@@ -1,7 +1,7 @@
 # README #
 
 PTtools is a library of python functions for calculating hydrodynamical quantities 
-around expanding bubbles of the new phase in an ealry universe phase transition.
+around expanding bubbles of the new phase in an early universe phase transition.
 
 
 ### What is this repository for? ###
