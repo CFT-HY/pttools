@@ -6,12 +6,15 @@ from Toolbox import *
 from matplotlib import pyplot as plt
 import warnings
 
+
 def cs2(logT_):
     T_ = np.exp(logT_)
     return cs(T_)**2
 
+
 def mu(xi_, v_):
     return (xi_ - v_)/(1-v_*xi_)
+
 
 def dy_dxi(y, xi_):
     v_, logT_ = y
@@ -20,6 +23,7 @@ def dy_dxi(y, xi_):
     #    dlogT_dxi = (2*v / (1-(ga**2)*v*(xi - v))) * 1/((xi - v)/(cs2(logT)*(1-(ga**2)*v*(xi-v))-(mu(xi, v)/(ga**2))))
     dlogT_dxi = ga_**2 * mu(xi_,v_) * dv_dxi
     return [dv_dxi, dlogT_dxi]
+
 
 def get_Tminus(Tguess, Xiw):
     warnings.filterwarnings("error")
