@@ -7,23 +7,6 @@ from matplotlib import pyplot as plt
 import warnings
 
 
-def cs2(logT_):
-    T_ = np.exp(logT_)
-    return cs(T_)**2
-
-
-def mu(xi_, v_):
-    return (xi_ - v_)/(1-v_*xi_)
-
-
-def dy_dxi(y, xi_):
-    v_, logT_ = y
-    dv_dxi = (2*v_ / xi_) * 1/((1-v_*xi_)*((mu(xi_, v_)**2/cs2(logT_))-1))
-    ga_ = 1/(1-v_**2)
-    #    dlogT_dxi = (2*v / (1-(ga**2)*v*(xi - v))) * 1/((xi - v)/(cs2(logT)*(1-(ga**2)*v*(xi-v))-(mu(xi, v)/(ga**2))))
-    dlogT_dxi = ga_**2 * mu(xi_,v_) * dv_dxi
-    return [dv_dxi, dlogT_dxi]
-
 
 def get_Tminus(Tguess, Xiw):
     warnings.filterwarnings("error")
@@ -78,7 +61,7 @@ print 'vminus_arr',vminus_arr
 
 
 nxi = 125
-xi_end = 0.5
+xi_end = 0.55
 
 n_success = tuple(np.where(np.isfinite(Tminus_arr))[0])
 
@@ -136,7 +119,7 @@ for n in n_success:
     plt.figure(2)
     plt.xlabel('Xi')
     plt.ylabel('Wminus1(T)/Wminus(Tn)')
-    plt.plot(xi3_arr, wminus1(np.exp(logT_arr))/wminus1(Tn_Tc))
+    plt.plot(xi3_arr, wminus(np.exp(logT_arr))/wminus(Tn_Tc))
 #    plt.plot(xi3_arr, np.exp(logT_arr))
 
 plt.show()
