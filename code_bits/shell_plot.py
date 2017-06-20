@@ -4,6 +4,9 @@
 # See Espinosa et al 2010
 #
 # Mudhahir Al-Ajmi and Mark Hindmarsh 2015-16
+#
+# Change to show how to use git
+
 
 import sys, os
 import numpy as np
