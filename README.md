@@ -3,6 +3,9 @@
 PTtools is a library of python functions for calculating hydrodynamical quantities 
 around expanding bubbles of the new phase in an early universe phase transition.
 
+vip\_code contains code for computing invariant fluid velocity profile (Danny)
+
+gw\_code contains code from taking invariant profile and computing GW power spectrum (Mulham)
 
 ### What is this repository for? ###
 
