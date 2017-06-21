@@ -1,8 +1,10 @@
 # A program to generate plots of v and ln(T/T_c) against xi.
 # May in future split into two files, one containing the program itself, and a toolbox-type file.
 
-# To do: vPlus/vMinus functions, find eqn for cs from EIKR EoS, try to identify xi_end (see findTminus) mathematically
-# rather than guessing
+# To do:
+# vPlus/vMinus functions,
+# Find eqn for cs from EIKR EoS, try to identify xi_end (see findTminus) mathematically rather than guessing
+# -> Find expression for cs minus (Espinosa pg 10)
 import numpy as np
 
 
@@ -36,3 +38,11 @@ def IdentifyType(vw, al_p, cs):
     print 'v- = ', vm
     print 'v+  = ', vp
     return wallType, vp, vm
+
+
+def xi_stop(wallType, vw):
+    if wallType == 'Def':
+        xs = vw
+    else:
+        xs = csminus()
+    return xs
