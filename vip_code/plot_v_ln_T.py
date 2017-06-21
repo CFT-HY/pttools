@@ -2,10 +2,11 @@
 # May in future split into two files, one containing the program itself, and a toolbox-type file.
 
 # To do:
-# vPlus/vMinus functions,
-# Find eqn for cs from EIKR EoS, try to identify xi_end (see findTminus) mathematically rather than guessing
+# vPlus/vMinus functions
+# Try to identify xi_end (see findTminus) mathematically rather than guessing
 # -> Find expression for cs minus (Espinosa pg 10)
 import numpy as np
+import EIKR_Toolbox as eikr
 
 
 def min_speed_deton(al_p, cs):
@@ -19,20 +20,22 @@ def min_speed_deton(al_p, cs):
 #     return 1/(3*vPlus(vm, al_p, 'Deflagration'))
 
 
-def IdentifyType(vw, al_p, cs):
+def IdentifyType(vw, al_p, c):
     # vw = wall velocity, al_p is alpha plus, cs is speed of sound (varies dependent and EoS used).
     # vPlus and vMinus are functions based on 2016 work, to be clarified with Mark.
-    if vw < cs:
+    if vw < c:
         wallType = 'Def'
         vm = vw
-        vp = vPlus(vm)
-    elif vw > cs:
-        if vw < min_speed_deton(al_p, cs):
+        vp = vPlus(vm, al_p)
+    elif vw > c:
+        if vw < min_speed_deton(al_p, c):
             wallType = 'Hyb'
+            vm = c
+            vp = vPlus(vm, al_p)
         else:
             wallType = 'Det'
             vp = vw
-            vm = vMinus(vp)
+            vm = vMinus(vp, al_p)
     # Should consider case where vWall==cs
     print 'Using wall type ', wallType
     print 'v- = ', vm
@@ -46,3 +49,10 @@ def xi_stop(wallType, vw):
     else:
         xs = csminus()
     return xs
+
+
+def cs(T, state):
+    if state == 'EIKR':
+        return eikr.cs(T)
+    else:
+        return 1./np.sqrt(3.0)
