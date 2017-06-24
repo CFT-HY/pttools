@@ -26,10 +26,11 @@ Tminus_arr = np.zeros_like(Xiw_arr)
 vminus_arr = np.zeros_like(Xiw_arr)
 
 Tguess = 0.8
-
 for Xiw in Xiw_arr:
+    print Xiw
     count = np.where(Xiw_arr == Xiw)
     Tminus = get_Tminus(Tguess, Xiw)
+    print Tminus
     Tminus_arr[count] = Tminus[0]
     if not np.isnan(Tminus[0]):
         vminus_arr[count] = vminus(Tminus[0],Xiw)
