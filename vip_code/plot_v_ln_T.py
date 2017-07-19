@@ -101,8 +101,6 @@ def dy_dxi(y, xi):
     v, t = y
     g = gamma(v)
     print 'gamma', g
-    print 'v', v
-    print 'xi', xi
     dv_dxi = (2 * v / xi) * 1 / (g*(1 - v * xi) * ((mu(xi, v) ** 2 / Eos.cs2(t)) - 1))
     dlog_tm_dxi = g**2 * mu(xi, v) * dv_dxi
     return [dv_dxi, dlog_tm_dxi]
