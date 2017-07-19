@@ -59,6 +59,23 @@ def wplus(T):
     return (4./3.)*a0*T**4
 
 
+def mu(vw, v):
+    return (vw-v)/(1.-vw*v)
+
+
+def gamma(v):
+    return np.sqrt(1./(1-v**2))
+
+
+def dy_dxi(y, xi):
+    vmp, tm = y
+    dv_dxi = (2 * vmp / xi) * 1 / ((1 - vmp * xi) * ((mu(xi, vmp) ** 2 / cs(tm)) - 1))
+    #    dlogT_dxi = (2*v / (1-(ga**2)*v*(xi - v))) * 1/((xi - v)/(cs2(logT)*(1-(ga**2)*v*(xi-v))-(mu(xi, v)/(ga**2))))
+    dlog_tm_dxi = (gamma(vmp))**2 * mu(xi, vmp) * dv_dxi
+    return [dv_dxi, dlog_tm_dxi]
+
+
+
 gstar = 106.75
 D = 0.4444
 A = 0.1990
