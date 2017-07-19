@@ -5,8 +5,6 @@ import sys
 import numpy as np
 from scipy import integrate as itg
 from scipy import optimize as opt
-
-
 import matplotlib.pyplot as plt
 
 
@@ -42,6 +40,7 @@ def identify_type(vw, al_p, eos, tm=0):
     print 'Using wall type ', walltype
     print 'v- = ', vm
     print 'v+ = ', vp
+    print 'cs = ', cs
     return walltype, vp, vm
 
 
@@ -101,6 +100,9 @@ def gamma(v):
 def dy_dxi(y, xi):
     v, t = y
     g = gamma(v)
+    print 'gamma', g
+    print 'v', v
+    print 'xi', xi
     dv_dxi = (2 * v / xi) * 1 / (g*(1 - v * xi) * ((mu(xi, v) ** 2 / Eos.cs2(t)) - 1))
     dlog_tm_dxi = g**2 * mu(xi, v) * dv_dxi
     return [dv_dxi, dlog_tm_dxi]
@@ -113,7 +115,7 @@ def vShock(xis, tm):
 
 def xvariables(Npts, v_w, tm):
     dxi = 1./Npts
-    xi = np.linspace(0., 1., num=(Npts+1))
+    xi = np.linspace(0.01, 1., num=(Npts+1))
     v_sh = np.zeros(Npts+1)
     nWall = np.int(np.floor(v_w/dxi))
     ncs = np.int(np.floor(Eos.cs(tm)/dxi))
@@ -135,20 +137,23 @@ def shell_prop(xiw, vp, vm, tm, tp, walltype, points):
     xi_p = xi[range_p]
     if xiw > Eos.cs(tm):
         sols_m = itg.odeint(dy_dxi, y_m, xi_m)
+        print 'm', sols_m
         v_arr[range_m] = np.transpose(sols_m[:, 0])
+        psi_arr[range_m] = sols_m[:, 1]
     sols_p = itg.odeint(dy_dxi, y_p, xi_p)
+    print 'p', sols_p
     v_arr[range_p] = sols_p[:, 0]
-    if not (walltype == "Detonation"):
-        for n in range(nWall, points):
-            if v_arr[n] < v_sh[n]:
-                nShock = n
-                break
-    else:
-        nShock = nWall
+    # if not (walltype == "Detonation"):
+    #     for n in range(nWall, points):
+    #         if v_arr[n] < v_sh[n]:
+    #             nShock = n
+    #             break
+    # else:
+    #     nShock = nWall
 
-    # Set fluid velocity to zero in front of the shock (integration isn't correct in front of shock)
-    v_arr[nShock:] = 0.0
-    psi_arr[range_m] = sols_m[:, 1]
+    # # Set fluid velocity to zero in front of the shock (integration isn't correct in front of shock)
+    # v_arr[nShock:] = 0.0
+
     psi_arr[range_p] = sols_p[:, 1]
 
     # # Also need to set w to constant behind place where v -> 0
@@ -214,6 +219,9 @@ def main():
     vs, psis, xis = shell_prop(v_wall, v_plus, v_minus, t_minus, t_plus, wall_type, npts)
 
     plt.figure()
+    plt.title('Velocity')
+    plt.xlabel('$/xi$')
+    plt.ylabel('v')
     plt.plot(xis, vs)
 
     plt.show()
