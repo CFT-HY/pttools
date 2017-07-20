@@ -135,9 +135,6 @@ def shell_prop(xiw, vp, vm, tm, tp, walltype, points):
     xi_m = xi[range_m]
     xi_p = xi[range_p]
     xi_m_rev = xi_m[::-1]
-    print 'xi_m 1: ', xi_m[0], xi_m[-1]
-    print 'xi_m_rev 1: ', xi_m_rev[0], xi_m_rev[-1]
-    print 'xi_p 1: ',xi_p[0], xi_p[-1]
     if xiw > Eos.cs(tm):
         sols_m = itg.odeint(dy_dxi, y_m, xi_m_rev)
         # print 'm', sols_m
@@ -154,17 +151,17 @@ def shell_prop(xiw, vp, vm, tm, tp, walltype, points):
     #             break
     # else:
     #     nShock = nWall
-
     # # Set fluid velocity to zero in front of the shock (integration isn't correct in front of shock)
     # v_arr[nShock:] = 0.0
 
-    T_arr[range_p] = sols_p[:, 1]
+    # if not (walltype == 'Def'):
+    #     for n in range(0, len(xi)):
+    #         if xi[n] >= Eos.cs(T_arr[n]):
+    #             ncs = n
+    #             break
+    #     v_arr[0:ncs] = 0.
 
-    # # Also need to set w to constant behind place where v -> 0
-    # n_cs = np.max(np.where(v_arr > 0.))
-    # psi_arr[n_cs + 1:] = psi_arr[n_cs]
-    # # # and v to zero behind v -> 0 place
-    # v_arr[n_cs + 1:] = 0
+    T_arr[range_p] = sols_p[:, 1]
     return v_arr, T_arr, xi
 
 

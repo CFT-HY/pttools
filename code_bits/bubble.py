@@ -168,7 +168,7 @@ def velocity(v_w, al_p, wallType, Npts):
                                                     v_just_behind(xi[nWall],vfm_p,dxi),xi_behind)#,mxstep=5000000)
     if not (wallType=="Detonation"):
         for n in range(nWall,Npts):
-            if vFluid[n] < v_sh[n]:
+            if vFluid[n] < v_sh[n]: 
                 nShock = n
                 break
     else: nShock = nWall
