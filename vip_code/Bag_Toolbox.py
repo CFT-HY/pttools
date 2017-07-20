@@ -9,6 +9,10 @@ def w_plus(tplus):
     return 4./3.*aplus*tplus**4
 
 
+def w_minus(t):
+    return 4./3.*aminus*t**4
+
+
 def gamma(v):
     return np.sqrt(1./(1-v**2))
 
@@ -22,7 +26,7 @@ def t_plus(al_p):
 
 
 def cs(t):
-    return 1./np.sqrt(3.)  # 0.577
+    return 1./np.sqrt(3.) * np.ones_like(t)  # 0.577
 
 # reverse this
 def cs2(t):

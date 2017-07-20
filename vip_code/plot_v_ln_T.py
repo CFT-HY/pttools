@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # A program to generate plots of v and ln(T/T_c) against xi.
 # May in future split into two files, one containing the program itself, and a toolbox-type file.
 
@@ -100,10 +101,10 @@ def gamma(v):
 def dy_dxi(y, xi):
     v, t = y
     g = gamma(v)
-    print 'gamma', g
+    # print 'gamma', g
     dv_dxi = (2 * v / xi) * 1 / (g*(1 - v * xi) * ((mu(xi, v) ** 2 / Eos.cs2(t)) - 1))
-    dlog_tm_dxi = g**2 * mu(xi, v) * dv_dxi
-    return [dv_dxi, dlog_tm_dxi]
+    dt_dxi = t*g**2 * mu(xi, v) * dv_dxi
+    return [dv_dxi, dt_dxi]
 
 
 def vShock(xis, tm):
@@ -128,18 +129,23 @@ def shell_prop(xiw, vp, vm, tm, tp, walltype, points):
     y_m = vmp, tm
     y_p = vpp, tp
     v_arr = np.zeros_like(xi)
-    psi_arr = np.zeros_like(xi)
+    T_arr = np.zeros_like(xi)
     range_m = np.where(xi < xiw)
     range_p = np.where(xi > xiw)
-    xi_m = np.transpose(xi[range_m])
+    xi_m = xi[range_m]
     xi_p = xi[range_p]
+    xi_m_rev = xi_m[::-1]
+    print 'xi_m 1: ', xi_m[0], xi_m[-1]
+    print 'xi_m_rev 1: ', xi_m_rev[0], xi_m_rev[-1]
+    print 'xi_p 1: ',xi_p[0], xi_p[-1]
     if xiw > Eos.cs(tm):
-        sols_m = itg.odeint(dy_dxi, y_m, xi_m)
-        print 'm', sols_m
-        v_arr[range_m] = np.transpose(sols_m[:, 0])
-        psi_arr[range_m] = sols_m[:, 1]
+        sols_m = itg.odeint(dy_dxi, y_m, xi_m_rev)
+        # print 'm', sols_m
+        v_arr[range_m] = sols_m[::-1, 0]
+        T_arr[range_m] = sols_m[::-1, 1]
     sols_p = itg.odeint(dy_dxi, y_p, xi_p)
-    print 'p', sols_p
+    # print 'p', sols_p
+
     v_arr[range_p] = sols_p[:, 0]
     # if not (walltype == "Detonation"):
     #     for n in range(nWall, points):
@@ -152,14 +158,14 @@ def shell_prop(xiw, vp, vm, tm, tp, walltype, points):
     # # Set fluid velocity to zero in front of the shock (integration isn't correct in front of shock)
     # v_arr[nShock:] = 0.0
 
-    psi_arr[range_p] = sols_p[:, 1]
+    T_arr[range_p] = sols_p[:, 1]
 
     # # Also need to set w to constant behind place where v -> 0
     # n_cs = np.max(np.where(v_arr > 0.))
     # psi_arr[n_cs + 1:] = psi_arr[n_cs]
     # # # and v to zero behind v -> 0 place
     # v_arr[n_cs + 1:] = 0
-    return v_arr, psi_arr, xi
+    return v_arr, T_arr, xi
 
 
 def main():
@@ -214,13 +220,31 @@ def main():
         print 'tminus=', t_minus
         wall_type, v_plus, v_minus = identify_type(v_wall, alpha_plus, state_eqn, t_minus)
 
-    vs, psis, xis = shell_prop(v_wall, v_plus, v_minus, t_minus, t_plus, wall_type, npts)
+    vs, Ts, xis = shell_prop(v_wall, v_plus, v_minus, t_minus, t_plus, wall_type, npts)
+
+    Ts_norm = Ts/Ts[-1]
+
+    w = Eos.w_minus(Ts)
+    w_norm = w/w[-1]
 
     plt.figure()
     plt.title('Velocity')
-    plt.xlabel('$/xi$')
-    plt.ylabel('v')
+    plt.xlabel(r'$\xi$')
+    plt.ylabel(r'$v$')
     plt.plot(xis, vs)
+
+    plt.figure()
+    plt.title('Temperature')
+    plt.xlabel(r'$\xi$')
+    plt.ylabel(r'$\ln (T)$')
+    plt.plot(xis, Ts_norm)
+
+    plt.figure()
+    plt.title('Enthalpy')
+    plt.xlabel(r'$\xi$')
+    plt.ylabel(r'$w/w_{\rm n}$')
+    plt.plot(xis, w_norm) # only right behind the wall with w_minus
+
 
     plt.show()
 

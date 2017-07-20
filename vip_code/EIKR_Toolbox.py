@@ -11,11 +11,15 @@ def dp_dT(T):
 
 
 def de_dT(T):
-    return 4.*a0*(T**3) - params[1]*T*(phi_broken(T)**3)
+    return 4.*a0*(T**3) - params[1]*T*(phi_broken(T)**2)
 
 
 def cs(T):
-    return np.sqrt((dp_dT(T))/(de_dT(T)))
+    return np.sqrt(cs2(T))
+
+
+def cs2(T):
+    return (dp_dT(T))/(de_dT(T))
 
 
 def alphaplus(T):
@@ -27,12 +31,16 @@ def epsilon(T):
 
 
 def p(T):
-    return (1./3.)*a0*(T**4)-(1./2.)*params[1]*(T**2-params[4]**2)*phi_broken(T)**2 - (1./3.)*params[2]*T*phi_broken(T)\
-        **3 + (1./4.)*params[3]*phi_broken(T)**4
+    return (1./3.)*a0*(T**4)-(1./2.)*params[1]*(T**2-params[4]**2)*phi_broken(T)**2 + (1./3.)*params[2]*T*phi_broken(T)\
+        **3 - (1./4.)*params[3]*phi_broken(T)**4 - V0
 
 
 def e(T):
-    return a0*(T**4)-(1./2.)*params[1]*(T**2 - params[4]**2)*phi_broken(T)**2-(1./4.)*params[3]*phi_broken(T)**4
+    return a0*(T**4) - (1./2.)*params[1]*(T**2 + params[4]**2)*phi_broken(T)**2 + (1./4.)*params[3]*phi_broken(T)**4 + V0
+
+
+def s(T):
+    return dp_dT(T)
 
 
 def wminus(T):
@@ -82,6 +90,8 @@ A = 0.1990
 lamda = 0.0396
 T0_Tc = 1./(np.sqrt(2))
 Tn_Tc = 0.8
+
+V0 = (D*T0_Tc**2)**2/(4*lamda)
 
 params = (gstar, D, A, lamda, T0_Tc, Tn_Tc)
 a0 = (params[0]*(np.pi**2)/30)
