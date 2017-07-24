@@ -21,6 +21,11 @@ def d2v_dt2(T):
 def p(T):
     return 1./3.*a0*T**4 - v()
 
+def tps_from_wps(tms, vms, vps):
+    g_m_shock2 = gamma(vms)**2
+    g_p_shock2 = gamma(vps)**2
+    wps = (w_minus(tms)*g_m_shock2*vms)/(g_p_shock2*vps)
+    return ((3./4.)*(wps/aplus))**0.25
 
 gstar = 106.75
 D = 0.4444

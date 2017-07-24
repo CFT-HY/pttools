@@ -111,14 +111,20 @@ def xvariables(Npts, v_w, tm):
     nWall = np.int(np.floor(v_w/dxi))
     ncs = np.int(np.floor(Eos.cs(tm)/dxi))
     v_sh[ncs:] = vShock(xi[ncs:], tm)
-    return xi, v_sh, nWall, ncs
+    return dxi, xi, v_sh, nWall, ncs
+
+
+def v_just_behind(x, v, dx):
+    # Fluid velocity one extra space step behind wall, arranged so that dv_dxi_deton guaranteed positive
+    dv = np.sqrt(4.*dx*v*(1-v*v)*(x-v)/(1-x*x))
+    return v-dv
 
 
 def shell_prop(xiw, vp, vm, tm, tp, walltype, points):
-    xi, v_sh, nWall, ncs = xvariables(points, xiw, tm)
+    dxi, xi, v_sh, nWall, ncs = xvariables(points, xiw, tm)
     vmp = mu(xiw, vm)
-    vpp = mu(vp, xiw)
-    y_m = vmp, tm
+    vpp = mu(xiw, vp)
+    y_m = v_just_behind(xiw, vmp, dxi), tm
     y_p = vpp, tp
     v_arr = np.zeros_like(xi)
     T_arr = np.zeros_like(xi)
@@ -129,31 +135,37 @@ def shell_prop(xiw, vp, vm, tm, tp, walltype, points):
     xi_m_rev = xi_m[::-1]
     if xiw > Eos.cs(tm):
         sols_m = itg.odeint(dy_dxi, y_m, xi_m_rev)
-        # print 'm', sols_m
         v_arr[range_m] = sols_m[::-1, 0]
         T_arr[range_m] = sols_m[::-1, 1]
     sols_p = itg.odeint(dy_dxi, y_p, xi_p)
-    # print 'p', sols_p
 
     v_arr[range_p] = sols_p[:, 0]
     T_arr[range_p] = sols_p[:, 1]
-    # if not (walltype == "Detonation"):
-    #     for n in range(nWall, points):
-    #         if v_arr[n] < v_sh[n]:
-    #             nShock = n
-    #             break
-    # else:
-    #     nShock = nWall
-    # # Set fluid velocity to zero in front of the shock (integration isn't correct in front of shock)
-    # v_arr[nShock:] = 0.0
 
-    # for n in range(0, len(xi)):
-    #     if xi[n] >= Eos.cs(T_arr[n]):
-    #         ncs = n
-    #         break
-    # if not (walltype == 'Def'):
-    #     v_arr[0:ncs] = 0.
-    # T_arr[0:ncs] = T_arr[ncs]
+    if not (walltype == "Det"):
+        for n in range(nWall, points):
+            if v_arr[n] < v_sh[n]:
+                nShock = n
+                break
+    else:
+        nShock = nWall
+    # Set fluid velocity to zero in front of the shock (integration isn't correct in front of shock)
+    v_arr[nShock:] = 0.0
+
+    for n in range(0, len(xi)):
+        if xi[n] >= Eos.cs(T_arr[n]):
+            ncs = n
+            break
+
+    if not (walltype == 'Def'):
+        v_arr[0:ncs] = 0.
+        T_arr[0:ncs] = T_arr[ncs]
+
+    if not (walltype == 'Det'):
+        tps = Eos.tps_from_wps(T_arr[nShock-1], v_arr[nShock-1], xi[nShock-1])
+        T_arr[nShock:] = tps
+        if walltype == 'Def':
+            T_arr[0:nWall] = tm
     return v_arr, T_arr, xi
 
 
