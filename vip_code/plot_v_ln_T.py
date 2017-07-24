@@ -86,14 +86,6 @@ def v_shock(xis, cs):
     return np.maximum(0., (xis**2-cs**2)/(xis*(1-cs**2)))
 
 
-# def xi_stop(wallType, vw):
-#     if wallType == 'Def':
-#         xs = vw # wrong side, want xi shock
-#     else:
-#         xs = csMinus() # T dep, don't know final T
-#     return xs
-
-
 def gamma(v):
     return np.sqrt(1./(1-v**2))
 
@@ -144,6 +136,7 @@ def shell_prop(xiw, vp, vm, tm, tp, walltype, points):
     # print 'p', sols_p
 
     v_arr[range_p] = sols_p[:, 0]
+    T_arr[range_p] = sols_p[:, 1]
     # if not (walltype == "Detonation"):
     #     for n in range(nWall, points):
     #         if v_arr[n] < v_sh[n]:
@@ -154,14 +147,13 @@ def shell_prop(xiw, vp, vm, tm, tp, walltype, points):
     # # Set fluid velocity to zero in front of the shock (integration isn't correct in front of shock)
     # v_arr[nShock:] = 0.0
 
+    # for n in range(0, len(xi)):
+    #     if xi[n] >= Eos.cs(T_arr[n]):
+    #         ncs = n
+    #         break
     # if not (walltype == 'Def'):
-    #     for n in range(0, len(xi)):
-    #         if xi[n] >= Eos.cs(T_arr[n]):
-    #             ncs = n
-    #             break
     #     v_arr[0:ncs] = 0.
-
-    T_arr[range_p] = sols_p[:, 1]
+    # T_arr[0:ncs] = T_arr[ncs]
     return v_arr, T_arr, xi
 
 
