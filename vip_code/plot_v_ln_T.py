@@ -1,42 +1,35 @@
 #!/usr/bin/env python
-# A program to generate plots of v and ln(T/T_c) against xi.
-# May in future split into two files, one containing the program itself, and a toolbox-type file.
+# A program to generate plots of v and T/T_c against xi.
 
 import sys
 import numpy as np
 from scipy import integrate as itg
 from scipy import optimize as opt
 import matplotlib.pyplot as plt
+import Mechanics_Toolbox as Mech
 
 
 def min_speed_deton(al_p, cs):
     # Minimum speed for a detonation
-    print 'min_speed_deton: al_p ', al_p
     return (cs/(1 + al_p))*(1 + np.sqrt(al_p*(2. + 3.*al_p)))
 
 
-# def max_speed_deflag(al_p, c):
-#     # Maximum speed for a deflagration
-#     vm=cs
-#     return 1/(3*vPlus(vm, al_p, 'Deflagration'))
-
-
-def identify_type(vw, al_p, eos, tm=0):
+def identify_type(vw, al_p, tm=0):
     # vw = wall velocity, al_p is alpha plus, cs is speed of sound (varies dependent and EoS used).
     cs = Eos.cs(tm)
     if vw < cs:
         walltype = 'Def'
         vm = vw
-        vp = vplus(vm, al_p)
+        vp = Mech.v_plus(vm, al_p)
     elif vw > cs:
         if vw < min_speed_deton(al_p, cs):
             walltype = 'Hyb'
             vm = cs
-            vp = vplus(vm, al_p)
+            vp = Mech.v_plus(vm, al_p)
         else:
             walltype = 'Det'
             vp = vw
-            vm = vminus(vp, al_p)
+            vm = Mech.v_minus(vp, al_p)
     # Should consider case where vWall==cs
     print 'Using wall type ', walltype
     print 'v- = ', vm
@@ -45,62 +38,22 @@ def identify_type(vw, al_p, eos, tm=0):
     return walltype, vp, vm
 
 
-def vplus(vm, al_p):
-    if vm <= 1./np.sqrt(3.):
-        vp = (1./(1.+al_p))*(((vm/2.)+(1./(6.*vm)))-np.sqrt(((vm/2.)+(1./(6.*vm)))**2+(al_p**2)+((2./3.)*al_p)-(1./3.)))
-    elif vm > 1./np.sqrt(3.):
-        vp = (1./(1.+al_p))*(((vm/2.)+(1./(6.*vm)))+np.sqrt(((vm/2.)+(1./(6.*vm)))**2+(al_p**2)+((2./3.)*al_p)-(1./3.)))
-    return vp
-
-
-def vminus(vp, al_p):
-    if vp < 1./np.sqrt(3.):
-        vm = (((1+al_p)/2.)*vp+((1.-3.*al_p)/(6*vp)))-np.sqrt(((((1.+al_p)*vp)/2.)+((1.-3.*al_p)/(6.*vp)))**2-(1./3.))
-    elif vp > 1./np.sqrt(3.):
-        vm = (((1+al_p)/2.)*vp+((1.-3.*al_p)/(6*vp)))+np.sqrt(((((1.+al_p)*vp)/2.)+((1.-3.*al_p)/(6.*vp)))**2-(1./3.))
-    # Edge case?
-    return vm
-
-
-def mu(vw, v):
-    return (vw-v)/(1.-vw*v)
-
-
-def dv_dxi_deflag(vp, x, cs):
-    # differential equation: dv/dxi  for deflagrations
-    if vp < v_shock(x, cs):  # Can happen if you try to integrate beyond shock
-        val = 0.  # Stops solution blowing up
-    else:
-        val = (2./x)*vp*(1.-vp**2)*(1./(1-x*vp))*(1./(mu(x, vp)**2/cs**2 - 1))
-    return val
-
-
-def dv_dxi_deton(vp, x, cs):
-    # differential equation: dv/dxi  for detonations and hybrids (integrate backwards from wall)
-    val = (2./x)*vp*(1.-vp**2)*(1./(1-x*vp))*(1./(mu(x, vp)**2/cs**2 - 1))
-    return val
-
-
 def v_shock(xis, cs):
     # Fluid velocity at a shock at xis.  No shock for xis < cs, so returns zero
     return np.maximum(0., (xis**2-cs**2)/(xis*(1-cs**2)))
 
 
-def gamma(v):
-    return np.sqrt(1./(1-v**2))
-
-
 def dy_dxi(y, xi):
     v, t = y
-    g = gamma(v)
+    g = Mech.gamma(v)
     # print 'gamma', g
-    dv_dxi = (2 * v / xi) * 1 / (g*(1 - v * xi) * ((mu(xi, v) ** 2 / Eos.cs2(t)) - 1))
-    dt_dxi = t*g**2 * mu(xi, v) * dv_dxi
+    dv_dxi = (2 * v / xi) * 1 / (g*(1 - v * xi) * ((Mech.mu(xi, v) ** 2 / Eos.cs2(t)) - 1))
+    dt_dxi = t*g**2 * Mech.mu(xi, v) * dv_dxi
     return [dv_dxi, dt_dxi]
 
 
 def vShock(xis, tm):
-# Fluid velocity at a shock at xis.  No shock for xis < cs, so returns zero
+    # Fluid velocity at a shock at xis.  No shock for xis < cs, so returns zero
     return np.maximum(0.,(xis**2 - Eos.cs2(tm))/(xis*(1 - Eos.cs2(tm))) )
 
 
@@ -122,8 +75,8 @@ def v_just_behind(x, v, dx):
 
 def shell_prop(xiw, vp, vm, tm, tp, walltype, points):
     dxi, xi, v_sh, nWall, ncs = xvariables(points, xiw, tm)
-    vmp = mu(xiw, vm)
-    vpp = mu(xiw, vp)
+    vmp = Mech.mu(xiw, vm)
+    vpp = Mech.mu(xiw, vp)
     y_m = v_just_behind(xiw, vmp, dxi), tm
     y_p = vpp, tp
     v_arr = np.zeros_like(xi)
@@ -142,14 +95,16 @@ def shell_prop(xiw, vp, vm, tm, tp, walltype, points):
     v_arr[range_p] = sols_p[:, 0]
     T_arr[range_p] = sols_p[:, 1]
 
+    print walltype, 'Correcting beyond shock'
     if not (walltype == "Det"):
         for n in range(nWall, points):
             if v_arr[n] < v_sh[n]:
                 nShock = n
                 break
+        tps = Eos.tps_from_wps(T_arr[nShock-1], v_arr[nShock-1], xi[nShock-1])
+        T_arr[nShock:] = tps
     else:
         nShock = nWall
-    # Set fluid velocity to zero in front of the shock (integration isn't correct in front of shock)
     v_arr[nShock:] = 0.0
 
     for n in range(0, len(xi)):
@@ -158,14 +113,13 @@ def shell_prop(xiw, vp, vm, tm, tp, walltype, points):
             break
 
     if not (walltype == 'Def'):
+        print walltype, 'Correcting up to speed of sound'
         v_arr[0:ncs] = 0.
         T_arr[0:ncs] = T_arr[ncs]
 
-    if not (walltype == 'Det'):
-        tps = Eos.tps_from_wps(T_arr[nShock-1], v_arr[nShock-1], xi[nShock-1])
-        T_arr[nShock:] = tps
-        if walltype == 'Def':
-            T_arr[0:nWall] = tm
+    if walltype == 'Def':
+        print walltype, 'Correcting up to wall'
+        T_arr[0:nWall] = tm
     return v_arr, T_arr, xi
 
 
@@ -208,13 +162,11 @@ def main():
             while not 0. < t_plus < 1.:
                 print 't_plus must satisfy 0 < t_plus < 1'
                 t_plus = input('Enter t_plus ')
-        print'eval alpha plus'
         alpha_plus = Eos.alphaplus(t_plus)
-        print 'eval finished'
 
     # identify derived quantities, order dependent on state_eqn
     if state_eqn == 'Bag':
-        wall_type, v_plus, v_minus = identify_type(v_wall, alpha_plus, state_eqn)
+        wall_type, v_plus, v_minus = identify_type(v_wall, alpha_plus)
         t_minus = Eos.t_minus(t_plus, v_plus, v_minus)
     else:
         t_minus = opt.fsolve(Eos.delta_w, t_plus, v_wall)[0]
@@ -244,8 +196,7 @@ def main():
     plt.title('Enthalpy')
     plt.xlabel(r'$\xi$')
     plt.ylabel(r'$w/w_{\rm n}$')
-    plt.plot(xis, w_norm) # only right behind the wall with w_minus
-
+    plt.plot(xis, w_norm)
 
     plt.show()
 
