@@ -1,9 +1,17 @@
 # Toolbox file for EIKR EoS, lifted from existing Toolbox as needed
+import sys
 import numpy as np
 import Mechanics_Toolbox as Mech
 
 
 def phi_broken(T):
+    if (A*T)**2-4*lamda*D*(T**2-T0_Tc**2)>0:
+        pass
+    else:
+        print 'Error: T**2-T0**2 = ', (T**2-T0_Tc**2)
+        print 'T = ', T
+        print 'T0 = ', T0_Tc
+        sys.exit(1)
     return(A*T+np.sqrt((A*T)**2-4*lamda*D*(T**2-T0_Tc**2)))/2*lamda
 
 
@@ -37,14 +45,29 @@ def w_plus(T):
     return (4. / 3.) * a0 * T ** 4
 
 
+def vminus(T,Xiw):
+    B = ((Xiw**2)*(1+alphaplus(T))**2-alphaplus(T)**2 - (2./3.)*alphaplus(T)+(1./3.))/(2*Xiw*(1+alphaplus(T)))
+#    A = Xiw
+#    B = - ( Xiw**2 + (1./3) - (1 - Xiw**2)*alphaplus(T) )
+#    C = Xiw/3
+#    return  (-B + np.sqrt(B**2 - 4*A*C) )/(2.*A)
+    return B + np.sqrt(B**2 - 1./3)
+
+
 def energy_cons(T, Xiw):
-# Expression from EM conservation eequation to be equated to broken phase enthalpy
-    return (Xiw*(1/(1-Xiw**2))*w_plus(Tn_Tc))/(Mech.v_minus(T, Xiw)*(1/(1-Mech.v_minus(T, Xiw)**2)))
+    # Expression from EM conservation equation to be equated to broken phase enthalpy
+    return (Xiw*(1/(1-Xiw**2))*w_plus(Tn_Tc))/(vminus(T, Xiw)*(1/(1-vminus(T, Xiw)**2)))
 
 
 def delta_w(T, Xiw):
+    print'delta_w:'
+    print 'T = ', T
+    print 'Xiw =', Xiw
+    dw = w_minus(T) - energy_cons(T, Xiw)
+    print 'Returning ', dw
+    print ''
     # Function whose root gives temperature on broken phase side of wall
-    return w_minus(T) - energy_cons(T, Xiw)
+    return dw
 
 
 def e(T):

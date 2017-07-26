@@ -16,7 +16,7 @@ def w_minus(t):
 def tps_from_wps(tms, vms, vps):
     g_m_shock2 = Mech.gamma(vms)**2
     g_p_shock2 = Mech.gamma(vps)**2
-    wms = w_minus(tms)
+    wms = w_plus(tms)
     wps = (wms*g_m_shock2*vms)/(g_p_shock2*vps)
     return ((3./4.)*(wps/aplus))**0.25
 

@@ -15,7 +15,7 @@ def min_speed_deton(al_p, cs):
 
 
 def identify_type(vw, al_p, tm=0):
-    # vw = wall velocity, al_p is alpha plus, cs is speed of sound (varies dependent and EoS used).
+    # Identifies wall type from provided parameters
     cs = Eos.cs(tm)
     if vw < cs:
         walltype = 'Def'
@@ -29,6 +29,7 @@ def identify_type(vw, al_p, tm=0):
         else:
             walltype = 'Det'
             vp = vw
+            print 'vp = ', vp
             vm = Mech.v_minus(vp, al_p)
     # Should consider case where vWall==cs
     print 'Using wall type ', walltype
@@ -44,9 +45,9 @@ def v_shock(xis, cs):
 
 
 def dy_dxi(y, xi):
+    # Coupled ODEs
     v, t = y
     g = Mech.gamma(v)
-    # print 'gamma', g
     dv_dxi = (2 * v / xi) * 1 / (g*(1 - v * xi) * ((Mech.mu(xi, v) ** 2 / Eos.cs2(t)) - 1))
     dt_dxi = t*g**2 * Mech.mu(xi, v) * dv_dxi
     return [dv_dxi, dt_dxi]
@@ -74,6 +75,7 @@ def v_just_behind(x, v, dx):
 
 
 def shell_prop(xiw, vp, vm, tm, tp, walltype, points):
+    # Integrates coupled ODEs for v and T, and corrects non-physical behaviour
     dxi, xi, v_sh, nWall, ncs = xvariables(points, xiw, tm)
     vmp = Mech.mu(xiw, vm)
     vpp = Mech.mu(xiw, vp)
@@ -101,7 +103,7 @@ def shell_prop(xiw, vp, vm, tm, tp, walltype, points):
             if v_arr[n] < v_sh[n]:
                 nShock = n
                 break
-        tps = Eos.tps_from_wps(T_arr[nShock-1], v_arr[nShock-1], xi[nShock-1])
+        tps = Eos.tps_from_wps(T_arr[nShock-1], Mech.mu(xi[nShock-1], v_arr[nShock-1]), xi[nShock-1])
         T_arr[nShock:] = tps
     else:
         nShock = nWall
@@ -142,6 +144,7 @@ def main():
         while not 0 < v_wall < 1:
             print 'Error: v_wall must be satisfy 0 < v_wall < 1'
             v_wall = input('Enter v_wall ')
+
     if len(sys.argv) == 5:
         npts = int(sys.argv[5])
     else:
@@ -163,23 +166,28 @@ def main():
                 print 't_plus must satisfy 0 < t_plus < 1'
                 t_plus = input('Enter t_plus ')
         alpha_plus = Eos.alphaplus(t_plus)
+        print 'alpha_plus = ', alpha_plus
 
     # identify derived quantities, order dependent on state_eqn
     if state_eqn == 'Bag':
+        print 'Using Bag procedure'
         wall_type, v_plus, v_minus = identify_type(v_wall, alpha_plus)
         t_minus = Eos.t_minus(t_plus, v_plus, v_minus)
     else:
+        print 'Using EIKR procedure'
+        print 'tplus = ', t_plus
         t_minus = opt.fsolve(Eos.delta_w, t_plus, v_wall)[0]
         print 'tminus=', t_minus
-        wall_type, v_plus, v_minus = identify_type(v_wall, alpha_plus, state_eqn, t_minus)
+        wall_type, v_plus, v_minus = identify_type(v_wall, alpha_plus, t_minus)
 
     vs, Ts, xis = shell_prop(v_wall, v_plus, v_minus, t_minus, t_plus, wall_type, npts)
 
+    # Normalise outputs
     Ts_norm = Ts/Ts[-1]
-
     w = Eos.w_minus(Ts)
     w_norm = w/w[-1]
 
+    # Plot outputs
     plt.figure()
     plt.title('Velocity')
     plt.xlabel(r'$\xi$')
@@ -189,7 +197,7 @@ def main():
     plt.figure()
     plt.title('Temperature')
     plt.xlabel(r'$\xi$')
-    plt.ylabel(r'$\ln (T)$')
+    plt.ylabel(r'$T$')
     plt.plot(xis, Ts_norm)
 
     plt.figure()
