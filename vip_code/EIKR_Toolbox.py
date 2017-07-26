@@ -1,17 +1,22 @@
 # Toolbox file for EIKR EoS, lifted from existing Toolbox as needed
 import sys
 import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import Mechanics_Toolbox as Mech
 
 
 def phi_broken(T):
-    if (A*T)**2-4*lamda*D*(T**2-T0_Tc**2)>0:
-        pass
-    else:
-        print 'Error: T**2-T0**2 = ', (T**2-T0_Tc**2)
-        print 'T = ', T
-        print 'T0 = ', T0_Tc
-        sys.exit(1)
+    print 'phi:'
+    print 'T = ', T
+    print ''
+    # if (A*T)**2-4*lamda*D*(T**2-T0_Tc**2)>0:
+    #     pass
+    # else:
+    #     print 'Error: T**2-T0**2 = ', (T**2-T0_Tc**2)
+    #     print 'T = ', T
+    #     print 'T0 = ', T0_Tc
+    #     sys.exit(1)
     return(A*T+np.sqrt((A*T)**2-4*lamda*D*(T**2-T0_Tc**2)))/2*lamda
 
 
@@ -21,6 +26,9 @@ def v(T):
 
 
 def dv_dt(T):
+    # print 'dvdt:'
+    # print 'T = ', T
+    # print ''
     return D*T*phi_broken(T)**2 - (1./3.)*A*phi_broken(T)**3
 
 
@@ -30,6 +38,9 @@ def d2v_dt2(T):
 
 # All thermodynamic quantities in broken phase (minus) unless stated otherwise
 def p(T):
+    # print 'p:'
+    # print 'T = ', T
+    # print''
     return 1./3.*a0*T**4 - v(T)
 
 
@@ -60,12 +71,12 @@ def energy_cons(T, Xiw):
 
 
 def delta_w(T, Xiw):
-    print'delta_w:'
-    print 'T = ', T
-    print 'Xiw =', Xiw
+    # print'delta_w:'
+    # print 'T = ', T
+    # print 'Xiw =', Xiw
     dw = w_minus(T) - energy_cons(T, Xiw)
-    print 'Returning ', dw
-    print ''
+    # print 'Returning ', dw
+    # print ''
     # Function whose root gives temperature on broken phase side of wall
     return dw
 
@@ -110,3 +121,22 @@ Tn_Tc = 0.8
 
 V0 = (D*T0_Tc**2)**2/(4*lamda)
 a0 = (gstar*(np.pi**2)/30)
+
+# T = 0.3
+# xi = 0.8
+# xis = np.linspace(0, 1, 1000)
+# Ts = np.linspace(0, 1, 1000)
+# y_with_const_t = delta_w(T, xis)
+# y_with_const_xi = delta_w(Ts, xi)
+#
+#
+# plt.figure()
+# plt.title('const t')
+# plt.plot(xis, y_with_const_t)
+# plt.xlabel('xi')
+#
+# plt.figure()
+# plt.title('const xi')
+# plt.plot(Ts, y_with_const_xi)
+# plt.xlabel('T')
+# plt.show()
