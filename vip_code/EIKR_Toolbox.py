@@ -17,7 +17,7 @@ def phi_broken(T):
     #     print 'T = ', T
     #     print 'T0 = ', T0_Tc
     #     sys.exit(1)
-    return(A*T+np.sqrt((A*T)**2-4*lamda*D*(T**2-T0_Tc**2)))/2*lamda
+    return(A*T+np.sqrt((A*T)**2-4*lamda*D*(T**2-T0_Tc**2)))/(2*lamda)
 
 
 def v(T):
@@ -85,12 +85,12 @@ def e(T):
     return w_minus(T) - p(T)
 
 
-def de_dt(T):
+def de_dT(T):
     return T*(4.*a0*T**2 - d2v_dt2(T))
 
 
 def cs2(T):
-    return s(T)/de_dt(T)
+    return s(T)/de_dT(T)
 
 
 def cs(T):

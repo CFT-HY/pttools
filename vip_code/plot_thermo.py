@@ -38,10 +38,11 @@ def main():
     # Plot EIKR broken phase specific heat
     plt.figure()
 
-    plt.plot(t,eos_eikr.de_dT(t),label='EIKR')
+    plt.plot(t,eos_eikr.de_dT(t),label='de_dT EIKR')
+    plt.plot(t,3*eos_eikr.s(t),label='s EIKR')
 
     plt.xlabel(r'$T/T_c$',fontsize=20)
-    plt.ylabel(r'$de/dT$',fontsize=20)
+    plt.ylabel(r'$de/dT, s$',fontsize=20)
 
     # Plot EIKR broken phase g_eff and h_eff
     plt.figure()
@@ -57,6 +58,15 @@ def main():
     plt.legend()
 
     plt.ylim((-100.,150.))
+
+    # Plot EIKR broken phase specific heat
+    plt.figure()
+
+    plt.plot(t,eos_eikr.v(t)/eos_eikr.V0,label='V EIKR')
+
+    plt.xlabel(r'$T/T_c$',fontsize=20)
+    plt.ylabel(r'$v(T/T_c)$',fontsize=20)
+
 
     plt.show()
 

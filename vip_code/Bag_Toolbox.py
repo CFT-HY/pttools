@@ -34,4 +34,4 @@ def cs(t):
 
 
 def cs2(t):
-    return 1./3.
+    return np.ones_like(t) * (1./3.)
