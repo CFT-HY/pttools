@@ -178,6 +178,7 @@ def main():
         print 'tplus = ', t_plus
         t_minus = opt.fsolve(Eos.delta_w, t_plus, v_wall)[0]
         print 'tminus=', t_minus
+        sys.exit(1)
         wall_type, v_plus, v_minus = identify_type(v_wall, alpha_plus, t_minus)
 
     vs, Ts, xis = shell_prop(v_wall, v_plus, v_minus, t_minus, t_plus, wall_type, npts)

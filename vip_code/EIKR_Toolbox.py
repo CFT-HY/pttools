@@ -7,9 +7,9 @@ import Mechanics_Toolbox as Mech
 
 
 def phi_broken(T):
-    print 'phi:'
-    print 'T = ', T
-    print ''
+    # print 'phi:'
+    # print 'T = ', T
+    # print ''
     # if (A*T)**2-4*lamda*D*(T**2-T0_Tc**2)>0:
     #     pass
     # else:
@@ -18,6 +18,16 @@ def phi_broken(T):
     #     print 'T0 = ', T0_Tc
     #     sys.exit(1)
     return(A*T+np.sqrt((A*T)**2-4*lamda*D*(T**2-T0_Tc**2)))/(2*lamda)
+
+
+def dphi_dt(T):
+    b = (A**2-4*lamda*D)*T**2 + 2*lamda*D*T0_Tc**2
+    return (A/lamda)*(b/np.sqrt(b+2*lamda*D*T0_Tc**2))
+
+
+def d2phi_dt2(T):
+    b = (A**2-4*lamda*D)*T
+    return (A*b)/lamda * (b*T + 6*lamda*D*T0_Tc**2)/((b*T + 4*lamda*D*T0_Tc**2)**(3./2.))
 
 
 def v(T):
@@ -29,12 +39,16 @@ def dv_dt(T):
     # print 'dvdt:'
     # print 'T = ', T
     # print ''
-    return D*T*phi_broken(T)**2 - (1./3.)*A*phi_broken(T)**3
+    # return D*T*phi_broken(T)**2 - (1./3.)*A*phi_broken(T)**3
+    phi = phi_broken(T)
+    return D*T*phi**2 - (1./3.)*A*phi + (D*T**2 - A*T*phi + lamda*phi**2)*phi*dphi_dt(T)
 
 
 def d2v_dt2(T):
-    return D*phi_broken(T)**2
-
+    # return D*phi_broken(T)**2
+    phi = phi_broken(T)
+    return D*phi**2 - A*(p**2-(1./3.))*dphi_dt(T) + (D*T**2-2*A*T*phi+3*lamda*phi**2)*dphi_dt(T)**2 \
+        + (D*T**2-A*T*phi+lamda*phi**2)*phi*d2phi_dt2(T)
 
 # All thermodynamic quantities in broken phase (minus) unless stated otherwise
 def p(T):
@@ -122,21 +136,9 @@ Tn_Tc = 0.8
 V0 = (D*T0_Tc**2)**2/(4*lamda)
 a0 = (gstar*(np.pi**2)/30)
 
-# T = 0.3
-# xi = 0.8
-# xis = np.linspace(0, 1, 1000)
-# Ts = np.linspace(0, 1, 1000)
-# y_with_const_t = delta_w(T, xis)
-# y_with_const_xi = delta_w(Ts, xi)
-#
-#
-# plt.figure()
-# plt.title('const t')
-# plt.plot(xis, y_with_const_t)
-# plt.xlabel('xi')
-#
-# plt.figure()
-# plt.title('const xi')
-# plt.plot(Ts, y_with_const_xi)
-# plt.xlabel('T')
-# plt.show()
+Ts = np.linspace(0, 1, 100)
+ys = e(Ts) - 3*p(Ts)
+
+plt.figure()
+plt.plot(Ts, ys)
+plt.show()
