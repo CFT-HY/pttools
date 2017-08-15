@@ -77,26 +77,31 @@ def v_just_behind(x, v, dx):
 def shell_prop(xiw, vp, vm, tm, tp, walltype, points):
     # Integrates coupled ODEs for v and T, and corrects non-physical behaviour
     dxi, xi, v_sh, nWall, ncs = xvariables(points, xiw, tm)
+    # v minus prime
     vmp = Mech.mu(xiw, vm)
     vpp = Mech.mu(xiw, vp)
+    # init conds
     y_m = v_just_behind(xiw, vmp, dxi), tm
     y_p = vpp, tp
+    # initialize arrays
     v_arr = np.zeros_like(xi)
     T_arr = np.zeros_like(xi)
+    # split range ahead and behind wall
     range_m = np.where(xi < xiw)
     range_p = np.where(xi > xiw)
     xi_m = xi[range_m]
     xi_p = xi[range_p]
     xi_m_rev = xi_m[::-1]
+    # perform relevant integrations
     if xiw > Eos.cs(tm):
         sols_m = itg.odeint(dy_dxi, y_m, xi_m_rev)
         v_arr[range_m] = sols_m[::-1, 0]
         T_arr[range_m] = sols_m[::-1, 1]
     sols_p = itg.odeint(dy_dxi, y_p, xi_p)
-
     v_arr[range_p] = sols_p[:, 0]
     T_arr[range_p] = sols_p[:, 1]
 
+    # corrections
     print walltype, 'Correcting beyond shock'
     if not (walltype == "Det"):
         for n in range(nWall, points):
@@ -178,7 +183,6 @@ def main():
         print 'tplus = ', t_plus
         t_minus = opt.fsolve(Eos.delta_w, t_plus, v_wall)[0]
         print 'tminus=', t_minus
-        sys.exit(1)
         wall_type, v_plus, v_minus = identify_type(v_wall, alpha_plus, t_minus)
 
     vs, Ts, xis = shell_prop(v_wall, v_plus, v_minus, t_minus, t_plus, wall_type, npts)
