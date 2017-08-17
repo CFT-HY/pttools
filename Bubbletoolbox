@@ -1,0 +1,232 @@
+import numpy as np
+from scipy.integrate import odeint
+import matplotlib.pyplot as plt
+
+#Inputs:
+Type='detonation'#Type of transitions
+#Valid inputs are: 'detonation','deflagration' & 'hybrid'
+Np=5000 #Number of points used in the numerical simulations
+beta=100 #Rate of bubble nucleation $\textcolor{red}{\beta}$
+vw=0.92 #Wall speed $\textcolor{red}{v_w}$
+alpha=0.0046 #Strength of interaction $\textcolor{red}{\alpha}$
+n=1#Parameter which controls the width of the distribution
+Rstar=(8.*np.pi)**(1./3.)*vw/beta #Average separation between bubbles
+Lf=Rstar #Scaling parameter $\textcolor{red}{L_\text{f}}$
+kmin=0.1/Lf #Minimum array value
+kmax=1000/Lf #Maximum array value
+k=np.logspace(np.log10(kmin),np.log10(kmax),Np) 
+#Array using the minimum & maximum values set earlier, with Np number of points
+
+
+def vpdef(vm,alpha):
+#$\textcolor{red}{v_+}$ in terms of $\textcolor{red}{v_-}$ & Strength of interaction ($\textcolor{red}{\alpha}$) for deflagrations in the wall frame
+    return np.fabs((1.0/6./vm+vm/2.0-np.sqrt((1.0/6./vm+vm/2.0)**2+alpha**2+2.0/3.0*alpha-1.0/3.0))/(1+alpha))
+
+    
+    def vmdet(vp,alpha):
+#$\textcolor{red}{v_-}$ in terms of $\textcolor{red}{v_+}$ & Strength of interaction ($\textcolor{red}{\alpha}$) for detonations in the wall frame
+    return (((1.0+alpha)**2*vp**2-alpha**2-2./3.*alpha+1./3.)/(vp+vp*alpha)+np.sqrt((((1.0+alpha)**2*vp**2-alpha**2-2./3.*alpha+1./3.)/(vp+vp*alpha))**2-4./3.))/2.
+
+def lt(v1,v2):
+#Lorentz Transformation
+    return np.fabs(v1-v2)/(1.-v1*v2)
+
+     
+def gamma(v): 
+#Lorentz Factor $\textcolor{red}{\gamma}$
+    return 1./np.sqrt(1.-v**2)   
+   
+    
+def cs(T):
+#Speed of sound as a function of temperature
+#For our purposes we approximate as sqrt(1/3) in the radiation era
+    return np.sqrt(1./3.)
+
+       
+def v_ip_nonlin(n,vw,alpha,Np,Type):
+#Returns the invariant velocity profile
+    def diff(y,t):
+            fi=2.0*y/t
+            se=1.0/(1-y**2.0)
+            th=1.0-t*y
+            u=(t-y)/(1.-t*y)
+            bra=u**2.0/cs(0)**2-1.0 
+            dydt = fi/se/th/bra
+            return dydt
+    if Type=='detonation':
+        v_max=lt(vw,vmdet(vw,alpha))
+        xi = np.logspace(np.log10(vw),np.log10(cs(0)),Np)
+        return odeint(diff,v_max,xi),xi
+    if Type=='deflagration':
+        v_max=lt(vw,vpdef(vw,alpha))
+        t=np.logspace(np.log10(vw),np.log10(1.0),Np)
+        y=odeint(diff,v_max,t)
+        i=0
+        found=0
+        while i<Np and found==0:
+            if lt(y[i],t[i])*t[i]>1./3.:
+                xish=t[i-1]
+                found=1
+            i=i+1
+        xi=np.logspace(np.log10(vw),np.log10(xish),Np)
+        return odeint(diff,v_max,xi),xi
+    if Type=='hybrid':
+        v_max1=lt(vw,cs(0))
+        xi1=np.logspace(np.log10(vw),np.log10(cs(0)),Np)
+        g1=odeint(diff,v_max1,xi1)
+        v_max2=lt(vw,vpdef(cs(0),alpha))
+        t=np.logspace(np.log10(vw),np.log10(1.0),Np)
+        y=odeint(diff,v_max2,t)
+        i=0
+        found=0
+        while i<Np and found==0:
+            if lt(y[i],t[i])*t[i]>1./3.:
+                xish=t[i-1]
+                found=1
+            i=i+1
+        xi2=np.logspace(np.log10(vw),np.log10(xish),Np)
+        g2=odeint(diff,v_max2,xi2)
+        ar1=np.zeros(Np)
+        ar2=np.zeros(Np)
+        k=0
+        while k<Np:
+            ar1[k]=np.asscalar(g1[k])
+            ar2[k]=np.asscalar(g2[k])
+            k=k+1
+        xi=np.logspace(np.log10(cs(0)),np.log10(xish),Np)
+        vip=np.zeros(Np)
+        j=0
+        while j<Np:
+            if xi[j]<vw:
+                vip[j]=np.interp(xi[j],sorted(xi1),sorted(ar1))
+            if xi[j]>vw:
+                vip[j]=np.interp(xi[j],xi2,ar2)
+            j=j+1
+        return vip,xi
+       
+
+def f_nonlin_func(z,n,vw,alpha,beta,Np,Type):
+#Returns the value of f(z) at a specific point z
+    j=0
+    f_nonlin=np.zeros(Np)
+    array=np.zeros(Np)
+    v_ip,xi=v_ip_nonlin(n,vw,alpha,Np,Type)
+    while j<Np:
+        def f(z):
+            k=0
+            while k<Np:
+                array[k]=v_ip[k]*np.sin(z*xi[k])
+                k=k+1
+            I=np.trapz(array,xi)
+            return 4.*np.pi/z*I
+        f_nonlin[j]=f(z[j])
+        j=j+1
+    return f_nonlin
+    
+
+def g_nonlin_func(z,n,vw,alpha,beta,Np,Type):
+#Returns the value of g(z) at a specific point z
+    f_nonlin=f_nonlin_func(z,n,vw,alpha,beta,Np,Type)
+    df_nonlindz = np.gradient(f_nonlin)/np.gradient(z)
+    g_nonlin=(z*df_nonlindz + 2.*f_nonlin)
+    return g_nonlin
+    
+        
+def A_nonlin_func(z,n,vw,alpha,beta,Np,Type):
+#Returns the value of A(z) at a specific point z
+    f_nonlin=f_nonlin_func(z,n,vw,alpha,beta,Np,Type)
+    df_nonlindz = np.gradient(f_nonlin)/np.gradient(z)
+    g_nonlin=(z*df_nonlindz + 2.*f_nonlin)
+    dg_nonlindz=np.gradient(g_nonlin)/np.gradient(z)
+    A_nonlin = 0.25*(df_nonlindz**2 + dg_nonlindz**2/(cs(0)*z)**2)
+    return A_nonlin
+
+   
+    
+def nu(T,beta,vw,n):
+#returns the value of the distirbution function at time $\textcolor{red}{\tilde{T}}$
+    Rstar=(8.*np.pi)**(1./3.)*vw/beta
+    tildTstar=Rstar*beta/(2.*vw)
+    a=(n+1.)/tildTstar
+    Norm=a**(n+1)/np.math.factorial(n)
+    return Norm*T**(n)*np.exp(-a*T)
+
+    
+    
+def P_vfunc(qmin,qmax,Lf,n,vw,alpha,beta,Np,Type):
+#Returns an array of $\textcolor{red}{P_v(q/Lf)/Lf^3}$ corresponding to an array with limits qmin & qmax
+#I used the fact that $\textcolor{red}{P_v(q/Lf)=Lf^3 \bar{P}_v(q)}$ to calculate $\textcolor{red}{\tilde{P}_{GW}}$ as a function of $\textcolor{red}{P_v}$ rather than $\textcolor{red}{\bar{P}_v}$
+    tmin=0.01
+    tmax=100
+    t=np.logspace(np.log10(tmin),np.log10(tmax),Np)
+    q=np.logspace(np.log10(qmin/Lf),np.log10(qmax/Lf),Np)
+    def z_array(q):
+        return q*t/beta
+    z_lookup=np.logspace(np.log10(q[0]*t[0]/beta),np.log10(q[Np-1]*t[Np-1]/beta),Np)
+    A_nonlin_lookup=A_nonlin_func(z_lookup,n,vw,alpha,beta,Np,Type)
+    i=0
+    j=0
+    A_nonlin_2d_array = np.zeros((Np,Np))
+    while i<Np:        
+        A_nonlin_2d_array[i]=np.interp(z_array(q[i]),z_lookup,A_nonlin_lookup)
+        i=i+1
+    Rstar=(8.*np.pi)**(1./3.)*vw/beta
+       
+    array2=np.zeros(Np)
+    P_v=np.zeros(Np)
+    Factor = Rstar**3/(8.*np.pi)**2/vw**6
+    s=0
+    m=0
+    while s<Np:
+        while m<Np:
+            array2[m]=t[m]**6*nu(t[m],beta,vw,n)*A_nonlin_2d_array[s][m]
+            m=m+1
+        m=0
+        D=np.trapz(array2,t)
+        P_v[s]=D*Factor
+        s=s+1
+    return P_v*Lf**(-3)
+
+def Mathcal_P_v(kmin,kmax,Lf,n,vw,alpha,beta,Np,Type):
+    k=np.logspace(np.log10(kmin),np.log10(kmax),Np)    
+    return k**3/(2.*np.pi**2)*P_vfunc(kmin*Lf,kmax*Lf,Lf,n,vw,alpha,beta,Np,Type)*Lf**3
+
+
+    
+
+def Tilde_P_GW(ymin,ymax,Lf,n,vw,alpha,beta,Np,Type):
+#Returns an array of $\textcolor{red}{\tilde{P}_{GW}}$ corresponding to an array with limits ymin & ymax
+    xmax=ymax/cs(0)*(1.+cs(0))/2.
+    xmin=ymin/cs(0)*(1.-cs(0))/2.
+    xlookup=np.logspace(np.log10(xmin),np.log10(xmax),Np) 
+    P_vlookup=P_vfunc(xmin,xmax,Lf,n,vw,alpha,beta,Np,Type)
+    y=np.logspace(np.log10(ymin),np.log10(ymax),Np) 
+    array3=np.zeros(Np)
+    P_GW=np.zeros(Np)
+    i=0
+    j=0
+    while i<Np:
+        xplus=y[i]/cs(0)*(1.+cs(0))/2.
+        xminus=y[i]/cs(0)*(1.-cs(0))/2.
+        x=np.logspace(np.log10(xminus),np.log10(xplus),Np) 
+        while j<Np:
+            array3[j]=(x[j]-xplus)**2*(x[j]-xminus)**2/x[j]/(xplus+xminus-x[j])*np.interp(x[j],xlookup,P_vlookup)*np.interp((xplus+xminus-x[j]),xlookup,P_vlookup)
+            j=j+1
+        j=0
+        Factor2=(1-cs(0))**2/4/np.pi/y[i]/cs(0)**3
+        P_GW[i]=Factor2*np.trapz(array3,x)
+        array3=np.zeros(Np)
+        i=i+1
+    return P_GW
+
+    
+    
+def Mathcal_P_GW(kmin,kmax,Lf,n,vw,alpha,beta,Np,Type):
+#Returns an array of $\textcolor{red}{\mathcal{P}_{GW}}$ corresponding to an array with limits kmin & kmax
+    k=np.logspace(np.log10(kmin),np.log10(kmax),Np) 
+    return 16./3.*k**3*Lf**(3)/2./np.pi**2*Tilde_P_GW(kmin*Lf,kmax*Lf,Lf,n,vw,alpha,beta,Np,Type)
+
+plt.loglog(k*Lf,Mathcal_P_v(kmin,kmax,Lf,n,vw,alpha,beta,Np,Type))
+#Plots the Velocity power spectrum $\textcolor{red}{\mathcal{P}_v}$ as a function of $\textcolor{red}{kR_*}$
+plt.loglog(k*Lf,Mathcal_P_GW(kmin,kmax,Lf,n,vw,alpha,beta,Np,Type))
+#Plots the GW power spectrum $\textcolor{red}{\mathcal{P}_{GW}}$ as a function of $\textcolor{red}{kR_*}$
