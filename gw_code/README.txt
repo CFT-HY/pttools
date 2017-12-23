@@ -1,5 +1,8 @@
 This is a working directory for Mulham's MSc project:
 
-currently, aimed to take v_ip (invariant profile for fluid) and calculate 
-velocity power spectrum
-GW power spectrum
+ssmtools contains tools for calculating velocity and gravitational 
+wave power spectra.
+
+current incarnation needs bubble toolbox for computing invariant 
+profiles.
+
