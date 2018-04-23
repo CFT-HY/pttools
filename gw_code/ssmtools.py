@@ -152,10 +152,16 @@ def A_nonlin_func(z, vw, alpha, wall_type='Calculate', npt=NPTDEFAULT):
 def nu(T, nuc_type='simultaneous', args=()):
     # returns the value of the distribution function at time $\textcolor{red}{\tilde{T}}$
     if nuc_type == "simultaneous":
-        dist = 0.5 * T**2 * np.exp(-T**3 / 6)
+        a = args[0]
+        dist = 0.5 * a * (a*T)**2 * np.exp(-(a*T)**3 / 6)
     elif nuc_type == "exponential":
         n = args[0]
         dist = (1. / np.math.factorial(n)) * T ** n * np.exp(-T)
+        # delT = args[0]
+        # e_fac = np.exp(delT)
+        # norm = 1./(1 - np.exp(-e_fac))
+        # dist = norm * e_fac*np.exp(-T) * np.exp( - e_fac*np.exp(-T))
+
     return dist
 
 

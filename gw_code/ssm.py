@@ -49,9 +49,10 @@ plt.rc('font', size=16)
 plt.figure(1,figsize=[10,5])
 ax = plt.gca()
 
-plt.loglog(z, Mathcal_P_GW(z, vw, alpha, wall_type, 'simultaneous', [], Np), label='sim')
-plt.loglog(z, Mathcal_P_GW(z, vw, alpha, wall_type, 'exponential', [0.,], Np), label='exp, 0')
-plt.loglog(z, Mathcal_P_GW(z, vw, alpha, wall_type, 'exponential', [2.,], Np), label='exp, 2')
+plt.loglog(z, Mathcal_P_GW(z, vw, alpha, wall_type, 'simultaneous', [1.], Np), label='sim, 1')
+plt.loglog(z, Mathcal_P_GW(z, vw, alpha, wall_type, 'simultaneous', [2.], Np), label='sim, 2')
+plt.loglog(z, Mathcal_P_GW(z, vw, alpha, wall_type, 'exponential', [0.], Np), label='exp, 0')
+plt.loglog(z, Mathcal_P_GW(z, vw, alpha, wall_type, 'exponential', [2.], Np), label='exp, 2')
 
 plt.xlabel(r'$kR_*$')
 plt.ylabel(r'$\Omega_{\rm gw}(kR_*)$')

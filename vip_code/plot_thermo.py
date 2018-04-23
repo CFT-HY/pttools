@@ -53,19 +53,22 @@ def main():
     plt.plot(t,geff,label=r'EIKR $g_{\rm eff}$')
     plt.plot(t,heff,label=r'EIKR $h_{\rm eff}$')
 
+    plt.legend()
+
+
     plt.xlabel(r'$T/T_c$',fontsize=20)
     plt.ylabel(r'$g_{\rm eff}$, $h_{\rm eff}$',fontsize=20)
     plt.legend()
 
     plt.ylim((-100.,150.))
 
-    # Plot EIKR broken phase specific heat
+    # Plot EIKR equilibrium potential normalised to V0
     plt.figure()
 
-    plt.plot(t,eos_eikr.v(t)/eos_eikr.V0,label='V EIKR')
+    plt.plot(t,eos_eikr.V(t)/eos_eikr.V00,label='V EIKR')
 
     plt.xlabel(r'$T/T_c$',fontsize=20)
-    plt.ylabel(r'$v(T/T_c)$',fontsize=20)
+    plt.ylabel(r'$V(T/T_c)$',fontsize=20)
 
 
     plt.show()

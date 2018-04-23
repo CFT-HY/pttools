@@ -54,7 +54,7 @@ def main():
     print("Fluid velocity just behind of the wall in plasma frame:", vfm_p)
 
     # Now ready to solve for fluid profile
-    v_f, enthalp = b.fluid_shell(v_wall, alpha_p, wall_type,  Np)
+    v_f, enthalp, xi = b.fluid_shell(v_wall, alpha_p, wall_type,  Np)
 
     # with v_f can find shock position and get enthalpy ratio
     n_sh = b.find_shock_index(v_f[:],xi,v_wall,wall_type)

@@ -14,22 +14,26 @@
 from __future__ import absolute_import, division, print_function
 
 import sys
-import os
 import numpy as np
 import scipy.integrate
 import scipy.optimize as opt
-import matplotlib.pyplot as plt
+
 
 # Should think about true cs
-cs = 1/np.sqrt(3)  # speed of sound
 cs0 = 1/np.sqrt(3)  # ideal speed of sound
+cs = cs0
 eps = np.nextafter(0, 1)  # smallest float
 
 # Default number of entries in xi array
 NPDEFAULT = 5000
 
-# Helper functions
+def cs_fun(w):
+    # Speed of sound function
+    # to be adapted to more realistic equations of state, e.g. with interpolation
+    return cs0
 
+
+# Helper functions
 
 def lorentz(xi, v):
     # Lorentz Transformation of fluid speed v between local moving frame and plasma frame.
@@ -55,21 +59,38 @@ def v_plus(vm, ap, wall_type):
         b = -1.
     else:
         b = 1.
-    return (0.5/(1+ap))*(X + b*np.sqrt(X**2 + 4.*ap**2 + (8./3.)*ap - (4./3.)))
+    return_value = (0.5/(1+ap))*(X + b*np.sqrt(X**2 + 4.*ap**2 + (8./3.)*ap - (4./3.)))
+
+    if isinstance(return_value, np.ndarray):
+        return_value[np.where(isinstance(return_value,complex))] = np.nan
+    else:
+        if isinstance(return_value,complex):
+            return_value = np.nan
+            
+    return return_value
 
 
-def v_minus(vp, ap):
+def v_minus(vp, ap, wall_type='Detonation'):
     #    Wall frame speed behind the wall
     vp2 = vp**2
     Y = vp2 + 1./3.
     Z = (Y - ap*(1. - vp2))
     X = (4./3.)*vp2
-    if Z**2 < X:
-        print("Error (Detonation): High value of alpha_+")
-        return False
-#      sys.exit(1)
+
+    if wall_type=='Detonation':
+        b = +1.
     else:
-        return (0.5/vp)*(Z + np.sqrt(Z**2 - X))
+        b = -1.
+    
+    return_value = (0.5/vp)*(Z + b*np.sqrt(Z**2 - X))
+
+    if isinstance(return_value, np.ndarray):
+        return_value[np.where(isinstance(return_value,complex))] = np.nan
+    else:
+        if isinstance(return_value,complex):
+            return_value = np.nan
+            
+    return return_value
 
 
 def v_just_behind(x, v, dx):
@@ -94,9 +115,9 @@ def v_shock(xi):
     return v_sh
 
 
-def w_shock(xi):
+def w_shock(xi, w_n=1.):
     # Fluid enthalpy at a shock at xis.  No shock for xis < cs, so returns nan
-    w_sh = (9*xi**2 - 1)/(3*(1-xi**2))
+    w_sh = w_n * (9*xi**2 - 1)/(3*(1-xi**2))
 
     if isinstance(w_sh, np.ndarray):
         w_sh[np.where(xi < cs0)] = np.nan
@@ -124,6 +145,38 @@ def dv_dxi_deton(v1, x):
     return val
 
 
+def dfluid_dxi_deflag(vel_en, x):
+    #  returns [dv/dxi, dw/dxi] for integrating ODEs (deflagration)
+    v = vel_en[0]
+    w = vel_en[1]
+    mu = lorentz(x, v)
+    ga2 = gamma2(v)
+    cs2 = cs_fun(w)**2
+
+    if v < v_shock(x):  # Can happen if you try to integrate beyond shock
+        dv_dxi = 0.         # Stops solution blowing up
+    else:
+        dv_dxi = (2./x)*(v/(1-x*v))/(ga2*(mu**2/cs2 - 1))
+    dw_dxi = w * ga2*mu*(1/cs2 + 1)*dv_dxi
+    return [dv_dxi, dw_dxi]
+
+
+def fluid_integrate_deflag(vel_en0, xi_array):
+    # integrates fluid equations, hopefully backwards from shock
+    # no error checking as yet
+    return scipy.integrate.odeint(dfluid_dxi_deflag, vel_en0, xi_array)
+
+
+# Another approach if cs is constant is to integrate enthalpy equation directly
+def ln_enthalpy_integrand(v1, x):
+    # Calculating enthalpy
+    lf = gamma2(v1)
+    lb = lorentz(x, v1)
+    return (1.+1./cs**2)*lf*lb
+
+
+# Useful quantities for deciding type of transition
+
 def min_speed_deton(al_p):
     # Minimum speed for a detonation (Jouguet speed)
     return (cs0/(1 + al_p))*(1 + np.sqrt(al_p*(2. + 3.*al_p)))
@@ -133,13 +186,6 @@ def max_speed_deflag(al_p):
     # Maximum speed for a deflagration
     vm = cs
     return 1/(3*v_plus(vm, al_p, 'Deflagration'))
-
-
-def ln_enthalpy_integrand(v1, x):
-    # Calculating enthalpy
-    lf = gamma2(v1)
-    lb = lorentz(x, v1)
-    return (1.+1./cs**2)*lf*lb
 
 
 # Housekeeping functions for setting up integration
