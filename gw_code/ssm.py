@@ -53,6 +53,8 @@ plt.loglog(z, Mathcal_P_GW(z, vw, alpha, wall_type, 'simultaneous', [1.], Np), l
 plt.loglog(z, Mathcal_P_GW(z, vw, alpha, wall_type, 'simultaneous', [2.], Np), label='sim, 2')
 plt.loglog(z, Mathcal_P_GW(z, vw, alpha, wall_type, 'exponential', [0.], Np), label='exp, 0')
 plt.loglog(z, Mathcal_P_GW(z, vw, alpha, wall_type, 'exponential', [2.], Np), label='exp, 2')
+plt.loglog(z, Mathcal_P_GW(z, vw, alpha, wall_type, 'TWW', [1.,1.], Np), 'k--', label='TWW, 1')
+plt.loglog(z, Mathcal_P_GW(z, vw, alpha, wall_type, 'TWW', [1.,10.], Np),'k',  label='TWW, 0.1')
 
 plt.xlabel(r'$kR_*$')
 plt.ylabel(r'$\Omega_{\rm gw}(kR_*)$')

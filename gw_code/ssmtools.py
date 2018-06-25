@@ -161,6 +161,11 @@ def nu(T, nuc_type='simultaneous', args=()):
         # e_fac = np.exp(delT)
         # norm = 1./(1 - np.exp(-e_fac))
         # dist = norm * e_fac*np.exp(-T) * np.exp( - e_fac*np.exp(-T))
+    elif nuc_type == "TWW":
+        Tm = args[0]
+        s = args[1]
+        norm = (1 - np.exp(-np.exp(s*Tm)))/s
+        dist = np.exp(s*(Tm-T) - np.exp(s*(Tm - T)))/norm
 
     return dist
 

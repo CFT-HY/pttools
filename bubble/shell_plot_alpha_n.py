@@ -34,7 +34,7 @@ def main():
         sys.stderr.write('shell_plot_alpha_n: error: no solution for '
                          'v_wall={}, alpha_n={}\n'.format(v_wall,alpha_n) )
         sys.stderr.write('shell_plot_alpha_n: Max alpha_n for '
-                         'v_wall={} is alpha_n={}\n'.format(v_wall,b.alphaNMaxDeflagration(v_wall)) )
+                         'v_wall={} is alpha_n={}\n'.format(v_wall,b.alpha_n_max_deflagration(v_wall)) )
         sys.stderr.write('shell_plot_alpha_n: Min v_wall for '
                          'alpha_n={} is v_wall={}\n'.format(alpha_n,'[function to be written]') )
         sys.exit(2)
@@ -129,7 +129,7 @@ def main():
     leg_pos_w = leg_ud + ' ' + leg_lr
 
     # plt.figure("Fluid velocity")
-    plt.figure(figsize=(8, 8))
+    plt.figure(figsize=(5, 5))
     plt.subplot(2,1,1)
 
     plt.title(r'%s: $\xi_{\rm w} =  %g$, $\alpha_+ =  %g$, $\alpha_n =  %g$, $r = %g$'
@@ -146,8 +146,8 @@ def main():
 
     plt.legend(loc=leg_pos_v)
 
-    plt.ylabel(r'$v(\xi)$',size = 18)
-    plt.xlabel(r'$\xi$',size = 18)
+    plt.ylabel(r'$v(\xi)$',size = 16)
+    plt.xlabel(r'$\xi$',size = 16)
     plt.axis([xscale_min, xscale_max, 0.0, yscale_v*1.2])
 
     # plt.figure("Enthalpy")
@@ -162,8 +162,8 @@ def main():
 
     plt.legend(loc=leg_pos_w)
 
-    plt.ylabel(r'$w(\xi)/w_{\rm n}$',size = 18)
-    plt.xlabel(r'$\xi$',size = 18)
+    plt.ylabel(r'$w(\xi)/w_{\rm n}$',size = 16)
+    plt.xlabel(r'$\xi$',size = 16)
     plt.axis([xscale_min, xscale_max, 0.0, yscale_enth*1.2])
 
     plt.savefig('shell_plot_vw_{}_alphan_{}.pdf'.format(v_wall,alpha_n))
