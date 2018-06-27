@@ -151,7 +151,7 @@ def main():
             v_wall = input('Enter v_wall ')
 
     if len(sys.argv) == 5:
-        npts = int(sys.argv[5])
+        npts = int(sys.argv[4])
     else:
         npts = 5000
         print 'npts unspecified, defaulting to npts = 5000'

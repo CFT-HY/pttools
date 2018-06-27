@@ -35,3 +35,15 @@ def cs(t):
 
 def cs2(t):
     return np.ones_like(t) * (1./3.)
+
+
+def cs2_w(w):
+    return cs2(w)
+
+
+def cs_w(w):
+    return np.sqrt(cs2_w(w))
+
+
+def p_w(w, e=epsilon):
+    return 0.25 * w - e

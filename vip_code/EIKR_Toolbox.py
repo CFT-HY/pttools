@@ -118,14 +118,29 @@ def d2V_dphi2(T,phi=None):
             2*(-A*T+mu0)*phi + \
             3*lamda*phi**2
 
+
 # All thermodynamic quantities in broken phase (minus) unless stated otherwise
+def T_w(w):
+    return ((3.*w)/(4.*a0))**0.25
+
+
 def p(T):
     # Equilibrium pressure
     return 1./3.*a0*T**4 - V(T)
 
 
+def p_w(w, e):
+    T = T_w(w)
+    return 1. / 3. * a0 * T ** 4 - V(T)
+
+
 def s(T):
     # Equilibrium entropy
+    return (4./3.)*a0*T**3 - dV_dT(T)
+
+
+def s_w(w):
+    T = T_w(w)
     return (4./3.)*a0*T**3 - dV_dT(T)
 
 
@@ -172,6 +187,11 @@ def e(T):
 
 def de_dT(T):
     # Equilibrium specific heat
+    return T*(4.*a0*T**2 - d2V_dT2(T))
+
+
+def de_dT_w(w):
+    T = T_w(w)
     return T*(4.*a0*T**2 - d2V_dT2(T))
 
 

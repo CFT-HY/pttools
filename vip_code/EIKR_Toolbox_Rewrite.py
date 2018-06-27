@@ -68,7 +68,6 @@ def epsilon(T):
     return 0.25*(e(T)-3*p(T))
 
 
-
 def tps_from_wps(tms, vms, vps):
     g_m_shock2 = gamma(vms)**2
     g_p_shock2 = gamma(vps)**2
