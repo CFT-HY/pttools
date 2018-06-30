@@ -3,22 +3,24 @@ from __future__ import absolute_import, division, print_function
 
 import sys
 import numpy as np
+import scipy.optimize as opt
 import Mechanics_Toolbox as Mech
 
 
-def set_params(name):
+def set_params(name, new_value=None):
     global gstar, D, A, lamda, T0, Tn, m0_2, mu0
     if name == 'weak':
         gstar = 106.75
-        D = 0.4444
-        A = 0.1990
+        D = 4/9.
+        A = 0.1990232604
         lamda = 0.0396
         T0 = 1./(np.sqrt(2))
         Tn = 0.86
         m0_2 = -D*T0**2
         mu0 = 0
     elif name == 'intermediate':
-        D = 0.2222
+        gstar = 106.75
+        D = 2/9.
         A = 0.1990
         lamda = 0.0792
         T0 = 1./(np.sqrt(2))
@@ -27,13 +29,30 @@ def set_params(name):
         mu0 = 0
     elif name == 'strong':
         gstar=106.75
-        D=0.66667
+        D=2/3.
         A = 0.1990232604
         lamda=0.0264068
         T0=1./(np.sqrt(2))
         Tn = 0.77278
         m0_2 = -D*T0**2
         mu0 = 0
+    elif name == 'gstar':
+        gstar = new_value
+    elif name == 'D':
+        D = new_value
+    elif name == 'A':
+        A = new_value
+    elif name == 'lamda':
+        lamda = new_value
+    elif name == 'T0':
+        T0 = new_value
+    elif name == 'Tn':
+        Tn = new_value
+    elif name == 'm0_2':
+        m0_2 = new_value
+    elif name == 'mu0':
+        mu0 = new_value
+            
     else:
         sys.exit('set_params: params name not recognised')
         
@@ -46,10 +65,8 @@ def set_params(name):
 
 
 def print_params():
-    print("print_params:")
+    print("print_params: basic")
     print("gstar ", gstar)
-    print("a0    ", a0)
-    print("V00   ", V00)
     print("D     ", D)
     print("m0_2  ", m0_2)
     print("A     ", A)
@@ -57,7 +74,10 @@ def print_params():
     print("lamda ", lamda)
     print("T0    ", T0)
     print("Tn    ", Tn)
-    
+    print("print_params: derived")
+    print("a0    ", a0)
+    print("V00   ", V00)
+    print("Tcrit ", Tcrit())
     return 1
     
 
@@ -75,6 +95,13 @@ def phi_broken(T):
     return (A*T - mu0 + np.sqrt((A*T - mu0)**2-4*lamda*(D*T**2+m0_2)))/(2*lamda)
 
 
+def Tcrit():
+    a = lamda*D - (2/9.)*A**2
+    b = +(4/9.)*mu0*A
+    c = lamda*m0_2 - (2/9.)*mu0**2
+    return (0.5/a)*(-b + (b**2 - 4*a*c)**0.5)
+
+    
 def V0():
     # Effective potential at zero temperature
     return 0.5*(m0_2)*phi_broken(0)**2 + \
@@ -91,20 +118,23 @@ def V(T,phi=None):
             0.25*lamda*phi**4
 
 
-def dV_dT(T):
+def dV_dT(T,phi=None):
     # Derivative of effective potential wrt temperature
-    return D*T*phi_broken(T)**2 - (1./3.)*A*phi_broken(T)**3
+    if phi is None:
+        phi=phi_broken(T)
+    return D*T*phi**2 - (1./3.)*A*phi**3
 
 
-def d2V_dT2(T):
+def d2V_dT2(T,phi=None):
     # Second derivative of effective potential wrt temperature
-    return D*phi_broken(T)**2
+    if phi is None:
+        phi=phi_broken(T)
+    return D*phi**2
 
 
 def dV_dphi(T,phi=None):
     if phi is None:
         phi=phi_broken(T)
-    # Effective potential
     return (D*T**2+m0_2)*phi + \
             (-A*T+mu0)*phi**2 + \
             lamda*phi**3
@@ -113,39 +143,62 @@ def dV_dphi(T,phi=None):
 def d2V_dphi2(T,phi=None):
     if phi is None:
         phi=phi_broken(T)
-    # Effective potential
     return (D*T**2+m0_2) + \
             2*(-A*T+mu0)*phi + \
             3*lamda*phi**2
 
+def d2V_dTdphi(T,phi=None):
+    if phi is None:
+        phi=phi_broken(T)
+    return 2*D*T*phi - A*T*phi**2
 
+    
+def dphi_dT(T,phi=None):
+    if phi is None:
+        phi=phi_broken(T)
+        return -(2*D*T - A*phi)/(2*lamda*phi + mu0 - A*T)
+    else:
+        return np.zeros_like(T)
+
+        
 # All thermodynamic quantities in broken phase (minus) unless stated otherwise
-def T_w(w):
-    return ((3.*w)/(4.*a0))**0.25
+def T_w(w, phi=None):
+    Tguess0 = ((3.*w)/(4.*a0))**0.25
+    Tguess1 = (3.*(w + Tguess0*dV_dT(Tguess0,phi))/(4.*a0))**0.25
+#    print(T0,T1)
+    def Twfun(T):
+        return w - (4./3)*a0*T**4 + T*dV_dT(T,phi)
+    # Think about Newton-Raphson for the solution?
+    return opt.fsolve(Twfun, Tguess1)
+        
 
-
-def p(T):
+def p(T, phi=None):
     # Equilibrium pressure
-    return 1./3.*a0*T**4 - V(T)
+    return 1./3.*a0*T**4 - V(T,phi)
 
 
-def p_w(w, e):
-    T = T_w(w)
-    return 1. / 3. * a0 * T ** 4 - V(T)
+def p_w(w, phi=None):
+    T = T_w(w, phi)
+    return p(T, phi)
 
 
-def s(T):
+def s(T, phi=None):
     # Equilibrium entropy
-    return (4./3.)*a0*T**3 - dV_dT(T)
+    return (4./3.)*a0*T**3 - dV_dT(T, phi)
 
 
-def s_w(w):
-    T = T_w(w)
-    return (4./3.)*a0*T**3 - dV_dT(T)
+def s_w(w, phi=None):
+    T = T_w(w, phi)
+    return s(T, phi)
 
-
-def w_minus(T):
+    
+def w(T, phi=None):
     # Equilibrium enthalpy
+    return T*s(T, phi)
+
+    
+def w_minus(T):
+    # Equilibrium enthalpy, broken phase
     return T*s(T)
 
 
@@ -180,39 +233,41 @@ def delta_w(T, xi_w):
     return dw
 
 
-def e(T):
+def e(T, phi=None):
     # Equilibrium energy density
-    return w_minus(T) - p(T)
+    return w(T, phi) - p(T, phi)
 
 
-def de_dT(T):
+def de_dT(T, phi=None):
     # Equilibrium specific heat
-    return T*(4.*a0*T**2 - d2V_dT2(T))
+    return T*(4.*a0*T**2 - d2V_dT2(T, phi) 
+            - d2V_dTdphi(T,phi)*dphi_dT(T,phi))
 
 
-def de_dT_w(w):
-    T = T_w(w)
-    return T*(4.*a0*T**2 - d2V_dT2(T))
+def de_dT_w(w, phi=None):
+    T = T_w(w, phi)
+    return de_dT(T, phi)
 
 
-def cs2(T):
+def cs2(T, phi=None):
     # Equilibrium sound speed squared
-    return s(T)/de_dT(T)
+    return s(T, phi)/de_dT(T, phi)
 
 
-def cs(T):
+def cs(T, phi=None):
     # Equilibrium sound speed
-    return np.sqrt(cs2(T))
+    return np.sqrt(cs2(T, phi))
 
 
-def alphaplus(T):
-    # Equilibrium transition strength parameter
-    return epsilon(T)/(a0*Tn**4)  # Caution! Detonation only
-
-
-def epsilon(T):
+def epsilon(T, phi=None):
     # 0.25 * equilibrium trace anomaly
-    return 0.25*(e(T)-3*p(T))
+    return 0.25*(e(T, phi)-3*p(T, phi))
+
+    
+def alphaplus(T):
+    # Equilibrium transition strength parameter (evaluate in symm phase)
+#    print(epsilon(T,0),w(T,0))
+    return epsilon(T,0)/(0.75*w(T,0))
 
 
 def tps_from_wps(tms, vms, vps):
