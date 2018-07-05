@@ -14,12 +14,12 @@ import scipy.optimize as opt
 from scipy.optimize import fsolve
 
 
-def cs(w):
-    return Eos.cs_w(w)
+def cs(w, phi):
+    return Eos.cs_w(w, phi)
 
 
-def p(w, e):
-    return Eos.p_w(w, e)
+def pressure(w, phi):
+    return Eos.p_w(w, phi)
 
 
 def df_dtau(z, t, c_s=cs):
@@ -64,7 +64,7 @@ def fluid_from_xi_sh(xi_sh, w_n=1., N=1000, c_s=cs):
     return v_ls, w_ls, xi_ls
 
 
-def fluid_minus(v_plus_wall, w_plus_plasma, eos='bag', p=p, params=[0, 0.1]):
+def fluid_minus(v_plus_wall, w_plus_plasma, eos='Bag', p=pressure, params=[0, 0.1]):
     # Returns v_minus, w_minus from v_plus and w_plus (wall frame)
     # i.e. solves energy-momentum conservation equations across wall
     #print ("vpluswall", v_plus_wall, "w_plus_plasma", w_plus_plasma)
@@ -88,8 +88,9 @@ def fluid_minus(v_plus_wall, w_plus_plasma, eos='bag', p=p, params=[0, 0.1]):
         return v_minus_wall, w_minus_wall
 
     if eos != 'Bag':
+
         v_minus_wall_estimate, w_minus_wall_estimate = (fluid_minus(v_plus_wall,
-                                                                    w_plus_plasma, eos, p, params))
+                                                                    w_plus_plasma, 'Bag', p, params))
         vw_minus_wall_estimate = np.stack((v_minus_wall_estimate, w_minus_wall_estimate))
         e_plus = params[1]
         e_minus = params[0]
@@ -116,7 +117,7 @@ def fluid_minus(v_plus_wall, w_plus_plasma, eos='bag', p=p, params=[0, 0.1]):
 
 
 def fluid_minus_local_from_fluid_plus_plasma(v_plus_plasma, w_plus_plasma,
-                                             xi_plus_plasma, eos='bag', p=p, params=[0, 0.1]):
+                                             xi_plus_plasma, eos='Bag', p=pressure, params=[0, 0.1]):
     # Finds v_minus, w_minus if wall is at range of positions xi_plus_plasma
     v_plus_wall = bubble.lorentz(xi_plus_plasma, v_plus_plasma)  # this is an array?
     v_minus_local, w_minus_local = fluid_minus(v_plus_wall, w_plus_plasma, eos, p, params)
@@ -146,7 +147,7 @@ def root_estimate(xi_ls, v_minus_local, v_exit):
             return xi_ls[i]
 
 
-def fluid_at_wall(xi_shock, w_n=1, eos='Bag', p=p, params=[0, 0.1], N=1000, c_s=cs):
+def fluid_at_wall(xi_shock, w_n=1, eos='Bag', p=pressure, params=[0, 0.1], N=1000, c_s=cs):
     # Integrate back from shock, return inferred wall speed and fluid variables
     # uses:  fluid_from_xi_sh
     #            fluid_minus_local_from_fluid_plus_plasma
@@ -170,7 +171,7 @@ def fluid_at_wall(xi_shock, w_n=1, eos='Bag', p=p, params=[0, 0.1], N=1000, c_s=
     return xi_try
 
 
-def wall_speed_zero(xi_sh, xi_wall, w_n=1, eos='Bag', p=p, params=[0, 0.1],
+def wall_speed_zero(xi_sh, xi_wall, w_n=1, eos='Bag', p=pressure, params=[0, 0.1],
                     N=1000, c_s=cs):
     # Returns difference between wall speed xi_try computed from
     # xi_shock and eos and target wall speed. Suitable for use in root-finder.
@@ -178,9 +179,10 @@ def wall_speed_zero(xi_sh, xi_wall, w_n=1, eos='Bag', p=p, params=[0, 0.1],
     return xi_try - xi_wall
 
 
-def root_find_xi_sh(xi_wall, w_n=1., eos='Bag', p=p, params=[0, 0.1], N=1000, c_s=cs):
+def root_find_xi_sh(xi_wall, w_n=1., eos='Bag', p=pressure, params=[0, 0.1], N=1000, c_s=cs):
     # invokes root finder on wall_speed_zero to get xi_sh
-    xi_shock = opt.newton(wall_speed_zero, 0.577, args=(xi_wall, w_n, eos, p, params, N, c_s))
+    x0 = c_s(w_n)
+    xi_shock = opt.newton(wall_speed_zero, x0, args=(xi_wall, w_n, eos, p, params, N, c_s))
     return xi_shock
 
 
@@ -252,39 +254,82 @@ if __name__ == '__main__':
             print 'Error: Unrecognised input'
             state_eqn = raw_input('Enter equation of state model: Bag, Eikr, or Test ')
     print('Would you like to edit other parameters? Y/N')
-    print('Defaults: w_n=1, e-=0, e+=0.1, N=1000')
-    param_edit = raw_input()
-    while True:
-        if param_edit == 'Y':
-            print('Leave values to use defaults')
-            in1 = raw_input('w_n = ')
-            if in1 == '':
-                wn = 1.0
-            else:
-                wn = float(in1)
-            in2 = raw_input('e- = ')
-            if in2 == '':
-                eminus = 0.
-            else:
-                eminus = float(in2)
-            in3 = raw_input('e+ = ')
-            if in3 == '':
-                eplus = 0.1
-            else:
-                eplus = float(in3)
-            in4 = raw_input('N = ')
-            if in4 == '':
+    if state_eqn == 'Bag' or state_eqn == 'Test':
+        print('Defaults: w_n=1, e-=0, e+=0.1, N=1000')
+        param_edit = raw_input()
+        while True:
+            if param_edit == 'Y':
+                print('Leave values blank to use defaults')
+                in1 = raw_input('w_n = ')
+                if in1 == '':
+                    wn = 1.0
+                else:
+                    wn = float(in1)
+                in2 = raw_input('e- = ')
+                if in2 == '':
+                    eminus = 0.
+                else:
+                    eminus = float(in2)
+                in3 = raw_input('e+ = ')
+                if in3 == '':
+                    eplus = 0.1
+                else:
+                    eplus = float(in3)
+                in4 = raw_input('N = ')
+                if in4 == '':
+                    N = 1000
+                else:
+                    N = int(in4)
+                secondary_params = [eminus, eplus]
+                break
+            elif param_edit == 'N':
+                wn = 1.
+                secondary_params = [0., 0.1]
                 N = 1000
+                break
             else:
-                N = int(in4)
-            e_list = [eminus, eplus]
-            break
-        elif param_edit == 'N':
-            wn = 1.
-            e_list = [0., 0.1]
-            N = 1000
-            break
-        else:
-            print('Input not recognised.')
-            param_edit = raw_input('Would you like to edit other parameters? Y/N')
-    plot_graph(xi_w, state_eqn, wn, e_list, N)
+                print('Input not recognised.')
+                param_edit = raw_input('Would you like to edit parameters? Y/N')
+    elif state_eqn == 'Eikr':
+        print('Defaults: w_n=1, phi-=None, phi+=0, N=1000')
+        param_edit = raw_input()
+        while True:
+            if param_edit == 'Y':
+                print('Leave values blank to use defaults')
+                in1 = raw_input('w_n = ')
+                if in1 == '':
+                    wn = 1.0
+                else:
+                    wn = float(in1)
+                in2 = raw_input('phi- = ')
+                if in2 == '':
+                    phiminus = None
+                else:
+                    phiminus = float(in2)
+                in3 = raw_input('phi+ = ')
+                if in3 == '':
+                    phiplus = 0.
+                else:
+                    phiplus = float(in3)
+                in4 = raw_input('N = ')
+                if in4 == '':
+                    N = 1000
+                else:
+                    N = int(in4)
+                secondary_params = [phiminus, phiplus]
+                break
+            elif param_edit == 'N':
+                wn = 1.
+                secondary_params = [None, 0.1]
+                N = 1000
+                break
+            else:
+                print('Input not recognised.')
+                param_edit = raw_input('Would you like to edit parameters? Y/N')
+    else:
+        print('An unknown error has occurred, using default Bag settings')
+        fail = True
+    if fail == True:
+        plot_graph(xi_w, state_eqn)
+    else:
+        plot_graph(xi_w, state_eqn, wn, secondary_params, N)

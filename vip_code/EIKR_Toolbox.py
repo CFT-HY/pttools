@@ -254,9 +254,17 @@ def cs2(T, phi=None):
     return s(T, phi)/de_dT(T, phi)
 
 
+def cs2_w(w, phi=None):
+    return s_w(w, phi)/de_dT_w(w, phi)
+
+
 def cs(T, phi=None):
     # Equilibrium sound speed
     return np.sqrt(cs2(T, phi))
+
+
+def cs_w(w, phi=None):
+    np.sqrt(cs2_w(w, phi))
 
 
 def epsilon(T, phi=None):

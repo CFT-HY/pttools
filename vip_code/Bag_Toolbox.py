@@ -1,8 +1,27 @@
 import numpy as np
 import Mechanics_Toolbox as Mech
-aplus = (np.pi ** 2) * 106.75 / 30.
-aminus=(np.pi**2)*106.75/30.
-epsilon = 0.399
+
+
+def set_params(name, new_value=None):
+    global aplus, aminus, epsilonplus, epsilonminus
+    if name == 'default':
+        aplus = (np.pi ** 2) * 106.75 / 30.
+        aminus = (np.pi**2)*106.75/30.
+        epsilonplus = 0.399
+        epsilonminus = 0
+    elif name == 'aplus':
+        aplus = new_value
+    elif name == 'aminus':
+        aminus = new_value
+    elif name == 'epsilonplus':
+        epsilonplus = new_value
+    elif name == 'epsilonminus':
+        epsilonminus = new_value
+    return
+
+
+def call_params():
+    return np.array([aplus, aminus, epsilonplus, epsilonminus])
 
 
 def w_plus(tplus):
@@ -26,7 +45,7 @@ def t_minus(tplus, vplus, vminus):
 
 
 def t_plus(al_p):
-    return (epsilon/(aplus*al_p))**0.25
+    return (epsilonplus/(aplus*al_p))**0.25
 
 
 def cs(t):
@@ -41,9 +60,17 @@ def cs2_w(w):
     return cs2(w)
 
 
-def cs_w(w):
+def cs_w(w, dummy):
     return np.sqrt(cs2_w(w))
 
 
-def p_w(w, e=epsilon):
+def p_w(w, phi):
+    if phi is None:
+        e = epsilonminus
+    else:
+        e = epsilonplus
     return 0.25 * w - e
+
+
+set_params('default')
+
