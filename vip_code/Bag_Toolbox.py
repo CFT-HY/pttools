@@ -1,5 +1,6 @@
 import numpy as np
 import Mechanics_Toolbox as Mech
+import sys
 
 
 def set_params(name, new_value=None):
@@ -17,6 +18,16 @@ def set_params(name, new_value=None):
         epsilonplus = new_value
     elif name == 'epsilonminus':
         epsilonminus = new_value
+    else:
+        sys.exit('set_params_bag: params name not recognised')
+    return
+
+
+def print_params():
+    print('aplus = ',aplus)
+    print('aminus = ', aminus)
+    print('epsilonplus = ', epsilonplus)
+    print('epsilonminus = ', epsilonminus)
     return
 
 

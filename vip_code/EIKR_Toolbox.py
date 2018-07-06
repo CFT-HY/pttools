@@ -54,7 +54,7 @@ def set_params(name, new_value=None):
         mu0 = new_value
             
     else:
-        sys.exit('set_params: params name not recognised')
+        sys.exit('set_params_eikr: params name not recognised')
         
     compute_derived_params()
 
@@ -270,6 +270,11 @@ def cs_w(w, phi=None):
 def epsilon(T, phi=None):
     # 0.25 * equilibrium trace anomaly
     return 0.25*(e(T, phi)-3*p(T, phi))
+
+
+def epsilon_w(w, phi=None):
+    T = T_w(w, phi)
+    return 0.25 * (e(T, phi) - 3 * p(T, phi))
 
     
 def alphaplus(T):
