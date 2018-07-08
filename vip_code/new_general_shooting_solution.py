@@ -4,6 +4,8 @@
 @author: Jacky
 Modified by Danny
 """
+from __future__ import absolute_import, division, print_function
+
 import sys
 import bubble
 import numpy as np
@@ -13,13 +15,14 @@ import matplotlib.pyplot as plt
 import scipy.optimize as opt
 from scipy.optimize import fsolve
 import Mechanics_Toolbox as Mech
-
+#import EIKR_Toolbox as Eos
 
 def set_params_sim(name, new_value=None):
     global wn, N
     if name == 'default':
         wn = 1.
         N = 1000
+        set_eos('Bag')
     elif name == 'wn':
         wn = new_value
     elif name == 'N':
@@ -27,12 +30,20 @@ def set_params_sim(name, new_value=None):
     else:
         sys.exit('set_params_sim: params name not recognised')
 
+def set_eos(eos_name):
+    global Eos
+    if eos_name == 'Bag':
+        import Bag_Toolbox as Eos
+    elif eos_name == 'Eikr':
+        import EIKR_Toolbox as Eos
+    else:
+        print('set_eos: eos_name not recognised, eos unchanged')    
 
-def cs(w, phi):
+def cs(w, phi=None):
     return Eos.cs_w(w, phi)
 
 
-def pressure(w, phi):
+def pressure(w, phi=None):
     return Eos.p_w(w, phi)
 
 
@@ -71,6 +82,8 @@ def fluid_from_xi_sh(xi_sh, w_n=1., N=1000, c_s=cs):
     v, w, xi = fluid_shell_param(v_minus, w_minus, xi_sh, N, c_s)
     # Returns lower (physical) segment of curve v(xi), also w and xi there.
     n_min = np.argmin(xi)
+    print('v_minus',v_minus)
+    print('n_min',n_min)
     v_ls = v[0:n_min]
     w_ls = w[0:n_min]
     xi_ls = xi[0:n_min]
@@ -150,6 +163,7 @@ def fluid_at_wall(xi_shock, w_n=1, eos='Bag', N=1000, c_s=cs):
     # uses:  fluid_from_xi_sh
     #            fluid_minus_local_from_fluid_plus_plasma
     #            exit_speed_wall(xi_real)
+    print('xi_shock, w_n, N, c_s',xi_shock, w_n, N, c_s)
     v_ls, w_ls, xi_ls = fluid_from_xi_sh(xi_shock, w_n, N, c_s)
 
     v_minus_local, w_minus_local = fluid_minus_local_from_fluid_plus_plasma(v_ls, w_ls,
@@ -179,11 +193,11 @@ def wall_speed_zero(xi_sh, xi_wall, w_n=1, eos='Bag', N=1000, c_s=cs):
 def root_find_xi_sh(xi_wall, w_n=1., eos='Bag', N=1000, c_s=cs):
     # invokes root finder on wall_speed_zero to get xi_sh
     x0 = c_s(w_n, 0)
-    xi_shock = opt.newton(wall_speed_zero, x0, args=(xi_wall, w_n, eos, N, c_s))
+    xi_shock = opt.newton(wall_speed_zero, x0*(1.01), args=(xi_wall, w_n, eos, N, c_s))
     return xi_shock
 
 
-def plot_graph(xi_wall, eos, w_n=wn, N=N):
+def plot_graph(xi_wall, eos, w_n=1, N=1000):
     xi_shock = root_find_xi_sh(xi_wall, w_n, eos, N=N)
     v_ls, w_ls, xi_ls = fluid_from_xi_sh(xi_shock, w_n, N)
     v_minus_local, w_minus_local = fluid_minus_local_from_fluid_plus_plasma(v_ls, w_ls,
@@ -239,7 +253,7 @@ if __name__ == '__main__':
     xi_w = float(sys.argv[1])
     if not 0. < xi_w < 1.:
         while not 0. < xi_w < 1.:
-            print 'Error: xi_wall must be satisfy 0 < xi_wall < 1'
+            print('Error: xi_wall must be satisfy 0 < xi_wall < 1')
             xi_w = input('Enter xi_wall ')
     state_eqn = str(sys.argv[2])
     while True:
@@ -250,7 +264,7 @@ if __name__ == '__main__':
             import EIKR_Toolbox as Eos
             break
         else:
-            print 'Error: Unrecognised input'
+            print('Error: Unrecognised input')
             state_eqn = raw_input('Enter equation of state model: Bag, Eikr, or Test ')
     print('Would you like to edit simulation parameters? Y/N')
     print('Defaults: wn=1, N=1000')
@@ -264,7 +278,7 @@ if __name__ == '__main__':
             if param_edit == 'N':
                 break
             elif param_edit == 'Y':
-                print ''
+                print('')
             else:
                 print('Input not recognised.')
                 param_edit = raw_input('Would you like to edit simulation parameters? Y/N')
@@ -287,7 +301,7 @@ if __name__ == '__main__':
                 if param_edit == 'N':
                     break
                 elif param_edit == 'Y':
-                    print ''
+                    print('')
                 else:
                     print('Input not recognised.')
                     param_edit = raw_input('Would you like to edit model parameters? Y/N')
@@ -309,7 +323,7 @@ if __name__ == '__main__':
                 if param_edit == 'N':
                     break
                 elif param_edit == 'Y':
-                    print ''
+                    print('')
                 else:
                     print('Input not recognised.')
                     param_edit = raw_input('Would you like to edit model parameters? Y/N')
