@@ -6,7 +6,6 @@ import numpy as np
 import scipy.optimize as opt
 import Mechanics_Toolbox as Mech
 
-
 def set_params(name, new_value=None):
     global gstar, D, A, lamda, T0, Tn, m0_2, mu0
     if name == 'weak':
@@ -169,7 +168,11 @@ def T_w(w, phi=None):
     def Twfun(T):
         return w - (4./3)*a0*T**4 + T*dV_dT(T,phi)
     # Think about Newton-Raphson for the solution?
-    return opt.fsolve(Twfun, Tguess1)
+    sol = opt.fsolve(Twfun, Tguess1)
+    if isinstance(w,np.ndarray):
+        return sol
+    else:
+        return sol[0]
         
 
 def p(T, phi=None):
@@ -264,7 +267,7 @@ def cs(T, phi=None):
 
 
 def cs_w(w, phi=None):
-    np.sqrt(cs2_w(w, phi))
+    return np.sqrt(cs2_w(w, phi))
 
 
 def epsilon(T, phi=None):
