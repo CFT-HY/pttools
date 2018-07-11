@@ -83,5 +83,11 @@ def p_w(w, phi):
     return 0.25 * w - e
 
 
+def epsilon_w(w, phi=None):
+    if phi == None:
+        return call_params()[3]
+    else:
+        return call_params()[2]
+
 set_params('default')
 

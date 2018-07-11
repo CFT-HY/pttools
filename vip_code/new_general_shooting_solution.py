@@ -17,6 +17,7 @@ from scipy.optimize import fsolve
 import Mechanics_Toolbox as Mech
 #import EIKR_Toolbox as Eos
 
+
 def set_params_sim(name, new_value=None):
     global wn, N
     if name == 'default':
@@ -30,6 +31,7 @@ def set_params_sim(name, new_value=None):
     else:
         sys.exit('set_params_sim: params name not recognised')
 
+
 def set_eos(eos_name):
     global Eos
     if eos_name == 'Bag':
@@ -38,6 +40,7 @@ def set_eos(eos_name):
         import EIKR_Toolbox as Eos
     else:
         print('set_eos: eos_name not recognised, eos unchanged')    
+
 
 def cs(w, phi=None):
     return Eos.cs_w(w, phi)
@@ -91,41 +94,42 @@ def fluid_from_xi_sh(xi_sh, w_n=1., N=1000, c_s=cs):
     return v_ls, w_ls, xi_ls
 
 
-def fluid_minus(v_plus_wall, w_plus_plasma, eos='Bag'):
+def fluid_minus(v_plus_wall, w_plus, eos='Bag'):
     # Returns v_minus, w_minus from v_plus and w_plus (wall frame)
     # i.e. solves energy-momentum conservation equations across wall
-    #print ("vpluswall", v_plus_wall, "w_plus_plasma", w_plus_plasma)
-    #print(eos)
-    if eos == 'Bag':
-        eps_plus = Eos.call_params()[2]
-        eps_minus = Eos.call_params()[3]
-        Q = w_plus_plasma * (bubble.gamma2(v_plus_wall))
-        E = (w_plus_plasma * (bubble.gamma2(v_plus_wall)) * (v_plus_wall ** 2)
-             + w_plus_plasma / 4 - eps_plus)
-        a = 3 * Q * v_plus_wall / 4
-        b = -(E + eps_minus)
-        c = Q * v_plus_wall / 4
-        v_minus_wall = (-b - ((b ** 2) - 4 * a * c) ** (0.5)) / (2 * a)
-        #print('v_minus_wall', v_minus_wall)
-        w_minus_plasma = Q * v_plus_wall * (1 - v_minus_wall ** 2) / v_minus_wall
-        #print('w_minus_plasma', w_minus_plasma)
-        w_minus_wall = w_minus_plasma
-        v_minus_wall[np.where(isinstance(v_minus_wall, complex))] = np.nan
+    # print ("vpluswall", v_plus_wall, "w_plus_plasma", w_plus_plasma)
+    # print(eos)
+    eps_plus = Eos.epsilon_w(w_plus, phi=0.0)
+    eps_minus = 0.0
 
-        return v_minus_wall, w_minus_wall
+    #    eps_plus = Eos.call_params()[2]
+    #    eps_minus = Eos.call_params()[3]
+    Q = w_plus * (bubble.gamma2(v_plus_wall)) * v_plus_wall
+    E = (w_plus * (bubble.gamma2(v_plus_wall)) * (v_plus_wall ** 2)
+         + w_plus / 4 - eps_plus)
+    a = 3 * Q / 4
+    b = -(E + eps_minus)
+    c = Q / 4
+    v_minus_wall = (-b - ((b ** 2) - 4 * a * c) ** (0.5)) / (2 * a)
+    # print('v_minus_wall', v_minus_wall)
+    w_minus_wall = Q * (1 - v_minus_wall ** 2) / v_minus_wall
+    # print('w_minus_plasma', w_minus_plasma)
+    v_minus_wall[np.where(isinstance(v_minus_wall, complex))] = np.nan
+    if eos != 'Bag':
+        def eqns(x0):
+            v_minus_wall_est, w_minus_wall_est = x0
+            Q_minus = w_minus_wall_est*bubble.gamma2(v_minus_wall_est)*v_minus_wall_est
+            return (Q-Q_minus, E - Q_minus * v_minus_wall_est - Eos.p_w(w_minus_wall_est))
+        v_minus_wall, w_minus_wall = fsolve(eqns, (v_minus_wall, w_minus_wall))
+        #        T_plus = Eos.T_w(w_plus_plasma, 0)
+        #        T_minus = opt.fsolve(Eos.delta_w, T_plus, xi_w)[0]
+        #        w_minus_wall = Eos.w_minus(T_minus)
+        #
+        #        alpha_plus = Eos.alphaplus(T_plus)
+        #        v_minus_wall = Mech.v_minus(v_plus_wall, alpha_plus)
+        #   use fsolve with bag v_minus_wall, w_minus as initial guess
 
-    elif eos == 'Eikr':
-        T_plus = Eos.T_w(w_plus_plasma, 0)
-        T_minus = opt.fsolve(Eos.delta_w, T_plus, xi_w)[0]
-        w_minus_wall = Eos.w_minus(T_minus)
-
-        alpha_plus = Eos.alphaplus(T_plus)
-        v_minus_wall = Mech.v_minus(v_plus_wall, alpha_plus)
-        return v_minus_wall, w_minus_wall
-
-    else:
-        sys.exit('Generic test model not supported in fluid_minus')
-
+    return v_minus_wall, w_minus_wall
 
 def fluid_minus_local_from_fluid_plus_plasma(v_plus_plasma, w_plus_plasma,
                                              xi_plus_plasma, eos='Bag'):
