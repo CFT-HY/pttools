@@ -8,7 +8,7 @@ def set_params(name, new_value=None):
     if name == 'default':
         aplus = (np.pi ** 2) * 106.75 / 30.
         aminus = (np.pi**2)*106.75/30.
-        epsilonplus = 0.399
+        epsilonplus = 0.1
         epsilonminus = 0
     elif name == 'aplus':
         aplus = new_value
@@ -68,7 +68,7 @@ def cs2(t):
 
 
 def cs2_w(w):
-    return cs2(w)
+    return 1./3.
 
 
 def cs_w(w, dummy):
