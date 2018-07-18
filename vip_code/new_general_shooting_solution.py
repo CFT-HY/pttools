@@ -118,11 +118,39 @@ def fluid_minus(v_plus_wall, w_plus, eos='Bag'):
     # print('w_minus_plasma', w_minus_plasma)
     v_minus_wall[np.where(isinstance(v_minus_wall, complex))] = np.nan
     if eos != 'Bag':
-        def eqns(x0):
-            v_minus_wall_est, w_minus_wall_est = x0
+        def eqns(x0, length):
+            # print('x0', x0[177])
+            # print('len x0', len(x0))
+            v_minus_wall_est = np.array([])
+            w_minus_wall_est = np.array([])
+            for i in range(0, length):
+                v_minus_wall_est = np.append(v_minus_wall_est, x0[i])
+            for i in range(length, 2*length):
+                w_minus_wall_est = np.append(w_minus_wall_est, x0[i])
+            # print('v_minus_wall', v_minus_wall)
+            # print('v_minus_est ', v_minus_wall_est)
+            # print('w_minus_wall', w_minus_wall)
+            # print('w_minus_est ', w_minus_wall_est)
             Q_minus = w_minus_wall_est*bubble.gamma2(v_minus_wall_est)*v_minus_wall_est
-            return (Q-Q_minus, E - Q_minus * v_minus_wall_est - Eos.p_w(w_minus_wall_est))
-        v_minus_wall, w_minus_wall = fsolve(eqns, (v_minus_wall, w_minus_wall))
+            mom_con = Q-Q_minus
+            en_con = E - Q_minus * v_minus_wall_est - Eos.p_w(w_minus_wall_est)
+            out = np.append(mom_con, en_con)
+            # print('out', out)
+            return out
+
+        est = np.array([[v_minus_wall], [w_minus_wall]])
+        len_v = len(v_minus_wall)
+        # len_w = len(w_minus_wall)
+        # print('len v', len_v)
+        # print('len w', len_w)
+        # print(v_minus_wall[88])
+        # print('est', est)
+        wall = fsolve(eqns, est, args=(len_v))
+        # print(wall)
+        for i in range(0, len_v):
+            v_minus_wall[i] = wall[i]
+            w_minus_wall[i] = wall[i+len_v]
+
         #        T_plus = Eos.T_w(w_plus_plasma, 0)
         #        T_minus = opt.fsolve(Eos.delta_w, T_plus, xi_w)[0]
         #        w_minus_wall = Eos.w_minus(T_minus)
@@ -233,7 +261,7 @@ def plot_graph(xi_wall, eos, w_n=1, N=1000):
             v_plot[i] = 0
 
     plt.figure(1)
-    #print(max(w_plot))
+    # print(max(w_plot))
     plt.axis([0, 1, 0, max(w_plot)])
     plt.xlabel(r'$\xi$')
     plt.ylabel(r'$w(\xi)$')
@@ -250,7 +278,7 @@ def plot_graph(xi_wall, eos, w_n=1, N=1000):
 def plot_graphs():
     xi_wall = np.arange(0.35, 0.49, 0.04)
     for i in range(0, len(xi_wall)):
-        plot_graph(xi_wall[i])
+        plot_graph(xi_wall[i], eos='Bag')
 
 
 print('gss: setting params')

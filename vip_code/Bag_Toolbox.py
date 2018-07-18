@@ -69,7 +69,7 @@ def cs2(t):
 
 
 def cs2_w(w):
-    return cs2(w)
+    return 1./3.
 
 
 def cs_w(w, dummy):
