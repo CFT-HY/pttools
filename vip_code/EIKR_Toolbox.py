@@ -281,9 +281,8 @@ def epsilon_w(w, phi=None):
 
     
 def alphaplus(T):
-    # Equilibrium transition strength parameter (evaluate in symm phase)
-#    print(epsilon(T,0),w(T,0))
-    return epsilon(T,0)/(0.75*w(T,0))
+    # Equilibrium transition strength parameter
+    return (epsilon(T,0)-epsilon(T))/(0.75*w(T,0))
 
 
 def tps_from_wps(tms, vms, vps):
