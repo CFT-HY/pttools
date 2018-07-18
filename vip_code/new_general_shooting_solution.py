@@ -39,6 +39,8 @@ def set_eos(eos_name):
         import Bag_Toolbox as Eos
     elif eos_name == 'Eikr':
         import EIKR_Toolbox as Eos
+    elif eos_name == 'Test':
+        import Bag_Toolbox as Eos
     else:
         print('set_eos: eos_name not recognised, eos unchanged')    
 
@@ -138,20 +140,46 @@ def fluid_minus(v_plus_wall, w_plus, eos='Bag'):
             # print('out', out)
             return out
 
-        est = np.array([[v_minus_wall], [w_minus_wall]])
+        def em_eqns(x,Q_plus,E_plus):
+            v = x[0]
+            w = x[1]
+            Q_minus = w*bubble.gamma2(v)*v
+            mom_con = Q_plus-Q_minus
+            en_con = E_plus - Q_minus * v - Eos.p_w(w)
+            
+            return [mom_con, en_con]
+            
+
+#        est = np.array([[v_minus_wall], [w_minus_wall]])
+#        print('est shape',est.shape)
         len_v = len(v_minus_wall)
-        # len_w = len(w_minus_wall)
+#        len_w = len(w_minus_wall)
         # print('len v', len_v)
         # print('len w', len_w)
         # print(v_minus_wall[88])
         # print('est', est)
-        wall = fsolve(eqns, est, args=(len_v))
-        # print(wall)
-        for i in range(0, len_v):
-            v_minus_wall[i] = wall[i]
-            w_minus_wall[i] = wall[i+len_v]
+#        print('starting fsolve for wall speed')
+#        wall = fsolve(eqns, est, args=(len_v))
+#        print('fsolve for wall speed done')
+#        print('wall variable shape',wall.shape)
+#        # print(wall)
+#        for i in range(0, len_v):
+#            v_minus_wall[i] = wall[i]
+#            w_minus_wall[i] = wall[i+len_v]
 
-        #        T_plus = Eos.T_w(w_plus_plasma, 0)
+        print('v_minus_wall.shape',v_minus_wall.shape)
+        print('starting fsolve for wall speed')
+        for i in range(0, len_v):
+#            print('v_minus_wall[{}]'.format(i), v_minus_wall[i])
+            if not np.isnan(v_minus_wall[i]):
+                est = [v_minus_wall[i], w_minus_wall[i]]
+                fluid_at_wall = fsolve(em_eqns, est, args=(Q[i], E[i]) )
+                v_minus_wall[i] = fluid_at_wall[0]
+                w_minus_wall[i] = fluid_at_wall[1]
+        print('fsolve for wall speed done')
+
+            
+            #        T_plus = Eos.T_w(w_plus_plasma, 0)
         #        T_minus = opt.fsolve(Eos.delta_w, T_plus, xi_w)[0]
         #        w_minus_wall = Eos.w_minus(T_minus)
         #

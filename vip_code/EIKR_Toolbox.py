@@ -10,18 +10,18 @@ def set_params(name, new_value=None):
     global gstar, D, A, lamda, T0, Tn, m0_2, mu0
     if name == 'weak':
         gstar = 106.75
-        D = 4/9.
+        D = 2/9.
         A = 0.1990232604
-        lamda = 0.0396
+        lamda = 0.0792
         T0 = 1./(np.sqrt(2))
         Tn = 0.86
         m0_2 = -D*T0**2
         mu0 = 0
     elif name == 'intermediate':
         gstar = 106.75
-        D = 2/9.
-        A = 0.1990
-        lamda = 0.0792
+        D = 4/9.
+        A = 0.1990232604
+        lamda = 0.0396
         T0 = 1./(np.sqrt(2))
         Tn = 0.8
         m0_2 = -D*T0**2

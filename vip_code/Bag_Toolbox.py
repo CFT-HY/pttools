@@ -76,7 +76,7 @@ def cs_w(w, dummy):
     return np.sqrt(cs2_w(w))
 
 
-def p_w(w, phi):
+def p_w(w, phi=None):
     if phi is None:
         e = epsilonminus
     else:
@@ -85,7 +85,7 @@ def p_w(w, phi):
 
 
 def epsilon_w(w, phi=None):
-    if phi == None:
+    if phi is None:
         return call_params()[3]
     else:
         return call_params()[2]
