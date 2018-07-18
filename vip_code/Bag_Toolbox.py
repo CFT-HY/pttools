@@ -6,9 +6,9 @@ import sys
 def set_params(name, new_value=None):
     global aplus, aminus, epsilonplus, epsilonminus
     if name == 'default':
-        aplus = (np.pi ** 2) * 106.75 / 30.
-        aminus = (np.pi**2)*106.75/30.
-        epsilonplus = 0.399
+        aplus = (np.pi ** 2) * 106.75 / 30. # As if all ultrarelativistic
+        aminus = (np.pi**2)*86.25/30. # As if h, W, Z, t are non-rel
+        epsilonplus = 0.1
         epsilonminus = 0
     elif name == 'aplus':
         aplus = new_value
@@ -20,6 +20,7 @@ def set_params(name, new_value=None):
         epsilonminus = new_value
     else:
         sys.exit('set_params_bag: params name not recognised')
+    print_params()
     return
 
 
@@ -89,5 +90,6 @@ def epsilon_w(w, phi=None):
     else:
         return call_params()[2]
 
+print('Bag_Toolbox: setting default params')
 set_params('default')
 

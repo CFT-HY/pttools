@@ -35,6 +35,7 @@ def set_params_sim(name, new_value=None):
 def set_eos(eos_name):
     global Eos
     if eos_name == 'Bag':
+        print('Importing ' + eos_name)
         import Bag_Toolbox as Eos
     elif eos_name == 'Eikr':
         import EIKR_Toolbox as Eos
@@ -111,7 +112,8 @@ def fluid_minus(v_plus_wall, w_plus, eos='Bag'):
     b = -(E + eps_minus)
     c = Q / 4
     v_minus_wall = (-b - ((b ** 2) - 4 * a * c) ** (0.5)) / (2 * a)
-    # print('v_minus_wall', v_minus_wall)
+    print('eps_plus',eps_plus)
+    print('v_minus_wall', v_minus_wall)
     w_minus_wall = Q * (1 - v_minus_wall ** 2) / v_minus_wall
     # print('w_minus_plasma', w_minus_plasma)
     v_minus_wall[np.where(isinstance(v_minus_wall, complex))] = np.nan
@@ -207,9 +209,12 @@ def plot_graph(xi_wall, eos, w_n=1, N=1000):
     v_minus_local, w_minus_local = fluid_minus_local_from_fluid_plus_plasma(v_ls, w_ls,
                                                                             xi_ls, eos)
 
-    plt.plot(xi_ls, w_ls)
-    plt.plot(xi_ls, v_ls)
-    plt.plot(xi_ls, v_minus_local)
+    plt.plot(xi_ls, w_ls, label='w+ (plasma)')
+    plt.plot(xi_ls, v_ls, label='v+ (plasma)')
+    plt.plot(xi_ls, v_minus_local, label='v- (wall)')
+    plt.plot(xi_ls, xi_ls, 'k--', label='v- (wall) = xi')
+    plt.axis([0, 1, 0, 1])
+    plt.legend()
     plt.show()
 
     w_plot = np.zeros(len(xi_ls))
@@ -248,7 +253,9 @@ def plot_graphs():
         plot_graph(xi_wall[i])
 
 
+print('gss: setting params')
 set_params_sim('default')
+
 fail = False
 if __name__ == '__main__':
     if len(sys.argv) != 3:
