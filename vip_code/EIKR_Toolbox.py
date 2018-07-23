@@ -248,6 +248,7 @@ def de_dT(T, phi=None):
 
 
 def de_dT_w(w, phi=None):
+    # Equilibrium specific heat (fn of w)
     T = T_w(w, phi)
     return de_dT(T, phi)
 
@@ -258,6 +259,7 @@ def cs2(T, phi=None):
 
 
 def cs2_w(w, phi=None):
+    # Equilibrium sound speed squared (fn of w)
     return s_w(w, phi)/de_dT_w(w, phi)
 
 
@@ -267,6 +269,7 @@ def cs(T, phi=None):
 
 
 def cs_w(w, phi=None):
+    # Equilibrium sound speed (fn of w)
     return np.sqrt(cs2_w(w, phi))
 
 
@@ -276,6 +279,7 @@ def epsilon(T, phi=None):
 
 
 def epsilon_w(w, phi=None):
+    # 0.25 * equilibrium trace anomaly (fn of w)
     T = T_w(w, phi)
     return 0.25 * (e(T, phi) - 3 * p(T, phi))
 
