@@ -5,7 +5,7 @@ import EIKR_Toolbox as Eikr
 import Bag_Toolbox as Bag
 
 
-def remake_bag():
+def bagify():
     eps_plus = Eikr.epsilon(Eikr.Tn, 0)
     eps_minus = Eikr.epsilon(Eikr.Tn)
     a_plus = Eikr.a(Eikr.Tn, 0)
@@ -27,13 +27,14 @@ true_bag_xi_1, true_bag_w_1, true_bag_v_1 = gss.plot_graph_module(0.4, Bag)
 # true_bag_xi_4, true_bag_w_4, true_bag_v_4 = gss.plot_graph_module(0.55, Bag)
 # Bag.print_params()
 # print('')
-remake_bag()
+bagify()
 # Bag.print_params()
 e_bag_xi_1, e_bag_w_1, e_bag_v_1 = gss.plot_graph_module(0.4, Bag)
 # e_bag_xi_2, e_bag_w_2, e_bag_v_2 = gss.plot_graph_module(0.45, Bag)
 # e_bag_xi_3, e_bag_w_3, e_bag_v_3 = gss.plot_graph_module(0.5, Bag)
 # e_bag_xi_4, e_bag_w_4, e_bag_v_4 = gss.plot_graph_module(0.55, Bag)
 
-print(true_bag_xi_1-e_bag_xi_1)
+print('number of bag xi points', len(true_bag_xi_1))
+print('number of bagified eikr xi points', len(e_bag_xi_1))
 
 
