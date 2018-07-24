@@ -35,6 +35,21 @@ def set_params(name, new_value=None):
         Tn = 0.77278
         m0_2 = -D*T0**2
         mu0 = 0
+    elif name == 'vstrong':
+#        gamma=0.2222*4
+#        T_0=0.70710678118654757
+#        Lambda=0.079221/4
+#        gstar=106.75
+#        alpha=0.19902
+#        T_N=0.7577
+        gstar=106.75
+        D=8/9.
+        A = 0.1990232604
+        lamda=0.079221/4
+        T0=1./(np.sqrt(2))
+        Tn = 0.7577
+        m0_2 = -D*T0**2
+        mu0 = 0
     elif name == 'gstar':
         gstar = new_value
     elif name == 'D':
@@ -248,6 +263,7 @@ def de_dT(T, phi=None):
 
 
 def de_dT_w(w, phi=None):
+    # Equilibrium specific heat (fn of w)
     T = T_w(w, phi)
     return de_dT(T, phi)
 
@@ -258,6 +274,7 @@ def cs2(T, phi=None):
 
 
 def cs2_w(w, phi=None):
+    # Equilibrium sound speed squared (fn of w)
     return s_w(w, phi)/de_dT_w(w, phi)
 
 
@@ -267,6 +284,7 @@ def cs(T, phi=None):
 
 
 def cs_w(w, phi=None):
+    # Equilibrium sound speed (fn of w)
     return np.sqrt(cs2_w(w, phi))
 
 
@@ -276,6 +294,7 @@ def epsilon(T, phi=None):
 
 
 def epsilon_w(w, phi=None):
+    # 0.25 * equilibrium trace anomaly (fn of w)
     T = T_w(w, phi)
     return 0.25 * (e(T, phi) - 3 * p(T, phi))
 
