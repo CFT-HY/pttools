@@ -72,8 +72,8 @@ def set_params(name, new_value=None):
         
     compute_derived_params()
 
-    print("set_params: name  ", name)
-    print_params()
+    # print("set_params: name  ", name)
+    # print_params()
     
     return 1
 
@@ -302,6 +302,10 @@ def epsilon_w(w, phi=None):
 def alphaplus(T):
     # Equilibrium transition strength parameter
     return (epsilon(T,0)-epsilon(T))/(0.75*w(T,0))
+
+
+def a(T, phi=None):
+    return w(T, phi)/(0.75*T**4)
 
 
 def tps_from_wps(tms, vms, vps):

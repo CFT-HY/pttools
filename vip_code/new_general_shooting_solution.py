@@ -88,8 +88,8 @@ def fluid_from_xi_sh(xi_sh, w_n=1., N=1000, c_s=cs):
     v, w, xi = fluid_shell_param(v_minus, w_minus, xi_sh, N, c_s)
     # Returns lower (physical) segment of curve v(xi), also w and xi there.
     n_min = np.argmin(xi)
-    print('v_minus',v_minus)
-    print('n_min',n_min)
+    # print('v_minus',v_minus)
+    # print('n_min',n_min)
     v_ls = v[0:n_min]
     w_ls = w[0:n_min]
     xi_ls = xi[0:n_min]
@@ -114,32 +114,12 @@ def fluid_minus(v_plus_wall, w_plus, eos='Bag'):
     b = -(E + eps_minus)
     c = Q / 4
     v_minus_wall = (-b - ((b ** 2) - 4 * a * c) ** (0.5)) / (2 * a)
-    print('eps_plus',eps_plus)
-    print('v_minus_wall', v_minus_wall)
+    # print('eps_plus',eps_plus)
+    # print('v_minus_wall', v_minus_wall)
     w_minus_wall = Q * (1 - v_minus_wall ** 2) / v_minus_wall
     # print('w_minus_plasma', w_minus_plasma)
     v_minus_wall[np.where(isinstance(v_minus_wall, complex))] = np.nan
     if eos != 'Bag':
-        def eqns(x0, length):
-            # print('x0', x0[177])
-            # print('len x0', len(x0))
-            v_minus_wall_est = np.array([])
-            w_minus_wall_est = np.array([])
-            for i in range(0, length):
-                v_minus_wall_est = np.append(v_minus_wall_est, x0[i])
-            for i in range(length, 2*length):
-                w_minus_wall_est = np.append(w_minus_wall_est, x0[i])
-            # print('v_minus_wall', v_minus_wall)
-            # print('v_minus_est ', v_minus_wall_est)
-            # print('w_minus_wall', w_minus_wall)
-            # print('w_minus_est ', w_minus_wall_est)
-            Q_minus = w_minus_wall_est*bubble.gamma2(v_minus_wall_est)*v_minus_wall_est
-            mom_con = Q-Q_minus
-            en_con = E - Q_minus * v_minus_wall_est - Eos.p_w(w_minus_wall_est)
-            out = np.append(mom_con, en_con)
-            # print('out', out)
-            return out
-
         def em_eqns(x,Q_plus,E_plus):
             v = x[0]
             w = x[1]
@@ -148,35 +128,17 @@ def fluid_minus(v_plus_wall, w_plus, eos='Bag'):
             en_con = E_plus - Q_minus * v - Eos.p_w(w)
             
             return [mom_con, en_con]
-            
 
-#        est = np.array([[v_minus_wall], [w_minus_wall]])
-#        print('est shape',est.shape)
         len_v = len(v_minus_wall)
-#        len_w = len(w_minus_wall)
-        # print('len v', len_v)
-        # print('len w', len_w)
-        # print(v_minus_wall[88])
-        # print('est', est)
-#        print('starting fsolve for wall speed')
-#        wall = fsolve(eqns, est, args=(len_v))
-#        print('fsolve for wall speed done')
-#        print('wall variable shape',wall.shape)
-#        # print(wall)
-#        for i in range(0, len_v):
-#            v_minus_wall[i] = wall[i]
-#            w_minus_wall[i] = wall[i+len_v]
 
-        print('v_minus_wall.shape',v_minus_wall.shape)
-        print('starting fsolve for wall speed')
+        # print('starting fsolve for wall speed')
         for i in range(0, len_v):
-#            print('v_minus_wall[{}]'.format(i), v_minus_wall[i])
             if not np.isnan(v_minus_wall[i]):
                 est = [v_minus_wall[i], w_minus_wall[i]]
-                fluid_at_wall = fsolve(em_eqns, est, args=(Q[i], E[i]) )
-                v_minus_wall[i] = fluid_at_wall[0]
-                w_minus_wall[i] = fluid_at_wall[1]
-        print('fsolve for wall speed done')
+                fluid_wall = fsolve(em_eqns, est, args=(Q[i], E[i]))
+                v_minus_wall[i] = fluid_wall[0]
+                w_minus_wall[i] = fluid_wall[1]
+        # print('fsolve for wall speed done')
 
             
             #        T_plus = Eos.T_w(w_plus_plasma, 0)
@@ -225,7 +187,7 @@ def fluid_at_wall(xi_shock, w_n=1, eos='Bag', N=1000, c_s=cs):
     # uses:  fluid_from_xi_sh
     #            fluid_minus_local_from_fluid_plus_plasma
     #            exit_speed_wall(xi_real)
-    print('xi_shock, w_n, N, c_s',xi_shock, w_n, N, c_s)
+    # print('xi_shock, w_n, N, c_s',xi_shock, w_n, N, c_s)
     v_ls, w_ls, xi_ls = fluid_from_xi_sh(xi_shock, w_n, N, c_s)
 
     v_minus_local, w_minus_local = fluid_minus_local_from_fluid_plus_plasma(v_ls, w_ls,
@@ -233,7 +195,7 @@ def fluid_at_wall(xi_shock, w_n=1, eos='Bag', N=1000, c_s=cs):
     v_exit = exit_speed_wall(xi_ls)
 
     rootguess_xi = root_estimate(xi_ls, v_minus_local, v_exit)
-    print('rootguess_xi', rootguess_xi)
+    # print('rootguess_xi', rootguess_xi)
     v_minus_local_function = interp1d(xi_ls, v_minus_local)
     v_exit_function = interp1d(xi_ls, v_exit)
 
@@ -302,6 +264,50 @@ def plot_graph(xi_wall, eos, w_n=1, N=1000):
     plt.plot(xi_ls, v_plot)
     plt.show()
 
+
+def plot_graph_module(xi_wall, eos, w_n=1, N=1000):
+    xi_shock = root_find_xi_sh(xi_wall, w_n, eos, N=N)
+    v_ls, w_ls, xi_ls = fluid_from_xi_sh(xi_shock, w_n, N)
+    v_minus_local, w_minus_local = fluid_minus_local_from_fluid_plus_plasma(v_ls, w_ls,
+                                                                            xi_ls, eos)
+
+    plt.plot(xi_ls, w_ls, label='w+ (plasma)')
+    plt.plot(xi_ls, v_ls, label='v+ (plasma)')
+    plt.plot(xi_ls, v_minus_local, label='v- (wall)')
+    plt.plot(xi_ls, xi_ls, 'k--', label='v- (wall) = xi')
+    plt.axis([0, 1, 0, 1])
+    plt.legend()
+    plt.show()
+
+    w_plot = np.zeros(len(xi_ls))
+    v_plot = np.zeros(len(xi_ls))
+
+    a = np.where(xi_ls < xi_wall)[0]
+    w_plot[a[0]:] = w_minus_local[a[0]]
+    v_plot[a[0]:] = 0
+
+    for i in range(0, len(xi_ls)):
+        if xi_ls[i] >= xi_wall and xi_ls[i] < xi_shock:
+            w_plot[i] = w_ls[i]
+            v_plot[i] = v_ls[i]
+        if xi_ls[i] >= xi_shock:
+            w_plot[i] = w_n
+            v_plot[i] = 0
+
+    plt.figure(1)
+    # print(max(w_plot))
+    plt.axis([0, 1, 0, max(w_plot)])
+    plt.xlabel(r'$\xi$')
+    plt.ylabel(r'$w(\xi)$')
+    plt.plot(xi_ls, w_plot)
+
+    plt.figure(2)
+    plt.axis([0, 1, 0, 1])
+    plt.xlabel(r'$\xi$')
+    plt.ylabel(r'$v(\xi)$')
+    plt.plot(xi_ls, v_plot)
+    plt.show()
+    return xi_ls, w_plot, v_plot
 
 def plot_graphs():
     xi_wall = np.arange(0.35, 0.49, 0.04)

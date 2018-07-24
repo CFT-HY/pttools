@@ -20,7 +20,7 @@ def set_params(name, new_value=None):
         epsilonminus = new_value
     else:
         sys.exit('set_params_bag: params name not recognised')
-    print_params()
+    # print_params()
     return
 
 
