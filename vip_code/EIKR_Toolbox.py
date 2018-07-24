@@ -35,6 +35,21 @@ def set_params(name, new_value=None):
         Tn = 0.77278
         m0_2 = -D*T0**2
         mu0 = 0
+    elif name == 'vstrong':
+#        gamma=0.2222*4
+#        T_0=0.70710678118654757
+#        Lambda=0.079221/4
+#        gstar=106.75
+#        alpha=0.19902
+#        T_N=0.7577
+        gstar=106.75
+        D=8/9.
+        A = 0.1990232604
+        lamda=0.079221/4
+        T0=1./(np.sqrt(2))
+        Tn = 0.7577
+        m0_2 = -D*T0**2
+        mu0 = 0
     elif name == 'gstar':
         gstar = new_value
     elif name == 'D':

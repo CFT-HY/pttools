@@ -57,9 +57,9 @@ def A_nonlin_func(z, vw, alpha, wall_type='Calculate', npt=NPTDEFAULT,with_g=Tru
     if with_g:
         g = (z * df_dz + 2. * f)
         dg_dz = np.gradient(g) / np.gradient(z)
-        A2 = A2 + 0.25 * (dg_dz ** 2 / (cs(0) * z) ** 2)
+        A2 = A2 + 0.25 * (dg_dz ** 2 / (cs0 * z) ** 2)
     else:
-        print('with_g = False, multiplying (f'')^2 by 2')
+        print('with_g = False, multiplying (f\')^2 by 2')
         A2 = A2*2
     return A2
 
@@ -109,9 +109,9 @@ def A2_from_f(z,f,with_g=True):
     if with_g:
         g = (z * df_dz + 2. * f)
         dg_dz = np.gradient(g) / np.gradient(z)
-        A2 = A2 + 0.25 * (dg_dz ** 2 / (cs(0) * z) ** 2)
+        A2 = A2 + 0.25 * (dg_dz ** 2 / (cs0 * z) ** 2)
     else:
-        print('with_g = False, multiplying (f'')^2 by 2')
+        print('with_g = False, multiplying (f\')^2 by 2')
         A2 = A2*2
     return A2
     
@@ -195,24 +195,24 @@ def Tilde_P_GW(y, vw, alpha, wall_type, nuc_type, nuc_args,  npt=NPTDEFAULT):
     nz = npt[0]
 #    nxi = npt[1]
 #    nt = npt[2]
-    xmax = max(y) / cs(0) * (1. + cs(0)) / 2.
-    xmin = min(y) / cs(0) * (1. - cs(0)) / 2.
+    xmax = max(y) / cs0 * (1. + cs0) / 2.
+    xmin = min(y) / cs0 * (1. - cs0) / 2.
     xlookup = np.logspace(np.log10(xmin), np.log10(xmax), nz)
     P_vlookup = Pbar_vfunc(xlookup, vw, alpha, wall_type, nuc_type, nuc_args,  npt)
 
     array3 = np.zeros(nz)
     p_gw = np.zeros(nz)
     for i in range(nz):
-        xplus = y[i] / cs(0) * (1. + cs(0)) / 2.
-        xminus = y[i] / cs(0) * (1. - cs(0)) / 2.
+        xplus = y[i] / cs0 * (1. + cs0) / 2.
+        xminus = y[i] / cs0 * (1. - cs0) / 2.
         x = np.logspace(np.log10(xminus), np.log10(xplus), nz)
         # for j in range(npt):
         #     array3[j] = (x[j] - xplus) ** 2 * (x[j] - xminus) ** 2 / x[j] / (xplus + xminus - x[j]) * np.interp(x[j],
         #         xlookup, P_vlookup) * np.interp((xplus + xminus - x[j]), xlookup, P_vlookup)
         array3 = (x - xplus)**2 * (x - xminus)**2 / x / (xplus + xminus - x) * np.interp(x,
                 xlookup, P_vlookup) * np.interp((xplus + xminus - x), xlookup, P_vlookup)
-        p_gw_factor = ((1 - cs(0)**2)/cs(0)**2)**2 / (4*np.pi*y[i]*cs(0))
-        # Corrected MBH 14.12.17 - was (1 - cs(0)) ** 2 / 4 / np.pi / y[i] / cs(0)**3
+        p_gw_factor = ((1 - cs0**2)/cs0**2)**2 / (4*np.pi*y[i]*cs0)
+        # Corrected MBH 14.12.17 - was (1 - cs0) ** 2 / 4 / np.pi / y[i] / cs0**3
         p_gw[i] = p_gw_factor * np.trapz(array3, x)
     return p_gw
 
@@ -299,13 +299,13 @@ def spec_den_gw_scaled(xlookup, P_vlookup, y=None):
 
     if y is None:
         nz = len(xlookup)
-        ymax = max(xlookup)  / ( 0.5 * (1. + cs(0)) / cs(0))
-        ymin = min(xlookup) / (0.5 * (1. - cs(0)) / cs(0))
+        ymax = max(xlookup)  / ( 0.5 * (1. + cs0) / cs0)
+        ymin = min(xlookup) / (0.5 * (1. - cs0) / cs0)
         y = np.logspace(np.log10(ymin), np.log10(ymax), nz)
     else:
         nz = len(y)
-        xlargest = max(y)  * 0.5 * (1. + cs(0)) / cs(0)
-        xsmallest = min(y) * 0.5 * (1. - cs(0)) / cs(0)
+        xlargest = max(y)  * 0.5 * (1. + cs0) / cs0
+        xsmallest = min(y) * 0.5 * (1. - cs0) / cs0
     
         print(max(y),max(xlookup)-xlargest)
         print(min(y),min(xlookup)-xsmallest)
@@ -316,26 +316,26 @@ def spec_den_gw_scaled(xlookup, P_vlookup, y=None):
     p_gw = np.zeros_like(y)
 
     for i in range(nz):
-        xplus = y[i] / cs(0) * (1. + cs(0)) / 2.
-        xminus = y[i] / cs(0) * (1. - cs(0)) / 2.
+        xplus = y[i] / cs0 * (1. + cs0) / 2.
+        xminus = y[i] / cs0 * (1. - cs0) / 2.
         x = np.logspace(np.log10(xminus), np.log10(xplus), nz)
         integrand = (x - xplus)**2 * (x - xminus)**2 / x / (xplus + xminus - x) * np.interp(x,
                 xlookup, P_vlookup) * np.interp((xplus + xminus - x), xlookup, P_vlookup)
-        p_gw_factor = ((1 - cs(0)**2)/cs(0)**2)**2 / (4*np.pi*y[i]*cs(0))
+        p_gw_factor = ((1 - cs0**2)/cs0**2)**2 / (4*np.pi*y[i]*cs0)
         p_gw[i] = p_gw_factor * np.trapz(integrand, x)
 
         # Testing alternative formula - do give the same result.
 #    for i in range(nz):
-#        xplus = y[i] * (1. + cs(0)) / (2*cs(0))
-#        xminus = y[i] * (1. - cs(0)) / (2*cs(0))
+#        xplus = y[i] * (1. + cs0) / (2*cs0)
+#        xminus = y[i] * (1. - cs0) / (2*cs0)
 #        x = np.logspace(np.log10(xminus), np.log10(xplus), nz)
 #        # for j in range(npt):
 #        #     array3[j] = (x[j] - xplus) ** 2 * (x[j] - xminus) ** 2 / x[j] / (xplus + xminus - x[j]) * np.interp(x[j],
 #        #         xlookup, P_vlookup) * np.interp((xplus + xminus - x[j]), xlookup, P_vlookup)
-#        mu = (2*x*cs(0) - y[i]*(1 - cs(0)**2))/(2*x*cs(0)**2)
-#        array3 = (x**3/(y[i]/cs(0) - x)) * (1 - mu**2)**2 * np.interp(x,
-#                xlookup, P_vlookup) * np.interp((y[i]/cs(0) - x), xlookup, P_vlookup)
-#        p_gw_factor_alt = 1. / (4*np.pi*y[i]*cs(0))
+#        mu = (2*x*cs0 - y[i]*(1 - cs0**2))/(2*x*cs0**2)
+#        array3 = (x**3/(y[i]/cs0 - x)) * (1 - mu**2)**2 * np.interp(x,
+#                xlookup, P_vlookup) * np.interp((y[i]/cs0 - x), xlookup, P_vlookup)
+#        p_gw_factor_alt = 1. / (4*np.pi*y[i]*cs0)
 #        p_gw_alt[i] = p_gw_factor_alt * np.trapz(array3, x)
 
         
@@ -345,7 +345,7 @@ def spec_den_gw_scaled(xlookup, P_vlookup, y=None):
 
     
 #
-# Functions for computing fluid profiles now contained in ssmtools.py
+# Functions for computing fluid profiles now contained in bubble.py
 #
 
 def vpdef(vm, alpha):
@@ -386,13 +386,13 @@ def v_ip_nonlin(n, vw, alpha, npt, wall_type):
         se = 1.0 / (1 - y ** 2.0)
         th = 1.0 - t * y
         u = (t - y) / (1. - t * y)
-        bra = u ** 2.0 / cs(0) ** 2 - 1.0
+        bra = u ** 2.0 / cs0 ** 2 - 1.0
         dydt = fi / se / th / bra
         return dydt
 
     if wall_type == 'Detonation':
         v_max = lt(vw, vmdet(vw, alpha))
-        xi = np.logspace(np.log10(vw), np.log10(cs(0)), nxi)
+        xi = np.logspace(np.log10(vw), np.log10(cs0), nxi)
         return odeint(diff, v_max, xi), xi
     if wall_type == 'Deflagration':
         v_max = lt(vw, vpdef(vw, alpha))
@@ -408,10 +408,10 @@ def v_ip_nonlin(n, vw, alpha, npt, wall_type):
         xi = np.logspace(np.log10(vw), np.log10(xish), nxi)
         return odeint(diff, v_max, xi), xi
     if wall_type == 'Hybrid':
-        v_max1 = lt(vw, cs(0))
-        xi1 = np.logspace(np.log10(vw), np.log10(cs(0)), nxi)
+        v_max1 = lt(vw, cs0)
+        xi1 = np.logspace(np.log10(vw), np.log10(cs0), nxi)
         g1 = odeint(diff, v_max1, xi1)
-        v_max2 = lt(vw, vpdef(cs(0), alpha))
+        v_max2 = lt(vw, vpdef(cs0, alpha))
         t = np.logspace(np.log10(vw), np.log10(1.0), nxi)
         y = odeint(diff, v_max2, t)
         i = 0
@@ -430,7 +430,7 @@ def v_ip_nonlin(n, vw, alpha, npt, wall_type):
             ar1[k] = np.asscalar(g1[k])
             ar2[k] = np.asscalar(g2[k])
             k = k + 1
-        xi = np.logspace(np.log10(cs(0)), np.log10(xish), nxi)
+        xi = np.logspace(np.log10(cs0), np.log10(xish), nxi)
         vip = np.zeros(nxi)
         j = 0
         while j < nxi:
