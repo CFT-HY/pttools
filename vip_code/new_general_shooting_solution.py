@@ -88,7 +88,7 @@ def fluid_from_xi_sh(xi_sh, w_n=1., N=1000, c_s=cs):
     v, w, xi = fluid_shell_param(v_minus, w_minus, xi_sh, N, c_s)
     # Returns lower (physical) segment of curve v(xi), also w and xi there.
     n_min = np.argmin(xi)
-    # print('v_minus',v_minus)
+    # print('xi',xi)
     # print('n_min',n_min)
     v_ls = v[0:n_min]
     w_ls = w[0:n_min]
@@ -271,13 +271,13 @@ def plot_graph_module(xi_wall, eos, w_n=1, N=1000):
     v_minus_local, w_minus_local = fluid_minus_local_from_fluid_plus_plasma(v_ls, w_ls,
                                                                             xi_ls, eos)
 
-    plt.plot(xi_ls, w_ls, label='w+ (plasma)')
-    plt.plot(xi_ls, v_ls, label='v+ (plasma)')
-    plt.plot(xi_ls, v_minus_local, label='v- (wall)')
-    plt.plot(xi_ls, xi_ls, 'k--', label='v- (wall) = xi')
-    plt.axis([0, 1, 0, 1])
-    plt.legend()
-    plt.show()
+    # plt.plot(xi_ls, w_ls, label='w+ (plasma)')
+    # plt.plot(xi_ls, v_ls, label='v+ (plasma)')
+    # plt.plot(xi_ls, v_minus_local, label='v- (wall)')
+    # plt.plot(xi_ls, xi_ls, 'k--', label='v- (wall) = xi')
+    # plt.axis([0, 1, 0, 1])
+    # plt.legend()
+    # plt.show()
 
     w_plot = np.zeros(len(xi_ls))
     v_plot = np.zeros(len(xi_ls))
@@ -294,19 +294,19 @@ def plot_graph_module(xi_wall, eos, w_n=1, N=1000):
             w_plot[i] = w_n
             v_plot[i] = 0
 
-    plt.figure(1)
+    # plt.figure(1)
     # print(max(w_plot))
-    plt.axis([0, 1, 0, max(w_plot)])
-    plt.xlabel(r'$\xi$')
-    plt.ylabel(r'$w(\xi)$')
-    plt.plot(xi_ls, w_plot)
-
-    plt.figure(2)
-    plt.axis([0, 1, 0, 1])
-    plt.xlabel(r'$\xi$')
-    plt.ylabel(r'$v(\xi)$')
-    plt.plot(xi_ls, v_plot)
-    plt.show()
+    # plt.axis([0, 1, 0, max(w_plot)])
+    # plt.xlabel(r'$\xi$')
+    # plt.ylabel(r'$w(\xi)$')
+    # plt.plot(xi_ls, w_plot)
+    #
+    # plt.figure(2)
+    # plt.axis([0, 1, 0, 1])
+    # plt.xlabel(r'$\xi$')
+    # plt.ylabel(r'$v(\xi)$')
+    # plt.plot(xi_ls, v_plot)
+    # plt.show()
     return xi_ls, w_plot, v_plot
 
 def plot_graphs():
