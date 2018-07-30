@@ -305,7 +305,7 @@ def alphaplus(T):
 
 
 def a(T, phi=None):
-    return w(T, phi)/(0.75*T**4)
+    return 0.75*w(T, phi)/T**4
 
 
 def tps_from_wps(tms, vms, vps):
