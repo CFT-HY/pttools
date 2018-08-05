@@ -15,7 +15,7 @@ from __future__ import absolute_import, division, print_function
 
 import sys
 import numpy as np
-import scipy.integrate
+import scipy.integrate as int
 import scipy.optimize as opt
 
 
@@ -26,6 +26,8 @@ eps = np.nextafter(0, 1)  # smallest float
 
 # Default number of entries in xi array
 NPDEFAULT = 5000
+# Integration limit for parametric form of fluid equations
+t_end = 50.
 
 def cs_fun(w):
     # Speed of sound function
@@ -33,7 +35,13 @@ def cs_fun(w):
     return cs0
 
 
-# Helper functions
+def cs_w(w):
+    # Speed of sound function, another label
+    # to be adapted to more realistic equations of state, e.g. with interpolation
+    return cs0
+
+
+    # Helper functions
 
 def lorentz(xi, v):
     # Lorentz Transformation of fluid speed v between local moving frame and plasma frame.
@@ -164,7 +172,7 @@ def dfluid_dxi_deflag(vel_en, x):
 def fluid_integrate_deflag(vel_en0, xi_array):
     # integrates fluid equations, hopefully backwards from shock
     # no error checking as yet
-    return scipy.integrate.odeint(dfluid_dxi_deflag, vel_en0, xi_array)
+    return int.odeint(dfluid_dxi_deflag, vel_en0, xi_array)
 
 
 # Another approach if cs is constant is to integrate enthalpy equation directly
@@ -174,6 +182,35 @@ def ln_enthalpy_integrand(v1, x):
     lb = lorentz(x, v1)
     return (1.+1./cs**2)*lf*lb
 
+
+# And now the parametric form (Jacky Lindsay and Mike Soughton MPhys project 2017-18)
+def df_dtau(y, t, c_s=cs_fun):
+    # Returns differentials in parametric form, suitable for odeint
+    v  = y[0]
+    w  = y[1]
+    xi = y[2]
+
+    dxi_dt = xi * (((xi - v) ** 2) - (c_s(w) ** 2) * ((1 - (xi * v)) ** 2))  # dxi/dt
+    dv_dt  = 2 * v * (c_s(w) ** 2) * (1 - (v ** 2)) * (1 - (xi * v))  # dv/dt
+    dw_dt  = ((2 * v * w / (xi * (xi - v))) * dxi_dt + 
+              ((w / (1 - v ** 2)) * (((1 - v * xi) / (xi - v)) + ((xi - v) / (1 - xi * v)))) * dv_dt)  # dw/dt
+
+    return [dv_dt, dw_dt, dxi_dt]
+
+    
+def fluid_shell_param(v0, w0, xi0, direction=+1., N=NPDEFAULT, c_s=cs_w):
+    # Integrates parametric fluid equations from an initial condition
+    print(direction)
+    t = np.linspace(0., direction*t_end, N)
+    if isinstance(xi0, np.ndarray):
+        soln = int.odeint(df_dtau, (v0[0], w0[0], xi0[0]), t, args=(c_s, ))
+    else:
+        soln = int.odeint(df_dtau, (v0, w0, xi0), t, args=(c_s, ))
+    v = soln[:, 0]
+    w  = soln[:, 1]
+    xi  = soln[:, 2]
+
+    return v, w, xi
 
 # Useful quantities for deciding type of transition
 
@@ -325,8 +362,8 @@ def velocity(v_w, al_p, wall_type, Npts):
         v_behind_init = vfm_p
 
     #   Calculating the fluid velocity
-    v_fluid[n_wall:] = scipy.integrate.odeint(dv_dxi_deflag, vfp_p, xi_ahead)  # ,mxstep=5000000)
-    v_fluid[n_wall-1:ncs:-1] = scipy.integrate.odeint(dv_dxi_deton, v_behind_init, xi_behind)  # ,mxstep=5000000)
+    v_fluid[n_wall:] = int.odeint(dv_dxi_deflag, vfp_p, xi_ahead)  # ,mxstep=5000000)
+    v_fluid[n_wall-1:ncs:-1] = int.odeint(dv_dxi_deton, v_behind_init, xi_behind)  # ,mxstep=5000000)
 
     n_shock = find_shock_index(v_fluid[:,0], xi, v_w, wall_type)
 
@@ -367,7 +404,7 @@ def enthalpy(v_wall, alpha_p, wall_type, Np, v_f):
 
     ln_en_integ = ln_enthalpy_integrand(v_f[:n_shock], xi[:n_shock])
 
-    en_exp = scipy.integrate.cumtrapz(ln_en_integ, v_f[:n_shock], initial=0.0)
+    en_exp = int.cumtrapz(ln_en_integ, v_f[:n_shock], initial=0.0)
     w[:n_shock] = np.exp(en_exp)
 
     # if wall_type == "Deflagration":
