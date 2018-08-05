@@ -119,6 +119,7 @@ def fluid_minus(v_plus_wall, w_plus, eos='Bag'):
     w_minus_wall = Q * (1 - v_minus_wall ** 2) / v_minus_wall
     # print('w_minus_plasma', w_minus_plasma)
     v_minus_wall[np.where(isinstance(v_minus_wall, complex))] = np.nan
+    print(type(v_minus_wall))
     if eos != 'Bag':
         def em_eqns(x,Q_plus,E_plus):
             v = x[0]

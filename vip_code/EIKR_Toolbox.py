@@ -192,7 +192,7 @@ def T_w(w, phi=None):
 
 def p(T, phi=None):
     # Equilibrium pressure
-    return 1./3.*a0*T**4 - V(T,phi)
+    return 1./3.*a0*T**4 - V(T, phi)
 
 
 def p_w(w, phi=None):
