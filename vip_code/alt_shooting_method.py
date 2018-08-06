@@ -58,29 +58,20 @@ def find_wall_frame_sym_vars(wminus, vminus_wall):
     return wplus, vplus_wall
 
 
-def find_xi_shock1(v, w, xi):
+def find_xi_shock(v, w, xi):
     # Finds shock by working through known xi, w, v values solving v-cs^2, and searching for a sign change in
     # the values
     values = np.zeros(len(xi))
     for i in range(0, len(xi)):
         # print(i)
-        values[-i-1] = v[-i-1]*xi[-i-1] - Eos.cs2_w(w[-i-1], 0)
-        print(v[-i-1], xi[-i-1], Eos.cs2_w(w[-i-1], 0), w[-i-1], values[-i-1])
+        values[-i-1] = bubble.lorentz(xi[-i-1], v[-i-1])*xi[-i-1] - Eos.cs2_w(w[-i-1], 0)
+        # print(v[-i-1], xi[-i-1], Eos.cs2_w(w[-i-1], 0), w[-i-1], values[-i-1])
         if values[-i-1]*values[-i] < 0:
             shock_index = i+1
             break
-    print(values)
+    # print(values)
     print(shock_index)
-    return v[-shock_index], w[-shock_index], xi[-shock_index]
-
-
-def find_xi_shock2(vwall, w, xi):
-    vproduct = []
-    for i in range(0, len(xi)-1):
-        np.append(vproduct, vwall[i]*vwall[i+1])
-    plt.figure()
-    plt.plot(xi, vproduct)
-    plt.show()
+    return bubble.lorentz(xi[-shock_index], v[-shock_index]), w[-shock_index], xi[-shock_index]
 
 
 if __name__ == '__main__':
@@ -95,10 +86,10 @@ if __name__ == '__main__':
     w_minus = float(sys.argv[2])
 
     w_plus, v_plus_wall = find_wall_frame_sym_vars(w_minus, xi_w)
-    # print(w_plus, v_plus)
     v_plus = bubble.lorentz(xi_w, v_plus_wall)
     v_array, w_array, xi_array = bubble.fluid_shell_param(v_plus, w_plus, xi_w, direction=-1)
+    v_s_minus, w_s_minus, xi_s = find_xi_shock(v_array, w_array, xi_array)
+    v_s_plus = 1./(3. * v_s_minus)
+    w_s_plus = w_s_minus * bubble.gamma2(v_s_minus)*v_s_minus/(bubble.gamma2(v_s_plus)*v_s_plus)
+    print(w_s_plus)
 
-    find_xi_shock2(v_plus_wall, w_array, xi_array)
-    # v_s, w_s, xi_s = find_xi_shock(v_array, w_array, xi_array)
-    # print(xi_s)
