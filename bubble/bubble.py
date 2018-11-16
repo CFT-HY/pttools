@@ -41,7 +41,7 @@ def cs_w(w):
     return cs0
 
 
-    # Helper functions
+# Relativity helper functions
 
 def lorentz(xi, v):
     # Lorentz Transformation of fluid speed v between local moving frame and plasma frame.
@@ -153,26 +153,46 @@ def dv_dxi_deton(v1, x):
     return val
 
 
-def dfluid_dxi_deflag(vel_en, x):
-    #  returns [dv/dxi, dw/dxi] for integrating ODEs (deflagration)
+def dfluid_dxi_deton(vel_en, xi):
+    #  returns [dv/dxi, dw/dxi] for integrating ODEs (detonation)
     v = vel_en[0]
     w = vel_en[1]
-    mu = lorentz(x, v)
+    mu = lorentz(xi, v)
     ga2 = gamma2(v)
     cs2 = cs_fun(w)**2
 
-    if v < v_shock(x):  # Can happen if you try to integrate beyond shock
-        dv_dxi = 0.         # Stops solution blowing up
-    else:
-        dv_dxi = (2./x)*(v/(1-x*v))/(ga2*(mu**2/cs2 - 1))
+    dv_dxi = (2./xi)*(v/(1-xi*v))/(ga2*(mu**2/cs2 - 1))
     dw_dxi = w * ga2*mu*(1/cs2 + 1)*dv_dxi
     return [dv_dxi, dw_dxi]
 
 
-def fluid_integrate_deflag(vel_en0, xi_array):
-    # integrates fluid equations, hopefully backwards from shock
+def dfluid_dxi_deflag(vel_en, xi):
+    #  returns [dv/dxi, dw/dxi] for integrating ODEs (deflagration)
+    v = vel_en[0]
+    w = vel_en[1]
+    mu = lorentz(xi, v)
+    ga2 = gamma2(v)
+    cs2 = cs_fun(w)**2
+
+    if v < v_shock(xi):  # Can happen if you try to integrate beyond shock
+        dv_dxi = 0.         # Stops solution blowing up
+    else:
+        dv_dxi = (2./xi)*(v/(1-xi*v))/(ga2*(mu**2/cs2 - 1))
+    dw_dxi = w * ga2*mu*(1/cs2 + 1)*dv_dxi
+    return [dv_dxi, dw_dxi]
+
+    
+def fluid_integrate(vel_en0, xi_array, direction):
+    # integrates fluid equations in non-parametric form
     # no error checking as yet
-    return int.odeint(dfluid_dxi_deflag, vel_en0, xi_array)
+    if direction == 'behind':
+        soln = int.odeint(dfluid_dxi_deton, vel_en0, xi_array)
+    elif direction == 'ahead':
+        soln = int.odeint(dfluid_dxi_deflag, vel_en0, xi_array)
+    else:
+        sys.exit('error: fluid_integrate: direction unrecognised')
+        
+    return soln[:,0], soln[:,1], xi_array
 
 
 # Another approach if cs is constant is to integrate enthalpy equation directly
@@ -336,6 +356,66 @@ def fluid_shell(v_w, al_p, wall_type="Calculate", Npts=NPDEFAULT):
     v_fluid, xi = velocity(v_w, al_p, wall_type, Npts)
     w_fluid, _ = enthalpy(v_w, al_p, wall_type, Npts, v_fluid)
 
+#    should really integrate equations as a pair, but about to be 
+#    superceded by fluid_shall_parametric
+    
+    return v_fluid, w_fluid, xi
+
+
+def fluid_shell_new(v_w, al_p, wall_type="Calculate", Npts=NPDEFAULT):
+    # Returns np 1D arrays with fluid velocity and enthalpy, for
+    # given wall speed v_f and alpha_plus al_p
+    # Enthalpy normalised to w_n = 1.0 far in front (only possible for constant cs)
+    # Consider replacing Npts with xi array
+
+    if wall_type == "Calculate":
+        wall_type = identify_wall_type(v_w, al_p)
+    # In case wall_type given wrongly (check this)
+    if v_w > cs0 and wall_type == 'Deflagration':
+        wall_type == 'Hybrid'
+
+    xi, v_sh, n_wall, ncs = xvariables(Npts, v_w)   # initiating x-axis variables
+
+    xi_ahead = xi[n_wall:]
+    xi_behind = xi[n_wall-1:ncs:-1]  # Could be empty
+    v_fluid = np.zeros_like(xi)
+    w_fluid = np.zeros_like(xi)
+
+    vfp_w, vfm_w, vfp_p, vfm_p = fluid_speeds_at_wall(al_p, wall_type, v_w)
+
+    wp = 1.0 # Nominal value - will be rescaled later
+    wm = wp/enthalpy_ratio(vfm_w, vfp_w) # enthalpy just behind wall
+    w_fluid[0:n_wall] = wm # Supersonic walls will overwrite for n>ncs
+    
+    if wall_type == 'Hybrid':
+        # Look out for divergent slope just behind wall
+        dxi = v_w - xi[n_wall-1]
+        if dxi < 0.:
+            print("error: fluid_shell_new: dxi = v_w - xi[n_wall-1] i negative")
+            sys.exit(1)
+        v_behind_init = v_just_behind(xi[n_wall-1], vfm_p, dxi)
+    else:
+        v_behind_init = vfm_p
+
+    v_fluid[n_wall:], w_fluid[n_wall:], _ = \
+        fluid_integrate([vfp_p, wp], xi_ahead, 'ahead')
+        
+    v_fluid[n_wall-1:ncs:-1], w_fluid[n_wall-1:ncs:-1], _ = \
+        fluid_integrate([v_behind_init, wm], xi_behind, 'behind')
+
+    n_shock = find_shock_index(v_fluid, xi, v_w, wall_type)
+    # Set fluid velocity to zero in front of the shock (integration isn't correct in front of shock)
+    v_fluid[n_shock:] = 0.0
+
+    # Hybrid/detonation integration extends back to trailing edge at n_cs+1
+    # w is constant behind that
+    # Deflagration: n_wall-1 is just behind wall
+    n_trail = min(n_wall-1,ncs+1)
+    w_fluid[0:n_trail] = w_fluid[n_trail]
+
+    # Normalise enthalpy to w_n = 1 far in front
+    w_fluid *= 1./w_fluid[-1]
+    
     return v_fluid, w_fluid, xi
 
 
@@ -434,16 +514,23 @@ def find_alpha_n(v_wall_, ap_, wall_type_="Calculate", Np_=NPDEFAULT):
     # print( "find_alpha_n 1: ", v_wall_,ap_,wall_type_
     if wall_type_ == "Calculate":
         wall_type_ = identify_wall_type(v_wall_, ap_)
-    # v_ = velocity(v_wall_, ap_, wall_type_, Np_)
-    # w_ = enthalpy(v_wall_, ap_, wall_type_, Np_, v_)
     _, w_, _ = fluid_shell(v_wall_, ap_, wall_type_, Np_)
-    # alpha_N = (w_+/w_N)*alpha_+
-    # w_ is normalised to 1 at large xi
     # print( "find_alpha_n 2: ", v_wall_,ap_,wall_type_,w_[n_wall,0]*ap_
     # Need n_wall+1, as w is an integral of v, and lags by 1 step
     return ap_*w_[n_wall+1]/w_[-1]
+    
 
-
+def find_alpha_n_from_w(w, v_wall, alpha_p):
+    # Calculates alpha_N ([(3/4) difference in trace anomaly]/enthalpy) from alpha_plus (ap_)
+    # Assuming one has solution array w
+    npt = w.size
+    n_wall = derived_parameters(v_wall, npt)
+    # print( "find_alpha_n 1: ", v_wall_,ap_,wall_type_
+    # print( "find_alpha_n 2: ", v_wall_,ap_,wall_type_,w_[n_wall,0]*ap_
+    # Need n_wall+1, as w is an integral of v, and lags by 1 step
+    return alpha_p*w[n_wall+1]/w[-1]
+    
+    
 def alpha_n_max_hybrid(v_wall_, Np_=NPDEFAULT):
     # Calculates maximum alpha_N for given v_wall, for Hybrid
     n_wall = derived_parameters(v_wall_, Np_)
@@ -482,50 +569,55 @@ def alpha_n_max_deflagration(v_wall_, Np_=NPDEFAULT):
     return w_[n_wall+1]*(1./3)
 
 
-def alpha_plus_max_detonation(v_wall_):
-    # Maximum allowed value of alpha_+ for a detonation with wall speed v_wall_
+def alpha_plus_max_detonation(v_wall):
+    # Maximum allowed value of alpha_+ for a detonation with wall speed v_wall
     # Comes from inverting v_w > v_Jouguet
-    a= 3*(1-v_wall_**2)
-    b= (1-np.sqrt(3)*v_wall_)**2
-    for bb, vw in np.nditer([b, v_wall_]):
+    it = np.nditer([None,v_wall],[],[['writeonly','allocate'],['readonly']])
+    for bb, vw in it:
+        a = 3*(1-vw**2)
         if vw < cs0:
-            bb = 0.0
-    # b[np.where(v_wall_ < 1./np.sqrt(3))] = 0.0
-    return b/a
+            b = 0.0
+        else:
+            b = (1-np.sqrt(3)*vw)**2
+        bb[...] = b/a
+
+    if isinstance(v_wall,np.ndarray):
+        return it.operands[0]
+    else:
+        return type(v_wall)(it.operands[0])
 
 
-def alpha_n_max_detonation(v_wall_):
+def alpha_n_max_detonation(v_wall):
     # Maximum allowed value of alpha_n for a detonation with wall speed v_wall_
-    # Same as above, because alpha_n = alpha_+
-    if v_wall_ < cs0:
+    # Same as alpha_plus_max_detonation, because alpha_n = alpha_+
+    if v_wall < cs0:
         anm_det = 0.0
     else:
-        anm_det = alpha_plus_max_detonation(v_wall_)
+        anm_det = alpha_plus_max_detonation(v_wall)
     return anm_det
 
 
-def alpha_plus_min_hybrid(v_wall_):
+def alpha_plus_min_hybrid(v_wall):
     # Minimum allowed value of alpha_+ for a hybrid with wall speed v_wall_
     # Condition from coincidence of wall and shock
-    b = (1-np.sqrt(3)*v_wall_)**2
-    c = 9*v_wall_**2 - 1
+    b = (1-np.sqrt(3)*v_wall)**2
+    c = 9*v_wall**2 - 1
     # for bb, vw in np.nditer([b,v_wall_]):
     if isinstance(b, np.ndarray):
-        b[np.where(v_wall_ < 1./np.sqrt(3))] = 0.0
+        b[np.where(v_wall < 1./np.sqrt(3))] = 0.0
     else:
-        if v_wall_ < cs0:
+        if v_wall < cs0:
             b = 0.0
     return b/c
 
 
-def alpha_n_min_hybrid(v_wall_):
-    # return find_alpha_n(v_wall_,alpha_plus_min_hybrid(v_wall_),"Hybrid")
-    # This can cause errors, so ...
-    return alpha_n_max_detonation(v_wall_)
+def alpha_n_min_hybrid(v_wall):
+    # Minimum alpha_n for a hybrid is equal to maximum alpha_n for a detonation
+    return alpha_n_max_detonation(v_wall)
 
 
 def find_alpha_plus(v_wall, alpha_n_given, Np=NPDEFAULT):
-    # Calculating alpha_plus from alpha_n.
+    # Calculate alpha_plus from a given alpha_n.
 
     if alpha_n_given < alpha_n_max_detonation(v_wall):
         # Must be detonation
@@ -633,21 +725,21 @@ def v_approx_low_alpha(xi, v_wall, alpha):
 
 
 def w_approx_low_alpha(xi, v_wall, alpha):
-    # Approximate solution for v(xi) at low alpha_+ = alpha_n
+    # Approximate solution for w(xi) at low alpha_+ = alpha_n
 
     v_max = 3 * alpha * v_wall/abs(3*v_wall**2 - 1)
     gaws2 = 1./(1. - 3*v_wall**2)
     w_app = np.exp(8*v_max * gaws2 * v_wall * ((v_wall/cs0) - 1))
 
     w_app[np.where(xi > max(v_wall, cs0))] = 1.0
-    v_app[np.where(xi < min(v_wall, cs0))] = 0.0
+    w_app[np.where(xi < min(v_wall, cs0))] = 0.0
 
-    return v_app
+    return w_app
 
 
 def mean_enthalpy_change(v, w, xi, v_wall):
-    # Compute mean square (4-)velocity of fluid in bubble
-    integral = np.trapz(xi**2 * (w - 1.), xi)
+    # Compute mean change in enthalphy in bubble relative to outside value
+    integral = np.trapz(xi**2 * (w - w[-1]), xi)
     return 3 * integral / v_wall**3
 
 
