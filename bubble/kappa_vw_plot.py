@@ -13,10 +13,11 @@ import sigfig as sf
 
 
 def main():
-    if not len(sys.argv) in [5,6,7]:
-        sys.stderr.write('usage: %s <vw_min> <vw_max> <log10_alpha_n_min> <log10_alpha_n_max> [n_vw] [n_a]\n' % sys.argv[0])
+    if not len(sys.argv) in [6,7,8]:
+        sys.stderr.write('usage: %s <vw_min> <vw_max> <log10_alpha_n_min> <log10_alpha_n_max> [n_vw] [n_a] [file_suffix] \n' % sys.argv[0])
         sys.exit(1)
-            
+    
+    sys.stderr.write('Starting')
     vw_min = float(sys.argv[1])
     vw_max = float(sys.argv[2])
     log10_alpha_n_min = float(sys.argv[3])
@@ -26,8 +27,12 @@ def main():
     if len(sys.argv) >= 6:
         n_vw = float(sys.argv[5])
     n_a = 3 # Default number of alpha_n points
-    if len(sys.argv) == 7:
+    if len(sys.argv) >= 7:
         n_a = float(sys.argv[6])
+    file_suffix = '' # file ending
+    if len(sys.argv) >= 8:
+        file_suffix = sys.argv[7]
+
 
     if vw_min > 1.0 or vw_max > 1.0:
         print("error: wall speed > 1. not possible")
@@ -62,13 +67,12 @@ def main():
         col = (xcol,0,1.-xcol)
         vJouguet = b.min_speed_deton(alpha_n)
 
-        y_data = b.get_kappa(vw_arr,alpha_n,verbosity=2)
+        y_data = b.get_kappa(vw_arr,alpha_n,npts=10000,verbosity=1)
         x_data = vw_arr
 
         hyb_index = np.logical_and(vw_arr > b.cs0, vw_arr < vJouguet)
         det_index = (vw_arr > vJouguet)
 
-        print('Plotting', alpha_n)
         plt.semilogy(x_data[def_index], y_data[def_index], color=col,
                      label=r'$\alpha_{{\rm n}} = {}$'.format(alpha_n))
         plt.semilogy(x_data[hyb_index], y_data[hyb_index], color=col, linestyle='--')
@@ -89,7 +93,7 @@ def main():
     plt.grid()
     plt.tight_layout()
 
-    plt.savefig('kappa_vw_alpha_n_new.pdf')
+    plt.savefig('kappa_vw_alpha_{}.pdf'.format(file_suffix))
 
     plt.show()
 
