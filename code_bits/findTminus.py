@@ -1,3 +1,5 @@
+# From MPhys project by Andrew Hanna 2016-17
+
 from scipy.optimize import fsolve
 from scipy.integrate import odeint
 
