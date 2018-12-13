@@ -19,6 +19,8 @@ import sys
 import numpy as np
 import scipy.integrate as spi
 import scipy.optimize as opt
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 eps = np.nextafter(0, 1)  # smallest float
 
@@ -662,12 +664,12 @@ def v_approx_high_alpha(xi, v_wall, v_xi_wall):
     return xi0 - 2*dv - A2*dv**2
 
 
-def v_approx_hybrid(xi, v_wall, v_xiWall):
+def v_approx_hybrid(xi, v_wall, v_xi_wall):
     # Approximate solution for v(xi) near v(xi) = xi (same as v_approx_high_alpha)
-    xi0 = (v_xiWall + 2*v_wall)/3.
+    xi0 = xi_zero(v_wall, v_xi_wall)
     A2 = 3*(2*xi0 - 1)/(1 - xi0**2)
     dv = (xi - xi0)
-    return xi - 3*dv - A2*dv**2
+    return xi - 2*dv - A2*dv**2
 
 
 def w_approx_high_alpha(xi, v_wall, v_xi_wall, w_xi_wall):
@@ -693,6 +695,7 @@ def v_approx_low_alpha(xi, v_wall, alpha):
 
 def w_approx_low_alpha(xi, v_wall, alpha):
     # Approximate solution for w(xi) at low alpha_+ = alpha_n
+    # (not complete for xi < min(v_wall, cs0))
 
     v_max = 3 * alpha * v_wall/abs(3*v_wall**2 - 1)
     gaws2 = 1./(1. - 3*v_wall**2)
@@ -877,4 +880,127 @@ def get_kappa_dw(v_wall, alpha_n, npts=NPDEFAULT, verbosity=0):
         dw_out = type(v_wall)(it.operands[2])
 
     return kappa_out, dw_out
+
+
+def plot_fluid_shell(v_wall, alpha_n, save_string=None, Np=NPDEFAULT):
+    # Calls fluid  and plots resulting v, w
+    # Along with:
+    # - shock curves (where v and w should form shock)
+    # - low alpha approximattion if alpha_plus < 0.025
+    # - high alpha approximation if alpha_plus > 0.2
+    # annotates titles with:
+    # Wall type, v_wall, alpha_n
+    # alpha_plus (alpha just in front of wall)
+    # r (ratio of enthalpies either side of wall)
+    # xi_sh (shock speed)
+    # w_0/w_n (ration of internal to external enthalpies)
+    # Ubar_f (mean square U = gamma(v) v)
+    # kinetic energy fraction
+    # kappa (Espinosa et al efficiency factor)
+    # omega (thermal energy relative to scalar potential energy, as measured by trace anomaly)
+    # Last should sum to 1.
+    high_alpha_p_plot = 0.2  # Above which plot high-alpha approximation
+    low_alpha_p_plot = 0.025  # Below which plot  low-alpha approximation
+
+        
+    wall_type = identify_wall_type(v_wall, alpha_n)
+
+    if wall_type=='Error':
+        sys.stderr.write('shell_plot: error: no solution for v_wall = {}, alpha_n = {}\n'.format(v_wall,alpha_n))
+        sys.exit(1)
+        
+    v, w, xi = fluid_shell(v_wall, alpha_n, Np)
+    xi_even = np.linspace(1/Np,1-1/Np,Np)
+    v_sh = v_shock(xi_even)
+    w_sh = w_shock(xi_even)
+
+    n_wall = find_v_index(xi, v_wall)
+    n_cs = np.int(np.floor(cs0*Np))
+    n_sh = xi.size-2
+
+    r = w[n_wall]/w[n_wall-1]
+    alpha_plus = alpha_n*w[-1]/w[n_wall]
+
+
+    ubarf2 = Ubarf_squared(v, w, xi, v_wall)
+    # Kinetic energy fraction of total
+    ke_frac = ubarf2/(0.75*(1 + alpha_n))
+    # Efficiency of turning Higgs potential into kinetic energy
+    kappa = ubarf2/(0.75*alpha_n)
+    # and efficiency of turning Higgs potential into thermal energy
+    dw = 0.75 * mean_enthalpy_change(v, w, xi, v_wall)/(0.75 * alpha_n * w[-1])
+    
+
+    if alpha_plus > high_alpha_p_plot:
+        v_approx = v_approx_high_alpha(xi[n_wall:n_sh], v_wall, v[n_wall])
+        w_approx = w_approx_high_alpha(xi[n_wall:n_sh], v_wall, v[n_wall], w[n_wall])
+
+    if alpha_plus < low_alpha_p_plot and not wall_type == 'Hybrid':
+        v_approx = v_approx_low_alpha(xi, v_wall, alpha_plus)
+# Not working yet
+#        w_approx = w_approx_low_alpha(xi, v_wall, alpha_plus)
+
+    # Plot
+    # Comment out for latex plotting if possible
+    #plt.rc('text', usetex=True)
+    #plt.rc('font', family='serif')
+    mpl.rcParams.update({'font.size': 14})
+    yscale_v = max(v)*1.2
+    xscale_max = min(xi[-2]*1.1,1.0)
+    yscale_enth_max = max(w)*1.2
+    yscale_enth_min = min(w)/1.2
+    xscale_min = xi[n_wall]*0.5
+
+    f = plt.figure(figsize=(8, 8))
+
+# First velocity
+    plt.subplot(2,1,1)
+
+    plt.title(r'{}: $\xi_{{\rm w}} =  {}$, $\alpha_{{\rm n}} =  {}$, $\alpha_+ =  {:5.3f}$, $r =  {:5.3f}$, $\xi_{{\rm sh}} =  {:5.3f}$'.format(
+        wall_type, v_wall, alpha_n, alpha_plus, r, xi[-2]),size=14)
+    plt.plot(xi, v, 'b', label=r'$v(\xi)$')
+
+    if not wall_type == 'Detonation':
+        plt.plot(xi_even[n_cs:], v_sh[n_cs:], 'r--', label=r'$v_{\rm sh}(\xi_{\rm sh})$')
+        if alpha_plus > high_alpha_p_plot:
+            plt.plot(xi[n_wall:n_sh], v_approx,'b--',label=r'$v$ high $\alpha$ approx')
+            plt.plot(xi, xi,'k--',label=r'$v_{\rm max}$')
+
+    if alpha_plus < low_alpha_p_plot and not wall_type == 'Hybrid':
+        plt.plot(xi, v_approx, 'b--', label=r'$v$ low $\alpha$ approx')
+    
+    plt.legend(loc='upper left')
+
+    plt.ylabel(r'$v(\xi)$', size=16)
+    plt.xlabel(r'$\xi$', size=16)
+    plt.axis([xscale_min, xscale_max, 0.0, yscale_v])
+
+# Then enthalpy
+    plt.subplot(2,1,2)
+
+    plt.title(r'$w_0/w_n = {:4.2}$, $\bar{{U}}_f = {:.3f}$, $K = {:5.3g}$, $\kappa = {:5.3f}$, $\omega = {:5.3f}$'.format(w[0]/w[-1],ubarf2**0.5,ke_frac, kappa, dw),size=14)
+    plt.plot(xi, np.ones_like(xi)*w[-1], '--', color='0.5')
+    plt.plot(xi, w, 'b', label=r'$w(\xi)$')
+    
+    if not wall_type == 'Detonation':
+        plt.plot(xi_even[n_cs:], w_sh[n_cs:],'r--',label=r'$w_{\rm sh}(\xi_{\rm sh})$')
+
+        if alpha_plus > high_alpha_p_plot:
+            plt.plot(xi[n_wall:n_sh], w_approx[:], 'b--', label=r'$w$ high $\alpha$ approx')
+
+#    if alpha_plus < low_alpha_p_plot and not wall_type == 'Hybrid':
+#        plt.plot(xi, w_approx, 'b--', label=r'$w$ low $\alpha$ approx')
+
+    plt.legend(loc='upper left')
+    plt.ylabel(r'$w(\xi)$', size=16)
+    plt.xlabel(r'$\xi$', size=16)
+    plt.axis([xscale_min, xscale_max, yscale_enth_min, yscale_enth_max])
+
+    plt.tight_layout()
+
+    if save_string is not None:
+        plt.savefig('shell_plot_vw_{}_alphan_{}{}'.format(v_wall,alpha_n,save_string))
+    plt.show()
+    
+    return f
 
