@@ -11,10 +11,11 @@ See Espinosa et al 2010, Hindmarsh & Hijazi 2019.
 Authors: Mark Hindmarsh 2015-19, with Mudhahir Al-Ajmi, and contributions from: 
  Danny Bail (Sussex MPhys RP projects 2016-18); Jacky Lindsay and Mike Soughton (MPhys project 2017-18)
 
-Changes planned at 01.19:
-- Turn comments into docstrings
+Changes planned at 02.19:
 - allow general equation of state (so integrate with V, T together instead of v, w separately)
    Idea to introduce eos as a class. Need a new interface which uses eos variables rather than alpha.
+- Include bubble nucleation calculations of beta (from V(T,phi))
+- Now comments are docstrings, think about sphinx
 
 """
 
