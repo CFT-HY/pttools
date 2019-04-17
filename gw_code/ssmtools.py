@@ -11,11 +11,9 @@ Author: Mark Hindmarsh 2015-19
 from __future__ import absolute_import, division, print_function
 
 import sys
-sys.path.append('../bubble')
-
 import numpy as np
 from scipy.optimize import fsolve
-import bubble as b
+from pttools.bubble import bubble as b
 
 #NZDEFAULT = 2000  # Default Number of points used in the numerical integrations
 NXIDEFAULT = 2000 # Default Number of points used ifor FFT
@@ -242,17 +240,6 @@ def nu(T, nuc_type='simultaneous', args=(1,)):
     elif nuc_type == "exponential":
         a = args[0]
         dist = a * np.exp(-a*T)
-#        n = args[0]
-#        dist = (1. / np.math.factorial(n)) * T ** n * np.exp(-T)
-        # delT = args[0]
-        # e_fac = np.exp(delT)
-        # norm = 1./(1 - np.exp(-e_fac))
-        # dist = norm * e_fac*np.exp(-T) * np.exp( - e_fac*np.exp(-T))
-    elif nuc_type == "TWW":
-        Tm = args[0]
-        s = args[1]
-        norm = (1 - np.exp(-np.exp(s*Tm)))/s
-        dist = np.exp(s*(Tm-T) - np.exp(s*(Tm - T)))/norm
     else:
         sys.stderr.write('error: nu: nucleation type not recognised')
         sys.exit(1)
@@ -272,7 +259,7 @@ def spec_den_v(z, params, npt=NPTDEFAULT, filename=None, skip=1, method='e_conse
      Returns dimensionless velocity spectral density $\bar{P}_v$, given array $z = qR_*$ and parameters:
         vw = params[0]       scalar
         alpha = params[1]    scalar
-        nuc_type = params[2] string [simultaneous | exponential | TWW]
+        nuc_type = params[2] string [simultaneous | exponential]
         nuc_args = params[3] tuple
      
      Gets fluid velocity profile from bubble toolbox or from file if specified. 
@@ -376,7 +363,7 @@ def power_v(z, params, npt=NPTDEFAULT, filename=None, skip=1, method='e_conservi
     Power spectrum of velocity field in Sound Shell Model.
         vw = params[0]       scalar
         alpha = params[1]    scalar
-        nuc_type = params[2] string [simultaneous | exponential | TWW]
+        nuc_type = params[2] string [simultaneous | exponential]
         nuc_args = params[3] tuple
     """
     p_v = spec_den_v(z,params,npt,filename,skip,method)
@@ -388,7 +375,7 @@ def power_gw_scaled(z, params, npt=NPTDEFAULT, filename=None, skip=1, method='e_
      Scaled GW power spectrum at array of z = kR* values by
         vw = params[0]       scalar
         alpha = params[1]    scalar
-        nuc_type = params[2] string [simultaneous | exponential | TWW]
+        nuc_type = params[2] string [simultaneous | exponential]
         nuc_args = params[3] tuple
 
     Steps:

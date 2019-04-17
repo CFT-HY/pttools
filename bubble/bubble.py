@@ -1086,7 +1086,7 @@ def get_kappa_dq(v_wall, alpha_n, npts=NPDEFAULT, verbosity=0):
     
 def plot_fluid_shell(v_wall, alpha_n, save_string=None, Np=NPDEFAULT):
     """
-     Calls ``fluid_shell`` and plots resulting v, w against xi. 
+     Calls ``fluid_shell`` and plots resulting v, w against xi, returning figure handle.
      Also plots:
      - shock curves (where v and w should form shock)
      - low alpha approximation if alpha_plus < 0.025
@@ -1207,7 +1207,7 @@ def plot_fluid_shell(v_wall, alpha_n, save_string=None, Np=NPDEFAULT):
 
 def plot_fluid_shells(v_wall_list, alpha_n_list, multi=False, save_string=None, Np=NPDEFAULT):
     """
-     Calls ``fluid_shell`` and plots resulting v, w against xi. 
+     Calls ``fluid_shell`` and plots resulting v, w against xi. Returns figure handle.
      Annotates titles with:
      - Wall type, v_wall, alpha_n
      - alpha_plus (alpha just in front of wall)
