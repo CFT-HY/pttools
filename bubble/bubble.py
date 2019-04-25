@@ -266,11 +266,13 @@ def df_dtau(y, t, cs2_fun=cs2_bag):
     w  = y[1]
     xi = y[2]
     cs2 = cs2_fun(w)
-
-    dxi_dt = xi * (((xi - v) ** 2) - (cs2) * ((1 - (xi * v)) ** 2))  # dxi/dt
-    dv_dt  = 2 * v * (cs2) * (1 - (v ** 2)) * (1 - (xi * v))  # dv/dt
-    dw_dt  = ((2 * v * w / (xi * (xi - v))) * dxi_dt + 
-              ((w / (1 - v ** 2)) * (((1 - v * xi) / (xi - v)) + ((xi - v) / (1 - xi * v)))) * dv_dt)  # dw/dt
+    xiXv = xi*v
+    xi_v = xi - v
+    v2  = v*v
+    
+    dxi_dt = xi * ((xi_v)**2 - cs2 * (1 - xiXv)**2)  # dxi/dt
+    dv_dt  = 2 * v * cs2 * (1 - v2) * (1 - xiXv)  # dv/dt
+    dw_dt  = (w/(1 - v2)) * (xi_v/(1 - xiXv)) * (1/cs2 + 1) * dv_dt
 
     return [dv_dt, dw_dt, dxi_dt]
 
@@ -280,6 +282,7 @@ def fluid_integrate_param(v0, w0, xi0, t_end=TENDDEFAULT, npts=NPDEFAULT, cs2_fu
      Integrates parametric fluid equations in df_dtau from an initial condition.
      Positive t_end integrates along curves from (v,w) = (0,cs0) to (1,1).
      Negative t_end integrates towards (0,cs0).
+     Returns: v, w, xi, t
     """
     t = np.linspace(0., t_end, npts)
     if isinstance(xi0, np.ndarray):
@@ -549,10 +552,6 @@ def fluid_shell_alpha_plus(v_wall, alpha_plus, wall_type='Calculate', npts=NPDEF
         xib = np.concatenate((xi,xib))
 
     # Now put halves together in right order
-#    v  = np.concatenate((np.flip(vb,0),vf))
-#    w  = np.concatenate((np.flip(wb,0),wf))
-#    w  = w*(w_n/w[-1])
-#    xi = np.concatenate((np.flip(xib,0),xif))
     v  = np.concatenate((np.flipud(vb),vf))
     w  = np.concatenate((np.flipud(wb),wf))
     w  = w*(w_n/w[-1])
@@ -1129,7 +1128,7 @@ def plot_fluid_shell(v_wall, alpha_n, save_string=None, Np=NPDEFAULT):
 
 
     ubarf2 = ubarf_squared(v, w, xi, v_wall)
-    # Kinetic energy fraction of total
+    # Kinetic energy fraction of total (Bag equation of state)
     ke_frac = ubarf2/(0.75*(1 + alpha_n))
     # Efficiency of turning Higgs potential into kinetic energy
     kappa = ubarf2/(0.75*alpha_n)
@@ -1160,20 +1159,25 @@ def plot_fluid_shell(v_wall, alpha_n, save_string=None, Np=NPDEFAULT):
     plt.plot(xi, v, 'b', label=r'$v(\xi)$')
 
     if not wall_type == 'Detonation':
-        plt.plot(xi_even[n_cs:], v_sh[n_cs:], 'r--', label=r'$v_{\rm sh}(\xi_{\rm sh})$')
+        plt.plot(xi_even[n_cs:], v_sh[n_cs:], 'k--', label=r'$v_{\rm sh}(\xi_{\rm sh})$')
         if vmax > high_v_plot*v_wall:
             plt.plot(xi[n_wall:n_sh], v_approx,'b--',label=r'$v$ ($v \lesssim \xi$ approx)')
             plt.plot(xi, xi,'k--',label=r'$v = \xi$')
+
+    if not wall_type == 'Deflagration':
+        v_minus_max = lorentz(xi_even, cs0)
+        plt.plot(xi_even[n_cs:], v_minus_max[n_cs:], 'k-.', label=r'$\mu(\xi,c_{\rm s})$')
 
     if vmax < low_v_plot and not wall_type == 'Hybrid':
         plt.plot(xi, v_approx, 'b--', label=r'$v$ low $\alpha$ approx')
     
     plt.legend(loc='upper left')
 
-    plt.ylabel(r'$v(\xi)$', size=16)
-    plt.xlabel(r'$\xi$', size=16)
+    plt.ylabel(r'$v(\xi)$')
+    plt.xlabel(r'$\xi$')
     plt.axis([xscale_min, xscale_max, 0.0, yscale_v])
-
+    plt.grid()
+    
 # Then enthalpy
     plt.subplot(2,1,2)
 
@@ -1183,11 +1187,14 @@ def plot_fluid_shell(v_wall, alpha_n, save_string=None, Np=NPDEFAULT):
     plt.plot(xi, w, 'b', label=r'$w(\xi)$')
     
     if not wall_type == 'Detonation':
-        plt.plot(xi_even[n_cs:], w_sh[n_cs:],'r--',label=r'$w_{\rm sh}(\xi_{\rm sh})$')
+        plt.plot(xi_even[n_cs:], w_sh[n_cs:],'k--',label=r'$w_{\rm sh}(\xi_{\rm sh})$')
 
         if vmax > high_v_plot*v_wall:
             plt.plot(xi[n_wall:n_sh], w_approx[:], 'b--', label=r'$w$ ($v \lesssim \xi$ approx)')
 
+    else:
+        wmax_det = (xi_even/cs0)*gamma2(xi_even)/gamma2(cs0)
+        plt.plot(xi_even[n_cs:], wmax_det[n_cs:],'k-.',label=r'$w_{\rm max}$')
 #    if alpha_plus < low_alpha_p_plot and not wall_type == 'Hybrid':
 #        plt.plot(xi, w_approx, 'b--', label=r'$w$ low $\alpha$ approx')
 
@@ -1195,6 +1202,7 @@ def plot_fluid_shell(v_wall, alpha_n, save_string=None, Np=NPDEFAULT):
     plt.ylabel(r'$w(\xi)$', size=16)
     plt.xlabel(r'$\xi$', size=16)
     plt.axis([xscale_min, xscale_max, yscale_enth_min, yscale_enth_max])
+    plt.grid()
 
     plt.tight_layout()
 
@@ -1258,7 +1266,6 @@ def plot_fluid_shells(v_wall_list, alpha_n_list, multi=False, save_string=None, 
 #        alpha_plus = alpha_n*w[-1]/w[n_wall]
 #    
 #    
-
         # Plot
         yscale_v = max(max(v), yscale_v)
         yscale_enth_max = max(max(w),yscale_enth_max)
@@ -1269,7 +1276,10 @@ def plot_fluid_shells(v_wall_list, alpha_n_list, multi=False, save_string=None, 
     # First velocity
         ax[0,n].plot(xi, v, 'b')
         if not wall_type == 'Detonation':
-            ax[0,n].plot(xi_even[n_cs:], v_sh[n_cs:], 'r--', label=r'$v_{\rm sh}(\xi_{\rm sh})$')
+            ax[0,n].plot(xi_even[n_cs:], v_sh[n_cs:], 'k--', label=r'$v_{\rm sh}(\xi_{\rm sh})$')
+        if not wall_type == 'Deflagration':
+            v_minus_max = lorentz(xi_even, cs0)
+            ax[0,n].plot(xi_even[n_cs:], v_minus_max[n_cs:], 'k-.', label=r'$\mu(\xi,c_{\rm s})$')
 
         if multi:
             n_wall = find_v_index(xi, v_wall)
@@ -1285,8 +1295,25 @@ def plot_fluid_shells(v_wall_list, alpha_n_list, multi=False, save_string=None, 
 #        ax[1,n].plot(xi, np.ones_like(xi)*w[-1], '--', color='0.5')
         ax[1,n].plot(xi, w, 'b')
         if not wall_type == 'Detonation':
-            ax[1,n].plot(xi_even[n_cs:n_sh], w_sh[n_cs:n_sh],'r--',label=r'$w_{\rm sh}(\xi_{\rm sh})$')
+            ax[1,n].plot(xi_even[n_cs:n_sh], w_sh[n_cs:n_sh],'k--',label=r'$w_{\rm sh}(\xi_{\rm sh})$')
+        else:
+            wmax_det = (xi_even/cs0)*gamma2(xi_even)/gamma2(cs0)
+            ax[1,n].plot(xi_even[n_cs:], wmax_det[n_cs:],'k-.',label=r'$w_{\rm max}$')
 
+        if multi:
+            ubarf2 = ubarf_squared(v, w, xi, v_wall)
+            # Kinetic energy fraction of total (Bag equation of state)
+            ke_frac = ubarf2/(0.75*(1 + alpha_n))
+            # Efficiency of turning Higgs potential into kinetic energy
+            kappa = ubarf2/(0.75*alpha_n)
+            # and efficiency of turning Higgs potential into thermal energy
+            dw = 0.75 * mean_enthalpy_change(v, w, xi, v_wall)/(0.75 * alpha_n * w[-1])
+#            ax[1,n].set_title(r'$w_0/w_n = {:4.2}$, $\bar{{U}}_f = {:.3f}$, $K = {:5.3g}$, $\kappa = {:5.3f}$, $\omega = {:5.3f}$'.format(
+#                      w[0]/w[-1],ubarf2**0.5,ke_frac, kappa, dw),size=14)
+            ax[1,n].set_title(r'$K = {:5.3g}$, $\kappa = {:5.3f}$, $\omega = {:5.3f}$'.format(
+                      ke_frac, kappa, dw),size=14)
+
+            
         ax[1,n].set_xlabel(r'$\xi$')
         ax[1,n].grid(True)
         if multi:
