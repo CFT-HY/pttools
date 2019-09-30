@@ -455,10 +455,14 @@ def fluid_shell_alpha_plus(v_wall, alpha_plus, wall_type='Calculate', npts=NPDEF
         xib = np.concatenate((xi,xib))
 
     # Now put halves together in right order
-    v  = np.concatenate((np.flip(vb,0),vf))
-    w  = np.concatenate((np.flip(wb,0),wf))
+#    v  = np.concatenate((np.flip(vb,0),vf))
+#    w  = np.concatenate((np.flip(wb,0),wf))
+#    w  = w*(w_n/w[-1])
+#    xi = np.concatenate((np.flip(xib,0),xif))
+    v  = np.concatenate((np.flipud(vb),vf))
+    w  = np.concatenate((np.flipud(wb),wf))
     w  = w*(w_n/w[-1])
-    xi = np.concatenate((np.flip(xib,0),xif))
+    xi = np.concatenate((np.flipud(xib),xif))
 
     return v, w, xi
 
