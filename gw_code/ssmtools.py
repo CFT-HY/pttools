@@ -4,7 +4,7 @@ import sys
 sys.path.append('../bubble')
 
 import numpy as np
-import bubble as b
+import bubble.bubble as b
 
 #NZDEFAULT = 2000  # Default Number of points used in the numerical integrations
 NXIDEFAULT = 2000 # Default Number of points used ifor FFT
