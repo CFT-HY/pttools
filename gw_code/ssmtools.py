@@ -137,9 +137,9 @@ def A2_e_conserving_file(z, filename, alpha, skip=1, npt=NPTDEFAULT):
     def fun(x):
         return x - b.w(e_n, 0., alpha*(0.75*x))
     w_n0 = b.w(e_n, 0., alpha*(e_n)) # Correct only in Bag, probably good enough
-    w_n = fsolve(fun, w_n0) 
+    w_n = fsolve(fun, w_n0)[0] # fsolve returns array, want float 
     lam = (e_xi_lt1 - e_n)/w_n
-    print('initial guess w_n0: {}, final {}'.format(w_n0,w_n))
+    print('ssmtools.A2_e_conserving_file: initial guess w_n0: {}, final {}'.format(w_n0,w_n))
     
     lam_ft = np.zeros_like(z)
     for j in range(lam_ft.size):
