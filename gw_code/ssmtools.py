@@ -15,11 +15,11 @@ import numpy as np
 from scipy.optimize import fsolve
 from pttools.bubble import bubble as b
 
-#NZDEFAULT = 2000  # Default Number of points used in the numerical integrations
-NXIDEFAULT = 2000 # Default Number of points used ifor FFT
-NTDEFAULT = 200 # Number of T-tilde values to integrrate bubble lifetime distribution over
+NXIDEFAULT = 2000 # Default Number of points used in bubble profiles
+NTDEFAULT  = 200 # Number of T-tilde values to integrate bubble lifetime distribution over
+NZDEFAULT  = 2000  # Default Number of points used in the numerical integrations
 
-NPTDEFAULT = [NXIDEFAULT, NTDEFAULT]
+NPTDEFAULT = [NXIDEFAULT, NTDEFAULT, NZDEFAULT]
 
 cs0 = b.cs0
 
@@ -154,7 +154,6 @@ def f_ssm_func(z, vw, alpha_n, npt=NPTDEFAULT):
      z is array of scaled wavenumbers z = kR*
     """
     nxi = npt[0]
-    # nt = npt[1]
     f_ssm = np.zeros_like(z)
     v_ip, _, xi = b.fluid_shell(vw, alpha_n, nxi)
 
@@ -171,7 +170,6 @@ def lam_ssm_func(z, vw, alpha_n, npt=NPTDEFAULT):
     """
     nxi = npt[0]
     xi_re = np.linspace(0,1-1/nxi,nxi) # need to resample for lam = de/w
-    # nt = npt[1]
     v_ip, w_ip, xi = b.fluid_shell(vw, alpha_n, nxi)
 
     lam_orig = b.de_from_w(w_ip,xi,vw,alpha_n)/w_ip[-1]
@@ -384,8 +382,9 @@ def power_gw_scaled(z, params, npt=NPTDEFAULT, filename=None, skip=1, method='e_
      3. turning SD into power
     """
     eps = 1e-8 # Seems to be needed for max(z) <= 100. Why?
-    nz = len(z)
-    xmax = max(z) * ( 0.5 * (1. + cs0) / cs0) + eps
+#    nz = len(z) - this can be too few for velocity PS convolutions
+    nz = npt[2]
+    xmax = max(z) * (0.5 * (1. + cs0) / cs0) + eps
     xmin = min(z) * (0.5 * (1. - cs0) / cs0) - eps
     x = np.logspace(np.log10(xmin), np.log10(xmax), nz)
 
