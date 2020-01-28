@@ -581,14 +581,24 @@ def fluid_wall_to_shock(v, w, xi, t, wall_type):
     """
      Truncates fluid variable arrays (v, w, xi) so last element is just ahead of shock
     """
-    n_shock = -2
+    n_shock_index = -2
+    n_shock = 0
     if not wall_type == 'Detonation':
         it = np.nditer([v, xi], flags=['c_index'])
         for vv, x in it:
             if vv <= v_shock(x):
-                n_shock = it.index
+                n_shock_index = it.index
                 break
-        
+    
+    if n_shock_index == 0:
+        sys.stderr.write('fluid_wall_to_shock: warning: deflagration solved as detonation\n')
+#        sys.stderr.write(' probably because alpha not found accurately enough from alpha_n\n')
+        sys.stderr.write(' temporary fix implemented\n')
+        n_shock = 1
+    else:
+        n_shock = n_shock_index
+
+#    print("n_shock",n_shock,v[n_shock],v_shock(xi[n_shock]))
     return v[:n_shock+1], w[:n_shock+1], xi[:n_shock+1], t[:n_shock+1]
 
 
@@ -888,6 +898,21 @@ def de_from_w(w, xi, v_wall, alpha_n):
               
     return e_from_w - e_from_w[-1]
 
+def de_from_w_new(v, w, xi, v_wall, alpha_n):
+    """
+    For exploring new methods of calculating energy density difference 
+    from velocity and enthalpy, assuming bag equation of state
+    Can get alpha_n = find_alpha_n_from_w_xi(w,xi,v_wall,alpha_p) 
+    """
+    e_from_w = e(w, phase(xi,v_wall), 0.75*w[-1]*alpha_n)
+    
+    de = e_from_w - e_from_w[-1]
+
+    # Try adjusting by a factor - currently doesn't do anything    
+    de *= 1.0
+    
+    return de
+
 
 def mean_energy_change(v, w, xi, v_wall, alpha_n):
     """
@@ -1166,7 +1191,7 @@ def plot_fluid_shell(v_wall, alpha_n, save_string=None, Np=NPDEFAULT):
     if not wall_type == 'Detonation':
         plt.plot(xi_even[n_cs:], v_sh[n_cs:], 'k--', label=r'$v_{\rm sh}(\xi_{\rm sh})$')
         if vmax > high_v_plot*v_wall:
-            plt.plot(xi[n_wall:n_sh], v_approx,'b--',label=r'$v$ ($v \lesssim \xi$ approx)')
+            plt.plot(xi[n_wall:n_sh], v_approx,'b--',label=r'$v$ ($v < \xi$ approx)')
             plt.plot(xi, xi,'k--',label=r'$v = \xi$')
 
     if not wall_type == 'Deflagration':
@@ -1195,7 +1220,7 @@ def plot_fluid_shell(v_wall, alpha_n, save_string=None, Np=NPDEFAULT):
         plt.plot(xi_even[n_cs:], w_sh[n_cs:],'k--',label=r'$w_{\rm sh}(\xi_{\rm sh})$')
 
         if vmax > high_v_plot*v_wall:
-            plt.plot(xi[n_wall:n_sh], w_approx[:], 'b--', label=r'$w$ ($v \lesssim \xi$ approx)')
+            plt.plot(xi[n_wall:n_sh], w_approx[:], 'b--', label=r'$w$ ($v < \xi$ approx)')
 
     else:
         wmax_det = (xi_even/cs0)*gamma2(xi_even)/gamma2(cs0)

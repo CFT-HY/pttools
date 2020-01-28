@@ -36,7 +36,7 @@ def sin_transform(z, xi, v):
 #############################
 # Sound shell model functions.
 #############################
-def A2_ssm_func(z, vw, alpha, npt=NPTDEFAULT, method='e_conserving'):
+def A2_ssm_func(z, vw, alpha, npt=NPTDEFAULT, method='e_conserving', de_method='standard'):
     """
      Returns the value of $|A(z)|^2$, 
      z is an array of scaled wavenumbers $z = kR_*$. 
@@ -47,7 +47,7 @@ def A2_ssm_func(z, vw, alpha, npt=NPTDEFAULT, method='e_conserving'):
     
     if method=='e_conserving':
         # This is the correct method (as of 12.18)
-        A2 = A2_e_conserving(z, vw, alpha, npt)
+        A2 = A2_e_conserving(z, vw, alpha, npt, 'A2_only', de_method)
     elif method=='f_only':
         print('A2_ssm_func: f_only method, multiplying (f\')^2 by 2')
         f = f_ssm_func(z, vw, alpha, npt)
@@ -71,7 +71,7 @@ def A2_ssm_func(z, vw, alpha, npt=NPTDEFAULT, method='e_conserving'):
     return A2
 
 
-def A2_e_conserving(z, vw, alpha_n, npt=NPTDEFAULT, ret_vals='A2_only'):
+def A2_e_conserving(z, vw, alpha_n, npt=NPTDEFAULT, ret_vals='A2_only', de_method='standard'):
     """
      Returns the value of $|A(z)|^2$, where |Plane wave amplitude|^2 = T^3 |A(z)|^2, 
      calculated from self-similar hydro solution obtained with ``bubble.fluid_shell``.
@@ -80,8 +80,8 @@ def A2_e_conserving(z, vw, alpha_n, npt=NPTDEFAULT, ret_vals='A2_only'):
      linear order, meaning that there is an apparent $z^0$ piece at very low $z$.
     """
     nxi = npt[0]
-    xi_re = np.linspace(0,1-1/nxi,nxi) # need to resample for lam = de/w
-    
+    xi_re = np.linspace(0,1-1/nxi,nxi) 
+    # need to resample for lam = de/w, as some points are very far apart
     v_ip, w_ip, xi = b.fluid_shell(vw, alpha_n, nxi)
 
     f = np.zeros_like(z)
@@ -91,8 +91,12 @@ def A2_e_conserving(z, vw, alpha_n, npt=NPTDEFAULT, ret_vals='A2_only'):
     v_ft = np.gradient(f) / np.gradient(z)
 
     # Now get and resample lam = de/w
-    lam_orig = b.de_from_w(w_ip,xi,vw,alpha_n)/w_ip[-1]
-    lam_orig += w_ip*v_ip*v_ip/w_ip[-1]
+    if de_method == 'standard':
+        lam_orig = b.de_from_w(w_ip,xi,vw,alpha_n)/w_ip[-1]
+    elif de_method == 'adjusted':
+        lam_orig = b.de_from_w_new(v_ip,w_ip,xi,vw,alpha_n)/w_ip[-1]
+
+    lam_orig += w_ip*v_ip*v_ip/w_ip[-1] #   This doesn't make much difference at small alpha
     lam_re = np.interp(xi_re,xi,lam_orig)
     lam_ft = np.zeros_like(z)
     for j in range(lam_ft.size):
@@ -163,7 +167,7 @@ def f_ssm_func(z, vw, alpha_n, npt=NPTDEFAULT):
     return f_ssm
 
 
-def lam_ssm_func(z, vw, alpha_n, npt=NPTDEFAULT):
+def lam_ssm_func(z, vw, alpha_n, npt=NPTDEFAULT, method='standard'):
     """
      3D FT of radial energy perturbation from Sound Shell Model fluid profile
      z is array of scaled wavenumbers z = kR*
@@ -172,7 +176,10 @@ def lam_ssm_func(z, vw, alpha_n, npt=NPTDEFAULT):
     xi_re = np.linspace(0,1-1/nxi,nxi) # need to resample for lam = de/w
     v_ip, w_ip, xi = b.fluid_shell(vw, alpha_n, nxi)
 
-    lam_orig = b.de_from_w(w_ip,xi,vw,alpha_n)/w_ip[-1]
+    if method == 'standard':
+        lam_orig = b.de_from_w(w_ip,xi,vw,alpha_n)/w_ip[-1]
+    elif method == 'adjusted':
+        lam_orig = b.de_from_w_new(v_ip,w_ip,xi,vw,alpha_n)/w_ip[-1]
     lam_re = np.interp(xi_re,xi,lam_orig)
     lam_ft = np.zeros_like(z)
     
@@ -252,7 +259,7 @@ def pow_spec(z,spec_den):
     return z**3  / (2. * np.pi ** 2) * spec_den
 
 
-def spec_den_v(z, params, npt=NPTDEFAULT, filename=None, skip=1, method='e_conserving'):
+def spec_den_v(z, params, npt=NPTDEFAULT, filename=None, skip=1, method='e_conserving', de_method='standard'):
     """
      Returns dimensionless velocity spectral density $\bar{P}_v$, given array $z = qR_*$ and parameters:
         vw = params[0]       scalar
@@ -287,7 +294,7 @@ def spec_den_v(z, params, npt=NPTDEFAULT, filename=None, skip=1, method='e_conse
         alpha = params[1]
         nuc_type = params[2]
         nuc_args = params[3]
-        A2_lookup = A2_ssm_func(qT_lookup, vw, alpha, npt, method)
+        A2_lookup = A2_ssm_func(qT_lookup, vw, alpha, npt, method, de_method)
     else:
         vw = params[0]
         alpha = params[1]
@@ -301,6 +308,7 @@ def spec_den_v(z, params, npt=NPTDEFAULT, filename=None, skip=1, method='e_conse
         return qRstar * Ttilde / (b_R *vw )
 
     A2_2d_array = np.zeros((nz, nt))
+    
     for i in range(nz):
         A2_2d_array[i] = np.interp(qT_array(z[i],t_array), qT_lookup, A2_lookup)
 
@@ -356,7 +364,7 @@ def spec_den_gw_scaled(xlookup, P_vlookup, y=None):
     return (4./3.)*p_gw, y
 
 
-def power_v(z, params, npt=NPTDEFAULT, filename=None, skip=1, method='e_conserving'):
+def power_v(z, params, npt=NPTDEFAULT, filename=None, skip=1, method='e_conserving', de_method='standard'):
     """
     Power spectrum of velocity field in Sound Shell Model.
         vw = params[0]       scalar
@@ -364,11 +372,11 @@ def power_v(z, params, npt=NPTDEFAULT, filename=None, skip=1, method='e_conservi
         nuc_type = params[2] string [simultaneous | exponential]
         nuc_args = params[3] tuple
     """
-    p_v = spec_den_v(z,params,npt,filename,skip,method)
+    p_v = spec_den_v(z,params,npt,filename,skip,method, de_method)
     return pow_spec(z,p_v)    
 
     
-def power_gw_scaled(z, params, npt=NPTDEFAULT, filename=None, skip=1, method='e_conserving'):
+def power_gw_scaled(z, params, npt=NPTDEFAULT, filename=None, skip=1, method='e_conserving', de_method='standard'):
     """
      Scaled GW power spectrum at array of z = kR* values by
         vw = params[0]       scalar
@@ -388,7 +396,7 @@ def power_gw_scaled(z, params, npt=NPTDEFAULT, filename=None, skip=1, method='e_
     xmin = min(z) * (0.5 * (1. - cs0) / cs0) - eps
     x = np.logspace(np.log10(xmin), np.log10(xmax), nz)
 
-    sd_v = spec_den_v(x, params, npt, filename, skip, method)
+    sd_v = spec_den_v(x, params, npt, filename, skip, method, de_method)
     sd_gw, y = spec_den_gw_scaled(x, sd_v, z)
     return pow_spec(z, sd_gw)
 
