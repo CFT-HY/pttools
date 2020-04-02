@@ -516,11 +516,11 @@ def fluid_shell_alpha_plus(v_wall, alpha_plus, wall_type='Calculate', npts=NPDEF
     # Integrate forward and find shock.
     if not wall_type == 'Detonation':
     # First go
-        v,w,xi,t = fluid_integrate_param(vfp_p, wp, v_w+dxi, -TENDDEFAULT, NPDEFAULT, cs2_fun)
+        v,w,xi,t = fluid_integrate_param(vfp_p, wp, v_w, -TENDDEFAULT, NPDEFAULT, cs2_fun)
         v, w, xi, t = fluid_wall_to_shock(v, w, xi, t, wall_type)
     # Now refine so that there are ~N points between wall and shock
         t_end_refine = t[-1]
-        v,w,xi,t = fluid_integrate_param(vfp_p, wp, v_w+dxi, t_end_refine, npts, cs2_fun)
+        v,w,xi,t = fluid_integrate_param(vfp_p, wp, v_w, t_end_refine, npts, cs2_fun)
         v, w, xi, t = fluid_wall_to_shock(v, w, xi, t, wall_type)
         v, w, xi = shock_zoom_last_element(v, w, xi)
     # Now complete to xi = 1
@@ -591,9 +591,11 @@ def fluid_wall_to_shock(v, w, xi, t, wall_type):
                 break
     
     if n_shock_index == 0:
-        sys.stderr.write('fluid_wall_to_shock: warning: deflagration solved as detonation\n')
+        sys.stderr.write('fluid_wall_to_shock: warning: v[0] < v_shock(xi[0]) for {}\n'.format(wall_type))
+        sys.stderr.write('wall_type: {}, xi[0] = {}, v[0] = {}, v_sh(xi[0]) = {}\n'.format(
+                wall_type, xi[0], v[0], v_shock(xi[0])))
 #        sys.stderr.write(' probably because alpha not found accurately enough from alpha_n\n')
-        sys.stderr.write(' temporary fix implemented\n')
+        sys.stderr.write('shock profile has only one element. Temporary fix implemented.\n')
         n_shock = 1
     else:
         n_shock = n_shock_index
