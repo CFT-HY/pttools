@@ -347,7 +347,7 @@ def identify_wall_type_alpha_plus(v_wall, alpha_p):
      Determines wall type from wall speed and at-wall strength parameter. 
      wall_type = [ 'Detonation' | 'Deflagration' | 'Hybrid' ]
     """
-    if v_wall < cs0:
+    if v_wall <= cs0:
         wall_type = 'Deflagration'
     else:
         if alpha_p < alpha_plus_max_detonation(v_wall):
@@ -385,7 +385,7 @@ def find_v_index(xi, v_target):
 
 def v_shock(xi):
     """
-     Fluid velocity at a shock at xi.  No shocks exist for xi < cs, so returns zero
+     Fluid velocity at a shock at xi.  No shocks exist for xi < cs, so returns zero.
     """
     # Maybe should return a nan?
     v_sh = (3*xi**2 - 1)/(2*xi)
@@ -401,7 +401,7 @@ def v_shock(xi):
 
 def w_shock(xi, w_n=1.):
     """
-     Fluid enthalpy at a shock at xi.  No shocks exist for xi < cs, so returns nan
+     Fluid enthalpy at a shock at xi.  No shocks exist for xi < cs, so returns nan.
     """
     w_sh = w_n * (9*xi**2 - 1)/(3*(1-xi**2))
 
@@ -419,6 +419,7 @@ def find_shock_index(v_f, xi, v_wall, wall_type):
      Array index of shock from first point where fluid velocity v_f goes below v_shock
      For detonation, returns wall position.
     """
+    check_wall_speed(v_wall)
     n_shock = 0
 
     if not (wall_type == "Detonation"):
@@ -461,8 +462,9 @@ def shock_zoom_last_element(v, w, xi):
 def fluid_shell(v_wall, alpha_n, n_xi=N_XI_DEFAULT):
     """
      Finds fluid shell (v, w, xi) from a given v_wall, alpha_n, which must be scalars.  
-     Option to increase resolution n_xi
+     Option to change xi resolution n_xi
     """
+    check_physical_params([v_wall,alpha_n])
     wall_type = identify_wall_type(v_wall, alpha_n)
     if wall_type == 'Error':
         sys.stderr.write('fluid_shell: giving up because of identify_wall_type error')
@@ -486,6 +488,7 @@ def fluid_shell_alpha_plus(v_wall, alpha_plus, wall_type='Calculate', n_xi=N_XI_
          w_n - specify enthalpy outside fluid shell
          cs2_fun - sound speed squared as a function of enthalpy, default 
     """
+    check_wall_speed(v_wall)
     dxi = 1./n_xi
 #    dxi = 10*eps
 
@@ -510,7 +513,7 @@ def fluid_shell_alpha_plus(v_wall, alpha_plus, wall_type='Calculate', n_xi=N_XI_
     wp = 1.0 # Nominal value - will be rescaled later
     wm = wp/enthalpy_ratio(vfm_w, vfp_w) # enthalpy just behind wall
 
-    # Set up parts outside shell where v=0. 2 points only.
+    # Set up parts outside shell where v=0. Need 2 points only.
     xif = np.linspace(v_wall + dxi,1.0,2)
     vf = np.zeros_like(xif)
     wf = np.ones_like(xif)*wp 
@@ -523,11 +526,12 @@ def fluid_shell_alpha_plus(v_wall, alpha_plus, wall_type='Calculate', n_xi=N_XI_
     if not wall_type == 'Detonation':
     # First go
         v,w,xi,t = fluid_integrate_param(vfp_p, wp, v_w, -T_END_DEFAULT, N_XI_DEFAULT, cs2_fun)
-        v, w, xi, t = fluid_wall_to_shock(v, w, xi, t, wall_type)
-    # Now refine so that there are ~N points between wall and shock
+        v, w, xi, t = trim_fluid_wall_to_shock(v, w, xi, t, wall_type)
+    # Now refine so that there are ~N points between wall and shock.  A bit excessive for thin
+    # shocks perhaps, but better safe than sorry. Then improve final point with shock_zoom...
         t_end_refine = t[-1]
         v,w,xi,t = fluid_integrate_param(vfp_p, wp, v_w, t_end_refine, n_xi, cs2_fun)
-        v, w, xi, t = fluid_wall_to_shock(v, w, xi, t, wall_type)
+        v, w, xi, t = trim_fluid_wall_to_shock(v, w, xi, t, wall_type)
         v, w, xi = shock_zoom_last_element(v, w, xi)
     # Now complete to xi = 1
         vf = np.concatenate((v,vf))
@@ -543,17 +547,19 @@ def fluid_shell_alpha_plus(v_wall, alpha_plus, wall_type='Calculate', n_xi=N_XI_
     # Integrate backward to sound speed.
     if not wall_type == 'Deflagration':
     # First go
-        v,w,xi,t = fluid_integrate_param(vfm_p, wm, v_w-dxi, -T_END_DEFAULT, N_XI_DEFAULT, cs2_fun)
-        v, w, xi, t = fluid_wall_to_cs(v, w, xi, t, v_wall, wall_type)
-    # Now refine so that there are ~N points between wall and point closest to cs
-        t_end_refine = t[-1]
-        v,w,xi,t = fluid_integrate_param(vfm_p, wm, v_w-dxi, t_end_refine, n_xi, cs2_fun)
-        v, w, xi, t = fluid_wall_to_cs(v, w, xi, t, v_wall, wall_type)
+        v,w,xi,t = fluid_integrate_param(vfm_p, wm, v_w, -T_END_DEFAULT, N_XI_DEFAULT, cs2_fun)
+        v, w, xi, t = trim_fluid_wall_to_cs(v, w, xi, t, v_wall, wall_type)
+#    # Now refine so that there are ~N points between wall and point closest to cs
+#    # For walls just faster than sound, will give very (too?) fine a resolution.
+#        t_end_refine = t[-1]
+#        v,w,xi,t = fluid_integrate_param(vfm_p, wm, v_w, t_end_refine, n_xi, cs2_fun)
+#        v, w, xi, t = trim_fluid_wall_to_cs(v, w, xi, t, v_wall, wall_type)
 
     # Now complete to xi = 0
         vb = np.concatenate((v,vb))
         wb = np.ones_like(xib)*w[-1]
         wb = np.concatenate((w,wb))
+        # Can afford to bring this point all the way to cs2.
         xib[0] = cs2_fun(w[-1])**0.5
         xib = np.concatenate((xi,xib))
 
@@ -571,21 +577,48 @@ def fluid_shell_alpha_plus(v_wall, alpha_plus, wall_type='Calculate', n_xi=N_XI_
     return v, w, xi
 
 
-def fluid_wall_to_cs(v, w, xi, t, v_wall, wall_type, dxi_lim=dxi_small, cs2_fun=cs2_bag):
+def trim_fluid_wall_to_cs(v, w, xi, t, v_wall, wall_type, dxi_lim=dxi_small, cs2_fun=cs2_bag):
     """
-     Picks out fluid variable arrays (v, w, xi) which are not too close to fixed point at 
-     xi = cs(w), and also definitely behind the wall.
+     Picks out fluid variable arrays (v, w, xi, t) which are definitely behind 
+     the wall for deflagration and hybrid.
+     Also removes negative fluid speeds and xi <= sound_speed, which might be left by
+     an inaccurate integration.
+     If the wall is within about 1e-16 of cs, rounding errors are flagged.
     """
-    dxi2 = xi**2 - cs2_fun(w)
-    if not (wall_type == "Deflagration"):
-        relevant = np.where(np.logical_and(dxi2 > dxi_lim**2, xi < v_wall))
+    check_wall_speed(v_wall)
+    n_start = 0 
         
-    return v[relevant], w[relevant], xi[relevant], t[relevant]
+
+    n_stop_index = -2
+    n_stop = 0
+    if not wall_type == 'Deflagration':
+        it = np.nditer([v, w, xi], flags=['c_index'])
+        for vv, ww, x in it:
+            if vv <= 0 or x**2 <= cs2_fun(ww):
+                n_stop_index = it.index
+                break
+    
+    if n_stop_index == 0:
+        sys.stderr.write('trim_fluid_wall_to_cs: warning: integation gave v < 0 or xi <= cs\n')
+        sys.stderr.write('     wall_type: {}, v_wall: {}, xi[0] = {}, v[] = {}\n'.format(
+                wall_type, v_wall, xi[0], v[0]))
+        sys.stderr.write('     Fluid profile has only one element between vw and cs. Fix implemented by adding one extra point.\n')
+        n_stop = 1
+    else:
+        n_stop = n_stop_index
+
+    if (xi[0] == v_wall) and not (wall_type == "Detonation"):
+        n_start = 1
+        n_stop += 1
+        
+
+    return v[n_start:n_stop], w[n_start:n_stop], xi[n_start:n_stop], t[n_start:n_stop]
 
 
-def fluid_wall_to_shock(v, w, xi, t, wall_type):
+
+def trim_fluid_wall_to_shock(v, w, xi, t, wall_type):
     """
-     Truncates fluid variable arrays (v, w, xi) so last element is just ahead of shock
+     Trims fluid variable arrays (v, w, xi) so last element is just ahead of shock
     """
     n_shock_index = -2
     n_shock = 0
@@ -597,11 +630,10 @@ def fluid_wall_to_shock(v, w, xi, t, wall_type):
                 break
     
     if n_shock_index == 0:
-        sys.stderr.write('fluid_wall_to_shock: warning: v[0] < v_shock(xi[0]\n')
+        sys.stderr.write('trim_fluid_wall_to_shock: warning: v[0] < v_shock(xi[0]\n')
         sys.stderr.write('     wall_type: {}, xi[0] = {}, v[0] = {}, v_sh(xi[0]) = {}\n'.format(
                 wall_type, xi[0], v[0], v_shock(xi[0])))
-#        sys.stderr.write(' probably because alpha not found accurately enough from alpha_n\n')
-        sys.stderr.write('     Shock profile has only one element. Temporary fix implemented.\n')
+        sys.stderr.write('     Shock profile has only one element. Fix implemented by adding one extra point.\n')
         n_shock = 1
     else:
         n_shock = n_shock_index
@@ -622,6 +654,7 @@ def find_alpha_n(v_wall, alpha_p, wall_type="Calculate", n_xi=N_XI_DEFAULT):
      alpha_n is global strength parameter, alpha_plus the at-wall strength parameter.
      
     """
+    check_wall_speed(v_wall)
     if wall_type == "Calculate":
         wall_type = identify_wall_type_alpha_plus(v_wall, alpha_p)
     _, w, xi = fluid_shell_alpha_plus(v_wall, alpha_p, wall_type, n_xi)
@@ -733,11 +766,7 @@ def alpha_n_max_deflagration(v_wall, Np=N_XI_DEFAULT):
      for given v_wall, for deflagration.
      Works also for hybrids, as they are supersonic deflagrations
     """
-
-    if v_wall >= 1.0:
-        sys.exit('alpha_n_max_deflagration: error: unphysical parameter(s)\n\
-                 v_wall = {}, require v_wall < 1'.format(v_wall))
-
+    check_wall_speed(v_wall)
     # wall_type_ = identify_wall_type(v_wall_, 1./3)
     it = np.nditer([None,v_wall],[],[['writeonly','allocate'],['readonly']])
     for ww, vw in it:
@@ -746,7 +775,7 @@ def alpha_n_max_deflagration(v_wall, Np=N_XI_DEFAULT):
         else:
             wall_type = "Deflagration"
 
-        ap = 1./3 - 1e-3
+        ap = 1./3 - 1.0e-10 # Warning - this is not safe.  Causes warnings for v low vw
         _, w, xi = fluid_shell_alpha_plus(vw, ap, wall_type, Np)
         n_wall = find_v_index(xi, vw)
         ww[...] = w[n_wall+1]*(1./3)
@@ -797,6 +826,7 @@ def alpha_plus_min_hybrid(v_wall):
      Minimum allowed value of alpha_plus for a hybrid with wall speed v_wall. 
      Condition from coincidence of wall and shock
     """
+    check_wall_speed(v_wall)
     b = (1-np.sqrt(3)*v_wall)**2
     c = 9*v_wall**2 - 1
     # for bb, vw in np.nditer([b,v_wall_]):
@@ -812,6 +842,7 @@ def alpha_n_min_hybrid(v_wall):
     """
      Minimum alpha_n for a hybrid. Equal to maximum alpha_n for a detonation.
     """
+    check_wall_speed(v_wall)
     return alpha_n_max_detonation(v_wall)
 
 
@@ -821,6 +852,7 @@ def xi_zero(v_wall, v_xi_wall):
     """
      Used in approximate solution near v(xi) = xi: defined as solution to v(xi0) = xi0
     """
+    check_wall_speed(v_wall)
     xi0 = (v_xi_wall + 2*v_wall)/3.
     return xi0
 
@@ -829,6 +861,7 @@ def v_approx_high_alpha(xi, v_wall, v_xi_wall):
     """
      Approximate solution for fluid velocity v(xi) near v(xi) = xi. 
     """
+    check_wall_speed(v_wall)
     xi0 = xi_zero(v_wall, v_xi_wall)
     A2 = 3*(2*xi0 - 1)/(1 - xi0**2)
     dv = (xi - xi0)
@@ -839,6 +872,7 @@ def v_approx_hybrid(xi, v_wall, v_xi_wall):
     """
      Approximate solution for fluid velocity v(xi) near v(xi) = xi (same as v_approx_high_alpha).
     """
+    check_wall_speed(v_wall)
     xi0 = xi_zero(v_wall, v_xi_wall)
     A2 = 3*(2*xi0 - 1)/(1 - xi0**2)
     dv = (xi - xi0)
@@ -849,6 +883,7 @@ def w_approx_high_alpha(xi, v_wall, v_xi_wall, w_xi_wall):
     """
      Approximate solution for ehthalpy w(xi) near v(xi) = xi. 
     """
+    check_wall_speed(v_wall)
     xi0 = xi_zero(v_wall, v_xi_wall)
     return w_xi_wall*np.exp(-12*(xi - xi0)**2/(1 - xi0**2)**2)
 
@@ -892,6 +927,7 @@ def split_integrate(fun_, v, w, xi, v_wall):
     # Split an integration of a function fun_ of arrays v w xi 
     # according to whether xi is inside or outside the wall (expecting discontinuity there). 
     """
+    check_wall_speed(v_wall)
     inside  = np.where(xi < v_wall) 
     outside = np.where(xi > v_wall) 
     int1 = 0.
@@ -920,6 +956,7 @@ def de_from_w(w, xi, v_wall, alpha_n):
     bag equation of state.
     Can get alpha_n = find_alpha_n_from_w_xi(w,xi,v_wall,alpha_p) 
     """
+    check_physical_params([v_wall,alpha_n])
     e_from_w = e(w, phase(xi,v_wall), 0.75*w[-1]*alpha_n)
               
     return e_from_w - e_from_w[-1]
@@ -930,6 +967,7 @@ def de_from_w_new(v, w, xi, v_wall, alpha_n):
     For exploring new methods of calculating energy density difference 
     from velocity and enthalpy, assuming bag equation of state.
     """
+    check_physical_params([v_wall,alpha_n])
     e_from_w = e(w, phase(xi,v_wall), 0.75*w[-1]*alpha_n)
     
     de = e_from_w - e_from_w[-1]
@@ -948,6 +986,7 @@ def mean_energy_change(v, w, xi, v_wall, alpha_n):
 #        return de_from_w(w, xi, v_wall, alpha_n)
 #    int1, int2 = split_integrate(ene_diff, v, w, xi**3, v_wall)
 #    integral = int1 + int2
+    check_physical_params([v_wall,alpha_n])
     integral = np.trapz(de_from_w(w, xi, v_wall, alpha_n), xi**3)
     return integral / v_wall**3
 
@@ -960,6 +999,7 @@ def mean_enthalpy_change(v, w, xi, v_wall):
 #        return dw
 #    int1, int2 = split_integrate(en_diff, v, w - w[-1], xi**3, v_wall)
 #    integral = int1 + int2
+    check_wall_speed(v_wall)
     integral = np.trapz((w - w[-1]), xi**3)
     return integral / v_wall**3
 
@@ -968,6 +1008,7 @@ def mean_kinetic_energy(v, w, xi, v_wall):
     """
      Mean kinetic energy of fluid in bubble. 
     """
+    check_wall_speed(v_wall)
     integral = np.trapz(w * v**2 * gamma2(v), xi**3)
     
     return integral / (w[-1]*v_wall**3)
@@ -977,6 +1018,7 @@ def ubarf_squared(v, w, xi, v_wall):
     """
      Enthalpy-weighted mean square space components of 4-velocity of fluid in bubble. 
     """
+    check_wall_speed(v_wall)
 #    def fun(v,w,xi):
 #        return w * v**2 * gamma2(v)
 #    int1, int2 = split_integrate(fun, v, w, xi**3, v_wall)
@@ -992,6 +1034,7 @@ def get_ke_frac(v_wall, alpha_n, n_xi=N_XI_DEFAULT):
      Bag equation of state only so far, as it takes 
      e_n = (3./4) w_n (1+alpha_n). This assumes zero trace anomaly in broken phase. 
     """
+    check_physical_params([v_wall,alpha_n])
     ubar2 = get_ubarf2(v_wall, alpha_n, n_xi)
 
     return ubar2/(0.75*(1 + alpha_n))
@@ -1002,6 +1045,7 @@ def get_ke_de_frac(v_wall, alpha_n, n_xi=N_XI_DEFAULT, verbosity=0):
      Kinetic energy fraction and fractional change in energy 
      from wall velocity array. Sum should be 0. Assumes bag model.
     """
+    check_physical_params([v_wall,alpha_n])
     it = np.nditer([v_wall, None, None])
     for vw, ke, de in it:
         wall_type = identify_wall_type(vw, alpha_n)
@@ -1034,6 +1078,7 @@ def get_ubarf2(v_wall, alpha_n, n_xi=N_XI_DEFAULT):
      v_wall can be scalar or iterable. 
      alpha_n must be scalar.
     """
+    check_physical_params([v_wall,alpha_n])
     it = np.nditer([v_wall, None])
     for vw, Ubarf2 in it:
         wall_type = identify_wall_type(vw, alpha_n)
@@ -1053,6 +1098,7 @@ def get_kappa(v_wall, alpha_n, n_xi=N_XI_DEFAULT, verbosity=0):
      Efficiency factor kappa from v_wall and alpha_n. v_wall can be array.
     """
     # NB was called get_kappa_arr
+    check_physical_params([v_wall,alpha_n])
     it = np.nditer([v_wall, None])
     for vw, kappa in it:
         wall_type = identify_wall_type(vw, alpha_n)
@@ -1080,6 +1126,7 @@ def get_kappa_de(v_wall, alpha_n, n_xi=N_XI_DEFAULT, verbosity=0):
      Calculates efficiency factor kappa and fractional change in energy 
      from v_wall and alpha_n. v_wall can be an array. Sum should be 0 (bag model).
     """
+    check_physical_params([v_wall,alpha_n])
     it = np.nditer([v_wall, None, None])
     for vw, kappa, de in it:
         wall_type = identify_wall_type(vw, alpha_n)
@@ -1112,6 +1159,7 @@ def get_kappa_dq(v_wall, alpha_n, n_xi=N_XI_DEFAULT, verbosity=0):
      from v_wall and alpha_n. v_wall can be an array. Sum should be 1. 
      Thermal energy is defined as q = (3/4)*enthalpy. 
     """
+    check_physical_params([v_wall,alpha_n])
     it = np.nditer([v_wall, None, None])
     for vw, kappa, dq in it:
         wall_type = identify_wall_type(vw, alpha_n)
@@ -1144,16 +1192,16 @@ def check_wall_speed(v_wall):
     Checks that v_wall values are all physical (0 < v_wall <1)
     """
     if isinstance(v_wall,float):
-        if v_wall >= 1.0 or v_wall < 0.0:
+        if v_wall >= 1.0 or v_wall <= 0.0:
             sys.exit('check_wall_speed: error: unphysical parameter(s)\n\
                      v_wall = {}, require 0 < v_wall < 1'.format(v_wall))
     elif isinstance(v_wall,np.ndarray):
-        if np.logical_or(np.any(v_wall >= 1.0), np.any(v_wall < 0.0)):
+        if np.logical_or(np.any(v_wall >= 1.0), np.any(v_wall <= 0.0)):
             sys.exit('check_wall_speed: error: unphysical parameter(s)\n\
                      at least one value outside 0 < v_wall < 1')
     elif isinstance(v_wall,list):
         for vw in v_wall:
-            if vw >= 1.0 or vw < 0.0:
+            if vw >= 1.0 or vw <= 0.0:
                 sys.exit('check_wall_speed: error: unphysical parameter(s)\n\
                          at least one value outside 0 < v_wall < 1')
     else:
