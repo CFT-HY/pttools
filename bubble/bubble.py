@@ -1070,7 +1070,7 @@ def get_ke_de_frac(v_wall, alpha_n, n_xi=N_XI_DEFAULT, verbosity=0):
     return ke_out, de_out
 
 
-def get_ubarf2(v_wall, alpha_n, n_xi=N_XI_DEFAULT):
+def get_ubarf2(v_wall, alpha_n, n_xi=N_XI_DEFAULT, verbosity=0):
     """
      Get mean square fluid velocity from v_wall and alpha_n.
      v_wall can be scalar or iterable. 
@@ -1085,8 +1085,8 @@ def get_ubarf2(v_wall, alpha_n, n_xi=N_XI_DEFAULT):
             Ubarf2[...] = ubarf_squared(v, w, xi, vw)
         else:
             Ubarf2[...] = np.nan
-            if verbosity > 0:
-                sys.stderr.write("{:8.6f} {:8.6f} {} ".format(vw, alpha_n, Ubarf2),flush=True)
+        if verbosity > 0:
+            sys.stderr.write("{:8.6f} {:8.6f} {} ".format(vw, alpha_n, Ubarf2),flush=True)
 
 
     # Ubarf2 is stored in it.operands[1]
