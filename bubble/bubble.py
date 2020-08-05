@@ -1034,7 +1034,6 @@ def get_ke_frac(v_wall, alpha_n, n_xi=N_XI_DEFAULT):
      Bag equation of state only so far, as it takes 
      e_n = (3./4) w_n (1+alpha_n). This assumes zero trace anomaly in broken phase. 
     """
-    check_physical_params([v_wall,alpha_n])
     ubar2 = get_ubarf2(v_wall, alpha_n, n_xi)
 
     return ubar2/(0.75*(1 + alpha_n))
@@ -1045,7 +1044,6 @@ def get_ke_de_frac(v_wall, alpha_n, n_xi=N_XI_DEFAULT, verbosity=0):
      Kinetic energy fraction and fractional change in energy 
      from wall velocity array. Sum should be 0. Assumes bag model.
     """
-    check_physical_params([v_wall,alpha_n])
     it = np.nditer([v_wall, None, None])
     for vw, ke, de in it:
         wall_type = identify_wall_type(vw, alpha_n)
@@ -1078,7 +1076,6 @@ def get_ubarf2(v_wall, alpha_n, n_xi=N_XI_DEFAULT):
      v_wall can be scalar or iterable. 
      alpha_n must be scalar.
     """
-    check_physical_params([v_wall,alpha_n])
     it = np.nditer([v_wall, None])
     for vw, Ubarf2 in it:
         wall_type = identify_wall_type(vw, alpha_n)
@@ -1088,9 +1085,17 @@ def get_ubarf2(v_wall, alpha_n, n_xi=N_XI_DEFAULT):
             Ubarf2[...] = ubarf_squared(v, w, xi, vw)
         else:
             Ubarf2[...] = np.nan
+            if verbosity > 0:
+                sys.stderr.write("{:8.6f} {:8.6f} {} ".format(vw, alpha_n, Ubarf2),flush=True)
+
 
     # Ubarf2 is stored in it.operands[1]
-    return it.operands[1]
+    if isinstance(v_wall,np.ndarray):
+        ubarf2_out = it.operands[1]
+    else:
+        ubarf2_out = type(v_wall)(it.operands[1])
+
+    return ubarf2_out
 
 
 def get_kappa(v_wall, alpha_n, n_xi=N_XI_DEFAULT, verbosity=0):
@@ -1098,7 +1103,6 @@ def get_kappa(v_wall, alpha_n, n_xi=N_XI_DEFAULT, verbosity=0):
      Efficiency factor kappa from v_wall and alpha_n. v_wall can be array.
     """
     # NB was called get_kappa_arr
-    check_physical_params([v_wall,alpha_n])
     it = np.nditer([v_wall, None])
     for vw, kappa in it:
         wall_type = identify_wall_type(vw, alpha_n)
@@ -1126,7 +1130,6 @@ def get_kappa_de(v_wall, alpha_n, n_xi=N_XI_DEFAULT, verbosity=0):
      Calculates efficiency factor kappa and fractional change in energy 
      from v_wall and alpha_n. v_wall can be an array. Sum should be 0 (bag model).
     """
-    check_physical_params([v_wall,alpha_n])
     it = np.nditer([v_wall, None, None])
     for vw, kappa, de in it:
         wall_type = identify_wall_type(vw, alpha_n)
@@ -1159,7 +1162,6 @@ def get_kappa_dq(v_wall, alpha_n, n_xi=N_XI_DEFAULT, verbosity=0):
      from v_wall and alpha_n. v_wall can be an array. Sum should be 1. 
      Thermal energy is defined as q = (3/4)*enthalpy. 
     """
-    check_physical_params([v_wall,alpha_n])
     it = np.nditer([v_wall, None, None])
     for vw, kappa, dq in it:
         wall_type = identify_wall_type(vw, alpha_n)
