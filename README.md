@@ -1,49 +1,23 @@
 # README #
 
 PTtools is a library of python functions for calculating hydrodynamical quantities 
-around expanding bubbles of the new phase in an early universe phase transition.
+around expanding bubbles of the new phase in an early universe phase transition, 
+and the resulting gravitational wave power spectrum in the sound shell model.
 
-Master branch:
+Reference: [Hindmarsh and Hijazi (2019)](https://arxiv.org/abs/1909.10040)
 
-bubble contains main branch of code for computing invariant profiles, plus scripts to make plots
+### submodules:
 
-gw\_code contains code from taking invariant profile and computing GW power spectrum (Mulham)
+* bubble: code for computing the fluid shells (velocity and enthalpy as a function of scaled radius), plus scripts to make plots.
+* gw\_code: code from taking fluid shells and computing GW power spectrum.
 
-dev branch:
+### branches:
 
-code\_bits contains code from various projects in progress
-* plot_v_ln_T returns graphs showing fluid velocity, temperature and enthalpy around wall.
-* plot_thermo shows comparison graphs between the Bag and EIKR models.
-* Bag_Toolbox and EIKR_Toolbox contain thermodynamic equations for the respective models.
-* Mechanics_Toolbox contains relativistic equations and other shared equations.
-* Plus other bits and pieces
+* master: main branch, stable release.
+* master_dev: developments for later inclusion in the master branch.
+* bubble_dev: for developments in the hydro part of the code only.
 
-Known issues: Small discrepancies between this program and Mark's original version for Bag model.
-Epsilon and alpha_plus negative for all T.
-
-
-### What is this repository for? ###
-
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
-
-### How do I get set up? ###
-
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
-
-### Contribution guidelines ###
-
-* Writing tests
-* Code review
-* Other guidelines
 
 ### Who do I talk to? ###
 
-* Repo owner or admin
-* Other community or team contact
+* Repo owner: Mark Hindmarsh
