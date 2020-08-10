@@ -1006,17 +1006,19 @@ def mean_enthalpy_change(v, w, xi, v_wall):
 
 def mean_kinetic_energy(v, w, xi, v_wall):
     """
-     Mean kinetic energy of fluid in bubble. 
+     Kinetic energy of fluid in bubble, averaged over bubble volume, 
+     from fluid shell functions.
     """
     check_wall_speed(v_wall)
     integral = np.trapz(w * v**2 * gamma2(v), xi**3)
     
-    return integral / (w[-1]*v_wall**3)
+    return integral / (v_wall**3)
 
 
 def ubarf_squared(v, w, xi, v_wall):
     """
-     Enthalpy-weighted mean square space components of 4-velocity of fluid in bubble. 
+     Enthalpy-weighted mean square space components of 4-velocity of fluid in bubble,  
+     from fluid shell functions.
     """
     check_wall_speed(v_wall)
 #    def fun(v,w,xi):
