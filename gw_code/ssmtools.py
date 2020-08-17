@@ -559,7 +559,9 @@ def spec_den_gw_scaled(xlookup, P_vlookup, y=None):
         p_gw_factor = ((1 - cs0**2)/cs0**2)**2 / (4*np.pi*y[i]*cs0)
         p_gw[i] = p_gw_factor * np.trapz(integrand, x)
 
-    # Here we are using G = 2P_v (v spec den is twice plane wave amplitude spec den)
+    # Here we are using G = 2P_v (v spec den is twice plane wave amplitude spec den).
+    # Eq 3.48 in SSM paper gives a factor 3.Gamma^2.P_v.P_v = 3 * (4/3)^2.P_v.P_v
+    # Hence overall should use (4/3).G.G
     return (4./3.)*p_gw, y
 
 

@@ -65,6 +65,8 @@ dxi_small = 1./N_XI_DEFAULT
 
 cs0 = 1/np.sqrt(3)  # ideal speed of sound
 cs0_2 = 1./3  # ideal speed of sound squared
+symm_phase = 0.0
+brok_phase = 1.0
 
 
 #def cs_w(w):
@@ -83,15 +85,23 @@ def cs2_bag(w):
     """
     Speed of sound squared in Bag model, equal to 1/3 independent of enthalpy $w$
     """
-    # Should return same type/shape as w
-    return cs0_2
+    if isinstance(w,np.ndarray):
+        cs2 = cs0_2*np.ones_like(w)
+    else:    
+        cs2 = cs0_2
+    
+    return cs2
 
 
 def theta_bag(w, phase, alpha_n):
     """
     Trace anomaly $\theta = (e - 3p)/4$ in Bag model.
     """
-    return alpha_n * (0.75 * w[-1]) * (1 - phase) 
+    if isinstance(w,np.ndarray):
+        w_n = w[-1]
+    else:
+        w_n = w
+    return alpha_n * (0.75 * w_n) * (1 - phase) 
 
 
 def p(w, phase, theta_s, theta_b=0.):
@@ -138,10 +148,24 @@ def phase(xi,v_w):
      in symmetric phase (xi>v_w), phase = 0 
      in broken phase (xi<v_w), phase = 1
     """
-    ph = np.zeros_like(xi)
-    ph[np.where(xi < v_w)] = 1.0
+    if isinstance(xi,np.ndarray):
+        ph = np.zeros_like(xi)
+        ph[np.where(xi < v_w)] = brok_phase
+    else:    
+        ph = symm_phase
+        if xi < v_w:
+            ph = brok_phase
+        
     return ph
 
+
+def adiabatic_index(w, phase, theta_s, theta_b=0.):
+    """
+    Returns array of float, adiabatic index (ratio of enthalpy to energy).
+    """
+    
+    return w/e(w, phase, theta_s, theta_b)
+    
 
 # Relativity helper functions
 
@@ -794,10 +818,11 @@ def alpha_plus_max_detonation(v_wall):
      Maximum allowed value of alpha_plus for a detonation with wall speed v_wall. 
      Comes from inverting v_w > v_Jouguet
     """
-    if v_wall >= 1.0:
-        sys.exit('alpha_n_max_detonation: error: unphysical parameter(s)\n\
-                 v_wall = {}, require v_wall < 1'.format(v_wall))
+#    if v_wall >= 1.0:
+#        sys.exit('alpha_n_max_detonation: error: unphysical parameter(s)\n\
+#                 v_wall = {}, require v_wall < 1'.format(v_wall))
 
+    check_wall_speed(v_wall)
     it = np.nditer([None,v_wall],[],[['writeonly','allocate'],['readonly']])
     for bb, vw in it:
         a = 3*(1-vw**2)
@@ -841,10 +866,19 @@ def alpha_plus_min_hybrid(v_wall):
 def alpha_n_min_hybrid(v_wall):
     """
      Minimum alpha_n for a hybrid. Equal to maximum alpha_n for a detonation.
+     Same as aalpha_n_min_deflagration, as a hybrid is a supersonic deflagration.
     """
     check_wall_speed(v_wall)
     return alpha_n_max_detonation(v_wall)
 
+
+def alpha_n_min_deflagration(v_wall):
+    """
+     Minimum alpha_n for a deflagration. Equal to maximum alpha_n for a detonation.
+     Same as alpha_n_min_hybrid, as a hybrid is a supersonic deflagration.
+    """
+    check_wall_speed(v_wall)
+    return alpha_n_max_detonation(v_wall)
 
 # Functions for calculating approximate solutions
     
@@ -1041,6 +1075,35 @@ def get_ke_frac(v_wall, alpha_n, n_xi=N_XI_DEFAULT):
     return ubar2/(0.75*(1 + alpha_n))
 
     
+def get_ke_frac_new(v_wall, alpha_n, n_xi=N_XI_DEFAULT, verbosity=0):
+    """
+     Determine kinetic energy fraction (of total energy). 
+     Bag equation of state only so far, as it takes 
+     e_n = (3./4) w_n (1+alpha_n). This assumes zero trace anomaly in broken phase. 
+    """
+    it = np.nditer([v_wall, None])
+    for vw, ke in it:
+        wall_type = identify_wall_type(vw, alpha_n)
+        if not wall_type=='Error':
+            # Now ready to solve for fluid profile
+            v, w, xi = fluid_shell(vw, alpha_n, n_xi)
+            ke[...] = mean_kinetic_energy(v, w, xi, vw)
+        else:
+            ke[...] = np.nan
+        if verbosity > 0:
+            sys.stderr.write("{:8.6f} {:8.6f} {} \n".format(vw, alpha_n, ke))
+
+    # Symmetric phase energy density
+    e_s = e(w[-1], 0, theta_bag(w[-1], 0, alpha_n) )
+    # result is stored in it.operands[1]
+    if isinstance(v_wall,np.ndarray):
+        ke_frac_out = it.operands[1]/e_s
+    else:
+        ke_frac_out = type(v_wall)(it.operands[1])/e_s
+
+    return ke_frac_out
+
+    
 def get_ke_de_frac(v_wall, alpha_n, n_xi=N_XI_DEFAULT, verbosity=0):
     """
      Kinetic energy fraction and fractional change in energy 
@@ -1060,7 +1123,7 @@ def get_ke_de_frac(v_wall, alpha_n, n_xi=N_XI_DEFAULT, verbosity=0):
             ke[...] = np.nan
             de[...] = np.nan
         if verbosity > 0:
-            sys.stderr.write("{:8.6f} {:8.6f} {} {}".format(vw, alpha_n, ke, de),flush=True)
+            sys.stderr.write("{:8.6f} {:8.6f} {} {}\n".format(vw, alpha_n, ke, de))
 
     if isinstance(v_wall,np.ndarray):
         ke_out = it.operands[1]
@@ -1088,7 +1151,39 @@ def get_ubarf2(v_wall, alpha_n, n_xi=N_XI_DEFAULT, verbosity=0):
         else:
             Ubarf2[...] = np.nan
         if verbosity > 0:
-            sys.stderr.write("{:8.6f} {:8.6f} {} ".format(vw, alpha_n, Ubarf2),flush=True)
+            sys.stderr.write("{:8.6f} {:8.6f} {} \n".format(vw, alpha_n, Ubarf2))
+
+
+    # Ubarf2 is stored in it.operands[1]
+    if isinstance(v_wall,np.ndarray):
+        ubarf2_out = it.operands[1]
+    else:
+        ubarf2_out = type(v_wall)(it.operands[1])
+
+    return ubarf2_out
+
+
+def get_ubarf2_new(v_wall, alpha_n, n_xi=N_XI_DEFAULT, verbosity=0):
+    """
+     Get mean square fluid velocity from v_wall and alpha_n.
+     v_wall can be scalar or iterable. 
+     alpha_n must be scalar.
+    """
+    w_mean = 1 # For bag, it doesn't matter
+    Gamma = adiabatic_index(w_mean, brok_phase, theta_bag(w_mean,brok_phase,alpha_n))
+    print(Gamma)
+
+    it = np.nditer([v_wall, None])
+    for vw, Ubarf2 in it:
+        wall_type = identify_wall_type(vw, alpha_n)
+        if not wall_type=='Error':
+            # Now ready to get Ubarf2
+            ke_frac = get_ke_frac_new(vw, alpha_n)
+            Ubarf2[...] = ke_frac/Gamma
+        else:
+            Ubarf2[...] = np.nan
+        if verbosity > 0:
+            sys.stderr.write("{:8.6f} {:8.6f} {} \n".format(vw, alpha_n, Ubarf2))
 
 
     # Ubarf2 is stored in it.operands[1]
@@ -1117,7 +1212,7 @@ def get_kappa(v_wall, alpha_n, n_xi=N_XI_DEFAULT, verbosity=0):
         else:
             kappa[...] = np.nan
         if verbosity > 0:
-            sys.stderr.write("{:8.6f} {:8.6f} {} ".format(vw, alpha_n, kappa),flush=True)
+            sys.stderr.write("{:8.6f} {:8.6f} {} \n".format(vw, alpha_n, kappa))
 
     if isinstance(v_wall,np.ndarray):
         kappa_out = it.operands[1]
@@ -1146,7 +1241,7 @@ def get_kappa_de(v_wall, alpha_n, n_xi=N_XI_DEFAULT, verbosity=0):
             kappa[...] = np.nan
             de[...] = np.nan
         if verbosity > 0:
-            sys.stderr.write("{:8.6f} {:8.6f} {} {}".format(vw, alpha_n, kappa, de),flush=True)
+            sys.stderr.write("{:8.6f} {:8.6f} {} {}\n".format(vw, alpha_n, kappa, de))
 
     if isinstance(v_wall,np.ndarray):
         kappa_out = it.operands[1]
@@ -1178,7 +1273,7 @@ def get_kappa_dq(v_wall, alpha_n, n_xi=N_XI_DEFAULT, verbosity=0):
             kappa[...] = np.nan
             dq[...] = np.nan
         if verbosity > 0:
-            sys.stderr.write("{:8.6f} {:8.6f} {} {}".format(vw, alpha_n, kappa, dq),flush=True)
+            sys.stderr.write("{:8.6f} {:8.6f} {} {} \n".format(vw, alpha_n, kappa, dq))
 
     if isinstance(v_wall,np.ndarray):
         kappa_out = it.operands[1]
