@@ -346,7 +346,7 @@ def max_speed_deflag(alpha_p):
     return 1/(3*v_plus(cs0, alpha_p, 'Deflagration'))
 
 
-def identify_wall_type(v_wall, alpha_n):
+def identify_wall_type(v_wall, alpha_n, exit_on_error=False):
     """
      Determines wall type from wall speed and global strength parameter. 
      wall_type = [ 'Detonation' | 'Deflagration' | 'Hybrid' ]
@@ -362,6 +362,11 @@ def identify_wall_type(v_wall, alpha_n):
                 wall_type = "Deflagration"
             else:
                 wall_type = "Hybrid"
+
+    if wall_type == 'Error' & exit_on_error == True:
+        sys.stderr.write('identify_wall_type: \
+                         error: no solution for v_wall = {}, alpha_n = {}\n'.format(v_wall,alpha_n))
+        sys.exit(1)
 
     return wall_type
 
@@ -818,9 +823,6 @@ def alpha_plus_max_detonation(v_wall):
      Maximum allowed value of alpha_plus for a detonation with wall speed v_wall. 
      Comes from inverting v_w > v_Jouguet
     """
-#    if v_wall >= 1.0:
-#        sys.exit('alpha_n_max_detonation: error: unphysical parameter(s)\n\
-#                 v_wall = {}, require v_wall < 1'.format(v_wall))
 
     check_wall_speed(v_wall)
     it = np.nditer([None,v_wall],[],[['writeonly','allocate'],['readonly']])
@@ -1416,7 +1418,7 @@ def plot_fluid_shell(v_wall, alpha_n, save_string=None, Np=N_XI_DEFAULT):
     if vmax < low_v_plot and not wall_type == 'Hybrid':
         plt.plot(xi, v_approx, 'b--', label=r'$v$ low $\alpha$ approx')
     
-    plt.legend(loc='upper left')
+    plt.legend(loc='best')
 
     plt.ylabel(r'$v(\xi)$')
     plt.xlabel(r'$\xi$')
@@ -1443,7 +1445,7 @@ def plot_fluid_shell(v_wall, alpha_n, save_string=None, Np=N_XI_DEFAULT):
 #    if alpha_plus < low_alpha_p_plot and not wall_type == 'Hybrid':
 #        plt.plot(xi, w_approx, 'b--', label=r'$w$ low $\alpha$ approx')
 
-    plt.legend(loc='upper left')
+    plt.legend(loc='best')
     plt.ylabel(r'$w(\xi)$', size=16)
     plt.xlabel(r'$\xi$', size=16)
     plt.axis([xscale_min, xscale_max, yscale_enth_min, yscale_enth_max])

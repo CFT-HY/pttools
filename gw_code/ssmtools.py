@@ -31,6 +31,8 @@ import sys
 import numpy as np
 from scipy.optimize import fsolve
 from pttools.bubble import bubble as b
+#import bubble.bubble as b
+#import bubble as b
 
 NXIDEFAULT = 2000 # Default number of xi points used in bubble profiles
 NTDEFAULT  = 200   # Default number of T-tilde values for bubble lifetime distribution integration
