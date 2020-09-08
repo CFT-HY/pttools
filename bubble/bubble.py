@@ -363,7 +363,7 @@ def identify_wall_type(v_wall, alpha_n, exit_on_error=False):
             else:
                 wall_type = "Hybrid"
 
-    if wall_type == 'Error' & exit_on_error == True:
+    if (wall_type == 'Error') & exit_on_error:
         sys.stderr.write('identify_wall_type: \
                          error: no solution for v_wall = {}, alpha_n = {}\n'.format(v_wall,alpha_n))
         sys.exit(1)
