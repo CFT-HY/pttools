@@ -1455,7 +1455,6 @@ def plot_fluid_shell(v_wall, alpha_n, save_string=None, Np=N_XI_DEFAULT):
 
     if save_string is not None:
         plt.savefig('shell_plot_vw_{}_alphan_{:.3}{}'.format(v_wall,alpha_n,save_string))
-    plt.show()
     
     return f
 
@@ -1593,6 +1592,4 @@ def plot_fluid_shells(v_wall_list, alpha_n_list, multi=False, save_string=None, 
                     save_string))
 
 
-    plt.show()
-    
     return f
