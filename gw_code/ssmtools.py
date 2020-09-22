@@ -150,35 +150,36 @@ def sin_transform(z, xi, f, z_st_thresh=Z_ST_THRESH):
     """
      sin transform of f(xi), Fourier transform variable z. 
      xi and f arrays of the same shape, z can be an array of a different shape.
-     For high z, use approximation rather than doing the integral.
+     For z > z_st_thresh, use approximation rather than doing the integral.
+     Interpolate between  z_st_thresh - dz_blend < z < z_st_thresh.
     """
     dz_blend = DZ_ST_BLEND
-#    dz_blend = 0
     
     if isinstance(z,np.ndarray):
         lo = np.where(z <= z_st_thresh)
-        lo_plus = np.where(z <= z_st_thresh + dz_blend)
-        z_lo_plus = z[lo_plus]
-        array_lo_plus = np.sin(np.outer(z_lo_plus, xi)) * f
-        I = np.trapz(array_lo_plus, xi)
+        z_lo = z[lo]
+        array_lo = np.sin(np.outer(z_lo, xi)) * f
+        I = np.trapz(array_lo, xi)
         
         if len(lo) < len(z):
-            z_hi = z[np.where(z > z_st_thresh)]
+            z_hi = z[np.where(z > z_st_thresh - dz_blend)]
             I_hi  = sin_transform_approx(z_hi,xi,f)
 
-            if len(z_hi) + len(z_lo_plus) > len(z):
+            if len(z_hi) + len(z_lo) > len(z):
                 #If there are elements in the z blend range, then blend
-                hi_blend = np.where(z_hi <= z_st_thresh + dz_blend)
+                hi_blend = np.where(z_hi <= z_st_thresh)
                 z_hi_blend = z_hi[hi_blend]
-                lo_blend = np.where(z_lo_plus > z_st_thresh)
+                lo_blend = np.where(z_lo > z_st_thresh - dz_blend)
                 z_blend_max = max(z_hi_blend)
                 z_blend_min = min(z_hi_blend)
-                s = (z_hi_blend - z_blend_min)/(z_blend_max-z_blend_min)
+                if z_blend_max > z_blend_min:
+                    s = (z_hi_blend - z_blend_min)/(z_blend_max-z_blend_min)
+                else:
+                    s = 0.5
                 frac = 3*s**2 - 2*s**3
-                I_hi[hi_blend] = I_hi[hi_blend] * frac \
-                    + I[lo_blend]*(1 - frac)
+                I[lo_blend] = I_hi[hi_blend] * frac + I[lo_blend]*(1 - frac)
 
-            I = np.concatenate((I[lo],I_hi))
+            I = np.concatenate((I[lo],I_hi[z_hi > z_st_thresh]))
     else:
         if z <= z_st_thresh:
             array = f * np.sin(z * xi)

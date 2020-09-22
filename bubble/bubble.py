@@ -493,7 +493,7 @@ def fluid_shell(v_wall, alpha_n, n_xi=N_XI_DEFAULT):
      Finds fluid shell (v, w, xi) from a given v_wall, alpha_n, which must be scalars.  
      Option to change xi resolution n_xi
     """
-    check_physical_params([v_wall,alpha_n])
+#    check_physical_params([v_wall,alpha_n])
     wall_type = identify_wall_type(v_wall, alpha_n)
     if wall_type == 'Error':
         sys.stderr.write('fluid_shell: giving up because of identify_wall_type error')
