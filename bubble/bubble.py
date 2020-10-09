@@ -715,7 +715,7 @@ def find_alpha_plus(v_wall, alpha_n_given, n_xi=N_XI_DEFAULT):
                 def func(x): 
                     return find_alpha_n(vw, x, wall_type, n_xi) - alpha_n_given
                 a_initial_guess = alpha_plus_initial_guess(vw, alpha_n_given)
-                al_p = opt.fsolve(func, a_initial_guess, xtol=find_alpha_plus_tol)[0]
+                al_p = opt.fsolve(func, a_initial_guess, xtol=find_alpha_plus_tol, factor=0.1)[0]
                 ap[...] = al_p
             else:
                 ap[...] = np.nan
