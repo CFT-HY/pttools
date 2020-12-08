@@ -14,7 +14,7 @@ high-k signal in GWPS from numerical error.
 - Allow calls to power spectra and spectral density functions  
 with 2-component params list, i.e. params = [v_wall, alpha_n] (parse_params)
 exponential nucleation with parameters (1,) assumed.
-- reduced NZDEFAULT from 2000 to 320, to reduce high-k numerical error when using numerical sin transform
+- reduced NQDEFAULT from 2000 to 320, to reduce high-k numerical error when using numerical sin transform
 
 Changes planned 06/20
 - improve docstrings
@@ -36,8 +36,8 @@ from pttools.bubble import bubble as b
 
 NXIDEFAULT = 2000 # Default number of xi points used in bubble profiles
 NTDEFAULT  = 200   # Default number of T-tilde values for bubble lifetime distribution integration
-NZDEFAULT  = 320  # Default number of z points used in the velocity convolution integrations.
-NPTDEFAULT = [NXIDEFAULT, NTDEFAULT, NZDEFAULT]
+NQDEFAULT  = 320  # Default number of wavevectors used in the velocity convolution integrations.
+NPTDEFAULT = [NXIDEFAULT, NTDEFAULT, NQDEFAULT]
 
 #It seems that NPTDEFAULT should be something like NXIDEFAULT/(2.pi), otherwise one 
 #gets a GW power spectrum which drifts up at high k.
@@ -483,6 +483,7 @@ def spec_den_v(z, params, npt=NPTDEFAULT, filename=None, skip=1,
     nz = z.size
 #    nxi = npt[0]
     nt = npt[1]
+#    nq = npt[2]
 
     log10zmin = np.log10(min(z))
     log10zmax = np.log10(max(z))
@@ -527,10 +528,10 @@ def spec_den_v(z, params, npt=NPTDEFAULT, filename=None, skip=1,
     return sd_v
 
 
-def spec_den_gw_scaled(xlookup, P_vlookup, y=None):
+def spec_den_gw_scaled(xlookup, P_vlookup, z=None):
     """
      Spectral density of scaled gravitational wave power at values of kR* given 
-     by input y array, or at len(xlookup) values of kR* between the min and max 
+     by input z array, or at len(xlookup) values of kR* between the min and max 
      of xlookup where the GW power can be computed. 
      (xlookup, P_vlookup) is used as a lookup table to specify function. 
      P_vlookup is the spectral density of the FT of the velocity field, 
@@ -538,34 +539,35 @@ def spec_den_gw_scaled(xlookup, P_vlookup, y=None):
      factor of 2.
     """
 
-    if y is None:
-        nz = len(xlookup)
-        ymax = max(xlookup)  / ( 0.5 * (1. + cs0) / cs0)
-        ymin = min(xlookup) / (0.5 * (1. - cs0) / cs0)
-        y = np.logspace(np.log10(ymin), np.log10(ymax), nz)
+    if z is None:
+        nx = len(xlookup)
+        zmax = max(xlookup)  / ( 0.5 * (1. + cs0) / cs0)
+        zmin = min(xlookup) / (0.5 * (1. - cs0) / cs0)
+        z = np.logspace(np.log10(zmin), np.log10(zmax), nx)
     else:
-        nz = len(y)
-        xlargest = max(y)  * 0.5 * (1. + cs0) / cs0
-        xsmallest = min(y) * 0.5 * (1. - cs0) / cs0
+#        nx = len(z)
+        nx = len(xlookup)
+        xlargest = max(z)  * 0.5 * (1. + cs0) / cs0
+        xsmallest = min(z) * 0.5 * (1. - cs0) / cs0
     
         if max(xlookup) < xlargest or min(xlookup) > xsmallest:
             sys.exit("spec_den_gw_scaled: error: range of xlookup not large enough")
 
-    p_gw = np.zeros_like(y)
-
-    for i in range(nz):
-        xplus = y[i] / cs0 * (1. + cs0) / 2.
-        xminus = y[i] / cs0 * (1. - cs0) / 2.
-        x = np.logspace(np.log10(xminus), np.log10(xplus), nz)
+    p_gw = np.zeros_like(z)
+    
+    for i in range(z.size):
+        xplus = z[i] / cs0 * (1. + cs0) / 2.
+        xminus = z[i] / cs0 * (1. - cs0) / 2.
+        x = np.logspace(np.log10(xminus), np.log10(xplus), nx)
         integrand = (x - xplus)**2 * (x - xminus)**2 / x / (xplus + xminus - x) * np.interp(x,
                 xlookup, P_vlookup) * np.interp((xplus + xminus - x), xlookup, P_vlookup)
-        p_gw_factor = ((1 - cs0**2)/cs0**2)**2 / (4*np.pi*y[i]*cs0)
+        p_gw_factor = ((1 - cs0**2)/cs0**2)**2 / (4*np.pi*z[i]*cs0)
         p_gw[i] = p_gw_factor * np.trapz(integrand, x)
 
     # Here we are using G = 2P_v (v spec den is twice plane wave amplitude spec den).
     # Eq 3.48 in SSM paper gives a factor 3.Gamma^2.P_v.P_v = 3 * (4/3)^2.P_v.P_v
     # Hence overall should use (4/3).G.G
-    return (4./3.)*p_gw, y
+    return (4./3.)*p_gw, z
 
 
 def power_v(z, params, npt=NPTDEFAULT, filename=None, skip=1, 
@@ -608,12 +610,12 @@ def power_gw_scaled(z, params, npt=NPTDEFAULT, filename=None, skip=1,
     b.check_physical_params(params)
     
     eps = 1e-8 # Seems to be needed for max(z) <= 100. Why?
-#    nz = len(z) - this can be too few for velocity PS convolutions
-    nz = npt[2]
+#    nx = len(z) - this can be too few for velocity PS convolutions
+    nx = npt[2]
     xmax = max(z) * (0.5 * (1. + cs0) / cs0) + eps
     xmin = min(z) * (0.5 * (1. - cs0) / cs0) - eps
 
-    x = np.logspace(np.log10(xmin), np.log10(xmax), nz)
+    x = np.logspace(np.log10(xmin), np.log10(xmax), nx)
 
     sd_v = spec_den_v(x, params, npt, filename, skip, method, de_method, z_st_thresh)
     sd_gw, y = spec_den_gw_scaled(x, sd_v, z)
