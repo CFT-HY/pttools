@@ -1,0 +1,6 @@
+# List of project requirements for pip
+# https://pip.pypa.io/en/stable/user_guide/#requirements-files
+
+matplotlib
+numpy
+scipy
