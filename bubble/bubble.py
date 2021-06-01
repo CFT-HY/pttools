@@ -949,10 +949,10 @@ def w_approx_low_alpha(xi, v_wall, alpha):
     
     v_max = 3 * alpha * v_wall/abs(3*v_wall**2 - 1)
     gaws2 = 1./(1. - 3*v_wall**2)
-    w_app = np.exp(8*v_max * gaws2 * v_wall * ((v_wall/cs0) - 1))
+    w_app = np.exp(8*v_max * gaws2 * v_wall**2 * (1/xi - 1/cs0))
 
     w_app[np.where(xi > max(v_wall, cs0))] = 1.0
-    w_app[np.where(xi < min(v_wall, cs0))] = 0.0
+    w_app[np.where(xi < min(v_wall, cs0))] = np.nan
 
     return w_app
 
@@ -1328,7 +1328,7 @@ def check_physical_params(params):
     return None
 
     
-def plot_fluid_shell(v_wall, alpha_n, save_string=None, Np=N_XI_DEFAULT):
+def plot_fluid_shell(v_wall, alpha_n, save_string=None, Np=N_XI_DEFAULT, low_v_approx=False, high_v_approx=False):
     """
      Calls ``fluid_shell`` and plots resulting v, w against xi, returning figure handle.
      Also plots:
@@ -1349,8 +1349,8 @@ def plot_fluid_shell(v_wall, alpha_n, save_string=None, Np=N_XI_DEFAULT):
     """
     check_physical_params([v_wall, alpha_n])
     
-    high_v_plot = 0.8 # Above which plot v ~ xi approximation
-    low_v_plot = 0.025  # Below which plot  low v approximation
+#    high_v_plot = 0.8 # Above which plot v ~ xi approximation
+#    low_v_plot = 0.2  # Below which plot  low v approximation
 
     wall_type = identify_wall_type(v_wall, alpha_n)
 
@@ -1382,13 +1382,13 @@ def plot_fluid_shell(v_wall, alpha_n, save_string=None, Np=N_XI_DEFAULT):
     # and efficiency of turning Higgs potential into thermal energy
     dw = 0.75 * mean_enthalpy_change(v, w, xi, v_wall)/(0.75 * alpha_n * w[-1])
     
-    if vmax > high_v_plot*v_wall:
+    if high_v_approx:
         v_approx = v_approx_high_alpha(xi[n_wall:n_sh], v_wall, v[n_wall])
         w_approx = w_approx_high_alpha(xi[n_wall:n_sh], v_wall, v[n_wall], w[n_wall])
 
-    if vmax < low_v_plot and not wall_type == 'Hybrid':
+    if low_v_approx:
         v_approx = v_approx_low_alpha(xi, v_wall, alpha_plus)
-
+        w_approx = w_approx_low_alpha(xi, v_wall, alpha_plus)
     # Plot
     yscale_v = max(v)*1.2
     xscale_max = min(xi[-2]*1.1,1.0)
@@ -1407,7 +1407,7 @@ def plot_fluid_shell(v_wall, alpha_n, save_string=None, Np=N_XI_DEFAULT):
 
     if not wall_type == 'Detonation':
         plt.plot(xi_even[n_cs:], v_sh[n_cs:], 'k--', label=r'$v_{\rm sh}(\xi_{\rm sh})$')
-        if vmax > high_v_plot*v_wall:
+        if high_v_approx:
             plt.plot(xi[n_wall:n_sh], v_approx,'b--',label=r'$v$ ($v < \xi$ approx)')
             plt.plot(xi, xi,'k--',label=r'$v = \xi$')
 
@@ -1415,7 +1415,7 @@ def plot_fluid_shell(v_wall, alpha_n, save_string=None, Np=N_XI_DEFAULT):
         v_minus_max = lorentz(xi_even, cs0)
         plt.plot(xi_even[n_cs:], v_minus_max[n_cs:], 'k-.', label=r'$\mu(\xi,c_{\rm s})$')
 
-    if vmax < low_v_plot and not wall_type == 'Hybrid':
+    if low_v_approx:
         plt.plot(xi, v_approx, 'b--', label=r'$v$ low $\alpha$ approx')
     
     plt.legend(loc='best')
@@ -1436,14 +1436,15 @@ def plot_fluid_shell(v_wall, alpha_n, save_string=None, Np=N_XI_DEFAULT):
     if not wall_type == 'Detonation':
         plt.plot(xi_even[n_cs:], w_sh[n_cs:],'k--',label=r'$w_{\rm sh}(\xi_{\rm sh})$')
 
-        if vmax > high_v_plot*v_wall:
+        if high_v_approx:
             plt.plot(xi[n_wall:n_sh], w_approx[:], 'b--', label=r'$w$ ($v < \xi$ approx)')
 
     else:
         wmax_det = (xi_even/cs0)*gamma2(xi_even)/gamma2(cs0)
         plt.plot(xi_even[n_cs:], wmax_det[n_cs:],'k-.',label=r'$w_{\rm max}$')
-#    if alpha_plus < low_alpha_p_plot and not wall_type == 'Hybrid':
-#        plt.plot(xi, w_approx, 'b--', label=r'$w$ low $\alpha$ approx')
+
+    if low_v_approx:
+        plt.plot(xi, w_approx, 'b--', label=r'$w$ low $\alpha$ approx')
 
     plt.legend(loc='best')
     plt.ylabel(r'$w(\xi)$', size=16)
