@@ -14,7 +14,16 @@ coverage.txt
 coverage.xml
 htmlcov
 
+# Graphing
+classes.png
+classes.svg
+packages.png
+packages.svg
+
 # Output files
 pow_*.pdf
 pow_*.txt
 *test.txt
+
+# Pylint
+pylint.txt

@@ -1,0 +1,50 @@
+image: python:3.8
+
+pipelines:
+  default:
+    - step:
+        name: Install dependencies
+        caches:
+          - pip
+        script:
+          - python -V
+          - pip install -r requirements.txt
+          - pip install pylint
+    - parallel:
+      - step:
+          name: Lint
+          caches:
+            - pip
+          script:
+            - pylint bubble gw_code tests 2>&1 | tee pylint.txt
+          artifacts:
+            - pylint.txt
+      - step:
+          name: Graph
+          caches:
+            - pip
+          script:
+            - pyreverse ./bubble ./gw_code -o png
+            - pyreverse ./bubble ./gw_code -o svg
+          artifacts:
+            - classes.png
+            - classes.svg
+            - packages.png
+            - packages.svg
+      - step:
+          name: Test
+          caches:
+            - pip
+          script:
+            - coverage run
+            - coverage combine
+            - coverage report | tee coverage.txt
+            - coverage html
+            - coverage xml
+            - coverage json
+            - bash <(curl -s https://codecov.io/bash)
+          artifacts:
+            - coverage.txt
+            - coverage.xml
+            - coverage.json
+            - htmlcov
