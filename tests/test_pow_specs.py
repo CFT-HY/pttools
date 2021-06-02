@@ -25,13 +25,14 @@ class TestPowSpecs(unittest.TestCase):
         data_reference = np.loadtxt(os.path.join(TEST_DATA_PATH, "data_compare_nuc-test_reference.txt"))
         data_test = np.loadtxt(os.path.join(TEST_DATA_PATH, "data_compare_nuc-test.txt"))
 
+        # The sign of p_cwg does not matter
+        data_article[:, 9] = np.abs(data_article[:, 9])
+        data_reference[:, 9] = np.abs(data_reference[:, 9])
+        data_test[:, 9] = np.abs(data_test[:, 9])
+
         if not np.array_equal(data_reference, data_test):
             np.testing.assert_allclose(data_reference, data_test)
             print("WARNING! There are small differences in the output and reference data.")
-
-        # The sign of p_cwg does not matter
-        data_article[:, 9] = np.abs(data_article[:, 9])
-        data_test[:, 9] = np.abs(data_test[:, 9])
 
         # PTtools has been changed since the article has been written,
         # and therefore there are slight differences in the results.
