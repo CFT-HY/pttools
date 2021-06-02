@@ -40,7 +40,7 @@ pipelines:
             - pip install -r requirements.txt
             - pip install coverage
             - coverage run
-            - coverage combine
+            # - coverage combine
             - coverage report | tee coverage.txt
             - coverage html
             - coverage xml
