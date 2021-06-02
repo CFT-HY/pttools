@@ -20,6 +20,7 @@ pipelines:
             - pip
           script:
             - python -V
+            - apt-get update
             - apt-get install -y graphviz
             - pip install -r requirements.txt
             - pip install pylint
