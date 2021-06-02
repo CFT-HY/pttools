@@ -1,0 +1,9 @@
+[run]
+branch = True
+command_line = -m unittest discover -s tests
+source = .
+omit =
+    */venv/*
+
+[report]
+show_missing = True
