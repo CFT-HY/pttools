@@ -652,7 +652,7 @@ def plot_ps_compare_nuc(vw, alpha, save_id=None, graph_file_type=None):
         f_v.savefig(md_path + "pow_v_" + graph_file_suffix)
         f_gw.savefig(md_path + "pow_gw_" + graph_file_suffix)
     
-    plt.show()
+    # plt.show()
         
     return v2_list, Omgw_scaled_list, list(p_cwg), list(p_ssm)
 
