@@ -30,9 +30,8 @@ class TestPowSpecs(unittest.TestCase):
         data_reference[:, 9] = np.abs(data_reference[:, 9])
         data_test[:, 9] = np.abs(data_test[:, 9])
 
-        if not np.array_equal(data_reference, data_test):
-            np.testing.assert_allclose(data_reference, data_test)
-            print("WARNING! There are small differences in the output and reference data.")
+        # The results differ slightly depending on the library versions
+        np.testing.assert_allclose(data_reference, data_test, rtol=4.6e-7, atol=0)
 
         # PTtools has been changed since the article has been written,
         # and therefore there are slight differences in the results.
