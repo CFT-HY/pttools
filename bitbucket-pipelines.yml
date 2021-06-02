@@ -9,7 +9,7 @@ pipelines:
         script:
           - python -V
           - pip install -r requirements.txt
-          - pip install pylint
+          - pip install coverage pylint
     - parallel:
       - step:
           name: Lint
