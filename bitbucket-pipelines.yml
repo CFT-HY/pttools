@@ -2,20 +2,15 @@ image: python:3.8
 
 pipelines:
   default:
-    - step:
-        name: Install dependencies
-        caches:
-          - pip
-        script:
-          - python -V
-          - pip install -r requirements.txt
-          - pip install coverage pylint
     - parallel:
       - step:
           name: Lint
           caches:
             - pip
           script:
+            - python -V
+            - pip install -r requirements.txt
+            - pip install pylint
             - pylint bubble gw_code tests 2>&1 | tee pylint.txt
           artifacts:
             - pylint.txt
@@ -24,6 +19,9 @@ pipelines:
           caches:
             - pip
           script:
+            - python -V
+            - pip install -r requirements.txt
+            - pip install pylint
             - pyreverse ./bubble ./gw_code -o png
             - pyreverse ./bubble ./gw_code -o svg
           artifacts:
@@ -36,6 +34,9 @@ pipelines:
           caches:
             - pip
           script:
+            - python -V
+            - pip install -r requirements.txt
+            - pip install coverage
             - coverage run
             - coverage combine
             - coverage report | tee coverage.txt
