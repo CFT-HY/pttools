@@ -31,9 +31,9 @@ import sys
 import numpy as np
 from scipy.optimize import fsolve
 try:
-    import pttools.bubble.bubble as b
+    import pttools.bubble as b
 except ImportError:
-    import bubble.bubble as b
+    import bubble as b
 
 NXIDEFAULT = 2000 # Default number of xi points used in bubble profiles
 NTDEFAULT  = 200   # Default number of T-tilde values for bubble lifetime distribution integration
