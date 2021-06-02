@@ -688,17 +688,17 @@ def plot_ps(z_list, pow_list, ps_type, ax_limits='weak',
 #    print(ps_type + " power: ", power)
 
     # Pretty graphs
-    ax.grid(True)
-    ax.set_xlabel(r'$kR_*$')
-    if ps_type == 'gw':
-        ax.set_ylabel(r'$(H_{\rm n}R_*)^{-1}\mathcal{P}^\prime_{\rm ' + ps_type + '}(kR_*)$')
-    else:
-        ax.set_ylabel(r'$\mathcal{P}_{\rm ' + ps_type + '}(kR_*)$')
-    ax.set_ylim([p_min, p_max])
-    ax.set_xlim([zmin, zmax])
-    if leg_list is not None:
-        plt.legend(loc='best')
-    plt.tight_layout()
+    # ax.grid(True)
+    # ax.set_xlabel(r'$kR_*$')
+    # if ps_type == 'gw':
+    #     ax.set_ylabel(r'$(H_{\rm n}R_*)^{-1}\mathcal{P}^\prime_{\rm ' + ps_type + '}(kR_*)$')
+    # else:
+    #     ax.set_ylabel(r'$\mathcal{P}_{\rm ' + ps_type + '}(kR_*)$')
+    # ax.set_ylim([p_min, p_max])
+    # ax.set_xlim([zmin, zmax])
+    # if leg_list is not None:
+    #     plt.legend(loc='best')
+    # plt.tight_layout()
 #    plt.savefig("P" + ps_type + "_foo.pdf")
     
     return fig
