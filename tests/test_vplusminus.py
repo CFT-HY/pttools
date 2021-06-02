@@ -1,8 +1,11 @@
+import os.path
 import unittest
 
 import numpy as np
 
 import bubble as b
+
+TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_data")
 
 
 class TestVPlusMinus(unittest.TestCase):
@@ -29,10 +32,10 @@ class TestVPlusMinus(unittest.TestCase):
         This generates the same data as plotted by fig_8l_vplusminus.py.
         """
         v_first = np.linspace(1 / self.npts, 1, self.npts)
-        self.v_conversion(b.v_plus, "test_data/v_plus_minus.txt", v_first)
+        self.v_conversion(b.v_plus, os.path.join(TEST_DATA_PATH, "v_plus_minus.txt"), v_first)
 
     def test_v_minus_plus(self):
         """Compute v_minus from v_plus."""
         # Todo: Test in some other way to avoid "RuntimeWarning: invalid value encountered in sqrt"
         v_first = np.linspace(1/self.npts+0.1, 0.9, self.npts)
-        self.v_conversion(b.v_minus, "test_data/v_minus_plus.txt", v_first)
+        self.v_conversion(b.v_minus, os.path.join(TEST_DATA_PATH, "v_minus_plus.txt"), v_first)

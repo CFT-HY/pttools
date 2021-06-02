@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from __future__ import absolute_import, division, print_function
 
+import os
 import sys
 sys.path.append('../../../')
 
@@ -73,7 +74,7 @@ nt_string = '_nT{}'.format(Np_list[0][2])
 file_type = 'pdf'
 
 # md_path = '../model_data/'  # Model data path
-md_path = "test_data/"
+md_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_data/")
 
 # All run parameters
     
