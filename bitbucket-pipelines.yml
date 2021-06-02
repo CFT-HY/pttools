@@ -1,10 +1,9 @@
-image: python:3.8
-
 pipelines:
   default:
     - parallel:
       - step:
           name: Lint
+          image: python:3.8
           caches:
             - pip
           script:
@@ -16,6 +15,7 @@ pipelines:
             - pylint.txt
       - step:
           name: Graph
+          image: python:3.8
           caches:
             - pip
           script:
@@ -33,6 +33,7 @@ pipelines:
             - packages.svg
       - step:
           name: Test
+          image: python:3.8
           caches:
             - pip
           script:
@@ -51,3 +52,13 @@ pipelines:
             - coverage.xml
             - coverage.json
             - htmlcov
+      - step:
+          name: Test with Python 3.6
+          image: python:3.6
+          caches:
+            - pip
+          script:
+            - python -V
+            - pip install -r requirements.txt
+            - pip install coverage
+            - coverage run
