@@ -21,7 +21,7 @@ packages.png
 packages.svg
 
 # Output files
-pow_*.pdf
+*.pdf
 pow_*.txt
 *test.txt
 
