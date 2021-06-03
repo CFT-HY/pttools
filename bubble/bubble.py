@@ -29,6 +29,8 @@ Changes 06.20:
 from __future__ import absolute_import, division, print_function
 
 import sys
+import typing as tp
+
 import numpy as np
 import scipy.integrate as spi
 import scipy.optimize as opt
@@ -1328,7 +1330,14 @@ def check_physical_params(params):
     return None
 
     
-def plot_fluid_shell(v_wall, alpha_n, save_string=None, Np=N_XI_DEFAULT, low_v_approx=False, high_v_approx=False):
+def plot_fluid_shell(
+        v_wall,
+        alpha_n,
+        save_string=None,
+        Np=N_XI_DEFAULT,
+        low_v_approx=False,
+        high_v_approx=False,
+        debug: bool = False):
     """
      Calls ``fluid_shell`` and plots resulting v, w against xi, returning figure handle.
      Also plots:
@@ -1456,11 +1465,15 @@ def plot_fluid_shell(v_wall, alpha_n, save_string=None, Np=N_XI_DEFAULT, low_v_a
 
     if save_string is not None:
         plt.savefig('shell_plot_vw_{}_alphan_{:.3}{}'.format(v_wall,alpha_n,save_string))
-    
+
+    if debug:
+        arrs = [v, w, xi, v_sh, w_sh]
+        scalars = [n_wall, n_cs, n_sh, r, alpha_plus, ubarf2, ke_frac, kappa, dw]
+        return f, arrs, scalars
     return f
 
 
-def plot_fluid_shells(v_wall_list, alpha_n_list, multi=False, save_string=None, Np=N_XI_DEFAULT):
+def plot_fluid_shells(v_wall_list, alpha_n_list, multi=False, save_string=None, Np=N_XI_DEFAULT, debug: bool = False):
     """
      Calls ``fluid_shell`` and plots resulting v, w against xi. Returns figure handle.
      Annotates titles with:
@@ -1493,6 +1506,22 @@ def plot_fluid_shells(v_wall_list, alpha_n_list, multi=False, save_string=None, 
     f.subplots_adjust(wspace=0.1)
     
     n=0
+
+    if debug:
+        # Debug arrays
+        lst_v = []
+        lst_w = []
+        lst_xi = []
+        lst_v_sh = []
+        lst_v_minus_max = []
+        lst_w_sh = []
+
+        # Debug values
+        lst_ubarf2 = []
+        lst_ke_frac = []
+        lst_kappa = []
+        lst_dw = []
+
     for v_wall, alpha_n in zip(v_wall_list, alpha_n_list):
         check_physical_params([v_wall, alpha_n])
 
@@ -1563,12 +1592,25 @@ def plot_fluid_shells(v_wall_list, alpha_n_list, multi=False, save_string=None, 
             ax[1,n].set_title(r'$K = {:5.3g}$, $\kappa = {:5.3f}$, $\omega = {:5.3f}$'.format(
                       ke_frac, kappa, dw),size=14)
 
+            if debug:
+                # Scalars
+                lst_ubarf2.append(ubarf2)
+                lst_ke_frac.append(ke_frac)
+                lst_kappa.append(kappa)
+                lst_dw.append(dw)
             
         ax[1,n].set_xlabel(r'$\xi$')
         ax[1,n].grid(True)
         if multi:
             n += 1
 
+        if debug:
+            # Arrays
+            lst_v.append(v)
+            lst_w.append(w)
+            lst_xi.append(xi)
+            lst_v_sh.append(v_sh)
+            lst_w_sh.append(w_sh)
 
     xscale_min = 0.0
     xscale_max = 1.0
@@ -1592,5 +1634,9 @@ def plot_fluid_shells(v_wall_list, alpha_n_list, multi=False, save_string=None, 
                     alpha_n_list[0],alpha_n_list[-1],
                     save_string))
 
-
+    if debug:
+        data = [[np.nansum(arr) for arr in lst] for lst in [lst_v, lst_w, lst_xi, lst_v_sh, lst_w_sh]]
+        if multi:
+            data += [lst_ubarf2, lst_ke_frac, lst_kappa, lst_dw]
+        return f, np.array(data, dtype=np.float_)
     return f
