@@ -1337,7 +1337,8 @@ def plot_fluid_shell(
         Np=N_XI_DEFAULT,
         low_v_approx=False,
         high_v_approx=False,
-        debug: bool = False):
+        debug: bool = False,
+        draw: bool = True):
     """
      Calls ``fluid_shell`` and plots resulting v, w against xi, returning figure handle.
      Also plots:
@@ -1461,7 +1462,8 @@ def plot_fluid_shell(
     plt.axis([xscale_min, xscale_max, yscale_enth_min, yscale_enth_max])
     plt.grid()
 
-    plt.tight_layout()
+    if draw:
+        plt.tight_layout()
 
     if save_string is not None:
         plt.savefig('shell_plot_vw_{}_alphan_{:.3}{}'.format(v_wall,alpha_n,save_string))
