@@ -35,14 +35,14 @@ class TestShells(unittest.TestCase):
         alpha_weak_list = len(vw_weak_list) * [alpha_weak]
         alpha_inter_list = len(vw_inter_list) * [alpha_inter]
 
-        _, data_weak = bubble.plot_fluid_shells(vw_weak_list, alpha_weak_list, debug=True)
-        _, data_inter = bubble.plot_fluid_shells(vw_inter_list, alpha_inter_list, debug=True)
+        _, data_weak = bubble.plot_fluid_shells(vw_weak_list, alpha_weak_list, debug=True, draw=False)
+        _, data_inter = bubble.plot_fluid_shells(vw_inter_list, alpha_inter_list, debug=True, draw=False)
 
         vw_list_esp = [0.5, 0.7, 0.77]
         alpha_plus_list_esp = [0.263, 0.052, 0.091]
         alpha_n_list_esp = [bubble.find_alpha_n(vw, ap) for vw, ap in zip(vw_list_esp, alpha_plus_list_esp)]
 
-        _, data_esp = bubble.plot_fluid_shells(vw_list_esp, alpha_n_list_esp, multi=True, debug=True)
+        _, data_esp = bubble.plot_fluid_shells(vw_list_esp, alpha_n_list_esp, multi=True, debug=True, draw=False)
 
         # Generate new reference data
         # np.savetxt(self.shell_file_path("weak"), data_weak)

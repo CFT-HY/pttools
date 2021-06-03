@@ -1473,7 +1473,14 @@ def plot_fluid_shell(
     return f
 
 
-def plot_fluid_shells(v_wall_list, alpha_n_list, multi=False, save_string=None, Np=N_XI_DEFAULT, debug: bool = False):
+def plot_fluid_shells(
+        v_wall_list,
+        alpha_n_list,
+        multi=False,
+        save_string=None,
+        Np=N_XI_DEFAULT,
+        debug: bool = False,
+        draw: bool = True):
     """
      Calls ``fluid_shell`` and plots resulting v, w against xi. Returns figure handle.
      Annotates titles with:
@@ -1618,7 +1625,8 @@ def plot_fluid_shells(v_wall_list, alpha_n_list, multi=False, save_string=None, 
     ax[0,0].axis([xscale_min,xscale_max, 0.0, yscale_v*1.2])
     ax[1,0].axis([xscale_min, xscale_max, y_scale_enth_min, yscale_enth_max*1.1 - 0.1*wn_max])
 
-    f.canvas.draw()
+    if draw:
+        f.canvas.draw()
     ylabels = [tick.get_text() for tick in ax[1,0].get_yticklabels()]
     ax[1,0].set_yticklabels(ylabels[:-1])
     
