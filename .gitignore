@@ -21,7 +21,11 @@ packages.png
 packages.svg
 
 # Output files
+*.dot
+*.html
 *.pdf
+*.png
+*.svg
 pow_*.txt
 *test.txt
 
