@@ -4,8 +4,7 @@ import unittest
 import numpy as np
 
 import bubble as b
-
-TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_data")
+from test_utils import TEST_DATA_PATH
 
 
 class TestVPlusMinus(unittest.TestCase):

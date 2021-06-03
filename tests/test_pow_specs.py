@@ -1,11 +1,10 @@
-import os
+import os.path
 import unittest
 
 import numpy as np
 
 import ssm_paper_utils as spu
-
-TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_data")
+from test_utils import TEST_DATA_PATH
 
 
 class TestPowSpecs(unittest.TestCase):
