@@ -77,6 +77,8 @@ jobs:
     strategy:
       matrix:
         python-version: [ 3.6, 3.7, 3.8, 3.9 ]
+    env:
+      PRIMARY_PYTHON_VERSION: 3.8
     steps:
     - name: Setup Python
       uses: actions/setup-python@v2
@@ -109,6 +111,7 @@ jobs:
         coverage json
     - name: Upload results
       uses: actions/upload-artifact@v2
+      if: ${{ matrix.python-version == env.PRIMARY_PYTHON_VERSION }}
       with:
         name: Coverage
         path: |
@@ -119,7 +122,7 @@ jobs:
         if-no-files-found: error
     - name: Upload results to Codecov
       uses: codecov/codecov-action@v1
-      if: ${{ matrix.python-version == '3.8' }}
+      if: ${{ matrix.python-version == env.PRIMARY_PYTHON_VERSION }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ${{ github.workspace }}/coverage.xml
