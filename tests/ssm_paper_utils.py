@@ -528,7 +528,7 @@ def plot_ps_compare_res(vw, alpha, nuc_type='simultaneous', nuc_args=(1.,),
     return f_v, f_gw
 
 
-def plot_ps_1bubble(vw, alpha, save_id=None, graph_file_type=None, Np = Np_list[-1]):
+def plot_ps_1bubble(vw, alpha, save_id=None, graph_file_type=None, Np = Np_list[-1], debug: bool = False):
     # Plots power spectra predictions of 1 bubble. Shown are
     # |A|^2, |f'(z)|^2/2 and |l(z)|^2/2
     # Saves data if save_id is set
@@ -568,8 +568,10 @@ def plot_ps_1bubble(vw, alpha, save_id=None, graph_file_type=None, Np = Np_list[
             + nz_string + nx_string +  save_id + '.' + graph_file_type
         f.savefig(md_path + "one_bub_" + graph_file_suffix)
     
-    plt.show()
-        
+    # plt.show()
+
+    if debug:
+        return f, np.array([z, A2, fp2_2, lam2])
     return f
 
             
@@ -919,7 +921,7 @@ def do_all_plot_ps_compare_nuc(save_id=None, graph_file_type=None):
     return param_list, v2_list, Omgw_scaled_list, p_cwg_list, p_ssm_list
 
     
-def do_all_plot_ps_1bubble(save_id=None, graph_file_type=None):
+def do_all_plot_ps_1bubble(save_id=None, graph_file_type=None, debug: bool = False):
     vw_weak_list = [0.92, 0.56, 0.44]
     vw_inter_list = [0.92, 0.56, 0.44]
     
@@ -930,11 +932,17 @@ def do_all_plot_ps_1bubble(save_id=None, graph_file_type=None):
     alpha_list_all =[alpha_weak, alpha_inter]
     
     f_list = []
+    data_lst = []
     for vw_list, alpha, in zip(vw_list_all, alpha_list_all):
         for vw in vw_list:
+            if debug:
+                f, data = plot_ps_1bubble(vw, alpha, save_id, graph_file_type, debug=debug)
+                data_lst.append(data)
             f = plot_ps_1bubble(vw, alpha, save_id, graph_file_type)
             f_list.append(f)
-        
+
+    if debug:
+        return f_list, np.array(data_lst)
     return f_list
 
     
