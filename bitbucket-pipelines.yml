@@ -10,7 +10,7 @@ pipelines:
             - python -V
             - pip install -r requirements.txt
             - pip install pylint
-            - pylint bubble gw_code tests 2>&1 | tee pylint.txt
+            - pylint . bubble gw_code tests 2>&1 | tee pylint.txt
           artifacts:
             - pylint.txt
       - step:
@@ -24,8 +24,8 @@ pipelines:
             - apt-get install -y graphviz
             - pip install -r requirements.txt
             - pip install pylint
-            - pyreverse ./bubble ./gw_code -o png
-            - pyreverse ./bubble ./gw_code -o svg
+            - pyreverse . -o png
+            - pyreverse . -o svg
           artifacts:
             - classes.png
             - classes.svg
