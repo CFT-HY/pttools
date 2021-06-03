@@ -56,21 +56,31 @@ jobs:
       - name: Install requirements
         run: |
           pip --cache-dir=.pip install --upgrade pip
-          pip --cache-dir=.pip install pylint
+          pip --cache-dir=.pip install "pyan3 >=1.1.1, !=1.2.0" pylint
           pip --cache-dir=.pip install -r requirements.txt
       - name: Run Pyreverse
         run: |
-          pyreverse . -o png
-          pyreverse . -o svg
+          mkdir uml
+          pyreverse . -o png -d ./uml
+          pyreverse . -o svg -d ./uml
+      - name: Run Pyan
+        run: |
+          mkdir call_graphs
+          pyan3 "./**/*.py" --html > ./call_graphs/call_graph_all.html
+          pyan3 "./**/*.py" --svg > ./call_graphs/call_graph_all.svg
+          pyan3 "./bubble/*.py" "./gw_code/*.py" --html > ./call_graphs/call_graph_pttools.html
+          pyan3 "./bubble/*.py" "./gw_code/*.py" --svg > ./call_graphs/call_graph_pttools.svg
+          pyan3 "./bubble/bubble.py" --html > ./call_graphs/call_graph_bubble.html
+          pyan3 "./bubble/bubble.py" --svg > ./call_graphs/call_graph_bubble.svg
+          pyan3 "./gw_code/ssmtools.py" --html > ./call_graphs/call_graph_ssmtools.html
+          pyan3 "./gw_code/ssmtools.py" --svg > ./call_graphs/call_graph_ssmtools.svg
       - name: Upload results
         uses: actions/upload-artifact@v2
         with:
           name: Graph
           path: |
-            classes.png
-            classes.svg
-            packages.png
-            packages.svg
+            call_graphs
+            uml
           if-no-files-found: error
   test:
     runs-on: ubuntu-latest
