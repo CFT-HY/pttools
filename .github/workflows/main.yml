@@ -119,7 +119,7 @@ jobs:
         if-no-files-found: error
     - name: Upload results to Codecov
       uses: codecov/codecov-action@v1
-      if: ${{ matrix.python-version }} == "3.8"
+      if: ${{ matrix.python-version == '3.8' }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ${{ github.workspace }}/coverage.xml
