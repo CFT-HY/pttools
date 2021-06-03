@@ -1633,10 +1633,12 @@ def plot_fluid_shells(
     ax[1,0].set_yticklabels(ylabels[:-1])
     
     ax[0,0].set_ylabel(r'$v(\xi)$')
-    plt.tight_layout()
+    if draw:
+        plt.tight_layout()
 
     ax[1,0].set_ylabel(r'$w(\xi)$')
-    plt.tight_layout()
+    if draw:
+        plt.tight_layout()
 
     if save_string is not None:
         plt.savefig('shells_plot_vw_{}-{}_alphan_{:.3}-{:.3}{}'.format(
