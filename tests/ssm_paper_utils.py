@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from __future__ import absolute_import, division, print_function
 
+import io
 import os
 import sys
 sys.path.append('../../../')
@@ -13,6 +14,7 @@ from scipy.optimize import curve_fit
 import gw_code.ssmtools as ssm
 import bubble as b
 import tex_utils as tu
+from test_utils import TEST_DATA_PATH
 
 print('Importing {}'.format(ssm.__file__))
 print('Importing {}'.format(b.__file__))
@@ -192,7 +194,10 @@ def add_ssm_fit(f_gw, y, pow_gw):
 def make_1dh_compare_table(params_list, v2_list, 
                            file_name='table_1dh_compare.tex'):
 
-    f = open(file_name,'w')            
+    if isinstance(file_name, io.TextIOBase):
+        f = file_name
+    else:
+        f = open(file_name,'w')
     f.write('\\begin{tabular}{cc | rrr }\n')
     
     f.write('\\hline\\hline\n')
@@ -220,7 +225,8 @@ def make_1dh_compare_table(params_list, v2_list,
         
     f.write('\\hline\\hline\n')
     f.write('\\end{tabular}\n')
-    f.close()
+    if not isinstance(file_name, io.TextIOBase):
+        f.close()
     
     return None
 
@@ -243,7 +249,10 @@ def make_3dh_compare_table(params_list, v2_list, Omgw_list, p_list,
     z_peak_prace = [8.6, 10.4, 18.3, np.nan, 9.9, 
                     8.5, np.nan, 16.1, np.nan, 6.9]
 
-    f = open(file_name,'w')            
+    if isinstance(file_name, io.TextIOBase):
+        f = file_name
+    else:
+        f = open(file_name, 'w')
     f.write('\\begin{tabular}{cc | rr | rr | ll | rr}\n')
     
     f.write('\\hline\\hline\n')
@@ -301,8 +310,9 @@ def make_3dh_compare_table(params_list, v2_list, Omgw_list, p_list,
         
     f.write('\\hline\\hline \n')
     f.write('\\end{tabular} \n')
-    
-    f.close()
+
+    if not isinstance(file_name, io.TextIOBase):
+        f.close()
     return None
 
 
@@ -312,7 +322,10 @@ def make_nuc_compare_table(params_list, v2_list, Omgw_list, p_sim_list, p_exp_li
     # comparing between simulataneous and exponential nucleation
                     
 #    print('\\begin{tabular}{cc | rr | rr | ll | rr | rr}')
-    f = open(file_name,'w')            
+    if isinstance(file_name, io.TextIOBase):
+        f = file_name
+    else:
+        f = open(file_name, 'w')
     f.write('\\begin{tabular}{cc | rr | ll | rr | rr}\n')
     
     f.write('\\hline\\hline\n')
@@ -373,7 +386,8 @@ def make_nuc_compare_table(params_list, v2_list, Omgw_list, p_sim_list, p_exp_li
         
     f.write('\\hline\\hline\n')
     f.write('\\end{tabular} \n')
-    f.close()
+    if not isinstance(file_name, io.TextIOBase):
+        f.close()
     
     return None
 
