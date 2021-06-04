@@ -24,7 +24,7 @@ jobs:
           pip --cache-dir=.pip install pylint
           pip --cache-dir=.pip install -r requirements.txt
       - name: Run Pylint
-        run: pylint . bubble ssmtools tests 2>&1 | tee pylint.txt
+        run: pylint pttools tests 2>&1 | tee pylint.txt
       - name: Upload results
         uses: actions/upload-artifact@v2
         with:
@@ -61,26 +61,28 @@ jobs:
       - name: Run Pyreverse
         run: |
           mkdir uml
-          pyreverse . -o png -d ./uml
-          pyreverse . -o svg -d ./uml
+          pyreverse pttools -o png -d ./uml
+          pyreverse pttools -o svg -d ./uml
       - name: Run Pyan
         # -a = --annotated
         # -c = --colored
         # -e = --nested-groups
         run: |
           mkdir call_graphs
-          pyan3 "./**/*.py" -a -c -e --dot > ./call_graphs/call_graph_all.dot
-          pyan3 "./**/*.py" -a -c -e --html > ./call_graphs/call_graph_all.html
-          pyan3 "./**/*.py" -a -c -e --svg > ./call_graphs/call_graph_all.svg
-          pyan3 "./bubble/*.py" "./gw_code/*.py" -a -c -e --dot > ./call_graphs/call_graph_pttools.dot
-          pyan3 "./bubble/*.py" "./gw_code/*.py" -a -c -e --html > ./call_graphs/call_graph_pttools.html
-          pyan3 "./bubble/*.py" "./gw_code/*.py" -a -c -e --svg > ./call_graphs/call_graph_pttools.svg
-          pyan3 "./bubble/bubble.py" -a -c -e --dot > ./call_graphs/call_graph_bubble.dot
-          pyan3 "./bubble/bubble.py" -a -c -e --html > ./call_graphs/call_graph_bubble.html
-          pyan3 "./bubble/bubble.py" -a -c -e --svg > ./call_graphs/call_graph_bubble.svg
-          pyan3 "./gw_code/ssmtools.py" -a -c -e --dot > ./call_graphs/call_graph_ssmtools.dot
-          pyan3 "./gw_code/ssmtools.py" -a -c -e --html > ./call_graphs/call_graph_ssmtools.html
-          pyan3 "./gw_code/ssmtools.py" -a -c -e --svg > ./call_graphs/call_graph_ssmtools.svg
+        # Call graphs of the entire project are broken at the moment:
+        # "KeyError: <Node import:pttools.bubble.bubble>"
+        # pyan3 "./**/*.py" -a -c -e --dot > ./call_graphs/call_graph_all.dot
+        # pyan3 "./**/*.py" -a -c -e --html > ./call_graphs/call_graph_all.html
+        # pyan3 "./**/*.py" -a -c -e --svg > ./call_graphs/call_graph_all.svg
+          pyan3 "./pttools/**/*.py" -a -c -e --dot > ./call_graphs/call_graph_pttools.dot
+          pyan3 "./pttools/**/*.py" -a -c -e --html > ./call_graphs/call_graph_pttools.html
+          pyan3 "./pttools/**/*.py" -a -c -e --svg > ./call_graphs/call_graph_pttools.svg
+          pyan3 "./pttools/bubble/*.py" -a -c -e --dot > ./call_graphs/call_graph_bubble.dot
+          pyan3 "./pttools/bubble/*.py" -a -c -e --html > ./call_graphs/call_graph_bubble.html
+          pyan3 "./pttools/bubble/*.py" -a -c -e --svg > ./call_graphs/call_graph_bubble.svg
+          pyan3 "./pttools/ssmtools/*.py" -a -c -e --dot > ./call_graphs/call_graph_ssmtools.dot
+          pyan3 "./pttools/ssmtools/*.py" -a -c -e --html > ./call_graphs/call_graph_ssmtools.html
+          pyan3 "./pttools/ssmtools/*.py" -a -c -e --svg > ./call_graphs/call_graph_ssmtools.svg
       - name: Upload results
         uses: actions/upload-artifact@v2
         with:
@@ -116,15 +118,15 @@ jobs:
     - name: Install requirements
       run: |
         pip --cache-dir=.pip install --upgrade pip
-        pip --cache-dir=.pip install coverage
+        pip --cache-dir=.pip install pytest pytest-cov pytest-pythonpath pytest-xdist
         pip --cache-dir=.pip install -r requirements.txt
     - name: Run tests with coverage
       run: coverage run
     - name: Create coverage reports
       run: |
-        coverage report | tee coverage.txt
-        coverage html
-        coverage xml
+      # Without pytest-pythonpath the PYTHONPATH would have to be set manually
+      # PYTHONPATH="${PYTHONPATH}${PYTHONPATH:+:}./tests" pytest | tee test-output.txt
+        pytest | tee test-output.txt
         coverage json
     - name: Upload results
       uses: actions/upload-artifact@v2
@@ -132,7 +134,7 @@ jobs:
       with:
         name: Coverage
         path: |
-          coverage.txt
+          test-output.txt
           coverage.xml
           coverage.json
           htmlcov

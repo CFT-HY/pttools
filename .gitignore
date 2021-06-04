@@ -26,9 +26,8 @@ packages.svg
 *.pdf
 *.png
 *.svg
+*test.txt
 fluidprofiles
 pow_*.txt
-*test.txt
-
-# Pylint
 pylint.txt
+test-output.txt
