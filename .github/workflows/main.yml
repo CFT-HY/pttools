@@ -67,13 +67,13 @@ jobs:
         # -a = --annotated
         # -c = --colored
         # -e = --nested-groups
-        run: |
-          mkdir call_graphs
         # Call graphs of the entire project are broken at the moment:
         # "KeyError: <Node import:pttools.bubble.bubble>"
         # pyan3 "./**/*.py" -a -c -e --dot > ./call_graphs/call_graph_all.dot
         # pyan3 "./**/*.py" -a -c -e --html > ./call_graphs/call_graph_all.html
         # pyan3 "./**/*.py" -a -c -e --svg > ./call_graphs/call_graph_all.svg
+        run: |
+          mkdir call_graphs
           pyan3 "./pttools/**/*.py" -a -c -e --dot > ./call_graphs/call_graph_pttools.dot
           pyan3 "./pttools/**/*.py" -a -c -e --html > ./call_graphs/call_graph_pttools.html
           pyan3 "./pttools/**/*.py" -a -c -e --svg > ./call_graphs/call_graph_pttools.svg
@@ -123,9 +123,9 @@ jobs:
     - name: Run tests with coverage
       run: coverage run
     - name: Create coverage reports
-      run: |
       # Without pytest-pythonpath the PYTHONPATH would have to be set manually
       # PYTHONPATH="${PYTHONPATH}${PYTHONPATH:+:}./tests" pytest | tee test-output.txt
+      run: |
         pytest | tee test-output.txt
         coverage json
     - name: Upload results
