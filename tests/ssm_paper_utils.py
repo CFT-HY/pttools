@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
-import gw_code.ssmtools as ssm
+import ssmtools.ssmtools as ssm
 import bubble as b
 import tex_utils as tu
 from test_utils import TEST_DATA_PATH

@@ -14,7 +14,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import bubble as b
-import gw_code.ssmtools as ssm
+import ssmtools.ssmtools as ssm
 from test_utils import TEST_DATA_PATH
 
 print('Importing {}'.format(ssm.__file__))

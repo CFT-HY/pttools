@@ -24,7 +24,7 @@ jobs:
           pip --cache-dir=.pip install pylint
           pip --cache-dir=.pip install -r requirements.txt
       - name: Run Pylint
-        run: pylint . bubble gw_code tests 2>&1 | tee pylint.txt
+        run: pylint . bubble ssmtools tests 2>&1 | tee pylint.txt
       - name: Upload results
         uses: actions/upload-artifact@v2
         with:

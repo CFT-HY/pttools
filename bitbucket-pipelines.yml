@@ -10,7 +10,7 @@ pipelines:
             - python -V
             - pip install -r requirements.txt
             - pip install pylint
-            - pylint . bubble gw_code tests 2>&1 | tee pylint.txt
+            - pylint . bubble ssmtools tests 2>&1 | tee pylint.txt
           artifacts:
             - pylint.txt
       - step:
