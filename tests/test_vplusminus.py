@@ -19,7 +19,7 @@ class TestVPlusMinus(unittest.TestCase):
             data.append(func(v_first, alpha, 'Detonation'))
             data.append(func(v_first, alpha, 'Deflagration'))
 
-        # Create new data
+        # Generate new reference data
         # np.savetxt(ref_path, np.array(data).T)
 
         data_arr = np.array(data).T
@@ -28,7 +28,7 @@ class TestVPlusMinus(unittest.TestCase):
 
     def test_v_plus_minus(self):
         """Compute v_plus from v_minus.
-        This generates the same data as plotted by fig_8l_vplusminus.py.
+        This generates the same data as plotted by sound-shell-model/paper/python/fig_8l_vplusminus.py.
         """
         v_first = np.linspace(1 / self.npts, 1, self.npts)
         self.v_conversion(b.v_plus, os.path.join(TEST_DATA_PATH, "v_plus_minus.txt"), v_first)
