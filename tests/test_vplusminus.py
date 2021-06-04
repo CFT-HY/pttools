@@ -3,7 +3,7 @@ import unittest
 
 import numpy as np
 
-import bubble as b
+import pttools.bubble as b
 from test_utils import TEST_DATA_PATH
 
 

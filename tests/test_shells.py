@@ -3,7 +3,7 @@ import unittest
 
 import numpy as np
 
-import bubble
+from pttools import bubble
 import ssm_paper_utils as spu
 from test_utils import TEST_DATA_PATH
 

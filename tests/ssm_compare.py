@@ -13,8 +13,8 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-import bubble as b
-import ssmtools.ssmtools as ssm
+import pttools.bubble as b
+import pttools.ssmtools as ssm
 from test_utils import TEST_DATA_PATH
 
 print('Importing {}'.format(ssm.__file__))
