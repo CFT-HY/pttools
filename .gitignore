@@ -26,6 +26,7 @@ packages.svg
 *.pdf
 *.png
 *.svg
+fluidprofiles
 pow_*.txt
 *test.txt
 

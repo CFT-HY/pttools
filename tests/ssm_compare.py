@@ -8,12 +8,14 @@ import sys
 # Add path for pttools
 sys.path.append('../../../')
 
+import os
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import bubble as b
 import gw_code.ssmtools as ssm
+from test_utils import TEST_DATA_PATH
 
 print('Importing {}'.format(ssm.__file__))
 print('Importing {}'.format(b.__file__))
@@ -63,8 +65,14 @@ nt_string = '_nT{}'.format(Np_list[0][2])
 
 file_type = 'pdf'
 
-mdp = 'model_data/'  # model data path
-gdp = 'graphs/'  # graph path
+# mdp = 'model_data/'  # model data path
+# gdp = 'graphs/'  # graph path
+mdp = os.path.join(TEST_DATA_PATH, "model_data/")
+gdp = os.path.join(TEST_DATA_PATH, "graphs/")
+if not os.path.isdir(mdp):
+    os.mkdir(mdp)
+if not os.path.isdir(gdp):
+    os.mkdir(gdp)
 
 # All run parameters
     
@@ -102,7 +110,8 @@ dir_inter_list = ['results-intermediate-scaled_etatilde0.17_v0.92_dx2/',
         'results-intermediate-scaled_etatilde0.62_v0.44_dx2/'
     ]
 
-path_head = 'fluidprofiles/'
+# path_head = 'fluidprofiles/'
+path_head = os.path.join(TEST_DATA_PATH, "fluidprofiles/")
 path_list_all = ['weak/', 'intermediate/']
 file_pattern = 'data-extracted.{:05d}.txt'
 
@@ -157,7 +166,7 @@ def plot_ps(z_list, pow_list, ps_type, ax_limits='weak',
     return fig
 
 
-def generate_ps(vw, alpha, method='e_conserving', v_xi_file=None, save_ids=[None, None], show=True):    
+def generate_ps(vw, alpha, method='e_conserving', v_xi_file=None, save_ids=[None, None], show=True, debug: bool = False):
     """ Generates, plots velocity and GW power as functions of $kR_*$.
     Saves power spectra in files pow_v_*, pow_gw_*...<string>.txt if save_id[0]=string.
     Saves plots in files pow_v_*, pow_gw_*...<string>.pdf if save_id[1]=string.
@@ -277,12 +286,19 @@ def generate_ps(vw, alpha, method='e_conserving', v_xi_file=None, save_ids=[None
 
     if show:
         plt.show()
-        
+
+    if debug:
+        debug_data = [Ubarf2]
+        debug_arrs = [sd_v, pow_v, gw_power]
+        if v_xi_file is not None:
+            debug_arrs += [sd_v2, pow_v2, sd_gw2, pow_gw2]
+        debug_data += [np.sum(arr) for arr in debug_arrs]
+        return V2_pow_v, gw_power, debug_data
     return V2_pow_v, gw_power
 # end function generate_ps
 
     
-def all_generate_ps_prace(save_ids=['', ''], show=True):
+def all_generate_ps_prace(save_ids=['', ''], show=True, debug: bool = False):
     """Generate power spectra with Prace17 SSM parameters. 
     Save data files and graphs.
     Returns U-bar-f^2 and GW power as tuple of lists."""
@@ -291,17 +307,25 @@ def all_generate_ps_prace(save_ids=['', ''], show=True):
     
     v2_list = []
     Omgw_scaled_list = []
-    
+    debug_data = []
+
     for vw_list, alpha, step_list, path, dir_list in zip(vw_list_all, alpha_list_all, 
                                                    step_list_all, path_list_all, dir_list_all):
         for vw, step, dir in zip(vw_list, step_list, dir_list):
             v_xi_file = path_head + path + dir + file_pattern.format(step)
-            v2, Omgw = generate_ps(vw, alpha, method, v_xi_file, save_ids, show)
+            print("v_xi_file:", v_xi_file)
+            if debug:
+                v2, Omgw, data = generate_ps(vw, alpha, method, v_xi_file, save_ids, show, debug=debug)
+                debug_data.append(data)
+            else:
+                v2, Omgw = generate_ps(vw, alpha, method, v_xi_file, save_ids, show)
             v2_list.append(v2)
             Omgw_scaled_list.append(Omgw)
-    
+
+    if debug:
+        return v2_list, Omgw_scaled_list, debug_data
     return v2_list, Omgw_scaled_list
-   
+
     
 def get_yaxis_limits(ps_type,strength='weak'):
     if strength == 'weak':     

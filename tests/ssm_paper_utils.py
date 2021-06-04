@@ -76,7 +76,7 @@ nt_string = '_nT{}'.format(Np_list[0][2])
 file_type = 'pdf'
 
 # md_path = '../model_data/'  # Model data path
-md_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_data/")
+md_path = TEST_DATA_PATH + "/"
 
 # All run parameters
     
