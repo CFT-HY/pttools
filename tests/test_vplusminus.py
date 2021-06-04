@@ -3,7 +3,7 @@ import unittest
 
 import numpy as np
 
-import pttools.bubble as b
+from pttools import bubble
 from test_utils import TEST_DATA_PATH
 
 
@@ -31,10 +31,10 @@ class TestVPlusMinus(unittest.TestCase):
         This generates the same data as plotted by sound-shell-model/paper/python/fig_8l_vplusminus.py.
         """
         v_first = np.linspace(1 / self.npts, 1, self.npts)
-        self.v_conversion(b.v_plus, os.path.join(TEST_DATA_PATH, "v_plus_minus.txt"), v_first)
+        self.v_conversion(bubble.v_plus, os.path.join(TEST_DATA_PATH, "v_plus_minus.txt"), v_first)
 
     def test_v_minus_plus(self):
         """Compute v_minus from v_plus."""
         # Todo: Test in some other way to avoid "RuntimeWarning: invalid value encountered in sqrt"
         v_first = np.linspace(1/self.npts+0.1, 0.9, self.npts)
-        self.v_conversion(b.v_minus, os.path.join(TEST_DATA_PATH, "v_minus_plus.txt"), v_first)
+        self.v_conversion(bubble.v_minus, os.path.join(TEST_DATA_PATH, "v_minus_plus.txt"), v_first)
