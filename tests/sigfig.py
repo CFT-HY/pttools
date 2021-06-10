@@ -1,5 +1,5 @@
-'''This module provides function for working with significant
-figures.'''
+"""This module provides function for working with significant
+figures."""
 # import types,
 import re, string
 
@@ -7,7 +7,7 @@ epat = re.compile(r'^([^e]+)e(.+)$')
 
 
 def round_sig(x, n):
-    '''round floating point x to n significant figures'''
+    """round floating point x to n significant figures"""
     if type(n) is not int:
         raise TypeError("n must be an integer")
     try:
@@ -42,7 +42,7 @@ def round_sig(x, n):
 
 
 def round_sig_signed(x, n):
-    '''round floating point x to n significant figures'''
+    """round floating point x to n significant figures"""
     if type(n) is not int:
         raise TypeError("n must be an integer")
     try:
@@ -77,9 +77,9 @@ def round_sig_signed(x, n):
 
 
 def round_sig_error(x, ex, n, paren=False):
-    '''Find ex rounded to n sig-figs and make the floating point x
+    """Find ex rounded to n sig-figs and make the floating point x
    match the number of decimals.  If [paren], the string is
-   returned as quantity(error) format'''
+   returned as quantity(error) format"""
     stex = round_sig(ex, n)
     if stex.find('.') < 0:
         extra_zeros = len(stex) - n
@@ -96,13 +96,13 @@ def round_sig_error(x, ex, n, paren=False):
 
 
 def format_table(cols, errors, n, labels=None, headers=None, latex=False):
-    '''Format a table such that the errors have n significant
+    """Format a table such that the errors have n significant
    figures.  [cols] and [errors] should be a list of 1D arrays
    that correspond to data and errors in columns.  [n] is the number of
    significant figures to keep in the errors.  [labels] is an optional
    column of strings that will be in the first column.  [headers] is
    an optional list of column headers.  If [latex] is true, format
-   the table so that it can be included in a LaTeX table '''
+   the table so that it can be included in a LaTeX table """
     if len(cols) != len(errors):
         raise ValueError("Error:  cols and errors must have same length")
 
@@ -168,8 +168,8 @@ def format_table(cols, errors, n, labels=None, headers=None, latex=False):
 
 
 def round_sig_error2(x, ex1, ex2, n):
-    '''Find min(ex1,ex2) rounded to n sig-figs and make the floating point x
-   and max(ex,ex2) match the number of decimals.'''
+    """Find min(ex1,ex2) rounded to n sig-figs and make the floating point x
+   and max(ex,ex2) match the number of decimals."""
     minerr = min(ex1, ex2)
     minstex = round_sig(minerr, n)
     if minstex.find('.') < 0:
