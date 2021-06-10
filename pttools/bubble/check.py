@@ -1,11 +1,15 @@
 import sys
+import typing as tp
 
 import numpy as np
 
+import pttools.type_hints as th
 from . import alpha
 
+PHYSICAL_PARAMS_TYPE = tp.Union[tp.Tuple[float, float], tp.List[float]]
 
-def check_wall_speed(v_wall):
+
+def check_wall_speed(v_wall: tp.Union[th.FLOAT_OR_ARR, tp.List[float]]) -> None:
     """
     Checks that v_wall values are all physical (0 < v_wall <1)
     """
@@ -25,10 +29,8 @@ def check_wall_speed(v_wall):
     else:
         sys.exit('check_wall_speed: error: v_wall must be float, list or array.\n ')
 
-    return None
 
-
-def check_physical_params(params):
+def check_physical_params(params: PHYSICAL_PARAMS_TYPE) -> None:
     """
     Checks that v_wall = params[0], alpha_n = params[1] values are physical, i.e.
          0 < v_wall <1
@@ -42,4 +44,3 @@ def check_physical_params(params):
         sys.exit('check_alpha_n: error: unphysical parameter(s)\n\
                      v_wall, alpha_n = {}, {}\n\
                      require alpha_n < {}\n'.format(v_wall, alpha_n, alpha.alpha_n_max(v_wall)))
-    return None

@@ -1,9 +1,12 @@
+import typing as tp
+
 import numpy as np
 
+import pttools.type_hints as th
 from . import const
 
 
-def sin_transform_old(z, xi, v):
+def sin_transform_old(z: th.FLOAT_OR_ARR, xi: np.ndarray, v: np.ndarray):
     """
      sin transform of v(xi), Fourier transform variable z.
      xi and v arrays of the same shape, z can be an array of a different shape.
@@ -19,7 +22,7 @@ def sin_transform_old(z, xi, v):
     return I
 
 
-def envelope(xi, f):
+def envelope(xi: np.ndarray, f: np.ndarray) -> tp.Tuple[tp.List[float], tp.List[float]]:
     """
     Returns lists of xi, f pairs "outlining" function f.
     Helper function for sin_transform_approx.
@@ -69,7 +72,7 @@ def envelope(xi, f):
     return xi_list, f_list
 
 
-def sin_transform_approx(z, xi, f):
+def sin_transform_approx(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray) -> np.ndarray:
     """
     Approximate sin transform of f(xi), Fourier transform variable z.
     xi and f arrays of the same shape, z can be an array of a different shape.
@@ -81,16 +84,14 @@ def sin_transform_approx(z, xi, f):
     as $z \\to \\infty$.
     Function assumed piecewise continuous in intervals $[\\xi_1, \\xi_w]$ and
     $[\\xi_w,\\xi_2]$.
-
     """
-
     [xi1, xi_w, _, xi2], [f1, f_m, f_p, f2] = envelope(xi, f)
     I = -(f2 * np.cos(z * xi2) - f_p * np.cos(z * xi_w)) / z
     I += -(f_m * np.cos(z * xi_w) - f1 * np.cos(z * xi1)) / z
     return I
 
 
-def sin_transform(z, xi, f, z_st_thresh=const.Z_ST_THRESH):
+def sin_transform(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray, z_st_thresh=const.Z_ST_THRESH) -> th.FLOAT_OR_ARR:
     """
      sin transform of f(xi), Fourier transform variable z.
      xi and f arrays of the same shape, z can be an array of a different shape.
@@ -134,7 +135,10 @@ def sin_transform(z, xi, f, z_st_thresh=const.Z_ST_THRESH):
     return I
 
 
-def resample_uniform_xi(xi, f, nxi=const.NPTDEFAULT[0]):
+def resample_uniform_xi(
+        xi: np.ndarray,
+        f: th.FLOAT_OR_ARR,
+        nxi: int = const.NPTDEFAULT[0]) -> tp.Tuple[np.ndarray, th.FLOAT_OR_ARR]:
     """
     Provide uniform resample of function defined by (x,y) = (xi,f).
     Returns f interpolated and the uniform grid of nxi points in range [0,1]

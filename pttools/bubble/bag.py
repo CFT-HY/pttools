@@ -1,9 +1,13 @@
 """Some functions useful for the bag equation of state"""
 
+import typing as tp
+
 import numpy as np
 
+import pttools.type_hints as th
 from . import const
 
+CS2_FUN_TYPE = tp.Callable[[th.FLOAT_OR_ARR], float]
 
 # def cs_w(w):
 #    # Speed of sound function, another label
@@ -17,7 +21,7 @@ from . import const
 #    return cs0_2
 
 
-def cs2_bag(w):
+def cs2_bag(w: th.FLOAT_OR_ARR) -> float:
     """
     Speed of sound squared in Bag model, equal to 1/3 independent of enthalpy $w$
     """
@@ -29,7 +33,7 @@ def cs2_bag(w):
     return cs2
 
 
-def theta_bag(w, phase, alpha_n):
+def theta_bag(w: th.FLOAT_OR_ARR, phase: th.FLOAT_OR_ARR, alpha_n: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     """
     Trace anomaly $\theta = (e - 3p)/4$ in Bag model.
     """
@@ -40,7 +44,11 @@ def theta_bag(w, phase, alpha_n):
     return alpha_n * (0.75 * w_n) * (1 - phase)
 
 
-def p(w, phase, theta_s, theta_b=0.):
+def p(
+        w: th.FLOAT_OR_ARR,
+        phase: th.FLOAT_OR_ARR,
+        theta_s: th.FLOAT_OR_ARR,
+        theta_b: th.FLOAT_OR_ARR = 0.) -> th.FLOAT_OR_ARR:
     """
      Pressure as a function of enthalpy, assuming bag model.
      phase: phase indicator (see below).
@@ -53,7 +61,11 @@ def p(w, phase, theta_s, theta_b=0.):
     return 0.25 * w - theta
 
 
-def e(w, phase, theta_s, theta_b=0.):
+def e(
+        w: th.FLOAT_OR_ARR,
+        phase: th.FLOAT_OR_ARR,
+        theta_s: th.FLOAT_OR_ARR,
+        theta_b: th.FLOAT_OR_ARR = 0.) -> th.FLOAT_OR_ARR:
     """
      Energy density as a function of enthalpy, assuming bag model.
      theta = (e - 3p)/4 ("vacuum energy")
@@ -64,7 +76,11 @@ def e(w, phase, theta_s, theta_b=0.):
     return w - p(w, phase, theta_s, theta_b)
 
 
-def w(e, phase, theta_s, theta_b=0):
+def w(
+        e: th.FLOAT_OR_ARR,
+        phase: th.FLOAT_OR_ARR,
+        theta_s: th.FLOAT_OR_ARR,
+        theta_b: th.FLOAT_OR_ARR = 0.) -> th.FLOAT_OR_ARR:
     """
      Enthalpy as a function of energy density, assuming bag model.
      theta = (e - 3p)/4 ("vacuum energy")
@@ -78,7 +94,7 @@ def w(e, phase, theta_s, theta_b=0):
     return (4 / 3) * (e - theta)
 
 
-def phase(xi, v_w):
+def phase(xi: th.FLOAT_OR_ARR, v_w: float) -> th.FLOAT_OR_ARR:
     """
      Returns array indicating phase of system.
      in symmetric phase (xi>v_w), phase = 0
@@ -95,7 +111,11 @@ def phase(xi, v_w):
     return ph
 
 
-def adiabatic_index(w, phase, theta_s, theta_b=0.):
+def adiabatic_index(
+        w: th.FLOAT_OR_ARR,
+        phase: th.FLOAT_OR_ARR,
+        theta_s: th.FLOAT_OR_ARR,
+        theta_b: th.FLOAT_OR_ARR = 0.) -> th.FLOAT_OR_ARR:
     """
     Returns array of float, adiabatic index (ratio of enthalpy to energy).
     """

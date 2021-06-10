@@ -5,13 +5,20 @@ import sys
 import numpy as np
 from scipy.optimize import fsolve
 
+import pttools.type_hints as th
 from pttools import bubble
 from . import calculators
 from . import const
 
 
-def A2_ssm_func(z, vw, alpha, npt=const.NPTDEFAULT,
-                method='e_conserving', de_method='standard', z_st_thresh=const.Z_ST_THRESH):
+def A2_ssm_func(
+        z: np.ndarray,
+        vw,
+        alpha: float,
+        npt: const.NPT_TYPE = const.NPTDEFAULT,
+        method: str = 'e_conserving',
+        de_method: str = 'standard',
+        z_st_thresh: float = const.Z_ST_THRESH):
     """
      Returns the value of $|A(z)|^2$,
      z is an array of scaled wavenumbers $z = kR_*$.
@@ -22,7 +29,6 @@ def A2_ssm_func(z, vw, alpha, npt=const.NPTDEFAULT,
      de_method: How energy density fluctuation feeds into GW ps.  See A2_ssm_e_conserving.
      z_st_thresh: wavenumber at which to switch sin_transform to its approximation.
     """
-
     if method == 'e_conserving':
         # This is the correct method (as of 12.18)
         A2 = A2_e_conserving(z, vw, alpha, npt, 'A2_only', de_method, z_st_thresh)
@@ -49,8 +55,14 @@ def A2_ssm_func(z, vw, alpha, npt=const.NPTDEFAULT,
     return A2
 
 
-def A2_e_conserving(z, vw, alpha_n, npt=const.NPTDEFAULT,
-                    ret_vals='A2_only', de_method='standard', z_st_thresh=const.Z_ST_THRESH):
+def A2_e_conserving(
+        z: np.ndarray,
+        vw,
+        alpha_n: float,
+        npt: const.NPT_TYPE = const.NPTDEFAULT,
+        ret_vals: str = "A2_only",
+        de_method: str = "standard",
+        z_st_thresh: float = const.Z_ST_THRESH):
     """
      Returns the value of $|A(z)|^2$, where |Plane wave amplitude|^2 = T^3 |A(z)|^2,
      calculated from self-similar hydro solution obtained with ``bubble.fluid_shell``.
@@ -59,7 +71,6 @@ def A2_e_conserving(z, vw, alpha_n, npt=const.NPTDEFAULT,
      linear order, meaning that there is an apparent $z^0$ piece at very low $z$,
      and may exaggerate the GWs at low vw. ATM no other de_methods, but argument
      allows trials.
-
     """
     nxi = npt[0]
     #    xi_re = np.linspace(0,1-1/nxi,nxi)
@@ -97,7 +108,13 @@ def A2_e_conserving(z, vw, alpha_n, npt=const.NPTDEFAULT,
         return A2, v_ft ** 2 / 2, (const.cs0 * lam_ft) ** 2 / 2
 
 
-def A2_e_conserving_file(z, filename, alpha, skip=1, npt=const.NPTDEFAULT, z_st_thresh=const.Z_ST_THRESH):
+def A2_e_conserving_file(
+        z: np.ndarray,
+        filename: str,
+        alpha: float,
+        skip: int = 1,
+        npt: const.NPT_TYPE = const.NPTDEFAULT,
+        z_st_thresh: float = const.Z_ST_THRESH):
     """
      Returns the value of $|A(z)|^2$, where |Plane wave amplitude|^2 = T^3 |A(z)|^2,
      calculated from file, outout by ``spherical-hydro-code``.
@@ -146,7 +163,12 @@ def A2_e_conserving_file(z, filename, alpha, skip=1, npt=const.NPTDEFAULT, z_st_
     return 0.25 * (v_ft ** 2 + (const.cs0 * lam_ft) ** 2)
 
 
-def f_ssm_func(z, vw, alpha_n, npt=const.NPTDEFAULT, z_st_thresh=const.Z_ST_THRESH):
+def f_ssm_func(
+        z: th.FLOAT_OR_ARR,
+        vw,
+        alpha_n,
+        npt: const.NPT_TYPE = const.NPTDEFAULT,
+        z_st_thresh: float = const.Z_ST_THRESH):
     """
      3D FT of radial fluid velocity v(r) from Sound Shell Model fluid profile.
      z is array of scaled wavenumbers z = kR*
@@ -162,7 +184,13 @@ def f_ssm_func(z, vw, alpha_n, npt=const.NPTDEFAULT, z_st_thresh=const.Z_ST_THRE
     return f_ssm
 
 
-def lam_ssm_func(z, vw, alpha_n, npt=const.NPTDEFAULT, de_method='standard', z_st_thresh=const.Z_ST_THRESH):
+def lam_ssm_func(
+        z,
+        vw,
+        alpha_n,
+        npt: const.NPT_TYPE = const.NPTDEFAULT,
+        de_method: str = "standard",
+        z_st_thresh: float = const.Z_ST_THRESH):
     """
      3D FT of radial energy perturbation from Sound Shell Model fluid profile
      z is array of scaled wavenumbers z = kR*
@@ -188,7 +216,7 @@ def lam_ssm_func(z, vw, alpha_n, npt=const.NPTDEFAULT, de_method='standard', z_s
     return lam_ft
 
 
-def g_ssm_func(z, vw, alpha, npt=const.NPTDEFAULT):
+def g_ssm_func(z: np.ndarray, vw, alpha, npt: const.NPT_TYPE = const.NPTDEFAULT) -> np.ndarray:
     """
      3D FT of radial fluid acceleration \dot{v}(r) from Sound Shell Model fluid profile.
      z is array of scaled wavenumbers z = kR*.
@@ -199,7 +227,13 @@ def g_ssm_func(z, vw, alpha, npt=const.NPTDEFAULT):
     return g_ssm
 
 
-def f_file(z_arr, t, filename, skip=0, npt=const.NPTDEFAULT, z_st_thresh=const.Z_ST_THRESH):
+def f_file(
+        z_arr: np.ndarray,
+        t,
+        filename: str,
+        skip: int = 0,
+        npt: const.NPT_TYPE = const.NPTDEFAULT,
+        z_st_thresh: float = const.Z_ST_THRESH):
     """
      3D FT of radial fluid velocity v(r) from file.
      z is array of scaled wavenumbers z = kR*
@@ -224,7 +258,7 @@ def f_file(z_arr, t, filename, skip=0, npt=const.NPTDEFAULT, z_st_thresh=const.Z
     return f
 
 
-def g_file(z, t, filename, skip=0):
+def g_file(z: np.ndarray, t, filename: str, skip: int = 0) -> np.ndarray:
     """
      3D FT of radial fluid acceleration \dot{v}(r) from file
      z is array of scaled wavenumbers z = kR*

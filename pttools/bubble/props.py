@@ -1,12 +1,15 @@
 """Useful functions for finding properties of solution """
 
+import typing as tp
+
 import numpy as np
 
+import pttools.type_hints as th
 from . import check
 from . import const
 
 
-def find_v_index(xi, v_target):
+def find_v_index(xi: np.ndarray, v_target: float) -> int:
     """
      The first array index of xi where value is just above v_target
     """
@@ -19,7 +22,7 @@ def find_v_index(xi, v_target):
     return n
 
 
-def v_shock(xi):
+def v_shock(xi: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     """
      Fluid velocity at a shock at xi.  No shocks exist for xi < cs, so returns zero.
     """
@@ -35,7 +38,7 @@ def v_shock(xi):
     return v_sh
 
 
-def w_shock(xi, w_n=1.):
+def w_shock(xi: th.FLOAT_OR_ARR, w_n: float = 1.) -> th.FLOAT_OR_ARR:
     """
      Fluid enthalpy at a shock at xi.  No shocks exist for xi < cs, so returns nan.
     """
@@ -50,7 +53,7 @@ def w_shock(xi, w_n=1.):
     return w_sh
 
 
-def find_shock_index(v_f, xi, v_wall, wall_type):
+def find_shock_index(v_f: np.ndarray, xi: np.ndarray, v_wall: float, wall_type: str) -> int:
     """
      Array index of shock from first point where fluid velocity v_f goes below v_shock
      For detonation, returns wall position.
@@ -71,7 +74,10 @@ def find_shock_index(v_f, xi, v_wall, wall_type):
     return n_shock
 
 
-def shock_zoom_last_element(v, w, xi):
+def shock_zoom_last_element(
+        v: np.ndarray,
+        w: np.ndarray,
+        xi: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
      Replaces last element of (v,w,xi) arrays by better estimate of
      shock position and values of v, w there.

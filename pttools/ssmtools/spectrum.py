@@ -1,13 +1,15 @@
 import sys
+import typing as tp
 
 import numpy as np
 
+import pttools.type_hints as th
 from pttools import bubble
 from . import const
 from . import ssm
 
 
-def nu(T, nuc_type='simultaneous', args=(1,)):
+def nu(T: th.FLOAT_OR_ARR, nuc_type: str = "simultaneous", args=(1,)) -> th.FLOAT_OR_ARR:
     """
      Bubble lifetime distribution function as function of (dimensionless) time T.
      ``nuc_type`` allows ``simultaneous`` or ``exponential`` bubble nucleation.
@@ -25,14 +27,14 @@ def nu(T, nuc_type='simultaneous', args=(1,)):
     return dist
 
 
-def pow_spec(z,spec_den):
+def pow_spec(z: th.FLOAT_OR_ARR, spec_den: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     """
      Power spectrum from spectral density at dimensionless wavenumber z.
     """
-    return z**3  / (2. * np.pi ** 2) * spec_den
+    return z**3 / (2. * np.pi ** 2) * spec_den
 
 
-def parse_params(params):
+def parse_params(params: bubble.PHYSICAL_PARAMS_TYPE):
     vw = params[0]
     alpha = params[1]
     if len(params) > 2:
@@ -47,8 +49,15 @@ def parse_params(params):
     return vw, alpha, nuc_type, nuc_args
 
 
-def spec_den_v(z, params, npt=const.NPTDEFAULT, filename=None, skip=1,
-               method='e_conserving', de_method='standard', z_st_thresh=const.Z_ST_THRESH):
+def spec_den_v(
+        z: np.ndarray,
+        params: bubble.PHYSICAL_PARAMS_TYPE,
+        npt: const.NPT_TYPE = const.NPTDEFAULT,
+        filename: str = None,
+        skip: int = 1,
+        method: str = "e_conserving",
+        de_method: str = "standard",
+        z_st_thresh=const.Z_ST_THRESH):
     """
      Returns dimensionless velocity spectral density $\bar{P}_v$, given array $z = qR_*$ and parameters:
         vw = params[0]       scalar
@@ -110,7 +119,10 @@ def spec_den_v(z, params, npt=const.NPTDEFAULT, filename=None, skip=1,
     return sd_v
 
 
-def spec_den_gw_scaled(xlookup, P_vlookup, z=None):
+def spec_den_gw_scaled(
+        xlookup: np.ndarray,
+        P_vlookup: np.ndarray,
+        z: np.ndarray = None) -> tp.Tuple[np.ndarray, np.ndarray]:
     """
      Spectral density of scaled gravitational wave power at values of kR* given
      by input z array, or at len(xlookup) values of kR* between the min and max
@@ -141,10 +153,10 @@ def spec_den_gw_scaled(xlookup, P_vlookup, z=None):
         xplus = z[i] / const.cs0 * (1. + const.cs0) / 2.
         xminus = z[i] / const.cs0 * (1. - const.cs0) / 2.
         x = np.logspace(np.log10(xminus), np.log10(xplus), nx)
-        integrand = (x - xplus) ** 2 * (x - xminus) ** 2 / x / (xplus + xminus - x) * np.interp(x,
-                                                                                                xlookup,
-                                                                                                P_vlookup) * np.interp(
-            (xplus + xminus - x), xlookup, P_vlookup)
+        integrand = \
+            (x - xplus) ** 2 * (x - xminus) ** 2 / x / (xplus + xminus - x) \
+            * np.interp(x, xlookup, P_vlookup) \
+            * np.interp((xplus + xminus - x), xlookup, P_vlookup)
         p_gw_factor = ((1 - const.cs0 ** 2) / const.cs0 ** 2) ** 2 / (4 * np.pi * z[i] * const.cs0)
         p_gw[i] = p_gw_factor * np.trapz(integrand, x)
 
@@ -154,8 +166,15 @@ def spec_den_gw_scaled(xlookup, P_vlookup, z=None):
     return (4. / 3.) * p_gw, z
 
 
-def power_v(z, params, npt=const.NPTDEFAULT, filename=None, skip=1,
-            method='e_conserving', de_method='standard', z_st_thresh=const.Z_ST_THRESH):
+def power_v(
+        z: np.ndarray,
+        params: bubble.PHYSICAL_PARAMS_TYPE,
+        npt=const.NPTDEFAULT,
+        filename: str = None,
+        skip: int = 1,
+        method: str = 'e_conserving',
+        de_method: str = 'standard',
+        z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
     """
     Power spectrum of velocity field in Sound Shell Model.
         vw = params[0]       scalar
@@ -169,8 +188,15 @@ def power_v(z, params, npt=const.NPTDEFAULT, filename=None, skip=1,
     return pow_spec(z, p_v)
 
 
-def power_gw_scaled(z, params, npt=const.NPTDEFAULT, filename=None, skip=1,
-                    method='e_conserving', de_method='standard', z_st_thresh=const.Z_ST_THRESH):
+def power_gw_scaled(
+        z: np.ndarray,
+        params: bubble.PHYSICAL_PARAMS_TYPE,
+        npt=const.NPTDEFAULT,
+        filename: str = None,
+        skip: int = 1,
+        method: str = "e_conserving",
+        de_method: str = "standard",
+        z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
     """
      Scaled GW power spectrum at array of z = kR* values, where R* is mean bubble centre
      separation and k is comoving wavenumber.  To convert to predicted spectrum,

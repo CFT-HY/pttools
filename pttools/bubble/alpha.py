@@ -7,6 +7,7 @@ import sys
 import numpy as np
 import scipy.optimize as opt
 
+import pttools.type_hints as th
 from . import const
 from . import fluid
 from . import check
@@ -14,14 +15,17 @@ from . import props
 from . import transition
 
 
-def find_alpha_n(v_wall, alpha_p, wall_type="Calculate", n_xi=const.N_XI_DEFAULT):
+def find_alpha_n(
+        v_wall: th.FLOAT_OR_ARR,
+        alpha_p: float,
+        wall_type: str = "Calculate",
+        n_xi: int = const.N_XI_DEFAULT) -> float:
     """
      Calculates alpha_n from alpha_plus, for given v_wall.
      v_wall can be scalar or iterable.
      alpha_p[lus] must be scalar.
      alpha = ([(3/4) difference in trace anomaly]/enthalpy).
      alpha_n is global strength parameter, alpha_plus the at-wall strength parameter.
-
     """
     check.check_wall_speed(v_wall)
     if wall_type == "Calculate":
@@ -31,7 +35,7 @@ def find_alpha_n(v_wall, alpha_p, wall_type="Calculate", n_xi=const.N_XI_DEFAULT
     return alpha_p * w[n_wall] / w[-1]
 
 
-def find_alpha_plus(v_wall, alpha_n_given, n_xi=const.N_XI_DEFAULT):
+def find_alpha_plus(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float, n_xi: int = const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR:
     """
      Calculate alpha_plus from a given alpha_n and v_wall.
      v_wall can be scalar or iterable.
@@ -39,7 +43,6 @@ def find_alpha_plus(v_wall, alpha_n_given, n_xi=const.N_XI_DEFAULT):
      alpha = ([(3/4) difference in trace anomaly]/enthalpy)
      alpha_n is global strength parameter, alpha_plus the at-wall strength parameter.
     """
-
     it = np.nditer([None, v_wall], [], [['writeonly', 'allocate'], ['readonly']])
     for ap, vw in it:
         if alpha_n_given < alpha_n_max_detonation(vw):
@@ -68,7 +71,7 @@ def find_alpha_plus(v_wall, alpha_n_given, n_xi=const.N_XI_DEFAULT):
         return type(v_wall)(it.operands[0])
 
 
-def alpha_plus_initial_guess(v_wall, alpha_n_given):
+def alpha_plus_initial_guess(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float) -> th.FLOAT_OR_ARR:
     """
      Initial guess for root-finding of alpha_plus from alpha_n.
      Linear approx between alpha_n_min and alpha_n_max.
@@ -91,7 +94,7 @@ def alpha_plus_initial_guess(v_wall, alpha_n_given):
     return a_guess
 
 
-def find_alpha_n_from_w_xi(w, xi, v_wall, alpha_p):
+def find_alpha_n_from_w_xi(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_p: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     """
      Calculates alpha_N ([(3/4) difference in trace anomaly]/enthalpy) from alpha_p[lus]
      Assumes one has solution arrays w, xi
@@ -100,7 +103,7 @@ def find_alpha_n_from_w_xi(w, xi, v_wall, alpha_p):
     return alpha_p * w[n_wall] / w[-1]
 
 
-def alpha_n_max_hybrid(v_wall, n_xi=const.N_XI_DEFAULT):
+def alpha_n_max_hybrid(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> float:
     """
      Calculates maximum alpha_n for given v_wall, assuming Hybrid fluid shell
     """
@@ -121,7 +124,7 @@ def alpha_n_max_hybrid(v_wall, n_xi=const.N_XI_DEFAULT):
     return w[n_wall] * (1. / 3)
 
 
-def alpha_n_max(v_wall, Np=const.N_XI_DEFAULT):
+def alpha_n_max(v_wall: th.FLOAT_OR_ARR, Np=const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR:
     """
     alpha_n_max(v_wall, Np=N_XI_DEFAULT)
 
@@ -131,7 +134,7 @@ def alpha_n_max(v_wall, Np=const.N_XI_DEFAULT):
     return alpha_n_max_deflagration(v_wall, Np)
 
 
-def alpha_n_max_deflagration(v_wall, Np=const.N_XI_DEFAULT):
+def alpha_n_max_deflagration(v_wall: th.FLOAT_OR_ARR, Np=const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR:
     """
      Calculates maximum alpha_n (relative trace anomaly outside bubble)
      for given v_wall, for deflagration.
@@ -160,7 +163,7 @@ def alpha_n_max_deflagration(v_wall, Np=const.N_XI_DEFAULT):
         return type(v_wall)(it.operands[0])
 
 
-def alpha_plus_max_detonation(v_wall):
+def alpha_plus_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     """
      Maximum allowed value of alpha_plus for a detonation with wall speed v_wall.
      Comes from inverting v_w > v_Jouguet
@@ -182,7 +185,7 @@ def alpha_plus_max_detonation(v_wall):
         return type(v_wall)(it.operands[0])
 
 
-def alpha_n_max_detonation(v_wall):
+def alpha_n_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     """
      Maximum allowed value of alpha_n for a detonation with wall speed v_wall.
      Same as alpha_plus_max_detonation, because alpha_n = alpha_plus for detonation.
@@ -190,7 +193,7 @@ def alpha_n_max_detonation(v_wall):
     return alpha_plus_max_detonation(v_wall)
 
 
-def alpha_plus_min_hybrid(v_wall):
+def alpha_plus_min_hybrid(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     """
      Minimum allowed value of alpha_plus for a hybrid with wall speed v_wall.
      Condition from coincidence of wall and shock
@@ -207,7 +210,7 @@ def alpha_plus_min_hybrid(v_wall):
     return b / c
 
 
-def alpha_n_min_hybrid(v_wall):
+def alpha_n_min_hybrid(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     """
      Minimum alpha_n for a hybrid. Equal to maximum alpha_n for a detonation.
      Same as aalpha_n_min_deflagration, as a hybrid is a supersonic deflagration.
@@ -216,7 +219,7 @@ def alpha_n_min_hybrid(v_wall):
     return alpha_n_max_detonation(v_wall)
 
 
-def alpha_n_min_deflagration(v_wall):
+def alpha_n_min_deflagration(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     """
      Minimum alpha_n for a deflagration. Equal to maximum alpha_n for a detonation.
      Same as alpha_n_min_hybrid, as a hybrid is a supersonic deflagration.

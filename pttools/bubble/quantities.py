@@ -1,9 +1,11 @@
 """Functions for calculating quantities derived from solutions"""
 
 import sys
+import typing as tp
 
 import numpy as np
 
+import pttools.type_hints as th
 from . import bag
 from . import check
 from . import const
@@ -11,8 +13,24 @@ from . import fluid
 from . import relativity
 from . import transition
 
+INTEGRAND_TYPE = tp.Union[
+    tp.Callable[
+        [np.ndarray, np.ndarray, np.ndarray],
+        np.ndarray
+    ],
+    tp.Callable[
+        [float, float, float],
+        float
+    ]
+]
 
-def split_integrate(fun_, v, w, xi, v_wall):
+
+def split_integrate(
+        fun_: INTEGRAND_TYPE,
+        v: np.ndarray,
+        w: np.ndarray,
+        xi: np.ndarray,
+        v_wall: float) -> tp.Tuple[float, float]:
     """
     # Split an integration of a function fun_ of arrays v w xi
     # according to whether xi is inside or outside the wall (expecting discontinuity there).
@@ -29,7 +47,12 @@ def split_integrate(fun_, v, w, xi, v_wall):
     return int1, int2
 
 
-def part_integrate(fun_, v, w, xi, where_in):
+def part_integrate(
+        fun_: INTEGRAND_TYPE,
+        v: np.ndarray,
+        w: np.ndarray,
+        xi: np.ndarray,
+        where_in: tp.Union[int, np.ndarray]) -> float:
     """
      Integrate a function fun_ of arrays v w xi over index selection where_in.
     """
@@ -40,7 +63,7 @@ def part_integrate(fun_, v, w, xi, where_in):
     return np.trapz(integrand, xi_in)
 
 
-def de_from_w(w, xi, v_wall, alpha_n):
+def de_from_w(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> np.ndarray:
     """
     Calculates energy density difference de = e - e[-1] from enthalpy, assuming
     bag equation of state.
@@ -52,13 +75,13 @@ def de_from_w(w, xi, v_wall, alpha_n):
     return e_from_w - e_from_w[-1]
 
 
-def de_from_w_new(v, w, xi, v_wall, alpha_n):
+def de_from_w_new(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> np.ndarray:
     """
     For exploring new methods of calculating energy density difference
     from velocity and enthalpy, assuming bag equation of state.
     """
     check.check_physical_params([v_wall, alpha_n])
-    e_from_w =bag.e(w, bag.phase(xi, v_wall), 0.75 * w[-1] * alpha_n)
+    e_from_w = bag.e(w, bag.phase(xi, v_wall), 0.75 * w[-1] * alpha_n)
 
     de = e_from_w - e_from_w[-1]
 
@@ -68,7 +91,7 @@ def de_from_w_new(v, w, xi, v_wall, alpha_n):
     return de
 
 
-def mean_energy_change(v, w, xi, v_wall, alpha_n):
+def mean_energy_change(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> float:
     """
      Bubble-averaged change in energy density in bubble relative to outside value.
     """
@@ -81,7 +104,7 @@ def mean_energy_change(v, w, xi, v_wall, alpha_n):
     return integral / v_wall ** 3
 
 
-def mean_enthalpy_change(v, w, xi, v_wall):
+def mean_enthalpy_change(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
     """
      Mean change in enthalphy in bubble relative to outside value.
     """
@@ -94,18 +117,17 @@ def mean_enthalpy_change(v, w, xi, v_wall):
     return integral / v_wall ** 3
 
 
-def mean_kinetic_energy(v, w, xi, v_wall):
+def mean_kinetic_energy(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
     """
      Kinetic energy of fluid in bubble, averaged over bubble volume,
      from fluid shell functions.
     """
     check.check_wall_speed(v_wall)
     integral = np.trapz(w * v ** 2 * relativity.gamma2(v), xi ** 3)
-
     return integral / (v_wall ** 3)
 
 
-def ubarf_squared(v, w, xi, v_wall):
+def ubarf_squared(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
     """
      Enthalpy-weighted mean square space components of 4-velocity of fluid in bubble,
      from fluid shell functions.
@@ -120,18 +142,21 @@ def ubarf_squared(v, w, xi, v_wall):
     return mean_kinetic_energy(v, w, xi, v_wall) / w[-1]
 
 
-def get_ke_frac(v_wall, alpha_n, n_xi=const.N_XI_DEFAULT):
+def get_ke_frac(v_wall: th.FLOAT_OR_ARR, alpha_n: float, n_xi: int = const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR:
     """
      Determine kinetic energy fraction (of total energy).
      Bag equation of state only so far, as it takes
      e_n = (3./4) w_n (1+alpha_n). This assumes zero trace anomaly in broken phase.
     """
     ubar2 = get_ubarf2(v_wall, alpha_n, n_xi)
-
     return ubar2 / (0.75 * (1 + alpha_n))
 
 
-def get_ke_frac_new(v_wall, alpha_n, n_xi=const.N_XI_DEFAULT, verbosity=0):
+def get_ke_frac_new(
+        v_wall: th.FLOAT_OR_ARR,
+        alpha_n: float,
+        n_xi: int = const.N_XI_DEFAULT,
+        verbosity: int = 0) -> th.FLOAT_OR_ARR:
     """
      Determine kinetic energy fraction (of total energy).
      Bag equation of state only so far, as it takes
@@ -160,7 +185,11 @@ def get_ke_frac_new(v_wall, alpha_n, n_xi=const.N_XI_DEFAULT, verbosity=0):
     return ke_frac_out
 
 
-def get_ke_de_frac(v_wall, alpha_n, n_xi=const.N_XI_DEFAULT, verbosity=0):
+def get_ke_de_frac(
+        v_wall: th.FLOAT_OR_ARR,
+        alpha_n: float,
+        n_xi: int = const.N_XI_DEFAULT,
+        verbosity: int = 0) -> tp.Union[tp.Tuple[float, float], tp.Tuple[np.ndarray, np.ndarray]]:
     """
      Kinetic energy fraction and fractional change in energy
      from wall velocity array. Sum should be 0. Assumes bag model.
@@ -191,7 +220,11 @@ def get_ke_de_frac(v_wall, alpha_n, n_xi=const.N_XI_DEFAULT, verbosity=0):
     return ke_out, de_out
 
 
-def get_ubarf2(v_wall, alpha_n, n_xi=const.N_XI_DEFAULT, verbosity=0):
+def get_ubarf2(
+        v_wall: th.FLOAT_OR_ARR,
+        alpha_n: float,
+        n_xi: int = const.N_XI_DEFAULT,
+        verbosity: int = 0) -> th.FLOAT_OR_ARR:
     """
      Get mean square fluid velocity from v_wall and alpha_n.
      v_wall can be scalar or iterable.
@@ -218,7 +251,11 @@ def get_ubarf2(v_wall, alpha_n, n_xi=const.N_XI_DEFAULT, verbosity=0):
     return ubarf2_out
 
 
-def get_ubarf2_new(v_wall, alpha_n, n_xi=const.N_XI_DEFAULT, verbosity=0):
+def get_ubarf2_new(
+        v_wall: th.FLOAT_OR_ARR,
+        alpha_n: float,
+        n_xi: int = const.N_XI_DEFAULT,
+        verbosity: int = 0) -> th.FLOAT_OR_ARR:
     """
      Get mean square fluid velocity from v_wall and alpha_n.
      v_wall can be scalar or iterable.
@@ -249,7 +286,11 @@ def get_ubarf2_new(v_wall, alpha_n, n_xi=const.N_XI_DEFAULT, verbosity=0):
     return ubarf2_out
 
 
-def get_kappa(v_wall, alpha_n, n_xi=const.N_XI_DEFAULT, verbosity=0):
+def get_kappa(
+        v_wall: th.FLOAT_OR_ARR,
+        alpha_n: float,
+        n_xi: int = const.N_XI_DEFAULT,
+        verbosity: int = 0) -> th.FLOAT_OR_ARR:
     """
      Efficiency factor kappa from v_wall and alpha_n. v_wall can be array.
     """
@@ -276,7 +317,11 @@ def get_kappa(v_wall, alpha_n, n_xi=const.N_XI_DEFAULT, verbosity=0):
     return kappa_out
 
 
-def get_kappa_de(v_wall, alpha_n, n_xi=const.N_XI_DEFAULT, verbosity=0):
+def get_kappa_de(
+        v_wall: th.FLOAT_OR_ARR,
+        alpha_n: float,
+        n_xi: int = const.N_XI_DEFAULT,
+        verbosity: int = 0) -> tp.Union[tp.Tuple[float, float], tp.Tuple[np.ndarray, np.ndarray]]:
     """
      Calculates efficiency factor kappa and fractional change in energy
      from v_wall and alpha_n. v_wall can be an array. Sum should be 0 (bag model).
@@ -307,7 +352,11 @@ def get_kappa_de(v_wall, alpha_n, n_xi=const.N_XI_DEFAULT, verbosity=0):
     return kappa_out, de_out
 
 
-def get_kappa_dq(v_wall, alpha_n, n_xi=const.N_XI_DEFAULT, verbosity=0):
+def get_kappa_dq(
+        v_wall: th.FLOAT_OR_ARR,
+        alpha_n: float,
+        n_xi: int = const.N_XI_DEFAULT,
+        verbosity: int = 0) -> tp.Union[tp.Tuple[float, float], tp.Tuple[np.ndarray, np.ndarray]]:
     """
      Calculates efficiency factor kappa and fractional change in thermal energy
      from v_wall and alpha_n. v_wall can be an array. Sum should be 1.

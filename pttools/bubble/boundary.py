@@ -1,12 +1,14 @@
 import sys
+import typing as tp
 
 import numpy as np
 
+import pttools.type_hints as th
 from . import const
 from . import relativity
 
 
-def v_plus(vm, ap, wall_type):
+def v_plus(vm: th.FLOAT_OR_ARR, ap: th.FLOAT_OR_ARR, wall_type: str) -> th.FLOAT_OR_ARR:
     """
      Wall frame fluid speed v_plus ahead of the wall, as a function of
      vm = v_minus - fluid speed v_plus behind the wall
@@ -29,7 +31,7 @@ def v_plus(vm, ap, wall_type):
     return return_value
 
 
-def v_minus(vp, ap, wall_type='Detonation'):
+def v_minus(vp: th.FLOAT_OR_ARR, ap: th.FLOAT_OR_ARR, wall_type: str = "Detonation") -> th.FLOAT_OR_ARR:
     """
      Wall frame fluid speed v_minus behind the wall, as a function of
      vp = v_plus - fluid speed v_plus behind the wall
@@ -57,7 +59,10 @@ def v_minus(vp, ap, wall_type='Detonation'):
     return return_value
 
 
-def fluid_speeds_at_wall(v_wall, alpha_p, wall_type):
+def fluid_speeds_at_wall(
+        v_wall: float,
+        alpha_p: th.FLOAT_OR_ARR,
+        wall_type: str) -> tp.Tuple[float, float, float, float]:
     """
      Solves fluid speed boundary conditions at the wall, returning
          vfp_w, vfm_w, vfp_p, vfm_p
@@ -91,7 +96,7 @@ def fluid_speeds_at_wall(v_wall, alpha_p, wall_type):
     return vfp_w, vfm_w, vfp_p, vfm_p
 
 
-def enthalpy_ratio(v_m, v_p):
+def enthalpy_ratio(v_m: th.FLOAT_OR_ARR, v_p: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     """
      Ratio of enthalpies behind (w_- ) and ahead (w_+) of a shock or
      transition front, w_-/w_+. Uses conservation of momentum in moving frame.

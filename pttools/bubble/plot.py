@@ -1,4 +1,5 @@
 import sys
+import typing as tp
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -27,16 +28,19 @@ mpl.rcParams.update({'ytick.labelsize': font_size})
 # but make legend smaller
 mpl.rcParams.update({'legend.fontsize': 14})
 
+FLOAT_LIST_OR_ARR_TYPE = tp.Union[tp.List[float], np.ndarray]
+
 
 def plot_fluid_shell(
-        v_wall,
-        alpha_n,
-        save_string=None,
-        Np=const.N_XI_DEFAULT,
-        low_v_approx=False,
-        high_v_approx=False,
+        v_wall: float,
+        alpha_n: float,
+        save_string: str = None,
+        Np: int = const.N_XI_DEFAULT,
+        low_v_approx: bool = False,
+        high_v_approx: bool = False,
         debug: bool = False,
-        draw: bool = True):
+        draw: bool = True) \
+        -> tp.Union[plt.Figure, tp.Tuple[plt.Figure, tp.List[np.ndarray], tp.List[tp.Union[int, float]]]]:
     """
      Calls ``fluid_shell`` and plots resulting v, w against xi, returning figure handle.
      Also plots:
@@ -175,13 +179,13 @@ def plot_fluid_shell(
 
 
 def plot_fluid_shells(
-        v_wall_list,
-        alpha_n_list,
-        multi=False,
-        save_string=None,
-        Np=const.N_XI_DEFAULT,
+        v_wall_list: FLOAT_LIST_OR_ARR_TYPE,
+        alpha_n_list: tp.Union[tp.List[float], np.ndarray],
+        multi: bool = False,
+        save_string: str = None,
+        Np: int = const.N_XI_DEFAULT,
         debug: bool = False,
-        draw: bool = True):
+        draw: bool = True) -> tp.Union[plt.Figure, tp.Tuple[plt.Figure, np.ndarray]]:
     """
      Calls ``fluid_shell`` and plots resulting v, w against xi. Returns figure handle.
      Annotates titles with:

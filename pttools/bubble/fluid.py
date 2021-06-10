@@ -5,10 +5,12 @@ Now in parametric form (Jacky Lindsay and Mike Soughton MPhys project 2017-18)
 """
 
 import sys
+import typing as tp
 
 import numpy as np
 import scipy.integrate as spi
 
+import pttools.type_hints as th
 from . import alpha
 from . import bag
 from . import boundary
@@ -18,7 +20,7 @@ from . import props
 from . import transition
 
 
-def df_dtau(y, t, cs2_fun=bag.cs2_bag):
+def df_dtau(y: np.ndarray, t: float, cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag) -> tp.Tuple[float, float, float]:
     """
      Differentials of fluid variables (v, w, xi) in parametric form, suitable for odeint
     """
@@ -34,10 +36,16 @@ def df_dtau(y, t, cs2_fun=bag.cs2_bag):
     dv_dt = 2 * v * cs2 * (1 - v2) * (1 - xiXv)  # dv/dt
     dw_dt = (w / (1 - v2)) * (xi_v / (1 - xiXv)) * (1 / cs2 + 1) * dv_dt
 
-    return [dv_dt, dw_dt, dxi_dt]
+    return dv_dt, dw_dt, dxi_dt
 
 
-def fluid_integrate_param(v0, w0, xi0, t_end=const.T_END_DEFAULT, n_xi=const.N_XI_DEFAULT, cs2_fun=bag.cs2_bag):
+def fluid_integrate_param(
+        v0: th.FLOAT_OR_ARR,
+        w0: th.FLOAT_OR_ARR,
+        xi0: th.FLOAT_OR_ARR,
+        t_end: float = const.T_END_DEFAULT,
+        n_xi: int = const.N_XI_DEFAULT,
+        cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
      Integrates parametric fluid equations in df_dtau from an initial condition.
      Positive t_end integrates along curves from (v,w) = (0,cs0) to (1,1).
@@ -59,7 +67,11 @@ def fluid_integrate_param(v0, w0, xi0, t_end=const.T_END_DEFAULT, n_xi=const.N_X
 # Main function for integrating fluid equations and deriving v, w
 # for complete range 0 < xi < 1
 
-def fluid_shell(v_wall, alpha_n, n_xi=const.N_XI_DEFAULT):
+def fluid_shell(
+        v_wall: th.FLOAT_OR_ARR,
+        alpha_n: th.FLOAT_OR_ARR,
+        n_xi: int = const.N_XI_DEFAULT) \
+        -> tp.Union[tp.Tuple[float, float, float], tp.Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """
      Finds fluid shell (v, w, xi) from a given v_wall, alpha_n, which must be scalars.
      Option to change xi resolution n_xi
@@ -77,7 +89,13 @@ def fluid_shell(v_wall, alpha_n, n_xi=const.N_XI_DEFAULT):
             return np.nan, np.nan, np.nan
 
 
-def fluid_shell_alpha_plus(v_wall, alpha_plus, wall_type='Calculate', n_xi=const.N_XI_DEFAULT, w_n=1, cs2_fun=bag.cs2_bag):
+def fluid_shell_alpha_plus(
+        v_wall: th.FLOAT_OR_ARR,
+        alpha_plus: th.FLOAT_OR_ARR,
+        wall_type: str = "Calculate",
+        n_xi: int = const.N_XI_DEFAULT,
+        w_n: float = 1,
+        cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
      Finds fluid shell (v, w, xi) from a given v_wall, alpha_plus (at-wall strength parameter).
      Where v=0 (behind and ahead of shell) uses only two points.
@@ -177,7 +195,14 @@ def fluid_shell_alpha_plus(v_wall, alpha_plus, wall_type='Calculate', n_xi=const
     return v, w, xi
 
 
-def trim_fluid_wall_to_cs(v, w, xi, t, v_wall, wall_type, dxi_lim=const.dxi_small, cs2_fun=bag.cs2_bag):
+def trim_fluid_wall_to_cs(
+        v: np.ndarray,
+        w: np.ndarray,
+        xi: np.ndarray,
+        t: np.ndarray,
+        v_wall: th.FLOAT_OR_ARR, wall_type: str,
+        dxi_lim: float = const.dxi_small,
+        cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
      Picks out fluid variable arrays (v, w, xi, t) which are definitely behind
      the wall for deflagration and hybrid.
@@ -214,7 +239,12 @@ def trim_fluid_wall_to_cs(v, w, xi, t, v_wall, wall_type, dxi_lim=const.dxi_smal
     return v[n_start:n_stop], w[n_start:n_stop], xi[n_start:n_stop], t[n_start:n_stop]
 
 
-def trim_fluid_wall_to_shock(v, w, xi, t, wall_type):
+def trim_fluid_wall_to_shock(
+        v: np.ndarray,
+        w: np.ndarray,
+        xi: np.ndarray,
+        t: np.ndarray,
+        wall_type: str) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
      Trims fluid variable arrays (v, w, xi) so last element is just ahead of shock
     """
