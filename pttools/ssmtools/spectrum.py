@@ -106,7 +106,7 @@ def spec_den_v(
     for i in range(nz):
         A2_2d_array[i] = np.interp(qT_array(z[i], t_array), qT_lookup, A2_lookup)
 
-    array2 = np.zeros(nt)
+    # array2 = np.zeros(nt)
     sd_v = np.zeros(nz)  # array for spectral density of v
     factor = 1. / (b_R * vw) ** 6
     factor = 2 * factor  # because spectral density of v is 2 * P_v

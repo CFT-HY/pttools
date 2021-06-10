@@ -72,7 +72,7 @@ def plot_fluid_shell(
 
     v, w, xi = fluid.fluid_shell(v_wall, alpha_n, Np)
 
-    vmax = max(v)
+    # vmax = max(v)
 
     xi_even = np.linspace(1 / Np, 1 - 1 / Np, Np)
     v_sh = props.v_shock(xi_even)
@@ -113,7 +113,8 @@ def plot_fluid_shell(
     plt.subplot(2, 1, 1)
 
     plt.title(
-        r'$\xi_{{\rm w}} =  {}$, $\alpha_{{\rm n}} =  {:.3}$, $\alpha_+ =  {:5.3f}$, $r =  {:.3f}$, $\xi_{{\rm sh}} =  {:5.3f}$'.format(
+        r'$\xi_{{\rm w}} =  {}$, $\alpha_{{\rm n}} =  {:.3}$, '
+        r'$\alpha_+ =  {:5.3f}$, $r =  {:.3f}$, $\xi_{{\rm sh}} =  {:5.3f}$'.format(
             v_wall, alpha_n, alpha_plus, r, xi[-2]), size=16)
     plt.plot(xi, v, 'b', label=r'$v(\xi)$')
 
@@ -209,7 +210,7 @@ def plot_fluid_shells(
 
     ncols = 1
     fig_width = 8
-    if multi == True:
+    if multi is True:
         ncols = len(v_wall_list)
         fig_width = ncols * 5
 
@@ -225,7 +226,7 @@ def plot_fluid_shells(
         lst_w = []
         lst_xi = []
         lst_v_sh = []
-        lst_v_minus_max = []
+        # lst_v_minus_max = []
         lst_w_sh = []
 
         # Debug values
@@ -279,7 +280,8 @@ def plot_fluid_shells(
             alpha_plus = alpha_n * w[-1] / w[n_wall]
 
             ax[0, n].set_title(
-                r'$\alpha_{{\rm n}} =  {:5.3f}$, $\alpha_+ =  {:5.3f}$, $r =  {:5.3f}$, $\xi_{{\rm sh}} =  {:5.3f}$'.format(
+                r'$\alpha_{{\rm n}} =  {:5.3f}$, $\alpha_+ =  {:5.3f}$, '
+                r'$r =  {:5.3f}$, $\xi_{{\rm sh}} =  {:5.3f}$'.format(
                     alpha_n, alpha_plus, r, xi[-2]), size=14)
 
         ax[0, n].grid(True)
@@ -301,7 +303,8 @@ def plot_fluid_shells(
             kappa = ubarf2 / (0.75 * alpha_n)
             # and efficiency of turning Higgs potential into thermal energy
             dw = 0.75 * quantities.mean_enthalpy_change(v, w, xi, v_wall) / (0.75 * alpha_n * w[-1])
-            #            ax[1,n].set_title(r'$w_0/w_n = {:4.2}$, $\bar{{U}}_f = {:.3f}$, $K = {:5.3g}$, $\kappa = {:5.3f}$, $\omega = {:5.3f}$'.format(
+            #            ax[1,n].set_title(r'$w_0/w_n = {:4.2}$, $\bar{{U}}_f = {:.3f}$, '
+            #            r'$K = {:5.3g}$, $\kappa = {:5.3f}$, $\omega = {:5.3f}$'.format(
             #                      w[0]/w[-1],ubarf2**0.5,ke_frac, kappa, dw),size=14)
             ax[1, n].set_title(r'$K = {:5.3g}$, $\kappa = {:5.3f}$, $\omega = {:5.3f}$'.format(
                 ke_frac, kappa, dw), size=14)

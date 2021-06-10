@@ -14,12 +14,12 @@ def sin_transform_old(z: th.FLOAT_OR_ARR, xi: np.ndarray, v: np.ndarray):
 
     if isinstance(z, np.ndarray):
         array = np.sin(np.outer(z, xi)) * v
-        I = np.trapz(array, xi)
+        integral = np.trapz(array, xi)
     else:
         array = v * np.sin(z * xi)
-        I = np.trapz(array, xi)
+        integral = np.trapz(array, xi)
 
-    return I
+    return integral
 
 
 def envelope(xi: np.ndarray, f: np.ndarray) -> tp.Tuple[tp.List[float], tp.List[float]]:
@@ -86,9 +86,9 @@ def sin_transform_approx(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray) -> n
     $[\\xi_w,\\xi_2]$.
     """
     [xi1, xi_w, _, xi2], [f1, f_m, f_p, f2] = envelope(xi, f)
-    I = -(f2 * np.cos(z * xi2) - f_p * np.cos(z * xi_w)) / z
-    I += -(f_m * np.cos(z * xi_w) - f1 * np.cos(z * xi1)) / z
-    return I
+    integral = -(f2 * np.cos(z * xi2) - f_p * np.cos(z * xi_w)) / z
+    integral += -(f_m * np.cos(z * xi_w) - f1 * np.cos(z * xi1)) / z
+    return integral
 
 
 def sin_transform(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray, z_st_thresh=const.Z_ST_THRESH) -> th.FLOAT_OR_ARR:
@@ -104,7 +104,7 @@ def sin_transform(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray, z_st_thresh
         lo = np.where(z <= z_st_thresh)
         z_lo = z[lo]
         array_lo = np.sin(np.outer(z_lo, xi)) * f
-        I = np.trapz(array_lo, xi)
+        integral = np.trapz(array_lo, xi)
 
         if len(lo) < len(z):
             z_hi = z[np.where(z > z_st_thresh - dz_blend)]
@@ -122,17 +122,17 @@ def sin_transform(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray, z_st_thresh
                 else:
                     s = 0.5
                 frac = 3 * s ** 2 - 2 * s ** 3
-                I[lo_blend] = I_hi[hi_blend] * frac + I[lo_blend] * (1 - frac)
+                integral[lo_blend] = I_hi[hi_blend] * frac + integral[lo_blend] * (1 - frac)
 
-            I = np.concatenate((I[lo], I_hi[z_hi > z_st_thresh]))
+            integral = np.concatenate((integral[lo], I_hi[z_hi > z_st_thresh]))
     else:
         if z <= z_st_thresh:
             array = f * np.sin(z * xi)
-            I = np.trapz(array, xi)
+            integral = np.trapz(array, xi)
         else:
-            I = sin_transform_approx(z, xi, f)
+            integral = sin_transform_approx(z, xi, f)
 
-    return I
+    return integral
 
 
 def resample_uniform_xi(
@@ -143,5 +143,5 @@ def resample_uniform_xi(
     Provide uniform resample of function defined by (x,y) = (xi,f).
     Returns f interpolated and the uniform grid of nxi points in range [0,1]
     """
-    xi_re = np.linspace(0,1-1/nxi,nxi)
+    xi_re = np.linspace(0, 1-1/nxi, nxi)
     return xi_re, np.interp(xi_re, xi, f)

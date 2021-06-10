@@ -20,13 +20,14 @@ NPTDEFAULT: NPT_TYPE = (NXIDEFAULT, NTDEFAULT, NQDEFAULT)
 #
 # NTDEFAULT can be left as it is, or even reduced to 100
 
+# Default dimensionless wavenumber above which to use approximation for sin_transform, sin_transform_approx.
 # TODO: check that this can actually be a float
-Z_ST_THRESH: float = 50    # Default dimensionless wavenumber above which to use approximation for
-                    # sin_transform, sin_transform_approx.
+Z_ST_THRESH: float = 50
+
 DZ_ST_BLEND: float = np.pi  # Default wavenumber overlap for matching sin_transform_approx
 
-T_TILDE_MAX: float = 20.0  # Maximum in bubble lifetime distribution integration
-T_TILDE_MIN: float = 0.01  # Minimum in bubble lifetime distribution integration
+T_TILDE_MAX: float = 20.0   # Maximum in bubble lifetime distribution integration
+T_TILDE_MIN: float = 0.01   # Minimum in bubble lifetime distribution integration
 
 DEFAULT_NUC_TYPE: str = "exponential"
 DEFAULT_NUC_PARM: tp.Tuple[int] = (1,)

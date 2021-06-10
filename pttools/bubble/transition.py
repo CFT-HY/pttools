@@ -34,7 +34,7 @@ def identify_wall_type(v_wall: float, alpha_n: float, exit_on_error: bool = Fals
      wall_type = [ 'Detonation' | 'Deflagration' | 'Hybrid' ]
     """
     # v_wall = wall velocity, alpha_n = relative trace anomaly at nucleation temp outside shell
-    wall_type = 'Error' # Default
+    wall_type = 'Error'  # Default
     if alpha_n < alpha.alpha_n_max_detonation(v_wall):
         # Must be detonation
         wall_type = 'Detonation'
@@ -47,7 +47,7 @@ def identify_wall_type(v_wall: float, alpha_n: float, exit_on_error: bool = Fals
 
     if (wall_type == 'Error') & exit_on_error:
         sys.stderr.write('identify_wall_type: \
-                         error: no solution for v_wall = {}, alpha_n = {}\n'.format(v_wall,alpha_n))
+                         error: no solution for v_wall = {}, alpha_n = {}\n'.format(v_wall, alpha_n))
         sys.exit(1)
 
     return wall_type
@@ -63,17 +63,17 @@ def identify_wall_type_alpha_plus(v_wall: float, alpha_p: float) -> str:
     else:
         if alpha_p < alpha.alpha_plus_max_detonation(v_wall):
             wall_type = 'Detonation'
-            if alpha_p > alpha.alpha_plus_min_hybrid(v_wall) and alpha_p < 1/3.:
+            if alpha.alpha_plus_min_hybrid(v_wall) < alpha_p < 1/3.:
                 sys.stderr.write('identify_wall_type_alpha_plus: warning:\n')
-                sys.stderr.write('      Hybrid and Detonation both possible for v_wall = {}, alpha_plus = {}\n'.format(v_wall,alpha_p))
+                sys.stderr.write('      Hybrid and Detonation both possible for v_wall = {}, alpha_plus = {}\n'.format(
+                    v_wall, alpha_p))
                 sys.stderr.write('      Choosing detonation.\n')
         else:
             wall_type = 'Hybrid'
 
-
     if alpha_p > (1/3.) and not wall_type == 'Detonation':
         sys.stderr.write('identify_wall_type_alpha_plus: error:\n')
-        sys.stderr.write('      no solution for v_wall = {}, alpha_plus = {}\n'.format(v_wall,alpha_p))
+        sys.stderr.write('      no solution for v_wall = {}, alpha_plus = {}\n'.format(v_wall, alpha_p))
         wall_type = 'Error'
 
     return wall_type

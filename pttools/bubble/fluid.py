@@ -214,7 +214,7 @@ def trim_fluid_wall_to_cs(
     n_start = 0
 
     n_stop_index = -2
-    n_stop = 0
+    # n_stop = 0
     if not wall_type == 'Deflagration':
         it = np.nditer([v, w, xi], flags=['c_index'])
         for vv, ww, x in it:
@@ -249,7 +249,7 @@ def trim_fluid_wall_to_shock(
      Trims fluid variable arrays (v, w, xi) so last element is just ahead of shock
     """
     n_shock_index = -2
-    n_shock = 0
+    # n_shock = 0
     if not wall_type == 'Detonation':
         it = np.nditer([v, xi], flags=['c_index'])
         for vv, x in it:

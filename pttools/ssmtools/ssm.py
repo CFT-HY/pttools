@@ -148,7 +148,7 @@ def A2_e_conserving_file(
     def fun(x):
         return x - bubble.w(e_n, 0., alpha * (0.75 * x))
 
-    w_n0 = bubble.w(e_n, 0., alpha * (e_n))  # Correct only in Bag, probably good enough
+    w_n0 = bubble.w(e_n, 0., alpha * e_n)  # Correct only in Bag, probably good enough
     w_n = fsolve(fun, w_n0)[0]  # fsolve returns array, want float
     lam = (e_xi_lt1 - e_n) / w_n
     print('ssmtools.A2_e_conserving_file: initial guess w_n0: {}, final {}'.format(w_n0, w_n))
@@ -157,8 +157,8 @@ def A2_e_conserving_file(
     #    for j in range(lam_ft.size):
     #        lam_ft[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi_lt1, xi_lt1*lam,
     #              z_st_thresh=max(z)) # Need to fix problem with ST of lam for detonations
-    lam_ft = (4. * np.pi / z) * calculators.sin_transform(z, xi_lt1, xi_lt1 * lam,
-                                              z_st_thresh)
+    lam_ft = (4. * np.pi / z) * \
+        calculators.sin_transform(z, xi_lt1, xi_lt1 * lam, z_st_thresh)
 
     return 0.25 * (v_ft ** 2 + (const.cs0 * lam_ft) ** 2)
 
@@ -176,9 +176,9 @@ def f_ssm_func(
     nxi = npt[0]
     v_ip, _, xi = bubble.fluid_shell(vw, alpha_n, nxi)
 
-#    f_ssm = np.zeros_like(z)
-#    for j in range(f_ssm.size):
-#        f_ssm[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi, v_ip)
+    # f_ssm = np.zeros_like(z)
+    # for j in range(f_ssm.size):
+    #    f_ssm[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi, v_ip)
     f_ssm = (4.*np.pi/z) * calculators.sin_transform(z, xi, v_ip, z_st_thresh)
 
     return f_ssm
@@ -200,24 +200,23 @@ def lam_ssm_func(
     v_ip, w_ip, xi = bubble.fluid_shell(vw, alpha_n, nxi)
 
     if de_method == 'alternate':
-        lam_orig = bubble.de_from_w_new(v_ip,w_ip,xi,vw,alpha_n)/w_ip[-1]
+        lam_orig = bubble.de_from_w_new(v_ip, w_ip, xi, vw, alpha_n) / w_ip[-1]
     else:
-        lam_orig = bubble.de_from_w(w_ip,xi,vw,alpha_n)/w_ip[-1]
-    xi_re,lam_re = calculators.resample_uniform_xi(xi,lam_orig,nxi)
+        lam_orig = bubble.de_from_w(w_ip, xi, vw, alpha_n) / w_ip[-1]
+    xi_re, lam_re = calculators.resample_uniform_xi(xi, lam_orig, nxi)
 
-#    lam_ft = np.zeros_like(z)
-#    for j in range(lam_ft.size):
-#        lam_ft[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi_re, xi_re*lam_re,
-#              z_st_thresh=max(z)) # Need to fix problem with ST of lam for detonations
+    # lam_ft = np.zeros_like(z)
+    # for j in range(lam_ft.size):
+    #    lam_ft[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi_re, xi_re*lam_re,
+    #          z_st_thresh=max(z)) # Need to fix problem with ST of lam for detonations
 
-    lam_ft = (4.*np.pi/z) * calculators.sin_transform(z, xi_re, xi_re*lam_re,
-              z_st_thresh)
+    lam_ft = (4.*np.pi/z) * calculators.sin_transform(z, xi_re, xi_re*lam_re, z_st_thresh)
 
     return lam_ft
 
 
 def g_ssm_func(z: np.ndarray, vw, alpha, npt: const.NPT_TYPE = const.NPTDEFAULT) -> np.ndarray:
-    """
+    r"""
      3D FT of radial fluid acceleration \dot{v}(r) from Sound Shell Model fluid profile.
      z is array of scaled wavenumbers z = kR*.
     """
@@ -259,7 +258,7 @@ def f_file(
 
 
 def g_file(z: np.ndarray, t, filename: str, skip: int = 0) -> np.ndarray:
-    """
+    r"""
      3D FT of radial fluid acceleration \dot{v}(r) from file
      z is array of scaled wavenumbers z = kR*
     """

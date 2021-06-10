@@ -92,7 +92,7 @@ def shock_zoom_last_element(
         dxi_sh = dxi * (v[-2] - v_sh[-2])/(dv_sh - dv)
         # now replace final element
         xi[-1] = xi[-2] + dxi_sh
-        v[-1]  = v[-2] + (dv_sh/dxi)*dxi_sh
-        w[-1]  = w[-2] + (dw_sh/dxi)*dxi_sh
+        v[-1] = v[-2] + (dv_sh/dxi)*dxi_sh
+        w[-1] = w[-2] + (dw_sh/dxi)*dxi_sh
     # If not, do nothing
     return v, w, xi
