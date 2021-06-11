@@ -21,6 +21,13 @@ CS2_FUN_TYPE = tp.Callable[[th.FLOAT_OR_ARR], float]
 #    return cs0_2
 
 
+def check_thetas(theta_s: th.FLOAT_OR_ARR, theta_b: th.FLOAT_OR_ARR) -> None:
+    if np.any(theta_b >= theta_s):
+        raise ValueError(
+            "theta_b should always be smaller than theta_s, "
+            f"but got theta_s={theta_s}, theta_b={theta_b}")
+
+
 def cs2_bag(w: th.FLOAT_OR_ARR) -> float:
     """
     Speed of sound squared in Bag model, equal to 1/3 independent of enthalpy $w$
@@ -57,6 +64,7 @@ def p(
      _b = broken phase, behind bubble (phase = 1)
      enthalpy, theta and phase can be arrays (same shape)
     """
+    check_thetas(theta_s, theta_b)
     theta = theta_b * phase + theta_s * (1.0 - phase)
     return 0.25 * w - theta
 
@@ -88,8 +96,9 @@ def w(
      _b = broken phase, behind bubble (phase = 1)
      enthalpy and phase can be arrays (same shape)
     """
-    #     Actually, theta is often known only from alpha_n and w, so should
-    #     think about an fsolve?
+    check_thetas(theta_s, theta_b)
+    # Actually, theta is often known only from alpha_n and w, so should
+    # think about an fsolve?
     theta = theta_b * phase + theta_s * (1.0 - phase)
     return (4 / 3) * (e - theta)
 
@@ -119,5 +128,4 @@ def adiabatic_index(
     """
     Returns array of float, adiabatic index (ratio of enthalpy to energy).
     """
-
     return w / e(w, phase, theta_s, theta_b)
