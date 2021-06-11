@@ -30,7 +30,9 @@ class TestPowSpecs(unittest.TestCase):
         data_test[:, 9] = np.abs(data_test[:, 9])
 
         # The results differ slightly depending on the library versions
-        np.testing.assert_allclose(data_test, data_reference, rtol=4.6e-7, atol=0)
+        # np.testing.assert_allclose(data_test, data_reference, rtol=4.6e-7, atol=0)
+        # Using Numba changes the results slightly
+        np.testing.assert_allclose(data_test, data_reference, rtol=9.1e-7, atol=0)
 
         # PTtools has been changed since the article has been written,
         # and therefore there are slight differences in the results.

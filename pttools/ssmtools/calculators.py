@@ -1,11 +1,14 @@
 import typing as tp
 
+# import numba.types
 import numpy as np
 
 import pttools.type_hints as th
+# from pttools import speedup
 from . import const
 
 
+# @speedup.njit
 def sin_transform_old(z: th.FLOAT_OR_ARR, xi: np.ndarray, v: np.ndarray):
     """
      sin transform of v(xi), Fourier transform variable z.
@@ -22,6 +25,7 @@ def sin_transform_old(z: th.FLOAT_OR_ARR, xi: np.ndarray, v: np.ndarray):
     return integral
 
 
+# @speedup.njit
 def envelope(xi: np.ndarray, f: np.ndarray) -> tp.Tuple[tp.List[float], tp.List[float]]:
     """
     Returns lists of xi, f pairs "outlining" function f.
@@ -72,6 +76,7 @@ def envelope(xi: np.ndarray, f: np.ndarray) -> tp.Tuple[tp.List[float], tp.List[
     return xi_list, f_list
 
 
+# @speedup.njit
 def sin_transform_approx(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray) -> np.ndarray:
     """
     Approximate sin transform of f(xi), Fourier transform variable z.
@@ -135,6 +140,56 @@ def sin_transform(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray, z_st_thresh
     return integral
 
 
+# @speedup.njit
+# def sin_transform_scalar(z: float, xi: np.ndarray, f: np.ndarray, z_st_thresh=const.Z_ST_THRESH) -> float:
+#     if z <= z_st_thresh:
+#         array = f * np.sin(z * xi)
+#         integral = np.trapz(array, xi)
+#     else:
+#         integral = sin_transform_approx(z, xi, f)
+#     return integral
+#
+#
+# @speedup.njit
+# def sin_transform_arr(z: np.ndarray, xi: np.ndarray, f: np.ndarray, z_st_thresh=const.Z_ST_THRESH) -> np.ndarray:
+#     lo = np.where(z <= z_st_thresh)
+#     z_lo = z[lo]
+#     array_lo = np.sin(np.outer(z_lo, xi)) * f
+#     integral = np.trapz(array_lo, xi)
+#
+#     if len(lo) < len(z):
+#         z_hi = z[np.where(z > z_st_thresh - const.DZ_ST_BLEND)]
+#         I_hi = sin_transform_approx(z_hi, xi, f)
+#
+#         if len(z_hi) + len(z_lo) > len(z):
+#             # If there are elements in the z blend range, then blend
+#             hi_blend = np.where(z_hi <= z_st_thresh)
+#             z_hi_blend = z_hi[hi_blend]
+#             lo_blend = np.where(z_lo > z_st_thresh - const.DZ_ST_BLEND)
+#             z_blend_max = np.max(z_hi_blend)
+#             z_blend_min = np.min(z_hi_blend)
+#             if z_blend_max > z_blend_min:
+#                 s = (z_hi_blend - z_blend_min) / (z_blend_max - z_blend_min)
+#             else:
+#                 s = 0.5 * np.ones_like(z_hi_blend)
+#             frac = 3 * s ** 2 - 2 * s ** 3
+#             integral[lo_blend] = I_hi[hi_blend] * frac + integral[lo_blend] * (1 - frac)
+#
+#         integral = np.concatenate((integral[lo], I_hi[z_hi > z_st_thresh]))
+#     return integral
+#
+#
+# @speedup.generated_jit
+# def sin_transform(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray, z_st_thresh=const.Z_ST_THRESH):
+#     if isinstance(z, numba.types.Float):
+#         return sin_transform_scalar
+#     elif isinstance(z, numba.types.Array):
+#         return sin_transform_arr
+#     else:
+#         raise NotImplementedError
+
+
+# @speedup.njit
 def resample_uniform_xi(
         xi: np.ndarray,
         f: th.FLOAT_OR_ARR,
