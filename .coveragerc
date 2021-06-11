@@ -3,7 +3,7 @@ branch = True
 # command_line = -m unittest discover -s tests
 source = .
 omit =
-    */venv/*
+    **/venv/*
 parallel = True
 
 [report]
