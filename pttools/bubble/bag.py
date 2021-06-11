@@ -1,5 +1,6 @@
 """Some functions useful for the bag equation of state"""
 
+# import enum
 import typing as tp
 
 import numpy as np
@@ -8,6 +9,14 @@ import pttools.type_hints as th
 from . import const
 
 CS2_FUN_TYPE = tp.Callable[[th.FLOAT_OR_ARR], float]
+
+
+# TODO: think about using an enum for the phases
+# @enum.unique
+# class Phase(enum.IntEnum):
+#     SYMMETRIC = 0
+#     BROKEN = 1
+
 
 # def cs_w(w):
 #    # Speed of sound function, another label
