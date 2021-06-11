@@ -20,5 +20,7 @@ dxi_small: float = 1./N_XI_DEFAULT
 cs0: np.float_ = 1 / np.sqrt(3)  # ideal speed of sound
 cs0_2: float = 1./3  # ideal speed of sound squared
 
+# TODO: In general the phase is a scalar variable (real number).
+# However, in the bag model it's approximated as an integer.
 symm_phase: int = 0
 brok_phase: int = 1
