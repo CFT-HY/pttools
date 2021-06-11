@@ -41,11 +41,14 @@ def v_approx_hybrid(xi: th.FLOAT_OR_ARR, v_wall: th.FLOAT_OR_ARR, v_xi_wall: th.
     return xi - 2 * dv - A2 * dv ** 2
 
 
-def w_approx_high_alpha(xi, v_wall, v_xi_wall, w_xi_wall):
+def w_approx_high_alpha(
+        xi: th.FLOAT_OR_ARR,
+        v_wall: th.FLOAT_OR_ARR,
+        v_xi_wall: th.FLOAT_OR_ARR,
+        w_xi_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     """
      Approximate solution for ehthalpy w(xi) near v(xi) = xi.
     """
-    # TODO: add type hints for this function
     check.check_wall_speed(v_wall)
     xi0 = xi_zero(v_wall, v_xi_wall)
     return w_xi_wall * np.exp(-12 * (xi - xi0) ** 2 / (1 - xi0 ** 2) ** 2)
