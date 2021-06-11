@@ -52,7 +52,7 @@ def part_integrate(
         v: np.ndarray,
         w: np.ndarray,
         xi: np.ndarray,
-        where_in: tp.Union[int, np.ndarray]) -> float:
+        where_in: th.INT_OR_ARR) -> float:
     """
      Integrate a function fun_ of arrays v w xi over index selection where_in.
     """

@@ -33,7 +33,7 @@ def cs2_bag(w: th.FLOAT_OR_ARR) -> float:
     return cs2
 
 
-def theta_bag(w: th.FLOAT_OR_ARR, phase: th.FLOAT_OR_ARR, alpha_n: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
+def theta_bag(w: th.FLOAT_OR_ARR, phase: th.INT_OR_ARR, alpha_n: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     """
     Trace anomaly $\theta = (e - 3p)/4$ in Bag model.
     """
@@ -46,7 +46,7 @@ def theta_bag(w: th.FLOAT_OR_ARR, phase: th.FLOAT_OR_ARR, alpha_n: th.FLOAT_OR_A
 
 def p(
         w: th.FLOAT_OR_ARR,
-        phase: th.FLOAT_OR_ARR,
+        phase: th.INT_OR_ARR,
         theta_s: th.FLOAT_OR_ARR,
         theta_b: th.FLOAT_OR_ARR = 0.) -> th.FLOAT_OR_ARR:
     """
@@ -63,7 +63,7 @@ def p(
 
 def e(
         w: th.FLOAT_OR_ARR,
-        phase: th.FLOAT_OR_ARR,
+        phase: th.INT_OR_ARR,
         theta_s: th.FLOAT_OR_ARR,
         theta_b: th.FLOAT_OR_ARR = 0.) -> th.FLOAT_OR_ARR:
     """
@@ -78,7 +78,7 @@ def e(
 
 def w(
         e: th.FLOAT_OR_ARR,
-        phase: th.FLOAT_OR_ARR,
+        phase: th.INT_OR_ARR,
         theta_s: th.FLOAT_OR_ARR,
         theta_b: th.FLOAT_OR_ARR = 0.) -> th.FLOAT_OR_ARR:
     """
@@ -113,7 +113,7 @@ def phase(xi: th.FLOAT_OR_ARR, v_w: float) -> th.FLOAT_OR_ARR:
 
 def adiabatic_index(
         w: th.FLOAT_OR_ARR,
-        phase: th.FLOAT_OR_ARR,
+        phase: th.INT_OR_ARR,
         theta_s: th.FLOAT_OR_ARR,
         theta_b: th.FLOAT_OR_ARR = 0.) -> th.FLOAT_OR_ARR:
     """
