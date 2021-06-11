@@ -4,6 +4,7 @@ branch = True
 source = .
 omit =
     */venv/*
+parallel = True
 
 [report]
 show_missing = True
