@@ -1,5 +1,4 @@
 import enum
-import sys
 import typing as tp
 
 import numpy as np
@@ -98,10 +97,9 @@ def fluid_speeds_at_wall(
             vfp_w = v_wall  # Fluid velocity just ahead of the wall in wall frame (v+)
             vfp_p = relativity.lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
         else:
-            sys.stderr.write("fluid_speeds_at_wall: error: sol_type wrong or unset")
-            sys.exit(1)
+            raise ValueError(f"Unknown sol_type: {sol_type}")
     else:
-        sys.stderr.write("fluid_speeds_at_wall: error: v_wall > 1")
+        raise ValueError(f"v_wall > 1: v_wall = {v_wall}")
 
     return vfp_w, vfm_w, vfp_p, vfm_p
 

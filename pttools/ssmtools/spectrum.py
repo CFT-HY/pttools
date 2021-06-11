@@ -1,4 +1,3 @@
-import sys
 import typing as tp
 
 import numpy as np
@@ -21,8 +20,7 @@ def nu(T: th.FLOAT_OR_ARR, nuc_type: str = "simultaneous", args=(1,)) -> th.FLOA
         a = args[0]
         dist = a * np.exp(-a*T)
     else:
-        sys.stderr.write('error: nu: nucleation type not recognised')
-        sys.exit(1)
+        raise ValueError(f"Nucleation type not recognized: \"{nuc_type}\"")
 
     return dist
 
@@ -145,7 +143,7 @@ def spec_den_gw_scaled(
         xsmallest = min(z) * 0.5 * (1. - const.cs0) / const.cs0
 
         if max(xlookup) < xlargest or min(xlookup) > xsmallest:
-            sys.exit("spec_den_gw_scaled: error: range of xlookup not large enough")
+            raise ValueError("Range of xlookup is not large enough.")
 
     p_gw = np.zeros_like(z)
 
@@ -215,7 +213,7 @@ def power_gw_scaled(
      3. turning SD into power
     """
     if np.any(z <= 0.0):
-        sys.exit('power_gw_scaled: error: z values must all be positive\n')
+        raise ValueError("z values must all be positive.")
 
     bubble.check_physical_params(params)
 

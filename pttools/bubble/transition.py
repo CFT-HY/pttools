@@ -1,6 +1,6 @@
 """Useful quantities for deciding type of transition"""
 
-import sys
+import logging
 
 import numpy as np
 
@@ -8,6 +8,8 @@ import pttools.type_hints as th
 from . import alpha
 from . import boundary
 from . import const
+
+logger = logging.getLogger(__name__)
 
 
 def min_speed_deton(alpha: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
@@ -46,9 +48,7 @@ def identify_solution_type(v_wall: float, alpha_n: float, exit_on_error: bool = 
                 sol_type = boundary.SolutionType.HYBRID
 
     if (sol_type == boundary.SolutionType.ERROR) & exit_on_error:
-        sys.stderr.write('identify_solution_type: \
-                         error: no solution for v_wall = {}, alpha_n = {}\n'.format(v_wall, alpha_n))
-        sys.exit(1)
+        raise RuntimeError(f"No solution for v_wall = {v_wall}, alpha_n = {alpha_n}")
 
     return sol_type
 
@@ -64,16 +64,14 @@ def identify_solution_type_alpha_plus(v_wall: float, alpha_p: float) -> boundary
         if alpha_p < alpha.alpha_plus_max_detonation(v_wall):
             sol_type = boundary.SolutionType.DETON
             if alpha.alpha_plus_min_hybrid(v_wall) < alpha_p < 1/3.:
-                sys.stderr.write('identify_solution_type_alpha_plus: warning:\n')
-                sys.stderr.write('      Hybrid and Detonation both possible for v_wall = {}, alpha_plus = {}\n'.format(
-                    v_wall, alpha_p))
-                sys.stderr.write('      Choosing detonation.\n')
+                logger.warning(
+                    f"Hybrid and detonation both possible for v_wall = {v_wall}, alpha_plus = {alpha_p}. "
+                    "Choosing detonation.")
         else:
             sol_type = boundary.SolutionType.HYBRID
 
     if alpha_p > (1/3.) and not sol_type == boundary.SolutionType.DETON:
-        sys.stderr.write('identify_solution_type_alpha_plus: error:\n')
-        sys.stderr.write('      no solution for v_wall = {}, alpha_plus = {}\n'.format(v_wall, alpha_p))
+        logger.error(f"No solution for for v_wall = {v_wall}, alpha_plus = {alpha_p}")
         sol_type = boundary.SolutionType.ERROR
 
     return sol_type

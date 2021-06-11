@@ -2,8 +2,6 @@
 alpha_p(lus) (strength parameter just in front of wall)
 """
 
-import sys
-
 import numpy as np
 import scipy.optimize as opt
 
@@ -110,9 +108,7 @@ def alpha_n_max_hybrid(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> float:
     """
     sol_type = transition.identify_solution_type_alpha_plus(v_wall, 1. / 3)
     if sol_type == boundary.SolutionType.SUB_DEF:
-        sys.stderr.write('alpha_n_max_hybrid: error: called with v_wall < cs\n')
-        sys.stderr.write('     use alpha_n_max_deflagration instead\n')
-        sys.exit(6)
+        raise ValueError("Alpha_n_max_hybrid was called with v_wall < cs. Use alpha_n_max_deflagration instead.")
 
     # Might have been returned as "Detonation, which takes precedence over Hybrid
     sol_type = boundary.SolutionType.HYBRID

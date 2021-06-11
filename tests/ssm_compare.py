@@ -4,10 +4,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-import sys
-# Add path for pttools
-sys.path.append('../../../')
-
+import logging
 import os
 import numpy as np
 import matplotlib as mpl
@@ -19,6 +16,8 @@ from test_utils import TEST_DATA_PATH
 
 print('Importing {}'.format(ssm.__file__))
 print('Importing {}'.format(b.__file__))
+
+logger = logging.getLogger(__name__)
 
 # Set up plotting
 # LaTeX can cause problems if system not configured correctly
@@ -121,7 +120,6 @@ step_list_all = [step_weak_list, step_inter_list]
 dir_list_all = [dir_weak_list, dir_inter_list]
 
 
-
 def plot_ps(z_list, pow_list, ps_type, ax_limits='weak', 
             leg_list=None, col_list=None, ls_list=None, fig=None):
     # Plots a list of power spectra, with axis limits appropriate to prace runs
@@ -182,7 +180,7 @@ def generate_ps(vw, alpha, method='e_conserving', v_xi_file=None, save_ids=[None
     elif alpha < 0.1:  # intermediate transition
         strength = 'inter'
     else:
-        sys.stderr.write('generate_ps: warning: alpha > 0.1, taking strength = strong\n')
+        logger.warning("alpha > 0.1, taking strength = strong")
         strength = 'strong'
 
 # Generate power spectra
@@ -326,7 +324,7 @@ def all_generate_ps_prace(save_ids=['', ''], show=True, debug: bool = False):
         return v2_list, Omgw_scaled_list, debug_data
     return v2_list, Omgw_scaled_list
 
-    
+
 def get_yaxis_limits(ps_type,strength='weak'):
     if strength == 'weak':     
         if ps_type=='v':
@@ -359,7 +357,7 @@ def get_yaxis_limits(ps_type,strength='weak'):
             p_min = 1e-5
             p_max = 1e-1
     else:
-        sys.stderr.write('get_yaxis_limits: warning: strength = [ *weak | inter | strong]')
+        logger.warning("strength = [ *weak | inter | strong]")
         if ps_type=='v':
             p_min = 1e-8
             p_max = 1e-3
@@ -381,7 +379,7 @@ def get_ymax_location(x, y):
     xmax = x[np.where(y == ymax)][0]
     return np.array([xmax, ymax])
 
-    
+
 def plot_guide_power_law_prace(ax, x, y, n, position, shifts=None ):
     # Wrapper for plot_guide_power_law, with power laws and line 
     # shifts appropriate for velocity and GW spectra of prace runs
@@ -399,7 +397,7 @@ def plot_guide_power_law_prace(ax, x, y, n, position, shifts=None ):
             txt_shift=[0.5, 0.5]
             xloglen = -1
         else:
-            sys.exit('plot_guide_power_law_prace: error: position not recognised')
+            raise ValueError("Position not recognised")
     else:
         line_shift = shifts[0]
         txt_shift = shifts[1]
@@ -410,7 +408,7 @@ def plot_guide_power_law_prace(ax, x, y, n, position, shifts=None ):
         elif position=='low':
             xloglen = -1
         else:
-            sys.exit('plot_guide_power_law_prace: error: position not recognised')
+            raise ValueError(f"Position not recognised: {position}")
 
     max_loc = get_ymax_location(x, y)
 
@@ -420,7 +418,7 @@ def plot_guide_power_law_prace(ax, x, y, n, position, shifts=None ):
 
     return power_law_loc
 
-    
+
 def plot_guide_power_law(ax, loc, power, xloglen=1, txt='', txt_shift=[1, 1], col='k', ls='-'):
     # Plot a guide power law going through loc[0], loc[1] with index power
     # Optional annotation at (loc[0]*txt_shift[0], loc[1]*txt_shift[1])
@@ -454,7 +452,7 @@ def plot_guide_power_laws_ssm(f, z, pow, ps_type='v', inter_flag=False):
     else:
         n_lo, n_med, n_hi = tuple(ps_type)
 
-    sys.stderr.write('plot_guide_power_laws_ssm: Plotting guide power laws\n')
+    logger.debug("Plotting guide power laws")
 
     high_peak  = np.where(z > x_high)
     plot_guide_power_law_prace(f.axes[0], z[high_peak], pow[high_peak], n_hi, 'high', 
@@ -478,7 +476,7 @@ def plot_guide_power_laws_prace(f_v, f_gw, z, pow_v, y, pow_gw,
     x_high = 10
     x_low  = 2
     [nv_lo, ngw_lo] = np_lo
-    sys.stderr.write('Plotting guide power laws\n')
+    logger.debug("Plotting guide power laws")
     high_peak_v  = np.where(z > x_high)
     high_peak_gw = np.where(y > x_high)
     plot_guide_power_law_prace(f_v.axes[0], z[high_peak_v], pow_v[high_peak_v], -1, 'high', 
@@ -501,5 +499,3 @@ def plot_guide_power_laws_prace(f_v, f_gw, z, pow_v, y, pow_gw,
                                shifts=[[0.6,0.25],[0.5,0.08]])
 
     return f_v, f_gw
-
-    

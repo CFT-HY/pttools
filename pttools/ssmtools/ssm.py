@@ -1,6 +1,6 @@
 """Sound shell model functions"""
 
-import sys
+import logging
 
 import numpy as np
 from scipy.optimize import fsolve
@@ -9,6 +9,8 @@ import pttools.type_hints as th
 from pttools import bubble
 from . import calculators
 from . import const
+
+logger = logging.getLogger(__name__)
 
 
 def A2_ssm_func(
@@ -47,9 +49,7 @@ def A2_ssm_func(
         A2 = 0.25 * (df_dz ** 2)
         A2 = A2 + 0.25 * (dg_dz ** 2 / (const.cs0 * z) ** 2)
     else:
-        sys.stderr.write('A2_ssm_func: warning: method not known, should be\n')
-        sys.stderr.write('             [e_conserving | f_only | with_g]\n')
-        sys.stderr.write('             defaulting to e_conserving\n')
+        logger.warning("Method not known, should be [e_conserving | f_only | with_g]. Defaulting to e_conserving.")
         A2 = A2_e_conserving(z, vw, alpha, npt)
 
     return A2
@@ -127,8 +127,8 @@ def A2_e_conserving_file(
         with open(filename) as f:
             t = float(f.readline())
         r, v_all, e_all = np.loadtxt(filename, usecols=(0, 1, 4), unpack=True, skiprows=skip)
-    except IOError:
-        sys.exit('ssmtools.A2_e_conserving_file: error loading file:' + filename)
+    except IOError as error:
+        raise IOError(f"Error loading file: \"{filename}\"") from error
 
     xi_all = r / t
     wh_xi_lt1 = np.where(xi_all < 1.)
@@ -240,8 +240,8 @@ def f_file(
     print('ssmtools.f_file: loading v(xi) from {} at time {}'.format(filename, t))
     try:
         r, v_all = np.loadtxt(filename, usecols=(0, 1), unpack=True, skiprows=skip)
-    except IOError:
-        sys.exit('ssmtools.f_file: error loading file:' + filename)
+    except IOError as error:
+        raise IOError(f"Error loading file: \"{filename}\"") from error
 
     xi_all = r / t
     wh_xi_lt1 = np.where(xi_all < 1.)

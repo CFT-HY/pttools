@@ -4,7 +4,7 @@ Now in parametric form (Jacky Lindsay and Mike Soughton MPhys project 2017-18)
 # RHS is Eq (33) in Espinosa et al (plus dw/dt not written there)
 """
 
-import sys
+import logging
 import typing as tp
 
 import numpy as np
@@ -18,6 +18,8 @@ from . import check
 from . import const
 from . import props
 from . import transition
+
+logger = logging.getLogger(__name__)
 
 
 def df_dtau(y: np.ndarray, t: float, cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag) -> tp.Tuple[float, float, float]:
@@ -79,7 +81,7 @@ def fluid_shell(
     #    check_physical_params([v_wall,alpha_n])
     sol_type = transition.identify_solution_type(v_wall, alpha_n)
     if sol_type == boundary.SolutionType.ERROR:
-        sys.stderr.write('fluid_shell: giving up because of identify_solution_type error')
+        logger.error(f"Giving up because of identify_solution_type error")
         return np.nan, np.nan, np.nan
     else:
         al_p = alpha.find_alpha_plus(v_wall, alpha_n, n_xi)
@@ -123,7 +125,7 @@ def fluid_shell_alpha_plus(
         sol_type = transition.identify_solution_type_alpha_plus(v_w, al_p)
 
     if sol_type == boundary.SolutionType.ERROR:
-        sys.stderr.write('fluid_shell_alpha_plus: giving up because of identify_solution_type error')
+        logger.error("Giving up because of identify_solution_type error")
         return np.nan, np.nan, np.nan
 
     # Solve boundary conditions at wall
@@ -223,11 +225,11 @@ def trim_fluid_wall_to_cs(
                 break
 
     if n_stop_index == 0:
-        sys.stderr.write('trim_fluid_wall_to_cs: warning: integation gave v < 0 or xi <= cs\n')
-        sys.stderr.write('     sol_type: {}, v_wall: {}, xi[0] = {}, v[] = {}\n'.format(
-            sol_type, v_wall, xi[0], v[0]))
-        sys.stderr.write(
-            '     Fluid profile has only one element between vw and cs. Fix implemented by adding one extra point.\n')
+        logger.warning(
+            "Integation gave v < 0 or xi <= cs. "
+            f"sol_type: {sol_type}, v_wall: {v_wall}, xi[0] = {xi[0]}, v[] = {v[0]}. "
+            "Fluid profile has only one element between vw and cs. Fix implemented by adding one extra point."
+        )
         n_stop = 1
     else:
         n_stop = n_stop_index
@@ -258,10 +260,10 @@ def trim_fluid_wall_to_shock(
                 break
 
     if n_shock_index == 0:
-        sys.stderr.write('trim_fluid_wall_to_shock: warning: v[0] < v_shock(xi[0]\n')
-        sys.stderr.write('     sol_type: {}, xi[0] = {}, v[0] = {}, v_sh(xi[0]) = {}\n'.format(
-            sol_type, xi[0], v[0], props.v_shock(xi[0])))
-        sys.stderr.write('     Shock profile has only one element. Fix implemented by adding one extra point.\n')
+        logger.warning(
+            "v[0] < v_shock(xi[0]). "
+            f"sol_type: {sol_type}, xi[0] = {xi[0]}, v[0] = {v[0]}, v_sh(xi[0]) = {props.v_shock(xi[0])}. "
+            "Shock profile has only one element. Fix implemented by adding one extra point.")
         n_shock = 1
     else:
         n_shock = n_shock_index

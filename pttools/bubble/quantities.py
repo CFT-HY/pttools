@@ -1,6 +1,7 @@
 """Functions for calculating quantities derived from solutions"""
 
-import sys
+import logging
+
 import typing as tp
 
 import numpy as np
@@ -24,6 +25,8 @@ INTEGRAND_TYPE = tp.Union[
         float
     ]
 ]
+
+logger = logging.getLogger(__name__)
 
 
 def split_integrate(
@@ -173,7 +176,7 @@ def get_ke_frac_new(
         else:
             ke[...] = np.nan
         if verbosity > 0:
-            sys.stderr.write("{:8.6f} {:8.6f} {} \n".format(vw, alpha_n, ke))
+            logger.debug(f"{vw:8.6f} {alpha_n:8.6f} {ke}")
 
     # Symmetric phase energy density
     e_s = bag.e(w[-1], 0, bag.theta_bag(w[-1], 0, alpha_n))
@@ -209,7 +212,7 @@ def get_ke_de_frac(
             ke[...] = np.nan
             de[...] = np.nan
         if verbosity > 0:
-            sys.stderr.write("{:8.6f} {:8.6f} {} {}\n".format(vw, alpha_n, ke, de))
+            logger.debug(f"{vw:8.6f} {alpha_n:8.6f} {ke} {de}")
 
     if isinstance(v_wall, np.ndarray):
         ke_out = it.operands[1]
@@ -241,7 +244,7 @@ def get_ubarf2(
         else:
             Ubarf2[...] = np.nan
         if verbosity > 0:
-            sys.stderr.write("{:8.6f} {:8.6f} {} \n".format(vw, alpha_n, Ubarf2))
+            logger.debug(f"{vw:8.6f} {alpha_n:8.6f} {Ubarf2}")
 
     # Ubarf2 is stored in it.operands[1]
     if isinstance(v_wall, np.ndarray):
@@ -276,7 +279,7 @@ def get_ubarf2_new(
         else:
             Ubarf2[...] = np.nan
         if verbosity > 0:
-            sys.stderr.write("{:8.6f} {:8.6f} {} \n".format(vw, alpha_n, Ubarf2))
+            logger.debug(f"{vw:8.6f} {alpha_n:8.6f} {Ubarf2}")
 
     # Ubarf2 is stored in it.operands[1]
     if isinstance(v_wall, np.ndarray):
@@ -341,7 +344,7 @@ def get_kappa_de(
             kappa[...] = np.nan
             de[...] = np.nan
         if verbosity > 0:
-            sys.stderr.write("{:8.6f} {:8.6f} {} {}\n".format(vw, alpha_n, kappa, de))
+            logger.debug(f"{vw:8.6f} {alpha_n:8.6f} {kappa} {de}")
 
     if isinstance(v_wall, np.ndarray):
         kappa_out = it.operands[1]
@@ -377,7 +380,7 @@ def get_kappa_dq(
             kappa[...] = np.nan
             dq[...] = np.nan
         if verbosity > 0:
-            sys.stderr.write("{:8.6f} {:8.6f} {} {} \n".format(vw, alpha_n, kappa, dq))
+            logger.debug(f"{vw:8.6f} {alpha_n:8.6f} {kappa} {dq}")
 
     if isinstance(v_wall, np.ndarray):
         kappa_out = it.operands[1]

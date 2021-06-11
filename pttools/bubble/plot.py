@@ -1,4 +1,3 @@
-import sys
 import typing as tp
 
 import matplotlib as mpl
@@ -67,9 +66,8 @@ def plot_fluid_shell(
 
     sol_type = transition.identify_solution_type(v_wall, alpha_n)
 
-    if sol_type == boundary.SolutionType.ERROR:
-        sys.stderr.write('shell_plot: error: no solution for v_wall = {}, alpha_n = {}\n'.format(v_wall, alpha_n))
-        sys.exit(1)
+    if sol_type is boundary.SolutionType.ERROR:
+        raise RuntimeError(f"No solution for v_wall = {v_wall}, alpha_n = {alpha_n}")
 
     v, w, xi = fluid.fluid_shell(v_wall, alpha_n, Np)
 
@@ -242,9 +240,7 @@ def plot_fluid_shells(
         sol_type = transition.identify_solution_type(v_wall, alpha_n)
 
         if sol_type == boundary.SolutionType.ERROR:
-            sys.stderr.write(
-                'plot_fluid_shells: error: no solution for v_wall = {}, alpha_n = {}\n'.format(v_wall, alpha_n))
-            sys.exit(1)
+            raise RuntimeError(f"No solution for v_wall = {v_wall}, alpha_n = {alpha_n}.")
 
         v, w, xi = fluid.fluid_shell(v_wall, alpha_n, Np)
         n_cs = np.int(np.floor(const.cs0 * Np))

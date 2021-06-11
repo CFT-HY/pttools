@@ -2,10 +2,7 @@
 from __future__ import absolute_import, division, print_function
 
 import io
-import os
-import sys
-sys.path.append('../../../')
-
+import logging
 
 import numpy as np
 import matplotlib as mpl
@@ -18,6 +15,8 @@ from test_utils import TEST_DATA_PATH
 
 print('Importing {}'.format(ssm.__file__))
 print('Importing {}'.format(b.__file__))
+
+logger = logging.getLogger(__name__)
 
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
@@ -815,7 +814,7 @@ def plot_and_save(vw, alpha, method='e_conserving', v_xi_file=None, suffix=None)
     elif alpha < 0.1:  # intermediate transition
         strength = 'inter'
     else:
-        sys.stderr.write('plot_and_save: warning: alpha > 0.1, taking strength = inter')
+        logger.warning("alpha > 0.1, taking strength = inter")
 
     f1 = plt.figure(figsize=[8, 4])
     ax_v = plt.gca()
@@ -995,7 +994,7 @@ def get_yaxis_limits(ps_type,strength='weak'):
             p_min = 1e-5
             p_max = 1e-1
     else:
-        sys.stderr.write('get_yaxis_limits: warning: strength = [ *weak | inter | strong]')
+        logger.warning("warning: strength = [ *weak | inter | strong]")
         if ps_type=='v':
             p_min = 1e-8
             p_max = 1e-3
@@ -1035,7 +1034,7 @@ def plot_guide_power_law_prace(ax, x, y, n, position, shifts=None ):
             txt_shift=[0.5, 0.5]
             xloglen = -1
         else:
-            sys.exit('plot_guide_power_law_prace: error: position not recognised')
+            raise ValueError("Position not recognised")
     else:
         line_shift = shifts[0]
         txt_shift = shifts[1]
@@ -1046,7 +1045,7 @@ def plot_guide_power_law_prace(ax, x, y, n, position, shifts=None ):
         elif position=='low':
             xloglen = -1
         else:
-            sys.exit('plot_guide_power_law_prace: error: position not recognised')
+            raise ValueError("Position not recognised")
 
     max_loc = get_ymax_location(x, y)
 
@@ -1090,7 +1089,7 @@ def plot_guide_power_laws_ssm(f, z, pow, ps_type='v', inter_flag=False):
     else:
         n_lo, n_med, n_hi = tuple(ps_type)
 
-    sys.stderr.write('plot_guide_power_laws_ssm: Plotting guide power laws\n')
+    logger.debug("Plotting guide power laws.")
 
     high_peak  = np.where(z > x_high)
     plot_guide_power_law_prace(f.axes[0], z[high_peak], pow[high_peak], n_hi, 'high', 
@@ -1114,7 +1113,7 @@ def plot_guide_power_laws_prace(f_v, f_gw, z, pow_v, y, pow_gw,
     x_high = 10
     x_low  = 2
     [nv_lo, ngw_lo] = np_lo
-    sys.stderr.write('Plotting guide power laws\n')
+    logger.debug("Plotting guide power laws.")
     high_peak_v  = np.where(z > x_high)
     high_peak_gw = np.where(y > x_high)
     plot_guide_power_law_prace(f_v.axes[0], z[high_peak_v], pow_v[high_peak_v], -1, 'high', 
@@ -1137,5 +1136,3 @@ def plot_guide_power_laws_prace(f_v, f_gw, z, pow_v, y, pow_gw,
                                shifts=[[0.6,0.25],[0.5,0.08]])
 
     return f_v, f_gw
-
-    
