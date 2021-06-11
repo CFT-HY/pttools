@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from . import approx
+from . import boundary
 from . import check
 from . import const
 from . import fluid
@@ -64,9 +65,9 @@ def plot_fluid_shell(
     #    high_v_plot = 0.8 # Above which plot v ~ xi approximation
     #    low_v_plot = 0.2  # Below which plot  low v approximation
 
-    wall_type = transition.identify_wall_type(v_wall, alpha_n)
+    sol_type = transition.identify_solution_type(v_wall, alpha_n)
 
-    if wall_type == 'Error':
+    if sol_type == boundary.SolutionType.ERROR:
         sys.stderr.write('shell_plot: error: no solution for v_wall = {}, alpha_n = {}\n'.format(v_wall, alpha_n))
         sys.exit(1)
 
@@ -118,13 +119,13 @@ def plot_fluid_shell(
             v_wall, alpha_n, alpha_plus, r, xi[-2]), size=16)
     plt.plot(xi, v, 'b', label=r'$v(\xi)$')
 
-    if not wall_type == 'Detonation':
+    if not sol_type == boundary.SolutionType.DETON:
         plt.plot(xi_even[n_cs:], v_sh[n_cs:], 'k--', label=r'$v_{\rm sh}(\xi_{\rm sh})$')
         if high_v_approx:
             plt.plot(xi[n_wall:n_sh], v_approx, 'b--', label=r'$v$ ($v < \xi$ approx)')
             plt.plot(xi, xi, 'k--', label=r'$v = \xi$')
 
-    if not wall_type == 'Deflagration':
+    if not sol_type == boundary.SolutionType.SUB_DEF:
         v_minus_max = relativity.lorentz(xi_even, const.cs0)
         plt.plot(xi_even[n_cs:], v_minus_max[n_cs:], 'k-.', label=r'$\mu(\xi,c_{\rm s})$')
 
@@ -147,7 +148,7 @@ def plot_fluid_shell(
     plt.plot(xi, np.ones_like(xi) * w[-1], '--', color='0.5')
     plt.plot(xi, w, 'b', label=r'$w(\xi)$')
 
-    if not wall_type == 'Detonation':
+    if not sol_type == boundary.SolutionType.DETON:
         plt.plot(xi_even[n_cs:], w_sh[n_cs:], 'k--', label=r'$w_{\rm sh}(\xi_{\rm sh})$')
 
         if high_v_approx:
@@ -238,9 +239,9 @@ def plot_fluid_shells(
     for v_wall, alpha_n in zip(v_wall_list, alpha_n_list):
         check.check_physical_params([v_wall, alpha_n])
 
-        wall_type = transition.identify_wall_type(v_wall, alpha_n)
+        sol_type = transition.identify_solution_type(v_wall, alpha_n)
 
-        if wall_type == 'Error':
+        if sol_type == boundary.SolutionType.ERROR:
             sys.stderr.write(
                 'plot_fluid_shells: error: no solution for v_wall = {}, alpha_n = {}\n'.format(v_wall, alpha_n))
             sys.exit(1)
@@ -268,9 +269,9 @@ def plot_fluid_shells(
 
         # First velocity
         ax[0, n].plot(xi, v, 'b')
-        if not wall_type == 'Detonation':
+        if not sol_type == boundary.SolutionType.DETON:
             ax[0, n].plot(xi_even[n_cs:], v_sh[n_cs:], 'k--', label=r'$v_{\rm sh}(\xi_{\rm sh})$')
-        if not wall_type == 'Deflagration':
+        if not sol_type == boundary.SolutionType.SUB_DEF:
             v_minus_max = relativity.lorentz(xi_even, const.cs0)
             ax[0, n].plot(xi_even[n_cs:], v_minus_max[n_cs:], 'k-.', label=r'$\mu(\xi,c_{\rm s})$')
 
@@ -289,7 +290,7 @@ def plot_fluid_shells(
         # Then enthalpy
         #        ax[1,n].plot(xi, np.ones_like(xi)*w[-1], '--', color='0.5')
         ax[1, n].plot(xi, w, 'b')
-        if not wall_type == 'Detonation':
+        if not sol_type == boundary.SolutionType.DETON:
             ax[1, n].plot(xi_even[n_cs:n_sh], w_sh[n_cs:n_sh], 'k--', label=r'$w_{\rm sh}(\xi_{\rm sh})$')
         else:
             wmax_det = (xi_even / const.cs0) * relativity.gamma2(xi_even) / relativity.gamma2(const.cs0)

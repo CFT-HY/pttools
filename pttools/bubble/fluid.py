@@ -77,14 +77,14 @@ def fluid_shell(
      Option to change xi resolution n_xi
     """
     #    check_physical_params([v_wall,alpha_n])
-    wall_type = transition.identify_wall_type(v_wall, alpha_n)
-    if wall_type == 'Error':
-        sys.stderr.write('fluid_shell: giving up because of identify_wall_type error')
+    sol_type = transition.identify_solution_type(v_wall, alpha_n)
+    if sol_type == boundary.SolutionType.ERROR:
+        sys.stderr.write('fluid_shell: giving up because of identify_solution_type error')
         return np.nan, np.nan, np.nan
     else:
         al_p = alpha.find_alpha_plus(v_wall, alpha_n, n_xi)
         if not np.isnan(al_p):
-            return fluid_shell_alpha_plus(v_wall, al_p, wall_type, n_xi)
+            return fluid_shell_alpha_plus(v_wall, al_p, sol_type, n_xi)
         else:
             return np.nan, np.nan, np.nan
 
@@ -92,7 +92,7 @@ def fluid_shell(
 def fluid_shell_alpha_plus(
         v_wall: th.FLOAT_OR_ARR,
         alpha_plus: th.FLOAT_OR_ARR,
-        wall_type: str = "Calculate",
+        sol_type: boundary.SolutionType = boundary.SolutionType.UNKNOWN,
         n_xi: int = const.N_XI_DEFAULT,
         w_n: float = 1,
         cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -101,7 +101,7 @@ def fluid_shell_alpha_plus(
      Where v=0 (behind and ahead of shell) uses only two points.
      v_wall and alpha_plus must be scalars, and are converted from 1-element arrays if needed.
      Options:
-         wall_type (string) - specify wall type if more than one permitted.
+         sol_type (string) - specify wall type if more than one permitted.
          n_xi (int) - increase resolution
          w_n - specify enthalpy outside fluid shell
          cs2_fun - sound speed squared as a function of enthalpy, default
@@ -119,15 +119,15 @@ def fluid_shell_alpha_plus(
     else:
         v_w = v_wall
 
-    if wall_type == "Calculate":
-        wall_type = transition.identify_wall_type_alpha_plus(v_w, al_p)
+    if sol_type == boundary.SolutionType.UNKNOWN:
+        sol_type = transition.identify_solution_type_alpha_plus(v_w, al_p)
 
-    if wall_type == 'Error':
-        sys.stderr.write('fluid_shell_alpha_plus: giving up because of identify_wall_type error')
+    if sol_type == boundary.SolutionType.ERROR:
+        sys.stderr.write('fluid_shell_alpha_plus: giving up because of identify_solution_type error')
         return np.nan, np.nan, np.nan
 
     # Solve boundary conditions at wall
-    vfp_w, vfm_w, vfp_p, vfm_p = boundary.fluid_speeds_at_wall(v_w, al_p, wall_type)
+    vfp_w, vfm_w, vfp_p, vfm_p = boundary.fluid_speeds_at_wall(v_w, al_p, sol_type)
     wp = 1.0  # Nominal value - will be rescaled later
     wm = wp / boundary.enthalpy_ratio(vfm_w, vfp_w)  # enthalpy just behind wall
 
@@ -141,15 +141,15 @@ def fluid_shell_alpha_plus(
     wb = np.ones_like(xib) * wm
 
     # Integrate forward and find shock.
-    if not wall_type == 'Detonation':
+    if not sol_type == boundary.SolutionType.DETON:
         # First go
         v, w, xi, t = fluid_integrate_param(vfp_p, wp, v_w, -const.T_END_DEFAULT, const.N_XI_DEFAULT, cs2_fun)
-        v, w, xi, t = trim_fluid_wall_to_shock(v, w, xi, t, wall_type)
+        v, w, xi, t = trim_fluid_wall_to_shock(v, w, xi, t, sol_type)
         # Now refine so that there are ~N points between wall and shock.  A bit excessive for thin
         # shocks perhaps, but better safe than sorry. Then improve final point with shock_zoom...
         t_end_refine = t[-1]
         v, w, xi, t = fluid_integrate_param(vfp_p, wp, v_w, t_end_refine, n_xi, cs2_fun)
-        v, w, xi, t = trim_fluid_wall_to_shock(v, w, xi, t, wall_type)
+        v, w, xi, t = trim_fluid_wall_to_shock(v, w, xi, t, sol_type)
         v, w, xi = props.shock_zoom_last_element(v, w, xi)
         # Now complete to xi = 1
         vf = np.concatenate((v, vf))
@@ -163,15 +163,15 @@ def fluid_shell_alpha_plus(
         xif = np.concatenate((xi, xif))
 
     # Integrate backward to sound speed.
-    if not wall_type == 'Deflagration':
+    if not sol_type == boundary.SolutionType.SUB_DEF:
         # First go
         v, w, xi, t = fluid_integrate_param(vfm_p, wm, v_w, -const.T_END_DEFAULT, const.N_XI_DEFAULT, cs2_fun)
-        v, w, xi, t = trim_fluid_wall_to_cs(v, w, xi, t, v_wall, wall_type)
+        v, w, xi, t = trim_fluid_wall_to_cs(v, w, xi, t, v_wall, sol_type)
         #    # Now refine so that there are ~N points between wall and point closest to cs
         #    # For walls just faster than sound, will give very (too?) fine a resolution.
         #        t_end_refine = t[-1]
         #        v,w,xi,t = fluid_integrate_param(vfm_p, wm, v_w, t_end_refine, n_xi, cs2_fun)
-        #        v, w, xi, t = trim_fluid_wall_to_cs(v, w, xi, t, v_wall, wall_type)
+        #        v, w, xi, t = trim_fluid_wall_to_cs(v, w, xi, t, v_wall, sol_type)
 
         # Now complete to xi = 0
         vb = np.concatenate((v, vb))
@@ -200,7 +200,7 @@ def trim_fluid_wall_to_cs(
         w: np.ndarray,
         xi: np.ndarray,
         t: np.ndarray,
-        v_wall: th.FLOAT_OR_ARR, wall_type: str,
+        v_wall: th.FLOAT_OR_ARR, sol_type: boundary.SolutionType,
         dxi_lim: float = const.dxi_small,
         cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
@@ -215,7 +215,7 @@ def trim_fluid_wall_to_cs(
 
     n_stop_index = -2
     # n_stop = 0
-    if not wall_type == 'Deflagration':
+    if not sol_type == boundary.SolutionType.SUB_DEF:
         it = np.nditer([v, w, xi], flags=['c_index'])
         for vv, ww, x in it:
             if vv <= 0 or x ** 2 <= cs2_fun(ww):
@@ -224,15 +224,15 @@ def trim_fluid_wall_to_cs(
 
     if n_stop_index == 0:
         sys.stderr.write('trim_fluid_wall_to_cs: warning: integation gave v < 0 or xi <= cs\n')
-        sys.stderr.write('     wall_type: {}, v_wall: {}, xi[0] = {}, v[] = {}\n'.format(
-            wall_type, v_wall, xi[0], v[0]))
+        sys.stderr.write('     sol_type: {}, v_wall: {}, xi[0] = {}, v[] = {}\n'.format(
+            sol_type, v_wall, xi[0], v[0]))
         sys.stderr.write(
             '     Fluid profile has only one element between vw and cs. Fix implemented by adding one extra point.\n')
         n_stop = 1
     else:
         n_stop = n_stop_index
 
-    if (xi[0] == v_wall) and not (wall_type == "Detonation"):
+    if (xi[0] == v_wall) and not (sol_type == boundary.SolutionType.DETON):
         n_start = 1
         n_stop += 1
 
@@ -244,13 +244,13 @@ def trim_fluid_wall_to_shock(
         w: np.ndarray,
         xi: np.ndarray,
         t: np.ndarray,
-        wall_type: str) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        sol_type: boundary.SolutionType) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
      Trims fluid variable arrays (v, w, xi) so last element is just ahead of shock
     """
     n_shock_index = -2
     # n_shock = 0
-    if not wall_type == 'Detonation':
+    if not sol_type == boundary.SolutionType.DETON:
         it = np.nditer([v, xi], flags=['c_index'])
         for vv, x in it:
             if vv <= props.v_shock(x):
@@ -259,8 +259,8 @@ def trim_fluid_wall_to_shock(
 
     if n_shock_index == 0:
         sys.stderr.write('trim_fluid_wall_to_shock: warning: v[0] < v_shock(xi[0]\n')
-        sys.stderr.write('     wall_type: {}, xi[0] = {}, v[0] = {}, v_sh(xi[0]) = {}\n'.format(
-            wall_type, xi[0], v[0], props.v_shock(xi[0])))
+        sys.stderr.write('     sol_type: {}, xi[0] = {}, v[0] = {}, v_sh(xi[0]) = {}\n'.format(
+            sol_type, xi[0], v[0], props.v_shock(xi[0])))
         sys.stderr.write('     Shock profile has only one element. Fix implemented by adding one extra point.\n')
         n_shock = 1
     else:

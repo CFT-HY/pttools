@@ -5,6 +5,7 @@ import typing as tp
 import numpy as np
 
 import pttools.type_hints as th
+from . import boundary
 from . import check
 from . import const
 
@@ -53,7 +54,7 @@ def w_shock(xi: th.FLOAT_OR_ARR, w_n: float = 1.) -> th.FLOAT_OR_ARR:
     return w_sh
 
 
-def find_shock_index(v_f: np.ndarray, xi: np.ndarray, v_wall: float, wall_type: str) -> int:
+def find_shock_index(v_f: np.ndarray, xi: np.ndarray, v_wall: float, sol_type: boundary.SolutionType) -> int:
     """
      Array index of shock from first point where fluid velocity v_f goes below v_shock
      For detonation, returns wall position.
@@ -61,7 +62,7 @@ def find_shock_index(v_f: np.ndarray, xi: np.ndarray, v_wall: float, wall_type: 
     check.check_wall_speed(v_wall)
     n_shock = 0
 
-    if not (wall_type == "Detonation"):
+    if not (sol_type == boundary.SolutionType.DETON):
         it = np.nditer([v_f, xi], flags=['c_index'])
         for v, x in it:
             if x > v_wall:

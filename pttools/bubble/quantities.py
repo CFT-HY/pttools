@@ -7,6 +7,7 @@ import numpy as np
 
 import pttools.type_hints as th
 from . import bag
+from . import boundary
 from . import check
 from . import const
 from . import fluid
@@ -164,8 +165,8 @@ def get_ke_frac_new(
     """
     it = np.nditer([v_wall, None])
     for vw, ke in it:
-        wall_type = transition.identify_wall_type(vw, alpha_n)
-        if not wall_type == 'Error':
+        sol_type = transition.identify_solution_type(vw, alpha_n)
+        if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid.fluid_shell(vw, alpha_n, n_xi)
             ke[...] = mean_kinetic_energy(v, w, xi, vw)
@@ -196,9 +197,9 @@ def get_ke_de_frac(
     """
     it = np.nditer([v_wall, None, None])
     for vw, ke, de in it:
-        wall_type = transition.identify_wall_type(vw, alpha_n)
+        sol_type = transition.identify_solution_type(vw, alpha_n)
 
-        if not wall_type == 'Error':
+        if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid.fluid_shell(vw, alpha_n, n_xi)
             # Esp+ epsilon is alpha_n * 0.75*w_n
@@ -232,8 +233,8 @@ def get_ubarf2(
     """
     it = np.nditer([v_wall, None])
     for vw, Ubarf2 in it:
-        wall_type = transition.identify_wall_type(vw, alpha_n)
-        if not wall_type == 'Error':
+        sol_type = transition.identify_solution_type(vw, alpha_n)
+        if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid.fluid_shell(vw, alpha_n, n_xi)
             Ubarf2[...] = ubarf_squared(v, w, xi, vw)
@@ -267,8 +268,8 @@ def get_ubarf2_new(
 
     it = np.nditer([v_wall, None])
     for vw, Ubarf2 in it:
-        wall_type = transition.identify_wall_type(vw, alpha_n)
-        if not wall_type == 'Error':
+        sol_type = transition.identify_solution_type(vw, alpha_n)
+        if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to get Ubarf2
             ke_frac = get_ke_frac_new(vw, alpha_n)
             Ubarf2[...] = ke_frac / Gamma
@@ -297,9 +298,9 @@ def get_kappa(
     # NB was called get_kappa_arr
     it = np.nditer([v_wall, None])
     for vw, kappa in it:
-        wall_type = transition.identify_wall_type(vw, alpha_n)
+        sol_type = transition.identify_solution_type(vw, alpha_n)
 
-        if not wall_type == 'Error':
+        if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid.fluid_shell(vw, alpha_n, n_xi)
 
@@ -328,9 +329,9 @@ def get_kappa_de(
     """
     it = np.nditer([v_wall, None, None])
     for vw, kappa, de in it:
-        wall_type = transition.identify_wall_type(vw, alpha_n)
+        sol_type = transition.identify_solution_type(vw, alpha_n)
 
-        if not wall_type == 'Error':
+        if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid.fluid_shell(vw, alpha_n, n_xi)
             # Esp+ epsilon is alpha_n * 0.75*w_n
@@ -364,9 +365,9 @@ def get_kappa_dq(
     """
     it = np.nditer([v_wall, None, None])
     for vw, kappa, dq in it:
-        wall_type = transition.identify_wall_type(vw, alpha_n)
+        sol_type = transition.identify_solution_type(vw, alpha_n)
 
-        if not wall_type == 'Error':
+        if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid.fluid_shell(vw, alpha_n, n_xi)
             # Esp+ epsilon is alpha_n * 0.75*w_n

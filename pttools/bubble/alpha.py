@@ -8,6 +8,7 @@ import numpy as np
 import scipy.optimize as opt
 
 import pttools.type_hints as th
+from . import boundary
 from . import const
 from . import fluid
 from . import check
@@ -18,7 +19,7 @@ from . import transition
 def find_alpha_n(
         v_wall: th.FLOAT_OR_ARR,
         alpha_p: float,
-        wall_type: str = "Calculate",
+        sol_type: boundary.SolutionType = boundary.SolutionType.UNKNOWN,
         n_xi: int = const.N_XI_DEFAULT) -> float:
     """
      Calculates alpha_n from alpha_plus, for given v_wall.
@@ -28,9 +29,9 @@ def find_alpha_n(
      alpha_n is global strength parameter, alpha_plus the at-wall strength parameter.
     """
     check.check_wall_speed(v_wall)
-    if wall_type == "Calculate":
-        wall_type = transition.identify_wall_type_alpha_plus(v_wall, alpha_p)
-    _, w, xi = fluid.fluid_shell_alpha_plus(v_wall, alpha_p, wall_type, n_xi)
+    if sol_type == boundary.SolutionType.UNKNOWN:
+        sol_type = transition.identify_solution_type_alpha_plus(v_wall, alpha_p)
+    _, w, xi = fluid.fluid_shell_alpha_plus(v_wall, alpha_p, sol_type, n_xi)
     n_wall = props.find_v_index(xi, v_wall)
     return alpha_p * w[n_wall] / w[-1]
 
@@ -47,17 +48,17 @@ def find_alpha_plus(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float, n_xi: int = c
     for ap, vw in it:
         if alpha_n_given < alpha_n_max_detonation(vw):
             # Must be detonation
-            wall_type = 'Detonation'
+            sol_type = boundary.SolutionType.DETON
             ap[...] = alpha_n_given
         else:
             if alpha_n_given < alpha_n_max_deflagration(vw):
                 if vw <= const.cs0:
-                    wall_type = "Deflagration"
+                    sol_type = boundary.SolutionType.SUB_DEF
                 else:
-                    wall_type = "Hybrid"
+                    sol_type = boundary.SolutionType.HYBRID
 
                 def func(x):
-                    return find_alpha_n(vw, x, wall_type, n_xi) - alpha_n_given
+                    return find_alpha_n(vw, x, sol_type, n_xi) - alpha_n_given
 
                 a_initial_guess = alpha_plus_initial_guess(vw, alpha_n_given)
                 al_p = opt.fsolve(func, a_initial_guess, xtol=const.find_alpha_plus_tol, factor=0.1)[0]
@@ -107,16 +108,16 @@ def alpha_n_max_hybrid(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> float:
     """
      Calculates maximum alpha_n for given v_wall, assuming Hybrid fluid shell
     """
-    wall_type = transition.identify_wall_type_alpha_plus(v_wall, 1. / 3)
-    if wall_type == "Deflagration":
+    sol_type = transition.identify_solution_type_alpha_plus(v_wall, 1. / 3)
+    if sol_type == boundary.SolutionType.SUB_DEF:
         sys.stderr.write('alpha_n_max_hybrid: error: called with v_wall < cs\n')
         sys.stderr.write('     use alpha_n_max_deflagration instead\n')
         sys.exit(6)
 
     # Might have been returned as "Detonation, which takes precedence over Hybrid
-    wall_type = "Hybrid"
+    sol_type = boundary.SolutionType.HYBRID
     ap = 1. / 3 - 1e-8
-    _, w, xi = fluid.fluid_shell_alpha_plus(v_wall, ap, wall_type, n_xi)
+    _, w, xi = fluid.fluid_shell_alpha_plus(v_wall, ap, sol_type, n_xi)
     n_wall = props.find_v_index(xi, v_wall)
 
     # alpha_N = (w_+/w_N)*alpha_+
@@ -141,16 +142,16 @@ def alpha_n_max_deflagration(v_wall: th.FLOAT_OR_ARR, Np=const.N_XI_DEFAULT) -> 
      Works also for hybrids, as they are supersonic deflagrations
     """
     check.check_wall_speed(v_wall)
-    # wall_type_ = identify_wall_type(v_wall_, 1./3)
+    # sol_type_ = identify_solution_type(v_wall_, 1./3)
     it = np.nditer([None, v_wall], [], [['writeonly', 'allocate'], ['readonly']])
     for ww, vw in it:
         if vw > const.cs0:
-            wall_type = "Hybrid"
+            sol_type = boundary.SolutionType.HYBRID
         else:
-            wall_type = "Deflagration"
+            sol_type = boundary.SolutionType.SUB_DEF
 
         ap = 1. / 3 - 1.0e-10  # Warning - this is not safe.  Causes warnings for v low vw
-        _, w, xi = fluid.fluid_shell_alpha_plus(vw, ap, wall_type, Np)
+        _, w, xi = fluid.fluid_shell_alpha_plus(vw, ap, sol_type, Np)
         n_wall = props.find_v_index(xi, vw)
         ww[...] = w[n_wall + 1] * (1. / 3)
 
