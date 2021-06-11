@@ -31,3 +31,4 @@ fluidprofiles
 pow_*.txt
 pylint.txt
 test-output.txt
+test-results

@@ -118,7 +118,7 @@ jobs:
     - name: Install requirements
       run: |
         pip --cache-dir=.pip install --upgrade pip
-        pip --cache-dir=.pip install pytest pytest-cov pytest-pythonpath pytest-xdist
+        pip --cache-dir=.pip install pytest pytest-cov pytest-html pytest-pythonpath pytest-xdist
         pip --cache-dir=.pip install -r requirements.txt
     - name: Run tests with coverage
       # Without pytest-pythonpath the PYTHONPATH would have to be set manually
@@ -130,12 +130,13 @@ jobs:
       uses: actions/upload-artifact@v2
       if: ${{ matrix.python-version == env.PRIMARY_PYTHON_VERSION }}
       with:
-        name: Coverage
+        name: Test results
         path: |
-          test-output.txt
           coverage.xml
           coverage.json
           htmlcov
+          test-output.txt
+          test-results
         if-no-files-found: error
     - name: Upload results to Codecov
       uses: codecov/codecov-action@v1
