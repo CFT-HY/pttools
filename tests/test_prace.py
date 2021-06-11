@@ -4,7 +4,6 @@ import unittest
 import numpy as np
 
 import ssm_compare as scom
-import ssm_paper_utils as spu
 from test_utils import TEST_DATA_PATH
 
 
