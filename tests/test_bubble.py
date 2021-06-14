@@ -8,7 +8,8 @@ from test_utils import TEST_DATA_PATH
 
 
 class TestBubble(unittest.TestCase):
-    def test_bubble(self):
+    @staticmethod
+    def test_bubble():
         _, data = spu.do_all_plot_ps_1bubble(debug=True)
         data_summed = np.sum(data, axis=2)
         file_path = os.path.join(TEST_DATA_PATH, "bubble.txt")

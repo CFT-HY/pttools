@@ -1,7 +1,10 @@
-"""This module provides function for working with significant
-figures."""
-# import types,
-import re, string
+"""This module provides function for working with significant figures.
+
+Modified from
+https://bitbucket.org/hindmars/sound-shell-model/
+"""
+
+import re
 
 epat = re.compile(r'^([^e]+)e(.+)$')
 
@@ -12,7 +15,7 @@ def round_sig(x, n):
         raise TypeError("n must be an integer")
     try:
         x = float(x)
-    except:
+    except ValueError:
         raise TypeError("x must be a floating point object")
     form = "%0." + str(n - 1) + "e"
     st = form % x
@@ -47,7 +50,7 @@ def round_sig_signed(x, n):
         raise TypeError("n must be an integer")
     try:
         x = float(x)
-    except:
+    except ValueError:
         raise TypeError("x must be a floating point object")
     form = "%+0." + str(n - 1) + "e"
     st = form % x
@@ -87,7 +90,7 @@ def round_sig_error(x, ex, n, paren=False):
         stx = round_sig(x, sigfigs)
     else:
         num_after_dec = len(stex.split('.')[1])
-        stx = ("%%.%df" % num_after_dec) % (x)
+        stx = ("%%.%df" % num_after_dec) % x
     if paren:
         if stex.find('.') >= 0:
             stex = stex[stex.find('.') + 1:]
@@ -119,11 +122,11 @@ def format_table(cols, errors, n, labels=None, headers=None, latex=False):
                 raise ValueError("length of headers should be %d" % (ncols + 1))
         else:
             if len(headers) != ncols:
-                raise ValueError("length of headers should be %d" % (ncols))
+                raise ValueError("length of headers should be %d" % ncols)
 
     if labels is not None:
         if len(labels) != nrows:
-            raise ValueError("length of labels should be %d" % (nrows))
+            raise ValueError("length of labels should be %d" % nrows)
 
     strcols = []
     for col, error in zip(cols, errors):
@@ -135,17 +138,17 @@ def format_table(cols, errors, n, labels=None, headers=None, latex=False):
             strcols[-1].append(err)
 
     lengths = [max([len(item) for item in strcol]) for strcol in strcols]
-    format = ""
+    fmt = ""
     if labels is not None:
-        format += "%%%ds " % (max(map(len, labels)))
+        fmt += "%%%ds " % (max(map(len, labels)))
         if latex:
-            format += "& "
+            fmt += "& "
     for length in lengths:
-        format += "%%%ds " % (length)
+        fmt += "%%%ds " % length
         if latex:
-            format += "& "
+            fmt += "& "
     if latex:
-        format = format[:-2] + " \\\\"
+        fmt = fmt[:-2] + " \\\\"
     output = []
     if headers:
         if labels:
@@ -158,12 +161,12 @@ def format_table(cols, errors, n, labels=None, headers=None, latex=False):
             for head in headers:
                 hs.append(head)
                 hs.append('+/-')
-        output.append(format % tuple(hs))
+        output.append(fmt % tuple(hs))
     for i in range(nrows):
         if labels is not None:
-            output.append(format % tuple([labels[i]] + [strcol[i] for strcol in strcols]))
+            output.append(fmt % tuple([labels[i]] + [strcol[i] for strcol in strcols]))
         else:
-            output.append(format % tuple([strcol[i] for strcol in strcols]))
+            output.append(fmt % tuple([strcol[i] for strcol in strcols]))
     return output
 
 
@@ -179,9 +182,8 @@ def round_sig_error2(x, ex1, ex2, n):
         maxstex = round_sig(max(ex1, ex2), sigfigs)
     else:
         num_after_dec = len(minstex.split('.')[1])
-        stx = ("%%.%df" % num_after_dec) % (x)
+        stx = ("%%.%df" % num_after_dec) % x
         maxstex = ("%%.%df" % num_after_dec) % (max(ex1, ex2))
     if ex1 < ex2:
         return stx, minstex, maxstex
-    else:
-        return stx, maxstex, minstex
+    return stx, maxstex, minstex

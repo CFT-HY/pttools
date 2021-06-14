@@ -13,7 +13,7 @@ class TestPrace(unittest.TestCase):
         if not os.path.isdir(fluid_profiles_dir):
             print("Fluid profiles not found. Cannot execute PRACE tests.")
             return
-        v2_list, Omgw_scaled_list, data = scom.all_generate_ps_prace(save_ids=["test", "test"], show=False, debug=True)
+        v2_list, Omgw_scaled_list, data = scom.all_generate_ps_prace(save_ids=("test", "test"), show=False, debug=True)
         ref_path = os.path.join(TEST_DATA_PATH, "ps_prace.txt")
 
         test_data = np.concatenate([np.array([v2_list, Omgw_scaled_list]), data])

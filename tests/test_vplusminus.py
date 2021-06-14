@@ -16,8 +16,8 @@ class TestVPlusMinus(unittest.TestCase):
     def v_conversion(self, func: callable, ref_path: str, v_first: np.ndarray):
         data = [v_first]
         for i_alpha, alpha in enumerate(self.alpha_plus_list):
-            data.append(func(v_first, alpha, 'Detonation'))
-            data.append(func(v_first, alpha, 'Deflagration'))
+            data.append(func(v_first, alpha, bubble.SolutionType.DETON))
+            data.append(func(v_first, alpha, bubble.SolutionType.SUB_DEF))
 
         # Generate new reference data
         # np.savetxt(ref_path, np.array(data).T)
