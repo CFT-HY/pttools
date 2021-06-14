@@ -156,10 +156,10 @@ def generate_ps(
 
     # Now some saving if requested
     if save_ids[0] is not None or save_ids[1] is not None:
-        nz_string = 'nz{}k'.format(Np[0] // 1000)
-        nx_string = '_nx{}k'.format(Np[1] // 1000)
-        nT_string = '_nT{}-'.format(Np[2])
-        file_suffix = "vw{:3.2f}alpha{}_".format(vw, alpha) + const.NUC_STRING + nz_string + nx_string + nT_string
+        nz_string = f'nz{Np[0] // 1000}k'
+        nx_string = f'_nx{Np[1] // 1000}k'
+        nT_string = f'_nT{Np[2]}-'
+        file_suffix = f"vw{vw:3.2f}alpha{alpha}_" + const.NUC_STRING + nz_string + nx_string + nT_string
 
     if save_ids[0] is not None:
         data_file_suffix = file_suffix + save_ids[0] + '.txt'

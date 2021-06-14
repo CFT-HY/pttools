@@ -163,10 +163,10 @@ def make_1dh_compare_table(params_list, v2_list,
         Ubarf_1d_ssm = np.sqrt(bubble.get_ubarf2(vw, alpha))
         
         f.write(tu.tex_sf(100*alpha) + ' & ')
-        f.write('{:.2f}'.format(vw) + ' & ')
-        f.write('{:4.1f}'.format(np.sqrt(v2_sim)*1000) + ' & ')
-        f.write('{:4.1f}'.format(np.sqrt(v2_exp)*1000) + ' & ')
-        f.write('{:4.1f}'.format(1000*Ubarf_1d_ssm).replace('nan', '   ') + ' \\\\ \n')
+        f.write(f'{vw:.2f} & ')
+        f.write(f'{np.sqrt(v2_sim)*1000:4.1f} & ')
+        f.write(f'{np.sqrt(v2_exp)*1000:4.1f} & ')
+        f.write(f'{1000*Ubarf_1d_ssm:4.1f}'.replace('nan', '   ') + ' \\\\ \n')
         # f.write()
 
     f.write('\\hline\\hline\n')
@@ -239,23 +239,23 @@ def make_3dh_compare_table(params_list, v2_list, Omgw_list, p_list,
         # elif alpha < 0.1:
         #     factor = 1e7
         
-        # f.write('{:6}'.format(alpha) + ' & ')
+        # f.write('{alpha:6} & ')
         f.write(tu.tex_sf(100*alpha) + ' & ')
-        f.write('{:.2f}'.format(vw) + ' & ')
-        f.write('{:4.1f}'.format(1000*np.sqrt(v2_sim)) + ' & ')
-        f.write('{:4.1f}'.format(1000*Ubarf_prace[n]).replace('nan', '   ') + ' & ')
-        # f.write('{:4.1f}'.format(1000*Ubarf_1d_ssm).replace('nan','   ') + ' & ')
-        f.write('{:3.1f}'.format(100*Om_tilde) + ' & ')
-        f.write('{:3.1f}'.format(100*Om_tilde_prace[n]).replace('nan', '   ') + ' & ')
-        # f.write('{:.1f}'.format(A) + ' & ')
-        # f.write('{:.1f}'.format(A_prace[n]).replace('nan',8*' ') + ' & ')
+        f.write(f'{vw:.2f} & ')
+        f.write(f'{1000*np.sqrt(v2_sim):4.1f} & ')
+        f.write(f'{1000*Ubarf_prace[n]:4.1f}'.replace('nan', '   ') + ' & ')
+        # f.write(f'{1000*Ubarf_1d_ssm:4.1f}'.replace('nan','   ') + ' & ')
+        f.write(f'{100*Om_tilde:3.1f} & ')
+        f.write(f'{100*Om_tilde_prace[n]:3.1f}'.replace('nan', '   ') + ' & ')
+        # f.write(f'{A:.1f} & ')
+        # f.write(f'{A_prace[n]:.1f}'.replace('nan',8*' ') + ' & ')
         f.write(tu.tex_sf(A, mult='\\cdot') + ' & ')
         if A_prace[n] is not np.nan:
             f.write(tu.tex_sf(A_prace[n], mult='\\cdot') + ' & ')
         else:
             f.write(8*' ' + ' & ')
-        f.write('{:4.1f}'.format(z_peak) + ' & ')
-        f.write('{:4.1f}'.format(z_peak_prace[n]).replace('nan', '   ') + ' \\\\ \n')
+        f.write(f'{z_peak:4.1f} & ')
+        f.write(f'{z_peak_prace[n]:4.1f}'.replace('nan', '   ') + ' \\\\ \n')
         # f.write()
 
     f.write('\\hline\\hline \n')
@@ -316,23 +316,23 @@ def make_nuc_compare_table(params_list, v2_list, Omgw_list, p_sim_list, p_exp_li
         # elif alpha < 0.1:
         #     factor = 1e7
         
-        # f.write('{:6.2f}'.format(100*alpha) + ' & ')
+        # f.write(f'{100*alpha:6.2f} & ')
         f.write(tu.tex_sf(100*alpha) + ' & ')
-        f.write('{:.2f}'.format(vw) + ' & ')
-        # f.write('{:4.1f}'.format(np.sqrt(v2_sim)*1000) + ' & ')
-        # f.write('{:4.1f}'.format(np.sqrt(v2_exp)*1000) + ' & ')
-        f.write('{:3.1f}'.format(100*Om_tilde_sim) + ' & ')
-        f.write('{:3.1f}'.format(100*Om_tilde_exp) + ' & ')
-        # f.write('{:.1f}'.format(A) + ' & ')
-        # f.write('{:.1f}'.format(A_prace[n]).replace('nan',8*' ') + ' & ')
+        f.write(f'{vw:.2f} & ')
+        # f.write(f'{np.sqrt(v2_sim)*1000:4.1f} & ')
+        # f.write(f'{np.sqrt(v2_exp)*1000:4.1f} & ')
+        f.write(f'{100*Om_tilde_sim:3.1f} & ')
+        f.write(f'{100*Om_tilde_exp:3.1f} & ')
+        # f.write(f'{A:.1f} & ')
+        # f.write(f'{A_prace[n]:.1f}'.replace('nan',8*' ') + ' & ')
         f.write(tu.tex_sf(A_sim, mult='\\cdot') + ' & ')
         f.write(tu.tex_sf(A_exp, mult='\\cdot') + ' & ')
-        f.write('{:4.1f}'.format(z_peak_sim) + ' & ')
-        f.write('{:4.1f}'.format(z_peak_exp) + ' & ')
-        f.write('{:3.1f}'.format(z_break_exp) + ' & ')
-        f.write('{:3.1f}'.format(z_peak_exp * abs(vw - bubble.CS0) / vw) + ' \\\\ \n')
+        f.write(f'{z_peak_sim:4.1f} & ')
+        f.write(f'{z_peak_exp:4.1f} & ')
+        f.write(f'{z_break_exp:3.1f} & ')
+        f.write(f'{z_peak_exp * abs(vw - bubble.CS0) / vw :3.1f} \\\\ \n')
         # f.write()
-        
+
     f.write('\\hline\\hline\n')
     f.write('\\end{tabular} \n')
     if not isinstance(file_name, io.TextIOBase):
@@ -440,11 +440,11 @@ def plot_ps_compare_res(
         
         if save_id is not None:
 
-            nz_string = 'nz{}k'.format(Np[0] // 1000)
-            nx_string = '_nx{}k'.format(Np[1] // 1000)
-            nT_string = '_nT{}-'.format(Np[2])
+            nz_string = f'nz{Np[0] // 1000}k'
+            nx_string = f'_nx{Np[1] // 1000}k'
+            nT_string = f'_nT{Np[2]}-'
 
-            data_file_suffix = "vw{}alpha{}_".format(vw, alpha) + nuc_string \
+            data_file_suffix = f"vw{vw}alpha{alpha}_" + nuc_string \
                 + nz_string + nx_string + nT_string + save_id + '.txt'
             np.savetxt(MD_PATH + 'pow_v_' + data_file_suffix, np.stack((z, pow_v), axis=-1), fmt='%.18e %.18e')
             np.savetxt(MD_PATH + 'pow_gw_' + data_file_suffix, np.stack((y, pow_gw), axis=-1), fmt='%.18e %.18e')
@@ -452,9 +452,9 @@ def plot_ps_compare_res(
         else:
             save_id = ''
 
-        nz_string_all += '{}k'.format(Np[0] // 1000)
-        nx_string_all += '{}k'.format(Np[1] // 1000)
-        nT_string_all += '{}-'.format(Np[2])
+        nz_string_all += f'{Np[0] // 1000}k'
+        nx_string_all += f'{Np[1] // 1000}k'
+        nT_string_all += f'{Np[2]}-'
 
     with plt.rc_context({'legend.fontsize': 12}):
         f_v = plotting.plot_ps(
@@ -477,7 +477,7 @@ def plot_ps_compare_res(
 
     # Save graph if asked for
     if save_id is not None:
-        graph_file_suffix = "vw{:.2f}alpha{}_".format(vw, alpha) + nuc_string \
+        graph_file_suffix = f"vw{vw:.2f}alpha{alpha}_" + nuc_string \
                             + nz_string_all + nx_string_all + nT_string_all + save_id + '.' + const.FILE_TYPE
         f_v.savefig("pow_v_" + graph_file_suffix)
         f_gw.savefig("pow_gw_" + graph_file_suffix)
@@ -501,8 +501,8 @@ def plot_ps_1bubble(vw, alpha, save_id=None, graph_file_type=None, Np=const.NP_L
     
     z = np.logspace(np.log10(const.Z_MIN), np.log10(const.Z_MAX), Np[0])
     
-    nz_string = 'nz{}k_'.format(Np[0] // 1000)
-    nx_string = 'nx{}k-'.format(Np[1] // 1000)
+    nz_string = f'nz{Np[0] // 1000}k_'
+    nx_string = f'nx{Np[1] // 1000}k-'
 
     A2, fp2_2, lam2 = ssm.A2_e_conserving(z, vw, alpha, npt=Np[1:], ret_vals='all')
     
@@ -523,7 +523,7 @@ def plot_ps_1bubble(vw, alpha, save_id=None, graph_file_type=None, Np=const.NP_L
     
     # Save graph if asked for
     if graph_file_type is not None:
-        graph_file_suffix = "vw{:.2f}alpha{}_".format(vw, alpha)  \
+        graph_file_suffix = f"vw{vw:.2f}alpha{alpha}_"  \
             + nz_string + nx_string + save_id + '.' + graph_file_type
         f.savefig(MD_PATH + "one_bub_" + graph_file_suffix)
     
@@ -559,12 +559,11 @@ def plot_ps_compare_nuc(vw, alpha, save_id=None, graph_file_type=None):
 
     Np = const.NP_LIST[-1]
 
-    nz_string = 'nz{}k'.format(Np[0] // 1000)
-    nx_string = '_nx{}k'.format(Np[1] // 1000)
-    nT_string = '_nT{}-'.format(Np[2])
+    nz_string = f'nz{Np[0] // 1000}k'
+    nx_string = f'_nx{Np[1] // 1000}k'
+    nT_string = f'_nT{Np[2]}-'
 
     nuc_string_all = ''
-    
 
     for nuc_type, nuc_args in zip(nuc_type_list, nuc_args_list):
         z, pow_v, y, pow_gw = ps_from_ssm(vw, alpha, nuc_type, nuc_args, Np, method)
@@ -578,12 +577,10 @@ def plot_ps_compare_nuc(vw, alpha, save_id=None, graph_file_type=None):
             nuc_string += str(nuc_args[n]) + '_'
 
         if save_id is not None:
-
-            data_file_suffix = "vw{:.2f}alpha{}_".format(vw, alpha) + nuc_string \
+            data_file_suffix = f"vw{vw:.2f}alpha{alpha}_" + nuc_string \
                 + nz_string + nx_string + nT_string + save_id + '.txt'
             np.savetxt(MD_PATH + 'pow_v_' + data_file_suffix, np.stack((z, pow_v), axis=-1), fmt='%.18e %.18e')
             np.savetxt(MD_PATH + 'pow_gw_' + data_file_suffix, np.stack((y, pow_gw), axis=-1), fmt='%.18e %.18e')
-
         else:
             save_id = ''
 
@@ -602,22 +599,22 @@ def plot_ps_compare_nuc(vw, alpha, save_id=None, graph_file_type=None):
     plotting.plot_guide_power_laws_prace(
         f_v, f_gw, z_list[0], pow_v_list[0],
         y_list[0], pow_gw_list[0], inter_flag=inter_flag)
-            
+
     p_cwg = add_cwg_fit(f_gw, y_list[0], pow_gw_list[0])
     p_ssm = add_ssm_fit(f_gw, y_list[1], pow_gw_list[1])
 
     if save_id is None:
         save_id = ''
-    
+
     # Save graph if asked for
     if graph_file_type is not None:
-        graph_file_suffix = "vw{:.2f}alpha{}_".format(vw, alpha) + nuc_string_all \
+        graph_file_suffix = f"vw{vw:.2f}alpha{alpha}_" + nuc_string_all \
             + nz_string + nx_string + nT_string + save_id + '.' + graph_file_type
         f_v.savefig(MD_PATH + "pow_v_" + graph_file_suffix)
         f_gw.savefig(MD_PATH + "pow_gw_" + graph_file_suffix)
-    
+
     # plt.show()
-        
+
     return v2_list, Omgw_scaled_list, list(p_cwg), list(p_ssm)
 
 
@@ -777,10 +774,10 @@ def plot_and_save(vw, alpha, method='e_conserving', v_xi_file=None, suffix=None)
     f2.tight_layout()
 
     if suffix is not None:
-        nz_string = 'nz{}k'.format(Np[0] // 1000)
-        nx_string = '_nx{}k'.format(Np[1] // 1000)
-        nT_string = '_nT{}-'.format(Np[2])
-        file_suffix = "vw{:3.2f}alpha{}_".format(vw, alpha) + const.NUC_STRING \
+        nz_string = f'nz{Np[0] // 1000}k'
+        nx_string = f'_nx{Np[1] // 1000}k'
+        nT_string = f'_nT{Np[2]}-'
+        file_suffix = f"vw{vw:3.2f}alpha{alpha}_" + const.NUC_STRING \
                       + nz_string + nx_string + nT_string + suffix
     
         data_file_suffix = file_suffix + '.txt'

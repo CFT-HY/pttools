@@ -112,9 +112,8 @@ def plot_fluid_shell(
     plt.subplot(2, 1, 1)
 
     plt.title(
-        r'$\xi_{{\rm w}} =  {}$, $\alpha_{{\rm n}} =  {:.3}$, '
-        r'$\alpha_+ =  {:5.3f}$, $r =  {:.3f}$, $\xi_{{\rm sh}} =  {:5.3f}$'.format(
-            v_wall, alpha_n, alpha_plus, r, xi[-2]), size=16)
+        rf'$\xi_{{\rm w}} =  {v_wall}$, $\alpha_{{\rm n}} =  {alpha_n:.3}$, '
+        rf'$\alpha_+ =  {alpha_plus:5.3f}$, $r =  {r:.3f}$, $\xi_{{\rm sh}} =  {xi[-2]:5.3f}$', size=16)
     plt.plot(xi, v, 'b', label=r'$v(\xi)$')
 
     if not sol_type == boundary.SolutionType.DETON:
@@ -141,8 +140,8 @@ def plot_fluid_shell(
     plt.subplot(2, 1, 2)
 
     plt.title(
-        r'$w_0/w_n = {:4.2}$, $\bar{{U}}_f = {:.3f}$, $K = {:5.3g}$, $\kappa = {:5.3f}$, $\omega = {:5.3f}$'.format(
-            w[0] / w[-1], ubarf2 ** 0.5, ke_frac, kappa, dw), size=16)
+        rf'$w_0/w_n = {w[0] / w[-1]:4.2}$, $\bar{{U}}_f = {ubarf2 ** 0.5:.3f}$, $K = {ke_frac:5.3g}$, '
+        rf'$\kappa = {kappa:5.3f}$, $\omega = {dw:5.3f}$', size=16)
     plt.plot(xi, np.ones_like(xi) * w[-1], '--', color='0.5')
     plt.plot(xi, w, 'b', label=r'$w(\xi)$')
 
@@ -169,7 +168,7 @@ def plot_fluid_shell(
         plt.tight_layout()
 
     if save_string is not None:
-        plt.savefig('shell_plot_vw_{}_alphan_{:.3}{}'.format(v_wall, alpha_n, save_string))
+        plt.savefig(f"shell_plot_vw_{v_wall}_alphan_{alpha_n:.3}{save_string}")
 
     if debug:
         arrs = [v, w, xi, v_sh, w_sh]
@@ -277,9 +276,8 @@ def plot_fluid_shells(
             alpha_plus = alpha_n * w[-1] / w[n_wall]
 
             ax[0, n].set_title(
-                r'$\alpha_{{\rm n}} =  {:5.3f}$, $\alpha_+ =  {:5.3f}$, '
-                r'$r =  {:5.3f}$, $\xi_{{\rm sh}} =  {:5.3f}$'.format(
-                    alpha_n, alpha_plus, r, xi[-2]), size=14)
+                rf'$\alpha_{{\rm n}} =  {alpha_n:5.3f}$, $\alpha_+ =  {alpha_plus:5.3f}$, '
+                rf'$r =  {r:5.3f}$, $\xi_{{\rm sh}} =  {xi[-2]:5.3f}$', size=14)
 
         ax[0, n].grid(True)
 
@@ -303,8 +301,7 @@ def plot_fluid_shells(
             #            ax[1,n].set_title(r'$w_0/w_n = {:4.2}$, $\bar{{U}}_f = {:.3f}$, '
             #            r'$K = {:5.3g}$, $\kappa = {:5.3f}$, $\omega = {:5.3f}$'.format(
             #                      w[0]/w[-1],ubarf2**0.5,ke_frac, kappa, dw),size=14)
-            ax[1, n].set_title(r'$K = {:5.3g}$, $\kappa = {:5.3f}$, $\omega = {:5.3f}$'.format(
-                ke_frac, kappa, dw), size=14)
+            ax[1, n].set_title(rf'$K = {ke_frac:5.3g}$, $\kappa = {kappa:5.3f}$, $\omega = {dw:5.3f}$', size=14)
 
             if debug:
                 # Scalars
@@ -346,10 +343,9 @@ def plot_fluid_shells(
         plt.tight_layout()
 
     if save_string is not None:
-        plt.savefig('shells_plot_vw_{}-{}_alphan_{:.3}-{:.3}{}'.format(
-            v_wall_list[0], v_wall_list[-1],
-            alpha_n_list[0], alpha_n_list[-1],
-            save_string))
+        plt.savefig(
+            f"shells_plot_vw_{v_wall_list[0]}-{v_wall_list[-1]}_"
+            f"alphan_{alpha_n_list[0]:.3}-{alpha_n_list[-1]:.3}{save_string}")
 
     if debug:
         data = [[np.nansum(arr) for arr in lst] for lst in [lst_v, lst_w, lst_xi, lst_v_sh, lst_w_sh]]
