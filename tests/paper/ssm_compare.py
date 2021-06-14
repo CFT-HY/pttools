@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 import pttools.bubble as b
 import pttools.ssmtools as ssm
-from test_utils import TEST_DATA_PATH
+from tests.test_utils import TEST_DATA_PATH
 
 logger = logging.getLogger(__name__)
 

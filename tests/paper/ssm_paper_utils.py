@@ -15,8 +15,8 @@ from scipy.optimize import curve_fit
 
 import pttools.bubble as b
 import pttools.ssmtools as ssm
-import tex_utils as tu
-from test_utils import TEST_DATA_PATH
+import tests.paper.tex_utils as tu
+from tests.test_utils import TEST_DATA_PATH
 
 logger = logging.getLogger(__name__)
 

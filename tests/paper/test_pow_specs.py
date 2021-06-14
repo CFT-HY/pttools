@@ -3,8 +3,8 @@ import unittest
 
 import numpy as np
 
-import ssm_paper_utils as spu
-from test_utils import TEST_DATA_PATH
+from tests.paper import ssm_paper_utils as spu
+from tests.test_utils import TEST_DATA_PATH
 
 
 class TestPowSpecs(unittest.TestCase):

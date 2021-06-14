@@ -6,7 +6,7 @@ https://bitbucket.org/hindmars/sound-shell-model/
 
 import numpy as np
 
-import sigfig as sf
+from tests.paper import sigfig as sf
 
 
 def tex_sf(x: float, n: int = 2, sci_notn_threshold: int = 2, mult: str = "\\times") -> str:

@@ -4,7 +4,7 @@ import unittest
 import numpy as np
 
 from pttools import bubble
-from test_utils import TEST_DATA_PATH
+from tests.test_utils import TEST_DATA_PATH
 
 
 class TestPlane(unittest.TestCase):

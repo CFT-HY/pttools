@@ -3,8 +3,8 @@ import unittest
 
 import numpy as np
 
-import ssm_compare as scom
-from test_utils import TEST_DATA_PATH
+from tests.paper import ssm_compare as scom
+from tests.test_utils import TEST_DATA_PATH
 
 
 class TestPrace(unittest.TestCase):

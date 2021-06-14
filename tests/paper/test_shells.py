@@ -4,8 +4,8 @@ import unittest
 import numpy as np
 
 from pttools import bubble
-import ssm_paper_utils as spu
-from test_utils import TEST_DATA_PATH
+from tests.paper import ssm_paper_utils as spu
+from tests.test_utils import TEST_DATA_PATH
 
 
 class TestShells(unittest.TestCase):
