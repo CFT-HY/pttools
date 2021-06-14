@@ -1,5 +1,5 @@
 [tool.pytest.ini_options]
-addopts = "--cov=. --cov-report=html --cov-report=term --cov-report=term-missing --cov-report=xml --html=test-results/test-report.html --numprocesses=auto"
+addopts = "--alluredir=test-results/allure --cov=. --cov-report=html --cov-report=term --cov-report=term-missing --cov-report=xml --html=test-results/html/test-report.html --numprocesses=auto"
 # python_paths = "tests"
 testpaths = [
     "tests"
