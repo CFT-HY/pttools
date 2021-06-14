@@ -9,30 +9,18 @@ import logging
 import typing as tp
 
 import numpy as np
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
 import pttools.bubble as b
 import pttools.ssmtools as ssm
+from tests.paper import utils
 import tests.paper.tex_utils as tu
 from tests.test_utils import TEST_DATA_PATH
 
 logger = logging.getLogger(__name__)
 
-plt.rc('text', usetex=True)
-plt.rc('font', family='serif')
-
-font_size = 20
-mpl.rcParams.update({'font.size': font_size})
-mpl.rcParams.update({'lines.linewidth': 1.5})
-mpl.rcParams.update({'axes.linewidth': 2.0})
-mpl.rcParams.update({'axes.labelsize': font_size})
-mpl.rcParams.update({'xtick.labelsize': font_size})
-mpl.rcParams.update({'ytick.labelsize': font_size})
-# but make legend smaller
-mpl.rcParams.update({'legend.fontsize': 14})
-
+utils.setup_plotting()
 
 # Compare SSM prediction with data
 # Creates and plots velocity and GW power spectra from SSM

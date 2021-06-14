@@ -11,32 +11,16 @@ import os
 import typing as tp
 
 import numpy as np
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import pttools.bubble as b
 import pttools.ssmtools as ssm
+from tests.paper import utils
 from tests.test_utils import TEST_DATA_PATH
 
 logger = logging.getLogger(__name__)
 
-# Set up plotting
-# LaTeX can cause problems if system not configured correctly
-plt.rc('text', usetex=True)
-plt.rc('font', family='serif')
-
-FONT_SIZE = 20
-mpl.rcParams.update({'font.size': FONT_SIZE})
-mpl.rcParams.update({'lines.linewidth': 1.5})
-mpl.rcParams.update({'axes.linewidth': 2.0})
-mpl.rcParams.update({'axes.labelsize': FONT_SIZE})
-mpl.rcParams.update({'xtick.labelsize': FONT_SIZE})
-mpl.rcParams.update({'ytick.labelsize': FONT_SIZE})
-# but make legend smaller
-mpl.rcParams.update({'legend.fontsize': 14})
-
-COLOUR_LIST = ['b', 'r', 'g']
-
+utils.setup_plotting()
 # Number of points used in the numerical calculations (n_z, n_xi, n_t)
 # z - wavenumber space, xi - r/t space, t - time for size distribution integration
 NP_LIST = [[1000, 2000, 200], [2500, 5000, 500], [5000, 10000, 1000]]
