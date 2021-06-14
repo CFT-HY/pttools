@@ -59,8 +59,8 @@ class TestPlane(unittest.TestCase):
 
         # Create a line to show the maximum (universe frame) fluid velocity behind the wall.
         # Relevant for detonations and supersonic deflagrations.
-        vb_max_line = bubble.lorentz(xi_line, bubble.cs0)
-        vb_max_line[xi_line <= bubble.cs0] = np.nan
+        vb_max_line = bubble.lorentz(xi_line, bubble.CS0)
+        vb_max_line[xi_line <= bubble.CS0] = np.nan
 
         # Plot lines for the wall conditions
         # plt.plot(xi_line, va_max_line, 'k:', label=r'$v = \xi$')
@@ -89,7 +89,7 @@ class TestPlane(unittest.TestCase):
                                                                                   n_xi=1000)
             # Grey out parts of line which are unphysical
             unphysical = np.logical_and(deflag_v_b - bubble.v_shock(deflag_xi_b) < 0,
-                                        deflag_v_b - bubble.lorentz(deflag_xi_b, bubble.cs0) > 0)
+                                        deflag_v_b - bubble.lorentz(deflag_xi_b, bubble.CS0) > 0)
             # But let's keep the unphysical points to look at
             deflag_v_b_grey = deflag_v_b[unphysical]
             deflag_xi_b_grey = deflag_xi_b[unphysical]

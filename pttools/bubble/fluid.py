@@ -203,7 +203,7 @@ def trim_fluid_wall_to_cs(
         xi: np.ndarray,
         t: np.ndarray,
         v_wall: th.FLOAT_OR_ARR, sol_type: boundary.SolutionType,
-        dxi_lim: float = const.dxi_small,
+        dxi_lim: float = const.DXI_SMALL,
         cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
      Picks out fluid variable arrays (v, w, xi, t) which are definitely behind

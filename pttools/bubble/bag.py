@@ -45,9 +45,9 @@ def cs2_bag(w: th.FLOAT_OR_ARR) -> float:
     Speed of sound squared in Bag model, equal to 1/3 independent of enthalpy $w$
     """
     if isinstance(w, np.ndarray):
-        cs2 = const.cs0_2 * np.ones_like(w)
+        cs2 = const.CS0_2 * np.ones_like(w)
     else:
-        cs2 = const.cs0_2
+        cs2 = const.CS0_2
 
     return cs2
 
@@ -129,11 +129,11 @@ def phase(xi: th.FLOAT_OR_ARR, v_w: float) -> th.FLOAT_OR_ARR:
     """
     if isinstance(xi, np.ndarray):
         ph = np.zeros_like(xi)
-        ph[np.where(xi < v_w)] = const.brok_phase
+        ph[np.where(xi < v_w)] = const.BROK_PHASE
     else:
-        ph = const.symm_phase
+        ph = const.SYMM_PHASE
         if xi < v_w:
-            ph = const.brok_phase
+            ph = const.BROK_PHASE
 
     return ph
 

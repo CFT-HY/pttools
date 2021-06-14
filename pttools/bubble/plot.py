@@ -18,13 +18,13 @@ from . import transition
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
 
-font_size = 18
-mpl.rcParams.update({'font.size': font_size})
+FONT_SIZE = 18
+mpl.rcParams.update({'font.size': FONT_SIZE})
 mpl.rcParams.update({'lines.linewidth': 1.5})
 mpl.rcParams.update({'axes.linewidth': 2.0})
-mpl.rcParams.update({'axes.labelsize': font_size})
-mpl.rcParams.update({'xtick.labelsize': font_size})
-mpl.rcParams.update({'ytick.labelsize': font_size})
+mpl.rcParams.update({'axes.labelsize': FONT_SIZE})
+mpl.rcParams.update({'xtick.labelsize': FONT_SIZE})
+mpl.rcParams.update({'ytick.labelsize': FONT_SIZE})
 # but make legend smaller
 mpl.rcParams.update({'legend.fontsize': 14})
 
@@ -78,7 +78,7 @@ def plot_fluid_shell(
     w_sh = props.w_shock(xi_even)
 
     n_wall = props.find_v_index(xi, v_wall)
-    n_cs = np.int(np.floor(const.cs0 * Np))
+    n_cs = np.int(np.floor(const.CS0 * Np))
     n_sh = xi.size - 2
 
     r = w[n_wall] / w[n_wall - 1]
@@ -124,7 +124,7 @@ def plot_fluid_shell(
             plt.plot(xi, xi, 'k--', label=r'$v = \xi$')
 
     if not sol_type == boundary.SolutionType.SUB_DEF:
-        v_minus_max = relativity.lorentz(xi_even, const.cs0)
+        v_minus_max = relativity.lorentz(xi_even, const.CS0)
         plt.plot(xi_even[n_cs:], v_minus_max[n_cs:], 'k-.', label=r'$\mu(\xi,c_{\rm s})$')
 
     if low_v_approx:
@@ -153,7 +153,7 @@ def plot_fluid_shell(
             plt.plot(xi[n_wall:n_sh], w_approx[:], 'b--', label=r'$w$ ($v < \xi$ approx)')
 
     else:
-        wmax_det = (xi_even / const.cs0) * relativity.gamma2(xi_even) / relativity.gamma2(const.cs0)
+        wmax_det = (xi_even / const.CS0) * relativity.gamma2(xi_even) / relativity.gamma2(const.CS0)
         plt.plot(xi_even[n_cs:], wmax_det[n_cs:], 'k-.', label=r'$w_{\rm max}$')
 
     if low_v_approx:
@@ -243,7 +243,7 @@ def plot_fluid_shells(
             raise RuntimeError(f"No solution for v_wall = {v_wall}, alpha_n = {alpha_n}.")
 
         v, w, xi = fluid.fluid_shell(v_wall, alpha_n, Np)
-        n_cs = np.int(np.floor(const.cs0 * Np))
+        n_cs = np.int(np.floor(const.CS0 * Np))
         n_sh = xi.size - 2
         v_sh = props.v_shock(xi_even)
         w_sh = props.w_shock(xi_even)
@@ -268,7 +268,7 @@ def plot_fluid_shells(
         if not sol_type == boundary.SolutionType.DETON:
             ax[0, n].plot(xi_even[n_cs:], v_sh[n_cs:], 'k--', label=r'$v_{\rm sh}(\xi_{\rm sh})$')
         if not sol_type == boundary.SolutionType.SUB_DEF:
-            v_minus_max = relativity.lorentz(xi_even, const.cs0)
+            v_minus_max = relativity.lorentz(xi_even, const.CS0)
             ax[0, n].plot(xi_even[n_cs:], v_minus_max[n_cs:], 'k-.', label=r'$\mu(\xi,c_{\rm s})$')
 
         if multi:
@@ -289,7 +289,7 @@ def plot_fluid_shells(
         if not sol_type == boundary.SolutionType.DETON:
             ax[1, n].plot(xi_even[n_cs:n_sh], w_sh[n_cs:n_sh], 'k--', label=r'$w_{\rm sh}(\xi_{\rm sh})$')
         else:
-            wmax_det = (xi_even / const.cs0) * relativity.gamma2(xi_even) / relativity.gamma2(const.cs0)
+            wmax_det = (xi_even / const.CS0) * relativity.gamma2(xi_even) / relativity.gamma2(const.CS0)
             ax[1, n].plot(xi_even[n_cs:], wmax_det[n_cs:], 'k-.', label=r'$w_{\rm max}$')
 
         if multi:

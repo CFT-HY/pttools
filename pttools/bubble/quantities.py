@@ -266,7 +266,7 @@ def get_ubarf2_new(
      alpha_n must be scalar.
     """
     w_mean = 1  # For bag, it doesn't matter
-    Gamma = bag.adiabatic_index(w_mean, const.brok_phase, bag.theta_bag(w_mean, const.brok_phase, alpha_n))
+    Gamma = bag.adiabatic_index(w_mean, const.BROK_PHASE, bag.theta_bag(w_mean, const.BROK_PHASE, alpha_n))
     print(Gamma)
 
     it = np.nditer([v_wall, None])

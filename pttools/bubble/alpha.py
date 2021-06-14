@@ -50,7 +50,7 @@ def find_alpha_plus(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float, n_xi: int = c
             ap[...] = alpha_n_given
         else:
             if alpha_n_given < alpha_n_max_deflagration(vw):
-                if vw <= const.cs0:
+                if vw <= const.CS0:
                     sol_type = boundary.SolutionType.SUB_DEF
                 else:
                     sol_type = boundary.SolutionType.HYBRID
@@ -59,7 +59,7 @@ def find_alpha_plus(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float, n_xi: int = c
                     return find_alpha_n(vw, x, sol_type, n_xi) - alpha_n_given
 
                 a_initial_guess = alpha_plus_initial_guess(vw, alpha_n_given)
-                al_p = opt.fsolve(func, a_initial_guess, xtol=const.find_alpha_plus_tol, factor=0.1)[0]
+                al_p = opt.fsolve(func, a_initial_guess, xtol=const.FIND_ALPHA_PLUS_TOL, factor=0.1)[0]
                 ap[...] = al_p
             else:
                 ap[...] = np.nan
@@ -141,7 +141,7 @@ def alpha_n_max_deflagration(v_wall: th.FLOAT_OR_ARR, Np=const.N_XI_DEFAULT) -> 
     # sol_type_ = identify_solution_type(v_wall_, 1./3)
     it = np.nditer([None, v_wall], [], [['writeonly', 'allocate'], ['readonly']])
     for ww, vw in it:
-        if vw > const.cs0:
+        if vw > const.CS0:
             sol_type = boundary.SolutionType.HYBRID
         else:
             sol_type = boundary.SolutionType.SUB_DEF
@@ -170,7 +170,7 @@ def alpha_plus_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     it = np.nditer([None, v_wall], [], [['writeonly', 'allocate'], ['readonly']])
     for bb, vw in it:
         a = 3 * (1 - vw ** 2)
-        if vw < const.cs0:
+        if vw < const.CS0:
             b = 0.0
         else:
             b = (1 - np.sqrt(3) * vw) ** 2
@@ -202,7 +202,7 @@ def alpha_plus_min_hybrid(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     if isinstance(b, np.ndarray):
         b[np.where(v_wall < 1. / np.sqrt(3))] = 0.0
     else:
-        if v_wall < const.cs0:
+        if v_wall < const.CS0:
             b = 0.0
     return b / c
 

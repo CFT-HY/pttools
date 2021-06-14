@@ -18,7 +18,7 @@ def min_speed_deton(alpha: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
      Equivalent to v_plus(cs0,alpha).
      Note that alpha_plus = alpha_n for detonation.
     """
-    return (const.cs0/(1 + alpha))*(1 + np.sqrt(alpha*(2. + 3.*alpha)))
+    return (const.CS0 / (1 + alpha)) * (1 + np.sqrt(alpha * (2. + 3. * alpha)))
 
 
 def max_speed_deflag(alpha_p: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
@@ -27,7 +27,7 @@ def max_speed_deflag(alpha_p: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
      May be greater than 1, meaning that hybrids exist for all wall speeds above cs.
      alpha_plus < 1/3, but alpha_n unbounded above.
     """
-    return 1/(3*boundary.v_plus(const.cs0, alpha_p, boundary.SolutionType.SUB_DEF))
+    return 1/(3 * boundary.v_plus(const.CS0, alpha_p, boundary.SolutionType.SUB_DEF))
 
 
 def identify_solution_type(v_wall: float, alpha_n: float, exit_on_error: bool = False) -> boundary.SolutionType:
@@ -42,7 +42,7 @@ def identify_solution_type(v_wall: float, alpha_n: float, exit_on_error: bool = 
         sol_type = boundary.SolutionType.DETON
     else:
         if alpha_n < alpha.alpha_n_max_deflagration(v_wall):
-            if v_wall <= const.cs0:
+            if v_wall <= const.CS0:
                 sol_type = boundary.SolutionType.SUB_DEF
             else:
                 sol_type = boundary.SolutionType.HYBRID
@@ -58,7 +58,7 @@ def identify_solution_type_alpha_plus(v_wall: float, alpha_p: float) -> boundary
      Determines wall type from wall speed and at-wall strength parameter.
      solution_type = [ 'Detonation' | 'Deflagration' | 'Hybrid' ]
     """
-    if v_wall <= const.cs0:
+    if v_wall <= const.CS0:
         sol_type = boundary.SolutionType.SUB_DEF
     else:
         if alpha_p < alpha.alpha_plus_max_detonation(v_wall):

@@ -25,100 +25,97 @@ logger = logging.getLogger(__name__)
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
 
-font_size = 20
-mpl.rcParams.update({'font.size': font_size})
+FONT_SIZE = 20
+mpl.rcParams.update({'font.size': FONT_SIZE})
 mpl.rcParams.update({'lines.linewidth': 1.5})
 mpl.rcParams.update({'axes.linewidth': 2.0})
-mpl.rcParams.update({'axes.labelsize': font_size})
-mpl.rcParams.update({'xtick.labelsize': font_size})
-mpl.rcParams.update({'ytick.labelsize': font_size})
+mpl.rcParams.update({'axes.labelsize': FONT_SIZE})
+mpl.rcParams.update({'xtick.labelsize': FONT_SIZE})
+mpl.rcParams.update({'ytick.labelsize': FONT_SIZE})
 # but make legend smaller
 mpl.rcParams.update({'legend.fontsize': 14})
 
-colour_list = ['b', 'r', 'g']
+COLOUR_LIST = ['b', 'r', 'g']
 
 # Number of points used in the numerical calculations (n_z, n_xi, n_t)
 # z - wavenumber space, xi - r/t space, t - time for size distribution integration
-Np_list = [[1000, 2000, 200], [2500, 5000, 500], [5000, 10000, 1000]]  
+NP_LIST = [[1000, 2000, 200], [2500, 5000, 500], [5000, 10000, 1000]]
 
-nuc_type = 'simultaneous'
-nuc_args = (1.,)
+NUC_TYPE = 'simultaneous'
+NUC_ARGS = (1.,)
 # Simultaneous is relevant for comparison to num sims
 # Or:
 # nuc_type = 'exponential'
 # nuc_args = (1,)
 
-zmin = 0.2   # Minimum z = k.R* array value
-zmax = 1000  # Maximum z = k.R* array value
+Z_MIN = 0.2   # Minimum z = k.R* array value
+Z_MAX = 1000  # Maximum z = k.R* array value
 
 
-nz_string = 'nz'
-for r in range(len(Np_list)):
-    nz = Np_list[r][0]
-    nz_string += '{}k'.format(nz // 1000)
+NZ_STRING = 'nz'
+for r in range(len(NP_LIST)):
+    nz = NP_LIST[r][0]
+    NZ_STRING += '{}k'.format(nz // 1000)
 
-nuc_string = nuc_type[0:3] + '_'
-for n in range(len(nuc_args)):
-    nuc_string += str(nuc_args[n]) + '_'
+NUC_STRING = NUC_TYPE[0:3] + '_'
+for n in range(len(NUC_ARGS)):
+    NUC_STRING += str(NUC_ARGS[n]) + '_'
 
-nt_string = '_nT{}'.format(Np_list[0][2])
+NT_STRING = '_nT{}'.format(NP_LIST[0][2])
 
-file_type = 'pdf'
+FILE_TYPE = 'pdf'
 
-# mdp = 'model_data/'  # model data path
-# gdp = 'graphs/'  # graph path
-mdp = os.path.join(TEST_DATA_PATH, "model_data/")
-gdp = os.path.join(TEST_DATA_PATH, "graphs/")
-if not os.path.isdir(mdp):
-    os.mkdir(mdp)
-if not os.path.isdir(gdp):
-    os.mkdir(gdp)
+MDP = os.path.join(TEST_DATA_PATH, "model_data/")
+GDP = os.path.join(TEST_DATA_PATH, "graphs/")
+if not os.path.isdir(MDP):
+    os.mkdir(MDP)
+if not os.path.isdir(GDP):
+    os.mkdir(GDP)
 
 # All run parameters
     
-vw_weak_list = [0.92, 0.80, 0.68, 0.56, 0.44]
-vw_inter_list = [0.92, 0.72, 0.44]
+VW_WEAK_LIST = [0.92, 0.80, 0.68, 0.56, 0.44]
+VW_INTER_LIST = [0.92, 0.72, 0.44]
 # NB prace runs did not include intermediate 0.80, 0.56
 
-eta_weak_list = [0.19, 0.35, 0.51, 0.59, 0.93]
-eta_inter_list = [0.17, 0.40, 0.62]
+ETA_WEAK_LIST = [0.19, 0.35, 0.51, 0.59, 0.93]
+ETA_INTER_LIST = [0.17, 0.40, 0.62]
 
-alpha_weak = 0.0046
-alpha_inter = 0.050
+ALPHA_WEAK = 0.0046
+ALPHA_INTER = 0.050
 
-t_weak_list = [1210, 1380, 1630, 1860, 2520]
-t_inter_list = [1180, 1480, 2650]
+T_WEAK_LIST = [1210, 1380, 1630, 1860, 2520]
+T_INTER_LIST = [1180, 1480, 2650]
 
-dt_weak_list = [0.08*t for t in t_weak_list]
-dt_inter_list = [0.08*t for t in t_inter_list]
-dt_inter_list[1] = 0.05*t_inter_list[1]  # dx=1
+DT_WEAK_LIST = [0.08 * t for t in T_WEAK_LIST]
+DT_INTER_LIST = [0.08 * t for t in T_INTER_LIST]
+DT_INTER_LIST[1] = 0.05 * T_INTER_LIST[1]  # dx=1
 
-step_weak_list = [int(round(dt/20)*20) for dt in dt_weak_list]
-step_inter_list = [int(round(dt/20)*20) for dt in dt_inter_list]
+STEP_WEAK_LIST = [int(round(dt / 20) * 20) for dt in DT_WEAK_LIST]
+STEP_INTER_LIST = [int(round(dt / 20) * 20) for dt in DT_INTER_LIST]
 
 # Files used in prace paper 2017
-
-dir_weak_list = [
+DIR_WEAK_LIST = [
     "results-weak-scaled_etatilde0.19_v0.92_dx2/",
     "results-weak-scaled_etatilde0.35_v0.80_dx2/",
     "results-weak-scaled_etatilde0.51_v0.68_dx2/",
     "results-weak-scaled_etatilde0.59_v0.56_dx2/",
     "results-weak-scaled_etatilde0.93_v0.44_dx2/"
 ]
-dir_inter_list = [
+DIR_INTER_LIST = [
     "results-intermediate-scaled_etatilde0.17_v0.92_dx2/",
     "results-intermediate-scaled_etatilde0.40_v0.72_dx1/",
     "results-intermediate-scaled_etatilde0.62_v0.44_dx2/"
 ]
 
-path_head = os.path.join(TEST_DATA_PATH, "fluidprofiles/")
-path_list_all = ['weak/', 'intermediate/']
-file_pattern = 'data-extracted.{:05d}.txt'
+PATH_HEAD = os.path.join(TEST_DATA_PATH, "fluidprofiles/")
+PATH_LIST_ALL = ['weak/', 'intermediate/']
+FILE_PATTERN = 'data-extracted.{:05d}.txt'
 
-vw_list_all = [vw_weak_list, vw_inter_list]
-alpha_list_all = [alpha_weak, alpha_inter]
-step_list_all = [step_weak_list, step_inter_list]
-dir_list_all = [dir_weak_list, dir_inter_list]
+VW_LIST_ALL = [VW_WEAK_LIST, VW_INTER_LIST]
+ALPHA_LIST_ALL = [ALPHA_WEAK, ALPHA_INTER]
+STEP_LIST_ALL = [STEP_WEAK_LIST, STEP_INTER_LIST]
+DIR_LIST_ALL = [DIR_WEAK_LIST, DIR_INTER_LIST]
 
 
 @enum.unique
@@ -191,7 +188,7 @@ def plot_ps(
     else:
         ax.set_ylabel(r'$\mathcal{P}_{\rm ' + ps_type + '}(kR_*)$')
     ax.set_ylim([p_min, p_max])
-    ax.set_xlim([zmin, zmax])
+    ax.set_xlim([Z_MIN, Z_MAX])
     if leg_list is not None:
         plt.legend(loc='best')
     plt.tight_layout()
@@ -214,8 +211,8 @@ def generate_ps(
     Returns <V^2> and Omgw divided by (Ht.HR*).
     """
 
-    Np = Np_list[-1]
-    col = colour_list[0]
+    Np = NP_LIST[-1]
+    col = COLOUR_LIST[0]
 
     if alpha < 0.01:
         strength = Strength.WEAK
@@ -226,17 +223,17 @@ def generate_ps(
         strength = Strength.STRONG
 
     # Generate power spectra
-    z = np.logspace(np.log10(zmin), np.log10(zmax), Np[0])
+    z = np.logspace(np.log10(Z_MIN), np.log10(Z_MAX), Np[0])
 
     # Array using the minimum & maximum values set earlier, with Np[0] number of points
     print("vw = ", vw, "alpha = ", alpha, "Np = ", Np)
 
-    sd_v = ssm.spec_den_v(z, [vw, alpha, nuc_type, nuc_args], Np[1:], method=method)
+    sd_v = ssm.spec_den_v(z, [vw, alpha, NUC_TYPE, NUC_ARGS], Np[1:], method=method)
     pow_v = ssm.pow_spec(z,sd_v)
     V2_pow_v = np.trapz(pow_v/z, z)
 
     if v_xi_file is not None:
-        sd_v2 = ssm.spec_den_v(z, [vw, alpha, nuc_type, nuc_args], Np[1:], v_xi_file, method=method)
+        sd_v2 = ssm.spec_den_v(z, [vw, alpha, NUC_TYPE, NUC_ARGS], Np[1:], v_xi_file, method=method)
         pow_v2 = ssm.pow_spec(z, sd_v2)
         V2_pow_v = np.trapz(pow_v2/z, z)
 
@@ -264,7 +261,7 @@ def generate_ps(
             ax_v.loglog(z, pow_v2, color=col, linestyle='--')
             ax_gw.loglog(y, pow_gw2, color=col, linestyle='--')
 
-        inter_flag = (abs(b.cs0 - vw) < 0.05)  # Due intermediate power law
+        inter_flag = (abs(b.CS0 - vw) < 0.05)  # Due intermediate power law
         plot_guide_power_laws_prace(f1, f2, z, pow_v, y, pow_gw, inter_flag=inter_flag)
 
         # Pretty graph 1
@@ -273,7 +270,7 @@ def generate_ps(
         ax_v.set_xlabel(r'$kR_*$')
         ax_v.set_ylabel(r'$\mathcal{P}_{\rm v}(kR_*)$')
         ax_v.set_ylim([pv_min, pv_max])
-        ax_v.set_xlim([zmin, zmax])
+        ax_v.set_xlim([Z_MIN, Z_MAX])
         f1.tight_layout()
 
         # Pretty graph 2
@@ -282,7 +279,7 @@ def generate_ps(
         ax_gw.set_xlabel(r'$kR_*$')
         ax_gw.set_ylabel(r'$\Omega^\prime_{\rm gw}(kR_*)/(H_{\rm n}R_*)$')
         ax_gw.set_ylim([pgw_min, pgw_max])
-        ax_gw.set_xlim([zmin, zmax])
+        ax_gw.set_xlim([Z_MIN, Z_MAX])
         f2.tight_layout()
 
     # Now some saving if requested
@@ -290,32 +287,32 @@ def generate_ps(
         nz_string = 'nz{}k'.format(Np[0] // 1000)
         nx_string = '_nx{}k'.format(Np[1] // 1000)
         nT_string = '_nT{}-'.format(Np[2])
-        file_suffix = "vw{:3.2f}alpha{}_".format(vw, alpha) + nuc_string + nz_string + nx_string + nT_string
+        file_suffix = "vw{:3.2f}alpha{}_".format(vw, alpha) + NUC_STRING + nz_string + nx_string + nT_string
 
     if save_ids[0] is not None:
         data_file_suffix = file_suffix + save_ids[0] + '.txt'
 
         if v_xi_file is None:
-            np.savetxt(mdp + 'pow_v_' + data_file_suffix, 
+            np.savetxt(MDP + 'pow_v_' + data_file_suffix,
                        np.stack((z, pow_v), axis=-1), fmt='%.18e %.18e')
-            np.savetxt(mdp + 'pow_gw_' + data_file_suffix, 
+            np.savetxt(MDP + 'pow_gw_' + data_file_suffix,
                        np.stack((y, pow_gw), axis=-1), fmt='%.18e %.18e')
         else:
-            np.savetxt(mdp + 'pow_v_' + data_file_suffix, 
+            np.savetxt(MDP + 'pow_v_' + data_file_suffix,
                        np.stack((z, pow_v, pow_v2), axis=-1), fmt='%.18e %.18e %.18e')
-            np.savetxt(mdp + 'pow_gw_' + data_file_suffix, 
+            np.savetxt(MDP + 'pow_gw_' + data_file_suffix,
                        np.stack((y, pow_gw, pow_gw2), axis=-1), fmt='%.18e %.18e %.18e')
 
     if save_ids[1] is not None:
         graph_file_suffix = file_suffix + save_ids[1] + '.pdf'
-        f1.savefig(gdp + "pow_v_" + graph_file_suffix)
-        f2.savefig(gdp + "pow_gw_" + graph_file_suffix)
+        f1.savefig(GDP + "pow_v_" + graph_file_suffix)
+        f2.savefig(GDP + "pow_gw_" + graph_file_suffix)
 
     # Now some diagnostic comparisons between real space <v^2> and Fourier space already calculated
     v_ip, w_ip, xi = b.fluid_shell(vw, alpha)
     Ubarf2 = b.ubarf_squared(v_ip, w_ip, xi, vw)
 
-    print("vw = {}, alpha = {}, nucleation = {}".format(vw, alpha, nuc_string))
+    print("vw = {}, alpha = {}, nucleation = {}".format(vw, alpha, NUC_STRING))
     print("<v^2> =                      ", V2_pow_v)
     print("Ubarf2 (1 bubble)            ", Ubarf2)
     print("Ratio <v^2>/Ubarf2           ", V2_pow_v/Ubarf2)
@@ -346,9 +343,9 @@ def all_generate_ps_prace(save_ids: tp.Tuple[str, str] = ('', ''), show=True, de
     debug_data = []
 
     for vw_list, alpha, step_list, path, dir_list in \
-            zip(vw_list_all, alpha_list_all, step_list_all, path_list_all, dir_list_all):
+            zip(VW_LIST_ALL, ALPHA_LIST_ALL, STEP_LIST_ALL, PATH_LIST_ALL, DIR_LIST_ALL):
         for vw, step, dir_name in zip(vw_list, step_list, dir_list):
-            v_xi_file = path_head + path + dir_name + file_pattern.format(step)
+            v_xi_file = PATH_HEAD + path + dir_name + FILE_PATTERN.format(step)
             print("v_xi_file:", v_xi_file)
             if debug:
                 v2, Omgw, data = generate_ps(vw, alpha, method, v_xi_file, save_ids, show, debug=debug)

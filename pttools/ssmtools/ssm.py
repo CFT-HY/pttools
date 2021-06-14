@@ -47,7 +47,7 @@ def A2_ssm_func(
         g = (z * df_dz + 2. * f)
         dg_dz = np.gradient(g) / np.gradient(z)
         A2 = 0.25 * (df_dz ** 2)
-        A2 = A2 + 0.25 * (dg_dz ** 2 / (const.cs0 * z) ** 2)
+        A2 = A2 + 0.25 * (dg_dz ** 2 / (const.CS0 * z) ** 2)
     else:
         logger.warning("Method not known, should be [e_conserving | f_only | with_g]. Defaulting to e_conserving.")
         A2 = A2_e_conserving(z, vw, alpha, npt)
@@ -100,12 +100,12 @@ def A2_e_conserving(
     #              z_st_thresh=max(z)) # Need to fix problem with ST of lam for detonations
     lam_ft = (4. * np.pi / z) * calculators.sin_transform(z, xi_re, xi_re * lam_re, z_st_thresh)
 
-    A2 = 0.25 * (v_ft ** 2 + (const.cs0 * lam_ft) ** 2)
+    A2 = 0.25 * (v_ft ** 2 + (const.CS0 * lam_ft) ** 2)
 
     if ret_vals == 'A2_only':
         return A2
     else:
-        return A2, v_ft ** 2 / 2, (const.cs0 * lam_ft) ** 2 / 2
+        return A2, v_ft ** 2 / 2, (const.CS0 * lam_ft) ** 2 / 2
 
 
 def A2_e_conserving_file(
@@ -160,7 +160,7 @@ def A2_e_conserving_file(
     lam_ft = (4. * np.pi / z) * \
         calculators.sin_transform(z, xi_lt1, xi_lt1 * lam, z_st_thresh)
 
-    return 0.25 * (v_ft ** 2 + (const.cs0 * lam_ft) ** 2)
+    return 0.25 * (v_ft ** 2 + (const.CS0 * lam_ft) ** 2)
 
 
 def f_ssm_func(

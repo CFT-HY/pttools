@@ -87,9 +87,9 @@ def fluid_speeds_at_wall(
             vfp_w = v_plus(v_wall, alpha_p, sol_type)  # Fluid velocity just ahead of the wall in wall frame (v+)
             vfp_p = relativity.lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
         elif sol_type == SolutionType.HYBRID:
-            vfm_w = const.cs0  # Fluid velocity just behind the wall in plasma frame (hybrid)
+            vfm_w = const.CS0  # Fluid velocity just behind the wall in plasma frame (hybrid)
             vfm_p = relativity.lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
-            vfp_w = v_plus(const.cs0, alpha_p, sol_type)  # Fluid velocity just ahead of the wall in wall frame (v+)
+            vfp_w = v_plus(const.CS0, alpha_p, sol_type)  # Fluid velocity just ahead of the wall in wall frame (v+)
             vfp_p = relativity.lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
         elif sol_type == SolutionType.DETON:
             vfm_w = v_minus(v_wall, alpha_p)  # Fluid velocity just behind the wall in wall frame (v-)

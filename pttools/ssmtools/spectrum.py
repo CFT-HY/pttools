@@ -133,14 +133,14 @@ def spec_den_gw_scaled(
 
     if z is None:
         nx = len(xlookup)
-        zmax = max(xlookup) / (0.5 * (1. + const.cs0) / const.cs0)
-        zmin = min(xlookup) / (0.5 * (1. - const.cs0) / const.cs0)
+        zmax = max(xlookup) / (0.5 * (1. + const.CS0) / const.CS0)
+        zmin = min(xlookup) / (0.5 * (1. - const.CS0) / const.CS0)
         z = np.logspace(np.log10(zmin), np.log10(zmax), nx)
     else:
         #        nx = len(z)
         nx = len(xlookup)
-        xlargest = max(z) * 0.5 * (1. + const.cs0) / const.cs0
-        xsmallest = min(z) * 0.5 * (1. - const.cs0) / const.cs0
+        xlargest = max(z) * 0.5 * (1. + const.CS0) / const.CS0
+        xsmallest = min(z) * 0.5 * (1. - const.CS0) / const.CS0
 
         if max(xlookup) < xlargest or min(xlookup) > xsmallest:
             raise ValueError("Range of xlookup is not large enough.")
@@ -148,14 +148,14 @@ def spec_den_gw_scaled(
     p_gw = np.zeros_like(z)
 
     for i in range(z.size):
-        xplus = z[i] / const.cs0 * (1. + const.cs0) / 2.
-        xminus = z[i] / const.cs0 * (1. - const.cs0) / 2.
+        xplus = z[i] / const.CS0 * (1. + const.CS0) / 2.
+        xminus = z[i] / const.CS0 * (1. - const.CS0) / 2.
         x = np.logspace(np.log10(xminus), np.log10(xplus), nx)
         integrand = \
             (x - xplus) ** 2 * (x - xminus) ** 2 / x / (xplus + xminus - x) \
             * np.interp(x, xlookup, P_vlookup) \
             * np.interp((xplus + xminus - x), xlookup, P_vlookup)
-        p_gw_factor = ((1 - const.cs0 ** 2) / const.cs0 ** 2) ** 2 / (4 * np.pi * z[i] * const.cs0)
+        p_gw_factor = ((1 - const.CS0 ** 2) / const.CS0 ** 2) ** 2 / (4 * np.pi * z[i] * const.CS0)
         p_gw[i] = p_gw_factor * np.trapz(integrand, x)
 
     # Here we are using G = 2P_v (v spec den is twice plane wave amplitude spec den).
@@ -220,8 +220,8 @@ def power_gw_scaled(
     eps = 1e-8  # Seems to be needed for max(z) <= 100. Why?
     #    nx = len(z) - this can be too few for velocity PS convolutions
     nx = npt[2]
-    xmax = max(z) * (0.5 * (1. + const.cs0) / const.cs0) + eps
-    xmin = min(z) * (0.5 * (1. - const.cs0) / const.cs0) - eps
+    xmax = max(z) * (0.5 * (1. + const.CS0) / const.CS0) + eps
+    xmin = min(z) * (0.5 * (1. - const.CS0) / const.CS0) - eps
 
     x = np.logspace(np.log10(xmin), np.log10(xmax), nx)
 

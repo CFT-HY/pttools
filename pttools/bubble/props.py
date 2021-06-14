@@ -31,9 +31,9 @@ def v_shock(xi: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     v_sh = (3*xi**2 - 1)/(2*xi)
 
     if isinstance(v_sh, np.ndarray):
-        v_sh[np.where(xi < const.cs0)] = 0.0
+        v_sh[np.where(xi < const.CS0)] = 0.0
     else:
-        if xi < const.cs0:
+        if xi < const.CS0:
             v_sh = 0.0
 
     return v_sh
@@ -46,9 +46,9 @@ def w_shock(xi: th.FLOAT_OR_ARR, w_n: float = 1.) -> th.FLOAT_OR_ARR:
     w_sh = w_n * (9*xi**2 - 1)/(3*(1-xi**2))
 
     if isinstance(w_sh, np.ndarray):
-        w_sh[np.where(xi < const.cs0)] = np.nan
+        w_sh[np.where(xi < const.CS0)] = np.nan
     else:
-        if xi < const.cs0:
+        if xi < const.CS0:
             w_sh = np.nan
 
     return w_sh

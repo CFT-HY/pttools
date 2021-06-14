@@ -26,11 +26,11 @@ class TestShells(unittest.TestCase):
 
     def test_fluid_shells(self):
         """Based on sound-shell-model/paper/python/fig_1_9_shell_plots.py"""
-        vw_weak_list = spu.vw_weak_list
-        vw_inter_list = spu.vw_inter_list
+        vw_weak_list = spu.VW_WEAK_LIST
+        vw_inter_list = spu.VW_INTER_LIST
 
-        alpha_weak = spu.alpha_weak
-        alpha_inter = spu.alpha_inter
+        alpha_weak = spu.ALPHA_WEAK
+        alpha_inter = spu.ALPHA_INTER
 
         alpha_weak_list = len(vw_weak_list) * [alpha_weak]
         alpha_inter_list = len(vw_inter_list) * [alpha_inter]

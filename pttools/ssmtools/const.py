@@ -32,4 +32,4 @@ T_TILDE_MIN: float = 0.01   # Minimum in bubble lifetime distribution integratio
 DEFAULT_NUC_TYPE: str = "exponential"
 DEFAULT_NUC_PARM: tp.Tuple[int] = (1,)
 
-cs0: np.float_ = bubble.cs0  # Default sound speed
+CS0: np.float_ = bubble.CS0  # Default sound speed
