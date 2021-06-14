@@ -487,7 +487,7 @@ def plot_ps_compare_res(
     return f_v, f_gw
 
 
-def plot_ps_1bubble(vw, alpha, save_id=None, graph_file_type=None, Np = const.NP_LIST[-1], debug: bool = False):
+def plot_ps_1bubble(vw, alpha, save_id=None, graph_file_type=None, Np=const.NP_LIST[-1], debug: bool = False):
     # Plots power spectra predictions of 1 bubble. Shown are
     # |A|^2, |f'(z)|^2/2 and |l(z)|^2/2
     # Saves data if save_id is set
@@ -565,6 +565,7 @@ def plot_ps_compare_nuc(vw, alpha, save_id=None, graph_file_type=None):
 
     nuc_string_all = ''
     
+
     for nuc_type, nuc_args in zip(nuc_type_list, nuc_args_list):
         z, pow_v, y, pow_gw = ps_from_ssm(vw, alpha, nuc_type, nuc_args, Np, method)
         z_list.append(z)
@@ -787,14 +788,14 @@ def plot_and_save(vw, alpha, method='e_conserving', v_xi_file=None, suffix=None)
 
         if v_xi_file is None:
             np.savetxt(MD_PATH + 'pow_v_' + data_file_suffix,
-                       np.stack((z,pow_v), axis=-1), fmt='%.18e %.18e')
+                       np.stack((z, pow_v), axis=-1), fmt='%.18e %.18e')
             np.savetxt(MD_PATH + 'pow_gw_' + data_file_suffix,
-                       np.stack((y,pow_gw), axis=-1), fmt='%.18e %.18e')
+                       np.stack((y, pow_gw), axis=-1), fmt='%.18e %.18e')
         else:
             np.savetxt(MD_PATH + 'pow_v_' + data_file_suffix,
-                       np.stack((z,pow_v,pow_v2), axis=-1), fmt='%.18e %.18e %.18e')
+                       np.stack((z, pow_v, pow_v2), axis=-1), fmt='%.18e %.18e %.18e')
             np.savetxt(MD_PATH + 'pow_gw_' + data_file_suffix,
-                       np.stack((y,pow_gw,pow_gw2), axis=-1), fmt='%.18e %.18e %.18e')
+                       np.stack((y, pow_gw, pow_gw2), axis=-1), fmt='%.18e %.18e %.18e')
         f1.savefig(MD_PATH + "pow_v_" + graph_file_suffix)
         f2.savefig(MD_PATH + "pow_gw_" + graph_file_suffix)
 
