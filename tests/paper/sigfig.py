@@ -5,11 +5,14 @@ https://bitbucket.org/hindmars/sound-shell-model/
 """
 
 import re
+import typing as tp
 
-epat = re.compile(r'^([^e]+)e(.+)$')
+import numpy as np
+
+EPAT = re.compile(r'^([^e]+)e(.+)$')
 
 
-def round_sig(x, n):
+def round_sig(x: float, n: int) -> str:
     """round floating point x to n significant figures"""
     if type(n) is not int:
         raise TypeError("n must be an integer")
@@ -19,7 +22,7 @@ def round_sig(x, n):
         raise TypeError("x must be a floating point object")
     form = "%0." + str(n - 1) + "e"
     st = form % x
-    num, expo = epat.findall(st)[0]
+    num, expo = EPAT.findall(st)[0]
     expo = int(expo)
     #   fs = string.split(num,'.')
     fs = num.split('.')
@@ -44,7 +47,7 @@ def round_sig(x, n):
         return sign + "0." + "0" * (expo - 1) + fs[0] + fs[1]
 
 
-def round_sig_signed(x, n):
+def round_sig_signed(x: float, n: int) -> str:
     """round floating point x to n significant figures"""
     if type(n) is not int:
         raise TypeError("n must be an integer")
@@ -54,7 +57,7 @@ def round_sig_signed(x, n):
         raise TypeError("x must be a floating point object")
     form = "%+0." + str(n - 1) + "e"
     st = form % x
-    num, expo = epat.findall(st)[0]
+    num, expo = EPAT.findall(st)[0]
     expo = int(expo)
     #   fs = string.split(num,'.')
     fs = num.split('.')
@@ -79,7 +82,7 @@ def round_sig_signed(x, n):
         return sign + "0." + "0" * (expo - 1) + fs[0] + fs[1]
 
 
-def round_sig_error(x, ex, n, paren=False):
+def round_sig_error(x: float, ex: float, n: int, paren: bool = False) -> tp.Union[str, tp.Tuple[str, str]]:
     """Find ex rounded to n sig-figs and make the floating point x
    match the number of decimals.  If [paren], the string is
    returned as quantity(error) format"""
@@ -98,7 +101,13 @@ def round_sig_error(x, ex, n, paren=False):
     return stx, stex
 
 
-def format_table(cols, errors, n, labels=None, headers=None, latex=False):
+def format_table(
+        cols: tp.List[np.ndarray],
+        errors: tp.List[np.ndarray],
+        n: int,
+        labels: tp.List[str] = None,
+        headers: tp.List[str] = None,
+        latex: bool = False):
     """Format a table such that the errors have n significant
    figures.  [cols] and [errors] should be a list of 1D arrays
    that correspond to data and errors in columns.  [n] is the number of
@@ -109,35 +118,35 @@ def format_table(cols, errors, n, labels=None, headers=None, latex=False):
     if len(cols) != len(errors):
         raise ValueError("Error:  cols and errors must have same length")
 
-    ncols = len(cols)
-    nrows = len(cols[0])
+    n_cols = len(cols)
+    n_rows = len(cols[0])
 
     if headers is not None:
         if labels is not None:
-            if len(headers) == ncols:
+            if len(headers) == n_cols:
                 headers = [""] + headers
-            elif len(headers) == ncols + 1:
+            elif len(headers) == n_cols + 1:
                 pass
             else:
-                raise ValueError("length of headers should be %d" % (ncols + 1))
+                raise ValueError("length of headers should be %d" % (n_cols + 1))
         else:
-            if len(headers) != ncols:
-                raise ValueError("length of headers should be %d" % ncols)
+            if len(headers) != n_cols:
+                raise ValueError("length of headers should be %d" % n_cols)
 
     if labels is not None:
-        if len(labels) != nrows:
-            raise ValueError("length of labels should be %d" % nrows)
+        if len(labels) != n_rows:
+            raise ValueError("length of labels should be %d" % n_rows)
 
-    strcols = []
+    str_cols = []
     for col, error in zip(cols, errors):
-        strcols.append([])
-        strcols.append([])
-        for i in range(nrows):
+        str_cols.append([])
+        str_cols.append([])
+        for i in range(n_rows):
             val, err = round_sig_error(col[i], error[i], n)
-            strcols[-2].append(val)
-            strcols[-1].append(err)
+            str_cols[-2].append(val)
+            str_cols[-1].append(err)
 
-    lengths = [max([len(item) for item in strcol]) for strcol in strcols]
+    lengths = [max([len(item) for item in strcol]) for strcol in str_cols]
     fmt = ""
     if labels is not None:
         fmt += "%%%ds " % (max(map(len, labels)))
@@ -162,28 +171,28 @@ def format_table(cols, errors, n, labels=None, headers=None, latex=False):
                 hs.append(head)
                 hs.append('+/-')
         output.append(fmt % tuple(hs))
-    for i in range(nrows):
+    for i in range(n_rows):
         if labels is not None:
-            output.append(fmt % tuple([labels[i]] + [strcol[i] for strcol in strcols]))
+            output.append(fmt % tuple([labels[i]] + [strcol[i] for strcol in str_cols]))
         else:
-            output.append(fmt % tuple([strcol[i] for strcol in strcols]))
+            output.append(fmt % tuple([strcol[i] for strcol in str_cols]))
     return output
 
 
-def round_sig_error2(x, ex1, ex2, n):
+def round_sig_error2(x: float, ex1: float, ex2: float, n: int) -> tp.Tuple[str, str, str]:
     """Find min(ex1,ex2) rounded to n sig-figs and make the floating point x
    and max(ex,ex2) match the number of decimals."""
-    minerr = min(ex1, ex2)
-    minstex = round_sig(minerr, n)
-    if minstex.find('.') < 0:
-        extra_zeros = len(minstex) - n
+    min_err = min(ex1, ex2)
+    min_stex = round_sig(min_err, n)
+    if min_stex.find('.') < 0:
+        extra_zeros = len(min_stex) - n
         sigfigs = len(str(int(x))) - extra_zeros
         stx = round_sig(x, sigfigs)
-        maxstex = round_sig(max(ex1, ex2), sigfigs)
+        max_stex = round_sig(max(ex1, ex2), sigfigs)
     else:
-        num_after_dec = len(minstex.split('.')[1])
+        num_after_dec = len(min_stex.split('.')[1])
         stx = ("%%.%df" % num_after_dec) % x
-        maxstex = ("%%.%df" % num_after_dec) % (max(ex1, ex2))
+        max_stex = ("%%.%df" % num_after_dec) % (max(ex1, ex2))
     if ex1 < ex2:
-        return stx, minstex, maxstex
-    return stx, maxstex, minstex
+        return stx, min_stex, max_stex
+    return stx, max_stex, min_stex
