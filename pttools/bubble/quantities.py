@@ -311,7 +311,7 @@ def get_kappa(
         else:
             kappa[...] = np.nan
         if verbosity > 0:
-            sys.stderr.write("{:8.6f} {:8.6f} {} \n".format(vw, alpha_n, kappa))
+            logger.debug(f"{vw:8.6f} {alpha_n:8.6f} {kappa}")
 
     if isinstance(v_wall, np.ndarray):
         kappa_out = it.operands[1]

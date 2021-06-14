@@ -727,7 +727,7 @@ def plot_and_save(vw, alpha, method='e_conserving', v_xi_file=None, suffix=None)
     z = np.logspace(np.log10(const.Z_MIN), np.log10(const.Z_MAX), Np[0])
 
     # Array using the minimum & maximum values set earlier, with Np[0] number of points
-    print("vw = ", vw, "alpha = ", alpha, "Np = ", Np)
+    logger.debug(f"vw = {vw}, alpha = {alpha}, Np = {Np}")
 
     sd_v = ssm.spec_den_v(z, [vw, alpha, const.NUC_TYPE, const.NUC_ARGS], Np[1:], method=method)
     pow_v = ssm.pow_spec(z, sd_v)
@@ -800,11 +800,12 @@ def plot_and_save(vw, alpha, method='e_conserving', v_xi_file=None, suffix=None)
     v_ip, w_ip, xi = bubble.fluid_shell(vw, alpha)
     Ubarf2 = bubble.Ubarf_squared(v_ip, w_ip, xi, vw)
 
-    print("vw = {}, alpha = {}, nucleation = {}".format(vw, alpha, const.NUC_STRING))
-    print("<v^2> =                      ", V2_pow_v)
-    print("Ubarf2 (1 bubble)            ", Ubarf2)
-    print("Ratio <v^2>/Ubarf2           ", [V2/Ubarf2 for V2 in V2_pow_v])
-    print("gw power (scaled):           ", gw_power)
+    logger.debug(
+        f"vw = {vw}, alpha = {alpha}, nucleation = {const.NUC_STRING}, "
+        f"<v^2> = {V2_pow_v}, Ubarf2 (1 bubble) = {Ubarf2}, "
+        f"Ratio <v^2>/Ubarf2 = {[V2/Ubarf2 for V2 in V2_pow_v]}, "
+        f"gw power (scaled) = {gw_power}"
+    )
 
     plt.show()
     return V2_pow_v, gw_power
