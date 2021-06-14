@@ -265,7 +265,7 @@ def generate_ps(
         plot_guide_power_laws_prace(f1, f2, z, pow_v, y, pow_gw, inter_flag=inter_flag)
 
         # Pretty graph 1
-        pv_min, pv_max = get_yaxis_limits('v', strength)
+        pv_min, pv_max = get_yaxis_limits(PSType.V, strength)
         ax_v.grid(True)
         ax_v.set_xlabel(r'$kR_*$')
         ax_v.set_ylabel(r'$\mathcal{P}_{\rm v}(kR_*)$')
@@ -274,7 +274,7 @@ def generate_ps(
         f1.tight_layout()
 
         # Pretty graph 2
-        pgw_min, pgw_max = get_yaxis_limits('gw', strength)
+        pgw_min, pgw_max = get_yaxis_limits(PSType.GW, strength)
         ax_gw.grid(True)
         ax_gw.set_xlabel(r'$kR_*$')
         ax_gw.set_ylabel(r'$\Omega^\prime_{\rm gw}(kR_*)/(H_{\rm n}R_*)$')
