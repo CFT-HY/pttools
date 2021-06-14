@@ -13,8 +13,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
-import pttools.bubble as b
-import pttools.ssmtools as ssm
+from pttools import bubble
+from pttools import ssmtools as ssm
 from tests.paper import const
 from tests.paper import plotting
 from tests.paper import utils
@@ -160,7 +160,7 @@ def make_1dh_compare_table(params_list, v2_list,
         vw = params[1]
         v2_sim = v2_list[n][0]
         v2_exp = v2_list[n][1]
-        Ubarf_1d_ssm = np.sqrt(b.get_ubarf2(vw, alpha))
+        Ubarf_1d_ssm = np.sqrt(bubble.get_ubarf2(vw, alpha))
         
         f.write(tu.tex_sf(100*alpha) + ' & ')
         f.write('{:.2f}'.format(vw) + ' & ')
@@ -330,7 +330,7 @@ def make_nuc_compare_table(params_list, v2_list, Omgw_list, p_sim_list, p_exp_li
         f.write('{:4.1f}'.format(z_peak_sim) + ' & ')
         f.write('{:4.1f}'.format(z_peak_exp) + ' & ')
         f.write('{:3.1f}'.format(z_break_exp) + ' & ')
-        f.write('{:3.1f}'.format(z_peak_exp * abs(vw - b.CS0) / vw) + ' \\\\ \n')
+        f.write('{:3.1f}'.format(z_peak_exp * abs(vw - bubble.CS0) / vw) + ' \\\\ \n')
         # f.write()
         
     f.write('\\hline\\hline\n')
@@ -389,7 +389,7 @@ def ps_from_ssm(vw, alpha, nuc_type='simultaneous', nuc_args=(1.,), Np=const.NP_
 
     sd_gw, y = ssm.spec_den_gw_scaled(z, sd_v)
     pow_gw = ssm.pow_spec(y, sd_gw)
-    
+
     gw_power = np.trapz(pow_gw/y, y)
 
     Ubarf = np.sqrt(V2_pow_v)
@@ -470,7 +470,7 @@ def plot_ps_compare_res(
             nv_lo = 3
             ngw_lo = 5
         
-        inter_flag = (abs(b.CS0 - vw) < 0.05)
+        inter_flag = (abs(bubble.CS0 - vw) < 0.05)
         plotting.plot_guide_power_laws_prace(
             f_v, f_gw, z_list[0], pow_v_list[0], y_list[0], pow_gw_list[0],
             (nv_lo, ngw_lo), inter_flag)
@@ -508,14 +508,14 @@ def plot_ps_1bubble(vw, alpha, save_id=None, graph_file_type=None, Np = const.NP
     
     z_list = 3*[z]
     ph_sp_fac = z**3/(2*np.pi**2)
-    ps_list = [ph_sp_fac * A2, ph_sp_fac * fp2_2 / 2, ph_sp_fac * b.CS0_2 * lam2 / 4]
-    leg_list = ['$|A|^2$', '$|f^\prime(z)|^2/4$', '$c_{\\rm s}^2|l(z)|^2/4$']
+    ps_list = [ph_sp_fac * A2, ph_sp_fac * fp2_2 / 2, ph_sp_fac * bubble.CS0_2 * lam2 / 4]
+    leg_list = ['$|A|^2$', r'$|f^\prime(z)|^2/4$', '$c_{\\rm s}^2|l(z)|^2/4$']
 
     f = plotting.plot_ps(
         z_list, ps_list, utils.PSType.UNKNOWN, ax_limits=strength,
         col_list=const.COLOURS, leg_list=leg_list)
 
-    inter_flag = (abs(b.CS0 - vw) < 0.05)
+    inter_flag = (abs(bubble.CS0 - vw) < 0.05)
     plotting.plot_guide_power_laws_ssm(f, z, ph_sp_fac*A2, utils.PSType.V, inter_flag=inter_flag)
     
     if save_id is None:
@@ -597,7 +597,7 @@ def plot_ps_compare_nuc(vw, alpha, save_id=None, graph_file_type=None):
         y_list, pow_gw_list, utils.PSType.GW,
         ax_limits=strength, col_list=const.COLOURS, leg_list=nuc_type_list)
 
-    inter_flag = (abs(b.CS0 - vw) < 0.05)
+    inter_flag = (abs(bubble.CS0 - vw) < 0.05)
     plotting.plot_guide_power_laws_prace(
         f_v, f_gw, z_list[0], pow_v_list[0],
         y_list[0], pow_gw_list[0], inter_flag=inter_flag)
@@ -754,7 +754,7 @@ def plot_and_save(vw, alpha, method='e_conserving', v_xi_file=None, suffix=None)
         ax_gw.loglog(y, pow_gw2, color=col, linestyle='--')
         gw_power.append(np.trapz(pow_gw2/y, y))
         
-    inter_flag = (abs(b.CS0 - vw) < 0.05)  # Due intermediate power law
+    inter_flag = (abs(bubble.CS0 - vw) < 0.05)  # Due intermediate power law
     plotting.plot_guide_power_laws_prace(f1, f2, z, pow_v, y, pow_gw, inter_flag=inter_flag)
 
     # Pretty graph 1
@@ -799,8 +799,8 @@ def plot_and_save(vw, alpha, method='e_conserving', v_xi_file=None, suffix=None)
         f2.savefig(MD_PATH + "pow_gw_" + graph_file_suffix)
 
     # Now some comparisons between real space <v^2> and Fourier space already calculated
-    v_ip, w_ip, xi = b.fluid_shell(vw, alpha)
-    Ubarf2 = b.Ubarf_squared(v_ip, w_ip, xi, vw)
+    v_ip, w_ip, xi = bubble.fluid_shell(vw, alpha)
+    Ubarf2 = bubble.Ubarf_squared(v_ip, w_ip, xi, vw)
 
     print("vw = {}, alpha = {}, nucleation = {}".format(vw, alpha, const.NUC_STRING))
     print("<v^2> =                      ", V2_pow_v)

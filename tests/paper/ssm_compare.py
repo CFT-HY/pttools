@@ -12,7 +12,7 @@ import typing as tp
 import numpy as np
 import matplotlib.pyplot as plt
 
-import pttools.bubble as b
+from pttools import bubble
 import pttools.ssmtools as ssm
 from tests.paper import const
 from tests.paper import plotting
@@ -133,7 +133,7 @@ def generate_ps(
             ax_v.loglog(z, pow_v2, color=col, linestyle='--')
             ax_gw.loglog(y, pow_gw2, color=col, linestyle='--')
 
-        inter_flag = (abs(b.CS0 - vw) < 0.05)  # Due intermediate power law
+        inter_flag = (abs(bubble.CS0 - vw) < 0.05)  # Due intermediate power law
         plotting.plot_guide_power_laws_prace(f1, f2, z, pow_v, y, pow_gw, inter_flag=inter_flag)
 
         # Pretty graph 1
@@ -181,8 +181,8 @@ def generate_ps(
         f2.savefig(GDP + "pow_gw_" + graph_file_suffix)
 
     # Now some diagnostic comparisons between real space <v^2> and Fourier space already calculated
-    v_ip, w_ip, xi = b.fluid_shell(vw, alpha)
-    Ubarf2 = b.ubarf_squared(v_ip, w_ip, xi, vw)
+    v_ip, w_ip, xi = bubble.fluid_shell(vw, alpha)
+    Ubarf2 = bubble.ubarf_squared(v_ip, w_ip, xi, vw)
 
     logger.debug(
         f"vw = {vw}, alpha = {alpha}, nucleation = {const.NUC_STRING}, "
