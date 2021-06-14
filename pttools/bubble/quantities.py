@@ -74,7 +74,7 @@ def de_from_w(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> n
     Can get alpha_n = find_alpha_n_from_w_xi(w,xi,v_wall,alpha_p)
     """
     check.check_physical_params([v_wall, alpha_n])
-    e_from_w = bag.e(w, bag.phase(xi, v_wall), 0.75 * w[-1] * alpha_n)
+    e_from_w = bag.get_e(w, bag.get_phase(xi, v_wall), 0.75 * w[-1] * alpha_n)
 
     return e_from_w - e_from_w[-1]
 
@@ -85,7 +85,7 @@ def de_from_w_new(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, a
     from velocity and enthalpy, assuming bag equation of state.
     """
     check.check_physical_params([v_wall, alpha_n])
-    e_from_w = bag.e(w, bag.phase(xi, v_wall), 0.75 * w[-1] * alpha_n)
+    e_from_w = bag.get_e(w, bag.get_phase(xi, v_wall), 0.75 * w[-1] * alpha_n)
 
     de = e_from_w - e_from_w[-1]
 
@@ -179,7 +179,7 @@ def get_ke_frac_new(
             logger.debug(f"{vw:8.6f} {alpha_n:8.6f} {ke}")
 
     # Symmetric phase energy density
-    e_s = bag.e(w[-1], 0, bag.theta_bag(w[-1], 0, alpha_n))
+    e_s = bag.get_e(w[-1], 0, bag.theta_bag(w[-1], 0, alpha_n))
     # result is stored in it.operands[1]
     if isinstance(v_wall, np.ndarray):
         ke_frac_out = it.operands[1] / e_s

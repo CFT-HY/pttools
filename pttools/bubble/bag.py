@@ -63,7 +63,7 @@ def theta_bag(w: th.FLOAT_OR_ARR, phase: th.INT_OR_ARR, alpha_n: th.FLOAT_OR_ARR
     return alpha_n * (0.75 * w_n) * (1 - phase)
 
 
-def p(
+def get_p(
         w: th.FLOAT_OR_ARR,
         phase: th.INT_OR_ARR,
         theta_s: th.FLOAT_OR_ARR,
@@ -83,7 +83,7 @@ def p(
     return 0.25 * w - theta
 
 
-def e(
+def get_e(
         w: th.FLOAT_OR_ARR,
         phase: th.INT_OR_ARR,
         theta_s: th.FLOAT_OR_ARR,
@@ -97,10 +97,10 @@ def e(
 
     See also the equation 4.10.
     """
-    return w - p(w, phase, theta_s, theta_b)
+    return w - get_p(w, phase, theta_s, theta_b)
 
 
-def w(
+def get_w(
         e: th.FLOAT_OR_ARR,
         phase: th.INT_OR_ARR,
         theta_s: th.FLOAT_OR_ARR,
@@ -121,7 +121,7 @@ def w(
     return 4/3 * (e - theta)
 
 
-def phase(xi: th.FLOAT_OR_ARR, v_w: float) -> th.FLOAT_OR_ARR:
+def get_phase(xi: th.FLOAT_OR_ARR, v_w: float) -> th.FLOAT_OR_ARR:
     """
     Returns array indicating phase of system.
     in symmetric phase (xi>v_w), phase = 0
@@ -146,4 +146,4 @@ def adiabatic_index(
     """
     Returns array of float, adiabatic index (ratio of enthalpy to energy).
     """
-    return w / e(w, phase, theta_s, theta_b)
+    return w / get_e(w, phase, theta_s, theta_b)
