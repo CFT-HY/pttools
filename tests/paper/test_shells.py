@@ -4,6 +4,7 @@ import unittest
 import numpy as np
 
 from pttools import bubble
+from tests.paper import const
 from tests.paper import ssm_paper_utils as spu
 from tests.test_utils import TEST_DATA_PATH
 
@@ -26,11 +27,11 @@ class TestShells(unittest.TestCase):
 
     def test_fluid_shells(self):
         """Based on sound-shell-model/paper/python/fig_1_9_shell_plots.py"""
-        vw_weak_list = spu.VW_WEAK_LIST
+        vw_weak_list = const.VW_WEAK_LIST
         vw_inter_list = spu.VW_INTER_LIST
 
-        alpha_weak = spu.ALPHA_WEAK
-        alpha_inter = spu.ALPHA_INTER
+        alpha_weak = const.ALPHA_WEAK
+        alpha_inter = const.ALPHA_INTER
 
         alpha_weak_list = len(vw_weak_list) * [alpha_weak]
         alpha_inter_list = len(vw_inter_list) * [alpha_inter]

@@ -15,39 +15,13 @@ import matplotlib.pyplot as plt
 
 import pttools.bubble as b
 import pttools.ssmtools as ssm
+from tests.paper import const
 from tests.paper import utils
 from tests.test_utils import TEST_DATA_PATH
 
 logger = logging.getLogger(__name__)
 
 utils.setup_plotting()
-# Number of points used in the numerical calculations (n_z, n_xi, n_t)
-# z - wavenumber space, xi - r/t space, t - time for size distribution integration
-NP_LIST = [[1000, 2000, 200], [2500, 5000, 500], [5000, 10000, 1000]]
-
-NUC_TYPE = 'simultaneous'
-NUC_ARGS = (1.,)
-# Simultaneous is relevant for comparison to num sims
-# Or:
-# nuc_type = 'exponential'
-# nuc_args = (1,)
-
-Z_MIN = 0.2   # Minimum z = k.R* array value
-Z_MAX = 1000  # Maximum z = k.R* array value
-
-
-NZ_STRING = 'nz'
-for r in range(len(NP_LIST)):
-    nz = NP_LIST[r][0]
-    NZ_STRING += '{}k'.format(nz // 1000)
-
-NUC_STRING = NUC_TYPE[0:3] + '_'
-for n in range(len(NUC_ARGS)):
-    NUC_STRING += str(NUC_ARGS[n]) + '_'
-
-NT_STRING = '_nT{}'.format(NP_LIST[0][2])
-
-FILE_TYPE = 'pdf'
 
 MDP = os.path.join(TEST_DATA_PATH, "model_data/")
 GDP = os.path.join(TEST_DATA_PATH, "graphs/")
@@ -57,16 +31,9 @@ if not os.path.isdir(GDP):
     os.mkdir(GDP)
 
 # All run parameters
-    
-VW_WEAK_LIST = [0.92, 0.80, 0.68, 0.56, 0.44]
+
 VW_INTER_LIST = [0.92, 0.72, 0.44]
 # NB prace runs did not include intermediate 0.80, 0.56
-
-ETA_WEAK_LIST = [0.19, 0.35, 0.51, 0.59, 0.93]
-ETA_INTER_LIST = [0.17, 0.40, 0.62]
-
-ALPHA_WEAK = 0.0046
-ALPHA_INTER = 0.050
 
 T_WEAK_LIST = [1210, 1380, 1630, 1860, 2520]
 T_INTER_LIST = [1180, 1480, 2650]
@@ -96,8 +63,7 @@ PATH_HEAD = os.path.join(TEST_DATA_PATH, "fluidprofiles/")
 PATH_LIST_ALL = ['weak/', 'intermediate/']
 FILE_PATTERN = 'data-extracted.{:05d}.txt'
 
-VW_LIST_ALL = [VW_WEAK_LIST, VW_INTER_LIST]
-ALPHA_LIST_ALL = [ALPHA_WEAK, ALPHA_INTER]
+VW_LIST_ALL = [const.VW_WEAK_LIST, VW_INTER_LIST]
 STEP_LIST_ALL = [STEP_WEAK_LIST, STEP_INTER_LIST]
 DIR_LIST_ALL = [DIR_WEAK_LIST, DIR_INTER_LIST]
 
@@ -172,7 +138,7 @@ def plot_ps(
     else:
         ax.set_ylabel(r'$\mathcal{P}_{\rm ' + ps_type + '}(kR_*)$')
     ax.set_ylim([p_min, p_max])
-    ax.set_xlim([Z_MIN, Z_MAX])
+    ax.set_xlim([const.Z_MIN, const.Z_MAX])
     if leg_list is not None:
         plt.legend(loc='best')
     plt.tight_layout()
@@ -195,8 +161,8 @@ def generate_ps(
     Returns <V^2> and Omgw divided by (Ht.HR*).
     """
 
-    Np = NP_LIST[-1]
-    col = COLOUR_LIST[0]
+    Np = const.NP_LIST[-1]
+    col = const.COLOURS[0]
 
     if alpha < 0.01:
         strength = Strength.WEAK
@@ -207,17 +173,17 @@ def generate_ps(
         strength = Strength.STRONG
 
     # Generate power spectra
-    z = np.logspace(np.log10(Z_MIN), np.log10(Z_MAX), Np[0])
+    z = np.logspace(np.log10(const.Z_MIN), np.log10(const.Z_MAX), Np[0])
 
     # Array using the minimum & maximum values set earlier, with Np[0] number of points
     print("vw = ", vw, "alpha = ", alpha, "Np = ", Np)
 
-    sd_v = ssm.spec_den_v(z, [vw, alpha, NUC_TYPE, NUC_ARGS], Np[1:], method=method)
+    sd_v = ssm.spec_den_v(z, [vw, alpha, const.NUC_TYPE, const.NUC_ARGS], Np[1:], method=method)
     pow_v = ssm.pow_spec(z,sd_v)
     V2_pow_v = np.trapz(pow_v/z, z)
 
     if v_xi_file is not None:
-        sd_v2 = ssm.spec_den_v(z, [vw, alpha, NUC_TYPE, NUC_ARGS], Np[1:], v_xi_file, method=method)
+        sd_v2 = ssm.spec_den_v(z, [vw, alpha, const.NUC_TYPE, const.NUC_ARGS], Np[1:], v_xi_file, method=method)
         pow_v2 = ssm.pow_spec(z, sd_v2)
         V2_pow_v = np.trapz(pow_v2/z, z)
 
@@ -254,7 +220,7 @@ def generate_ps(
         ax_v.set_xlabel(r'$kR_*$')
         ax_v.set_ylabel(r'$\mathcal{P}_{\rm v}(kR_*)$')
         ax_v.set_ylim([pv_min, pv_max])
-        ax_v.set_xlim([Z_MIN, Z_MAX])
+        ax_v.set_xlim([const.Z_MIN, const.Z_MAX])
         f1.tight_layout()
 
         # Pretty graph 2
@@ -263,7 +229,7 @@ def generate_ps(
         ax_gw.set_xlabel(r'$kR_*$')
         ax_gw.set_ylabel(r'$\Omega^\prime_{\rm gw}(kR_*)/(H_{\rm n}R_*)$')
         ax_gw.set_ylim([pgw_min, pgw_max])
-        ax_gw.set_xlim([Z_MIN, Z_MAX])
+        ax_gw.set_xlim([const.Z_MIN, const.Z_MAX])
         f2.tight_layout()
 
     # Now some saving if requested
@@ -271,7 +237,7 @@ def generate_ps(
         nz_string = 'nz{}k'.format(Np[0] // 1000)
         nx_string = '_nx{}k'.format(Np[1] // 1000)
         nT_string = '_nT{}-'.format(Np[2])
-        file_suffix = "vw{:3.2f}alpha{}_".format(vw, alpha) + NUC_STRING + nz_string + nx_string + nT_string
+        file_suffix = "vw{:3.2f}alpha{}_".format(vw, alpha) + const.NUC_STRING + nz_string + nx_string + nT_string
 
     if save_ids[0] is not None:
         data_file_suffix = file_suffix + save_ids[0] + '.txt'
@@ -296,7 +262,7 @@ def generate_ps(
     v_ip, w_ip, xi = b.fluid_shell(vw, alpha)
     Ubarf2 = b.ubarf_squared(v_ip, w_ip, xi, vw)
 
-    print("vw = {}, alpha = {}, nucleation = {}".format(vw, alpha, NUC_STRING))
+    print("vw = {}, alpha = {}, nucleation = {}".format(vw, alpha, const.NUC_STRING))
     print("<v^2> =                      ", V2_pow_v)
     print("Ubarf2 (1 bubble)            ", Ubarf2)
     print("Ratio <v^2>/Ubarf2           ", V2_pow_v/Ubarf2)
@@ -327,7 +293,7 @@ def all_generate_ps_prace(save_ids: tp.Tuple[str, str] = ('', ''), show=True, de
     debug_data = []
 
     for vw_list, alpha, step_list, path, dir_list in \
-            zip(VW_LIST_ALL, ALPHA_LIST_ALL, STEP_LIST_ALL, PATH_LIST_ALL, DIR_LIST_ALL):
+            zip(VW_LIST_ALL, const.ALPHA_LIST_ALL, STEP_LIST_ALL, PATH_LIST_ALL, DIR_LIST_ALL):
         for vw, step, dir_name in zip(vw_list, step_list, dir_list):
             v_xi_file = PATH_HEAD + path + dir_name + FILE_PATTERN.format(step)
             print("v_xi_file:", v_xi_file)
