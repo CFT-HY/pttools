@@ -1,3 +1,5 @@
+"""Common utilities for ssm_compare.py and ssm_paper_utils.py"""
+
 import enum
 import logging
 

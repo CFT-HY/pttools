@@ -1,3 +1,5 @@
+"""Constants common to both ssm_compare.py and ssm_paper_utils.py"""
+
 ALPHA_WEAK = 0.0046
 ALPHA_INTER = 0.050
 ALPHA_LIST_ALL = [ALPHA_WEAK, ALPHA_INTER]

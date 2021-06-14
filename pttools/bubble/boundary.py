@@ -1,3 +1,5 @@
+"""Functions for calculating the properties of the bubble boundaries"""
+
 import enum
 import typing as tp
 

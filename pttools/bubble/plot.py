@@ -1,3 +1,8 @@
+"""Plotting functions of the bubble module
+
+All functions using Matplotlib etc. should be put here to keep them separate from the numerical codebase.
+"""
+
 import typing as tp
 
 import matplotlib as mpl

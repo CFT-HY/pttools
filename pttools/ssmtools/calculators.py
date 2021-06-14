@@ -1,3 +1,5 @@
+"""Numerical utilities for ssmtools"""
+
 import typing as tp
 
 # import numba.types

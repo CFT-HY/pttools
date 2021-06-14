@@ -1,3 +1,5 @@
+"""Type hints for simplifying and unifying PTtools code"""
+
 import typing as tp
 
 import numpy as np

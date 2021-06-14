@@ -1,3 +1,5 @@
+"""Functions for computing GW power spectra"""
+
 import typing as tp
 
 import numpy as np

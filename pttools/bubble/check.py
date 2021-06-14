@@ -1,3 +1,5 @@
+"""Validation tools"""
+
 import typing as tp
 
 import numpy as np

@@ -1,3 +1,5 @@
+"""Functions for calculating quantities from Einstein's special theory of relativity"""
+
 import numpy as np
 
 import pttools.type_hints as th

@@ -1,3 +1,5 @@
+"""Utility functions and constants for unit testing"""
+
 import decimal
 import os.path
 import typing as tp
