@@ -35,13 +35,13 @@ def A2_ssm_func(
         # This is the correct method (as of 12.18)
         A2 = A2_e_conserving(z, vw, alpha, npt, 'A2_only', de_method, z_st_thresh)
     elif method == 'f_only':
-        print('A2_ssm_func: f_only method, multiplying (f\')^2 by 2')
+        logger.debug("f_only method, multiplying (f\')^2 by 2")
         f = f_ssm_func(z, vw, alpha, npt)
         df_dz = np.gradient(f) / np.gradient(z)
         A2 = 0.25 * (df_dz ** 2)
         A2 = A2 * 2
     elif method == 'with_g':
-        print('A2_ssm_func: with_g method')
+        logger.debug("With_g method")
         f = f_ssm_func(z, vw, alpha, npt)
         df_dz = np.gradient(f) / np.gradient(z)
         g = (z * df_dz + 2. * f)
@@ -122,7 +122,7 @@ def A2_e_conserving_file(
      Uses method respecting energy conservation, although only accurate to
      linear order, meaning that there is an apparent $z^0$ piece at very low $z$.
     """
-    print('ssmtools.A2_e_conserving_file: loading v(xi), e(xi) from {}'.format(filename))
+    logger.debug(f"loading v(xi), e(xi) from {filename}")
     try:
         with open(filename) as f:
             t = float(f.readline())
@@ -132,8 +132,8 @@ def A2_e_conserving_file(
 
     xi_all = r / t
     wh_xi_lt1 = np.where(xi_all < 1.)
-    print('ssmtools.A2_e_conserving_file: interpolating v(xi), e(xi) from {} to {} points'.format(len(wh_xi_lt1[0]),
-                                                                                                  npt[0]))
+    logger.debug(f"Interpolating v(xi), e(xi) from {wh_xi_lt1[0]} to {npt[0]} points")
+
     xi_lt1 = np.linspace(0., 1., npt[0])
     v_xi_lt1 = np.interp(xi_lt1, xi_all, v_all)
     e_xi_lt1 = np.interp(xi_lt1, xi_all, e_all)
@@ -151,7 +151,7 @@ def A2_e_conserving_file(
     w_n0 = bubble.w(e_n, 0., alpha * e_n)  # Correct only in Bag, probably good enough
     w_n = fsolve(fun, w_n0)[0]  # fsolve returns array, want float
     lam = (e_xi_lt1 - e_n) / w_n
-    print('ssmtools.A2_e_conserving_file: initial guess w_n0: {}, final {}'.format(w_n0, w_n))
+    logger.debug(f"Initial guess w_n0: {w_n0}, final {w_n}")
 
     #    lam_ft = np.zeros_like(z)
     #    for j in range(lam_ft.size):
@@ -237,7 +237,7 @@ def f_file(
      3D FT of radial fluid velocity v(r) from file.
      z is array of scaled wavenumbers z = kR*
     """
-    print('ssmtools.f_file: loading v(xi) from {} at time {}'.format(filename, t))
+    logger.debug(f"Loading v(xi) from {filename} at time {t}")
     try:
         r, v_all = np.loadtxt(filename, usecols=(0, 1), unpack=True, skiprows=skip)
     except IOError as error:
@@ -245,7 +245,7 @@ def f_file(
 
     xi_all = r / t
     wh_xi_lt1 = np.where(xi_all < 1.)
-    print('ssmtools.f_file: interpolating v(xi) from {} to {} points'.format(len(wh_xi_lt1[0]), npt[0]))
+    logger.debug(f"Interpolating v(xi) from {len(wh_xi_lt1[0])} to {npt[0]} points")
     #    xi_lt1 = np.linspace(0.,1.,npt[0])
     #    v_xi_lt1 = np.interp(xi_lt1,xi_all,v_all)
     xi_lt1, v_xi_lt1 = calculators.resample_uniform_xi(xi_all, v_all, npt[0])

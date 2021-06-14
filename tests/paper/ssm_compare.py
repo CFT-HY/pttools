@@ -98,7 +98,7 @@ def generate_ps(
     z = np.logspace(np.log10(const.Z_MIN), np.log10(const.Z_MAX), Np[0])
 
     # Array using the minimum & maximum values set earlier, with Np[0] number of points
-    print("vw = ", vw, "alpha = ", alpha, "Np = ", Np)
+    logger.debug(f"vw = {vw}, alpha = {alpha}, Np = {Np}")
 
     sd_v = ssm.spec_den_v(z, [vw, alpha, const.NUC_TYPE, const.NUC_ARGS], Np[1:], method=method)
     pow_v = ssm.pow_spec(z,sd_v)
@@ -184,11 +184,12 @@ def generate_ps(
     v_ip, w_ip, xi = b.fluid_shell(vw, alpha)
     Ubarf2 = b.ubarf_squared(v_ip, w_ip, xi, vw)
 
-    print("vw = {}, alpha = {}, nucleation = {}".format(vw, alpha, const.NUC_STRING))
-    print("<v^2> =                      ", V2_pow_v)
-    print("Ubarf2 (1 bubble)            ", Ubarf2)
-    print("Ratio <v^2>/Ubarf2           ", V2_pow_v/Ubarf2)
-    print("gw power (scaled):           ", gw_power)
+    logger.debug(
+        f"vw = {vw}, alpha = {alpha}, nucleation = {const.NUC_STRING}, "
+        f"<v^2> = {V2_pow_v}, Ubarf2 (1 bubble) = {Ubarf2}, "
+        f"Ratio <v^2>/Ubarf2 = {V2_pow_v/Ubarf2}, "
+        f"gw power (scaled) = {gw_power}"
+    )
 
     if show:
         plt.show()
@@ -218,7 +219,7 @@ def all_generate_ps_prace(save_ids: tp.Tuple[str, str] = ('', ''), show=True, de
             zip(VW_LIST_ALL, const.ALPHA_LIST_ALL, STEP_LIST_ALL, PATH_LIST_ALL, DIR_LIST_ALL):
         for vw, step, dir_name in zip(vw_list, step_list, dir_list):
             v_xi_file = PATH_HEAD + path + dir_name + FILE_PATTERN.format(step)
-            print("v_xi_file:", v_xi_file)
+            logger.debug(f"v_xi_file: {v_xi_file}")
             if debug:
                 v2, Omgw, data = generate_ps(vw, alpha, method, v_xi_file, save_ids, show, debug=debug)
                 debug_data.append(data)

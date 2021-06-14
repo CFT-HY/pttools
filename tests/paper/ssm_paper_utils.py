@@ -395,15 +395,8 @@ def ps_from_ssm(vw, alpha, nuc_type='simultaneous', nuc_args=(1.,), Np=const.NP_
     Ubarf = np.sqrt(V2_pow_v)
     AdInd = 4/(3*(1+alpha))
     Omgwtil = gw_power/(AdInd*V2_pow_v)**2
-    
-    print('{:s}'.format(nuc_string), end=' ')
-    print('{}'.format(alpha), end=' ')
-    print('{:.2f}'.format(vw), end=' ')
-    print('{:.3e}'.format(V2_pow_v), end=' ')
-    print('{:5.2f}'.format(1000*Ubarf), end=' ')
-    print('{:.3e}'.format(gw_power), end=' ')
-    print('{:.3f}'.format(100*Omgwtil), end=' ')
-    print()
+
+    logger.debug(f"{nuc_string:s} {alpha} {vw:.2f} {V2_pow_v:.3e} {1000*Ubarf:5.2f} {gw_power:.3e} {100*Omgwtil:.3f}")
 
     return z, pow_v, y, pow_gw
 
