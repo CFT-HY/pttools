@@ -16,13 +16,14 @@ from scipy.optimize import curve_fit
 import pttools.bubble as b
 import pttools.ssmtools as ssm
 from tests.paper import const
+from tests.paper import plotting
 from tests.paper import utils
 import tests.paper.tex_utils as tu
 from tests.test_utils import TEST_DATA_PATH
 
 logger = logging.getLogger(__name__)
 
-utils.setup_plotting()
+plotting.setup_plotting()
 
 # Compare SSM prediction with data
 # Creates and plots velocity and GW power spectra from SSM
@@ -374,17 +375,16 @@ def load_compare_nuc_data(file: str):
 
 def ps_from_ssm(vw, alpha, nuc_type='simultaneous', nuc_args=(1.,), Np=const.NP_LIST[-1], method='e_conserving'):
     # Get velocity and GW power spectra from SSM
-    
+
     nuc_string = nuc_type[0:3] + '_'
     for n in range(len(nuc_args)):
         nuc_string += str(nuc_args[n]) + '_'
 
-    
     z = np.logspace(np.log10(const.Z_MIN), np.log10(const.Z_MAX), Np[0])
 
     sd_v = ssm.spec_den_v(z, [vw, alpha, nuc_type, nuc_args], Np[1:], method=method)
-    pow_v = ssm.pow_spec(z,sd_v)
-    
+    pow_v = ssm.pow_spec(z, sd_v)
+
     V2_pow_v = np.trapz(pow_v/z, z)
 
     sd_gw, y = ssm.spec_den_gw_scaled(z, sd_v)
@@ -406,18 +406,24 @@ def ps_from_ssm(vw, alpha, nuc_type='simultaneous', nuc_args=(1.,), Np=const.NP_
     print()
 
     return z, pow_v, y, pow_gw
- 
 
-def plot_ps_compare_res(vw, alpha, nuc_type='simultaneous', nuc_args=(1.,), 
-                        save_id=None, graph_file_type=None, method='e_conserving'):
+
+def plot_ps_compare_res(
+        vw,
+        alpha,
+        nuc_type='simultaneous',
+        nuc_args=(1.,),
+        save_id=None,
+        graph_file_type=None,
+        method: utils.Method = utils.Method.E_CONSERVING):
     # Plots power spectra predictions of SSM with different resolutions in Np_list
     # Saves data and graphs if save_id is set
     
-    strength = 'weak'
+    strength = utils.Strength.WEAK
     if alpha >= 0.05:
-        strength = 'inter'
+        strength = utils.Strength.INTER
     if alpha >= 0.5:
-        strength = 'strong'
+        strength = utils.Strength.STRONG
 
     z_list = []
     pow_v_list = []
@@ -458,11 +464,13 @@ def plot_ps_compare_res(vw, alpha, nuc_type='simultaneous', nuc_args=(1.,),
         nT_string_all += '{}-'.format(Np[2])
 
     with plt.rc_context({'legend.fontsize': 12}):
-        f_v  = plot_ps(z_list, pow_v_list, 'v', ax_limits=strength, col_list=const.COLOURS)
-        f_gw = plot_ps(y_list, pow_gw_list, 'gw', ax_limits=strength, col_list=const.COLOURS)
-    
+        f_v = plotting.plot_ps(
+            z_list, pow_v_list, utils.PSType.V, ax_limits=strength, col_list=const.COLOURS)
+        f_gw = plotting.plot_ps(
+            y_list, pow_gw_list, utils.PSType.GW, ax_limits=strength, col_list=const.COLOURS)
+
         # Now plot guide power laws
-        if method=='e_conserving':
+        if method is utils.Method.E_CONSERVING:
             nv_lo = 5
             ngw_lo = 9
         else:
@@ -470,8 +478,9 @@ def plot_ps_compare_res(vw, alpha, nuc_type='simultaneous', nuc_args=(1.,),
             ngw_lo = 5
         
         inter_flag = (abs(b.CS0 - vw) < 0.05)
-        plot_guide_power_laws_prace(f_v, f_gw, z_list[0], pow_v_list[0], y_list[0], pow_gw_list[0], 
-                                    [nv_lo, ngw_lo], inter_flag)
+        plotting.plot_guide_power_laws_prace(
+            f_v, f_gw, z_list[0], pow_v_list[0], y_list[0], pow_gw_list[0],
+            (nv_lo, ngw_lo), inter_flag)
 
     # Save graph if asked for
     if save_id is not None:
@@ -491,11 +500,11 @@ def plot_ps_1bubble(vw, alpha, save_id=None, graph_file_type=None, Np = const.NP
     # Saves data if save_id is set
     # Saves graph file if graph_file_type is set
     
-    strength = 'weak'
+    strength = utils.Strength.WEAK
     if alpha >= 0.05:
-        strength = 'inter'
+        strength = utils.Strength.INTER
     if alpha >= 0.5:
-        strength = 'strong'
+        strength = utils.Strength.STRONG
     
     z = np.logspace(np.log10(const.Z_MIN), np.log10(const.Z_MAX), Np[0])
     
@@ -508,13 +517,13 @@ def plot_ps_1bubble(vw, alpha, save_id=None, graph_file_type=None, Np = const.NP
     ph_sp_fac = z**3/(2*np.pi**2)
     ps_list = [ph_sp_fac * A2, ph_sp_fac * fp2_2 / 2, ph_sp_fac * b.CS0_2 * lam2 / 4]
     leg_list = ['$|A|^2$', '$|f^\prime(z)|^2/4$', '$c_{\\rm s}^2|l(z)|^2/4$']
-    
-    f = plot_ps(z_list, ps_list, '', ax_limits=strength,
-                col_list=const.COLOURS, leg_list=leg_list)
+
+    f = plotting.plot_ps(
+        z_list, ps_list, utils.PSType.UNKNOWN, ax_limits=strength,
+        col_list=const.COLOURS, leg_list=leg_list)
 
     inter_flag = (abs(b.CS0 - vw) < 0.05)
-    plot_guide_power_laws_ssm(f, z, ph_sp_fac*A2, 'v', 
-                              inter_flag=inter_flag)
+    plotting.plot_guide_power_laws_ssm(f, z, ph_sp_fac*A2, utils.PSType.V, inter_flag=inter_flag)
     
     if save_id is None:
         save_id = ''
@@ -522,7 +531,7 @@ def plot_ps_1bubble(vw, alpha, save_id=None, graph_file_type=None, Np = const.NP
     # Save graph if asked for
     if graph_file_type is not None:
         graph_file_suffix = "vw{:.2f}alpha{}_".format(vw, alpha)  \
-            + nz_string + nx_string +  save_id + '.' + graph_file_type
+            + nz_string + nx_string + save_id + '.' + graph_file_type
         f.savefig(MD_PATH + "one_bub_" + graph_file_suffix)
     
     # plt.show()
@@ -531,22 +540,22 @@ def plot_ps_1bubble(vw, alpha, save_id=None, graph_file_type=None, Np = const.NP
         return f, np.array([z, A2, fp2_2, lam2])
     return f
 
-            
+
 def plot_ps_compare_nuc(vw, alpha, save_id=None, graph_file_type=None):
     # Plots power spectra predictions of SSM with different nucleation models
     # Saves data if save_id is set.
     # Saves graph file if graph_file_type is set.
 
-    method = 'e_conserving'
+    method = utils.Method.E_CONSERVING
     nuc_type_list = ['simultaneous', 'exponential']
-    nuc_args_list = [(1.,),(1.,)]
-    
-    strength = 'weak'
+    nuc_args_list = [(1.,), (1.,)]
+
+    strength = utils.Strength.WEAK
     if alpha >= 0.05:
-        strength = 'inter'
+        strength = utils.Strength.INTER
     if alpha >= 0.5:
-        strength = 'strong'
-    
+        strength = utils.Strength.STRONG
+
     z_list = []
     pow_v_list = []
     y_list = []
@@ -554,7 +563,7 @@ def plot_ps_compare_nuc(vw, alpha, save_id=None, graph_file_type=None):
 
     v2_list = []
     Omgw_scaled_list = []
-    
+
     Np = const.NP_LIST[-1]
 
     nz_string = 'nz{}k'.format(Np[0] // 1000)
@@ -585,18 +594,20 @@ def plot_ps_compare_nuc(vw, alpha, save_id=None, graph_file_type=None):
             save_id = ''
 
         nuc_string_all += nuc_string
-        v2_list.append(np.trapz(pow_v/z,z))
-        Omgw_scaled_list.append(np.trapz(pow_gw/y,y))
+        v2_list.append(np.trapz(pow_v/z, z))
+        Omgw_scaled_list.append(np.trapz(pow_gw/y, y))
 
-        
-        
-    f_v  = plot_ps(z_list, pow_v_list, 'v', ax_limits=strength, col_list=const.COLOURS, leg_list=nuc_type_list)
-    f_gw = plot_ps(y_list, pow_gw_list, 'gw', ax_limits=strength, col_list=const.COLOURS, leg_list=nuc_type_list)
+    f_v = plotting.plot_ps(
+        z_list, pow_v_list, utils.PSType.V,
+        ax_limits=strength, col_list=const.COLOURS, leg_list=nuc_type_list)
+    f_gw = plotting.plot_ps(
+        y_list, pow_gw_list, utils.PSType.GW,
+        ax_limits=strength, col_list=const.COLOURS, leg_list=nuc_type_list)
 
-    
     inter_flag = (abs(b.CS0 - vw) < 0.05)
-    plot_guide_power_laws_prace(f_v, f_gw, z_list[0], pow_v_list[0], 
-                                y_list[0], pow_gw_list[0], inter_flag=inter_flag)
+    plotting.plot_guide_power_laws_prace(
+        f_v, f_gw, z_list[0], pow_v_list[0],
+        y_list[0], pow_gw_list[0], inter_flag=inter_flag)
             
     p_cwg = add_cwg_fit(f_gw, y_list[0], pow_gw_list[0])
     p_ssm = add_ssm_fit(f_gw, y_list[1], pow_gw_list[1])
@@ -607,60 +618,13 @@ def plot_ps_compare_nuc(vw, alpha, save_id=None, graph_file_type=None):
     # Save graph if asked for
     if graph_file_type is not None:
         graph_file_suffix = "vw{:.2f}alpha{}_".format(vw, alpha) + nuc_string_all \
-            + nz_string + nx_string + nT_string +  save_id + '.' + graph_file_type
+            + nz_string + nx_string + nT_string + save_id + '.' + graph_file_type
         f_v.savefig(MD_PATH + "pow_v_" + graph_file_suffix)
         f_gw.savefig(MD_PATH + "pow_gw_" + graph_file_suffix)
     
     # plt.show()
         
     return v2_list, Omgw_scaled_list, list(p_cwg), list(p_ssm)
-
-
-def plot_ps(z_list, pow_list, ps_type, ax_limits='weak', 
-            leg_list=None, col_list=None, ls_list=None, fig=None):
-    # Plots a list of power spectra, with axis limits appropriate to prace runs
-    # reurns a figure handle
-    
-    if col_list is None:
-        col_list = ['b']*len(z_list)
-        
-    if ls_list is None:
-        ls_list = ['-']*len(z_list)
-
-    if fig is None:
-        fig = plt.figure(figsize=[8, 4])
-        ax = plt.gca()
-
-    p_min, p_max = get_yaxis_limits(ps_type, ax_limits)
-
-    power = []
-
-    if leg_list is None:
-        for z, pow, col, ls in zip(z_list, pow_list, col_list, ls_list):
-            ax.loglog(z, pow, color=col, linestyle=ls)
-            power.append(np.trapz(pow/z, z))
-    else:
-        for z, pow, leg, col, ls in zip(z_list, pow_list, leg_list, col_list, ls_list):
-            ax.loglog(z, pow, color=col, linestyle=ls, label=leg)
-            power.append(np.trapz(pow/z, z))
-
-    # print(ps_type + " power: ", power)
-
-    # Pretty graphs
-    # ax.grid(True)
-    # ax.set_xlabel(r'$kR_*$')
-    # if ps_type == 'gw':
-    #     ax.set_ylabel(r'$(H_{\rm n}R_*)^{-1}\mathcal{P}^\prime_{\rm ' + ps_type + '}(kR_*)$')
-    # else:
-    #     ax.set_ylabel(r'$\mathcal{P}_{\rm ' + ps_type + '}(kR_*)$')
-    # ax.set_ylim([p_min, p_max])
-    # ax.set_xlim([zmin, zmax])
-    # if leg_list is not None:
-    #     plt.legend(loc='best')
-    # plt.tight_layout()
-   # plt.savefig("P" + ps_type + "_foo.pdf")
-    
-    return fig
 
 
 # def plot_ps_from_1dhydro(nt_list, v_xi_file_path, method='e_conserving', save_id=None, graph_file_suffix=None,
@@ -754,9 +718,9 @@ def plot_and_save(vw, alpha, method='e_conserving', v_xi_file=None, suffix=None)
     col = const.COLOURS[0]
 
     if alpha < 0.01:
-        strength = 'weak'
+        strength = utils.Strength.WEAK
     elif alpha < 0.1:  # intermediate transition
-        strength = 'inter'
+        strength = utils.Strength.INTER
     else:
         logger.warning("alpha > 0.1, taking strength = inter")
 
@@ -775,13 +739,13 @@ def plot_and_save(vw, alpha, method='e_conserving', v_xi_file=None, suffix=None)
     print("vw = ", vw, "alpha = ", alpha, "Np = ", Np)
 
     sd_v = ssm.spec_den_v(z, [vw, alpha, const.NUC_TYPE, const.NUC_ARGS], Np[1:], method=method)
-    pow_v = ssm.pow_spec(z,sd_v)
+    pow_v = ssm.pow_spec(z, sd_v)
     ax_v.loglog(z, pow_v, color=col)
     V2_pow_v.append(np.trapz(pow_v/z, z))
 
     if v_xi_file is not None:
         sd_v2 = ssm.spec_den_v(z, [vw, alpha, const.NUC_TYPE, const.NUC_ARGS], Np[1:], v_xi_file, method=method)
-        pow_v2 = ssm.pow_spec(z,sd_v2)
+        pow_v2 = ssm.pow_spec(z, sd_v2)
         ax_v.loglog(z, pow_v2, color=col, linestyle='--')
         V2_pow_v.append(np.trapz(pow_v2/z, z))
 
@@ -792,16 +756,16 @@ def plot_and_save(vw, alpha, method='e_conserving', v_xi_file=None, suffix=None)
     gw_power.append(np.trapz(pow_gw/y, y))
 
     if v_xi_file is not None:
-        sd_gw2, y = ssm.spec_den_gw_scaled(z,sd_v2)
+        sd_gw2, y = ssm.spec_den_gw_scaled(z, sd_v2)
         pow_gw2 = ssm.pow_spec(y, sd_gw2)
         ax_gw.loglog(y, pow_gw2, color=col, linestyle='--')
         gw_power.append(np.trapz(pow_gw2/y, y))
         
-    inter_flag = (abs(b.CS0 - vw) < 0.05) # Due intermediate power law
-    plot_guide_power_laws_prace(f1, f2, z, pow_v, y, pow_gw, inter_flag=inter_flag)
+    inter_flag = (abs(b.CS0 - vw) < 0.05)  # Due intermediate power law
+    plotting.plot_guide_power_laws_prace(f1, f2, z, pow_v, y, pow_gw, inter_flag=inter_flag)
 
     # Pretty graph 1
-    pv_min, pv_max = get_yaxis_limits('v',strength)
+    pv_min, pv_max = plotting.get_yaxis_limits(utils.PSType.V, strength)
     ax_v.grid(True)
     ax_v.set_xlabel(r'$kR_*$')
     ax_v.set_ylabel(r'$\mathcal{P}_{\rm v}(kR_*)$')
@@ -810,7 +774,7 @@ def plot_and_save(vw, alpha, method='e_conserving', v_xi_file=None, suffix=None)
     f1.tight_layout()
 
     # Pretty graph 2
-    pgw_min, pgw_max = get_yaxis_limits('gw',strength)
+    pgw_min, pgw_max = plotting.get_yaxis_limits(utils.PSType.GW, strength)
     ax_gw.grid(True)
     ax_gw.set_xlabel(r'$kR_*$')
     ax_gw.set_ylabel(r'$\Omega_{\rm gw}(kR_*)$')
@@ -830,14 +794,14 @@ def plot_and_save(vw, alpha, method='e_conserving', v_xi_file=None, suffix=None)
 
         if v_xi_file is None:
             np.savetxt(MD_PATH + 'pow_v_' + data_file_suffix,
-                       np.stack((z,pow_v),axis=-1), fmt='%.18e %.18e')
+                       np.stack((z,pow_v), axis=-1), fmt='%.18e %.18e')
             np.savetxt(MD_PATH + 'pow_gw_' + data_file_suffix,
-                       np.stack((y,pow_gw),axis=-1), fmt='%.18e %.18e')
+                       np.stack((y,pow_gw), axis=-1), fmt='%.18e %.18e')
         else:
             np.savetxt(MD_PATH + 'pow_v_' + data_file_suffix,
-                       np.stack((z,pow_v,pow_v2),axis=-1), fmt='%.18e %.18e %.18e')
+                       np.stack((z,pow_v,pow_v2), axis=-1), fmt='%.18e %.18e %.18e')
             np.savetxt(MD_PATH + 'pow_gw_' + data_file_suffix,
-                       np.stack((y,pow_gw,pow_gw2),axis=-1), fmt='%.18e %.18e %.18e')
+                       np.stack((y,pow_gw,pow_gw2), axis=-1), fmt='%.18e %.18e %.18e')
         f1.savefig(MD_PATH + "pow_v_" + graph_file_suffix)
         f2.savefig(MD_PATH + "pow_gw_" + graph_file_suffix)
 
@@ -883,8 +847,8 @@ def do_all_plot_ps_1bubble(save_id=None, graph_file_type=None, debug: bool = Fal
     alpha_inter = 0.050
 
     vw_list_all = [vw_weak_list, vw_inter_list]
-    alpha_list_all =[alpha_weak, alpha_inter]
-    
+    alpha_list_all = [alpha_weak, alpha_inter]
+
     f_list = []
     data_lst = []
     for vw_list, alpha, in zip(vw_list_all, alpha_list_all):
@@ -898,181 +862,3 @@ def do_all_plot_ps_1bubble(save_id=None, graph_file_type=None, debug: bool = Fal
     if debug:
         return f_list, np.array(data_lst)
     return f_list
-
-
-# Helper Functions for pretty graphs
-
-def get_yaxis_limits(ps_type,strength='weak'):
-    if strength == 'weak':     
-        if ps_type=='v':
-            p_min = 1e-8
-            p_max = 1e-3
-        elif ps_type=='gw':
-            p_min = 1e-16
-            p_max = 1e-8
-        else:
-            p_min = 1e-8
-            p_max = 1e-3
-    elif strength == 'inter':  
-        if ps_type=='v':
-            p_min = 1e-7
-            p_max = 1e-2
-        elif ps_type=='gw':
-            p_min = 1e-12
-            p_max = 1e-4
-        else:
-            p_min = 1e-7
-            p_max = 1e-2
-    elif strength == 'strong':  
-        if ps_type=='v':
-            p_min = 1e-5
-            p_max = 1
-        elif ps_type=='gw':
-            p_min = 1e-8
-            p_max = 1
-        else:
-            p_min = 1e-5
-            p_max = 1e-1
-    else:
-        logger.warning("warning: strength = [ *weak | inter | strong]")
-        if ps_type=='v':
-            p_min = 1e-8
-            p_max = 1e-3
-        elif ps_type=='gw':
-            p_min = 1e-16
-            p_max = 1e-8
-        else:
-            p_min = 1e-8
-            p_max = 1e-3
-    
-    return p_min, p_max
-
-
-# Functions for plotting guide power laws on graphs
-
-def get_ymax_location(x, y):
-    # Returns x, y coordinates of maximum of array y
-    ymax = max(y)
-    xmax = x[np.where(y == ymax)][0]
-    return np.array([xmax, ymax])
-
-
-def plot_guide_power_law_prace(ax, x, y, n, position, shifts=None ):
-    # Wrapper for plot_guide_power_law, with power laws and line 
-    # shifts appropriate for velocity and GW spectra of prace runs
-    if shifts==None:
-        if position=='high':
-            line_shift = [2, 1]
-            txt_shift = [1.25, 1]
-            xloglen = 1
-        elif position=='med':
-            line_shift = [0.5, 1.2]
-            txt_shift = [0.5, 0.7]
-            xloglen = -0.8
-        elif position=='low':
-            line_shift=[0.25, 0.25]
-            txt_shift=[0.5, 0.5]
-            xloglen = -1
-        else:
-            raise ValueError("Position not recognised")
-    else:
-        line_shift = shifts[0]
-        txt_shift = shifts[1]
-        if position=='high':
-            xloglen = 1
-        elif position=='med':
-            xloglen = -0.8
-        elif position=='low':
-            xloglen = -1
-        else:
-            raise ValueError("Position not recognised")
-
-    max_loc = get_ymax_location(x, y)
-
-    power_law_loc = max_loc * np.array(line_shift)
-    plot_guide_power_law(ax, power_law_loc, n, xloglen=xloglen, 
-                         txt=r'$k^{{{:}}}$'.format(n), txt_shift=txt_shift)
-
-    return power_law_loc
-
-
-def plot_guide_power_law(ax, loc, power, xloglen=1, txt='', txt_shift=[1, 1], col='k', ls='-'):
-    # Plot a guide power law going through loc[0], loc[1] with index power
-    # Optional annotation at (loc[0]*txt_shift[0], loc[1]*txt_shift[1])
-    # Returns the points in two arrays (is this the best thing?)
-    xp = loc[0]
-    yp = loc[1]
-    x_guide = np.logspace(np.log10(xp), np.log10(xp) + xloglen, 2)
-    y_guide = yp*(x_guide/xp)**power
-    ax.loglog(x_guide, y_guide, color=col, linestyle=ls)
-
-    if txt != '':
-        txt_loc = loc * np.array(txt_shift)
-        ax.text(txt_loc[0], txt_loc[1], txt, fontsize=16)
-
-    return x_guide, y_guide
-
-
-def plot_guide_power_laws_ssm(f, z, pow, ps_type='v', inter_flag=False):
-    # Plot guide power laws (assumes params all same for list)
-    # Shifts designed for simulataneous nucleation lines
-    x_high = 10
-    x_low  = 3
-    if ps_type == 'v':
-        n_lo, n_med, n_hi = 5, 1, -1
-        shifts_hi = [[2,1],[1.5,1]]
-        shifts_lo = [[0.5,0.25],[0.5,0.15]]
-    elif ps_type == 'gw':
-        n_lo, n_med, n_hi = 9, 1, -3
-        shifts_hi = None
-        shifts_lo = [[0.6,0.25],[0.5,0.08]]
-    else:
-        n_lo, n_med, n_hi = tuple(ps_type)
-
-    logger.debug("Plotting guide power laws.")
-
-    high_peak  = np.where(z > x_high)
-    plot_guide_power_law_prace(f.axes[0], z[high_peak], pow[high_peak], n_hi, 'high', 
-                                   shifts=shifts_hi)
-
-    if inter_flag:
-        # intermediate power law to be plotted
-        plot_guide_power_law_prace(f.axes[0], z[high_peak], pow[high_peak], n_med, 'med')
-
-    low_peak = np.where(z < x_low)
-    plot_guide_power_law_prace(f.axes[0], z[low_peak], pow[low_peak], n_lo, 'low', 
-                               shifts=shifts_lo)
-
-    return f
-
-
-def plot_guide_power_laws_prace(f_v, f_gw, z, pow_v, y, pow_gw, 
-                                np_lo=[5, 9], inter_flag=False):
-    # Plot guide power laws (assumes params all same for list)
-    # Shifts designed for simulataneous nucleation lines
-    x_high = 10
-    x_low = 2
-    [nv_lo, ngw_lo] = np_lo
-    logger.debug("Plotting guide power laws.")
-    high_peak_v = np.where(z > x_high)
-    high_peak_gw = np.where(y > x_high)
-    plot_guide_power_law_prace(f_v.axes[0], z[high_peak_v], pow_v[high_peak_v], -1, 'high', 
-                                   shifts=[[2, 1], [2.1, 0.6]])
-    plot_guide_power_law_prace(f_gw.axes[0], y[high_peak_gw], pow_gw[high_peak_gw], -3, 'high')
-
-    if inter_flag:
-        # intermediate power law to be plotted
-        plot_guide_power_law_prace(f_v.axes[0], z[high_peak_v], pow_v[high_peak_v], 1, 'med')
-        plot_guide_power_law_prace(f_gw.axes[0], y[high_peak_gw], pow_gw[high_peak_gw], 1, 'med',
-                                   shifts=[[0.5, 1.5], [0.5, 2]])
-
-    low_peak_v = np.where(z < x_low)
-    low_peak_gw = np.where(y < x_low)
-    plot_guide_power_law_prace(f_v.axes[0], z[low_peak_v], pow_v[low_peak_v], nv_lo, 'low', 
-                               shifts=[[0.5, 0.25], [0.5, 0.15]])
-    # plot_guide_power_law_prace(f_gw.axes[0], y[low_peak_gw], pow_gw[low_peak_gw], ngw_lo, 'low',
-    #                            shifts=[[0.4,0.5],[0.5,0.5]])
-    plot_guide_power_law_prace(f_gw.axes[0], y[low_peak_gw], pow_gw[low_peak_gw], ngw_lo, 'low',
-                               shifts=[[0.6, 0.25], [0.5, 0.08]])
-
-    return f_v, f_gw
