@@ -21,7 +21,7 @@ from tests.test_utils import TEST_DATA_PATH
 
 logger = logging.getLogger(__name__)
 
-plotting.setup_plotting()
+bubble.setup_plotting()
 
 MDP = os.path.join(TEST_DATA_PATH, "model_data/")
 GDP = os.path.join(TEST_DATA_PATH, "graphs/")
