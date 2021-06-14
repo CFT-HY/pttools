@@ -5,7 +5,7 @@ import logging
 import numpy as np
 
 import pttools.type_hints as th
-from . import alpha
+from . import alpha as alpha_tools
 from . import boundary
 from . import const
 
@@ -37,11 +37,11 @@ def identify_solution_type(v_wall: float, alpha_n: float, exit_on_error: bool = 
     """
     # v_wall = wall velocity, alpha_n = relative trace anomaly at nucleation temp outside shell
     sol_type = boundary.SolutionType.ERROR  # Default
-    if alpha_n < alpha.alpha_n_max_detonation(v_wall):
+    if alpha_n < alpha_tools.alpha_n_max_detonation(v_wall):
         # Must be detonation
         sol_type = boundary.SolutionType.DETON
     else:
-        if alpha_n < alpha.alpha_n_max_deflagration(v_wall):
+        if alpha_n < alpha_tools.alpha_n_max_deflagration(v_wall):
             if v_wall <= const.CS0:
                 sol_type = boundary.SolutionType.SUB_DEF
             else:
@@ -61,9 +61,9 @@ def identify_solution_type_alpha_plus(v_wall: float, alpha_p: float) -> boundary
     if v_wall <= const.CS0:
         sol_type = boundary.SolutionType.SUB_DEF
     else:
-        if alpha_p < alpha.alpha_plus_max_detonation(v_wall):
+        if alpha_p < alpha_tools.alpha_plus_max_detonation(v_wall):
             sol_type = boundary.SolutionType.DETON
-            if alpha.alpha_plus_min_hybrid(v_wall) < alpha_p < 1/3.:
+            if alpha_tools.alpha_plus_min_hybrid(v_wall) < alpha_p < 1/3.:
                 logger.warning(
                     f"Hybrid and detonation both possible for v_wall = {v_wall}, alpha_plus = {alpha_p}. "
                     "Choosing detonation.")
