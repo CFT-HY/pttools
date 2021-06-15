@@ -14,7 +14,7 @@ EPAT = re.compile(r'^([^e]+)e(.+)$')
 
 def round_sig(x: float, n: int) -> str:
     """round floating point x to n significant figures"""
-    if type(n) is not int:
+    if not isinstance(n, int):
         raise TypeError("n must be an integer")
     try:
         x = float(x)
@@ -49,7 +49,7 @@ def round_sig(x: float, n: int) -> str:
 
 def round_sig_signed(x: float, n: int) -> str:
     """round floating point x to n significant figures"""
-    if type(n) is not int:
+    if not isinstance(n, int):
         raise TypeError("n must be an integer")
     try:
         x = float(x)
