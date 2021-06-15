@@ -111,25 +111,25 @@ def generate_ps(
 
     sd_gw, y = ssm.spec_den_gw_scaled(z, sd_v)
     pow_gw = ssm.pow_spec(y, sd_gw)
-    gw_power = np.trapz(pow_gw/y, y)    
+    gw_power = np.trapz(pow_gw/y, y)
 
     if v_xi_file is not None:
         sd_gw2, y = ssm.spec_den_gw_scaled(z, sd_v2)
         pow_gw2 = ssm.pow_spec(y, sd_gw2)
-        gw_power = np.trapz(pow_gw2/y, y)    
+        gw_power = np.trapz(pow_gw2/y, y)
 
     # Now for some plotting if requested
     if save_ids[1] is not None or show:
         f1 = plt.figure(figsize=[8, 4])
         ax_v = plt.gca()
-        
+
         f2 = plt.figure(figsize=[8, 4])
         ax_gw = plt.gca()
-        
+
         ax_gw.loglog(y, pow_gw, color=col)
         ax_v.loglog(z, pow_v, color=col)
-        
-        if v_xi_file is not None:    
+
+        if v_xi_file is not None:
             ax_v.loglog(z, pow_v2, color=col, linestyle='--')
             ax_gw.loglog(y, pow_gw2, color=col, linestyle='--')
 
@@ -205,7 +205,7 @@ def generate_ps(
 
 
 def all_generate_ps_prace(save_ids: tp.Tuple[str, str] = ('', ''), show=True, debug: bool = False):
-    """Generate power spectra with Prace17 SSM parameters. 
+    """Generate power spectra with Prace17 SSM parameters.
     Save data files and graphs.
     Returns U-bar-f^2 and GW power as tuple of lists."""
 
