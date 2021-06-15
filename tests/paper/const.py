@@ -29,14 +29,8 @@ NUC_ARGS = (1.,)
 # NUC_TYPE = "exponential"
 # NUC_ARGS = (0,)
 
-NZ_STRING = "nz"
-for r in range(len(NP_LIST)):
-    nz = NP_LIST[r][0]
-    NZ_STRING += f"{nz // 1000}k"
-
-NUC_STRING = NUC_TYPE[0:3] + "_"
-for n in range(len(NUC_ARGS)):
-    NUC_STRING += str(NUC_ARGS[n]) + "_"
+NZ_STRING = "nz" + "".join(f"{np[0] // 1000}k" for np in NP_LIST)
+NUC_STRING = NUC_TYPE[0:3] + "_" + "_".join(str(arg) for arg in NUC_ARGS) + "_"
 
 NT_STRING = f"_nT{NP_LIST[0][2]}"
 
