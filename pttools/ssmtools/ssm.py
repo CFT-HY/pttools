@@ -104,8 +104,7 @@ def A2_e_conserving(
 
     if ret_vals == 'A2_only':
         return A2
-    else:
-        return A2, v_ft ** 2 / 2, (const.CS0 * lam_ft) ** 2 / 2
+    return A2, v_ft ** 2 / 2, (const.CS0 * lam_ft) ** 2 / 2
 
 
 def A2_e_conserving_file(

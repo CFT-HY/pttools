@@ -66,8 +66,7 @@ def find_alpha_plus(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float, n_xi: int = c
 
     if isinstance(v_wall, np.ndarray):
         return it.operands[0]
-    else:
-        return type(v_wall)(it.operands[0])
+    return type(v_wall)(it.operands[0])
 
 
 def alpha_plus_initial_guess(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float) -> th.FLOAT_OR_ARR:
@@ -156,8 +155,7 @@ def alpha_n_max_deflagration(v_wall: th.FLOAT_OR_ARR, Np=const.N_XI_DEFAULT) -> 
     # Need n_wall+1, as w is an integral of v, and lags by 1 step
     if isinstance(v_wall, np.ndarray):
         return it.operands[0]
-    else:
-        return type(v_wall)(it.operands[0])
+    return type(v_wall)(it.operands[0])
 
 
 def alpha_plus_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
@@ -178,8 +176,7 @@ def alpha_plus_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
 
     if isinstance(v_wall, np.ndarray):
         return it.operands[0]
-    else:
-        return type(v_wall)(it.operands[0])
+    return type(v_wall)(it.operands[0])
 
 
 def alpha_n_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:

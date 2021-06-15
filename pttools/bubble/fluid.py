@@ -83,12 +83,10 @@ def fluid_shell(
     if sol_type == boundary.SolutionType.ERROR:
         logger.error(f"Giving up because of identify_solution_type error")
         return np.nan, np.nan, np.nan
-    else:
-        al_p = alpha.find_alpha_plus(v_wall, alpha_n, n_xi)
-        if not np.isnan(al_p):
-            return fluid_shell_alpha_plus(v_wall, al_p, sol_type, n_xi)
-        else:
-            return np.nan, np.nan, np.nan
+    al_p = alpha.find_alpha_plus(v_wall, alpha_n, n_xi)
+    if not np.isnan(al_p):
+        return fluid_shell_alpha_plus(v_wall, al_p, sol_type, n_xi)
+    return np.nan, np.nan, np.nan
 
 
 def fluid_shell_alpha_plus(
