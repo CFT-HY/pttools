@@ -19,10 +19,10 @@ def check_wall_speed(v_wall: tp.Union[th.FLOAT_OR_ARR, tp.List[float]]) -> None:
             raise ValueError(f"Unphysical parameter(s): v_wall = {v_wall}, required 0 < v_wall < 1.")
     elif isinstance(v_wall, np.ndarray):
         if np.logical_or(np.any(v_wall >= 1.0), np.any(v_wall <= 0.0)):
-            raise ValueError(f"Unphysical parameter(s): at least one value outside 0 < v_wall < 1.")
+            raise ValueError("Unphysical parameter(s): at least one value outside 0 < v_wall < 1.")
     elif isinstance(v_wall, list):
         if any(vw >= 1.0 or vw <= 0.0 for vw in v_wall):
-            raise ValueError(f"Unphysical parameter(s): at least one value outside 0 < v_wall < 1.")
+            raise ValueError("Unphysical parameter(s): at least one value outside 0 < v_wall < 1.")
     else:
         raise TypeError("v_wall must be float, list or array.")
 
