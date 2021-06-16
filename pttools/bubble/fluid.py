@@ -111,11 +111,11 @@ def fluid_shell_alpha_plus(
     #    dxi = 10*eps
 
     if isinstance(alpha_plus, np.ndarray):
-        al_p = np.asscalar(alpha_plus)
+        al_p = alpha_plus.item()
     else:
         al_p = alpha_plus
     if isinstance(v_wall, np.ndarray):
-        v_w = np.asscalar(v_wall)
+        v_w = v_wall.item()
     else:
         v_w = v_wall
 
