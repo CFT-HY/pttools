@@ -99,7 +99,7 @@ def sin_transform_approx(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray) -> n
 
 
 @numba.njit
-def sin_transform_scalar(z: float, xi: np.ndarray, f: np.ndarray, z_st_thresh: float = const.Z_ST_THRESH) -> float:
+def _sin_transform_scalar(z: float, xi: np.ndarray, f: np.ndarray, z_st_thresh: float = const.Z_ST_THRESH) -> float:
     if z <= z_st_thresh:
         array = f * np.sin(z * xi)
         integral = np.trapz(array, xi)
