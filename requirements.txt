@@ -5,3 +5,6 @@ matplotlib
 numba
 numpy
 scipy
+# TBB can be used to speed up Numba threading
+# https://numba.pydata.org/numba-doc/latest/user/threading-layer.html#which-threading-layers-are-available
+tbb
