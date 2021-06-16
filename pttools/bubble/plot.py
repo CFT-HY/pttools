@@ -90,7 +90,7 @@ def plot_fluid_shell(
     w_sh = props.w_shock(xi_even)
 
     n_wall = props.find_v_index(xi, v_wall)
-    n_cs = np.int(np.floor(const.CS0 * Np))
+    n_cs = int(np.floor(const.CS0 * Np))
     n_sh = xi.size - 2
 
     r = w[n_wall] / w[n_wall - 1]
@@ -254,7 +254,7 @@ def plot_fluid_shells(
             raise RuntimeError(f"No solution for v_wall = {v_wall}, alpha_n = {alpha_n}.")
 
         v, w, xi = fluid.fluid_shell(v_wall, alpha_n, Np)
-        n_cs = np.int(np.floor(const.CS0 * Np))
+        n_cs = int(np.floor(const.CS0 * Np))
         n_sh = xi.size - 2
         v_sh = props.v_shock(xi_even)
         w_sh = props.w_shock(xi_even)
