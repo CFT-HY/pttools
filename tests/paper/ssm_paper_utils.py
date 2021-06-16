@@ -372,7 +372,13 @@ def load_compare_nuc_data(file: str):
     return params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list
 
 
-def ps_from_ssm(vw, alpha, nuc_type='simultaneous', nuc_args=(1.,), Np=const.NP_LIST[-1], method='e_conserving'):
+def ps_from_ssm(
+        vw,
+        alpha,
+        nuc_type: ssm.NucType = ssm.NucType.SIMULTANEOUS,
+        nuc_args=(1.,),
+        Np=const.NP_LIST[-1],
+        method: ssm.Method = ssm.Method.E_CONSERVING):
     """Get velocity and GW power spectra from SSM"""
 
     nuc_string = nuc_type[0:3] + '_'
@@ -402,12 +408,12 @@ def ps_from_ssm(vw, alpha, nuc_type='simultaneous', nuc_args=(1.,), Np=const.NP_
 
 def plot_ps_compare_res(
         vw,
-        alpha,
-        nuc_type='simultaneous',
+        alpha: float,
+        nuc_type: ssm.NucType = ssm.NucType.SIMULTANEOUS,
         nuc_args=(1.,),
-        save_id=None,
+        save_id: str = None,
         graph_file_type=None,
-        method: utils.Method = utils.Method.E_CONSERVING):
+        method: ssm.Method = ssm.Method.E_CONSERVING):
     """
     Plots power spectra predictions of SSM with different resolutions in Np_list
     Saves data and graphs if save_id is set
@@ -463,7 +469,7 @@ def plot_ps_compare_res(
             y_list, pow_gw_list, utils.PSType.GW, ax_limits=strength, col_list=const.COLOURS)
 
         # Now plot guide power laws
-        if method is utils.Method.E_CONSERVING:
+        if method is ssm.Method.E_CONSERVING:
             nv_lo = 5
             ngw_lo = 9
         else:
@@ -487,7 +493,13 @@ def plot_ps_compare_res(
     return f_v, f_gw
 
 
-def plot_ps_1bubble(vw, alpha, save_id=None, graph_file_type=None, Np=const.NP_LIST[-1], debug: bool = False):
+def plot_ps_1bubble(
+        vw,
+        alpha: float,
+        save_id: str = None,
+        graph_file_type: str = None,
+        Np=const.NP_LIST[-1],
+        debug: bool = False) -> tp.Union[plt.Figure, tp.Tuple[plt.Figure, np.ndarray]]:
     """
     Plots power spectra predictions of 1 bubble. Shown are
     |A|^2, |f'(z)|^2/2 and |l(z)|^2/2
@@ -535,14 +547,18 @@ def plot_ps_1bubble(vw, alpha, save_id=None, graph_file_type=None, Np=const.NP_L
     return f
 
 
-def plot_ps_compare_nuc(vw, alpha, save_id=None, graph_file_type=None):
+def plot_ps_compare_nuc(
+        vw: float,
+        alpha: float,
+        save_id: str = None,
+        graph_file_type: str = None) -> tp.Tuple[list, list, list, list]:
     """
     Plots power spectra predictions of SSM with different nucleation models
     Saves data if save_id is set.
     Saves graph file if graph_file_type is set.
     """
-    method = utils.Method.E_CONSERVING
-    nuc_type_list = ['simultaneous', 'exponential']
+    method = ssm.Method.E_CONSERVING
+    nuc_type_list = [ssm.NucType.SIMULTANEOUS, ssm.NucType.EXPONENTIAL]
     nuc_args_list = [(1.,), (1.,)]
 
     strength = utils.Strength.WEAK
@@ -815,7 +831,7 @@ def plot_and_save(vw, alpha, method='e_conserving', v_xi_file=None, suffix=None)
     return V2_pow_v, gw_power
 
 
-def do_all_plot_ps_compare_nuc(save_id=None, graph_file_type=None):
+def do_all_plot_ps_compare_nuc(save_id: str = None, graph_file_type=None):
     v2_list = []
     Omgw_scaled_list = []
 

@@ -29,7 +29,6 @@ DZ_ST_BLEND: float = np.pi  # Default wavenumber overlap for matching sin_transf
 T_TILDE_MAX: float = 20.0   # Maximum in bubble lifetime distribution integration
 T_TILDE_MIN: float = 0.01   # Minimum in bubble lifetime distribution integration
 
-DEFAULT_NUC_TYPE: str = "exponential"
 DEFAULT_NUC_PARM: tp.Tuple[int] = (1,)
 
 CS0: np.float_ = bubble.CS0  # Default sound speed

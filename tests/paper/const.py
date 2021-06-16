@@ -1,5 +1,7 @@
 """Constants common to both ssm_compare.py and ssm_paper_utils.py"""
 
+import pttools.ssmtools as ssm
+
 ALPHA_WEAK = 0.0046
 ALPHA_INTER = 0.050
 ALPHA_LIST_ALL = [ALPHA_WEAK, ALPHA_INTER]
@@ -19,7 +21,7 @@ NP_LIST = [[1000, 2000, 200], [2500, 5000, 500], [5000, 10000, 1000]]
 # Np_list = [[1000, 1000, 200], [2000, 2000, 200], [5000, 5000, 200]]
 # Np_list = [[10000, 10000, 200],]
 
-NUC_TYPE = "simultaneous"
+NUC_TYPE = ssm.NucType.SIMULTANEOUS
 NUC_ARGS = (1.,)
 # Simultaneous is relevant for comparison to num sims
 # Or: (ssm_compare.py)

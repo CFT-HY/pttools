@@ -1,5 +1,6 @@
 """Functions for computing GW power spectra"""
 
+import enum
 import typing as tp
 
 import numpy as np
@@ -10,15 +11,24 @@ from . import const
 from . import ssm
 
 
-def nu(T: th.FLOAT_OR_ARR, nuc_type: str = "simultaneous", args=(1,)) -> th.FLOAT_OR_ARR:
+@enum.unique
+class NucType(str, enum.Enum):
+    EXPONENTIAL = "exponential"
+    SIMULTANEOUS = "simultaneous"
+
+
+DEFAULT_NUC_TYPE = NucType.EXPONENTIAL
+
+
+def nu(T: th.FLOAT_OR_ARR, nuc_type: NucType = NucType.SIMULTANEOUS, args=(1,)) -> th.FLOAT_OR_ARR:
     """
     Bubble lifetime distribution function as function of (dimensionless) time T.
     ``nuc_type`` allows ``simultaneous`` or ``exponential`` bubble nucleation.
     """
-    if nuc_type == "simultaneous":
+    if nuc_type is NucType.SIMULTANEOUS:
         a = args[0]
         dist = 0.5 * a * (a*T)**2 * np.exp(-(a*T)**3 / 6)
-    elif nuc_type == "exponential":
+    elif nuc_type is NucType.EXPONENTIAL:
         a = args[0]
         dist = a * np.exp(-a*T)
     else:
@@ -55,8 +65,8 @@ def spec_den_v(
         npt: const.NPT_TYPE = const.NPTDEFAULT,
         filename: str = None,
         skip: int = 1,
-        method: str = "e_conserving",
-        de_method: str = "standard",
+        method: ssm.Method = ssm.Method.E_CONSERVING,
+        de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
         z_st_thresh=const.Z_ST_THRESH):
     """
     Returns dimensionless velocity spectral density $\bar{P}_v$, given array $z = qR_*$ and parameters:
@@ -172,8 +182,8 @@ def power_v(
         npt=const.NPTDEFAULT,
         filename: str = None,
         skip: int = 1,
-        method: str = 'e_conserving',
-        de_method: str = 'standard',
+        method: ssm.Method = ssm.Method.E_CONSERVING,
+        de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
     """
     Power spectrum of velocity field in Sound Shell Model.
@@ -194,8 +204,8 @@ def power_gw_scaled(
         npt=const.NPTDEFAULT,
         filename: str = None,
         skip: int = 1,
-        method: str = "e_conserving",
-        de_method: str = "standard",
+        method: ssm.Method = ssm.Method.E_CONSERVING,
+        de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
     """
     Scaled GW power spectrum at array of z = kR* values, where R* is mean bubble centre

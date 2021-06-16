@@ -9,11 +9,6 @@ logger = logging.getLogger(__name__)
 
 
 @enum.unique
-class Method(str, enum.Enum):
-    E_CONSERVING = "e_conserving"
-
-
-@enum.unique
 class PSType(str, enum.Enum):
     GW = "gw"
     V = "v"

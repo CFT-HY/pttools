@@ -1,5 +1,6 @@
 """Sound shell model functions"""
 
+import enum
 import logging
 
 import numpy as np
@@ -13,13 +14,26 @@ from . import const
 logger = logging.getLogger(__name__)
 
 
+@enum.unique
+class DE_Method(str, enum.Enum):
+    ALTERNATE = "alternate"
+    STANDARD = "standard"
+
+
+@enum.unique
+class Method(str, enum.Enum):
+    E_CONSERVING = "e_conserving"
+    F_ONLY = "f_only"
+    WITH_G = "with_g"
+
+
 def A2_ssm_func(
         z: np.ndarray,
         vw,
         alpha: float,
         npt: const.NPT_TYPE = const.NPTDEFAULT,
-        method: str = 'e_conserving',
-        de_method: str = 'standard',
+        method: Method = Method.E_CONSERVING,
+        de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH):
     """
     Returns the value of $|A(z)|^2$,
@@ -31,16 +45,16 @@ def A2_ssm_func(
     de_method: How energy density fluctuation feeds into GW ps.  See A2_ssm_e_conserving.
     z_st_thresh: wavenumber at which to switch sin_transform to its approximation.
     """
-    if method == 'e_conserving':
+    if method is Method.E_CONSERVING:
         # This is the correct method (as of 12.18)
         A2 = A2_e_conserving(z, vw, alpha, npt, 'A2_only', de_method, z_st_thresh)
-    elif method == 'f_only':
+    elif method is Method.F_ONLY:
         logger.debug("f_only method, multiplying (f\')^2 by 2")
         f = f_ssm_func(z, vw, alpha, npt)
         df_dz = np.gradient(f) / np.gradient(z)
         A2 = 0.25 * (df_dz ** 2)
         A2 = A2 * 2
-    elif method == 'with_g':
+    elif method is Method.WITH_G:
         logger.debug("With_g method")
         f = f_ssm_func(z, vw, alpha, npt)
         df_dz = np.gradient(f) / np.gradient(z)
@@ -61,7 +75,7 @@ def A2_e_conserving(
         alpha_n: float,
         npt: const.NPT_TYPE = const.NPTDEFAULT,
         ret_vals: str = "A2_only",
-        de_method: str = "standard",
+        de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH):
     """
     Returns the value of $|A(z)|^2$, where |Plane wave amplitude|^2 = T^3 |A(z)|^2,
@@ -85,7 +99,7 @@ def A2_e_conserving(
     v_ft = np.gradient(f) / np.gradient(z)
 
     # Now get and resample lam = de/w
-    if de_method == 'alternate':
+    if de_method is DE_Method.ALTERNATE:
         lam_orig = bubble.de_from_w_new(v_ip, w_ip, xi, vw, alpha_n) / w_ip[-1]
     else:
         lam_orig = bubble.de_from_w(w_ip, xi, vw, alpha_n) / w_ip[-1]
@@ -188,7 +202,7 @@ def lam_ssm_func(
         vw,
         alpha_n,
         npt: const.NPT_TYPE = const.NPTDEFAULT,
-        de_method: str = "standard",
+        de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH):
     """
     3D FT of radial energy perturbation from Sound Shell Model fluid profile
@@ -198,7 +212,7 @@ def lam_ssm_func(
 #    xi_re = np.linspace(0,1-1/nxi,nxi) # need to resample for lam = de/w
     v_ip, w_ip, xi = bubble.fluid_shell(vw, alpha_n, nxi)
 
-    if de_method == 'alternate':
+    if de_method is DE_Method.ALTERNATE:
         lam_orig = bubble.de_from_w_new(v_ip, w_ip, xi, vw, alpha_n) / w_ip[-1]
     else:
         lam_orig = bubble.de_from_w(w_ip, xi, vw, alpha_n) / w_ip[-1]

@@ -71,7 +71,7 @@ DIR_LIST_ALL = [DIR_WEAK_LIST, DIR_INTER_LIST]
 def generate_ps(
         vw: float,
         alpha: float,
-        method: utils.Method = utils.Method.E_CONSERVING,
+        method: ssm.Method = ssm.Method.E_CONSERVING,
         v_xi_file=None,
         save_ids: tp.Tuple[str, str] = (None, None),
         show: bool = True,
@@ -212,7 +212,7 @@ def all_generate_ps_prace(save_ids: tp.Tuple[str, str] = ('', ''), show=True, de
     Returns U-bar-f^2 and GW power as tuple of lists.
     """
 
-    method = utils.Method.E_CONSERVING
+    method = ssm.Method.E_CONSERVING
 
     v2_list = []
     Omgw_scaled_list = []
