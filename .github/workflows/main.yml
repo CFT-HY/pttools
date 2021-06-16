@@ -64,25 +64,10 @@ jobs:
           pyreverse pttools -o png -d ./uml
           pyreverse pttools -o svg -d ./uml
       - name: Run Pyan
-        # -a = --annotated
-        # -c = --colored
-        # -e = --nested-groups
-        # Call graphs of the entire project are broken at the moment:
-        # "KeyError: <Node import:pttools.bubble.bubble>"
-        # pyan3 "./**/*.py" -a -c -e --dot > ./call_graphs/call_graph_all.dot
-        # pyan3 "./**/*.py" -a -c -e --html > ./call_graphs/call_graph_all.html
-        # pyan3 "./**/*.py" -a -c -e --svg > ./call_graphs/call_graph_all.svg
         run: |
-          mkdir call_graphs
-          pyan3 "./pttools/**/*.py" -a -c -e --dot > ./call_graphs/call_graph_pttools.dot
-          pyan3 "./pttools/**/*.py" -a -c -e --html > ./call_graphs/call_graph_pttools.html
-          pyan3 "./pttools/**/*.py" -a -c -e --svg > ./call_graphs/call_graph_pttools.svg
-          pyan3 "./pttools/bubble/*.py" -a -c -e --dot > ./call_graphs/call_graph_bubble.dot
-          pyan3 "./pttools/bubble/*.py" -a -c -e --html > ./call_graphs/call_graph_bubble.html
-          pyan3 "./pttools/bubble/*.py" -a -c -e --svg > ./call_graphs/call_graph_bubble.svg
-          pyan3 "./pttools/ssmtools/*.py" -a -c -e --dot > ./call_graphs/call_graph_ssmtools.dot
-          pyan3 "./pttools/ssmtools/*.py" -a -c -e --html > ./call_graphs/call_graph_ssmtools.html
-          pyan3 "./pttools/ssmtools/*.py" -a -c -e --svg > ./call_graphs/call_graph_ssmtools.svg
+          ./gen_call_graphs.sh "bubble" "./pttools/bubble/**/*.py"
+          ./gen_call_graphs.sh "pttools" "./pttools/**/*.py"
+          ./gen_call_graphs.sh "ssmtools" "./pttools/ssmtools/**/*.py"
       - name: Upload results
         uses: actions/upload-artifact@v2
         with:
