@@ -3,10 +3,12 @@
 import enum
 import typing as tp
 
+import numba
 import numpy as np
 
 import pttools.type_hints as th
 from pttools import bubble
+from pttools import speedup
 from . import const
 from . import ssm
 
@@ -20,6 +22,9 @@ class NucType(str, enum.Enum):
 DEFAULT_NUC_TYPE = NucType.EXPONENTIAL
 
 
+# Jitting does not work:
+# SystemError: CPUDispatcher(<function nu at 0x7f729cc2fd30>) returned NULL without setting an error
+# @numba.njit
 def nu(T: th.FLOAT_OR_ARR, nuc_type: NucType = NucType.SIMULTANEOUS, args=(1,)) -> th.FLOAT_OR_ARR:
     """
     Bubble lifetime distribution function as function of (dimensionless) time T.
@@ -32,7 +37,8 @@ def nu(T: th.FLOAT_OR_ARR, nuc_type: NucType = NucType.SIMULTANEOUS, args=(1,)) 
         a = args[0]
         dist = a * np.exp(-a*T)
     else:
-        raise ValueError(f"Nucleation type not recognized: \"{nuc_type}\"")
+        # raise ValueError(f"Nucleation type not recognized: \"{nuc_type}\"")
+        raise ValueError("Nucleation type not recognized")
 
     return dist
 
@@ -129,6 +135,38 @@ def spec_den_v(
     return sd_v
 
 
+@numba.njit(parallel=True)
+def _spec_den_gw_scaled(
+        xlookup: np.ndarray,
+        P_vlookup: np.ndarray,
+        z: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
+    nx = len(xlookup)
+    p_gw = np.zeros_like(z)
+
+    # TODO
+    # ssmpaper_rev.pdf
+    # Equation
+    # Paper talks about z, here x
+    # Paper y is z here
+    # Equation 3.47
+    for i in numba.prange(z.size):
+        xplus = z[i] / const.CS0 * (1. + const.CS0) / 2.
+        xminus = z[i] / const.CS0 * (1. - const.CS0) / 2.
+        # x = np.logspace(np.log10(xminus), np.log10(xplus), nx)
+        x = speedup.logspace(np.log10(xminus), np.log10(xplus), nx)
+        integrand = \
+            (x - xplus) ** 2 * (x - xminus) ** 2 / x / (xplus + xminus - x) \
+            * np.interp(x, xlookup, P_vlookup) \
+            * np.interp((xplus + xminus - x), xlookup, P_vlookup)
+        p_gw_factor = ((1 - const.CS0 ** 2) / const.CS0 ** 2) ** 2 / (4 * np.pi * z[i] * const.CS0)
+        p_gw[i] = p_gw_factor * np.trapz(integrand, x)
+
+    # Here we are using G = 2P_v (v spec den is twice plane wave amplitude spec den).
+    # Eq 3.48 in SSM paper gives a factor 3.Gamma^2.P_v.P_v = 3 * (4/3)^2.P_v.P_v
+    # Hence overall should use (4/3).G.G
+    return (4. / 3.) * p_gw, z
+
+
 def spec_den_gw_scaled(
         xlookup: np.ndarray,
         P_vlookup: np.ndarray,
@@ -150,30 +188,15 @@ def spec_den_gw_scaled(
         z = np.logspace(np.log10(zmin), np.log10(zmax), nx)
     else:
         #        nx = len(z)
-        nx = len(xlookup)
+        # nx = len(xlookup)
+        # Integration limits
         xlargest = max(z) * 0.5 * (1. + const.CS0) / const.CS0
         xsmallest = min(z) * 0.5 * (1. - const.CS0) / const.CS0
 
         if max(xlookup) < xlargest or min(xlookup) > xsmallest:
             raise ValueError("Range of xlookup is not large enough.")
 
-    p_gw = np.zeros_like(z)
-
-    for i in range(z.size):
-        xplus = z[i] / const.CS0 * (1. + const.CS0) / 2.
-        xminus = z[i] / const.CS0 * (1. - const.CS0) / 2.
-        x = np.logspace(np.log10(xminus), np.log10(xplus), nx)
-        integrand = \
-            (x - xplus) ** 2 * (x - xminus) ** 2 / x / (xplus + xminus - x) \
-            * np.interp(x, xlookup, P_vlookup) \
-            * np.interp((xplus + xminus - x), xlookup, P_vlookup)
-        p_gw_factor = ((1 - const.CS0 ** 2) / const.CS0 ** 2) ** 2 / (4 * np.pi * z[i] * const.CS0)
-        p_gw[i] = p_gw_factor * np.trapz(integrand, x)
-
-    # Here we are using G = 2P_v (v spec den is twice plane wave amplitude spec den).
-    # Eq 3.48 in SSM paper gives a factor 3.Gamma^2.P_v.P_v = 3 * (4/3)^2.P_v.P_v
-    # Hence overall should use (4/3).G.G
-    return (4. / 3.) * p_gw, z
+    return _spec_den_gw_scaled(xlookup, P_vlookup, z)
 
 
 def power_v(

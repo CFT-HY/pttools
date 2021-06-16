@@ -1,10 +1,14 @@
+import logging
 import os.path
 import unittest
 
+import numba
 import numpy as np
 
 from tests.paper import ssm_paper_utils as spu
 from tests.test_utils import TEST_DATA_PATH
+
+logger = logging.getLogger(__name__)
 
 
 class TestPowSpecs(unittest.TestCase):
@@ -37,3 +41,6 @@ class TestPowSpecs(unittest.TestCase):
         # PTtools has been changed since the article has been written,
         # and therefore there are slight differences in the results.
         np.testing.assert_allclose(data_test, data_article, rtol=0.14, atol=0)
+
+        # Since this was a heavy computation, let's print info on the threading layer used
+        logger.debug(f"Numba threading layer used: {numba.threading_layer()}")

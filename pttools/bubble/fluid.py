@@ -253,7 +253,7 @@ def trim_fluid_wall_to_shock(
     if not sol_type == boundary.SolutionType.DETON:
         it = np.nditer([v, xi], flags=['c_index'])
         for vv, x in it:
-            if vv <= props.v_shock(x):
+            if vv <= props.v_shock(x.item()):
                 n_shock_index = it.index
                 break
 
