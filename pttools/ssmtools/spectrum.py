@@ -12,8 +12,8 @@ from . import ssm
 
 def nu(T: th.FLOAT_OR_ARR, nuc_type: str = "simultaneous", args=(1,)) -> th.FLOAT_OR_ARR:
     """
-     Bubble lifetime distribution function as function of (dimensionless) time T.
-     ``nuc_type`` allows ``simultaneous`` or ``exponential`` bubble nucleation.
+    Bubble lifetime distribution function as function of (dimensionless) time T.
+    ``nuc_type`` allows ``simultaneous`` or ``exponential`` bubble nucleation.
     """
     if nuc_type == "simultaneous":
         a = args[0]
@@ -29,7 +29,7 @@ def nu(T: th.FLOAT_OR_ARR, nuc_type: str = "simultaneous", args=(1,)) -> th.FLOA
 
 def pow_spec(z: th.FLOAT_OR_ARR, spec_den: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     """
-     Power spectrum from spectral density at dimensionless wavenumber z.
+    Power spectrum from spectral density at dimensionless wavenumber z.
     """
     return z**3 / (2. * np.pi ** 2) * spec_den
 
@@ -59,15 +59,15 @@ def spec_den_v(
         de_method: str = "standard",
         z_st_thresh=const.Z_ST_THRESH):
     """
-     Returns dimensionless velocity spectral density $\bar{P}_v$, given array $z = qR_*$ and parameters:
-        vw = params[0]       scalar
-        alpha = params[1]    scalar
-        nuc_type = params[2] string [exponential* | simultaneous]
-        nuc_args = params[3] tuple  default (1,)
+    Returns dimensionless velocity spectral density $\bar{P}_v$, given array $z = qR_*$ and parameters:
+    vw = params[0]       scalar
+    alpha = params[1]    scalar
+    nuc_type = params[2] string [exponential* | simultaneous]
+    nuc_args = params[3] tuple  default (1,)
 
-     Gets fluid velocity profile from bubble toolbox or from file if specified.
-     Convolves 1-bubble Fourier transform $|A(q T)|^2$ with bubble wall
-     lifetime distribution $\nu(T \beta)$ specified by ``nuc_type`` and ``nuc_args``.
+    Gets fluid velocity profile from bubble toolbox or from file if specified.
+    Convolves 1-bubble Fourier transform $|A(q T)|^2$ with bubble wall
+    lifetime distribution $\nu(T \beta)$ specified by ``nuc_type`` and ``nuc_args``.
     """
     bubble.check_physical_params(params)
 
@@ -124,13 +124,13 @@ def spec_den_gw_scaled(
         P_vlookup: np.ndarray,
         z: np.ndarray = None) -> tp.Tuple[np.ndarray, np.ndarray]:
     """
-     Spectral density of scaled gravitational wave power at values of kR* given
-     by input z array, or at len(xlookup) values of kR* between the min and max
-     of xlookup where the GW power can be computed.
-     (xlookup, P_vlookup) is used as a lookup table to specify function.
-     P_vlookup is the spectral density of the FT of the velocity field,
-     not the spectral density of plane wave coeffs, which is lower by a
-     factor of 2.
+    Spectral density of scaled gravitational wave power at values of kR* given
+    by input z array, or at len(xlookup) values of kR* between the min and max
+    of xlookup where the GW power can be computed.
+    (xlookup, P_vlookup) is used as a lookup table to specify function.
+    P_vlookup is the spectral density of the FT of the velocity field,
+    not the spectral density of plane wave coeffs, which is lower by a
+    factor of 2.
     """
 
     if z is None:
@@ -198,10 +198,10 @@ def power_gw_scaled(
         de_method: str = "standard",
         z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
     """
-     Scaled GW power spectrum at array of z = kR* values, where R* is mean bubble centre
-     separation and k is comoving wavenumber.  To convert to predicted spectrum,
-     multiply by $(H_n R_*)(H_n \tau_v)$, where $H_n$ is the Hubble rate at the
-     nucleation time, and $\tau_v$ is the lifetime of the shear stress source.
+    Scaled GW power spectrum at array of z = kR* values, where R* is mean bubble centre
+    separation and k is comoving wavenumber.  To convert to predicted spectrum,
+    multiply by $(H_n R_*)(H_n \tau_v)$, where $H_n$ is the Hubble rate at the
+    nucleation time, and $\tau_v$ is the lifetime of the shear stress source.
 
     Input parameters
         vw = params[0]       scalar  (required) [0 < vw < 1]
@@ -210,9 +210,9 @@ def power_gw_scaled(
         nuc_args = params[3] tuple   (optional) default (1,)
 
     Steps:
-     1. Getting velocity field spectral density
-     2. Geeting gw spectral density
-     3. turning SD into power
+    1. Getting velocity field spectral density
+    2. Geeting gw spectral density
+    3. turning SD into power
     """
     if np.any(z <= 0.0):
         raise ValueError("z values must all be positive.")

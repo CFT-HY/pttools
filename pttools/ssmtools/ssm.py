@@ -22,14 +22,14 @@ def A2_ssm_func(
         de_method: str = 'standard',
         z_st_thresh: float = const.Z_ST_THRESH):
     """
-     Returns the value of $|A(z)|^2$,
-     z is an array of scaled wavenumbers $z = kR_*$.
-     |Plane wave amplitude|^2 = T^3 |A(z)|^2
-     method: (string) correct method for SSM is ``e_conserving``.
-             Also allows exploring effect of other incorrect
-             methods ``f_only`` and ``with_g``.
-     de_method: How energy density fluctuation feeds into GW ps.  See A2_ssm_e_conserving.
-     z_st_thresh: wavenumber at which to switch sin_transform to its approximation.
+    Returns the value of $|A(z)|^2$,
+    z is an array of scaled wavenumbers $z = kR_*$.
+    |Plane wave amplitude|^2 = T^3 |A(z)|^2
+    method: (string) correct method for SSM is ``e_conserving``.
+         Also allows exploring effect of other incorrect
+         methods ``f_only`` and ``with_g``.
+    de_method: How energy density fluctuation feeds into GW ps.  See A2_ssm_e_conserving.
+    z_st_thresh: wavenumber at which to switch sin_transform to its approximation.
     """
     if method == 'e_conserving':
         # This is the correct method (as of 12.18)
@@ -64,13 +64,13 @@ def A2_e_conserving(
         de_method: str = "standard",
         z_st_thresh: float = const.Z_ST_THRESH):
     """
-     Returns the value of $|A(z)|^2$, where |Plane wave amplitude|^2 = T^3 |A(z)|^2,
-     calculated from self-similar hydro solution obtained with ``bubble.fluid_shell``.
-     z is an array of scaled wavenumbers $z = kR_*$.
-     de_method: 'standard' (e-conserving) method is only accurate to
-     linear order, meaning that there is an apparent $z^0$ piece at very low $z$,
-     and may exaggerate the GWs at low vw. ATM no other de_methods, but argument
-     allows trials.
+    Returns the value of $|A(z)|^2$, where |Plane wave amplitude|^2 = T^3 |A(z)|^2,
+    calculated from self-similar hydro solution obtained with ``bubble.fluid_shell``.
+    z is an array of scaled wavenumbers $z = kR_*$.
+    de_method: 'standard' (e-conserving) method is only accurate to
+    linear order, meaning that there is an apparent $z^0$ piece at very low $z$,
+    and may exaggerate the GWs at low vw. ATM no other de_methods, but argument
+    allows trials.
     """
     nxi = npt[0]
     #    xi_re = np.linspace(0,1-1/nxi,nxi)
@@ -115,11 +115,11 @@ def A2_e_conserving_file(
         npt: const.NPT_TYPE = const.NPTDEFAULT,
         z_st_thresh: float = const.Z_ST_THRESH):
     """
-     Returns the value of $|A(z)|^2$, where |Plane wave amplitude|^2 = T^3 |A(z)|^2,
-     calculated from file, outout by ``spherical-hydro-code``.
-     z is an array of scaled wavenumbers $z = kR_*$.
-     Uses method respecting energy conservation, although only accurate to
-     linear order, meaning that there is an apparent $z^0$ piece at very low $z$.
+    Returns the value of $|A(z)|^2$, where |Plane wave amplitude|^2 = T^3 |A(z)|^2,
+    calculated from file, outout by ``spherical-hydro-code``.
+    z is an array of scaled wavenumbers $z = kR_*$.
+    Uses method respecting energy conservation, although only accurate to
+    linear order, meaning that there is an apparent $z^0$ piece at very low $z$.
     """
     logger.debug(f"loading v(xi), e(xi) from {filename}")
     try:
@@ -169,8 +169,8 @@ def f_ssm_func(
         npt: const.NPT_TYPE = const.NPTDEFAULT,
         z_st_thresh: float = const.Z_ST_THRESH):
     """
-     3D FT of radial fluid velocity v(r) from Sound Shell Model fluid profile.
-     z is array of scaled wavenumbers z = kR*
+    3D FT of radial fluid velocity v(r) from Sound Shell Model fluid profile.
+    z is array of scaled wavenumbers z = kR*
     """
     nxi = npt[0]
     v_ip, _, xi = bubble.fluid_shell(vw, alpha_n, nxi)
@@ -191,8 +191,8 @@ def lam_ssm_func(
         de_method: str = "standard",
         z_st_thresh: float = const.Z_ST_THRESH):
     """
-     3D FT of radial energy perturbation from Sound Shell Model fluid profile
-     z is array of scaled wavenumbers z = kR*
+    3D FT of radial energy perturbation from Sound Shell Model fluid profile
+    z is array of scaled wavenumbers z = kR*
     """
     nxi = npt[0]
 #    xi_re = np.linspace(0,1-1/nxi,nxi) # need to resample for lam = de/w
@@ -216,8 +216,8 @@ def lam_ssm_func(
 
 def g_ssm_func(z: np.ndarray, vw, alpha, npt: const.NPT_TYPE = const.NPTDEFAULT) -> np.ndarray:
     r"""
-     3D FT of radial fluid acceleration \dot{v}(r) from Sound Shell Model fluid profile.
-     z is array of scaled wavenumbers z = kR*.
+    3D FT of radial fluid acceleration \dot{v}(r) from Sound Shell Model fluid profile.
+    z is array of scaled wavenumbers z = kR*.
     """
     f_ssm = f_ssm_func(z, vw, alpha, npt)
     df_ssmdz = np.gradient(f_ssm) / np.gradient(z)
@@ -233,8 +233,8 @@ def f_file(
         npt: const.NPT_TYPE = const.NPTDEFAULT,
         z_st_thresh: float = const.Z_ST_THRESH):
     """
-     3D FT of radial fluid velocity v(r) from file.
-     z is array of scaled wavenumbers z = kR*
+    3D FT of radial fluid velocity v(r) from file.
+    z is array of scaled wavenumbers z = kR*
     """
     logger.debug(f"Loading v(xi) from {filename} at time {t}")
     try:
@@ -258,8 +258,8 @@ def f_file(
 
 def g_file(z: np.ndarray, t, filename: str, skip: int = 0) -> np.ndarray:
     r"""
-     3D FT of radial fluid acceleration \dot{v}(r) from file
-     z is array of scaled wavenumbers z = kR*
+    3D FT of radial fluid acceleration \dot{v}(r) from file
+    z is array of scaled wavenumbers z = kR*
     """
     f = f_file(z, t, filename, skip)
     df_dz = np.gradient(f) / np.gradient(z)
