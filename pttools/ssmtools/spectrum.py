@@ -50,7 +50,7 @@ def parse_params(params: bubble.PHYSICAL_PARAMS_TYPE):
     if len(params) > 2:
         nuc_type = params[2]
     else:
-        nuc_type = const.DEFAULT_NUC_TYPE
+        nuc_type = DEFAULT_NUC_TYPE
     if len(params) > 3:
         nuc_args = params[3]
     else:
