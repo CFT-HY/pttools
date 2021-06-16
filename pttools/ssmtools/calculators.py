@@ -13,8 +13,8 @@ from . import const
 # @speedup.njit
 def sin_transform_old(z: th.FLOAT_OR_ARR, xi: np.ndarray, v: np.ndarray):
     """
-     sin transform of v(xi), Fourier transform variable z.
-     xi and v arrays of the same shape, z can be an array of a different shape.
+    sin transform of v(xi), Fourier transform variable z.
+    xi and v arrays of the same shape, z can be an array of a different shape.
     """
 
     if isinstance(z, np.ndarray):
@@ -100,10 +100,10 @@ def sin_transform_approx(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray) -> n
 
 def sin_transform(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray, z_st_thresh=const.Z_ST_THRESH) -> th.FLOAT_OR_ARR:
     """
-     sin transform of f(xi), Fourier transform variable z.
-     xi and f arrays of the same shape, z can be an array of a different shape.
-     For z > z_st_thresh, use approximation rather than doing the integral.
-     Interpolate between  z_st_thresh - dz_blend < z < z_st_thresh.
+    sin transform of f(xi), Fourier transform variable z.
+    xi and f arrays of the same shape, z can be an array of a different shape.
+    For z > z_st_thresh, use approximation rather than doing the integral.
+    Interpolate between  z_st_thresh - dz_blend < z < z_st_thresh.
     """
     dz_blend = const.DZ_ST_BLEND
 

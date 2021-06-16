@@ -54,22 +54,22 @@ def plot_fluid_shell(
         draw: bool = True) \
         -> tp.Union[plt.Figure, tp.Tuple[plt.Figure, tp.List[np.ndarray], tp.List[tp.Union[int, float]]]]:
     """
-     Calls ``fluid_shell`` and plots resulting v, w against xi, returning figure handle.
-     Also plots:
-     - shock curves (where v and w should form shock)
-     - low alpha approximation if alpha_plus < 0.025
-     - high alpha approximation if alpha_plus > 0.2
-     Annotates titles with:
-     - Wall type, v_wall, alpha_n
-     - alpha_plus (alpha just in front of wall)
-     - r (ratio of enthalpies either side of wall)
-     - xi_sh (shock speed)
-     - w_0/w_n (ration of internal to external enthalpies)
-     - ubar_f (mean square U = gamma(v) v)
-     - K kinetic energy fraction
-     - kappa (Espinosa et al efficiency factor)
-     - omega (thermal energy relative to scalar potential energy, as measured by trace anomaly)
-     Last two should sum to 1.
+    Calls ``fluid_shell`` and plots resulting v, w against xi, returning figure handle.
+    Also plots:
+    - shock curves (where v and w should form shock)
+    - low alpha approximation if alpha_plus < 0.025
+    - high alpha approximation if alpha_plus > 0.2
+    Annotates titles with:
+    - Wall type, v_wall, alpha_n
+    - alpha_plus (alpha just in front of wall)
+    - r (ratio of enthalpies either side of wall)
+    - xi_sh (shock speed)
+    - w_0/w_n (ration of internal to external enthalpies)
+    - ubar_f (mean square U = gamma(v) v)
+    - K kinetic energy fraction
+    - kappa (Espinosa et al efficiency factor)
+    - omega (thermal energy relative to scalar potential energy, as measured by trace anomaly)
+    Last two should sum to 1.
     """
     check.check_physical_params([v_wall, alpha_n])
 
@@ -198,18 +198,18 @@ def plot_fluid_shells(
         debug: bool = False,
         draw: bool = True) -> tp.Union[plt.Figure, tp.Tuple[plt.Figure, np.ndarray]]:
     """
-     Calls ``fluid_shell`` and plots resulting v, w against xi. Returns figure handle.
-     Annotates titles with:
-     - Wall type, v_wall, alpha_n
-     - alpha_plus (alpha just in front of wall)
-     - r (ratio of enthalpies either side of wall)
-     - xi_sh (shock speed)
-     - w_0/w_n (ration of internal to external enthalpies)
-     - ubar_f (mean square U = gamma(v) v)
-     - K kinetic energy fraction
-     - kappa (Espinosa et al efficiency factor)
-     - omega (thermal energy relative to scalar potential energy, as measured by trace anomaly)
-     Last two should sum to 1.
+    Calls ``fluid_shell`` and plots resulting v, w against xi. Returns figure handle.
+    Annotates titles with:
+    - Wall type, v_wall, alpha_n
+    - alpha_plus (alpha just in front of wall)
+    - r (ratio of enthalpies either side of wall)
+    - xi_sh (shock speed)
+    - w_0/w_n (ration of internal to external enthalpies)
+    - ubar_f (mean square U = gamma(v) v)
+    - K kinetic energy fraction
+    - kappa (Espinosa et al efficiency factor)
+    - omega (thermal energy relative to scalar potential energy, as measured by trace anomaly)
+    Last two should sum to 1.
     """
 
     xi_even = np.linspace(1 / Np, 1 - 1 / Np, Np)

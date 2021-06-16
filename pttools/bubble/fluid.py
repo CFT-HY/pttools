@@ -75,8 +75,8 @@ def fluid_shell(
         n_xi: int = const.N_XI_DEFAULT) \
         -> tp.Union[tp.Tuple[float, float, float], tp.Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """
-     Finds fluid shell (v, w, xi) from a given v_wall, alpha_n, which must be scalars.
-     Option to change xi resolution n_xi
+    Finds fluid shell (v, w, xi) from a given v_wall, alpha_n, which must be scalars.
+    Option to change xi resolution n_xi
     """
     #    check_physical_params([v_wall,alpha_n])
     sol_type = transition.identify_solution_type(v_wall, alpha_n)
@@ -97,14 +97,14 @@ def fluid_shell_alpha_plus(
         w_n: float = 1,
         cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-     Finds fluid shell (v, w, xi) from a given v_wall, alpha_plus (at-wall strength parameter).
-     Where v=0 (behind and ahead of shell) uses only two points.
-     v_wall and alpha_plus must be scalars, and are converted from 1-element arrays if needed.
-     Options:
-         sol_type (string) - specify wall type if more than one permitted.
-         n_xi (int) - increase resolution
-         w_n - specify enthalpy outside fluid shell
-         cs2_fun - sound speed squared as a function of enthalpy, default
+    Finds fluid shell (v, w, xi) from a given v_wall, alpha_plus (at-wall strength parameter).
+    Where v=0 (behind and ahead of shell) uses only two points.
+    v_wall and alpha_plus must be scalars, and are converted from 1-element arrays if needed.
+    Options:
+        sol_type (string) - specify wall type if more than one permitted.
+        n_xi (int) - increase resolution
+        w_n - specify enthalpy outside fluid shell
+        cs2_fun - sound speed squared as a function of enthalpy, default
     """
     check.check_wall_speed(v_wall)
     dxi = 1. / n_xi
@@ -204,11 +204,11 @@ def trim_fluid_wall_to_cs(
         dxi_lim: float = const.DXI_SMALL,
         cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
-     Picks out fluid variable arrays (v, w, xi, t) which are definitely behind
-     the wall for deflagration and hybrid.
-     Also removes negative fluid speeds and xi <= sound_speed, which might be left by
-     an inaccurate integration.
-     If the wall is within about 1e-16 of cs, rounding errors are flagged.
+    Picks out fluid variable arrays (v, w, xi, t) which are definitely behind
+    the wall for deflagration and hybrid.
+    Also removes negative fluid speeds and xi <= sound_speed, which might be left by
+    an inaccurate integration.
+    If the wall is within about 1e-16 of cs, rounding errors are flagged.
     """
     check.check_wall_speed(v_wall)
     n_start = 0
@@ -246,7 +246,7 @@ def trim_fluid_wall_to_shock(
         t: np.ndarray,
         sol_type: boundary.SolutionType) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
-     Trims fluid variable arrays (v, w, xi) so last element is just ahead of shock
+    Trims fluid variable arrays (v, w, xi) so last element is just ahead of shock
     """
     n_shock_index = -2
     # n_shock = 0

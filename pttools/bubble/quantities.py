@@ -296,7 +296,7 @@ def get_kappa(
         n_xi: int = const.N_XI_DEFAULT,
         verbosity: int = 0) -> th.FLOAT_OR_ARR:
     """
-     Efficiency factor kappa from v_wall and alpha_n. v_wall can be array.
+    Efficiency factor kappa from v_wall and alpha_n. v_wall can be array.
     """
     # NB was called get_kappa_arr
     it = np.nditer([v_wall, None])
@@ -327,8 +327,8 @@ def get_kappa_de(
         n_xi: int = const.N_XI_DEFAULT,
         verbosity: int = 0) -> tp.Union[tp.Tuple[float, float], tp.Tuple[np.ndarray, np.ndarray]]:
     """
-     Calculates efficiency factor kappa and fractional change in energy
-     from v_wall and alpha_n. v_wall can be an array. Sum should be 0 (bag model).
+    Calculates efficiency factor kappa and fractional change in energy
+    from v_wall and alpha_n. v_wall can be an array. Sum should be 0 (bag model).
     """
     it = np.nditer([v_wall, None, None])
     for vw, kappa, de in it:
@@ -362,9 +362,9 @@ def get_kappa_dq(
         n_xi: int = const.N_XI_DEFAULT,
         verbosity: int = 0) -> tp.Union[tp.Tuple[float, float], tp.Tuple[np.ndarray, np.ndarray]]:
     """
-     Calculates efficiency factor kappa and fractional change in thermal energy
-     from v_wall and alpha_n. v_wall can be an array. Sum should be 1.
-     Thermal energy is defined as q = (3/4)*enthalpy.
+    Calculates efficiency factor kappa and fractional change in thermal energy
+    from v_wall and alpha_n. v_wall can be an array. Sum should be 1.
+    Thermal energy is defined as q = (3/4)*enthalpy.
     """
     it = np.nditer([v_wall, None, None])
     for vw, kappa, dq in it:

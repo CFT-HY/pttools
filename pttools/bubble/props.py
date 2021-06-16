@@ -25,7 +25,7 @@ def find_v_index(xi: np.ndarray, v_target: float) -> int:
 
 def v_shock(xi: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     """
-     Fluid velocity at a shock at xi.  No shocks exist for xi < cs, so returns zero.
+    Fluid velocity at a shock at xi.  No shocks exist for xi < cs, so returns zero.
     """
     # Maybe should return a nan?
     v_sh = (3*xi**2 - 1)/(2*xi)
@@ -41,7 +41,7 @@ def v_shock(xi: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
 
 def w_shock(xi: th.FLOAT_OR_ARR, w_n: float = 1.) -> th.FLOAT_OR_ARR:
     """
-     Fluid enthalpy at a shock at xi.  No shocks exist for xi < cs, so returns nan.
+    Fluid enthalpy at a shock at xi.  No shocks exist for xi < cs, so returns nan.
     """
     w_sh = w_n * (9*xi**2 - 1)/(3*(1-xi**2))
 
@@ -56,8 +56,8 @@ def w_shock(xi: th.FLOAT_OR_ARR, w_n: float = 1.) -> th.FLOAT_OR_ARR:
 
 def find_shock_index(v_f: np.ndarray, xi: np.ndarray, v_wall: float, sol_type: boundary.SolutionType) -> int:
     """
-     Array index of shock from first point where fluid velocity v_f goes below v_shock
-     For detonation, returns wall position.
+    Array index of shock from first point where fluid velocity v_f goes below v_shock
+    For detonation, returns wall position.
     """
     check.check_wall_speed(v_wall)
     n_shock = 0
@@ -80,8 +80,8 @@ def shock_zoom_last_element(
         w: np.ndarray,
         xi: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-     Replaces last element of (v,w,xi) arrays by better estimate of
-     shock position and values of v, w there.
+    Replaces last element of (v,w,xi) arrays by better estimate of
+    shock position and values of v, w there.
     """
     v_sh = v_shock(xi)
     # First check if last two elements straddle shock
