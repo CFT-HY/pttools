@@ -76,7 +76,8 @@ def generate_ps(
         save_ids: tp.Tuple[str, str] = (None, None),
         show: bool = True,
         debug: bool = False):
-    """ Generates, plots velocity and GW power as functions of $kR_*$.
+    """
+    Generates, plots velocity and GW power as functions of $kR_*$.
     Saves power spectra in files pow_v_*, pow_gw_*...<string>.txt if save_id[0]=string.
     Saves plots in files pow_v_*, pow_gw_*...<string>.pdf if save_id[1]=string.
     Shows plots if show=True
@@ -205,9 +206,11 @@ def generate_ps(
 
 
 def all_generate_ps_prace(save_ids: tp.Tuple[str, str] = ('', ''), show=True, debug: bool = False):
-    """Generate power spectra with Prace17 SSM parameters.
+    """
+    Generate power spectra with Prace17 SSM parameters.
     Save data files and graphs.
-    Returns U-bar-f^2 and GW power as tuple of lists."""
+    Returns U-bar-f^2 and GW power as tuple of lists.
+    """
 
     method = utils.Method.E_CONSERVING
 

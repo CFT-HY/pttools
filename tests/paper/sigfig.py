@@ -13,7 +13,7 @@ EPAT = re.compile(r'^([^e]+)e(.+)$')
 
 
 def round_sig(x: float, n: int) -> str:
-    """round floating point x to n significant figures"""
+    """Round floating point x to n significant figures."""
     if not isinstance(n, int):
         raise TypeError("n must be an integer")
     try:
@@ -48,7 +48,7 @@ def round_sig(x: float, n: int) -> str:
 
 
 def round_sig_signed(x: float, n: int) -> str:
-    """round floating point x to n significant figures"""
+    """Round floating point x to n significant figures."""
     if not isinstance(n, int):
         raise TypeError("n must be an integer")
     try:
@@ -83,9 +83,11 @@ def round_sig_signed(x: float, n: int) -> str:
 
 
 def round_sig_error(x: float, ex: float, n: int, paren: bool = False) -> tp.Union[str, tp.Tuple[str, str]]:
-    """Find ex rounded to n sig-figs and make the floating point x
-   match the number of decimals.  If [paren], the string is
-   returned as quantity(error) format"""
+    """
+    Find ex rounded to n sig-figs and make the floating point x
+    match the number of decimals.  If [paren], the string is
+    returned as quantity(error) format
+    """
     stex = round_sig(ex, n)
     if stex.find('.') < 0:
         extra_zeros = len(stex) - n
@@ -108,13 +110,14 @@ def format_table(
         labels: tp.List[str] = None,
         headers: tp.List[str] = None,
         latex: bool = False):
-    """Format a table such that the errors have n significant
-   figures.  [cols] and [errors] should be a list of 1D arrays
-   that correspond to data and errors in columns.  [n] is the number of
-   significant figures to keep in the errors.  [labels] is an optional
-   column of strings that will be in the first column.  [headers] is
-   an optional list of column headers.  If [latex] is true, format
-   the table so that it can be included in a LaTeX table """
+    """
+    Format a table such that the errors have n significant figures.
+    [cols] and [errors] should be a list of 1D arrays that correspond to data and errors in columns.
+    [n] is the number of significant figures to keep in the errors.
+    [labels] is an optional column of strings that will be in the first column.
+    [headers] is an optional list of column headers.
+    If [latex] is true, format the table so that it can be included in a LaTeX table
+    """
     if len(cols) != len(errors):
         raise ValueError("Error:  cols and errors must have same length")
 
@@ -180,8 +183,10 @@ def format_table(
 
 
 def round_sig_error2(x: float, ex1: float, ex2: float, n: int) -> tp.Tuple[str, str, str]:
-    """Find min(ex1,ex2) rounded to n sig-figs and make the floating point x
-   and max(ex,ex2) match the number of decimals."""
+    """
+    Find min(ex1,ex2) rounded to n sig-figs and make the floating point x
+    and max(ex,ex2) match the number of decimals.
+    """
     min_err = min(ex1, ex2)
     min_stex = round_sig(min_err, n)
     if min_stex.find('.') < 0:

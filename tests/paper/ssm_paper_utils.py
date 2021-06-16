@@ -703,9 +703,11 @@ def plot_ps_compare_nuc(vw, alpha, save_id=None, graph_file_type=None):
 
 
 def plot_and_save(vw, alpha, method='e_conserving', v_xi_file=None, suffix=None):
-    """Plots the Velocity power spectrum as a function of $kR_*$.
+    """
+    Plots the Velocity power spectrum as a function of $kR_*$.
     Plots the scaled GW power spectrum as a function of $kR_*$.
-    Saves power spectra in files pow_v_*, pow_gw_* if suffix is set."""
+    Saves power spectra in files pow_v_*, pow_gw_* if suffix is set.
+    """
 
     Np = const.NP_LIST[-1]
     col = const.COLOURS[0]
