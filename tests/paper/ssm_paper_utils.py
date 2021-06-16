@@ -23,7 +23,7 @@ from tests.test_utils import TEST_DATA_PATH
 
 logger = logging.getLogger(__name__)
 
-bubble.setup_plotting()
+# bubble.setup_plotting()
 
 # Compare SSM prediction with data
 # Creates and plots velocity and GW power spectra from SSM

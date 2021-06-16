@@ -40,7 +40,7 @@ def setup_plotting(font: str = "serif", font_size: int = 20, usetex: bool = True
     mpl.rcParams.update({'legend.fontsize': 14})
 
 
-setup_plotting()
+# setup_plotting()
 
 
 def plot_fluid_shell(
