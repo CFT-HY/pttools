@@ -25,9 +25,6 @@ logger = logging.getLogger(__name__)
 
 # bubble.setup_plotting()
 
-# Compare SSM prediction with data
-# Creates and plots velocity and GW power spectra from SSM
-
 # Model data path
 MD_PATH = TEST_DATA_PATH + "/"
 
@@ -179,10 +176,11 @@ def make_1dh_compare_table(params_list, v2_list,
 
 def make_3dh_compare_table(params_list, v2_list, Omgw_list, p_list,
                            file_name: tp.Union[str, io.TextIOBase] = 'table_3dh_compare.tex') -> None:
-    # Prints table to file, comparing selected statistics between
-    # SSM and "Prace" 3dh hydro simulations (Hindmarsh et al 2017)
-    # Mean square fluid velocity
-
+    """
+    Prints table to file, comparing selected statistics between
+    SSM and "Prace" 3dh hydro simulations (Hindmarsh et al 2017)
+    Mean square fluid velocity
+    """
     Ubarf_prace = [
         4.60e-3, 5.75e-3, 8.65e-3, 13.8e-3, 7.51e-3,
         43.7e-3, np.nan, 65.0e-3, np.nan, 54.5e-3]
@@ -267,9 +265,10 @@ def make_3dh_compare_table(params_list, v2_list, Omgw_list, p_list,
 
 def make_nuc_compare_table(params_list, v2_list, Omgw_list, p_sim_list, p_exp_list,
                            file_name: tp.Union[str, io.TextIOBase] = 'table_nuc_compare.tex') -> None:
-    # Prints table to stdout, displaying selected statistics
-    # comparing between simulataneous and exponential nucleation
-
+    """
+    Prints table to stdout, displaying selected statistics
+    comparing between simulataneous and exponential nucleation
+    """
     # print('\\begin{tabular}{cc | rr | rr | ll | rr | rr}')
     if isinstance(file_name, io.TextIOBase):
         f = file_name
@@ -374,7 +373,7 @@ def load_compare_nuc_data(file: str):
 
 
 def ps_from_ssm(vw, alpha, nuc_type='simultaneous', nuc_args=(1.,), Np=const.NP_LIST[-1], method='e_conserving'):
-    # Get velocity and GW power spectra from SSM
+    """Get velocity and GW power spectra from SSM"""
 
     nuc_string = nuc_type[0:3] + '_'
     for n in range(len(nuc_args)):
@@ -409,9 +408,10 @@ def plot_ps_compare_res(
         save_id=None,
         graph_file_type=None,
         method: utils.Method = utils.Method.E_CONSERVING):
-    # Plots power spectra predictions of SSM with different resolutions in Np_list
-    # Saves data and graphs if save_id is set
-
+    """
+    Plots power spectra predictions of SSM with different resolutions in Np_list
+    Saves data and graphs if save_id is set
+    """
     strength = utils.Strength.WEAK
     if alpha >= 0.05:
         strength = utils.Strength.INTER
@@ -488,11 +488,12 @@ def plot_ps_compare_res(
 
 
 def plot_ps_1bubble(vw, alpha, save_id=None, graph_file_type=None, Np=const.NP_LIST[-1], debug: bool = False):
-    # Plots power spectra predictions of 1 bubble. Shown are
-    # |A|^2, |f'(z)|^2/2 and |l(z)|^2/2
-    # Saves data if save_id is set
-    # Saves graph file if graph_file_type is set
-
+    """
+    Plots power spectra predictions of 1 bubble. Shown are
+    |A|^2, |f'(z)|^2/2 and |l(z)|^2/2
+    Saves data if save_id is set
+    Saves graph file if graph_file_type is set
+    """
     strength = utils.Strength.WEAK
     if alpha >= 0.05:
         strength = utils.Strength.INTER
@@ -535,10 +536,11 @@ def plot_ps_1bubble(vw, alpha, save_id=None, graph_file_type=None, Np=const.NP_L
 
 
 def plot_ps_compare_nuc(vw, alpha, save_id=None, graph_file_type=None):
-    # Plots power spectra predictions of SSM with different nucleation models
-    # Saves data if save_id is set.
-    # Saves graph file if graph_file_type is set.
-
+    """
+    Plots power spectra predictions of SSM with different nucleation models
+    Saves data if save_id is set.
+    Saves graph file if graph_file_type is set.
+    """
     method = utils.Method.E_CONSERVING
     nuc_type_list = ['simultaneous', 'exponential']
     nuc_args_list = [(1.,), (1.,)]

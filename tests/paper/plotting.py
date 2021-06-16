@@ -67,9 +67,11 @@ def plot_guide_power_law(
         txt_shift: tp.Tuple[float, float] = (1, 1),
         color: str = "k",
         linestyle: str = "-"):
-    # Plot a guide power law going through loc[0], loc[1] with index power
-    # Optional annotation at (loc[0]*txt_shift[0], loc[1]*txt_shift[1])
-    # Returns the points in two arrays (is this the best thing?)
+    """
+    Plot a guide power law going through loc[0], loc[1] with index power
+    Optional annotation at (loc[0]*txt_shift[0], loc[1]*txt_shift[1])
+    Returns the points in two arrays (is this the best thing?)
+    """
     xp = loc[0]
     yp = loc[1]
     x_guide = np.logspace(np.log10(xp), np.log10(xp) + xloglen, 2)
@@ -84,8 +86,10 @@ def plot_guide_power_law(
 
 
 def plot_guide_power_law_prace(ax: plt.Axes, x: np.ndarray, y: np.ndarray, n, position: utils.Position, shifts=None):
-    # Wrapper for plot_guide_power_law, with power laws and line
-    # shifts appropriate for velocity and GW spectra of prace runs
+    """
+    Wrapper for plot_guide_power_law, with power laws and line
+    shifts appropriate for velocity and GW spectra of prace runs
+    """
     if shifts is None:
         if position is utils.Position.HIGH:
             line_shift = [2, 1]
@@ -131,8 +135,10 @@ def plot_guide_power_laws_prace(
         pow_gw: np.ndarray,
         np_lo: tp.Tuple[int, int] = (5, 9),
         inter_flag: bool = False) -> tp.Tuple[plt.Figure, plt.Figure]:
-    # Plot guide power laws (assumes params all same for list)
-    # Shifts designed for simulataneous nucleation lines
+    """
+    Plot guide power laws (assumes params all same for list)
+    Shifts designed for simulataneous nucleation lines
+    """
     x_high = 10
     x_low = 2
     [nv_lo, ngw_lo] = np_lo
@@ -171,8 +177,10 @@ def plot_guide_power_laws_ssm(
         powers: np.ndarray,
         ps_type: utils.PSType = utils.PSType.V,
         inter_flag: bool = False) -> plt.Figure:
-    # Plot guide power laws (assumes params all same for list)
-    # Shifts designed for simultaneous nucleation lines
+    """
+    Plot guide power laws (assumes params all same for list)
+    Shifts designed for simultaneous nucleation lines
+    """
     x_high = 10
     x_low = 3
     if ps_type is utils.PSType.V:
@@ -212,9 +220,10 @@ def plot_ps(
         ls_list=None,
         fig: plt.Figure = None,
         pretty: bool = False) -> plt.Figure:
-    # Plots a list of power spectra, with axis limits appropriate to prace runs
-    # returns a figure handle
-
+    """
+    Plots a list of power spectra, with axis limits appropriate to prace runs
+    returns a figure handle
+    """
     if col_list is None:
         col_list = ['b'] * len(z_list)
 
