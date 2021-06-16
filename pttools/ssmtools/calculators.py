@@ -165,8 +165,12 @@ def sin_transform(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray, z_st_thresh
     """
     if isinstance(z, numba.types.Float):
         return _sin_transform_scalar
-    elif isinstance(z, numba.types.Array):
+    if isinstance(z, numba.types.Array):
         return _sin_transform_arr
+    if isinstance(z, float):
+        return _sin_transform_scalar(z, xi, f, z_st_thresh)
+    if isinstance(z, np.ndarray):
+        return _sin_transform_arr(z, xi, f, z_st_thresh)
     else:
         raise NotImplementedError
 

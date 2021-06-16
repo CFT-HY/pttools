@@ -50,6 +50,10 @@ def v_shock(xi: th.FLOAT_OR_ARR):
         return _v_shock_scalar
     if isinstance(xi, numba.types.Array):
         return _v_shock_arr
+    if isinstance(xi, float):
+        return _v_shock_scalar(xi)
+    if isinstance(xi, np.ndarray):
+        return _v_shock_arr(xi)
     else:
         raise TypeError(f"Unsupported type for xi: {type(xi)}")
 
