@@ -79,7 +79,50 @@ jobs:
             call_graphs
             uml
           if-no-files-found: error
-  test:
+  test-numba:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ 3.6, 3.7, 3.8, 3.9 ]
+    steps:
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Print Python version
+      run: python -V
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Load pip cache
+      uses: actions/cache@v2
+      with:
+        path: .pip
+        key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          pip-${{ runner.os }}-
+          pip-
+    - name: Install requirements
+      run: |
+        pip --cache-dir=.pip install --upgrade pip
+        pip --cache-dir=.pip install allure-pytest pytest pytest-cov pytest-html pytest-xdist
+        pip --cache-dir=.pip install -r requirements.txt
+    - name: Run tests
+      run: |
+        pytest | tee test-output.txt
+        coverage json
+    - name: Upload results
+      uses: actions/upload-artifact@v2
+      if: ${{ matrix.python-version == env.PRIMARY_PYTHON_VERSION }}
+      with:
+        name: Test results with Numba
+        path: |
+          coverage.xml
+          coverage.json
+          htmlcov
+          test-output.txt
+          test-results
+        if-no-files-found: error
+  test-python:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -111,14 +154,15 @@ jobs:
     - name: Run tests with coverage
       # Without pytest-pythonpath the PYTHONPATH may have to be set manually
       # PYTHONPATH="${PYTHONPATH}${PYTHONPATH:+:}./tests" pytest | tee test-output.txt
+      # Coverage of Numba-compiled functions does not get reported
       run: |
-        pytest | tee test-output.txt
+        NUMBA_DISABLE_JIT=1 pytest | tee test-output.txt
         coverage json
     - name: Upload results
       uses: actions/upload-artifact@v2
       if: ${{ matrix.python-version == env.PRIMARY_PYTHON_VERSION }}
       with:
-        name: Test results
+        name: Test results without Numba
         path: |
           coverage.xml
           coverage.json
