@@ -172,7 +172,7 @@ def plot_guide_power_laws_prace(
 
 
 def plot_guide_power_laws_ssm(
-        f: plt.Figure,
+        fig: plt.Figure,
         z: np.ndarray,
         powers: np.ndarray,
         ps_type: utils.PSType = utils.PSType.V,
@@ -198,16 +198,16 @@ def plot_guide_power_laws_ssm(
     logger.debug("Plotting guide power laws")
 
     high_peak = np.where(z > x_high)
-    plot_guide_power_law_prace(f.axes[0], z[high_peak], powers[high_peak], n_hi, utils.Position.HIGH, shifts=shifts_hi)
+    plot_guide_power_law_prace(fig.axes[0], z[high_peak], powers[high_peak], n_hi, utils.Position.HIGH, shifts=shifts_hi)
 
     if inter_flag:
         # intermediate power law to be plotted
-        plot_guide_power_law_prace(f.axes[0], z[high_peak], powers[high_peak], n_med, utils.Position.MED)
+        plot_guide_power_law_prace(fig.axes[0], z[high_peak], powers[high_peak], n_med, utils.Position.MED)
 
     low_peak = np.where(z < x_low)
-    plot_guide_power_law_prace(f.axes[0], z[low_peak], powers[low_peak], n_lo, utils.Position.LOW, shifts=shifts_lo)
+    plot_guide_power_law_prace(fig.axes[0], z[low_peak], powers[low_peak], n_lo, utils.Position.LOW, shifts=shifts_lo)
 
-    return f
+    return fig
 
 
 def plot_ps(
