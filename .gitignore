@@ -29,6 +29,7 @@ packages.svg
 *.svg
 *test.txt
 fluidprofiles
+logs
 pow_*.txt
 pylint.txt
 test-output.txt
