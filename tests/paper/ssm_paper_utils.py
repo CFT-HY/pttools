@@ -288,7 +288,7 @@ def make_nuc_compare_table(params_list, v2_list, Omgw_list, p_sim_list, p_exp_li
     f.write('$x_{\\rm p}^{\\rm sim}$' + ' & ')
     f.write('$x_{\\rm p}^{\\rm exp}$' + ' & ')
     f.write('$x_{\\rm b}^{\\rm exp}$' + ' & ')
-    f.write('$x_{\\rm p}^{\\rm exp}\De_\\text{w}$' + ' \\\\ \n')
+    f.write('$x_{\\rm p}^{\\rm exp}\\De_\\text{w}$' + ' \\\\ \n')
     # f.write()
     f.write('\\hline\n')
 
