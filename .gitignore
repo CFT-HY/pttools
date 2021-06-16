@@ -23,6 +23,7 @@ packages.svg
 # Output files
 *.dot
 *.html
+*.lprof
 *.pdf
 *.png
 *.svg
