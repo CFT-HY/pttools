@@ -66,10 +66,10 @@ jobs:
       - name: Run Pyan
         run: |
           ./gen_call_graphs.sh "all" "./**/*.py"
-          ./gen_call_graphs.sh "bubble" "./pttools/bubble/**/*.py"
-          ./gen_call_graphs.sh "pttools" "./pttools/**/*.py"
-          ./gen_call_graphs.sh "pttools_tests" "./pttools/**/*.py" "./tests/**/*.py"
-          ./gen_call_graphs.sh "ssmtools" "./pttools/ssmtools/**/*.py"
+          ./gen_call_graphs.sh "bubble" "./pttools/bubble/**.py"
+          ./gen_call_graphs.sh "pttools" "./pttools/**.py"
+          ./gen_call_graphs.sh "pttools_tests" "./pttools/**.py" "./pttools/**/*.py" "./tests/**.py"
+          ./gen_call_graphs.sh "ssmtools" "./pttools/ssmtools/**.py"
           ./gen_call_graphs.sh "tests" "./tests/**/*.py"
       - name: Upload results
         uses: actions/upload-artifact@v2
