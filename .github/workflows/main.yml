@@ -108,6 +108,7 @@ jobs:
         pip --cache-dir=.pip install -r requirements.txt
     - name: Run tests
       run: |
+        set -o pipefail
         pytest | tee test-output.txt
         coverage json
     - name: Upload results
@@ -156,6 +157,7 @@ jobs:
       # PYTHONPATH="${PYTHONPATH}${PYTHONPATH:+:}./tests" pytest | tee test-output.txt
       # Coverage of Numba-compiled functions does not get reported
       run: |
+        set -o pipefail
         NUMBA_DISABLE_JIT=1 pytest | tee test-output.txt
         coverage json
     - name: Upload results
