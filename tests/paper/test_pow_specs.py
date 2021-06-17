@@ -1,4 +1,5 @@
 import logging
+import os
 import os.path
 import unittest
 
@@ -42,5 +43,9 @@ class TestPowSpecs(unittest.TestCase):
         # and therefore there are slight differences in the results.
         np.testing.assert_allclose(data_test, data_article, rtol=0.14, atol=0)
 
-        # Since this was a heavy computation, let's print info on the threading layer used
-        logger.debug(f"Numba threading layer used: {numba.threading_layer()}")
+        numba_disable_jit = os.getenv("NUMBA_DISABLE_JIT", default=None)
+        if numba_disable_jit:
+            logger.debug(f"Numba is disabled: NUMBA_DISABLE_JIT = {numba_disable_jit}")
+        else:
+            # Since this was a heavy computation, let's print info on the threading layer used
+            logger.debug(f"Numba threading layer used: {numba.threading_layer()}")
