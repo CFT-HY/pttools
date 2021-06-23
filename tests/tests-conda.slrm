@@ -44,7 +44,15 @@ else
   conda env update --prefix "${PTTOOLS_DIR}/envs" --file environment.yml
 fi
 conda activate "${PTTOOLS_DIR}/envs"
-pip install -r "${PTTOOLS_DIR}/requirements-dev.txt"
+
+# Override pip cache directory for Kale to avoid hitting the disk quota limits
+if [ -z "${WRKDIR}" ]; then
+  PIP_CACHE_DIR="${WRKDIR}/cache/pip"
+else
+  PIP_CACHE_DIR="$(pip cache dir)"
+fi
+
+pip --cache-dir="${PIP_CACHE_DIR}" install -r "${PTTOOLS_DIR}/requirements-dev.txt"
 
 numba --sysinfo
 
