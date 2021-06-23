@@ -89,6 +89,8 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+      env:
+        PRIMARY_PYTHON_VERSION: 3.8
     - name: Print Python version
       run: python -V
     - name: Checkout
