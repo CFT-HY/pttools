@@ -50,6 +50,7 @@ def pow_spec(z: th.FLOAT_OR_ARR, spec_den: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     return z**3 / (2. * np.pi ** 2) * spec_den
 
 
+# @numba.njit
 def parse_params(params: bubble.PHYSICAL_PARAMS_TYPE):
     vw = params[0]
     alpha = params[1]
@@ -65,6 +66,7 @@ def parse_params(params: bubble.PHYSICAL_PARAMS_TYPE):
     return vw, alpha, nuc_type, nuc_args
 
 
+# @numba.njit
 def spec_den_v(
         z: np.ndarray,
         params: bubble.PHYSICAL_PARAMS_TYPE,
@@ -101,7 +103,8 @@ def spec_den_v(
     log10tmin = np.log10(tmin)
     log10tmax = np.log10(tmax)
 
-    t_array = np.logspace(log10tmin, log10tmax, nt)
+    # t_array = np.logspace(log10tmin, log10tmax, nt)
+    t_array = speedup.logspace(log10tmin, log10tmax, nt)
 
     qT_lookup = 10 ** (np.arange(log10zmin + log10tmin, log10zmax + log10tmax, dlog10z))
 

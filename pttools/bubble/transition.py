@@ -2,6 +2,7 @@
 
 import logging
 
+import numba
 import numpy as np
 
 import pttools.type_hints as th
@@ -53,6 +54,7 @@ def identify_solution_type(v_wall: float, alpha_n: float, exit_on_error: bool = 
     return sol_type
 
 
+# @numba.njit
 def identify_solution_type_alpha_plus(v_wall: float, alpha_p: float) -> boundary.SolutionType:
     """
     Determines wall type from wall speed and at-wall strength parameter.
@@ -64,14 +66,16 @@ def identify_solution_type_alpha_plus(v_wall: float, alpha_p: float) -> boundary
         if alpha_p < alpha_tools.alpha_plus_max_detonation(v_wall):
             sol_type = boundary.SolutionType.DETON
             if alpha_tools.alpha_plus_min_hybrid(v_wall) < alpha_p < 1/3.:
-                logger.warning(
-                    f"Hybrid and detonation both possible for v_wall = {v_wall}, alpha_plus = {alpha_p}. "
-                    "Choosing detonation.")
+                with numba.objmode:
+                    logger.warning((
+                        "Hybrid and detonation both possible for v_wall = {}, alpha_plus = {}. "
+                        "Choosing detonation.").format(v_wall, alpha_p))
         else:
             sol_type = boundary.SolutionType.HYBRID
 
     if alpha_p > (1/3.) and not sol_type == boundary.SolutionType.DETON:
-        logger.error(f"No solution for for v_wall = {v_wall}, alpha_plus = {alpha_p}")
+        with numba.objmode:
+            logger.error("No solution for for v_wall = {}, alpha_plus = {}".format(v_wall, alpha_p))
         sol_type = boundary.SolutionType.ERROR
 
     return sol_type

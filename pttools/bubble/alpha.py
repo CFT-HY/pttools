@@ -2,6 +2,7 @@
 alpha_p(lus) (strength parameter just in front of wall)
 """
 
+import numba
 import numpy as np
 import scipy.optimize as opt
 
@@ -120,6 +121,7 @@ def alpha_n_max_hybrid(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> float:
     return w[n_wall] * (1. / 3)
 
 
+# @numba.njit
 def alpha_n_max(v_wall: th.FLOAT_OR_ARR, Np=const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR:
     """
     alpha_n_max(v_wall, Np=N_XI_DEFAULT)

@@ -3,6 +3,8 @@ import os
 import os.path
 import unittest
 
+# os.environ["NUMBA_DEBUG_CACHE"] = "1"
+
 import numba
 import numpy as np
 

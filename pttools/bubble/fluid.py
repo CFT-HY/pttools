@@ -7,6 +7,7 @@ Now in parametric form (Jacky Lindsay and Mike Soughton MPhys project 2017-18)
 import logging
 import typing as tp
 
+import numba
 import numpy as np
 import scipy.integrate as spi
 
@@ -22,6 +23,7 @@ from . import transition
 logger = logging.getLogger(__name__)
 
 
+# @numba.njit
 def df_dtau(y: np.ndarray, t: float, cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag) -> tp.Tuple[float, float, float]:
     """
      Differentials of fluid variables (v, w, xi) in parametric form, suitable for odeint
@@ -89,12 +91,13 @@ def fluid_shell(
     return np.nan, np.nan, np.nan
 
 
+# @numba.njit
 def fluid_shell_alpha_plus(
         v_wall: th.FLOAT_OR_ARR,
         alpha_plus: th.FLOAT_OR_ARR,
         sol_type: boundary.SolutionType = boundary.SolutionType.UNKNOWN,
         n_xi: int = const.N_XI_DEFAULT,
-        w_n: float = 1,
+        w_n: float = 1.,
         cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Finds fluid shell (v, w, xi) from a given v_wall, alpha_plus (at-wall strength parameter).
@@ -195,6 +198,7 @@ def fluid_shell_alpha_plus(
     return v, w, xi
 
 
+# @numba.njit
 def trim_fluid_wall_to_cs(
         v: np.ndarray,
         w: np.ndarray,
@@ -223,11 +227,12 @@ def trim_fluid_wall_to_cs(
                 break
 
     if n_stop_index == 0:
-        logger.warning(
-            "Integation gave v < 0 or xi <= cs. "
-            f"sol_type: {sol_type}, v_wall: {v_wall}, xi[0] = {xi[0]}, v[] = {v[0]}. "
-            "Fluid profile has only one element between vw and cs. Fix implemented by adding one extra point."
-        )
+        with numba.objmode:
+            logger.warning((
+                "Integation gave v < 0 or xi <= cs. "
+                "sol_type: {}, v_wall: {}, xi[0] = {}, v[0] = {}. "
+                "Fluid profile has only one element between vw and cs. "
+                "Fix implemented by adding one extra point.").format(sol_type, v_wall, xi[0], v[0]))
         n_stop = 1
     else:
         n_stop = n_stop_index
@@ -239,6 +244,7 @@ def trim_fluid_wall_to_cs(
     return v[n_start:n_stop], w[n_start:n_stop], xi[n_start:n_stop], t[n_start:n_stop]
 
 
+# @numba.njit
 def trim_fluid_wall_to_shock(
         v: np.ndarray,
         w: np.ndarray,
@@ -258,13 +264,18 @@ def trim_fluid_wall_to_shock(
                 break
 
     if n_shock_index == 0:
-        logger.warning(
-            "v[0] < v_shock(xi[0]). "
-            f"sol_type: {sol_type}, xi[0] = {xi[0]}, v[0] = {v[0]}, v_sh(xi[0]) = {props.v_shock(xi[0])}. "
-            "Shock profile has only one element. Fix implemented by adding one extra point.")
+        with numba.objmode:
+            # F-strings are not yet supported by Numba, even in object mode.
+            # https://github.com/numba/numba/issues/3250
+            logger.warning((
+                "v[0] < v_shock(xi[0]). "
+                "sol_type: {}, xi[0] = {}, v[0] = {}, v_sh(xi[0]) = {}. "
+                "Shock profile has only one element. Fix implemented by adding one extra point.").format(
+                sol_type, xi[0], v[0], props.v_shock(xi[0])
+            ))
         n_shock = 1
     else:
         n_shock = n_shock_index
 
-    #    print("n_shock",n_shock,v[n_shock],v_shock(xi[n_shock]))
+    # print("n_shock",n_shock,v[n_shock],v_shock(xi[n_shock]))
     return v[:n_shock + 1], w[:n_shock + 1], xi[:n_shock + 1], t[:n_shock + 1]

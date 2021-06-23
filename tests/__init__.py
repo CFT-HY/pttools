@@ -13,8 +13,9 @@ logging.basicConfig(
         logging.FileHandler(log_file_path),
         logging.StreamHandler()
     ],
-    level=logging.DEBUG,
+    # level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s %(levelname)-8s %(module)-16s %(funcName)-32s %(lineno)-4d %(message)s'
 )
 # Disable Numba log spam
-logging.getLogger("ssa").setLevel(logging.INFO)
+# logging.getLogger("ssa").setLevel(logging.INFO)
