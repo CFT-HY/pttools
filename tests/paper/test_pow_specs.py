@@ -46,7 +46,9 @@ class TestPowSpecs(unittest.TestCase):
             # Since this was a heavy computation, let's print info on the threading layer used
             logger.info(f"Numba threading layer used: {numba.threading_layer()}")
             # Using Numba changes the results slightly
-            np.testing.assert_allclose(data_test, data_reference, rtol=9.1e-7, atol=0)
+            # np.testing.assert_allclose(data_test, data_reference, rtol=9.1e-7, atol=0)
+            # The library versions on Kale change the results further
+            np.testing.assert_allclose(data_test, data_reference, rtol=1.21e-6, atol=0)
 
         # PTtools has been changed since the article has been written,
         # and therefore there are slight differences in the results.
