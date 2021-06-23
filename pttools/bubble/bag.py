@@ -6,6 +6,7 @@ See page 37 of the lecture notes 10.21468/SciPostPhysLectNotes.24
 # import enum
 import typing as tp
 
+import numba
 import numpy as np
 
 import pttools.type_hints as th
@@ -40,16 +41,31 @@ def check_thetas(theta_s: th.FLOAT_OR_ARR, theta_b: th.FLOAT_OR_ARR) -> None:
             f"but got theta_s={theta_s}, theta_b={theta_b}")
 
 
-def cs2_bag(w: th.FLOAT_OR_ARR) -> float:
+@numba.njit
+def _cs2_bag_scalar(w: float) -> float:
+    return const.CS0_2
+
+
+@numba.njit
+def _cs2_bag_arr(w: np.ndarray) -> np.ndarray:
+    return const.CS0_2 * np.ones_like(w)
+
+
+@numba.generated_jit(nopython=True)
+def cs2_bag(w: th.FLOAT_OR_ARR):
     """
     Speed of sound squared in Bag model, equal to 1/3 independent of enthalpy $w$
     """
+    if isinstance(w, numba.types.Float):
+        return _cs2_bag_scalar
+    if isinstance(w, numba.types.Array):
+        return _cs2_bag_arr
+    if isinstance(w, float):
+        return _cs2_bag_scalar(w)
     if isinstance(w, np.ndarray):
-        cs2 = const.CS0_2 * np.ones_like(w)
+        return _cs2_bag_arr(w)
     else:
-        cs2 = const.CS0_2
-
-    return cs2
+        raise TypeError(f"Unknown type for w: {type(w)}")
 
 
 def theta_bag(w: th.FLOAT_OR_ARR, phase: th.INT_OR_ARR, alpha_n: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
