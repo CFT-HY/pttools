@@ -36,18 +36,18 @@ class TestPowSpecs(unittest.TestCase):
         data_reference[:, 9] = np.abs(data_reference[:, 9])
         data_test[:, 9] = np.abs(data_test[:, 9])
 
-        # The results differ slightly depending on the library versions
-        # np.testing.assert_allclose(data_test, data_reference, rtol=4.6e-7, atol=0)
-        # Using Numba changes the results slightly
-        np.testing.assert_allclose(data_test, data_reference, rtol=9.1e-7, atol=0)
+        numba_disable_jit = os.getenv("NUMBA_DISABLE_JIT", default=None)
+
+        if numba_disable_jit:
+            logger.debug(f"Numba is disabled: NUMBA_DISABLE_JIT = {numba_disable_jit}")
+            # The results differ slightly depending on the library versions
+            np.testing.assert_allclose(data_test, data_reference, rtol=4.6e-7, atol=0)
+        else:
+            # Using Numba changes the results slightly
+            np.testing.assert_allclose(data_test, data_reference, rtol=9.1e-7, atol=0)
+            # Since this was a heavy computation, let's print info on the threading layer used
+            logger.debug(f"Numba threading layer used: {numba.threading_layer()}")
 
         # PTtools has been changed since the article has been written,
         # and therefore there are slight differences in the results.
         np.testing.assert_allclose(data_test, data_article, rtol=0.14, atol=0)
-
-        numba_disable_jit = os.getenv("NUMBA_DISABLE_JIT", default=None)
-        if numba_disable_jit:
-            logger.debug(f"Numba is disabled: NUMBA_DISABLE_JIT = {numba_disable_jit}")
-        else:
-            # Since this was a heavy computation, let's print info on the threading layer used
-            logger.debug(f"Numba threading layer used: {numba.threading_layer()}")
