@@ -84,13 +84,13 @@ jobs:
     strategy:
       matrix:
         python-version: [ 3.6, 3.7, 3.8, 3.9 ]
+    env:
+      PRIMARY_PYTHON_VERSION: 3.8
     steps:
     - name: Setup Python
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-      env:
-        PRIMARY_PYTHON_VERSION: 3.8
     - name: Print Python version
       run: python -V
     - name: Checkout
