@@ -42,6 +42,7 @@ else
   PIP_CACHE_DIR="$(pip cache dir)"
 fi
 
+pip --cache-dir="${PIP_CACHE_DIR}" install wheel
 pip --cache-dir="${PIP_CACHE_DIR}" install -r "${PTTOOLS_DIR}/requirements.txt" -r "${PTTOOLS_DIR}/requirements-dev.txt"
 
 numba --sysinfo
