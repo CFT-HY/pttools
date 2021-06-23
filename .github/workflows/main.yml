@@ -21,8 +21,7 @@ jobs:
       - name: Install requirements
         run: |
           pip --cache-dir=.pip install --upgrade pip
-          pip --cache-dir=.pip install pylint
-          pip --cache-dir=.pip install -r requirements.txt
+          pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
       - name: Run Pylint
         run: pylint pttools tests 2>&1 | tee pylint.txt
       - name: Upload results
@@ -56,8 +55,7 @@ jobs:
       - name: Install requirements
         run: |
           pip --cache-dir=.pip install --upgrade pip
-          pip --cache-dir=.pip install "pyan3 >=1.1.1, !=1.2.0" pylint
-          pip --cache-dir=.pip install -r requirements.txt
+          pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
       - name: Run Pyreverse
         run: |
           mkdir uml
@@ -106,8 +104,7 @@ jobs:
     - name: Install requirements
       run: |
         pip --cache-dir=.pip install --upgrade pip
-        pip --cache-dir=.pip install allure-pytest pytest pytest-cov pytest-html pytest-xdist
-        pip --cache-dir=.pip install -r requirements.txt
+        pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
     - name: Run tests
       run: |
         set -o pipefail
@@ -152,8 +149,7 @@ jobs:
     - name: Install requirements
       run: |
         pip --cache-dir=.pip install --upgrade pip
-        pip --cache-dir=.pip install allure-pytest pytest pytest-cov pytest-html pytest-xdist
-        pip --cache-dir=.pip install -r requirements.txt
+        pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
     - name: Run tests with coverage
       # Without pytest-pythonpath the PYTHONPATH may have to be set manually
       # PYTHONPATH="${PYTHONPATH}${PYTHONPATH:+:}./tests" pytest | tee test-output.txt

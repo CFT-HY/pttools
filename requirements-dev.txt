@@ -1,0 +1,12 @@
+# The dependency files could be combined with the line below, but this would double-install packages
+# in the conda environment.
+# -r requirements.txt
+allure-pytest
+# For Numba system info
+psutil
+pyan3 >=1.1.1, !=1.2.0
+pylint
+pytest
+pytest-cov
+pytest-html
+pytest-xdist
