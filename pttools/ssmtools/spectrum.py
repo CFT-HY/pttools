@@ -103,8 +103,8 @@ def spec_den_v(
     log10tmin = np.log10(tmin)
     log10tmax = np.log10(tmax)
 
-    # t_array = np.logspace(log10tmin, log10tmax, nt)
-    t_array = speedup.logspace(log10tmin, log10tmax, nt)
+    t_array = np.logspace(log10tmin, log10tmax, nt)
+    # t_array = speedup.logspace(log10tmin, log10tmax, nt)
 
     qT_lookup = 10 ** (np.arange(log10zmin + log10tmin, log10zmax + log10tmax, dlog10z))
 
