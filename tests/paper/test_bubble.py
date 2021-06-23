@@ -19,3 +19,7 @@ class TestBubble(unittest.TestCase):
 
         data_ref = np.loadtxt(os.path.join(file_path))
         np.testing.assert_allclose(data_summed, data_ref)
+
+
+if __name__ == "__main__":
+    unittest.main()

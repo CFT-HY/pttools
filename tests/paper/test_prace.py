@@ -26,3 +26,7 @@ class TestPrace(unittest.TestCase):
 
         ref_data = np.loadtxt(ref_path)
         np.testing.assert_allclose(test_data, ref_data)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -57,3 +57,7 @@ class TestShells(unittest.TestCase):
         np.testing.assert_allclose(data_weak, ref_weak)
         np.testing.assert_allclose(data_inter, ref_inter)
         np.testing.assert_allclose(data_esp, ref_esp)
+
+
+if __name__ == "__main__":
+    unittest.main()

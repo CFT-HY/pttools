@@ -51,3 +51,7 @@ class TestBag(unittest.TestCase):
         e = bubble.get_e(self.w_arr, self.phase, self.theta_s, self.theta_b)
         data = bubble.get_w(e, self.phase, self.theta_s, self.theta_b)
         np.testing.assert_allclose(data, ref_data)
+
+
+if __name__ == "__main__":
+    unittest.main()

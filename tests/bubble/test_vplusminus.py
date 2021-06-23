@@ -38,3 +38,7 @@ class TestVPlusMinus(unittest.TestCase):
         # Todo: Test in some other way to avoid "RuntimeWarning: invalid value encountered in sqrt"
         v_first = np.linspace(1/self.npts+0.1, 0.9, self.npts)
         self.v_conversion(bubble.v_minus, os.path.join(TEST_DATA_PATH, "v_minus_plus.txt"), v_first)
+
+
+if __name__ == "__main__":
+    unittest.main()

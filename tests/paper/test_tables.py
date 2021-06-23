@@ -50,3 +50,7 @@ class TestTables(unittest.TestCase):
             spu.make_nuc_compare_table,
             [self.params, self.v2, self.Omgw, self.pfit_sim, self.pfit_exp]
         )
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -51,3 +51,7 @@ class TestPowSpecs(unittest.TestCase):
         # PTtools has been changed since the article has been written,
         # and therefore there are slight differences in the results.
         np.testing.assert_allclose(data_test, data_article, rtol=0.14, atol=0)
+
+
+if __name__ == "__main__":
+    unittest.main()
