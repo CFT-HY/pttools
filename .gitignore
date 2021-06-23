@@ -3,6 +3,7 @@ __pycache__
 *.pyc
 .idea
 .DS_Store
+envs
 model_data
 venv
 

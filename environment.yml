@@ -1,0 +1,10 @@
+# Anaconda environment configuration
+
+name: pttools
+dependencies:
+  - python>=3.6
+  - matplotlib
+  - numba
+  - numpy
+  - scipy
+  - tbb
