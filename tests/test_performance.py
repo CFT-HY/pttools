@@ -60,7 +60,7 @@ class TestPerformance(unittest.TestCase):
         gw = ssm.power_gw_scaled(z,[0.1,0.1])
         """)
         command = "gw = ssm.power_gw_scaled(z,[0.1,0.1])"
-        cls.run_with_different_threads("GW", setup, command, 20)
+        cls.run_with_different_threads("GW", setup, command, 10)
 
     @classmethod
     def test_performance_sin_transform(cls):
