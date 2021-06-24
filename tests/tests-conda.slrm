@@ -47,9 +47,9 @@ conda activate "${PTTOOLS_DIR}/envs"
 
 # Override pip cache directory for Kale to avoid hitting the disk quota limits
 if [ -z "${WRKDIR}" ]; then
-  PIP_CACHE_DIR="${WRKDIR}/cache/pip"
-else
   PIP_CACHE_DIR="$(pip cache dir)"
+else
+  PIP_CACHE_DIR="${WRKDIR}/cache/pip"
 fi
 
 pip --cache-dir="${PIP_CACHE_DIR}" install -r "${PTTOOLS_DIR}/requirements-dev.txt"
