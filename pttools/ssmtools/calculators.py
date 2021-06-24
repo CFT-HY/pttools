@@ -1,5 +1,6 @@
 """Numerical utilities for ssmtools"""
 
+import logging
 import typing as tp
 
 import numba
@@ -8,6 +9,8 @@ import numpy as np
 
 import pttools.type_hints as th
 from . import const
+
+logger = logging.getLogger(__name__)
 
 
 @numba.njit
@@ -56,7 +59,12 @@ def envelope(xi: np.ndarray, f: np.ndarray) -> tp.Tuple[tp.List[float], tp.List[
     f_max = f[i_max_f]
     xi_w = xi[i_max_f]  # max f always at wall
 
-    df_at_max = f[i_max_f + 1] - f[i_max_f - 1]
+    if i_max_f == f.size:
+        df_at_max = f[i_max_f] - f[i_max_f - 2]
+        with numba.objmode:
+            logger.warning("i_max_f is at the end of f. df_at_max will be calculated for the previous values.")
+    else:
+        df_at_max = f[i_max_f + 1] - f[i_max_f - 1]
 
     #    print(ind1, ind2, [xi1,f1], [xi_w, f_max])
 
