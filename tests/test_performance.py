@@ -62,6 +62,22 @@ class TestPerformance(unittest.TestCase):
         command = "gw = ssm.power_gw_scaled(z,[0.1,0.1])"
         cls.run_with_different_threads("GW", setup, command, 20)
 
+    @classmethod
+    def test_performance_sin_transform(cls):
+        setup = textwrap.dedent("""
+        import os
+        import numpy as np
+
+        import pttools.ssmtools.calculators as calc
+
+        z = np.logspace(0, 2, 10000)
+        xi = np.linspace(0, 1, 10000)
+        # TODO: put some better function here
+        f = np.amax([np.zeros_like(xi), np.sin(xi)], axis=0)
+        """)
+        command = "transformed = calc.sin_transform(z, xi, f)"
+        cls.run_with_different_threads("sin_transform", setup, command, 10)
+
 
 if __name__ == "__main__":
     unittest.main()
