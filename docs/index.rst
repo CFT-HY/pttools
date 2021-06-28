@@ -7,8 +7,10 @@ Welcome to PTtools's documentation!
 ===================================
 
 .. toctree::
-   :maxdepth: 2
    :caption: Contents:
+
+   usage
+   modules/index
 
 
 
