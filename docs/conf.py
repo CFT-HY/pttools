@@ -28,6 +28,9 @@ author = 'Mark Hindmarsh, Danny Bail & Mika Mäki'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    # Markdown support can be enabled by uncommenting the line below.
+    # https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html#using-markdown-with-sphinx
+    # "myst_parser"
 ]
 
 # Add any paths that contain templates here, relative to this directory.
