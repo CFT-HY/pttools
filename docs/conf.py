@@ -18,8 +18,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # -- Project information -----------------------------------------------------
 
 project = 'PTtools'
-copyright = '2021, Mark Hindmarsh, Danny Bail & Mika Mäki'
-author = 'Mark Hindmarsh, Danny Bail & Mika Mäki'
+copyright = '2015-2021, Mark Hindmarsh, Mudhahir Al-Ajmi, Danny Bail & Mika Mäki'
+author = 'Mark Hindmarsh, Mudhahir Al-Ajmi, Danny Bail, Jacky Lindsay, Mike Soughton & Mika Mäki'
 
 
 # -- General configuration ---------------------------------------------------
