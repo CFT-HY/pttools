@@ -15,11 +15,13 @@ logger = logging.getLogger(__name__)
 
 @numba.njit
 def sin_transform_old(z: th.FLOAT_OR_ARR, xi: np.ndarray, v: np.ndarray):
-    """
-    sin transform of v(xi), Fourier transform variable z.
-    xi and v arrays of the same shape, z can be an array of a different shape.
-    """
+    r"""
+    sin transform of $v(\xi)$
 
+    :param z: Fourier transform variable (any shape)
+    :param xi: $\xi$
+    :param v: wall speed $v$, same shape as $\xi$
+    """
     if isinstance(z, np.ndarray):
         array = np.sin(np.outer(z, xi)) * v
         integral = np.trapz(array, xi)
@@ -34,8 +36,8 @@ def sin_transform_old(z: th.FLOAT_OR_ARR, xi: np.ndarray, v: np.ndarray):
 def envelope(xi: np.ndarray, f: np.ndarray) -> tp.Tuple[tp.List[float], tp.List[float]]:
     """
     Helper function for sin_transform_approx.
-
     Assumes that
+
     - max(v) is achieved at a discontinuity (bubble wall)
     - f(xi) finishes at a discontinuity (shock)
     - at least the first element of f is zero
@@ -93,17 +95,20 @@ def envelope(xi: np.ndarray, f: np.ndarray) -> tp.Tuple[tp.List[float], tp.List[
 
 @numba.njit
 def sin_transform_approx(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray) -> np.ndarray:
-    """
-    Approximate sin transform of f(xi), Fourier transform variable z.
-    xi and f arrays of the same shape, z can be an array of a different shape.
-    values $f_a$ and $f_b$, we have
+    r"""
+    Approximate sin transform of $f(\xi)$.
+    For values $f_a$ and $f_b$, we have
     $$
-    \\int_{\\xi_a}^{\\xi_b} d\\xi f(\\xi) \\sin(z \\xi) \\to
-    - \\frac{1}{z} \\left(f_b \\cos(z \\xi_b) - f_a \\cos(z \\xi_a)\\right) + O(1/z^2)
+    \int_{\xi_a}^{\xi_b} d\xi f(\xi) \sin(z \xi) \to
+    - \frac{1}{z} \left(f_b \cos(z \xi_b) - f_a \cos(z \xi_a)\right) + O(1/z^2)
     $$
-    as $z \\to \\infty$.
-    Function assumed piecewise continuous in intervals $[\\xi_1, \\xi_w]$ and
-    $[\\xi_w,\\xi_2]$.
+    as $z \to \infty$.
+    Function assumed piecewise continuous in intervals $[\xi_1, \xi_w]$ and
+    $[\xi_w,\xi_2]$.
+
+    :param z: Fourier transform variable (any shape)
+    :param xi: $\xi$
+    :param f: function values at the points $\xi$, same shape as $\xi$
     """
     [xi1, xi_w, _, xi2], [f1, f_m, f_p, f2] = envelope(xi, f)
     integral = -(f2 * np.cos(z * xi2) - f_p * np.cos(z * xi_w)) / z
@@ -170,11 +175,14 @@ def _sin_transform_arr(
 
 @numba.generated_jit(nopython=True)
 def sin_transform(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray, z_st_thresh: float = const.Z_ST_THRESH):
-    """
+    r"""
     sin transform of f(xi), Fourier transform variable z.
-    xi and f arrays of the same shape, z can be an array of a different shape.
     For z > z_st_thresh, use approximation rather than doing the integral.
     Interpolate between  z_st_thresh - dz_blend < z < z_st_thresh.
+
+    :param z: Fourier transform variable (any shape)
+    :param xi: $\xi$
+    :param f: function values at the points $\xi$, same shape as $\xi$
     """
     if isinstance(z, numba.types.Float):
         return _sin_transform_scalar
@@ -192,10 +200,10 @@ def sin_transform(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray, z_st_thresh
 def resample_uniform_xi(
         xi: np.ndarray,
         f: th.FLOAT_OR_ARR,
-        nxi: int = const.NPTDEFAULT[0]) -> tp.Tuple[np.ndarray, th.FLOAT_OR_ARR]:
+        n_xi: int = const.NPTDEFAULT[0]) -> tp.Tuple[np.ndarray, th.FLOAT_OR_ARR]:
+    r"""
+    Provide uniform resample of function defined by $(x,y) = (\xi,f)$.
+    Returns f interpolated and the uniform grid of n_xi points in range [0,1]
     """
-    Provide uniform resample of function defined by (x,y) = (xi,f).
-    Returns f interpolated and the uniform grid of nxi points in range [0,1]
-    """
-    xi_re = np.linspace(0, 1-1/nxi, nxi)
+    xi_re = np.linspace(0, 1-1/n_xi, n_xi)
     return xi_re, np.interp(xi_re, xi, f)

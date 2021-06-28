@@ -20,12 +20,16 @@ def find_alpha_n(
         alpha_p: float,
         sol_type: boundary.SolutionType = boundary.SolutionType.UNKNOWN,
         n_xi: int = const.N_XI_DEFAULT) -> float:
-    """
-    Calculates alpha_n from alpha_plus, for given v_wall.
-    v_wall can be scalar or iterable.
-    alpha_p[lus] must be scalar.
-    alpha = ([(3/4) difference in trace anomaly]/enthalpy).
-    alpha_n is global strength parameter, alpha_plus the at-wall strength parameter.
+    r"""
+    Calculates $\alpha_n$ from $\alpha_+$, for given v_wall.
+
+    $\alpha = \frac{ \frac{3}{4} \text{difference in trace anomaly} }{\text{enthalpy}}$
+
+    :param v_wall: $v_\text{wall}$, wall speed
+    :param alpha_p: $\alpha_+$, the at-wall strength parameter.
+    :param sol_type:
+    :param n_xi:
+    :return: $\alpha_n$, global strength parameter
     """
     check.check_wall_speed(v_wall)
     if sol_type == boundary.SolutionType.UNKNOWN:
@@ -36,12 +40,15 @@ def find_alpha_n(
 
 
 def find_alpha_plus(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float, n_xi: int = const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR:
-    """
-    Calculate alpha_plus from a given alpha_n and v_wall.
-    v_wall can be scalar or iterable.
-    alpha_n_given must be scalar.
-    alpha = ([(3/4) difference in trace anomaly]/enthalpy)
-    alpha_n is global strength parameter, alpha_plus the at-wall strength parameter.
+    r"""
+    Calculate $\alpha_+$ from a given $\alpha_n$ and $v_\text{wall}$.
+
+    $\alpha = \frac{ \frac{3}{4} \text{difference in trace anomaly} }{\text{enthalpy}}$
+
+    :param v_wall: $v_\text{wall}$, the wall speed
+    :param alpha_n_given: $\alpha_n$, the global strength parameter
+    :param n_xi:
+    :return: $\alpha_+$, the the at-wall strength parameter
     """
     it = np.nditer([None, v_wall], [], [['writeonly', 'allocate'], ['readonly']])
     for ap, vw in it:
@@ -71,11 +78,15 @@ def find_alpha_plus(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float, n_xi: int = c
 
 
 def alpha_plus_initial_guess(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float) -> th.FLOAT_OR_ARR:
+    r"""
+    Initial guess for root-finding of $\alpha_+$ from $\alpha_n$.
+    Linear approx between $\alpha_{n,\min}$ and $\alpha_{n,\max}$.
+    Doesn't do obvious checks like Detonation - needs improving?
+
+    :param v_wall: $v_\text{wall}$, wall speed
+    :param alpha_n_given: $\alpha_{n, \text{given}}$
+    :return: initial guess for $\alpha_+$
     """
-    Initial guess for root-finding of alpha_plus from alpha_n.
-    Linear approx between alpha_n_min and alpha_n_max.
-    """
-    #     Doesn't do obvious checks like Detonation - needs improving?
 
     if alpha_n_given < 0.05:
         a_guess = alpha_n_given
@@ -94,17 +105,22 @@ def alpha_plus_initial_guess(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float) -> t
 
 
 def find_alpha_n_from_w_xi(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_p: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
-    """
-    Calculates alpha_N ([(3/4) difference in trace anomaly]/enthalpy) from alpha_p[lus]
-    Assumes one has solution arrays w, xi
+    r"""
+    Calculates $\alpha_n$,
+    $\alpha = \frac{ \frac{3}{4} \text{difference in trace anomaly} }{\text{enthalpy}}$
+    from $\alpha_+$
+
+    :return: $\alpha_n$
     """
     n_wall = props.find_v_index(xi, v_wall)
     return alpha_p * w[n_wall] / w[-1]
 
 
 def alpha_n_max_hybrid(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> float:
-    """
-    Calculates maximum alpha_n for given v_wall, assuming Hybrid fluid shell
+    r"""
+    Calculates $\alpha_{n,\max}$ for given $v_\text{wall\$, assuming hybrid fluid shell
+
+    :return: $\alpha_{n,\max}$
     """
     sol_type = transition.identify_solution_type_alpha_plus(v_wall, 1. / 3)
     if sol_type == boundary.SolutionType.SUB_DEF:
@@ -123,20 +139,22 @@ def alpha_n_max_hybrid(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> float:
 
 # @numba.njit
 def alpha_n_max(v_wall: th.FLOAT_OR_ARR, Np=const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR:
-    """
-    alpha_n_max(v_wall, Np=N_XI_DEFAULT)
+    r"""
+    Calculates $\alpha_{n,\max}$ (relative trace anomaly outside bubble)
+    for given $v_\text{wall}$, which is max $\alpha_n$ for (supersonic) deflagration.
 
-    Calculates maximum alpha_n (relative trace anomaly outside bubble)
-    for given v_wall, which is max alpha_n for (supersonic) deflagration.
+    :return: $\alpha_{n,\max}$, the relative trace anomaly outside the bubble
     """
     return alpha_n_max_deflagration(v_wall, Np)
 
 
 def alpha_n_max_deflagration(v_wall: th.FLOAT_OR_ARR, Np=const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR:
-    """
-    Calculates maximum alpha_n (relative trace anomaly outside bubble)
-    for given v_wall, for deflagration.
+    r"""
+    Calculates maximum $\alpha_n$ (relative trace anomaly outside bubble)
+    for given $v_\text{wall}$, for deflagration.
     Works also for hybrids, as they are supersonic deflagrations
+
+    :return: maximum $\alpha_n$
     """
     check.check_wall_speed(v_wall)
     # sol_type_ = identify_solution_type(v_wall_, 1./3)
@@ -161,11 +179,10 @@ def alpha_n_max_deflagration(v_wall: th.FLOAT_OR_ARR, Np=const.N_XI_DEFAULT) -> 
 
 
 def alpha_plus_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
+    r"""
+    Maximum allowed value of $\alpha_+$ for a detonation with wall speed $v_\text{wall}$.
+    Comes from inverting $v_w$ > $v_\text{Jouguet}$.
     """
-    Maximum allowed value of alpha_plus for a detonation with wall speed v_wall.
-    Comes from inverting v_w > v_Jouguet
-    """
-
     check.check_wall_speed(v_wall)
     it = np.nditer([None, v_wall], [], [['writeonly', 'allocate'], ['readonly']])
     for bb, vw in it:
@@ -182,16 +199,16 @@ def alpha_plus_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
 
 
 def alpha_n_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
-    """
-    Maximum allowed value of alpha_n for a detonation with wall speed v_wall.
-    Same as alpha_plus_max_detonation, because alpha_n = alpha_plus for detonation.
+    r"""
+    Maximum allowed value of $\alpha_n$ for a detonation with wall speed $v_\text{wall}$.
+    Same as alpha_plus_max_detonation, because $\alpha_n = \alpha_+$ for detonation.
     """
     return alpha_plus_max_detonation(v_wall)
 
 
 def alpha_plus_min_hybrid(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
-    """
-    Minimum allowed value of alpha_plus for a hybrid with wall speed v_wall.
+    r"""
+    Minimum allowed value of $\alpha_+$ for a hybrid with wall speed $v_\text{wall}$.
     Condition from coincidence of wall and shock
     """
     check.check_wall_speed(v_wall)
@@ -207,17 +224,17 @@ def alpha_plus_min_hybrid(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
 
 
 def alpha_n_min_hybrid(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
-    """
-    Minimum alpha_n for a hybrid. Equal to maximum alpha_n for a detonation.
-    Same as aalpha_n_min_deflagration, as a hybrid is a supersonic deflagration.
+    r"""
+    Minimum $\alpha_n$ for a hybrid. Equal to maximum $\alpha_n$ for a detonation.
+    Same as alpha_n_min_deflagration, as a hybrid is a supersonic deflagration.
     """
     check.check_wall_speed(v_wall)
     return alpha_n_max_detonation(v_wall)
 
 
 def alpha_n_min_deflagration(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
-    """
-    Minimum alpha_n for a deflagration. Equal to maximum alpha_n for a detonation.
+    r"""
+    Minimum $\alpha_n$ for a deflagration. Equal to maximum $\alpha_n$ for a detonation.
     Same as alpha_n_min_hybrid, as a hybrid is a supersonic deflagration.
     """
     check.check_wall_speed(v_wall)

@@ -1,7 +1,7 @@
 """Functions for fluid differential equations
 
 Now in parametric form (Jacky Lindsay and Mike Soughton MPhys project 2017-18)
-# RHS is Eq (33) in Espinosa et al (plus dw/dt not written there)
+# RHS is Eq (33) in Espinosa et al (plus $\frac{dw}{dt}$ not written there)
 """
 
 import logging
@@ -25,8 +25,10 @@ logger = logging.getLogger(__name__)
 
 # @numba.njit
 def df_dtau(y: np.ndarray, t: float, cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag) -> tp.Tuple[float, float, float]:
-    """
-     Differentials of fluid variables (v, w, xi) in parametric form, suitable for odeint
+    r"""
+    Differentials of fluid variables $(v, w, \xi)$ in parametric form, suitable for odeint
+
+    :return: $\frac{dv}{d\tau}, \frac{dw}{d\tau}, \frac{d\xi}{d\tau}$
     """
     v = y[0]
     w = y[1]
@@ -49,12 +51,12 @@ def fluid_integrate_param(
         xi0: th.FLOAT_OR_ARR,
         t_end: float = const.T_END_DEFAULT,
         n_xi: int = const.N_XI_DEFAULT,
-        cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """
-     Integrates parametric fluid equations in df_dtau from an initial condition.
-     Positive t_end integrates along curves from (v,w) = (0,cs0) to (1,1).
-     Negative t_end integrates towards (0,cs0).
-     Returns: v, w, xi, t
+        cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag):
+    r"""
+    Integrates parametric fluid equations in df_dtau from an initial condition.
+    Positive t_end integrates along curves from (v,w) = (0,cs0) to (1,1).
+    Negative t_end integrates towards (0,cs0).
+    :return: $v, w, \xi, t$
     """
     t = np.linspace(0., t_end, n_xi)
     if isinstance(xi0, np.ndarray):
@@ -76,8 +78,8 @@ def fluid_shell(
         alpha_n: th.FLOAT_OR_ARR,
         n_xi: int = const.N_XI_DEFAULT) \
         -> tp.Union[tp.Tuple[float, float, float], tp.Tuple[np.ndarray, np.ndarray, np.ndarray]]:
-    """
-    Finds fluid shell (v, w, xi) from a given v_wall, alpha_n, which must be scalars.
+    r"""
+    Finds fluid shell $(v, w, \xi)$ from a given $v_\text{wall}, \alpha_n$, which must be scalars.
     Option to change xi resolution n_xi
     """
     #    check_physical_params([v_wall,alpha_n])
@@ -99,17 +101,22 @@ def fluid_shell_alpha_plus(
         n_xi: int = const.N_XI_DEFAULT,
         w_n: float = 1.,
         cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Finds fluid shell (v, w, xi) from a given v_wall, alpha_plus (at-wall strength parameter).
-    Where v=0 (behind and ahead of shell) uses only two points.
+    r"""
+    Finds fluid shell (v, w, xi) from a given $v_\text{wall}, \alpha_+$ (at-wall strength parameter).
+    Where $v=0$ (behind and ahead of shell) uses only two points.
     v_wall and alpha_plus must be scalars, and are converted from 1-element arrays if needed.
 
     :param sol_type: specify wall type if more than one permitted.
     :param n_xi: increase resolution
     :param w_n: specify enthalpy outside fluid shell
     :param cs2_fun: sound speed squared as a function of enthalpy, default
+    :return: $v, w, \xi$
     """
     # if isinstance(v_wall, np.ndarray):
+    #     raise ValueError
+    # if isinstance(alpha_plus, np.ndarray):
+    #     raise ValueError
+
     check.check_wall_speed(v_wall)
     dxi = 1. / n_xi
     #    dxi = 10*eps
@@ -208,8 +215,8 @@ def trim_fluid_wall_to_cs(
         v_wall: th.FLOAT_OR_ARR, sol_type: boundary.SolutionType,
         dxi_lim: float = const.DXI_SMALL,
         cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Picks out fluid variable arrays (v, w, xi, t) which are definitely behind
+    r"""
+    Picks out fluid variable arrays $(v, w, \xi, t)$ which are definitely behind
     the wall for deflagration and hybrid.
     Also removes negative fluid speeds and xi <= sound_speed, which might be left by
     an inaccurate integration.
@@ -252,8 +259,10 @@ def trim_fluid_wall_to_shock(
         xi: np.ndarray,
         t: np.ndarray,
         sol_type: boundary.SolutionType) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Trims fluid variable arrays (v, w, xi) so last element is just ahead of shock
+    r"""
+    Trims fluid variable arrays $(v, w, \xi)$ so last element is just ahead of shock
+
+    :return: trimmed $v, w, \xi, t$
     """
     n_shock_index = -2
     # n_shock = 0

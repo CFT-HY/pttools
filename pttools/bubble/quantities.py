@@ -35,9 +35,9 @@ def split_integrate(
         w: np.ndarray,
         xi: np.ndarray,
         v_wall: float) -> tp.Tuple[float, float]:
-    """
-    Split an integration of a function func of arrays v w xi
-    according to whether xi is inside or outside the wall (expecting discontinuity there).
+    r"""
+    Split an integration of a function func of arrays $v, w, \xi$
+    according to whether $\xi$ is inside or outside the wall (expecting discontinuity there).
     """
     check.check_wall_speed(v_wall)
     inside = np.where(xi < v_wall)
@@ -57,8 +57,8 @@ def part_integrate(
         w: np.ndarray,
         xi: np.ndarray,
         where_in: th.INT_OR_ARR) -> float:
-    """
-    Integrate a function func of arrays v w xi over index selection where_in.
+    r"""
+    Integrate a function func of arrays $v, w, \xi$ over index selection where_in.
     """
     xi_in = xi[where_in]
     v_in = v[where_in]
@@ -68,10 +68,10 @@ def part_integrate(
 
 
 def de_from_w(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> np.ndarray:
-    """
-    Calculates energy density difference de = e - e[-1] from enthalpy, assuming
+    r"""
+    Calculates energy density difference ``de = e - e[-1]`` from enthalpy, assuming
     bag equation of state.
-    Can get alpha_n = find_alpha_n_from_w_xi(w,xi,v_wall,alpha_p)
+    Can get ``alpha_n = find_alpha_n_from_w_xi(w,xi,v_wall,alpha_p)``
     """
     check.check_physical_params([v_wall, alpha_n])
     e_from_w = bag.get_e(w, bag.get_phase(xi, v_wall), 0.75 * w[-1] * alpha_n)
@@ -97,7 +97,7 @@ def de_from_w_new(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, a
 
 def mean_energy_change(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> float:
     """
-     Bubble-averaged change in energy density in bubble relative to outside value.
+    Bubble-averaged change in energy density in bubble relative to outside value.
     """
     #    def ene_diff(v,w,xi):
     #        return de_from_w(w, xi, v_wall, alpha_n)
@@ -110,7 +110,7 @@ def mean_energy_change(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: flo
 
 def mean_enthalpy_change(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
     """
-     Mean change in enthalphy in bubble relative to outside value.
+    Mean change in enthalpy in bubble relative to outside value.
     """
     #    def en_diff(v, dw, xi):
     #        return dw
@@ -123,8 +123,8 @@ def mean_enthalpy_change(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: f
 
 def mean_kinetic_energy(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
     """
-     Kinetic energy of fluid in bubble, averaged over bubble volume,
-     from fluid shell functions.
+    Kinetic energy of fluid in bubble, averaged over bubble volume,
+    from fluid shell functions.
     """
     check.check_wall_speed(v_wall)
     integral = np.trapz(w * v ** 2 * relativity.gamma2(v), xi ** 3)
@@ -133,8 +133,8 @@ def mean_kinetic_energy(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: fl
 
 def ubarf_squared(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
     """
-     Enthalpy-weighted mean square space components of 4-velocity of fluid in bubble,
-     from fluid shell functions.
+    Enthalpy-weighted mean square space components of 4-velocity of fluid in bubble,
+    from fluid shell functions.
     """
     check.check_wall_speed(v_wall)
     #    def fun(v,w,xi):
@@ -147,10 +147,11 @@ def ubarf_squared(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float) -
 
 
 def get_ke_frac(v_wall: th.FLOAT_OR_ARR, alpha_n: float, n_xi: int = const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR:
-    """
-     Determine kinetic energy fraction (of total energy).
-     Bag equation of state only so far, as it takes
-     e_n = (3./4) w_n (1+alpha_n). This assumes zero trace anomaly in broken phase.
+    r"""
+    Determine kinetic energy fraction (of total energy).
+    Bag equation of state only so far, as it takes
+    $e_n = \frac{3}{4} w_n (1 + \alpha_n)$.
+    This assumes zero trace anomaly in broken phase.
     """
     ubar2 = get_ubarf2(v_wall, alpha_n, n_xi)
     return ubar2 / (0.75 * (1 + alpha_n))
@@ -161,10 +162,11 @@ def get_ke_frac_new(
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
         verbosity: int = 0) -> th.FLOAT_OR_ARR:
-    """
-     Determine kinetic energy fraction (of total energy).
-     Bag equation of state only so far, as it takes
-     e_n = (3./4) w_n (1+alpha_n). This assumes zero trace anomaly in broken phase.
+    r"""
+    Determine kinetic energy fraction (of total energy).
+    Bag equation of state only so far, as it takes
+    $e_n = \frac{3}{4} w_n (1 + \alpha_n)$.
+    This assumes zero trace anomaly in broken phase.
     """
     it = np.nditer([v_wall, None])
     for vw, ke in it:
@@ -195,8 +197,8 @@ def get_ke_de_frac(
         n_xi: int = const.N_XI_DEFAULT,
         verbosity: int = 0) -> tp.Union[tp.Tuple[float, float], tp.Tuple[np.ndarray, np.ndarray]]:
     """
-     Kinetic energy fraction and fractional change in energy
-     from wall velocity array. Sum should be 0. Assumes bag model.
+    Kinetic energy fraction and fractional change in energy
+    from wall velocity array. Sum should be 0. Assumes bag model.
     """
     it = np.nditer([v_wall, None, None])
     for vw, ke, de in it:
@@ -230,9 +232,9 @@ def get_ubarf2(
         n_xi: int = const.N_XI_DEFAULT,
         verbosity: int = 0) -> th.FLOAT_OR_ARR:
     """
-     Get mean square fluid velocity from v_wall and alpha_n.
-     v_wall can be scalar or iterable.
-     alpha_n must be scalar.
+    Get mean square fluid velocity from v_wall and alpha_n.
+    v_wall can be scalar or iterable.
+    alpha_n must be scalar.
     """
     it = np.nditer([v_wall, None])
     for vw, Ubarf2 in it:
@@ -260,10 +262,8 @@ def get_ubarf2_new(
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
         verbosity: int = 0) -> th.FLOAT_OR_ARR:
-    """
-     Get mean square fluid velocity from v_wall and alpha_n.
-     v_wall can be scalar or iterable.
-     alpha_n must be scalar.
+    r"""
+    Get mean square fluid velocity from $v_\text{wall}$ and $\alpha_n$.
     """
     w_mean = 1  # For bag, it doesn't matter
     Gamma = bag.adiabatic_index(w_mean, const.BROK_PHASE, bag.theta_bag(w_mean, const.BROK_PHASE, alpha_n))
@@ -295,8 +295,8 @@ def get_kappa(
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
         verbosity: int = 0) -> th.FLOAT_OR_ARR:
-    """
-    Efficiency factor kappa from v_wall and alpha_n. v_wall can be array.
+    r"""
+    Efficiency factor $\kappa$ from $v_\text{wall}$ and $\alpha_n$.
     """
     # NB was called get_kappa_arr
     it = np.nditer([v_wall, None])
@@ -326,9 +326,10 @@ def get_kappa_de(
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
         verbosity: int = 0) -> tp.Union[tp.Tuple[float, float], tp.Tuple[np.ndarray, np.ndarray]]:
-    """
-    Calculates efficiency factor kappa and fractional change in energy
-    from v_wall and alpha_n. v_wall can be an array. Sum should be 0 (bag model).
+    r"""
+    Calculates efficiency factor $\kappa$ and fractional change in energy
+    from $v_\text{wall\$ and $\alpha_n$. $v_\text{wall\$ can be an array.
+    Sum should be 0 (bag model).
     """
     it = np.nditer([v_wall, None, None])
     for vw, kappa, de in it:
@@ -361,10 +362,14 @@ def get_kappa_dq(
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
         verbosity: int = 0) -> tp.Union[tp.Tuple[float, float], tp.Tuple[np.ndarray, np.ndarray]]:
-    """
-    Calculates efficiency factor kappa and fractional change in thermal energy
-    from v_wall and alpha_n. v_wall can be an array. Sum should be 1.
-    Thermal energy is defined as q = (3/4)*enthalpy.
+    r"""
+    Calculates efficiency factor $\kappa$ and fractional change in thermal energy
+    from $v_\text{wall}$ and $\alpha_n$.
+    $v_\text{wall}$ can be an array.
+    Sum should be 1.
+    Thermal energy is defined as $q = \frac{3}{4} \text{enthalpy}$.
+
+    :return: $\kappa$, dq
     """
     it = np.nditer([v_wall, None, None])
     for vw, kappa, dq in it:

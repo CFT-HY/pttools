@@ -20,11 +20,13 @@ class SolutionType(str, enum.Enum):
 
 
 def v_plus(vm: th.FLOAT_OR_ARR, ap: th.FLOAT_OR_ARR, sol_type: SolutionType) -> th.FLOAT_OR_ARR:
-    """
-    Wall frame fluid speed v_plus ahead of the wall, as a function of
-    vm = v_minus - fluid speed v_plus behind the wall
-    ap = alpha_plus - strength parameter at wall
-    solution_type - Detonation, Deflagration, Hybrid
+    r"""
+    Wall frame fluid speed $v_+$ ahead of the wall
+
+    :param vm: $v_-$, fluid speed $v_+$ behind the wall
+    :param ap: $\alpha_+$, strength parameter at the wall
+    :param sol_type: Detonation, Deflagration, Hybrid
+    :return: $v_+$, fluid speed ahead of the wall
     """
     X = vm + 1. / (3 * vm)
     if sol_type == SolutionType.DETON:
@@ -43,11 +45,13 @@ def v_plus(vm: th.FLOAT_OR_ARR, ap: th.FLOAT_OR_ARR, sol_type: SolutionType) -> 
 
 
 def v_minus(vp: th.FLOAT_OR_ARR, ap: th.FLOAT_OR_ARR, sol_type: SolutionType = SolutionType.DETON) -> th.FLOAT_OR_ARR:
-    """
-    Wall frame fluid speed v_minus behind the wall, as a function of
-    vp = v_plus - fluid speed v_plus behind the wall
-    ap = alpha_plus - strength parameter at wall
-    sol_type - Detonation, Deflagration, Hybrid
+    r"""
+    Wall frame fluid speed $v_-$ behind the wall
+
+    :param vm: $v_-$, fluid speed $v_+$ behind the wall
+    :param ap: $\alpha_+$, strength parameter at the wall
+    :param sol_type: Detonation, Deflagration, Hybrid
+    :return: $v_+$, fluid speed behind the wall
     """
     vp2 = vp ** 2
     Y = vp2 + 1. / 3.

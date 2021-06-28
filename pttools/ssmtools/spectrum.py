@@ -15,6 +15,7 @@ from . import ssm
 
 @enum.unique
 class NucType(str, enum.Enum):
+    """Nucleation type"""
     EXPONENTIAL = "exponential"
     SIMULTANEOUS = "simultaneous"
 
@@ -85,15 +86,14 @@ def spec_den_v(
 
     :param z: array $z = qR_*$
     :param params: tuple of vw (scalar), alpha (scalar), nuc_type (string [exponential* | simultaneous]), nuc_args (tuple, default (1,))
-
     :return: dimensionless velocity spectral density $\bar{P}_v$
     """
     bubble.check_physical_params(params)
 
     nz = z.size
-    #    nxi = npt[0]
+    # nxi = npt[0]
     nt = npt[1]
-    #    nq = npt[2]
+    # nq = npt[2]
 
     log10zmin = np.log10(min(z))
     log10zmax = np.log10(max(z))
@@ -183,7 +183,6 @@ def spec_den_gw_scaled(
     not the spectral density of plane wave coeffs, which is lower by a
     factor of 2.
     """
-
     if z is None:
         nx = len(xlookup)
         zmax = max(xlookup) / (0.5 * (1. + const.CS0) / const.CS0)

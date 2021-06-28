@@ -191,7 +191,8 @@ def f_ssm_func(
         z_st_thresh: float = const.Z_ST_THRESH):
     """
     3D FT of radial fluid velocity v(r) from Sound Shell Model fluid profile.
-    z is array of scaled wavenumbers z = kR*
+
+    :param z: array of scaled wavenumbers $z = kR_*$
     """
     nxi = npt[0]
     v_ip, _, xi = bubble.fluid_shell(vw, alpha_n, nxi)
@@ -213,7 +214,8 @@ def lam_ssm_func(
         z_st_thresh: float = const.Z_ST_THRESH):
     """
     3D FT of radial energy perturbation from Sound Shell Model fluid profile
-    z is array of scaled wavenumbers z = kR*
+
+    :param z: array of scaled wavenumbers $z = kR_*$
     """
     nxi = npt[0]
 #    xi_re = np.linspace(0,1-1/nxi,nxi) # need to resample for lam = de/w
@@ -238,7 +240,8 @@ def lam_ssm_func(
 def g_ssm_func(z: np.ndarray, vw, alpha, npt: const.NPT_TYPE = const.NPTDEFAULT) -> np.ndarray:
     r"""
     3D FT of radial fluid acceleration \dot{v}(r) from Sound Shell Model fluid profile.
-    z is array of scaled wavenumbers z = kR*.
+
+    :param z: array of scaled wavenumbers $z = kR_*$
     """
     f_ssm = f_ssm_func(z, vw, alpha, npt)
     df_ssmdz = np.gradient(f_ssm) / np.gradient(z)
@@ -255,7 +258,8 @@ def f_file(
         z_st_thresh: float = const.Z_ST_THRESH):
     """
     3D FT of radial fluid velocity v(r) from file.
-    z is array of scaled wavenumbers z = kR*
+
+    :param z_arr: array of scaled wavenumbers $z = kR_*$
     """
     logger.debug(f"Loading v(xi) from {filename} at time {t}")
     try:
@@ -280,7 +284,8 @@ def f_file(
 def g_file(z: np.ndarray, t, filename: str, skip: int = 0) -> np.ndarray:
     r"""
     3D FT of radial fluid acceleration \dot{v}(r) from file
-    z is array of scaled wavenumbers z = kR*
+
+    :param z: array of scaled wavenumbers $z = kR_*$
     """
     f = f_file(z, t, filename, skip)
     df_dz = np.gradient(f) / np.gradient(z)
