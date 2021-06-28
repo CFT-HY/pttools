@@ -31,6 +31,10 @@ extensions = [
     # Automatic documentation for Python code
     # https://www.sphinx-doc.org/en/master/usage/quickstart.html#autodoc
     "sphinx.ext.autodoc",
+    # Mathematics rendering
+    # https://www.sphinx-doc.org/en/master/usage/extensions/math.html#module-sphinx.ext.mathjax
+    "sphinx.ext.mathjax",
+    "sphinx_math_dollar",
     # Markdown support can be enabled by uncommenting the line below.
     # https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html#using-markdown-with-sphinx
     # "myst_parser"
@@ -57,3 +61,10 @@ html_theme = "sphinx_rtd_theme"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+mathjax_config = {
+    'tex2jax': {
+        'inlineMath': [["\\(", "\\)"]],
+        'displayMath': [["\\[", "\\]"]],
+    },
+}
