@@ -62,6 +62,8 @@ html_theme = "sphinx_rtd_theme"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+# -- Math --------------------------------------------------------------------
+
 # This may not work unless changed to "mathjax_config", but that gives warnings with MathJax 3
 mathjax3_config = {
     'tex2jax': {
@@ -69,3 +71,11 @@ mathjax3_config = {
         'displayMath': [["\\[", "\\]"]],
     },
 }
+
+# -- Autodoc -----------------------------------------------------------------
+
+autodoc_default_options = {
+    "members": True,
+    "undoc-members": True
+}
+autodoc_typehints = "description"
