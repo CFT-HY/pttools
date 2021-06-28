@@ -29,6 +29,7 @@ packages.svg
 *.png
 *.svg
 *test.txt
+_build
 fluidprofiles
 logs
 pow_*.txt
