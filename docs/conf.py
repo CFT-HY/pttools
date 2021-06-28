@@ -10,9 +10,9 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os.path
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 # -- Project information -----------------------------------------------------
@@ -28,6 +28,9 @@ author = 'Mark Hindmarsh, Danny Bail & Mika Mäki'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    # Automatic documentation for Python code
+    # https://www.sphinx-doc.org/en/master/usage/quickstart.html#autodoc
+    "sphinx.ext.autodoc",
     # Markdown support can be enabled by uncommenting the line below.
     # https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html#using-markdown-with-sphinx
     # "myst_parser"
