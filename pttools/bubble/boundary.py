@@ -75,10 +75,10 @@ def fluid_speeds_at_wall(
         alpha_p: th.FLOAT_OR_ARR,
         sol_type: SolutionType) -> tp.Tuple[float, float, float, float]:
     """
-    Solves fluid speed boundary conditions at the wall, returning
-        vfp_w, vfm_w, vfp_p, vfm_p
+    Solves fluid speed boundary conditions at the wall.
     Fluid speed vf? just behind (?=m) and just ahead (?=p) of wall,
     in wall (_w) and plasma (_p) frames.
+    :return vfp_w, vfm_w, vfp_p, vfm_p
     """
     if v_wall <= 1:
         # print( "max_speed_deflag(alpha_p)= ", max_speed_deflag(alpha_p))
@@ -108,7 +108,7 @@ def fluid_speeds_at_wall(
 
 def enthalpy_ratio(v_m: th.FLOAT_OR_ARR, v_p: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     """
-    Ratio of enthalpies behind (w_- ) and ahead (w_+) of a shock or
-    transition front, w_-/w_+. Uses conservation of momentum in moving frame.
+    Ratio of enthalpies behind ($w_-$) and ahead $(w_+)$ of a shock or
+    transition front, $w_-/w_+$. Uses conservation of momentum in moving frame.
     """
     return relativity.gamma2(v_m) * v_m / (relativity.gamma2(v_p) * v_p)

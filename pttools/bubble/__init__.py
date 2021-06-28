@@ -13,7 +13,7 @@ Authors: Mark Hindmarsh 2015-20, with Mudhahir Al-Ajmi, and contributions from:
 
 Changes planned at 06.20:
 - allow general equation of state (so integrate with V, T together instead of v, w separately)
-   Idea to introduce eos as a class. Need a new interface which uses eos variables rather than alpha.
+Idea to introduce eos as a class. Need a new interface which uses eos variables rather than alpha.
 - Include bubble nucleation calculations of beta (from V(T,phi))
 - Now comments are docstrings, think about sphinx
 - Complete checks for physical (v_wall, alpha_n)

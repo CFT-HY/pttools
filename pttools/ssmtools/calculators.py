@@ -33,18 +33,22 @@ def sin_transform_old(z: th.FLOAT_OR_ARR, xi: np.ndarray, v: np.ndarray):
 @numba.njit
 def envelope(xi: np.ndarray, f: np.ndarray) -> tp.Tuple[tp.List[float], tp.List[float]]:
     """
-    Returns lists of xi, f pairs "outlining" function f.
     Helper function for sin_transform_approx.
+
     Assumes that
-    - max(v) is acheived at a discontinuity (bubble wall)
+    - max(v) is achieved at a discontinuity (bubble wall)
     - f(xi) finishes at a discontinuity (shock)
     - at least the first element of f is zero
 
-    xi1:  last zero value of f,             f1, value just before xi1
-    xi_w: positiom of maximum f (wall)      f_m, value just before wall
-                                            f_p, value just after wall
-    x12:  last non-zero value of f (def)    f2 (at shock, or after wall)
-          or 1st zero after wall (det)
+    xi1: last zero value of f,
+    xi_w: position of maximum f (wall)
+    x12: last non-zero value of f (def) or 1st zero after wall (det)
+    f1: value just before xi1
+    f_m: value just before wall
+    f_p: value just after wall
+    f2: (at shock, or after wall)
+
+    :return: lists of xi, f pairs "outlining" function f
     """
 
     xi_nonzero = xi[np.nonzero(f)]

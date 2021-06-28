@@ -30,14 +30,14 @@ logger = logging.getLogger(__name__)
 
 
 def split_integrate(
-        fun_: INTEGRAND_TYPE,
+        func: INTEGRAND_TYPE,
         v: np.ndarray,
         w: np.ndarray,
         xi: np.ndarray,
         v_wall: float) -> tp.Tuple[float, float]:
     """
-    # Split an integration of a function fun_ of arrays v w xi
-    # according to whether xi is inside or outside the wall (expecting discontinuity there).
+    Split an integration of a function func of arrays v w xi
+    according to whether xi is inside or outside the wall (expecting discontinuity there).
     """
     check.check_wall_speed(v_wall)
     inside = np.where(xi < v_wall)
@@ -45,25 +45,25 @@ def split_integrate(
     int1 = 0.
     int2 = 0.
     if v[inside].size >= 3:
-        int1 = part_integrate(fun_, v, w, xi, inside)
+        int1 = part_integrate(func, v, w, xi, inside)
     if v[outside].size >= 3:
-        int2 = part_integrate(fun_, v, w, xi, outside)
+        int2 = part_integrate(func, v, w, xi, outside)
     return int1, int2
 
 
 def part_integrate(
-        fun_: INTEGRAND_TYPE,
+        func: INTEGRAND_TYPE,
         v: np.ndarray,
         w: np.ndarray,
         xi: np.ndarray,
         where_in: th.INT_OR_ARR) -> float:
     """
-     Integrate a function fun_ of arrays v w xi over index selection where_in.
+    Integrate a function func of arrays v w xi over index selection where_in.
     """
     xi_in = xi[where_in]
     v_in = v[where_in]
     w_in = w[where_in]
-    integrand = fun_(v_in, w_in, xi_in)
+    integrand = func(v_in, w_in, xi_in)
     return np.trapz(integrand, xi_in)
 
 

@@ -76,16 +76,17 @@ def spec_den_v(
         method: ssm.Method = ssm.Method.E_CONSERVING,
         de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
         z_st_thresh=const.Z_ST_THRESH):
-    """
-    Returns dimensionless velocity spectral density $\bar{P}_v$, given array $z = qR_*$ and parameters:
-    vw = params[0]       scalar
-    alpha = params[1]    scalar
-    nuc_type = params[2] string [exponential* | simultaneous]
-    nuc_args = params[3] tuple  default (1,)
+    r"""
+    Get dimensionless velocity spectral density $\bar{P}_v$.
 
     Gets fluid velocity profile from bubble toolbox or from file if specified.
     Convolves 1-bubble Fourier transform $|A(q T)|^2$ with bubble wall
-    lifetime distribution $\nu(T \beta)$ specified by ``nuc_type`` and ``nuc_args``.
+    lifetime distribution $\nu(T \beta)$ specified by "nuc_type" and "nuc_args".
+
+    :param z: array $z = qR_*$
+    :param params: tuple of vw (scalar), alpha (scalar), nuc_type (string [exponential* | simultaneous]), nuc_args (tuple, default (1,))
+
+    :return: dimensionless velocity spectral density $\bar{P}_v$
     """
     bubble.check_physical_params(params)
 

@@ -103,12 +103,13 @@ def fluid_shell_alpha_plus(
     Finds fluid shell (v, w, xi) from a given v_wall, alpha_plus (at-wall strength parameter).
     Where v=0 (behind and ahead of shell) uses only two points.
     v_wall and alpha_plus must be scalars, and are converted from 1-element arrays if needed.
-    Options:
-        sol_type (string) - specify wall type if more than one permitted.
-        n_xi (int) - increase resolution
-        w_n - specify enthalpy outside fluid shell
-        cs2_fun - sound speed squared as a function of enthalpy, default
+
+    :param sol_type: specify wall type if more than one permitted.
+    :param n_xi: increase resolution
+    :param w_n: specify enthalpy outside fluid shell
+    :param cs2_fun: sound speed squared as a function of enthalpy, default
     """
+    # if isinstance(v_wall, np.ndarray):
     check.check_wall_speed(v_wall)
     dxi = 1. / n_xi
     #    dxi = 10*eps
