@@ -1,8 +1,10 @@
-.spyproject
-__pycache__
+*.egg-info
 *.pyc
+__pycache__
 .idea
 .DS_Store
+.spyproject
+dist
 envs
 model_data
 venv
