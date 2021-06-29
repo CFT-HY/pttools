@@ -47,16 +47,16 @@ def A2_ssm_func(
     :param z_st_thresh: wavenumber at which to switch sin_transform to its approximation.
     :return: $|A(z)|^2$
     """
-    if method is Method.E_CONSERVING:
+    if method == Method.E_CONSERVING:
         # This is the correct method (as of 12.18)
         A2 = A2_e_conserving(z, vw, alpha, npt, 'A2_only', de_method, z_st_thresh)
-    elif method is Method.F_ONLY:
+    elif method == Method.F_ONLY:
         logger.debug("f_only method, multiplying (f\')^2 by 2")
         f = f_ssm_func(z, vw, alpha, npt)
         df_dz = np.gradient(f) / np.gradient(z)
         A2 = 0.25 * (df_dz ** 2)
         A2 = A2 * 2
-    elif method is Method.WITH_G:
+    elif method == Method.WITH_G:
         logger.debug("With_g method")
         f = f_ssm_func(z, vw, alpha, npt)
         df_dz = np.gradient(f) / np.gradient(z)
@@ -104,7 +104,7 @@ def A2_e_conserving(
     v_ft = np.gradient(f) / np.gradient(z)
 
     # Now get and resample lam = de/w
-    if de_method is DE_Method.ALTERNATE:
+    if de_method == DE_Method.ALTERNATE:
         lam_orig = bubble.de_from_w_new(v_ip, w_ip, xi, vw, alpha_n) / w_ip[-1]
     else:
         lam_orig = bubble.de_from_w(w_ip, xi, vw, alpha_n) / w_ip[-1]
@@ -221,7 +221,7 @@ def lam_ssm_func(
 #    xi_re = np.linspace(0,1-1/nxi,nxi) # need to resample for lam = de/w
     v_ip, w_ip, xi = bubble.fluid_shell(vw, alpha_n, nxi)
 
-    if de_method is DE_Method.ALTERNATE:
+    if de_method == DE_Method.ALTERNATE:
         lam_orig = bubble.de_from_w_new(v_ip, w_ip, xi, vw, alpha_n) / w_ip[-1]
     else:
         lam_orig = bubble.de_from_w(w_ip, xi, vw, alpha_n) / w_ip[-1]

@@ -31,10 +31,10 @@ def nu(T: th.FLOAT_OR_ARR, nuc_type: NucType = NucType.SIMULTANEOUS, args=(1,)) 
     Bubble lifetime distribution function as function of (dimensionless) time T.
     ``nuc_type`` allows ``simultaneous`` or ``exponential`` bubble nucleation.
     """
-    if nuc_type is NucType.SIMULTANEOUS:
+    if nuc_type == NucType.SIMULTANEOUS:
         a = args[0]
         dist = 0.5 * a * (a*T)**2 * np.exp(-(a*T)**3 / 6)
-    elif nuc_type is NucType.EXPONENTIAL:
+    elif nuc_type == NucType.EXPONENTIAL:
         a = args[0]
         dist = a * np.exp(-a*T)
     else:
