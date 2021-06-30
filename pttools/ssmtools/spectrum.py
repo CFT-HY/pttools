@@ -60,7 +60,43 @@ def parse_params(params: bubble.PHYSICAL_PARAMS_TYPE):
     return vw, alpha, nuc_type, nuc_args
 
 
-# @numba.njit
+@numba.njit
+def _qT_array(qRstar, Ttilde, b_R, vw):
+    return qRstar * Ttilde / (b_R * vw)
+
+
+# (parallel=True)
+@numba.njit
+def _spec_den_v_core(
+        a: float,
+        A2_lookup: np.ndarray,
+        log10tmin: float,
+        log10tmax: float,
+        nz: int,
+        nuc_type: NucType,
+        nt: int,
+        qT_lookup: np.ndarray,
+        vw: float,
+        z: np.ndarray):
+    t_array = speedup.logspace(log10tmin, log10tmax, nt)
+    b_R = (8. * np.pi) ** (1. / 3.)  # $\beta R_* = b_R v_w $
+
+    # A2_2d_array = np.zeros((nz, nt))
+
+    # array2 = np.zeros(nt)
+    sd_v = np.zeros(nz)  # array for spectral density of v
+    factor = 1. / (b_R * vw) ** 6
+    factor = 2 * factor  # because spectral density of v is 2 * P_v
+
+    for i in numba.prange(nz):
+        A2_2d_array_z = np.interp(_qT_array(z[i], t_array, b_R, vw), qT_lookup, A2_lookup)
+        array2 = t_array ** 6 * nu(t_array, nuc_type, a) * A2_2d_array_z
+        D = np.trapz(array2, t_array)
+        sd_v[i] = D * factor
+
+    return sd_v
+
+
 def spec_den_v(
         z: np.ndarray,
         params: bubble.PHYSICAL_PARAMS_TYPE,
@@ -88,47 +124,38 @@ def spec_den_v(
     nt = npt[1]
     # nq = npt[2]
 
+    # z limits
     log10zmin = np.log10(min(z))
     log10zmax = np.log10(max(z))
     dlog10z = (log10zmax - log10zmin) / nz
 
+    # t limits
     tmin = const.T_TILDE_MIN
     tmax = const.T_TILDE_MAX
     log10tmin = np.log10(tmin)
     log10tmax = np.log10(tmax)
 
-    t_array = speedup.logspace(log10tmin, log10tmax, nt)
-
     qT_lookup = 10 ** (np.arange(log10zmin + log10tmin, log10zmax + log10tmax, dlog10z))
 
+    vw, alpha, nuc_type, nuc_args = parse_params(params)
+    a = nuc_args[0]
     if filename is None:
-        vw, alpha, nuc_type, nuc_args = parse_params(params)
         A2_lookup = ssm.A2_ssm_func(qT_lookup, vw, alpha, npt, method, de_method, z_st_thresh)
     else:
-        vw, alpha, nuc_type, nuc_args = parse_params(params)
         A2_lookup = ssm.A2_e_conserving_file(qT_lookup, filename, alpha, skip, npt, z_st_thresh)
 
-    b_R = (8. * np.pi) ** (1. / 3.)  # $\beta R_* = b_R v_w $
-
-    def qT_array(qRstar, Ttilde):
-        return qRstar * Ttilde / (b_R * vw)
-
-    A2_2d_array = np.zeros((nz, nt))
-
-    for i in range(nz):
-        A2_2d_array[i] = np.interp(qT_array(z[i], t_array), qT_lookup, A2_lookup)
-
-    # array2 = np.zeros(nt)
-    sd_v = np.zeros(nz)  # array for spectral density of v
-    factor = 1. / (b_R * vw) ** 6
-    factor = 2 * factor  # because spectral density of v is 2 * P_v
-
-    for s in range(nz):
-        array2 = t_array ** 6 * nu(t_array, nuc_type, nuc_args) * A2_2d_array[s]
-        D = np.trapz(array2, t_array)
-        sd_v[s] = D * factor
-
-    return sd_v
+    return _spec_den_v_core(
+        a=a,
+        A2_lookup=A2_lookup,
+        log10tmin=log10tmin,
+        log10tmax=log10tmax,
+        nt=nt,
+        nuc_type=nuc_type,
+        nz=nz,
+        qT_lookup=qT_lookup,
+        vw=vw,
+        z=z
+    )
 
 
 @numba.njit(parallel=True)
