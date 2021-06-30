@@ -178,26 +178,46 @@ def alpha_n_max_deflagration(v_wall: th.FLOAT_OR_ARR, Np=const.N_XI_DEFAULT) -> 
     return type(v_wall)(it.operands[0])
 
 
-def alpha_plus_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
+@numba.njit
+def _alpha_plus_max_detonation_scalar(v_wall: float):
+    check.check_wall_speed(v_wall)
+    a = 3 * (1 - v_wall ** 2)
+    if v_wall < const.CS0:
+        b = 0.0
+    else:
+        b = (1 - np.sqrt(3) * v_wall) ** 2
+    return b / a
+
+
+@numba.njit
+def _alpha_plus_max_detonation_arr(v_wall: np.ndarray):
+    bb = np.zeros(v_wall.shape)
+    for i in range(v_wall.size):
+        bb[i] = _alpha_plus_max_detonation_scalar(v_wall[i])
+    return bb
+
+
+@numba.generated_jit(nopython=True)
+def alpha_plus_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR_NUMBA:
     r"""
     Maximum allowed value of $\alpha_+$ for a detonation with wall speed $v_\text{wall}$.
     Comes from inverting $v_w$ > $v_\text{Jouguet}$.
     """
-    check.check_wall_speed(v_wall)
-    it = np.nditer([None, v_wall], [], [['writeonly', 'allocate'], ['readonly']])
-    for bb, vw in it:
-        a = 3 * (1 - vw ** 2)
-        if vw < const.CS0:
-            b = 0.0
-        else:
-            b = (1 - np.sqrt(3) * vw) ** 2
-        bb[...] = b / a
-
+    if isinstance(v_wall, numba.types.Float):
+        return _alpha_plus_max_detonation_scalar
+    if isinstance(v_wall, numba.types.Array):
+        if v_wall.ndim == 0:
+            return _alpha_plus_max_detonation_scalar
+        return _alpha_plus_max_detonation_arr
+    if isinstance(v_wall, float):
+        return _alpha_plus_max_detonation_scalar(v_wall)
     if isinstance(v_wall, np.ndarray):
-        return it.operands[0]
-    return type(v_wall)(it.operands[0])
+        return _alpha_plus_max_detonation_arr(v_wall)
+    else:
+        raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
+@numba.njit
 def alpha_n_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     r"""
     Maximum allowed value of $\alpha_n$ for a detonation with wall speed $v_\text{wall}$.

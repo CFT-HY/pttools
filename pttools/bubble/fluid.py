@@ -23,7 +23,7 @@ from . import transition
 logger = logging.getLogger(__name__)
 
 
-# @numba.njit
+@numba.njit
 def df_dtau(y: np.ndarray, t: float, cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag) -> tp.Tuple[float, float, float]:
     r"""
     Differentials of fluid variables $(v, w, \xi)$ in parametric form, suitable for odeint
@@ -206,7 +206,7 @@ def fluid_shell_alpha_plus(
     return v, w, xi
 
 
-# @numba.njit
+@numba.njit
 def trim_fluid_wall_to_cs(
         v: np.ndarray,
         w: np.ndarray,
@@ -225,13 +225,13 @@ def trim_fluid_wall_to_cs(
     check.check_wall_speed(v_wall)
     n_start = 0
 
+    # TODO: should this be 0 to match with the error handling below?
     n_stop_index = -2
     # n_stop = 0
-    if not sol_type == boundary.SolutionType.SUB_DEF:
-        it = np.nditer([v, w, xi], flags=['c_index'])
-        for vv, ww, x in it:
-            if vv <= 0 or x ** 2 <= cs2_fun(ww):
-                n_stop_index = it.index
+    if not sol_type == boundary.SolutionType.SUB_DEF.value:
+        for i in range(v.size):
+            if v[i] <= 0 or xi[i] ** 2 <= cs2_fun(w[i]):
+                n_stop_index = i
                 break
 
     if n_stop_index == 0:
@@ -245,14 +245,14 @@ def trim_fluid_wall_to_cs(
     else:
         n_stop = n_stop_index
 
-    if (xi[0] == v_wall) and not (sol_type == boundary.SolutionType.DETON):
+    if (xi[0] == v_wall) and not (sol_type == boundary.SolutionType.DETON.value):
         n_start = 1
         n_stop += 1
 
     return v[n_start:n_stop], w[n_start:n_stop], xi[n_start:n_stop], t[n_start:n_stop]
 
 
-# @numba.njit
+@numba.njit
 def trim_fluid_wall_to_shock(
         v: np.ndarray,
         w: np.ndarray,
@@ -267,10 +267,16 @@ def trim_fluid_wall_to_shock(
     n_shock_index = -2
     # n_shock = 0
     if not sol_type == boundary.SolutionType.DETON:
-        it = np.nditer([v, xi], flags=['c_index'])
-        for vv, x in it:
-            if vv <= props.v_shock(x.item()):
-                n_shock_index = it.index
+        # All iterator features are not yet supported by Numba
+        # it = np.nditer([v, xi], flags=['c_index'])
+        # for vv, x in it:
+        #     if vv <= props.v_shock(x.item()):
+        #         n_shock_index = it.index
+        #         break
+        for i in range(v.size):
+            if v[i] <= props.v_shock(xi[i]):
+                n_shock_index = i
+                # n_shock_index = it.index
                 break
 
     if n_shock_index == 0:

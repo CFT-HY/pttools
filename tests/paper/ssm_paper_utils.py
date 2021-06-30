@@ -9,6 +9,7 @@ import io
 import logging
 import typing as tp
 
+import numba
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
@@ -90,6 +91,7 @@ def cwg_fitfun(k, p0, p1):
     return p0*np.power(k/p1, 3.0)*np.power(7.0/(4.0 + 3.0*np.power(k/p1, 2.0)), 7.0/2.0)
 
 
+@numba.njit
 def double_broken_power_law(z, A, z0, z1, a, b, c, d=4., e=2.):
     s = z/z1
     D = z1/z0
