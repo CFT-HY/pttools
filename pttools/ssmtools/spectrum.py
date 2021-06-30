@@ -23,25 +23,18 @@ class NucType(str, enum.Enum):
 DEFAULT_NUC_TYPE = NucType.EXPONENTIAL
 
 
-# Jitting does not work:
-# SystemError: CPUDispatcher(<function nu at 0x7f729cc2fd30>) returned NULL without setting an error
-# @numba.njit
-def nu(T: th.FLOAT_OR_ARR, nuc_type: NucType = NucType.SIMULTANEOUS, args=(1,)) -> th.FLOAT_OR_ARR:
+@numba.njit
+def nu(T: th.FLOAT_OR_ARR, nuc_type: NucType = NucType.SIMULTANEOUS, a: float = 1.) -> th.FLOAT_OR_ARR:
     """
     Bubble lifetime distribution function as function of (dimensionless) time T.
     ``nuc_type`` allows ``simultaneous`` or ``exponential`` bubble nucleation.
     """
-    if nuc_type == NucType.SIMULTANEOUS:
-        a = args[0]
-        dist = 0.5 * a * (a*T)**2 * np.exp(-(a*T)**3 / 6)
-    elif nuc_type == NucType.EXPONENTIAL:
-        a = args[0]
-        dist = a * np.exp(-a*T)
-    else:
-        # raise ValueError(f"Nucleation type not recognized: \"{nuc_type}\"")
-        raise ValueError("Nucleation type not recognized")
-
-    return dist
+    if nuc_type == NucType.SIMULTANEOUS.value:
+        return 0.5 * a * (a*T)**2 * np.exp(-(a*T)**3 / 6)
+    if nuc_type == NucType.EXPONENTIAL.value:
+        return a * np.exp(-a*T)
+    # raise ValueError(f"Nucleation type not recognized: \"{nuc_type}\"")
+    raise ValueError("Nucleation type not recognized")
 
 
 def pow_spec(z: th.FLOAT_OR_ARR, spec_den: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
