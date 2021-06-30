@@ -65,8 +65,15 @@ def _qT_array(qRstar, Ttilde, b_R, vw):
     return qRstar * Ttilde / (b_R * vw)
 
 
-# (parallel=True)
 @numba.njit
+def _spec_den_v_core_loop(z_i, t_array, b_R, vw, qT_lookup, A2_lookup, nuc_type, a, factor):
+    A2_2d_array_z = np.interp(_qT_array(z_i, t_array, b_R, vw), qT_lookup, A2_lookup)
+    array2 = t_array ** 6 * nu(t_array, nuc_type, a) * A2_2d_array_z
+    D = np.trapz(array2, t_array)
+    return D * factor
+
+
+@numba.njit(parallel=True)
 def _spec_den_v_core(
         a: float,
         A2_lookup: np.ndarray,
@@ -89,10 +96,7 @@ def _spec_den_v_core(
     factor = 2 * factor  # because spectral density of v is 2 * P_v
 
     for i in numba.prange(nz):
-        A2_2d_array_z = np.interp(_qT_array(z[i], t_array, b_R, vw), qT_lookup, A2_lookup)
-        array2 = t_array ** 6 * nu(t_array, nuc_type, a) * A2_2d_array_z
-        D = np.trapz(array2, t_array)
-        sd_v[i] = D * factor
+        sd_v[i] = _spec_den_v_core_loop(z[i], t_array, b_R, vw, qT_lookup, A2_lookup, nuc_type, a, factor)
 
     return sd_v
 
