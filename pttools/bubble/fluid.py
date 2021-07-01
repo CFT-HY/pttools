@@ -86,7 +86,7 @@ def fluid_shell(
     Finds fluid shell $(v, w, \xi)$ from a given $v_\text{wall}, \alpha_n$, which must be scalars.
     Option to change xi resolution n_xi
     """
-    #    check_physical_params([v_wall,alpha_n])
+    # check_physical_params([v_wall,alpha_n])
     sol_type = transition.identify_solution_type(v_wall, alpha_n)
     if sol_type == boundary.SolutionType.ERROR:
         logger.error("Giving up because of identify_solution_type error")
@@ -97,10 +97,9 @@ def fluid_shell(
     return np.nan, np.nan, np.nan
 
 
-# @numba.njit
 def fluid_shell_alpha_plus(
-        v_wall: th.FLOAT_OR_ARR,
-        alpha_plus: th.FLOAT_OR_ARR,
+        v_wall: float,
+        alpha_plus: float,
         sol_type: boundary.SolutionType = boundary.SolutionType.UNKNOWN,
         n_xi: int = const.N_XI_DEFAULT,
         w_n: float = 1.,
@@ -110,33 +109,23 @@ def fluid_shell_alpha_plus(
     Where $v=0$ (behind and ahead of shell) uses only two points.
     v_wall and alpha_plus must be scalars, and are converted from 1-element arrays if needed.
 
+    :param v_wall: $v_\text{wall}$
+    :param alpha_plus: $\alpha_+$
     :param sol_type: specify wall type if more than one permitted.
     :param n_xi: increase resolution
     :param w_n: specify enthalpy outside fluid shell
     :param cs2_fun: sound speed squared as a function of enthalpy, default
     :return: $v, w, \xi$
     """
-    # if isinstance(v_wall, np.ndarray):
-    #     raise ValueError
-    # if isinstance(alpha_plus, np.ndarray):
-    #     raise ValueError
-
     check.check_wall_speed(v_wall)
-    dxi = 1. / n_xi
-    #    dxi = 10*eps
 
-    if isinstance(alpha_plus, np.ndarray):
-        al_p = alpha_plus.item()
-    else:
-        al_p = alpha_plus
-    if isinstance(v_wall, np.ndarray):
-        v_w = v_wall.item()
-    else:
-        v_w = v_wall
+    # Support for 0D arrays that may arise from other functions that use Numpy iterators
+    al_p = alpha_plus.item() if isinstance(alpha_plus, np.ndarray) else alpha_plus
+    v_w = v_wall.item() if isinstance(v_wall, np.ndarray) else v_wall
 
     if sol_type == boundary.SolutionType.UNKNOWN:
         sol_type = transition.identify_solution_type_alpha_plus(v_w, al_p)
-
+    # The identification above may set sol_type to error
     if sol_type == boundary.SolutionType.ERROR:
         logger.error("Giving up because of identify_solution_type error")
         return np.nan, np.nan, np.nan
@@ -145,6 +134,9 @@ def fluid_shell_alpha_plus(
     vfp_w, vfm_w, vfp_p, vfm_p = boundary.fluid_speeds_at_wall(v_w, al_p, sol_type)
     wp = 1.0  # Nominal value - will be rescaled later
     wm = wp / boundary.enthalpy_ratio(vfm_w, vfp_w)  # enthalpy just behind wall
+
+    dxi = 1. / n_xi
+    # dxi = 10*eps
 
     # Set up parts outside shell where v=0. Need 2 points only.
     xif = np.linspace(v_wall + dxi, 1.0, 2)
@@ -268,19 +260,13 @@ def trim_fluid_wall_to_shock(
 
     :return: trimmed $v, w, \xi, t$
     """
+    # TODO: should this be 0 to match with the error handling below?
     n_shock_index = -2
     # n_shock = 0
     if not sol_type == boundary.SolutionType.DETON:
-        # All iterator features are not yet supported by Numba
-        # it = np.nditer([v, xi], flags=['c_index'])
-        # for vv, x in it:
-        #     if vv <= props.v_shock(x.item()):
-        #         n_shock_index = it.index
-        #         break
         for i in range(v.size):
             if v[i] <= props.v_shock(xi[i]):
                 n_shock_index = i
-                # n_shock_index = it.index
                 break
 
     if n_shock_index == 0:
@@ -297,5 +283,4 @@ def trim_fluid_wall_to_shock(
     else:
         n_shock = n_shock_index
 
-    # print("n_shock",n_shock,v[n_shock],v_shock(xi[n_shock]))
     return v[:n_shock + 1], w[:n_shock + 1], xi[:n_shock + 1], t[:n_shock + 1]
