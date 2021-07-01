@@ -25,7 +25,7 @@ if command -v "module" &> /dev/null; then
   else
     # For CSC clusters
     # module load fgci-common
-    module load anaconda
+    module load python-env
   fi
 else
   echo "Warning! Module management system was not found."
