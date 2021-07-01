@@ -59,10 +59,14 @@ def fluid_integrate_param(
     :return: $v, w, \xi, t$
     """
     t = np.linspace(0., t_end, n_xi)
+
     if isinstance(xi0, np.ndarray):
+        # SciPy odeint is not supported by Numba.
+        # It cannot be put within numba.objmode either, as function-type arguments are not supported.
         soln = spi.odeint(df_dtau, (v0[0], w0[0], xi0[0]), t, args=(cs2_fun,))
     else:
         soln = spi.odeint(df_dtau, (v0, w0, xi0), t, args=(cs2_fun,))
+
     v = soln[:, 0]
     w = soln[:, 1]
     xi = soln[:, 2]
