@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=pttools-tests-conda
+# Account configuration is required on CSC clusters
+# #SBATCH --account=YOUR_GROUP_HERE
 #SBATCH --partition=test
 #SBATCH --time=00:10:00
 #SBATCH --ntasks=1
