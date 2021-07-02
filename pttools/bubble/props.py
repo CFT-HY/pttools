@@ -30,7 +30,7 @@ def find_v_index(xi: np.ndarray, v_target: float) -> int:
     return 0
 
 
-@numba.generated_jit(nopython=True)
+@numba.vectorize(nopython=True)
 def v_shock(xi: th.FLOAT_OR_ARR):
     r"""
     Fluid velocity at a shock at xi.
