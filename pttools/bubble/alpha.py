@@ -116,6 +116,7 @@ def find_alpha_n_from_w_xi(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_p
     return alpha_p * w[n_wall] / w[-1]
 
 
+# TODO: this cannot be jitted yet due to the use of fluid_shell_alpha_plus()
 def alpha_n_max_hybrid(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> float:
     r"""
     Calculates $\alpha_{n,\max}$ for given $v_\text{wall\$, assuming hybrid fluid shell
@@ -148,7 +149,34 @@ def alpha_n_max(v_wall: th.FLOAT_OR_ARR, Np=const.N_XI_DEFAULT) -> th.FLOAT_OR_A
     return alpha_n_max_deflagration(v_wall, Np)
 
 
-def alpha_n_max_deflagration(v_wall: th.FLOAT_OR_ARR, Np=const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR:
+# @numba.njit
+def _alpha_n_max_deflagration_scalar(v_wall: float, Np: int) -> float:
+    check.check_wall_speed(v_wall)
+    if v_wall > const.CS0:
+        sol_type = boundary.SolutionType.HYBRID
+    else:
+        sol_type = boundary.SolutionType.SUB_DEF
+
+    ap = 1. / 3 - 1.0e-10  # Warning - this is not safe.  Causes warnings for v low vw
+    _, w, xi = fluid.fluid_shell_alpha_plus(v_wall, ap, sol_type, Np)
+    n_wall = props.find_v_index(xi, v_wall)
+    return w[n_wall + 1] * (1. / 3)
+
+
+# @numba.njit
+def _alpha_n_max_deflagration_arr(v_wall: np.ndarray, Np: int) -> np.ndarray:
+    ret = np.zeros_like(v_wall)
+    for i in range(v_wall.size):
+        ret[i] = _alpha_n_max_deflagration_scalar(v_wall[i], Np)
+    # alpha_N = (w_+/w_N)*alpha_+
+    # w_ is normalised to 1 at large xi
+    # Need n_wall+1, as w is an integral of v, and lags by 1 step
+    return ret
+
+
+# TODO: this cannot be jitted yet due to the use of fluid_shell_alpha_plus()
+# @numba.generated_jit(nopython=True)
+def alpha_n_max_deflagration(v_wall: th.FLOAT_OR_ARR, Np: int = const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR_NUMBA:
     r"""
     Calculates maximum $\alpha_n$ (relative trace anomaly outside bubble)
     for given $v_\text{wall}$, for deflagration.
@@ -156,26 +184,17 @@ def alpha_n_max_deflagration(v_wall: th.FLOAT_OR_ARR, Np=const.N_XI_DEFAULT) -> 
 
     :return: maximum $\alpha_n$
     """
-    check.check_wall_speed(v_wall)
-    # sol_type_ = identify_solution_type(v_wall_, 1./3)
-    it = np.nditer([None, v_wall], [], [['writeonly', 'allocate'], ['readonly']])
-    for ww, vw in it:
-        if vw > const.CS0:
-            sol_type = boundary.SolutionType.HYBRID
-        else:
-            sol_type = boundary.SolutionType.SUB_DEF
-
-        ap = 1. / 3 - 1.0e-10  # Warning - this is not safe.  Causes warnings for v low vw
-        _, w, xi = fluid.fluid_shell_alpha_plus(vw, ap, sol_type, Np)
-        n_wall = props.find_v_index(xi, vw)
-        ww[...] = w[n_wall + 1] * (1. / 3)
-
-    # alpha_N = (w_+/w_N)*alpha_+
-    # w_ is normalised to 1 at large xi
-    # Need n_wall+1, as w is an integral of v, and lags by 1 step
+    if isinstance(v_wall, numba.types.Float):
+        return _alpha_n_max_deflagration_scalar
+    if isinstance(v_wall, numba.types.Array):
+        return _alpha_n_max_deflagration_arr
+    if isinstance(v_wall, float):
+        return _alpha_n_max_deflagration_scalar(v_wall, Np)
     if isinstance(v_wall, np.ndarray):
-        return it.operands[0]
-    return type(v_wall)(it.operands[0])
+        if not v_wall.ndim:
+            return _alpha_n_max_deflagration_scalar(v_wall.item(), Np)
+        return _alpha_n_max_deflagration_arr(v_wall, Np)
+    raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
 @numba.njit
@@ -228,36 +247,61 @@ def alpha_n_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     return alpha_plus_max_detonation(v_wall)
 
 
-def alpha_plus_min_hybrid(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
+@numba.njit
+def _alpha_plus_min_hybrid_scalar(v_wall: float) -> float:
+    check.check_wall_speed(v_wall)
+    if v_wall < const.CS0:
+        return 0
+    b = (1 - np.sqrt(3) * v_wall) ** 2
+    c = 9 * v_wall ** 2 - 1
+    return b / c
+
+
+@numba.njit
+def _alpha_plus_min_hybrid_arr(v_wall: np.ndarray) -> np.ndarray:
+    # TODO: implement this in a way that is performant also without Numba
+    ret = np.zeros_like(v_wall)
+    for i in range(v_wall.size):
+        ret[i] = _alpha_plus_min_hybrid_scalar(v_wall[i])
+    return ret
+
+
+@numba.generated_jit(nopython=True)
+def alpha_plus_min_hybrid(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR_NUMBA:
     r"""
     Minimum allowed value of $\alpha_+$ for a hybrid with wall speed $v_\text{wall}$.
     Condition from coincidence of wall and shock
     """
-    check.check_wall_speed(v_wall)
-    b = (1 - np.sqrt(3) * v_wall) ** 2
-    c = 9 * v_wall ** 2 - 1
-    # for bb, vw in np.nditer([b,v_wall_]):
-    if isinstance(b, np.ndarray):
-        b[np.where(v_wall < 1. / np.sqrt(3))] = 0.0
-    else:
-        if v_wall < const.CS0:
-            b = 0.0
-    return b / c
+    if isinstance(v_wall, numba.types.Float):
+        return _alpha_plus_min_hybrid_scalar
+    if isinstance(v_wall, numba.types.Array):
+        if not v_wall.ndim:
+            return _alpha_plus_min_hybrid_scalar
+        return _alpha_plus_min_hybrid_arr
+    if isinstance(v_wall, float):
+        return _alpha_plus_min_hybrid_scalar(v_wall)
+    if isinstance(v_wall, np.ndarray):
+        return _alpha_plus_min_hybrid_arr(v_wall)
+    raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
+@numba.njit
 def alpha_n_min_hybrid(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     r"""
     Minimum $\alpha_n$ for a hybrid. Equal to maximum $\alpha_n$ for a detonation.
     Same as alpha_n_min_deflagration, as a hybrid is a supersonic deflagration.
     """
-    check.check_wall_speed(v_wall)
+    # This check is implemented in the inner functions
+    # check.check_wall_speed(v_wall)
     return alpha_n_max_detonation(v_wall)
 
 
+@numba.njit
 def alpha_n_min_deflagration(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     r"""
     Minimum $\alpha_n$ for a deflagration. Equal to maximum $\alpha_n$ for a detonation.
     Same as alpha_n_min_hybrid, as a hybrid is a supersonic deflagration.
     """
-    check.check_wall_speed(v_wall)
+    # This check is implemented in the inner functions
+    # check.check_wall_speed(v_wall)
     return alpha_n_max_detonation(v_wall)
