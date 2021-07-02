@@ -281,6 +281,8 @@ def alpha_plus_min_hybrid(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR_NUMBA:
     if isinstance(v_wall, float):
         return _alpha_plus_min_hybrid_scalar(v_wall)
     if isinstance(v_wall, np.ndarray):
+        if not v_wall.ndim:
+            return _alpha_plus_min_hybrid_scalar(v_wall.item())
         return _alpha_plus_min_hybrid_arr(v_wall)
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
