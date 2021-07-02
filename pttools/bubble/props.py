@@ -11,19 +11,11 @@ from . import check
 from . import const
 
 
+@numba.njit
 def find_v_index(xi: np.ndarray, v_target: float) -> int:
     r"""
     The first array index of $\xi$ where value is just above $v_\text{target}$
     """
-    n = 0
-    it = np.nditer(xi, flags=['c_index'])
-    for x in it:
-        if x >= v_target:
-            n = it.index
-            break
-    return n
-
-
     greater = np.where(xi >= v_target)[0]
     if greater.size:
         return greater[0]
