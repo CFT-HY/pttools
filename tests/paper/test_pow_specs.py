@@ -16,7 +16,8 @@ logger = logging.getLogger(__name__)
 
 class TestPowSpecs(unittest.TestCase):
     """Unit testing for sound shell model power spectra, both velocity and GW."""
-    def test_pow_specs(self):
+    @staticmethod
+    def test_pow_specs():
         params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list = spu.do_all_plot_ps_compare_nuc('final3', None)
 
         save_id = 'test'
