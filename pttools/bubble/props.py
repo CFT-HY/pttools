@@ -22,7 +22,7 @@ def find_v_index(xi: np.ndarray, v_target: float) -> int:
     return 0
 
 
-@numba.vectorize(nopython=True)
+@numba.vectorize
 def v_shock(xi: th.FLOAT_OR_ARR):
     r"""
     Fluid velocity at a shock at xi.
@@ -34,43 +34,64 @@ def v_shock(xi: th.FLOAT_OR_ARR):
     return (3 * xi ** 2 - 1) / (2 * xi)
 
 
-def w_shock(xi: th.FLOAT_OR_ARR, w_n: float = 1.) -> th.FLOAT_OR_ARR:
+@numba.njit
+def _w_shock_scalar(xi: float, w_n: float) -> float:
+    if xi < const.CS0:
+        return np.nan
+    return w_n * (9*xi**2 - 1)/(3*(1-xi**2))
+
+
+@numba.njit
+def _w_shock_arr(xi: np.ndarray, w_n: float) -> np.ndarray:
+    ret = np.zeros_like(xi)
+    for i in range(xi.size):
+        ret[i] = _w_shock_scalar(xi[i], w_n)
+    return ret
+
+
+# This cannot be vectorized due to the keyword argument
+@numba.generated_jit(nopython=True)
+def w_shock(xi: th.FLOAT_OR_ARR, w_n: float = 1.) -> th.FLOAT_OR_ARR_NUMBA:
     r"""
     Fluid enthalpy at a shock at $\xi$.
     No shocks exist for $\xi < cs$, so returns nan.
     """
-    w_sh = w_n * (9*xi**2 - 1)/(3*(1-xi**2))
+    if isinstance(xi, numba.types.Float):
+        return _w_shock_scalar
+    if isinstance(xi, numba.types.Array):
+        if not xi.ndim:
+            return _w_shock_scalar
+        return _w_shock_arr
+    if isinstance(xi, float):
+        return _w_shock_scalar(xi, w_n)
+    if isinstance(xi, np.ndarray):
+        if not xi.ndim:
+            return _w_shock_scalar(xi.item(), w_n)
+        return _w_shock_arr(xi, w_n)
+    raise TypeError(f"Unknown type for xi: {type(xi)}")
 
-    if isinstance(w_sh, np.ndarray):
-        w_sh[np.where(xi < const.CS0)] = np.nan
-    else:
-        if xi < const.CS0:
-            w_sh = np.nan
 
-    return w_sh
-
-
+@numba.njit
 def find_shock_index(v_f: np.ndarray, xi: np.ndarray, v_wall: float, sol_type: boundary.SolutionType) -> int:
     r"""
     Array index of shock from first point where fluid velocity $v_f$ goes below $v_\text{shock}$.
     For detonation, returns wall position.
     """
     check.check_wall_speed(v_wall)
-    n_shock = 0
 
-    if not (sol_type == boundary.SolutionType.DETON):
-        it = np.nditer([v_f, xi], flags=['c_index'])
-        for v, x in it:
-            if x > v_wall:
-                if v <= v_shock(x):
-                    n_shock = it.index
-                    break
-    else:
+    n_shock = 0
+    if sol_type == boundary.SolutionType.DETON:
         n_shock = find_v_index(xi, v_wall)
+    else:
+        for i, (v, x) in enumerate(zip(v_f, xi)):
+            if x > v_wall and v <= v_shock(x):
+                n_shock = i
+                break
 
     return n_shock
 
 
+@numba.njit
 def shock_zoom_last_element(
         v: np.ndarray,
         w: np.ndarray,
