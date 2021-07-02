@@ -115,6 +115,7 @@ def v_minus(
     :return: $v_+$, fluid speed behind the wall
     """
     # TODO: add support for having both arguments as arrays
+    # sol_type is a string enum, which would complicate the use of numba.guvectorize
     if isinstance(vp, numba.types.Float) and isinstance(ap, numba.types.Float):
         return _v_minus_scalar
     if isinstance(vp, numba.types.Array) != isinstance(ap, numba.types.Array):
