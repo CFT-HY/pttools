@@ -13,6 +13,7 @@ from . import const
 logger = logging.getLogger(__name__)
 
 
+@numba.njit
 def min_speed_deton(alpha: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     r"""
     Minimum speed for a detonation (Jouguet speed).
@@ -22,6 +23,7 @@ def min_speed_deton(alpha: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     return (const.CS0 / (1 + alpha)) * (1 + np.sqrt(alpha * (2. + 3. * alpha)))
 
 
+@numba.njit
 def max_speed_deflag(alpha_p: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     r"""
     Maximum speed for a deflagration: speed where wall and shock are coincident.
@@ -31,6 +33,7 @@ def max_speed_deflag(alpha_p: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     return 1/(3 * boundary.v_plus(const.CS0, alpha_p, boundary.SolutionType.SUB_DEF))
 
 
+# TODO: this cannot be jitted yet due to the use of alpha_n_max_deflagration
 def identify_solution_type(v_wall: float, alpha_n: float, exit_on_error: bool = False) -> boundary.SolutionType:
     """
     Determines wall type from wall speed and global strength parameter.
@@ -54,7 +57,7 @@ def identify_solution_type(v_wall: float, alpha_n: float, exit_on_error: bool = 
     return sol_type
 
 
-# @numba.njit
+@numba.njit
 def identify_solution_type_alpha_plus(v_wall: float, alpha_p: float) -> boundary.SolutionType:
     """
     Determines wall type from wall speed and at-wall strength parameter.
@@ -65,7 +68,7 @@ def identify_solution_type_alpha_plus(v_wall: float, alpha_p: float) -> boundary
     else:
         if alpha_p < alpha_tools.alpha_plus_max_detonation(v_wall):
             sol_type = boundary.SolutionType.DETON
-            if alpha_tools.alpha_plus_min_hybrid(v_wall) < alpha_p < 1/3.:
+            if alpha_tools.alpha_plus_min_hybrid(v_wall) < alpha_p < 1/3:
                 with numba.objmode:
                     logger.warning((
                         "Hybrid and detonation both possible for v_wall = {}, alpha_plus = {}. "
@@ -73,7 +76,7 @@ def identify_solution_type_alpha_plus(v_wall: float, alpha_p: float) -> boundary
         else:
             sol_type = boundary.SolutionType.HYBRID
 
-    if alpha_p > (1/3.) and not sol_type == boundary.SolutionType.DETON:
+    if alpha_p > 1/3 and not sol_type == boundary.SolutionType.DETON.value:
         with numba.objmode:
             logger.error("No solution for for v_wall = {}, alpha_plus = {}".format(v_wall, alpha_p))
         sol_type = boundary.SolutionType.ERROR
