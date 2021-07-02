@@ -197,7 +197,7 @@ def alpha_n_max_deflagration(v_wall: th.FLOAT_OR_ARR, Np: int = const.N_XI_DEFAU
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
-@numba.vectorize
+@numba.vectorize(nopython=True)
 def alpha_plus_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR_NUMBA:
     r"""
     Maximum allowed value of $\alpha_+$ for a detonation with wall speed $v_\text{wall}$.
@@ -221,7 +221,7 @@ def alpha_n_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     return alpha_plus_max_detonation(v_wall)
 
 
-@numba.vectorize
+@numba.vectorize(nopython=True)
 def alpha_plus_min_hybrid(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR_NUMBA:
     r"""
     Minimum allowed value of $\alpha_+$ for a hybrid with wall speed $v_\text{wall}$.
