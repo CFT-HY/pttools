@@ -24,21 +24,10 @@ def find_v_index(xi: np.ndarray, v_target: float) -> int:
     return n
 
 
-@numba.njit
-def _v_shock_scalar(xi: float) -> float:
-    # Maybe should return a nan?
-    v_sh = (3 * xi ** 2 - 1) / (2 * xi)
-    if xi < const.CS0:
-        v_sh = 0.0
-    return v_sh
-
-
-@numba.njit
-def _v_shock_arr(xi: np.ndarray) -> np.ndarray:
-    # Maybe should return a nan?
-    v_sh = (3 * xi ** 2 - 1) / (2 * xi)
-    v_sh[np.where(xi < const.CS0)] = 0.0
-    return v_sh
+    greater = np.where(xi >= v_target)[0]
+    if greater.size:
+        return greater[0]
+    return 0
 
 
 @numba.generated_jit(nopython=True)
@@ -47,16 +36,10 @@ def v_shock(xi: th.FLOAT_OR_ARR):
     Fluid velocity at a shock at xi.
     No shocks exist for $\xi < cs$, so returns zero.
     """
-    if isinstance(xi, numba.types.Float):
-        return _v_shock_scalar
-    if isinstance(xi, numba.types.Array):
-        return _v_shock_arr
-    if isinstance(xi, float):
-        return _v_shock_scalar(xi)
-    if isinstance(xi, np.ndarray):
-        return _v_shock_arr(xi)
-    else:
-        raise TypeError(f"Unsupported type for xi: {type(xi)}")
+    # TODO: Maybe should return a nan?
+    if xi < const.CS0:
+        return 0
+    return (3 * xi ** 2 - 1) / (2 * xi)
 
 
 def w_shock(xi: th.FLOAT_OR_ARR, w_n: float = 1.) -> th.FLOAT_OR_ARR:
