@@ -51,9 +51,7 @@ class TestPerformance(unittest.TestCase):
     @classmethod
     def test_performance_gw(cls):
         setup = textwrap.dedent("""
-        import os
         import numpy as np
-
         import pttools.ssmtools as ssm
 
         z = np.logspace(0,2,100)
@@ -65,9 +63,7 @@ class TestPerformance(unittest.TestCase):
     @classmethod
     def test_performance_sin_transform(cls):
         setup = textwrap.dedent("""
-        import os
         import numpy as np
-
         import pttools.ssmtools.calculators as calc
 
         z = np.logspace(0, 2, 10000)
