@@ -206,12 +206,14 @@ def alpha_plus_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR_NUMBA:
     if isinstance(v_wall, numba.types.Float):
         return _alpha_plus_max_detonation_scalar
     if isinstance(v_wall, numba.types.Array):
-        if v_wall.ndim == 0:
+        if not v_wall.ndim:
             return _alpha_plus_max_detonation_scalar
         return _alpha_plus_max_detonation_arr
     if isinstance(v_wall, float):
         return _alpha_plus_max_detonation_scalar(v_wall)
     if isinstance(v_wall, np.ndarray):
+        if not v_wall.ndim:
+            return _alpha_plus_max_detonation_scalar(v_wall.item())
         return _alpha_plus_max_detonation_arr(v_wall)
     else:
         raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
