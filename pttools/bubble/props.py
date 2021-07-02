@@ -49,7 +49,7 @@ def _w_shock_arr(xi: np.ndarray, w_n: float) -> np.ndarray:
     return ret
 
 
-# This cannot be vectorized due to the keyword argument
+# This cannot be vectorized with numba.vectorize due to the keyword argument, but guvectorize might work
 @numba.generated_jit(nopython=True)
 def w_shock(xi: th.FLOAT_OR_ARR, w_n: float = 1.) -> th.FLOAT_OR_ARR_NUMBA:
     r"""
