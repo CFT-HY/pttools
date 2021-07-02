@@ -197,8 +197,12 @@ def alpha_n_max_deflagration(v_wall: th.FLOAT_OR_ARR, Np: int = const.N_XI_DEFAU
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
-@numba.njit
-def _alpha_plus_max_detonation_scalar(v_wall: float):
+@numba.vectorize
+def alpha_plus_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR_NUMBA:
+    r"""
+    Maximum allowed value of $\alpha_+$ for a detonation with wall speed $v_\text{wall}$.
+    Comes from inverting $v_w$ > $v_\text{Jouguet}$.
+    """
     check.check_wall_speed(v_wall)
     a = 3 * (1 - v_wall ** 2)
     if v_wall < const.CS0:
@@ -206,36 +210,6 @@ def _alpha_plus_max_detonation_scalar(v_wall: float):
     else:
         b = (1 - np.sqrt(3) * v_wall) ** 2
     return b / a
-
-
-@numba.njit
-def _alpha_plus_max_detonation_arr(v_wall: np.ndarray):
-    bb = np.zeros(v_wall.shape)
-    for i in range(v_wall.size):
-        bb[i] = _alpha_plus_max_detonation_scalar(v_wall[i])
-    return bb
-
-
-@numba.generated_jit(nopython=True)
-def alpha_plus_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR_NUMBA:
-    r"""
-    Maximum allowed value of $\alpha_+$ for a detonation with wall speed $v_\text{wall}$.
-    Comes from inverting $v_w$ > $v_\text{Jouguet}$.
-    """
-    if isinstance(v_wall, numba.types.Float):
-        return _alpha_plus_max_detonation_scalar
-    if isinstance(v_wall, numba.types.Array):
-        if not v_wall.ndim:
-            return _alpha_plus_max_detonation_scalar
-        return _alpha_plus_max_detonation_arr
-    if isinstance(v_wall, float):
-        return _alpha_plus_max_detonation_scalar(v_wall)
-    if isinstance(v_wall, np.ndarray):
-        if not v_wall.ndim:
-            return _alpha_plus_max_detonation_scalar(v_wall.item())
-        return _alpha_plus_max_detonation_arr(v_wall)
-    else:
-        raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
 @numba.njit
@@ -247,44 +221,18 @@ def alpha_n_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     return alpha_plus_max_detonation(v_wall)
 
 
-@numba.njit
-def _alpha_plus_min_hybrid_scalar(v_wall: float) -> float:
+@numba.vectorize
+def alpha_plus_min_hybrid(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR_NUMBA:
+    r"""
+    Minimum allowed value of $\alpha_+$ for a hybrid with wall speed $v_\text{wall}$.
+    Condition from coincidence of wall and shock
+    """
     check.check_wall_speed(v_wall)
     if v_wall < const.CS0:
         return 0
     b = (1 - np.sqrt(3) * v_wall) ** 2
     c = 9 * v_wall ** 2 - 1
     return b / c
-
-
-@numba.njit
-def _alpha_plus_min_hybrid_arr(v_wall: np.ndarray) -> np.ndarray:
-    # TODO: implement this in a way that is performant also without Numba
-    ret = np.zeros_like(v_wall)
-    for i in range(v_wall.size):
-        ret[i] = _alpha_plus_min_hybrid_scalar(v_wall[i])
-    return ret
-
-
-@numba.generated_jit(nopython=True)
-def alpha_plus_min_hybrid(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR_NUMBA:
-    r"""
-    Minimum allowed value of $\alpha_+$ for a hybrid with wall speed $v_\text{wall}$.
-    Condition from coincidence of wall and shock
-    """
-    if isinstance(v_wall, numba.types.Float):
-        return _alpha_plus_min_hybrid_scalar
-    if isinstance(v_wall, numba.types.Array):
-        if not v_wall.ndim:
-            return _alpha_plus_min_hybrid_scalar
-        return _alpha_plus_min_hybrid_arr
-    if isinstance(v_wall, float):
-        return _alpha_plus_min_hybrid_scalar(v_wall)
-    if isinstance(v_wall, np.ndarray):
-        if not v_wall.ndim:
-            return _alpha_plus_min_hybrid_scalar(v_wall.item())
-        return _alpha_plus_min_hybrid_arr(v_wall)
-    raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
 @numba.njit
