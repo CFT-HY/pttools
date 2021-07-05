@@ -6,6 +6,7 @@ Now in parametric form (Jacky Lindsay and Mike Soughton MPhys project 2017-18)
 
 import functools
 import logging
+# import threading
 import typing as tp
 
 import numba
@@ -13,6 +14,7 @@ import numpy as np
 import scipy.integrate as spi
 
 import pttools.type_hints as th
+# from pttools import speedup
 from . import alpha
 from . import bag
 from . import boundary
@@ -22,9 +24,11 @@ from . import props
 from . import transition
 
 logger = logging.getLogger(__name__)
+# ODEINT_LOCK = threading.Lock()
 
 
 # This caching prevents df_dtau from being recompiled every time fluid_integrate_param is called
+# @speedup.threadsafe_lru
 @functools.lru_cache(typed=True)
 def gen_df_dtau(cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag):
     r"""
@@ -68,6 +72,8 @@ def fluid_integrate_param(
     t = np.linspace(0., t_end, n_xi)
     df_dtau = gen_df_dtau(cs2_fun)
 
+    # This lock prevents a SystemError when running multiple threads
+    # with ODEINT_LOCK:
     if isinstance(xi0, np.ndarray):
         # SciPy odeint is not supported by Numba.
         # Putting it within numba.objmode can also be challenging, as function-type arguments are not supported.

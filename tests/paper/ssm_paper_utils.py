@@ -5,8 +5,10 @@ Modified from
 https://bitbucket.org/hindmars/sound-shell-model/
 """
 
+# import concurrent.futures as fut
 import io
 import logging
+# import os
 import typing as tp
 
 import numba
@@ -843,6 +845,7 @@ def do_all_plot_ps_compare_nuc(save_id: str = None, graph_file_type=None):
     p_cwg_list = []
     p_ssm_list = []
 
+    # This loop cannot be multi-threaded, as Matplotlib is not thread-safe
     for vw_list, alpha, in zip(VW_LIST_ALL, const.ALPHA_LIST_ALL):
         for vw in vw_list:
             v2, Omgw_scaled, p_cwg, p_ssm = plot_ps_compare_nuc(vw, alpha, save_id, graph_file_type)
@@ -851,6 +854,27 @@ def do_all_plot_ps_compare_nuc(save_id: str = None, graph_file_type=None):
             param_list.append([alpha, vw])
             p_cwg_list.append(p_cwg)
             p_ssm_list.append(p_ssm)
+
+    # Get the number of CPUs available to the current process
+    # https://stackoverflow.com/a/55423170/
+    # n_cpus = len(os.sched_getaffinity(0))
+    # logger.debug(f"Parallelising do_all_plot_ps_compare_nuc across {n_cpus} CPU cores.")
+
+    # futures = []
+    # with fut.ThreadPoolExecutor(max_workers=n_cpus) as e:
+    #     for vw_list, alpha, in zip(VW_LIST_ALL, const.ALPHA_LIST_ALL):
+    #         for vw in vw_list:
+    #             future = e.submit(plot_ps_compare_nuc, vw, alpha, save_id, graph_file_type)
+    #             futures.append(future)
+    #             param_list.append([alpha, vw])
+    #
+    #     for future in futures:
+    #         v2, Omgw_scaled, p_cwg, p_ssm = future.result()
+    #         v2_list.append(v2)
+    #         Omgw_scaled_list.append(Omgw_scaled)
+    #
+    #         p_cwg_list.append(p_cwg)
+    #         p_ssm_list.append(p_ssm)
 
     return param_list, v2_list, Omgw_scaled_list, p_cwg_list, p_ssm_list
 
