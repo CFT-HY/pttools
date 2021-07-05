@@ -8,7 +8,7 @@ import unittest
 import numpy as np
 
 import pttools.ssmtools as ssm
-from tests.paper.test_pow_specs import test_pow_specs
+from tests.paper.test_pow_specs import pow_specs
 from . import utils_cprofile
 from . import utils_pyinstrument
 from . import utils_yappi
@@ -44,22 +44,22 @@ class TestProfilePowSpecs(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        test_pow_specs()
+        pow_specs()
 
     @classmethod
     def test_profile_pow_specs_cprofile(cls):
         with utils_cprofile.CProfiler(cls.name):
-            test_pow_specs()
+            pow_specs()
 
     @classmethod
     def test_profile_pow_specs_pyinstrument(cls):
         with utils_pyinstrument.PyInstrumentProfiler(cls.name):
-            test_pow_specs()
+            pow_specs()
 
     @classmethod
     def test_profile_gw_yappi(cls):
         with utils_yappi.YappiProfiler(cls.name):
-            test_pow_specs()
+            pow_specs()
 
 
 if __name__ == "__main__":
