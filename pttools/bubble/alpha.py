@@ -77,6 +77,8 @@ def find_alpha_plus(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float, n_xi: int = c
     if isinstance(v_wall, float):
         return _find_alpha_plus_scalar(v_wall, alpha_n_given, n_xi)
     if isinstance(v_wall, np.ndarray):
+        if not v_wall.ndim:
+            return _find_alpha_plus_scalar(v_wall.item(), alpha_n_given, n_xi)
         return _find_alpha_plus_arr(v_wall, alpha_n_given, n_xi)
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
