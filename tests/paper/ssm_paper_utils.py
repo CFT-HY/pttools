@@ -87,6 +87,7 @@ VW_LIST_ALL = [const.VW_WEAK_LIST, VW_INTER_LIST]
 
 # Functions
 
+@numba.njit
 def cwg_fitfun(k, p0, p1):
     return p0*np.power(k/p1, 3.0)*np.power(7.0/(4.0 + 3.0*np.power(k/p1, 2.0)), 7.0/2.0)
 
@@ -102,6 +103,7 @@ def double_broken_power_law(z, A, z0, z1, a, b, c, d=4., e=2.):
     return A * norm*s**a/(1 + (D*s)**d)**((a-b)/d) / (b-c-m + m*s**e)**((b-c)/e)
 
 
+@numba.njit
 def ssm_fitfun(z, A, z0, z1):
     return double_broken_power_law(z, A, z0, z1, 9, 1, -4)
 
