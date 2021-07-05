@@ -5,8 +5,7 @@ import pyinstrument
 from . import utils
 
 PROFILE_DIR = os.path.join(utils.PROFILE_DIR, "pyinstrument")
-if not os.path.isdir(PROFILE_DIR):
-    os.mkdir(PROFILE_DIR)
+os.makedirs(PROFILE_DIR, exist_ok=True)
 
 
 class PyInstrumentProfiler(utils.Profiler):

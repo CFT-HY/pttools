@@ -7,8 +7,7 @@ PROFILE_DIR = os.path.join(
     "test-results",
     "profiles"
 )
-if not os.path.isdir(PROFILE_DIR):
-    os.mkdir(PROFILE_DIR)
+os.makedirs(PROFILE_DIR, exist_ok=True)
 
 
 class Profiler(abc.ABC):

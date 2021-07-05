@@ -25,10 +25,8 @@ logger = logging.getLogger(__name__)
 
 MDP = os.path.join(TEST_DATA_PATH, "model_data/")
 GDP = os.path.join(TEST_DATA_PATH, "graphs/")
-if not os.path.isdir(MDP):
-    os.mkdir(MDP)
-if not os.path.isdir(GDP):
-    os.mkdir(GDP)
+os.makedirs(MDP, exist_ok=True)
+os.makedirs(GDP, exist_ok=True)
 
 # All run parameters
 
