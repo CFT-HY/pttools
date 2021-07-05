@@ -106,5 +106,5 @@ def vectorize(**kwargs):
                     for i, i_args in enumerate(zip(*func_args))
                 ])
             return wrapper
-        return numba.vectorize(func, **kwargs)
+        return numba.vectorize(**kwargs)(func)
     return vectorize_inner
