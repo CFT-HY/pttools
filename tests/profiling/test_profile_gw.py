@@ -25,8 +25,10 @@ class TestProfileGW(TestProfile):
 
     @classmethod
     def test_profile_gw_pyinstrument(cls):
+        """Pyinstrument is a sampling profiler, and therefore repeating gives more accurate results."""
         with utils_pyinstrument.PyInstrumentProfiler(cls.name):
-            ssm.power_gw_scaled(cls.z, cls.params)
+            for _ in range(100):
+                ssm.power_gw_scaled(cls.z, cls.params)
 
     @classmethod
     def test_profile_gw_yappi(cls):
