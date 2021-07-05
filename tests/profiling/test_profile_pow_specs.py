@@ -1,3 +1,4 @@
+import os
 import unittest
 
 from tests.paper.test_pow_specs import pow_specs
@@ -9,6 +10,12 @@ from . import utils_yappi
 
 class TestProfilePowSpecs(TestProfile):
     name = "pow_specs"
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        if os.getenv("GITHUB_ACTIONS", default=False):
+            raise unittest.SkipTest("This test would take too long on GitHub Actions")
+        super().setUpClass()
 
     @classmethod
     def setup_numba(cls):
