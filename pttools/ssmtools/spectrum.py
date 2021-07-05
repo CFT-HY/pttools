@@ -73,7 +73,7 @@ def _spec_den_v_core_loop(z_i, t_array, b_R, vw, qT_lookup, A2_lookup, nuc_type,
     return D * factor
 
 
-@numba.njit(parallel=True)
+@numba.njit(parallel=True, nogil=True)
 def _spec_den_v_core(
         a: float,
         A2_lookup: np.ndarray,
@@ -194,7 +194,7 @@ def _spec_den_gw_scaled_core(
     return (4. / 3.) * p_gw, z
 
 
-@numba.njit
+@numba.njit(nogil=True)
 def _spec_den_gw_scaled_z(xlookup: np.ndarray, P_vlookup, z):
     # nx = len(z)
     # nx = len(xlookup)
@@ -208,7 +208,7 @@ def _spec_den_gw_scaled_z(xlookup: np.ndarray, P_vlookup, z):
     return _spec_den_gw_scaled_core(xlookup, P_vlookup, z)
 
 
-@numba.njit
+@numba.njit(nogil=True)
 def _spec_den_gw_scaled_no_z(xlookup, P_vlookup, z):
     nx = len(xlookup)
     zmax = max(xlookup) / (0.5 * (1. + const.CS0) / const.CS0)
@@ -217,7 +217,7 @@ def _spec_den_gw_scaled_no_z(xlookup, P_vlookup, z):
     return _spec_den_gw_scaled_core(xlookup, P_vlookup, new_z)
 
 
-@numba.generated_jit(nopython=True)
+@numba.generated_jit(nopython=True, nogil=True)
 def spec_den_gw_scaled(
         xlookup: np.ndarray,
         P_vlookup: np.ndarray,
