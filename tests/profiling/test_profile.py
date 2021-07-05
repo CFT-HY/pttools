@@ -3,24 +3,40 @@
 When implementing new tests, the functions should be called at least once to JIT-compile them before profiling
 """
 
+import abc
 import unittest
 
 import numpy as np
 
 import pttools.ssmtools as ssm
+from pttools import speedup
 from tests.paper.test_pow_specs import pow_specs
 from . import utils_cprofile
 from . import utils_pyinstrument
 from . import utils_yappi
 
 
-class TestProfileGW(unittest.TestCase):
+class TestProfile(abc.ABC, unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        if not speedup.NUMBA_DISABLE_JIT:
+            cls.setup_numba()
+
+    @classmethod
+    @abc.abstractmethod
+    def setup_numba(cls):
+        """Run the command to be profiled before profiling to ensure
+        that it's already fully Numba-jitted when profiled."""
+        pass
+
+
+class TestProfileGW(TestProfile):
     name = "gw"
     z = np.logspace(0, 2, 100)
     params = [0.1, 0.1]
 
     @classmethod
-    def setUpClass(cls) -> None:
+    def setup_numba(cls):
         ssm.power_gw_scaled(cls.z, cls.params)
 
     @classmethod
@@ -39,11 +55,11 @@ class TestProfileGW(unittest.TestCase):
             ssm.power_gw_scaled(cls.z, cls.params)
 
 
-class TestProfilePowSpecs(unittest.TestCase):
+class TestProfilePowSpecs(TestProfile):
     name = "pow_specs"
 
     @classmethod
-    def setUpClass(cls) -> None:
+    def setup_numba(cls):
         pow_specs()
 
     @classmethod
