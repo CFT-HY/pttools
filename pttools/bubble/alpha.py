@@ -39,6 +39,30 @@ def find_alpha_n(
     return alpha_p * w[n_wall] / w[-1]
 
 
+def _find_alpha_plus_scalar(v_wall: float, alpha_n_given: float, n_xi: int) -> float:
+    if alpha_n_given < alpha_n_max_detonation(v_wall):
+        # Must be detonation
+        # sol_type = boundary.SolutionType.DETON
+        return alpha_n_given
+    if alpha_n_given < alpha_n_max_deflagration(v_wall):
+        sol_type = boundary.SolutionType.SUB_DEF if v_wall <= const.CS0 else boundary.SolutionType.HYBRID
+
+        def func(x):
+            return find_alpha_n(v_wall, x, sol_type, n_xi) - alpha_n_given
+
+        a_initial_guess = alpha_plus_initial_guess(v_wall, alpha_n_given)
+        # This returns np.float64
+        return opt.fsolve(func, a_initial_guess, xtol=const.FIND_ALPHA_PLUS_TOL, factor=0.1)[0]
+    return np.nan
+
+
+def _find_alpha_plus_arr(v_wall: np.ndarray, alpha_n_given: float, n_xi: int) -> np.ndarray:
+    ap = np.zeros_like(v_wall)
+    for i, vw in enumerate(v_wall):
+        ap[i] = _find_alpha_plus_scalar(vw, alpha_n_given, n_xi)
+    return ap
+
+
 def find_alpha_plus(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float, n_xi: int = const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR:
     r"""
     Calculate $\alpha_+$ from a given $\alpha_n$ and $v_\text{wall}$.
@@ -50,31 +74,11 @@ def find_alpha_plus(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float, n_xi: int = c
     :param n_xi:
     :return: $\alpha_+$, the the at-wall strength parameter
     """
-    it = np.nditer([None, v_wall], [], [['writeonly', 'allocate'], ['readonly']])
-    for ap, vw in it:
-        if alpha_n_given < alpha_n_max_detonation(vw):
-            # Must be detonation
-            sol_type = boundary.SolutionType.DETON
-            ap[...] = alpha_n_given
-        else:
-            if alpha_n_given < alpha_n_max_deflagration(vw):
-                if vw <= const.CS0:
-                    sol_type = boundary.SolutionType.SUB_DEF
-                else:
-                    sol_type = boundary.SolutionType.HYBRID
-
-                def func(x):
-                    return find_alpha_n(vw, x, sol_type, n_xi) - alpha_n_given
-
-                a_initial_guess = alpha_plus_initial_guess(vw, alpha_n_given)
-                al_p = opt.fsolve(func, a_initial_guess, xtol=const.FIND_ALPHA_PLUS_TOL, factor=0.1)[0]
-                ap[...] = al_p
-            else:
-                ap[...] = np.nan
-
+    if isinstance(v_wall, float):
+        return _find_alpha_plus_scalar(v_wall, alpha_n_given, n_xi)
     if isinstance(v_wall, np.ndarray):
-        return it.operands[0]
-    return type(v_wall)(it.operands[0])
+        return _find_alpha_plus_arr(v_wall, alpha_n_given, n_xi)
+    raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
 def alpha_plus_initial_guess(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float) -> th.FLOAT_OR_ARR:
