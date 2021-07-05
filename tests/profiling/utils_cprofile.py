@@ -2,6 +2,7 @@ import cProfile
 import io
 import os
 import pstats
+import sys
 import typing as tp
 
 from . import utils
@@ -28,15 +29,15 @@ def process(name: str, profile: cProfile.Profile):
     path = os.path.join(PROFILE_DIR, f"{name}")
     profile.dump_stats(f"{path}.pstat")
 
-    save_sorted(profile, path, pstats.SortKey.TIME, True)
-    save_sorted(profile, path, pstats.SortKey.CUMULATIVE)
-    save_sorted(profile, path, pstats.SortKey.PCALLS)
+    save_sorted(profile, path, "time", True)
+    save_sorted(profile, path, "cumulative")
+    save_sorted(profile, path, "pcalls")
 
 
 def save_sorted(
         profile: cProfile.Profile,
         path: str,
-        sort: tp.Union[pstats.SortKey, str],
+        sort: tp.Union["pstats.SortKey", str],
         print_to_console: bool = False):
     # Save to file
     stream = io.StringIO()
@@ -46,7 +47,8 @@ def save_sorted(
     if print_to_console:
         print(text)
 
-    sort_name = sort.value if sort is pstats.SortKey else sort
+    # pstats.SortKey was introduced in Python 3.7
+    sort_name = sort.value if (sys.version_info >= (3, 7) and sort is pstats.SortKey) else sort
     path_labeled = f"{path}_{sort_name}"
     with open(f"{path_labeled}.txt", "w") as file:
         file.write(text)
