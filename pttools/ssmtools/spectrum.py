@@ -163,7 +163,7 @@ def spec_den_v(
 
 
 @numba.njit(parallel=True)
-def _spec_den_gw_scaled(
+def _spec_den_gw_scaled_core(
         xlookup: np.ndarray,
         P_vlookup: np.ndarray,
         z: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
@@ -194,10 +194,34 @@ def _spec_den_gw_scaled(
     return (4. / 3.) * p_gw, z
 
 
+@numba.njit
+def _spec_den_gw_scaled_z(xlookup: np.ndarray, P_vlookup, z):
+    # nx = len(z)
+    # nx = len(xlookup)
+    # Integration limits
+    xlargest = max(z) * 0.5 * (1. + const.CS0) / const.CS0
+    xsmallest = min(z) * 0.5 * (1. - const.CS0) / const.CS0
+
+    if max(xlookup) < xlargest or min(xlookup) > xsmallest:
+        raise ValueError("Range of xlookup is not large enough.")
+
+    return _spec_den_gw_scaled_core(xlookup, P_vlookup, z)
+
+
+@numba.njit
+def _spec_den_gw_scaled_no_z(xlookup, P_vlookup, z):
+    nx = len(xlookup)
+    zmax = max(xlookup) / (0.5 * (1. + const.CS0) / const.CS0)
+    zmin = min(xlookup) / (0.5 * (1. - const.CS0) / const.CS0)
+    new_z = speedup.logspace(np.log10(zmin), np.log10(zmax), nx)
+    return _spec_den_gw_scaled_core(xlookup, P_vlookup, new_z)
+
+
+@numba.generated_jit(nopython=True)
 def spec_den_gw_scaled(
         xlookup: np.ndarray,
         P_vlookup: np.ndarray,
-        z: np.ndarray = None) -> tp.Tuple[np.ndarray, np.ndarray]:
+        z: np.ndarray = None) -> tp.Union[tp.Tuple[np.ndarray, np.ndarray], th.NUMBA_FUNC]:
     """
     Spectral density of scaled gravitational wave power at values of kR* given
     by input z array, or at len(xlookup) values of kR* between the min and max
@@ -207,22 +231,15 @@ def spec_den_gw_scaled(
     not the spectral density of plane wave coeffs, which is lower by a
     factor of 2.
     """
+    if isinstance(z, numba.types.Array):
+        return _spec_den_gw_scaled_z
+    if isinstance(z, (numba.types.NoneType, numba.types.Omitted)):
+        return _spec_den_gw_scaled_no_z
+    if isinstance(z, np.ndarray):
+        return _spec_den_gw_scaled_z(xlookup, P_vlookup, z)
     if z is None:
-        nx = len(xlookup)
-        zmax = max(xlookup) / (0.5 * (1. + const.CS0) / const.CS0)
-        zmin = min(xlookup) / (0.5 * (1. - const.CS0) / const.CS0)
-        z = np.logspace(np.log10(zmin), np.log10(zmax), nx)
-    else:
-        #        nx = len(z)
-        # nx = len(xlookup)
-        # Integration limits
-        xlargest = max(z) * 0.5 * (1. + const.CS0) / const.CS0
-        xsmallest = min(z) * 0.5 * (1. - const.CS0) / const.CS0
-
-        if max(xlookup) < xlargest or min(xlookup) > xsmallest:
-            raise ValueError("Range of xlookup is not large enough.")
-
-    return _spec_den_gw_scaled(xlookup, P_vlookup, z)
+        return _spec_den_gw_scaled_no_z(xlookup, P_vlookup, z)
+    raise TypeError(f"Unknown type for z: {type(z)}")
 
 
 def power_v(
