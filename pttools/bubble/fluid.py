@@ -4,6 +4,7 @@ Now in parametric form (Jacky Lindsay and Mike Soughton MPhys project 2017-18)
 # RHS is Eq (33) in Espinosa et al (plus $\frac{dw}{dt}$ not written there)
 """
 
+import functools
 import logging
 import typing as tp
 
@@ -23,26 +24,32 @@ from . import transition
 logger = logging.getLogger(__name__)
 
 
-@numba.njit
-def df_dtau(y: np.ndarray, t: float, cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag) -> tp.Tuple[float, float, float]:
+# This caching prevents df_dtau from being recompiled every time fluid_integrate_param is called
+@functools.lru_cache(typed=True)
+def gen_df_dtau(cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag):
     r"""
-    Differentials of fluid variables $(v, w, \xi)$ in parametric form, suitable for odeint
+    Generate a function for the differentials of fluid variables $(v, w, \xi)$ in parametric form, suitable for odeint
 
     :return: $\frac{dv}{d\tau}, \frac{dw}{d\tau}, \frac{d\xi}{d\tau}$
     """
-    v = y[0]
-    w = y[1]
-    xi = y[2]
-    cs2 = cs2_fun(w)
-    xiXv = xi * v
-    xi_v = xi - v
-    v2 = v * v
 
-    dxi_dt = xi * ((xi_v) ** 2 - cs2 * (1 - xiXv) ** 2)  # dxi/dt
-    dv_dt = 2 * v * cs2 * (1 - v2) * (1 - xiXv)  # dv/dt
-    dw_dt = (w / (1 - v2)) * (xi_v / (1 - xiXv)) * (1 / cs2 + 1) * dv_dt
+    @numba.njit
+    def df_dtau(y: np.ndarray, t: float) -> tp.Tuple[float, float, float]:
+        v = y[0]
+        w = y[1]
+        xi = y[2]
+        cs2 = cs2_fun(w)
+        xiXv = xi * v
+        xi_v = xi - v
+        v2 = v * v
 
-    return dv_dt, dw_dt, dxi_dt
+        dxi_dt = xi * ((xi_v) ** 2 - cs2 * (1 - xiXv) ** 2)  # dxi/dt
+        dv_dt = 2 * v * cs2 * (1 - v2) * (1 - xiXv)  # dv/dt
+        dw_dt = (w / (1 - v2)) * (xi_v / (1 - xiXv)) * (1 / cs2 + 1) * dv_dt
+
+        return dv_dt, dw_dt, dxi_dt
+
+    return df_dtau
 
 
 def fluid_integrate_param(
@@ -59,13 +66,15 @@ def fluid_integrate_param(
     :return: $v, w, \xi, t$
     """
     t = np.linspace(0., t_end, n_xi)
+    df_dtau = gen_df_dtau(cs2_fun)
 
     if isinstance(xi0, np.ndarray):
         # SciPy odeint is not supported by Numba.
-        # It cannot be put within numba.objmode either, as function-type arguments are not supported.
-        soln = spi.odeint(df_dtau, (v0[0], w0[0], xi0[0]), t, args=(cs2_fun,))
+        # Putting it within numba.objmode can also be challenging, as function-type arguments are not supported.
+        # For better performance, the args should not contain functions.
+        soln = spi.odeint(df_dtau, (v0[0], w0[0], xi0[0]), t)
     else:
-        soln = spi.odeint(df_dtau, (v0, w0, xi0), t, args=(cs2_fun,))
+        soln = spi.odeint(df_dtau, (v0, w0, xi0), t)
 
     v = soln[:, 0]
     w = soln[:, 1]
