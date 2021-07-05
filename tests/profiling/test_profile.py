@@ -48,13 +48,11 @@ class TestProfilePowSpecs(unittest.TestCase):
 
     @classmethod
     def test_profile_pow_specs_cprofile(cls):
-        TestPowSpecs.test_pow_specs()
         with utils_cprofile.CProfiler(cls.name):
             TestPowSpecs.test_pow_specs()
 
     @classmethod
     def test_profile_pow_specs_pyinstrument(cls):
-        TestPowSpecs.test_pow_specs()
         with utils_pyinstrument.PyInstrumentProfiler(cls.name):
             TestPowSpecs.test_pow_specs()
 
