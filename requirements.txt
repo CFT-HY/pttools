@@ -1,6 +1,8 @@
 # List of project requirements for pip
 # https://pip.pypa.io/en/stable/user_guide/#requirements-files
 
+# Intel Compile Runtime provides Intel SVML, which speeds up Numba
+icc-rt
 matplotlib
 numba
 numpy
