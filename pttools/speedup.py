@@ -8,6 +8,7 @@ import collections
 import functools
 import inspect
 import logging
+import os
 import threading
 import typing as tp
 
@@ -16,12 +17,18 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-ENABLED: bool = True
+NUMBA_DISABLE_JIT = os.getenv("NUMBA_DISABLE_JIT", False)
 
 NUMBA_OPTS: tp.Dict[str, any] = {
     # Caching does not work properly with functions that have dependencies across files
     # "cache": True
 }
+
+
+def generated_jit(func: callable):
+    if NUMBA_DISABLE_JIT:
+        return func
+    return numba.generated_jit(func, nopython=True, **NUMBA_OPTS)
 
 
 @numba.njit(parallel=True)
@@ -62,12 +69,6 @@ def njit(func: callable = None, **kwargs):
     return _njit(func)
 
 
-def generated_jit(func: callable):
-    if ENABLED:
-        return numba.generated_jit(func, nopython=True, **NUMBA_OPTS)
-    return func
-
-
 def threadsafe_lru(func):
     """From
     https://noamkremen.github.io/a-simple-threadsafe-caching-decorator.html
@@ -81,3 +82,29 @@ def threadsafe_lru(func):
             return func(*args, **kwargs)
 
     return _thread_lru
+
+
+def vectorize(**kwargs):
+    """Extended version of numba.vectorize with support for NUMBA_DISABLE_JIT"""
+    def vectorize_inner(func):
+        if NUMBA_DISABLE_JIT:
+            def wrapper(*func_args, **func_kwargs):
+                # If called with scalars
+                if not \
+                        next((isinstance(arg, np.ndarray) for arg in func_args), False) or \
+                        next((isinstance(arg, np.ndarray) for arg in func_kwargs.values()), False):
+                    return func(*func_args, **func_kwargs)
+                # If called with 0D arrays
+                if not np.all([arg.ndim for arg in func_args] + [arg.ndim for arg in func_kwargs.values()]):
+                    return func(
+                        *[arg.item() for arg in func_args],
+                        **{name: value.item() for name, value in func_kwargs.items()}
+                    )
+                # If called with arrays
+                return np.array([
+                    func(*i_args, **{name: value[i] for name, value in func_kwargs.items()})
+                    for i, i_args in enumerate(zip(*func_args))
+                ])
+            return wrapper
+        return numba.vectorize(func, **kwargs)
+    return vectorize_inner
