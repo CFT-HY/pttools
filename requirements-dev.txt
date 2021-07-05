@@ -5,8 +5,10 @@ allure-pytest
 # For Numba system info
 psutil
 pyan3 >=1.1.1, !=1.2.0
+pyinstrument
 pylint
 pytest
 pytest-cov
 pytest-html
 pytest-xdist
+yappi
