@@ -6,50 +6,64 @@ import numpy as np
 import scipy.integrate as spi
 
 import pttools.type_hints as th
-from tests.test_utils import TEST_DATA_PATH
+from tests.test_utils import TEST_DATA_PATH, TEST_FIGURE_PATH
 from tests.paper import plane
 from tests.paper import plot_plane
 
 PLOT = True
+os.makedirs(TEST_FIGURE_PATH, exist_ok=True)
 
 
 class TestPlane(unittest.TestCase):
-    @staticmethod
-    def test_plane_bdf():
-        validate_plane(method=spi.BDF, rtol=5e-3)
+    figure: plt.Figure
+    axs: np.ndarray
 
-    @staticmethod
-    def test_plane_dop853():
-        validate_plane(method=spi.DOP853, rtol=2.1e-4)
+    @classmethod
+    def setUpClass(cls) -> None:
+        grid_shape = (3, 3)
+        if PLOT:
+            cls.figure, cls.axs = plt.subplots(*grid_shape, figsize=(16.5, 11.7))
+        else:
+            cls.axs = np.zeros(grid_shape)
 
-    @staticmethod
+    @classmethod
+    def tearDownClass(cls) -> None:
+        if PLOT:
+            cls.figure.tight_layout()
+            path = os.path.join(TEST_FIGURE_PATH, "integrators")
+            for fmt in ("pdf", "png", "svg"):
+                cls.figure.savefig(f"{path}.{fmt}")
+            # plt.show()
+
+    def test_plane_bdf(self):
+        validate_plane(method=spi.BDF, rtol=5e-3, ax=self.axs[2, 0])
+
+    def test_plane_dop853(self):
+        validate_plane(method=spi.DOP853, rtol=2.1e-4, ax=self.axs[2, 1])
+
     @unittest.expectedFailure
-    def test_plane_lsoda():
-        validate_plane(method=spi.LSODA)
+    def test_plane_lsoda(self):
+        validate_plane(method=spi.LSODA, ax=self.axs[0, 1])
 
-    @staticmethod
-    def test_plane_odeint():
-        validate_plane(odeint=True, method=spi.LSODA)
+    def test_plane_odeint(self):
+        validate_plane(odeint=True, method=spi.LSODA, ax=self.axs[0, 0])
 
-    @staticmethod
     @unittest.expectedFailure
-    def test_plane_radau():
-        validate_plane(method=spi.Radau)
+    def test_plane_radau(self):
+        validate_plane(method=spi.Radau, ax=self.axs[2, 2])
 
-    @staticmethod
-    def test_plane_rk23():
-        validate_plane(method=spi.RK23, rtol=2.11e-2)
+    def test_plane_rk23(self):
+        validate_plane(method=spi.RK23, rtol=2.11e-2, ax=self.axs[1, 0])
 
-    @staticmethod
-    def test_plane_rk45():
-        validate_plane(method=spi.RK45, rtol=1.95e-3)
+    def test_plane_rk45(self):
+        validate_plane(method=spi.RK45, rtol=1.95e-3, ax=self.axs[1, 1])
 
 
-def validate_plane(odeint: bool = False, method: th.ODE_SOLVER = spi.LSODA, rtol: float = 1e-7):
+def validate_plane(odeint: bool = False, method: th.ODE_SOLVER = spi.LSODA, rtol: float = 1e-7, ax: plt.Axes = None):
     data = plane.xiv_plane(odeint, method)
 
-    if PLOT:
-        plot_plane.plot_plane(data)
+    if ax:
+        plot_plane.plot_plane(ax, data, method, odeint)
 
     data_summed = np.sum(data, axis=2)
     file_path = os.path.join(TEST_DATA_PATH, "xi-v_plane.txt")
@@ -63,5 +77,3 @@ def validate_plane(odeint: bool = False, method: th.ODE_SOLVER = spi.LSODA, rtol
 
 if __name__ == "__main__":
     unittest.main()
-    # if PLOT:
-    #     plt.show()
