@@ -16,5 +16,7 @@ logging.basicConfig(
     # level=logging.INFO,
     format='%(asctime)s %(levelname)-8s %(module)-16s %(funcName)-32s %(lineno)-4d %(message)s'
 )
+# Disable Matplotlib log spam
+logging.getLogger("font_manager").setLevel(logging.INFO)
 # Disable Numba log spam
 logging.getLogger("ssa").setLevel(logging.INFO)
