@@ -47,15 +47,11 @@ def gen_df_dtau(cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag, odeint: bool = False):
         xi_v = xi - v
         v2 = v * v
 
-        # ret = np.empty_like(y)
-        # ret[0] = 2 * v * cs2 * (1 - v2) * (1 - xiXv)  # dv/dt
-        # ret[1] = (w / (1 - v2)) * (xi_v / (1 - xiXv)) * (1 / cs2 + 1) * ret[1]  # dw_dt
-        # ret[2] = xi * (xi_v ** 2 - cs2 * (1 - xiXv) ** 2)  # dxi/dt
-        # return ret
-        dxi_dt = xi * ((xi_v) ** 2 - cs2 * (1 - xiXv) ** 2)  # dxi/dt
-        dv_dt = 2 * v * cs2 * (1 - v2) * (1 - xiXv)  # dv/dt
-        dw_dt = (w / (1 - v2)) * (xi_v / (1 - xiXv)) * (1 / cs2 + 1) * dv_dt
-        return np.array([dv_dt, dw_dt, dxi_dt])
+        ret = np.empty_like(y)
+        ret[0] = 2 * v * cs2 * (1 - v2) * (1 - xiXv)  # dv/dt
+        ret[1] = (w / (1 - v2)) * (xi_v / (1 - xiXv)) * (1 / cs2 + 1) * ret[0]  # dw_dt
+        ret[2] = xi * (xi_v ** 2 - cs2 * (1 - xiXv) ** 2)  # dxi/dt
+        return ret
 
     if odeint:
         @numba.njit
@@ -73,7 +69,8 @@ def fluid_integrate_param(
         n_xi: int = const.N_XI_DEFAULT,
         cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag,
         odeint: bool = True,
-        method: th.ODE_SOLVER = spi.LSODA):
+        method: th.ODE_SOLVER = spi.LSODA,
+        vectorized: bool = False) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""
     Integrates parametric fluid equations in df_dtau from an initial condition.
     Positive t_end integrates along curves from (v,w) = (0,cs0) to (1,1).
@@ -106,7 +103,7 @@ def fluid_integrate_param(
         xi = soln[:, 2]
     else:
         soln: spi._ivp.ivp.OdeResult = spi.solve_ivp(
-            df_dtau, t_span=(0, t_end), y0=np.array([v0, w0, xi0]), method=method, t_eval=t)
+            df_dtau, t_span=(0, t_end), y0=np.array([v0, w0, xi0]), method=method, t_eval=t, vectorized=vectorized)
         v = soln.y[0, :]
         w = soln.y[1, :]
         xi = soln.y[2, :]
