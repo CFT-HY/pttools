@@ -14,6 +14,7 @@ echo "Running on $(hostname --fqdn)"
 
 PTTOOLS_DIR="$(realpath "..")"
 cd "${PTTOOLS_DIR}"
+echo "PTtools is located at: ${PTTOOLS_DIR}"
 
 if command -v "module" &> /dev/null; then
   if [[ "$(hostname --fqdn)" == *grid.helsinki.fi ]]; then
@@ -34,7 +35,10 @@ fi
 
 VENV_DIR="${PTTOOLS_DIR}/venv"
 if [ ! -d "${VENV_DIR}" ]; then
+  echo "Creating virtualenv at: ${VENV_DIR}"
   python3 -m venv --upgrade-deps "${VENV_DIR}"
+else
+  echo "Using virtualenv at: ${VENV_DIR}"
 fi
 source "${VENV_DIR}/bin/activate"
 
@@ -44,6 +48,7 @@ if [ -z "${WRKDIR}" ]; then
 else
   PIP_CACHE_DIR="${WRKDIR}/cache/pip"
 fi
+echo "Using pip cache at: ${PIP_CACHE_DIR}"
 
 pip --cache-dir="${PIP_CACHE_DIR}" install wheel
 pip --cache-dir="${PIP_CACHE_DIR}" install -r "${PTTOOLS_DIR}/requirements.txt" -r "${PTTOOLS_DIR}/requirements-dev.txt"
