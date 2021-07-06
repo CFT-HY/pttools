@@ -6,6 +6,14 @@ import pttools.type_hints as th
 from pttools import bubble
 
 
+def get_solver_name(method: th.ODE_SOLVER, odeint: bool = False) -> str:
+    if odeint:
+        return "odeint"
+    if isinstance(method, spi.OdeSolver):
+        return method.__class__.__name__
+    return method.__name__
+
+
 def v_ahead_max(xi):
     """Maximum fluid velocity allowed"""
     return xi
@@ -104,9 +112,4 @@ def plot_plane(
     ax.set_ylabel(r'$v(\xi)$')
     ax.grid()
     ax.legend(loc='upper left')
-    if odeint:
-        ax.set_title("odeint")
-    elif isinstance(method, spi.OdeSolver):
-        ax.set_title(method.__class__.__name__)
-    else:
-        ax.set_title(method.__name__)
+    ax.set_title(get_solver_name(method, odeint))
