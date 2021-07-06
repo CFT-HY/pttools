@@ -32,7 +32,7 @@ class TestProfilePowSpecs(TestProfile):
             pow_specs()
 
     @classmethod
-    def test_profile_gw_yappi(cls):
+    def test_profile_pow_specs_yappi(cls):
         with utils_yappi.YappiProfiler(cls.name):
             pow_specs()
 
