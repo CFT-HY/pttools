@@ -55,10 +55,13 @@ pip --cache-dir="${PIP_CACHE_DIR}" install -r "${PTTOOLS_DIR}/requirements.txt" 
 
 numba --sysinfo
 
+# Use as many CPU cores as requested with Slurm
+NUM_CPUS="$(python -c "import os; print(len(os.sched_getaffinity(0)))")"
+
 # You can replace this with your own workload
 if command -v "srun" &> /dev/null; then
-  srun pytest
+  srun pytest --numprocesses="${NUM_CPUS}"
 else
   echo "Warning! Slurm was not found. Running directly."
-  pytest
+  pytest --numprocesses="${NUM_CPUS}"
 fi
