@@ -195,7 +195,10 @@ def _spec_den_gw_scaled_core(
 
 
 @numba.njit(nogil=True)
-def _spec_den_gw_scaled_z(xlookup: np.ndarray, P_vlookup, z):
+def _spec_den_gw_scaled_z(
+        xlookup: np.ndarray,
+        P_vlookup: np.ndarray,
+        z: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
     # nx = len(z)
     # nx = len(xlookup)
     # Integration limits
@@ -209,7 +212,10 @@ def _spec_den_gw_scaled_z(xlookup: np.ndarray, P_vlookup, z):
 
 
 @numba.njit(nogil=True)
-def _spec_den_gw_scaled_no_z(xlookup, P_vlookup, z):
+def _spec_den_gw_scaled_no_z(
+        xlookup: np.ndarray,
+        P_vlookup: np.ndarray,
+        z: None) -> tp.Tuple[np.ndarray, np.ndarray]:
     nx = len(xlookup)
     zmax = max(xlookup) / (0.5 * (1. + const.CS0) / const.CS0)
     zmin = min(xlookup) / (0.5 * (1. - const.CS0) / const.CS0)
