@@ -1,12 +1,16 @@
 import os.path
 import unittest
 
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy.integrate as spi
 
 import pttools.type_hints as th
 from tests.test_utils import TEST_DATA_PATH
-from . import plane
+from tests.paper import plane
+from tests.paper import plot_plane
+
+PLOT = True
 
 
 class TestPlane(unittest.TestCase):
@@ -43,6 +47,10 @@ class TestPlane(unittest.TestCase):
 
 def validate_plane(odeint: bool = False, method: th.ODE_SOLVER = spi.LSODA, rtol: float = 1e-7):
     data = plane.xiv_plane(odeint, method)
+
+    if PLOT:
+        plot_plane.plot_plane(data)
+
     data_summed = np.sum(data, axis=2)
     file_path = os.path.join(TEST_DATA_PATH, "xi-v_plane.txt")
 
@@ -55,3 +63,5 @@ def validate_plane(odeint: bool = False, method: th.ODE_SOLVER = spi.LSODA, rtol
 
 if __name__ == "__main__":
     unittest.main()
+    # if PLOT:
+    #     plt.show()
