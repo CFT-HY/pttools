@@ -2,6 +2,7 @@ import logging
 import os.path
 import shutil
 import subprocess
+import timeit
 import typing as tp
 import unittest
 
@@ -22,9 +23,15 @@ os.makedirs(TEST_FIGURE_PATH, exist_ok=True)
 
 
 class TestPlane(unittest.TestCase):
+    FIG_PATH = os.path.join(TEST_FIGURE_PATH, "integrators")
     grid_fig: plt.Figure
     axs: np.ndarray
-    FIG_PATH = os.path.join(TEST_FIGURE_PATH, "integrators")
+    ref_data: np.ndarray
+
+    # Dicts for solvers
+    mean_diffs: tp.Dict[int, float] = {}
+    names: tp.Dict[int, str] = {}
+    iter_times: tp.Dict[int, float] = {}
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -37,6 +44,8 @@ class TestPlane(unittest.TestCase):
     @classmethod
     def tearDownClass(cls) -> None:
         if PLOT:
+            cls.plot_perf()
+            cls.plot_diff()
             cls.grid_fig.tight_layout()
             save_fig_multi(cls.grid_fig, cls.FIG_PATH)
             # plt.show()
@@ -63,16 +72,54 @@ class TestPlane(unittest.TestCase):
             else:
                 logger.warning("ffmpeg was not found, so the xi-v-plane animation could not be created")
 
+    @classmethod
+    def plot_perf(cls, i_ax: tp.Tuple[int, int] = (0, 2)):
+        ax: plt.Axes = cls.axs[i_ax[0], i_ax[1]]
+        inds = list(cls.names.keys())
+        names = [cls.names[i] for i in inds]
+        iter_times = [cls.iter_times[i] for i in inds]
+        ax.bar(inds, iter_times, tick_label=names)
+        ax.set_title("Execution time per run")
+        ax.set_xlabel("Solver")
+        ax.set_ylabel("Time (s)")
+        ax.set_yscale("log")
+
+    @classmethod
+    def plot_diff(cls, i_ax: tp.Tuple[int, int] = (1, 2)):
+        ax: plt.Axes = cls.axs[i_ax[0], i_ax[1]]
+        inds = list(cls.names.keys())
+        names = [cls.names[i] for i in inds]
+        diffs = [cls.mean_diffs[i] for i in inds]
+        ax.bar(inds, diffs, tick_label=names)
+        ax.set_title("Relative mean difference compared to odeint")
+        ax.set_xlabel("Solver")
+        ax.set_ylabel("Relative mean difference")
+        ax.set_yscale("log")
+
     def validate_plane(
             self,
             odeint: bool = False,
             method: th.ODE_SOLVER = spi.LSODA,
             rtol: float = 1e-7,
             i: int = None,
-            ax: tp.Tuple[int, int] = None):
+            ax: tp.Tuple[int, int] = None,
+            perf_iters: int = 10):
+        name = plot_plane.get_solver_name(method, odeint)
+        self.names[i] = name
+        # The actual results are computed first to ensure, that the code is JIT-compiled before testing performance
         data = plane.xiv_plane(odeint, method)
+        self.mean_diffs[i] = np.nanmean(np.abs((data - self.ref_data) / data))
 
-        if ax:
+        result = timeit.timeit(lambda: plane.xiv_plane(odeint, method), number=perf_iters)
+        iter_time = result/perf_iters
+        self.iter_times[i] = result/perf_iters
+        text = \
+            f"{name} performance with {perf_iters} iterations: " \
+            f"{result:.2f} s, {iter_time:.2f} s/iteration"
+        print(text)
+        logger.info(text)
+
+        if PLOT and ax:
             fig: plt.Figure = plt.figure()
             ax2: plt.Axes = fig.add_subplot()
             plot_plane.plot_plane(self.axs[ax[0], ax[1]], data, method, odeint, deflag_ref=self.ref_data)
@@ -87,6 +134,7 @@ class TestPlane(unittest.TestCase):
         # np.savetxt(file_path, data_summed)
 
         data_ref = np.loadtxt(file_path)
+        # Asserting is the last step to ensure, that the plots are created regardless of the results
         np.testing.assert_allclose(data_summed, data_ref, rtol=rtol)
 
     def test_plane_bdf(self):
