@@ -44,11 +44,10 @@ def gen_df_dtau(cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag, method: str = None):
     if isinstance(method, str) and method.startswith("numba_lsoda"):
         @numba.cfunc(NumbaLSODA.lsoda_sig)
         def df_dtau_numba(t, u, du, p):
-            # Manual override for now
-            cs2 = 1 / 3.
             v = u[0]
             w = u[1]
             xi = u[2]
+            cs2 = cs2_fun(w)
             xiXv = xi * v
             xi_v = xi - v
             v2 = v * v
