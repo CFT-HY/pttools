@@ -97,7 +97,7 @@ class TestPlane(unittest.TestCase):
         ax.bar(inds, diffs, tick_label=names)
         ax.set_title("Mean relative difference compared to odeint")
         ax.set_xlabel("Solver")
-        ax.set_ylabel("Relative mean difference")
+        ax.set_ylabel("Mean relative difference")
         ax.set_yscale("log")
 
     def validate_plane(
