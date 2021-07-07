@@ -41,7 +41,7 @@ def gen_df_dtau(cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag, method: str = None):
 
     :return: $\frac{dv}{d\tau}, \frac{dw}{d\tau}, \frac{d\xi}{d\tau}$
     """
-    if isinstance(method, str) and method.startswith("numba_lsoda"):
+    if method == "numba_lsoda":
         @numba.cfunc(NumbaLSODA.lsoda_sig)
         def df_dtau_numba(t, u, du, p):
             v = u[0]
@@ -55,16 +55,11 @@ def gen_df_dtau(cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag, method: str = None):
             du[0] = 2 * v * cs2 * (1 - v2) * (1 - xiXv)  # dv/dt
             du[1] = (w / (1 - v2)) * (xi_v / (1 - xiXv)) * (1 / cs2 + 1) * du[0]  # dw_dt
             du[2] = xi * (xi_v ** 2 - cs2 * (1 - xiXv) ** 2)  # dxi/dt
-
-        if method == "numba_lsoda_negative":
-            @numba.cfunc(NumbaLSODA.lsoda_sig)
-            def df_dtau_numba_negative(t, u, du, p):
-                ret = df_dtau_numba(t, u, du, p)
+            # If integrating backwards
+            if p[0]:
                 du[0] *= -1.
                 du[1] *= -1.
                 du[2] *= -1.
-                return ret
-            return df_dtau_numba_negative
         return df_dtau_numba
 
     @numba.njit
@@ -91,6 +86,9 @@ def gen_df_dtau(cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag, method: str = None):
     return df_dtau
 
 
+df_dtau_numba_bag = gen_df_dtau(bag.cs2_bag, method="numba_lsoda")
+
+
 def fluid_integrate_param(
         v0: float,
         w0: float,
@@ -113,10 +111,12 @@ def fluid_integrate_param(
         w0 = w0.item()
         xi0 = xi0.item()
 
-    if method == "numba_lsoda" and t_end < 0:
-        df_dtau = gen_df_dtau(cs2_fun, method="numba_lsoda_negative")
-    else:
-        df_dtau = gen_df_dtau(cs2_fun, method=method)
+    if method == "numba_lsoda":
+        if NumbaLSODA is None:
+            raise ImportError("NumbaLSODA is not loaded")
+        return fluid_integrate_param_numba(v0, w0, xi0, t_end, n_xi, gen_df_dtau(cs2_fun, method).address)
+
+    df_dtau = gen_df_dtau(cs2_fun, method=method)
     t = np.linspace(0., t_end, n_xi) if n_xi else None
     y0 = np.array([v0, w0, xi0])
 
@@ -132,16 +132,6 @@ def fluid_integrate_param(
         v = soln[:, 0]
         w = soln[:, 1]
         xi = soln[:, 2]
-    elif method == "numba_lsoda":
-        if NumbaLSODA is None:
-            raise ImportError("NumbaLSODA is not loaded")
-        t_numba = -t if t_end < 0 else t
-        usol, success = NumbaLSODA.lsoda(df_dtau.address, u0=y0, t_eval=t_numba)
-        if not success:
-            logger.error(f"NumbaLSODA failed for %s integration", "backwards" if t_end < 0 else "forwards")
-        v = usol[:, 0]
-        w = usol[:, 1]
-        xi = usol[:, 2]
     else:
         try:
             soln: spi._ivp.ivp.OdeResult = spi.solve_ivp(
@@ -155,6 +145,28 @@ def fluid_integrate_param(
         w = soln.y[1, :]
         xi = soln.y[2, :]
 
+    return v, w, xi, t
+
+
+@numba.njit
+def fluid_integrate_param_numba(
+        v0: float,
+        w0: float,
+        xi0: float,
+        t_end: float = const.T_END_DEFAULT,
+        n_xi: int = const.N_XI_DEFAULT,
+        df_dtau_fun_ptr: numba.types.CPointer = df_dtau_numba_bag.address):
+    t = np.linspace(0., t_end, n_xi)
+    y0 = np.array([v0, w0, xi0])
+    t_numba = -t if t_end < 0 else t
+    data = np.array([1 if t_end < 0 else 0])
+    usol, success = NumbaLSODA.lsoda(df_dtau_fun_ptr, u0=y0, t_eval=t_numba, data=data)
+    if not success:
+        with numba.objmode:
+            logger.error(f"NumbaLSODA failed for %s integration", "backwards" if t_end < 0 else "forwards")
+    v = usol[:, 0]
+    w = usol[:, 1]
+    xi = usol[:, 2]
     return v, w, xi, t
 
 
