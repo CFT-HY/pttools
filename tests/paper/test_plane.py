@@ -31,6 +31,8 @@ class TestPlane(unittest.TestCase):
         grid_shape = (3, 3)
         if PLOT:
             cls.grid_fig, cls.axs = plt.subplots(*grid_shape, figsize=(16.5, 11.7))
+            cls.grid_fig.suptitle(r"Comparison of integrators for $\xi$-$v$-plane")
+            cls.ref_data = plane.xiv_plane(odeint=True, method=spi.LSODA)
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -71,10 +73,10 @@ class TestPlane(unittest.TestCase):
         data = plane.xiv_plane(odeint, method)
 
         if ax:
-            plot_plane.plot_plane(self.axs[ax[0], ax[1]], data, method, odeint)
             fig: plt.Figure = plt.figure()
             ax2: plt.Axes = fig.add_subplot()
-            plot_plane.plot_plane(ax2, data, method, odeint)
+            plot_plane.plot_plane(self.axs[ax[0], ax[1]], data, method, odeint, deflag_ref=self.ref_data)
+            plot_plane.plot_plane(ax2, data, method, odeint, deflag_ref=self.ref_data)
             fig_name = f"{self.FIG_PATH}_{i}_{plot_plane.get_solver_name(method, odeint)}"
             save_fig_multi(fig, fig_name)
 

@@ -1,3 +1,5 @@
+import typing as tp
+
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.integrate as spi
@@ -6,12 +8,37 @@ import pttools.type_hints as th
 from pttools import bubble
 
 
+def filter_not(arr: np.ndarray, mask: np.ndarray) -> np.ndarray:
+    arr2 = arr.copy()
+    arr2[np.logical_not(mask)] = np.nan
+    return arr2
+
+
 def get_solver_name(method: th.ODE_SOLVER, odeint: bool = False) -> str:
     if odeint:
         return "odeint"
     if isinstance(method, spi.OdeSolver):
         return method.__class__.__name__
     return method.__name__
+
+
+def get_differing_inds(
+        deflag: np.ndarray,
+        deflag_ref: np.ndarray,
+        i: int,
+        rtol: float) -> np.ndarray:
+    deflag_v_b = deflag[0, i, :]
+    deflag_xi_b = deflag[2, i, :]
+    deflag_v_f = deflag[3, i, :]
+    deflag_xi_f = deflag[5, i, :]
+    differing_b = np.logical_not(np.logical_and(
+        np.isclose(deflag_v_b, deflag_ref[0, i, :], rtol=rtol),
+        np.isclose(deflag_xi_b, deflag_ref[2, i, :], rtol=rtol)))
+    differing_f = np.logical_not(np.logical_and(
+        np.isclose(deflag_v_f, deflag_ref[3, i, :], rtol=rtol),
+        np.isclose(deflag_xi_f, deflag_ref[5, i, :], rtol=rtol)
+    ))
+    return np.array([differing_b, differing_f])
 
 
 def v_ahead_max(xi):
@@ -46,6 +73,10 @@ def plot_plane(
         deflag: np.ndarray,
         method: th.ODE_SOLVER,
         odeint: bool = False,
+        deflag_ref: np.ndarray = None,
+        rtol_high_diff: float = 1e-2,
+        rtol_mid_diff: float = 1e-3,
+        rtol_small_diff: float = 1e-4,
         tau_backwards_end: float = -100.0):
     """Modified from sound-shell-model/paper/python/fig_8r_xi-v_plane.py"""
     # Define a suitable number of default lines to plot
@@ -82,8 +113,9 @@ def plot_plane(
         deflag_xi_f = deflag[5, i, :]
 
         # Grey out parts of line which are unphysical
-        unphysical = np.logical_and(deflag_v_b - bubble.v_shock(deflag_xi_b) < 0,
-                                    deflag_v_b - bubble.lorentz(deflag_xi_b, bubble.CS0) > 0)
+        unphysical = np.logical_and(
+            deflag_v_b - bubble.v_shock(deflag_xi_b) < 0,
+            deflag_v_b - bubble.lorentz(deflag_xi_b, bubble.CS0) > 0)
         # But let's keep the unphysical points to look at
         deflag_v_b_grey = deflag_v_b[unphysical]
         deflag_xi_b_grey = deflag_xi_b[unphysical]
@@ -92,9 +124,21 @@ def plot_plane(
         deflag_v_b_grey[deflag_v_b_grey < 1e-4] = np.nan
 
         # Plot
-        ax.plot(deflag_xi_f, deflag_v_f, color=[0.8, 0.8, 0.8])
+        grey = (0.8, 0.8, 0.8)
+        ax.plot(deflag_xi_f, deflag_v_f, color=grey)
         ax.plot(deflag_xi_b, deflag_v_b, 'k')
-        ax.plot(deflag_xi_b_grey, deflag_v_b_grey, color=[0.8, 0.8, 0.8])
+        ax.plot(deflag_xi_b_grey, deflag_v_b_grey, color=grey)
+
+        if deflag_ref is not None:
+            diff_small = get_differing_inds(deflag, deflag_ref, i, rtol=rtol_small_diff)
+            diff_mid = get_differing_inds(deflag, deflag_ref, i, rtol=rtol_mid_diff)
+            diff_high = get_differing_inds(deflag, deflag_ref, i, rtol=rtol_high_diff)
+            diff_small[diff_mid] = 0
+            diff_mid[diff_high] = 0
+
+            for diff, color in zip((diff_small, diff_mid, diff_high), ("yellow", "orange", "red")):
+                ax.plot(filter_not(deflag_xi_b, diff[0, :]), filter_not(deflag_v_b, diff[0, :]), color=color)
+                ax.plot(filter_not(deflag_xi_f, diff[1, :]), filter_not(deflag_v_f, diff[1, :]), color=color)
 
         # Make and plot a few lines starting from xi = 1
         if not i % 2:
