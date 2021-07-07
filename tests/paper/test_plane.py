@@ -1,3 +1,4 @@
+# import faulthandler
 import logging
 import os.path
 import shutil
@@ -16,6 +17,7 @@ from tests.test_utils import TEST_DATA_PATH, TEST_FIGURE_PATH
 from tests.paper import plane
 from tests.paper import plot_plane
 
+# faulthandler.enable()
 logger = logging.getLogger(__name__)
 
 PLOT = True
@@ -24,6 +26,7 @@ os.makedirs(TEST_FIGURE_PATH, exist_ok=True)
 
 class TestPlane(unittest.TestCase):
     FIG_PATH = os.path.join(TEST_FIGURE_PATH, "integrators")
+    grid_shape: tp.Tuple[int, int] = (2, 5)
     grid_fig: plt.Figure
     axs: np.ndarray
     ref_data: np.ndarray
@@ -35,11 +38,10 @@ class TestPlane(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        grid_shape = (3, 3)
         if PLOT:
-            cls.grid_fig, cls.axs = plt.subplots(*grid_shape, figsize=(16.5, 11.7))
+            cls.grid_fig, cls.axs = plt.subplots(*cls.grid_shape, figsize=np.array([16, 9])*1.7)
             cls.grid_fig.suptitle(r"Comparison of integrators for $\xi$-$v$-plane")
-            cls.ref_data = plane.xiv_plane(odeint=True, method=spi.LSODA)
+            cls.ref_data = plane.xiv_plane(method=spi.odeint)
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -73,11 +75,11 @@ class TestPlane(unittest.TestCase):
                 logger.warning("ffmpeg was not found, so the xi-v-plane animation could not be created")
 
     @classmethod
-    def plot_perf(cls, i_ax: tp.Tuple[int, int] = (0, 2)):
+    def plot_perf(cls, i_ax: tp.Tuple[int, int] = (0, 3)):
         ax: plt.Axes = cls.axs[i_ax[0], i_ax[1]]
         inds = list(cls.names.keys())
         names = [cls.names[i] for i in inds]
-        iter_times = [cls.iter_times[i] for i in inds]
+        iter_times = [cls.iter_times[i] if i in cls.iter_times else None for i in inds]
         ax.bar(inds, iter_times, tick_label=names)
         ax.set_title("Execution time per run")
         ax.set_xlabel("Solver")
@@ -85,13 +87,15 @@ class TestPlane(unittest.TestCase):
         ax.set_yscale("log")
 
     @classmethod
-    def plot_diff(cls, i_ax: tp.Tuple[int, int] = (1, 2)):
+    def plot_diff(cls, i_ax: tp.Tuple[int, int] = (0, 4)):
         ax: plt.Axes = cls.axs[i_ax[0], i_ax[1]]
-        inds = list(cls.names.keys())
+        diff_dict = {ind: diff for ind, diff in cls.mean_diffs.items() if np.isfinite(diff)}
+        inds = list(diff_dict.keys())
         names = [cls.names[i] for i in inds]
-        diffs = [cls.mean_diffs[i] for i in inds]
+        diffs = list(diff_dict.values())
+        print(diffs)
         ax.bar(inds, diffs, tick_label=names)
-        ax.set_title("Relative mean difference compared to odeint")
+        ax.set_title("Mean relative difference compared to odeint")
         ax.set_xlabel("Solver")
         ax.set_ylabel("Relative mean difference")
         ax.set_yscale("log")
@@ -99,18 +103,20 @@ class TestPlane(unittest.TestCase):
     def validate_plane(
             self,
             odeint: bool = False,
-            method: th.ODE_SOLVER = spi.LSODA,
+            method: th.ODE_SOLVER = spi.odeint,
             rtol: float = 1e-7,
             i: int = None,
             ax: tp.Tuple[int, int] = None,
             perf_iters: int = 10):
-        name = plot_plane.get_solver_name(method, odeint)
+        if i in self.names:
+            raise ValueError(f"Duplicate solver index: {i}")
+        name = plot_plane.get_solver_name(method)
         self.names[i] = name
         # The actual results are computed first to ensure, that the code is JIT-compiled before testing performance
-        data = plane.xiv_plane(odeint, method)
+        data = plane.xiv_plane(method=method)
         self.mean_diffs[i] = np.nanmean(np.abs((data - self.ref_data) / data))
 
-        result = timeit.timeit(lambda: plane.xiv_plane(odeint, method), number=perf_iters)
+        result = timeit.timeit(lambda: plane.xiv_plane(method=method), number=perf_iters)
         iter_time = result/perf_iters
         self.iter_times[i] = result/perf_iters
         text = \
@@ -122,9 +128,9 @@ class TestPlane(unittest.TestCase):
         if PLOT and ax:
             fig: plt.Figure = plt.figure()
             ax2: plt.Axes = fig.add_subplot()
-            plot_plane.plot_plane(self.axs[ax[0], ax[1]], data, method, odeint, deflag_ref=self.ref_data)
-            plot_plane.plot_plane(ax2, data, method, odeint, deflag_ref=self.ref_data)
-            fig_name = f"{self.FIG_PATH}_{i}_{plot_plane.get_solver_name(method, odeint)}"
+            plot_plane.plot_plane(self.axs[ax[0], ax[1]], data, method, deflag_ref=self.ref_data)
+            plot_plane.plot_plane(ax2, data, method, deflag_ref=self.ref_data)
+            fig_name = f"{self.FIG_PATH}_{i}_{plot_plane.get_solver_name(method)}"
             save_fig_multi(fig, fig_name)
 
         data_summed = np.sum(data, axis=2)
@@ -138,21 +144,29 @@ class TestPlane(unittest.TestCase):
         np.testing.assert_allclose(data_summed, data_ref, rtol=rtol)
 
     def test_plane_bdf(self):
-        self.validate_plane(method=spi.BDF, rtol=5e-3, i=5, ax=(2, 0))
+        self.validate_plane(method=spi.BDF, rtol=5e-3, i=5, ax=(1, 2))
 
     def test_plane_dop853(self):
-        self.validate_plane(method=spi.DOP853, rtol=2.1e-4, i=6, ax=(2, 1))
+        self.validate_plane(method=spi.DOP853, rtol=2.1e-4, i=6, ax=(1, 3))
 
     @unittest.expectedFailure
     def test_plane_lsoda(self):
         self.validate_plane(method=spi.LSODA, i=2, ax=(0, 1))
 
+    @unittest.expectedFailure
+    def test_plane_numba_lsoda(self):
+        try:
+            self.validate_plane(method="numba_lsoda", i=8, ax=(0, 2))
+        except ImportError as e:
+            logger.exception("Could not load NumbaLSODA.", exc_info=e)
+            self.skipTest("Could not load NumbaLSODA.")
+
     def test_plane_odeint(self):
-        self.validate_plane(odeint=True, method=spi.LSODA, i=1, ax=(0, 0))
+        self.validate_plane(method=spi.odeint, i=1, ax=(0, 0))
 
     @unittest.expectedFailure
     def test_plane_radau(self):
-        self.validate_plane(method=spi.Radau, i=7, ax=(2, 2))
+        self.validate_plane(method=spi.Radau, i=7, ax=(1, 4))
 
     def test_plane_rk23(self):
         self.validate_plane(method=spi.RK23, rtol=2.11e-2, i=3, ax=(1, 0))

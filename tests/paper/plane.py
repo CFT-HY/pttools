@@ -6,8 +6,7 @@ from pttools import bubble
 
 
 def xiv_plane(
-        odeint: bool = False,
-        method: th.ODE_SOLVER = spi.LSODA,
+        method: th.ODE_SOLVER = spi.odeint,
         tau_forwards_end: float = 100.0,
         tau_backwards_end: float = -100.0,
         n_xi0: int = 9,
@@ -21,9 +20,9 @@ def xiv_plane(
     for i, xi0 in enumerate(xi0_array):
         # Make lines starting from v = xi, forward and back
         deflag_v_b, deflag_w_b, deflag_xi_b, _ = bubble.fluid_integrate_param(
-            xi0, 1, xi0, t_end=tau_backwards_end, n_xi=n_xi, odeint=odeint, method=method)
+            xi0, 1, xi0, t_end=tau_backwards_end, n_xi=n_xi, method=method)
         deflag_v_f, deflag_w_f, deflag_xi_f, _ = bubble.fluid_integrate_param(
-            xi0, 1, xi0, t_end=tau_forwards_end, n_xi=n_xi, odeint=odeint, method=method)
+            xi0, 1, xi0, t_end=tau_forwards_end, n_xi=n_xi, method=method)
         # Grey out parts of line which are unphysical
         unphysical = np.logical_and(
             deflag_v_b - bubble.v_shock(deflag_xi_b) < 0,

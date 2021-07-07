@@ -14,8 +14,12 @@ def filter_not(arr: np.ndarray, mask: np.ndarray) -> np.ndarray:
     return arr2
 
 
-def get_solver_name(method: th.ODE_SOLVER, odeint: bool = False) -> str:
-    if odeint:
+def get_solver_name(method: th.ODE_SOLVER) -> str:
+    if method == "numba_lsoda":
+        return "numba"
+    if isinstance(method, str):
+        return method
+    if method is spi.odeint:
         return "odeint"
     if isinstance(method, spi.OdeSolver):
         return method.__class__.__name__
@@ -39,6 +43,11 @@ def get_differing_inds(
         np.isclose(deflag_xi_f, deflag_ref[5, i, :], rtol=rtol)
     ))
     return np.array([differing_b, differing_f])
+
+
+def set_invalid_v_to_nan(v: np.ndarray):
+    v[v < 0] = np.nan
+    v[v > 1] = np.nan
 
 
 def v_ahead_max(xi):
@@ -123,6 +132,11 @@ def plot_plane(
         # Unphysical doesn't quite work for last points, so ...
         deflag_v_b_grey[deflag_v_b_grey < 1e-4] = np.nan
 
+        if method == "numba_lsoda":
+            set_invalid_v_to_nan(deflag_v_b)
+            set_invalid_v_to_nan(deflag_v_f)
+            set_invalid_v_to_nan(deflag_v_b_grey)
+
         # Plot
         grey = (0.8, 0.8, 0.8)
         ax.plot(deflag_xi_f, deflag_v_f, color=grey)
@@ -136,9 +150,17 @@ def plot_plane(
             diff_small[diff_mid] = 0
             diff_mid[diff_high] = 0
 
-            for diff, color in zip((diff_small, diff_mid, diff_high), ("yellow", "orange", "red")):
-                ax.plot(filter_not(deflag_xi_b, diff[0, :]), filter_not(deflag_v_b, diff[0, :]), color=color)
-                ax.plot(filter_not(deflag_xi_f, diff[1, :]), filter_not(deflag_v_f, diff[1, :]), color=color)
+            for diff, color, rtol in zip(
+                    (diff_small, diff_mid, diff_high),
+                    ("yellow", "orange", "red"),
+                    (rtol_small_diff, rtol_mid_diff, rtol_high_diff)):
+                label = f"relative error > {rtol*100:.2f} %" if i == 0 else None
+                ax.plot(
+                    filter_not(deflag_xi_b, diff[0, :]), filter_not(deflag_v_b, diff[0, :]),
+                    color=color, label=label)
+                ax.plot(
+                    filter_not(deflag_xi_f, diff[1, :]), filter_not(deflag_v_f, diff[1, :]),
+                    color=color)
 
         # Make and plot a few lines starting from xi = 1
         if not i % 2:
@@ -156,4 +178,4 @@ def plot_plane(
     ax.set_ylabel(r'$v(\xi)$')
     ax.grid()
     ax.legend(loc='upper left')
-    ax.set_title(get_solver_name(method, odeint))
+    ax.set_title(get_solver_name(method))

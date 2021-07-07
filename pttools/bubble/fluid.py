@@ -10,6 +10,12 @@ import logging
 import typing as tp
 
 import numba
+logger = logging.getLogger(__name__)
+try:
+    import NumbaLSODA
+except ImportError:
+    NumbaLSODA = None
+    logger.warning("NumbaLSODA could not be imported, and is therefore not available.")
 import numpy as np
 import scipy.integrate as spi
 
@@ -23,19 +29,34 @@ from . import const
 from . import props
 from . import transition
 
-logger = logging.getLogger(__name__)
 # ODEINT_LOCK = threading.Lock()
 
 
 # This caching prevents df_dtau from being recompiled every time fluid_integrate_param is called
 # @speedup.threadsafe_lru
 @functools.lru_cache(typed=True)
-def gen_df_dtau(cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag, odeint: bool = False):
+def gen_df_dtau(cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag, method: str = None):
     r"""
     Generate a function for the differentials of fluid variables $(v, w, \xi)$ in parametric form, suitable for odeint
 
     :return: $\frac{dv}{d\tau}, \frac{dw}{d\tau}, \frac{d\xi}{d\tau}$
     """
+    if method == "numba_lsoda":
+        @numba.cfunc(NumbaLSODA.lsoda_sig)
+        def df_dtau(t, u, du, p):
+            # Manual override for now
+            cs2 = 1 / 3.
+            v = u[0]
+            w = u[1]
+            xi = u[2]
+            xiXv = xi * v
+            xi_v = xi - v
+            v2 = v * v
+
+            du[0] = 2 * v * cs2 * (1 - v2) * (1 - xiXv)  # dv/dt
+            du[1] = (w / (1 - v2)) * (xi_v / (1 - xiXv)) * (1 / cs2 + 1) * du[0]  # dw_dt
+            du[2] = xi * (xi_v ** 2 - cs2 * (1 - xiXv) ** 2)  # dxi/dt
+        return df_dtau
 
     @numba.njit
     def df_dtau(t: float, y: np.ndarray) -> np.ndarray:
@@ -53,11 +74,12 @@ def gen_df_dtau(cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag, odeint: bool = False):
         ret[2] = xi * (xi_v ** 2 - cs2 * (1 - xiXv) ** 2)  # dxi/dt
         return ret
 
-    if odeint:
+    if method is spi.odeint:
         @numba.njit
         def df_dtau_odeint(y: np.ndarray, t: float) -> np.ndarray:
             return df_dtau(t, y)
         return df_dtau_odeint
+
     return df_dtau
 
 
@@ -68,8 +90,7 @@ def fluid_integrate_param(
         t_end: float = const.T_END_DEFAULT,
         n_xi: int = const.N_XI_DEFAULT,
         cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag,
-        odeint: bool = True,
-        method: th.ODE_SOLVER = spi.LSODA,
+        method: th.ODE_SOLVER = spi.odeint,
         vectorized: bool = False) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""
     Integrates parametric fluid equations in df_dtau from an initial condition.
@@ -84,8 +105,9 @@ def fluid_integrate_param(
         w0 = w0.item()
         xi0 = xi0.item()
 
-    df_dtau = gen_df_dtau(cs2_fun, odeint=odeint)
+    df_dtau = gen_df_dtau(cs2_fun, method=method)
     t = np.linspace(0., t_end, n_xi) if n_xi else None
+    y0 = np.array([v0, w0, xi0])
 
     # This lock prevents a SystemError when running multiple threads
     # with ODEINT_LOCK:
@@ -94,16 +116,29 @@ def fluid_integrate_param(
     # Putting these within numba.objmode can also be challenging, as function-type arguments are not supported.
     # For better performance, the "df_dtau" should be already fully Numba-compiled at this point instead
     # of taking functions as its arguments.
-    if odeint:
-        if method is not spi.LSODA:
-            raise NotImplementedError("The old SciPy odeint does not support other methods than its built-in LSODA.")
-        soln: np.ndarray = spi.odeint(df_dtau, (v0, w0, xi0), t)
+    if method is spi.odeint:
+        soln: np.ndarray = spi.odeint(df_dtau, y0, t)
         v = soln[:, 0]
         w = soln[:, 1]
         xi = soln[:, 2]
+    elif method == "numba_lsoda":
+        if NumbaLSODA is None:
+            raise ImportError("NumbaLSODA is not loaded")
+        usol, success = NumbaLSODA.lsoda(df_dtau.address, u0=y0, t_eval=t)
+        if not success:
+            logger.error(f"NumbaLSODA failed for %s integration", "backwards" if t_end < 0 else "forwards")
+        v = usol[:, 0]
+        w = usol[:, 1]
+        xi = usol[:, 2]
     else:
-        soln: spi._ivp.ivp.OdeResult = spi.solve_ivp(
-            df_dtau, t_span=(0, t_end), y0=np.array([v0, w0, xi0]), method=method, t_eval=t, vectorized=vectorized)
+        try:
+            soln: spi._ivp.ivp.OdeResult = spi.solve_ivp(
+                df_dtau, t_span=(0, t_end), y0=y0, method=method, t_eval=t, vectorized=vectorized)
+        except ValueError as e:
+            logger.error(
+                "Solver was not recognized to be a special case, "
+                "so it was passed to solve_ivp, which didn't understand it either.")
+            raise e
         v = soln.y[0, :]
         w = soln.y[1, :]
         xi = soln.y[2, :]
