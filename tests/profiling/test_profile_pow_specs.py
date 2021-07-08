@@ -1,11 +1,15 @@
 import os
 import unittest
 
-from tests.paper.test_pow_specs import pow_specs
+import tests.paper.ssm_paper_utils as spu
 from .test_profile import TestProfile
 from . import utils_cprofile
 from . import utils_pyinstrument
 from . import utils_yappi
+
+
+def pow_specs():
+    spu.do_all_plot_ps_compare_nuc('final3', None)
 
 
 class TestProfilePowSpecs(TestProfile):
