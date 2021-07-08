@@ -13,7 +13,7 @@ import scipy.integrate as spi
 
 import pttools.type_hints as th
 from tests.plotting import save_fig_multi
-from tests.test_utils import TEST_DATA_PATH, TEST_FIGURE_PATH
+from tests import test_utils
 from tests.paper import plane
 from tests.paper import plot_plane
 
@@ -21,11 +21,11 @@ from tests.paper import plot_plane
 logger = logging.getLogger(__name__)
 
 PLOT = True
-os.makedirs(TEST_FIGURE_PATH, exist_ok=True)
+os.makedirs(test_utils.TEST_FIGURE_PATH, exist_ok=True)
 
 
 class TestPlane(unittest.TestCase):
-    FIG_PATH = os.path.join(TEST_FIGURE_PATH, "integrators")
+    FIG_PATH = os.path.join(test_utils.TEST_FIGURE_PATH, "integrators")
     grid_shape: tp.Tuple[int, int] = (2, 5)
     grid_fig: plt.Figure
     axs: np.ndarray
@@ -133,7 +133,7 @@ class TestPlane(unittest.TestCase):
             save_fig_multi(fig, fig_name)
 
         data_summed = np.nansum(data, axis=2)
-        file_path = os.path.join(TEST_DATA_PATH, "xi-v_plane.txt")
+        file_path = os.path.join(test_utils.TEST_DATA_PATH, "xi-v_plane.txt")
 
         # Generate new reference data
         # if method == spi.odeint:
@@ -141,7 +141,7 @@ class TestPlane(unittest.TestCase):
 
         data_ref = np.loadtxt(file_path)
         # Asserting is the last step to ensure, that the plots are created regardless of the results
-        np.testing.assert_allclose(data_summed, data_ref, rtol=rtol)
+        test_utils.assert_allclose(data_summed, data_ref, rtol=rtol)
 
     def test_plane_bdf(self):
         self.validate_plane(method=spi.BDF, rtol=5e-3, i=5, ax=(1, 2))

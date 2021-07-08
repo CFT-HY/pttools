@@ -6,24 +6,24 @@ import numpy as np
 from pttools import bubble
 from tests.paper import const
 from tests.paper import ssm_paper_utils as spu
-from tests.test_utils import TEST_DATA_PATH
+from tests import test_utils
 
 
 class TestShells(unittest.TestCase):
     @staticmethod
     def shell_file_path(name: str) -> str:
-        return os.path.join(TEST_DATA_PATH, f"shells_{name}.txt")
+        return os.path.join(test_utils.TEST_DATA_PATH, f"shells_{name}.txt")
 
     def test_fluid_shell(self):
         _, arrs, scalars = bubble.plot_fluid_shell(v_wall=0.7, alpha_n=0.052, debug=True, draw=False)
         data = np.array([np.nansum(arr) for arr in arrs] + scalars)
-        file_path = os.path.join(TEST_DATA_PATH, "shell.txt")
+        file_path = os.path.join(test_utils.TEST_DATA_PATH, "shell.txt")
 
         # Generate new reference data
         # np.savetxt(file_path, data)
 
         data_ref = np.loadtxt(file_path)
-        np.testing.assert_allclose(data, data_ref)
+        test_utils.assert_allclose(data, data_ref)
 
     def test_fluid_shells(self):
         """Based on sound-shell-model/paper/python/fig_1_9_shell_plots.py"""
@@ -54,9 +54,9 @@ class TestShells(unittest.TestCase):
         ref_inter = np.loadtxt(self.shell_file_path("inter"))
         ref_esp = np.loadtxt(self.shell_file_path("esp"))
 
-        np.testing.assert_allclose(data_weak, ref_weak)
-        np.testing.assert_allclose(data_inter, ref_inter)
-        np.testing.assert_allclose(data_esp, ref_esp)
+        test_utils.assert_allclose(data_weak, ref_weak)
+        test_utils.assert_allclose(data_inter, ref_inter)
+        test_utils.assert_allclose(data_esp, ref_esp)
 
 
 if __name__ == "__main__":

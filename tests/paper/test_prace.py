@@ -5,19 +5,19 @@ import unittest
 import numpy as np
 
 from tests.paper import ssm_compare as scom
-from tests.test_utils import TEST_DATA_PATH
+from tests import test_utils
 
 logger = logging.getLogger(__name__)
 
 
 class TestPrace(unittest.TestCase):
     def test_ps_prace(self):
-        fluid_profiles_dir = os.path.join(TEST_DATA_PATH, "fluidprofiles")
+        fluid_profiles_dir = os.path.join(test_utils.TEST_DATA_PATH, "fluidprofiles")
         if not os.path.isdir(fluid_profiles_dir):
             logger.warning("Fluid profiles not found. Cannot execute PRACE tests.")
             return
         v2_list, Omgw_scaled_list, data = scom.all_generate_ps_prace(save_ids=("test", "test"), show=False, debug=True)
-        ref_path = os.path.join(TEST_DATA_PATH, "ps_prace.txt")
+        ref_path = os.path.join(test_utils.TEST_DATA_PATH, "ps_prace.txt")
 
         test_data = np.concatenate([np.array([v2_list, Omgw_scaled_list]), data])
 
@@ -25,7 +25,7 @@ class TestPrace(unittest.TestCase):
         # np.savetxt(ref_path, test_data)
 
         ref_data = np.loadtxt(ref_path)
-        np.testing.assert_allclose(test_data, ref_data)
+        test_utils.assert_allclose(test_data, ref_data)
 
 
 if __name__ == "__main__":

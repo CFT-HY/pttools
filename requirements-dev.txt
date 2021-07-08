@@ -2,6 +2,7 @@
 # in the conda environment.
 # -r requirements.txt
 allure-pytest
+colorama
 # For Numba system info
 psutil
 pyan3 >=1.1.1, !=1.2.0
