@@ -10,17 +10,16 @@ import logging
 import typing as tp
 
 import numba
-logger = logging.getLogger(__name__)
 try:
     import NumbaLSODA
 except ImportError:
     NumbaLSODA = None
-    logger.warning("NumbaLSODA could not be imported, and is therefore not available.")
 import numpy as np
 import scipy.integrate as spi
 
+import pttools.bubble.const
 import pttools.type_hints as th
-# from pttools import speedup
+from pttools import speedup
 from . import alpha
 from . import bag
 from . import boundary
@@ -28,6 +27,10 @@ from . import check
 from . import const
 from . import props
 from . import transition
+
+logger = logging.getLogger(__name__)
+if NumbaLSODA is None:
+    logger.warning("Could not import NumbaLSODA")
 
 # ODEINT_LOCK = threading.Lock()
 
