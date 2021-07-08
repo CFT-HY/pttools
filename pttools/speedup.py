@@ -18,7 +18,7 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 NUMBA_DISABLE_JIT = os.getenv("NUMBA_DISABLE_JIT", False)
-
+NUMBA_INTEGRATE = False
 NUMBA_OPTS: tp.Dict[str, any] = {
     # Caching does not work properly with functions that have dependencies across files
     # "cache": True

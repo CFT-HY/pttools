@@ -173,6 +173,29 @@ def fluid_integrate_param_numba(
     return v, w, xi, t
 
 
+@numba.njit
+def fluid_integrate_param_wrapper(
+        v0: float,
+        w0: float,
+        xi0: float,
+        t_end: float = const.T_END_DEFAULT,
+        n_xi: int = const.N_XI_DEFAULT,
+        cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag,
+        method: th.ODE_SOLVER = "numba_njit",
+        vectorized: bool = False):
+    if method != "numba_njit":
+        raise ValueError("Custom ODE solvers are not supported by Numba")
+    if cs2_fun(np.nan) != pttools.bubble.const.CS0_2:
+        raise ValueError("Custom cs2-functions are not supported by Numba")
+    if vectorized:
+        raise ValueError("Vectorized cs2-functions are not supported by Numba")
+    return fluid_integrate_param_numba(v0, w0, xi0, t_end, n_xi)
+
+
+if speedup.NUMBA_INTEGRATE:
+    fluid_integrate_param = fluid_integrate_param_wrapper
+
+
 # Main function for integrating fluid equations and deriving v, w
 # for complete range 0 < xi < 1
 

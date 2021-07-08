@@ -8,6 +8,7 @@ import unittest
 import numba
 import numpy as np
 
+from pttools.speedup import NUMBA_DISABLE_JIT, NUMBA_INTEGRATE
 from tests.paper import ssm_paper_utils as spu
 from tests import test_utils
 
@@ -41,21 +42,23 @@ def pow_specs():
     data_reference[:, 9] = np.abs(data_reference[:, 9])
     data_test[:, 9] = np.abs(data_test[:, 9])
 
-    numba_disable_jit = os.getenv("NUMBA_DISABLE_JIT", default=None)
-
-    if numba_disable_jit:
-        logger.info(f"Numba is disabled: NUMBA_DISABLE_JIT = {numba_disable_jit}")
+    if NUMBA_DISABLE_JIT:
+        logger.info(f"Numba is disabled: NUMBA_DISABLE_JIT = {NUMBA_DISABLE_JIT}")
         # The results differ slightly depending on the library versions
-        test_utils.assert_allclose(data_test, data_reference, rtol=4.6e-7, atol=0)
+        rtol = 4.6e-7
     else:
         # Since this was a heavy computation, let's print info on the threading layer used
         logger.info(f"Numba threading layer used: {numba.threading_layer()}")
         # Using Numba changes the results slightly
-        # test_utils.assert_allclose(data_test, data_reference, rtol=9.1e-7, atol=0)
+        # rtol = 9.1e-7
         # The library versions on Kale change the results further
-        # test_utils.assert_allclose(data_test, data_reference, rtol=1.21e-6, atol=0)
+        # rtol = 1.21e-6
         # Working around indexing bugs in envelope() has changed the results further
-        test_utils.assert_allclose(data_test, data_reference, rtol=1.72e-6, atol=0)
+        rtol = 1.72e-6
+    if NUMBA_INTEGRATE:
+        logger.warning("test_pow_specs tolerances have been loosened for Numba")
+        rtol = 0.013
+    test_utils.assert_allclose(data_test, data_reference, rtol=rtol, atol=0)
 
     # PTtools has been changed since the article has been written,
     # and therefore there are slight differences in the results.
