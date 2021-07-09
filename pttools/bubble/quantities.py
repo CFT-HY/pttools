@@ -241,7 +241,7 @@ def get_ubarf2(
         sol_type = transition.identify_solution_type(vw, alpha_n)
         if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
-            v, w, xi = fluid.fluid_shell(vw, alpha_n, n_xi)
+            v, w, xi = fluid.fluid_shell(vw.item(), alpha_n, n_xi)
             Ubarf2[...] = ubarf_squared(v, w, xi, vw)
         else:
             Ubarf2[...] = np.nan

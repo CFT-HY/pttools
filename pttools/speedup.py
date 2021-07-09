@@ -25,6 +25,22 @@ NUMBA_OPTS: tp.Dict[str, any] = {
 }
 
 
+def conditional_decorator(dec: callable, condition: bool, **kwargs) -> callable:
+    def decorator(func: callable) -> callable:
+        if condition:
+            if kwargs:
+                return dec(**kwargs)(func)
+            return dec(func)
+        return func
+    return decorator
+
+
+def njit_if_numba_integrate(func: callable = None, **kwargs) -> callable:
+    if func:
+        return conditional_decorator(numba.njit, NUMBA_INTEGRATE, **kwargs)(func)
+    return conditional_decorator(numba.njit, NUMBA_INTEGRATE, **kwargs)
+
+
 def generated_jit(func: callable):
     if NUMBA_DISABLE_JIT:
         return func

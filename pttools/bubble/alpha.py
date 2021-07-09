@@ -49,7 +49,7 @@ def _find_alpha_plus_scalar(v_wall: float, alpha_n_given: float, n_xi: int) -> f
         sol_type = boundary.SolutionType.SUB_DEF if v_wall <= const.CS0 else boundary.SolutionType.HYBRID
 
         def func(x):
-            return find_alpha_n(v_wall, x, sol_type, n_xi) - alpha_n_given
+            return find_alpha_n(v_wall, x.item(), sol_type, n_xi) - alpha_n_given
 
         a_initial_guess = alpha_plus_initial_guess(v_wall, alpha_n_given)
         # This returns np.float64

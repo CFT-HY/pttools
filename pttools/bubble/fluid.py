@@ -201,8 +201,8 @@ if speedup.NUMBA_INTEGRATE:
 # for complete range 0 < xi < 1
 
 def fluid_shell(
-        v_wall: th.FLOAT_OR_ARR,
-        alpha_n: th.FLOAT_OR_ARR,
+        v_wall: float,
+        alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT) \
         -> tp.Union[tp.Tuple[float, float, float], tp.Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     r"""
@@ -220,6 +220,7 @@ def fluid_shell(
     return np.nan, np.nan, np.nan
 
 
+@speedup.njit_if_numba_integrate
 def fluid_shell_alpha_plus(
         v_wall: float,
         alpha_plus: float,
@@ -242,19 +243,16 @@ def fluid_shell_alpha_plus(
     """
     check.check_wall_speed(v_wall)
 
-    # Support for 0D arrays that may arise from other functions that use Numpy iterators
-    al_p = alpha_plus.item() if isinstance(alpha_plus, np.ndarray) else alpha_plus
-    v_w = v_wall.item() if isinstance(v_wall, np.ndarray) else v_wall
-
-    if sol_type == boundary.SolutionType.UNKNOWN:
-        sol_type = transition.identify_solution_type_alpha_plus(v_w, al_p)
+    if sol_type == boundary.SolutionType.UNKNOWN.value:
+        sol_type = transition.identify_solution_type_alpha_plus(v_wall, alpha_plus).value
     # The identification above may set sol_type to error
-    if sol_type == boundary.SolutionType.ERROR:
-        logger.error("Giving up because of identify_solution_type error")
-        return np.nan, np.nan, np.nan
+    if sol_type == boundary.SolutionType.ERROR.value:
+        with numba.objmode:
+            logger.error("Giving up because of identify_solution_type error")
+        return np.array([np.nan]), np.array([np.nan]), np.array([np.nan])
 
     # Solve boundary conditions at wall
-    vfp_w, vfm_w, vfp_p, vfm_p = boundary.fluid_speeds_at_wall(v_w, al_p, sol_type)
+    vfp_w, vfm_w, vfp_p, vfm_p = boundary.fluid_speeds_at_wall(v_wall, alpha_plus, sol_type)
     wp = 1.0  # Nominal value - will be rescaled later
     wm = wp / boundary.enthalpy_ratio(vfm_w, vfp_w)  # enthalpy just behind wall
 
@@ -266,19 +264,19 @@ def fluid_shell_alpha_plus(
     vf = np.zeros_like(xif)
     wf = np.ones_like(xif) * wp
 
-    xib = np.linspace(min(cs2_fun(w_n) ** 0.5, v_w) - dxi, 0.0, 2)
+    xib = np.linspace(min(cs2_fun(w_n) ** 0.5, v_wall) - dxi, 0.0, 2)
     vb = np.zeros_like(xib)
     wb = np.ones_like(xib) * wm
 
     # Integrate forward and find shock.
-    if not sol_type == boundary.SolutionType.DETON:
+    if not sol_type == boundary.SolutionType.DETON.value:
         # First go
-        v, w, xi, t = fluid_integrate_param(vfp_p, wp, v_w, -const.T_END_DEFAULT, const.N_XI_DEFAULT, cs2_fun)
+        v, w, xi, t = fluid_integrate_param(vfp_p, wp, v_wall, -const.T_END_DEFAULT, const.N_XI_DEFAULT, cs2_fun)
         v, w, xi, t = trim_fluid_wall_to_shock(v, w, xi, t, sol_type)
         # Now refine so that there are ~N points between wall and shock.  A bit excessive for thin
         # shocks perhaps, but better safe than sorry. Then improve final point with shock_zoom...
         t_end_refine = t[-1]
-        v, w, xi, t = fluid_integrate_param(vfp_p, wp, v_w, t_end_refine, n_xi, cs2_fun)
+        v, w, xi, t = fluid_integrate_param(vfp_p, wp, v_wall, t_end_refine, n_xi, cs2_fun)
         v, w, xi, t = trim_fluid_wall_to_shock(v, w, xi, t, sol_type)
         v, w, xi = props.shock_zoom_last_element(v, w, xi)
         # Now complete to xi = 1
@@ -293,14 +291,14 @@ def fluid_shell_alpha_plus(
         xif = np.concatenate((xi, xif))
 
     # Integrate backward to sound speed.
-    if not sol_type == boundary.SolutionType.SUB_DEF:
+    if not sol_type == boundary.SolutionType.SUB_DEF.value:
         # First go
-        v, w, xi, t = fluid_integrate_param(vfm_p, wm, v_w, -const.T_END_DEFAULT, const.N_XI_DEFAULT, cs2_fun)
+        v, w, xi, t = fluid_integrate_param(vfm_p, wm, v_wall, -const.T_END_DEFAULT, const.N_XI_DEFAULT, cs2_fun)
         v, w, xi, t = trim_fluid_wall_to_cs(v, w, xi, t, v_wall, sol_type)
         #    # Now refine so that there are ~N points between wall and point closest to cs
         #    # For walls just faster than sound, will give very (too?) fine a resolution.
         #        t_end_refine = t[-1]
-        #        v,w,xi,t = fluid_integrate_param(vfm_p, wm, v_w, t_end_refine, n_xi, cs2_fun)
+        #        v,w,xi,t = fluid_integrate_param(vfm_p, wm, v_wall, t_end_refine, n_xi, cs2_fun)
         #        v, w, xi, t = trim_fluid_wall_to_cs(v, w, xi, t, v_wall, sol_type)
 
         # Now complete to xi = 0
