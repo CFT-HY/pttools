@@ -4,6 +4,7 @@ import unittest
 
 import numpy as np
 
+from pttools import speedup
 from tests.paper import ssm_paper_utils as spu
 from tests.test_utils import TEST_DATA_PATH
 
@@ -32,6 +33,7 @@ class TestTables(unittest.TestCase):
         buffer.seek(0)
         self.assertEqual(buffer.read(), ref_data)
 
+    @speedup.conditional_decorator(unittest.expectedFailure, speedup.NUMBA_INTEGRATE)
     def test_1dh_compare_table(self):
         self.validate(
             "table_1dh_compare.tex",
