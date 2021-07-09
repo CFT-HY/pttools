@@ -49,7 +49,7 @@ def process_text_thread(stats: yappi.YThreadStats, path: str, print_to_console: 
 
 def process_text(
         stats: tp.Union[yappi.YFuncStats, yappi.YThreadStats],
-        path: str,
+        path: str = None,
         print_to_console: bool = False,
         columns: tp.Dict[int, tp.Tuple[str, int]] = None) -> str:
     stream = io.StringIO()
@@ -61,9 +61,9 @@ def process_text(
 
     if print_to_console:
         print(text)
-
-    with open(path, "w") as file:
-        file.write(text)
+    if path:
+        with open(path, "w") as file:
+            file.write(text)
 
     return text
 
