@@ -27,6 +27,8 @@ class TestShells(unittest.TestCase):
         # np.savetxt(file_path, data)
 
         data_ref = np.loadtxt(file_path)
+        if NUMBA_INTEGRATE:
+            logger.warning("test_fluid_shell tolerances have been loosened for NumbaLSODA")
         test_utils.assert_allclose(data, data_ref, rtol=(0.292 if NUMBA_INTEGRATE else 1e-7))
 
     def test_fluid_shells(self):
