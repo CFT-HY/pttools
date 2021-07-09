@@ -19,9 +19,9 @@ def xiv_plane(
     deflag = np.zeros((6, len(xi0_array), n_xi))
     for i, xi0 in enumerate(xi0_array):
         # Make lines starting from v = xi, forward and back
-        deflag_v_b, deflag_w_b, deflag_xi_b, _ = bubble.fluid_integrate_param(
+        deflag_v_b, deflag_w_b, deflag_xi_b, _ = bubble.fluid_integrate_param_python(
             xi0, 1, xi0, t_end=tau_backwards_end, n_xi=n_xi, method=method)
-        deflag_v_f, deflag_w_f, deflag_xi_f, _ = bubble.fluid_integrate_param(
+        deflag_v_f, deflag_w_f, deflag_xi_f, _ = bubble.fluid_integrate_param_python(
             xi0, 1, xi0, t_end=tau_forwards_end, n_xi=n_xi, method=method)
         # Grey out parts of line which are unphysical
         unphysical = np.logical_and(

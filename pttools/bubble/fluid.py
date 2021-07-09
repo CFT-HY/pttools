@@ -192,6 +192,7 @@ def fluid_integrate_param_wrapper(
     return fluid_integrate_param_numba(v0, w0, xi0, t_end, n_xi)
 
 
+fluid_integrate_param_python = fluid_integrate_param
 if speedup.NUMBA_INTEGRATE:
     fluid_integrate_param = fluid_integrate_param_wrapper
 

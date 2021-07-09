@@ -164,7 +164,8 @@ def plot_plane(
 
         # Make and plot a few lines starting from xi = 1
         if not i % 2:
-            det_v_b, det_w_b, det_xi_b, _ = bubble.fluid_integrate_param(xi0, 1, 1, t_end=tau_backwards_end, n_xi=n_xi)
+            det_v_b, det_w_b, det_xi_b, _ = \
+                bubble.fluid_integrate_param_python(xi0, 1, 1, t_end=tau_backwards_end, n_xi=n_xi)
 
     # Plot curves corresponding to selected solutions (c.f. Espinosa et al 2010)
     plot_v_excerpt(ax, 0.5, 0.263)
