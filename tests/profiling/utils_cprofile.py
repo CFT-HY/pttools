@@ -12,8 +12,8 @@ os.makedirs(PROFILE_DIR, exist_ok=True)
 
 
 class CProfiler(utils.Profiler):
-    def __init__(self, name: str):
-        super().__init__(name)
+    def __init__(self, name: str, print_to_console: bool = False):
+        super().__init__(name, print_to_console)
         self.profiler = cProfile.Profile()
 
     def __enter__(self):
@@ -21,14 +21,14 @@ class CProfiler(utils.Profiler):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.profiler.disable()
-        process(self.name, self.profiler)
+        process(self.name, self.profiler, self.print_to_console)
 
 
-def process(name: str, profile: cProfile.Profile):
+def process(name: str, profile: cProfile.Profile, print_to_console: bool = False):
     path = os.path.join(PROFILE_DIR, f"{name}")
     profile.dump_stats(f"{path}.pstat")
 
-    save_sorted(profile, path, "time", True)
+    save_sorted(profile, path, "time", print_to_console)
     save_sorted(profile, path, "cumulative")
     save_sorted(profile, path, "pcalls")
 

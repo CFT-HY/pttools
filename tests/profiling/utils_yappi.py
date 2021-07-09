@@ -14,9 +14,6 @@ os.makedirs(PROFILE_DIR, exist_ok=True)
 class YappiProfiler(utils.Profiler):
     _lock = threading.Lock()
 
-    def __init__(self, name: str):
-        super().__init__(name)
-
     @classmethod
     def __enter__(cls):
         if cls._lock.locked() or yappi.is_running():
@@ -27,10 +24,10 @@ class YappiProfiler(utils.Profiler):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._lock.release()
         yappi.stop()
-        process(self.name)
+        process(self.name, self.print_to_console)
 
 
-def process_text_func(stats: yappi.YFuncStats, path: str, print_to_console: bool) -> str:
+def process_text_func(stats: yappi.YFuncStats, path: str, print_to_console: bool = False) -> str:
     return process_text(stats, path, print_to_console, columns={
         0: ("ncall", 5),
         1: ("tsub", 8),
@@ -40,7 +37,7 @@ def process_text_func(stats: yappi.YFuncStats, path: str, print_to_console: bool
     })
 
 
-def process_text_thread(stats: yappi.YThreadStats, path: str, print_to_console: bool) -> str:
+def process_text_thread(stats: yappi.YThreadStats, path: str, print_to_console: bool = False) -> str:
     return process_text(stats, path, print_to_console, columns={
         0: ("name", 20),
         1: ("id", 5),
@@ -53,7 +50,7 @@ def process_text_thread(stats: yappi.YThreadStats, path: str, print_to_console: 
 def process_text(
         stats: tp.Union[yappi.YFuncStats, yappi.YThreadStats],
         path: str,
-        print_to_console: bool,
+        print_to_console: bool = False,
         columns: tp.Dict[int, tp.Tuple[str, int]] = None) -> str:
     stream = io.StringIO()
     kwargs = {"out": stream}
@@ -61,6 +58,7 @@ def process_text(
         kwargs["columns"] = columns
     stats.print_all(**kwargs)
     text = stream.getvalue()
+
     if print_to_console:
         print(text)
 
@@ -70,11 +68,12 @@ def process_text(
     return text
 
 
-def process(name: str, print_to_console: bool = True) -> tp.Tuple[yappi.YFuncStats, yappi.YThreadStats]:
+def process(name: str, print_to_console: bool = False) -> tp.Tuple[yappi.YFuncStats, yappi.YThreadStats]:
     func_stats: yappi.YFuncStats = yappi.get_func_stats()
     thread_stats: yappi.YThreadStats = yappi.get_thread_stats()
 
-    func_stats.print_all()
+    if print_to_console:
+        func_stats.print_all()
     path = os.path.join(PROFILE_DIR, f"{name}")
     path_func = f"{path}_functions"
     for fmt, extension in [("YSTAT", "ystat"), ("CALLGRIND", "callgrind"), ("PSTAT", "pstat")]:
