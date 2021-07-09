@@ -5,6 +5,7 @@
 icc-rt
 matplotlib
 numba
+git+git://github.com/Nicholaswogan/NumbaLSODA.git
 numpy
 scipy
 # TBB can be used to speed up Numba threading
