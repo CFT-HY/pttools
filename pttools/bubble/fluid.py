@@ -200,6 +200,7 @@ if speedup.NUMBA_INTEGRATE:
 # Main function for integrating fluid equations and deriving v, w
 # for complete range 0 < xi < 1
 
+# @speedup.njit_if_numba_integrate
 def fluid_shell(
         v_wall: float,
         alpha_n: float,
@@ -212,12 +213,15 @@ def fluid_shell(
     # check_physical_params([v_wall,alpha_n])
     sol_type = transition.identify_solution_type(v_wall, alpha_n)
     if sol_type == boundary.SolutionType.ERROR:
-        logger.error("Giving up because of identify_solution_type error")
-        return np.nan, np.nan, np.nan
+        with numba.objmode:
+            logger.error("Giving up because of identify_solution_type error")
+        nan_arr = np.array([np.nan])
+        return nan_arr, nan_arr, nan_arr
     al_p = alpha.find_alpha_plus(v_wall, alpha_n, n_xi)
     if not np.isnan(al_p):
         return fluid_shell_alpha_plus(v_wall, al_p, sol_type, n_xi)
-    return np.nan, np.nan, np.nan
+    nan_arr = np.array([np.nan])
+    return nan_arr, nan_arr, nan_arr
 
 
 @speedup.njit_if_numba_integrate
@@ -249,7 +253,8 @@ def fluid_shell_alpha_plus(
     if sol_type == boundary.SolutionType.ERROR.value:
         with numba.objmode:
             logger.error("Giving up because of identify_solution_type error")
-        return np.array([np.nan]), np.array([np.nan]), np.array([np.nan])
+        nan_arr = np.array([np.nan])
+        return nan_arr, nan_arr, nan_arr
 
     # Solve boundary conditions at wall
     vfp_w, vfm_w, vfp_p, vfm_p = boundary.fluid_speeds_at_wall(v_wall, alpha_plus, sol_type)

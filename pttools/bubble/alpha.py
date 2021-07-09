@@ -16,6 +16,7 @@ from . import props
 from . import transition
 
 
+@speedup.njit_if_numba_integrate
 def find_alpha_n(
         v_wall: th.FLOAT_OR_ARR,
         alpha_p: float,
@@ -34,12 +35,22 @@ def find_alpha_n(
     """
     check.check_wall_speed(v_wall)
     if sol_type == boundary.SolutionType.UNKNOWN:
-        sol_type = transition.identify_solution_type_alpha_plus(v_wall, alpha_p)
+        sol_type = transition.identify_solution_type_alpha_plus(v_wall, alpha_p).value
     _, w, xi = fluid.fluid_shell_alpha_plus(v_wall, alpha_p, sol_type, n_xi)
     n_wall = props.find_v_index(xi, v_wall)
     return alpha_p * w[n_wall] / w[-1]
 
 
+@speedup.njit_if_numba_integrate
+def _find_alpha_plus_optimizer(
+        x: np.ndarray,
+        v_wall: float,
+        sol_type: boundary.SolutionType,
+        n_xi: int, alpha_n_given: float) -> float:
+    return find_alpha_n(v_wall, x.item(), sol_type, n_xi) - alpha_n_given
+
+
+@speedup.njit_if_numba_integrate
 def _find_alpha_plus_scalar(v_wall: float, alpha_n_given: float, n_xi: int) -> float:
     if alpha_n_given < alpha_n_max_detonation(v_wall):
         # Must be detonation
@@ -48,23 +59,32 @@ def _find_alpha_plus_scalar(v_wall: float, alpha_n_given: float, n_xi: int) -> f
     if alpha_n_given < alpha_n_max_deflagration(v_wall):
         sol_type = boundary.SolutionType.SUB_DEF if v_wall <= const.CS0 else boundary.SolutionType.HYBRID
 
-        def func(x):
-            return find_alpha_n(v_wall, x.item(), sol_type, n_xi) - alpha_n_given
-
         a_initial_guess = alpha_plus_initial_guess(v_wall, alpha_n_given)
-        # This returns np.float64
-        return opt.fsolve(func, a_initial_guess, xtol=const.FIND_ALPHA_PLUS_TOL, factor=0.1)[0]
+        with numba.objmode(ret="float64"):
+            # This returns np.float64
+            ret: float = opt.fsolve(
+                _find_alpha_plus_optimizer,
+                a_initial_guess,
+                args=(v_wall, sol_type, n_xi, alpha_n_given),
+                xtol=const.FIND_ALPHA_PLUS_TOL,
+                factor=0.1)[0]
+        return ret
     return np.nan
 
 
+@speedup.njit_if_numba_integrate(parallel=True)
 def _find_alpha_plus_arr(v_wall: np.ndarray, alpha_n_given: float, n_xi: int) -> np.ndarray:
     ap = np.zeros_like(v_wall)
-    for i, vw in enumerate(v_wall):
-        ap[i] = _find_alpha_plus_scalar(vw, alpha_n_given, n_xi)
+    for i in numba.prange(v_wall.size):
+        ap[i] = _find_alpha_plus_scalar(v_wall[i], alpha_n_given, n_xi)
     return ap
 
 
-def find_alpha_plus(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float, n_xi: int = const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR:
+@speedup.conditional_decorator(numba.generated_jit, speedup.NUMBA_INTEGRATE, nopython=True)
+def find_alpha_plus(
+        v_wall: th.FLOAT_OR_ARR,
+        alpha_n_given: float,
+        n_xi: int = const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR_NUMBA:
     r"""
     Calculate $\alpha_+$ from a given $\alpha_n$ and $v_\text{wall}$.
 
@@ -75,6 +95,12 @@ def find_alpha_plus(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float, n_xi: int = c
     :param n_xi:
     :return: $\alpha_+$, the the at-wall strength parameter
     """
+    if isinstance(v_wall, numba.types.Float):
+        return _find_alpha_plus_scalar
+    if isinstance(v_wall, numba.types.Array):
+        if not v_wall.ndim:
+            return _find_alpha_plus_scalar
+        return _find_alpha_plus_arr
     if isinstance(v_wall, float):
         return _find_alpha_plus_scalar(v_wall, alpha_n_given, n_xi)
     if isinstance(v_wall, np.ndarray):
@@ -84,6 +110,7 @@ def find_alpha_plus(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float, n_xi: int = c
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
+@speedup.njit_if_numba_integrate
 def alpha_plus_initial_guess(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float) -> th.FLOAT_OR_ARR:
     r"""
     Initial guess for root-finding of $\alpha_+$ from $\alpha_n$.
@@ -145,7 +172,7 @@ def alpha_n_max_hybrid(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> float:
     return w[n_wall] * (1. / 3)
 
 
-# @numba.njit
+@speedup.njit_if_numba_integrate
 def alpha_n_max(v_wall: th.FLOAT_OR_ARR, Np=const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR:
     r"""
     Calculates $\alpha_{n,\max}$ (relative trace anomaly outside bubble)
@@ -156,24 +183,20 @@ def alpha_n_max(v_wall: th.FLOAT_OR_ARR, Np=const.N_XI_DEFAULT) -> th.FLOAT_OR_A
     return alpha_n_max_deflagration(v_wall, Np)
 
 
-# @numba.njit
+@speedup.njit_if_numba_integrate
 def _alpha_n_max_deflagration_scalar(v_wall: float, Np: int) -> float:
     check.check_wall_speed(v_wall)
-    if v_wall > const.CS0:
-        sol_type = boundary.SolutionType.HYBRID
-    else:
-        sol_type = boundary.SolutionType.SUB_DEF
-
+    sol_type = boundary.SolutionType.HYBRID.value if v_wall > const.CS0 else boundary.SolutionType.SUB_DEF.value
     ap = 1. / 3 - 1.0e-10  # Warning - this is not safe.  Causes warnings for v low vw
     _, w, xi = fluid.fluid_shell_alpha_plus(v_wall, ap, sol_type, Np)
     n_wall = props.find_v_index(xi, v_wall)
     return w[n_wall + 1] * (1. / 3)
 
 
-# @numba.njit
+@speedup.njit_if_numba_integrate(parallel=True)
 def _alpha_n_max_deflagration_arr(v_wall: np.ndarray, Np: int) -> np.ndarray:
     ret = np.zeros_like(v_wall)
-    for i in range(v_wall.size):
+    for i in numba.prange(v_wall.size):
         ret[i] = _alpha_n_max_deflagration_scalar(v_wall[i], Np)
     # alpha_N = (w_+/w_N)*alpha_+
     # w_ is normalised to 1 at large xi
@@ -181,8 +204,7 @@ def _alpha_n_max_deflagration_arr(v_wall: np.ndarray, Np: int) -> np.ndarray:
     return ret
 
 
-# TODO: this cannot be jitted yet due to the use of fluid_shell_alpha_plus()
-# @numba.generated_jit(nopython=True)
+@speedup.conditional_decorator(numba.generated_jit, speedup.NUMBA_INTEGRATE, nopython=True)
 def alpha_n_max_deflagration(v_wall: th.FLOAT_OR_ARR, Np: int = const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR_NUMBA:
     r"""
     Calculates maximum $\alpha_n$ (relative trace anomaly outside bubble)
@@ -194,6 +216,8 @@ def alpha_n_max_deflagration(v_wall: th.FLOAT_OR_ARR, Np: int = const.N_XI_DEFAU
     if isinstance(v_wall, numba.types.Float):
         return _alpha_n_max_deflagration_scalar
     if isinstance(v_wall, numba.types.Array):
+        if not v_wall.ndim:
+            return _alpha_n_max_deflagration_scalar
         return _alpha_n_max_deflagration_arr
     if isinstance(v_wall, float):
         return _alpha_n_max_deflagration_scalar(v_wall, Np)

@@ -6,6 +6,7 @@ import numba
 import numpy as np
 
 import pttools.type_hints as th
+from pttools import speedup
 from . import alpha as alpha_tools
 from . import boundary
 from . import const
@@ -33,7 +34,7 @@ def max_speed_deflag(alpha_p: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     return 1/(3 * boundary.v_plus(const.CS0, alpha_p, boundary.SolutionType.SUB_DEF))
 
 
-# TODO: this cannot be jitted yet due to the use of alpha_n_max_deflagration
+@speedup.njit_if_numba_integrate
 def identify_solution_type(v_wall: float, alpha_n: float, exit_on_error: bool = False) -> boundary.SolutionType:
     """
     Determines wall type from wall speed and global strength parameter.
@@ -52,7 +53,9 @@ def identify_solution_type(v_wall: float, alpha_n: float, exit_on_error: bool = 
                 sol_type = boundary.SolutionType.HYBRID
 
     if (sol_type == boundary.SolutionType.ERROR) & exit_on_error:
-        raise RuntimeError(f"No solution for v_wall = {v_wall}, alpha_n = {alpha_n}")
+        with numba.objmode:
+            logger.error(f"No solution for v_wall = %s, alpha_n = %s", v_wall, alpha_n)
+        raise RuntimeError("No solution for given v_wall, alpha_n")
 
     return sol_type
 
