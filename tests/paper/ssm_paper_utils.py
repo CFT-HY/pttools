@@ -523,7 +523,7 @@ def plot_ps_1bubble(
     nz_string = f'nz{Np[0] // 1000}k_'
     nx_string = f'nx{Np[1] // 1000}k-'
 
-    A2, fp2_2, lam2 = ssm.A2_e_conserving(z, vw, alpha, npt=Np[1:], ret_vals='all')
+    A2, fp2_2, lam2 = ssm.A2_e_conserving(z, vw, alpha, npt=Np[1:])
 
     z_list = 3*[z]
     ph_sp_fac = z**3/(2*np.pi**2)

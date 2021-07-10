@@ -4,6 +4,7 @@ See page 37 of the lecture notes 10.21468/SciPostPhysLectNotes.24
 """
 
 # import enum
+import logging
 import typing as tp
 
 import numba
@@ -11,6 +12,8 @@ import numpy as np
 
 import pttools.type_hints as th
 from . import const
+
+logger = logging.getLogger(__name__)
 
 CS2_FUN_TYPE = tp.Callable[[th.FLOAT_OR_ARR], float]
 
@@ -34,11 +37,14 @@ CS2_FUN_TYPE = tp.Callable[[th.FLOAT_OR_ARR], float]
 #    return cs0_2
 
 
+@numba.njit
 def check_thetas(theta_s: th.FLOAT_OR_ARR, theta_b: th.FLOAT_OR_ARR) -> None:
     if np.any(theta_b >= theta_s):
-        raise ValueError(
-            "theta_b should always be smaller than theta_s, "
-            f"but got theta_s={theta_s}, theta_b={theta_b}")
+        with numba.objmode:
+            logger.error(
+                "theta_b should always be smaller than theta_s, "
+                f"but got theta_s=%s, theta_b=%s", theta_s, theta_b)
+        raise ValueError("theta_b should always be smaller than theta_s")
 
 
 @numba.njit
@@ -81,6 +87,7 @@ def theta_bag(w: th.FLOAT_OR_ARR, phase: th.INT_OR_ARR, alpha_n: th.FLOAT_OR_ARR
     return alpha_n * (0.75 * w_n) * (1 - phase)
 
 
+@numba.njit
 def get_p(
         w: th.FLOAT_OR_ARR,
         phase: th.INT_OR_ARR,
@@ -103,6 +110,7 @@ def get_p(
     return 0.25 * w - theta
 
 
+@numba.njit
 def get_e(
         w: th.FLOAT_OR_ARR,
         phase: th.INT_OR_ARR,
@@ -123,6 +131,7 @@ def get_e(
     return w - get_p(w, phase, theta_s, theta_b)
 
 
+@numba.njit
 def get_w(
         e: th.FLOAT_OR_ARR,
         phase: th.INT_OR_ARR,
@@ -147,6 +156,19 @@ def get_w(
     return 4/3 * (e - theta)
 
 
+@numba.njit
+def _get_phase_scalar(xi: float, v_w: float) -> int:
+    return const.BROK_PHASE if xi < v_w else const.SYMM_PHASE
+
+
+@numba.njit
+def _get_phase_arr(xi: np.ndarray, v_w: float) -> np.ndarray:
+    ph = np.zeros_like(xi)
+    ph[np.where(xi < v_w)] = const.BROK_PHASE
+    return ph
+
+
+@numba.generated_jit(nopython=True)
 def get_phase(xi: th.FLOAT_OR_ARR, v_w: float) -> th.FLOAT_OR_ARR:
     r"""
     Returns array indicating phase of system.
@@ -155,17 +177,20 @@ def get_phase(xi: th.FLOAT_OR_ARR, v_w: float) -> th.FLOAT_OR_ARR:
 
     :return: phase
     """
+    if isinstance(xi, numba.types.Float):
+        return _get_phase_scalar
+    if isinstance(xi, numba.types.Array):
+        if not xi.ndim:
+            return _get_phase_scalar
+        return _get_phase_arr
+    if isinstance(xi, float):
+        return _get_phase_scalar(xi, v_w)
     if isinstance(xi, np.ndarray):
-        ph = np.zeros_like(xi)
-        ph[np.where(xi < v_w)] = const.BROK_PHASE
-    else:
-        ph = const.SYMM_PHASE
-        if xi < v_w:
-            ph = const.BROK_PHASE
-
-    return ph
+        return _get_phase_arr(xi, v_w)
+    raise TypeError(f"Unknown type for {type(xi)}")
 
 
+@numba.njit
 def adiabatic_index(
         w: th.FLOAT_OR_ARR,
         phase: th.INT_OR_ARR,

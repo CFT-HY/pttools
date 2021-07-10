@@ -50,7 +50,7 @@ def A2_ssm_func(
     """
     if method == Method.E_CONSERVING:
         # This is the correct method (as of 12.18)
-        A2 = A2_e_conserving(z, vw, alpha, npt, 'A2_only', de_method, z_st_thresh)
+        A2 = A2_e_conserving(z, vw, alpha, npt, de_method, z_st_thresh)[0]
     elif method == Method.F_ONLY:
         logger.debug("f_only method, multiplying (f\')^2 by 2")
         f = f_ssm_func(z, vw, alpha, npt)
@@ -67,18 +67,17 @@ def A2_ssm_func(
         A2 = A2 + 0.25 * (dg_dz ** 2 / (const.CS0 * z) ** 2)
     else:
         logger.warning("Method not known, should be [e_conserving | f_only | with_g]. Defaulting to e_conserving.")
-        A2 = A2_e_conserving(z, vw, alpha, npt)
+        A2 = A2_e_conserving(z, vw, alpha, npt)[0]
 
     return A2
 
 
-# @speedup.njit_if_numba_integrate
+@speedup.njit_if_numba_integrate
 def A2_e_conserving(
         z: np.ndarray,
         vw,
         alpha_n: float,
         npt: const.NPT_TYPE = const.NPTDEFAULT,
-        ret_vals: str = "A2_only",
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH):
     r"""
@@ -91,7 +90,7 @@ def A2_e_conserving(
       linear order, meaning that there is an apparent $z^0$ piece at very low $z$,
       and may exaggerate the GWs at low vw. ATM no other de_methods, but argument
       allows trials.
-    :return: $|A(z)|^2$
+    :return: $|A(z)|^2$, fp2_2, lam2
     """
     nxi = npt[0]
     #    xi_re = np.linspace(0,1-1/nxi,nxi)
@@ -123,8 +122,6 @@ def A2_e_conserving(
 
     A2 = 0.25 * (v_ft ** 2 + (const.CS0 * lam_ft) ** 2)
 
-    if ret_vals == 'A2_only':
-        return A2
     return A2, v_ft ** 2 / 2, (const.CS0 * lam_ft) ** 2 / 2
 
 

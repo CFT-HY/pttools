@@ -121,7 +121,7 @@ def spec_den_v(
     :param params: tuple of vw (scalar), alpha (scalar), nuc_type (string [exponential* | simultaneous]), nuc_args (tuple, default (1,))
     :return: dimensionless velocity spectral density $\bar{P}_v$
     """
-    bubble.check_physical_params(params)
+    bubble.check_physical_params(tuple(params))
 
     nz = z.size
     # nxi = npt[0]

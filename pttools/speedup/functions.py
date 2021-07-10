@@ -1,9 +1,20 @@
 """Faster or Numba-jitted versions of library functions"""
 
 import numba
-# from numba.extending import overload
+from numba.extending import overload
 import numpy as np
 
+
+@overload(np.any)
+def np_any(a):
+    if isinstance(a, numba.types.Boolean):
+        def func(a):
+            return a
+        return func
+    if isinstance(a, numba.types.Number):
+        def func(a):
+            return bool(a)
+        return func
 
 # @overload(np.asanyarray)
 # def asanyarray(arr: np.ndarray):
