@@ -3,6 +3,7 @@
 import enum
 import logging
 
+import numba
 import numpy as np
 from scipy.optimize import fsolve
 
@@ -28,6 +29,7 @@ class Method(str, enum.Enum):
     WITH_G = "with_g"
 
 
+@speedup.njit_if_numba_integrate
 def A2_ssm_func(
         z: np.ndarray,
         vw,
@@ -52,21 +54,24 @@ def A2_ssm_func(
         # This is the correct method (as of 12.18)
         A2 = A2_e_conserving(z, vw, alpha, npt, de_method, z_st_thresh)[0]
     elif method == Method.F_ONLY:
-        logger.debug("f_only method, multiplying (f\')^2 by 2")
+        with numba.objmode:
+            logger.debug("f_only method, multiplying (f\')^2 by 2")
         f = f_ssm_func(z, vw, alpha, npt)
-        df_dz = np.gradient(f) / np.gradient(z)
+        df_dz = speedup.gradient(f) / speedup.gradient(z)
         A2 = 0.25 * (df_dz ** 2)
         A2 = A2 * 2
     elif method == Method.WITH_G:
-        logger.debug("With_g method")
+        with numba.objmode:
+            logger.debug("With_g method")
         f = f_ssm_func(z, vw, alpha, npt)
-        df_dz = np.gradient(f) / np.gradient(z)
+        df_dz = speedup.gradient(f) / speedup.gradient(z)
         g = (z * df_dz + 2. * f)
-        dg_dz = np.gradient(g) / np.gradient(z)
+        dg_dz = speedup.gradient(g) / speedup.gradient(z)
         A2 = 0.25 * (df_dz ** 2)
         A2 = A2 + 0.25 * (dg_dz ** 2 / (const.CS0 * z) ** 2)
     else:
-        logger.warning("Method not known, should be [e_conserving | f_only | with_g]. Defaulting to e_conserving.")
+        with numba.objmode:
+            logger.warning("Method not known, should be [e_conserving | f_only | with_g]. Defaulting to e_conserving.")
         A2 = A2_e_conserving(z, vw, alpha, npt)[0]
 
     return A2
@@ -182,6 +187,7 @@ def A2_e_conserving_file(
     return 0.25 * (v_ft ** 2 + (const.CS0 * lam_ft) ** 2)
 
 
+@speedup.njit_if_numba_integrate
 def f_ssm_func(
         z: th.FLOAT_OR_ARR,
         vw,
