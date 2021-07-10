@@ -45,7 +45,6 @@ def gen_df_dtau(cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag, method: str = None):
     :return: $\frac{dv}{d\tau}, \frac{dw}{d\tau}, \frac{d\xi}{d\tau}$
     """
     if method == "numba_lsoda":
-        @numba.cfunc(NumbaLSODA.lsoda_sig)
         def df_dtau_numba(t, u, du, p):
             v = u[0]
             w = u[1]
@@ -63,7 +62,9 @@ def gen_df_dtau(cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag, method: str = None):
                 du[0] *= -1.
                 du[1] *= -1.
                 du[2] *= -1.
-        return df_dtau_numba
+        if speedup.NUMBA_DISABLE_JIT:
+            raise RuntimeError("Cannot use NumbaLSODA when Numba is disabled")
+        return numba.cfunc(NumbaLSODA.lsoda_sig)(df_dtau_numba)
 
     @numba.njit
     def df_dtau(t: float, y: np.ndarray) -> np.ndarray:
@@ -89,7 +90,12 @@ def gen_df_dtau(cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag, method: str = None):
     return df_dtau
 
 
-df_dtau_numba_bag = gen_df_dtau(bag.cs2_bag, method="numba_lsoda")
+if speedup.NUMBA_DISABLE_JIT:
+    def df_dtau_numba_bag():
+        raise RuntimeError("df_dtau_numba has not been created, as Numba is disabled")
+    df_dtau_numba_bag.address = None
+else:
+    df_dtau_numba_bag = gen_df_dtau(bag.cs2_bag, method="numba_lsoda")
 
 
 def fluid_integrate_param(
