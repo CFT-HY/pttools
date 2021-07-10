@@ -200,7 +200,7 @@ if speedup.NUMBA_INTEGRATE:
 # Main function for integrating fluid equations and deriving v, w
 # for complete range 0 < xi < 1
 
-# @speedup.njit_if_numba_integrate
+@speedup.njit_if_numba_integrate
 def fluid_shell(
         v_wall: float,
         alpha_n: float,
@@ -219,7 +219,8 @@ def fluid_shell(
         return nan_arr, nan_arr, nan_arr
     al_p = alpha.find_alpha_plus(v_wall, alpha_n, n_xi)
     if not np.isnan(al_p):
-        return fluid_shell_alpha_plus(v_wall, al_p, sol_type, n_xi)
+        # SolutionType has to be passed by its value when jitting
+        return fluid_shell_alpha_plus(v_wall, al_p, sol_type.value, n_xi)
     nan_arr = np.array([np.nan])
     return nan_arr, nan_arr, nan_arr
 
@@ -334,7 +335,8 @@ def trim_fluid_wall_to_cs(
         w: np.ndarray,
         xi: np.ndarray,
         t: np.ndarray,
-        v_wall: th.FLOAT_OR_ARR, sol_type: boundary.SolutionType,
+        v_wall: th.FLOAT_OR_ARR,
+        sol_type: boundary.SolutionType,
         dxi_lim: float = const.DXI_SMALL,
         cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""
