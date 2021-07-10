@@ -14,4 +14,6 @@ NUMBA_OPTS: tp.Dict[str, any] = {
 }
 
 if NUMBA_INTEGRATE:
+    if NUMBA_DISABLE_JIT:
+        raise RuntimeError("Numba integration cannot be enabled when Numba is disabled")
     logger.warning("Numba-jitted integration has been globally enabled. The results may not be as accurate.")
