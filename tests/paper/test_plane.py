@@ -12,6 +12,7 @@ import numpy as np
 import scipy.integrate as spi
 
 import pttools.type_hints as th
+from pttools import speedup
 from tests.plotting import save_fig_multi
 from tests import test_utils
 from tests.paper import plane
@@ -152,6 +153,7 @@ class TestPlane(unittest.TestCase):
     def test_plane_lsoda(self):
         self.validate_plane(method=spi.LSODA, rtol=3.1e-3, i=2, ax=(0, 1))
 
+    @unittest.skipIf(speedup.NUMBA_DISABLE_JIT, "NumbaLSODA cannot be used if Numba is disabled")
     def test_plane_numba_lsoda(self):
         try:
             self.validate_plane(method="numba_lsoda", rtol=4.0e-3, i=8, ax=(0, 2))
