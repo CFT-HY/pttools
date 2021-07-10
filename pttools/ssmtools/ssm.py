@@ -8,6 +8,7 @@ from scipy.optimize import fsolve
 
 import pttools.type_hints as th
 from pttools import bubble
+from pttools import speedup
 from . import calculators
 from . import const
 
@@ -71,6 +72,7 @@ def A2_ssm_func(
     return A2
 
 
+# @speedup.njit_if_numba_integrate
 def A2_e_conserving(
         z: np.ndarray,
         vw,
@@ -101,7 +103,7 @@ def A2_e_conserving(
     #        f[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi, v_ip, z_st_thresh)
     f = (4. * np.pi / z) * calculators.sin_transform(z, xi, v_ip, z_st_thresh)
 
-    v_ft = np.gradient(f) / np.gradient(z)
+    v_ft = speedup.gradient(f) / speedup.gradient(z)
 
     # Now get and resample lam = de/w
     if de_method == DE_Method.ALTERNATE:
