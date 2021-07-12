@@ -8,7 +8,7 @@ import unittest
 import numba
 import numpy as np
 
-from pttools.speedup import NUMBA_DISABLE_JIT, NUMBA_INTEGRATE
+from pttools.speedup import NUMBA_DISABLE_JIT, NUMBA_INTEGRATE_TOLERANCES
 from tests.paper import ssm_paper_utils as spu
 from tests import test_utils
 
@@ -55,7 +55,7 @@ def pow_specs():
         # rtol = 1.21e-6
         # Working around indexing bugs in envelope() has changed the results further
         rtol = 1.72e-6
-    if NUMBA_INTEGRATE:
+    if NUMBA_INTEGRATE_TOLERANCES:
         logger.warning("test_pow_specs tolerances have been loosened for Numba")
         rtol = 0.013
     test_utils.assert_allclose(data_test, data_reference, rtol=rtol, atol=0)

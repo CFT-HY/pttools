@@ -4,7 +4,7 @@ import unittest
 
 import numpy as np
 
-from pttools.speedup import NUMBA_INTEGRATE
+from pttools.speedup import NUMBA_INTEGRATE_TOLERANCES
 from tests.paper import ssm_compare as scom
 from tests import test_utils
 
@@ -26,9 +26,9 @@ class TestPrace(unittest.TestCase):
         # np.savetxt(ref_path, test_data)
 
         ref_data = np.loadtxt(ref_path)
-        if NUMBA_INTEGRATE:
+        if NUMBA_INTEGRATE_TOLERANCES:
             logger.warning("test_ps_prace tolerances have been loosened for NumbaLSODA")
-        test_utils.assert_allclose(test_data, ref_data, rtol=(1.6e-2 if NUMBA_INTEGRATE else 1e-7))
+        test_utils.assert_allclose(test_data, ref_data, rtol=(1.6e-2 if NUMBA_INTEGRATE_TOLERANCES else 1e-7))
 
 
 if __name__ == "__main__":

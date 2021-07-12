@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 NUMBA_DISABLE_JIT = os.getenv("NUMBA_DISABLE_JIT", False)
 NUMBA_INTEGRATE = os.getenv("NUMBA_INTEGRATE", False)
+NUMBA_INTEGRATE_TOLERANCES = os.getenv("NUMBA_INTEGRATE_TOLERANCES", NUMBA_INTEGRATE)
 NUMBA_OPTS: tp.Dict[str, any] = {
     # Caching does not work properly with functions that have dependencies across files
     # "cache": True
