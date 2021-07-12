@@ -15,6 +15,8 @@ import enum
 import numba
 # import numpy as np
 
+from pttools import speedup
+
 
 @enum.unique
 class NucType(str, enum.Enum):
@@ -43,7 +45,7 @@ class NucArgs:
     ("v_wall", numba.float64),
     ("alpha", numba.float64),
     ("nuc_type", numba.optional(numba.types.string)),
-    ("nuc_args", numba.optional(NucArgs.class_type.instance_type))
+    ("nuc_args", NotImplemented if speedup.NUMBA_DISABLE_JIT else numba.optional(NucArgs.class_type.instance_type))
 ])
 class PhysicalParams:
     def __init__(self, v_wall: float, alpha: float, nuc_type: NucType = None, nuc_args: NucArgs = None):
