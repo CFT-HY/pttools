@@ -1,17 +1,18 @@
 """Performance testing script"""
 
 import logging
-import os
 import timeit
 import unittest
 import textwrap
 
 import numba
+from pttools import speedup
 
 logger = logging.getLogger(__name__)
 
-NUMBA_DISABLE_JIT = os.getenv("NUMBA_DISABLE_JIT", default=None)
-if NUMBA_DISABLE_JIT:
+NUMBA_HAS_GET_NUM_THREADS = hasattr(numba, "get_num_threads")
+
+if speedup.NUMBA_DISABLE_JIT:
     __TEXT = "Numba JIT is disabled. Performance tests will be single-threaded."
     print(__TEXT)
     logger.warning(__TEXT)
@@ -29,7 +30,7 @@ class TestPerformance(unittest.TestCase):
 
     @classmethod
     def run_with_different_threads(cls, name: str, setup: str, command: str, number: int):
-        if NUMBA_DISABLE_JIT:
+        if speedup.NUMBA_DISABLE_JIT:
             cls.run_and_log(name, setup, command, number, 1)
         else:
             default_threads = numba.get_num_threads()
@@ -49,6 +50,7 @@ class TestPerformance(unittest.TestCase):
             logger.info(f"Numba threading layer used: {numba.threading_layer()}")
 
     @classmethod
+    @unittest.skipIf(not NUMBA_HAS_GET_NUM_THREADS, "Numba is too old for setting the number of threads.")
     def test_performance_gw(cls):
         setup = textwrap.dedent("""
         import numpy as np
@@ -61,6 +63,7 @@ class TestPerformance(unittest.TestCase):
         cls.run_with_different_threads("GW", setup, command, 10)
 
     @classmethod
+    @unittest.skipIf(not NUMBA_HAS_GET_NUM_THREADS, "Numba is too old for setting the number of threads.")
     def test_performance_sin_transform(cls):
         setup = textwrap.dedent("""
         import numpy as np
