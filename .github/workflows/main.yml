@@ -21,6 +21,7 @@ jobs:
       - name: Install requirements
         run: |
           pip --cache-dir=.pip install --upgrade pip
+          pip --cache-dir=.pip install --upgrade wheel
           pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
       - name: Run Pylint
         run: pylint pttools tests 2>&1 | tee pylint.txt
@@ -55,6 +56,7 @@ jobs:
       - name: Install requirements
         run: |
           pip --cache-dir=.pip install --upgrade pip
+          pip --cache-dir=.pip install --upgrade wheel
           pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
       - name: Run Pyreverse
         run: |
@@ -104,6 +106,7 @@ jobs:
     - name: Install requirements
       run: |
         pip --cache-dir=.pip install --upgrade pip
+        pip --cache-dir=.pip install --upgrade wheel
         pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
     - name: Run tests
       run: |
@@ -149,6 +152,7 @@ jobs:
     - name: Install requirements
       run: |
         pip --cache-dir=.pip install --upgrade pip
+        pip --cache-dir=.pip install --upgrade wheel
         pip --cache-dir=.pip install -r requirements-old.txt -r requirements-dev.txt
     - name: Run tests
       run: |
@@ -194,6 +198,7 @@ jobs:
     - name: Install requirements
       run: |
         pip --cache-dir=.pip install --upgrade pip
+        pip --cache-dir=.pip install --upgrade wheel
         pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
     - name: Run tests with coverage
       # Without pytest-pythonpath the PYTHONPATH may have to be set manually
