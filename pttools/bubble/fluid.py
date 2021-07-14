@@ -352,7 +352,7 @@ def trim_fluid_wall_to_shock(
     # TODO: should this be 0 to match with the error handling below?
     n_shock_index = -2
     # n_shock = 0
-    if not sol_type == boundary.SolutionType.DETON:
+    if sol_type != boundary.SolutionType.DETON.value:
         for i in range(v.size):
             if v[i] <= props.v_shock(xi[i]):
                 n_shock_index = i
