@@ -149,7 +149,7 @@ jobs:
     - name: Install requirements
       run: |
         pip --cache-dir=.pip install --upgrade pip
-        pip --cache-dir=.pip install numba==0.45.1 llvmlite==0.32.1
+        pip --cache-dir=.pip install llvmlite==0.32.1 numba==0.45.1 numpy==1.19.5
         pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
     - name: Run tests
       run: |
