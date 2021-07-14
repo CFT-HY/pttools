@@ -48,8 +48,7 @@ def check_thetas(theta_s: th.FLOAT_OR_ARR, theta_b: th.FLOAT_OR_ARR) -> None:
         raise ValueError("theta_b should always be smaller than theta_s")
 
 
-@speedup.conditional_decorator(numba.cfunc, speedup.NUMBA_DISABLE_JIT, sig="float64(float64)")
-@speedup.conditional_decorator(numba.njit, not speedup.NUMBA_DISABLE_JIT)
+@numba.njit
 def cs2_bag_scalar(w: float) -> float:
     """The scalar versions of the bag functions have to be compiled to cfuncs if jitting is disabled,
     as otherwise the cfunc version of the differential cannot be created.

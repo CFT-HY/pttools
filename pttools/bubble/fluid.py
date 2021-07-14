@@ -43,6 +43,10 @@ def add_df_dtau(name: str, cs2_fun: bag.CS2_FUN_TYPE) -> speedup.DifferentialPoi
 
 def gen_df_dtau(cs2_fun: bag.CS2_FUN_TYPE) -> speedup.Differential:
     r"""Generate a function for the differentials of fluid variables $(v, w, \xi)$ in parametric form."""
+    cs2_fun_numba = cs2_fun \
+        if isinstance(cs2_fun, (th.CFunc, th.Dispatcher)) \
+        else numba.cfunc("float64(float64)")(cs2_fun)
+
     def df_dtau(t: float, u: np.ndarray, du: np.ndarray, p: np.ndarray = None) -> None:
         r"""Computes the differentials of the variables $(v, w, \xi)$ for a given $c_s^2$ function
 
@@ -51,7 +55,7 @@ def gen_df_dtau(cs2_fun: bag.CS2_FUN_TYPE) -> speedup.Differential:
         v = u[0]
         w = u[1]
         xi = u[2]
-        cs2 = cs2_fun(w)
+        cs2 = cs2_fun_numba(w)
         xiXv = xi * v
         xi_v = xi - v
         v2 = v * v

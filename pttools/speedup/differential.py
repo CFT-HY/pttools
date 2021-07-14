@@ -15,6 +15,7 @@ except ImportError:
 import numpy as np
 
 from pttools.type_hints import CFunc, CPUDispatcher
+from . import options
 
 Differential = tp.Union[tp.Callable[[float, np.ndarray, np.ndarray, tp.Optional[np.ndarray]], None], CFunc]
 DifferentialOdeint = tp.Union[tp.Callable[[np.ndarray, float, tp.Optional[np.ndarray]], np.ndarray], CPUDispatcher]
@@ -38,17 +39,18 @@ class DifferentialCache:
         with self._lock:
             if name in self._cache_cfunc:
                 raise ValueError("The key is already in the cache")
+            differential_njit = numba.njit(differential)
             differential_cfunc = numba.cfunc(lsoda_sig)(differential)
+            differential_core = differential_cfunc if options.NUMBA_DISABLE_JIT else differential_njit
             if p0_is_backwards:
                 @numba.cfunc(lsoda_sig)
                 def differential_numbalsoda(t: float, u: np.ndarray, du: np.ndarray, p: np.ndarray):
-                    differential_cfunc(t, u, du, p)
+                    differential_core(t, u, du, p)
                     if p[0]:
                         for i in range(ndim):
                             du[i] *= -1.
             else:
-                differential_numbalsoda = differential_cfunc
-            differential_njit = numba.njit(differential)
+                differential_numbalsoda = numba.cfunc(lsoda_sig)(differential)
 
             @numba.njit
             def differential_odeint(y: np.ndarray, t: float, p: np.ndarray = None) -> np.ndarray:
