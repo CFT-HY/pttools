@@ -3,6 +3,7 @@ import unittest
 import numpy as np
 
 import pttools.ssmtools as ssm
+from pttools import speedup
 from .test_profile import TestProfile
 from . import utils_cprofile
 from . import utils_pyinstrument
@@ -24,6 +25,9 @@ class TestProfileGW(TestProfile):
             ssm.power_gw_scaled(cls.z, cls.params)
 
     @classmethod
+    @unittest.skipIf(
+        speedup.NUMBA_SEGFAULTING_PROFILERS,
+        "Pyinstrument may segfault with old Numba versions")
     def test_profile_gw_pyinstrument(cls):
         """Pyinstrument is a sampling profiler, and therefore repeating gives more accurate results."""
         with utils_pyinstrument.PyInstrumentProfiler(cls.name):

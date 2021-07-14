@@ -2,6 +2,7 @@ import os
 import unittest
 
 import tests.paper.ssm_paper_utils as spu
+from pttools import speedup
 from .test_profile import TestProfile
 from . import utils_cprofile
 from . import utils_pyinstrument
@@ -31,6 +32,9 @@ class TestProfilePowSpecs(TestProfile):
             pow_specs()
 
     @classmethod
+    @unittest.skipIf(
+        speedup.NUMBA_SEGFAULTING_PROFILERS,
+        "Pyinstrument may segfault with old Numba versions")
     def test_profile_pow_specs_pyinstrument(cls):
         with utils_pyinstrument.PyInstrumentProfiler(cls.name):
             pow_specs()
