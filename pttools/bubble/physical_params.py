@@ -28,7 +28,7 @@ class NucType(str, enum.Enum):
 DEFAULT_NUC_TYPE = NucType.EXPONENTIAL
 
 
-@numba.experimental.jitclass([
+@speedup.jitclass([
     ("a", numba.float64)
 ])
 class NucArgs:
@@ -41,7 +41,7 @@ class NucArgs:
 # np.record()
 
 
-@numba.experimental.jitclass([
+@speedup.jitclass([
     ("v_wall", numba.float64),
     ("alpha", numba.float64),
     ("nuc_type", numba.optional(numba.types.string)),
