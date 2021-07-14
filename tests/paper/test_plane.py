@@ -2,6 +2,7 @@ import logging
 import os.path
 import shutil
 import subprocess
+import sys
 import timeit
 import typing as tp
 import unittest
@@ -58,6 +59,9 @@ class TestPlane(unittest.TestCase):
             video_path = f"{path}.mp4"
             if os.path.exists(video_path):
                 os.remove(video_path)
+            kwargs = {}
+            if sys.version_info >= (3, 7):
+                kwargs["capture_output"] = True
             ret: subprocess.CompletedProcess = subprocess.run(
                 [
                     "ffmpeg",
@@ -69,7 +73,7 @@ class TestPlane(unittest.TestCase):
                     video_path
                 ],
                 check=False,
-                capture_output=True
+                **kwargs
             )
             # print(ret.stdout)
             # print(ret.stderr)
