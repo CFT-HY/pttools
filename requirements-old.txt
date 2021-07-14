@@ -1,11 +1,11 @@
 # Requirements for testing with old Numba
 icc-rt
-llvmlite == 0.32.1
+llvmlite == 0.29.0
 matplotlib
 numba == 0.45.1
 git+git://github.com/Nicholaswogan/NumbaLSODA.git
 # NumPy 1.20.0 had an ABI change that made it incompatible with old Numba versions
 # https://github.com/numba/numba/issues/6041#issuecomment-665123183
-numpy == 1.17.2
+numpy == 1.19.0
 scipy
 tbb
