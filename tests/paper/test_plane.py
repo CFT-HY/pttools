@@ -1,4 +1,3 @@
-# import faulthandler
 import logging
 import os.path
 import shutil
@@ -9,7 +8,6 @@ import unittest
 
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy.integrate as spi
 
 from pttools import speedup
 from tests.plotting import save_fig_multi
@@ -17,7 +15,6 @@ from tests import test_utils
 from tests.paper import plane
 from tests.paper import plot_plane
 
-# faulthandler.enable()
 logger = logging.getLogger(__name__)
 
 PLOT = True
@@ -50,7 +47,6 @@ class TestPlane(unittest.TestCase):
             cls.plot_diff()
             cls.grid_fig.tight_layout()
             save_fig_multi(cls.grid_fig, cls.FIG_PATH)
-            # plt.show()
             if shutil.which("ffmpeg"):
                 video_path = f"{cls.FIG_PATH}.mp4"
                 if os.path.exists(video_path):
