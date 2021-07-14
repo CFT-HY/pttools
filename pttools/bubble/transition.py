@@ -79,7 +79,7 @@ def identify_solution_type_alpha_plus(v_wall: float, alpha_p: float) -> boundary
         else:
             sol_type = boundary.SolutionType.HYBRID
 
-    if alpha_p > 1/3 and not sol_type == boundary.SolutionType.DETON.value:
+    if alpha_p > 1/3 and sol_type != boundary.SolutionType.DETON:
         with numba.objmode:
             logger.error("No solution for for v_wall = {}, alpha_plus = {}".format(v_wall, alpha_p))
         sol_type = boundary.SolutionType.ERROR
