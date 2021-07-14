@@ -11,6 +11,7 @@ import numba
 import numpy as np
 
 import pttools.type_hints as th
+from pttools import speedup
 from . import const
 
 logger = logging.getLogger(__name__)
@@ -47,13 +48,11 @@ def check_thetas(theta_s: th.FLOAT_OR_ARR, theta_b: th.FLOAT_OR_ARR) -> None:
         raise ValueError("theta_b should always be smaller than theta_s")
 
 
-@numba.cfunc("float64(float64)")
+@speedup.conditional_decorator(numba.cfunc, speedup.NUMBA_DISABLE_JIT, sig="float64(float64)")
+@speedup.conditional_decorator(numba.njit, not speedup.NUMBA_DISABLE_JIT)
 def cs2_bag_scalar(w: float) -> float:
-    """The scalar versions of the bag functions have to be cfuncs
-    so that they are compiled even when Numba jitting is disabled,
-    as they have to be converted to pointers, which serve as indices
-    to the differentials.
-    Otherwise running the code without jitting will fail.
+    """The scalar versions of the bag functions have to be compiled to cfuncs if jitting is disabled,
+    as otherwise the cfunc version of the differential cannot be created.
     """
     return const.CS0_2
 
