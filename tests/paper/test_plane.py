@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.integrate as spi
 
-import pttools.type_hints as th
 from pttools import speedup
 from tests.plotting import save_fig_multi
 from tests import test_utils
@@ -42,7 +41,7 @@ class TestPlane(unittest.TestCase):
         if PLOT:
             cls.grid_fig, cls.axs = plt.subplots(*cls.grid_shape, figsize=np.array([16, 9])*1.7)
             cls.grid_fig.suptitle(r"Comparison of integrators for $\xi$-$v$-plane")
-            cls.ref_data = plane.xiv_plane(method=spi.odeint)
+            cls.ref_data = plane.xiv_plane(method="odeint")
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -103,7 +102,7 @@ class TestPlane(unittest.TestCase):
 
     def validate_plane(
             self,
-            method: th.ODE_SOLVER = spi.odeint,
+            method: str = "odeint",
             rtol: float = 1e-7,
             i: int = None,
             ax: tp.Tuple[int, int] = None,
@@ -145,13 +144,13 @@ class TestPlane(unittest.TestCase):
         test_utils.assert_allclose(data_summed, data_ref, rtol=rtol)
 
     def test_plane_bdf(self):
-        self.validate_plane(method=spi.BDF, rtol=5e-3, i=5, ax=(1, 2))
+        self.validate_plane(method="BDF", rtol=5e-3, i=5, ax=(1, 2))
 
     def test_plane_dop853(self):
-        self.validate_plane(method=spi.DOP853, rtol=1.57e-2, i=6, ax=(1, 3))
+        self.validate_plane(method="DOP853", rtol=1.57e-2, i=6, ax=(1, 3))
 
     def test_plane_lsoda(self):
-        self.validate_plane(method=spi.LSODA, rtol=3.1e-3, i=2, ax=(0, 1))
+        self.validate_plane(method="LSODA", rtol=3.1e-3, i=2, ax=(0, 1))
 
     @unittest.skipIf(speedup.NUMBA_DISABLE_JIT, "NumbaLSODA cannot be used if Numba is disabled")
     def test_plane_numba_lsoda(self):
@@ -162,16 +161,16 @@ class TestPlane(unittest.TestCase):
             self.skipTest("Could not load NumbaLSODA.")
 
     def test_plane_odeint(self):
-        self.validate_plane(method=spi.odeint, i=1, ax=(0, 0))
+        self.validate_plane(method="odeint", i=1, ax=(0, 0))
 
     def test_plane_radau(self):
-        self.validate_plane(method=spi.Radau, rtol=8.24e-4, i=7, ax=(1, 4))
+        self.validate_plane(method="Radau", rtol=8.24e-4, i=7, ax=(1, 4))
 
     def test_plane_rk23(self):
-        self.validate_plane(method=spi.RK23, rtol=2.11e-2, i=3, ax=(1, 0))
+        self.validate_plane(method="RK23", rtol=2.11e-2, i=3, ax=(1, 0))
 
     def test_plane_rk45(self):
-        self.validate_plane(method=spi.RK45, rtol=1.95e-3, i=4, ax=(1, 1))
+        self.validate_plane(method="RK45", rtol=1.95e-3, i=4, ax=(1, 1))
 
 
 if __name__ == "__main__":

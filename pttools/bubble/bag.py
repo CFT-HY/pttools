@@ -47,13 +47,19 @@ def check_thetas(theta_s: th.FLOAT_OR_ARR, theta_b: th.FLOAT_OR_ARR) -> None:
         raise ValueError("theta_b should always be smaller than theta_s")
 
 
-@numba.njit
-def _cs2_bag_scalar(w: float) -> float:
+@numba.cfunc("float64(float64)")
+def cs2_bag_scalar(w: float) -> float:
+    """The scalar versions of the bag functions have to be cfuncs
+    so that they are compiled even when Numba jitting is disabled,
+    as they have to be converted to pointers, which serve as indices
+    to the differentials.
+    Otherwise running the code without jitting will fail.
+    """
     return const.CS0_2
 
 
 @numba.njit
-def _cs2_bag_arr(w: np.ndarray) -> np.ndarray:
+def cs2_bag_arr(w: np.ndarray) -> np.ndarray:
     return const.CS0_2 * np.ones_like(w)
 
 
@@ -63,15 +69,14 @@ def cs2_bag(w: th.FLOAT_OR_ARR):
     Speed of sound squared in Bag model, equal to $\frac{1}{3}$ independent of enthalpy $w$
     """
     if isinstance(w, numba.types.Float):
-        return _cs2_bag_scalar
+        return cs2_bag_scalar
     if isinstance(w, numba.types.Array):
-        return _cs2_bag_arr
+        return cs2_bag_arr
     if isinstance(w, float):
-        return _cs2_bag_scalar(w)
+        return cs2_bag_scalar(w)
     if isinstance(w, np.ndarray):
-        return _cs2_bag_arr(w)
-    else:
-        raise TypeError(f"Unknown type for w: {type(w)}")
+        return cs2_bag_arr(w)
+    raise TypeError(f"Unknown type for w: {type(w)}")
 
 
 def theta_bag(w: th.FLOAT_OR_ARR, phase: th.INT_OR_ARR, alpha_n: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:

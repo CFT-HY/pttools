@@ -17,10 +17,10 @@ def filter_not(arr: np.ndarray, mask: np.ndarray) -> np.ndarray:
 def get_solver_name(method: th.ODE_SOLVER) -> str:
     if method == "numba_lsoda":
         return "numba"
-    if isinstance(method, str):
-        return method
     if method is spi.odeint:
         return "odeint"
+    if isinstance(method, str):
+        return method
     if isinstance(method, spi.OdeSolver):
         return method.__class__.__name__
     return method.__name__
@@ -81,7 +81,6 @@ def plot_plane(
         ax: plt.Axes,
         deflag: np.ndarray,
         method: th.ODE_SOLVER,
-        odeint: bool = False,
         deflag_ref: np.ndarray = None,
         rtol_high_diff: float = 1e-2,
         rtol_mid_diff: float = 1e-3,
@@ -165,7 +164,7 @@ def plot_plane(
         # Make and plot a few lines starting from xi = 1
         if not i % 2:
             det_v_b, det_w_b, det_xi_b, _ = \
-                bubble.fluid_integrate_param_python(xi0, 1, 1, t_end=tau_backwards_end, n_xi=n_xi)
+                bubble.fluid_integrate_param(xi0, 1, 1, t_end=tau_backwards_end, n_xi=n_xi)
 
     # Plot curves corresponding to selected solutions (c.f. Espinosa et al 2010)
     plot_v_excerpt(ax, 0.5, 0.263)

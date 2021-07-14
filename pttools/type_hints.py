@@ -8,7 +8,7 @@ import scipy.integrate as spi
 
 # Function and object types
 NUMBA_FUNC = tp.Union[callable, CPUDispatcher]
-ODE_SOLVER = tp.Union[spi.OdeSolver, tp.Type[spi.OdeSolver], tp.Type[spi.odeint], "numba_lsoda"]
+ODE_SOLVER = tp.Union[spi.OdeSolver, tp.Type[spi.OdeSolver], tp.Type[spi.odeint], str]
 
 # Numerical types
 FLOAT_OR_ARR = tp.Union[float, np.ndarray]
