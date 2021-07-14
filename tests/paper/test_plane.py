@@ -22,57 +22,69 @@ os.makedirs(test_utils.TEST_FIGURE_PATH, exist_ok=True)
 
 
 class TestPlane(unittest.TestCase):
+    FIGSIZE = np.array([16, 9])*1.7
     FIG_PATH = os.path.join(test_utils.TEST_FIGURE_PATH, "integrators")
     grid_shape: tp.Tuple[int, int] = (2, 5)
-    grid_fig: plt.Figure
-    axs: np.ndarray
+    grid_fig_abs: plt.Figure
+    grid_fig_rel: plt.Figure
+    axs_abs: np.ndarray
+    axs_rel: np.ndarray
     ref_data: np.ndarray
 
     # Dicts for solvers
-    mean_diffs: tp.Dict[int, float] = {}
+    mean_rel_diffs: tp.Dict[int, float] = {}
+    mean_abs_diffs: tp.Dict[int, float] = {}
     names: tp.Dict[int, str] = {}
     iter_times: tp.Dict[int, float] = {}
 
     @classmethod
     def setUpClass(cls) -> None:
         if PLOT:
-            cls.grid_fig, cls.axs = plt.subplots(*cls.grid_shape, figsize=np.array([16, 9])*1.7)
-            cls.grid_fig.suptitle(r"Comparison of integrators for $\xi$-$v$-plane")
+            cls.grid_fig_abs, cls.axs_abs = plt.subplots(*cls.grid_shape, figsize=cls.FIGSIZE)
+            cls.grid_fig_rel, cls.axs_rel = plt.subplots(*cls.grid_shape, figsize=cls.FIGSIZE)
+            common_title = r"Comparison of integrators for $\xi$-$v$-plane"
+            cls.grid_fig_abs.suptitle(f"{common_title}, absolute errors")
+            cls.grid_fig_rel.suptitle(f"{common_title}, relative errors")
             cls.ref_data = plane.xiv_plane(method="odeint")
+
+    @classmethod
+    def process_output(cls, name: str, fig: plt.Figure, axs: np.ndarray, diffs: tp.Dict[int, float]):
+        cls.plot_perf(axs[0, 3])
+        cls.plot_diff(axs[0, 4], name, diffs)
+        fig.tight_layout()
+        path = f"{cls.FIG_PATH}_{name}"
+        save_fig_multi(fig, path)
+        if shutil.which("ffmpeg"):
+            video_path = f"{path}.mp4"
+            if os.path.exists(video_path):
+                os.remove(video_path)
+            ret: subprocess.CompletedProcess = subprocess.run(
+                [
+                    "ffmpeg",
+                    "-framerate", "0.5",
+                    "-pattern_type", "glob",
+                    "-i", f"{path}_*.png",
+                    "-c:v", "libx264",
+                    "-r", "30",
+                    video_path
+                ],
+                check=False,
+                capture_output=True
+            )
+            # print(ret.stdout)
+            # print(ret.stderr)
+            ret.check_returncode()
+        else:
+            logger.warning("ffmpeg was not found, so the xi-v-plane animation could not be created")
 
     @classmethod
     def tearDownClass(cls) -> None:
         if PLOT:
-            cls.plot_perf()
-            cls.plot_diff()
-            cls.grid_fig.tight_layout()
-            save_fig_multi(cls.grid_fig, cls.FIG_PATH)
-            if shutil.which("ffmpeg"):
-                video_path = f"{cls.FIG_PATH}.mp4"
-                if os.path.exists(video_path):
-                    os.remove(video_path)
-                ret: subprocess.CompletedProcess = subprocess.run(
-                    [
-                        "ffmpeg",
-                        "-framerate", "0.5",
-                        "-pattern_type", "glob",
-                        "-i", f"{cls.FIG_PATH}_*.png",
-                        "-c:v", "libx264",
-                        "-r", "30",
-                        video_path
-                    ],
-                    check=False,
-                    capture_output=True
-                )
-                # print(ret.stdout)
-                # print(ret.stderr)
-                ret.check_returncode()
-            else:
-                logger.warning("ffmpeg was not found, so the xi-v-plane animation could not be created")
+            cls.process_output("absolute", cls.grid_fig_abs, cls.axs_abs, cls.mean_abs_diffs)
+            cls.process_output("relative", cls.grid_fig_rel, cls.axs_rel, cls.mean_rel_diffs)
 
     @classmethod
-    def plot_perf(cls, i_ax: tp.Tuple[int, int] = (0, 3)):
-        ax: plt.Axes = cls.axs[i_ax[0], i_ax[1]]
+    def plot_perf(cls, ax: plt.Axes):
         inds = list(cls.names.keys())
         names = [cls.names[i] for i in inds]
         iter_times = [cls.iter_times[i] if i in cls.iter_times else None for i in inds]
@@ -83,17 +95,15 @@ class TestPlane(unittest.TestCase):
         ax.set_yscale("log")
 
     @classmethod
-    def plot_diff(cls, i_ax: tp.Tuple[int, int] = (0, 4)):
-        ax: plt.Axes = cls.axs[i_ax[0], i_ax[1]]
-        diff_dict = {ind: diff for ind, diff in cls.mean_diffs.items() if np.isfinite(diff)}
+    def plot_diff(cls, ax: plt.Axes, name: str, diffs: tp.Dict[int, float]):
+        diff_dict = {ind: diff for ind, diff in diffs.items() if np.isfinite(diff)}
         inds = list(diff_dict.keys())
         names = [cls.names[i] for i in inds]
-        diffs = list(diff_dict.values())
-        print(diffs)
-        ax.bar(inds, diffs, tick_label=names)
-        ax.set_title("Mean relative difference compared to odeint")
+        diff_vals = list(diff_dict.values())
+        ax.bar(inds, diff_vals, tick_label=names)
+        ax.set_title(f"Mean {name} error compared to odeint")
         ax.set_xlabel("Solver")
-        ax.set_ylabel("Mean relative difference")
+        ax.set_ylabel(f"Mean {name} error")
         ax.set_yscale("log")
 
     def validate_plane(
@@ -109,7 +119,8 @@ class TestPlane(unittest.TestCase):
         self.names[i] = name
         # The actual results are computed first to ensure, that the code is JIT-compiled before testing performance
         data = plane.xiv_plane(method=method)
-        self.mean_diffs[i] = np.nanmean(np.abs((data - self.ref_data) / data))
+        self.mean_abs_diffs[i] = np.nanmean(np.abs(data - self.ref_data))
+        self.mean_rel_diffs[i] = np.nanmean(np.abs((data - self.ref_data) / data))
 
         result = timeit.timeit(lambda: plane.xiv_plane(method=method), number=perf_iters)
         iter_time = result/perf_iters
@@ -120,13 +131,27 @@ class TestPlane(unittest.TestCase):
         print(text)
         logger.info(text)
 
+        abs_tols = {
+            "atol_small_diff": 1e-5,
+            "atol_mid_diff": 1e-4,
+            "atol_high_diff": 1e-3,
+            "rtol_small_diff": 0,
+            "rtol_mid_diff": 0,
+            "rtol_high_diff": 0
+        }
+        rel_tols = {}
+
         if PLOT and ax:
-            fig: plt.Figure = plt.figure()
-            ax2: plt.Axes = fig.add_subplot()
-            plot_plane.plot_plane(self.axs[ax[0], ax[1]], data, method, deflag_ref=self.ref_data)
-            plot_plane.plot_plane(ax2, data, method, deflag_ref=self.ref_data)
-            fig_name = f"{self.FIG_PATH}_{i}_{plot_plane.get_solver_name(method)}"
-            save_fig_multi(fig, fig_name)
+            for name, axs, tols in zip(
+                    ("absolute", "relative"),
+                    (self.axs_abs, self.axs_rel),
+                    (abs_tols, rel_tols)):
+                fig: plt.Figure = plt.figure()
+                ax2: plt.Axes = fig.add_subplot()
+                plot_plane.plot_plane(axs[ax[0], ax[1]], data, method, deflag_ref=self.ref_data, **tols)
+                plot_plane.plot_plane(ax2, data, method, deflag_ref=self.ref_data, **tols)
+                fig_name = f"{self.FIG_PATH}_{name}_{i}_{plot_plane.get_solver_name(method)}"
+                save_fig_multi(fig, fig_name)
 
         data_summed = np.nansum(data, axis=2)
         file_path = os.path.join(test_utils.TEST_DATA_PATH, "xi-v_plane.txt")

@@ -1,5 +1,3 @@
-import typing as tp
-
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.integrate as spi
@@ -12,6 +10,14 @@ def filter_not(arr: np.ndarray, mask: np.ndarray) -> np.ndarray:
     arr2 = arr.copy()
     arr2[np.logical_not(mask)] = np.nan
     return arr2
+
+
+def get_label(rtol: float, atol: float) -> str:
+    if not atol:
+        return f"relative error > {rtol * 100:.2f} %"
+    if not rtol:
+        return f"absolute error > {atol:.1e}"
+    return rf"error > {rtol:.1e}$\xi$ + {atol:.1e}"
 
 
 def get_solver_name(method: th.ODE_SOLVER) -> str:
@@ -30,17 +36,22 @@ def get_differing_inds(
         deflag: np.ndarray,
         deflag_ref: np.ndarray,
         i: int,
-        rtol: float) -> np.ndarray:
+        rtol: float,
+        atol: float = 0) -> np.ndarray:
+    r"""Get the indices where $v$, $w$ or $\xi$ values do not meet the given tolerances"""
+    # differing_b = np.isclose(deflag[:3, i, :], deflag_ref[:3, i, :], rtol=rtol, atol=atol)
+    # differing_f = np.isclose(deflag[3:, i, :], deflag_ref[:3, i, :], rtol=rtol, atol=atol)
     deflag_v_b = deflag[0, i, :]
     deflag_xi_b = deflag[2, i, :]
     deflag_v_f = deflag[3, i, :]
     deflag_xi_f = deflag[5, i, :]
     differing_b = np.logical_not(np.logical_and(
-        np.isclose(deflag_v_b, deflag_ref[0, i, :], rtol=rtol),
-        np.isclose(deflag_xi_b, deflag_ref[2, i, :], rtol=rtol)))
+        np.isclose(deflag_v_b, deflag_ref[0, i, :], rtol=rtol, atol=atol),
+        np.isclose(deflag_xi_b, deflag_ref[2, i, :], rtol=rtol, atol=atol)
+    ))
     differing_f = np.logical_not(np.logical_and(
-        np.isclose(deflag_v_f, deflag_ref[3, i, :], rtol=rtol),
-        np.isclose(deflag_xi_f, deflag_ref[5, i, :], rtol=rtol)
+        np.isclose(deflag_v_f, deflag_ref[3, i, :], rtol=rtol, atol=atol),
+        np.isclose(deflag_xi_f, deflag_ref[5, i, :], rtol=rtol, atol=atol)
     ))
     return np.array([differing_b, differing_f])
 
@@ -82,9 +93,12 @@ def plot_plane(
         deflag: np.ndarray,
         method: th.ODE_SOLVER,
         deflag_ref: np.ndarray = None,
-        rtol_high_diff: float = 1e-2,
-        rtol_mid_diff: float = 1e-3,
         rtol_small_diff: float = 1e-4,
+        rtol_mid_diff: float = 1e-3,
+        rtol_high_diff: float = 1e-2,
+        atol_small_diff: float = 0,
+        atol_mid_diff: float = 0,
+        atol_high_diff: float = 0,
         tau_backwards_end: float = -100.0):
     """Modified from sound-shell-model/paper/python/fig_8r_xi-v_plane.py"""
     # Define a suitable number of default lines to plot
@@ -143,17 +157,18 @@ def plot_plane(
         ax.plot(deflag_xi_b_grey, deflag_v_b_grey, color=grey)
 
         if deflag_ref is not None:
-            diff_small = get_differing_inds(deflag, deflag_ref, i, rtol=rtol_small_diff)
-            diff_mid = get_differing_inds(deflag, deflag_ref, i, rtol=rtol_mid_diff)
-            diff_high = get_differing_inds(deflag, deflag_ref, i, rtol=rtol_high_diff)
+            diff_small = get_differing_inds(deflag, deflag_ref, i, rtol=rtol_small_diff, atol=atol_small_diff)
+            diff_mid = get_differing_inds(deflag, deflag_ref, i, rtol=rtol_mid_diff, atol=atol_mid_diff)
+            diff_high = get_differing_inds(deflag, deflag_ref, i, rtol=rtol_high_diff, atol=atol_high_diff)
             diff_small[diff_mid] = 0
             diff_mid[diff_high] = 0
 
-            for diff, color, rtol in zip(
+            for diff, color, rtol, atol in zip(
                     (diff_small, diff_mid, diff_high),
                     ("yellow", "orange", "red"),
-                    (rtol_small_diff, rtol_mid_diff, rtol_high_diff)):
-                label = f"relative error > {rtol*100:.2f} %" if i == 0 else None
+                    (rtol_small_diff, rtol_mid_diff, rtol_high_diff),
+                    (atol_small_diff, atol_mid_diff, atol_high_diff)):
+                label = get_label(rtol, atol) if not i else None
                 ax.plot(
                     filter_not(deflag_xi_b, diff[0, :]), filter_not(deflag_v_b, diff[0, :]),
                     color=color, label=label)
