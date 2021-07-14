@@ -14,7 +14,7 @@ except ImportError:
         numba.types.CPointer(numba.types.double))
 import numpy as np
 
-from pttools.type_hints import CFunc, CPUDispatcher
+from pttools.speedup.numba_wrapper import CFunc, CPUDispatcher
 from . import options
 
 Differential = tp.Union[tp.Callable[[float, np.ndarray, np.ndarray, tp.Optional[np.ndarray]], None], CFunc]

@@ -1,24 +1,11 @@
 """Type hints for simplifying and unifying PTtools code"""
 
-import logging
 import typing as tp
 
-try:
-    from numba.core.ccallback import CFunc
-    from numba.core.dispatcher import Dispatcher
-    from numba.core.registry import CPUDispatcher
-    NUMBA_IS_OLD = False
-except ImportError:
-    from numba.ccallback import CFunc
-    from numba.dispatcher import Dispatcher
-    from numba.targets.registry import CPUDispatcher
-    NUMBA_IS_OLD = True
 import numpy as np
 import scipy.integrate as spi
 
-logger = logging.getLogger(__name__)
-if NUMBA_IS_OLD:
-    logger.warning("You are using an old version of Numba. Please upgrade, as compatibility may break without notice.")
+from pttools.speedup.numba_wrapper import CPUDispatcher
 
 # Function and object types
 NUMBA_FUNC = tp.Union[callable, CPUDispatcher]
