@@ -95,7 +95,7 @@ def _v_minus_arr(vp: th.FLOAT_OR_ARR, ap: th.FLOAT_OR_ARR, sol_type: SolutionTyp
     ret = (0.5 / vp) * (Z + b * np.sqrt(Z ** 2 - X))
     complex_inds = np.where(np.imag(ret) != 0)
     if np.any(complex_inds):
-        ret[np.where(np.imag(ret) != 0)] = np.nan
+        ret[np.where(np.imag(ret))] = np.nan
         with numba.objmode:
             logger.warning("Complex numbers detected in v_minus. This is deprecated. Check the types of the arguments.")
     return ret
