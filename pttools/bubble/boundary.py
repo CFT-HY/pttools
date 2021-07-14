@@ -27,25 +27,29 @@ class SolutionType(str, enum.Enum):
 def _v_plus_scalar(vm: float, ap: float, sol_type: SolutionType) -> float:
     X = vm + 1. / (3 * vm)
     b = 1. if sol_type == SolutionType.DETON.value else -1.
-    ret = (0.5 / (1 + ap)) * (X + b * np.sqrt(X ** 2 + 4. * ap ** 2 + (8. / 3.) * ap - (4. / 3.)))
-    if np.imag(ret):
-        with numba.objmode:
-            logger.warning("Complex numbers detected in v_plus. This is deprecated. Check the types of the arguments.")
-        return np.nan
-    return ret
+    return (0.5 / (1 + ap)) * (X + b * np.sqrt(X ** 2 + 4. * ap ** 2 + (8. / 3.) * ap - (4. / 3.)))
+    # if np.imag(ret):
+    #     with numba.objmode:
+    #         logger.warning(
+    #             "Complex numbers detected in v_plus. This is deprecated. "
+    #             "Check the types of the arguments.")
+    #     return np.nan
+    # return ret
 
 
 @numba.njit
 def _v_plus_arr(vm: th.FLOAT_OR_ARR, ap: th.FLOAT_OR_ARR, sol_type: SolutionType) -> np.ndarray:
     X = vm + 1. / (3 * vm)
     b = 1. if sol_type == SolutionType.DETON.value else -1.
-    ret = (0.5 / (1 + ap)) * (X + b * np.sqrt(X ** 2 + 4. * ap ** 2 + (8. / 3.) * ap - (4. / 3.)))
-    complex_inds = np.where(np.imag(ret))
-    if np.any(complex_inds):
-        ret[np.where(np.imag(ret))] = np.nan
-        with numba.objmode:
-            logger.warning("Complex numbers detected in v_plus. This is deprecated. Check the types of the arguments.")
-    return np.real(ret)
+    return (0.5 / (1 + ap)) * (X + b * np.sqrt(X ** 2 + 4. * ap ** 2 + (8. / 3.) * ap - (4. / 3.)))
+    # complex_inds = np.where(np.imag(ret))
+    # if np.any(complex_inds):
+    #     ret[np.where(np.imag(ret))] = np.nan
+    #     with numba.objmode:
+    #         logger.warning(
+    #             "Complex numbers detected in v_plus. This is deprecated. "
+    #             "Check the types of the arguments.")
+    # return np.real(ret)
 
 
 @numba.generated_jit(nopython=True)
@@ -77,12 +81,14 @@ def _v_minus_scalar(vp: float, ap: float, sol_type: SolutionType):
     Z = (Y - ap * (1. - vp2))
     X = (4. / 3.) * vp2
     b = 1. if sol_type == SolutionType.DETON.value else -1
-    ret = (0.5 / vp) * (Z + b * np.sqrt(Z ** 2 - X))
-    if np.imag(ret):
-        with numba.objmode:
-            logger.warning("Complex numbers detected in v_minus. This is deprecated. Check the types of the arguments.")
-        return np.nan
-    return ret
+    return (0.5 / vp) * (Z + b * np.sqrt(Z ** 2 - X))
+    # if np.imag(ret):
+    #     with numba.objmode:
+    #         logger.warning(
+    #             "Complex numbers detected in v_minus. This is deprecated. "
+    #             "Check the types of the arguments.")
+    #     return np.nan
+    # return ret
 
 
 @numba.njit
@@ -92,13 +98,15 @@ def _v_minus_arr(vp: th.FLOAT_OR_ARR, ap: th.FLOAT_OR_ARR, sol_type: SolutionTyp
     Z = (Y - ap * (1. - vp2))
     X = (4. / 3.) * vp2
     b = 1. if sol_type == SolutionType.DETON.value else -1
-    ret = (0.5 / vp) * (Z + b * np.sqrt(Z ** 2 - X))
-    complex_inds = np.where(np.imag(ret))
-    if np.any(complex_inds):
-        ret[np.where(np.imag(ret))] = np.nan
-        with numba.objmode:
-            logger.warning("Complex numbers detected in v_minus. This is deprecated. Check the types of the arguments.")
-    return ret
+    return (0.5 / vp) * (Z + b * np.sqrt(Z ** 2 - X))
+    # complex_inds = np.where(np.imag(ret))
+    # if np.any(complex_inds):
+    #     ret[np.where(np.imag(ret))] = np.nan
+    #     with numba.objmode:
+    #         logger.warning(
+    #             "Complex numbers detected in v_minus. This is deprecated. "
+    #             "Check the types of the arguments.")
+    # return ret
 
 
 @numba.generated_jit(nopython=True)
