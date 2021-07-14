@@ -2,8 +2,6 @@ import threading
 import typing as tp
 
 import numba
-from numba.core.ccallback import CFunc
-from numba.core.registry import CPUDispatcher
 try:
     import NumbaLSODA
     lsoda_sig = NumbaLSODA.lsoda_sig
@@ -15,6 +13,8 @@ except ImportError:
         numba.types.CPointer(numba.types.double),
         numba.types.CPointer(numba.types.double))
 import numpy as np
+
+from pttools.type_hints import CFunc, CPUDispatcher
 
 Differential = tp.Union[tp.Callable[[float, np.ndarray, np.ndarray, tp.Optional[np.ndarray]], None], CFunc]
 DifferentialOdeint = tp.Union[tp.Callable[[np.ndarray, float, tp.Optional[np.ndarray]], np.ndarray], CPUDispatcher]
