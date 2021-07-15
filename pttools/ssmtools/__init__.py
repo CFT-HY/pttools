@@ -2,6 +2,9 @@ r"""
 Functions for calculating velocity and gravitational wave power spectra from
 a first-order phase transition in the Sound Shell Model.
 
+The Sound Shell Model is discussed in further detail in the article
+Sound Shell Model for Acoustic Gravitational Wave Production at a First-Order Phase Transition in the Early Universe
+
 See Hindmarsh 2018, Hindmarsh & Hijazi 2019.
 
 Author: Mark Hindmarsh 2015-20

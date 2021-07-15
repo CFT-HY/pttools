@@ -79,9 +79,13 @@ def cs2_bag(w: th.FLOAT_OR_ARR):
 
 def theta_bag(w: th.FLOAT_OR_ARR, phase: th.INT_OR_ARR, alpha_n: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     r"""
-    Trace anomaly $\theta = (e - 3p)/4$ in Bag model. (equation 7.24)
+    Trace anomaly $\theta = \frac{1}{4} (e - 3p)$ in the Bag model.
+    Equation 7.24 in the lecture notes, equation 2.10 in the article
 
-    :return: $\theta_\text{bag}$
+    :param w: enthalpy $w$
+    :param phase: phase(s)
+    :param alpha_n: strength of the transition $\alpha_n$
+    :return: trace anomaly $\theta_\text{bag}$
     """
     if isinstance(w, np.ndarray):
         w_n = w[-1]

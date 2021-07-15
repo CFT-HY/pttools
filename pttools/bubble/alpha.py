@@ -1,5 +1,6 @@
-"""Functions for alpha_n (strength parameter at nucleation temp) and
-alpha_p(lus) (strength parameter just in front of wall)
+r"""
+Functions for $\alpha_n$ (strength parameter at nucleation temperature) and
+$alpha_\text{plus}$ (strength parameter just in front of the wall)
 """
 
 import numba
@@ -23,14 +24,14 @@ def find_alpha_n(
         sol_type: boundary.SolutionType = boundary.SolutionType.UNKNOWN,
         n_xi: int = const.N_XI_DEFAULT) -> float:
     r"""
-    Calculates $\alpha_n$ from $\alpha_+$, for given v_wall.
+    Calculates $\alpha_n$ from $\alpha_+$, for given $v_\text{wall}$.
 
     $\alpha = \frac{ \frac{3}{4} \text{difference in trace anomaly} }{\text{enthalpy}}$
 
     :param v_wall: $v_\text{wall}$, wall speed
     :param alpha_p: $\alpha_+$, the at-wall strength parameter.
-    :param sol_type:
-    :param n_xi:
+    :param sol_type: type of the bubble (detonation, deflagration etc.)
+    :param n_xi: number of $\xi$ values to investigate
     :return: $\alpha_n$, global strength parameter
     """
     check.check_wall_speed(v_wall)
@@ -46,7 +47,9 @@ def _find_alpha_plus_optimizer(
         x: np.ndarray,
         v_wall: float,
         sol_type: boundary.SolutionType,
-        n_xi: int, alpha_n_given: float) -> float:
+        n_xi: int,
+        alpha_n_given: float) -> float:
+    """find_alpha_plus() is looking for the zeroes of this function."""
     return find_alpha_n(v_wall, x.item(), sol_type, n_xi) - alpha_n_given
 
 
@@ -121,28 +124,24 @@ def alpha_plus_initial_guess(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float) -> t
     :param alpha_n_given: $\alpha_{n, \text{given}}$
     :return: initial guess for $\alpha_+$
     """
-
     if alpha_n_given < 0.05:
-        a_guess = alpha_n_given
-    else:
-        alpha_plus_min = alpha_plus_min_hybrid(v_wall)
-        alpha_plus_max = 1. / 3
+        return alpha_n_given
 
-        alpha_n_min = alpha_n_min_hybrid(v_wall)
-        alpha_n_max = alpha_n_max_deflagration(v_wall)
+    alpha_plus_min = alpha_plus_min_hybrid(v_wall)
+    alpha_plus_max = 1. / 3
 
-        slope = (alpha_plus_max - alpha_plus_min) / (alpha_n_max - alpha_n_min)
+    alpha_n_min = alpha_n_min_hybrid(v_wall)
+    alpha_n_max = alpha_n_max_deflagration(v_wall)
 
-        a_guess = alpha_plus_min + slope * (alpha_n_given - alpha_n_min)
-
-    return a_guess
+    slope = (alpha_plus_max - alpha_plus_min) / (alpha_n_max - alpha_n_min)
+    return alpha_plus_min + slope * (alpha_n_given - alpha_n_min)
 
 
 def find_alpha_n_from_w_xi(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_p: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     r"""
-    Calculates $\alpha_n$,
-    $\alpha = \frac{ \frac{3}{4} \text{difference in trace anomaly} }{\text{enthalpy}}$
-    from $\alpha_+$
+    Calculates the transition strength parameter
+    $\alpha_n = \frac{4}{3} \frac{\theta_s(T_n) - \theta_b(T_n)}{w(T_n)}$,
+    from $\alpha_+$.
 
     :return: $\alpha_n$
     """
@@ -153,7 +152,8 @@ def find_alpha_n_from_w_xi(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_p
 # TODO: this cannot be jitted yet due to the use of fluid_shell_alpha_plus()
 def alpha_n_max_hybrid(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> float:
     r"""
-    Calculates $\alpha_{n,\max}$ for given $v_\text{wall\$, assuming hybrid fluid shell
+    Calculates the relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
+     for given $v_\text{wall}$, assuming hybrid fluid shell
 
     :return: $\alpha_{n,\max}$
     """
@@ -173,31 +173,33 @@ def alpha_n_max_hybrid(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> float:
 
 
 @speedup.njit_if_numba_integrate
-def alpha_n_max(v_wall: th.FLOAT_OR_ARR, Np=const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR:
+def alpha_n_max(v_wall: th.FLOAT_OR_ARR, n_xi: int = const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR:
     r"""
-    Calculates $\alpha_{n,\max}$ (relative trace anomaly outside bubble)
+    Calculates the relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
     for given $v_\text{wall}$, which is max $\alpha_n$ for (supersonic) deflagration.
 
+    :param v_wall: $v_\text{wall}$
+    :param n_xi: number of $\xi$ points
     :return: $\alpha_{n,\max}$, the relative trace anomaly outside the bubble
     """
-    return alpha_n_max_deflagration(v_wall, Np)
+    return alpha_n_max_deflagration(v_wall, n_xi)
 
 
 @speedup.njit_if_numba_integrate
-def _alpha_n_max_deflagration_scalar(v_wall: float, Np: int) -> float:
+def _alpha_n_max_deflagration_scalar(v_wall: float, n_xi: int) -> float:
     check.check_wall_speed(v_wall)
     sol_type = boundary.SolutionType.HYBRID.value if v_wall > const.CS0 else boundary.SolutionType.SUB_DEF.value
     ap = 1. / 3 - 1.0e-10  # Warning - this is not safe.  Causes warnings for v low vw
-    _, w, xi = fluid.fluid_shell_alpha_plus(v_wall, ap, sol_type, Np)
+    _, w, xi = fluid.fluid_shell_alpha_plus(v_wall, ap, sol_type, n_xi)
     n_wall = props.find_v_index(xi, v_wall)
     return w[n_wall + 1] * (1. / 3)
 
 
 @speedup.njit_if_numba_integrate(parallel=True)
-def _alpha_n_max_deflagration_arr(v_wall: np.ndarray, Np: int) -> np.ndarray:
+def _alpha_n_max_deflagration_arr(v_wall: np.ndarray, n_xi: int) -> np.ndarray:
     ret = np.zeros_like(v_wall)
     for i in numba.prange(v_wall.size):
-        ret[i] = _alpha_n_max_deflagration_scalar(v_wall[i], Np)
+        ret[i] = _alpha_n_max_deflagration_scalar(v_wall[i], n_xi)
     # alpha_N = (w_+/w_N)*alpha_+
     # w_ is normalised to 1 at large xi
     # Need n_wall+1, as w is an integral of v, and lags by 1 step
@@ -205,12 +207,14 @@ def _alpha_n_max_deflagration_arr(v_wall: np.ndarray, Np: int) -> np.ndarray:
 
 
 @speedup.conditional_decorator(numba.generated_jit, speedup.NUMBA_INTEGRATE, nopython=True)
-def alpha_n_max_deflagration(v_wall: th.FLOAT_OR_ARR, Np: int = const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR_NUMBA:
+def alpha_n_max_deflagration(v_wall: th.FLOAT_OR_ARR, n_xi: int = const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR_NUMBA:
     r"""
-    Calculates maximum $\alpha_n$ (relative trace anomaly outside bubble)
+    Calculates the relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
     for given $v_\text{wall}$, for deflagration.
-    Works also for hybrids, as they are supersonic deflagrations
+    Works also for hybrids, as they are supersonic deflagrations.
 
+    :param v_wall: $v_\text{wall}$
+    :param n_xi: number of $\xi$ points
     :return: maximum $\alpha_n$
     """
     if isinstance(v_wall, numba.types.Float):
@@ -220,11 +224,11 @@ def alpha_n_max_deflagration(v_wall: th.FLOAT_OR_ARR, Np: int = const.N_XI_DEFAU
             return _alpha_n_max_deflagration_scalar
         return _alpha_n_max_deflagration_arr
     if isinstance(v_wall, float):
-        return _alpha_n_max_deflagration_scalar(v_wall, Np)
+        return _alpha_n_max_deflagration_scalar(v_wall, n_xi)
     if isinstance(v_wall, np.ndarray):
         if not v_wall.ndim:
-            return _alpha_n_max_deflagration_scalar(v_wall.item(), Np)
-        return _alpha_n_max_deflagration_arr(v_wall, Np)
+            return _alpha_n_max_deflagration_scalar(v_wall.item(), n_xi)
+        return _alpha_n_max_deflagration_arr(v_wall, n_xi)
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
@@ -256,7 +260,7 @@ def alpha_n_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
 def alpha_plus_min_hybrid(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR_NUMBA:
     r"""
     Minimum allowed value of $\alpha_+$ for a hybrid with wall speed $v_\text{wall}$.
-    Condition from coincidence of wall and shock
+    Condition from coincidence of wall and shock.
     """
     check.check_wall_speed(v_wall)
     if v_wall < const.CS0:
