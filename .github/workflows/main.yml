@@ -8,6 +8,8 @@ jobs:
         uses: actions/setup-python@v2
       - name: Print Python version
         run: python -V
+      - name: Install LaTeX
+        run: sudo apt-get install -y latexmk
       - name: Checkout
         uses: actions/checkout@v2
       - name: Load pip cache
