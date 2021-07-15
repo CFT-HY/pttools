@@ -12,6 +12,7 @@
 #
 import os.path
 import sys
+import typing as tp
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
@@ -31,6 +32,9 @@ extensions = [
     # Automatic documentation for Python code
     # https://www.sphinx-doc.org/en/master/usage/quickstart.html#autodoc
     "sphinx.ext.autodoc",
+    # External links
+    # https://www.sphinx-doc.org/en/master/usage/extensions/extlinks.html
+    "sphinx.ext.extlinks",
     # Mathematics rendering
     # https://www.sphinx-doc.org/en/master/usage/extensions/math.html#module-sphinx.ext.mathjax
     "sphinx.ext.mathjax",
@@ -79,3 +83,11 @@ autodoc_default_options = {
     "undoc-members": True
 }
 autodoc_typehints = "description"
+
+# -- Other -------------------------------------------------------------------
+
+extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
+    "gw_ssm_article": ("https://link.aps.org/doi/10.1103/PhysRevLett.112.041301", None),
+    "notes": ("https://scipost.org/10.21468/SciPostPhysLectNotes.24", None),
+    "ssm_article": ("https://link.aps.org/doi/10.1103/PhysRevLett.120.071301", None),
+}
