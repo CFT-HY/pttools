@@ -5,6 +5,7 @@ env:
 jobs:
   docs:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Setup Python
         uses: actions/setup-python@v2
@@ -42,6 +43,7 @@ jobs:
           if-no-files-found: error
   graph:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Setup Python
         uses: actions/setup-python@v2
@@ -89,6 +91,7 @@ jobs:
           if-no-files-found: error
   lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Setup Python
         uses: actions/setup-python@v2
@@ -120,6 +123,7 @@ jobs:
           if-no-files-found: error
   test-numba:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     strategy:
       matrix:
         python-version: [ 3.6, 3.7, 3.8, 3.9 ]
@@ -166,6 +170,7 @@ jobs:
         if-no-files-found: error
   test-numba-old:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     strategy:
       matrix:
         python-version: [ 3.6, 3.7 ]
@@ -212,6 +217,7 @@ jobs:
         if-no-files-found: error
   test-python:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     strategy:
       matrix:
         python-version: [ 3.6, 3.7, 3.8, 3.9 ]
