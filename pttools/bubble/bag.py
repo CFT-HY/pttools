@@ -40,7 +40,7 @@ CS2_FUN_TYPE = tp.Callable[[th.FLOAT_OR_ARR], float]
 
 @numba.njit
 def check_thetas(theta_s: th.FLOAT_OR_ARR, theta_b: th.FLOAT_OR_ARR) -> None:
-    if np.any(theta_b >= theta_s):
+    if np.any(theta_b > theta_s):
         with numba.objmode:
             logger.error(
                 "theta_b should always be smaller than theta_s, "
