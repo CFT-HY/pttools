@@ -285,9 +285,10 @@ def fluid_shell_alpha_plus(
     v = np.concatenate((np.flipud(vb), vf))
     w = np.concatenate((np.flipud(wb), wf))
     w = w * (w_n / w[-1])
+    # The memory layout of the resulting xi array may cause problems with old Numba versions.
     xi = np.concatenate((np.flipud(xib), xif))
-
-    return v, w, xi
+    # Using .copy() results in a contiguous memory layout, alleviating the issue above.
+    return v, w, xi.copy()
 
 
 @numba.njit

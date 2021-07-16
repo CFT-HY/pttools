@@ -35,7 +35,7 @@ def find_alpha_n(
     :return: $\alpha_n$, global strength parameter
     """
     check.check_wall_speed(v_wall)
-    if sol_type == boundary.SolutionType.UNKNOWN:
+    if sol_type == boundary.SolutionType.UNKNOWN.value:
         sol_type = transition.identify_solution_type_alpha_plus(v_wall, alpha_p).value
     _, w, xi = fluid.fluid_shell_alpha_plus(v_wall, alpha_p, sol_type, n_xi)
     n_wall = props.find_v_index(xi, v_wall)

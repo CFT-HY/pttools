@@ -1,41 +1,7 @@
 """Faster or Numba-jitted versions of library functions"""
 
 import numba
-from numba.extending import overload
 import numpy as np
-
-
-@overload(np.any)
-def np_any(a):
-    if isinstance(a, numba.types.Boolean):
-        def func(a):
-            return a
-        return func
-    if isinstance(a, numba.types.Number):
-        def func(a):
-            return bool(a)
-        return func
-
-# @overload(np.asanyarray)
-# def asanyarray(arr: np.ndarray):
-#     if isinstance(arr, numba.types.Array):
-#         def func(arr: np.ndarray):
-#             return arr
-#         return func
-#     raise NotImplementedError
-#
-#
-# @overload(np.ndim)
-# def ndim(val):
-#     if isinstance(val, numba.types.Number):
-#         def func(val):
-#             return 0
-#         return func
-#     if isinstance(val, numba.types.Array):
-#         def func(val):
-#             return val.ndim
-#         return func
-#     raise NotImplementedError
 
 
 @numba.njit

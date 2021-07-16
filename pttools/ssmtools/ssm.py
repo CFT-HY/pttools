@@ -50,17 +50,17 @@ def A2_ssm_func(
     :param z_st_thresh: wavenumber at which to switch sin_transform to its approximation.
     :return: $|A(z)|^2$
     """
-    if method == Method.E_CONSERVING:
+    if method == Method.E_CONSERVING.value:
         # This is the correct method (as of 12.18)
         A2 = A2_e_conserving(z, vw, alpha, npt, de_method, z_st_thresh)[0]
-    elif method == Method.F_ONLY:
+    elif method == Method.F_ONLY.value:
         with numba.objmode:
             logger.debug("f_only method, multiplying (f\')^2 by 2")
         f = f_ssm_func(z, vw, alpha, npt)
         df_dz = speedup.gradient(f) / speedup.gradient(z)
         A2 = 0.25 * (df_dz ** 2)
         A2 = A2 * 2
-    elif method == Method.WITH_G:
+    elif method == Method.WITH_G.value:
         with numba.objmode:
             logger.debug("With_g method")
         f = f_ssm_func(z, vw, alpha, npt)
@@ -110,7 +110,7 @@ def A2_e_conserving(
     v_ft = speedup.gradient(f) / speedup.gradient(z)
 
     # Now get and resample lam = de/w
-    if de_method == DE_Method.ALTERNATE:
+    if de_method == DE_Method.ALTERNATE.value:
         lam_orig = bubble.de_from_w_new(v_ip, w_ip, xi, vw, alpha_n) / w_ip[-1]
     else:
         lam_orig = bubble.de_from_w(w_ip, xi, vw, alpha_n) / w_ip[-1]

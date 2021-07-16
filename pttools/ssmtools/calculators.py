@@ -131,6 +131,8 @@ def sin_transform_core(x: np.ndarray, f: np.ndarray, freq: np.ndarray):
     integral = np.zeros_like(freq)
     for i in numba.prange(freq.size):
         integrand = f * np.sin(freq[i] * x)
+        # If you get Numba errors here, ensure that x is contiguous.
+        # This can be achieved with the use of x.copy() in the data pipeline leading to this function.
         integral[i] = np.trapz(integrand, x)
     return integral
 
