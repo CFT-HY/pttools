@@ -4,7 +4,7 @@ import typing as tp
 
 import numpy as np
 
-import tests.math
+from . import math as test_math
 
 DEFAULT_FMT = ".8e"
 HIGH_PREC = 10
@@ -23,7 +23,7 @@ def row_to_str(row: np.ndarray, close: np.ndarray, fmt: str = DEFAULT_FMT) -> st
 def pairs_to_rows(actual: np.ndarray, desired: np.ndarray, close: np.ndarray, fmt: str = DEFAULT_FMT) -> tp.List[str]:
     return [
         f"{'' if ok else colorama.Fore.RED}"
-        f"{act:{fmt}}, {des:{fmt}}, {tests.math.rel_diff_scalar(act, des):{fmt}}, {abs(act - des):{fmt}}"
+        f"{act:{fmt}}, {des:{fmt}}, {test_math.rel_diff_scalar(act, des):{fmt}}, {abs(act - des):{fmt}}"
         f"{'' if ok else colorama.Fore.RESET}"
         for act, des, ok in zip(actual, desired, close)
     ]

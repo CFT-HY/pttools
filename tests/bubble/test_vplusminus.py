@@ -4,7 +4,7 @@ import unittest
 import numpy as np
 
 from pttools.bubble import boundary
-from tests.test_utils import TEST_DATA_PATH
+from tests.utils.const import TEST_DATA_PATH
 
 
 class TestVPlusMinus(unittest.TestCase):

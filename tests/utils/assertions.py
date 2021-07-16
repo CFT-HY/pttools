@@ -1,17 +1,11 @@
 """Utility functions and constants for unit testing"""
 
 import inspect
-import os.path
 
 import numpy as np
 
-from tests import printing
-import tests.math
-
-TEST_PATH = os.path.dirname(os.path.abspath(__file__))
-TEST_DATA_PATH = os.path.join(TEST_PATH, "test_data")
-TEST_RESULT_PATH = os.path.join(os.path.dirname(TEST_PATH), "test-results")
-TEST_FIGURE_PATH = os.path.join(TEST_RESULT_PATH, "figures")
+from . import math as test_math
+from . import printing
 
 
 def assert_allclose(
@@ -36,7 +30,7 @@ def assert_allclose(
     mismatched = actual.size - np.sum(close)
     print(f"Mismatched elements: {mismatched} / {actual.size} ({mismatched / actual.size * 100:.1f}%)")
     print(f"Max absolute difference: {np.max(np.abs(actual - desired))}")
-    print(f"Max relative difference: {np.max(tests.math.rel_diff_arr(actual, desired))}")
+    print(f"Max relative difference: {np.max(test_math.rel_diff_arr(actual, desired))}")
 
     if actual.ndim == 1:
         printing.print_1d(actual, desired, close)

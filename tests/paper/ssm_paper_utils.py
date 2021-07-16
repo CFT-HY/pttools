@@ -22,7 +22,7 @@ from tests.paper import const
 from tests.paper import plotting
 from tests.paper import utils
 import tests.paper.tex_utils as tu
-from tests.test_utils import TEST_DATA_PATH
+from tests.utils.const import TEST_DATA_PATH
 
 logger = logging.getLogger(__name__)
 

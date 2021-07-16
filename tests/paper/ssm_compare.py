@@ -17,7 +17,7 @@ import pttools.ssmtools as ssm
 from tests.paper import const
 from tests.paper import plotting
 from tests.paper import utils
-from tests.test_utils import TEST_DATA_PATH
+from tests.utils.const import TEST_DATA_PATH
 
 logger = logging.getLogger(__name__)
 

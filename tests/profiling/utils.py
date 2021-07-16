@@ -1,9 +1,9 @@
 import abc
 import os
 
-from tests import test_utils
+from tests.utils import TEST_RESULT_PATH
 
-PROFILE_DIR = os.path.join(test_utils.TEST_RESULT_PATH, "profiles")
+PROFILE_DIR = os.path.join(TEST_RESULT_PATH, "profiles")
 os.makedirs(PROFILE_DIR, exist_ok=True)
 
 

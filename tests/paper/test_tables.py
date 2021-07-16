@@ -6,7 +6,7 @@ import numpy as np
 
 from pttools import speedup
 from tests.paper import ssm_paper_utils as spu
-from tests.test_utils import TEST_DATA_PATH
+from tests.utils.const import TEST_DATA_PATH
 
 
 class TestTables(unittest.TestCase):
