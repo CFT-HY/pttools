@@ -87,7 +87,7 @@ def fluid_integrate_param(
 
     t = np.linspace(0., t_end, n_xi)
     y0 = np.array([v0, w0, xi0])
-    if method == "numba_lsoda":
+    if method == "numba_lsoda" or speedup.NUMBA_INTEGRATE:
         if NumbaLSODA is None:
             raise ImportError("NumbaLSODA is not loaded")
         v, w, xi, success = fluid_integrate_param_numba(t, y0, df_dtau_ptr)
