@@ -239,11 +239,10 @@ def alpha_plus_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR_NUMBA:
     Comes from inverting $v_w$ > $v_\text{Jouguet}$.
     """
     check.check_wall_speed(v_wall)
-    a = 3 * (1 - v_wall ** 2)
     if v_wall < const.CS0:
-        b = 0.0
-    else:
-        b = (1 - np.sqrt(3) * v_wall) ** 2
+        return 0
+    a = 3 * (1 - v_wall ** 2)
+    b = (1 - np.sqrt(3) * v_wall) ** 2
     return b / a
 
 
