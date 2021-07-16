@@ -331,7 +331,7 @@ def get_kappa_de(
         verbosity: int = 0) -> tp.Union[tp.Tuple[float, float], tp.Tuple[np.ndarray, np.ndarray]]:
     r"""
     Calculates efficiency factor $\kappa$ and fractional change in energy
-    from $v_\text{wall\$ and $\alpha_n$. $v_\text{wall\$ can be an array.
+    from $v_\text{wall}$ and $\alpha_n$. $v_\text{wall}$ can be an array.
     Sum should be 0 (bag model).
     """
     it = np.nditer([v_wall, None, None])

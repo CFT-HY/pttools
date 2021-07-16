@@ -10,10 +10,25 @@ from . import check
 from . import const
 
 
+def A2_approx(xi0: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
+    r"""
+    Approximate solution for A2.
+    $A2_\text{approx} = \frac{3(2\xi_0 - 1)}{1 - \xi_0^2}$
+
+    :param xi0: $\xi_0$
+    :return: A2
+    """
+    return 3 * (2 * xi0 - 1) / (1 - xi0 ** 2)
+
+
 def xi_zero(v_wall: th.FLOAT_OR_ARR, v_xi_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     r"""
-    Used in approximate solution near $v(\xi) = \xi$: defined as solution to $v(\xi_0) = \xi_0$
+    Used in approximate solution near $v(\xi) = \xi$: defined as solution to $v(\xi_0) = \xi_0$.
 
+    $\xi_0 = \frac{1}{3} (v(\xi_\text{wall} + 2 v_\text{wall})$
+
+    :param v_wall: $v_\text{wall}$
+    :param v_xi_wall: $v(\xi_\text{wall})$
     :return: $\xi_0$
     """
     check.check_wall_speed(v_wall)
@@ -29,9 +44,8 @@ def v_approx_high_alpha(xi: th.FLOAT_OR_ARR, v_wall: th.FLOAT_OR_ARR, v_xi_wall:
     """
     check.check_wall_speed(v_wall)
     xi0 = xi_zero(v_wall, v_xi_wall)
-    A2 = 3 * (2 * xi0 - 1) / (1 - xi0 ** 2)
     dv = (xi - xi0)
-    return xi0 - 2 * dv - A2 * dv ** 2
+    return xi0 - 2 * dv - A2_approx(xi0) * dv ** 2
 
 
 def v_approx_hybrid(xi: th.FLOAT_OR_ARR, v_wall: th.FLOAT_OR_ARR, v_xi_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
@@ -42,9 +56,8 @@ def v_approx_hybrid(xi: th.FLOAT_OR_ARR, v_wall: th.FLOAT_OR_ARR, v_xi_wall: th.
     """
     check.check_wall_speed(v_wall)
     xi0 = xi_zero(v_wall, v_xi_wall)
-    A2 = 3 * (2 * xi0 - 1) / (1 - xi0 ** 2)
     dv = (xi - xi0)
-    return xi - 2 * dv - A2 * dv ** 2
+    return xi - 2 * dv - A2_approx(xi0) * dv ** 2
 
 
 def w_approx_high_alpha(
