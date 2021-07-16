@@ -29,7 +29,7 @@ class Method(str, enum.Enum):
     WITH_G = "with_g"
 
 
-@speedup.njit_if_numba_integrate
+@numba.njit
 def A2_ssm_func(
         z: np.ndarray,
         vw,
@@ -77,7 +77,7 @@ def A2_ssm_func(
     return A2
 
 
-@speedup.njit_if_numba_integrate
+@numba.njit
 def A2_e_conserving(
         z: np.ndarray,
         vw,
@@ -187,7 +187,7 @@ def A2_e_conserving_file(
     return 0.25 * (v_ft ** 2 + (const.CS0 * lam_ft) ** 2)
 
 
-@speedup.njit_if_numba_integrate
+@numba.njit
 def f_ssm_func(
         z: th.FLOAT_OR_ARR,
         vw,

@@ -17,7 +17,7 @@ from . import props
 from . import transition
 
 
-@speedup.njit_if_numba_integrate
+@numba.njit
 def find_alpha_n(
         v_wall: th.FLOAT_OR_ARR,
         alpha_p: float,
@@ -42,7 +42,7 @@ def find_alpha_n(
     return alpha_p * w[n_wall] / w[-1]
 
 
-@speedup.njit_if_numba_integrate
+@numba.njit
 def _find_alpha_plus_optimizer(
         x: np.ndarray,
         v_wall: float,
@@ -53,7 +53,7 @@ def _find_alpha_plus_optimizer(
     return find_alpha_n(v_wall, x.item(), sol_type, n_xi) - alpha_n_given
 
 
-@speedup.njit_if_numba_integrate
+@numba.njit
 def _find_alpha_plus_scalar(v_wall: float, alpha_n_given: float, n_xi: int) -> float:
     if alpha_n_given < alpha_n_max_detonation(v_wall):
         # Must be detonation
@@ -75,7 +75,7 @@ def _find_alpha_plus_scalar(v_wall: float, alpha_n_given: float, n_xi: int) -> f
     return np.nan
 
 
-@speedup.njit_if_numba_integrate(parallel=True)
+@numba.njit(parallel=True)
 def _find_alpha_plus_arr(v_wall: np.ndarray, alpha_n_given: float, n_xi: int) -> np.ndarray:
     ap = np.zeros_like(v_wall)
     for i in numba.prange(v_wall.size):
@@ -83,7 +83,7 @@ def _find_alpha_plus_arr(v_wall: np.ndarray, alpha_n_given: float, n_xi: int) ->
     return ap
 
 
-@speedup.conditional_decorator(numba.generated_jit, speedup.NUMBA_INTEGRATE, nopython=True)
+@numba.generated_jit(nopython=True)
 def find_alpha_plus(
         v_wall: th.FLOAT_OR_ARR,
         alpha_n_given: float,
@@ -113,7 +113,7 @@ def find_alpha_plus(
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
-@speedup.njit_if_numba_integrate
+@numba.njit
 def alpha_plus_initial_guess(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float) -> th.FLOAT_OR_ARR:
     r"""
     Initial guess for root-finding of $\alpha_+$ from $\alpha_n$.
@@ -172,7 +172,7 @@ def alpha_n_max_hybrid(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> float:
     return w[n_wall] * (1. / 3)
 
 
-@speedup.njit_if_numba_integrate
+@numba.njit
 def alpha_n_max(v_wall: th.FLOAT_OR_ARR, n_xi: int = const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR:
     r"""
     Calculates the relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
@@ -185,7 +185,7 @@ def alpha_n_max(v_wall: th.FLOAT_OR_ARR, n_xi: int = const.N_XI_DEFAULT) -> th.F
     return alpha_n_max_deflagration(v_wall, n_xi)
 
 
-@speedup.njit_if_numba_integrate
+@numba.njit
 def _alpha_n_max_deflagration_scalar(v_wall: float, n_xi: int) -> float:
     check.check_wall_speed(v_wall)
     sol_type = boundary.SolutionType.HYBRID.value if v_wall > const.CS0 else boundary.SolutionType.SUB_DEF.value
@@ -195,7 +195,7 @@ def _alpha_n_max_deflagration_scalar(v_wall: float, n_xi: int) -> float:
     return w[n_wall + 1] * (1. / 3)
 
 
-@speedup.njit_if_numba_integrate(parallel=True)
+@numba.njit(parallel=True)
 def _alpha_n_max_deflagration_arr(v_wall: np.ndarray, n_xi: int) -> np.ndarray:
     ret = np.zeros_like(v_wall)
     for i in numba.prange(v_wall.size):
@@ -206,7 +206,7 @@ def _alpha_n_max_deflagration_arr(v_wall: np.ndarray, n_xi: int) -> np.ndarray:
     return ret
 
 
-@speedup.conditional_decorator(numba.generated_jit, speedup.NUMBA_INTEGRATE, nopython=True)
+@numba.generated_jit(nopython=True)
 def alpha_n_max_deflagration(v_wall: th.FLOAT_OR_ARR, n_xi: int = const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR_NUMBA:
     r"""
     Calculates the relative trace anomaly outside the bubble, $\alpha_{n,\max}$,

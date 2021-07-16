@@ -160,7 +160,7 @@ def fluid_integrate_param_solve_ivp(
 # Main function for integrating fluid equations and deriving v, w
 # for complete range 0 < xi < 1
 
-@speedup.njit_if_numba_integrate
+@numba.njit
 def fluid_shell(
         v_wall: float,
         alpha_n: float,
@@ -185,7 +185,7 @@ def fluid_shell(
     return nan_arr, nan_arr, nan_arr
 
 
-@speedup.njit_if_numba_integrate
+@numba.njit
 def fluid_shell_alpha_plus(
         v_wall: float,
         alpha_plus: float,

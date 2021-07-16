@@ -4,10 +4,10 @@ import logging
 
 import typing as tp
 
+import numba
 import numpy as np
 
 import pttools.type_hints as th
-from pttools import speedup
 from . import bag
 from . import boundary
 from . import check
@@ -68,7 +68,7 @@ def part_integrate(
     return np.trapz(integrand, xi_in)
 
 
-@speedup.njit_if_numba_integrate
+@numba.njit
 def de_from_w(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> np.ndarray:
     r"""
     Calculates energy density difference ``de = e - e[-1]`` from enthalpy, assuming
@@ -81,7 +81,7 @@ def de_from_w(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> n
     return e_from_w - e_from_w[-1]
 
 
-@speedup.njit_if_numba_integrate
+@numba.njit
 def de_from_w_new(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> np.ndarray:
     """
     For exploring new methods of calculating energy density difference

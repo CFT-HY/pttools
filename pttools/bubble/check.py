@@ -7,7 +7,6 @@ import numba
 import numpy as np
 
 import pttools.type_hints as th
-from pttools import speedup
 from . import alpha
 
 logger = logging.getLogger(__name__)
@@ -51,7 +50,7 @@ def check_wall_speed(v_wall: tp.Union[th.FLOAT_OR_ARR, tp.List[float]]):
         raise TypeError("v_wall must be float, list or array.")
 
 
-@speedup.njit_if_numba_integrate
+@numba.njit
 def check_physical_params(params: PHYSICAL_PARAMS_TYPE) -> None:
     r"""
     Checks that $v _\text{wall}$ = params[0], $\alpha_n$ = params[1] values are physical, i.e.
