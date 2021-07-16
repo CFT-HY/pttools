@@ -91,7 +91,8 @@ class TestPlane(unittest.TestCase):
     def plot_perf(cls, ax: plt.Axes):
         inds = list(cls.names.keys())
         names = [cls.names[i] for i in inds]
-        iter_times = [cls.iter_times[i] if i in cls.iter_times else None for i in inds]
+        # None is not supported here in old Matplotlib, so 0 is used instead
+        iter_times = [cls.iter_times[i] if i in cls.iter_times else 0 for i in inds]
         ax.bar(inds, iter_times, tick_label=names)
         ax.set_title("Execution time per run")
         ax.set_xlabel("Solver")
