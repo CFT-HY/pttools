@@ -124,6 +124,7 @@ def mean_enthalpy_change(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: f
     return integral / v_wall ** 3
 
 
+@numba.njit
 def mean_kinetic_energy(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
     """
     Kinetic energy of fluid in bubble, averaged over bubble volume,
@@ -134,6 +135,7 @@ def mean_kinetic_energy(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: fl
     return integral / (v_wall ** 3)
 
 
+@numba.njit
 def ubarf_squared(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
     """
     Enthalpy-weighted mean square space components of 4-velocity of fluid in bubble,
@@ -229,6 +231,30 @@ def get_ke_de_frac(
     return ke_out, de_out
 
 
+@numba.njit
+def _get_ubarf2_scalar(v_wall: float, alpha_n: float, n_xi: int, verbosity: int) -> float:
+    if transition.identify_solution_type(v_wall, alpha_n) == boundary.SolutionType.ERROR:
+        ubarf2 = np.nan
+    else:
+        # Now ready to solve for fluid profile
+        v, w, xi = fluid.fluid_shell(v_wall, alpha_n, n_xi)
+        ubarf2 = ubarf_squared(v, w, xi, v_wall)
+
+    if verbosity > 0:
+        with numba.objmode:
+            logger.debug(f"v_wall=%8.6f, alpha_n=%8.6f, ubarf2=%f", v_wall, alpha_n, ubarf2)
+    return ubarf2
+
+
+@numba.njit(parallel=True)
+def _get_ubarf2_arr(v_wall: np.ndarray, alpha_n: float, n_xi: int, verbosity: int) -> np.ndarray:
+    ubarf2 = np.zeros_like(v_wall)
+    for i in numba.prange(v_wall.size):
+        ubarf2[i] = _get_ubarf2_scalar(v_wall[i], alpha_n, n_xi, verbosity)
+    return ubarf2
+
+
+@numba.generated_jit(nopython=True)
 def get_ubarf2(
         v_wall: th.FLOAT_OR_ARR,
         alpha_n: float,
@@ -239,25 +265,17 @@ def get_ubarf2(
     v_wall can be scalar or iterable.
     alpha_n must be scalar.
     """
-    it = np.nditer([v_wall, None])
-    for vw, Ubarf2 in it:
-        sol_type = transition.identify_solution_type(vw, alpha_n)
-        if not sol_type == boundary.SolutionType.ERROR:
-            # Now ready to solve for fluid profile
-            v, w, xi = fluid.fluid_shell(vw.item(), alpha_n, n_xi)
-            Ubarf2[...] = ubarf_squared(v, w, xi, vw)
-        else:
-            Ubarf2[...] = np.nan
-        if verbosity > 0:
-            logger.debug(f"{vw:8.6f} {alpha_n:8.6f} {Ubarf2}")
-
-    # Ubarf2 is stored in it.operands[1]
+    if isinstance(v_wall, numba.types.Float):
+        return _get_ubarf2_scalar
+    if isinstance(v_wall, numba.types.Array):
+        if not v_wall.ndim:
+            return _get_ubarf2_scalar
+        return _get_ubarf2_arr
+    if isinstance(v_wall, float):
+        return _get_ubarf2_scalar(v_wall, alpha_n, n_xi, verbosity)
     if isinstance(v_wall, np.ndarray):
-        ubarf2_out = it.operands[1]
-    else:
-        ubarf2_out = type(v_wall)(it.operands[1])
-
-    return ubarf2_out
+        return _get_ubarf2_arr(v_wall, alpha_n, n_xi, verbosity)
+    raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
 def get_ubarf2_new(
