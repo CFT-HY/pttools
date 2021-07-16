@@ -185,7 +185,9 @@ def make_3dh_compare_table(params_list, v2_list, Omgw_list, p_list,
     """
     Prints table to file, comparing selected statistics between
     SSM and "Prace" 3dh hydro simulations (Hindmarsh et al 2017)
-    Mean square fluid velocity
+    Mean square fluid velocity.
+
+    The results are precomputed, and therefore this function doesn't call pttools.
     """
     Ubarf_prace = [
         4.60e-3, 5.75e-3, 8.65e-3, 13.8e-3, 7.51e-3,
@@ -273,7 +275,9 @@ def make_nuc_compare_table(params_list, v2_list, Omgw_list, p_sim_list, p_exp_li
                            file_name: tp.Union[str, io.TextIOBase] = 'table_nuc_compare.tex') -> None:
     """
     Prints table to stdout, displaying selected statistics
-    comparing between simulataneous and exponential nucleation
+    comparing between simulataneous and exponential nucleation.
+
+    The results are precomputed, and therefore this function doesn't call pttools.
     """
     # print('\\begin{tabular}{cc | rr | rr | ll | rr | rr}')
     if isinstance(file_name, io.TextIOBase):
