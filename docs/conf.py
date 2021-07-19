@@ -15,6 +15,8 @@ import sys
 import typing as tp
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Create a directory for static files to avoid a warning when building.
+os.makedirs(os.path.join(os.path.dirname(os.path.abspath(__file__)), "_static"), exist_ok=True)
 
 # -- Project information -----------------------------------------------------
 
