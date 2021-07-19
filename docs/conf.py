@@ -37,6 +37,7 @@ extensions = [
     # External links
     # https://www.sphinx-doc.org/en/master/usage/extensions/extlinks.html
     "sphinx.ext.extlinks",
+    "sphinx.ext.intersphinx",
     # Mathematics rendering
     # https://www.sphinx-doc.org/en/master/usage/extensions/math.html#module-sphinx.ext.mathjax
     "sphinx.ext.mathjax",
@@ -92,4 +93,10 @@ extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
     "gw_ssm_article": ("https://link.aps.org/doi/10.1103/PhysRevLett.112.041301", None),
     "notes": ("https://scipost.org/10.21468/SciPostPhysLectNotes.24", None),
     "ssm_article": ("https://link.aps.org/doi/10.1103/PhysRevLett.120.071301", None),
+}
+intersphinx_mapping: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
+    "cobaya": ("https://cobaya.readthedocs.io/en/latest/", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None)
 }
