@@ -62,8 +62,11 @@ def identify_solution_type(v_wall: float, alpha_n: float, exit_on_error: bool = 
 @numba.njit
 def identify_solution_type_alpha_plus(v_wall: float, alpha_p: float) -> boundary.SolutionType:
     """
-    Determines wall type from wall speed and at-wall strength parameter.
-    solution_type = [ 'Detonation' | 'Deflagration' | 'Hybrid' ]
+    Determines wall type from wall speed $v_\text{wall}$ and at-wall strength parameter $\alpha_p$.
+
+    :param v_wall: $v_\text{wall}$
+    :param alpha_p: $\alpha_p$
+    :return: solution type [ 'Detonation' | 'Deflagration' | 'Hybrid' ]
     """
     if v_wall <= const.CS0:
         sol_type = boundary.SolutionType.SUB_DEF

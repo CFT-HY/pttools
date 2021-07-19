@@ -49,7 +49,7 @@ def _find_alpha_plus_optimizer(
         sol_type: boundary.SolutionType,
         n_xi: int,
         alpha_n_given: float) -> float:
-    """find_alpha_plus() is looking for the zeroes of this function."""
+    """find_alpha_plus() is looking for the zeroes of this function: $\alpha_n = \alpha_{n,\text{given}}$."""
     return find_alpha_n(v_wall, x.item(), sol_type, n_xi) - alpha_n_given
 
 
@@ -89,9 +89,10 @@ def find_alpha_plus(
         alpha_n_given: float,
         n_xi: int = const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR_NUMBA:
     r"""
-    Calculate $\alpha_+$ from a given $\alpha_n$ and $v_\text{wall}$.
+    Calculate the at-wall strength parameter $\alpha_+$ from a given $\alpha_n$ and $v_\text{wall}$.
 
-    $\alpha = \frac{ \frac{3}{4} \text{difference in trace anomaly} }{\text{enthalpy}}$
+    $\alpha = \frac{4}{3} \frac{ \theta_s(T_n) - \theta_b(T_n) }{w(T_n)}$
+    (:gw_pt_ssm:`GW PT SSM<>`, eq. 2.11)
 
     :param v_wall: $v_\text{wall}$, the wall speed
     :param alpha_n_given: $\alpha_n$, the global strength parameter
