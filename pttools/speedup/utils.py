@@ -9,8 +9,8 @@ def conditional_decorator(dec: callable, condition: bool, **kwargs) -> callable:
     def decorator(func: callable) -> callable:
         if condition:
             if kwargs:
-                return dec(**kwargs)(func)
-            return dec(func)
+                return functools.wraps(func)(dec(**kwargs)(func))
+            return functools.wraps(func)(dec(func))
         return func
     return decorator
 

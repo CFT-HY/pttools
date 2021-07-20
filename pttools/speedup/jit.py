@@ -5,6 +5,7 @@ Warning: complex decorators calling Numba may cause segmentation faults when pro
 https://github.com/numba/numba/issues/3625
 """
 
+import functools
 import inspect
 import logging
 
@@ -62,8 +63,10 @@ def njit_module(**kwargs):
 
 def vectorize(**kwargs):
     """Extended version of numba.vectorize with support for NUMBA_DISABLE_JIT"""
-    def vectorize_inner(func):
+    def vectorize_inner(func: callable):
         if options.NUMBA_DISABLE_JIT:
+            # Using functools.wraps() ensures that docstrings etc. are preserved
+            @functools.wraps(func)
             def wrapper(*func_args, **func_kwargs):
                 # If called with scalars
                 if not \
@@ -82,5 +85,5 @@ def vectorize(**kwargs):
                     for i, i_args in enumerate(zip(*func_args))
                 ])
             return wrapper
-        return numba.vectorize(**kwargs)(func)
+        return functools.wraps(func)(numba.vectorize(**kwargs)(func))
     return vectorize_inner
