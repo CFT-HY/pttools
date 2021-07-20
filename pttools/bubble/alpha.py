@@ -88,14 +88,17 @@ def find_alpha_plus(
         alpha_n_given: float,
         n_xi: int = const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR_NUMBA:
     r"""
-    Calculate the at-wall strength parameter $\alpha_+$ from a given $\alpha_n$ and $v_\text{wall}$.
+    Calculate the at-wall strength parameter $\alpha_+$ from given $\alpha_n$ and $v_\text{wall}$.
 
     $\alpha = \frac{4}{3} \frac{ \theta_s(T_n) - \theta_b(T_n) }{w(T_n)}$
     (:gw_pt_ssm:`GW PT SSM<>`, eq. 2.11)
 
+    Uses :func:`scipy.optimize.fsolve` and therefore spends time in the Python interpreter even when jitted.
+    This should be taken into account when running parallel simulations.
+
     :param v_wall: $v_\text{wall}$, the wall speed
     :param alpha_n_given: $\alpha_n$, the global strength parameter
-    :param n_xi:
+    :param n_xi: number of $\xi$ points
     :return: $\alpha_+$, the the at-wall strength parameter
     """
     if isinstance(v_wall, numba.types.Float):
@@ -153,7 +156,7 @@ def find_alpha_n_from_w_xi(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_p
 def alpha_n_max_hybrid(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> float:
     r"""
     Calculates the relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
-     for given $v_\text{wall}$, assuming hybrid fluid shell
+    for given $v_\text{wall}$, assuming hybrid fluid shell
 
     :return: $\alpha_{n,\max}$
     """
@@ -237,6 +240,8 @@ def alpha_plus_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR_NUMBA:
     r"""
     Maximum allowed value of $\alpha_+$ for a detonation with wall speed $v_\text{wall}$.
     Comes from inverting $v_w$ > $v_\text{Jouguet}$.
+
+    $\alpha_{+,\max,\text{detonation}} = \frac{ (1 - \sqrt{3} v_\text{wall})^2 }{ 3(1 - v_\text{wall}^2 }$
     """
     check.check_wall_speed(v_wall)
     if v_wall < const.CS0:
@@ -250,7 +255,10 @@ def alpha_plus_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR_NUMBA:
 def alpha_n_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     r"""
     Maximum allowed value of $\alpha_n$ for a detonation with wall speed $v_\text{wall}$.
-    Same as alpha_plus_max_detonation, because $\alpha_n = \alpha_+$ for detonation.
+    Same as $\alpha_{+,\max,\text{detonation}$, because $\alpha_n = \alpha_+$ for detonation.
+
+    :param v_wall: $v_\text{wall}$
+    :return: $\alpha_{n,\max,\text{detonation}$
     """
     return alpha_plus_max_detonation(v_wall)
 
@@ -260,6 +268,11 @@ def alpha_plus_min_hybrid(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR_NUMBA:
     r"""
     Minimum allowed value of $\alpha_+$ for a hybrid with wall speed $v_\text{wall}$.
     Condition from coincidence of wall and shock.
+
+    $\alpha_{+, \min, \text{hybrid}} = \frac{ (1 - \sqrt{3} v_\text{wall})^2 }{ 9 v_\text{wall}^2 - 1}$
+
+    :param v_wall: $v_\text{wall}$
+    :return: $\alpha_{+, \min, \text{hybrid}}$
     """
     check.check_wall_speed(v_wall)
     if v_wall < const.CS0:
@@ -274,6 +287,9 @@ def alpha_n_min_hybrid(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     r"""
     Minimum $\alpha_n$ for a hybrid. Equal to maximum $\alpha_n$ for a detonation.
     Same as alpha_n_min_deflagration, as a hybrid is a supersonic deflagration.
+
+    :param v_wall: $v_\text{wall}$
+    :return: $\alpha_{n,\min,\text{hybrid}} = \alpha_{n,\min,\text{deflagration} = \alpha_{n,\max,\text{detonation}$
     """
     # This check is implemented in the inner functions
     # check.check_wall_speed(v_wall)
@@ -285,6 +301,9 @@ def alpha_n_min_deflagration(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     r"""
     Minimum $\alpha_n$ for a deflagration. Equal to maximum $\alpha_n$ for a detonation.
     Same as alpha_n_min_hybrid, as a hybrid is a supersonic deflagration.
+
+    :param v_wall: $v_\text{wall}$
+    :return: $\alpha_{n,\min,\text{deflagration}} = \alpha_{n,\min,\text{hybrid} = \alpha_{n,\max,\text{detonation}$
     """
     # This check is implemented in the inner functions
     # check.check_wall_speed(v_wall)
