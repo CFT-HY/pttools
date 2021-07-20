@@ -13,15 +13,17 @@ from . import const
 logger = logging.getLogger(__name__)
 
 
-@numba.njit
-def sin_transform_old(z: th.FLOAT_OR_ARR, xi: np.ndarray, v: np.ndarray):
+def sin_transform_old(z: th.FLOAT_OR_ARR, xi: np.ndarray, v: np.ndarray) -> th.FLOAT_OR_ARR:
     r"""
-    sin transform of $v(\xi)$
+    Old sin transform of $v(\xi)$
+
+    .. deprecated:: 0.1
 
     :param z: Fourier transform variable (any shape)
     :param xi: $\xi$
     :param v: wall speed $v$, same shape as $\xi$
     """
+    logger.warning("sin_transform_old is deprecated")
     if isinstance(z, np.ndarray):
         array = np.sin(np.outer(z, xi)) * v
         integral = np.trapz(array, xi)
@@ -34,8 +36,8 @@ def sin_transform_old(z: th.FLOAT_OR_ARR, xi: np.ndarray, v: np.ndarray):
 
 @numba.njit
 def envelope(xi: np.ndarray, f: np.ndarray) -> tp.Tuple[tp.List[float], tp.List[float]]:
-    """
-    Helper function for sin_transform_approx.
+    r"""
+    Helper function for :meth:`sin_transform_approx`.
     Assumes that
 
     - max(v) is achieved at a discontinuity (bubble wall)
@@ -50,7 +52,7 @@ def envelope(xi: np.ndarray, f: np.ndarray) -> tp.Tuple[tp.List[float], tp.List[
     f_p: value just after wall
     f2: (at shock, or after wall)
 
-    :return: lists of xi, f pairs "outlining" function f
+    :return: lists of $\xi$, $f$ pairs "outlining" function $f$
     """
 
     xi_nonzero = xi[np.nonzero(f)]
@@ -73,7 +75,7 @@ def envelope(xi: np.ndarray, f: np.ndarray) -> tp.Tuple[tp.List[float], tp.List[
     else:
         df_at_max = f[i_max_f + 1] - f[i_max_f - 1]
 
-    #    print(ind1, ind2, [xi1,f1], [xi_w, f_max])
+    # print(ind1, ind2, [xi1,f1], [xi_w, f_max])
 
     if df_at_max > 0:
         # deflagration or hybrid, ending in shock.
@@ -127,13 +129,24 @@ def _sin_transform_scalar(z: float, xi: np.ndarray, f: np.ndarray, z_st_thresh: 
 
 
 @numba.njit(parallel=True)
-def sin_transform_core(x: np.ndarray, f: np.ndarray, freq: np.ndarray):
+def sin_transform_core(t: np.ndarray, f: np.ndarray, freq: np.ndarray) -> np.ndarray:
+    r"""
+    The `sine transform <https://en.wikipedia.org/wiki/Sine_and_cosine_transforms>`_
+    for multiple values of $\omega$ without any approximations.
+    Computes the following for each angular frequency $\omega$.
+    $$\hat{f}(\omega) = \int_{{t}_\min}^{{t}_\max} f(t) \sin(\omega t) dt$$
+
+    :param t: variable of the real space ($t$ or $x$)
+    :param f: function values at the points $t$
+    :param freq: frequencies $\omega$
+    :return: value of the sine transformed function at each angular frequency $\omega$
+    """
     integral = np.zeros_like(freq)
     for i in numba.prange(freq.size):
-        integrand = f * np.sin(freq[i] * x)
-        # If you get Numba errors here, ensure that x is contiguous.
-        # This can be achieved with the use of x.copy() in the data pipeline leading to this function.
-        integral[i] = np.trapz(integrand, x)
+        integrand = f * np.sin(freq[i] * t)
+        # If you get Numba errors here, ensure that t is contiguous.
+        # This can be achieved with the use of t.copy() in the data pipeline leading to this function.
+        integral[i] = np.trapz(integrand, t)
     return integral
 
 
@@ -182,9 +195,13 @@ def sin_transform(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray, z_st_thresh
     For z > z_st_thresh, use approximation rather than doing the integral.
     Interpolate between  z_st_thresh - dz_blend < z < z_st_thresh.
 
+    Without the approximations this function would compute
+    $\hat{f}(z) =  f(\xi) \int_{{\xi}_\min}^{{\xi}_\max} \sin(z \xi) d\xi$
+
     :param z: Fourier transform variable (any shape)
-    :param xi: $\xi$
+    :param xi: $\xi$ points over which to integrate
     :param f: function values at the points $\xi$, same shape as $\xi$
+    :param z_st_thresh: for $z$ values above z_sh_tresh, use approximation rather than doing the integral.
     """
     if isinstance(z, numba.types.Float):
         return _sin_transform_scalar
