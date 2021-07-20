@@ -83,7 +83,8 @@ mathjax3_config = {
 
 autodoc_default_options = {
     "members": True,
-    "undoc-members": True
+    "show-inheritance": True,
+    "undoc-members": True,
 }
 autodoc_typehints = "description"
 
