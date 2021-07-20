@@ -35,7 +35,7 @@ def sin_transform_old(z: th.FLOAT_OR_ARR, xi: np.ndarray, v: np.ndarray) -> th.F
 
 
 @numba.njit
-def envelope(xi: np.ndarray, f: np.ndarray) -> tp.Tuple[tp.List[float], tp.List[float]]:
+def envelope(xi: np.ndarray, f: np.ndarray) -> np.ndarray:
     r"""
     Helper function for :meth:`sin_transform_approx`.
     Assumes that
@@ -52,7 +52,7 @@ def envelope(xi: np.ndarray, f: np.ndarray) -> tp.Tuple[tp.List[float], tp.List[
     f_p: value just after wall
     f2: (at shock, or after wall)
 
-    :return: lists of $\xi$, $f$ pairs "outlining" function $f$
+    :return: array of $\xi$, $f$ pairs "outlining" function $f$
     """
 
     xi_nonzero = xi[np.nonzero(f)]
@@ -78,21 +78,20 @@ def envelope(xi: np.ndarray, f: np.ndarray) -> tp.Tuple[tp.List[float], tp.List[
     # print(ind1, ind2, [xi1,f1], [xi_w, f_max])
 
     if df_at_max > 0:
-        # deflagration or hybrid, ending in shock.
+        # Deflagration or hybrid, ending in shock.
         f_m = f[i_max_f - 1]
         f_p = f_max
         f2 = f[ind2]
-
     else:
-        # detonation, nothing beyond wall
+        # Detonation, nothing beyond wall
         f_m = f_max
         f_p = 0
         f2 = 0
 
-    xi_list = [xi1, xi_w, xi_w, xi2]
-    f_list = [f1, f_m, f_p, f2]
-
-    return xi_list, f_list
+    return np.array([
+        [xi1, xi_w, xi_w, xi2],
+        [f1, f_m, f_p, f2]
+    ])
 
 
 @numba.njit
@@ -112,7 +111,7 @@ def sin_transform_approx(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray) -> n
     :param xi: $\xi$
     :param f: function values at the points $\xi$, same shape as $\xi$
     """
-    [xi1, xi_w, _, xi2], [f1, f_m, f_p, f2] = envelope(xi, f)
+    [[xi1, xi_w, _, xi2], [f1, f_m, f_p, f2]] = envelope(xi, f)
     integral = -(f2 * np.cos(z * xi2) - f_p * np.cos(z * xi_w)) / z
     integral += -(f_m * np.cos(z * xi_w) - f1 * np.cos(z * xi1)) / z
     return integral
