@@ -59,20 +59,19 @@ def _find_alpha_plus_scalar(v_wall: float, alpha_n_given: float, n_xi: int) -> f
         # Must be detonation
         # sol_type = boundary.SolutionType.DETON
         return alpha_n_given
-    if alpha_n_given < alpha_n_max_deflagration(v_wall):
-        sol_type = boundary.SolutionType.SUB_DEF if v_wall <= const.CS0 else boundary.SolutionType.HYBRID
-
-        a_initial_guess = alpha_plus_initial_guess(v_wall, alpha_n_given)
-        with numba.objmode(ret="float64"):
-            # This returns np.float64
-            ret: float = opt.fsolve(
-                _find_alpha_plus_optimizer,
-                a_initial_guess,
-                args=(v_wall, sol_type, n_xi, alpha_n_given),
-                xtol=const.FIND_ALPHA_PLUS_TOL,
-                factor=0.1)[0]
-        return ret
-    return np.nan
+    if alpha_n_given >= alpha_n_max_deflagration(v_wall):
+        return np.nan
+    sol_type = boundary.SolutionType.SUB_DEF if v_wall <= const.CS0 else boundary.SolutionType.HYBRID
+    a_initial_guess = alpha_plus_initial_guess(v_wall, alpha_n_given)
+    with numba.objmode(ret="float64"):
+        # This returns np.float64
+        ret: float = opt.fsolve(
+            _find_alpha_plus_optimizer,
+            a_initial_guess,
+            args=(v_wall, sol_type, n_xi, alpha_n_given),
+            xtol=const.FIND_ALPHA_PLUS_TOL,
+            factor=0.1)[0]
+    return ret
 
 
 @numba.njit(parallel=True)
