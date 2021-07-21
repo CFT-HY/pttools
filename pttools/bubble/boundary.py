@@ -22,10 +22,22 @@ class SolutionType(str, enum.Enum):
 
     .. plot:: fig/relativistic_combustion.py
     """
+
+    #: In a detonation the fluid outside the bubble is at rest and the wall moves at a supersonic speed.
     DETON = "Detonation"
+
+    #: This value is used to inform, that determining the type of the
+    #: relativistic combustion failed.
     ERROR = "Error"
+
+    #: In the hybrid case the wall speed is supersonic and the fluid is moving both ahead and behind the wall.
     HYBRID = "Hybrid"
+
+    #: In a subsonic deflagration the fluid is at rest inside the bubble,
+    #: and the wall moves at a subsonic speed.
     SUB_DEF = "Subsonic deflagration"
+
+    #: This value is used, when the type of the relativistic combustion is not yet determined.
     UNKNOWN = "Unknown"
 
 
