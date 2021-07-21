@@ -133,7 +133,7 @@ def sin_transform_core(t: np.ndarray, f: np.ndarray, freq: np.ndarray) -> np.nda
     The `sine transform <https://en.wikipedia.org/wiki/Sine_and_cosine_transforms>`_
     for multiple values of $\omega$ without any approximations.
     Computes the following for each angular frequency $\omega$.
-    $$\hat{f}(\omega) = \int_{{t}_\min}^{{t}_\max} f(t) \sin(\omega t) dt$$
+    $$\hat{f}(\omega) = \int_{{t}_\text{min}}^{{t}_\text{max}} f(t) \sin(\omega t) dt$$
 
     :param t: variable of the real space ($t$ or $x$)
     :param f: function values at the points $t$
@@ -195,7 +195,7 @@ def sin_transform(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray, z_st_thresh
     Interpolate between  z_st_thresh - dz_blend < z < z_st_thresh.
 
     Without the approximations this function would compute
-    $\hat{f}(z) =  f(\xi) \int_{{\xi}_\min}^{{\xi}_\max} \sin(z \xi) d\xi$
+    $\hat{f}(z) =  f(\xi) \int_{{\xi}_\text{min}}^{{\xi}_\text{max}} \sin(z \xi) d\xi$
 
     :param z: Fourier transform variable (any shape)
     :param xi: $\xi$ points over which to integrate

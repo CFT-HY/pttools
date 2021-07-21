@@ -255,10 +255,10 @@ def alpha_plus_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR_NUMBA:
 def alpha_n_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     r"""
     Maximum allowed value of $\alpha_n$ for a detonation with wall speed $v_\text{wall}$.
-    Same as $\alpha_{+,\max,\text{detonation}$, because $\alpha_n = \alpha_+$ for detonation.
+    Same as $\alpha_{+,\max,\text{detonation}}$, because $\alpha_n = \alpha_+$ for detonation.
 
     :param v_wall: $v_\text{wall}$
-    :return: $\alpha_{n,\max,\text{detonation}$
+    :return: $\alpha_{n,\max,\text{detonation}}$
     """
     return alpha_plus_max_detonation(v_wall)
 
@@ -289,7 +289,7 @@ def alpha_n_min_hybrid(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     Same as alpha_n_min_deflagration, as a hybrid is a supersonic deflagration.
 
     :param v_wall: $v_\text{wall}$
-    :return: $\alpha_{n,\min,\text{hybrid}} = \alpha_{n,\min,\text{deflagration} = \alpha_{n,\max,\text{detonation}$
+    :return: $\alpha_{n,\min,\text{hybrid}} = \alpha_{n,\min,\text{deflagration}} = \alpha_{n,\max,\text{detonation}}$
     """
     # This check is implemented in the inner functions
     # check.check_wall_speed(v_wall)
@@ -303,7 +303,7 @@ def alpha_n_min_deflagration(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     Same as alpha_n_min_hybrid, as a hybrid is a supersonic deflagration.
 
     :param v_wall: $v_\text{wall}$
-    :return: $\alpha_{n,\min,\text{deflagration}} = \alpha_{n,\min,\text{hybrid} = \alpha_{n,\max,\text{detonation}$
+    :return: $\alpha_{n,\min,\text{deflagration}} = \alpha_{n,\min,\text{hybrid}} = \alpha_{n,\max,\text{detonation}}$
     """
     # This check is implemented in the inner functions
     # check.check_wall_speed(v_wall)
