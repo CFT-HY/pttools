@@ -16,6 +16,12 @@ logger = logging.getLogger(__name__)
 
 @enum.unique
 class SolutionType(str, enum.Enum):
+    """There are three different types of relativistic combustion.
+    For further details, please see chapter 7.2 and figure 14
+    of the :notes:`lecture notes <>`.
+
+    .. plot:: fig/relativistic_combustion.py
+    """
     DETON = "Detonation"
     ERROR = "Error"
     HYBRID = "Hybrid"

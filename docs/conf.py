@@ -31,15 +31,13 @@ author = 'Mark Hindmarsh, Mudhahir Al-Ajmi, Danny Bail, Jacky Lindsay, Mike Soug
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "matplotlib.sphinxext.plot_directive",
     # Automatic documentation for Python code
-    # https://www.sphinx-doc.org/en/master/usage/quickstart.html#autodoc
     "sphinx.ext.autodoc",
     # External links
-    # https://www.sphinx-doc.org/en/master/usage/extensions/extlinks.html
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
     # Mathematics rendering
-    # https://www.sphinx-doc.org/en/master/usage/extensions/math.html#module-sphinx.ext.mathjax
     "sphinx.ext.mathjax",
     "sphinx_math_dollar",
     # Markdown support can be enabled by uncommenting the line below.
