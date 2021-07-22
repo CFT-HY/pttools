@@ -2,6 +2,7 @@ import logging
 import os.path
 import unittest
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools import bubble
