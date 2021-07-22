@@ -2,7 +2,8 @@
 Creates and plots velocity and GW power spectra from SSM
 
 Modified from
-https://bitbucket.org/hindmars/sound-shell-model/
+`sound-shell-model/paper/python/ssm_paper_utils.py
+<https://bitbucket.org/hindmars/sound-shell-model/src/master/paper/python/ssm_paper_utils.py>`_.
 """
 
 # import concurrent.futures as fut

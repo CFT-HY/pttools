@@ -1,3 +1,5 @@
+"""Test power spectra predictions of SSM with different nucleation models"""
+
 import logging
 import os
 import os.path

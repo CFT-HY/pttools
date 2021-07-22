@@ -100,7 +100,11 @@ def plot_plane(
         atol_mid_diff: float = 0,
         atol_high_diff: float = 0,
         tau_backwards_end: float = -100.0):
-    """Modified from sound-shell-model/paper/python/fig_8r_xi-v_plane.py"""
+    """
+    Modified from
+    `sound-shell-model/paper/python/fig_8r_xi-v_plane.py
+    <https://bitbucket.org/hindmars/sound-shell-model/src/master/paper/python/fig_8r_xi-v_plane.py>`_.
+    """
     # Define a suitable number of default lines to plot
     n_xi0 = deflag.shape[1]
     xi0_step = 1 / (n_xi0 + 1)

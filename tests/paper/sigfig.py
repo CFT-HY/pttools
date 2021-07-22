@@ -1,7 +1,8 @@
 """This module provides function for working with significant figures.
 
 Modified from
-https://bitbucket.org/hindmars/sound-shell-model/
+`sound-shell-model/paper/python/sigfig.py
+<https://bitbucket.org/hindmars/sound-shell-model/src/master/paper/python/sigfig.py>`_.
 """
 
 import re

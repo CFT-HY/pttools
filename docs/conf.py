@@ -89,10 +89,13 @@ autodoc_typehints = "description"
 # -- Other -------------------------------------------------------------------
 
 extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
+    # Articles
     "gw_ssm": ("https://link.aps.org/doi/10.1103/PhysRevLett.112.041301", "Hindmarsh et. al, 2014"),
     "ssm": ("https://link.aps.org/doi/10.1103/PhysRevLett.120.071301", "Hindmarsh et. al, 2018"),
     "gw_pt_ssm": ("https://iopscience.iop.org/article/10.1088/1475-7516/2019/12/062", "Hindmarsh et. al, 2019"),
     "notes": ("https://scipost.org/10.21468/SciPostPhysLectNotes.24", "Hindmarsh et. al, 2021"),
+    # Other
+    "issue": ("https://github.com/hindmars/pttools/issues/%s", "issue %s"),
 }
 intersphinx_mapping: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
     "cobaya": ("https://cobaya.readthedocs.io/en/latest/", None),
@@ -100,4 +103,5 @@ intersphinx_mapping: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
     "numba": ("https://numba.readthedocs.io/en/stable/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
+    # "yappi": ("https://yappi.readthedocs.io/en/latest/", None),
 }

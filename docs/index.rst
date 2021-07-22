@@ -11,7 +11,7 @@ Welcome to PTtools's documentation!
 
    usage
    modules/index
-
+   modules/tests/index
 
 
 Indices and tables

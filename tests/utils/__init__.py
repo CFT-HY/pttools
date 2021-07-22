@@ -1,4 +1,4 @@
-"""Test utilities"""
+"""Utilities for the unit tests"""
 
 from .assertions import *
 from .const import *

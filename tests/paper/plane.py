@@ -9,7 +9,11 @@ def xiv_plane(
         tau_backwards_end: float = -100.0,
         n_xi0: int = 9,
         n_xi: int = 1000) -> np.ndarray:
-    """Modified from sound-shell-model/paper/python/fig_8r_xi-v_plane.py"""
+    """
+    Modified from
+    `sound-shell-model/paper/python/fig_8r_xi-v_plane.py
+    <https://bitbucket.org/hindmars/sound-shell-model/src/master/paper/python/fig_8r_xi-v_plane.py>`_.
+    """
     # Define a suitable number of default lines to plot
     xi0_step = 1 / (n_xi0 + 1)
     xi0_array = np.linspace(xi0_step, 1 - xi0_step, n_xi0)

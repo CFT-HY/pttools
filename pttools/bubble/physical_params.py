@@ -32,6 +32,7 @@ DEFAULT_NUC_TYPE = NucType.EXPONENTIAL
     ("a", numba.float64)
 ])
 class NucArgs:
+    """Nucleation arguments"""
     def __init__(self, a: float):
         self.a = a
 

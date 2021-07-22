@@ -1,7 +1,8 @@
 """LaTeX utilities
 
 Modified from
-https://bitbucket.org/hindmars/sound-shell-model/
+`sound-shell-model/paper/python/tex_utils.py
+<https://bitbucket.org/hindmars/sound-shell-model/src/master/paper/python/tex_utils.py>`_.
 """
 
 import numpy as np

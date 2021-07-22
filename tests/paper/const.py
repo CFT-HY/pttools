@@ -1,4 +1,9 @@
-"""Constants common to both ssm_compare.py and ssm_paper_utils.py"""
+"""
+Constants common to both
+:mod:`tests.paper.ssm_compare`
+and
+:mod:`tests.paper.ssm_paper_utils`.
+"""
 
 import numpy as np
 
@@ -15,15 +20,17 @@ ETA_INTER_LIST = [0.17, 0.40, 0.62]
 
 FILE_TYPE = "pdf"
 
-# Number of points used in the numerical calculations (n_z, n_xi, n_t)
-# z - wavenumber space, xi - r/t space, t - time for size distribution integration
+#: Number of points used in the numerical calculations (n_z, n_xi, n_t).
+#: z - wavenumber space, xi - r/t space, t - time for size distribution integration
 NP_ARR = np.array([[1000, 2000, 200], [2500, 5000, 500], [5000, 10000, 1000]])
 # Additional values from ssm_paper_utils.py
 # NP_ARR = [[2000, 2000, 200], ]
 # NP_ARR = [[1000, 1000, 200], [2000, 2000, 200], [5000, 5000, 200]]
 # NP_ARR = [[10000, 10000, 200],]
 
+#: Default nucleation type
 NUC_TYPE = ssm.NucType.SIMULTANEOUS
+#: Default nucleation arguments
 NUC_ARGS = (1.,)
 # Simultaneous is relevant for comparison to num sims
 # Or: (ssm_compare.py)
