@@ -5,6 +5,10 @@ Until the PTtools repository is made public, these downloads require SSH authent
 just like any GitHub repository cloning over SSH.
 Please request access to the repository from prof. Hindmarsh.
 
+If you're just using PTtools for your project,
+:ref:`installation using a package manager such as pip <With pip>` is recommended.
+However, if you're developing PTtools itself, you should :ref:`work on a cloned repository <Local development>`.
+
 With pip
 --------
 Installing PTtools within a

@@ -34,6 +34,8 @@ extensions = [
     "matplotlib.sphinxext.plot_directive",
     # Automatic documentation for Python code
     "sphinx.ext.autodoc",
+    # Automatic labeling for documentation sections
+    "sphinx.ext.autosectionlabel",
     # External links
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
