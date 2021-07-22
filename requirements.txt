@@ -5,7 +5,7 @@
 icc-rt
 matplotlib
 numba
-git+git://github.com/Nicholaswogan/NumbaLSODA.git
+git+https://github.com/Nicholaswogan/NumbaLSODA.git
 # If you're using an old version of Numba and get the error:
 # "create_target_machine() got an unexpected keyword argument 'jitdebug'"
 # then you may have to downgrade llvmlite to 0.32.1
