@@ -180,8 +180,12 @@ def make_1dh_compare_table(params_list, v2_list,
     return None
 
 
-def make_3dh_compare_table(params_list, v2_list, Omgw_list, p_list,
-                           file_name: tp.Union[str, io.TextIOBase] = 'table_3dh_compare.tex') -> None:
+def make_3dh_compare_table(
+        params_list,
+        v2_list,
+        Omgw_list,
+        p_list,
+        file_name: tp.Union[str, io.TextIOBase] = 'table_3dh_compare.tex') -> None:
     """
     Prints table to file, comparing selected statistics between
     SSM and "Prace" 3dh hydro simulations (Hindmarsh et al 2017)
@@ -205,10 +209,7 @@ def make_3dh_compare_table(params_list, v2_list, Omgw_list, p_list,
         8.6, 10.4, 18.3, np.nan, 9.9,
         8.5, np.nan, 16.1, np.nan, 6.9]
 
-    if isinstance(file_name, io.TextIOBase):
-        f = file_name
-    else:
-        f = open(file_name, 'w')
+    f = file_name if isinstance(file_name, io.TextIOBase) else open(file_name, 'w')
     f.write('\\begin{tabular}{cc | rr | rr | ll | rr}\n')
 
     f.write('\\hline\\hline\n')
@@ -271,8 +272,13 @@ def make_3dh_compare_table(params_list, v2_list, Omgw_list, p_list,
         f.close()
 
 
-def make_nuc_compare_table(params_list, v2_list, Omgw_list, p_sim_list, p_exp_list,
-                           file_name: tp.Union[str, io.TextIOBase] = 'table_nuc_compare.tex') -> None:
+def make_nuc_compare_table(
+        params_list,
+        v2_list,
+        Omgw_list,
+        p_sim_list,
+        p_exp_list,
+        file_name: tp.Union[str, io.TextIOBase] = 'table_nuc_compare.tex') -> None:
     """
     Prints table to stdout, displaying selected statistics
     comparing between simulataneous and exponential nucleation.
@@ -280,10 +286,7 @@ def make_nuc_compare_table(params_list, v2_list, Omgw_list, p_sim_list, p_exp_li
     The results are precomputed, and therefore this function doesn't call pttools.
     """
     # print('\\begin{tabular}{cc | rr | rr | ll | rr | rr}')
-    if isinstance(file_name, io.TextIOBase):
-        f = file_name
-    else:
-        f = open(file_name, 'w')
+    f = file_name if isinstance(file_name, io.TextIOBase) else open(file_name, 'w')
     f.write('\\begin{tabular}{cc | rr | ll | rr | rr}\n')
 
     f.write('\\hline\\hline\n')
@@ -348,7 +351,7 @@ def make_nuc_compare_table(params_list, v2_list, Omgw_list, p_sim_list, p_exp_li
         f.close()
 
 
-def save_compare_nuc_data(file, params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list):
+def save_compare_nuc_data(file, params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list) -> list:
     data = []
     for params, v2, Omgw, pc, ps in zip(params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list):
         data.append(params + v2 + Omgw + pc + ps)
@@ -383,10 +386,10 @@ def load_compare_nuc_data(file: str):
 
 
 def ps_from_ssm(
-        vw,
-        alpha,
+        vw: float,
+        alpha: float,
         nuc_type: ssm.NucType = ssm.NucType.SIMULTANEOUS,
-        nuc_args=(1.,),
+        nuc_args: bubble.NUC_ARGS_TYPE = (1.,),
         Np: np.ndarray = const.NP_ARR[-1],
         method: ssm.Method = ssm.Method.E_CONSERVING):
     """Get velocity and GW power spectra from SSM"""
@@ -397,7 +400,7 @@ def ps_from_ssm(
 
     z = np.logspace(np.log10(const.Z_MIN), np.log10(const.Z_MAX), Np[0])
 
-    sd_v = ssm.spec_den_v(z, [vw, alpha, nuc_type, nuc_args], Np[1:], method=method)
+    sd_v = ssm.spec_den_v(z, (vw, alpha, nuc_type, nuc_args), Np[1:], method=method)
     pow_v = ssm.pow_spec(z, sd_v)
 
     V2_pow_v = np.trapz(pow_v/z, z)
@@ -417,10 +420,10 @@ def ps_from_ssm(
 
 
 def plot_ps_compare_res(
-        vw,
+        vw: float,
         alpha: float,
         nuc_type: ssm.NucType = ssm.NucType.SIMULTANEOUS,
-        nuc_args=(1.,),
+        nuc_args: bubble.NUC_ARGS_TYPE = (1.,),
         save_id: str = None,
         graph_file_type=None,
         method: ssm.Method = ssm.Method.E_CONSERVING):
@@ -455,7 +458,6 @@ def plot_ps_compare_res(
         pow_gw_list.append(pow_gw)
 
         if save_id is not None:
-
             nz_string = f'nz{Np[0] // 1000}k'
             nx_string = f'_nx{Np[1] // 1000}k'
             nT_string = f'_nT{Np[2]}-'
@@ -473,9 +475,9 @@ def plot_ps_compare_res(
         nT_string_all += f'{Np[2]}-'
 
     with plt.rc_context({'legend.fontsize': 12}):
-        f_v = plotting.plot_ps(
+        fig_v = plotting.plot_ps(
             z_list, pow_v_list, utils.PSType.V, ax_limits=strength, col_list=const.COLOURS)
-        f_gw = plotting.plot_ps(
+        fig_gw = plotting.plot_ps(
             y_list, pow_gw_list, utils.PSType.GW, ax_limits=strength, col_list=const.COLOURS)
 
         # Now plot guide power laws
@@ -488,23 +490,23 @@ def plot_ps_compare_res(
 
         inter_flag = (abs(bubble.CS0 - vw) < 0.05)
         plotting.plot_guide_power_laws_prace(
-            f_v, f_gw, z_list[0], pow_v_list[0], y_list[0], pow_gw_list[0],
+            fig_v, fig_gw, z_list[0], pow_v_list[0], y_list[0], pow_gw_list[0],
             (nv_lo, ngw_lo), inter_flag)
 
     # Save graph if asked for
     if save_id is not None:
         graph_file_suffix = f"vw{vw:.2f}alpha{alpha}_" + nuc_string \
                             + nz_string_all + nx_string_all + nT_string_all + save_id + '.' + const.FILE_TYPE
-        f_v.savefig("pow_v_" + graph_file_suffix)
-        f_gw.savefig("pow_gw_" + graph_file_suffix)
+        fig_v.savefig("pow_v_" + graph_file_suffix)
+        fig_gw.savefig("pow_gw_" + graph_file_suffix)
 
-    plt.show()
+    # plt.show()
 
-    return f_v, f_gw
+    return fig_v, fig_gw
 
 
 def plot_ps_1bubble(
-        vw,
+        vw: float,
         alpha: float,
         save_id: str = None,
         graph_file_type: str = None,
@@ -534,12 +536,12 @@ def plot_ps_1bubble(
     ps_list = [ph_sp_fac * A2, ph_sp_fac * fp2_2 / 2, ph_sp_fac * bubble.CS0_2 * lam2 / 4]
     leg_list = ['$|A|^2$', r'$|f^\prime(z)|^2/4$', '$c_{\\rm s}^2|l(z)|^2/4$']
 
-    f = plotting.plot_ps(
+    fig = plotting.plot_ps(
         z_list, ps_list, utils.PSType.UNKNOWN, ax_limits=strength,
         col_list=const.COLOURS, leg_list=leg_list)
 
     inter_flag = (abs(bubble.CS0 - vw) < 0.05)
-    plotting.plot_guide_power_laws_ssm(f, z, ph_sp_fac*A2, utils.PSType.V, inter_flag=inter_flag)
+    plotting.plot_guide_power_laws_ssm(fig, z, ph_sp_fac*A2, utils.PSType.V, inter_flag=inter_flag)
 
     if save_id is None:
         save_id = ''
@@ -548,13 +550,13 @@ def plot_ps_1bubble(
     if graph_file_type is not None:
         graph_file_suffix = f"vw{vw:.2f}alpha{alpha}_"  \
             + nz_string + nx_string + save_id + '.' + graph_file_type
-        f.savefig(MD_PATH + "one_bub_" + graph_file_suffix)
+        fig.savefig(MD_PATH + "one_bub_" + graph_file_suffix)
 
     # plt.show()
 
     if debug:
-        return f, np.array([z, A2, fp2_2, lam2])
-    return f
+        return fig, np.array([z, A2, fp2_2, lam2])
+    return fig
 
 
 def plot_ps_compare_nuc(
@@ -616,20 +618,20 @@ def plot_ps_compare_nuc(
         v2_list.append(np.trapz(pow_v/z, z))
         Omgw_scaled_list.append(np.trapz(pow_gw/y, y))
 
-    f_v = plotting.plot_ps(
+    fig_v = plotting.plot_ps(
         z_list, pow_v_list, utils.PSType.V,
         ax_limits=strength, col_list=const.COLOURS, leg_list=nuc_type_list)
-    f_gw = plotting.plot_ps(
+    fig_gw = plotting.plot_ps(
         y_list, pow_gw_list, utils.PSType.GW,
         ax_limits=strength, col_list=const.COLOURS, leg_list=nuc_type_list)
 
     inter_flag = (abs(bubble.CS0 - vw) < 0.05)
     plotting.plot_guide_power_laws_prace(
-        f_v, f_gw, z_list[0], pow_v_list[0],
+        fig_v, fig_gw, z_list[0], pow_v_list[0],
         y_list[0], pow_gw_list[0], inter_flag=inter_flag)
 
-    p_cwg = add_cwg_fit(f_gw, y_list[0], pow_gw_list[0])
-    p_ssm = add_ssm_fit(f_gw, y_list[1], pow_gw_list[1])
+    p_cwg = add_cwg_fit(fig_gw, y_list[0], pow_gw_list[0])
+    p_ssm = add_ssm_fit(fig_gw, y_list[1], pow_gw_list[1])
 
     if save_id is None:
         save_id = ''
@@ -638,10 +640,8 @@ def plot_ps_compare_nuc(
     if graph_file_type is not None:
         graph_file_suffix = f"vw{vw:.2f}alpha{alpha}_" + nuc_string_all \
             + nz_string + nx_string + nT_string + save_id + '.' + graph_file_type
-        f_v.savefig(MD_PATH + "pow_v_" + graph_file_suffix)
-        f_gw.savefig(MD_PATH + "pow_gw_" + graph_file_suffix)
-
-    # plt.show()
+        fig_v.savefig(MD_PATH + "pow_v_" + graph_file_suffix)
+        fig_gw.savefig(MD_PATH + "pow_gw_" + graph_file_suffix)
 
     return v2_list, Omgw_scaled_list, list(p_cwg), list(p_ssm)
 
@@ -728,7 +728,7 @@ def plot_ps_compare_nuc(
 #    return f_v_list, f_gw_list
 
 
-def plot_and_save(vw, alpha, method='e_conserving', v_xi_file=None, suffix=None):
+def plot_and_save(vw: float, alpha: float, method: ssm.Method = ssm.Method.E_CONSERVING, v_xi_file=None, suffix=None):
     """
     Plots the Velocity power spectrum as a function of $kR_*$.
     Plots the scaled GW power spectrum as a function of $kR_*$.
@@ -759,13 +759,14 @@ def plot_and_save(vw, alpha, method='e_conserving', v_xi_file=None, suffix=None)
     # Array using the minimum & maximum values set earlier, with Np[0] number of points
     logger.debug(f"vw = {vw}, alpha = {alpha}, Np = {Np}")
 
-    sd_v = ssm.spec_den_v(z, [vw, alpha, const.NUC_TYPE, const.NUC_ARGS], Np[1:], method=method)
+    params = (vw, alpha, const.NUC_TYPE, const.NUC_ARGS)
+    sd_v = ssm.spec_den_v(z, params, Np[1:], method=method)
     pow_v = ssm.pow_spec(z, sd_v)
     ax_v.loglog(z, pow_v, color=col)
     V2_pow_v.append(np.trapz(pow_v/z, z))
 
     if v_xi_file is not None:
-        sd_v2 = ssm.spec_den_v(z, [vw, alpha, const.NUC_TYPE, const.NUC_ARGS], Np[1:], v_xi_file, method=method)
+        sd_v2 = ssm.spec_den_v(z, params, Np[1:], v_xi_file, method=method)
         pow_v2 = ssm.pow_spec(z, sd_v2)
         ax_v.loglog(z, pow_v2, color=col, linestyle='--')
         V2_pow_v.append(np.trapz(pow_v2/z, z))
@@ -841,7 +842,7 @@ def plot_and_save(vw, alpha, method='e_conserving', v_xi_file=None, suffix=None)
     return V2_pow_v, gw_power
 
 
-def do_all_plot_ps_compare_nuc(save_id: str = None, graph_file_type=None):
+def do_all_plot_ps_compare_nuc(save_id: str = None, graph_file_type: str = None):
     v2_list = []
     Omgw_scaled_list = []
 
@@ -883,7 +884,7 @@ def do_all_plot_ps_compare_nuc(save_id: str = None, graph_file_type=None):
     return param_list, v2_list, Omgw_scaled_list, p_cwg_list, p_ssm_list
 
 
-def do_all_plot_ps_1bubble(save_id=None, graph_file_type=None, debug: bool = False):
+def do_all_plot_ps_1bubble(save_id: str = None, graph_file_type: str = None, debug: bool = False):
     vw_weak_list = [0.92, 0.56, 0.44]
     vw_inter_list = [0.92, 0.56, 0.44]
 
@@ -893,16 +894,16 @@ def do_all_plot_ps_1bubble(save_id=None, graph_file_type=None, debug: bool = Fal
     vw_list_all = [vw_weak_list, vw_inter_list]
     alpha_list_all = [alpha_weak, alpha_inter]
 
-    f_list = []
+    figs = []
     data_lst = []
     for vw_list, alpha, in zip(vw_list_all, alpha_list_all):
         for vw in vw_list:
             if debug:
-                f, data = plot_ps_1bubble(vw, alpha, save_id, graph_file_type, debug=debug)
+                fig, data = plot_ps_1bubble(vw, alpha, save_id, graph_file_type, debug=debug)
                 data_lst.append(data)
-            f = plot_ps_1bubble(vw, alpha, save_id, graph_file_type)
-            f_list.append(f)
+            fig = plot_ps_1bubble(vw, alpha, save_id, graph_file_type)
+            figs.append(fig)
 
     if debug:
-        return f_list, np.array(data_lst)
-    return f_list
+        return figs, np.array(data_lst)
+    return figs
