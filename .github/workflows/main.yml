@@ -27,7 +27,7 @@ jobs:
         run: |
           pip --cache-dir=.pip install --upgrade pip
           pip --cache-dir=.pip install --upgrade wheel
-          pip --cache-dir=.pip install -r requirements.txt -r docs/requirements.txt
+          pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt -r docs/requirements.txt
       - name: Generate documentation
         run: |
           cd docs
