@@ -111,7 +111,12 @@ def sin_transform_approx(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray) -> n
     :param xi: $\xi$
     :param f: function values at the points $\xi$, same shape as $\xi$
     """
-    [[xi1, xi_w, _, xi2], [f1, f_m, f_p, f2]] = envelope(xi, f)
+    # Old versions of Numba don't support unpacking 2D arrays
+    # [[xi1, xi_w, _, xi2], [f1, f_m, f_p, f2]] = envelope(xi, f)
+    envelope_arr = envelope(xi, f)
+    [xi1, xi_w, _, xi2] = envelope_arr[0, :]
+    [f1, f_m, f_p, f2] = envelope_arr[1, :]
+
     integral = -(f2 * np.cos(z * xi2) - f_p * np.cos(z * xi_w)) / z
     integral += -(f_m * np.cos(z * xi_w) - f1 * np.cos(z * xi1)) / z
     return integral
