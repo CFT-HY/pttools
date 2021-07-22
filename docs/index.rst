@@ -9,6 +9,7 @@ Welcome to PTtools's documentation!
 .. toctree::
    :caption: Contents:
 
+   install
    usage
    modules/index
    modules/tests/index
