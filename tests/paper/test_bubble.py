@@ -2,6 +2,7 @@ import logging
 import os.path
 import unittest
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools import speedup
@@ -14,7 +15,9 @@ logger = logging.getLogger(__name__)
 class TestBubble(unittest.TestCase):
     @staticmethod
     def test_bubble():
-        _, data = spu.do_all_plot_ps_1bubble(debug=True)
+        figs, data = spu.do_all_plot_ps_1bubble(debug=True)
+        for fig in figs:
+            plt.close(fig)
         data_summed = np.sum(data, axis=2)
         file_path = os.path.join(utils.TEST_DATA_PATH, "bubble.txt")
 

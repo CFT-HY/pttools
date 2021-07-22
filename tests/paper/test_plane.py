@@ -54,6 +54,7 @@ class TestPlane(unittest.TestCase):
         fig.tight_layout()
         path = f"{cls.FIG_PATH}_{name}"
         utils.save_fig_multi(fig, path)
+        plt.close(fig)
         if shutil.which("ffmpeg"):
             video_path = f"{path}.mp4"
             if os.path.exists(video_path):
@@ -156,6 +157,7 @@ class TestPlane(unittest.TestCase):
                 plot_plane.plot_plane(ax2, data, method, deflag_ref=self.ref_data, **tols)
                 fig_name = f"{self.FIG_PATH}_{name}_{i}_{plot_plane.get_solver_name(method)}"
                 utils.save_fig_multi(fig, fig_name)
+                plt.close(fig)
 
         data_summed = np.nansum(data, axis=2)
         file_path = os.path.join(utils.TEST_DATA_PATH, "xi-v_plane.txt")

@@ -193,6 +193,9 @@ def generate_ps(
 
     if show:
         plt.show()
+    if save_ids[1] is not None or show:
+        plt.close(f1)
+        plt.close(f2)
 
     if debug:
         debug_data = [Ubarf2]

@@ -642,6 +642,8 @@ def plot_ps_compare_nuc(
             + nz_string + nx_string + nT_string + save_id + '.' + graph_file_type
         fig_v.savefig(MD_PATH + "pow_v_" + graph_file_suffix)
         fig_gw.savefig(MD_PATH + "pow_gw_" + graph_file_suffix)
+        plt.close(fig_v)
+        plt.close(fig_gw)
 
     return v2_list, Omgw_scaled_list, list(p_cwg), list(p_ssm)
 

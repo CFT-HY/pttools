@@ -19,7 +19,8 @@ class TestShells(unittest.TestCase):
         return os.path.join(utils.TEST_DATA_PATH, f"shells_{name}.txt")
 
     def test_fluid_shell(self):
-        _, arrs, scalars = bubble.plot_fluid_shell(v_wall=0.7, alpha_n=0.052, debug=True, draw=False)
+        fig, arrs, scalars = bubble.plot_fluid_shell(v_wall=0.7, alpha_n=0.052, debug=True, draw=False)
+        plt.close(fig)
         data = np.array([np.nansum(arr) for arr in arrs] + scalars)
         file_path = os.path.join(utils.TEST_DATA_PATH, "shell.txt")
 
