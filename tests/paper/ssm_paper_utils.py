@@ -387,7 +387,7 @@ def ps_from_ssm(
         alpha,
         nuc_type: ssm.NucType = ssm.NucType.SIMULTANEOUS,
         nuc_args=(1.,),
-        Np=const.NP_LIST[-1],
+        Np: np.ndarray = const.NP_ARR[-1],
         method: ssm.Method = ssm.Method.E_CONSERVING):
     """Get velocity and GW power spectra from SSM"""
 
@@ -447,7 +447,7 @@ def plot_ps_compare_res(
     nx_string_all = '_nx'
     nT_string_all = '_nT'
 
-    for Np in const.NP_LIST:
+    for Np in const.NP_ARR:
         z, pow_v, y, pow_gw = ps_from_ssm(vw, alpha, nuc_type, nuc_args, Np, method)
         z_list.append(z)
         pow_v_list.append(pow_v)
@@ -508,7 +508,7 @@ def plot_ps_1bubble(
         alpha: float,
         save_id: str = None,
         graph_file_type: str = None,
-        Np=const.NP_LIST[-1],
+        Np=const.NP_ARR[-1],
         debug: bool = False) -> tp.Union[plt.Figure, tp.Tuple[plt.Figure, np.ndarray]]:
     """
     Plots power spectra predictions of 1 bubble. Shown are
@@ -585,7 +585,7 @@ def plot_ps_compare_nuc(
     v2_list = []
     Omgw_scaled_list = []
 
-    Np = const.NP_LIST[-1]
+    Np = const.NP_ARR[-1]
 
     nz_string = f'nz{Np[0] // 1000}k'
     nx_string = f'_nx{Np[1] // 1000}k'
@@ -735,7 +735,7 @@ def plot_and_save(vw, alpha, method='e_conserving', v_xi_file=None, suffix=None)
     Saves power spectra in files pow_v_*, pow_gw_* if suffix is set.
     """
 
-    Np = const.NP_LIST[-1]
+    Np = const.NP_ARR[-1]
     col = const.COLOURS[0]
 
     if alpha < 0.01:

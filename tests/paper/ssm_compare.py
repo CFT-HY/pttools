@@ -82,7 +82,7 @@ def generate_ps(
     Returns <V^2> and Omgw divided by (Ht.HR*).
     """
 
-    Np = const.NP_LIST[-1]
+    Np = const.NP_ARR[-1]
     col = const.COLOURS[0]
 
     if alpha < 0.01:
@@ -99,12 +99,13 @@ def generate_ps(
     # Array using the minimum & maximum values set earlier, with Np[0] number of points
     logger.debug(f"vw = {vw}, alpha = {alpha}, Np = {Np}")
 
-    sd_v = ssm.spec_den_v(z, [vw, alpha, const.NUC_TYPE, const.NUC_ARGS], Np[1:], method=method)
-    pow_v = ssm.pow_spec(z,sd_v)
+    params = (vw, alpha, const.NUC_TYPE, const.NUC_ARGS)
+    sd_v = ssm.spec_den_v(z, params, Np[1:], method=method)
+    pow_v = ssm.pow_spec(z, sd_v)
     V2_pow_v = np.trapz(pow_v/z, z)
 
     if v_xi_file is not None:
-        sd_v2 = ssm.spec_den_v(z, [vw, alpha, const.NUC_TYPE, const.NUC_ARGS], Np[1:], v_xi_file, method=method)
+        sd_v2 = ssm.spec_den_v(z, params, Np[1:], v_xi_file, method=method)
         pow_v2 = ssm.pow_spec(z, sd_v2)
         V2_pow_v = np.trapz(pow_v2/z, z)
 

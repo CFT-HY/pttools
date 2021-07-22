@@ -1,6 +1,7 @@
 """Functions for computing GW power spectra"""
 
 import enum
+import logging
 import typing as tp
 
 import numba
@@ -11,6 +12,8 @@ from pttools import bubble
 from pttools import speedup
 from . import const
 from . import ssm
+
+logger = logging.getLogger(__name__)
 
 
 @enum.unique
@@ -42,6 +45,13 @@ def pow_spec(z: th.FLOAT_OR_ARR, spec_den: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     Power spectrum from spectral density at dimensionless wavenumber z.
     """
     return z**3 / (2. * np.pi ** 2) * spec_den
+
+
+def convert_params(params: bubble.PHYSICAL_PARAMS_TYPE) -> bubble.PHYSICAL_PARAMS_TYPE:
+    if isinstance(params, list):
+        logger.warning("Specifying the model parameters as a list is deprecated. Please use a tuple instead.")
+        return tuple(params)
+    return params
 
 
 # @numba.njit
@@ -121,7 +131,8 @@ def spec_den_v(
     :param params: tuple of vw (scalar), alpha (scalar), nuc_type (string [exponential* | simultaneous]), nuc_args (tuple, default (1,))
     :return: dimensionless velocity spectral density $\bar{P}_v$
     """
-    bubble.check_physical_params(tuple(params))
+    params = convert_params(params)
+    bubble.check_physical_params(params)
 
     nz = z.size
     # nxi = npt[0]
@@ -273,7 +284,7 @@ def power_v(
 def power_gw_scaled(
         z: np.ndarray,
         params: bubble.PHYSICAL_PARAMS_TYPE,
-        npt=const.NPTDEFAULT,
+        npt: const.NPT_TYPE = const.NPTDEFAULT,
         filename: str = None,
         skip: int = 1,
         method: ssm.Method = ssm.Method.E_CONSERVING,
@@ -298,6 +309,7 @@ def power_gw_scaled(
     """
     if np.any(z <= 0.0):
         raise ValueError("z values must all be positive.")
+    params = convert_params(params)
 
     bubble.check_physical_params(params)
 

@@ -75,7 +75,7 @@ def de_from_w(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> n
     bag equation of state.
     Can get ``alpha_n = find_alpha_n_from_w_xi(w,xi,v_wall,alpha_p)``
     """
-    check.check_physical_params([v_wall, alpha_n])
+    check.check_physical_params((v_wall, alpha_n))
     e_from_w = bag.get_e(w, bag.get_phase(xi, v_wall), 0.75 * w[-1] * alpha_n)
 
     return e_from_w - e_from_w[-1]
@@ -87,7 +87,7 @@ def de_from_w_new(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, a
     For exploring new methods of calculating energy density difference
     from velocity and enthalpy, assuming bag equation of state.
     """
-    check.check_physical_params([v_wall, alpha_n])
+    check.check_physical_params((v_wall, alpha_n))
     e_from_w = bag.get_e(w, bag.get_phase(xi, v_wall), 0.75 * w[-1] * alpha_n)
 
     de = e_from_w - e_from_w[-1]
@@ -106,7 +106,7 @@ def mean_energy_change(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: flo
     #        return de_from_w(w, xi, v_wall, alpha_n)
     #    int1, int2 = split_integrate(ene_diff, v, w, xi**3, v_wall)
     #    integral = int1 + int2
-    check.check_physical_params([v_wall, alpha_n])
+    check.check_physical_params((v_wall, alpha_n))
     integral = np.trapz(de_from_w(w, xi, v_wall, alpha_n), xi ** 3)
     return integral / v_wall ** 3
 

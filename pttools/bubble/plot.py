@@ -71,7 +71,7 @@ def plot_fluid_shell(
     - omega (thermal energy relative to scalar potential energy, as measured by trace anomaly)
     Last two should sum to 1.
     """
-    check.check_physical_params([v_wall, alpha_n])
+    check.check_physical_params((v_wall, alpha_n))
 
     #    high_v_plot = 0.8 # Above which plot v ~ xi approximation
     #    low_v_plot = 0.2  # Below which plot  low v approximation
@@ -245,7 +245,7 @@ def plot_fluid_shells(
         lst_dw = []
 
     for v_wall, alpha_n in zip(v_wall_list, alpha_n_list):
-        check.check_physical_params([v_wall, alpha_n])
+        check.check_physical_params((v_wall, alpha_n))
 
         sol_type = transition.identify_solution_type(v_wall, alpha_n)
 

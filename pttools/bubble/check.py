@@ -11,7 +11,8 @@ from . import alpha
 
 logger = logging.getLogger(__name__)
 
-PHYSICAL_PARAMS_TYPE = tp.Union[tp.Tuple[float, float], tp.List[float]]
+NUC_ARGS_TYPE = tp.Tuple[float, ...]
+PHYSICAL_PARAMS_TYPE = tp.Union[tp.Tuple[float, float], tp.Tuple[float, float, str, NUC_ARGS_TYPE]]
 
 
 @numba.njit
