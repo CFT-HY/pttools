@@ -6,6 +6,6 @@ Unit tests
    paper
    profiling
    utils
-   other
+   misc
 
 .. automodule:: tests

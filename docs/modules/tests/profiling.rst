@@ -6,7 +6,7 @@ Profiling
 .. automodule:: tests.profiling.test_profile
 
 GW power spectrum tests
-----------------------
+-----------------------
 
 .. automodule:: tests.profiling.test_profile_gw
 
