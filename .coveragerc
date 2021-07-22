@@ -4,6 +4,7 @@ branch = True
 source = .
 omit =
     **/envs/*
+    **/envs-old/*
     **/venv/*
 parallel = True
 

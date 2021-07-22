@@ -44,5 +44,6 @@ test-output.txt
 .spyproject
 dist
 envs
+envs-old
 model_data
 venv
