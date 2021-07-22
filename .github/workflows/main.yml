@@ -31,9 +31,7 @@ jobs:
       - name: Generate documentation
         run: |
           cd docs
-          make html
-          make latexpdf
-          make epub
+          make all
       - name: Upload results
         uses: actions/upload-artifact@v2
         with:
