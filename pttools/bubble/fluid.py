@@ -27,8 +27,6 @@ from . import props
 from . import transition
 
 logger = logging.getLogger(__name__)
-if NumbaLSODA is None:
-    logger.warning("Could not import NumbaLSODA")
 
 DEFAULT_DF_DTAU: str = "bag"
 # ODEINT_LOCK = threading.Lock()

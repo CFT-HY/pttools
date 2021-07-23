@@ -13,6 +13,10 @@ except ImportError:
     from numba.dispatcher import Dispatcher
     from numba.targets.registry import CPUDispatcher
     NUMBA_OLD_STRUCTURE = True
+try:
+    import NumbaLSODA
+except ImportError:
+    NumbaLSODA = None
 
 logger = logging.getLogger(__name__)
 
@@ -28,3 +32,9 @@ if NUMBA_OLD_STRUCTURE:
 if NUMBA_SEGFAULTING_PROFILERS:
     logger.warning(
         "You are using an old Numba version, which is prone to segfaulting when profiled. Please upgrade.")
+if NumbaLSODA is None:
+    logger.warning(
+        "Could not import NumbaLSODA. "
+        "As it's a relatively new library, it may not have been installed automatically by your package manager. "
+        "To use NumbaLSODA, please install it manually."
+    )
