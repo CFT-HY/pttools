@@ -138,7 +138,7 @@ def v_minus(
     :param vp: $v_-$, fluid speed $v_+$ behind the wall
     :param ap: $\alpha_+$, strength parameter at the wall
     :param sol_type: Detonation, Deflagration, Hybrid
-    :return: $v_+$, fluid speed behind the wall
+    :return: $v_-$, fluid speed behind the wall
     """
     # TODO: add support for having both arguments as arrays
     # sol_type is a string enum, which would complicate the use of numba.guvectorize
