@@ -14,6 +14,7 @@ from pttools import speedup
 from tests import utils
 from tests.paper import plane
 from tests.paper import plot_plane
+from tests.test_performance import PERFORMANCE_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +99,9 @@ class TestPlane(unittest.TestCase):
         ax.set_xlabel("Solver")
         ax.set_ylabel("Time (s)")
         ax.set_yscale("log")
+        with open(os.path.join(PERFORMANCE_DIR, "plane.txt"), "w") as file:
+            for name, time in zip(names, iter_times):
+                file.write(f"{name}: {time} s\n")
 
     @classmethod
     def plot_diff(cls, ax: plt.Axes, name: str, diffs: tp.Dict[int, float]):
