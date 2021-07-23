@@ -1,4 +1,8 @@
-"""Functions for plotting guide power laws on graphs"""
+"""Functions for plotting guide power laws on graphs
+
+Separated from
+:mod:`tests.paper.ssm_paper_utils`.
+"""
 
 import logging
 import typing as tp

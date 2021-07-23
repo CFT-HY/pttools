@@ -92,11 +92,11 @@ VW_LIST_ALL = [const.VW_WEAK_LIST, VW_INTER_LIST]
 
 @numba.njit
 def cwg_fitfun(k, p0, p1):
-    return p0*np.power(k/p1, 3.0)*np.power(7.0/(4.0 + 3.0*np.power(k/p1, 2.0)), 7.0/2.0)
+    return p0 * np.power(k/p1, 3.0)*np.power(7.0/(4.0 + 3.0*np.power(k/p1, 2.0)), 7.0/2.0)
 
 
 @numba.njit
-def double_broken_power_law(z, A, z0, z1, a, b, c, d=4., e=2.):
+def double_broken_power_law(z, A, z0, z1, a, b, c, d: float = 4., e: float = 2.):
     s = z/z1
     D = z1/z0
     Dpow = D**d
@@ -111,21 +111,21 @@ def ssm_fitfun(z, A, z0, z1):
     return double_broken_power_law(z, A, z0, z1, 9, 1, -4)
 
 
-def get_cwg_fit_pars(y, pow_gw):
+def get_cwg_fit_pars(y: np.ndarray, pow_gw: np.ndarray):
     frange = np.where(y > 10)
     pars0 = (pow_gw[frange][0], 10)
     pars, _ = curve_fit(cwg_fitfun, y[frange], pow_gw[frange], pars0)
     return pars[0], pars[1]
 
 
-def get_ssm_fit_pars(y, pow_gw):
+def get_ssm_fit_pars(y: np.ndarray, pow_gw: np.ndarray):
     frange = np.where(y > 1e-8)
     pars0 = (pow_gw[frange][0], 3, 20)
     pars, _ = curve_fit(ssm_fitfun, y[frange], pow_gw[frange], pars0, sigma=np.sqrt(pow_gw[frange]))
     return pars
 
 
-def add_cwg_fit(f_gw, y, pow_gw):
+def add_cwg_fit(f_gw: plt.Figure, y: np.ndarray, pow_gw: np.ndarray):
     p = get_cwg_fit_pars(y, pow_gw)
     pow_gw_sim_cwg = cwg_fitfun(y, p[0], p[1])
     f_gw.axes[0].loglog(y, pow_gw_sim_cwg, 'k-.', label='CWG fit')
@@ -133,7 +133,7 @@ def add_cwg_fit(f_gw, y, pow_gw):
     return p
 
 
-def add_ssm_fit(f_gw, y, pow_gw):
+def add_ssm_fit(f_gw: plt.Figure, y, pow_gw):
     p = get_ssm_fit_pars(y, pow_gw)
     pow_gw_sim_ssm = ssm_fitfun(y, p[0], p[1], p[2])
     f_gw.axes[0].loglog(y, pow_gw_sim_ssm, 'k--', label='SSM fit')
@@ -141,13 +141,11 @@ def add_ssm_fit(f_gw, y, pow_gw):
     return p
 
 
-def make_1dh_compare_table(params_list, v2_list,
-                           file_name: tp.Union[str, io.TextIOBase] = 'table_1dh_compare.tex'):
-
-    if isinstance(file_name, io.TextIOBase):
-        f = file_name
-    else:
-        f = open(file_name, 'w')
+def make_1dh_compare_table(
+        params_list: np.ndarray,
+        v2_list: np.ndarray,
+        file_name: tp.Union[str, io.TextIOBase] = 'table_1dh_compare.tex') -> None:
+    f = file_name if isinstance(file_name, io.TextIOBase) else open(file_name, "w")
     f.write('\\begin{tabular}{cc | rrr }\n')
 
     f.write('\\hline\\hline\n')
@@ -177,8 +175,6 @@ def make_1dh_compare_table(params_list, v2_list,
     f.write('\\end{tabular}\n')
     if not isinstance(file_name, io.TextIOBase):
         f.close()
-
-    return None
 
 
 def make_3dh_compare_table(
