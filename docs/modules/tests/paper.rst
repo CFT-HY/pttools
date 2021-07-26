@@ -19,6 +19,11 @@ Plane plotting
 
 .. automodule:: tests.paper.plot_plane
 
+Plotting
+--------
+
+.. automodule:: tests.paper.plotting
+
 Significant figures
 -------------------
 
