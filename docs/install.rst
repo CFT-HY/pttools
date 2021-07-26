@@ -106,3 +106,14 @@ You can set up a local development environment with the following commands.
 On a cluster
 ------------
 Please see the Slurm job script templates in the tests folder.
+
+NumbaLSODA
+----------
+`NumbaLSODA <https://github.com/Nicholaswogan/NumbaLSODA>`_
+is an optional dependency, which speeds up ODE integration.
+It's not available on PyPI and therefore it has to be installed separately when installing using a package manager.
+This can be done with:
+
+.. code-block:: bash
+
+  pip3 install --upgrade "NumbaLSODA @ git+https://github.com/Nicholaswogan/NumbaLSODA.git"
