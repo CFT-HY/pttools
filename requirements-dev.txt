@@ -6,7 +6,7 @@ colorama
 # For Numba system info
 psutil
 pyan3 >=1.1.1, !=1.2.0
-pyinstrument
+pyinstrument >= 3.4.2, < 4.0.0
 pylint
 pytest
 pytest-cov
