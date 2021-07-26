@@ -1,7 +1,10 @@
-"""Functions for plotting guide power laws on graphs
+"""Plotting methods for plotting guide power laws on graphs.
 
-Separated from
-:mod:`tests.paper.ssm_paper_utils`.
+These methods are shared by
+:mod:`tests.paper.ssm_paper_utils`
+and
+:mod:`tests.paper.ssm_compare`.
+In the :ssm_repo:`sound-shell-model repository <>` these methods are included in both of the aforementioned files.
 """
 
 import logging

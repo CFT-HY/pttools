@@ -98,6 +98,7 @@ extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
     "notes": ("https://scipost.org/10.21468/SciPostPhysLectNotes.24", "Hindmarsh et. al, 2021"),
     # Other
     "issue": ("https://github.com/hindmars/pttools/issues/%s", "issue %s"),
+    "ssm_repo": ("https://bitbucket.org/hindmars/sound-shell-model/src/master/", "sound-shell-model/%s")
 }
 intersphinx_mapping: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
     "cobaya": ("https://cobaya.readthedocs.io/en/latest/", None),

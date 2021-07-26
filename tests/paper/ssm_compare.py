@@ -2,7 +2,7 @@
 Creates and plots velocity and GW power spectra from SSM
 
 Modified from
-https://bitbucket.org/hindmars/sound-shell-model/
+:ssm_repo:`paper_ssm_prace/figures/ssm_compare.py`
 """
 
 import logging
