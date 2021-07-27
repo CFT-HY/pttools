@@ -36,5 +36,5 @@ if NumbaLSODA is None:
     logger.warning(
         "Could not import NumbaLSODA. "
         "As it's a relatively new library, it may not have been installed automatically by your package manager. "
-        "To use NumbaLSODA, please install it manually."
+        "To use NumbaLSODA, please see the PTtools documentation on how to install it manually."
     )
