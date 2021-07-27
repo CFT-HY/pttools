@@ -3,6 +3,7 @@
 
 # Intel Compile Runtime provides Intel SVML, which speeds up Numba
 icc-rt
+intel-openmp; sys_platform == "darwin"
 matplotlib
 numba
 # NumbaLSODA cannot yet be compiled automatically on the GitHub Actions Windows runners
