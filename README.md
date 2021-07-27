@@ -1,4 +1,6 @@
 # README #
+[![CI](https://github.com/hindmars/pttools/actions/workflows/main.yml/badge.svg)](https://github.com/hindmars/pttools/actions/workflows/main.yml)
+[![Docs](https://github.com/hindmars/pttools/actions/workflows/docs.yml/badge.svg)](https://github.com/hindmars/pttools/actions/workflows/docs.yml)
 
 PTtools is a library of python functions for calculating hydrodynamical quantities 
 around expanding bubbles of the new phase in an early universe phase transition, 
