@@ -28,10 +28,9 @@ jobs:
             pip --cache-dir=.pip install --upgrade wheel
             pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
         - name: Print Numba sysinfo
+          # On macOS the Numba script is not executable by default and therefore has to be called as a Python module.
           run: |
-            PYTHON_VERSION="$(python -c 'import platform; print(platform.python_version())')"
-            chmod +x "/Users/runner/hostedtoolcache/Python/${PYTHON_VERSION}/x64/bin/numba"
-            numba --sysinfo | tee numba-sysinfo.txt
+            python -m numba --sysinfo | tee numba-sysinfo.txt
         - name: Run tests
           run: |
             set -o pipefail
