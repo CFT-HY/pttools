@@ -29,7 +29,7 @@ jobs:
             pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
         - name: Print Numba information
           run: |
-            chmod +x "$(which numba)"
+            chmod +x $(which numba)
             numba --sysinfo
         - name: Run tests
           run: |
