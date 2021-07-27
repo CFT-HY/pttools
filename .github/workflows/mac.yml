@@ -27,6 +27,8 @@ jobs:
             pip --cache-dir=.pip install --upgrade pip
             pip --cache-dir=.pip install --upgrade wheel
             pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
+        - name: Print Numba information
+          run: numba --sysinfo
         - name: Run tests
           run: |
             set -o pipefail
