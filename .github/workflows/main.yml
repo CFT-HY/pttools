@@ -113,6 +113,8 @@ jobs:
         pip --cache-dir=.pip install --upgrade pip
         pip --cache-dir=.pip install --upgrade wheel
         pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
+    - name: Print Numba sysinfo
+      run: numba --sysinfo | tee numba-sysinfo.txt
     - name: Run tests
       run: |
         set -o pipefail
@@ -127,6 +129,7 @@ jobs:
           coverage.xml
           coverage.json
           htmlcov
+          numba-sysinfo.txt
           test-output.txt
           test-results
         if-no-files-found: error
@@ -160,6 +163,8 @@ jobs:
         pip --cache-dir=.pip install --upgrade pip
         pip --cache-dir=.pip install --upgrade wheel
         pip --cache-dir=.pip install -r requirements-old.txt -r requirements-dev.txt
+    - name: Print Numba sysinfo
+      run: numba --sysinfo | tee numba-sysinfo.txt
     - name: Run tests
       run: |
         set -o pipefail
@@ -174,6 +179,7 @@ jobs:
           coverage.xml
           coverage.json
           htmlcov
+          numba-sysinfo.txt
           test-output.txt
           test-results
         if-no-files-found: error
@@ -205,6 +211,8 @@ jobs:
         pip --cache-dir=.pip install --upgrade pip
         pip --cache-dir=.pip install --upgrade wheel
         pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
+    - name: Print Numba sysinfo
+      run: numba --sysinfo | tee numba-sysinfo.txt
     - name: Run tests with coverage
       # Without pytest-pythonpath the PYTHONPATH may have to be set manually
       # PYTHONPATH="${PYTHONPATH}${PYTHONPATH:+:}./tests" pytest | tee test-output.txt
@@ -222,6 +230,7 @@ jobs:
           coverage.xml
           coverage.json
           htmlcov
+          numba-sysinfo.txt
           test-output.txt
           test-results
         if-no-files-found: error

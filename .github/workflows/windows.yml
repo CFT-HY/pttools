@@ -29,8 +29,8 @@ jobs:
             pip --cache-dir=.pip install --upgrade pip
             pip --cache-dir=.pip install --upgrade wheel
             pip --cache-dir=.pip install icc-rt matplotlib numba numpy scipy tbb -r requirements-dev.txt
-        - name: Print Numba information
-          run: numba --sysinfo
+        - name: Print Numba sysinfo
+          run: numba --sysinfo | tee numba-sysinfo.txt
         - name: Run tests
           # Failures may not get processed properly, as pipefail is not supported on Windows.
           # set -o pipefail
@@ -45,6 +45,7 @@ jobs:
               coverage.xml
               coverage.json
               htmlcov
+              numba-sysinfo.txt
               test-output.txt
               test-results
             if-no-files-found: error

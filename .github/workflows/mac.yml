@@ -27,11 +27,11 @@ jobs:
             pip --cache-dir=.pip install --upgrade pip
             pip --cache-dir=.pip install --upgrade wheel
             pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
-        - name: Print Numba information
+        - name: Print Numba sysinfo
           run: |
             PYTHON_VERSION="$(python -c 'import platform; print(platform.python_version())')"
             chmod +x "/Users/runner/hostedtoolcache/Python/${PYTHON_VERSION}/x64/bin/numba"
-            numba --sysinfo
+            numba --sysinfo | tee numba-sysinfo.txt
         - name: Run tests
           run: |
             set -o pipefail
@@ -45,6 +45,7 @@ jobs:
               coverage.xml
               coverage.json
               htmlcov
+              numba-sysinfo.txt
               test-output.txt
               test-results
             if-no-files-found: error
