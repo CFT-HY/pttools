@@ -23,10 +23,12 @@ jobs:
               pip-${{ runner.os }}-
               pip-
         - name: Install requirements
+          # Todo: fix NumbaLSODA installation on Windows
+          # Currently the requirements are specified manually to skip NumbaLSODA
           run: |
             pip --cache-dir=.pip install --upgrade pip
             pip --cache-dir=.pip install --upgrade wheel
-            pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
+            pip --cache-dir=.pip install icc-rt matplotlib numba numpy scipy tbb -r requirements-dev.txt
         - name: Print Numba information
           run: numba --sysinfo
         - name: Run tests
