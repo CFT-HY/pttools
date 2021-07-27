@@ -13,7 +13,7 @@ from . import utils_yappi
 class TestProfileGW(TestProfile):
     name = "gw"
     z = np.logspace(0, 2, 100)
-    params = [0.1, 0.1]
+    params = (0.1, 0.1)
 
     @classmethod
     def setup_numba(cls):

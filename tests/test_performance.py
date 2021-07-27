@@ -65,9 +65,9 @@ class TestPerformance(unittest.TestCase):
         import pttools.ssmtools as ssm
 
         z = np.logspace(0,2,100)
-        gw = ssm.power_gw_scaled(z,(0.1,0.1))
+        gw = ssm.power_gw_scaled(z, (0.1,0.1))
         """)
-        command = "gw = ssm.power_gw_scaled(z,[0.1,0.1])"
+        command = "gw = ssm.power_gw_scaled(z, (0.1,0.1))"
         cls.run_with_different_threads("GW", setup, command, 10)
 
     @classmethod
