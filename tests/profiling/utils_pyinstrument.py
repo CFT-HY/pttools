@@ -26,8 +26,8 @@ def process(profiler: pyinstrument.Profiler, name: str, print_to_console: bool =
     if print_to_console:
         print(profiler.output_text(unicode=True, color=True))
 
-    with open(f"{path}.txt", "w") as file:
+    with open(f"{path}.txt", "w", encoding="utf-8") as file:
         file.write(profiler.output_text(unicode=True, color=False))
 
-    with open(f"{path}.html", "w") as file:
+    with open(f"{path}.html", "w", encoding="utf-8") as file:
         file.write(profiler.output_html())
