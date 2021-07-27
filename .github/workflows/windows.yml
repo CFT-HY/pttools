@@ -30,7 +30,7 @@ jobs:
             pip --cache-dir=.pip install --upgrade wheel
             pip --cache-dir=.pip install icc-rt matplotlib numba numpy scipy tbb -r requirements-dev.txt
         - name: Print Numba sysinfo
-          run: numba --sysinfo | tee numba-sysinfo.txt
+          run: python -m numba --sysinfo | tee numba-sysinfo.txt
         - name: Run tests
           # Failures may not get processed properly, as pipefail is not supported on Windows.
           # set -o pipefail
