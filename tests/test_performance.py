@@ -4,7 +4,6 @@ import logging
 import os
 import timeit
 import unittest
-import sys
 import textwrap
 import typing as tp
 
@@ -60,7 +59,6 @@ class TestPerformance(unittest.TestCase):
 
     @classmethod
     @unittest.skipIf(not NUMBA_HAS_GET_NUM_THREADS, "Numba is too old for setting the number of threads.")
-    @unittest.skipIf(sys.platform.startswith("darwin"), "This test crashes on macOS")
     def test_performance_gw(cls):
         setup = textwrap.dedent("""
         import numpy as np

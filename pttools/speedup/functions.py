@@ -3,6 +3,8 @@
 import numba
 import numpy as np
 
+from . import options
+
 
 @numba.njit
 def gradient(f: np.ndarray):
@@ -18,7 +20,7 @@ def gradient(f: np.ndarray):
     return out
 
 
-@numba.njit(parallel=True)
+@numba.njit(parallel=options.NUMBA_NESTED_PARALLELISM)
 def logspace(start: float, stop: float, num: int, base: float = 10.0) -> np.ndarray:
     """Numba version of numpy.logspace"""
     y = np.linspace(start, stop, num)

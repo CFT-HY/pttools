@@ -34,7 +34,7 @@ jobs:
         - name: Run tests
           run: |
             set -o pipefail
-            pytest | tee test-output.txt
+            NUMBA_NESTED_PARALLELISM=0 pytest | tee test-output.txt
             coverage json
         - name: Upload results
           uses: actions/upload-artifact@v2
