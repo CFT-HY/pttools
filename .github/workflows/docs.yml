@@ -1,0 +1,39 @@
+name: Docs
+on: push
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v2
+      - name: Print Python version
+        run: python -V
+      - name: Install LaTeX
+        run: sudo apt-get install -y cm-super dvipng latexmk texlive-latex-extra
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Load pip cache
+        uses: actions/cache@v2
+        with:
+          path: .pip
+          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            pip-${{ runner.os }}-
+            pip-
+      - name: Install requirements
+        run: |
+          pip --cache-dir=.pip install --upgrade pip
+          pip --cache-dir=.pip install --upgrade wheel
+          pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt -r docs/requirements.txt
+      - name: Generate documentation
+        run: |
+          cd docs
+          make all
+      - name: Upload results
+        uses: actions/upload-artifact@v2
+        with:
+          name: Documentation
+          path: |
+            docs/_build
+          if-no-files-found: error
