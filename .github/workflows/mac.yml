@@ -29,7 +29,9 @@ jobs:
             pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
         - name: Print Numba information
           run: |
-            chmod +x $(which numba)
+            NUMBA_PATH="$(which numba)"
+            echo "Numba is in the path: ${NUMBA_PATH}"
+            chmod +x "${NUMBA_PATH}"
             numba --sysinfo
         - name: Run tests
           run: |
