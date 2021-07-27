@@ -1,0 +1,45 @@
+name: Test on macOS
+on: workflow_dispatch
+jobs:
+  test:
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+        - name: Setup Python
+          uses: actions/setup-python@v2
+          with:
+            # macOS minutes cost 10x what Linux does, so testing multiple Python versions would be quite costly
+            python-version: 3.9
+        - name: Print Python version
+          run: python -V
+        - name: Checkout
+          uses: actions/checkout@v2
+        - name: Load pip cache
+          uses: actions/cache@v2
+          with:
+            path: .pip
+            key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+            restore-keys: |
+              pip-${{ runner.os }}-
+              pip-
+        - name: Install requirements
+          run: |
+            pip --cache-dir=.pip install --upgrade pip
+            pip --cache-dir=.pip install --upgrade wheel
+            pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
+        - name: Run tests
+          run: |
+            set -o pipefail
+            pytest | tee test-output.txt
+            coverage json
+        - name: Upload results
+          uses: actions/upload-artifact@v2
+          with:
+            name: Test results with Numba
+            path: |
+              coverage.xml
+              coverage.json
+              htmlcov
+              test-output.txt
+              test-results
+            if-no-files-found: error
