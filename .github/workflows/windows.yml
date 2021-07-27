@@ -28,7 +28,7 @@ jobs:
           run: |
             pip --cache-dir=.pip install --upgrade pip
             pip --cache-dir=.pip install --upgrade wheel
-            pip --cache-dir=.pip install icc-rt matplotlib numba numpy scipy tbb -r requirements-dev.txt
+            pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
         - name: Print Numba sysinfo
           run: python -m numba --sysinfo | tee numba-sysinfo.txt
         - name: Run tests
