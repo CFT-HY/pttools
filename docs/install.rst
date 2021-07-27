@@ -41,15 +41,6 @@ Alternatively you can install the development version.
   # such as icc-rt and tbb for better performance with Numba
   pip3 install --upgrade "pttools[performance] @ git+ssh://git@github.com/hindmars/pttools.git@dev"
 
-If you get an error about missing ``cmake``, you have to install it manually.
-On Debian- and Ubuntu-based systems this can be done with the following commands.
-Once ``cmake`` is installed, run the pip installation above again.
-
-.. code-block:: bash
-
-  sudo apt-get update
-  sudo apt-get install cmake
-
 With conda
 ----------
 PTtools does not yet have a
@@ -117,3 +108,12 @@ This can be done with:
 .. code-block:: bash
 
   pip3 install --upgrade "NumbaLSODA @ git+https://github.com/Nicholaswogan/NumbaLSODA.git"
+
+If you get an error about missing ``cmake``, you have to install it manually.
+On Debian- and Ubuntu-based systems this can be done with the following commands.
+Once ``cmake`` is installed, run the pip installation above again.
+
+.. code-block:: bash
+
+  sudo apt-get update
+  sudo apt-get install cmake
