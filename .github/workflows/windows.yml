@@ -7,9 +7,9 @@ jobs:
     steps:
         - name: Setup Python
           uses: actions/setup-python@v2
-          with:
-            # Windows minutes cost 2x what Linux does, so testing multiple Python versions would be quite costly
-            python-version: 3.9
+          # Windows minutes cost 2x what Linux does, so testing multiple Python versions would be quite costly
+          # with:
+            # python-version: 3.9
         - name: Print Python version
           run: python -V
         - name: Checkout
