@@ -1,5 +1,5 @@
 name: Test on macOS
-on: workflow_dispatch
+on: [push, workflow_dispatch]
 jobs:
   test:
     runs-on: macos-latest

@@ -1,5 +1,5 @@
 name: Test Windows
-on: workflow_dispatch
+on: [push, workflow_dispatch]
 jobs:
   test:
     runs-on: windows-latest
