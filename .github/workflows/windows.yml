@@ -32,8 +32,9 @@ jobs:
         - name: Print Numba information
           run: numba --sysinfo
         - name: Run tests
+          # Failures may not get processed properly, as pipefail is not supported on Windows.
+          # set -o pipefail
           run: |
-            set -o pipefail
             pytest | tee test-output.txt
             coverage json
         - name: Upload results
