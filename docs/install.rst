@@ -51,13 +51,13 @@ Stable version
 
 .. code-block:: bash
 
-  pip3 install --upgrade "pttools[NumbaLSODA,performance] @ git+ssh://git@github.com/hindmars/pttools.git"
+  pip3 install --upgrade "pttools-gw[NumbaLSODA,performance] @ git+ssh://git@github.com/hindmars/pttools.git"
 
 Development version
 
 .. code-block:: bash
 
-  pip3 install --upgrade "pttools[NumbaLSODA,performance] @ git+ssh://git@github.com/hindmars/pttools.git@dev"
+  pip3 install --upgrade "pttools-gw[NumbaLSODA,performance] @ git+ssh://git@github.com/hindmars/pttools.git@dev"
 
 With conda
 ----------
