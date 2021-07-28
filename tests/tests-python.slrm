@@ -61,7 +61,8 @@ else
 fi
 echo "Using pip cache at: ${PIP_CACHE_DIR}"
 
-pip --cache-dir="${PIP_CACHE_DIR}" install wheel
+pip --cache-dir="${PIP_CACHE_DIR}" install --upgrade pip
+pip --cache-dir="${PIP_CACHE_DIR}" install --upgrade wheel
 # When using this script for another project that uses PTtools,
 # please add something like "pip install pttools-gw" here.
 # See the PTtools documentation for more exact instructions.
