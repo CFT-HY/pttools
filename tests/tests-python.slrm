@@ -31,12 +31,13 @@ if command -v "module" &> /dev/null; then
     # https://docs.csc.fi/apps/python/
     # module load fgci-common
     module load python-env
-    # Fix for over-eager Anaconda package configuration
-    unset PYTHONPATH
   fi
 else
   echo "Warning! Module management system was not found."
 fi
+
+# Fix over-eager Anaconda package configuration on CSC clusters
+unset PYTHONPATH
 
 VENV_DIR="${PROJECT_DIR}/venv"
 if [ ! -d "${VENV_DIR}" ]; then
