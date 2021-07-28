@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# This script serves as an example on how to build and run a conda environment with PTtools on a Slurm cluster.
+# Please feel free to copy this script to your repository and to edit it to suit your needs.
+
 #SBATCH --job-name=pttools-tests-conda
 # Account configuration is required on CSC clusters
 # #SBATCH --account=YOUR_GROUP_HERE
@@ -16,6 +19,8 @@ echo "Running on $(hostname --fqdn)"
 # SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 # PROJECT_DIR="${SCRIPT_DIR}/.."
 
+# When using this script in another project,
+# please edit this line so that it points to the root of the repository.
 PROJECT_DIR="$(realpath "..")"
 cd "${PROJECT_DIR}"
 
@@ -54,6 +59,9 @@ else
   PIP_CACHE_DIR="${WRKDIR}/cache/pip"
 fi
 
+# When using this script for another project that uses PTtools,
+# please add something like "pip install pttools-gw" here.
+# See the PTtools documentation for more exact instructions.
 pip --cache-dir="${PIP_CACHE_DIR}" install -r "${PROJECT_DIR}/requirements-dev.txt"
 
 numba --sysinfo

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# This script serves as an example on how to build and run a virtual environment with PTtools on a Slurm cluster.
+# Please feel free to copy this script to your repository and to edit it to suit your needs.
+
 #SBATCH --job-name=pttools-tests-conda
 # Account configuration is required on CSC clusters
 # #SBATCH --account=YOUR_GROUP_HERE
@@ -12,6 +15,8 @@ set -e
 
 echo "Running on $(hostname --fqdn)"
 
+# When using this script in another project,
+# please edit this line so that it points to the root of the repository.
 PROJECT_DIR="$(realpath "..")"
 cd "${PROJECT_DIR}"
 echo "PTtools is located at: ${PROJECT_DIR}"
@@ -51,6 +56,9 @@ fi
 echo "Using pip cache at: ${PIP_CACHE_DIR}"
 
 pip --cache-dir="${PIP_CACHE_DIR}" install wheel
+# When using this script for another project that uses PTtools,
+# please add something like "pip install pttools-gw" here.
+# See the PTtools documentation for more exact instructions.
 pip --cache-dir="${PIP_CACHE_DIR}" install -r "${PROJECT_DIR}/requirements.txt" -r "${PROJECT_DIR}/requirements-dev.txt"
 
 numba --sysinfo
