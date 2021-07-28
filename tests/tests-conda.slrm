@@ -40,6 +40,9 @@ else
   echo "Warning! Module management system was not found."
 fi
 
+# Fix over-eager Anaconda package configuration on CSC clusters.
+unset PYTHONPATH
+
 # Enabling conda for use in scripts
 eval "$(conda shell.bash hook)"
 
