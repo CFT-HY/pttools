@@ -53,6 +53,10 @@ else
 fi
 source "${VENV_DIR}/bin/activate"
 
+# These are for debugging problems with the virtualenv
+echo "Using python at: $(which python)"
+echo "Using pip at: $(which pip)"
+
 # Override pip cache directory for Kale to avoid hitting the disk quota limits
 if [ -z "${WRKDIR}" ]; then
   PIP_CACHE_DIR="$(pip cache dir)"

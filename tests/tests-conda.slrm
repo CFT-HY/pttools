@@ -52,12 +52,17 @@ else
 fi
 conda activate "${PROJECT_DIR}/envs"
 
+# These are for debugging problems with the virtualenv
+echo "Using python at: $(which python)"
+echo "Using pip at: $(which pip)"
+
 # Override pip cache directory for Kale to avoid hitting the disk quota limits.
 if [ -z "${WRKDIR}" ]; then
   PIP_CACHE_DIR="$(pip cache dir)"
 else
   PIP_CACHE_DIR="${WRKDIR}/cache/pip"
 fi
+echo "Using pip cache at: ${PIP_CACHE_DIR}"
 
 # When using this script for another project that uses PTtools,
 # please add something like "pip install pttools-gw" here.
