@@ -41,7 +41,13 @@ fi
 VENV_DIR="${PROJECT_DIR}/venv"
 if [ ! -d "${VENV_DIR}" ]; then
   echo "Creating virtualenv at: ${VENV_DIR}"
-  python3 -m venv --upgrade-deps "${VENV_DIR}"
+  if python3 -c "import sys; sys.exit(sys.version_info < (3, 9, 0))"; then
+    # 3.9 or later
+    python3 -m venv --upgrade-deps "${VENV_DIR}"
+  else
+    echo "Python version is older than 3.9. Please consider upgrading."
+    python3 -m venv "${VENV_DIR}"
+  fi
 else
   echo "Using virtualenv at: ${VENV_DIR}"
 fi
