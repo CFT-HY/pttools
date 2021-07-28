@@ -7,7 +7,7 @@ intel-openmp; sys_platform == "darwin"
 matplotlib
 numba
 # NumbaLSODA cannot yet be compiled automatically on the GitHub Actions Windows runners
-git+https://github.com/Nicholaswogan/NumbaLSODA.git; sys_platform != "win32"
+NumbaLSODA; sys_platform != "win32"
 # If you're using an old version of Numba and get the error:
 # "create_target_machine() got an unexpected keyword argument 'jitdebug'"
 # then you may have to downgrade llvmlite to 0.32.1
