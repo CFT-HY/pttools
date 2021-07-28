@@ -52,7 +52,7 @@ else
 fi
 conda activate "${PROJECT_DIR}/envs"
 
-# Override pip cache directory for Kale to avoid hitting the disk quota limits
+# Override pip cache directory for Kale to avoid hitting the disk quota limits.
 if [ -z "${WRKDIR}" ]; then
   PIP_CACHE_DIR="$(pip cache dir)"
 else
@@ -64,9 +64,11 @@ fi
 # See the PTtools documentation for more exact instructions.
 pip --cache-dir="${PIP_CACHE_DIR}" install -r "${PROJECT_DIR}/requirements-dev.txt"
 
+# Print Numba system information for debugging installation issues.
 numba --sysinfo
 
-# Use as many CPU cores as requested with Slurm
+# Use as many CPU cores as available to the job according to the Slurm job configuration
+# instead of the number of physical CPUs.
 NUM_CPUS="$(python -c "import os; print(len(os.sched_getaffinity(0)))")"
 
 # You can replace this with your own workload
