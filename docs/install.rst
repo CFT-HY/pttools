@@ -1,13 +1,15 @@
 Installation
 ============
 
-Until the PTtools repository is made public, these downloads require SSH authentication
+Until the PTtools repository is made public, these downloads require
+`SSH authentication <https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh>`_
 just like any GitHub repository cloning over SSH.
 Please request access to the repository from prof. Hindmarsh.
 
 If you're just using PTtools for your project,
 :ref:`installation using a package manager such as pip <With pip>` is recommended.
-However, if you're developing PTtools itself, you should :ref:`work on a cloned repository <Local development>`.
+However, if you're developing PTtools itself, you should
+:ref:`work on a cloned repository <Local development>`.
 
 With pip
 --------
@@ -22,24 +24,40 @@ The virtual environment can be created with the following commands.
   # The --upgrade-deps argument is not supported by Python versions older than 3.9
   # and can be left out.
   python3 -m venv --upgrade-deps venv
+  # This activates the virtual environment for the current shell session,
+  # and will have to be run again for each new shell session / console window.
   source ./venv/bin/activate
 
-Once the virtualenv is activated with the commands above, you can install PTtools from the Git repository with pip.
+Once the virtual environment is activated with the commands above,
+you can install PTtools from the Git repository with pip.
 A PyPI package will be available later, once PTtools is made open source.
 
+The ``[NumbaLSODA]`` flag installs the optional
+`NumbaLSODA <https://pypi.org/project/NumbaLSODA/>`_
+ordinary differential equation (ODE) solver library,
+but it may not build on all platforms, especially Windows.
+Therefore if you get any build errors,
+please remove the ``[NumbaLSODA]`` flag and try the PTtools installation again.
+You can then have a look at the
+:ref:`NumbaLSODA` section of the installation instructions.
+
+The ``[performance]`` flag installs additional libraries such as
+`icc-rt <https://pypi.org/project/icc-rt/>`_
+and
+`tbb <https://pypi.org/project/tbb/>`_
+for better performance with Numba.
+
+Stable version
+
 .. code-block:: bash
 
-  # The "[performance]" installs additional libraries
-  # such as icc-rt and tbb for better performance with Numba
-  pip3 install --upgrade "pttools[performance] @ git+ssh://git@github.com/hindmars/pttools.git"
+  pip3 install --upgrade "pttools[NumbaLSODA,performance] @ git+ssh://git@github.com/hindmars/pttools.git"
 
-Alternatively you can install the development version.
+Development version
 
 .. code-block:: bash
 
-  # The "[performance]" installs additional libraries
-  # such as icc-rt and tbb for better performance with Numba
-  pip3 install --upgrade "pttools[performance] @ git+ssh://git@github.com/hindmars/pttools.git@dev"
+  pip3 install --upgrade "pttools[NumbaLSODA,performance] @ git+ssh://git@github.com/hindmars/pttools.git@dev"
 
 With conda
 ----------
@@ -51,22 +69,27 @@ If you'd like to have one, please make a feature request in the
 
 With Docker
 -----------
-Before PTtools is published as open source, the direct builds from Git require,
+Before PTtools is published as open source, the direct Docker builds from Git require
 that Docker can find your SSH keys.
 This can be accomplished by running Docker
 `without sudo <https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user>`_.
+The Docker container is configured by the ``Dockerfile`` at the root of the repository.
+Once you have built the PTtools container,
+you can build your own containers which use PTtools by starting their Dockerfiles with ``FROM pttools``.
 
 Stable version
 
 .. code-block:: bash
 
   docker build "git@github.com:hindmars/pttools.git#main" --tag pttools
+  docker run -it pttools
 
 Development version
 
 .. code-block:: bash
 
   docker build "git@github.com:hindmars/pttools.git#dev" --tag pttools:dev
+  docker run -it pttools:dev
 
 Local development version
 
@@ -76,6 +99,7 @@ Local development version
   cd pttools
   git checkout dev
   docker build . --tag pttools:dev
+  docker run -it pttools:dev
 
 Local development
 -----------------
@@ -96,16 +120,24 @@ You can set up a local development environment with the following commands.
 
 On a cluster
 ------------
-Please see the Slurm job script templates in the tests folder.
+For running a local development installation of PTtools on a Slurm cluster,
+please see the job script templates in the tests folder.
 
 NumbaLSODA
 ----------
-`NumbaLSODA <https://github.com/Nicholaswogan/NumbaLSODA>`_
-is an optional dependency, which speeds up ODE integration.
-It's not available on PyPI and therefore it has to be installed separately when installing using a package manager.
-This can be done with:
+`NumbaLSODA <https://pypi.org/project/NumbaLSODA/>`_
+is an optional dependency, which speeds up the integration of ordinary differential equations (ODE).
+It's in an early stage and may require build tools such as ``cmake`` for its installation,
+and it seems not to compile yet on Windows.
+You can install NumbaLSODA manually with
 
 .. code-block:: bash
+
+  pip3 install --upgrade NumbaLSODA
+
+You may also try building from the Git repository.
+
+.. code-bock:: bash
 
   pip3 install --upgrade "NumbaLSODA @ git+https://github.com/Nicholaswogan/NumbaLSODA.git"
 
@@ -117,3 +149,35 @@ Once ``cmake`` is installed, run the pip installation above again.
 
   sudo apt-get update
   sudo apt-get install cmake
+
+Numba compatibility and nested parallelism
+------------------------------------------
+
+Some parts of the code such as
+:meth:`pttools.ssmtools.spectrum.spec_den_gw_scaled`
+contain nested parallelism to optimally use all available CPU resources.
+This requires that either OpenMP or Intel TBB is installed,
+as Numba's integrated workqueue backend does not support nested parallelism.
+Therefore if you get the error
+
+.. code-block::
+
+  Terminating: Nested parallel kernel launch detected,
+  the workqueue threading layer does not supported nested parallelism.
+  Try the TBB threading layer.
+
+when running a program that uses PTtools, or the error
+``Fatal Python error: Aborted``
+when running pytest,
+please install either OpenMP or Intel TBB (or both).
+You can verify that the installation works by running the command ``numba --sysinfo``
+and checking the contents of the section ``Threading Layer Information``.
+If you can't get the threading backends working,
+you can disable the nested parallelism by setting the environment variable
+``NUMBA_NESTED_PARALLELISM=0`` before importing PTtools.
+For example, this command should work for the
+:ref:`Local development` version without the threading libraries:
+
+.. code-block:: bash
+
+  NUMBA_NESTED_PARALLELISM=0 pytest
