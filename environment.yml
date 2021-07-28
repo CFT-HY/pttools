@@ -10,7 +10,7 @@
 name: pttools
 dependencies:
   - python>=3.6
-  - icc_rt
+  # - icc_rt
   - matplotlib
   - numba
   - numpy
