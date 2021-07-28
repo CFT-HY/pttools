@@ -60,6 +60,8 @@ echo "Using pip at: $(which pip)"
 
 # Override pip cache directory for Kale to avoid hitting the disk quota limits.
 if [ -z "${WRKDIR}" ]; then
+  # This assumes that the Python and pip versions installed by Conda are recent enough
+  # so that the command "pip cache dir" exists.
   PIP_CACHE_DIR="$(pip cache dir)"
 else
   PIP_CACHE_DIR="${WRKDIR}/cache/pip"

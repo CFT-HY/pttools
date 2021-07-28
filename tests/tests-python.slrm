@@ -36,7 +36,7 @@ else
   echo "Warning! Module management system was not found."
 fi
 
-# Fix over-eager Anaconda package configuration on CSC clusters
+# Fix over-eager Anaconda package configuration on CSC clusters.
 unset PYTHONPATH
 
 VENV_DIR="${PROJECT_DIR}/venv"
@@ -56,11 +56,15 @@ source "${VENV_DIR}/bin/activate"
 
 # These are for debugging problems with the virtualenv
 echo "Python version: $(python -c "import platform; print(platform.python_version())")"
-echo "Pip version: $(pip --version)"
+echo "Pip version (before upgrade): $(pip --version)"
 echo "Using python at: $(which python)"
 echo "Using pip at: $(which pip)"
 
-# Override pip cache directory for Kale to avoid hitting the disk quota limits
+# This has to be before the cache setup so that the command "pip cache dir" works.
+pip install --upgrade pip
+echo "Pip version (after upgrade): $(pip --version)"
+
+# Override pip cache directory for Kale to avoid hitting the disk quota limits.
 if [ -z "${WRKDIR}" ]; then
   PIP_CACHE_DIR="$(pip cache dir)"
 else
@@ -68,14 +72,13 @@ else
 fi
 echo "Using pip cache at: ${PIP_CACHE_DIR}"
 
-pip --cache-dir="${PIP_CACHE_DIR}" install --upgrade pip
 pip --cache-dir="${PIP_CACHE_DIR}" install --upgrade wheel
 # When using this script for another project that uses PTtools,
 # please add something like "pip install pttools-gw" here.
 # See the PTtools documentation for more exact instructions.
 pip --cache-dir="${PIP_CACHE_DIR}" install -r "${PROJECT_DIR}/requirements.txt" -r "${PROJECT_DIR}/requirements-dev.txt"
 
-# Print Numba system information for debugging installation issues
+# Print Numba system information for debugging installation issues.
 numba --sysinfo
 
 # Use as many CPU cores as available to the job according to the Slurm job configuration
