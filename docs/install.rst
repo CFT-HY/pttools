@@ -152,10 +152,12 @@ Once ``cmake`` is installed, run the pip installation above again.
 
 Numba compatibility and nested parallelism
 ------------------------------------------
+Nested parallelism is currently disabled by default due to the difficulty
+in setting up OpenMP and TBB on cluster environments and macOS.
 
 Some parts of the code such as
 :meth:`pttools.ssmtools.spectrum.spec_den_gw_scaled`
-contain nested parallelism to optimally use all available CPU resources.
+can use nested parallelism to optimally use all available CPU resources.
 This requires that either OpenMP or Intel TBB is installed,
 as Numba's integrated workqueue backend does not support nested parallelism.
 Therefore if you get the error
