@@ -54,6 +54,7 @@ fi
 source "${VENV_DIR}/bin/activate"
 
 # These are for debugging problems with the virtualenv
+echo "Python version: $(python -c "import platform; print(platform.python_version())")"
 echo "Using python at: $(which python)"
 echo "Using pip at: $(which pip)"
 
