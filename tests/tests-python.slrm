@@ -12,9 +12,9 @@ set -e
 
 echo "Running on $(hostname --fqdn)"
 
-PTTOOLS_DIR="$(realpath "..")"
-cd "${PTTOOLS_DIR}"
-echo "PTtools is located at: ${PTTOOLS_DIR}"
+PROJECT_DIR="$(realpath "..")"
+cd "${PROJECT_DIR}"
+echo "PTtools is located at: ${PROJECT_DIR}"
 
 if command -v "module" &> /dev/null; then
   if [[ "$(hostname --fqdn)" == *grid.helsinki.fi ]]; then
@@ -33,7 +33,7 @@ else
   echo "Warning! Module management system was not found."
 fi
 
-VENV_DIR="${PTTOOLS_DIR}/venv"
+VENV_DIR="${PROJECT_DIR}/venv"
 if [ ! -d "${VENV_DIR}" ]; then
   echo "Creating virtualenv at: ${VENV_DIR}"
   python3 -m venv --upgrade-deps "${VENV_DIR}"
@@ -51,7 +51,7 @@ fi
 echo "Using pip cache at: ${PIP_CACHE_DIR}"
 
 pip --cache-dir="${PIP_CACHE_DIR}" install wheel
-pip --cache-dir="${PIP_CACHE_DIR}" install -r "${PTTOOLS_DIR}/requirements.txt" -r "${PTTOOLS_DIR}/requirements-dev.txt"
+pip --cache-dir="${PIP_CACHE_DIR}" install -r "${PROJECT_DIR}/requirements.txt" -r "${PROJECT_DIR}/requirements-dev.txt"
 
 numba --sysinfo
 

@@ -14,10 +14,10 @@ echo "Running on $(hostname --fqdn)"
 
 # Slurm scripts are placed in a special directory when executed, so this doesn't work
 # SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-# PTTOOLS_DIR="${SCRIPT_DIR}/.."
+# PROJECT_DIR="${SCRIPT_DIR}/.."
 
-PTTOOLS_DIR="$(realpath "..")"
-cd "${PTTOOLS_DIR}"
+PROJECT_DIR="$(realpath "..")"
+cd "${PROJECT_DIR}"
 
 if command -v "module" &> /dev/null; then
   if [[ "$(hostname --fqdn)" == *grid.helsinki.fi ]]; then
@@ -37,15 +37,15 @@ fi
 eval "$(conda shell.bash hook)"
 
 # Conda environment setup
-if [ ! -d "${PTTOOLS_DIR}/envs" ]; then
+if [ ! -d "${PROJECT_DIR}/envs" ]; then
   # NOTE! By default Conda may download packages to ~/.conda, which may not have enough disk quota.
   # To change this behaviour, create a .condarc config file.
   # https://conda.io/projects/conda/en/latest/user-guide/configuration/use-condarc.html#
-  conda env create --prefix "${PTTOOLS_DIR}/envs" --file environment.yml
+  conda env create --prefix "${PROJECT_DIR}/envs" --file environment.yml
 else
-  conda env update --prefix "${PTTOOLS_DIR}/envs" --file environment.yml
+  conda env update --prefix "${PROJECT_DIR}/envs" --file environment.yml
 fi
-conda activate "${PTTOOLS_DIR}/envs"
+conda activate "${PROJECT_DIR}/envs"
 
 # Override pip cache directory for Kale to avoid hitting the disk quota limits
 if [ -z "${WRKDIR}" ]; then
@@ -54,7 +54,7 @@ else
   PIP_CACHE_DIR="${WRKDIR}/cache/pip"
 fi
 
-pip --cache-dir="${PIP_CACHE_DIR}" install -r "${PTTOOLS_DIR}/requirements-dev.txt"
+pip --cache-dir="${PIP_CACHE_DIR}" install -r "${PROJECT_DIR}/requirements-dev.txt"
 
 numba --sysinfo
 
