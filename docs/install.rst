@@ -137,7 +137,7 @@ You can install NumbaLSODA manually with
 
 You may also try building from the Git repository.
 
-.. code-bock:: bash
+.. code-block:: bash
 
   pip3 install --upgrade "NumbaLSODA @ git+https://github.com/Nicholaswogan/NumbaLSODA.git"
 
