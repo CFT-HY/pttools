@@ -1,17 +1,16 @@
 Acknowledgements
 ================
-
 The following people have contributed to the development of PTtools (in alphabetical order).
 
 - Mudhahir Al-Ajmi
-- Danny Bail
+- Danny Bail (Sussex MPhys RP projects 2016-18)
 - Daniel Cutting
 - Chloe Gowling
 - Mulham Hijazi
-- Mark Hindmarsh
+- Mark Hindmarsh (2015 $\rightarrow$)
 - Jacky Lindsay
-- Mika Mäki
-- Mike Soughton
+- Mika Mäki (University of Helsinki summer employee 2021)
+- Mike Soughton (MPhys project 2017-18)
 
 The development of PTtools has been funded by
 
