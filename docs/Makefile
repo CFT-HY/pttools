@@ -15,6 +15,7 @@ help:
 .PHONY: help Makefile
 
 all:
+	$(MAKE) linkcheck
 	$(MAKE) html
 	$(MAKE) latexpdf
 	$(MAKE) epub
