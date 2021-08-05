@@ -108,3 +108,15 @@ intersphinx_mapping: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
     "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
     # "yappi": ("https://yappi.readthedocs.io/en/latest/", None),
 }
+linkcheck_allowed_redirects = {
+    r"https://bitbucket\.org/*": r"https://id\.atlassian\.com/*",
+    r"https://www.helsinki\.fi/": r"https://www.helsinki\.fi/en",
+}
+# The authentication info could be set up to work on the CI build
+# https://docs.github.com/en/actions/reference/authentication-in-a-workflow
+# linkcheck_auth = []
+linkcheck_ignore = [
+    r"https://github\.com/hindmars/pttools/*"
+]
+linkcheck_timeout = 5
+linkcheck_workers = 10
