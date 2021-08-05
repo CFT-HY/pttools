@@ -34,12 +34,12 @@ DEFAULT_DF_DTAU: str = "bag"
 differentials = speedup.DifferentialCache()
 
 
-def add_df_dtau(name: str, cs2_fun: bag.CS2_FUN_TYPE) -> speedup.DifferentialPointer:
+def add_df_dtau(name: str, cs2_fun: bag.CS2Fun) -> speedup.DifferentialPointer:
     func = gen_df_dtau(cs2_fun)
     return differentials.add(name, func)
 
 
-def gen_df_dtau(cs2_fun: bag.CS2_FUN_TYPE) -> speedup.Differential:
+def gen_df_dtau(cs2_fun: bag.CS2Fun) -> speedup.Differential:
     r"""Generate a function for the differentials of fluid variables $(v, w, \xi)$ in parametric form."""
     cs2_fun_numba = cs2_fun \
         if isinstance(cs2_fun, (speedup.CFunc, speedup.Dispatcher)) \
@@ -190,7 +190,7 @@ def fluid_shell_alpha_plus(
         sol_type: boundary.SolutionType = boundary.SolutionType.UNKNOWN,
         n_xi: int = const.N_XI_DEFAULT,
         w_n: float = 1.,
-        cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag,
+        cs2_fun: bag.CS2Fun = bag.cs2_bag,
         df_dtau_ptr: speedup.DifferentialPointer = DF_DTAU_BAG_PTR) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
     r"""
     Finds fluid shell (v, w, xi) from a given $v_\text{wall}, \alpha_+$ (at-wall strength parameter).
@@ -295,10 +295,10 @@ def trim_fluid_wall_to_cs(
         w: np.ndarray,
         xi: np.ndarray,
         t: np.ndarray,
-        v_wall: th.FLOAT_OR_ARR,
+        v_wall: th.FloatOrArr,
         sol_type: boundary.SolutionType,
         dxi_lim: float = const.DXI_SMALL,
-        cs2_fun: bag.CS2_FUN_TYPE = bag.cs2_bag) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        cs2_fun: bag.CS2Fun = bag.cs2_bag) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""
     Picks out fluid variable arrays $(v, w, \xi, t)$ which are definitely behind
     the wall for deflagration and hybrid.

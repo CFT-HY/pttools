@@ -27,7 +27,7 @@ def gen_piecewise(x, points: np.ndarray):
     return sp.Piecewise(*args)
 
 
-def sin_transform_debug(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray, z_st_thresh: float = const.Z_ST_THRESH):
+def sin_transform_debug(z: th.FloatOrArr, xi: np.ndarray, f: np.ndarray, z_st_thresh: float = const.Z_ST_THRESH):
     fig: plt.Figure
     axs: np.ndarray
     fig, axs = plt.subplots(2, 3, figsize=(11.7, 8.3))
@@ -104,7 +104,7 @@ def sin_transform_debug(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray, z_st_
 
 
 def sin_transform(
-        z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray, z_st_thresh: float = const.Z_ST_THRESH) -> th.FLOAT_OR_ARR:
+        z: th.FloatOrArr, xi: np.ndarray, f: np.ndarray, z_st_thresh: float = const.Z_ST_THRESH) -> th.FloatOrArr:
 
     # Ensure that xi is monotonically increasing
     if np.any(np.diff(xi) <= 0):

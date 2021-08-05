@@ -56,7 +56,7 @@ def _v_plus_scalar(vm: float, ap: float, sol_type: SolutionType) -> float:
 
 
 @numba.njit
-def _v_plus_arr(vm: th.FLOAT_OR_ARR, ap: th.FLOAT_OR_ARR, sol_type: SolutionType) -> np.ndarray:
+def _v_plus_arr(vm: th.FloatOrArr, ap: th.FloatOrArr, sol_type: SolutionType) -> np.ndarray:
     X = vm + 1. / (3 * vm)
     b = 1. if sol_type == SolutionType.DETON.value else -1.
     return (0.5 / (1 + ap)) * (X + b * np.sqrt(X ** 2 + 4. * ap ** 2 + (8. / 3.) * ap - (4. / 3.)))
@@ -71,7 +71,7 @@ def _v_plus_arr(vm: th.FLOAT_OR_ARR, ap: th.FLOAT_OR_ARR, sol_type: SolutionType
 
 
 @numba.generated_jit(nopython=True)
-def v_plus(vm: float, ap: th.FLOAT_OR_ARR, sol_type: SolutionType) -> th.FLOAT_OR_ARR_NUMBA:
+def v_plus(vm: float, ap: th.FloatOrArr, sol_type: SolutionType) -> th.FloatOrArrNumba:
     r"""
     Wall frame fluid speed $v_+$ ahead of the wall
 
@@ -110,7 +110,7 @@ def _v_minus_scalar(vp: float, ap: float, sol_type: SolutionType):
 
 
 @numba.njit
-def _v_minus_arr(vp: th.FLOAT_OR_ARR, ap: th.FLOAT_OR_ARR, sol_type: SolutionType):
+def _v_minus_arr(vp: th.FloatOrArr, ap: th.FloatOrArr, sol_type: SolutionType):
     vp2 = vp ** 2
     Y = vp2 + 1. / 3.
     Z = (Y - ap * (1. - vp2))
@@ -129,9 +129,9 @@ def _v_minus_arr(vp: th.FLOAT_OR_ARR, ap: th.FLOAT_OR_ARR, sol_type: SolutionTyp
 
 @numba.generated_jit(nopython=True)
 def v_minus(
-    vp: th.FLOAT_OR_ARR,
-    ap: th.FLOAT_OR_ARR,
-    sol_type: SolutionType = SolutionType.DETON) -> th.FLOAT_OR_ARR_NUMBA:
+    vp: th.FloatOrArr,
+    ap: th.FloatOrArr,
+    sol_type: SolutionType = SolutionType.DETON) -> th.FloatOrArrNumba:
     r"""
     Wall frame fluid speed $v_-$ behind the wall
 
@@ -156,7 +156,7 @@ def v_minus(
 @numba.njit
 def fluid_speeds_at_wall(
         v_wall: float,
-        alpha_p: th.FLOAT_OR_ARR,
+        alpha_p: th.FloatOrArr,
         sol_type: SolutionType) -> tp.Tuple[float, float, float, float]:
     """
     Solves fluid speed boundary conditions at the wall.
@@ -195,7 +195,7 @@ def fluid_speeds_at_wall(
 
 
 @numba.njit
-def enthalpy_ratio(v_m: th.FLOAT_OR_ARR, v_p: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
+def enthalpy_ratio(v_m: th.FloatOrArr, v_p: th.FloatOrArr) -> th.FloatOrArr:
     """
     Ratio of enthalpies behind ($w_-$) and ahead $(w_+)$ of a shock or
     transition front, $w_-/w_+$. Uses conservation of momentum in moving frame.

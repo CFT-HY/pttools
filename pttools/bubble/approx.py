@@ -10,7 +10,7 @@ from . import check
 from . import const
 
 
-def A2_approx(xi0: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
+def A2_approx(xi0: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Approximate solution for A2.
     $A2_\text{approx} = \frac{3(2\xi_0 - 1)}{1 - \xi_0^2}$
@@ -21,7 +21,7 @@ def A2_approx(xi0: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
     return 3 * (2 * xi0 - 1) / (1 - xi0 ** 2)
 
 
-def xi_zero(v_wall: th.FLOAT_OR_ARR, v_xi_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
+def xi_zero(v_wall: th.FloatOrArr, v_xi_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Used in approximate solution near $v(\xi) = \xi$: defined as solution to $v(\xi_0) = \xi_0$.
 
@@ -36,7 +36,7 @@ def xi_zero(v_wall: th.FLOAT_OR_ARR, v_xi_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_
     return xi0
 
 
-def v_approx_high_alpha(xi: th.FLOAT_OR_ARR, v_wall: th.FLOAT_OR_ARR, v_xi_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
+def v_approx_high_alpha(xi: th.FloatOrArr, v_wall: th.FloatOrArr, v_xi_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Approximate solution for fluid velocity $v(\xi)$ near $v(\xi) = \xi$.
 
@@ -48,7 +48,7 @@ def v_approx_high_alpha(xi: th.FLOAT_OR_ARR, v_wall: th.FLOAT_OR_ARR, v_xi_wall:
     return xi0 - 2 * dv - A2_approx(xi0) * dv ** 2
 
 
-def v_approx_hybrid(xi: th.FLOAT_OR_ARR, v_wall: th.FLOAT_OR_ARR, v_xi_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
+def v_approx_hybrid(xi: th.FloatOrArr, v_wall: th.FloatOrArr, v_xi_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Approximate solution for fluid velocity $v(\xi)$ near $v(\xi) = \xi$ (same as v_approx_high_alpha).
 
@@ -61,10 +61,10 @@ def v_approx_hybrid(xi: th.FLOAT_OR_ARR, v_wall: th.FLOAT_OR_ARR, v_xi_wall: th.
 
 
 def w_approx_high_alpha(
-        xi: th.FLOAT_OR_ARR,
-        v_wall: th.FLOAT_OR_ARR,
-        v_xi_wall: th.FLOAT_OR_ARR,
-        w_xi_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
+        xi: th.FloatOrArr,
+        v_wall: th.FloatOrArr,
+        v_xi_wall: th.FloatOrArr,
+        w_xi_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Approximate solution for enthalpy $w(\xi)$ near $v(\xi) = \xi$.
 

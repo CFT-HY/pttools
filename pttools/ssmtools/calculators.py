@@ -13,7 +13,7 @@ from . import const
 logger = logging.getLogger(__name__)
 
 
-def sin_transform_old(z: th.FLOAT_OR_ARR, xi: np.ndarray, v: np.ndarray) -> th.FLOAT_OR_ARR:
+def sin_transform_old(z: th.FloatOrArr, xi: np.ndarray, v: np.ndarray) -> th.FloatOrArr:
     r"""
     Old sin transform of $v(\xi)$
 
@@ -95,7 +95,7 @@ def envelope(xi: np.ndarray, f: np.ndarray) -> np.ndarray:
 
 
 @numba.njit
-def sin_transform_approx(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray) -> np.ndarray:
+def sin_transform_approx(z: th.FloatOrArr, xi: np.ndarray, f: np.ndarray) -> np.ndarray:
     r"""
     Approximate sin transform of $f(\xi)$.
     For values $f_a$ and $f_b$, we have
@@ -193,7 +193,7 @@ def _sin_transform_arr(
 
 
 @numba.generated_jit(nopython=True)
-def sin_transform(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray, z_st_thresh: float = const.Z_ST_THRESH):
+def sin_transform(z: th.FloatOrArr, xi: np.ndarray, f: np.ndarray, z_st_thresh: float = const.Z_ST_THRESH):
     r"""
     sin transform of f(xi), Fourier transform variable z.
     For z > z_st_thresh, use approximation rather than doing the integral.
@@ -222,8 +222,8 @@ def sin_transform(z: th.FLOAT_OR_ARR, xi: np.ndarray, f: np.ndarray, z_st_thresh
 @numba.njit
 def resample_uniform_xi(
         xi: np.ndarray,
-        f: th.FLOAT_OR_ARR,
-        n_xi: int = const.NPTDEFAULT[0]) -> tp.Tuple[np.ndarray, th.FLOAT_OR_ARR]:
+        f: th.FloatOrArr,
+        n_xi: int = const.NPTDEFAULT[0]) -> tp.Tuple[np.ndarray, th.FloatOrArr]:
     r"""
     Provide uniform resample of function defined by $(x,y) = (\xi,f)$.
     Returns f interpolated and the uniform grid of n_xi points in range [0,1]

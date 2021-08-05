@@ -20,7 +20,7 @@ def get_label(rtol: float, atol: float) -> str:
     return rf"error > {rtol:.1e}$\xi$ + {atol:.1e}"
 
 
-def get_solver_name(method: th.ODE_SOLVER) -> str:
+def get_solver_name(method: th.ODESolver) -> str:
     if method == "numba_lsoda":
         return "numba"
     if method is spi.odeint:
@@ -91,7 +91,7 @@ def plot_v_excerpt(ax: plt.Axes, v_wall: float, alpha_plus: float, n_xi: int = 5
 def plot_plane(
         ax: plt.Axes,
         deflag: np.ndarray,
-        method: th.ODE_SOLVER,
+        method: th.ODESolver,
         deflag_ref: np.ndarray = None,
         rtol_small_diff: float = 1e-4,
         rtol_mid_diff: float = 1e-3,

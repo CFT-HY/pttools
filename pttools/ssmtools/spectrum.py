@@ -27,7 +27,7 @@ DEFAULT_NUC_TYPE = NucType.EXPONENTIAL
 
 
 @numba.njit
-def nu(T: th.FLOAT_OR_ARR, nuc_type: NucType = NucType.SIMULTANEOUS, a: float = 1.) -> th.FLOAT_OR_ARR:
+def nu(T: th.FloatOrArr, nuc_type: NucType = NucType.SIMULTANEOUS, a: float = 1.) -> th.FloatOrArr:
     """
     Bubble lifetime distribution function as function of (dimensionless) time T.
     ``nuc_type`` allows ``simultaneous`` or ``exponential`` bubble nucleation.
@@ -40,14 +40,14 @@ def nu(T: th.FLOAT_OR_ARR, nuc_type: NucType = NucType.SIMULTANEOUS, a: float = 
     raise ValueError("Nucleation type not recognized")
 
 
-def pow_spec(z: th.FLOAT_OR_ARR, spec_den: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
+def pow_spec(z: th.FloatOrArr, spec_den: th.FloatOrArr) -> th.FloatOrArr:
     """
     Power spectrum from spectral density at dimensionless wavenumber z.
     """
     return z**3 / (2. * np.pi ** 2) * spec_den
 
 
-def convert_params(params: bubble.PHYSICAL_PARAMS_TYPE) -> bubble.PHYSICAL_PARAMS_TYPE:
+def convert_params(params: bubble.PhysicalParams) -> bubble.PhysicalParams:
     if isinstance(params, list):
         logger.warning("Specifying the model parameters as a list is deprecated. Please use a tuple instead.")
         return tuple(params)
@@ -55,7 +55,7 @@ def convert_params(params: bubble.PHYSICAL_PARAMS_TYPE) -> bubble.PHYSICAL_PARAM
 
 
 # @numba.njit
-def parse_params(params: bubble.PHYSICAL_PARAMS_TYPE):
+def parse_params(params: bubble.PhysicalParams):
     vw = params[0]
     alpha = params[1]
     if len(params) > 2:
@@ -113,7 +113,7 @@ def _spec_den_v_core(
 
 def spec_den_v(
         z: np.ndarray,
-        params: bubble.PHYSICAL_PARAMS_TYPE,
+        params: bubble.PhysicalParams,
         npt: const.NPT_TYPE = const.NPTDEFAULT,
         filename: str = None,
         skip: int = 1,
@@ -238,7 +238,7 @@ def _spec_den_gw_scaled_no_z(
 def spec_den_gw_scaled(
         xlookup: np.ndarray,
         P_vlookup: np.ndarray,
-        z: np.ndarray = None) -> tp.Union[tp.Tuple[np.ndarray, np.ndarray], th.NUMBA_FUNC]:
+        z: np.ndarray = None) -> tp.Union[tp.Tuple[np.ndarray, np.ndarray], th.NumbaFunc]:
     """
     Spectral density of scaled gravitational wave power at values of kR* given
     by input z array, or at len(xlookup) values of kR* between the min and max
@@ -261,7 +261,7 @@ def spec_den_gw_scaled(
 
 def power_v(
         z: np.ndarray,
-        params: bubble.PHYSICAL_PARAMS_TYPE,
+        params: bubble.PhysicalParams,
         npt=const.NPTDEFAULT,
         filename: str = None,
         skip: int = 1,
@@ -283,7 +283,7 @@ def power_v(
 
 def power_gw_scaled(
         z: np.ndarray,
-        params: bubble.PHYSICAL_PARAMS_TYPE,
+        params: bubble.PhysicalParams,
         npt: const.NPT_TYPE = const.NPTDEFAULT,
         filename: str = None,
         skip: int = 1,

@@ -11,8 +11,8 @@ from . import alpha
 
 logger = logging.getLogger(__name__)
 
-NUC_ARGS_TYPE = tp.Tuple[float, ...]
-PHYSICAL_PARAMS_TYPE = tp.Union[tp.Tuple[float, float], tp.Tuple[float, float, str, NUC_ARGS_TYPE]]
+NucArgs = tp.Tuple[float, ...]
+PhysicalParams = tp.Union[tp.Tuple[float, float], tp.Tuple[float, float, str, NucArgs]]
 
 
 @numba.njit
@@ -30,7 +30,7 @@ def _check_wall_speed_scalar(v_wall: float):
 
 
 @numba.generated_jit(nopython=True)
-def check_wall_speed(v_wall: tp.Union[th.FLOAT_OR_ARR, tp.List[float]]):
+def check_wall_speed(v_wall: tp.Union[th.FloatOrArr, tp.List[float]]):
     r"""
     Checks that $v _\text{wall}$ values are all physical $(0 < v _\text{wall} < 1)$.
     """
@@ -52,7 +52,7 @@ def check_wall_speed(v_wall: tp.Union[th.FLOAT_OR_ARR, tp.List[float]]):
 
 
 @numba.njit
-def check_physical_params(params: PHYSICAL_PARAMS_TYPE) -> None:
+def check_physical_params(params: PhysicalParams) -> None:
     r"""
     Checks that $v _\text{wall}$ = params[0], $\alpha_n$ = params[1] values are physical, i.e.
     $0 < v _\text{wall} < 1$,

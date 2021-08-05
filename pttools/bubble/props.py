@@ -23,7 +23,7 @@ def find_v_index(xi: np.ndarray, v_target: float) -> int:
 
 
 @numba.vectorize
-def v_shock(xi: th.FLOAT_OR_ARR):
+def v_shock(xi: th.FloatOrArr):
     r"""
     Fluid velocity at a shock at xi.
     No shocks exist for $\xi < cs$, so returns zero.
@@ -51,7 +51,7 @@ def _w_shock_arr(xi: np.ndarray, w_n: float) -> np.ndarray:
 
 # This cannot be vectorized with numba.vectorize due to the keyword argument, but guvectorize might work
 @numba.generated_jit(nopython=True)
-def w_shock(xi: th.FLOAT_OR_ARR, w_n: float = 1.) -> th.FLOAT_OR_ARR_NUMBA:
+def w_shock(xi: th.FloatOrArr, w_n: float = 1.) -> th.FloatOrArrNumba:
     r"""
     Fluid enthalpy at a shock at $\xi$.
     No shocks exist for $\xi < cs$, so returns nan.

@@ -7,7 +7,7 @@ import pttools.type_hints as th
 
 
 @numba.njit
-def lorentz(xi: th.FLOAT_OR_ARR, v: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
+def lorentz(xi: th.FloatOrArr, v: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Lorentz transformation of fluid speed $v$ between moving frame and plasma frame:
     $\frac{\xi - v}{1 - v\xi}$.
@@ -19,7 +19,7 @@ def lorentz(xi: th.FLOAT_OR_ARR, v: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
 
 
 @numba.njit
-def gamma2(v: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
+def gamma2(v: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Square of Lorentz gamma, $\gamma^2 = \frac{1}{1 - v^2}$.
 
@@ -30,7 +30,7 @@ def gamma2(v: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
 
 
 @numba.njit
-def gamma(v: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
+def gamma(v: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Lorentz gamma, $\gamma = (1 - v^2)^{-\frac{1}{2}}$.
 

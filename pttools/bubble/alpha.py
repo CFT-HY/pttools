@@ -19,7 +19,7 @@ from . import transition
 
 @numba.njit
 def find_alpha_n(
-        v_wall: th.FLOAT_OR_ARR,
+        v_wall: th.FloatOrArr,
         alpha_p: float,
         sol_type: boundary.SolutionType = boundary.SolutionType.UNKNOWN,
         n_xi: int = const.N_XI_DEFAULT) -> float:
@@ -84,9 +84,9 @@ def _find_alpha_plus_arr(v_wall: np.ndarray, alpha_n_given: float, n_xi: int) ->
 
 @numba.generated_jit(nopython=True)
 def find_alpha_plus(
-        v_wall: th.FLOAT_OR_ARR,
+        v_wall: th.FloatOrArr,
         alpha_n_given: float,
-        n_xi: int = const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR_NUMBA:
+        n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArrNumba:
     r"""
     Calculate the at-wall strength parameter $\alpha_+$ from given $\alpha_n$ and $v_\text{wall}$.
 
@@ -117,7 +117,7 @@ def find_alpha_plus(
 
 
 @numba.njit
-def alpha_plus_initial_guess(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float) -> th.FLOAT_OR_ARR:
+def alpha_plus_initial_guess(v_wall: th.FloatOrArr, alpha_n_given: float) -> th.FloatOrArr:
     r"""
     Initial guess for root-finding of $\alpha_+$ from $\alpha_n$.
     Linear approx between $\alpha_{n,\min}$ and $\alpha_{n,\max}$.
@@ -140,7 +140,7 @@ def alpha_plus_initial_guess(v_wall: th.FLOAT_OR_ARR, alpha_n_given: float) -> t
     return alpha_plus_min + slope * (alpha_n_given - alpha_n_min)
 
 
-def find_alpha_n_from_w_xi(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_p: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
+def find_alpha_n_from_w_xi(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_p: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Calculates the transition strength parameter
     $\alpha_n = \frac{4}{3} \frac{\theta_s(T_n) - \theta_b(T_n)}{w(T_n)}$,
@@ -176,7 +176,7 @@ def alpha_n_max_hybrid(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> float:
 
 
 @numba.njit
-def alpha_n_max(v_wall: th.FLOAT_OR_ARR, n_xi: int = const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR:
+def alpha_n_max(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArr:
     r"""
     Calculates the relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
     for given $v_\text{wall}$, which is max $\alpha_n$ for (supersonic) deflagration.
@@ -210,7 +210,7 @@ def _alpha_n_max_deflagration_arr(v_wall: np.ndarray, n_xi: int) -> np.ndarray:
 
 
 @numba.generated_jit(nopython=True)
-def alpha_n_max_deflagration(v_wall: th.FLOAT_OR_ARR, n_xi: int = const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR_NUMBA:
+def alpha_n_max_deflagration(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArrNumba:
     r"""
     Calculates the relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
     for given $v_\text{wall}$, for deflagration.
@@ -236,7 +236,7 @@ def alpha_n_max_deflagration(v_wall: th.FLOAT_OR_ARR, n_xi: int = const.N_XI_DEF
 
 
 @speedup.vectorize(nopython=True)
-def alpha_plus_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR_NUMBA:
+def alpha_plus_max_detonation(v_wall: th.FloatOrArr) -> th.FloatOrArrNumba:
     r"""
     Maximum allowed value of $\alpha_+$ for a detonation with wall speed $v_\text{wall}$.
     Comes from inverting $v_w$ > $v_\text{Jouguet}$.
@@ -252,7 +252,7 @@ def alpha_plus_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR_NUMBA:
 
 
 @numba.njit
-def alpha_n_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
+def alpha_n_max_detonation(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Maximum allowed value of $\alpha_n$ for a detonation with wall speed $v_\text{wall}$.
     Same as $\alpha_{+,\max,\text{detonation}}$, because $\alpha_n = \alpha_+$ for detonation.
@@ -264,7 +264,7 @@ def alpha_n_max_detonation(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
 
 
 @speedup.vectorize(nopython=True)
-def alpha_plus_min_hybrid(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR_NUMBA:
+def alpha_plus_min_hybrid(v_wall: th.FloatOrArr) -> th.FloatOrArrNumba:
     r"""
     Minimum allowed value of $\alpha_+$ for a hybrid with wall speed $v_\text{wall}$.
     Condition from coincidence of wall and shock.
@@ -283,7 +283,7 @@ def alpha_plus_min_hybrid(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR_NUMBA:
 
 
 @numba.njit
-def alpha_n_min_hybrid(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
+def alpha_n_min_hybrid(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Minimum $\alpha_n$ for a hybrid. Equal to maximum $\alpha_n$ for a detonation.
     Same as alpha_n_min_deflagration, as a hybrid is a supersonic deflagration.
@@ -297,7 +297,7 @@ def alpha_n_min_hybrid(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
 
 
 @numba.njit
-def alpha_n_min_deflagration(v_wall: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
+def alpha_n_min_deflagration(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Minimum $\alpha_n$ for a deflagration. Equal to maximum $\alpha_n$ for a detonation.
     Same as alpha_n_min_hybrid, as a hybrid is a supersonic deflagration.

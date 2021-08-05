@@ -189,7 +189,7 @@ def A2_e_conserving_file(
 
 @numba.njit
 def f_ssm_func(
-        z: th.FLOAT_OR_ARR,
+        z: th.FloatOrArr,
         vw,
         alpha_n,
         npt: const.NPT_TYPE = const.NPTDEFAULT,

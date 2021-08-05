@@ -16,7 +16,7 @@ from . import fluid
 from . import relativity
 from . import transition
 
-INTEGRAND_TYPE = tp.Union[
+Integrand = tp.Union[
     tp.Callable[
         [np.ndarray, np.ndarray, np.ndarray],
         np.ndarray
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 def split_integrate(
-        func: INTEGRAND_TYPE,
+        func: Integrand,
         v: np.ndarray,
         w: np.ndarray,
         xi: np.ndarray,
@@ -53,11 +53,11 @@ def split_integrate(
 
 
 def part_integrate(
-        func: INTEGRAND_TYPE,
+        func: Integrand,
         v: np.ndarray,
         w: np.ndarray,
         xi: np.ndarray,
-        where_in: th.INT_OR_ARR) -> float:
+        where_in: th.IntOrArr) -> float:
     r"""
     Integrate a function func of arrays $v, w, \xi$ over index selection where_in.
     """
@@ -151,7 +151,7 @@ def ubarf_squared(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float) -
     return mean_kinetic_energy(v, w, xi, v_wall) / w[-1]
 
 
-def get_ke_frac(v_wall: th.FLOAT_OR_ARR, alpha_n: float, n_xi: int = const.N_XI_DEFAULT) -> th.FLOAT_OR_ARR:
+def get_ke_frac(v_wall: th.FloatOrArr, alpha_n: float, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArr:
     r"""
     Determine kinetic energy fraction (of total energy).
     Bag equation of state only so far, as it takes
@@ -163,10 +163,10 @@ def get_ke_frac(v_wall: th.FLOAT_OR_ARR, alpha_n: float, n_xi: int = const.N_XI_
 
 
 def get_ke_frac_new(
-        v_wall: th.FLOAT_OR_ARR,
+        v_wall: th.FloatOrArr,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
-        verbosity: int = 0) -> th.FLOAT_OR_ARR:
+        verbosity: int = 0) -> th.FloatOrArr:
     r"""
     Determine kinetic energy fraction (of total energy).
     Bag equation of state only so far, as it takes
@@ -197,7 +197,7 @@ def get_ke_frac_new(
 
 
 def get_ke_de_frac(
-        v_wall: th.FLOAT_OR_ARR,
+        v_wall: th.FloatOrArr,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
         verbosity: int = 0) -> tp.Union[tp.Tuple[float, float], tp.Tuple[np.ndarray, np.ndarray]]:
@@ -256,10 +256,10 @@ def _get_ubarf2_arr(v_wall: np.ndarray, alpha_n: float, n_xi: int, verbosity: in
 
 @numba.generated_jit(nopython=True)
 def get_ubarf2(
-        v_wall: th.FLOAT_OR_ARR,
+        v_wall: th.FloatOrArr,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
-        verbosity: int = 0) -> th.FLOAT_OR_ARR:
+        verbosity: int = 0) -> th.FloatOrArr:
     """
     Get mean square fluid velocity from v_wall and alpha_n.
     v_wall can be scalar or iterable.
@@ -279,10 +279,10 @@ def get_ubarf2(
 
 
 def get_ubarf2_new(
-        v_wall: th.FLOAT_OR_ARR,
+        v_wall: th.FloatOrArr,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
-        verbosity: int = 0) -> th.FLOAT_OR_ARR:
+        verbosity: int = 0) -> th.FloatOrArr:
     r"""
     Get mean square fluid velocity from $v_\text{wall}$ and $\alpha_n$.
     """
@@ -312,10 +312,10 @@ def get_ubarf2_new(
 
 
 def get_kappa(
-        v_wall: th.FLOAT_OR_ARR,
+        v_wall: th.FloatOrArr,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
-        verbosity: int = 0) -> th.FLOAT_OR_ARR:
+        verbosity: int = 0) -> th.FloatOrArr:
     r"""
     Efficiency factor $\kappa$ from $v_\text{wall}$ and $\alpha_n$.
     """
@@ -343,7 +343,7 @@ def get_kappa(
 
 
 def get_kappa_de(
-        v_wall: th.FLOAT_OR_ARR,
+        v_wall: th.FloatOrArr,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
         verbosity: int = 0) -> tp.Union[tp.Tuple[float, float], tp.Tuple[np.ndarray, np.ndarray]]:
@@ -379,7 +379,7 @@ def get_kappa_de(
 
 
 def get_kappa_dq(
-        v_wall: th.FLOAT_OR_ARR,
+        v_wall: th.FloatOrArr,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
         verbosity: int = 0) -> tp.Union[tp.Tuple[float, float], tp.Tuple[np.ndarray, np.ndarray]]:

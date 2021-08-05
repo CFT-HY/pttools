@@ -386,7 +386,7 @@ def ps_from_ssm(
         vw: float,
         alpha: float,
         nuc_type: ssm.NucType = ssm.NucType.SIMULTANEOUS,
-        nuc_args: bubble.NUC_ARGS_TYPE = (1.,),
+        nuc_args: bubble.NucArgs = (1.,),
         Np: np.ndarray = const.NP_ARR[-1],
         method: ssm.Method = ssm.Method.E_CONSERVING):
     """Get velocity and GW power spectra from SSM"""
@@ -420,7 +420,7 @@ def plot_ps_compare_res(
         vw: float,
         alpha: float,
         nuc_type: ssm.NucType = ssm.NucType.SIMULTANEOUS,
-        nuc_args: bubble.NUC_ARGS_TYPE = (1.,),
+        nuc_args: bubble.NucArgs = (1.,),
         save_id: str = None,
         graph_file_type=None,
         method: ssm.Method = ssm.Method.E_CONSERVING):

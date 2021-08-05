@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 @numba.njit
-def min_speed_deton(alpha: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
+def min_speed_deton(alpha: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Minimum speed for a detonation (Jouguet speed).
     Equivalent to $v_+(cs_0,\alpha)$.
@@ -24,7 +24,7 @@ def min_speed_deton(alpha: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
 
 
 @numba.njit
-def max_speed_deflag(alpha_p: th.FLOAT_OR_ARR) -> th.FLOAT_OR_ARR:
+def max_speed_deflag(alpha_p: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Maximum speed for a deflagration: speed where wall and shock are coincident.
     May be greater than 1, meaning that hybrids exist for all wall speeds above cs.

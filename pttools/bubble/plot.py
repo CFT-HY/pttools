@@ -19,7 +19,7 @@ from . import quantities
 from . import relativity
 from . import transition
 
-FLOAT_LIST_OR_ARR_TYPE = tp.Union[tp.List[float], np.ndarray]
+FloatListOrArr = tp.Union[tp.List[float], np.ndarray]
 
 
 def setup_plotting(font: str = "serif", font_size: int = 20, usetex: bool = True):
@@ -190,7 +190,7 @@ def plot_fluid_shell(
 
 
 def plot_fluid_shells(
-        v_wall_list: FLOAT_LIST_OR_ARR_TYPE,
+        v_wall_list: FloatListOrArr,
         alpha_n_list: tp.Union[tp.List[float], np.ndarray],
         multi: bool = False,
         save_string: str = None,
