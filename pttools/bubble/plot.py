@@ -8,6 +8,7 @@ import typing as tp
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 from . import approx
 from . import boundary
@@ -50,9 +51,8 @@ def plot_fluid_shell(
         Np: int = const.N_XI_DEFAULT,
         low_v_approx: bool = False,
         high_v_approx: bool = False,
-        debug: bool = False,
         draw: bool = True) \
-        -> tp.Union[plt.Figure, tp.Tuple[plt.Figure, tp.List[np.ndarray], tp.List[tp.Union[int, float]]]]:
+        -> tp.Tuple[plt.Figure, tp.Dict[str, np.ndarray], tp.Dict[str, float]]:
     r"""
     Calls ``fluid_shell`` and plots resulting $v, w$ against $\xi$, returning figure handle.
     Also plots:
@@ -118,7 +118,7 @@ def plot_fluid_shell(
     yscale_enth_min = min(w) / 1.2
     xscale_min = xi[n_wall] * 0.5
 
-    f = plt.figure(figsize=(7, 8))
+    fig = plt.figure(figsize=(7, 8))
 
     # First velocity
     plt.subplot(2, 1, 1)
@@ -178,15 +178,28 @@ def plot_fluid_shell(
 
     if draw:
         plt.tight_layout()
-
     if save_string is not None:
         plt.savefig(f"shell_plot_vw_{v_wall}_alphan_{alpha_n:.3}{save_string}")
 
-    if debug:
-        arrs = [v, w, xi, v_sh, w_sh]
-        scalars = [n_wall, n_cs, n_sh, r, alpha_plus, ubarf2, ke_frac, kappa, dw]
-        return f, arrs, scalars
-    return f
+    arrs = {
+        "v": v,
+        "w": w,
+        "xi": xi,
+        "v_sh": v_sh,
+        "w_sh": w_sh
+    }
+    scalars = {
+        "n_wall": n_wall,
+        "n_cs": n_cs,
+        "n_sh": n_sh,
+        "r": r,
+        "alpha_plus": alpha_plus,
+        "ubarf2": ubarf2,
+        "ke_frac": ke_frac,
+        "kappa": kappa,
+        "dw": dw
+    }
+    return fig, arrs, scalars
 
 
 def plot_fluid_shells(

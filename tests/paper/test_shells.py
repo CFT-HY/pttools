@@ -5,6 +5,7 @@ import unittest
 
 import matplotlib.pyplot as plt
 import numpy as np
+# import orjson
 
 from pttools import bubble
 from pttools.speedup import NUMBA_INTEGRATE_TOLERANCES
@@ -21,18 +22,26 @@ class TestShells(unittest.TestCase):
         return os.path.join(utils.TEST_DATA_PATH, f"shells_{name}.txt")
 
     def test_fluid_shell(self):
-        fig, arrs, scalars = bubble.plot_fluid_shell(v_wall=0.7, alpha_n=0.052, debug=True, draw=False)
+        fig, arrs, scalars = bubble.plot_fluid_shell(v_wall=0.7, alpha_n=0.052, draw=False)
         plt.close(fig)
-        data = np.array([np.nansum(arr) for arr in arrs] + scalars)
-        file_path = os.path.join(utils.TEST_DATA_PATH, "shell.txt")
+        # data = {"arrays": arrs, "scalars": scalars}
+        data_numpy = np.array([np.nansum(arr) for arr in arrs.values()] + list(scalars.values()))
+
+        # path_json = os.path.join(utils.TEST_DATA_PATH, "shell.json")
+        path_txt = os.path.join(utils.TEST_DATA_PATH, "shell.txt")
 
         # Generate new reference data
-        # np.savetxt(file_path, data)
+        # Using old reference data for now. It was generated with the following code.
+        # data = np.array([np.nansum(arr) for arr in arrs] + scalars)
+        # np.savetxt(path_txt, data)
+        # with open(path_json, "wb") as file:
+        #     file.write(orjson.dumps(data, option=orjson.OPT_SERIALIZE_NUMPY))
 
-        data_ref = np.loadtxt(file_path)
+        data_ref = np.loadtxt(path_txt)
+        # arrs_nansum = {f"nansum({name})": np.nansum(arr) for name, arr in arrs.items()}
         if NUMBA_INTEGRATE_TOLERANCES:
             logger.warning("test_fluid_shell tolerances have been loosened for NumbaLSODA")
-        utils.assert_allclose(data, data_ref, rtol=(0.292 if NUMBA_INTEGRATE_TOLERANCES else 1e-7))
+        utils.assert_allclose(data_numpy, data_ref, rtol=(0.292 if NUMBA_INTEGRATE_TOLERANCES else 1e-7))
 
     def test_fluid_shells(self):
         """Based on sound-shell-model/paper/python/fig_1_9_shell_plots.py"""
