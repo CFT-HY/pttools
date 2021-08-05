@@ -105,6 +105,10 @@ extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
     "gw_pt_ssm": ("https://arxiv.org/abs/1909.10040", "Hindmarsh et. al, 2019"),
     "notes": ("https://arxiv.org/abs/2008.09136", "Hindmarsh et. al, 2021"),
     # Other
+    "aof_grant": (
+        "https://akareport.aka.fi/ibi_apps/WFServlet?IBIF_ex=x_hakkuvaus2&CLICKED_ON=&HAKNRO1=%s&UILANG=en&TULOSTE=HTML",
+        "Academy of Finland grant %s"
+    ),
     "issue": ("https://github.com/hindmars/pttools/issues/%s", "issue %s"),
     "ssm_repo": ("https://bitbucket.org/hindmars/sound-shell-model/src/master/", "sound-shell-model/%s")
 }
@@ -124,6 +128,7 @@ linkcheck_allowed_redirects = {
 # https://docs.github.com/en/actions/reference/authentication-in-a-workflow
 # linkcheck_auth = []
 linkcheck_ignore = [
+    # The project repository will return 404 without authentication until it's published.
     r"https://github\.com/hindmars/pttools/*"
 ]
 linkcheck_timeout = 5
