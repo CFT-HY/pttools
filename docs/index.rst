@@ -11,6 +11,7 @@ Welcome to PTtools's documentation!
 
    install
    usage
+   history
    modules/index
    modules/tests/index
    acknowledgements
