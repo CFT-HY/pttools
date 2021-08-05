@@ -21,8 +21,16 @@ os.makedirs(os.path.join(os.path.dirname(os.path.abspath(__file__)), "_static"),
 # -- Project information -----------------------------------------------------
 
 project = 'PTtools'
-copyright = '2015-2021, Mark Hindmarsh, Mudhahir Al-Ajmi, Danny Bail, Daniel Cutting & Mika Mäki'
-author = 'Mark Hindmarsh, Mudhahir Al-Ajmi, Danny Bail, Jacky Lindsay, Mike Soughton, Daniel Cutting & Mika Mäki'
+_authors = [
+    "Mark Hindmarsh",
+    "Mulham Hijazi",
+    "Mudhahir Al-Ajmi",
+    "Mika Mäki",
+    "Chloe Gowling",
+    "Daniel Cutting"
+]
+author = f"{', '.join(_authors[:-1])} & {_authors[-1]}"
+copyright = f"2015-2021, {author}"
 
 
 # -- General configuration ---------------------------------------------------
