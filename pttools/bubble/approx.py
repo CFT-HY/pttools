@@ -25,6 +25,9 @@ def v_approx_high_alpha(xi: th.FloatOrArr, v_wall: th.FloatOrArr, v_xi_wall: th.
     r"""
     Approximate solution for fluid velocity $v(\xi)$ near $v(\xi) = \xi$.
 
+    :param xi: $\xi$
+    :param v_wall: $v_\text{wall}$
+    :param v_xi_wall: $v(\xi_\text{wall})$
     :return: $v_\text{approx}$
     """
     check.check_wall_speed(v_wall)
@@ -35,20 +38,24 @@ def v_approx_high_alpha(xi: th.FloatOrArr, v_wall: th.FloatOrArr, v_xi_wall: th.
 
 def v_approx_hybrid(xi: th.FloatOrArr, v_wall: th.FloatOrArr, v_xi_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
-    Approximate solution for fluid velocity $v(\xi)$ near $v(\xi) = \xi$ (same as v_approx_high_alpha).
+    Approximate solution for fluid velocity $v(\xi)$ near $v(\xi) = \xi$.
+    Same as :func:`v_approx_high_alpha`.
 
+    :param xi: $\xi$
+    :param v_wall: $v_\text{wall}$
+    :param v_xi_wall: $v(\xi_\text{wall})$
     :return: $v_\text{approx}$
     """
-    check.check_wall_speed(v_wall)
-    xi0 = xi_zero(v_wall, v_xi_wall)
-    dv = (xi - xi0)
-    return xi - 2 * dv - A2_approx(xi0) * dv ** 2
+    return v_approx_high_alpha(xi, v_wall, v_xi_wall)
 
 
 def v_approx_low_alpha(xi: np.ndarray, v_wall: float, alpha: float) -> np.ndarray:
     r"""
     Approximate solution for fluid velocity $v(\xi)$ at low $\alpha_+ = \alpha_n$.
 
+    :xi: $\xi$
+    :v_wall: $v_\text{wall}$
+    :alpha: $\alpha$
     :return: $v_\text{approx}$
     """
     def v_approx_fun(x, v_w):
@@ -71,6 +78,10 @@ def w_approx_high_alpha(
     r"""
     Approximate solution for enthalpy $w(\xi)$ near $v(\xi) = \xi$.
 
+    :param xi: $\xi$
+    :param v_wall: $v_\text{wall}$
+    :param v_xi_wall: $v(\xi_\text{wall})$
+    :param w_xi_wall: $w(\xi_\text{wall})$
     :return: $w_\text{approx}$
     """
     check.check_wall_speed(v_wall)
@@ -83,6 +94,9 @@ def w_approx_low_alpha(xi: np.ndarray, v_wall: float, alpha: float) -> np.ndarra
     Approximate solution for enthalpy $w(\xi)$ at low $\alpha_+ = \alpha_n$.
     (Not complete for $\xi < \min(v _\text{wall}, cs_0)$).
 
+    :param xi: $\xi$
+    :param v_wall: $v_\text{wall}$
+    :param alpha: $\alpha$
     :return: $w_\text{approx}$
     """
     v_max = 3 * alpha * v_wall / abs(3 * v_wall ** 2 - 1)
@@ -99,7 +113,7 @@ def xi_zero(v_wall: th.FloatOrArr, v_xi_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Used in approximate solution near $v(\xi) = \xi$: defined as solution to $v(\xi_0) = \xi_0$.
 
-    $\xi_0 = \frac{1}{3} (v(\xi_\text{wall} + 2 v_\text{wall})$
+    $$\xi_0 = \frac{1}{3} (v(\xi_\text{wall}+2v_\text{wall})$$
 
     :param v_wall: $v_\text{wall}$
     :param v_xi_wall: $v(\xi_\text{wall})$

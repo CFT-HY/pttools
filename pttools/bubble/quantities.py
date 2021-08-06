@@ -36,6 +36,12 @@ def de_from_w(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> n
     Calculates energy density difference ``de = e - e[-1]`` from enthalpy, assuming
     bag equation of state.
     Can get ``alpha_n = find_alpha_n_from_w_xi(w,xi,v_wall,alpha_p)``
+
+    :param w: $w$
+    :param xi: $\xi$
+    :param v_wall: $v_\text{wall}$
+    :param alpha_n: $\alpha_n$
+    :return: energy density difference de
     """
     check.check_physical_params((v_wall, alpha_n))
     e_from_w = bag.get_e(w, bag.get_phase(xi, v_wall), 0.75 * w[-1] * alpha_n)
@@ -45,9 +51,16 @@ def de_from_w(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> n
 
 @numba.njit
 def de_from_w_new(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> np.ndarray:
-    """
+    r"""
     For exploring new methods of calculating energy density difference
     from velocity and enthalpy, assuming bag equation of state.
+
+    :param v: $v$
+    :param w: $w$
+    :param xi: $\xi$
+    :param v_wall: $v_\text{wall}$
+    :param alpha_n: $\alpha_n$
+    :return: energy density difference de
     """
     check.check_physical_params((v_wall, alpha_n))
     e_from_w = bag.get_e(w, bag.get_phase(xi, v_wall), 0.75 * w[-1] * alpha_n)
@@ -67,6 +80,12 @@ def get_kappa(
         verbosity: int = 0) -> th.FloatOrArr:
     r"""
     Efficiency factor $\kappa$ from $v_\text{wall}$ and $\alpha_n$.
+
+    :param v_wall: $v_\text{wall}$
+    :param alpha_n: $\alpha_n$
+    :param n_xi: number of $\xi$ points
+    :param verbosity: logging verbosity
+    :return: efficiency factor $\kappa$
     """
     # NB was called get_kappa_arr
     it = np.nditer([v_wall, None])
@@ -100,6 +119,12 @@ def get_kappa_de(
     Calculates efficiency factor $\kappa$ and fractional change in energy
     from $v_\text{wall}$ and $\alpha_n$. $v_\text{wall}$ can be an array.
     Sum should be 0 (bag model).
+
+    :param v_wall: $v_\text{wall}$
+    :param alpha_n: $\alpha_n$
+    :param n_xi: number of $\xi$ points
+    :param verbosity: logging verbosity
+    :return: $\kappa, de$
     """
     it = np.nditer([v_wall, None, None])
     for vw, kappa, de in it:
@@ -139,6 +164,10 @@ def get_kappa_dq(
     Sum should be 1.
     Thermal energy is defined as $q = \frac{3}{4} \text{enthalpy}$.
 
+    :param v_wall: $v_\text{wall}$
+    :param alpha_n: $\alpha_n$
+    :param n_xi: number of $\xi$ points
+    :param verbosity: logging verbosity
     :return: $\kappa$, dq
     """
     it = np.nditer([v_wall, None, None])
@@ -172,9 +201,15 @@ def get_ke_de_frac(
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
         verbosity: int = 0) -> tp.Union[tp.Tuple[float, float], tp.Tuple[np.ndarray, np.ndarray]]:
-    """
+    r"""
     Kinetic energy fraction and fractional change in energy
     from wall velocity array. Sum should be 0. Assumes bag model.
+
+    :param v_wall: $v_\text{wall}$
+    :param alpha_n: $\alpha_n$
+    :param n_xi: number of $\xi$ points
+    :param verbosity: logging verbosity
+    :return: kinetic energy fraction, fractional change in energy
     """
     it = np.nditer([v_wall, None, None])
     for vw, ke, de in it:
@@ -208,6 +243,11 @@ def get_ke_frac(v_wall: th.FloatOrArr, alpha_n: float, n_xi: int = const.N_XI_DE
     Bag equation of state only so far, as it takes
     $e_n = \frac{3}{4} w_n (1 + \alpha_n)$.
     This assumes zero trace anomaly in broken phase.
+
+    :param v_wall: $v_\text{wall}$
+    :param alpha_n: $\alpha_n$
+    :param n_xi: number of $\xi$ points
+    :return: kinetic energy fraction
     """
     ubar2 = get_ubarf2(v_wall, alpha_n, n_xi)
     return ubar2 / (0.75 * (1 + alpha_n))
@@ -223,6 +263,12 @@ def get_ke_frac_new(
     Bag equation of state only so far, as it takes
     $e_n = \frac{3}{4} w_n (1 + \alpha_n)$.
     This assumes zero trace anomaly in broken phase.
+
+    :param v_wall: $v_\text{wall}$
+    :param alpha_n: $\alpha_n$
+    :param n_xi: number of $\xi$ points
+    :param verbosity: logging verbosity
+    :return: kinetic energy fraction
     """
     it = np.nditer([v_wall, None])
     for vw, ke in it:
@@ -276,10 +322,14 @@ def get_ubarf2(
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
         verbosity: int = 0) -> th.FloatOrArr:
-    """
-    Get mean square fluid velocity from v_wall and alpha_n.
-    v_wall can be scalar or iterable.
-    alpha_n must be scalar.
+    r"""
+    Get mean square fluid velocity from $v_\text{wall}$ and $\alpha_n$.
+
+    :param v_wall: $v_\text{wall}$
+    :param alpha_n: $\alpha_n$
+    :param n_xi: number of $\xi$ points
+    :param verbosity: logging verbosity
+    :return: mean square fluid velocity
     """
     if isinstance(v_wall, numba.types.Float):
         return _get_ubarf2_scalar
@@ -301,6 +351,12 @@ def get_ubarf2_new(
         verbosity: int = 0) -> th.FloatOrArr:
     r"""
     Get mean square fluid velocity from $v_\text{wall}$ and $\alpha_n$.
+
+    :param v_wall: $v_\text{wall}$
+    :param alpha_n: $\alpha_n$
+    :param n_xi: not used
+    :param verbosity: logging verbosity
+    :return: mean square fluid velocity
     """
     w_mean = 1  # For bag, it doesn't matter
     Gamma = bag.adiabatic_index(w_mean, const.BROK_PHASE, bag.theta_bag(w_mean, const.BROK_PHASE, alpha_n))
@@ -328,8 +384,15 @@ def get_ubarf2_new(
 
 
 def mean_energy_change(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> float:
-    """
+    r"""
     Bubble-averaged change in energy density in bubble relative to outside value.
+
+    :param v: $v$
+    :param w: $w$
+    :param xi: $\xi$
+    :param v_wall: $v_\text{wall}$
+    :param alpha_n: $\alpha_n$
+    :return: mean energy change
     """
     #    def ene_diff(v,w,xi):
     #        return de_from_w(w, xi, v_wall, alpha_n)
@@ -341,8 +404,14 @@ def mean_energy_change(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: flo
 
 
 def mean_enthalpy_change(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
-    """
+    r"""
     Mean change in enthalpy in bubble relative to outside value.
+
+    :param v: $v$
+    :param w: $w$
+    :param xi: $\xi$
+    :param v_wall: $v_\text{wall}$
+    :return: mean enthalpy change
     """
     #    def en_diff(v, dw, xi):
     #        return dw
@@ -355,9 +424,15 @@ def mean_enthalpy_change(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: f
 
 @numba.njit
 def mean_kinetic_energy(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
-    """
+    r"""
     Kinetic energy of fluid in bubble, averaged over bubble volume,
     from fluid shell functions.
+
+    :param v: $v$
+    :param w: $w$
+    :param xi: $\xi$
+    :param v_wall: $v_\text{wall}$
+    :return: mean kinetic energy
     """
     check.check_wall_speed(v_wall)
     integral = np.trapz(w * v ** 2 * relativity.gamma2(v), xi ** 3)
@@ -372,6 +447,12 @@ def part_integrate(
         where_in: th.IntOrArr) -> float:
     r"""
     Integrate a function func of arrays $v, w, \xi$ over index selection where_in.
+
+    :param func: function to be integrated
+    :param v: $v$
+    :param w: $w$
+    :param xi: $\xi$
+    :param where_in: index selection
     """
     xi_in = xi[where_in]
     v_in = v[where_in]
@@ -389,6 +470,12 @@ def split_integrate(
     r"""
     Split an integration of a function func of arrays $v, w, \xi$
     according to whether $\xi$ is inside or outside the wall (expecting discontinuity there).
+
+    :param func: function to be integrated
+    :param v: $v$
+    :param w: $w$
+    :param xi: $\xi$
+    :param v_wall: $v_\text{wall}$
     """
     check.check_wall_speed(v_wall)
     inside = np.where(xi < v_wall)
@@ -404,9 +491,14 @@ def split_integrate(
 
 @numba.njit
 def ubarf_squared(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
-    """
+    r"""
     Enthalpy-weighted mean square space components of 4-velocity of fluid in bubble,
     from fluid shell functions.
+
+    :param v: $v$
+    :param w: $w$
+    :param xi: $\xi$
+    :param v_wall: $v_\text{wall}$
     """
     check.check_wall_speed(v_wall)
     #    def fun(v,w,xi):

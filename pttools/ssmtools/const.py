@@ -1,3 +1,5 @@
+"""Constants for the SSMtools module."""
+
 import typing as tp
 
 import numpy as np
@@ -35,6 +37,7 @@ T_TILDE_MAX: float = 20.0
 #: Minimum in bubble lifetime distribution integration
 T_TILDE_MIN: float = 0.01
 
+#: Default nucleation parameters
 DEFAULT_NUC_PARM: tp.Tuple[int] = (1,)
 
 #: Default sound speed

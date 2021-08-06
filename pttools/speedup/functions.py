@@ -8,7 +8,7 @@ from . import options
 
 @numba.njit
 def gradient(f: np.ndarray):
-    """np.gradient() for Numba"""
+    """Numba version of :func:`np.gradient`."""
 
     if f.ndim > 1:
         raise NotImplementedError
@@ -22,6 +22,6 @@ def gradient(f: np.ndarray):
 
 @numba.njit(parallel=options.NUMBA_NESTED_PARALLELISM)
 def logspace(start: float, stop: float, num: int, base: float = 10.0) -> np.ndarray:
-    """Numba version of numpy.logspace"""
+    """Numba version of :func:`numpy.logspace`."""
     y = np.linspace(start, stop, num)
     return base**y

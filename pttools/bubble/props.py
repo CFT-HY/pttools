@@ -1,4 +1,4 @@
-"""Useful functions for finding properties of solution """
+"""Useful functions for finding the properties of a solution."""
 
 import typing as tp
 
@@ -16,6 +16,11 @@ def find_shock_index(v_f: np.ndarray, xi: np.ndarray, v_wall: float, sol_type: b
     r"""
     Array index of shock from first point where fluid velocity $v_f$ goes below $v_\text{shock}$.
     For detonation, returns wall position.
+
+    :param v_f: fluid velocity $v_f$
+    :param v_wall: wall velocity $v_\text{wall}$
+    :param sol_type: solution type (detonation etc.)
+    :return: shock index
     """
     check.check_wall_speed(v_wall)
 
@@ -50,7 +55,14 @@ def shock_zoom_last_element(
     r"""
     Replaces last element of $(v,w,\xi)$ arrays by better estimate of
     shock position and values of $v, w$ there.
+
+    :param v: $v$
+    :param w: $w$
+    :param xi: $\xi$
+    :return: given $v, w, \xi$ arrays with the last elements replaced
     """
+    # TODO: Edit this so that it won't edit the original arrays.
+
     v_sh = v_shock(xi)
     # First check if last two elements straddle shock
     if v[-1] < v_sh[-1] and v[-2] > v_sh[-2] and xi[-1] > xi[-2]:
@@ -100,6 +112,9 @@ def w_shock(xi: th.FloatOrArr, w_n: float = 1.) -> th.FloatOrArrNumba:
     r"""
     Fluid enthalpy at a shock at $\xi$.
     No shocks exist for $\xi < cs$, so returns nan.
+
+    :param xi: $\xi$
+    :return: $w_\text{shock}$, fluid enthalpy at the shock
     """
     if isinstance(xi, numba.types.Float):
         return _w_shock_scalar

@@ -1,6 +1,6 @@
-"""Some functions useful for the bag equation of state
+"""Functions for the bag equation of state.
 
-See page 37 of the lecture notes 10.21468/SciPostPhysLectNotes.24
+See page 37 of the :notes:`lecture notes <>`.
 """
 
 # import enum
@@ -58,6 +58,11 @@ def adiabatic_index(
 
 @numba.njit
 def check_thetas(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> None:
+    r"""Check that $\theta_s \leq \theta_b$.
+
+    :param theta_s: $\theta_s$
+    :param theta_b: $\theta_b$
+    """
     if np.any(theta_b > theta_s):
         with numba.objmode:
             logger.warning(
@@ -79,9 +84,12 @@ def cs2_bag_arr(w: np.ndarray) -> np.ndarray:
 
 
 @numba.generated_jit(nopython=True)
-def cs2_bag(w: th.FloatOrArr):
+def cs2_bag(w: th.FloatOrArr) -> th.FloatOrArrNumba:
     r"""
-    Speed of sound squared in Bag model, equal to $\frac{1}{3}$ independent of enthalpy $w$
+    Speed of sound squared in Bag model, equal to $\frac{1}{3}$ independent of enthalpy $w$.
+
+    :param w: enthalpy $w$
+    :return: speed of sound squared $c_s^2$
     """
     if isinstance(w, numba.types.Float):
         return cs2_bag_scalar
@@ -101,7 +109,7 @@ def get_e(
         theta_s: th.FloatOrArr,
         theta_b: th.FloatOrArr = 0.) -> th.FloatOrArr:
     r"""
-    Energy density as a function of enthalpy $w$, assuming bag model.
+    Energy density $e$ as a function of enthalpy $w$, assuming bag model.
     $\theta = \frac{e - 3p}{4}$ ("vacuum energy").
     Enthalpy and phase can be arrays of the same shape.
     See also the equation 4.10.
@@ -110,7 +118,7 @@ def get_e(
     :param phase: phase indicator
     :param theta_s: $\theta$ for symmetric phase, ahead of bubble (phase = 0)
     :param theta_b: $\theta$ for broken phase, behind bubble (phase = 1)
-    :return: energy density
+    :return: energy density $e$
     """
     return w - get_p(w, phase, theta_s, theta_b)
 
@@ -200,7 +208,7 @@ def get_w(
 def theta_bag(w: th.FloatOrArr, phase: th.IntOrArr, alpha_n: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Trace anomaly $\theta = \frac{1}{4} (e - 3p)$ in the Bag model.
-    Equation 7.24 in the lecture notes, equation 2.10 in the article
+    Equation 7.24 in the lecture notes, equation 2.10 in the article.
 
     :param w: enthalpy $w$
     :param phase: phase(s)

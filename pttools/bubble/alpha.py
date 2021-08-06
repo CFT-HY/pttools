@@ -1,6 +1,6 @@
 r"""
 Functions for $\alpha_n$ (strength parameter at nucleation temperature) and
-$alpha_\text{plus}$ (strength parameter just in front of the wall)
+$\alpha_+$ (strength parameter just in front of the wall)
 """
 
 import numba
@@ -60,7 +60,7 @@ def alpha_n_max_deflagration(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAU
 
     :param v_wall: $v_\text{wall}$
     :param n_xi: number of $\xi$ points
-    :return: maximum $\alpha_n$
+    :return: $\alpha_{n,\max}$
     """
     if isinstance(v_wall, numba.types.Float):
         return _alpha_n_max_deflagration_scalar
@@ -81,7 +81,7 @@ def alpha_n_max_deflagration(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAU
 def alpha_n_max_detonation(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Maximum allowed value of $\alpha_n$ for a detonation with wall speed $v_\text{wall}$.
-    Same as $\alpha_{+,\max,\text{detonation}}$, because $\alpha_n = \alpha_+$ for detonation.
+    Same as :func:`alpha_plus_max_detonation`, because $\alpha_n = \alpha_+$ for detonation.
 
     :param v_wall: $v_\text{wall}$
     :return: $\alpha_{n,\max,\text{detonation}}$
@@ -94,6 +94,8 @@ def alpha_n_max_hybrid(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> float:
     Calculates the relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
     for given $v_\text{wall}$, assuming hybrid fluid shell
 
+    :param v_wall: $v_\text{wall}$
+    :param n_xi: number of $\xi$ points
     :return: $\alpha_{n,\max}$
     """
     sol_type = transition.identify_solution_type_alpha_plus(v_wall, 1. / 3)
@@ -115,7 +117,7 @@ def alpha_n_max_hybrid(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> float:
 def alpha_n_min_deflagration(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Minimum $\alpha_n$ for a deflagration. Equal to maximum $\alpha_n$ for a detonation.
-    Same as alpha_n_min_hybrid, as a hybrid is a supersonic deflagration.
+    Same as :func:`alpha_n_min_hybrid`, as a hybrid is a supersonic deflagration.
 
     :param v_wall: $v_\text{wall}$
     :return: $\alpha_{n,\min,\text{deflagration}} = \alpha_{n,\min,\text{hybrid}} = \alpha_{n,\max,\text{detonation}}$
@@ -129,7 +131,7 @@ def alpha_n_min_deflagration(v_wall: th.FloatOrArr) -> th.FloatOrArr:
 def alpha_n_min_hybrid(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Minimum $\alpha_n$ for a hybrid. Equal to maximum $\alpha_n$ for a detonation.
-    Same as alpha_n_min_deflagration, as a hybrid is a supersonic deflagration.
+    Same as :func:`alpha_n_min_deflagration`, as a hybrid is a supersonic deflagration.
 
     :param v_wall: $v_\text{wall}$
     :return: $\alpha_{n,\min,\text{hybrid}} = \alpha_{n,\min,\text{deflagration}} = \alpha_{n,\max,\text{detonation}}$
@@ -226,7 +228,7 @@ def find_alpha_n(
 def find_alpha_n_from_w_xi(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_p: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Calculates the transition strength parameter
-    $\alpha_n = \frac{4}{3} \frac{\theta_s(T_n) - \theta_b(T_n)}{w(T_n)}$,
+    $\alpha_n = \frac{4}{3} \frac{\theta_s(T_n) - \theta_b(T_n)}{w(T_n)}$
     from $\alpha_+$.
 
     :return: $\alpha_n$

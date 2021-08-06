@@ -74,7 +74,9 @@ def max_speed_deflag(alpha_p: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Maximum speed for a deflagration: speed where wall and shock are coincident.
     May be greater than 1, meaning that hybrids exist for all wall speeds above cs.
-    $alpha_plus < \frac{1}{3}$, but $\alpha_n$ unbounded above.
+    $\alpha_+ < \frac{1}{3}$, but $\alpha_n$ unbounded above.
+
+    :param alpha_p: $\alpha_+$
     """
     return 1/(3 * boundary.v_plus(const.CS0, alpha_p, boundary.SolutionType.SUB_DEF))
 
@@ -85,5 +87,7 @@ def min_speed_deton(alpha: th.FloatOrArr) -> th.FloatOrArr:
     Minimum speed for a detonation (Jouguet speed).
     Equivalent to $v_+(cs_0,\alpha)$.
     Note that $\alpha_+ = \alpha_n$ for detonation.
+
+    :param alpha: $\alpha$
     """
     return (const.CS0 / (1 + alpha)) * (1 + np.sqrt(alpha * (2. + 3. * alpha)))

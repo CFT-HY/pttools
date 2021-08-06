@@ -12,7 +12,7 @@ EPS: np.float_ = np.nextafter(0, 1)
 N_XI_DEFAULT: int = 5000
 #: Maximum number of entries in $\xi$ array
 N_XI_MAX: int = 1000000
-#: How accurate is alpha_plus(alpha_n)
+#: How accurate is $\alpha_+ (\alpha_n)$
 FIND_ALPHA_PLUS_TOL: float = 1e-6
 #: Integration limit for the parametric form of the fluid equations
 T_END_DEFAULT: float = 50.

@@ -1,4 +1,4 @@
-"""Numerical utilities for ssmtools"""
+"""Numerical utilities for SSMtools."""
 
 import logging
 import typing as tp
@@ -16,12 +16,12 @@ logger = logging.getLogger(__name__)
 @numba.njit
 def envelope(xi: np.ndarray, f: np.ndarray) -> np.ndarray:
     r"""
-    Helper function for :meth:`sin_transform_approx`.
+    Helper function for :func:`sin_transform_approx`.
     Assumes that
 
-    - max(v) is achieved at a discontinuity (bubble wall)
-    - f(xi) finishes at a discontinuity (shock)
-    - at least the first element of f is zero
+    - $\max(v)$ is achieved at a discontinuity (bubble wall)
+    - $f(\xi)$ finishes at a discontinuity (shock)
+    - at least the first element of $f$ is zero
 
     xi1: last zero value of f,
     xi_w: position of maximum f (wall)
@@ -31,6 +31,8 @@ def envelope(xi: np.ndarray, f: np.ndarray) -> np.ndarray:
     f_p: value just after wall
     f2: (at shock, or after wall)
 
+    :param: xi: $\xi$
+    :param f: function values $f$ at the points $\xi$
     :return: array of $\xi$, $f$ pairs "outlining" function $f$
     """
 
@@ -80,7 +82,11 @@ def resample_uniform_xi(
         n_xi: int = const.NPTDEFAULT[0]) -> tp.Tuple[np.ndarray, th.FloatOrArr]:
     r"""
     Provide uniform resample of function defined by $(x,y) = (\xi,f)$.
-    Returns f interpolated and the uniform grid of n_xi points in range [0,1]
+    Returns f interpolated and the uniform grid of n_xi points in range [0,1].
+
+    :param xi: $\xi$
+    :param f: function values $f$ at the points $\xi$
+    :param n_xi: number of interpolated points
     """
     xi_re = np.linspace(0, 1-1/n_xi, n_xi)
     return xi_re, np.interp(xi_re, xi, f)
@@ -135,19 +141,24 @@ def _sin_transform_arr(
 
 
 @numba.generated_jit(nopython=True)
-def sin_transform(z: th.FloatOrArr, xi: np.ndarray, f: np.ndarray, z_st_thresh: float = const.Z_ST_THRESH):
+def sin_transform(
+        z: th.FloatOrArr,
+        xi: np.ndarray,
+        f: np.ndarray,
+        z_st_thresh: float = const.Z_ST_THRESH) -> th.FloatOrArrNumba:
     r"""
-    sin transform of f(xi), Fourier transform variable z.
+    sin transform of $f(\xi)$, Fourier transform variable z.
     For z > z_st_thresh, use approximation rather than doing the integral.
     Interpolate between  z_st_thresh - dz_blend < z < z_st_thresh.
 
     Without the approximations this function would compute
-    $\hat{f}(z) =  f(\xi) \int_{{\xi}_\text{min}}^{{\xi}_\text{max}} \sin(z \xi) d\xi$
+    $$\hat{f}(z) =  f(\xi) \int_{{\xi}_\text{min}}^{{\xi}_\text{max}} \sin(z \xi) d\xi$$.
 
     :param z: Fourier transform variable (any shape)
     :param xi: $\xi$ points over which to integrate
     :param f: function values at the points $\xi$, same shape as $\xi$
     :param z_st_thresh: for $z$ values above z_sh_tresh, use approximation rather than doing the integral.
+    :return: sine transformed values $\hat{f}(z)$
     """
     if isinstance(z, numba.types.Float):
         return _sin_transform_scalar
@@ -215,7 +226,7 @@ def sin_transform_old(z: th.FloatOrArr, xi: np.ndarray, v: np.ndarray) -> th.Flo
     r"""
     Old sin transform of $v(\xi)$
 
-    .. deprecated:: 0.1
+    .. deprecated:: 0.0.1
 
     :param z: Fourier transform variable (any shape)
     :param xi: $\xi$

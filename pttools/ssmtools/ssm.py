@@ -195,8 +195,8 @@ def f_file(
         filename: str,
         skip: int = 0,
         npt: const.NPT_TYPE = const.NPTDEFAULT,
-        z_st_thresh: float = const.Z_ST_THRESH):
-    """
+        z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
+    r"""
     3D FT of radial fluid velocity v(r) from file.
 
     :param z_arr: array of scaled wavenumbers $z = kR_*$
@@ -224,24 +224,25 @@ def f_file(
 @numba.njit
 def f_ssm_func(
         z: th.FloatOrArr,
-        vw,
-        alpha_n,
+        v_wall: float,
+        alpha_n: float,
         npt: const.NPT_TYPE = const.NPTDEFAULT,
-        z_st_thresh: float = const.Z_ST_THRESH):
-    """
+        z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
+    r"""
     3D FT of radial fluid velocity v(r) from Sound Shell Model fluid profile.
 
     :param z: array of scaled wavenumbers $z = kR_*$
+    :param v_wall: $v_\text{wall}$
+    :param alpha_n: $\alpha_n$
+    :param npt: number of points
     """
     nxi = npt[0]
-    v_ip, _, xi = bubble.fluid_shell(vw, alpha_n, nxi)
+    v_ip, _, xi = bubble.fluid_shell(v_wall, alpha_n, nxi)
 
     # f_ssm = np.zeros_like(z)
     # for j in range(f_ssm.size):
     #    f_ssm[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi, v_ip)
-    f_ssm = (4.*np.pi/z) * calculators.sin_transform(z, xi, v_ip, z_st_thresh)
-
-    return f_ssm
+    return (4.*np.pi/z) * calculators.sin_transform(z, xi, v_ip, z_st_thresh)
 
 
 def g_file(z: np.ndarray, t, filename: str, skip: int = 0) -> np.ndarray:
@@ -252,20 +253,18 @@ def g_file(z: np.ndarray, t, filename: str, skip: int = 0) -> np.ndarray:
     """
     f = f_file(z, t, filename, skip)
     df_dz = np.gradient(f) / np.gradient(z)
-    g = (z * df_dz + 2. * f)
-    return g
+    return z * df_dz + 2. * f
 
 
 def g_ssm_func(z: np.ndarray, vw, alpha, npt: const.NPT_TYPE = const.NPTDEFAULT) -> np.ndarray:
     r"""
-    3D FT of radial fluid acceleration \dot{v}(r) from Sound Shell Model fluid profile.
+    3D FT of radial fluid acceleration $\dot{v}$(r) from Sound Shell Model fluid profile.
 
     :param z: array of scaled wavenumbers $z = kR_*$
     """
     f_ssm = f_ssm_func(z, vw, alpha, npt)
     df_ssmdz = np.gradient(f_ssm) / np.gradient(z)
-    g_ssm = (z * df_ssmdz + 2. * f_ssm)
-    return g_ssm
+    return z * df_ssmdz + 2. * f_ssm
 
 
 def lam_ssm_func(
@@ -281,7 +280,7 @@ def lam_ssm_func(
     :param z: array of scaled wavenumbers $z = kR_*$
     """
     nxi = npt[0]
-#    xi_re = np.linspace(0,1-1/nxi,nxi) # need to resample for lam = de/w
+    # xi_re = np.linspace(0,1-1/nxi,nxi) # need to resample for lam = de/w
     v_ip, w_ip, xi = bubble.fluid_shell(vw, alpha_n, nxi)
 
     if de_method == DE_Method.ALTERNATE:
@@ -295,6 +294,4 @@ def lam_ssm_func(
     #    lam_ft[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi_re, xi_re*lam_re,
     #          z_st_thresh=max(z)) # Need to fix problem with ST of lam for detonations
 
-    lam_ft = (4.*np.pi/z) * calculators.sin_transform(z, xi_re, xi_re*lam_re, z_st_thresh)
-
-    return lam_ft
+    return (4.*np.pi/z) * calculators.sin_transform(z, xi_re, xi_re*lam_re, z_st_thresh)

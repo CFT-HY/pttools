@@ -43,9 +43,15 @@ class SolutionType(str, enum.Enum):
 
 @numba.njit
 def enthalpy_ratio(v_m: th.FloatOrArr, v_p: th.FloatOrArr) -> th.FloatOrArr:
-    """
+    r"""
     Ratio of enthalpies behind ($w_-$) and ahead $(w_+)$ of a shock or
     transition front, $w_-/w_+$. Uses conservation of momentum in moving frame.
+
+    $$\frac{\gamma^2 (v_m) v_m}{\gamma^2 (v_p) v_p}$$
+
+    :param v_m: $v_-$
+    :param v_p: $v_+$
+    :return: enthalpy ratio
     """
     return relativity.gamma2(v_m) * v_m / (relativity.gamma2(v_p) * v_p)
 
@@ -55,11 +61,15 @@ def fluid_speeds_at_wall(
         v_wall: float,
         alpha_p: th.FloatOrArr,
         sol_type: SolutionType) -> tp.Tuple[float, float, float, float]:
-    """
+    r"""
     Solves fluid speed boundary conditions at the wall.
     Fluid speed vf? just behind (?=m) and just ahead (?=p) of wall,
     in wall (_w) and plasma (_p) frames.
-    :return vfp_w, vfm_w, vfp_p, vfm_p
+
+    :param v_wall: $v_\text{wall}$
+    :param alpha_p: $\alpha_+$
+    :param sol_type: solution type
+    :return: vfp_w, vfm_w, vfp_p, vfm_p
     """
     if v_wall <= 1:
         # print( "max_speed_deflag(alpha_p)= ", max_speed_deflag(alpha_p))
@@ -128,9 +138,9 @@ def _v_minus_arr(vp: th.FloatOrArr, ap: th.FloatOrArr, sol_type: SolutionType):
 
 @numba.generated_jit(nopython=True)
 def v_minus(
-    vp: th.FloatOrArr,
-    ap: th.FloatOrArr,
-    sol_type: SolutionType = SolutionType.DETON) -> th.FloatOrArrNumba:
+        vp: th.FloatOrArr,
+        ap: th.FloatOrArr,
+        sol_type: SolutionType = SolutionType.DETON) -> th.FloatOrArrNumba:
     r"""
     Wall frame fluid speed $v_-$ behind the wall
 

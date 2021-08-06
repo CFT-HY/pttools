@@ -1,4 +1,4 @@
-"""Plotting functions of the bubble module
+"""Plotting functions of the bubble module.
 
 All functions using Matplotlib etc. should be put here to keep them separate from the numerical codebase.
 """
@@ -8,7 +8,7 @@ import typing as tp
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
+# import pandas as pd
 
 from . import approx
 from . import boundary
@@ -33,7 +33,7 @@ def plot_fluid_shell(
         draw: bool = True) \
         -> tp.Tuple[plt.Figure, tp.Dict[str, np.ndarray], tp.Dict[str, float]]:
     r"""
-    Calls :meth:`pttools.bubble.fluid.fluid_shell` and plots resulting $v, w$ against $\xi$.
+    Calls :func:`pttools.bubble.fluid.fluid_shell` and plots resulting $v, w$ against $\xi$.
     Also plots:
 
     - shock curves (where $v$ and $w$ should form shock)
@@ -202,11 +202,11 @@ def plot_fluid_shells(
         debug: bool = False,
         draw: bool = True) -> tp.Union[plt.Figure, tp.Tuple[plt.Figure, np.ndarray]]:
     r"""
-    Calls :meth:`pttools.bubble.fluid.fluid_shell` and plots resulting v, w against xi.
+    Calls :func:`pttools.bubble.fluid.fluid_shell` and plots resulting v, w against xi.
     Annotates titles with:
 
     - Wall type, $v_\text{wall}, \alpha_n$
-    - $alpha_+$ ($\alpha$ just in front of wall)
+    - $\alpha_+$ ($\alpha$ just in front of wall)
     - $r$ (ratio of enthalpies either side of wall)
     - $\xi_{sh}$ (shock speed)
     - $\frac{w_0}{w_n}$ (ration of internal to external enthalpies)
@@ -388,6 +388,10 @@ def setup_plotting(font: str = "serif", font_size: int = 20, usetex: bool = True
     """Get decent-sized plots.
 
     LaTeX can cause problems if the system is not configured correctly.
+
+    :param font: name of the default font
+    :param font_size: font size for the labels
+    :param usetex: whether to use LaTeX
     """
     plt.rc('text', usetex=usetex)
     plt.rc('font', family=font)

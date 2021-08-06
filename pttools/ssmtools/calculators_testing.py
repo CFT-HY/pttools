@@ -1,3 +1,5 @@
+"""Testing utilities for the SSMtools calculators"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.fft

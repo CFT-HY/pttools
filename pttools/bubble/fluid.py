@@ -1,7 +1,7 @@
-"""Functions for fluid differential equations
+r"""Functions for fluid differential equations
 
-Now in parametric form (Jacky Lindsay and Mike Soughton MPhys project 2017-18)
-# RHS is Eq (33) in Espinosa et al (plus $\frac{dw}{dt}$ not written there)
+Now in parametric form (Jacky Lindsay and Mike Soughton MPhys project 2017-18).
+RHS is Eq (33) in Espinosa et al (plus $\frac{dw}{dt}$ not written there)
 """
 
 import logging
@@ -31,16 +31,29 @@ logger = logging.getLogger(__name__)
 DEFAULT_DF_DTAU: str = "bag"
 # ODEINT_LOCK = threading.Lock()
 
+#: Cache for the differential equations.
+#: New differential equations have to be added here before usage so that they can be found by
+#: :func:`scipy.integrate.odeint` and :func:`scipy.integrate.solve_ivp`.
 differentials = speedup.DifferentialCache()
 
 
 def add_df_dtau(name: str, cs2_fun: bag.CS2Fun) -> speedup.DifferentialPointer:
+    """Add a new differential equation to the cache based on the given sound speed function.
+
+    :param name: the name of the function
+    :param cs2_fun: function, which gives the speed of sound squared $c_s^2$.
+    :return:
+    """
     func = gen_df_dtau(cs2_fun)
     return differentials.add(name, func)
 
 
 def gen_df_dtau(cs2_fun: bag.CS2Fun) -> speedup.Differential:
-    r"""Generate a function for the differentials of fluid variables $(v, w, \xi)$ in parametric form."""
+    r"""Generate a function for the differentials of fluid variables $(v, w, \xi)$ in parametric form.
+
+    :param cs2_fun: function, which gives the speed of sound squared $c_s^2$.
+    :return: function for the differential equation
+    """
     cs2_fun_numba = cs2_fun \
         if isinstance(cs2_fun, (speedup.CFunc, speedup.Dispatcher)) \
         else numba.cfunc("float64(float64)")(cs2_fun)
@@ -64,6 +77,7 @@ def gen_df_dtau(cs2_fun: bag.CS2Fun) -> speedup.Differential:
     return df_dtau
 
 
+#: Pointer to the differential equation of the bag model
 DF_DTAU_BAG_PTR = add_df_dtau("bag", bag.cs2_bag_scalar)
 
 
@@ -80,6 +94,14 @@ def fluid_integrate_param(
     Integrates parametric fluid equations in df_dtau from an initial condition.
     Positive t_end integrates along curves from (v,w) = (0,cs0) to (1,1).
     Negative t_end integrates towards (0,cs0).
+
+    :param v0: $v_0$
+    :param w0: $w_0$
+    :param xi0: $\xi_0$
+    :param t_end: $t_\text{end}$
+    :param n_xi: number of $\xi$ points
+    :param df_dtau_ptr: pointer to the differential equation function
+    :param method: differential equation solver to be used
     :return: $v, w, \xi, t$
     """
 
@@ -110,6 +132,13 @@ def fluid_integrate_param(
 
 @numba.njit
 def fluid_integrate_param_numba(t: np.ndarray, y0: np.ndarray, df_dtau_ptr: speedup.DifferentialPointer):
+    r"""Integrate a differential equation using NumbaLSODA.
+
+    :param t: time
+    :param y0: starting point
+    :param df_dtau_ptr: pointer to the differential equation function
+    :return: $v, w, \xi$, success status
+    """
     backwards = t[-1] < 0
     t_numba = -t if backwards else t
     data = np.array([1 if backwards else 0])
@@ -124,6 +153,13 @@ def fluid_integrate_param_numba(t: np.ndarray, y0: np.ndarray, df_dtau_ptr: spee
 
 
 def fluid_integrate_param_odeint(t: np.ndarray, y0: np.ndarray, df_dtau_ptr: speedup.DifferentialPointer):
+    r"""Integrate a differential equation using :func:`scipy.integrate.odeint`.
+
+    :param t: time
+    :param y0: starting point
+    :param df_dtau_ptr: pointer to the differential equation function, which is already in the cache
+    :return: $v, w, \xi$, success status
+    """
     try:
         func = differentials.get_odeint(df_dtau_ptr)
         soln: np.ndarray = spi.odeint(func, y0, t)
@@ -140,6 +176,13 @@ def fluid_integrate_param_odeint(t: np.ndarray, y0: np.ndarray, df_dtau_ptr: spe
 
 def fluid_integrate_param_solve_ivp(
         t: np.ndarray, y0: np.ndarray, df_dtau_ptr: speedup.DifferentialPointer, method: str):
+    """Integrate a differential equation using :func:`scipy.integrate.solve_ivp`.
+
+    :param t: time
+    :param y0: starting point
+    :param df_dtau_ptr: pointer to the differential equation function, which is already in the cache
+    :method: name of the integrator to be used. See the :func:`scipy.integrate.solve_ivp` documentation.
+    """
     try:
         func = differentials.get_solve_ivp(df_dtau_ptr)
         soln: spi._ivp.ivp.OdeResult = spi.solve_ivp(
@@ -166,7 +209,11 @@ def fluid_shell(
         -> tp.Union[tp.Tuple[float, float, float], tp.Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     r"""
     Finds fluid shell $(v, w, \xi)$ from a given $v_\text{wall}, \alpha_n$, which must be scalars.
-    Option to change xi resolution n_xi
+
+    :param v_wall: $v_\text{wall}$
+    :param alpha_n: $\alpha_n$
+    :param n_xi: number of $\xi$ points
+    :return: $v, w, \xi$
     """
     # check_physical_params([v_wall,alpha_n])
     sol_type = transition.identify_solution_type(v_wall, alpha_n)
@@ -195,7 +242,6 @@ def fluid_shell_alpha_plus(
     r"""
     Finds fluid shell (v, w, xi) from a given $v_\text{wall}, \alpha_+$ (at-wall strength parameter).
     Where $v=0$ (behind and ahead of shell) uses only two points.
-    v_wall and alpha_plus must be scalars, and are converted from 1-element arrays if needed.
 
     :param v_wall: $v_\text{wall}$
     :param alpha_plus: $\alpha_+$
@@ -203,6 +249,7 @@ def fluid_shell_alpha_plus(
     :param n_xi: increase resolution
     :param w_n: specify enthalpy outside fluid shell
     :param cs2_fun: sound speed squared as a function of enthalpy, default
+    :param df_dtau_ptr: pointer to the differential equation function
     :return: $v, w, \xi$
     """
     check.check_wall_speed(v_wall)
@@ -302,9 +349,19 @@ def trim_fluid_wall_to_cs(
     r"""
     Picks out fluid variable arrays $(v, w, \xi, t)$ which are definitely behind
     the wall for deflagration and hybrid.
-    Also removes negative fluid speeds and xi <= sound_speed, which might be left by
+    Also removes negative fluid speeds and $\xi \leq c_s$, which might be left by
     an inaccurate integration.
     If the wall is within about 1e-16 of cs, rounding errors are flagged.
+
+    :param v: $v$
+    :param w: $w$
+    :param xi: $\xi$
+    :param t: $t$
+    :param v_wall: $v_\text{wall}$
+    :param sol_type: solution type
+    :param dxi_lim: not used
+    :param cs2_fun: function, which gives $c_s^2$
+    :return: trimmed $v, w, \xi, t$
     """
     check.check_wall_speed(v_wall)
     n_start = 0
@@ -344,8 +401,13 @@ def trim_fluid_wall_to_shock(
         t: np.ndarray,
         sol_type: boundary.SolutionType) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""
-    Trims fluid variable arrays $(v, w, \xi)$ so last element is just ahead of shock
+    Trims fluid variable arrays $(v, w, \xi)$ so last element is just ahead of shock.
 
+    :param v: $v$
+    :param w: $w$
+    :param xi: $\xi$
+    :param t: $t$
+    :param sol_type: solution type
     :return: trimmed $v, w, \xi, t$
     """
     # TODO: should this be 0 to match with the error handling below?

@@ -23,10 +23,12 @@ class NucType(str, enum.Enum):
     SIMULTANEOUS = "simultaneous"
 
 
+#: Default nucleation type
 DEFAULT_NUC_TYPE = NucType.EXPONENTIAL
 
 
 def convert_params(params: bubble.PhysicalParams) -> bubble.PhysicalParams:
+    """Convert the physical parameters from a list to a tuple if necessary."""
     if isinstance(params, list):
         logger.warning("Specifying the model parameters as a list is deprecated. Please use a tuple instead.")
         return tuple(params)
@@ -35,9 +37,12 @@ def convert_params(params: bubble.PhysicalParams) -> bubble.PhysicalParams:
 
 @numba.njit
 def nu(T: th.FloatOrArr, nuc_type: NucType = NucType.SIMULTANEOUS, a: float = 1.) -> th.FloatOrArr:
-    """
-    Bubble lifetime distribution function as function of (dimensionless) time T.
-    ``nuc_type`` allows ``simultaneous`` or ``exponential`` bubble nucleation.
+    r"""
+    Bubble lifetime distribution function
+
+    :param T: dimensionless time
+    :param nuc_type: nucleation type, simultaneous or exponential
+    :return: bubble lifetime distribution $\nu$
     """
     if nuc_type == NucType.SIMULTANEOUS.value:
         return 0.5 * a * (a*T)**2 * np.exp(-(a*T)**3 / 6)
@@ -48,8 +53,14 @@ def nu(T: th.FloatOrArr, nuc_type: NucType = NucType.SIMULTANEOUS, a: float = 1.
 
 
 # @numba.njit
-def parse_params(params: bubble.PhysicalParams):
-    vw = params[0]
+def parse_params(params: bubble.PhysicalParams) -> tp.Tuple[float, float, NucType, bubble.NucArgs]:
+    r"""
+    Parse physical parameters from the tuple.
+
+    :param params: tuple of physical parameters
+    :return: $v_\text{wall}, \alpha$, nucleation type, nucleation arguments
+    """
+    v_wall = params[0]
     alpha = params[1]
     if len(params) > 2:
         nuc_type = params[2]
@@ -60,12 +71,16 @@ def parse_params(params: bubble.PhysicalParams):
     else:
         nuc_args = const.DEFAULT_NUC_PARM
 
-    return vw, alpha, nuc_type, nuc_args
+    return v_wall, alpha, nuc_type, nuc_args
 
 
 def pow_spec(z: th.FloatOrArr, spec_den: th.FloatOrArr) -> th.FloatOrArr:
     """
     Power spectrum from spectral density at dimensionless wavenumber z.
+
+    :param z: dimensionless wavenumber $z$
+    :param spec_den: spectral density
+    :return: power spectrum
     """
     return z**3 / (2. * np.pi ** 2) * spec_den
 
@@ -85,16 +100,24 @@ def power_gw_scaled(
     multiply by $(H_n R_*)(H_n \tau_v)$, where $H_n$ is the Hubble rate at the
     nucleation time, and $\tau_v$ is the lifetime of the shear stress source.
 
-    Input parameters
-        vw = params[0]       scalar  (required) [0 < vw < 1]
-        alpha = params[1]    scalar  (required) [0 < alpha_n < alpha_n_max(v_w)]
-        nuc_type = params[2] string  (optional) [exponential* | simultaneous]
-        nuc_args = params[3] tuple   (optional) default (1,)
+    Physical parameters
+
+    - vw = params[0]       scalar  (required) [0 < vw < 1]
+    - alpha = params[1]    scalar  (required) [0 < alpha_n < alpha_n_max(v_w)]
+    - nuc_type = params[2] string  (optional) [exponential* | simultaneous]
+    - nuc_args = params[3] tuple   (optional) default (1,)
 
     Steps:
+
     1. Getting velocity field spectral density
     2. Geeting gw spectral density
     3. turning SD into power
+
+    :param z: array $z = qR_*$
+    :param params: physical parameters, see the description above
+    :param npt: number of points
+    :param filename: path to load A2 values from
+    :return: scaled GW power spectrum
     """
     if np.any(z <= 0.0):
         raise ValueError("z values must all be positive.")
@@ -118,18 +141,26 @@ def power_gw_scaled(
 def power_v(
         z: np.ndarray,
         params: bubble.PhysicalParams,
-        npt=const.NPTDEFAULT,
+        npt: const.NPT_TYPE = const.NPTDEFAULT,
         filename: str = None,
         skip: int = 1,
         method: ssm.Method = ssm.Method.E_CONSERVING,
         de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
     """
-    Power spectrum of velocity field in Sound Shell Model.
-        vw = params[0]       scalar
-        alpha = params[1]    scalar
-        nuc_type = params[2] string [exponential* | simultaneous]
-        nuc_args = params[3] tuple  default (1,)
+    Power spectrum of the velocity field in the Sound Shell Model.
+
+    - vw = params[0]       scalar
+    - alpha = params[1]    scalar
+    - nuc_type = params[2] string [exponential* | simultaneous]
+    - nuc_args = params[3] tuple  default (1,)
+
+    :param z: array $z = qR_*$
+    :param params: physical parameters, see the description above
+    :param npt: number of points
+    :param filename: path to load A2 values from
+    :param z_st_thresh: not used
+    :return: power spectrum of the velocity field
     """
     bubble.check_physical_params(params)
 
@@ -282,6 +313,7 @@ def spec_den_v(
 
     :param z: array $z = qR_*$
     :param params: tuple of vw (scalar), alpha (scalar), nuc_type (string [exponential* | simultaneous]), nuc_args (tuple, default (1,))
+    :param npt: number of poitns
     :return: dimensionless velocity spectral density $\bar{P}_v$
     """
     params = convert_params(params)

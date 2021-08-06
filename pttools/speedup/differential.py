@@ -26,16 +26,22 @@ DifferentialPointer = numba.types.CPointer(lsoda_sig)
 class DifferentialCache:
     """Cache for the functions that compute the differentials
 
-    This cache system automatically compiles versions
+    This cache system automatically compiles versions for
+    :func:`scipy.integrate.odeint`,
+    :func:`scipy.integrate.solve_ivp`
+    and NumbaLSODA.
     """
-
     def __init__(self):
         self._lock = threading.Lock()
         self._cache_cfunc: tp.Dict[DifferentialPointer, Differential] = {}
         self._cache_odeint: tp.Dict[DifferentialPointer, DifferentialOdeint] = {}
         self._cache_solve_ivp: tp.Dict[DifferentialPointer, DifferentialSolveIVP] = {}
 
-    def add(self, name: str, differential: Differential, p0_is_backwards: bool = True, ndim: int = 3):
+    def add(
+            self,
+            name: str, differential: Differential,
+            p0_is_backwards: bool = True,
+            ndim: int = 3) -> DifferentialPointer:
         with self._lock:
             if name in self._cache_cfunc:
                 raise ValueError("The key is already in the cache")
