@@ -12,6 +12,26 @@ from . import const
 
 
 @numba.njit
+def find_shock_index(v_f: np.ndarray, xi: np.ndarray, v_wall: float, sol_type: boundary.SolutionType) -> int:
+    r"""
+    Array index of shock from first point where fluid velocity $v_f$ goes below $v_\text{shock}$.
+    For detonation, returns wall position.
+    """
+    check.check_wall_speed(v_wall)
+
+    n_shock = 0
+    if sol_type == boundary.SolutionType.DETON:
+        n_shock = find_v_index(xi, v_wall)
+    else:
+        for i, (v, x) in enumerate(zip(v_f, xi)):
+            if x > v_wall and v <= v_shock(x):
+                n_shock = i
+                break
+
+    return n_shock
+
+
+@numba.njit
 def find_v_index(xi: np.ndarray, v_target: float) -> int:
     r"""
     The first array index of $\xi$ where value is just above $v_\text{target}$
@@ -20,6 +40,31 @@ def find_v_index(xi: np.ndarray, v_target: float) -> int:
     if greater.size:
         return greater[0]
     return 0
+
+
+@numba.njit
+def shock_zoom_last_element(
+        v: np.ndarray,
+        w: np.ndarray,
+        xi: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    r"""
+    Replaces last element of $(v,w,\xi)$ arrays by better estimate of
+    shock position and values of $v, w$ there.
+    """
+    v_sh = v_shock(xi)
+    # First check if last two elements straddle shock
+    if v[-1] < v_sh[-1] and v[-2] > v_sh[-2] and xi[-1] > xi[-2]:
+        dxi = xi[-1] - xi[-2]
+        dv = v[-1] - v[-2]
+        dv_sh = v_sh[-1] - v_sh[-2]
+        dw_sh = w[-1] - w[-2]
+        dxi_sh = dxi * (v[-2] - v_sh[-2])/(dv_sh - dv)
+        # now replace final element
+        xi[-1] = xi[-2] + dxi_sh
+        v[-1] = v[-2] + (dv_sh/dxi)*dxi_sh
+        w[-1] = w[-2] + (dw_sh/dxi)*dxi_sh
+    # If not, do nothing
+    return v, w, xi
 
 
 @numba.vectorize
@@ -69,48 +114,3 @@ def w_shock(xi: th.FloatOrArr, w_n: float = 1.) -> th.FloatOrArrNumba:
             return _w_shock_scalar(xi.item(), w_n)
         return _w_shock_arr(xi, w_n)
     raise TypeError(f"Unknown type for xi: {type(xi)}")
-
-
-@numba.njit
-def find_shock_index(v_f: np.ndarray, xi: np.ndarray, v_wall: float, sol_type: boundary.SolutionType) -> int:
-    r"""
-    Array index of shock from first point where fluid velocity $v_f$ goes below $v_\text{shock}$.
-    For detonation, returns wall position.
-    """
-    check.check_wall_speed(v_wall)
-
-    n_shock = 0
-    if sol_type == boundary.SolutionType.DETON:
-        n_shock = find_v_index(xi, v_wall)
-    else:
-        for i, (v, x) in enumerate(zip(v_f, xi)):
-            if x > v_wall and v <= v_shock(x):
-                n_shock = i
-                break
-
-    return n_shock
-
-
-@numba.njit
-def shock_zoom_last_element(
-        v: np.ndarray,
-        w: np.ndarray,
-        xi: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    r"""
-    Replaces last element of $(v,w,\xi)$ arrays by better estimate of
-    shock position and values of $v, w$ there.
-    """
-    v_sh = v_shock(xi)
-    # First check if last two elements straddle shock
-    if v[-1] < v_sh[-1] and v[-2] > v_sh[-2] and xi[-1] > xi[-2]:
-        dxi = xi[-1] - xi[-2]
-        dv = v[-1] - v[-2]
-        dv_sh = v_sh[-1] - v_sh[-2]
-        dw_sh = w[-1] - w[-2]
-        dxi_sh = dxi * (v[-2] - v_sh[-2])/(dv_sh - dv)
-        # now replace final element
-        xi[-1] = xi[-2] + dxi_sh
-        v[-1] = v[-2] + (dv_sh/dxi)*dxi_sh
-        w[-1] = w[-2] + (dw_sh/dxi)*dxi_sh
-    # If not, do nothing
-    return v, w, xi

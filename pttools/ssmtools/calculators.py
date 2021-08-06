@@ -13,27 +13,6 @@ from . import const
 logger = logging.getLogger(__name__)
 
 
-def sin_transform_old(z: th.FloatOrArr, xi: np.ndarray, v: np.ndarray) -> th.FloatOrArr:
-    r"""
-    Old sin transform of $v(\xi)$
-
-    .. deprecated:: 0.1
-
-    :param z: Fourier transform variable (any shape)
-    :param xi: $\xi$
-    :param v: wall speed $v$, same shape as $\xi$
-    """
-    logger.warning("sin_transform_old is deprecated")
-    if isinstance(z, np.ndarray):
-        array = np.sin(np.outer(z, xi)) * v
-        integral = np.trapz(array, xi)
-    else:
-        array = v * np.sin(z * xi)
-        integral = np.trapz(array, xi)
-
-    return integral
-
-
 @numba.njit
 def envelope(xi: np.ndarray, f: np.ndarray) -> np.ndarray:
     r"""
@@ -95,31 +74,16 @@ def envelope(xi: np.ndarray, f: np.ndarray) -> np.ndarray:
 
 
 @numba.njit
-def sin_transform_approx(z: th.FloatOrArr, xi: np.ndarray, f: np.ndarray) -> np.ndarray:
+def resample_uniform_xi(
+        xi: np.ndarray,
+        f: th.FloatOrArr,
+        n_xi: int = const.NPTDEFAULT[0]) -> tp.Tuple[np.ndarray, th.FloatOrArr]:
     r"""
-    Approximate sin transform of $f(\xi)$.
-    For values $f_a$ and $f_b$, we have
-    $$
-    \int_{\xi_a}^{\xi_b} d\xi f(\xi) \sin(z \xi) \to
-    - \frac{1}{z} \left(f_b \cos(z \xi_b) - f_a \cos(z \xi_a)\right) + O(1/z^2)
-    $$
-    as $z \to \infty$.
-    Function assumed piecewise continuous in intervals $[\xi_1, \xi_w]$ and
-    $[\xi_w,\xi_2]$.
-
-    :param z: Fourier transform variable (any shape)
-    :param xi: $\xi$
-    :param f: function values at the points $\xi$, same shape as $\xi$
+    Provide uniform resample of function defined by $(x,y) = (\xi,f)$.
+    Returns f interpolated and the uniform grid of n_xi points in range [0,1]
     """
-    # Old versions of Numba don't support unpacking 2D arrays
-    # [[xi1, xi_w, _, xi2], [f1, f_m, f_p, f2]] = envelope(xi, f)
-    envelope_arr = envelope(xi, f)
-    [xi1, xi_w, _, xi2] = envelope_arr[0, :]
-    [f1, f_m, f_p, f2] = envelope_arr[1, :]
-
-    integral = -(f2 * np.cos(z * xi2) - f_p * np.cos(z * xi_w)) / z
-    integral += -(f_m * np.cos(z * xi_w) - f1 * np.cos(z * xi1)) / z
-    return integral
+    xi_re = np.linspace(0, 1-1/n_xi, n_xi)
+    return xi_re, np.interp(xi_re, xi, f)
 
 
 @numba.njit
@@ -129,28 +93,6 @@ def _sin_transform_scalar(z: float, xi: np.ndarray, f: np.ndarray, z_st_thresh: 
         integral = np.trapz(array, xi)
     else:
         integral = sin_transform_approx(z, xi, f)
-    return integral
-
-
-@numba.njit(parallel=True)
-def sin_transform_core(t: np.ndarray, f: np.ndarray, freq: np.ndarray) -> np.ndarray:
-    r"""
-    The `sine transform <https://en.wikipedia.org/wiki/Sine_and_cosine_transforms>`_
-    for multiple values of $\omega$ without any approximations.
-    Computes the following for each angular frequency $\omega$.
-    $$\hat{f}(\omega) = \int_{{t}_\text{min}}^{{t}_\text{max}} f(t) \sin(\omega t) dt$$
-
-    :param t: variable of the real space ($t$ or $x$)
-    :param f: function values at the points $t$
-    :param freq: frequencies $\omega$
-    :return: value of the sine transformed function at each angular frequency $\omega$
-    """
-    integral = np.zeros_like(freq)
-    for i in numba.prange(freq.size):
-        integrand = f * np.sin(freq[i] * t)
-        # If you get Numba errors here, ensure that t is contiguous.
-        # This can be achieved with the use of t.copy() in the data pipeline leading to this function.
-        integral[i] = np.trapz(integrand, t)
     return integral
 
 
@@ -219,14 +161,72 @@ def sin_transform(z: th.FloatOrArr, xi: np.ndarray, f: np.ndarray, z_st_thresh: 
         raise NotImplementedError
 
 
-@numba.njit
-def resample_uniform_xi(
-        xi: np.ndarray,
-        f: th.FloatOrArr,
-        n_xi: int = const.NPTDEFAULT[0]) -> tp.Tuple[np.ndarray, th.FloatOrArr]:
+@numba.njit(parallel=True)
+def sin_transform_core(t: np.ndarray, f: np.ndarray, freq: np.ndarray) -> np.ndarray:
     r"""
-    Provide uniform resample of function defined by $(x,y) = (\xi,f)$.
-    Returns f interpolated and the uniform grid of n_xi points in range [0,1]
+    The `sine transform <https://en.wikipedia.org/wiki/Sine_and_cosine_transforms>`_
+    for multiple values of $\omega$ without any approximations.
+    Computes the following for each angular frequency $\omega$.
+    $$\hat{f}(\omega) = \int_{{t}_\text{min}}^{{t}_\text{max}} f(t) \sin(\omega t) dt$$
+
+    :param t: variable of the real space ($t$ or $x$)
+    :param f: function values at the points $t$
+    :param freq: frequencies $\omega$
+    :return: value of the sine transformed function at each angular frequency $\omega$
     """
-    xi_re = np.linspace(0, 1-1/n_xi, n_xi)
-    return xi_re, np.interp(xi_re, xi, f)
+    integral = np.zeros_like(freq)
+    for i in numba.prange(freq.size):
+        integrand = f * np.sin(freq[i] * t)
+        # If you get Numba errors here, ensure that t is contiguous.
+        # This can be achieved with the use of t.copy() in the data pipeline leading to this function.
+        integral[i] = np.trapz(integrand, t)
+    return integral
+
+
+@numba.njit
+def sin_transform_approx(z: th.FloatOrArr, xi: np.ndarray, f: np.ndarray) -> np.ndarray:
+    r"""
+    Approximate sin transform of $f(\xi)$.
+    For values $f_a$ and $f_b$, we have
+    $$
+    \int_{\xi_a}^{\xi_b} d\xi f(\xi) \sin(z \xi) \to
+    - \frac{1}{z} \left(f_b \cos(z \xi_b) - f_a \cos(z \xi_a)\right) + O(1/z^2)
+    $$
+    as $z \to \infty$.
+    Function assumed piecewise continuous in intervals $[\xi_1, \xi_w]$ and
+    $[\xi_w,\xi_2]$.
+
+    :param z: Fourier transform variable (any shape)
+    :param xi: $\xi$
+    :param f: function values at the points $\xi$, same shape as $\xi$
+    """
+    # Old versions of Numba don't support unpacking 2D arrays
+    # [[xi1, xi_w, _, xi2], [f1, f_m, f_p, f2]] = envelope(xi, f)
+    envelope_arr = envelope(xi, f)
+    [xi1, xi_w, _, xi2] = envelope_arr[0, :]
+    [f1, f_m, f_p, f2] = envelope_arr[1, :]
+
+    integral = -(f2 * np.cos(z * xi2) - f_p * np.cos(z * xi_w)) / z
+    integral += -(f_m * np.cos(z * xi_w) - f1 * np.cos(z * xi1)) / z
+    return integral
+
+
+def sin_transform_old(z: th.FloatOrArr, xi: np.ndarray, v: np.ndarray) -> th.FloatOrArr:
+    r"""
+    Old sin transform of $v(\xi)$
+
+    .. deprecated:: 0.1
+
+    :param z: Fourier transform variable (any shape)
+    :param xi: $\xi$
+    :param v: wall speed $v$, same shape as $\xi$
+    """
+    logger.warning("sin_transform_old is deprecated")
+    if isinstance(z, np.ndarray):
+        array = np.sin(np.outer(z, xi)) * v
+        integral = np.trapz(array, xi)
+    else:
+        array = v * np.sin(z * xi)
+        integral = np.trapz(array, xi)
+
+    return integral

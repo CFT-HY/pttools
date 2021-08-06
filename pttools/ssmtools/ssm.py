@@ -29,53 +29,7 @@ class Method(str, enum.Enum):
     WITH_G = "with_g"
 
 
-@numba.njit
-def A2_ssm_func(
-        z: np.ndarray,
-        vw,
-        alpha: float,
-        npt: const.NPT_TYPE = const.NPTDEFAULT,
-        method: Method = Method.E_CONSERVING,
-        de_method: DE_Method = DE_Method.STANDARD,
-        z_st_thresh: float = const.Z_ST_THRESH):
-    r"""
-    Returns the value of $|A(z)|^2$.
-    $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$
-
-    :param z: array of scaled wavenumbers $z = kR_*$
-    :param method: correct method for SSM is "e_conserving".
-      Also allows exploring effect of other incorrect
-      methods ``f_only`` and ``with_g``.
-    :param de_method: How energy density fluctuation feeds into GW ps.  See A2_ssm_e_conserving.
-    :param z_st_thresh: wavenumber at which to switch sin_transform to its approximation.
-    :return: $|A(z)|^2$
-    """
-    if method == Method.E_CONSERVING.value:
-        # This is the correct method (as of 12.18)
-        A2 = A2_e_conserving(z, vw, alpha, npt, de_method, z_st_thresh)[0]
-    elif method == Method.F_ONLY.value:
-        with numba.objmode:
-            logger.debug("f_only method, multiplying (f\')^2 by 2")
-        f = f_ssm_func(z, vw, alpha, npt)
-        df_dz = speedup.gradient(f) / speedup.gradient(z)
-        A2 = 0.25 * (df_dz ** 2)
-        A2 = A2 * 2
-    elif method == Method.WITH_G.value:
-        with numba.objmode:
-            logger.debug("With_g method")
-        f = f_ssm_func(z, vw, alpha, npt)
-        df_dz = speedup.gradient(f) / speedup.gradient(z)
-        g = (z * df_dz + 2. * f)
-        dg_dz = speedup.gradient(g) / speedup.gradient(z)
-        A2 = 0.25 * (df_dz ** 2)
-        A2 = A2 + 0.25 * (dg_dz ** 2 / (const.CS0 * z) ** 2)
-    else:
-        with numba.objmode:
-            logger.warning("Method not known, should be [e_conserving | f_only | with_g]. Defaulting to e_conserving.")
-        A2 = A2_e_conserving(z, vw, alpha, npt)[0]
-
-    return A2
-
+# TODO: rename A2 to a2 so that Sphinx won't think that these methods are classes.
 
 @numba.njit
 def A2_e_conserving(
@@ -188,70 +142,51 @@ def A2_e_conserving_file(
 
 
 @numba.njit
-def f_ssm_func(
-        z: th.FloatOrArr,
+def A2_ssm_func(
+        z: np.ndarray,
         vw,
-        alpha_n,
+        alpha: float,
         npt: const.NPT_TYPE = const.NPTDEFAULT,
-        z_st_thresh: float = const.Z_ST_THRESH):
-    """
-    3D FT of radial fluid velocity v(r) from Sound Shell Model fluid profile.
-
-    :param z: array of scaled wavenumbers $z = kR_*$
-    """
-    nxi = npt[0]
-    v_ip, _, xi = bubble.fluid_shell(vw, alpha_n, nxi)
-
-    # f_ssm = np.zeros_like(z)
-    # for j in range(f_ssm.size):
-    #    f_ssm[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi, v_ip)
-    f_ssm = (4.*np.pi/z) * calculators.sin_transform(z, xi, v_ip, z_st_thresh)
-
-    return f_ssm
-
-
-def lam_ssm_func(
-        z,
-        vw,
-        alpha_n,
-        npt: const.NPT_TYPE = const.NPTDEFAULT,
+        method: Method = Method.E_CONSERVING,
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH):
-    """
-    3D FT of radial energy perturbation from Sound Shell Model fluid profile
-
-    :param z: array of scaled wavenumbers $z = kR_*$
-    """
-    nxi = npt[0]
-#    xi_re = np.linspace(0,1-1/nxi,nxi) # need to resample for lam = de/w
-    v_ip, w_ip, xi = bubble.fluid_shell(vw, alpha_n, nxi)
-
-    if de_method == DE_Method.ALTERNATE:
-        lam_orig = bubble.de_from_w_new(v_ip, w_ip, xi, vw, alpha_n) / w_ip[-1]
-    else:
-        lam_orig = bubble.de_from_w(w_ip, xi, vw, alpha_n) / w_ip[-1]
-    xi_re, lam_re = calculators.resample_uniform_xi(xi, lam_orig, nxi)
-
-    # lam_ft = np.zeros_like(z)
-    # for j in range(lam_ft.size):
-    #    lam_ft[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi_re, xi_re*lam_re,
-    #          z_st_thresh=max(z)) # Need to fix problem with ST of lam for detonations
-
-    lam_ft = (4.*np.pi/z) * calculators.sin_transform(z, xi_re, xi_re*lam_re, z_st_thresh)
-
-    return lam_ft
-
-
-def g_ssm_func(z: np.ndarray, vw, alpha, npt: const.NPT_TYPE = const.NPTDEFAULT) -> np.ndarray:
     r"""
-    3D FT of radial fluid acceleration \dot{v}(r) from Sound Shell Model fluid profile.
+    Returns the value of $|A(z)|^2$.
+    $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$
 
     :param z: array of scaled wavenumbers $z = kR_*$
+    :param method: correct method for SSM is "e_conserving".
+      Also allows exploring effect of other incorrect
+      methods ``f_only`` and ``with_g``.
+    :param de_method: How energy density fluctuation feeds into GW ps.  See A2_ssm_e_conserving.
+    :param z_st_thresh: wavenumber at which to switch sin_transform to its approximation.
+    :return: $|A(z)|^2$
     """
-    f_ssm = f_ssm_func(z, vw, alpha, npt)
-    df_ssmdz = np.gradient(f_ssm) / np.gradient(z)
-    g_ssm = (z * df_ssmdz + 2. * f_ssm)
-    return g_ssm
+    if method == Method.E_CONSERVING.value:
+        # This is the correct method (as of 12.18)
+        A2 = A2_e_conserving(z, vw, alpha, npt, de_method, z_st_thresh)[0]
+    elif method == Method.F_ONLY.value:
+        with numba.objmode:
+            logger.debug("f_only method, multiplying (f\')^2 by 2")
+        f = f_ssm_func(z, vw, alpha, npt)
+        df_dz = speedup.gradient(f) / speedup.gradient(z)
+        A2 = 0.25 * (df_dz ** 2)
+        A2 = A2 * 2
+    elif method == Method.WITH_G.value:
+        with numba.objmode:
+            logger.debug("With_g method")
+        f = f_ssm_func(z, vw, alpha, npt)
+        df_dz = speedup.gradient(f) / speedup.gradient(z)
+        g = (z * df_dz + 2. * f)
+        dg_dz = speedup.gradient(g) / speedup.gradient(z)
+        A2 = 0.25 * (df_dz ** 2)
+        A2 = A2 + 0.25 * (dg_dz ** 2 / (const.CS0 * z) ** 2)
+    else:
+        with numba.objmode:
+            logger.warning("Method not known, should be [e_conserving | f_only | with_g]. Defaulting to e_conserving.")
+        A2 = A2_e_conserving(z, vw, alpha, npt)[0]
+
+    return A2
 
 
 def f_file(
@@ -286,6 +221,29 @@ def f_file(
     return f
 
 
+@numba.njit
+def f_ssm_func(
+        z: th.FloatOrArr,
+        vw,
+        alpha_n,
+        npt: const.NPT_TYPE = const.NPTDEFAULT,
+        z_st_thresh: float = const.Z_ST_THRESH):
+    """
+    3D FT of radial fluid velocity v(r) from Sound Shell Model fluid profile.
+
+    :param z: array of scaled wavenumbers $z = kR_*$
+    """
+    nxi = npt[0]
+    v_ip, _, xi = bubble.fluid_shell(vw, alpha_n, nxi)
+
+    # f_ssm = np.zeros_like(z)
+    # for j in range(f_ssm.size):
+    #    f_ssm[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi, v_ip)
+    f_ssm = (4.*np.pi/z) * calculators.sin_transform(z, xi, v_ip, z_st_thresh)
+
+    return f_ssm
+
+
 def g_file(z: np.ndarray, t, filename: str, skip: int = 0) -> np.ndarray:
     r"""
     3D FT of radial fluid acceleration \dot{v}(r) from file
@@ -296,3 +254,47 @@ def g_file(z: np.ndarray, t, filename: str, skip: int = 0) -> np.ndarray:
     df_dz = np.gradient(f) / np.gradient(z)
     g = (z * df_dz + 2. * f)
     return g
+
+
+def g_ssm_func(z: np.ndarray, vw, alpha, npt: const.NPT_TYPE = const.NPTDEFAULT) -> np.ndarray:
+    r"""
+    3D FT of radial fluid acceleration \dot{v}(r) from Sound Shell Model fluid profile.
+
+    :param z: array of scaled wavenumbers $z = kR_*$
+    """
+    f_ssm = f_ssm_func(z, vw, alpha, npt)
+    df_ssmdz = np.gradient(f_ssm) / np.gradient(z)
+    g_ssm = (z * df_ssmdz + 2. * f_ssm)
+    return g_ssm
+
+
+def lam_ssm_func(
+        z,
+        vw,
+        alpha_n,
+        npt: const.NPT_TYPE = const.NPTDEFAULT,
+        de_method: DE_Method = DE_Method.STANDARD,
+        z_st_thresh: float = const.Z_ST_THRESH):
+    """
+    3D FT of radial energy perturbation from Sound Shell Model fluid profile
+
+    :param z: array of scaled wavenumbers $z = kR_*$
+    """
+    nxi = npt[0]
+#    xi_re = np.linspace(0,1-1/nxi,nxi) # need to resample for lam = de/w
+    v_ip, w_ip, xi = bubble.fluid_shell(vw, alpha_n, nxi)
+
+    if de_method == DE_Method.ALTERNATE:
+        lam_orig = bubble.de_from_w_new(v_ip, w_ip, xi, vw, alpha_n) / w_ip[-1]
+    else:
+        lam_orig = bubble.de_from_w(w_ip, xi, vw, alpha_n) / w_ip[-1]
+    xi_re, lam_re = calculators.resample_uniform_xi(xi, lam_orig, nxi)
+
+    # lam_ft = np.zeros_like(z)
+    # for j in range(lam_ft.size):
+    #    lam_ft[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi_re, xi_re*lam_re,
+    #          z_st_thresh=max(z)) # Need to fix problem with ST of lam for detonations
+
+    lam_ft = (4.*np.pi/z) * calculators.sin_transform(z, xi_re, xi_re*lam_re, z_st_thresh)
+
+    return lam_ft

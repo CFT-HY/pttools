@@ -21,21 +21,6 @@ def A2_approx(xi0: th.FloatOrArr) -> th.FloatOrArr:
     return 3 * (2 * xi0 - 1) / (1 - xi0 ** 2)
 
 
-def xi_zero(v_wall: th.FloatOrArr, v_xi_wall: th.FloatOrArr) -> th.FloatOrArr:
-    r"""
-    Used in approximate solution near $v(\xi) = \xi$: defined as solution to $v(\xi_0) = \xi_0$.
-
-    $\xi_0 = \frac{1}{3} (v(\xi_\text{wall} + 2 v_\text{wall})$
-
-    :param v_wall: $v_\text{wall}$
-    :param v_xi_wall: $v(\xi_\text{wall})$
-    :return: $\xi_0$
-    """
-    check.check_wall_speed(v_wall)
-    xi0 = (v_xi_wall + 2 * v_wall) / 3.
-    return xi0
-
-
 def v_approx_high_alpha(xi: th.FloatOrArr, v_wall: th.FloatOrArr, v_xi_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Approximate solution for fluid velocity $v(\xi)$ near $v(\xi) = \xi$.
@@ -60,21 +45,6 @@ def v_approx_hybrid(xi: th.FloatOrArr, v_wall: th.FloatOrArr, v_xi_wall: th.Floa
     return xi - 2 * dv - A2_approx(xi0) * dv ** 2
 
 
-def w_approx_high_alpha(
-        xi: th.FloatOrArr,
-        v_wall: th.FloatOrArr,
-        v_xi_wall: th.FloatOrArr,
-        w_xi_wall: th.FloatOrArr) -> th.FloatOrArr:
-    r"""
-    Approximate solution for enthalpy $w(\xi)$ near $v(\xi) = \xi$.
-
-    :return: $w_\text{approx}$
-    """
-    check.check_wall_speed(v_wall)
-    xi0 = xi_zero(v_wall, v_xi_wall)
-    return w_xi_wall * np.exp(-12 * (xi - xi0) ** 2 / (1 - xi0 ** 2) ** 2)
-
-
 def v_approx_low_alpha(xi: np.ndarray, v_wall: float, alpha: float) -> np.ndarray:
     r"""
     Approximate solution for fluid velocity $v(\xi)$ at low $\alpha_+ = \alpha_n$.
@@ -93,6 +63,21 @@ def v_approx_low_alpha(xi: np.ndarray, v_wall: float, alpha: float) -> np.ndarra
     return v_app
 
 
+def w_approx_high_alpha(
+        xi: th.FloatOrArr,
+        v_wall: th.FloatOrArr,
+        v_xi_wall: th.FloatOrArr,
+        w_xi_wall: th.FloatOrArr) -> th.FloatOrArr:
+    r"""
+    Approximate solution for enthalpy $w(\xi)$ near $v(\xi) = \xi$.
+
+    :return: $w_\text{approx}$
+    """
+    check.check_wall_speed(v_wall)
+    xi0 = xi_zero(v_wall, v_xi_wall)
+    return w_xi_wall * np.exp(-12 * (xi - xi0) ** 2 / (1 - xi0 ** 2) ** 2)
+
+
 def w_approx_low_alpha(xi: np.ndarray, v_wall: float, alpha: float) -> np.ndarray:
     r"""
     Approximate solution for enthalpy $w(\xi)$ at low $\alpha_+ = \alpha_n$.
@@ -108,3 +93,18 @@ def w_approx_low_alpha(xi: np.ndarray, v_wall: float, alpha: float) -> np.ndarra
     w_app[np.where(xi < min(v_wall, const.CS0))] = np.nan
 
     return w_app
+
+
+def xi_zero(v_wall: th.FloatOrArr, v_xi_wall: th.FloatOrArr) -> th.FloatOrArr:
+    r"""
+    Used in approximate solution near $v(\xi) = \xi$: defined as solution to $v(\xi_0) = \xi_0$.
+
+    $\xi_0 = \frac{1}{3} (v(\xi_\text{wall} + 2 v_\text{wall})$
+
+    :param v_wall: $v_\text{wall}$
+    :param v_xi_wall: $v(\xi_\text{wall})$
+    :return: $\xi_0$
+    """
+    check.check_wall_speed(v_wall)
+    xi0 = (v_xi_wall + 2 * v_wall) / 3.
+    return xi0

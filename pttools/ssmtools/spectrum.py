@@ -26,6 +26,13 @@ class NucType(str, enum.Enum):
 DEFAULT_NUC_TYPE = NucType.EXPONENTIAL
 
 
+def convert_params(params: bubble.PhysicalParams) -> bubble.PhysicalParams:
+    if isinstance(params, list):
+        logger.warning("Specifying the model parameters as a list is deprecated. Please use a tuple instead.")
+        return tuple(params)
+    return params
+
+
 @numba.njit
 def nu(T: th.FloatOrArr, nuc_type: NucType = NucType.SIMULTANEOUS, a: float = 1.) -> th.FloatOrArr:
     """
@@ -38,20 +45,6 @@ def nu(T: th.FloatOrArr, nuc_type: NucType = NucType.SIMULTANEOUS, a: float = 1.
         return a * np.exp(-a*T)
     # raise ValueError(f"Nucleation type not recognized: \"{nuc_type}\"")
     raise ValueError("Nucleation type not recognized")
-
-
-def pow_spec(z: th.FloatOrArr, spec_den: th.FloatOrArr) -> th.FloatOrArr:
-    """
-    Power spectrum from spectral density at dimensionless wavenumber z.
-    """
-    return z**3 / (2. * np.pi ** 2) * spec_den
-
-
-def convert_params(params: bubble.PhysicalParams) -> bubble.PhysicalParams:
-    if isinstance(params, list):
-        logger.warning("Specifying the model parameters as a list is deprecated. Please use a tuple instead.")
-        return tuple(params)
-    return params
 
 
 # @numba.njit
@@ -68,6 +61,166 @@ def parse_params(params: bubble.PhysicalParams):
         nuc_args = const.DEFAULT_NUC_PARM
 
     return vw, alpha, nuc_type, nuc_args
+
+
+def pow_spec(z: th.FloatOrArr, spec_den: th.FloatOrArr) -> th.FloatOrArr:
+    """
+    Power spectrum from spectral density at dimensionless wavenumber z.
+    """
+    return z**3 / (2. * np.pi ** 2) * spec_den
+
+
+def power_gw_scaled(
+        z: np.ndarray,
+        params: bubble.PhysicalParams,
+        npt: const.NPT_TYPE = const.NPTDEFAULT,
+        filename: str = None,
+        skip: int = 1,
+        method: ssm.Method = ssm.Method.E_CONSERVING,
+        de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
+        z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
+    """
+    Scaled GW power spectrum at array of z = kR* values, where R* is mean bubble centre
+    separation and k is comoving wavenumber.  To convert to predicted spectrum,
+    multiply by $(H_n R_*)(H_n \tau_v)$, where $H_n$ is the Hubble rate at the
+    nucleation time, and $\tau_v$ is the lifetime of the shear stress source.
+
+    Input parameters
+        vw = params[0]       scalar  (required) [0 < vw < 1]
+        alpha = params[1]    scalar  (required) [0 < alpha_n < alpha_n_max(v_w)]
+        nuc_type = params[2] string  (optional) [exponential* | simultaneous]
+        nuc_args = params[3] tuple   (optional) default (1,)
+
+    Steps:
+    1. Getting velocity field spectral density
+    2. Geeting gw spectral density
+    3. turning SD into power
+    """
+    if np.any(z <= 0.0):
+        raise ValueError("z values must all be positive.")
+    params = convert_params(params)
+
+    bubble.check_physical_params(params)
+
+    eps = 1e-8  # Seems to be needed for max(z) <= 100. Why?
+    #    nx = len(z) - this can be too few for velocity PS convolutions
+    nx = npt[2]
+    xmax = max(z) * (0.5 * (1. + const.CS0) / const.CS0) + eps
+    xmin = min(z) * (0.5 * (1. - const.CS0) / const.CS0) - eps
+
+    x = np.logspace(np.log10(xmin), np.log10(xmax), nx)
+
+    sd_v = spec_den_v(x, params, npt, filename, skip, method, de_method, z_st_thresh)
+    sd_gw, y = spec_den_gw_scaled(x, sd_v, z)
+    return pow_spec(z, sd_gw)
+
+
+def power_v(
+        z: np.ndarray,
+        params: bubble.PhysicalParams,
+        npt=const.NPTDEFAULT,
+        filename: str = None,
+        skip: int = 1,
+        method: ssm.Method = ssm.Method.E_CONSERVING,
+        de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
+        z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
+    """
+    Power spectrum of velocity field in Sound Shell Model.
+        vw = params[0]       scalar
+        alpha = params[1]    scalar
+        nuc_type = params[2] string [exponential* | simultaneous]
+        nuc_args = params[3] tuple  default (1,)
+    """
+    bubble.check_physical_params(params)
+
+    p_v = spec_den_v(z, params, npt, filename, skip, method, de_method)
+    return pow_spec(z, p_v)
+
+
+@numba.njit(parallel=True)
+def _spec_den_gw_scaled_core(
+        xlookup: np.ndarray,
+        P_vlookup: np.ndarray,
+        z: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
+    nx = len(xlookup)
+    p_gw = np.zeros_like(z)
+
+    # TODO
+    # ssmpaper_rev.pdf
+    # Equation
+    # Paper talks about z, here x
+    # Paper y is z here
+    # Equation 3.47
+    for i in numba.prange(z.size):
+        xplus = z[i] / const.CS0 * (1. + const.CS0) / 2.
+        xminus = z[i] / const.CS0 * (1. - const.CS0) / 2.
+        # x = np.logspace(np.log10(xminus), np.log10(xplus), nx)
+        x = speedup.logspace(np.log10(xminus), np.log10(xplus), nx)
+        integrand = \
+            (x - xplus) ** 2 * (x - xminus) ** 2 / x / (xplus + xminus - x) \
+            * np.interp(x, xlookup, P_vlookup) \
+            * np.interp((xplus + xminus - x), xlookup, P_vlookup)
+        p_gw_factor = ((1 - const.CS0 ** 2) / const.CS0 ** 2) ** 2 / (4 * np.pi * z[i] * const.CS0)
+        p_gw[i] = p_gw_factor * np.trapz(integrand, x)
+
+    # Here we are using G = 2P_v (v spec den is twice plane wave amplitude spec den).
+    # Eq 3.48 in SSM paper gives a factor 3.Gamma^2.P_v.P_v = 3 * (4/3)^2.P_v.P_v
+    # Hence overall should use (4/3).G.G
+    return (4. / 3.) * p_gw, z
+
+
+@numba.njit(nogil=True)
+def _spec_den_gw_scaled_z(
+        xlookup: np.ndarray,
+        P_vlookup: np.ndarray,
+        z: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
+    # nx = len(z)
+    # nx = len(xlookup)
+    # Integration limits
+    xlargest = max(z) * 0.5 * (1. + const.CS0) / const.CS0
+    xsmallest = min(z) * 0.5 * (1. - const.CS0) / const.CS0
+
+    if max(xlookup) < xlargest or min(xlookup) > xsmallest:
+        raise ValueError("Range of xlookup is not large enough.")
+
+    return _spec_den_gw_scaled_core(xlookup, P_vlookup, z)
+
+
+@numba.njit(nogil=True)
+def _spec_den_gw_scaled_no_z(
+        xlookup: np.ndarray,
+        P_vlookup: np.ndarray,
+        z: None) -> tp.Tuple[np.ndarray, np.ndarray]:
+    nx = len(xlookup)
+    zmax = max(xlookup) / (0.5 * (1. + const.CS0) / const.CS0)
+    zmin = min(xlookup) / (0.5 * (1. - const.CS0) / const.CS0)
+    new_z = speedup.logspace(np.log10(zmin), np.log10(zmax), nx)
+    return _spec_den_gw_scaled_core(xlookup, P_vlookup, new_z)
+
+
+@numba.generated_jit(nopython=True, nogil=True)
+def spec_den_gw_scaled(
+        xlookup: np.ndarray,
+        P_vlookup: np.ndarray,
+        z: np.ndarray = None) -> tp.Union[tp.Tuple[np.ndarray, np.ndarray], th.NumbaFunc]:
+    """
+    Spectral density of scaled gravitational wave power at values of kR* given
+    by input z array, or at len(xlookup) values of kR* between the min and max
+    of xlookup where the GW power can be computed.
+    (xlookup, P_vlookup) is used as a lookup table to specify function.
+    P_vlookup is the spectral density of the FT of the velocity field,
+    not the spectral density of plane wave coeffs, which is lower by a
+    factor of 2.
+    """
+    if isinstance(z, numba.types.Array):
+        return _spec_den_gw_scaled_z
+    if isinstance(z, (numba.types.NoneType, numba.types.Omitted)):
+        return _spec_den_gw_scaled_no_z
+    if isinstance(z, np.ndarray):
+        return _spec_den_gw_scaled_z(xlookup, P_vlookup, z)
+    if z is None:
+        return _spec_den_gw_scaled_no_z(xlookup, P_vlookup, z)
+    raise TypeError(f"Unknown type for z: {type(z)}")
 
 
 @numba.njit
@@ -171,156 +324,3 @@ def spec_den_v(
         vw=vw,
         z=z
     )
-
-
-@numba.njit(parallel=True)
-def _spec_den_gw_scaled_core(
-        xlookup: np.ndarray,
-        P_vlookup: np.ndarray,
-        z: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
-    nx = len(xlookup)
-    p_gw = np.zeros_like(z)
-
-    # TODO
-    # ssmpaper_rev.pdf
-    # Equation
-    # Paper talks about z, here x
-    # Paper y is z here
-    # Equation 3.47
-    for i in numba.prange(z.size):
-        xplus = z[i] / const.CS0 * (1. + const.CS0) / 2.
-        xminus = z[i] / const.CS0 * (1. - const.CS0) / 2.
-        # x = np.logspace(np.log10(xminus), np.log10(xplus), nx)
-        x = speedup.logspace(np.log10(xminus), np.log10(xplus), nx)
-        integrand = \
-            (x - xplus) ** 2 * (x - xminus) ** 2 / x / (xplus + xminus - x) \
-            * np.interp(x, xlookup, P_vlookup) \
-            * np.interp((xplus + xminus - x), xlookup, P_vlookup)
-        p_gw_factor = ((1 - const.CS0 ** 2) / const.CS0 ** 2) ** 2 / (4 * np.pi * z[i] * const.CS0)
-        p_gw[i] = p_gw_factor * np.trapz(integrand, x)
-
-    # Here we are using G = 2P_v (v spec den is twice plane wave amplitude spec den).
-    # Eq 3.48 in SSM paper gives a factor 3.Gamma^2.P_v.P_v = 3 * (4/3)^2.P_v.P_v
-    # Hence overall should use (4/3).G.G
-    return (4. / 3.) * p_gw, z
-
-
-@numba.njit(nogil=True)
-def _spec_den_gw_scaled_z(
-        xlookup: np.ndarray,
-        P_vlookup: np.ndarray,
-        z: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
-    # nx = len(z)
-    # nx = len(xlookup)
-    # Integration limits
-    xlargest = max(z) * 0.5 * (1. + const.CS0) / const.CS0
-    xsmallest = min(z) * 0.5 * (1. - const.CS0) / const.CS0
-
-    if max(xlookup) < xlargest or min(xlookup) > xsmallest:
-        raise ValueError("Range of xlookup is not large enough.")
-
-    return _spec_den_gw_scaled_core(xlookup, P_vlookup, z)
-
-
-@numba.njit(nogil=True)
-def _spec_den_gw_scaled_no_z(
-        xlookup: np.ndarray,
-        P_vlookup: np.ndarray,
-        z: None) -> tp.Tuple[np.ndarray, np.ndarray]:
-    nx = len(xlookup)
-    zmax = max(xlookup) / (0.5 * (1. + const.CS0) / const.CS0)
-    zmin = min(xlookup) / (0.5 * (1. - const.CS0) / const.CS0)
-    new_z = speedup.logspace(np.log10(zmin), np.log10(zmax), nx)
-    return _spec_den_gw_scaled_core(xlookup, P_vlookup, new_z)
-
-
-@numba.generated_jit(nopython=True, nogil=True)
-def spec_den_gw_scaled(
-        xlookup: np.ndarray,
-        P_vlookup: np.ndarray,
-        z: np.ndarray = None) -> tp.Union[tp.Tuple[np.ndarray, np.ndarray], th.NumbaFunc]:
-    """
-    Spectral density of scaled gravitational wave power at values of kR* given
-    by input z array, or at len(xlookup) values of kR* between the min and max
-    of xlookup where the GW power can be computed.
-    (xlookup, P_vlookup) is used as a lookup table to specify function.
-    P_vlookup is the spectral density of the FT of the velocity field,
-    not the spectral density of plane wave coeffs, which is lower by a
-    factor of 2.
-    """
-    if isinstance(z, numba.types.Array):
-        return _spec_den_gw_scaled_z
-    if isinstance(z, (numba.types.NoneType, numba.types.Omitted)):
-        return _spec_den_gw_scaled_no_z
-    if isinstance(z, np.ndarray):
-        return _spec_den_gw_scaled_z(xlookup, P_vlookup, z)
-    if z is None:
-        return _spec_den_gw_scaled_no_z(xlookup, P_vlookup, z)
-    raise TypeError(f"Unknown type for z: {type(z)}")
-
-
-def power_v(
-        z: np.ndarray,
-        params: bubble.PhysicalParams,
-        npt=const.NPTDEFAULT,
-        filename: str = None,
-        skip: int = 1,
-        method: ssm.Method = ssm.Method.E_CONSERVING,
-        de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
-        z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
-    """
-    Power spectrum of velocity field in Sound Shell Model.
-        vw = params[0]       scalar
-        alpha = params[1]    scalar
-        nuc_type = params[2] string [exponential* | simultaneous]
-        nuc_args = params[3] tuple  default (1,)
-    """
-    bubble.check_physical_params(params)
-
-    p_v = spec_den_v(z, params, npt, filename, skip, method, de_method)
-    return pow_spec(z, p_v)
-
-
-def power_gw_scaled(
-        z: np.ndarray,
-        params: bubble.PhysicalParams,
-        npt: const.NPT_TYPE = const.NPTDEFAULT,
-        filename: str = None,
-        skip: int = 1,
-        method: ssm.Method = ssm.Method.E_CONSERVING,
-        de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
-        z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
-    """
-    Scaled GW power spectrum at array of z = kR* values, where R* is mean bubble centre
-    separation and k is comoving wavenumber.  To convert to predicted spectrum,
-    multiply by $(H_n R_*)(H_n \tau_v)$, where $H_n$ is the Hubble rate at the
-    nucleation time, and $\tau_v$ is the lifetime of the shear stress source.
-
-    Input parameters
-        vw = params[0]       scalar  (required) [0 < vw < 1]
-        alpha = params[1]    scalar  (required) [0 < alpha_n < alpha_n_max(v_w)]
-        nuc_type = params[2] string  (optional) [exponential* | simultaneous]
-        nuc_args = params[3] tuple   (optional) default (1,)
-
-    Steps:
-    1. Getting velocity field spectral density
-    2. Geeting gw spectral density
-    3. turning SD into power
-    """
-    if np.any(z <= 0.0):
-        raise ValueError("z values must all be positive.")
-    params = convert_params(params)
-
-    bubble.check_physical_params(params)
-
-    eps = 1e-8  # Seems to be needed for max(z) <= 100. Why?
-    #    nx = len(z) - this can be too few for velocity PS convolutions
-    nx = npt[2]
-    xmax = max(z) * (0.5 * (1. + const.CS0) / const.CS0) + eps
-    xmin = min(z) * (0.5 * (1. - const.CS0) / const.CS0) - eps
-
-    x = np.logspace(np.log10(xmin), np.log10(xmax), nx)
-
-    sd_v = spec_den_v(x, params, npt, filename, skip, method, de_method, z_st_thresh)
-    sd_gw, y = spec_den_gw_scaled(x, sd_v, z)
-    return pow_spec(z, sd_gw)

@@ -23,27 +23,6 @@ from . import transition
 FloatListOrArr = tp.Union[tp.List[float], np.ndarray]
 
 
-def setup_plotting(font: str = "serif", font_size: int = 20, usetex: bool = True):
-    """Get decent-sized plots
-
-    LaTeX can cause problems if system not configured correctly
-    """
-    plt.rc('text', usetex=usetex)
-    plt.rc('font', family=font)
-
-    mpl.rcParams.update({'font.size': font_size})
-    mpl.rcParams.update({'lines.linewidth': 1.5})
-    mpl.rcParams.update({'axes.linewidth': 2.0})
-    mpl.rcParams.update({'axes.labelsize': font_size})
-    mpl.rcParams.update({'xtick.labelsize': font_size})
-    mpl.rcParams.update({'ytick.labelsize': font_size})
-    # but make legend smaller
-    mpl.rcParams.update({'legend.fontsize': 14})
-
-
-# setup_plotting()
-
-
 def plot_fluid_shell(
         v_wall: float,
         alpha_n: float,
@@ -54,27 +33,39 @@ def plot_fluid_shell(
         draw: bool = True) \
         -> tp.Tuple[plt.Figure, tp.Dict[str, np.ndarray], tp.Dict[str, float]]:
     r"""
-    Calls ``fluid_shell`` and plots resulting $v, w$ against $\xi$, returning figure handle.
+    Calls :meth:`pttools.bubble.fluid.fluid_shell` and plots resulting $v, w$ against $\xi$.
     Also plots:
+
     - shock curves (where $v$ and $w$ should form shock)
-    - low alpha approximation if $alpha_+ < 0.025$
-    - high alpha approximation if $alpha_+ > 0.2$
+    - low alpha approximation if $\alpha_+ < 0.025$
+    - high alpha approximation if $\alpha_+ > 0.2$
+
     Annotates titles with:
+
     - Wall type, $v_\text{wall}$, $\alpha_n$
     - $\alpha_+$ ($\alpha$ just in front of wall)
     - $r$ (ratio of enthalpies either side of wall)
     - $\xi_{sh}$ (shock speed)
-    - $\frac{w_0}{w_n} (ration of internal to external enthalpies)
-    - ubar_f (mean square U = gamma(v) v)
+    - $\frac{w_0}{w_n}$ (ration of internal to external enthalpies)
+    - ubar_f (mean square $U = \gamma (v) v$)
     - K kinetic energy fraction
     - kappa (Espinosa et al efficiency factor)
     - omega (thermal energy relative to scalar potential energy, as measured by trace anomaly)
+
     Last two should sum to 1.
+
+    :param v_wall: $v_\text{wall}$
+    :param alpha_n: $\alpha_n$
+    :param draw: whether to actually fill the figure with data.
+        This is used to disable drawing on systems that don't have LaTeX installed,
+        such as the unit testing environment.
+    :return: figure, dict of generated arrays, dict of generated scalars
     """
+    # TODO: use greek symbols for kappa and omega
     check.check_physical_params((v_wall, alpha_n))
 
-    #    high_v_plot = 0.8 # Above which plot v ~ xi approximation
-    #    low_v_plot = 0.2  # Below which plot  low v approximation
+    # high_v_plot = 0.8 # Above which plot v ~ xi approximation
+    # low_v_plot = 0.2  # Below which plot  low v approximation
 
     sol_type = transition.identify_solution_type(v_wall, alpha_n)
 
@@ -211,8 +202,9 @@ def plot_fluid_shells(
         debug: bool = False,
         draw: bool = True) -> tp.Union[plt.Figure, tp.Tuple[plt.Figure, np.ndarray]]:
     r"""
-    Calls ``fluid_shell`` and plots resulting v, w against xi. Returns figure handle.
+    Calls :meth:`pttools.bubble.fluid.fluid_shell` and plots resulting v, w against xi.
     Annotates titles with:
+
     - Wall type, $v_\text{wall}, \alpha_n$
     - $alpha_+$ ($\alpha$ just in front of wall)
     - $r$ (ratio of enthalpies either side of wall)
@@ -222,7 +214,19 @@ def plot_fluid_shells(
     - K kinetic energy fraction
     - kappa (Espinosa et al efficiency factor)
     - omega (thermal energy relative to scalar potential energy, as measured by trace anomaly)
+
     Last two should sum to 1.
+
+    :param v_wall_list: $v_\text{wall}$ values to simulate with
+    :param alpha_n_list: $\alpha_n$ values to simulate with (same size as v_wall_list)
+    :param multi: whether to plot multiple figures
+    :param save_string: a descriptive name for the figure file. Required for saving the figure.
+    :param Np: number of $\xi$ points
+    :param debug: whether to return debug data
+    :param draw: whether to actually fill the figure with data.
+        This is used to disable drawing on systems that don't have LaTeX installed,
+        such as the unit testing environment.
+    :return: figure (or figure and data array if debug is True)
     """
     xi_even = np.linspace(1 / Np, 1 - 1 / Np, Np)
     yscale_v = 0.0
@@ -378,3 +382,24 @@ def plot_fluid_shells(
             data += [lst_ubarf2, lst_ke_frac, lst_kappa, lst_dw]
         return f, np.array(data, dtype=np.float_)
     return f
+
+
+def setup_plotting(font: str = "serif", font_size: int = 20, usetex: bool = True) -> None:
+    """Get decent-sized plots.
+
+    LaTeX can cause problems if the system is not configured correctly.
+    """
+    plt.rc('text', usetex=usetex)
+    plt.rc('font', family=font)
+
+    mpl.rcParams.update({'font.size': font_size})
+    mpl.rcParams.update({'lines.linewidth': 1.5})
+    mpl.rcParams.update({'axes.linewidth': 2.0})
+    mpl.rcParams.update({'axes.labelsize': font_size})
+    mpl.rcParams.update({'xtick.labelsize': font_size})
+    mpl.rcParams.update({'ytick.labelsize': font_size})
+    # but make legend smaller
+    mpl.rcParams.update({'legend.fontsize': 14})
+
+
+# setup_plotting()

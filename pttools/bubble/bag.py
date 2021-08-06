@@ -39,6 +39,24 @@ CS2Fun = tp.Callable[[th.FloatOrArr], float]
 
 
 @numba.njit
+def adiabatic_index(
+        w: th.FloatOrArr,
+        phase: th.IntOrArr,
+        theta_s: th.FloatOrArr,
+        theta_b: th.FloatOrArr = 0.) -> th.FloatOrArr:
+    r"""
+    Returns array of float, adiabatic index (ratio of enthalpy to energy).
+
+    :param w: enthalpy $w$
+    :param phase: phase indicator
+    :param theta_s: $\theta$ for symmetric phase, ahead of bubble (phase = 0)
+    :param theta_b: $\theta$ for broken phase, behind bubble (phase = 1)
+    :return: adiabatic index
+    """
+    return w / get_e(w, phase, theta_s, theta_b)
+
+
+@numba.njit
 def check_thetas(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> None:
     if np.any(theta_b > theta_s):
         with numba.objmode:
@@ -76,21 +94,25 @@ def cs2_bag(w: th.FloatOrArr):
     raise TypeError(f"Unknown type for w: {type(w)}")
 
 
-def theta_bag(w: th.FloatOrArr, phase: th.IntOrArr, alpha_n: th.FloatOrArr) -> th.FloatOrArr:
+@numba.njit
+def get_e(
+        w: th.FloatOrArr,
+        phase: th.IntOrArr,
+        theta_s: th.FloatOrArr,
+        theta_b: th.FloatOrArr = 0.) -> th.FloatOrArr:
     r"""
-    Trace anomaly $\theta = \frac{1}{4} (e - 3p)$ in the Bag model.
-    Equation 7.24 in the lecture notes, equation 2.10 in the article
+    Energy density as a function of enthalpy $w$, assuming bag model.
+    $\theta = \frac{e - 3p}{4}$ ("vacuum energy").
+    Enthalpy and phase can be arrays of the same shape.
+    See also the equation 4.10.
 
     :param w: enthalpy $w$
-    :param phase: phase(s)
-    :param alpha_n: strength of the transition $\alpha_n$
-    :return: trace anomaly $\theta_\text{bag}$
+    :param phase: phase indicator
+    :param theta_s: $\theta$ for symmetric phase, ahead of bubble (phase = 0)
+    :param theta_b: $\theta$ for broken phase, behind bubble (phase = 1)
+    :return: energy density
     """
-    if isinstance(w, np.ndarray):
-        w_n = w[-1]
-    else:
-        w_n = w
-    return alpha_n * (0.75 * w_n) * (1 - phase)
+    return w - get_p(w, phase, theta_s, theta_b)
 
 
 @numba.njit
@@ -114,52 +136,6 @@ def get_p(
     check_thetas(theta_s, theta_b)
     theta = theta_b * phase + theta_s * (1.0 - phase)
     return 0.25 * w - theta
-
-
-@numba.njit
-def get_e(
-        w: th.FloatOrArr,
-        phase: th.IntOrArr,
-        theta_s: th.FloatOrArr,
-        theta_b: th.FloatOrArr = 0.) -> th.FloatOrArr:
-    r"""
-    Energy density as a function of enthalpy $w$, assuming bag model.
-    $\theta = \frac{e - 3p}{4}$ ("vacuum energy").
-    Enthalpy and phase can be arrays of the same shape.
-    See also the equation 4.10.
-
-    :param w: enthalpy $w$
-    :param phase: phase indicator
-    :param theta_s: $\theta$ for symmetric phase, ahead of bubble (phase = 0)
-    :param theta_b: $\theta$ for broken phase, behind bubble (phase = 1)
-    :return: energy density
-    """
-    return w - get_p(w, phase, theta_s, theta_b)
-
-
-@numba.njit
-def get_w(
-        e: th.FloatOrArr,
-        phase: th.IntOrArr,
-        theta_s: th.FloatOrArr,
-        theta_b: th.FloatOrArr = 0.) -> th.FloatOrArr:
-    r"""
-    Enthalpy $w$ as a function of energy density, assuming bag model.
-    $\theta = \frac{e - 3p}{4}$ ("vacuum energy").
-    Enthalpy and phase can be arrays of the same shape.
-    Mentioned on page 23.
-
-    :param e: energy density
-    :param phase: phase indicator
-    :param theta_s: $\theta$ for symmetric phase, ahead of bubble (phase = 0)
-    :param theta_b: $\theta$ for broken phase, behind bubble (phase = 1)
-    :return: enthalpy $w$
-    """
-    check_thetas(theta_s, theta_b)
-    # Actually, theta is often known only from alpha_n and w, so should
-    # think about an fsolve?
-    theta = theta_b * phase + theta_s * (1.0 - phase)
-    return 4/3 * (e - theta)
 
 
 @numba.njit
@@ -197,18 +173,42 @@ def get_phase(xi: th.FloatOrArr, v_w: float) -> th.FloatOrArr:
 
 
 @numba.njit
-def adiabatic_index(
-        w: th.FloatOrArr,
+def get_w(
+        e: th.FloatOrArr,
         phase: th.IntOrArr,
         theta_s: th.FloatOrArr,
         theta_b: th.FloatOrArr = 0.) -> th.FloatOrArr:
     r"""
-    Returns array of float, adiabatic index (ratio of enthalpy to energy).
+    Enthalpy $w$ as a function of energy density, assuming bag model.
+    $\theta = \frac{e - 3p}{4}$ ("vacuum energy").
+    Enthalpy and phase can be arrays of the same shape.
+    Mentioned on page 23.
 
-    :param w: enthalpy $w$
+    :param e: energy density
     :param phase: phase indicator
     :param theta_s: $\theta$ for symmetric phase, ahead of bubble (phase = 0)
     :param theta_b: $\theta$ for broken phase, behind bubble (phase = 1)
-    :return: adiabatic index
+    :return: enthalpy $w$
     """
-    return w / get_e(w, phase, theta_s, theta_b)
+    check_thetas(theta_s, theta_b)
+    # Actually, theta is often known only from alpha_n and w, so should
+    # think about an fsolve?
+    theta = theta_b * phase + theta_s * (1.0 - phase)
+    return 4/3 * (e - theta)
+
+
+def theta_bag(w: th.FloatOrArr, phase: th.IntOrArr, alpha_n: th.FloatOrArr) -> th.FloatOrArr:
+    r"""
+    Trace anomaly $\theta = \frac{1}{4} (e - 3p)$ in the Bag model.
+    Equation 7.24 in the lecture notes, equation 2.10 in the article
+
+    :param w: enthalpy $w$
+    :param phase: phase(s)
+    :param alpha_n: strength of the transition $\alpha_n$
+    :return: trace anomaly $\theta_\text{bag}$
+    """
+    if isinstance(w, np.ndarray):
+        w_n = w[-1]
+    else:
+        w_n = w
+    return alpha_n * (0.75 * w_n) * (1 - phase)
