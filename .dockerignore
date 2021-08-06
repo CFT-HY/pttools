@@ -37,6 +37,7 @@ test-output.txt
 # Misc
 *.egg-info
 *.pyc
+*.zip
 **/__pycache__
 .idea
 .DS_Store
