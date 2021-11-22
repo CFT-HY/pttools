@@ -101,7 +101,9 @@ jobs:
     - name: Print Python version
       run: python -V
     - name: Install ffmpeg
-      run: sudo apt-get install ffmpeg
+      run: |
+        sudo apt-get update
+        sudo apt-get install ffmpeg
     - name: Checkout
       uses: actions/checkout@v2
     - name: Load pip cache
