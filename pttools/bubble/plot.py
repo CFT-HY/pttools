@@ -31,7 +31,7 @@ def plot_fluid_shell(
         low_v_approx: bool = False,
         high_v_approx: bool = False,
         draw: bool = True) \
-        -> tp.Tuple[plt.Figure, tp.Dict[str, np.ndarray], tp.Dict[str, float]]:
+        -> tp.Tuple[plt.Figure, tp.Dict[str, tp.Union[np.ndarray, float]]]:
     r"""
     Calls :func:`pttools.bubble.fluid.fluid_shell` and plots resulting $v, w$ against $\xi$.
     Also plots:
@@ -59,49 +59,38 @@ def plot_fluid_shell(
     :param draw: whether to actually fill the figure with data.
         This is used to disable drawing on systems that don't have LaTeX installed,
         such as the unit testing environment.
-    :return: figure, dict of generated arrays, dict of generated scalars
+    :return: figure, dict of generated params
     """
-    # TODO: use greek symbols for kappa and omega
-    check.check_physical_params((v_wall, alpha_n))
+
+    params = fluid.fluid_shell_params(
+        v_wall=v_wall,
+        alpha_n=alpha_n,
+        Np=Np,
+        low_v_approx=low_v_approx,
+        high_v_approx=high_v_approx
+    )
+    alpha_plus = params["alpha_plus"]
+    dw = params["dw"]
+    kappa = params["kappa"]
+    ke_frac = params["ke_frac"]
+    n_cs = params["n_cs"]
+    n_sh = params["n_sh"]
+    n_wall = params["n_wall"]
+    r = params["r"]
+    sol_type = params["sol_type"]
+    ubarf2 = params["ubarf2"]
+    v = params["v"]
+    v_approx = params["v_approx"]
+    v_sh = params["v_sh"]
+    w = params["w"]
+    w_approx = params["w_approx"]
+    w_sh = params["w_sh"]
+    xi = params["xi"]
+    xi_even = params["xi_even"]
 
     # high_v_plot = 0.8 # Above which plot v ~ xi approximation
     # low_v_plot = 0.2  # Below which plot  low v approximation
 
-    sol_type = transition.identify_solution_type(v_wall, alpha_n)
-
-    if sol_type is boundary.SolutionType.ERROR:
-        raise RuntimeError(f"No solution for v_wall = {v_wall}, alpha_n = {alpha_n}")
-
-    v, w, xi = fluid.fluid_shell(v_wall, alpha_n, Np)
-
-    # vmax = max(v)
-
-    xi_even = np.linspace(1 / Np, 1 - 1 / Np, Np)
-    v_sh = props.v_shock(xi_even)
-    w_sh = props.w_shock(xi_even)
-
-    n_wall = props.find_v_index(xi, v_wall)
-    n_cs = int(np.floor(const.CS0 * Np))
-    n_sh = xi.size - 2
-
-    r = w[n_wall] / w[n_wall - 1]
-    alpha_plus = alpha_n * w[-1] / w[n_wall]
-
-    ubarf2 = quantities.ubarf_squared(v, w, xi, v_wall)
-    # Kinetic energy fraction of total (Bag equation of state)
-    ke_frac = ubarf2 / (0.75 * (1 + alpha_n))
-    # Efficiency of turning Higgs potential into kinetic energy
-    kappa = ubarf2 / (0.75 * alpha_n)
-    # and efficiency of turning Higgs potential into thermal energy
-    dw = 0.75 * quantities.mean_enthalpy_change(v, w, xi, v_wall) / (0.75 * alpha_n * w[-1])
-
-    if high_v_approx:
-        v_approx = approx.v_approx_high_alpha(xi[n_wall:n_sh], v_wall, v[n_wall])
-        w_approx = approx.w_approx_high_alpha(xi[n_wall:n_sh], v_wall, v[n_wall], w[n_wall])
-
-    if low_v_approx:
-        v_approx = approx.v_approx_low_alpha(xi, v_wall, alpha_plus)
-        w_approx = approx.w_approx_low_alpha(xi, v_wall, alpha_plus)
     # Plot
     yscale_v = max(v) * 1.2
     xscale_max = min(xi[-2] * 1.1, 1.0)
@@ -172,25 +161,7 @@ def plot_fluid_shell(
     if save_string is not None:
         plt.savefig(f"shell_plot_vw_{v_wall}_alphan_{alpha_n:.3}{save_string}")
 
-    arrs = {
-        "v": v,
-        "w": w,
-        "xi": xi,
-        "v_sh": v_sh,
-        "w_sh": w_sh
-    }
-    scalars = {
-        "n_wall": n_wall,
-        "n_cs": n_cs,
-        "n_sh": n_sh,
-        "r": r,
-        "alpha_plus": alpha_plus,
-        "ubarf2": ubarf2,
-        "ke_frac": ke_frac,
-        "kappa": kappa,
-        "dw": dw
-    }
-    return fig, arrs, scalars
+    return fig, params
 
 
 def plot_fluid_shells(

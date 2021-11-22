@@ -19,11 +19,13 @@ import scipy.integrate as spi
 import pttools.type_hints as th
 from pttools import speedup
 from . import alpha
+from . import approx
 from . import bag
 from . import boundary
 from . import check
 from . import const
 from . import props
+from . import quantities
 from . import transition
 
 logger = logging.getLogger(__name__)
@@ -36,6 +38,29 @@ DEFAULT_DF_DTAU: str = "bag"
 #: :func:`scipy.integrate.odeint` and :func:`scipy.integrate.solve_ivp`.
 differentials = speedup.DifferentialCache()
 
+#
+# class FluidShellParams:
+#     def __init__(self):
+#
+#
+# arrs = {
+#     "v": v,
+#     "w": w,
+#     "xi": xi,
+#     "v_sh": v_sh,
+#     "w_sh": w_sh
+# }
+# scalars = {
+#     "n_wall": n_wall,
+#     "n_cs": n_cs,
+#     "n_sh": n_sh,
+#     "r": r,
+#     "alpha_plus": alpha_plus,
+#     "ubarf2": ubarf2,
+#     "ke_frac": ke_frac,
+#     "kappa": kappa,
+#     "dw": dw
+# }
 
 def add_df_dtau(name: str, cs2_fun: bag.CS2Fun) -> speedup.DifferentialPointer:
     """Add a new differential equation to the cache based on the given sound speed function.
@@ -334,6 +359,80 @@ def fluid_shell_alpha_plus(
     xi = np.concatenate((np.flipud(xib), xif))
     # Using .copy() results in a contiguous memory layout, alleviating the issue above.
     return v, w, xi.copy()
+
+
+def fluid_shell_params(
+        v_wall: float,
+        alpha_n: float,
+        Np: int = const.N_XI_DEFAULT,
+        low_v_approx: bool = False,
+        high_v_approx: bool = False):
+    if low_v_approx and high_v_approx:
+        raise ValueError("Both low and high v approximations can't be enabled at the same time.")
+
+    # TODO: use greek symbols for kappa and omega
+    check.check_physical_params((v_wall, alpha_n))
+
+    sol_type = transition.identify_solution_type(v_wall, alpha_n)
+
+    if sol_type is boundary.SolutionType.ERROR:
+        raise RuntimeError(f"No solution for v_wall = {v_wall}, alpha_n = {alpha_n}")
+
+    v, w, xi = fluid_shell(v_wall, alpha_n, Np)
+
+    # vmax = max(v)
+
+    xi_even = np.linspace(1 / Np, 1 - 1 / Np, Np)
+    v_sh = props.v_shock(xi_even)
+    w_sh = props.w_shock(xi_even)
+
+    n_wall = props.find_v_index(xi, v_wall)
+    n_cs = int(np.floor(const.CS0 * Np))
+    n_sh = xi.size - 2
+
+    r = w[n_wall] / w[n_wall - 1]
+    alpha_plus = alpha_n * w[-1] / w[n_wall]
+
+    ubarf2 = quantities.ubarf_squared(v, w, xi, v_wall)
+    # Kinetic energy fraction of total (Bag equation of state)
+    ke_frac = ubarf2 / (0.75 * (1 + alpha_n))
+    # Efficiency of turning Higgs potential into kinetic energy
+    kappa = ubarf2 / (0.75 * alpha_n)
+    # and efficiency of turning Higgs potential into thermal energy
+    dw = 0.75 * quantities.mean_enthalpy_change(v, w, xi, v_wall) / (0.75 * alpha_n * w[-1])
+
+    if high_v_approx:
+        v_approx = approx.v_approx_high_alpha(xi[n_wall:n_sh], v_wall, v[n_wall])
+        w_approx = approx.w_approx_high_alpha(xi[n_wall:n_sh], v_wall, v[n_wall], w[n_wall])
+    elif low_v_approx:
+        v_approx = approx.v_approx_low_alpha(xi, v_wall, alpha_plus)
+        w_approx = approx.w_approx_low_alpha(xi, v_wall, alpha_plus)
+    else:
+        v_approx = None
+        w_approx = None
+
+    return {
+        # Arrays
+        "v": v,
+        "w": w,
+        "xi": xi,
+        "xi_even": xi_even,
+        "v_sh": v_sh,
+        "w_sh": w_sh,
+        "v_approx": v_approx,
+        "w_approx": w_approx,
+        # Scalars
+        "n_wall": n_wall,
+        "n_cs": n_cs,
+        "n_sh": n_sh,
+        "r": r,
+        "alpha_plus": alpha_plus,
+        "ubarf2": ubarf2,
+        "ke_frac": ke_frac,
+        "kappa": kappa,
+        "dw": dw,
+        "sol_type": sol_type
+    }
 
 
 @numba.njit
