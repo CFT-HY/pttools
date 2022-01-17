@@ -14,7 +14,9 @@ jobs:
       - name: Print Python version
         run: python -V
       - name: Install LaTeX
-        run: sudo apt-get install -y cm-super dvipng latexmk texlive-latex-extra
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cm-super dvipng latexmk texlive-latex-extra
       - name: Checkout
         uses: actions/checkout@v2
       - name: Load pip cache
