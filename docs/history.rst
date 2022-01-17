@@ -48,7 +48,7 @@ These modifications were Mika's summer project in 2021.
       `Pyinstrument <https://github.com/joerick/pyinstrument>`_ and
       `YAPPI <https://github.com/sumerc/yappi>`_.
 
-- `Package <https://packaging.python.org/tutorials/packaging-projects/>`_
+- `Package <https://packaging.python.org/en/latest/tutorials/packaging-projects/>`_
   PTtools with
   `setuptools <https://pypi.org/project/setuptools/>`_
   so that it can be installed with pip.
@@ -56,7 +56,7 @@ These modifications were Mika's summer project in 2021.
     - This prepares the project for being published on `PyPI <https://pypi.org/>`_.
 
 - Add example scripts for running on `Slurm <https://slurm.schedmd.com/>`_ clusters.
-- Add `Sphinx <https://www.sphinx-doc.org/>`_ documentation (the one you're currently reading).
+- Add `Sphinx <https://www.sphinx-doc.org/en/master/>`_ documentation (the one you're currently reading).
 
 
 Previous development

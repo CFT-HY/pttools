@@ -2,7 +2,7 @@ Installation
 ============
 
 Until the PTtools repository is made public, these downloads require
-`SSH authentication <https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh>`_
+`SSH authentication <https://docs.github.com/en/authentication/connecting-to-github-with-ssh>`_
 just like any GitHub repository cloning over SSH.
 Please request access to the repository from prof. Hindmarsh.
 
