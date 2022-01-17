@@ -30,7 +30,7 @@ _authors = [
     "Daniel Cutting"
 ]
 author = f"{', '.join(_authors[:-1])} & {_authors[-1]}"
-copyright = f"2015-2021, {author}"
+copyright = f"2015-2022, {author}"
 
 
 # -- General configuration ---------------------------------------------------
