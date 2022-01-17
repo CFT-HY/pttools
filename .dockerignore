@@ -1,7 +1,7 @@
-# The files matching the shell expansions are ignored by Git.
-# Remember to update .dockerignore as well!
-# The following line is empty so that the line numbers match with .dockerignore.
-#
+# These paths are ignored for the Docker build context.
+# This file should first contain everything in .gitignore and some additions after those.
+# You can use the scripts in the link to ensure that all unnecessary files are ignored.
+# https://stackoverflow.com/a/40966234/10930376
 
 # Coverage
 .coverage
@@ -48,3 +48,9 @@ envs
 envs-old
 model_data
 venv
+
+# Ignored for Docker only
+.git
+.github
+call_graphs
+docs

@@ -1,0 +1,15 @@
+[run]
+branch = True
+# command_line = -m unittest discover -s tests
+source = .
+omit =
+    **/envs/*
+    **/envs-old/*
+    **/venv/*
+parallel = True
+
+[report]
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
+show_missing = True

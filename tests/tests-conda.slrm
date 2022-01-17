@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+# This script serves as an example on how to build and run a conda environment with PTtools on a Slurm cluster.
+# Please feel free to copy this script to your repository and to edit it to suit your needs.
+
+#SBATCH --job-name=pttools-tests-conda
+# Account configuration is required on CSC clusters
+# #SBATCH --account=YOUR_GROUP_HERE
+#SBATCH --partition=test
+# The time limit has to be sufficient to include first-time package installation,
+# but 10 minutes is the maximum allowed on the Kale test queue.
+#SBATCH --time=00:10:00
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem-per-cpu=1G
+#SBATCH --output=pttools-tests-conda.out
+set -e
+
+echo "Running on $(hostname --fqdn)"
+
+# Slurm scripts are placed in a special directory when executed, so this doesn't work
+# SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+# PROJECT_DIR="${SCRIPT_DIR}/.."
+
+# When using this script in another project,
+# please edit this line so that it points to the root of the repository.
+PROJECT_DIR="$(realpath "..")"
+cd "${PROJECT_DIR}"
+
+if command -v "module" &> /dev/null; then
+  if [[ "$(hostname --fqdn)" == *grid.helsinki.fi ]]; then
+    # For the Kale cluster of the University of Helsinki
+    # https://wiki.helsinki.fi/display/it4sci/Kale+User+Guide
+    module load Anaconda3/2020.02
+  else
+    # For CSC clusters
+    # module load fgci-common
+    module load python-env
+  fi
+else
+  echo "Warning! Module management system was not found."
+fi
+
+# Fix over-eager Anaconda package configuration on CSC clusters.
+unset PYTHONPATH
+
+# Enabling conda for use in scripts
+eval "$(conda shell.bash hook)"
+
+# Conda environment setup
+if [ ! -d "${PROJECT_DIR}/envs" ]; then
+  # NOTE! By default Conda may download packages to ~/.conda, which may not have enough disk quota.
+  # To change this behaviour, create a .condarc config file.
+  # https://conda.io/projects/conda/en/latest/user-guide/configuration/use-condarc.html#
+  conda env create --prefix "${PROJECT_DIR}/envs" --file environment.yml
+else
+  conda env update --prefix "${PROJECT_DIR}/envs" --file environment.yml
+fi
+conda activate "${PROJECT_DIR}/envs"
+
+# These are for debugging problems with the virtualenv
+echo "Python version: $(python -c "import platform; print(platform.python_version())")"
+echo "Pip version: $(pip --version)"
+echo "Using python at: $(which python)"
+echo "Using pip at: $(which pip)"
+
+# Override pip cache directory for Kale to avoid hitting the disk quota limits.
+if [ -z "${WRKDIR}" ]; then
+  # This assumes that the Python and pip versions installed by Conda are recent enough
+  # so that the command "pip cache dir" exists.
+  PIP_CACHE_DIR="$(pip cache dir)"
+else
+  PIP_CACHE_DIR="${WRKDIR}/cache/pip"
+fi
+echo "Using pip cache at: ${PIP_CACHE_DIR}"
+
+# When using this script for another project that uses PTtools,
+# please add something like "pip install pttools-gw" here.
+# See the PTtools documentation for more exact instructions.
+pip --cache-dir="${PIP_CACHE_DIR}" install -r "${PROJECT_DIR}/requirements-dev.txt"
+
+# Print Numba system information for debugging installation issues.
+numba --sysinfo
+
+# Use as many CPU cores as available to the job according to the Slurm job configuration
+# instead of the number of physical CPUs.
+NUM_CPUS="$(python -c "import os; print(len(os.sched_getaffinity(0)))")"
+
+# You can replace this with your own workload
+if command -v "srun" &> /dev/null; then
+  srun pytest --numprocesses="${NUM_CPUS}"
+else
+  echo "Warning! Slurm was not found. Running directly."
+  pytest --numprocesses="${NUM_CPUS}"
+fi

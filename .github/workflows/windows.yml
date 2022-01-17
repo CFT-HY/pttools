@@ -1,0 +1,53 @@
+name: Test on Windows
+on: [push, workflow_dispatch]
+env:
+  PRIMARY_PYTHON_VERSION: 3.8
+jobs:
+  test:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+        - name: Setup Python
+          uses: actions/setup-python@v2
+          # Windows minutes cost 2x what Linux does, so testing multiple Python versions would be quite costly
+          with:
+            python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
+        - name: Print Python version
+          run: python -V
+        - name: Checkout
+          uses: actions/checkout@v2
+        - name: Load pip cache
+          uses: actions/cache@v2
+          with:
+            path: .pip
+            key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+            restore-keys: |
+              pip-${{ runner.os }}-
+              pip-
+        - name: Install requirements
+          # Todo: fix NumbaLSODA installation on Windows
+          # Currently the requirements are specified manually to skip NumbaLSODA
+          run: |
+            pip --cache-dir=.pip install --upgrade pip
+            pip --cache-dir=.pip install --upgrade wheel
+            pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
+        - name: Print Numba sysinfo
+          run: python -m numba --sysinfo | tee numba-sysinfo.txt
+        - name: Run tests
+          # Failures may not get processed properly, as pipefail is not supported on Windows.
+          # set -o pipefail
+          run: |
+            pytest | tee test-output.txt
+            coverage json
+        - name: Upload results
+          uses: actions/upload-artifact@v2
+          with:
+            name: Test results with Numba
+            path: |
+              coverage.xml
+              coverage.json
+              htmlcov
+              numba-sysinfo.txt
+              test-output.txt
+              test-results
+            if-no-files-found: error

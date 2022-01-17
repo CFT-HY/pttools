@@ -1,0 +1,4 @@
+# myst-parser
+sphinx
+sphinx-math-dollar
+sphinx-rtd-theme
