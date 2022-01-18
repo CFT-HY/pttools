@@ -5,7 +5,9 @@
 icc-rt
 intel-openmp; sys_platform == "darwin"
 matplotlib
-numba
+# Numba 0.55 breaks the unit tests
+# https://github.com/numba/numba/issues/7751
+numba != 0.55
 # NumbaLSODA cannot yet be compiled automatically on the GitHub Actions Windows runners
 NumbaLSODA; sys_platform != "win32"
 # If you're using an old version of Numba and get the error:
