@@ -62,6 +62,7 @@ differentials = speedup.DifferentialCache()
 #     "dw": dw
 # }
 
+
 def add_df_dtau(name: str, cs2_fun: bag.CS2Fun) -> speedup.DifferentialPointer:
     """Add a new differential equation to the cache based on the given sound speed function.
 
@@ -354,6 +355,8 @@ def fluid_shell_alpha_plus(
     #    xi = np.concatenate((np.flip(xib,0),xif))
     v = np.concatenate((np.flipud(vb), vf))
     w = np.concatenate((np.flipud(wb), wf))
+    # This fixes the scaling of the results.
+    # The original scaling does not matter for computing the problem, but the endpoint w[-1] has to match w_n.
     w = w * (w_n / w[-1])
     # The memory layout of the resulting xi array may cause problems with old Numba versions.
     xi = np.concatenate((np.flipud(xib), xif))
