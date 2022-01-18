@@ -1,7 +1,7 @@
 name: Test on macOS
 on: [push, workflow_dispatch]
 env:
-  PRIMARY_PYTHON_VERSION: 3.8
+  PRIMARY_PYTHON_VERSION: '3.8'
 jobs:
   test:
     runs-on: macos-latest
