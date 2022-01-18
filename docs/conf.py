@@ -99,11 +99,14 @@ autodoc_typehints = "description"
 # -- Other -------------------------------------------------------------------
 
 extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
-    # Articles
-    "gw_ssm": ("https://arxiv.org/abs/1304.2433", "Hindmarsh et. al, 2014"),
-    "ssm": ("https://arxiv.org/abs/1608.04735", "Hindmarsh et. al, 2018"),
-    "gw_pt_ssm": ("https://arxiv.org/abs/1909.10040", "Hindmarsh et. al, 2019"),
-    "notes": ("https://arxiv.org/abs/2008.09136", "Hindmarsh et. al, 2021"),
+    # Hindmarsh articles
+    "gw_ssm": ("https://arxiv.org/abs/1304.2433", "Hindmarsh et al., 2014"),
+    "ssm": ("https://arxiv.org/abs/1608.04735", "Hindmarsh et al., 2018"),
+    "gw_pt_ssm": ("https://arxiv.org/abs/1909.10040", "Hindmarsh et al., 2019"),
+    "notes": ("https://arxiv.org/abs/2008.09136", "Hindmarsh et al., 2021"),
+    # Other articles
+    "giese_2020": ("https://arxiv.org/abs/2004.06995", "Giese et al., 2020"),
+    "giese_2021": ("https://arxiv.org/abs/2010.09744", "Giese et al., 2021"),
     # Other
     "aof_grant": (
         "https://akareport.aka.fi/ibi_apps/WFServlet?IBIF_ex=x_hakkuvaus2&CLICKED_ON=&HAKNRO1=%s&UILANG=en&TULOSTE=HTML",

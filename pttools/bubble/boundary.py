@@ -15,6 +15,13 @@ logger = logging.getLogger(__name__)
 
 
 @enum.unique
+class Phase(float, enum.Enum):
+    """In general the phase is a scalar variable (a real number), and therefore also these values are floats."""
+    SYMMETRIC = 0.
+    BROKEN = 1.
+
+
+@enum.unique
 class SolutionType(str, enum.Enum):
     """There are three different types of relativistic combustion.
     For further details, please see chapter 7.2 and figure 14
@@ -64,7 +71,10 @@ def fluid_speeds_at_wall(
     r"""
     Solves fluid speed boundary conditions at the wall.
     Fluid speed vf? just behind (?=m) and just ahead (?=p) of wall,
-    in wall (_w) and plasma (_p) frames.
+    in wall (_w) and plasma/universe (_p) frames.
+
+    Figures v+ and v- both in the wall frame and in the universe (plasma) frame.
+    TODO: add a validity check for v_minus
 
     :param v_wall: $v_\text{wall}$
     :param alpha_p: $\alpha_+$

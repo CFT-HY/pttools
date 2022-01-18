@@ -33,6 +33,8 @@ def alpha_n_max(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.Flo
 @numba.njit
 def _alpha_n_max_deflagration_scalar(v_wall: float, n_xi: int) -> float:
     check.check_wall_speed(v_wall)
+    # TODO: This may not be correct, as it makes an explicit reference to const.CS0
+    # At least there is circular logic due to the call to fluid_shell_alpha_plus
     sol_type = boundary.SolutionType.HYBRID.value if v_wall > const.CS0 else boundary.SolutionType.SUB_DEF.value
     ap = 1. / 3 - 1.0e-10  # Warning - this is not safe.  Causes warnings for v low vw
     _, w, xi = fluid.fluid_shell_alpha_plus(v_wall, ap, sol_type, n_xi)

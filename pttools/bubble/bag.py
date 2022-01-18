@@ -11,31 +11,12 @@ import numba
 import numpy as np
 
 import pttools.type_hints as th
-from pttools import speedup
+from pttools.bubble.boundary import Phase
 from . import const
 
 logger = logging.getLogger(__name__)
 
 CS2Fun = tp.Callable[[th.FloatOrArr], float]
-
-
-# TODO: think about using an enum for the phases
-# @enum.unique
-# class Phase(enum.IntEnum):
-#     SYMMETRIC = 0
-#     BROKEN = 1
-
-
-# def cs_w(w):
-#    # Speed of sound function, another label
-#    # to be adapted to more realistic equations of state, e.g. with interpolation
-#    return cs0
-#
-#
-# def cs2_w(w):
-#    # Speed of sound squared function
-#    # to be adapted to more realistic equations of state, e.g. with interpolation
-#    return cs0_2
 
 
 @numba.njit
@@ -147,14 +128,14 @@ def get_p(
 
 
 @numba.njit
-def _get_phase_scalar(xi: float, v_w: float) -> int:
-    return const.BROK_PHASE if xi < v_w else const.SYMM_PHASE
+def _get_phase_scalar(xi: float, v_w: float) -> float:
+    return Phase.BROKEN if xi < v_w else Phase.SYMMETRIC
 
 
 @numba.njit
 def _get_phase_arr(xi: np.ndarray, v_w: float) -> np.ndarray:
     ph = np.zeros_like(xi)
-    ph[np.where(xi < v_w)] = const.BROK_PHASE
+    ph[np.where(xi < v_w)] = Phase.BROKEN.value
     return ph
 
 
