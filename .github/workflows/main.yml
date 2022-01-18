@@ -1,7 +1,7 @@
 name: CI
 on: push
 env:
-  PRIMARY_PYTHON_VERSION: '3.8'
+  PRIMARY_PYTHON_VERSION: '3.9'
 jobs:
   graph:
     runs-on: ubuntu-latest
