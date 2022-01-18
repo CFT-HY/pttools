@@ -1,7 +1,7 @@
-import colorama
 import decimal
 import typing as tp
 
+import colorama
 import numpy as np
 
 from . import math as test_math
