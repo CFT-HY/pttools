@@ -132,7 +132,13 @@ linkcheck_allowed_redirects = {
 # linkcheck_auth = []
 linkcheck_ignore = [
     # The project repository will return 404 without authentication until it's published.
-    r"https://github\.com/hindmars/pttools/*"
+    r"https://github\.com/hindmars/pttools/*",
 ]
+if "GITHUB_ACTIONS" in os.environ:
+    linkcheck_ignore += [
+        r"https://akareport\.aka\.fi/ibi_apps/WFServlet*",
+        r"https://stfc\.ukri\.org/",
+    ]
+
 linkcheck_timeout = 5
 linkcheck_workers = 10
