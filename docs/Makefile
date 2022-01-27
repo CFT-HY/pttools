@@ -15,6 +15,8 @@ help:
 .PHONY: help Makefile
 
 all:
+	# Cleaning helps in detecting changes to the Python files.
+	$(MAKE) clean
 	$(MAKE) linkcheck
 	$(MAKE) html
 	$(MAKE) latexpdf
