@@ -92,7 +92,7 @@ jobs:
     timeout-minutes: 10
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', '3.9']
+        python-version: ['3.7', '3.8', '3.9']
     steps:
     - name: Setup Python
       uses: actions/setup-python@v2
@@ -144,7 +144,7 @@ jobs:
     timeout-minutes: 10
     strategy:
       matrix:
-        python-version: ['3.6', '3.7']
+        python-version: ['3.7']
     env:
       PRIMARY_OLD_PYTHON_VERSION: '3.7'
     steps:
@@ -194,7 +194,7 @@ jobs:
     timeout-minutes: 10
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', '3.9']
+        python-version: ['3.7', '3.8', '3.9']
     steps:
     - name: Setup Python
       uses: actions/setup-python@v2
