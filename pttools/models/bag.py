@@ -6,7 +6,12 @@ from .model import Model
 
 
 class BagModel(Model):
-    """Bag model"""
+    r"""Bag equation of state.
+    Each integration corresponds to a line on the figure below (fig. 9 of :gw_pt_ssm:`\ `).
+
+    .. plot:: fig/xi_v_plane.py
+
+    """
     def __init__(self, a_s, a_b, V_s):
         super().__init__()
         self.a_s = a_s
@@ -21,5 +26,5 @@ class BagModel(Model):
             return self.a_b * temp**4
         raise ValueError(f"Unknown phase: {phase}")
 
-    def cs2(self, w: th.FloatOrArr = None):
+    def cs2(self, w: th.FloatOrArr = None, **kwargs):
         return 1/3

@@ -91,7 +91,7 @@ def plot_v_excerpt(ax: plt.Axes, v_wall: float, alpha_plus: float, n_xi: int = 5
 def plot_plane(
         ax: plt.Axes,
         deflag: np.ndarray,
-        method: th.ODESolver,
+        method: th.ODESolver = None,
         deflag_ref: np.ndarray = None,
         rtol_small_diff: float = 1e-4,
         rtol_mid_diff: float = 1e-3,
@@ -99,7 +99,11 @@ def plot_plane(
         atol_small_diff: float = 0,
         atol_mid_diff: float = 0,
         atol_high_diff: float = 0,
-        tau_backwards_end: float = -100.0):
+        tau_backwards_end: float = -100.0,
+        cs2_s: float = bubble.const.CS0_2,
+        cs2_b: float = bubble.const.CS0_2,
+        selected_solutions: bool = True
+    ):
     """
     Modified from
     `sound-shell-model/paper/python/fig_8r_xi-v_plane.py
@@ -118,13 +122,13 @@ def plot_plane(
     va_max_line = v_ahead_max(xi_line)
 
     # Create the shock line for deflagrations
-    v_shock_line = bubble.v_shock(xi_line)
+    v_shock_line = bubble.v_shock(xi_line, cs2=cs2_s)
     v_shock_line[v_shock_line <= 0.0] = np.nan
 
     # Create a line to show the maximum (universe frame) fluid velocity behind the wall.
     # Relevant for detonations and supersonic deflagrations.
-    vb_max_line = bubble.lorentz(xi_line, bubble.CS0)
-    vb_max_line[xi_line <= bubble.CS0] = np.nan
+    vb_max_line = bubble.lorentz(xi_line, np.sqrt(cs2_b))
+    vb_max_line[xi_line <= np.sqrt(cs2_b)] = np.nan
 
     # Plot lines for the wall conditions
     ax.plot(xi_line, va_max_line, 'k:', label=r'$v = \xi$')
@@ -186,9 +190,10 @@ def plot_plane(
                 bubble.fluid_integrate_param(xi0, 1, 1, t_end=tau_backwards_end, n_xi=n_xi)
 
     # Plot curves corresponding to selected solutions (c.f. Espinosa et al 2010)
-    plot_v_excerpt(ax, 0.5, 0.263)
-    plot_v_excerpt(ax, 0.7, 0.052)
-    plot_v_excerpt(ax, 0.77, 0.091)
+    if selected_solutions:
+        plot_v_excerpt(ax, 0.5, 0.263)
+        plot_v_excerpt(ax, 0.7, 0.052)
+        plot_v_excerpt(ax, 0.77, 0.091)
 
     # Make plot look nice
     ax.set_xlim(0, 1)
@@ -197,4 +202,5 @@ def plot_plane(
     ax.set_ylabel(r'$v(\xi)$')
     ax.grid()
     ax.legend(loc='upper left')
-    ax.set_title(get_solver_name(method))
+    if method:
+        ax.set_title(get_solver_name(method))

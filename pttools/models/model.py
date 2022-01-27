@@ -15,5 +15,5 @@ class Model:
         pass
 
     @abc.abstractmethod
-    def cs2(self, *args, w: th.FloatOrArr = None, **kwargs):
+    def cs2(self, *args, **kwargs):
         pass

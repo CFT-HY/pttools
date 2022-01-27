@@ -52,7 +52,7 @@ def check_thetas(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> None:
 
 
 @numba.njit
-def cs2_bag_scalar(w: float) -> float:
+def cs2_bag_scalar(w: float, todo=None, todo2=None) -> float:
     """The scalar versions of the bag functions have to be compiled to cfuncs if jitting is disabled,
     as otherwise the cfunc version of the differential cannot be created.
     """
@@ -60,12 +60,12 @@ def cs2_bag_scalar(w: float) -> float:
 
 
 @numba.njit
-def cs2_bag_arr(w: np.ndarray) -> np.ndarray:
+def cs2_bag_arr(w: np.ndarray, todo=None, todo2=None) -> np.ndarray:
     return const.CS0_2 * np.ones_like(w)
 
 
 @numba.generated_jit(nopython=True)
-def cs2_bag(w: th.FloatOrArr) -> th.FloatOrArrNumba:
+def cs2_bag(w: th.FloatOrArr, todo=None, todo2=None) -> th.FloatOrArrNumba:
     r"""
     Speed of sound squared in Bag model, equal to $\frac{1}{3}$ independent of enthalpy $w$.
 

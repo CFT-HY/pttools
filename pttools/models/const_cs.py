@@ -1,4 +1,4 @@
-r"""$\mu, \nu$-model"""
+r"""Constant sound speed model, aka. $\mu, \nu$ model"""
 
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase
@@ -14,8 +14,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class MuNuModel(Model):
+class ConstCSModel(Model):
     r"""$\mu, \nu$-model
+
+    .. plot:: fig/const_cs_model.py
 
     """
     def __init__(self, a_s: float, a_b: float, css2: float, csb2: float, eps: float):
@@ -33,17 +35,21 @@ class MuNuModel(Model):
         self.cs2 = self.gen_cs2()
 
     def cs2(self, v: float, w: float, xi: float):
-        raise NotImplementedError
+        raise NotImplementedError("Not yet loaded!")
 
     def gen_cs2(self):
+        # These become compile-time constants
+        css2 = self.css2
+        csb2 = self.csb2
+
         @numba.njit
         def cs2(v: float, w: float, xi: float) -> float:
             if v > props.v_shock(xi):
                 # Ahead of the wall
-                return self.css2
-            if v < props.v_max_behind(xi, self.csb2):
+                return css2
+            if v < props.v_max_behind(xi, csb2):
                 # Behind the wall
-                return self.csb2
+                return csb2
             # Unphysical, so let's use the bag model
             return const.CS0_2
         return cs2

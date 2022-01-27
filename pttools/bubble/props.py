@@ -96,6 +96,25 @@ def v_max_behind(xi: th.FloatOrArr, cs: float):
 
 
 @numba.njit
+def _v_shock_scalar(xi: float, cs2: float):
+    # TODO: Maybe should return a nan?
+    # Squaring is used instead of a square root, as it's faster.
+    if xi**2 < cs2:
+        return 0
+    return (xi ** 2 - cs2) / (xi * (1 - cs2))
+    # For bag EoS
+    # return (3 * xi ** 2 - 1) / (2 * xi)
+
+
+@numba.njit
+def _v_shock_arr(xi: np.ndarray, cs2: float):
+    ret = np.zeros_like(xi)
+    for i in range(xi.size):
+        ret[i] = _v_shock_scalar(xi[i], cs2)
+    return ret
+
+
+@numba.generated_jit(nopython=True)
 def v_shock(xi: th.FloatOrArr, cs2: float = const.CS0_2):
     r"""
     Fluid velocity at a shock at xi.
@@ -103,14 +122,22 @@ def v_shock(xi: th.FloatOrArr, cs2: float = const.CS0_2):
     $$ v_{sh}(\xi) = \frac{\xi^2 - c_s^2}{\xi (1 - c_s^2)} $$
 
     For the bag equation of state ($c_s = \frac{1}{3}$) this gives eq. B.17 of :gw_pt_ssm:`\ `.
-    $$ v_{sh}(\xi) = \frac{3\xi^2 - 1}{2\xi} $$
+
+    $$ v_{sh}(\xi) = \frac{3 \xi^2 - 1}{2\xi} $$
+
+    :param xi: $\xi$
+    :param cs2: $c_s^2$
+    :return: $v_{sh}$
     """
-    # TODO: Maybe should return a nan?
-    if xi < const.CS0:
-        return 0
-    return (xi**2 - cs2**2)/(xi*(1-cs2))
-    # For bag EoS
-    # return (3 * xi ** 2 - 1) / (2 * xi)
+    if isinstance(xi, numba.types.Float):
+        return _v_shock_scalar
+    if isinstance(xi, numba.types.Array):
+        return _v_shock_arr
+    if isinstance(xi, float):
+        return _v_shock_scalar(xi, cs2)
+    if isinstance(xi, np.ndarray):
+        return _v_shock_arr(xi, cs2)
+    raise TypeError(f"Unknown type for xi: {type(xi)}")
 
 
 @numba.njit
@@ -135,6 +162,7 @@ def w_shock(xi: th.FloatOrArr, w_n: float = 1.) -> th.FloatOrArrNumba:
     Fluid enthalpy at a shock at $\xi$.
     No shocks exist for $\xi < cs$, so returns nan.
     Equation B.18 of :gw_pt_ssm:`\ `.
+
     $$ w_{sh}(\xi) = w_n \frac{9\xi^2 - 1}{3(1 - \xi^2)} $$
 
     :param xi: $\xi$

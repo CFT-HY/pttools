@@ -87,7 +87,7 @@ def gen_df_dtau(cs2_fun: bag.CS2Fun) -> speedup.Differential:
     """
     cs2_fun_numba = cs2_fun \
         if isinstance(cs2_fun, (speedup.CFunc, speedup.Dispatcher)) \
-        else numba.cfunc("float64(float64)")(cs2_fun)
+        else numba.cfunc("float64(float64, float64, float64)")(cs2_fun)
 
     def df_dtau(t: float, u: np.ndarray, du: np.ndarray, p: np.ndarray = None) -> None:
         r"""Computes the differentials of the variables $(v, w, \xi)$ for a given $c_s^2$ function
@@ -97,7 +97,7 @@ def gen_df_dtau(cs2_fun: bag.CS2Fun) -> speedup.Differential:
         v = u[0]
         w = u[1]
         xi = u[2]
-        cs2 = cs2_fun_numba(w)
+        cs2 = cs2_fun_numba(v, w, xi)
         xiXv = xi * v
         xi_v = xi - v
         v2 = v * v
@@ -125,10 +125,6 @@ def fluid_integrate_param(
     Integrates parametric fluid equations in df_dtau from an initial condition.
     Positive t_end integrates along curves from $(v,w) = (0,c_{s,0})$ to $(1,1)$.
     Negative t_end integrates towards $(0,c_s{s,0})$.
-
-    Each integration corresponds to a line on the figure below (fig. 9 of :gw_pt_ssm:`¸ `).
-
-    .. plot:: fig/xi_v_plane.py
 
     :param v0: $v_0$
     :param w0: $w_0$
