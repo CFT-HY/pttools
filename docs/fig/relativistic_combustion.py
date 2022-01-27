@@ -1,6 +1,6 @@
-"""Script for generating a figure of the three different types of relativistic combustion
+r"""Script for generating a figure of the three different types of relativistic combustion
 
-Original version was developed by Daniel Cutting for the figure 14 of the :notes:`lecture notes <>`.
+Original version was developed by Daniel Cutting for the figure 14 of :notes:`\ `.
 """
 
 import typing as tp

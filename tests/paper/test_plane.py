@@ -1,3 +1,8 @@
+r"""Plot the absolute and relative relative errors of different integrators for the $\xi, v$ plane.
+See :gw_pt_ssm:`\ ` fig. 9
+Excerpts of these plots are in :gw_pt_ssm:`\ ` fig. 10 and :notes:`\ ` fig. 15.
+"""
+
 import logging
 import os.path
 import shutil

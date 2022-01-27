@@ -10,6 +10,6 @@ Bag
 ---
 .. automodule:: pttools.models.bag
 
-Mu, nu
+Constant sound speed
 ------
-.. automodule:: pttools.models.mu_nu
+.. automodule:: pttools.models.const_cs

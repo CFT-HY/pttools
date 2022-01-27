@@ -76,6 +76,11 @@ def add_df_dtau(name: str, cs2_fun: bag.CS2Fun) -> speedup.DifferentialPointer:
 
 def gen_df_dtau(cs2_fun: bag.CS2Fun) -> speedup.Differential:
     r"""Generate a function for the differentials of fluid variables $(v, w, \xi)$ in parametric form.
+    The parametrised differential equation is as in :gw_pt_ssm:`\ ` eq. B.14-16:
+
+    - $\frac{dv}{dt} = 2v c_s^2 (1-v^2) (1 - \xi v)$
+    - $\frac{dw}{dt} = \frac{w}{1-v^2} \frac{\xi - v}{1 - \xi v} (\frac{1}{c_s^2}+1) \frac{dv}{dt}$
+    - $\frac{d\xi}{dt} = \xi \left( (\xi - v)^2 - c_s^2 (1 - \xi v)^2 \right)$
 
     :param cs2_fun: function, which gives the speed of sound squared $c_s^2$.
     :return: function for the differential equation
@@ -118,8 +123,12 @@ def fluid_integrate_param(
         method: str = "odeint") -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""
     Integrates parametric fluid equations in df_dtau from an initial condition.
-    Positive t_end integrates along curves from (v,w) = (0,cs0) to (1,1).
-    Negative t_end integrates towards (0,cs0).
+    Positive t_end integrates along curves from $(v,w) = (0,c_{s,0})$ to $(1,1)$.
+    Negative t_end integrates towards $(0,c_s{s,0})$.
+
+    Each integration corresponds to a line on the figure below (fig. 9 of :gw_pt_ssm:`¸ `).
+
+    .. plot:: fig/xi_v_plane.py
 
     :param v0: $v_0$
     :param w0: $w_0$

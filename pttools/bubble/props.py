@@ -9,6 +9,7 @@ import pttools.type_hints as th
 from . import boundary
 from . import check
 from . import const
+from . import relativity
 
 
 @numba.njit
@@ -18,6 +19,7 @@ def find_shock_index(v_f: np.ndarray, xi: np.ndarray, v_wall: float, sol_type: b
     For detonation, returns wall position.
 
     :param v_f: fluid velocity $v_f$
+    :param xi: $\xi$
     :param v_wall: wall velocity $v_\text{wall}$
     :param sol_type: solution type (detonation etc.)
     :return: shock index
@@ -80,15 +82,35 @@ def shock_zoom_last_element(
 
 
 @numba.vectorize
-def v_shock(xi: th.FloatOrArr):
+def v_max_behind(xi: th.FloatOrArr, cs: float):
+    r"""Maximum fluid velocity behind the wall.
+    Given by the condition $\mu(\xi, v) = c_s$.
+    This results in:
+    $$ v_\text{max} = \frac{c_s-\xi}{c_s \xi - 1} $$
+
+    :param xi: $\xi$
+    :param cs: $c_s$, speed of sound behind the wall (=in the broken phase)
+    :return: $v_\text{max,behind}$
+    """
+    return relativity.lorentz(xi, cs)
+
+
+@numba.njit
+def v_shock(xi: th.FloatOrArr, cs2: float = const.CS0_2):
     r"""
     Fluid velocity at a shock at xi.
     No shocks exist for $\xi < cs$, so returns zero.
+    $$ v_{sh}(\xi) = \frac{\xi^2 - c_s^2}{\xi (1 - c_s^2)} $$
+
+    For the bag equation of state ($c_s = \frac{1}{3}$) this gives eq. B.17 of :gw_pt_ssm:`\ `.
+    $$ v_{sh}(\xi) = \frac{3\xi^2 - 1}{2\xi} $$
     """
     # TODO: Maybe should return a nan?
     if xi < const.CS0:
         return 0
-    return (3 * xi ** 2 - 1) / (2 * xi)
+    return (xi**2 - cs2**2)/(xi*(1-cs2))
+    # For bag EoS
+    # return (3 * xi ** 2 - 1) / (2 * xi)
 
 
 @numba.njit
@@ -112,8 +134,11 @@ def w_shock(xi: th.FloatOrArr, w_n: float = 1.) -> th.FloatOrArrNumba:
     r"""
     Fluid enthalpy at a shock at $\xi$.
     No shocks exist for $\xi < cs$, so returns nan.
+    Equation B.18 of :gw_pt_ssm:`\ `.
+    $$ w_{sh}(\xi) = w_n \frac{9\xi^2 - 1}{3(1 - \xi^2)} $$
 
     :param xi: $\xi$
+    :param w_n: enthalpy on the TODO side of the wall
     :return: $w_\text{shock}$, fluid enthalpy at the shock
     """
     if isinstance(xi, numba.types.Float):
