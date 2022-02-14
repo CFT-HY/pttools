@@ -5,9 +5,13 @@ These tests are not part of PTtools itself and are not included in the PTtools p
 However, they contain good examples on how to use PTtools and its dependencies.
 """
 
+import faulthandler
 import logging
 import os
 import time
+
+if not faulthandler.is_enabled():
+    faulthandler.enable()
 
 log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs")
 os.makedirs(log_dir, exist_ok=True)
