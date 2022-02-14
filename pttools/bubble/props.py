@@ -101,9 +101,13 @@ def _v_shock_scalar(xi: float, cs2: float):
     # Squaring is used instead of a square root, as it's faster.
     if xi**2 < cs2:
         return 0
-    return (xi ** 2 - cs2) / (xi * (1 - cs2))
+
+    # This generalization is wrong. The shock velocity requires significantly more complex treatment.
+    # TODO: implement v_shock
+    # return (xi**2 - cs2) / (xi * (1 - cs2))
+
     # For bag EoS
-    # return (3 * xi ** 2 - 1) / (2 * xi)
+    return (3 * xi**2 - 1) / (2 * xi)
 
 
 @numba.njit
