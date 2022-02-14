@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 @enum.unique
 class Phase(float, enum.Enum):
     """In general the phase is a scalar variable (a real number), and therefore also these values are floats."""
+    # Do not change these values without also checking the model cs2 functions.
     SYMMETRIC = 0.
     BROKEN = 1.
 
