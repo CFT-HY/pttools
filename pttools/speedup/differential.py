@@ -40,7 +40,7 @@ class DifferentialCache:
     def add(
             self,
             name: str, differential: Differential,
-            p0_is_backwards: bool = True,
+            p_last_is_backwards: bool = True,
             ndim: int = 3) -> DifferentialPointer:
         with self._lock:
             if name in self._cache_cfunc:
@@ -48,11 +48,11 @@ class DifferentialCache:
             differential_njit = numba.njit(differential)
             differential_cfunc = numba.cfunc(lsoda_sig)(differential)
             differential_core = differential_cfunc if options.NUMBA_DISABLE_JIT else differential_njit
-            if p0_is_backwards:
+            if p_last_is_backwards:
                 @numba.cfunc(lsoda_sig)
                 def differential_numbalsoda(t: float, u: np.ndarray, du: np.ndarray, p: np.ndarray):
                     differential_core(t, u, du, p)
-                    if p[0]:
+                    if p[-1]:
                         for i in range(ndim):
                             du[i] *= -1.
             else:
