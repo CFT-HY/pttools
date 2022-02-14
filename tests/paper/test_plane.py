@@ -51,7 +51,7 @@ class TestPlane(unittest.TestCase):
             common_title = r"Comparison of integrators for $\xi$-$v$-plane"
             cls.grid_fig_abs.suptitle(f"{common_title}, absolute errors")
             cls.grid_fig_rel.suptitle(f"{common_title}, relative errors")
-            cls.ref_data = plane.xiv_plane(method="odeint")
+            cls.ref_data = plane.xiv_plane(method="odeint", separate_phases=False)
 
     @classmethod
     def process_output(cls, name: str, fig: plt.Figure, axs: np.ndarray, diffs: tp.Dict[int, float]):
@@ -132,11 +132,11 @@ class TestPlane(unittest.TestCase):
         name = plot_plane.get_solver_name(method)
         self.names[i] = name
         # The actual results are computed first to ensure, that the code is JIT-compiled before testing performance
-        data = plane.xiv_plane(method=method)
+        data = plane.xiv_plane(method=method, separate_phases=False)
         self.mean_abs_diffs[i] = np.nanmean(np.abs(data - self.ref_data))
         self.mean_rel_diffs[i] = np.nanmean(np.abs((data - self.ref_data) / data))
 
-        result = timeit.timeit(lambda: plane.xiv_plane(method=method), number=perf_iters)
+        result = timeit.timeit(lambda: plane.xiv_plane(method=method, separate_phases=False), number=perf_iters)
         iter_time = result/perf_iters
         self.iter_times[i] = result/perf_iters
         text = \
@@ -162,8 +162,8 @@ class TestPlane(unittest.TestCase):
                     (abs_tols, rel_tols)):
                 fig: plt.Figure = plt.figure()
                 ax2: plt.Axes = fig.add_subplot()
-                plot_plane.plot_plane(axs[ax[0], ax[1]], data, method, deflag_ref=self.ref_data, **tols)
-                plot_plane.plot_plane(ax2, data, method, deflag_ref=self.ref_data, **tols)
+                plot_plane.plot_plane(ax=axs[ax[0], ax[1]], data_s=data, method=method, deflag_ref=self.ref_data, **tols)
+                plot_plane.plot_plane(ax=ax2, data_s=data, method=method, deflag_ref=self.ref_data, **tols)
                 fig_name = f"{self.FIG_PATH}_{name}_{i}_{plot_plane.get_solver_name(method)}"
                 utils.save_fig_multi(fig, fig_name)
                 plt.close(fig)

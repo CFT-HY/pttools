@@ -33,25 +33,25 @@ def get_solver_name(method: th.ODESolver) -> str:
 
 
 def get_differing_inds(
-        deflag: np.ndarray,
-        deflag_ref: np.ndarray,
+        data: np.ndarray,
+        data_ref: np.ndarray,
         i: int,
         rtol: float,
         atol: float = 0) -> np.ndarray:
     r"""Get the indices where $v$, $w$ or $\xi$ values do not meet the given tolerances"""
-    # differing_b = np.isclose(deflag[:3, i, :], deflag_ref[:3, i, :], rtol=rtol, atol=atol)
-    # differing_f = np.isclose(deflag[3:, i, :], deflag_ref[:3, i, :], rtol=rtol, atol=atol)
-    deflag_v_b = deflag[0, i, :]
-    deflag_xi_b = deflag[2, i, :]
-    deflag_v_f = deflag[3, i, :]
-    deflag_xi_f = deflag[5, i, :]
+    # differing_b = np.isclose(data[:3, i, :], data_ref[:3, i, :], rtol=rtol, atol=atol)
+    # differing_f = np.isclose(data[3:, i, :], data_ref[:3, i, :], rtol=rtol, atol=atol)
+    data_v_b = data[0, i, :]
+    data_xi_b = data[2, i, :]
+    data_v_f = data[3, i, :]
+    data_xi_f = data[5, i, :]
     differing_b = np.logical_not(np.logical_and(
-        np.isclose(deflag_v_b, deflag_ref[0, i, :], rtol=rtol, atol=atol),
-        np.isclose(deflag_xi_b, deflag_ref[2, i, :], rtol=rtol, atol=atol)
+        np.isclose(data_v_b, data_ref[0, i, :], rtol=rtol, atol=atol),
+        np.isclose(data_xi_b, data_ref[2, i, :], rtol=rtol, atol=atol)
     ))
     differing_f = np.logical_not(np.logical_and(
-        np.isclose(deflag_v_f, deflag_ref[3, i, :], rtol=rtol, atol=atol),
-        np.isclose(deflag_xi_f, deflag_ref[5, i, :], rtol=rtol, atol=atol)
+        np.isclose(data_v_f, data_ref[3, i, :], rtol=rtol, atol=atol),
+        np.isclose(data_xi_f, data_ref[5, i, :], rtol=rtol, atol=atol)
     ))
     return np.array([differing_b, differing_f])
 
@@ -88,32 +88,7 @@ def plot_v_excerpt(ax: plt.Axes, v_wall: float, alpha_plus: float, n_xi: int = 5
         ax.plot([xi_b[-1]], [v_b[-1]], "bo")
 
 
-def plot_plane(
-        ax: plt.Axes,
-        deflag: np.ndarray,
-        method: th.ODESolver = None,
-        deflag_ref: np.ndarray = None,
-        rtol_small_diff: float = 1e-4,
-        rtol_mid_diff: float = 1e-3,
-        rtol_high_diff: float = 1e-2,
-        atol_small_diff: float = 0,
-        atol_mid_diff: float = 0,
-        atol_high_diff: float = 0,
-        tau_backwards_end: float = -100.0,
-        cs2_s: float = bubble.const.CS0_2,
-        cs2_b: float = bubble.const.CS0_2,
-        selected_solutions: bool = True
-    ):
-    """
-    Modified from
-    `sound-shell-model/paper/python/fig_8r_xi-v_plane.py
-    <https://bitbucket.org/hindmars/sound-shell-model/src/master/paper/python/fig_8r_xi-v_plane.py>`_.
-    """
-    # Define a suitable number of default lines to plot
-    n_xi0 = deflag.shape[1]
-    xi0_step = 1 / (n_xi0 + 1)
-    xi0_array = np.linspace(xi0_step, 1 - xi0_step, n_xi0)
-
+def plot_conditions(ax: plt.Axes, cs2_s: float, cs2_b: float):
     # Create a line v(xi) = xi to start solving on with forwards and backwards solutions
     # This is the maximum fluid speed ahead of wall for deflagrations
     xi_min = 0.0 + 1 / bubble.N_XI_DEFAULT
@@ -135,12 +110,70 @@ def plot_plane(
     ax.plot(xi_line, v_shock_line, 'k--', label=r'$v = v_{\rm sh}(\xi)$')
     ax.plot(xi_line, vb_max_line, 'k-.', label=r'$v = \mu(\xi, c_s)$')
 
-    n_xi = deflag.shape[2]
-    for i, xi0 in enumerate(xi0_array):
-        deflag_v_b = deflag[0, i, :]
-        deflag_xi_b = deflag[2, i, :]
-        deflag_v_f = deflag[3, i, :]
-        deflag_xi_f = deflag[5, i, :]
+
+def plot_differing(
+        ax: plt.Axes,
+        data: np.ndarray,
+        ref: np.ndarray,
+        rtol_diffs: np.ndarray,
+        atol_diffs: np.ndarray
+        ):
+    diff_small = get_differing_inds(data_b, deflag_ref, i, rtol=rtol_small_diff, atol=atol_small_diff)
+    diff_mid = get_differing_inds(data_b, deflag_ref, i, rtol=rtol_mid_diff, atol=atol_mid_diff)
+    diff_high = get_differing_inds(data_b, deflag_ref, i, rtol=rtol_high_diff, atol=atol_high_diff)
+    diff_small[diff_mid] = 0
+    diff_mid[diff_high] = 0
+
+    for diff, color, rtol, atol in zip(
+        (diff_small, diff_mid, diff_high),
+        ("yellow", "orange", "red"),
+        rtol_diffs,
+        atol_diffs):
+        label = get_label(rtol, atol) if not i else None
+        ax.plot(
+            filter_not(deflag_xi_b, diff[0, :]), filter_not(deflag_v_b, diff[0, :]),
+            color=color, label=label)
+        ax.plot(
+            filter_not(deflag_xi_f, diff[1, :]), filter_not(deflag_v_f, diff[1, :]),
+            color=color)
+
+
+def plot_plane(
+        ax: plt.Axes,
+        data_s: np.ndarray,
+        data_b: np.ndarray = None,
+        method: th.ODESolver = None,
+        deflag_ref: np.ndarray = None,
+        rtol_small_diff: float = 1e-4,
+        rtol_mid_diff: float = 1e-3,
+        rtol_high_diff: float = 1e-2,
+        atol_small_diff: float = 0,
+        atol_mid_diff: float = 0,
+        atol_high_diff: float = 0,
+        tau_backwards_end: float = -100.0,
+        cs2_s: float = bubble.const.CS0_2,
+        cs2_b: float = bubble.const.CS0_2,
+        selected_solutions: bool = True
+    ):
+    """
+    Modified from
+    `sound-shell-model/paper/python/fig_8r_xi-v_plane.py
+    <https://bitbucket.org/hindmars/sound-shell-model/src/master/paper/python/fig_8r_xi-v_plane.py>`_.
+    """
+    # Define a suitable number of default lines to plot
+    # n_xi0 = data_b.shape[1]
+    # xi0_step = 1 / (n_xi0 + 1)
+    # xi0_array = np.linspace(xi0_step, 1 - xi0_step, n_xi0)
+
+    plot_conditions(ax, cs2_s, cs2_b)
+
+    # n_xi = data_s.shape[2]
+    # TODO: change this to something more reasonable
+    for i in range(data_s.shape[1]):
+        deflag_v_b = data_s[0, i, :]
+        deflag_xi_b = data_s[2, i, :]
+        deflag_v_f = data_s[3, i, :]
+        deflag_xi_f = data_s[5, i, :]
 
         # Grey out parts of line which are unphysical
         unphysical = np.logical_and(
@@ -164,30 +197,21 @@ def plot_plane(
         ax.plot(deflag_xi_b, deflag_v_b, 'k')
         ax.plot(deflag_xi_b_grey, deflag_v_b_grey, color=grey)
 
-        if deflag_ref is not None:
-            diff_small = get_differing_inds(deflag, deflag_ref, i, rtol=rtol_small_diff, atol=atol_small_diff)
-            diff_mid = get_differing_inds(deflag, deflag_ref, i, rtol=rtol_mid_diff, atol=atol_mid_diff)
-            diff_high = get_differing_inds(deflag, deflag_ref, i, rtol=rtol_high_diff, atol=atol_high_diff)
-            diff_small[diff_mid] = 0
-            diff_mid[diff_high] = 0
-
-            for diff, color, rtol, atol in zip(
-                    (diff_small, diff_mid, diff_high),
-                    ("yellow", "orange", "red"),
-                    (rtol_small_diff, rtol_mid_diff, rtol_high_diff),
-                    (atol_small_diff, atol_mid_diff, atol_high_diff)):
-                label = get_label(rtol, atol) if not i else None
-                ax.plot(
-                    filter_not(deflag_xi_b, diff[0, :]), filter_not(deflag_v_b, diff[0, :]),
-                    color=color, label=label)
-                ax.plot(
-                    filter_not(deflag_xi_f, diff[1, :]), filter_not(deflag_v_f, diff[1, :]),
-                    color=color)
+        # if deflag_ref is not None:
+            # TODO
+            # plot_differing()
 
         # Make and plot a few lines starting from xi = 1
-        if not i % 2:
-            det_v_b, det_w_b, det_xi_b, _ = \
-                bubble.fluid_integrate_param(xi0, 1, 1, t_end=tau_backwards_end, n_xi=n_xi)
+        # This code seems not to be used, so it's disabled.
+        # if not i % 2:
+        #     det_v_b, det_w_b, det_xi_b, _ = \
+        #         bubble.fluid_integrate_param(xi0, 1, 1, t_end=tau_backwards_end, n_xi=n_xi)
+
+    if data_b is not None:
+        for i in range(data_b.shape[1]):
+            det_v = data_b[0, i, :]
+            det_xi = data_b[2, i, :]
+            ax.plot(det_xi, det_v, "k")
 
     # Plot curves corresponding to selected solutions (c.f. Espinosa et al 2010)
     if selected_solutions:

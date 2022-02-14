@@ -21,7 +21,11 @@ class ConstCSModel(Model):
 
     """
     def __init__(self, a_s: float, a_b: float, css2: float, csb2: float, eps: float):
+        if css2 > 1/3:
+            raise ValueError(
+                "C_{s,s}^2 has to be <= 1/3 for the solution to be physical. This is because g_eff is monotonic.")
         super().__init__()
+        # TODO: replace these with g_eff-based functions.
         self.a_s = a_s
         self.a_b = a_b
         self.css2 = css2
@@ -34,7 +38,8 @@ class ConstCSModel(Model):
 
         self.cs2 = self.gen_cs2()
 
-    def cs2(self, v: float, w: float, xi: float):
+    @staticmethod
+    def cs2(w: float, phase: float):
         raise NotImplementedError("Not yet loaded!")
 
     def gen_cs2(self):
@@ -43,18 +48,14 @@ class ConstCSModel(Model):
         csb2 = self.csb2
 
         @numba.njit
-        def cs2(v: float, w: float, xi: float) -> float:
-            if v > props.v_shock(xi):
-                # Ahead of the wall
-                return css2
-            if v < props.v_max_behind(xi, csb2):
-                # Behind the wall
-                return csb2
-            # Unphysical, so let's use the bag model
-            return const.CS0_2
+        def cs2(w: float, phase: float) -> float:
+            # Mathematical operations should be faster than conditional logic in compiled functions.
+            return phase*csb2 + (1 - phase)*css2
         return cs2
 
-    def p(self, T: th.FloatOrArr, phase: Phase) -> th.FloatOrArr:
+    # TODO: make these take in enthalpy instead
+
+    def p_temp(self, T: th.FloatOrArr, phase: Phase) -> th.FloatOrArr:
         if phase == Phase.SYMMETRIC:
             return 1/3 * self.a_s * T**self.mu - self.eps
         if phase == Phase.BROKEN:

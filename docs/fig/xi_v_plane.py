@@ -7,10 +7,10 @@ from tests.paper.plot_plane import plot_plane
 
 
 def main():
-    data = xiv_plane()
+    data_b, data_s = xiv_plane()
     fig: plt.Figure = plt.figure()
     ax: plt.Axes = fig.add_subplot()
-    plot_plane(ax=ax, deflag=data)
+    plot_plane(ax=ax, data_b=data_b, data_s=data_s, selected_solutions=False)
 
 
 if __name__ == "__main__":

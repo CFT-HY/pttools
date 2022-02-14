@@ -87,17 +87,22 @@ def gen_df_dtau(cs2_fun: bag.CS2Fun) -> speedup.Differential:
     """
     cs2_fun_numba = cs2_fun \
         if isinstance(cs2_fun, (speedup.CFunc, speedup.Dispatcher)) \
-        else numba.cfunc("float64(float64, float64, float64)")(cs2_fun)
+        else numba.cfunc("float64(float64, float64)")(cs2_fun)
 
-    def df_dtau(t: float, u: np.ndarray, du: np.ndarray, p: np.ndarray = None) -> None:
+    def df_dtau(t: float, u: np.ndarray, du: np.ndarray, args: np.ndarray = None) -> None:
         r"""Computes the differentials of the variables $(v, w, \xi)$ for a given $c_s^2$ function
 
+        :param t: "time"
+        :param u: point
+        :param du: derivatives
+        :param args: extra arguments: [phase]
         :return: $\frac{dv}{d\tau}, \frac{dw}{d\tau}, \frac{d\xi}{d\tau}$
         """
         v = u[0]
         w = u[1]
         xi = u[2]
-        cs2 = cs2_fun_numba(v, w, xi)
+        phase = args[0]
+        cs2 = cs2_fun_numba(w, phase)
         xiXv = xi * v
         xi_v = xi - v
         v2 = v * v
@@ -117,6 +122,7 @@ def fluid_integrate_param(
         v0: float,
         w0: float,
         xi0: float,
+        phase: float = -1.,
         t_end: float = const.T_END_DEFAULT,
         n_xi: int = const.N_XI_DEFAULT,
         df_dtau_ptr: speedup.DifferentialPointer = DF_DTAU_BAG_PTR,
@@ -129,19 +135,25 @@ def fluid_integrate_param(
     :param v0: $v_0$
     :param w0: $w_0$
     :param xi0: $\xi_0$
+    :param phase: phase $\phi$
     :param t_end: $t_\text{end}$
     :param n_xi: number of $\xi$ points
     :param df_dtau_ptr: pointer to the differential equation function
     :param method: differential equation solver to be used
     :return: $v, w, \xi, t$
     """
+    if phase < 0.:
+        print("The phase has not been set! Assuming symmetric phase.")
+        phase = 0.
 
     t = np.linspace(0., t_end, n_xi)
     y0 = np.array([v0, w0, xi0])
+    # The second value ensures that the Numba typing is correct.
+    data = np.array([phase, 0.])
     if method == "numba_lsoda" or speedup.NUMBA_INTEGRATE:
         if NumbaLSODA is None:
             raise ImportError("NumbaLSODA is not loaded")
-        v, w, xi, success = fluid_integrate_param_numba(t, y0, df_dtau_ptr)
+        v, w, xi, success = fluid_integrate_param_numba(t=t, y0=y0, data=data, df_dtau_ptr=df_dtau_ptr)
 
     # This lock prevents a SystemError when running multiple threads
     # with ODEINT_LOCK:
@@ -153,27 +165,32 @@ def fluid_integrate_param(
     else:
         with numba.objmode(v="float64[:]", w="float64[:]", xi="float64[:]", success="boolean"):
             if method == "odeint":
-                v, w, xi, success = fluid_integrate_param_odeint(t, y0, df_dtau_ptr)
+                v, w, xi, success = fluid_integrate_param_odeint(t=t, y0=y0, data=data, df_dtau_ptr=df_dtau_ptr)
             else:
-                v, w, xi, success = fluid_integrate_param_solve_ivp(t, y0, df_dtau_ptr, method)
+                v, w, xi, success = fluid_integrate_param_solve_ivp(
+                    t=t, y0=y0, data=data, df_dtau_ptr=df_dtau_ptr, method=method)
     if not success:
         raise RuntimeError("integration failed")
     return v, w, xi, t
 
 
 @numba.njit
-def fluid_integrate_param_numba(t: np.ndarray, y0: np.ndarray, df_dtau_ptr: speedup.DifferentialPointer):
+def fluid_integrate_param_numba(t: np.ndarray, y0: np.ndarray, data: np.ndarray, df_dtau_ptr: speedup.DifferentialPointer):
     r"""Integrate a differential equation using NumbaLSODA.
 
     :param t: time
     :param y0: starting point
+    :param data: constants
     :param df_dtau_ptr: pointer to the differential equation function
     :return: $v, w, \xi$, success status
     """
     backwards = t[-1] < 0
     t_numba = -t if backwards else t
-    data = np.array([1 if backwards else 0])
-    usol, success = NumbaLSODA.lsoda(df_dtau_ptr, u0=y0, t_eval=t_numba, data=data)
+    data_numba = np.zeros((data.size + 1))
+    data_numba[:-1] = data
+    # Numba does not support float(bool)
+    data_numba[-1] = int(backwards)
+    usol, success = NumbaLSODA.lsoda(df_dtau_ptr, u0=y0, t_eval=t_numba, data=data_numba)
     if not success:
         with numba.objmode:
             logger.error(f"NumbaLSODA failed for %s integration", "backwards" if backwards else "forwards")
@@ -183,7 +200,7 @@ def fluid_integrate_param_numba(t: np.ndarray, y0: np.ndarray, df_dtau_ptr: spee
     return v, w, xi, success
 
 
-def fluid_integrate_param_odeint(t: np.ndarray, y0: np.ndarray, df_dtau_ptr: speedup.DifferentialPointer):
+def fluid_integrate_param_odeint(t: np.ndarray, y0: np.ndarray, data: np.ndarray, df_dtau_ptr: speedup.DifferentialPointer):
     r"""Integrate a differential equation using :func:`scipy.integrate.odeint`.
 
     :param t: time
@@ -193,7 +210,7 @@ def fluid_integrate_param_odeint(t: np.ndarray, y0: np.ndarray, df_dtau_ptr: spe
     """
     try:
         func = differentials.get_odeint(df_dtau_ptr)
-        soln: np.ndarray = spi.odeint(func, y0, t)
+        soln: np.ndarray = spi.odeint(func, y0=y0, t=t, args=(data,))
         v = soln[:, 0]
         w = soln[:, 1]
         xi = soln[:, 2]
@@ -206,18 +223,18 @@ def fluid_integrate_param_odeint(t: np.ndarray, y0: np.ndarray, df_dtau_ptr: spe
 
 
 def fluid_integrate_param_solve_ivp(
-        t: np.ndarray, y0: np.ndarray, df_dtau_ptr: speedup.DifferentialPointer, method: str):
+        t: np.ndarray, y0: np.ndarray, data: np.ndarray, df_dtau_ptr: speedup.DifferentialPointer, method: str):
     """Integrate a differential equation using :func:`scipy.integrate.solve_ivp`.
 
     :param t: time
     :param y0: starting point
     :param df_dtau_ptr: pointer to the differential equation function, which is already in the cache
-    :method: name of the integrator to be used. See the :func:`scipy.integrate.solve_ivp` documentation.
+    :param method: name of the integrator to be used. See the :func:`scipy.integrate.solve_ivp` documentation.
     """
     try:
         func = differentials.get_solve_ivp(df_dtau_ptr)
         soln: spi._ivp.ivp.OdeResult = spi.solve_ivp(
-            func, t_span=(t[0], t[-1]), y0=y0, method=method, t_eval=t)
+            func, t_span=(t[0], t[-1]), y0=y0, method=method, t_eval=t, args=(data,))
         v = soln.y[0, :]
         w = soln.y[1, :]
         xi = soln.y[2, :]
@@ -314,12 +331,14 @@ def fluid_shell_alpha_plus(
     # Integrate forward and find shock.
     if not sol_type == boundary.SolutionType.DETON.value:
         # First go
-        v, w, xi, t = fluid_integrate_param(vfp_p, wp, v_wall, -const.T_END_DEFAULT, const.N_XI_DEFAULT, df_dtau_ptr)
+        v, w, xi, t = fluid_integrate_param(
+            v0=vfp_p, w0=wp, xi0=v_wall, t_end=-const.T_END_DEFAULT, n_xi=const.N_XI_DEFAULT, df_dtau_ptr=df_dtau_ptr)
         v, w, xi, t = trim_fluid_wall_to_shock(v, w, xi, t, sol_type)
         # Now refine so that there are ~N points between wall and shock.  A bit excessive for thin
         # shocks perhaps, but better safe than sorry. Then improve final point with shock_zoom...
         t_end_refine = t[-1]
-        v, w, xi, t = fluid_integrate_param(vfp_p, wp, v_wall, t_end_refine, n_xi, df_dtau_ptr)
+        v, w, xi, t = fluid_integrate_param(
+            v0=vfp_p, w0=wp, xi0=v_wall, t_end=t_end_refine, n_xi=n_xi, df_dtau_ptr=df_dtau_ptr)
         v, w, xi, t = trim_fluid_wall_to_shock(v, w, xi, t, sol_type)
         v, w, xi = props.shock_zoom_last_element(v, w, xi)
         # Now complete to xi = 1
@@ -336,7 +355,8 @@ def fluid_shell_alpha_plus(
     # Integrate backward to sound speed.
     if not sol_type == boundary.SolutionType.SUB_DEF.value:
         # First go
-        v, w, xi, t = fluid_integrate_param(vfm_p, wm, v_wall, -const.T_END_DEFAULT, const.N_XI_DEFAULT, df_dtau_ptr)
+        v, w, xi, t = fluid_integrate_param(
+            v0=vfm_p, w0=wm, xi0=v_wall, t_end=-const.T_END_DEFAULT, n_xi=const.N_XI_DEFAULT, df_dtau_ptr=df_dtau_ptr)
         v, w, xi, t = trim_fluid_wall_to_cs(v, w, xi, t, v_wall, sol_type)
         #    # Now refine so that there are ~N points between wall and point closest to cs
         #    # For walls just faster than sound, will give very (too?) fine a resolution.

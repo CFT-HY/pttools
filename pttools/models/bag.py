@@ -2,29 +2,68 @@
 
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase
+from .geff import StandardModel
 from .model import Model
 
+import numba
+import numpy as np
+from scipy import interpolate
 
-class BagModel(Model):
+
+class BagModel(StandardModel, Model):
     r"""Bag equation of state.
     Each integration corresponds to a line on the figure below (fig. 9 of :gw_pt_ssm:`\ `).
 
     .. plot:: fig/xi_v_plane.py
 
     """
-    def __init__(self, a_s, a_b, V_s):
+    def __init__(self):
         super().__init__()
-        self.a_s = a_s
-        self.a_b = a_b
-        self.V_s = V_s
+        w = self.w(self.GEFF_DATA_TEMP)
+        self.gs_w_spline = interpolate.splrep(w, self.GEFF_DATA_GS)
+        self.grho_w_spline = interpolate.splrep(w, self.GEFF_DATA_GRHO)
+        self.T_spline = interpolate.splrep(w, self.GEFF_DATA_TEMP)
 
-    def p(self, temp, phase):
-        """:notes: (eq. 7.33)"""
+    def a_b(self, w: th.FloatOrArr) -> th.FloatOrArr:
+        return 4*np.pi**2 / 90 * self.gs_w(w)
+
+    def a_s(self, w: th.FloatOrArr) -> th.FloatOrArr:
+        return self.a_b(w)
+
+    @staticmethod
+    @numba.njit
+    def cs2(w: th.FloatOrArr = None, phase: float = None):
+        return 1/3
+
+    def grho_w(self, w: th.FloatOrArr) -> th.FloatOrArr:
+        return interpolate.splev(w, self.grho_w_spline)
+
+    def gs_w(self, w: th.FloatOrArr) -> th.FloatOrArr:
+        return interpolate.splev(w, self.gs_w_spline)
+
+    def p(self, w: float, phase: float):
+        """:notes: eq. 7.1, 7.33
+        $$ p_s = a_s T^4 $$
+        $$ p_b = a_b T^4 $$
+        """
+        # TODO: could this be done with a single interpolation?
         if phase == Phase.SYMMETRIC:
-            return self.a_s * temp**4 - self.V_s
+            return self.a_s(w) * self.T(w)**4 - self.V_s
         elif phase == Phase.BROKEN:
-            return self.a_b * temp**4
+            return self.a_b(w) * self.T(w)**4
         raise ValueError(f"Unknown phase: {phase}")
 
-    def cs2(self, w: th.FloatOrArr = None, **kwargs):
-        return 1/3
+    def T(self, w: th.FloatOrArr, phase: th.FloatOrArr = None):
+        return interpolate.splev(w, self.T_spline)
+
+    def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr = None) -> th.FloatOrArr:
+        r"""Enthalpy density $w$
+
+        $$ w = e + p = Ts = T \frac{dp}{dT} = \frac{4\pi^2}{90} g_{eff} T^4 $$
+        For the steps please see :notes: page 23 and eq. 7.1.
+
+        :param temp: temperature $T$ (MeV)
+        :param phase: phase $\phi$ (not used)
+        :return: enthalpy density $w$
+        """
+        return (4*np.pi**2)/90 * self.g_s(temp) * temp**4

@@ -52,7 +52,9 @@ class DifferentialCache:
                 @numba.cfunc(lsoda_sig)
                 def differential_numbalsoda(t: float, u: np.ndarray, du: np.ndarray, p: np.ndarray):
                     differential_core(t, u, du, p)
-                    if p[-1]:
+                    # TODO: implement support for arbitrarily long p
+                    p_arr = numba.carray(p, (3,), numba.types.double)
+                    if p_arr[-1]:
                         for i in range(ndim):
                             du[i] *= -1.
             else:
