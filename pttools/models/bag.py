@@ -35,18 +35,38 @@ class BagModel(StandardModel, Model):
     def cs2(w: th.FloatOrArr = None, phase: float = None):
         return 1/3
 
+    def e(self, temp: th.FloatOrArr) -> th.FloatOrArr:
+        """:borsanyi_2016: eq. S12
+
+        :return: $e(T)$
+        """
+        return np.pi**2 / 30 * self.grho(temp) * temp**4
+
+    def e_w(self, w: th.FloatOrArr) -> th.FloatOrArr:
+        """
+        :return: $e(w)$
+        """
+        return np.pi**2 / 30 * self.grho_w(w) * self.T(w)**4
+
     def grho_w(self, w: th.FloatOrArr) -> th.FloatOrArr:
+        """
+        :return: $g_\rho(w)$
+        """
         return interpolate.splev(w, self.grho_w_spline)
 
     def gs_w(self, w: th.FloatOrArr) -> th.FloatOrArr:
+        """
+        :return: $g_s(w)$
+        """
         return interpolate.splev(w, self.gs_w_spline)
 
     def p(self, w: float, phase: float):
-        """:notes: eq. 7.1, 7.33
+        """:notes: eq. 5.14, 7.1, 7.33
         $$ p_s = a_s T^4 $$
         $$ p_b = a_b T^4 $$
         """
         # TODO: could this be done with a single interpolation?
+        # TODO: using a's with gs_w() is probably wrong.
         if phase == Phase.SYMMETRIC:
             return self.a_s(w) * self.T(w)**4 - self.V_s
         elif phase == Phase.BROKEN:
@@ -56,14 +76,20 @@ class BagModel(StandardModel, Model):
     def T(self, w: th.FloatOrArr, phase: th.FloatOrArr = None):
         return interpolate.splev(w, self.T_spline)
 
+    def theta(self, temp: th.FloatOrArr) -> th.FloatOrArr:
+        return self.e(temp) - 3/4 * self.w(temp)
+
+    def theta_w(self, w: th.FloatOrArr) -> th.FloatOrArr:
+        return self.e_w(w) - 3/4 * w
+
     def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr = None) -> th.FloatOrArr:
         r"""Enthalpy density $w$
 
         $$ w = e + p = Ts = T \frac{dp}{dT} = \frac{4\pi^2}{90} g_{eff} T^4 $$
-        For the steps please see :notes: page 23 and eq. 7.1.
+        For the steps please see :notes: page 23 and eq. 7.1. and :borsanyi_2016: eq. S12.
 
         :param temp: temperature $T$ (MeV)
         :param phase: phase $\phi$ (not used)
         :return: enthalpy density $w$
         """
-        return (4*np.pi**2)/90 * self.g_s(temp) * temp**4
+        return (4*np.pi**2)/90 * self.gs(temp) * temp**4
