@@ -1,6 +1,6 @@
 r"""
-Functions for $\alpha_n$ (strength parameter at nucleation temperature) and
-$\alpha_+$ (strength parameter just in front of the wall)
+Functions for computing $\alpha_n$, the strength parameter at nucleation temperature,
+and $\alpha_+$, the strength parameter just in front of the wall.
 """
 
 import numba
@@ -83,7 +83,7 @@ def alpha_n_max_deflagration(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAU
 def alpha_n_max_detonation(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Maximum allowed value of $\alpha_n$ for a detonation with wall speed $v_\text{wall}$.
-    Same as :func:`alpha_plus_max_detonation`, because $\alpha_n = \alpha_+$ for detonation.
+    Same as :func:`alpha_plus_max_detonation`, since for a detonation $\alpha_n = \alpha_+$.
 
     :param v_wall: $v_\text{wall}$
     :return: $\alpha_{n,\max,\text{detonation}}$
@@ -209,9 +209,10 @@ def find_alpha_n(
         sol_type: boundary.SolutionType = boundary.SolutionType.UNKNOWN,
         n_xi: int = const.N_XI_DEFAULT) -> float:
     r"""
-    Calculates $\alpha_n$ from $\alpha_+$, for given $v_\text{wall}$.
+    Calculates the transition strength parameter at the nucleation temperature,
+    $\alpha_n$, from $\alpha_+$, for given $v_\text{wall}$.
 
-    $\alpha = \frac{ \frac{3}{4} \text{difference in trace anomaly} }{\text{enthalpy}}$
+    $$ \alpha_n = \frac{4 \Delta \theta (T_n)}{3 w(T_n)} \frac{4}{3} \frac{ \theta_s(T_n) - \theta_b(T_n) }{w(T_n)} $$
 
     :param v_wall: $v_\text{wall}$, wall speed
     :param alpha_p: $\alpha_+$, the at-wall strength parameter.
@@ -287,7 +288,7 @@ def find_alpha_plus(
     r"""
     Calculate the at-wall strength parameter $\alpha_+$ from given $\alpha_n$ and $v_\text{wall}$.
 
-    $\alpha = \frac{4}{3} \frac{ \theta_s(T_n) - \theta_b(T_n) }{w(T_n)}$
+    $$ \alpha_+ = \frac{4 \Delta \theta (T_+)}{3 w_+} \frac{4}{3} \frac{ \theta_s(T_+) - \theta_b(T_+) }{w(T_+)} $$
     (:gw_pt_ssm:`GW PT SSM<>`, eq. 2.11)
 
     Uses :func:`scipy.optimize.fsolve` and therefore spends time in the Python interpreter even when jitted.
