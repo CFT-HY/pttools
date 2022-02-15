@@ -1,7 +1,7 @@
 """
 Effective degrees of freedom for the Standard Model as a function of temperature.
 Cubic spline interpolation for the range $0 - 10^{5.45}$ MeV from the table S2 of
-`Borsanyi et al., 2016 <https://arxiv.org/abs/1606.07494>`_
+:borsanyi_2016:.
 
 .. plot:: fig/geff.py
 
