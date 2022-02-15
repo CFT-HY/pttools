@@ -1,7 +1,7 @@
 name: Docs
 on: push
 env:
-  PRIMARY_PYTHON_VERSION: '3.9'
+  PRIMARY_PYTHON_VERSION: '3.10'
 jobs:
   docs:
     runs-on: ubuntu-latest

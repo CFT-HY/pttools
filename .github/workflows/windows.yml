@@ -1,7 +1,7 @@
 name: Test on Windows
 on: [push, workflow_dispatch]
 env:
-  PRIMARY_PYTHON_VERSION: '3.9'
+  PRIMARY_PYTHON_VERSION: '3.10'
 jobs:
   test:
     runs-on: windows-latest
