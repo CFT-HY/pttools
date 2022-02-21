@@ -11,5 +11,9 @@ Bag
 .. automodule:: pttools.models.bag
 
 Constant sound speed
-------
+--------------------
 .. automodule:: pttools.models.const_cs
+
+Thermo
+------
+.. automodule:: pttools.models.thermo

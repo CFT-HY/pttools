@@ -3,7 +3,7 @@ Effective degrees of freedom for the Standard Model as a function of temperature
 Cubic spline interpolation for the range $0 - 10^{5.45}$ MeV from the table S2 of
 :borsanyi_2016:.
 
-.. plot:: fig/geff.py
+.. plot:: fig/thermo.py
 
 """
 
@@ -15,7 +15,7 @@ from scipy import interpolate
 import pttools.type_hints as th
 
 
-class GeffModel(abc.ABC):
+class ThermoModel(abc.ABC):
     @abc.abstractmethod
     def grho(self, temp: th.FloatOrArr) -> th.FloatOrArr:
         pass
@@ -25,7 +25,7 @@ class GeffModel(abc.ABC):
         pass
 
 
-class StandardModel(GeffModel):
+class StandardModel(ThermoModel):
     # Copied from the ArXiv file som_eos.tex
     GEFF_DATA = np.array([[
         [0.00, 10.71, 1.00228],

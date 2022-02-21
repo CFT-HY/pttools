@@ -2,7 +2,7 @@
 
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase
-from .geff import StandardModel
+from .thermo import StandardModel
 from .model import Model
 
 import numba

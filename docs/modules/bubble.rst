@@ -30,10 +30,6 @@ Fluid
 -----
 .. automodule:: pttools.bubble.fluid
 
-Geff
-----
-.. automodule:: pttools.bubble.geff
-
 Physical parameters
 -------------------
 .. automodule:: pttools.bubble.physical_params
