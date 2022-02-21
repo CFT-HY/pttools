@@ -17,7 +17,7 @@ import pttools.type_hints as th
 
 class ThermoModel(abc.ABC):
     @abc.abstractmethod
-    def grho(self, temp: th.FloatOrArr) -> th.FloatOrArr:
+    def ge(self, temp: th.FloatOrArr) -> th.FloatOrArr:
         pass
 
     @abc.abstractmethod
@@ -46,23 +46,23 @@ class StandardModel(ThermoModel):
         [5.45, 104.98, 1.00023],
     ]]).T
     GEFF_DATA_TEMP = 10 ** GEFF_DATA[0, :]
-    GEFF_DATA_GRHO = GEFF_DATA[1, :]
-    GEFF_DATA_GRHO_GS_RATIO = GEFF_DATA[2, :]
-    GEFF_DATA_GS = GEFF_DATA_GRHO / GEFF_DATA_GRHO_GS_RATIO
+    GEFF_DATA_GE = GEFF_DATA[1, :]
+    GEFF_DATA_GE_GS_RATIO = GEFF_DATA[2, :]
+    GEFF_DATA_GS = GEFF_DATA_GE / GEFF_DATA_GE_GS_RATIO
     # s=smoothing.
     # It's not mentioned in the article, so it's disabled to ensure that the error limits of the article hold.
-    GRHO_SPLINE = interpolate.splrep(GEFF_DATA[0, :], GEFF_DATA_GRHO, s=0)
+    GE_SPLINE = interpolate.splrep(GEFF_DATA[0, :], GEFF_DATA_GE, s=0)
     GS_SPLINE = interpolate.splrep(GEFF_DATA[0, :], GEFF_DATA_GS, s=0)
-    GRHO_GS_RATIO_SPLINE = interpolate.splrep(GEFF_DATA[0, :], GEFF_DATA_GRHO_GS_RATIO, s=0)
+    GE_GS_RATIO_SPLINE = interpolate.splrep(GEFF_DATA[0, :], GEFF_DATA_GE_GS_RATIO, s=0)
 
-    def grho(self, temp: th.FloatOrArr) -> th.FloatOrArr:
+    def ge(self, temp: th.FloatOrArr) -> th.FloatOrArr:
         r"""
         Effective degrees of freedom for the energy density $g_{eff,\rho}(T)$
 
         :param temp: temperature $T$ (MeV)
         :return: $g_{eff,\rho}$
         """
-        return interpolate.splev(np.log10(temp), self.GRHO_SPLINE)
+        return interpolate.splev(np.log10(temp), self.GE_SPLINE)
 
     def gs(self, temp: th.FloatOrArr) -> th.FloatOrArr:
         r"""
@@ -73,5 +73,5 @@ class StandardModel(ThermoModel):
         """
         return interpolate.splev(np.log10(temp), self.GS_SPLINE)
 
-    def grho_gs_ratio(self, temp: th.FloatOrArr) -> th.FloatOrArr:
-        return interpolate.splev(np.log10(temp), self.GRHO_GS_RATIO_SPLINE)
+    def ge_gs_ratio(self, temp: th.FloatOrArr) -> th.FloatOrArr:
+        return interpolate.splev(np.log10(temp), self.GE_GS_RATIO_SPLINE)

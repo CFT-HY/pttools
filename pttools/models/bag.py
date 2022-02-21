@@ -21,7 +21,7 @@ class BagModel(StandardModel, Model):
         super().__init__()
         w = self.w(self.GEFF_DATA_TEMP)
         self.gs_w_spline = interpolate.splrep(w, self.GEFF_DATA_GS)
-        self.grho_w_spline = interpolate.splrep(w, self.GEFF_DATA_GRHO)
+        self.grho_w_spline = interpolate.splrep(w, self.GEFF_DATA_GE)
         self.T_spline = interpolate.splrep(w, self.GEFF_DATA_TEMP)
 
     def a_b(self, w: th.FloatOrArr) -> th.FloatOrArr:
@@ -40,7 +40,7 @@ class BagModel(StandardModel, Model):
 
         :return: $e(T)$
         """
-        return np.pi**2 / 30 * self.grho(temp) * temp**4
+        return np.pi ** 2 / 30 * self.ge(temp) * temp ** 4
 
     def e_w(self, w: th.FloatOrArr) -> th.FloatOrArr:
         """

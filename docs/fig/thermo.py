@@ -14,14 +14,14 @@ def main():
 
     sm = StandardModel()
     temp = np.logspace(sm.GEFF_DATA[0, 0], sm.GEFF_DATA[0, -1], 100)
-    axs[0].plot(temp, sm.grho_gs_ratio(temp), label=r"$g_\rho/g_s(T)$, spline")
-    axs[0].scatter(sm.GEFF_DATA_TEMP, sm.GEFF_DATA_GRHO_GS_RATIO, label=r"$g_\rho/g_s(T)$, data")
+    axs[0].plot(temp, sm.ge_gs_ratio(temp), label=r"$g_e/g_s(T)$, spline")
+    axs[0].scatter(sm.GEFF_DATA_TEMP, sm.GEFF_DATA_GE_GS_RATIO, label=r"$g_e/g_s(T)$, data")
     axs[0].grid(True)
     axs[0].legend()
 
-    axs[1].plot(temp, sm.grho(temp), label=r"$g_\rho(T)$, spline", color="blue")
+    axs[1].plot(temp, sm.ge(temp), label=r"$g_e(T)$, spline", color="blue")
     axs[1].plot(temp, sm.gs(temp), label=r"$g_s(T)$, spline", color="red")
-    axs[1].scatter(sm.GEFF_DATA_TEMP, sm.GEFF_DATA_GRHO, label=r"$g_\rho(T)$, data")
+    axs[1].scatter(sm.GEFF_DATA_TEMP, sm.GEFF_DATA_GE, label=r"$g_e(T)$, data")
     axs[1].set_xscale("log")
     axs[1].set_xlabel("T (MeV)")
     axs[1].grid(True)
