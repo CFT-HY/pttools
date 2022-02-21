@@ -3,7 +3,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.models.thermo import StandardModel
+from pttools.models.sm import StandardModel
 
 
 def main():
