@@ -43,10 +43,10 @@ def fpbspl(t: np.ndarray, n: int, k: int, x: float, l: int, h: np.ndarray):
             lj = li-j
             if t[li] == t[lj]:
                 h[i+1] = 0.
-                continue
-            f = hh[i] / (t[li] - t[lj])
-            h[i] = h[i] + f*(t[li] - x)
-            h[i+1] = f*(x-t[lj])
+            else:
+                f = hh[i] / (t[li] - t[lj])
+                h[i] = h[i] + f*(t[li] - x)
+                h[i+1] = f*(x-t[lj])
 
 
 # @numba.njit
