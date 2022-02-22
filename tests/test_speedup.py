@@ -1,8 +1,10 @@
 import unittest
 
 import numpy as np
+import scipy.interpolate
 
 from pttools import speedup
+from pttools.speedup import spline
 from . import utils
 
 
