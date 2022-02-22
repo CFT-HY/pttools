@@ -342,10 +342,10 @@ def splev(t: np.ndarray, n: int, c: np.ndarray, k: int, x: np.ndarray, y: np.nda
                 else:
                     arg = te
 
-        # c  search for knot interval t(l) <= arg < t(l+1)
+        # search for knot interval t(l) <= arg < t(l+1)
         while not (arg >= t[l] or l1 == k2):
-            l = l1
-            l1 = l-1
+            l1 = l
+            l = l-1
 
         while not (arg < t[l1] or l == nk1):
             l = l1
