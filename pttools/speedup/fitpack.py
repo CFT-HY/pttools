@@ -306,7 +306,7 @@ def splev(t: np.ndarray, n: int, c: np.ndarray, k: int, x: np.ndarray, y: np.nda
     tb: float
     te: float
 
-    h: np.ndarray = np.empty((6,))
+    h: np.ndarray = np.empty((20,))
 
     ier = 10
     if m < 1:
