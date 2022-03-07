@@ -122,8 +122,8 @@ def fitpack_spl_(x: np.ndarray, nu: int, t: np.ndarray, c: np.ndarray, k: int, e
     return y, ier
 
 
-def test_spline():
-    from tests import utils
+def spline():
+    # from tests import utils
 
     x = np.linspace(0, 2*np.pi, 20)
     x2 = np.linspace(0, 2*np.pi, 40)
@@ -141,7 +141,8 @@ def test_spline():
     # utils.assert_allclose(data, ref)
 
 
-test_spline()
+if __name__ == "__main__":
+    spline()
 
 # TODO
 # - redo splev()
