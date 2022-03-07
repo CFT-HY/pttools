@@ -6,6 +6,10 @@ Differential
 ------------
 .. automodule:: pttools.speedup.differential
 
+Fitpack
+-------
+.. automodule:: pttools.speedup.fitpack
+
 Functions
 ---------
 .. automodule:: pttools.speedup.functions
@@ -25,6 +29,10 @@ Options
 Overload
 --------
 .. automodule:: pttools.speedup.overload
+
+Spline
+------
+.. automodule:: pttools.speedup.spline
 
 Utilities
 ---------
