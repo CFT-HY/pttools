@@ -3,12 +3,13 @@
 # import os
 import typing as tp
 
-import numba
-from numba.extending import overload
+# import numba
+# from numba.extending import overload
 import numpy as np
-import scipy.interpolate
+# import scipy.interpolate
 
-import fitpack
+from pttools.speedup import fitpack
+
 
 # interpolate_dir = os.path.dirname(os.path.abspath(scipy.interpolate.fitpack.__file__))
 # fitpack_files = glob.glob(os.path.join(interpolate_dir, "_fitpack.*.so"))

@@ -2,8 +2,8 @@
 
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase
-from .thermo import StandardModel
-from .model import Model
+from pttools.models.sm import StandardModel
+from pttools.models.model import Model
 
 import numba
 import numpy as np
