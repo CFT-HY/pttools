@@ -121,29 +121,3 @@ def fitpack_spl_(x: np.ndarray, nu: int, t: np.ndarray, c: np.ndarray, k: int, e
         ier = fitpack.splev(t, n, c, k, x, y, m, e)
 
     return y, ier
-
-
-def spline():
-    # from tests import utils
-
-    x = np.linspace(0, 2*np.pi, 20)
-    x2 = np.linspace(0, 2*np.pi, 40)
-    y = np.sin(x)
-    spl = scipy.interpolate.splrep(x, y, s=0)
-    ref = scipy.interpolate.splev(x2, spl)
-    data = splev(x2, spl)
-
-    import matplotlib.pyplot as plt
-    plt.plot(x2, data, label="data")
-    plt.plot(x2, ref, label="ref", ls=":")
-    plt.legend()
-    plt.show()
-
-    # utils.assert_allclose(data, ref)
-
-
-if __name__ == "__main__":
-    spline()
-
-# TODO
-# - redo splev()
