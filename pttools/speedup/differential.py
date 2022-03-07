@@ -3,15 +3,19 @@ import typing as tp
 
 import numba
 try:
-    import NumbaLSODA
-    lsoda_sig = NumbaLSODA.lsoda_sig
+    import numbalsoda
+    lsoda_sig = numbalsoda.lsoda_sig
 except ImportError:
-    NumbaLSODA = None
-    lsoda_sig = numba.types.void(
-        numba.types.double,
-        numba.types.CPointer(numba.types.double),
-        numba.types.CPointer(numba.types.double),
-        numba.types.CPointer(numba.types.double))
+    try:
+        import NumbaLSODA as numbalsoda
+        lsoda_sig = numbalsoda.lsoda_sig
+    except ImportError:
+        numbalsoda = None
+        lsoda_sig = numba.types.void(
+            numba.types.double,
+            numba.types.CPointer(numba.types.double),
+            numba.types.CPointer(numba.types.double),
+            numba.types.CPointer(numba.types.double))
 import numpy as np
 
 from pttools.speedup.numba_wrapper import CFunc, CPUDispatcher

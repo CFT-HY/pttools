@@ -10,9 +10,12 @@ import typing as tp
 
 import numba
 try:
-    import NumbaLSODA
+    import numbalsoda
 except ImportError:
-    NumbaLSODA = None
+    try:
+        import NumbaLSODA as numbalsoda
+    except ImportError:
+        NumbaLSODA = None
 import numpy as np
 import scipy.integrate as spi
 
@@ -151,7 +154,7 @@ def fluid_integrate_param(
     # The second value ensures that the Numba typing is correct.
     data = np.array([phase, 0.])
     if method == "numba_lsoda" or speedup.NUMBA_INTEGRATE:
-        if NumbaLSODA is None:
+        if numbalsoda is None:
             raise ImportError("NumbaLSODA is not loaded")
         v, w, xi, success = fluid_integrate_param_numba(t=t, y0=y0, data=data, df_dtau_ptr=df_dtau_ptr)
 
@@ -190,7 +193,7 @@ def fluid_integrate_param_numba(t: np.ndarray, y0: np.ndarray, data: np.ndarray,
     data_numba[:-1] = data
     # Numba does not support float(bool)
     data_numba[-1] = int(backwards)
-    usol, success = NumbaLSODA.lsoda(df_dtau_ptr, u0=y0, t_eval=t_numba, data=data_numba)
+    usol, success = numbalsoda.lsoda(df_dtau_ptr, u0=y0, t_eval=t_numba, data=data_numba)
     if not success:
         with numba.objmode:
             logger.error(f"NumbaLSODA failed for %s integration", "backwards" if backwards else "forwards")
