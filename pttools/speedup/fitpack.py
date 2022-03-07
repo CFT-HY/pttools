@@ -22,6 +22,13 @@ def fpbspl(t: np.ndarray, n: int, k: int, x: float, l: int, h: np.ndarray):
     c      is not checked.
 
     https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/fpbspl.f#L19
+
+    :param t: position of the knots (length n)
+    :param n: total number of knots
+    :param k: degree of the spline
+    :param x: ?
+    :param l: ?
+    :param h: ?
     """
     f: np.ndarray
     one: float

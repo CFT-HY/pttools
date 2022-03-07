@@ -9,8 +9,15 @@ class ThermoModel(abc.ABC):
     """
     The thermodynamic model characterizes the particle physics of interest.
     """
+    def __init__(self):
+        self.cs2 = self._gen_cs2()
+
+    def _gen_cs2(self) -> callable:
+        # TODO: Precompute cs2 here
+        return
 
     def cs2(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        # TODO: precompute this in Python so that one interpolation is enough when it's called
         pass
 
     @abc.abstractmethod
