@@ -41,7 +41,7 @@ These modifications were Mika's summer project in 2021.
       and with multiple versions of Numba and other libraries.
     - Set up automatic testing with all major operating systems (GNU/Linux, Windows, macOS).
     - Set up automatic performance testing using `timeit <https://docs.python.org/3/library/timeit.html>`_.
-    - Set up automatic profiling (:module:`tests.profiling`) of the performance-critical parts of the code such as
+    - Set up automatic profiling (:mod:`tests.profiling`) of the performance-critical parts of the code such as
       :meth:`pttools.ssmtools.spectrum.power_gw_scaled` and
       :meth:`tests.paper.ssm_paper_utils.do_all_plot_ps_compare_nuc` using
       `cProfile <https://docs.python.org/3/library/profile.html>`_,
