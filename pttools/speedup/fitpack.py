@@ -332,7 +332,7 @@ def splev(t: np.ndarray, n: int, c: np.ndarray, k: int, x: np.ndarray, y: np.nda
             #     pass
             if e == 1:
                 y[i] = 0
-                break
+                continue
             elif e == 2:
                 ier = 1
                 return ier
