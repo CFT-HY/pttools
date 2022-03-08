@@ -1,7 +1,9 @@
 import os.path
+import typing as tp
 import unittest
 
 import matplotlib.pyplot as plt
+import numba
 import numpy as np
 import scipy.interpolate
 
@@ -10,6 +12,11 @@ from pttools.speedup import spline
 from . import utils
 
 os.makedirs(utils.TEST_FIGURE_PATH, exist_ok=True)
+
+
+@numba.njit
+def jitted_spline(x: np.ndarray, tck: tp.Tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
+    return scipy.interpolate.splev(x, tck, der, ext)
 
 
 class TestSpeedup(unittest.TestCase):
@@ -49,7 +56,7 @@ class TestSpeedup(unittest.TestCase):
         y = np.sin(x)
         spl = scipy.interpolate.splrep(x, y, k=1, s=0)
         ref = scipy.interpolate.splev(x2, spl)
-        data = spline.splev_linear(x2, spl)
+        data = jitted_spline(x2, spl)
 
         fig: plt.Figure = plt.Figure()
         ax: plt.Axes = fig.add_subplot()

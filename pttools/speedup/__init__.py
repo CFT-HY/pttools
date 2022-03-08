@@ -8,3 +8,4 @@ from .jit import *
 from .numba_wrapper import *
 from .utils import *
 from .options import *
+from .spline import *

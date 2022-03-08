@@ -108,46 +108,49 @@ def splev_linear(x: np.ndarray, tck: tp.Tuple[np.ndarray, np.ndarray, int], der:
     :param der: order of derivative to be computed
     :param ext: Extrapolation: 0 = extrapolate, 1 = return 0, 2 = raise ValueError, 3 = return the boundary value
     """
-    t, c, k = tck
-    if k != 1:
-        raise NotImplementedError("Only linear interpolation is implemented at the moment")
-    if der != 0:
-        raise NotImplementedError("Derivatives are not yet implemented")
+    def func(x: np.ndarray, tck: tp.Tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
+        t, c, k = tck
+        if k != 1:
+            print("Got k = ", k)
+            raise NotImplementedError("Only linear interpolation is implemented at the moment")
+        if der != 0:
+            raise NotImplementedError("Derivatives are not yet implemented")
 
-    y = np.empty_like(x)
-    for i, xp in enumerate(x):
-        if xp < t[0]:
-            if ext == 0:
-                a = (c[1] - c[0]) / (t[2] - t[1])
-                y[i] = c[0] + a*(xp - t[0])
-            elif ext == 1:
-                y[i] = 0
-            elif ext == 2:
-                raise ValueError("Extrapolating is disabled")
-            elif ext == 3:
-                y[i] = c[0]
-            else:
-                raise ValueError("Invalid ext")
-            break
-        for j in range(t.size-2):
-            if xp < t[j+2]:
-                a = (c[j+1] - c[j]) / (t[j+2] - t[j+1])
-                y[i] = c[j] + a*(xp - t[j+1])
+        y = np.empty_like(x)
+        for i, xp in enumerate(x):
+            if xp < t[0]:
+                if ext == 0:
+                    a = (c[1] - c[0]) / (t[2] - t[1])
+                    y[i] = c[0] + a*(xp - t[0])
+                elif ext == 1:
+                    y[i] = 0
+                elif ext == 2:
+                    raise ValueError("Extrapolating is disabled")
+                elif ext == 3:
+                    y[i] = c[0]
+                else:
+                    raise ValueError("Invalid ext")
                 break
-        # If the upper boundary is exceeded
-        else:
-            if ext == 0:
-                a = (c[-3] - c[-4]) / (t[-2] - t[-3])
-                y[i] = c[-1] + a*(xp - t[-1])
-            elif ext == 1:
-                y[i] = 0
-            elif ext == 2:
-                raise ValueError("Extrapolating is disabled")
-            elif ext == 3:
-                y[i] = c[-3]
+            for j in range(t.size-2):
+                if xp < t[j+2]:
+                    a = (c[j+1] - c[j]) / (t[j+2] - t[j+1])
+                    y[i] = c[j] + a*(xp - t[j+1])
+                    break
+            # If the upper boundary is exceeded
             else:
-                raise ValueError("Invalid ext")
-    return y
+                if ext == 0:
+                    a = (c[-3] - c[-4]) / (t[-2] - t[-3])
+                    y[i] = c[-3] + a*(xp - t[-2])
+                elif ext == 1:
+                    y[i] = 0
+                elif ext == 2:
+                    raise ValueError("Extrapolating is disabled")
+                elif ext == 3:
+                    y[i] = c[-3]
+                else:
+                    raise ValueError("Invalid ext")
+        return y
+    return func
 
 
 # @numba.njit
