@@ -1,15 +1,22 @@
 """
-Functions from FITPACK
-https://www.netlib.org/dierckx/
+Functions from the
+`SciPy version <https://github.com/scipy/scipy/tree/v1.8.0/scipy/interpolate/fitpack>`_
+of
+`FITPACK <https://www.netlib.org/dierckx/>`_.
+
+These don't work yet and are therefore not used.
 """
 
-import numba
+# import numba
 import numpy as np
 
 
 # @numba.njit
 def fpbspl(t: np.ndarray, n: int, k: int, x: float, l: int, h: np.ndarray):
     """
+    Modified from the
+    `SciPy version <https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/fpbspl.f#L19>`_.
+
     c  subroutine fpbspl evaluates the (k+1) non-zero b-splines of
     c  degree k at t(l) <= x < t(l+1) using the stable recurrence
     c  relation of de boor and cox.
@@ -20,8 +27,6 @@ def fpbspl(t: np.ndarray, n: int, k: int, x: float, l: int, h: np.ndarray):
     c      or else the routine will be accessing memory outside t
     c      Thus it is imperative that that k <= l <= n-k but this
     c      is not checked.
-
-    https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/fpbspl.f#L19
 
     :param t: position of the knots (length n)
     :param n: total number of knots
@@ -57,68 +62,69 @@ def fpbspl(t: np.ndarray, n: int, k: int, x: float, l: int, h: np.ndarray):
 
 
 # @numba.njit
-def splder(t: np.ndarray, n: int, c: np.ndarray, k: int, nu: int, x: np.ndarray, y: np.ndarray, m: int, e: int, wrk: np.ndarray) -> int:
+def splder(
+    t: np.ndarray,
+    n: int,
+    c: np.ndarray,
+    k: int,
+    nu: int,
+    x: np.ndarray,
+    y: np.ndarray,
+    m: int,
+    e: int,
+    wrk: np.ndarray) -> int:
     """
-    c  subroutine splder evaluates in a number of points x(i),i=1,2,...,m
-    c  the derivative of order nu of a spline s(x) of degree k,given in
-    c  its b-spline representation.
-    c
-    c  calling sequence:
-    c     call splder(t,n,c,k,nu,x,y,m,e,wrk,ier)
-    c
-    c  input parameters:
-    c    t    : array,length n, which contains the position of the knots.
-    c    n    : integer, giving the total number of knots of s(x).
-    c    c    : array,length n, which contains the b-spline coefficients.
-    c    k    : integer, giving the degree of s(x).
-    c    nu   : integer, specifying the order of the derivative. 0<=nu<=k
-    c    x    : array,length m, which contains the points where the deriv-
-    c           ative of s(x) must be evaluated.
-    c    m    : integer, giving the number of points where the derivative
-    c           of s(x) must be evaluated
-    c    e    : integer, if 0 the spline is extrapolated from the end
-    c           spans for points not in the support, if 1 the spline
-    c           evaluates to zero for those points, and if 2 ier is set to
-    c           1 and the subroutine returns.
-    c    wrk  : real array of dimension n. used as working space.
-    c
-    c  output parameters:
-    c    y    : array,length m, giving the value of the derivative of s(x)
-    c           at the different points.
-    c    ier  : error flag
-    c      ier = 0 : normal return
-    c      ier = 1 : argument out of bounds and e == 2
-    c      ier =10 : invalid input data (see restrictions)
-    c
-    c  restrictions:
-    c    0 <= nu <= k
-    c    m >= 1
-    c    t(k+1) <= x(i) <= x(i+1) <= t(n-k) , i=1,2,...,m-1.
-    c
-    c  other subroutines required: fpbspl
-    c
-    c  references :
-    c    de boor c : on calculating with b-splines, j. approximation theory
-    c                6 (1972) 50-62.
-    c    cox m.g.  : the numerical evaluation of b-splines, j. inst. maths
-    c                applics 10 (1972) 134-149.
-    c   dierckx p. : curve and surface fitting with splines, monographs on
-    c                numerical analysis, oxford university press, 1993.
-    c
-    c  author :
-    c    p.dierckx
-    c    dept. computer science, k.u.leuven
-    c    celestijnenlaan 200a, b-3001 heverlee, belgium.
-    c    e-mail : Paul.Dierckx@cs.kuleuven.ac.be
-    c
-    c  latest update : march 1987
-    c
-    c++ pearu: 13 aug 20003
-    c++   - disabled cliping x values to interval [min(t),max(t)]
-    c++   - removed the restriction of the orderness of x values
-    c++   - fixed initialization of sp to double precision value
+    Modified from the
+    `SciPy version <https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/splder.f#L67>`_.
 
-    https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/splder.f#L67
+    subroutine splder evaluates in a number of points x(i),i=1,2,...,m
+    the derivative of order nu of a spline s(x) of degree k,given in
+    its b-spline representation.
+
+    input parameters:
+    :param t: array,length n, which contains the position of the knots.
+    :param n: integer, giving the total number of knots of s(x).
+    :param c: array,length n, which contains the b-spline coefficients.
+    :param k: integer, giving the degree of s(x).
+    :param nu: integer, specifying the order of the derivative. 0<=nu<=k
+    :param x: array,length m, which contains the points where the derivative of s(x) must be evaluated.
+    :param m: integer, giving the number of points where the derivative of s(x) must be evaluated
+    :param e: integer, if 0 the spline is extrapolated from the end spans for points not in the support,
+        if 1 the spline evaluates to zero for those points, and if 2 ier is set to 1 and the subroutine returns.
+    :param wrk: real array of dimension n. used as working space.
+    :param y: array,length m, giving the value of the derivative of s(x) at the different points.
+    :return: ier, error flag
+        ier = 0 : normal return
+        ier = 1 : argument out of bounds and e == 2
+        ier =10 : invalid input data (see restrictions)
+
+    restrictions:
+      0 <= nu <= k
+      m >= 1
+      t(k+1) <= x(i) <= x(i+1) <= t(n-k) , i=1,2,...,m-1.
+
+    other subroutines required: fpbspl
+
+    references :
+      de boor c : on calculating with b-splines, j. approximation theory
+                  6 (1972) 50-62.
+      cox m.g.  : the numerical evaluation of b-splines, j. inst. maths
+                  applics 10 (1972) 134-149.
+     dierckx p. : curve and surface fitting with splines, monographs on
+                  numerical analysis, oxford university press, 1993.
+
+    author :
+      p.dierckx
+      dept. computer science, k.u.leuven
+      celestijnenlaan 200a, b-3001 heverlee, belgium.
+      e-mail : Paul.Dierckx@cs.kuleuven.ac.be
+
+    latest update : march 1987
+
+    ++ pearu: 13 aug 20003
+    ++   - disabled cliping x values to interval [min(t),max(t)]
+    ++   - removed the restriction of the orderness of x values
+    ++   - fixed initialization of sp to double precision value
     """
     i: int
     j: int
@@ -242,63 +248,55 @@ def splder(t: np.ndarray, n: int, c: np.ndarray, k: int, nu: int, x: np.ndarray,
 # @numba.njit
 def splev(t: np.ndarray, n: int, c: np.ndarray, k: int, x: np.ndarray, y: np.ndarray, m: int, e: int) -> int:
     """
-    c  subroutine splev evaluates in a number of points x(i),i=1,2,...,m
-    c  a spline s(x) of degree k, given in its b-spline representation.
-    c
-    c  calling sequence:
-    c     call splev(t,n,c,k,x,y,m,e,ier)
-    c
-    c  input parameters:
-    c    t    : array,length n, which contains the position of the knots.
-    c    n    : integer, giving the total number of knots of s(x).
-    c    c    : array,length n, which contains the b-spline coefficients.
-    c    k    : integer, giving the degree of s(x).
-    c    x    : array,length m, which contains the points where s(x) must
-    c           be evaluated.
-    c    m    : integer, giving the number of points where s(x) must be
-    c           evaluated.
-    c    e    : integer, if 0 the spline is extrapolated from the end
-    c           spans for points not in the support, if 1 the spline
-    c           evaluates to zero for those points, if 2 ier is set to
-    c           1 and the subroutine returns, and if 3 the spline evaluates
-    c           to the value of the nearest boundary point.
-    c
-    c  output parameter:
-    c    y    : array,length m, giving the value of s(x) at the different
-    c           points.
-    c    ier  : error flag
-    c      ier = 0 : normal return
-    c      ier = 1 : argument out of bounds and e == 2
-    c      ier =10 : invalid input data (see restrictions)
-    c
-    c  restrictions:
-    c    m >= 1
-    c--    t(k+1) <= x(i) <= x(i+1) <= t(n-k) , i=1,2,...,m-1.
-    c
-    c  other subroutines required: fpbspl.
-    c
-    c  references :
-    c    de boor c  : on calculating with b-splines, j. approximation theory
-    c                 6 (1972) 50-62.
-    c    cox m.g.   : the numerical evaluation of b-splines, j. inst. maths
-    c                 applics 10 (1972) 134-149.
-    c    dierckx p. : curve and surface fitting with splines, monographs on
-    c                 numerical analysis, oxford university press, 1993.
-    c
-    c  author :
-    c    p.dierckx
-    c    dept. computer science, k.u.leuven
-    c    celestijnenlaan 200a, b-3001 heverlee, belgium.
-    c    e-mail : Paul.Dierckx@cs.kuleuven.ac.be
-    c
-    c  latest update : march 1987
-    c
-    c++ pearu: 11 aug 2003
-    c++   - disabled cliping x values to interval [min(t),max(t)]
-    c++   - removed the restriction of the orderness of x values
-    c++   - fixed initialization of sp to double precision value
+    Modified from the
+    `SciPy version <https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/splev.f>`_.
 
-    https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/splev.f
+    subroutine splev evaluates in a number of points x(i),i=1,2,...,m
+    a spline s(x) of degree k, given in its b-spline representation.
+
+    :param t: array,length n, which contains the position of the knots.
+    :param n: integer, giving the total number of knots of s(x).
+    :param c: array,length n, which contains the b-spline coefficients.
+    :param k: integer, giving the degree of s(x).
+    :param x: array,length m, which contains the points where s(x) must be evaluated.
+    :param m: integer, giving the number of points where s(x) must be evaluated.
+    :param e: integer, if 0 the spline is extrapolated from the end
+        spans for points not in the support, if 1 the spline
+        evaluates to zero for those points, if 2 ier is set to
+        1 and the subroutine returns, and if 3 the spline evaluates
+        to the value of the nearest boundary point.
+    :param y: array,length m, giving the value of s(x) at the different points.
+    :return: ier, error flag
+        ier = 0 : normal return
+        ier = 1 : argument out of bounds and e == 2
+        ier =10 : invalid input data (see restrictions)
+
+    restrictions:
+      m >= 1
+    --    t(k+1) <= x(i) <= x(i+1) <= t(n-k) , i=1,2,...,m-1.
+
+    other subroutines required: fpbspl.
+
+    references :
+      de boor c  : on calculating with b-splines, j. approximation theory
+                   6 (1972) 50-62.
+      cox m.g.   : the numerical evaluation of b-splines, j. inst. maths
+                   applics 10 (1972) 134-149.
+      dierckx p. : curve and surface fitting with splines, monographs on
+                   numerical analysis, oxford university press, 1993.
+
+    author :
+      p.dierckx
+      dept. computer science, k.u.leuven
+      celestijnenlaan 200a, b-3001 heverlee, belgium.
+      e-mail : Paul.Dierckx@cs.kuleuven.ac.be
+
+    latest update : march 1987
+
+    ++ pearu: 11 aug 2003
+    ++   - disabled cliping x values to interval [min(t),max(t)]
+    ++   - removed the restriction of the orderness of x values
+    ++   - fixed initialization of sp to double precision value
     """
     i: int
     j: int

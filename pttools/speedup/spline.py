@@ -1,3 +1,11 @@
+"""
+Spline interpolation utilities
+
+These are implemented manually, as SciPy libraries don't expose the interfaces of the Fortran functions.
+Only their wrappers written in C are exposed, but those expect Python objects and therefore aren't callable
+from Numba without the use of object mode.
+"""
+
 # import ctypes as ct
 # import glob
 # import os
@@ -9,7 +17,6 @@ import numpy as np
 # import scipy.interpolate
 
 from pttools.speedup import fitpack
-
 
 # interpolate_dir = os.path.dirname(os.path.abspath(scipy.interpolate.fitpack.__file__))
 # fitpack_files = glob.glob(os.path.join(interpolate_dir, "_fitpack.*.so"))
@@ -51,9 +58,13 @@ from pttools.speedup import fitpack
 # @overload(scipy.interpolate.splev)
 def splev(x: np.ndarray, tck: tp.Tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
     """
-    Modified from scipy.interpolate.splev
+    Modified from :external:py:function:`scipy.interpolate.splev`.
+    See the SciPy documentation for details.
 
     :param x: 1D array
+    :param tck: Tuple of spline parameters as given by scipy.interpolate.splrep()
+    :param der: order of derivative to be computed
+    :param ext: Extrapolation: 0 = extrapolate, 1 = return 0, 2 = raise ValueError, 3 = return the boundary value
     """
     t, c, k = tck
 
@@ -92,7 +103,8 @@ def splev(x: np.ndarray, tck: tp.Tuple[np.ndarray, np.ndarray, int], der: int = 
 # @numba.njit
 def fitpack_spl_(x: np.ndarray, nu: int, t: np.ndarray, c: np.ndarray, k: int, e: int):
     """
-    https://github.com/scipy/scipy/blob/main/scipy/interpolate/src/_fitpackmodule.c
+    Numba implementation of the
+    `SciPy C wrapper for spline interpolation <https://github.com/scipy/scipy/blob/main/scipy/interpolate/src/_fitpackmodule.c>`_.
     """
     # ier = ct.c_int()
     #
