@@ -35,6 +35,8 @@ class StandardModel(ThermoModel):
         [5.45, 104.98, 1.00023],
     ]]).T
     GEFF_DATA_TEMP = 10 ** GEFF_DATA[0, :]
+    # MIN_TEMP = GEFF_DATA_TEMP[0]
+    # MAX_TEMP = GEFF_DATA_TEMP[-1]
     GEFF_DATA_GE = GEFF_DATA[1, :]
     GEFF_DATA_GE_GS_RATIO = GEFF_DATA[2, :]
     GEFF_DATA_GS = GEFF_DATA_GE / GEFF_DATA_GE_GS_RATIO
