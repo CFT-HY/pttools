@@ -53,7 +53,7 @@ class TestSpeedup(unittest.TestCase):
     def test_spline_linear():
         x = np.linspace(0, 2*np.pi, 10)
         x2 = np.linspace(0, 2*np.pi, 20)
-        y = np.sin(x)
+        y = np.cos(x)
         spl = scipy.interpolate.splrep(x, y, k=1, s=0)
         ref = scipy.interpolate.splev(x2, spl)
         data = jitted_spline(x2, spl)
@@ -67,7 +67,7 @@ class TestSpeedup(unittest.TestCase):
         plt.close(fig)
 
         try:
-            utils.assert_allclose(data, ref, atol=1e-15)
+            utils.assert_allclose(data, ref)
         except AssertionError as e:
             t, c, k = spl
             with np.printoptions(
