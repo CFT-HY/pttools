@@ -45,11 +45,10 @@ class StandardModel(ThermoModel):
     GE_GS_RATIO_SPLINE = interpolate.splrep(GEFF_DATA[0, :], GEFF_DATA_GE_GS_RATIO, s=0)
 
     def dge_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        # TODO: this doesn't seem to be right. There probably should be a minus in the exponent.
-        return np.log(10) * 10**temp * interpolate.splev(np.log10(temp), self.GE_SPLINE, der=1)
+        return 1/(np.log(10)*temp) * interpolate.splev(np.log10(temp), self.GE_SPLINE, der=1)
 
     def dgs_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        return np.log(10) * 10**temp * interpolate.splev(np.log10(temp), self.GS_SPLINE, der=1)
+        return 1/(np.log(10)*temp) * interpolate.splev(np.log10(temp), self.GS_SPLINE, der=1)
 
     def ge(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         return interpolate.splev(np.log10(temp), self.GE_SPLINE)
