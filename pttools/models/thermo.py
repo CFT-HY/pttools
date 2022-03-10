@@ -33,9 +33,8 @@ class ThermoModel(abc.ABC):
                 return scipy.interpolate.splev(np.log10(temp), cs2_spl_s)
             elif phase == Phase.BROKEN.value:
                 return scipy.interpolate.splev(np.log10(temp), cs2_spl_b)
-            else:
-                return scipy.interpolate.splev(np.log10(temp), cs2_spl_b) * phase \
-                       + scipy.interpolate.splev(np.log10(temp), cs2_spl_s) * (1 - phase)
+            return scipy.interpolate.splev(np.log10(temp), cs2_spl_b) * phase \
+                + scipy.interpolate.splev(np.log10(temp), cs2_spl_s) * (1 - phase)
         return cs2
 
     def cs2(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -46,7 +45,7 @@ class ThermoModel(abc.ABC):
         :param phase: phase $phi$
         :return: $c_s^2$
         """
-        raise RuntimeError("The cs2 function has not yet been loaded")
+        raise RuntimeError("The cs2(T, phase) function has not yet been loaded")
 
     def cs2_full(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         """Full evaluation of $c_s^2$ from the underlying quantities"""
