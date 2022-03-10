@@ -5,7 +5,7 @@ and $\alpha_+$, the strength parameter just in front of the wall.
 
 import numba
 import numpy as np
-import scipy.optimize as opt
+import scipy.optimize
 
 import pttools.type_hints as th
 from pttools import speedup
@@ -35,6 +35,7 @@ def _alpha_n_max_deflagration_scalar(v_wall: float, n_xi: int) -> float:
     check.check_wall_speed(v_wall)
     # TODO: This may not be correct, as it makes an explicit reference to const.CS0
     # At least there is circular logic due to the call to fluid_shell_alpha_plus
+    # TODO: This line is for the bag model only, as cs should depend on enthalpy and phase
     sol_type = boundary.SolutionType.HYBRID.value if v_wall > const.CS0 else boundary.SolutionType.SUB_DEF.value
     ap = 1. / 3 - 1.0e-10  # Warning - this is not safe.  Causes warnings for v low vw
     _, w, xi = fluid.fluid_shell_alpha_plus(v_wall, ap, sol_type, n_xi)
@@ -253,6 +254,11 @@ def _find_alpha_plus_optimizer(
 
 @numba.njit
 def _find_alpha_plus_scalar(v_wall: float, alpha_n_given: float, n_xi: int) -> float:
+    """
+    TODO: this might not generalize directly to models other than the bag model.
+    It's possibly that the equations don't require any modifications, but instead the optimizer will simply
+    fail in some cases.
+    """
     if alpha_n_given < alpha_n_max_detonation(v_wall):
         # Must be detonation
         # sol_type = boundary.SolutionType.DETON
@@ -263,7 +269,7 @@ def _find_alpha_plus_scalar(v_wall: float, alpha_n_given: float, n_xi: int) -> f
     a_initial_guess = alpha_plus_initial_guess(v_wall, alpha_n_given)
     with numba.objmode(ret="float64"):
         # This returns np.float64
-        ret: float = opt.fsolve(
+        ret: float = scipy.optimize.fsolve(
             _find_alpha_plus_optimizer,
             a_initial_guess,
             args=(v_wall, sol_type, n_xi, alpha_n_given),

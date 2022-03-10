@@ -9,7 +9,7 @@ from tests.paper.plot_plane import plot_plane
 
 
 def main():
-    model = ConstCSModel(a_s=1, a_b=1, css2=0.4**2, csb2=1/3, eps=1)
+    model = ConstCSModel(a_s=1, a_b=1, css2=0.4**2, csb2=1/3, V_s=1, V_b=0)
     df_dtau_ptr = add_df_dtau("const_cs", model.cs2)
     data_b, data_s = xiv_plane(df_dtau_ptr=df_dtau_ptr, cs2_s=model.css2, cs2_b=model.csb2)
     fig: plt.Figure = plt.figure()

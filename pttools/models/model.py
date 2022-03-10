@@ -1,8 +1,11 @@
 """Template for equations of state"""
 
+import typing as tp
+
 import numba
 import numpy as np
 import scipy.interpolate
+import scipy.optimize
 
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase
@@ -11,7 +14,13 @@ from pttools.models.thermo import ThermoModel
 
 class Model:
     """Template for equations of state"""
-    def __init__(self, thermo: ThermoModel, V_s: float = 0, V_b: float = 0):
+    def __init__(self, thermo: tp.Optional[ThermoModel], V_s: float = 0, V_b: float = 0):
+        """
+        :param thermo: model of the underlying thermodynamics.
+            Some models don't take this, but use their own approximations instead.
+        :param V_s: the constant term in the expression of $p$ in the symmetric phase
+        :param V_b: the constant term in the expression of $p$ in the broken phase
+        """
         self.thermo = thermo
         self.V_s = V_s
         self.V_b = V_b
@@ -20,16 +29,18 @@ class Model:
         if V_b > V_s:
             raise ValueError("The bubble does not expand if V_b >= V_s.")
 
-        self.temp_spline_s = scipy.interpolate.splrep(
-            self.w(self.thermo.GEFF_DATA_TEMP, Phase.SYMMETRIC), self.thermo.GEFF_DATA_TEMP
-        )
-        self.temp_spline_b = scipy.interpolate.splrep(
-            self.w(self.thermo.GEFF_DATA_TEMP, Phase.BROKEN), self.thermo.GEFF_DATA_TEMP
-        )
+        if thermo is not None:
+            self.temp_spline_s = scipy.interpolate.splrep(
+                self.w(self.thermo.GEFF_DATA_TEMP, Phase.SYMMETRIC), self.thermo.GEFF_DATA_TEMP
+            )
+            self.temp_spline_b = scipy.interpolate.splrep(
+                self.w(self.thermo.GEFF_DATA_TEMP, Phase.BROKEN), self.thermo.GEFF_DATA_TEMP
+            )
 
         self.cs2 = self.gen_cs2()
 
     def gen_cs2(self):
+        """This function generates the Numba-jitted cs2 function to be used by the fluid integrator"""
         w_s = self.w(self.thermo.GEFF_DATA_TEMP, Phase.SYMMETRIC)
         w_b = self.w(self.thermo.GEFF_DATA_TEMP, Phase.BROKEN)
 
@@ -52,23 +63,47 @@ class Model:
                    + scipy.interpolate.splev(w, cs2_spl_s) * (1 - phase)
         return cs2
 
-    def critical_temp(self):
-        # TODO: with SciPy solver?
-        pass
+    def critical_temp_opt(self, temp: float):
+        """Optimizer function for critical temperature"""
+        const = 90 / np.pi ** 2 * (self.V_b - self.V_s)
+        return (self.gp_temp(temp, Phase.SYMMETRIC) - self.gp_temp(temp, Phase.BROKEN))*temp**4 + const
+
+    def critical_temp(self, guess: float) -> float:
+        """Solves for the critical temperature $T_c$, where $p_s(T_c)=p_b(T_c)$"""
+        # This returns np.float64
+        return scipy.optimize.fsolve(
+            self.critical_temp_opt,
+            guess
+            # args=(const),
+            # xtol=
+            # factor=0.1
+        )[0]
 
     def cs2(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         """Speed of sound squared. This must be a Numba-compiled function."""
         raise RuntimeError("The cs2(w, phase) function has not yet been loaded")
 
     def e(self, w: th.FloatOrArr, phase: th.FloatOrArr):
-        # TODO: implement based on g_e
-        pass
+        r"""Energy density $e(w,\phi)$"""
+        temp = self.temp(w, phase)
+        return np.pi**2 / 30 * self.thermo.ge(temp, phase) * temp**4
 
-    def p(self, w: th.FloatOrArr , phase: th.FloatOrArr):
-        # TODO: implement based on g_p (which needs to be computed...)
-        pass
+    def gp(self, w: th.FloatOrArr, phase: th.FloatOrArr):
+        r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(w,\phi)$"""
+        temp = self.temp(w, phase)
+        return self.gp_temp(temp, phase)
+
+    def gp_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr):
+        r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(T,\phi)"""
+        return 4*self.thermo.gs(temp, phase) - 3*self.thermo.ge(temp, phase) + (90*self.V(phase)) / (np.pi**2 * temp**4)
+
+    def p(self, w: th.FloatOrArr, phase: th.FloatOrArr):
+        r"""Pressure $p(w,\phi)$"""
+        temp = self.temp(w, phase)
+        return np.pi**2 / 90 * self.gp(temp, phase) * temp**4 - self.V(phase)
 
     def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr):
+        r"""Temperature $T$"""
         if phase == Phase.SYMMETRIC.value:
             return scipy.interpolate.splev(w, self.temp_spline_s)
         elif phase == Phase.BROKEN.value:
@@ -77,7 +112,7 @@ class Model:
             + scipy.interpolate.splev(w, self.temp_spline_s) * (1 - phase)
 
     def V(self, phase: th.FloatOrArr) -> th.FloatOrArr:
-        """Potential"""
+        """Potential $V$"""
         return phase*self.V_b + (1 - phase)*self.V_s
 
     def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
