@@ -52,15 +52,23 @@ class Model:
                    + scipy.interpolate.splev(w, cs2_spl_s) * (1 - phase)
         return cs2
 
+    def critical_temp(self):
+        # TODO: with SciPy solver?
+        pass
+
     def cs2(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         """Speed of sound squared. This must be a Numba-compiled function."""
         raise RuntimeError("The cs2(w, phase) function has not yet been loaded")
 
-    # @abc.abstractmethod
-    # def p(self, w: float, phase: float):
-    #     pass
+    def e(self, w: th.FloatOrArr, phase: th.FloatOrArr):
+        # TODO: implement based on g_e
+        pass
 
-    def T(self, w: th.FloatOrArr, phase: th.FloatOrArr = None):
+    def p(self, w: th.FloatOrArr , phase: th.FloatOrArr):
+        # TODO: implement based on g_p (which needs to be computed...)
+        pass
+
+    def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr):
         if phase == Phase.SYMMETRIC.value:
             return scipy.interpolate.splev(w, self.temp_spline_s)
         elif phase == Phase.BROKEN.value:
@@ -72,7 +80,7 @@ class Model:
         """Potential"""
         return phase*self.V_b + (1 - phase)*self.V_s
 
-    def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr = None) -> th.FloatOrArr:
+    def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Enthalpy density $w$
 
         $$ w = e + p = Ts = T \frac{dp}{dT} = \frac{4\pi^2}{90} g_{eff} T^4 $$
