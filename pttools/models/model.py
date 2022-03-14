@@ -84,7 +84,12 @@ class Model:
         raise RuntimeError("The cs2(w, phase) function has not yet been loaded")
 
     def e(self, w: th.FloatOrArr, phase: th.FloatOrArr):
-        r"""Energy density $e(w,\phi)$"""
+        r"""Computes the energy density $e(w,\phi)$ by first computing $w(T)$ and then using :borsanyi_2016: eq. S12
+        $$ e(T) = \frac{\pi^2}{30} g_e(T) T^4 $$
+        :param w: enthalpy $w$
+        :param phase: phase $\phi$
+        :return: $e(w)
+        """
         temp = self.temp(w, phase)
         return np.pi**2 / 30 * self.thermo.ge(temp, phase) * temp**4
 
