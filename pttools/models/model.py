@@ -116,6 +116,12 @@ class Model:
         return scipy.interpolate.splev(w, self.temp_spline_b) * phase \
             + scipy.interpolate.splev(w, self.temp_spline_s) * (1 - phase)
 
+    def theta(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        """Trace anomaly :notes: eq. 7.24
+        $$ \theta = \frac{1}{4}(e - 3p) $$
+        """
+        return 1/4 * (self.e(w, phase) - 3*self.p(w, phase))
+
     def V(self, phase: th.FloatOrArr) -> th.FloatOrArr:
         """Potential $V$"""
         return phase*self.V_b + (1 - phase)*self.V_s
