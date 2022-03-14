@@ -42,8 +42,8 @@ class ConstCSModel(Model):
         self.a_s = a_s
         self.a_b = a_b
         self.csb = np.sqrt(csb2)
-        self.eps_s = V_s
-        self.eps_b = V_b
+        self.V_s = V_s
+        self.V_b = V_b
 
         self.mu = 1 + 1/css2
         self.nu = 1 + 1/csb2
@@ -72,8 +72,8 @@ class ConstCSModel(Model):
         r"""Energy density $e(T,\phi)$
 
         There is a typo in :giese_2021:. The 4 there should be a mu."""
-        e_s = 1/3 * self.a_s * (self.mu - 1) * temp**self.mu + self.eps_s
-        e_b = 1/3 * self.a_b * (self.nu - 1) * temp**self.nu + self.eps_b
+        e_s = 1/3 * self.a_s * (self.mu - 1) * temp**self.mu + self.V_s
+        e_b = 1/3 * self.a_b * (self.nu - 1) * temp**self.nu + self.V_b
         return e_b * phase + e_s * (1 - phase)
 
     def p(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
