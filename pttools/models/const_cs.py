@@ -31,6 +31,15 @@ class ConstCSModel(Model):
             css2: float, csb2: float,
             V_s: float = 0, V_b: float = 0,
             temp0: float = 1):
+        r"""
+        :param a_s: prefactor of $p$ in the symmetric phase
+        :param a_b: prefactor of $p$ in the broken phase
+        :param css2: $c_{s,s}^2, speed of sound squared in the symmetric phase
+        :param csb2: $c_{s,b}^2, speed of sound squared in the broken phase
+        :param V_s: $V_s \equiv \epsilon_s$, the potential term of $p$ in the symmetric phase
+        :param V_b: $V_b \equiv \epsilon_b$, the potential term of $p$ in the broken phase
+        :param temp0: reference temperature, usually 1 * unit of choice, e,g. 1 GeV
+        """
         if css2 > 1/3:
             raise ValueError(
                 "C_{s,s}^2 has to be <= 1/3 for the solution to be physical. This is because g_eff is monotonic.")
