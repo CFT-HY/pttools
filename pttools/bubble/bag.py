@@ -16,7 +16,9 @@ from . import const
 
 logger = logging.getLogger(__name__)
 
-CS2Fun = tp.Callable[[th.FloatOrArr], float]
+CS2Fun = tp.Callable[[th.FloatOrArr, th.FloatOrArr], th.FloatOrArr]
+CS2FunScalarSig = numba.double(numba.double, numba.double)
+CS2FunScalarPtr = numba.types.CPointer(CS2FunScalarSig)
 
 
 @numba.njit
@@ -52,20 +54,29 @@ def check_thetas(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> None:
 
 
 @numba.njit
-def cs2_bag_scalar(w: float, todo=None) -> float:
+def cs2_bag_scalar(w: float, phase: float) -> float:
     """The scalar versions of the bag functions have to be compiled to cfuncs if jitting is disabled,
     as otherwise the cfunc version of the differential cannot be created.
     """
     return const.CS0_2
 
 
+@numba.cfunc(CS2FunScalarSig)
+def cs2_bag_scalar_cfunc(w: float, phase: float) -> float:
+    return const.CS0_2
+
+
+CS2_BAG_SCALAR_PTR = cs2_bag_scalar_cfunc.address
+CS2ScalarCType = cs2_bag_scalar_cfunc.ctypes
+
+
 @numba.njit
-def cs2_bag_arr(w: np.ndarray, todo=None) -> np.ndarray:
+def cs2_bag_arr(w: np.ndarray, phase: np.ndarray) -> np.ndarray:
     return const.CS0_2 * np.ones_like(w)
 
 
 @numba.generated_jit(nopython=True)
-def cs2_bag(w: th.FloatOrArr, todo=None) -> th.FloatOrArrNumba:
+def cs2_bag(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArrNumba:
     r"""
     Speed of sound squared in Bag model, equal to $\frac{1}{3}$ independent of enthalpy $w$.
 

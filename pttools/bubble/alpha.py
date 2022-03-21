@@ -3,18 +3,28 @@ Functions for computing $\alpha_n$, the strength parameter at nucleation tempera
 and $\alpha_+$, the strength parameter just in front of the wall.
 """
 
+import ctypes
+import threading
+import typing as tp
+
 import numba
 import numpy as np
 import scipy.optimize
 
 import pttools.type_hints as th
 from pttools import speedup
-from . import boundary
-from . import const
-from . import fluid
-from . import check
-from . import props
-from . import transition
+from pttools.bubble import bag
+from pttools.bubble import boundary
+from pttools.bubble import const
+from pttools.bubble import fluid
+from pttools.bubble import check
+from pttools.bubble import props
+from pttools.bubble import transition
+
+
+CS2CFunc = ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double)
+CS2CACHE: tp.Dict[bag.CS2FunScalarPtr, CS2CFunc] = {}
+find_alpha_plus_scalar_lock = threading.Lock()
 
 
 @numba.njit
@@ -208,7 +218,9 @@ def find_alpha_n(
         v_wall: th.FloatOrArr,
         alpha_p: float,
         sol_type: boundary.SolutionType = boundary.SolutionType.UNKNOWN,
-        n_xi: int = const.N_XI_DEFAULT) -> float:
+        n_xi: int = const.N_XI_DEFAULT,
+        cs2_fun: bag.CS2Fun = bag.cs2_bag,
+        df_dtau_ptr: speedup.DifferentialPointer = fluid.DF_DTAU_BAG_PTR) -> float:
     r"""
     Calculates the transition strength parameter at the nucleation temperature,
     $\alpha_n$, from $\alpha_+$, for given $v_\text{wall}$.
@@ -224,7 +236,7 @@ def find_alpha_n(
     check.check_wall_speed(v_wall)
     if sol_type == boundary.SolutionType.UNKNOWN.value:
         sol_type = transition.identify_solution_type_alpha_plus(v_wall, alpha_p).value
-    _, w, xi = fluid.fluid_shell_alpha_plus(v_wall, alpha_p, sol_type, n_xi)
+    _, w, xi = fluid.fluid_shell_alpha_plus(v_wall, alpha_p, sol_type, n_xi, cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr)
     n_wall = props.find_v_index(xi, v_wall)
     return alpha_p * w[n_wall] / w[-1]
 
@@ -243,17 +255,38 @@ def find_alpha_n_from_w_xi(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_p
 
 @numba.njit
 def _find_alpha_plus_optimizer(
-        x: np.ndarray,
+        alpha: np.ndarray,
         v_wall: float,
         sol_type: boundary.SolutionType,
         n_xi: int,
-        alpha_n_given: float) -> float:
+        alpha_n_given: float,
+        cs2_fun: bag.CS2Fun,
+        df_dtau_ptr: speedup.DifferentialPointer) -> float:
     """find_alpha_plus() is looking for the zeroes of this function: $\alpha_n = \alpha_{n,\text{given}}$."""
-    return find_alpha_n(v_wall, x.item(), sol_type, n_xi) - alpha_n_given
+    return find_alpha_n(v_wall, alpha.item(), sol_type, n_xi, cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr) - alpha_n_given
+
+
+def _find_alpha_plus_scalar_cs2_converter(cs2_fun_ptr: bag.CS2FunScalarPtr) -> CS2CFunc:
+    r"""Converter for getting a $c_s^$ ctypes function from a pointer
+
+    This is a rather ugly hack. There should be a better way to call a function by a pointer!
+    """
+    with find_alpha_plus_scalar_lock:
+        if cs2_fun_ptr in CS2CACHE:
+            return CS2CACHE[cs2_fun_ptr]
+        # https://numba.pydata.org/numba-doc/0.15.1/interface_c.html
+        cs2_fun = ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double)(cs2_fun_ptr)
+        CS2CACHE[cs2_fun_ptr] = cs2_fun
+        return cs2_fun
 
 
 @numba.njit
-def _find_alpha_plus_scalar(v_wall: float, alpha_n_given: float, n_xi: int) -> float:
+def _find_alpha_plus_scalar(
+        v_wall: float,
+        alpha_n_given: float,
+        n_xi: int,
+        cs2_fun_ptr: bag.CS2FunScalarPtr,
+        df_dtau_ptr: speedup.DifferentialPointer) -> float:
     """
     TODO: this might not generalize directly to models other than the bag model.
     It's possibly that the equations don't require any modifications, but instead the optimizer will simply
@@ -268,21 +301,28 @@ def _find_alpha_plus_scalar(v_wall: float, alpha_n_given: float, n_xi: int) -> f
     sol_type = boundary.SolutionType.SUB_DEF if v_wall <= const.CS0 else boundary.SolutionType.HYBRID
     a_initial_guess = alpha_plus_initial_guess(v_wall, alpha_n_given)
     with numba.objmode(ret="float64"):
+        cs2_fun = _find_alpha_plus_scalar_cs2_converter(cs2_fun_ptr)
+
         # This returns np.float64
         ret: float = scipy.optimize.fsolve(
             _find_alpha_plus_optimizer,
             a_initial_guess,
-            args=(v_wall, sol_type, n_xi, alpha_n_given),
+            args=(v_wall, sol_type, n_xi, alpha_n_given, cs2_fun, df_dtau_ptr),
             xtol=const.FIND_ALPHA_PLUS_TOL,
             factor=0.1)[0]
     return ret
 
 
 @numba.njit(parallel=True)
-def _find_alpha_plus_arr(v_wall: np.ndarray, alpha_n_given: float, n_xi: int) -> np.ndarray:
+def _find_alpha_plus_arr(
+        v_wall: np.ndarray,
+        alpha_n_given: float,
+        n_xi: int,
+        cs2_fun_ptr: bag.CS2FunScalarPtr,
+        df_dtau_ptr: speedup.DifferentialPointer) -> np.ndarray:
     ap = np.zeros_like(v_wall)
     for i in numba.prange(v_wall.size):
-        ap[i] = _find_alpha_plus_scalar(v_wall[i], alpha_n_given, n_xi)
+        ap[i] = _find_alpha_plus_scalar(v_wall[i], alpha_n_given, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr)
     return ap
 
 
@@ -290,7 +330,9 @@ def _find_alpha_plus_arr(v_wall: np.ndarray, alpha_n_given: float, n_xi: int) ->
 def find_alpha_plus(
         v_wall: th.FloatOrArr,
         alpha_n_given: float,
-        n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArrNumba:
+        n_xi: int = const.N_XI_DEFAULT,
+        cs2_fun_ptr: bag.CS2FunScalarPtr = bag.CS2_BAG_SCALAR_PTR,
+        df_dtau_ptr: speedup.DifferentialPointer = fluid.DF_DTAU_BAG_PTR) -> th.FloatOrArrNumba:
     r"""
     Calculate the at-wall strength parameter $\alpha_+$ from given $\alpha_n$ and $v_\text{wall}$.
 
@@ -312,9 +354,9 @@ def find_alpha_plus(
             return _find_alpha_plus_scalar
         return _find_alpha_plus_arr
     if isinstance(v_wall, float):
-        return _find_alpha_plus_scalar(v_wall, alpha_n_given, n_xi)
+        return _find_alpha_plus_scalar(v_wall, alpha_n_given, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr)
     if isinstance(v_wall, np.ndarray):
         if not v_wall.ndim:
-            return _find_alpha_plus_scalar(v_wall.item(), alpha_n_given, n_xi)
-        return _find_alpha_plus_arr(v_wall, alpha_n_given, n_xi)
+            return _find_alpha_plus_scalar(v_wall.item(), alpha_n_given, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr)
+        return _find_alpha_plus_arr(v_wall, alpha_n_given, n_xi, cs2_fun=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr)
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")

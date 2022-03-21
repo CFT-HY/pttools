@@ -8,7 +8,7 @@ from pttools.models.const_cs import ConstCSModel
 
 
 def main():
-    model = ConstCSModel(a_s=1, a_b=1, css2=0.4**2, csb2=1 / 3, V_s=1, V_b=0)
+    model = ConstCSModel(a_s=1, a_b=1, css2=0.4**2, csb2=1/3, V_s=0, V_b=0)
     crit = model.critical_temp(guess=10)
     temps_b = np.linspace(0.5 * crit, crit)
     temps_s = np.linspace(crit, 1.2 * crit)

@@ -3,7 +3,7 @@ r"""Functions for fluid differential equations
 Now in parametric form (Jacky Lindsay and Mike Soughton MPhys project 2017-18).
 RHS is Eq (33) in Espinosa et al (plus $\frac{dw}{dt}$ not written there)
 """
-
+import ctypes
 import logging
 # import threading
 import typing as tp
@@ -117,7 +117,7 @@ def gen_df_dtau(cs2_fun: bag.CS2Fun) -> speedup.Differential:
 
 
 #: Pointer to the differential equation of the bag model
-DF_DTAU_BAG_PTR = add_df_dtau("bag", bag.cs2_bag_scalar)
+DF_DTAU_BAG_PTR = add_df_dtau("bag", bag.cs2_bag)
 
 
 @numba.njit
@@ -256,7 +256,10 @@ def fluid_integrate_param_solve_ivp(
 def fluid_shell(
         v_wall: float,
         alpha_n: float,
-        n_xi: int = const.N_XI_DEFAULT) \
+        n_xi: int = const.N_XI_DEFAULT,
+        cs2_fun: bag.CS2Fun = bag.cs2_bag_scalar,
+        cs2_fun_ptr: bag.CS2FunScalarPtr = bag.CS2_BAG_SCALAR_PTR,
+        df_dtau_ptr: speedup.DifferentialPointer = DF_DTAU_BAG_PTR) \
         -> tp.Union[tp.Tuple[float, float, float], tp.Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     r"""
     Finds fluid shell $(v, w, \xi)$ from a given $v_\text{wall}, \alpha_n$, which must be scalars.
@@ -273,12 +276,12 @@ def fluid_shell(
             logger.error("Giving up because of identify_solution_type error")
         nan_arr = np.array([np.nan])
         return nan_arr, nan_arr, nan_arr
-    al_p = alpha.find_alpha_plus(v_wall, alpha_n, n_xi)
-    if not np.isnan(al_p):
-        # SolutionType has to be passed by its value when jitting
-        return fluid_shell_alpha_plus(v_wall, al_p, sol_type.value, n_xi)
-    nan_arr = np.array([np.nan])
-    return nan_arr, nan_arr, nan_arr
+    al_p = alpha.find_alpha_plus(v_wall, alpha_n, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr)
+    if np.isnan(al_p):
+        nan_arr = np.array([np.nan])
+        return nan_arr, nan_arr, nan_arr
+    # SolutionType has to be passed by its value when jitting
+    return fluid_shell_alpha_plus(v_wall, al_p, sol_type.value, n_xi, cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr)
 
 
 @numba.njit
@@ -289,7 +292,8 @@ def fluid_shell_alpha_plus(
         n_xi: int = const.N_XI_DEFAULT,
         w_n: float = 1.,
         cs2_fun: bag.CS2Fun = bag.cs2_bag,
-        df_dtau_ptr: speedup.DifferentialPointer = DF_DTAU_BAG_PTR) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        df_dtau_ptr: speedup.DifferentialPointer = DF_DTAU_BAG_PTR,
+        sol_type_fun: callable = None) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
     r"""
     Finds fluid shell (v, w, xi) from a given $v_\text{wall}, \alpha_+$ (at-wall strength parameter).
     Where $v=0$ (behind and ahead of shell) uses only two points.
@@ -303,6 +307,10 @@ def fluid_shell_alpha_plus(
     :param df_dtau_ptr: pointer to the differential equation function
     :return: $v, w, \xi$
     """
+    # These didn't work, and therefore this function gets cs2_fun as a function instead of a pointer
+    # cs2_fun = bag.CS2ScalarCType(cs2_fun_ptr)
+    # cs2_fun = ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double)(cs2_fun)
+
     check.check_wall_speed(v_wall)
 
     if sol_type == boundary.SolutionType.UNKNOWN.value:
@@ -323,13 +331,22 @@ def fluid_shell_alpha_plus(
     # dxi = 10*eps
 
     # Set up parts outside shell where v=0. Need 2 points only.
+    # Forwards integration
     xif = np.linspace(v_wall + dxi, 1.0, 2)
     vf = np.zeros_like(xif)
     wf = np.ones_like(xif) * wp
 
-    xib = np.linspace(min(cs2_fun(w_n) ** 0.5, v_wall) - dxi, 0.0, 2)
+    # Backwards integration
+    # TODO: set a value for the phase
+    xib = np.linspace(min(cs2_fun(w_n, 0) ** 0.5, v_wall) - dxi, 0.0, 2)
     vb = np.zeros_like(xib)
     wb = np.ones_like(xib) * wm
+
+    # TODO: remove the dependence on sol_type
+    # Instead:
+    # - check if the value of alpha_plus allows only one type of solution
+    # - If yes, compute using that
+    # - Otherwise compute both and then see which takes to the correct direction
 
     # Integrate forward and find shock.
     if not sol_type == boundary.SolutionType.DETON.value:
@@ -372,7 +389,8 @@ def fluid_shell_alpha_plus(
         wb = np.ones_like(xib) * w[-1]
         wb = np.concatenate((w, wb))
         # Can afford to bring this point all the way to cs2.
-        xib[0] = cs2_fun(w[-1]) ** 0.5
+        # TODO: set a value for the phase
+        xib[0] = cs2_fun(w[-1], 0) ** 0.5
         xib = np.concatenate((xi, xib))
 
     # Now put halves together in right order
@@ -501,7 +519,9 @@ def trim_fluid_wall_to_cs(
     # n_stop = 0
     if not sol_type == boundary.SolutionType.SUB_DEF.value:
         for i in range(v.size):
-            if v[i] <= 0 or xi[i] ** 2 <= cs2_fun(w[i]):
+            # TODO: set a valid value for this
+            phase = -1
+            if v[i] <= 0 or xi[i] ** 2 <= cs2_fun(w[i], phase):
                 n_stop_index = i
                 break
 
