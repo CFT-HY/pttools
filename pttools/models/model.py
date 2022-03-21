@@ -29,6 +29,8 @@ class Model:
         if V_b > V_s:
             raise ValueError("The bubble does not expand if V_b >= V_s.")
 
+        self.critical_temp_const = 90 / np.pi ** 2 * (self.V_b - self.V_s)
+
         if thermo is not None:
             self.temp_spline_s = scipy.interpolate.splrep(
                 self.w(self.thermo.GEFF_DATA_TEMP, Phase.SYMMETRIC), self.thermo.GEFF_DATA_TEMP
@@ -60,13 +62,13 @@ class Model:
             elif phase == Phase.BROKEN.value:
                 return scipy.interpolate.splev(w, cs2_spl_b)
             return scipy.interpolate.splev(w, cs2_spl_b) * phase \
-                   + scipy.interpolate.splev(w, cs2_spl_s) * (1 - phase)
+                + scipy.interpolate.splev(w, cs2_spl_s) * (1 - phase)
         return cs2
 
     def critical_temp_opt(self, temp: float):
         """Optimizer function for critical temperature"""
-        const = 90 / np.pi ** 2 * (self.V_b - self.V_s)
-        return (self.gp_temp(temp, Phase.SYMMETRIC) - self.gp_temp(temp, Phase.BROKEN))*temp**4 + const
+        return (self.gp_temp(temp, Phase.SYMMETRIC) - self.gp_temp(temp, Phase.BROKEN))*temp**4 \
+            + self.critical_temp_const
 
     def critical_temp(self, guess: float) -> float:
         """Solves for the critical temperature $T_c$, where $p_s(T_c)=p_b(T_c)$"""
