@@ -19,7 +19,7 @@ except ImportError:
 import numpy as np
 
 from pttools.speedup.numba_wrapper import CFunc, CPUDispatcher
-from . import options
+from pttools.speedup.options import NUMBA_DISABLE_JIT
 
 Differential = tp.Union[tp.Callable[[float, np.ndarray, np.ndarray, tp.Optional[np.ndarray]], None], CFunc]
 DifferentialOdeint = tp.Union[tp.Callable[[np.ndarray, float, tp.Optional[np.ndarray]], np.ndarray], CPUDispatcher]
@@ -51,18 +51,20 @@ class DifferentialCache:
                 raise ValueError("The key is already in the cache")
             differential_njit = numba.njit(differential)
             differential_cfunc = numba.cfunc(lsoda_sig)(differential)
-            differential_core = differential_cfunc if options.NUMBA_DISABLE_JIT else differential_njit
-            if p_last_is_backwards:
+            differential_core = differential_cfunc if NUMBA_DISABLE_JIT else differential_njit
+            if p_last_is_backwards and not NUMBA_DISABLE_JIT:
                 @numba.cfunc(lsoda_sig)
                 def differential_numbalsoda(t: float, u: np.ndarray, du: np.ndarray, p: np.ndarray):
                     differential_core(t, u, du, p)
                     # TODO: implement support for arbitrarily long p
+                    # This cannot be used when jitting is disabled
+                    # https://github.com/numba/numba/issues/8002
                     p_arr = numba.carray(p, (3,), numba.types.double)
                     if p_arr[-1]:
                         for i in range(ndim):
                             du[i] *= -1.
             else:
-                differential_numbalsoda = numba.cfunc(lsoda_sig)(differential)
+                differential_numbalsoda = differential_cfunc
 
             @numba.njit
             def differential_odeint(y: np.ndarray, t: float, p: np.ndarray = None) -> np.ndarray:

@@ -81,6 +81,7 @@ def cs2_bag(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArrNumba:
     Speed of sound squared in Bag model, equal to $\frac{1}{3}$ independent of enthalpy $w$.
 
     :param w: enthalpy $w$
+    :param phase: phase $\phi$
     :return: speed of sound squared $c_s^2$
     """
     if isinstance(w, numba.types.Float):
@@ -88,10 +89,10 @@ def cs2_bag(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArrNumba:
     if isinstance(w, numba.types.Array):
         return cs2_bag_arr
     if isinstance(w, float):
-        return cs2_bag_scalar(w)
+        return cs2_bag_scalar(w, phase)
     if isinstance(w, np.ndarray):
-        return cs2_bag_arr(w)
-    raise TypeError(f"Unknown type for w: {type(w)}")
+        return cs2_bag_arr(w, phase)
+    raise TypeError(f"Unknown type for w")
 
 
 @numba.njit

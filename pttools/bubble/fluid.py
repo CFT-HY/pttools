@@ -117,7 +117,7 @@ def gen_df_dtau(cs2_fun: bag.CS2Fun) -> speedup.Differential:
 
 
 #: Pointer to the differential equation of the bag model
-DF_DTAU_BAG_PTR = add_df_dtau("bag", bag.cs2_bag)
+DF_DTAU_BAG_PTR = add_df_dtau("bag", bag.cs2_bag_scalar_cfunc if speedup.NUMBA_DISABLE_JIT else bag.cs2_bag)
 
 
 @numba.njit
@@ -187,6 +187,9 @@ def fluid_integrate_param_numba(t: np.ndarray, y0: np.ndarray, data: np.ndarray,
     :param df_dtau_ptr: pointer to the differential equation function
     :return: $v, w, \xi$, success status
     """
+    if speedup.NUMBA_DISABLE_JIT:
+        raise NotImplementedError("NumbaLSODA is supported only when jitting is enabled")
+
     backwards = t[-1] < 0
     t_numba = -t if backwards else t
     data_numba = np.zeros((data.size + 1))
