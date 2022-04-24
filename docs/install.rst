@@ -33,7 +33,7 @@ you can install PTtools from the Git repository with pip.
 A PyPI package will be available later, once PTtools is made open source.
 
 The ``[NumbaLSODA]`` flag installs the optional
-`NumbaLSODA <https://pypi.org/project/NumbaLSODA/>`_
+`NumbaLSODA <https://pypi.org/project/numbalsoda/>`_
 ordinary differential equation (ODE) solver library,
 but it may not build on all platforms, especially Windows.
 Therefore if you get any build errors,
@@ -125,7 +125,7 @@ please see the job script templates in the tests folder.
 
 NumbaLSODA
 ----------
-`NumbaLSODA <https://pypi.org/project/NumbaLSODA/>`_
+`NumbaLSODA <https://pypi.org/project/numbalsoda/>`_
 is an optional dependency, which speeds up the integration of ordinary differential equations (ODE).
 It's in an early stage and may require build tools such as ``cmake`` for its installation,
 and it seems not to compile yet on Windows.

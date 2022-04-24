@@ -20,7 +20,7 @@ These modifications were Mika's summer project in 2021.
 - Improve code structure by splitting :mod:`pttools.bubble` and :mod:`pttools.ssmtools` to multiple submodules.
 - Improve code quality.
 
-    - Lint each commit automatically with `Pylint <https://pylint.org/>`_.
+    - Lint each commit automatically with `Pylint <https://pylint.pycqa.org/en/latest/>`_.
     - Improve compliance with PEP8.
 
 - Add support for other integrators in addition to

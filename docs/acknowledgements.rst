@@ -21,7 +21,7 @@ The development of PTtools has been funded by
   :aof_grant:`286769 <286769>`
   and
   :aof_grant:`333609 <333609>`
-- `Science and Technology Facilities Council <https://stfc.ukri.org/>`_
+- `Science and Technology Facilities Council <https://www.ukri.org/councils/stfc/>`_
   grants
   `ST/J000477/1 <https://gtr.ukri.org/projects?ref=ST%2FJ000477%2F1>`_
   and
