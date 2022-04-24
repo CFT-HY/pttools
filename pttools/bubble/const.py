@@ -2,7 +2,7 @@
 
 import numpy as np
 
-# TODO: Use typing.Final, when the oldest supported Python version is 3.8
+# TODO: Add typing.Final for these when Python 3.8 becomes the oldest supported version.
 # https://www.python.org/dev/peps/pep-0591/
 
 #: Smallest float

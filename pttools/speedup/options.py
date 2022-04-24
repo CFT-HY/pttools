@@ -6,6 +6,9 @@ import typing as tp
 
 logger = logging.getLogger(__name__)
 
+# TODO: Add typing.Final for these when Python 3.8 becomes the oldest supported version.
+# https://www.python.org/dev/peps/pep-0591/
+
 #: Whether Numba JIT compilation has been disabled.
 NUMBA_DISABLE_JIT = bool(int(os.getenv("NUMBA_DISABLE_JIT", "0")))
 #: Whether to use NumbaLSODA as the default ODE integrator.
