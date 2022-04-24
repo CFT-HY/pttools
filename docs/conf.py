@@ -63,6 +63,10 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+# Automatic section labeling produces duplicated labels. This silences the warnings from those.
+# https://github.com/sphinx-doc/sphinx/issues/7728
+# https://github.com/sphinx-doc/sphinx/issues/7697
+suppress_warnings = ["autosectionlabel.*"]
 
 # -- Options for HTML output -------------------------------------------------
 
