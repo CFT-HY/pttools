@@ -3,7 +3,7 @@ Creates and plots velocity and GW power spectra from SSM
 
 Modified from
 `sound-shell-model/paper/python/ssm_paper_utils.py
-<https://bitbucket.org/hindmars/sound-shell-model/src/master/paper/python/ssm_paper_utils.py>`_.
+<https://bitbucket.org/hindmars/sound-shell-model/src/master/paper/python/ssm_paper_utils.py>`__.
 """
 
 # import concurrent.futures as fut
@@ -509,9 +509,10 @@ def plot_ps_1bubble(
         graph_file_type: str = None,
         Np=const.NP_ARR[-1],
         debug: bool = False) -> tp.Union[plt.Figure, tp.Tuple[plt.Figure, np.ndarray]]:
-    """
+    # Sphinx considers vertical lines as substitution references. Therefore the command \mid has to be used instead.
+    r"""
     Plots power spectra predictions of 1 bubble. Shown are
-    |A|^2, |f'(z)|^2/2 and |l(z)|^2/2
+    $\mid A \mid^2, \mid f'(z) \mid^2/2$ and $\mid l(z) \mid^2/2$
     Saves data if save_id is set
     Saves graph file if graph_file_type is set
     """
