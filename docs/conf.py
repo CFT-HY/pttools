@@ -114,6 +114,9 @@ extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
         "Academy of Finland grant %s"
     ),
     "issue": ("https://github.com/hindmars/pttools/issues/%s", "issue %s"),
+    "rel_hydro_book": (
+        "https://doi.org/10.1093/acprof:oso/9780198528906.001.0001",
+        "Relativistic hydrodynamics, Rezzolla, Zanotti, 2013"),
     "ssm_repo": ("https://bitbucket.org/hindmars/sound-shell-model/src/master/", "sound-shell-model/%s")
 }
 intersphinx_mapping: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {

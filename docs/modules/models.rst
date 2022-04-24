@@ -2,18 +2,26 @@ Models
 ======
 .. automodule:: pttools.models
 
-Model
------
-.. automodule:: pttools.models.model
+Base model
+----------
+.. automodule:: pttools.models.base
 
-Bag
----
+Full thermodynamics-based model
+-------------------------------
+.. automodule:: pttools.models.full
+
+Analytic base model
+-------------------
+.. automodule:: pttools.models.analytic
+
+Bag model
+---------
 .. automodule:: pttools.models.bag
 
 Constant sound speed
 --------------------
 .. automodule:: pttools.models.const_cs
 
-Thermo
-------
+Thermodynamics model
+--------------------
 .. automodule:: pttools.models.thermo

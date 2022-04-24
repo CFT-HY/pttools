@@ -12,6 +12,7 @@ class ThermoModel(abc.ABC):
     """
     The thermodynamic model characterizes the particle physics of interest.
     """
+    #: Container for the data of $g_\text{eff}$ as a function of temperature
     GEFF_DATA_TEMP: np.ndarray
 
     def __init__(self):
@@ -66,21 +67,21 @@ class ThermoModel(abc.ABC):
     @abc.abstractmethod
     def ge(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""
-        Effective degrees of freedom for the energy density $g_{eff,e}(T)$
+        Effective degrees of freedom for the energy density $g_{\text{eff},e}(T)$
 
         :param temp: temperature $T$ (MeV)
         :param phase: phase $\phi$
-        :return: $g_{eff,e}$
+        :return: $g_{\text{eff},e}$
         """
 
     @abc.abstractmethod
     def gs(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""
-        Effective degrees of freedom for the entropy density, $g_{eff,s}(T)$
+        Effective degrees of freedom for the entropy density, $g_{\text{eff},s}(T)$
 
         :param temp: temperature $T$ (MeV)
         :param phase: phase $\phi$
-        :return: $g_{eff,s}$
+        :return: $g_{\text{eff},s}$
         """
 
     def dp_dt(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
