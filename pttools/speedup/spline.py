@@ -58,7 +58,7 @@ from pttools.speedup import fitpack
 # @overload(scipy.interpolate.splev)
 def splev(x: np.ndarray, tck: tp.Tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
     """
-    Modified from :external:py:function:`scipy.interpolate.splev`.
+    Modified from :external:py:func:`scipy.interpolate.splev`.
     See the SciPy documentation for details.
 
     :param x: 1D array

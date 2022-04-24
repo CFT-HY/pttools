@@ -23,7 +23,7 @@ if numba_wrapper.NUMBA_VERSION < (0, 49, 0):
 
 @overload(np.any)
 def np_any(a):
-    """Overload of :func:`numpy.any` for booleans and scalars."""
+    """Overload of :external:py:func:`numpy.any` for booleans and scalars."""
     if isinstance(a, numba.types.Boolean):
         def func(a):
             return a
