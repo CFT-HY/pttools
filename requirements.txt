@@ -7,8 +7,10 @@ intel-openmp; sys_platform == "darwin"
 matplotlib
 # Numba 0.55 breaks the unit tests
 # https://github.com/numba/numba/issues/7751
-numba != 0.55; python_version < "3.10"
-numba >= 0.55.1; python_version >= "3.10"
+# PyCharm does not understand a dependency if all the versions are conditional
+# numba != 0.55; python_version < "3.10"
+# numba >= 0.55.1; python_version >= "3.10"
+numba != 0.55
 # NumbaLSODA cannot yet be compiled automatically on the GitHub Actions Windows runners
 numbalsoda; sys_platform != "win32"
 # If you're using an old version of Numba and get the error:
