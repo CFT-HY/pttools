@@ -274,7 +274,7 @@ def splev(t: np.ndarray, n: int, c: np.ndarray, k: int, x: np.ndarray, y: np.nda
 
     restrictions:
       m >= 1
-    --    t(k+1) <= x(i) <= x(i+1) <= t(n-k) , i=1,2,...,m-1.
+      --    t(k+1) <= x(i) <= x(i+1) <= t(n-k) , i=1,2,...,m-1.
 
     other subroutines required: fpbspl.
 
