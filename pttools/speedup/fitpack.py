@@ -1,6 +1,6 @@
 """
 Functions from the
-`SciPy version <https://github.com/scipy/scipy/tree/v1.8.0/scipy/interpolate/fitpack>`_
+`SciPy version <https://github.com/scipy/scipy/tree/v1.8.0/scipy/interpolate/fitpack>`__
 of
 `FITPACK <https://www.netlib.org/dierckx/>`_.
 
@@ -15,7 +15,7 @@ import numpy as np
 def fpbspl(t: np.ndarray, n: int, k: int, x: float, l: int, h: np.ndarray):
     """
     Modified from the
-    `SciPy version <https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/fpbspl.f#L19>`_.
+    `SciPy version <https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/fpbspl.f#L19>`__.
 
     c  subroutine fpbspl evaluates the (k+1) non-zero b-splines of
     c  degree k at t(l) <= x < t(l+1) using the stable recurrence
@@ -75,7 +75,7 @@ def splder(
     wrk: np.ndarray) -> int:
     """
     Modified from the
-    `SciPy version <https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/splder.f#L67>`_.
+    `SciPy version <https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/splder.f#L67>`__.
 
     subroutine splder evaluates in a number of points x(i),i=1,2,...,m
     the derivative of order nu of a spline s(x) of degree k,given in
@@ -249,7 +249,7 @@ def splder(
 def splev(t: np.ndarray, n: int, c: np.ndarray, k: int, x: np.ndarray, y: np.ndarray, m: int, e: int) -> int:
     """
     Modified from the
-    `SciPy version <https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/splev.f>`_.
+    `SciPy version <https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/splev.f>`__.
 
     subroutine splev evaluates in a number of points x(i),i=1,2,...,m
     a spline s(x) of degree k, given in its b-spline representation.
