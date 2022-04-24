@@ -104,8 +104,8 @@ class ConstCSModel(AnalyticModel):
 
     def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Temperature $T(w,\phi)$. Inverted from the equation of $w(T,\phi)$.
-        $$T_s = T_0 \left( \frac{3w}{\mu a_s T_0^4} \right)^{\frac{1}{\mu}$$
-        $$T_b = T_0 \left( \frac{3w}{\nu a_s T_0^4} \right)^{\frac{1}{\nu}$$
+        $$T_s = T_0 \left( \frac{3w}{\mu a_s T_0^4} \right)^\frac{1}{\mu}$$
+        $$T_b = T_0 \left( \frac{3w}{\nu a_s T_0^4} \right)^\frac{1}{\nu}$$
         """
         temp_s = self.temp0 * (3*w / (self.mu*self.a_s*self.temp0**4))**(1/self.mu)
         temp_b = self.temp0 * (3*w / (self.nu*self.a_b*self.temp0**4))**(1/self.nu)
