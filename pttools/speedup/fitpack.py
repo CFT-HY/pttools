@@ -82,6 +82,7 @@ def splder(
     its b-spline representation.
 
     input parameters:
+
     :param t: array,length n, which contains the position of the knots.
     :param n: integer, giving the total number of knots of s(x).
     :param c: array,length n, which contains the b-spline coefficients.
@@ -105,15 +106,15 @@ def splder(
 
     other subroutines required: fpbspl
 
-    references :
+    references:
       de boor c : on calculating with b-splines, j. approximation theory
                   6 (1972) 50-62.
       cox m.g.  : the numerical evaluation of b-splines, j. inst. maths
                   applics 10 (1972) 134-149.
-     dierckx p. : curve and surface fitting with splines, monographs on
+      dierckx p. : curve and surface fitting with splines, monographs on
                   numerical analysis, oxford university press, 1993.
 
-    author :
+    author:
       p.dierckx
       dept. computer science, k.u.leuven
       celestijnenlaan 200a, b-3001 heverlee, belgium.
