@@ -31,7 +31,7 @@ def identify_solution_type(v_wall: float, alpha_n: float, exit_on_error: bool = 
             else:
                 sol_type = boundary.SolutionType.HYBRID
 
-    if (sol_type == boundary.SolutionType.ERROR) & exit_on_error:
+    if sol_type == boundary.SolutionType.ERROR and exit_on_error:
         with numba.objmode:
             logger.error(f"No solution for v_wall = %s, alpha_n = %s", v_wall, alpha_n)
         raise RuntimeError("No solution for given v_wall, alpha_n")
@@ -48,6 +48,7 @@ def identify_solution_type_alpha_plus(v_wall: float, alpha_p: float) -> boundary
     :param alpha_p: $\alpha_p$
     :return: solution type [ 'Detonation' | 'Deflagration' | 'Hybrid' ]
     """
+    # TODO: Currently this is for the bag model only
     if v_wall <= const.CS0:
         sol_type = boundary.SolutionType.SUB_DEF
     else:
@@ -78,7 +79,7 @@ def max_speed_deflag(alpha_p: th.FloatOrArr) -> th.FloatOrArr:
 
     :param alpha_p: $\alpha_+$
     """
-    return 1/(3 * boundary.v_plus(const.CS0, alpha_p, boundary.SolutionType.SUB_DEF))
+    return 1 / (3 * boundary.v_plus(const.CS0, alpha_p, boundary.SolutionType.SUB_DEF))
 
 
 @numba.njit

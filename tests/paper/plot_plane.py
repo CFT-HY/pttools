@@ -7,6 +7,7 @@ from pttools import bubble
 
 
 def filter_not(arr: np.ndarray, mask: np.ndarray) -> np.ndarray:
+    """Replace the elements that are False in the mask with np.nan"""
     arr2 = arr.copy()
     arr2[np.logical_not(mask)] = np.nan
     return arr2
@@ -68,7 +69,7 @@ def v_ahead_max(xi):
 
 def plot_v_excerpt(ax: plt.Axes, v_wall: float, alpha_plus: float, n_xi: int = 500):
     """Plots parts of solution obtained by integration of fluid equations.
-    Supersonic deflgration solution comes in two parts, ahead and behind wall,
+    Supersonic deflagration solution comes in two parts, ahead and behind wall,
     each with about npts values."""
     v, w, xi = bubble.fluid_shell_alpha_plus(v_wall, alpha_plus, n_xi=n_xi)
     wall_type = bubble.identify_solution_type(v_wall, alpha_plus)

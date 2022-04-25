@@ -3,7 +3,7 @@ r"""Functions for fluid differential equations
 Now in parametric form (Jacky Lindsay and Mike Soughton MPhys project 2017-18).
 RHS is Eq (33) in Espinosa et al (plus $\frac{dw}{dt}$ not written there)
 """
-import ctypes
+# import ctypes
 import logging
 # import threading
 import typing as tp
@@ -298,8 +298,8 @@ def fluid_shell_alpha_plus(
         df_dtau_ptr: speedup.DifferentialPointer = DF_DTAU_BAG_PTR,
         sol_type_fun: callable = None) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
     r"""
-    Finds fluid shell (v, w, xi) from a given $v_\text{wall}, \alpha_+$ (at-wall strength parameter).
-    Where $v=0$ (behind and ahead of shell) uses only two points.
+    Finds the fluid shell profile (v, w, xi) from a given $v_\text{wall}, \alpha_+$ (at-wall strength parameter).
+    When $v=0$ (behind and ahead of shell), this uses only two points.
 
     :param v_wall: $v_\text{wall}$
     :param alpha_plus: $\alpha_+$
@@ -334,12 +334,12 @@ def fluid_shell_alpha_plus(
     # dxi = 10*eps
 
     # Set up parts outside shell where v=0. Need 2 points only.
-    # Forwards integration
+    # Forwards integration, from v_wall to xi=1
     xif = np.linspace(v_wall + dxi, 1.0, 2)
     vf = np.zeros_like(xif)
     wf = np.ones_like(xif) * wp
 
-    # Backwards integration
+    # Backwards integration, from cs or 0 to v_wall
     # TODO: set a value for the phase
     xib = np.linspace(min(cs2_fun(w_n, 0) ** 0.5, v_wall) - dxi, 0.0, 2)
     vb = np.zeros_like(xib)

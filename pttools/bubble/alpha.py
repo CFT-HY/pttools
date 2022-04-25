@@ -267,7 +267,7 @@ def _find_alpha_plus_optimizer(
 
 
 def _find_alpha_plus_scalar_cs2_converter(cs2_fun_ptr: bag.CS2FunScalarPtr) -> CS2CFunc:
-    r"""Converter for getting a $c_s^$ ctypes function from a pointer
+    r"""Converter for getting a $c_s^2$ ctypes function from a pointer
 
     This is a rather ugly hack. There should be a better way to call a function by a pointer!
     """
@@ -286,29 +286,32 @@ def _find_alpha_plus_scalar(
         alpha_n_given: float,
         n_xi: int,
         cs2_fun_ptr: bag.CS2FunScalarPtr,
-        df_dtau_ptr: speedup.DifferentialPointer) -> float:
+        df_dtau_ptr: speedup.DifferentialPointer,
+        xtol: float) -> float:
     """
     TODO: this might not generalize directly to models other than the bag model.
     It's possibly that the equations don't require any modifications, but instead the optimizer will simply
     fail in some cases.
+    At least the sol_type dependence in fluid_shell_alpha_plus should be removed.
     """
     if alpha_n_given < alpha_n_max_detonation(v_wall):
         # Must be detonation
         # sol_type = boundary.SolutionType.DETON
         return alpha_n_given
     if alpha_n_given >= alpha_n_max_deflagration(v_wall):
+        # Greater than the maximum possible -> fail
         return np.nan
     sol_type = boundary.SolutionType.SUB_DEF if v_wall <= const.CS0 else boundary.SolutionType.HYBRID
-    a_initial_guess = alpha_plus_initial_guess(v_wall, alpha_n_given)
+    ap_initial_guess = alpha_plus_initial_guess(v_wall, alpha_n_given)
     with numba.objmode(ret="float64"):
         cs2_fun = _find_alpha_plus_scalar_cs2_converter(cs2_fun_ptr)
 
         # This returns np.float64
         ret: float = scipy.optimize.fsolve(
             _find_alpha_plus_optimizer,
-            a_initial_guess,
+            ap_initial_guess,
             args=(v_wall, sol_type, n_xi, alpha_n_given, cs2_fun, df_dtau_ptr),
-            xtol=const.FIND_ALPHA_PLUS_TOL,
+            xtol=xtol,
             factor=0.1)[0]
     return ret
 
@@ -319,7 +322,8 @@ def _find_alpha_plus_arr(
         alpha_n_given: float,
         n_xi: int,
         cs2_fun_ptr: bag.CS2FunScalarPtr,
-        df_dtau_ptr: speedup.DifferentialPointer) -> np.ndarray:
+        df_dtau_ptr: speedup.DifferentialPointer,
+        xtol: float) -> np.ndarray:
     ap = np.zeros_like(v_wall)
     for i in numba.prange(v_wall.size):
         ap[i] = _find_alpha_plus_scalar(v_wall[i], alpha_n_given, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr)
@@ -332,12 +336,13 @@ def find_alpha_plus(
         alpha_n_given: float,
         n_xi: int = const.N_XI_DEFAULT,
         cs2_fun_ptr: bag.CS2FunScalarPtr = bag.CS2_BAG_SCALAR_PTR,
-        df_dtau_ptr: speedup.DifferentialPointer = fluid.DF_DTAU_BAG_PTR) -> th.FloatOrArrNumba:
+        df_dtau_ptr: speedup.DifferentialPointer = fluid.DF_DTAU_BAG_PTR,
+        xtol: float = const.FIND_ALPHA_PLUS_TOL) -> th.FloatOrArrNumba:
     r"""
     Calculate the at-wall strength parameter $\alpha_+$ from given $\alpha_n$ and $v_\text{wall}$.
 
-    $$ \alpha_+ = \frac{4 \Delta \theta (T_+)}{3 w_+} \frac{4}{3} \frac{ \theta_s(T_+) - \theta_b(T_+) }{w(T_+)} $$
-    (:gw_pt_ssm:`GW PT SSM<>`, eq. 2.11)
+    $$\alpha_+ = \frac{4 \Delta \theta (T_+)}{3 w_+} = \frac{4}{3} \frac{ \theta_s(T_+) - \theta_b(T_+) }{w(T_+)}$$
+    (:gw_pt_ssm:`\ `, eq. 2.11)
 
     Uses :func:`scipy.optimize.fsolve` and therefore spends time in the Python interpreter even when jitted.
     This should be taken into account when running parallel simulations.
@@ -354,9 +359,9 @@ def find_alpha_plus(
             return _find_alpha_plus_scalar
         return _find_alpha_plus_arr
     if isinstance(v_wall, float):
-        return _find_alpha_plus_scalar(v_wall, alpha_n_given, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr)
+        return _find_alpha_plus_scalar(v_wall, alpha_n_given, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, xtol=xtol)
     if isinstance(v_wall, np.ndarray):
         if not v_wall.ndim:
-            return _find_alpha_plus_scalar(v_wall.item(), alpha_n_given, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr)
-        return _find_alpha_plus_arr(v_wall, alpha_n_given, n_xi, cs2_fun=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr)
+            return _find_alpha_plus_scalar(v_wall.item(), alpha_n_given, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, xtol=xtol)
+        return _find_alpha_plus_arr(v_wall, alpha_n_given, n_xi, cs2_fun=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, xtol=xtol)
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
