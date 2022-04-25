@@ -70,36 +70,39 @@ def fluid_speeds_at_wall(
         alpha_p: th.FloatOrArr,
         sol_type: SolutionType) -> tp.Tuple[float, float, float, float]:
     r"""
-    Solves fluid speed boundary conditions at the wall.
-    Fluid speed vf? just behind (?=m) and just ahead (?=p) of wall,
+    Solves fluid speed boundary conditions at the wall to obtain
+    the fluid speeds both in the universe (plasma frame): $v_+$ and $v_+$
+    and in the wall frame: $\tilde{v}_+, \tilde{v}_-$.
+
+    The abbreviations are: fluid speed (vf) just behind (m=minus) and just ahead (p=plus) of wall,
     in wall (_w) and plasma/universe (_p) frames.
 
-    Figures v+ and v- both in the wall frame and in the universe (plasma) frame.
     TODO: add a validity check for v_minus
 
     :param v_wall: $v_\text{wall}$
     :param alpha_p: $\alpha_+$
     :param sol_type: solution type
-    :return: vfp_w, vfm_w, vfp_p, vfm_p
+    :return: $v_+, v_-, \tilde{v}_+, \tilde{v}_-$
     """
     if v_wall <= 1:
         # print( "max_speed_deflag(alpha_p)= ", max_speed_deflag(alpha_p))
         #     if v_wall < max_speed_deflag(alpha_p) and v_wall <= cs and alpha_p <= 1/3.:
         if sol_type == SolutionType.SUB_DEF.value:
-            vfm_w = v_wall  # Fluid velocity just behind the wall in wall frame (v-)
-            vfm_p = relativity.lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
+            # For clarity these are defined here in the same order as returned
             vfp_w = v_plus(v_wall, alpha_p, sol_type)  # Fluid velocity just ahead of the wall in wall frame (v+)
+            vfm_w = v_wall  # Fluid velocity just behind the wall in wall frame (v-)
             vfp_p = relativity.lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
+            vfm_p = relativity.lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
         elif sol_type == SolutionType.HYBRID.value:
-            vfm_w = const.CS0  # Fluid velocity just behind the wall in plasma frame (hybrid)
-            vfm_p = relativity.lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
             vfp_w = v_plus(const.CS0, alpha_p, sol_type)  # Fluid velocity just ahead of the wall in wall frame (v+)
+            vfm_w = const.CS0  # Fluid velocity just behind the wall in plasma frame (hybrid)
             vfp_p = relativity.lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
-        elif sol_type == SolutionType.DETON.value:
-            vfm_w = v_minus(v_wall, alpha_p)  # Fluid velocity just behind the wall in wall frame (v-)
             vfm_p = relativity.lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
+        elif sol_type == SolutionType.DETON.value:
             vfp_w = v_wall  # Fluid velocity just ahead of the wall in wall frame (v+)
+            vfm_w = v_minus(v_wall, alpha_p)  # Fluid velocity just behind the wall in wall frame (v-)
             vfp_p = relativity.lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
+            vfm_p = relativity.lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
         else:
             with numba.objmode:
                 logger.error("Unknown sol_type: %s", sol_type)
@@ -113,13 +116,15 @@ def fluid_speeds_at_wall(
 
 
 @numba.njit
-def _v_minus_scalar(vp: float, ap: float, sol_type: SolutionType):
+def _v_minus_scalar(vp: float, ap: float, sol_type: SolutionType) -> float:
     vp2 = vp ** 2
     Y = vp2 + 1. / 3.
     Z = (Y - ap * (1. - vp2))
     X = (4. / 3.) * vp2
     b = 1. if sol_type == SolutionType.DETON.value else -1
     return (0.5 / vp) * (Z + b * np.sqrt(Z ** 2 - X))
+
+    # Handling of complex return values for scalars
     # if np.imag(ret):
     #     with numba.objmode:
     #         logger.warning(
@@ -130,13 +135,12 @@ def _v_minus_scalar(vp: float, ap: float, sol_type: SolutionType):
 
 
 @numba.njit
-def _v_minus_arr(vp: th.FloatOrArr, ap: th.FloatOrArr, sol_type: SolutionType):
-    vp2 = vp ** 2
-    Y = vp2 + 1. / 3.
-    Z = (Y - ap * (1. - vp2))
-    X = (4. / 3.) * vp2
-    b = 1. if sol_type == SolutionType.DETON.value else -1
-    return (0.5 / vp) * (Z + b * np.sqrt(Z ** 2 - X))
+def _v_minus_arr(vp: np.ndarray, ap: float, sol_type: SolutionType) -> np.ndarray:
+    ret = np.empty_like(vp)
+    for i, v in enumerate(vp):
+        ret[i] = _v_minus_scalar(v, ap, sol_type)
+    return ret
+
     # complex_inds = np.where(np.imag(ret))
     # if np.any(complex_inds):
     #     ret[np.where(np.imag(ret))] = np.nan
@@ -150,25 +154,33 @@ def _v_minus_arr(vp: th.FloatOrArr, ap: th.FloatOrArr, sol_type: SolutionType):
 @numba.generated_jit(nopython=True)
 def v_minus(
         vp: th.FloatOrArr,
-        ap: th.FloatOrArr,
+        ap: float,
         sol_type: SolutionType = SolutionType.DETON) -> th.FloatOrArrNumba:
     r"""
-    Wall frame fluid speed $v_-$ behind the wall
+    Wall frame fluid speed $\tilde{v}_-$ behind the wall
+    $$\frac{1}{2} \left[
+    \left( (1 + \alpha_+)\tilde{v}_+ + \frac{1 - 3\alpha_+}{3 \tilde{v}_+} \right)
+    \pm
+    \sqrt{ \left( (1 + \alpha_+)\tilde{v}_+ + \frac{1 - 3\alpha_+}{3 \tilde{v}_+} \right)^2 - \frac{4}{3} }
+    \right]$$
+    :gw_pt_ssm:`\ `, eq. B.7
 
-    :param vp: $v_-$, fluid speed $v_+$ behind the wall
+    Positive sign is for detonations and negative for others.
+
+    :param vp: $\tilde{v}_+$, fluid speed ahead of the wall
     :param ap: $\alpha_+$, strength parameter at the wall
     :param sol_type: Detonation, Deflagration, Hybrid
-    :return: $v_-$, fluid speed behind the wall
+    :return: $\tilde{v}_-$, fluid speed behind the wall
     """
     # TODO: add support for having both arguments as arrays
     # sol_type is a string enum, which would complicate the use of numba.guvectorize
-    if isinstance(vp, numba.types.Float) and isinstance(ap, numba.types.Float):
+    if isinstance(vp, numba.types.Float):
         return _v_minus_scalar
-    if isinstance(vp, numba.types.Array) != isinstance(ap, numba.types.Array):
+    if isinstance(vp, numba.types.Array):
         return _v_minus_arr
-    if isinstance(vp, float) and isinstance(ap, float):
+    if isinstance(vp, float):
         return _v_minus_scalar(vp, ap, sol_type)
-    if isinstance(vp, np.ndarray) != isinstance(ap, np.ndarray):
+    if isinstance(vp, np.ndarray):
         return _v_minus_arr(vp, ap, sol_type)
     raise TypeError(f"Unknown argument types: vp = {type(vp)}, ap = {type(ap)}")
 
@@ -177,7 +189,11 @@ def v_minus(
 def _v_plus_scalar(vm: float, ap: float, sol_type: SolutionType) -> float:
     X = vm + 1. / (3 * vm)
     b = 1. if sol_type == SolutionType.DETON.value else -1.
-    return (0.5 / (1 + ap)) * (X + b * np.sqrt(X ** 2 + 4. * ap ** 2 + (8. / 3.) * ap - (4. / 3.)))
+    vp = (0.5 / (1 + ap)) * (X + b * np.sqrt(X ** 2 + 4. * ap ** 2 + (8. / 3.) * ap - (4. / 3.)))
+    # Fluid must flow through the wall from the outside to the inside of the bubble.
+    return vp if vp >= 0 else np.nan
+
+    # Handling of complex return values for scalars
     # if np.imag(ret):
     #     with numba.objmode:
     #         logger.warning(
@@ -188,10 +204,12 @@ def _v_plus_scalar(vm: float, ap: float, sol_type: SolutionType) -> float:
 
 
 @numba.njit
-def _v_plus_arr(vm: th.FloatOrArr, ap: th.FloatOrArr, sol_type: SolutionType) -> np.ndarray:
-    X = vm + 1. / (3 * vm)
-    b = 1. if sol_type == SolutionType.DETON.value else -1.
-    return (0.5 / (1 + ap)) * (X + b * np.sqrt(X ** 2 + 4. * ap ** 2 + (8. / 3.) * ap - (4. / 3.)))
+def _v_plus_arr(vm: np.ndarray, ap: float, sol_type: SolutionType) -> np.ndarray:
+    ret = np.empty_like(vm)
+    for i, v in enumerate(vm):
+        ret[i] = _v_plus_scalar(v, ap, sol_type)
+    return ret
+
     # complex_inds = np.where(np.imag(ret))
     # if np.any(complex_inds):
     #     ret[np.where(np.imag(ret))] = np.nan
@@ -203,22 +221,34 @@ def _v_plus_arr(vm: th.FloatOrArr, ap: th.FloatOrArr, sol_type: SolutionType) ->
 
 
 @numba.generated_jit(nopython=True)
-def v_plus(vm: float, ap: th.FloatOrArr, sol_type: SolutionType) -> th.FloatOrArrNumba:
+def v_plus(vm: th.FloatOrArr, ap: float, sol_type: SolutionType) -> th.FloatOrArrNumba:
     r"""
-    Wall frame fluid speed $v_+$ ahead of the wall
+    Wall frame fluid speed $\tilde{v}_+$ ahead of the wall
+    $$\tilde{v}_+ = \frac{1}{2(1 + \alpha_+)}
+    \left[
+    \left( \frac{1}{3 \tilde{v}_-} + \tilde{v}_- \right)
+    \pm
+    \sqrt{ \left( \frac{1}{3\tilde{v}_-} - \tilde{v}_- \right)^2 + 4\alpha_+^2 + \frac{8}{3} \alpha_+}
+    \right]$$
+    :gw_pt_ssm:`\ `, eq. B.6,
+    :notes:`\ `, eq. 7.27.
+    The equations in both sources are equivalent by moving a factor of 2.
 
-    :param vm: $v_-$, fluid speed $v_+$ behind the wall
+    Positive sign is for detonations and negative for others.
+
+    :param vm: $\tilde{v}_-$, fluid speed behind the wall
     :param ap: $\alpha_+$, strength parameter at the wall
     :param sol_type: Detonation, Deflagration, Hybrid
-    :return: $v_+$, fluid speed ahead of the wall
+    :return: $\tilde{v}_+$, fluid speed ahead of the wall
     """
     # TODO: add support for having both arguments as arrays
-    if isinstance(vm, numba.types.Float) and isinstance(ap, numba.types.Float):
+    # sol_type is a string enum, which would complicate the use of numba.guvectorize
+    if isinstance(vm, numba.types.Float):
         return _v_plus_scalar
-    if isinstance(vm, numba.types.Array) != isinstance(ap, numba.types.Array):
+    if isinstance(vm, numba.types.Array):
         return _v_plus_arr
-    if isinstance(vm, float) and isinstance(ap, float):
+    if isinstance(vm, float):
         return _v_plus_scalar(vm, ap, sol_type)
-    if isinstance(vm, np.ndarray) != isinstance(ap, np.ndarray):
+    if isinstance(vm, np.ndarray):
         return _v_plus_arr(vm, ap, sol_type)
     raise TypeError(f"Unknown argument types: vm = {type(vm)}, ap = {type(ap)}")
