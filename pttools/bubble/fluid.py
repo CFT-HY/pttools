@@ -15,7 +15,7 @@ except ImportError:
     try:
         import NumbaLSODA as numbalsoda
     except ImportError:
-        NumbaLSODA = None
+        numbalsoda = None
 import numpy as np
 import scipy.integrate as spi
 
