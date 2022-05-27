@@ -82,7 +82,7 @@ def fluid_speeds_at_wall(
     :param v_wall: $v_\text{wall}$
     :param alpha_p: $\alpha_+$
     :param sol_type: solution type
-    :return: $v_+, v_-, \tilde{v}_+, \tilde{v}_-$
+    :return: $v_+,v_-,\tilde{v}_+,\tilde{v}_-$
     """
     if v_wall <= 1:
         # print( "max_speed_deflag(alpha_p)= ", max_speed_deflag(alpha_p))
@@ -158,7 +158,7 @@ def v_minus(
         sol_type: SolutionType = SolutionType.DETON) -> th.FloatOrArrNumba:
     r"""
     Wall frame fluid speed $\tilde{v}_-$ behind the wall
-    $$\frac{1}{2} \left[
+    $$\tilde{v}_- = \frac{1}{2} \left[
     \left( (1 + \alpha_+)\tilde{v}_+ + \frac{1 - 3\alpha_+}{3 \tilde{v}_+} \right)
     \pm
     \sqrt{ \left( (1 + \alpha_+)\tilde{v}_+ + \frac{1 - 3\alpha_+}{3 \tilde{v}_+} \right)^2 - \frac{4}{3} }

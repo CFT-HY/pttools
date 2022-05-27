@@ -25,3 +25,7 @@ Constant sound speed
 Thermodynamics model
 --------------------
 .. automodule:: pttools.models.thermo
+
+Standard Model
+--------------
+.. automodule:: pttools.models.sm
