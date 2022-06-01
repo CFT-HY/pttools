@@ -4,6 +4,7 @@ import unittest
 import numpy as np
 
 from pttools.bubble import boundary
+from tests.utils.assertions import assert_allclose
 from tests.utils.const import TEST_DATA_PATH
 
 
@@ -25,7 +26,7 @@ class TestVPlusMinus(unittest.TestCase):
 
         data_arr = np.array(data).T
         data_ref = np.loadtxt(ref_path)
-        np.testing.assert_array_equal(data_arr, data_ref)
+        assert_allclose(data_arr, data_ref)
 
     def test_v_plus_minus(self):
         """Compute v_plus from v_minus.
