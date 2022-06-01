@@ -24,7 +24,6 @@ from tests.test_performance import PERFORMANCE_DIR
 logger = logging.getLogger(__name__)
 
 PLOT = True
-os.makedirs(utils.TEST_FIGURE_PATH, exist_ok=True)
 
 
 class TestPlane(unittest.TestCase):
@@ -58,7 +57,7 @@ class TestPlane(unittest.TestCase):
         cls.plot_perf(axs[0, 3])
         cls.plot_diff(axs[0, 4], name, diffs)
         fig.tight_layout()
-        path = f"{cls.FIG_PATH}_{name}"
+        path = os.path.join(cls.FIG_PATH, f"integrators_{name}")
         utils.save_fig_multi(fig, path)
         plt.close(fig)
         if shutil.which("ffmpeg"):
@@ -92,6 +91,8 @@ class TestPlane(unittest.TestCase):
         if PLOT:
             cls.process_output("absolute", cls.grid_fig_abs, cls.axs_abs, cls.mean_abs_diffs)
             cls.process_output("relative", cls.grid_fig_rel, cls.axs_rel, cls.mean_rel_diffs)
+            plt.close(cls.grid_fig_abs)
+            plt.close(cls.grid_fig_rel)
 
     @classmethod
     def plot_perf(cls, ax: plt.Axes):
@@ -164,7 +165,7 @@ class TestPlane(unittest.TestCase):
                 ax2: plt.Axes = fig.add_subplot()
                 plot_plane.plot_plane(ax=axs[ax[0], ax[1]], data_s=data, method=method, deflag_ref=self.ref_data, **tols)
                 plot_plane.plot_plane(ax=ax2, data_s=data, method=method, deflag_ref=self.ref_data, **tols)
-                fig_name = f"{self.FIG_PATH}_{name}_{i}_{plot_plane.get_solver_name(method)}"
+                fig_name = os.path.join(self.FIG_PATH, f"integrators_{name}_{i}_{plot_plane.get_solver_name(method)}")
                 utils.save_fig_multi(fig, fig_name)
                 plt.close(fig)
 

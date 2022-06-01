@@ -15,6 +15,8 @@ from tests import utils
 
 logger = logging.getLogger(__name__)
 
+FIG_PATH = os.path.join(utils.TEST_FIGURE_PATH, "fluid_shells")
+
 
 class TestShells(unittest.TestCase):
     @staticmethod
@@ -30,8 +32,10 @@ class TestShells(unittest.TestCase):
         # for name, value in params.items():
         #     print(name, value, type(value))
         # print([np.nansum(param) if isinstance(param, np.ndarray) else param for param in params.values()])
-        data_numpy = np.array([np.nansum(param) if isinstance(param, np.ndarray) else param for param in params.values()], dtype=np.float_)
-            # [np.nansum(arr) for arr in arrs.values()] + list(scalars.values()))
+        data_numpy = np.array(
+            [np.nansum(param) if isinstance(param, np.ndarray) else param for param in params.values()],
+            dtype=np.float_)
+        # [np.nansum(arr) for arr in arrs.values()] + list(scalars.values()))
 
         # path_json = os.path.join(utils.TEST_DATA_PATH, "shell.json")
         path_txt = os.path.join(utils.TEST_DATA_PATH, "shell.txt")
@@ -60,15 +64,19 @@ class TestShells(unittest.TestCase):
         alpha_weak_list = len(vw_weak_list) * [alpha_weak]
         alpha_inter_list = len(vw_inter_list) * [alpha_inter]
 
-        _, data_weak = bubble.plot_fluid_shells(vw_weak_list, alpha_weak_list, debug=True, draw=False)
-        _, data_inter = bubble.plot_fluid_shells(vw_inter_list, alpha_inter_list, debug=True, draw=False)
+        fig_weak, data_weak = bubble.plot_fluid_shells(vw_weak_list, alpha_weak_list, debug=True)
+        fig_inter, data_inter = bubble.plot_fluid_shells(vw_inter_list, alpha_inter_list, debug=True)
 
         # Espinosa et al. 2010 comparisons
         vw_list_esp = [0.5, 0.7, 0.77]
         alpha_plus_list_esp = [0.263, 0.052, 0.091]
         alpha_n_list_esp = [bubble.find_alpha_n(vw, ap) for vw, ap in zip(vw_list_esp, alpha_plus_list_esp)]
 
-        _, data_esp = bubble.plot_fluid_shells(vw_list_esp, alpha_n_list_esp, multi=True, debug=True, draw=False)
+        fig_esp, data_esp = bubble.plot_fluid_shells(vw_list_esp, alpha_n_list_esp, multi=True, debug=True)
+
+        for fig, name in zip([fig_weak, fig_inter, fig_esp], ["weak", "inter", "esp"]):
+            utils.save_fig_multi(fig, os.path.join(FIG_PATH, name))
+            plt.close(fig)
 
         # Generate new reference data
         # np.savetxt(self.shell_file_path("weak"), data_weak)
@@ -93,7 +101,9 @@ class TestShells(unittest.TestCase):
         utils.assert_allclose(data_esp, ref_esp, rtol=rtols[2])
 
     def test_plot_fluid_shell(self):
-        bubble.plot_fluid_shell(v_wall=0.7, alpha_n=0.052, draw=False)
+        fig, params = bubble.plot_fluid_shell(v_wall=0.7, alpha_n=0.052)
+        utils.save_fig_multi(fig, os.path.join(FIG_PATH, "fluid_shell_single"))
+        plt.close(fig)
 
 
 if __name__ == "__main__":

@@ -17,14 +17,14 @@ import pttools.ssmtools as ssm
 from tests.paper import const
 from tests.paper import plotting
 from tests.paper import utils
-from tests.utils.const import TEST_DATA_PATH
+from tests.utils.const import TEST_DATA_PATH, TEST_FIGURE_PATH
 
 logger = logging.getLogger(__name__)
 
 # bubble.setup_plotting()
 
-MDP = os.path.join(TEST_DATA_PATH, "model_data/")
-GDP = os.path.join(TEST_DATA_PATH, "graphs/")
+MDP = os.path.join(TEST_DATA_PATH, "model_data")
+GDP = TEST_FIGURE_PATH
 os.makedirs(MDP, exist_ok=True)
 os.makedirs(GDP, exist_ok=True)
 
@@ -114,6 +114,7 @@ def generate_ps(
     gw_power = np.trapz(pow_gw/y, y)
 
     if v_xi_file is not None:
+        # TODO: This could be reordered to avoid the warning about the undefined variable
         sd_gw2, y = ssm.spec_den_gw_scaled(z, sd_v2)
         pow_gw2 = ssm.pow_spec(y, sd_gw2)
         gw_power = np.trapz(pow_gw2/y, y)
@@ -165,20 +166,20 @@ def generate_ps(
         data_file_suffix = file_suffix + save_ids[0] + '.txt'
 
         if v_xi_file is None:
-            np.savetxt(MDP + 'pow_v_' + data_file_suffix,
+            np.savetxt(os.path.join(MDP, 'pow_v_' + data_file_suffix),
                        np.stack((z, pow_v), axis=-1), fmt='%.18e %.18e')
-            np.savetxt(MDP + 'pow_gw_' + data_file_suffix,
+            np.savetxt(os.path.join(MDP, 'pow_gw_' + data_file_suffix),
                        np.stack((y, pow_gw), axis=-1), fmt='%.18e %.18e')
         else:
-            np.savetxt(MDP + 'pow_v_' + data_file_suffix,
+            np.savetxt(os.path.join(MDP, 'pow_v_' + data_file_suffix),
                        np.stack((z, pow_v, pow_v2), axis=-1), fmt='%.18e %.18e %.18e')
-            np.savetxt(MDP + 'pow_gw_' + data_file_suffix,
+            np.savetxt(os.path.join(MDP, 'pow_gw_' + data_file_suffix),
                        np.stack((y, pow_gw, pow_gw2), axis=-1), fmt='%.18e %.18e %.18e')
 
     if save_ids[1] is not None:
         graph_file_suffix = file_suffix + save_ids[1] + '.pdf'
-        f1.savefig(GDP + "pow_v_" + graph_file_suffix)
-        f2.savefig(GDP + "pow_gw_" + graph_file_suffix)
+        f1.savefig(os.path.join(GDP, "pow_v_" + graph_file_suffix))
+        f2.savefig(os.path.join(GDP, "pow_gw_" + graph_file_suffix))
 
     # Now some diagnostic comparisons between real space <v^2> and Fourier space already calculated
     v_ip, w_ip, xi = bubble.fluid_shell(vw, alpha)

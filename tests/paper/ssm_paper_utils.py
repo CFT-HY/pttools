@@ -885,7 +885,12 @@ def do_all_plot_ps_compare_nuc(save_id: str = None, graph_file_type: str = None)
     return param_list, v2_list, Omgw_scaled_list, p_cwg_list, p_ssm_list
 
 
-def do_all_plot_ps_1bubble(save_id: str = None, graph_file_type: str = None, debug: bool = False):
+def do_all_plot_ps_1bubble(
+        save_id: str = None,
+        graph_file_type: str = None,
+        debug: bool = False) -> tp.Union[
+            tp.Tuple[tp.List[plt.Figure], tp.List[str]],
+            tp.Tuple[tp.List[plt.Figure], tp.List[str], np.ndarray]]:
     vw_weak_list = [0.92, 0.56, 0.44]
     vw_inter_list = [0.92, 0.56, 0.44]
 
@@ -896,6 +901,7 @@ def do_all_plot_ps_1bubble(save_id: str = None, graph_file_type: str = None, deb
     alpha_list_all = [alpha_weak, alpha_inter]
 
     figs = []
+    fig_ids = []
     data_lst = []
     for vw_list, alpha, in zip(vw_list_all, alpha_list_all):
         for vw in vw_list:
@@ -904,7 +910,8 @@ def do_all_plot_ps_1bubble(save_id: str = None, graph_file_type: str = None, deb
                 data_lst.append(data)
             fig = plot_ps_1bubble(vw, alpha, save_id, graph_file_type)
             figs.append(fig)
+            fig_ids.append(f"vw{vw}_alpha{alpha}")
 
     if debug:
-        return figs, np.array(data_lst)
-    return figs
+        return figs, fig_ids, np.array(data_lst)
+    return figs, fig_ids
