@@ -19,8 +19,8 @@ ALPHA_LIST_ALL = [ALPHA_WEAK, ALPHA_INTER]
 #: Colours for comparison plots
 COLOURS = ("b", "r", "g")
 
-ETA_WEAK_LIST = [0.19, 0.35, 0.51, 0.59, 0.93]
-ETA_INTER_LIST = [0.17, 0.40, 0.62]
+# ETA_WEAK_LIST = [0.19, 0.35, 0.51, 0.59, 0.93]
+# ETA_INTER_LIST = [0.17, 0.40, 0.62]
 
 #: File type for saving the plots
 FILE_TYPE = "pdf"
@@ -45,12 +45,11 @@ NUC_ARGS = (1.,)
 # NUC_TYPE = "exponential"
 # NUC_ARGS = (0,)
 
-NZ_STRING = "nz" + "".join(f"{np[0] // 1000}k" for np in NP_ARR)
-NUC_STRING = NUC_TYPE[0:3] + "_" + "_".join(str(arg) for arg in NUC_ARGS) + "_"
+# NZ_STRING = "nz" + "".join(f"{np[0] // 1000}k" for np in NP_ARR)
 #: Nucleation config as string
 NUC_STRING: str = NUC_TYPE[0:3] + "_" + "_".join(str(arg) for arg in NUC_ARGS) + "_"
 
-NT_STRING = f"_nT{NP_ARR[0][2]}"
+# NT_STRING = f"_nT{NP_ARR[0][2]}"
 
 #: Wall velocities for testing with weak transition strength
 VW_WEAK_LIST = [0.92, 0.80, 0.68, 0.56, 0.44]
