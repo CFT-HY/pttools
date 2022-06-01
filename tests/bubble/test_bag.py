@@ -7,6 +7,10 @@ from tests import utils
 
 
 class TestBag(unittest.TestCase):
+    """Test the functions of the bag model equation of state
+
+    TODO: This will be phased out when the support for custom models is implemented
+    """
     @classmethod
     def setUpClass(cls) -> None:
         """

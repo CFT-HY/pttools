@@ -7,6 +7,7 @@ from pttools import speedup
 
 
 class TestParams(unittest.TestCase):
+    """Test the experimental jitclass-based parameter storage"""
     def test_nuc_args(self):
         pp.NucArgs(0.1)
 

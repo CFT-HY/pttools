@@ -17,6 +17,7 @@ def assert_allclose(
         err_msg: str = "",
         verbose: bool = True,
         fmt: str = printing.DEFAULT_FMT):
+    """Assert that all array elements correspond to the reference within the given tolerances"""
     if actual.ndim >= 3:
         with np.printoptions(edgeitems=30, linewidth=200):
             np.testing.assert_allclose(actual, desired, rtol, atol, equal_nan, err_msg, verbose)

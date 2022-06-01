@@ -34,6 +34,7 @@ MD_PATH = TEST_DATA_PATH + "/"
 
 # All run parameters
 
+#: Wall velocities for intermediate transition strength
 VW_INTER_LIST = [0.92, 0.80, 0.731, 0.56, 0.44]
 
 # NB1 prace runs did not include intermediate 0.80, 0.44.

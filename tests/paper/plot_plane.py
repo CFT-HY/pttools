@@ -1,3 +1,7 @@
+"""
+TODO: rename this to plot_plane_paper
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.integrate as spi

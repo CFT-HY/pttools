@@ -9,15 +9,20 @@ import numpy as np
 
 import pttools.ssmtools as ssm
 
+#: Weak transition strength
 ALPHA_WEAK = 0.0046
+#: Intermediate transition strength
 ALPHA_INTER = 0.050
+#: Transition strengths to plot with
 ALPHA_LIST_ALL = [ALPHA_WEAK, ALPHA_INTER]
 
+#: Colours for comparison plots
 COLOURS = ("b", "r", "g")
 
 ETA_WEAK_LIST = [0.19, 0.35, 0.51, 0.59, 0.93]
 ETA_INTER_LIST = [0.17, 0.40, 0.62]
 
+#: File type for saving the plots
 FILE_TYPE = "pdf"
 
 #: Number of points used in the numerical calculations (n_z, n_xi, n_t).
@@ -42,9 +47,12 @@ NUC_ARGS = (1.,)
 
 NZ_STRING = "nz" + "".join(f"{np[0] // 1000}k" for np in NP_ARR)
 NUC_STRING = NUC_TYPE[0:3] + "_" + "_".join(str(arg) for arg in NUC_ARGS) + "_"
+#: Nucleation config as string
+NUC_STRING: str = NUC_TYPE[0:3] + "_" + "_".join(str(arg) for arg in NUC_ARGS) + "_"
 
 NT_STRING = f"_nT{NP_ARR[0][2]}"
 
+#: Wall velocities for testing with weak transition strength
 VW_WEAK_LIST = [0.92, 0.80, 0.68, 0.56, 0.44]
 
 Z_MIN = 0.2   # Minimum z = k.R* array value

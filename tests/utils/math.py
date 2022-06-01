@@ -8,6 +8,7 @@ def rel_diff_arr(x: np.ndarray, y: np.ndarray) -> np.ndarray:
 
 
 def rel_diff_scalar(x: float, y: float) -> float:
+    """Relative difference of two scalars"""
     if y == 0:
         return np.nan
     return abs(x - y) / y

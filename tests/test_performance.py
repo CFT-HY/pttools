@@ -13,7 +13,8 @@ from tests.utils.const import TEST_RESULT_PATH
 
 logger = logging.getLogger(__name__)
 
-NUMBA_HAS_GET_NUM_THREADS = hasattr(numba, "get_num_threads")
+#: Whether the installed Numba has support for setting the number of threads
+NUMBA_HAS_GET_NUM_THREADS: bool = hasattr(numba, "get_num_threads")
 PERFORMANCE_DIR = os.path.join(TEST_RESULT_PATH, "performance")
 os.makedirs(PERFORMANCE_DIR, exist_ok=True)
 

@@ -267,6 +267,8 @@ def fluid_shell(
     r"""
     Finds fluid shell $(v, w, \xi)$ from a given $v_\text{wall}, \alpha_n$, which must be scalars.
 
+    Computes $\alpha_+$ from $\alpha_n$ and then calls :py:func:`fluid_shell_alpha_plus`.
+
     :param v_wall: $v_\text{wall}$
     :param alpha_n: $\alpha_n$
     :param n_xi: number of $\xi$ points
