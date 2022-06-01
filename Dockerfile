@@ -1,7 +1,7 @@
 # The standard Debian image is used instead of the Alpine one,
 # as Alpine uses a different version of the C standard library,
 # and therefore the usual Python wheels don't work on Alpine.
-FROM python:3.9
+FROM python:3.10
 
 RUN apt-get update \
     && apt-get install -y cmake \

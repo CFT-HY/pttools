@@ -38,5 +38,8 @@ There you can find a zip file containing the documentation in various formats.
 The recommended way to browse the documentation is to unpack the zip file and then open
 `html/index.html` with a web browser.
 
+### Requirements
+Python >= 3.7
+
 ### Who do I talk to?
 - Repo owner: [Mark Hindmarsh](https://github.com/hindmars/)
