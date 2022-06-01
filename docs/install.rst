@@ -32,12 +32,12 @@ Once the virtual environment is activated with the commands above,
 you can install PTtools from the Git repository with pip.
 A PyPI package will be available later, once PTtools is made open source.
 
-The ``[NumbaLSODA]`` flag installs the optional
+The ``[numbalsoda]`` flag installs the optional
 `NumbaLSODA <https://pypi.org/project/numbalsoda/>`_
 ordinary differential equation (ODE) solver library,
 but it may not build on all platforms, especially Windows.
 Therefore if you get any build errors,
-please remove the ``[NumbaLSODA]`` flag and try the PTtools installation again.
+please remove the ``[numbalsoda]`` flag and try the PTtools installation again.
 You can then have a look at the
 :ref:`NumbaLSODA` section of the installation instructions.
 
@@ -133,13 +133,13 @@ You can install NumbaLSODA manually with
 
 .. code-block:: bash
 
-  pip3 install --upgrade NumbaLSODA
+  pip3 install --upgrade numbalsoda
 
 You may also try building from the Git repository.
 
 .. code-block:: bash
 
-  pip3 install --upgrade "NumbaLSODA @ git+https://github.com/Nicholaswogan/NumbaLSODA.git"
+  pip3 install --upgrade "numbalsoda @ git+https://github.com/Nicholaswogan/numbalsoda.git"
 
 If you get an error about missing ``cmake``, you have to install it manually.
 On Debian- and Ubuntu-based systems this can be done with the following commands.
