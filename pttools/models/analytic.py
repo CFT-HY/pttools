@@ -1,9 +1,9 @@
 import abc
 
-from pttools.models.base import BaseModel
+from pttools.models.base import Model
 
 
-class AnalyticModel(BaseModel, abc.ABC):
+class AnalyticModel(Model, abc.ABC):
     def __init__(self, a_s: float, a_b: float, V_s: float, V_b: float = 0):
         r"""
         :param a_s: prefactor of $p$ in the symmetric phase. The convention is as in :notes:`\ ` eq. 7.33.

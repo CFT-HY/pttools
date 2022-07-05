@@ -6,7 +6,7 @@ import scipy.optimize
 import pttools.type_hints as th
 
 
-class BaseModel(abc.ABC):
+class Model(abc.ABC):
     """Template for equations of state"""
     def __init__(self, V_s: float = 0, V_b: float = 0):
         r"""

@@ -9,11 +9,11 @@ import scipy.optimize
 
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase
-from pttools.models.base import BaseModel
+from pttools.models.base import Model
 from pttools.models.thermo import ThermoModel
 
 
-class FullModel(BaseModel):
+class FullModel(Model):
     """Template for equations of state"""
     def __init__(self, thermo: ThermoModel, V_s: float = 0, V_b: float = 0):
         """
