@@ -54,7 +54,7 @@ def _check_wall_speed_scalar(v_wall: float):
 @numba.generated_jit(nopython=True)
 def check_wall_speed(v_wall: tp.Union[th.FloatOrArr, tp.List[float]]):
     r"""
-    Checks that $v _\text{wall}$ values are all physical $(0 < v _\text{wall} < 1)$.
+    Checks that $v _\text{wall}$ values are all physical: $(0 < v _\text{wall} < 1)$.
     """
     if isinstance(v_wall, numba.types.Float):
         return _check_wall_speed_scalar
