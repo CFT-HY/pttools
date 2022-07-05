@@ -56,7 +56,9 @@ def pow_specs():
         # The library versions on Kale change the results further
         # rtol = 1.21e-6
         # Working around indexing bugs in envelope() has changed the results further
-        rtol = 1.72e-6
+        # rtol = 1.72e-6
+        # Changing v_plus and v_minus implementations has changed the results further for pure Python
+        rtol = 9.61e-7
     if NUMBA_INTEGRATE_TOLERANCES:
         logger.warning("test_pow_specs tolerances have been loosened for Numba")
         rtol = 0.013
