@@ -244,6 +244,7 @@ def find_alpha_n(
     return alpha_p * w[n_wall] / w[-1]
 
 
+@numba.njit
 def find_alpha_n_from_w_xi(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_p: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Calculates the transition strength parameter
