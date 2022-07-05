@@ -94,7 +94,8 @@ def alpha_n_max_deflagration(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAU
 def alpha_n_max_detonation(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Maximum allowed value of $\alpha_n$ for a detonation with wall speed $v_\text{wall}$.
-    Same as :func:`alpha_plus_max_detonation`, since for a detonation $\alpha_n = \alpha_+$.
+    Same as :func:`alpha_plus_max_detonation`, since for a detonation $\alpha_n = \alpha_+$,
+    as there is no fluid movement outside the wall.
 
     :param v_wall: $v_\text{wall}$
     :return: $\alpha_{n,\max,\text{detonation}}$

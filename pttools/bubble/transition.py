@@ -42,10 +42,10 @@ def identify_solution_type(v_wall: float, alpha_n: float, exit_on_error: bool = 
 @numba.njit
 def identify_solution_type_alpha_plus(v_wall: float, alpha_p: float) -> boundary.SolutionType:
     r"""
-    Determines wall type from wall speed $v_\text{wall}$ and at-wall strength parameter $\alpha_p$.
+    Determines wall type from wall speed $v_\text{wall}$ and at-wall strength parameter $\alpha_+$.
 
     :param v_wall: $v_\text{wall}$
-    :param alpha_p: $\alpha_p$
+    :param alpha_p: $\alpha_+$
     :return: solution type [ 'Detonation' | 'Deflagration' | 'Hybrid' ]
     """
     # TODO: Currently this is for the bag model only

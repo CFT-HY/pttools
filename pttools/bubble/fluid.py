@@ -328,6 +328,7 @@ def fluid_shell_alpha_plus(
         return nan_arr, nan_arr, nan_arr
 
     # Solve boundary conditions at wall
+    # See the function docstring for the abbreviations
     vfp_w, vfm_w, vfp_p, vfm_p = boundary.fluid_speeds_at_wall(v_wall, alpha_plus, sol_type)
     wp = 1.0  # Nominal value - will be rescaled later
     wm = wp / boundary.enthalpy_ratio(vfm_w, vfp_w)  # enthalpy just behind wall

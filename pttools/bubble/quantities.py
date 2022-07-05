@@ -1,4 +1,7 @@
-"""Functions for calculating quantities derived from solutions"""
+"""Functions for calculating quantities derived from solutions
+
+TODO: Should this be renamed as thermodynamics?
+"""
 
 import logging
 
