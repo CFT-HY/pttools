@@ -118,14 +118,23 @@ def fluid_speeds_at_wall(
     return vfp_w, vfm_w, vfp_p, vfm_p
 
 
+# TODO: Are the signs chosen correctly for models beyond the bag model?
+
 @numba.njit
 def _v_minus_scalar(vp: float, ap: float, sol_type: SolutionType) -> float:
+    # Fluid must flow through the wall from the outside to the inside of the bubble.
+    if vp < 0:
+        return np.nan
     vp2 = vp ** 2
-    Y = vp2 + 1. / 3.
-    Z = (Y - ap * (1. - vp2))
-    X = (4. / 3.) * vp2
-    b = 1. if sol_type == SolutionType.DETON.value else -1
-    return (0.5 / vp) * (Z + b * np.sqrt(Z ** 2 - X))
+    y = vp2 + 1. / 3.
+    z = (y - ap * (1. - vp2))
+    x = (4. / 3.) * vp2
+    # TODO: the automatic sol_type is not yet enabled
+    if sol_type is None:
+        b = 1. if vp < 1/np.sqrt(3) else -1
+    else:
+        b = 1. if sol_type == SolutionType.DETON.value else -1
+    return (0.5 / vp) * (z + b * np.sqrt(z ** 2 - x))
 
     # Handling of complex return values for scalars
     # if np.imag(ret):
@@ -137,11 +146,11 @@ def _v_minus_scalar(vp: float, ap: float, sol_type: SolutionType) -> float:
     # return ret
 
 
-@numba.njit
+@numba.njit(parallel=True)
 def _v_minus_arr(vp: np.ndarray, ap: float, sol_type: SolutionType) -> np.ndarray:
     ret = np.empty_like(vp)
-    for i, v in enumerate(vp):
-        ret[i] = _v_minus_scalar(v, ap, sol_type)
+    for i in numba.prange(vp.size):
+        ret[i] = _v_minus_scalar(vp[i], ap, sol_type)
     return ret
 
     # complex_inds = np.where(np.imag(ret))
@@ -155,12 +164,9 @@ def _v_minus_arr(vp: np.ndarray, ap: float, sol_type: SolutionType) -> np.ndarra
 
 
 @numba.generated_jit(nopython=True)
-def v_minus(
-        vp: th.FloatOrArr,
-        ap: float,
-        sol_type: SolutionType = SolutionType.DETON) -> th.FloatOrArrNumba:
+def v_minus(vp: th.FloatOrArr, ap: float, sol_type: SolutionType = SolutionType.DETON) -> th.FloatOrArrNumba:
     r"""
-    Wall frame fluid speed $\tilde{v}_-$ behind the wall
+    Fluid speed $\tilde{v}_-$ behind the wall in the wall frame
     $$\tilde{v}_- = \frac{1}{2} \left[
     \left( (1 + \alpha_+)\tilde{v}_+ + \frac{1 - 3\alpha_+}{3 \tilde{v}_+} \right)
     \pm
@@ -168,15 +174,15 @@ def v_minus(
     \right]$$
     :gw_pt_ssm:`\ `, eq. B.7
 
-    Positive sign is for detonations and negative for others.
+    Positive sign is for $\tilde{v}_+ < \frac{1}{\sqrt{3}}$.
+    This is independent of the equation of state but corresponds to detonations in the bag model.
 
     :param vp: $\tilde{v}_+$, fluid speed ahead of the wall
     :param ap: $\alpha_+$, strength parameter at the wall
-    :param sol_type: Detonation, Deflagration, Hybrid
+    :param sol_type: Detonation, Deflagration, Hybrid (assumed detonation if not given)
     :return: $\tilde{v}_-$, fluid speed behind the wall
     """
     # TODO: add support for having both arguments as arrays
-    # sol_type is a string enum, which would complicate the use of numba.guvectorize
     if isinstance(vp, numba.types.Float):
         return _v_minus_scalar
     if isinstance(vp, numba.types.Array):
@@ -190,9 +196,13 @@ def v_minus(
 
 @numba.njit
 def _v_plus_scalar(vm: float, ap: float, sol_type: SolutionType) -> float:
-    X = vm + 1. / (3 * vm)
-    b = 1. if sol_type == SolutionType.DETON.value else -1.
-    vp = (0.5 / (1 + ap)) * (X + b * np.sqrt(X ** 2 + 4. * ap ** 2 + (8. / 3.) * ap - (4. / 3.)))
+    x = vm + 1. / (3 * vm)
+    # TODO: the automatic sol_type is not yet enabled
+    if sol_type is None:
+        b = 1. if vm > 1/np.sqrt(3) else -1.
+    else:
+        b = 1. if sol_type == SolutionType.DETON.value else -1.
+    vp = (0.5 / (1 + ap)) * (x + b * np.sqrt(x ** 2 + 4. * ap ** 2 + (8. / 3.) * ap - (4. / 3.)))
     # Fluid must flow through the wall from the outside to the inside of the bubble.
     return vp if vp >= 0 else np.nan
 
@@ -206,11 +216,11 @@ def _v_plus_scalar(vm: float, ap: float, sol_type: SolutionType) -> float:
     # return ret
 
 
-@numba.njit
+@numba.njit(parallel=True)
 def _v_plus_arr(vm: np.ndarray, ap: float, sol_type: SolutionType) -> np.ndarray:
     ret = np.empty_like(vm)
-    for i, v in enumerate(vm):
-        ret[i] = _v_plus_scalar(v, ap, sol_type)
+    for i in numba.prange(vm.size):
+        ret[i] = _v_plus_scalar(vm[i], ap, sol_type)
     return ret
 
     # complex_inds = np.where(np.imag(ret))
@@ -226,7 +236,7 @@ def _v_plus_arr(vm: np.ndarray, ap: float, sol_type: SolutionType) -> np.ndarray
 @numba.generated_jit(nopython=True)
 def v_plus(vm: th.FloatOrArr, ap: float, sol_type: SolutionType) -> th.FloatOrArrNumba:
     r"""
-    Wall frame fluid speed $\tilde{v}_+$ ahead of the wall
+    Fluid speed $\tilde{v}_+$ ahead of the wall in the wall frame
     $$\tilde{v}_+ = \frac{1}{2(1 + \alpha_+)}
     \left[
     \left( \frac{1}{3 \tilde{v}_-} + \tilde{v}_- \right)
@@ -237,7 +247,8 @@ def v_plus(vm: th.FloatOrArr, ap: float, sol_type: SolutionType) -> th.FloatOrAr
     :notes:`\ `, eq. 7.27.
     The equations in both sources are equivalent by moving a factor of 2.
 
-    Positive sign is for detonations and negative for others.
+    Positive sign is for $\tilde{v}_- > \frac{1}{\sqrt{3}}$.
+    This is independent of the equation of state but corresponds to detonations in the bag model.
 
     :param vm: $\tilde{v}_-$, fluid speed behind the wall
     :param ap: $\alpha_+$, strength parameter at the wall
@@ -245,7 +256,6 @@ def v_plus(vm: th.FloatOrArr, ap: float, sol_type: SolutionType) -> th.FloatOrAr
     :return: $\tilde{v}_+$, fluid speed ahead of the wall
     """
     # TODO: add support for having both arguments as arrays
-    # sol_type is a string enum, which would complicate the use of numba.guvectorize
     if isinstance(vm, numba.types.Float):
         return _v_plus_scalar
     if isinstance(vm, numba.types.Array):
