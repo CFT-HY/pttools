@@ -141,6 +141,8 @@ linkcheck_allowed_redirects = {
 linkcheck_ignore = [
     # The project repository will return 404 without authentication until it's published.
     r"https://github\.com/hindmars/pttools/*",
+    # The private Bitbucket repos will also return 404 without authentication
+    r"https://bitbucket.org/hindmars/sound-shell-model/*",
 ]
 if "GITHUB_ACTIONS" in os.environ:
     linkcheck_ignore += [
