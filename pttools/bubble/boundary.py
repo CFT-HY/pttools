@@ -87,33 +87,33 @@ def fluid_speeds_at_wall(
     :param sol_type: solution type
     :return: $v_+,v_-,\tilde{v}_+,\tilde{v}_-$
     """
-    if v_wall <= 1:
-        # print( "max_speed_deflag(alpha_p)= ", max_speed_deflag(alpha_p))
-        #     if v_wall < max_speed_deflag(alpha_p) and v_wall <= cs and alpha_p <= 1/3.:
-        if sol_type == SolutionType.SUB_DEF.value:
-            # For clarity these are defined here in the same order as returned
-            vfp_w = v_plus(v_wall, alpha_p, sol_type)  # Fluid velocity just ahead of the wall in wall frame (v+)
-            vfm_w = v_wall  # Fluid velocity just behind the wall in wall frame (v-)
-            vfp_p = relativity.lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
-            vfm_p = relativity.lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
-        elif sol_type == SolutionType.HYBRID.value:
-            vfp_w = v_plus(const.CS0, alpha_p, sol_type)  # Fluid velocity just ahead of the wall in wall frame (v+)
-            vfm_w = const.CS0  # Fluid velocity just behind the wall in plasma frame (hybrid)
-            vfp_p = relativity.lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
-            vfm_p = relativity.lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
-        elif sol_type == SolutionType.DETON.value:
-            vfp_w = v_wall  # Fluid velocity just ahead of the wall in wall frame (v+)
-            vfm_w = v_minus(v_wall, alpha_p)  # Fluid velocity just behind the wall in wall frame (v-)
-            vfp_p = relativity.lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
-            vfm_p = relativity.lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
-        else:
-            with numba.objmode:
-                logger.error("Unknown sol_type: %s", sol_type)
-            raise ValueError("Unknown sol_type")
-    else:
+    if v_wall > 1:
         with numba.objmode:
             logger.error("v_wall > 1: v_wall = %s", v_wall)
         raise ValueError("v_wall > 1")
+
+    # print( "max_speed_deflag(alpha_p)= ", max_speed_deflag(alpha_p))
+    #     if v_wall < max_speed_deflag(alpha_p) and v_wall <= cs and alpha_p <= 1/3.:
+    if sol_type == SolutionType.SUB_DEF.value:
+        # For clarity these are defined here in the same order as returned
+        vfp_w = v_plus(v_wall, alpha_p, sol_type)  # Fluid velocity just ahead of the wall in wall frame (v+)
+        vfm_w = v_wall  # Fluid velocity just behind the wall in wall frame (v-)
+        vfp_p = relativity.lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
+        vfm_p = relativity.lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
+    elif sol_type == SolutionType.HYBRID.value:
+        vfp_w = v_plus(const.CS0, alpha_p, sol_type)  # Fluid velocity just ahead of the wall in wall frame (v+)
+        vfm_w = const.CS0  # Fluid velocity just behind the wall in plasma frame (hybrid)
+        vfp_p = relativity.lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
+        vfm_p = relativity.lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
+    elif sol_type == SolutionType.DETON.value:
+        vfp_w = v_wall  # Fluid velocity just ahead of the wall in wall frame (v+)
+        vfm_w = v_minus(v_wall, alpha_p)  # Fluid velocity just behind the wall in wall frame (v-)
+        vfp_p = relativity.lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
+        vfm_p = relativity.lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
+    else:
+        with numba.objmode:
+            logger.error("Unknown sol_type: %s", sol_type)
+        raise ValueError("Unknown sol_type")
 
     return vfp_w, vfm_w, vfp_p, vfm_p
 
