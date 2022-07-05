@@ -4,6 +4,7 @@ import numpy as np
 import scipy.optimize
 
 import pttools.type_hints as th
+from pttools.bubble.boundary import Phase
 
 
 class Model(abc.ABC):
@@ -23,6 +24,20 @@ class Model(abc.ABC):
         self.critical_temp_const = 90 / np.pi ** 2 * (self.V_b - self.V_s)
 
         self.cs2 = self.gen_cs2()
+
+    def alpha_n(self, wn: float) -> float:
+        theta_diff = self.theta(wn, Phase.SYMMETRIC) - self.theta(wn, Phase.BROKEN)
+        if theta_diff < 0:
+            raise ValueError(
+                "For a physical equation of state theta_- < theta_+. See p. 33 of Hindmarsh and Hijazi, 2019")
+        return 4 * theta_diff / (3 * wn)
+
+    def alpha_plus(self, wp: float, wm: float):
+        theta_diff = self.theta(wp, Phase.SYMMETRIC) - self.theta(wm, Phase.BROKEN)
+        if theta_diff < 0:
+            raise ValueError(
+                "For a physical equation of state theta_- < theta_+. See p. 33 of Hindmarsh and Hijazi, 2019")
+        return 4 * theta_diff / (3 * wp)
 
     def critical_temp(self, guess: float) -> float:
         r"""Solves for the critical temperature $T_c$, where $p_s(T_c)=p_b(T_c)$
