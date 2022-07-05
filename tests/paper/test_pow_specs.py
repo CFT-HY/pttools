@@ -47,7 +47,9 @@ def pow_specs():
     if NUMBA_DISABLE_JIT:
         logger.info(f"Numba is disabled: NUMBA_DISABLE_JIT = {NUMBA_DISABLE_JIT}")
         # The results differ slightly depending on the library versions
-        rtol = 4.6e-7
+        # rtol = 4.6e-7
+        # Changing v_plus and v_minus implementations has changed the results further for pure Python
+        rtol = 9.61e-7
     else:
         # Since this was a heavy computation, let's print info on the threading layer used
         logger.info(f"Numba threading layer used: {numba.threading_layer()}")
@@ -57,8 +59,6 @@ def pow_specs():
         # rtol = 1.21e-6
         # Working around indexing bugs in envelope() has changed the results further
         # rtol = 1.72e-6
-        # Changing v_plus and v_minus implementations has changed the results further for pure Python
-        rtol = 9.61e-7
     if NUMBA_INTEGRATE_TOLERANCES:
         logger.warning("test_pow_specs tolerances have been loosened for Numba")
         rtol = 0.013
