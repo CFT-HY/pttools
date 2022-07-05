@@ -1,4 +1,7 @@
-"""Functions for calculating the properties of the bubble boundaries"""
+"""Functions for calculating the properties of the bubble boundaries
+
+.. plot:: fig/vm_vp_plane.py
+"""
 
 import enum
 import logging
