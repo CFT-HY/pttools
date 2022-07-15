@@ -31,6 +31,8 @@ _authors = [
 ]
 author = f"{', '.join(_authors[:-1])} & {_authors[-1]}"
 copyright = f"2015-2022, {author}"
+version = "0.0.1"
+release = version
 
 
 # -- General configuration ---------------------------------------------------
