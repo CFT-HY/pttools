@@ -102,16 +102,18 @@ autodoc_typehints = "description"
 
 # -- Other -------------------------------------------------------------------
 
+# Sphinx 6.0 will require base URLs and caption strings to contain exactly one "%s",
+# and all other "%" need to be escaped as "%%".
 extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
     # Hindmarsh articles
-    "gw_ssm": ("https://arxiv.org/abs/1304.2433", "Hindmarsh et al., 2014"),
-    "ssm": ("https://arxiv.org/abs/1608.04735", "Hindmarsh et al., 2018"),
-    "gw_pt_ssm": ("https://arxiv.org/abs/1909.10040", "Hindmarsh et al., 2019"),
-    "notes": ("https://arxiv.org/abs/2008.09136", "Hindmarsh et al., 2021"),
+    "gw_ssm": ("https://arxiv.org/abs/1304.2433%s", "Hindmarsh et al., 2014%s"),
+    "ssm": ("https://arxiv.org/abs/1608.04735%s", "Hindmarsh et al., 2018%s"),
+    "gw_pt_ssm": ("https://arxiv.org/abs/1909.10040%s", "Hindmarsh et al., 2019%s"),
+    "notes": ("https://arxiv.org/abs/2008.09136%s", "Hindmarsh et al., 2021%s"),
     # Other articles
-    "borsanyi_2016": ("https://arxiv.org/abs/1606.07494", "Borsanyi et al., 2016"),
-    "giese_2020": ("https://arxiv.org/abs/2004.06995", "Giese et al., 2020"),
-    "giese_2021": ("https://arxiv.org/abs/2010.09744", "Giese et al., 2021"),
+    "borsanyi_2016": ("https://arxiv.org/abs/1606.07494%s", "Borsanyi et al., 2016%s"),
+    "giese_2020": ("https://arxiv.org/abs/2004.06995%s", "Giese et al., 2020%s"),
+    "giese_2021": ("https://arxiv.org/abs/2010.09744%s", "Giese et al., 2021%s"),
     # Other
     "aof_grant": (
         "https://akareport.aka.fi/ibi_apps/WFServlet?IBIF_ex=x_hakkuvaus2&CLICKED_ON=&HAKNRO1=%s&UILANG=en&TULOSTE=HTML",
@@ -119,9 +121,9 @@ extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
     ),
     "issue": ("https://github.com/hindmars/pttools/issues/%s", "issue %s"),
     "rel_hydro_book": (
-        "https://doi.org/10.1093/acprof:oso/9780198528906.001.0001",
-        "Relativistic hydrodynamics, Rezzolla, Zanotti, 2013"),
-    "ssm_repo": ("https://bitbucket.org/hindmars/sound-shell-model/src/master/", "sound-shell-model/%s")
+        "https://doi.org/10.1093/acprof:oso/9780198528906.001.0001%s",
+        "Relativistic hydrodynamics, Rezzolla, Zanotti, 2013%s"),
+    "ssm_repo": ("https://bitbucket.org/hindmars/sound-shell-model/src/master/%s", "sound-shell-model/%s")
 }
 intersphinx_mapping: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
     "cobaya": ("https://cobaya.readthedocs.io/en/latest/", None),
