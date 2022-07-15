@@ -102,6 +102,20 @@ autodoc_default_options = {
 }
 autodoc_typehints = "description"
 
+
+# def skip(app, what, name, obj, would_skip, options):
+#     """Enabling the documentation of __init__ functions
+#     https://stackoverflow.com/a/5599712/
+#     """
+#     if name == "__init__":
+#         return False
+#     return would_skip
+#
+#
+# def setup(app):
+#     app.connect("autodoc-skip-member", skip)
+
+
 # -- Other -------------------------------------------------------------------
 
 # Sphinx 6.0 will require base URLs and caption strings to contain exactly one "%s",
