@@ -8,6 +8,7 @@ import logging
 import typing as tp
 
 import numba
+from numba.core.registry import CPUDispatcher
 import numpy as np
 
 import pttools.type_hints as th
@@ -16,7 +17,7 @@ from . import const
 
 logger = logging.getLogger(__name__)
 
-CS2Fun = tp.Callable[[th.FloatOrArr, th.FloatOrArr], th.FloatOrArr]
+CS2Fun = tp.Union[tp.Callable[[th.FloatOrArr, th.FloatOrArr], th.FloatOrArr], CPUDispatcher]
 CS2FunScalarSig = numba.double(numba.double, numba.double)
 CS2FunScalarPtr = numba.types.CPointer(CS2FunScalarSig)
 
