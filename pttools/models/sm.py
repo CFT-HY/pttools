@@ -15,7 +15,11 @@ from pttools.models.thermo import ThermoModel
 
 
 class StandardModel(ThermoModel):
-    """Thermodynamics of the Standard Model"""
+    """Thermodynamics of the Standard Model
+
+    Units are in GeV
+    """
+    BASE_NAME = "standard_model"
     # Copied from the ArXiv file som_eos.tex
     GEFF_DATA = np.array([[
         [0.00, 10.71, 1.00228],

@@ -4,7 +4,7 @@
 allure-pytest
 colorama
 # h5py
-# orjson
+orjson
 # pandas
 # For Numba system info
 psutil

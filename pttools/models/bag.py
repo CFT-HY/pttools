@@ -14,9 +14,15 @@ class BagModel(AnalyticModel):
     .. plot:: fig/xi_v_plane.py
 
     """
+    BASE_NAME = "bag"
+
+    def critical_temp(self, guess: float) -> float:
+        # TODO
+        raise NotImplementedError
+
     @staticmethod
     @numba.njit
-    def cs2(w: th.FloatOrArr = None, phase: float = None):
+    def cs2(w: th.FloatOrArr = None, phase: th.FloatOrArr = None):
         r"""Sound speed squared, $c_s^2=\frac{1}{3}$.
         :notes:`\ `, p. 37,
         :rel_hydro_book:`\ `, eq. 2.207

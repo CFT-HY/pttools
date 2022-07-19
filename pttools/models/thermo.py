@@ -11,12 +11,16 @@ import pttools.type_hints as th
 class ThermoModel(abc.ABC):
     """
     The thermodynamic model characterizes the particle physics of interest.
+
+    TODO: Some of the functions seem to return vertical arrays. Fix this!
     """
+    BASE_NAME: str
     #: Container for the data of $g_\text{eff}$ as a function of temperature
     GEFF_DATA_TEMP: np.ndarray
 
-    def __init__(self):
+    def __init__(self, name: str = None):
         self.cs2 = self._gen_cs2()
+        self.name = self.BASE_NAME if name is None else name
 
     def _gen_cs2(self) -> callable:
         cs2_spl_s = scipy.interpolate.splrep(

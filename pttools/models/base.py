@@ -1,40 +1,68 @@
 import abc
-import numpy as np
 
+import numpy as np
 import scipy.optimize
 
 import pttools.type_hints as th
+from pttools.bubble.bag import CS2Fun
 from pttools.bubble.boundary import Phase
 
 
 class Model(abc.ABC):
-    """Template for equations of state"""
-    def __init__(self, V_s: float = 0, V_b: float = 0):
-        r"""
-        :param V_s: the constant term in the expression of $p$ in the symmetric phase
-        :param V_b: the constant term in the expression of $p$ in the broken phase
-        """
-        self.V_s: float = V_s
-        self.V_b: float = V_b
+    r"""Template for equations of state
+
+    :param t_ref: reference temperature
+    :param t_min: minimum temperature at which the model is valid
+    :param V_s: the constant term in the expression of $p$ in the symmetric phase
+    :param V_b: the constant term in the expression of $p$ in the broken phase
+    :param name: custom name for the model
+    """
+    BASE_NAME: str
+
+    def __init__(
+            self,
+            t_ref: float = 1, t_min: float = 0,
+            V_s: float = 0, V_b: float = 0,
+            name: str = None, gen_cs2: bool = True):
+        if t_ref <= t_min:
+            raise ValueError("The reference temperature has to be higher than the minimum temperature.")
 
         # Equal values are allowed so that the default values are accepted.
         if V_b > V_s:
             raise ValueError("The bubble does not expand if V_b >= V_s.")
 
-        self.critical_temp_const = 90 / np.pi ** 2 * (self.V_b - self.V_s)
+        self.t_ref: float = t_ref
+        self.t_min: float = t_min
+        self.V_s: float = V_s
+        self.V_b: float = V_b
+        self.name = self.BASE_NAME if name is None else name
 
-        self.cs2 = self.gen_cs2()
+        #: $$\frac{90}{\pi^2} (V_b - V_s)$$
+        self.critical_temp_const: float = 90 / np.pi ** 2 * (self.V_b - self.V_s)
 
-    def alpha_n(self, wn: float) -> float:
+        self.cs2: CS2Fun = self.gen_cs2() if gen_cs2 else None
+
+    def alpha_n(self, wn: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
+        $$\alpha_n = \frac{4(\theta(w_n,\phi_s) - \theta(w_n,\phi_b)}{3w_n}$$
+
+        :param wn: enthalpy of the symmetric phase at the nucleation temperature
+        """
         theta_diff = self.theta(wn, Phase.SYMMETRIC) - self.theta(wn, Phase.BROKEN)
-        if theta_diff < 0:
+        if np.any(theta_diff < 0):
             raise ValueError(
                 "For a physical equation of state theta_- < theta_+. See p. 33 of Hindmarsh and Hijazi, 2019")
         return 4 * theta_diff / (3 * wn)
 
-    def alpha_plus(self, wp: float, wm: float):
+    def alpha_plus(self, wp: th.FloatOrArr, wm: th.FloatOrArr):
+        r"""Transition strength parameter $\alpha_+$
+        $$\alpha_+ = \frac{4\Delta \theta}{3w_+} = \frac{4(\theta(w_+,\phi_s) - \theta(w_-,\phi_b)}{3w_+}$$
+
+        :param wp: $w_+$
+        :param wm: $w_-$
+        """
         theta_diff = self.theta(wp, Phase.SYMMETRIC) - self.theta(wm, Phase.BROKEN)
-        if theta_diff < 0:
+        if np.any(theta_diff < 0):
             raise ValueError(
                 "For a physical equation of state theta_- < theta_+. See p. 33 of Hindmarsh and Hijazi, 2019")
         return 4 * theta_diff / (3 * wp)
@@ -106,9 +134,8 @@ class Model(abc.ABC):
         """
         return phase*self.V_b + (1 - phase)*self.V_s
 
-    # TODO: replace callable with the correct Numba type
     @abc.abstractmethod
-    def gen_cs2(self) -> callable:
+    def gen_cs2(self) -> CS2Fun:
         r"""This function should generate a Numba-jitted $c_s^2$ function for the model."""
 
     @abc.abstractmethod

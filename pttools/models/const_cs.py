@@ -21,12 +21,15 @@ class ConstCSModel(AnalyticModel):
     .. plot:: fig/const_cs_s.py
 
     """
+    BASE_NAME = "const_cs"
+
     def __init__(
             self,
             a_s: float, a_b: float,
             css2: float, csb2: float,
             V_s: float = 0, V_b: float = 0,
-            temp0: float = 1):
+            temp0: float = 1,
+            name: str = None):
         # Ensure that these descriptions correspond to those in the base class
         r"""
         :param a_s: prefactor of $p$ in the symmetric phase. The convention is as in :notes:`\ ` eq. 7.33.
@@ -36,13 +39,14 @@ class ConstCSModel(AnalyticModel):
         :param V_s: $V_s \equiv \epsilon_s$, the potential term of $p$ in the symmetric phase
         :param V_b: $V_b \equiv \epsilon_b$, the potential term of $p$ in the broken phase
         :param temp0: reference temperature, usually 1 * unit of choice, e,g. 1 GeV
+        :param name: custom name for the model
         """
         if css2 > 1/3:
             raise ValueError(
                 "C_{s,s}^2 has to be <= 1/3 for the solution to be physical. This is because g_eff is monotonic.")
         self.css2 = css2
         self.csb2 = csb2
-        super().__init__(a_s=a_s, a_b=a_b, V_s=V_s, V_b=V_b)
+        super().__init__(a_s=a_s, a_b=a_b, V_s=V_s, V_b=V_b, name=name)
 
         self.temp0 = temp0
         self.a_s = a_s

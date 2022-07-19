@@ -1,7 +1,5 @@
 """Full thermodynamics-based model"""
 
-import typing as tp
-
 import numba
 import numpy as np
 import scipy.interpolate
@@ -14,15 +12,17 @@ from pttools.models.thermo import ThermoModel
 
 
 class FullModel(Model):
-    """Template for equations of state"""
-    def __init__(self, thermo: ThermoModel, V_s: float = 0, V_b: float = 0):
-        """
-        :param thermo: model of the underlying thermodynamics.
-                       Some models don't take this, but use their own approximations instead.
-        :param V_s: the constant term in the expression of $p$ in the symmetric phase
-        :param V_b: the constant term in the expression of $p$ in the broken phase
-        """
-        super().__init__(V_s=V_s, V_b=V_b)
+    r"""Full thermodynamics-based equation of state
+
+    :param thermo: model of the underlying thermodynamics.
+               Some models don't take this, but use their own approximations instead.
+    :param V_s: the constant term in the expression of $p$ in the symmetric phase
+    :param V_b: the constant term in the expression of $p$ in the broken phase
+    """
+    BASE_NAME = "full"
+
+    def __init__(self, thermo: ThermoModel, V_s: float = 0, V_b: float = 0, name: str = None):
+        super().__init__(V_s=V_s, V_b=V_b, name=name, gen_cs2=False)
         self.thermo = thermo
 
         self.temp_spline_s = scipy.interpolate.splrep(
@@ -50,25 +50,26 @@ class FullModel(Model):
 
         @numba.njit
         def cs2(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-            if phase == Phase.SYMMETRIC.value:
-                return scipy.interpolate.splev(w, cs2_spl_s)
-            elif phase == Phase.BROKEN.value:
-                return scipy.interpolate.splev(w, cs2_spl_b)
+            if np.isscalar(phase):
+                if phase == Phase.SYMMETRIC.value:
+                    return scipy.interpolate.splev(w, cs2_spl_s)
+                elif phase == Phase.BROKEN.value:
+                    return scipy.interpolate.splev(w, cs2_spl_b)
             return scipy.interpolate.splev(w, cs2_spl_b) * phase \
                 + scipy.interpolate.splev(w, cs2_spl_s) * (1 - phase)
         return cs2
 
-    def critical_temp_opt(self, temp: float):
+    def critical_temp_opt(self, temp: float) -> float:
         """Optimizer function for critical temperature"""
         return (self.gp_temp(temp, Phase.SYMMETRIC) - self.gp_temp(temp, Phase.BROKEN))*temp**4 \
             + self.critical_temp_const
 
     def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Computes the energy density $e(T,\phi)$ by using :borsanyi_2016: eq. S12
-        $$ e(T) = \frac{\pi^2}{30} g_e(T) T^4 $$
+        r"""Energy density $e(T,\phi)$, using :borsanyi_2016:`\ `, eq. S12
+        $$ e(T,\phi) = \frac{\pi^2}{30} g_e(T,\phi) T^4 $$
         :param temp: temperature $T$
         :param phase: phase $\phi$
-        :return: $e(T)
+        :return: $e(T,\phi)$
         """
         return np.pi**2 / 30 * self.thermo.ge(temp, phase) * temp**4
 
@@ -77,32 +78,41 @@ class FullModel(Model):
         temp = self.temp(w, phase)
         return self.gp_temp(temp, phase)
 
-    def gp_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr):
-        r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(T,\phi)"""
+    def gp_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(T,\phi)$
+        $$ g_{\text{eff},p}(T,\phi) = 4g_s(T,\phi) - 3g_e(T,\phi) + \frac{90 V(\phi)}{\pi^2 T^4} $$
+        """
         return 4*self.thermo.gs(temp, phase) - 3*self.thermo.ge(temp, phase) + (90*self.V(phase)) / (np.pi**2 * temp**4)
 
     def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Pressure $p(T,\phi)$"""
+        r"""Pressure $p(T,\phi)$
+        $$ p(T,\phi) = \frac{\pi^2}{90} g_p(T,\phi) T^4 - V(\phi) $$
+        """
         return np.pi**2 / 90 * self.gp(temp, phase) * temp**4 - self.V(phase)
 
     def s_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        # TODO
-        pass
+        r"""Entropy density $s(T,\phi), using :borsanyi_2016:`\ `, eq. S12$
+        $$ s(T,\phi) = \frac{2\pi^2}{45} g_s(T) T^3$$
+        :param temp: temperature $T$
+        :param phase: phase $\phi$
+        :return: $s(T,\phi)$
+        """
+        return 2*np.pi**2 / 45 * self.thermo.gs(temp, phase) * temp**3
 
     def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr):
         r"""Temperature $T$"""
-        if phase == Phase.SYMMETRIC.value:
-            return scipy.interpolate.splev(w, self.temp_spline_s)
-        elif phase == Phase.BROKEN.value:
-            return scipy.interpolate.splev(w, self.temp_spline_b)
+        if np.isscalar(phase):
+            if phase == Phase.SYMMETRIC.value:
+                return scipy.interpolate.splev(w, self.temp_spline_s)
+            elif phase == Phase.BROKEN.value:
+                return scipy.interpolate.splev(w, self.temp_spline_b)
         return scipy.interpolate.splev(w, self.temp_spline_b) * phase \
             + scipy.interpolate.splev(w, self.temp_spline_s) * (1 - phase)
 
     def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Enthalpy density $w$
-
-        $$ w = e + p = Ts = T \frac{dp}{dT} = \frac{4\pi^2}{90} g_{eff} T^4 $$
-        For the steps please see :notes: page 23 and eq. 7.1. and :borsanyi_2016: eq. S12.
+        $$ w = e + p = Ts = T \frac{dp}{dT} = \frac{4\pi^2}{90} g_s T^4 $$
+        For the steps please see :notes:`\ ` page 23 and eq. 7.1. and :borsanyi_2016: eq. S12.
 
         :param temp: temperature $T$ (MeV)
         :param phase: phase $\phi$ (not used)
