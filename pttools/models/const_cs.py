@@ -21,14 +21,15 @@ class ConstCSModel(AnalyticModel):
     .. plot:: fig/const_cs_s.py
 
     """
-    BASE_NAME = "const_cs"
+    DEFAULT_NAME = "const_cs"
 
     def __init__(
             self,
             a_s: float, a_b: float,
             css2: float, csb2: float,
             V_s: float = 0, V_b: float = 0,
-            temp0: float = 1,
+            t_min: float = 0,
+            t_ref: float = 1,
             name: str = None):
         # Ensure that these descriptions correspond to those in the base class
         r"""
@@ -48,7 +49,6 @@ class ConstCSModel(AnalyticModel):
         self.csb2 = csb2
         super().__init__(a_s=a_s, a_b=a_b, V_s=V_s, V_b=V_b, name=name)
 
-        self.temp0 = temp0
         self.a_s = a_s
         self.a_b = a_b
         self.csb = np.sqrt(csb2)
@@ -61,8 +61,8 @@ class ConstCSModel(AnalyticModel):
         self.cs2 = self.gen_cs2()
 
     def critical_temp_opt(self, temp: float):
-        const = (self.V_b - self.V_s)**self.temp0**4
-        return self.a_s * (temp/self.temp0)**self.mu - self.a_b * (temp/self.temp0)**self.nu + const
+        const = (self.V_b - self.V_s)**self.t_ref**4
+        return self.a_s * (temp/self.t_ref)**self.mu - self.a_b * (temp/self.t_ref)**self.nu + const
 
     def gen_cs2(self):
         # These become compile-time constants
@@ -82,6 +82,7 @@ class ConstCSModel(AnalyticModel):
         :giese_2021:`\ `, eq. 15.
         In the article there is a typo: the 4 there should be a $\mu$.
         """
+        self.validate_temp(temp)
         e_s = self.a_s * (self.mu - 1) * temp**self.mu + self.V_s
         e_b = self.a_b * (self.nu - 1) * temp**self.nu + self.V_b
         return e_b * phase + e_s * (1 - phase)
@@ -92,6 +93,7 @@ class ConstCSModel(AnalyticModel):
         $$p_b = a_b T^\nu - V_b$$
         :giese_2021:`\ `, eq. 15.
         """
+        self.validate_temp(temp)
         p_s = self.a_s * temp**self.mu - self.V_s
         p_b = self.a_b * temp**self.nu - self.V_b
         return p_b * phase + p_s * (1 - phase)
@@ -102,8 +104,9 @@ class ConstCSModel(AnalyticModel):
         $$s_b = \nu a-b \left( \frac{T}{T_0} \right)^{\nu-1} T_0^3$$
         Derived from :giese_2021:`\ `, eq. 15.
         """
-        s_s = self.mu * self.a_s * (temp/self.temp0)**(self.mu-1) * self.temp0**3
-        s_b = self.nu * self.a_b * (temp/self.temp0)**(self.nu-1) * self.temp0**3
+        self.validate_temp(temp)
+        s_s = self.mu * self.a_s * (temp/self.t_ref)**(self.mu-1) * self.t_ref**3
+        s_b = self.nu * self.a_b * (temp/self.t_ref)**(self.nu-1) * self.t_ref**3
         return s_b * phase + s_s * (1 - phase)
 
     def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -111,8 +114,8 @@ class ConstCSModel(AnalyticModel):
         $$T_s = T_0 \left( \frac{3w}{\mu a_s T_0^4} \right)^\frac{1}{\mu}$$
         $$T_b = T_0 \left( \frac{3w}{\nu a_s T_0^4} \right)^\frac{1}{\nu}$$
         """
-        temp_s = self.temp0 * (3*w / (self.mu*self.a_s*self.temp0**4))**(1/self.mu)
-        temp_b = self.temp0 * (3*w / (self.nu*self.a_b*self.temp0**4))**(1/self.nu)
+        temp_s = self.t_ref * (3*w / (self.mu*self.a_s*self.t_ref**4))**(1/self.mu)
+        temp_b = self.t_ref * (3*w / (self.nu*self.a_b*self.t_ref**4))**(1/self.nu)
         return temp_b * phase + temp_s * (1 - phase)
 
     def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -120,6 +123,7 @@ class ConstCSModel(AnalyticModel):
         $$w_s = \mu a_s \left( \frac{T}{T_0} \right)^\mu T_0^4$$
         $$w_s = \nu a_s \left( \frac{T}{T_0} \right)^\nu T_0^4$$
         """
-        w_s = self.mu * self.a_s * (temp/self.temp0)**self.mu * self.temp0**4
-        w_b = self.nu * self.a_b * (temp/self.temp0)**self.nu * self.temp0**4
+        self.validate_temp(temp)
+        w_s = self.mu * self.a_s * (temp/self.t_ref)**self.mu * self.t_ref**4
+        w_b = self.nu * self.a_b * (temp/self.t_ref)**self.nu * self.t_ref**4
         return w_b * phase + w_s * (1 - phase)

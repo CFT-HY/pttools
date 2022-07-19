@@ -7,23 +7,28 @@ import scipy.optimize
 
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase
-from pttools.models.base import Model
+from pttools.models.model import Model
 from pttools.models.thermo import ThermoModel
 
 
 class FullModel(Model):
     r"""Full thermodynamics-based equation of state
 
+    Temperature limits should be set in the ThermoModel.
+
     :param thermo: model of the underlying thermodynamics.
                Some models don't take this, but use their own approximations instead.
     :param V_s: the constant term in the expression of $p$ in the symmetric phase
     :param V_b: the constant term in the expression of $p$ in the broken phase
     """
-    BASE_NAME = "full"
+    DEFAULT_NAME = "full"
 
     def __init__(self, thermo: ThermoModel, V_s: float = 0, V_b: float = 0, name: str = None):
         super().__init__(V_s=V_s, V_b=V_b, name=name, gen_cs2=False)
         self.thermo = thermo
+        # Override auto-generated limits with those from the ThermoModel
+        self.t_min = thermo.t_min
+        self.t_max = thermo.t_max
 
         self.temp_spline_s = scipy.interpolate.splrep(
             self.w(self.thermo.GEFF_DATA_TEMP, Phase.SYMMETRIC), self.thermo.GEFF_DATA_TEMP
@@ -71,6 +76,7 @@ class FullModel(Model):
         :param phase: phase $\phi$
         :return: $e(T,\phi)$
         """
+        self.validate_temp(temp)
         return np.pi**2 / 30 * self.thermo.ge(temp, phase) * temp**4
 
     def gp(self, w: th.FloatOrArr, phase: th.FloatOrArr):
@@ -82,12 +88,14 @@ class FullModel(Model):
         r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(T,\phi)$
         $$ g_{\text{eff},p}(T,\phi) = 4g_s(T,\phi) - 3g_e(T,\phi) + \frac{90 V(\phi)}{\pi^2 T^4} $$
         """
+        self.validate_temp(temp)
         return 4*self.thermo.gs(temp, phase) - 3*self.thermo.ge(temp, phase) + (90*self.V(phase)) / (np.pi**2 * temp**4)
 
     def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Pressure $p(T,\phi)$
         $$ p(T,\phi) = \frac{\pi^2}{90} g_p(T,\phi) T^4 - V(\phi) $$
         """
+        self.validate_temp(temp)
         return np.pi**2 / 90 * self.gp(temp, phase) * temp**4 - self.V(phase)
 
     def s_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -97,6 +105,7 @@ class FullModel(Model):
         :param phase: phase $\phi$
         :return: $s(T,\phi)$
         """
+        self.validate_temp(temp)
         return 2*np.pi**2 / 45 * self.thermo.gs(temp, phase) * temp**3
 
     def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr):
@@ -118,4 +127,5 @@ class FullModel(Model):
         :param phase: phase $\phi$ (not used)
         :return: enthalpy density $w$
         """
+        self.validate_temp(temp)
         return (4*np.pi**2)/90 * self.thermo.gs(temp, phase) * temp**4

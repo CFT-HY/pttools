@@ -2,7 +2,7 @@ import typing as tp
 
 import numpy as np
 
-from pttools.models.base import Model
+from pttools.models.model import Model
 
 
 class Bubble:

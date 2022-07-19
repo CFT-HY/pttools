@@ -1,28 +1,31 @@
 import abc
+import logging
 
 import numba
 import numpy as np
 import scipy.interpolate
 
+from pttools.bubble.bag import CS2Fun
 from pttools.bubble.boundary import Phase
+from pttools.models.base import BaseModel
 import pttools.type_hints as th
 
+logger = logging.getLogger(__name__)
 
-class ThermoModel(abc.ABC):
+
+class ThermoModel(BaseModel, abc.ABC):
     """
     The thermodynamic model characterizes the particle physics of interest.
 
     TODO: Some of the functions seem to return vertical arrays. Fix this!
     """
     BASE_NAME: str
-    #: Container for the data of $g_\text{eff}$ as a function of temperature
+    #: Container for the temperatures of $g_\text{eff}$ data
     GEFF_DATA_TEMP: np.ndarray
 
-    def __init__(self, name: str = None):
-        self.cs2 = self._gen_cs2()
-        self.name = self.BASE_NAME if name is None else name
+    # Concrete methods
 
-    def _gen_cs2(self) -> callable:
+    def gen_cs2(self) -> CS2Fun:
         cs2_spl_s = scipy.interpolate.splrep(
             np.log10(self.GEFF_DATA_TEMP),
             self.cs2_full(self.GEFF_DATA_TEMP, Phase.SYMMETRIC),
@@ -32,8 +35,15 @@ class ThermoModel(abc.ABC):
             self.cs2_full(self.GEFF_DATA_TEMP, Phase.BROKEN),
             k=1)
 
+        t_min = self.t_min
+        t_max = self.t_max
+
         @numba.njit
         def cs2(temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+            # The validate_temp() function cannot be called from jitted functions
+            if temp < t_min or temp > t_max:
+                return np.nan
+
             if phase == Phase.SYMMETRIC.value:
                 return scipy.interpolate.splev(np.log10(temp), cs2_spl_s)
             elif phase == Phase.BROKEN.value:
@@ -55,6 +65,22 @@ class ThermoModel(abc.ABC):
     def cs2_full(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         """Full evaluation of $c_s^2$ from the underlying quantities"""
         return self.dp_dt(temp, phase) / self.de_dt(temp, phase)
+
+    def dp_dt(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        r"""
+        $\frac{dp}{dT}$
+
+        TODO: it may be necessary to use gp instead of gs
+        """
+        return np.pi**2/90 * (self.dgs_dT(temp, phase) * temp ** 4 + 4 * self.gs(temp, phase)*temp**3)
+
+    def de_dt(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        r"""
+        $\frac{de}{dT}$
+        """
+        return np.pi**2/30 * (self.dge_dT(temp, phase) * temp**4 + 4*self.ge(temp, phase)*temp**3)
+
+    # Abstract methods
 
     @abc.abstractmethod
     def dge_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -87,17 +113,3 @@ class ThermoModel(abc.ABC):
         :param phase: phase $\phi$
         :return: $g_{\text{eff},s}$
         """
-
-    def dp_dt(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""
-        $\frac{dp}{dT}$
-
-        TODO: it may be necessary to use gp instead of gs
-        """
-        return np.pi**2/90 * (self.dgs_dT(temp, phase) * temp ** 4 + 4 * self.gs(temp, phase)*temp**3)
-
-    def de_dt(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""
-        $\frac{de}{dT}$
-        """
-        return np.pi**2/30 * (self.dge_dT(temp, phase) * temp**4 + 4*self.ge(temp, phase)*temp**3)

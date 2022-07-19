@@ -19,7 +19,7 @@ class StandardModel(ThermoModel):
 
     Units are in GeV
     """
-    BASE_NAME = "standard_model"
+    DEFAULT_NAME = "standard_model"
     # Copied from the ArXiv file som_eos.tex
     GEFF_DATA = np.array([[
         [0.00, 10.71, 1.00228],
@@ -40,8 +40,8 @@ class StandardModel(ThermoModel):
         [5.45, 104.98, 1.00023],
     ]]).T
     GEFF_DATA_TEMP = 10 ** GEFF_DATA[0, :]
-    # MIN_TEMP = GEFF_DATA_TEMP[0]
-    # MAX_TEMP = GEFF_DATA_TEMP[-1]
+    DEFAULT_T_MIN = GEFF_DATA_TEMP[0]
+    DEFAULT_T_MAX = GEFF_DATA_TEMP[-1]
     GEFF_DATA_GE = GEFF_DATA[1, :]
     GEFF_DATA_GE_GS_RATIO = GEFF_DATA[2, :]
     GEFF_DATA_GS = GEFF_DATA_GE / GEFF_DATA_GE_GS_RATIO
@@ -52,18 +52,23 @@ class StandardModel(ThermoModel):
     GE_GS_RATIO_SPLINE = interpolate.splrep(GEFF_DATA[0, :], GEFF_DATA_GE_GS_RATIO, s=0)
 
     def dge_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        self.validate_temp(temp)
         return 1/(np.log(10)*temp) * interpolate.splev(np.log10(temp), self.GE_SPLINE, der=1)
 
     def dgs_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        self.validate_temp(temp)
         return 1/(np.log(10)*temp) * interpolate.splev(np.log10(temp), self.GS_SPLINE, der=1)
 
     def ge(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        self.validate_temp(temp)
         return interpolate.splev(np.log10(temp), self.GE_SPLINE)
 
     def gs(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        self.validate_temp(temp)
         return interpolate.splev(np.log10(temp), self.GS_SPLINE)
 
     def ge_gs_ratio(self, temp: th.FloatOrArr) -> th.FloatOrArr:
+        self.validate_temp(temp)
         return interpolate.splev(np.log10(temp), self.GE_GS_RATIO_SPLINE)
 
 

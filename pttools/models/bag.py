@@ -14,7 +14,7 @@ class BagModel(AnalyticModel):
     .. plot:: fig/xi_v_plane.py
 
     """
-    BASE_NAME = "bag"
+    DEFAULT_NAME = "bag"
 
     def critical_temp(self, guess: float) -> float:
         # TODO
@@ -33,6 +33,7 @@ class BagModel(AnalyticModel):
         r"""Energy density as a function of temperature, :giese_2021:`\ ` eq. 15, :borsanyi_2016:`\ `, eq. S12
         The convention for $a_s$ and $a_b$ is that of :notes:`\ `, eq. 7.33.
         """
+        self.validate_temp(temp)
         e_s = 3*self.a_s * temp**4
         e_b = 3*self.a_b * temp**4
         return e_b * phase + e_s * (1 - phase)
@@ -46,6 +47,7 @@ class BagModel(AnalyticModel):
         $$p_b = a_b T^4$$
         The convention for $a_s$ and $a_b$ is that of :notes:`\ ` eq. 7.33.
         """
+        self.validate_temp(temp)
         p_s = self.a_s * temp**4 - self.V_s
         p_b = self.a_b * temp**4 - self.V_b
         return p_b * phase + p_s * (1 - phase)
@@ -56,6 +58,7 @@ class BagModel(AnalyticModel):
         $$s_b = 4 a_b T^3$$
         Derived from :notes:`\ ` eq. 7.33.
         """
+        self.validate_temp(temp)
         s_s = 4*self.a_s*temp**3
         s_b = 4*self.a_b*temp**3
         return s_b * phase + s_s * (1 - phase)
@@ -84,6 +87,7 @@ class BagModel(AnalyticModel):
         :param temp: temperature $T$
         :param phase: phase $\phi$
         """
+        self.validate_temp(temp)
         return 4 * (self.a_b * phase + self.a_s * (1-phase))**temp**4
 
     @staticmethod

@@ -9,7 +9,7 @@ from scipy.optimize import fsolve
 
 from pttools.bubble.boundary import Phase, v_plus
 from pttools.bubble.relativity import gamma2
-from pttools.models.base import Model
+from pttools.models.model import Model
 
 
 def v_chapman_jouguet(

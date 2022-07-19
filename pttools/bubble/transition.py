@@ -12,7 +12,7 @@ from . import alpha as alpha_tools
 from . import boundary
 from . import const
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
-from pttools.models.base import Model
+from pttools.models.model import Model
 
 logger = logging.getLogger(__name__)
 

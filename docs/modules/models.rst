@@ -6,9 +6,9 @@ Base model
 ----------
 .. automodule:: pttools.models.base
 
-Full thermodynamics-based model
--------------------------------
-.. automodule:: pttools.models.full
+Model
+-----
+.. automodule:: pttools.models.model
 
 Analytic base model
 -------------------
@@ -21,6 +21,10 @@ Bag model
 Constant sound speed
 --------------------
 .. automodule:: pttools.models.const_cs
+
+Full thermodynamics-based model
+-------------------------------
+.. automodule:: pttools.models.full
 
 Thermodynamics model
 --------------------
