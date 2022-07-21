@@ -38,6 +38,7 @@ jobs:
           pyreverse pttools -o png -d ./uml
           pyreverse pttools -o svg -d ./uml
       - name: Run Pyan
+        continue-on-error: true
         run: |
           ./gen_call_graphs.sh "all" "./**/*.py"
           ./gen_call_graphs.sh "bubble" "./pttools/bubble/**.py"
