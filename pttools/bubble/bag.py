@@ -8,9 +8,9 @@ import logging
 import typing as tp
 
 import numba
-from numba.core.registry import CPUDispatcher
 import numpy as np
 
+from pttools.speedup import CPUDispatcher
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase
 from . import const
