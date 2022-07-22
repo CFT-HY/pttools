@@ -40,7 +40,7 @@ class ConstCSModel(AnalyticModel):
         :param csb2: $c_{s,b}^2, speed of sound squared in the broken phase
         :param V_s: $V_s \equiv \epsilon_s$, the potential term of $p$ in the symmetric phase
         :param V_b: $V_b \equiv \epsilon_b$, the potential term of $p$ in the broken phase
-        :param temp0: reference temperature, usually 1 * unit of choice, e,g. 1 GeV
+        :param t_ref: reference temperature, usually 1 * unit of choice, e,g. 1 GeV
         :param name: custom name for the model
         """
         if css2 > 1/3:
