@@ -93,7 +93,11 @@ class BagModel(AnalyticModel):
         :param phase: phase $\phi$
         :return: temperature $T(w,\phi)$
         """
-        return (w / (4*(self.a_b*phase + self.a_s*(1-phase))))**(1/4)
+        # return (w / (4*(self.a_b*phase + self.a_s*(1-phase))))**(1/4)
+        # Defined in the same way as for ConstCSModel
+        temp_s = (w / (4*self.a_s))**0.25
+        temp_b = (w / (4*self.a_b))**0.25
+        return temp_b * phase + temp_s * (1 - phase)
 
     @staticmethod
     def v_shock(xi: th.FloatOrArr) -> th.FloatOrArr:
