@@ -80,8 +80,8 @@ class ConstCSModel(AnalyticModel):
         In the article there is a typo: the 4 there should be a $\mu$.
         """
         self.validate_temp(temp)
-        e_s = self.a_s * (self.mu - 1) * temp**self.mu + self.V_s
-        e_b = self.a_b * (self.nu - 1) * temp**self.nu + self.V_b
+        e_s = (self.mu - 1) * self.a_s * temp**self.mu + self.V_s
+        e_b = (self.nu - 1) * self.a_b * temp**self.nu + self.V_b
         return e_b * phase + e_s * (1 - phase)
 
     def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
