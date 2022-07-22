@@ -27,7 +27,7 @@ def main():
     ax1.set_yscale("log")
     ax1.legend()
 
-    w = np.linspace(1, 1e23, 100)
+    w = np.logspace(1, 23, 100)
     ax2.plot(w, model.temp(w, Phase.SYMMETRIC), label="symmetric", alpha=alpha)
     ax2.plot(w, model.temp(w, Phase.BROKEN), label="broken", alpha=alpha)
     ax2.plot(model.w(thermo.GEFF_DATA_TEMP, Phase.SYMMETRIC), thermo.GEFF_DATA_TEMP, label="symmetric(full)")
