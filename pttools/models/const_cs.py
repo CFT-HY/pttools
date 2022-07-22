@@ -28,7 +28,8 @@ class ConstCSModel(AnalyticModel):
             a_s: float, a_b: float,
             css2: float, csb2: float,
             V_s: float = 0, V_b: float = 0,
-            t_min: float = 0,
+            t_min: float = None,
+            t_max: float = None,
             t_ref: float = 1,
             name: str = None):
         # Ensure that these descriptions correspond to those in the base class
@@ -45,20 +46,16 @@ class ConstCSModel(AnalyticModel):
         if css2 > 1/3:
             raise ValueError(
                 "C_{s,s}^2 has to be <= 1/3 for the solution to be physical. This is because g_eff is monotonic.")
+
         self.css2 = css2
         self.csb2 = csb2
-        super().__init__(a_s=a_s, a_b=a_b, V_s=V_s, V_b=V_b, name=name)
-
-        self.a_s = a_s
-        self.a_b = a_b
+        self.css = np.sqrt(css2)
         self.csb = np.sqrt(csb2)
-        self.V_s = V_s
-        self.V_b = V_b
+        self.mu = 1 + 1 / css2
+        self.nu = 1 + 1 / csb2
+        self.t_ref = t_ref
 
-        self.mu = 1 + 1/css2
-        self.nu = 1 + 1/csb2
-
-        self.cs2 = self.gen_cs2()
+        super().__init__(a_s=a_s, a_b=a_b, V_s=V_s, V_b=V_b, t_min=t_min, t_max=t_max, name=name)
 
     def critical_temp_opt(self, temp: float):
         const = (self.V_b - self.V_s)**self.t_ref**4

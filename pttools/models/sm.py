@@ -21,7 +21,7 @@ class StandardModel(ThermoModel):
     """
     DEFAULT_NAME = "standard_model"
     # Copied from the ArXiv file som_eos.tex
-    GEFF_DATA = np.array([[
+    GEFF_DATA = np.array([
         [0.00, 10.71, 1.00228],
         [0.50, 10.74, 1.00029],
         [1.00, 10.76, 1.00048],
@@ -38,7 +38,8 @@ class StandardModel(ThermoModel):
         [4.60, 91.97, 1.00887],
         [5.00, 102.17, 1.00750],
         [5.45, 104.98, 1.00023],
-    ]]).T
+    ]).T
+    GEFF_DATA_LOG_TEMP = GEFF_DATA[0, :]
     GEFF_DATA_TEMP = 10 ** GEFF_DATA[0, :]
     DEFAULT_T_MIN = GEFF_DATA_TEMP[0]
     DEFAULT_T_MAX = GEFF_DATA_TEMP[-1]
@@ -47,9 +48,9 @@ class StandardModel(ThermoModel):
     GEFF_DATA_GS = GEFF_DATA_GE / GEFF_DATA_GE_GS_RATIO
     # s=smoothing.
     # It's not mentioned in the article, so it's disabled to ensure that the error limits of the article hold.
-    GE_SPLINE = interpolate.splrep(GEFF_DATA[0, :], GEFF_DATA_GE, s=0)
-    GS_SPLINE = interpolate.splrep(GEFF_DATA[0, :], GEFF_DATA_GS, s=0)
-    GE_GS_RATIO_SPLINE = interpolate.splrep(GEFF_DATA[0, :], GEFF_DATA_GE_GS_RATIO, s=0)
+    GE_SPLINE = interpolate.splrep(GEFF_DATA_LOG_TEMP, GEFF_DATA_GE, s=0)
+    GS_SPLINE = interpolate.splrep(GEFF_DATA_LOG_TEMP, GEFF_DATA_GS, s=0)
+    GE_GS_RATIO_SPLINE = interpolate.splrep(GEFF_DATA_LOG_TEMP, GEFF_DATA_GE_GS_RATIO, s=0)
 
     def dge_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         self.validate_temp(temp)

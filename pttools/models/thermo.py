@@ -39,17 +39,44 @@ class ThermoModel(BaseModel, abc.ABC):
         t_max = self.t_max
 
         @numba.njit
-        def cs2(temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-            # The validate_temp() function cannot be called from jitted functions
-            if temp < t_min or temp > t_max:
-                return np.nan
-
-            if phase == Phase.SYMMETRIC.value:
+        def cs2_compute(temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+            if np.all(phase == Phase.SYMMETRIC.value):
                 return scipy.interpolate.splev(np.log10(temp), cs2_spl_s)
-            elif phase == Phase.BROKEN.value:
+            elif np.all(phase == Phase.BROKEN.value):
                 return scipy.interpolate.splev(np.log10(temp), cs2_spl_b)
             return scipy.interpolate.splev(np.log10(temp), cs2_spl_b) * phase \
                 + scipy.interpolate.splev(np.log10(temp), cs2_spl_s) * (1 - phase)
+
+        @numba.njit
+        def cs2_scalar_temp(temp: float, phase: th.FloatOrArr) -> th.FloatOrArr:
+            if temp < t_min or temp > t_max:
+                return np.nan
+            return cs2_compute(temp, phase)
+
+        @numba.njit
+        def cs2_arr_temp(temp: np.ndarray, phase: th.FloatOrArr) -> np.ndarray:
+            invalid = np.logical_or(temp < t_min, temp > t_max)
+            if np.any(invalid):
+                temp2 = temp.copy()
+                temp2[invalid] = np.nan
+            return cs2_compute(temp, phase)
+
+        @numba.generated_jit(nopython=True)
+        def cs2(temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArrNumba:
+            """The validate_temp function cannot be called from jitted functions,
+            and therefore we have to use the validate_temp"""
+            if isinstance(temp, numba.types.Float):
+                return cs2_scalar_temp
+            if isinstance(temp, numba.types.Array):
+                return cs2_arr_temp
+            if isinstance(temp, float):
+                return cs2_scalar_temp(temp, phase)
+            if isinstance(temp, np.ndarray):
+                if not temp.ndim:
+                    return cs2_scalar_temp(temp.item(), phase)
+                return cs2_arr_temp(temp, phase)
+            raise TypeError(f"Unknown type for temp: {type(temp)}")
+
         return cs2
 
     def cs2(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:

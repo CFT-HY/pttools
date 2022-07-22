@@ -17,7 +17,7 @@ def gamma(v: th.FloatOrArr) -> th.FloatOrArr:
     return np.sqrt(gamma2(v))
 
 
-@numba.njit
+@numba.njit(error_model="numpy")
 def gamma2(v: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Square of Lorentz gamma, $\gamma^2 = \frac{1}{1 - v^2}$.

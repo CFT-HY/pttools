@@ -1,9 +1,13 @@
 """Bag model"""
 
+import logging
+
 import numba
 
 import pttools.type_hints as th
 from pttools.models.analytic import AnalyticModel
+
+logger = logging.getLogger(__name__)
 
 
 class BagModel(AnalyticModel):
@@ -15,6 +19,20 @@ class BagModel(AnalyticModel):
 
     """
     DEFAULT_NAME = "bag"
+
+    def __init__(
+            self,
+            V_s: float, V_b: float = 0,
+            a_s: float = None, a_b: float = None,
+            g_s: float = None, g_b: float = None,
+            t_min: float = None, t_max: float = None,
+            name: str = None):
+        if V_b != 0:
+            logger.warning("V_b has been specified for the bag model, even though it's usually omitted.")
+
+        super().__init__(V_s=V_s, V_b=V_b, a_s=a_s, a_b=a_b, g_s=g_s, g_b=g_b, t_min=t_min, t_max=t_max, name=name)
+        if self.a_s <= self.a_b:
+            raise ValueError("The bag model must have a_s > a_b for the critical temperature to be non-negative.")
 
     def critical_temp(self, guess: float) -> float:
         r"""Critical temperature for the bag model

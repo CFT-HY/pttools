@@ -5,7 +5,6 @@ import numpy as np
 import scipy.optimize
 
 import pttools.type_hints as th
-from pttools.bubble.bag import CS2Fun
 from pttools.bubble.boundary import Phase
 from pttools.models.base import BaseModel
 
@@ -31,16 +30,15 @@ class Model(BaseModel, abc.ABC):
             name: str = None,
             gen_cs2: bool = True):
 
+        if V_b >= V_s:
+            raise ValueError("The bubble does not expand if V_b >= V_s.")
+
         self.t_ref: float = t_ref
         self.V_s: float = V_s
         self.V_b: float = V_b
 
         #: $$\frac{90}{\pi^2} (V_b - V_s)$$
         self.critical_temp_const: float = 90 / np.pi ** 2 * (self.V_b - self.V_s)
-
-        # Equal values are allowed so that the default values are accepted.
-        if V_b > V_s:
-            raise ValueError("The bubble does not expand if V_b >= V_s.")
 
         super().__init__(name=name, t_min=t_min, t_max=t_max, gen_cs2=gen_cs2)
 
@@ -49,29 +47,75 @@ class Model(BaseModel, abc.ABC):
 
     # Concrete methods
 
-    def alpha_n(self, wn: th.FloatOrArr) -> th.FloatOrArr:
+    def alpha_n(self, wn: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
         $$\alpha_n = \frac{4(\theta(w_n,\phi_s) - \theta(w_n,\phi_b)}{3w_n}$$
 
         :param wn: enthalpy of the symmetric phase at the nucleation temperature
+        :param allow_negative: whether to allow unphysical negative output values
         """
-        theta_diff = self.theta(wn, Phase.SYMMETRIC) - self.theta(wn, Phase.BROKEN)
+        theta_s = self.theta(wn, Phase.SYMMETRIC)
+        theta_b = self.theta(wn, Phase.BROKEN)
+        theta_diff = theta_s - theta_b
         if np.any(theta_diff < 0):
-            raise ValueError(
-                "For a physical equation of state theta_- < theta_+. See p. 33 of Hindmarsh and Hijazi, 2019")
+            if np.isscalar(wn):
+                info = f"Got: wn={wn}, theta_s={theta_s}, theta_b={theta_b}, diff: {theta_diff}."
+            else:
+                i = np.argmin(theta_diff)
+                info = f"Most problematic values: wn={wn[i]}, "\
+                       f"theta_s={theta_s[i]}, theta_b={theta_b[i]}, diff: {theta_diff[i]}."
+            msg = f"For a physical equation of state theta_+ > theta_-. {info} See p. 33 of Hindmarsh and Hijazi, 2019."
+            logger.error(msg)
+            if not allow_negative:
+                ValueError(msg)
+
         return 4 * theta_diff / (3 * wn)
 
-    def alpha_plus(self, wp: th.FloatOrArr, wm: th.FloatOrArr):
+    def alpha_plus(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
         r"""Transition strength parameter $\alpha_+$
         $$\alpha_+ = \frac{4\Delta \theta}{3w_+} = \frac{4(\theta(w_+,\phi_s) - \theta(w_-,\phi_b)}{3w_+}$$
 
         :param wp: $w_+$
         :param wm: $w_-$
+        :param allow_negative: whether to allow unphysical negative output values
         """
-        theta_diff = self.theta(wp, Phase.SYMMETRIC) - self.theta(wm, Phase.BROKEN)
+        theta_s = self.theta(wp, Phase.SYMMETRIC)
+        theta_b = self.theta(wm, Phase.BROKEN)
+        theta_diff = theta_s - theta_b
+
+        # Error handling
         if np.any(theta_diff < 0):
-            raise ValueError(
-                "For a physical equation of state theta_- < theta_+. See p. 33 of Hindmarsh and Hijazi, 2019")
+            if np.isscalar(wp) and np.isscalar(wm):
+                info = "Got:"
+                i = None
+                theta_diff_prob = theta_diff[i]
+            else:
+                i = np.argmin(theta_diff)
+                theta_diff_prob = theta_diff[i]
+                info = "Most problematic values:"
+            if np.isscalar(wp):
+                wp_prob = wp
+                theta_s_prob = theta_s
+            else:
+                wp_prob = wp[i]
+                theta_s_prob = theta_s[i]
+            if np.isscalar(wm):
+                wm_prob = wm
+                theta_b_prob = theta_b
+            else:
+                wm_prob = wm[i]
+                theta_b_prob = theta_b[i]
+            theta_s_prob = theta_s if np.isscalar(theta_s) else theta_s[i]
+            theta_b_prob = theta_b if np.isscalar(theta_b) else theta_b[i]
+
+            msg = "For a physical equation of state theta_+ > theta_-. "\
+                  f"{info} wp={wp_prob}, wm={wm_prob}, "\
+                  f"theta_s={theta_s_prob}, theta_b={theta_b_prob}, theta_diff={theta_diff_prob}. "\
+                  "See p. 33 of Hindmarsh and Hijazi, 2019."
+            logger.error(msg)
+            if not allow_negative:
+                ValueError(msg)
+
         return 4 * theta_diff / (3 * wp)
 
     def critical_temp(self, guess: float) -> float:

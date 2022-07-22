@@ -129,11 +129,11 @@ def _v_minus_scalar(vp: float, ap: float, sol_type: SolutionType) -> float:
     y = vp2 + 1. / 3.
     z = (y - ap * (1. - vp2))
     x = (4. / 3.) * vp2
-    # TODO: the automatic sol_type is not yet enabled
-    if sol_type is None:
-        b = 1. if vp < 1/np.sqrt(3) else -1
-    else:
-        b = 1. if sol_type == SolutionType.DETON.value else -1
+    # Finding the solution type automatically does not work in the general case
+    # if sol_type is None:
+    #     b = 1. if vp < 1/np.sqrt(3) else -1
+    # else:
+    b = 1. if sol_type == SolutionType.DETON.value else -1
     return (0.5 / vp) * (z + b * np.sqrt(z ** 2 - x))
 
     # Handling of complex return values for scalars
@@ -197,11 +197,11 @@ def v_minus(vp: th.FloatOrArr, ap: float, sol_type: SolutionType = SolutionType.
 @numba.njit
 def _v_plus_scalar(vm: float, ap: float, sol_type: SolutionType) -> float:
     x = vm + 1. / (3 * vm)
-    # TODO: the automatic sol_type is not yet enabled
-    if sol_type is None:
-        b = 1. if vm > 1/np.sqrt(3) else -1.
-    else:
-        b = 1. if sol_type == SolutionType.DETON.value else -1.
+    # Finding the SolutionType automatically does not work in the general case
+    # if sol_type is None:
+    #     b = 1. if vm > 1/np.sqrt(3) else -1.
+    # else:
+    b = 1. if sol_type == SolutionType.DETON.value else -1.
     vp = (0.5 / (1 + ap)) * (x + b * np.sqrt(x ** 2 + 4. * ap ** 2 + (8. / 3.) * ap - (4. / 3.)))
     # Fluid must flow through the wall from the outside to the inside of the bubble.
     return vp if vp >= 0 else np.nan

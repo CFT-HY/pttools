@@ -2,7 +2,8 @@ import typing as tp
 
 import numpy as np
 
-from pttools.models.model import Model
+if tp.TYPE_CHECKING:
+    from pttools.models.model import Model
 
 
 class Bubble:

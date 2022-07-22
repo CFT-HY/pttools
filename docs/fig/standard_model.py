@@ -14,7 +14,7 @@ def main():
     fig.subplots_adjust(hspace=0)
 
     sm = StandardModel()
-    temp = np.logspace(sm.GEFF_DATA[0, 0], sm.GEFF_DATA[0, -1], 100)
+    temp = np.logspace(sm.GEFF_DATA_LOG_TEMP[0], sm.GEFF_DATA_LOG_TEMP[-1], 100)
     axs[0].plot(temp, sm.ge_gs_ratio(temp), label=r"$g_e/g_s(T)$, spline")
     axs[0].scatter(sm.GEFF_DATA_TEMP, sm.GEFF_DATA_GE_GS_RATIO, label=r"$g_e/g_s(T)$, data")
     axs[0].grid(True)

@@ -1,5 +1,7 @@
 """Full thermodynamics-based model"""
 
+import typing as tp
+
 import numba
 import numpy as np
 import scipy.interpolate
@@ -8,6 +10,7 @@ import scipy.optimize
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase
 from pttools.models.model import Model
+# if tp.TYPE_CHECKING:
 from pttools.models.thermo import ThermoModel
 
 
@@ -23,7 +26,7 @@ class FullModel(Model):
     """
     DEFAULT_NAME = "full"
 
-    def __init__(self, thermo: ThermoModel, V_s: float = 0, V_b: float = 0, name: str = None):
+    def __init__(self, thermo: ThermoModel, V_s: float, V_b: float = 0, name: str = None):
         super().__init__(V_s=V_s, V_b=V_b, name=name, gen_cs2=False)
         self.thermo = thermo
         # Override auto-generated limits with those from the ThermoModel

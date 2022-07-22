@@ -12,7 +12,8 @@ from . import alpha as alpha_tools
 from . import boundary
 from . import const
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
-from pttools.models.model import Model
+if tp.TYPE_CHECKING:
+    from pttools.models.model import Model
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ def identify_solution_type(v_wall: float, alpha_n: float, exit_on_error: bool = 
 def identify_solution_type_beyond_bag(
         v_wall: float,
         alpha_n: float,
-        model: Model,
+        model: "Model",
         wp: float = 1) -> boundary.SolutionType:
 
     if is_surely_detonation(v_wall, alpha_n, model):
@@ -60,14 +61,14 @@ def identify_solution_type_beyond_bag(
     return boundary.SolutionType.UNKNOWN
 
 
-def is_surely_sub_def(v_wall: float, alpha_n: float, model: Model, wn: float = 1):
+def is_surely_sub_def(v_wall: float, alpha_n: float, model: "Model", wn: float = 1):
     r"""If v_wall < cs_b for all w in [0, wn], then it is certainly a deflagration"""
     if v_wall**2 < max_cs2_inside_sub_def(model, wn):
         return True
     return False
 
 
-def is_surely_detonation(v_wall: float, alpha_n: float, model: Model) -> float:
+def is_surely_detonation(v_wall: float, alpha_n: float, model: "Model") -> float:
     r"""If $v_w > v_{CJ}$, it is certainly a detonation"""
     v_cj = v_chapman_jouguet(alpha_n, model)
     if v_wall > v_cj:
@@ -75,7 +76,7 @@ def is_surely_detonation(v_wall: float, alpha_n: float, model: Model) -> float:
     return False
 
 
-def max_cs2_inside_sub_def(model: Model, wn: float = 1) -> float:
+def max_cs2_inside_sub_def(model: "Model", wn: float = 1) -> float:
     r"""If the wall speed $v_w < c_s(w) \forall w \in [0, w_n]$,
     then the wall is certainly subsonic and therefore the solution is certainly a subsonic deflagration."""
     def func(w):
