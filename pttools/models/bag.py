@@ -114,7 +114,7 @@ class BagModel(AnalyticModel):
         :param phase: phase $\phi$
         """
         self.validate_temp(temp)
-        return 4 * (self.a_b * phase + self.a_s * (1-phase))**temp**4
+        return 4 * (self.a_b * phase + self.a_s * (1-phase))*temp**4
 
     @staticmethod
     def w_shock(xi: th.FloatOrArr, w_n: th.FloatOrArr) -> th.FloatOrArr:
