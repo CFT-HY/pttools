@@ -78,7 +78,7 @@ class FullModel(Model):
         :return: $e(T,\phi)$
         """
         self.validate_temp(temp)
-        return np.pi**2 / 30 * self.thermo.ge(temp, phase) * temp**4
+        return np.pi**2 / 30 * self.thermo.ge(temp, phase) * temp**4 + self.V(phase)
 
     def gp(self, w: th.FloatOrArr, phase: th.FloatOrArr):
         r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(w,\phi)$"""
