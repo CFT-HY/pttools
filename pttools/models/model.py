@@ -25,13 +25,15 @@ class Model(BaseModel, abc.ABC):
 
     def __init__(
             self,
+            V_s: float, V_b: float = 0,
             t_ref: float = 1, t_min: float = None, t_max: float = None,
-            V_s: float = 0, V_b: float = 0,
             name: str = None,
             gen_cs2: bool = True):
 
-        if V_b >= V_s:
-            raise ValueError("The bubble does not expand if V_b >= V_s.")
+        if V_s < V_b:
+            raise ValueError(f"The bubble does not expand if V_s <= V_b. Got: V_s={V_s}, V_b={V_b}.")
+        if V_s == V_b:
+            logger.warning("The bubble will not expand, since V_b = V_s. Got: V_b = V_s = %s", V_s)
 
         self.t_ref: float = t_ref
         self.V_s: float = V_s
