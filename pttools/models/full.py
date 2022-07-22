@@ -34,37 +34,35 @@ class FullModel(Model):
         self.t_max = thermo.t_max
 
         self.temp_spline_s = scipy.interpolate.splrep(
-            self.w(self.thermo.GEFF_DATA_TEMP, Phase.SYMMETRIC), self.thermo.GEFF_DATA_TEMP
+            np.log10(self.w(self.thermo.GEFF_DATA_TEMP, Phase.SYMMETRIC)), self.thermo.GEFF_DATA_LOG_TEMP
         )
         self.temp_spline_b = scipy.interpolate.splrep(
-            self.w(self.thermo.GEFF_DATA_TEMP, Phase.BROKEN), self.thermo.GEFF_DATA_TEMP
+            np.log10(self.w(self.thermo.GEFF_DATA_TEMP, Phase.BROKEN)), self.thermo.GEFF_DATA_LOG_TEMP
         )
 
         self.cs2 = self.gen_cs2()
 
     def gen_cs2(self):
         """This function generates the Numba-jitted cs2 function to be used by the fluid integrator"""
-        w_s = self.w(self.thermo.GEFF_DATA_TEMP, Phase.SYMMETRIC)
-        w_b = self.w(self.thermo.GEFF_DATA_TEMP, Phase.BROKEN)
-
         cs2_spl_s = scipy.interpolate.splrep(
-            w_s,
+            np.log10(self.w(self.thermo.GEFF_DATA_TEMP, Phase.SYMMETRIC)),
             self.thermo.cs2_full(self.thermo.GEFF_DATA_TEMP, Phase.SYMMETRIC),
-            k=1)
+            k=1
+        )
         cs2_spl_b = scipy.interpolate.splrep(
-            w_b,
+            np.log10(self.w(self.thermo.GEFF_DATA_TEMP, Phase.BROKEN)),
             self.thermo.cs2_full(self.thermo.GEFF_DATA_TEMP, Phase.BROKEN),
-            k=1)
+            k=1
+        )
 
         @numba.njit
         def cs2(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-            if np.isscalar(phase):
-                if phase == Phase.SYMMETRIC.value:
-                    return scipy.interpolate.splev(w, cs2_spl_s)
-                elif phase == Phase.BROKEN.value:
-                    return scipy.interpolate.splev(w, cs2_spl_b)
-            return scipy.interpolate.splev(w, cs2_spl_b) * phase \
-                + scipy.interpolate.splev(w, cs2_spl_s) * (1 - phase)
+            if np.all(phase == Phase.SYMMETRIC.value):
+                return scipy.interpolate.splev(np.log10(w), cs2_spl_s)
+            if np.all(phase == Phase.BROKEN.value):
+                return scipy.interpolate.splev(np.log10(w), cs2_spl_b)
+            return scipy.interpolate.splev(np.log10(w), cs2_spl_b) * phase \
+                + scipy.interpolate.splev(np.log10(w), cs2_spl_s) * (1 - phase)
         return cs2
 
     def critical_temp_opt(self, temp: float) -> float:
@@ -113,13 +111,12 @@ class FullModel(Model):
 
     def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr):
         r"""Temperature $T$"""
-        if np.isscalar(phase):
-            if phase == Phase.SYMMETRIC.value:
-                return scipy.interpolate.splev(w, self.temp_spline_s)
-            elif phase == Phase.BROKEN.value:
-                return scipy.interpolate.splev(w, self.temp_spline_b)
-        return scipy.interpolate.splev(w, self.temp_spline_b) * phase \
-            + scipy.interpolate.splev(w, self.temp_spline_s) * (1 - phase)
+        if np.all(phase == Phase.SYMMETRIC.value):
+            return 10**scipy.interpolate.splev(np.log10(w), self.temp_spline_s)
+        if np.all(phase == Phase.BROKEN.value):
+            return 10**scipy.interpolate.splev(np.log10(w), self.temp_spline_b)
+        return 10**scipy.interpolate.splev(np.log10(w), self.temp_spline_b) * phase \
+            + 10**scipy.interpolate.splev(np.log10(w), self.temp_spline_s) * (1 - phase)
 
     def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Enthalpy density $w$

@@ -20,20 +20,34 @@ class ThermoModel(BaseModel, abc.ABC):
     TODO: Some of the functions seem to return vertical arrays. Fix this!
     """
     BASE_NAME: str
+    GEFF_DATA_LOG_TEMP: np.ndarray
     #: Container for the temperatures of $g_\text{eff}$ data
     GEFF_DATA_TEMP: np.ndarray
 
     # Concrete methods
 
     def gen_cs2(self) -> CS2Fun:
+        cs2_s = self.cs2_full(self.GEFF_DATA_TEMP, Phase.SYMMETRIC)
+        cs2_b = self.cs2_full(self.GEFF_DATA_TEMP, Phase.BROKEN)
+        if np.any(cs2_s < 0):
+            raise ValueError("cs2_s cannot be negative")
+        if np.any(cs2_s > 1):
+            raise ValueError("cs2_s cannot exceed 1")
+        if np.any(cs2_b < 0):
+            raise ValueError("cs2_b cannot be negative")
+        if np.any(cs2_b > 1):
+            raise ValueError("cs2_b cannot exceed 1")
+
         cs2_spl_s = scipy.interpolate.splrep(
             np.log10(self.GEFF_DATA_TEMP),
-            self.cs2_full(self.GEFF_DATA_TEMP, Phase.SYMMETRIC),
-            k=1)
+            cs2_s,
+            k=1
+        )
         cs2_spl_b = scipy.interpolate.splrep(
             np.log10(self.GEFF_DATA_TEMP),
-            self.cs2_full(self.GEFF_DATA_TEMP, Phase.BROKEN),
-            k=1)
+            cs2_b,
+            k=1
+        )
 
         t_min = self.t_min
         t_max = self.t_max
@@ -42,10 +56,18 @@ class ThermoModel(BaseModel, abc.ABC):
         def cs2_compute(temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
             if np.all(phase == Phase.SYMMETRIC.value):
                 return scipy.interpolate.splev(np.log10(temp), cs2_spl_s)
-            elif np.all(phase == Phase.BROKEN.value):
+            if np.all(phase == Phase.BROKEN.value):
                 return scipy.interpolate.splev(np.log10(temp), cs2_spl_b)
             return scipy.interpolate.splev(np.log10(temp), cs2_spl_b) * phase \
                 + scipy.interpolate.splev(np.log10(temp), cs2_spl_s) * (1 - phase)
+
+            # if np.any(ret > 1):
+            #     with numba.objmode:
+            #         logger.warning("Got cs2 > 1: %s", np.max(ret))
+            # if np.any(ret < 0):
+            #     with numba.objmode:
+            #         logger.warning("Got cs2 < 0: %s", np.min(ret))
+            # return ret
 
         @numba.njit
         def cs2_scalar_temp(temp: float, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -82,6 +104,7 @@ class ThermoModel(BaseModel, abc.ABC):
     def cs2(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""
         Sound speed squared, $c_s^2$, interpolated from precomputed values.
+        Takes in $T$ instead of $w$, unlike the equation of state model.
 
         :param temp: temperature $T$ (MeV)
         :param phase: phase $phi$

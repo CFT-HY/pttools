@@ -5,6 +5,7 @@ Cubic spline interpolation for the range $0 - 10^{5.45}$ MeV from the table S2 o
 
 .. plot:: fig/standard_model.py
 
+.. plot:: fig/standard_model_theta.py
 """
 
 import numpy as np
