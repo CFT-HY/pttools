@@ -105,8 +105,6 @@ class Model(BaseModel, abc.ABC):
             else:
                 wm_prob = wm[i]
                 theta_b_prob = theta_b[i]
-            theta_s_prob = theta_s if np.isscalar(theta_s) else theta_s[i]
-            theta_b_prob = theta_b if np.isscalar(theta_b) else theta_b[i]
 
             msg = "For a physical equation of state theta_+ > theta_-. "\
                   f"{info} wp={wp_prob}, wm={wm_prob}, "\
