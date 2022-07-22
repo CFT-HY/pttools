@@ -15,6 +15,7 @@ class ModelBaseCase(JsonTestCase, abc.ABC):
     EXPECT_MISSING_DATA = True
     SAVE_NEW_DATA = True
 
+    REF_DATA_PATH: str
     TEST_ARR_SIZE: int = 10
     w_arr1 = np.linspace(0.1, 1.1, TEST_ARR_SIZE)
     w_arr2 = np.linspace(0, 1, TEST_ARR_SIZE)

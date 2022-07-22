@@ -1,7 +1,10 @@
 import unittest
 
+import numpy as np
+
 from pttools import models
 from tests.models.base_model import ModelBaseCase
+from tests.utils.assertions import assert_allclose
 
 
 class TestBag(ModelBaseCase, unittest.TestCase):
@@ -23,16 +26,29 @@ class TestBag(ModelBaseCase, unittest.TestCase):
 
 
 class TestConstCSLikeBag(ModelBaseCase, unittest.TestCase):
+    #: This test should use the bag model reference data instead of creating its own
+    SAVE_NEW_DATA = False
+    model: models.ConstCSModel
+
     @classmethod
     def setUpClass(cls, *args, **kwargs) -> None:
-        model = models.ConstCSModel(a_s=1.1, a_b=1.2, V_s=1.3, css2=1/3, csb2=1/3)
+        # Use bag model reference data
+        model = models.ConstCSModel(a_s=1.2, a_b=1.1, V_s=1.3, css2=1/3, csb2=1/3, name="bag")
         super().setUpClass(model)
+
+    def test_constants(self):
+        self.assertAlmostEqual(self.model.mu, 4)
+        self.assertAlmostEqual(self.model.nu, 4)
+        self.assertEqual(self.model.t_ref, 1)
+
+    def test_cs2_like_bag(self):
+        assert_allclose(self.model.cs2(self.w_arr1, self.phase_arr), 1/3*np.ones_like(self.w_arr1))
 
 
 class TestConstCS(ModelBaseCase, unittest.TestCase):
     @classmethod
     def setUpClass(cls, *args, **kwargs) -> None:
-        model = models.ConstCSModel(a_s=1.1, a_b=1.2, V_s=1.3, css2=0.4**2, csb2=1/3)
+        model = models.ConstCSModel(a_s=1.2, a_b=1.1, V_s=1.3, css2=0.4**2, csb2=1/3)
         super().setUpClass(model)
 
 
@@ -40,7 +56,7 @@ class TestFull(ModelBaseCase, unittest.TestCase):
     @classmethod
     def setUpClass(cls, *args, **kwargs) -> None:
         sm = models.StandardModel()
-        model = models.FullModel(thermo=sm, V_s=1.1)
+        model = models.FullModel(thermo=sm, V_s=1.3)
         super().setUpClass(model)
 
     # @unittest.expectedFailure
