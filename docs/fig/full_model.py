@@ -7,7 +7,7 @@ from pttools.models import FullModel, StandardModel
 
 def main():
     thermo = StandardModel()
-    model = FullModel(thermo=thermo, V_s=1)
+    model = FullModel(thermo=thermo, V_s=0)
 
     fig: plt.Figure = plt.figure()
     ax1: plt.Axes
