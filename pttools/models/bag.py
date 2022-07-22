@@ -17,8 +17,12 @@ class BagModel(AnalyticModel):
     DEFAULT_NAME = "bag"
 
     def critical_temp(self, guess: float) -> float:
-        # TODO
-        raise NotImplementedError
+        r"""Critical temperature for the bag model
+
+        $$T_{cr} = \sqrt[4]{\frac{3 V_s}{a_s - a_b}}$$
+        :giese_2020:`\ ` p. 6
+        """
+        return (3 * self.V_s / (self.a_s - self.a_b))**0.25
 
     @staticmethod
     @numba.njit
