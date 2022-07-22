@@ -90,7 +90,7 @@ class FullModel(Model):
         $$ g_{\text{eff},p}(T,\phi) = 4g_s(T,\phi) - 3g_e(T,\phi) + \frac{90 V(\phi)}{\pi^2 T^4} $$
         """
         self.validate_temp(temp)
-        return 4*self.thermo.gs(temp, phase) - 3*self.thermo.ge(temp, phase) + (90*self.V(phase)) / (np.pi**2 * temp**4)
+        return 4*self.thermo.gs(temp, phase) - 3*self.thermo.ge(temp, phase) # + (90*self.V(phase)) / (np.pi**2 * temp**4)
 
     def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Pressure $p(T,\phi)$
