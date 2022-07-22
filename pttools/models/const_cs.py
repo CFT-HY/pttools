@@ -25,9 +25,10 @@ class ConstCSModel(AnalyticModel):
 
     def __init__(
             self,
-            a_s: float, a_b: float,
             css2: float, csb2: float,
-            V_s: float = 0, V_b: float = 0,
+            V_s: float, V_b: float = 0,
+            a_s: float = None, a_b: float = None,
+            g_s: float = None, g_b: float = None,
             t_min: float = None,
             t_max: float = None,
             t_ref: float = 1,
@@ -55,7 +56,7 @@ class ConstCSModel(AnalyticModel):
         self.nu = 1 + 1 / csb2
         self.t_ref = t_ref
 
-        super().__init__(a_s=a_s, a_b=a_b, V_s=V_s, V_b=V_b, t_min=t_min, t_max=t_max, name=name)
+        super().__init__(V_s=V_s, V_b=V_b, a_s=a_s, a_b=a_b, g_s=g_s, g_b=g_b, t_min=t_min, t_max=t_max, name=name)
 
     def critical_temp_opt(self, temp: float):
         const = (self.V_b - self.V_s)*self.t_ref**4
