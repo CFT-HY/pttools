@@ -21,18 +21,25 @@ if numba_wrapper.NUMBA_VERSION < (0, 49, 0):
         return impl
 
 
-@overload(np.any)
-def np_any(a):
-    """Overload of :external:py:func:`numpy.any` for booleans and scalars."""
+@overload(np.all)
+def np_all(a):
+    """Overload of :external:py:func:`numpy.all` for booleans"""
     if isinstance(a, numba.types.Boolean):
         def func(a):
             return a
+        return func
 
+
+@overload(np.any)
+def np_any(a):
+    """Overload of :external:py:func:`numpy.any` for booleans and scalars"""
+    if isinstance(a, numba.types.Boolean):
+        def func(a):
+            return a
         return func
     if isinstance(a, numba.types.Number):
         def func(a):
             return bool(a)
-
         return func
 
 # @overload(np.asanyarray)
