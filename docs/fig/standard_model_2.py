@@ -7,7 +7,7 @@ from pttools.models.sm import StandardModel
 
 def main():
     thermo = StandardModel()
-    temp = np.logspace(thermo.GEFF_DATA_LOG_TEMP[0], thermo.GEFF_DATA_LOG_TEMP[-1])
+    temp = np.logspace(thermo.GEFF_DATA_LOG_TEMP[0], thermo.GEFF_DATA_LOG_TEMP[-1], 100)
 
     fig: plt.Figure = plt.figure()
     ax1: plt.Axes
