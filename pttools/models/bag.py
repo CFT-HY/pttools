@@ -56,8 +56,8 @@ class BagModel(AnalyticModel):
         The convention for $a_s$ and $a_b$ is that of :notes:`\ `, eq. 7.33.
         """
         self.validate_temp(temp)
-        e_s = 3*self.a_s * temp**4
-        e_b = 3*self.a_b * temp**4
+        e_s = 3*self.a_s * temp**4 + self.V_s
+        e_b = 3*self.a_b * temp**4 + self.V_b
         return e_b * phase + e_s * (1 - phase)
 
     def gen_cs2(self):
