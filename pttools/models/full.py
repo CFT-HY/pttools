@@ -24,10 +24,13 @@ class FullModel(Model):
     :param V_s: the constant term in the expression of $p$ in the symmetric phase
     :param V_b: the constant term in the expression of $p$ in the broken phase
     """
+    DEFAULT_LABEL = "Full model"
     DEFAULT_NAME = "full"
 
-    def __init__(self, thermo: ThermoModel, V_s: float, V_b: float = 0, name: str = None):
-        super().__init__(V_s=V_s, V_b=V_b, name=name, gen_cs2=False)
+    def __init__(self, thermo: ThermoModel, V_s: float, V_b: float = 0, name: str = None, label: str = None):
+        if label is None:
+            label = f"Full model ({thermo.label})"
+        super().__init__(V_s=V_s, V_b=V_b, name=name, label=label, gen_cs2=False)
         self.thermo = thermo
         # Override auto-generated limits with those from the ThermoModel
         self.t_min = thermo.t_min

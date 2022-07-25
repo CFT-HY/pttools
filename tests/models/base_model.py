@@ -63,7 +63,7 @@ class ModelBaseCase(JsonTestCase, abc.ABC):
 
     def test_theta(self):
         data = self.model.theta(self.w_arr1, self.phase_arr)
-        self.assert_json(data, "theta")
+        self.assert_json(data, "theta", atol=1e-15)
 
     def test_e_temp(self):
         data = self.model.e_temp(self.temp_arr, self.phase_arr)
@@ -84,3 +84,8 @@ class ModelBaseCase(JsonTestCase, abc.ABC):
     def test_w(self):
         data = self.model.w(self.temp_arr, self.phase_arr)
         self.assert_json(data, "w")
+
+    def test_w_n(self):
+        alpha_n = np.linspace(0.01, 0.5, 10)
+        data = self.model.w_n(alpha_n)
+        self.assert_json(data, "w_n")

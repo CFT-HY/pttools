@@ -18,6 +18,7 @@ class BagModel(AnalyticModel):
     .. plot:: fig/xi_v_plane.py
 
     """
+    DEFAULT_LABEL = "Bag model"
     DEFAULT_NAME = "bag"
 
     def __init__(
@@ -26,11 +27,18 @@ class BagModel(AnalyticModel):
             a_s: float = None, a_b: float = None,
             g_s: float = None, g_b: float = None,
             t_min: float = None, t_max: float = None,
-            name: str = None):
+            name: str = None,
+            label: str = None):
         if V_b != 0:
             logger.warning("V_b has been specified for the bag model, even though it's usually omitted.")
 
-        super().__init__(V_s=V_s, V_b=V_b, a_s=a_s, a_b=a_b, g_s=g_s, g_b=g_b, t_min=t_min, t_max=t_max, name=name)
+        super().__init__(
+            V_s=V_s, V_b=V_b,
+            a_s=a_s, a_b=a_b,
+            g_s=g_s, g_b=g_b,
+            t_min=t_min, t_max=t_max,
+            name=name, label=label
+        )
         if self.a_s <= self.a_b:
             raise ValueError("The bag model must have a_s > a_b for the critical temperature to be non-negative.")
 
@@ -99,6 +107,13 @@ class BagModel(AnalyticModel):
         temp_b = (w / (4*self.a_b))**0.25
         return temp_b * phase + temp_s * (1 - phase)
 
+    def theta(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        """Trace anomaly $\theta$
+
+        For the bag model the trace anomaly $\theta$ does not depend on the enthalpy.
+        """
+        return self.V_b * phase + self.V_s * (1 - phase)
+
     @staticmethod
     def v_shock(xi: th.FloatOrArr) -> th.FloatOrArr:
         r"""Velocity at the shock, :gw_pt_ssm:`\ ` eq. B.17
@@ -115,6 +130,13 @@ class BagModel(AnalyticModel):
         """
         self.validate_temp(temp)
         return 4 * (self.a_b * phase + self.a_s * (1-phase))*temp**4
+
+    def w_n(self, alpha_n: th.FloatOrArr, wn_guess: float = None) -> th.FloatOrArr:
+        r"""Enthalpy at nucleation temperature
+        $$w_n = \frac{4}{3} \frac{V_s - V_b}{\alpha_n}$$
+        This can be derived from the equations for $\theta$ and $\alpha_n$.
+        """
+        return self.bag_wn_const / alpha_n
 
     @staticmethod
     def w_shock(xi: th.FloatOrArr, w_n: th.FloatOrArr) -> th.FloatOrArr:

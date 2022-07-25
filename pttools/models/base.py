@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 class BaseModel(abc.ABC):
     """The base for both Model and ThermoModel"""
+    DEFAULT_LABEL: str = None
     DEFAULT_NAME: str = None
     DEFAULT_T_MIN: float = 0
     DEFAULT_T_MAX: float = np.inf
@@ -20,16 +21,24 @@ class BaseModel(abc.ABC):
             name: str = None,
             t_min: float = None, t_max: float = None,
             restrict_to_valid: bool = True,
+            label: str = None,
             gen_cs2: bool = True):
         self.name = self.DEFAULT_NAME if name is None else name
+        self.label = self.DEFAULT_LABEL if label is None else label
         self.t_min = self.DEFAULT_T_MIN if t_min is None else t_min
         self.t_max = self.DEFAULT_T_MAX if t_max is None else t_max
         self.restrict_to_valid = restrict_to_valid
 
         if self.name is None:
-            raise ValueError("The model must have a name")
+            raise ValueError("The model must have a name.")
+        if " " in self.name:
+            logger.warning(
+                "Model names should not have spaces to ensure that the file names don't cause problems. "
+                f"Got: \"{self.name}\".")
+        if self.label is None:
+            raise ValueError("The model must have a label.")
         if self.t_max <= self.t_min:
-            raise ValueError(f"T_max ({self.t_max}) should be higher than T_min ({self.t_min})")
+            raise ValueError(f"T_max ({self.t_max}) should be higher than T_min ({self.t_min}).")
 
         self.cs2: CS2Fun = self.gen_cs2() if gen_cs2 else None
 
@@ -44,14 +53,14 @@ class BaseModel(abc.ABC):
             if temp < self.t_min:
                 logger.warning(
                     f"The temperature {temp} "
-                    f"is below the minimum temperature {self.t_min} of the model \"{self.name}\""
+                    f"is below the minimum temperature {self.t_min} of the model \"{self.name}\"."
                 )
                 if self.restrict_to_valid:
                     return np.nan
             elif temp > self.t_max:
                 logger.warning(
                     f"The temperature {temp} "
-                    f"is above the maximum temperature {self.t_max} of the model \"{self.name}\""
+                    f"is above the maximum temperature {self.t_max} of the model \"{self.name}\"."
                 )
                 if self.restrict_to_valid:
                     return np.nan
@@ -65,14 +74,14 @@ class BaseModel(abc.ABC):
             if has_below:
                 logger.warning(
                     f"Some temperatures ({np.min(temp)} and possibly above) "
-                    f"are below the minimum temperature {self.t_min} of the model \"{self.name}\""
+                    f"are below the minimum temperature {self.t_min} of the model \"{self.name}\"."
                 )
                 if self.restrict_to_valid:
                     temp[below] = np.nan
             if has_above:
                 logger.warning(
                     f"Some temperatures ({np.max(temp)} and possibly above) "
-                    f"are below the minimum temperature {self.t_max} of the model \"{self.name}\""
+                    f"are below the minimum temperature {self.t_max} of the model \"{self.name}\"."
                 )
                 if self.restrict_to_valid:
                     temp[above] = np.nan

@@ -2,7 +2,7 @@ import abc
 import logging
 
 import numpy as np
-import scipy.optimize
+from scipy.optimize import fsolve
 
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase
@@ -22,18 +22,18 @@ class Model(BaseModel, abc.ABC):
     :param name: custom name for the model
     :param gen_cs2: used internally for postponing the generation of the cs2 function
     """
-
     def __init__(
             self,
             V_s: float, V_b: float = 0,
             t_ref: float = 1, t_min: float = None, t_max: float = None,
             name: str = None,
+            label: str = None,
             gen_cs2: bool = True):
 
         if V_s < V_b:
-            raise ValueError(f"The bubble does not expand if V_s <= V_b. Got: V_s={V_s}, V_b={V_b}.")
+            raise ValueError(f"The bubble will not expand, when V_s <= V_b. Got: V_s={V_s}, V_b={V_b}.")
         if V_s == V_b:
-            logger.warning("The bubble will not expand, since V_b = V_s. Got: V_b = V_s = %s", V_s)
+            logger.warning("The bubble will not expand, when V_s <= V_b. Got: V_b = V_s = %s.", V_s)
 
         self.t_ref: float = t_ref
         self.V_s: float = V_s
@@ -42,7 +42,7 @@ class Model(BaseModel, abc.ABC):
         #: $$\frac{90}{\pi^2} (V_b - V_s)$$
         self.critical_temp_const: float = 90 / np.pi ** 2 * (self.V_b - self.V_s)
 
-        super().__init__(name=name, t_min=t_min, t_max=t_max, gen_cs2=gen_cs2)
+        super().__init__(name=name, t_min=t_min, t_max=t_max, label=label, gen_cs2=gen_cs2)
 
         if t_ref <= self.t_min:
             raise ValueError("The reference temperature has to be higher than the minimum temperature.")
@@ -124,7 +124,7 @@ class Model(BaseModel, abc.ABC):
         :param guess: starting guess for the critical temperature
         """
         # This returns np.float64
-        return scipy.optimize.fsolve(
+        return fsolve(
             self.critical_temp_opt,
             guess
             # args=(const),
@@ -191,6 +191,28 @@ class Model(BaseModel, abc.ABC):
         :param phase: phase $\phi$
         """
         return phase*self.V_b + (1 - phase)*self.V_s
+
+    def _w_n_scalar(self, alpha_n: float, wn_guess: float) -> float:
+        wn_sol = fsolve(self._w_n_solvable, x0=np.array([wn_guess]), args=(alpha_n, ), full_output=True)
+        wn: float = wn_sol[0][0]
+        if wn_sol[2] != 1:
+            logger.error(
+                f"w_n solution was not found for model={self.name}, alpha_n={alpha_n}, wn_guess={wn_guess}. "
+                f"Using w_n={wn}. "
+                f"Reason: {wn_sol[3]}")
+        return wn
+
+    def _w_n_solvable(self, param: np.ndarray, alpha_n: float) -> th.FloatOrArr:
+        return self.alpha_n(param[0]) - alpha_n
+
+    def w_n(self, alpha_n: th.FloatOrArr, wn_guess: float = 1) -> th.FloatOrArr:
+        """Enthalpy at nucleation temperature with given $\alpha_n$"""
+        if np.isscalar(alpha_n):
+            return self._w_n_scalar(alpha_n, wn_guess)
+        ret = np.zeros_like(alpha_n)
+        for i in range(alpha_n.size):
+            ret[i] = self._w_n_scalar(alpha_n[i], wn_guess)
+        return ret
 
     # Abstract methods
 

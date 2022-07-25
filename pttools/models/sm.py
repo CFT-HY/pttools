@@ -20,6 +20,7 @@ class StandardModel(ThermoModel):
 
     Units are in GeV
     """
+    DEFAULT_LABEL = "Standard Model"
     DEFAULT_NAME = "standard_model"
     # Copied from the ArXiv file som_eos.tex
     GEFF_DATA = np.array([

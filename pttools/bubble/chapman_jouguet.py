@@ -23,7 +23,8 @@ def gen_wn_solvable(model: "Model", alpha_n: float):
     def wn_solvable(params: np.ndarray) -> float:
         r"""This function is zero when $w_n$ corresponds to the given $\alpha_n$"""
         wn = params[0]
-        return model.theta(wn, Phase.SYMMETRIC) - model.theta(wn, Phase.BROKEN) - 3/4 * wn * alpha_n
+        # return model.theta(wn, Phase.SYMMETRIC) - model.theta(wn, Phase.BROKEN) - 3/4 * wn * alpha_n
+        return model.alpha_n(wn) - alpha_n
     return wn_solvable
 
 

@@ -19,7 +19,6 @@ class ThermoModel(BaseModel, abc.ABC):
 
     TODO: Some of the functions seem to return vertical arrays. Fix this!
     """
-    BASE_NAME: str
     GEFF_DATA_LOG_TEMP: np.ndarray
     #: Container for the temperatures of $g_\text{eff}$ data
     GEFF_DATA_TEMP: np.ndarray
