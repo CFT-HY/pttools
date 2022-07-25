@@ -21,7 +21,7 @@ class JsonTestCase(abc.ABC):
     EXPECT_MISSING_DATA: bool = False
     SAVE_NEW_DATA: bool = False
 
-    def assert_json(self, data: th.FloatOrArr, key: str):
+    def assert_json(self, data: th.FloatOrArr, key: str, rtol: float = 1e-7, atol: float = 0):
         if isinstance(data, np.ndarray):
             if data.size == 1:
                 data = data.item()
@@ -30,7 +30,7 @@ class JsonTestCase(abc.ABC):
         self.data[key] = data
         if key in self.ref_data:
             ref_data = self.ref_data[key]
-            assert_allclose(data, ref_data)
+            assert_allclose(data, ref_data, rtol=rtol, atol=atol)
         elif self.EXPECT_MISSING_DATA:
             logger.warning(f"Reference data missing in %s: %s", type(self).__name__, key)
         else:
