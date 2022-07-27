@@ -131,11 +131,17 @@ class BagModel(AnalyticModel):
         self.validate_temp(temp)
         return 4 * (self.a_b * phase + self.a_s * (1-phase))*temp**4
 
-    def w_n(self, alpha_n: th.FloatOrArr, wn_guess: float = None) -> th.FloatOrArr:
+    def w_n(
+            self,
+            alpha_n: th.FloatOrArr,
+            wn_guess: float = None,
+            analytical: bool = True) -> th.FloatOrArr:
         r"""Enthalpy at nucleation temperature
         $$w_n = \frac{4}{3} \frac{V_s - V_b}{\alpha_n}$$
         This can be derived from the equations for $\theta$ and $\alpha_n$.
         """
+        if not analytical:
+            super().w_n(alpha_n, wn_guess)
         return self.bag_wn_const / alpha_n
 
     @staticmethod

@@ -142,7 +142,12 @@ class ConstCSModel(AnalyticModel):
         w_b = self.nu * self.a_b * (temp/self.t_ref)**self.nu * self.t_ref**4
         return w_b * phase + w_s * (1 - phase)
 
-    def w_n(self, alpha_n: th.FloatOrArr, wn_guess: float = None, allow_negative: bool = False) -> th.FloatOrArr:
+    def w_n(
+            self,
+            alpha_n: th.FloatOrArr,
+            wn_guess: float = None,
+            allow_negative: bool = False,
+            analytical: bool = True) -> th.FloatOrArr:
         r"""Enthalpy at nucleation temperature
         $$w_n = \frac{b}{\alpha_n - a}$$
         where
@@ -164,4 +169,7 @@ class ConstCSModel(AnalyticModel):
             logger.error(msg)
             if not allow_negative:
                 ValueError(msg)
+
+        if not analytical:
+            super().w_n(alpha_n, wn_guess)
         return self.bag_wn_const / (alpha_n - self.const_cs_wn_const)
