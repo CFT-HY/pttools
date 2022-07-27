@@ -164,8 +164,10 @@ class ConstCSModel(AnalyticModel):
                 info = f"Got: wn={alpha_n}."
             else:
                 i = np.argmin(diff)
-                info = f"Most problematic values: wn={alpha_n[i]}, diff={diff[i]}."
-            msg = f"Got too small alpha_n for the model \"{self.name}\". {info}"
+                info = f"Most problematic values: alpha_n={alpha_n[i]}, diff={diff[i]}."
+            msg = \
+                f"Got too small alpha_n for the model \"{self.name}\". {info} " \
+                f"The minimum with the given parameters is {self.const_cs_wn_const}."
             logger.error(msg)
             if not allow_negative:
                 raise ValueError(msg)
