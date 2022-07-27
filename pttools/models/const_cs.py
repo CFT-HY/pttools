@@ -168,7 +168,7 @@ class ConstCSModel(AnalyticModel):
             msg = f"Got too small alpha_n for the model \"{self.name}\". {info}"
             logger.error(msg)
             if not allow_negative:
-                ValueError(msg)
+                raise ValueError(msg)
 
         if not analytical:
             super().w_n(alpha_n, wn_guess)

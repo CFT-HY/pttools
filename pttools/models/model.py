@@ -69,7 +69,7 @@ class Model(BaseModel, abc.ABC):
             msg = f"For a physical equation of state theta_+ > theta_-. {info} See p. 33 of Hindmarsh and Hijazi, 2019."
             logger.error(msg)
             if not allow_negative:
-                ValueError(msg)
+                raise ValueError(msg)
 
         return 4 * theta_diff / (3 * wn)
 
@@ -114,7 +114,7 @@ class Model(BaseModel, abc.ABC):
                   "See p. 33 of Hindmarsh and Hijazi, 2019."
             logger.error(msg)
             if not allow_negative:
-                ValueError(msg)
+                raise ValueError(msg)
 
         return 4 * theta_diff / (3 * wp)
 
