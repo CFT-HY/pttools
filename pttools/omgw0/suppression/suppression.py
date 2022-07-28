@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Interpolate or extrapolate kinetic suppression data in the sound shell model.
+
 Created on wed 4 Aug  2021
 
 @author: cg411
-Interpolate or extrapolate kinetic suppression data in the sound shell model.
 """
 import os
 import numpy as np
