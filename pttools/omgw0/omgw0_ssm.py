@@ -7,7 +7,7 @@ as a function of physical frequency $f$ in Sound shell model.
 
 Created on 10/11/21
 
-@author: cg411, markh
+@author: chloeg, markh
 
 """
 # import os
@@ -23,18 +23,6 @@ import pttools.ssmtools.const
 from . import const
 
 #%%
-# T_default = 100 # GeV
-# Fgw0 = 3.57e-5 #arXiv:1910.13125v1 eqn 20
-
-# As used in PTtools
-# NXIDEFAULT = 2000 # Default number of xi points used in bubble profiles
-# NTDEFAULT  = 200   # Default number of T-tilde values for bubble lifetime distribution integration
-# NZDEFAULT  = 320  # Default number of z points used in the velocity convolution integrations.
-# NPTDEFAULT = (NXIDEFAULT, NTDEFAULT, NZDEFAULT)
-# previously used to get higher accuracy (7000,200,7000)
-# SUP_METHOD_DEFAULT = 'none'
-
-
 ################################
 # SGWB as calculated by PTtools (SSM)
 ################################
@@ -56,8 +44,6 @@ def get_f0(rs, T=const.T_default):
     """
     Factor required to take into account redshift of frequency scale
     See Eqn 2.13 of arXiv:2106.05984
-    
-    
     """
     return const.fs0_ref/rs * (T/100) * (100/100)**(1/6)
 
@@ -73,7 +59,7 @@ def calc_omgw0(freqs, vw, alpha, rs, T=const.T_default, npt=pttools.ssmtools.con
     z = freqs/fp0
 
     K_frac = K.calc_ke_frac(vw, alpha)
-    omgwi = ssm.power_gw_scaled(z, params, npt=npt) # z_st_thresh=np.inf, ,npt=npt
+    omgwi = ssm.power_gw_scaled(z, params, npt=npt)
 
     # entry options for power_gw_scaled
     #          z: np.ndarray,
