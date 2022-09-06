@@ -16,15 +16,30 @@ except ImportError:
     from numba.dispatcher import Dispatcher
     from numba.targets.registry import CPUDispatcher
     NUMBA_OLD_STRUCTURE = True
+
+from . import options
 OLD_NUMBALSODA = False
-try:
-    import numbalsoda
-except ImportError:
+if options.NUMBA_DISABLE_JIT:
+    # As of 0.3.3 NumbaLSODA can't be imported when Numba is disabled
+    numbalsoda = None
+else:
     try:
-        import NumbaLSODA as numbalsoda
-        OLD_NUMBALSODA = True
+        import numbalsoda
     except ImportError:
-        numbalsoda = None
+        try:
+            import NumbaLSODA as numbalsoda
+            OLD_NUMBALSODA = True
+        except ImportError:
+            numbalsoda = None
+
+if numbalsoda is None:
+    lsoda_sig = numba.types.void(
+        numba.types.double,
+        numba.types.CPointer(numba.types.double),
+        numba.types.CPointer(numba.types.double),
+        numba.types.CPointer(numba.types.double))
+else:
+    lsoda_sig = numbalsoda.lsoda_sig
 
 logger = logging.getLogger(__name__)
 

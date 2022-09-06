@@ -2,23 +2,9 @@ import threading
 import typing as tp
 
 import numba
-try:
-    import numbalsoda
-    lsoda_sig = numbalsoda.lsoda_sig
-except ImportError:
-    try:
-        import NumbaLSODA as numbalsoda
-        lsoda_sig = numbalsoda.lsoda_sig
-    except ImportError:
-        numbalsoda = None
-        lsoda_sig = numba.types.void(
-            numba.types.double,
-            numba.types.CPointer(numba.types.double),
-            numba.types.CPointer(numba.types.double),
-            numba.types.CPointer(numba.types.double))
 import numpy as np
 
-from pttools.speedup.numba_wrapper import CFunc, CPUDispatcher
+from pttools.speedup.numba_wrapper import CFunc, CPUDispatcher, lsoda_sig
 from pttools.speedup.options import NUMBA_DISABLE_JIT
 
 Differential = tp.Union[tp.Callable[[float, np.ndarray, np.ndarray, tp.Optional[np.ndarray]], None], CFunc]

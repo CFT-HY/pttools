@@ -9,18 +9,12 @@ import logging
 import typing as tp
 
 import numba
-try:
-    import numbalsoda
-except ImportError:
-    try:
-        import NumbaLSODA as numbalsoda
-    except ImportError:
-        numbalsoda = None
 import numpy as np
 import scipy.integrate as spi
 
 import pttools.type_hints as th
 from pttools import speedup
+from pttools.speedup.numba_wrapper import numbalsoda
 from . import alpha
 from . import approx
 from . import bag
