@@ -86,6 +86,6 @@ class ModelBaseCase(JsonTestCase, abc.ABC):
         self.assert_json(data, "w")
 
     def test_w_n(self):
-        alpha_n = np.linspace(0.01, 0.5, 10)
+        alpha_n = np.linspace(0.15, 0.5, 10)
         data = self.model.w_n(alpha_n)
         self.assert_json(data, "w_n")
