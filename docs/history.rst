@@ -36,7 +36,7 @@ These modifications were Mika's summer project in 2021.
 
 - Add unit testing.
 
-    - Set up `CI/CD pipeline on GitHub Actions <https://github.com/hindmars/pttools/actions>`_.
+    - Set up `CI/CD pipeline on GitHub Actions <https://github.com/hindmars-org/pttools/actions>`_.
     - Set up automatic testing with Python versions from 3.6 to 3.9
       and with multiple versions of Numba and other libraries.
     - Set up automatic testing with all major operating systems (GNU/Linux, Windows, macOS).

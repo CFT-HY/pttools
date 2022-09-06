@@ -135,7 +135,7 @@ extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
         "https://akareport.aka.fi/ibi_apps/WFServlet?IBIF_ex=x_hakkuvaus2&CLICKED_ON=&HAKNRO1=%s&UILANG=en&TULOSTE=HTML",
         "Academy of Finland grant %s"
     ),
-    "issue": ("https://github.com/hindmars/pttools/issues/%s", "issue %s"),
+    "issue": ("https://github.com/hindmars-org/pttools/issues/%s", "issue %s"),
     "rel_hydro_book": (
         "https://doi.org/10.1093/acprof:oso/9780198528906.001.0001%s",
         "Relativistic hydrodynamics, Rezzolla, Zanotti, 2013%s"),
@@ -158,7 +158,7 @@ linkcheck_allowed_redirects = {
 # linkcheck_auth = []
 linkcheck_ignore = [
     # The project repository will return 404 without authentication until it's published.
-    r"https://github\.com/hindmars/pttools/*",
+    r"https://github\.com/hindmars-org/pttools/*",
     # The private Bitbucket repos will also return 404 without authentication
     r"https://bitbucket.org/hindmars/sound-shell-model/*",
 ]
