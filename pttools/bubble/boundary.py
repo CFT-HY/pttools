@@ -9,7 +9,10 @@ import typing as tp
 
 import numba
 import numpy as np
+from scipy.optimize import fsolve
 
+if tp.TYPE_CHECKING:
+    from pttools.models.model import Model
 import pttools.type_hints as th
 from . import const
 from . import relativity
@@ -76,6 +79,7 @@ def fluid_speeds_at_wall(
     Solves fluid speed boundary conditions at the wall to obtain
     the fluid speeds both in the universe (plasma frame): $v_+$ and $v_+$
     and in the wall frame: $\tilde{v}_+, \tilde{v}_-$.
+    Verified to work for the bag model only!
 
     The abbreviations are: fluid speed (vf) just behind (m=minus) and just ahead (p=plus) of wall,
     in wall (_w) and plasma/universe (_p) frames.
@@ -118,23 +122,111 @@ def fluid_speeds_at_wall(
     return vfp_w, vfm_w, vfp_p, vfm_p
 
 
-# TODO: Are the signs chosen correctly for models beyond the bag model?
+def junction_conditions_solvable(params: np.ndarray, vp: float, wp: float, model: "Model"):
+    """Get the deviation from both boundary conditions simultaneously."""
+    vm = params[0]
+    wm = params[1]
+    return np.array([
+        junction_condition_deviation1(vp, wp, vm, wm),
+        junction_condition_deviation2(
+            vp, wp, model.p(wp, Phase.SYMMETRIC),
+            vm, wm, model.p(wm, Phase.BROKEN)
+        )
+    ])
+
 
 @numba.njit
-def _v_minus_scalar(vp: float, ap: float, sol_type: SolutionType) -> float:
+def junction_condition_deviation1(
+        vp: th.FloatOrArr, wp: th.FloatOrArr,
+        vm: th.FloatOrArr, wm: th.FloatOrArr) -> th.FloatOrArr:
+    r"""Deviation from the first junction condition
+    $$w_- \tilde{\gamma}_-^2 \tilde{v}_- - w_+ \tilde{\gamma}_-^2 \tilde{v}_+$$
+    :notes:`\ `, eq. 7.22
+    """
+    return wm * relativity.gamma2(vm) * vm - wp * relativity.gamma2(vp) * vp
+
+
+@numba.njit
+def junction_condition_deviation2(
+        vp: th.FloatOrArr, wp: th.FloatOrArr, pp: th.FloatOrArr,
+        vm: th.FloatOrArr, wm: th.FloatOrArr, pm: th.FloatOrArr
+    ):
+    r"""Deviation from the second junction condition
+    $$w_- \tilde{\gamma}_-^2 \tilde{v}_-^2 + p_- - w_+ \tilde{\gamma}_+^2 \tilde{v}_+^2 - p_+$$
+    :notes:`\ `, eq. 7.22
+    """
+    return wm * relativity.gamma2(vm) * vm**2 + pm - wp * relativity.gamma2(vp) * vp**2 + pp
+
+
+# def boundary_conditions_shock():
+#     pass
+
+
+def solve_junction(
+        v_wall: float,
+        wn: float,
+        sol_type: SolutionType,
+        model: "Model",
+        vm_guess: float = None,
+        wm_guess: float = None) -> tp.Tuple[float, float, float, float]:
+    """Model-independent
+
+    TODO not used yet
+    """
+    if sol_type == SolutionType.SUB_DEF.value:
+        sol = fsolve(
+            junction_conditions_solvable,
+            x0=np.array([vm_guess, wm_guess]),
+            args=(v_wall, wn, model),
+            full_output=True
+        )
+    elif sol_type == SolutionType.DETON.value:
+        raise NotImplementedError
+        # sol_shock = scipy.optimize.fsolve(boundary_conditions_shock, args=)
+    else:
+        raise NotImplementedError("Boundary solving for hybrids has not been implemented yet.")
+    vm = sol[0][0]
+    wm = sol[0][1]
+    if sol[2] != 1:
+        logger.error(
+            f"Boundary solution was not found for v_wall={v_wall}, wn={wn}, model={model.name}. " +
+            f"Using v_-={vm}, w_-={wm}. " +
+            ("" if (0 < vm < 1) else "This is unphysical!") +
+            f"Reason: {sol[3]}")
+    return v_wall, wn, vm, wm
+
+
+@numba.njit
+def _v_minus_scalar(vp: float, ap: float, sol_type: SolutionType, debug: bool) -> float:
     # Fluid must flow through the wall from the outside to the inside of the bubble.
     if vp < 0:
         return np.nan
+    # This has probably been written like this for numerical stability
     vp2 = vp ** 2
     y = vp2 + 1. / 3.
     z = (y - ap * (1. - vp2))
     x = (4. / 3.) * vp2
+    sqrt_arg = z**2 - x
+
+    # Way 2
+    # x = (1 + ap)*vp + (1 - 3*ap)/(3*vp)
+    # sqrt_arg = x**2 - 4/3
+
+    if debug and sqrt_arg < 0:
+        with numba.objmode:
+            logger.warning(f"Cannot compute vm, got imaginary result with: vp={vp}, ap={ap}, in sqrt: {sqrt_arg}")
+        return np.nan
+
     # Finding the solution type automatically does not work in the general case
     # if sol_type is None:
     #     b = 1. if vp < 1/np.sqrt(3) else -1
     # else:
+
     b = 1. if sol_type == SolutionType.DETON.value else -1
-    return (0.5 / vp) * (z + b * np.sqrt(z ** 2 - x))
+    return (0.5 / vp) * (z + b * np.sqrt(sqrt_arg))
+
+    # Way 2
+    # return 0.5 * (x + b*np.sqrt(sqrt_arg))
 
     # Handling of complex return values for scalars
     # if np.imag(ret):
@@ -147,10 +239,10 @@ def _v_minus_scalar(vp: float, ap: float, sol_type: SolutionType) -> float:
 
 
 @numba.njit(parallel=True)
-def _v_minus_arr(vp: np.ndarray, ap: float, sol_type: SolutionType) -> np.ndarray:
+def _v_minus_arr(vp: np.ndarray, ap: float, sol_type: SolutionType, debug: bool) -> np.ndarray:
     ret = np.empty_like(vp)
     for i in numba.prange(vp.size):
-        ret[i] = _v_minus_scalar(vp[i], ap, sol_type)
+        ret[i] = _v_minus_scalar(vp[i], ap, sol_type, debug)
     return ret
 
     # complex_inds = np.where(np.imag(ret))
@@ -164,7 +256,11 @@ def _v_minus_arr(vp: np.ndarray, ap: float, sol_type: SolutionType) -> np.ndarra
 
 
 @numba.generated_jit(nopython=True)
-def v_minus(vp: th.FloatOrArr, ap: float, sol_type: SolutionType = SolutionType.DETON) -> th.FloatOrArrNumba:
+def v_minus(
+        vp: th.FloatOrArr,
+        ap: float,
+        sol_type: SolutionType = SolutionType.DETON,
+        debug: bool = False) -> th.FloatOrArrNumba:
     r"""
     Fluid speed $\tilde{v}_-$ behind the wall in the wall frame
     $$\tilde{v}_- = \frac{1}{2} \left[
@@ -174,8 +270,9 @@ def v_minus(vp: th.FloatOrArr, ap: float, sol_type: SolutionType = SolutionType.
     \right]$$
     :gw_pt_ssm:`\ `, eq. B.7
 
-    Positive sign is for $\tilde{v}_+ < \frac{1}{\sqrt{3}}$.
-    This is independent of the equation of state but corresponds to detonations in the bag model.
+    Positive sign is for detonations,
+    which corresponds to $\tilde{v}_+ < \frac{1}{\sqrt{3}}$ in the bag model.
+    TODO Check that this is actually the case.
 
     :param vp: $\tilde{v}_+$, fluid speed ahead of the wall
     :param ap: $\alpha_+$, strength parameter at the wall
@@ -188,9 +285,9 @@ def v_minus(vp: th.FloatOrArr, ap: float, sol_type: SolutionType = SolutionType.
     if isinstance(vp, numba.types.Array):
         return _v_minus_arr
     if isinstance(vp, float):
-        return _v_minus_scalar(vp, ap, sol_type)
+        return _v_minus_scalar(vp, ap, sol_type, debug)
     if isinstance(vp, np.ndarray):
-        return _v_minus_arr(vp, ap, sol_type)
+        return _v_minus_arr(vp, ap, sol_type, debug)
     raise TypeError(f"Unknown argument types: vp = {type(vp)}, ap = {type(ap)}")
 
 
@@ -247,8 +344,9 @@ def v_plus(vm: th.FloatOrArr, ap: float, sol_type: SolutionType) -> th.FloatOrAr
     :notes:`\ `, eq. 7.27.
     The equations in both sources are equivalent by moving a factor of 2.
 
-    Positive sign is for $\tilde{v}_- > \frac{1}{\sqrt{3}}$.
-    This is independent of the equation of state but corresponds to detonations in the bag model.
+    Positive sign is for deflagrations,
+    which corresponds to $\tilde{v}_- > \frac{1}{\sqrt{3}}$ in the bag model.
+    TODO Check that this is actually the case.
 
     :param vm: $\tilde{v}_-$, fluid speed behind the wall
     :param ap: $\alpha_+$, strength parameter at the wall
@@ -265,3 +363,15 @@ def v_plus(vm: th.FloatOrArr, ap: float, sol_type: SolutionType) -> th.FloatOrAr
     if isinstance(vm, np.ndarray):
         return _v_plus_arr(vm, ap, sol_type)
     raise TypeError(f"Unknown argument types: vm = {type(vm)}, ap = {type(ap)}")
+
+
+def wm_junction(vp: th.FloatOrArr, wp: th.FloatOrArr, vm: th.FloatOrArr) -> th.FloatOrArr:
+    r"""Get $w_-$ from the junction condition 1
+    $$w_- = w_+ \frac{\tilde{\gamma}_+^2 \tilde{v}_+}{\tilde{\gamma}_-^2 \tilde{v}_-}$$
+    :notes:`\ `, eq. 7.22
+    """
+    wm = wp * relativity.gamma2(vp) * vp / (relativity.gamma2(vm) * vm)
+    # wm > wp for detonations
+    # if wm > wp:
+    #     logger.warning(f"wm_junction resulted in wm > wp: vp={vp}, wp={wp}, vm={vm}, wm={wm}")
+    return wm
