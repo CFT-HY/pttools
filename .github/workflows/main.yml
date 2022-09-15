@@ -88,6 +88,38 @@ jobs:
           path: |
             ${{ github.workspace }}/pylint.txt
           if-no-files-found: error
+#  fossa:
+#    runs-on: ubuntu-latest
+#    timeout-minutes: 5
+#    steps:
+#      - name: Setup Python
+#        uses: actions/setup-python@v2
+#        with:
+#          python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
+#      - name: Print Python version
+#        run: python -V
+#      - name: Checkout
+#        uses: actions/checkout@v2
+#      - name: Load pip cache
+#        uses: actions/cache@v2
+#        with:
+#          path: .pip
+#          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+#          restore-keys: |
+#            pip-${{ runner.os }}-
+#            pip-
+#      - name: Install requirements
+#        run: |
+#          pip --cache-dir=.pip install --upgrade pip
+#          pip --cache-dir=.pip install --upgrade wheel
+#          pip --cache-dir=.pip install -r requirements.txt
+#      - name: Install FOSSA
+#        run: |
+#          curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | sudo bash
+#      - name: Run FOSSA
+#        run: fossa analyze
+#        env:
+#          FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
   test-numba:
     runs-on: ubuntu-latest
     timeout-minutes: 10
