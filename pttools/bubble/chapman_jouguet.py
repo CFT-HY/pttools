@@ -95,4 +95,4 @@ def v_chapman_jouguet_bag(alpha_plus: th.FloatOrArr) -> th.FloatOrArr:
 
     $$v_{CJ}(\alpha_+) = \frac{1}{\sqrt{3}} \frac{1 + \sqrt{\alpha_+ + 3 \alpha_+^2}}{1 + \alpha_+}$$
     """
-    return 1/np.sqrt(3) * (1 + np.sqrt(alpha_plus + 3*alpha_plus**2) / (1 + alpha_plus))
+    return 1/np.sqrt(3) * (1 + np.sqrt(alpha_plus + 3*alpha_plus**2)) / (1 + alpha_plus)
