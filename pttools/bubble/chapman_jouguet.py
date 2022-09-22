@@ -217,7 +217,8 @@ def v_chapman_jouguet_bag(alpha_plus: th.FloatOrArr) -> th.FloatOrArr:
     only in the case of detonations within the bag model."
     :notes:` \` p. 40
 
-    $$v_{CJ}(\alpha_+) = \frac{1}{\sqrt{3}} \frac{1 + \sqrt{\alpha_+ + 3 \alpha_+^2}}{1 + \alpha_+}$$
+    $$v_{CJ}(\alpha_+) = \frac{1}{\sqrt{3}} \frac{1 + \sqrt{2\alpha_+ + 3 \alpha_+^2}}{1 + \alpha_+}$$
+    This differs from :notes:` \` eq. 7.34 and `\ ` eq. B.19 by a factor of 2.
     It should be noted that $v_{CJ} \in [0, 1] \forall \alpha_+ >= 0$.
     """
-    return 1/np.sqrt(3) * (1 + np.sqrt(alpha_plus + 3*alpha_plus**2)) / (1 + alpha_plus)
+    return 1/np.sqrt(3) * (1 + np.sqrt(2*alpha_plus + 3*alpha_plus**2)) / (1 + alpha_plus)
