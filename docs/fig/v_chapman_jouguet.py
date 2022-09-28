@@ -18,7 +18,7 @@ def debug_plot(ax: plt.Axes, model: models.Model):
     wp = model.w_n(ap)
     vm_test = bubble.v_minus(vp, ap, debug=True)
     print(f"ap={ap}, vp={vp}, wp={wp}, vm={vm_test}")
-    exit()
+    # exit()
     vm = bubble.CS0
     wm_bag = bubble.wm_junction(vp, wp, vm)
     dev = bubble.wm_vw_solvable(np.array([wm_bag]), model, vp, wp)
@@ -100,6 +100,16 @@ def main():
     ax2.set_xlabel(r"$\alpha_n$")
     ax2.set_ylabel("$v_{CJ}$")
     ax2.legend()
+
+    # Checking
+    # ax2.axvline(1/3)
+    # ax2.axhline(np.sqrt(3)/2)
+    # ax2.set_xlim(0, 0.5)
+    #
+    # wn = model_const_cs.w_n(alpha_n)
+    # wm = 4*wn
+    # alpha_plus = model_const_cs.alpha_plus(wn, wm)
+    # ax2.axvline(alpha_plus)
 
     fig.tight_layout()
 
