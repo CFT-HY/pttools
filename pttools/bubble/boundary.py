@@ -124,6 +124,19 @@ def fluid_speeds_at_wall(
     return vfp_w, vfm_w, vfp_p, vfm_p
 
 
+def junction_conditions_deviation(vp: th.FloatOrArr, vm: th.FloatOrArr, ap: th.FloatOrArr) -> th.FloatOrArr:
+    r"""Deviation from the combined junction conditions
+    $$\Delta = \left( \frac{1}{\tilde{v}_-} + 3\tilde{v}_- \right) \tilde{v}_+ - 3(1 + \alpha_+) \tilde{v}_+^2 - \alpha_+ + 1$$
+    """
+    dev = (1/vm + 3*vm)*vp - 3*(1 + ap)*vp**2 + 3*ap - 1
+    if not np.allclose(dev, 0):
+        if np.isscalar(dev):
+            logger.error(f"Non-zero deviation from junction conditions: {dev} for vp={vp}, vm={vm}, ap={ap}")
+        else:
+            logger.error(f"Non-zero deviation from junction conditions")
+    return dev
+
+
 def junction_conditions_solvable(params: np.ndarray, vp: float, wp: float, model: "Model"):
     """Get the deviation from both boundary conditions simultaneously."""
     vm = params[0]
