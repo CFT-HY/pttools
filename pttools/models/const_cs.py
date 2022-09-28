@@ -78,6 +78,28 @@ class ConstCSModel(AnalyticModel):
         const = (self.V_b - self.V_s)*self.t_ref**4
         return self.a_s * (temp/self.t_ref)**self.mu - self.a_b * (temp/self.t_ref)**self.nu + const
 
+    # def alpha_plus(
+    #         self,
+    #         wp: th.FloatOrArr, wm: th.FloatOrArr = None,
+    #         allow_negative: bool = False, analytical: bool = True) -> th.FloatOrArr:
+    #     r"""Transition strength parameter $\alpha_+$
+    #     $$\alpha_+ = \frac{4}{3w_+} (V_+ - V_-)$$
+    #
+    #     TODO: Nope, this is wrong! The temperature terms don't cancel!
+    #     """
+    #     if not analytical:
+    #         if wm is None:
+    #             raise ValueError("wm must be provided for non-analytical alpha_plus.")
+    #         return super().alpha_plus(wp, wm, allow_negative)
+    #
+    #     if wp < 0:
+    #         logger.error("Got negative wp for alpha_plus")
+    #         if not allow_negative:
+    #             raise ValueError("Got negative wp for alpha_plus")
+    #
+    #     # V_s > V_b is handled by BaseModel
+    #     return 4/(3*wp) * (self.V_s - self.V_b)
+
     def gen_cs2(self):
         # These become compile-time constants
         css2 = self.css2

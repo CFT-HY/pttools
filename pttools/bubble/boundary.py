@@ -404,6 +404,23 @@ def v_plus(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: bool = T
     raise TypeError(f"Unknown argument types: vm = {type(vm)}, ap = {type(ap)}")
 
 
+def v_plus_limit(ap: th.FloatOrArr, sol_type: SolutionType) -> th.FloatOrArr:
+    r"""Limit for the values that $\tilde{v}_+$ can have.
+
+    TODO this is the Chapman-Jouguet speed, not a separate limit!
+
+    $$\frac{1}{1+\alpha_+} \left( \frac{1}{\sqrt{3}} \pm \sqrt{\alpha_+ ( \alpha_+ + \frac{2}{3})} \right)
+    """
+    b = 1 if sol_type == SolutionType.DETON.value else -1
+    return 1/(1 + ap) * (1/np.sqrt(3) + b*np.sqrt(ap*(ap+2/3)))
+
+
+def v_plus_off_limits(vp: float, ap: float, sol_type: SolutionType):
+    if sol_type == SolutionType.DETON.value:
+        return vp < v_plus_limit(ap, sol_type)
+    return vp > v_plus_limit(ap, sol_type)
+
+
 def wm_junction(vp: th.FloatOrArr, wp: th.FloatOrArr, vm: th.FloatOrArr) -> th.FloatOrArr:
     r"""Get $w_-$ from the junction condition 1
     $$w_- = w_+ \frac{\tilde{\gamma}_+^2 \tilde{v}_+}{\tilde{\gamma}_-^2 \tilde{v}_-}$$

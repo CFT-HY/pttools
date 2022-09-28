@@ -16,6 +16,7 @@ from pttools.bubble.relativity import gamma2
 # This would cause a circular import
 # from pttools.models.bag import BagModel
 if tp.TYPE_CHECKING:
+    # from pttools.models.const_cs import ConstCSModel
     from pttools.models.model import Model
 import pttools.type_hints as th
 
@@ -222,3 +223,10 @@ def v_chapman_jouguet_bag(alpha_plus: th.FloatOrArr) -> th.FloatOrArr:
     It should be noted that $v_{CJ} \in [0, 1] \forall \alpha_+ >= 0$.
     """
     return 1/np.sqrt(3) * (1 + np.sqrt(2*alpha_plus + 3*alpha_plus**2)) / (1 + alpha_plus)
+
+
+# def v_chapman_jouguet_const_cs(alpha_n: th.FloatOrArr, model: "ConstCSModel") -> th.FloatOrArr:
+#     # TODO: Nope, this is wrong!
+#     wn = model.w_n(alpha_n)
+#     ap = model.alpha_plus(wn)
+#     return boundary.v_plus(model.csb, ap)
