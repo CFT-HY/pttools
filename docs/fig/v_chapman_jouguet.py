@@ -17,7 +17,7 @@ def debug_plot(ax: plt.Axes, model: models.Model):
     vp = bubble.v_chapman_jouguet_bag(ap)
     wp = model.w_n(ap)
     vm_test = bubble.v_minus(vp, ap, debug=True)
-    print(f"ap={ap}, vp={vp}, wp={wp}, vm={vm_test}")
+    print(f"ap={ap}, vp={vp}, wp={wp}, vm={vm_test}, vm_target={bubble.CS0}")
     exit()
     vm = bubble.CS0
     wm_bag = bubble.wm_junction(vp, wp, vm)
