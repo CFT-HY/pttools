@@ -30,12 +30,13 @@ class Phase(float, enum.Enum):
 
 @enum.unique
 class SolutionType(str, enum.Enum):
-    """There are three different types of relativistic combustion.
+    r"""There are three different types of relativistic combustion.
     For further details, please see chapter 7.2 and figure 14
-    of the :notes:`lecture notes <>`.
+    of :notes:`\ `.
 
     .. plot:: fig/relativistic_combustion.py
     """
+    # TODO: Should the strong and weak branches of the solutions (vplus, vminus signs) be distinquished here?
 
     #: In a detonation the fluid outside the bubble is at rest and the wall moves at a supersonic speed.
     DETON = "Detonation"
@@ -59,7 +60,8 @@ class SolutionType(str, enum.Enum):
 def enthalpy_ratio(v_m: th.FloatOrArr, v_p: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Ratio of enthalpies behind ($w_-$) and ahead $(w_+)$ of a shock or
-    transition front, $w_-/w_+$. Uses conservation of momentum in moving frame.
+    transition front, $w_-/w_+$.
+    Uses conservation of momentum in moving frame.
 
     $$\frac{\gamma^2 (v_m) v_m}{\gamma^2 (v_p) v_p}$$
 
@@ -197,7 +199,12 @@ def solve_junction(
 
 
 @numba.njit
-def _v_minus_scalar(vp: float, ap: float, sol_type: SolutionType, debug: bool) -> float:
+def _v_minus_scalar(
+        vp: float,
+        ap: float,
+        sol_type: SolutionType,
+        strong_branch: bool,
+        debug: bool) -> float:
     # Fluid must flow through the wall from the outside to the inside of the bubble.
     if vp < 0:
         return np.nan
@@ -214,7 +221,7 @@ def _v_minus_scalar(vp: float, ap: float, sol_type: SolutionType, debug: bool) -
 
     if debug and sqrt_arg < 0:
         with numba.objmode:
-            logger.warning(f"Cannot compute vm, got imaginary result with: vp={vp}, ap={ap}, in sqrt: {sqrt_arg}")
+            logger.error(f"Cannot compute vm, got imaginary result with: vp={vp}, ap={ap}, in sqrt: {sqrt_arg}")
         return np.nan
 
     # Finding the solution type automatically does not work in the general case
@@ -223,7 +230,8 @@ def _v_minus_scalar(vp: float, ap: float, sol_type: SolutionType, debug: bool) -
     # else:
 
     b = 1. if sol_type == SolutionType.DETON.value else -1
-    return (0.5 / vp) * (z + b * np.sqrt(sqrt_arg))
+    c = -1 if strong_branch else 1
+    return (0.5 / vp) * (z + b * c * np.sqrt(sqrt_arg))
 
     # Way 2
     # return 0.5 * (x + b*np.sqrt(sqrt_arg))
@@ -239,10 +247,15 @@ def _v_minus_scalar(vp: float, ap: float, sol_type: SolutionType, debug: bool) -
 
 
 @numba.njit(parallel=True)
-def _v_minus_arr(vp: np.ndarray, ap: float, sol_type: SolutionType, debug: bool) -> np.ndarray:
+def _v_minus_arr(
+        vp: np.ndarray,
+        ap: float,
+        sol_type: SolutionType,
+        strong_branch: bool,
+        debug: bool) -> np.ndarray:
     ret = np.empty_like(vp)
     for i in numba.prange(vp.size):
-        ret[i] = _v_minus_scalar(vp[i], ap, sol_type, debug)
+        ret[i] = _v_minus_scalar(vp[i], ap, sol_type, strong_branch, debug)
     return ret
 
     # complex_inds = np.where(np.imag(ret))
@@ -260,6 +273,7 @@ def v_minus(
         vp: th.FloatOrArr,
         ap: float,
         sol_type: SolutionType = SolutionType.DETON,
+        strong_branch: bool = False,
         debug: bool = False) -> th.FloatOrArrNumba:
     r"""
     Fluid speed $\tilde{v}_-$ behind the wall in the wall frame
@@ -285,23 +299,36 @@ def v_minus(
     if isinstance(vp, numba.types.Array):
         return _v_minus_arr
     if isinstance(vp, float):
-        return _v_minus_scalar(vp, ap, sol_type, debug)
+        return _v_minus_scalar(vp, ap, sol_type, strong_branch, debug)
     if isinstance(vp, np.ndarray):
-        return _v_minus_arr(vp, ap, sol_type, debug)
+        return _v_minus_arr(vp, ap, sol_type, strong_branch, debug)
     raise TypeError(f"Unknown argument types: vp = {type(vp)}, ap = {type(ap)}")
 
 
 @numba.njit
-def _v_plus_scalar(vm: float, ap: float, sol_type: SolutionType) -> float:
+def _v_plus_scalar(vm: float, ap: float, sol_type: SolutionType, debug: bool) -> float:
     x = vm + 1. / (3 * vm)
     # Finding the SolutionType automatically does not work in the general case
     # if sol_type is None:
     #     b = 1. if vm > 1/np.sqrt(3) else -1.
     # else:
     b = 1. if sol_type == SolutionType.DETON.value else -1.
-    vp = (0.5 / (1 + ap)) * (x + b * np.sqrt(x ** 2 + 4. * ap ** 2 + (8. / 3.) * ap - (4. / 3.)))
     # Fluid must flow through the wall from the outside to the inside of the bubble.
-    return vp if vp >= 0 else np.nan
+    if b == -1 and ap > 1/3:
+        if debug:
+            with numba.objmode:
+                logger.error(f"v_plus would be negative for a deflagration with ap > 1/3, got ap={ap}")
+        return np.nan
+
+    return (0.5 / (1 + ap)) * (x + b * np.sqrt(x ** 2 + 4. * ap ** 2 + (8. / 3.) * ap - (4. / 3.)))
+    # if vp < 0:
+    #     with numba.objmode:
+    #         logger.error(
+    #             f"Cannot compute v_plus, got negative result: {vp}. "
+    #             "THIS SHOULD NOT HAPPEN. Earlier checks should have caught this."
+    #         )
+    #     return np.nan
+    # return vp
 
     # Handling of complex return values for scalars
     # if np.imag(ret):
@@ -314,10 +341,10 @@ def _v_plus_scalar(vm: float, ap: float, sol_type: SolutionType) -> float:
 
 
 @numba.njit(parallel=True)
-def _v_plus_arr(vm: np.ndarray, ap: float, sol_type: SolutionType) -> np.ndarray:
+def _v_plus_arr(vm: np.ndarray, ap: float, sol_type: SolutionType, debug: bool) -> np.ndarray:
     ret = np.empty_like(vm)
     for i in numba.prange(vm.size):
-        ret[i] = _v_plus_scalar(vm[i], ap, sol_type)
+        ret[i] = _v_plus_scalar(vm[i], ap, sol_type, debug)
     return ret
 
     # complex_inds = np.where(np.imag(ret))
@@ -331,7 +358,7 @@ def _v_plus_arr(vm: np.ndarray, ap: float, sol_type: SolutionType) -> np.ndarray
 
 
 @numba.generated_jit(nopython=True)
-def v_plus(vm: th.FloatOrArr, ap: float, sol_type: SolutionType) -> th.FloatOrArrNumba:
+def v_plus(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: bool = True) -> th.FloatOrArrNumba:
     r"""
     Fluid speed $\tilde{v}_+$ ahead of the wall in the wall frame
     $$\tilde{v}_+ = \frac{1}{2(1 + \alpha_+)}
@@ -344,9 +371,8 @@ def v_plus(vm: th.FloatOrArr, ap: float, sol_type: SolutionType) -> th.FloatOrAr
     :notes:`\ `, eq. 7.27.
     The equations in both sources are equivalent by moving a factor of 2.
 
-    Positive sign is for deflagrations,
+    Positive sign is for detonations,
     which corresponds to $\tilde{v}_- > \frac{1}{\sqrt{3}}$ in the bag model.
-    TODO Check that this is actually the case.
 
     :param vm: $\tilde{v}_-$, fluid speed behind the wall
     :param ap: $\alpha_+$, strength parameter at the wall
@@ -359,9 +385,9 @@ def v_plus(vm: th.FloatOrArr, ap: float, sol_type: SolutionType) -> th.FloatOrAr
     if isinstance(vm, numba.types.Array):
         return _v_plus_arr
     if isinstance(vm, float):
-        return _v_plus_scalar(vm, ap, sol_type)
+        return _v_plus_scalar(vm, ap, sol_type, debug)
     if isinstance(vm, np.ndarray):
-        return _v_plus_arr(vm, ap, sol_type)
+        return _v_plus_arr(vm, ap, sol_type, debug)
     raise TypeError(f"Unknown argument types: vm = {type(vm)}, ap = {type(ap)}")
 
 
