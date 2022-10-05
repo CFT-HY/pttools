@@ -49,7 +49,9 @@ def pow_specs():
         # The results differ slightly depending on the library versions
         # rtol = 4.6e-7
         # Changing v_plus and v_minus implementations has changed the results further for pure Python
-        rtol = 9.61e-7
+        # rtol = 9.61e-7
+        # Changes continue
+        rtol = 1.14e-6
     else:
         # Since this was a heavy computation, let's print info on the threading layer used
         logger.info(f"Numba threading layer used: {numba.threading_layer()}")
