@@ -45,11 +45,11 @@ def main():
     alpha = 0.5
     # Transition strength
     # alpha_n = np.linspace(0.1, 0.3, n_points)
-    alpha_n = np.linspace(0, 2, n_points)
+    alpha_n = np.linspace(0.07, 2, n_points)
 
     model_bag = models.BagModel(a_s=1.1, a_b=1, V_s=1)
     model_const_cs_like_bag = models.ConstCSModel(a_s=1.1, a_b=1, css2=1/3, csb2=1/3, V_s=1)
-    model_const_cs = models.ConstCSModel(a_s=1.1, a_b=1, css2=1/3, csb2=0.25, V_s=1)
+    model_const_cs = models.ConstCSModel(a_s=1.1, a_b=1, css2=0.25, csb2=1/3, V_s=1)
     # print("w_n:", model_const_cs.w_n(alpha_n=0.1))
     # print("alpha_n:", model_const_cs.alpha_n(wn=1e6))
 
@@ -97,6 +97,11 @@ def main():
     ax2.plot(alpha_n, v_cj_bag, label="Bag model", alpha=alpha)
     ax2.plot(alpha_n, v_cj_const_cs, label=r"Constant $c_s$ model", alpha=alpha)
     ax2.plot(alpha_n, v_cj_const_cs_like_bag, label=r"Constant $c_s$ model with bag coeff.", alpha=alpha)
+    ax2.plot(
+        alpha_n,
+        bubble.v_chapman_jouguet_const_cs_reference(alpha_n, model_const_cs),
+        label="ref", alpha=alpha
+    )
     ax2.set_xlabel(r"$\alpha_n$")
     ax2.set_ylabel("$v_{CJ}$")
     ax2.legend()

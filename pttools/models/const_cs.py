@@ -91,6 +91,13 @@ class ConstCSModel(AnalyticModel):
                 raise ValueError(info)
         return ret
 
+    def alpha_plus(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
+        r"""If $\nu=4 \Leftrightarrow c_{sb}=\frac{1}{\sqrt{3}}$, $w_-$ does not affect the result."""
+        ret = (1 - 4/self.mu) - (1 - 4/self.nu)*wm/(3*wp) + self.bag_wn_const/wp
+        if (not allow_negative) and np.any(ret < 0):
+            raise ValueError
+        return ret
+
     def critical_temp_opt(self, temp: float) -> float:
         const = (self.V_b - self.V_s)*self.t_ref**4
         return self.a_s * (temp/self.t_ref)**self.mu - self.a_b * (temp/self.t_ref)**self.nu + const

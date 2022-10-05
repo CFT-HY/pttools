@@ -36,7 +36,7 @@ def wm_solvable(params: np.ndarray, model: "Model", wn: float):
     wm_param = params[0]
     vm2 = model.cs2(wm_param, Phase.BROKEN)
     vm = np.sqrt(vm2)
-    ap = model.alpha_plus(wp=wn, wm=wm_param)
+    ap = model.alpha_plus(wp=wn, wm=wm_param, allow_negative=True)
     vp = boundary.v_plus(vm, ap, sol_type=SolutionType.DETON)
     # print(f"vm={vm}, ap={ap}, vp={vp}")
 
@@ -225,8 +225,12 @@ def v_chapman_jouguet_bag(alpha_plus: th.FloatOrArr) -> th.FloatOrArr:
     return 1/np.sqrt(3) * (1 + np.sqrt(2*alpha_plus + 3*alpha_plus**2)) / (1 + alpha_plus)
 
 
-# def v_chapman_jouguet_const_cs(alpha_n: th.FloatOrArr, model: "ConstCSModel") -> th.FloatOrArr:
-#     wn = model.w_n(alpha_n)
-#     wm = boundary.wm_junction
-#     ap = model.alpha_plus(wn)
-#     return boundary.v_plus(model.csb, ap)
+def v_chapman_jouguet_const_cs_reference(alpha_n: np.ndarray, model: "ConstCSModel") -> np.ndarray:
+    if model.nu != 4:
+        raise ValueError("This point works only for nu=4.")
+    wn = model.w_n(alpha_n)
+    ap = model.alpha_plus(wp=wn, wm=1)
+    ret = np.zeros_like(ap)
+    for i, a in enumerate(ap):
+        ret[i] = boundary.v_plus(model.csb, a, sol_type=SolutionType.DETON)
+    return ret
