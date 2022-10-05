@@ -206,7 +206,7 @@ class Model(BaseModel, abc.ABC):
         return self.alpha_n(param[0]) - alpha_n
 
     def w_n(self, alpha_n: th.FloatOrArr, wn_guess: float = 1) -> th.FloatOrArr:
-        """Enthalpy at nucleation temperature with given $\alpha_n$"""
+        r"""Enthalpy at nucleation temperature with given $\alpha_n$"""
         if np.isscalar(alpha_n):
             return self._w_n_scalar(alpha_n, wn_guess)
         ret = np.zeros_like(alpha_n)

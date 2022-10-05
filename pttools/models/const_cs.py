@@ -173,7 +173,7 @@ class ConstCSModel(AnalyticModel):
         r"""Enthalpy at nucleation temperature
         $$w_n = \frac{b}{\alpha_n - a}$$
         where
-        $$a = \frac{4}{3} \frac{V_s - V_b}$$
+        $$a = \frac{4}{3} (V_s - V_b)$$
         $$b = \frac{1}{3\alpha_n} \left[
         (1-\frac{4}{\mu}T_0^{\mu-4}
         - (1-\frac{4}{\nu}T_0^{\nu-4}
