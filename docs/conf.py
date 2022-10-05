@@ -157,10 +157,14 @@ linkcheck_allowed_redirects = {
 # https://docs.github.com/en/actions/reference/authentication-in-a-workflow
 # linkcheck_auth = []
 linkcheck_ignore = [
-    # The project repository will return 404 without authentication until it's published.
-    r"https://github\.com/hindmars-org/pttools/*",
+    # This website does not allow crawlers
+    # r"https://academic.oup.com/book/*",
     # The private Bitbucket repos will also return 404 without authentication
     r"https://bitbucket.org/hindmars/sound-shell-model/*",
+    # This link redirects to a site that does not allow crawlers
+    f"https://doi.org/10.1093/acprof:oso/9780198528906.001.0001",
+    # The project repository will return 404 without authentication until it's published.
+    r"https://github\.com/hindmars-org/pttools/*",
 ]
 if "GITHUB_ACTIONS" in os.environ:
     linkcheck_ignore += [

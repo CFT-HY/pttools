@@ -2,7 +2,7 @@
 Functions from the
 `SciPy version <https://github.com/scipy/scipy/tree/v1.8.0/scipy/interpolate/fitpack>`__
 of
-`FITPACK <https://www.netlib.org/dierckx/>`_.
+`FITPACK <https://netlib.org/dierckx/>`_.
 
 These don't work yet and are therefore not used.
 """
