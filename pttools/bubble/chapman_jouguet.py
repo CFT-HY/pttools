@@ -226,7 +226,7 @@ def v_chapman_jouguet_bag(alpha_plus: th.FloatOrArr) -> th.FloatOrArr:
 
 
 # def v_chapman_jouguet_const_cs(alpha_n: th.FloatOrArr, model: "ConstCSModel") -> th.FloatOrArr:
-#     # TODO: Nope, this is wrong!
 #     wn = model.w_n(alpha_n)
+#     wm = boundary.wm_junction
 #     ap = model.alpha_plus(wn)
 #     return boundary.v_plus(model.csb, ap)

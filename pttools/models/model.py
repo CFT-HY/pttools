@@ -49,11 +49,22 @@ class Model(BaseModel, abc.ABC):
 
     # Concrete methods
 
+    @staticmethod
+    def check_wn_for_alpha_n(wn: th.FloatOrArr, allow_negative: bool = False):
+        if np.any(wn < 0):
+            if np.isscalar(wn):
+                info = f"Got negative wn={wn} for alpha_n."
+            else:
+                info = f"Got negative wn for alpha_n. Most problematic value: wn={np.min(wn)}"
+            logger.error(info)
+            if not allow_negative:
+                raise ValueError(info)
+
     def alpha_n(self, wn: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
         $$\alpha_n = \frac{4(\theta(w_n,\phi_s) - \theta(w_n,\phi_b)}{3w_n}$$
 
-        :param wn: enthalpy of the symmetric phase at the nucleation temperature
+        :param wn: $w_n$, enthalpy of the symmetric phase at the nucleation temperature
         :param allow_negative: whether to allow unphysical negative output values
         """
         theta_s = self.theta(wn, Phase.SYMMETRIC)
@@ -207,6 +218,7 @@ class Model(BaseModel, abc.ABC):
 
     def w_n(self, alpha_n: th.FloatOrArr, wn_guess: float = 1) -> th.FloatOrArr:
         r"""Enthalpy at nucleation temperature with given $\alpha_n$"""
+        # TODO: rename this to wn
         if np.isscalar(alpha_n):
             return self._w_n_scalar(alpha_n, wn_guess)
         ret = np.zeros_like(alpha_n)

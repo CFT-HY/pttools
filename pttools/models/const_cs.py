@@ -69,10 +69,27 @@ class ConstCSModel(AnalyticModel):
             name=name, label=label
         )
 
-        self.const_cs_wn_const: float = 1 / 3 * (
-            (1 - 4 / self.mu) * self.t_ref ** (self.mu - 4)
-            - (1 - 4 / self.nu) * self.t_ref ** (self.nu - 4)
-        )
+        self.const_cs_wn_const: float = 4/3 * (1/self.mu - 1/self.nu)
+
+    def alpha_n(self, wn: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
+        r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
+        $$\alpha_n = \frac{4}{3} \left( \frac{1}{\nu} - \frac{1}{\mu} + \frac{1}{w_n} (V_s - V_b) \right)$$
+
+        :param wn: $w_n$, enthalpy of the symmetric phase at the nucleation temperature
+        :param allow_negative: whether to allow unphysical negative output values (not checked for this model)
+        """
+        self.check_wn_for_alpha_n(wn, allow_negative)
+        ret = 4/3 * (1/self.nu - 1/self.mu) + self.bag_wn_const/wn
+        if (not allow_negative) and np.any(ret < 0):
+            if np.isscalar(ret):
+                info = f"Got negative alpha_n={ret} with wn={wn}, mu={self.mu}, nu={self.nu}."
+            else:
+                i = np.argmin(wn)
+                info = f"Got negative alpha_n. Most problematic values: alpha_n={ret[i]}, wn={wn[i]}, mu={self.mu}, nu={self.nu}"
+            logger.error(info)
+            if not allow_negative:
+                raise ValueError(info)
+        return ret
 
     def critical_temp_opt(self, temp: float) -> float:
         const = (self.V_b - self.V_s)*self.t_ref**4
@@ -82,15 +99,13 @@ class ConstCSModel(AnalyticModel):
     #         self,
     #         wp: th.FloatOrArr, wm: th.FloatOrArr = None,
     #         allow_negative: bool = False, analytical: bool = True) -> th.FloatOrArr:
-    #     r"""Transition strength parameter $\alpha_+$
-    #     $$\alpha_+ = \frac{4}{3w_+} (V_+ - V_-)$$
-    #
-    #     TODO: Nope, this is wrong! The temperature terms don't cancel!
-    #     """
+    #     r"""Transition strength parameter $\alpha_+$"""
     #     if not analytical:
     #         if wm is None:
     #             raise ValueError("wm must be provided for non-analytical alpha_plus.")
     #         return super().alpha_plus(wp, wm, allow_negative)
+    #
+    #
     #
     #     if wp < 0:
     #         logger.error("Got negative wp for alpha_plus")
@@ -171,13 +186,10 @@ class ConstCSModel(AnalyticModel):
             allow_negative: bool = False,
             analytical: bool = True) -> th.FloatOrArr:
         r"""Enthalpy at nucleation temperature
-        $$w_n = \frac{b}{\alpha_n - a}$$
+        $$w_n = \frac{a}{\alpha_n - b}$$
         where
         $$a = \frac{4}{3} (V_s - V_b)$$
-        $$b = \frac{1}{3\alpha_n} \left[
-        (1-\frac{4}{\mu}T_0^{\mu-4}
-        - (1-\frac{4}{\nu}T_0^{\nu-4}
-        \right]$$
+        $$b = \frac{4}{3} \left( \frac{1}{\mu} - \frac{1}{\nu} \right)$$
         This can be derived from the equations for $\theta$ and $\alpha_n$.
         """
         diff = alpha_n - self.const_cs_wn_const

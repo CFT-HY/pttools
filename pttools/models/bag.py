@@ -3,6 +3,7 @@
 import logging
 
 import numba
+# import numpy as np
 
 import pttools.type_hints as th
 from pttools.models.analytic import AnalyticModel
@@ -41,6 +42,17 @@ class BagModel(AnalyticModel):
         )
         if self.a_s <= self.a_b:
             raise ValueError("The bag model must have a_s > a_b for the critical temperature to be non-negative.")
+
+    def alpha_n(self, wn: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
+        r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
+        $$\alpha_n = \frac{4}{3w_n}(V_s - V_b)$$
+
+        :param wn: $w_n$, enthalpy of the symmetric phase at the nucleation temperature
+        :param allow_negative: whether to allow unphysical negative output values (not checked for this model)
+        """
+        # TODO: should this function have a check for the negative values?
+        self.check_wn_for_alpha_n(wn, allow_negative)
+        return self.bag_wn_const / wn
 
     def critical_temp(self, guess: float) -> float:
         r"""Critical temperature for the bag model
