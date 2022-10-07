@@ -51,36 +51,60 @@ def identify_solution_type(v_wall: float, alpha_n: float, exit_on_error: bool = 
 def identify_solution_type_beyond_bag(
         v_wall: float,
         alpha_n: float,
-        model: "Model",
-        wp: float = 1) -> boundary.SolutionType:
+        model: "Model") -> boundary.SolutionType:
 
-    if is_surely_detonation(v_wall, alpha_n, model):
+    v_cj = v_chapman_jouguet(model, alpha_n)
+    wn = model.w_n(alpha_n)
+
+    if is_surely_detonation(v_wall, v_cj):
         return boundary.SolutionType.DETON
-    if is_surely_sub_def(v_wall, alpha_n, model, wp):
+    if is_surely_sub_def(v_wall, model, wn):
         return boundary.SolutionType.SUB_DEF
+    if cannot_be_detonation(v_wall, v_cj) and cannot_be_sub_def(v_wall, model, wn):
+        return boundary.SolutionType.HYBRID
+    logger.warning(f"Could not determine solution type for {model.name} with v_wall={v_wall}, alpha_n={alpha_n}")
     return boundary.SolutionType.UNKNOWN
 
 
-def is_surely_sub_def(v_wall: float, alpha_n: float, model: "Model", wn: float = 1):
-    r"""If v_wall < cs_b for all w in [0, wn], then it is certainly a deflagration"""
-    if v_wall**2 < max_cs2_inside_sub_def(model, wn):
+def cannot_be_sub_def(v_wall: float, model: "Model", wn: float):
+    """If the wall is certainly hypersonic, it cannot be a subsonic deflagration."""
+    if v_wall**2 > max_cs2_inside_def(model, wn):
         return True
     return False
 
 
-def is_surely_detonation(v_wall: float, alpha_n: float, model: "Model") -> float:
+def is_surely_sub_def(v_wall: float, model: "Model", wn: float):
+    r"""If v_wall < cs_b for all w in [0, wn], then it is certainly a deflagration."""
+    if v_wall**2 < min_cs2_inside_sub_def(model, wn):
+        return True
+    return False
+
+
+def is_surely_detonation(v_wall: float, v_cj: float) -> float:
     r"""If $v_w > v_{CJ}$, it is certainly a detonation"""
-    v_cj = v_chapman_jouguet(alpha_n, model)
-    if v_wall > v_cj:
-        return True
-    return False
+    return v_wall > v_cj
 
 
-def max_cs2_inside_sub_def(model: "Model", wn: float = 1) -> float:
+def cannot_be_detonation(v_wall: float, v_cj: float) -> float:
+    r"""If $v_w < v_{CJ}, it cannot be a detonation"""
+    return v_wall < v_cj
+
+
+def max_cs2_inside_def(model: "Model", wn: float = 1) -> float:
+    r"""If the wall speed $v_w > c_s(w) \forall w \in [0, w_n]$,
+    then the wall is certainly hypersonic and therefore the solution cannot be a subsonic deflagration."""
+    def func(w):
+        return -model.cs2(w, boundary.Phase.BROKEN)
+
+    sol = fminbound(func, x1=0, x2=wn)
+    return sol[0]
+
+
+def min_cs2_inside_sub_def(model: "Model", wn: float = 1) -> float:
     r"""If the wall speed $v_w < c_s(w) \forall w \in [0, w_n]$,
     then the wall is certainly subsonic and therefore the solution is certainly a subsonic deflagration."""
     def func(w):
-        return -model.cs2(w, boundary.Phase.BROKEN)
+        return model.cs2(w, boundary.Phase.BROKEN)
 
     sol = fminbound(func, x1=0, x2=wn)
     return sol[0]
