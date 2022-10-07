@@ -44,12 +44,13 @@ def main():
     # Plot opacity
     alpha = 0.5
     # Transition strength
-    # alpha_n = np.linspace(0.1, 0.3, n_points)
-    alpha_n = np.linspace(0.07, 2, n_points)
+    alpha_n = np.linspace(0, 0.3, n_points)
+    # alpha_n = np.linspace(0.07, 2, n_points)
 
     model_bag = models.BagModel(a_s=1.1, a_b=1, V_s=1)
     model_const_cs_like_bag = models.ConstCSModel(a_s=1.1, a_b=1, css2=1/3, csb2=1/3, V_s=1)
     model_const_cs = models.ConstCSModel(a_s=1.1, a_b=1, css2=0.25, csb2=1/3, V_s=1)
+    model_const_cs2 = models.ConstCSModel(a_s=1.1, a_b=1, css2=1/4, csb2=1/3.5, V_s=1)
     # print("w_n:", model_const_cs.w_n(alpha_n=0.1))
     # print("alpha_n:", model_const_cs.alpha_n(wn=1e6))
 
@@ -92,6 +93,7 @@ def main():
     v_cj_bag = compute_model(alpha_n, model_bag, analytical=False)
     v_cj_const_cs_like_bag = compute_model(alpha_n, model_const_cs_like_bag)
     v_cj_const_cs = compute_model(alpha_n, model_const_cs)
+    v_cj_const_cs2 = compute_model(alpha_n, model_const_cs2)
 
     ax2.plot(alpha_n, v_cj_bag_analytical, label="Bag model (analytical)", alpha=alpha)
     ax2.plot(alpha_n, v_cj_bag, label="Bag model", alpha=alpha)
@@ -104,6 +106,7 @@ def main():
     )
     ax2.set_xlabel(r"$\alpha_n$")
     ax2.set_ylabel("$v_{CJ}$")
+    ax2.plot(alpha_n, v_cj_const_cs2, label=r"Constant $c_s$ model v2", alpha=alpha, ls=":")
     ax2.legend()
 
     # Checking
