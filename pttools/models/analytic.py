@@ -22,8 +22,8 @@ class AnalyticModel(Model, abc.ABC):
     :param V_b: $V_b = \epsilon_b$, the potential term of $p$ in the broken phase
     :param a_s: prefactor of $p$ in the symmetric phase
     :param a_b: prefactor of $p$ in the broken phase
-    :param g_s: $g_\text{eff}(\phi=s)$, degrees of freedom for $p$ in the symmetric phase
-    :param g_b: $g_\text{eff}(\phi=b)$, degrees of freedom for $p$ in the broken phase
+    :param g_s: $g_\text{eff}(\phi=s)$, degrees of freedom for $p$ in the symmetric phase at T=T0
+    :param g_b: $g_\text{eff}(\phi=b)$, degrees of freedom for $p$ in the broken phase at T=T0
     :param name: custom name for the model
     """
     def __init__(
