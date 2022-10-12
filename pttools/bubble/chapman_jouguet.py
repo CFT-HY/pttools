@@ -13,10 +13,8 @@ from pttools.bubble import const
 from pttools.bubble import boundary
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.relativity import gamma2
-# This would cause a circular import
-# from pttools.models.bag import BagModel
+from pttools.models.const_cs import ConstCSModel
 if tp.TYPE_CHECKING:
-    # from pttools.models.const_cs import ConstCSModel
     from pttools.models.model import Model
 import pttools.type_hints as th
 
@@ -226,8 +224,10 @@ def v_chapman_jouguet_bag(alpha_plus: th.FloatOrArr) -> th.FloatOrArr:
 
 
 def v_chapman_jouguet_const_cs_reference(alpha_n: np.ndarray, model: "ConstCSModel") -> np.ndarray:
+    if not isinstance(model, ConstCSModel):
+        raise TypeError("This reference only works for ConstCSModel.")
     if model.nu != 4:
-        raise ValueError("This point works only for nu=4.")
+        raise ValueError("This reference only works for nu=4.")
     wn = model.w_n(alpha_n)
     ap = model.alpha_plus(wp=wn, wm=1)
     ret = np.zeros_like(ap)
