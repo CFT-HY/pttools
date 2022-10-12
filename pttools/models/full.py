@@ -70,7 +70,7 @@ class FullModel(Model):
 
     def critical_temp_opt(self, temp: float) -> float:
         """Optimizer function for critical temperature"""
-        return (self.gp_temp(temp, Phase.SYMMETRIC) - self.gp_temp(temp, Phase.BROKEN))*temp**4 \
+        return (self.thermo.gp(temp, Phase.SYMMETRIC) - self.thermo.gp(temp, Phase.BROKEN))*temp**4 \
             + self.critical_temp_const
 
     def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -86,14 +86,7 @@ class FullModel(Model):
     def gp(self, w: th.FloatOrArr, phase: th.FloatOrArr):
         r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(w,\phi)$"""
         temp = self.temp(w, phase)
-        return self.gp_temp(temp, phase)
-
-    def gp_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(T,\phi)$
-        $$ g_{\text{eff},p}(T,\phi) = 4g_s(T,\phi) - 3g_e(T,\phi) + \frac{90 V(\phi)}{\pi^2 T^4} $$
-        """
-        self.validate_temp(temp)
-        return 4*self.thermo.gs(temp, phase) - 3*self.thermo.ge(temp, phase) # + (90*self.V(phase)) / (np.pi**2 * temp**4)
+        return self.thermo.gp(temp, phase)
 
     def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Pressure $p(T,\phi)$

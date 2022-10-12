@@ -129,6 +129,14 @@ class ThermoModel(BaseModel, abc.ABC):
         """
         return np.pi**2/30 * (self.dge_dT(temp, phase) * temp**4 + 4*self.ge(temp, phase)*temp**3)
 
+    def gp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(T,\phi)$
+        $$g_{\text{eff},p}(T,\phi) = 4g_s(T,\phi) - 3g_e(T,\phi)$$
+        """
+        # + \frac{90 V(\phi)}{\pi^2 T^4}
+        self.validate_temp(temp)
+        return 4*self.gs(temp, phase) - 3*self.ge(temp, phase)  # + (90*self.V(phase)) / (np.pi**2 * temp**4)
+
     # Abstract methods
 
     @abc.abstractmethod
