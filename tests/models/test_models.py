@@ -35,9 +35,22 @@ class TestConstCSLikeBag(BagBaseCase, unittest.TestCase):
 
 
 class TestConstCS(ModelBaseCase, unittest.TestCase):
+    SAVE_NEW_DATA = True
+
     @classmethod
     def setUpClass(cls, *args, **kwargs) -> None:
         model = models.ConstCSModel(a_s=1.2, a_b=1.1, V_s=1.3, css2=0.4**2, csb2=1/3)
+        super().setUpClass(model)
+
+
+class TestConstCSThermo(ModelBaseCase, unittest.TestCase):
+    SAVE_NEW_DATA = False
+
+    @classmethod
+    def setUpClass(cls, *args, **kwargs) -> None:
+        V_s = 1.3
+        thermo = models.ConstCSThermoModel(a_s=1.2, a_b=1.1, V_s=V_s, css2=0.4**2, csb2=1/3, name="const_cs")
+        model = models.FullModel(thermo=thermo, V_s=V_s)
         super().setUpClass(model)
 
 

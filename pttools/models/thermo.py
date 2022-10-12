@@ -17,8 +17,9 @@ class ThermoModel(BaseModel, abc.ABC):
     """
     The thermodynamic model characterizes the particle physics of interest.
 
-    TODO: Some of the functions seem to return vertical arrays. Fix this!
+    TODO: Some functions seem to return vertical arrays. Fix this!
     """
+    #: Container for the log10 temperatures of $g_\text{eff}$ data
     GEFF_DATA_LOG_TEMP: np.ndarray
     #: Container for the temperatures of $g_\text{eff}$ data
     GEFF_DATA_TEMP: np.ndarray

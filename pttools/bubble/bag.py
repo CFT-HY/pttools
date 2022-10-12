@@ -1,6 +1,6 @@
-"""Functions for the bag equation of state.
+r"""Functions for the bag equation of state.
 
-See page 37 of the :notes:`lecture notes <>`.
+See page 37 of :notes:`\ `.
 """
 
 # import enum

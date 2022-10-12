@@ -11,6 +11,14 @@ from pttools.models.analytic import AnalyticModel
 logger = logging.getLogger(__name__)
 
 
+def cs2_to_mu(cs2: th.FloatOrArr) -> th.FloatOrArr:
+    r"""Convert speed of sound squared $c_s^2$ to $\mu$
+
+    $$\mu = 1 + \frac{1}{\c_s^2}$$
+    """
+    return 1 + 1 / cs2
+
+
 class ConstCSModel(AnalyticModel):
     r"""$\mu, \nu$-model
 
@@ -45,6 +53,8 @@ class ConstCSModel(AnalyticModel):
         :param V_b: $V_b \equiv \epsilon_b$, the potential term of $p$ in the broken phase
         :param t_ref: reference temperature, usually 1 * unit of choice, e,g. 1 GeV
         :param name: custom name for the model
+
+        TODO: Rename mu to mu_s and nu to mu_b
         """
         if css2 > 1/3 or csb2 > 1/3:
             raise ValueError(
@@ -57,7 +67,8 @@ class ConstCSModel(AnalyticModel):
         self.csb2 = csb2
         self.css = np.sqrt(css2)
         self.csb = np.sqrt(csb2)
-        self.mu = 1 + 1 / css2
+        self.mu = cs2_to_mu(css2)
+        self.nu = cs2_to_mu(csb2)
         self.nu = 1 + 1 / csb2
         self.t_ref = t_ref
 
