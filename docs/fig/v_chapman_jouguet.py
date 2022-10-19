@@ -36,9 +36,11 @@ def debug_plot(ax: plt.Axes, model: models.Model):
 
 def main():
     fig: plt.Figure = plt.figure()
+    fig2: plt.Figure = plt.figure()
     ax2 = fig.add_subplot()
     # ax1: plt.Axes
     ax2: plt.Axes
+    ax3: plt.Axes = fig2.add_subplot()
 
     n_points = 100
     # Plot opacity
@@ -92,13 +94,24 @@ def main():
     # ax1.set_xscale("log")
 
     # debug_plot(ax1, model_bag)
+    temp = np.linspace(1, 10, 100)
+    ax3.plot(temp, model_const_cs.e_temp(temp, bubble.Phase.BROKEN)/temp**4, label="analytical e")
+    ax3.plot(temp, model_const_cs.p_temp(temp, bubble.Phase.BROKEN)/temp**4, label="analytical p")
+    ax3.plot(temp, model_const_cs.w(temp, bubble.Phase.BROKEN) / temp ** 4, label="analytical w")
+    ax3.plot(temp, model_const_cs_full.e_temp(temp, bubble.Phase.BROKEN)/temp**4, label="full e")
+    ax3.plot(temp, model_const_cs_full.p_temp(temp, bubble.Phase.BROKEN)/temp**4, label="full p")
+    ax3.plot(temp, model_const_cs_full.w(temp, bubble.Phase.BROKEN) / temp ** 4, label="full w")
+    # print(model_const_cs_full.V(bubble.Phase.BROKEN))
+    ax3.set_xlabel("T")
+    ax3.set_ylabel("e, p, w / T**4")
+    ax3.legend()
 
     v_cj_bag_analytical = compute_model(alpha_n, model_bag)
     v_cj_bag = compute_model(alpha_n, model_bag, analytical=False)
     v_cj_const_cs_like_bag = compute_model(alpha_n, model_const_cs_like_bag)
     v_cj_const_cs = compute_model(alpha_n, model_const_cs)
     v_cj_const_cs2 = compute_model(alpha_n, model_const_cs2)
-    v_cj_const_cs_full = compute_model(alpha_n, model_const_cs_full)
+    # v_cj_const_cs_full = compute_model(alpha_n, model_const_cs_full)
 
     ax2.plot(alpha_n, v_cj_bag_analytical, label="Bag model (analytical)", alpha=alpha)
     ax2.plot(alpha_n, v_cj_bag, label="Bag model", alpha=alpha, ls="--")
@@ -110,7 +123,7 @@ def main():
     ax2.plot(alpha_n, v_cj_const_cs, label=r"Constant $c_s$ model", alpha=alpha, ls="--")
     ax2.plot(alpha_n, v_cj_const_cs_like_bag, label=r"Constant $c_s$ model with bag coeff.", alpha=alpha, ls=":")
     ax2.plot(alpha_n, v_cj_const_cs2, label=r"Constant $c_s$ model v2", alpha=alpha, ls="--")
-    ax2.plot(alpha_n, v_cj_const_cs_full, label=r"Constant $c_s$ ThermoModel", alpha=alpha)
+    # ax2.plot(alpha_n, v_cj_const_cs_full, label=r"Constant $c_s$ ThermoModel", alpha=alpha)
     ax2.set_xlabel(r"$\alpha_n$")
     ax2.set_ylabel("$v_{CJ}$")
 
