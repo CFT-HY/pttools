@@ -11,7 +11,7 @@ from Numba without the use of object mode.
 # import os
 import typing as tp
 
-# import numba
+import numba
 from numba.extending import overload
 import numpy as np
 import scipy.interpolate
@@ -100,57 +100,74 @@ def splev(x: np.ndarray, tck: tp.Tuple[np.ndarray, np.ndarray, int], der: int = 
     return y.reshape(shape)
 
 
+@numba.njit
+def splev_linear_core(xp: float, t: np.ndarray, c: np.ndarray, ext: int) -> float:
+    if xp < t[0]:
+        if ext == 0:
+            a = (c[1] - c[0]) / (t[2] - t[1])
+            return c[0] + a * (xp - t[0])
+        if ext == 1:
+            return 0
+        if ext == 2:
+            raise ValueError("Extrapolating is disabled")
+        if ext == 3:
+            return c[0]
+        raise ValueError("Invalid ext")
+    for j in range(t.size - 2):
+        if xp < t[j + 2]:
+            a = (c[j + 1] - c[j]) / (t[j + 2] - t[j + 1])
+            return c[j] + a * (xp - t[j + 1])
+    # If the upper boundary is exceeded
+    else:
+        if ext == 0:
+            a = (c[-3] - c[-4]) / (t[-2] - t[-3])
+            return c[-3] + a * (xp - t[-2])
+        if ext == 1:
+            return 0
+        if ext == 2:
+            raise ValueError("Extrapolating is disabled")
+        if ext == 3:
+            return c[-3]
+        raise ValueError("Invalid ext")
+
+
+@numba.njit
+def splev_linear_validate(k: int, der: int) -> None:
+    if k != 1:
+        print("Got k = ", k)
+        raise NotImplementedError("Only linear interpolation is implemented at the moment")
+    if der != 0:
+        raise NotImplementedError("Derivatives are not yet implemented")
+
+
+def splev_linear_arr(x, tck: tp.Tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
+    t, c, k = tck
+    splev_linear_validate(k, der)
+
+    y = np.empty_like(x)
+    for i, xp in enumerate(x):
+        y[i] = splev_linear_core(xp, t, c, ext)
+
+    return y
+
+
+def splev_linear_scalar(x, tck: tp.Tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
+    t, c, k = tck
+    splev_linear_validate(k, der)
+    return splev_linear_core(x, t, c, ext)
+
+
 @overload(scipy.interpolate.splev)
-def splev_linear(x: np.ndarray, tck: tp.Tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
+def splev_linear(x, tck: tp.Tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
     """
-    :param x: 1D array
+    :param x: float or 1D array
     :param tck: Tuple of spline parameters as given by scipy.interpolate.splrep()
     :param der: order of derivative to be computed
     :param ext: Extrapolation: 0 = extrapolate, 1 = return 0, 2 = raise ValueError, 3 = return the boundary value
     """
-    def func(x: np.ndarray, tck: tp.Tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
-        t, c, k = tck
-        if k != 1:
-            print("Got k = ", k)
-            raise NotImplementedError("Only linear interpolation is implemented at the moment")
-        if der != 0:
-            raise NotImplementedError("Derivatives are not yet implemented")
-
-        y = np.empty_like(x)
-        for i, xp in enumerate(x):
-            if xp < t[0]:
-                if ext == 0:
-                    a = (c[1] - c[0]) / (t[2] - t[1])
-                    y[i] = c[0] + a*(xp - t[0])
-                elif ext == 1:
-                    y[i] = 0
-                elif ext == 2:
-                    raise ValueError("Extrapolating is disabled")
-                elif ext == 3:
-                    y[i] = c[0]
-                else:
-                    raise ValueError("Invalid ext")
-                break
-            for j in range(t.size-2):
-                if xp < t[j+2]:
-                    a = (c[j+1] - c[j]) / (t[j+2] - t[j+1])
-                    y[i] = c[j] + a*(xp - t[j+1])
-                    break
-            # If the upper boundary is exceeded
-            else:
-                if ext == 0:
-                    a = (c[-3] - c[-4]) / (t[-2] - t[-3])
-                    y[i] = c[-3] + a*(xp - t[-2])
-                elif ext == 1:
-                    y[i] = 0
-                elif ext == 2:
-                    raise ValueError("Extrapolating is disabled")
-                elif ext == 3:
-                    y[i] = c[-3]
-                else:
-                    raise ValueError("Invalid ext")
-        return y
-    return func
+    if isinstance(x, numba.types.Float):
+        return splev_linear_scalar
+    return splev_linear_arr
 
 
 # @numba.njit
