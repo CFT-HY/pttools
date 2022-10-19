@@ -136,7 +136,8 @@ class ThermoModel(BaseModel, abc.ABC):
         """
         # + \frac{90 V(\phi)}{\pi^2 T^4}
         self.validate_temp(temp)
-        return 4*self.gs(temp, phase) - 3*self.ge(temp, phase)  # + (90*self.V(phase)) / (np.pi**2 * temp**4)
+        # TODO: Check that this is correct
+        return (4*self.gs(temp, phase) - self.ge(temp, phase))/3  # + (90*self.V(phase)) / (np.pi**2 * temp**4)
 
     # Abstract methods
 
