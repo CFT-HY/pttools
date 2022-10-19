@@ -36,13 +36,13 @@ def debug_plot(ax: plt.Axes, model: models.Model):
 
 def main():
     fig: plt.Figure = plt.figure()
-    ax1, ax2 = fig.subplots(2)
-    ax1: plt.Axes
+    ax2 = fig.add_subplot()
+    # ax1: plt.Axes
     ax2: plt.Axes
 
     n_points = 100
     # Plot opacity
-    alpha = 0.5
+    alpha = 1
     # Transition strength
     alpha_n = np.linspace(0, 0.3, n_points)
     # alpha_n = np.linspace(0.07, 2, n_points)
@@ -51,6 +51,10 @@ def main():
     model_const_cs_like_bag = models.ConstCSModel(a_s=1.1, a_b=1, css2=1/3, csb2=1/3, V_s=1)
     model_const_cs = models.ConstCSModel(a_s=1.1, a_b=1, css2=0.25, csb2=1/3, V_s=1)
     model_const_cs2 = models.ConstCSModel(a_s=1.1, a_b=1, css2=1/4, csb2=1/3.5, V_s=1)
+    model_const_cs_full = models.FullModel(
+        thermo=models.ConstCSThermoModel(a_s=1.1, a_b=1, css2=0.25, csb2=1/3, V_s=1),
+        V_s=1
+    )
     # print("w_n:", model_const_cs.w_n(alpha_n=0.1))
     # print("alpha_n:", model_const_cs.alpha_n(wn=1e6))
 
@@ -87,26 +91,29 @@ def main():
     # ax1.set_yscale("log")
     # ax1.set_xscale("log")
 
-    debug_plot(ax1, model_bag)
+    # debug_plot(ax1, model_bag)
 
     v_cj_bag_analytical = compute_model(alpha_n, model_bag)
     v_cj_bag = compute_model(alpha_n, model_bag, analytical=False)
     v_cj_const_cs_like_bag = compute_model(alpha_n, model_const_cs_like_bag)
     v_cj_const_cs = compute_model(alpha_n, model_const_cs)
     v_cj_const_cs2 = compute_model(alpha_n, model_const_cs2)
+    v_cj_const_cs_full = compute_model(alpha_n, model_const_cs_full)
 
     ax2.plot(alpha_n, v_cj_bag_analytical, label="Bag model (analytical)", alpha=alpha)
-    ax2.plot(alpha_n, v_cj_bag, label="Bag model", alpha=alpha)
-    ax2.plot(alpha_n, v_cj_const_cs, label=r"Constant $c_s$ model", alpha=alpha)
-    ax2.plot(alpha_n, v_cj_const_cs_like_bag, label=r"Constant $c_s$ model with bag coeff.", alpha=alpha)
+    ax2.plot(alpha_n, v_cj_bag, label="Bag model", alpha=alpha, ls="--")
     ax2.plot(
         alpha_n,
         bubble.v_chapman_jouguet_const_cs_reference(alpha_n, model_const_cs),
-        label="ref", alpha=alpha
+        label="Constant $c_s$ analytical ref.", alpha=alpha
     )
+    ax2.plot(alpha_n, v_cj_const_cs, label=r"Constant $c_s$ model", alpha=alpha, ls="--")
+    ax2.plot(alpha_n, v_cj_const_cs_like_bag, label=r"Constant $c_s$ model with bag coeff.", alpha=alpha, ls=":")
+    ax2.plot(alpha_n, v_cj_const_cs2, label=r"Constant $c_s$ model v2", alpha=alpha, ls="--")
+    ax2.plot(alpha_n, v_cj_const_cs_full, label=r"Constant $c_s$ ThermoModel", alpha=alpha)
     ax2.set_xlabel(r"$\alpha_n$")
     ax2.set_ylabel("$v_{CJ}$")
-    ax2.plot(alpha_n, v_cj_const_cs2, label=r"Constant $c_s$ model v2", alpha=alpha, ls=":")
+
     ax2.legend()
 
     # Checking
