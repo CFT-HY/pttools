@@ -77,6 +77,9 @@ class StandardModel(ThermoModel):
 
 if __name__ == "__main__":
     sm = StandardModel()
+    print("GE_SPLINE")
     print(type(sm.GE_SPLINE))
-    for elem in sm.GE_SPLINE:
-        print(elem)
+    for i, elem in enumerate(sm.GE_SPLINE):
+        print(f"{i}:", elem)
+    print("Test")
+    print(sm.cs2(np.linspace(1, 2, 5), 1))
