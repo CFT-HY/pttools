@@ -93,7 +93,7 @@ class FullModel(Model):
         $$ p(T,\phi) = \frac{\pi^2}{90} g_p(T,\phi) T^4 - V(\phi) $$
         """
         self.validate_temp(temp)
-        return np.pi**2 / 90 * self.gp(temp, phase) * temp**4 - self.V(phase)
+        return np.pi**2 / 90 * self.thermo.gp(temp, phase) * temp**4 - self.V(phase)
 
     def s_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Entropy density $s(T,\phi), using :borsanyi_2016:`\ `, eq. S12$
