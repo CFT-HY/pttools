@@ -116,7 +116,7 @@ class FullModel(Model):
 
     def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Enthalpy density $w$
-        $$ w = e + p = Ts = T \frac{dp}{dT} = \frac{4\pi^2}{90} g_s T^4 $$
+        $$ w = e + p = Ts = T \frac{dp}{dT} = \frac{2\pi^2}{45} g_s T^4 $$
         For the steps please see :notes:`\ ` page 23 and eq. 7.1. and :borsanyi_2016: eq. S12.
 
         :param temp: temperature $T$ (MeV)
@@ -124,4 +124,4 @@ class FullModel(Model):
         :return: enthalpy density $w$
         """
         self.validate_temp(temp)
-        return (4*np.pi**2)/90 * self.thermo.gs(temp, phase) * temp**4
+        return temp * self.s_temp(temp, phase)
