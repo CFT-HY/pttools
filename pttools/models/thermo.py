@@ -116,13 +116,14 @@ class ThermoModel(BaseModel, abc.ABC):
         """Full evaluation of $c_s^2$ from the underlying quantities"""
         return self.dp_dt(temp, phase) / self.de_dt(temp, phase)
 
+    def dgp_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        return (4*self.dgs_dT(temp, phase) - self.dge_dT(temp, phase))/3
+
     def dp_dt(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""
         $\frac{dp}{dT}$
-
-        TODO: it may be necessary to use gp instead of gs
         """
-        return np.pi**2/90 * (self.dgs_dT(temp, phase) * temp ** 4 + 4 * self.gs(temp, phase)*temp**3)
+        return np.pi**2/90 * (self.dgs_dT(temp, phase) * temp**4 + 4*self.gp(temp, phase)*temp**3)
 
     def de_dt(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""
@@ -136,8 +137,7 @@ class ThermoModel(BaseModel, abc.ABC):
         """
         # + \frac{90 V(\phi)}{\pi^2 T^4}
         self.validate_temp(temp)
-        # TODO: Check that this is correct
-        return (4*self.gs(temp, phase) - self.ge(temp, phase))/3  # + (90*self.V(phase)) / (np.pi**2 * temp**4)
+        return (4*self.gs(temp, phase) - self.ge(temp, phase))/3
 
     # Abstract methods
 
