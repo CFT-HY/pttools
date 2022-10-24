@@ -38,28 +38,28 @@ class ConstCSThermoModel(ThermoModel):
             name=name, label=label
         )
 
-    # def dg_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-    #     r"""$$\frac{dg}{dT} = (self.mu_\pm - 4) \frac{90}{\pi^2} a_\pm T_0^{4-\mu} T^{\mu - 5}"""
-    #     dg_dT_s = (self.mu_s - 4) * 90/np.pi**2 * self.a_s * self.t_ref**(4-self.mu_s) * temp**(self.mu_s - 5)
-    #     dg_dT_b = (self.mu_b - 4) * 90/np.pi**2 * self.a_b * self.t_ref**(4-self.mu_b) * temp**(self.mu_b - 5)
-    #     return dg_dT_s * phase + dg_dT_b * (1 - phase)
-
     def dge_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        # return self.dg_dT(temp, phase)
-        # TODO: Implement these
-        return 0 * temp * phase
+        dge_s = 30/np.pi**2 * (self.mu_s - 1) * (self.mu_s - 4) * self.a_s * self.t_ref**(self.mu_s - 4) * temp**(self.mu_s - 5)
+        dge_b = 30/np.pi**2 * (self.mu_b - 1) * (self.mu_b - 4) * self.a_b * self.t_ref**(self.mu_b - 4) * temp**(self.mu_b - 5)
+        return dge_b * phase + dge_s * (1 - phase)
 
     def dgs_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        # return self.dg_dT(temp, phase)
-        # TODO: Implement these
-        return 0 * temp * phase
+        dgs_s = 45/(2*np.pi**2) * self.mu_s * (self.mu_s - 4) * self.a_s * self.t_ref**(self.mu_s - 4) * temp**(self.mu_s - 5)
+        dgs_b = 45/(2*np.pi**2) * self.mu_b * (self.mu_b - 4) * self.a_b * self.t_ref**(self.mu_b - 4) * temp**(self.mu_b - 5)
+        return dgs_b * phase + dgs_s * (1 - phase)
 
     def ge(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        ge_s = (self.mu_s - 1) * 90 / np.pi ** 2 * self.a_s * (temp / self.t_ref) ** (self.mu_s - 4)
-        ge_b = (self.mu_b - 1) * 90 / np.pi ** 2 * self.a_b * (temp / self.t_ref) ** (self.mu_b - 4)
+        ge_s = 30/np.pi**2 * (
+            (self.mu_s - 1) * self.a_s * (temp / self.t_ref) ** (self.mu_s - 4)
+            + self.V_s / temp**4
+        )
+        ge_b = 30/np.pi**2 * (
+            (self.mu_b - 1) * self.a_b * (temp / self.t_ref) ** (self.mu_b - 4)
+            + self.V_b / temp**4
+        )
         return ge_b * phase + ge_s * (1 - phase)
 
     def gs(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        gs_s = 90/np.pi**2 * self.a_s * self.mu_s / 4 * (temp / self.t_ref)**(self.mu_s - 4)
-        gs_b = 90/np.pi**2 * self.a_b * self.mu_b / 4 * (temp / self.t_ref)**(self.mu_b - 4)
+        gs_s = 45/(2*np.pi**2) * self.a_s * self.mu_s * (temp / self.t_ref)**(self.mu_s - 4)
+        gs_b = 45/(2*np.pi**2) * self.a_b * self.mu_b * (temp / self.t_ref)**(self.mu_b - 4)
         return gs_b * phase + gs_s * (1 - phase)
