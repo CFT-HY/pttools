@@ -27,10 +27,11 @@ class ConstCSThermoModel(ThermoModel):
 
         self.a_s = a_s
         self.a_b = a_b
+        self.V_s = V_s
+        self.V_b = V_b
         self.t_ref = t_ref
         self.mu_s = const_cs.cs2_to_mu(css2)
         self.mu_b = const_cs.cs2_to_mu(csb2)
-        print("mu:", self.mu_s, self.mu_b)
         # TODO: Generate reference values for g0 here (corresponding to a_s, a_b)
 
         super().__init__(

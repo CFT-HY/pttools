@@ -54,8 +54,7 @@ def main():
     model_const_cs = models.ConstCSModel(a_s=1.1, a_b=1, css2=0.25, csb2=1/3, V_s=1)
     model_const_cs2 = models.ConstCSModel(a_s=1.1, a_b=1, css2=1/4, csb2=1/3.5, V_s=1)
     model_const_cs_full = models.FullModel(
-        thermo=models.ConstCSThermoModel(a_s=1.1, a_b=1, css2=0.25, csb2=1/3, V_s=1),
-        V_s=1
+        thermo=models.ConstCSThermoModel(a_s=1.1, a_b=1, css2=0.25, csb2=1/3, V_s=1)
     )
     # print("w_n:", model_const_cs.w_n(alpha_n=0.1))
     # print("alpha_n:", model_const_cs.alpha_n(wn=1e6))

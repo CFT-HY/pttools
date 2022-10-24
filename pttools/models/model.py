@@ -28,12 +28,21 @@ class Model(BaseModel, abc.ABC):
             t_ref: float = 1, t_min: float = None, t_max: float = None,
             name: str = None,
             label: str = None,
-            gen_cs2: bool = True):
+            gen_cs2: bool = True,
+            implicit_V: bool = False):
 
-        if V_s < V_b:
-            raise ValueError(f"The bubble will not expand, when V_s <= V_b. Got: V_s={V_s}, V_b={V_b}.")
-        if V_s == V_b:
-            logger.warning("The bubble will not expand, when V_s <= V_b. Got: V_b = V_s = %s.", V_s)
+        if implicit_V:
+            if V_s != 0 or V_b != 0:
+                logger.warning(
+                    "Potentials have been specified for the implicit model: %s. "
+                    "This is for debugging purposes only. Be careful that the definitions of g and V are consistent.",
+                    self.DEFAULT_NAME if name is None else name
+                )
+        else:
+            if V_s < V_b:
+                raise ValueError(f"The bubble will not expand, when V_s <= V_b. Got: V_s={V_s}, V_b={V_b}.")
+            if V_s == V_b:
+                logger.warning("The bubble will not expand, when V_s <= V_b. Got: V_b = V_s = %s.", V_s)
 
         self.t_ref: float = t_ref
         self.V_s: float = V_s

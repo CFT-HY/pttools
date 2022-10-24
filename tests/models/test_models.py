@@ -48,9 +48,8 @@ class TestConstCSThermo(ModelBaseCase, unittest.TestCase):
 
     @classmethod
     def setUpClass(cls, *args, **kwargs) -> None:
-        V_s = 1.3
-        thermo = models.ConstCSThermoModel(a_s=1.2, a_b=1.1, V_s=V_s, css2=0.4**2, csb2=1/3, name="const_cs")
-        model = models.FullModel(thermo=thermo, V_s=V_s)
+        thermo = models.ConstCSThermoModel(a_s=1.2, a_b=1.1, V_s=1.3, css2=0.4**2, csb2=1/3, name="const_cs")
+        model = models.FullModel(thermo=thermo)
         super().setUpClass(model)
 
 

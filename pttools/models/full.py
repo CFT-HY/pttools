@@ -1,6 +1,7 @@
 """Full thermodynamics-based model"""
 
-import typing as tp
+import logging
+# import typing as tp
 
 import numba
 import numpy as np
@@ -12,6 +13,8 @@ from pttools.bubble.boundary import Phase
 from pttools.models.model import Model
 # if tp.TYPE_CHECKING:
 from pttools.models.thermo import ThermoModel
+
+logger = logging.getLogger(__name__)
 
 
 class FullModel(Model):
@@ -27,10 +30,10 @@ class FullModel(Model):
     DEFAULT_LABEL = "Full model"
     DEFAULT_NAME = "full"
 
-    def __init__(self, thermo: ThermoModel, V_s: float, V_b: float = 0, name: str = None, label: str = None):
+    def __init__(self, thermo: ThermoModel, V_s: float = 0, V_b: float = 0, name: str = None, label: str = None):
         if label is None:
             label = f"Full model ({thermo.label})"
-        super().__init__(V_s=V_s, V_b=V_b, name=name, label=label, gen_cs2=False)
+        super().__init__(V_s=V_s, V_b=V_b, name=name, label=label, gen_cs2=False, implicit_V=True)
         self.thermo = thermo
         # Override auto-generated limits with those from the ThermoModel
         self.t_min = thermo.t_min
@@ -90,7 +93,7 @@ class FullModel(Model):
 
     def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Pressure $p(T,\phi)$
-        $$ p(T,\phi) = \frac{\pi^2}{90} g_p(T,\phi) T^4 - V(\phi) $$
+        $$ p(T,\phi) = \frac{\pi^2}{90} g_p(T,\phi) T^4$$
         """
         self.validate_temp(temp)
         return np.pi**2 / 90 * self.thermo.gp(temp, phase) * temp**4 - self.V(phase)
