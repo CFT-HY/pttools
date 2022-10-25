@@ -3,7 +3,7 @@
 import logging
 
 import numba
-# import numpy as np
+import numpy as np
 
 import pttools.type_hints as th
 from pttools.models.analytic import AnalyticModel
@@ -69,7 +69,7 @@ class BagModel(AnalyticModel):
         :notes:`\ `, p. 37,
         :rel_hydro_book:`\ `, eq. 2.207
         """
-        return 1/3
+        return 1/3 * np.ones_like(w) * np.ones_like(phase)
 
     def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Energy density as a function of temperature, :giese_2021:`\ ` eq. 15, :borsanyi_2016:`\ `, eq. S12
