@@ -10,7 +10,7 @@ class TestBag(BagBaseCase, unittest.TestCase):
 
     @classmethod
     def setUpClass(cls, *args, **kwargs) -> None:
-        model = models.BagModel(a_s=1.2, a_b=1.1, V_s=1.3)
+        model = models.BagModel(**cls.PARAMS)
         super().setUpClass(model)
 
 
@@ -20,7 +20,7 @@ class TestConstCSLikeBag(BagBaseCase, unittest.TestCase):
     @classmethod
     def setUpClass(cls, *args, **kwargs) -> None:
         # Use bag model reference data
-        model = models.ConstCSModel(a_s=1.2, a_b=1.1, V_s=1.3, css2=1/3, csb2=1/3, name="bag")
+        model = models.ConstCSModel(**cls.PARAMS_FULL)
         super().setUpClass(model)
 
     def test_constants(self):
@@ -32,6 +32,28 @@ class TestConstCSLikeBag(BagBaseCase, unittest.TestCase):
     def test_critical_temp(self):
         pass
         # super().test_critical_temp()
+
+
+class TestConstCSThermoLikeBag(BagBaseCase, unittest.TestCase):
+    model: models.FullModel
+
+    @classmethod
+    def setUpClass(cls, *args, **kwargs) -> None:
+        model = models.FullModel(
+            thermo=models.ConstCSThermoModel(**cls.PARAMS_FULL), name="bag")
+        super().setUpClass(model)
+
+    def test_constants(self):
+        self.assertAlmostEqual(self.model.thermo.mu_s, 4)
+        self.assertAlmostEqual(self.model.thermo.mu_b, 4)
+        self.assertEqual(self.model.t_ref, 1)
+
+    def test_cs2_full(self):
+        data = self.model.thermo.cs2_full(self.w_arr1, self.phase_arr)
+        self.assert_json(data, "cs2")
+
+    # def test_critical_temp(self):
+    #     pass
 
 
 class TestConstCS(ModelBaseCase, unittest.TestCase):
@@ -48,9 +70,13 @@ class TestConstCSThermo(ModelBaseCase, unittest.TestCase):
 
     @classmethod
     def setUpClass(cls, *args, **kwargs) -> None:
-        thermo = models.ConstCSThermoModel(a_s=1.2, a_b=1.1, V_s=1.3, css2=0.4**2, csb2=1/3, name="const_cs")
-        model = models.FullModel(thermo=thermo)
+        thermo = models.ConstCSThermoModel(a_s=1.2, a_b=1.1, V_s=1.3, css2=0.4**2, csb2=1/3)
+        model = models.FullModel(thermo=thermo, name="const_cs")
         super().setUpClass(model)
+
+    def test_cs2_full(self):
+        data = self.model.thermo.cs2_full(self.w_arr1, self.phase_arr)
+        self.assert_json(data, "cs2")
 
 
 class TestFull(ModelBaseCase, unittest.TestCase):

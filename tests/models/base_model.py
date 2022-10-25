@@ -17,10 +17,11 @@ class ModelBaseCase(JsonTestCase, abc.ABC):
 
     REF_DATA_PATH: str
     TEST_ARR_SIZE: int = 10
-    w_arr1 = np.linspace(0.1, 1.1, TEST_ARR_SIZE)
-    w_arr2 = np.linspace(0, 1, TEST_ARR_SIZE)
-    phase_arr = np.linspace(0, 1, TEST_ARR_SIZE)
-    temp_arr = np.linspace(0, 1, TEST_ARR_SIZE)
+
+    temp_arr = np.linspace(1, 100, TEST_ARR_SIZE)
+    w_arr1 = temp_arr**4
+    w_arr2 = temp_arr**3.9
+    phase_arr = np.array([(1 + (-1)**i)/2 for i in range(TEST_ARR_SIZE)])
 
     @classmethod
     def setUpClass(cls, model: Model):
@@ -63,7 +64,7 @@ class ModelBaseCase(JsonTestCase, abc.ABC):
 
     def test_theta(self):
         data = self.model.theta(self.w_arr1, self.phase_arr)
-        self.assert_json(data, "theta", atol=1e-15)
+        self.assert_json(data, "theta", atol=2.3e-9)
 
     def test_e_temp(self):
         data = self.model.e_temp(self.temp_arr, self.phase_arr)
