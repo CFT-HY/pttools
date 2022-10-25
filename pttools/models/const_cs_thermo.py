@@ -9,7 +9,7 @@ class ConstCSThermoModel(ThermoModel):
     DEFAULT_LABEL = "ConstCSThermoModel"
     DEFAULT_NAME = "const_cs_thermo"
 
-    GEFF_DATA_LOG_TEMP = np.linspace(0, 3, 100)
+    GEFF_DATA_LOG_TEMP = np.linspace(-1, 3, 1000)
     GEFF_DATA_TEMP = 10**GEFF_DATA_LOG_TEMP
 
     def __init__(

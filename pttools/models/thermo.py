@@ -26,17 +26,51 @@ class ThermoModel(BaseModel, abc.ABC):
 
     # Concrete methods
 
+    def __init__(
+            self,
+            name: str = None,
+            t_min: float = None, t_max: float = None,
+            restrict_to_valid: bool = True,
+            label: str = None,
+            gen_cs2: bool = True):
+
+        t_data_min = np.min(self.GEFF_DATA_TEMP)
+        t_data_max = np.max(self.GEFF_DATA_TEMP)
+        if t_min is None:
+            self.t_min = np.min(self.GEFF_DATA_TEMP)
+        elif t_min < t_data_min:
+            raise ValueError("Model must have spline data for its validity range.")
+
+        if t_max is None:
+            self.t_max = np.max(self.GEFF_DATA_TEMP)
+        elif t_max > t_data_max:
+            raise ValueError("ThermoModel must have spline data for its validity range.")
+
+        super().__init__(
+            name=name,
+            t_min=t_min, t_max=t_max,
+            restrict_to_valid=restrict_to_valid,
+            label=label,
+            gen_cs2=gen_cs2
+        )
+
+    def validate_cs2(self, cs2: np.ndarray, name: str) -> bool:
+        err = []
+        if np.any(cs2 < 0):
+            err.append("cannot be negative")
+        if np.any(cs2 > 1):
+            err.append("cannot exceed 1")
+        if err:
+            msg = ", ".join(err)
+            logger.error(f"Invalid {name}: {msg}, got range: {np.min(cs2)} - {np.max(cs2)}")
+            return False
+        return True
+
     def gen_cs2(self) -> CS2Fun:
         cs2_s = self.cs2_full(self.GEFF_DATA_TEMP, Phase.SYMMETRIC)
         cs2_b = self.cs2_full(self.GEFF_DATA_TEMP, Phase.BROKEN)
-        if np.any(cs2_s < 0):
-            raise ValueError("cs2_s cannot be negative")
-        if np.any(cs2_s > 1):
-            raise ValueError("cs2_s cannot exceed 1")
-        if np.any(cs2_b < 0):
-            raise ValueError("cs2_b cannot be negative")
-        if np.any(cs2_b > 1):
-            raise ValueError("cs2_b cannot exceed 1")
+        self.validate_cs2(cs2_s, "cs2_s")
+        self.validate_cs2(cs2_b, "cs2_b")
 
         cs2_spl_s = scipy.interpolate.splrep(
             np.log10(self.GEFF_DATA_TEMP),
