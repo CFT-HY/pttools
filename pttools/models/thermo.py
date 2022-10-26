@@ -62,7 +62,7 @@ class ThermoModel(BaseModel, abc.ABC):
             err.append("cannot exceed 1")
         if err:
             msg = ", ".join(err)
-            logger.error(f"Invalid {name}: {msg}, got range: {np.min(cs2)} - {np.max(cs2)}")
+            logger.error(f"Invalid {name} for {self.name}: {msg}, got range: {np.min(cs2)} - {np.max(cs2)}")
             return False
         return True
 
@@ -71,6 +71,8 @@ class ThermoModel(BaseModel, abc.ABC):
         cs2_b = self.cs2_full(self.GEFF_DATA_TEMP, Phase.BROKEN)
         self.validate_cs2(cs2_s, "cs2_s")
         self.validate_cs2(cs2_b, "cs2_b")
+        # with np.printoptions(threshold=np.inf):
+        #     print(np.array([self.GEFF_DATA_TEMP, cs2_s]).T)
 
         cs2_spl_s = scipy.interpolate.splrep(
             np.log10(self.GEFF_DATA_TEMP),
@@ -148,7 +150,10 @@ class ThermoModel(BaseModel, abc.ABC):
 
     def cs2_full(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         """Full evaluation of $c_s^2$ from the underlying quantities"""
-        return self.dp_dt(temp, phase) / self.de_dt(temp, phase)
+        # This hopefully reduces numerical errors
+        return (self.dgp_dT(temp, phase)*temp + 4*self.gp(temp, phase)) / \
+               (3 * (self.dge_dT(temp, phase)*temp + 4*self.ge(temp, phase)))
+        # return self.dp_dt(temp, phase) / self.de_dt(temp, phase)
 
     def dgp_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         return 4*self.dgs_dT(temp, phase) - 3*self.dge_dT(temp, phase)

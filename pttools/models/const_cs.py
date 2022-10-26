@@ -80,7 +80,7 @@ class ConstCSModel(AnalyticModel):
             name=name, label=label
         )
 
-        self.const_cs_wn_const: float = 4/3 * (1/self.mu - 1/self.nu)
+        self.const_cs_wn_const: float = 4/3 * (1/self.nu - 1/self.mu)
 
     def alpha_n(self, wn: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.

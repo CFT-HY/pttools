@@ -60,7 +60,7 @@ def main():
 
     comp = ModelComparison(
         temp=np.linspace(1, 100, 100),
-        phase=models.Phase.BROKEN
+        phase=models.Phase.SYMMETRIC
     )
     comp.add(model_bag)
     comp.add(model_thermo_bag, ls="--")

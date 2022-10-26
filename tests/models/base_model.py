@@ -18,7 +18,7 @@ class ModelBaseCase(JsonTestCase, abc.ABC):
     REF_DATA_PATH: str
     TEST_ARR_SIZE: int = 10
 
-    alpha_n = np.linspace(0.05, 0.5, 10)
+    alpha_n = np.linspace(0.15, 0.5, 10)
     temp_arr = np.linspace(1, 100, TEST_ARR_SIZE)
     w_arr1 = temp_arr**4
     w_arr2 = temp_arr**3.9

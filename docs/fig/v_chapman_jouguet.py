@@ -46,15 +46,15 @@ def main():
     # Plot opacity
     alpha = 1
     # Transition strength
-    alpha_n = np.linspace(0, 0.3, n_points)
+    alpha_n = np.linspace(0.15, 0.3, n_points)
     # alpha_n = np.linspace(0.07, 2, n_points)
 
     model_bag = models.BagModel(a_s=1.1, a_b=1, V_s=1)
     model_const_cs_like_bag = models.ConstCSModel(a_s=1.1, a_b=1, css2=1/3, csb2=1/3, V_s=1)
     model_const_cs = models.ConstCSModel(a_s=1.1, a_b=1, css2=0.25, csb2=1/3, V_s=1)
-    model_const_cs2 = models.ConstCSModel(a_s=1.1, a_b=1, css2=1/4, csb2=1/3.5, V_s=1)
+    model_const_cs2 = models.ConstCSModel(a_s=1.1, a_b=1, css2=1/3, csb2=0.25, V_s=1)
     model_const_cs_full = models.FullModel(
-        thermo=models.ConstCSThermoModel(a_s=1.1, a_b=1, css2=0.25, csb2=1/3, V_s=1)
+        thermo=models.ConstCSThermoModel(a_s=1.1, a_b=1, css2=1/3, csb2=0.25, V_s=1)
     )
     # print("w_n:", model_const_cs.w_n(alpha_n=0.1))
     # print("alpha_n:", model_const_cs.alpha_n(wn=1e6))
@@ -94,12 +94,12 @@ def main():
 
     # debug_plot(ax1, model_bag)
     temp = np.linspace(1, 10, 100)
-    ax3.plot(temp, model_const_cs.e_temp(temp, bubble.Phase.BROKEN)/temp**4, label="analytical e")
-    ax3.plot(temp, model_const_cs.p_temp(temp, bubble.Phase.BROKEN)/temp**4, label="analytical p")
-    ax3.plot(temp, model_const_cs.w(temp, bubble.Phase.BROKEN) / temp ** 4, label="analytical w")
-    ax3.plot(temp, model_const_cs_full.e_temp(temp, bubble.Phase.BROKEN)/temp**4, label="full e")
-    ax3.plot(temp, model_const_cs_full.p_temp(temp, bubble.Phase.BROKEN)/temp**4, label="full p")
-    ax3.plot(temp, model_const_cs_full.w(temp, bubble.Phase.BROKEN) / temp ** 4, label="full w")
+    ax3.plot(temp, model_const_cs.e_temp(temp, bubble.Phase.SYMMETRIC)/temp**4, label="analytical e")
+    ax3.plot(temp, model_const_cs.p_temp(temp, bubble.Phase.SYMMETRIC)/temp**4, label="analytical p")
+    ax3.plot(temp, model_const_cs.w(temp, bubble.Phase.SYMMETRIC) / temp ** 4, label="analytical w")
+    ax3.plot(temp, model_const_cs_full.e_temp(temp, bubble.Phase.SYMMETRIC)/temp**4, label="full e")
+    ax3.plot(temp, model_const_cs_full.p_temp(temp, bubble.Phase.SYMMETRIC)/temp**4, label="full p")
+    ax3.plot(temp, model_const_cs_full.w(temp, bubble.Phase.SYMMETRIC) / temp ** 4, label="full w")
     # print(model_const_cs_full.V(bubble.Phase.BROKEN))
     ax3.set_xlabel("T")
     ax3.set_ylabel("e, p, w / T**4")
@@ -121,8 +121,8 @@ def main():
     )
     ax2.plot(alpha_n, v_cj_const_cs, label=r"Constant $c_s$ model", alpha=alpha, ls="--")
     ax2.plot(alpha_n, v_cj_const_cs_like_bag, label=r"Constant $c_s$ model with bag coeff.", alpha=alpha, ls=":")
-    ax2.plot(alpha_n, v_cj_const_cs2, label=r"Constant $c_s$ model v2", alpha=alpha, ls="--")
-    ax2.plot(alpha_n, v_cj_const_cs_full, label=r"Constant $c_s$ ThermoModel", alpha=alpha)
+    ax2.plot(alpha_n, v_cj_const_cs2, label=r"Constant $c_s$ model v2", alpha=alpha, ls="-")
+    ax2.plot(alpha_n, v_cj_const_cs_full, label=r"Constant $c_s$ ThermoModel", alpha=alpha, ls=":")
     ax2.set_xlabel(r"$\alpha_n$")
     ax2.set_ylabel("$v_{CJ}$")
 
