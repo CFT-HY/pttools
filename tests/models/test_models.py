@@ -6,12 +6,17 @@ from tests.models.base_bag import BagBaseCase
 
 
 class TestBag(BagBaseCase, unittest.TestCase):
+    model: models.BagModel
     SAVE_NEW_DATA = True
 
     @classmethod
     def setUpClass(cls, *args, **kwargs) -> None:
         model = models.BagModel(**cls.PARAMS)
         super().setUpClass(model)
+
+    def test_wn_full(self):
+        data = self.model.w_n(self.alpha_n, analytical=False)
+        self.assert_json(data, "w_n", allow_save=False)
 
 
 class TestConstCSLikeBag(BagBaseCase, unittest.TestCase):
@@ -32,6 +37,10 @@ class TestConstCSLikeBag(BagBaseCase, unittest.TestCase):
     def test_critical_temp(self):
         pass
         # super().test_critical_temp()
+
+    def test_wn_full(self):
+        data = self.model.w_n(self.alpha_n, analytical=False)
+        self.assert_json(data, "w_n", allow_save=False)
 
 
 class TestConstCSThermoLikeBag(BagBaseCase, unittest.TestCase):
@@ -57,12 +66,17 @@ class TestConstCSThermoLikeBag(BagBaseCase, unittest.TestCase):
 
 
 class TestConstCS(ModelBaseCase, unittest.TestCase):
+    model: models.ConstCSModel
     SAVE_NEW_DATA = True
 
     @classmethod
     def setUpClass(cls, *args, **kwargs) -> None:
         model = models.ConstCSModel(a_s=1.2, a_b=1.1, V_s=1.3, css2=0.4**2, csb2=1/3)
         super().setUpClass(model)
+
+    def test_wn_full(self):
+        data = self.model.w_n(self.alpha_n, analytical=False)
+        self.assert_json(data, "w_n", allow_save=False)
 
 
 class TestConstCSThermo(ModelBaseCase, unittest.TestCase):

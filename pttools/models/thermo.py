@@ -151,13 +151,13 @@ class ThermoModel(BaseModel, abc.ABC):
         return self.dp_dt(temp, phase) / self.de_dt(temp, phase)
 
     def dgp_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        return (4*self.dgs_dT(temp, phase) - self.dge_dT(temp, phase))/3
+        return 4*self.dgs_dT(temp, phase) - 3*self.dge_dT(temp, phase)
 
     def dp_dt(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""
         $\frac{dp}{dT}$
         """
-        return np.pi**2/90 * (self.dgs_dT(temp, phase) * temp**4 + 4*self.gp(temp, phase)*temp**3)
+        return np.pi**2/90 * (self.dgp_dT(temp, phase) * temp**4 + 4*self.gp(temp, phase)*temp**3)
 
     def de_dt(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""
@@ -171,7 +171,7 @@ class ThermoModel(BaseModel, abc.ABC):
         """
         # + \frac{90 V(\phi)}{\pi^2 T^4}
         self.validate_temp(temp)
-        return (4*self.gs(temp, phase) - self.ge(temp, phase))/3
+        return 4*self.gs(temp, phase) - 3*self.ge(temp, phase)
 
     # Abstract methods
 

@@ -48,19 +48,29 @@ class BagModel(AnalyticModel):
         $$\alpha_n = \frac{4}{3w_n}(V_s - V_b)$$
 
         :param wn: $w_n$, enthalpy of the symmetric phase at the nucleation temperature
-        :param allow_negative: whether to allow unphysical negative output values (not checked for this model)
+        :param allow_negative: whether to allow unphysical negative values
         """
-        # TODO: should this function have a check for the negative values?
-        self.check_wn_for_alpha_n(wn, allow_negative)
+        self.check_w_for_alpha(wn, allow_negative)
         return self.bag_wn_const / wn
+
+    def alpha_plus(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
+        r"""Transition strength parameter $\alpha_+$, :notes:`\ `, eq. 7.25.
+        $$\alpha_+ = \frac{4}{3w_+}(V_s - V_b)$$
+
+        :param wp: $w_+$, enthalpy ahead of the wall
+        :param wm: $w_-$, enthalpy behind the wall (not used)
+        :param allow_negative: whether to allow unphysical negative values
+        """
+        self.check_w_for_alpha(wp, allow_negative)
+        return self.bag_wn_const / wp
 
     def critical_temp(self, guess: float) -> float:
         r"""Critical temperature for the bag model
 
-        $$T_{cr} = \sqrt[4]{\frac{3 V_s}{a_s - a_b}}$$
-        :giese_2020:`\ ` p. 6
+        $$T_{cr} = \sqrt[4]{\frac{V_s - V_b}{a_s - a_b}}$$
+        Note that :giese_2020:`\ ` p. 6 is using a different convention.
         """
-        return (3 * self.V_s / (self.a_s - self.a_b))**0.25
+        return ((self.V_s - self.V_b) / (self.a_s - self.a_b))**0.25
 
     @staticmethod
     @numba.njit
@@ -124,7 +134,7 @@ class BagModel(AnalyticModel):
 
         For the bag model the trace anomaly $\theta$ does not depend on the enthalpy.
         """
-        return self.V_b * phase + self.V_s * (1 - phase)
+        return (self.V_b * phase + self.V_s * (1 - phase)) * np.ones_like(w)
 
     @staticmethod
     def v_shock(xi: th.FloatOrArr) -> th.FloatOrArr:
@@ -146,7 +156,7 @@ class BagModel(AnalyticModel):
     def w_n(
             self,
             alpha_n: th.FloatOrArr,
-            wn_guess: float = None,
+            wn_guess: float = 1,
             analytical: bool = True) -> th.FloatOrArr:
         r"""Enthalpy at nucleation temperature
         $$w_n = \frac{4}{3} \frac{V_s - V_b}{\alpha_n}$$

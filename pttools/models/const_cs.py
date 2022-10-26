@@ -89,7 +89,7 @@ class ConstCSModel(AnalyticModel):
         :param wn: $w_n$, enthalpy of the symmetric phase at the nucleation temperature
         :param allow_negative: whether to allow unphysical negative output values (not checked for this model)
         """
-        self.check_wn_for_alpha_n(wn, allow_negative)
+        self.check_w_for_alpha(wn, allow_negative)
         ret = 4/3 * (1/self.nu - 1/self.mu) + self.bag_wn_const/wn
         if (not allow_negative) and np.any(ret < 0):
             if np.isscalar(ret):
@@ -104,7 +104,12 @@ class ConstCSModel(AnalyticModel):
 
     def alpha_plus(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
         r"""If $\nu=4 \Leftrightarrow c_{sb}=\frac{1}{\sqrt{3}}$, $w_-$ does not affect the result."""
-        ret = (1 - 4/self.mu) - (1 - 4/self.nu)*wm/(3*wp) + self.bag_wn_const/wp
+
+        # The result is validated, so the inputs don't have to be.
+        # self.check_w_for_alpha(wp, allow_negative)
+        # self.check_w_for_alpha(wm, allow_negative)
+
+        ret = (1 - 4/self.mu)/3 - (1 - 4/self.nu)*wm/(3*wp) + self.bag_wn_const/wp
         if (not allow_negative) and np.any(ret < 0):
             raise ValueError
         return ret
@@ -200,7 +205,7 @@ class ConstCSModel(AnalyticModel):
     def w_n(
             self,
             alpha_n: th.FloatOrArr,
-            wn_guess: float = None,
+            wn_guess: float = 1,
             allow_negative: bool = False,
             analytical: bool = True) -> th.FloatOrArr:
         r"""Enthalpy at nucleation temperature

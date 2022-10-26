@@ -18,6 +18,7 @@ class ModelBaseCase(JsonTestCase, abc.ABC):
     REF_DATA_PATH: str
     TEST_ARR_SIZE: int = 10
 
+    alpha_n = np.linspace(0.05, 0.5, 10)
     temp_arr = np.linspace(1, 100, TEST_ARR_SIZE)
     w_arr1 = temp_arr**4
     w_arr2 = temp_arr**3.9
@@ -48,7 +49,7 @@ class ModelBaseCase(JsonTestCase, abc.ABC):
 
     def test_cs2(self):
         data = self.model.cs2(self.w_arr1, self.phase_arr)
-        self.assert_json(data, "cs2")
+        self.assert_json(data, "cs2", rtol=3.4e-4)
 
     def test_e(self):
         data = self.model.e(self.w_arr1, self.phase_arr)
@@ -56,7 +57,7 @@ class ModelBaseCase(JsonTestCase, abc.ABC):
 
     def test_p(self):
         data = self.model.p(self.w_arr1, self.phase_arr)
-        self.assert_json(data, "p")
+        self.assert_json(data, "p", rtol=2.3e-4)
 
     def test_s(self):
         data = self.model.s(self.w_arr1, self.phase_arr)
@@ -64,7 +65,7 @@ class ModelBaseCase(JsonTestCase, abc.ABC):
 
     def test_theta(self):
         data = self.model.theta(self.w_arr1, self.phase_arr)
-        self.assert_json(data, "theta", atol=2.3e-9)
+        self.assert_json(data, "theta", atol=1.2e-8)
 
     def test_e_temp(self):
         data = self.model.e_temp(self.temp_arr, self.phase_arr)
@@ -72,7 +73,7 @@ class ModelBaseCase(JsonTestCase, abc.ABC):
 
     def test_p_temp(self):
         data = self.model.p_temp(self.temp_arr, self.phase_arr)
-        self.assert_json(data, "p_temp")
+        self.assert_json(data, "p_temp", rtol=5e-5)
 
     def test_s_temp(self):
         data = self.model.s_temp(self.temp_arr, self.phase_arr)
@@ -87,6 +88,5 @@ class ModelBaseCase(JsonTestCase, abc.ABC):
         self.assert_json(data, "w")
 
     def test_w_n(self):
-        alpha_n = np.linspace(0.15, 0.5, 10)
-        data = self.model.w_n(alpha_n)
+        data = self.model.w_n(self.alpha_n)
         self.assert_json(data, "w_n")

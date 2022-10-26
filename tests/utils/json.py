@@ -21,13 +21,14 @@ class JsonTestCase(abc.ABC):
     EXPECT_MISSING_DATA: bool = False
     SAVE_NEW_DATA: bool = False
 
-    def assert_json(self, data: th.FloatOrArr, key: str, rtol: float = 1e-7, atol: float = 0):
+    def assert_json(self, data: th.FloatOrArr, key: str, rtol: float = 1e-7, atol: float = 0, allow_save: bool = True):
         if isinstance(data, np.ndarray):
             if data.size == 1:
                 data = data.item()
             if data.ndim == 2 and data.shape[1] == 1:
                 data = data.T
-        self.data[key] = data
+        if allow_save:
+            self.data[key] = data
         if key in self.ref_data:
             ref_data = self.ref_data[key]
             assert_allclose(data, ref_data, rtol=rtol, atol=atol)

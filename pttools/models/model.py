@@ -59,12 +59,17 @@ class Model(BaseModel, abc.ABC):
     # Concrete methods
 
     @staticmethod
-    def check_wn_for_alpha_n(wn: th.FloatOrArr, allow_negative: bool = False):
-        if np.any(wn < 0):
-            if np.isscalar(wn):
-                info = f"Got negative wn={wn} for alpha_n."
+    def check_w_for_alpha(w: th.FloatOrArr, allow_negative: bool = False):
+        if w is None or np.any(np.isnan(w)):
+            logger.error("Got w=nan for alpha.")
+            # Scalar nan cannot be tested for negativity.
+            if w is None:
+                return
+        elif np.any(w < 0):
+            if np.isscalar(w):
+                info = f"Got negative w={w} for alpha."
             else:
-                info = f"Got negative wn for alpha_n. Most problematic value: wn={np.min(wn)}"
+                info = f"Got negative w for alpha. Most problematic value: w={np.min(w)}"
             logger.error(info)
             if not allow_negative:
                 raise ValueError(info)

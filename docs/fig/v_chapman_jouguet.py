@@ -110,7 +110,7 @@ def main():
     v_cj_const_cs_like_bag = compute_model(alpha_n, model_const_cs_like_bag)
     v_cj_const_cs = compute_model(alpha_n, model_const_cs)
     v_cj_const_cs2 = compute_model(alpha_n, model_const_cs2)
-    # v_cj_const_cs_full = compute_model(alpha_n, model_const_cs_full)
+    v_cj_const_cs_full = compute_model(alpha_n, model_const_cs_full)
 
     ax2.plot(alpha_n, v_cj_bag_analytical, label="Bag model (analytical)", alpha=alpha)
     ax2.plot(alpha_n, v_cj_bag, label="Bag model", alpha=alpha, ls="--")
@@ -122,7 +122,7 @@ def main():
     ax2.plot(alpha_n, v_cj_const_cs, label=r"Constant $c_s$ model", alpha=alpha, ls="--")
     ax2.plot(alpha_n, v_cj_const_cs_like_bag, label=r"Constant $c_s$ model with bag coeff.", alpha=alpha, ls=":")
     ax2.plot(alpha_n, v_cj_const_cs2, label=r"Constant $c_s$ model v2", alpha=alpha, ls="--")
-    # ax2.plot(alpha_n, v_cj_const_cs_full, label=r"Constant $c_s$ ThermoModel", alpha=alpha)
+    ax2.plot(alpha_n, v_cj_const_cs_full, label=r"Constant $c_s$ ThermoModel", alpha=alpha)
     ax2.set_xlabel(r"$\alpha_n$")
     ax2.set_ylabel("$v_{CJ}$")
 
