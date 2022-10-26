@@ -23,9 +23,9 @@ logger = logging.getLogger(__name__)
 
 # bubble.setup_plotting()
 
-MDP = os.path.join(TEST_DATA_PATH, "model_data")
+# MDP = os.path.join(TEST_DATA_PATH, "model_data")
 GDP = TEST_FIGURE_PATH
-os.makedirs(MDP, exist_ok=True)
+# os.makedirs(MDP, exist_ok=True)
 os.makedirs(GDP, exist_ok=True)
 
 # All run parameters
