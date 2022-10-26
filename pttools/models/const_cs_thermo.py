@@ -40,13 +40,13 @@ class ConstCSThermoModel(ThermoModel):
         )
 
     def dge_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        dge_s = 30/np.pi**2 * (self.mu_s - 1) * (self.mu_s - 4) * self.a_s * self.t_ref**(self.mu_s - 4) * temp**(self.mu_s - 5)
-        dge_b = 30/np.pi**2 * (self.mu_b - 1) * (self.mu_b - 4) * self.a_b * self.t_ref**(self.mu_b - 4) * temp**(self.mu_b - 5)
+        dge_s = 30/np.pi**2 * (self.mu_s - 1) * (self.mu_s - 4) * self.a_s * self.t_ref**(4 - self.mu_s) * temp**(self.mu_s - 5)
+        dge_b = 30/np.pi**2 * (self.mu_b - 1) * (self.mu_b - 4) * self.a_b * self.t_ref**(4 - self.mu_b) * temp**(self.mu_b - 5)
         return dge_b * phase + dge_s * (1 - phase)
 
     def dgs_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        dgs_s = 45/(2*np.pi**2) * self.mu_s * (self.mu_s - 4) * self.a_s * self.t_ref**(self.mu_s - 4) * temp**(self.mu_s - 5)
-        dgs_b = 45/(2*np.pi**2) * self.mu_b * (self.mu_b - 4) * self.a_b * self.t_ref**(self.mu_b - 4) * temp**(self.mu_b - 5)
+        dgs_s = 45/(2*np.pi**2) * self.mu_s * (self.mu_s - 4) * self.a_s * self.t_ref**(4 - self.mu_s) * temp**(self.mu_s - 5)
+        dgs_b = 45/(2*np.pi**2) * self.mu_b * (self.mu_b - 4) * self.a_b * self.t_ref**(4 - self.mu_b) * temp**(self.mu_b - 5)
         return dgs_b * phase + dgs_s * (1 - phase)
 
     def ge(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
