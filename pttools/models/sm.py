@@ -54,25 +54,58 @@ class StandardModel(ThermoModel):
     GS_SPLINE = interpolate.splrep(GEFF_DATA_LOG_TEMP, GEFF_DATA_GS, s=0)
     GE_GS_RATIO_SPLINE = interpolate.splrep(GEFF_DATA_LOG_TEMP, GEFF_DATA_GE_GS_RATIO, s=0)
 
+    def __init__(
+            self,
+            g_mult_s: float = 1, g_mult_b: float = 1,
+            V_s: float = 0, V_b: float = 0,
+            name: str = None,
+            t_min: float = None, t_max: float = None,
+            restrict_to_valid: bool = True,
+            label: str = None,
+            gen_cs2: bool = True):
+
+        self.g_mult_s = g_mult_s
+        self.g_mult_b = g_mult_b
+        self.V_s = V_s
+        self.V_b = V_b
+
+        super().__init__(
+            name=name,
+            t_min=t_min, t_max=t_max,
+            restrict_to_valid=restrict_to_valid,
+            label=label,
+            gen_cs2=gen_cs2
+        )
+
     def dge_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         self.validate_temp(temp)
-        return 1/(np.log(10)*temp) * interpolate.splev(np.log10(temp), self.GE_SPLINE, der=1)
+        return 1/(np.log(10)*temp) * interpolate.splev(np.log10(temp), self.GE_SPLINE, der=1) * self.g_mult(phase) \
+            - 120/np.pi**2 * self.V_b/temp**5
 
     def dgs_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         self.validate_temp(temp)
-        return 1/(np.log(10)*temp) * interpolate.splev(np.log10(temp), self.GS_SPLINE, der=1)
+        return 1/(np.log(10)*temp) * interpolate.splev(np.log10(temp), self.GS_SPLINE, der=1) * self.g_mult(phase)
 
     def ge(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         self.validate_temp(temp)
-        return interpolate.splev(np.log10(temp), self.GE_SPLINE)
+        return interpolate.splev(np.log10(temp), self.GE_SPLINE) * self.g_mult(phase) \
+            + 30/np.pi**2 * self.V(phase) / temp**4
 
     def gs(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         self.validate_temp(temp)
-        return interpolate.splev(np.log10(temp), self.GS_SPLINE)
+        return interpolate.splev(np.log10(temp), self.GS_SPLINE) * self.g_mult(phase)
 
-    def ge_gs_ratio(self, temp: th.FloatOrArr) -> th.FloatOrArr:
+    def ge_gs_ratio(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         self.validate_temp(temp)
-        return interpolate.splev(np.log10(temp), self.GE_GS_RATIO_SPLINE)
+        if self.g_mult_s == self.g_mult_b == 1 and self.V_s == self.V_b == 0:
+            return interpolate.splev(np.log10(temp), self.GE_GS_RATIO_SPLINE)
+        return self.ge(temp, phase) / self.gs(temp, phase)
+
+    def g_mult(self, phase: th.FloatOrArr) -> th.FloatOrArr:
+        return self.g_mult_b * phase + self.g_mult_s * (1 - phase)
+
+    def V(self, phase: np.ndarray) -> np.ndarray:
+        return self.V_b * phase + self.V_s * (1 - phase)
 
 
 if __name__ == "__main__":
