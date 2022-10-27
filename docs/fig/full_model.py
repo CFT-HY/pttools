@@ -1,3 +1,5 @@
+# Todo: Could this be removed and replaced with compare_models?
+
 import matplotlib.pyplot as plt
 import numpy as np
 
