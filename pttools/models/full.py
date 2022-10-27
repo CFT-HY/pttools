@@ -86,10 +86,14 @@ class FullModel(Model):
         self.validate_temp(temp)
         return np.pi**2 / 30 * self.thermo.ge(temp, phase) * temp**4 + self.V(phase)
 
-    def gp(self, w: th.FloatOrArr, phase: th.FloatOrArr):
-        r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(w,\phi)$"""
-        temp = self.temp(w, phase)
+    def ge_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        return self.thermo.ge(temp, phase)
+
+    def gp_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         return self.thermo.gp(temp, phase)
+
+    def gs_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        return self.thermo.gs(temp, phase)
 
     def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Pressure $p(T,\phi)$

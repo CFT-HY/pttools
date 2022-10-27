@@ -3,6 +3,7 @@ import logging
 
 import numpy as np
 
+import pttools.type_hints as th
 from pttools.models.model import Model
 
 logger = logging.getLogger(__name__)
@@ -58,3 +59,12 @@ class AnalyticModel(Model, abc.ABC):
                 f"Got: a_s={self.a_s}, a_b={self.a_b}.")
 
         self.bag_wn_const: float = 4 / 3 * (self.V_s - self.V_b)
+
+    def ge_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        return 30/np.pi**2 * self.e_temp(temp, phase) / temp**4
+
+    def gs_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr):
+        return 45/(2*np.pi**2) * self.s_temp(temp, phase) / temp**4
+
+    def gp_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr):
+        return 90/np.pi**2 * self.p_temp(temp, phase) / temp**4

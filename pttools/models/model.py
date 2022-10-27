@@ -184,6 +184,21 @@ class Model(BaseModel, abc.ABC):
         """
         return self.e_temp(self.temp(w, phase), phase)
 
+    def ge(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Effective degrees of freedom for energy density, $g_{\text{eff},e}(w,\phi)$"""
+        temp = self.temp(w, phase)
+        return self.ge_temp(temp, phase)
+
+    def gs(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Effective degrees of freedom for entropy, $g_{\text{eff},s}(w,\phi)$"""
+        temp = self.temp(w, phase)
+        return self.ge_temp(temp, phase)
+
+    def gp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(w,\phi)$"""
+        temp = self.temp(w, phase)
+        return self.ge_temp(temp, phase)
+
     def p(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Pressure $p(w,\phi)$. Calls the temperature-based function.
 
@@ -252,6 +267,18 @@ class Model(BaseModel, abc.ABC):
         :param temp: temperature $T$
         :param phase: phase $\phi$
         """
+
+    @abc.abstractmethod
+    def ge_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        pass
+
+    @abc.abstractmethod
+    def gp_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        pass
+
+    @abc.abstractmethod
+    def gs_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        pass
 
     @abc.abstractmethod
     def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:

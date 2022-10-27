@@ -155,6 +155,9 @@ class ThermoModel(BaseModel, abc.ABC):
                (3 * (self.dge_dT(temp, phase)*temp + 4*self.ge(temp, phase)))
         # return self.dp_dt(temp, phase) / self.de_dt(temp, phase)
 
+    def ge_gs_ratio(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        return self.ge(temp, phase) / self.gs(temp, phase)
+
     def dgp_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         return 4*self.dgs_dT(temp, phase) - 3*self.dge_dT(temp, phase)
 
