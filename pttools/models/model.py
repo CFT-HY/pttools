@@ -55,7 +55,9 @@ class Model(BaseModel, abc.ABC):
         super().__init__(name=name, t_min=t_min, t_max=t_max, label=label, gen_cs2=gen_cs2)
 
         if t_ref <= self.t_min:
-            raise ValueError("The reference temperature has to be higher than the minimum temperature.")
+            raise ValueError(f"T_ref should be higher than T_min. Got: T_ref={t_ref}, T_min={self.t_min}")
+        if t_ref >= self.t_max:
+            raise ValueError(f"T_ref should be lower than T_max. Got: T_ref={t_ref}, T_max={self.t_max}")
 
     # Concrete methods
 
