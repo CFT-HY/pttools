@@ -144,7 +144,7 @@ class ConstCSModel(AnalyticModel):
         @numba.njit
         def cs2(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
             # Mathematical operations should be faster than conditional logic in compiled functions.
-            return phase*csb2 + (1 - phase)*css2
+            return (phase*csb2 + (1 - phase)*css2) * np.ones_like(w)
         return cs2
 
     def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
