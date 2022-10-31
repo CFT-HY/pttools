@@ -147,6 +147,10 @@ class ConstCSModel(AnalyticModel):
             return (phase*csb2 + (1 - phase)*css2) * np.ones_like(w)
         return cs2
 
+    def cs2_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        # ConstCSModel.cs2() is independent of T and w
+        return self.cs2(temp, phase)
+
     def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Energy density $e(T,\phi)$
         $$e_s = a_s (\mu - 1) T^\mu + V_s$$

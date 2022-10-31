@@ -157,6 +157,9 @@ class Model(BaseModel, abc.ABC):
         """
         raise RuntimeError("The cs2(w, phase) function has not yet been loaded")
 
+    def cs2_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        return self.cs2(self.w(temp, phase), phase)
+
     def e(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Energy density $e(w,\phi)$. Calls the temperature-based function.
 

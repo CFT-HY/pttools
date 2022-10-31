@@ -81,6 +81,11 @@ class BagModel(AnalyticModel):
         """
         return 1/3 * np.ones_like(w) * np.ones_like(phase)
 
+    @staticmethod
+    @numba.njit
+    def cs2_temp(temp, phase):
+        BagModel.cs2(temp, phase)
+
     def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Energy density as a function of temperature, :giese_2021:`\ ` eq. 15, :borsanyi_2016:`\ `, eq. S12
         The convention for $a_s$ and $a_b$ is that of :notes:`\ `, eq. 7.33.
