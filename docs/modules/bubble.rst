@@ -34,10 +34,6 @@ Physical parameters
 -------------------
 .. automodule:: pttools.bubble.physical_params
 
-Plot
-----
-.. automodule:: pttools.bubble.plot
-
 Props
 -----
 .. automodule:: pttools.bubble.props

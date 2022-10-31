@@ -10,6 +10,7 @@ Modules
 
 
 .. toctree::
+   analysis
    bubble
    models
    ssmtools
