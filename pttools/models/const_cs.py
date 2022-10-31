@@ -24,9 +24,7 @@ class ConstCSModel(AnalyticModel):
 
     .. plot:: fig/const_cs_xi_v.py
 
-    .. plot:: fig/const_cs_p.py
-
-    .. plot:: fig/const_cs_s.py
+    .. plot:: fig/const_cs.py
 
     """
     DEFAULT_LABEL = "Constant $c_s$ model"
