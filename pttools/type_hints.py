@@ -14,6 +14,8 @@ NumbaFunc = tp.Union[callable, CPUDispatcher]
 ODESolver = tp.Union[spi.OdeSolver, tp.Type[spi.OdeSolver], tp.Type[spi.odeint], str]
 
 # Numerical types
+#: Float list or a Numpy array
+FloatListOrArr = tp.Union[tp.List[float], np.ndarray]
 #: Float or a Numpy array
 FloatOrArr = tp.Union[float, np.ndarray]
 #: The return type of a Numba function that returns a float or a Numpy array

@@ -15,7 +15,6 @@ from .check import *
 from .const import *
 from .fluid import *
 # from .physical_params import *
-from .plot import *
 from .props import *
 from .quantities import *
 from .relativity import *
