@@ -6,6 +6,7 @@ from scipy.optimize import fsolve
 
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase
+from pttools.bubble.check import find_most_negative_vals
 from pttools.models.base import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -83,20 +84,19 @@ class Model(BaseModel, abc.ABC):
         """
         theta_s = self.theta(wn, Phase.SYMMETRIC)
         theta_b = self.theta(wn, Phase.BROKEN)
-        theta_diff = theta_s - theta_b
-        if np.any(theta_diff < 0):
-            if np.isscalar(wn):
-                info = f"Got: wn={wn}, theta_s={theta_s}, theta_b={theta_b}, diff: {theta_diff}."
-            else:
-                i = np.argmin(theta_diff)
-                info = f"Most problematic values: wn={wn[i]}, "\
-                       f"theta_s={theta_s[i]}, theta_b={theta_b[i]}, diff: {theta_diff[i]}."
-            msg = f"For a physical equation of state theta_+ > theta_-. {info} See p. 33 of Hindmarsh and Hijazi, 2019."
+        diff = theta_s - theta_b
+        prob_diff, prob_theta_s, prob_theta_b = find_most_negative_vals(theta_s, theta_b, diff)
+        if prob_diff is not None:
+            text = "Got" if np.isscalar(diff) else "Most problematic values"
+            msg = \
+                f"For a physical equation of state theta_+ > theta_-. {text}: " \
+                f"theta_s={prob_theta_s}, theta_b={prob_theta_b}, diff={prob_diff}. " \
+                "See p. 33 of Hindmarsh and Hijazi, 2019."
             logger.error(msg)
             if not allow_negative:
                 raise ValueError(msg)
 
-        return 4 * theta_diff / (3 * wn)
+        return 4 * diff / (3 * wn)
 
     def alpha_plus(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
         r"""Transition strength parameter $\alpha_+$
@@ -108,40 +108,19 @@ class Model(BaseModel, abc.ABC):
         """
         theta_s = self.theta(wp, Phase.SYMMETRIC)
         theta_b = self.theta(wm, Phase.BROKEN)
-        theta_diff = theta_s - theta_b
-
-        # Error handling
-        if np.any(theta_diff < 0):
-            if np.isscalar(wp) and np.isscalar(wm):
-                info = "Got:"
-                i = None
-                theta_diff_prob = theta_diff[i]
-            else:
-                i = np.argmin(theta_diff)
-                theta_diff_prob = theta_diff[i]
-                info = "Most problematic values:"
-            if np.isscalar(wp):
-                wp_prob = wp
-                theta_s_prob = theta_s
-            else:
-                wp_prob = wp[i]
-                theta_s_prob = theta_s[i]
-            if np.isscalar(wm):
-                wm_prob = wm
-                theta_b_prob = theta_b
-            else:
-                wm_prob = wm[i]
-                theta_b_prob = theta_b[i]
-
-            msg = "For a physical equation of state theta_+ > theta_-. "\
-                  f"{info} wp={wp_prob}, wm={wm_prob}, "\
-                  f"theta_s={theta_s_prob}, theta_b={theta_b_prob}, theta_diff={theta_diff_prob}. "\
+        diff = theta_s - theta_b
+        prob_diff, prob_wp, prob_wm, prob_theta_s, prob_theta_b = find_most_negative_vals(diff, wp, wm, theta_s, theta_b)
+        if prob_diff is not None:
+            text = "Got" if np.isscalar(diff) else "Most problematic values"
+            msg = "For a physical equation of state theta_+ > theta_-. " \
+                  f"{text}: wp={prob_wp}, wm={prob_wm}, " \
+                  f"theta_s={prob_theta_s}, theta_b={prob_theta_b}, theta_diff={prob_diff}. " \
                   "See p. 33 of Hindmarsh and Hijazi, 2019."
             logger.error(msg)
             if not allow_negative:
                 raise ValueError(msg)
 
-        return 4 * theta_diff / (3 * wp)
+        return 4 * diff / (3 * wp)
 
     def critical_temp(self, guess: float) -> float:
         r"""Solves for the critical temperature $T_c$, where $p_s(T_c)=p_b(T_c)$

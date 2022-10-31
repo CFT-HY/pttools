@@ -71,3 +71,19 @@ def check_wall_speed(v_wall: tp.Union[th.FloatOrArr, tp.List[float]]):
             raise ValueError("Unphysical parameter(s): at least one value outside 0 < v_wall < 1.")
     else:
         raise TypeError("v_wall must be float, list or array.")
+
+
+def find_most_negative_vals(vals: th.FloatOrArr, *args) \
+        -> tp.List[tp.Optional[float]]:
+    if vals is None or (not np.any(vals < 0)):
+        return [None]*(len(args)+1)
+    if np.isscalar(vals):
+        return [vals, *args]
+
+    i = np.argmin(vals)
+    vals = [vals[i]]
+
+    for arg in args:
+        vals.append(arg if np.isscalar(arg) else arg[i])
+
+    return vals
