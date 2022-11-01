@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 def cs2_to_mu(cs2: th.FloatOrArr) -> th.FloatOrArr:
     r"""Convert speed of sound squared $c_s^2$ to $\mu$
 
-    $$\mu = 1 + \frac{1}{\c_s^2}$$
+    $$\mu = 1 + \frac{1}{c_s^2}$$
     """
     return 1 + 1 / cs2
 
@@ -45,8 +45,8 @@ class ConstCSModel(AnalyticModel):
         r"""
         :param a_s: prefactor of $p$ in the symmetric phase. The convention is as in :notes:`\ ` eq. 7.33.
         :param a_b: prefactor of $p$ in the broken phase. The convention is as in :notes:`\ ` eq. 7.33.
-        :param css2: $c_{s,s}^2, speed of sound squared in the symmetric phase
-        :param csb2: $c_{s,b}^2, speed of sound squared in the broken phase
+        :param css2: $c_{s,s}^2$, speed of sound squared in the symmetric phase
+        :param csb2: $c_{s,b}^2$, speed of sound squared in the broken phase
         :param V_s: $V_s \equiv \epsilon_s$, the potential term of $p$ in the symmetric phase
         :param V_b: $V_b \equiv \epsilon_b$, the potential term of $p$ in the broken phase
         :param t_ref: reference temperature, usually 1 * unit of choice, e,g. 1 GeV
@@ -80,14 +80,17 @@ class ConstCSModel(AnalyticModel):
 
         self.const_cs_wn_const: float = 4/3 * (1/self.nu - 1/self.mu)
 
-    def alpha_n(self, wn: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
+    def alpha_n(self, wn: th.FloatOrArr, allow_negative: bool = False, allow_no_transition: bool = False) -> th.FloatOrArr:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
         $$\alpha_n = \frac{4}{3} \left( \frac{1}{\nu} - \frac{1}{\mu} + \frac{1}{w_n} (V_s - V_b) \right)$$
 
         :param wn: $w_n$, enthalpy of the symmetric phase at the nucleation temperature
         :param allow_negative: whether to allow unphysical negative output values (not checked for this model)
+        :param allow_no_transition: allow $w_n$ for which there is no phase transition
         """
         self.check_w_for_alpha(wn, allow_negative)
+        # self.check_p(wn, allow_fail=allow_no_transition)
+
         ret = 4/3 * (1/self.nu - 1/self.mu) + self.bag_wn_const/wn
         if (not allow_negative) and np.any(ret < 0):
             if np.isscalar(ret):

@@ -167,6 +167,7 @@ def junction_condition_deviation2(
         vp: th.FloatOrArr, wp: th.FloatOrArr, pp: th.FloatOrArr,
         vm: th.FloatOrArr, wm: th.FloatOrArr, pm: th.FloatOrArr
     ):
+    # Todo: This docstring causes the error "ERROR: Unknown target name: "p"" with Sphinx.
     r"""Deviation from the second junction condition
     $$w_- \tilde{\gamma}_-^2 \tilde{v}_-^2 + p_- - w_+ \tilde{\gamma}_+^2 \tilde{v}_+^2 - p_+$$
     :notes:`\ `, eq. 7.22

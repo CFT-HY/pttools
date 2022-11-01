@@ -77,13 +77,16 @@ class Model(BaseModel, abc.ABC):
             if not allow_negative:
                 raise ValueError(info)
 
-    def alpha_n(self, wn: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
+    def alpha_n(self, wn: th.FloatOrArr, allow_negative: bool = False, allow_no_transition: bool = False) \
+            -> th.FloatOrArr:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
         $$\alpha_n = \frac{4(\theta(w_n,\phi_s) - \theta(w_n,\phi_b)}{3w_n}$$
 
         :param wn: $w_n$, enthalpy of the symmetric phase at the nucleation temperature
-        :param allow_negative: whether to allow unphysical negative output values
+        :param allow_negative: allow unphysical negative output values
+        :param allow_no_transition: allow $w_n$ for which there is no phase transition
         """
+        # self.check_p(wn, allow_fail=allow_no_transition)
         theta_s = self.theta(wn, Phase.SYMMETRIC)
         theta_b = self.theta(wn, Phase.BROKEN)
         diff = theta_s - theta_b
@@ -101,6 +104,7 @@ class Model(BaseModel, abc.ABC):
         return 4 * diff / (3 * wn)
 
     def alpha_plus(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
+        # Todo: This docstring causes the Sphinx error "ERROR: Unknown target name: "w"."
         r"""Transition strength parameter $\alpha_+$
         $$\alpha_+ = \frac{4\Delta \theta}{3w_+} = \frac{4(\theta(w_+,\phi_s) - \theta(w_-,\phi_b)}{3w_+}$$
 
@@ -123,6 +127,24 @@ class Model(BaseModel, abc.ABC):
                 raise ValueError(msg)
 
         return 4 * diff / (3 * wp)
+
+    def check_p(self, wn: th.FloatOrArr, allow_fail: bool = False):
+        temp = self.temp(wn, Phase.SYMMETRIC)
+        self.check_p_temp(temp, allow_fail=allow_fail)
+
+    def check_p_temp(self, temp_n: th.FloatOrArr, allow_fail: bool = False):
+        """For the phase transition to happen $p_s(T_n) < p_b(T_n)$"""
+        p_s = self.p_temp(temp_n, Phase.SYMMETRIC)
+        p_b = self.p_temp(temp_n, Phase.BROKEN)
+        diff = p_b - p_s
+        prob_diff, prob_temp, prob_p_s, prob_p_b = find_most_negative_vals(diff, temp_n, p_s, p_b)
+        if prob_diff is not None:
+            text = "Got" if np.isscalar(diff) else "Most problematic values"
+            msg = \
+                f"Failed the check p_s(T_n) < p_b(T_n). {text}: " \
+                f"T_n={prob_temp}, p_s(T_n)={prob_p_s}, p_b(T_n)={prob_p_b}, diff={prob_diff}"
+            if not allow_fail:
+                raise ValueError(msg)
 
     def critical_temp(self, guess: float) -> float:
         r"""Solves for the critical temperature $T_c$, where $p_s(T_c)=p_b(T_c)$

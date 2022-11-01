@@ -43,14 +43,17 @@ class BagModel(AnalyticModel):
         if self.a_s <= self.a_b:
             raise ValueError("The bag model must have a_s > a_b for the critical temperature to be non-negative.")
 
-    def alpha_n(self, wn: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
+    def alpha_n(self, wn: th.FloatOrArr, allow_negative: bool = False, allow_no_transition: bool = False) \
+            -> th.FloatOrArr:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
         $$\alpha_n = \frac{4}{3w_n}(V_s - V_b)$$
 
         :param wn: $w_n$, enthalpy of the symmetric phase at the nucleation temperature
-        :param allow_negative: whether to allow unphysical negative values
+        :param allow_negative: allow unphysical negative values
+        :param allow_no_transition: allow $w_n$ for which there is no phase transition
         """
         self.check_w_for_alpha(wn, allow_negative)
+        # self.check_p(wn, allow_fail=allow_no_transition)
         return self.bag_wn_const / wn
 
     def alpha_plus(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
