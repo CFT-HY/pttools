@@ -7,6 +7,7 @@ from scipy.optimize import fsolve
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase
 from pttools.bubble.check import find_most_negative_vals
+from pttools.bubble.fluid import add_df_dtau
 from pttools.models.base import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -48,6 +49,7 @@ class Model(BaseModel, abc.ABC):
         self.t_ref: float = t_ref
         self.V_s: float = V_s
         self.V_b: float = V_b
+        self.__df_dtau_ptr = None
 
         #: $$\frac{90}{\pi^2} (V_b - V_s)$$
         self.critical_temp_const: float = 90 / np.pi ** 2 * (self.V_b - self.V_s)
@@ -181,6 +183,14 @@ class Model(BaseModel, abc.ABC):
 
     def cs2_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         return self.cs2(self.w(temp, phase), phase)
+
+    def df_dtau_ptr(self) -> int:
+        if self.__df_dtau_ptr is not None:
+            return self.__df_dtau_ptr
+
+        val = add_df_dtau(f"{self.name}_{id(self)}", self.cs2)
+        self.__df_dtau_ptr = val
+        return val
 
     def e(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Energy density $e(w,\phi)$. Calls the temperature-based function.
