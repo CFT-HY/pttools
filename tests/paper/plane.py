@@ -42,10 +42,10 @@ def xiv_plane(
             t_end=tau_forwards_end, n_xi=n_xi, df_dtau_ptr=df_dtau_ptr, method=method, phase=bubble.Phase.SYMMETRIC)
         # Filter out the unphysical part of the curves
         if separate_phases:
-            deflag_v_b[deflag_v_b < bubble.v_shock(deflag_xi_b, cs2=cs2_s)] = np.nan
+            deflag_v_b[deflag_v_b < bubble.v_shock(deflag_xi_b)] = np.nan
         else:
             unphysical = np.logical_and(
-                deflag_v_b < bubble.v_shock(deflag_xi_b, cs2=cs2_s),
+                deflag_v_b < bubble.v_shock(deflag_xi_b),
                 deflag_v_b > bubble.lorentz(deflag_xi_b, np.sqrt(cs2_b))
             )
             deflag_v_b[unphysical] = np.nan

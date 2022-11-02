@@ -88,6 +88,8 @@ def v_max_behind(xi: th.FloatOrArr, cs: float):
     This results in:
     $$ v_\text{max} = \frac{c_s-\xi}{c_s \xi - 1} $$
 
+    Requires that the sound speed is a constant!
+
     :param xi: $\xi$
     :param cs: $c_s$, speed of sound behind the wall (=in the broken phase)
     :return: $v_\text{max,behind}$
@@ -96,30 +98,26 @@ def v_max_behind(xi: th.FloatOrArr, cs: float):
 
 
 @numba.njit
-def _v_shock_scalar(xi: float, cs2: float):
-    # TODO: Maybe should return a nan?
-    # Squaring is used instead of a square root, as it's faster.
-    if xi**2 < cs2:
-        return 0
+def _v_shock_scalar(xi: float) -> float:
+    # const.CS0 is used only because it corresponds to the 1/sqrt(3) we need.
+    # This has nothing to do with the sound speed!
+    if xi < const.CS0:
+        return np.nan
 
-    # This generalization is wrong. The shock velocity requires significantly more complex treatment.
-    # TODO: implement v_shock
-    # return (xi**2 - cs2) / (xi * (1 - cs2))
-
-    # For bag EoS
-    return (3 * xi**2 - 1) / (2 * xi)
+    v = (3 * xi**2 - 1) / (2 * xi)
+    return v
 
 
 @numba.njit
-def _v_shock_arr(xi: np.ndarray, cs2: float):
+def _v_shock_arr(xi: np.ndarray) -> np.ndarray:
     ret = np.zeros_like(xi)
     for i in range(xi.size):
-        ret[i] = _v_shock_scalar(xi[i], cs2)
+        ret[i] = _v_shock_scalar(xi[i])
     return ret
 
 
 @numba.generated_jit(nopython=True)
-def v_shock(xi: th.FloatOrArr, cs2: float = const.CS0_2):
+def v_shock(xi: th.FloatOrArr):
     r"""
     Fluid velocity at a shock at xi.
     No shocks exist for $\xi < cs$, so returns zero.
@@ -138,14 +136,16 @@ def v_shock(xi: th.FloatOrArr, cs2: float = const.CS0_2):
     if isinstance(xi, numba.types.Array):
         return _v_shock_arr
     if isinstance(xi, float):
-        return _v_shock_scalar(xi, cs2)
+        return _v_shock_scalar(xi)
     if isinstance(xi, np.ndarray):
-        return _v_shock_arr(xi, cs2)
+        return _v_shock_arr(xi)
     raise TypeError(f"Unknown type for xi: {type(xi)}")
 
 
 @numba.njit
 def _w_shock_scalar(xi: float, w_n: float) -> float:
+    # const.CS0 is used only because it corresponds to the 1/sqrt(3) we need.
+    # This has nothing to do with the sound speed!
     if xi < const.CS0:
         return np.nan
     return w_n * (9*xi**2 - 1)/(3*(1-xi**2))

@@ -102,7 +102,7 @@ def plot_conditions(ax: plt.Axes, cs2_s: float, cs2_b: float):
     va_max_line = v_ahead_max(xi_line)
 
     # Create the shock line for deflagrations
-    v_shock_line = bubble.v_shock(xi_line, cs2=cs2_s)
+    v_shock_line = bubble.v_shock(xi_line)
     v_shock_line[v_shock_line <= 0.0] = np.nan
 
     # Create a line to show the maximum (universe frame) fluid velocity behind the wall.
