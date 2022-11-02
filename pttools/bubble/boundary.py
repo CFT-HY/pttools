@@ -82,7 +82,8 @@ def fluid_speeds_at_wall(
     Solves fluid speed boundary conditions at the wall to obtain
     the fluid speeds both in the universe (plasma frame): $v_+$ and $v_+$
     and in the wall frame: $\tilde{v}_+, \tilde{v}_-$.
-    Verified to work for the bag model only!
+
+    Bag model only!
 
     The abbreviations are: fluid speed (vf) just behind (m=minus) and just ahead (p=plus) of wall,
     in wall (_w) and plasma/universe (_p) frames.

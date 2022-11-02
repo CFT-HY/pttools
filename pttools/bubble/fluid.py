@@ -11,18 +11,23 @@ import typing as tp
 import numba
 import numpy as np
 import scipy.integrate as spi
+import scipy.optimize
 
 import pttools.type_hints as th
 from pttools import speedup
 from pttools.speedup.numba_wrapper import numbalsoda
+if tp.TYPE_CHECKING:
+    from pttools.models.model import Model
 from . import alpha
 from . import approx
 from . import bag
 from . import boundary
 from . import check
+from . import chapman_jouguet
 from . import const
 from . import props
 from . import quantities
+from . import relativity
 from . import transition
 
 logger = logging.getLogger(__name__)
@@ -59,6 +64,8 @@ differentials = speedup.DifferentialCache()
 #     "dw": dw
 # }
 
+
+# Todo: Think whether the differentials should be stored in the models.
 
 def add_df_dtau(name: str, cs2_fun: bag.CS2Fun) -> speedup.DifferentialPointer:
     """Add a new differential equation to the cache based on the given sound speed function.
@@ -263,6 +270,8 @@ def fluid_shell(
 
     Computes $\alpha_+$ from $\alpha_n$ and then calls :py:func:`fluid_shell_alpha_plus`.
 
+    Bag model only!
+
     :param v_wall: $v_\text{wall}$
     :param alpha_n: $\alpha_n$
     :param n_xi: number of $\xi$ points
@@ -283,6 +292,109 @@ def fluid_shell(
     return fluid_shell_alpha_plus(v_wall, al_p, sol_type.value, n_xi, cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr)
 
 
+def fluid_shell_deflagration(model: "Model", v_wall: float, wn: float, xi_sh: float):
+    vm_sh = props.v_shock(xi_sh)
+    wm_sh = props.w_shock(xi_sh, wn)
+
+    # Todo: the direction of the integration will probably have to be determined by trial and error.
+    v, w, xi, t = fluid_integrate_param(
+        v0=vm_sh, w0=wm_sh, xi0=xi_sh,
+        phase=boundary.Phase.SYMMETRIC.value,
+        t_end=const.T_END_DEFAULT,
+        n_xi=const.N_XI_DEFAULT,
+        df_dtau_ptr=model.df_dtau_ptr()
+    )
+    i_wall = np.argmax(xi < v_wall)
+    v = v[:i_wall]
+    w = w[:i_wall]
+
+    # Solve the boundary conditions here
+    # -> get v_center
+    v_center = None
+
+    return v, w, xi
+
+
+def fluid_shell_deflagration_solvable(params: np.ndarray, model: "Model", v_wall: float, wn: float):
+    xi_sh = params[0]
+    v, w, xi = fluid_shell_deflagration(model, v_wall, wn, xi_sh)
+    return v[-1]
+
+
+def fluid_shell_generic(
+            model: "Model",
+            v_wall: float,
+            alpha_n: float,
+            sol_type: boundary.SolutionType,
+            wn_guess: float = 1,
+            wm_guess: float = 2,
+            n_xi: int = const.N_XI_DEFAULT
+        ):
+    wn = model.w_n(alpha_n, wn_guess=wn_guess)
+    dxi = 1. / n_xi
+
+    # Detonations are the simplest case
+    if sol_type == boundary.SolutionType.DETON:
+        # Solve boundary conditions
+        wm = chapman_jouguet.wm_chapman_jouguet(model, wp=wn, wm_guess=wm_guess)
+        vm_tilde = np.sqrt(model.cs2(wm, boundary.Phase.BROKEN))
+        # Convert to the plasma frame
+        vm = relativity.lorentz(v_wall, vm_tilde)
+
+        v, w, xi, t = fluid_integrate_param(
+            v0=vm, w0=wm, xi0=v_wall,
+            phase=boundary.Phase.BROKEN.value,
+            t_end=-const.T_END_DEFAULT,
+            n_xi=const.N_XI_DEFAULT,
+            df_dtau_ptr=model.df_dtau_ptr()
+        )
+        v, w, xi, t = trim_fluid_wall_to_cs(v, w, xi, t, v_wall, sol_type)
+        w_center = w[-1]
+
+        # Revert the order of points in the arrays for concatenation
+        v = np.flip(v)
+        w = np.flip(w)
+        xi = np.flip(xi)
+
+        # Ahead of the wall the fluid is still
+        xif = np.linspace(v_wall + dxi, 1, 2)
+
+        # In the center of the bubble the fluid is still
+        xib = np.linspace(0, np.sqrt(model.cs2(w_center, boundary.Phase.BROKEN)) - dxi, 2)
+
+    elif sol_type == boundary.SolutionType.SUB_DEF:
+        xi_sh = scipy.optimize.fsolve(
+            fluid_shell_deflagration_solvable,
+            0.8,
+            args=(model, v_wall, wn)
+        )
+        v, w, xi = fluid_shell_deflagration(model, v_wall, wn, xi_sh)
+        w_center = w[0]
+
+        xif = np.linspace(xi_sh + dxi, 1, 2)
+        xib = np.linspace(0, v_wall - dxi, 2)
+    elif sol_type == boundary.SolutionType.HYBRID:
+        raise NotImplementedError
+    else:
+        raise NotImplementedError
+
+    vf = np.zeros_like(xif)
+    wf = np.ones_like(xif) * wn
+    vb = np.zeros_like(xib)
+    wb = np.ones_like(vb) * w_center
+
+    params = {
+        "vm": vm,
+        "wm": wm,
+        "wn": wn,
+        "dxi": dxi,
+    }
+    v = np.concatenate((vb, v, vf))
+    w = np.concatenate((wb, w, wf))
+    xi = np.concatenate((xib, xi, xif))
+    return v, w, xi
+
+
 @numba.njit
 def fluid_shell_alpha_plus(
         v_wall: float,
@@ -296,6 +408,8 @@ def fluid_shell_alpha_plus(
     r"""
     Finds the fluid shell profile (v, w, xi) from a given $v_\text{wall}, \alpha_+$ (at-wall strength parameter).
     When $v=0$ (behind and ahead of shell), this uses only two points.
+
+    Bag model only!
 
     :param v_wall: $v_\text{wall}$
     :param alpha_plus: $\alpha_+$
@@ -517,11 +631,9 @@ def trim_fluid_wall_to_cs(
     # TODO: should this be 0 to match with the error handling below?
     n_stop_index = -2
     # n_stop = 0
-    if not sol_type == boundary.SolutionType.SUB_DEF.value:
+    if sol_type != boundary.SolutionType.SUB_DEF.value:
         for i in range(v.size):
-            # TODO: set a valid value for this
-            phase = -1
-            if v[i] <= 0 or xi[i] ** 2 <= cs2_fun(w[i], phase):
+            if v[i] <= 0 or xi[i] ** 2 <= cs2_fun(w[i], boundary.Phase.BROKEN):
                 n_stop_index = i
                 break
 

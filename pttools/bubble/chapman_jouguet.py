@@ -30,20 +30,6 @@ logger = logging.getLogger(__name__)
 #     return wn_solvable
 
 
-def wm_solvable(params: np.ndarray, model: "Model", wn: float):
-    wm_param = params[0]
-    vm2 = model.cs2(wm_param, Phase.BROKEN)
-    vm = np.sqrt(vm2)
-    ap = model.alpha_plus(wp=wn, wm=wm_param, allow_negative=True)
-    vp = boundary.v_plus(vm, ap, sol_type=SolutionType.DETON)
-    # print(f"vm={vm}, ap={ap}, vp={vp}")
-
-    # What was this?
-    # return wm_param - wn * vp / (1 - vp**2) * (1 - vm2) / vm
-
-    return wm_param**2 + wn * gamma2(vp) * vp * (vm2 - 1)
-
-
 # def chapman_jouguet_solvable(params: np.ndarray, model: "Model", wn: float, wm_guess: float):
 #     v_wall = params[0]
 #     vm_guess = np.sqrt(model.cs2(wm_guess, Phase.BROKEN))
@@ -189,13 +175,7 @@ def v_chapman_jouguet(
     # Get wm
     # For detonations wn = wp
 
-    wm_sol = fsolve(wm_solvable, x0=np.array([wm_guess]), args=(model, wn), full_output=True)
-    wm: float = wm_sol[0][0]
-    if wm_sol[2] != 1:
-        logger.error(
-            f"w_- solution was not found for alpha_n={alpha_n}, model={model.name}, wm_guess={wm_guess}. "
-            f"Using w_-={wm}. "
-            f"Reason: {wm_sol[3]}")
+    wm = wm_chapman_jouguet(model, wp=wn, wm_guess=2)
 
     # Compute vp with wp, wm & vm
     vm_cj2 = model.cs2(wm, Phase.BROKEN)
@@ -235,3 +215,32 @@ def v_chapman_jouguet_const_cs_reference(alpha_n: np.ndarray, model: "ConstCSMod
     for i, a in enumerate(ap):
         ret[i] = boundary.v_plus(model.csb, a, sol_type=SolutionType.DETON)
     return ret
+
+
+def wm_chapman_jouguet(model: "Model", wp: float, wm_guess: float = 2) -> float:
+    """Get $w_-$ for a transition that has $\tilde{v}_-=c_{s-}(w_-)
+    such as a Chapman-Jouguet detonation or a Chapman-Jouguet deflagration.
+    """
+    wm_sol = fsolve(wm_solvable_chapman_jouguet, x0=np.array([wm_guess]), args=(model, wp), full_output=True)
+    wm: float = wm_sol[0][0]
+    if wm_sol[2] != 1:
+        logger.error(
+            f"w_- solution was not found for w_+={wp}, model={model.name}, wm_guess={wm_guess}. "
+            f"Using w_-={wm}. "
+            f"Reason: {wm_sol[3]}")
+    return wm
+
+
+def wm_solvable_chapman_jouguet(params: np.ndarray, model: "Model", wp: float):
+    wm_param = params[0]
+    # This assumes that the solution is a Chapman-Jouguet one
+    vm2 = model.cs2(wm_param, Phase.BROKEN)
+    vm = np.sqrt(vm2)
+    ap = model.alpha_plus(wp=wp, wm=wm_param, allow_negative=True)
+    vp = boundary.v_plus(vm, ap, sol_type=SolutionType.DETON)
+    # print(f"vm={vm}, ap={ap}, vp={vp}")
+
+    # What was this?
+    # return wm_param - wn * vp / (1 - vp**2) * (1 - vm2) / vm
+
+    return wm_param ** 2 + wp * gamma2(vp) * vp * (vm2 - 1)
