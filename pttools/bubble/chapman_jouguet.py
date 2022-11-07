@@ -69,7 +69,7 @@ def wm_vw(wm_guess: float, model: "Model", vp: float, wp: float):
 def v_chapman_jouguet_solvable(params: np.ndarray, model: "Model", wp: float, wm_guess: float = None):
     vp = params[0]
     # If a guess is not provided, use the bag model value.
-    wm_guess = boundary.wm_junction(vp, wp, const.CS0) if wm_guess is None else wm_guess
+    wm_guess = boundary.w2_junction(vp, wp, const.CS0) if wm_guess is None else wm_guess
     wm = wm_vw(wm_guess, model, vp, wp)
     vm = boundary.v_minus(vp, model.alpha_plus(wp, wm))
     cs = model.cs2(wm, Phase.BROKEN)

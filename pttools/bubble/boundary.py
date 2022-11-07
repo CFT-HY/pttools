@@ -93,7 +93,7 @@ def fluid_speeds_at_wall(
     :param v_wall: $v_\text{wall}$
     :param alpha_p: $\alpha_+$
     :param sol_type: solution type
-    :return: $v_+,v_-,\tilde{v}_+,\tilde{v}_-$
+    :return: $\tilde{v}_+,\tilde{v}_-,v_+,v_-$
     """
     if v_wall > 1:
         with numba.objmode:
@@ -139,79 +139,90 @@ def junction_conditions_deviation(vp: th.FloatOrArr, vm: th.FloatOrArr, ap: th.F
     return dev
 
 
-def junction_conditions_solvable(params: np.ndarray, vp: float, wp: float, model: "Model"):
+def junction_conditions_solvable(params: np.ndarray, model: "Model", v1: float, w1: float, phase1: float, phase2: float):
     """Get the deviation from both boundary conditions simultaneously."""
-    vm = params[0]
-    wm = params[1]
+    v2 = params[0]
+    w2 = params[1]
     return np.array([
-        junction_condition_deviation1(vp, wp, vm, wm),
+        junction_condition_deviation1(v1, w1, v2, w2),
         junction_condition_deviation2(
-            vp, wp, model.p(wp, Phase.SYMMETRIC),
-            vm, wm, model.p(wm, Phase.BROKEN)
+            v1, w1, model.p(w1, phase1),
+            v2, w2, model.p(w2, phase2)
         )
     ])
 
 
 @numba.njit
 def junction_condition_deviation1(
-        vp: th.FloatOrArr, wp: th.FloatOrArr,
-        vm: th.FloatOrArr, wm: th.FloatOrArr) -> th.FloatOrArr:
+        v1: th.FloatOrArr, w1: th.FloatOrArr,
+        v2: th.FloatOrArr, w2: th.FloatOrArr) -> th.FloatOrArr:
     r"""Deviation from the first junction condition
     $$w_- \tilde{\gamma}_-^2 \tilde{v}_- - w_+ \tilde{\gamma}_-^2 \tilde{v}_+$$
     :notes:`\ `, eq. 7.22
     """
-    return wm * relativity.gamma2(vm) * vm - wp * relativity.gamma2(vp) * vp
+    return w1 * relativity.gamma2(v1) * v1 - w2 * relativity.gamma2(v2) * v2
 
 
 @numba.njit
 def junction_condition_deviation2(
-        vp: th.FloatOrArr, wp: th.FloatOrArr, pp: th.FloatOrArr,
-        vm: th.FloatOrArr, wm: th.FloatOrArr, pm: th.FloatOrArr
+        v1: th.FloatOrArr, w1: th.FloatOrArr, p1: th.FloatOrArr,
+        v2: th.FloatOrArr, w2: th.FloatOrArr, p2: th.FloatOrArr
     ):
     # Todo: This docstring causes the error "ERROR: Unknown target name: "p"" with Sphinx.
     r"""Deviation from the second junction condition
-    $$w_- \tilde{\gamma}_-^2 \tilde{v}_-^2 + p_- - w_+ \tilde{\gamma}_+^2 \tilde{v}_+^2 - p_+$$
+    $$w_1 \tilde{\gamma}_1^2 \tilde{v}_1^2 + p_1 - w_2 \tilde{\gamma}_2^2 \tilde{v}_2^2 - p_2$$
     :notes:`\ `, eq. 7.22
     """
-    return wm * relativity.gamma2(vm) * vm**2 + pm - wp * relativity.gamma2(vp) * vp**2 + pp
-
-
-# def boundary_conditions_shock():
-#     pass
+    return w1 * relativity.gamma2(v1) * v1**2 + p1 - w2 * relativity.gamma2(v2) * v2**2 - p2
 
 
 def solve_junction(
-        v_wall: float,
-        wn: float,
-        sol_type: SolutionType,
         model: "Model",
-        vm_guess: float = None,
-        wm_guess: float = None) -> tp.Tuple[float, float, float, float]:
-    """Model-independent
-
-    TODO not used yet
+        v1: float,
+        w1: float,
+        phase1: Phase,
+        phase2: Phase,
+        v2_guess: float,
+        w2_guess: float,
+        allow_failure: bool = False) -> tp.Tuple[float, float]:
+    """Model-independent junction condition solver
+    Velocities are in the wall frame!
     """
-    if sol_type == SolutionType.SUB_DEF.value:
-        sol = fsolve(
-            junction_conditions_solvable,
-            x0=np.array([vm_guess, wm_guess]),
-            args=(v_wall, wn, model),
-            full_output=True
-        )
-    elif sol_type == SolutionType.DETON.value:
-        raise NotImplementedError
-        # sol_shock = scipy.optimize.fsolve(boundary_conditions_shock, args=)
-    else:
-        raise NotImplementedError("Boundary solving for hybrids has not been implemented yet.")
-    vm = sol[0][0]
-    wm = sol[0][1]
+    # if w2_guess is None:
+    #     from . import chapman_jouguet
+    #     w2_guess = 0.5*chapman_jouguet.wm_chapman_jouguet(model, w1)
+    # if v2_guess is None:
+    #     v2_guess = 0.5*np.sqrt(model.cs2(w2_guess, Phase.BROKEN))
+    # w2_guess = 1.05*w1
+    # v2_guess = 0.05
+    # vp, vm, vp_tilde, vm_tilde = fluid_speeds_at_wall(v1, alpha_p=model.alpha_n(w1), sol_type=SolutionType.DETON)
+    # v2_guess = vm_tilde
+    # w2_guess = 1.234 * w1
+    # v2_guess = 0.818
+    # print("v2_guess, w2_guess, w1:", v2_guess, w2_guess, w1)
+    # v2_guess = 0.1
+    # wn = 1 -> wm = 1.25
+    # Enthalpy ratio wm = 1.234 wn
+
+    sol = fsolve(
+        junction_conditions_solvable,
+        x0=np.array([v2_guess, w2_guess]),
+        args=(model, v1, w1, phase1, phase2),
+        full_output=True
+    )
+    v2 = sol[0][0]
+    w2 = sol[0][1]
     if sol[2] != 1:
-        logger.error(
-            f"Boundary solution was not found for v_wall={v_wall}, wn={wn}, model={model.name}. " +
-            f"Using v_-={vm}, w_-={wm}. " +
-            ("" if (0 < vm < 1) else "This is unphysical!") +
-            f"Reason: {sol[3]}")
-    return v_wall, wn, vm, wm
+        msg = \
+            f"Boundary solution was not found for v1={v1}, w1={w1}, model={model.name}. " + \
+            f"Using v2={v2}, w2={w2}. " + \
+            ("" if (0 < v2 < 1) else "This is unphysical!") + \
+            f"Reason: {sol[3]}"
+        logger.error(msg)
+        if not allow_failure:
+            logger.error("ERROR")
+            # raise ValueError(msg)
+    return v2, w2
 
 
 @numba.njit
@@ -424,12 +435,12 @@ def v_plus_off_limits(vp: float, ap: float, sol_type: SolutionType):
     return vp > v_plus_limit(ap, sol_type)
 
 
-def wm_junction(vp: th.FloatOrArr, wp: th.FloatOrArr, vm: th.FloatOrArr) -> th.FloatOrArr:
+def w2_junction(v1: th.FloatOrArr, w1: th.FloatOrArr, v2: th.FloatOrArr) -> th.FloatOrArr:
     r"""Get $w_-$ from the junction condition 1
-    $$w_- = w_+ \frac{\tilde{\gamma}_+^2 \tilde{v}_+}{\tilde{\gamma}_-^2 \tilde{v}_-}$$
+    $$w_1 = w_2 \frac{\tilde{\gamma}_2^2 \tilde{v}_2}{\tilde{\gamma}_1^2 \tilde{v}_1}$$
     :notes:`\ `, eq. 7.22
     """
-    wm = wp * relativity.gamma2(vp) * vp / (relativity.gamma2(vm) * vm)
+    wm = w1 * relativity.gamma2(v1) * v1 / (relativity.gamma2(v2) * v2)
     # wm > wp for detonations
     # if wm > wp:
     #     logger.warning(f"wm_junction resulted in wm > wp: vp={vp}, wp={wp}, vm={vm}, wm={wm}")

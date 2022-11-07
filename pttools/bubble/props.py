@@ -143,7 +143,7 @@ def v_shock(xi: th.FloatOrArr):
 
 
 @numba.njit
-def _w_shock_scalar(xi: float, w_n: float) -> float:
+def _wm_shock_scalar(xi: float, w_n: float) -> float:
     # const.CS0 is used only because it corresponds to the 1/sqrt(3) we need.
     # This has nothing to do with the sound speed!
     if xi < const.CS0:
@@ -152,16 +152,16 @@ def _w_shock_scalar(xi: float, w_n: float) -> float:
 
 
 @numba.njit
-def _w_shock_arr(xi: np.ndarray, w_n: float) -> np.ndarray:
+def _wm_shock_arr(xi: np.ndarray, w_n: float) -> np.ndarray:
     ret = np.zeros_like(xi)
     for i in range(xi.size):
-        ret[i] = _w_shock_scalar(xi[i], w_n)
+        ret[i] = _wm_shock_scalar(xi[i], w_n)
     return ret
 
 
 # This cannot be vectorized with numba.vectorize due to the keyword argument, but guvectorize might work
 @numba.generated_jit(nopython=True)
-def w_shock(xi: th.FloatOrArr, w_n: float = 1.) -> th.FloatOrArrNumba:
+def wm_shock(xi: th.FloatOrArr, w_n: float = 1.) -> th.FloatOrArrNumba:
     r"""
     Fluid enthalpy at a shock at $\xi$.
     No shocks exist for $\xi < cs$, so returns nan.
@@ -174,15 +174,61 @@ def w_shock(xi: th.FloatOrArr, w_n: float = 1.) -> th.FloatOrArrNumba:
     :return: $w_\text{shock}$, fluid enthalpy at the shock
     """
     if isinstance(xi, numba.types.Float):
-        return _w_shock_scalar
+        return _wm_shock_scalar
     if isinstance(xi, numba.types.Array):
         if not xi.ndim:
-            return _w_shock_scalar
-        return _w_shock_arr
+            return _wm_shock_scalar
+        return _wm_shock_arr
     if isinstance(xi, float):
-        return _w_shock_scalar(xi, w_n)
+        return _wm_shock_scalar(xi, w_n)
     if isinstance(xi, np.ndarray):
         if not xi.ndim:
-            return _w_shock_scalar(xi.item(), w_n)
-        return _w_shock_arr(xi, w_n)
+            return _wm_shock_scalar(xi.item(), w_n)
+        return _wm_shock_arr(xi, w_n)
+    raise TypeError(f"Unknown type for xi: {type(xi)}")
+
+
+@numba.njit
+def _wp_shock_scalar(xi: float, wm: float) -> float:
+    # const.CS0 is used only because it corresponds to the 1/sqrt(3) we need.
+    # This has nothing to do with the sound speed!
+    if xi < const.CS0:
+        return np.nan
+    return wm * (3*(1-xi**2))/(9*xi**2 - 1)
+
+
+@numba.njit
+def _wp_shock_arr(xi: np.ndarray, wm: float) -> np.ndarray:
+    ret = np.zeros_like(xi)
+    for i in range(xi.size):
+        ret[i] = _wp_shock_scalar(xi[i], wm)
+    return ret
+
+
+# This cannot be vectorized with numba.vectorize due to the keyword argument, but guvectorize might work
+@numba.generated_jit(nopython=True)
+def wp_shock(xi: th.FloatOrArr, wm: float) -> th.FloatOrArrNumba:
+    r"""
+    Fluid enthalpy in front of a shock at $\xi$.
+    No shocks exist for $\xi < cs$, so returns nan.
+    Derived from :gw_pt_ssm:`\ ` eq. B.18.
+
+    $$ w_n(\xi) = w_{-,sh} \frac{3(1 - \xi^2)}{9\xi^2 - 1} $$
+
+    :param xi: $\xi$
+    :param wm: $w_{-,sh}$, enthalpy behind the shock
+    :return: $w_{+,sh}$, enthalpy in front of the shock
+    """
+    if isinstance(xi, numba.types.Float):
+        return _wp_shock_scalar
+    if isinstance(xi, numba.types.Array):
+        if not xi.ndim:
+            return _wp_shock_scalar
+        return _wp_shock_arr
+    if isinstance(xi, float):
+        return _wp_shock_scalar(xi, wm)
+    if isinstance(xi, np.ndarray):
+        if not xi.ndim:
+            return _wp_shock_scalar(xi.item(), wm)
+        return _wp_shock_arr(xi, wm)
     raise TypeError(f"Unknown type for xi: {type(xi)}")

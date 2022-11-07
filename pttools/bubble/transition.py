@@ -44,17 +44,16 @@ def identify_solution_type(v_wall: float, alpha_n: float, exit_on_error: bool = 
     return sol_type
 
 
-# -----
-# TODO: Untested
-# -----
-
 def identify_solution_type_beyond_bag(
+        model: "Model",
         v_wall: float,
         alpha_n: float,
-        model: "Model") -> boundary.SolutionType:
+        wn_guess: float,
+        wm_guess: float
+        ) -> boundary.SolutionType:
 
-    v_cj = v_chapman_jouguet(model, alpha_n)
-    wn = model.w_n(alpha_n)
+    wn = model.w_n(alpha_n, wn_guess)
+    v_cj = v_chapman_jouguet(model, alpha_n, wn_guess=wn, wm_guess=wm_guess)
 
     if is_surely_detonation(v_wall, v_cj):
         return boundary.SolutionType.DETON
@@ -90,14 +89,20 @@ def cannot_be_detonation(v_wall: float, v_cj: float) -> float:
     return v_wall < v_cj
 
 
-def max_cs2_inside_def(model: "Model", wn: float = 1) -> float:
+def max_cs2_inside_def(model: "Model", wn: float = 1, allow_fail: bool = False) -> float:
     r"""If the wall speed $v_w > c_s(w) \forall w \in [0, w_n]$,
     then the wall is certainly hypersonic and therefore the solution cannot be a subsonic deflagration."""
     def func(w):
         return -model.cs2(w, boundary.Phase.BROKEN)
 
-    sol = fminbound(func, x1=0, x2=wn)
-    return sol[0]
+    sol = fminbound(func, x1=0, x2=wn, full_output=True)
+    cs2 = -sol[1]
+    if sol[2]:
+        msg = f"Could not find max_cs2_inside_def. Using wn={wn}, max_cs2_inside_def={cs2}. Iterations: {sol[3]}"
+        logger.error(msg)
+        if not allow_fail:
+            raise RuntimeError(msg)
+    return cs2
 
 
 def min_cs2_inside_sub_def(model: "Model", wn: float = 1) -> float:

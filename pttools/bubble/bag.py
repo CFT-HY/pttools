@@ -14,6 +14,8 @@ from pttools.speedup import CPUDispatcher
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase
 from . import const
+# from . import relativity
+# from . import boundary
 
 logger = logging.getLogger(__name__)
 
@@ -197,6 +199,23 @@ def get_w(
     # think about an fsolve?
     theta = theta_b * phase + theta_s * (1.0 - phase)
     return 4/3 * (e - theta)
+
+
+# def junction_bag(v1: th.FloatOrArr, w1: th.FloatOrArr, V1: th.FloatOrArr, V2: th.FloatOrArr, greater_branch: bool) -> tp.Tuple[th.FloatOrArr, th.FloatOrArr]:
+#     v2 = v2_tilde_bag(v1, w1, V1, V2, greater_branch)
+#     return v2, boundary.w2_junction(v1, w1, v2)
+#
+#
+# def v2_tilde_bag(v1: th.FloatOrArr, w1: th.FloatOrArr, V1: th.FloatOrArr, V2: th.FloatOrArr, greater_branch: bool) -> th.FloatOrArr:
+#     """This doesn't seem to work properly for the greater branch."""
+#     a = v1 + ((V2 - V1)/w1 + 1/4) / (relativity.gamma2(v1) * v1)
+#     sign = 1 if greater_branch else -1
+#     ret = (2*a + sign * np.sqrt(4*a**2 - 3)) / 3
+#     if np.any(ret < 0) and not greater_branch:
+#         logger.error(f"Got v2_tilde={ret} with the lesser branch. Should you select the greater branch?")
+#     if np.any(ret > 1) and greater_branch:
+#         logger.error(f"Got v2_tilde={ret} with the greater branch. Should you select the lesser branch?")
+#     return ret
 
 
 def theta_bag(w: th.FloatOrArr, phase: th.IntOrArr, alpha_n: th.FloatOrArr) -> th.FloatOrArr:

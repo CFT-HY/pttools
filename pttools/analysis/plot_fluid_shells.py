@@ -90,7 +90,7 @@ def plot_fluid_shells(
         n_cs = int(np.floor(const.CS0 * Np))
         n_sh = xi.size - 2
         v_sh = props.v_shock(xi_even)
-        w_sh = props.w_shock(xi_even)
+        w_sh = props.wm_shock(xi_even)
 
         # n_wall = find_v_index(xi, v_wall)
         # n_cs = np.int(np.floor(cs0*Np))

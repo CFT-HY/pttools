@@ -292,58 +292,174 @@ def fluid_shell(
     return fluid_shell_alpha_plus(v_wall, al_p, sol_type.value, n_xi, cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr)
 
 
-def fluid_shell_deflagration(model: "Model", v_wall: float, wn: float, xi_sh: float):
+def fluid_shell_deflagration(model: "Model", v_wall: float, wn: float, xi_sh: float, allow_failure: bool = False):
+    if np.isnan(v_wall) or v_wall < 0 or v_wall > 1 or np.isnan(xi_sh) or xi_sh < 0 or xi_sh > 1:
+        logger.error("Got invalid parameters for fluid_shell_deflagration")
+        nan_arr = np.array([np.nan])
+        return nan_arr, nan_arr, nan_arr, np.nan, np.nan
     vm_sh = props.v_shock(xi_sh)
-    wm_sh = props.w_shock(xi_sh, wn)
+    wm_sh = props.wm_shock(xi_sh, wn)
+    # print("v, w, xi", vm_sh, wm_sh, xi_sh)
 
-    # Todo: the direction of the integration will probably have to be determined by trial and error.
+    logger.info(f"Integrating deflagration with v_wall={v_wall}, wn={wn}, xi_sh={xi_sh}")
+    # Todo: In more advanced models,
+    #  the direction of the integration will probably have to be determined by trial and error.
     v, w, xi, t = fluid_integrate_param(
         v0=vm_sh, w0=wm_sh, xi0=xi_sh,
-        phase=boundary.Phase.SYMMETRIC.value,
+        phase=boundary.Phase.SYMMETRIC,
         t_end=const.T_END_DEFAULT,
         n_xi=const.N_XI_DEFAULT,
-        df_dtau_ptr=model.df_dtau_ptr()
+        df_dtau_ptr=model.df_dtau_ptr(),
+        # method="RK45"
     )
-    i_wall = np.argmax(xi < v_wall)
-    v = v[:i_wall]
-    w = w[:i_wall]
+    v = np.flip(v)
+    w = np.flip(w)
+    xi = np.flip(xi)
+    # print(np.array([v, w, xi]).T)
+    i_min_xi = np.argmin(xi)
+    i_wall = np.argmax(xi[i_min_xi:] >= v_wall) + i_min_xi
+    # If the curve goes vertical before xi_wall is reached
+    if i_wall == i_min_xi:
+        nan_arr = np.array([np.nan])
+        return nan_arr, nan_arr, nan_arr, np.nan, np.nan
+    v = v[i_wall:]
+    w = w[i_wall:]
+    xi = xi[i_wall:]
 
-    # Solve the boundary conditions here
-    # -> get v_center
-    v_center = None
+    vp = v[0]
+    wp = w[0]
+    vp_tilde = relativity.lorentz(vp, v_wall)
+    if np.isnan(vp_tilde) or vp_tilde < 0:
+        logger.warning("Got vp_tilde < 0")
+        # nan_arr = np.array([np.nan])
+        # return nan_arr, nan_arr, nan_arr, np.nan, np.nan
 
-    return v, w, xi
+    vm_tilde, wm = boundary.solve_junction(
+        model, vp_tilde, wp,
+        boundary.Phase.SYMMETRIC, boundary.Phase.BROKEN,
+        v2_guess=v_wall, w2_guess=wp,
+        allow_failure=allow_failure
+    )
+    vm = relativity.lorentz(vm_tilde, v_wall)
+
+    return v, w, xi, vm, wm
+
+
+def fluid_shell_deflagration2(
+        model: "Model",
+        v_wall: float, alpha_n: float, w_center: float,
+        allow_failure: bool = False) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, float, float]:
+    # Use bag model as the starting guess
+    # alpha_plus_bag = alpha.find_alpha_plus(v_wall, alpha_n, n_xi=const.N_XI_DEFAULT)
+    # vp_tilde_bag, vm_tilde_bag, vp_bag, vm_bag = boundary.fluid_speeds_at_wall(
+    #     v_wall, alpha_p=alpha_plus_bag, sol_type=boundary.SolutionType.SUB_DEF)
+    # wp_bag = boundary.w2_junction(vm_tilde_bag, w_center, vp_tilde_bag)
+    # vp_tilde_bag, wp_bag = bag.junction_bag(v_wall, w_center, 0, 1, greater_branch=False)
+
+    # The boundary conditions are symmetric with respect to the indices,
+    # and can therefore be used with the opposite indices.
+    Vp = 1
+    Vm = 0
+    alpha_minus = 4*(Vm - Vp)/(3*w_center)
+    vp_tilde_bag = boundary.v_minus(vp=v_wall, ap=alpha_minus, sol_type=boundary.SolutionType.SUB_DEF)
+    wp_bag = boundary.w2_junction(v_wall, w_center, vp_tilde_bag)
+
+    logger.debug(f"v_wall={v_wall}, w_center={w_center}, vp_tilde_bag={vp_tilde_bag}, wp_bag={wp_bag}")
+    if vp_tilde_bag < 0 or vp_tilde_bag > 1 or wp_bag < w_center:
+        raise ValueError
+
+    if np.isnan(vp_tilde_bag) or np.isnan(wp_bag):
+        nan_arr = np.array([np.nan])
+        return nan_arr, nan_arr, nan_arr, np.nan, np.nan
+
+    # Solve the boundary conditions
+    vp_tilde, wp = boundary.solve_junction(
+        model, v_wall, w_center,
+        boundary.Phase.BROKEN, boundary.Phase.SYMMETRIC,
+        v2_guess=vp_tilde_bag, w2_guess=wp_bag,
+        allow_failure=allow_failure
+    )
+    # Todo: think about this minus sign. Is it physical? Is it necessary?
+    vp = relativity.lorentz(vp_tilde, -v_wall)
+    logger.debug(f"vp_tilde={vp_tilde}, vp={vp}, wp={wp}")
+
+    # Integrate from the wall to the shock
+    v, w, xi, t = fluid_integrate_param(
+        v0=vp, w0=wp, xi0=v_wall,
+        phase=boundary.Phase.SYMMETRIC,
+        t_end=const.T_END_DEFAULT,
+        n_xi=const.N_XI_DEFAULT,
+        df_dtau_ptr=model.df_dtau_ptr(),
+        # method="RK45"
+    )
+    mu = props.v_shock(xi)
+    i_shock = np.argmax(v <= mu)
+    v = v[:i_shock]
+    w = w[:i_shock]
+    xi = xi[:i_shock]
+
+    xi_sh = xi[-1]
+    wm_sh = w[-1]
+    wn = props.wp_shock(xi_sh, wm_sh)
+
+    return v, w, xi, wn, xi_sh
 
 
 def fluid_shell_deflagration_solvable(params: np.ndarray, model: "Model", v_wall: float, wn: float):
     xi_sh = params[0]
-    v, w, xi = fluid_shell_deflagration(model, v_wall, wn, xi_sh)
-    return v[-1]
+    v, w, xi, vm, wm = fluid_shell_deflagration(model, v_wall, wn, xi_sh, allow_failure=True)
+    return vm
+
+
+def fluid_shell_deflagration2_solvable(params: np.ndarray, model: "Model", v_wall: float, alpha_n: float, wn: float):
+    w_center = params[0]
+    v, w, xi, wn_estimate, xi_sh = fluid_shell_deflagration2(model, v_wall, alpha_n, w_center, allow_failure=True)
+    return wn_estimate - wn
 
 
 def fluid_shell_generic(
             model: "Model",
             v_wall: float,
             alpha_n: float,
-            sol_type: boundary.SolutionType,
+            sol_type: tp.Optional[boundary.SolutionType],
             wn_guess: float = 1,
             wm_guess: float = 2,
             n_xi: int = const.N_XI_DEFAULT
         ):
+    if sol_type is None or sol_type is boundary.SolutionType.UNKNOWN:
+        sol_type = transition.identify_solution_type_beyond_bag(model, v_wall, alpha_n)
+    if sol_type is boundary.SolutionType.UNKNOWN:
+        msg = \
+            f"Could not determine solution type automatically for model={model}, v_wall={v_wall}, alpha_n={alpha_n}. " \
+            "Please choose it manually."
+        logger.error(msg)
+        raise ValueError(msg)
+
+    v_cj = chapman_jouguet.v_chapman_jouguet(model, alpha_n, wn_guess, wm_guess)
     wn = model.w_n(alpha_n, wn_guess=wn_guess)
     dxi = 1. / n_xi
 
     # Detonations are the simplest case
     if sol_type == boundary.SolutionType.DETON:
-        # Solve boundary conditions
-        wm = chapman_jouguet.wm_chapman_jouguet(model, wp=wn, wm_guess=wm_guess)
-        vm_tilde = np.sqrt(model.cs2(wm, boundary.Phase.BROKEN))
+        if transition.cannot_be_detonation(v_wall, v_cj):
+            raise ValueError(f"Too slow wall speed for a detonation: v_wall={v_wall}, v_cj={v_cj}")
+        # Use bag model as the starting point
+        vp_tilde_bag, vm_tilde_bag, vp_bag, vm_bag = boundary.fluid_speeds_at_wall(
+            v_wall, alpha_p=alpha_n, sol_type=boundary.SolutionType.DETON)
+        wm_bag = boundary.w2_junction(v1=vp_tilde_bag, w1=wn, v2=vm_tilde_bag)
+        # Solve junction conditions
+        vm_tilde, wm = boundary.solve_junction(
+            model,
+            v1=v_wall, w1=wn,
+            phase1=boundary.Phase.SYMMETRIC, phase2=boundary.Phase.BROKEN,
+            v2_guess=vm_tilde_bag, w2_guess=wm_bag)
+
         # Convert to the plasma frame
         vm = relativity.lorentz(v_wall, vm_tilde)
 
         v, w, xi, t = fluid_integrate_param(
             v0=vm, w0=wm, xi0=v_wall,
-            phase=boundary.Phase.BROKEN.value,
+            phase=boundary.Phase.BROKEN,
             t_end=-const.T_END_DEFAULT,
             n_xi=const.N_XI_DEFAULT,
             df_dtau_ptr=model.df_dtau_ptr()
@@ -363,32 +479,59 @@ def fluid_shell_generic(
         xib = np.linspace(0, np.sqrt(model.cs2(w_center, boundary.Phase.BROKEN)) - dxi, 2)
 
     elif sol_type == boundary.SolutionType.SUB_DEF:
-        xi_sh = scipy.optimize.fsolve(
-            fluid_shell_deflagration_solvable,
-            0.8,
-            args=(model, v_wall, wn)
+        if transition.cannot_be_sub_def(v_wall, model, wn):
+            raise ValueError("Invalid parameters for a subsonic deflagration")
+
+        # xi_sh_guess = 1.05*np.sqrt(transition.max_cs2_inside_def(model, wn))
+        # sol = scipy.optimize.fsolve(
+        #     fluid_shell_deflagration_solvable,
+        #     xi_sh_guess,
+        #     args=(model, v_wall, wn),
+        #     full_output=True
+        # )
+        # xi_sh = sol[0][0]
+        # if sol[2] != 1:
+        #     logger.error(
+        #         f"Deflagration solution was not found for model={model}, v_wall={v_wall}, alpha_n={alpha_n}. "
+        #         f"Using xi_sh={xi_sh}. Reason: {sol[3]}"
+        #     )
+        # v, w, xi, _, w_center = fluid_shell_deflagration(model, v_wall, wn, xi_sh)
+
+        wm_guess = wn
+        sol = scipy.optimize.fsolve(
+            fluid_shell_deflagration2_solvable,
+            wm_guess,
+            args=(model, v_wall, alpha_n, wn),
+            full_output=True
         )
-        v, w, xi = fluid_shell_deflagration(model, v_wall, wn, xi_sh)
-        w_center = w[0]
+        w_center = sol[0][0]
+        if sol[2] != 1:
+            logger.error(
+                f"Deflagration solution was not found for model={model}, v_wall={v_wall}, alpha_n={alpha_n}. "
+                f"Using w_center={w_center}. Reason: {sol[3]}"
+            )
+        v, w, xi, wn, xi_sh = fluid_shell_deflagration2(model, v_wall, alpha_n, w_center)
+        print(np.array([v, w, xi]).T)
+        print("wn, xi_sh", wn, xi_sh)
 
         xif = np.linspace(xi_sh + dxi, 1, 2)
         xib = np.linspace(0, v_wall - dxi, 2)
     elif sol_type == boundary.SolutionType.HYBRID:
         raise NotImplementedError
     else:
-        raise NotImplementedError
+        raise RuntimeError("This case should not be encountered")
 
     vf = np.zeros_like(xif)
     wf = np.ones_like(xif) * wn
     vb = np.zeros_like(xib)
     wb = np.ones_like(vb) * w_center
 
-    params = {
-        "vm": vm,
-        "wm": wm,
-        "wn": wn,
-        "dxi": dxi,
-    }
+    # params = {
+    #     "vm": vm,
+    #     "wm": wm,
+    #     "wn": wn,
+    #     "dxi": dxi,
+    # }
     v = np.concatenate((vb, v, vf))
     w = np.concatenate((wb, w, wf))
     xi = np.concatenate((xib, xi, xif))
@@ -547,7 +690,7 @@ def fluid_shell_params(
 
     xi_even = np.linspace(1 / Np, 1 - 1 / Np, Np)
     v_sh = props.v_shock(xi_even)
-    w_sh = props.w_shock(xi_even)
+    w_sh = props.wm_shock(xi_even)
 
     n_wall = props.find_v_index(xi, v_wall)
     n_cs = int(np.floor(const.CS0 * Np))
@@ -610,7 +753,7 @@ def trim_fluid_wall_to_cs(
         cs2_fun: bag.CS2Fun = bag.cs2_bag) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""
     Picks out fluid variable arrays $(v, w, \xi, t)$ which are definitely behind
-    the wall for deflagration and hybrid.
+    the wall for detonation and hybrid.
     Also removes negative fluid speeds and $\xi \leq c_s$, which might be left by
     an inaccurate integration.
     If the wall is within about 1e-16 of cs, rounding errors are flagged.
