@@ -7,6 +7,7 @@ import numpy as np
 
 import pttools.type_hints as th
 from pttools.models.analytic import AnalyticModel
+from pttools.models.bag import BagModel
 
 logger = logging.getLogger(__name__)
 
@@ -143,6 +144,10 @@ class ConstCSModel(AnalyticModel):
         # These become compile-time constants
         css2 = self.css2
         csb2 = self.csb2
+
+        # Using the BagModel cs2 saves us from having to compile additional Numba functions
+        if css2 == 1/3 and csb2 == 1/3:
+            return BagModel.cs2
 
         @numba.njit
         def cs2(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
