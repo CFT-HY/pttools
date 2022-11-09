@@ -119,16 +119,12 @@ def _v_shock_arr(xi: np.ndarray) -> np.ndarray:
 @numba.generated_jit(nopython=True)
 def v_shock(xi: th.FloatOrArr):
     r"""
-    Fluid velocity at a shock at xi.
-    No shocks exist for $\xi < cs$, so returns zero.
-    $$ v_{sh}(\xi) = \frac{\xi^2 - c_s^2}{\xi (1 - c_s^2)} $$
-
-    For the bag equation of state ($c_s = \frac{1}{3}$) this gives eq. B.17 of :gw_pt_ssm:`\ `.
-
+    Fluid velocity at a shock at $\xi$.
+    No shocks exist for $\xi < \frac{1}{\sqrt{3}}$, so this returns zero.
     $$ v_{sh}(\xi) = \frac{3 \xi^2 - 1}{2\xi} $$
+    :gw_pt_ssm:`\ `, eq. B.17.
 
     :param xi: $\xi$
-    :param cs2: $c_s^2$
     :return: $v_{sh}$
     """
     if isinstance(xi, numba.types.Float):
