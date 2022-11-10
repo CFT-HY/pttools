@@ -248,7 +248,7 @@ def _v_minus_scalar(
 
     if debug and sqrt_arg < 0:
         with numba.objmode:
-            logger.error(f"Cannot compute vm, got imaginary result with: vp={vp}, ap={ap}, in sqrt: {sqrt_arg}")
+            logger.error("Cannot compute vm, got imaginary result with: vp=%s, ap=%s in sqrt_arg=%s", vp, ap, sqrt_arg)
         return np.nan
 
     # Finding the solution type automatically does not work in the general case
@@ -344,7 +344,7 @@ def _v_plus_scalar(vm: float, ap: float, sol_type: SolutionType, debug: bool) ->
     if b == -1 and ap > 1/3:
         if debug:
             with numba.objmode:
-                logger.error(f"v_plus would be negative for a deflagration with ap > 1/3, got ap={ap}")
+                logger.error("v_plus would be negative for a deflagration with ap > 1/3, got ap=%s", ap)
         return np.nan
 
     return (0.5 / (1 + ap)) * (x + b * np.sqrt(x ** 2 + 4. * ap ** 2 + (8. / 3.) * ap - (4. / 3.)))
