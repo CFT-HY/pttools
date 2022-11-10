@@ -29,10 +29,7 @@ def njit(func: callable = None, **kwargs):
 
     May cause segmentation faults with profilers.
     """
-    # print(func, kwargs)
-
     def _njit(func2):
-        # print("Jitting", func2)
         return numba.njit(func2, **options.NUMBA_OPTS, **kwargs)
     if func is None:
         return _njit

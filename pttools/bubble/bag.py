@@ -19,13 +19,9 @@ from . import const
 
 logger = logging.getLogger(__name__)
 
-CS2Fun = tp.Union[tp.Callable[[th.FloatOrArr, th.FloatOrArr], th.FloatOrArr], CPUDispatcher]
-CS2FunScalarSig = numba.double(numba.double, numba.double)
-CS2FunScalarPtr = numba.types.CPointer(CS2FunScalarSig)
-
 
 @numba.njit
-def adiabatic_index(
+def adiabatic_index_bag(
         w: th.FloatOrArr,
         phase: th.IntOrArr,
         theta_s: th.FloatOrArr,
@@ -39,7 +35,7 @@ def adiabatic_index(
     :param theta_b: $\theta$ for broken phase, behind bubble (phase = 1)
     :return: adiabatic index
     """
-    return w / get_e(w, phase, theta_s, theta_b)
+    return w / e_bag(w, phase, theta_s, theta_b)
 
 
 @numba.njit
@@ -64,7 +60,7 @@ def cs2_bag_scalar(w: float, phase: float) -> float:
     return const.CS0_2
 
 
-@numba.cfunc(CS2FunScalarSig)
+@numba.cfunc(th.CS2FunScalarSig)
 def cs2_bag_scalar_cfunc(w: float, phase: float) -> float:
     return const.CS0_2
 
@@ -99,7 +95,7 @@ def cs2_bag(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArrNumba:
 
 
 @numba.njit
-def get_e(
+def e_bag(
         w: th.FloatOrArr,
         phase: th.IntOrArr,
         theta_s: th.FloatOrArr,
@@ -116,11 +112,11 @@ def get_e(
     :param theta_b: $\theta$ for broken phase, behind bubble (phase = 1)
     :return: energy density $e$
     """
-    return w - get_p(w, phase, theta_s, theta_b)
+    return w - p_bag(w, phase, theta_s, theta_b)
 
 
 @numba.njit
-def get_p(
+def p_bag(
         w: th.FloatOrArr,
         phase: th.IntOrArr,
         theta_s: th.FloatOrArr,
@@ -155,7 +151,7 @@ def _get_phase_arr(xi: np.ndarray, v_w: float) -> np.ndarray:
 
 
 @numba.generated_jit(nopython=True)
-def get_phase(xi: th.FloatOrArr, v_w: float) -> th.FloatOrArr:
+def get_phase_bag(xi: th.FloatOrArr, v_w: float) -> th.FloatOrArr:
     r"""
     Returns array indicating phase of system.
     in symmetric phase $(\xi > v_w)$, phase = 0
@@ -177,7 +173,7 @@ def get_phase(xi: th.FloatOrArr, v_w: float) -> th.FloatOrArr:
 
 
 @numba.njit
-def get_w(
+def w_bag(
         e: th.FloatOrArr,
         phase: th.IntOrArr,
         theta_s: th.FloatOrArr,

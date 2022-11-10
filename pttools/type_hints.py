@@ -1,7 +1,9 @@
 """Type hints for simplifying and unifying PTtools code"""
 
+import ctypes
 import typing as tp
 
+import numba
 import numpy as np
 import scipy.integrate as spi
 
@@ -22,3 +24,8 @@ FloatOrArr = tp.Union[float, np.ndarray]
 FloatOrArrNumba = tp.Union[float, np.ndarray, NumbaFunc]
 #: Integer or a Numpy array
 IntOrArr = tp.Union[int, np.ndarray]
+
+CS2Fun = tp.Union[tp.Callable[[FloatOrArr, FloatOrArr], FloatOrArr], CPUDispatcher]
+CS2FunScalarSig = numba.double(numba.double, numba.double)
+CS2FunScalarPtr = numba.types.CPointer(CS2FunScalarSig)
+CS2CFunc = ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double)

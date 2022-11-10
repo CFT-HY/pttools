@@ -22,8 +22,7 @@ from pttools.bubble import props
 from pttools.bubble import transition
 
 
-CS2CFunc = ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double)
-CS2CACHE: tp.Dict[bag.CS2FunScalarPtr, CS2CFunc] = {}
+CS2CACHE: tp.Dict[th.CS2FunScalarPtr, th.CS2CFunc] = {}
 find_alpha_plus_scalar_lock = threading.Lock()
 
 
@@ -96,6 +95,8 @@ def alpha_n_max_detonation(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     Maximum allowed value of $\alpha_n$ for a detonation with wall speed $v_\text{wall}$.
     Same as :func:`alpha_plus_max_detonation`, since for a detonation $\alpha_n = \alpha_+$,
     as there is no fluid movement outside the wall.
+
+    Bag model only!
 
     :param v_wall: $v_\text{wall}$
     :return: $\alpha_{n,\max,\text{detonation}}$
@@ -220,7 +221,7 @@ def find_alpha_n(
         alpha_p: float,
         sol_type: boundary.SolutionType = boundary.SolutionType.UNKNOWN,
         n_xi: int = const.N_XI_DEFAULT,
-        cs2_fun: bag.CS2Fun = bag.cs2_bag,
+        cs2_fun: th.CS2Fun = bag.cs2_bag,
         df_dtau_ptr: speedup.DifferentialPointer = fluid.DF_DTAU_BAG_PTR) -> float:
     r"""
     Calculates the transition strength parameter at the nucleation temperature,
@@ -264,13 +265,13 @@ def _find_alpha_plus_optimizer(
         sol_type: boundary.SolutionType,
         n_xi: int,
         alpha_n_given: float,
-        cs2_fun: bag.CS2Fun,
+        cs2_fun: th.CS2Fun,
         df_dtau_ptr: speedup.DifferentialPointer) -> float:
     """find_alpha_plus() is looking for the zeroes of this function: $\alpha_n = \alpha_{n,\text{given}}$."""
     return find_alpha_n(v_wall, alpha.item(), sol_type, n_xi, cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr) - alpha_n_given
 
 
-def _find_alpha_plus_scalar_cs2_converter(cs2_fun_ptr: bag.CS2FunScalarPtr) -> CS2CFunc:
+def _find_alpha_plus_scalar_cs2_converter(cs2_fun_ptr: th.CS2FunScalarPtr) -> th.CS2CFunc:
     r"""Converter for getting a $c_s^2$ ctypes function from a pointer
 
     This is a rather ugly hack. There should be a better way to call a function by a pointer!
@@ -289,7 +290,7 @@ def _find_alpha_plus_scalar(
         v_wall: float,
         alpha_n_given: float,
         n_xi: int,
-        cs2_fun_ptr: bag.CS2FunScalarPtr,
+        cs2_fun_ptr: th.CS2FunScalarPtr,
         df_dtau_ptr: speedup.DifferentialPointer,
         xtol: float) -> float:
     """
@@ -325,7 +326,7 @@ def _find_alpha_plus_arr(
         v_wall: np.ndarray,
         alpha_n_given: float,
         n_xi: int,
-        cs2_fun_ptr: bag.CS2FunScalarPtr,
+        cs2_fun_ptr: th.CS2FunScalarPtr,
         df_dtau_ptr: speedup.DifferentialPointer,
         xtol: float) -> np.ndarray:
     ap = np.zeros_like(v_wall)
@@ -339,7 +340,7 @@ def find_alpha_plus(
         v_wall: th.FloatOrArr,
         alpha_n_given: float,
         n_xi: int = const.N_XI_DEFAULT,
-        cs2_fun_ptr: bag.CS2FunScalarPtr = bag.CS2_BAG_SCALAR_PTR,
+        cs2_fun_ptr: th.CS2FunScalarPtr = bag.CS2_BAG_SCALAR_PTR,
         df_dtau_ptr: speedup.DifferentialPointer = fluid.DF_DTAU_BAG_PTR,
         xtol: float = const.FIND_ALPHA_PLUS_TOL) -> th.FloatOrArrNumba:
     r"""

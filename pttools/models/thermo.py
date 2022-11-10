@@ -5,7 +5,6 @@ import numba
 import numpy as np
 import scipy.interpolate
 
-from pttools.bubble.bag import CS2Fun
 from pttools.bubble.boundary import Phase
 from pttools.models.base import BaseModel
 import pttools.type_hints as th
@@ -66,7 +65,7 @@ class ThermoModel(BaseModel, abc.ABC):
             return False
         return True
 
-    def gen_cs2(self) -> CS2Fun:
+    def gen_cs2(self) -> th.CS2Fun:
         cs2_s = self.cs2_full(self.GEFF_DATA_TEMP, Phase.SYMMETRIC)
         cs2_b = self.cs2_full(self.GEFF_DATA_TEMP, Phase.BROKEN)
         self.validate_cs2(cs2_s, "cs2_s")

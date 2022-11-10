@@ -51,7 +51,7 @@ class TestBag(unittest.TestCase):
 
     def test_e(self):
         ref_data = np.array([1.175, 1.2125, 1.25, 1.2875, 1.325])
-        data = bubble.get_e(self.w_arr, self.phase, self.theta_s, self.theta_b)
+        data = bubble.e_bag(self.w_arr, self.phase, self.theta_s, self.theta_b)
         utils.assert_allclose(data, ref_data)
 
     # def test_junction_bag_lesser(self):
@@ -68,7 +68,7 @@ class TestBag(unittest.TestCase):
 
     def test_p(self):
         ref_data = np.array([-0.275, -0.2625, -0.25, -0.2375, -0.225])
-        data = bubble.get_p(self.w_arr, self.phase, self.theta_s, self.theta_b)
+        data = bubble.p_bag(self.w_arr, self.phase, self.theta_s, self.theta_b)
         utils.assert_allclose(data, ref_data)
 
     # def test_phase_scalar(self):
@@ -84,8 +84,8 @@ class TestBag(unittest.TestCase):
 
     def test_w(self):
         ref_data = np.array([0.9, 0.95, 1, 1.05, 1.1])
-        e = bubble.get_e(self.w_arr, self.phase, self.theta_s, self.theta_b)
-        data = bubble.get_w(e, self.phase, self.theta_s, self.theta_b)
+        e = bubble.e_bag(self.w_arr, self.phase, self.theta_s, self.theta_b)
+        data = bubble.w_bag(e, self.phase, self.theta_s, self.theta_b)
         utils.assert_allclose(data, ref_data)
 
 

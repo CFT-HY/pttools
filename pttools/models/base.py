@@ -3,7 +3,6 @@ import logging
 
 import numpy as np
 
-from pttools.bubble.bag import CS2Fun
 import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
@@ -40,7 +39,7 @@ class BaseModel(abc.ABC):
         if self.t_max <= self.t_min:
             raise ValueError(f"T_max ({self.t_max}) should be higher than T_min ({self.t_min}).")
 
-        self.cs2: CS2Fun = self.gen_cs2() if gen_cs2 else None
+        self.cs2: th.CS2Fun = self.gen_cs2() if gen_cs2 else None
 
     # Concrete methods
 
@@ -94,5 +93,5 @@ class BaseModel(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def gen_cs2(self) -> CS2Fun:
+    def gen_cs2(self) -> th.CS2Fun:
         r"""This function should generate a Numba-jitted $c_s^2$ function for the model."""

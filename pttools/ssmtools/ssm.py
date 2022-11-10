@@ -124,9 +124,9 @@ def A2_e_conserving_file(
     e_n = e_xi_lt1[-1]
 
     def fun(x):
-        return x - bubble.get_w(e_n, 0, alpha * (0.75 * x))
+        return x - bubble.w_bag(e_n, 0, alpha * (0.75 * x))
 
-    w_n0 = bubble.get_w(e_n, 0, alpha * e_n)  # Correct only in Bag, probably good enough
+    w_n0 = bubble.w_bag(e_n, 0, alpha * e_n)  # Correct only in Bag, probably good enough
     w_n = fsolve(fun, w_n0)[0]  # fsolve returns array, want float
     lam = (e_xi_lt1 - e_n) / w_n
     logger.debug(f"Initial guess w_n0: {w_n0}, final {w_n}")

@@ -67,7 +67,7 @@ differentials = speedup.DifferentialCache()
 
 # Todo: Think whether the differentials should be stored in the models.
 
-def add_df_dtau(name: str, cs2_fun: bag.CS2Fun) -> speedup.DifferentialPointer:
+def add_df_dtau(name: str, cs2_fun: th.CS2Fun) -> speedup.DifferentialPointer:
     """Add a new differential equation to the cache based on the given sound speed function.
 
     :param name: the name of the function
@@ -78,7 +78,7 @@ def add_df_dtau(name: str, cs2_fun: bag.CS2Fun) -> speedup.DifferentialPointer:
     return differentials.add(name, func)
 
 
-def gen_df_dtau(cs2_fun: bag.CS2Fun) -> speedup.Differential:
+def gen_df_dtau(cs2_fun: th.CS2Fun) -> speedup.Differential:
     r"""Generate a function for the differentials of fluid variables $(v, w, \xi)$ in parametric form.
     The parametrised differential equation is as in :gw_pt_ssm:`\ ` eq. B.14-16:
 
@@ -261,8 +261,8 @@ def fluid_shell(
         v_wall: float,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
-        cs2_fun: bag.CS2Fun = bag.cs2_bag_scalar,
-        cs2_fun_ptr: bag.CS2FunScalarPtr = bag.CS2_BAG_SCALAR_PTR,
+        cs2_fun: th.CS2Fun = bag.cs2_bag_scalar,
+        cs2_fun_ptr: th.CS2FunScalarPtr = bag.CS2_BAG_SCALAR_PTR,
         df_dtau_ptr: speedup.DifferentialPointer = DF_DTAU_BAG_PTR) \
         -> tp.Union[tp.Tuple[float, float, float], tp.Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     r"""
@@ -586,7 +586,7 @@ def fluid_shell_alpha_plus(
         sol_type: boundary.SolutionType = boundary.SolutionType.UNKNOWN,
         n_xi: int = const.N_XI_DEFAULT,
         w_n: float = 1.,
-        cs2_fun: bag.CS2Fun = bag.cs2_bag,
+        cs2_fun: th.CS2Fun = bag.cs2_bag,
         df_dtau_ptr: speedup.DifferentialPointer = DF_DTAU_BAG_PTR,
         sol_type_fun: callable = None) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
     r"""
@@ -791,7 +791,7 @@ def trim_fluid_wall_to_cs(
         v_wall: th.FloatOrArr,
         sol_type: boundary.SolutionType,
         dxi_lim: float = const.DXI_SMALL,
-        cs2_fun: bag.CS2Fun = bag.cs2_bag) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        cs2_fun: th.CS2Fun = bag.cs2_bag) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""
     Picks out fluid variable arrays $(v, w, \xi, t)$ which are definitely behind
     the wall for detonation and hybrid.
