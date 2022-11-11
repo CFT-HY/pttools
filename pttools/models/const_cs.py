@@ -1,6 +1,7 @@
 r"""Constant sound speed model, aka. $\mu, \nu$ model"""
 
 import logging
+import typing as tp
 
 import numba
 import numpy as np
@@ -170,6 +171,15 @@ class ConstCSModel(AnalyticModel):
         e_s = (self.mu - 1) * self.a_s * temp**self.mu + self.V_s
         e_b = (self.nu - 1) * self.a_b * temp**self.nu + self.V_b
         return e_b * phase + e_s * (1 - phase)
+
+    def export(self) -> tp.Dict[str, any]:
+        return {
+            **super().export(),
+            "css2": self.css2,
+            "csb2": self.csb2,
+            "mu": self.mu,
+            "nu": self.nu
+        }
 
     def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Pressure $p(T,\phi)$

@@ -1,5 +1,7 @@
 import abc
+import datetime
 import logging
+import typing as tp
 
 import numpy as np
 
@@ -85,6 +87,17 @@ class BaseModel(abc.ABC):
                 if self.restrict_to_valid:
                     temp[above] = np.nan
         return temp
+
+    def export(self) -> tp.Dict[str, any]:
+        """User-created model classes should extend this"""
+        return {
+            "name": self.name,
+            "label": self.label,
+            "datetime": datetime.datetime.now(),
+            "t_min": self.t_min,
+            "t_max": self.t_max,
+            "restrict_to_valid": self.restrict_to_valid
+        }
 
     # Abstract methods
 

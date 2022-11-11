@@ -1,5 +1,6 @@
 import abc
 import logging
+import typing as tp
 
 import numpy as np
 from scipy.optimize import fsolve
@@ -199,6 +200,14 @@ class Model(BaseModel, abc.ABC):
         :param phase: phase $\phi$
         """
         return self.e_temp(self.temp(w, phase), phase)
+
+    def export(self) -> tp.Dict[str, any]:
+        return {
+            **super().export(),
+            "t_ref": self.t_ref,
+            "V_s": self.V_s,
+            "V_b": self.V_b
+        }
 
     def ge(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Effective degrees of freedom for energy density, $g_{\text{eff},e}(w,\phi)$"""

@@ -1,5 +1,6 @@
 import abc
 import logging
+import typing as tp
 
 import numpy as np
 
@@ -59,6 +60,13 @@ class AnalyticModel(Model, abc.ABC):
                 f"Got: a_s={self.a_s}, a_b={self.a_b}.")
 
         self.bag_wn_const: float = 4 / 3 * (self.V_s - self.V_b)
+
+    def export(self) -> tp.Dict[str, any]:
+        return {
+            **super().export(),
+            "a_s": self.a_s,
+            "a_b": self.a_b
+        }
 
     def ge_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         return 30/np.pi**2 * self.e_temp(temp, phase) / temp**4

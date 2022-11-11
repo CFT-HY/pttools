@@ -18,6 +18,8 @@ numbalsoda; sys_platform != "win32"
 # then you may have to downgrade llvmlite to 0.32.1
 # https://github.com/rapidsai/cuml/issues/2389#issuecomment-642645437
 numpy
+orjson
+plotly
 scipy
 # TBB can be used to speed up Numba threading
 # https://numba.pydata.org/numba-doc/latest/user/threading-layer.html#which-threading-layers-are-available

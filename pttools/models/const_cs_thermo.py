@@ -1,8 +1,10 @@
+import typing as tp
+
+import numpy as np
+
 import pttools.type_hints as th
 from .thermo import ThermoModel
 from . import const_cs
-
-import numpy as np
 
 
 class ConstCSThermoModel(ThermoModel):
@@ -30,6 +32,10 @@ class ConstCSThermoModel(ThermoModel):
         self.V_s = V_s
         self.V_b = V_b
         self.t_ref = t_ref
+        self.css2 = css2
+        self.csb2 = csb2
+        self.css = np.sqrt(css2)
+        self.csb= np.sqrt(csb2)
         self.mu_s = const_cs.cs2_to_mu(css2)
         self.mu_b = const_cs.cs2_to_mu(csb2)
         # TODO: Generate reference values for g0 here (corresponding to a_s, a_b)
@@ -54,6 +60,16 @@ class ConstCSThermoModel(ThermoModel):
         dgs_s = 45/(2*np.pi**2) * self.mu_s * (self.mu_s - 4) * self.a_s * self.t_ref**(4 - self.mu_s) * temp**(self.mu_s - 5)
         dgs_b = 45/(2*np.pi**2) * self.mu_b * (self.mu_b - 4) * self.a_b * self.t_ref**(4 - self.mu_b) * temp**(self.mu_b - 5)
         return dgs_b * phase + dgs_s * (1 - phase)
+
+    def export(self) -> tp.Dict[str, any]:
+        return {
+            **super().export(),
+            "t_ref": self.t_ref,
+            "css2": self.css2,
+            "csb2": self.csb2,
+            "mu_s": self.mu_s,
+            "mu_b": self.mu_b
+        }
 
     def ge(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         ge_s = 30/np.pi**2 * (

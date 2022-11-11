@@ -14,5 +14,6 @@ dependencies:
   - matplotlib
   - numba
   - numpy
+  - plotly
   - scipy
   - tbb

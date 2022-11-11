@@ -71,6 +71,11 @@ class ModelBaseCase(JsonTestCase, abc.ABC):
         data = self.model.e_temp(self.temp_arr, self.phase_arr)
         self.assert_json(data, "e_temp")
 
+    def test_export(self):
+        self.model.export()
+        # self.assertIn("name", data)
+        # self.assertin("label", data)
+
     def test_p_temp(self):
         data = self.model.p_temp(self.temp_arr, self.phase_arr)
         self.assert_json(data, "p_temp", rtol=5e-5)

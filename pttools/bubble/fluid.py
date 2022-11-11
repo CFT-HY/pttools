@@ -467,8 +467,8 @@ def fluid_shell_generic(
         raise ValueError(msg)
 
     failed = False
-    v_cj = chapman_jouguet.v_chapman_jouguet(model, alpha_n, wn_guess, wm_guess)
     wn = model.w_n(alpha_n, wn_guess=wn_guess)
+    v_cj = chapman_jouguet.v_chapman_jouguet(model, alpha_n, wn, wm_guess)
     dxi = 1. / n_xi
     logger.info(f"Solved model parameters: v_cj={v_cj}, wn={wn}")
 
@@ -513,7 +513,7 @@ def fluid_shell_generic(
         #  the direction of the integration will probably have to be determined by trial and error.
 
         if reverse:
-            xi_sh_guess = 1.05*np.sqrt(transition.max_cs2_inside_def(model, wn))
+            xi_sh_guess = 1.1*np.sqrt(transition.max_cs2_inside_def(model, wn))
             sol = scipy.optimize.fsolve(
                 fluid_shell_deflagration_reverse_solvable,
                 xi_sh_guess,
