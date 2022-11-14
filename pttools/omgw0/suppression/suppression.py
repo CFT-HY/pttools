@@ -85,6 +85,8 @@ def get_suppression_factor(vw,alpha, method =METHOD_DEFAULT):
             supp_factor = interpolate.griddata((vws_sim, alphas_sim), ssm_sup, (vv_n, aa_n), method='linear')[0]
 
         elif method == "ext_constant":
+            if alpha < min(alphas_sim_ext):
+                supp_factor = 1
 
             supp_factor = interpolate.griddata((vws_sim_ext, alphas_sim_ext), ssm_sup_ext, (vv_n, aa_n), method='linear')[0]
 
