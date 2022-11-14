@@ -9,7 +9,7 @@ import typing as tp
 
 import numba
 import numpy as np
-import scipy.optimize
+from scipy.optimize import fsolve
 
 import pttools.type_hints as th
 from pttools import speedup
@@ -312,7 +312,7 @@ def _find_alpha_plus_scalar(
         cs2_fun = _find_alpha_plus_scalar_cs2_converter(cs2_fun_ptr)
 
         # This returns np.float64
-        ret: float = scipy.optimize.fsolve(
+        ret: float = fsolve(
             _find_alpha_plus_optimizer,
             ap_initial_guess,
             args=(v_wall, sol_type, n_xi, alpha_n_given, cs2_fun, df_dtau_ptr),

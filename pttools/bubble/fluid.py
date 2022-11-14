@@ -11,7 +11,7 @@ import typing as tp
 import numba
 import numpy as np
 import scipy.integrate as spi
-import scipy.optimize
+from scipy.optimize import fsolve
 
 import pttools.type_hints as th
 from pttools import speedup
@@ -515,7 +515,7 @@ def fluid_shell_generic(
 
         if reverse:
             xi_sh_guess = 1.1*np.sqrt(transition.max_cs2_inside_def(model, wn))
-            sol = scipy.optimize.fsolve(
+            sol = fsolve(
                 fluid_shell_deflagration_reverse_solvable,
                 xi_sh_guess,
                 args=(model, v_wall, wn),
@@ -531,7 +531,7 @@ def fluid_shell_generic(
             v, w, xi, _, w_center = fluid_shell_deflagration_reverse(model, v_wall, wn, xi_sh)
         else:
             wm_guess = 0.3*wn
-            sol = scipy.optimize.fsolve(
+            sol = fsolve(
                 fluid_shell_deflagration_solvable,
                 wm_guess,
                 args=(model, v_wall, alpha_n, wn),
