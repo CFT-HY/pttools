@@ -28,6 +28,7 @@ from . import const
 from . import props
 from . import quantities
 from . import relativity
+from . import shock
 from . import transition
 
 logger = logging.getLogger(__name__)
@@ -299,8 +300,8 @@ def fluid_shell_deflagration_reverse(model: "Model", v_wall: float, wn: float, x
         return nan_arr, nan_arr, nan_arr, np.nan, np.nan
 
     # Solve boundary conditions at the shock
-    vm_sh = props.v_shock(xi_sh)
-    wm_sh = props.wm_shock(xi_sh, wn)
+    vm_sh = shock.v_shock_bag(xi_sh)
+    wm_sh = shock.wm_shock_bag(xi_sh, wn)
 
     # Integrate from the shock to the wall
     logger.info(
@@ -409,7 +410,7 @@ def fluid_shell_deflagration(
         # method="RK45"
     )
     # Trim the integration to the shock
-    v_shock = props.v_shock(xi)
+    v_shock = shock.v_shock_bag(xi)
     i_shock = np.argmax(v <= v_shock)
     if i_shock == 0:
         if np.max(xi) < const.CS0:
@@ -426,7 +427,7 @@ def fluid_shell_deflagration(
 
     xi_sh = xi[-1]
     wm_sh = w[-1]
-    wn = props.wp_shock(xi_sh, wm_sh)
+    wn = shock.wp_shock_bag(xi_sh, wm_sh)
 
     return v, w, xi, wn, xi_sh
 
@@ -658,7 +659,7 @@ def fluid_shell_alpha_plus(
         v, w, xi, t = fluid_integrate_param(
             v0=vfp_p, w0=wp, xi0=v_wall, t_end=t_end_refine, n_xi=n_xi, df_dtau_ptr=df_dtau_ptr)
         v, w, xi, t = trim_fluid_wall_to_shock(v, w, xi, t, sol_type)
-        v, w, xi = props.shock_zoom_last_element(v, w, xi)
+        v, w, xi = shock.shock_zoom_last_element(v, w, xi)
         # Now complete to xi = 1
         vf = np.concatenate((v, vf))
         # enthalpy
@@ -730,8 +731,8 @@ def fluid_shell_params(
     # vmax = max(v)
 
     xi_even = np.linspace(1 / Np, 1 - 1 / Np, Np)
-    v_sh = props.v_shock(xi_even)
-    w_sh = props.wm_shock(xi_even)
+    v_sh = shock.v_shock_bag(xi_even)
+    w_sh = shock.wm_shock_bag(xi_even)
 
     n_wall = props.find_v_index(xi, v_wall)
     n_cs = int(np.floor(const.CS0 * Np))
@@ -861,7 +862,7 @@ def trim_fluid_wall_to_shock(
     # n_shock = 0
     if sol_type != boundary.SolutionType.DETON.value:
         for i in range(v.size):
-            if v[i] <= props.v_shock(xi[i]):
+            if v[i] <= shock.v_shock_bag(xi[i]):
                 n_shock_index = i
                 break
 
@@ -873,7 +874,7 @@ def trim_fluid_wall_to_shock(
                 "v[0] < v_shock(xi[0]). "
                 "sol_type: {}, xi[0] = {}, v[0] = {}, v_sh(xi[0]) = {}. "
                 "Shock profile has only one element. Fix implemented by adding one extra point.").format(
-                sol_type, xi[0], v[0], props.v_shock(xi[0])
+                sol_type, xi[0], v[0], shock.v_shock_bag(xi[0])
             ))
         n_shock = 1
     else:

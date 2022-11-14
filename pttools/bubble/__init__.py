@@ -18,4 +18,5 @@ from .fluid import *
 from .props import *
 from .quantities import *
 from .relativity import *
+from .shock import *
 from .transition import *

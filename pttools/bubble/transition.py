@@ -1,4 +1,4 @@
-"""Useful quantities for deciding type of transition"""
+"""Useful quantities for deciding the type of a transition"""
 
 import logging
 import typing as tp
