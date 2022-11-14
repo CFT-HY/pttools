@@ -64,20 +64,19 @@ def plot_fluid_shells(
 
     n = 0
 
-    if debug:
-        # Debug arrays
-        lst_v = []
-        lst_w = []
-        lst_xi = []
-        lst_v_sh = []
-        # lst_v_minus_max = []
-        lst_w_sh = []
+    # Debug arrays
+    lst_v = []
+    lst_w = []
+    lst_xi = []
+    lst_v_sh = []
+    # lst_v_minus_max = []
+    lst_w_sh = []
 
-        # Debug values
-        lst_ubarf2 = []
-        lst_ke_frac = []
-        lst_kappa = []
-        lst_dw = []
+    # Debug values
+    lst_ubarf2 = []
+    lst_ke_frac = []
+    lst_kappa = []
+    lst_dw = []
 
     for v_wall, alpha_n in zip(v_wall_list, alpha_n_list):
         check.check_physical_params((v_wall, alpha_n))
