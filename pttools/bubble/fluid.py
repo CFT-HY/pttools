@@ -508,8 +508,11 @@ def fluid_shell_generic(
         xi = np.flip(xi)
 
     elif sol_type == SolutionType.SUB_DEF:
-        if transition.cannot_be_sub_def(v_wall, model, wn):
-            raise ValueError("Invalid parameters for a subsonic deflagration")
+        if transition.cannot_be_sub_def(model, v_wall, wn):
+            raise ValueError(
+                f"Invalid parameters for a subsonic deflagration: model={model}, v_wall={v_wall}, wn={wn}. "
+                "Decrease v_wall or increase csb2."
+            )
 
         # Todo: In more advanced models,
         #  the direction of the integration will probably have to be determined by trial and error.
