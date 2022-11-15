@@ -411,8 +411,21 @@ def fluid_shell_deflagration(
         # method="RK45"
     )
     # Trim the integration to the shock
-    v_shock = shock.v_shock_bag(xi)
-    i_shock = np.argmax(v <= v_shock)
+    i_shock = 0
+    cs_n = np.sqrt(model.cs2(wn, Phase.SYMMETRIC))
+    for i, xi_i in enumerate(xi):
+        if xi_i < cs_n:
+            continue
+        v_shock_tilde, w_shock = shock.solve_shock(model, xi_i, wn)
+        v_shock = relativity.lorentz(xi_i, v_shock_tilde)
+        if v[i] <= v_shock:
+            i_shock = i
+            break
+
+    # Bag model version
+    # v_shock = shock.v_shock_bag(xi)
+    # i_shock = np.argmax(v <= v_shock)
+
     if i_shock == 0:
         if np.max(xi) < const.CS0:
             msg = \
