@@ -3,19 +3,14 @@ r"""Functions for the bag equation of state.
 See page 37 of :notes:`\ `.
 """
 
-# import enum
 import logging
-import typing as tp
 
 import numba
 import numpy as np
 
-from pttools.speedup import CPUDispatcher
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase
 from . import const
-# from . import relativity
-# from . import boundary
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +146,7 @@ def _get_phase_arr(xi: np.ndarray, v_w: float) -> np.ndarray:
 
 
 @numba.generated_jit(nopython=True)
-def get_phase_bag(xi: th.FloatOrArr, v_w: float) -> th.FloatOrArr:
+def get_phase_bag(xi: th.FloatOrArr, v_w: float) -> th.FloatOrArrNumba:
     r"""
     Returns array indicating phase of system.
     in symmetric phase $(\xi > v_w)$, phase = 0

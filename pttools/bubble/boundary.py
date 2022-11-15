@@ -25,6 +25,7 @@ class Phase(float, enum.Enum):
     """In general the phase is a scalar variable (a real number), and therefore also these values are floats."""
     # Todo: Move this to a separate file.
     # Do not change these values without also checking the model cs2 functions.
+    # These are floats instead of integers to ensure that the Numba functions don't have to be compiled twice.
     SYMMETRIC = 0.
     BROKEN = 1.
 
