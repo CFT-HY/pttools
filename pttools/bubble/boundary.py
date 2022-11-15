@@ -188,6 +188,14 @@ def solve_junction(
     """Model-independent junction condition solver
     Velocities are in the wall frame!
     """
+    if np.isclose(v1, 0) or np.isclose(v1, 1) \
+            or np.isclose(v2_guess, 0) or np.isclose(v2_guess, 1) \
+            or np.isclose(w1, 0) or np.isclose(w2_guess, 0):
+        logger.warning(
+            "Invalid input for junction solver. "
+            f"Got: v1={v1}, w1={w1}, v2_guess={v2_guess}, w2_guess={w2_guess}")
+        return np.nan, np.nan
+
     # if w2_guess is None:
     #     from . import chapman_jouguet
     #     w2_guess = 0.5*chapman_jouguet.wm_chapman_jouguet(model, w1)
@@ -216,11 +224,12 @@ def solve_junction(
         msg = \
             f"Boundary solution was not found for v1={v1}, w1={w1}, model={model.name}. " + \
             f"Using v2={v2}, w2={w2}. " + \
-            ("" if (0 < v2 < 1) else "This is unphysical!") + \
+            ("" if (0 < v2 < 1) else "This is unphysical! ") + \
             f"Reason: {sol[3]}"
         logger.error(msg)
         if not allow_failure:
-            logger.error("ERROR")
+            return np.nan, np.nan
+            # logger.error("ERROR")
             # raise ValueError(msg)
     return v2, w2
 
