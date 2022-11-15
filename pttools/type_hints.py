@@ -25,7 +25,11 @@ FloatOrArrNumba = tp.Union[float, np.ndarray, NumbaFunc]
 #: Integer or a Numpy array
 IntOrArr = tp.Union[int, np.ndarray]
 
+#: Type of a cs2 function
 CS2Fun = tp.Union[tp.Callable[[FloatOrArr, FloatOrArr], FloatOrArr], CPUDispatcher]
+#: Numba type of a cs2 function
 CS2FunScalarSig = numba.double(numba.double, numba.double)
+#: Numba pointer to a cs2 function
 CS2FunScalarPtr = numba.types.CPointer(CS2FunScalarSig)
+#: ctypes type of a cs2 function
 CS2CFunc = ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double)
