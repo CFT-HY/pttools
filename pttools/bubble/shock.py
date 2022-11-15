@@ -1,5 +1,6 @@
 """Functions for shocks"""
 
+import logging
 import typing as tp
 
 import numba.types
@@ -10,6 +11,10 @@ from .boundary import Phase, SolutionType, solve_junction
 from . import check
 from . import const
 from . import props
+if tp.TYPE_CHECKING:
+    from pttools.models.model import Model
+
+logger = logging.getLogger(__name__)
 
 
 @numba.njit
@@ -83,8 +88,33 @@ def solve_shock(
     :param vp: $\tilde{v}_{+,sh} = \xi_{sh}$
     :param wp: $w_{+,sh} = w_n$
     """
+    if vp < 0 or vp > 1 or np.isclose(vp, 0) or np.isclose(vp, 1):
+        logger.error(f"Got invalid vp={vp} for shock solver.")
+        return np.nan, np.nan
+    if np.isclose(wp, 0):
+        logger.error(f"Got invalid wp={wp} for shock solver.")
+        return np.nan, np.nan
     vm_guess = 1/(3*vp) if vm_guess is None else vm_guess
+    if np.isclose(vm_guess, 0) or np.isclose(vm_guess, 1):
+        logger.error(f"Got invalid estimate for vm={vm_guess}")
+        return np.nan, np.nan
+
+    cs = np.sqrt(model.cs2(wp, Phase.SYMMETRIC))
+    if vp < cs:
+        logger.error(f"The shock must be hypersonic. Got vp={vp}, wp={wp}, cs(wp)={cs}")
+        return np.nan, np.nan
+    if np.isclose(vp, cs):
+        logger.warning(f"The shock barely exists. Got vp={vp}, wp={wp}")
+        return vp, wp
+
     wm_guess = wm_shock_bag(vp, wp) if wm_guess is None else wm_guess
+    if np.isnan(wm_guess):
+        # Some small value
+        wm_guess = 0.1
+
+    if np.isclose(wm_guess, 0):
+        logger.error(f"Got invalid estimate for wm={wm_guess}")
+        return np.nan, np.nan
     return solve_junction(
         model,
         v1=vp, w1=wp,
@@ -139,8 +169,10 @@ def v_shock_bag(xi: th.FloatOrArr):
 def _wm_shock_bag_scalar(xi: float, w_n: float, nan_on_negative: bool) -> float:
     # const.CS0 is used only because it corresponds to the 1/sqrt(3) we need.
     # This has nothing to do with the sound speed!
-    if xi < const.CS0:
+    if nan_on_negative and xi < const.CS0:
         return np.nan
+    if xi == 1:
+        return np.inf
     return w_n * (9*xi**2 - 1)/(3*(1-xi**2))
 
 
