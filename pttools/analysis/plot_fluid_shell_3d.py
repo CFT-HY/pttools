@@ -1,3 +1,4 @@
+import logging
 import typing as tp
 
 import numpy as np
@@ -7,7 +8,10 @@ import plotly.graph_objects as go
 from pttools.bubble.bubble import Bubble
 from pttools.bubble.boundary import Phase
 from pttools.bubble.relativity import lorentz
+from pttools.bubble.shock import solve_shock
 from pttools.models.model import Model
+
+logger = logging.getLogger(__name__)
 
 
 class BubblePlot3D:
@@ -36,6 +40,7 @@ class BubblePlot3D:
 
     def create_fig(self):
         self.mu_surface()
+        self.shock_surfaces()
         return go.Figure(
             data=[
                 *self.plots
@@ -50,6 +55,7 @@ class BubblePlot3D:
         )
 
     def mu_surface(self, n_xi: int = 20, n_w: int = 20, w_mult: float = 1.1):
+        logger.info("Computing mu surface.")
         if self.model is None:
             return
         xi = np.linspace(0, 1, n_xi)
@@ -59,18 +65,38 @@ class BubblePlot3D:
         mu = lorentz(xi_grid, cs_grid)
         mu[mu < 0] = np.nan
 
-        self.plots.append(go.Surface(z=mu, x=w, y=xi, opacity=0.5))
+        self.plots.append(go.Surface(x=w, y=xi, z=mu, opacity=0.5, name="µ"))
+        logger.info("Mu surface ready.")
 
     def save(self, path: str):
         fig = self.create_fig()
         fig.write_html(f"{path}.html")
         fig.write_image(f"{path}.png")
 
-    def shock_surface(self, n_xi: int = 20, n_w: int = 20, w_mult: float = 1.1):
+    def shock_surfaces(self, n_xi: int = 20, n_w: int = 30, w_mult: float = 1.1):
         if self.model is None:
             return
-        xi = np.linspace(0, 1, n_xi)
-        w = np.linspace(0, w_mult*max(np.max(bubble.w) for bubble in self.bubbles), n_w)
+        logger.info("Computing shock surface.")
+        w_max = max(np.max(bubble.w) for bubble in self.bubbles)
+        cs2_min, cs2_min_w = self.model.cs2_min(w_max, Phase.SYMMETRIC)
+        xi_arr = np.linspace(np.sqrt(cs2_min), 0.99, n_xi)
+        wp_arr = np.linspace(0.01, w_mult*w_max, n_w)
+        wp_grid, xi_grid = np.meshgrid(wp_arr, xi_arr)
+        vm_grid = np.zeros_like(wp_grid)
+        wm_grid = np.zeros_like(wp_grid)
+
+        for i_xi, xi in enumerate(xi_arr):
+            for i_wp, wp in enumerate(wp_arr):
+                vm_tilde, wm = solve_shock(self.model, xi, wp)
+                vm_grid[i_xi, i_wp] = lorentz(xi, vm_tilde)
+                wm_grid[i_xi, i_wp] = wm
+
+        vm_grid[vm_grid > 1] = np.nan
+        wm_grid[wm_grid > w_mult * w_max] = np.nan
+
+        self.plots.append(go.Surface(x=wp_arr, y=xi_arr, z=vm_grid, opacity=0.5, name="Shock, $w=w_+$"))
+        self.plots.append(go.Surface(x=wm_grid, y=xi_grid, z=vm_grid, opacity=0.5, name="Shock, $w=w_-$"))
+        logger.info("Shock surface ready.")
 
     def show(self):
         self.create_fig().show()
