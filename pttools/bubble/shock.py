@@ -6,14 +6,14 @@ import numba.types
 import numpy as np
 
 import pttools.type_hints as th
-from . import boundary
+from .boundary import Phase, SolutionType, solve_junction
 from . import check
 from . import const
 from . import props
 
 
 @numba.njit
-def find_shock_index(v_f: np.ndarray, xi: np.ndarray, v_wall: float, sol_type: boundary.SolutionType) -> int:
+def find_shock_index(v_f: np.ndarray, xi: np.ndarray, v_wall: float, sol_type: SolutionType) -> int:
     r"""
     Array index of shock from first point where fluid velocity $v_f$ goes below $v_\text{shock}$.
     For detonation, returns wall position.
@@ -27,7 +27,7 @@ def find_shock_index(v_f: np.ndarray, xi: np.ndarray, v_wall: float, sol_type: b
     check.check_wall_speed(v_wall)
 
     n_shock = 0
-    if sol_type == boundary.SolutionType.DETON:
+    if sol_type == SolutionType.DETON:
         n_shock = props.find_v_index(xi, v_wall)
     else:
         for i, (v, x) in enumerate(zip(v_f, xi)):
@@ -76,8 +76,8 @@ def solve_shock(
         wp: float,
         vm_guess: float = None,
         wm_guess: float = None,
-        phase: boundary.Phase = boundary.Phase.SYMMETRIC,
-        allow_failure: bool = False):
+        phase: Phase = Phase.SYMMETRIC,
+        allow_failure: bool = False) -> tp.Tuple[float, float]:
     r"""Solve the boundary conditions at a shock
 
     :param vp: $\tilde{v}_{+,sh} = \xi_{sh}$
@@ -85,7 +85,7 @@ def solve_shock(
     """
     vm_guess = 1/(3*vp) if vm_guess is None else vm_guess
     wm_guess = wm_shock_bag(vp, wp) if wm_guess is None else wm_guess
-    return boundary.solve_junction(
+    return solve_junction(
         model,
         v1=vp, w1=wp,
         phase1=phase, phase2=phase,
@@ -136,7 +136,7 @@ def v_shock_bag(xi: th.FloatOrArr):
 
 
 @numba.njit
-def _wm_shock_bag_scalar(xi: float, w_n: float) -> float:
+def _wm_shock_bag_scalar(xi: float, w_n: float, nan_on_negative: bool) -> float:
     # const.CS0 is used only because it corresponds to the 1/sqrt(3) we need.
     # This has nothing to do with the sound speed!
     if xi < const.CS0:
@@ -145,16 +145,16 @@ def _wm_shock_bag_scalar(xi: float, w_n: float) -> float:
 
 
 @numba.njit
-def _wm_shock_bag_arr(xi: np.ndarray, w_n: float) -> np.ndarray:
+def _wm_shock_bag_arr(xi: np.ndarray, w_n: float, nan_on_negative: bool) -> np.ndarray:
     ret = np.zeros_like(xi)
     for i in range(xi.size):
-        ret[i] = _wm_shock_bag_scalar(xi[i], w_n)
+        ret[i] = _wm_shock_bag_scalar(xi[i], w_n, nan_on_negative)
     return ret
 
 
 # This cannot be vectorized with numba.vectorize due to the keyword argument, but guvectorize might work
 @numba.generated_jit(nopython=True)
-def wm_shock_bag(xi: th.FloatOrArr, w_n: float = 1.) -> th.FloatOrArrNumba:
+def wm_shock_bag(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = True) -> th.FloatOrArrNumba:
     r"""
     Fluid enthalpy behind a shock at $\xi$ in the bag model.
     No shocks exist for $\xi < c_s$, so returns nan.
@@ -173,11 +173,11 @@ def wm_shock_bag(xi: th.FloatOrArr, w_n: float = 1.) -> th.FloatOrArrNumba:
             return _wm_shock_bag_scalar
         return _wm_shock_bag_arr
     if isinstance(xi, float):
-        return _wm_shock_bag_scalar(xi, w_n)
+        return _wm_shock_bag_scalar(xi, w_n, nan_on_negative)
     if isinstance(xi, np.ndarray):
         if not xi.ndim:
-            return _wm_shock_bag_scalar(xi.item(), w_n)
-        return _wm_shock_bag_arr(xi, w_n)
+            return _wm_shock_bag_scalar(xi.item(), w_n, nan_on_negative)
+        return _wm_shock_bag_arr(xi, w_n, nan_on_negative)
     raise TypeError(f"Unknown type for xi: {type(xi)}")
 
 

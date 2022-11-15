@@ -9,7 +9,7 @@ from scipy.optimize import fminbound
 
 import pttools.type_hints as th
 from . import alpha as alpha_tools
-from . import boundary
+from .boundary import Phase, SolutionType, v_plus
 from . import const
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 if tp.TYPE_CHECKING:
@@ -19,24 +19,24 @@ logger = logging.getLogger(__name__)
 
 
 @numba.njit
-def identify_solution_type(v_wall: float, alpha_n: float, exit_on_error: bool = False) -> boundary.SolutionType:
+def identify_solution_type(v_wall: float, alpha_n: float, exit_on_error: bool = False) -> SolutionType:
     """
     Determines wall type from wall speed and global strength parameter.
     solution_type = [ 'Detonation' | 'Deflagration' | 'Hybrid' ]
     """
     # v_wall = wall velocity, alpha_n = relative trace anomaly at nucleation temp outside shell
-    sol_type = boundary.SolutionType.ERROR  # Default
-    if alpha_n < alpha_tools.alpha_n_max_detonation(v_wall):
+    sol_type = SolutionType.ERROR  # Default
+    if alpha_n < alpha_tools.alpha_n_max_detonation_bag(v_wall):
         # Must be detonation
-        sol_type = boundary.SolutionType.DETON
+        sol_type = SolutionType.DETON
     else:
-        if alpha_n < alpha_tools.alpha_n_max_deflagration(v_wall):
+        if alpha_n < alpha_tools.alpha_n_max_deflagration_bag(v_wall):
             if v_wall <= const.CS0:
-                sol_type = boundary.SolutionType.SUB_DEF
+                sol_type = SolutionType.SUB_DEF
             else:
-                sol_type = boundary.SolutionType.HYBRID
+                sol_type = SolutionType.HYBRID
 
-    if sol_type == boundary.SolutionType.ERROR and exit_on_error:
+    if sol_type == SolutionType.ERROR and exit_on_error:
         with numba.objmode:
             logger.error(f"No solution for v_wall = %s, alpha_n = %s", v_wall, alpha_n)
         raise RuntimeError("No solution for given v_wall, alpha_n")
@@ -50,19 +50,19 @@ def identify_solution_type_beyond_bag(
         alpha_n: float,
         wn_guess: float,
         wm_guess: float
-        ) -> boundary.SolutionType:
+        ) -> SolutionType:
 
     wn = model.w_n(alpha_n, wn_guess)
     v_cj = v_chapman_jouguet(model, alpha_n, wn_guess=wn, wm_guess=wm_guess)
 
     if is_surely_detonation(v_wall, v_cj):
-        return boundary.SolutionType.DETON
-    if is_surely_sub_def(v_wall, model, wn):
-        return boundary.SolutionType.SUB_DEF
-    if cannot_be_detonation(v_wall, v_cj) and cannot_be_sub_def(v_wall, model, wn):
-        return boundary.SolutionType.HYBRID
+        return SolutionType.DETON
+    if is_surely_sub_def(model, v_wall, wn):
+        return SolutionType.SUB_DEF
+    if cannot_be_detonation(v_wall, v_cj) and cannot_be_sub_def(model, v_wall, wn):
+        return SolutionType.HYBRID
     logger.warning(f"Could not determine solution type for {model.name} with v_wall={v_wall}, alpha_n={alpha_n}")
-    return boundary.SolutionType.UNKNOWN
+    return SolutionType.UNKNOWN
 
 
 def cannot_be_sub_def(v_wall: float, model: "Model", wn: float):
@@ -118,7 +118,7 @@ def min_cs2_inside_sub_def(model: "Model", wn: float = 1) -> float:
 
 
 @numba.njit
-def identify_solution_type_alpha_plus(v_wall: float, alpha_p: float) -> boundary.SolutionType:
+def identify_solution_type_alpha_plus(v_wall: float, alpha_p: float) -> SolutionType:
     r"""
     Determines wall type from wall speed $v_\text{wall}$ and at-wall strength parameter $\alpha_+$.
 
@@ -128,22 +128,22 @@ def identify_solution_type_alpha_plus(v_wall: float, alpha_p: float) -> boundary
     """
     # TODO: Currently this is for the bag model only
     if v_wall <= const.CS0:
-        sol_type = boundary.SolutionType.SUB_DEF
+        sol_type = SolutionType.SUB_DEF
     else:
-        if alpha_p < alpha_tools.alpha_plus_max_detonation(v_wall):
-            sol_type = boundary.SolutionType.DETON
+        if alpha_p < alpha_tools.alpha_plus_max_detonation_bag(v_wall):
+            sol_type = SolutionType.DETON
             if alpha_tools.alpha_plus_min_hybrid(v_wall) < alpha_p < 1/3:
                 with numba.objmode:
                     logger.warning((
                         "Hybrid and detonation both possible for v_wall = {}, alpha_plus = {}. "
                         "Choosing detonation.").format(v_wall, alpha_p))
         else:
-            sol_type = boundary.SolutionType.HYBRID
+            sol_type = SolutionType.HYBRID
 
-    if alpha_p > 1/3 and sol_type != boundary.SolutionType.DETON:
+    if alpha_p > 1/3 and sol_type != SolutionType.DETON:
         with numba.objmode:
             logger.error("No solution for for v_wall = {}, alpha_plus = {}".format(v_wall, alpha_p))
-        sol_type = boundary.SolutionType.ERROR
+        sol_type = SolutionType.ERROR
 
     return sol_type
 
@@ -157,11 +157,11 @@ def max_speed_deflag(alpha_p: th.FloatOrArr) -> th.FloatOrArr:
 
     :param alpha_p: $\alpha_+$
     """
-    return 1 / (3 * boundary.v_plus(const.CS0, alpha_p, boundary.SolutionType.SUB_DEF))
+    return 1 / (3 * v_plus(const.CS0, alpha_p, SolutionType.SUB_DEF))
 
 
 @numba.njit
-def min_speed_deton(alpha: th.FloatOrArr) -> th.FloatOrArr:
+def min_speed_deton_bag(alpha: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Minimum speed for a detonation (Jouguet speed).
     Equivalent to $v_+(cs_0,\alpha)$.

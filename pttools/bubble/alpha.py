@@ -3,7 +3,6 @@ Functions for computing $\alpha_n$, the strength parameter at nucleation tempera
 and $\alpha_+$, the strength parameter just in front of the wall.
 """
 
-import ctypes
 import threading
 import typing as tp
 
@@ -27,7 +26,7 @@ find_alpha_plus_scalar_lock = threading.Lock()
 
 
 @numba.njit
-def alpha_n_max(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArr:
+def alpha_n_max_bag(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArr:
     r"""
     Calculates the relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
     for given $v_\text{wall}$, which is max $\alpha_n$ for (supersonic) deflagration.
@@ -36,14 +35,14 @@ def alpha_n_max(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.Flo
     :param n_xi: number of $\xi$ points
     :return: $\alpha_{n,\max}$, the relative trace anomaly outside the bubble
     """
-    return alpha_n_max_deflagration(v_wall, n_xi)
+    return alpha_n_max_deflagration_bag(v_wall, n_xi)
 
 
 @numba.njit
-def _alpha_n_max_deflagration_scalar(v_wall: float, n_xi: int) -> float:
+def _alpha_n_max_deflagration_bag_scalar(v_wall: float, n_xi: int) -> float:
     check.check_wall_speed(v_wall)
-    # TODO: This may not be correct, as it makes an explicit reference to const.CS0
-    # At least there is circular logic due to the call to fluid_shell_alpha_plus
+    # TODO: This seems to be specific to the bag model
+    # There is circular logic due to the call to fluid_shell_alpha_plus
     # TODO: This line is for the bag model only, as cs should depend on enthalpy and phase
     sol_type = boundary.SolutionType.HYBRID.value if v_wall > const.CS0 else boundary.SolutionType.SUB_DEF.value
     ap = 1. / 3 - 1.0e-10  # Warning - this is not safe.  Causes warnings for v low vw
@@ -53,10 +52,10 @@ def _alpha_n_max_deflagration_scalar(v_wall: float, n_xi: int) -> float:
 
 
 @numba.njit(parallel=True)
-def _alpha_n_max_deflagration_arr(v_wall: np.ndarray, n_xi: int) -> np.ndarray:
+def _alpha_n_max_deflagration_bag_arr(v_wall: np.ndarray, n_xi: int) -> np.ndarray:
     ret = np.zeros_like(v_wall)
     for i in numba.prange(v_wall.size):
-        ret[i] = _alpha_n_max_deflagration_scalar(v_wall[i], n_xi)
+        ret[i] = _alpha_n_max_deflagration_bag_scalar(v_wall[i], n_xi)
     # alpha_N = (w_+/w_N)*alpha_+
     # w_ is normalised to 1 at large xi
     # Need n_wall+1, as w is an integral of v, and lags by 1 step
@@ -64,7 +63,7 @@ def _alpha_n_max_deflagration_arr(v_wall: np.ndarray, n_xi: int) -> np.ndarray:
 
 
 @numba.generated_jit(nopython=True)
-def alpha_n_max_deflagration(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArrNumba:
+def alpha_n_max_deflagration_bag(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArrNumba:
     r"""
     Calculates the relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
     for given $v_\text{wall}$, for deflagration.
@@ -75,22 +74,22 @@ def alpha_n_max_deflagration(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAU
     :return: $\alpha_{n,\max}$
     """
     if isinstance(v_wall, numba.types.Float):
-        return _alpha_n_max_deflagration_scalar
+        return _alpha_n_max_deflagration_bag_scalar
     if isinstance(v_wall, numba.types.Array):
         if not v_wall.ndim:
-            return _alpha_n_max_deflagration_scalar
-        return _alpha_n_max_deflagration_arr
+            return _alpha_n_max_deflagration_bag_scalar
+        return _alpha_n_max_deflagration_bag_arr
     if isinstance(v_wall, float):
-        return _alpha_n_max_deflagration_scalar(v_wall, n_xi)
+        return _alpha_n_max_deflagration_bag_scalar(v_wall, n_xi)
     if isinstance(v_wall, np.ndarray):
         if not v_wall.ndim:
-            return _alpha_n_max_deflagration_scalar(v_wall.item(), n_xi)
-        return _alpha_n_max_deflagration_arr(v_wall, n_xi)
+            return _alpha_n_max_deflagration_bag_scalar(v_wall.item(), n_xi)
+        return _alpha_n_max_deflagration_bag_arr(v_wall, n_xi)
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
 @numba.njit
-def alpha_n_max_detonation(v_wall: th.FloatOrArr) -> th.FloatOrArr:
+def alpha_n_max_detonation_bag(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Maximum allowed value of $\alpha_n$ for a detonation with wall speed $v_\text{wall}$.
     Same as :func:`alpha_plus_max_detonation`, since for a detonation $\alpha_n = \alpha_+$,
@@ -101,10 +100,10 @@ def alpha_n_max_detonation(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     :param v_wall: $v_\text{wall}$
     :return: $\alpha_{n,\max,\text{detonation}}$
     """
-    return alpha_plus_max_detonation(v_wall)
+    return alpha_plus_max_detonation_bag(v_wall)
 
 
-def alpha_n_max_hybrid(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> float:
+def alpha_n_max_hybrid_bag(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> float:
     r"""
     Calculates the relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
     for given $v_\text{wall}$, assuming hybrid fluid shell
@@ -129,7 +128,7 @@ def alpha_n_max_hybrid(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> float:
 
 
 @numba.njit
-def alpha_n_min_deflagration(v_wall: th.FloatOrArr) -> th.FloatOrArr:
+def alpha_n_min_deflagration_bag(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Minimum $\alpha_n$ for a deflagration. Equal to maximum $\alpha_n$ for a detonation.
     Same as :func:`alpha_n_min_hybrid`, as a hybrid is a supersonic deflagration.
@@ -139,11 +138,11 @@ def alpha_n_min_deflagration(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     """
     # This check is implemented in the inner functions
     # check.check_wall_speed(v_wall)
-    return alpha_n_max_detonation(v_wall)
+    return alpha_n_max_detonation_bag(v_wall)
 
 
 @numba.njit
-def alpha_n_min_hybrid(v_wall: th.FloatOrArr) -> th.FloatOrArr:
+def alpha_n_min_hybrid_bag(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Minimum $\alpha_n$ for a hybrid. Equal to maximum $\alpha_n$ for a detonation.
     Same as :func:`alpha_n_min_deflagration`, as a hybrid is a supersonic deflagration.
@@ -153,7 +152,7 @@ def alpha_n_min_hybrid(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     """
     # This check is implemented in the inner functions
     # check.check_wall_speed(v_wall)
-    return alpha_n_max_detonation(v_wall)
+    return alpha_n_max_detonation_bag(v_wall)
 
 
 @numba.njit
@@ -173,15 +172,15 @@ def alpha_plus_initial_guess(v_wall: th.FloatOrArr, alpha_n_given: float) -> th.
     alpha_plus_min = alpha_plus_min_hybrid(v_wall)
     alpha_plus_max = 1. / 3
 
-    alpha_n_min = alpha_n_min_hybrid(v_wall)
-    alpha_n_max = alpha_n_max_deflagration(v_wall)
+    alpha_n_min = alpha_n_min_hybrid_bag(v_wall)
+    alpha_n_max = alpha_n_max_deflagration_bag(v_wall)
 
     slope = (alpha_plus_max - alpha_plus_min) / (alpha_n_max - alpha_n_min)
     return alpha_plus_min + slope * (alpha_n_given - alpha_n_min)
 
 
 @speedup.vectorize(nopython=True)
-def alpha_plus_max_detonation(v_wall: th.FloatOrArr) -> th.FloatOrArrNumba:
+def alpha_plus_max_detonation_bag(v_wall: th.FloatOrArr) -> th.FloatOrArrNumba:
     r"""
     Maximum allowed value of $\alpha_+$ for a detonation with wall speed $v_\text{wall}$.
     Comes from inverting $v_w$ > $v_\text{Jouguet}$.
@@ -202,7 +201,9 @@ def alpha_plus_min_hybrid(v_wall: th.FloatOrArr) -> th.FloatOrArrNumba:
     Minimum allowed value of $\alpha_+$ for a hybrid with wall speed $v_\text{wall}$.
     Condition from coincidence of wall and shock.
 
-    $\alpha_{+, \min, \text{hybrid}} = \frac{ (1 - \sqrt{3} v_\text{wall})^2 }{ 9 v_\text{wall}^2 - 1}$
+    $$\alpha_{+, \min, \text{hybrid}} = \frac{ (1 - \sqrt{3} v_\text{wall})^2 }{ 9 v_\text{wall}^2 - 1}$$
+
+    Todo: Is this specific to the bag model?
 
     :param v_wall: $v_\text{wall}$
     :return: $\alpha_{+, \min, \text{hybrid}}$
@@ -216,7 +217,7 @@ def alpha_plus_min_hybrid(v_wall: th.FloatOrArr) -> th.FloatOrArrNumba:
 
 
 @numba.njit
-def find_alpha_n(
+def find_alpha_n_bag(
         v_wall: th.FloatOrArr,
         alpha_p: float,
         sol_type: boundary.SolutionType = boundary.SolutionType.UNKNOWN,
@@ -248,18 +249,24 @@ def find_alpha_n(
 @numba.njit
 def find_alpha_n_from_w_xi(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_p: th.FloatOrArr) -> th.FloatOrArr:
     r"""
-    Calculates the transition strength parameter
-    $\alpha_n = \frac{4}{3} \frac{\theta_s(T_n) - \theta_b(T_n)}{w(T_n)}$
-    from $\alpha_+$.
+    Calculates the transition strength parameter with
+    $$\alpha_n = \frac{w_+}{w_n} \alpha_p$$.
 
+    Model-independent.
+
+    :param w: $w$ array of a bubble
+    :param xi: $xi$ array of a bubble
+    :param v_wall: $v_\text{wall}$
+    :param alpha_p. $\alpha_+$
     :return: $\alpha_n$
     """
     n_wall = props.find_v_index(xi, v_wall)
-    return alpha_p * w[n_wall] / w[-1]
+    wn = w[-1]
+    return w[n_wall] / wn * alpha_p
 
 
 @numba.njit
-def _find_alpha_plus_optimizer(
+def _find_alpha_plus_optimizer_bag(
         alpha: np.ndarray,
         v_wall: float,
         sol_type: boundary.SolutionType,
@@ -268,7 +275,7 @@ def _find_alpha_plus_optimizer(
         cs2_fun: th.CS2Fun,
         df_dtau_ptr: speedup.DifferentialPointer) -> float:
     """find_alpha_plus() is looking for the zeroes of this function: $\alpha_n = \alpha_{n,\text{given}}$."""
-    return find_alpha_n(v_wall, alpha.item(), sol_type, n_xi, cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr) - alpha_n_given
+    return find_alpha_n_bag(v_wall, alpha.item(), sol_type, n_xi, cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr) - alpha_n_given
 
 
 def _find_alpha_plus_scalar_cs2_converter(cs2_fun_ptr: th.CS2FunScalarPtr) -> th.CS2CFunc:
@@ -280,13 +287,13 @@ def _find_alpha_plus_scalar_cs2_converter(cs2_fun_ptr: th.CS2FunScalarPtr) -> th
         if cs2_fun_ptr in CS2CACHE:
             return CS2CACHE[cs2_fun_ptr]
         # https://numba.pydata.org/numba-doc/0.15.1/interface_c.html
-        cs2_fun = ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double)(cs2_fun_ptr)
+        cs2_fun = th.CS2CFunc(cs2_fun_ptr)
         CS2CACHE[cs2_fun_ptr] = cs2_fun
         return cs2_fun
 
 
 @numba.njit
-def _find_alpha_plus_scalar(
+def _find_alpha_plus_scalar_bag(
         v_wall: float,
         alpha_n_given: float,
         n_xi: int,
@@ -299,11 +306,11 @@ def _find_alpha_plus_scalar(
     fail in some cases.
     At least the sol_type dependence in fluid_shell_alpha_plus should be removed.
     """
-    if alpha_n_given < alpha_n_max_detonation(v_wall):
+    if alpha_n_given < alpha_n_max_detonation_bag(v_wall):
         # Must be detonation
         # sol_type = boundary.SolutionType.DETON
         return alpha_n_given
-    if alpha_n_given >= alpha_n_max_deflagration(v_wall):
+    if alpha_n_given >= alpha_n_max_deflagration_bag(v_wall):
         # Greater than the maximum possible -> fail
         return np.nan
     sol_type = boundary.SolutionType.SUB_DEF if v_wall <= const.CS0 else boundary.SolutionType.HYBRID
@@ -313,7 +320,7 @@ def _find_alpha_plus_scalar(
 
         # This returns np.float64
         ret: float = fsolve(
-            _find_alpha_plus_optimizer,
+            _find_alpha_plus_optimizer_bag,
             ap_initial_guess,
             args=(v_wall, sol_type, n_xi, alpha_n_given, cs2_fun, df_dtau_ptr),
             xtol=xtol,
@@ -322,7 +329,7 @@ def _find_alpha_plus_scalar(
 
 
 @numba.njit(parallel=True)
-def _find_alpha_plus_arr(
+def _find_alpha_plus_bag_arr(
         v_wall: np.ndarray,
         alpha_n_given: float,
         n_xi: int,
@@ -331,12 +338,12 @@ def _find_alpha_plus_arr(
         xtol: float) -> np.ndarray:
     ap = np.zeros_like(v_wall)
     for i in numba.prange(v_wall.size):
-        ap[i] = _find_alpha_plus_scalar(v_wall[i], alpha_n_given, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr)
+        ap[i] = _find_alpha_plus_scalar_bag(v_wall[i], alpha_n_given, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr)
     return ap
 
 
 @numba.generated_jit(nopython=True)
-def find_alpha_plus(
+def find_alpha_plus_bag(
         v_wall: th.FloatOrArr,
         alpha_n_given: float,
         n_xi: int = const.N_XI_DEFAULT,
@@ -358,15 +365,15 @@ def find_alpha_plus(
     :return: $\alpha_+$, the the at-wall strength parameter
     """
     if isinstance(v_wall, numba.types.Float):
-        return _find_alpha_plus_scalar
+        return _find_alpha_plus_scalar_bag
     if isinstance(v_wall, numba.types.Array):
         if not v_wall.ndim:
-            return _find_alpha_plus_scalar
-        return _find_alpha_plus_arr
+            return _find_alpha_plus_scalar_bag
+        return _find_alpha_plus_bag_arr
     if isinstance(v_wall, float):
-        return _find_alpha_plus_scalar(v_wall, alpha_n_given, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, xtol=xtol)
+        return _find_alpha_plus_scalar_bag(v_wall, alpha_n_given, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, xtol=xtol)
     if isinstance(v_wall, np.ndarray):
         if not v_wall.ndim:
-            return _find_alpha_plus_scalar(v_wall.item(), alpha_n_given, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, xtol=xtol)
-        return _find_alpha_plus_arr(v_wall, alpha_n_given, n_xi, cs2_fun=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, xtol=xtol)
+            return _find_alpha_plus_scalar_bag(v_wall.item(), alpha_n_given, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, xtol=xtol)
+        return _find_alpha_plus_bag_arr(v_wall, alpha_n_given, n_xi, cs2_fun=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, xtol=xtol)
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")

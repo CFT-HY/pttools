@@ -22,6 +22,7 @@ from . import alpha
 from . import approx
 from . import bag
 from . import boundary
+from .boundary import Phase, SolutionType
 from . import check
 from . import chapman_jouguet
 from . import const
@@ -280,12 +281,12 @@ def fluid_shell(
     """
     # check_physical_params([v_wall,alpha_n])
     sol_type = transition.identify_solution_type(v_wall, alpha_n)
-    if sol_type == boundary.SolutionType.ERROR:
+    if sol_type == SolutionType.ERROR:
         with numba.objmode:
             logger.error("Giving up because of identify_solution_type error")
         nan_arr = np.array([np.nan])
         return nan_arr, nan_arr, nan_arr
-    al_p = alpha.find_alpha_plus(v_wall, alpha_n, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr)
+    al_p = alpha.find_alpha_plus_bag(v_wall, alpha_n, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr)
     if np.isnan(al_p):
         nan_arr = np.array([np.nan])
         return nan_arr, nan_arr, nan_arr
@@ -308,7 +309,7 @@ def fluid_shell_deflagration_reverse(model: "Model", v_wall: float, wn: float, x
         f"Integrating deflagration with v_wall={v_wall}, wn={wn} from vm_sh={vm_sh}, wm_sh={wm_sh}, xi_sh={xi_sh}")
     v, w, xi, t = fluid_integrate_param(
         v0=vm_sh, w0=wm_sh, xi0=xi_sh,
-        phase=boundary.Phase.SYMMETRIC,
+        phase=Phase.SYMMETRIC,
         t_end=const.T_END_DEFAULT,
         n_xi=const.N_XI_DEFAULT,
         df_dtau_ptr=model.df_dtau_ptr(),
@@ -340,7 +341,7 @@ def fluid_shell_deflagration_reverse(model: "Model", v_wall: float, wn: float, x
 
     vm_tilde, wm = boundary.solve_junction(
         model, vp_tilde, wp,
-        boundary.Phase.SYMMETRIC, boundary.Phase.BROKEN,
+        Phase.SYMMETRIC, Phase.BROKEN,
         v2_guess=v_wall, w2_guess=wp,
         allow_failure=allow_failure
     )
@@ -359,7 +360,7 @@ def fluid_shell_deflagration(
 
         # alpha_plus_bag = alpha.find_alpha_plus(v_wall, alpha_n, n_xi=const.N_XI_DEFAULT)
         # vp_tilde_bag, vm_tilde_bag, vp_bag, vm_bag = boundary.fluid_speeds_at_wall(
-        #     v_wall, alpha_p=alpha_plus_bag, sol_type=boundary.SolutionType.SUB_DEF)
+        #     v_wall, alpha_p=alpha_plus_bag, sol_type=SolutionType.SUB_DEF)
         # wp_bag = boundary.w2_junction(vm_tilde_bag, w_center, vp_tilde_bag)
         # vp_tilde_bag, wp_bag = bag.junction_bag(v_wall, w_center, 0, 1, greater_branch=False)
 
@@ -368,7 +369,7 @@ def fluid_shell_deflagration(
         Vp = 1
         Vm = 0
         alpha_minus = 4*(Vm - Vp)/(3*w_center)
-        vp_tilde_guess = boundary.v_minus(vp=v_wall, ap=alpha_minus, sol_type=boundary.SolutionType.SUB_DEF)
+        vp_tilde_guess = boundary.v_minus(vp=v_wall, ap=alpha_minus, sol_type=SolutionType.SUB_DEF)
         vp_guess = -relativity.lorentz(vp_tilde_guess, v_wall)
         wp_guess = boundary.w2_junction(v_wall, w_center, vp_tilde_guess)
     else:
@@ -393,7 +394,7 @@ def fluid_shell_deflagration(
     # Solve the boundary conditions at the wall
     vp_tilde, wp = boundary.solve_junction(
         model, v_wall, w_center,
-        boundary.Phase.BROKEN, boundary.Phase.SYMMETRIC,
+        Phase.BROKEN, Phase.SYMMETRIC,
         v2_guess=vp_tilde_guess, w2_guess=wp_guess,
         allow_failure=allow_failure
     )
@@ -403,7 +404,7 @@ def fluid_shell_deflagration(
     # Integrate from the wall to the shock
     v, w, xi, t = fluid_integrate_param(
         v0=vp, w0=wp, xi0=v_wall,
-        phase=boundary.Phase.SYMMETRIC,
+        phase=Phase.SYMMETRIC,
         t_end=-const.T_END_DEFAULT,
         n_xi=const.N_XI_DEFAULT,
         df_dtau_ptr=model.df_dtau_ptr(),
@@ -448,7 +449,7 @@ def fluid_shell_generic(
             model: "Model",
             v_wall: float,
             alpha_n: float,
-            sol_type: tp.Optional[boundary.SolutionType] = None,
+            sol_type: tp.Optional[SolutionType] = None,
             wn_guess: float = 1,
             wm_guess: float = 2,
             n_xi: int = const.N_XI_DEFAULT,
@@ -458,9 +459,9 @@ def fluid_shell_generic(
     logger.info(
         f"Solving fluid shell for model={model}, v_wall={v_wall}, sol_type={sol_type}, alpha_n={alpha_n}"
     )
-    if sol_type is None or sol_type is boundary.SolutionType.UNKNOWN:
+    if sol_type is None or sol_type is SolutionType.UNKNOWN:
         sol_type = transition.identify_solution_type_beyond_bag(model, v_wall, alpha_n, wn_guess, wm_guess)
-    if sol_type is boundary.SolutionType.UNKNOWN:
+    if sol_type is SolutionType.UNKNOWN:
         msg = \
             f"Could not determine solution type automatically for model={model}, v_wall={v_wall}, alpha_n={alpha_n}. " \
             "Please choose it manually."
@@ -474,18 +475,18 @@ def fluid_shell_generic(
     logger.info(f"Solved model parameters: v_cj={v_cj}, wn={wn}")
 
     # Detonations are the simplest case
-    if sol_type == boundary.SolutionType.DETON:
+    if sol_type == SolutionType.DETON:
         if transition.cannot_be_detonation(v_wall, v_cj):
             raise ValueError(f"Too slow wall speed for a detonation: v_wall={v_wall}, v_cj={v_cj}")
         # Use bag model as the starting point
         vp_tilde_bag, vm_tilde_bag, vp_bag, vm_bag = boundary.fluid_speeds_at_wall(
-            v_wall, alpha_p=alpha_n, sol_type=boundary.SolutionType.DETON)
+            v_wall, alpha_p=alpha_n, sol_type=SolutionType.DETON)
         wm_bag = boundary.w2_junction(v1=vp_tilde_bag, w1=wn, v2=vm_tilde_bag)
         # Solve junction conditions
         vm_tilde, wm = boundary.solve_junction(
             model,
             v1=v_wall, w1=wn,
-            phase1=boundary.Phase.SYMMETRIC, phase2=boundary.Phase.BROKEN,
+            phase1=Phase.SYMMETRIC, phase2=Phase.BROKEN,
             v2_guess=vm_tilde_bag, w2_guess=wm_bag)
 
         # Convert to the plasma frame
@@ -493,7 +494,7 @@ def fluid_shell_generic(
 
         v, w, xi, t = fluid_integrate_param(
             v0=vm, w0=wm, xi0=v_wall,
-            phase=boundary.Phase.BROKEN,
+            phase=Phase.BROKEN,
             t_end=-const.T_END_DEFAULT,
             n_xi=const.N_XI_DEFAULT,
             df_dtau_ptr=model.df_dtau_ptr()
@@ -506,7 +507,7 @@ def fluid_shell_generic(
         w = np.flip(w)
         xi = np.flip(xi)
 
-    elif sol_type == boundary.SolutionType.SUB_DEF:
+    elif sol_type == SolutionType.SUB_DEF:
         if transition.cannot_be_sub_def(v_wall, model, wn):
             raise ValueError("Invalid parameters for a subsonic deflagration")
 
@@ -514,7 +515,7 @@ def fluid_shell_generic(
         #  the direction of the integration will probably have to be determined by trial and error.
 
         if reverse:
-            xi_sh_guess = 1.1*np.sqrt(transition.max_cs2_inside_def(model, wn))
+            xi_sh_guess = 1.1*np.sqrt(model.cs2_max(wn, Phase.BROKEN))
             sol = fsolve(
                 fluid_shell_deflagration_reverse_solvable,
                 xi_sh_guess,
@@ -549,7 +550,7 @@ def fluid_shell_generic(
             logger.info(f"Deflagration: w_center={w_center}, wn={wn}")
             # print(np.array([v, w, xi]).T)
             # print("wn, xi_sh", wn, xi_sh)
-    elif sol_type == boundary.SolutionType.HYBRID:
+    elif sol_type == SolutionType.HYBRID:
         raise NotImplementedError
     else:
         raise ValueError(f"Invalid solution type: {sol_type}")
@@ -584,7 +585,7 @@ def fluid_shell_generic(
 def fluid_shell_alpha_plus(
         v_wall: float,
         alpha_plus: float,
-        sol_type: boundary.SolutionType = boundary.SolutionType.UNKNOWN,
+        sol_type: SolutionType = SolutionType.UNKNOWN,
         n_xi: int = const.N_XI_DEFAULT,
         w_n: float = 1.,
         cs2_fun: th.CS2Fun = bag.cs2_bag,
@@ -611,10 +612,10 @@ def fluid_shell_alpha_plus(
 
     check.check_wall_speed(v_wall)
 
-    if sol_type == boundary.SolutionType.UNKNOWN.value:
+    if sol_type == SolutionType.UNKNOWN.value:
         sol_type = transition.identify_solution_type_alpha_plus(v_wall, alpha_plus).value
     # The identification above may set sol_type to error
-    if sol_type == boundary.SolutionType.ERROR.value:
+    if sol_type == SolutionType.ERROR.value:
         with numba.objmode:
             logger.error("Giving up because of identify_solution_type error")
         nan_arr = np.array([np.nan])
@@ -648,7 +649,7 @@ def fluid_shell_alpha_plus(
     # - Otherwise compute both and then see which takes to the correct direction
 
     # Integrate forward and find shock.
-    if not sol_type == boundary.SolutionType.DETON.value:
+    if not sol_type == SolutionType.DETON.value:
         # First go
         v, w, xi, t = fluid_integrate_param(
             v0=vfp_p, w0=wp, xi0=v_wall, t_end=-const.T_END_DEFAULT, n_xi=const.N_XI_DEFAULT, df_dtau_ptr=df_dtau_ptr)
@@ -672,7 +673,7 @@ def fluid_shell_alpha_plus(
         xif = np.concatenate((xi, xif))
 
     # Integrate backward to sound speed.
-    if not sol_type == boundary.SolutionType.SUB_DEF.value:
+    if not sol_type == SolutionType.SUB_DEF.value:
         # First go
         v, w, xi, t = fluid_integrate_param(
             v0=vfm_p, w0=wm, xi0=v_wall, t_end=-const.T_END_DEFAULT, n_xi=const.N_XI_DEFAULT, df_dtau_ptr=df_dtau_ptr)
@@ -723,7 +724,7 @@ def fluid_shell_params(
 
     sol_type = transition.identify_solution_type(v_wall, alpha_n)
 
-    if sol_type is boundary.SolutionType.ERROR:
+    if sol_type is SolutionType.ERROR:
         raise RuntimeError(f"No solution for v_wall = {v_wall}, alpha_n = {alpha_n}")
 
     v, w, xi = fluid_shell(v_wall, alpha_n, Np)
@@ -790,7 +791,7 @@ def trim_fluid_wall_to_cs(
         xi: np.ndarray,
         t: np.ndarray,
         v_wall: th.FloatOrArr,
-        sol_type: boundary.SolutionType,
+        sol_type: SolutionType,
         dxi_lim: float = const.DXI_SMALL,
         cs2_fun: th.CS2Fun = bag.cs2_bag) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""
@@ -816,9 +817,9 @@ def trim_fluid_wall_to_cs(
     # TODO: should this be 0 to match with the error handling below?
     n_stop_index = -2
     # n_stop = 0
-    if sol_type != boundary.SolutionType.SUB_DEF.value:
+    if sol_type != SolutionType.SUB_DEF.value:
         for i in range(v.size):
-            if v[i] <= 0 or xi[i] ** 2 <= cs2_fun(w[i], boundary.Phase.BROKEN.value):
+            if v[i] <= 0 or xi[i] ** 2 <= cs2_fun(w[i], Phase.BROKEN.value):
                 n_stop_index = i
                 break
 
@@ -833,7 +834,7 @@ def trim_fluid_wall_to_cs(
     else:
         n_stop = n_stop_index
 
-    if (xi[0] == v_wall) and not (sol_type == boundary.SolutionType.DETON.value):
+    if (xi[0] == v_wall) and not (sol_type == SolutionType.DETON.value):
         n_start = 1
         n_stop += 1
 
@@ -846,7 +847,7 @@ def trim_fluid_wall_to_shock(
         w: np.ndarray,
         xi: np.ndarray,
         t: np.ndarray,
-        sol_type: boundary.SolutionType) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        sol_type: SolutionType) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""
     Trims fluid variable arrays $(v, w, \xi)$ so last element is just ahead of shock.
 
@@ -860,7 +861,7 @@ def trim_fluid_wall_to_shock(
     # TODO: should this be 0 to match with the error handling below?
     n_shock_index = -2
     # n_shock = 0
-    if sol_type != boundary.SolutionType.DETON.value:
+    if sol_type != SolutionType.DETON.value:
         for i in range(v.size):
             if v[i] <= shock.v_shock_bag(xi[i]):
                 n_shock_index = i

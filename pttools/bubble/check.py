@@ -26,7 +26,7 @@ def check_physical_params(params: PhysicalParams) -> None:
     alpha_n = params[1]
     check_wall_speed(v_wall)
 
-    alpha_n_max = alpha.alpha_n_max(v_wall)
+    alpha_n_max = alpha.alpha_n_max_bag(v_wall)
     if alpha_n > alpha_n_max:
         with numba.objmode:
             logger.error((
