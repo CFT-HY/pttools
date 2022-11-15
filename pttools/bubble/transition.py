@@ -65,18 +65,17 @@ def identify_solution_type_beyond_bag(
     return SolutionType.UNKNOWN
 
 
-def cannot_be_sub_def(v_wall: float, model: "Model", wn: float):
-    """If the wall is certainly hypersonic, it cannot be a subsonic deflagration."""
-    if v_wall**2 > max_cs2_inside_def(model, wn):
-        return True
-    return False
+def cannot_be_detonation(v_wall: float, v_cj: float) -> float:
+    r"""If $v_w < v_{CJ}, it cannot be a detonation"""
+    return v_wall < v_cj
 
 
-def is_surely_sub_def(v_wall: float, model: "Model", wn: float):
-    r"""If v_wall < cs_b for all w in [0, wn], then it is certainly a deflagration."""
-    if v_wall**2 < min_cs2_inside_sub_def(model, wn):
-        return True
-    return False
+def cannot_be_sub_def(model: "Model", v_wall: float, wn: float) -> bool:
+    r"""If the wall speed $v_w > c_{sb}(w) \forall w \in [0, w_n]$,
+    then the wall is certainly hypersonic in the broken phase and must have fluid movement inside the wall
+    to satisfy the boundary conditions. Therefore, the solution cannot be a subsonic deflagration."""
+    cs2_max, w_max = model.cs2_max(wn, Phase.BROKEN)
+    return v_wall**2 > cs2_max
 
 
 def is_surely_detonation(v_wall: float, v_cj: float) -> float:
@@ -84,37 +83,12 @@ def is_surely_detonation(v_wall: float, v_cj: float) -> float:
     return v_wall > v_cj
 
 
-def cannot_be_detonation(v_wall: float, v_cj: float) -> float:
-    r"""If $v_w < v_{CJ}, it cannot be a detonation"""
-    return v_wall < v_cj
-
-
-def max_cs2_inside_def(model: "Model", wn: float = 1, allow_fail: bool = False) -> float:
-    r"""If the wall speed $v_w > c_s(w) \forall w \in [0, w_n]$,
-    then the wall is certainly hypersonic and therefore the solution cannot be a subsonic deflagration."""
-    def func(w):
-        return -model.cs2(w, boundary.Phase.BROKEN)
-
-    sol = fminbound(func, x1=0, x2=wn, full_output=True)
-    cs2 = -sol[1]
-    if sol[2]:
-        msg = f"Could not find max_cs2_inside_def. Using wn={wn}, max_cs2_inside_def={cs2}. Iterations: {sol[3]}"
-        logger.error(msg)
-        if not allow_fail:
-            raise RuntimeError(msg)
-    return cs2
-
-
-def min_cs2_inside_sub_def(model: "Model", wn: float = 1) -> float:
-    r"""If the wall speed $v_w < c_s(w) \forall w \in [0, w_n]$,
-    then the wall is certainly subsonic and therefore the solution is certainly a subsonic deflagration."""
-    def func(w):
-        return model.cs2(w, boundary.Phase.BROKEN)
-
-    sol = fminbound(func, x1=0, x2=wn)
-    return sol[0]
-
-# -----
+def is_surely_sub_def(model: "Model", v_wall: float, wn: float) -> bool:
+    r"""If the wall speed $v_w < c_{sb}(w) \forall w \in [0, w_n]$,
+    then the wall is certainly subsonic in the broken phase,
+    and therefore the solution is certainly a subsonic deflagration."""
+    cs2_min, w_min = model.cs2_min(wn, Phase.BROKEN)
+    return v_wall**2 < cs2_min
 
 
 @numba.njit

@@ -136,6 +136,15 @@ class ThermoModel(BaseModel, abc.ABC):
 
         return cs2
 
+    def gen_cs2_neg(self) -> th.CS2Fun:
+        cs2 = self.cs2
+
+        @numba.njit
+        def cs2_neg(temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+            return -cs2(temp, phase)
+
+        return cs2_neg
+
     def cs2(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""
         Sound speed squared, $c_s^2$, interpolated from precomputed values.
@@ -146,6 +155,9 @@ class ThermoModel(BaseModel, abc.ABC):
         :return: $c_s^2$
         """
         raise RuntimeError("The cs2(T, phase) function has not yet been loaded")
+
+    def cs2_neg(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        raise RuntimeError("The cs2_neg(T, phase) function has not yet been loaded.")
 
     def cs2_full(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         """Full evaluation of $c_s^2$ from the underlying quantities"""

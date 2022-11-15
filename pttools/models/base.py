@@ -41,7 +41,9 @@ class BaseModel(abc.ABC):
         if self.t_max <= self.t_min:
             raise ValueError(f"T_max ({self.t_max}) should be higher than T_min ({self.t_min}).")
 
-        self.cs2: th.CS2Fun = self.gen_cs2() if gen_cs2 else None
+        if gen_cs2:
+            self.cs2 = self.gen_cs2()
+            self.cs2_neg = self.gen_cs2_neg()
 
     # Concrete methods
 
@@ -106,5 +108,14 @@ class BaseModel(abc.ABC):
         pass
 
     @abc.abstractmethod
+    def cs2_neg(self, *args, **kwargs) -> th.FloatOrArr:
+        pass
+
+    @abc.abstractmethod
     def gen_cs2(self) -> th.CS2Fun:
         r"""This function should generate a Numba-jitted $c_s^2$ function for the model."""
+
+    @abc.abstractmethod
+    def gen_cs2_neg(self) -> th.CS2Fun:
+        r"""This function shoud generate a negative version of
+        the Numba-jitted $c_s^2$ function to be used for maximisation."""

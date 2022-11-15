@@ -2,8 +2,9 @@ import abc
 import logging
 import typing as tp
 
+import numba
 import numpy as np
-from scipy.optimize import fsolve
+from scipy.optimize import fminbound, fsolve
 
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase
@@ -63,6 +64,31 @@ class Model(BaseModel, abc.ABC):
             raise ValueError(f"T_ref should be lower than T_max. Got: T_ref={t_ref}, T_max={self.t_max}")
 
     # Concrete methods
+
+    @staticmethod
+    def _cs2_limit(
+            w_max: float, phase: Phase,
+            is_max: bool, cs2_fun: th.CS2Fun, w_min: float = 0,
+            allow_fail: bool = False, **kwargs) -> tp.Tuple[float, float]:
+        name = "max" if is_max else "min"
+        sol = fminbound(cs2_fun, x1=w_min, x2=w_max, args=(phase,), full_output=True, **kwargs)
+        w: float = sol[0]
+        cs2: float = -sol[1] if is_max else sol[1]
+        if sol[2]:
+            msg = f"Could not find cs2_{name}. Using cs2_{name}={cs2} at w={w}. Iterations: {sol[3]}"
+            logger.error(msg)
+            if not allow_fail:
+                raise RuntimeError(msg)
+        invalid_w = w < 0
+        invalid_cs2 = (cs2 < 0 or cs2 > 1)
+        if invalid_w or invalid_cs2:
+            msg = f"Got {'invalid' if invalid_cs2 else ''} cs2_{name}={cs2} at {'invalid' if invalid_w else ''} w={w}"
+            logger.error(msg)
+            if not allow_fail:
+                raise RuntimeError(msg)
+        if cs2 > 1/3:
+            logger.warning(f"Got physically impossible cs2={cs2} > 1/3 at w={w}. Check that the model is valid.")
+        return cs2, w
 
     @staticmethod
     def check_w_for_alpha(w: th.FloatOrArr, allow_negative: bool = False):
@@ -154,6 +180,7 @@ class Model(BaseModel, abc.ABC):
 
         :param guess: starting guess for the critical temperature
         """
+        # Todo: enable full output
         # This returns np.float64
         return fsolve(
             self.critical_temp_opt,
@@ -180,7 +207,22 @@ class Model(BaseModel, abc.ABC):
         :param w: enthalpy $w$
         :param phase: phase $\phi$
         """
-        raise RuntimeError("The cs2(w, phase) function has not yet been loaded")
+        raise RuntimeError("The cs2(w, phase) function has not yet been loaded.")
+
+    def cs2_max(
+            self,
+            w_max: float, phase: Phase,
+            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tp.Tuple[float, float]:
+        return self._cs2_limit(w_max, phase, True, self.cs2_neg, w_min, allow_fail, **kwargs)
+
+    def cs2_min(
+            self,
+            w_max: float, phase: Phase,
+            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tp.Tuple[float, float]:
+        return self._cs2_limit(w_max, phase, False, self.cs2, w_min, allow_fail, **kwargs)
+
+    def cs2_neg(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        raise RuntimeError("The cs2_neg(w, phase) function has not yet been loaded.")
 
     def cs2_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         return self.cs2(self.w(temp, phase), phase)
@@ -213,6 +255,15 @@ class Model(BaseModel, abc.ABC):
         r"""Effective degrees of freedom for energy density, $g_{\text{eff},e}(w,\phi)$"""
         temp = self.temp(w, phase)
         return self.ge_temp(temp, phase)
+
+    def gen_cs2_neg(self) -> th.CS2Fun:
+        cs2 = self.cs2
+
+        @numba.njit
+        def cs2_neg(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+            return -cs2(w, phase)
+
+        return cs2_neg
 
     def gs(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Effective degrees of freedom for entropy, $g_{\text{eff},s}(w,\phi)$"""

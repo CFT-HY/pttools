@@ -47,6 +47,7 @@ class FullModel(Model):
         )
 
         self.cs2 = self.gen_cs2()
+        self.cs2_neg = self.gen_cs2_neg()
 
     def gen_cs2(self):
         """This function generates the Numba-jitted cs2 function to be used by the fluid integrator"""
