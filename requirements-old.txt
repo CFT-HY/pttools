@@ -8,5 +8,7 @@ numbalsoda == 0.3.1; sys_platform != "win32"
 # NumPy 1.20.0 had an ABI change that made it incompatible with old Numba versions
 # https://github.com/numba/numba/issues/6041#issuecomment-665123183
 numpy == 1.19.0
+orjson
+plotly
 scipy
 tbb
