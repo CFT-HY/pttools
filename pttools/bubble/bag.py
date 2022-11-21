@@ -134,40 +134,6 @@ def p_bag(
 
 
 @numba.njit
-def _get_phase_scalar(xi: float, v_w: float) -> float:
-    return Phase.BROKEN if xi < v_w else Phase.SYMMETRIC
-
-
-@numba.njit
-def _get_phase_arr(xi: np.ndarray, v_w: float) -> np.ndarray:
-    ph = np.zeros_like(xi)
-    ph[np.where(xi < v_w)] = Phase.BROKEN.value
-    return ph
-
-
-@numba.generated_jit(nopython=True)
-def get_phase_bag(xi: th.FloatOrArr, v_w: float) -> th.FloatOrArrNumba:
-    r"""
-    Returns array indicating phase of system.
-    in symmetric phase $(\xi > v_w)$, phase = 0
-    in broken phase $(\xi < v_w)$, phase = 1
-
-    :return: phase
-    """
-    if isinstance(xi, numba.types.Float):
-        return _get_phase_scalar
-    if isinstance(xi, numba.types.Array):
-        if not xi.ndim:
-            return _get_phase_scalar
-        return _get_phase_arr
-    if isinstance(xi, float):
-        return _get_phase_scalar(xi, v_w)
-    if isinstance(xi, np.ndarray):
-        return _get_phase_arr(xi, v_w)
-    raise TypeError(f"Unknown type for {type(xi)}")
-
-
-@numba.njit
 def w_bag(
         e: th.FloatOrArr,
         phase: th.IntOrArr,

@@ -38,7 +38,8 @@ class SolutionType(str, enum.Enum):
 
     .. plot:: fig/relativistic_combustion.py
     """
-    # TODO: Should the strong and weak branches of the solutions (vplus, vminus signs) be distinquished here?
+    # Todo: Move this to transition.py
+    # Todo: Should the strong and weak branches of the solutions (vplus, vminus signs) be distinquished here?
 
     #: In a detonation the fluid outside the bubble is at rest and the wall moves at a supersonic speed.
     DETON = "Detonation"
@@ -125,6 +126,40 @@ def fluid_speeds_at_wall(
         raise ValueError("Unknown sol_type")
 
     return vfp_w, vfm_w, vfp_p, vfm_p
+
+
+@numba.njit
+def _get_phase_scalar(xi: float, v_w: float) -> float:
+    return Phase.BROKEN if xi < v_w else Phase.SYMMETRIC
+
+
+@numba.njit
+def _get_phase_arr(xi: np.ndarray, v_w: float) -> np.ndarray:
+    ph = np.zeros_like(xi)
+    ph[np.where(xi < v_w)] = Phase.BROKEN.value
+    return ph
+
+
+@numba.generated_jit(nopython=True)
+def get_phase(xi: th.FloatOrArr, v_w: float) -> th.FloatOrArrNumba:
+    r"""
+    Returns array indicating phase of system.
+    in symmetric phase $(\xi > v_w)$, phase = 0
+    in broken phase $(\xi < v_w)$, phase = 1
+
+    :return: phase
+    """
+    if isinstance(xi, numba.types.Float):
+        return _get_phase_scalar
+    if isinstance(xi, numba.types.Array):
+        if not xi.ndim:
+            return _get_phase_scalar
+        return _get_phase_arr
+    if isinstance(xi, float):
+        return _get_phase_scalar(xi, v_w)
+    if isinstance(xi, np.ndarray):
+        return _get_phase_arr(xi, v_w)
+    raise TypeError(f"Unknown type for {type(xi)}")
 
 
 def junction_conditions_deviation(vp: th.FloatOrArr, vm: th.FloatOrArr, ap: th.FloatOrArr) -> th.FloatOrArr:
