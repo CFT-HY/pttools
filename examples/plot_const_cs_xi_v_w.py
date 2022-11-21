@@ -1,11 +1,16 @@
-import os.path
+"""
+ConstCSModel
+====================
+
+Constant sound speed model
+"""
 
 import numpy as np
 
 from pttools.analysis.plot_fluid_shell_3d import BubblePlot3D
 from pttools.bubble.boundary import SolutionType
 from pttools.bubble.bubble import Bubble
-from pttools.logging import setup_logging
+# from pttools.logging import setup_logging
 from pttools.models.const_cs import ConstCSModel
 
 
@@ -24,12 +29,8 @@ def main():
     plot.add(Bubble(const_cs, v_wall=0.95, alpha_n=0.15, sol_type=SolutionType.DETON), color="red")
     plot.add(Bubble(const_cs, v_wall=0.4, alpha_n=0.6, sol_type=SolutionType.SUB_DEF), color="red")
 
-    fig_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "const_cs_xi_v_w")
-
-    # plot.show()
-    plot.save(fig_path)
+    return plot.create_fig()
 
 
-if __name__ == "__main__":
-    setup_logging()
-    main()
+# setup_logging()
+main()

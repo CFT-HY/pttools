@@ -1,51 +1,30 @@
 Bubble
 ======
+
+.. currentmodule:: pttools.bubble
+
 .. automodule:: pttools.bubble
+   :no-members:
+   :no-inherited-members:
 
-Alpha
------
-.. automodule:: pttools.bubble.alpha
+:py:mod:`pttools.bubble`:
 
-Approx
-------
-.. automodule:: pttools.bubble.approx
+.. autosummary::
+   :toctree: gen_modules/
+   :template: module.rst
 
-Bag
----
-.. automodule:: pttools.bubble.bag
-
-Boundary
---------
-.. automodule:: pttools.bubble.boundary
-
-Check
------
-.. automodule:: pttools.bubble.check
-
-Const
------
-.. automodule:: pttools.bubble.const
-
-Fluid
------
-.. automodule:: pttools.bubble.fluid
-
-Physical parameters
--------------------
-.. automodule:: pttools.bubble.physical_params
-
-Props
------
-.. automodule:: pttools.bubble.props
-
-Quantities
-----------
-.. automodule:: pttools.bubble.quantities
-
-Relativity
-----------
-.. automodule:: pttools.bubble.relativity
-
-Transition
-----------
-.. automodule:: pttools.bubble.transition
+   alpha
+   approx
+   bag
+   boundary
+   bubble
+   chapman_jouguet
+   check
+   const
+   fluid
+   physical_params
+   props
+   quantities
+   relativity
+   shock
+   transition

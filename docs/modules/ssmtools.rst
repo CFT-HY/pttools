@@ -1,20 +1,19 @@
 SSMtools
 ========
 
+.. currentmodule:: pttools.ssmtools
+
 .. automodule:: pttools.ssmtools
+   :no-members:
+   :no-inherited-members:
 
-Calculators
------------
-.. automodule:: pttools.ssmtools.calculators
+:py:mod:`pttools.ssmtools`:
 
-Const
------
-.. automodule:: pttools.ssmtools.const
+.. autosummary::
+   :toctree: gen_modules/
+   :template: module.rst
 
-Spectrum
------------
-.. automodule:: pttools.ssmtools.spectrum
-
-SSM
----
-.. automodule:: pttools.ssmtools.ssm
+   calculators
+   const
+   spectrum
+   ssm

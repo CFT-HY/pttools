@@ -8,10 +8,12 @@ Welcome to PTtools's documentation!
 
 .. toctree::
    :caption: Contents:
+   :maxdepth: 2
 
    install
    usage
    history
+   auto_examples/index
    modules/index
    modules/tests/index
    acknowledgements

@@ -10,6 +10,8 @@ Modules
 
 
 .. toctree::
+   :maxdepth: 1
+
    analysis
    bubble
    models

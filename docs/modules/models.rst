@@ -1,35 +1,25 @@
 Models
 ======
+
+.. currentmodule:: pttools.models
+
 .. automodule:: pttools.models
+   :no-members:
+   :no-inherited-members:
 
-Base model
-----------
-.. automodule:: pttools.models.base
+:py:mod:`pttools.models`:
 
-Model
------
-.. automodule:: pttools.models.model
+.. autosummary::
+   :toctree: gen_modules/
+   :template: module.rst
 
-Analytic base model
--------------------
-.. automodule:: pttools.models.analytic
-
-Bag model
----------
-.. automodule:: pttools.models.bag
-
-Constant sound speed
---------------------
-.. automodule:: pttools.models.const_cs
-
-Full thermodynamics-based model
--------------------------------
-.. automodule:: pttools.models.full
-
-Thermodynamics model
---------------------
-.. automodule:: pttools.models.thermo
-
-Standard Model
---------------
-.. automodule:: pttools.models.sm
+   analytic
+   bag
+   base
+   const_cs
+   const_cs_thermo
+   full
+   model
+   sigmoid
+   sm
+   thermo

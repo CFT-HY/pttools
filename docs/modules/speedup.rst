@@ -1,39 +1,24 @@
 Speedup
 =======
+
+.. currentmodule:: pttools.speedup
+
 .. automodule:: pttools.speedup
+   :no-members:
+   :no-inherited-members:
 
-Differential
-------------
-.. automodule:: pttools.speedup.differential
+:py:mod:`pttools.speedup`:
 
-Fitpack
--------
-.. automodule:: pttools.speedup.fitpack
+.. autosummary::
+   :toctree: gen_modules/
+   :template: module.rst
 
-Functions
----------
-.. automodule:: pttools.speedup.functions
-
-JIT
----
-.. automodule:: pttools.speedup.jit
-
-Numba wrapper
--------------
-.. automodule:: pttools.speedup.numba_wrapper
-
-Options
--------
-.. automodule:: pttools.speedup.options
-
-Overload
---------
-.. automodule:: pttools.speedup.overload
-
-Spline
-------
-.. automodule:: pttools.speedup.spline
-
-Utilities
----------
-.. automodule:: pttools.speedup.utils
+   differential
+   fitpack
+   functions
+   jit
+   numba_wrapper
+   options
+   overload
+   spline
+   utils

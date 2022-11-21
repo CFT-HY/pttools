@@ -1,5 +1,5 @@
 Analysis
-======
+========
 .. automodule:: pttools.analysis
 
 .. automodule:: pttools.analysis.g_cs2

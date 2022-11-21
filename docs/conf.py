@@ -13,10 +13,12 @@
 import os.path
 import sys
 import typing as tp
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+dir_path = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.dirname(dir_path))
 
 # Create a directory for static files to avoid a warning when building.
-os.makedirs(os.path.join(os.path.dirname(os.path.abspath(__file__)), "_static"), exist_ok=True)
+os.makedirs(os.path.join(dir_path, "_static"), exist_ok=True)
 
 # -- Project information -----------------------------------------------------
 
@@ -44,6 +46,7 @@ extensions = [
     "matplotlib.sphinxext.plot_directive",
     # Automatic documentation for Python code
     "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
     # Automatic labeling for documentation sections
     "sphinx.ext.autosectionlabel",
     # External links
@@ -51,6 +54,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     # Mathematics rendering
     "sphinx.ext.mathjax",
+    "sphinx_gallery.gen_gallery",
     "sphinx_math_dollar",
     # Markdown support can be enabled by uncommenting the line below.
     # https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html#using-markdown-with-sphinx
@@ -174,3 +178,15 @@ if "GITHUB_ACTIONS" in os.environ:
 
 linkcheck_timeout = 5
 linkcheck_workers = 10
+
+sphinx_gallery_conf = {
+    "backreferences_dir": "gen_modules/backreferences",
+    "compress_images": ("images", "thumbnails"),
+    "doc_module": "pttools",
+    "examples_dirs": os.path.join(os.path.dirname(dir_path), "examples"),
+    "gallery_dirs": "auto_examples",
+    # "image_srcset": ["2x"],
+    # "matplotlib_animations": True,
+    "show_memory": True,
+}
+autosummary_generate = True

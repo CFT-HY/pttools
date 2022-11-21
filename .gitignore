@@ -19,6 +19,8 @@ packages.svg
 
 # Output files
 _build
+auto_examples
+gen_modules
 logs
 test-results
 tests/test_data/fluidprofiles
