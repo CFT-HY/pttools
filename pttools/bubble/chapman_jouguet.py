@@ -199,6 +199,9 @@ def v_chapman_jouguet_bag(alpha_plus: th.FloatOrArr) -> th.FloatOrArr:
     $$v_{CJ}(\alpha_+) = \frac{1}{\sqrt{3}} \frac{1 + \sqrt{2\alpha_+ + 3 \alpha_+^2}}{1 + \alpha_+}$$
     This differs from :notes:` \` eq. 7.34 and `\ ` eq. B.19 by a factor of 2.
     It should be noted that $v_{CJ} \in [0, 1] \forall \alpha_+ >= 0$.
+
+    The Chapman-Jouguet speed can be different for other models,
+    but for all detonations $v_w \geq v_{CJ,\text{bag}}$.
     """
     return 1/np.sqrt(3) * (1 + np.sqrt(2*alpha_plus + 3*alpha_plus**2)) / (1 + alpha_plus)
 

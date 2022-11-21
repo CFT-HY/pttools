@@ -4,8 +4,6 @@ import logging
 import typing as tp
 
 import numba
-import numpy as np
-from scipy.optimize import fminbound
 
 import pttools.type_hints as th
 from . import alpha as alpha_tools
@@ -132,15 +130,3 @@ def max_speed_deflag(alpha_p: th.FloatOrArr) -> th.FloatOrArr:
     :param alpha_p: $\alpha_+$
     """
     return 1 / (3 * v_plus(const.CS0, alpha_p, SolutionType.SUB_DEF))
-
-
-@numba.njit
-def min_speed_deton_bag(alpha: th.FloatOrArr) -> th.FloatOrArr:
-    r"""
-    Minimum speed for a detonation (Jouguet speed).
-    Equivalent to $v_+(cs_0,\alpha)$.
-    Note that $\alpha_+ = \alpha_n$ for detonation.
-
-    :param alpha: $\alpha$
-    """
-    return (const.CS0 / (1 + alpha)) * (1 + np.sqrt(alpha * (2. + 3. * alpha)))
