@@ -38,7 +38,7 @@ class BubblePlot3D:
             )
         ])
 
-    def create_fig(self):
+    def create_fig(self) -> go.Figure:
         self.mu_surface()
         self.shock_surfaces()
         return go.Figure(
@@ -68,10 +68,11 @@ class BubblePlot3D:
         self.plots.append(go.Surface(x=w, y=xi, z=mu, opacity=0.5, name="µ"))
         logger.info("Mu surface ready.")
 
-    def save(self, path: str):
+    def save(self, path: str) -> go.Figure:
         fig = self.create_fig()
         fig.write_html(f"{path}.html")
         fig.write_image(f"{path}.png")
+        return fig
 
     def shock_surfaces(self, n_xi: int = 20, n_w: int = 30, w_mult: float = 1.1):
         if self.model is None:
@@ -98,5 +99,7 @@ class BubblePlot3D:
         self.plots.append(go.Surface(x=wm_grid, y=xi_grid, z=vm_grid, opacity=0.5, name="Shock, $w=w_-$"))
         logger.info("Shock surface ready.")
 
-    def show(self):
-        self.create_fig().show()
+    def show(self) -> go.Figure:
+        fig = self.create_fig()
+        fig.show()
+        return fig
