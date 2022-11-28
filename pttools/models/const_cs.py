@@ -29,7 +29,8 @@ class ConstCSModel(AnalyticModel):
     .. plot:: fig/const_cs.py
 
     """
-    DEFAULT_LABEL = "Constant $c_s$ model"
+    DEFAULT_LABEL_LATEX = "Constant $c_s$ model"
+    DEFAULT_LABEL_UNICODE = "Constant cₛ model"
     DEFAULT_NAME = "const_cs"
 
     def __init__(
@@ -42,7 +43,8 @@ class ConstCSModel(AnalyticModel):
             t_max: float = None,
             t_ref: float = 1,
             name: str = None,
-            label: str = None):
+            label_latex: str = None,
+            label_unicode: str = None):
         # Ensure that these descriptions correspond to those in the base class
         r"""
         :param a_s: prefactor of $p$ in the symmetric phase. The convention is as in :notes:`\ ` eq. 7.33.
@@ -90,7 +92,7 @@ class ConstCSModel(AnalyticModel):
             a_s=a_s, a_b=a_b,
             g_s=g_s, g_b=g_b,
             t_min=t_min, t_max=t_max,
-            name=name, label=label
+            name=name, label_latex=label_latex, label_unicode=label_unicode
         )
 
     def alpha_n(self, wn: th.FloatOrArr, allow_negative: bool = False, allow_no_transition: bool = False) -> th.FloatOrArr:

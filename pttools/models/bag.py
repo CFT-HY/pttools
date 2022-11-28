@@ -19,7 +19,8 @@ class BagModel(AnalyticModel):
     .. plot:: fig/xi_v_plane.py
 
     """
-    DEFAULT_LABEL = "Bag model"
+    DEFAULT_LABEL_LATEX = "Bag model"
+    DEFAULT_LABEL_UNICODE = DEFAULT_LABEL_LATEX
     DEFAULT_NAME = "bag"
 
     def __init__(
@@ -29,7 +30,8 @@ class BagModel(AnalyticModel):
             g_s: float = None, g_b: float = None,
             t_min: float = None, t_max: float = None,
             name: str = None,
-            label: str = None):
+            label_latex: str = None,
+            label_unicode: str = None):
         if V_b != 0:
             logger.warning("V_b has been specified for the bag model, even though it's usually omitted.")
 
@@ -38,7 +40,7 @@ class BagModel(AnalyticModel):
             a_s=a_s, a_b=a_b,
             g_s=g_s, g_b=g_b,
             t_min=t_min, t_max=t_max,
-            name=name, label=label
+            name=name, label_latex=label_latex, label_unicode=label_unicode
         )
         if self.a_s <= self.a_b:
             raise ValueError("The bag model must have a_s > a_b for the critical temperature to be non-negative.")

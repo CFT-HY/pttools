@@ -34,15 +34,20 @@ class FullModel(Model):
             V_s: float = 0, V_b: float = 0,
             t_crit_guess: float = None,
             allow_invalid: bool = False,
-            name: str = None, label: str = None):
-        if label is None:
-            label = f"Full model ({thermo.label})"
+            name: str = None,
+            label_latex: str = None,
+            label_unicode: str = None):
+        if not label_latex:
+            label_latex = f"Full model ({thermo.label_latex})"
+        if not label_unicode:
+            label_unicode = f"Full model ({thermo.label_unicode})"
         self.thermo = thermo
 
         super().__init__(
             V_s=V_s, V_b=V_b,
             t_min=thermo.t_min, t_max=thermo.t_max,
-            name=name, label=label, gen_critical=False, gen_cs2=False, implicit_V=True)
+            name=name, label_latex=label_latex, label_unicode=label_unicode,
+            gen_critical=False, gen_cs2=False, implicit_V=True)
 
         self.temp_spline_s = splrep(
             np.log10(self.w(self.thermo.GEFF_DATA_TEMP, Phase.SYMMETRIC)), self.thermo.GEFF_DATA_LOG_TEMP

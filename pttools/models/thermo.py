@@ -30,7 +30,8 @@ class ThermoModel(BaseModel, abc.ABC):
             name: str = None,
             t_min: float = None, t_max: float = None,
             restrict_to_valid: bool = True,
-            label: str = None,
+            label_latex: str = None,
+            label_unicode: str = None,
             gen_cs2: bool = True):
 
         t_data_min = np.min(self.GEFF_DATA_TEMP)
@@ -49,7 +50,7 @@ class ThermoModel(BaseModel, abc.ABC):
             name=name,
             t_min=t_min, t_max=t_max,
             restrict_to_valid=restrict_to_valid,
-            label=label,
+            label_latex=label_latex, label_unicode=label_unicode,
             gen_cs2=gen_cs2
         )
 

@@ -32,7 +32,8 @@ class Model(BaseModel, abc.ABC):
             t_ref: float = 1, t_min: float = None, t_max: float = None,
             t_crit_guess: float = None,
             name: str = None,
-            label: str = None,
+            label_latex: str = None,
+            label_unicode: str = None,
             gen_critical: bool = True,
             gen_cs2: bool = True,
             implicit_V: bool = False,
@@ -62,7 +63,11 @@ class Model(BaseModel, abc.ABC):
         #: $$\frac{90}{\pi^2} (V_b - V_s)$$
         self.critical_temp_const: float = 90 / np.pi ** 2 * (self.V_b - self.V_s)
 
-        super().__init__(name=name, t_min=t_min, t_max=t_max, label=label, gen_cs2=gen_cs2)
+        super().__init__(
+            t_min=t_min, t_max=t_max,
+            name=name, label_latex=label_latex, label_unicode=label_unicode,
+            gen_cs2=gen_cs2
+        )
 
         # A model could have t_ref = 1 GeV and be valid only for e.g. > 10 GeV
         # if t_ref < self.t_min:

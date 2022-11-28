@@ -35,7 +35,8 @@ class AnalyticModel(Model, abc.ABC):
             g_s: float = None, g_b: float = None,
             t_min: float = None, t_max: float = None,
             name: str = None,
-            label: str = None):
+            label_latex: str = None,
+            label_unicode: str = None):
         self.a_s: float
         self.a_b: float
         if a_s is not None and a_b is not None and g_s is None and g_b is None:
@@ -52,7 +53,7 @@ class AnalyticModel(Model, abc.ABC):
         super().__init__(
             V_s=V_s, V_b=V_b,
             t_min=t_min, t_max=t_max,
-            name=name, label=label
+            name=name, label_latex=label_latex, label_unicode=label_unicode
         )
         if self.a_s <= self.a_b:
             logger.warning(

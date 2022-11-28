@@ -20,7 +20,8 @@ class StandardModel(ThermoModel):
 
     Units are in GeV
     """
-    DEFAULT_LABEL = "Standard Model"
+    DEFAULT_LABEL_LATEX = "Standard Model"
+    DEFAULT_LABEL_UNICODE = DEFAULT_LABEL_LATEX
     DEFAULT_NAME = "standard_model"
     # Copied from the ArXiv file som_eos.tex
     GEFF_DATA = np.array([
@@ -61,7 +62,8 @@ class StandardModel(ThermoModel):
             name: str = None,
             t_min: float = None, t_max: float = None,
             restrict_to_valid: bool = True,
-            label: str = None,
+            label_latex: str = None,
+            label_unicode: str = None,
             gen_cs2: bool = True):
 
         self.g_mult_s = g_mult_s
@@ -70,10 +72,9 @@ class StandardModel(ThermoModel):
         self.V_b = V_b
 
         super().__init__(
-            name=name,
             t_min=t_min, t_max=t_max,
             restrict_to_valid=restrict_to_valid,
-            label=label,
+            name=name, label_latex=label_latex, label_unicode=label_unicode,
             gen_cs2=gen_cs2
         )
 

@@ -12,7 +12,8 @@ logger = logging.getLogger(__name__)
 
 class BaseModel(abc.ABC):
     """The base for both Model and ThermoModel"""
-    DEFAULT_LABEL: str = None
+    DEFAULT_LABEL_LATEX: str = None
+    DEFAULT_LABEL_UNICODE: str = None
     DEFAULT_NAME: str = None
     # Zero temperature would break many of the equations
     DEFAULT_T_MIN: float = 1e-3
@@ -23,10 +24,12 @@ class BaseModel(abc.ABC):
             name: str = None,
             t_min: float = None, t_max: float = None,
             restrict_to_valid: bool = True,
-            label: str = None,
+            label_latex: str = None,
+            label_unicode: str = None,
             gen_cs2: bool = True):
         self.name = self.DEFAULT_NAME if name is None else name
-        self.label = self.DEFAULT_LABEL if label is None else label
+        self.label_latex = self.DEFAULT_LABEL_LATEX if label_latex is None else label_latex
+        self.label_unicode = self.DEFAULT_LABEL_UNICODE if label_unicode is None else label_unicode
         self.t_min = self.DEFAULT_T_MIN if t_min is None else t_min
         self.t_max = self.DEFAULT_T_MAX if t_max is None else t_max
         self.restrict_to_valid = restrict_to_valid
@@ -37,8 +40,10 @@ class BaseModel(abc.ABC):
             logger.warning(
                 "Model names should not have spaces to ensure that the file names don't cause problems. "
                 f"Got: \"{self.name}\".")
-        if self.label is None:
-            raise ValueError("The model must have a label.")
+        if not (self.label_latex and self.label_unicode):
+            raise ValueError("The model must have labels.")
+        if "$" in self.label_unicode:
+            logger.warning(f"The Unicode label of a model should not contain \"$\". Got: \"{self.label_unicode}\"")
         if self.t_max <= self.t_min:
             raise ValueError(f"T_max ({self.t_max}) should be higher than T_min ({self.t_min}).")
 
@@ -95,7 +100,8 @@ class BaseModel(abc.ABC):
         """User-created model classes should extend this"""
         return {
             "name": self.name,
-            "label": self.label,
+            "label_latex": self.label_latex,
+            "label_unicode": self.label_unicode,
             "datetime": datetime.datetime.now(),
             "t_min": self.t_min,
             "t_max": self.t_max,

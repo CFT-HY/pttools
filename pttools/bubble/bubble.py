@@ -36,7 +36,9 @@ class Bubble:
         self.alpha_n = alpha_n
         self.sol_type = sol_type
         self.solved = False
-        self.label = rf"{self.model.label}, $v_w={v_wall}, \alpha_n={alpha_n}$" if label is None else label
+        # The labels are defined without LaTeX, as it's not supported in Plotly 3D plots.
+        # https://github.com/plotly/plotly.js/issues/608
+        self.label = f"{self.model.label}, v_w={v_wall}, αₙ={alpha_n}" if label is None else label
         self.notes: tp.List[str] = []
 
         self.wn = model.w_n(alpha_n)

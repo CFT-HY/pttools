@@ -8,7 +8,8 @@ from . import const_cs
 
 
 class ConstCSThermoModel(ThermoModel):
-    DEFAULT_LABEL = "ConstCSThermoModel"
+    DEFAULT_LABEL_LATEX = "Constant $c_s$ thermo-model"
+    DEFAULT_LABEL_UNICODE = "Constant cₛ thermo-model"
     DEFAULT_NAME = "const_cs_thermo"
 
     GEFF_DATA_LOG_TEMP = np.linspace(-1, 3, 1000)
@@ -23,7 +24,8 @@ class ConstCSThermoModel(ThermoModel):
             t_max: float = None,
             t_ref: float = 1,
             name: str = None,
-            label: str = None):
+            label_latex: str = None,
+            label_unicode: str = None):
         # For validation
         const_cs.ConstCSModel(css2=css2, csb2=csb2, V_s=V_s, V_b=V_b, a_s=a_s, a_b=a_b)
 
@@ -42,7 +44,7 @@ class ConstCSThermoModel(ThermoModel):
 
         super().__init__(
             t_min=t_min, t_max=t_max,
-            name=name, label=label
+            name=name, label_latex=label_latex, label_unicode=label_unicode
         )
 
     def dge_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:

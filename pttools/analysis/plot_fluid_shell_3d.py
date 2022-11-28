@@ -15,10 +15,11 @@ logger = logging.getLogger(__name__)
 
 
 class BubblePlot3D:
-    def __init__(self, model: Model = None):
+    def __init__(self, model: Model = None, colorscale: str = "YlOrRd"):
         self.model = model
         self.bubbles: tp.List[Bubble] = []
         self.plots: tp.List[BasePlotlyType] = []
+        self.colorscale = colorscale
 
     def add(self, bubble: Bubble, color: str = None):
         if not bubble.solved:
@@ -32,8 +33,9 @@ class BubblePlot3D:
             }
         self.plots.extend([
             go.Scatter3d(
-                x=bubble.w, y=bubble.xi, z=bubble.v,
+                x=bubble.w/bubble.model.wn_max, y=bubble.xi, z=bubble.v,
                 mode="lines",
+                name=bubble.label,
                 **kwargs
             )
         ])
@@ -41,18 +43,25 @@ class BubblePlot3D:
     def create_fig(self) -> go.Figure:
         self.mu_surface()
         self.shock_surfaces()
-        return go.Figure(
+        fig = go.Figure(
             data=[
                 *self.plots
-            ],
-            layout={
-                "scene": {
-                    "xaxis_title": "w",
-                    "yaxis_title": r"$\xi$",
-                    "zaxis_title": "v"
-                }
-            }
+            ]
         )
+        fig.update_layout({
+            # "margin": {
+            #     "l": 0,
+            #     "r": 200,
+            #     "b": 0,
+            #     "t": 0
+            # },
+            "scene": {
+                "xaxis_title": "w/w(Tc)",
+                "yaxis_title": "ξ",
+                "zaxis_title": "v"
+            },
+        })
+        return fig
 
     def mu_surface(self, n_xi: int = 20, n_w: int = 20, w_mult: float = 1.1):
         logger.info("Computing mu surface.")
@@ -65,7 +74,15 @@ class BubblePlot3D:
         mu = lorentz(xi_grid, cs_grid)
         mu[mu < 0] = np.nan
 
-        self.plots.append(go.Surface(x=w, y=xi, z=mu, opacity=0.5, name="µ"))
+        self.plots.append(go.Surface(
+            x=w/self.model.wn_max, y=xi, z=mu,
+            opacity=0.5, name=r"µ(ξ, cₛ(w))",
+            colorbar={
+                "lenmode": "fraction",
+                "len": 0.5
+            },
+            colorscale=self.colorscale
+        ))
         logger.info("Mu surface ready.")
 
     def save(self, path: str) -> go.Figure:
@@ -95,8 +112,16 @@ class BubblePlot3D:
         vm_grid[vm_grid > 1] = np.nan
         wm_grid[wm_grid > w_mult * w_max] = np.nan
 
-        self.plots.append(go.Surface(x=wp_arr, y=xi_arr, z=vm_grid, opacity=0.5, name="Shock, $w=w_+$"))
-        self.plots.append(go.Surface(x=wm_grid, y=xi_grid, z=vm_grid, opacity=0.5, name="Shock, $w=w_-$"))
+        self.plots.append(go.Surface(
+            x=wp_arr/self.model.wn_max, y=xi_arr, z=vm_grid,
+            opacity=0.5, name="Shock, $w=w₊$",
+            colorscale=self.colorscale, showscale=False
+        ))
+        self.plots.append(go.Surface(
+            x=wm_grid/self.model.wn_max, y=xi_grid, z=vm_grid,
+            opacity=0.5, name="Shock, $w=w₋$",
+            colorscale=self.colorscale, showscale=False
+        ))
         logger.info("Shock surface ready.")
 
     def show(self) -> go.Figure:
