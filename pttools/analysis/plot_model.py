@@ -27,7 +27,8 @@ class ModelPlot:
         self.ax_s = self.axs[0, 1]
         self.ax_w = self.axs[0, 2]
         self.ax_e = self.axs[1, 0]
-        self.ax_cs2 = self.axs[1, 2]
+        self.ax_cs2 = self.axs[1, 1]
+        # self.ax_theta = self.axs[2, 0]
 
         if t_log:
             self.t_min = max(model.t_min, 10**(-t_log_range)*model.t_crit) if t_min is None else t_min

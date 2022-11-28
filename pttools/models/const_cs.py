@@ -175,6 +175,9 @@ class ConstCSModel(AnalyticModel):
         # ConstCSModel.cs2() is independent of T and w
         return self.cs2(temp, phase)
 
+    def delta_theta(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
+        return (1/4 - 1/self.mu)*wp/3 - (1/4 - 1/self.nu)*wm/3 + self.V_s - self.V_b
+
     def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Energy density $e(T,\phi)$
         $$e_s = a_s (\mu - 1) T^\mu + V_s$$

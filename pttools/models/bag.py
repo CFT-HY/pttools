@@ -91,6 +91,9 @@ class BagModel(AnalyticModel):
     def cs2_temp(temp, phase):
         BagModel.cs2(temp, phase)
 
+    def delta_theta(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
+        return (self.V_s - self.V_b) * np.ones_like(wp) * np.ones_like(wm)
+
     def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Energy density as a function of temperature, :giese_2021:`\ ` eq. 15, :borsanyi_2016:`\ `, eq. S12
         The convention for $a_s$ and $a_b$ is that of :notes:`\ `, eq. 7.33.

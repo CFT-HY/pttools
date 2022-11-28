@@ -156,21 +156,7 @@ class Model(BaseModel, abc.ABC):
         :param wm: $w_-$
         :param allow_negative: whether to allow unphysical negative output values
         """
-        theta_s = self.theta(wp, Phase.SYMMETRIC)
-        theta_b = self.theta(wm, Phase.BROKEN)
-        diff = theta_s - theta_b
-        prob_diff, prob_wp, prob_wm, prob_theta_s, prob_theta_b = find_most_negative_vals(diff, wp, wm, theta_s, theta_b)
-        if prob_diff is not None:
-            text = "Got" if np.isscalar(diff) else "Most problematic values"
-            msg = "For a physical equation of state theta_+ > theta_-. " \
-                  f"{text}: wp={prob_wp}, wm={prob_wm}, " \
-                  f"theta_s={prob_theta_s}, theta_b={prob_theta_b}, theta_diff={prob_diff}. " \
-                  "See p. 33 of Hindmarsh and Hijazi, 2019."
-            logger.error(msg)
-            if not allow_negative:
-                raise ValueError(msg)
-
-        return 4 * diff / (3 * wp)
+        return 4 * self.delta_theta(wp, wm, allow_negative) / (3 * wp)
 
     def check_p(self, wn: th.FloatOrArr, allow_fail: bool = False):
         temp = self.temp(wn, Phase.SYMMETRIC)
@@ -319,6 +305,23 @@ class Model(BaseModel, abc.ABC):
 
     def cs2_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         return self.cs2(self.w(temp, phase), phase)
+
+    def delta_theta(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
+        theta_s = self.theta(wp, Phase.SYMMETRIC)
+        theta_b = self.theta(wm, Phase.BROKEN)
+        diff = theta_s - theta_b
+        prob_diff, prob_wp, prob_wm, prob_theta_s, prob_theta_b = find_most_negative_vals(diff, wp, wm, theta_s, theta_b)
+        if prob_diff is not None:
+            text = "Got" if np.isscalar(diff) else "Most problematic values"
+            msg = "For a physical equation of state theta_+ > theta_-. " \
+                  f"{text}: wp={prob_wp}, wm={prob_wm}, " \
+                  f"theta_s={prob_theta_s}, theta_b={prob_theta_b}, theta_diff={prob_diff}. " \
+                  "See p. 33 of Hindmarsh and Hijazi, 2019."
+            logger.error(msg)
+            if not allow_negative:
+                raise ValueError(msg)
+
+        return diff
 
     def df_dtau_ptr(self) -> int:
         if self.__df_dtau_ptr is not None:
