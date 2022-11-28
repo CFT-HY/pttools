@@ -36,12 +36,6 @@ class AnalyticModel(Model, abc.ABC):
             t_min: float = None, t_max: float = None,
             name: str = None,
             label: str = None):
-        super().__init__(
-            V_s=V_s, V_b=V_b,
-            t_min=t_min, t_max=t_max,
-            name=name, label=label
-        )
-
         self.a_s: float
         self.a_b: float
         if a_s is not None and a_b is not None and g_s is None and g_b is None:
@@ -53,13 +47,18 @@ class AnalyticModel(Model, abc.ABC):
         else:
             raise ValueError("Specify either a_s and a_b or g_s and g_b")
 
+        self.bag_wn_const: float = 4 / 3 * (V_s - V_b)
+
+        super().__init__(
+            V_s=V_s, V_b=V_b,
+            t_min=t_min, t_max=t_max,
+            name=name, label=label
+        )
         if self.a_s <= self.a_b:
             logger.warning(
                 f"The model \"{self.name}\" does not satisfy a_s > a_b. "
-                "Please check that the critical temperature is non-negative."
+                "Please check that the critical temperature is non-negative. "
                 f"Got: a_s={self.a_s}, a_b={self.a_b}.")
-
-        self.bag_wn_const: float = 4 / 3 * (self.V_s - self.V_b)
 
     def export(self) -> tp.Dict[str, any]:
         return {

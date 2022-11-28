@@ -14,7 +14,8 @@ class BaseModel(abc.ABC):
     """The base for both Model and ThermoModel"""
     DEFAULT_LABEL: str = None
     DEFAULT_NAME: str = None
-    DEFAULT_T_MIN: float = 0
+    # Zero temperature would break many of the equations
+    DEFAULT_T_MIN: float = 1e-3
     DEFAULT_T_MAX: float = np.inf
 
     def __init__(

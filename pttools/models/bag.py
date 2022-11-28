@@ -67,7 +67,7 @@ class BagModel(AnalyticModel):
         self.check_w_for_alpha(wp, allow_negative)
         return self.bag_wn_const / wp
 
-    def critical_temp(self, guess: float) -> float:
+    def critical_temp(self, **kwargs) -> float:
         r"""Critical temperature for the bag model
 
         $$T_{cr} = \sqrt[4]{\frac{V_s - V_b}{a_s - a_b}}$$

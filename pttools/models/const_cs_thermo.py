@@ -35,7 +35,7 @@ class ConstCSThermoModel(ThermoModel):
         self.css2 = css2
         self.csb2 = csb2
         self.css = np.sqrt(css2)
-        self.csb= np.sqrt(csb2)
+        self.csb = np.sqrt(csb2)
         self.mu_s = const_cs.cs2_to_mu(css2)
         self.mu_b = const_cs.cs2_to_mu(csb2)
         # TODO: Generate reference values for g0 here (corresponding to a_s, a_b)

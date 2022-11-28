@@ -1,12 +1,10 @@
 """Full thermodynamics-based model"""
 
 import logging
-# import typing as tp
 
 import numba
 import numpy as np
-import scipy.interpolate
-import scipy.optimize
+from scipy.interpolate import splev, splrep
 
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase
@@ -30,33 +28,41 @@ class FullModel(Model):
     DEFAULT_LABEL = "Full model"
     DEFAULT_NAME = "full"
 
-    def __init__(self, thermo: ThermoModel, V_s: float = 0, V_b: float = 0, name: str = None, label: str = None):
+    def __init__(
+            self,
+            thermo: ThermoModel,
+            V_s: float = 0, V_b: float = 0,
+            t_crit_guess: float = None,
+            allow_invalid: bool = False,
+            name: str = None, label: str = None):
         if label is None:
             label = f"Full model ({thermo.label})"
-        super().__init__(V_s=V_s, V_b=V_b, name=name, label=label, gen_cs2=False, implicit_V=True)
         self.thermo = thermo
-        # Override auto-generated limits with those from the ThermoModel
-        self.t_min = thermo.t_min
-        self.t_max = thermo.t_max
 
-        self.temp_spline_s = scipy.interpolate.splrep(
+        super().__init__(
+            V_s=V_s, V_b=V_b,
+            t_min=thermo.t_min, t_max=thermo.t_max,
+            name=name, label=label, gen_critical=False, gen_cs2=False, implicit_V=True)
+
+        self.temp_spline_s = splrep(
             np.log10(self.w(self.thermo.GEFF_DATA_TEMP, Phase.SYMMETRIC)), self.thermo.GEFF_DATA_LOG_TEMP
         )
-        self.temp_spline_b = scipy.interpolate.splrep(
+        self.temp_spline_b = splrep(
             np.log10(self.w(self.thermo.GEFF_DATA_TEMP, Phase.BROKEN)), self.thermo.GEFF_DATA_LOG_TEMP
         )
+        self.t_crit, self.wn_max, self.alpha_n_min = self.criticals(t_crit_guess, allow_invalid)
 
         self.cs2 = self.gen_cs2()
         self.cs2_neg = self.gen_cs2_neg()
 
     def gen_cs2(self):
         """This function generates the Numba-jitted cs2 function to be used by the fluid integrator"""
-        cs2_spl_s = scipy.interpolate.splrep(
+        cs2_spl_s = splrep(
             np.log10(self.w(self.thermo.GEFF_DATA_TEMP, Phase.SYMMETRIC)),
             self.thermo.cs2_full(self.thermo.GEFF_DATA_TEMP, Phase.SYMMETRIC),
             k=1
         )
-        cs2_spl_b = scipy.interpolate.splrep(
+        cs2_spl_b = splrep(
             np.log10(self.w(self.thermo.GEFF_DATA_TEMP, Phase.BROKEN)),
             self.thermo.cs2_full(self.thermo.GEFF_DATA_TEMP, Phase.BROKEN),
             k=1
@@ -65,11 +71,11 @@ class FullModel(Model):
         @numba.njit
         def cs2(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
             if np.all(phase == Phase.SYMMETRIC.value):
-                return scipy.interpolate.splev(np.log10(w), cs2_spl_s)
+                return splev(np.log10(w), cs2_spl_s)
             if np.all(phase == Phase.BROKEN.value):
-                return scipy.interpolate.splev(np.log10(w), cs2_spl_b)
-            return scipy.interpolate.splev(np.log10(w), cs2_spl_b) * phase \
-                + scipy.interpolate.splev(np.log10(w), cs2_spl_s) * (1 - phase)
+                return splev(np.log10(w), cs2_spl_b)
+            return splev(np.log10(w), cs2_spl_b) * phase \
+                + splev(np.log10(w), cs2_spl_s) * (1 - phase)
         return cs2
 
     def critical_temp_opt(self, temp: float) -> float:
@@ -116,11 +122,11 @@ class FullModel(Model):
     def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr):
         r"""Temperature $T$"""
         if np.all(phase == Phase.SYMMETRIC.value):
-            return 10**scipy.interpolate.splev(np.log10(w), self.temp_spline_s)
+            return 10**splev(np.log10(w), self.temp_spline_s)
         if np.all(phase == Phase.BROKEN.value):
-            return 10**scipy.interpolate.splev(np.log10(w), self.temp_spline_b)
-        return 10**scipy.interpolate.splev(np.log10(w), self.temp_spline_b) * phase \
-            + 10**scipy.interpolate.splev(np.log10(w), self.temp_spline_s) * (1 - phase)
+            return 10**splev(np.log10(w), self.temp_spline_b)
+        return 10**splev(np.log10(w), self.temp_spline_b) * phase \
+            + 10**splev(np.log10(w), self.temp_spline_s) * (1 - phase)
 
     def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Enthalpy density $w$

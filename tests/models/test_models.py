@@ -93,11 +93,11 @@ class TestConstCSThermo(ModelBaseCase, unittest.TestCase):
         self.assert_json(data, "cs2")
 
 
-class TestFull(ModelBaseCase, unittest.TestCase):
+class TestSM(ModelBaseCase, unittest.TestCase):
     @classmethod
     def setUpClass(cls, *args, **kwargs) -> None:
-        sm = models.StandardModel()
-        model = models.FullModel(thermo=sm, V_s=1.3)
+        sm = models.StandardModel(V_s=1.3, g_mult_s=1.3)
+        model = models.FullModel(thermo=sm)
         super().setUpClass(model)
 
     # @unittest.expectedFailure

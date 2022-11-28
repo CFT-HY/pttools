@@ -30,10 +30,13 @@ class Model(BaseModel, abc.ABC):
             self,
             V_s: float, V_b: float = 0,
             t_ref: float = 1, t_min: float = None, t_max: float = None,
+            t_crit_guess: float = None,
             name: str = None,
             label: str = None,
+            gen_critical: bool = True,
             gen_cs2: bool = True,
-            implicit_V: bool = False):
+            implicit_V: bool = False,
+            allow_invalid: bool = False):
 
         if implicit_V:
             if V_s != 0 or V_b != 0:
@@ -44,7 +47,10 @@ class Model(BaseModel, abc.ABC):
                 )
         else:
             if V_s < V_b:
-                raise ValueError(f"The bubble will not expand, when V_s <= V_b. Got: V_s={V_s}, V_b={V_b}.")
+                msg = f"The bubble will not expand, when V_s <= V_b. Got: V_s={V_s}, V_b={V_b}."
+                logger.error(msg)
+                if not allow_invalid:
+                    raise ValueError(msg)
             if V_s == V_b:
                 logger.warning("The bubble will not expand, when V_s <= V_b. Got: V_b = V_s = %s.", V_s)
 
@@ -58,10 +64,14 @@ class Model(BaseModel, abc.ABC):
 
         super().__init__(name=name, t_min=t_min, t_max=t_max, label=label, gen_cs2=gen_cs2)
 
-        if t_ref <= self.t_min:
-            raise ValueError(f"T_ref should be higher than T_min. Got: T_ref={t_ref}, T_min={self.t_min}")
+        # A model could have t_ref = 1 GeV and be valid only for e.g. > 10 GeV
+        # if t_ref < self.t_min:
+        #     raise logger.warning(f"T_ref should be higher than T_min. Got: T_ref={t_ref}, T_min={self.t_min}")
         if t_ref >= self.t_max:
             raise ValueError(f"T_ref should be lower than T_max. Got: T_ref={t_ref}, T_max={self.t_max}")
+
+        if gen_critical:
+            self.t_crit, self.wn_max, self.alpha_n_min = self.criticals(t_crit_guess, allow_invalid)
 
     # Concrete methods
 
@@ -175,27 +185,105 @@ class Model(BaseModel, abc.ABC):
             if not allow_fail:
                 raise ValueError(msg)
 
-    def critical_temp(self, guess: float) -> float:
+    def criticals(self, t_crit_guess: float, allow_fail: bool = False, log_info: bool = True):
+        t_crit = self.critical_temp(guess=t_crit_guess, allow_fail=allow_fail)
+        wn_min = self.w(t_crit, Phase.SYMMETRIC)
+        alpha_n_min = self.alpha_n(wn_min)
+
+        logger.info(
+            f"Initialized model with name={self.name}, T_crit={t_crit}, alpha_n_min={alpha_n_min}. "
+            f"At T_crit: w_s={wn_min}, w_b={self.w(t_crit, Phase.BROKEN)}, "
+            f"e_s={self.e_temp(t_crit, Phase.SYMMETRIC)}, e_b={self.e_temp(t_crit, Phase.BROKEN)}, "
+            f"p_s={self.p_temp(t_crit, Phase.SYMMETRIC)}, p_b={self.p_temp(t_crit, Phase.BROKEN)}"
+        )
+        return t_crit, wn_min, alpha_n_min
+
+    def critical_temp(
+            self,
+            guess: float = None,
+            guess_backup: float = 2,
+            t_max_backup: float = 10000,
+            allow_fail: bool = False) -> float:
         r"""Solves for the critical temperature $T_c$, where $p_s(T_c)=p_b(T_c)$
 
-        :param guess: starting guess for the critical temperature
+        :param guess: starting guess for $T_\text{crit}$
+        :param guess_backup: alternative guess that is used if guess is None
+        :param t_max_backup: alternative $T_\text{max}$ that is used if $T_\text{max}$ is None
+        :param allow_fail: do not raise exceptions on errors
         """
-        # Todo: enable full output
-        # This returns np.float64
-        return fsolve(
+        if guess is None:
+            if np.isfinite(self.t_max):
+                guess = np.exp((np.log(self.t_min) + np.log(self.t_max)) / 2)
+            else:
+                guess = guess_backup
+
+        p_s_min = self.p_temp(self.t_min, Phase.SYMMETRIC)
+        p_b_min = self.p_temp(self.t_min, Phase.BROKEN)
+        if p_s_min >= p_b_min:
+            msg = \
+                "All models should have p_s(T=T_min) < p_b(T=T_min) for T_crit to exist. " \
+                f"Got: T_min={self.t_min}, p_s={p_s_min}, p_b={p_b_min}."
+            logger.error(msg)
+            if not allow_fail:
+                raise ValueError(msg)
+
+        t_max = self.t_max if np.isfinite(self.t_max) else t_max_backup
+        t_arr = np.logspace(np.log10(self.t_min), np.log10(t_max), 10)
+        p_s_arr = self.p_temp(t_arr, Phase.SYMMETRIC)
+        p_b_arr = self.p_temp(t_arr, Phase.BROKEN)
+        if np.all(p_s_arr <= p_b_arr):
+            msg = \
+                "All models should have p_s(T>T_crit) > p_b(T>T_crit) for T_crit to exist. " \
+                f"Got: T_max={t_max}, p_s={p_s_arr[-1]}, p_b={p_b_arr[-1]}."
+            logger.error(msg)
+            if not allow_fail:
+                raise ValueError(msg)
+
+        sol = fsolve(
             self.critical_temp_opt,
-            guess
-            # args=(const),
-            # xtol=
-            # factor=0.1
-        )[0]
+            x0=np.array([guess]),
+            full_output=True
+        )
+        t_crit = sol[0][0]
+        if sol[2] != 1:
+            msg = \
+                f"Could not find Tc with guess={guess}. " \
+                f"Using Tc={t_crit}. Reason: {sol[3]}"
+            logger.error(msg)
+            if not allow_fail:
+                raise RuntimeError(msg)
+
+        # Validate temperature
+        if t_crit <= self.t_min:
+            msg = f"T_crit should be higher than T_min. Got: T_crit={t_crit}, T_min={self.t_min}"
+            logger.error(msg)
+            if not allow_fail:
+                raise ValueError(msg)
+        if t_crit >= self.t_max:
+            msg = f"T_max should be lower than T_max. Got: T_crit={t_crit}, T_max={self.t_max}"
+            logger.error(msg)
+            if not allow_fail:
+                raise ValueError(msg)
+
+        # Validate pressure
+        p_crit_s = self.p_temp(t_crit, Phase.SYMMETRIC)
+        p_crit_b = self.p_temp(t_crit, Phase.BROKEN)
+        if not np.isclose(p_crit_s, p_crit_b):
+            msg = f"Pressures do not match at T_crit. Got: p_s={p_crit_s}, p_b={p_crit_b}"
+            logger.error(msg)
+            if not allow_fail:
+                raise ValueError(msg)
+        if p_crit_s < 0 or p_crit_b < 0:
+            msg = f"Pressure cannot be negative at T_crit. Got: p_s={p_crit_s}, p_b={p_crit_b}"
+            logger.error(msg)
+            if not allow_fail:
+                raise ValueError(msg)
+
+        return t_crit
 
     def critical_temp_opt(self, temp: float) -> float:
-        """This function should have its minimum at the critical temperature
-
-        A subclass does not have to implement this if it reimplements :func:`critical_temp`.
-        """
-        raise NotImplementedError
+        """This function should be zero at the critical temperature $T_c$, where $p_s(T_c)=p_b(T_c)."""
+        return self.p_temp(temp, Phase.SYMMETRIC) - self.p_temp(temp, Phase.BROKEN)
 
     def cs2(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Speed of sound squared $c_s^2(w,\phi)$. This must be a Numba-compiled function.
