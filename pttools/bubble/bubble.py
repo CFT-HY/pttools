@@ -22,7 +22,8 @@ class Bubble:
             self,
             model: "Model", v_wall: float, alpha_n: float,
             sol_type: SolutionType = None,
-            label: str = None):
+            label_latex: str = None,
+            label_unicode: str = None):
         if v_wall < 0 or v_wall > 1:
             raise ValueError(f"Invalid v_wall={v_wall}")
         if alpha_n < 0 or alpha_n > 1 or alpha_n < model.alpha_n_min:
@@ -38,7 +39,10 @@ class Bubble:
         self.solved = False
         # The labels are defined without LaTeX, as it's not supported in Plotly 3D plots.
         # https://github.com/plotly/plotly.js/issues/608
-        self.label = f"{self.model.label}, v_w={v_wall}, αₙ={alpha_n}" if label is None else label
+        self.label_latex = rf"{self.model.label_latex} $v_w={v_wall}, \alpha_n={alpha_n}" \
+            if label_latex is None else label_latex
+        self.label_unicode = f"{self.model.label_unicode}, v_w={v_wall}, αₙ={alpha_n}" \
+            if label_unicode is None else label_unicode
         self.notes: tp.List[str] = []
 
         self.wn = model.w_n(alpha_n)

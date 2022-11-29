@@ -38,9 +38,9 @@ class FullModel(Model):
             label_latex: str = None,
             label_unicode: str = None):
         if not label_latex:
-            label_latex = f"Full model ({thermo.label_latex})"
+            label_latex = f"Full ({thermo.label_latex})"
         if not label_unicode:
-            label_unicode = f"Full model ({thermo.label_unicode})"
+            label_unicode = f"Full ({thermo.label_unicode})"
         self.thermo = thermo
 
         super().__init__(

@@ -35,7 +35,7 @@ class BubblePlot3D:
             go.Scatter3d(
                 x=bubble.w/bubble.model.wn_max, y=bubble.xi, z=bubble.v,
                 mode="lines",
-                name=bubble.label,
+                name=bubble.label_unicode,
                 **kwargs
             )
         ])

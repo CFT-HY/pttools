@@ -58,34 +58,27 @@ class ConstCSModel(AnalyticModel):
 
         TODO: Rename mu to mu_s and nu to mu_b
         """
-        cs_err = False
-        if css2 > 1/3:
-            if np.isclose(css2, 1/3):
-                css2 = 1/3
-                logger.warning("css2 is slightly over 1/3. Changing it to 1/3.")
-            else:
-                cs_err = True
-        if csb2 > 1/3:
-            if np.isclose(csb2, 1/3):
-                csb2 = 1/3
-                logger.warning("csb2 is slightly over 1/3. Changing it to 1/3.")
-            else:
-                cs_err = True
-        if cs_err:
+        self.css2 = self.validate_cs2(css2, "css2")
+        self.csb2 = self.validate_cs2(csb2, "csb2")
+
+        if np.isnan(css2) or np.isnan(csb2):
             raise ValueError(
-                "c_{s,s}^2 and c_{s,b}^2 have to be <= 1/3 for the solution to be physical. "
+                "c_{s,s}^2 and c_{s,b}^2 have to be 0 < c_s <= 1/3 for the solution to be physical. "
                 "This is because g_eff is monotonic. "
                 f"Got: c_{{s,s}}^2={css2}, c_{{s,b}}^2={csb2}."
             )
 
-        self.css2 = css2
-        self.csb2 = csb2
         self.css = np.sqrt(css2)
         self.csb = np.sqrt(csb2)
         self.mu = cs2_to_mu(css2)
         self.nu = cs2_to_mu(csb2)
         self.t_ref = t_ref
         self.const_cs_wn_const: float = 4 / 3 * (1 / self.nu - 1 / self.mu)
+
+        label_latex = f"Const. $c_s, c_{{ss}}^2={self.css2}, c_{{sb}}^2={self.csb2}" \
+            if not label_latex else label_latex
+        label_unicode = f"Const. cₛ, css2={self.css2}, csb2={self.csb2}" \
+            if not label_unicode else label_unicode
 
         super().__init__(
             V_s=V_s, V_b=V_b,
@@ -94,6 +87,18 @@ class ConstCSModel(AnalyticModel):
             t_min=t_min, t_max=t_max,
             name=name, label_latex=label_latex, label_unicode=label_unicode
         )
+
+    @staticmethod
+    def validate_cs2(cs2: float, name: str = "cs2") -> float:
+        if cs2 < 0:
+            return np.nan
+        if cs2 > 1/3:
+            if np.isclose(cs2, 1/3):
+                logger.warning(f"{name} is slightly over 1/3. Changing it to 1/3.")
+                return 1/3
+            else:
+                return np.nan
+        return cs2
 
     def alpha_n(self, wn: th.FloatOrArr, allow_negative: bool = False, allow_no_transition: bool = False) -> th.FloatOrArr:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.

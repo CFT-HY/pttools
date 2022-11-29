@@ -45,6 +45,12 @@ class BagModel(AnalyticModel):
         if self.a_s <= self.a_b:
             raise ValueError("The bag model must have a_s > a_b for the critical temperature to be non-negative.")
 
+        # These have to be after super().__init__() for a_s and a_b to be populated.
+        if self.label_latex is self.DEFAULT_LABEL_LATEX:
+            self.label_latex = f"Bag, $a_s={self.a_s}, a_b={self.a_b}, V_s={self.V_s}, V_b={self.V_b}$"
+        if self.label_unicode is self.DEFAULT_LABEL_UNICODE:
+            self.label_unicode = f"Bag, a_s={self.a_s}, a_b={self.a_b}, V_s={self.V_s}, V_b={self.V_b}"
+
     def alpha_n(self, wn: th.FloatOrArr, allow_negative: bool = False, allow_no_transition: bool = False) \
             -> th.FloatOrArr:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
