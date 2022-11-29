@@ -91,7 +91,7 @@ class BubblePlot3D:
         fig.write_image(f"{path}.png")
         return fig
 
-    def shock_surfaces(self, n_xi: int = 20, n_w: int = 30, w_mult: float = 1.1):
+    def shock_surfaces(self, n_xi: int = 20, n_w: int = 30, w_mult: float = 1., wp_surface: bool = False):
         if self.model is None:
             return
         logger.info("Computing shock surface.")
@@ -112,11 +112,12 @@ class BubblePlot3D:
         vm_grid[vm_grid > 1] = np.nan
         wm_grid[wm_grid > w_mult * w_max] = np.nan
 
-        self.plots.append(go.Surface(
-            x=wp_arr/self.model.wn_max, y=xi_arr, z=vm_grid,
-            opacity=0.5, name="Shock, $w=w₊$",
-            colorscale=self.colorscale, showscale=False
-        ))
+        if wp_surface:
+            self.plots.append(go.Surface(
+                x=wp_arr/self.model.wn_max, y=xi_arr, z=vm_grid,
+                opacity=0.5, name="Shock, $w=w₊$",
+                colorscale=self.colorscale, showscale=False
+            ))
         self.plots.append(go.Surface(
             x=wm_grid/self.model.wn_max, y=xi_grid, z=vm_grid,
             opacity=0.5, name="Shock, $w=w₋$",
