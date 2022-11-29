@@ -58,6 +58,7 @@ class ConstCSModel(AnalyticModel):
 
         TODO: Rename mu to mu_s and nu to mu_b
         """
+        logger.debug(f"Initialising ConstCSModel with css2={css2}, csb2={csb2}.")
         self.css2 = self.validate_cs2(css2, "css2")
         self.csb2 = self.validate_cs2(csb2, "csb2")
 

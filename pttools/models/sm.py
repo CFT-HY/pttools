@@ -8,11 +8,15 @@ Cubic spline interpolation for the range $0 - 10^{5.45}$ MeV from the table S2 o
 .. plot:: fig/standard_model_2.py
 """
 
+import logging
+
 import numpy as np
 from scipy import interpolate
 
 import pttools.type_hints as th
 from pttools.models.thermo import ThermoModel
+
+logger = logging.getLogger(__name__)
 
 
 class StandardModel(ThermoModel):
@@ -65,6 +69,7 @@ class StandardModel(ThermoModel):
             label_latex: str = None,
             label_unicode: str = None,
             gen_cs2: bool = True):
+        logger.debug(f"Creating Standard Model with g_mult_s={g_mult_s}, g_mult_b={g_mult_b}, V_s={V_s}, V_b={V_b}")
 
         self.g_mult_s = g_mult_s
         self.g_mult_b = g_mult_b

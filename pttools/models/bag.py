@@ -32,6 +32,7 @@ class BagModel(AnalyticModel):
             name: str = None,
             label_latex: str = None,
             label_unicode: str = None):
+        logger.debug("Initialising BagModel.")
         if V_b != 0:
             logger.warning("V_b has been specified for the bag model, even though it's usually omitted.")
 
@@ -43,7 +44,10 @@ class BagModel(AnalyticModel):
             name=name, label_latex=label_latex, label_unicode=label_unicode
         )
         if self.a_s <= self.a_b:
-            raise ValueError("The bag model must have a_s > a_b for the critical temperature to be non-negative.")
+            raise ValueError(
+                "The bag model must have a_s > a_b for the critical temperature to be non-negative. "
+                f"Got: a_s={self.a_s}, a_b={self.a_b}"
+            )
 
         # These have to be after super().__init__() for a_s and a_b to be populated.
         if self.label_latex is self.DEFAULT_LABEL_LATEX:

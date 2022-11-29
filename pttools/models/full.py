@@ -37,6 +37,7 @@ class FullModel(Model):
             name: str = None,
             label_latex: str = None,
             label_unicode: str = None):
+        logger.debug("Initialising FullModel.")
         if not label_latex:
             label_latex = f"Full ({thermo.label_latex})"
         if not label_unicode:
