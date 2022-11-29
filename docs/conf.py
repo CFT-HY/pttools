@@ -185,6 +185,7 @@ sphinx_gallery_conf = {
     "doc_module": "pttools",
     "examples_dirs": os.path.join(os.path.dirname(dir_path), "examples"),
     "gallery_dirs": "auto_examples",
+    "ignore_pattern": r"(__init__\.py|utils\.py)",
     # "image_srcset": ["2x"],
     # "matplotlib_animations": True,
     "show_memory": True,

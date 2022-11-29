@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from pttools.bubble.boundary import Phase
 from pttools.models.base import BaseModel
 
-ENABLE_DRAWING: bool = False if "GITHUB_ACTIONS" in os.environ else True
+ENABLE_DRAWING: bool = "GITHUB_ACTIONS" not in os.environ
 
 
 def model_phase_label(model: BaseModel, phase: Phase) -> str:
@@ -16,7 +16,7 @@ def model_phase_label(model: BaseModel, phase: Phase) -> str:
         phase_str = "b"
     else:
         phase_str = f"{phase:.2f}"
-    return rf"{model.label}, $\phi$={phase_str}"
+    return rf"{model.label_latex}, $\phi$={phase_str}"
 
 
 def setup_plotting(font: str = "serif", font_size: int = 20, usetex: bool = True) -> None:

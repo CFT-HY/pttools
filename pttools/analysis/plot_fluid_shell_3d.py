@@ -5,6 +5,7 @@ import numpy as np
 from plotly.basedatatypes import BasePlotlyType
 import plotly.graph_objects as go
 
+from pttools.analysis.plot_plotly import PlotlyPlot
 from pttools.bubble.bubble import Bubble
 from pttools.bubble.boundary import Phase
 from pttools.bubble.relativity import lorentz
@@ -14,8 +15,9 @@ from pttools.models.model import Model
 logger = logging.getLogger(__name__)
 
 
-class BubblePlot3D:
+class BubblePlot3D(PlotlyPlot):
     def __init__(self, model: Model = None, colorscale: str = "YlOrRd"):
+        super().__init__()
         self.model = model
         self.bubbles: tp.List[Bubble] = []
         self.plots: tp.List[BasePlotlyType] = []
@@ -85,12 +87,6 @@ class BubblePlot3D:
         ))
         logger.info("Mu surface ready.")
 
-    def save(self, path: str) -> go.Figure:
-        fig = self.create_fig()
-        fig.write_html(f"{path}.html")
-        fig.write_image(f"{path}.png")
-        return fig
-
     def shock_surfaces(self, n_xi: int = 20, n_w: int = 30, w_mult: float = 1., wp_surface: bool = False):
         if self.model is None:
             return
@@ -124,8 +120,3 @@ class BubblePlot3D:
             colorscale=self.colorscale, showscale=False
         ))
         logger.info("Shock surface ready.")
-
-    def show(self) -> go.Figure:
-        fig = self.create_fig()
-        fig.show()
-        return fig

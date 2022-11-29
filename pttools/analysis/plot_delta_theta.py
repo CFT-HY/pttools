@@ -4,11 +4,13 @@ import numpy as np
 from plotly.basedatatypes import BasePlotlyType
 import plotly.graph_objects as go
 
+from pttools.analysis.plot_plotly import PlotlyPlot
 from pttools.models.model import Model
 
 
-class DeltaThetaPlot3D:
+class DeltaThetaPlot3D(PlotlyPlot):
     def __init__(self):
+        super().__init__()
         self.plots: tp.List[BasePlotlyType] = []
 
     def add(self, model: Model):
@@ -33,10 +35,4 @@ class DeltaThetaPlot3D:
                 "zaxis_title": "Δθ"
             }
         })
-        return fig
-
-    def save(self, path: str) -> go.Figure:
-        fig = self.create_fig()
-        fig.write_html(f"{path}.html")
-        fig.write_image(f"{path}.png")
         return fig

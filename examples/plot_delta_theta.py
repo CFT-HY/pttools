@@ -1,7 +1,15 @@
+r"""
+Delta-Theta
+===========
+
+$\Delta \theta$ surfaces
+"""
+
 import os.path
 
 import numpy as np
 
+from examples.utils import FIG_DIR
 from pttools.analysis.plot_delta_theta import DeltaThetaPlot3D
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
@@ -15,8 +23,7 @@ plot = DeltaThetaPlot3D()
 plot.add(bag)
 plot.add(const_cs)
 
-fig = plot.save(os.path.join(os.path.dirname(os.path.abspath(__file__)), "plot_delta_theta"))
+plot.save(os.path.join(FIG_DIR, "plot_delta_theta"))
 if "__file__" in globals():
-    fig = plot.create_fig()
-    fig.show()
-fig
+    plot.show()
+plot.fig()
