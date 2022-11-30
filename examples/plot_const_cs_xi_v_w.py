@@ -28,11 +28,13 @@ csb = 1/np.sqrt(3) - 0.01
 const_cs = ConstCSModel(a_s=1.5, a_b=1, css2=1/3, csb2=csb**2, V_s=1)
 plot = BubblePlot3D(model=const_cs)
 
-plot.add(Bubble(bag, v_wall=0.85, alpha_n=0.15, sol_type=SolutionType.DETON), color="blue")
-plot.add(Bubble(bag, v_wall=0.5, alpha_n=0.6, sol_type=SolutionType.SUB_DEF), color="blue")
+plot.add(Bubble(bag, v_wall=0.4, alpha_n=0.1, sol_type=SolutionType.SUB_DEF), color="blue")
+plot.add(Bubble(bag, v_wall=0.7, alpha_n=0.1, sol_type=SolutionType.HYBRID), color="blue")
+plot.add(Bubble(bag, v_wall=0.8, alpha_n=0.1, sol_type=SolutionType.DETON), color="blue")
 
-plot.add(Bubble(const_cs, v_wall=0.95, alpha_n=0.30, sol_type=SolutionType.DETON), color="red")
 plot.add(Bubble(const_cs, v_wall=0.45, alpha_n=0.6, sol_type=SolutionType.SUB_DEF), color="red")
+plot.add(Bubble(const_cs, v_wall=0.7, alpha_n=0.4, sol_type=SolutionType.HYBRID), color="red")
+plot.add(Bubble(const_cs, v_wall=0.95, alpha_n=0.30, sol_type=SolutionType.DETON), color="red")
 
 plot.save(os.path.join(FIG_DIR, "plot_const_cs_xi_v_w"))
 if "__file__" in globals():

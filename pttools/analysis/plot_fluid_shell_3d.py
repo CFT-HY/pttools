@@ -65,12 +65,12 @@ class BubblePlot3D(PlotlyPlot):
         })
         return fig
 
-    def mu_surface(self, n_xi: int = 20, n_w: int = 20, w_mult: float = 1.1):
+    def mu_surface(self, n_xi: int = 20, n_w: int = 20, w_mult: float = 1.5):
         logger.info("Computing mu surface.")
         if self.model is None:
             return
         xi = np.linspace(0, 1, n_xi)
-        w = np.linspace(0, w_mult*max(np.max(bubble.w) for bubble in self.bubbles), n_w)
+        w = np.linspace(0, w_mult*self.model.wn_max, n_w)
         cs = np.sqrt(self.model.cs2(w, Phase.BROKEN))
         cs_grid, xi_grid = np.meshgrid(cs, xi)
         mu = lorentz(xi_grid, cs_grid)
@@ -87,11 +87,11 @@ class BubblePlot3D(PlotlyPlot):
         ))
         logger.info("Mu surface ready.")
 
-    def shock_surfaces(self, n_xi: int = 20, n_w: int = 30, w_mult: float = 1., wp_surface: bool = False):
+    def shock_surfaces(self, n_xi: int = 20, n_w: int = 30, w_mult: float = 1.5, wp_surface: bool = False):
         if self.model is None:
             return
         logger.info("Computing shock surface.")
-        w_max = max(np.max(bubble.w) for bubble in self.bubbles)
+        w_max = w_mult * self.model.wn_max
         cs2_min, cs2_min_w = self.model.cs2_min(w_max, Phase.SYMMETRIC)
         xi_arr = np.linspace(np.sqrt(cs2_min), 0.99, n_xi)
         wp_arr = np.linspace(0.01, w_mult*w_max, n_w)
@@ -101,7 +101,7 @@ class BubblePlot3D(PlotlyPlot):
 
         for i_xi, xi in enumerate(xi_arr):
             for i_wp, wp in enumerate(wp_arr):
-                vm_tilde, wm = solve_shock(self.model, xi, wp)
+                vm_tilde, wm = solve_shock(self.model, xi, wp, backwards=True, warn_if_barely_exists=False)
                 vm_grid[i_xi, i_wp] = lorentz(xi, vm_tilde)
                 wm_grid[i_xi, i_wp] = wm
 

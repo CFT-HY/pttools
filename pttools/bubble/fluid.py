@@ -352,10 +352,12 @@ def fluid_shell_deflagration_reverse(model: "Model", v_wall: float, wn: float, x
 
 def fluid_shell_deflagration(
         model: "Model",
-        v_wall: float, alpha_n: float, wn: float, w_center: float,
+        v_wall: float, wn: float, w_center: float,
         vp_guess: float = None, wp_guess: float = None,
-        allow_failure: bool = False) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, float, float]:
+        allow_failure: bool = False) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, float]:
+    using_bag = False
     if vp_guess is None or wp_guess is None:
+        using_bag = True
         # Use bag model as the starting guess
 
         # alpha_plus_bag = alpha.find_alpha_plus(v_wall, alpha_n, n_xi=const.N_XI_DEFAULT)
@@ -380,20 +382,34 @@ def fluid_shell_deflagration(
         invalid_param = "vp_tilde_guess"
     elif vp_guess < 0 or vp_guess > v_wall:
         invalid_param = "vp_guess"
-    elif np.isnan(wp_guess) or wp_guess < wn:
+    elif np.isnan(wp_guess):
         invalid_param = "wp_guess"
+    elif wp_guess < wn:
+        logger.warning(f"Using invalid wp_guess={wp_guess}")
     if invalid_param is not None:
         logger.error(
             f"Invalid parameter: {invalid_param}. Got: "
             f"v_wall={v_wall}, w_center={w_center}, "
-            f"vp_tilde_guess={vp_tilde_guess}, vp_guess={vp_guess}, wp_guess={wp_guess}"
+            f"vp_tilde_guess={vp_tilde_guess}, vp_guess={vp_guess}, wp_guess={wp_guess}, wn={wn}"
         )
         nan_arr = np.array([np.nan])
-        return nan_arr, nan_arr, nan_arr, np.nan, np.nan
+        return nan_arr, nan_arr, nan_arr, np.nan
 
+    return fluid_shell_deflagration_common(
+        model,
+        v_wall, wn, w_center,
+        vp_tilde_guess, wp_guess,
+        SolutionType.SUB_DEF, allow_failure)
+
+
+def fluid_shell_deflagration_common(
+        model: "Model",
+        v_wall: float, wn: float, wm: float, vp_tilde_guess: float, wp_guess: float,
+        sol_type: SolutionType,
+        allow_failure: bool) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, float]:
     # Solve the boundary conditions at the wall
     vp_tilde, wp = boundary.solve_junction(
-        model, v_wall, w_center,
+        model, v_wall, wm,
         Phase.BROKEN, Phase.SYMMETRIC,
         v2_guess=vp_tilde_guess, w2_guess=wp_guess,
         allow_failure=allow_failure
@@ -410,51 +426,43 @@ def fluid_shell_deflagration(
         df_dtau_ptr=model.df_dtau_ptr(),
         # method="RK45"
     )
-    # Trim the integration to the shock
-    i_shock = 0
-    cs_n = np.sqrt(model.cs2(wn, Phase.SYMMETRIC))
-    for i, xi_i in enumerate(xi):
-        if xi_i < cs_n:
-            continue
-        v_shock_tilde, w_shock = shock.solve_shock(model, xi_i, wn)
-        v_shock = relativity.lorentz(xi_i, v_shock_tilde)
-        if v[i] <= v_shock:
-            i_shock = i
-            break
-
-    # Bag model version
-    # v_shock = shock.v_shock_bag(xi)
-    # i_shock = np.argmax(v <= v_shock)
-
-    if i_shock == 0:
-        if np.max(xi) < const.CS0:
-            msg = \
-                "The curve turns backwards before reaching the shock. " + \
-                "Probably the model does not allow deflagrations with these parameters."
-            logger.error(msg)
-            if not allow_failure:
-                raise RuntimeError(msg)
-        i_shock = -1
+    i_shock = shock.find_shock_index(model, v, xi, v_wall, wn, sol_type, allow_failure=allow_failure)
     v = v[:i_shock]
     w = w[:i_shock]
     xi = xi[:i_shock]
 
     xi_sh = xi[-1]
-    wm_sh = w[-1]
-    wn = shock.wp_shock_bag(xi_sh, wm_sh)
+    vm_tilde_sh = relativity.lorentz(xi_sh, v[-1])
+    wn_estimate = boundary.w2_junction(vm_tilde_sh, w[-1], xi_sh)
+    return v, w, xi, wn_estimate
 
-    return v, w, xi, wn, xi_sh
 
-
-def fluid_shell_deflagration_reverse_solvable(params: np.ndarray, model: "Model", v_wall: float, wn: float):
+def fluid_shell_deflagration_reverse_solvable(params: np.ndarray, model: "Model", v_wall: float, wn: float) -> float:
     xi_sh = params[0]
     v, w, xi, vm, wm = fluid_shell_deflagration_reverse(model, v_wall, wn, xi_sh, allow_failure=True)
     return vm
 
 
-def fluid_shell_deflagration_solvable(params: np.ndarray, model: "Model", v_wall: float, alpha_n: float, wn: float):
+def fluid_shell_deflagration_solvable(params: np.ndarray, model: "Model", v_wall: float, wn: float) -> float:
     w_center = params[0]
-    v, w, xi, wn_estimate, xi_sh = fluid_shell_deflagration(model, v_wall, alpha_n, wn, w_center, allow_failure=True)
+    v, w, xi, wn_estimate = fluid_shell_deflagration(model, v_wall, wn, w_center, allow_failure=True)
+    return wn_estimate - wn
+
+
+def fluid_shell_hybrid(model: "Model", v_wall: float, wn: float, wm: float, allow_failure: bool = False):
+    # Exit velocity is at the sound speed
+    vm_tilde = np.sqrt(model.cs2(wm, Phase.BROKEN))
+    return fluid_shell_deflagration_common(
+        model, v_wall, wn, wm,
+        vp_tilde_guess=0.75*vm_tilde, wp_guess=2*wm,
+        sol_type=SolutionType.HYBRID,
+        allow_failure=allow_failure
+    )
+
+
+def fluid_shell_hybrid_solvable(params: np.ndarray, model: "Model", v_wall: float, wn: float) -> float:
+    wm = params[0]
+    v, w, xi, wn_estimate = fluid_shell_hybrid(model, v_wall, wn, wm, allow_failure=True)
     return wn_estimate - wn
 
 
@@ -551,7 +559,7 @@ def fluid_shell_generic(
             sol = fsolve(
                 fluid_shell_deflagration_solvable,
                 wm_guess,
-                args=(model, v_wall, alpha_n, wn),
+                args=(model, v_wall, wn),
                 full_output=True
             )
             w_center = sol[0][0]
@@ -561,13 +569,37 @@ def fluid_shell_generic(
                     f"Deflagration solution was not found for model={model}, v_wall={v_wall}, alpha_n={alpha_n}. "
                     f"Using w_center={w_center}. Reason: {sol[3]}"
                 )
-            v, w, xi, wn, xi_sh = fluid_shell_deflagration(
+            v, w, xi, wn_estimate = fluid_shell_deflagration(
                 model, v_wall, alpha_n, wn, w_center, allow_failure=allow_failure)
-            logger.info(f"Deflagration: w_center={w_center}, wn={wn}")
+            logger.info(f"Deflagration: w_center={w_center}, wn_estimate={wn_estimate}")
             # print(np.array([v, w, xi]).T)
             # print("wn, xi_sh", wn, xi_sh)
     elif sol_type == SolutionType.HYBRID:
-        raise NotImplementedError
+        wm_guess = 2*wn
+        sol = fsolve(
+            fluid_shell_hybrid_solvable,
+            wm_guess,
+            args=(model, v_wall, wn),
+            full_output=True
+        )
+        wm = sol[0][0]
+        if sol[2] != 1:
+            failed = True
+            logger.error(
+                f"Hybrid solution was not found for model={model}, v_wall={v_wall}, alpha_n={alpha_n}. "
+                f"Using wm={wm}. Reason: {sol[3]}"
+            )
+        v, w, xi, wn_estimate = fluid_shell_hybrid(model, v_wall, wn, wm, allow_failure=allow_failure)
+        vm = relativity.lorentz(v_wall, np.sqrt(model.cs2(wm, Phase.BROKEN)))
+        v_tail, w_tail, xi_tail, t_tail = fluid_integrate_param(
+            vm, wm, v_wall,
+            phase=Phase.BROKEN,
+            t_end=-const.T_END_DEFAULT,
+            df_dtau_ptr=model.df_dtau_ptr())
+        v = np.concatenate((np.flip(v_tail), v))
+        w = np.concatenate((np.flip(w_tail), w))
+        xi = np.concatenate((np.flip(xi_tail), xi))
+        w_center = w[0]
     else:
         raise ValueError(f"Invalid solution type: {sol_type}")
 

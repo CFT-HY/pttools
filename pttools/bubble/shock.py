@@ -11,6 +11,7 @@ from .boundary import Phase, SolutionType, solve_junction
 from . import check
 from . import const
 from . import props
+from . import relativity
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 @numba.njit
-def find_shock_index(v_f: np.ndarray, xi: np.ndarray, v_wall: float, sol_type: SolutionType) -> int:
+def find_shock_index_bag(v_f: np.ndarray, xi: np.ndarray, v_wall: float, sol_type: SolutionType) -> int:
     r"""
     Array index of shock from first point where fluid velocity $v_f$ goes below $v_\text{shock}$.
     For detonation, returns wall position.
@@ -29,6 +30,7 @@ def find_shock_index(v_f: np.ndarray, xi: np.ndarray, v_wall: float, sol_type: S
     :param sol_type: solution type (detonation etc.)
     :return: shock index
     """
+    logger.warning("DEPRECATED")
     check.check_wall_speed(v_wall)
 
     n_shock = 0
@@ -41,6 +43,44 @@ def find_shock_index(v_f: np.ndarray, xi: np.ndarray, v_wall: float, sol_type: S
                 break
 
     return n_shock
+
+
+def find_shock_index(
+        model: "Model",
+        v: np.ndarray, xi: np.ndarray,
+        v_wall: float, wn: float,
+        sol_type: SolutionType,
+        allow_failure: bool = False) -> float:
+    # Todo: replace this with isinstance()
+    if sol_type is SolutionType.DETON:
+        return props.find_v_index(xi, v_wall)
+    elif model.name == "bag":
+        return np.argmax(np.logical_and(xi > v_wall, v <= v_shock_bag(xi)))
+
+    # Trim the integration to the shock
+    i_shock = 0
+    # The shock curve hits v=0 here
+    cs_n = np.sqrt(model.cs2(wn, Phase.SYMMETRIC))
+    for i, xi_i in enumerate(xi):
+        if xi_i < cs_n:
+            continue
+        v_shock_tilde, w_shock = solve_shock(model, xi_i, wn, backwards=True)
+        v_shock = relativity.lorentz(xi_i, v_shock_tilde)
+        if v[i] <= v_shock:
+            i_shock = i
+            break
+
+    if i_shock == 0:
+        if np.max(xi) < const.CS0:
+            msg = \
+                "The curve turns backwards before reaching the shock. " + \
+                "Probably the model does not allow this solution type with these parameters."
+            logger.error(msg)
+            if not allow_failure:
+                raise RuntimeError(msg)
+        i_shock = -1
+
+    return i_shock
 
 
 @numba.njit
@@ -76,50 +116,72 @@ def shock_zoom_last_element(
 
 
 def solve_shock(
-        model: "Model",
-        vp: float,
-        wp: float,
-        vm_guess: float = None,
-        wm_guess: float = None,
-        phase: Phase = Phase.SYMMETRIC,
-        allow_failure: bool = False) -> tp.Tuple[float, float]:
+            model: "Model",
+            v1: float,
+            w1: float,
+            backwards: bool,
+            v2_guess: float = None,
+            w2_guess: float = None,
+            phase: Phase = Phase.SYMMETRIC,
+            allow_failure: bool = False,
+            warn_if_barely_exists: bool = True) -> tp.Tuple[float, float]:
     r"""Solve the boundary conditions at a shock
 
-    :param vp: $\tilde{v}_{+,sh} = \xi_{sh}$
-    :param wp: $w_{+,sh} = w_n$
+    :param model: Hydrodynamics model
+    :param v1: $\tilde{v}_{1,sh}$
+    :param w1: $w_{1,sh}$
+    :param v2_guess: Starting guess for $\tilde{v}_{2,sh}$
+    :param w2_guess: Starting guess for $w_{2,sh}$
+    :param phase: Phase in which the shock propagates
+    :param backwards: whether to solve from $+$ to $-$ instead of from $-$ to $+$
+    :param allow_failure: Whether to allow invalid values
     """
-    if vp < 0 or vp > 1 or np.isclose(vp, 0) or np.isclose(vp, 1):
-        logger.error(f"Got invalid vp={vp} for shock solver.")
+    if v1 < 0 or v1 > 1 or np.isclose(v1, 0) or np.isnan(v1):
+        logger.error(f"Got invalid v1={v1} for shock solver.")
         return np.nan, np.nan
-    if np.isclose(wp, 0):
-        logger.error(f"Got invalid wp={wp} for shock solver.")
-        return np.nan, np.nan
-    vm_guess = 1/(3*vp) if vm_guess is None else vm_guess
-    if np.isclose(vm_guess, 0) or np.isclose(vm_guess, 1):
-        logger.error(f"Got invalid estimate for vm={vm_guess}")
+    if np.isclose(w1, 0) or np.isnan(w1):
+        logger.error(f"Got invalid w1={w1} for shock solver.")
         return np.nan, np.nan
 
-    cs = np.sqrt(model.cs2(wp, Phase.SYMMETRIC))
-    if vp < cs:
-        logger.error(f"The shock must be hypersonic. Got vp={vp}, wp={wp}, cs(wp)={cs}")
-        return np.nan, np.nan
-    if np.isclose(vp, cs):
-        logger.warning(f"The shock barely exists. Got vp={vp}, wp={wp}")
-        return vp, wp
+    if np.isclose(v1, 1):
+        logger.error(f"Got v1={v1} for shock solver.")
+        return 1, np.nan
 
-    wm_guess = wm_shock_bag(vp, wp) if wm_guess is None else wm_guess
-    if np.isnan(wm_guess):
-        # Some small value
-        wm_guess = 0.1
+    cs = np.sqrt(model.cs2(w1, phase))
+    if np.isclose(v1, cs):
+        if warn_if_barely_exists:
+            logger.warning(f"The shock barely exists. Got v1={v1}, w1={w1}")
+        return v1, w1
 
-    if np.isclose(wm_guess, 0):
-        logger.error(f"Got invalid estimate for wm={wm_guess}")
+    # Bag model guess
+    if v2_guess is None:
+        v2_guess = 1/(3*v1)
+    if np.isclose(v2_guess, 0) or np.isclose(v2_guess, 1):
+        logger.error(f"Got invalid estimate for v2={v2_guess}")
         return np.nan, np.nan
+
+    if backwards:
+        if v1 < cs:
+            logger.error(f"The shock must be supersonic. Got v1=vp={v1}, w1=wp={w1}, cs(wp)={cs}")
+            return np.nan, np.nan
+        if w2_guess is None:
+            w2_guess = wm_shock_bag(v1, w1)
+        if np.isnan(w2_guess):
+            w2_guess = 0.1*w1
+    else:
+        if w2_guess is None:
+            w2_guess = wp_shock_bag(v1, w1)
+        if np.isnan(w2_guess):
+            w2_guess = 2*w1
+    if w2_guess < 0 or np.isclose(w2_guess, 0):
+        logger.error(f"Got invalid estimate for w2={w2_guess}")
+        return np.nan, np.nan
+
     return solve_junction(
         model,
-        v1=vp, w1=wp,
+        v1=v1, w1=w1,
         phase1=phase, phase2=phase,
-        v2_guess=vm_guess, w2_guess=wm_guess,
+        v2_guess=v2_guess, w2_guess=w2_guess,
         allow_failure=allow_failure
     )
 
