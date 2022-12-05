@@ -4,18 +4,25 @@ import numba.types
 import numpy as np
 
 import pttools.type_hints as th
+from .boundary import Phase
 from . import relativity
 
 
 @numba.njit
 def find_v_index(xi: np.ndarray, v_target: float) -> int:
     r"""
-    The first array index of $\xi$ where value is just above $v_\text{target}$
+    The first array index of $\xi$ where value is just above $v_\text{target}$.
+    If no xi > v_target is found, returns 0.
     """
-    greater = np.where(xi >= v_target)[0]
-    if greater.size:
-        return greater[0]
-    return 0
+    return np.argmax(xi >= v_target)
+
+
+def find_phase(xi: np.ndarray, v_wall: float) -> np.ndarray:
+    i_wall = find_v_index(xi, v_wall)
+    # This presumes that Phase.SYMMETRIC = 0
+    phase = np.zeros_like(xi)
+    phase[:i_wall] = Phase.BROKEN
+    return phase
 
 
 @numba.vectorize

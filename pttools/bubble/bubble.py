@@ -1,4 +1,5 @@
 import datetime
+import functools
 import logging
 import typing as tp
 
@@ -6,11 +7,16 @@ import numpy as np
 
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.fluid import fluid_shell_generic
+from pttools.bubble import thermo
 from pttools.speedup.export import export_json
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
 logger = logging.getLogger(__name__)
+
+
+class NotYetSolvedError(RuntimeError):
+    pass
 
 
 class Bubble:
@@ -87,4 +93,60 @@ class Bubble:
             v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type)
 
     def spectrum(self):
-        raise NotImplementedError
+        raise NotYetSolvedError
+
+    # -----
+    # Thermodynamics
+    # -----
+
+    @functools.cached_property
+    def ebar(self) -> float:
+        return self.model.e(self.wn, Phase.SYMMETRIC)
+
+    @functools.cached_property
+    def kappa(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.kappa(self.model, self.v, self.w, self.xi, self.trace_anomaly)
+
+    @functools.cached_property
+    def trace_anomaly(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.trace_anomaly(self.model, self.w, self.xi, self.v_wall)
+
+    @functools.cached_property
+    def kinetic_energy_fraction(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.kinetic_energy_fraction(self.model, self.v, self.w, self.xi, ek=self.kinetic_energy_density)
+
+    @functools.cached_property
+    def kinetic_energy_density(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.kinetic_energy_density(self.v, self.w, self.xi)
+
+    @functools.cached_property
+    def mean_adiabatic_index(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.mean_adiabatic_index(self.wn, self.ebar)
+
+    @functools.cached_property
+    def omega(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.omega(self.model, self.w, self.xi, self.v_wall, self.trace_anomaly)
+
+    @functools.cached_property
+    def thermal_energy_density(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.trace_anomaly(self.model, self.w, self.xi, self.v_wall)
+
+    @functools.cached_property
+    def ubarf2(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.ubarf2(self.v, self.w, self.xi, self.v_wall, self.kinetic_energy_density)

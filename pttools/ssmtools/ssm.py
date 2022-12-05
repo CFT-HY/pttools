@@ -65,9 +65,9 @@ def A2_e_conserving(
 
     # Now get and resample lam = de/w
     if de_method == DE_Method.ALTERNATE.value:
-        lam_orig = bubble.de_from_w_new(v_ip, w_ip, xi, vw, alpha_n) / w_ip[-1]
+        lam_orig = bubble.de_from_w_new_bag(v_ip, w_ip, xi, vw, alpha_n) / w_ip[-1]
     else:
-        lam_orig = bubble.de_from_w(w_ip, xi, vw, alpha_n) / w_ip[-1]
+        lam_orig = bubble.de_from_w_bag(w_ip, xi, vw, alpha_n) / w_ip[-1]
 
     lam_orig += w_ip * v_ip * v_ip / w_ip[-1]  # This doesn't make much difference at small alpha
     xi_re, lam_re = calculators.resample_uniform_xi(xi, lam_orig, nxi)
@@ -284,9 +284,9 @@ def lam_ssm_func(
     v_ip, w_ip, xi = bubble.fluid_shell(vw, alpha_n, nxi)
 
     if de_method == DE_Method.ALTERNATE:
-        lam_orig = bubble.de_from_w_new(v_ip, w_ip, xi, vw, alpha_n) / w_ip[-1]
+        lam_orig = bubble.de_from_w_new_bag(v_ip, w_ip, xi, vw, alpha_n) / w_ip[-1]
     else:
-        lam_orig = bubble.de_from_w(w_ip, xi, vw, alpha_n) / w_ip[-1]
+        lam_orig = bubble.de_from_w_bag(w_ip, xi, vw, alpha_n) / w_ip[-1]
     xi_re, lam_re = calculators.resample_uniform_xi(xi, lam_orig, nxi)
 
     # lam_ft = np.zeros_like(z)

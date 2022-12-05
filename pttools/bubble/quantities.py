@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 @numba.njit
-def de_from_w(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> np.ndarray:
+def de_from_w_bag(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> np.ndarray:
     r"""
     Calculates energy density difference ``de = e - e[-1]`` from enthalpy, assuming
     bag equation of state.
@@ -53,7 +53,7 @@ def de_from_w(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> n
 
 
 @numba.njit
-def de_from_w_new(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> np.ndarray:
+def de_from_w_new_bag(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> np.ndarray:
     r"""
     For exploring new methods of calculating energy density difference
     from velocity and enthalpy, assuming bag equation of state.
@@ -138,7 +138,7 @@ def get_kappa_de(
             v, w, xi = fluid.fluid_shell(vw, alpha_n, n_xi)
             # Esp+ epsilon is alpha_n * 0.75*w_n
             kappa[...] = (4 / 3) * ubarf_squared(v, w, xi, vw)
-            de[...] = mean_energy_change(v, w, xi, vw, alpha_n)
+            de[...] = mean_energy_change_bag(v, w, xi, vw, alpha_n)
         else:
             kappa[...] = np.nan
             de[...] = np.nan
@@ -199,7 +199,7 @@ def get_kappa_dq(
     return kappa_out, dq_out
 
 
-def get_ke_de_frac(
+def get_ke_de_frac_bag(
         v_wall: th.FloatOrArr,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
@@ -223,7 +223,7 @@ def get_ke_de_frac(
             v, w, xi = fluid.fluid_shell(vw, alpha_n, n_xi)
             # Esp+ epsilon is alpha_n * 0.75*w_n
             ke[...] = ubarf_squared(v, w, xi, vw) / (0.75 * (1 + alpha_n))
-            de[...] = mean_energy_change(v, w, xi, vw, alpha_n) / (0.75 * w[-1] * (1 + alpha_n))
+            de[...] = mean_energy_change_bag(v, w, xi, vw, alpha_n) / (0.75 * w[-1] * (1 + alpha_n))
         else:
             ke[...] = np.nan
             de[...] = np.nan
@@ -240,7 +240,7 @@ def get_ke_de_frac(
     return ke_out, de_out
 
 
-def get_ke_frac(v_wall: th.FloatOrArr, alpha_n: float, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArr:
+def get_ke_frac_bag(v_wall: th.FloatOrArr, alpha_n: float, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArr:
     r"""
     Determine kinetic energy fraction (of total energy).
     Bag equation of state only so far, as it takes
@@ -256,7 +256,7 @@ def get_ke_frac(v_wall: th.FloatOrArr, alpha_n: float, n_xi: int = const.N_XI_DE
     return ubar2 / (0.75 * (1 + alpha_n))
 
 
-def get_ke_frac_new(
+def get_ke_frac_new_bag(
         v_wall: th.FloatOrArr,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
@@ -347,7 +347,7 @@ def get_ubarf2(
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
-def get_ubarf2_new(
+def get_ubarf2_new_bag(
         v_wall: th.FloatOrArr,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
@@ -370,7 +370,7 @@ def get_ubarf2_new(
         sol_type = transition.identify_solution_type(vw, alpha_n)
         if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to get Ubarf2
-            ke_frac = get_ke_frac_new(vw, alpha_n)
+            ke_frac = get_ke_frac_new_bag(vw, alpha_n)
             Ubarf2[...] = ke_frac / Gamma
         else:
             Ubarf2[...] = np.nan
@@ -386,7 +386,7 @@ def get_ubarf2_new(
     return ubarf2_out
 
 
-def mean_energy_change(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> float:
+def mean_energy_change_bag(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> float:
     r"""
     Bubble-averaged change in energy density in bubble relative to outside value.
 
@@ -402,7 +402,7 @@ def mean_energy_change(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: flo
     #    int1, int2 = split_integrate(ene_diff, v, w, xi**3, v_wall)
     #    integral = int1 + int2
     check.check_physical_params((v_wall, alpha_n))
-    integral = np.trapz(de_from_w(w, xi, v_wall, alpha_n), xi ** 3)
+    integral = np.trapz(de_from_w_bag(w, xi, v_wall, alpha_n), xi ** 3)
     return integral / v_wall ** 3
 
 
