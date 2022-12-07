@@ -280,7 +280,7 @@ def fluid_shell(
     :return: $v, w, \xi$
     """
     # check_physical_params([v_wall,alpha_n])
-    sol_type = transition.identify_solution_type(v_wall, alpha_n)
+    sol_type = transition.identify_solution_type_bag(v_wall, alpha_n)
     if sol_type == SolutionType.ERROR:
         with numba.objmode:
             logger.error("Giving up because of identify_solution_type error")
@@ -766,7 +766,7 @@ def fluid_shell_params(
     # TODO: use greek symbols for kappa and omega
     check.check_physical_params((v_wall, alpha_n))
 
-    sol_type = transition.identify_solution_type(v_wall, alpha_n)
+    sol_type = transition.identify_solution_type_bag(v_wall, alpha_n)
 
     if sol_type is SolutionType.ERROR:
         raise RuntimeError(f"No solution for v_wall = {v_wall}, alpha_n = {alpha_n}")

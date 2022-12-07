@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 @numba.njit
-def identify_solution_type(v_wall: float, alpha_n: float, exit_on_error: bool = False) -> SolutionType:
+def identify_solution_type_bag(v_wall: float, alpha_n: float, exit_on_error: bool = False) -> SolutionType:
     """
     Determines wall type from wall speed and global strength parameter.
     solution_type = [ 'Detonation' | 'Deflagration' | 'Hybrid' ]
@@ -42,7 +42,7 @@ def identify_solution_type(v_wall: float, alpha_n: float, exit_on_error: bool = 
     return sol_type
 
 
-def identify_solution_type_beyond_bag(
+def identify_solution_type(
         model: "Model",
         v_wall: float,
         alpha_n: float,

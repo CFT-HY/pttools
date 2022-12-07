@@ -93,7 +93,7 @@ def get_kappa(
     # NB was called get_kappa_arr
     it = np.nditer([v_wall, None])
     for vw, kappa in it:
-        sol_type = transition.identify_solution_type(vw, alpha_n)
+        sol_type = transition.identify_solution_type_bag(vw, alpha_n)
 
         if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
@@ -131,7 +131,7 @@ def get_kappa_de(
     """
     it = np.nditer([v_wall, None, None])
     for vw, kappa, de in it:
-        sol_type = transition.identify_solution_type(vw, alpha_n)
+        sol_type = transition.identify_solution_type_bag(vw, alpha_n)
 
         if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
@@ -175,7 +175,7 @@ def get_kappa_dq(
     """
     it = np.nditer([v_wall, None, None])
     for vw, kappa, dq in it:
-        sol_type = transition.identify_solution_type(vw, alpha_n)
+        sol_type = transition.identify_solution_type_bag(vw, alpha_n)
 
         if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
@@ -216,7 +216,7 @@ def get_ke_de_frac_bag(
     """
     it = np.nditer([v_wall, None, None])
     for vw, ke, de in it:
-        sol_type = transition.identify_solution_type(vw, alpha_n)
+        sol_type = transition.identify_solution_type_bag(vw, alpha_n)
 
         if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
@@ -275,7 +275,7 @@ def get_ke_frac_new_bag(
     """
     it = np.nditer([v_wall, None])
     for vw, ke in it:
-        sol_type = transition.identify_solution_type(vw, alpha_n)
+        sol_type = transition.identify_solution_type_bag(vw, alpha_n)
         if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid.fluid_shell(vw, alpha_n, n_xi)
@@ -298,7 +298,7 @@ def get_ke_frac_new_bag(
 
 @numba.njit
 def _get_ubarf2_scalar(v_wall: float, alpha_n: float, n_xi: int, verbosity: int) -> float:
-    if transition.identify_solution_type(v_wall, alpha_n) == boundary.SolutionType.ERROR:
+    if transition.identify_solution_type_bag(v_wall, alpha_n) == boundary.SolutionType.ERROR:
         ubarf2 = np.nan
     else:
         # Now ready to solve for fluid profile
@@ -367,7 +367,7 @@ def get_ubarf2_new_bag(
 
     it = np.nditer([v_wall, None])
     for vw, Ubarf2 in it:
-        sol_type = transition.identify_solution_type(vw, alpha_n)
+        sol_type = transition.identify_solution_type_bag(vw, alpha_n)
         if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to get Ubarf2
             ke_frac = get_ke_frac_new_bag(vw, alpha_n)

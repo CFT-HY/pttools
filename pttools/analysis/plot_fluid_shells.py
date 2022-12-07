@@ -81,7 +81,7 @@ def plot_fluid_shells(
     for v_wall, alpha_n in zip(v_wall_list, alpha_n_list):
         check.check_physical_params((v_wall, alpha_n))
 
-        sol_type = transition.identify_solution_type(v_wall, alpha_n)
+        sol_type = transition.identify_solution_type_bag(v_wall, alpha_n)
         if sol_type == boundary.SolutionType.ERROR:
             raise RuntimeError(f"No solution for v_wall = {v_wall}, alpha_n = {alpha_n}.")
 
