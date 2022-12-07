@@ -12,11 +12,11 @@ class RelativityTest(unittest.TestCase):
 
     def test_gamma(self):
         g = relativity.gamma(self.v)
-        self.assertTrue(np.all(0 < g < 1))
+        self.assertTrue(np.all(g > 0))
 
     def test_gamma2(self):
         g2 = relativity.gamma2(self.v)
-        self.assertTrue(np.all(0 < g2 < 1))
+        self.assertTrue(np.all(g2 > 0))
 
     def test_lorentz(self):
         mu = relativity.lorentz(0.5, self.v)
