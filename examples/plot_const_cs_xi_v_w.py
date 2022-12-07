@@ -37,6 +37,6 @@ plot.add(Bubble(const_cs, v_wall=0.7, alpha_n=0.4, sol_type=SolutionType.HYBRID)
 plot.add(Bubble(const_cs, v_wall=0.95, alpha_n=0.30, sol_type=SolutionType.DETON), color="red")
 
 plot.save(os.path.join(FIG_DIR, "plot_const_cs_xi_v_w"))
-if "__file__" in globals():
+if __name__ == "__main__" and "__file__" in globals():
     plot.show()
 plot.fig()

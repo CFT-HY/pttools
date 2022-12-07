@@ -24,6 +24,6 @@ plot.add(bag)
 plot.add(const_cs)
 
 plot.save(os.path.join(FIG_DIR, "plot_delta_theta"))
-if "__file__" in globals():
+if __name__ == "__main__" and "__file__" in globals():
     plot.show()
 plot.fig()
