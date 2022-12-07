@@ -113,12 +113,6 @@ class Bubble:
         return thermo.kappa(self.model, self.v, self.w, self.xi, self.trace_anomaly)
 
     @functools.cached_property
-    def trace_anomaly(self) -> float:
-        if not self.solved:
-            raise NotYetSolvedError
-        return thermo.trace_anomaly(self.model, self.w, self.xi, self.v_wall)
-
-    @functools.cached_property
     def kinetic_energy_fraction(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
@@ -144,6 +138,12 @@ class Bubble:
 
     @functools.cached_property
     def thermal_energy_density(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.thermal_energy_density(self.w, self.xi)
+
+    @functools.cached_property
+    def trace_anomaly(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.trace_anomaly(self.model, self.w, self.xi, self.v_wall)
