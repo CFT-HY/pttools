@@ -48,9 +48,9 @@ def kinetic_energy_density(v: np.ndarray, w: np.ndarray, xi: np.ndarray) -> floa
     :param xi: $\xi$
     :return: $e_K$
     """
-    # The factor of 4*pi is not needed due to the choice of the integration points
+    # The factor of 4*pi can be omitted with a specific choice of the integration points.
     # TODO check that this the above is correct.
-    return np.trapz(w * v**2 * relativity.gamma2(v), xi**3)
+    return 4*np.pi * np.trapz(xi**2 * w * v**2 * relativity.gamma2(v), xi)
 
 
 # @numba.njit
@@ -76,7 +76,7 @@ def thermal_energy_density(w: np.ndarray, xi: np.ndarray) -> float:
     r"""Thermal energy density
     $$\Delta e_Q = 4 \pi \int_0^{\xi_\text{max}} d\xi \xi^2 \frac{3}{4} (w - w_n)$$
     """
-    return np.trapz(0.75*(w - w[-1]), xi**3)
+    return 4*np.pi * np.trapz(xi**2 * 0.75*(w - w[-1]), xi)
 
 
 def trace_anomaly(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
@@ -86,7 +86,7 @@ def trace_anomaly(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float) 
     phase = props.find_phase(xi, v_wall)
     theta = model.theta(w, phase)
     theta_n = model.theta(w[-1], Phase.SYMMETRIC)
-    return np.trapz(theta - theta_n, xi**3)
+    return 4*np.pi * np.trapz(xi**2 * (theta - theta_n), xi)
 
 
 def ubarf2(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, ek: float = None, wbar: float = None):
