@@ -480,14 +480,10 @@ def fluid_shell_generic(
     logger.info(
         f"Solving fluid shell for model={model}, v_wall={v_wall}, sol_type={sol_type}, alpha_n={alpha_n}"
     )
-    if sol_type is None or sol_type is SolutionType.UNKNOWN:
-        sol_type = transition.identify_solution_type_beyond_bag(model, v_wall, alpha_n, wn_guess, wm_guess)
-    if sol_type is SolutionType.UNKNOWN:
-        msg = \
-            f"Could not determine solution type automatically for model={model}, v_wall={v_wall}, alpha_n={alpha_n}. " \
-            "Please choose it manually."
-        logger.error(msg)
-        raise ValueError(msg)
+    sol_type = transition.validate_solution_type(
+        model,
+        v_wall=v_wall, alpha_n=alpha_n, sol_type=sol_type,
+        wn_guess=wn_guess, wm_guess=wm_guess)
 
     failed = False
     wn = model.w_n(alpha_n, wn_guess=wn_guess)

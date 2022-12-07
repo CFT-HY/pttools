@@ -8,6 +8,7 @@ import numpy as np
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.fluid import fluid_shell_generic
 from pttools.bubble import thermo
+from pttools.bubble import transition
 from pttools.speedup.export import export_json
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
@@ -34,9 +35,11 @@ class Bubble:
             raise ValueError(f"Invalid v_wall={v_wall}")
         if alpha_n < 0 or alpha_n > 1 or alpha_n < model.alpha_n_min:
             raise ValueError(f"Invalid alpha_n={alpha_n}. Minimum for the model: {model.alpha_n_min}")
-        if sol_type is None:
-            # Todo: determine solution type
-            pass
+        sol_type = transition.validate_solution_type(
+            model,
+            v_wall=v_wall, alpha_n=alpha_n, sol_type=sol_type,
+            wn_guess=wn_guess, wm_guess=wm_guess
+        )
 
         self.model: Model = model
         self.v_wall = v_wall

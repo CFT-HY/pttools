@@ -63,6 +63,24 @@ def identify_solution_type_beyond_bag(
     return SolutionType.UNKNOWN
 
 
+def validate_solution_type(
+        model: "Model",
+        v_wall: float,
+        alpha_n: float,
+        sol_type: SolutionType,
+        wn_guess: float,
+        wm_guess: float) -> SolutionType:
+    if sol_type is None or sol_type is SolutionType.UNKNOWN:
+        sol_type = identify_solution_type(model, v_wall, alpha_n, wn_guess, wm_guess)
+    if sol_type is SolutionType.UNKNOWN:
+        msg = \
+            f"Could not determine solution type automatically for model={model}, v_wall={v_wall}, alpha_n={alpha_n}. " \
+            "Please choose it manually."
+        logger.error(msg)
+        raise ValueError(msg)
+    return sol_type
+
+
 def cannot_be_detonation(v_wall: float, v_cj: float) -> float:
     r"""If $v_w < v_{CJ}, it cannot be a detonation"""
     return v_wall < v_cj
