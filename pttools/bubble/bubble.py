@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class NotYetSolvedError(RuntimeError):
-    pass
+    """Error for accessing the properties of a bubble that has not been solved yet"""
 
 
 class Bubble:
@@ -30,7 +30,9 @@ class Bubble:
             model: "Model", v_wall: float, alpha_n: float,
             sol_type: SolutionType = None,
             label_latex: str = None,
-            label_unicode: str = None):
+            label_unicode: str = None,
+            wn_guess: float = 1,
+            wm_guess: float = 2):
         if v_wall < 0 or v_wall > 1:
             raise ValueError(f"Invalid v_wall={v_wall}")
         if alpha_n < 0 or alpha_n > 1 or alpha_n < model.alpha_n_min:
@@ -94,6 +96,7 @@ class Bubble:
         self.v, self.w, self.xi = fluid_shell_generic(
             model=self.model,
             v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type)
+        self.solved = True
 
     def spectrum(self):
         raise NotYetSolvedError
