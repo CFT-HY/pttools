@@ -44,7 +44,8 @@ class ConstCSModel(AnalyticModel):
             t_ref: float = 1,
             name: str = None,
             label_latex: str = None,
-            label_unicode: str = None):
+            label_unicode: str = None,
+            allow_invalid: bool = False):
         # Ensure that these descriptions correspond to those in the base class
         r"""
         :param a_s: prefactor of $p$ in the symmetric phase. The convention is as in :notes:`\ ` eq. 7.33.
@@ -86,7 +87,8 @@ class ConstCSModel(AnalyticModel):
             a_s=a_s, a_b=a_b,
             g_s=g_s, g_b=g_b,
             t_min=t_min, t_max=t_max,
-            name=name, label_latex=label_latex, label_unicode=label_unicode
+            name=name, label_latex=label_latex, label_unicode=label_unicode,
+            allow_invalid=allow_invalid
         )
 
     @staticmethod
