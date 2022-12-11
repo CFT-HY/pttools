@@ -485,7 +485,7 @@ def trim_fluid_wall_to_cs(
     else:
         n_stop = n_stop_index
 
-    if (xi[0] == v_wall) and not (sol_type == boundary.SolutionType.DETON.value):
+    if (xi[0] == v_wall): #and not (sol_type == boundary.SolutionType.DETON.value):
         n_start = 1
         n_stop += 1
 
@@ -500,7 +500,8 @@ def trim_fluid_wall_to_shock(
         t: np.ndarray,
         sol_type: boundary.SolutionType) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""
-    Trims fluid variable arrays $(v, w, \xi)$ so last element is just ahead of shock.
+    Trims fluid variable arrays $(v, w, \xi)$ so last element is just ahead of shock, 
+    and first element is just ahead of the wall.
 
     :param v: $v$
     :param w: $w$
@@ -532,4 +533,4 @@ def trim_fluid_wall_to_shock(
     else:
         n_shock = n_shock_index
 
-    return v[:n_shock + 1], w[:n_shock + 1], xi[:n_shock + 1], t[:n_shock + 1]
+    return v[1:n_shock + 1], w[1:n_shock + 1], xi[1:n_shock + 1], t[1:n_shock + 1]

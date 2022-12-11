@@ -8,6 +8,7 @@ import numba.types
 import numpy as np
 
 import pttools.type_hints as th
+from pttools import speedup
 from . import const
 
 logger = logging.getLogger(__name__)
@@ -24,54 +25,102 @@ def envelope(xi: np.ndarray, f: np.ndarray) -> np.ndarray:
     - at least the first element of $f$ is zero
 
     xi1: last zero value of f,
-    xi_w: position of maximum f (wall)
+    xi_wm: position of maximum df_dxi (just after cs or just before wall)
+    xi_wp: position of maximum f, just after wall (hybrid, deflag) or just before (deton)
+    xi_sh: position of minimum df_dxi, just before wall (deton) or shock (otherwise))
     x12: last non-zero value of f (def) or 1st zero after wall (det)
     f1: value just before xi1
     f_m: value just before wall
     f_p: value just after wall
-    f2: (at shock, or after wall)
+    f_sh: value just before shock or wall
+    f2: (just after shock or wall)
 
     :param: xi: $\xi$
     :param f: function values $f$ at the points $\xi$
     :return: array of $\xi$, $f$ pairs "outlining" function $f$
     """
 
+    # New version, more robust, works with new interpolator, and simplified search
+    # Really, one would like positions of discontinuities at the wall and the shock 
+    # to be passed to the function.  Would be easier in a bubble class.
+
+    # First bit of logic relies on there to be at least one zero at origin
     xi_nonzero = xi[np.nonzero(f)]
     xi1 = np.min(xi_nonzero)
-    xi2 = np.max(xi_nonzero)
     ind1 = np.where(xi == xi1)[0][0]  # where returns tuple, first element array
-    ind2 = np.where(xi == xi2)[0][0]
-    f1 = f[ind1 - 1]  # in practice, f1 is always zero, or very close, so could drop.
-    xi1 = xi[ind1 - 1]  # line up f1 and xi1
 
+    # Next is the outer limit of the fluid shell
+    xi2 = np.max(xi_nonzero)
+    ind2 = np.where(xi == xi2)[0][0]
+    f2 = f[ind2+1]  # This should be zero
+    xi2 = xi[ind2 + 1]  # line up f2 and xi2
+    # Following relies on shock (deflagration) or the wall (detonation) 
+    # to be unresolved (as it should be from bubble.fluid_shell)
+    f_sh = f[ind2]
+    xi_sh = xi[ind2]
+
+
+    # Now we look for the wall, in the deflgration case, as a large positive change
+    # For a detonation, this largest gradient may be anywhere.
+    df_dxi = speedup.gradient(f)/speedup.gradient(xi)
+    i_max_df = np.argmax(df_dxi)
+
+    # Also, the largest value should be near or at the wall.  The interpolator 
+    # may deliver lots of the same maximum value if it has to extrapolate near 
+    # the wall, and argmax gives the first it finds
     i_max_f = np.argmax(f)
     f_max = f[i_max_f]
-    xi_w = xi[i_max_f]  # max f always at wall
+    xi_wp = xi[i_max_f]
+    f_p = f_max
 
-    # TODO: this indexing fix has changed test_pow_specs.py results a bit
-    if i_max_f + 1 == f.shape[0]:
-        df_at_max = f[i_max_f] - f[i_max_f - 2]
-        with numba.objmode:
-            logger.warning("i_max_f is at the end of f. df_at_max will be calculated for the previous values.")
-    else:
-        df_at_max = f[i_max_f + 1] - f[i_max_f - 1]
+    if i_max_df == i_max_f:
+        i_max_df -= 1
+    xi_wm = xi[i_max_df]
+    f_m = f[i_max_df]
+    # i_min_df = np.argmin(df_dxi)
+    # xi_sh = xi[i_min_df]
+    # f_sh = f[i_min_df]
 
-    # print(ind1, ind2, [xi1,f1], [xi_w, f_max])
+    if ind1 >= i_max_df:
+        ind1 = i_max_df -1 
+    
+    f1 = f[ind1]  # in practice, f1 is always zero, or very close, so could drop.
+    xi1 = xi[ind1]  # line up f1 and xi1
 
-    if df_at_max > 0:
-        # Deflagration or hybrid, ending in shock.
-        f_m = f[i_max_f - 1]
-        f_p = f_max
-        f2 = f[ind2]
-    else:
-        # Detonation, nothing beyond wall
-        f_m = f_max
-        f_p = 0
-        f2 = 0
+
+    # now max f is always just ahead or just behind wall (see resample_uniform_xi)
+    # deflagration and hybrid: max just ahead
+    # detonation max just behind
+
+    # # TODO: this indexing fix has changed test_pow_specs.py results a bit
+    # if i_max_f + 1 == f.shape[0]:
+    #     df_at_max = f[i_max_f] - f[i_max_f - 2]
+    #     with numba.objmode:
+    #         logger.warning("i_max_f is at the end of f. df_at_max will be calculated for the previous values.")
+    # else:
+    #     df_at_max = f[i_max_f + 1] - f[i_max_f - 1]
+
+    # # print(ind1, ind2, [xi1,f1], [xi_w, f_max])
+    # print('envelope: ', f[i_max_f-3:i_max_f+3])
+
+    # if df_at_max > 0:
+    #     # Deflagration or hybrid, ending in shock.
+    #     f_m = f[i_max_f - 1]
+    #     f_p = f_max
+    #     f2 = f[ind2]
+    #     xi_wm = xi[i_max_f-1]  
+    #     xi_wp = xi[i_max_f]  
+    # else:
+    #     # Detonation, nothing beyond wall
+    #     f_m = f_max
+    #     f_p = 0
+    #     f2 = 0
+    #     xi_wm = xi[i_max_f]  
+    #     xi_wp = xi[i_max_f+1]  
 
     return np.array([
-        [xi1, xi_w, xi_w, xi2],
-        [f1, f_m, f_p, f2]
+        [xi1, xi_wm, xi_wp, xi_sh, xi2],
+        [f1, f_m, f_p, f_sh, f2]
     ])
 
 
@@ -79,17 +128,31 @@ def envelope(xi: np.ndarray, f: np.ndarray) -> np.ndarray:
 def resample_uniform_xi(
         xi: np.ndarray,
         f: th.FloatOrArr,
-        n_xi: int = const.NPTDEFAULT[0]) -> tp.Tuple[np.ndarray, th.FloatOrArr]:
+        n_xi: int = const.NPTDEFAULT[0],
+        vw: float = 1.0) -> tp.Tuple[np.ndarray, th.FloatOrArr]:
     r"""
     Provide uniform resample of function defined by $(x,y) = (\xi,f)$.
-    Returns f interpolated and the uniform grid of n_xi points in range [0,1].
+    Returns f interpolated and the uniform grid of n_xi points in ranges 
+    [0,vw) and [vw,1).
 
     :param xi: $\xi$
     :param f: function values $f$ at the points $\xi$
     :param n_xi: number of interpolated points
+    :param vw: (optional) wall location, where discontuity may be
     """
+    # New resampler which copes better with discontinuity at xi = vw (MBH 10.12.22)
     xi_re = np.linspace(0, 1-1/n_xi, n_xi)
-    return xi_re, np.interp(xi_re, xi, f)
+    f_re = np.zeros_like(xi_re)
+    seg1 = (xi_re < vw)
+    seg1_orig = (xi < vw)
+    f_re[seg1] = np.interp(xi_re[seg1], xi[seg1_orig], f[seg1_orig])
+
+    if vw <= xi_re[-1]:
+        seg2 = (xi_re >= vw)
+        seg2_orig = (xi >= vw)
+        f_re[seg2] = np.interp(xi_re[seg2], xi[seg2_orig], f[seg2_orig])
+
+    return xi_re, f_re
 
 
 @numba.njit
@@ -214,11 +277,23 @@ def sin_transform_approx(z: th.FloatOrArr, xi: np.ndarray, f: np.ndarray) -> np.
     # Old versions of Numba don't support unpacking 2D arrays
     # [[xi1, xi_w, _, xi2], [f1, f_m, f_p, f2]] = envelope(xi, f)
     envelope_arr = envelope(xi, f)
-    [xi1, xi_w, _, xi2] = envelope_arr[0, :]
-    [f1, f_m, f_p, f2] = envelope_arr[1, :]
-
-    integral = -(f2 * np.cos(z * xi2) - f_p * np.cos(z * xi_w)) / z
-    integral += -(f_m * np.cos(z * xi_w) - f1 * np.cos(z * xi1)) / z
+    [xi1, xi_wm, xi_wp, xi_sh] = envelope_arr[0, 0:4]
+    [f1, f_m, f_p, f_sh] = envelope_arr[1, 0:4]
+    
+    # Get dxi spacing, should be even, but maybe not in future.
+    # Used to try and distinguish a true discontinuity from a finite segment
+    dxi = xi[1] - xi[0]
+    # factor 1.5 to make room for rounding errors
+    integral = 0*z
+    if xi_wm - xi1 > 1.5*dxi:
+        # logger.debug('sin_transform_approx adding from segment 1 (xi1, xi_wm)')
+        integral += -(f_m * np.cos(z * xi_wm) - f1 * np.cos(z * xi1)) / z
+    if xi_wp - xi_wm > 1.5*dxi:
+        # logger.debug('sin_transform_approx adding from segment 2 (xi_wm, xi_wp)')
+        integral += -(f_p * np.cos(z * xi_wp) - f_m * np.cos(z * xi_wm)) / z
+    if xi_sh - xi_wp > 1.5*dxi:
+        # logger.debug('sin_transform_approx adding from segment 3 (xi_wp, xi_sh)')
+        integral += -(f_sh * np.cos(z * xi_sh) - f_p * np.cos(z * xi_wp)) / z
     return integral
 
 

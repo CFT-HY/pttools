@@ -5,6 +5,11 @@ r"""
 Calculate physical gravitational wave power spectrum $\Omega_{\rm gw}(f)$
 as a function of physical frequency $f$ in Sound shell model.
 
+To do:
+    geff variable number of degrees of freedom for redshifting of frequency 
+        and amplitude, with default value 100.
+    check consistency with power_gw_scaled interface
+
 Created on 10/11/21
 
 @author: cg411, markh
@@ -41,7 +46,7 @@ from . import const
 
 def J(r_star, K_frac):
     """
-    pre-factor to convert power_gw_scaled to predicted spectrum
+    pre-factor to convert ssm.power_gw_scaled to predicted spectrum
     approximation of $(H_n R_*)(H_n \tau_v)$
     updating to properly convert from flow time to source time
     See Eqn 2.8 of 	arXiv:2106.05984

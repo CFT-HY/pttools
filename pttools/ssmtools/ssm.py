@@ -45,10 +45,14 @@ def A2_e_conserving(
     calculated from self-similar hydro solution obtained with "bubble.fluid_shell".
 
     :param z: array of scaled wavenumbers $z = kR_*$.
+    :param vw: wall speed, $v_\text{wall}$
+    :param alpha_n: transition strength parameter $\alpha_n$
+    :param npt: number of points, can give as tuple (n_xi, n_t, n_z).
     :param de_method: Note that 'standard' (e-conserving) method is only accurate to
       linear order, meaning that there is an apparent $z^0$ piece at very low $z$,
       and may exaggerate the GWs at low vw. ATM no other de_methods, but argument
       allows trials.
+    :param z_st_thresh: wavenumber at which to switch sin_transform to its approximation.
     :return: $|A(z)|^2$, fp2_2, lam2
     """
     nxi = npt[0]
@@ -59,7 +63,12 @@ def A2_e_conserving(
     #    f = np.zeros_like(z)
     #    for j in range(f.size):
     #        f[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi, v_ip, z_st_thresh)
-    f = (4. * np.pi / z) * calculators.sin_transform(z, xi, v_ip, z_st_thresh)
+
+    # Now we resample on v as well (Dec 2022 MBH)
+    # better symmetry, also sin_transform_approx is written with resampled fields in mind.
+    xi_re, v_re = calculators.resample_uniform_xi(xi, v_ip, nxi, vw)
+    # f = (4. * np.pi / z) * calculators.sin_transform(z, xi, v_ip, z_st_thresh)
+    f = (4. * np.pi / z) * calculators.sin_transform(z, xi_re, v_re, z_st_thresh)
 
     v_ft = speedup.gradient(f) / speedup.gradient(z)
 
@@ -70,14 +79,15 @@ def A2_e_conserving(
         lam_orig = bubble.de_from_w(w_ip, xi, vw, alpha_n) / w_ip[-1]
 
     lam_orig += w_ip * v_ip * v_ip / w_ip[-1]  # This doesn't make much difference at small alpha
-    xi_re, lam_re = calculators.resample_uniform_xi(xi, lam_orig, nxi)
+    # Use new resampler which copes better with discontinuity at xi = vw (MBH 10.12.22)
+    xi_re, xi_lam_re = calculators.resample_uniform_xi(xi, xi*lam_orig, nxi, vw)
 
     #    lam_re = np.interp(xi_re,xi,lam_orig)
     #    lam_ft = np.zeros_like(z)
     #    for j in range(lam_ft.size):
     #        lam_ft[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi_re, xi_re*lam_re,
     #              z_st_thresh=max(z)) # Need to fix problem with ST of lam for detonations
-    lam_ft = (4. * np.pi / z) * calculators.sin_transform(z, xi_re, xi_re * lam_re, z_st_thresh)
+    lam_ft = (4. * np.pi / z) * calculators.sin_transform(z, xi_re, xi_lam_re, z_st_thresh)
 
     A2 = 0.25 * (v_ft ** 2 + (const.CS0 * lam_ft) ** 2)
 
@@ -90,12 +100,14 @@ def A2_e_conserving_file(
         alpha: float,
         skip: int = 1,
         npt: const.NPT_TYPE = const.NPTDEFAULT,
-        z_st_thresh: float = const.Z_ST_THRESH):
+        z_st_thresh: float = np.inf):
     r"""
     Returns the value of $|A(z)|^2$, where $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$,
     calculated from file, output by "spherical-hydro-code".
     Uses method respecting energy conservation, although only accurate to
-    linear order, meaning that there is an apparent $z^0$ piece at very low $z$.
+    linear order, meaning that there is an apparent $z^0$ piece at very low $z$. 
+    By default uses full numerical sine transform, rather than approximating above 
+    z = const.Z_ST_THRESH.
 
     :param z: array of scaled wavenumbers $z = kR_*$
     :return: $|A(z)|^2$
@@ -118,7 +130,7 @@ def A2_e_conserving_file(
     #    f = np.zeros_like(z)
     #    for j in range(f.size):
     #        f[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi_lt1, v_xi_lt1)
-    f = (4. * np.pi / z) * calculators.sin_transform(z, xi_lt1, v_xi_lt1)
+    f = (4. * np.pi / z) * calculators.sin_transform(z, xi_lt1, v_xi_lt1, z_st_thresh)
 
     v_ft = np.gradient(f) / np.gradient(z)
     e_n = e_xi_lt1[-1]
@@ -155,6 +167,9 @@ def A2_ssm_func(
     $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$
 
     :param z: array of scaled wavenumbers $z = kR_*$
+    :param vw: wall speed, $v_\text{wall}$
+    :param alpha_n: transition strength parameter $\alpha_n$
+    :param npt: number of points, can give as tuple (n_xi, n_t, n_z).
     :param method: correct method for SSM is "e_conserving".
       Also allows exploring effect of other incorrect
       methods ``f_only`` and ``with_g``.
@@ -195,9 +210,10 @@ def f_file(
         filename: str,
         skip: int = 0,
         npt: const.NPT_TYPE = const.NPTDEFAULT,
-        z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
+        z_st_thresh: float = np.inf) -> np.ndarray:
     r"""
-    3D FT of radial fluid velocity v(r) from file.
+    3D FT of radial fluid velocity v(r) from file, byt default without high-z
+    approximation (z_st_thresh = np.inf).
 
     :param z_arr: array of scaled wavenumbers $z = kR_*$
     """
@@ -224,7 +240,7 @@ def f_file(
 @numba.njit
 def f_ssm_func(
         z: th.FloatOrArr,
-        v_wall: float,
+        vw: float,
         alpha_n: float,
         npt: const.NPT_TYPE = const.NPTDEFAULT,
         z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
@@ -232,12 +248,13 @@ def f_ssm_func(
     3D FT of radial fluid velocity v(r) from Sound Shell Model fluid profile.
 
     :param z: array of scaled wavenumbers $z = kR_*$
-    :param v_wall: $v_\text{wall}$
-    :param alpha_n: $\alpha_n$
-    :param npt: number of points
+    :param vw: wall speed, $v_\text{wall}$
+    :param alpha_n: transition strength parameter $\alpha_n$
+    :param npt: number of points, can give as tuple (n_xi, n_t, n_z).
+    :param z_st_thresh: wavenumber at which to switch sin_transform to its approximation.
     """
     nxi = npt[0]
-    v_ip, _, xi = bubble.fluid_shell(v_wall, alpha_n, nxi)
+    v_ip, _, xi = bubble.fluid_shell(vw, alpha_n, nxi)
 
     # f_ssm = np.zeros_like(z)
     # for j in range(f_ssm.size):
@@ -261,6 +278,9 @@ def g_ssm_func(z: np.ndarray, vw, alpha, npt: const.NPT_TYPE = const.NPTDEFAULT)
     3D FT of radial fluid acceleration $\dot{v}$(r) from Sound Shell Model fluid profile.
 
     :param z: array of scaled wavenumbers $z = kR_*$
+    :param vw: wall speed, $v_\text{wall}$
+    :param alpha_n: transition strength parameter $\alpha_n$
+    :param npt: number of points, can give as tuple (n_xi, n_t, n_z).
     """
     f_ssm = f_ssm_func(z, vw, alpha, npt)
     df_ssmdz = np.gradient(f_ssm) / np.gradient(z)
@@ -278,6 +298,11 @@ def lam_ssm_func(
     3D FT of radial energy perturbation from Sound Shell Model fluid profile
 
     :param z: array of scaled wavenumbers $z = kR_*$
+    :param vw: wall speed, $v_\text{wall}$
+    :param alpha_n: transition strength parameter $\alpha_n$
+    :param npt: number of points, can give as tuple (n_xi, n_t, n_z).
+    :param de_method: How energy density fluctuation feeds into GW ps.  See A2_ssm_e_conserving.
+    :param z_st_thresh: wavenumber at which to switch sin_transform to its approximation.
     """
     nxi = npt[0]
     # xi_re = np.linspace(0,1-1/nxi,nxi) # need to resample for lam = de/w
@@ -287,11 +312,11 @@ def lam_ssm_func(
         lam_orig = bubble.de_from_w_new(v_ip, w_ip, xi, vw, alpha_n) / w_ip[-1]
     else:
         lam_orig = bubble.de_from_w(w_ip, xi, vw, alpha_n) / w_ip[-1]
-    xi_re, lam_re = calculators.resample_uniform_xi(xi, lam_orig, nxi)
+    xi_re, xi_lam_re = calculators.resample_uniform_xi(xi, xi*lam_orig, nxi, vw)
 
     # lam_ft = np.zeros_like(z)
     # for j in range(lam_ft.size):
     #    lam_ft[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi_re, xi_re*lam_re,
     #          z_st_thresh=max(z)) # Need to fix problem with ST of lam for detonations
 
-    return (4.*np.pi/z) * calculators.sin_transform(z, xi_re, xi_re*lam_re, z_st_thresh)
+    return (4.*np.pi/z) * calculators.sin_transform(z, xi_re, xi_lam_re, z_st_thresh)

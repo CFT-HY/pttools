@@ -164,7 +164,7 @@ def power_v(
     """
     bubble.check_physical_params(params)
 
-    p_v = spec_den_v(z, params, npt, filename, skip, method, de_method)
+    p_v = spec_den_v(z, params, npt, filename, skip, method, de_method, z_st_thresh)
     return pow_spec(z, p_v)
 
 
@@ -342,7 +342,9 @@ def spec_den_v(
     if filename is None:
         A2_lookup = ssm.A2_ssm_func(qT_lookup, vw, alpha, npt, method, de_method, z_st_thresh)
     else:
-        A2_lookup = ssm.A2_e_conserving_file(qT_lookup, filename, alpha, skip, npt, z_st_thresh)
+        # A2_lookup = ssm.A2_e_conserving_file(qT_lookup, filename, alpha, skip, npt, z_st_thresh)
+        # Shouldn't use sine transform approximation on smooth data from simulation files
+        A2_lookup = ssm.A2_e_conserving_file(qT_lookup, filename, alpha, skip, npt, z_st_thresh=np.inf)
 
     return _spec_den_v_core(
         a=a,
