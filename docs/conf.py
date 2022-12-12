@@ -109,7 +109,7 @@ extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
         "https://akareport.aka.fi/ibi_apps/WFServlet?IBIF_ex=x_hakkuvaus2&CLICKED_ON=&HAKNRO1=%s&UILANG=en&TULOSTE=HTML",
         "Academy of Finland grant %s"
     ),
-    "issue": ("https://github.com/hindmars/pttools/issues/%s", "issue %s"),
+    "issue": ("https://github.com/hindmars-org/pttools/issues/%s", "issue %s"),
     "ssm_repo": ("https://bitbucket.org/hindmars/sound-shell-model/src/master/", "sound-shell-model/%s")
 }
 intersphinx_mapping: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
@@ -129,7 +129,7 @@ linkcheck_allowed_redirects = {
 # linkcheck_auth = []
 linkcheck_ignore = [
     # The project repository will return 404 without authentication until it's published.
-    r"https://github\.com/hindmars/pttools/*"
+    r"https://github\.com/hindmars-org/pttools/*"
 ]
 linkcheck_timeout = 5
 linkcheck_workers = 10
