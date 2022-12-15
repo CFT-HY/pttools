@@ -13,6 +13,7 @@ import numpy as np
 import pttools.type_hints as th
 from . import bag
 from . import boundary
+from .boundary import Phase, SolutionType
 from . import check
 from . import const
 from . import fluid
@@ -93,6 +94,8 @@ def get_kappa(
     # NB was called get_kappa_arr
     it = np.nditer([v_wall, None])
     for vw, kappa in it:
+        # This is necessary for Numba
+        vw = vw.item()
         sol_type = transition.identify_solution_type_bag(vw, alpha_n)
 
         if not sol_type == boundary.SolutionType.ERROR:
@@ -131,6 +134,7 @@ def get_kappa_de(
     """
     it = np.nditer([v_wall, None, None])
     for vw, kappa, de in it:
+        vw = vw.item()
         sol_type = transition.identify_solution_type_bag(vw, alpha_n)
 
         if not sol_type == boundary.SolutionType.ERROR:
@@ -175,6 +179,7 @@ def get_kappa_dq(
     """
     it = np.nditer([v_wall, None, None])
     for vw, kappa, dq in it:
+        vw = vw.item()
         sol_type = transition.identify_solution_type_bag(vw, alpha_n)
 
         if not sol_type == boundary.SolutionType.ERROR:
@@ -216,6 +221,7 @@ def get_ke_de_frac_bag(
     """
     it = np.nditer([v_wall, None, None])
     for vw, ke, de in it:
+        vw = vw.item()
         sol_type = transition.identify_solution_type_bag(vw, alpha_n)
 
         if not sol_type == boundary.SolutionType.ERROR:
@@ -275,6 +281,7 @@ def get_ke_frac_new_bag(
     """
     it = np.nditer([v_wall, None])
     for vw, ke in it:
+        vw = vw.item()
         sol_type = transition.identify_solution_type_bag(vw, alpha_n)
         if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
@@ -324,7 +331,7 @@ def get_ubarf2(
         v_wall: th.FloatOrArr,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
-        verbosity: int = 0) -> th.FloatOrArr:
+        verbosity: int = 0) -> th.FloatOrArrNumba:
     r"""
     Get mean square fluid velocity from $v_\text{wall}$ and $\alpha_n$.
 
@@ -362,11 +369,12 @@ def get_ubarf2_new_bag(
     :return: mean square fluid velocity
     """
     w_mean = 1  # For bag, it doesn't matter
-    Gamma = bag.adiabatic_index_bag(w_mean, const.BROK_PHASE, bag.theta_bag(w_mean, const.BROK_PHASE, alpha_n))
+    Gamma = bag.adiabatic_index_bag(w_mean, Phase.BROKEN, bag.theta_bag(w_mean, Phase.BROKEN, alpha_n))
     logger.debug(Gamma)
 
     it = np.nditer([v_wall, None])
     for vw, Ubarf2 in it:
+        vw = vw.item()
         sol_type = transition.identify_solution_type_bag(vw, alpha_n)
         if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to get Ubarf2
