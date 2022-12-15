@@ -98,8 +98,13 @@ class Bubble:
             v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type)
         self.solved = True
 
+        if self.thermal_energy_density < 0:
+            logger.error(
+                "Thermal energy density should not be negative! Now entropy is decreasing. Got: %s",
+                self.thermal_energy_density)
+
     def spectrum(self):
-        raise NotYetSolvedError
+        raise NotImplementedError
 
     # -----
     # Thermodynamics
