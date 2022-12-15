@@ -118,7 +118,7 @@ class Bubble:
     def kappa(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.kappa(self.model, self.v, self.w, self.xi, self.trace_anomaly)
+        return thermo.kappa(self.model, self.v, self.w, self.xi, self.v_wall, delta_e_theta=self.trace_anomaly)
 
     @functools.cached_property
     def kinetic_energy_fraction(self) -> float:
