@@ -141,7 +141,7 @@ def get_kappa_de(
             # Now ready to solve for fluid profile
             v, w, xi = fluid.fluid_shell(vw, alpha_n, n_xi)
             # Esp+ epsilon is alpha_n * 0.75*w_n
-            kappa[...] = (4 / 3) * ubarf_squared(v, w, xi, vw)
+            kappa[...] = ubarf_squared(v, w, xi, vw) / (0.75 * alpha_n)
             de[...] = mean_energy_change_bag(v, w, xi, vw, alpha_n)
         else:
             kappa[...] = np.nan
