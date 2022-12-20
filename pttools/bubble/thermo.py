@@ -7,6 +7,17 @@ from . import relativity
 from pttools.models.model import Model
 
 
+# Todo: Fix the equations in the docstrings
+
+def entropy_density(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
+    r"""
+    Volume-averaged entropy density
+    $$s_\text{avg} =
+    """
+    phase = props.find_phase(xi, v_wall)
+    return 1 / (v_wall**3) * np.trapz(model.s(w, phase) - model.s(w[-1], Phase.SYMMETRIC), xi**3)
+
+
 def kappa(
         model: "Model",
         v: np.ndarray, w: np.ndarray, xi: np.ndarray,

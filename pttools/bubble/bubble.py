@@ -98,10 +98,16 @@ class Bubble:
             v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type)
         self.solved = True
 
+        if self.entropy_density < 0:
+            logger.error(
+                "Entropy density should not be negative! Now entropy is decreasing. Got: %s",
+                self.entropy_density
+            )
         if self.thermal_energy_density < 0:
             logger.error(
-                "Thermal energy density should not be negative! Now entropy is decreasing. Got: %s",
-                self.thermal_energy_density)
+                "Thermal energy density is negative. The bubble is therefore working as a heat engine. Got: %s",
+                self.thermal_energy_density
+            )
 
     def spectrum(self):
         raise NotImplementedError
@@ -113,6 +119,10 @@ class Bubble:
     @functools.cached_property
     def ebar(self) -> float:
         return self.model.e(self.wn, Phase.SYMMETRIC)
+
+    @functools.cached_property
+    def entropy_density(self) -> float:
+        return thermo.entropy_density(self.model, self.w, self.xi, self.v_wall)
 
     @functools.cached_property
     def kappa(self) -> float:
