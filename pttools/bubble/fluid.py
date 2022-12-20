@@ -696,13 +696,15 @@ def fluid_shell_alpha_plus(
     if not sol_type == SolutionType.DETON.value:
         # First go
         v, w, xi, t = fluid_integrate_param(
-            v0=vfp_p, w0=wp, xi0=v_wall, t_end=-const.T_END_DEFAULT, n_xi=const.N_XI_DEFAULT, df_dtau_ptr=df_dtau_ptr)
+            v0=vfp_p, w0=wp, xi0=v_wall,
+            phase=Phase.SYMMETRIC.value, t_end=-const.T_END_DEFAULT, n_xi=const.N_XI_DEFAULT, df_dtau_ptr=df_dtau_ptr)
         v, w, xi, t = trim_fluid_wall_to_shock(v, w, xi, t, sol_type)
         # Now refine so that there are ~N points between wall and shock.  A bit excessive for thin
         # shocks perhaps, but better safe than sorry. Then improve final point with shock_zoom...
         t_end_refine = t[-1]
         v, w, xi, t = fluid_integrate_param(
-            v0=vfp_p, w0=wp, xi0=v_wall, t_end=t_end_refine, n_xi=n_xi, df_dtau_ptr=df_dtau_ptr)
+            v0=vfp_p, w0=wp, xi0=v_wall,
+            phase=Phase.SYMMETRIC.value, t_end=t_end_refine, n_xi=n_xi, df_dtau_ptr=df_dtau_ptr)
         v, w, xi, t = trim_fluid_wall_to_shock(v, w, xi, t, sol_type)
         v, w, xi = shock.shock_zoom_last_element(v, w, xi)
         # Now complete to xi = 1
@@ -720,7 +722,8 @@ def fluid_shell_alpha_plus(
     if not sol_type == SolutionType.SUB_DEF.value:
         # First go
         v, w, xi, t = fluid_integrate_param(
-            v0=vfm_p, w0=wm, xi0=v_wall, t_end=-const.T_END_DEFAULT, n_xi=const.N_XI_DEFAULT, df_dtau_ptr=df_dtau_ptr)
+            v0=vfm_p, w0=wm, xi0=v_wall,
+            phase=Phase.BROKEN.value, t_end=-const.T_END_DEFAULT, n_xi=const.N_XI_DEFAULT, df_dtau_ptr=df_dtau_ptr)
         v, w, xi, t = trim_fluid_wall_to_cs(v, w, xi, t, v_wall, sol_type)
         #    # Now refine so that there are ~N points between wall and point closest to cs
         #    # For walls just faster than sound, will give very (too?) fine a resolution.
