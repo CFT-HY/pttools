@@ -16,7 +16,6 @@ class BubbleTest(unittest.TestCase):
         ebar = self.bubble.ebar
         self.assertGreater(ebar, 0)
 
-    @unittest.expectedFailure
     def test_kappa(self):
         kappa = self.bubble.kappa
         self.assertGreater(kappa, 0)
