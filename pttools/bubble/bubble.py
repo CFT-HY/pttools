@@ -134,13 +134,13 @@ class Bubble:
     def kinetic_energy_fraction(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.kinetic_energy_fraction(self.model, self.v, self.w, self.xi, ek=self.kinetic_energy_density)
+        return thermo.kinetic_energy_fraction(self.model, self.v, self.w, self.xi, self.v_wall, ek=self.kinetic_energy_density)
 
     @functools.cached_property
     def kinetic_energy_density(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.kinetic_energy_density(self.v, self.w, self.xi)
+        return thermo.kinetic_energy_density(self.v, self.w, self.xi, self.v_wall)
 
     @functools.cached_property
     def mean_adiabatic_index(self) -> float:
@@ -158,7 +158,7 @@ class Bubble:
     def thermal_energy_density(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.thermal_energy_density(self.w, self.xi)
+        return thermo.thermal_energy_density(self.w, self.xi, self.v_wall)
 
     @functools.cached_property
     def trace_anomaly(self) -> float:
