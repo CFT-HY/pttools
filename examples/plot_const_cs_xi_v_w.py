@@ -37,12 +37,13 @@ bag_det = Bubble(bag, v_wall=0.77, alpha_n=0.091, sol_type=SolutionType.DETON)
 for bubble in [bag_def, bag_hybrid, bag_det]:
     plot.add(bubble, color="blue")
     print(
-        f"{bubble.label_unicode}: w0/wn={bubble.w[0] / bubble.wn}, "
-        f"Ubarf2={bubble.ubarf2}, K={bubble.kinetic_energy_fraction}, kappa={bubble.kappa}, omega={bubble.omega}, "
-        f"Trace anomaly={bubble.trace_anomaly}"
+        f"{bubble.label_unicode}: w0/wn={bubble.w[0] / bubble.wn:.4f}, "
+        f"Ubarf2={bubble.ubarf2:.4f}, K={bubble.kinetic_energy_fraction:.4f}, "
+        f"kappa={bubble.kappa:.4f}, omega={bubble.omega:.4f}, kappa+omega={bubble.kappa+bubble.omega:.4f}, "
+        f"trace anomaly={bubble.trace_anomaly:.4f}"
     )
     kappa = quantities.get_kappa(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n)
-    print(f"Reference kappa={kappa}")
+    print(f"Reference kappa={kappa:.4f}")
 
 plot.add(Bubble(const_cs, v_wall=0.5, alpha_n=0.578, sol_type=SolutionType.SUB_DEF), color="red")
 plot.add(Bubble(const_cs, v_wall=0.7, alpha_n=0.151, sol_type=SolutionType.HYBRID), color="red")
