@@ -43,7 +43,7 @@ for bubble in [bag_def, bag_hybrid, bag_det]:
         f"trace anomaly={bubble.trace_anomaly:.4f}"
     )
     kappa = quantities.get_kappa(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n)
-    print(f"Reference kappa={kappa:.4f}")
+    print(f"Reference kappa={kappa:.4f}, relative error={(bubble.kappa - kappa)/kappa}")
 
 plot.add(Bubble(const_cs, v_wall=0.5, alpha_n=0.578, sol_type=SolutionType.SUB_DEF), color="red")
 plot.add(Bubble(const_cs, v_wall=0.7, alpha_n=0.151, sol_type=SolutionType.HYBRID), color="red")
