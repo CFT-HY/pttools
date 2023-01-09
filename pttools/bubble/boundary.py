@@ -269,9 +269,9 @@ def solve_junction(
             # raise ValueError(msg)
 
     devs = junction_conditions_solvable(np.array([v2, w2]), model, v1, w1, phase1, phase2)
-    print(f"v1w={v1}, v2w={v2}, w1={w1}, w2={w2}, dev={devs}")
+    # print(f"v1w={v1}, v2w={v2}, w1={w1}, w2={w2}, dev={devs}")
     if not np.allclose(devs, np.zeros(2)):
-        raise ValueError(f"The boundary solver gave a solution that deviates from the boundary conditions with: {devs}")
+        logger.error("The boundary solver gave a solution that deviates from the boundary conditions with: %s", devs)
     return v2, w2
 
 

@@ -397,19 +397,20 @@ def fluid_shell_deflagration(
 
     return fluid_shell_deflagration_common(
         model,
-        v_wall, wn, w_center,
+        v_wall, wn,
+        v_wall, w_center,
         vp_tilde_guess, wp_guess,
         SolutionType.SUB_DEF, allow_failure)
 
 
 def fluid_shell_deflagration_common(
         model: "Model",
-        v_wall: float, wn: float, wm: float, vp_tilde_guess: float, wp_guess: float,
+        v_wall: float, wn: float, vm_tilde: float, wm: float, vp_tilde_guess: float, wp_guess: float,
         sol_type: SolutionType,
         allow_failure: bool) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, float]:
     # Solve the boundary conditions at the wall
     vp_tilde, wp = boundary.solve_junction(
-        model, v_wall, wm,
+        model, vm_tilde, wm,
         Phase.BROKEN, Phase.SYMMETRIC,
         v2_guess=vp_tilde_guess, w2_guess=wp_guess,
         allow_failure=allow_failure
@@ -453,7 +454,8 @@ def fluid_shell_hybrid(model: "Model", v_wall: float, wn: float, wm: float, allo
     # Exit velocity is at the sound speed
     vm_tilde = np.sqrt(model.cs2(wm, Phase.BROKEN))
     return fluid_shell_deflagration_common(
-        model, v_wall, wn, wm,
+        model, v_wall, wn,
+        vm_tilde, wm,
         vp_tilde_guess=0.75*vm_tilde, wp_guess=2*wm,
         sol_type=SolutionType.HYBRID,
         allow_failure=allow_failure
@@ -566,8 +568,12 @@ def fluid_shell_generic(
                     f"Using w_center={w_center}. Reason: {sol[3]}"
                 )
             v, w, xi, wn_estimate = fluid_shell_deflagration(
-                model, v_wall, alpha_n, wn, w_center, allow_failure=allow_failure)
-            logger.info(f"Deflagration: w_center={w_center}, wn_estimate={wn_estimate}")
+                model, v_wall, wn, w_center, allow_failure=allow_failure)
+            if not np.isclose(wn_estimate, wn):
+                logger.error(
+                    f"Deflagration solution was not found for model={model}, v_wall={v_wall}, alpha_n={alpha_n}. "
+                    f"Got wn_estimate={wn_estimate}, which differs from wn={wn}."
+                )
             # print(np.array([v, w, xi]).T)
             # print("wn, xi_sh", wn, xi_sh)
     elif sol_type == SolutionType.HYBRID:
@@ -586,6 +592,11 @@ def fluid_shell_generic(
                 f"Using wm={wm}. Reason: {sol[3]}"
             )
         v, w, xi, wn_estimate = fluid_shell_hybrid(model, v_wall, wn, wm, allow_failure=allow_failure)
+        if not np.isclose(wn_estimate, wn):
+            logger.error(
+                f"Hybrid solution was not found for model={model}, v_wall={v_wall}, alpha_n={alpha_n}. "
+                f"Got wn_estimate={wn_estimate}, which differs from wn={wn}."
+            )
         vm = relativity.lorentz(v_wall, np.sqrt(model.cs2(wm, Phase.BROKEN)))
         v_tail, w_tail, xi_tail, t_tail = fluid_integrate_param(
             vm, wm, v_wall,
