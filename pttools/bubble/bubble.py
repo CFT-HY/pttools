@@ -69,7 +69,7 @@ class Bubble:
 
         logger.info(
             "Initialized a bubble with: "
-            f"model={self.model}, v_w={v_wall}, alpha_n={alpha_n}, T_nuc={self.tn}, w_nuc={self.wn}")
+            f"model={self.model.label_unicode}, v_w={v_wall}, alpha_n={alpha_n}, T_nuc={self.tn}, w_nuc={self.wn}")
 
     def add_note(self, note: str):
         self.notes.append(note)
