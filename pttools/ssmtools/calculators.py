@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 @numba.njit
-def envelope(xi: np.ndarray, f: np.ndarray) -> np.ndarray:
+def envelope(xi: np.ndarray, f: np.ndarray, xi_wall: float = None, xi_sh: float = None) -> np.ndarray:
     r"""
     Helper function for :func:`sin_transform_approx`.
     Assumes that
@@ -35,6 +35,11 @@ def envelope(xi: np.ndarray, f: np.ndarray) -> np.ndarray:
     :param f: function values $f$ at the points $\xi$
     :return: array of $\xi$, $f$ pairs "outlining" function $f$
     """
+    if xi_wall is None or xi_sh is None:
+        logger.warning(
+            "Please give xi_wall and xi_sh to envelope(). "
+            "They will be needed in the future for finding the discontinuities."
+        )
 
     xi_nonzero = xi[np.nonzero(f)]
     xi1 = np.min(xi_nonzero)
