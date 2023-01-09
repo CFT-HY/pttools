@@ -91,4 +91,5 @@ for bubble in [bag_def, bag_hybrid, bag_det]:
     validate(bubble.v, bubble.w, bubble.xi, bubble.sol_type)
 
 # ax.legend()
-plt.show()
+if __name__ == "__main__" and "__file__" in globals():
+    plt.show()

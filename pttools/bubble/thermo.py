@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 
 import pttools.type_hints as th
@@ -6,13 +8,20 @@ from . import props
 from . import relativity
 from pttools.models.model import Model
 
+logger = logging.getLogger(__name__)
+
 
 # Todo: Fix the equations in the docstrings
+
+def ebar(model: Model, wn: float):
+    """Energy is conserved, and therefore $\bar{e}=e_n$."""
+    return model.e(wn, Phase.SYMMETRIC)
+
 
 def entropy_density(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
     r"""
     Volume-averaged entropy density
-    $$s_\text{avg} =
+    $$s_\text{avg} = \frac{1}{v_w^3} \int (s(w,\phi) - s(w_n, \phi_s) \xi^3$$
     """
     phase = props.find_phase(xi, v_wall)
     return 1 / (v_wall**3) * np.trapz(model.s(w, phase) - model.s(w[-1], Phase.SYMMETRIC), xi**3)
@@ -36,15 +45,15 @@ def kinetic_energy_fraction(
         model: "Model",
         v: np.ndarray, w: np.ndarray, xi: np.ndarray,
         v_wall: float,
-        ek: float = None, ebar: float = None) -> float:
+        ek: float = None, eb: float = None) -> float:
     r"""Kinetic energy fraction
     $$K = \frac{e_K}{\bar{e}}$$
     """
     if ek is None:
         ek = kinetic_energy_density(v, w, xi, v_wall)
-    if ebar is None:
-        ebar = model.e(w[-1], Phase.SYMMETRIC)
-    return ek / ebar
+    if eb is None:
+        eb = ebar(model, w[-1])
+    return ek / eb
 
 
 # @numba.njit
@@ -66,11 +75,11 @@ def kinetic_energy_density(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall:
 
 
 # @numba.njit
-def mean_adiabatic_index(wn: th.FloatOrArr, ebar: th.FloatOrArr) -> th.FloatOrArr:
+def mean_adiabatic_index(wb: th.FloatOrArr, eb: th.FloatOrArr) -> th.FloatOrArr:
     r"""Mean adiabatic index
     $$\Gamma = \frac{\bar{w}}{\bar{e}}$$
     """
-    return wn / ebar
+    return wb / eb
 
 
 def omega(
@@ -101,12 +110,24 @@ def trace_anomaly(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float) 
     return 1/(v_wall**3) * np.trapz((theta - theta_n), xi**3)
 
 
-def ubarf2(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, ek: float = None, wbar: float = None) -> float:
+def ubarf2(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, ek: float = None, wb: float = None, wn: float = None) -> float:
     r"""Enthalpy-weighted mean square fluid 4-velocity around the bubble
     $$\bar{U}_f^2 = \frac{3}{4\pi \bar{w} v_w^3} e_K$$
     """
     if ek is None:
         ek = kinetic_energy_density(v, w, xi, v_wall)
-    if wbar is None:
-        wbar = w[-1]
-    return 3/(4*np.pi*wbar*v_wall**3) * ek
+    # if wb is None:
+    #     wb = wbar(w, xi, v_wall, wn)
+    # return 3/(4*np.pi*wb*v_wall**3) * ek
+    return ek / w[-1]
+
+
+def wbar(w: np.ndarray, xi: np.ndarray, v_wall: float, wn: float = None):
+    logger.warning("wbar is untested and may return false results")
+
+    w_reverse = w[::-1]
+    i_max = len(w_reverse) - np.argmax(w_reverse != w[-1]) - 1
+    ret = 1/(v_wall**3) * np.trapz(w[:i_max], xi[:i_max]**3)
+    if wn is not None and ret <= wn:
+        logger.warning(f"Should have wbar > wn. Got: wbar={wn}, wn={wn}")
+    return ret

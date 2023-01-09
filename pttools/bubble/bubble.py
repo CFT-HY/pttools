@@ -118,7 +118,7 @@ class Bubble:
 
     @functools.cached_property
     def ebar(self) -> float:
-        return self.model.e(self.wn, Phase.SYMMETRIC)
+        return thermo.ebar(self.model, self.wn)
 
     @functools.cached_property
     def entropy_density(self) -> float:
@@ -134,7 +134,9 @@ class Bubble:
     def kinetic_energy_fraction(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.kinetic_energy_fraction(self.model, self.v, self.w, self.xi, self.v_wall, ek=self.kinetic_energy_density)
+        return thermo.kinetic_energy_fraction(
+            self.model, self.v, self.w, self.xi,
+            self.v_wall, ek=self.kinetic_energy_density)
 
     @functools.cached_property
     def kinetic_energy_density(self) -> float:
@@ -146,7 +148,7 @@ class Bubble:
     def mean_adiabatic_index(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.mean_adiabatic_index(self.wn, self.ebar)
+        return thermo.mean_adiabatic_index(self.wbar, self.ebar)
 
     @functools.cached_property
     def omega(self) -> float:
@@ -170,4 +172,12 @@ class Bubble:
     def ubarf2(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.ubarf2(self.v, self.w, self.xi, self.v_wall, self.kinetic_energy_density)
+        return thermo.ubarf2(
+            self.v, self.w, self.xi,
+            self.v_wall, ek=self.kinetic_energy_density, wb=self.wbar, wn=self.wn)
+
+    @functools.cached_property
+    def wbar(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.wbar(self.w, self.xi, self.v_wall, self.wn)
