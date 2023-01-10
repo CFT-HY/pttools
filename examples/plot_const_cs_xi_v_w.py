@@ -36,12 +36,7 @@ bag_det = Bubble(bag, v_wall=0.77, alpha_n=0.091, sol_type=SolutionType.DETON)
 
 for bubble in [bag_def, bag_hybrid, bag_det]:
     plot.add(bubble, color="blue")
-    print(
-        f"{bubble.label_unicode}: w0/wn={bubble.w[0] / bubble.wn:.4f}, "
-        f"Ubarf2={bubble.ubarf2:.4f}, K={bubble.kinetic_energy_fraction:.4f}, "
-        f"kappa={bubble.kappa:.4f}, omega={bubble.omega:.4f}, kappa+omega={bubble.kappa+bubble.omega:.4f}, "
-        f"trace anomaly={bubble.trace_anomaly:.4f}"
-    )
+    print(bubble.info_str())
     kappa = quantities.get_kappa(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n)
     ubarf2 = quantities.get_ubarf2_new_bag(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n)
     ke_frac = quantities.get_ke_frac_bag(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n)
@@ -49,10 +44,15 @@ for bubble in [bag_def, bag_hybrid, bag_det]:
     print(f"Reference ubarf2={ubarf2:.4f}, relative error={(bubble.ubarf2 - ubarf2)/ubarf2}")
     print(f"Reference ke_frac={ke_frac:.4f}, relative error={(bubble.kinetic_energy_fraction - ke_frac)/ke_frac}")
 
-plot.add(Bubble(const_cs, v_wall=0.5, alpha_n=0.578, sol_type=SolutionType.SUB_DEF), color="red")
-plot.add(Bubble(const_cs, v_wall=0.7, alpha_n=0.151, sol_type=SolutionType.HYBRID), color="red")
+const_cs_def = Bubble(const_cs, v_wall=0.5, alpha_n=0.578, sol_type=SolutionType.SUB_DEF)
+const_cs_hybrid = Bubble(const_cs, v_wall=0.7, alpha_n=0.151, sol_type=SolutionType.HYBRID)
 # These values had to be modified for a solution to exist
-plot.add(Bubble(const_cs, v_wall=0.8, alpha_n=0.1, sol_type=SolutionType.DETON), color="red")
+const_cs_det = Bubble(const_cs, v_wall=0.8, alpha_n=0.1, sol_type=SolutionType.DETON)
+
+for bubble in [const_cs_def, const_cs_hybrid, const_cs_det]:
+    plot.add(bubble, color="red")
+    print(bubble.info_str())
+
 
 plot.save(os.path.join(FIG_DIR, "plot_const_cs_xi_v_w"))
 if __name__ == "__main__" and "__file__" in globals():

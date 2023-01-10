@@ -90,6 +90,13 @@ class Bubble:
             export_json(data, path)
         return data
 
+    def info_str(self, prec: str = ".4f") -> str:
+        return \
+            f"{self.label_unicode}: w0/wn={self.w[0] / self.wn:{prec}}, " \
+            f"Ubarf2={self.ubarf2:{prec}}, K={self.kinetic_energy_fraction:{prec}}, " \
+            f"κ={self.kappa:{prec}}, ω={self.omega:{prec}}, κ+ω={self.kappa + self.omega:{prec}}, " \
+            f"trace anomaly={self.trace_anomaly:{prec}}"
+
     def solve(self):
         if self.solved:
             logger.warning("Re-solving an already solved model!")
