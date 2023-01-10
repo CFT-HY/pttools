@@ -20,9 +20,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y graphviz
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Load pip cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: .pip
           key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
@@ -67,9 +67,9 @@ jobs:
       - name: Print Python version
         run: python -V
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Load pip cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: .pip
           key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
@@ -101,9 +101,9 @@ jobs:
 #      - name: Print Python version
 #        run: python -V
 #      - name: Checkout
-#        uses: actions/checkout@v2
+#        uses: actions/checkout@v3
 #      - name: Load pip cache
-#        uses: actions/cache@v2
+#        uses: actions/cache@v3
 #        with:
 #          path: .pip
 #          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
@@ -140,9 +140,9 @@ jobs:
         sudo apt-get update
         sudo apt-get install ffmpeg
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Load pip cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: .pip
         key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
@@ -190,9 +190,9 @@ jobs:
     - name: Print Python version
       run: python -V
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Load pip cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: .pip
         key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
@@ -238,9 +238,9 @@ jobs:
     - name: Print Python version
       run: python -V
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Load pip cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: .pip
         key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
