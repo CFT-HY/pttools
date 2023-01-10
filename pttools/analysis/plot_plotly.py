@@ -1,5 +1,4 @@
 import abc
-from functools import cache
 
 import plotly.graph_objects as go
 
