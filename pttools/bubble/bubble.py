@@ -188,7 +188,7 @@ class Bubble:
             raise NotYetSolvedError
         return thermo.ubarf2(
             self.v, self.w, self.xi,
-            self.v_wall, ek=self.kinetic_energy_density, wb=self.wbar, wn=self.wn)
+            self.v_wall, ek=self.kinetic_energy_density, wn=self.wn)  # wb=self.wbar
 
     @functools.cached_property
     def wbar(self) -> float:
