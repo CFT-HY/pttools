@@ -36,10 +36,11 @@ def envelope(xi: np.ndarray, f: np.ndarray, xi_wall: float = None, xi_sh: float 
     :return: array of $\xi$, $f$ pairs "outlining" function $f$
     """
     if xi_wall is None or xi_sh is None:
-        logger.warning(
-            "Please give xi_wall and xi_sh to envelope(). "
-            "They will be needed in the future for finding the discontinuities."
-        )
+        with numba.objmode:
+            logger.warning(
+                "Please give xi_wall and xi_sh to envelope(). "
+                "They will be needed in the future for finding the discontinuities."
+            )
 
     xi_nonzero = xi[np.nonzero(f)]
     xi1 = np.min(xi_nonzero)
