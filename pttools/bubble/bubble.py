@@ -97,9 +97,11 @@ class Bubble:
             f"κ={self.kappa:{prec}}, ω={self.omega:{prec}}, κ+ω={self.kappa + self.omega:{prec}}, " \
             f"trace anomaly={self.trace_anomaly:{prec}}"
 
-    def solve(self):
+    def solve(self, sum_rtol: float = 6.6e-3, error_prec: str = ".4f"):
         if self.solved:
-            logger.warning("Re-solving an already solved model!")
+            logger.warning(
+                "Re-solving an already solved bubble! Already computed quantities will not be updated due to caching."
+            )
         self.v, self.w, self.xi = fluid_shell_generic(
             model=self.model,
             v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type)
@@ -111,9 +113,14 @@ class Bubble:
                 self.entropy_density
             )
         if self.thermal_energy_density < 0:
-            logger.error(
+            logger.warning(
                 "Thermal energy density is negative. The bubble is therefore working as a heat engine. Got: %s",
                 self.thermal_energy_density
+            )
+        if not np.isclose(self.kappa + self.omega, 1, rtol=sum_rtol):
+            logger.error(
+                "κ+ω != 1. Got: "
+                f"κ={self.kappa:{error_prec}}, ω={self.omega:{error_prec}}, κ+ω={self.kappa + self.omega:{error_prec}}"
             )
 
     def spectrum(self):
