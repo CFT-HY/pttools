@@ -16,7 +16,7 @@ jobs:
       - name: Install LaTeX
         run: |
           sudo apt-get update
-          sudo apt-get install -y cm-super dvipng latexmk texlive-latex-extra texlive-xetex
+          sudo apt-get install -y cm-super dvipng latexmk texlive-latex-extra texlive-xetex ttf-freefont
       - name: Checkout
         uses: actions/checkout@v3
       - name: Load pip cache
