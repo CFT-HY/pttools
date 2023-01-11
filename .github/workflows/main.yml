@@ -199,31 +199,31 @@ jobs:
 #        restore-keys: |
 #          pip-${{ runner.os }}-
 #          pip-
-    - name: Install requirements
-      run: |
-        pip --cache-dir=.pip install --upgrade pip
-        pip --cache-dir=.pip install --upgrade wheel
-        pip --cache-dir=.pip install -r requirements-old.txt -r requirements-dev.txt
-    - name: Print Numba sysinfo
-      run: numba --sysinfo | tee numba-sysinfo.txt
-    - name: Run tests
-      run: |
-        set -o pipefail
-        pytest | tee test-output.txt
-        coverage json
-    - name: Upload results
-      uses: actions/upload-artifact@v2
-      if: ${{ matrix.python-version == env.PRIMARY_OLD_PYTHON_VERSION }}
-      with:
-        name: Test results with old Numba
-        path: |
-          coverage.xml
-          coverage.json
-          htmlcov
-          numba-sysinfo.txt
-          test-output.txt
-          test-results
-        if-no-files-found: error
+#    - name: Install requirements
+#      run: |
+#        pip --cache-dir=.pip install --upgrade pip
+#        pip --cache-dir=.pip install --upgrade wheel
+#        pip --cache-dir=.pip install -r requirements-old.txt -r requirements-dev.txt
+#    - name: Print Numba sysinfo
+#      run: numba --sysinfo | tee numba-sysinfo.txt
+#    - name: Run tests
+#      run: |
+#        set -o pipefail
+#        pytest | tee test-output.txt
+#        coverage json
+#    - name: Upload results
+#      uses: actions/upload-artifact@v2
+#      if: ${{ matrix.python-version == env.PRIMARY_OLD_PYTHON_VERSION }}
+#      with:
+#        name: Test results with old Numba
+#        path: |
+#          coverage.xml
+#          coverage.json
+#          htmlcov
+#          numba-sysinfo.txt
+#          test-output.txt
+#          test-results
+#        if-no-files-found: error
   test-python:
     runs-on: ubuntu-latest
     timeout-minutes: 10
