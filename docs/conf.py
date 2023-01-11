@@ -178,6 +178,7 @@ linkcheck_ignore = [
 if "GITHUB_ACTIONS" in os.environ:
     linkcheck_ignore += [
         r"https://akareport\.aka\.fi/ibi_apps/WFServlet*",
+        r"https://gtr\.ukri\.org/*",
         r"https://stfc\.ukri\.org/",
     ]
 
