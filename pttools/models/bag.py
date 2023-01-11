@@ -91,7 +91,7 @@ class BagModel(AnalyticModel):
 
     @staticmethod
     @numba.njit
-    def cs2(w: th.FloatOrArr = None, phase: th.FloatOrArr = None):
+    def cs2(w: th.FloatOrArr = None, phase: th.FloatOrArr = None) -> th.FloatOrArr:
         r"""Sound speed squared, $c_s^2=\frac{1}{3}$.
         :notes:`\ `, p. 37,
         :rel_hydro_book:`\ `, eq. 2.207
@@ -101,7 +101,7 @@ class BagModel(AnalyticModel):
     @staticmethod
     @numba.njit
     def cs2_temp(temp, phase):
-        BagModel.cs2(temp, phase)
+        return BagModel.cs2(temp, phase)
 
     def delta_theta(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
         return (self.V_s - self.V_b) * np.ones_like(wp) * np.ones_like(wm)
