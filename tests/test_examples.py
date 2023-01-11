@@ -3,12 +3,29 @@
 import logging
 import unittest
 
+import matplotlib.pyplot as plt
+
+import examples.plot_chapman_jouguet
+import examples.plot_const_cs_xi_v
+import examples.plot_model_comparison
+import examples.plot_old_new
+
 logger = logging.getLogger(__name__)
 
 
 class ExampleTest(unittest.TestCase):
     @staticmethod
-    def test_plot_const_cs_xi_w():
+    def test_plot_chapman_jouguet():
+        plot = examples.plot_chapman_jouguet.main()
+        plt.close(plot.fig)
+
+    @staticmethod
+    def test_plot_const_xi_v():
+        fig = examples.plot_const_cs_xi_v.main()
+        plt.close(fig)
+
+    @staticmethod
+    def test_plot_const_cs_xi_v_w():
         import examples.plot_const_cs_xi_v_w as script
         script.plot.fig()
 
@@ -18,6 +35,18 @@ class ExampleTest(unittest.TestCase):
         script.plot.fig()
 
     @staticmethod
+    def test_plot_model_comparison():
+        plot = examples.plot_model_comparison.main()
+        plt.close(plot.fig)
+
+    @staticmethod
     def test_plot_old_new():
-        import examples.plot_old_new as script
-        script.fig.close()
+        fig = examples.plot_old_new.main()
+        plt.close(fig)
+
+    @staticmethod
+    def test_plot_standard_model():
+        import examples.plot_standard_model as script
+        plt.close(script.fig)
+        plt.close(script.plot.fig)
+        plt.close(script.plot2.fig)
