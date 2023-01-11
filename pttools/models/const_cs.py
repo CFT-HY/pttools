@@ -22,13 +22,7 @@ def cs2_to_mu(cs2: th.FloatOrArr) -> th.FloatOrArr:
 
 
 class ConstCSModel(AnalyticModel):
-    r"""$\mu, \nu$-model
-
-    .. plot:: fig/const_cs_xi_v.py
-
-    .. plot:: fig/const_cs.py
-
-    """
+    r"""$\mu, \nu$-model"""
     DEFAULT_LABEL_LATEX = "Constant $c_s$ model"
     DEFAULT_LABEL_UNICODE = "Constant cₛ model"
     DEFAULT_NAME = "const_cs"

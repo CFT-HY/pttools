@@ -1,4 +1,7 @@
-r"""$(\xi, v)$ plane figure for the constant sound speed model"""
+r"""
+ConstCSModel $\xi, v$ plane
+===========================
+"""
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,8 +10,6 @@ from pttools.bubble.fluid import add_df_dtau, fluid_shell, fluid_shell_generic
 from pttools.bubble.boundary import SolutionType
 from pttools.bubble.relativity import lorentz
 from pttools.models.const_cs import ConstCSModel
-from pttools.models.const_cs_thermo import ConstCSThermoModel
-from pttools.models.full import FullModel
 from tests.paper.plane import xiv_plane
 from tests.paper.plot_plane import plot_plane
 
@@ -47,6 +48,7 @@ def main():
     ax.plot(xi, v, c="r")
 
     ax.legend()
+    return fig
 
 
 if __name__ == "__main__":

@@ -23,7 +23,7 @@ class ChapmanJouguetPlot:
             v_cj[i] = v_chapman_jouguet(alpha_n=self.alpha_n[i], model=model, analytical=analytical)
 
         if label is None:
-            label = model.label
+            label = model.label_latex
         self.ax.plot(self.alpha_n, v_cj, label=label, ls=ls)
 
     def process(self):

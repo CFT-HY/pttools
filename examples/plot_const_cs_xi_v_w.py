@@ -1,8 +1,8 @@
-"""
-ConstCSModel
-============
+r"""
+ConstCSModel 3D
+===============
 
-Constant sound speed model
+Constant sound speed model $\xi, v, w$
 """
 
 import os.path
@@ -21,39 +21,42 @@ from pttools.models.const_cs import ConstCSModel
 
 # setup_logging()
 
-bag = BagModel(a_s=1.1, a_b=1, V_s=1)
-# css = 1/np.sqrt(3) - 0.05
-# csb = 1/np.sqrt(3) - 0.1
-# print(f"css={css}, csb={csb}")
-csb = 1/np.sqrt(3) - 0.01
-const_cs = ConstCSModel(a_s=1.5, a_b=1, css2=1/3, csb2=csb**2, V_s=1)
-plot = BubblePlot3D(model=const_cs)
+def main():
+    bag = BagModel(a_s=1.1, a_b=1, V_s=1)
+    # css = 1/np.sqrt(3) - 0.05
+    # csb = 1/np.sqrt(3) - 0.1
+    # print(f"css={css}, csb={csb}")
+    csb = 1/np.sqrt(3) - 0.01
+    const_cs = ConstCSModel(a_s=1.5, a_b=1, css2=1/3, csb2=csb**2, V_s=1)
+    plot = BubblePlot3D(model=const_cs)
 
-# v_wall and alpha_n values are from Hindmarsh and Hijazi, 2019.
-bag_def = Bubble(bag, v_wall=0.5, alpha_n=0.578, sol_type=SolutionType.SUB_DEF)
-bag_hybrid = Bubble(bag, v_wall=0.7, alpha_n=0.151, sol_type=SolutionType.HYBRID)
-bag_det = Bubble(bag, v_wall=0.77, alpha_n=0.091, sol_type=SolutionType.DETON)
+    # v_wall and alpha_n values are from Hindmarsh and Hijazi, 2019.
+    bag_def = Bubble(bag, v_wall=0.5, alpha_n=0.578, sol_type=SolutionType.SUB_DEF)
+    bag_hybrid = Bubble(bag, v_wall=0.7, alpha_n=0.151, sol_type=SolutionType.HYBRID)
+    bag_det = Bubble(bag, v_wall=0.77, alpha_n=0.091, sol_type=SolutionType.DETON)
 
-for bubble in [bag_def, bag_hybrid, bag_det]:
-    plot.add(bubble, color="blue")
-    print(bubble.info_str())
-    kappa = quantities.get_kappa(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n)
-    ubarf2 = quantities.get_ubarf2_new_bag(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n)
-    ke_frac = quantities.get_ke_frac_bag(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n)
-    print(f"Reference kappa={kappa:.4f}, relative error={(bubble.kappa - kappa)/kappa}")
-    print(f"Reference ubarf2={ubarf2:.4f}, relative error={(bubble.ubarf2 - ubarf2)/ubarf2}")
-    print(f"Reference ke_frac={ke_frac:.4f}, relative error={(bubble.kinetic_energy_fraction - ke_frac)/ke_frac}")
+    for bubble in [bag_def, bag_hybrid, bag_det]:
+        plot.add(bubble, color="blue")
+        print(bubble.info_str())
+        kappa = quantities.get_kappa(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n)
+        ubarf2 = quantities.get_ubarf2_new_bag(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n)
+        ke_frac = quantities.get_ke_frac_bag(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n)
+        print(f"Reference kappa={kappa:.4f}, relative error={(bubble.kappa - kappa)/kappa}")
+        print(f"Reference ubarf2={ubarf2:.4f}, relative error={(bubble.ubarf2 - ubarf2)/ubarf2}")
+        print(f"Reference ke_frac={ke_frac:.4f}, relative error={(bubble.kinetic_energy_fraction - ke_frac)/ke_frac}")
 
-const_cs_def = Bubble(const_cs, v_wall=0.5, alpha_n=0.578, sol_type=SolutionType.SUB_DEF)
-const_cs_hybrid = Bubble(const_cs, v_wall=0.7, alpha_n=0.151, sol_type=SolutionType.HYBRID)
-# These values had to be modified for a solution to exist
-const_cs_det = Bubble(const_cs, v_wall=0.8, alpha_n=0.1, sol_type=SolutionType.DETON)
+    const_cs_def = Bubble(const_cs, v_wall=0.5, alpha_n=0.578, sol_type=SolutionType.SUB_DEF)
+    const_cs_hybrid = Bubble(const_cs, v_wall=0.7, alpha_n=0.151, sol_type=SolutionType.HYBRID)
+    # These values had to be modified for a solution to exist
+    const_cs_det = Bubble(const_cs, v_wall=0.8, alpha_n=0.1, sol_type=SolutionType.DETON)
 
-for bubble in [const_cs_def, const_cs_hybrid, const_cs_det]:
-    plot.add(bubble, color="red")
-    print(bubble.info_str())
+    for bubble in [const_cs_def, const_cs_hybrid, const_cs_det]:
+        plot.add(bubble, color="red")
+        print(bubble.info_str())
+    return plot
 
 
+plot = main()
 plot.save(os.path.join(FIG_DIR, "plot_const_cs_xi_v_w"))
 if __name__ == "__main__" and "__file__" in globals():
     plot.show()

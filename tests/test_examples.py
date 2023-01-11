@@ -13,6 +13,11 @@ class ExampleTest(unittest.TestCase):
         script.plot.fig()
 
     @staticmethod
-    def test_delta_theta():
+    def test_plot_delta_theta():
         import examples.plot_delta_theta as script
         script.plot.fig()
+
+    @staticmethod
+    def test_plot_old_new():
+        import examples.plot_old_new as script
+        script.fig.close()

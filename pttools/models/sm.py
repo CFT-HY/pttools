@@ -2,10 +2,6 @@ r"""
 Effective degrees of freedom for the Standard Model as a function of temperature.
 Cubic spline interpolation for the range $0 - 10^{5.45}$ MeV from the table S2 of
 :borsanyi_2016:`\ `.
-
-.. plot:: fig/standard_model.py
-
-.. plot:: fig/standard_model_2.py
 """
 
 import logging

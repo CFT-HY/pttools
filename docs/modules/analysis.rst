@@ -1,12 +1,23 @@
 Analysis
 ========
-.. automodule:: pttools.analysis
 
-.. automodule:: pttools.analysis.g_cs2
-.. automodule:: pttools.analysis.plot_chapman_jouguet
-.. automodule:: pttools.analysis.plot_fluid_shell
-.. automodule:: pttools.analysis.plot_fluid_shells
-.. automodule:: pttools.analysis.plot_model
-.. automodule:: pttools.analysis.plot_models
-.. automodule:: pttools.analysis.plot_thermomodels
-.. automodule:: pttools.analysis.utils
+.. currentmodule:: pttools.analysis
+
+.. automodule:: pttools.analysis
+   :no-members:
+   :no-inherited-members:
+
+:py:mod:`pttools.analysis`:
+
+.. autosummary::
+   :toctree: gen_modules/
+   :template: module.rst
+
+   g_cs2
+   plot_chapman_jouguet
+   plot_fluid_shell
+   plot_fluid_shells
+   plot_model
+   plot_models
+   plot_thermomodels
+   utils

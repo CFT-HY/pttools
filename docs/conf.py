@@ -188,12 +188,15 @@ linkcheck_workers = 10
 sphinx_gallery_conf = {
     "backreferences_dir": "gen_modules/backreferences",
     "compress_images": ("images", "thumbnails"),
-    "doc_module": "pttools",
+    "doc_module": ("pttools", ),
     "examples_dirs": os.path.join(os.path.dirname(dir_path), "examples"),
     "gallery_dirs": "auto_examples",
     "ignore_pattern": r"(__init__\.py|utils\.py)",
     # "image_srcset": ["2x"],
     # "matplotlib_animations": True,
+    "reference_url": {
+        "pttools": None,
+    },
     "show_memory": True,
 }
 autosummary_generate = True

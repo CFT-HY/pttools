@@ -25,9 +25,10 @@ class ConstCSThermoModel(ThermoModel):
             t_ref: float = 1,
             name: str = None,
             label_latex: str = None,
-            label_unicode: str = None):
+            label_unicode: str = None,
+            allow_invalid: bool = False):
         # For validation
-        const_cs.ConstCSModel(css2=css2, csb2=csb2, V_s=V_s, V_b=V_b, a_s=a_s, a_b=a_b)
+        const_cs.ConstCSModel(css2=css2, csb2=csb2, V_s=V_s, V_b=V_b, a_s=a_s, a_b=a_b, allow_invalid=allow_invalid)
 
         self.a_s = a_s
         self.a_b = a_b
