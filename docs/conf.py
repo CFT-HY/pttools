@@ -17,6 +17,9 @@ import typing as tp
 dir_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(dir_path))
 
+from pttools.logging import setup_logging
+setup_logging()
+
 # Create a directory for static files to avoid a warning when building.
 os.makedirs(os.path.join(dir_path, "_static"), exist_ok=True)
 
