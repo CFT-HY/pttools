@@ -36,21 +36,22 @@ class DifferentialCache:
             if name in self._cache_cfunc:
                 raise ValueError("The key is already in the cache")
             differential_njit = numba.njit(differential)
-            differential_cfunc = numba.cfunc(lsoda_sig)(differential)
-            differential_core = differential_cfunc if NUMBA_DISABLE_JIT else differential_njit
-            if p_last_is_backwards and not NUMBA_DISABLE_JIT:
-                @numba.cfunc(lsoda_sig)
-                def differential_numbalsoda(t: float, u: np.ndarray, du: np.ndarray, p: np.ndarray):
-                    differential_core(t, u, du, p)
-                    # TODO: implement support for arbitrarily long p
-                    # This cannot be used when jitting is disabled
-                    # https://github.com/numba/numba/issues/8002
-                    p_arr = numba.carray(p, (3,), numba.types.double)
-                    if p_arr[-1]:
-                        for i in range(ndim):
-                            du[i] *= -1.
-            else:
-                differential_numbalsoda = differential_cfunc
+            # differential_core = differential_cfunc if NUMBA_DISABLE_JIT else differential_njit
+            if not NUMBA_DISABLE_JIT:
+                differential_cfunc = numba.cfunc(lsoda_sig)(differential)
+                if p_last_is_backwards:
+                    @numba.cfunc(lsoda_sig)
+                    def differential_numbalsoda(t: float, u: np.ndarray, du: np.ndarray, p: np.ndarray):
+                        differential_njit(t, u, du, p)
+                        # TODO: implement support for arbitrarily long p
+                        # This cannot be used when jitting is disabled
+                        # https://github.com/numba/numba/issues/8002
+                        p_arr = numba.carray(p, (3,), numba.types.double)
+                        if p_arr[-1]:
+                            for i in range(ndim):
+                                du[i] *= -1.
+                else:
+                    differential_numbalsoda = differential_cfunc
 
             @numba.njit
             def differential_odeint(y: np.ndarray, t: float, p: np.ndarray = None) -> np.ndarray:
@@ -64,7 +65,10 @@ class DifferentialCache:
                 differential_njit(t, y, du, p)
                 return du
 
-            address = differential_numbalsoda.address
+            if NUMBA_DISABLE_JIT:
+                address = id(differential_njit)
+            else:
+                address = differential_numbalsoda.address
             self._cache_odeint[name] = differential_odeint
             self._cache_odeint[address] = differential_odeint
             self._cache_solve_ivp[name] = differential_solve_ivp

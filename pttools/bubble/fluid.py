@@ -16,6 +16,7 @@ from scipy.optimize import fsolve
 import pttools.type_hints as th
 from pttools import speedup
 from pttools.speedup.numba_wrapper import numbalsoda
+from pttools.speedup.options import NUMBA_DISABLE_JIT
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 from . import alpha
@@ -92,7 +93,7 @@ def gen_df_dtau(cs2_fun: th.CS2Fun) -> speedup.Differential:
     :return: function for the differential equation
     """
     cs2_fun_numba = cs2_fun \
-        if isinstance(cs2_fun, (speedup.CFunc, speedup.Dispatcher)) \
+        if isinstance(cs2_fun, (speedup.CFunc, speedup.Dispatcher)) or NUMBA_DISABLE_JIT \
         else numba.cfunc("float64(float64, float64)")(cs2_fun)
 
     def df_dtau(t: float, u: np.ndarray, du: np.ndarray, args: np.ndarray = None) -> None:
