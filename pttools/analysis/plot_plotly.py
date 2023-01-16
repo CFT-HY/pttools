@@ -1,3 +1,5 @@
+"""Base class for plotting with Plotly"""
+
 import abc
 
 import plotly.graph_objects as go
@@ -6,6 +8,7 @@ from pttools.analysis.utils import ENABLE_DRAWING
 
 
 class PlotlyPlot(abc.ABC):
+    """Base class for plotting with Plotly"""
     def __init__(self):
         self._fig = None
 

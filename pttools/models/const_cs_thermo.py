@@ -1,3 +1,5 @@
+"""ThermoModel-based constant $c_s$ model"""
+
 import typing as tp
 
 import numpy as np

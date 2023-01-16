@@ -1,3 +1,5 @@
+"""Plot thermodynamic quantities for a model"""
+
 import logging
 
 import matplotlib.pyplot as plt

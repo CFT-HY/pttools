@@ -1,3 +1,5 @@
+"""Base class for equation of state models and thermodynamics models"""
+
 import abc
 import datetime
 import logging

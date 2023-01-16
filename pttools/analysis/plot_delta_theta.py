@@ -1,3 +1,5 @@
+r"""Plot $\Delta \theta (w_+, w_-)$"""
+
 import typing as tp
 
 import numpy as np

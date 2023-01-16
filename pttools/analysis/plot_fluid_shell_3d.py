@@ -1,3 +1,5 @@
+r"""Plot $(v,w,\xi)$ for fluid shells"""
+
 import logging
 import typing as tp
 

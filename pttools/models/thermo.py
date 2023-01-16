@@ -1,3 +1,5 @@
+"""Base class for thermodynamics models"""
+
 import abc
 import logging
 
@@ -14,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 class ThermoModel(BaseModel, abc.ABC):
     """
-    The thermodynamic model characterizes the particle physics of interest.
+    The thermodynamics model characterizes the particle physics of interest.
 
     TODO: Some functions seem to return vertical arrays. Fix this!
     """

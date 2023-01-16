@@ -1,4 +1,4 @@
-"""Sound shell model functions"""
+"""Sound Shell Model functions"""
 
 import enum
 import logging

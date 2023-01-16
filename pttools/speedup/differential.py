@@ -1,3 +1,5 @@
+"""Utilities for handling functions for the differential equations"""
+
 import threading
 import typing as tp
 

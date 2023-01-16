@@ -1,3 +1,5 @@
+r"""Plot $v(\xi)$ and $w(\xi)$ for fluid shells"""
+
 import typing as tp
 
 import matplotlib.pyplot as plt

@@ -1,3 +1,5 @@
+"""Sigmoid-based model"""
+
 import numba
 import numpy as np
 

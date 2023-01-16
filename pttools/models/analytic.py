@@ -1,3 +1,5 @@
+"""Base class for analytical models"""
+
 import abc
 import logging
 import typing as tp

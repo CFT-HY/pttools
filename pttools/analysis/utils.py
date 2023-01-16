@@ -1,3 +1,5 @@
+"""Utilities for plotting and analysing data"""
+
 import os
 
 import matplotlib as mpl

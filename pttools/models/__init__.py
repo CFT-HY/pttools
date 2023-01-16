@@ -1,5 +1,5 @@
 """
-This module contains models for different equations of state.
+Models for various equations of state
 """
 
 from .analytic import *

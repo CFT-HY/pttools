@@ -1,3 +1,5 @@
+"""Additional definitions for Numba-jitting functions from other libraries"""
+
 import logging
 
 import numba

@@ -490,6 +490,7 @@ def w2_junction(v1: th.FloatOrArr, w1: th.FloatOrArr, v2: th.FloatOrArr) -> th.F
     $$w_1 = w_2 \frac{\tilde{\gamma}_2^2 \tilde{v}_2}{\tilde{\gamma}_1^2 \tilde{v}_1}$$
     :notes:`\ `, eq. 7.22
     """
+    # Todo: use enthalpy_ratio() for this
     wm = w1 * relativity.gamma2(v1) * v1 / (relativity.gamma2(v2) * v2)
     # wm > wp for detonations
     # if wm > wp:

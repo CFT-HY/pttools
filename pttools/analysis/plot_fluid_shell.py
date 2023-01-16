@@ -1,3 +1,5 @@
+r"""Plot $v(\xi)$ and $w(\xi)$ for a fluid shell"""
+
 import typing as tp
 
 import matplotlib.pyplot as plt
@@ -33,7 +35,7 @@ def plot_fluid_shell(
     - $\frac{w_0}{w_n}$ (ration of internal to external enthalpies)
     - ubar_f (mean square $U = \gamma (v) v$)
     - K kinetic energy fraction
-    - kappa (Espinosa et al efficiency factor)
+    - kappa (Espinosa et al. efficiency factor)
     - omega (thermal energy relative to scalar potential energy, as measured by trace anomaly)
 
     Last two should sum to 1.

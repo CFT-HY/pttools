@@ -1,3 +1,5 @@
+"""Wrapper for importing Numba libraries without version dependencies"""
+
 # pylint: disable=unused-import
 
 import logging

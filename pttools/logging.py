@@ -1,3 +1,5 @@
+"""Logging configuration"""
+
 import faulthandler
 import logging
 import os

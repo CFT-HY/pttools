@@ -1,3 +1,5 @@
+r"""Compare the thermodynamic quantities of multiple models"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 

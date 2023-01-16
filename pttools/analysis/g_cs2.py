@@ -1,3 +1,5 @@
+r"""Plot $g_\text{eff}$ and $c_s^2$"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 

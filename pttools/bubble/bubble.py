@@ -1,3 +1,5 @@
+"""A solution of the hydrodynamic equations"""
+
 import datetime
 import functools
 import logging

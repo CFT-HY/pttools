@@ -1,6 +1,11 @@
 Other tests
 ###########
 
+Examples
+--------
+
+.. automodule:: tests.test_examples
+
 Performance
 -----------
 
