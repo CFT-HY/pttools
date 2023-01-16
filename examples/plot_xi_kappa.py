@@ -1,3 +1,8 @@
+r"""
+Plot $\kappa(\xi)$ for various models
+=====================================
+"""
+
 import concurrent.futures as cf
 import logging
 import os

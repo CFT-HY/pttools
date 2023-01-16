@@ -1,3 +1,8 @@
+r"""
+Compare $\kappa(\xi)$ for old and new solvers
+=============================================
+"""
+
 import logging
 import time
 
