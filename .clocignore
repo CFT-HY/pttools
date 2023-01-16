@@ -1,0 +1,11 @@
+.coverage
+.pytest_cache
+coverage.xml
+docs/_build
+docs/auto_examples
+docs/gen_examples
+htmlcov
+logs
+test-results
+tests/test_data
+venv
