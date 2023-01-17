@@ -73,6 +73,8 @@ disable=raw-checker-failed,
         useless-suppression,
         deprecated-pragma,
         use-symbolic-message-instead,
+        # Custom additions
+        too-many-arguments
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -100,7 +102,7 @@ evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / stateme
 output-format=text
 
 # Tells whether to display a full report or only the messages.
-reports=no
+reports=yes
 
 # Activate the evaluation score.
 score=yes
@@ -369,18 +371,28 @@ good-names=
     b,
     b_R,
     c,
+    cs,
+    cs2,
     de,
+    dge_dT,
+    dgp_dT,
     dq,
     du,
     dv,
     dw,
     e,
+    eb,
+    ek,
     f,
     f1,
     f2,
     g,
+    ge,
+    gp,
+    gs,
     it,
     ls,
+    mu,
     n,
     nu,
     nt,
@@ -393,16 +405,33 @@ good-names=
     r,
     s,
     t,
+    tn,
     T,
     Ttilde,
+    u,
     v,
+    v0,
+    v1,
+    v2,
     vb,
     vf,
+    vm,
+    vp,
     vw,
+    V,
+    V_s,
+    V_b,
     w,
+    w0,
+    w1,
+    w2,
+    wb,
+    wf,
     wm,
+    wn,
     wp,
     x,
+    x2,
     xi,
     y,
     y0,
