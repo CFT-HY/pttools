@@ -44,11 +44,12 @@ def check_thetas(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> None:
         with numba.objmode:
             logger.warning(
                 "theta_b should always be smaller than theta_s, "
-                f"but got theta_s=%s, theta_b=%s", theta_s, theta_b)
+                "but got theta_s=%s, theta_b=%s", theta_s, theta_b)
 
 
 @numba.njit
-def cs2_bag_scalar(w: float, phase: float) -> float:
+# pylint: disable=unused-argument
+def cs2_bag_scalar(w: float, phase: Phase) -> float:
     """The scalar versions of the bag functions have to be compiled to cfuncs if jitting is disabled,
     as otherwise the cfunc version of the differential cannot be created.
     """
@@ -56,7 +57,8 @@ def cs2_bag_scalar(w: float, phase: float) -> float:
 
 
 @numba.cfunc(th.CS2FunScalarSig)
-def cs2_bag_scalar_cfunc(w: float, phase: float) -> float:
+# pylint: disable=unused-argument
+def cs2_bag_scalar_cfunc(w: float, phase: Phase) -> float:
     return const.CS0_2
 
 
@@ -65,6 +67,7 @@ CS2ScalarCType = cs2_bag_scalar_cfunc.ctypes
 
 
 @numba.njit
+# pylint: disable=unused-argument
 def cs2_bag_arr(w: np.ndarray, phase: np.ndarray) -> np.ndarray:
     return const.CS0_2 * np.ones_like(w)
 
@@ -86,7 +89,7 @@ def cs2_bag(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArrNumba:
         return cs2_bag_scalar(w, phase)
     if isinstance(w, np.ndarray):
         return cs2_bag_arr(w, phase)
-    raise TypeError(f"Unknown type for w")
+    raise TypeError("Unknown type for w")
 
 
 @numba.njit

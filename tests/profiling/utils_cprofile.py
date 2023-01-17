@@ -40,8 +40,8 @@ def save_sorted(
         print_to_console: bool = False):
     # Save to file
     stream = io.StringIO()
-    ps = pstats.Stats(profile, stream=stream).sort_stats(sort)
-    ps.print_stats()
+    stats = pstats.Stats(profile, stream=stream).sort_stats(sort)
+    stats.print_stats()
     text = stream.getvalue()
     if print_to_console:
         print(text)

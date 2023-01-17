@@ -54,7 +54,7 @@ def find_shock_index(
     # Todo: replace this with isinstance()
     if sol_type is SolutionType.DETON:
         return props.find_v_index(xi, v_wall)
-    elif model.name == "bag":
+    if model.name == "bag":
         return np.argmax(np.logical_and(xi > v_wall, v <= v_shock_bag(xi)))
 
     # Trim the integration to the shock
@@ -64,6 +64,7 @@ def find_shock_index(
     for i, xi_i in enumerate(xi):
         if xi_i < cs_n:
             continue
+        # pylint: disable=unused-variable
         v_shock_tilde, w_shock = solve_shock(model, xi_i, wn, backwards=True)
         v_shock = relativity.lorentz(xi_i, v_shock_tilde)
         if v[i] <= v_shock:

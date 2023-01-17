@@ -31,7 +31,7 @@ def round_sig(x: float, n: int) -> str:
         fs = [fs[0], ""]
     if expo == 0:
         return num
-    elif expo > 0:
+    if expo > 0:
         if len(fs[1]) < expo:
             fs[1] += "0" * (expo - len(fs[1]))
         st = fs[0] + fs[1][0:expo]
@@ -66,7 +66,7 @@ def round_sig_signed(x: float, n: int) -> str:
         fs = [fs[0], ""]
     if expo == 0:
         return num
-    elif expo > 0:
+    if expo > 0:
         if len(fs[1]) < expo:
             fs[1] += "0" * (expo - len(fs[1]))
         st = fs[0] + fs[1][0:expo]

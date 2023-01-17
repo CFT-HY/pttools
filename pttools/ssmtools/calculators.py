@@ -174,8 +174,7 @@ def sin_transform(
         return _sin_transform_scalar(z, xi, f, z_st_thresh)
     if isinstance(z, np.ndarray):
         return _sin_transform_arr(z, xi, f, z_st_thresh)
-    else:
-        raise NotImplementedError
+    raise NotImplementedError
 
 
 @numba.njit(parallel=True)
@@ -192,6 +191,7 @@ def sin_transform_core(t: np.ndarray, f: np.ndarray, freq: np.ndarray) -> np.nda
     :return: value of the sine transformed function at each angular frequency $\omega$
     """
     integral = np.zeros_like(freq)
+    # pylint: disable=not-an-iterable
     for i in numba.prange(freq.size):
         integrand = f * np.sin(freq[i] * t)
         # If you get Numba errors here, ensure that t is contiguous.

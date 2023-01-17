@@ -94,8 +94,7 @@ class ConstCSModel(AnalyticModel):
             if np.isclose(cs2, 1/3):
                 logger.warning(f"{name} is slightly over 1/3. Changing it to 1/3.")
                 return 1/3
-            else:
-                return np.nan
+            return np.nan
         return cs2
 
     def alpha_n(self, wn: th.FloatOrArr, allow_negative: bool = False, allow_no_transition: bool = False) -> th.FloatOrArr:
@@ -131,8 +130,7 @@ class ConstCSModel(AnalyticModel):
         if (not allow_negative) and np.any(ret < 0):
             if np.isscalar(ret):
                 raise ValueError(f"Got negative alpha_+={ret}")
-            else:
-                raise ValueError(f"Got negative alpha_+, most problematic value: {np.min(ret)}")
+            raise ValueError(f"Got negative alpha_+, most problematic value: {np.min(ret)}")
         return ret
 
     def critical_temp_opt(self, temp: float) -> float:

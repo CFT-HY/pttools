@@ -17,8 +17,6 @@ import pttools.type_hints as th
 from pttools import speedup
 from pttools.speedup.numba_wrapper import numbalsoda
 from pttools.speedup.options import NUMBA_DISABLE_JIT
-if tp.TYPE_CHECKING:
-    from pttools.models.model import Model
 from . import alpha
 from . import approx
 from . import bag
@@ -32,6 +30,8 @@ from . import quantities
 from . import relativity
 from . import shock
 from . import transition
+if tp.TYPE_CHECKING:
+    from pttools.models.model import Model
 
 logger = logging.getLogger(__name__)
 
@@ -182,7 +182,9 @@ def fluid_integrate_param(
 
 
 @numba.njit
-def fluid_integrate_param_numba(t: np.ndarray, y0: np.ndarray, data: np.ndarray, df_dtau_ptr: speedup.DifferentialPointer):
+def fluid_integrate_param_numba(
+        t: np.ndarray, y0: np.ndarray, data: np.ndarray,
+        df_dtau_ptr: speedup.DifferentialPointer):
     r"""Integrate a differential equation using NumbaLSODA.
 
     :param t: time
@@ -420,6 +422,7 @@ def fluid_shell_deflagration_common(
     # logger.debug(f"vp_tilde={vp_tilde}, vp={vp}, wp={wp}")
 
     # Integrate from the wall to the shock
+    # pylint: disable=unused-variable
     v, w, xi, t = fluid_integrate_param(
         v0=vp, w0=wp, xi0=v_wall,
         phase=Phase.SYMMETRIC,
@@ -441,12 +444,14 @@ def fluid_shell_deflagration_common(
 
 def fluid_shell_deflagration_reverse_solvable(params: np.ndarray, model: "Model", v_wall: float, wn: float) -> float:
     xi_sh = params[0]
+    # pylint: disable=unused-variable
     v, w, xi, vm, wm = fluid_shell_deflagration_reverse(model, v_wall, wn, xi_sh, allow_failure=True)
     return vm
 
 
 def fluid_shell_deflagration_solvable(params: np.ndarray, model: "Model", v_wall: float, wn: float) -> float:
     w_center = params[0]
+    # pylint: disable=unused-variable
     v, w, xi, wn_estimate = fluid_shell_deflagration(model, v_wall, wn, w_center, allow_failure=True)
     return wn_estimate - wn
 
@@ -465,6 +470,7 @@ def fluid_shell_hybrid(model: "Model", v_wall: float, wn: float, wm: float, allo
 
 def fluid_shell_hybrid_solvable(params: np.ndarray, model: "Model", v_wall: float, wn: float) -> float:
     wm = params[0]
+    # pylint: disable=unused-variable
     v, w, xi, wn_estimate = fluid_shell_hybrid(model, v_wall, wn, wm, allow_failure=True)
     return wn_estimate - wn
 
@@ -893,7 +899,7 @@ def trim_fluid_wall_to_cs(
     else:
         n_stop = n_stop_index
 
-    if (xi[0] == v_wall) and not (sol_type == SolutionType.DETON.value):
+    if (xi[0] == v_wall) and not sol_type == SolutionType.DETON.value:
         n_start = 1
         n_stop += 1
 

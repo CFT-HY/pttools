@@ -38,4 +38,4 @@ T_TILDE_MIN: float = 0.01
 DEFAULT_NUC_PARM: tp.Tuple[int] = (1,)
 
 #: Default sound speed
-CS0: np.float_ = tp.Final[bubble.CS0]
+CS0: tp.Final[np.float_] = bubble.CS0

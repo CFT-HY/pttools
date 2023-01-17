@@ -64,13 +64,11 @@ def check_wall_speed(v_wall: tp.Union[th.FloatOrArr, tp.List[float]]):
         return _check_wall_speed_arr
     if isinstance(v_wall, float):
         return _check_wall_speed_scalar(v_wall)
-    elif isinstance(v_wall, np.ndarray):
+    if isinstance(v_wall, np.ndarray):
         return _check_wall_speed_arr(v_wall)
-    elif isinstance(v_wall, list):
-        if any(vw >= 1.0 or vw <= 0.0 for vw in v_wall):
-            raise ValueError("Unphysical parameter(s): at least one value outside 0 < v_wall < 1.")
-    else:
-        raise TypeError("v_wall must be float, list or array.")
+    if isinstance(v_wall, list):
+        return _check_wall_speed_arr(np.array(v_wall))
+    raise TypeError("v_wall must be float, list or array.")
 
 
 def find_most_negative_vals(vals: th.FloatOrArr, *args) \

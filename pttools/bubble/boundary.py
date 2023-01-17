@@ -11,11 +11,11 @@ import numba
 import numpy as np
 from scipy.optimize import fsolve
 
-if tp.TYPE_CHECKING:
-    from pttools.models.model import Model
 import pttools.type_hints as th
 from . import const
 from . import relativity
+if tp.TYPE_CHECKING:
+    from pttools.models.model import Model
 
 logger = logging.getLogger(__name__)
 
@@ -135,9 +135,9 @@ def _get_phase_scalar(xi: float, v_w: float) -> float:
 
 @numba.njit
 def _get_phase_arr(xi: np.ndarray, v_w: float) -> np.ndarray:
-    ph = np.zeros_like(xi)
-    ph[np.where(xi < v_w)] = Phase.BROKEN.value
-    return ph
+    phase = np.zeros_like(xi)
+    phase[np.where(xi < v_w)] = Phase.BROKEN.value
+    return phase
 
 
 @numba.generated_jit(nopython=True)
@@ -164,7 +164,8 @@ def get_phase(xi: th.FloatOrArr, v_w: float) -> th.FloatOrArrNumba:
 
 def junction_conditions_deviation(vp: th.FloatOrArr, vm: th.FloatOrArr, ap: th.FloatOrArr) -> th.FloatOrArr:
     r"""Deviation from the combined junction conditions
-    $$\Delta = \left( \frac{1}{\tilde{v}_-} + 3\tilde{v}_- \right) \tilde{v}_+ - 3(1 + \alpha_+) \tilde{v}_+^2 - \alpha_+ + 1$$
+    $$\Delta = \left( \frac{1}{\tilde{v}_-} + 3\tilde{v}_- \right)
+    \tilde{v}_+ - 3(1 + \alpha_+) \tilde{v}_+^2 - \alpha_+ + 1$$
     """
     dev = (1/vm + 3*vm)*vp - 3*(1 + ap)*vp**2 + 3*ap - 1
     if not np.allclose(dev, 0):
@@ -175,7 +176,11 @@ def junction_conditions_deviation(vp: th.FloatOrArr, vm: th.FloatOrArr, ap: th.F
     return dev
 
 
-def junction_conditions_solvable(params: np.ndarray, model: "Model", v1: float, w1: float, phase1: float, phase2: float):
+def junction_conditions_solvable(
+        params: np.ndarray,
+        model: "Model",
+        v1: float, w1: float,
+        phase1: float, phase2: float):
     """Get the deviation from both boundary conditions simultaneously."""
     v2 = params[0]
     w2 = params[1]
@@ -331,6 +336,7 @@ def _v_minus_arr(
         strong_branch: bool,
         debug: bool) -> np.ndarray:
     ret = np.empty_like(vp)
+    # pylint: disable=not-an-iterable
     for i in numba.prange(vp.size):
         ret[i] = _v_minus_scalar(vp[i], ap, sol_type, strong_branch, debug)
     return ret
@@ -420,6 +426,7 @@ def _v_plus_scalar(vm: float, ap: float, sol_type: SolutionType, debug: bool) ->
 @numba.njit(parallel=True)
 def _v_plus_arr(vm: np.ndarray, ap: float, sol_type: SolutionType, debug: bool) -> np.ndarray:
     ret = np.empty_like(vm)
+    # pylint: disable=not-an-iterable
     for i in numba.prange(vm.size):
         ret[i] = _v_plus_scalar(vm[i], ap, sol_type, debug)
     return ret

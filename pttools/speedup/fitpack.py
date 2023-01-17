@@ -7,6 +7,8 @@ of
 These don't work yet and are therefore not used.
 """
 
+# pylint: disable=invalid-name, too-many-arguments, too-many-locals, unused-argument, unused-variable
+
 # import numba
 import numpy as np
 
