@@ -36,7 +36,7 @@ def A2_e_conserving(
         z: np.ndarray,
         vw,
         alpha_n: float,
-        npt: const.NPT_TYPE = const.NPTDEFAULT,
+        npt: const.NptType = const.NPTDEFAULT,
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH):
     r"""
@@ -89,7 +89,7 @@ def A2_e_conserving_file(
         filename: str,
         alpha: float,
         skip: int = 1,
-        npt: const.NPT_TYPE = const.NPTDEFAULT,
+        npt: const.NptType = const.NPTDEFAULT,
         z_st_thresh: float = const.Z_ST_THRESH):
     r"""
     Returns the value of $|A(z)|^2$, where $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$,
@@ -146,7 +146,7 @@ def A2_ssm_func(
         z: np.ndarray,
         vw,
         alpha: float,
-        npt: const.NPT_TYPE = const.NPTDEFAULT,
+        npt: const.NptType = const.NPTDEFAULT,
         method: Method = Method.E_CONSERVING,
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH):
@@ -194,7 +194,7 @@ def f_file(
         t,
         filename: str,
         skip: int = 0,
-        npt: const.NPT_TYPE = const.NPTDEFAULT,
+        npt: const.NptType = const.NPTDEFAULT,
         z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
     r"""
     3D FT of radial fluid velocity v(r) from file.
@@ -226,7 +226,7 @@ def f_ssm_func(
         z: th.FloatOrArr,
         v_wall: float,
         alpha_n: float,
-        npt: const.NPT_TYPE = const.NPTDEFAULT,
+        npt: const.NptType = const.NPTDEFAULT,
         z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
     r"""
     3D FT of radial fluid velocity v(r) from Sound Shell Model fluid profile.
@@ -256,7 +256,7 @@ def g_file(z: np.ndarray, t, filename: str, skip: int = 0) -> np.ndarray:
     return z * df_dz + 2. * f
 
 
-def g_ssm_func(z: np.ndarray, vw, alpha, npt: const.NPT_TYPE = const.NPTDEFAULT) -> np.ndarray:
+def g_ssm_func(z: np.ndarray, vw, alpha, npt: const.NptType = const.NPTDEFAULT) -> np.ndarray:
     r"""
     3D FT of radial fluid acceleration $\dot{v}$(r) from Sound Shell Model fluid profile.
 
@@ -271,7 +271,7 @@ def lam_ssm_func(
         z,
         vw,
         alpha_n,
-        npt: const.NPT_TYPE = const.NPTDEFAULT,
+        npt: const.NptType = const.NPTDEFAULT,
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH):
     """
