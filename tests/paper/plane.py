@@ -13,7 +13,7 @@ def xiv_plane(
         n_xi0_b: int = 6,
         n_xi0_s: int = 9,
         n_xi: int = 1000,
-        df_dtau_ptr: speedup.DifferentialPointer = bubble.fluid.DF_DTAU_BAG_PTR,
+        df_dtau_ptr: speedup.DifferentialPointer = bubble.DF_DTAU_BAG_PTR,
         cs2_s=bubble.CS0_2,
         cs2_b=bubble.CS0_2,
         separate_phases: bool = True

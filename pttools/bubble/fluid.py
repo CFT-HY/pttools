@@ -3,20 +3,16 @@ r"""Functions for fluid differential equations
 Now in parametric form (Jacky Lindsay and Mike Soughton MPhys project 2017-18).
 RHS is Eq (33) in Espinosa et al (plus $\frac{dw}{dt}$ not written there)
 """
-# import ctypes
+
 import logging
-# import threading
 import typing as tp
 
 import numba
 import numpy as np
-import scipy.integrate as spi
 from scipy.optimize import fsolve
 
 import pttools.type_hints as th
 from pttools import speedup
-from pttools.speedup.numba_wrapper import numbalsoda
-from pttools.speedup.options import NUMBA_DISABLE_JIT
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 from . import alpha
@@ -27,233 +23,15 @@ from .boundary import Phase, SolutionType
 from . import check
 from . import chapman_jouguet
 from . import const
+from . import integrate
 from . import props
 from . import quantities
 from . import relativity
 from . import shock
 from . import transition
+from . import trim
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_DF_DTAU: str = "bag"
-# ODEINT_LOCK = threading.Lock()
-
-#: Cache for the differential equations.
-#: New differential equations have to be added here before usage so that they can be found by
-#: :func:`scipy.integrate.odeint` and :func:`scipy.integrate.solve_ivp`.
-differentials = speedup.DifferentialCache()
-
-#
-# class FluidShellParams:
-#     def __init__(self):
-#
-#
-# arrs = {
-#     "v": v,
-#     "w": w,
-#     "xi": xi,
-#     "v_sh": v_sh,
-#     "w_sh": w_sh
-# }
-# scalars = {
-#     "n_wall": n_wall,
-#     "n_cs": n_cs,
-#     "n_sh": n_sh,
-#     "r": r,
-#     "alpha_plus": alpha_plus,
-#     "ubarf2": ubarf2,
-#     "ke_frac": ke_frac,
-#     "kappa": kappa,
-#     "dw": dw
-# }
-
-
-# Todo: Think whether the differentials should be stored in the models.
-
-def add_df_dtau(name: str, cs2_fun: th.CS2Fun) -> speedup.DifferentialPointer:
-    """Add a new differential equation to the cache based on the given sound speed function.
-
-    :param name: the name of the function
-    :param cs2_fun: function, which gives the speed of sound squared $c_s^2$.
-    :return:
-    """
-    func = gen_df_dtau(cs2_fun)
-    return differentials.add(name, func)
-
-
-def gen_df_dtau(cs2_fun: th.CS2Fun) -> speedup.Differential:
-    r"""Generate a function for the differentials of fluid variables $(v, w, \xi)$ in parametric form.
-    The parametrised differential equation is as in :gw_pt_ssm:`\ ` eq. B.14-16:
-
-    - $\frac{dv}{dt} = 2v c_s^2 (1-v^2) (1 - \xi v)$
-    - $\frac{dw}{dt} = \frac{w}{1-v^2} \frac{\xi - v}{1 - \xi v} (\frac{1}{c_s^2}+1) \frac{dv}{dt}$
-    - $\frac{d\xi}{dt} = \xi \left( (\xi - v)^2 - c_s^2 (1 - \xi v)^2 \right)$
-
-    :param cs2_fun: function, which gives the speed of sound squared $c_s^2$.
-    :return: function for the differential equation
-    """
-    cs2_fun_numba = cs2_fun \
-        if isinstance(cs2_fun, (speedup.CFunc, speedup.Dispatcher)) or NUMBA_DISABLE_JIT \
-        else numba.cfunc("float64(float64, float64)")(cs2_fun)
-
-    def df_dtau(t: float, u: np.ndarray, du: np.ndarray, args: np.ndarray = None) -> None:
-        r"""Computes the differentials of the variables $(v, w, \xi)$ for a given $c_s^2$ function
-
-        :param t: "time"
-        :param u: point
-        :param du: derivatives
-        :param args: extra arguments: [phase]
-        :return: $\frac{dv}{d\tau}, \frac{dw}{d\tau}, \frac{d\xi}{d\tau}$
-        """
-        v = u[0]
-        w = u[1]
-        xi = u[2]
-        phase = args[0]
-        cs2 = cs2_fun_numba(w, phase)
-        xiXv = xi * v
-        xi_v = xi - v
-        v2 = v * v
-
-        du[0] = 2 * v * cs2 * (1 - v2) * (1 - xiXv)  # dv/dt
-        du[1] = (w / (1 - v2)) * (xi_v / (1 - xiXv)) * (1 / cs2 + 1) * du[0]  # dw_dt
-        du[2] = xi * (xi_v ** 2 - cs2 * (1 - xiXv) ** 2)  # dxi/dt
-    return df_dtau
-
-
-#: Pointer to the differential equation of the bag model
-DF_DTAU_BAG_PTR = add_df_dtau("bag", bag.cs2_bag_scalar_cfunc if speedup.NUMBA_DISABLE_JIT else bag.cs2_bag)
-
-
-@numba.njit
-def fluid_integrate_param(
-        v0: float,
-        w0: float,
-        xi0: float,
-        phase: float = -1.,
-        t_end: float = const.T_END_DEFAULT,
-        n_xi: int = const.N_XI_DEFAULT,
-        df_dtau_ptr: speedup.DifferentialPointer = DF_DTAU_BAG_PTR,
-        method: str = "odeint") -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    r"""
-    Integrates parametric fluid equations in df_dtau from an initial condition.
-    Positive t_end integrates along curves from $(v,w) = (0,c_{s,0})$ to $(1,1)$.
-    Negative t_end integrates towards $(0,c_s{s,0})$.
-
-    :param v0: $v_0$
-    :param w0: $w_0$
-    :param xi0: $\xi_0$
-    :param phase: phase $\phi$
-    :param t_end: $t_\text{end}$
-    :param n_xi: number of $\xi$ points
-    :param df_dtau_ptr: pointer to the differential equation function
-    :param method: differential equation solver to be used
-    :return: $v, w, \xi, t$
-    """
-    if phase < 0.:
-        print("The phase has not been set! Assuming symmetric phase.")
-        phase = 0.
-
-    t = np.linspace(0., t_end, n_xi)
-    y0 = np.array([v0, w0, xi0])
-    # The second value ensures that the Numba typing is correct.
-    data = np.array([phase, 0.])
-    if method == "numba_lsoda" or speedup.NUMBA_INTEGRATE:
-        if numbalsoda is None:
-            raise ImportError("NumbaLSODA is not loaded")
-        v, w, xi, success = fluid_integrate_param_numba(t=t, y0=y0, data=data, df_dtau_ptr=df_dtau_ptr)
-
-    # This lock prevents a SystemError when running multiple threads
-    # with ODEINT_LOCK:
-
-    # SciPy differential equation solvers are not supported by Numba.
-    # Putting these within numba.objmode can also be challenging, as function-type arguments are not supported.
-    # For better performance, the "df_dtau" should be already fully Numba-compiled at this point instead
-    # of taking functions as its arguments.
-    else:
-        with numba.objmode(v="float64[:]", w="float64[:]", xi="float64[:]", success="boolean"):
-            if method == "odeint":
-                v, w, xi, success = fluid_integrate_param_odeint(t=t, y0=y0, data=data, df_dtau_ptr=df_dtau_ptr)
-            else:
-                v, w, xi, success = fluid_integrate_param_solve_ivp(
-                    t=t, y0=y0, data=data, df_dtau_ptr=df_dtau_ptr, method=method)
-    if not success:
-        raise RuntimeError("integration failed")
-    return v, w, xi, t
-
-
-@numba.njit
-def fluid_integrate_param_numba(t: np.ndarray, y0: np.ndarray, data: np.ndarray, df_dtau_ptr: speedup.DifferentialPointer):
-    r"""Integrate a differential equation using NumbaLSODA.
-
-    :param t: time
-    :param y0: starting point
-    :param data: constants
-    :param df_dtau_ptr: pointer to the differential equation function
-    :return: $v, w, \xi$, success status
-    """
-    if speedup.NUMBA_DISABLE_JIT:
-        raise NotImplementedError("NumbaLSODA is supported only when jitting is enabled")
-
-    backwards = t[-1] < 0
-    t_numba = -t if backwards else t
-    data_numba = np.zeros((data.size + 1))
-    data_numba[:-1] = data
-    # Numba does not support float(bool)
-    data_numba[-1] = int(backwards)
-    usol, success = numbalsoda.lsoda(df_dtau_ptr, u0=y0, t_eval=t_numba, data=data_numba)
-    if not success:
-        with numba.objmode:
-            logger.error(f"NumbaLSODA failed for %s integration", "backwards" if backwards else "forwards")
-    v = usol[:, 0]
-    w = usol[:, 1]
-    xi = usol[:, 2]
-    return v, w, xi, success
-
-
-def fluid_integrate_param_odeint(t: np.ndarray, y0: np.ndarray, data: np.ndarray, df_dtau_ptr: speedup.DifferentialPointer):
-    r"""Integrate a differential equation using :func:`scipy.integrate.odeint`.
-
-    :param t: time
-    :param y0: starting point
-    :param df_dtau_ptr: pointer to the differential equation function, which is already in the cache
-    :return: $v, w, \xi$, success status
-    """
-    try:
-        func = differentials.get_odeint(df_dtau_ptr)
-        soln: np.ndarray = spi.odeint(func, y0=y0, t=t, args=(data,))
-        v = soln[:, 0]
-        w = soln[:, 1]
-        xi = soln[:, 2]
-        success = True
-    except Exception as e:
-        logger.exception("odeint failed", exc_info=e)
-        v = w = xi = np.zeros_like(t)
-        success = False
-    return v, w, xi, success
-
-
-def fluid_integrate_param_solve_ivp(
-        t: np.ndarray, y0: np.ndarray, data: np.ndarray, df_dtau_ptr: speedup.DifferentialPointer, method: str):
-    """Integrate a differential equation using :func:`scipy.integrate.solve_ivp`.
-
-    :param t: time
-    :param y0: starting point
-    :param df_dtau_ptr: pointer to the differential equation function, which is already in the cache
-    :param method: name of the integrator to be used. See the :func:`scipy.integrate.solve_ivp` documentation.
-    """
-    try:
-        func = differentials.get_solve_ivp(df_dtau_ptr)
-        soln: spi._ivp.ivp.OdeResult = spi.solve_ivp(
-            func, t_span=(t[0], t[-1]), y0=y0, method=method, t_eval=t, args=(data,))
-        v = soln.y[0, :]
-        w = soln.y[1, :]
-        xi = soln.y[2, :]
-        success = True
-    except Exception as e:
-        logger.exception("solve_ivp failed", exc_info=e)
-        v = w = xi = np.zeros_like(t)
-        success = False
-    return v, w, xi, success
 
 
 # Main function for integrating fluid equations and deriving v, w
@@ -266,7 +44,7 @@ def fluid_shell(
         n_xi: int = const.N_XI_DEFAULT,
         cs2_fun: th.CS2Fun = bag.cs2_bag_scalar,
         cs2_fun_ptr: th.CS2FunScalarPtr = bag.CS2_BAG_SCALAR_PTR,
-        df_dtau_ptr: speedup.DifferentialPointer = DF_DTAU_BAG_PTR) \
+        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR) \
         -> tp.Union[tp.Tuple[float, float, float], tp.Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     r"""
     Finds fluid shell $(v, w, \xi)$ from a given $v_\text{wall}, \alpha_n$, which must be scalars.
@@ -308,7 +86,7 @@ def fluid_shell_deflagration_reverse(model: "Model", v_wall: float, wn: float, x
     # Integrate from the shock to the wall
     logger.info(
         f"Integrating deflagration with v_wall={v_wall}, wn={wn} from vm_sh={vm_sh}, wm_sh={wm_sh}, xi_sh={xi_sh}")
-    v, w, xi, t = fluid_integrate_param(
+    v, w, xi, t = integrate.fluid_integrate_param(
         v0=vm_sh, w0=wm_sh, xi0=xi_sh,
         phase=Phase.SYMMETRIC,
         t_end=const.T_END_DEFAULT,
@@ -420,7 +198,7 @@ def fluid_shell_deflagration_common(
     # logger.debug(f"vp_tilde={vp_tilde}, vp={vp}, wp={wp}")
 
     # Integrate from the wall to the shock
-    v, w, xi, t = fluid_integrate_param(
+    v, w, xi, t = integrate.fluid_integrate_param(
         v0=vp, w0=wp, xi0=v_wall,
         phase=Phase.SYMMETRIC,
         t_end=-const.T_END_DEFAULT,
@@ -512,14 +290,14 @@ def fluid_shell_generic(
         # Convert to the plasma frame
         vm = relativity.lorentz(v_wall, vm_tilde)
 
-        v, w, xi, t = fluid_integrate_param(
+        v, w, xi, t = integrate.fluid_integrate_param(
             v0=vm, w0=wm, xi0=v_wall,
             phase=Phase.BROKEN,
             t_end=-const.T_END_DEFAULT,
             n_xi=const.N_XI_DEFAULT,
             df_dtau_ptr=model.df_dtau_ptr()
         )
-        v, w, xi, t = trim_fluid_wall_to_cs(v, w, xi, t, v_wall, sol_type, cs2_fun=model.cs2)
+        v, w, xi, t = trim.trim_fluid_wall_to_cs(v, w, xi, t, v_wall, sol_type, cs2_fun=model.cs2)
         w_center = w[-1]
 
         # Revert the order of points in the arrays for concatenation
@@ -599,7 +377,7 @@ def fluid_shell_generic(
                 f"Got wn_estimate={wn_estimate}, which differs from wn={wn}."
             )
         vm = relativity.lorentz(v_wall, np.sqrt(model.cs2(wm, Phase.BROKEN)))
-        v_tail, w_tail, xi_tail, t_tail = fluid_integrate_param(
+        v_tail, w_tail, xi_tail, t_tail = integrate.fluid_integrate_param(
             vm, wm, v_wall,
             phase=Phase.BROKEN,
             t_end=-const.T_END_DEFAULT,
@@ -645,7 +423,7 @@ def fluid_shell_alpha_plus(
         n_xi: int = const.N_XI_DEFAULT,
         w_n: float = 1.,
         cs2_fun: th.CS2Fun = bag.cs2_bag,
-        df_dtau_ptr: speedup.DifferentialPointer = DF_DTAU_BAG_PTR,
+        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR,
         sol_type_fun: callable = None) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
     r"""
     Finds the fluid shell profile (v, w, xi) from a given $v_\text{wall}, \alpha_+$ (at-wall strength parameter).
@@ -707,17 +485,17 @@ def fluid_shell_alpha_plus(
     # Integrate forward and find shock.
     if not sol_type == SolutionType.DETON.value:
         # First go
-        v, w, xi, t = fluid_integrate_param(
+        v, w, xi, t = integrate.fluid_integrate_param(
             v0=vfp_p, w0=wp, xi0=v_wall,
             phase=Phase.SYMMETRIC.value, t_end=-const.T_END_DEFAULT, n_xi=const.N_XI_DEFAULT, df_dtau_ptr=df_dtau_ptr)
-        v, w, xi, t = trim_fluid_wall_to_shock(v, w, xi, t, sol_type)
+        v, w, xi, t = trim.trim_fluid_wall_to_shock(v, w, xi, t, sol_type)
         # Now refine so that there are ~N points between wall and shock.  A bit excessive for thin
         # shocks perhaps, but better safe than sorry. Then improve final point with shock_zoom...
         t_end_refine = t[-1]
-        v, w, xi, t = fluid_integrate_param(
+        v, w, xi, t = integrate.fluid_integrate_param(
             v0=vfp_p, w0=wp, xi0=v_wall,
             phase=Phase.SYMMETRIC.value, t_end=t_end_refine, n_xi=n_xi, df_dtau_ptr=df_dtau_ptr)
-        v, w, xi, t = trim_fluid_wall_to_shock(v, w, xi, t, sol_type)
+        v, w, xi, t = trim.trim_fluid_wall_to_shock(v, w, xi, t, sol_type)
         v, w, xi = shock.shock_zoom_last_element(v, w, xi)
         # Now complete to xi = 1
         vf = np.concatenate((v, vf))
@@ -733,10 +511,10 @@ def fluid_shell_alpha_plus(
     # Integrate backward to sound speed.
     if not sol_type == SolutionType.SUB_DEF.value:
         # First go
-        v, w, xi, t = fluid_integrate_param(
+        v, w, xi, t = integrate.fluid_integrate_param(
             v0=vfm_p, w0=wm, xi0=v_wall,
             phase=Phase.BROKEN.value, t_end=-const.T_END_DEFAULT, n_xi=const.N_XI_DEFAULT, df_dtau_ptr=df_dtau_ptr)
-        v, w, xi, t = trim_fluid_wall_to_cs(v, w, xi, t, v_wall, sol_type)
+        v, w, xi, t = trim.trim_fluid_wall_to_cs(v, w, xi, t, v_wall, sol_type)
         #    # Now refine so that there are ~N points between wall and point closest to cs
         #    # For walls just faster than sound, will give very (too?) fine a resolution.
         #        t_end_refine = t[-1]
@@ -841,103 +619,3 @@ def fluid_shell_params(
         "dw": dw,
         "sol_type": sol_type
     }
-
-
-@numba.njit
-def trim_fluid_wall_to_cs(
-        v: np.ndarray,
-        w: np.ndarray,
-        xi: np.ndarray,
-        t: np.ndarray,
-        v_wall: th.FloatOrArr,
-        sol_type: SolutionType,
-        dxi_lim: float = const.DXI_SMALL,
-        cs2_fun: th.CS2Fun = bag.cs2_bag) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    r"""
-    Picks out fluid variable arrays $(v, w, \xi, t)$ which are definitely behind
-    the wall for detonation and hybrid.
-    Also removes negative fluid speeds and $\xi \leq c_s$, which might be left by
-    an inaccurate integration.
-    If the wall is within about 1e-16 of cs, rounding errors are flagged.
-
-    :param v: $v$
-    :param w: $w$
-    :param xi: $\xi$
-    :param t: $t$
-    :param v_wall: $v_\text{wall}$
-    :param sol_type: solution type
-    :param dxi_lim: not used
-    :param cs2_fun: function, which gives $c_s^2$
-    :return: trimmed $v, w, \xi, t$
-    """
-    check.check_wall_speed(v_wall)
-    n_start = 0
-
-    # TODO: should this be 0 to match with the error handling below?
-    n_stop_index = -2
-    # n_stop = 0
-    if sol_type != SolutionType.SUB_DEF.value:
-        for i in range(v.size):
-            if v[i] <= 0 or xi[i] ** 2 <= cs2_fun(w[i], Phase.BROKEN.value):
-                n_stop_index = i
-                break
-
-    if n_stop_index == 0:
-        with numba.objmode:
-            logger.warning((
-                "Integation gave v < 0 or xi <= cs. "
-                "sol_type: {}, v_wall: {}, xi[0] = {}, v[0] = {}. "
-                "Fluid profile has only one element between vw and cs. "
-                "Fix implemented by adding one extra point.").format(sol_type, v_wall, xi[0], v[0]))
-        n_stop = 1
-    else:
-        n_stop = n_stop_index
-
-    if (xi[0] == v_wall) and not (sol_type == SolutionType.DETON.value):
-        n_start = 1
-        n_stop += 1
-
-    return v[n_start:n_stop], w[n_start:n_stop], xi[n_start:n_stop], t[n_start:n_stop]
-
-
-@numba.njit
-def trim_fluid_wall_to_shock(
-        v: np.ndarray,
-        w: np.ndarray,
-        xi: np.ndarray,
-        t: np.ndarray,
-        sol_type: SolutionType) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    r"""
-    Trims fluid variable arrays $(v, w, \xi)$ so last element is just ahead of shock.
-
-    :param v: $v$
-    :param w: $w$
-    :param xi: $\xi$
-    :param t: $t$
-    :param sol_type: solution type
-    :return: trimmed $v, w, \xi, t$
-    """
-    # TODO: should this be 0 to match with the error handling below?
-    n_shock_index = -2
-    # n_shock = 0
-    if sol_type != SolutionType.DETON.value:
-        for i in range(v.size):
-            if v[i] <= shock.v_shock_bag(xi[i]):
-                n_shock_index = i
-                break
-
-    if n_shock_index == 0:
-        with numba.objmode:
-            # F-strings are not yet supported by Numba, even in object mode.
-            # https://github.com/numba/numba/issues/3250
-            logger.warning((
-                "v[0] < v_shock(xi[0]). "
-                "sol_type: {}, xi[0] = {}, v[0] = {}, v_sh(xi[0]) = {}. "
-                "Shock profile has only one element. Fix implemented by adding one extra point.").format(
-                sol_type, xi[0], v[0], shock.v_shock_bag(xi[0])
-            ))
-        n_shock = 1
-    else:
-        n_shock = n_shock_index
-
-    return v[:n_shock + 1], w[:n_shock + 1], xi[:n_shock + 1], t[:n_shock + 1]

@@ -14,9 +14,11 @@ from .chapman_jouguet import *
 from .check import *
 from .const import *
 from .fluid import *
+from .integrate import *
 # from .physical_params import *
 from .props import *
 from .quantities import *
 from .relativity import *
 from .shock import *
 from .transition import *
+from .trim import *

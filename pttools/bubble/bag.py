@@ -9,7 +9,6 @@ import numba
 import numpy as np
 
 import pttools.type_hints as th
-from pttools.bubble.boundary import Phase
 from . import const
 
 logger = logging.getLogger(__name__)

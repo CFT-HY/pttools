@@ -17,6 +17,7 @@ from pttools.bubble import boundary
 from pttools.bubble import const
 from pttools.bubble import fluid
 from pttools.bubble import check
+from pttools.bubble import integrate
 from pttools.bubble import props
 from pttools.bubble import transition
 
@@ -223,7 +224,7 @@ def find_alpha_n_bag(
         sol_type: boundary.SolutionType = boundary.SolutionType.UNKNOWN,
         n_xi: int = const.N_XI_DEFAULT,
         cs2_fun: th.CS2Fun = bag.cs2_bag,
-        df_dtau_ptr: speedup.DifferentialPointer = fluid.DF_DTAU_BAG_PTR) -> float:
+        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR) -> float:
     r"""
     Calculates the transition strength parameter at the nucleation temperature,
     $\alpha_n$, from $\alpha_+$, for given $v_\text{wall}$.
@@ -348,7 +349,7 @@ def find_alpha_plus_bag(
         alpha_n_given: float,
         n_xi: int = const.N_XI_DEFAULT,
         cs2_fun_ptr: th.CS2FunScalarPtr = bag.CS2_BAG_SCALAR_PTR,
-        df_dtau_ptr: speedup.DifferentialPointer = fluid.DF_DTAU_BAG_PTR,
+        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR,
         xtol: float = const.FIND_ALPHA_PLUS_TOL) -> th.FloatOrArrNumba:
     r"""
     Calculate the at-wall strength parameter $\alpha_+$ from given $\alpha_n$ and $v_\text{wall}$.

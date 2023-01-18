@@ -11,7 +11,7 @@ from scipy.optimize import fminbound, fsolve
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase
 from pttools.bubble.check import find_most_negative_vals
-from pttools.bubble.fluid import add_df_dtau
+from pttools.bubble.integrate import add_df_dtau
 from pttools.models.base import BaseModel
 
 logger = logging.getLogger(__name__)

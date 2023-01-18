@@ -6,8 +6,9 @@ ConstCSModel $\xi, v$ plane
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.bubble.fluid import add_df_dtau, fluid_shell, fluid_shell_generic
+from pttools.bubble.fluid import fluid_shell, fluid_shell_generic
 from pttools.bubble.boundary import SolutionType
+from pttools.bubble.integrate import add_df_dtau
 from pttools.bubble.relativity import lorentz
 from pttools.models.const_cs import ConstCSModel
 from tests.paper.plane import xiv_plane
