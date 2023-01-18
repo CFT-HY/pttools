@@ -4,6 +4,7 @@
 # Intel Compile Runtime provides Intel SVML, which speeds up Numba
 icc-rt
 intel-openmp; sys_platform == "darwin"
+kaleido
 matplotlib
 # Numba 0.55 breaks the unit tests
 # https://github.com/numba/numba/issues/7751
