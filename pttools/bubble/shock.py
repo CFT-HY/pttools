@@ -55,7 +55,7 @@ def find_shock_index(
     if sol_type is SolutionType.DETON:
         return props.find_v_index(xi, v_wall)
     # Todo: replace this with isinstance()
-    elif model.name == "bag":
+    if model.name == "bag":
         return np.argmax(np.logical_and(xi > v_wall, v <= v_shock_bag(xi)))
 
     # Trim the integration to the shock
@@ -65,7 +65,8 @@ def find_shock_index(
     for i, xi_i in enumerate(xi):
         if xi_i < cs_n:
             continue
-        # This can emit a lot of log spam if the warning is enabled
+        # This can emit a lot of log spam if the warning of a barely existing shock is enabled.
+        # pylint: disable=unused-variable
         v_shock_tilde, w_shock = solve_shock(
             model, xi_i, wn,
             backwards=True, warn_if_barely_exists=warn_if_barely_exists)

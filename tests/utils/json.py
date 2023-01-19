@@ -38,19 +38,26 @@ class JsonTestCase(abc.ABC):
             raise KeyError(f"Reference data missing in {type(self).__name__}: {key}")
 
     @classmethod
+    # pylint: disable=invalid-name, unused-argument
     def setUpClass(cls, *args, **kwargs):
         cls.data = {}
         if os.path.isfile(cls.REF_DATA_PATH):
             with open(cls.REF_DATA_PATH, "rb") as file:
+                # pylint: disable=no-member
                 cls.ref_data = orjson.loads(file.read())
         else:
             logger.warning("Reference data file for not found. Starting with a blank file.")
             cls.ref_data = {}
 
     @classmethod
+    # pylint: disable=invalid-name
     def tearDownClass(cls):
         if cls.SAVE_NEW_DATA and cls.data:
-            json = orjson.dumps(cls.data, option=orjson.OPT_SERIALIZE_NUMPY | orjson.OPT_APPEND_NEWLINE | orjson.OPT_INDENT_2)
+            # pylint: disable=no-member
+            json = orjson.dumps(
+                cls.data,
+                option=orjson.OPT_SERIALIZE_NUMPY | orjson.OPT_APPEND_NEWLINE | orjson.OPT_INDENT_2
+            )
             os.makedirs(os.path.dirname(cls.REF_DATA_PATH), exist_ok=True)
             with open(cls.REF_DATA_PATH, "wb") as file:
                 file.write(json)

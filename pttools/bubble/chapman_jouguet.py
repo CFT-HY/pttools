@@ -14,9 +14,9 @@ from pttools.bubble import boundary
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.relativity import gamma2
 # from pttools.models.const_cs import ConstCSModel
+import pttools.type_hints as th
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
-import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 

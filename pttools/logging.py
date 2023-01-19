@@ -7,6 +7,7 @@ import time
 
 
 def setup_logging(log_dir: str = None, enable_faulthandler: bool = True, silence_spam: bool = True):
+    """Configure logging to both file and console and optionally silence spam"""
     if enable_faulthandler and not faulthandler.is_enabled():
         faulthandler.enable()
 

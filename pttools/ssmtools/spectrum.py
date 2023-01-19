@@ -88,7 +88,7 @@ def pow_spec(z: th.FloatOrArr, spec_den: th.FloatOrArr) -> th.FloatOrArr:
 def power_gw_scaled(
         z: np.ndarray,
         params: bubble.PhysicalParams,
-        npt: const.NPT_TYPE = const.NPTDEFAULT,
+        npt: const.NptType = const.NPTDEFAULT,
         filename: str = None,
         skip: int = 1,
         method: ssm.Method = ssm.Method.E_CONSERVING,
@@ -141,7 +141,7 @@ def power_gw_scaled(
 def power_v(
         z: np.ndarray,
         params: bubble.PhysicalParams,
-        npt: const.NPT_TYPE = const.NPTDEFAULT,
+        npt: const.NptType = const.NPTDEFAULT,
         filename: str = None,
         skip: int = 1,
         method: ssm.Method = ssm.Method.E_CONSERVING,
@@ -298,7 +298,7 @@ def _spec_den_v_core(
 def spec_den_v(
         z: np.ndarray,
         params: bubble.PhysicalParams,
-        npt: const.NPT_TYPE = const.NPTDEFAULT,
+        npt: const.NptType = const.NPTDEFAULT,
         filename: str = None,
         skip: int = 1,
         method: ssm.Method = ssm.Method.E_CONSERVING,

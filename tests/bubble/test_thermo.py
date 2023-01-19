@@ -19,6 +19,7 @@ class ThermoTest:
     bubbles: tp.List[Bubble]
 
     @classmethod
+    # pylint: disable=invalid-name
     def setUpClass(cls) -> None:
         model = BagModel(a_s=1.1, a_b=1, V_s=1)
         cls.bubbles = [

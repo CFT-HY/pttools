@@ -13,8 +13,6 @@ from scipy.optimize import fsolve
 
 import pttools.type_hints as th
 from pttools import speedup
-if tp.TYPE_CHECKING:
-    from pttools.models.model import Model
 from . import alpha
 from . import approx
 from . import bag
@@ -202,6 +200,7 @@ def fluid_shell_deflagration_common(
     # logger.debug(f"vp_tilde={vp_tilde}, vp={vp}, wp={wp}")
 
     # Integrate from the wall to the shock
+    # pylint: disable=unused-variable
     v, w, xi, t = integrate.fluid_integrate_param(
         v0=vp, w0=wp, xi0=v_wall,
         phase=Phase.SYMMETRIC,
@@ -226,15 +225,18 @@ def fluid_shell_deflagration_common(
 
 def fluid_shell_deflagration_reverse_solvable(params: np.ndarray, model: "Model", v_wall: float, wn: float) -> float:
     xi_sh = params[0]
+    # pylint: disable=unused-variable
     v, w, xi, vm, wm = fluid_shell_deflagration_reverse(model, v_wall, wn, xi_sh, allow_failure=True)
     return vm
 
 
 def fluid_shell_deflagration_solvable(params: np.ndarray, model: "Model", v_wall: float, wn: float) -> float:
     w_center = params[0]
+    # pylint: disable=unused-variable
     v, w, xi, wn_estimate = fluid_shell_deflagration(
         model, v_wall, wn, w_center,
         allow_failure=True, warn_if_shock_barely_exists=False)
+    v, w, xi, wn_estimate = fluid_shell_deflagration(model, v_wall, wn, w_center, allow_failure=True)
     return wn_estimate - wn
 
 
@@ -255,6 +257,7 @@ def fluid_shell_hybrid(
 
 def fluid_shell_hybrid_solvable(params: np.ndarray, model: "Model", v_wall: float, wn: float) -> float:
     wm = params[0]
+    # pylint: disable=unused-variable
     v, w, xi, wn_estimate = fluid_shell_hybrid(
         model, v_wall, wn, wm,
         allow_failure=True, warn_if_shock_barely_exists=False)

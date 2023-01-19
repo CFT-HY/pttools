@@ -23,6 +23,7 @@ from . import options
 OLD_NUMBALSODA = False
 if options.NUMBA_DISABLE_JIT:
     # As of 0.3.3 NumbaLSODA can't be imported when Numba is disabled
+    # pylint: disable=invalid-name
     numbalsoda = None
 else:
     try:
