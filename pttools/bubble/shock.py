@@ -50,10 +50,11 @@ def find_shock_index(
         v: np.ndarray, xi: np.ndarray,
         v_wall: float, wn: float,
         sol_type: SolutionType,
-        allow_failure: bool = False) -> float:
-    # Todo: replace this with isinstance()
+        allow_failure: bool = False,
+        warn_if_barely_exists: bool = True) -> float:
     if sol_type is SolutionType.DETON:
         return props.find_v_index(xi, v_wall)
+    # Todo: replace this with isinstance()
     elif model.name == "bag":
         return np.argmax(np.logical_and(xi > v_wall, v <= v_shock_bag(xi)))
 
@@ -64,7 +65,10 @@ def find_shock_index(
     for i, xi_i in enumerate(xi):
         if xi_i < cs_n:
             continue
-        v_shock_tilde, w_shock = solve_shock(model, xi_i, wn, backwards=True)
+        # This can emit a lot of log spam if the warning is enabled
+        v_shock_tilde, w_shock = solve_shock(
+            model, xi_i, wn,
+            backwards=True, warn_if_barely_exists=warn_if_barely_exists)
         v_shock = relativity.lorentz(xi_i, v_shock_tilde)
         if v[i] <= v_shock:
             i_shock = i

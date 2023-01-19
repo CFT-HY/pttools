@@ -133,7 +133,8 @@ def fluid_shell_deflagration(
         model: "Model",
         v_wall: float, wn: float, w_center: float,
         vp_guess: float = None, wp_guess: float = None,
-        allow_failure: bool = False) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, float]:
+        allow_failure: bool = False,
+        warn_if_shock_barely_exists: bool = True) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, float]:
     using_bag = False
     if vp_guess is None or wp_guess is None:
         using_bag = True
@@ -179,14 +180,17 @@ def fluid_shell_deflagration(
         v_wall, wn,
         v_wall, w_center,
         vp_tilde_guess, wp_guess,
-        SolutionType.SUB_DEF, allow_failure)
+        SolutionType.SUB_DEF,
+        allow_failure=allow_failure,
+        warn_if_shock_barely_exists=warn_if_shock_barely_exists)
 
 
 def fluid_shell_deflagration_common(
         model: "Model",
         v_wall: float, wn: float, vm_tilde: float, wm: float, vp_tilde_guess: float, wp_guess: float,
         sol_type: SolutionType,
-        allow_failure: bool) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, float]:
+        allow_failure: bool,
+        warn_if_shock_barely_exists: bool) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, float]:
     # Solve the boundary conditions at the wall
     vp_tilde, wp = boundary.solve_junction(
         model, vm_tilde, wm,
@@ -206,7 +210,10 @@ def fluid_shell_deflagration_common(
         df_dtau_ptr=model.df_dtau_ptr(),
         # method="RK45"
     )
-    i_shock = shock.find_shock_index(model, v, xi, v_wall, wn, sol_type, allow_failure=allow_failure)
+    i_shock = shock.find_shock_index(
+        model, v, xi, v_wall, wn, sol_type,
+        allow_failure=allow_failure, warn_if_barely_exists=warn_if_shock_barely_exists
+    )
     v = v[:i_shock]
     w = w[:i_shock]
     xi = xi[:i_shock]
@@ -225,11 +232,15 @@ def fluid_shell_deflagration_reverse_solvable(params: np.ndarray, model: "Model"
 
 def fluid_shell_deflagration_solvable(params: np.ndarray, model: "Model", v_wall: float, wn: float) -> float:
     w_center = params[0]
-    v, w, xi, wn_estimate = fluid_shell_deflagration(model, v_wall, wn, w_center, allow_failure=True)
+    v, w, xi, wn_estimate = fluid_shell_deflagration(
+        model, v_wall, wn, w_center,
+        allow_failure=True, warn_if_shock_barely_exists=False)
     return wn_estimate - wn
 
 
-def fluid_shell_hybrid(model: "Model", v_wall: float, wn: float, wm: float, allow_failure: bool = False):
+def fluid_shell_hybrid(
+        model: "Model", v_wall: float, wn: float, wm: float,
+        allow_failure: bool = False, warn_if_shock_barely_exists: bool = True):
     # Exit velocity is at the sound speed
     vm_tilde = np.sqrt(model.cs2(wm, Phase.BROKEN))
     return fluid_shell_deflagration_common(
@@ -237,13 +248,16 @@ def fluid_shell_hybrid(model: "Model", v_wall: float, wn: float, wm: float, allo
         vm_tilde, wm,
         vp_tilde_guess=0.75*vm_tilde, wp_guess=2*wm,
         sol_type=SolutionType.HYBRID,
-        allow_failure=allow_failure
+        allow_failure=allow_failure,
+        warn_if_shock_barely_exists=warn_if_shock_barely_exists
     )
 
 
 def fluid_shell_hybrid_solvable(params: np.ndarray, model: "Model", v_wall: float, wn: float) -> float:
     wm = params[0]
-    v, w, xi, wn_estimate = fluid_shell_hybrid(model, v_wall, wn, wm, allow_failure=True)
+    v, w, xi, wn_estimate = fluid_shell_hybrid(
+        model, v_wall, wn, wm,
+        allow_failure=True, warn_if_shock_barely_exists=False)
     return wn_estimate - wn
 
 
