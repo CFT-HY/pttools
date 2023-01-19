@@ -436,7 +436,7 @@ def fluid_shell_generic(
             "Solved fluid shell for model=%s, v_wall=%s, alpha_n=%s, sol_type=%s",
             model.label_unicode, v_wall, alpha_n, sol_type
         )
-    return v, w, xi
+    return v, w, xi, sol_type, failed
 
 
 @numba.njit

@@ -49,6 +49,8 @@ class Bubble:
         self.v_wall = v_wall
         self.alpha_n = alpha_n
         self.sol_type = sol_type
+
+        self.failed = False
         self.solved = False
         # The labels are defined without LaTeX, as it's not supported in Plotly 3D plots.
         # https://github.com/plotly/plotly.js/issues/608
@@ -104,9 +106,16 @@ class Bubble:
             logger.warning(
                 "Re-solving an already solved bubble! Already computed quantities will not be updated due to caching."
             )
-        self.v, self.w, self.xi = fluid_shell_generic(
-            model=self.model,
-            v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type)
+        try:
+            self.v, self.w, self.xi, self.sol_type, self.failed = fluid_shell_generic(
+                model=self.model,
+                v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type)
+        except RuntimeError as e:
+            logger.exception(
+                "Solving the bubble with model=%s, v_wall=%s, alpha_n=%s failed.",
+                self.model, self.v_wall, self.alpha_n, exc_info=e)
+            self.failed = True
+            return
         self.solved = True
 
         if self.entropy_density < 0:
