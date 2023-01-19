@@ -273,7 +273,8 @@ def fluid_shell_generic(
             allow_failure: bool = False
         ):
     logger.info(
-        f"Solving fluid shell for model={model}, v_wall={v_wall}, sol_type={sol_type}, alpha_n={alpha_n}"
+        "Solving fluid shell for model=%s, v_wall=%s, alpha_n=%s, sol_type=%s",
+        model.label_unicode, v_wall, alpha_n, sol_type
     )
     sol_type = transition.validate_solution_type(
         model,
@@ -284,7 +285,10 @@ def fluid_shell_generic(
     wn = model.w_n(alpha_n, wn_guess=wn_guess)
     v_cj = chapman_jouguet.v_chapman_jouguet(model, alpha_n, wn, wm_guess)
     dxi = 1. / n_xi
-    logger.info(f"Solved model parameters: v_cj={v_cj}, wn={wn}")
+    logger.info(
+        "Solved model parameters: v_cj=%s, wn=%s for bubble with model=%s, v_wall=%s, sol_type=%s, alpha_n=%s",
+        v_cj, wn, model.label_unicode, v_wall, sol_type, alpha_n
+    )
 
     # Detonations are the simplest case
     if sol_type == SolutionType.DETON:
@@ -322,7 +326,7 @@ def fluid_shell_generic(
     elif sol_type == SolutionType.SUB_DEF:
         if transition.cannot_be_sub_def(model, v_wall, wn):
             raise ValueError(
-                f"Invalid parameters for a subsonic deflagration: model={model}, v_wall={v_wall}, wn={wn}. "
+                f"Invalid parameters for a subsonic deflagration: model={model.name}, v_wall={v_wall}, wn={wn}. "
                 "Decrease v_wall or increase csb2."
             )
 
@@ -341,7 +345,7 @@ def fluid_shell_generic(
             if sol[2] != 1:
                 failed = True
                 logger.error(
-                    f"Deflagration solution was not found for model={model}, v_wall={v_wall}, alpha_n={alpha_n}. "
+                    f"Deflagration solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. "
                     f"Using xi_sh={xi_sh}. Reason: {sol[3]}"
                 )
             v, w, xi, _, w_center = fluid_shell_deflagration_reverse(model, v_wall, wn, xi_sh)
@@ -357,14 +361,14 @@ def fluid_shell_generic(
             if sol[2] != 1:
                 failed = True
                 logger.error(
-                    f"Deflagration solution was not found for model={model}, v_wall={v_wall}, alpha_n={alpha_n}. "
+                    f"Deflagration solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. "
                     f"Using w_center={w_center}. Reason: {sol[3]}"
                 )
             v, w, xi, wn_estimate = fluid_shell_deflagration(
                 model, v_wall, wn, w_center, allow_failure=allow_failure)
             if not np.isclose(wn_estimate, wn):
                 logger.error(
-                    f"Deflagration solution was not found for model={model}, v_wall={v_wall}, alpha_n={alpha_n}. "
+                    f"Deflagration solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. "
                     f"Got wn_estimate={wn_estimate}, which differs from wn={wn}."
                 )
             # print(np.array([v, w, xi]).T)
@@ -381,13 +385,13 @@ def fluid_shell_generic(
         if sol[2] != 1:
             failed = True
             logger.error(
-                f"Hybrid solution was not found for model={model}, v_wall={v_wall}, alpha_n={alpha_n}. "
+                f"Hybrid solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. "
                 f"Using wm={wm}. Reason: {sol[3]}"
             )
         v, w, xi, wn_estimate = fluid_shell_hybrid(model, v_wall, wn, wm, allow_failure=allow_failure)
         if not np.isclose(wn_estimate, wn):
             logger.error(
-                f"Hybrid solution was not found for model={model}, v_wall={v_wall}, alpha_n={alpha_n}. "
+                f"Hybrid solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. "
                 f"Got wn_estimate={wn_estimate}, which differs from wn={wn}."
             )
         vm = relativity.lorentz(v_wall, np.sqrt(model.cs2(wm, Phase.BROKEN)))
@@ -423,9 +427,15 @@ def fluid_shell_generic(
     # }
 
     if failed:
-        logger.error("Failed to find a solution. Returning approximate results.")
+        logger.error(
+            "Failed to find a solution. Returning approximate results for model=%s, v_wall=%s, alpha_n=%s, sol_type=%s",
+            model.label_unicode, v_wall, alpha_n, sol_type
+        )
     else:
-        logger.info("Solved fluid shell.")
+        logger.info(
+            "Solved fluid shell for model=%s, v_wall=%s, alpha_n=%s, sol_type=%s",
+            model.label_unicode, v_wall, alpha_n, sol_type
+        )
     return v, w, xi
 
 
