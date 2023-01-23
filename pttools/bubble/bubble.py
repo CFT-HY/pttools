@@ -9,6 +9,7 @@ import numpy as np
 
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.fluid import fluid_shell_generic
+from pttools.bubble import const
 from pttools.bubble import thermo
 from pttools.bubble import transition
 from pttools.speedup.export import export_json
@@ -23,10 +24,7 @@ class NotYetSolvedError(RuntimeError):
 
 
 class Bubble:
-    """A solution of the hydrodynamic equations
-
-    (Defined in the meeting with Hindmarsh on 2022-07-06.)
-    """
+    """A solution of the hydrodynamic equations"""
     def __init__(
             self,
             model: "Model", v_wall: float, alpha_n: float,
@@ -34,7 +32,8 @@ class Bubble:
             label_latex: str = None,
             label_unicode: str = None,
             wn_guess: float = 1,
-            wm_guess: float = 2):
+            wm_guess: float = 2,
+            n_points: int = const.N_XI_DEFAULT):
         if v_wall < 0 or v_wall > 1:
             raise ValueError(f"Invalid v_wall={v_wall}")
         if alpha_n < 0 or alpha_n > 1 or alpha_n < model.alpha_n_min:
@@ -45,14 +44,25 @@ class Bubble:
             wn_guess=wn_guess, wm_guess=wm_guess
         )
 
+        # Parameters
         self.model: Model = model
         self.v_wall = v_wall
         self.alpha_n = alpha_n
         self.sol_type = sol_type
+        self.n_points = n_points
 
+        # Computed parameters
+        self.wn = model.w_n(alpha_n)
+        self.tn = model.temp(self.wn, Phase.SYMMETRIC)
+        if self.tn > model.t_crit:
+            raise ValueError(f"Bubbles form only when T_nuc < T_crit. Got: T_nuc={self.tn}, T_crit={model.t_crit}")
+
+        # Flags
         self.failed = False
         self.solved = False
-        # The labels are defined without LaTeX, as it's not supported in Plotly 3D plots.
+        self.invalid = False
+
+        # LaTeX labels are not supported in Plotly 3D plots.
         # https://github.com/plotly/plotly.js/issues/608
         self.label_latex = rf"{self.model.label_latex} $v_w={v_wall}, \alpha_n={alpha_n}" \
             if label_latex is None else label_latex
@@ -60,20 +70,21 @@ class Bubble:
             if label_unicode is None else label_unicode
         self.notes: tp.List[str] = []
 
-        self.wn = model.w_n(alpha_n)
-        self.tn = model.temp(self.wn, Phase.SYMMETRIC)
-        if self.tn > model.t_crit:
-            raise ValueError(f"Bubbles form only when T_nuc < T_crit. Got: T_nuc={self.tn}, T_crit={model.t_crit}")
-
+        # Output data
         self.v: tp.Optional[np.ndarray] = None
         self.w: tp.Optional[np.ndarray] = None
         self.xi: tp.Optional[np.ndarray] = None
+        self.wp: tp.Optional[float] = None
+        self.wm: tp.Optional[float] = None
+        self.alpha_plus: tp.Optional[float] = None
 
         self.gw_power_spectrum = None
 
         logger.info(
             "Initialized a bubble with: "
-            f"model={self.model.label_unicode}, v_w={v_wall}, alpha_n={alpha_n}, T_nuc={self.tn}, w_nuc={self.wn}")
+            "model=%s, v_w=%s, alpha_n=%s, T_nuc=%s, w_nuc=%s",
+            self.model.label_unicode, v_wall, alpha_n, self.tn, self.wn
+        )
 
     def add_note(self, note: str):
         self.notes.append(note)
@@ -101,15 +112,15 @@ class Bubble:
             f"κ={self.kappa:{prec}}, ω={self.omega:{prec}}, κ+ω={self.kappa + self.omega:{prec}}, " \
             f"trace anomaly={self.trace_anomaly:{prec}}"
 
-    def solve(self, sum_rtol: float = 6.6e-3, error_prec: str = ".4f"):
+    def solve(self, sum_rtol: float = 1e-2, error_prec: str = ".4f"):
         if self.solved:
             logger.warning(
                 "Re-solving an already solved bubble! Already computed quantities will not be updated due to caching."
             )
         try:
-            self.v, self.w, self.xi, self.sol_type, self.failed = fluid_shell_generic(
+            self.v, self.w, self.xi, self.sol_type, self.wp, self.wm, self.failed = fluid_shell_generic(
                 model=self.model,
-                v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type)
+                v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type, n_xi=self.n_points)
         except RuntimeError as e:
             logger.exception(
                 "Solving the bubble with model=%s, v_wall=%s, alpha_n=%s failed.",
@@ -118,11 +129,19 @@ class Bubble:
             return
         self.solved = True
 
+        self.alpha_plus = self.model.alpha_plus(self.wp, self.wm)
+        if self.alpha_plus >= 1/3:
+            logger.error(
+                "Got alpha_plus > 1/3 with model=%s, v_wall=%s, alpha_n=%s. This is unphysical! Got: %s",
+                self.model, self.v_wall, self.alpha_n, self.alpha_plus
+            )
+            self.invalid = True
         if self.entropy_density < 0:
             logger.error(
                 "Entropy density should not be negative! Now entropy is decreasing. Got: %s",
                 self.entropy_density
             )
+            # self.invalid = True
         if self.thermal_energy_density < 0:
             logger.warning(
                 "Thermal energy density is negative. The bubble is therefore working as a heat engine. Got: %s",
@@ -133,6 +152,7 @@ class Bubble:
                 "κ+ω != 1. Got: "
                 f"κ={self.kappa:{error_prec}}, ω={self.omega:{error_prec}}, κ+ω={self.kappa + self.omega:{error_prec}}"
             )
+            self.invalid = True
 
     def spectrum(self):
         raise NotImplementedError

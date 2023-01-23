@@ -133,9 +133,9 @@ def fluid_shell_deflagration(
         vp_guess: float = None, wp_guess: float = None,
         allow_failure: bool = False,
         warn_if_shock_barely_exists: bool = True) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, float]:
-    using_bag = False
+    # using_bag = False
     if vp_guess is None or wp_guess is None:
-        using_bag = True
+        # using_bag = True
         # Use bag model as the starting guess
 
         # alpha_plus_bag = alpha.find_alpha_plus(v_wall, alpha_n, n_xi=const.N_XI_DEFAULT)
@@ -297,6 +297,7 @@ def fluid_shell_generic(
     if sol_type == SolutionType.DETON:
         if transition.cannot_be_detonation(v_wall, v_cj):
             raise ValueError(f"Too slow wall speed for a detonation: v_wall={v_wall}, v_cj={v_cj}")
+        wp = wn
         # Use bag model as the starting point
         vp_tilde_bag, vm_tilde_bag, vp_bag, vm_bag = boundary.fluid_speeds_at_wall(
             v_wall, alpha_p=alpha_n, sol_type=SolutionType.DETON)
@@ -376,6 +377,8 @@ def fluid_shell_generic(
                 )
             # print(np.array([v, w, xi]).T)
             # print("wn, xi_sh", wn, xi_sh)
+        wm = w_center
+        wp = w[0]
     elif sol_type == SolutionType.HYBRID:
         wm_guess = 2*wn
         sol = fsolve(
@@ -392,6 +395,7 @@ def fluid_shell_generic(
                 f"Using wm={wm}. Reason: {sol[3]}"
             )
         v, w, xi, wn_estimate = fluid_shell_hybrid(model, v_wall, wn, wm, allow_failure=allow_failure)
+        wp = w[0]
         if not np.isclose(wn_estimate, wn):
             logger.error(
                 f"Hybrid solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. "
@@ -439,7 +443,7 @@ def fluid_shell_generic(
             "Solved fluid shell for model=%s, v_wall=%s, alpha_n=%s, sol_type=%s",
             model.label_unicode, v_wall, alpha_n, sol_type
         )
-    return v, w, xi, sol_type, failed
+    return v, w, xi, sol_type, wp, wm, failed
 
 
 @numba.njit

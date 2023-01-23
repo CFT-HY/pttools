@@ -121,7 +121,7 @@ class ConstCSModel(AnalyticModel):
         return ret
 
     def alpha_plus(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
-        r"""If $\nu=4 \Leftrightarrow c_{sb}=\frac{1}{\sqrt{3}}$, $w_-$ does not affect the result."""
+        r"""If $\nu=4 \Leftrightarrow c_{sb}=\frac{1}{\sqrt{3}}$, then $w_-$ does not affect the result."""
 
         self.check_w_for_alpha(wp, allow_negative)
         self.check_w_for_alpha(wm, allow_negative)
