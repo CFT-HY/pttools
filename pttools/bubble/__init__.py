@@ -10,6 +10,7 @@ from .alpha import *
 from .approx import *
 from .bag import *
 from .boundary import *
+from .bubble import *
 from .chapman_jouguet import *
 from .check import *
 from .const import *
