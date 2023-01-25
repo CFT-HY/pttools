@@ -7,6 +7,7 @@ import numba
 import numpy as np
 
 import pttools.type_hints as th
+from pttools.bubble.boundary import Phase
 from pttools.models.analytic import AnalyticModel
 from pttools.models.bag import BagModel
 
@@ -119,6 +120,13 @@ class ConstCSModel(AnalyticModel):
             if not allow_negative:
                 raise ValueError(info)
         return ret
+
+    def alpha_n_bar(self, alpha_n: float):
+        r"""Conversion from $\alpha_n$ to $\alpha_{\bar{\theta}n}$ of :giese_2021:`\ `, eq. 13"""
+        wn = self.w_n(alpha_n)
+        tn = self.temp(wn, Phase.SYMMETRIC)
+        return alpha_n + (1 - 1 / (3 * self.cs2(wn, Phase.BROKEN))) * \
+            (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN))
 
     def alpha_plus(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
         r"""If $\nu=4 \Leftrightarrow c_{sb}=\frac{1}{\sqrt{3}}$, then $w_-$ does not affect the result."""
