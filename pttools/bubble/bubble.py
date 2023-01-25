@@ -58,9 +58,10 @@ class Bubble:
             raise ValueError(f"Bubbles form only when T_nuc < T_crit. Got: T_nuc={self.tn}, T_crit={model.t_crit}")
 
         # Flags
-        self.failed = False
         self.solved = False
-        self.invalid = False
+        self.no_solution_found = False
+        self.numerical_error = False
+        self.unphysical = False
 
         # LaTeX labels are not supported in Plotly 3D plots.
         # https://github.com/plotly/plotly.js/issues/608
@@ -112,47 +113,51 @@ class Bubble:
             f"κ={self.kappa:{prec}}, ω={self.omega:{prec}}, κ+ω={self.kappa + self.omega:{prec}}, " \
             f"trace anomaly={self.trace_anomaly:{prec}}"
 
-    def solve(self, sum_rtol: float = 1e-2, error_prec: str = ".4f"):
+    def solve(self, sum_rtol_warning: float = 1e-2, sum_rtol_error: float = 5e-2, error_prec: str = ".4f"):
         if self.solved:
-            logger.warning(
-                "Re-solving an already solved bubble! Already computed quantities will not be updated due to caching."
-            )
+            msg = "Re-solving an already solved bubble! Already computed quantities will not be updated due to caching."
+            logger.warning(msg)
+            self.add_note(msg)
         try:
+            # Todo: make this more specific
             self.v, self.w, self.xi, self.sol_type, self.wp, self.wm, self.failed = fluid_shell_generic(
                 model=self.model,
                 v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type, n_xi=self.n_points)
         except RuntimeError as e:
-            logger.exception(
-                "Solving the bubble with model=%s, v_wall=%s, alpha_n=%s failed.",
-                self.model, self.v_wall, self.alpha_n, exc_info=e)
-            self.failed = True
+            msg = f"Solving the bubble with model={self.model}, v_wall={self.v_wall}, alpha_n={self.alpha_n} failed."
+            logger.exception(msg, exc_info=e)
+            self.add_note(msg)
+            self.no_solution_found = True
             return
         self.solved = True
 
         self.alpha_plus = self.model.alpha_plus(self.wp, self.wm)
         if self.alpha_plus >= 1/3:
-            logger.error(
-                "Got alpha_plus > 1/3 with model=%s, v_wall=%s, alpha_n=%s. This is unphysical! Got: %s",
-                self.model, self.v_wall, self.alpha_n, self.alpha_plus
-            )
-            self.invalid = True
+            msg = f"Got alpha_plus > 1/3 with model={self.model}, v_wall={self.v_wall}, alpha_n={self.alpha_n}. "\
+                  f"This is unphysical! Got: {self.alpha_plus}"
+            logger.error(msg)
+            self.add_note(msg)
+            self.unphysical = True
         if self.entropy_density < 0:
-            logger.error(
-                "Entropy density should not be negative! Now entropy is decreasing. Got: %s",
-                self.entropy_density
-            )
-            # self.invalid = True
+            msg = f"Entropy density should not be negative! Now entropy is decreasing. Got: {self.entropy_density}"
+            logger.error(msg)
+            self.add_note(msg)
+            self.unphysical = True
         if self.thermal_energy_density < 0:
-            logger.warning(
-                "Thermal energy density is negative. The bubble is therefore working as a heat engine. Got: %s",
-                self.thermal_energy_density
-            )
-        if not np.isclose(self.kappa + self.omega, 1, rtol=sum_rtol):
-            logger.error(
-                "κ+ω != 1. Got: "
+            msg = "Thermal energy density is negative. The bubble is therefore working as a heat engine. "\
+                  f"Got: {self.thermal_energy_density}"
+            logger.warning(msg)
+            self.add_note(msg)
+        if not np.isclose(self.kappa + self.omega, 1, rtol=sum_rtol_warning):
+            sum_err = not np.isclose(self.kappa + self.omega, 1, rtol=sum_rtol_error)
+            if sum_err:
+                self.numerical_error = True
+            msg = "κ+ω != 1." + \
+                ("Marking the solution as unphysical." if sum_err else "") + \
+                " Got: " \
                 f"κ={self.kappa:{error_prec}}, ω={self.omega:{error_prec}}, κ+ω={self.kappa + self.omega:{error_prec}}"
-            )
-            self.invalid = True
+            logger.error(msg)
+            self.add_note(msg)
 
     def spectrum(self):
         raise NotImplementedError
