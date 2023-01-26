@@ -7,7 +7,7 @@ import numpy as np
 
 import pttools.type_hints as th
 from pttools.analysis import utils
-from pttools.bubble import boundary, check, const, fluid, props, quantities, relativity, shock, transition
+from pttools.bubble import boundary, check, const, fluid_bag, props, quantities, relativity, shock, transition
 
 
 def plot_fluid_shells(
@@ -87,7 +87,7 @@ def plot_fluid_shells(
         if sol_type == boundary.SolutionType.ERROR:
             raise RuntimeError(f"No solution for v_wall = {v_wall}, alpha_n = {alpha_n}.")
 
-        v, w, xi = fluid.fluid_shell(v_wall, alpha_n, Np)
+        v, w, xi = fluid_bag.fluid_shell(v_wall, alpha_n, Np)
         n_cs = int(np.floor(const.CS0 * Np))
         n_sh = xi.size - 2
         v_sh = shock.v_shock_bag(xi_even)

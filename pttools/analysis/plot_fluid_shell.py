@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.analysis import utils
-from pttools.bubble import boundary, const, fluid, relativity
+from pttools.bubble import boundary, const, fluid_bag, relativity
 
 
 def plot_fluid_shell(
@@ -50,7 +50,7 @@ def plot_fluid_shell(
     if draw is None:
         draw = utils.ENABLE_DRAWING
 
-    params = fluid.fluid_shell_params(
+    params = fluid_bag.fluid_shell_params(
         v_wall=v_wall,
         alpha_n=alpha_n,
         Np=Np,
