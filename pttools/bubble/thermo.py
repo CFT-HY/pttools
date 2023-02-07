@@ -1,4 +1,5 @@
 import logging
+import typing as tp
 
 import numpy as np
 
@@ -6,14 +7,15 @@ import pttools.type_hints as th
 from .boundary import Phase
 from . import props
 from . import relativity
-from pttools.models.model import Model
+if tp.TYPE_CHECKING:
+    from pttools.models.model import Model
 
 logger = logging.getLogger(__name__)
 
 
 # Todo: Fix the equations in the docstrings
 
-def ebar(model: Model, wn: float):
+def ebar(model: "Model", wn: float):
     """Energy is conserved, and therefore $\bar{e}=e_n$."""
     return model.e(wn, Phase.SYMMETRIC)
 
