@@ -38,7 +38,7 @@ class Bubble:
             raise ValueError(f"Invalid v_wall={v_wall}")
         if alpha_n < 0 or alpha_n > 1 or alpha_n < model.alpha_n_min:
             raise ValueError(f"Invalid alpha_n={alpha_n}. Minimum for the model: {model.alpha_n_min}")
-        sol_type = transition.validate_solution_type(
+        self.sol_type = transition.validate_solution_type(
             model,
             v_wall=v_wall, alpha_n=alpha_n, sol_type=sol_type,
             wn_guess=wn_guess, wm_guess=wm_guess
@@ -48,7 +48,6 @@ class Bubble:
         self.model: Model = model
         self.v_wall = v_wall
         self.alpha_n = alpha_n
-        self.sol_type = sol_type
         self.n_points = n_points
 
         # Computed parameters
