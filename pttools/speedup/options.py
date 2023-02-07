@@ -6,6 +6,9 @@ import typing as tp
 
 logger = logging.getLogger(__name__)
 
+#: Maximum workers for ProcessPoolExecutor (determined dynamically based on the available CPUs)
+MAX_WORKERS_DEFAULT: int = len(os.sched_getaffinity(0))
+
 #: Whether Numba JIT compilation has been disabled.
 NUMBA_DISABLE_JIT: tp.Final[bool] = bool(int(os.getenv("NUMBA_DISABLE_JIT", "0")))
 #: Whether to use NumbaLSODA as the default ODE integrator.
