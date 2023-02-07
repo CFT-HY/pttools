@@ -9,8 +9,9 @@ class BubbleTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         model = BagModel(a_s=1.1, a_b=1, V_s=1)
-        cls.bubble = Bubble(model, v_wall=0.5, alpha_n=0.1)
-        cls.bubble.solve()
+        bubble = Bubble(model, v_wall=0.5, alpha_n=0.1)
+        bubble.solve()
+        cls.bubble = bubble
 
     def test_ebar(self):
         ebar = self.bubble.ebar
