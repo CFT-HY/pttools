@@ -52,10 +52,15 @@ class BagModel(AnalyticModel):
             )
 
         # These have to be after super().__init__() for a_s and a_b to be populated.
+        label_prec = 3
         if self.label_latex is self.DEFAULT_LABEL_LATEX:
-            self.label_latex = f"Bag, $a_s={self.a_s}, a_b={self.a_b}, V_s={self.V_s}, V_b={self.V_b}$"
+            self.label_latex = \
+                f"Bag, $a_s={self.a_s:.{label_prec}f}, a_b={self.a_b:.{label_prec}f}, " \
+                f"V_s={self.V_s:.{label_prec}f}, V_b={self.V_b:.{label_prec}f}$"
         if self.label_unicode is self.DEFAULT_LABEL_UNICODE:
-            self.label_unicode = f"Bag, a_s={self.a_s}, a_b={self.a_b}, V_s={self.V_s}, V_b={self.V_b}"
+            self.label_unicode = \
+                f"Bag, a_s={self.a_s:.{label_prec}f}, a_b={self.a_b:.{label_prec}f}, " \
+                f"V_s={self.V_s:.{label_prec}f}, V_b={self.V_b:.{label_prec}f}"
 
     def alpha_n(self, wn: th.FloatOrArr, allow_negative: bool = False, allow_no_transition: bool = False) \
             -> th.FloatOrArr:
