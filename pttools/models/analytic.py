@@ -47,7 +47,7 @@ class AnalyticModel(Model, abc.ABC):
             self.a_b = a_b
         elif a_s is None and a_b is None and g_s is not None and g_b is not None:
             self.a_s = np.pi**2/90 * g_s
-            self.g_b = np.pi**2/90 * g_b
+            self.a_b = np.pi**2/90 * g_b
         else:
             raise ValueError("Specify either a_s and a_b or g_s and g_b")
 
