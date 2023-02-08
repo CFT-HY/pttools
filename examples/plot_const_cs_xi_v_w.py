@@ -2,7 +2,7 @@ r"""
 ConstCSModel 3D
 ===============
 
-Constant sound speed model $\xi, v, w$
+Plot $\xi, v, w$ in 3D for the constant sound speed model
 """
 
 import os.path

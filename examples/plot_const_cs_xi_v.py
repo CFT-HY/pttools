@@ -1,6 +1,8 @@
 r"""
 ConstCSModel $\xi, v$ plane
 ===========================
+
+Plot the $\xi, v$ plane for the constant sound speed model
 """
 
 import matplotlib.pyplot as plt

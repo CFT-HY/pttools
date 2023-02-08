@@ -1,6 +1,8 @@
 """
 Chapman-Jouguet speed
 =====================
+
+Plot $v_{CJ} (\alpha_n)$
 """
 
 import matplotlib.pyplot as plt

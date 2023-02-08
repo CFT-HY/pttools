@@ -2,7 +2,7 @@
 ConstCSModel
 ============
 
-Constant sound speed model
+Plot various quantities for the constant sound speed model
 """
 
 import matplotlib.pyplot as plt

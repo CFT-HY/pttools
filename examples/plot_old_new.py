@@ -2,7 +2,7 @@
 Old-new comparison
 ============
 
-Comparison of old and new results
+Comparison of old and new solvers
 """
 
 import matplotlib.pyplot as plt

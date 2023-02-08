@@ -2,7 +2,7 @@ r"""
 Delta-Theta
 ===========
 
-$\Delta \theta$ surfaces
+Plot $\Delta \theta$ surfaces
 """
 
 import os.path
