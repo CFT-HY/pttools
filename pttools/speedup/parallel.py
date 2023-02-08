@@ -22,12 +22,12 @@ def run_parallel(
         **kwargs) -> np.ndarray:
     with cf.ProcessPoolExecutor(max_workers=max_workers) as ex:
         # Submit parallel execution
-        with np.nditer([params, None]) as it:
+        with np.nditer([params, None], flags=("refs_ok",)) as it:
             for obj, fut in it:
                 fut[...] = ex.submit(func, obj, *args, **kwargs)
             futs = it.operands[1]
         # Collect results
-        with np.nditer([futs, None]) as it:
+        with np.nditer([futs, None], flags=("refs_ok",)) as it:
             for fut, res in it:
-                res[...] = fut.result()
-        return it.operands[1]
+                res[...] = fut.item().result()
+            return it.operands[1]
