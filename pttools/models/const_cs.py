@@ -73,7 +73,7 @@ class ConstCSModel(AnalyticModel):
         self.const_cs_wn_const: float = 4 / 3 * (1 / self.nu - 1 / self.mu)
 
         label_prec = 3
-        label_latex = f"Const. $c_s, c_{{ss}}^2={self.css2:.{label_prec}f}, c_{{sb}}^2={self.csb2:.{label_prec}f}" \
+        label_latex = f"Const. $c_s, c_{{ss}}^2={self.css2:.{label_prec}f}, c_{{sb}}^2={self.csb2:.{label_prec}f}$" \
             if not label_latex else label_latex
         label_unicode = f"Const. cₛ, css2={self.css2:.{label_prec}f}, csb2={self.csb2:.{label_prec}f}" \
             if not label_unicode else label_unicode
