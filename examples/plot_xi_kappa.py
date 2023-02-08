@@ -11,6 +11,7 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 
+from examples import utils
 from pttools.logging import setup_logging
 from pttools.bubble.boundary import Phase
 from pttools.bubble.bubble import Bubble
@@ -69,7 +70,7 @@ def main():
     ax.set_yscale("log")
     ax.set_xlabel(r"$\xi_w$")
     ax.set_ylabel(r"$\kappa$")
-    fig.savefig("./plot_xi_kappa.png")
+    fig.savefig(os.path.join(utils.FIG_DIR, "plot_xi_kappa.png"))
 
     logger.info(f"Elapsed time: {time.perf_counter() - t_start}")
     return fig
