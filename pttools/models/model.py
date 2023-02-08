@@ -150,6 +150,10 @@ class Model(BaseModel, abc.ABC):
 
         return 4 * diff / (3 * wn)
 
+    def alpha_n_bar(self, alpha_n: float) -> float:
+        r"""Conversion from $\alpha_n$ to $\alpha_{\bar{\theta}n}$ of :giese_2021:`\ `, eq. 13"""
+        raise NotImplementedError
+
     def alpha_plus(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
         # Todo: This docstring causes the Sphinx error "ERROR: Unknown target name: "w"."
         r"""Transition strength parameter $\alpha_+$

@@ -121,8 +121,7 @@ class ConstCSModel(AnalyticModel):
                 raise ValueError(info)
         return ret
 
-    def alpha_n_bar(self, alpha_n: float):
-        r"""Conversion from $\alpha_n$ to $\alpha_{\bar{\theta}n}$ of :giese_2021:`\ `, eq. 13"""
+    def alpha_n_bar(self, alpha_n: float) -> float:
         wn = self.w_n(alpha_n)
         tn = self.temp(wn, Phase.SYMMETRIC)
         return alpha_n + (1 - 1 / (3 * self.cs2(wn, Phase.BROKEN))) * \

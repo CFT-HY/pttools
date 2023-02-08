@@ -70,6 +70,9 @@ class BagModel(AnalyticModel):
         # self.check_p(wn, allow_fail=allow_no_transition)
         return self.bag_wn_const / wn
 
+    def alpha_n_bar(self, alpha_n: float) -> float:
+        return alpha_n
+
     def alpha_plus(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
         r"""Transition strength parameter $\alpha_+$, :notes:`\ `, eq. 7.25.
         $$\alpha_+ = \frac{4}{3w_+}(V_s - V_b)$$
