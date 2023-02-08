@@ -178,7 +178,6 @@ def fluid_shell_deflagration_reverse(model: "Model", v_wall: float, wn: float, x
 def fluid_shell_detonation(model: "Model", v_wall: float, alpha_n: float, wn: float, v_cj: float) -> SolverOutput:
     if transition.cannot_be_detonation(v_wall, v_cj):
         raise ValueError(f"Too slow wall speed for a detonation: v_wall={v_wall}, v_cj={v_cj}")
-    wp = wn
     # Use bag model as the starting point
     vp_tilde_bag, vm_tilde_bag, vp_bag, vm_bag = boundary.fluid_speeds_at_wall(
         v_wall, alpha_p=alpha_n, sol_type=SolutionType.DETON)
@@ -203,7 +202,7 @@ def fluid_shell_detonation(model: "Model", v_wall: float, alpha_n: float, wn: fl
     v, w, xi, t = trim.trim_fluid_wall_to_cs(v, w, xi, t, v_wall, SolutionType.DETON, cs2_fun=model.cs2)
 
     # Revert the order of points in the arrays for concatenation
-    return np.flip(v), np.flip(w), np.flip(xi), wp, wm, True
+    return np.flip(v), np.flip(w), np.flip(xi), wn, wm, True
 
 
 def fluid_shell_hybrid(
