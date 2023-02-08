@@ -1,4 +1,5 @@
 import concurrent.futures as cf
+import typing as tp
 
 import numpy as np
 
@@ -6,7 +7,7 @@ from pttools.speedup.options import MAX_WORKERS_DEFAULT
 
 
 def solve_bubbles(bubbles: np.ndarray, max_workers: int = MAX_WORKERS_DEFAULT) -> None:
-    futs = []
+    futs: tp.List[cf.Future] = []
     with cf.ProcessPoolExecutor(max_workers=max_workers) as ex:
         for bubble in np.nditer(bubbles):
             futs.append(ex.submit(bubble.solve))
