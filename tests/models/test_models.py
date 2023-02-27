@@ -80,6 +80,7 @@ class TestConstCS(ModelBaseCase, unittest.TestCase):
 
 
 class TestConstCSThermo(ModelBaseCase, unittest.TestCase):
+    model: models.FullModel
     SAVE_NEW_DATA = False
 
     @classmethod
