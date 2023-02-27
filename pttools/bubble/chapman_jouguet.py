@@ -182,7 +182,7 @@ def v_chapman_jouguet(
     # Get wm
     # For detonations wn = wp
 
-    wm = wm_chapman_jouguet(model, wp=wn, wm_guess=2)
+    wm = wm_chapman_jouguet(model, wp=wn, wm_guess=wm_guess)
 
     # Compute vp with wp, wm & vm
     vm_cj2 = model.cs2(wm, Phase.BROKEN)
