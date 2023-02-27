@@ -10,7 +10,7 @@ import numpy as np
 
 from pttools.analysis.plot_entropy import plot_entropy
 from pttools.models.bag import BagModel
-from pttools.models.const_cs import ConstCSModel
+# from pttools.models.const_cs import ConstCSModel
 
 
 def main():
@@ -22,7 +22,10 @@ def main():
         v_walls=np.linspace(0.05, 0.95, n_points),
         alpha_ns=np.linspace(0.05, 0.95, n_points),
         # v_walls=np.linspace(0.3, 0.8, 9),
-        # alpha_ns=np.linspace(0.12, 0.5, 9)
+        # alpha_ns=np.linspace(0.12, 0.5, 9),
+        min_level=-0.3,
+        max_level=0.4,
+        diff_level=0.05
     )
 
 

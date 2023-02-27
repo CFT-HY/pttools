@@ -6,63 +6,51 @@ Created on Fri Jul  2 18:20:37 2021
 
 @author: hindmars
 
-Requires input data as a npz file.
+Requires input data as an npz file.
 """
 
-# import sys
-# sys.path.append('../pttools/')
+import typing as tp
 
-import pttools.bubble as b
+from pttools.analysis.plot_entropy import plot_entropy_data
+from pttools.bubble.chapman_jouguet import v_chapman_jouguet_bag
 import matplotlib.pyplot as plt
 import numpy as np
 
-n_alpha = 10
-n_vw = 10
 
-# g_bro = eos.G_BRO_DEFAULT*0.5
-# g_sym = eos.G_SYM_DEFAULT
+def load(n_alpha: int = 10, n_vw: int = 10, g_bro: int = 120, g_sym: int = 123) \
+        -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    file_name = f"s_change_gbro{g_bro:3.0f}_g_sym{g_sym:3.0f}_nalpha_{n_alpha}_nvw_{n_vw}.npz"
+    d = np.load(file_name)
 
-g_bro = 120
-g_sym = 123
+    ds_arr = d["arr_0"]
+    vw_arr = d["arr_1"]
+    alpha_arr = d["arr_2"]
+
+    return ds_arr, vw_arr, alpha_arr
 
 
-file_name = 's_change_gbro{:3.0f}_g_sym{:3.0f}_nalpha_{}_nvw_{}.npz'.format(g_bro, g_sym, n_alpha, n_vw)
-d = np.load(file_name)
+def main(n_alpha: int = 10, n_vw: int = 10, g_bro: int = 120, g_sym: int = 123):
+    # g_bro = eos.G_BRO_DEFAULT*0.5
+    # g_sym = eos.G_SYM_DEFAULT
 
-ds_arr = d['arr_0']
-vw_arr = d['arr_1']
-alpha_arr = d['arr_2']
+    ds_arr, vw_arr, alpha_arr = load(n_alpha, n_vw, g_bro, g_sym)
 
-fig, ax = plt.subplots()
+    fig, ax = plot_entropy_data(
+        ds_arr,
+        v_walls=vw_arr,
+        alpha_ns=alpha_arr,
+        min_level=-0.3,
+        max_level=0.4,
+        diff_level=0.05
+    )
 
-min_level = -0.3
-max_level = 0.4
-diff_level = 0.05
+    # ax.plot(b.min_speed_deton(alpha_arr), alpha_arr, 'k--', label=r'$v_{\rm J}$')
+    ax.plot(v_chapman_jouguet_bag(alpha_arr), alpha_arr, 'k--', label=r'$v_{\rm J}$')
+    # ax.plot(vw_arr, b.alpha_n_max(vw_arr), 'k', label=r'$\alpha_{\rm max}$', linewidth=2)
 
-n_min = int(min_level/diff_level)
-n_max = int(max_level/diff_level)
+    ax.legend()
 
-levels = np.linspace(n_min, n_max, n_max - n_min + 1, endpoint=True )*diff_level
 
-cmap_neg = plt.cm.get_cmap("Blues")
-cmap_pos = plt.cm.get_cmap("Reds")
-
-cols = list( cmap_neg((levels[levels <0]-diff_level)/(min_level-diff_level)) ) + list(cmap_pos((levels[levels >= 0]+diff_level)/(max_level+diff_level)))
-
-cs = ax.contourf(vw_arr, alpha_arr, ds_arr, levels, colors=cols)
-
-cbar = fig.colorbar(cs)
-cbar.ax.set_ylabel(r'$\Delta S/S$')
-
-# ax.plot(b.min_speed_deton(alpha_arr), alpha_arr, 'k--', label=r'$v_{\rm J}$')
-ax.plot(b.v_chapman_jouguet_bag(alpha_arr), alpha_arr, 'k--', label=r'$v_{\rm J}$')
-# ax.plot(vw_arr, b.alpha_n_max(vw_arr), 'k', label=r'$\alpha_{\rm max}$', linewidth=2)
-
-ax.grid()
-ax.set_xlim(0,1)
-ax.set_ylim(0,1)
-ax.set_xlabel(r'$v_{\rm w}$')
-ax.set_ylabel(r'$\alpha$')
-plt.legend()
-
-plt.show()
+if __name__ == "__main__":
+    main()
+    plt.show()
