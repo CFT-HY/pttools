@@ -51,7 +51,7 @@ def find_shock_index(
         v_wall: float, wn: float,
         sol_type: SolutionType,
         allow_failure: bool = False,
-        warn_if_barely_exists: bool = True) -> float:
+        warn_if_barely_exists: bool = True) -> int:
     if sol_type is SolutionType.DETON:
         return props.find_v_index(xi, v_wall)
     # Todo: replace this with isinstance()
