@@ -18,6 +18,11 @@ class TestBag(BagBaseCase, unittest.TestCase):
         data = self.model.w_n(self.alpha_n, analytical=False)
         self.assert_json(data, "w_n", allow_save=False)
 
+    def test_auto_potential(self):
+        params = {**self.PARAMS, "V_s": None, "V_b": None, "auto_potential": True}
+        model = models.BagModel(**params)
+        self.assertAlmostEqual(model.critical_temp(), 1)
+
 
 class TestConstCSLikeBag(BagBaseCase, unittest.TestCase):
     model: models.ConstCSModel

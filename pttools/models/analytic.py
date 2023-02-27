@@ -29,6 +29,7 @@ class AnalyticModel(Model, abc.ABC):
     :param g_s: $g_\text{eff}(\phi=s)$, degrees of freedom for $p$ in the symmetric phase at T=T0
     :param g_b: $g_\text{eff}(\phi=b)$, degrees of freedom for $p$ in the broken phase at T=T0
     :param name: custom name for the model
+    :param auto_potential: set V_s and V_b so that T_c = 1 (bag model only)
     """
     def __init__(
             self,
@@ -39,7 +40,8 @@ class AnalyticModel(Model, abc.ABC):
             name: str = None,
             label_latex: str = None,
             label_unicode: str = None,
-            allow_invalid: bool = False):
+            allow_invalid: bool = False,
+            auto_potential: bool = False):
         self.a_s: float
         self.a_b: float
         if a_s is not None and a_b is not None and g_s is None and g_b is None:
@@ -50,6 +52,12 @@ class AnalyticModel(Model, abc.ABC):
             self.a_b = np.pi**2/90 * g_b
         else:
             raise ValueError("Specify either a_s and a_b or g_s and g_b")
+
+        if auto_potential:
+            if not ((V_s is None or V_s == 0) and (V_b is None or V_s == 0)):
+                raise ValueError("Cannot set manual potentials when automatic potential is enabled.")
+            V_s = self.a_s - self.a_b
+            V_b = 0
 
         self.bag_wn_const: float = 4 / 3 * (V_s - V_b)
 
