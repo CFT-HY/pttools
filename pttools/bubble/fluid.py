@@ -109,6 +109,10 @@ def fluid_shell_deflagration_common(
         model, v, xi, v_wall, wn, sol_type,
         allow_failure=allow_failure, warn_if_barely_exists=warn_if_shock_barely_exists
     )
+    if i_shock == 0:
+        logger.error("The shock was not found by the deflagration solver")
+        nan_arr = np.array([np.nan])
+        return nan_arr, nan_arr, nan_arr, wp, np.nan
     v = v[:i_shock]
     w = w[:i_shock]
     xi = xi[:i_shock]
@@ -372,7 +376,6 @@ def fluid_shell_generic(
     # Detonations are the simplest case
     if sol_type == SolutionType.DETON:
         v, w, xi, wp, wm, solution_found = fluid_shell_detonation(model, v_wall, alpha_n, wn, v_cj)
-
     elif sol_type == SolutionType.SUB_DEF:
         if transition.cannot_be_sub_def(model, v_wall, wn):
             raise ValueError(
