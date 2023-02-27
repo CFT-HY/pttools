@@ -58,9 +58,11 @@ class Bubble:
 
         # Flags
         self.solved = False
+        self.solver_failed = False
         self.no_solution_found = False
         self.numerical_error = False
-        self.unphysical = False
+        self.unphysical_alpha_plus = False
+        self.unphysical_entropy = False
 
         # LaTeX labels are not supported in Plotly 3D plots.
         # https://github.com/plotly/plotly.js/issues/608
@@ -119,11 +121,15 @@ class Bubble:
             self.add_note(msg)
         try:
             # Todo: make this more specific
-            self.v, self.w, self.xi, self.sol_type, self.wp, self.wm, self.failed = fluid_shell_generic(
+            self.v, self.w, self.xi, self.sol_type, self.wp, self.wm, self.solver_failed = fluid_shell_generic(
                 model=self.model,
                 v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type, n_xi=self.n_points)
-        except RuntimeError as e:
-            msg = f"Solving the bubble with model={self.model}, v_wall={self.v_wall}, alpha_n={self.alpha_n} failed."
+            if self.solver_failed:
+                msg = f"Solver failed with model={self.model}, v_wall={self.v_wall}, alpha_n={self.alpha_n}"
+                logger.error(msg)
+                self.add_note(msg)
+        except (IndexError, RuntimeError) as e:
+            msg = f"Solver crashed with model={self.model}, v_wall={self.v_wall}, alpha_n={self.alpha_n}."
             logger.exception(msg, exc_info=e)
             self.add_note(msg)
             self.no_solution_found = True
@@ -136,12 +142,12 @@ class Bubble:
                   f"This is unphysical! Got: {self.alpha_plus}"
             logger.error(msg)
             self.add_note(msg)
-            self.unphysical = True
+            self.unphysical_alpha_plus = True
         if self.entropy_density < 0:
             msg = f"Entropy density should not be negative! Now entropy is decreasing. Got: {self.entropy_density}"
             logger.error(msg)
             self.add_note(msg)
-            self.unphysical = True
+            self.unphysical_entropy = True
         if self.thermal_energy_density < 0:
             msg = "Thermal energy density is negative. The bubble is therefore working as a heat engine. "\
                   f"Got: {self.thermal_energy_density}"
@@ -151,8 +157,8 @@ class Bubble:
             sum_err = not np.isclose(self.kappa + self.omega, 1, rtol=sum_rtol_error)
             if sum_err:
                 self.numerical_error = True
-            msg = "κ+ω != 1." + \
-                ("Marking the solution as unphysical." if sum_err else "") + \
+            msg = "κ+ω != 1. " + \
+                ("Marking the solution to have a numerical error." if sum_err else "") + \
                 " Got: " \
                 f"κ={self.kappa:{error_prec}}, ω={self.omega:{error_prec}}, κ+ω={self.kappa + self.omega:{error_prec}}"
             logger.error(msg)
@@ -167,10 +173,14 @@ class Bubble:
 
     @functools.cached_property
     def ebar(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
         return thermo.ebar(self.model, self.wn)
 
     @functools.cached_property
     def entropy_density(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
         return thermo.entropy_density(self.model, self.w, self.xi, self.v_wall)
 
     @functools.cached_property
