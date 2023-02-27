@@ -184,6 +184,12 @@ class Bubble:
         return thermo.entropy_density(self.model, self.w, self.xi, self.v_wall)
 
     @functools.cached_property
+    def entropy_density_relative(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return self.entropy_density / self.model.s(self.wn, Phase.SYMMETRIC)
+
+    @functools.cached_property
     def kappa(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
