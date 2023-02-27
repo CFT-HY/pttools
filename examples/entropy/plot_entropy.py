@@ -14,12 +14,13 @@ from pttools.models.const_cs import ConstCSModel
 
 
 def main():
+    n_points = 10
     plot_entropy(
         # model=ConstCSModel(css2=1/3 - 0.01, csb2=1/3 - 0.02, a_s=1.5, a_b=1, V_s=1),
         # model=BagModel(a_s=1.1, a_b=1, V_s=1),
-        model=BagModel(g_s=123, g_b=120, V_s=1),
-        v_walls=np.linspace(0.12, 0.8, 9),
-        alpha_ns=np.linspace(0.12, 0.8, 9),
+        model=BagModel(g_s=123, g_b=120, V_s=0.9),
+        v_walls=np.linspace(0.05, 0.95, n_points),
+        alpha_ns=np.linspace(0.05, 0.95, n_points),
         # v_walls=np.linspace(0.3, 0.8, 9),
         # alpha_ns=np.linspace(0.12, 0.5, 9)
     )
