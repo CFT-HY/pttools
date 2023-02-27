@@ -16,13 +16,9 @@ logger = logging.getLogger(__name__)
 def create_bubble(params: np.ndarray, model: "Model", post_func: callable = None, *args, **kwargs):
     v_wall, alpha_n = params
     bubble = Bubble(model, v_wall, alpha_n)
-    try:
-        bubble.solve()
-    except IndexError as e:
-        logger.exception("FAIL", exc_info=e)
-        return np.nan
+    bubble.solve()
     if post_func is not None:
-        return post_func(bubble, *args, **kwargs)
+        return bubble, post_func(bubble, *args, **kwargs)
     return bubble
 
 
@@ -31,7 +27,8 @@ def create_bubbles(
         v_walls: np.ndarray,
         alpha_ns: np.ndarray,
         func: callable = None,
-        max_workers: int = options.MAX_WORKERS_DEFAULT) -> np.ndarray:
+        output_dtypes: tp.Iterable = None,
+        max_workers: int = options.MAX_WORKERS_DEFAULT) -> tp.Union[np.ndarray, tp.Tuple[np.ndarray, np.ndarray]]:
 
     params = np.empty((v_walls.size, alpha_ns.size, 2))
     for i_v_wall, v_wall in enumerate(v_walls):
@@ -40,7 +37,10 @@ def create_bubbles(
             params[i_v_wall, i_alpha_n, 1] = alpha_n
 
     return parallel.run_parallel(
-        create_bubble, params, multiple_params=True, max_workers=max_workers,
+        create_bubble, params,
+        multiple_params=True,
+        output_dtypes=output_dtypes,
+        max_workers=max_workers,
         model=model,
         post_func=func
     )
