@@ -2,6 +2,7 @@
 Chapman-Jouguet speed
 """
 
+from collections.abc import Iterable
 import logging
 import typing as tp
 
@@ -147,11 +148,11 @@ def v_chapman_jouguet_new(
 
 def v_chapman_jouguet(
         model: "Model",
-        alpha_n: float,
+        alpha_n: th.FloatOrArr,
         wn_guess: float = 1,
         wm_guess: float = 2,
         extra_output: bool = False,
-        analytical: bool = True) -> tp.Union[float, tp.Tuple[float, float, float]]:
+        analytical: bool = True) -> tp.Union[float, tp.Tuple[float, float, float], np.ndarray]:
     """Chapman-Jouguet speed
 
     This is the minimum wall speed for detonations.
@@ -161,6 +162,12 @@ def v_chapman_jouguet(
     """
     if analytical and model.DEFAULT_NAME == "bag":
         return v_chapman_jouguet_bag(alpha_plus=alpha_n)
+
+    if isinstance(alpha_n, Iterable):
+        return np.array([v_chapman_jouguet(
+            model, a_n,
+            wn_guess=wn_guess, wm_guess=wm_guess, extra_output=extra_output, analytical=analytical
+        ) for a_n in alpha_n])
 
     # wn_sol = fsolve(gen_wn_solvable(model, alpha_n), x0=np.array([wn_guess]), full_output=True)
     # wn: float = wn_sol[0][0]
