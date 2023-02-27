@@ -31,6 +31,7 @@ test-output.txt
 *.dot
 *.html
 *.lprof
+*.npz
 *.pdf
 *.png
 *.svg
