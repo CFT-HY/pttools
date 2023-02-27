@@ -1,10 +1,11 @@
 import logging
 import typing as tp
 
+from matplotlib.contour import QuadContourSet
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.analysis.cmap import cmap
+from pttools.analysis import cmap
 from pttools.analysis.bubble_grid import BubbleGridVWAlpha
 from pttools.bubble.bubble import Bubble
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
@@ -33,12 +34,15 @@ def plot_entropy(
         max_level: float,
         diff_level: float) -> tp.Tuple[plt.Figure, plt.Axes]:
     grid = BubbleGridVWAlpha(model, v_walls, alpha_ns, compute)
-    fig, ax = plot_entropy_data(grid.data.T, min_level=min_level, max_level=max_level, diff_level=diff_level)
+    fig, ax = plot_entropy_data(grid.data.T, v_walls, alpha_ns, min_level=min_level, max_level=max_level, diff_level=diff_level)
 
-    ax.contour(v_walls, alpha_ns, grid.unphysical_alpha_plus())
+    cmap.color_region(ax, v_walls, alpha_ns, grid.unphysical_alpha_plus(), color="red", alpha=0.5)
+    cmap.color_region(ax, v_walls, alpha_ns, grid.numerical_error(), color="blue", alpha=0.5)
+    cmap.color_region(ax, v_walls, alpha_ns, grid.solver_failed(), color="green", alpha=0.5)
 
     ax.plot(v_chapman_jouguet(model, alpha_ns), alpha_ns, 'k--', label=r'$v_{CJ}$')
     ax.set_title(rf"$\Delta s / s_n$ for {model.label_latex}")
+    ax.legend()
     return fig, ax
 
 
@@ -52,8 +56,8 @@ def plot_entropy_data(
         fig: plt.Figure = plt.figure()
         ax: plt.Axes = fig.add_subplot()
 
-    levels, cols = cmap(min_level, max_level, diff_level)
-    cs = ax.contourf(v_walls, alpha_ns, data, levels=levels, colors=cols)
+    levels, cols = cmap.cmap(min_level, max_level, diff_level)
+    cs: QuadContourSet = ax.contourf(v_walls, alpha_ns, data, levels=levels, colors=cols)
     cbar = fig.colorbar(cs)
     cbar.ax.set_ylabel(r'$\Delta s / s_n$')
 
@@ -63,6 +67,6 @@ def plot_entropy_data(
     ax.set_title(rf"$\Delta s / s_n$")
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
-    ax.legend()
+    # ax.legend()
 
     return fig, ax

@@ -20,6 +20,9 @@ class BubbleGrid:
     def numerical_error(self):
         return self.get_value("numerical_error")
 
+    def solver_failed(self):
+        return self.get_value("solver_failed")
+
     def unphysical_alpha_plus(self):
         return self.get_value("unphysical_alpha_plus")
 

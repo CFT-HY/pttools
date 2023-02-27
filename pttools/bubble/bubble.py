@@ -129,7 +129,7 @@ class Bubble:
                 logger.error(msg)
                 self.add_note(msg)
         except (IndexError, RuntimeError) as e:
-            msg = f"Solver crashed with model={self.model}, v_wall={self.v_wall}, alpha_n={self.alpha_n}."
+            msg = f"Solver crashed with model={self.model.label_unicode}, v_wall={self.v_wall}, alpha_n={self.alpha_n}."
             logger.exception(msg, exc_info=e)
             self.add_note(msg)
             self.no_solution_found = True
@@ -138,7 +138,8 @@ class Bubble:
 
         self.alpha_plus = self.model.alpha_plus(self.wp, self.wm)
         if self.alpha_plus >= 1/3:
-            msg = f"Got alpha_plus > 1/3 with model={self.model}, v_wall={self.v_wall}, alpha_n={self.alpha_n}. "\
+            msg = "Got alpha_plus > 1/3 with "\
+                  f"model={self.model.label_unicode}, v_wall={self.v_wall}, alpha_n={self.alpha_n}. "\
                   f"This is unphysical! Got: {self.alpha_plus}"
             logger.error(msg)
             self.add_note(msg)
@@ -158,8 +159,8 @@ class Bubble:
             if sum_err:
                 self.numerical_error = True
             msg = "κ+ω != 1. " + \
-                ("Marking the solution to have a numerical error." if sum_err else "") + \
-                " Got: " \
+                ("Marking the solution to have a numerical error. " if sum_err else "") + \
+                "Got: " \
                 f"κ={self.kappa:{error_prec}}, ω={self.omega:{error_prec}}, κ+ω={self.kappa + self.omega:{error_prec}}"
             logger.error(msg)
             self.add_note(msg)

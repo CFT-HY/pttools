@@ -1,5 +1,6 @@
 import typing as tp
 
+from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -23,3 +24,13 @@ def cmap(
         list(cmap_pos((levels[levels >= 0] + diff_level) / (max_level + diff_level)))
 
     return levels, cols
+
+
+def color_region(
+        ax: plt.Axes,
+        x: np.ndarray, y: np.ndarray, region: np.ndarray,
+        color: str = "red", alpha: float = 1):
+    cmp = ListedColormap([color], color, 1)
+    region2 = region.copy()
+    region2[region2 == 0] = np.nan
+    return ax.contourf(x, y, region2, cmap=cmp, alpha=alpha)
