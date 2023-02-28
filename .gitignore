@@ -29,6 +29,7 @@ pow_*.txt
 pylint.txt
 test-output.txt
 *.dot
+*.hdf5
 *.html
 *.lprof
 *.npz

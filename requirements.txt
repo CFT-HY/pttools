@@ -1,6 +1,7 @@
 # List of project requirements for pip
 # https://pip.pypa.io/en/stable/user_guide/#requirements-files
 
+h5py
 # Intel Compile Runtime provides Intel SVML, which speeds up Numba
 icc-rt
 intel-openmp; sys_platform == "darwin"
