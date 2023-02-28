@@ -1,9 +1,12 @@
 import concurrent.futures as cf
+import logging
 import typing as tp
 
 import numpy as np
 
 from pttools.speedup.options import MAX_WORKERS_DEFAULT
+
+logger = logging.getLogger(__name__)
 
 
 def run_parallel(
@@ -11,7 +14,9 @@ def run_parallel(
         params: np.ndarray,
         max_workers: int = MAX_WORKERS_DEFAULT,
         multiple_params: bool = False,
-        output_dtypes: list = None,
+        unpack_params: bool = False,
+        output_dtypes: tp.Union[tp.Tuple[tp.Type, ...], tp.List[tp.Type]] = None,
+        log_progress: bool = False,
         *args,
         **kwargs) -> tp.Union[np.ndarray, tp.Tuple[np.ndarray, ...]]:
     flags = ["refs_ok"]
@@ -30,16 +35,24 @@ def run_parallel(
                 op_flags=[["readonly"], ["readwrite", "allocate"]],
                 op_axes=op_axes,
                 op_dtypes=[params.dtype, object]) as it:
-            for obj, fut in it:
-                fut[...] = ex.submit(func, obj, *args, **kwargs)
+            if unpack_params:
+                for param, fut in it:
+                    fut[...] = ex.submit(func, *param, *args, **kwargs)
+            else:
+                for param, fut in it:
+                    fut[...] = ex.submit(func, param, *args, **kwargs)
             futs = it.operands[1]
 
         # Collect results
 
         # Single output
         if output_dtypes is None:
-            with np.nditer([futs, None], flags=("refs_ok",)) as it:
+            with np.nditer(
+                    [futs, None],
+                    flags=("refs_ok", "multi_index")) as it:
                 for fut, res in it:
+                    if log_progress:
+                        logger.debug("Processing item %s", it.multi_index)
                     res[...] = fut.item().result()
                 return it.operands[1]
 
@@ -48,9 +61,11 @@ def run_parallel(
         output_arrs = tuple(np.empty(futs.shape, dtype=dtype) for dtype in output_dtypes)
         with np.nditer(
                 [futs, *output_arrs],
-                flags=("refs_ok",),
+                flags=("refs_ok", "multi_index"),
                 op_flags=op_flags2) as it:
             for elems in it:
+                if log_progress:
+                    logger.debug("Processing item %s", it.multi_index)
                 res = elems[0].item().result()
                 for arr, val in zip(elems[1:], res):
                     arr[...] = val
