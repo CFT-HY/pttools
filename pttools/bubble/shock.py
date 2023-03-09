@@ -184,9 +184,9 @@ def solve_shock(
 
     return solve_junction(
         model,
-        v1=v1, w1=w1,
+        v1_tilde=v1, w1=w1,
         phase1=phase, phase2=phase,
-        v2_guess=v2_guess, w2_guess=w2_guess,
+        v2_tilde_guess=v2_guess, w2_guess=w2_guess,
         allow_failure=allow_failure
     )
 
