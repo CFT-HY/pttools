@@ -11,6 +11,7 @@ from .boundary import Phase, SolutionType
 from . import chapman_jouguet
 from . import const
 from . import integrate
+from . import fluid_reference
 from . import relativity
 from . import shock
 from . import transition
@@ -63,8 +64,8 @@ def fluid_shell_deflagration(
     if invalid_param is not None:
         logger.error(
             f"Invalid parameter: {invalid_param}. Got: "
-            f"v_wall={v_wall}, w_center={w_center}, "
-            f"vp_tilde_guess={vp_tilde_guess}, vp_guess={vp_guess}, wp_guess={wp_guess}, wn={wn}"
+            f"model={model.label_unicode}, v_wall={v_wall}, wn={wn}, w_center={w_center}, "
+            f"vp_guess={vp_guess}, vp_tilde_guess={vp_tilde_guess}, wp_guess={wp_guess}"
         )
         nan_arr = np.array([np.nan])
         return nan_arr, nan_arr, nan_arr, np.nan, np.nan
@@ -211,13 +212,14 @@ def fluid_shell_detonation(model: "Model", v_wall: float, alpha_n: float, wn: fl
 
 def fluid_shell_hybrid(
         model: "Model", v_wall: float, wn: float, wm: float,
+        vp_tilde_guess: float, wp_guess: float,
         allow_failure: bool = False, warn_if_shock_barely_exists: bool = True):
     # Exit velocity is at the sound speed
     vm_tilde = np.sqrt(model.cs2(wm, Phase.BROKEN))
     return fluid_shell_deflagration_common(
         model, v_wall, wn,
         vm_tilde, wm,
-        vp_tilde_guess=0.75*vm_tilde, wp_guess=2*wm,
+        vp_tilde_guess=vp_tilde_guess, wp_guess=wp_guess,
         sol_type=SolutionType.HYBRID,
         allow_failure=allow_failure,
         warn_if_shock_barely_exists=warn_if_shock_barely_exists
@@ -242,11 +244,14 @@ def fluid_shell_solvable_deflagration(params: np.ndarray, model: "Model", v_wall
     return wn_estimate - wn
 
 
-def fluid_shell_solvable_hybrid(params: np.ndarray, model: "Model", v_wall: float, wn: float) -> float:
+def fluid_shell_solvable_hybrid(
+        params: np.ndarray, model: "Model", v_wall: float, wn: float,
+        vp_tilde_guess: float, wp_guess: float) -> float:
     wm = params[0]
     # pylint: disable=unused-variable
     v, w, xi, wp, wn_estimate = fluid_shell_hybrid(
         model, v_wall, wn, wm,
+        vp_tilde_guess=vp_tilde_guess, wp_guess=wp_guess,
         allow_failure=True, warn_if_shock_barely_exists=False)
     return wn_estimate - wn
 
@@ -254,8 +259,7 @@ def fluid_shell_solvable_hybrid(params: np.ndarray, model: "Model", v_wall: floa
 # Solvers
 
 def fluid_shell_solver_deflagration(
-        model: "Model", v_wall: float, alpha_n: float, wn: float, allow_failure: bool) -> SolverOutput:
-    wm_guess = 0.3 * wn
+        model: "Model", v_wall: float, alpha_n: float, wn: float, wm_guess: float, allow_failure: bool) -> SolverOutput:
     sol = fsolve(
         fluid_shell_solvable_deflagration,
         np.array([wm_guess]),
@@ -306,12 +310,12 @@ def fluid_shell_solver_deflagration_reverse(model: "Model", v_wall: float, alpha
 
 
 def fluid_shell_solver_hybrid(
-        model: "Model", v_wall: float, alpha_n: float, wn: float, allow_failure: bool) -> SolverOutput:
-    wm_guess = 2 * wn
+        model: "Model", v_wall: float, alpha_n: float, wn: float,
+        vp_tilde_guess: float, wp_guess: float, wm_guess: float, allow_failure: bool) -> SolverOutput:
     sol = fsolve(
         fluid_shell_solvable_hybrid,
         np.array([wm_guess]),
-        args=(model, v_wall, wn),
+        args=(model, v_wall, wn, vp_tilde_guess, wp_guess),
         full_output=True
     )
     wm = sol[0][0]
@@ -322,7 +326,12 @@ def fluid_shell_solver_hybrid(
             f"Hybrid solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. "
             f"Using wm={wm}. Reason: {sol[3]}"
         )
-    v, w, xi, wp, wn_estimate = fluid_shell_hybrid(model, v_wall, wn, wm, allow_failure=allow_failure)
+    v, w, xi, wp, wn_estimate = fluid_shell_hybrid(
+        model, v_wall, wn, wm,
+        vp_tilde_guess=vp_tilde_guess,
+        wp_guess=wp_guess,
+        allow_failure=allow_failure
+    )
     wp = w[0]
     if not np.isclose(wn_estimate, wn):
         solution_found = False
@@ -350,22 +359,47 @@ def fluid_shell_generic(
             v_wall: float,
             alpha_n: float,
             sol_type: tp.Optional[SolutionType] = None,
+            vp_tilde_guess: float = None,
             wn_guess: float = 1,
-            wm_guess: float = 2,
+            wp_guess: float = None,
+            wm_guess: float = None,
             n_xi: int = const.N_XI_DEFAULT,
             reverse: bool = False,
             allow_failure: bool = False
         ):
     logger.info(
         "Solving fluid shell for model=%s, v_wall=%s, alpha_n=%s, sol_type=%s",
-        model.label_unicode, v_wall, alpha_n, sol_type
+        model.label_unicode, v_wall, alpha_n, sol_type,
     )
+
+    wn = model.w_n(alpha_n, wn_guess=wn_guess)
+
+    # Load and scale reference data
+    vp_ref, vm_ref, vp_tilde_ref, vm_tilde_ref, wp_ref, wm_ref = fluid_reference.ref().get(v_wall, alpha_n)
+    if vp_tilde_guess is None:
+        vp_tilde_guess = vp_tilde_ref
+    # The reference data has wn=1 and therefore has to be scaled with wn.
+    if wp_guess is None:
+        wp_guess = wp_ref * wn
+    if wm_guess is None:
+        wm_guess = wm_ref * wn
+    # if wn_guess is None:
+    #     wn_guess = min(wp_guess, wm_guess)
+
+    if vp_tilde_guess < 0 or wm_guess < 0 or wn_guess < 0 or wp_guess < wn_guess or wp_guess < wm_guess:
+        raise ValueError(f"Got invalid guesses: vp_tilde={vp_tilde_guess}, wp={wp_guess}, wm={wm_guess}, wn={wn_guess}")
+
+    logger.debug(
+        "with starting guesses vp_tilde=%s, wp=%s, wm=%s, wn=%s",
+        vp_tilde_guess, wp_guess, wm_guess, wn_guess
+    )
+
     sol_type = transition.validate_solution_type(
         model,
         v_wall=v_wall, alpha_n=alpha_n, sol_type=sol_type,
-        wn_guess=wn_guess, wm_guess=wm_guess)
+        wn_guess=wn, wm_guess=wm_guess
+    )
 
-    wn = model.w_n(alpha_n, wn_guess=wn_guess)
     v_cj = chapman_jouguet.v_chapman_jouguet(model, alpha_n, wn, wm_guess)
     dxi = 1. / n_xi
     logger.info(
@@ -383,14 +417,21 @@ def fluid_shell_generic(
                 "Decrease v_wall or increase csb2."
             )
 
-        # Todo: In more advanced models,
-        #  the direction of the integration will probably have to be determined by trial and error.
+        # In more advanced models,
+        # the direction of the integration will probably have to be determined by trial and error.
         if reverse:
             v, w, xi, wp, wm, solution_found = fluid_shell_solver_deflagration_reverse(model, v_wall, alpha_n, wn)
         else:
-            v, w, xi, wp, wm, solution_found = fluid_shell_solver_deflagration(model, v_wall, alpha_n, wn, allow_failure)
+            v, w, xi, wp, wm, solution_found = fluid_shell_solver_deflagration(
+                model, v_wall, alpha_n, wn, wm_guess, allow_failure)
     elif sol_type == SolutionType.HYBRID:
-        v, w, xi, wp, wm, solution_found = fluid_shell_solver_hybrid(model, v_wall, alpha_n, wn, allow_failure)
+        v, w, xi, wp, wm, solution_found = fluid_shell_solver_hybrid(
+            model, v_wall, alpha_n, wn,
+            vp_tilde_guess=vp_tilde_guess,
+            wp_guess=wp_guess,
+            wm_guess=wm_guess,
+            allow_failure=allow_failure
+        )
     else:
         raise ValueError(f"Invalid solution type: {sol_type}")
 
