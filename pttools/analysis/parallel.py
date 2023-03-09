@@ -5,6 +5,7 @@ import typing as tp
 import numpy as np
 
 from pttools.bubble.bubble import Bubble
+from pttools.bubble import fluid_reference
 from pttools.speedup import options
 from pttools.speedup import parallel
 if tp.TYPE_CHECKING:
@@ -36,6 +37,7 @@ def create_bubbles(
             params[i_v_wall, i_alpha_n, 0] = v_wall
             params[i_v_wall, i_alpha_n, 1] = alpha_n
 
+    fluid_reference.ref()
     return parallel.run_parallel(
         create_bubble, params,
         multiple_params=True,
