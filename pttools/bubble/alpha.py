@@ -104,6 +104,7 @@ def alpha_n_max_detonation_bag(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     return alpha_plus_max_detonation_bag(v_wall)
 
 
+@numba.njit
 def alpha_n_max_hybrid_bag(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> float:
     r"""
     Calculates the relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
@@ -113,19 +114,19 @@ def alpha_n_max_hybrid_bag(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> flo
     :param n_xi: number of $\xi$ points
     :return: $\alpha_{n,\max}$
     """
-    sol_type = transition.identify_solution_type_alpha_plus(v_wall, 1. / 3)
+    sol_type = transition.identify_solution_type_alpha_plus(v_wall, 1/3).value
     if sol_type == boundary.SolutionType.SUB_DEF:
         raise ValueError("Alpha_n_max_hybrid was called with v_wall < cs. Use alpha_n_max_deflagration instead.")
 
     # Might have been returned as "Detonation, which takes precedence over Hybrid
-    sol_type = boundary.SolutionType.HYBRID
-    ap = 1. / 3 - 1e-8
+    sol_type = boundary.SolutionType.HYBRID.value
+    ap = 1/3 - 1e-8
     _, w, xi = fluid_bag.fluid_shell_alpha_plus(v_wall, ap, sol_type, n_xi)
     n_wall = props.find_v_index(xi, v_wall)
 
     # alpha_N = (w_+/w_N)*alpha_+
     # w_ is normalised to 1 at large xi
-    return w[n_wall] * (1. / 3)
+    return w[n_wall] * 1/3
 
 
 @numba.njit

@@ -33,10 +33,17 @@ def identify_solution_type_bag(v_wall: float, alpha_n: float, exit_on_error: boo
                 sol_type = SolutionType.SUB_DEF
             else:
                 sol_type = SolutionType.HYBRID
+        # elif v_wall > const.CS0 and alpha_n < alpha_tools.alpha_n_max_hybrid_bag(v_wall):
+        #     with numba.objmode:
+        #         logger.warning(
+        #             "Using an untested way to identify the solution as a hybrid with v_wall=%s, alpha_n=%s",
+        #             v_wall, alpha_n
+        #         )
+        #     sol_type = SolutionType.HYBRID
 
     if sol_type == SolutionType.ERROR and exit_on_error:
         with numba.objmode:
-            logger.error(f"No solution for v_wall = %s, alpha_n = %s", v_wall, alpha_n)
+            logger.error(f"No solution for v_wall=%s, alpha_n=%s", v_wall, alpha_n)
         raise RuntimeError("No solution for given v_wall, alpha_n")
 
     return sol_type
