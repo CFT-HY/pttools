@@ -29,8 +29,8 @@ class FluidReference:
         self.v_wall = np.linspace(v_wall_min, v_wall_max, n_v_wall, endpoint=True)
         self.alpha_n = np.linspace(alpha_n_min, alpha_n_max, n_alpha_n, endpoint=True)
 
-        # if not os.path.exists(path):
-        self.create()
+        if not os.path.exists(path):
+            self.create()
 
         self.data = np.empty((n_v_wall, n_alpha_n, 6))
         with h5py.File(path, "r") as file:
