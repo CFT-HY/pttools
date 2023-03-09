@@ -8,6 +8,11 @@ import time
 
 def setup_logging(log_dir: str = None, enable_faulthandler: bool = True, silence_spam: bool = True):
     """Configure logging to both file and console and optionally silence spam"""
+    # Allow running this function only once
+    if getattr(setup_logging, "has_run", False):
+        return
+    setup_logging.has_run = True
+
     if enable_faulthandler and not faulthandler.is_enabled():
         faulthandler.enable()
 
