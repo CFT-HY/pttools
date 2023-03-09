@@ -8,6 +8,7 @@ Plot the relative change in entropy density
 import matplotlib.pyplot as plt
 import numpy as np
 
+from pttools.logging import setup_logging
 from pttools.analysis.plot_entropy import plot_entropy
 from pttools.models.bag import BagModel
 # from pttools.models.const_cs import ConstCSModel
@@ -30,5 +31,6 @@ def main():
 
 
 if __name__ == "__main__":
+    setup_logging()
     main()
     plt.show()

@@ -37,7 +37,7 @@ def fluid_shell(
         cs2_fun: th.CS2Fun = bag.cs2_bag_scalar,
         cs2_fun_ptr: th.CS2FunScalarPtr = bag.CS2_BAG_SCALAR_PTR,
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR) \
-        -> tp.Union[tp.Tuple[float, float, float], tp.Tuple[np.ndarray, np.ndarray, np.ndarray]]:
+        -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
     r"""
     Finds fluid shell $(v, w, \xi)$ from a given $v_\text{wall}, \alpha_n$, which must be scalars.
 
@@ -54,7 +54,7 @@ def fluid_shell(
     sol_type = transition.identify_solution_type_bag(v_wall, alpha_n)
     if sol_type == SolutionType.ERROR:
         with numba.objmode:
-            logger.error("Giving up because of identify_solution_type error")
+            logger.error("Could not indentify solution type for v_wall=%s, alpha_n=%s", v_wall, alpha_n)
         nan_arr = np.array([np.nan])
         return nan_arr, nan_arr, nan_arr
     al_p = alpha.find_alpha_plus_bag(v_wall, alpha_n, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr)
@@ -101,7 +101,7 @@ def fluid_shell_alpha_plus(
     # The identification above may set sol_type to error
     if sol_type == SolutionType.ERROR.value:
         with numba.objmode:
-            logger.error("Giving up because of identify_solution_type error")
+            logger.error("Solution type could not be found for v_wall=%s, alpha_n=%s", v_wall, alpha_plus)
         nan_arr = np.array([np.nan])
         return nan_arr, nan_arr, nan_arr
 

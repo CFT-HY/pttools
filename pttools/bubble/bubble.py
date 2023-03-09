@@ -125,7 +125,8 @@ class Bubble:
                 model=self.model,
                 v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type, n_xi=self.n_points)
             if self.solver_failed:
-                msg = f"Solver failed with model={self.model}, v_wall={self.v_wall}, alpha_n={self.alpha_n}"
+                msg = f"Solver failed with model={self.model.label_unicode}, " \
+                      f"v_wall={self.v_wall}, alpha_n={self.alpha_n}"
                 logger.error(msg)
                 self.add_note(msg)
         except (IndexError, RuntimeError) as e:
@@ -138,19 +139,21 @@ class Bubble:
 
         self.alpha_plus = self.model.alpha_plus(self.wp, self.wm)
         if self.alpha_plus >= 1/3:
-            msg = "Got alpha_plus > 1/3 with "\
-                  f"model={self.model.label_unicode}, v_wall={self.v_wall}, alpha_n={self.alpha_n}. "\
+            msg = "Got alpha_plus > 1/3 with " \
+                  f"model={self.model.label_unicode}, v_wall={self.v_wall}, alpha_n={self.alpha_n}. " \
                   f"This is unphysical! Got: {self.alpha_plus}"
             logger.error(msg)
             self.add_note(msg)
             self.unphysical_alpha_plus = True
         if self.entropy_density < 0:
-            msg = f"Entropy density should not be negative! Now entropy is decreasing. Got: {self.entropy_density}"
+            msg = "Entropy density should not be negative! Now entropy is decreasing. " \
+                  f"Got: {self.entropy_density} with " \
+                  f"model={self.model.label_unicode}, v_wall={self.v_wall}, alpha_n={self.alpha_n}"
             logger.error(msg)
             self.add_note(msg)
             self.unphysical_entropy = True
         if self.thermal_energy_density < 0:
-            msg = "Thermal energy density is negative. The bubble is therefore working as a heat engine. "\
+            msg = "Thermal energy density is negative. The bubble is therefore working as a heat engine. " \
                   f"Got: {self.thermal_energy_density}"
             logger.warning(msg)
             self.add_note(msg)
@@ -158,10 +161,11 @@ class Bubble:
             sum_err = not np.isclose(self.kappa + self.omega, 1, rtol=sum_rtol_error)
             if sum_err:
                 self.numerical_error = True
-            msg = "κ+ω != 1. " + \
+            msg = f"Got κ+ω != 1. " + \
                 ("Marking the solution to have a numerical error. " if sum_err else "") + \
-                "Got: " \
-                f"κ={self.kappa:{error_prec}}, ω={self.omega:{error_prec}}, κ+ω={self.kappa + self.omega:{error_prec}}"
+                f"Got: κ={self.kappa:{error_prec}}, ω={self.omega:{error_prec}}, "\
+                f"κ+ω={self.kappa + self.omega:{error_prec}} " \
+                f"with model={self.model.label_unicode}, v_wall={self.v_wall}, alpha_n={self.alpha_n}"
             logger.error(msg)
             self.add_note(msg)
 
