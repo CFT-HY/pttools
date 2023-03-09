@@ -219,22 +219,24 @@ def junction_condition_deviation2(
 
 def solve_junction(
         model: "Model",
-        v1: float,
+        v1_tilde: float,
         w1: float,
         phase1: Phase,
         phase2: Phase,
-        v2_guess: float,
+        v2_tilde_guess: float,
         w2_guess: float,
         allow_failure: bool = False) -> tp.Tuple[float, float]:
     """Model-independent junction condition solver
     Velocities are in the wall frame!
     """
-    if np.isclose(v1, 0) or np.isclose(v1, 1) \
-            or np.isclose(v2_guess, 0) or np.isclose(v2_guess, 1) \
+    if np.isnan(v1_tilde) or np.isnan(w1) or np.isnan(v2_tilde_guess) or np.isnan(w2_guess) \
+            or v1_tilde < 0 or v1_tilde > 1 or w1 < 0 or v2_tilde_guess < 0 or v2_tilde_guess > 1 or w2_guess < 0 \
+            or np.isclose(v1_tilde, 0) or np.isclose(v1_tilde, 1) \
+            or np.isclose(v2_tilde_guess, 0) or np.isclose(v2_tilde_guess, 1) \
             or np.isclose(w1, 0) or np.isclose(w2_guess, 0):
         logger.warning(
             "Invalid input for junction solver. "
-            f"Got: v1={v1}, w1={w1}, v2_guess={v2_guess}, w2_guess={w2_guess}")
+            f"Got: v1={v1_tilde}, w1={w1}, v2_guess={v2_tilde_guess}, w2_guess={w2_guess}")
         return np.nan, np.nan
 
     # if w2_guess is None:
@@ -255,17 +257,17 @@ def solve_junction(
 
     sol = fsolve(
         junction_conditions_solvable,
-        x0=np.array([v2_guess, w2_guess]),
-        args=(model, v1, w1, phase1, phase2),
+        x0=np.array([v2_tilde_guess, w2_guess]),
+        args=(model, v1_tilde, w1, phase1, phase2),
         full_output=True
     )
-    v2 = sol[0][0]
+    v2_tilde = sol[0][0]
     w2 = sol[0][1]
     if sol[2] != 1:
         msg = \
-            f"Boundary solution was not found for v1={v1}, w1={w1}, model={model.name}. " + \
-            f"Using v2={v2}, w2={w2}. " + \
-            ("" if (0 < v2 < 1) else "This is unphysical! ") + \
+            f"Boundary solution was not found for v1={v1_tilde}, w1={w1}, model={model.name}. " + \
+            f"Using v2_tilde={v2_tilde}, w2={w2}. " + \
+            ("" if (0 < v2_tilde < 1) else "This is unphysical! ") + \
             f"Reason: {sol[3]}"
         logger.error(msg)
         if not allow_failure:
@@ -273,11 +275,13 @@ def solve_junction(
             # logger.error("ERROR")
             # raise ValueError(msg)
 
-    devs = junction_conditions_solvable(np.array([v2, w2]), model, v1, w1, phase1, phase2)
+    # TODO: add the Giese junction solver option here (Giese eq. 11)
+
+    devs = junction_conditions_solvable(np.array([v2_tilde, w2]), model, v1_tilde, w1, phase1, phase2)
     # print(f"v1w={v1}, v2w={v2}, w1={w1}, w2={w2}, dev={devs}")
     if not np.allclose(devs, np.zeros(2)):
         logger.error("The boundary solver gave a solution that deviates from the boundary conditions with: %s", devs)
-    return v2, w2
+    return v2_tilde, w2
 
 
 @numba.njit
