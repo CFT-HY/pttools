@@ -5,6 +5,7 @@ Entropy comparison
 Comparison of the entropies of the old and new solvers
 """
 
+from matplotlib import ticker
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -29,6 +30,7 @@ def main():
     diff = (entropy_old - data) / np.abs(data)
 
     cs = ax.contourf(v_walls, alpha_ns, diff)
+    # cs = ax.contourf(v_walls, alpha_ns, diff, locator=ticker.LogLocator())
 
     # levels, cols = cmap(-0.3, 0.4, 0.05)
     # cs = ax.contourf(v_walls, alpha_ns, grid.data.T, levels=levels, colors=cols)
