@@ -19,6 +19,17 @@ def run_parallel(
         log_progress: bool = False,
         *args,
         **kwargs) -> tp.Union[np.ndarray, tp.Tuple[np.ndarray, ...]]:
+    """Run the given function with multiple parameters in parallel
+
+    :param func: The function to be executed in parallel
+    :param params: Array of the function parameters
+    :param max_workers: Maximum number of worker processes
+    :param multiple_params: Whether the last dimension of the parameter array contains multiple parameters for each function call
+    :param unpack_params: Whether the multiple parameters should be unpacked before giving them to the function
+    :param output_dtypes: If the function has multiple output values, their types should be given here
+    :param log_progress: Whether to output progress to logging
+    :return: Numpy arrays for each output value
+    """
     flags = ["refs_ok"]
     if multiple_params:
         flags.append("reduce_ok")
@@ -69,4 +80,4 @@ def run_parallel(
                 res = elems[0].item().result()
                 for arr, val in zip(elems[1:], res):
                     arr[...] = val
-            return output_arrs
+        return output_arrs
