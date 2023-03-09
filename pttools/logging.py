@@ -33,3 +33,4 @@ def setup_logging(log_dir: str = None, enable_faulthandler: bool = True, silence
         logging.getLogger("matplotlib").setLevel(logging.INFO)
         logging.getLogger("numba").setLevel(logging.INFO)
         logging.getLogger("Pillow").setLevel(logging.INFO)
+        logging.getLogger("PIL").setLevel(logging.INFO)
