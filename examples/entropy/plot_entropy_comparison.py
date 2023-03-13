@@ -5,7 +5,7 @@ Entropy comparison
 Comparison of the entropies of the old and new solvers
 """
 
-from matplotlib import ticker
+# from matplotlib import ticker
 import matplotlib.pyplot as plt
 import numpy as np
 

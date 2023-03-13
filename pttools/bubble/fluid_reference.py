@@ -6,6 +6,7 @@ import typing as tp
 
 import h5py
 import numpy as np
+from scipy.interpolate import NearestNDInterpolator
 
 from pttools.bubble import boundary
 from pttools.bubble.alpha import alpha_n_max_bag
@@ -24,8 +25,8 @@ class FluidReference:
             v_wall_max: float = 0.95,
             alpha_n_min: float = 0.05,
             alpha_n_max: float = 0.95,
-            n_v_wall: int = 18,
-            n_alpha_n: int = 18):
+            n_v_wall: int = 20,
+            n_alpha_n: int = 20):
         self.path = path
         self.v_wall = np.linspace(v_wall_min, v_wall_max, n_v_wall, endpoint=True)
         self.alpha_n = np.linspace(alpha_n_min, alpha_n_max, n_alpha_n, endpoint=True)
@@ -33,7 +34,7 @@ class FluidReference:
         if not os.path.exists(path):
             self.create()
 
-        self.data = np.empty((n_v_wall, n_alpha_n, 6))
+        self.data = np.empty((n_alpha_n, n_v_wall, 6))
         with h5py.File(path, "r") as file:
             self.data[:, :, 0] = file["vp"]
             self.data[:, :, 1] = file["vm"]
@@ -42,8 +43,17 @@ class FluidReference:
             self.data[:, :, 4] = file["wp"]
             self.data[:, :, 5] = file["wm"]
 
+            self.interp = NearestNDInterpolator(x=file["coords"], y=file["inds"])
+
         if np.any(self.data < 0):
             raise ValueError
+
+        self.vp = self.data[:, :, 0]
+        self.vm = self.data[:, :, 1]
+        self.vp_tilde = self.data[:, :, 2]
+        self.vm_tilde = self.data[:, :, 3]
+        self.wp = self.data[:, :, 4]
+        self.wm = self.data[:, :, 5]
 
     def create(self):
         logger.info("Generating fluid reference")
@@ -53,7 +63,7 @@ class FluidReference:
             with h5py.File(self.path, "w") as file:
                 alpha_n_max = alpha_n_max_bag(self.v_wall)
 
-                params = np.empty((self.v_wall.size, self.alpha_n.size, 3))
+                params = np.empty((self.alpha_n.size, self.v_wall.size, 3))
                 params[:, :, 0], params[:, :, 1] = np.meshgrid(self.v_wall, self.alpha_n)
                 params[:, :, 2], _ = np.meshgrid(alpha_n_max, self.alpha_n)
 
@@ -72,16 +82,50 @@ class FluidReference:
                 file.create_dataset("wp", data=wp)
                 file.create_dataset("wm", data=wm)
                 # file.create_dataset("wn", data=wn)
+
+                data = np.empty((self.alpha_n.size, self.v_wall.size, 6))
+                data[:, :, 0] = vp
+                data[:, :, 1] = vm
+                data[:, :, 2] = vp_tilde
+                data[:, :, 3] = vm_tilde
+                data[:, :, 4] = wp
+                data[:, :, 5] = wm
+
+                # Nearest neighbour interpolator set-up
+                valids = np.logical_not(np.any(np.isnan(data), axis=2))
+                valid_count = np.sum(valids)
+                coords = np.empty((valid_count, 2))
+                inds = np.empty((valid_count,), dtype=np.uint)
+                i = 0
+                for i_alpha_n, alpha_n in enumerate(self.alpha_n):
+                    for i_v_wall, v_wall in enumerate(self.v_wall):
+                        if valids[i_alpha_n, i_v_wall]:
+                            if np.any(np.isnan(data[i_alpha_n, i_v_wall, :])):
+                                raise RuntimeError(
+                                    "nan values should not be picked up for the nearest neighbour set-up"
+                                )
+
+                            coords[i, 0] = self.v_wall[i_v_wall]
+                            coords[i, 1] = self.alpha_n[i_alpha_n]
+                            inds[i] = i_alpha_n * self.v_wall.size + i_v_wall
+                            i += 1
+
+                file.create_dataset("coords", data=coords)
+                file.create_dataset("inds", data=inds)
         except Exception as e:
             # Remove broken file
             os.remove(self.path)
             raise e
         logger.info("Fluid reference ready")
 
-    def get(self, v_wall: float, alpha_n: float) -> np.ndarray:
-        i_v_wall = (np.abs(self.v_wall - v_wall)).argmin()
-        i_alpha_n = (np.abs(self.alpha_n - alpha_n)).argmin()
-        return self.data[i_v_wall, i_alpha_n, :]
+    def get(self, v_wall: float, alpha_n: float, allow_nan: bool = False) -> np.ndarray:
+        if allow_nan:
+            i_v_wall = (np.abs(self.v_wall - v_wall)).argmin()
+            i_alpha_n = (np.abs(self.alpha_n - alpha_n)).argmin()
+            return self.data[i_alpha_n, i_v_wall, :]
+
+        ind = int(self.interp(v_wall, alpha_n))
+        return self.data[ind // self.v_wall.size, ind % self.v_wall.size]
 
 
 def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tp.Tuple[float, float, float, float, float, float]:
