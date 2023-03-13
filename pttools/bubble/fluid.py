@@ -396,10 +396,11 @@ def fluid_shell_generic(
     wn = model.w_n(alpha_n, wn_guess=wn_guess)
 
     # Load and scale reference data
+    using_ref = False
     vp_ref, vm_ref, vp_tilde_ref, vm_tilde_ref, wp_ref, wm_ref = fluid_reference.ref().get(v_wall, alpha_n)
-    if np.any(np.isnan((vp_ref, vm_ref, vp_tilde_ref, vm_tilde_ref, wp_ref, wm_ref))):
-        logger.debug("Reference has nan values at v_wall=%s, alpha_n=%s", v_wall, alpha_n)
+
     if vp_guess is None or np.isnan(vp_guess):
+        using_ref = True
         vp_guess = vp_ref
         vp_tilde_guess = vp_tilde_ref
     else:
@@ -407,8 +408,10 @@ def fluid_shell_generic(
 
     # The reference data has wn=1 and therefore has to be scaled with wn.
     if wp_guess is None or np.isnan(wp_guess):
+        using_ref = True
         wp_guess = wp_ref * wn
     if wm_guess is None or np.isnan(wp_guess):
+        using_ref = True
         if np.isnan(wm_ref):
             logger.warning(
                 "No reference data for v_wall=%s, alpha_n=%s. Using an arbitrary starting guess.",
@@ -419,6 +422,12 @@ def fluid_shell_generic(
             wm_guess = wm_ref * wn
     # if wn_guess is None:
     #     wn_guess = min(wp_guess, wm_guess)
+
+    if using_ref and np.any(np.isnan((vp_ref, vm_ref, vp_tilde_ref, vm_tilde_ref, wp_ref, wm_ref))):
+        logger.warning(
+            "Using arbitrary starting guesses at v_wall=%s, alpha_n=%s,"
+            "as all starting guesses were not provided, and the reference has nan values."
+        )
 
     if vp_guess < 0 or vp_guess > 1 or vp_tilde_guess < 0 or vp_tilde_guess > 1 \
             or wm_guess < 0 or wn_guess < 0 or wp_guess < wn_guess or wp_guess < wm_guess:
