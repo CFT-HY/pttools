@@ -95,14 +95,23 @@ class Bubble:
     def export(self, path: str = None) -> tp.Dict[str, any]:
         data = {
             "datetime": datetime.datetime.now(),
+            "notes": self.notes,
+            # Input parameters
             "model": self.model.export(),
             "v_wall": self.v_wall,
             "alpha_n": self.alpha_n,
             "sol_type": self.sol_type,
+            # Solution
             "v": self.v,
             "w": self.w,
             "xi": self.xi,
-            "notes": self.notes
+            # Solution parameters
+            "tn": self.tn,
+            "wn": self.wn,
+            "wp": self.wp,
+            "wm": self.wm,
+            "alpha_plus": self.alpha_plus,
+            "v_cj": self.v_cj
         }
         if path is not None:
             export_json(data, path)
