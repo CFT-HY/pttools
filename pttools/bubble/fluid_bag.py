@@ -36,19 +36,25 @@ def fluid_shell(
         n_xi: int = const.N_XI_DEFAULT,
         cs2_fun: th.CS2Fun = bag.cs2_bag_scalar,
         cs2_fun_ptr: th.CS2FunScalarPtr = bag.CS2_BAG_SCALAR_PTR,
-        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR) \
-        -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR,
+        # Implementing optional extra output did not work due to Numba typing constraints
+        # extra_output: bool = False
+        ) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        # -> tp.Union[
+        #     tp.Tuple[np.ndarray, np.ndarray, np.ndarray],
+        #     tp.Tuple[np.ndarray, np.ndarray, np.ndarray, SolutionType, float, float, float, float, float]
+        # ]:
     r"""
     Finds fluid shell $(v, w, \xi)$ from a given $v_\text{wall}, \alpha_n$, which must be scalars.
 
     Computes $\alpha_+$ from $\alpha_n$ and then calls :py:func:`fluid_shell_alpha_plus`.
 
-    Bag model only!
+    Assumes the bag model, but can also create rough approximations for other models.
 
     :param v_wall: $v_\text{wall}$
     :param alpha_n: $\alpha_n$
     :param n_xi: number of $\xi$ points
-    :return: $v, w, \xi$
+    :return: $v, w, \xi$ or alternatively $v, w, \xi$, sol_type
     """
     # check_physical_params([v_wall,alpha_n])
     sol_type = transition.identify_solution_type_bag(v_wall, alpha_n)
@@ -56,13 +62,21 @@ def fluid_shell(
         with numba.objmode:
             logger.error("Could not indentify solution type for v_wall=%s, alpha_n=%s", v_wall, alpha_n)
         nan_arr = np.array([np.nan])
+        # if extra_output:
+        #     return nan_arr, nan_arr, nan_arr, sol_type, np.nan, np.nan, np.nan, np.nan, np.nan
         return nan_arr, nan_arr, nan_arr
     al_p = alpha.find_alpha_plus_bag(v_wall, alpha_n, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr)
     if np.isnan(al_p):
         nan_arr = np.array([np.nan])
+        # if extra_output:
+        #     return nan_arr, nan_arr, nan_arr, sol_type, np.nan, np.nan, np.nan, np.nan, np.nan
         return nan_arr, nan_arr, nan_arr
     # SolutionType has to be passed by its value when jitting
     return fluid_shell_alpha_plus(v_wall, al_p, sol_type.value, n_xi, cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr)
+    # if extra_output:
+    #     v, w, xi, vfp_w, vfm_w, vfp_p, vfm_p = ret
+    #     return v, w, xi, sol_type, al_p, vfp_w, vfm_w, vfp_p, vfm_p
+    # return ret
 
 
 @numba.njit
@@ -74,7 +88,13 @@ def fluid_shell_alpha_plus(
         w_n: float = 1.,
         cs2_fun: th.CS2Fun = bag.cs2_bag,
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR,
-        sol_type_fun: callable = None) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        sol_type_fun: callable = None,
+        # extra_output: bool = False
+        ) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
+            # tp.Union[
+                # tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
+                # tp.Tuple[np.ndarray, np.ndarray, np.ndarray, float, float, float, float]
+            # ]:
     r"""
     Finds the fluid shell profile (v, w, xi) from a given $v_\text{wall}, \alpha_+$ (at-wall strength parameter).
     When $v=0$ (behind and ahead of shell), this uses only two points.
@@ -103,6 +123,8 @@ def fluid_shell_alpha_plus(
         with numba.objmode:
             logger.error("Solution type could not be found for v_wall=%s, alpha_n=%s", v_wall, alpha_plus)
         nan_arr = np.array([np.nan])
+        # if extra_output:
+        #     return nan_arr, nan_arr, nan_arr, np.nan, np.nan, np.nan, np.nan
         return nan_arr, nan_arr, nan_arr
 
     # Solve boundary conditions at wall
@@ -181,7 +203,7 @@ def fluid_shell_alpha_plus(
         xib = np.concatenate((xi, xib))
 
     # Now put halves together in right order
-    # Need to fix this according to python version
+    # Need to fix this according to Python version
     #    v  = np.concatenate((np.flip(vb,0),vf))
     #    w  = np.concatenate((np.flip(wb,0),wf))
     #    w  = w*(w_n/w[-1])
@@ -194,7 +216,10 @@ def fluid_shell_alpha_plus(
     # The memory layout of the resulting xi array may cause problems with old Numba versions.
     xi = np.concatenate((np.flipud(xib), xif))
     # Using .copy() results in a contiguous memory layout, alleviating the issue above.
-    return v, w, xi.copy()
+    xi = xi.copy()
+    # if extra_output:
+    #     return v, w, xi, vfp_w, vfm_w, vfp_p, vfm_p
+    return v, w, xi
 
 
 def fluid_shell_params(

@@ -156,9 +156,8 @@ def v_chapman_jouguet(
     """Chapman-Jouguet speed
 
     This is the minimum wall speed for detonations.
-    This produces incorrect results for some reason.
 
-    (Based on the handwritten notes by Hindmarsh on 2022-06-15.)
+    TODO: Make further checks that the solutions are valid.
     """
     if analytical and model.DEFAULT_NAME == "bag":
         return v_chapman_jouguet_bag(alpha_plus=alpha_n)

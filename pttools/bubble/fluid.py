@@ -11,7 +11,9 @@ from .boundary import Phase, SolutionType
 from . import chapman_jouguet
 from . import const
 from . import integrate
+from . import fluid_bag
 from . import fluid_reference
+from . import props
 from . import relativity
 from . import shock
 from . import transition
@@ -295,9 +297,7 @@ def fluid_shell_solver_deflagration(
         full_output=True
     )
     wm = sol[0][0]
-    solution_found = True
-    if sol[2] != 1:
-        solution_found = False
+    solution_found = (sol[2] == 1)
     v, w, xi, wp, wn_estimate = fluid_shell_deflagration(
         model, v_wall, wn, wm, vp_guess=vp_guess, wp_guess=wp_guess, allow_failure=allow_failure)
     if not np.isclose(wn_estimate, wn):
@@ -392,8 +392,28 @@ def fluid_shell_generic(
             wm_guess: float = None,
             n_xi: int = const.N_XI_DEFAULT,
             reverse: bool = False,
-            allow_failure: bool = False
+            allow_failure: bool = False,
+            use_bag_solver: bool = False
         ):
+    """Generic fluid shell solver
+
+    In most cases you should not have to call this directly. Create a Bubble instead.
+    """
+    if use_bag_solver and model.DEFAULT_NAME == "bag":
+        logger.info("Using bag solver for model=%s, v_wall=%s, alpha_n=%s", model.label_unicode, v_wall, alpha_n)
+        v, w, xi = fluid_bag.fluid_shell(v_wall, alpha_n)
+        if np.any(np.isnan(v)):
+            return v, w, xi, sol_type, np.nan, np.nan, np.nan, True
+
+        sol_type2 = transition.identify_solution_type_bag(v_wall, alpha_n)
+        if sol_type is not None and sol_type != sol_type2:
+            raise ValueError(f"Bag model gave a different solution type ({sol_type2}) than what was given ({sol_type}).")
+        vp, vm, vp_tilde, vm_tilde, wp, wm, wn = props.v_and_w_from_solution
+
+        # The wm_guess is not needed for the bag model
+        v_cj = chapman_jouguet.v_chapman_jouguet(model, alpha_n, wn, wm)
+        return v, w, xi, sol_type, wp, wm, v_cj, False
+
     wn = model.w_n(alpha_n, wn_guess=wn_guess)
 
     # Load and scale reference data
@@ -431,9 +451,9 @@ def fluid_shell_generic(
         )
 
     if vp_guess < 0 or vp_guess > 1 or vp_tilde_guess < 0 or vp_tilde_guess > 1 \
-            or wm_guess < 0 or wn_guess < 0 or wp_guess < wn_guess or wp_guess < wm_guess:
+            or wm_guess < 0 or wn_guess < 0 or wp_guess < wn_guess:
         raise ValueError(
-            f"Got invalid guesses: vp_tilde={vp_tilde_guess}, wp={wp_guess}, wm={wm_guess}, wn={wn_guess}"
+            f"Got invalid guesses: vp_tilde={vp_tilde_guess}, wp={wp_guess}, wm={wm_guess}, wn={wn_guess} "
             f"for v_wall={v_wall}, alpha_n={alpha_n}"
         )
 
@@ -468,6 +488,7 @@ def fluid_shell_generic(
         # In more advanced models,
         # the direction of the integration will probably have to be determined by trial and error.
         if reverse:
+            logger.warning("Using reverse deflagration solver, which has not been properly tested.")
             v, w, xi, wp, wm, solution_found = fluid_shell_solver_deflagration_reverse(model, v_wall, alpha_n, wn)
         else:
             v, w, xi, wp, wm, solution_found = fluid_shell_solver_deflagration(
@@ -509,4 +530,4 @@ def fluid_shell_generic(
         #     "model=%s, v_wall=%s, alpha_n=%s, sol_type=%s",
         #     model.label_unicode, v_wall, alpha_n, sol_type
         # )
-    return v, w, xi, sol_type, wp, wm, not solution_found
+    return v, w, xi, sol_type, wp, wm, v_cj, not solution_found

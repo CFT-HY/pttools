@@ -11,7 +11,9 @@ from scipy.interpolate import NearestNDInterpolator
 from pttools.bubble import boundary
 from pttools.bubble.alpha import alpha_n_max_bag
 from pttools.bubble.fluid_bag import fluid_shell
-from pttools.bubble.relativity import lorentz
+from pttools.bubble import props
+from pttools.bubble import transition
+
 from pttools.speedup.parallel import run_parallel
 
 logger = logging.getLogger(__name__)
@@ -133,29 +135,14 @@ def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tp.Tuple[float
         return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 
     v, w, xi = fluid_shell(v_wall, alpha_n)
+    sol_type = transition.identify_solution_type_bag(v_wall, alpha_n)
+
     if np.any(np.isnan(v)) or np.any(np.isnan(w)) or np.any(np.isnan(xi)):
         logger.error("Got nan values from the integration at v_wall=%s, alpha_n=%s", v_wall, alpha_n)
         return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 
-    i_wall = np.argmax(v)
-    i_wall_w = np.argmax(w)
-    if i_wall != i_wall_w:
-        raise ValueError("The wall is not at the same index in v and w")
-    vw = xi[i_wall]
-    if not np.isclose(vw, v_wall):
-        raise ValueError(f"v_wall={v_wall}, computed v_wall={vw}")
-    vp = v[i_wall]
-    vm = v[i_wall-1]
-    vp_tilde = lorentz(v_wall, vp)
-    if np.isnan(vp_tilde) or vp_tilde < 0:
-        raise ValueError(f"vp={vp}, vp_tilde={vp_tilde}")
-    vm_tilde = lorentz(v_wall, vm)
-    if np.isnan(vm_tilde) or vm_tilde < 0:
-        raise ValueError(f"vm={vm}, vm_tilde={vm_tilde}")
-    wp = w[i_wall]
-    wm = w[i_wall-1]
+    vp, vm, vp_tilde, vm_tilde, wp, wm, wn = props.v_and_w_from_solution(v, w, xi, v_wall, sol_type)
 
-    wn = w[-1]
     if not np.isclose(wn, 1):
         raise ValueError(f"The old solver should always have wn=1, got wn={wn}")
 

@@ -79,6 +79,7 @@ class Bubble:
         self.wp: tp.Optional[float] = None
         self.wm: tp.Optional[float] = None
         self.alpha_plus: tp.Optional[float] = None
+        self.v_cj: tp.Optional[float] = None
 
         self.gw_power_spectrum = None
 
@@ -120,10 +121,12 @@ class Bubble:
             logger.warning(msg)
             self.add_note(msg)
         try:
-            # Todo: make this more specific
-            self.v, self.w, self.xi, self.sol_type, self.wp, self.wm, self.solver_failed = fluid_shell_generic(
-                model=self.model,
-                v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type, n_xi=self.n_points)
+            # Todo: make the solver errors more specific
+            self.v, self.w, self.xi, self.sol_type, self.wp, self.wm, self.v_cj, self.solver_failed = \
+                fluid_shell_generic(
+                    model=self.model,
+                    v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type, n_xi=self.n_points
+                )
             if self.solver_failed:
                 msg = f"Solver failed with model={self.model.label_unicode}, " \
                       f"v_wall={self.v_wall}, alpha_n={self.alpha_n}"
@@ -137,6 +140,7 @@ class Bubble:
             return
         self.solved = True
 
+        # Validity checking for the solution
         self.alpha_plus = self.model.alpha_plus(self.wp, self.wm)
         if self.alpha_plus >= 1/3:
             msg = "Got alpha_plus > 1/3 with " \
