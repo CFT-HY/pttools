@@ -284,8 +284,9 @@ def fluid_shell_solver_deflagration(
         v_wall: float, alpha_n: float, wn: float,
         wm_guess: float, vp_guess: float = None, wp_guess: float = None, allow_failure: bool = False) -> SolverOutput:
     if vp_guess > v_wall:
-        logger.error("Invalid vp_guess=%s > v_wall=%s", vp_guess, v_wall)
-        vp_guess = 0.9 * v_wall
+        vp_guess_new = 0.95 * v_wall
+        logger.error("Invalid vp_guess=%s > v_wall=%s, replacing with vp_guess=%s", vp_guess, v_wall, vp_guess_new)
+        vp_guess = vp_guess_new
 
     sol = fsolve(
         fluid_shell_solvable_deflagration,
