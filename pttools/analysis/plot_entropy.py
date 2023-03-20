@@ -8,6 +8,8 @@ import numpy as np
 
 from pttools.analysis import cmap
 from pttools.analysis.bubble_grid import BubbleGridVWAlpha
+from pttools.analysis.plot_vw_alpha import VwAlphaPlot
+from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.bubble import Bubble
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 
@@ -17,43 +19,111 @@ if tp.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+class EntropyPlot(VwAlphaPlot):
+    def __init__(
+            self,
+            grid: BubbleGridVWAlpha,
+            entropy: np.ndarray,
+            min_level: float,
+            max_level: float,
+            diff_level: float,
+            fig: plt.Figure = None,
+            ax: plt.Axes = None):
+        super().__init__(fig, ax)
+        plot_entropy_data(entropy, grid.v_walls, grid.alpha_ns, min_level, max_level, diff_level, fig=fig, ax=ax)
+
+        cmap.color_region(self.ax, grid.v_walls, grid.alpha_ns, grid.unphysical_alpha_plus(), color="red", alpha=0.5)
+        cmap.color_region(self.ax, grid.v_walls, grid.alpha_ns, grid.numerical_error(), color="blue", alpha=0.5)
+        cmap.color_region(self.ax, grid.v_walls, grid.alpha_ns, grid.solver_failed(), color="green", alpha=0.5)
+
+        self.ax.plot(v_chapman_jouguet(grid.model, grid.alpha_ns), grid.alpha_ns, 'k--', label=r'$v_{CJ}$')
+        self.ax.set_title(rf"$\Delta s / s_n$ for {grid.model.label_latex}")
+        self.ax.legend()
+
+
+class DeltaEntropyPlot(VwAlphaPlot):
+    def __init__(
+            self,
+            grid: BubbleGridVWAlpha,
+            w1: np.ndarray,
+            w2: np.ndarray,
+            w_ref: np.ndarray,
+            title: str,
+            fig: plt.Figure = None,
+            ax: plt.Axes = None):
+        super().__init__(fig, ax)
+        rel_change = (w1 - w2) / w_ref
+        cs: QuadContourSet = ax.contourf(grid.v_walls, grid.alpha_ns, rel_change, locator=ticker.LinearLocator(numticks=20))
+        cbar = self.fig.colorbar(cs)
+        cbar.ax.set_ylabel(title)
+
+
+class KappaOmegaSumPlot(VwAlphaPlot):
+    def __init__(self, grid: BubbleGridVWAlpha, fig: plt.Figure = None, ax: plt.Axes = None):
+        super().__init__(fig, ax)
+
+        kappa_omega_sum = np.abs(grid.kappa() + grid.omega() - 1)
+        cs: QuadContourSet = ax.contourf(grid.v_walls, grid.alpha_ns, kappa_omega_sum, locator=ticker.LogLocator())
+        cbar = fig.colorbar(cs)
+        cbar.ax.set_ylabel(r"$|\kappa + \omega - 1|$")
+
+
 def compute(bubble: Bubble):
     try:
         if bubble.no_solution_found or bubble.solver_failed:
-            return np.nan
-        return bubble.entropy_density_relative
+            return np.nan, np.nan, np.nan, np.nan, np.nan
+        sm = bubble.model.s(bubble.wm, Phase.BROKEN)
+        sn = bubble.model.s(bubble.wn, Phase.SYMMETRIC)
+        if bubble.sol_type is SolutionType.DETON:
+            sp = sn
+            sm_sh = sm
+        else:
+            sp = bubble.model.s(bubble.wp, Phase.SYMMETRIC)
+            sm_sh = bubble.model.s(bubble.wm_sh, Phase.SYMMETRIC)
+        return (
+            bubble.entropy_density_relative,
+            sp,
+            sm,
+            sm_sh,
+            sn
+        )
     except IndexError as e:
-        logger.exception("Fail", exc_info=e)
-        return np.nan
+        logger.exception("THIS SHOULD NOT HAPPEN", exc_info=e)
+        return np.nan, np.nan, np.nan, np.nan, np.nan
+
+
+compute.return_type = (np.float_, np.float_, np.float_, np.float_, np.float_)
 
 
 def gen_and_plot_entropy(
-        model: "Model",
+        models: tp.List["Model"],
         v_walls: np.ndarray,
         alpha_ns: np.ndarray,
         min_level: float,
         max_level: float,
         diff_level: float,
-        use_bag_solver: bool = False) -> tp.Tuple[plt.Figure, plt.Axes]:
-    grid = BubbleGridVWAlpha(model, v_walls, alpha_ns, compute, use_bag_solver=use_bag_solver)
-    fig, ax = plot_entropy(
-        grid.data.T, v_walls, alpha_ns,
-        min_level=min_level, max_level=max_level, diff_level=diff_level)
+        use_bag_solver: bool = False) -> tp.Tuple[plt.Figure, np.ndarray]:
+    fig: plt.Figure = plt.figure()
+    axs = fig.subplots(nrows=len(models), ncols=4)
 
-    cmap.color_region(ax, v_walls, alpha_ns, grid.unphysical_alpha_plus().T, color="red", alpha=0.5)
-    cmap.color_region(ax, v_walls, alpha_ns, grid.numerical_error().T, color="blue", alpha=0.5)
-    cmap.color_region(ax, v_walls, alpha_ns, grid.solver_failed().T, color="green", alpha=0.5)
+    for i_model, model in enumerate(models):
+        grid = BubbleGridVWAlpha(model, v_walls, alpha_ns, compute, use_bag_solver=use_bag_solver)
 
-    ax.plot(v_chapman_jouguet(model, alpha_ns), alpha_ns, 'k--', label=r'$v_{CJ}$')
-    ax.set_title(rf"$\Delta s / s_n$ for {model.label_latex}")
-    ax.legend()
+        EntropyPlot(grid, grid.data[0], min_level, max_level, diff_level, fig=fig, ax=axs[i_model, 0])
+        DeltaEntropyPlot(
+            grid, w1=grid.data[2], w2=grid.data[1], w_ref=grid.data[3],
+            title=r"$\frac{s_- - s_+}{s_n}$", fig=fig, ax=axs[i_model, 1])
+        DeltaEntropyPlot(
+            grid, w1=grid.data[3], w2=grid.data[4], w_ref=grid.data[4],
+            title=r"$\frac{s_n - s_{w-}}{s_n}$", fig=fig, ax=axs[i_model, 2])
+        KappaOmegaSumPlot(grid, fig, axs[i_model, 3])
 
-    plot_kappa_omega_sum(grid)
+    #fig.tight_layout()
 
-    return fig, ax
+    return fig, axs
 
 
-def plot_entropy(
+def plot_entropy_data(
         data: np.ndarray,
         v_walls: np.ndarray, alpha_ns: np.ndarray,
         min_level: float, max_level: float, diff_level: float,
@@ -75,23 +145,5 @@ def plot_entropy(
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     # ax.legend()
-
-    return fig, ax
-
-
-def plot_kappa_omega_sum(grid: BubbleGridVWAlpha, fig: plt.Figure = None, ax: plt.Axes = None):
-    if fig is None or ax is None:
-        fig = plt.figure()
-        ax = fig.add_subplot()
-
-    kappa_omega_sum: np.ndarray = grid.kappa().astype(np.float_) + grid.omega().astype(np.float_)
-    kappa_omega_sum = np.abs(kappa_omega_sum - 1)
-    cs: QuadContourSet = ax.contourf(grid.v_walls, grid.alpha_ns, kappa_omega_sum.T, locator=ticker.LogLocator())
-    cbar = fig.colorbar(cs)
-    cbar.ax.set_ylabel(r"$|\kappa + \omega - 1|$")
-
-    ax.grid()
-    ax.set_xlabel(r"$v_w$")
-    ax.set_ylabel(r"$\alpha_n$")
 
     return fig, ax

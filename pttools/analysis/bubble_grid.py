@@ -12,12 +12,12 @@ class BubbleGrid:
     def __init__(self, bubbles: np.ndarray):
         self.bubbles = bubbles
 
-    def get_value(self, name: str, is_obj: bool = False) -> np.ndarray:
-        if is_obj:
-            flags = ("refs_ok", )
-        else:
-            flags = ()
-        with np.nditer([self.bubbles, None], flags=flags) as it:
+    def get_value(self, name: str, dtype: tp.Type = None) -> np.ndarray:
+        with np.nditer(
+                [self.bubbles, None],
+                flags=("refs_ok", ),
+                op_flags=[["readonly"], ["writeonly", "allocate"]],
+                op_dtypes=(object, dtype)) as it:
             for bubble, res in it:
                 try:
                     res[...] = getattr(bubble.item(), name)
@@ -25,23 +25,23 @@ class BubbleGrid:
                     res[...] = None
             return it.operands[1]
 
-    def kappa(self):
-        return self.get_value("kappa", is_obj=True)
+    def kappa(self) -> np.ndarray:
+        return self.get_value("kappa", dtype=np.float_)
 
-    def numerical_error(self):
-        return self.get_value("numerical_error", is_obj=True)
+    def numerical_error(self) -> np.ndarray:
+        return self.get_value("numerical_error", dtype=np.bool_)
 
-    def omega(self):
-        return self.get_value("omega", is_obj=True)
+    def omega(self) -> np.ndarray:
+        return self.get_value("omega", dtype=np.float_)
 
-    def solver_failed(self):
-        return self.get_value("solver_failed", is_obj=True)
+    def solver_failed(self) -> np.ndarray:
+        return self.get_value("solver_failed", dtype=np.bool_)
 
-    def unphysical_alpha_plus(self):
-        return self.get_value("unphysical_alpha_plus", is_obj=True)
+    def unphysical_alpha_plus(self) -> np.ndarray:
+        return self.get_value("unphysical_alpha_plus", dtype=np.bool_)
 
-    def unphysical_entropy(self):
-        return self.get_value("unphysical_entropy", is_obj=True)
+    def unphysical_entropy(self) -> np.ndarray:
+        return self.get_value("unphysical_entropy", dtype=np.bool_)
 
 
 class BubbleGridVWAlpha(BubbleGrid):
@@ -54,14 +54,16 @@ class BubbleGridVWAlpha(BubbleGrid):
             use_bag_solver: bool = False):
         data = create_bubbles(
                 model, v_walls, alpha_ns, func,
-                output_dtypes=(object, np.float_),
                 kwargs={"use_bag_solver": use_bag_solver}
         )
-        self.v_walls = v_walls
-        self.alpha_ns = alpha_ns
         if func is None:
             bubbles = data
         else:
             bubbles = data[0]
-            self.data = data[1]
+            self.data = data[1] if len(data) == 2 else data[1:]
+
+        self.model = model
+        self.v_walls = v_walls
+        self.alpha_ns = alpha_ns
+
         super().__init__(bubbles)
