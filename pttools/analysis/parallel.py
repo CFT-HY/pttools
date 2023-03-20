@@ -14,10 +14,15 @@ if tp.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def create_bubble(params: np.ndarray, model: "Model", post_func: callable = None, *args, **kwargs):
+def create_bubble(
+        params: np.ndarray,
+        model: "Model",
+        post_func: callable = None,
+        use_bag_solver: bool = False,
+        *args, **kwargs) -> tp.Union[Bubble, tp.Tuple[Bubble, tp.Any]]:
     v_wall, alpha_n = params
     bubble = Bubble(model, v_wall, alpha_n)
-    bubble.solve()
+    bubble.solve(use_bag_solver=use_bag_solver)
     if post_func is not None:
         return bubble, post_func(bubble, *args, **kwargs)
     return bubble

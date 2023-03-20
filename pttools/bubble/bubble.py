@@ -124,7 +124,12 @@ class Bubble:
             f"κ={self.kappa:{prec}}, ω={self.omega:{prec}}, κ+ω={self.kappa + self.omega:{prec}}, " \
             f"trace anomaly={self.trace_anomaly:{prec}}"
 
-    def solve(self, sum_rtol_warning: float = 1e-2, sum_rtol_error: float = 5e-2, error_prec: str = ".4f"):
+    def solve(
+            self,
+            sum_rtol_warning: float = 1e-2,
+            sum_rtol_error: float = 5e-2,
+            error_prec: str = ".4f",
+            use_bag_solver: bool = False):
         if self.solved:
             msg = "Re-solving an already solved bubble! Already computed quantities will not be updated due to caching."
             logger.warning(msg)
@@ -134,7 +139,8 @@ class Bubble:
             self.v, self.w, self.xi, self.sol_type, self.wp, self.wm, self.v_cj, self.solver_failed = \
                 fluid_shell_generic(
                     model=self.model,
-                    v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type, n_xi=self.n_points
+                    v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type, n_xi=self.n_points,
+                    use_bag_solver=use_bag_solver
                 )
             if self.solver_failed:
                 msg = f"Solver failed with model={self.model.label_unicode}, " \

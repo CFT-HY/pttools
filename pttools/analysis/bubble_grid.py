@@ -31,8 +31,20 @@ class BubbleGrid:
 
 
 class BubbleGridVWAlpha(BubbleGrid):
-    def __init__(self, model: "Model", v_walls: np.ndarray, alpha_ns: np.ndarray, func: callable = None):
-        data = create_bubbles(model, v_walls, alpha_ns, func, output_dtypes=(object, np.float_))
+    def __init__(
+            self,
+            model: "Model",
+            v_walls: np.ndarray,
+            alpha_ns: np.ndarray,
+            func: callable = None,
+            use_bag_solver: bool = False):
+        data = create_bubbles(
+                model, v_walls, alpha_ns, func,
+                output_dtypes=(object, np.float_),
+                kwargs={"use_bag_solver": use_bag_solver}
+        )
+        self.v_walls = v_walls
+        self.alpha_ns = alpha_ns
         if func is None:
             bubbles = data
         else:
