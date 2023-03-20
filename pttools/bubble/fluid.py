@@ -399,22 +399,24 @@ def fluid_shell_generic(
 
     In most cases you should not have to call this directly. Create a Bubble instead.
     """
+    wn = model.w_n(alpha_n, wn_guess=wn_guess)
+
     if use_bag_solver and model.DEFAULT_NAME == "bag":
         logger.info("Using bag solver for model=%s, v_wall=%s, alpha_n=%s", model.label_unicode, v_wall, alpha_n)
         v, w, xi = fluid_bag.fluid_shell(v_wall, alpha_n)
+        # The results of the old solver are scaled to wn=1
+        w *= wn
         if np.any(np.isnan(v)):
             return v, w, xi, sol_type, np.nan, np.nan, np.nan, True
 
         sol_type2 = transition.identify_solution_type_bag(v_wall, alpha_n)
         if sol_type is not None and sol_type != sol_type2:
             raise ValueError(f"Bag model gave a different solution type ({sol_type2}) than what was given ({sol_type}).")
-        vp, vm, vp_tilde, vm_tilde, wp, wm, wn = props.v_and_w_from_solution
+        vp, vm, vp_tilde, vm_tilde, wp, wm, wn = props.v_and_w_from_solution(v, w, xi, v_wall, sol_type2)
 
         # The wm_guess is not needed for the bag model
         v_cj = chapman_jouguet.v_chapman_jouguet(model, alpha_n, wn, wm)
         return v, w, xi, sol_type, wp, wm, v_cj, False
-
-    wn = model.w_n(alpha_n, wn_guess=wn_guess)
 
     # Load and scale reference data
     using_ref = False
