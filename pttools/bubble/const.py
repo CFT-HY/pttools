@@ -18,8 +18,8 @@ FIND_ALPHA_PLUS_TOL: float = 1e-6
 T_END_DEFAULT: float = 50.
 #: Difference between consequent $\xi$ values
 DXI_SMALL: float = 1. / N_XI_DEFAULT
-
-# Some functions useful for the bag equation of state.
+#: Array with one NaN
+nan_arr = np.array([np.nan])
 
 #: Ideal speed of sound
 CS0: tp.Final[np.float_] = 1 / np.sqrt(3)

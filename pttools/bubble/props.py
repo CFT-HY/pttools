@@ -1,5 +1,7 @@
 """Useful functions for finding the properties of a solution."""
 
+import typing as tp
+
 import numba.types
 import numpy as np
 
@@ -41,7 +43,8 @@ def v_max_behind(xi: th.FloatOrArr, cs: float):
     return relativity.lorentz(xi, cs)
 
 
-def v_and_w_from_solution(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, sol_type: SolutionType):
+def v_and_w_from_solution(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, sol_type: SolutionType) -> \
+        tp.Tuple[float, float, float, float, float, float, float, float]:
     i_wall = np.argmax(v)
     i_wall_w = np.argmax(w)
     if i_wall != i_wall_w:
@@ -75,4 +78,5 @@ def v_and_w_from_solution(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: 
             raise ValueError("Got wp < wm for a deflagration or hybrid")
 
     wn = w[-1]
-    return vp, vm, vp_tilde, vm_tilde, wp, wm, wn
+    wm_sh: float = w[(np.flip(w) > wn)[0]]
+    return vp, vm, vp_tilde, vm_tilde, wp, wm, wn, wm_sh

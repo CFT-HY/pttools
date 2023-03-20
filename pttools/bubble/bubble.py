@@ -78,6 +78,7 @@ class Bubble:
         self.xi: tp.Optional[np.ndarray] = None
         self.wp: tp.Optional[float] = None
         self.wm: tp.Optional[float] = None
+        self.wm_sh: tp.Optional[float] = None
         self.alpha_plus: tp.Optional[float] = None
         self.v_cj: tp.Optional[float] = None
 
@@ -110,6 +111,7 @@ class Bubble:
             "wn": self.wn,
             "wp": self.wp,
             "wm": self.wm,
+            "wm_sh": self.wm_sh,
             "alpha_plus": self.alpha_plus,
             "v_cj": self.v_cj
         }
@@ -136,7 +138,7 @@ class Bubble:
             self.add_note(msg)
         try:
             # Todo: make the solver errors more specific
-            self.v, self.w, self.xi, self.sol_type, self.wp, self.wm, self.v_cj, self.solver_failed = \
+            self.v, self.w, self.xi, self.sol_type, self.wp, self.wm, self.wm_sh, self.v_cj, self.solver_failed = \
                 fluid_shell_generic(
                     model=self.model,
                     v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type, n_xi=self.n_points,
