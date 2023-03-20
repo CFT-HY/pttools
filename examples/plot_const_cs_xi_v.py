@@ -18,6 +18,8 @@ from tests.paper.plane import xiv_plane
 from tests.paper.plot_plane import plot_plane
 
 
+# TODO: fix the location of the shock line
+
 def main():
     cs = 1 / np.sqrt(3) - 0.05
 

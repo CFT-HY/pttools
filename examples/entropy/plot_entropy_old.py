@@ -11,7 +11,7 @@ Requires input data as an npz file.
 
 import typing as tp
 
-from pttools.analysis.plot_entropy import plot_entropy_data
+from pttools.analysis.plot_entropy import plot_entropy
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet_bag
 from pttools.bubble.alpha import alpha_n_max_bag, alpha_n_max_detonation_bag
 import matplotlib.pyplot as plt
@@ -36,7 +36,7 @@ def main(n_alpha: int = 10, n_vw: int = 10, g_bro: int = 120, g_sym: int = 123):
 
     ds_arr, vw_arr, alpha_arr = load(n_alpha, n_vw, g_bro, g_sym)
 
-    fig, ax = plot_entropy_data(
+    fig, ax = plot_entropy(
         ds_arr,
         v_walls=vw_arr,
         alpha_ns=alpha_arr,

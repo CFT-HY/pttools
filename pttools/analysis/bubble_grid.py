@@ -2,6 +2,7 @@ import typing as tp
 
 import numpy as np
 
+from pttools.bubble.bubble import NotYetSolvedError
 from pttools.analysis.parallel import create_bubbles
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
@@ -11,23 +12,36 @@ class BubbleGrid:
     def __init__(self, bubbles: np.ndarray):
         self.bubbles = bubbles
 
-    def get_value(self, name: str) -> np.ndarray:
-        with np.nditer([self.bubbles, None], flags=("refs_ok", )) as it:
+    def get_value(self, name: str, is_obj: bool = False) -> np.ndarray:
+        if is_obj:
+            flags = ("refs_ok", )
+        else:
+            flags = ()
+        with np.nditer([self.bubbles, None], flags=flags) as it:
             for bubble, res in it:
-                res[...] = getattr(bubble.item(), name)
+                try:
+                    res[...] = getattr(bubble.item(), name)
+                except NotYetSolvedError:
+                    res[...] = None
             return it.operands[1]
 
+    def kappa(self):
+        return self.get_value("kappa", is_obj=True)
+
     def numerical_error(self):
-        return self.get_value("numerical_error")
+        return self.get_value("numerical_error", is_obj=True)
+
+    def omega(self):
+        return self.get_value("omega", is_obj=True)
 
     def solver_failed(self):
-        return self.get_value("solver_failed")
+        return self.get_value("solver_failed", is_obj=True)
 
     def unphysical_alpha_plus(self):
-        return self.get_value("unphysical_alpha_plus")
+        return self.get_value("unphysical_alpha_plus", is_obj=True)
 
     def unphysical_entropy(self):
-        return self.get_value("unphysical_entropy")
+        return self.get_value("unphysical_entropy", is_obj=True)
 
 
 class BubbleGridVWAlpha(BubbleGrid):
