@@ -2,6 +2,7 @@ import functools
 import logging
 import multiprocessing
 import os.path
+import time
 import typing as tp
 
 import h5py
@@ -25,10 +26,10 @@ class FluidReference:
             path: str,
             v_wall_min: float = 0.05,
             v_wall_max: float = 0.95,
-            alpha_n_min: float = 0.05,
-            alpha_n_max: float = 0.95,
-            n_v_wall: int = 20,
-            n_alpha_n: int = 20):
+            alpha_n_min: float = 0.01,
+            alpha_n_max: float = 0.99,
+            n_v_wall: int = 100,
+            n_alpha_n: int = 100):
         self.path = path
         self.v_wall = np.linspace(v_wall_min, v_wall_max, n_v_wall, endpoint=True)
         self.alpha_n = np.linspace(alpha_n_min, alpha_n_max, n_alpha_n, endpoint=True)
