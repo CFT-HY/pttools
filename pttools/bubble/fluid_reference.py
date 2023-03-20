@@ -36,16 +36,27 @@ class FluidReference:
         if not os.path.exists(path):
             self.create()
 
-        self.data = np.empty((n_alpha_n, n_v_wall, 6))
-        with h5py.File(path, "r") as file:
-            self.data[:, :, 0] = file["vp"]
-            self.data[:, :, 1] = file["vm"]
-            self.data[:, :, 2] = file["vp_tilde"]
-            self.data[:, :, 3] = file["vm_tilde"]
-            self.data[:, :, 4] = file["wp"]
-            self.data[:, :, 5] = file["wm"]
+        try:
+            file = h5py.File(path, "r")
+        except (KeyError, OSError) as e:
+            logger.exception(
+                "Could not open the fluid reference file at \"%s\". Generating a new one.",
+                path, exc_info=e
+            )
+            os.remove(self.path)
+            self.create()
+            file = h5py.File(path, "r")
 
-            self.interp = NearestNDInterpolator(x=file["coords"], y=file["inds"])
+        self.data = np.empty((n_alpha_n, n_v_wall, 6))
+        self.data[:, :, 0] = file["vp"]
+        self.data[:, :, 1] = file["vm"]
+        self.data[:, :, 2] = file["vp_tilde"]
+        self.data[:, :, 3] = file["vm_tilde"]
+        self.data[:, :, 4] = file["wp"]
+        self.data[:, :, 5] = file["wm"]
+
+        self.interp = NearestNDInterpolator(x=file["coords"], y=file["inds"])
+        file.close()
 
         if np.any(self.data < 0):
             raise ValueError
