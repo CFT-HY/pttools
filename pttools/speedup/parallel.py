@@ -76,10 +76,20 @@ def run_parallel(
         # Collect results
 
         # Single output
+        single_output = False
         if output_dtypes is None:
+            single_output = True
+            output_arr = None
+        elif len(output_dtypes) == 1:
+            single_output = True
+            output_arr = np.empty_like(futs, dtype=output_dtypes[0])
+
+        if single_output:
             with np.nditer(
-                    [futs, None],
-                    flags=("refs_ok", "c_index", "multi_index"), order="C") as it:
+                    [futs, output_arr],
+                    flags=("refs_ok", "c_index", "multi_index"),
+                    # op_flags=[["readonly"], ["writeonly"]],
+                    order="C") as it:
                 for fut, res in it:
                     log_progress(it, log_progress_element, log_progress_percentage)
                     res[...] = fut.item().result()
