@@ -59,6 +59,7 @@ class FluidReference:
 
     def create(self):
         logger.info("Generating fluid reference")
+        start_time = time.perf_counter()
         if os.path.exists(self.path):
             os.remove(self.path)
         try:
@@ -75,7 +76,7 @@ class FluidReference:
                     multiple_params=True,
                     unpack_params=True,
                     output_dtypes=(np.float_, np.float_, np.float_, np.float_, np.float_, np.float_),
-                    log_progress=True
+                    log_progress_percentage=5
                 )
                 file.create_dataset("vp", data=vp)
                 file.create_dataset("vm", data=vm)
@@ -118,7 +119,7 @@ class FluidReference:
             # Remove broken file
             os.remove(self.path)
             raise e
-        logger.info("Fluid reference ready")
+        logger.info("Fluid reference ready, took: %s s", time.perf_counter() - start_time)
 
     def get(self, v_wall: float, alpha_n: float, allow_nan: bool = False) -> np.ndarray:
         if allow_nan:

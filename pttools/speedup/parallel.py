@@ -9,6 +9,18 @@ from pttools.speedup.options import MAX_WORKERS_DEFAULT
 logger = logging.getLogger(__name__)
 
 
+def log_progress(it: np.nditer, log_progress_element: int, log_progress_percentage: float):
+    ind = it.index
+    arr_size = it.operands[0].size
+    percentage = ind / arr_size * 100
+    percentage_prev = (ind - 1) / arr_size * 100
+
+    if (log_progress_element is not None and ind % log_progress_element == 0) \
+            or (log_progress_percentage is not None and
+                np.floor(percentage / log_progress_percentage) != np.floor(percentage_prev / log_progress_percentage)):
+        logger.debug("Processing item %s, %s %%", it.multi_index, percentage)
+
+
 def run_parallel(
         func: callable,
         params: np.ndarray,
@@ -16,9 +28,10 @@ def run_parallel(
         multiple_params: bool = False,
         unpack_params: bool = False,
         output_dtypes: tp.Union[tp.Tuple[tp.Type, ...], tp.List[tp.Type]] = None,
-        log_progress: bool = False,
-        *args,
-        **kwargs) -> tp.Union[np.ndarray, tp.Tuple[np.ndarray, ...]]:
+        log_progress_element: int = None,
+        log_progress_percentage: float = None,
+        args: tp.Union[list, tuple] = (),
+        kwargs: tp.Dict[str, tp.Any] = None) -> tp.Union[np.ndarray, tp.Tuple[np.ndarray, ...]]:
     """Run the given function with multiple parameters in parallel
 
     :param func: The function to be executed in parallel
@@ -27,9 +40,15 @@ def run_parallel(
     :param multiple_params: Whether the last dimension of the parameter array contains multiple parameters for each function call
     :param unpack_params: Whether the multiple parameters should be unpacked before giving them to the function
     :param output_dtypes: If the function has multiple output values, their types should be given here
-    :param log_progress: Whether to output progress to logging
+    :param log_progress_element: Log progress every n element
+    :param log_progress_percentage: Log progress every x %
+    :param args: common arguments for the function
+    :param kwargs: common kwargs for the function
     :return: Numpy arrays for each output value
     """
+    if kwargs is None:
+        kwargs = {}
+
     flags = ["refs_ok"]
     if multiple_params:
         flags.append("reduce_ok")
@@ -60,10 +79,9 @@ def run_parallel(
         if output_dtypes is None:
             with np.nditer(
                     [futs, None],
-                    flags=("refs_ok", "multi_index")) as it:
+                    flags=("refs_ok", "c_index", "multi_index"), order="C") as it:
                 for fut, res in it:
-                    if log_progress:
-                        logger.debug("Processing item %s", it.multi_index)
+                    log_progress(it, log_progress_element, log_progress_percentage)
                     res[...] = fut.item().result()
                 return it.operands[1]
 
@@ -72,11 +90,11 @@ def run_parallel(
         output_arrs = tuple(np.empty(futs.shape, dtype=dtype) for dtype in output_dtypes)
         with np.nditer(
                 [futs, *output_arrs],
-                flags=("refs_ok", "multi_index"),
-                op_flags=op_flags2) as it:
+                flags=("refs_ok", "c_index", "multi_index"),
+                op_flags=op_flags2,
+                order="C") as it:
             for elems in it:
-                if log_progress:
-                    logger.debug("Processing item %s", it.multi_index)
+                log_progress(it, log_progress_element, log_progress_percentage)
                 res = elems[0].item().result()
                 for arr, val in zip(elems[1:], res):
                     arr[...] = val

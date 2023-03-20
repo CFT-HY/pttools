@@ -29,7 +29,14 @@ def create_bubbles(
         alpha_ns: np.ndarray,
         func: callable = None,
         output_dtypes: tp.Iterable = None,
-        max_workers: int = options.MAX_WORKERS_DEFAULT) -> tp.Union[np.ndarray, tp.Tuple[np.ndarray, np.ndarray]]:
+        max_workers: int = options.MAX_WORKERS_DEFAULT,
+        kwargs: tp.Dict[str, any] = None) -> tp.Union[np.ndarray, tp.Tuple[np.ndarray, np.ndarray]]:
+    kwargs2 = {
+        "model": model,
+        "post_func": func
+    }
+    if kwargs is not None:
+        kwargs2.update(kwargs)
 
     params = np.empty((v_walls.size, alpha_ns.size, 2))
     for i_v_wall, v_wall in enumerate(v_walls):
@@ -43,8 +50,7 @@ def create_bubbles(
         multiple_params=True,
         output_dtypes=output_dtypes,
         max_workers=max_workers,
-        model=model,
-        post_func=func
+        kwargs=kwargs2
     )
 
 
