@@ -9,7 +9,7 @@ from tests.utils.test_assertions import assert_allclose
 
 
 class ReferenceTest(unittest.TestCase):
-    def test_indexing(self):
+    def test_generation(self):
         path = os.path.join(TEST_DATA_PATH, "fluid_reference_indexing.hdf5")
         if os.path.exists(path):
             os.remove(path)

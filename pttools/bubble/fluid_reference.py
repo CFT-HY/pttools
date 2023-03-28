@@ -31,6 +31,7 @@ class FluidReference:
             n_v_wall: int = 100,
             n_alpha_n: int = 100):
         self.path = path
+        # Todo: load these values from the file
         self.v_wall = np.linspace(v_wall_min, v_wall_max, n_v_wall, endpoint=True)
         self.alpha_n = np.linspace(alpha_n_min, alpha_n_max, n_alpha_n, endpoint=True)
 
@@ -68,6 +69,8 @@ class FluidReference:
         self.vm_tilde = self.data[:, :, 3]
         self.wp = self.data[:, :, 4]
         self.wm = self.data[:, :, 5]
+
+        logger.info("Loaded fluid reference with n_alpha_n=%s, n_v_wall=%s", self.data.shape[0], self.data.shape[1])
 
     def create(self):
         logger.info("Generating fluid reference")
@@ -140,7 +143,9 @@ class FluidReference:
             return self.data[i_alpha_n, i_v_wall, :]
 
         ind = int(self.interp(v_wall, alpha_n))
-        return self.data[ind // self.v_wall.size, ind % self.v_wall.size]
+        i_alpha_n = ind // self.v_wall.size
+        i_v_wall = ind % self.v_wall.size
+        return self.data[i_alpha_n, i_v_wall]
 
 
 def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tp.Tuple[float, float, float, float, float, float]:
