@@ -167,7 +167,8 @@ def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tp.Tuple[float
     return vp, vm, vp_tilde, vm_tilde, wp, wm
 
 
-@functools.cache
+# Todo: replace this with functools.cache when Python 3.9 is the oldest supported version
+@functools.lru_cache
 def ref():
     if multiprocessing.parent_process() is not None:
         raise RuntimeError(
