@@ -154,7 +154,7 @@ def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tp.Tuple[float
         logger.error("Got nan values from the integration at v_wall=%s, alpha_n=%s", v_wall, alpha_n)
         return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 
-    vp, vm, vp_tilde, vm_tilde, wp, wm, wn = props.v_and_w_from_solution(v, w, xi, v_wall, sol_type)
+    vp, vm, vp_tilde, vm_tilde, wp, wm, wn, wm_sh = props.v_and_w_from_solution(v, w, xi, v_wall, sol_type)
 
     if not np.isclose(wn, 1):
         raise ValueError(f"The old solver should always have wn=1, got wn={wn}")
