@@ -56,13 +56,25 @@ def find_shock_index(
         return props.find_v_index(xi, v_wall)
     # Todo: replace this with isinstance()
     if model.name == "bag":
-        return np.argmax(np.logical_and(xi > v_wall, v <= v_shock_bag(xi)))
+        points_after_shock = np.logical_and(xi > v_wall, v <= v_shock_bag(xi))
+        if np.sum(points_after_shock):
+            return np.argmax(points_after_shock)
+        points_near_cs = np.logical_and(np.isclose(xi, const.CS0), np.isclose(v, 0))
+        if np.sum(points_near_cs):
+            return np.argmax(points_near_cs)
+        raise RuntimeError("Did not find shock for the bag model")
 
     # Trim the integration to the shock
     i_shock = 0
     # The shock curve hits v=0 here
     cs_n = np.sqrt(model.cs2(wn, Phase.SYMMETRIC))
-    for i, xi_i in enumerate(xi):
+
+    for i, (xi_i, v_i) in enumerate(zip(xi, v)):
+        # The shock can be so tiny that it cannot be distinguished.
+        if np.isclose(xi_i, cs_n) and np.isclose(v_i, 0):
+            i_shock = i
+            break
+
         if xi_i < cs_n:
             continue
         # This can emit a lot of log spam if the warning of a barely existing shock is enabled.
@@ -78,12 +90,12 @@ def find_shock_index(
     if i_shock == 0:
         if np.max(xi) < const.CS0:
             msg = \
-                "The curve turns backwards before reaching the shock. " + \
+                "The curve does not reach the shock. (E.g. it turns backwards before reaching the shock.) " + \
                 "Probably the model does not allow this solution type with these parameters."
             logger.error(msg)
             if not allow_failure:
                 raise RuntimeError(msg)
-        i_shock = -1
+        i_shock = v.size - 1
 
     return i_shock
 
