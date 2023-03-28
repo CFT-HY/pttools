@@ -12,6 +12,7 @@ from pttools.analysis.plot_vw_alpha import VwAlphaPlot
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.bubble import Bubble
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
+from pttools.bubble import relativity
 
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
@@ -58,6 +59,19 @@ class DeltaEntropyPlot(VwAlphaPlot):
         cbar.ax.set_ylabel(title)
 
 
+class EntropyConservationPlot(VwAlphaPlot):
+    def __init__(
+            self,
+            grid: BubbleGridVWAlpha,
+            diff: np.ndarray,
+            fig: plt.Figure = None,
+            ax: plt.Axes = None):
+        super().__init__(fig, ax)
+        cs: QuadContourSet = ax.contourf(grid.v_walls, grid.alpha_ns, diff, locator=ticker.LinearLocator(numticks=20))
+        cbar = self.fig.colorbar(cs)
+        cbar.ax.set_ylabel(r"$\tilde{\gamma}_- \tilde{v}_- s_- - \tilde{\gamma}_+ \tilde{v}_+ s_+$")
+
+
 class KappaOmegaSumPlot(VwAlphaPlot):
     def __init__(self, grid: BubbleGridVWAlpha, fig: plt.Figure = None, ax: plt.Axes = None):
         super().__init__(fig, ax)
@@ -71,7 +85,7 @@ class KappaOmegaSumPlot(VwAlphaPlot):
 def compute(bubble: Bubble):
     try:
         if bubble.no_solution_found or bubble.solver_failed:
-            return np.nan, np.nan, np.nan, np.nan, np.nan
+            return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
         sm = bubble.model.s(bubble.wm, Phase.BROKEN)
         sn = bubble.model.s(bubble.wn, Phase.SYMMETRIC)
         if bubble.sol_type is SolutionType.DETON:
@@ -80,19 +94,24 @@ def compute(bubble: Bubble):
         else:
             sp = bubble.model.s(bubble.wp, Phase.SYMMETRIC)
             sm_sh = bubble.model.s(bubble.wm_sh, Phase.SYMMETRIC)
+
+        diff = relativity.gamma(bubble.vm_tilde) * bubble.vm_tilde * sm - \
+            relativity.gamma(bubble.vp_tilde) * bubble.vp_tilde * sp
+        # diff_sh = relativity.gamma(bubble.)
         return (
             bubble.entropy_density_relative,
             sp,
             sm,
             sm_sh,
-            sn
+            sn,
+            diff
         )
     except IndexError as e:
         logger.exception("THIS SHOULD NOT HAPPEN", exc_info=e)
-        return np.nan, np.nan, np.nan, np.nan, np.nan
+        return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 
 
-compute.return_type = (np.float_, np.float_, np.float_, np.float_, np.float_)
+compute.return_type = (np.float_, np.float_, np.float_, np.float_, np.float_, np.float_)
 
 
 def gen_and_plot_entropy(
@@ -108,17 +127,25 @@ def gen_and_plot_entropy(
 
     for i_model, model in enumerate(models):
         grid = BubbleGridVWAlpha(model, v_walls, alpha_ns, compute, use_bag_solver=use_bag_solver)
+        # These are declared explicitly as above to avoid indexing errors
+        s_total_rel = grid.data[0]
+        sp = grid.data[1]
+        sm = grid.data[2]
+        sm_sh = grid.data[3]
+        sn = grid.data[4]
+        diff = grid.data[5]
 
-        EntropyPlot(grid, grid.data[0], min_level, max_level, diff_level, fig=fig, ax=axs[i_model, 0])
+        EntropyPlot(grid, s_total_rel, min_level, max_level, diff_level, fig=fig, ax=axs[i_model, 0])
         DeltaEntropyPlot(
-            grid, w1=grid.data[2], w2=grid.data[1], w_ref=grid.data[3],
+            grid, w1=sm, w2=sp, w_ref=sn,
             title=r"$\frac{s_- - s_+}{s_n}$", fig=fig, ax=axs[i_model, 1])
         DeltaEntropyPlot(
-            grid, w1=grid.data[3], w2=grid.data[4], w_ref=grid.data[4],
-            title=r"$\frac{s_n - s_{w-}}{s_n}$", fig=fig, ax=axs[i_model, 2])
-        KappaOmegaSumPlot(grid, fig, axs[i_model, 3])
+            grid, w1=sm_sh, w2=sn, w_ref=sn,
+            title=r"$\frac{s_{sh-} - s_n}{s_n}$", fig=fig, ax=axs[i_model, 2])
+        # KappaOmegaSumPlot(grid, fig, axs[i_model, 3])
+        EntropyConservationPlot(grid, diff, fig, axs[i_model, 3])
 
-    #fig.tight_layout()
+    # fig.tight_layout()
 
     return fig, axs
 

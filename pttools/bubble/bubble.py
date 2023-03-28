@@ -76,11 +76,15 @@ class Bubble:
         self.v: tp.Optional[np.ndarray] = None
         self.w: tp.Optional[np.ndarray] = None
         self.xi: tp.Optional[np.ndarray] = None
+        self.vp: tp.Optional[float] = None
+        self.vm: tp.Optional[float] = None
+        self.vp_tilde: tp.Optional[float] = None
+        self.vm_tilde: tp.Optional[float] = None
+        self.v_cj: tp.Optional[float] = None
         self.wp: tp.Optional[float] = None
         self.wm: tp.Optional[float] = None
         self.wm_sh: tp.Optional[float] = None
         self.alpha_plus: tp.Optional[float] = None
-        self.v_cj: tp.Optional[float] = None
 
         self.gw_power_spectrum = None
 
@@ -108,6 +112,10 @@ class Bubble:
             "xi": self.xi,
             # Solution parameters
             "tn": self.tn,
+            "vp": self.vp,
+            "vm": self.vm,
+            "vp_tilde": self.vp_tilde,
+            "vm_tilde": self.vm_tilde,
             "wn": self.wn,
             "wp": self.wp,
             "wm": self.wm,
@@ -138,7 +146,9 @@ class Bubble:
             self.add_note(msg)
         try:
             # Todo: make the solver errors more specific
-            self.v, self.w, self.xi, self.sol_type, self.wp, self.wm, self.wm_sh, self.v_cj, self.solver_failed = \
+            self.v, self.w, self.xi, self.sol_type, \
+                self.vp, self.vm, self.vp_tilde, self.vm_tilde, \
+                self.wp, self.wm, self.wm_sh, self.v_cj, self.solver_failed = \
                 fluid_shell_generic(
                     model=self.model,
                     v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type, n_xi=self.n_points,
@@ -159,9 +169,10 @@ class Bubble:
 
         # Validity checking for the solution
         self.alpha_plus = self.model.alpha_plus(self.wp, self.wm)
-        if self.alpha_plus >= 1/3:
+        if self.sol_type != SolutionType.DETON and self.alpha_plus >= 1/3:
             msg = "Got alpha_plus > 1/3 with " \
-                  f"model={self.model.label_unicode}, v_wall={self.v_wall}, alpha_n={self.alpha_n}. " \
+                  f"model={self.model.label_unicode}, v_wall={self.v_wall}, " \
+                  f"alpha_n={self.alpha_n}, sol_type={self.sol_type}. " \
                   f"This is unphysical! Got: {self.alpha_plus}"
             logger.error(msg)
             self.add_note(msg)
