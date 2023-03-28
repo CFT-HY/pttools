@@ -10,12 +10,15 @@ import matplotlib.pyplot as plt
 from pttools.logging import setup_logging
 from pttools.bubble.fluid_bag import fluid_shell
 from pttools.models.bag import BagModel
+from pttools.models.const_cs import ConstCSModel
 from pttools.bubble import props
 from pttools.bubble.bubble import Bubble
 
 setup_logging()
 
 model = BagModel(g_s=123, g_b=120, V_s=0.9)
+# model = BagModel(a_s=13.488, a_b=13.159, V_s=0.900, V_b=0.000)
+# model = ConstCSModel(css2=0.323, csb2=0.322, g_s=123, g_b=120, V_s=0.9)
 
 v_wall = 0.85
 alpha_n = 0.05
