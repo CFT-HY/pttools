@@ -422,24 +422,31 @@ def fluid_shell_generic(
 
     if use_bag_solver and model.DEFAULT_NAME == "bag":
         logger.info("Using bag solver for model=%s, v_wall=%s, alpha_n=%s", model.label_unicode, v_wall, alpha_n)
+        sol_type2 = transition.identify_solution_type_bag(v_wall, alpha_n)
+        if sol_type is not None and sol_type != sol_type2:
+            raise ValueError(f"Bag model gave a different solution type ({sol_type2}) than what was given ({sol_type}).")
+
         v, w, xi = fluid_bag.fluid_shell(v_wall, alpha_n)
         # The results of the old solver are scaled to wn=1
         w *= wn
         if np.any(np.isnan(v)):
-            return v, w, xi, sol_type, np.nan, np.nan, np.nan, np.nan, True
+            return v, w, xi, sol_type2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, True
 
-        sol_type2 = transition.identify_solution_type_bag(v_wall, alpha_n)
-        if sol_type is not None and sol_type != sol_type2:
-            raise ValueError(f"Bag model gave a different solution type ({sol_type2}) than what was given ({sol_type}).")
         vp, vm, vp_tilde, vm_tilde, wp, wm, wn, wm_sh = props.v_and_w_from_solution(v, w, xi, v_wall, sol_type2)
 
         # The wm_guess is not needed for the bag model
         v_cj: float = chapman_jouguet.v_chapman_jouguet(model, alpha_n, wn, wm)
-        return v, w, xi, sol_type2, wp, wm, wm_sh, v_cj, False
+        return v, w, xi, sol_type2, vp_tilde, vm_tilde, wp, wm, wm_sh, v_cj, False
+
+    sol_type = transition.validate_solution_type(
+        model,
+        v_wall=v_wall, alpha_n=alpha_n, sol_type=sol_type,
+        wn_guess=wn, wm_guess=wm_guess
+    )
 
     # Load and scale reference data
     using_ref = False
-    vp_ref, vm_ref, vp_tilde_ref, vm_tilde_ref, wp_ref, wm_ref = fluid_reference.ref().get(v_wall, alpha_n)
+    vp_ref, vm_ref, vp_tilde_ref, vm_tilde_ref, wp_ref, wm_ref = fluid_reference.ref().get(v_wall, alpha_n, sol_type)
 
     if vp_guess is None or np.isnan(vp_guess):
         using_ref = True
@@ -477,12 +484,6 @@ def fluid_shell_generic(
             f"Got invalid guesses: vp_tilde={vp_tilde_guess}, wp={wp_guess}, wm={wm_guess}, wn={wn_guess} "
             f"for v_wall={v_wall}, alpha_n={alpha_n}"
         )
-
-    sol_type = transition.validate_solution_type(
-        model,
-        v_wall=v_wall, alpha_n=alpha_n, sol_type=sol_type,
-        wn_guess=wn, wm_guess=wm_guess
-    )
 
     v_cj = chapman_jouguet.v_chapman_jouguet(model, alpha_n, wn, wm_guess)
     dxi = 1. / n_xi
