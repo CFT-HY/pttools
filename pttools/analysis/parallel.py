@@ -1,5 +1,6 @@
 import concurrent.futures as cf
 import logging
+import time
 import typing as tp
 
 import numpy as np
@@ -36,8 +37,10 @@ def create_bubbles(
         v_walls: np.ndarray,
         alpha_ns: np.ndarray,
         func: callable = None,
+        log_progress_percentage: float = 5,
         max_workers: int = options.MAX_WORKERS_DEFAULT,
         kwargs: tp.Dict[str, any] = None) -> tp.Union[np.ndarray, tp.Tuple[np.ndarray, np.ndarray]]:
+    start_time = time.perf_counter()
     post_func_return_multiple = False
     if func is None:
         output_dtypes = None
@@ -66,13 +69,19 @@ def create_bubbles(
             params[i_alpha_n, i_v_wall, 1] = alpha_n
 
     fluid_reference.ref()
-    return parallel.run_parallel(
+    ret = parallel.run_parallel(
         create_bubble, params,
         multiple_params=True,
         output_dtypes=output_dtypes,
         max_workers=max_workers,
+        log_progress_percentage=log_progress_percentage,
         kwargs=kwargs2
     )
+    bubble_count = alpha_ns.size * v_walls.size
+    elapsed = time.perf_counter() - start_time
+    elapsed_per_bubble = elapsed / bubble_count
+    logger.debug("Creating %s bubbles took %s s in total, %s s per bubble", bubble_count, elapsed, elapsed_per_bubble)
+    return ret
 
 
 def solve_bubbles(bubbles: np.ndarray, max_workers: int = options.MAX_WORKERS_DEFAULT) -> None:
