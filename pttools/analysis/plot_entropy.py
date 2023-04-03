@@ -82,10 +82,13 @@ class KappaOmegaSumPlot(VwAlphaPlot):
         cbar.ax.set_ylabel(r"$|\kappa + \omega - 1|$")
 
 
+COMPUTE_FAIL = np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
+
+
 def compute(bubble: Bubble):
     try:
         if bubble.no_solution_found or bubble.solver_failed:
-            return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
+            return COMPUTE_FAIL
         sm = bubble.model.s(bubble.wm, Phase.BROKEN)
         sn = bubble.model.s(bubble.wn, Phase.SYMMETRIC)
         if bubble.sol_type is SolutionType.DETON:
@@ -97,21 +100,23 @@ def compute(bubble: Bubble):
 
         diff = relativity.gamma(bubble.vm_tilde) * bubble.vm_tilde * sm - \
             relativity.gamma(bubble.vp_tilde) * bubble.vp_tilde * sp
-        # diff_sh = relativity.gamma(bubble.)
+        diff_sh = relativity.gamma(bubble.vm_tilde_sh) * bubble.vm_tilde_sh * sm_sh - \
+            relativity.gamma(bubble.vp_tilde_sh) * bubble.vp_tilde_sh * sn
         return (
             bubble.entropy_density_relative,
             sp,
             sm,
             sm_sh,
             sn,
-            diff
+            diff,
+            diff_sh
         )
     except IndexError as e:
-        logger.exception("THIS SHOULD NOT HAPPEN", exc_info=e)
-        return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
+        logger.exception(f"Computing entropy quantities failed for {bubble.label_unicode}.", exc_info=e)
+        return COMPUTE_FAIL
 
 
-compute.return_type = (np.float_, np.float_, np.float_, np.float_, np.float_, np.float_)
+compute.return_type = (np.float_, np.float_, np.float_, np.float_, np.float_, np.float_, np.float_)
 
 
 def gen_and_plot_entropy(
@@ -134,16 +139,18 @@ def gen_and_plot_entropy(
         sm_sh = grid.data[3]
         sn = grid.data[4]
         diff = grid.data[5]
+        diff_sh = grid.data[6]
 
         EntropyPlot(grid, s_total_rel, min_level, max_level, diff_level, fig=fig, ax=axs[i_model, 0])
         DeltaEntropyPlot(
             grid, w1=sm, w2=sp, w_ref=sn,
             title=r"$\frac{s_- - s_+}{s_n}$", fig=fig, ax=axs[i_model, 1])
-        DeltaEntropyPlot(
-            grid, w1=sm_sh, w2=sn, w_ref=sn,
-            title=r"$\frac{s_{sh-} - s_n}{s_n}$", fig=fig, ax=axs[i_model, 2])
+        # DeltaEntropyPlot(
+        #     grid, w1=sm_sh, w2=sn, w_ref=sn,
+        #     title=r"$\frac{s_{sh-} - s_n}{s_n}$", fig=fig, ax=axs[i_model, 2])
         # KappaOmegaSumPlot(grid, fig, axs[i_model, 3])
-        EntropyConservationPlot(grid, diff, fig, axs[i_model, 3])
+        EntropyConservationPlot(grid, diff, fig, axs[i_model, 2])
+        EntropyConservationPlot(grid, diff_sh, fig, axs[i_model, 3])
 
     # fig.tight_layout()
 

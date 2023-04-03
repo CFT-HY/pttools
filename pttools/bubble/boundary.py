@@ -9,8 +9,8 @@ import typing as tp
 
 import numba
 import numpy as np
-from scipy.optimize import fsolve
 
+from pttools.speedup.solvers import fsolve_vary
 import pttools.type_hints as th
 from . import const
 from . import relativity
@@ -240,34 +240,22 @@ def solve_junction(
             f"Got: v1={v1_tilde}, w1={w1}, v2_guess={v2_tilde_guess}, w2_guess={w2_guess}")
         return np.nan, np.nan
 
-    # if w2_guess is None:
-    #     from . import chapman_jouguet
-    #     w2_guess = 0.5*chapman_jouguet.wm_chapman_jouguet(model, w1)
-    # if v2_guess is None:
-    #     v2_guess = 0.5*np.sqrt(model.cs2(w2_guess, Phase.BROKEN))
-    # w2_guess = 1.05*w1
-    # v2_guess = 0.05
-    # vp, vm, vp_tilde, vm_tilde = fluid_speeds_at_wall(v1, alpha_p=model.alpha_n(w1), sol_type=SolutionType.DETON)
-    # v2_guess = vm_tilde
-    # w2_guess = 1.234 * w1
-    # v2_guess = 0.818
-    # print("v2_guess, w2_guess, w1:", v2_guess, w2_guess, w1)
-    # v2_guess = 0.1
-    # wn = 1 -> wm = 1.25
-    # Enthalpy ratio wm = 1.234 wn
-
-    sol = fsolve(
+    # Using fsolve_vary helps in finding the solutions, but it can also make the overall solver a lot slower.
+    sol = fsolve_vary(
         junction_conditions_solvable,
         x0=np.array([v2_tilde_guess, w2_guess]),
         args=(model, v1_tilde, w1, phase1, phase2),
-        full_output=True
+        # This would create a lot of log spam
+        log_status=False
     )
     v2_tilde = sol[0][0]
     w2 = sol[0][1]
+
     if sol[2] != 1:
         msg = \
-            f"Boundary solution was not found for v1={v1_tilde}, w1={w1}, model={model.name}. " + \
-            f"Using v2_tilde={v2_tilde}, w2={w2}. " + \
+            f"Boundary solution was not found for v1_tilde={v1_tilde}, w1={w1}, model={model.name}. " \
+            f"Using v2_tilde={v2_tilde}, w2={w2}. Guess was v2_tilde={v2_tilde_guess}, w2={w2_guess}. " \
+            f"Deviations={junction_conditions_solvable(np.array([v2_tilde, w2]), model, v1_tilde, w1, phase1, phase2)}. " + \
             ("" if (0 < v2_tilde < 1) else "This is unphysical! ") + \
             f"Reason: {sol[3]}"
         logger.error(msg)

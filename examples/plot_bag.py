@@ -9,10 +9,12 @@ import matplotlib.pyplot as plt
 
 from pttools.logging import setup_logging
 from pttools.bubble.fluid_bag import fluid_shell
+from pttools.bubble.fluid_reference import ref
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
 from pttools.bubble import props
 from pttools.bubble.bubble import Bubble
+from pttools.bubble.boundary import SolutionType
 
 setup_logging()
 
@@ -31,9 +33,15 @@ print("Solving with new solver")
 bubble = Bubble(model, v_wall=v_wall, alpha_n=alpha_n)
 bubble.solve()
 print(bubble.sol_type)
+ref_data = ref().get(v_wall, alpha_n, bubble.sol_type)
+print(
+    f"vp={ref_data[0]}, vm={ref_data[1]}, "
+    f"vp_tilde={ref_data[2]}, vm_tilde={ref_data[3]}, "
+    f"wp={ref_data[4]}, wm={ref_data[5]}"
+)
 
 fig: plt.Figure = plt.figure()
-ax1, ax2, ax3, ax4 = fig.subplots(4, 1)
+ax1, ax2, ax3, ax4 = fig.subplots(4, 1, sharex=True)
 
 phase = props.find_phase(bubble.xi, bubble.v_wall)
 theta = model.theta(bubble.w, phase)

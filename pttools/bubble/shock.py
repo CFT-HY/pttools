@@ -80,8 +80,10 @@ def find_shock_index(
         # This can emit a lot of log spam if the warning of a barely existing shock is enabled.
         # pylint: disable=unused-variable
         v_shock_tilde, w_shock = solve_shock(
-            model, xi_i, wn,
-            backwards=True, warn_if_barely_exists=warn_if_barely_exists)
+            model,
+            v1_tilde=xi_i, w1=wn,
+            backwards=True, warn_if_barely_exists=warn_if_barely_exists
+        )
         v_shock = relativity.lorentz(xi_i, v_shock_tilde)
         if v[i] <= v_shock:
             i_shock = i
@@ -134,10 +136,10 @@ def shock_zoom_last_element(
 
 def solve_shock(
             model: "Model",
-            v1: float,
+            v1_tilde: float,
             w1: float,
             backwards: bool,
-            v2_guess: float = None,
+            v2_tilde_guess: float = None,
             w2_guess: float = None,
             phase: Phase = Phase.SYMMETRIC,
             allow_failure: bool = False,
@@ -145,49 +147,52 @@ def solve_shock(
     r"""Solve the boundary conditions at a shock
 
     :param model: Hydrodynamics model
-    :param v1: $\tilde{v}_{1,sh}$
+    :param v1_tilde: $\tilde{v}_{1,sh}$
     :param w1: $w_{1,sh}$
-    :param v2_guess: Starting guess for $\tilde{v}_{2,sh}$
+    :param v2_tilde_guess: Starting guess for $\tilde{v}_{2,sh}$
     :param w2_guess: Starting guess for $w_{2,sh}$
     :param phase: Phase in which the shock propagates
     :param backwards: whether to solve from $+$ to $-$ instead of from $-$ to $+$
     :param allow_failure: Whether to allow invalid values
+    :return: $\tilde{v}_{2,sh},w2$
     """
-    if v1 < 0 or v1 > 1 or np.isclose(v1, 0) or np.isnan(v1):
-        logger.error(f"Got invalid v1={v1} for shock solver.")
+    # Handle invalid inputs
+    if v1_tilde < 0 or v1_tilde > 1 or np.isclose(v1_tilde, 0) or np.isnan(v1_tilde):
+        logger.error(f"Got invalid v1={v1_tilde} for shock solver.")
         return np.nan, np.nan
     if np.isclose(w1, 0) or np.isnan(w1):
         logger.error(f"Got invalid w1={w1} for shock solver.")
         return np.nan, np.nan
 
-    if np.isclose(v1, 1):
-        logger.error(f"Got v1={v1} for shock solver.")
+    if np.isclose(v1_tilde, 1):
+        logger.error(f"Got v1={v1_tilde} for shock solver.")
         return 1, np.nan
 
+    # If shock barely exists
     cs = np.sqrt(model.cs2(w1, phase))
-    if np.isclose(v1, cs):
+    if np.isclose(v1_tilde, cs):
         if warn_if_barely_exists:
-            logger.warning(f"The shock barely exists. Got v1={v1}, w1={w1}")
-        return v1, w1
+            logger.warning(f"The shock barely exists. Got v1={v1_tilde}, w1={w1}")
+        return v1_tilde, w1
 
     # Bag model guess
-    if v2_guess is None:
-        v2_guess = 1/(3*v1)
-    if np.isclose(v2_guess, 0) or np.isclose(v2_guess, 1):
-        logger.error(f"Got invalid estimate for v2={v2_guess}")
+    if v2_tilde_guess is None:
+        v2_tilde_guess = 1 / (3 * v1_tilde)
+    if np.isclose(v2_tilde_guess, 0) or np.isclose(v2_tilde_guess, 1):
+        logger.error(f"Got invalid estimate for v2={v2_tilde_guess}")
         return np.nan, np.nan
 
     if backwards:
-        if v1 < cs:
-            logger.error(f"The shock must be supersonic. Got v1=vp={v1}, w1=wp={w1}, cs(wp)={cs}")
+        if v1_tilde < cs:
+            logger.error(f"The shock must be supersonic. Got v1=vp={v1_tilde}, w1=wp={w1}, cs(wp)={cs}")
             return np.nan, np.nan
         if w2_guess is None:
-            w2_guess = wm_shock_bag(v1, w1)
+            w2_guess = wm_shock_bag(v1_tilde, w1)
         if np.isnan(w2_guess):
             w2_guess = 0.1*w1
     else:
         if w2_guess is None:
-            w2_guess = wp_shock_bag(v1, w1)
+            w2_guess = wp_shock_bag(v1_tilde, w1)
         if np.isnan(w2_guess):
             w2_guess = 2*w1
     if w2_guess < 0 or np.isclose(w2_guess, 0):
@@ -196,9 +201,9 @@ def solve_shock(
 
     return solve_junction(
         model,
-        v1_tilde=v1, w1=w1,
+        v1_tilde=v1_tilde, w1=w1,
         phase1=phase, phase2=phase,
-        v2_tilde_guess=v2_guess, w2_guess=w2_guess,
+        v2_tilde_guess=v2_tilde_guess, w2_guess=w2_guess,
         allow_failure=allow_failure
     )
 

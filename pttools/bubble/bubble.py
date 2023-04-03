@@ -72,14 +72,19 @@ class Bubble:
             if label_unicode is None else label_unicode
         self.notes: tp.List[str] = []
 
-        # Output data
+        # Output arrays
         self.v: tp.Optional[np.ndarray] = None
         self.w: tp.Optional[np.ndarray] = None
         self.xi: tp.Optional[np.ndarray] = None
+
+        # Output values
         self.vp: tp.Optional[float] = None
         self.vm: tp.Optional[float] = None
         self.vp_tilde: tp.Optional[float] = None
         self.vm_tilde: tp.Optional[float] = None
+        self.v_sh: tp.Optional[float] = None
+        self.vm_sh: tp.Optional[float] = None
+        self.vm_tilde_sh: tp.Optional[float] = None
         self.v_cj: tp.Optional[float] = None
         self.wp: tp.Optional[float] = None
         self.wm: tp.Optional[float] = None
@@ -116,6 +121,9 @@ class Bubble:
             "vm": self.vm,
             "vp_tilde": self.vp_tilde,
             "vm_tilde": self.vm_tilde,
+            "v_sh": self.v_sh,
+            "vm_sh": self.vm_sh,
+            "vm_tilde_sh": self.vm_tilde_sh,
             "wn": self.wn,
             "wp": self.wp,
             "wm": self.wm,
@@ -148,6 +156,7 @@ class Bubble:
             # Todo: make the solver errors more specific
             self.v, self.w, self.xi, self.sol_type, \
                 self.vp, self.vm, self.vp_tilde, self.vm_tilde, \
+                self.v_sh, self.vm_sh, self.vm_tilde_sh, \
                 self.wp, self.wm, self.wm_sh, self.v_cj, self.solver_failed = \
                 fluid_shell_generic(
                     model=self.model,
@@ -203,6 +212,15 @@ class Bubble:
 
     def spectrum(self):
         raise NotImplementedError
+
+    @property
+    def vp_tilde_sh(self):
+        """Velocity in front of the shock in the shock frame
+
+        The fluid ahead of the shock is still, and therefore
+        $$\tilde{v}_{+,sh} = v_{sh}$$.
+        """
+        return self.v_sh
 
     # -----
     # Thermodynamics
