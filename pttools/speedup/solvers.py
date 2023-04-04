@@ -29,9 +29,9 @@ def fsolve_vary(
         for sign in (1, -1):
             x0_var = x0.copy()
             if scalar_var:
-                x0_var[i] += sign*variations
+                x0_var[i] *= 1 + sign*variations
             else:
-                x0_var[i] += sign*variations[i]
+                x0_var[i] *= 1 + sign*variations[i]
             sol2 = fsolve(func, x0=x0_var, args=args, full_output=True, **kwargs)
             if sol2[2] == 1:
                 if log_status:
