@@ -9,17 +9,51 @@ from pttools.speedup.options import MAX_WORKERS_DEFAULT
 logger = logging.getLogger(__name__)
 
 
-def log_progress(it: np.nditer, log_progress_element: int, log_progress_percentage: float):
-    ind = it.index
-    arr_size = it.operands[0].size
-    percentage = ind / arr_size * 100
-    percentage_prev = (ind - 1) / arr_size * 100
+class FakeFuture:
+    def __init__(self, func: callable, *args, **kwargs):
+        self._result = func(*args, **kwargs)
 
-    if (log_progress_element is not None and ind % log_progress_element == 0) \
-            or (log_progress_percentage is not None and
-                np.floor(percentage / log_progress_percentage) != np.floor(percentage_prev / log_progress_percentage)):
-        logger.debug("Processing item %s, %s %%", it.multi_index, percentage)
+    def result(self):
+        return self._result
 
+
+class LoggingRunner:
+    def __init__(
+            self,
+            func: callable,
+            arr_size: int,
+            unpack_params: bool,
+            args: tuple = (),
+            kwargs: tp.Dict[str, any] = None,
+            log_progress_element: int = None,
+            log_progress_percentage: float = None):
+        self.func = func
+        self.arr_size = arr_size
+        self.unpack_params = unpack_params
+        self.args = args
+        self.kwargs = {} if kwargs is None else kwargs
+        self.log_progress_element = log_progress_element
+        self.log_progress_percentage = log_progress_percentage
+
+    def run(self, param, index: int = None, multi_index: tp.Iterable = None):
+        if self.unpack_params:
+            ret = self.func(*param, *self.args, **self.kwargs)
+        else:
+            ret = self.func(param, *self.args, **self.kwargs)
+
+        if index is not None:
+            percentage = index / self.arr_size * 100
+            percentage_prev = (index - 1) / self.arr_size * 100
+            if (self.log_progress_element is not None and index % self.log_progress_element == 0) \
+                or (self.log_progress_percentage is not None and
+                    np.floor(percentage / self.log_progress_percentage) != np.floor(
+                    percentage_prev / self.log_progress_percentage)):
+                if multi_index is None:
+                    logger.debug("Processed item %s/%s, %s %%", index, self.arr_size, percentage)
+                else:
+                    logger.debug("Processed item %s, %s/%s, %s %%", multi_index, index, self.arr_size, percentage)
+
+        return ret
 
 def run_parallel(
         func: callable,
@@ -31,7 +65,8 @@ def run_parallel(
         log_progress_element: int = None,
         log_progress_percentage: float = None,
         args: tp.Union[list, tuple] = (),
-        kwargs: tp.Dict[str, tp.Any] = None) -> tp.Union[np.ndarray, tp.Tuple[np.ndarray, ...]]:
+        kwargs: tp.Dict[str, tp.Any] = None,
+        single_thread: bool = False) -> tp.Union[np.ndarray, tp.Tuple[np.ndarray, ...]]:
     """Run the given function with multiple parameters in parallel
 
     :param func: The function to be executed in parallel
@@ -44,6 +79,7 @@ def run_parallel(
     :param log_progress_percentage: Log progress every x %
     :param args: common arguments for the function
     :param kwargs: common kwargs for the function
+    :param single_thread: disable parallelism for debugging and profiling
     :return: Numpy arrays for each output value
     """
     if kwargs is None:
@@ -54,8 +90,19 @@ def run_parallel(
         flags.append("reduce_ok")
         flags.append("external_loop")
         op_axes = [None, [*list(range(params.ndim-1)), -1]]
+        arr_size: int = np.prod(params.shape[:-1])
     else:
+        flags.append("c_index")
+        flags.append("multi_index")
         op_axes = None
+        arr_size: int = np.prod(params.shape)
+
+    runner = LoggingRunner(
+        func,
+        arr_size=arr_size, unpack_params=unpack_params,
+        args=args, kwargs=kwargs,
+        log_progress_element=log_progress_element, log_progress_percentage=log_progress_percentage
+    )
 
     with cf.ProcessPoolExecutor(max_workers=max_workers) as ex:
         # Submit parallel execution
@@ -64,13 +111,16 @@ def run_parallel(
                 flags=flags,
                 op_flags=[["readonly"], ["readwrite", "allocate"]],
                 op_axes=op_axes,
-                op_dtypes=[params.dtype, object]) as it:
-            if unpack_params:
-                for param, fut in it:
-                    fut[...] = ex.submit(func, *param, *args, **kwargs)
+                op_dtypes=[params.dtype, object],
+                order="C") as it:
+            if single_thread:
+                for ind, (param, fut) in enumerate(it):
+                    multi_index = None if multiple_params else it.multi_index
+                    fut[...] = FakeFuture(runner.run, param, index=ind, multi_index=multi_index)
             else:
-                for param, fut in it:
-                    fut[...] = ex.submit(func, param, *args, **kwargs)
+                for ind, (param, fut) in enumerate(it):
+                    multi_index = None if multiple_params else it.multi_index
+                    fut[...] = ex.submit(runner.run, param, index=ind, multi_index=multi_index)
             futs = it.operands[1]
 
         # Collect results
@@ -91,7 +141,6 @@ def run_parallel(
                     # op_flags=[["readonly"], ["writeonly"]],
                     order="C") as it:
                 for fut, res in it:
-                    log_progress(it, log_progress_element, log_progress_percentage)
                     res[...] = fut.item().result()
                 return it.operands[1]
 
@@ -104,7 +153,6 @@ def run_parallel(
                 op_flags=op_flags2,
                 order="C") as it:
             for elems in it:
-                log_progress(it, log_progress_element, log_progress_percentage)
                 res = elems[0].item().result()
                 for arr, val in zip(elems[1:], res):
                     arr[...] = val
