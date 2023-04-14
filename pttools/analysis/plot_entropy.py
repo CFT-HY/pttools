@@ -140,8 +140,9 @@ def gen_and_plot_entropy(
         min_level: float,
         max_level: float,
         diff_level: float,
-        use_bag_solver: bool = False) -> tp.Tuple[plt.Figure, np.ndarray]:
-    fig: plt.Figure = plt.figure()
+        use_bag_solver: bool = False,
+        path: str = None) -> tp.Tuple[plt.Figure, np.ndarray]:
+    fig: plt.Figure = plt.figure(figsize=(16*1.5, 9*1.5))
     axs = fig.subplots(nrows=len(models), ncols=4)
 
     for i_model, model in enumerate(models):
@@ -168,6 +169,9 @@ def gen_and_plot_entropy(
         DurationPlot(grid, fig, axs[i_model, 3])
 
     # fig.tight_layout()
+
+    if path is not None:
+        fig.savefig(path)
 
     return fig, axs
 

@@ -5,6 +5,8 @@ Entropy
 Plot the relative change in entropy density
 """
 
+import os.path
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -12,6 +14,8 @@ from pttools.logging import setup_logging
 from pttools.analysis.plot_entropy import gen_and_plot_entropy
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
+
+from examples.utils import FIG_DIR
 
 
 def main():
@@ -33,7 +37,8 @@ def main():
         min_level=-0.3,
         max_level=0.4,
         diff_level=0.05,
-        # use_bag_solver=True
+        # use_bag_solver=True,
+        path=os.path.join(FIG_DIR, "entropy.png")
     )
 
 
