@@ -25,6 +25,9 @@ class BubbleGrid:
                     res[...] = None
             return it.operands[1]
 
+    def elapsed(self) -> np.ndarray:
+        return self.get_value("elapsed", dtype=np.float_)
+
     def kappa(self) -> np.ndarray:
         return self.get_value("kappa", dtype=np.float_)
 

@@ -20,6 +20,20 @@ if tp.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+class DurationPlot(VwAlphaPlot):
+    def __init__(self, grid: BubbleGridVWAlpha, fig: plt.Figure = None, ax: plt.Axes = None):
+        super().__init__(fig, ax)
+        img = ax.pcolor(grid.v_walls, grid.alpha_ns, grid.elapsed())
+        cbar = ax.figure.colorbar(img, ax=ax)
+
+        # cs: QuadContourSet = ax.contourf(grid.v_walls, grid.alpha_ns, grid.elapsed(),
+        #                                  locator=ticker.LinearLocator(numticks=20))
+        # cbar = self.fig.colorbar(cs)
+
+        cbar.ax.set_ylabel("Time elapsed (s)")
+        ax.set_title(f"Time elapsed (s) for {grid.model.label_latex}")
+
+
 class EntropyPlot(VwAlphaPlot):
     def __init__(
             self,
@@ -150,7 +164,8 @@ def gen_and_plot_entropy(
         #     title=r"$\frac{s_{sh-} - s_n}{s_n}$", fig=fig, ax=axs[i_model, 2])
         # KappaOmegaSumPlot(grid, fig, axs[i_model, 3])
         EntropyConservationPlot(grid, diff, fig, axs[i_model, 2])
-        EntropyConservationPlot(grid, diff_sh, fig, axs[i_model, 3])
+        # EntropyConservationPlot(grid, diff_sh, fig, axs[i_model, 3])
+        DurationPlot(grid, fig, axs[i_model, 3])
 
     # fig.tight_layout()
 

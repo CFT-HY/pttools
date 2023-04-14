@@ -90,6 +90,7 @@ class Bubble:
         self.wm: tp.Optional[float] = None
         self.wm_sh: tp.Optional[float] = None
         self.alpha_plus: tp.Optional[float] = None
+        self.elapsed: tp.Optional[float] = None
 
         self.gw_power_spectrum = None
 
@@ -157,7 +158,7 @@ class Bubble:
             self.v, self.w, self.xi, self.sol_type, \
                 self.vp, self.vm, self.vp_tilde, self.vm_tilde, \
                 self.v_sh, self.vm_sh, self.vm_tilde_sh, \
-                self.wp, self.wm, self.wm_sh, self.v_cj, self.solver_failed = \
+                self.wp, self.wm, self.wm_sh, self.v_cj, self.solver_failed, self.elapsed = \
                 fluid_shell_generic(
                     model=self.model,
                     v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type, n_xi=self.n_points,

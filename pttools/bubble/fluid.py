@@ -1,6 +1,7 @@
 r"""Solver for the fluid velocity profile of a bubble"""
 
 import logging
+import time
 import typing as tp
 
 import numpy as np
@@ -335,6 +336,7 @@ def fluid_shell_solvable_hybrid(
 
 def fluid_shell_solver_deflagration(
         model: "Model",
+        start_time: float,
         v_wall: float, alpha_n: float, wn: float,
         wm_guess: float, vp_guess: float = None, wp_guess: float = None, allow_failure: bool = False) -> SolverOutput:
     if vp_guess > v_wall:
@@ -361,7 +363,8 @@ def fluid_shell_solver_deflagration(
         logger.error(
             f"Deflagration solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. "
             f"Got wn_estimate={wn_estimate} for wn={wn}." +
-            (f"" if sol[2] == 1 else f" Reason: {sol[3]}")
+            (f"" if sol[2] == 1 else f" Reason: {sol[3]}") +
+            f"Elapsed: {time.perf_counter() - start_time} s."
         )
     # print(np.array([v, w, xi]).T)
     # print("wn, xi_sh", wn, xi_sh)
@@ -369,7 +372,10 @@ def fluid_shell_solver_deflagration(
     return v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, solution_found
 
 
-def fluid_shell_solver_deflagration_reverse(model: "Model", v_wall: float, alpha_n: float, wn: float) -> SolverOutput:
+def fluid_shell_solver_deflagration_reverse(
+        model: "Model",
+        start_time: float,
+        v_wall: float, alpha_n: float, wn: float) -> SolverOutput:
     # This is arbitrary and should be replaced by a value from the bag model
     xi_sh_guess = 1.1 * np.sqrt(model.cs2_max(wn, Phase.BROKEN))
     sol = fsolve(
@@ -384,7 +390,7 @@ def fluid_shell_solver_deflagration_reverse(model: "Model", v_wall: float, alpha
         solution_found = False
         logger.error(
             f"Deflagration solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. "
-            f"Using xi_sh={xi_sh}. Reason: {sol[3]}"
+            f"Using xi_sh={xi_sh}. Reason: {sol[3]} Elapsed: {time.perf_counter() - start_time} s."
         )
     v, w, xi, wp, wm, vm = fluid_shell_deflagration_reverse(model, v_wall, wn, xi_sh)
 
@@ -392,7 +398,9 @@ def fluid_shell_solver_deflagration_reverse(model: "Model", v_wall: float, alpha
 
 
 def fluid_shell_solver_hybrid(
-        model: "Model", v_wall: float, alpha_n: float, wn: float,
+        model: "Model",
+        start_time: float,
+        v_wall: float, alpha_n: float, wn: float,
         vp_tilde_guess: float, wp_guess: float, wm_guess: float, allow_failure: bool) -> SolverOutput:
     sol = fsolve_vary(
         fluid_shell_solvable_hybrid,
@@ -405,7 +413,7 @@ def fluid_shell_solver_hybrid(
         solution_found = False
         logger.error(
             f"Hybrid solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. "
-            f"Using wm={wm}. Reason: {sol[3]}"
+            f"Using wm={wm}. Reason: {sol[3]} Elapsed: {time.perf_counter() - start_time} s."
         )
     v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = fluid_shell_hybrid(
         model, v_wall, wn, wm,
@@ -415,11 +423,12 @@ def fluid_shell_solver_hybrid(
         warn_if_shock_barely_exists=False
     )
     # wp = w[0]
+    # Todo: is this unnecessary?
     if not np.isclose(wn_estimate, wn):
         solution_found = False
         logger.error(
             f"Hybrid solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. "
-            f"Got wn_estimate={wn_estimate}, which differs from wn={wn}."
+            f"Got wn_estimate={wn_estimate}, which differs from wn={wn}. Elapsed: {time.perf_counter() - start_time} s."
         )
     vm = relativity.lorentz(v_wall, np.sqrt(model.cs2(wm, Phase.BROKEN)))
     v_tail, w_tail, xi_tail, t_tail = integrate.fluid_integrate_param(
@@ -451,11 +460,12 @@ def fluid_shell_generic(
             use_bag_solver: bool = False
         ) -> tp.Tuple[
             np.ndarray, np.ndarray, np.ndarray, SolutionType,
-            float, float, float, float, float, float, float, float, float, float, float, bool]:
+            float, float, float, float, float, float, float, float, float, float, float, bool, float]:
     """Generic fluid shell solver
 
     In most cases you should not have to call this directly. Create a Bubble instead.
     """
+    start_time = time.perf_counter()
     wn = model.w_n(alpha_n, wn_guess=wn_guess)
 
     if use_bag_solver and model.DEFAULT_NAME == "bag":
@@ -468,13 +478,15 @@ def fluid_shell_generic(
         # The results of the old solver are scaled to wn=1
         w *= wn
         if np.any(np.isnan(v)):
-            return v, w, xi, sol_type2, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, True
+            return v, w, xi, sol_type2, \
+                np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, True, time.perf_counter() - start_time
 
         vp, vm, vp_tilde, vm_tilde, wp, wm, wn, wm_sh = props.v_and_w_from_solution(v, w, xi, v_wall, sol_type2)
 
         # The wm_guess is not needed for the bag model
         v_cj: float = chapman_jouguet.v_chapman_jouguet(model, alpha_n, wn, wm)
-        return v, w, xi, sol_type2, vp_tilde, vm_tilde, np.nan, np.nan, np.nan, wp, wm, wm_sh, v_cj, False
+        return v, w, xi, sol_type2, \
+            vp, vm, vp_tilde, vm_tilde, np.nan, np.nan, np.nan, wp, wm, wm_sh, v_cj, False, time.perf_counter() - start_time
 
     sol_type = transition.validate_solution_type(
         model,
@@ -555,13 +567,15 @@ def fluid_shell_generic(
         else:
             v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, solution_found = \
                 fluid_shell_solver_deflagration(
-                    model, v_wall, alpha_n, wn, wm_guess,
+                    model, start_time,
+                    v_wall, alpha_n, wn, wm_guess,
                     vp_guess=vp_guess, wp_guess=wp_guess, allow_failure=allow_failure
                 )
     elif sol_type == SolutionType.HYBRID:
         v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, solution_found = \
             fluid_shell_solver_hybrid(
-                model, v_wall, alpha_n, wn,
+                model, start_time,
+                v_wall, alpha_n, wn,
                 vp_tilde_guess=vp_tilde_guess,
                 wp_guess=wp_guess,
                 wm_guess=wm_guess,
@@ -583,10 +597,11 @@ def fluid_shell_generic(
     w = np.concatenate((wb, w, wf))
     xi = np.concatenate((xib, xi, xif))
 
+    elapsed = time.perf_counter() - start_time
     if solution_found:
         logger.info(
-            "Solved fluid shell for model=%s, v_wall=%s, alpha_n=%s, sol_type=%s",
-            model.label_unicode, v_wall, alpha_n, sol_type
+            "Solved fluid shell for model=%s, v_wall=%s, alpha_n=%s, sol_type=%s. Elapsed: %s s",
+            model.label_unicode, v_wall, alpha_n, sol_type, elapsed
         )
     else:
         pass
@@ -596,4 +611,4 @@ def fluid_shell_generic(
         #     "model=%s, v_wall=%s, alpha_n=%s, sol_type=%s",
         #     model.label_unicode, v_wall, alpha_n, sol_type
         # )
-    return v, w, xi, sol_type, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, v_cj, not solution_found
+    return v, w, xi, sol_type, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, v_cj, not solution_found, elapsed
