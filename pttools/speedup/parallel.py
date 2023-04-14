@@ -55,6 +55,7 @@ class LoggingRunner:
 
         return ret
 
+
 def run_parallel(
         func: callable,
         params: np.ndarray,

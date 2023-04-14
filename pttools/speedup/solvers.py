@@ -11,7 +11,8 @@ def fsolve_vary(
         func: callable,
         x0: np.ndarray,
         args: tp.Optional[tp.Union[tp.Iterable, tuple]] = None,
-        variations: tp.Union[float, np.ndarray] = 0.01,
+        abs_variations: tp.Union[float, np.ndarray] = 1e-3,
+        rel_variations: tp.Union[float, np.ndarray] = 0.01,
         log_status: bool = True,
         **kwargs) -> tp.Tuple[np.ndarray, dict, int, str]:
     """SciPy fsolve, but if it fails, it tries to vary the initial guess to find a solution"""
@@ -24,14 +25,21 @@ def fsolve_vary(
         return sol
 
     # Vary the initial guess
-    scalar_var = np.isscalar(variations)
+    scalar_rel_var = np.isscalar(rel_variations)
+    scalar_abs_var = np.isscalar(abs_variations)
     for i in range(x0.shape[0]):
         for sign in (1, -1):
             x0_var = x0.copy()
-            if scalar_var:
-                x0_var[i] *= 1 + sign*variations
+            if scalar_rel_var:
+                x0_var[i] *= 1 + sign*rel_variations
             else:
-                x0_var[i] *= 1 + sign*variations[i]
+                x0_var[i] *= 1 + sign*rel_variations[i]
+
+            if scalar_abs_var:
+                x0_var[i] += sign * abs_variations
+            else:
+                x0_var[i] += sign * abs_variations[i]
+
             sol2 = fsolve(func, x0=x0_var, args=args, full_output=True, **kwargs)
             if sol2[2] == 1:
                 if log_status:
@@ -39,7 +47,7 @@ def fsolve_vary(
                 return sol2
     if log_status:
         logger.error(
-            "Solution was not found directly, nor by varying the initial guess from %s with %s",
-            x0, variations
+            "Solution was not found directly, nor by varying the initial guess from %s with abs=%s, rel=%s",
+            x0, abs_variations, rel_variations
         )
     return sol
