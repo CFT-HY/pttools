@@ -4,6 +4,7 @@
 """
 
 import enum
+import functools
 import logging
 import typing as tp
 
@@ -240,13 +241,10 @@ def solve_junction(
             f"Got: v1={v1_tilde}, w1={w1}, v2_guess={v2_tilde_guess}, w2_guess={w2_guess}")
         return np.nan, np.nan
 
-    # Using fsolve_vary helps in finding the solutions, but it can also make the overall solver a lot slower.
-    sol = fsolve_vary(
-        junction_conditions_solvable,
-        x0=np.array([v2_tilde_guess, w2_guess]),
-        args=(model, v1_tilde, w1, phase1, phase2),
-        # This would create a lot of log spam
-        log_status=False
+    sol = solve_junction_internal(
+        model=model, v1_tilde=v1_tilde, w1=w1,
+        phase1=phase1, phase2=phase2,
+        v2_tilde_guess=v2_tilde_guess, w2_guess=w2_guess
     )
     v2_tilde = sol[0][0]
     w2 = sol[0][1]
@@ -271,6 +269,22 @@ def solve_junction(
     if not np.allclose(devs, np.zeros(2), atol=atol):
         logger.error("The boundary solver gave a solution that deviates from the boundary conditions with: %s", devs)
     return v2_tilde, w2
+
+
+@functools.lru_cache(maxsize=const.JUNCTION_CACHE_SIZE)
+def solve_junction_internal(
+        model: "Model",
+        v1_tilde: float, w1: float,
+        phase1: Phase, phase2: Phase,
+        v2_tilde_guess: float, w2_guess: float) -> tp.Tuple[np.ndarray, dict, int, str]:
+    # Using fsolve_vary helps in finding the solutions, but it can also make the overall solver a lot slower.
+    return fsolve_vary(
+        junction_conditions_solvable,
+        x0=np.array([v2_tilde_guess, w2_guess]),
+        args=(model, v1_tilde, w1, phase1, phase2),
+        # This would create a lot of log spam
+        log_status=False
+    )
 
 
 @numba.njit
