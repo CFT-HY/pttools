@@ -64,42 +64,67 @@ def find_shock_index(
             return np.argmax(points_near_cs)
         raise RuntimeError("Did not find shock for the bag model")
 
-    # Trim the integration to the shock
-    i_shock = 0
     # The shock curve hits v=0 here
     cs_n = np.sqrt(model.cs2(wn, Phase.SYMMETRIC))
 
-    for i, (xi_i, v_i) in enumerate(zip(xi, v)):
-        # The shock can be so tiny that it cannot be distinguished.
-        if np.isclose(xi_i, cs_n) and np.isclose(v_i, 0):
-            i_shock = i
-            break
+    i_close: int = np.argmax(np.logical_and(np.isclose(xi, cs_n), np.isclose(v, 0)))
+    i_cs_n: int = np.argmax(xi > cs_n)
+    i_right = np.argmax(xi)
 
-        if xi_i < cs_n:
-            continue
-        # This can emit a lot of log spam if the warning of a barely existing shock is enabled.
-        # pylint: disable=unused-variable
-        v_shock_tilde, w_shock = solve_shock(
-            model,
-            v1_tilde=xi_i, w1=wn,
-            backwards=True, warn_if_barely_exists=warn_if_barely_exists
-        )
-        v_shock = relativity.lorentz(xi_i, v_shock_tilde)
-        if v[i] <= v_shock:
-            i_shock = i
-            break
+    # If the curve goes directly to zero at cs_n
+    if i_close != 0 and (i_cs_n == 0 or i_close <= i_cs_n):
+        return i_close
 
-    if i_shock == 0:
-        if np.max(xi) < const.CS0:
-            msg = \
-                "The curve does not reach the shock. (E.g. it turns backwards before reaching the shock.) " + \
-                "Probably the model does not allow this solution type with these parameters."
-            logger.error(msg)
-            if not allow_failure:
-                raise RuntimeError(msg)
-        i_shock = v.size - 1
+    i_left = i_cs_n
+    # The curve changes its direction here
 
-    return i_shock
+    if not np.all(np.diff(xi[i_left:i_right])):
+        msg = "xi is not monotonic from cs_n to xi_max"
+        logger.error(msg)
+        if not allow_failure:
+            raise RuntimeError(msg)
+
+    # if v[i_left] < v_shock(model, wn=wn, xi=xi[i_left], warn_if_barely_exists=warn_if_barely_exists):
+    #     msg = "v at cs_n > v_shock"
+    #     if not allow_failure:
+    #         raise RuntimeError(msg)
+
+    if v[i_right] > v_shock(model, wn=wn, xi=xi[i_right], warn_if_barely_exists=warn_if_barely_exists):
+        # Fix for tiny shocks
+        if np.isclose(xi[i_right], cs_n, atol=0.02):
+            return i_close
+
+        msg = \
+            "The curve does not reach the shock. (E.g. it turns backwards before reaching the shock.) " + \
+            "Probably the model does not allow this solution type with these parameters."
+        logger.error(msg)
+        if not allow_failure:
+            raise RuntimeError(msg)
+        return 0
+
+    # Binary search
+    i_sh = 0
+    while i_right - i_left > 1:
+        i_sh = i_left + (i_right - i_left) // 2
+        # logger.debug(f"i_right={i_right}, i_left={i_left}, i_sh={i_sh}")
+        v_i = v[i_sh]
+        v_sh = v_shock(model, wn=wn, xi=xi[i_sh], warn_if_barely_exists=warn_if_barely_exists)
+        if v_i > v_sh:
+            i_left = i_sh
+        elif v_i < v_sh:
+            i_right = i_sh
+        else:
+            return i_sh + 1
+
+    if i_sh == 0:
+        raise RuntimeError("Shock index finder ended up in an invalid state.")
+
+    if v[i_sh] > v_shock(model, wn=wn, xi=xi[i_sh], warn_if_barely_exists=warn_if_barely_exists):
+        # logger.warning("Manually correcting i_sh with +1 to %s", i_sh)
+        if v[i_sh + 1] > v_shock(model, wn, xi[i_sh + 1], warn_if_barely_exists=warn_if_barely_exists):
+            raise RuntimeError("i_sh + 1 should be beyond the shock")
+        return i_sh + 1
+    return i_sh
 
 
 @numba.njit
@@ -206,6 +231,17 @@ def solve_shock(
         v2_tilde_guess=v2_tilde_guess, w2_guess=w2_guess,
         allow_failure=allow_failure
     )
+
+
+def v_shock(model: "Model", wn: float, xi: float, warn_if_barely_exists: bool = True) -> float:
+    # This can emit a lot of log spam if the warning of a barely existing shock is enabled.
+    # pylint: disable=unused-variable
+    v_shock_tilde, w_shock = solve_shock(
+        model,
+        v1_tilde=xi, w1=wn,
+        backwards=True, warn_if_barely_exists=warn_if_barely_exists
+    )
+    return relativity.lorentz(xi, v_shock_tilde)
 
 
 @numba.njit
