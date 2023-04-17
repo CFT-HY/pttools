@@ -10,12 +10,14 @@ import os.path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.logging import setup_logging
+from pttools.bubble import boundary
 from pttools.analysis.plot_entropy import gen_and_plot_entropy
+from pttools.logging import setup_logging
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
 
 from examples.utils import FIG_DIR
+from tests.profiling import utils_cprofile
 
 
 def main():
@@ -44,5 +46,7 @@ def main():
 
 if __name__ == "__main__":
     setup_logging()
+    # with utils_cprofile.CProfiler("plot_entropy"):
+    #     main()
     main()
     plt.show()
