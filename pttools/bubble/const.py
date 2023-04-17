@@ -25,3 +25,6 @@ nan_arr = np.array([np.nan])
 CS0: tp.Final[np.float_] = 1 / np.sqrt(3)
 #: Ideal speed of sound squared
 CS0_2: tp.Final[float] = 1/3
+
+JUNCTION_ATOL: float = 2.4e-8
+JUNCTION_CACHE_SIZE: int = 1024
