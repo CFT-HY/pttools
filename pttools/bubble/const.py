@@ -19,7 +19,8 @@ T_END_DEFAULT: float = 50.
 #: Difference between consequent $\xi$ values
 DXI_SMALL: float = 1. / N_XI_DEFAULT
 #: Array with one NaN
-nan_arr = np.array([np.nan])
+nan_arr: tp.Final[np.ndarray] = np.array([np.nan])
+nan_arr.setflags(write=False)
 
 #: Ideal speed of sound
 CS0: tp.Final[np.float_] = 1 / np.sqrt(3)
