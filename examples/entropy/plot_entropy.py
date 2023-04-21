@@ -46,7 +46,12 @@ def main():
 
 if __name__ == "__main__":
     setup_logging()
-    # with utils_cprofile.CProfiler("plot_entropy"):
-    #     main()
-    main()
+    profiling = False
+    if profiling:
+        with utils_cprofile.CProfiler("plot_entropy"):
+            main()
+            # The cache info is per-process
+            print(boundary.solve_junction_internal.cache_info())
+    else:
+        main()
     plt.show()
