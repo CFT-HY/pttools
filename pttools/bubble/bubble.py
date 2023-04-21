@@ -28,6 +28,7 @@ class Bubble:
     def __init__(
             self,
             model: "Model", v_wall: float, alpha_n: float,
+            solve: bool = False,
             sol_type: SolutionType = None,
             label_latex: str = None,
             label_unicode: str = None,
@@ -94,11 +95,14 @@ class Bubble:
 
         self.gw_power_spectrum = None
 
-        logger.info(
-            "Initialized a bubble with: "
-            "model=%s, v_w=%s, alpha_n=%s, T_nuc=%s, w_nuc=%s",
-            self.model.label_unicode, v_wall, alpha_n, self.tn, self.wn
-        )
+        if solve:
+            self.solve()
+        else:
+            logger.info(
+                "Initialized a bubble with: "
+                "model=%s, v_w=%s, alpha_n=%s, T_nuc=%s, w_nuc=%s",
+                self.model.label_unicode, v_wall, alpha_n, self.tn, self.wn
+            )
 
     def add_note(self, note: str):
         self.notes.append(note)
