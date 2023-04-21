@@ -7,7 +7,7 @@ import numba.types
 import numpy as np
 
 import pttools.type_hints as th
-from .boundary import Phase, SolutionType, solve_junction
+from .boundary import Phase, SolutionType, solve_junction, w2_junction
 from . import check
 from . import const
 from . import props
@@ -49,7 +49,9 @@ def find_shock_index(
         model: "Model",
         v: np.ndarray, xi: np.ndarray,
         v_wall: float, wn: float,
+        cs_n: float,
         sol_type: SolutionType,
+        v_shock_atol: float = 3.5e-8,
         allow_failure: bool = False,
         warn_if_barely_exists: bool = True) -> int:
     if sol_type is SolutionType.DETON:
@@ -64,15 +66,12 @@ def find_shock_index(
             return np.argmax(points_near_cs)
         raise RuntimeError("Did not find shock for the bag model")
 
-    # The shock curve hits v=0 here
-    cs_n = np.sqrt(model.cs2(wn, Phase.SYMMETRIC))
-
     i_close: int = np.argmax(np.logical_and(np.isclose(xi, cs_n), np.isclose(v, 0)))
     i_cs_n: int = np.argmax(xi > cs_n)
-    i_right = np.argmax(xi)
+    i_right: int = np.argmax(xi)
 
     # If the curve goes directly to zero at cs_n
-    if i_close != 0 and (i_cs_n == 0 or i_close <= i_cs_n):
+    if i_close != 0 and ((i_cs_n == 0 and xi[0] < cs_n) or i_close <= i_cs_n):
         return i_close
 
     i_left = i_cs_n
@@ -89,15 +88,50 @@ def find_shock_index(
     #     if not allow_failure:
     #         raise RuntimeError(msg)
 
-    if v[i_right] > v_shock(model, wn=wn, xi=xi[i_right], warn_if_barely_exists=warn_if_barely_exists):
+    v_sh_xi_max = v_shock(model, wn=wn, xi=xi[i_right], cs_n=cs_n, warn_if_barely_exists=warn_if_barely_exists)
+    if v[i_right] > v_sh_xi_max:
+        if v_sh_xi_max - v[i_right] < v_shock_atol:
+            return i_right
         # Fix for tiny shocks
-        if np.isclose(xi[i_right], cs_n, atol=0.02):
-            return i_close
+        # if np.isclose(xi[i_right], cs_n, atol=0.02):
+        #     return i_close
+        # if np.isclose(v[i_cs_n], 0, atol=0.01):
+        #     return i_cs_n
 
+        v_sh_cs_n = v_shock(model, wn=wn, xi=cs_n, cs_n=cs_n, warn_if_barely_exists=warn_if_barely_exists)
         msg = \
             "The curve does not reach the shock. (E.g. it turns backwards before reaching the shock.) " + \
-            "Probably the model does not allow this solution type with these parameters."
+            f"i_cs_n={i_cs_n}, i_xi_max={i_right}, i_close={i_close} " + \
+            f"cs_n={cs_n}, xi_max={xi[i_right]}, " + \
+            f"v_cs_n={v[i_cs_n]}, v_xi_max={v[i_right]}, " + \
+            f"v_sh_cs_n={v_sh_cs_n}, v_sh_xi_max={v_sh_xi_max}"
         logger.error(msg)
+
+        # Manual fallback to the old shock finder
+        # This may not find the shock correctly until after the curve has turned backwards.
+
+        # i_sh = 0
+        # for i, (xi_i, v_i) in enumerate(zip(xi, v)):
+        #     # The shock can be so tiny that it cannot be distinguished.
+        #     if np.isclose(xi_i, cs_n) and np.isclose(v_i, 0):
+        #         i_sh = i
+        #         break
+        #
+        #     if xi_i < cs_n:
+        #         continue
+        #     # This can emit a lot of log spam if the warning of a barely existing shock is enabled.
+        #     # pylint: disable=unused-variable
+        #     v_shock_tilde, w_shock = solve_shock(
+        #         model,
+        #         v1_tilde=xi_i, w1=wn,
+        #         backwards=True, warn_if_barely_exists=warn_if_barely_exists
+        #     )
+        #     v_sh = relativity.lorentz(xi_i, v_shock_tilde)
+        #     if v[i] <= v_sh:
+        #         i_sh = i
+        #         break
+        # return i_sh
+
         if not allow_failure:
             raise RuntimeError(msg)
         return 0
@@ -108,7 +142,7 @@ def find_shock_index(
         i_sh = i_left + (i_right - i_left) // 2
         # logger.debug(f"i_right={i_right}, i_left={i_left}, i_sh={i_sh}")
         v_i = v[i_sh]
-        v_sh = v_shock(model, wn=wn, xi=xi[i_sh], warn_if_barely_exists=warn_if_barely_exists)
+        v_sh = v_shock(model, wn=wn, xi=xi[i_sh], cs_n=cs_n, warn_if_barely_exists=warn_if_barely_exists)
         if v_i > v_sh:
             i_left = i_sh
         elif v_i < v_sh:
@@ -119,9 +153,9 @@ def find_shock_index(
     if i_sh == 0:
         raise RuntimeError("Shock index finder ended up in an invalid state.")
 
-    if v[i_sh] > v_shock(model, wn=wn, xi=xi[i_sh], warn_if_barely_exists=warn_if_barely_exists):
+    if v[i_sh] > v_shock(model, wn=wn, xi=xi[i_sh], cs_n=cs_n, warn_if_barely_exists=warn_if_barely_exists):
         # logger.warning("Manually correcting i_sh with +1 to %s", i_sh)
-        if v[i_sh + 1] > v_shock(model, wn, xi[i_sh + 1], warn_if_barely_exists=warn_if_barely_exists):
+        if v[i_sh + 1] > v_shock(model, wn, xi[i_sh + 1], cs_n=cs_n, warn_if_barely_exists=warn_if_barely_exists):
             raise RuntimeError("i_sh + 1 should be beyond the shock")
         return i_sh + 1
     return i_sh
@@ -166,6 +200,7 @@ def solve_shock(
             backwards: bool,
             v2_tilde_guess: float = None,
             w2_guess: float = None,
+            csp: float = None,
             phase: Phase = Phase.SYMMETRIC,
             allow_failure: bool = False,
             warn_if_barely_exists: bool = True) -> tp.Tuple[float, float]:
@@ -174,11 +209,14 @@ def solve_shock(
     :param model: Hydrodynamics model
     :param v1_tilde: $\tilde{v}_{1,sh}$
     :param w1: $w_{1,sh}$
+    :param backwards: whether to solve from $+$ to $-$ instead of from $-$ to $+$
     :param v2_tilde_guess: Starting guess for $\tilde{v}_{2,sh}$
     :param w2_guess: Starting guess for $w_{2,sh}$
+    :param csp: Speed of sound in front of the shock. Will be computed from the model if not given.
+        The computation is only an approximation when solving forwards.
     :param phase: Phase in which the shock propagates
-    :param backwards: whether to solve from $+$ to $-$ instead of from $-$ to $+$
     :param allow_failure: Whether to allow invalid values
+    :param warn_if_barely_exists: Warn if the shock barely exists
     :return: $\tilde{v}_{2,sh},w2$
     """
     # Handle invalid inputs
@@ -193,33 +231,46 @@ def solve_shock(
         logger.error(f"Got v1={v1_tilde} for shock solver.")
         return 1, np.nan
 
-    # If shock barely exists
-    cs = np.sqrt(model.cs2(w1, phase))
-    if np.isclose(v1_tilde, cs):
+    if csp is None:
+        # When solving forwards, this is only an approximation, but a valid one for tiny shocks.
+        csp2 = model.cs2(w1, phase)
+        csp = np.sqrt(csp2)
+    else:
+        csp2 = csp**2
+
+    # If the shock barely exists
+    if np.isclose(v1_tilde, csp):
         if warn_if_barely_exists:
             logger.warning(f"The shock barely exists. Got v1={v1_tilde}, w1={w1}")
         return v1_tilde, w1
 
-    # Bag model guess
     if v2_tilde_guess is None:
-        v2_tilde_guess = 1 / (3 * v1_tilde)
+        # Bag model guess
+        # v2_tilde_guess = 1 / (3 * v1_tilde)
+        # General guess
+        v2_tilde_guess = csp2 * v1_tilde
     if np.isclose(v2_tilde_guess, 0) or np.isclose(v2_tilde_guess, 1):
         logger.error(f"Got invalid estimate for v2={v2_tilde_guess}")
         return np.nan, np.nan
 
-    if backwards:
-        if v1_tilde < cs:
-            logger.error(f"The shock must be supersonic. Got v1=vp={v1_tilde}, w1=wp={w1}, cs(wp)={cs}")
-            return np.nan, np.nan
-        if w2_guess is None:
-            w2_guess = wm_shock_bag(v1_tilde, w1)
-        if np.isnan(w2_guess):
-            w2_guess = 0.1*w1
-    else:
-        if w2_guess is None:
-            w2_guess = wp_shock_bag(v1_tilde, w1)
-        if np.isnan(w2_guess):
-            w2_guess = 2*w1
+    if backwards and v1_tilde < csp:
+        logger.error(f"The shock must be supersonic. Got v1=vp={v1_tilde}, w1=wp={w1}, cs(wp)={csp}")
+        return np.nan, np.nan
+
+    # Old guess based on the bag model. It does not work for xi**2 < 1/3.
+    # if backwards:
+    #     if w2_guess is None:
+    #         # The bag guess does not work when
+    #         w2_guess = wm_shock_bag(v1_tilde, w1)
+    #     if np.isnan(w2_guess):
+    #         w2_guess = 0.1*w1
+    # else:
+    #     if w2_guess is None:
+    #         w2_guess = wp_shock_bag(v1_tilde, w1)
+
+    if w2_guess is None:
+        w2_guess = w2_junction(v1_tilde, w1, v2_tilde_guess)
+
     if w2_guess < 0 or np.isclose(w2_guess, 0):
         logger.error(f"Got invalid estimate for w2={w2_guess}")
         return np.nan, np.nan
@@ -233,15 +284,39 @@ def solve_shock(
     )
 
 
-def v_shock(model: "Model", wn: float, xi: float, warn_if_barely_exists: bool = True) -> float:
+@np.vectorize
+def v_shock(model: "Model", wn: float, xi: float, cs_n: float, warn_if_barely_exists: bool = True) -> float:
+    if xi <= cs_n or np.isclose(xi, cs_n):
+        return 0
+    if np.isclose(xi, 1):
+        return 1
+
     # This can emit a lot of log spam if the warning of a barely existing shock is enabled.
     # pylint: disable=unused-variable
     v_shock_tilde, w_shock = solve_shock(
         model,
         v1_tilde=xi, w1=wn,
+        csp=cs_n,
         backwards=True, warn_if_barely_exists=warn_if_barely_exists
     )
-    return relativity.lorentz(xi, v_shock_tilde)
+    ret = relativity.lorentz(xi, v_shock_tilde)
+    # print(f"v1=0, v2={ret}, v2_tilde={v_shock_tilde}, wn={wn}, w_sh={w_shock}")
+
+    if ret < 0:
+        return 0
+    return ret
+
+
+def v_shock_curve(
+        model: "Model",
+        wn: float, n_points: int = 20,
+        warn_if_barely_exists: bool = False) -> tp.Tuple[np.ndarray, np.ndarray]:
+    cs_n = np.sqrt(model.cs2(wn, Phase.SYMMETRIC))
+    # Create more points near cs_n, as there the accuracy is the most critical
+    xi = cs_n + np.logspace(-4, 0, num=n_points) * (1 - cs_n)
+    # Ensure that the shock curve starts from xi=cs_n, v=0
+    xi[0] = cs_n
+    return xi, v_shock(model, wn, xi, warn_if_barely_exists)
 
 
 @numba.njit
