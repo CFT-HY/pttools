@@ -32,6 +32,10 @@ jobs:
           pip --cache-dir=.pip install --upgrade pip
           pip --cache-dir=.pip install --upgrade wheel
           pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt -r docs/requirements.txt
+      - name: Generate reference data
+        run: python3 pttools/bubble/fluid_reference.py
+        env:
+          PYTHONPATH: .
       - name: Generate documentation
         run: |
           cd docs

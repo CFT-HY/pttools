@@ -33,6 +33,10 @@ jobs:
             pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
         - name: Print Numba sysinfo
           run: python -m numba --sysinfo | tee numba-sysinfo.txt
+        - name: Generate reference data
+          run: python3 pttools/bubble/fluid_reference.py
+          env:
+            PYTHONPATH: .
         - name: Run tests
           # Failures may not get processed properly, as pipefail is not supported on Windows.
           # set -o pipefail

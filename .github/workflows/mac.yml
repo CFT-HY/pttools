@@ -33,6 +33,10 @@ jobs:
           # On macOS the Numba script is not executable by default and therefore has to be called as a Python module.
           run: |
             python -m numba --sysinfo | tee numba-sysinfo.txt
+        - name: Generate reference data
+          run: python3 pttools/bubble/fluid_reference.py
+          env:
+            PYTHONPATH: .
         - name: Run tests
           run: |
             set -o pipefail
