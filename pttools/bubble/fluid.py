@@ -347,8 +347,8 @@ def fluid_shell_solver_deflagration(
         model: "Model",
         start_time: float,
         v_wall: float, alpha_n: float, wn: float, cs_n: float, alpha_n_max_bag: float,
-        wm_guess: float, vp_guess: float = None, wp_guess: float = None,
-        allow_failure: bool = False, log_high_alpha_n_failures: bool = True) -> SolverOutput:
+        wm_guess: float, vp_guess: float, wp_guess: float, wn_rtol: float,
+        allow_failure: bool, log_high_alpha_n_failures: bool = True) -> SolverOutput:
     if vp_guess > v_wall:
         vp_guess_new = 0.95 * v_wall
         if log_high_alpha_n_failures or alpha_n < alpha_n_max_bag:
@@ -370,7 +370,7 @@ def fluid_shell_solver_deflagration(
         vp_guess=vp_guess, wp_guess=wp_guess,
         allow_failure=allow_failure, warn_if_shock_barely_exists=False
     )
-    if not np.isclose(wn_estimate, wn):
+    if not np.isclose(wn_estimate, wn, rtol=wn_rtol):
         solution_found = False
     if not solution_found:
         msg = f"Deflagration solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. " + \
@@ -418,7 +418,7 @@ def fluid_shell_solver_hybrid(
         model: "Model",
         start_time: float,
         v_wall: float, alpha_n: float, wn: float, cs_n: float, alpha_n_max_bag: float,
-        vp_tilde_guess: float, wp_guess: float, wm_guess: float,
+        vp_tilde_guess: float, wp_guess: float, wm_guess: float, wn_rtol: float,
         allow_failure: bool, log_high_alpha_n_failures: bool) -> SolverOutput:
     sol = fsolve_vary(
         fluid_shell_solvable_hybrid,
@@ -438,7 +438,7 @@ def fluid_shell_solver_hybrid(
         warn_if_shock_barely_exists=False
     )
     # wp = w[0]
-    if not np.isclose(wn_estimate, wn):
+    if not np.isclose(wn_estimate, wn, rtol=wn_rtol):
         solution_found = False
     if not solution_found:
         msg = \
@@ -478,6 +478,7 @@ def fluid_shell_generic(
             wn_guess: float = 1,
             wp_guess: float = None,
             wm_guess: float = None,
+            wn_rtol: float = 1e-4,
             alpha_n_max_bag: float = None,
             n_xi: int = const.N_XI_DEFAULT,
             reverse: bool = False,
@@ -610,7 +611,7 @@ def fluid_shell_generic(
                     v_wall, alpha_n, wn,
                     cs_n=cs_n,
                     alpha_n_max_bag=alpha_n_max_bag,
-                    wm_guess=wm_guess, vp_guess=vp_guess, wp_guess=wp_guess,
+                    wm_guess=wm_guess, vp_guess=vp_guess, wp_guess=wp_guess, wn_rtol=wn_rtol,
                     allow_failure=allow_failure, log_high_alpha_n_failures=log_high_alpha_n_failures
                 )
     elif sol_type == SolutionType.HYBRID:
@@ -623,6 +624,7 @@ def fluid_shell_generic(
                 vp_tilde_guess=vp_tilde_guess,
                 wp_guess=wp_guess,
                 wm_guess=wm_guess,
+                wn_rtol=wn_rtol,
                 allow_failure=allow_failure,
                 log_high_alpha_n_failures=log_high_alpha_n_failures
             )
