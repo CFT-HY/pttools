@@ -7,6 +7,7 @@ import typing as tp
 
 import numpy as np
 
+from pttools.bubble.alpha import alpha_n_max_deflagration_bag
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.fluid import fluid_shell_generic
 from pttools.bubble import const
@@ -34,7 +35,8 @@ class Bubble:
             label_unicode: str = None,
             wn_guess: float = 1,
             wm_guess: float = 2,
-            n_points: int = const.N_XI_DEFAULT):
+            n_points: int = const.N_XI_DEFAULT,
+            log_success: bool = False):
         if v_wall < 0 or v_wall > 1:
             raise ValueError(f"Invalid v_wall={v_wall}")
         if alpha_n < 0 or alpha_n > 1 or alpha_n < model.alpha_n_min:
@@ -50,6 +52,7 @@ class Bubble:
         self.v_wall = v_wall
         self.alpha_n = alpha_n
         self.n_points = n_points
+        self.log_success = log_success
 
         # Computed parameters
         self.wn = model.w_n(alpha_n)
@@ -97,7 +100,7 @@ class Bubble:
 
         if solve:
             self.solve()
-        else:
+        elif log_success:
             logger.info(
                 "Initialized a bubble with: "
                 "model=%s, v_w=%s, alpha_n=%s, T_nuc=%s, w_nuc=%s",
@@ -152,11 +155,16 @@ class Bubble:
             sum_rtol_warning: float = 1e-2,
             sum_rtol_error: float = 5e-2,
             error_prec: str = ".4f",
-            use_bag_solver: bool = False):
+            use_bag_solver: bool = False,
+            log_high_alpha_n_failures: bool = True,
+            log_negative_entropy: bool = True):
         if self.solved:
             msg = "Re-solving an already solved bubble! Already computed quantities will not be updated due to caching."
             logger.warning(msg)
             self.add_note(msg)
+
+        alpha_n_max_bag = alpha_n_max_deflagration_bag(self.v_wall)
+
         try:
             # Todo: make the solver errors more specific
             self.v, self.w, self.xi, self.sol_type, \
@@ -165,13 +173,16 @@ class Bubble:
                 self.wp, self.wm, self.wm_sh, self.v_cj, self.solver_failed, self.elapsed = \
                 fluid_shell_generic(
                     model=self.model,
-                    v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type, n_xi=self.n_points,
-                    use_bag_solver=use_bag_solver
+                    v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type,
+                    alpha_n_max_bag=alpha_n_max_bag, n_xi=self.n_points,
+                    use_bag_solver=use_bag_solver,
+                    log_success=self.log_success, log_high_alpha_n_failures=log_high_alpha_n_failures
                 )
             if self.solver_failed:
+                # This is already reported by the individual solvers
                 msg = f"Solver failed with model={self.model.label_unicode}, " \
                       f"v_wall={self.v_wall}, alpha_n={self.alpha_n}"
-                logger.error(msg)
+                # logger.error(msg)
                 self.add_note(msg)
         except (IndexError, RuntimeError) as e:
             msg = f"Solver crashed with model={self.model.label_unicode}, v_wall={self.v_wall}, alpha_n={self.alpha_n}."
@@ -195,7 +206,8 @@ class Bubble:
             msg = "Entropy density should not be negative! Now entropy is decreasing. " \
                   f"Got: {self.entropy_density} with " \
                   f"model={self.model.label_unicode}, v_wall={self.v_wall}, alpha_n={self.alpha_n}"
-            logger.error(msg)
+            if log_negative_entropy:
+                logger.warning(msg)
             self.add_note(msg)
             self.unphysical_entropy = True
         if self.thermal_energy_density < 0:
@@ -212,7 +224,11 @@ class Bubble:
                 f"Got: κ={self.kappa:{error_prec}}, ω={self.omega:{error_prec}}, "\
                 f"κ+ω={self.kappa + self.omega:{error_prec}} " \
                 f"with model={self.model.label_unicode}, v_wall={self.v_wall}, alpha_n={self.alpha_n}"
-            logger.error(msg)
+            if log_high_alpha_n_failures or self.alpha_n < alpha_n_max_bag or self.sol_type == SolutionType.DETON:
+                if sum_err:
+                    logger.error(msg)
+                else:
+                    logger.warning(msg)
             self.add_note(msg)
 
     def spectrum(self):

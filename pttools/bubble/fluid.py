@@ -8,6 +8,7 @@ import numpy as np
 from scipy.optimize import fsolve
 
 from pttools.speedup.solvers import fsolve_vary
+from . import alpha
 from . import boundary
 from .boundary import Phase, SolutionType
 from . import chapman_jouguet
@@ -345,17 +346,20 @@ def fluid_shell_solvable_hybrid(
 def fluid_shell_solver_deflagration(
         model: "Model",
         start_time: float,
-        v_wall: float, alpha_n: float, wn: float, cs_n: float,
-        wm_guess: float, vp_guess: float = None, wp_guess: float = None, allow_failure: bool = False) -> SolverOutput:
+        v_wall: float, alpha_n: float, wn: float, cs_n: float, alpha_n_max_bag: float,
+        wm_guess: float, vp_guess: float = None, wp_guess: float = None,
+        allow_failure: bool = False, log_high_alpha_n_failures: bool = True) -> SolverOutput:
     if vp_guess > v_wall:
         vp_guess_new = 0.95 * v_wall
-        logger.error("Invalid vp_guess=%s > v_wall=%s, replacing with vp_guess=%s", vp_guess, v_wall, vp_guess_new)
+        if log_high_alpha_n_failures or alpha_n < alpha_n_max_bag:
+            logger.error("Invalid vp_guess=%s > v_wall=%s, replacing with vp_guess=%s", vp_guess, v_wall, vp_guess_new)
         vp_guess = vp_guess_new
 
     sol = fsolve_vary(
         fluid_shell_solvable_deflagration,
         np.array([wm_guess]),
         args=(model, v_wall, wn, cs_n, vp_guess, wp_guess),
+        log_status=log_high_alpha_n_failures
     )
     wm = sol[0][0]
     solution_found = sol[2] == 1
@@ -369,12 +373,16 @@ def fluid_shell_solver_deflagration(
     if not np.isclose(wn_estimate, wn):
         solution_found = False
     if not solution_found:
-        logger.error(
-            f"Deflagration solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. "
-            f"Got wn_estimate={wn_estimate} for wn={wn}." +
-            (f"" if sol[2] == 1 else f" Reason: {sol[3]}") +
+        msg = f"Deflagration solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. " + \
+            ("(as expected)" if alpha_n >= alpha_n_max_bag else "") + \
+            f"Got wn_estimate={wn_estimate} for wn={wn}." + \
+            ("" if sol[2] == 1 else f" Reason: {sol[3]}") + \
             f"Elapsed: {time.perf_counter() - start_time} s."
-        )
+        if alpha_n >= alpha_n_max_bag:
+            if log_high_alpha_n_failures:
+                logger.warning(msg)
+        else:
+            logger.error(msg)
     # print(np.array([v, w, xi]).T)
     # print("wn, xi_sh", wn, xi_sh)
 
@@ -409,21 +417,18 @@ def fluid_shell_solver_deflagration_reverse(
 def fluid_shell_solver_hybrid(
         model: "Model",
         start_time: float,
-        v_wall: float, alpha_n: float, wn: float, cs_n: float,
-        vp_tilde_guess: float, wp_guess: float, wm_guess: float, allow_failure: bool) -> SolverOutput:
+        v_wall: float, alpha_n: float, wn: float, cs_n: float, alpha_n_max_bag: float,
+        vp_tilde_guess: float, wp_guess: float, wm_guess: float,
+        allow_failure: bool, log_high_alpha_n_failures: bool) -> SolverOutput:
     sol = fsolve_vary(
         fluid_shell_solvable_hybrid,
         np.array([wm_guess]),
-        args=(model, v_wall, wn, cs_n, vp_tilde_guess, wp_guess)
+        args=(model, v_wall, wn, cs_n, vp_tilde_guess, wp_guess),
+        log_status=log_high_alpha_n_failures
     )
     wm = sol[0][0]
-    solution_found = True
-    if sol[2] != 1:
-        solution_found = False
-        logger.error(
-            f"Hybrid solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. "
-            f"Using wm={wm}. Reason: {sol[3]} Elapsed: {time.perf_counter() - start_time} s."
-        )
+    solution_found = sol[2] == 1
+
     v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = fluid_shell_hybrid(
         model, v_wall, wn, wm,
         cs_n=cs_n,
@@ -433,13 +438,22 @@ def fluid_shell_solver_hybrid(
         warn_if_shock_barely_exists=False
     )
     # wp = w[0]
-    # Todo: is this unnecessary?
     if not np.isclose(wn_estimate, wn):
         solution_found = False
-        logger.error(
-            f"Hybrid solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. "
-            f"Got wn_estimate={wn_estimate}, which differs from wn={wn}. Elapsed: {time.perf_counter() - start_time} s."
-        )
+    if not solution_found:
+        msg = \
+            f"Hybrid solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. " + \
+            f"Got wn_estimate={wn_estimate}, which differs from wn={wn}. " + \
+            ("(as expected)" if alpha_n >= alpha_n_max_bag else "") + \
+            f"Got wn_estimate={wn_estimate} for wn={wn}. " + \
+            ("" if sol[2] == 1 else f"Reason: {sol[3]} ") + \
+            f"Elapsed: {time.perf_counter() - start_time} s."
+        if alpha_n >= alpha_n_max_bag:
+            if log_high_alpha_n_failures:
+                logger.warning(msg)
+        else:
+            logger.error(msg)
+
     vm = relativity.lorentz(v_wall, np.sqrt(model.cs2(wm, Phase.BROKEN)))
     v_tail, w_tail, xi_tail, t_tail = integrate.fluid_integrate_param(
         vm, wm, v_wall,
@@ -464,10 +478,13 @@ def fluid_shell_generic(
             wn_guess: float = 1,
             wp_guess: float = None,
             wm_guess: float = None,
+            alpha_n_max_bag: float = None,
             n_xi: int = const.N_XI_DEFAULT,
             reverse: bool = False,
             allow_failure: bool = False,
-            use_bag_solver: bool = False
+            use_bag_solver: bool = False,
+            log_success: bool = True,
+            log_high_alpha_n_failures: bool = False
         ) -> tp.Tuple[
             np.ndarray, np.ndarray, np.ndarray, SolutionType,
             float, float, float, float, float, float, float, float, float, float, float, bool, float]:
@@ -476,11 +493,19 @@ def fluid_shell_generic(
     In most cases you should not have to call this directly. Create a Bubble instead.
     """
     start_time = time.perf_counter()
+    if alpha_n_max_bag is None:
+        alpha_n_max_bag = alpha.alpha_n_max_deflagration_bag(v_wall)
+
     wn = model.w_n(alpha_n, wn_guess=wn_guess)
     # The shock curve hits v=0 here
     cs_n = np.sqrt(model.cs2(wn, Phase.SYMMETRIC))
 
     if use_bag_solver and model.DEFAULT_NAME == "bag":
+        if alpha_n >= alpha_n_max_bag:
+            logger.info("Got model=%s, v_wall=%s, alpha_n=%s, for which there is no solution.", model.label_unicode, v_wall, alpha_n)
+            return const.nan_arr, const.nan_arr, const.nan_arr, SolutionType.ERROR, \
+                np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, True, time.perf_counter() - start_time
+
         logger.info("Using bag solver for model=%s, v_wall=%s, alpha_n=%s", model.label_unicode, v_wall, alpha_n)
         sol_type2 = transition.identify_solution_type_bag(v_wall, alpha_n)
         if sol_type is not None and sol_type != sol_type2:
@@ -550,14 +575,16 @@ def fluid_shell_generic(
     v_cj = chapman_jouguet.v_chapman_jouguet(model, alpha_n, wn, wm_guess)
     dxi = 1. / n_xi
 
-    logger.info(
-        "Solving fluid shell for model=%s, v_wall=%s, alpha_n=%s"
-        " with sol_type=%s, v_cj=%s, wn=%s "
-        "and starting guesses vp=%s vp_tilde=%s, wp=%s, wm=%s, wn=%s",
-        model.label_unicode, v_wall, alpha_n,
-        sol_type, v_cj, wn,
-        vp_guess, vp_tilde_guess, wp_guess, wm_guess, wn_guess
-    )
+    if log_success:
+        logger.info(
+            "Solving fluid shell for model=%s, v_wall=%s, alpha_n=%s " +
+            (f"(>= alpha_n_max_bag={alpha_n_max_bag}) " if alpha_n > alpha_n_max_bag and sol_type != SolutionType.DETON else "") +
+            "with sol_type=%s, v_cj=%s, wn=%s "
+            "and starting guesses vp=%s vp_tilde=%s, wp=%s, wm=%s, wn=%s",
+            model.label_unicode, v_wall, alpha_n,
+            sol_type, v_cj, wn,
+            vp_guess, vp_tilde_guess, wp_guess, wm_guess, wn_guess
+        )
 
     # Detonations are the simplest case
     if sol_type == SolutionType.DETON:
@@ -582,7 +609,9 @@ def fluid_shell_generic(
                     model, start_time,
                     v_wall, alpha_n, wn,
                     cs_n=cs_n,
-                    wm_guess=wm_guess, vp_guess=vp_guess, wp_guess=wp_guess, allow_failure=allow_failure
+                    alpha_n_max_bag=alpha_n_max_bag,
+                    wm_guess=wm_guess, vp_guess=vp_guess, wp_guess=wp_guess,
+                    allow_failure=allow_failure, log_high_alpha_n_failures=log_high_alpha_n_failures
                 )
     elif sol_type == SolutionType.HYBRID:
         v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, solution_found = \
@@ -590,10 +619,12 @@ def fluid_shell_generic(
                 model, start_time,
                 v_wall, alpha_n, wn,
                 cs_n=cs_n,
+                alpha_n_max_bag=alpha_n_max_bag,
                 vp_tilde_guess=vp_tilde_guess,
                 wp_guess=wp_guess,
                 wm_guess=wm_guess,
-                allow_failure=allow_failure
+                allow_failure=allow_failure,
+                log_high_alpha_n_failures=log_high_alpha_n_failures
             )
     else:
         raise ValueError(f"Invalid solution type: {sol_type}")
@@ -612,17 +643,9 @@ def fluid_shell_generic(
     xi = np.concatenate((xib, xi, xif))
 
     elapsed = time.perf_counter() - start_time
-    if solution_found:
+    if solution_found and log_success:
         logger.info(
             "Solved fluid shell for model=%s, v_wall=%s, alpha_n=%s, sol_type=%s. Elapsed: %s s",
             model.label_unicode, v_wall, alpha_n, sol_type, elapsed
         )
-    else:
-        pass
-        # This should be logged by the individual solvers
-        # logger.error(
-        #     "Failed to find a solution. Returning approximate results for "
-        #     "model=%s, v_wall=%s, alpha_n=%s, sol_type=%s",
-        #     model.label_unicode, v_wall, alpha_n, sol_type
-        # )
     return v, w, xi, sol_type, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, v_cj, not solution_found, elapsed

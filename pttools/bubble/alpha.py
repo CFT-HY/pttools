@@ -29,7 +29,7 @@ find_alpha_plus_scalar_lock = threading.Lock()
 @numba.njit
 def alpha_n_max_bag(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArr:
     r"""
-    Calculates the relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
+    Calculates the maximum relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
     for given $v_\text{wall}$, which is max $\alpha_n$ for (supersonic) deflagration.
 
     :param v_wall: $v_\text{wall}$
@@ -66,7 +66,7 @@ def _alpha_n_max_deflagration_bag_arr(v_wall: np.ndarray, n_xi: int) -> np.ndarr
 @numba.generated_jit(nopython=True)
 def alpha_n_max_deflagration_bag(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArrNumba:
     r"""
-    Calculates the relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
+    Calculates the maximum relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
     for given $v_\text{wall}$, for deflagration.
     Works also for hybrids, as they are supersonic deflagrations.
 
