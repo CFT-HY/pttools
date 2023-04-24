@@ -49,7 +49,7 @@ jobs:
           ./gen_call_graphs.sh "ssmtools" "./pttools/ssmtools/**.py"
           ./gen_call_graphs.sh "tests" "./tests/**/*.py"
       - name: Upload results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Graph
           path: |
@@ -84,7 +84,7 @@ jobs:
       - name: Run Pylint
         run: pylint pttools tests 2>&1 | tee pylint.txt
       - name: Upload results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Lint
           path: |
@@ -166,7 +166,7 @@ jobs:
         pytest | tee test-output.txt
         coverage json
     - name: Upload results
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       if: ${{ matrix.python-version == env.PRIMARY_PYTHON_VERSION }}
       with:
         name: Test results with Numba
@@ -216,7 +216,7 @@ jobs:
 #        pytest | tee test-output.txt
 #        coverage json
 #    - name: Upload results
-#      uses: actions/upload-artifact@v2
+#      uses: actions/upload-artifact@v3
 #      if: ${{ matrix.python-version == env.PRIMARY_OLD_PYTHON_VERSION }}
 #      with:
 #        name: Test results with old Numba
@@ -271,7 +271,7 @@ jobs:
         NUMBA_DISABLE_JIT=1 pytest | tee test-output.txt
         coverage json
     - name: Upload results
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       if: ${{ matrix.python-version == env.PRIMARY_PYTHON_VERSION }}
       with:
         name: Test results without Numba

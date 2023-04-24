@@ -8,7 +8,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
       - name: Print Python version
@@ -41,7 +41,7 @@ jobs:
           cd docs
           make all
       - name: Upload results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Documentation
           path: |

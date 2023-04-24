@@ -8,7 +8,7 @@ jobs:
     timeout-minutes: 15
     steps:
         - name: Setup Python
-          uses: actions/setup-python@v2
+          uses: actions/setup-python@v4
           # Windows minutes cost 2x what Linux does, so testing multiple Python versions would be quite costly
           with:
             python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
@@ -44,7 +44,7 @@ jobs:
             pytest | tee test-output.txt
             coverage json
         - name: Upload results
-          uses: actions/upload-artifact@v2
+          uses: actions/upload-artifact@v3
           with:
             name: Test results with Numba
             path: |
