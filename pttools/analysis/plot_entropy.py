@@ -47,9 +47,9 @@ class EntropyPlot(VwAlphaPlot):
         super().__init__(fig, ax)
         plot_entropy_data(entropy, grid.v_walls, grid.alpha_ns, min_level, max_level, diff_level, fig=fig, ax=ax)
 
-        cmap.color_region(self.ax, grid.v_walls, grid.alpha_ns, grid.unphysical_alpha_plus(), color="red", alpha=0.5)
-        cmap.color_region(self.ax, grid.v_walls, grid.alpha_ns, grid.numerical_error(), color="blue", alpha=0.5)
-        cmap.color_region(self.ax, grid.v_walls, grid.alpha_ns, grid.solver_failed(), color="green", alpha=0.5)
+        cmap.color_region(self.ax, grid.v_walls, grid.alpha_ns, grid.numerical_error(), color="red", alpha=0.5)
+        cmap.color_region(self.ax, grid.v_walls, grid.alpha_ns, grid.unphysical_alpha_plus(), color="green", alpha=0.5)
+        cmap.color_region(self.ax, grid.v_walls, grid.alpha_ns, grid.solver_failed(), color="black")
 
         self.ax.plot(v_chapman_jouguet(grid.model, grid.alpha_ns), grid.alpha_ns, 'k--', label=r'$v_{CJ}$')
         self.ax.set_title(rf"$\Delta s / s_n$ for {grid.model.label_latex}")
