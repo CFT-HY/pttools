@@ -152,7 +152,7 @@ class Bubble:
 
     def solve(
             self,
-            sum_rtol_warning: float = 1e-2,
+            sum_rtol_warning: float = 1.5e-2,
             sum_rtol_error: float = 5e-2,
             error_prec: str = ".4f",
             use_bag_solver: bool = False,
