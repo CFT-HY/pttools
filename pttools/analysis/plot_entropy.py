@@ -163,8 +163,8 @@ def gen_and_plot_entropy(
         # DeltaEntropyPlot(
         #     grid, w1=sm_sh, w2=sn, w_ref=sn,
         #     title=r"$\frac{s_{sh-} - s_n}{s_n}$", fig=fig, ax=axs[i_model, 2])
-        # KappaOmegaSumPlot(grid, fig, axs[i_model, 3])
-        EntropyConservationPlot(grid, diff, fig, axs[i_model, 2])
+        KappaOmegaSumPlot(grid, fig, axs[i_model, 2])
+        # EntropyConservationPlot(grid, diff, fig, axs[i_model, 2])
         # EntropyConservationPlot(grid, diff_sh, fig, axs[i_model, 3])
         DurationPlot(grid, fig, axs[i_model, 3])
 
