@@ -164,6 +164,7 @@ class Bubble:
             self.add_note(msg)
 
         alpha_n_max_bag = alpha_n_max_deflagration_bag(self.v_wall)
+        high_alpha_n = alpha_n_max_bag - self.alpha_n < 0.05
 
         try:
             # Todo: make the solver errors more specific
@@ -174,7 +175,8 @@ class Bubble:
                 fluid_shell_generic(
                     model=self.model,
                     v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type,
-                    alpha_n_max_bag=alpha_n_max_bag, n_xi=self.n_points,
+                    alpha_n_max_bag=alpha_n_max_bag,
+                    high_alpha_n=high_alpha_n, n_xi=self.n_points,
                     use_bag_solver=use_bag_solver,
                     log_success=self.log_success, log_high_alpha_n_failures=log_high_alpha_n_failures
                 )
@@ -194,7 +196,7 @@ class Bubble:
 
         # Validity checking for the solution
         self.alpha_plus = self.model.alpha_plus(self.wp, self.wm)
-        if self.sol_type != SolutionType.DETON and self.alpha_plus >= 1/3:
+        if self.alpha_plus >= 1/3 and self.sol_type != SolutionType.DETON:
             msg = "Got alpha_plus > 1/3 with " \
                   f"model={self.model.label_unicode}, v_wall={self.v_wall}, " \
                   f"alpha_n={self.alpha_n}, sol_type={self.sol_type}. " \
@@ -224,7 +226,7 @@ class Bubble:
                 f"Got: κ={self.kappa:{error_prec}}, ω={self.omega:{error_prec}}, "\
                 f"κ+ω={self.kappa + self.omega:{error_prec}} " \
                 f"with model={self.model.label_unicode}, v_wall={self.v_wall}, alpha_n={self.alpha_n}"
-            if log_high_alpha_n_failures or self.alpha_n < alpha_n_max_bag or self.sol_type == SolutionType.DETON:
+            if log_high_alpha_n_failures or (not high_alpha_n) or self.sol_type == SolutionType.DETON:
                 if sum_err:
                     logger.error(msg)
                 else:
