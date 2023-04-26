@@ -131,22 +131,23 @@ def fluid_shell_deflagration_common(
     vp = -relativity.lorentz(vp_tilde, v_wall)
 
     # Manual correction for hybrids
-    if sol_type == SolutionType.HYBRID:
-        # If we are already below the shock velocity, then add a manual correction
-        vm_shock_tilde, w_shock = shock.solve_shock(
-            model,
-            # The fluid before the shock is still
-            v1_tilde=v_wall,
-            w1=wn,
-            csp=cs_n,
-            backwards=True, warn_if_barely_exists=warn_if_shock_barely_exists
-        )
-        vm_shock = relativity.lorentz(v_wall, vm_shock_tilde)
-        if vm_shock < 0 or vm_shock > 1:
-            raise RuntimeError(f"Got invalid vm_shock={vm_shock} when attempting to correct a hybrid.")
-        if vp < vm_shock:
-            logger.warning("vp < v_shock at the wall. Applying manual correction. Got: vp=%s, v_shock=%s", vp, vm_shock)
-            vp = vm_shock + 1e-3
+    # if sol_type == SolutionType.HYBRID:
+    #     # If we are already below the shock velocity, then add a manual correction
+    #     vm_shock_tilde, w_shock = shock.solve_shock(
+    #         model,
+    #         # The fluid before the shock is still
+    #         v1_tilde=v_wall,
+    #         w1=wn,
+    #         csp=cs_n,
+    #         backwards=True, warn_if_barely_exists=warn_if_shock_barely_exists
+    #     )
+    #     vm_shock = relativity.lorentz(v_wall, vm_shock_tilde)
+    #     if vm_shock < 0 or vm_shock > 1:
+    #         raise RuntimeError(f"Got invalid vm_shock={vm_shock} when attempting to correct a hybrid.")
+    #     if vp < vm_shock:
+    #         logger.warning("vp < v_shock at the wall. Applying manual correction. Got: vp=%s, v_shock=%s", vp, vm_shock)
+    #         vp = vm_shock + 1e-3
+    #         wp = w_shock + 1e-3
 
     # logger.debug(f"vp_tilde={vp_tilde}, vp={vp}, wp={wp}")
 
