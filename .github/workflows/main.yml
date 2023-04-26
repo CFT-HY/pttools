@@ -124,7 +124,7 @@ jobs:
 #          FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
   test-numba:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     strategy:
       matrix:
         python-version: ['3.8', '3.9', '3.10']
@@ -230,7 +230,7 @@ jobs:
 #        if-no-files-found: error
   test-python:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     strategy:
       matrix:
         python-version: ['3.8', '3.9', '3.10']
