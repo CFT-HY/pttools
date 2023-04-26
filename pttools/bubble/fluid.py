@@ -398,8 +398,9 @@ def fluid_shell_solver_deflagration(
         vp_guess=vp_guess, wp_guess=wp_guess,
         allow_failure=allow_failure, warn_if_shock_barely_exists=False
     )
-    if not np.isclose(wn_estimate, wn, rtol=wn_rtol):
+    if solution_found and not np.isclose(wn_estimate, wn, rtol=wn_rtol):
         solution_found = False
+        reason = f"Result not within rtol={wn_rtol}."
     if not solution_found:
         msg = (
             f"Deflagration solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. " +
@@ -483,8 +484,9 @@ def fluid_shell_solver_hybrid(
         warn_if_shock_barely_exists=False
     )
     # wp = w[0]
-    if not np.isclose(wn_estimate, wn, rtol=wn_rtol):
+    if solution_found and not np.isclose(wn_estimate, wn, rtol=wn_rtol):
         solution_found = False
+        reason = f"Result not within rtol={wn_rtol}."
     if not solution_found:
         msg = (
             f"Hybrid solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. " +
