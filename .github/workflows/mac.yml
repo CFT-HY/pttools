@@ -1,10 +1,16 @@
 name: Test on macOS
-on: [push, workflow_dispatch]
+on:
+  push:
+  workflow_dispatch:
+#  workflow_run:
+#    workflows: [ CI ]
+#    types: [ completed ]
 env:
   PRIMARY_PYTHON_VERSION: '3.10'
 jobs:
   test:
     runs-on: macos-latest
+    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
     timeout-minutes: 20
     steps:
         - name: Setup Python
