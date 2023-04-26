@@ -78,5 +78,5 @@ def v_and_w_from_solution(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: 
             raise ValueError("Got wp < wm for a deflagration or hybrid")
 
     wn = w[-1]
-    wm_sh: float = w[(np.flip(w) > wn)[0]]
+    wm_sh: float = w[np.argmax(np.flip(w) > wn)]
     return vp, vm, vp_tilde, vm_tilde, wp, wm, wn, wm_sh

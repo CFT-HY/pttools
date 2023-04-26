@@ -9,13 +9,19 @@ Created on Fri Jul  2 18:20:37 2021
 Requires input data as an npz file.
 """
 
+import logging
+import os.path
 import typing as tp
 
-from pttools.analysis.plot_entropy import plot_entropy
-from pttools.bubble.chapman_jouguet import v_chapman_jouguet_bag
-from pttools.bubble.alpha import alpha_n_max_bag, alpha_n_max_detonation_bag
 import matplotlib.pyplot as plt
 import numpy as np
+
+from examples.utils import FIG_DIR
+from pttools.analysis.plot_entropy import plot_entropy_data
+from pttools.bubble.chapman_jouguet import v_chapman_jouguet_bag
+from pttools.bubble.alpha import alpha_n_max_bag, alpha_n_max_detonation_bag
+
+logger = logging.getLogger(__name__)
 
 
 def load(n_alpha: int = 10, n_vw: int = 10, g_bro: int = 120, g_sym: int = 123) \
@@ -30,13 +36,18 @@ def load(n_alpha: int = 10, n_vw: int = 10, g_bro: int = 120, g_sym: int = 123) 
     return ds_arr, vw_arr, alpha_arr
 
 
-def main(n_alpha: int = 10, n_vw: int = 10, g_bro: int = 120, g_sym: int = 123):
+def main(n_alpha: int = 10, n_vw: int = 10, g_bro: int = 120, g_sym: int = 123, path: str = None):
     # g_bro = eos.G_BRO_DEFAULT*0.5
     # g_sym = eos.G_SYM_DEFAULT
 
-    ds_arr, vw_arr, alpha_arr = load(n_alpha, n_vw, g_bro, g_sym)
+    try:
+        ds_arr, vw_arr, alpha_arr = load(n_alpha, n_vw, g_bro, g_sym)
+    except FileNotFoundError as e:
+        msg = f"The entropy data file was not found: {e}"
+        logger.error(msg)
+        return
 
-    fig, ax = plot_entropy(
+    fig, ax = plot_entropy_data(
         ds_arr,
         v_walls=vw_arr,
         alpha_ns=alpha_arr,
@@ -54,7 +65,11 @@ def main(n_alpha: int = 10, n_vw: int = 10, g_bro: int = 120, g_sym: int = 123):
 
     ax.legend()
 
+    if path is not None:
+        fig.savefig(path)
+    return fig
+
 
 if __name__ == "__main__":
-    main()
+    main(path=os.path.join(FIG_DIR, "entropy_old.png"))
     plt.show()
