@@ -157,15 +157,15 @@ def gen_and_plot_entropy(
         diff_sh = grid.data[6]
 
         EntropyPlot(grid, s_total_rel, min_level, max_level, diff_level, fig=fig, ax=axs[i_model, 0])
-        DeltaEntropyPlot(
-            grid, w1=sm, w2=sp, w_ref=sn,
-            title=r"$\frac{s_- - s_+}{s_n}$", fig=fig, ax=axs[i_model, 1])
+        # DeltaEntropyPlot(
+        #     grid, w1=sm, w2=sp, w_ref=sn,
+        #     title=r"$\frac{s_- - s_+}{s_n}$", fig=fig, ax=axs[i_model, 1])
         # DeltaEntropyPlot(
         #     grid, w1=sm_sh, w2=sn, w_ref=sn,
         #     title=r"$\frac{s_{sh-} - s_n}{s_n}$", fig=fig, ax=axs[i_model, 2])
+        EntropyConservationPlot(grid, diff, fig, axs[i_model, 1])
+        # EntropyConservationPlot(grid, diff_sh, fig, axs[i_model, 2])
         KappaOmegaSumPlot(grid, fig, axs[i_model, 2])
-        # EntropyConservationPlot(grid, diff, fig, axs[i_model, 2])
-        # EntropyConservationPlot(grid, diff_sh, fig, axs[i_model, 3])
         DurationPlot(grid, fig, axs[i_model, 3])
 
     # fig.tight_layout()
