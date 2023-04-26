@@ -7,6 +7,12 @@ jobs:
   deploy-pypi:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # https://github.com/marketplace/actions/pypi-publish
+    environment:
+      name: pypi
+      url: https://pypi.org/p/pttools-gw
+    permissions:
+      id-token: write
     steps:
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -38,6 +44,7 @@ jobs:
           if-no-files-found: error
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
+        # An API token is not needed with trusted publishing (OpenID Connect)
+        # with:
+        #   user: __token__
+        #   password: ${{ secrets.PYPI_API_TOKEN }}
