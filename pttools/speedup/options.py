@@ -7,7 +7,7 @@ import typing as tp
 
 logger = logging.getLogger(__name__)
 
-GITHUB_ACTIONS: tp.Final[bool] = bool(int(os.getenv("GITHUB_ACTIONS", default="0")))
+GITHUB_ACTIONS: tp.Final[bool] = "GITHUB_ACTIONS" in os.environ
 
 #: Maximum workers for ProcessPoolExecutor (determined dynamically based on the available CPUs)
 if hasattr(os, "sched_getaffinity"):
