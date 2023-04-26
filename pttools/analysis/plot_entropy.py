@@ -23,15 +23,15 @@ logger = logging.getLogger(__name__)
 class DurationPlot(VwAlphaPlot):
     def __init__(self, grid: BubbleGridVWAlpha, fig: plt.Figure = None, ax: plt.Axes = None):
         super().__init__(fig, ax)
-        img = ax.pcolor(grid.v_walls, grid.alpha_ns, grid.elapsed())
+        img = ax.pcolor(grid.v_walls, grid.alpha_ns, np.log10(grid.elapsed()))
         cbar = ax.figure.colorbar(img, ax=ax)
 
         # cs: QuadContourSet = ax.contourf(grid.v_walls, grid.alpha_ns, grid.elapsed(),
         #                                  locator=ticker.LinearLocator(numticks=20))
         # cbar = self.fig.colorbar(cs)
 
-        cbar.ax.set_ylabel("Time elapsed (s)")
-        ax.set_title(f"Time elapsed (s) for {grid.model.label_latex}")
+        cbar.ax.set_ylabel("Time elapsed (log10(s))")
+        ax.set_title(f"Time elapsed for {grid.model.label_latex}")
 
 
 class EntropyPlot(VwAlphaPlot):
