@@ -9,7 +9,7 @@ import numpy as np
 EPS: tp.Final[np.float_] = np.nextafter(0, 1)
 
 #: Default number of entries in $\xi$ array
-N_XI_DEFAULT: int = 5000
+N_XI_DEFAULT: int = 50000
 #: Maximum number of entries in $\xi$ array
 N_XI_MAX: int = 1000000
 #: How accurate is $\alpha_+ (\alpha_n)$
