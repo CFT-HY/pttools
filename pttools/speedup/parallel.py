@@ -155,6 +155,10 @@ def run_parallel(
                 order="C") as it:
             for elems in it:
                 res = elems[0].item().result()
-                for arr, val in zip(elems[1:], res):
-                    arr[...] = val
+                try:
+                    for arr, val in zip(elems[1:], res):
+                        arr[...] = val
+                except ValueError as e:
+                    logger.exception("Could not store result to output array. Got: %s", res, exc_info=e)
+                    raise e
         return output_arrs
