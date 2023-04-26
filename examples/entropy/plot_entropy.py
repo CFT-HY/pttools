@@ -15,13 +15,14 @@ from pttools.analysis.plot_entropy import gen_and_plot_entropy
 from pttools.logging import setup_logging
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
+from pttools import speedup
 
 from examples.utils import FIG_DIR
 from tests.profiling import utils_cprofile
 
 
 def main():
-    n_points = 20
+    n_points = 10 if speedup.GITHUB_ACTIONS else n_points = 20
     models = [
         # BagModel(a_s=1.1, a_b=1, V_s=1),
         # ConstCSModel(css2=1/3-0.01, csb2=1/3-0.02, a_s=1.5, a_b=1, V_s=1)

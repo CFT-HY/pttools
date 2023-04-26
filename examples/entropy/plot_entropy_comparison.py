@@ -18,10 +18,11 @@ from pttools.analysis.bubble_grid import BubbleGridVWAlpha
 from pttools.analysis.plot_entropy import compute
 from pttools.logging import setup_logging
 from pttools.models.bag import BagModel
+from pttools import speedup
 
 
-    n_points = 20
 def main(relative: bool = True, path: str = None):
+    n_points = 10 if speedup.GITHUB_ACTIONS else 20
     v_walls = np.linspace(0.05, 0.95, n_points, endpoint=True)
     alpha_ns = v_walls
     # entropy_ref, v_walls, alpha_ns = load()
