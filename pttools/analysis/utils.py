@@ -1,14 +1,13 @@
 """Utilities for plotting and analysing data"""
 
-import os
-
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 from pttools.bubble.boundary import Phase
 from pttools.models.base import BaseModel
+from pttools import speedup
 
-ENABLE_DRAWING: bool = "GITHUB_ACTIONS" not in os.environ
+ENABLE_DRAWING: bool = not speedup.GITHUB_ACTIONS
 
 
 def model_phase_label(model: BaseModel, phase: Phase) -> str:

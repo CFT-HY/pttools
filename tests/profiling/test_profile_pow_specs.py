@@ -18,7 +18,7 @@ class TestProfilePowSpecs(TestProfile):
 
     @classmethod
     def setUpClass(cls) -> None:
-        if os.getenv("GITHUB_ACTIONS", default=False):
+        if speedup.GITHUB_ACTIONS:
             raise unittest.SkipTest("This test would take too long on GitHub Actions")
         super().setUpClass()
 
