@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.bubble import fluid_reference
+from pttools.bubble.transition import SolutionType
 
 
 def main():
@@ -44,8 +45,9 @@ def main():
 
     fig.tight_layout()
 
-    print(ref.get(v_wall=0.25, alpha_n=0.8))
-    print(ref.get(v_wall=0.8, alpha_n=0.25))
+    print(ref.get(v_wall=0.25, alpha_n=0.8, sol_type=SolutionType.SUB_DEF))
+    print(ref.get(v_wall=0.7, alpha_n=0.25, sol_type=SolutionType.HYBRID))
+    print(ref.get(v_wall=0.1, alpha_n=0.95, sol_type=SolutionType.DETON))
 
 
 if __name__ == "__main__":
