@@ -22,7 +22,7 @@ from tests.profiling import utils_cprofile
 
 
 def main():
-    n_points = 10 if speedup.GITHUB_ACTIONS else n_points = 20
+    n_points = 10 if speedup.GITHUB_ACTIONS else 20
     models = [
         # BagModel(a_s=1.1, a_b=1, V_s=1),
         # ConstCSModel(css2=1/3-0.01, csb2=1/3-0.02, a_s=1.5, a_b=1, V_s=1)
