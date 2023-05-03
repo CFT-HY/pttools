@@ -34,7 +34,7 @@ w_center = np.linspace(0.9*wm_bag, 1.1*wm_bag)
 wn_est = np.empty_like(w_center)
 for i, w_center_i in enumerate(w_center):
     v, w, xi, vp, vm, vp_tilde, vm_tilde, xi_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = \
-        fluid.fluid_shell_deflagration(model, v_wall=v_wall, wn=wn, w_center=w_center_i, vp_guess=vp_bag, wp_guess=wp_bag)
+        fluid.fluid_shell_deflagration(model, v_wall=v_wall, wn=wn, w_center=w_center_i, cs_n=model.css2, vp_guess=vp_bag, wp_guess=wp_bag)
     wn_est[i] = wn_estimate
 
 
