@@ -227,6 +227,7 @@ def solve_junction(
         v2_tilde_guess: float,
         w2_guess: float,
         allow_failure: bool = False,
+        # rtol: float = const.JUNCTION_RTOL,
         atol: float = const.JUNCTION_ATOL) -> tp.Tuple[float, float]:
     """Model-independent junction condition solver
     Velocities are in the wall frame!

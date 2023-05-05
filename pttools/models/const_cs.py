@@ -98,7 +98,12 @@ class ConstCSModel(AnalyticModel):
             return np.nan
         return cs2
 
-    def alpha_n(self, wn: th.FloatOrArr, allow_negative: bool = False, allow_no_transition: bool = False) -> th.FloatOrArr:
+    def alpha_n(
+            self,
+            wn: th.FloatOrArr,
+            allow_invalid: bool = False,
+            allow_no_transition: bool = False,
+            log_invalid: bool = True) -> th.FloatOrArr:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
         $$\alpha_n = \frac{4}{3} \left( \frac{1}{\nu} - \frac{1}{\mu} + \frac{1}{w_n} (V_s - V_b) \right)$$
 
@@ -106,18 +111,19 @@ class ConstCSModel(AnalyticModel):
         :param allow_negative: whether to allow unphysical negative output values (not checked for this model)
         :param allow_no_transition: allow $w_n$ for which there is no phase transition
         """
-        self.check_w_for_alpha(wn, allow_negative)
+        self.check_w_for_alpha(wn, allow_invalid=allow_invalid, name="wn", alpha_name="alpha_n")
         # self.check_p(wn, allow_fail=allow_no_transition)
 
         ret = 4/3 * (1/self.nu - 1/self.mu) + self.bag_wn_const/wn
-        if (not allow_negative) and np.any(ret < 0):
+        if (not allow_invalid or log_invalid) and np.any(ret < 0):
             if np.isscalar(ret):
                 info = f"Got negative alpha_n={ret} with wn={wn}, mu={self.mu}, nu={self.nu}."
             else:
                 i = np.argmin(wn)
                 info = f"Got negative alpha_n. Most problematic values: alpha_n={ret[i]}, wn={wn[i]}, mu={self.mu}, nu={self.nu}"
-            logger.error(info)
-            if not allow_negative:
+            if log_invalid:
+                logger.error(info)
+            if not allow_invalid:
                 raise ValueError(info)
         return ret
 
@@ -127,17 +133,23 @@ class ConstCSModel(AnalyticModel):
         return alpha_n + (1 - 1 / (3 * self.cs2(wn, Phase.BROKEN))) * \
             (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN))
 
-    def alpha_plus(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
+    def alpha_plus(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_invalid: bool = False, log_invalid: bool = True) -> th.FloatOrArr:
         r"""If $\nu=4 \Leftrightarrow c_{sb}=\frac{1}{\sqrt{3}}$, then $w_-$ does not affect the result."""
 
-        self.check_w_for_alpha(wp, allow_negative)
-        self.check_w_for_alpha(wm, allow_negative)
+        self.check_w_for_alpha(wp, allow_invalid=allow_invalid, log_invalid=log_invalid, name="wp", alpha_name="alpha_plus")
+        self.check_w_for_alpha(wm, allow_invalid=allow_invalid, log_invalid=log_invalid, name="wm", alpha_name="alpha_plus")
 
         ret = (1 - 4/self.mu)/3 - (1 - 4/self.nu)*wm/(3*wp) + self.bag_wn_const/wp
-        if (not allow_negative) and np.any(ret < 0):
+        if np.any(ret < 0):
             if np.isscalar(ret):
-                raise ValueError(f"Got negative alpha_+={ret}")
-            raise ValueError(f"Got negative alpha_+, most problematic value: {np.min(ret)}")
+                msg = f"Got negative alpha_plus={ret}"
+            else:
+                msg = f"Got negative alpha_plus, most problematic value: {np.min(ret)}"
+
+            if log_invalid:
+                logger.error(msg)
+            if not allow_invalid:
+                raise ValueError(msg)
         return ret
 
     def critical_temp_opt(self, temp: float) -> float:

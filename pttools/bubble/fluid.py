@@ -522,8 +522,9 @@ def fluid_shell_generic(
             v_wall: float,
             alpha_n: float,
             sol_type: tp.Optional[SolutionType] = None,
+            wn: float = None,
             vp_guess: float = None,
-            wn_guess: float = 1,
+            wn_guess: float = None,
             wp_guess: float = None,
             wm_guess: float = None,
             wn_rtol: float = 1e-4,
@@ -548,7 +549,8 @@ def fluid_shell_generic(
     if high_alpha_n is None:
         high_alpha_n = alpha_n > alpha_n_max_bag
 
-    wn = model.w_n(alpha_n, wn_guess=wn_guess)
+    if wn is None:
+        wn = model.w_n(alpha_n, wn_guess=wn_guess)
     # The shock curve hits v=0 here
     cs_n = np.sqrt(model.cs2(wn, Phase.SYMMETRIC))
 
@@ -573,14 +575,14 @@ def fluid_shell_generic(
         vp, vm, vp_tilde, vm_tilde, wp, wm, wn, wm_sh = props.v_and_w_from_solution(v, w, xi, v_wall, sol_type2)
 
         # The wm_guess is not needed for the bag model
-        v_cj: float = chapman_jouguet.v_chapman_jouguet(model, alpha_n, wn, wm)
+        v_cj: float = chapman_jouguet.v_chapman_jouguet(model, alpha_n, wn=wn, wm_guess=wm)
         return v, w, xi, sol_type2, \
             vp, vm, vp_tilde, vm_tilde, np.nan, np.nan, np.nan, wp, wm, wm_sh, v_cj, False, time.perf_counter() - start_time
 
     sol_type = transition.validate_solution_type(
         model,
         v_wall=v_wall, alpha_n=alpha_n, sol_type=sol_type,
-        wn_guess=wn, wm_guess=wm_guess
+        wn=wn, wm_guess=wm_guess
     )
 
     # Load and scale reference data
@@ -617,14 +619,13 @@ def fluid_shell_generic(
             "as all starting guesses were not provided, and the reference has nan values."
         )
 
-    if vp_guess < 0 or vp_guess > 1 or vp_tilde_guess < 0 or vp_tilde_guess > 1 \
-            or wm_guess < 0 or wn_guess < 0 or wp_guess < wn_guess:
+    if vp_guess < 0 or vp_guess > 1 or vp_tilde_guess < 0 or vp_tilde_guess > 1 or wm_guess < 0 or wp_guess < wn:
         raise ValueError(
-            f"Got invalid guesses: vp_tilde={vp_tilde_guess}, wp={wp_guess}, wm={wm_guess}, wn={wn_guess} "
-            f"for v_wall={v_wall}, alpha_n={alpha_n}"
+            f"Got invalid guesses: vp_tilde={vp_tilde_guess}, wp={wp_guess}, wm={wm_guess}"
+            f"for v_wall={v_wall}, alpha_n={alpha_n}, wn={wn_guess}"
         )
 
-    v_cj = chapman_jouguet.v_chapman_jouguet(model, alpha_n, wn, wm_guess)
+    v_cj = chapman_jouguet.v_chapman_jouguet(model, alpha_n, wn=wn, wm_guess=wm_guess)
     dxi = 1. / n_xi
 
     if log_success:

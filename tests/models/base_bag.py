@@ -30,9 +30,9 @@ class BagBaseCase(ModelBaseCase, abc.ABC):
 
         See :notes:` \` p. 40
         """
-        wn = 1.1
+        wn = 70
         alpha_n = self.model.alpha_n(wn=wn)
-        alpha_plus = self.model.alpha_plus(wp=wn, wm=0.9)
+        alpha_plus = self.model.alpha_plus(wp=wn, wm=20)
         self.assertAlmostEqual(alpha_n, alpha_plus)
 
     def test_cs2_like_bag(self):

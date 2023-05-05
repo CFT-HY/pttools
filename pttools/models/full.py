@@ -56,7 +56,7 @@ class FullModel(Model):
         self.temp_spline_b = splrep(
             np.log10(self.w(self.thermo.GEFF_DATA_TEMP, Phase.BROKEN)), self.thermo.GEFF_DATA_LOG_TEMP
         )
-        self.t_crit, self.wn_max, self.alpha_n_min = self.criticals(t_crit_guess, allow_invalid)
+        self.t_crit, self.w_crit, self.alpha_n_min = self.criticals(t_crit_guess, allow_invalid)
 
         self.cs2 = self.gen_cs2()
         self.cs2_neg = self.gen_cs2_neg()

@@ -1,9 +1,4 @@
-r"""
-Effective degrees of freedom for the Standard Model as a function of temperature.
-
-Cubic spline interpolation for the range $0 - 10^{5.45}$ MeV from the table S2 of
-:borsanyi_2016:`\ `.
-"""
+"""Standard Model"""
 
 import logging
 
@@ -17,9 +12,11 @@ logger = logging.getLogger(__name__)
 
 
 class StandardModel(ThermoModel):
-    """Thermodynamics of the Standard Model
+    r"""Standard Model thermodynamics.
 
-    Units are in GeV
+    Based on cubic spline interpolation for the effective degrees of freedom of the Standard Model.
+    Data range $0 - 10^{5.45}$ MeV from the table S2 of :borsanyi_2016:`\ `.
+    Units are in MeV.
     """
     DEFAULT_LABEL_LATEX = "Standard Model"
     DEFAULT_LABEL_UNICODE = DEFAULT_LABEL_LATEX

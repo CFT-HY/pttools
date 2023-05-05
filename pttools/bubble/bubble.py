@@ -33,18 +33,20 @@ class Bubble:
             sol_type: SolutionType = None,
             label_latex: str = None,
             label_unicode: str = None,
-            wn_guess: float = 1,
-            wm_guess: float = 2,
+            wn_guess: float = None,
+            wm_guess: float = None,
             n_points: int = const.N_XI_DEFAULT,
             log_success: bool = False):
         if v_wall < 0 or v_wall > 1:
             raise ValueError(f"Invalid v_wall={v_wall}")
         if alpha_n < 0 or alpha_n > 1 or alpha_n < model.alpha_n_min:
             raise ValueError(f"Invalid alpha_n={alpha_n}. Minimum for the model: {model.alpha_n_min}")
+
+        self.wn = model.w_n(alpha_n, wn_guess)
         self.sol_type = transition.validate_solution_type(
             model,
             v_wall=v_wall, alpha_n=alpha_n, sol_type=sol_type,
-            wn_guess=wn_guess, wm_guess=wm_guess
+            wn=self.wn, wm_guess=wm_guess
         )
 
         # Parameters
@@ -55,7 +57,6 @@ class Bubble:
         self.log_success = log_success
 
         # Computed parameters
-        self.wn = model.w_n(alpha_n)
         self.tn = model.temp(self.wn, Phase.SYMMETRIC)
         if self.tn > model.t_crit:
             raise ValueError(f"Bubbles form only when T_nuc < T_crit. Got: T_nuc={self.tn}, T_crit={model.t_crit}")
@@ -175,6 +176,7 @@ class Bubble:
                 fluid_shell_generic(
                     model=self.model,
                     v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type,
+                    wn=self.wn,
                     alpha_n_max_bag=alpha_n_max_bag,
                     high_alpha_n=high_alpha_n, n_xi=self.n_points,
                     use_bag_solver=use_bag_solver,

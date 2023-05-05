@@ -90,9 +90,10 @@ class BaseModel(abc.ABC):
                 if self.restrict_to_valid:
                     temp[below] = np.nan
             if has_above:
+                # raise ValueError(temp)
                 logger.warning(
                     f"Some temperatures ({np.max(temp)} and possibly above) "
-                    f"are below the minimum temperature {self.t_max} of the model \"{self.name}\"."
+                    f"are above the maximum temperature {self.t_max} of the model \"{self.name}\"."
                 )
                 if self.restrict_to_valid:
                     temp[above] = np.nan

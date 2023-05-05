@@ -37,8 +37,11 @@ plot.process()
 # %%
 # FullModel based on StandardModel
 # --------------------------------
-thermo2 = StandardModel(V_s=2, g_mult_s=1 + 1e-9)
-plot2 = ModelPlot(FullModel(thermo2))
+# thermo2 = StandardModel(V_s=5e12, g_mult_s=1 + 1e-9)
+thermo2 = StandardModel(V_s=5e15, g_mult_s=1 + 1e-5)
+model2 = FullModel(thermo2)
+plot2 = ModelPlot(model2)
+print(model2.t_crit, model2.t_max, model2.alpha_n_min, model2.w_crit)
 
 if __name__ == "__main__":
     plt.show()

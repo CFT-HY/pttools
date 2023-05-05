@@ -53,12 +53,13 @@ def identify_solution_type(
         model: "Model",
         v_wall: float,
         alpha_n: float,
+        wn: float,
         wn_guess: float,
         wm_guess: float
         ) -> SolutionType:
-
-    wn = model.w_n(alpha_n, wn_guess)
-    v_cj = v_chapman_jouguet(model, alpha_n, wn_guess=wn, wm_guess=wm_guess)
+    if wn is None:
+        wn = model.w_n(alpha_n, wn_guess)
+    v_cj = v_chapman_jouguet(model, alpha_n, wn=wn, wm_guess=wm_guess)
 
     if is_surely_detonation(v_wall, v_cj):
         return SolutionType.DETON
@@ -75,10 +76,11 @@ def validate_solution_type(
         v_wall: float,
         alpha_n: float,
         sol_type: SolutionType,
-        wn_guess: float,
-        wm_guess: float) -> SolutionType:
+        wn: float = None,
+        wn_guess: float = None,
+        wm_guess: float = None) -> SolutionType:
     if sol_type is None or sol_type is SolutionType.UNKNOWN:
-        sol_type = identify_solution_type(model, v_wall, alpha_n, wn_guess, wm_guess)
+        sol_type = identify_solution_type(model, v_wall, alpha_n, wn, wn_guess, wm_guess)
     if sol_type is SolutionType.UNKNOWN:
         msg = \
             f"Could not determine solution type automatically for model={model}, v_wall={v_wall}, alpha_n={alpha_n}. " \

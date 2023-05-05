@@ -64,23 +64,28 @@ class BagModel(AnalyticModel):
                 f"Bag, a_s={self.a_s:.{label_prec}f}, a_b={self.a_b:.{label_prec}f}, " \
                 f"V_s={self.V_s:.{label_prec}f}, V_b={self.V_b:.{label_prec}f}"
 
-    def alpha_n(self, wn: th.FloatOrArr, allow_negative: bool = False, allow_no_transition: bool = False) \
-            -> th.FloatOrArr:
+    def alpha_n(
+            self,
+            wn: th.FloatOrArr,
+            allow_invalid: bool = False,
+            allow_no_transition: bool = False,
+            log_invalid: bool = True) -> th.FloatOrArr:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
         $$\alpha_n = \frac{4}{3w_n}(V_s - V_b)$$
 
         :param wn: $w_n$, enthalpy of the symmetric phase at the nucleation temperature
-        :param allow_negative: allow unphysical negative values
+        :param allow_invalid: allow unphysical values
         :param allow_no_transition: allow $w_n$ for which there is no phase transition
+        :param log_invalid: log invalid values
         """
-        self.check_w_for_alpha(wn, allow_negative)
+        self.check_w_for_alpha(wn, allow_invalid=allow_invalid, log_invalid=log_invalid, name="wn", alpha_name="alpha_n")
         # self.check_p(wn, allow_fail=allow_no_transition)
         return self.bag_wn_const / wn
 
     def alpha_n_bar(self, alpha_n: float) -> float:
         return alpha_n
 
-    def alpha_plus(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
+    def alpha_plus(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_invalid: bool = False, log_invalid: bool = True) -> th.FloatOrArr:
         r"""Transition strength parameter $\alpha_+$, :notes:`\ `, eq. 7.25.
         $$\alpha_+ = \frac{4}{3w_+}(V_s - V_b)$$
 
@@ -88,7 +93,7 @@ class BagModel(AnalyticModel):
         :param wm: $w_-$, enthalpy behind the wall (not used)
         :param allow_negative: whether to allow unphysical negative values
         """
-        self.check_w_for_alpha(wp, allow_negative)
+        self.check_w_for_alpha(wp, allow_invalid=allow_invalid, log_invalid=log_invalid, name="wp", alpha_name="alpha_plus")
         return self.bag_wn_const / wp
 
     def critical_temp(self, **kwargs) -> float:

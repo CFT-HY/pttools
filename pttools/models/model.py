@@ -6,7 +6,7 @@ import typing as tp
 
 import numba
 import numpy as np
-from scipy.optimize import fminbound, fsolve
+from scipy.optimize import fminbound, fsolve, root_scalar
 
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase
@@ -70,6 +70,12 @@ class Model(BaseModel, abc.ABC):
             name=name, label_latex=label_latex, label_unicode=label_unicode,
             gen_cs2=gen_cs2
         )
+        self.w_min_s = self.w(self.t_min, Phase.SYMMETRIC)
+        self.w_min_b = self.w(self.t_min, Phase.BROKEN)
+        self.w_max_s = self.w(self.t_max, Phase.SYMMETRIC)
+        self.w_max_b = self.w(self.t_max, Phase.BROKEN)
+        self.w_min = max(self.w_min_s, self.w_min_b)
+        self.w_max = min(self.w_max_s, self.w_max_b)
 
         # A model could have t_ref = 1 GeV and be valid only for e.g. > 10 GeV
         # if t_ref < self.t_min:
@@ -108,31 +114,82 @@ class Model(BaseModel, abc.ABC):
             logger.warning(f"Got physically impossible cs2={cs2} > 1/3 at w={w}. Check that the model is valid.")
         return cs2, w
 
-    @staticmethod
-    def check_w_for_alpha(w: th.FloatOrArr, allow_negative: bool = False):
+    def check_w_for_alpha(
+            self,
+            w: th.FloatOrArr,
+            w_min: float = None,
+            w_max: float = None,
+            allow_invalid: bool = False,
+            log_invalid: bool = True,
+            name: str = "w",
+            alpha_name: str = "alpha") -> np.ndarray:
+        too_small = False
+        too_large = False
+        if w_min is None:
+            w_min = self.w_min
+        if w_max is None:
+            w_max = self.w_max
+
         if w is None or np.any(np.isnan(w)):
-            logger.error("Got w=nan for alpha.")
+            if log_invalid:
+                logger.error("Got w=nan for {name}}.")
             # Scalar None cannot be tested for negativity.
             if w is None:
-                return
-        elif np.any(w < 0):
+                return np.nan
+        elif np.any(w < w_min):
             if np.isscalar(w):
-                info = f"Got negative w={w} for alpha."
+                info = f"Got {name}={w} < w_min={w_min} for {alpha_name}."
             else:
-                info = f"Got negative w for alpha. Most problematic value: w={np.min(w)}"
-            logger.error(info)
-            if not allow_negative:
+                info = f"Got {name} < w_min={w_min} for {alpha_name}. Most problematic value: w={np.min(w)}"
+            if log_invalid:
+                logger.error(info)
+            if not allow_invalid:
                 raise ValueError(info)
+            too_small = True
+        elif np.any(w > w_max):
+            if np.isscalar(w):
+                info = f"Got {name}={w} > w_max={w_max} for {alpha_name}."
+            else:
+                info = f"Got {name} > w_max={w_max} for {alpha_name}. Most problematic value: w={np.max(w)}"
+            if log_invalid:
+                logger.error(info)
+            if not allow_invalid:
+                raise ValueError(info)
+            too_large = True
 
-    def alpha_n(self, wn: th.FloatOrArr, allow_negative: bool = False, allow_no_transition: bool = False) \
-            -> th.FloatOrArr:
+        if not allow_invalid:
+            if too_small or too_large:
+                w = w.copy()
+            if too_small:
+                w[w < w_min] = np.nan
+            if too_large:
+                w[w > w_max] = np.nan
+        return w
+
+    def alpha_n(
+            self,
+            wn: th.FloatOrArr,
+            allow_invalid: bool = False,
+            allow_no_transition: bool = False,
+            log_invalid: bool = True) -> th.FloatOrArr:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
         $$\alpha_n = \frac{4(\theta(w_n,\phi_s) - \theta(w_n,\phi_b)}{3w_n}$$
 
         :param wn: $w_n$, enthalpy of the symmetric phase at the nucleation temperature
-        :param allow_negative: allow unphysical negative output values
+        :param allow_invalid: allow unphysical output values
         :param allow_no_transition: allow $w_n$ for which there is no phase transition
+        :param log_invalid: log negative values
         """
+        self.check_w_for_alpha(wn, allow_invalid=allow_invalid, log_invalid=log_invalid, name="wn", alpha_name="alpha_n")
+        # if np.isscalar(wn):
+        #     if not self.w_min < wn < self.w_max:
+        #         return np.nan
+        # else:
+        #     wn_invalid = np.logical_or(wn < self.w_min, wn > self.w_max)
+        #     if np.any(wn_invalid):
+        #         wn = wn.copy()
+        #         wn[wn_invalid] = np.nan
+
         # self.check_p(wn, allow_fail=allow_no_transition)
         theta_s = self.theta(wn, Phase.SYMMETRIC)
         theta_b = self.theta(wn, Phase.BROKEN)
@@ -144,8 +201,9 @@ class Model(BaseModel, abc.ABC):
                 f"For a physical equation of state theta_+ > theta_-. {text}: " \
                 f"theta_s={prob_theta_s}, theta_b={prob_theta_b}, diff={prob_diff}. " \
                 "See p. 33 of Hindmarsh and Hijazi, 2019."
-            logger.error(msg)
-            if not allow_negative:
+            if log_invalid:
+                logger.error(msg)
+            if not allow_invalid:
                 raise ValueError(msg)
 
         return 4 * diff / (3 * wn)
@@ -154,16 +212,47 @@ class Model(BaseModel, abc.ABC):
         r"""Conversion from $\alpha_n$ to $\alpha_{\bar{\theta}n}$ of :giese_2021:`\ `, eq. 13"""
         raise NotImplementedError
 
-    def alpha_plus(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
+    def alpha_plus(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_invalid: bool = False, log_invalid: bool = True) -> th.FloatOrArr:
         # Todo: This docstring causes the Sphinx error "ERROR: Unknown target name: "w"."
         r"""Transition strength parameter $\alpha_+$
         $$\alpha_+ = \frac{4\Delta \theta}{3w_+} = \frac{4(\theta(w_+,\phi_s) - \theta(w_-,\phi_b)}{3w_+}$$
 
         :param wp: $w_+$
         :param wm: $w_-$
-        :param allow_negative: whether to allow unphysical negative output values
+        :param allow_invalid: whether to allow unphysical output values
+        :param log_invalid: whether to log invalid values
         """
-        return 4 * self.delta_theta(wp, wm, allow_negative) / (3 * wp)
+        self.check_w_for_alpha(wp, w_min=self.w_crit, allow_invalid=allow_invalid, name="wp", alpha_name="alpha_plus")
+        self.check_w_for_alpha(wm, allow_invalid=allow_invalid, name="wm", alpha_name="alpha_plus")
+        # if np.isscalar(wp):
+        #     if not self.w_crit < wp < self.w_max:
+        #         wp = np.nan
+        # else:
+        #     wp_invalid = np.logical_or(wp < self.w_crit, wp > self.w_max)
+        #     if np.any(wp_invalid):
+        #         wp = wp.copy()
+        #         wp[wp_invalid] = np.nan
+        #
+        # if np.isscalar(wm):
+        #     if not self.w_min < wm < self.w_max:
+        #         wm = np.nan
+        # else:
+        #     wm_invalid = np.logical_or(wm < self.w_min, wm > self.w_max)
+        #     if np.any(wm_invalid):
+        #         wm = wm.copy()
+        #         wm[wm_invalid] = np.nan
+
+        ret = 4 * self.delta_theta(wp, wm, allow_invalid) / (3 * wp)
+        if np.any(ret > 1):
+            if np.isscalar(ret):
+                info = f"Got alpha_plus = {ret} > 1"
+            else:
+                info = f"Got alpha_plus > 1. Most problematic value: {np.max(ret)}"
+            if log_invalid:
+                logger.error(info)
+            if not allow_invalid:
+                raise ValueError(info)
+        return ret
 
     def check_p(self, wn: th.FloatOrArr, allow_fail: bool = False):
         temp = self.temp(wn, Phase.SYMMETRIC)
@@ -412,21 +501,44 @@ class Model(BaseModel, abc.ABC):
         return phase*self.V_b + (1 - phase)*self.V_s
 
     def _w_n_scalar(self, alpha_n: float, wn_guess: float) -> float:
-        wn_sol = fsolve(self._w_n_solvable, x0=np.array([wn_guess]), args=(alpha_n, ), full_output=True)
-        wn: float = wn_sol[0][0]
-        if wn_sol[2] != 1:
+        wn = None
+        reason = None
+        try:
+            wn_sol = root_scalar(self._w_n_solvable, x0=wn_guess, x1=self.w_crit, args=(alpha_n, ), bracket=(self.w_min, self.w_crit))
+            wn = wn_sol.root
+            solution_found = wn_sol.converged
+            reason = wn_sol.flag
+            if np.isclose(wn, 0):
+                solution_found = False
+        except ValueError:
+            solution_found = False
+
+        if not solution_found:
+            wn_sol = fsolve(self._w_n_solvable, x0=np.array([wn_guess]), args=(alpha_n,), full_output=True)
+            solution_found = wn_sol[2] == 1
+            if solution_found:
+                wn = wn_sol[0][0]
+
+        if not solution_found:
             logger.error(
                 f"w_n solution was not found for model={self.name}, alpha_n={alpha_n}, wn_guess={wn_guess}. "
                 f"Using w_n={wn}. "
-                f"Reason: {wn_sol[3]}")
+                f"Reason: {reason}"
+            )
+            return np.nan
         return wn
 
-    def _w_n_solvable(self, param: np.ndarray, alpha_n: float) -> th.FloatOrArr:
-        return self.alpha_n(param[0]) - alpha_n
+    def _w_n_solvable(self, wn: th.FloatOrArr, alpha_n: float) -> th.FloatOrArr:
+        if not np.isscalar(wn):
+            wn = wn[0]
+        return self.alpha_n(wn, allow_invalid=True, log_invalid=False) - alpha_n
 
-    def w_n(self, alpha_n: th.FloatOrArr, wn_guess: float = 1) -> th.FloatOrArr:
+    def w_n(self, alpha_n: th.FloatOrArr, wn_guess: float = None) -> th.FloatOrArr:
         r"""Enthalpy at nucleation temperature with given $\alpha_n$"""
         # TODO: rename this to wn
+        if wn_guess is None:
+            wn_guess = 0.9*self.w_crit
+
         if np.isscalar(alpha_n):
             return self._w_n_scalar(alpha_n, wn_guess)
         ret = np.zeros_like(alpha_n)

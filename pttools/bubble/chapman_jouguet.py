@@ -80,14 +80,16 @@ def v_chapman_jouguet_solvable(params: np.ndarray, model: "Model", wp: float, wm
 def v_chapman_jouguet_new(
         model: "Model",
         alpha_n: float,
-        wn_guess: float = 1,
-        wm_guess: float = 1,
+        wn: float = None,
+        wn_guess: float = None,
+        wm_guess: float = None,
         extra_output: bool = False,
         analytical: bool = True) -> tp.Union[float, tp.Tuple[float, float, float]]:
     if analytical and model.DEFAULT_NAME == "bag":
         return v_chapman_jouguet_bag(alpha_plus=alpha_n)
 
-    wn = model.w_n(alpha_n, wn_guess=wn_guess)
+    if wn is None:
+        wn = model.w_n(alpha_n, wn_guess=wn_guess)
     v_cj_guess = v_chapman_jouguet_bag(alpha_plus=alpha_n)
     sol = fsolve(
         v_chapman_jouguet_solvable,
@@ -149,8 +151,9 @@ def v_chapman_jouguet_new(
 def v_chapman_jouguet(
         model: "Model",
         alpha_n: th.FloatOrArr,
-        wn_guess: float = 1,
-        wm_guess: float = 2,
+        wn: th.FloatOrArr = None,
+        wn_guess: float = None,
+        wm_guess: float = None,
         extra_output: bool = False,
         analytical: bool = True) -> tp.Union[float, tp.Tuple[float, float, float], np.ndarray]:
     """Chapman-Jouguet speed
@@ -165,7 +168,7 @@ def v_chapman_jouguet(
     if isinstance(alpha_n, Iterable):
         return np.array([v_chapman_jouguet(
             model, a_n,
-            wn_guess=wn_guess, wm_guess=wm_guess, extra_output=extra_output, analytical=analytical
+            wn=wn, wn_guess=wn_guess, wm_guess=wm_guess, extra_output=extra_output, analytical=analytical
         ) for a_n in alpha_n])
 
     # wn_sol = fsolve(gen_wn_solvable(model, alpha_n), x0=np.array([wn_guess]), full_output=True)
@@ -176,7 +179,8 @@ def v_chapman_jouguet(
     #         f"Using w_n={wn}. "
     #         f"Reason: {wn_sol[3]}")
 
-    wn = model.w_n(alpha_n, wn_guess=wn_guess)
+    if wn is None:
+        wn = model.w_n(alpha_n, wn_guess=wn_guess)
 
     # Get wm
     # For detonations wn = wp
@@ -186,7 +190,8 @@ def v_chapman_jouguet(
     # Compute vp with wp, wm & vm
     vm_cj2 = model.cs2(wm, Phase.BROKEN)
     vm_cj = np.sqrt(vm_cj2)
-    ap_cj = model.alpha_plus(wn, wm)
+    # Todo: implement proper validation for alpha_plus
+    ap_cj = model.alpha_plus(wn, wm, allow_invalid=True)
     v_cj = boundary.v_plus(vm_cj, ap_cj, sol_type=SolutionType.DETON)
     if extra_output:
         return v_cj, vm_cj, ap_cj
@@ -226,10 +231,12 @@ def v_chapman_jouguet_const_cs_reference(alpha_n: np.ndarray, model: "ConstCSMod
     return ret
 
 
-def wm_chapman_jouguet(model: "Model", wp: float, wm_guess: float = 2) -> float:
+def wm_chapman_jouguet(model: "Model", wp: float, wm_guess: float = None) -> float:
     """Get $w_-$ for a transition that has $\tilde{v}_-=c_{s-}(w_-)
     such as a Chapman-Jouguet detonation or a Chapman-Jouguet deflagration.
     """
+    if wm_guess is None:
+        wm_guess = max(wp, model.w_crit)
     wm_sol = fsolve(wm_solvable_chapman_jouguet, x0=np.array([wm_guess]), args=(model, wp), full_output=True)
     wm: float = wm_sol[0][0]
     if wm_sol[2] != 1:
@@ -245,7 +252,7 @@ def wm_solvable_chapman_jouguet(params: np.ndarray, model: "Model", wp: float):
     # This assumes that the solution is a Chapman-Jouguet one
     vm2 = model.cs2(wm_param, Phase.BROKEN)
     vm = np.sqrt(vm2)
-    ap = model.alpha_plus(wp=wp, wm=wm_param, allow_negative=True)
+    ap = model.alpha_plus(wp=wp, wm=wm_param, allow_invalid=True)
     vp = boundary.v_plus(vm, ap, sol_type=SolutionType.DETON)
     # print(f"vm={vm}, ap={ap}, vp={vp}")
 

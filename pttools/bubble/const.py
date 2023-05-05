@@ -28,4 +28,5 @@ CS0: tp.Final[np.float_] = 1 / np.sqrt(3)
 CS0_2: tp.Final[float] = 1/3
 
 JUNCTION_ATOL: float = 2.4e-8
+# JUNCTION_RTOL: float = 1e-6
 JUNCTION_CACHE_SIZE: int = 1024

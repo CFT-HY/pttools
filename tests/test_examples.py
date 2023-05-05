@@ -20,7 +20,7 @@ class ExampleTest(unittest.TestCase):
         plt.close(plot.fig)
 
     @staticmethod
-    def test_plot_const_xi_v():
+    def test_plot_const_cs_xi_v():
         fig = examples.plot_const_cs_xi_v.main()
         plt.close(fig)
 
