@@ -78,8 +78,8 @@ class Model(BaseModel, abc.ABC):
             raise ValueError(f"T_ref should be lower than T_max. Got: T_ref={t_ref}, T_max={self.t_max}")
 
         if gen_critical:
-            # TODO: rename wn_max to w_crit
-            self.t_crit, self.wn_max, self.alpha_n_min = self.criticals(t_crit_guess, allow_invalid)
+            # w_crit = wn_max
+            self.t_crit, self.w_crit, self.alpha_n_min = self.criticals(t_crit_guess, allow_invalid)
 
     # Concrete methods
 

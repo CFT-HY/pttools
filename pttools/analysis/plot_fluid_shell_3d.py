@@ -37,7 +37,7 @@ class BubblePlot3D(PlotlyPlot):
             }
         self.plots.extend([
             go.Scatter3d(
-                x=bubble.w/bubble.model.wn_max, y=bubble.xi, z=bubble.v,
+                x=bubble.w/bubble.model.w_crit, y=bubble.xi, z=bubble.v,
                 mode="lines",
                 name=bubble.label_unicode,
                 **kwargs
@@ -72,14 +72,14 @@ class BubblePlot3D(PlotlyPlot):
         if self.model is None:
             return
         xi = np.linspace(0, 1, n_xi)
-        w = np.linspace(0, w_mult*self.model.wn_max, n_w)
+        w = np.linspace(0, w_mult * self.model.w_crit, n_w)
         cs = np.sqrt(self.model.cs2(w, Phase.BROKEN))
         cs_grid, xi_grid = np.meshgrid(cs, xi)
         mu = lorentz(xi_grid, cs_grid)
         mu[mu < 0] = np.nan
 
         self.plots.append(go.Surface(
-            x=w/self.model.wn_max, y=xi, z=mu,
+            x=w/self.model.w_crit, y=xi, z=mu,
             opacity=0.5, name=r"µ(ξ, cₛ(w))",
             colorbar={
                 "lenmode": "fraction",
@@ -93,7 +93,7 @@ class BubblePlot3D(PlotlyPlot):
         if self.model is None:
             return
         logger.info("Computing shock surface.")
-        w_max = w_mult * self.model.wn_max
+        w_max = w_mult * self.model.w_crit
         cs2_min, cs2_min_w = self.model.cs2_min(w_max, Phase.SYMMETRIC)
         xi_arr = np.linspace(np.sqrt(cs2_min), 0.99, n_xi)
         wp_arr = np.linspace(0.01, w_mult*w_max, n_w)
@@ -112,12 +112,12 @@ class BubblePlot3D(PlotlyPlot):
 
         if wp_surface:
             self.plots.append(go.Surface(
-                x=wp_arr/self.model.wn_max, y=xi_arr, z=vm_grid,
+                x=wp_arr/self.model.w_crit, y=xi_arr, z=vm_grid,
                 opacity=0.5, name="Shock, $w=w₊$",
                 colorscale=self.colorscale, showscale=False
             ))
         self.plots.append(go.Surface(
-            x=wm_grid/self.model.wn_max, y=xi_grid, z=vm_grid,
+            x=wm_grid/self.model.w_crit, y=xi_grid, z=vm_grid,
             opacity=0.5, name="Shock, $w=w₋$",
             colorscale=self.colorscale, showscale=False
         ))

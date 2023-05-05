@@ -16,12 +16,12 @@ class DeltaThetaPlot3D(PlotlyPlot):
         self.plots: tp.List[BasePlotlyType] = []
 
     def add(self, model: Model):
-        wp = np.linspace(0, model.wn_max)
+        wp = np.linspace(0, model.w_crit)
         wm = wp
         wp_grid, wm_grid = np.meshgrid(wp, wm)
         delta = model.delta_theta(wp_grid, wm_grid, allow_negative=True)
         self.plots.append(go.Surface(
-            x=wp/model.wn_max, y=wm/model.wn_max, z=delta, name=model.label_unicode
+            x=wp/model.w_crit, y=wm / model.w_crit, z=delta, name=model.label_unicode
         ))
 
     def create_fig(self) -> go.Figure:
