@@ -34,8 +34,7 @@ class ModelPlot:
 
         if t_log:
             self.t_min = max(model.t_min, 10**(-t_log_range)*model.t_crit) if t_min is None else t_min
-            self.t_max = min(model.t_max, 10**(t_log_range*(np.log10(model.t_crit) - np.log10(self.t_min)))) \
-                if t_max is None else t_max
+            self.t_max = min(model.t_max, 10**t_log_range*model.t_crit) if t_max is None else t_max
             self.temps_b = np.logspace(np.log10(self.t_min), np.log10(model.t_crit), n_points)
             self.temps_s = np.logspace(np.log10(model.t_crit), np.log10(self.t_max), n_points)
         else:
