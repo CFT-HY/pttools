@@ -227,8 +227,9 @@ def solve_junction(
         v2_tilde_guess: float,
         w2_guess: float,
         allow_failure: bool = False,
-        # rtol: float = const.JUNCTION_RTOL,
-        atol: float = const.JUNCTION_ATOL) -> tp.Tuple[float, float]:
+        rtol: float = const.JUNCTION_RTOL,
+        # atol: float = const.JUNCTION_ATOL
+        ) -> tp.Tuple[float, float]:
     """Model-independent junction condition solver
     Velocities are in the wall frame!
     """
@@ -266,9 +267,14 @@ def solve_junction(
     # TODO: add the Giese junction solver option here (Giese eq. 11)
 
     devs = junction_conditions_solvable(np.array([v2_tilde, w2]), model, v1_tilde, w1, phase1, phase2)
+    devs_rel = devs / w1
     # print(f"v1w={v1}, v2w={v2}, w1={w1}, w2={w2}, dev={devs}")
-    if not np.allclose(devs, np.zeros(2), atol=atol):
-        logger.error("The boundary solver gave a solution that deviates from the boundary conditions with: %s", devs)
+    if np.max(np.abs(devs_rel)) > rtol:
+        logger.error(
+            "The boundary solver gave a solution that deviates from the boundary conditions with "
+            "absolute deviation %s, relative deviation %s",
+            devs, devs_rel
+        )
     return v2_tilde, w2
 
 

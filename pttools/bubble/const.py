@@ -9,7 +9,7 @@ import numpy as np
 EPS: tp.Final[np.float_] = np.nextafter(0, 1)
 
 #: Default number of entries in $\xi$ array
-N_XI_DEFAULT: int = 50000
+N_XI_DEFAULT: int = 5000
 #: Maximum number of entries in $\xi$ array
 N_XI_MAX: int = 1000000
 #: How accurate is $\alpha_+ (\alpha_n)$
@@ -27,6 +27,6 @@ CS0: tp.Final[np.float_] = 1 / np.sqrt(3)
 #: Ideal speed of sound squared
 CS0_2: tp.Final[float] = 1/3
 
-JUNCTION_ATOL: float = 2.4e-8
-# JUNCTION_RTOL: float = 1e-6
+# JUNCTION_ATOL: float = 2.4e-8
+JUNCTION_RTOL: float = 1e-6
 JUNCTION_CACHE_SIZE: int = 1024
