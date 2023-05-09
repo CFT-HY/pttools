@@ -41,7 +41,8 @@ def main():
         max_level=0.4,
         diff_level=0.05,
         # use_bag_solver=True,
-        path=os.path.join(FIG_DIR, "entropy.png")
+        path=os.path.join(FIG_DIR, "entropy.png"),
+        # single_plot=True
     )
 
 

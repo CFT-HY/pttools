@@ -141,9 +141,11 @@ def gen_and_plot_entropy(
         max_level: float,
         diff_level: float,
         use_bag_solver: bool = False,
-        path: str = None) -> tp.Tuple[plt.Figure, np.ndarray]:
-    fig: plt.Figure = plt.figure(figsize=(16*1.5, 9*1.5))
-    axs = fig.subplots(nrows=len(models), ncols=4)
+        path: str = None,
+        single_plot: bool = False) -> tp.Tuple[plt.Figure, np.ndarray]:
+    figsize = None if single_plot else (16*1.5, 9*1.5)
+    fig: plt.Figure = plt.figure(figsize=figsize)
+    axs = fig.subplots(nrows=len(models), ncols=1 if single_plot else 4)
 
     for i_model, model in enumerate(models):
         grid = BubbleGridVWAlpha(model, v_walls, alpha_ns, compute, use_bag_solver=use_bag_solver)
