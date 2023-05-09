@@ -140,7 +140,7 @@ class ConstCSModel(AnalyticModel):
         self.check_w_for_alpha(wm, allow_invalid=allow_invalid, log_invalid=log_invalid, name="wm", alpha_name="alpha_plus")
 
         ret = (1 - 4/self.mu)/3 - (1 - 4/self.nu)*wm/(3*wp) + self.bag_wn_const/wp
-        if np.any(ret < 0):
+        if (log_invalid or not allow_invalid) and np.any(ret < 0):
             if np.isscalar(ret):
                 msg = f"Got negative alpha_plus={ret}"
             else:

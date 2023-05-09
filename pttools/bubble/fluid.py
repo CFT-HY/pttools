@@ -405,7 +405,7 @@ def fluid_shell_solver_deflagration(
     if not solution_found:
         msg = (
             f"Deflagration solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. " +
-            ("(as expected)" if high_alpha_n else "") +
+            ("(as expected) " if high_alpha_n else "") +
             f"Got wn_estimate={wn_estimate} for wn={wn}." +
             f"Reason: {reason} " +
             f"Elapsed: {time.perf_counter() - start_time} s."

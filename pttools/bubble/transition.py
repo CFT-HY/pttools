@@ -80,7 +80,9 @@ def validate_solution_type(
         wn_guess: float = None,
         wm_guess: float = None) -> SolutionType:
     if sol_type is None or sol_type is SolutionType.UNKNOWN:
-        sol_type = identify_solution_type(model, v_wall, alpha_n, wn, wn_guess, wm_guess)
+        sol_type = identify_solution_type(
+            model, v_wall=v_wall, alpha_n=alpha_n, wn=wn, wn_guess=wn_guess, wm_guess=wm_guess
+        )
     if sol_type is SolutionType.UNKNOWN:
         msg = \
             f"Could not determine solution type automatically for model={model}, v_wall={v_wall}, alpha_n={alpha_n}. " \

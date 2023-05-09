@@ -122,7 +122,7 @@ class Model(BaseModel, abc.ABC):
             allow_invalid: bool = False,
             log_invalid: bool = True,
             name: str = "w",
-            alpha_name: str = "alpha") -> np.ndarray:
+            alpha_name: str = "alpha") -> tp.Union[float, np.ndarray]:
         too_small = False
         too_large = False
         if w_min is None:
@@ -132,7 +132,7 @@ class Model(BaseModel, abc.ABC):
 
         if w is None or np.any(np.isnan(w)):
             if log_invalid:
-                logger.error("Got w=nan for {name}}.")
+                logger.error(f"Got w=nan for {name}.")
             # Scalar None cannot be tested for negativity.
             if w is None:
                 return np.nan
@@ -159,6 +159,8 @@ class Model(BaseModel, abc.ABC):
 
         if not allow_invalid:
             if too_small or too_large:
+                if np.isscalar(w):
+                    return np.nan
                 w = w.copy()
             if too_small:
                 w[w < w_min] = np.nan
@@ -503,15 +505,17 @@ class Model(BaseModel, abc.ABC):
     def _w_n_scalar(self, alpha_n: float, wn_guess: float) -> float:
         wn = None
         reason = None
-        try:
-            wn_sol = root_scalar(self._w_n_solvable, x0=wn_guess, x1=self.w_crit, args=(alpha_n, ), bracket=(self.w_min, self.w_crit))
-            wn = wn_sol.root
-            solution_found = wn_sol.converged
-            reason = wn_sol.flag
-            if np.isclose(wn, 0):
-                solution_found = False
-        except ValueError:
-            solution_found = False
+        solution_found = False
+
+        # try:
+        #     wn_sol = root_scalar(self._w_n_solvable, x0=wn_guess, x1=self.w_crit, args=(alpha_n, ), bracket=(self.w_min, self.w_crit))
+        #     wn = wn_sol.root
+        #     solution_found = wn_sol.converged
+        #     reason = wn_sol.flag
+        #     if np.isclose(wn, 0):
+        #         solution_found = False
+        # except ValueError:
+        #     solution_found = False
 
         if not solution_found:
             wn_sol = fsolve(self._w_n_solvable, x0=np.array([wn_guess]), args=(alpha_n,), full_output=True)

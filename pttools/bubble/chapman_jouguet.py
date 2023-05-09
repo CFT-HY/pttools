@@ -191,7 +191,7 @@ def v_chapman_jouguet(
     vm_cj2 = model.cs2(wm, Phase.BROKEN)
     vm_cj = np.sqrt(vm_cj2)
     # Todo: implement proper validation for alpha_plus
-    ap_cj = model.alpha_plus(wn, wm, allow_invalid=True)
+    ap_cj = model.alpha_plus(wn, wm, allow_invalid=True, log_invalid=False)
     v_cj = boundary.v_plus(vm_cj, ap_cj, sol_type=SolutionType.DETON)
     if extra_output:
         return v_cj, vm_cj, ap_cj
@@ -252,7 +252,7 @@ def wm_solvable_chapman_jouguet(params: np.ndarray, model: "Model", wp: float):
     # This assumes that the solution is a Chapman-Jouguet one
     vm2 = model.cs2(wm_param, Phase.BROKEN)
     vm = np.sqrt(vm2)
-    ap = model.alpha_plus(wp=wp, wm=wm_param, allow_invalid=True)
+    ap = model.alpha_plus(wp=wp, wm=wm_param, allow_invalid=True, log_invalid=False)
     vp = boundary.v_plus(vm, ap, sol_type=SolutionType.DETON)
     # print(f"vm={vm}, ap={ap}, vp={vp}")
 
