@@ -15,6 +15,8 @@ from pttools.analysis.plot_entropy import gen_and_plot_entropy
 from pttools.logging import setup_logging
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
+from pttools.models.full import FullModel
+from pttools.models.sm import StandardModel
 from pttools import speedup
 
 from examples.utils import FIG_DIR
@@ -23,11 +25,13 @@ from tests.profiling import utils_cprofile
 
 def main():
     n_points = 10 if speedup.GITHUB_ACTIONS else 20
+    # sm = StandardModel(V_s=5e12, g_mult_s=1 + 1e-9)
     models = [
         # BagModel(a_s=1.1, a_b=1, V_s=1),
         # ConstCSModel(css2=1/3-0.01, csb2=1/3-0.02, a_s=1.5, a_b=1, V_s=1)
         BagModel(g_s=123, g_b=120, V_s=0.9),
         ConstCSModel(css2=1/3 - 0.01, csb2=1/3 - 0.011, g_s=123, g_b=120, V_s=0.9)
+        # FullModel(sm, t_crit_guess=100e3)
     ]
     alpha_n_min = np.max([model.alpha_n_min for model in models]) + 0.01
 
