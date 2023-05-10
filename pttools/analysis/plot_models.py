@@ -59,7 +59,11 @@ class ModelsPlot:
         self.ax_alpha_n.plot(self.temp, model.alpha_n(w), label=label, ls=ls, **kwargs)
         self.ax_alpha_plus.plot(
             self.temp,
-            model.alpha_plus(w, model.w(self.temp/2, phase), allow_invalid=True), label=label, ls=ls, **kwargs
+            model.alpha_plus(
+                w,
+                model.w(self.temp/2, phase),
+                error_on_invalid=False, nan_on_invalid=False, log_invalid=False),
+            label=label, ls=ls, **kwargs
         )
 
     def process(self):

@@ -36,11 +36,11 @@ class ModelBaseCase(JsonTestCase, abc.ABC):
             raise ValueError(f"Test arrays must have the same shape. Got: {sizes}")
 
     def test_alpha_n(self):
-        data = self.model.alpha_n(self.w_arr1, allow_invalid=True)
+        data = self.model.alpha_n(self.w_arr1, error_on_invalid=False, log_invalid=False)
         self.assert_json(data, "alpha_n")
 
     def test_alpha_plus(self):
-        data = self.model.alpha_plus(self.w_arr1, self.w_arr2, allow_invalid=True)
+        data = self.model.alpha_plus(self.w_arr1, self.w_arr2, error_on_invalid=False, log_invalid=False)
         self.assert_json(data, "alpha_plus")
 
     def test_critical_temp(self):

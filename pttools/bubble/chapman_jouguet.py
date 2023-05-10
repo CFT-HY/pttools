@@ -14,9 +14,9 @@ from pttools.bubble import const
 from pttools.bubble import boundary
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.relativity import gamma2
-# from pttools.models.const_cs import ConstCSModel
 import pttools.type_hints as th
 if tp.TYPE_CHECKING:
+    from pttools.models.const_cs import ConstCSModel
     from pttools.models.model import Model
 
 logger = logging.getLogger(__name__)
@@ -181,17 +181,21 @@ def v_chapman_jouguet(
 
     if wn is None:
         wn = model.w_n(alpha_n, wn_guess=wn_guess)
+    if wn is None or np.isnan(wn):
+        raise RuntimeError
 
     # Get wm
     # For detonations wn = wp
 
     wm = wm_chapman_jouguet(model, wp=wn, wm_guess=wm_guess)
+    if wm is None or np.isnan(wm):
+        raise RuntimeError
 
     # Compute vp with wp, wm & vm
     vm_cj2 = model.cs2(wm, Phase.BROKEN)
     vm_cj = np.sqrt(vm_cj2)
     # Todo: implement proper validation for alpha_plus
-    ap_cj = model.alpha_plus(wn, wm, allow_invalid=True, log_invalid=False)
+    ap_cj = model.alpha_plus(wn, wm, error_on_invalid=False, nan_on_invalid=False, log_invalid=False)
     v_cj = boundary.v_plus(vm_cj, ap_cj, sol_type=SolutionType.DETON)
     if extra_output:
         return v_cj, vm_cj, ap_cj
@@ -252,7 +256,7 @@ def wm_solvable_chapman_jouguet(params: np.ndarray, model: "Model", wp: float):
     # This assumes that the solution is a Chapman-Jouguet one
     vm2 = model.cs2(wm_param, Phase.BROKEN)
     vm = np.sqrt(vm2)
-    ap = model.alpha_plus(wp=wp, wm=wm_param, allow_invalid=True, log_invalid=False)
+    ap = model.alpha_plus(wp=wp, wm=wm_param, error_on_invalid=False, nan_on_invalid=False, log_invalid=False)
     vp = boundary.v_plus(vm, ap, sol_type=SolutionType.DETON)
     # print(f"vm={vm}, ap={ap}, vp={vp}")
 

@@ -101,21 +101,27 @@ class ConstCSModel(AnalyticModel):
     def alpha_n(
             self,
             wn: th.FloatOrArr,
-            allow_invalid: bool = False,
-            allow_no_transition: bool = False,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
         $$\alpha_n = \frac{4}{3} \left( \frac{1}{\nu} - \frac{1}{\mu} + \frac{1}{w_n} (V_s - V_b) \right)$$
 
         :param wn: $w_n$, enthalpy of the symmetric phase at the nucleation temperature
-        :param allow_negative: whether to allow unphysical negative output values (not checked for this model)
-        :param allow_no_transition: allow $w_n$ for which there is no phase transition
+        :param error_on_invalid: raise error for invalid values
+        :param nan_on_invalid: return nan for invalid values
+        :param log_invalid: whether to log invalid values
         """
-        self.check_w_for_alpha(wn, allow_invalid=allow_invalid, name="wn", alpha_name="alpha_n")
+        self.check_w_for_alpha(
+            wn,
+            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid,
+            name="wn", alpha_name="alpha_n"
+        )
         # self.check_p(wn, allow_fail=allow_no_transition)
 
         ret = 4/3 * (1/self.nu - 1/self.mu) + self.bag_wn_const/wn
-        if (not allow_invalid or log_invalid) and np.any(ret < 0):
+        invalid = ret < 0
+        if (error_on_invalid or nan_on_invalid or log_invalid) and np.any(invalid):
             if np.isscalar(ret):
                 info = f"Got negative alpha_n={ret} with wn={wn}, mu={self.mu}, nu={self.nu}."
             else:
@@ -123,8 +129,12 @@ class ConstCSModel(AnalyticModel):
                 info = f"Got negative alpha_n. Most problematic values: alpha_n={ret[i]}, wn={wn[i]}, mu={self.mu}, nu={self.nu}"
             if log_invalid:
                 logger.error(info)
-            if not allow_invalid:
+            if error_on_invalid:
                 raise ValueError(info)
+            if nan_on_invalid:
+                if np.isscalar(ret):
+                    return np.nan
+                ret[invalid] = np.nan
         return ret
 
     def alpha_n_bar(self, alpha_n: float) -> float:
@@ -133,23 +143,47 @@ class ConstCSModel(AnalyticModel):
         return alpha_n + (1 - 1 / (3 * self.cs2(wn, Phase.BROKEN))) * \
             (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN))
 
-    def alpha_plus(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_invalid: bool = False, log_invalid: bool = True) -> th.FloatOrArr:
+    def alpha_plus(
+            self,
+            wp: th.FloatOrArr,
+            wm: th.FloatOrArr,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
         r"""If $\nu=4 \Leftrightarrow c_{sb}=\frac{1}{\sqrt{3}}$, then $w_-$ does not affect the result."""
-
-        self.check_w_for_alpha(wp, allow_invalid=allow_invalid, log_invalid=log_invalid, name="wp", alpha_name="alpha_plus")
-        self.check_w_for_alpha(wm, allow_invalid=allow_invalid, log_invalid=log_invalid, name="wm", alpha_name="alpha_plus")
+        self.check_w_for_alpha(
+            wp,
+            # w_min=self.w_crit,
+            error_on_invalid=error_on_invalid,
+            nan_on_invalid=nan_on_invalid,
+            log_invalid=log_invalid,
+            name="wp", alpha_name="alpha_plus"
+        )
+        self.check_w_for_alpha(
+            wm,
+            error_on_invalid=error_on_invalid,
+            nan_on_invalid=nan_on_invalid,
+            log_invalid=log_invalid,
+            name="wm", alpha_name="alpha_plus"
+        )
 
         ret = (1 - 4/self.mu)/3 - (1 - 4/self.nu)*wm/(3*wp) + self.bag_wn_const/wp
-        if (log_invalid or not allow_invalid) and np.any(ret < 0):
+
+        invalid = np.logical_or(ret < 0, ret > 1)
+        if (error_on_invalid or nan_on_invalid or log_invalid) and np.any(invalid):
             if np.isscalar(ret):
-                msg = f"Got negative alpha_plus={ret}"
+                msg = f"Got invalid alpha_plus={ret}"
             else:
-                msg = f"Got negative alpha_plus, most problematic value: {np.min(ret)}"
+                msg = f"Got invalid alpha_plus in range: {np.min(ret)} - {np.max(ret)}"
 
             if log_invalid:
                 logger.error(msg)
-            if not allow_invalid:
+            if error_on_invalid:
                 raise ValueError(msg)
+            if nan_on_invalid:
+                if np.isscalar(ret):
+                    return np.nan
+                ret[invalid] = np.nan
         return ret
 
     def critical_temp_opt(self, temp: float) -> float:
@@ -195,8 +229,15 @@ class ConstCSModel(AnalyticModel):
         # ConstCSModel.cs2() is independent of T and w
         return self.cs2(temp, phase)
 
-    def delta_theta(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
-        return (1/4 - 1/self.mu)*wp/3 - (1/4 - 1/self.nu)*wm/3 + self.V_s - self.V_b
+    def delta_theta(
+            self,
+            wp: th.FloatOrArr, wm: th.FloatOrArr,
+            error_on_invalid: bool = True, nan_on_invalid: bool = True, log_invalid: bool = True) -> th.FloatOrArr:
+        ret = (1/4 - 1/self.mu)*wp/3 - (1/4 - 1/self.nu)*wm/3 + self.V_s - self.V_b
+        return self.check_delta_theta(
+            ret, wp=wp, wm=wm,
+            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid
+        )
 
     def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Energy density $e(T,\phi)$

@@ -19,7 +19,7 @@ class DeltaThetaPlot3D(PlotlyPlot):
         wp = np.linspace(0, model.w_crit)
         wm = wp
         wp_grid, wm_grid = np.meshgrid(wp, wm)
-        delta = model.delta_theta(wp_grid, wm_grid, allow_negative=True)
+        delta = model.delta_theta(wp_grid, wm_grid, error_on_invalid=False, nan_on_invalid=False, log_invalid=False)
         self.plots.append(go.Surface(
             x=wp/model.w_crit, y=wm / model.w_crit, z=delta, name=model.label_unicode
         ))

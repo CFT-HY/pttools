@@ -67,33 +67,53 @@ class BagModel(AnalyticModel):
     def alpha_n(
             self,
             wn: th.FloatOrArr,
-            allow_invalid: bool = False,
-            allow_no_transition: bool = False,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
         $$\alpha_n = \frac{4}{3w_n}(V_s - V_b)$$
 
         :param wn: $w_n$, enthalpy of the symmetric phase at the nucleation temperature
-        :param allow_invalid: allow unphysical values
-        :param allow_no_transition: allow $w_n$ for which there is no phase transition
-        :param log_invalid: log invalid values
+        :param error_on_invalid: raise error for invalid values
+        :param nan_on_invalid: return nan for invalid values
+        :param log_invalid: log negative values
         """
-        self.check_w_for_alpha(wn, allow_invalid=allow_invalid, log_invalid=log_invalid, name="wn", alpha_name="alpha_n")
+        self.check_w_for_alpha(
+            wn,
+            error_on_invalid=error_on_invalid,
+            nan_on_invalid=nan_on_invalid,
+            log_invalid=log_invalid,
+            name="wn", alpha_name="alpha_n"
+        )
         # self.check_p(wn, allow_fail=allow_no_transition)
         return self.bag_wn_const / wn
 
     def alpha_n_bar(self, alpha_n: float) -> float:
         return alpha_n
 
-    def alpha_plus(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_invalid: bool = False, log_invalid: bool = True) -> th.FloatOrArr:
+    def alpha_plus(
+            self,
+            wp: th.FloatOrArr,
+            wm: th.FloatOrArr,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
         r"""Transition strength parameter $\alpha_+$, :notes:`\ `, eq. 7.25.
         $$\alpha_+ = \frac{4}{3w_+}(V_s - V_b)$$
 
         :param wp: $w_+$, enthalpy ahead of the wall
         :param wm: $w_-$, enthalpy behind the wall (not used)
-        :param allow_negative: whether to allow unphysical negative values
+        :param error_on_invalid: raise error for invalid values
+        :param nan_on_invalid: return nan for invalid values
+        :param log_invalid: whether to log invalid values
         """
-        self.check_w_for_alpha(wp, allow_invalid=allow_invalid, log_invalid=log_invalid, name="wp", alpha_name="alpha_plus")
+        self.check_w_for_alpha(
+            wp,
+            # w_min=self.w_crit,
+            error_on_invalid=error_on_invalid,
+            nan_on_invalid=nan_on_invalid,
+            name="wp", alpha_name="alpha_plus"
+        )
         return self.bag_wn_const / wp
 
     def critical_temp(self, **kwargs) -> float:
@@ -118,8 +138,15 @@ class BagModel(AnalyticModel):
     def cs2_temp(temp, phase):
         return BagModel.cs2(temp, phase)
 
-    def delta_theta(self, wp: th.FloatOrArr, wm: th.FloatOrArr, allow_negative: bool = False) -> th.FloatOrArr:
-        return (self.V_s - self.V_b) * np.ones_like(wp) * np.ones_like(wm)
+    def delta_theta(
+            self,
+            wp: th.FloatOrArr, wm: th.FloatOrArr,
+            error_on_invalid: bool = True, nan_on_invalid: bool = True, log_invalid: bool = True) -> th.FloatOrArr:
+        delta_theta = (self.V_s - self.V_b) * np.ones_like(wp) * np.ones_like(wm)
+        return self.check_delta_theta(
+            delta_theta, wp=wp, wm=wm,
+            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
+        )
 
     def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Energy density as a function of temperature, :giese_2021:`\ ` eq. 15, :borsanyi_2016:`\ `, eq. S12

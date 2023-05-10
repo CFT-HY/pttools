@@ -67,7 +67,10 @@ def identify_solution_type(
         return SolutionType.SUB_DEF
     if cannot_be_detonation(v_wall, v_cj) and cannot_be_sub_def(model, v_wall, wn):
         return SolutionType.HYBRID
-    logger.warning(f"Could not determine solution type for {model.name} with v_wall={v_wall}, alpha_n={alpha_n}")
+    logger.warning(
+        f"Could not determine solution type for %s with v_wall=%s, alpha_n=%s, v_cj=%s",
+        model.name, v_wall, alpha_n, v_cj
+    )
     return SolutionType.UNKNOWN
 
 
