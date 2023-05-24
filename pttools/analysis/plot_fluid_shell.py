@@ -50,7 +50,7 @@ def plot_fluid_shell(
     if draw is None:
         draw = utils.ENABLE_DRAWING
 
-    params = fluid_bag.fluid_shell_params(
+    params = fluid_bag.fluid_shell_dict(
         v_wall=v_wall,
         alpha_n=alpha_n,
         Np=Np,

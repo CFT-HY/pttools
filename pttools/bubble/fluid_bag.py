@@ -222,7 +222,7 @@ def fluid_shell_alpha_plus(
     return v, w, xi
 
 
-def fluid_shell_params(
+def fluid_shell_dict(
         v_wall: float,
         alpha_n: float,
         Np: int = const.N_XI_DEFAULT,
