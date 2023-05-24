@@ -251,7 +251,10 @@ def fluid_shell_dict(
     n_cs = int(np.floor(const.CS0 * Np))
     n_sh = xi.size - 2
 
-    r = w[n_wall] / w[n_wall - 1]
+    if sol_type == SolutionType.DETON:
+        r = w[n_wall + 1] / w[n_wall]
+    else:
+        r = w[n_wall] / w[n_wall - 1]
     alpha_plus = alpha_n * w[-1] / w[n_wall]
 
     ubarf2 = quantities.ubarf_squared(v, w, xi, v_wall)
