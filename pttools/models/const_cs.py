@@ -158,7 +158,8 @@ class ConstCSModel(AnalyticModel):
         if sol_type == SolutionType.SUB_DEF:
             return np.maximum((1 - psi_n)/3, (self.mu - self.nu)/(3*self.mu))
         if sol_type == SolutionType.HYBRID:
-            return np.inf
+            # Not known / no simple formula
+            return 0
         raise ValueError(f"Invalid solution type: {sol_type}")
 
     def alpha_plus(
