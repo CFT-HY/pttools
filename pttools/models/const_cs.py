@@ -7,7 +7,7 @@ import numba
 import numpy as np
 
 import pttools.type_hints as th
-from pttools.bubble.boundary import Phase
+from pttools.bubble.boundary import Phase, SolutionType
 from pttools.models.analytic import AnalyticModel
 from pttools.models.bag import BagModel
 
@@ -142,6 +142,24 @@ class ConstCSModel(AnalyticModel):
         tn = self.temp(wn, Phase.SYMMETRIC)
         return alpha_n + (1 - 1 / (3 * self.cs2(wn, Phase.BROKEN))) * \
             (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN))
+
+    def alpha_n_bar_max_lte(self, wn: float, sol_type: SolutionType) -> float:
+        r"""$\alpha_{n,\text{max}}^\text{def}$, :ai_2023:`\ `, eq. 28, 31"""
+        psi_n = self.psi_n(wn)
+        if sol_type == SolutionType.DETON or sol_type == SolutionType.HYBRID:
+            return (1 - psi_n) / 3 * (1 + self.nu/3 * np.sqrt((1 - psi_n)/((self.nu - 1)*(self.nu - 2))))
+        return np.inf
+
+    def alpha_n_bar_min_lte(self, wn: th.FloatOrArr, sol_type: SolutionType) -> float:
+        r"""$\alpha_{n,\text{min}}^\text{def}$, :ai_2023:`\ `, eq. 27, 30"""
+        psi_n = self.psi_n(wn)
+        if sol_type == SolutionType.DETON:
+            return (1 - psi_n) / (12*psi_n) * (4 - (1 - psi_n)*(self.nu - 4))
+        if sol_type == SolutionType.SUB_DEF:
+            return np.maximum((1 - psi_n)/3, (self.mu - self.nu)/(3*self.mu))
+        if sol_type == SolutionType.HYBRID:
+            return np.inf
+        raise ValueError(f"Invalid solution type: {sol_type}")
 
     def alpha_plus(
             self,

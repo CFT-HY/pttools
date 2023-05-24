@@ -275,6 +275,13 @@ class Model(BaseModel, abc.ABC):
                 ret[invalid] = np.nan
         return ret
 
+    def alpha_theta_bar_plus(self, wp: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Transition strength parameter, :giese_2021:`\ `, eq. 9
+
+        $$\alpha_{\bar{\theta}+} = \frac{D \bar{\theta}(T_+)}{3 w_+}$$
+        """
+        return self.theta_bar(wp, Phase.SYMMETRIC) / (3 * wp)
+
     def check_p(self, wn: th.FloatOrArr, allow_fail: bool = False):
         temp = self.temp(wn, Phase.SYMMETRIC)
         self.check_p_temp(temp, allow_fail=allow_fail)
@@ -471,6 +478,20 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
 
+    def delta_theta_bar(self, w: th.FloatOrArr, phase_of_w: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Pseudotrace difference $D\bar{\theta}(w)$, :giese_2021:`\ `, eq. 10
+
+        $$D\bar{\theta}(w) = \bar{\theta}(T) - \bar{\theta}(T)$$
+        """
+        return self.delta_theta_bar_temp(self.temp(w, phase_of_w))
+
+    def delta_theta_bar_temp(self, temp: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Pseudotrace difference $D\bar{\theta}(T)$, :giese_2021:`\ `, eq. 10
+
+        $$D\bar{\theta}(T) = \bar{\theta}(T) - \bar{\theta}(T)$$
+        """
+        return self.theta_bar_temp(temp, Phase.SYMMETRIC) - self.theta_bar_temp(temp, Phase.BROKEN)
+
     def df_dtau_ptr(self) -> int:
         if self.__df_dtau_ptr is not None:
             return self.__df_dtau_ptr
@@ -486,6 +507,22 @@ class Model(BaseModel, abc.ABC):
         :param phase: phase $\phi$
         """
         return self.e_temp(self.temp(w, phase), phase)
+
+    def enthalpy_ratio(self, temp: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Enthalpy ratio $r(T)$
+
+        $$r(T) = \frac{w_s(T)}{w_b(T)}$$
+        :param temp: temperature $T$
+        """
+        return self.w(temp, Phase.SYMMETRIC) / self.w(temp, Phase.BROKEN)
+
+    def inverse_enthalpy_ratio(self, temp: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Inverse enthalpy ratio $\psi(T)$ :ai_2023:`\ `, eq. 19
+
+        $$\psi(T) = \frac{w_b(T)}{w_s(T)}$$
+        :param temp: temperature $T$
+        """
+        return self.w(temp, Phase.BROKEN) / self.w(temp, Phase.SYMMETRIC)
 
     def export(self) -> tp.Dict[str, any]:
         return {
@@ -527,6 +564,21 @@ class Model(BaseModel, abc.ABC):
         """
         return self.p_temp(self.temp(w, phase), phase)
 
+    def psi_n(self, wn: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Inverse enthalpy ratio at nucleation temperature $\psi_n$, :ai_2023:`\ `, p. 9
+
+        With validation check
+        """
+        ret = self.inverse_enthalpy_ratio(self.temp(wn, Phase.SYMMETRIC))
+        if np.max(np.abs(1 - ret)) > 0.1:
+            logger.warning(
+                "psi_n=%s differs significantly from 1. "
+                "Local thermal equilibrium (LTE) approximations may not be valid."
+                "See Ai et al. (2023) p. 15.",
+                ret
+            )
+        return ret
+
     def s(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Entropy density $s(w,\phi)$. Calls the temperature-based function.
 
@@ -544,6 +596,26 @@ class Model(BaseModel, abc.ABC):
         :param phase: phase $\phi$
         """
         return 1/4 * (self.e(w, phase) - 3*self.p(w, phase))
+
+    def theta_bar(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Pseudotrace $\bar{\theta}$, :giese_2021:`\ `, eq. 9, :ai_2023:`\ `, eq. 19
+
+        $$\bar{\theta}} = e - \frac{p}{c_b^2}}$$
+
+        :param w: enthalpy $w$
+        :param phase: phase $\phi$
+        """
+        return self.e(w, phase) - self.p(w, phase) / self.cs2(w, Phase.BROKEN)
+
+    def theta_bar_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Pseudotrace $\bar{\theta}$, :giese_2021:`\ `, eq. 9, :ai_2023:`\ `, eq. 19
+
+        $$\bar{\theta}} = e - \frac{p}{c_b^2}}$$
+
+        :param temp: temperature $T$
+        :param phase: phase $\phi$
+        """
+        return self.e_temp(temp, phase) - self.p_temp(temp, phase) / self.cs2_temp(temp, Phase.BROKEN)
 
     def V(self, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Potential $V(\phi)$

@@ -16,6 +16,7 @@ from pttools.bubble import transition
 from pttools.speedup.export import export_json
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
+    from pttools.models.const_cs import ConstCSModel
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +61,30 @@ class Bubble:
         self.tn = model.temp(self.wn, Phase.SYMMETRIC)
         if self.tn > model.t_crit:
             raise ValueError(f"Bubbles form only when T_nuc < T_crit. Got: T_nuc={self.tn}, T_crit={model.t_crit}")
+
+        # if isinstance(model, ConstCSModel)
+        if hasattr(model, "css2") and hasattr(model, "csb2"):
+            model: ConstCSModel
+            self.alpha_n_bar = model.alpha_n_bar(alpha_n)
+            self.alpha_n_bar_min_lte = model.alpha_n_bar_min_lte(self.wn, self.sol_type)
+            self.alpha_n_bar_max_lte = model.alpha_n_bar_max_lte(self.wn, self.sol_type)
+            if self.alpha_n_bar_max_lte < self.alpha_n_bar_min_lte:
+                raise RuntimeError(
+                    "Got invalid limits for alpha_n_bar_lte: "
+                    f"min={self.alpha_n_bar_min_lte}, max={self.alpha_n_bar_max_lte}"
+                )
+            if self.alpha_n_bar < self.alpha_n_bar_min_lte:
+                logger.warning("alpha_n_bar=%s < lte_min=%s", self.alpha_n_bar, self.alpha_n_bar_min_lte)
+            if self.alpha_n_bar > self.alpha_n_bar_max_lte:
+                logger.warning("alpha_n_bar=%s > lte_max=%s", self.alpha_n_bar, self.alpha_n_bar_max_lte)
+
+        self.psi_n = model.psi_n(self.wn)
+        if self.sol_type == SolutionType.DETON and self.psi_n < 0.75:
+            logger.warning(
+                "This detonation should not exist, as LTE predicts a large alpha_n_hyb_max for psi_n=%s < 0.75. "
+                "Please see Ai et al. (2023), p. 15.",
+                self.psi_n
+            )
 
         # Flags
         self.solved = False

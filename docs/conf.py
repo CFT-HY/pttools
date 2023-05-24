@@ -139,6 +139,7 @@ extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
     "gw_pt_ssm": ("https://arxiv.org/abs/1909.10040%s", "Hindmarsh et al., 2019%s"),
     "notes": ("https://arxiv.org/abs/2008.09136%s", "Hindmarsh et al., 2021%s"),
     # Other articles
+    "ai_2023": ("https://arxiv.org/abs/2303.10171", "Ai et al., 2023%s"),
     "borsanyi_2016": ("https://arxiv.org/abs/1606.07494%s", "Borsanyi et al., 2016%s"),
     "giese_2020": ("https://arxiv.org/abs/2004.06995%s", "Giese et al., 2020%s"),
     "giese_2021": ("https://arxiv.org/abs/2010.09744%s", "Giese et al., 2021%s"),
