@@ -34,8 +34,13 @@ def assert_allclose(
     if actual is None:
         actual = np.nan
     is_scalar = np.isscalar(actual)
-
-    if not is_scalar:
+    if is_scalar:
+        if not np.isscalar(desired):
+            raise TypeError(
+                "Cannot compare a scalar to an array reference. "
+                f"Got actual: {type(actual)}, desired: {type(desired)}"
+            )
+    else:
         if not isinstance(actual, np.ndarray):
             actual = np.array(actual, dtype=dtype)
         if not isinstance(desired, np.ndarray):

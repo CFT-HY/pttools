@@ -88,7 +88,7 @@ def validate_solution_type(
         )
     if sol_type is SolutionType.UNKNOWN:
         msg = \
-            f"Could not determine solution type automatically for model={model}, v_wall={v_wall}, alpha_n={alpha_n}. " \
+            f"Could not determine solution type automatically for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. " \
             "Please choose it manually."
         logger.error(msg)
         raise ValueError(msg)

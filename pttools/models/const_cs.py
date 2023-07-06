@@ -324,8 +324,10 @@ class ConstCSModel(AnalyticModel):
             self,
             alpha_n: th.FloatOrArr,
             wn_guess: float = 1,
-            allow_negative: bool = False,
-            analytical: bool = True) -> th.FloatOrArr:
+            analytical: bool = True,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
         r"""Enthalpy at nucleation temperature
         $$w_n = \frac{a}{\alpha_n - b}$$
         where
@@ -343,10 +345,16 @@ class ConstCSModel(AnalyticModel):
             msg = \
                 f"Got too small alpha_n for the model \"{self.name}\". {info} " \
                 f"The minimum with the given parameters is {self.const_cs_wn_const}."
-            logger.error(msg)
-            if not allow_negative:
+            if log_invalid:
+                logger.error(msg)
+            if error_on_invalid:
                 raise ValueError(msg)
+            if nan_on_invalid:
+                diff[diff < 0] = np.nan
 
-        if not analytical:
-            super().w_n(alpha_n, wn_guess)
-        return self.bag_wn_const / (alpha_n - self.const_cs_wn_const)
+        if analytical:
+            return self.bag_wn_const / (alpha_n - self.const_cs_wn_const)
+        return super().w_n(
+            alpha_n, wn_guess,
+            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
+        )

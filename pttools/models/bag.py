@@ -224,14 +224,20 @@ class BagModel(AnalyticModel):
             self,
             alpha_n: th.FloatOrArr,
             wn_guess: float = 1,
-            analytical: bool = True) -> th.FloatOrArr:
+            analytical: bool = True,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
         r"""Enthalpy at nucleation temperature
         $$w_n = \frac{4}{3} \frac{V_s - V_b}{\alpha_n}$$
         This can be derived from the equations for $\theta$ and $\alpha_n$.
         """
-        if not analytical:
-            super().w_n(alpha_n, wn_guess)
-        return self.bag_wn_const / alpha_n
+        if analytical:
+            return self.bag_wn_const / alpha_n
+        return super().w_n(
+            alpha_n, wn_guess,
+            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
+        )
 
     @staticmethod
     def w_shock(xi: th.FloatOrArr, w_n: th.FloatOrArr) -> th.FloatOrArr:

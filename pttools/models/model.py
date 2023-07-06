@@ -624,8 +624,14 @@ class Model(BaseModel, abc.ABC):
         """
         return phase*self.V_b + (1 - phase)*self.V_s
 
-    def _w_n_scalar(self, alpha_n: float, wn_guess: float) -> float:
-        wn = None
+    def _w_n_scalar(
+            self,
+            alpha_n: float,
+            wn_guess: float,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> float:
+        wn = np.nan
         reason = None
         solution_found = False
 
@@ -643,16 +649,21 @@ class Model(BaseModel, abc.ABC):
             wn_sol = fsolve(self._w_n_solvable, x0=np.array([wn_guess]), args=(alpha_n,), full_output=True)
             solution_found = wn_sol[2] == 1
             reason = wn_sol[3]
-            if solution_found:
+            if solution_found or np.isnan(wn):
                 wn = wn_sol[0][0]
 
         if not solution_found:
-            logger.error(
-                f"w_n solution was not found for model={self.name}, alpha_n={alpha_n}, wn_guess={wn_guess}. "
-                f"Using w_n={wn}. "
+            msg = (
+                f"w_n solution was not found for model={self.name}, alpha_n={alpha_n}, wn_guess={wn_guess}. " +
+                ("" if error_on_invalid else f"Using w_n={wn}. ") +
                 f"Reason: {reason}"
             )
-            return np.nan
+            if log_invalid:
+                logger.error(msg)
+            if error_on_invalid:
+                raise RuntimeError(msg)
+            if nan_on_invalid:
+                return np.nan
         return wn
 
     def _w_n_solvable(self, wn: th.FloatOrArr, alpha_n: float) -> th.FloatOrArr:
@@ -660,7 +671,13 @@ class Model(BaseModel, abc.ABC):
             wn = wn[0]
         return self.alpha_n(wn, error_on_invalid=False, nan_on_invalid=True, log_invalid=False) - alpha_n
 
-    def w_n(self, alpha_n: th.FloatOrArr, wn_guess: float = None) -> th.FloatOrArr:
+    def w_n(
+            self,
+            alpha_n: th.FloatOrArr,
+            wn_guess: float = None,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
         r"""Enthalpy at nucleation temperature with given $\alpha_n$"""
         # TODO: rename this to wn
         if wn_guess is None or np.isnan(wn_guess):
@@ -669,10 +686,22 @@ class Model(BaseModel, abc.ABC):
             wn_guess = 1
 
         if np.isscalar(alpha_n):
-            return self._w_n_scalar(alpha_n, wn_guess)
+            return self._w_n_scalar(
+                alpha_n,
+                wn_guess,
+                error_on_invalid=error_on_invalid,
+                nan_on_invalid=nan_on_invalid,
+                log_invalid=log_invalid
+            )
         ret = np.zeros_like(alpha_n)
         for i in range(alpha_n.size):
-            ret[i] = self._w_n_scalar(alpha_n[i], wn_guess)
+            ret[i] = self._w_n_scalar(
+                alpha_n[i],
+                wn_guess,
+                error_on_invalid=error_on_invalid,
+                nan_on_invalid=nan_on_invalid,
+                log_invalid=log_invalid
+            )
         return ret
 
     # Abstract methods

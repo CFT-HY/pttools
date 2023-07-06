@@ -155,7 +155,10 @@ def v_chapman_jouguet(
         wn_guess: float = None,
         wm_guess: float = None,
         extra_output: bool = False,
-        analytical: bool = True) -> tp.Union[float, tp.Tuple[float, float, float], np.ndarray]:
+        analytical: bool = True,
+        error_on_invalid: bool = True,
+        nan_on_invalid: bool = True,
+        log_invalid: bool = True) -> tp.Union[float, tp.Tuple[float, float, float], np.ndarray]:
     """Chapman-Jouguet speed
 
     This is the minimum wall speed for detonations.
@@ -168,7 +171,8 @@ def v_chapman_jouguet(
     if isinstance(alpha_n, Iterable):
         return np.array([v_chapman_jouguet(
             model, a_n,
-            wn=wn, wn_guess=wn_guess, wm_guess=wm_guess, extra_output=extra_output, analytical=analytical
+            wn=wn, wn_guess=wn_guess, wm_guess=wm_guess, extra_output=extra_output, analytical=analytical,
+            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         ) for a_n in alpha_n])
 
     # wn_sol = fsolve(gen_wn_solvable(model, alpha_n), x0=np.array([wn_guess]), full_output=True)
@@ -180,22 +184,37 @@ def v_chapman_jouguet(
     #         f"Reason: {wn_sol[3]}")
 
     if wn is None:
-        wn = model.w_n(alpha_n, wn_guess=wn_guess)
+        wn = model.w_n(
+            alpha_n, wn_guess=wn_guess,
+            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
+        )
     if wn is None or np.isnan(wn):
-        raise RuntimeError
+        msg = f"Failed to find wn for alpha_n={alpha_n}"
+        if log_invalid:
+            logger.error(msg)
+        if error_on_invalid:
+            raise RuntimeError(msg)
+        return np.nan
 
     # Get wm
     # For detonations wn = wp
 
-    wm = wm_chapman_jouguet(model, wp=wn, wm_guess=wm_guess)
+    wm = wm_chapman_jouguet(model, wp=wn, wm_guess=wm_guess, error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid)
     if wm is None or np.isnan(wm):
-        raise RuntimeError
+        msg = f"Failed to find wm for alpha_n={alpha_n}, wn={wn}"
+        if log_invalid:
+            logger.error(msg)
+        if error_on_invalid:
+            raise RuntimeError(msg)
+        return np.nan
 
     # Compute vp with wp, wm & vm
     vm_cj2 = model.cs2(wm, Phase.BROKEN)
     vm_cj = np.sqrt(vm_cj2)
     # Todo: implement proper validation for alpha_plus
-    ap_cj = model.alpha_plus(wn, wm, error_on_invalid=False, nan_on_invalid=False, log_invalid=False)
+    ap_cj = model.alpha_plus(wn, wm, error_on_invalid=error_on_invalid, nan_on_invalid=False, log_invalid=False)
+    if np.isnan(ap_cj):
+        raise RuntimeError
     v_cj = boundary.v_plus(vm_cj, ap_cj, sol_type=SolutionType.DETON)
     if extra_output:
         return v_cj, vm_cj, ap_cj
@@ -235,19 +254,36 @@ def v_chapman_jouguet_const_cs_reference(alpha_n: np.ndarray, model: "ConstCSMod
     return ret
 
 
-def wm_chapman_jouguet(model: "Model", wp: float, wm_guess: float = None) -> float:
+def wm_chapman_jouguet(
+        model: "Model", wp: float, wm_guess: float = None,
+        error_on_invalid: bool = True, nan_on_invalid: bool = True, log_invalid: bool = True) -> float:
     """Get $w_-$ for a transition that has $\tilde{v}_-=c_{s-}(w_-)
     such as a Chapman-Jouguet detonation or a Chapman-Jouguet deflagration.
     """
     if wm_guess is None:
-        wm_guess = max(wp, model.w_crit)
+        # Use logarithmic midpoint between wp and w_crit as the starting guess
+        wm_guess = wp if wp > model.w_crit else np.exp((np.log(wp) + np.log(model.w_crit))/2)
     wm_sol = fsolve(wm_solvable_chapman_jouguet, x0=np.array([wm_guess]), args=(model, wp), full_output=True)
     wm: float = wm_sol[0][0]
+
+    # If the solver fails, try again with another guess
     if wm_sol[2] != 1:
-        logger.error(
-            f"w_- solution was not found for w_+={wp}, model={model.name}, wm_guess={wm_guess}. "
-            f"Using w_-={wm}. "
-            f"Reason: {wm_sol[3]}")
+        wm_guess = 0.5 * wp if wp > model.w_crit else 2 * wp
+        wm_sol = fsolve(wm_solvable_chapman_jouguet, x0=np.array([wm_guess]), args=(model, wp), full_output=True)
+        wm = wm_sol[0][0]
+
+    if wm_sol[2] != 1:
+        msg = (
+            f"w_- solution was not found for w_+={wp}, model={model.name}, wm_guess={wm_guess}. " +
+            ("" if error_on_invalid else f"Using w_-={wm}. ") +
+            f"Reason: {wm_sol[3]}"
+        )
+        if log_invalid:
+            logger.error(msg)
+        if error_on_invalid:
+            raise RuntimeError(msg)
+        if nan_on_invalid:
+            return np.nan
     return wm
 
 
