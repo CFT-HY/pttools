@@ -12,7 +12,9 @@ matplotlib
 # PyCharm does not understand a dependency if all the versions are conditional
 # numba != 0.55; python_version < "3.10"
 # numba >= 0.55.1; python_version >= "3.10"
-numba != 0.55
+# Todo: generated_jit will be removed in Numba 0.59. Remove dependence on it and then update this dependency.
+# https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-generated-jit
+numba != 0.55, < 0.59
 # NumbaLSODA cannot yet be compiled automatically on the GitHub Actions Windows runners
 numbalsoda; sys_platform != "win32"
 # If you're using an old version of Numba and get the error:
