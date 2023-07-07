@@ -9,6 +9,7 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 
+from examples import utils
 from pttools.bubble import quantities
 from pttools.bubble.bubble import Bubble
 from pttools.models.bag import BagModel
@@ -16,7 +17,7 @@ from pttools.models.bag import BagModel
 logger = logging.getLogger(__name__)
 
 
-def main():
+def main() -> plt.Figure:
     t_start = time.perf_counter()
     model = BagModel(a_s=1.1, a_b=1, V_s=1)
     v_walls = np.linspace(0.2, 0.95, 10)
@@ -37,7 +38,9 @@ def main():
         ax.plot(v_walls, new)
 
     logger.info(f"Elapsed time: {time.perf_counter() - t_start}")
+    return fig
 
 
 if __name__ == "__main__":
-    main()
+    fig = main()
+    utils.save_and_show(fig, "xi_kappa_bag.png")

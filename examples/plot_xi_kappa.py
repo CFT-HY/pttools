@@ -70,7 +70,6 @@ def main():
     ax.set_yscale("log")
     ax.set_xlabel(r"$\xi_w$")
     ax.set_ylabel(r"$\kappa$")
-    fig.savefig(os.path.join(utils.FIG_DIR, "plot_xi_kappa.png"))
 
     logger.info(f"Elapsed time: {time.perf_counter() - t_start}")
     return fig
@@ -78,5 +77,5 @@ def main():
 
 if __name__ == "__main__":
     setup_logging()
-    main()
-    plt.show()
+    fig = main()
+    utils.save_and_show(fig, "plot_xi_kappa.png")

@@ -8,6 +8,7 @@ Comparison of old and new solvers
 import matplotlib.pyplot as plt
 import numpy as np
 
+from examples import utils
 from pttools.bubble import boundary
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.bubble import Bubble
@@ -102,5 +103,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
-    plt.show()
+    fig = main()
+    utils.save_and_show(fig, "old_new.png")

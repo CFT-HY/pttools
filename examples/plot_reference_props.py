@@ -8,11 +8,12 @@ Plot the parameters of fluid_reference
 import matplotlib.pyplot as plt
 import numpy as np
 
+from examples import utils
 from pttools.bubble import fluid_reference
 from pttools.bubble.transition import SolutionType
 
 
-def main():
+def main() -> plt.Figure:
     ref = fluid_reference.ref()
 
     fig: plt.Figure = plt.figure()
@@ -49,7 +50,9 @@ def main():
     print(ref.get(v_wall=0.7, alpha_n=0.25, sol_type=SolutionType.HYBRID))
     print(ref.get(v_wall=0.1, alpha_n=0.95, sol_type=SolutionType.DETON))
 
+    return fig
+
 
 if __name__ == "__main__":
-    main()
-    plt.show()
+    fig = main()
+    utils.save_and_show(fig, "reference_props.png")

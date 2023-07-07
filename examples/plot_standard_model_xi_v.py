@@ -13,6 +13,7 @@ from pttools.logging import setup_logging
 from pttools.models.full import FullModel
 from pttools.models.sm import StandardModel
 
+from examples import utils
 
 setup_logging()
 
@@ -29,5 +30,7 @@ fig: plt.Figure = plt.figure()
 ax: plt.Axes = fig.add_subplot()
 
 ax.plot(bubble.xi, bubble.v)
+ax.set_xlabel(r"$\xi$")
+ax.set_ylabel("$v$")
 
-plt.show()
+utils.save_and_show(fig, "standard_model_xi_v.png")

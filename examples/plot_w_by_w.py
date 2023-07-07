@@ -5,18 +5,16 @@ wn by w_center
 For debugging the solver
 """
 
-import os.path
-
 import matplotlib.pyplot as plt
 import numpy as np
 
+from examples import utils
 from pttools.bubble import fluid
 from pttools.bubble.boundary import SolutionType
 from pttools.bubble.fluid_reference import ref
 # from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
 
-from examples.utils import FIG_DIR
 
 model = ConstCSModel(css2=1/3 - 0.01, csb2=1/3 - 0.011, g_s=123, g_b=120, V_s=0.9)
 # model = BagModel(g_s=123, g_b=120, V_s=0.9)
@@ -45,4 +43,4 @@ ax.axhline(wn)
 ax.set_xlabel("$w_{center}$")
 ax.set_ylabel("w_n")
 
-fig.savefig(os.path.join(FIG_DIR, "w_by_w"))
+utils.save_and_show(fig, "w_by_w.png")

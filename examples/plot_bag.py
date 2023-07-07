@@ -9,6 +9,7 @@ import os.path
 
 import matplotlib.pyplot as plt
 
+from examples import utils
 from pttools.logging import setup_logging
 from pttools.bubble.fluid_bag import fluid_shell
 from pttools.bubble.fluid_reference import ref
@@ -17,8 +18,6 @@ from pttools.models.const_cs import ConstCSModel
 from pttools.bubble import props
 from pttools.bubble.bubble import Bubble
 from pttools.bubble.boundary import SolutionType
-
-from examples.utils import FIG_DIR
 
 setup_logging()
 
@@ -75,5 +74,4 @@ for ax in [ax1, ax2, ax3, ax4]:
 ax1.set_ylim(0, 1)
 fig.tight_layout()
 
-fig.savefig(os.path.join(FIG_DIR, "bag.png"))
-plt.show()
+utils.save_and_show(fig, "bag.png")

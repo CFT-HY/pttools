@@ -6,6 +6,7 @@ Comparison of BagModel and ConstCSModel
 import matplotlib.pyplot as plt
 import numpy as np
 
+from examples import utils
 from pttools.analysis.plot_models import ModelsPlot
 from pttools import models
 
@@ -26,5 +27,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
-    plt.show()
+    plot = main()
+    utils.save_and_show(plot.fig, "model_comparison.png")

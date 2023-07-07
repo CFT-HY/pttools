@@ -5,14 +5,14 @@ Chapman-Jouguet speed
 Plot $v_{CJ} (\alpha_n)$
 """
 
-import matplotlib.pyplot as plt
 import numpy as np
 
+from examples import utils
 from pttools import bubble, models
 from pttools.analysis.plot_chapman_jouguet import ChapmanJouguetPlot
 
 
-def main():
+def main() -> ChapmanJouguetPlot:
     plot = ChapmanJouguetPlot(alpha_n=np.linspace(0.15, 0.3, 100))
 
     plot.add(models.BagModel(a_s=1.1, a_b=1, V_s=1), analytical=False, label="Bag model (analytical)")
@@ -37,5 +37,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
-    plt.show()
+    plot = main()
+    utils.save_and_show(plot.fig, "chapman_jouguet.png")

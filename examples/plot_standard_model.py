@@ -8,8 +8,8 @@ Figures for the Standard Model
 import matplotlib.pyplot as plt
 import numpy as np
 
+from examples import utils
 from pttools.analysis.g_cs2 import plot_g_cs2
-
 from pttools.analysis.plot_model import ModelPlot
 from pttools.analysis.plot_thermomodels import ThermoModelsPlot
 from pttools.bubble.boundary import Phase
@@ -44,4 +44,4 @@ plot2 = ModelPlot(model2)
 print(model2.t_crit, model2.t_max, model2.alpha_n_min, model2.w_crit)
 
 if __name__ == "__main__":
-    plt.show()
+    utils.save_and_show(fig, "standard_model.png")

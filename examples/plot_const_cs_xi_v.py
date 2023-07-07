@@ -8,6 +8,7 @@ Plot the $\xi, v$ plane for the constant sound speed model
 import matplotlib.pyplot as plt
 import numpy as np
 
+from examples import utils
 from pttools.bubble.bubble import Bubble
 from pttools.bubble.fluid_bag import fluid_shell
 from pttools.bubble.boundary import SolutionType
@@ -63,5 +64,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
-    plt.show()
+    fig = main()
+    utils.save_and_show(fig, "const_cs_xi_v.png")
