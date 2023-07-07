@@ -26,5 +26,5 @@ class BubbleGridTest(unittest.TestCase):
             self.grid.unphysical_entropy()
         ]
         for arr in arrs:
-            if arr.dtype == np.object:
+            if arr.dtype == object:
                 raise TypeError(f"Array is of object dtype: {arr.dtype}")
