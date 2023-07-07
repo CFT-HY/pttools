@@ -1,3 +1,10 @@
+r"""
+Standard Model $\xi, v$
+=======================
+
+Example that the Standard Model can be used with the bubble solver
+"""
+
 import matplotlib.pyplot as plt
 
 from pttools.bubble.boundary import Phase

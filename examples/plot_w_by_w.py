@@ -1,6 +1,6 @@
 """
 wn by w_center
-===================
+==============
 
 For debugging the solver
 """
