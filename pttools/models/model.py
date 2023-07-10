@@ -9,7 +9,7 @@ import numpy as np
 from scipy.optimize import fminbound, fsolve, root_scalar
 
 import pttools.type_hints as th
-from pttools.bubble.boundary import Phase
+from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.check import find_most_negative_vals
 from pttools.bubble.integrate import add_df_dtau
 from pttools.models.base import BaseModel
@@ -213,6 +213,8 @@ class Model(BaseModel, abc.ABC):
             self,
             wp: th.FloatOrArr,
             wm: th.FloatOrArr,
+            vp_tilde: float = None,
+            sol_type: SolutionType = None,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
@@ -260,20 +262,13 @@ class Model(BaseModel, abc.ABC):
         #         wm = wm.copy()
         #         wm[wm_invalid] = np.nan
 
-        ret = 4 * self.delta_theta(wp, wm, error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid) / (3 * wp)
-        invalid = ret > 1
-        if (error_on_invalid or nan_on_invalid or log_invalid) and np.any(invalid):
-            if np.isscalar(ret):
-                info = f"Got alpha_plus = {ret} > 1"
-            else:
-                info = f"Got alpha_plus > 1. Most problematic value: {np.max(ret)}"
-            if log_invalid:
-                logger.error(info)
-            if error_on_invalid:
-                raise ValueError(info)
-            if nan_on_invalid:
-                ret[invalid] = np.nan
-        return ret
+        alpha_plus = 4 * self.delta_theta(
+            wp, wm, error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
+        ) / (3 * wp)
+        return self.check_alpha_plus(
+            alpha_plus, vp_tilde=vp_tilde, sol_type=sol_type,
+            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
+        )
 
     def alpha_theta_bar_plus(self, wp: th.FloatOrArr) -> th.FloatOrArr:
         r"""Transition strength parameter, :giese_2021:`\ `, eq. 9
@@ -281,6 +276,45 @@ class Model(BaseModel, abc.ABC):
         $$\alpha_{\bar{\theta}+} = \frac{D \bar{\theta}(T_+)}{3 w_+}$$
         """
         return self.theta_bar(wp, Phase.SYMMETRIC) / (3 * wp)
+
+    @staticmethod
+    def check_alpha_plus(
+            alpha_plus: th.FloatOrArr,
+            vp_tilde: th.FloatOrArr = None,
+            sol_type: SolutionType = None,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
+        r"""Check that the given $\alpha_+$ values are in the valid range $0 <= \alpha_+ < 1/3
+
+        Modifies the given array.
+        """
+        if error_on_invalid or nan_on_invalid or log_invalid:
+            if sol_type == SolutionType.SUB_DEF or sol_type == SolutionType.HYBRID:
+                invalid = np.logical_or(alpha_plus < 0, alpha_plus >= 1/3)
+            elif vp_tilde is not None:
+                # The square root in the vm_tilde equation must be positive
+                sqrt_invalid = ((1 + alpha_plus) * vp_tilde + (1 - 3 * alpha_plus) / (3 * vp_tilde)) ** 2 - 4 / 3 < 0
+                invalid = np.logical_or(alpha_plus < 0, sqrt_invalid)
+            else:
+                invalid = alpha_plus < 0
+            if np.any(invalid):
+                if np.isscalar(alpha_plus):
+                    info = f"Got invalid alpha_plus = {alpha_plus} for sol_type={sol_type}."
+                else:
+                    info = \
+                        f"Got invalid alpha_plus in range: {np.min(alpha_plus)} - {np.max(alpha_plus)}, " \
+                        f"for sol_type={sol_type}."
+                if log_invalid:
+                    logger.error(info)
+                if error_on_invalid:
+                    raise ValueError(info)
+                if nan_on_invalid:
+                    if np.isscalar(alpha_plus):
+                        return np.nan
+                    else:
+                        alpha_plus[invalid] = np.nan
+        return alpha_plus
 
     def check_p(self, wn: th.FloatOrArr, allow_fail: bool = False):
         temp = self.temp(wn, Phase.SYMMETRIC)

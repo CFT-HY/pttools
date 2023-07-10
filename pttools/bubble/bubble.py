@@ -222,12 +222,18 @@ class Bubble:
         self.solved = True
 
         # Validity checking for the solution
-        self.alpha_plus = self.model.alpha_plus(self.wp, self.wm)
-        if self.alpha_plus >= 1/3 and self.sol_type != SolutionType.DETON:
-            msg = "Got alpha_plus > 1/3 with " \
+        self.alpha_plus = self.model.alpha_plus(
+            self.wp, self.wm, vp_tilde=self.vp_tilde, sol_type=self.sol_type,
+            error_on_invalid=False, nan_on_invalid=True, log_invalid=True
+        )
+        if np.isnan(self.alpha_plus):
+            self.alpha_plus = self.model.alpha_plus(
+                self.wp, self.wm, vp_tilde=self.vp_tilde, sol_type=self.sol_type,
+                error_on_invalid=False, nan_on_invalid=False, log_invalid=False
+            )
+            msg = f"Got invalid alpha_plus={self.alpha_plus} with" \
                   f"model={self.model.label_unicode}, v_wall={self.v_wall}, " \
-                  f"alpha_n={self.alpha_n}, sol_type={self.sol_type}. " \
-                  f"This is unphysical! Got: {self.alpha_plus}"
+                  f"alpha_n={self.alpha_n}, sol_type={self.sol_type}."
             logger.error(msg)
             self.add_note(msg)
             self.unphysical_alpha_plus = True

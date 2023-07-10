@@ -166,6 +166,8 @@ class ConstCSModel(AnalyticModel):
             self,
             wp: th.FloatOrArr,
             wm: th.FloatOrArr,
+            vp_tilde: float = None,
+            sol_type: SolutionType = None,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
@@ -186,24 +188,11 @@ class ConstCSModel(AnalyticModel):
             name="wm", alpha_name="alpha_plus"
         )
 
-        ret = (1 - 4/self.mu)/3 - (1 - 4/self.nu)*wm/(3*wp) + self.bag_wn_const/wp
-
-        invalid = np.logical_or(ret < 0, ret > 1)
-        if (error_on_invalid or nan_on_invalid or log_invalid) and np.any(invalid):
-            if np.isscalar(ret):
-                msg = f"Got invalid alpha_plus={ret}"
-            else:
-                msg = f"Got invalid alpha_plus in range: {np.min(ret)} - {np.max(ret)}"
-
-            if log_invalid:
-                logger.error(msg)
-            if error_on_invalid:
-                raise ValueError(msg)
-            if nan_on_invalid:
-                if np.isscalar(ret):
-                    return np.nan
-                ret[invalid] = np.nan
-        return ret
+        alpha_plus = (1 - 4/self.mu)/3 - (1 - 4/self.nu)*wm/(3*wp) + self.bag_wn_const/wp
+        return self.check_alpha_plus(
+            alpha_plus, vp_tilde=vp_tilde, sol_type=sol_type,
+            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
+        )
 
     def critical_temp_opt(self, temp: float) -> float:
         const = (self.V_b - self.V_s)*self.t_ref**4

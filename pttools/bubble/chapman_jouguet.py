@@ -162,8 +162,6 @@ def v_chapman_jouguet(
     """Chapman-Jouguet speed
 
     This is the minimum wall speed for detonations.
-
-    TODO: Make further checks that the solutions are valid.
     """
     if analytical and model.DEFAULT_NAME == "bag":
         return v_chapman_jouguet_bag(alpha_plus=alpha_n)
@@ -211,10 +209,16 @@ def v_chapman_jouguet(
     # Compute vp with wp, wm & vm
     vm_cj2 = model.cs2(wm, Phase.BROKEN)
     vm_cj = np.sqrt(vm_cj2)
-    # Todo: implement proper validation for alpha_plus
-    ap_cj = model.alpha_plus(wn, wm, error_on_invalid=error_on_invalid, nan_on_invalid=False, log_invalid=False)
+    ap_cj = model.alpha_plus(
+        wn, wm, sol_type=SolutionType.DETON,
+        error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=False
+    )
     if np.isnan(ap_cj):
-        raise RuntimeError
+        msg = f"Failed to find alpha_plus for wn={wn}, wm={wm}. Got: {ap_cj}"
+        if log_invalid:
+            logger.error(msg)
+        if error_on_invalid:
+            raise RuntimeError(msg)
     v_cj = boundary.v_plus(vm_cj, ap_cj, sol_type=SolutionType.DETON)
     if extra_output:
         return v_cj, vm_cj, ap_cj
@@ -292,7 +296,10 @@ def wm_solvable_chapman_jouguet(params: np.ndarray, model: "Model", wp: float):
     # This assumes that the solution is a Chapman-Jouguet one
     vm2 = model.cs2(wm_param, Phase.BROKEN)
     vm = np.sqrt(vm2)
-    ap = model.alpha_plus(wp=wp, wm=wm_param, error_on_invalid=False, nan_on_invalid=False, log_invalid=False)
+    ap = model.alpha_plus(
+        wp=wp, wm=wm_param, sol_type=SolutionType.DETON,
+        error_on_invalid=False, nan_on_invalid=False, log_invalid=False
+    )
     vp = boundary.v_plus(vm, ap, sol_type=SolutionType.DETON)
     # print(f"vm={vm}, ap={ap}, vp={vp}")
 

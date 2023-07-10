@@ -6,6 +6,7 @@ import numba
 import numpy as np
 
 import pttools.type_hints as th
+from pttools.bubble.boundary import SolutionType
 from pttools.models.analytic import AnalyticModel
 
 logger = logging.getLogger(__name__)
@@ -95,6 +96,8 @@ class BagModel(AnalyticModel):
             self,
             wp: th.FloatOrArr,
             wm: th.FloatOrArr,
+            vp_tilde: float = None,
+            sol_type: SolutionType = None,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
@@ -114,7 +117,11 @@ class BagModel(AnalyticModel):
             nan_on_invalid=nan_on_invalid,
             name="wp", alpha_name="alpha_plus"
         )
-        return self.bag_wn_const / wp
+        alpha_plus = self.bag_wn_const / wp
+        return self.check_alpha_plus(
+            alpha_plus, vp_tilde=vp_tilde, sol_type=sol_type,
+            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
+        )
 
     def critical_temp(self, **kwargs) -> float:
         r"""Critical temperature for the bag model
