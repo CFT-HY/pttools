@@ -47,64 +47,64 @@ logger = logging.getLogger(__name__)
 #     return cs - vm
 
 
-def wm_vw_solvable(params: np.ndarray, model: "Model", vp: float, wp: float):
-    r"""$$\Delta_\text{junc1}(w_-)$$ for detonations"""
-    wm = params[0]
-    vm = boundary.v_minus(vp, model.alpha_plus(wp, wm), SolutionType.DETON)
-    return boundary.junction_condition_deviation1(vp, wp, vm, wm)
+# def wm_vw_solvable(params: np.ndarray, model: "Model", vp: float, wp: float):
+#     r"""$$\Delta_\text{junc1}(w_-)$$ for detonations"""
+#     wm = params[0]
+#     vm = boundary.v_minus(vp, model.alpha_plus(wp, wm), SolutionType.DETON)
+#     return boundary.junction_condition_deviation1(vp, wp, vm, wm)
+#
+#
+# def wm_vw(wm_guess: float, model: "Model", vp: float, wp: float):
+#     """$$w_-(v_w)$$"""
+#     sol = fsolve(wm_vw_solvable, x0=np.array([wm_guess]), args=(model, vp, wp), full_output=True)
+#     wm = sol[0][0]
+#     if sol[2] != 1:
+#         logger.error(
+#             f"wm(vw) solution was not found for model={model.name}, vp={vp}, wp={wp}, wm_guess={wm_guess}. "
+#             f"Using wm(vw)={wm}. "
+#             f"Reason: {sol[3]}"
+#         )
+#     return wm
+#
+#
+# def v_chapman_jouguet_solvable(params: np.ndarray, model: "Model", wp: float, wm_guess: float = None):
+#     vp = params[0]
+#     # If a guess is not provided, use the bag model value.
+#     wm_guess = boundary.w2_junction(vp, wp, const.CS0) if wm_guess is None else wm_guess
+#     wm = wm_vw(wm_guess, model, vp, wp)
+#     vm = boundary.v_minus(vp, model.alpha_plus(wp, wm))
+#     cs = model.cs2(wm, Phase.BROKEN)
+#     return vm - cs
 
 
-def wm_vw(wm_guess: float, model: "Model", vp: float, wp: float):
-    """$$w_-(v_w)$$"""
-    sol = fsolve(wm_vw_solvable, x0=np.array([wm_guess]), args=(model, vp, wp), full_output=True)
-    wm = sol[0][0]
-    if sol[2] != 1:
-        logger.error(
-            f"wm(vw) solution was not found for model={model.name}, vp={vp}, wp={wp}, wm_guess={wm_guess}. "
-            f"Using wm(vw)={wm}. "
-            f"Reason: {sol[3]}"
-        )
-    return wm
-
-
-def v_chapman_jouguet_solvable(params: np.ndarray, model: "Model", wp: float, wm_guess: float = None):
-    vp = params[0]
-    # If a guess is not provided, use the bag model value.
-    wm_guess = boundary.w2_junction(vp, wp, const.CS0) if wm_guess is None else wm_guess
-    wm = wm_vw(wm_guess, model, vp, wp)
-    vm = boundary.v_minus(vp, model.alpha_plus(wp, wm))
-    cs = model.cs2(wm, Phase.BROKEN)
-    return vm - cs
-
-
-def v_chapman_jouguet_new(
-        model: "Model",
-        alpha_n: float,
-        wn: float = None,
-        wn_guess: float = None,
-        wm_guess: float = None,
-        extra_output: bool = False,
-        analytical: bool = True) -> tp.Union[float, tp.Tuple[float, float, float]]:
-    if analytical and model.DEFAULT_NAME == "bag":
-        return v_chapman_jouguet_bag(alpha_plus=alpha_n)
-
-    if wn is None:
-        wn = model.w_n(alpha_n, wn_guess=wn_guess)
-    v_cj_guess = v_chapman_jouguet_bag(alpha_plus=alpha_n)
-    sol = fsolve(
-        v_chapman_jouguet_solvable,
-        x0=np.array([v_cj_guess]),
-        args=(model, wn),
-        full_output=True
-    )
-    v_cj = sol[0][0]
-    if sol[2] != 1:
-        logger.error(
-            f"v_cj solution was not found for alpha_n={alpha_n}, model={model.name}, wn_guess={wn_guess}. "
-            f"Using v_cj={v_cj}. "
-            f"Reason: {sol[3]}"
-        )
-    return v_cj
+# def v_chapman_jouguet_new(
+#         model: "Model",
+#         alpha_n: float,
+#         wn: float = None,
+#         wn_guess: float = None,
+#         wm_guess: float = None,
+#         extra_output: bool = False,
+#         analytical: bool = True) -> tp.Union[float, tp.Tuple[float, float, float]]:
+#     if analytical and model.DEFAULT_NAME == "bag":
+#         return v_chapman_jouguet_bag(alpha_plus=alpha_n)
+#
+#     if wn is None:
+#         wn = model.w_n(alpha_n, wn_guess=wn_guess)
+#     v_cj_guess = v_chapman_jouguet_bag(alpha_plus=alpha_n)
+#     sol = fsolve(
+#         v_chapman_jouguet_solvable,
+#         x0=np.array([v_cj_guess]),
+#         args=(model, wn),
+#         full_output=True
+#     )
+#     v_cj = sol[0][0]
+#     if sol[2] != 1:
+#         logger.error(
+#             f"v_cj solution was not found for alpha_n={alpha_n}, model={model.name}, wn_guess={wn_guess}. "
+#             f"Using v_cj={v_cj}. "
+#             f"Reason: {sol[3]}"
+#         )
+#     return v_cj
 
 
 # def v_chapman_jouguet_old2(
