@@ -20,12 +20,13 @@ def ebar(model: "Model", wn: float):
     return model.e(wn, Phase.SYMMETRIC)
 
 
-def entropy_density(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
+def entropy_density(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
     r"""
     Volume-averaged entropy density
     $$s_\text{avg} = \frac{1}{v_w^3} \int (s(w,\phi) - s(w_n, \phi_s) \xi^3$$
     """
-    phase = props.find_phase(xi, v_wall)
+    if phase is None:
+        phase = props.find_phase(xi, v_wall)
     return 1 / (v_wall**3) * np.trapz(model.s(w, phase) - model.s(w[-1], Phase.SYMMETRIC), xi**3)
 
 
@@ -102,11 +103,12 @@ def thermal_energy_density(w: np.ndarray, xi: np.ndarray, v_wall: float) -> floa
     return 1/(v_wall**3) * np.trapz(0.75*(w - w[-1]), xi**3)
 
 
-def trace_anomaly(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
+def trace_anomaly(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
     r"""Trace anomaly
     $$\Delta e_\theta = 4 \pi \int_0^{\xi_\text{max}} d\xi \xi^2 (\theta - \theta_n)$$
     """
-    phase = props.find_phase(xi, v_wall)
+    if phase is None:
+        phase = props.find_phase(xi, v_wall)
     theta = model.theta(w, phase)
     theta_n = model.theta(w[-1], Phase.SYMMETRIC)
     return 1/(v_wall**3) * np.trapz((theta - theta_n), xi**3)

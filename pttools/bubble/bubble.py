@@ -11,6 +11,7 @@ from pttools.bubble.alpha import alpha_n_max_deflagration_bag
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.fluid import fluid_shell_generic
 from pttools.bubble import const
+from pttools.bubble import props
 from pttools.bubble import thermo
 from pttools.bubble import transition
 from pttools.speedup.export import export_json
@@ -106,6 +107,7 @@ class Bubble:
         self.v: tp.Optional[np.ndarray] = None
         self.w: tp.Optional[np.ndarray] = None
         self.xi: tp.Optional[np.ndarray] = None
+        self.phase: tp.Optional[np.ndarray] = None
 
         # Output values
         self.vp: tp.Optional[float] = None
@@ -220,6 +222,7 @@ class Bubble:
             self.no_solution_found = True
             return
         self.solved = True
+        self.phase = props.find_phase(self.xi, self.v_wall)
 
         # Validity checking for the solution
         self.alpha_plus = self.model.alpha_plus(
@@ -292,7 +295,7 @@ class Bubble:
     def entropy_density(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.entropy_density(self.model, self.w, self.xi, self.v_wall)
+        return thermo.entropy_density(self.model, self.w, self.xi, self.v_wall, self.phase)
 
     @functools.cached_property
     def entropy_density_relative(self) -> float:
@@ -342,7 +345,7 @@ class Bubble:
     def trace_anomaly(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.trace_anomaly(self.model, self.w, self.xi, self.v_wall)
+        return thermo.trace_anomaly(self.model, self.w, self.xi, self.v_wall, self.phase)
 
     @functools.cached_property
     def ubarf2(self) -> float:

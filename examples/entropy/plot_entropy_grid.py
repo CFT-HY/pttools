@@ -1,8 +1,8 @@
 """
-Entropy
-=======
+Entropy grid
+============
 
-Plot the relative change in entropy density
+Plot the relative change in entropy density for a grid of bubbles.
 """
 
 import os.path
@@ -45,7 +45,7 @@ def main():
         max_level=0.4,
         diff_level=0.05,
         # use_bag_solver=True,
-        path=os.path.join(FIG_DIR, "entropy.png"),
+        path=os.path.join(FIG_DIR, "entropy_grid.png"),
         # single_plot=True
     )
 
@@ -54,7 +54,7 @@ if __name__ == "__main__":
     setup_logging()
     profiling = False
     if profiling:
-        with utils_cprofile.CProfiler("plot_entropy"):
+        with utils_cprofile.CProfiler("plot_entropy_grid"):
             main()
             # The cache info is per-process
             print(boundary.solve_junction_internal.cache_info())
