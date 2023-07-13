@@ -240,9 +240,9 @@ class Bubble:
             logger.error(msg)
             self.add_note(msg)
             self.unphysical_alpha_plus = True
-        if self.entropy_density < 0:
+        if self.avg_entropy_density < 0:
             msg = "Entropy density should not be negative! Now entropy is decreasing. " \
-                  f"Got: {self.entropy_density} with " \
+                  f"Got: {self.avg_entropy_density} with " \
                   f"model={self.model.label_unicode}, v_wall={self.v_wall}, alpha_n={self.alpha_n}"
             if log_negative_entropy:
                 logger.warning(msg)
@@ -292,16 +292,16 @@ class Bubble:
         return thermo.ebar(self.model, self.wn)
 
     @functools.cached_property
-    def entropy_density(self) -> float:
+    def avg_entropy_density(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.entropy_density(self.model, self.w, self.xi, self.v_wall, self.phase)
 
     @functools.cached_property
-    def entropy_density_relative(self) -> float:
+    def avg_entropy_density_relative(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
-        return self.entropy_density / self.model.s(self.wn, Phase.SYMMETRIC)
+        return self.avg_entropy_density / self.model.s(self.wn, Phase.SYMMETRIC)
 
     @functools.cached_property
     def kappa(self) -> float:
@@ -334,6 +334,12 @@ class Bubble:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.omega(self.model, self.w, self.xi, self.v_wall, self.trace_anomaly)
+
+    @functools.cached_property
+    def s(self):
+        if not self.solved:
+            raise NotYetSolvedError
+        return self.model.s(self.w, self.phase)
 
     @functools.cached_property
     def thermal_energy_density(self) -> float:

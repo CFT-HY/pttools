@@ -24,6 +24,9 @@ def find_phase(xi: np.ndarray, v_wall: float) -> np.ndarray:
     # This presumes that Phase.SYMMETRIC = 0
     phase = np.zeros_like(xi)
     phase[:i_wall] = Phase.BROKEN
+    # Fix for detonations
+    if np.isclose(xi[i_wall], v_wall):
+        phase[i_wall] = Phase.BROKEN
     return phase
 
 
