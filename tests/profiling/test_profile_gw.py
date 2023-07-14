@@ -37,7 +37,7 @@ class TestProfileGW(TestProfile):
             with utils_pyinstrument.PyInstrumentProfiler(cls.name):
                 for _ in range(100):
                     ssm.power_gw_scaled(cls.z, cls.params)
-        except UnboundLocalError as e:
+        except (AssertionError, UnboundLocalError) as e:
             logger.exception("Pyinstrument crashed", exc_info=e)
             if not speedup.NUMBA_PYINSTRUMENT_INCOMPATIBLE_PYTHON_VERSION:
                 raise e
