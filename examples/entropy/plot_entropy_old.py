@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from examples.utils import FIG_DIR
-from pttools.analysis.plot_entropy import plot_entropy_data
+from pttools.analysis.plot_entropy_grid import plot_entropy_data
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet_bag
 from pttools.bubble.alpha import alpha_n_max_bag, alpha_n_max_detonation_bag
 
