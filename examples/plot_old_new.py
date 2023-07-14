@@ -1,6 +1,6 @@
 """
 Old-new comparison
-============
+==================
 
 Comparison of old and new solvers
 """
