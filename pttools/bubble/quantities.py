@@ -100,7 +100,7 @@ def get_kappa(
 
         if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
-            v, w, xi = fluid_bag.fluid_shell(vw, alpha_n, n_xi)
+            v, w, xi = fluid_bag.fluid_shell_bag(vw, alpha_n, n_xi)
 
             kappa[...] = ubarf_squared(v, w, xi, vw) / (0.75 * alpha_n)
         else:
@@ -139,7 +139,7 @@ def get_kappa_de(
 
         if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
-            v, w, xi = fluid_bag.fluid_shell(vw, alpha_n, n_xi)
+            v, w, xi = fluid_bag.fluid_shell_bag(vw, alpha_n, n_xi)
             # Esp+ epsilon is alpha_n * 0.75*w_n
             kappa[...] = ubarf_squared(v, w, xi, vw) / (0.75 * alpha_n)
             de[...] = mean_energy_change_bag(v, w, xi, vw, alpha_n)
@@ -184,7 +184,7 @@ def get_kappa_dq(
 
         if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
-            v, w, xi = fluid_bag.fluid_shell(vw, alpha_n, n_xi)
+            v, w, xi = fluid_bag.fluid_shell_bag(vw, alpha_n, n_xi)
             # Esp+ epsilon is alpha_n * 0.75*w_n
             kappa[...] = ubarf_squared(v, w, xi, vw) / (0.75 * alpha_n)
             dq[...] = 0.75 * mean_enthalpy_change(v, w, xi, vw) / (0.75 * alpha_n * w[-1])
@@ -226,7 +226,7 @@ def get_ke_de_frac_bag(
 
         if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
-            v, w, xi = fluid_bag.fluid_shell(vw, alpha_n, n_xi)
+            v, w, xi = fluid_bag.fluid_shell_bag(vw, alpha_n, n_xi)
             # Esp+ epsilon is alpha_n * 0.75*w_n
             ke[...] = ubarf_squared(v, w, xi, vw) / (0.75 * (1 + alpha_n))
             de[...] = mean_energy_change_bag(v, w, xi, vw, alpha_n) / (0.75 * w[-1] * (1 + alpha_n))
@@ -285,7 +285,7 @@ def get_ke_frac_new_bag(
         sol_type = transition.identify_solution_type_bag(vw, alpha_n)
         if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
-            v, w, xi = fluid_bag.fluid_shell(vw, alpha_n, n_xi)
+            v, w, xi = fluid_bag.fluid_shell_bag(vw, alpha_n, n_xi)
             ke[...] = mean_kinetic_energy(v, w, xi, vw)
         else:
             ke[...] = np.nan
@@ -309,7 +309,7 @@ def _get_ubarf2_scalar(v_wall: float, alpha_n: float, n_xi: int, verbosity: int)
         ubarf2 = np.nan
     else:
         # Now ready to solve for fluid profile
-        v, w, xi = fluid_bag.fluid_shell(v_wall, alpha_n, n_xi)
+        v, w, xi = fluid_bag.fluid_shell_bag(v_wall, alpha_n, n_xi)
         ubarf2 = ubarf_squared(v, w, xi, v_wall)
 
     if verbosity > 0:

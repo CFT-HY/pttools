@@ -54,7 +54,7 @@ def A2_e_conserving(
     nxi = npt[0]
     #    xi_re = np.linspace(0,1-1/nxi,nxi)
     # need to resample for lam = de/w, as some non-zero points are very far apart
-    v_ip, w_ip, xi = bubble.fluid_shell(vw, alpha_n, nxi)
+    v_ip, w_ip, xi = bubble.fluid_shell_bag(vw, alpha_n, nxi)
 
     #    f = np.zeros_like(z)
     #    for j in range(f.size):
@@ -237,7 +237,7 @@ def f_ssm_func(
     :param npt: number of points
     """
     nxi = npt[0]
-    v_ip, _, xi = bubble.fluid_shell(v_wall, alpha_n, nxi)
+    v_ip, _, xi = bubble.fluid_shell_bag(v_wall, alpha_n, nxi)
 
     # f_ssm = np.zeros_like(z)
     # for j in range(f_ssm.size):
@@ -281,7 +281,7 @@ def lam_ssm_func(
     """
     nxi = npt[0]
     # xi_re = np.linspace(0,1-1/nxi,nxi) # need to resample for lam = de/w
-    v_ip, w_ip, xi = bubble.fluid_shell(vw, alpha_n, nxi)
+    v_ip, w_ip, xi = bubble.fluid_shell_bag(vw, alpha_n, nxi)
 
     if de_method == DE_Method.ALTERNATE:
         lam_orig = bubble.de_from_w_new_bag(v_ip, w_ip, xi, vw, alpha_n) / w_ip[-1]

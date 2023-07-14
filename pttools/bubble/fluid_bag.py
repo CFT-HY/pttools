@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 @numba.njit
-def fluid_shell(
+def fluid_shell_bag(
         v_wall: float,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
@@ -239,7 +239,7 @@ def fluid_shell_dict(
     if sol_type is SolutionType.ERROR:
         raise RuntimeError(f"No solution for v_wall = {v_wall}, alpha_n = {alpha_n}")
 
-    v, w, xi = fluid_shell(v_wall, alpha_n, Np)
+    v, w, xi = fluid_shell_bag(v_wall, alpha_n, Np)
 
     # vmax = max(v)
 

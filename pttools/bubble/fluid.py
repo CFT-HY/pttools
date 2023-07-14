@@ -565,7 +565,7 @@ def fluid_shell_generic(
         if sol_type is not None and sol_type != sol_type2:
             raise ValueError(f"Bag model gave a different solution type ({sol_type2}) than what was given ({sol_type}).")
 
-        v, w, xi = fluid_bag.fluid_shell(v_wall, alpha_n)
+        v, w, xi = fluid_bag.fluid_shell_bag(v_wall, alpha_n)
         # The results of the old solver are scaled to wn=1
         w *= wn
         if np.any(np.isnan(v)):

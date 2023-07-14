@@ -12,7 +12,7 @@ from scipy.interpolate import NearestNDInterpolator
 from pttools.bubble import boundary
 from pttools.bubble.alpha import alpha_n_max_bag
 from pttools.bubble.boundary import SolutionType
-from pttools.bubble.fluid_bag import fluid_shell
+from pttools.bubble.fluid_bag import fluid_shell_bag
 from pttools.bubble import props
 from pttools.bubble import transition
 
@@ -166,7 +166,7 @@ def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tp.Tuple[int, 
     if alpha_n > alpha_n_max:
         return -1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 
-    v, w, xi = fluid_shell(v_wall, alpha_n)
+    v, w, xi = fluid_shell_bag(v_wall, alpha_n)
     sol_type = transition.identify_solution_type_bag(v_wall, alpha_n)
 
     if np.any(np.isnan(v)) or np.any(np.isnan(w)) or np.any(np.isnan(xi)):

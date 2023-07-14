@@ -33,7 +33,7 @@ def setup_matplotlib(**kwargs):
 
 
 def plot_bubble(ax: plt.Axes, label: str, v_wall: float, alpha: float, n_xi: int) -> AxesImage:
-    v_f, enthalp, xi = bubble.fluid_shell(v_wall, alpha, n_xi)
+    v_f, enthalp, xi = bubble.fluid_shell_bag(v_wall, alpha, n_xi)
     n_wall = bubble.find_v_index(xi, v_wall)
     v_fluid = interp1d(xi, v_f, fill_value=0, bounds_error=False)
 

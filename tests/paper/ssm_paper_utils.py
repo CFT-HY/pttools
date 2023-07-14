@@ -829,7 +829,7 @@ def plot_and_save(vw: float, alpha: float, method: ssm.Method = ssm.Method.E_CON
         f2.savefig(MD_PATH + "pow_gw_" + graph_file_suffix)
 
     # Now some comparisons between real space <v^2> and Fourier space already calculated
-    v_ip, w_ip, xi = bubble.fluid_shell(vw, alpha)
+    v_ip, w_ip, xi = bubble.fluid_shell_bag(vw, alpha)
     Ubarf2 = bubble.Ubarf_squared(v_ip, w_ip, xi, vw)
 
     logger.debug(
