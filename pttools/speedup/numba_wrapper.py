@@ -3,6 +3,7 @@
 # pylint: disable=unused-import
 
 import logging
+import sys
 
 import numba
 try:
@@ -52,7 +53,10 @@ NUMBA_VERSION = tuple(int(val) for val in numba.__version__.split("."))
 #: Whether the Numba version used is prone to segfaulting when profiled.
 #: https://github.com/numba/numba/issues/3229
 #: https://github.com/numba/numba/issues/3625
-NUMBA_SEGFAULTING_PROFILERS = NUMBA_VERSION < (0, 49, 0)
+NUMBA_SEGFAULTING_PROFILERS: bool = NUMBA_VERSION < (0, 49, 0)
+NUMBA_PYINSTRUMENT_INCOMPATIBLE_PYTHON_VERSION: bool = \
+    sys.version_info.major > 3 or \
+    (sys.version_info.major == 3 and sys.version_info.minor >= 11)
 
 if NUMBA_OLD_STRUCTURE:
     logger.warning(
