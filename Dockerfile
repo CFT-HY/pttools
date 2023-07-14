@@ -1,10 +1,10 @@
 # The standard Debian image is used instead of the Alpine one,
 # as Alpine uses a different version of the C standard library,
 # and therefore the usual Python wheels don't work on Alpine.
-FROM python:3.10
+FROM python:3.11
 
 RUN apt-get update \
-    && apt-get install -y cmake \
+    && apt-get install -y cmake gfortran \
     && apt-get autoremove \
     && apt-get clean \
     && pip install --no-cache-dir --upgrade build

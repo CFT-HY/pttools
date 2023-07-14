@@ -1,9 +1,7 @@
 name: CI
 on: push
 env:
-  # Todo: use Python 3.11 when Numba adds support for it
-  # https://github.com/numba/numba/issues/8304
-  PRIMARY_PYTHON_VERSION: '3.10'
+  PRIMARY_PYTHON_VERSION: '3.11'
 jobs:
   graph:
     runs-on: ubuntu-latest
@@ -127,7 +125,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        python-version: ['3.8', '3.9', '3.10']
+        python-version: ['3.8', '3.9', '3.10', '3.11']
     steps:
     - name: Setup Python
       uses: actions/setup-python@v4
@@ -233,7 +231,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        python-version: ['3.8', '3.9', '3.10']
+        python-version: ['3.8', '3.9', '3.10', '3.11']
     steps:
     - name: Setup Python
       uses: actions/setup-python@v4

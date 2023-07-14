@@ -6,7 +6,7 @@ on:
 #    workflows: [ CI ]
 #    types: [ completed ]
 env:
-  PRIMARY_PYTHON_VERSION: '3.10'
+  PRIMARY_PYTHON_VERSION: '3.11'
 jobs:
   test:
     runs-on: windows-latest
