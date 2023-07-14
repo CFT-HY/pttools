@@ -27,6 +27,54 @@ class NucType(str, enum.Enum):
 DEFAULT_NUC_TYPE = NucType.EXPONENTIAL
 
 
+class Spectrum:
+    def __init__(
+            self,
+            bubble: bubble.Bubble,
+            z: np.ndarray = None,
+            z_st_thresh: float = const.Z_ST_THRESH,
+            nuc_type: NucType = DEFAULT_NUC_TYPE,
+            method: ssm.Method = ssm.Method.E_CONSERVING,
+            de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
+            nxi: int = 5000,
+            nt: int = 10000,
+            nq: int = 1000,
+            ):
+        self.bubble = bubble
+        self.de_method = de_method
+        self.method = method
+        self.nuc_type = nuc_type
+        self.z = np.logspace(np.log10(0.2), np.log10(1000), 5000) if z is None else z
+        self.z_st_thresh = z_st_thresh
+        self.nxi = nxi
+        self.nt = nt
+        self.nq = nq
+
+        self.nuc_args = (1., )
+        # Todo: check that alpha = alpha_n
+        self.params = (bubble.v_wall, bubble.alpha_n, nuc_type, self.nuc_args)
+
+        self.pow_v: tp.Optional[np.ndarray] = None
+        self.pow_gw: tp.Optional[np.ndarray] = None
+
+    def compute(self):
+        if not self.bubble.solved:
+            self.bubble.solve()
+        # Todo: This computation is almost the same as in power_v. Are these redundant?
+        # Todo: spec_den_v uses A2_ssm_func, which uses const.CS0. Are the results for bag model only?
+        sd_v = spec_den_v(
+            z=self.z, params=self.params, npt=(self.nxi, self.nt, self.nq),
+            method=self.method, de_method=self.de_method, z_st_thresh=self.z_st_thresh
+        )
+        self.pow_v = pow_spec(self.z, spec_den=sd_v)
+        # V2_pow_v = np.trapz(pow_v/self.z, self.z)
+
+        # Todo: This computation is almost the same as in power_gw_scaled. Are these redundant?
+        sd_gw, y = spec_den_gw_scaled(self.z, sd_v)
+        self.pow_gw = pow_spec(self.z, spec_den=sd_gw)
+        # gw_power = np.trapz(self.pow_gw/y, y)
+
+
 def convert_params(params: bubble.PhysicalParams) -> bubble.PhysicalParams:
     """Convert the physical parameters from a list to a tuple if necessary."""
     if isinstance(params, list):

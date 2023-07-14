@@ -124,8 +124,6 @@ class Bubble:
         self.alpha_plus: tp.Optional[float] = None
         self.elapsed: tp.Optional[float] = None
 
-        self.gw_power_spectrum = None
-
         if solve:
             self.solve()
         elif log_success:
@@ -268,9 +266,6 @@ class Bubble:
                 else:
                     logger.warning(msg)
             self.add_note(msg)
-
-    def spectrum(self):
-        raise NotImplementedError
 
     @property
     def vp_tilde_sh(self):
