@@ -48,7 +48,7 @@ class FullModel(Model):
             V_s=V_s, V_b=V_b,
             t_min=thermo.t_min, t_max=thermo.t_max,
             name=name, label_latex=label_latex, label_unicode=label_unicode,
-            gen_critical=False, gen_cs2=False, implicit_V=True)
+            gen_critical=False, gen_cs2=False, gen_cs2_neg=False, implicit_V=True)
 
         self.temp_spline_s = splrep(
             np.log10(self.w(self.thermo.GEFF_DATA_TEMP, Phase.SYMMETRIC)), self.thermo.GEFF_DATA_LOG_TEMP
@@ -59,7 +59,6 @@ class FullModel(Model):
         self.t_crit, self.w_crit, self.alpha_n_min = self.criticals(t_crit_guess, allow_invalid)
 
         self.cs2 = self.gen_cs2()
-        self.cs2_neg = self.gen_cs2_neg()
 
     def gen_cs2(self):
         """This function generates the Numba-jitted cs2 function to be used by the fluid integrator"""

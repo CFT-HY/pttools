@@ -40,6 +40,9 @@ class AnalyticModel(Model, abc.ABC):
             name: str = None,
             label_latex: str = None,
             label_unicode: str = None,
+            gen_critical: bool = True,
+            gen_cs2: bool = True,
+            gen_cs2_neg: bool = True,
             allow_invalid: bool = False,
             auto_potential: bool = False):
         self.a_s: float
@@ -65,6 +68,7 @@ class AnalyticModel(Model, abc.ABC):
             V_s=V_s, V_b=V_b,
             t_min=t_min, t_max=t_max,
             name=name, label_latex=label_latex, label_unicode=label_unicode,
+            gen_critical=gen_critical, gen_cs2=gen_cs2, gen_cs2_neg=gen_cs2_neg,
             allow_invalid=allow_invalid
         )
         if self.a_s <= self.a_b:

@@ -45,6 +45,7 @@ class BagModel(AnalyticModel):
             g_s=g_s, g_b=g_b,
             t_min=t_min, t_max=t_max,
             name=name, label_latex=label_latex, label_unicode=label_unicode,
+            gen_cs2=False, gen_cs2_neg=False,
             allow_invalid=allow_invalid,
             auto_potential=auto_potential
         )
@@ -142,6 +143,11 @@ class BagModel(AnalyticModel):
 
     @staticmethod
     @numba.njit
+    def cs2_neg(w: th.FloatOrArr = None, phase: th.FloatOrArr = None) -> th.FloatOrArr:
+        return - 1/3 * np.ones_like(w) * np.ones_like(phase)
+
+    @staticmethod
+    @numba.njit
     def cs2_temp(temp, phase):
         return BagModel.cs2(temp, phase)
 
@@ -163,9 +169,6 @@ class BagModel(AnalyticModel):
         e_s = 3*self.a_s * temp**4 + self.V_s
         e_b = 3*self.a_b * temp**4 + self.V_b
         return e_b * phase + e_s * (1 - phase)
-
-    def gen_cs2(self):
-        return self.cs2
 
     def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Pressure $p(T,\phi)$, :notes:`\ `, eq. 5.14, 7.1, 7.33, :giese_2021:`\ `, eq. 18

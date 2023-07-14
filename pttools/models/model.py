@@ -38,6 +38,7 @@ class Model(BaseModel, abc.ABC):
             label_unicode: str = None,
             gen_critical: bool = True,
             gen_cs2: bool = True,
+            gen_cs2_neg: bool = True,
             implicit_V: bool = False,
             allow_invalid: bool = False):
 
@@ -68,7 +69,7 @@ class Model(BaseModel, abc.ABC):
         super().__init__(
             t_min=t_min, t_max=t_max,
             name=name, label_latex=label_latex, label_unicode=label_unicode,
-            gen_cs2=gen_cs2
+            gen_cs2=gen_cs2, gen_cs2_neg=gen_cs2_neg
         )
         self.w_min_s = self.w(self.t_min, Phase.SYMMETRIC)
         self.w_min_b = self.w(self.t_min, Phase.BROKEN)
@@ -494,7 +495,7 @@ class Model(BaseModel, abc.ABC):
         return self._cs2_limit(w_max, phase, False, self.cs2, w_min, allow_fail, **kwargs)
 
     def cs2_neg(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        raise RuntimeError("The cs2_neg(w, phase) function has not yet been loaded.")
+        return -self.cs2(w, phase)
 
     def cs2_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         return self.cs2(self.w(temp, phase), phase)
@@ -570,15 +571,6 @@ class Model(BaseModel, abc.ABC):
         r"""Effective degrees of freedom for energy density, $g_{\text{eff},e}(w,\phi)$"""
         temp = self.temp(w, phase)
         return self.ge_temp(temp, phase)
-
-    def gen_cs2_neg(self) -> th.CS2Fun:
-        cs2 = self.cs2
-
-        @numba.njit
-        def cs2_neg(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-            return -cs2(w, phase)
-
-        return cs2_neg
 
     def gs(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Effective degrees of freedom for entropy, $g_{\text{eff},s}(w,\phi)$"""

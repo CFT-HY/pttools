@@ -233,6 +233,18 @@ class ConstCSModel(AnalyticModel):
             return (phase*csb2 + (1 - phase)*css2) * np.ones_like(w)
         return cs2
 
+    def gen_cs2_neg(self) -> th.CS2Fun:
+        css2 = self.css2
+        csb2 = self.csb2
+
+        if css2 == 1/3 and csb2 == 1/3:
+            return BagModel.cs2_neg
+
+        @numba.njit
+        def cs2_neg(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+            return -(phase*csb2 + (1 - phase)*css2) * np.ones_like(w)
+        return cs2_neg
+
     def cs2_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         # ConstCSModel.cs2() is independent of T and w
         return self.cs2(temp, phase)

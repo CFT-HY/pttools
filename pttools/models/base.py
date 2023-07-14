@@ -28,7 +28,8 @@ class BaseModel(abc.ABC):
             restrict_to_valid: bool = True,
             label_latex: str = None,
             label_unicode: str = None,
-            gen_cs2: bool = True):
+            gen_cs2: bool = True,
+            gen_cs2_neg: bool = True):
         self.name = self.DEFAULT_NAME if name is None else name
         self.label_latex = self.DEFAULT_LABEL_LATEX if label_latex is None else label_latex
         self.label_unicode = self.DEFAULT_LABEL_UNICODE if label_unicode is None else label_unicode
@@ -51,9 +52,32 @@ class BaseModel(abc.ABC):
 
         if gen_cs2:
             self.cs2 = self.gen_cs2()
+        if gen_cs2_neg:
             self.cs2_neg = self.gen_cs2_neg()
 
     # Concrete methods
+
+    def export(self) -> tp.Dict[str, any]:
+        """User-created model classes should extend this"""
+        return {
+            "name": self.name,
+            "label_latex": self.label_latex,
+            "label_unicode": self.label_unicode,
+            "datetime": datetime.datetime.now(),
+            "t_min": self.t_min,
+            "t_max": self.t_max,
+            "restrict_to_valid": self.restrict_to_valid
+        }
+
+    def gen_cs2(self) -> th.CS2Fun:
+        r"""This function should generate a Numba-jitted $c_s^2$ function for the model."""
+        raise NotImplementedError("This class does not have gen_cs2 defined")
+
+    def gen_cs2_neg(self) -> th.CS2Fun:
+        r"""This function should generate a negative version of
+        the Numba-jitted $c_s^2$ function to be used for maximisation.
+        """
+        raise NotImplementedError("This class does not have gen_cs2_neg defined")
 
     def validate_temp(self, temp: th.FloatOrArr) -> th.FloatOrArr:
         """Validate that the given temperatures are in the validity range of the model.
@@ -99,18 +123,6 @@ class BaseModel(abc.ABC):
                     temp[above] = np.nan
         return temp
 
-    def export(self) -> tp.Dict[str, any]:
-        """User-created model classes should extend this"""
-        return {
-            "name": self.name,
-            "label_latex": self.label_latex,
-            "label_unicode": self.label_unicode,
-            "datetime": datetime.datetime.now(),
-            "t_min": self.t_min,
-            "t_max": self.t_max,
-            "restrict_to_valid": self.restrict_to_valid
-        }
-
     # Abstract methods
 
     @abc.abstractmethod
@@ -120,12 +132,3 @@ class BaseModel(abc.ABC):
     @abc.abstractmethod
     def cs2_neg(self, *args, **kwargs) -> th.FloatOrArr:
         pass
-
-    @abc.abstractmethod
-    def gen_cs2(self) -> th.CS2Fun:
-        r"""This function should generate a Numba-jitted $c_s^2$ function for the model."""
-
-    @abc.abstractmethod
-    def gen_cs2_neg(self) -> th.CS2Fun:
-        r"""This function shoud generate a negative version of
-        the Numba-jitted $c_s^2$ function to be used for maximisation."""
