@@ -16,8 +16,8 @@ def cmap(
     n_max = int(max_level / diff_level)
 
     levels = np.linspace(n_min, n_max, n_max - n_min + 1, endpoint=True) * diff_level
-    cmap_neg = plt.cm.get_cmap(cmap_neg_name)
-    cmap_pos = plt.cm.get_cmap(cmap_pos_name)
+    cmap_neg = plt.colormaps[cmap_neg_name]
+    cmap_pos = plt.colormaps[cmap_pos_name]
 
     cols = \
         list(cmap_neg((levels[levels < 0] - diff_level) / (min_level - diff_level))) + \

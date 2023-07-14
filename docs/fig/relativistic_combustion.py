@@ -15,7 +15,7 @@ from scipy.interpolate import interp1d
 
 from pttools import bubble
 
-_VIRIDIS_BIG = matplotlib.cm.get_cmap("autumn_r", 512)
+_VIRIDIS_BIG = plt.colormaps["autumn_r"]
 _NEW_COLORS = _VIRIDIS_BIG(np.linspace(0, 1, 256))
 _NEW_COLORS[0] = matplotlib.colors.to_rgba("white", alpha=0)
 COLORMAP = matplotlib.colors.ListedColormap(_NEW_COLORS)
