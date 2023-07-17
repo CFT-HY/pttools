@@ -129,6 +129,9 @@ def fluid_shell_deflagration_common(
         allow_failure=allow_failure
     )
     vp = -relativity.lorentz(vp_tilde, v_wall)
+    if vp < 0 or wp < 0:
+        logger.error("Invalid starting point: vp=%s, wp=%s, vp_tilde=%s", vp, wp, vp_tilde)
+        return DEFLAGRATION_NAN
 
     # Manual correction for hybrids
     # if sol_type == SolutionType.HYBRID:
@@ -161,13 +164,16 @@ def fluid_shell_deflagration_common(
         df_dtau_ptr=model.df_dtau_ptr(),
         # method="RK45"
     )
+    # if np.argmax(xi) == 0:
+    #     logger.error("Deflagration solver gave a detonation-like solution.")
+    #     return DEFLAGRATION_NAN
     i_shock = shock.find_shock_index(
         model, v, xi, v_wall, wn,
         cs_n=cs_n, sol_type=sol_type,
         allow_failure=allow_failure, warn_if_barely_exists=warn_if_shock_barely_exists
     )
     if i_shock == 0:
-        logger.error("The shock was not found by the deflagration solver")
+        logger.error("The shock was not found by the deflagration solver.")
         return DEFLAGRATION_NAN
     v = v[:i_shock]
     w = w[:i_shock]

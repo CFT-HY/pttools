@@ -64,19 +64,28 @@ def find_shock_index(
         points_near_cs = np.logical_and(np.isclose(xi, const.CS0), np.isclose(v, 0))
         if np.sum(points_near_cs):
             return np.argmax(points_near_cs)
-        raise RuntimeError("Did not find shock for the bag model")
+        raise RuntimeError("Did not find shock for the bag model.")
 
-    i_close: int = np.argmax(np.logical_and(np.isclose(xi, cs_n), np.isclose(v, 0)))
-    i_cs_n: int = np.argmax(xi > cs_n)
+    # Index of highest xi = where the curve turns backwards
     i_right: int = np.argmax(xi)
+
+    if i_right == 0:
+        logger.error("The given xi array seems to be for a detonation, but got sol_type=%s.", sol_type)
+        return 0
+
+    # First index close to xi=cs_n, v=0
+    i_close: int = np.argmax(np.logical_and(np.isclose(xi, cs_n), np.isclose(v, 0)))
+    # First index where xi > cs_n
+    i_cs_n: int = np.argmax(xi > cs_n)
 
     # If the curve goes directly to zero at cs_n
     if i_close != 0 and ((i_cs_n == 0 and xi[0] < cs_n) or i_close <= i_cs_n):
         return i_close
 
+    # The lower limit for the shock search is where the shock curve hits v=0
     i_left = i_cs_n
-    # The curve changes its direction here
 
+    # The curve should go to the right before turning back at xi_max
     if not np.all(np.diff(xi[i_left:i_right])):
         msg = "xi is not monotonic from cs_n to xi_max"
         logger.error(msg)
@@ -89,9 +98,13 @@ def find_shock_index(
     #         raise RuntimeError(msg)
 
     v_sh_xi_max = v_shock(model, wn=wn, xi=xi[i_right], cs_n=cs_n, warn_if_barely_exists=warn_if_barely_exists)
+    # If the shock curve is not reached before the curve turns backwards
     if v[i_right] > v_sh_xi_max:
+        # If the intersection is close to the point where the curve turns backwards,
+        # we can use the right-most point as the point of the intersection.
         if v_sh_xi_max - v[i_right] < v_shock_atol:
             return i_right
+
         # Fix for tiny shocks
         # if np.isclose(xi[i_right], cs_n, atol=0.02):
         #     return i_close
@@ -140,7 +153,7 @@ def find_shock_index(
     i_sh = 0
     while i_right - i_left > 1:
         i_sh = i_left + (i_right - i_left) // 2
-        # logger.debug(f"i_right={i_right}, i_left={i_left}, i_sh={i_sh}")
+        # logger.debug(f"i_left={i_left}, i_right={i_right}, i_sh={i_sh}")
         v_i = v[i_sh]
         v_sh = v_shock(model, wn=wn, xi=xi[i_sh], cs_n=cs_n, warn_if_barely_exists=warn_if_barely_exists)
         if v_i > v_sh:
@@ -151,7 +164,9 @@ def find_shock_index(
             return i_sh + 1
 
     if i_sh == 0:
-        raise RuntimeError("Shock index finder ended up in an invalid state.")
+        raise RuntimeError(
+            f"Shock index finder ended up in an invalid state with i_left={i_left}, i_right={i_right}, i_sh={i_sh}."
+        )
 
     if v[i_sh] > v_shock(model, wn=wn, xi=xi[i_sh], cs_n=cs_n, warn_if_barely_exists=warn_if_barely_exists):
         # logger.warning("Manually correcting i_sh with +1 to %s", i_sh)
