@@ -185,6 +185,9 @@ def junction_conditions_solvable(
     """Get the deviation from both boundary conditions simultaneously."""
     v2 = params[0]
     w2 = params[1]
+    # This would avoid invalid values in the inner functions, but it may make the solver not to find the solution.
+    # if v2 < 0 or w2 < 0:
+    #     return np.array([np.nan, np.nan])
     return np.array([
         junction_condition_deviation1(v1, w1, v2, w2),
         junction_condition_deviation2(

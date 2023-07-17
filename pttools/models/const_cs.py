@@ -320,6 +320,15 @@ class ConstCSModel(AnalyticModel):
         $$T_s = T_0 \left( \frac{w}{\mu a_s T_0^4} \right)^\frac{1}{\mu}$$
         $$T_b = T_0 \left( \frac{w}{\nu a_s T_0^4} \right)^\frac{1}{\nu}$$
         """
+        # Some solvers may call this function with w < 0 when finding a solution, which causes NumPy to emit warnings.
+        invalid = w < 0
+        if np.isscalar(w):
+            if invalid:
+                w = np.nan
+        else:
+            if np.any(invalid):
+                w = w.copy()
+                w[invalid] = np.nan
         temp_s = self.t_ref * (w / (self.mu*self.a_s*self.t_ref**4))**(1/self.mu)
         temp_b = self.t_ref * (w / (self.nu*self.a_b*self.t_ref**4))**(1/self.nu)
         return temp_b * phase + temp_s * (1 - phase)
