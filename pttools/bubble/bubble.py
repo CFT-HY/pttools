@@ -69,7 +69,7 @@ class Bubble:
             self.alpha_n_bar = model.alpha_n_bar(alpha_n)
             self.alpha_n_bar_min_lte = model.alpha_n_bar_min_lte(self.wn, self.sol_type)
             self.alpha_n_bar_max_lte = model.alpha_n_bar_max_lte(self.wn, self.sol_type)
-            if self.alpha_n_bar_max_lte < self.alpha_n_bar_min_lte:
+            if self.alpha_n_bar_max_lte < self.alpha_n_bar_min_lte or self.alpha_n_bar_max_lte < 0:
                 logger.error(
                     "Got invalid limits for alpha_n_bar_lte: "
                     f"min={self.alpha_n_bar_min_lte}, max={self.alpha_n_bar_max_lte}"

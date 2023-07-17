@@ -596,12 +596,15 @@ class Model(BaseModel, abc.ABC):
         With validation check
         """
         ret = self.inverse_enthalpy_ratio(self.temp(wn, Phase.SYMMETRIC))
-        if np.max(np.abs(1 - ret)) > 0.1:
+        min_ret = np.min(ret)
+        if min_ret < 0.9:
             logger.warning(
-                "psi_n=%s differs significantly from 1. "
-                "Local thermal equilibrium (LTE) approximations may not be valid."
+                "psi_n=%s < 0.9. "
+                "Local thermal equilibrium (LTE) approximations may not be valid, "
+                "and therefore the model may not allow a constant v_wall to exist "
+                "without accounting for out-of-equilibrium effects. "
                 "See Ai et al. (2023) p. 15.",
-                ret
+                min_ret
             )
         return ret
 
