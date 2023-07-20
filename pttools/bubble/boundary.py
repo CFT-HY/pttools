@@ -278,6 +278,14 @@ def solve_junction(
             "absolute deviation %s, relative deviation %s",
             devs, devs_rel
         )
+    if v2_tilde < 0 or v2_tilde > 1 or w2 < 0:
+        logger.error(
+            "The boundary solver gave an unphysical solution with "
+            "v2_tilde=%s, w2=%s for model=%s, v1_tilde=%s, w1=%s, phase1=%s, phase2=%s.",
+            v2_tilde, w2, model.name, v1_tilde, w1, phase1, phase2
+        )
+        if not allow_failure:
+            return np.nan, np.nan
     return v2_tilde, w2
 
 
