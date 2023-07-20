@@ -1,5 +1,10 @@
 # Anaconda environment configuration
 
+# Create the environment with:
+# conda env create --name pttools -f environment.yml
+# Activate the environment with:
+# conda activate pttools
+
 # If you get an error with the following lines in its long output:
 # Fatal Python error: Aborted
 # File "pttools/envs/lib/python3.7/site-packages/matplotlib/backends/backend_qt5.py", line 119 in _create_qApp
