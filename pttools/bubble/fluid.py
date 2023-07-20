@@ -121,6 +121,14 @@ def fluid_shell_deflagration_common(
         sol_type: SolutionType,
         allow_failure: bool,
         warn_if_shock_barely_exists: bool) -> DeflagrationOutput:
+    if v_wall < 0 or v_wall > 1 or vm_tilde < 0 or vm_tilde > 1 or wn < 0 or wm < 0 or cs_n < 0 or cs_n > 1 \
+            or vp_tilde_guess < 0 or vp_tilde_guess > 1 or wp_guess < 0:
+        logger.error(
+            "Invalid starting values: v_wall=%s, vm_tilde=%s, wn=%s, wm=%s, cs_n=%s, vp_tilde_guess=%s, wp_guess=%s",
+            v_wall, vm_tilde, wn, wm, cs_n, vp_tilde_guess, wp_guess
+        )
+        return DEFLAGRATION_NAN
+
     # Solve the boundary conditions at the wall
     vp_tilde, wp = boundary.solve_junction(
         model, vm_tilde, wm,
@@ -130,7 +138,10 @@ def fluid_shell_deflagration_common(
     )
     vp = -relativity.lorentz(vp_tilde, v_wall)
     if vp < 0 or wp < 0:
-        logger.error("Invalid starting point: vp=%s, wp=%s, vp_tilde=%s", vp, wp, vp_tilde)
+        logger.error(
+            "Junction solver gave an invalid starting point: "
+            "vp=%s, wp=%s, vp_tilde=%s for vp_tilde_guess=%s, wp_guess=%s",
+            vp, wp, vp_tilde, vp_tilde_guess, wp_guess)
         return DEFLAGRATION_NAN
 
     # Manual correction for hybrids
@@ -164,9 +175,9 @@ def fluid_shell_deflagration_common(
         df_dtau_ptr=model.df_dtau_ptr(),
         # method="RK45"
     )
-    # if np.argmax(xi) == 0:
-    #     logger.error("Deflagration solver gave a detonation-like solution.")
-    #     return DEFLAGRATION_NAN
+    if np.argmax(xi) == 0:
+        logger.error("Deflagration solver gave a detonation-like solution.")
+        return DEFLAGRATION_NAN
     i_shock = shock.find_shock_index(
         model, v, xi, v_wall, wn,
         cs_n=cs_n, sol_type=sol_type,
@@ -175,6 +186,12 @@ def fluid_shell_deflagration_common(
     if i_shock == 0:
         logger.error("The shock was not found by the deflagration solver.")
         return DEFLAGRATION_NAN
+    if i_shock < 50:
+        logger.warning(
+            "The accuracy for locating the shock may not be sufficient, "
+            "as it was encountered early at i=%s/%s. Increase n_xi.",
+            i_shock, xi.size
+        )
     v = v[:i_shock]
     w = w[:i_shock]
     xi = xi[:i_shock]
