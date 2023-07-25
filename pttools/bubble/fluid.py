@@ -50,6 +50,7 @@ def fluid_shell_deflagration(
         cs_n: float,
         vp_guess: float = None, wp_guess: float = None,
         t_end: float = const.T_END_DEFAULT, n_xi: int = const.N_XI_DEFAULT,
+        thin_shell_limit: int = const.THIN_SHELL_LIMIT,
         allow_failure: bool = False,
         warn_if_shock_barely_exists: bool = True) -> DeflagrationOutput:
     if vp_guess is None or np.isnan(vp_guess) or wp_guess is None or np.isnan(wp_guess):
@@ -108,6 +109,7 @@ def fluid_shell_deflagration(
         vp_tilde_guess=vp_tilde_guess, wp_guess=wp_guess,
         sol_type=SolutionType.SUB_DEF,
         t_end=t_end, n_xi=n_xi,
+        thin_shell_limit=thin_shell_limit,
         allow_failure=allow_failure,
         warn_if_shock_barely_exists=warn_if_shock_barely_exists
     )
@@ -122,6 +124,7 @@ def fluid_shell_deflagration_common(
         vp_tilde_guess: float, wp_guess: float,
         sol_type: SolutionType,
         n_xi: int, t_end: float,
+        thin_shell_limit: int,
         allow_failure: bool,
         warn_if_shock_barely_exists: bool) -> DeflagrationOutput:
     if v_wall < 0 or v_wall > 1 or vm_tilde < 0 or vm_tilde > 1 or wn < 0 or wm < 0 or cs_n < 0 or cs_n > 1 \
@@ -189,7 +192,7 @@ def fluid_shell_deflagration_common(
     if i_shock == 0 or i_shock + 1 >= xi.size:
         logger.error("The shock was not found by the deflagration solver.")
         return DEFLAGRATION_NAN
-    if i_shock < 50:
+    if i_shock < thin_shell_limit:
         t_end2 = t[i_shock+20]
         logger.warning(
             "The accuracy for locating the shock may not be sufficient, "
@@ -204,17 +207,18 @@ def fluid_shell_deflagration_common(
             df_dtau_ptr=model.df_dtau_ptr(),
             # method="RK45"
         )
-        if np.argmax(xi) == 0:
+        if np.argmax(xi2) == 0:
             logger.error("Adjusting t_end gave a detonation-like solution. Using original solution.")
         else:
             i_shock2 = shock.find_shock_index(
-                model, v, xi, v_wall, wn,
+                model, v2, xi2, v_wall, wn,
                 cs_n=cs_n, sol_type=sol_type,
                 allow_failure=allow_failure, warn_if_barely_exists=warn_if_shock_barely_exists
             )
-            if i_shock2 == 0 or i_shock + 1 >= xi.size:
+            if i_shock2 == 0 or i_shock2 + 10 >= xi2.size:
                 logger.error("The shock was not found after t_end adjustment. Using original solution.")
             else:
+                i_shock = i_shock2
                 v = v2
                 w = w2
                 xi = xi2
@@ -347,6 +351,7 @@ def fluid_shell_detonation(
 def fluid_shell_hybrid(
         model: "Model", v_wall: float, wn: float, wm: float, cs_n: float,
         vp_tilde_guess: float, wp_guess: float, t_end: float, n_xi: int,
+        thin_shell_limit: int,
         allow_failure: bool = False, warn_if_shock_barely_exists: bool = True) -> DeflagrationOutput:
     # Exit velocity is at the sound speed
     vm_tilde = np.sqrt(model.cs2(wm, Phase.BROKEN))
@@ -364,6 +369,7 @@ def fluid_shell_hybrid(
         vp_tilde_guess=vp_tilde_guess, wp_guess=wp_guess,
         sol_type=SolutionType.HYBRID,
         t_end=t_end, n_xi=n_xi,
+        thin_shell_limit=thin_shell_limit,
         allow_failure=allow_failure,
         warn_if_shock_barely_exists=warn_if_shock_barely_exists
     )
@@ -383,7 +389,7 @@ def fluid_shell_solvable_deflagration_reverse(
 def fluid_shell_solvable_deflagration(
         # params: np.ndarray,
         w_center: float, model: "Model", v_wall: float, wn: float, cs_n: float,
-        vp_guess: float, wp_guess: float, t_end: float, n_xi: int) -> float:
+        vp_guess: float, wp_guess: float, t_end: float, n_xi: int, thin_shell_limit: int) -> float:
     if isinstance(w_center, np.ndarray):
         w_center = w_center[0]
     if np.isnan(w_center) or w_center < 0:
@@ -391,7 +397,7 @@ def fluid_shell_solvable_deflagration(
     # pylint: disable=unused-variable
     v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = fluid_shell_deflagration(
         model, v_wall=v_wall, wn=wn, w_center=w_center, cs_n=cs_n,
-        vp_guess=vp_guess, wp_guess=wp_guess, t_end=t_end, n_xi=n_xi,
+        vp_guess=vp_guess, wp_guess=wp_guess, t_end=t_end, n_xi=n_xi, thin_shell_limit=thin_shell_limit,
         allow_failure=True, warn_if_shock_barely_exists=False)
     return wn_estimate - wn
 
@@ -399,7 +405,7 @@ def fluid_shell_solvable_deflagration(
 def fluid_shell_solvable_hybrid(
         # params: np.ndarray,
         wm: float, model: "Model", v_wall: float, wn: float, cs_n: float,
-        vp_tilde_guess: float, wp_guess: float, t_end: float, n_xi: int) -> float:
+        vp_tilde_guess: float, wp_guess: float, t_end: float, n_xi: int, thin_shell_limit: int) -> float:
     if isinstance(wm, np.ndarray):
         wm = wm[0]
     if np.isnan(wm) or wm < 0:
@@ -408,7 +414,7 @@ def fluid_shell_solvable_hybrid(
     v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = fluid_shell_hybrid(
         model, v_wall=v_wall, wn=wn, wm=wm,
         cs_n=cs_n,
-        vp_tilde_guess=vp_tilde_guess, wp_guess=wp_guess, t_end=t_end, n_xi=n_xi,
+        vp_tilde_guess=vp_tilde_guess, wp_guess=wp_guess, t_end=t_end, n_xi=n_xi, thin_shell_limit=thin_shell_limit,
         allow_failure=True, warn_if_shock_barely_exists=False)
     return wn_estimate - wn
 
@@ -420,6 +426,7 @@ def fluid_shell_solver_deflagration(
         start_time: float,
         v_wall: float, alpha_n: float, wn: float, cs_n: float, high_alpha_n: bool,
         wm_guess: float, vp_guess: float, wp_guess: float, wn_rtol: float, t_end: float, n_xi: int,
+        thin_shell_limit: int,
         allow_failure: bool, log_high_alpha_n_failures: bool = True) -> SolverOutput:
     if vp_guess > v_wall:
         vp_guess_new = 0.95 * v_wall
@@ -431,7 +438,7 @@ def fluid_shell_solver_deflagration(
         fluid_shell_solvable_deflagration,
         x0=0.99*wm_guess,
         x1=1.01*wm_guess,
-        args=(model, v_wall, wn, cs_n, vp_guess, wp_guess, t_end, n_xi),
+        args=(model, v_wall, wn, cs_n, vp_guess, wp_guess, t_end, n_xi, thin_shell_limit),
     )
     wm = sol.root
     solution_found = sol.converged
@@ -443,7 +450,7 @@ def fluid_shell_solver_deflagration(
         sol = fsolve_vary(
             fluid_shell_solvable_deflagration,
             np.array([wm_guess]),
-            args=(model, v_wall, wn, cs_n, vp_guess, wp_guess, t_end, n_xi),
+            args=(model, v_wall, wn, cs_n, vp_guess, wp_guess, t_end, n_xi, thin_shell_limit),
             log_status=log_high_alpha_n_failures or not high_alpha_n
         )
         wm = sol[0][0]
@@ -453,7 +460,7 @@ def fluid_shell_solver_deflagration(
     v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = fluid_shell_deflagration(
         model, v_wall, wn, wm,
         cs_n=cs_n,
-        vp_guess=vp_guess, wp_guess=wp_guess, t_end=t_end, n_xi=n_xi,
+        vp_guess=vp_guess, wp_guess=wp_guess, t_end=t_end, n_xi=n_xi, thin_shell_limit=thin_shell_limit,
         allow_failure=allow_failure, warn_if_shock_barely_exists=False
     )
     if solution_found and not np.isclose(wn_estimate, wn, rtol=wn_rtol):
@@ -508,13 +515,14 @@ def fluid_shell_solver_hybrid(
         start_time: float,
         v_wall: float, alpha_n: float, wn: float, cs_n: float, high_alpha_n: bool,
         vp_tilde_guess: float, wp_guess: float, wm_guess: float, wn_rtol: float, t_end: float, n_xi: int,
+        thin_shell_limit: int,
         allow_failure: bool, log_high_alpha_n_failures: bool) -> SolverOutput:
 
     sol = root_scalar(
         fluid_shell_solvable_hybrid,
         x0=0.99*wm_guess,
         x1=1.01*wm_guess,
-        args=(model, v_wall, wn, cs_n, vp_tilde_guess, wp_guess, t_end, n_xi)
+        args=(model, v_wall, wn, cs_n, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit)
     )
     wm = sol.root
     solution_found = sol.converged
@@ -526,7 +534,7 @@ def fluid_shell_solver_hybrid(
         sol = fsolve_vary(
             fluid_shell_solvable_hybrid,
             np.array([wm_guess]),
-            args=(model, v_wall, wn, cs_n, vp_tilde_guess, wp_guess, t_end, n_xi),
+            args=(model, v_wall, wn, cs_n, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit),
             log_status=log_high_alpha_n_failures or not high_alpha_n
         )
         wm = sol[0][0]
@@ -539,6 +547,7 @@ def fluid_shell_solver_hybrid(
         vp_tilde_guess=vp_tilde_guess,
         wp_guess=wp_guess,
         t_end=t_end, n_xi=n_xi,
+        thin_shell_limit=thin_shell_limit,
         allow_failure=allow_failure,
         warn_if_shock_barely_exists=False
     )
@@ -592,6 +601,7 @@ def fluid_shell_generic(
             high_alpha_n: bool = None,
             t_end: float = const.T_END_DEFAULT,
             n_xi: int = const.N_XI_DEFAULT,
+            thin_shell_limit: int = const.THIN_SHELL_LIMIT,
             reverse: bool = False,
             allow_failure: bool = False,
             use_bag_solver: bool = False,
@@ -719,7 +729,10 @@ def fluid_shell_generic(
         if reverse:
             logger.warning("Using reverse deflagration solver, which has not been properly tested.")
             v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, solution_found = \
-                fluid_shell_solver_deflagration_reverse(model, start_time, v_wall, alpha_n, wn)
+                fluid_shell_solver_deflagration_reverse(
+                    model, start_time, v_wall, alpha_n, wn,
+                    t_end=t_end, n_xi=n_xi
+                )
         else:
             v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, solution_found = \
                 fluid_shell_solver_deflagration(
@@ -728,6 +741,7 @@ def fluid_shell_generic(
                     cs_n=cs_n,
                     high_alpha_n=high_alpha_n,
                     wm_guess=wm_guess, vp_guess=vp_guess, wp_guess=wp_guess, wn_rtol=wn_rtol, t_end=t_end, n_xi=n_xi,
+                    thin_shell_limit=thin_shell_limit,
                     allow_failure=allow_failure, log_high_alpha_n_failures=log_high_alpha_n_failures
                 )
     elif sol_type == SolutionType.HYBRID:
@@ -742,6 +756,7 @@ def fluid_shell_generic(
                 wm_guess=wm_guess,
                 wn_rtol=wn_rtol,
                 t_end=t_end, n_xi=n_xi,
+                thin_shell_limit=thin_shell_limit,
                 allow_failure=allow_failure,
                 log_high_alpha_n_failures=log_high_alpha_n_failures
             )

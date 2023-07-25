@@ -21,6 +21,8 @@ DXI_SMALL: float = 1. / N_XI_DEFAULT
 #: Array with one NaN
 nan_arr: tp.Final[np.ndarray] = np.array([np.nan])
 nan_arr.setflags(write=False)
+#: Limit of points for a shell to be so thin that it should be re-computed with more points
+THIN_SHELL_LIMIT: int = 100
 
 #: Ideal speed of sound
 CS0: tp.Final[np.float_] = 1 / np.sqrt(3)

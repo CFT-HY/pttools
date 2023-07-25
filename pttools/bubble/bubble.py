@@ -39,6 +39,7 @@ class Bubble:
             wm_guess: float = None,
             t_end: float = const.T_END_DEFAULT,
             n_xi: int = const.N_XI_DEFAULT,
+            thin_shell_limit: int = const.THIN_SHELL_LIMIT,
             log_success: bool = False):
         if v_wall < 0 or v_wall > 1:
             raise ValueError(f"Invalid v_wall={v_wall}")
@@ -58,6 +59,7 @@ class Bubble:
         self.alpha_n = alpha_n
         self.t_end = t_end
         self.n_xi = n_xi
+        self.thin_shell_limit = thin_shell_limit
         self.log_success = log_success
 
         # Computed parameters
@@ -149,6 +151,7 @@ class Bubble:
             "sol_type": self.sol_type,
             "t_end": self.t_end,
             "n_xi": self.n_xi,
+            "thin_shell_limit": self.thin_shell_limit,
             # Solution
             "v": self.v,
             "w": self.w,
@@ -207,7 +210,7 @@ class Bubble:
                     v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type,
                     wn=self.wn,
                     alpha_n_max_bag=alpha_n_max_bag,
-                    high_alpha_n=high_alpha_n, t_end=self.t_end, n_xi=self.n_xi,
+                    high_alpha_n=high_alpha_n, t_end=self.t_end, n_xi=self.n_xi, thin_shell_limit=self.thin_shell_limit,
                     use_bag_solver=use_bag_solver,
                     log_success=self.log_success, log_high_alpha_n_failures=log_high_alpha_n_failures
                 )
