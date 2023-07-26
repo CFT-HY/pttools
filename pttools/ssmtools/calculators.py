@@ -160,6 +160,8 @@ def sin_transform(
     Without the approximations this function would compute
     $$\hat{f}(z) =  f(\xi) \int_{{\xi}_\text{min}}^{{\xi}_\text{max}} \sin(z \xi) d\xi$$.
 
+    Used in :gw_pt_ssm:`\ ` eq. 4.5, 4.8
+
     :param z: Fourier transform variable (any shape)
     :param xi: $\xi$ points over which to integrate
     :param f: function values at the points $\xi$, same shape as $\xi$

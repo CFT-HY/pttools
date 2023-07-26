@@ -100,12 +100,12 @@ def generate_ps(
     logger.debug(f"vw = {vw}, alpha = {alpha}, Np = {Np}")
 
     params = (vw, alpha, const.NUC_TYPE, const.NUC_ARGS)
-    sd_v = ssm.spec_den_v(z, params, Np[1:], method=method)
+    sd_v = ssm.spec_den_v_bag(z, params, Np[1:], method=method)
     pow_v = ssm.pow_spec(z, sd_v)
     V2_pow_v = np.trapz(pow_v/z, z)
 
     if v_xi_file is not None:
-        sd_v2 = ssm.spec_den_v(z, params, Np[1:], v_xi_file, method=method)
+        sd_v2 = ssm.spec_den_v_bag(z, params, Np[1:], v_xi_file, method=method)
         pow_v2 = ssm.pow_spec(z, sd_v2)
         V2_pow_v = np.trapz(pow_v2/z, z)
 

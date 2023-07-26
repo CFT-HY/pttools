@@ -38,7 +38,7 @@ def main():
     for bubble in [bag_def, bag_hybrid, bag_det]:
         plot.add(bubble, color="blue")
         print(bubble.info_str())
-        kappa = quantities.get_kappa(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n)
+        kappa = quantities.get_kappa_bag(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n)
         ubarf2 = quantities.get_ubarf2_new_bag(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n)
         ke_frac = quantities.get_ke_frac_bag(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n)
         print(f"Reference kappa={kappa:.4f}, relative error={(bubble.kappa - kappa)/kappa}")

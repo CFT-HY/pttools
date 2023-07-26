@@ -77,7 +77,7 @@ def de_from_w_new_bag(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: floa
     return de
 
 
-def get_kappa(
+def get_kappa_bag(
         v_wall: th.FloatOrArr,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
@@ -116,7 +116,7 @@ def get_kappa(
     return kappa_out
 
 
-def get_kappa_de(
+def get_kappa_de_bag(
         v_wall: th.FloatOrArr,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
@@ -159,7 +159,7 @@ def get_kappa_de(
     return kappa_out, de_out
 
 
-def get_kappa_dq(
+def get_kappa_dq_bag(
         v_wall: th.FloatOrArr,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
@@ -258,7 +258,7 @@ def get_ke_frac_bag(v_wall: th.FloatOrArr, alpha_n: float, n_xi: int = const.N_X
     :param n_xi: number of $\xi$ points
     :return: kinetic energy fraction
     """
-    ubar2 = get_ubarf2(v_wall, alpha_n, n_xi)
+    ubar2 = get_ubarf2_bag(v_wall, alpha_n, n_xi)
     return ubar2 / (0.75 * (1 + alpha_n))
 
 
@@ -304,7 +304,7 @@ def get_ke_frac_new_bag(
 
 
 @numba.njit
-def _get_ubarf2_scalar(v_wall: float, alpha_n: float, n_xi: int, verbosity: int) -> float:
+def _get_ubarf2_bag_scalar(v_wall: float, alpha_n: float, n_xi: int, verbosity: int) -> float:
     if transition.identify_solution_type_bag(v_wall, alpha_n) == boundary.SolutionType.ERROR:
         ubarf2 = np.nan
     else:
@@ -319,15 +319,15 @@ def _get_ubarf2_scalar(v_wall: float, alpha_n: float, n_xi: int, verbosity: int)
 
 
 @numba.njit(parallel=True)
-def _get_ubarf2_arr(v_wall: np.ndarray, alpha_n: float, n_xi: int, verbosity: int) -> np.ndarray:
+def _get_ubarf2_bag_arr(v_wall: np.ndarray, alpha_n: float, n_xi: int, verbosity: int) -> np.ndarray:
     ubarf2 = np.zeros_like(v_wall)
     for i in numba.prange(v_wall.size):
-        ubarf2[i] = _get_ubarf2_scalar(v_wall[i], alpha_n, n_xi, verbosity)
+        ubarf2[i] = _get_ubarf2_bag_scalar(v_wall[i], alpha_n, n_xi, verbosity)
     return ubarf2
 
 
 @numba.generated_jit(nopython=True)
-def get_ubarf2(
+def get_ubarf2_bag(
         v_wall: th.FloatOrArr,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
@@ -342,15 +342,15 @@ def get_ubarf2(
     :return: mean square fluid velocity
     """
     if isinstance(v_wall, numba.types.Float):
-        return _get_ubarf2_scalar
+        return _get_ubarf2_bag_scalar
     if isinstance(v_wall, numba.types.Array):
         if not v_wall.ndim:
-            return _get_ubarf2_scalar
-        return _get_ubarf2_arr
+            return _get_ubarf2_bag_scalar
+        return _get_ubarf2_bag_arr
     if isinstance(v_wall, float):
-        return _get_ubarf2_scalar(v_wall, alpha_n, n_xi, verbosity)
+        return _get_ubarf2_bag_scalar(v_wall, alpha_n, n_xi, verbosity)
     if isinstance(v_wall, np.ndarray):
-        return _get_ubarf2_arr(v_wall, alpha_n, n_xi, verbosity)
+        return _get_ubarf2_bag_arr(v_wall, alpha_n, n_xi, verbosity)
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 

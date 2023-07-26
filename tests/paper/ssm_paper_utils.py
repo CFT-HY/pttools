@@ -163,7 +163,7 @@ def make_1dh_compare_table(
         vw = params[1]
         v2_sim = v2_list[n][0]
         v2_exp = v2_list[n][1]
-        Ubarf_1d_ssm = np.sqrt(bubble.get_ubarf2(vw, alpha))
+        Ubarf_1d_ssm = np.sqrt(bubble.get_ubarf2_bag(vw, alpha))
 
         f.write(tu.tex_sf(100*alpha) + ' & ')
         f.write(f'{vw:.2f} & ')
@@ -398,7 +398,7 @@ def ps_from_ssm(
 
     z = np.logspace(np.log10(const.Z_MIN), np.log10(const.Z_MAX), Np[0])
 
-    sd_v = ssm.spec_den_v(z, (vw, alpha, nuc_type, nuc_args), Np[1:], method=method)
+    sd_v = ssm.spec_den_v_bag(z, (vw, alpha, nuc_type, nuc_args), Np[1:], method=method)
     pow_v = ssm.pow_spec(z, sd_v)
 
     V2_pow_v = np.trapz(pow_v/z, z)
@@ -528,7 +528,7 @@ def plot_ps_1bubble(
     nz_string = f'nz{Np[0] // 1000}k_'
     nx_string = f'nx{Np[1] // 1000}k-'
 
-    A2, fp2_2, lam2 = ssm.A2_e_conserving(z, vw, alpha, npt=Np[1:])
+    A2, fp2_2, lam2 = ssm.a2_e_conserving_bag(z, vw, alpha, npt=Np[1:])
 
     z_list = 3*[z]
     ph_sp_fac = z**3/(2*np.pi**2)
@@ -761,13 +761,13 @@ def plot_and_save(vw: float, alpha: float, method: ssm.Method = ssm.Method.E_CON
     logger.debug(f"vw = {vw}, alpha = {alpha}, Np = {Np}")
 
     params = (vw, alpha, const.NUC_TYPE, const.NUC_ARGS)
-    sd_v = ssm.spec_den_v(z, params, Np[1:], method=method)
+    sd_v = ssm.spec_den_v_bag(z, params, Np[1:], method=method)
     pow_v = ssm.pow_spec(z, sd_v)
     ax_v.loglog(z, pow_v, color=col)
     V2_pow_v.append(np.trapz(pow_v/z, z))
 
     if v_xi_file is not None:
-        sd_v2 = ssm.spec_den_v(z, params, Np[1:], v_xi_file, method=method)
+        sd_v2 = ssm.spec_den_v_bag(z, params, Np[1:], v_xi_file, method=method)
         pow_v2 = ssm.pow_spec(z, sd_v2)
         ax_v.loglog(z, pow_v2, color=col, linestyle='--')
         V2_pow_v.append(np.trapz(pow_v2/z, z))

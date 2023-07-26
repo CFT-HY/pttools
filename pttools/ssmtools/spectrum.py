@@ -39,7 +39,7 @@ class Spectrum:
             nxi: int = 5000,
             nt: int = 10000,
             nq: int = 1000,
-            ):
+            compute: bool = True):
         self.bubble = bubble
         self.de_method = de_method
         self.method = method
@@ -50,27 +50,27 @@ class Spectrum:
         self.nt = nt
         self.nq = nq
 
-        self.nuc_args = (1., )
-        # Todo: check that alpha = alpha_n
-        self.params = (bubble.v_wall, bubble.alpha_n, nuc_type, self.nuc_args)
-
         self.pow_v: tp.Optional[np.ndarray] = None
         self.pow_gw: tp.Optional[np.ndarray] = None
+
+        if compute:
+            self.compute()
 
     def compute(self):
         if not self.bubble.solved:
             self.bubble.solve()
         # Todo: This computation is almost the same as in power_v. Are these redundant?
-        # Todo: spec_den_v uses A2_ssm_func, which uses const.CS0. Are the results for bag model only?
         sd_v = spec_den_v(
-            z=self.z, params=self.params, npt=(self.nxi, self.nt, self.nq),
-            method=self.method, de_method=self.de_method, z_st_thresh=self.z_st_thresh
+            bub=self.bubble, z=self.z, a=1.,
+            nuc_type=self.nuc_type, nt=self.nt, z_st_thresh=self.z_st_thresh,
         )
         self.pow_v = pow_spec(self.z, spec_den=sd_v)
         # V2_pow_v = np.trapz(pow_v/self.z, self.z)
 
         # Todo: This computation is almost the same as in power_gw_scaled. Are these redundant?
-        sd_gw, y = spec_den_gw_scaled(self.z, sd_v)
+        sd_gw, y = spec_den_gw_scaled(
+            self.z, sd_v, cs=np.sqrt(self.bubble.model.cs2(self.bubble.w[0], bubble.Phase.BROKEN))
+        )
         self.pow_gw = pow_spec(self.z, spec_den=sd_gw)
         # gw_power = np.trapz(self.pow_gw/y, y)
 
@@ -87,6 +87,8 @@ def convert_params(params: bubble.PhysicalParams) -> bubble.PhysicalParams:
 def nu(T: th.FloatOrArr, nuc_type: NucType = NucType.SIMULTANEOUS, a: float = 1.) -> th.FloatOrArr:
     r"""
     Bubble lifetime distribution function
+
+    :gw_pt_ssm:`\ ` eq. 4.27 & 4.32
 
     :param T: dimensionless time
     :param nuc_type: nucleation type, simultaneous or exponential
@@ -166,6 +168,8 @@ def power_gw_scaled(
     :param npt: number of points
     :param filename: path to load A2 values from
     :return: scaled GW power spectrum
+
+    TODO: Is this redundant now that there's Spectrum.compute()?
     """
     if np.any(z <= 0.0):
         raise ValueError("z values must all be positive.")
@@ -181,7 +185,7 @@ def power_gw_scaled(
 
     x = np.logspace(np.log10(xmin), np.log10(xmax), nx)
 
-    sd_v = spec_den_v(x, params, npt, filename, skip, method, de_method, z_st_thresh)
+    sd_v = spec_den_v_bag(x, params, npt, filename, skip, method, de_method, z_st_thresh)
     sd_gw, y = spec_den_gw_scaled(x, sd_v, z)
     return pow_spec(z, sd_gw)
 
@@ -209,10 +213,12 @@ def power_v(
     :param filename: path to load A2 values from
     :param z_st_thresh: not used
     :return: power spectrum of the velocity field
+
+    TODO: Is this redundant now that there's Spectrum.compute()?
     """
     bubble.check_physical_params(params)
 
-    p_v = spec_den_v(z, params, npt, filename, skip, method, de_method)
+    p_v = spec_den_v_bag(z, params, npt, filename, skip, method, de_method)
     return pow_spec(z, p_v)
 
 
@@ -220,26 +226,26 @@ def power_v(
 def _spec_den_gw_scaled_core(
         xlookup: np.ndarray,
         P_vlookup: np.ndarray,
-        z: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
+        z: np.ndarray,
+        cs: float) -> tp.Tuple[np.ndarray, np.ndarray]:
+    r""":gw_pt_ssm:`\ ` eq. 3.47
+
+    Variable z in paper is x here, and y in paper is z here
+    """
+    cs2 = cs**2
     nx = len(xlookup)
     p_gw = np.zeros_like(z)
 
-    # TODO
-    # ssmpaper_rev.pdf
-    # Equation
-    # Paper talks about z, here x
-    # Paper y is z here
-    # Equation 3.47
     for i in numba.prange(z.size):
-        xplus = z[i] / const.CS0 * (1. + const.CS0) / 2.
-        xminus = z[i] / const.CS0 * (1. - const.CS0) / 2.
+        xplus = z[i] / cs * (1. + cs) / 2.
+        xminus = z[i] / cs * (1. - cs) / 2.
         # x = np.logspace(np.log10(xminus), np.log10(xplus), nx)
         x = speedup.logspace(np.log10(xminus), np.log10(xplus), nx)
         integrand = \
             (x - xplus) ** 2 * (x - xminus) ** 2 / x / (xplus + xminus - x) \
             * np.interp(x, xlookup, P_vlookup) \
             * np.interp((xplus + xminus - x), xlookup, P_vlookup)
-        p_gw_factor = ((1 - const.CS0 ** 2) / const.CS0 ** 2) ** 2 / (4 * np.pi * z[i] * const.CS0)
+        p_gw_factor = ((1 - cs2) / cs2) ** 2 / (4 * np.pi * z[i] * cs)
         p_gw[i] = p_gw_factor * np.trapz(integrand, x)
 
     # Here we are using G = 2P_v (v spec den is twice plane wave amplitude spec den).
@@ -252,36 +258,39 @@ def _spec_den_gw_scaled_core(
 def _spec_den_gw_scaled_z(
         xlookup: np.ndarray,
         P_vlookup: np.ndarray,
-        z: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
+        z: np.ndarray,
+        cs: float) -> tp.Tuple[np.ndarray, np.ndarray]:
     # nx = len(z)
     # nx = len(xlookup)
     # Integration limits
-    xlargest = max(z) * 0.5 * (1. + const.CS0) / const.CS0
-    xsmallest = min(z) * 0.5 * (1. - const.CS0) / const.CS0
+    xlargest = max(z) * 0.5 * (1. + cs) / cs
+    xsmallest = min(z) * 0.5 * (1. - cs) / cs
 
     if max(xlookup) < xlargest or min(xlookup) > xsmallest:
         raise ValueError("Range of xlookup is not large enough.")
 
-    return _spec_den_gw_scaled_core(xlookup, P_vlookup, z)
+    return _spec_den_gw_scaled_core(xlookup, P_vlookup, z, cs)
 
 
 @numba.njit(nogil=True)
 def _spec_den_gw_scaled_no_z(
         xlookup: np.ndarray,
         P_vlookup: np.ndarray,
-        z: None) -> tp.Tuple[np.ndarray, np.ndarray]:
+        z: None,
+        cs: float) -> tp.Tuple[np.ndarray, np.ndarray]:
     nx = len(xlookup)
-    zmax = max(xlookup) / (0.5 * (1. + const.CS0) / const.CS0)
-    zmin = min(xlookup) / (0.5 * (1. - const.CS0) / const.CS0)
+    zmax = max(xlookup) / (0.5 * (1. + cs) / cs)
+    zmin = min(xlookup) / (0.5 * (1. - cs) / cs)
     new_z = speedup.logspace(np.log10(zmin), np.log10(zmax), nx)
-    return _spec_den_gw_scaled_core(xlookup, P_vlookup, new_z)
+    return _spec_den_gw_scaled_core(xlookup, P_vlookup, new_z, cs)
 
 
 @numba.generated_jit(nopython=True, nogil=True)
 def spec_den_gw_scaled(
         xlookup: np.ndarray,
         P_vlookup: np.ndarray,
-        z: np.ndarray = None) -> tp.Union[tp.Tuple[np.ndarray, np.ndarray], th.NumbaFunc]:
+        z: np.ndarray = None,
+        cs: float = const.CS0) -> tp.Union[tp.Tuple[np.ndarray, np.ndarray], th.NumbaFunc]:
     """
     Spectral density of scaled gravitational wave power at values of kR* given
     by input z array, or at len(xlookup) values of kR* between the min and max
@@ -296,9 +305,9 @@ def spec_den_gw_scaled(
     if isinstance(z, (numba.types.NoneType, numba.types.Omitted)):
         return _spec_den_gw_scaled_no_z
     if isinstance(z, np.ndarray):
-        return _spec_den_gw_scaled_z(xlookup, P_vlookup, z)
+        return _spec_den_gw_scaled_z(xlookup, P_vlookup, z, cs)
     if z is None:
-        return _spec_den_gw_scaled_no_z(xlookup, P_vlookup, z)
+        return _spec_den_gw_scaled_no_z(xlookup, P_vlookup, z, cs)
     raise TypeError(f"Unknown type for z: {type(z)}")
 
 
@@ -308,7 +317,9 @@ def _qT_array(qRstar, Ttilde, b_R, vw):
 
 
 @numba.njit
-def _spec_den_v_core_loop(z_i, t_array, b_R, vw, qT_lookup, A2_lookup, nuc_type, a, factor):
+def _spec_den_v_core_loop(
+        z_i: float, t_array: np.ndarray, b_R: float, vw: float,
+        qT_lookup: np.ndarray, A2_lookup: np.ndarray, nuc_type: NucType, a: float, factor: float):
     A2_2d_array_z = np.interp(_qT_array(z_i, t_array, b_R, vw), qT_lookup, A2_lookup)
     array2 = t_array ** 6 * nu(t_array, nuc_type, a) * A2_2d_array_z
     D = np.trapz(array2, t_array)
@@ -321,7 +332,6 @@ def _spec_den_v_core(
         A2_lookup: np.ndarray,
         log10tmin: float,
         log10tmax: float,
-        nz: int,
         nuc_type: NucType,
         nt: int,
         qT_lookup: np.ndarray,
@@ -333,17 +343,51 @@ def _spec_den_v_core(
     # A2_2d_array = np.zeros((nz, nt))
 
     # array2 = np.zeros(nt)
-    sd_v = np.zeros(nz)  # array for spectral density of v
+    sd_v = np.zeros(z.size)  # array for spectral density of v
     factor = 1. / (b_R * vw) ** 6
     factor = 2 * factor  # because spectral density of v is 2 * P_v
 
-    for i in numba.prange(nz):
+    for i in numba.prange(z.size):
         sd_v[i] = _spec_den_v_core_loop(z[i], t_array, b_R, vw, qT_lookup, A2_lookup, nuc_type, a, factor)
 
     return sd_v
 
 
 def spec_den_v(
+        bub: bubble.Bubble,
+        z: np.ndarray,
+        a: float,
+        nuc_type: NucType,
+        nt: int = const.NPTDEFAULT[1],
+        z_st_thresh: float = const.Z_ST_THRESH):
+    # z limits
+    log10zmin = np.log10(min(z))
+    log10zmax = np.log10(max(z))
+    dlog10z = (log10zmax - log10zmin) / z.size
+
+    # t limits
+    tmin = const.T_TILDE_MIN
+    tmax = const.T_TILDE_MAX
+    log10tmin = np.log10(tmin)
+    log10tmax = np.log10(tmax)
+
+    qT_lookup = 10 ** np.arange(log10zmin + log10tmin, log10zmax + log10tmax, dlog10z)
+
+    A2_lookup = ssm.a2_e_conserving(bub=bub, z=z, z_st_thresh=z_st_thresh)
+    return _spec_den_v_core(
+        a=a,
+        A2_lookup=A2_lookup,
+        log10tmin=log10tmin,
+        log10tmax=log10tmax,
+        nt=nt,
+        nuc_type=nuc_type,
+        qT_lookup=qT_lookup,
+        vw=bub.v_wall,
+        z=z
+    )
+
+
+def spec_den_v_bag(
         z: np.ndarray,
         params: bubble.PhysicalParams,
         npt: const.NptType = const.NPTDEFAULT,
@@ -361,7 +405,7 @@ def spec_den_v(
 
     :param z: array $z = qR_*$
     :param params: tuple of vw (scalar), alpha (scalar), nuc_type (string [exponential* | simultaneous]), nuc_args (tuple, default (1,))
-    :param npt: number of poitns
+    :param npt: number of points
     :return: dimensionless velocity spectral density $\bar{P}_v$
     """
     params = convert_params(params)
@@ -383,23 +427,21 @@ def spec_den_v(
     log10tmin = np.log10(tmin)
     log10tmax = np.log10(tmax)
 
-    qT_lookup = 10 ** (np.arange(log10zmin + log10tmin, log10zmax + log10tmax, dlog10z))
+    qT_lookup = 10 ** np.arange(log10zmin + log10tmin, log10zmax + log10tmax, dlog10z)
 
     vw, alpha, nuc_type, nuc_args = parse_params(params)
-    a = nuc_args[0]
     if filename is None:
-        A2_lookup = ssm.A2_ssm_func(qT_lookup, vw, alpha, npt, method, de_method, z_st_thresh)
+        A2_lookup = ssm.a2_ssm_func_bag(qT_lookup, vw, alpha, npt, method, de_method, z_st_thresh)
     else:
-        A2_lookup = ssm.A2_e_conserving_file(qT_lookup, filename, alpha, skip, npt, z_st_thresh)
+        A2_lookup = ssm.a2_e_conserving_bag_file(qT_lookup, filename, alpha, skip, npt, z_st_thresh)
 
     return _spec_den_v_core(
-        a=a,
+        a=nuc_args[0],
         A2_lookup=A2_lookup,
         log10tmin=log10tmin,
         log10tmax=log10tmax,
         nt=nt,
         nuc_type=nuc_type,
-        nz=nz,
         qT_lookup=qT_lookup,
         vw=vw,
         z=z

@@ -30,7 +30,7 @@ def main() -> plt.Figure:
         new = np.zeros_like(v_walls)
         for i_v, v_wall in enumerate(v_walls):
             # Old
-            old[i_v], _ = quantities.get_kappa_de(v_wall, alpha_n)
+            old[i_v], _ = quantities.get_kappa_de_bag(v_wall, alpha_n)
             # New
             bubble = Bubble(model, v_wall, alpha_n)
             bubble.solve()
