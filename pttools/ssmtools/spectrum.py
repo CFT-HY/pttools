@@ -28,30 +28,37 @@ DEFAULT_NUC_TYPE = NucType.EXPONENTIAL
 
 
 class Spectrum:
+    """Gravitational wave simulation object"""
     def __init__(
             self,
             bubble: bubble.Bubble,
             z: np.ndarray = None,
             z_st_thresh: float = const.Z_ST_THRESH,
             nuc_type: NucType = DEFAULT_NUC_TYPE,
-            method: ssm.Method = ssm.Method.E_CONSERVING,
-            de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
-            nxi: int = 5000,
+            # method: ssm.Method = ssm.Method.E_CONSERVING,
+            # de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
+            # nxi: int = 5000,
             nt: int = 10000,
-            nq: int = 1000,
+            # nq: int = 1000,
             compute: bool = True):
+        """
+        :param bubble: Fluid simulation object
+        :param z: $z = kR*$ array
+        """
         self.bubble = bubble
-        self.de_method = de_method
-        self.method = method
+        # self.de_method = de_method
+        # self.method = method
         self.nuc_type = nuc_type
         self.z = np.logspace(np.log10(0.2), np.log10(1000), 5000) if z is None else z
         self.z_st_thresh = z_st_thresh
-        self.nxi = nxi
+        # self.nxi = nxi
         self.nt = nt
-        self.nq = nq
+        # self.nq = nq
 
         self.pow_v: tp.Optional[np.ndarray] = None
         self.pow_gw: tp.Optional[np.ndarray] = None
+        self.spec_den_v: tp.Optional[np.ndarray] = None
+        self.spec_den_gw: tp.Optional[np.ndarray] = None
 
         if compute:
             self.compute()
@@ -59,19 +66,17 @@ class Spectrum:
     def compute(self):
         if not self.bubble.solved:
             self.bubble.solve()
-        # Todo: This computation is almost the same as in power_v. Are these redundant?
-        sd_v = spec_den_v(
+        cs = np.sqrt(self.bubble.model.cs2(self.bubble.w[0], bubble.Phase.BROKEN))
+
+        self.spec_den_v = spec_den_v(
             bub=self.bubble, z=self.z, a=1.,
-            nuc_type=self.nuc_type, nt=self.nt, z_st_thresh=self.z_st_thresh,
+            nuc_type=self.nuc_type, nt=self.nt, z_st_thresh=self.z_st_thresh, cs=cs
         )
-        self.pow_v = pow_spec(self.z, spec_den=sd_v)
+        self.pow_v = pow_spec(self.z, spec_den=self.spec_den_v)
         # V2_pow_v = np.trapz(pow_v/self.z, self.z)
 
-        # Todo: This computation is almost the same as in power_gw_scaled. Are these redundant?
-        sd_gw, y = spec_den_gw_scaled(
-            self.z, sd_v, cs=np.sqrt(self.bubble.model.cs2(self.bubble.w[0], bubble.Phase.BROKEN))
-        )
-        self.pow_gw = pow_spec(self.z, spec_den=sd_gw)
+        self.spec_den_gw, y = spec_den_gw_scaled(self.z, self.spec_den_v, cs=cs)
+        self.pow_gw = pow_spec(self.z, spec_den=self.spec_den_gw)
         # gw_power = np.trapz(self.pow_gw/y, y)
 
 
@@ -128,14 +133,17 @@ def pow_spec(z: th.FloatOrArr, spec_den: th.FloatOrArr) -> th.FloatOrArr:
     """
     Power spectrum from spectral density at dimensionless wavenumber z.
 
+    :gw_pt_ssm:`\ ` eq. 4.18
+
     :param z: dimensionless wavenumber $z$
     :param spec_den: spectral density
     :return: power spectrum
     """
+    # Todo: is this missing a factor of 2?
     return z**3 / (2. * np.pi ** 2) * spec_den
 
 
-def power_gw_scaled(
+def power_gw_scaled_bag(
         z: np.ndarray,
         params: bubble.PhysicalParams,
         npt: const.NptType = const.NPTDEFAULT,
@@ -168,8 +176,6 @@ def power_gw_scaled(
     :param npt: number of points
     :param filename: path to load A2 values from
     :return: scaled GW power spectrum
-
-    TODO: Is this redundant now that there's Spectrum.compute()?
     """
     if np.any(z <= 0.0):
         raise ValueError("z values must all be positive.")
@@ -190,7 +196,7 @@ def power_gw_scaled(
     return pow_spec(z, sd_gw)
 
 
-def power_v(
+def power_v_bag(
         z: np.ndarray,
         params: bubble.PhysicalParams,
         npt: const.NptType = const.NPTDEFAULT,
@@ -213,8 +219,6 @@ def power_v(
     :param filename: path to load A2 values from
     :param z_st_thresh: not used
     :return: power spectrum of the velocity field
-
-    TODO: Is this redundant now that there's Spectrum.compute()?
     """
     bubble.check_physical_params(params)
 
@@ -320,7 +324,8 @@ def _qT_array(qRstar, Ttilde, b_R, vw):
 def _spec_den_v_core_loop(
         z_i: float, t_array: np.ndarray, b_R: float, vw: float,
         qT_lookup: np.ndarray, A2_lookup: np.ndarray, nuc_type: NucType, a: float, factor: float):
-    A2_2d_array_z = np.interp(_qT_array(z_i, t_array, b_R, vw), qT_lookup, A2_lookup)
+    qT = _qT_array(z_i, t_array, b_R, vw)
+    A2_2d_array_z = np.interp(qT, qT_lookup, A2_lookup)
     array2 = t_array ** 6 * nu(t_array, nuc_type, a) * A2_2d_array_z
     D = np.trapz(array2, t_array)
     return D * factor
@@ -359,10 +364,11 @@ def spec_den_v(
         a: float,
         nuc_type: NucType,
         nt: int = const.NPTDEFAULT[1],
-        z_st_thresh: float = const.Z_ST_THRESH):
+        z_st_thresh: float = const.Z_ST_THRESH,
+        cs: float = None):
     # z limits
-    log10zmin = np.log10(min(z))
-    log10zmax = np.log10(max(z))
+    log10zmin = np.log10(np.min(z))
+    log10zmax = np.log10(np.max(z))
     dlog10z = (log10zmax - log10zmin) / z.size
 
     # t limits
@@ -372,8 +378,10 @@ def spec_den_v(
     log10tmax = np.log10(tmax)
 
     qT_lookup = 10 ** np.arange(log10zmin + log10tmin, log10zmax + log10tmax, dlog10z)
+    A2_lookup = ssm.a2_e_conserving(bub=bub, z=qT_lookup, z_st_thresh=z_st_thresh, cs=cs)[0]
+    # if qT_lookup.size != A2_lookup.size:
+    #     raise ValueError(f"Lookup sizes don't match: {qT_lookup.size} != {A2_lookup.size}")
 
-    A2_lookup = ssm.a2_e_conserving(bub=bub, z=z, z_st_thresh=z_st_thresh)
     return _spec_den_v_core(
         a=a,
         A2_lookup=A2_lookup,
@@ -434,6 +442,9 @@ def spec_den_v_bag(
         A2_lookup = ssm.a2_ssm_func_bag(qT_lookup, vw, alpha, npt, method, de_method, z_st_thresh)
     else:
         A2_lookup = ssm.a2_e_conserving_bag_file(qT_lookup, filename, alpha, skip, npt, z_st_thresh)
+
+    # if qT_lookup.size != A2_lookup.size:
+    #     raise ValueError(f"Lookup sizes don't match: {qT_lookup.size} != {A2_lookup.size}")
 
     return _spec_den_v_core(
         a=nuc_args[0],

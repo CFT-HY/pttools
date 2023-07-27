@@ -20,12 +20,12 @@ class TestProfileGW(TestProfile):
 
     @classmethod
     def setup_numba(cls):
-        ssm.power_gw_scaled(cls.z, cls.params)
+        ssm.power_gw_scaled_bag(cls.z, cls.params)
 
     @classmethod
     def test_profile_gw_cprofile(cls):
         with utils_cprofile.CProfiler(cls.name):
-            ssm.power_gw_scaled(cls.z, cls.params)
+            ssm.power_gw_scaled_bag(cls.z, cls.params)
 
     @classmethod
     @unittest.skipIf(
@@ -36,7 +36,7 @@ class TestProfileGW(TestProfile):
         try:
             with utils_pyinstrument.PyInstrumentProfiler(cls.name):
                 for _ in range(100):
-                    ssm.power_gw_scaled(cls.z, cls.params)
+                    ssm.power_gw_scaled_bag(cls.z, cls.params)
         except (AssertionError, UnboundLocalError) as e:
             logger.exception("Pyinstrument crashed", exc_info=e)
             if not speedup.NUMBA_PYINSTRUMENT_INCOMPATIBLE_PYTHON_VERSION:
@@ -45,7 +45,7 @@ class TestProfileGW(TestProfile):
     @classmethod
     def test_profile_gw_yappi(cls):
         with utils_yappi.YappiProfiler(cls.name):
-            ssm.power_gw_scaled(cls.z, cls.params)
+            ssm.power_gw_scaled_bag(cls.z, cls.params)
 
 
 if __name__ == "__main__":

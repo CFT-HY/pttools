@@ -2,6 +2,7 @@
 
 import enum
 import logging
+import typing as tp
 
 import numba
 import numpy as np
@@ -35,7 +36,8 @@ def a2_e_conserving(
         bub: Bubble,
         z: np.ndarray,
         z_st_thresh: float = const.Z_ST_THRESH,
-        nxi: int = const.NPTDEFAULT[0]):
+        nxi: int = const.NPTDEFAULT[0],
+        cs: float = None) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
     r"""
     Returns the value of $|A(z)|^2$, where
     $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$.
@@ -45,6 +47,8 @@ def a2_e_conserving(
     """
     if not bub.solved:
         bub.solve()
+    if cs is None:
+        cs = np.sqrt(bub.model.cs2(bub.w[0], Phase.BROKEN))
     v_ip, w_ip, xi = bub.v, bub.w, bub.xi
 
     # :gw_pt_ssm:`\ ` eq. 4.5
@@ -71,12 +75,10 @@ def a2_e_conserving(
     lam_ft = (4. * np.pi / z) * calculators.sin_transform(z, xi_re, xi_re * lam_re, z_st_thresh)
 
     # :gw_pt_ssm:`\ ` eq. 4.11
-    # Todo: think about which sound speed should be used in this case
-    cs_broken = np.sqrt(bub.model.cs2(bub.w[0], Phase.BROKEN))
 
-    A2 = 0.25 * (v_ft ** 2 + (cs_broken * lam_ft) ** 2)
+    A2 = 0.25 * (v_ft ** 2 + (cs * lam_ft) ** 2)
 
-    return A2, v_ft ** 2 / 2, (cs_broken * lam_ft) ** 2 / 2
+    return A2, v_ft ** 2 / 2, (cs * lam_ft) ** 2 / 2
 
 
 @numba.njit
