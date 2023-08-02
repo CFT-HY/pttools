@@ -51,12 +51,13 @@ class Model(BaseModel, abc.ABC):
                 )
         else:
             if V_s < V_b:
-                msg = f"The bubble will not expand, when V_s <= V_b. Got: V_s={V_s}, V_b={V_b}."
+                msg = f"The bubble will not expand, when V_s < V_b. Got: V_s={V_s}, V_b={V_b}."
                 logger.error(msg)
                 if not allow_invalid:
                     raise ValueError(msg)
-            if V_s == V_b:
-                logger.warning("The bubble will not expand, when V_s <= V_b. Got: V_b = V_s = %s.", V_s)
+            # This should not be a problem as long as a critical temperature exists.
+            # if V_s == V_b:
+            #     logger.warning("The bubble will not expand, when V_s <= V_b. Got: V_b = V_s = %s.", V_s)
 
         self.t_ref: float = t_ref
         self.V_s: float = V_s

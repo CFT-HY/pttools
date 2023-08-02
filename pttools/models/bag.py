@@ -54,6 +54,12 @@ class BagModel(AnalyticModel):
                 "The bag model must have a_s > a_b for the critical temperature to be non-negative. "
                 f"Got: a_s={self.a_s}, a_b={self.a_b}"
             )
+        # The < case already generates an error in the base class.
+        if self.V_s == self.V_b:
+            msg = f"The bubble will not expand in the Bag model, when V_s <= V_b. Got: V_s = V_b = {V_s}"
+            logger.error(msg)
+            if not allow_invalid:
+                raise ValueError(msg)
 
         # These have to be after super().__init__() for a_s and a_b to be populated.
         label_prec = 3
