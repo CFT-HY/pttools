@@ -27,6 +27,7 @@ def entropy_density(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float
     """
     if phase is None:
         phase = props.find_phase(xi, v_wall)
+    # TODO: shouldn't v_wall be v_shock here? In the case of deflagrations there is fluid movement outside the wall!
     return 1 / (v_wall**3) * np.trapz(model.s(w, phase) - model.s(w[-1], Phase.SYMMETRIC), xi**3)
 
 
@@ -135,3 +136,15 @@ def wbar(w: np.ndarray, xi: np.ndarray, v_wall: float, wn: float = None):
     if wn is not None and ret <= wn:
         logger.warning(f"Should have wbar > wn. Got: wbar={wn}, wn={wn}")
     return ret
+
+
+def w_b(model: "Model", v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
+    """"""
+    if phase is None:
+        phase = props.find_phase(xi, v_wall)
+    theta = model.theta(w, phase)
+    theta_n = model.theta(w[-1], Phase.SYMMETRIC)
+
+    i_max = np.nonzero(v)[0][-1]
+    # Todo: or i_max+1?
+    return 1/(xi[i_max]**3) * np.trapz(3/4 * w[-1] - w[:i_max]*relativity.gamma2(v[:i_max]) * v[:i_max]**2 + theta[:i_max] - theta_n, xi[:i_max]**3)

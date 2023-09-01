@@ -368,3 +368,9 @@ class Bubble:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.wbar(self.w, self.xi, self.v_wall, self.wn)
+
+    @functools.cached_property
+    def w_b(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.w_b(self.model, self.v, self.w, self.xi, v_wall=self.v_wall, phase=self.phase)
