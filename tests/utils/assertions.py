@@ -43,8 +43,12 @@ def assert_allclose(
     else:
         if not isinstance(actual, np.ndarray):
             actual = np.array(actual, dtype=dtype)
-        if not isinstance(desired, np.ndarray):
+
+        if np.isscalar(desired):
+            desired = np.ones_like(actual) * desired
+        elif not isinstance(desired, np.ndarray):
             desired = np.array(desired, dtype=dtype)
+
         if actual.ndim >= 3:
             with np.printoptions(edgeitems=30, linewidth=200):
                 np.testing.assert_allclose(actual, desired, rtol, atol, equal_nan, err_msg, verbose)
