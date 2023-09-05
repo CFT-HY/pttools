@@ -207,10 +207,6 @@ class Model(BaseModel, abc.ABC):
 
         return 4 * diff / (3 * wn)
 
-    def alpha_n_bar(self, alpha_n: float) -> float:
-        r"""Conversion from $\alpha_n$ to $\alpha_{\bar{\theta}n}$ of :giese_2021:`\ `, eq. 13"""
-        raise NotImplementedError
-
     def alpha_plus(
             self,
             wp: th.FloatOrArr,
@@ -272,12 +268,23 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
 
+    def alpha_theta_bar_n(self, wn: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Transition strength parameter, :giese_2021:`\ `, eq. 13
+
+        $$\alpha_{\bar{\theta}+} = \frac{D \bar{\theta}(T_n)}{3 w_n}$$
+        """
+        return self.delta_theta_bar(wn, Phase.SYMMETRIC) / (3 * wn)
+
+    def alpha_theta_bar_n_from_alpha_n(self, alpha_n: float) -> float:
+        r"""Conversion from $\alpha_n$ to $\alpha_{\bar{\theta}n}$ of :giese_2021:`\ `, eq. 13"""
+        raise NotImplementedError
+
     def alpha_theta_bar_plus(self, wp: th.FloatOrArr) -> th.FloatOrArr:
         r"""Transition strength parameter, :giese_2021:`\ `, eq. 9
 
         $$\alpha_{\bar{\theta}+} = \frac{D \bar{\theta}(T_+)}{3 w_+}$$
         """
-        return self.theta_bar(wp, Phase.SYMMETRIC) / (3 * wp)
+        return self.delta_theta_bar(wp, Phase.SYMMETRIC) / (3 * wp)
 
     @staticmethod
     def check_alpha_plus(

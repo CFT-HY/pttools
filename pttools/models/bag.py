@@ -96,9 +96,6 @@ class BagModel(AnalyticModel):
         # self.check_p(wn, allow_fail=allow_no_transition)
         return self.bag_wn_const / wn
 
-    def alpha_n_bar(self, alpha_n: float) -> float:
-        return alpha_n
-
     def alpha_plus(
             self,
             wp: th.FloatOrArr,
@@ -129,6 +126,9 @@ class BagModel(AnalyticModel):
             alpha_plus, vp_tilde=vp_tilde, sol_type=sol_type,
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
+
+    def alpha_theta_bar_n(self, alpha_n: float) -> float:
+        return alpha_n
 
     def critical_temp(self, **kwargs) -> float:
         r"""Critical temperature for the bag model
