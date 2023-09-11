@@ -23,7 +23,7 @@ def row_to_str(row: np.ndarray, close: np.ndarray, fmt: str = DEFAULT_FMT) -> st
 def pairs_to_rows(actual: np.ndarray, desired: np.ndarray, close: np.ndarray, fmt: str = DEFAULT_FMT) -> tp.List[str]:
     return [
         f"{'' if ok else colorama.Fore.RED}"
-        f"{act:{fmt}}, {des:{fmt}}, {test_math.rel_diff_scalar(act, des):{fmt}}, {abs(act - des):{fmt}}"
+        f"{act:{fmt}}, {des:{fmt}}, {test_math.rel_diff_scalar(act, des):{fmt}}, {act - des:{fmt}}"
         f"{'' if ok else colorama.Fore.RESET}"
         for act, des, ok in zip(actual, desired, close)
     ]
@@ -34,6 +34,10 @@ def print_1d_small(actual: np.ndarray, desired: np.ndarray, close: np.ndarray, f
     print(row_to_str(actual, close, fmt))
     print("desired:")
     print(row_to_str(desired, close, fmt))
+    print("rdiff:")
+    print(row_to_str(test_math.rel_diff_arr(actual, desired), close, fmt))
+    print("adiff:")
+    print(row_to_str(actual - desired, close, fmt))
 
 
 def print_1d_large(actual: np.ndarray, desired: np.ndarray, close: np.ndarray, fmt: str = DEFAULT_FMT):
