@@ -181,7 +181,7 @@ class Bubble:
             f"{self.label_unicode}: w0/wn={self.w[0] / self.wn:{prec}}, " \
             f"Ubarf2={self.ubarf2:{prec}}, K={self.kinetic_energy_fraction:{prec}}, " \
             f"κ={self.kappa:{prec}}, ω={self.omega:{prec}}, κ+ω={self.kappa + self.omega:{prec}}, " \
-            f"trace anomaly={self.trace_anomaly:{prec}}"
+            f"V-avg. trace anomaly={self.va_trace_anomaly:{prec}}"
 
     def solve(
             self,
@@ -245,17 +245,17 @@ class Bubble:
             logger.error(msg)
             self.add_note(msg)
             self.unphysical_alpha_plus = True
-        if self.avg_entropy_density < 0:
+        if self.va_entropy_density < 0:
             msg = "Entropy density should not be negative! Now entropy is decreasing. " \
-                  f"Got: {self.avg_entropy_density} with " \
+                  f"Got: {self.va_entropy_density} with " \
                   f"model={self.model.label_unicode}, v_wall={self.v_wall}, alpha_n={self.alpha_n}"
             if log_negative_entropy:
                 logger.warning(msg)
             self.add_note(msg)
             self.unphysical_entropy = True
-        if self.thermal_energy_density < 0:
+        if self.va_thermal_energy_density < 0:
             msg = "Thermal energy density is negative. The bubble is therefore working as a heat engine. " \
-                  f"Got: {self.thermal_energy_density}"
+                  f"Got: {self.va_thermal_energy_density}"
             logger.warning(msg)
             self.add_note(msg)
         if not np.isclose(self.kappa + self.omega, 1, rtol=sum_rtol_warning):
@@ -288,42 +288,53 @@ class Bubble:
     # -----
 
     @functools.cached_property
+    def bva_entropy_density(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.bva_entropy_density(self.model, self.w, self.xi, self.v_wall, self.phase)
+
+    @functools.cached_property
+    def bva_entropy_density_relative(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return self.bva_entropy_density / self.model.s(self.wn, Phase.SYMMETRIC)
+
+    @functools.cached_property
+    def bva_kinetic_energy_density(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.bva_kinetic_energy_density(self.v, self.w, self.xi, self.v_wall)
+
+    @functools.cached_property
+    def bva_thermal_energy_density(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.bva_thermal_energy_density(self.w, self.xi, self.v_wall)
+
+    @functools.cached_property
+    def bva_trace_anomaly(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.va_trace_anomaly(self.model, self.w, self.xi, self.v_wall, self.phase)
+
+    @functools.cached_property
     def ebar(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.ebar(self.model, self.wn)
 
     @functools.cached_property
-    def avg_entropy_density(self) -> float:
-        if not self.solved:
-            raise NotYetSolvedError
-        return thermo.entropy_density(self.model, self.w, self.xi, self.v_wall, self.phase)
-
-    @functools.cached_property
-    def avg_entropy_density_relative(self) -> float:
-        if not self.solved:
-            raise NotYetSolvedError
-        return self.avg_entropy_density / self.model.s(self.wn, Phase.SYMMETRIC)
-
-    @functools.cached_property
     def kappa(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.kappa(self.model, self.v, self.w, self.xi, self.v_wall, delta_e_theta=self.trace_anomaly)
+        return thermo.kappa(self.model, self.v, self.w, self.xi, self.v_wall, delta_e_theta=self.va_trace_anomaly)
 
     @functools.cached_property
     def kinetic_energy_fraction(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.kinetic_energy_fraction(
-            self.model, self.v, self.w, self.xi,
-            self.v_wall, ek=self.kinetic_energy_density)
-
-    @functools.cached_property
-    def kinetic_energy_density(self) -> float:
-        if not self.solved:
-            raise NotYetSolvedError
-        return thermo.kinetic_energy_density(self.v, self.w, self.xi, self.v_wall)
+            self.model, self.v, self.w, self.xi, ek=self.va_kinetic_energy_density)
 
     @functools.cached_property
     def mean_adiabatic_index(self) -> float:
@@ -335,7 +346,7 @@ class Bubble:
     def omega(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.omega(self.model, self.w, self.xi, self.v_wall, self.trace_anomaly)
+        return thermo.omega(self.model, self.w, self.xi, self.v_wall, delta_e_theta=self.va_trace_anomaly)
 
     @functools.cached_property
     def s(self):
@@ -344,24 +355,44 @@ class Bubble:
         return self.model.s(self.w, self.phase)
 
     @functools.cached_property
-    def thermal_energy_density(self) -> float:
-        if not self.solved:
-            raise NotYetSolvedError
-        return thermo.thermal_energy_density(self.w, self.xi, self.v_wall)
-
-    @functools.cached_property
-    def trace_anomaly(self) -> float:
-        if not self.solved:
-            raise NotYetSolvedError
-        return thermo.trace_anomaly(self.model, self.w, self.xi, self.v_wall, self.phase)
-
-    @functools.cached_property
     def ubarf2(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.ubarf2(
             self.v, self.w, self.xi,
-            self.v_wall, ek=self.kinetic_energy_density, wn=self.wn)  # wb=self.wbar
+            self.v_wall, ek_bva=self.bva_kinetic_energy_density)
+
+    # va = volume averaged
+
+    @functools.cached_property
+    def va_entropy_density(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.va_entropy_density(self.model, self.w, self.xi, self.v_wall, self.phase)
+
+    @functools.cached_property
+    def va_entropy_density_relative(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return self.va_entropy_density / self.model.s(self.wn, Phase.SYMMETRIC)
+
+    @functools.cached_property
+    def va_kinetic_energy_density(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.va_kinetic_energy_density(self.v, self.w, self.xi)
+
+    @functools.cached_property
+    def va_thermal_energy_density(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.va_thermal_energy_density(self.w, self.xi)
+
+    @functools.cached_property
+    def va_trace_anomaly(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.va_trace_anomaly(self.model, self.w, self.xi, self.v_wall, self.phase)
 
     @functools.cached_property
     def wbar(self) -> float:

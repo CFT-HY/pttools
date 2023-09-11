@@ -27,8 +27,8 @@ class BubbleTest(unittest.TestCase):
         self.assertGreater(kef, 0)
         self.assertLess(kef, 1)
 
-    def test_kinetic_energy_density(self):
-        ked = self.bubble.kinetic_energy_density
+    def test_va_kinetic_energy_density(self):
+        ked = self.bubble.va_kinetic_energy_density
         self.assertGreater(ked, 0)
 
     def test_mean_adiabatic_index(self):
@@ -40,10 +40,10 @@ class BubbleTest(unittest.TestCase):
         self.assertGreater(omega, 0)
         self.assertLess(omega, 1)
 
-    def test_thermal_energy_density(self):
-        ted = self.bubble.thermal_energy_density
+    def test_va_thermal_energy_density(self):
+        ted = self.bubble.va_thermal_energy_density
         self.assertGreater(ted, 0)
 
-    def test_trace_anomaly(self):
-        trace_anomaly = self.bubble.trace_anomaly
+    def test_va_trace_anomaly(self):
+        trace_anomaly = self.bubble.va_trace_anomaly
         self.assertTrue(np.isfinite(trace_anomaly))
