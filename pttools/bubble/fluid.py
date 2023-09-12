@@ -143,6 +143,26 @@ def fluid_shell_deflagration_common(
         allow_failure=allow_failure
     )
     vp = -relativity.lorentz(vp_tilde, v_wall)
+
+    # Ensure that the junction solver converges to the correct solution
+    # print(v_wall, vp, vp_tilde, vp_tilde_guess, wp, wp_guess)
+    # if vp < 0:
+    #     vp_tilde2, wp2 = boundary.solve_junction(
+    #         model, vm_tilde, wm,
+    #         Phase.BROKEN, Phase.SYMMETRIC,
+    #         v2_tilde_guess=0.1*vp_tilde_guess, w2_guess=5*wp_guess,
+    #         allow_failure=allow_failure
+    #     )
+    #     vp2 = -relativity.lorentz(vp_tilde, v_wall)
+    #     if vp2 > 0:
+    #         print("SUCCESS")
+    #         vp = vp2
+    #         vp_tilde = vp_tilde2
+    #         wp = wp2
+    #     else:
+    #         print("FAILURE")
+    # print(v_wall, vp, vp_tilde, vp_tilde_guess, wp, wp_guess)
+
     if vp < 0 or wp < 0:
         logger.error(
             "Junction solver gave an invalid starting point: "
