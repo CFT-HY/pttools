@@ -22,8 +22,13 @@ class BubbleTest(unittest.TestCase):
         self.assertGreater(kappa, 0)
         self.assertLess(kappa, 1)
 
-    def test_kinetic_energy_fraction(self):
-        kef = self.bubble.kinetic_energy_fraction
+    def test_bva_kinetic_energy_fraction(self):
+        kef = self.bubble.bva_kinetic_energy_fraction
+        self.assertGreater(kef, 0)
+        self.assertLess(kef, 1)
+
+    def test_va_kinetic_energy_fraction(self):
+        kef = self.bubble.va_kinetic_energy_fraction
         self.assertGreater(kef, 0)
         self.assertLess(kef, 1)
 
@@ -41,9 +46,9 @@ class BubbleTest(unittest.TestCase):
         self.assertLess(omega, 1)
 
     def test_va_thermal_energy_density(self):
-        ted = self.bubble.va_thermal_energy_density
+        ted = self.bubble.va_thermal_energy_density_diff
         self.assertGreater(ted, 0)
 
     def test_va_trace_anomaly(self):
-        trace_anomaly = self.bubble.va_trace_anomaly
+        trace_anomaly = self.bubble.va_trace_anomaly_diff
         self.assertTrue(np.isfinite(trace_anomaly))

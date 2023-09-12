@@ -17,7 +17,7 @@ class ThermoTest:
 
     KAPPA_REF: np.ndarray
     OMEGA_REF: np.ndarray
-    KE_FRAC_REF: np.ndarray
+    BVA_KE_FRAC_REF: np.ndarray
 
     bubbles: tp.List[Bubble]
 
@@ -41,9 +41,8 @@ class ThermoTest:
         """Ensure that there are no typos in the reference data"""
         assert_allclose(self.KAPPA_REF + self.OMEGA_REF, 1, 1.8e-2)
 
-    def test_ke_frac(self):
-        # Todo: get rid of this correcting factor and define ke_frac more rigorously!
-        assert_allclose([3/(4*np.pi * bubble.v_wall**3) * bubble.kinetic_energy_fraction for bubble in self.bubbles], self.KE_FRAC_REF, rtol=1.5e-2)
+    def test_bva_ke_frac(self):
+        assert_allclose([bubble.bva_kinetic_energy_fraction for bubble in self.bubbles], self.BVA_KE_FRAC_REF, rtol=1.5e-2)
 
     def test_omega(self):
         assert_allclose([bubble.omega for bubble in self.bubbles], self.OMEGA_REF, rtol=1.3e-2)
@@ -56,7 +55,7 @@ class ThermoTestLectureNotes(ThermoTest, unittest.TestCase):
     # Reference values
     KAPPA_REF = np.array([0.189, 0.452, 0.235])
     OMEGA_REF = np.array([0.815, 0.559, 0.769])
-    KE_FRAC_REF = np.array([0.0172, 0.0411, 0.0213])
+    BVA_KE_FRAC_REF = np.array([0.0172, 0.0411, 0.0213])
     UBARFS_REF = np.array([0.119, 0.184, 0.133])
 
     def test_ubarf(self):
@@ -70,4 +69,4 @@ class ThermoTestHindmarshHijazi(ThermoTest, unittest.TestCase):
     # Reference values
     KAPPA_REF = np.array([0.610, 0.522, 0.264])
     OMEGA_REF = np.array([0.395, 0.491, 0.744])
-    KE_FRAC_REF = np.array([0.223, 0.0684, 0.022])
+    BVA_KE_FRAC_REF = np.array([0.223, 0.0684, 0.022])

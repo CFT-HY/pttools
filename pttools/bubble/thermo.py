@@ -33,24 +33,38 @@ logger = logging.getLogger(__name__)
 # Todo: Fix the equations in the docstrings
 
 
-def bva_entropy_density(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
+def bva_entropy_density_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
     r"""Bubble volume averaged entropy density
     $$\frac{3}{4\pi v_w^3} s_\text{avg}
     """
-    return 3/(4*np.pi * v_wall**3) * va_entropy_density(model, w, xi, v_wall, phase)
+    return 3/(4*np.pi * v_wall**3) * va_entropy_density_diff(model, w, xi, v_wall, phase)
 
 
 def bva_kinetic_energy_density(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
     r"""Bubble volume averaged kinetic energy density"""
-    return 3/(4*np.pi * v_wall**3) * va_kinetic_energy_density(v, w, xi)
+    return 3/(4*np.pi * v_wall**3) * va_kinetic_energy_density_diff(v, w, xi)
 
 
-def bva_thermal_energy_density(w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
+def bva_kinetic_energy_fraction(ek_bva: float, eb: float) -> float:
+    r"""Bubble volume averaged kinetic energy fraction
+    $$K_\text{bva} = \frac{e_{K,\text{bva}}}{\bar{e}}$$
+    """
+    return ek_bva / eb
+
+
+def bva_thermal_energy_density(v_wall: float, eqp: float) -> float:
+    r"""Volume-averaged thermal energy density after the phase transition
+    $$e_Q' = e_Q + e_\theta - e_K' - e_\theta' = 4\pi \int_0^{\xi_\text{max}} d\xi \xi^2 \frac{3}{4}w_n - e_K' - \Delta e_\theta$$
+    """
+    return 3/(4*np.pi * v_wall**3) * eqp
+
+
+def bva_thermal_energy_density_diff(w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
     r"""Bubble volume averaged thermal energy density"""
-    return 3/(4*np.pi * v_wall**3) * va_thermal_energy_density(w, xi)
+    return 3/(4*np.pi * v_wall**3) * va_thermal_energy_density_diff(w, xi)
 
 
-def bva_trace_anomaly(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
+def bva_trace_anomaly_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
     r"""Bubble volume averaged trace anomaly
     $$\epsilon = \frac{3}{4\pi v_w^3} \Delta e_\theta$$
     """
@@ -69,25 +83,11 @@ def kappa(
         delta_e_theta: float = None) -> float:
     if delta_e_theta is None:
         delta_e_theta = va_trace_anomaly(model, w, xi, v_wall)
-    return va_kinetic_energy_density(v, w, xi) / np.abs(delta_e_theta)
+    return va_kinetic_energy_density_diff(v, w, xi) / np.abs(delta_e_theta)
 
 
 def kappa_approx(alpha_n: th.FloatOrArr) -> th.FloatOrArr:
     return alpha_n / (0.73 + 0.083*np.sqrt(alpha_n) + alpha_n)
-
-
-def kinetic_energy_fraction(
-        model: "Model",
-        v: np.ndarray, w: np.ndarray, xi: np.ndarray,
-        ek: float = None, eb: float = None) -> float:
-    r"""Kinetic energy fraction
-    $$K = \frac{e_K}{\bar{e}}$$
-    """
-    if ek is None:
-        ek = va_kinetic_energy_density(v, w, xi)
-    if eb is None:
-        eb = ebar(model, w[-1])
-    return ek / eb
 
 
 # @numba.njit
@@ -105,7 +105,7 @@ def omega(
         delta_e_theta: float = None) -> float:
     if delta_e_theta is None:
         delta_e_theta = va_trace_anomaly(model, w, xi, v_wall)
-    return va_thermal_energy_density(w, xi) / np.abs(delta_e_theta)
+    return va_thermal_energy_density_diff(w, xi) / np.abs(delta_e_theta)
 
 
 def ubarf2(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, ek_bva: float = None) -> float:
@@ -131,7 +131,11 @@ def wbar(w: np.ndarray, xi: np.ndarray, v_wall: float, wn: float):
     # return ret
 
 
-def va_entropy_density(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
+def va_enthalpy_density(eq: float) -> float:
+    return 4/3 * eq
+
+
+def va_entropy_density_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
     r"""
     Volume-averaged entropy density
     $$s_\text{avg} = \int d\xi \xi^2 (s(w,\phi) - s(w_n, \phi_s)$$
@@ -142,7 +146,7 @@ def va_entropy_density(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: fl
 
 
 # @numba.njit
-def va_kinetic_energy_density(v: np.ndarray, w: np.ndarray, xi: np.ndarray) -> float:
+def va_kinetic_energy_density_diff(v: np.ndarray, w: np.ndarray, xi: np.ndarray) -> float:
     r"""
     Volume-averaged kinetic energy density
     $$e_K = 4 \pi \int_0^{xi_\text{max}} d\xi \xi^2 w \gamma^2 v^2$$
@@ -157,8 +161,22 @@ def va_kinetic_energy_density(v: np.ndarray, w: np.ndarray, xi: np.ndarray) -> f
     return 4*np.pi/3 * np.trapz(w * v**2 * relativity.gamma2(v), xi**3)
 
 
+def va_kinetic_energy_fraction(ek_va: float, eb: float) -> float:
+    r"""Volume-averaged kinetic energy fraction
+    $$K_\text{va} = \frac{e_{K,\text{va}}}{\bar{e}}$$
+    """
+    return ek_va / eb
+
+
+def va_thermal_energy_density(v_shock: float, wn: float, ek: float, delta_e_theta: float) -> float:
+    r"""Volume-averaged thermal energy density after the phase transition
+    $$e_Q' = e_Q + e_\theta - e_K' - e_\theta' = 4\pi \int_0^{\xi_\text{max}} d\xi \xi^2 \frac{3}{4}w_n - e_K' - \Delta e_\theta$$
+    """
+    return np.pi * wn * v_shock**3 - ek - delta_e_theta
+
+
 # @numba.njit
-def va_thermal_energy_density(w: np.ndarray, xi: np.ndarray) -> float:
+def va_thermal_energy_density_diff(w: np.ndarray, xi: np.ndarray) -> float:
     r"""Volume-averaged thermal energy density
     $$\Delta e_Q = 4 \pi \int_0^{\xi_\text{max}} d\xi \xi^2 \frac{3}{4} (w - w_n)$$
     """
@@ -174,15 +192,3 @@ def va_trace_anomaly(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: floa
     theta = model.theta(w, phase)
     theta_n = model.theta(w[-1], Phase.SYMMETRIC)
     return 4*np.pi/3 * np.trapz((theta - theta_n), xi**3)
-
-
-def w_b(model: "Model", v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
-    """"""
-    if phase is None:
-        phase = props.find_phase(xi, v_wall)
-    theta = model.theta(w, phase)
-    theta_n = model.theta(w[-1], Phase.SYMMETRIC)
-
-    i_max = np.nonzero(v)[0][-1]
-    # Todo: or i_max+1?
-    return 1/(xi[i_max]**3) * np.trapz(3/4 * w[-1] - w[:i_max]*relativity.gamma2(v[:i_max]) * v[:i_max]**2 + theta[:i_max] - theta_n, xi[:i_max]**3)
