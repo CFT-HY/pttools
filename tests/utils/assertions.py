@@ -67,8 +67,8 @@ def assert_allclose(
     else:
         mismatched = actual.size - np.sum(close)
         print(f"Mismatched elements: {mismatched} / {actual.size} ({mismatched / actual.size * 100:.1f}%)")
-        print(f"Max absolute difference: {np.max(np.abs(actual - desired))}")
-        print(f"Max relative difference: {np.max(test_math.rel_diff_arr(actual, desired))}")
+        print(f"Max absolute difference: {np.nanmax(np.abs(actual - desired))}")
+        print(f"Max relative difference: {np.nanmax(test_math.rel_diff_arr(actual, desired))}")
 
         if actual.ndim == 1:
             printing.print_1d(actual, desired, close)
