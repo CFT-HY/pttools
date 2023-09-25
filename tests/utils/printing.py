@@ -17,7 +17,7 @@ def row_to_str(row: np.ndarray, close: np.ndarray, fmt: str = DEFAULT_FMT) -> st
         f"{'' if ok else colorama.Fore.RED}{act:{fmt}}{''if ok else colorama.Fore.RESET}"
         for act, ok in zip(row, close)
     ]
-    return f"[{' '.join(lst)}]"
+    return f"[{', '.join(lst)}]"
 
 
 def pairs_to_rows(actual: np.ndarray, desired: np.ndarray, close: np.ndarray, fmt: str = DEFAULT_FMT) -> tp.List[str]:
