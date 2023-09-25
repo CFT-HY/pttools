@@ -169,12 +169,6 @@ class ConstCSModel(AnalyticModel):
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
 
-    def alpha_theta_bar_n_from_alpha_n(self, alpha_n: float) -> float:
-        wn = self.w_n(alpha_n)
-        tn = self.temp(wn, Phase.SYMMETRIC)
-        return alpha_n + (1 - 1 / (3 * self.cs2(wn, Phase.BROKEN))) * \
-            (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN))
-
     def alpha_theta_bar_n_max_lte(self, wn: float, sol_type: SolutionType) -> float:
         r"""$\alpha_{n,\text{max}}^\text{def}$, :ai_2023:`\ `, eq. 28, 31"""
         if sol_type == SolutionType.DETON or sol_type == SolutionType.HYBRID:
@@ -348,6 +342,7 @@ class ConstCSModel(AnalyticModel):
             alpha_n: th.FloatOrArr,
             wn_guess: float = 1,
             analytical: bool = True,
+            theta_bar: bool = False,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
@@ -358,6 +353,16 @@ class ConstCSModel(AnalyticModel):
         $$b = \frac{4}{3} \left( \frac{1}{\mu} - \frac{1}{\nu} \right)$$
         This can be derived from the equations for $\theta$ and $\alpha_n$.
         """
+        if theta_bar:
+            return super().w_n(
+                alpha_n=alpha_n,
+                wn_guess=wn_guess,
+                theta_bar=theta_bar,
+                error_on_invalid=error_on_invalid,
+                nan_on_invalid=nan_on_invalid,
+                log_invalid=log_invalid
+            )
+
         diff = alpha_n - self.const_cs_wn_const
         if np.any(diff < 0):
             if np.isscalar(alpha_n):

@@ -37,16 +37,26 @@ class Bubble:
             label_unicode: str = None,
             wn_guess: float = None,
             wm_guess: float = None,
+            theta_bar: bool = False,
             t_end: float = const.T_END_DEFAULT,
             n_xi: int = const.N_XI_DEFAULT,
             thin_shell_limit: int = const.THIN_SHELL_LIMIT,
-            log_success: bool = False):
+            log_success: bool = False,
+            allow_invalid: bool = False,
+            log_invalid: bool = True):
         if v_wall < 0 or v_wall > 1:
             raise ValueError(f"Invalid v_wall={v_wall}")
-        if alpha_n < 0 or alpha_n > 1 or alpha_n < model.alpha_n_min:
-            raise ValueError(f"Invalid alpha_n={alpha_n}. Minimum for the model: {model.alpha_n_min}")
 
-        self.wn = model.w_n(alpha_n, wn_guess)
+        if not theta_bar:
+            model.validate_alpha_n(alpha_n)
+        self.wn = model.w_n(alpha_n, wn_guess, theta_bar=theta_bar)
+        if theta_bar:
+            self.alpha_theta_bar_n = alpha_n
+            self.alpha_n = model.alpha_n(self.wn)
+            model.validate_alpha_n(self.alpha_n, allow_invalid=allow_invalid, log_invalid=log_invalid)
+        else:
+            self.alpha_n = alpha_n
+
         self.sol_type = transition.validate_solution_type(
             model,
             v_wall=v_wall, alpha_n=alpha_n, sol_type=sol_type,
@@ -56,7 +66,6 @@ class Bubble:
         # Parameters
         self.model: Model = model
         self.v_wall = v_wall
-        self.alpha_n = alpha_n
         self.t_end = t_end
         self.n_xi = n_xi
         self.thin_shell_limit = thin_shell_limit
@@ -65,7 +74,11 @@ class Bubble:
         # Computed parameters
         self.tn = model.temp(self.wn, Phase.SYMMETRIC)
         if self.tn > model.t_crit:
-            raise ValueError(f"Bubbles form only when T_nuc < T_crit. Got: T_nuc={self.tn}, T_crit={model.t_crit}")
+            msg = f"Bubbles form only when T_nuc < T_crit. Got: T_nuc={self.tn}, T_crit={model.t_crit}"
+            if log_invalid:
+                logger.error(msg)
+            if not allow_invalid:
+                raise ValueError(msg)
 
         # if isinstance(model, ConstCSModel)
         if hasattr(model, "css2") and hasattr(model, "csb2"):
@@ -73,18 +86,19 @@ class Bubble:
             self.alpha_n_bar = model.alpha_theta_bar_n_from_alpha_n(alpha_n)
             self.alpha_theta_bar_n_min_lte = model.alpha_theta_bar_n_min_lte(self.wn, self.sol_type)
             self.alpha_theta_bar_n_max_lte = model.alpha_theta_bar_n_max_lte(self.wn, self.sol_type)
-            if self.alpha_theta_bar_n_max_lte < self.alpha_theta_bar_n_min_lte or self.alpha_theta_bar_n_max_lte < 0:
+            if log_invalid and (self.alpha_theta_bar_n_max_lte < self.alpha_theta_bar_n_min_lte
+                                or self.alpha_theta_bar_n_max_lte < 0):
                 logger.error(
                     "Got invalid limits for alpha_n_bar_lte: "
                     f"min={self.alpha_theta_bar_n_min_lte}, max={self.alpha_theta_bar_n_max_lte}"
                 )
-            if self.alpha_n_bar < self.alpha_theta_bar_n_min_lte:
+            if log_invalid and self.alpha_n_bar < self.alpha_theta_bar_n_min_lte:
                 logger.warning("alpha_n_bar=%s < lte_min=%s", self.alpha_n_bar, self.alpha_theta_bar_n_min_lte)
-            if self.alpha_n_bar > self.alpha_theta_bar_n_max_lte:
+            if log_invalid and self.alpha_n_bar > self.alpha_theta_bar_n_max_lte:
                 logger.warning("alpha_n_bar=%s > lte_max=%s", self.alpha_n_bar, self.alpha_theta_bar_n_max_lte)
 
         self.psi_n = model.psi_n(self.wn)
-        if self.sol_type == SolutionType.DETON and self.psi_n < 0.75:
+        if log_invalid and self.sol_type == SolutionType.DETON and self.psi_n < 0.75:
             logger.warning(
                 "This detonation should not exist, as LTE predicts a large alpha_n_hyb_max for psi_n=%s < 0.75. "
                 "Please see Ai et al. (2023), p. 15.",

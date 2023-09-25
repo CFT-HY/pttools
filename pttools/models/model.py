@@ -207,6 +207,13 @@ class Model(BaseModel, abc.ABC):
 
         return 4 * diff / (3 * wn)
 
+    def alpha_n_from_alpha_theta_bar_n(self, alpha_theta_bar_n: float):
+        wn = self.w_n(alpha_theta_bar_n, theta_bar=True)
+        tn = self.temp(wn, Phase.SYMMETRIC)
+        diff = (1 - 1 / (3 * self.cs2(wn, Phase.BROKEN))) * \
+            (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN)) / wn
+        return alpha_theta_bar_n - diff
+
     def alpha_plus(
             self,
             wp: th.FloatOrArr,
@@ -268,16 +275,32 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
 
-    def alpha_theta_bar_n(self, wn: th.FloatOrArr) -> th.FloatOrArr:
+    def alpha_theta_bar_n(
+            self,
+            wn: th.FloatOrArr,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
         r"""Transition strength parameter, :giese_2021:`\ `, eq. 13
 
         $$\alpha_{\bar{\theta}+} = \frac{D \bar{\theta}(T_n)}{3 w_n}$$
         """
+        self.check_w_for_alpha(
+            wn,
+            error_on_invalid=error_on_invalid,
+            nan_on_invalid=nan_on_invalid,
+            log_invalid=log_invalid,
+            name="wn", alpha_name="alpha_theta_bar_n"
+        )
         return self.delta_theta_bar(wn, Phase.SYMMETRIC) / (3 * wn)
 
     def alpha_theta_bar_n_from_alpha_n(self, alpha_n: float) -> float:
         r"""Conversion from $\alpha_n$ to $\alpha_{\bar{\theta}n}$ of :giese_2021:`\ `, eq. 13"""
-        raise NotImplementedError
+        wn = self.w_n(alpha_n)
+        tn = self.temp(wn, Phase.SYMMETRIC)
+        diff = (1 - 1 / (3 * self.cs2(wn, Phase.BROKEN))) * \
+            (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN)) / wn
+        return alpha_n + diff
 
     def alpha_theta_bar_plus(self, wp: th.FloatOrArr) -> th.FloatOrArr:
         r"""Transition strength parameter, :giese_2021:`\ `, eq. 9
@@ -642,7 +665,7 @@ class Model(BaseModel, abc.ABC):
         :param w: enthalpy $w$
         :param phase: phase $\phi$
         """
-        return self.e(w, phase) - self.p(w, phase) / self.cs2(w, Phase.BROKEN)
+        return self.e(w, phase) - self.p(w, phase) / self.cs2(self.temp(w, phase), Phase.BROKEN)
 
     def theta_bar_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Pseudotrace $\bar{\theta}$, :giese_2021:`\ `, eq. 9, :ai_2023:`\ `, eq. 19
@@ -661,10 +684,19 @@ class Model(BaseModel, abc.ABC):
         """
         return phase*self.V_b + (1 - phase)*self.V_s
 
+    def validate_alpha_n(self, alpha_n: float, allow_invalid: bool = False, log_invalid: bool = True):
+        if alpha_n < 0 or alpha_n > 1 or alpha_n < self.alpha_n_min:
+            msg = f"Invalid alpha_n={alpha_n}. Minimum for the model: {self.alpha_n_min}"
+            if log_invalid:
+                logger.error(msg)
+            if not allow_invalid:
+                raise ValueError(msg)
+
     def _w_n_scalar(
             self,
             alpha_n: float,
             wn_guess: float,
+            theta_bar: bool = False,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> float:
@@ -683,7 +715,7 @@ class Model(BaseModel, abc.ABC):
         #     solution_found = False
 
         if not solution_found:
-            wn_sol = fsolve(self._w_n_solvable, x0=np.array([wn_guess]), args=(alpha_n,), full_output=True)
+            wn_sol = fsolve(self._w_n_solvable, x0=np.array([wn_guess]), args=(alpha_n, theta_bar), full_output=True)
             solution_found = wn_sol[2] == 1
             reason = wn_sol[3]
             if solution_found or np.isnan(wn):
@@ -691,7 +723,8 @@ class Model(BaseModel, abc.ABC):
 
         if not solution_found:
             msg = (
-                f"w_n solution was not found for model={self.name}, alpha_n={alpha_n}, wn_guess={wn_guess}. " +
+                f"w_n solution was not found for model={self.name}, "
+                f"alpha_n={alpha_n}, wn_guess={wn_guess}, theta_bar={theta_bar}. " +
                 ("" if error_on_invalid else f"Using w_n={wn}. ") +
                 f"Reason: {reason}"
             )
@@ -703,15 +736,18 @@ class Model(BaseModel, abc.ABC):
                 return np.nan
         return wn
 
-    def _w_n_solvable(self, wn: th.FloatOrArr, alpha_n: float) -> th.FloatOrArr:
+    def _w_n_solvable(self, wn: th.FloatOrArr, alpha_n: float, theta_bar: bool) -> th.FloatOrArr:
         if not np.isscalar(wn):
             wn = wn[0]
+        if theta_bar:
+            return self.alpha_theta_bar_n(wn, error_on_invalid=False, nan_on_invalid=True, log_invalid=False) - alpha_n
         return self.alpha_n(wn, error_on_invalid=False, nan_on_invalid=True, log_invalid=False) - alpha_n
 
     def w_n(
             self,
             alpha_n: th.FloatOrArr,
             wn_guess: float = None,
+            theta_bar: bool = False,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
@@ -725,7 +761,8 @@ class Model(BaseModel, abc.ABC):
         if np.isscalar(alpha_n):
             return self._w_n_scalar(
                 alpha_n,
-                wn_guess,
+                wn_guess=wn_guess,
+                theta_bar=theta_bar,
                 error_on_invalid=error_on_invalid,
                 nan_on_invalid=nan_on_invalid,
                 log_invalid=log_invalid
@@ -734,7 +771,8 @@ class Model(BaseModel, abc.ABC):
         for i in range(alpha_n.size):
             ret[i] = self._w_n_scalar(
                 alpha_n[i],
-                wn_guess,
+                wn_guess=wn_guess,
+                theta_bar=theta_bar,
                 error_on_invalid=error_on_invalid,
                 nan_on_invalid=nan_on_invalid,
                 log_invalid=log_invalid

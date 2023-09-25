@@ -241,6 +241,7 @@ class BagModel(AnalyticModel):
             alpha_n: th.FloatOrArr,
             wn_guess: float = 1,
             analytical: bool = True,
+            theta_bar: bool = False,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
@@ -248,6 +249,11 @@ class BagModel(AnalyticModel):
         $$w_n = \frac{4}{3} \frac{V_s - V_b}{\alpha_n}$$
         This can be derived from the equations for $\theta$ and $\alpha_n$.
         """
+        if theta_bar:
+            super().w_n(
+                alpha_n, wn_guess=wn_guess, theta_bar=theta_bar,
+                error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
+            )
         if analytical:
             return self.bag_wn_const / alpha_n
         return super().w_n(
