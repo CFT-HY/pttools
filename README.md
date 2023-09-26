@@ -35,7 +35,7 @@ The documentation is automatically generated for new commits, and the resulting 
 by selecting the latest successful *docs* workflow and then scrolling down to the *artifacts* section.
 There you can find a zip file containing the documentation in various formats.
 
-The recommended way to browse the documentation is to unpack the zip file and then open
+The recommended way to browse the documentation is to unpack the docs zip file and then open
 `html/index.html` with a web browser.
 
 ### Requirements

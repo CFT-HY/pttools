@@ -66,7 +66,7 @@ class Spectrum:
     def compute(self):
         if not self.bubble.solved:
             self.bubble.solve()
-        cs = np.sqrt(self.bubble.model.cs2(self.bubble.w_b, bubble.Phase.BROKEN))
+        cs = np.sqrt(self.bubble.model.cs2(self.bubble.va_enthalpy_density, bubble.Phase.BROKEN))
 
         self.spec_den_v = spec_den_v(
             bub=self.bubble, z=self.z, a=1.,
