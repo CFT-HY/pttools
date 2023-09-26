@@ -37,6 +37,7 @@ class ConstCSModel(AnalyticModel):
             t_min: float = None,
             t_max: float = None,
             t_ref: float = 1,
+            t_crit_guess: float = None,
             name: str = None,
             label_latex: str = None,
             label_unicode: str = None,
@@ -72,6 +73,9 @@ class ConstCSModel(AnalyticModel):
         self.t_ref = t_ref
         self.const_cs_wn_const: float = 4 / 3 * (1 / self.nu - 1 / self.mu)
 
+        if t_crit_guess is None:
+            t_crit_guess = t_ref
+
         label_prec = 3
         label_latex = f"Const. $c_s, c_{{ss}}^2={self.css2:.{label_prec}f}, c_{{sb}}^2={self.csb2:.{label_prec}f}$" \
             if not label_latex else label_latex
@@ -82,7 +86,7 @@ class ConstCSModel(AnalyticModel):
             V_s=V_s, V_b=V_b,
             a_s=a_s, a_b=a_b,
             g_s=g_s, g_b=g_b,
-            t_min=t_min, t_max=t_max,
+            t_min=t_min, t_max=t_max, t_crit_guess=t_crit_guess,
             name=name, label_latex=label_latex, label_unicode=label_unicode,
             allow_invalid=allow_invalid
         )
@@ -123,7 +127,7 @@ class ConstCSModel(AnalyticModel):
         invalid = ret < 0
         if (error_on_invalid or nan_on_invalid or log_invalid) and np.any(invalid):
             if np.isscalar(ret):
-                info = f"Got negative alpha_n={ret} with wn={wn}, mu={self.mu}, nu={self.nu}."
+                info = f"Got negative alpha_n={ret} with wn={wn}, mu={self.mu}, nu={self.nu}, t_crit={self.t_crit}."
             else:
                 i = np.argmin(wn)
                 info = f"Got negative alpha_n. Most problematic values: alpha_n={ret[i]}, wn={wn[i]}, mu={self.mu}, nu={self.nu}"

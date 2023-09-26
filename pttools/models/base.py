@@ -47,6 +47,8 @@ class BaseModel(abc.ABC):
             raise ValueError("The model must have labels.")
         if "$" in self.label_unicode:
             logger.warning(f"The Unicode label of a model should not contain \"$\". Got: \"{self.label_unicode}\"")
+        if self.t_min <= 0:
+            raise ValueError(f"T_min should be larger than zero. Got: {self.t_min}")
         if self.t_max <= self.t_min:
             raise ValueError(f"T_max ({self.t_max}) should be higher than T_min ({self.t_min}).")
 

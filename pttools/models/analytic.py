@@ -36,7 +36,7 @@ class AnalyticModel(Model, abc.ABC):
             V_s: float, V_b: float = 0,
             a_s: float = None, a_b: float = None,
             g_s: float = None, g_b: float = None,
-            t_min: float = None, t_max: float = None,
+            t_min: float = None, t_max: float = None, t_crit_guess: float = None,
             name: str = None,
             label_latex: str = None,
             label_unicode: str = None,
@@ -66,7 +66,7 @@ class AnalyticModel(Model, abc.ABC):
 
         super().__init__(
             V_s=V_s, V_b=V_b,
-            t_min=t_min, t_max=t_max,
+            t_min=t_min, t_max=t_max, t_crit_guess=t_crit_guess,
             name=name, label_latex=label_latex, label_unicode=label_unicode,
             gen_critical=gen_critical, gen_cs2=gen_cs2, gen_cs2_neg=gen_cs2_neg,
             allow_invalid=allow_invalid

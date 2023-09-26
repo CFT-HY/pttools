@@ -403,6 +403,8 @@ class Model(BaseModel, abc.ABC):
 
     def criticals(self, t_crit_guess: float, allow_fail: bool = False, log_info: bool = True):
         t_crit = self.critical_temp(guess=t_crit_guess, allow_fail=allow_fail)
+        # self.t_crit has to be set already here for alpha_n error messages to work.
+        self.t_crit = t_crit
         wn_min = self.w(t_crit, Phase.SYMMETRIC)
         alpha_n_min = self.alpha_n(wn_min)
 
@@ -722,6 +724,14 @@ class Model(BaseModel, abc.ABC):
                 wn = wn_sol[0][0]
 
         if not solution_found:
+            wn_sol = fsolve(self._w_n_solvable, x0=np.array([1]), args=(alpha_n, theta_bar), full_output=True)
+            solution_found = wn_sol[2] == 1
+            # reason = wn_sol[3]
+            if solution_found or np.isnan(wn):
+                logger.debug("w_n solution was found with wn_guess=1, but not wn_guess=%s", wn_guess)
+                wn = wn_sol[0][0]
+
+        if not solution_found:
             msg = (
                 f"w_n solution was not found for model={self.name}, "
                 f"alpha_n={alpha_n}, wn_guess={wn_guess}, theta_bar={theta_bar}. " +
@@ -754,9 +764,7 @@ class Model(BaseModel, abc.ABC):
         r"""Enthalpy at nucleation temperature with given $\alpha_n$"""
         # TODO: rename this to wn
         if wn_guess is None or np.isnan(wn_guess):
-            # TODO: fix this guess to be computed from the model parameters
-            # wn_guess = self.w_crit
-            wn_guess = 1
+            wn_guess = 1.01 * self.w_crit
 
         if np.isscalar(alpha_n):
             return self._w_n_scalar(
