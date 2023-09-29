@@ -679,6 +679,24 @@ class Model(BaseModel, abc.ABC):
         """
         return self.e_temp(temp, phase) - self.p_temp(temp, phase) / self.cs2_temp(temp, Phase.BROKEN)
 
+    def tn(
+            self,
+            alpha_n: th.FloatOrArr,
+            wn_guess: float = None,
+            theta_bar: bool = False,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
+        return self.temp(
+            self.w_n(
+                alpha_n, wn_guess=wn_guess, theta_bar=theta_bar,
+                error_on_invalid=error_on_invalid,
+                nan_on_invalid=nan_on_invalid,
+                log_invalid=log_invalid
+            ),
+            Phase.SYMMETRIC
+        )
+
     def V(self, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Potential $V(\phi)$
 
