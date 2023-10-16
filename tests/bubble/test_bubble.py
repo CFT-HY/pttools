@@ -23,7 +23,7 @@ class BubbleTest(unittest.TestCase):
         self.assertLess(kappa, 1)
 
     def test_bva_kinetic_energy_fraction(self):
-        kef = self.bubble.bva_kinetic_energy_fraction
+        kef = self.bubble.kinetic_energy_fraction
         self.assertGreater(kef, 0)
         self.assertLess(kef, 1)
 

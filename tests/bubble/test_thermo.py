@@ -43,7 +43,7 @@ class ThermoTest:
         assert_allclose(self.KAPPA_REF + self.OMEGA_REF, 1, 1.8e-2)
 
     def test_bva_ke_frac(self):
-        assert_allclose([bubble.bva_kinetic_energy_fraction for bubble in self.bubbles], self.BVA_KE_FRAC_REF, rtol=1.5e-2)
+        assert_allclose([bubble.kinetic_energy_fraction for bubble in self.bubbles], self.BVA_KE_FRAC_REF, rtol=1.5e-2)
 
     def test_omega(self):
         assert_allclose([bubble.omega for bubble in self.bubbles], self.OMEGA_REF, rtol=1.3e-2)

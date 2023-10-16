@@ -43,7 +43,7 @@ def main():
         ke_frac = quantities.get_ke_frac_bag(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n)
         print(f"Reference kappa={kappa:.4f}, relative error={(bubble.kappa - kappa)/kappa}")
         print(f"Reference ubarf2={ubarf2:.4f}, relative error={(bubble.ubarf2 - ubarf2)/ubarf2}")
-        print(f"Reference ke_frac_bva={ke_frac:.4f}, relative error={(bubble.bva_kinetic_energy_fraction - ke_frac)/ke_frac}")
+        print(f"Reference ke_frac_bva={ke_frac:.4f}, relative error={(bubble.kinetic_energy_fraction - ke_frac) / ke_frac}")
 
     const_cs_def = Bubble(const_cs, v_wall=0.5, alpha_n=0.578, sol_type=SolutionType.SUB_DEF)
     const_cs_hybrid = Bubble(const_cs, v_wall=0.7, alpha_n=0.151, sol_type=SolutionType.HYBRID)

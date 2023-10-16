@@ -33,38 +33,38 @@ logger = logging.getLogger(__name__)
 # Todo: Fix the equations in the docstrings
 
 
-def bva_entropy_density_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
+def entropy_density_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
     r"""Bubble volume averaged entropy density
     $$\frac{3}{4\pi v_w^3} s_\text{avg}
     """
     return 3/(4*np.pi * v_wall**3) * va_entropy_density_diff(model, w, xi, v_wall, phase)
 
 
-def bva_kinetic_energy_density(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
+def kinetic_energy_density(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
     r"""Bubble volume averaged kinetic energy density"""
     return 3/(4*np.pi * v_wall**3) * va_kinetic_energy_density_diff(v, w, xi)
 
 
-def bva_kinetic_energy_fraction(ek_bva: float, eb: float) -> float:
+def kinetic_energy_fraction(ek_bva: float, eb: float) -> float:
     r"""Bubble volume averaged kinetic energy fraction
     $$K_\text{bva} = \frac{e_{K,\text{bva}}}{\bar{e}}$$
     """
     return ek_bva / eb
 
 
-def bva_thermal_energy_density(v_wall: float, eqp: float) -> float:
+def thermal_energy_density(v_wall: float, eqp: float) -> float:
     r"""Volume-averaged thermal energy density after the phase transition
     $$e_Q' = e_Q + e_\theta - e_K' - e_\theta' = 4\pi \int_0^{\xi_\text{max}} d\xi \xi^2 \frac{3}{4}w_n - e_K' - \Delta e_\theta$$
     """
     return 3/(4*np.pi * v_wall**3) * eqp
 
 
-def bva_thermal_energy_density_diff(w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
+def thermal_energy_density_diff(w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
     r"""Bubble volume averaged thermal energy density"""
     return 3/(4*np.pi * v_wall**3) * va_thermal_energy_density_diff(w, xi)
 
 
-def bva_trace_anomaly_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
+def trace_anomaly_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
     r"""Bubble volume averaged trace anomaly
     $$\epsilon = \frac{3}{4\pi v_w^3} \Delta e_\theta$$
     """
@@ -115,7 +115,7 @@ def ubarf2(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, ek_bva: 
     Presumes that w[-1] = wn = wbar
     """
     if ek_bva is None:
-        ek_bva = bva_kinetic_energy_density(v, w, xi, v_wall)
+        ek_bva = kinetic_energy_density(v, w, xi, v_wall)
     return ek_bva / w[-1]
 
 
