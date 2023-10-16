@@ -2,6 +2,7 @@ import functools
 import logging
 import multiprocessing
 import os.path
+import sys
 import time
 import typing as tp
 
@@ -199,10 +200,16 @@ def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tp.Tuple[int, 
 @functools.lru_cache
 def ref():
     if multiprocessing.parent_process() is not None:
-        raise RuntimeError(
-            "The reference data should be loaded in the main process "
-            "to ensure that each process doesn't have to load it separately. "
-            "Call this function once before creating sub-processes.")
+        is_macos = sys.platform == "Darwin"
+        msg = \
+            "The reference data was attempted to be loaded in a subprocess. " \
+            "The reference data should be loaded in the main process before creating subprocesses " \
+            "to ensure that each process doesn't have to load it separately. " \
+            "Call this function once before creating subprocesses."
+        if is_macos:
+            logger.warning(msg + " (This may not work on macOS.)")
+        else:
+            raise RuntimeError(msg)
     return FluidReference(path=os.path.join(os.path.dirname(__file__), "fluid_reference.hdf5"))
 
 
