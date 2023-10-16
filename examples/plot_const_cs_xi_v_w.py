@@ -48,7 +48,7 @@ def main():
     const_cs_def = Bubble(const_cs, v_wall=0.5, alpha_n=0.578, sol_type=SolutionType.SUB_DEF)
     const_cs_hybrid = Bubble(const_cs, v_wall=0.7, alpha_n=0.151, sol_type=SolutionType.HYBRID)
     # These values had to be modified for a solution to exist
-    const_cs_det = Bubble(const_cs, v_wall=0.8, alpha_n=0.1, sol_type=SolutionType.DETON)
+    const_cs_det = Bubble(const_cs, v_wall=0.8, alpha_n=0.11, sol_type=SolutionType.DETON)
 
     for bubble in [const_cs_def, const_cs_hybrid, const_cs_det]:
         plot.add(bubble, color="red")

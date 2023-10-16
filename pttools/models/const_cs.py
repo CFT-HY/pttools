@@ -123,7 +123,8 @@ class ConstCSModel(AnalyticModel):
         )
         # self.check_p(wn, allow_fail=allow_no_transition)
 
-        ret = 4/3 * (1/self.nu - 1/self.mu) + self.bag_wn_const/wn
+        tn = self.temp(wn, Phase.SYMMETRIC)
+        ret = (1-4/self.mu)/3 - (1-4/self.nu)/3*self.w(tn, Phase.BROKEN)/wn + self.bag_wn_const/wn
         invalid = ret < 0
         if (error_on_invalid or nan_on_invalid or log_invalid) and np.any(invalid):
             if np.isscalar(ret):
