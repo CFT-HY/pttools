@@ -1,4 +1,4 @@
-import os
+import logging
 import unittest
 
 import tests.paper.ssm_paper_utils as spu
@@ -7,6 +7,8 @@ from .test_profile import TestProfile
 from . import utils_cprofile
 from . import utils_pyinstrument
 from . import utils_yappi
+
+logger = logging.getLogger(__name__)
 
 
 def pow_specs():
@@ -36,8 +38,13 @@ class TestProfilePowSpecs(TestProfile):
         speedup.NUMBA_SEGFAULTING_PROFILERS,
         "Pyinstrument may segfault with old Numba versions")
     def test_profile_pow_specs_pyinstrument(cls):
-        with utils_pyinstrument.PyInstrumentProfiler(cls.name):
-            pow_specs()
+        try:
+            with utils_pyinstrument.PyInstrumentProfiler(cls.name):
+                pow_specs()
+        except (AssertionError, UnboundLocalError) as e:
+            logger.exception("Pyinstrument crashed", exc_info=e)
+            if not speedup.NUMBA_PYINSTRUMENT_INCOMPATIBLE_PYTHON_VERSION:
+                raise e
 
     @classmethod
     def test_profile_pow_specs_yappi(cls):
