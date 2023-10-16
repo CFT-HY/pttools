@@ -47,8 +47,10 @@ test-output.txt
 .DS_Store
 .pytest_cache
 .spyproject
+.vscode/*
 dist
 envs
 envs-old
 model_data
 venv
+!.vscode/settings.json
