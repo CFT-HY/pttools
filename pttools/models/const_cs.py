@@ -279,8 +279,8 @@ class ConstCSModel(AnalyticModel):
         In the article there is a typo: the 4 there should be a $\mu$.
         """
         self.validate_temp(temp)
-        e_s = (self.mu - 1) * self.a_s * temp**self.mu + self.V_s
-        e_b = (self.nu - 1) * self.a_b * temp**self.nu + self.V_b
+        e_s = (self.mu - 1) * self.a_s * (temp/self.t_ref)**(self.mu-4) * temp**4 + self.V_s
+        e_b = (self.nu - 1) * self.a_b * (temp/self.t_ref)**(self.nu-4) * temp**4 + self.V_b
         return e_b * phase + e_s * (1 - phase)
 
     def export(self) -> tp.Dict[str, any]:
@@ -299,8 +299,8 @@ class ConstCSModel(AnalyticModel):
         :giese_2021:`\ `, eq. 15.
         """
         self.validate_temp(temp)
-        p_s = self.a_s * temp**self.mu - self.V_s
-        p_b = self.a_b * temp**self.nu - self.V_b
+        p_s = self.a_s * (temp/self.t_ref)**(self.mu-4) * temp**4 - self.V_s
+        p_b = self.a_b * (temp/self.t_ref)**(self.nu-4) * temp**4 - self.V_b
         return p_b * phase + p_s * (1 - phase)
 
     def s_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -310,8 +310,8 @@ class ConstCSModel(AnalyticModel):
         Derived from :giese_2021:`\ `, eq. 15.
         """
         self.validate_temp(temp)
-        s_s = self.mu * self.a_s * (temp/self.t_ref)**(self.mu-1) * self.t_ref**3
-        s_b = self.nu * self.a_b * (temp/self.t_ref)**(self.nu-1) * self.t_ref**3
+        s_s = self.mu * self.a_s * (temp/self.t_ref)**(self.mu-4) * temp**3
+        s_b = self.nu * self.a_b * (temp/self.t_ref)**(self.nu-4) * temp**3
         return s_b * phase + s_s * (1 - phase)
 
     def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -338,8 +338,8 @@ class ConstCSModel(AnalyticModel):
         $$w_s = \nu a_s \left( \frac{T}{T_0} \right)^\nu T_0^4$$
         """
         self.validate_temp(temp)
-        w_s = self.mu * self.a_s * (temp/self.t_ref)**self.mu * self.t_ref**4
-        w_b = self.nu * self.a_b * (temp/self.t_ref)**self.nu * self.t_ref**4
+        w_s = self.mu * self.a_s * (temp/self.t_ref)**(self.mu-4) * temp**4
+        w_b = self.nu * self.a_b * (temp/self.t_ref)**(self.nu-4) * temp**4
         return w_b * phase + w_s * (1 - phase)
 
     def w_n(
