@@ -1,3 +1,10 @@
+"""
+ConstCSModel testing
+====================
+
+Simple testing for the constant sound speed model
+"""
+
 from pttools.models.const_cs import ConstCSModel
 
 
