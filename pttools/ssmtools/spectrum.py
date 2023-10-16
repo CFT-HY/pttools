@@ -55,10 +55,15 @@ class Spectrum:
         self.nt = nt
         # self.nq = nq
 
-        self.pow_v: tp.Optional[np.ndarray] = None
-        self.pow_gw: tp.Optional[np.ndarray] = None
+        # Todo: fill the missing descriptions
+        #: $P_v(q)$
         self.spec_den_v: tp.Optional[np.ndarray] = None
+        #: ???
         self.spec_den_gw: tp.Optional[np.ndarray] = None
+        #: $\mathcal{P}_\tilde{v}(q)$
+        self.pow_v: tp.Optional[np.ndarray] = None
+        #: ???
+        self.pow_gw: tp.Optional[np.ndarray] = None
 
         if compute:
             self.compute()
@@ -130,16 +135,15 @@ def parse_params(params: bubble.PhysicalParams) -> tp.Tuple[float, float, NucTyp
 
 
 def pow_spec(z: th.FloatOrArr, spec_den: th.FloatOrArr) -> th.FloatOrArr:
-    """
+    r"""
     Power spectrum from spectral density at dimensionless wavenumber z.
 
-    :gw_pt_ssm:`\ ` eq. 4.18
+    :gw_pt_ssm:`\ ` eq. 4.18, but without the factor of 2.
 
     :param z: dimensionless wavenumber $z$
     :param spec_den: spectral density
     :return: power spectrum
     """
-    # Todo: is this missing a factor of 2?
     return z**3 / (2. * np.pi ** 2) * spec_den
 
 
@@ -295,7 +299,7 @@ def spec_den_gw_scaled(
         P_vlookup: np.ndarray,
         z: np.ndarray = None,
         cs: float = const.CS0) -> tp.Union[tp.Tuple[np.ndarray, np.ndarray], th.NumbaFunc]:
-    """
+    r"""
     Spectral density of scaled gravitational wave power at values of kR* given
     by input z array, or at len(xlookup) values of kR* between the min and max
     of xlookup where the GW power can be computed.
@@ -303,6 +307,12 @@ def spec_den_gw_scaled(
     P_vlookup is the spectral density of the FT of the velocity field,
     not the spectral density of plane wave coeffs, which is lower by a
     factor of 2.
+
+    :return: $\hat{\mathcal{P}}$ Eq. 3.33 of Chloe's thesis, which should be ($3\Gamma \bar{U}_f$) Eq. 3.47
+    Eq. 3.46 converted to the spectral density and divided by (H L_f)
+
+    The factor of 3 comes from the Friedmann equation
+    3H^2/(8pi G)
     """
     if isinstance(z, numba.types.Array):
         return _spec_den_gw_scaled_z
@@ -366,6 +376,12 @@ def spec_den_v(
         nt: int = const.NPTDEFAULT[1],
         z_st_thresh: float = const.Z_ST_THRESH,
         cs: float = None):
+    """The full spectral density of the velocity field
+
+    This is twice the spectral density of the plane wave components of the velocity field
+
+    :return: 2 * $P_v(q)$ of eq. 4.17
+    """
     # z limits
     log10zmin = np.log10(np.min(z))
     log10zmax = np.log10(np.max(z))
