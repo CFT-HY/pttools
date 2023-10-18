@@ -10,3 +10,4 @@ from .utils import *
 from .options import *
 from .parallel import *
 from .spline import *
+from .tbb import *
