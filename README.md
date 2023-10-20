@@ -39,7 +39,7 @@ The recommended way to browse the documentation is to unpack the docs zip file a
 `html/index.html` with a web browser.
 
 ### Requirements
-Python 3.8 - 3.11
+Python 3.9 - 3.11
 
 ### Who do I talk to?
 - Repo owner: [Mark Hindmarsh](https://github.com/hindmars/)
