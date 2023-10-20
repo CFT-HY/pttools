@@ -2,7 +2,6 @@ import functools
 import logging
 import multiprocessing
 import os.path
-import sys
 import time
 import typing as tp
 
@@ -16,6 +15,7 @@ from pttools.bubble.boundary import SolutionType
 from pttools.bubble.fluid_bag import fluid_shell_bag
 from pttools.bubble import props
 from pttools.bubble import transition
+from pttools.speedup import IS_OSX
 
 from pttools.speedup.parallel import run_parallel
 
@@ -200,16 +200,14 @@ def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tp.Tuple[int, 
 @functools.lru_cache
 def ref():
     if multiprocessing.parent_process() is not None:
-        is_macos = sys.platform == "Darwin"
         msg = \
             "The reference data was attempted to be loaded in a subprocess. " \
             "The reference data should be loaded in the main process before creating subprocesses " \
             "to ensure that each process doesn't have to load it separately. " \
             "Call this function once before creating subprocesses."
-        if is_macos:
-            logger.warning(msg + " (This may not work on macOS.)")
-        else:
+        if not IS_OSX:
             raise RuntimeError(msg)
+        logger.warning(msg + " (This may not work on macOS.)")
     return FluidReference(path=os.path.join(os.path.dirname(__file__), "fluid_reference.hdf5"))
 
 
