@@ -15,8 +15,8 @@ Analysis
 
    g_cs2
    plot_chapman_jouguet
-   plot_fluid_shell
-   plot_fluid_shells
+   plot_fluid_shell_bag
+   plot_fluid_shells_bag
    plot_model
    plot_models
    plot_thermomodels

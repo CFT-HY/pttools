@@ -24,7 +24,7 @@ Paper
    test_plane
    test_pow_specs
    test_prace
-   test_shells
+   test_shells_bag
    test_tables
    tex_utils
    utils

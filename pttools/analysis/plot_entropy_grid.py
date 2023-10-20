@@ -117,7 +117,7 @@ def compute(bubble: Bubble):
         diff_sh = relativity.gamma(bubble.vm_tilde_sh) * bubble.vm_tilde_sh * sm_sh - \
             relativity.gamma(bubble.vp_tilde_sh) * bubble.vp_tilde_sh * sn
         return (
-            bubble.avg_entropy_density_relative,
+            bubble.entropy_density_relative,
             sp,
             sm,
             sm_sh,
