@@ -8,8 +8,8 @@ import numpy as np
 # import orjson
 
 from pttools import bubble
-from pttools.analysis.plot_fluid_shell import plot_fluid_shell
-from pttools.analysis.plot_fluid_shells import plot_fluid_shells_bag
+from pttools.analysis.plot_fluid_shell_bag import plot_fluid_shell_bag
+from pttools.analysis.plot_fluid_shells_bag import plot_fluid_shells_bag
 from pttools.speedup import NUMBA_INTEGRATE_TOLERANCES
 from tests.paper import const
 from tests.paper import ssm_paper_utils as spu
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 FIG_PATH = os.path.join(utils.TEST_FIGURE_PATH, "fluid_shells")
 
 
-class TestShells(unittest.TestCase):
+class TestShellsBag(unittest.TestCase):
     @staticmethod
     def shell_file_path(name: str) -> str:
         return os.path.join(utils.TEST_DATA_PATH, f"shells_{name}.txt")
@@ -105,7 +105,7 @@ class TestShells(unittest.TestCase):
         utils.assert_allclose(data_esp, ref_esp, rtol=rtols[2])
 
     def test_plot_fluid_shell(self):
-        fig, params = plot_fluid_shell(v_wall=0.7, alpha_n=0.052)
+        fig, params = plot_fluid_shell_bag(v_wall=0.7, alpha_n=0.052)
         utils.save_fig_multi(fig, os.path.join(FIG_PATH, "fluid_shell_single"))
         plt.close(fig)
 
