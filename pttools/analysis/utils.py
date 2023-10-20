@@ -1,5 +1,7 @@
 """Utilities for plotting and analysing data"""
 
+import typing as tp
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -7,7 +9,21 @@ from pttools.bubble.boundary import Phase
 from pttools.models.base import BaseModel
 from pttools import speedup
 
+A4_PAPER_SIZE: tp.Tuple[float, float] = (11.7, 8.3)
 ENABLE_DRAWING: bool = not speedup.GITHUB_ACTIONS
+FigAndAxes = tp.Tuple[plt.Figure, plt.Axes]
+
+
+def create_fig_ax(fig: plt.Figure = None, ax: plt.Axes = None) -> FigAndAxes:
+    if fig is None:
+        if ax is None:
+            fig = plt.figure()
+            ax = fig.add_subplot()
+        else:
+            fig = ax.get_figure()
+    if ax is None:
+        ax = fig.add_subplot()
+    return fig, ax
 
 
 def model_phase_label(model: BaseModel, phase: Phase) -> str:

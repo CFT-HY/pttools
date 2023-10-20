@@ -5,6 +5,7 @@ import functools
 import logging
 import typing as tp
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.bubble.alpha import alpha_n_max_deflagration_bag
@@ -18,6 +19,9 @@ from pttools.speedup.export import export_json
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
     from pttools.models.const_cs import ConstCSModel
+
+if tp.TYPE_CHECKING:
+    from pttools.analysis.utils import FigAndAxes
 
 logger = logging.getLogger(__name__)
 
@@ -196,6 +200,14 @@ class Bubble:
             f"Ubarf2={self.ubarf2:{prec}}, K={self.kinetic_energy_fraction:{prec}}, " \
             f"κ={self.kappa:{prec}}, ω={self.omega:{prec}}, κ+ω={self.kappa + self.omega:{prec}}, " \
             f"V-avg. trace anomaly={self.va_trace_anomaly_diff:{prec}}"
+
+    def plot(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None) -> "FigAndAxes":
+        from pttools.analysis.plot_bubble import plot_bubble
+        return plot_bubble(self, fig, ax, path)
+
+    def plot_w(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None) -> "FigAndAxes":
+        from pttools.analysis.plot_bubble import plot_bubble_w
+        return plot_bubble_w(self, fig, ax, path)
 
     def solve(
             self,

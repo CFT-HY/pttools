@@ -4,6 +4,7 @@ import enum
 import logging
 import typing as tp
 
+import matplotlib.pyplot as plt
 import numba
 import numpy as np
 
@@ -12,6 +13,9 @@ from pttools import bubble
 from pttools import speedup
 from . import const
 from . import ssm
+
+if tp.TYPE_CHECKING:
+    from pttools.analysis.utils import FigAndAxes
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +59,7 @@ class Spectrum:
         self.nt = nt
         # self.nq = nq
 
+        self.cs: tp.Optional[float] = None
         # Todo: fill the missing descriptions
         #: $P_v(q)$
         self.spec_den_v: tp.Optional[np.ndarray] = None
@@ -71,18 +76,38 @@ class Spectrum:
     def compute(self):
         if not self.bubble.solved:
             self.bubble.solve()
-        cs = np.sqrt(self.bubble.model.cs2(self.bubble.va_enthalpy_density, bubble.Phase.BROKEN))
+        self.cs = np.sqrt(self.bubble.model.cs2(self.bubble.va_enthalpy_density, bubble.Phase.BROKEN))
 
         self.spec_den_v = spec_den_v(
             bub=self.bubble, z=self.z, a=1.,
-            nuc_type=self.nuc_type, nt=self.nt, z_st_thresh=self.z_st_thresh, cs=cs
+            nuc_type=self.nuc_type, nt=self.nt, z_st_thresh=self.z_st_thresh, cs=self.cs
         )
         self.pow_v = pow_spec(self.z, spec_den=self.spec_den_v)
         # V2_pow_v = np.trapz(pow_v/self.z, self.z)
 
-        self.spec_den_gw, y = spec_den_gw_scaled(self.z, self.spec_den_v, cs=cs)
+        self.spec_den_gw, y = spec_den_gw_scaled(self.z, self.spec_den_v, cs=self.cs)
         self.pow_gw = pow_spec(self.z, spec_den=self.spec_den_gw)
         # gw_power = np.trapz(self.pow_gw/y, y)
+
+    def plot(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None) -> "FigAndAxes":
+        from pttools.analysis.plot_spectrum import plot_spectrum
+        return plot_spectrum(self, fig, ax, path)
+
+    def plot_v(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None) -> "FigAndAxes":
+        from pttools.analysis.plot_spectrum import plot_spectrum_v
+        return plot_spectrum_v(self, fig, ax, path)
+
+    def plot_spec_den_gw(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None) -> "FigAndAxes":
+        from pttools.analysis.plot_spectrum import plot_spectrum_spec_den_gw
+        return plot_spectrum_spec_den_gw(self, fig, ax, path)
+
+    def plot_spec_den_v(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None) -> "FigAndAxes":
+        from pttools.analysis.plot_spectrum import plot_spectrum_spec_den_v
+        return plot_spectrum_spec_den_v(self, fig, ax, path)
+
+    def plot_multi(self, fig: plt.Figure = None, path: str = None) -> plt.Figure:
+        from pttools.analysis.plot_spectrum import plot_spectrum_multi
+        return plot_spectrum_multi(self, fig, path)
 
 
 def convert_params(params: bubble.PhysicalParams) -> bubble.PhysicalParams:
