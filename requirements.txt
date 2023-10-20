@@ -1,12 +1,13 @@
 # List of project requirements for pip
 # https://pip.pypa.io/en/stable/user_guide/#requirements-files
 
-h5py
+h5py >= 3.10.0
 # Intel Compile Runtime provides Intel SVML, which speeds up Numba
-icc-rt
-intel-openmp; sys_platform == "darwin"
-kaleido
-matplotlib
+icc-rt >= 2020.0.133
+intel-openmp >= 2020.0.133; sys_platform == "darwin"
+# For Plotly image export
+kaleido >= 0.2.1
+matplotlib >= 3.8.0
 # Numba 0.55 breaks the unit tests
 # https://github.com/numba/numba/issues/7751
 # PyCharm does not understand a dependency if all the versions are conditional
@@ -14,17 +15,17 @@ matplotlib
 # numba >= 0.55.1; python_version >= "3.10"
 # Todo: generated_jit will be removed in Numba 0.59. Remove dependence on it and then update this dependency.
 # https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-generated-jit
-numba != 0.55, < 0.59
+numba >= 0.58.1, < 0.59
 # NumbaLSODA cannot yet be compiled automatically on the GitHub Actions Windows runners
-numbalsoda; sys_platform != "win32"
+numbalsoda >= 0.3.4; sys_platform != "win32"
 # If you're using an old version of Numba and get the error:
 # "create_target_machine() got an unexpected keyword argument 'jitdebug'"
 # then you may have to downgrade llvmlite to 0.32.1
 # https://github.com/rapidsai/cuml/issues/2389#issuecomment-642645437
-numpy
-orjson
-plotly
-scipy
+numpy >= 1.26.1
+orjson >= 3.9.9
+plotly >= 5.17.0
+scipy >= 1.11.3
 # TBB can be used to speed up Numba threading
 # https://numba.pydata.org/numba-doc/latest/user/threading-layer.html#which-threading-layers-are-available
-tbb
+tbb >= 2021.10.0

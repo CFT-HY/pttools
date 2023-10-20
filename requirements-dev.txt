@@ -1,19 +1,16 @@
 # The dependency files could be combined with the line below, but this would double-install packages
 # if some of the packages are already installed with conda.
 # -r requirements.txt
-allure-pytest
-colorama
-# h5py
-# For Plotly image export
-kaleido
+allure-pytest >= 2.13.2
+colorama >= 0.4.6
 # pandas
 # For Numba system info
-psutil
-pyan3 >=1.1.1, !=1.2.0
+psutil >= 5.9.6
+pyan3 >= 1.1.1, != 1.2.0
 pyinstrument >= 3.4.2, < 4.0.0
-pylint
-pytest
-pytest-cov
-pytest-html
-pytest-xdist
-yappi
+pylint >= 3.0.1
+pytest >= 7.4.2
+pytest-cov >= 4.1.0
+pytest-html >= 4.0.2
+pytest-xdist >= 3.3.1
+yappi >= 1.4.0
