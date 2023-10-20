@@ -9,7 +9,7 @@ import numpy as np
 
 from pttools import bubble
 from pttools.analysis.plot_fluid_shell import plot_fluid_shell
-from pttools.analysis.plot_fluid_shells import plot_fluid_shells
+from pttools.analysis.plot_fluid_shells import plot_fluid_shells_bag
 from pttools.speedup import NUMBA_INTEGRATE_TOLERANCES
 from tests.paper import const
 from tests.paper import ssm_paper_utils as spu
@@ -66,15 +66,15 @@ class TestShells(unittest.TestCase):
         alpha_weak_list = len(vw_weak_list) * [alpha_weak]
         alpha_inter_list = len(vw_inter_list) * [alpha_inter]
 
-        fig_weak, data_weak = plot_fluid_shells(vw_weak_list, alpha_weak_list, debug=True)
-        fig_inter, data_inter = plot_fluid_shells(vw_inter_list, alpha_inter_list, debug=True)
+        fig_weak, data_weak = plot_fluid_shells_bag(vw_weak_list, alpha_weak_list, debug=True)
+        fig_inter, data_inter = plot_fluid_shells_bag(vw_inter_list, alpha_inter_list, debug=True)
 
         # Espinosa et al. 2010 comparisons
         vw_list_esp = [0.5, 0.7, 0.77]
         alpha_plus_list_esp = [0.263, 0.052, 0.091]
         alpha_n_list_esp = [bubble.find_alpha_n_bag(vw, ap) for vw, ap in zip(vw_list_esp, alpha_plus_list_esp)]
 
-        fig_esp, data_esp = plot_fluid_shells(vw_list_esp, alpha_n_list_esp, multi=True, debug=True)
+        fig_esp, data_esp = plot_fluid_shells_bag(vw_list_esp, alpha_n_list_esp, multi=True, debug=True)
 
         for fig, name in zip([fig_weak, fig_inter, fig_esp], ["weak", "inter", "esp"]):
             utils.save_fig_multi(fig, os.path.join(FIG_PATH, name))

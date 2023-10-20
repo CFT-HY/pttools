@@ -1,4 +1,4 @@
-r"""Plot $v(\xi)$ and $w(\xi)$ for fluid shells"""
+r"""Plot $v(\xi)$ and $w(\xi)$ for fluid shells using the bag model"""
 
 import typing as tp
 
@@ -10,7 +10,7 @@ from pttools.analysis import utils
 from pttools.bubble import boundary, check, const, fluid_bag, props, quantities, relativity, shock, transition
 
 
-def plot_fluid_shells(
+def plot_fluid_shells_bag(
         v_wall_list: th.FloatListOrArr,
         alpha_n_list: tp.Union[tp.List[float], np.ndarray],
         multi: bool = False,
@@ -29,7 +29,7 @@ def plot_fluid_shells(
     - $\frac{w_0}{w_n}$ (ration of internal to external enthalpies)
     - ubar_f (mean square U = gamma(v) v)
     - K kinetic energy fraction
-    - kappa (Espinosa et al efficiency factor)
+    - kappa (Espinosa et al. efficiency factor)
     - omega (thermal energy relative to scalar potential energy, as measured by trace anomaly)
 
     Last two should sum to 1.

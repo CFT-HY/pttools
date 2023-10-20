@@ -1,4 +1,4 @@
-r"""Plot $v(\xi)$ and $w(\xi)$ for a fluid shell"""
+r"""Plot $v(\xi)$ and $w(\xi)$ for a fluid shell using the bag model"""
 
 import typing as tp
 
@@ -9,7 +9,7 @@ from pttools.analysis import utils
 from pttools.bubble import boundary, const, fluid_bag, relativity
 
 
-def plot_fluid_shell(
+def plot_fluid_shell_bag(
         v_wall: float,
         alpha_n: float,
         save_string: str = None,
