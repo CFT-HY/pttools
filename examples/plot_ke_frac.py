@@ -1,6 +1,6 @@
 r"""
 Kinetic energy fraction
-===============
+=======================
 
 Plot the kinetic energy fraction for various $\alpha_n$ as a function of $\xi_\text{wall}$
 """

@@ -1,3 +1,7 @@
+.. Please see these for ideas on how to expand this template
+   https://github.com/sphinx-doc/sphinx/issues/7912
+   https://sphinx-gallery.github.io/stable/configuration.html#auto-documenting-your-api-with-links-to-examples
+
 {{ fullname }}
 {{ underline }}
 
@@ -47,9 +51,21 @@
    Exceptions
    ----------
 
-   .. autosummary::
-   {% for item in exceptions %}
-      {{ item }}
+  {% for item in exceptions %}
+   .. autoexception:: {{ item }}
+
+   {%- endfor %}
+   {% endif %}
+   {% endblock %}
+
+   {% block attributes %}
+   {% if attributes %}
+
+   Attributes
+   ----------
+
+  {% for item in attributes %}
+   .. autodata:: {{ item }}
 
    {%- endfor %}
    {% endif %}

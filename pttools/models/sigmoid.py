@@ -13,7 +13,7 @@ def sigmoid(
         midpoint: th.FloatOrArr,
         max_val: th.FloatOrArr,
         steepness: th.FloatOrArr) -> th.FloatOrArr:
-    """`Logistic function <https://en.wikipedia.org/wiki/Logistic_function>_"""
+    """`Logistic function <https://en.wikipedia.org/wiki/Logistic_function>`_"""
     return max_val / (1 + np.exp(-steepness*(x - midpoint)))
 
 

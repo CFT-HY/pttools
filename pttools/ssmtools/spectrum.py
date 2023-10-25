@@ -334,7 +334,7 @@ def spec_den_gw_scaled(
     factor of 2.
 
     :return: $\hat{\mathcal{P}}$ Eq. 3.33 of Chloe's thesis, which should be ($3\Gamma \bar{U}_f$) Eq. 3.47
-    Eq. 3.46 converted to the spectral density and divided by (H L_f)
+        Eq. 3.46 converted to the spectral density and divided by (H L_f)
 
     The factor of 3 comes from the Friedmann equation
     3H^2/(8pi G)

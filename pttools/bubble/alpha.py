@@ -259,7 +259,7 @@ def find_alpha_n_from_w_xi(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_p
     :param w: $w$ array of a bubble
     :param xi: $xi$ array of a bubble
     :param v_wall: $v_\text{wall}$
-    :param alpha_p. $\alpha_+$
+    :param alpha_p: $\alpha_+$
     :return: $\alpha_n$
     """
     n_wall = props.find_v_index(xi, v_wall)

@@ -13,6 +13,7 @@
 import os.path
 import sys
 import typing as tp
+import warnings
 
 dir_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(dir_path))
@@ -108,10 +109,12 @@ mathjax3_config = {
 # -- Autodoc -----------------------------------------------------------------
 
 autodoc_default_options = {
-    "members": True,
+    # This would result in duplicate class descriptions when using a template.
+    # "members": True,
     "show-inheritance": True,
     "undoc-members": True,
 }
+autodoc_preserve_defaults = True
 autodoc_typehints = "description"
 
 
@@ -205,10 +208,24 @@ sphinx_gallery_conf = {
     "gallery_dirs": "auto_examples",
     "ignore_pattern": r"(__init__\.py|utils\.py)",
     # "image_srcset": ["2x"],
-    # "matplotlib_animations": True,
+    # "line_numbers": True,
+    "matplotlib_animations": True,
     "reference_url": {
         "pttools": None,
+        "tests": None,
     },
     "show_memory": True,
 }
 autosummary_generate = True
+
+
+# Remove matplotlib agg warnings from generated doc when using plt.show
+# From: https://github.com/sphinx-gallery/sphinx-gallery/blob/master/doc/conf.py
+warnings.filterwarnings(
+    "ignore",
+    category=UserWarning,
+    message="Matplotlib is currently using agg, which is a"
+    " non-GUI backend, so cannot show the figure.",
+)
+
+# numpydoc_show_class_members = False
