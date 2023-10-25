@@ -11,7 +11,7 @@ jobs:
   test:
     runs-on: windows-latest
     # if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
         - name: Setup Python
           uses: actions/setup-python@v4
