@@ -38,3 +38,4 @@ def setup_logging(log_dir: str = None, enable_faulthandler: bool = True, silence
         logging.getLogger("numba").setLevel(logging.INFO)
         logging.getLogger("Pillow").setLevel(logging.INFO)
         logging.getLogger("PIL").setLevel(logging.INFO)
+        logging.getLogger("urllib3").setLevel(logging.INFO)

@@ -7,7 +7,7 @@ Version history
 - Publish documentation to Read the Docs.
 - Improve integration with Cobaya and add examples.
 - Improve unit testing by using more comprehensive reference data, which are stored externally as HDF5.
-  Test whether `Git LFS <https://git-lfs.github.com/>`_ on GitLab would be a suitable storage.
+  Test whether `Git LFS <https://git-lfs.com/>`_ on GitLab would be a suitable storage.
 - Improve the way physical parameters are handled in the code.
   Replace the parameter tuple with a struct- or class-like data structure.
 - Further improve and expand the documentation.

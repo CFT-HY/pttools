@@ -662,7 +662,7 @@ class Model(BaseModel, abc.ABC):
     def theta_bar(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Pseudotrace $\bar{\theta}$, :giese_2021:`\ `, eq. 9, :ai_2023:`\ `, eq. 19
 
-        $$\bar{\theta}} = e - \frac{p}{c_b^2}}$$
+        $$\bar{\theta} = e - \frac{p}{c_b^2}$$
 
         :param w: enthalpy $w$
         :param phase: phase $\phi$
@@ -672,7 +672,7 @@ class Model(BaseModel, abc.ABC):
     def theta_bar_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Pseudotrace $\bar{\theta}$, :giese_2021:`\ `, eq. 9, :ai_2023:`\ `, eq. 19
 
-        $$\bar{\theta}} = e - \frac{p}{c_b^2}}$$
+        $$\bar{\theta} = e - \frac{p}{c_b^2}$$
 
         :param temp: temperature $T$
         :param phase: phase $\phi$

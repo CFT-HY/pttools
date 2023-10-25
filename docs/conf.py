@@ -156,9 +156,13 @@ extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
 }
 intersphinx_mapping: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
     "cobaya": ("https://cobaya.readthedocs.io/en/latest/", None),
+    "h5py": ("https://docs.h5py.org/en/stable/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
     "numba": ("https://numba.readthedocs.io/en/stable/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
+    "pyinstrument": ("https://pyinstrument.readthedocs.io/en/latest/", None),
+    "pylint": ("https://pylint.readthedocs.io/en/stable/", None),
+    "pytest": ("https://docs.pytest.org/en/stable/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     # "yappi": ("https://yappi.readthedocs.io/en/latest/", None),
 }
@@ -170,14 +174,17 @@ linkcheck_allowed_redirects = {
 # https://docs.github.com/en/actions/reference/authentication-in-a-workflow
 # linkcheck_auth = []
 linkcheck_ignore = [
-    # This website does not allow crawlers
+    # These websites don't allow crawlers
     # r"https://academic.oup.com/book/*",
+    r"https://www.aka.fi/*",
     # The private Bitbucket repos will also return 404 without authentication
     r"https://bitbucket.org/hindmars/sound-shell-model/*",
     # This link redirects to a site that does not allow crawlers
     f"https://doi.org/10.1093/acprof:oso/9780198528906.001.0001",
     # The project repository will return 404 without authentication until it's published.
     r"https://github\.com/hindmars-org/pttools/*",
+    # The anchors are valid but not detected by Sphinx.
+    r"https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/*",
 ]
 if "GITHUB_ACTIONS" in os.environ:
     linkcheck_ignore += [
@@ -186,7 +193,8 @@ if "GITHUB_ACTIONS" in os.environ:
         r"https://stfc\.ukri\.org/",
     ]
 
-linkcheck_timeout = 5
+# Timeout had to be increased from 5 to prevent errors with slow ArXiv links
+linkcheck_timeout = 10
 linkcheck_workers = 10
 
 sphinx_gallery_conf = {

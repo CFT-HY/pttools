@@ -96,7 +96,7 @@ def validate_solution_type(
 
 
 def cannot_be_detonation(v_wall: float, v_cj: float) -> float:
-    r"""If $v_w < v_{CJ}, it cannot be a detonation"""
+    r"""If $v_w < v_{CJ}$, it cannot be a detonation"""
     return v_wall < v_cj
 
 

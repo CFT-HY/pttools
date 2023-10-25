@@ -65,7 +65,7 @@ class Spectrum:
         self.spec_den_v: tp.Optional[np.ndarray] = None
         #: ???
         self.spec_den_gw: tp.Optional[np.ndarray] = None
-        #: $\mathcal{P}_\tilde{v}(q)$
+        #: $\mathcal{P}_{\tilde{v}}(q)$
         self.pow_v: tp.Optional[np.ndarray] = None
         #: ???
         self.pow_gw: tp.Optional[np.ndarray] = None
