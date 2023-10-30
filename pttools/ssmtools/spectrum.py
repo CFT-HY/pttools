@@ -480,9 +480,15 @@ def spec_den_v_bag(
 
     vw, alpha, nuc_type, nuc_args = parse_params(params)
     if filename is None:
-        A2_lookup = ssm.a2_ssm_func_bag(qT_lookup, vw, alpha, npt, method, de_method, z_st_thresh)
+        A2_lookup = ssm.a2_ssm_func_bag(
+            z=qT_lookup, v_wall=vw, alpha=alpha,
+            npt=npt, method=method, de_method=de_method, z_st_thresh=z_st_thresh
+        )
     else:
-        A2_lookup = ssm.a2_e_conserving_bag_file(qT_lookup, filename, alpha, skip, npt, z_st_thresh)
+        A2_lookup = ssm.a2_e_conserving_bag_file(
+            z=qT_lookup, filename=filename, alpha=alpha,
+            skip=skip, npt=npt, z_st_thresh=z_st_thresh
+        )
 
     # if qT_lookup.size != A2_lookup.size:
     #     raise ValueError(f"Lookup sizes don't match: {qT_lookup.size} != {A2_lookup.size}")

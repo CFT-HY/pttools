@@ -52,7 +52,7 @@ def a2_e_conserving(
     v_ip, w_ip, xi = bub.v, bub.w, bub.xi
 
     # :gw_pt_ssm:`\ ` eq. 4.5
-    f = (4. * np.pi / z) * calculators.sin_transform(z, xi, v_ip, z_st_thresh)
+    f = (4. * np.pi / z) * calculators.sin_transform(z, xi, v_ip, z_st_thresh, v_wall=bub.v_wall, v_sh=bub.v_sh)
 
     v_ft = speedup.gradient(f) / speedup.gradient(z)
 
@@ -72,7 +72,8 @@ def a2_e_conserving(
     #         calculators.sin_transform(z[j], xi_re, xi_re*lam_re, z_st_thresh=max(z))
 
     # :gw_pt_ssm:`\ ` eq. 4.8
-    lam_ft = (4. * np.pi / z) * calculators.sin_transform(z, xi_re, xi_re * lam_re, z_st_thresh)
+    lam_ft = (4. * np.pi / z) * calculators.sin_transform(
+        z, xi_re, xi_re * lam_re, z_st_thresh, v_wall=bub.v_wall, v_sh=bub.v_sh)
 
     # :gw_pt_ssm:`\ ` eq. 4.11
 
@@ -84,7 +85,7 @@ def a2_e_conserving(
 @numba.njit
 def a2_e_conserving_bag(
         z: np.ndarray,
-        vw: float,
+        v_wall: float,
         alpha_n: float,
         npt: const.NptType = const.NPTDEFAULT,
         de_method: DE_Method = DE_Method.STANDARD,
@@ -104,20 +105,21 @@ def a2_e_conserving_bag(
     nxi = npt[0]
     #    xi_re = np.linspace(0,1-1/nxi,nxi)
     # need to resample for lam = de/w, as some non-zero points are very far apart
-    v_ip, w_ip, xi = bubble.fluid_shell_bag(vw, alpha_n, nxi)
+    v_ip, w_ip, xi = bubble.fluid_shell_bag(v_wall, alpha_n, nxi)
+    v_sh = None
 
     #    f = np.zeros_like(z)
     #    for j in range(f.size):
     #        f[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi, v_ip, z_st_thresh)
-    f = (4. * np.pi / z) * calculators.sin_transform(z, xi, v_ip, z_st_thresh)
+    f = (4. * np.pi / z) * calculators.sin_transform(z, xi, v_ip, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
 
     v_ft = speedup.gradient(f) / speedup.gradient(z)
 
     # Now get and resample lam = de/w
     if de_method == DE_Method.ALTERNATE.value:
-        lam_orig = bubble.de_from_w_new_bag(v_ip, w_ip, xi, vw, alpha_n) / w_ip[-1]
+        lam_orig = bubble.de_from_w_new_bag(v_ip, w_ip, xi, v_wall, alpha_n) / w_ip[-1]
     else:
-        lam_orig = bubble.de_from_w_bag(w_ip, xi, vw, alpha_n) / w_ip[-1]
+        lam_orig = bubble.de_from_w_bag(w_ip, xi, v_wall, alpha_n) / w_ip[-1]
 
     lam_orig += w_ip * v_ip * v_ip / w_ip[-1]  # This doesn't make much difference at small alpha
     xi_re, lam_re = calculators.resample_uniform_xi(xi, lam_orig, nxi)
@@ -127,7 +129,7 @@ def a2_e_conserving_bag(
     #    for j in range(lam_ft.size):
     #        lam_ft[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi_re, xi_re*lam_re,
     #              z_st_thresh=max(z)) # Need to fix problem with ST of lam for detonations
-    lam_ft = (4. * np.pi / z) * calculators.sin_transform(z, xi_re, xi_re * lam_re, z_st_thresh)
+    lam_ft = (4. * np.pi / z) * calculators.sin_transform(z, xi_re, xi_re * lam_re, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
 
     A2 = 0.25 * (v_ft ** 2 + (const.CS0 * lam_ft) ** 2)
 
@@ -168,7 +170,7 @@ def a2_e_conserving_bag_file(
     #    f = np.zeros_like(z)
     #    for j in range(f.size):
     #        f[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi_lt1, v_xi_lt1)
-    f = (4. * np.pi / z) * calculators.sin_transform(z, xi_lt1, v_xi_lt1)
+    f = (4. * np.pi / z) * calculators.sin_transform(z, xi_lt1, v_xi_lt1, v_wall=None, v_sh=None)
 
     v_ft = np.gradient(f) / np.gradient(z)
     e_n = e_xi_lt1[-1]
@@ -186,7 +188,7 @@ def a2_e_conserving_bag_file(
     #        lam_ft[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi_lt1, xi_lt1*lam,
     #              z_st_thresh=max(z)) # Need to fix problem with ST of lam for detonations
     lam_ft = (4. * np.pi / z) * \
-        calculators.sin_transform(z, xi_lt1, xi_lt1 * lam, z_st_thresh)
+        calculators.sin_transform(z, xi_lt1, xi_lt1 * lam, z_st_thresh, v_wall=None, v_sh=None)
 
     return 0.25 * (v_ft ** 2 + (const.CS0 * lam_ft) ** 2)
 
@@ -194,7 +196,7 @@ def a2_e_conserving_bag_file(
 @numba.njit
 def a2_ssm_func_bag(
         z: np.ndarray,
-        vw: float,
+        v_wall: float,
         alpha: float,
         npt: const.NptType = const.NPTDEFAULT,
         method: Method = Method.E_CONSERVING,
@@ -214,18 +216,18 @@ def a2_ssm_func_bag(
     """
     if method == Method.E_CONSERVING.value:
         # This is the correct method (as of 12.18)
-        A2 = a2_e_conserving_bag(z, vw, alpha, npt, de_method, z_st_thresh)[0]
+        A2 = a2_e_conserving_bag(z, v_wall, alpha, npt, de_method, z_st_thresh)[0]
     elif method == Method.F_ONLY.value:
         with numba.objmode:
             logger.debug("f_only method, multiplying (f\')^2 by 2")
-        f = f_ssm_func_bag(z, vw, alpha, npt)
+        f = f_ssm_func_bag(z, v_wall, alpha, npt=npt)
         df_dz = speedup.gradient(f) / speedup.gradient(z)
         A2 = 0.25 * (df_dz ** 2)
         A2 = A2 * 2
     elif method == Method.WITH_G.value:
         with numba.objmode:
             logger.debug("With_g method")
-        f = f_ssm_func_bag(z, vw, alpha, npt)
+        f = f_ssm_func_bag(z, v_wall, alpha, npt=npt)
         df_dz = speedup.gradient(f) / speedup.gradient(z)
         g = (z * df_dz + 2. * f)
         dg_dz = speedup.gradient(g) / speedup.gradient(z)
@@ -234,7 +236,7 @@ def a2_ssm_func_bag(
     else:
         with numba.objmode:
             logger.warning("Method not known, should be [e_conserving | f_only | with_g]. Defaulting to e_conserving.")
-        A2 = a2_e_conserving_bag(z, vw, alpha, npt)[0]
+        A2 = a2_e_conserving_bag(z, v_wall, alpha, npt=npt)[0]
 
     return A2
 
@@ -266,7 +268,7 @@ def f_file_bag(
     #    f = np.zeros_like(z_arr)
     #    for n, z in enumerate(z_arr):
     #        f[n] = (4*np.pi/z)*calculators.sin_transform(z, xi_lt1, v_xi_lt1, z_st_thresh)
-    f = (4 * np.pi / z_arr) * calculators.sin_transform(z_arr, xi_lt1, v_xi_lt1, z_st_thresh)
+    f = (4 * np.pi / z_arr) * calculators.sin_transform(z_arr, xi_lt1, v_xi_lt1, z_st_thresh, v_wall=None, v_sh=None)
 
     return f
 
@@ -276,6 +278,7 @@ def f_ssm_func_bag(
         z: th.FloatOrArr,
         v_wall: float,
         alpha_n: float,
+        v_sh: float = None,
         npt: const.NptType = const.NPTDEFAULT,
         z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
     r"""
@@ -284,6 +287,7 @@ def f_ssm_func_bag(
     :param z: array of scaled wavenumbers $z = kR_*$
     :param v_wall: $v_\text{wall}$
     :param alpha_n: $\alpha_n$
+    :param v_sh: shock speed
     :param npt: number of points
     """
     nxi = npt[0]
@@ -292,7 +296,7 @@ def f_ssm_func_bag(
     # f_ssm = np.zeros_like(z)
     # for j in range(f_ssm.size):
     #    f_ssm[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi, v_ip)
-    return (4.*np.pi/z) * calculators.sin_transform(z, xi, v_ip, z_st_thresh)
+    return (4.*np.pi/z) * calculators.sin_transform(z, xi, v_ip, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
 
 
 def g_file_bag(z: np.ndarray, t, filename: str, skip: int = 0) -> np.ndarray:
@@ -306,21 +310,22 @@ def g_file_bag(z: np.ndarray, t, filename: str, skip: int = 0) -> np.ndarray:
     return z * df_dz + 2. * f
 
 
-def g_ssm_func_bag(z: np.ndarray, vw, alpha, npt: const.NptType = const.NPTDEFAULT) -> np.ndarray:
+def g_ssm_func_bag(z: np.ndarray, v_wall, alpha, npt: const.NptType = const.NPTDEFAULT) -> np.ndarray:
     r"""
     3D FT of radial fluid acceleration $\dot{v}$(r) from Sound Shell Model fluid profile.
 
     :param z: array of scaled wavenumbers $z = kR_*$
     """
-    f_ssm = f_ssm_func_bag(z, vw, alpha, npt)
+    f_ssm = f_ssm_func_bag(z, v_wall, alpha, npt=npt)
     df_ssmdz = np.gradient(f_ssm) / np.gradient(z)
     return z * df_ssmdz + 2. * f_ssm
 
 
 def lam_ssm_func_bag(
-        z,
-        vw,
-        alpha_n,
+        z: np.ndarray,
+        v_wall: float,
+        alpha_n: float,
+        v_sh: float = None,
         npt: const.NptType = const.NPTDEFAULT,
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH):
@@ -331,12 +336,12 @@ def lam_ssm_func_bag(
     """
     nxi = npt[0]
     # xi_re = np.linspace(0,1-1/nxi,nxi) # need to resample for lam = de/w
-    v_ip, w_ip, xi = bubble.fluid_shell_bag(vw, alpha_n, nxi)
+    v_ip, w_ip, xi = bubble.fluid_shell_bag(v_wall, alpha_n, nxi)
 
     if de_method == DE_Method.ALTERNATE:
-        lam_orig = bubble.de_from_w_new_bag(v_ip, w_ip, xi, vw, alpha_n) / w_ip[-1]
+        lam_orig = bubble.de_from_w_new_bag(v_ip, w_ip, xi, v_wall, alpha_n) / w_ip[-1]
     else:
-        lam_orig = bubble.de_from_w_bag(w_ip, xi, vw, alpha_n) / w_ip[-1]
+        lam_orig = bubble.de_from_w_bag(w_ip, xi, v_wall, alpha_n) / w_ip[-1]
     xi_re, lam_re = calculators.resample_uniform_xi(xi, lam_orig, nxi)
 
     # lam_ft = np.zeros_like(z)
@@ -344,4 +349,4 @@ def lam_ssm_func_bag(
     #    lam_ft[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi_re, xi_re*lam_re,
     #          z_st_thresh=max(z)) # Need to fix problem with ST of lam for detonations
 
-    return (4.*np.pi/z) * calculators.sin_transform(z, xi_re, xi_re*lam_re, z_st_thresh)
+    return (4.*np.pi/z) * calculators.sin_transform(z, xi_re, xi_re*lam_re, z_st_thresh, v_wall=v_wall, v_sh=v_sh)

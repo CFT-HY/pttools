@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 @numba.njit
-def envelope(xi: np.ndarray, f: np.ndarray, xi_wall: float = None, xi_sh: float = None) -> np.ndarray:
+def envelope(xi: np.ndarray, f: np.ndarray, v_wall: float = None, v_sh: float = None) -> np.ndarray:
     r"""
     Helper function for :func:`sin_transform_approx`.
     Assumes that
@@ -33,14 +33,16 @@ def envelope(xi: np.ndarray, f: np.ndarray, xi_wall: float = None, xi_sh: float 
 
     :param: xi: $\xi$
     :param f: function values $f$ at the points $\xi$
+    :param v_wall: wall speed
+    :param v_sh: shock speed
     :return: array of $\xi$, $f$ pairs "outlining" function $f$
     """
-    if xi_wall is None or xi_sh is None:
-        with numba.objmode:
-            logger.warning(
-                "Please give xi_wall and xi_sh to envelope(). "
-                "They will be needed in the future for finding the discontinuities."
-            )
+    # if v_wall is None or v_sh is None:
+    #     with numba.objmode:
+    #         logger.warning(
+    #             "Please give v_wall and v_sh to envelope(). "
+    #             "They will be needed in the future for finding the discontinuities."
+    #         )
 
     xi_nonzero = xi[np.nonzero(f)]
     xi1 = np.min(xi_nonzero)
@@ -99,18 +101,23 @@ def resample_uniform_xi(
 
 
 @numba.njit
-def _sin_transform_scalar(z: float, xi: np.ndarray, f: np.ndarray, z_st_thresh: float = const.Z_ST_THRESH) -> float:
+def _sin_transform_scalar(
+        z: float, xi: np.ndarray, f: np.ndarray,
+        z_st_thresh: float = const.Z_ST_THRESH,
+        v_wall: float = None, v_sh: float = None) -> float:
     if z <= z_st_thresh:
         array = f * np.sin(z * xi)
         integral = np.trapz(array, xi)
     else:
-        integral = sin_transform_approx(z, xi, f)
+        integral = sin_transform_approx(z, xi, f, v_wall=v_wall, v_sh=v_sh)
     return integral
 
 
 @numba.njit(parallel=True)
 def _sin_transform_arr(
-        z: np.ndarray, xi: np.ndarray, f: np.ndarray, z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
+        z: np.ndarray, xi: np.ndarray, f: np.ndarray,
+        z_st_thresh: float = const.Z_ST_THRESH,
+        v_wall: float = None, v_sh: float = None) -> np.ndarray:
     lo = np.where(z <= z_st_thresh)
     z_lo = z[lo]
     # Integrand of the sine transform
@@ -122,7 +129,7 @@ def _sin_transform_arr(
 
     if len(lo) < len(z):
         z_hi = z[np.where(z > z_st_thresh - const.DZ_ST_BLEND)]
-        I_hi = sin_transform_approx(z_hi, xi, f)
+        I_hi = sin_transform_approx(z_hi, xi, f, v_wall=v_wall, v_sh=v_sh)
 
         if len(z_hi) + len(z_lo) > len(z):
             # If there are elements in the z blend range, then blend
@@ -151,7 +158,9 @@ def sin_transform(
         z: th.FloatOrArr,
         xi: np.ndarray,
         f: np.ndarray,
-        z_st_thresh: float = const.Z_ST_THRESH) -> th.FloatOrArrNumba:
+        z_st_thresh: float = const.Z_ST_THRESH,
+        v_wall: float = None,
+        v_sh: float = None) -> th.FloatOrArrNumba:
     r"""
     sin transform of $f(\xi)$, Fourier transform variable z.
     For z > z_st_thresh, use approximation rather than doing the integral.
@@ -166,6 +175,8 @@ def sin_transform(
     :param xi: $\xi$ points over which to integrate
     :param f: function values at the points $\xi$, same shape as $\xi$
     :param z_st_thresh: for $z$ values above z_sh_tresh, use approximation rather than doing the integral.
+    :param v_wall: wall speed
+    :param v_sh: shock speed
     :return: sine transformed values $\hat{f}(z)$
     """
     if isinstance(z, numba.types.Float):
@@ -173,9 +184,9 @@ def sin_transform(
     if isinstance(z, numba.types.Array):
         return _sin_transform_arr
     if isinstance(z, float):
-        return _sin_transform_scalar(z, xi, f, z_st_thresh)
+        return _sin_transform_scalar(z, xi, f, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
     if isinstance(z, np.ndarray):
-        return _sin_transform_arr(z, xi, f, z_st_thresh)
+        return _sin_transform_arr(z, xi, f, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
     raise NotImplementedError
 
 
@@ -203,7 +214,9 @@ def sin_transform_core(t: np.ndarray, f: np.ndarray, freq: np.ndarray) -> np.nda
 
 
 @numba.njit
-def sin_transform_approx(z: th.FloatOrArr, xi: np.ndarray, f: np.ndarray) -> np.ndarray:
+def sin_transform_approx(
+        z: th.FloatOrArr, xi: np.ndarray, f: np.ndarray,
+        v_wall: float = None, v_sh: float = None) -> np.ndarray:
     r"""
     Approximate sin transform of $f(\xi)$.
     For values $f_a$ and $f_b$, we have
@@ -221,7 +234,7 @@ def sin_transform_approx(z: th.FloatOrArr, xi: np.ndarray, f: np.ndarray) -> np.
     """
     # Old versions of Numba don't support unpacking 2D arrays
     # [[xi1, xi_w, _, xi2], [f1, f_m, f_p, f2]] = envelope(xi, f)
-    envelope_arr = envelope(xi, f)
+    envelope_arr = envelope(xi, f, v_wall=v_wall, v_sh=v_sh)
     [xi1, xi_w, _, xi2] = envelope_arr[0, :]
     [f1, f_m, f_p, f2] = envelope_arr[1, :]
 
