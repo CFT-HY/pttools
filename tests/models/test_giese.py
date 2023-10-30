@@ -4,6 +4,7 @@ import unittest
 import typing as tp
 
 import numpy as np
+import pytest
 
 from pttools import models
 from pttools.analysis.parallel import create_bubbles
@@ -68,9 +69,7 @@ class GieseTest(unittest.TestCase):
         # The tolerance had to be increased when re-solving of thin shells was implemented.
         compare(model, alpha_ns, v_walls, kappa_ref, rtol=0.085)
 
-    # Using @staticmethod together with @conditional_decorator crashes Pytest
-    # @staticmethod
-    @conditional_decorator(unittest.expectedFailure, IS_OSX)
+    @pytest.mark.xfail(IS_OSX, reason="Bug on macOS", strict=True)
     def test_kappa33(self):
         kappa_ref = np.array([
             [0.00741574, 0.01450964, 0.02653822, 0.05782794, 0.18993211, 0.04904255, 0.0265001, 0.01816217],
