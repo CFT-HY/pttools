@@ -90,4 +90,5 @@ def load_tbb() -> tp.Optional[int]:
 if __name__ == "__main__":
     print("TBB version:", load_tbb())
 else:
-    load_tbb()
+    if IS_LINUX:
+        load_tbb()
