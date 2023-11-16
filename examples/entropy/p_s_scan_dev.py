@@ -33,7 +33,7 @@ g_bro = 120
 def get_entropy_diff(v_wall, alpha, g_bro=eos.G_BRO_DEFAULT, n_xi=b.N_XI_DEFAULT):
     bg = eos.bag_model(alpha, g_bro=g_bro)
 
-    v,w,xi = b.fluid_shell_bag(v_wall, alpha, n_xi=n_xi)
+    v,w,xi = b.sound_shell_bag(v_wall, alpha, n_xi=n_xi)
     if not any(np.isnan(v)):
         # entropy change
         T = bg.T(w,b.phase(xi,v_wall))
@@ -68,7 +68,7 @@ def get_entropy_diff_arr(vw_list, alpha_list, g_bro=eos.G_BRO_DEFAULT):
 def get_pressure_diff(v_wall, alpha, g_bro=eos.G_BRO_DEFAULT, n_xi=b.N_XI_DEFAULT):
     bg = eos.bag_model(alpha, g_bro=g_bro)
 
-    v,w,xi = b.fluid_shell_bag(v_wall, alpha, n_xi=n_xi)
+    v,w,xi = b.sound_shell_bag(v_wall, alpha, n_xi=n_xi)
     if not any(np.isnan(v)):
         # pressure change
         T = bg.T(w,b.phase(xi,v_wall))

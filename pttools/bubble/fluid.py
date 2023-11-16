@@ -44,7 +44,7 @@ DEFLAGRATION_NAN: DeflagrationOutput = \
     np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 
 
-def fluid_shell_deflagration(
+def sound_shell_deflagration(
         model: "Model",
         v_wall: float, wn: float, w_center: float,
         cs_n: float,
@@ -100,7 +100,7 @@ def fluid_shell_deflagration(
         logger.warning("Using invalid wp_guess=%s", wp_guess)
         wp_guess = 1.1 * wn
 
-    return fluid_shell_deflagration_common(
+    return sound_shell_deflagration_common(
         model,
         v_wall=v_wall,
         vm_tilde=v_wall,
@@ -115,7 +115,7 @@ def fluid_shell_deflagration(
     )
 
 
-def fluid_shell_deflagration_common(
+def sound_shell_deflagration_common(
         model: "Model",
         v_wall: float,
         vm_tilde: float,
@@ -258,7 +258,7 @@ def fluid_shell_deflagration_common(
     return v, w, xi, vp, vm, vp_tilde, vm_tilde, xi_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh
 
 
-def fluid_shell_deflagration_reverse(
+def sound_shell_deflagration_reverse(
         model: "Model", v_wall: float, wn: float, xi_sh: float, t_end: float, n_xi: int,
         allow_failure: bool = False):
     logger.warning("UNTESTED, will probably produce invalid results")
@@ -318,7 +318,7 @@ def fluid_shell_deflagration_reverse(
     return v, w, xi, wp, wm, vm
 
 
-def fluid_shell_detonation(
+def sound_shell_detonation(
         model: "Model", v_wall: float, alpha_n: float, wn: float, v_cj: float,
         vm_tilde_guess: float, wm_guess: float, t_end: float, n_xi: int) -> SolverOutput:
     if transition.cannot_be_detonation(v_wall, v_cj):
@@ -368,7 +368,7 @@ def fluid_shell_detonation(
     return np.flip(v), np.flip(w), np.flip(xi), vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wn, wm, wm, solution_found
 
 
-def fluid_shell_hybrid(
+def sound_shell_hybrid(
         model: "Model", v_wall: float, wn: float, wm: float, cs_n: float,
         vp_tilde_guess: float, wp_guess: float, t_end: float, n_xi: int,
         thin_shell_limit: int,
@@ -380,7 +380,7 @@ def fluid_shell_hybrid(
         vp_tilde_guess = 0.75*vm_tilde
     if np.isnan(wp_guess):
         wp_guess = 2*wm
-    return fluid_shell_deflagration_common(
+    return sound_shell_deflagration_common(
         model,
         v_wall=v_wall,
         vm_tilde=vm_tilde,
@@ -397,16 +397,16 @@ def fluid_shell_hybrid(
 
 # Solvables
 
-def fluid_shell_solvable_deflagration_reverse(
+def sound_shell_solvable_deflagration_reverse(
         params: np.ndarray, model: "Model", v_wall: float, wn: float, t_end: float, n_xi: int) -> float:
     xi_sh = params[0]
     # pylint: disable=unused-variable
-    v, w, xi, vm, wm = fluid_shell_deflagration_reverse(
+    v, w, xi, vm, wm = sound_shell_deflagration_reverse(
         model, v_wall, wn, xi_sh, t_end=t_end, n_xi=n_xi, allow_failure=True)
     return vm
 
 
-def fluid_shell_solvable_deflagration(
+def sound_shell_solvable_deflagration(
         # params: np.ndarray,
         w_center: float, model: "Model", v_wall: float, wn: float, cs_n: float,
         vp_guess: float, wp_guess: float, t_end: float, n_xi: int, thin_shell_limit: int) -> float:
@@ -415,14 +415,14 @@ def fluid_shell_solvable_deflagration(
     if np.isnan(w_center) or w_center < 0:
         return np.nan
     # pylint: disable=unused-variable
-    v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = fluid_shell_deflagration(
+    v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = sound_shell_deflagration(
         model, v_wall=v_wall, wn=wn, w_center=w_center, cs_n=cs_n,
         vp_guess=vp_guess, wp_guess=wp_guess, t_end=t_end, n_xi=n_xi, thin_shell_limit=thin_shell_limit,
         allow_failure=True, warn_if_shock_barely_exists=False)
     return wn_estimate - wn
 
 
-def fluid_shell_solvable_hybrid(
+def sound_shell_solvable_hybrid(
         # params: np.ndarray,
         wm: float, model: "Model", v_wall: float, wn: float, cs_n: float,
         vp_tilde_guess: float, wp_guess: float, t_end: float, n_xi: int, thin_shell_limit: int) -> float:
@@ -431,7 +431,7 @@ def fluid_shell_solvable_hybrid(
     if np.isnan(wm) or wm < 0:
         return np.nan
     # pylint: disable=unused-variable
-    v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = fluid_shell_hybrid(
+    v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = sound_shell_hybrid(
         model, v_wall=v_wall, wn=wn, wm=wm,
         cs_n=cs_n,
         vp_tilde_guess=vp_tilde_guess, wp_guess=wp_guess, t_end=t_end, n_xi=n_xi, thin_shell_limit=thin_shell_limit,
@@ -441,7 +441,7 @@ def fluid_shell_solvable_hybrid(
 
 # Solvers
 
-def fluid_shell_solver_deflagration(
+def sound_shell_solver_deflagration(
         model: "Model",
         start_time: float,
         v_wall: float, alpha_n: float, wn: float, cs_n: float, high_alpha_n: bool,
@@ -455,7 +455,7 @@ def fluid_shell_solver_deflagration(
         vp_guess = vp_guess_new
 
     sol = root_scalar(
-        fluid_shell_solvable_deflagration,
+        sound_shell_solvable_deflagration,
         x0=0.99*wm_guess,
         x1=1.01*wm_guess,
         args=(model, v_wall, wn, cs_n, vp_guess, wp_guess, t_end, n_xi, thin_shell_limit),
@@ -468,7 +468,7 @@ def fluid_shell_solver_deflagration(
         # if not high_alpha_n:
         #     logger.error("FALLBACK")
         sol = fsolve_vary(
-            fluid_shell_solvable_deflagration,
+            sound_shell_solvable_deflagration,
             np.array([wm_guess]),
             args=(model, v_wall, wn, cs_n, vp_guess, wp_guess, t_end, n_xi, thin_shell_limit),
             log_status=log_high_alpha_n_failures or not high_alpha_n
@@ -477,7 +477,7 @@ def fluid_shell_solver_deflagration(
         solution_found = sol[2] == 1
         reason = sol[3]
 
-    v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = fluid_shell_deflagration(
+    v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = sound_shell_deflagration(
         model, v_wall, wn, wm,
         cs_n=cs_n,
         vp_guess=vp_guess, wp_guess=wp_guess, t_end=t_end, n_xi=n_xi, thin_shell_limit=thin_shell_limit,
@@ -505,14 +505,14 @@ def fluid_shell_solver_deflagration(
     return v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, solution_found
 
 
-def fluid_shell_solver_deflagration_reverse(
+def sound_shell_solver_deflagration_reverse(
         model: "Model",
         start_time: float,
         v_wall: float, alpha_n: float, wn: float, t_end: float, n_xi: int) -> SolverOutput:
     # This is arbitrary and should be replaced by a value from the bag model
     xi_sh_guess = 1.1 * np.sqrt(model.cs2_max(wn, Phase.BROKEN))
     sol = fsolve(
-        fluid_shell_solvable_deflagration_reverse,
+        sound_shell_solvable_deflagration_reverse,
         xi_sh_guess,
         args=(model, v_wall, wn, t_end, n_xi),
         full_output=True
@@ -525,12 +525,12 @@ def fluid_shell_solver_deflagration_reverse(
             f"Deflagration solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. "
             f"Using xi_sh={xi_sh}. Reason: {sol[3]} Elapsed: {time.perf_counter() - start_time} s."
         )
-    v, w, xi, wp, wm, vm = fluid_shell_deflagration_reverse(model, v_wall, wn, xi_sh, t_end=t_end, n_xi=n_xi)
+    v, w, xi, wp, wm, vm = sound_shell_deflagration_reverse(model, v_wall, wn, xi_sh, t_end=t_end, n_xi=n_xi)
 
     return v, w, xi, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, wp, wm, np.nan, solution_found
 
 
-def fluid_shell_solver_hybrid(
+def sound_shell_solver_hybrid(
         model: "Model",
         start_time: float,
         v_wall: float, alpha_n: float, wn: float, cs_n: float, high_alpha_n: bool,
@@ -539,7 +539,7 @@ def fluid_shell_solver_hybrid(
         allow_failure: bool, log_high_alpha_n_failures: bool) -> SolverOutput:
 
     sol = root_scalar(
-        fluid_shell_solvable_hybrid,
+        sound_shell_solvable_hybrid,
         x0=0.99*wm_guess,
         x1=1.01*wm_guess,
         args=(model, v_wall, wn, cs_n, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit)
@@ -552,7 +552,7 @@ def fluid_shell_solver_hybrid(
         # if not high_alpha_n:
         #     logger.error("FALLBACK")
         sol = fsolve_vary(
-            fluid_shell_solvable_hybrid,
+            sound_shell_solvable_hybrid,
             np.array([wm_guess]),
             args=(model, v_wall, wn, cs_n, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit),
             log_status=log_high_alpha_n_failures or not high_alpha_n
@@ -561,7 +561,7 @@ def fluid_shell_solver_hybrid(
         solution_found = sol[2] == 1
         reason = sol[3]
 
-    v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = fluid_shell_hybrid(
+    v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = sound_shell_hybrid(
         model, v_wall, wn, wm,
         cs_n=cs_n,
         vp_tilde_guess=vp_tilde_guess,
@@ -606,7 +606,7 @@ def fluid_shell_solver_hybrid(
 
 # Main function
 
-def fluid_shell_generic(
+def sound_shell_generic(
             model: "Model",
             v_wall: float,
             alpha_n: float,
@@ -656,7 +656,7 @@ def fluid_shell_generic(
         if sol_type is not None and sol_type != sol_type2:
             raise ValueError(f"Bag model gave a different solution type ({sol_type2}) than what was given ({sol_type}).")
 
-        v, w, xi = fluid_bag.fluid_shell_bag(v_wall, alpha_n)
+        v, w, xi = fluid_bag.sound_shell_bag(v_wall, alpha_n)
         # The results of the old solver are scaled to wn=1
         w *= wn
         if np.any(np.isnan(v)):
@@ -733,7 +733,7 @@ def fluid_shell_generic(
     # Detonations are the simplest case
     if sol_type == SolutionType.DETON:
         v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, solution_found = \
-            fluid_shell_detonation(
+            sound_shell_detonation(
                 model, v_wall, alpha_n, wn, v_cj,
                 vm_tilde_guess=vm_tilde_ref, wm_guess=wm_ref, t_end=t_end, n_xi=n_xi,
             )
@@ -749,13 +749,13 @@ def fluid_shell_generic(
         if reverse:
             logger.warning("Using reverse deflagration solver, which has not been properly tested.")
             v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, solution_found = \
-                fluid_shell_solver_deflagration_reverse(
+                sound_shell_solver_deflagration_reverse(
                     model, start_time, v_wall, alpha_n, wn,
                     t_end=t_end, n_xi=n_xi
                 )
         else:
             v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, solution_found = \
-                fluid_shell_solver_deflagration(
+                sound_shell_solver_deflagration(
                     model, start_time,
                     v_wall, alpha_n, wn,
                     cs_n=cs_n,
@@ -766,7 +766,7 @@ def fluid_shell_generic(
                 )
     elif sol_type == SolutionType.HYBRID:
         v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, solution_found = \
-            fluid_shell_solver_hybrid(
+            sound_shell_solver_hybrid(
                 model, start_time,
                 v_wall, alpha_n, wn,
                 cs_n=cs_n,
@@ -803,3 +803,6 @@ def fluid_shell_generic(
             model.label_unicode, v_wall, alpha_n, sol_type, elapsed
         )
     return v, w, xi, sol_type, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, v_cj, not solution_found, elapsed
+
+
+fluid_shell_generic = sound_shell_generic

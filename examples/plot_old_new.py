@@ -88,7 +88,7 @@ def main():
 
     print("Solving old")
     for v_wall, alpha_n, sol_type in zip(v_walls, alpha_ns, sol_types):
-        v, w, xi = fluid_bag.fluid_shell_bag(v_wall=v_wall, alpha_n=alpha_n)
+        v, w, xi = fluid_bag.sound_shell_bag(v_wall=v_wall, alpha_n=alpha_n)
         ax.plot(xi, v, color="blue", label=rf"$v_w={v_wall}, \alpha_n={alpha_n}")
         validate(bag, v, w, xi, sol_type)
 

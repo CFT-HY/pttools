@@ -47,7 +47,7 @@ def _alpha_n_max_deflagration_bag_scalar(v_wall: float, n_xi: int) -> float:
     # TODO: This line is for the bag model only, as cs should depend on enthalpy and phase
     sol_type = boundary.SolutionType.HYBRID.value if v_wall > const.CS0 else boundary.SolutionType.SUB_DEF.value
     ap = 1. / 3 - 1.0e-10  # Warning - this is not safe.  Causes warnings for v low vw
-    _, w, xi = fluid_bag.fluid_shell_alpha_plus(v_wall, ap, sol_type, n_xi)
+    _, w, xi = fluid_bag.sound_shell_alpha_plus(v_wall, ap, sol_type, n_xi)
     n_wall = props.find_v_index(xi, v_wall)
     return w[n_wall + 1] * (1. / 3)
 
@@ -121,7 +121,7 @@ def alpha_n_max_hybrid_bag(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> flo
     # Might have been returned as "Detonation, which takes precedence over Hybrid
     sol_type = boundary.SolutionType.HYBRID.value
     ap = 1/3 - 1e-8
-    _, w, xi = fluid_bag.fluid_shell_alpha_plus(v_wall, ap, sol_type, n_xi)
+    _, w, xi = fluid_bag.sound_shell_alpha_plus(v_wall, ap, sol_type, n_xi)
     n_wall = props.find_v_index(xi, v_wall)
 
     # alpha_N = (w_+/w_N)*alpha_+
@@ -243,7 +243,7 @@ def find_alpha_n_bag(
     check.check_wall_speed(v_wall)
     if sol_type == boundary.SolutionType.UNKNOWN.value:
         sol_type = transition.identify_solution_type_alpha_plus(v_wall, alpha_p).value
-    _, w, xi = fluid_bag.fluid_shell_alpha_plus(v_wall, alpha_p, sol_type, n_xi, cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr)
+    _, w, xi = fluid_bag.sound_shell_alpha_plus(v_wall, alpha_p, sol_type, n_xi, cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr)
     n_wall = props.find_v_index(xi, v_wall)
     return alpha_p * w[n_wall] / w[-1]
 

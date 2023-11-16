@@ -10,7 +10,7 @@ import numpy as np
 
 from examples import utils
 from pttools.bubble.bubble import Bubble
-from pttools.bubble.fluid_bag import fluid_shell_bag
+from pttools.bubble.fluid_bag import sound_shell_bag
 from pttools.bubble.boundary import SolutionType
 from pttools.bubble.integrate import add_df_dtau
 from pttools.bubble.relativity import lorentz
@@ -36,12 +36,12 @@ def main():
     det2 = Bubble(model2, v_wall=0.85, alpha_n=0.05, sol_type=SolutionType.DETON)
     det2.solve()
     ax.plot(det2.xi, det2.v, c="b", label=r"$c_{sb}=\frac{1}{\sqrt{3}}$")
-    v, w, xi = fluid_shell_bag(v_wall=0.85, alpha_n=0.05)
+    v, w, xi = sound_shell_bag(v_wall=0.85, alpha_n=0.05)
     ax.plot(xi, v, c="g", label="bag", ls=":")
     def2 = Bubble(model2, v_wall=0.5, alpha_n=0.578, sol_type=SolutionType.SUB_DEF)
     def2.solve()
     ax.plot(def2.xi, def2.v, c="b")
-    v, w, xi = fluid_shell_bag(v_wall=0.5, alpha_n=0.578)
+    v, w, xi = sound_shell_bag(v_wall=0.5, alpha_n=0.578)
     ax.plot(xi, v, c="g", ls=":")
 
     xi = np.linspace(css, 1, 20)

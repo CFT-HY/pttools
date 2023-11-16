@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 @numba.njit
-def fluid_shell_bag(
+def sound_shell_bag(
         v_wall: float,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
@@ -72,7 +72,7 @@ def fluid_shell_bag(
         #     return nan_arr, nan_arr, nan_arr, sol_type, np.nan, np.nan, np.nan, np.nan, np.nan
         return nan_arr, nan_arr, nan_arr
     # SolutionType has to be passed by its value when jitting
-    return fluid_shell_alpha_plus(v_wall, al_p, sol_type.value, n_xi, cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr)
+    return sound_shell_alpha_plus(v_wall, al_p, sol_type.value, n_xi, cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr)
     # if extra_output:
     #     v, w, xi, vfp_w, vfm_w, vfp_p, vfm_p = ret
     #     return v, w, xi, sol_type, al_p, vfp_w, vfm_w, vfp_p, vfm_p
@@ -80,7 +80,7 @@ def fluid_shell_bag(
 
 
 @numba.njit
-def fluid_shell_alpha_plus(
+def sound_shell_alpha_plus(
         v_wall: float,
         alpha_plus: float,
         sol_type: SolutionType = SolutionType.UNKNOWN,
@@ -222,7 +222,7 @@ def fluid_shell_alpha_plus(
     return v, w, xi
 
 
-def fluid_shell_dict(
+def sound_shell_dict(
         v_wall: float,
         alpha_n: float,
         Np: int = const.N_XI_DEFAULT,
@@ -239,7 +239,7 @@ def fluid_shell_dict(
     if sol_type is SolutionType.ERROR:
         raise RuntimeError(f"No solution for v_wall = {v_wall}, alpha_n = {alpha_n}")
 
-    v, w, xi = fluid_shell_bag(v_wall, alpha_n, Np)
+    v, w, xi = sound_shell_bag(v_wall, alpha_n, Np)
 
     # vmax = max(v)
 
@@ -297,3 +297,8 @@ def fluid_shell_dict(
         "dw": dw,
         "sol_type": sol_type
     }
+
+
+fluid_shell_bag = sound_shell_bag
+fluid_shell_alpha_plus = sound_shell_alpha_plus
+fluid_shell_dict = sound_shell_dict

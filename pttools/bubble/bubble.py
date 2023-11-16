@@ -10,7 +10,7 @@ import numpy as np
 
 from pttools.bubble.alpha import alpha_n_max_deflagration_bag
 from pttools.bubble.boundary import Phase, SolutionType
-from pttools.bubble.fluid import fluid_shell_generic
+from pttools.bubble.fluid import sound_shell_generic
 from pttools.bubble import const
 from pttools.bubble import props
 from pttools.bubble import thermo
@@ -235,7 +235,7 @@ class Bubble:
                 self.vp, self.vm, self.vp_tilde, self.vm_tilde, \
                 self.v_sh, self.vm_sh, self.vm_tilde_sh, \
                 self.wp, self.wm, self.wm_sh, self.v_cj, self.solver_failed, self.elapsed = \
-                fluid_shell_generic(
+                sound_shell_generic(
                     model=self.model,
                     v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type,
                     wn=self.wn,

@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 from examples import utils
 from pttools.logging import setup_logging
-from pttools.bubble.fluid_bag import fluid_shell_bag
+from pttools.bubble.fluid_bag import sound_shell_bag
 from pttools.bubble.fluid_reference import ref
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
@@ -29,7 +29,7 @@ v_wall = 0.85
 alpha_n = 0.05
 
 print("Solving with old solver")
-v, w, xi = fluid_shell_bag(v_wall, alpha_n)
+v, w, xi = sound_shell_bag(v_wall, alpha_n)
 # print(v, w, xi)
 
 print("Solving with new solver")
