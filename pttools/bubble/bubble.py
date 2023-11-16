@@ -119,7 +119,7 @@ class Bubble:
 
         # LaTeX labels are not supported in Plotly 3D plots.
         # https://github.com/plotly/plotly.js/issues/608
-        self.label_latex = rf"{self.model.label_latex} $v_w={v_wall}, \alpha_n={alpha_n}" \
+        self.label_latex = rf"{self.model.label_latex}, $v_w={v_wall}, \alpha_n={alpha_n}$" \
             if label_latex is None else label_latex
         self.label_unicode = f"{self.model.label_unicode}, v_w={v_wall}, αₙ={alpha_n}" \
             if label_unicode is None else label_unicode
@@ -201,9 +201,13 @@ class Bubble:
             f"κ={self.kappa:{prec}}, ω={self.omega:{prec}}, κ+ω={self.kappa + self.omega:{prec}}, " \
             f"V-avg. trace anomaly={self.va_trace_anomaly_diff:{prec}}"
 
-    def plot(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None) -> "FigAndAxes":
+    def plot(self, fig: plt.Figure = None, path: str = None) -> plt.Figure:
         from pttools.analysis.plot_bubble import plot_bubble
-        return plot_bubble(self, fig, ax, path)
+        return plot_bubble(self, fig, path)
+
+    def plot_v(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None) -> "FigAndAxes":
+        from pttools.analysis.plot_bubble import plot_bubble_v
+        return plot_bubble_v(self, fig, ax, path)
 
     def plot_w(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None) -> "FigAndAxes":
         from pttools.analysis.plot_bubble import plot_bubble_w

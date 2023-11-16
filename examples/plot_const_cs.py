@@ -23,7 +23,7 @@ def main():
     save(model_plot.fig, "const_cs.png")
 
     bubble = Bubble(const_cs, v_wall=0.5, alpha_n=0.2)
-    bubble_fig, bubble_ax = bubble.plot()
+    bubble_fig = bubble.plot()
     save(bubble_fig, "const_cs_bubble.png")
 
     spectrum = Spectrum(bubble)
