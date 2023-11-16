@@ -18,12 +18,6 @@ from . import utils
 logger = logging.getLogger(__name__)
 
 
-def generated_jit(func: callable):
-    if options.NUMBA_DISABLE_JIT:
-        return func
-    return numba.generated_jit(func, nopython=True, **options.NUMBA_OPTS)
-
-
 def njit(func: callable = None, **kwargs):
     """Wrapper for numba.njit.
 

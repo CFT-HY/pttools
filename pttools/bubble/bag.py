@@ -72,8 +72,8 @@ def cs2_bag_arr(w: np.ndarray, phase: np.ndarray) -> np.ndarray:
     return const.CS0_2 * np.ones_like(w)
 
 
-@numba.generated_jit(nopython=True)
-def cs2_bag(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArrNumba:
+@numba.njit
+def cs2_bag(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Speed of sound squared in Bag model, equal to $\frac{1}{3}$ independent of enthalpy $w$.
 
@@ -81,15 +81,11 @@ def cs2_bag(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArrNumba:
     :param phase: phase $\phi$
     :return: speed of sound squared $c_s^2$
     """
-    if isinstance(w, numba.types.Float):
-        return cs2_bag_scalar
-    if isinstance(w, numba.types.Array):
-        return cs2_bag_arr
     if isinstance(w, float):
         return cs2_bag_scalar(w, phase)
     if isinstance(w, np.ndarray):
         return cs2_bag_arr(w, phase)
-    raise TypeError("Unknown type for w")
+    raise TypeError(f"Unknown type for w: {type(w)}")
 
 
 @numba.njit

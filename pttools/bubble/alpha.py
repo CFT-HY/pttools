@@ -7,6 +7,7 @@ import threading
 import typing as tp
 
 import numba
+from numba.extending import overload
 import numpy as np
 from scipy.optimize import fsolve
 
@@ -39,8 +40,8 @@ def alpha_n_max_bag(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th
     return alpha_n_max_deflagration_bag(v_wall, n_xi)
 
 
-@numba.njit
-def _alpha_n_max_deflagration_bag_scalar(v_wall: float, n_xi: int) -> float:
+# @numba.njit
+def _alpha_n_max_deflagration_bag_scalar(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArr:
     check.check_wall_speed(v_wall)
     # TODO: This seems to be specific to the bag model
     # There is circular logic due to the call to fluid_shell_alpha_plus
@@ -52,19 +53,21 @@ def _alpha_n_max_deflagration_bag_scalar(v_wall: float, n_xi: int) -> float:
     return w[n_wall + 1] * (1. / 3)
 
 
-@numba.njit(parallel=True)
-def _alpha_n_max_deflagration_bag_arr(v_wall: np.ndarray, n_xi: int) -> np.ndarray:
+_alpha_n_max_deflagration_bag_scalar_numba = numba.njit(_alpha_n_max_deflagration_bag_scalar)
+
+
+# @numba.njit(parallel=True)
+def _alpha_n_max_deflagration_bag_arr(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> np.ndarray:
     ret = np.zeros_like(v_wall)
     for i in numba.prange(v_wall.size):
-        ret[i] = _alpha_n_max_deflagration_bag_scalar(v_wall[i], n_xi)
+        ret[i] = _alpha_n_max_deflagration_bag_scalar_numba(v_wall[i], n_xi)
     # alpha_N = (w_+/w_N)*alpha_+
     # w_ is normalised to 1 at large xi
     # Need n_wall+1, as w is an integral of v, and lags by 1 step
     return ret
 
 
-@numba.generated_jit(nopython=True)
-def alpha_n_max_deflagration_bag(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArrNumba:
+def alpha_n_max_deflagration_bag(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArr:
     r"""
     Calculates the maximum relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
     for given $v_\text{wall}$, for deflagration.
@@ -74,18 +77,23 @@ def alpha_n_max_deflagration_bag(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_D
     :param n_xi: number of $\xi$ points
     :return: $\alpha_{n,\max}$
     """
-    if isinstance(v_wall, numba.types.Float):
-        return _alpha_n_max_deflagration_bag_scalar
-    if isinstance(v_wall, numba.types.Array):
-        if not v_wall.ndim:
-            return _alpha_n_max_deflagration_bag_scalar
-        return _alpha_n_max_deflagration_bag_arr
     if isinstance(v_wall, float):
         return _alpha_n_max_deflagration_bag_scalar(v_wall, n_xi)
     if isinstance(v_wall, np.ndarray):
         if not v_wall.ndim:
             return _alpha_n_max_deflagration_bag_scalar(v_wall.item(), n_xi)
         return _alpha_n_max_deflagration_bag_arr(v_wall, n_xi)
+    raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
+
+
+@overload(alpha_n_max_deflagration_bag)
+def alpha_n_max_deflagration_bag_numba(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArr:
+    if isinstance(v_wall, numba.types.Float):
+        return _alpha_n_max_deflagration_bag_scalar
+    if isinstance(v_wall, numba.types.Array):
+        if not v_wall.ndim:
+            return _alpha_n_max_deflagration_bag_scalar
+        return _alpha_n_max_deflagration_bag_arr
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 

@@ -4,6 +4,7 @@ import abc
 import logging
 
 import numba
+from numba.extending import overload
 import numpy as np
 import scipy.interpolate
 
@@ -122,20 +123,23 @@ class ThermoModel(BaseModel, abc.ABC):
                 temp2[invalid] = np.nan
             return cs2_compute(temp, phase)
 
-        @numba.generated_jit(nopython=True)
-        def cs2(temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArrNumba:
+        def cs2(temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
             """The validate_temp function cannot be called from jitted functions,
             and therefore we have to use the validate_temp"""
-            if isinstance(temp, numba.types.Float):
-                return cs2_scalar_temp
-            if isinstance(temp, numba.types.Array):
-                return cs2_arr_temp
             if isinstance(temp, float):
                 return cs2_scalar_temp(temp, phase)
             if isinstance(temp, np.ndarray):
                 if not temp.ndim:
                     return cs2_scalar_temp(temp.item(), phase)
                 return cs2_arr_temp(temp, phase)
+            raise TypeError(f"Unknown type for temp")
+
+        @overload(cs2)
+        def cs2_numba(temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArrNumba:
+            if isinstance(temp, numba.types.Float):
+                return cs2_scalar_temp
+            if isinstance(temp, numba.types.Array):
+                return cs2_arr_temp
             raise TypeError(f"Unknown type for temp: {type(temp)}")
 
         return cs2
