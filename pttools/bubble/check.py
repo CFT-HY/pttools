@@ -38,13 +38,11 @@ def check_physical_params(params: PhysicalParams) -> None:
         raise ValueError("Unphysical parameter(s). See the log for details.")
 
 
-# @numba.njit
 def _check_wall_speed_arr(v_wall: tp.Union[th.FloatOrArr, tp.List[float]]):
     if np.logical_or(np.any(v_wall >= 1.0), np.any(v_wall <= 0.0)):
         raise ValueError("Unphysical parameter(s): at least one value outside 0 < v_wall < 1.")
 
 
-# @numba.njit
 def _check_wall_speed_scalar(v_wall: tp.Union[th.FloatOrArr, tp.List[float]]):
     if not 0.0 <= v_wall <= 1.0:
         with numba.objmode:
@@ -65,8 +63,8 @@ def check_wall_speed(v_wall: tp.Union[th.FloatOrArr, tp.List[float]]):
     raise TypeError(f"v_wall must be float, list or array. Got: {type(v_wall)}")
 
 
-@overload(check_wall_speed)
-def check_wall_speed_numba(v_wall: tp.Union[th.FloatOrArr, tp.List[float]]):
+@overload(check_wall_speed, jit_options={"nopython": True})
+def _check_wall_speed_numba(v_wall: tp.Union[th.FloatOrArr, tp.List[float]]):
     if isinstance(v_wall, numba.types.Float):
         return _check_wall_speed_scalar
     if isinstance(v_wall, numba.types.Array):

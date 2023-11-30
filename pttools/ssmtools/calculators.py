@@ -4,6 +4,7 @@ import logging
 import typing as tp
 
 import numba
+from numba.extending import overload
 import numba.types
 import numpy as np
 
@@ -100,11 +101,13 @@ def resample_uniform_xi(
     return xi_re, np.interp(xi_re, xi, f)
 
 
-@numba.njit
 def _sin_transform_scalar(
-        z: float, xi: np.ndarray, f: np.ndarray,
+        z: th.FloatOrArr,
+        xi: np.ndarray,
+        f: np.ndarray,
         z_st_thresh: float = const.Z_ST_THRESH,
-        v_wall: float = None, v_sh: float = None) -> float:
+        v_wall: float = None,
+        v_sh: float = None) -> th.FloatOrArrNumba:
     if z <= z_st_thresh:
         array = f * np.sin(z * xi)
         integral = np.trapz(array, xi)
@@ -113,11 +116,13 @@ def _sin_transform_scalar(
     return integral
 
 
-@numba.njit(parallel=True)
 def _sin_transform_arr(
-        z: np.ndarray, xi: np.ndarray, f: np.ndarray,
+        z: th.FloatOrArr,
+        xi: np.ndarray,
+        f: np.ndarray,
         z_st_thresh: float = const.Z_ST_THRESH,
-        v_wall: float = None, v_sh: float = None) -> np.ndarray:
+        v_wall: float = None,
+        v_sh: float = None) -> th.FloatOrArrNumba:
     lo = np.where(z <= z_st_thresh)
     z_lo = z[lo]
     # Integrand of the sine transform
@@ -153,7 +158,6 @@ def _sin_transform_arr(
     return integral
 
 
-@numba.generated_jit(nopython=True)
 def sin_transform(
         z: th.FloatOrArr,
         xi: np.ndarray,
@@ -179,14 +183,25 @@ def sin_transform(
     :param v_sh: shock speed
     :return: sine transformed values $\hat{f}(z)$
     """
-    if isinstance(z, numba.types.Float):
-        return _sin_transform_scalar
-    if isinstance(z, numba.types.Array):
-        return _sin_transform_arr
     if isinstance(z, float):
         return _sin_transform_scalar(z, xi, f, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
     if isinstance(z, np.ndarray):
         return _sin_transform_arr(z, xi, f, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
+    raise NotImplementedError
+
+
+@overload(sin_transform, jit_options={"parallel": True})
+def _sin_transform_numba(
+        z: th.FloatOrArr,
+        xi: np.ndarray,
+        f: np.ndarray,
+        z_st_thresh: float = const.Z_ST_THRESH,
+        v_wall: float = None,
+        v_sh: float = None) -> th.FloatOrArrNumba:
+    if isinstance(z, numba.types.Float):
+        return _sin_transform_scalar
+    if isinstance(z, numba.types.Array):
+        return _sin_transform_arr
     raise NotImplementedError
 
 

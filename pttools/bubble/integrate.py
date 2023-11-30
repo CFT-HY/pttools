@@ -174,6 +174,9 @@ def fluid_integrate_param_odeint(t: np.ndarray, y0: np.ndarray, data: np.ndarray
     """
     try:
         func = differentials.get_odeint(df_dtau_ptr)
+        # This function call seems to be necessary to avoid a segfault within SciPy.
+        # Probably it has something to do with the lifetime of the function object.
+        func(y0, t[0], data)
         soln: np.ndarray = spi.odeint(func, y0=y0, t=t, args=(data,))
         v = soln[:, 0]
         w = soln[:, 1]

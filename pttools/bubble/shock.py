@@ -3,6 +3,7 @@
 import logging
 import typing as tp
 
+from numba.extending import overload
 import numba.types
 import numpy as np
 
@@ -334,8 +335,7 @@ def v_shock_curve(
     return xi, v_shock(model, wn, xi, warn_if_barely_exists)
 
 
-@numba.njit
-def _v_shock_bag_scalar(xi: float) -> float:
+def _v_shock_bag_scalar(xi: th.FloatOrArr) -> th.FloatOrArrNumba:
     # const.CS0 is used only because it corresponds to the 1/sqrt(3) we need.
     # This has nothing to do with the sound speed!
     if xi < const.CS0:
@@ -345,16 +345,17 @@ def _v_shock_bag_scalar(xi: float) -> float:
     return v
 
 
-@numba.njit
-def _v_shock_bag_arr(xi: np.ndarray) -> np.ndarray:
+_v_shock_bag_scalar_numba = numba.njit(_v_shock_bag_scalar)
+
+
+def _v_shock_bag_arr(xi: th.FloatOrArr) -> th.FloatOrArrNumba:
     ret = np.zeros_like(xi)
     for i in range(xi.size):
-        ret[i] = _v_shock_bag_scalar(xi[i])
+        ret[i] = _v_shock_bag_scalar_numba(xi[i])
     return ret
 
 
-@numba.generated_jit(nopython=True)
-def v_shock_bag(xi: th.FloatOrArr):
+def v_shock_bag(xi: th.FloatOrArr) -> th.FloatOrArrNumba:
     r"""
     Fluid velocity at a shock at $\xi$.
     No shocks exist for $\xi < \frac{1}{\sqrt{3}}$, so this returns zero.
@@ -364,10 +365,6 @@ def v_shock_bag(xi: th.FloatOrArr):
     :param xi: $\xi$
     :return: $v_{sh}$
     """
-    if isinstance(xi, numba.types.Float):
-        return _v_shock_bag_scalar
-    if isinstance(xi, numba.types.Array):
-        return _v_shock_bag_arr
     if isinstance(xi, float):
         return _v_shock_bag_scalar(xi)
     if isinstance(xi, np.ndarray):
@@ -375,8 +372,16 @@ def v_shock_bag(xi: th.FloatOrArr):
     raise TypeError(f"Unknown type for xi: {type(xi)}")
 
 
-@numba.njit
-def _wm_shock_bag_scalar(xi: float, w_n: float, nan_on_negative: bool) -> float:
+@overload(v_shock_bag, jit_options={"nopython": True})
+def _v_shock_bag_numba(xi: th.FloatOrArr) -> th.FloatOrArrNumba:
+    if isinstance(xi, numba.types.Float):
+        return _v_shock_bag_scalar
+    if isinstance(xi, numba.types.Array):
+        return _v_shock_bag_arr
+    raise TypeError(f"Unknown type for xi: {type(xi)}")
+
+
+def _wm_shock_bag_scalar(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = True) -> th.FloatOrArrNumba:
     # const.CS0 is used only because it corresponds to the 1/sqrt(3) we need.
     # This has nothing to do with the sound speed!
     if nan_on_negative and xi < const.CS0:
@@ -386,8 +391,7 @@ def _wm_shock_bag_scalar(xi: float, w_n: float, nan_on_negative: bool) -> float:
     return w_n * (9*xi**2 - 1)/(3*(1-xi**2))
 
 
-@numba.njit
-def _wm_shock_bag_arr(xi: np.ndarray, w_n: float, nan_on_negative: bool) -> np.ndarray:
+def _wm_shock_bag_arr(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = True) -> th.FloatOrArrNumba:
     ret = np.zeros_like(xi)
     for i in range(xi.size):
         ret[i] = _wm_shock_bag_scalar(xi[i], w_n, nan_on_negative)
@@ -395,7 +399,6 @@ def _wm_shock_bag_arr(xi: np.ndarray, w_n: float, nan_on_negative: bool) -> np.n
 
 
 # This cannot be vectorized with numba.vectorize due to the keyword argument, but guvectorize might work
-@numba.generated_jit(nopython=True)
 def wm_shock_bag(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = True) -> th.FloatOrArrNumba:
     r"""
     Fluid enthalpy behind a shock at $\xi$ in the bag model.
@@ -408,12 +411,6 @@ def wm_shock_bag(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = Tru
     :param w_n: enthalpy in front of the shock
     :return: $w_{sh}$, enthalpy behind the shock
     """
-    if isinstance(xi, numba.types.Float):
-        return _wm_shock_bag_scalar
-    if isinstance(xi, numba.types.Array):
-        if not xi.ndim:
-            return _wm_shock_bag_scalar
-        return _wm_shock_bag_arr
     if isinstance(xi, float):
         return _wm_shock_bag_scalar(xi, w_n, nan_on_negative)
     if isinstance(xi, np.ndarray):
@@ -423,7 +420,17 @@ def wm_shock_bag(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = Tru
     raise TypeError(f"Unknown type for xi: {type(xi)}")
 
 
-@numba.njit
+@overload(wm_shock_bag, jit_options={"nopython": True})
+def _wm_shock_bag_numba(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = True) -> th.FloatOrArrNumba:
+    if isinstance(xi, numba.types.Float):
+        return _wm_shock_bag_scalar
+    if isinstance(xi, numba.types.Array):
+        if not xi.ndim:
+            return _wm_shock_bag_scalar
+        return _wm_shock_bag_arr
+    raise TypeError(f"Unknown type for xi: {type(xi)}")
+
+
 def _wp_shock_bag_scalar(xi: float, wm: float) -> float:
     # const.CS0 is used only because it corresponds to the 1/sqrt(3) we need.
     # This has nothing to do with the sound speed!
@@ -432,7 +439,6 @@ def _wp_shock_bag_scalar(xi: float, wm: float) -> float:
     return wm * (3*(1-xi**2))/(9*xi**2 - 1)
 
 
-@numba.njit
 def _wp_shock_bag_arr(xi: np.ndarray, wm: float) -> np.ndarray:
     ret = np.zeros_like(xi)
     for i in range(xi.size):
@@ -441,7 +447,6 @@ def _wp_shock_bag_arr(xi: np.ndarray, wm: float) -> np.ndarray:
 
 
 # This cannot be vectorized with numba.vectorize due to the keyword argument, but guvectorize might work
-@numba.generated_jit(nopython=True)
 def wp_shock_bag(xi: th.FloatOrArr, wm: float) -> th.FloatOrArrNumba:
     r"""
     Fluid enthalpy in front of a shock at $\xi$ in the bag model.
@@ -454,16 +459,21 @@ def wp_shock_bag(xi: th.FloatOrArr, wm: float) -> th.FloatOrArrNumba:
     :param wm: $w_{-,sh}$, enthalpy behind the shock
     :return: $w_{+,sh}$, enthalpy in front of the shock
     """
-    if isinstance(xi, numba.types.Float):
-        return _wp_shock_bag_scalar
-    if isinstance(xi, numba.types.Array):
-        if not xi.ndim:
-            return _wp_shock_bag_scalar
-        return _wp_shock_bag_arr
     if isinstance(xi, float):
         return _wp_shock_bag_scalar(xi, wm)
     if isinstance(xi, np.ndarray):
         if not xi.ndim:
             return _wp_shock_bag_scalar(xi.item(), wm)
         return _wp_shock_bag_arr(xi, wm)
+    raise TypeError(f"Unknown type for xi: {type(xi)}")
+
+
+@overload(wp_shock_bag, jit_options={"nopython": True})
+def _wp_shock_bag_numba(xi: th.FloatOrArr, wm: float) -> th.FloatOrArrNumba:
+    if isinstance(xi, numba.types.Float):
+        return _wp_shock_bag_scalar
+    if isinstance(xi, numba.types.Array):
+        if not xi.ndim:
+            return _wp_shock_bag_scalar
+        return _wp_shock_bag_arr
     raise TypeError(f"Unknown type for xi: {type(xi)}")

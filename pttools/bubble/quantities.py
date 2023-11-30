@@ -8,6 +8,7 @@ import logging
 import typing as tp
 
 import numba
+from numba.extending import overload
 import numpy as np
 
 import pttools.type_hints as th
@@ -303,7 +304,6 @@ def get_ke_frac_new_bag(
     return ke_frac_out
 
 
-@numba.njit
 def _get_ubarf2_bag_scalar(v_wall: float, alpha_n: float, n_xi: int, verbosity: int) -> float:
     if transition.identify_solution_type_bag(v_wall, alpha_n) == boundary.SolutionType.ERROR:
         ubarf2 = np.nan
@@ -318,7 +318,6 @@ def _get_ubarf2_bag_scalar(v_wall: float, alpha_n: float, n_xi: int, verbosity: 
     return ubarf2
 
 
-@numba.njit(parallel=True)
 def _get_ubarf2_bag_arr(v_wall: np.ndarray, alpha_n: float, n_xi: int, verbosity: int) -> np.ndarray:
     ubarf2 = np.zeros_like(v_wall)
     for i in numba.prange(v_wall.size):
@@ -326,7 +325,6 @@ def _get_ubarf2_bag_arr(v_wall: np.ndarray, alpha_n: float, n_xi: int, verbosity
     return ubarf2
 
 
-@numba.generated_jit(nopython=True)
 def get_ubarf2_bag(
         v_wall: th.FloatOrArr,
         alpha_n: float,
@@ -341,16 +339,25 @@ def get_ubarf2_bag(
     :param verbosity: logging verbosity
     :return: mean square fluid velocity
     """
+    if isinstance(v_wall, float):
+        return _get_ubarf2_bag_scalar(v_wall, alpha_n, n_xi, verbosity)
+    if isinstance(v_wall, np.ndarray):
+        return _get_ubarf2_bag_arr(v_wall, alpha_n, n_xi, verbosity)
+    raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
+
+
+@overload(get_ubarf2_bag, jit_options={"nopython": True, "parallel": True})
+def _get_ubarf2_bag_numba(
+        v_wall: th.FloatOrArr,
+        alpha_n: float,
+        n_xi: int = const.N_XI_DEFAULT,
+        verbosity: int = 0) -> th.FloatOrArrNumba:
     if isinstance(v_wall, numba.types.Float):
         return _get_ubarf2_bag_scalar
     if isinstance(v_wall, numba.types.Array):
         if not v_wall.ndim:
             return _get_ubarf2_bag_scalar
         return _get_ubarf2_bag_arr
-    if isinstance(v_wall, float):
-        return _get_ubarf2_bag_scalar(v_wall, alpha_n, n_xi, verbosity)
-    if isinstance(v_wall, np.ndarray):
-        return _get_ubarf2_bag_arr(v_wall, alpha_n, n_xi, verbosity)
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 

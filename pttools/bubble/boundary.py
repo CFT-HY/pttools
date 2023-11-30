@@ -9,6 +9,7 @@ import logging
 import typing as tp
 
 import numba
+from numba.extending import overload
 import numpy as np
 
 from pttools.speedup.solvers import fsolve_vary
@@ -129,19 +130,16 @@ def fluid_speeds_at_wall(
     return vfp_w, vfm_w, vfp_p, vfm_p
 
 
-@numba.njit
-def _get_phase_scalar(xi: float, v_w: float) -> float:
+def _get_phase_scalar(xi: th.FloatOrArr, v_w: float) -> th.FloatOrArr:
     return Phase.BROKEN if xi < v_w else Phase.SYMMETRIC
 
 
-@numba.njit
-def _get_phase_arr(xi: np.ndarray, v_w: float) -> np.ndarray:
+def _get_phase_arr(xi: th.FloatOrArr, v_w: float) -> th.FloatOrArr:
     phase = np.zeros_like(xi)
     phase[np.where(xi < v_w)] = Phase.BROKEN.value
     return phase
 
 
-@numba.generated_jit(nopython=True)
 def get_phase(xi: th.FloatOrArr, v_w: float) -> th.FloatOrArrNumba:
     r"""
     Returns array indicating phase of system.
@@ -150,16 +148,21 @@ def get_phase(xi: th.FloatOrArr, v_w: float) -> th.FloatOrArrNumba:
 
     :return: phase
     """
+    if isinstance(xi, float):
+        return _get_phase_scalar(xi, v_w)
+    if isinstance(xi, np.ndarray):
+        return _get_phase_arr(xi, v_w)
+    raise TypeError(f"Unknown type for {type(xi)}")
+
+
+@overload(get_phase, jit_options={"nopython": True})
+def _get_phase_numba(xi: th.FloatOrArr, v_w: float) -> th.FloatOrArrNumba:
     if isinstance(xi, numba.types.Float):
         return _get_phase_scalar
     if isinstance(xi, numba.types.Array):
         if not xi.ndim:
             return _get_phase_scalar
         return _get_phase_arr
-    if isinstance(xi, float):
-        return _get_phase_scalar(xi, v_w)
-    if isinstance(xi, np.ndarray):
-        return _get_phase_arr(xi, v_w)
     raise TypeError(f"Unknown type for {type(xi)}")
 
 
@@ -305,13 +308,12 @@ def solve_junction_internal(
     )
 
 
-@numba.njit
 def _v_minus_scalar(
-        vp: float,
+        vp: th.FloatOrArr,
         ap: float,
-        sol_type: SolutionType,
-        strong_branch: bool,
-        debug: bool) -> float:
+        sol_type: SolutionType = SolutionType.DETON,
+        strong_branch: bool = False,
+        debug: bool = False) -> th.FloatOrArrNumba:
     # Fluid must flow through the wall from the outside to the inside of the bubble.
     if vp < 0:
         return np.nan
@@ -353,17 +355,20 @@ def _v_minus_scalar(
     # return ret
 
 
+_v_minus_scalar_numba = numba.njit(_v_minus_scalar)
+
+
 @numba.njit(parallel=True)
 def _v_minus_arr(
-        vp: np.ndarray,
+        vp: th.FloatOrArr,
         ap: float,
-        sol_type: SolutionType,
-        strong_branch: bool,
-        debug: bool) -> np.ndarray:
+        sol_type: SolutionType = SolutionType.DETON,
+        strong_branch: bool = False,
+        debug: bool = False) -> th.FloatOrArrNumba:
     ret = np.empty_like(vp)
     # pylint: disable=not-an-iterable
     for i in numba.prange(vp.size):
-        ret[i] = _v_minus_scalar(vp[i], ap, sol_type, strong_branch, debug)
+        ret[i] = _v_minus_scalar_numba(vp[i], ap, sol_type, strong_branch, debug)
     return ret
 
     # complex_inds = np.where(np.imag(ret))
@@ -376,7 +381,15 @@ def _v_minus_arr(
     # return ret
 
 
-@numba.generated_jit(nopython=True)
+def _v_minus_arr_wrapper(
+        vp: th.FloatOrArr,
+        ap: float,
+        sol_type: SolutionType = SolutionType.DETON,
+        strong_branch: bool = False,
+        debug: bool = False) -> th.FloatOrArrNumba:
+    return _v_minus_arr(vp=vp, ap=ap, sol_type=sol_type, strong_branch=strong_branch, debug=debug)
+
+
 def v_minus(
         vp: th.FloatOrArr,
         ap: float,
@@ -402,10 +415,6 @@ def v_minus(
     :return: $\tilde{v}_-$, fluid speed behind the wall
     """
     # TODO: add support for having both arguments as arrays
-    if isinstance(vp, numba.types.Float):
-        return _v_minus_scalar
-    if isinstance(vp, numba.types.Array):
-        return _v_minus_arr
     if isinstance(vp, float):
         return _v_minus_scalar(vp, ap, sol_type, strong_branch, debug)
     if isinstance(vp, np.ndarray):
@@ -413,8 +422,21 @@ def v_minus(
     raise TypeError(f"Unknown argument types: vp = {type(vp)}, ap = {type(ap)}")
 
 
-@numba.njit
-def _v_plus_scalar(vm: float, ap: float, sol_type: SolutionType, debug: bool) -> float:
+@overload(v_minus, jit_options={"nopython": True})
+def _v_minus_numba(
+        vp: th.FloatOrArr,
+        ap: float,
+        sol_type: SolutionType = SolutionType.DETON,
+        strong_branch: bool = False,
+        debug: bool = False) -> th.FloatOrArrNumba:
+    if isinstance(vp, numba.types.Float):
+        return _v_minus_scalar
+    if isinstance(vp, numba.types.Array):
+        return _v_minus_arr_wrapper
+    raise TypeError(f"Unknown argument types: vp = {type(vp)}, ap = {type(ap)}")
+
+
+def _v_plus_scalar(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: bool = True) -> th.FloatOrArrNumba:
     x = vm + 1. / (3 * vm)
     # Finding the SolutionType automatically does not work in the general case
     # if sol_type is None:
@@ -448,12 +470,15 @@ def _v_plus_scalar(vm: float, ap: float, sol_type: SolutionType, debug: bool) ->
     # return ret
 
 
+_v_plus_scalar_numba = numba.njit(_v_plus_scalar)
+
+
 @numba.njit(parallel=True)
-def _v_plus_arr(vm: np.ndarray, ap: float, sol_type: SolutionType, debug: bool) -> np.ndarray:
+def _v_plus_arr(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: bool = True) -> th.FloatOrArrNumba:
     ret = np.empty_like(vm)
     # pylint: disable=not-an-iterable
     for i in numba.prange(vm.size):
-        ret[i] = _v_plus_scalar(vm[i], ap, sol_type, debug)
+        ret[i] = _v_plus_scalar_numba(vm[i], ap, sol_type, debug)
     return ret
 
     # complex_inds = np.where(np.imag(ret))
@@ -466,7 +491,10 @@ def _v_plus_arr(vm: np.ndarray, ap: float, sol_type: SolutionType, debug: bool) 
     # return np.real(ret)
 
 
-@numba.generated_jit(nopython=True)
+def _v_plus_arr_wrapper(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: bool = True) -> th.FloatOrArrNumba:
+    return _v_plus_arr(vm=vm, ap=ap, sol_type=sol_type, debug=debug)
+
+
 def v_plus(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: bool = True) -> th.FloatOrArrNumba:
     r"""
     Fluid speed $\tilde{v}_+$ ahead of the wall in the wall frame
@@ -489,15 +517,19 @@ def v_plus(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: bool = T
     :return: $\tilde{v}_+$, fluid speed ahead of the wall
     """
     # TODO: add support for having both arguments as arrays
-    if isinstance(vm, numba.types.Float):
-        return _v_plus_scalar
-    if isinstance(vm, numba.types.Array):
-        return _v_plus_arr
     if isinstance(vm, float):
         return _v_plus_scalar(vm, ap, sol_type, debug)
     if isinstance(vm, np.ndarray):
         return _v_plus_arr(vm, ap, sol_type, debug)
     raise TypeError(f"Unknown argument types: vm = {type(vm)}, ap = {type(ap)}")
+
+
+@overload(v_plus, jit_options={"nopython": True})
+def _v_plus_numba(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: bool = True) -> th.FloatOrArrNumba:
+    if isinstance(vm, numba.types.Float):
+        return _v_plus_scalar
+    if isinstance(vm, numba.types.Array):
+        return _v_plus_arr_wrapper
 
 
 def v_plus_limit(ap: th.FloatOrArr, sol_type: SolutionType) -> th.FloatOrArr:

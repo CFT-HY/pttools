@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 if numba_wrapper.NUMBA_VERSION < (0, 49, 0):
     logger.warning("Overloading numpy.flipud for old Numba")
 
-    @overload(np.flipud)
+    @overload(np.flipud, jit_options={"nopython": True})
     def np_flip_ud(arr: np.ndarray):
         def impl(arr: np.ndarray) -> np.ndarray:
             # Copying may be necessary to avoid problems with the memory layout of the array
@@ -23,7 +23,7 @@ if numba_wrapper.NUMBA_VERSION < (0, 49, 0):
         return impl
 
 
-@overload(np.all)
+@overload(np.all, jit_options={"nopython": True})
 def np_all(a):
     """Overload of :external:py:func:`numpy.all` for booleans"""
     if isinstance(a, numba.types.Boolean):
@@ -32,7 +32,7 @@ def np_all(a):
         return func
 
 
-@overload(np.any)
+@overload(np.any, jit_options={"nopython": True})
 def np_any(a):
     """Overload of :external:py:func:`numpy.any` for booleans and scalars"""
     if isinstance(a, numba.types.Boolean):
@@ -44,7 +44,7 @@ def np_any(a):
             return bool(a)
         return func
 
-# @overload(np.asanyarray)
+# @overload(np.asanyarray, jit_options={"nopython": True})
 # def asanyarray(arr: np.ndarray):
 #     if isinstance(arr, numba.types.Array):
 #         def func(arr: np.ndarray):
@@ -53,7 +53,7 @@ def np_any(a):
 #     raise NotImplementedError
 #
 #
-# @overload(np.ndim)
+# @overload(np.ndim, jit_options={"nopython": True})
 # def ndim(val):
 #     if isinstance(val, numba.types.Number):
 #         def func(val):

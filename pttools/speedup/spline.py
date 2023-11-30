@@ -157,7 +157,7 @@ def splev_linear_scalar(x, tck: tp.Tuple[np.ndarray, np.ndarray, int], der: int 
     return splev_linear_core(x, t, c, ext)
 
 
-@overload(scipy.interpolate.splev)
+@overload(scipy.interpolate.splev, jit_options={"nopython": True})
 def splev_linear(x, tck: tp.Tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
     """
     :param x: float or 1D array

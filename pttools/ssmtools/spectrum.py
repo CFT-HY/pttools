@@ -6,6 +6,7 @@ import typing as tp
 
 import matplotlib.pyplot as plt
 import numba
+from numba.extending import overload
 import numpy as np
 
 import pttools.type_hints as th
@@ -287,7 +288,6 @@ def _spec_den_gw_scaled_core(
     return (4. / 3.) * p_gw, z
 
 
-@numba.njit(nogil=True)
 def _spec_den_gw_scaled_z(
         xlookup: np.ndarray,
         P_vlookup: np.ndarray,
@@ -305,7 +305,6 @@ def _spec_den_gw_scaled_z(
     return _spec_den_gw_scaled_core(xlookup, P_vlookup, z, cs)
 
 
-@numba.njit(nogil=True)
 def _spec_den_gw_scaled_no_z(
         xlookup: np.ndarray,
         P_vlookup: np.ndarray,
@@ -318,7 +317,6 @@ def _spec_den_gw_scaled_no_z(
     return _spec_den_gw_scaled_core(xlookup, P_vlookup, new_z, cs)
 
 
-@numba.generated_jit(nopython=True, nogil=True)
 def spec_den_gw_scaled(
         xlookup: np.ndarray,
         P_vlookup: np.ndarray,
@@ -339,14 +337,23 @@ def spec_den_gw_scaled(
     The factor of 3 comes from the Friedmann equation
     3H^2/(8pi G)
     """
-    if isinstance(z, numba.types.Array):
-        return _spec_den_gw_scaled_z
-    if isinstance(z, (numba.types.NoneType, numba.types.Omitted)):
-        return _spec_den_gw_scaled_no_z
     if isinstance(z, np.ndarray):
         return _spec_den_gw_scaled_z(xlookup, P_vlookup, z, cs)
     if z is None:
         return _spec_den_gw_scaled_no_z(xlookup, P_vlookup, z, cs)
+    raise TypeError(f"Unknown type for z: {type(z)}")
+
+
+@overload(spec_den_gw_scaled, jit_options={"nopython": True, "nogil": True})
+def _spec_den_gw_scaled_numba(
+        xlookup: np.ndarray,
+        P_vlookup: np.ndarray,
+        z: np.ndarray = None,
+        cs: float = const.CS0) -> tp.Union[tp.Tuple[np.ndarray, np.ndarray], th.NumbaFunc]:
+    if isinstance(z, numba.types.Array):
+        return _spec_den_gw_scaled_z
+    if isinstance(z, (numba.types.NoneType, numba.types.Omitted)):
+        return _spec_den_gw_scaled_no_z
     raise TypeError(f"Unknown type for z: {type(z)}")
 
 
