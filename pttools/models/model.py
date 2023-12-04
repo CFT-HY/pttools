@@ -570,7 +570,9 @@ class Model(BaseModel, abc.ABC):
         if self.__df_dtau_ptr is not None:
             return self.__df_dtau_ptr
 
+        logger.debug("Compiling cs2 for %s", self.label_unicode)
         val = add_df_dtau(f"{self.name}_{id(self)}", self.cs2)
+        logger.debug("Compiled cs2 for %s", self.label_unicode)
         self.__df_dtau_ptr = val
         return val
 
