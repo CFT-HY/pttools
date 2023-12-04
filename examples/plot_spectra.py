@@ -25,7 +25,7 @@ def main():
     ]
     spectra = [Spectrum(bubble) for bubble in bubbles]
 
-    return plot_spectra.plot_spectra(spectra)
+    return plot_spectra(spectra)
 
 
 if __name__ == "__main__":

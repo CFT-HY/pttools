@@ -6,7 +6,7 @@ from matplotlib import ticker
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.analysis import cmap
+from pttools.analysis.cmap import cmap, color_region
 from pttools.analysis.bubble_grid import BubbleGridVWAlpha
 from pttools.analysis.plot_vw_alpha import VwAlphaPlot
 from pttools.bubble.boundary import Phase, SolutionType
@@ -47,9 +47,9 @@ class EntropyPlot(VwAlphaPlot):
         super().__init__(fig, ax)
         plot_entropy_data(entropy, grid.v_walls, grid.alpha_ns, min_level, max_level, diff_level, fig=fig, ax=ax)
 
-        cmap.color_region(self.ax, grid.v_walls, grid.alpha_ns, grid.numerical_error(), color="red", alpha=0.5)
-        cmap.color_region(self.ax, grid.v_walls, grid.alpha_ns, grid.unphysical_alpha_plus(), color="green", alpha=0.5)
-        cmap.color_region(self.ax, grid.v_walls, grid.alpha_ns, grid.solver_failed(), color="black")
+        color_region(self.ax, grid.v_walls, grid.alpha_ns, grid.numerical_error(), color="red", alpha=0.5)
+        color_region(self.ax, grid.v_walls, grid.alpha_ns, grid.unphysical_alpha_plus(), color="green", alpha=0.5)
+        color_region(self.ax, grid.v_walls, grid.alpha_ns, grid.solver_failed(), color="black")
 
         self.ax.plot(v_chapman_jouguet(grid.model, grid.alpha_ns), grid.alpha_ns, 'k--', label=r'$v_{CJ}$')
         self.ax.set_title(rf"$\Delta s / s_n$ for {grid.model.label_latex}")
@@ -188,7 +188,7 @@ def plot_entropy_data(
         fig: plt.Figure = plt.figure()
         ax: plt.Axes = fig.add_subplot()
 
-    levels, cols = cmap.cmap(min_level, max_level, diff_level)
+    levels, cols = cmap(min_level, max_level, diff_level)
     cs: QuadContourSet = ax.contourf(v_walls, alpha_ns, data, levels=levels, colors=cols)
     cbar = fig.colorbar(cs)
     cbar.ax.set_ylabel(r'$\Delta s / s_n$')
