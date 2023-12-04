@@ -201,6 +201,8 @@ class Bubble:
             f"κ={self.kappa:{prec}}, ω={self.omega:{prec}}, κ+ω={self.kappa + self.omega:{prec}}, " \
             f"V-avg. trace anomaly={self.va_trace_anomaly_diff:{prec}}"
 
+    # Plotting
+
     def plot(self, fig: plt.Figure = None, path: str = None) -> plt.Figure:
         from pttools.analysis.plot_bubble import plot_bubble
         return plot_bubble(self, fig, path)
@@ -313,6 +315,11 @@ class Bubble:
         """
         return self.v_sh
 
+    # Quantities
+    def en(self) -> float:
+        r"""Nucleation energy density $e_n = e(T_n, \phi_s)$"""
+        return self.model.e(self.wn, Phase.SYMMETRIC)
+
     # -----
     # Thermodynamics
     # -----
@@ -348,6 +355,12 @@ class Bubble:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.thermal_energy_density_diff(self.w, self.xi, self.v_wall)
+
+    @functools.cached_property
+    def thermal_energy_fraction(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.thermal_energy_fraction(eq_bva=self.thermal_energy_density, eb=self.ebar)
 
     @functools.cached_property
     def trace_anomaly(self) -> float:
@@ -426,10 +439,23 @@ class Bubble:
         return thermo.va_kinetic_energy_fraction(ek_va=self.va_kinetic_energy_density, eb=self.ebar)
 
     @functools.cached_property
+    def va_thermal_energy_density(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.va_thermal_energy_density(
+            v_shock=self.v_sh, wn=self.wn, ek=self.va_kinetic_energy_density, delta_e_theta=self.va_trace_anomaly_diff)
+
+    @functools.cached_property
     def va_thermal_energy_density_diff(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.va_thermal_energy_density_diff(self.w, self.xi)
+
+    @functools.cached_property
+    def va_thermal_energy_fraction(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.va_thermal_energy_fraction(eq_va=self.va_thermal_energy_density, eb=self.ebar)
 
     @functools.cached_property
     def va_trace_anomaly_diff(self) -> float:

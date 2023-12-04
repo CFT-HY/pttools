@@ -53,7 +53,7 @@ def kinetic_energy_fraction(ek_bva: float, eb: float) -> float:
 
 
 def thermal_energy_density(v_wall: float, eqp: float) -> float:
-    r"""Volume-averaged thermal energy density after the phase transition
+    r"""Bubble volume averaged thermal energy density after the phase transition
     $$e_Q' = e_Q + e_\theta - e_K' - e_\theta' = 4\pi \int_0^{\xi_\text{max}} d\xi \xi^2 \frac{3}{4}w_n - e_K' - \Delta e_\theta$$
     """
     return 3/(4*np.pi * v_wall**3) * eqp
@@ -62,6 +62,10 @@ def thermal_energy_density(v_wall: float, eqp: float) -> float:
 def thermal_energy_density_diff(w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
     r"""Bubble volume averaged thermal energy density"""
     return 3/(4*np.pi * v_wall**3) * va_thermal_energy_density_diff(w, xi)
+
+
+def thermal_energy_fraction(eq_bva: float, eb: float):
+    return eq_bva / eb
 
 
 def trace_anomaly_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
@@ -181,6 +185,13 @@ def va_thermal_energy_density_diff(w: np.ndarray, xi: np.ndarray) -> float:
     $$\Delta e_Q = 4 \pi \int_0^{\xi_\text{max}} d\xi \xi^2 \frac{3}{4} (w - w_n)$$
     """
     return 4*np.pi/3 * np.trapz(0.75*(w - w[-1]), xi**3)
+
+
+def va_thermal_energy_fraction(eq_va: float, eb: float):
+    r"""Volume-averaged kinetic energy fraction
+    $$Q_\text{va} = \frac{e_{Q,\text{va}}}{\bar{e}}$$
+    """
+    return eq_va / eb
 
 
 def va_trace_anomaly(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:

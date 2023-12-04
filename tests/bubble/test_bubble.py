@@ -49,6 +49,14 @@ class BubbleTest(unittest.TestCase):
         ted = self.bubble.va_thermal_energy_density_diff
         self.assertGreater(ted, 0)
 
+    def test_bva_thermal_energy_fraction(self):
+        tef = self.bubble.thermal_energy_fraction
+        self.assertGreater(tef, 0)
+
+    def test_va_thermal_energy_fraction(self):
+        tef = self.bubble.va_thermal_energy_fraction
+        self.assertGreater(tef, 0)
+
     def test_va_trace_anomaly(self):
         trace_anomaly = self.bubble.va_trace_anomaly_diff
         self.assertTrue(np.isfinite(trace_anomaly))
