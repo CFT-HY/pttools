@@ -205,17 +205,17 @@ class Bubble:
 
     # Plotting
 
-    def plot(self, fig: plt.Figure = None, path: str = None) -> plt.Figure:
+    def plot(self, fig: plt.Figure = None, path: str = None, **kwargs) -> plt.Figure:
         from pttools.analysis.plot_bubble import plot_bubble
-        return plot_bubble(self, fig, path)
+        return plot_bubble(self, fig, path, **kwargs)
 
-    def plot_v(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None) -> "FigAndAxes":
+    def plot_v(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None, **kwargs) -> "FigAndAxes":
         from pttools.analysis.plot_bubble import plot_bubble_v
-        return plot_bubble_v(self, fig, ax, path)
+        return plot_bubble_v(self, fig, ax, path, **kwargs)
 
     def plot_w(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None) -> "FigAndAxes":
         from pttools.analysis.plot_bubble import plot_bubble_w
-        return plot_bubble_w(self, fig, ax, path)
+        return plot_bubble_w(self, fig, ax, path, **kwargs)
 
     def solve(
             self,

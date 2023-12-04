@@ -90,25 +90,25 @@ class Spectrum:
         self.pow_gw = pow_spec(self.z, spec_den=self.spec_den_gw)
         # gw_power = np.trapz(self.pow_gw/y, y)
 
-    def plot(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None) -> "FigAndAxes":
+    def plot(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None, **kwargs) -> "FigAndAxes":
         from pttools.analysis.plot_spectrum import plot_spectrum
-        return plot_spectrum(self, fig, ax, path)
+        return plot_spectrum(self, fig, ax, path, **kwargs)
 
-    def plot_v(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None) -> "FigAndAxes":
+    def plot_v(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None, **kwargs) -> "FigAndAxes":
         from pttools.analysis.plot_spectrum import plot_spectrum_v
-        return plot_spectrum_v(self, fig, ax, path)
+        return plot_spectrum_v(self, fig, ax, path, **kwargs)
 
-    def plot_spec_den_gw(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None) -> "FigAndAxes":
+    def plot_spec_den_gw(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None, **kwargs) -> "FigAndAxes":
         from pttools.analysis.plot_spectrum import plot_spectrum_spec_den_gw
-        return plot_spectrum_spec_den_gw(self, fig, ax, path)
+        return plot_spectrum_spec_den_gw(self, fig, ax, path, **kwargs)
 
-    def plot_spec_den_v(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None) -> "FigAndAxes":
+    def plot_spec_den_v(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None, **kwargs) -> "FigAndAxes":
         from pttools.analysis.plot_spectrum import plot_spectrum_spec_den_v
-        return plot_spectrum_spec_den_v(self, fig, ax, path)
+        return plot_spectrum_spec_den_v(self, fig, ax, path, **kwargs)
 
-    def plot_multi(self, fig: plt.Figure = None, path: str = None) -> plt.Figure:
+    def plot_multi(self, fig: plt.Figure = None, path: str = None, **kwargs) -> plt.Figure:
         from pttools.analysis.plot_spectrum import plot_spectrum_multi
-        return plot_spectrum_multi(self, fig, path)
+        return plot_spectrum_multi(self, fig, path, **kwargs)
 
 
 def convert_params(params: bubble.PhysicalParams) -> bubble.PhysicalParams:
