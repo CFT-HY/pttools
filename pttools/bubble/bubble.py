@@ -141,6 +141,7 @@ class Bubble:
         self.vm_sh: tp.Optional[float] = None
         self.vm_tilde_sh: tp.Optional[float] = None
         self.v_cj: tp.Optional[float] = None
+        self.w_center: tp.Optional[float] = None
         self.wp: tp.Optional[float] = None
         self.wm: tp.Optional[float] = None
         self.wm_sh: tp.Optional[float] = None
@@ -247,6 +248,7 @@ class Bubble:
                     use_bag_solver=use_bag_solver,
                     log_success=self.log_success, log_high_alpha_n_failures=log_high_alpha_n_failures
                 )
+            self.w_center = self.w[0]
             if self.solver_failed:
                 # This is already reported by the individual solvers
                 msg = f"Solver failed with model={self.model.label_unicode}, " \
