@@ -50,7 +50,7 @@ def sound_shell_deflagration(
         cs_n: float,
         vp_guess: float = None, wp_guess: float = None,
         t_end: float = const.T_END_DEFAULT, n_xi: int = const.N_XI_DEFAULT,
-        thin_shell_limit: int = const.THIN_SHELL_LIMIT,
+        thin_shell_limit: int = const.THIN_SHELL_T_POINTS_MIN,
         allow_failure: bool = False,
         warn_if_shock_barely_exists: bool = True) -> DeflagrationOutput:
     if vp_guess is None or np.isnan(vp_guess) or wp_guess is None or np.isnan(wp_guess):
@@ -621,7 +621,7 @@ def sound_shell_generic(
             high_alpha_n: bool = None,
             t_end: float = const.T_END_DEFAULT,
             n_xi: int = const.N_XI_DEFAULT,
-            thin_shell_limit: int = const.THIN_SHELL_LIMIT,
+            thin_shell_limit: int = const.THIN_SHELL_T_POINTS_MIN,
             reverse: bool = False,
             allow_failure: bool = False,
             use_bag_solver: bool = False,
