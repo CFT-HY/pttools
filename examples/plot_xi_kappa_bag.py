@@ -33,7 +33,6 @@ def main() -> plt.Figure:
             old[i_v], _ = quantities.get_kappa_de_bag(v_wall, alpha_n)
             # New
             bubble = Bubble(model, v_wall, alpha_n)
-            bubble.solve()
             new[i_v] = bubble.kappa
         ax.plot(v_walls, new)
 

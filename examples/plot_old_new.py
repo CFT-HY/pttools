@@ -86,15 +86,14 @@ def main():
     ax: plt.Axes = fig.add_subplot()
     plot_plane(ax=ax, data_s=data, selected_solutions=False)
 
-    print("Solving old")
+    print("Solving & plotting old")
     for v_wall, alpha_n, sol_type in zip(v_walls, alpha_ns, sol_types):
         v, w, xi = fluid_bag.sound_shell_bag(v_wall=v_wall, alpha_n=alpha_n)
         ax.plot(xi, v, color="blue", label=rf"$v_w={v_wall}, \alpha_n={alpha_n}")
         validate(bag, v, w, xi, sol_type)
 
-    print("Solving new")
+    print("Plotting new")
     for bubble in [bag_def, bag_hybrid, bag_det]:
-        bubble.solve()
         ax.plot(bubble.xi, bubble.v, ls=":", color="red")
         validate(bag, bubble.v, bubble.w, bubble.xi, bubble.sol_type)
 

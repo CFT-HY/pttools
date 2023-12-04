@@ -18,9 +18,6 @@ def main():
         Bubble(model, v_wall=0.7, alpha_n=0.1),
         Bubble(model, v_wall=0.3, alpha_n=0.1)
     ]
-    for bubble in bubbles:
-        bubble.solve()
-
     return plot_entropy(bubbles, colors=["r", "g", "b"])
 
 

@@ -27,9 +27,9 @@ def create_bubble(
     v_wall, alpha_n = params
     try:
         if bubble_kwargs is None:
-            bubble = Bubble(model, v_wall, alpha_n)
+            bubble = Bubble(model, v_wall, alpha_n, solve=False)
         else:
-            bubble = Bubble(model, v_wall, alpha_n, **bubble_kwargs)
+            bubble = Bubble(model, v_wall, alpha_n, solve=False, **bubble_kwargs)
     except Exception as e:
         if allow_bubble_failure:
             logger.exception("Failed to create a bubble:", exc_info=e)

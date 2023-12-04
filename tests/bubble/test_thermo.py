@@ -29,8 +29,6 @@ class ThermoTest:
             Bubble(cls.MODEL, v_wall=v_wall, alpha_n=alpha_n)
             for v_wall, alpha_n in zip(cls.V_WALLS, cls.ALPHA_NS)
         ]
-        for bubble in cls.bubbles:
-            bubble.solve()
 
     def test_kappa(self):
         assert_allclose([bubble.kappa for bubble in self.bubbles], self.KAPPA_REF, rtol=1.5e-2)

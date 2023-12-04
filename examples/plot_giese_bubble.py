@@ -27,7 +27,6 @@ ax: plt.Axes = fig.add_subplot()
 for alpha_tbn, color in zip(alpha_thetabar_ns, colors):
     try:
         bubble = Bubble(model=model, v_wall=v_wall, alpha_n=alpha_tbn, theta_bar=True, allow_invalid=True)
-        bubble.solve()
         ax.plot(bubble.xi, bubble.v, color=color)
     except (RuntimeError, ValueError) as e:
         logger.exception("ERROR:", exc_info=e)

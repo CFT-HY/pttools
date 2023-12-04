@@ -30,7 +30,6 @@ def kappa_vec(model: ConstCSModel, v_walls: np.ndarray, alpha_n: float) -> np.nd
     for i, v_wall in enumerate(v_walls):
         try:
             bubble = Bubble(model, v_wall=v_wall, alpha_n=alpha_n)
-            bubble.solve()
             kappas[i] = bubble.kappa
         except (IndexError, ValueError):
             continue

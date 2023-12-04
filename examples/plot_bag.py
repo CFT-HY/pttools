@@ -34,7 +34,6 @@ v, w, xi = sound_shell_bag(v_wall, alpha_n)
 
 print("Solving with new solver")
 bubble = Bubble(model, v_wall=v_wall, alpha_n=alpha_n)
-bubble.solve()
 print(bubble.sol_type)
 ref_data = ref().get(v_wall, alpha_n, bubble.sol_type)
 print(

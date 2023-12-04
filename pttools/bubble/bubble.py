@@ -35,7 +35,7 @@ class Bubble:
     def __init__(
             self,
             model: "Model", v_wall: float, alpha_n: float,
-            solve: bool = False,
+            solve: bool = True,
             sol_type: SolutionType = None,
             label_latex: str = None,
             label_unicode: str = None,

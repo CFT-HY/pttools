@@ -23,7 +23,6 @@ wn = model.w_n(alpha_n=0.1)
 tn = model.temp(wn, Phase.SYMMETRIC)
 print(wn, tn)
 bubble = Bubble(model, v_wall=0.3, alpha_n=0.05)
-bubble.solve()
 
 
 fig: plt.Figure = plt.figure()
