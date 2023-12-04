@@ -207,8 +207,15 @@ class Model(BaseModel, abc.ABC):
 
         return 4 * diff / (3 * wn)
 
-    def alpha_n_from_alpha_theta_bar_n(self, alpha_theta_bar_n: float):
-        wn = self.w_n(alpha_theta_bar_n, theta_bar=True)
+    def alpha_n_from_alpha_theta_bar_n(
+            self,
+            alpha_theta_bar_n: th.FloatOrArr,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
+        wn = self.w_n(
+            alpha_theta_bar_n, theta_bar=True,
+            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid)
         tn = self.temp(wn, Phase.SYMMETRIC)
         diff = (1 - 1 / (3 * self.cs2(wn, Phase.BROKEN))) * \
             (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN)) / wn
