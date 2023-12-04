@@ -31,28 +31,28 @@ class ThermoModel(BaseModel, abc.ABC):
     def __init__(
             self,
             name: str = None,
-            t_min: float = None, t_max: float = None,
+            T_min: float = None, T_max: float = None,
             restrict_to_valid: bool = True,
             label_latex: str = None,
             label_unicode: str = None,
             gen_cs2: bool = True,
             gen_cs2_neg: bool = False):
 
-        t_data_min = np.min(self.GEFF_DATA_TEMP)
-        t_data_max = np.max(self.GEFF_DATA_TEMP)
-        if t_min is None:
+        temp_data_min = np.min(self.GEFF_DATA_TEMP)
+        temp_data_max = np.max(self.GEFF_DATA_TEMP)
+        if T_min is None:
             self.t_min = np.min(self.GEFF_DATA_TEMP)
-        elif t_min < t_data_min:
+        elif T_min < temp_data_min:
             raise ValueError("Model must have spline data for its validity range.")
 
-        if t_max is None:
+        if T_max is None:
             self.t_max = np.max(self.GEFF_DATA_TEMP)
-        elif t_max > t_data_max:
+        elif T_max > temp_data_max:
             raise ValueError("ThermoModel must have spline data for its validity range.")
 
         super().__init__(
             name=name,
-            t_min=t_min, t_max=t_max,
+            T_min=T_min, T_max=T_max,
             restrict_to_valid=restrict_to_valid,
             label_latex=label_latex, label_unicode=label_unicode,
             gen_cs2=gen_cs2, gen_cs2_neg=gen_cs2_neg

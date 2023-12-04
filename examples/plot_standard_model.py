@@ -41,7 +41,7 @@ plot.process()
 thermo2 = StandardModel(V_s=5e15, g_mult_s=1 + 1e-5)
 model2 = FullModel(thermo2)
 plot2 = ModelPlot(model2)
-print(model2.t_crit, model2.t_max, model2.alpha_n_min, model2.w_crit)
+print(model2.t_crit, model2.T_max, model2.alpha_n_min, model2.w_crit)
 
 if __name__ == "__main__":
     utils.save_and_show(fig, "standard_model.png")

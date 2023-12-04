@@ -32,7 +32,7 @@ class FullModel(Model):
             self,
             thermo: ThermoModel,
             V_s: float = 0, V_b: float = 0,
-            t_crit_guess: float = None,
+            T_crit_guess: float = None,
             allow_invalid: bool = False,
             name: str = None,
             label_latex: str = None,
@@ -46,7 +46,7 @@ class FullModel(Model):
 
         super().__init__(
             V_s=V_s, V_b=V_b,
-            t_min=thermo.t_min, t_max=thermo.t_max,
+            T_min=thermo.t_min, T_max=thermo.t_max,
             name=name, label_latex=label_latex, label_unicode=label_unicode,
             gen_critical=False, gen_cs2=False, gen_cs2_neg=False, implicit_V=True)
 
@@ -56,7 +56,7 @@ class FullModel(Model):
         self.temp_spline_b = splrep(
             np.log10(self.w(self.thermo.GEFF_DATA_TEMP, Phase.BROKEN)), self.thermo.GEFF_DATA_LOG_TEMP
         )
-        self.t_crit, self.w_crit, self.alpha_n_min = self.criticals(t_crit_guess, allow_invalid)
+        self.t_crit, self.w_crit, self.alpha_n_min = self.criticals(T_crit_guess, allow_invalid)
 
         self.cs2 = self.gen_cs2()
 

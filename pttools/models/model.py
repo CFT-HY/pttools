@@ -4,9 +4,8 @@ import abc
 import logging
 import typing as tp
 
-import numba
 import numpy as np
-from scipy.optimize import fminbound, fsolve, root_scalar
+from scipy.optimize import fminbound, fsolve
 
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase, SolutionType
@@ -20,9 +19,9 @@ logger = logging.getLogger(__name__)
 class Model(BaseModel, abc.ABC):
     r"""Template for equations of state
 
-    :param t_ref: reference temperature.
+    :param T_ref: reference temperature.
         Be careful when using a thermodynamics-based model that there are no conflicts in the choices of units.
-    :param t_min: minimum temperature at which the model is valid
+    :param T_min: minimum temperature at which the model is valid
     :param V_s: the constant term in the expression of $p$ in the symmetric phase
     :param V_b: the constant term in the expression of $p$ in the broken phase
     :param name: custom name for the model
@@ -31,8 +30,8 @@ class Model(BaseModel, abc.ABC):
     def __init__(
             self,
             V_s: float, V_b: float = 0,
-            t_ref: float = 1, t_min: float = None, t_max: float = None,
-            t_crit_guess: float = None,
+            T_ref: float = 1, T_min: float = None, T_max: float = None,
+            T_crit_guess: float = None,
             name: str = None,
             label_latex: str = None,
             label_unicode: str = None,
@@ -59,7 +58,7 @@ class Model(BaseModel, abc.ABC):
             # if V_s == V_b:
             #     logger.warning("The bubble will not expand, when V_s <= V_b. Got: V_b = V_s = %s.", V_s)
 
-        self.t_ref: float = t_ref
+        self.T_ref: float = T_ref
         self.V_s: float = V_s
         self.V_b: float = V_b
         self.__df_dtau_ptr = None
@@ -68,26 +67,26 @@ class Model(BaseModel, abc.ABC):
         self.critical_temp_const: float = 90 / np.pi ** 2 * (self.V_b - self.V_s)
 
         super().__init__(
-            t_min=t_min, t_max=t_max,
+            T_min=T_min, T_max=T_max,
             name=name, label_latex=label_latex, label_unicode=label_unicode,
             gen_cs2=gen_cs2, gen_cs2_neg=gen_cs2_neg
         )
-        self.w_min_s = self.w(self.t_min, Phase.SYMMETRIC)
-        self.w_min_b = self.w(self.t_min, Phase.BROKEN)
-        self.w_max_s = self.w(self.t_max, Phase.SYMMETRIC)
-        self.w_max_b = self.w(self.t_max, Phase.BROKEN)
+        self.w_min_s = self.w(self.T_min, Phase.SYMMETRIC)
+        self.w_min_b = self.w(self.T_min, Phase.BROKEN)
+        self.w_max_s = self.w(self.T_max, Phase.SYMMETRIC)
+        self.w_max_b = self.w(self.T_max, Phase.BROKEN)
         self.w_min = max(self.w_min_s, self.w_min_b)
         self.w_max = min(self.w_max_s, self.w_max_b)
 
         # A model could have t_ref = 1 GeV and be valid only for e.g. > 10 GeV
         # if t_ref < self.t_min:
         #     raise logger.warning(f"T_ref should be higher than T_min. Got: T_ref={t_ref}, T_min={self.t_min}")
-        if t_ref >= self.t_max:
-            raise ValueError(f"T_ref should be lower than T_max. Got: T_ref={t_ref}, T_max={self.t_max}")
+        if T_ref >= self.T_max:
+            raise ValueError(f"T_ref should be lower than T_max. Got: T_ref={T_ref}, T_max={self.T_max}")
 
         if gen_critical:
             # w_crit = wn_max
-            self.t_crit, self.w_crit, self.alpha_n_min = self.criticals(t_crit_guess, allow_invalid)
+            self.T_crit, self.w_crit, self.alpha_n_min = self.criticals(T_crit_guess, allow_invalid)
 
     # Concrete methods
 
@@ -411,7 +410,7 @@ class Model(BaseModel, abc.ABC):
     def criticals(self, t_crit_guess: float, allow_fail: bool = False, log_info: bool = True):
         t_crit = self.critical_temp(guess=t_crit_guess, allow_fail=allow_fail)
         # self.t_crit has to be set already here for alpha_n error messages to work.
-        self.t_crit = t_crit
+        self.T_crit = t_crit
         wn_min = self.w(t_crit, Phase.SYMMETRIC)
         alpha_n_min = self.alpha_n(wn_min)
 
@@ -437,23 +436,23 @@ class Model(BaseModel, abc.ABC):
         :param allow_fail: do not raise exceptions on errors
         """
         if guess is None:
-            if np.isfinite(self.t_max):
-                guess = np.exp((np.log(self.t_min) + np.log(self.t_max)) / 2)
+            if np.isfinite(self.T_max):
+                guess = np.exp((np.log(self.T_min) + np.log(self.T_max)) / 2)
             else:
                 guess = guess_backup
 
-        p_s_min = self.p_temp(self.t_min, Phase.SYMMETRIC)
-        p_b_min = self.p_temp(self.t_min, Phase.BROKEN)
+        p_s_min = self.p_temp(self.T_min, Phase.SYMMETRIC)
+        p_b_min = self.p_temp(self.T_min, Phase.BROKEN)
         if p_s_min >= p_b_min:
             msg = \
                 "All models should have p_s(T=T_min) < p_b(T=T_min) for T_crit to exist. " \
-                f"Got: T_min={self.t_min}, p_s={p_s_min}, p_b={p_b_min}."
+                f"Got: T_min={self.T_min}, p_s={p_s_min}, p_b={p_b_min}."
             logger.error(msg)
             if not allow_fail:
                 raise ValueError(msg)
 
-        t_max = self.t_max if np.isfinite(self.t_max) else t_max_backup
-        t_arr = np.logspace(np.log10(self.t_min), np.log10(t_max), 10)
+        t_max = self.T_max if np.isfinite(self.T_max) else t_max_backup
+        t_arr = np.logspace(np.log10(self.T_min), np.log10(t_max), 10)
         p_s_arr = self.p_temp(t_arr, Phase.SYMMETRIC)
         p_b_arr = self.p_temp(t_arr, Phase.BROKEN)
         if np.all(p_s_arr <= p_b_arr):
@@ -479,13 +478,13 @@ class Model(BaseModel, abc.ABC):
                 raise RuntimeError(msg)
 
         # Validate temperature
-        if t_crit <= self.t_min:
-            msg = f"T_crit should be higher than T_min. Got: T_crit={t_crit}, T_min={self.t_min}"
+        if t_crit <= self.T_min:
+            msg = f"T_crit should be higher than T_min. Got: T_crit={t_crit}, T_min={self.T_min}"
             logger.error(msg)
             if not allow_fail:
                 raise ValueError(msg)
-        if t_crit >= self.t_max:
-            msg = f"T_max should be lower than T_max. Got: T_crit={t_crit}, T_max={self.t_max}"
+        if t_crit >= self.T_max:
+            msg = f"T_max should be lower than T_max. Got: T_crit={t_crit}, T_max={self.T_max}"
             logger.error(msg)
             if not allow_fail:
                 raise ValueError(msg)
@@ -602,7 +601,7 @@ class Model(BaseModel, abc.ABC):
     def export(self) -> tp.Dict[str, any]:
         return {
             **super().export(),
-            "t_ref": self.t_ref,
+            "t_ref": self.T_ref,
             "V_s": self.V_s,
             "V_b": self.V_b
         }

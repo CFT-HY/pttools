@@ -33,15 +33,15 @@ class ModelPlot:
         # self.ax_theta = self.axs[2, 0]
 
         if t_log:
-            self.t_min = max(model.t_min, 10**(-t_log_range)*model.t_crit) if t_min is None else t_min
-            self.t_max = min(model.t_max, 10**t_log_range*model.t_crit) if t_max is None else t_max
-            self.temps_b = np.logspace(np.log10(self.t_min), np.log10(model.t_crit), n_points)
-            self.temps_s = np.logspace(np.log10(model.t_crit), np.log10(self.t_max), n_points)
+            self.t_min = max(model.T_min, 10 ** (-t_log_range) * model.T_crit) if t_min is None else t_min
+            self.t_max = min(model.T_max, 10 ** t_log_range * model.T_crit) if t_max is None else t_max
+            self.temps_b = np.logspace(np.log10(self.t_min), np.log10(model.T_crit), n_points)
+            self.temps_s = np.logspace(np.log10(model.T_crit), np.log10(self.t_max), n_points)
         else:
-            self.t_min = max(model.t_min, 0.7 * model.t_crit) if t_min is None else t_min
-            self.t_max = min(model.t_max, 1.3 * model.t_crit) if t_max is None else t_max
-            self.temps_b = np.linspace(self.t_min, model.t_crit, n_points)
-            self.temps_s = np.linspace(model.t_crit, self.t_max, n_points)
+            self.t_min = max(model.T_min, 0.7 * model.T_crit) if t_min is None else t_min
+            self.t_max = min(model.T_max, 1.3 * model.T_crit) if t_max is None else t_max
+            self.temps_b = np.linspace(self.t_min, model.T_crit, n_points)
+            self.temps_s = np.linspace(model.T_crit, self.t_max, n_points)
 
         self.plot(self.ax_p, self.model.p_temp, "p", y_log=y_log)
         self.plot(self.ax_s, self.model.s_temp, "s", y_log=y_log)
@@ -80,7 +80,7 @@ class ModelPlot:
         ax.plot(self.temps_b, vals_b_low, color="b", label=label_b)
         ax.plot(self.temps_s, vals_b_high, color="b", ls=":")
 
-        ax.axvline(self.model.t_crit, ls=":", label=r"$T_{crit}$")
+        ax.axvline(self.model.T_crit, ls=":", label=r"$T_{crit}$")
         ax.set_xlabel("$T$")
         ax.set_ylabel(f"${label}$")
 

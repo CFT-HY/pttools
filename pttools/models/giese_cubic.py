@@ -33,7 +33,7 @@ class GieseCubicModel(AnalyticModel):
         return self.a_s/4 * temp**4 - self.V(temp, phase)
 
     def phase_min(self, temp: th.FloatOrArr):
-        return self.phase_min_full(self.d, self.E, temp, self.t_crit)
+        return self.phase_min_full(self.d, self.E, temp, self.T_crit)
 
     @staticmethod
     def phase_min_full(d: th.FloatOrArr, E: th.FloatOrArr, temp: th.FloatOrArr, temp_crit: th.FloatOrArr):
@@ -50,8 +50,8 @@ class GieseCubicModel(AnalyticModel):
         return self.lam * (
             phase**4
             - 2*self.E * phase**3 * temp
-            + phase**2 * (self.E**2 * self.t_crit**2 + self.d*(temp**2 - self.t_crit**2))
-        ) + self.lam/4 * (self.d - self.E**2)**2 * self.t_crit**4
+            + phase**2 * (self.E ** 2 * self.T_crit ** 2 + self.d * (temp ** 2 - self.T_crit ** 2))
+        ) + self.lam/4 * (self.d - self.E**2)**2 * self.T_crit**4
 
     def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         raise NotImplementedError

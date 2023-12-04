@@ -24,7 +24,7 @@ class BaseModel(abc.ABC):
     def __init__(
             self,
             name: str = None,
-            t_min: float = None, t_max: float = None,
+            T_min: float = None, T_max: float = None,
             restrict_to_valid: bool = True,
             label_latex: str = None,
             label_unicode: str = None,
@@ -33,8 +33,8 @@ class BaseModel(abc.ABC):
         self.name = self.DEFAULT_NAME if name is None else name
         self.label_latex = self.DEFAULT_LABEL_LATEX if label_latex is None else label_latex
         self.label_unicode = self.DEFAULT_LABEL_UNICODE if label_unicode is None else label_unicode
-        self.t_min = self.DEFAULT_T_MIN if t_min is None else t_min
-        self.t_max = self.DEFAULT_T_MAX if t_max is None else t_max
+        self.T_min = self.DEFAULT_T_MIN if T_min is None else T_min
+        self.T_max = self.DEFAULT_T_MAX if T_max is None else T_max
         self.restrict_to_valid = restrict_to_valid
 
         if self.name is None:
@@ -47,10 +47,10 @@ class BaseModel(abc.ABC):
             raise ValueError("The model must have labels.")
         if "$" in self.label_unicode:
             logger.warning(f"The Unicode label of a model should not contain \"$\". Got: \"{self.label_unicode}\"")
-        if self.t_min <= 0:
-            raise ValueError(f"T_min should be larger than zero. Got: {self.t_min}")
-        if self.t_max <= self.t_min:
-            raise ValueError(f"T_max ({self.t_max}) should be higher than T_min ({self.t_min}).")
+        if self.T_min <= 0:
+            raise ValueError(f"T_min should be larger than zero. Got: {self.T_min}")
+        if self.T_max <= self.T_min:
+            raise ValueError(f"T_max ({self.T_max}) should be higher than T_min ({self.T_min}).")
 
         if gen_cs2:
             self.cs2 = self.gen_cs2()
@@ -66,8 +66,8 @@ class BaseModel(abc.ABC):
             "label_latex": self.label_latex,
             "label_unicode": self.label_unicode,
             "datetime": datetime.datetime.now(),
-            "t_min": self.t_min,
-            "t_max": self.t_max,
+            "T_min": self.T_min,
+            "T_max": self.T_max,
             "restrict_to_valid": self.restrict_to_valid
         }
 
@@ -87,23 +87,23 @@ class BaseModel(abc.ABC):
         If invalid values are found, a copy of the array is created where those are set to np.nan.
         """
         if np.isscalar(temp):
-            if temp < self.t_min:
+            if temp < self.T_min:
                 logger.warning(
                     f"The temperature {temp} "
-                    f"is below the minimum temperature {self.t_min} of the model \"{self.name}\"."
+                    f"is below the minimum temperature {self.T_min} of the model \"{self.name}\"."
                 )
                 if self.restrict_to_valid:
                     return np.nan
-            elif temp > self.t_max:
+            elif temp > self.T_max:
                 logger.warning(
                     f"The temperature {temp} "
-                    f"is above the maximum temperature {self.t_max} of the model \"{self.name}\"."
+                    f"is above the maximum temperature {self.T_max} of the model \"{self.name}\"."
                 )
                 if self.restrict_to_valid:
                     return np.nan
         else:
-            below = temp < self.t_min
-            above = temp > self.t_max
+            below = temp < self.T_min
+            above = temp > self.T_max
             has_below = np.any(below)
             has_above = np.any(above)
             if self.restrict_to_valid and (has_below or has_above):
@@ -111,7 +111,7 @@ class BaseModel(abc.ABC):
             if has_below:
                 logger.warning(
                     f"Some temperatures ({np.min(temp)} and possibly above) "
-                    f"are below the minimum temperature {self.t_min} of the model \"{self.name}\"."
+                    f"are below the minimum temperature {self.T_min} of the model \"{self.name}\"."
                 )
                 if self.restrict_to_valid:
                     temp[below] = np.nan
@@ -119,7 +119,7 @@ class BaseModel(abc.ABC):
                 # raise ValueError(temp)
                 logger.warning(
                     f"Some temperatures ({np.max(temp)} and possibly above) "
-                    f"are above the maximum temperature {self.t_max} of the model \"{self.name}\"."
+                    f"are above the maximum temperature {self.T_max} of the model \"{self.name}\"."
                 )
                 if self.restrict_to_valid:
                     temp[above] = np.nan

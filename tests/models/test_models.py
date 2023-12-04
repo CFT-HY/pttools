@@ -60,7 +60,7 @@ class TestConstCSThermoLikeBag(BagBaseCase, unittest.TestCase):
     def test_constants(self):
         self.assertAlmostEqual(self.model.thermo.mu_s, 4)
         self.assertAlmostEqual(self.model.thermo.mu_b, 4)
-        self.assertEqual(self.model.t_ref, 1)
+        self.assertEqual(self.model.T_ref, 1)
 
     def test_cs2_full(self):
         data = self.model.thermo.cs2_full(self.w_arr1, self.phase_arr)

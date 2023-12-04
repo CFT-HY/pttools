@@ -58,7 +58,7 @@ class StandardModel(ThermoModel):
             g_mult_s: float = 1, g_mult_b: float = 1,
             V_s: float = 0, V_b: float = 0,
             name: str = None,
-            t_min: float = None, t_max: float = None,
+            T_min: float = None, T_max: float = None,
             restrict_to_valid: bool = True,
             label_latex: str = None,
             label_unicode: str = None,
@@ -71,7 +71,7 @@ class StandardModel(ThermoModel):
         self.V_b = V_b
 
         super().__init__(
-            t_min=t_min, t_max=t_max,
+            T_min=T_min, T_max=T_max,
             restrict_to_valid=restrict_to_valid,
             name=name, label_latex=label_latex, label_unicode=label_unicode,
             gen_cs2=gen_cs2

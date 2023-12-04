@@ -76,9 +76,9 @@ class Bubble:
         self.log_success = log_success
 
         # Computed parameters
-        self.tn = model.temp(self.wn, Phase.SYMMETRIC)
-        if self.tn > model.t_crit:
-            msg = f"Bubbles form only when T_nuc < T_crit. Got: T_nuc={self.tn}, T_crit={model.t_crit}"
+        self.Tn = model.temp(self.wn, Phase.SYMMETRIC)
+        if self.Tn > model.T_crit:
+            msg = f"Bubbles form only when T_nuc < T_crit. Got: T_nuc={self.Tn}, T_crit={model.T_crit}"
             if log_invalid:
                 logger.error(msg)
             if not allow_invalid:
@@ -152,7 +152,7 @@ class Bubble:
             logger.info(
                 "Initialized a bubble with: "
                 "model=%s, v_w=%s, alpha_n=%s, T_nuc=%s, w_nuc=%s",
-                self.model.label_unicode, v_wall, alpha_n, self.tn, self.wn
+                self.model.label_unicode, v_wall, alpha_n, self.Tn, self.wn
             )
 
     def add_note(self, note: str):
@@ -175,7 +175,7 @@ class Bubble:
             "w": self.w,
             "xi": self.xi,
             # Solution parameters
-            "tn": self.tn,
+            "Tn": self.Tn,
             "vp": self.vp,
             "vm": self.vm,
             "vp_tilde": self.vp_tilde,

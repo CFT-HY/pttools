@@ -22,8 +22,8 @@ class ConstCSThermoModel(ThermoModel):
             a_s: float, a_b: float,
             css2: float, csb2: float,
             V_s: float, V_b: float = 0,
-            t_min: float = None,
-            t_max: float = None,
+            T_min: float = None,
+            T_max: float = None,
             t_ref: float = 1,
             name: str = None,
             label_latex: str = None,
@@ -46,7 +46,7 @@ class ConstCSThermoModel(ThermoModel):
         # TODO: Generate reference values for g0 here (corresponding to a_s, a_b)
 
         super().__init__(
-            t_min=t_min, t_max=t_max,
+            T_min=T_min, T_max=T_max,
             name=name, label_latex=label_latex, label_unicode=label_unicode
         )
 

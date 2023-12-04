@@ -34,10 +34,10 @@ class ConstCSModel(AnalyticModel):
             V_s: float, V_b: float = 0,
             a_s: float = None, a_b: float = None,
             g_s: float = None, g_b: float = None,
-            t_min: float = None,
-            t_max: float = None,
-            t_ref: float = 1,
-            t_crit_guess: float = None,
+            T_min: float = None,
+            T_max: float = None,
+            T_ref: float = 1,
+            T_crit_guess: float = None,
             name: str = None,
             label_latex: str = None,
             label_unicode: str = None,
@@ -50,7 +50,7 @@ class ConstCSModel(AnalyticModel):
         :param csb2: $c_{s,b}^2$, speed of sound squared in the broken phase
         :param V_s: $V_s \equiv \epsilon_s$, the potential term of $p$ in the symmetric phase
         :param V_b: $V_b \equiv \epsilon_b$, the potential term of $p$ in the broken phase
-        :param t_ref: reference temperature, usually 1 * unit of choice, e,g. 1 GeV
+        :param T_ref: reference temperature, usually 1 * unit of choice, e,g. 1 GeV
         :param name: custom name for the model
 
         TODO: Rename mu to mu_s and nu to mu_b
@@ -70,11 +70,11 @@ class ConstCSModel(AnalyticModel):
         self.csb = np.sqrt(csb2)
         self.mu = cs2_to_mu(css2)
         self.nu = cs2_to_mu(csb2)
-        self.t_ref = t_ref
+        self.t_ref = T_ref
         self.const_cs_wn_const: float = 4 / 3 * (1 / self.nu - 1 / self.mu)
 
-        if t_crit_guess is None:
-            t_crit_guess = t_ref
+        if T_crit_guess is None:
+            T_crit_guess = T_ref
 
         label_prec = 3
         label_latex = f"Const. $c_s, c_{{ss}}^2={self.css2:.{label_prec}f}, c_{{sb}}^2={self.csb2:.{label_prec}f}$" \
@@ -86,7 +86,7 @@ class ConstCSModel(AnalyticModel):
             V_s=V_s, V_b=V_b,
             a_s=a_s, a_b=a_b,
             g_s=g_s, g_b=g_b,
-            t_min=t_min, t_max=t_max, t_crit_guess=t_crit_guess,
+            T_min=T_min, T_max=T_max, T_crit_guess=T_crit_guess,
             name=name, label_latex=label_latex, label_unicode=label_unicode,
             allow_invalid=allow_invalid
         )
@@ -128,7 +128,7 @@ class ConstCSModel(AnalyticModel):
         invalid = ret < 0
         if (error_on_invalid or nan_on_invalid or log_invalid) and np.any(invalid):
             if np.isscalar(ret):
-                info = f"Got negative alpha_n={ret} with wn={wn}, mu={self.mu}, nu={self.nu}, t_crit={self.t_crit}."
+                info = f"Got negative alpha_n={ret} with wn={wn}, mu={self.mu}, nu={self.nu}, t_crit={self.T_crit}."
             else:
                 i = np.argmin(wn)
                 info = f"Got negative alpha_n. Most problematic values: alpha_n={ret[i]}, wn={wn[i]}, mu={self.mu}, nu={self.nu}"
