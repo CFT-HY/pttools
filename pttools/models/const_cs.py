@@ -177,30 +177,30 @@ class ConstCSModel(AnalyticModel):
     def alpha_theta_bar_n_max_lte(self, wn: float, sol_type: SolutionType) -> float:
         r"""$\alpha_{n,\text{max}}^\text{def}$, :ai_2023:`\ `, eq. 28, 31"""
         if sol_type == SolutionType.DETON or sol_type == SolutionType.HYBRID:
-            psi_n = self.psi_n(wn)
-            if np.max(np.abs(psi_n - 1)) > 1:
+            Psi_n = self.Psi_n(wn)
+            if np.max(np.abs(Psi_n - 1)) > 1:
                 logger.warning(
-                    "alpha_n_bar_max_lte approximation is not valid, as |1 - psi_n| > 1. "
+                    "alpha_n_bar_max_lte approximation is not valid, as |1 - Psi_n| > 1. "
                     "You have to check yourself that alpha_n is valid."
                 )
-            sqrt_val = (1 - psi_n)/((self.nu - 1)*(self.nu - 2))
+            sqrt_val = (1 - Psi_n)/((self.nu - 1)*(self.nu - 2))
             if sqrt_val < 0:
                 return np.nan
-            return (1 - psi_n) / 3 * (1 + self.nu/3 * np.sqrt(sqrt_val))
+            return (1 - Psi_n) / 3 * (1 + self.nu/3 * np.sqrt(sqrt_val))
         return np.inf
 
     def alpha_theta_bar_n_min_lte(self, wn: th.FloatOrArr, sol_type: SolutionType) -> float:
         r"""$\alpha_{n,\text{min}}^\text{def}$, :ai_2023:`\ `, eq. 27, 30"""
-        psi_n = self.psi_n(wn)
+        Psi_n = self.Psi_n(wn)
         if sol_type == SolutionType.DETON:
             if np.abs(self.nu - 4) < 1:
                 logger.warning(
                     "alpha_bar_min_lte_det approximation is not valid, as |nu - 4| > 1. "
                     "You have to check yourself that alpha_n is valid."
                 )
-            return (1 - psi_n) / (12*psi_n) * (4 - (1 - psi_n)*(self.nu - 4))
+            return (1 - Psi_n) / (12*Psi_n) * (4 - (1 - Psi_n)*(self.nu - 4))
         if sol_type == SolutionType.SUB_DEF:
-            return np.maximum((1 - psi_n)/3, (self.mu - self.nu)/(3*self.mu))
+            return np.maximum((1 - Psi_n)/3, (self.mu - self.nu)/(3*self.mu))
         if sol_type == SolutionType.HYBRID:
             # Not known / no simple formula
             return 0

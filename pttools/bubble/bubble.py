@@ -101,12 +101,12 @@ class Bubble:
             if log_invalid and self.alpha_n_bar > self.alpha_theta_bar_n_max_lte:
                 logger.warning("alpha_n_bar=%s > lte_max=%s", self.alpha_n_bar, self.alpha_theta_bar_n_max_lte)
 
-        self.psi_n = model.psi_n(self.wn)
-        if log_invalid and self.sol_type == SolutionType.DETON and self.psi_n < 0.75:
+        self.Psi_n = model.Psi_n(self.wn)
+        if log_invalid and self.sol_type == SolutionType.DETON and self.Psi_n < 0.75:
             logger.warning(
-                "This detonation should not exist, as LTE predicts a large alpha_n_hyb_max for psi_n=%s < 0.75. "
+                "This detonation should not exist, as LTE predicts a large alpha_n_hyb_max for Psi_n=%s < 0.75. "
                 "Please see Ai et al. (2023), p. 15.",
-                self.psi_n
+                self.Psi_n
             )
 
         # Flags

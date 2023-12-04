@@ -591,9 +591,9 @@ class Model(BaseModel, abc.ABC):
         return self.w(temp, Phase.SYMMETRIC) / self.w(temp, Phase.BROKEN)
 
     def inverse_enthalpy_ratio(self, temp: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Inverse enthalpy ratio $\psi(T)$ :ai_2023:`\ `, eq. 19
+        r"""Inverse enthalpy ratio $\Psi(T)$ :ai_2023:`\ `, eq. 19
 
-        $$\psi(T) = \frac{w_b(T)}{w_s(T)}$$
+        $$\Psi(T) = \frac{w_b(T)}{w_s(T)}$$
         :param temp: temperature $T$
         """
         return self.w(temp, Phase.BROKEN) / self.w(temp, Phase.SYMMETRIC)
@@ -629,7 +629,7 @@ class Model(BaseModel, abc.ABC):
         """
         return self.p_temp(self.temp(w, phase), phase)
 
-    def psi_n(self, wn: th.FloatOrArr) -> th.FloatOrArr:
+    def Psi_n(self, wn: th.FloatOrArr) -> th.FloatOrArr:
         r"""Inverse enthalpy ratio at nucleation temperature $\psi_n$, :ai_2023:`\ `, p. 9
 
         With validation check
@@ -638,7 +638,7 @@ class Model(BaseModel, abc.ABC):
         min_ret = np.min(ret)
         if min_ret < 0.9:
             logger.warning(
-                "psi_n=%s < 0.9. "
+                "Psi_n=%s < 0.9. "
                 "Local thermal equilibrium (LTE) approximations may not be valid, "
                 "and therefore the model may not allow a constant v_wall to exist "
                 "without accounting for out-of-equilibrium effects. "
