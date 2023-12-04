@@ -23,7 +23,7 @@ class BubbleGridTest(unittest.TestCase):
             self.grid.omega(),
             self.grid.solver_failed(),
             self.grid.unphysical_alpha_plus(),
-            self.grid.unphysical_entropy()
+            self.grid.negative_net_entropy_change()
         ]
         for arr in arrs:
             if arr.dtype == object:

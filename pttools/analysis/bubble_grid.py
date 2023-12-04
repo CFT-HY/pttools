@@ -43,8 +43,8 @@ class BubbleGrid:
     def unphysical_alpha_plus(self) -> np.ndarray:
         return self.get_value("unphysical_alpha_plus", dtype=np.bool_)
 
-    def unphysical_entropy(self) -> np.ndarray:
-        return self.get_value("unphysical_entropy", dtype=np.bool_)
+    def negative_net_entropy_change(self) -> np.ndarray:
+        return self.get_value("negative_net_entropy_change", dtype=np.bool_)
 
 
 class BubbleGridVWAlpha(BubbleGrid):

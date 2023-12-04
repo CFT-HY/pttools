@@ -113,9 +113,10 @@ class Bubble:
         self.solved = False
         self.solver_failed = False
         self.no_solution_found = False
+        # Specific errors
+        self.negative_net_entropy_change = False
         self.numerical_error = False
         self.unphysical_alpha_plus = False
-        self.unphysical_entropy = False
 
         # LaTeX labels are not supported in Plotly 3D plots.
         # https://github.com/plotly/plotly.js/issues/608
@@ -284,7 +285,7 @@ class Bubble:
             if log_negative_entropy:
                 logger.warning(msg)
             self.add_note(msg)
-            self.unphysical_entropy = True
+            self.negative_net_entropy_change = True
         if self.va_thermal_energy_density_diff < 0:
             msg = "Thermal energy density is negative. The bubble is therefore working as a heat engine. " \
                   f"Got: {self.va_thermal_energy_density_diff}"
