@@ -13,6 +13,7 @@ from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.fluid import sound_shell_generic
 from pttools.bubble import const
 from pttools.bubble import props
+from pttools.bubble.relativity import gamma
 from pttools.bubble import thermo
 from pttools.bubble import transition
 from pttools.speedup.export import export_json
@@ -114,6 +115,7 @@ class Bubble:
         self.solver_failed = False
         self.no_solution_found = False
         # Specific errors
+        self.negative_entropy_flux = False
         self.negative_net_entropy_change = False
         self.numerical_error = False
         self.unphysical_alpha_plus = False
@@ -133,6 +135,12 @@ class Bubble:
         self.phase: tp.Optional[np.ndarray] = None
 
         # Output values
+        self.alpha_plus: tp.Optional[float] = None
+        self.elapsed: tp.Optional[float] = None
+        self.sp: tp.Optional[float] = None
+        self.sm: tp.Optional[float] = None
+        self.sm_sh: tp.Optional[float] = None
+        self.sn: tp.Optional[float] = None
         self.vp: tp.Optional[float] = None
         self.vm: tp.Optional[float] = None
         self.vp_tilde: tp.Optional[float] = None
@@ -145,8 +153,6 @@ class Bubble:
         self.wp: tp.Optional[float] = None
         self.wm: tp.Optional[float] = None
         self.wm_sh: tp.Optional[float] = None
-        self.alpha_plus: tp.Optional[float] = None
-        self.elapsed: tp.Optional[float] = None
 
         if solve:
             self.solve()
@@ -177,7 +183,13 @@ class Bubble:
             "w": self.w,
             "xi": self.xi,
             # Solution parameters
+            "alpha_plus": self.alpha_plus,
+            "sp": self.sp,
+            "sm": self.sm,
+            "sm_sh": self.sm_sh,
+            "sn": self.sn,
             "Tn": self.Tn,
+            "v_cj": self.v_cj,
             "vp": self.vp,
             "vm": self.vm,
             "vp_tilde": self.vp_tilde,
@@ -188,9 +200,7 @@ class Bubble:
             "wn": self.wn,
             "wp": self.wp,
             "wm": self.wm,
-            "wm_sh": self.wm_sh,
-            "alpha_plus": self.alpha_plus,
-            "v_cj": self.v_cj
+            "wm_sh": self.wm_sh
         }
         if path is not None:
             export_json(data, path)
@@ -213,7 +223,7 @@ class Bubble:
         from pttools.analysis.plot_bubble import plot_bubble_v
         return plot_bubble_v(self, fig, ax, path, **kwargs)
 
-    def plot_w(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None) -> "FigAndAxes":
+    def plot_w(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None, **kwargs) -> "FigAndAxes":
         from pttools.analysis.plot_bubble import plot_bubble_w
         return plot_bubble_w(self, fig, ax, path, **kwargs)
 
@@ -248,6 +258,19 @@ class Bubble:
                     use_bag_solver=use_bag_solver,
                     log_success=self.log_success, log_high_alpha_n_failures=log_high_alpha_n_failures
                 )
+            self.sn = self.model.s(self.wn, Phase.SYMMETRIC)
+            self.sm = self.model.s(self.wm, Phase.BROKEN)
+            if self.sol_type == SolutionType.DETON:
+                self.sp = self.sn
+                self.sm_sh = self.sm
+            else:
+                self.sp = self.model.s(self.wp, Phase.SYMMETRIC)
+                self.sm_sh = self.model.s(
+                    self.wm_sh,
+                    # In detonations the shock and wall have merged
+                    Phase.BROKEN if self.sol_type == SolutionType.DETON else Phase.SYMMETRIC
+                )
+
             self.w_center = self.w[0]
             if self.solver_failed:
                 # This is already reported by the individual solvers
@@ -280,6 +303,14 @@ class Bubble:
             logger.error(msg)
             self.add_note(msg)
             self.unphysical_alpha_plus = True
+        if self.entropy_flux_p < 0 or self.entropy_flux_m < 0 or self.entropy_flux_diff < 0:
+            msg = "Entropy fluxes should not be negative! " \
+                f"Got entropy_flux_p={self.entropy_flux_p}, entropy_flux_m={self.entropy_flux_m}, " \
+                f"entropy_flux_diff={self.entropy_flux_diff} with " \
+                f"model={self.model.label_unicode}, v_wall={self.v_wall}, alpha_n={self.alpha_n}"
+            logger.error(msg)
+            self.add_note(msg)
+            self.negative_entropy_flux = True
         if self.va_entropy_density_diff < 0:
             msg = "Entropy density should not be negative! Now entropy is decreasing. " \
                   f"Got: {self.va_entropy_density_diff} with " \
@@ -340,6 +371,47 @@ class Bubble:
         if not self.solved:
             raise NotYetSolvedError
         return self.entropy_density / self.model.s(self.wn, Phase.SYMMETRIC)
+
+    @functools.cached_property
+    def entropy_flux_p(self) -> float:
+        r"""Incoming entropy flux at the wall
+        $$\tilde{\gamma}_+ \tilde{v}_+ s_+$$
+        """
+        return gamma(self.vp_tilde) * self.vp_tilde * self.sp
+
+    @functools.cached_property
+    def entropy_flux_m(self) -> float:
+        r"""Outgoing entropy flux at the wall
+        $$\tilde{\gamma}_- \tilde{v}_- s_-$$
+        """
+        return gamma(self.vm_tilde) * self.vm_tilde * self.sm
+
+    @functools.cached_property
+    def entropy_flux_diff(self) -> float:
+        r"""Entropy flux difference at the wall
+        $$\tilde{\gamma}_- \tilde{v}_- s_- - \tilde{\gamma}_+ \tilde{v}_+ s_+$$
+        """
+        return self.entropy_flux_m - self.entropy_flux_p
+
+    @functools.cached_property
+    def entropy_flux_p_sh(self) -> float:
+        r"""Incoming entropy flux at the shock
+        $$\tilde{\gamma}_{+,sh} \tilde{v}_{+,sh} s_{+,sh}$$
+        """
+        return gamma(self.vp_tilde_sh) * self.vp_tilde_sh * self.sn
+
+    @functools.cached_property
+    def entropy_flux_m_sh(self) -> float:
+        r"""Outgoing entropy flux at the shock
+        $$\tilde{\gamma}_{-,sh} \tilde{v}_{-,sh} s_{-,sh}$$"""
+        return gamma(self.vm_tilde_sh) * self.vm_tilde_sh * self.sm_sh
+
+    @functools.cached_property
+    def entropy_flux_diff_sh(self) -> float:
+        r"""Entropy flux difference at the wall
+        $$\tilde{\gamma}_{-,sh} \tilde{v}_{-,sh} s_{-,sh} - \tilde{\gamma}_{+,sh} \tilde{v}_{+,sh} s_{+,sh}$$
+        """
+        return self.entropy_flux_m_sh - self.entropy_flux_p_sh
 
     @functools.cached_property
     def kinetic_energy_density(self) -> float:

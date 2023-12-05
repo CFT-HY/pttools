@@ -54,6 +54,7 @@ class EntropyPlot(VwAlphaPlot):
         self.ax.plot(v_chapman_jouguet(grid.model, grid.alpha_ns), grid.alpha_ns, 'k--', label=r'$v_{CJ}$')
         self.ax.set_title(rf"$\Delta s / s_n$ for {grid.model.label_latex}")
         self.ax.legend()
+        self.ax.set_title("Total net entropy change")
 
 
 class DeltaEntropyPlot(VwAlphaPlot):
@@ -84,6 +85,11 @@ class EntropyConservationPlot(VwAlphaPlot):
         cs: QuadContourSet = ax.contourf(grid.v_walls, grid.alpha_ns, diff, locator=ticker.LinearLocator(numticks=20))
         cbar = self.fig.colorbar(cs)
         cbar.ax.set_ylabel(r"$\tilde{\gamma}_- \tilde{v}_- s_- - \tilde{\gamma}_+ \tilde{v}_+ s_+$")
+        self.ax.set_title("Entropy generation at the wall")
+
+        self.ax.plot(v_chapman_jouguet(grid.model, grid.alpha_ns), grid.alpha_ns, 'k--', label=r'$v_{CJ}$')
+        color_region(self.ax, grid.v_walls, grid.alpha_ns, grid.solver_failed(), color="black")
+        self.ax.legend()
 
 
 class KappaOmegaSumPlot(VwAlphaPlot):
@@ -94,36 +100,27 @@ class KappaOmegaSumPlot(VwAlphaPlot):
         cs: QuadContourSet = ax.contourf(grid.v_walls, grid.alpha_ns, kappa_omega_sum, locator=ticker.LogLocator())
         cbar = fig.colorbar(cs)
         cbar.ax.set_ylabel(r"$|\kappa + \omega - 1|$")
+        self.ax.set_title(r"$|\kappa + \omega - 1|$")
+
+        self.ax.plot(v_chapman_jouguet(grid.model, grid.alpha_ns), grid.alpha_ns, 'k--', label=r'$v_{CJ}$')
+        self.ax.legend()
 
 
-COMPUTE_FAIL = np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
+COMPUTE_FAIL = (np.nan, ) * 7
 
 
 def compute(bubble: Bubble):
     try:
         if bubble.no_solution_found or bubble.solver_failed:
             return COMPUTE_FAIL
-        sm = bubble.model.s(bubble.wm, Phase.BROKEN)
-        sn = bubble.model.s(bubble.wn, Phase.SYMMETRIC)
-        if bubble.sol_type is SolutionType.DETON:
-            sp = sn
-            sm_sh = sm
-        else:
-            sp = bubble.model.s(bubble.wp, Phase.SYMMETRIC)
-            sm_sh = bubble.model.s(bubble.wm_sh, Phase.SYMMETRIC)
-
-        diff = relativity.gamma(bubble.vm_tilde) * bubble.vm_tilde * sm - \
-            relativity.gamma(bubble.vp_tilde) * bubble.vp_tilde * sp
-        diff_sh = relativity.gamma(bubble.vm_tilde_sh) * bubble.vm_tilde_sh * sm_sh - \
-            relativity.gamma(bubble.vp_tilde_sh) * bubble.vp_tilde_sh * sn
         return (
             bubble.entropy_density_relative,
-            sp,
-            sm,
-            sm_sh,
-            sn,
-            diff,
-            diff_sh
+            bubble.sp,
+            bubble.sm,
+            bubble.sm_sh,
+            bubble.sn,
+            bubble.entropy_flux_diff,
+            bubble.entropy_flux_diff_sh,
         )
     except IndexError as e:
         logger.exception(f"Computing entropy quantities failed for {bubble.label_unicode}.", exc_info=e)
