@@ -7,6 +7,7 @@ import numpy as np
 
 from pttools.bubble.bubble import Bubble
 from pttools.bubble import fluid_reference
+from pttools.bubble.integrate import precompile
 from pttools.speedup import options
 from pttools.speedup import parallel
 if tp.TYPE_CHECKING:
@@ -85,7 +86,12 @@ def create_bubbles(
             params[i_alpha_n, i_v_wall, 0] = v_wall
             params[i_alpha_n, i_v_wall, 1] = alpha_n
 
+    # Pre-do shared steps so that they don't have to be done for each process
     fluid_reference.ref()
+    model.df_dtau_ptr()
+    precompile()
+
+    # Run the parallel processing
     ret = parallel.run_parallel(
         create_bubble, params,
         multiple_params=True,

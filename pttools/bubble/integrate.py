@@ -7,6 +7,7 @@ import scipy.integrate as spi
 
 import pttools.type_hints as th
 from pttools import speedup
+from pttools.bubble.boundary import Phase
 from pttools.speedup.numba_wrapper import numbalsoda
 from pttools.speedup.options import NUMBA_DISABLE_JIT
 from . import bag
@@ -211,3 +212,7 @@ def fluid_integrate_param_solve_ivp(
         v = w = xi = np.zeros_like(t)
         success = False
     return v, w, xi, success
+
+
+def precompile():
+    fluid_integrate_param(v0=0.5, w0=0.5, xi0=0.5, phase=0., n_xi=2)
