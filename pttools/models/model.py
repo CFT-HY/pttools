@@ -87,7 +87,8 @@ class Model(BaseModel, abc.ABC):
 
         if gen_critical:
             # w_crit = wn_max
-            self.T_crit, self.w_crit, self.alpha_n_min = self.criticals(T_crit_guess, allow_invalid)
+            self.T_crit, self.w_crit = self.criticals(T_crit_guess, allow_invalid)
+            self.w_at_alpha_n_min, self.alpha_n_min = self.alpha_n_min_find()
 
     # Concrete methods
 
@@ -221,6 +222,21 @@ class Model(BaseModel, abc.ABC):
         diff = (1 - 1 / (3 * self.cs2(wn, Phase.BROKEN))) * \
             (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN)) / wn
         return alpha_theta_bar_n - diff
+
+    def alpha_n_min_find(self, w_min: float = None, w_max: float = None) -> tp.Tuple[float, float]:
+        if w_min is None:
+            w_min = self.w_min
+        if w_max is None:
+            w_max = self.w_crit
+        xopt, fval, ierr, numfunc = fminbound(self.alpha_n, x1=w_min, x2=w_max, args=(False, ), full_output=True)
+        if ierr:
+            raise RuntimeError(f"Finding alpha_n_min failed: xopt={xopt}, fval={fval}, ierr={ierr}, numfunc={numfunc}.")
+        alpha_n_w_max = self.alpha_n(w_max)
+        if alpha_n_w_max < fval:
+            xopt = w_max
+            fval = alpha_n_w_max
+        logger.debug("alpha_n_min=%s found at w=%s in range w_min=%s, w_max=%s", fval, xopt, w_min, w_max)
+        return xopt, fval
 
     def alpha_plus(
             self,
@@ -414,15 +430,15 @@ class Model(BaseModel, abc.ABC):
         # self.t_crit has to be set already here for alpha_n error messages to work.
         self.T_crit = t_crit
         wn_min = self.w(t_crit, Phase.SYMMETRIC)
-        alpha_n_min = self.alpha_n(wn_min)
+        alpha_n_at_wn_min = self.alpha_n(wn_min)
 
         logger.info(
-            f"Initialized model with name={self.name}, T_crit={t_crit}, alpha_n_min={alpha_n_min}. "
+            f"Initialized model with name={self.name}, T_crit={t_crit}, alpha_n_at_wn_min={alpha_n_at_wn_min}. "
             f"At T_crit: w_s={wn_min}, w_b={self.w(t_crit, Phase.BROKEN)}, "
             f"e_s={self.e_temp(t_crit, Phase.SYMMETRIC)}, e_b={self.e_temp(t_crit, Phase.BROKEN)}, "
             f"p_s={self.p_temp(t_crit, Phase.SYMMETRIC)}, p_b={self.p_temp(t_crit, Phase.BROKEN)}"
         )
-        return t_crit, wn_min, alpha_n_min
+        return t_crit, wn_min
 
     def critical_temp(
             self,
