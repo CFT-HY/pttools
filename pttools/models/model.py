@@ -210,11 +210,12 @@ class Model(BaseModel, abc.ABC):
     def alpha_n_from_alpha_theta_bar_n(
             self,
             alpha_theta_bar_n: th.FloatOrArr,
+            wn_guess: float = None,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
         wn = self.w_n(
-            alpha_theta_bar_n, theta_bar=True,
+            alpha_theta_bar_n, wn_guess=wn_guess, theta_bar=True,
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid)
         tn = self.temp(wn, Phase.SYMMETRIC)
         diff = (1 - 1 / (3 * self.cs2(wn, Phase.BROKEN))) * \
@@ -301,9 +302,9 @@ class Model(BaseModel, abc.ABC):
         )
         return self.delta_theta_bar(wn, Phase.SYMMETRIC) / (3 * wn)
 
-    def alpha_theta_bar_n_from_alpha_n(self, alpha_n: float) -> float:
+    def alpha_theta_bar_n_from_alpha_n(self, alpha_n: float, wn_guess: float = None) -> float:
         r"""Conversion from $\alpha_n$ to $\alpha_{\bar{\theta}n}$ of :giese_2021:`\ `, eq. 13"""
-        wn = self.w_n(alpha_n)
+        wn = self.w_n(alpha_n, wn_guess=wn_guess)
         tn = self.temp(wn, Phase.SYMMETRIC)
         diff = (1 - 1 / (3 * self.cs2(wn, Phase.BROKEN))) * \
             (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN)) / wn
@@ -714,12 +715,29 @@ class Model(BaseModel, abc.ABC):
         return phase*self.V_b + (1 - phase)*self.V_s
 
     def validate_alpha_n(self, alpha_n: float, allow_invalid: bool = False, log_invalid: bool = True):
-        if alpha_n < 0 or alpha_n > 1 or alpha_n < self.alpha_n_min:
+        if alpha_n < 0 or alpha_n < self.alpha_n_min:
             msg = f"Invalid alpha_n={alpha_n}. Minimum for the model: {self.alpha_n_min}"
             if log_invalid:
                 logger.error(msg)
             if not allow_invalid:
                 raise ValueError(msg)
+        elif alpha_n > 1:
+            if log_invalid:
+                logger.warning("Got alpha_n=%s > 1. Please be careful that it's valid.", alpha_n)
+
+    def vp_vm_tilde_ratio_giese(
+            self, vp_tilde: th.FloatOrArr, vm_tilde: th.FloatOrArr, wp: float, wm: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Giese approximation for $\frac{\tilde{v}_+}{\tilde{v}_-}$, :giese_2021:`\ ` eq. 11
+
+        $$\frac{\tilde{v}_+}{\tilde{v}_-} \approx \frac{
+            (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3\alpha_{\bar{\theta}_+} }{
+            (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3 \tilde{v}_+ \tilde{v}_- \alpha_{\bar{\theta}}_+
+        }$$
+        """
+        alpha_tbp = self.alpha_theta_bar_plus(wp)
+        cs2b = self.cs2(wm, Phase.BROKEN)
+        a = vp_tilde*vm_tilde / cs2b - 1
+        return (a + 3*alpha_tbp) / (a + 3*vp_tilde*vm_tilde*alpha_tbp)
 
     def _w_n_scalar(
             self,
@@ -790,8 +808,8 @@ class Model(BaseModel, abc.ABC):
             log_invalid: bool = True) -> th.FloatOrArr:
         r"""Enthalpy at nucleation temperature with given $\alpha_n$"""
         # TODO: rename this to wn
-        if wn_guess is None or np.isnan(wn_guess):
-            wn_guess = 1.01 * self.w_crit
+        if wn_guess is None or np.isnan(wn_guess) or wn_guess < 0:
+            wn_guess = 0.9 * self.w_crit
 
         if np.isscalar(alpha_n):
             return self._w_n_scalar(

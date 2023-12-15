@@ -382,12 +382,15 @@ class ConstCSModel(AnalyticModel):
                 logger.error(msg)
             if error_on_invalid:
                 raise ValueError(msg)
-            if nan_on_invalid:
-                diff[diff < 0] = np.nan
+            # if nan_on_invalid:
+            #     if np.isscalar(alpha_n):
+            #         diff = np.nan
+            #     else:
+            #         diff[diff < 0] = np.nan
 
         if analytical:
             return self.bag_wn_const / (alpha_n - self.const_cs_wn_const)
         return super().w_n(
-            alpha_n, wn_guess,
+            alpha_n, wn_guess=wn_guess,
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )

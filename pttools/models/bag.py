@@ -12,6 +12,15 @@ from pttools.models.analytic import AnalyticModel
 logger = logging.getLogger(__name__)
 
 
+@numba.njit
+def cs2(w: th.FloatOrArr = None, phase: th.FloatOrArr = None) -> th.FloatOrArr:
+    r"""Sound speed squared, $c_s^2=\frac{1}{3}$.
+    :notes:`\ `, p. 37,
+    :rel_hydro_book:`\ `, eq. 2.207
+    """
+    return 1/3 * np.ones_like(w) * np.ones_like(phase)
+
+
 class BagModel(AnalyticModel):
     r"""Bag equation of state.
     This is one of the simplest equations of state for a relativistic plasma.
@@ -138,14 +147,7 @@ class BagModel(AnalyticModel):
         """
         return ((self.V_s - self.V_b) / (self.a_s - self.a_b))**0.25
 
-    @staticmethod
-    @numba.njit
-    def cs2(w: th.FloatOrArr = None, phase: th.FloatOrArr = None) -> th.FloatOrArr:
-        r"""Sound speed squared, $c_s^2=\frac{1}{3}$.
-        :notes:`\ `, p. 37,
-        :rel_hydro_book:`\ `, eq. 2.207
-        """
-        return 1/3 * np.ones_like(w) * np.ones_like(phase)
+    cs2 = staticmethod(cs2)
 
     @staticmethod
     @numba.njit
@@ -155,7 +157,7 @@ class BagModel(AnalyticModel):
     @staticmethod
     @numba.njit
     def cs2_temp(temp, phase):
-        return BagModel.cs2(temp, phase)
+        return cs2(temp, phase)
 
     def delta_theta(
             self,

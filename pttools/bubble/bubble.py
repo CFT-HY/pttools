@@ -53,7 +53,7 @@ class Bubble:
             raise ValueError(f"Invalid v_wall={v_wall}")
 
         if not theta_bar:
-            model.validate_alpha_n(alpha_n)
+            model.validate_alpha_n(alpha_n, allow_invalid=allow_invalid, log_invalid=log_invalid)
         self.wn = model.w_n(alpha_n, wn_guess, theta_bar=theta_bar)
         if theta_bar:
             self.alpha_theta_bar_n = alpha_n
@@ -213,20 +213,6 @@ class Bubble:
             f"κ={self.kappa:{prec}}, ω={self.omega:{prec}}, κ+ω={self.kappa + self.omega:{prec}}, " \
             f"V-avg. trace anomaly={self.va_trace_anomaly_diff:{prec}}"
 
-    # Plotting
-
-    def plot(self, fig: plt.Figure = None, path: str = None, **kwargs) -> plt.Figure:
-        from pttools.analysis.plot_bubble import plot_bubble
-        return plot_bubble(self, fig, path, **kwargs)
-
-    def plot_v(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None, **kwargs) -> "FigAndAxes":
-        from pttools.analysis.plot_bubble import plot_bubble_v
-        return plot_bubble_v(self, fig, ax, path, **kwargs)
-
-    def plot_w(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None, **kwargs) -> "FigAndAxes":
-        from pttools.analysis.plot_bubble import plot_bubble_w
-        return plot_bubble_w(self, fig, ax, path, **kwargs)
-
     def solve(
             self,
             sum_rtol_warning: float = 1.5e-2,
@@ -340,6 +326,26 @@ class Bubble:
                     logger.warning(msg)
             self.add_note(msg)
 
+    # ---
+    # Plotting
+    # ---
+
+    def plot(self, fig: plt.Figure = None, path: str = None, **kwargs) -> plt.Figure:
+        from pttools.analysis.plot_bubble import plot_bubble
+        return plot_bubble(self, fig, path, **kwargs)
+
+    def plot_v(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None, **kwargs) -> "FigAndAxes":
+        from pttools.analysis.plot_bubble import plot_bubble_v
+        return plot_bubble_v(self, fig, ax, path, **kwargs)
+
+    def plot_w(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None, **kwargs) -> "FigAndAxes":
+        from pttools.analysis.plot_bubble import plot_bubble_w
+        return plot_bubble_w(self, fig, ax, path, **kwargs)
+
+    # ---
+    # Quantities
+    # ---
+
     @property
     def vp_tilde_sh(self):
         """Velocity in front of the shock in the shock frame
@@ -348,6 +354,18 @@ class Bubble:
         $$\tilde{v}_{+,sh} = v_{sh}$$.
         """
         return self.v_sh
+
+    @property
+    def vp_vm_tilde_ratio(self) -> float:
+        return self.vp_tilde/self.vm_tilde
+
+    @property
+    def vp_vm_tilde_ratio_giese(self) -> float:
+        return self.model.vp_vm_tilde_ratio_giese(vp_tilde=self.vp_tilde, vm_tilde=self.vm_tilde, wp=self.wp, wm=self.wm)
+
+    @property
+    def vp_vm_tilde_ratio_giese_rel_diff(self) -> float:
+        return np.abs(self.vp_vm_tilde_ratio_giese / self.vp_vm_tilde_ratio - 1)
 
     # Quantities
     def en(self) -> float:

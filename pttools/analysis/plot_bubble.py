@@ -1,3 +1,5 @@
+import typing as tp
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -6,13 +8,9 @@ from pttools.bubble.bubble import Bubble
 
 
 def plot_bubble(bubble: Bubble, fig: plt.Figure = None, path: str = None, **kwargs):
-    if fig is None:
-        fig = plt.figure(figsize=A4_PAPER_SIZE)
-    ax1 = fig.add_subplot(211)
-    ax2 = fig.add_subplot(212, sharex=ax1)
-    plot_bubble_v(bubble, fig, ax1, **kwargs)
-    plot_bubble_w(bubble, fig, ax2, **kwargs)
-    ax1.tick_params("x", labelbottom=False)
+    fig, ax_v, ax_w = setup_bubble_plot(fig)
+    plot_bubble_v(bubble, fig, ax_v, **kwargs)
+    plot_bubble_w(bubble, fig, ax_w, **kwargs)
     fig.suptitle(bubble.label_latex)
     fig.tight_layout()
     if path is not None:
@@ -28,6 +26,9 @@ def plot_bubble_common(bubble: Bubble, fig: plt.Figure, ax: plt.Axes, path: str 
     )
     ax.grid()
 
+    if ax.get_legend_handles_labels() != ([], []):
+        ax.legend()
+
     if path is not None:
         fig.savefig(path)
     return fig, ax
@@ -40,7 +41,10 @@ def plot_bubble_v(bubble: Bubble, fig: plt.Figure = None, ax: plt.Axes = None, p
 
     ax.plot(bubble.xi, bubble.v, **kwargs)
     ax.set_ylabel(r"$v$")
-    ax.set_ylim(0, min(1, 1.1*np.max(bubble.v)))
+    ax.set_ylim(
+        0,
+        min(1, 1.1 * max(line.get_ydata().max() for line in ax.lines))
+    )
     return plot_bubble_common(bubble, fig, ax, path)
 
 
@@ -51,6 +55,19 @@ def plot_bubble_w(bubble: Bubble, fig: plt.figure = None, ax: plt.Axes = None, p
 
     ax.plot(bubble.xi, bubble.w, **kwargs)
     ax.set_ylabel(r"$w$")
-    ax.set_ylim(np.min(bubble.w)/1.1, 1.1*np.max(bubble.w))
+    ax.set_ylim(
+        min(line.get_ydata().min() for line in ax.lines) / 1.1,
+        max(line.get_ydata().max() for line in ax.lines) * 1.1
+    )
 
     return plot_bubble_common(bubble, fig, ax, path)
+
+
+def setup_bubble_plot(fig: plt.Figure = None) -> tp.Tuple[plt.Figure, plt.Axes, plt.Axes]:
+    if fig is None:
+        fig = plt.figure(figsize=A4_PAPER_SIZE)
+    ax_v = fig.add_subplot(211)
+    ax_w = fig.add_subplot(212, sharex=ax_v)
+    ax_v.tick_params("x", labelbottom=False)
+    fig.tight_layout()
+    return fig, ax_v, ax_w

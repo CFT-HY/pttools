@@ -9,10 +9,8 @@ import numpy as np
 from pttools.analysis.cmap import cmap, color_region
 from pttools.analysis.bubble_grid import BubbleGridVWAlpha
 from pttools.analysis.plot_vw_alpha import VwAlphaPlot
-from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.bubble import Bubble
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
-from pttools.bubble import relativity
 
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
@@ -92,6 +90,19 @@ class EntropyConservationPlot(VwAlphaPlot):
         self.ax.legend()
 
 
+class GieseApproximationPlot(VwAlphaPlot):
+    def __init__(self, grid: BubbleGridVWAlpha, diff: np.ndarray, fig: plt.Figure = None, ax: plt.Axes = None):
+        super().__init__(fig, ax)
+
+        cs: QuadContourSet = ax.contourf(grid.v_walls, grid.alpha_ns, diff, locator=ticker.LogLocator(numticks=20))
+        cbar = fig.colorbar(cs)
+        cbar.ax.set_ylabel("Rel. diff. of Giese approx.")
+        self.ax.set_title("Rel. diff. of Giese approx.")
+
+        self.ax.plot(v_chapman_jouguet(grid.model, grid.alpha_ns), grid.alpha_ns, 'k--', label=r'$v_{CJ}$')
+        self.ax.legend()
+
+
 class KappaOmegaSumPlot(VwAlphaPlot):
     def __init__(self, grid: BubbleGridVWAlpha, fig: plt.Figure = None, ax: plt.Axes = None):
         super().__init__(fig, ax)
@@ -106,7 +117,8 @@ class KappaOmegaSumPlot(VwAlphaPlot):
         self.ax.legend()
 
 
-COMPUTE_FAIL = (np.nan, ) * 7
+_NUM_VALUES = 8
+COMPUTE_FAIL = (np.nan, ) * _NUM_VALUES
 
 
 def compute(bubble: Bubble):
@@ -121,13 +133,14 @@ def compute(bubble: Bubble):
             bubble.sn,
             bubble.entropy_flux_diff,
             bubble.entropy_flux_diff_sh,
+            bubble.vp_vm_tilde_ratio_giese_rel_diff
         )
     except IndexError as e:
         logger.exception(f"Computing entropy quantities failed for {bubble.label_unicode}.", exc_info=e)
         return COMPUTE_FAIL
 
 
-compute.return_type = (np.float_, np.float_, np.float_, np.float_, np.float_, np.float_, np.float_)
+compute.return_type = (np.float_, ) * _NUM_VALUES
 
 
 def gen_and_plot_entropy(
@@ -142,7 +155,7 @@ def gen_and_plot_entropy(
         single_plot: bool = False) -> tp.Tuple[plt.Figure, np.ndarray]:
     figsize = None if single_plot else (16*1.5, 9*1.5)
     fig: plt.Figure = plt.figure(figsize=figsize)
-    axs = fig.subplots(nrows=len(models), ncols=1 if single_plot else 4)
+    axs = fig.subplots(nrows=len(models), ncols=1 if single_plot else 5)
 
     for i_model, model in enumerate(models):
         grid = BubbleGridVWAlpha(model, v_walls, alpha_ns, compute, use_bag_solver=use_bag_solver)
@@ -154,6 +167,7 @@ def gen_and_plot_entropy(
         sn = grid.data[4]
         diff = grid.data[5]
         diff_sh = grid.data[6]
+        ratio = grid.data[7]
 
         EntropyPlot(grid, s_total_rel, min_level, max_level, diff_level, fig=fig, ax=axs[i_model, 0])
         # DeltaEntropyPlot(
@@ -166,6 +180,7 @@ def gen_and_plot_entropy(
         # EntropyConservationPlot(grid, diff_sh, fig, axs[i_model, 2])
         KappaOmegaSumPlot(grid, fig, axs[i_model, 2])
         DurationPlot(grid, fig, axs[i_model, 3])
+        GieseApproximationPlot(grid, ratio, fig=fig, ax=axs[i_model, 4])
 
     # fig.tight_layout()
 
