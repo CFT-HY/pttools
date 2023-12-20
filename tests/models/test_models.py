@@ -36,7 +36,7 @@ class TestConstCSLikeBag(BagBaseCase, unittest.TestCase):
     def test_constants(self):
         self.assertAlmostEqual(self.model.mu, 4)
         self.assertAlmostEqual(self.model.nu, 4)
-        self.assertEqual(self.model.t_ref, 1)
+        self.assertEqual(self.model.T_ref, 1)
 
     # @unittest.expectedFailure
     def test_critical_temp(self):

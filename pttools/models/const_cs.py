@@ -5,6 +5,7 @@ import typing as tp
 
 import numba
 import numpy as np
+from scipy.optimize import minimize, OptimizeResult
 
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase, SolutionType
@@ -31,9 +32,10 @@ class ConstCSModel(AnalyticModel):
     def __init__(
             self,
             css2: float, csb2: float,
-            V_s: float, V_b: float = 0,
+            V_s: float = None, V_b: float = 0,
             a_s: float = None, a_b: float = None,
             g_s: float = None, g_b: float = None,
+            alpha_n_min: float = None,
             T_min: float = None,
             T_max: float = None,
             T_ref: float = 1,
@@ -70,11 +72,15 @@ class ConstCSModel(AnalyticModel):
         self.csb = np.sqrt(csb2)
         self.mu = cs2_to_mu(css2)
         self.nu = cs2_to_mu(csb2)
-        self.t_ref = T_ref
+        self.T_ref = T_ref
         self.const_cs_wn_const: float = 4 / 3 * (1 / self.nu - 1 / self.mu)
 
         if T_crit_guess is None:
             T_crit_guess = T_ref
+
+        if alpha_n_min is not None:
+            a_s, a_b, V_s, V_b = self.alpha_n_min_find_params(
+                alpha_n_min_target=alpha_n_min, a_s_default=a_s, a_b=a_b, V_s_default=V_s, V_b=V_b)
 
         label_prec = 3
         label_latex = f"Const. $c_s, c_{{ss}}^2={self.css2:.{label_prec}f}, c_{{sb}}^2={self.csb2:.{label_prec}f}$" \
@@ -142,6 +148,76 @@ class ConstCSModel(AnalyticModel):
                 ret[invalid] = np.nan
         return ret
 
+    def alpha_n_min_find_params(
+            self,
+            alpha_n_min_target: float,
+            a_s_default: float = None,
+            a_b: float = 1,
+            V_s_default: float = None,
+            V_b: float = 0,
+            safety_factor_alpha: float = 0.99,
+            safety_factor_a: float = 1.1,
+            safety_factor_V: float = 0.01,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True,
+            cancel_on_invalid: bool = True) -> tp.Tuple[float, float, float, float]:
+        if a_s_default is None:
+            a_s_default = 1.1
+        if V_s_default is None:
+            V_s_default = 1.
+        if a_b is None:
+            a_b = 1.
+        model = ConstCSModel(css2=self.css2, csb2=self.csb2, a_s=a_s_default, a_b=a_b, V_s=V_s_default)
+        if model.alpha_n_min < alpha_n_min_target:
+            return a_s_default, a_b, V_s_default, V_b
+        sol: OptimizeResult = minimize(
+            self.alpha_n_min_find_params_solvable,
+            x0=np.array([a_s_default, V_s_default]),
+            bounds=((a_b * safety_factor_a, None), (safety_factor_V, None)),
+            args=(self.css2, self.csb2, a_b, V_b, safety_factor_alpha * alpha_n_min_target, )
+        )
+        if not sol.success:
+            msg = f"Failed to find alpha_n_min. Reason: {sol.message}"
+            if cancel_on_invalid:
+                logger.error(
+                    msg + ". Using given defaults a_s=%s, a_b=%s, V_s=%s, V_b=%s for css2=%s, csb2=%s.",
+                    a_s_default, a_b, V_s_default, V_b, self.css2, self.csb2
+                )
+                return a_s_default, a_b, V_s_default, V_b
+            if log_invalid:
+                logger.error(msg)
+            if error_on_invalid:
+                raise RuntimeError(msg)
+            if nan_on_invalid:
+                return np.nan, a_b, np.nan, V_b
+        a_s = sol.x[0]
+        V_s = sol.x[1]
+        model2 = ConstCSModel(css2=self.css2, csb2=self.csb2, a_s=a_s, a_b=a_b, V_s=V_s, V_b=V_b)
+        if model2.alpha_n_min > model.alpha_n_min:
+            logger.error(
+                "alpha_n_min solver returned greater alpha_n_min than with default values. "
+                "Using defaults a_s=%s, a_b=%s, V_s=%s, V_b=%s for css2=%s, csb2=%s.",
+                a_s_default, a_b, V_s_default, V_b, self.css2, self.csb2
+            )
+            return a_s_default, a_b, V_s_default, V_b
+        return a_s, a_b, V_s, V_b
+
+    @staticmethod
+    def alpha_n_min_find_params_solvable(
+            args: np.ndarray,
+            css2: float, csb2: float,
+            a_b: float, V_b: float,
+            alpha_n_target: float):
+        a_s = args[0]
+        V_s = args[1]
+        try:
+            model = ConstCSModel(css2=css2, csb2=csb2, a_s=a_s, a_b=a_b, V_s=V_s, V_b=V_b)
+        except (ValueError, RuntimeError):
+            return np.nan
+        diff = model.alpha_n_min - alpha_n_target
+        return diff**2
+
     def alpha_plus(
             self,
             wp: th.FloatOrArr,
@@ -207,8 +283,8 @@ class ConstCSModel(AnalyticModel):
         raise ValueError(f"Invalid solution type: {sol_type}")
 
     def critical_temp_opt(self, temp: float) -> float:
-        const = (self.V_b - self.V_s)*self.t_ref**4
-        return self.a_s * (temp/self.t_ref)**self.mu - self.a_b * (temp/self.t_ref)**self.nu + const
+        const = (self.V_b - self.V_s) * self.T_ref ** 4
+        return self.a_s * (temp / self.T_ref)**self.mu - self.a_b * (temp / self.T_ref)**self.nu + const
 
     # def alpha_plus(
     #         self,
@@ -279,8 +355,8 @@ class ConstCSModel(AnalyticModel):
         In the article there is a typo: the 4 there should be a $\mu$.
         """
         self.validate_temp(temp)
-        e_s = (self.mu - 1) * self.a_s * (temp/self.t_ref)**(self.mu-4) * temp**4 + self.V_s
-        e_b = (self.nu - 1) * self.a_b * (temp/self.t_ref)**(self.nu-4) * temp**4 + self.V_b
+        e_s = (self.mu - 1) * self.a_s * (temp / self.T_ref) ** (self.mu - 4) * temp ** 4 + self.V_s
+        e_b = (self.nu - 1) * self.a_b * (temp / self.T_ref) ** (self.nu - 4) * temp ** 4 + self.V_b
         return e_b * phase + e_s * (1 - phase)
 
     def export(self) -> tp.Dict[str, any]:
@@ -299,8 +375,8 @@ class ConstCSModel(AnalyticModel):
         :giese_2021:`\ `, eq. 15.
         """
         self.validate_temp(temp)
-        p_s = self.a_s * (temp/self.t_ref)**(self.mu-4) * temp**4 - self.V_s
-        p_b = self.a_b * (temp/self.t_ref)**(self.nu-4) * temp**4 - self.V_b
+        p_s = self.a_s * (temp / self.T_ref) ** (self.mu - 4) * temp ** 4 - self.V_s
+        p_b = self.a_b * (temp / self.T_ref) ** (self.nu - 4) * temp ** 4 - self.V_b
         return p_b * phase + p_s * (1 - phase)
 
     def s_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -310,8 +386,8 @@ class ConstCSModel(AnalyticModel):
         Derived from :giese_2021:`\ `, eq. 15.
         """
         self.validate_temp(temp)
-        s_s = self.mu * self.a_s * (temp/self.t_ref)**(self.mu-4) * temp**3
-        s_b = self.nu * self.a_b * (temp/self.t_ref)**(self.nu-4) * temp**3
+        s_s = self.mu * self.a_s * (temp / self.T_ref) ** (self.mu - 4) * temp ** 3
+        s_b = self.nu * self.a_b * (temp / self.T_ref) ** (self.nu - 4) * temp ** 3
         return s_b * phase + s_s * (1 - phase)
 
     def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -328,8 +404,8 @@ class ConstCSModel(AnalyticModel):
             if np.any(invalid):
                 w = w.copy()
                 w[invalid] = np.nan
-        temp_s = self.t_ref * (w / (self.mu*self.a_s*self.t_ref**4))**(1/self.mu)
-        temp_b = self.t_ref * (w / (self.nu*self.a_b*self.t_ref**4))**(1/self.nu)
+        temp_s = self.T_ref * (w / (self.mu * self.a_s * self.T_ref ** 4)) ** (1 / self.mu)
+        temp_b = self.T_ref * (w / (self.nu * self.a_b * self.T_ref ** 4)) ** (1 / self.nu)
         return temp_b * phase + temp_s * (1 - phase)
 
     def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -338,8 +414,8 @@ class ConstCSModel(AnalyticModel):
         $$w_s = \nu a_s \left( \frac{T}{T_0} \right)^\nu T_0^4$$
         """
         self.validate_temp(temp)
-        w_s = self.mu * self.a_s * (temp/self.t_ref)**(self.mu-4) * temp**4
-        w_b = self.nu * self.a_b * (temp/self.t_ref)**(self.nu-4) * temp**4
+        w_s = self.mu * self.a_s * (temp / self.T_ref) ** (self.mu - 4) * temp ** 4
+        w_b = self.nu * self.a_b * (temp / self.T_ref) ** (self.nu - 4) * temp ** 4
         return w_b * phase + w_s * (1 - phase)
 
     def w_n(

@@ -98,18 +98,19 @@ def create_figure(
 
 
 def main():
+    alpha_thetabar_ns = np.array([0.01, 0.03, 0.1, 0.3, 1, 3])
+    colors = ["b", "y", "r", "g", "purple", "grey"]
+    v_walls = np.linspace(0.2, 0.95, 50)
     a_s = 5
     a_b = 1
     V_s = 1
     models = [
-        ConstCSModel(css2=1/3, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s),
-        ConstCSModel(css2=1/3, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s),
-        ConstCSModel(css2=1/4, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s),
-        ConstCSModel(css2=1/4, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s)
+        ConstCSModel(css2=1/3, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_thetabar_ns[0]),
+        ConstCSModel(css2=1/3, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_thetabar_ns[0]),
+        ConstCSModel(css2=1/4, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_thetabar_ns[0]),
+        ConstCSModel(css2=1/4, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_thetabar_ns[0])
     ]
-    alpha_thetabar_ns = np.array([0.01, 0.03, 0.1, 0.3, 1, 3])
-    colors = ["b", "y", "r", "g", "purple", "grey"]
-    v_walls = np.linspace(0.2, 0.95, 50)
+    print(f"Minimum alpha_ns: {[model.alpha_n_min for model in models]}")
 
     fig: plt.Figure = plt.figure(figsize=A4_PAPER_SIZE)
     axs = fig.subplots(2, 2)
