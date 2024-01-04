@@ -67,6 +67,13 @@ class ConstCSModel(AnalyticModel):
                 "This is because g_eff is monotonic. "
                 f"Got: c_{{s,s}}^2={css2}, c_{{s,b}}^2={csb2}."
             )
+        if css2 > 1/3 or csb2 > 1/3:
+            logger.warning(
+                "c_{s,s}^2 > 1/3 or c_{s,b}^2 > 1/3. "
+                "Please ensure that g_eff is monotonic in your model. "
+                f"Got: c_{{s,s}}^2=%s, c_{{s,b}}^2=%s.",
+                css2, csb2
+            )
 
         self.css = np.sqrt(css2)
         self.csb = np.sqrt(csb2)
@@ -99,13 +106,11 @@ class ConstCSModel(AnalyticModel):
 
     @staticmethod
     def validate_cs2(cs2: float, name: str = "cs2") -> float:
-        if cs2 < 0:
+        if cs2 < 0 or cs2 > 1:
             return np.nan
-        if cs2 > 1/3:
-            if np.isclose(cs2, 1/3):
-                logger.warning(f"{name} is slightly over 1/3. Changing it to 1/3.")
-                return 1/3
-            return np.nan
+        if cs2 > 1/3 and np.isclose(cs2, 1/3):
+            logger.warning(f"{name} is slightly over 1/3. Changing it to 1/3.")
+            return 1/3
         return cs2
 
     def alpha_n(
