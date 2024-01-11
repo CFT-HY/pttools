@@ -63,8 +63,7 @@ class ConstCSModel(AnalyticModel):
 
         if np.isnan(css2) or np.isnan(csb2):
             raise ValueError(
-                "c_{s,s}^2 and c_{s,b}^2 have to be 0 < c_s <= 1/3 for the solution to be physical. "
-                "This is because g_eff is monotonic. "
+                "c_{s,s}^2 and c_{s,b}^2 have to be 0 < c_s <= 1."
                 f"Got: c_{{s,s}}^2={css2}, c_{{s,b}}^2={csb2}."
             )
         if css2 > 1/3 or csb2 > 1/3:
