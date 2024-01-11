@@ -213,36 +213,49 @@ def sound_shell_deflagration_common(
         logger.error("The shock was not found by the deflagration solver.")
         return DEFLAGRATION_NAN
     if i_shock < thin_shell_limit:
-        t_end2 = t[i_shock+20]
-        logger.warning(
-            "The accuracy for locating the shock may not be sufficient, "
-            "as it was encountered early at i=%s/%s. Adjusting t_end=%s to compensate.",
-            i_shock, xi.size, t_end2
-        )
-        v2, w2, xi2, t2 = integrate.fluid_integrate_param(
-            v0=vp, w0=wp, xi0=v_wall,
-            phase=Phase.SYMMETRIC,
-            t_end=t_end2,
-            n_xi=n_xi,
-            df_dtau_ptr=model.df_dtau_ptr(),
-            # method="RK45"
-        )
-        if np.argmax(xi2) == 0:
-            logger.error("Adjusting t_end gave a detonation-like solution. Using original solution.")
-        else:
-            i_shock2 = shock.find_shock_index(
-                model, v2, xi2, v_wall, wn,
-                cs_n=cs_n, sol_type=sol_type,
-                allow_failure=allow_failure, warn_if_barely_exists=warn_if_shock_barely_exists
+        i_shock_step = 20
+        t_end2 = t[i_shock + i_shock_step]
+        attempts = 5
+        for i in range(attempts):
+            # if i_shock >= thin_shell_limit:
+            #     break
+            logger.warning(
+                "The accuracy for locating the shock may not be sufficient, "
+                "as it was encountered early at i=%s/%s. Adjusting t_end=%s to compensate. Attempt %s/%s",
+                i_shock, xi.size, t_end2, i+1, attempts
             )
-            if i_shock2 == 0 or i_shock2 + 10 >= xi2.size:
+            v2, w2, xi2, t2 = integrate.fluid_integrate_param(
+                v0=vp, w0=wp, xi0=v_wall,
+                phase=Phase.SYMMETRIC,
+                t_end=t_end2,
+                n_xi=n_xi,
+                df_dtau_ptr=model.df_dtau_ptr(),
+                # method="RK45"
+            )
+            if np.argmax(xi2) == 0:
+                logger.error("Adjusting t_end gave a detonation-like solution. Using original solution.")
+                break
+            try:
+                i_shock2 = shock.find_shock_index(
+                    model, v2, xi2, v_wall, wn,
+                    cs_n=cs_n, sol_type=sol_type,
+                    allow_failure=allow_failure, warn_if_barely_exists=warn_if_shock_barely_exists
+                )
+            except RuntimeError:
+                logger.error("The shock finder crashed after t_end adjustment. Using original solution.")
+                break
+            if i_shock2 == 0 or i_shock2 + i_shock_step >= xi2.size:
                 logger.error("The shock was not found after t_end adjustment. Using original solution.")
-            else:
-                i_shock = i_shock2
-                v = v2
-                w = w2
-                xi = xi2
-                # t = t2
+                break
+            i_shock = i_shock2
+            v = v2
+            w = w2
+            xi = xi2
+            t = t2
+
+            if i_shock >= thin_shell_limit:
+                break
+            t_end2 = t[i_shock + i_shock_step]
 
     v = v[:i_shock]
     w = w[:i_shock]
