@@ -42,7 +42,7 @@ def entropy_density_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: 
 
 def kinetic_energy_density(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
     r"""Bubble volume averaged kinetic energy density"""
-    return 3/(4*np.pi * v_wall**3) * va_kinetic_energy_density_diff(v, w, xi)
+    return 3/(4*np.pi * v_wall**3) * va_kinetic_energy_density(v, w, xi)
 
 
 def kinetic_energy_fraction(ek_bva: float, eb: float) -> float:
@@ -87,7 +87,7 @@ def kappa(
         delta_e_theta: float = None) -> float:
     if delta_e_theta is None:
         delta_e_theta = va_trace_anomaly(model, w, xi, v_wall)
-    return va_kinetic_energy_density_diff(v, w, xi) / np.abs(delta_e_theta)
+    return va_kinetic_energy_density(v, w, xi) / np.abs(delta_e_theta)
 
 
 def kappa_approx(alpha_n: th.FloatOrArr) -> th.FloatOrArr:
@@ -150,7 +150,7 @@ def va_entropy_density_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wal
 
 
 # @numba.njit
-def va_kinetic_energy_density_diff(v: np.ndarray, w: np.ndarray, xi: np.ndarray) -> float:
+def va_kinetic_energy_density(v: np.ndarray, w: np.ndarray, xi: np.ndarray) -> float:
     r"""
     Volume-averaged kinetic energy density
     $$e_K = 4 \pi \int_0^{xi_\text{max}} d\xi \xi^2 w \gamma^2 v^2$$

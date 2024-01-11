@@ -523,7 +523,7 @@ class Bubble:
     def va_kinetic_energy_density(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.va_kinetic_energy_density_diff(self.v, self.w, self.xi)
+        return thermo.va_kinetic_energy_density(self.v, self.w, self.xi)
 
     @functools.cached_property
     def va_kinetic_energy_fraction(self) -> float:
