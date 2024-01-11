@@ -152,6 +152,13 @@ class ConstCSModel(AnalyticModel):
                 ret[invalid] = np.nan
         return ret
 
+    def alpha_n_min_find(self, w_min: float = None, w_max: float = None) -> tp.Tuple[float, float]:
+        # xopt, fval = super().alpha_n_min_find(w_min=w_min, w_max=w_max)
+        analytical = self.alpha_n(self.w_crit)
+        # print(f"const_cs alpha_n_min: analytical={fval}, found={analytical}")
+        # return xopt, fval
+        return self.w_crit, analytical
+
     def alpha_n_min_find_params(
             self,
             alpha_n_min_target: float,
@@ -159,13 +166,20 @@ class ConstCSModel(AnalyticModel):
             a_b: float = 1,
             V_s_default: float = None,
             V_b: float = 0,
-            safety_factor_alpha: float = 0.99,
-            safety_factor_a: float = 1.1,
-            safety_factor_V: float = 0.01,
+            safety_factor_alpha: float = 0.999,
+            safety_factor_a: float = 1.001,
+            safety_factor_V: float = 0.001,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True,
             cancel_on_invalid: bool = True) -> tp.Tuple[float, float, float, float]:
+        theor_min = 4/3*(1/self.nu - 1/self.mu)
+        if alpha_n_min_target < theor_min:
+            alpha_n_min_target_new = theor_min / safety_factor_alpha
+            msg = f"alpha_n_min_target = {alpha_n_min_target} is below the theoretical minimum of {theor_min}. "\
+                  f"Setting it to {alpha_n_min_target_new}"
+            logger.warning(msg)
+            alpha_n_min_target = alpha_n_min_target_new
         if a_s_default is None:
             a_s_default = 1.1
         if V_s_default is None:
