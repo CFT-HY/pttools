@@ -74,15 +74,24 @@ def create_figure(
         else:
             bubbles, kappas = create_bubbles(
                 model=model, v_walls=v_walls, alpha_ns=alpha_ns, func=get_kappa,
-                bubble_kwargs={"theta_bar": theta_bar, "allow_invalid": True}, allow_bubble_failure=True
+                bubble_kwargs={"theta_bar": theta_bar, "allow_invalid": False}, allow_bubble_failure=True
             )
         for j, color in enumerate(colors):
+            try:
+                i_max = np.nanargmax(kappas[j])
+            except ValueError:
+                print(f"Could not produce bubbles with alpha_n={alpha_ns[j]} for {model.label_unicode}")
+                continue
             ax.plot(v_walls, kappas[j], ls=ls, color=color, alpha=0.5)
+            print(
+                f"alpha_n={alpha_ns[j]}, kappa_max={kappas[j, i_max]}, i_max={i_max}, "
+                f"v_wall={v_walls[i_max]}, color={color}, ls={ls}, {model.label_unicode}"
+            )
 
     ax.set_xlabel(r"$\xi_w$")
     ax.set_ylabel(r"$\kappa$")
     ax.set_yscale("log")
-    ax.set_ylim(top=1)
+    ax.set_ylim(bottom=10**-2.5, top=1)
 
     title = ""
     if giese:
@@ -110,7 +119,12 @@ def main():
         ConstCSModel(css2=1/4, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_thetabar_ns[0]),
         ConstCSModel(css2=1/4, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_thetabar_ns[0])
     ]
-    print(f"Minimum alpha_ns: {[model.alpha_n_min for model in models]}")
+    # print(f"Minimum alpha_ns: {[model.alpha_n_min for model in models]}")
+    for model in models:
+        print(
+            f"css2={model.css2:.3f}, csb2={model.csb2:.3f}, alpha_n_min={model.alpha_n_min:.3f} "
+            f"(a_s={model.a_s:.3f}, a_b={model.a_b:.3f}, V_s={model.V_s:.3f}, V_b={model.V_b:.3f})"
+        )
 
     fig: plt.Figure = plt.figure(figsize=A4_PAPER_SIZE)
     axs = fig.subplots(2, 2)
