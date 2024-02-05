@@ -1,3 +1,8 @@
+"""
+Testing for finding $\alpha_{n,\text{min}}$ for ConstCSModel
+============================================================
+"""
+
 from pttools.models import ConstCSModel
 
 
