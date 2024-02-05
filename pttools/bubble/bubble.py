@@ -112,6 +112,7 @@ class Bubble:
 
         # Flags
         self.solved = False
+        # Todo: clarify the differences between these
         self.solver_failed = False
         self.no_solution_found = False
         # Specific errors

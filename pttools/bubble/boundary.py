@@ -12,6 +12,7 @@ import numba
 from numba.extending import overload
 import numpy as np
 
+from pttools.bubble.relativity import gamma
 from pttools.speedup.solvers import fsolve_vary
 import pttools.type_hints as th
 from . import const
@@ -281,6 +282,8 @@ def solve_junction(
             "absolute deviation %s, relative deviation %s",
             devs, devs_rel
         )
+        if not allow_failure:
+            return np.nan, np.nan
     if v2_tilde < 0 or v2_tilde > 1 or w2 < 0:
         logger.error(
             "The boundary solver gave an unphysical solution with "
@@ -289,6 +292,24 @@ def solve_junction(
         )
         if not allow_failure:
             return np.nan, np.nan
+
+    s1 = model.s(w1, phase1)
+    s2 = model.s(w2, phase2)
+    # Todo: create a separate function for the entropy flux instead of having the formula explicitly here
+    entropy_flux1 = gamma(v1_tilde) * v1_tilde * s1
+    entropy_flux2 = gamma(v2_tilde) * v2_tilde * s2
+    if entropy_flux1 < 0 or entropy_flux2 < 0:
+            # or (phase1 == Phase.SYMMETRIC and phase2 == Phase.BROKEN and entropy_flux2 - entropy_flux1 < 0)\
+            # or (phase1 == Phase.BROKEN and phase2 == Phase.SYMMETRIC and entropy_flux1 - entropy_flux2 < 0):
+        logger.error(
+            "The boundary solver gave an unphysical solution with "
+            "v2_tilde=%s, w2=%s for model=%s, v1_tilde=%s, w1=%s, phase1=%s, phase2=%s, "
+            "s_flux1=%s, s_flux2=%s.",
+            v2_tilde, w2, model.name, v1_tilde, w1, phase1, phase2, entropy_flux1, entropy_flux2
+        )
+        if not allow_failure:
+            return np.nan, np.nan
+
     return v2_tilde, w2
 
 

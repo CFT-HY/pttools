@@ -28,6 +28,10 @@ logger = logging.getLogger(__name__)
 def get_kappa(bubble: Bubble) -> float:
     if not bubble.solved:
         return np.nan
+    if bubble.no_solution_found or bubble.solver_failed:
+        return np.nan
+    if bubble.numerical_error:
+        return np.nan
     return bubble.kappa
 
 

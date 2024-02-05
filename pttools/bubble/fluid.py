@@ -47,7 +47,7 @@ DEFLAGRATION_NAN: DeflagrationOutput = \
 def sound_shell_deflagration(
         model: "Model",
         v_wall: float, wn: float, w_center: float,
-        cs_n: float,
+        cs_n: float, v_cj: float,
         vp_guess: float = None, wp_guess: float = None,
         t_end: float = const.T_END_DEFAULT, n_xi: int = const.N_XI_DEFAULT,
         thin_shell_limit: int = const.THIN_SHELL_T_POINTS_MIN,
@@ -105,7 +105,7 @@ def sound_shell_deflagration(
         v_wall=v_wall,
         vm_tilde=v_wall,
         wn=wn, wm=w_center,
-        cs_n=cs_n,
+        cs_n=cs_n, v_cj=v_cj,
         vp_tilde_guess=vp_tilde_guess, wp_guess=wp_guess,
         sol_type=SolutionType.SUB_DEF,
         t_end=t_end, n_xi=n_xi,
@@ -120,7 +120,7 @@ def sound_shell_deflagration_common(
         v_wall: float,
         vm_tilde: float,
         wn: float, wm: float,
-        cs_n: float,
+        cs_n: float, v_cj: float,
         vp_tilde_guess: float, wp_guess: float,
         sol_type: SolutionType,
         n_xi: int, t_end: float,
@@ -128,7 +128,7 @@ def sound_shell_deflagration_common(
         allow_failure: bool,
         warn_if_shock_barely_exists: bool) -> DeflagrationOutput:
     if v_wall < 0 or v_wall > 1 or vm_tilde < 0 or vm_tilde > 1 or wn < 0 or wm < 0 or cs_n < 0 or cs_n > 1 \
-            or vp_tilde_guess < 0 or vp_tilde_guess > 1 or wp_guess < 0:
+            or vp_tilde_guess < 0 or vp_tilde_guess > 1 or wp_guess < 0 or transition.is_surely_detonation(v_wall, v_cj):
         logger.error(
             "Invalid starting values: v_wall=%s, vm_tilde=%s, wn=%s, wm=%s, cs_n=%s, vp_tilde_guess=%s, wp_guess=%s",
             v_wall, vm_tilde, wn, wm, cs_n, vp_tilde_guess, wp_guess
@@ -212,18 +212,19 @@ def sound_shell_deflagration_common(
     if i_shock == 0 or i_shock + 1 >= xi.size:
         logger.error("The shock was not found by the deflagration solver.")
         return DEFLAGRATION_NAN
+
+    attempts = 5
     if i_shock < thin_shell_limit:
         i_shock_step = 20
         t_end2 = t[i_shock + i_shock_step]
-        attempts = 5
         for i in range(attempts):
             # if i_shock >= thin_shell_limit:
             #     break
-            logger.warning(
-                "The accuracy for locating the shock may not be sufficient, "
-                "as it was encountered early at i=%s/%s. Adjusting t_end=%s to compensate. Attempt %s/%s",
-                i_shock, xi.size, t_end2, i+1, attempts
-            )
+            # logger.warning(
+            #     "The accuracy for locating the shock may not be sufficient, "
+            #     "as it was encountered early at i=%s/%s. Adjusting t_end=%s to compensate. Attempt %s/%s",
+            #     i_shock, xi.size, t_end2, i+1, attempts
+            # )
             v2, w2, xi2, t2 = integrate.fluid_integrate_param(
                 v0=vp, w0=wp, xi0=v_wall,
                 phase=Phase.SYMMETRIC,
@@ -233,7 +234,7 @@ def sound_shell_deflagration_common(
                 # method="RK45"
             )
             if np.argmax(xi2) == 0:
-                logger.error("Adjusting t_end gave a detonation-like solution. Using original solution.")
+                logger.error("Adjusting t_end gave a detonation-like solution. Using the previous solution.")
                 break
             try:
                 i_shock2 = shock.find_shock_index(
@@ -242,10 +243,16 @@ def sound_shell_deflagration_common(
                     allow_failure=allow_failure, warn_if_barely_exists=warn_if_shock_barely_exists
                 )
             except RuntimeError:
-                logger.error("The shock finder crashed after t_end adjustment. Using original solution.")
+                logger.error(
+                    "The shock finder crashed after t_end adjustment at i=%s/%s. Using the previous solution.",
+                    i+i, attempts
+                )
                 break
             if i_shock2 == 0 or i_shock2 + i_shock_step >= xi2.size:
-                logger.error("The shock was not found after t_end adjustment. Using original solution.")
+                logger.error(
+                    "The shock was not found after t_end adjustment at i=%s/%s. Using the previous solution.",
+                    i+1, attempts
+                )
                 break
             i_shock = i_shock2
             v = v2
@@ -256,6 +263,10 @@ def sound_shell_deflagration_common(
             if i_shock >= thin_shell_limit:
                 break
             t_end2 = t[i_shock + i_shock_step]
+
+    if i_shock <= 1:
+        logger.error("The shock was not found for v_wall=%s despite %s t_end adjustments.", v_wall, attempts)
+        return DEFLAGRATION_NAN
 
     v = v[:i_shock]
     w = w[:i_shock]
@@ -382,7 +393,7 @@ def sound_shell_detonation(
 
 
 def sound_shell_hybrid(
-        model: "Model", v_wall: float, wn: float, wm: float, cs_n: float,
+        model: "Model", v_wall: float, wn: float, wm: float, cs_n: float, v_cj: float,
         vp_tilde_guess: float, wp_guess: float, t_end: float, n_xi: int,
         thin_shell_limit: int,
         allow_failure: bool = False, warn_if_shock_barely_exists: bool = True) -> DeflagrationOutput:
@@ -398,7 +409,7 @@ def sound_shell_hybrid(
         v_wall=v_wall,
         vm_tilde=vm_tilde,
         wn=wn, wm=wm,
-        cs_n=cs_n,
+        cs_n=cs_n, v_cj=v_cj,
         vp_tilde_guess=vp_tilde_guess, wp_guess=wp_guess,
         sol_type=SolutionType.HYBRID,
         t_end=t_end, n_xi=n_xi,
@@ -421,7 +432,7 @@ def sound_shell_solvable_deflagration_reverse(
 
 def sound_shell_solvable_deflagration(
         # params: np.ndarray,
-        w_center: float, model: "Model", v_wall: float, wn: float, cs_n: float,
+        w_center: float, model: "Model", v_wall: float, wn: float, cs_n: float, v_cj: float,
         vp_guess: float, wp_guess: float, t_end: float, n_xi: int, thin_shell_limit: int) -> float:
     if isinstance(w_center, np.ndarray):
         w_center = w_center[0]
@@ -429,7 +440,7 @@ def sound_shell_solvable_deflagration(
         return np.nan
     # pylint: disable=unused-variable
     v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = sound_shell_deflagration(
-        model, v_wall=v_wall, wn=wn, w_center=w_center, cs_n=cs_n,
+        model, v_wall=v_wall, wn=wn, w_center=w_center, cs_n=cs_n, v_cj=v_cj,
         vp_guess=vp_guess, wp_guess=wp_guess, t_end=t_end, n_xi=n_xi, thin_shell_limit=thin_shell_limit,
         allow_failure=True, warn_if_shock_barely_exists=False)
     return wn_estimate - wn
@@ -437,7 +448,7 @@ def sound_shell_solvable_deflagration(
 
 def sound_shell_solvable_hybrid(
         # params: np.ndarray,
-        wm: float, model: "Model", v_wall: float, wn: float, cs_n: float,
+        wm: float, model: "Model", v_wall: float, wn: float, cs_n: float, v_cj: float,
         vp_tilde_guess: float, wp_guess: float, t_end: float, n_xi: int, thin_shell_limit: int) -> float:
     if isinstance(wm, np.ndarray):
         wm = wm[0]
@@ -446,7 +457,7 @@ def sound_shell_solvable_hybrid(
     # pylint: disable=unused-variable
     v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = sound_shell_hybrid(
         model, v_wall=v_wall, wn=wn, wm=wm,
-        cs_n=cs_n,
+        cs_n=cs_n, v_cj=v_cj,
         vp_tilde_guess=vp_tilde_guess, wp_guess=wp_guess, t_end=t_end, n_xi=n_xi, thin_shell_limit=thin_shell_limit,
         allow_failure=True, warn_if_shock_barely_exists=False)
     return wn_estimate - wn
@@ -457,7 +468,7 @@ def sound_shell_solvable_hybrid(
 def sound_shell_solver_deflagration(
         model: "Model",
         start_time: float,
-        v_wall: float, alpha_n: float, wn: float, cs_n: float, high_alpha_n: bool,
+        v_wall: float, alpha_n: float, wn: float, cs_n: float, v_cj: float, high_alpha_n: bool,
         wm_guess: float, vp_guess: float, wp_guess: float, wn_rtol: float, t_end: float, n_xi: int,
         thin_shell_limit: int,
         allow_failure: bool, log_high_alpha_n_failures: bool = True) -> SolverOutput:
@@ -471,7 +482,7 @@ def sound_shell_solver_deflagration(
         sound_shell_solvable_deflagration,
         x0=0.99*wm_guess,
         x1=1.01*wm_guess,
-        args=(model, v_wall, wn, cs_n, vp_guess, wp_guess, t_end, n_xi, thin_shell_limit),
+        args=(model, v_wall, wn, cs_n, v_cj, vp_guess, wp_guess, t_end, n_xi, thin_shell_limit),
     )
     wm = sol.root
     solution_found = sol.converged
@@ -483,7 +494,7 @@ def sound_shell_solver_deflagration(
         sol = fsolve_vary(
             sound_shell_solvable_deflagration,
             np.array([wm_guess]),
-            args=(model, v_wall, wn, cs_n, vp_guess, wp_guess, t_end, n_xi, thin_shell_limit),
+            args=(model, v_wall, wn, cs_n, v_cj, vp_guess, wp_guess, t_end, n_xi, thin_shell_limit),
             log_status=log_high_alpha_n_failures or not high_alpha_n
         )
         wm = sol[0][0]
@@ -492,7 +503,7 @@ def sound_shell_solver_deflagration(
 
     v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = sound_shell_deflagration(
         model, v_wall, wn, wm,
-        cs_n=cs_n,
+        cs_n=cs_n, v_cj=v_cj,
         vp_guess=vp_guess, wp_guess=wp_guess, t_end=t_end, n_xi=n_xi, thin_shell_limit=thin_shell_limit,
         allow_failure=allow_failure, warn_if_shock_barely_exists=False
     )
@@ -546,16 +557,18 @@ def sound_shell_solver_deflagration_reverse(
 def sound_shell_solver_hybrid(
         model: "Model",
         start_time: float,
-        v_wall: float, alpha_n: float, wn: float, cs_n: float, high_alpha_n: bool,
+        v_wall: float, alpha_n: float, wn: float, cs_n: float, v_cj: float, high_alpha_n: bool,
         vp_tilde_guess: float, wp_guess: float, wm_guess: float, wn_rtol: float, t_end: float, n_xi: int,
         thin_shell_limit: int,
         allow_failure: bool, log_high_alpha_n_failures: bool) -> SolverOutput:
+    if v_wall >= v_cj:
+        raise RuntimeError("Invalid v_wall for a hybrid")
 
     sol = root_scalar(
         sound_shell_solvable_hybrid,
         x0=0.99*wm_guess,
         x1=1.01*wm_guess,
-        args=(model, v_wall, wn, cs_n, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit)
+        args=(model, v_wall, wn, cs_n, v_cj, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit)
     )
     wm = sol.root
     solution_found = sol.converged
@@ -567,7 +580,7 @@ def sound_shell_solver_hybrid(
         sol = fsolve_vary(
             sound_shell_solvable_hybrid,
             np.array([wm_guess]),
-            args=(model, v_wall, wn, cs_n, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit),
+            args=(model, v_wall, wn, cs_n, v_cj, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit),
             log_status=log_high_alpha_n_failures or not high_alpha_n
         )
         wm = sol[0][0]
@@ -576,7 +589,7 @@ def sound_shell_solver_hybrid(
 
     v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = sound_shell_hybrid(
         model, v_wall, wn, wm,
-        cs_n=cs_n,
+        cs_n=cs_n, v_cj=v_cj,
         vp_tilde_guess=vp_tilde_guess,
         wp_guess=wp_guess,
         t_end=t_end, n_xi=n_xi,
@@ -771,7 +784,7 @@ def sound_shell_generic(
                 sound_shell_solver_deflagration(
                     model, start_time,
                     v_wall, alpha_n, wn,
-                    cs_n=cs_n,
+                    cs_n=cs_n, v_cj=v_cj,
                     high_alpha_n=high_alpha_n,
                     wm_guess=wm_guess, vp_guess=vp_guess, wp_guess=wp_guess, wn_rtol=wn_rtol, t_end=t_end, n_xi=n_xi,
                     thin_shell_limit=thin_shell_limit,
@@ -783,6 +796,7 @@ def sound_shell_generic(
                 model, start_time,
                 v_wall, alpha_n, wn,
                 cs_n=cs_n,
+                v_cj=v_cj,
                 high_alpha_n=high_alpha_n,
                 vp_tilde_guess=vp_tilde_guess,
                 wp_guess=wp_guess,
