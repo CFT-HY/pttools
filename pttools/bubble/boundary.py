@@ -62,6 +62,29 @@ class SolutionType(str, enum.Enum):
     UNKNOWN = "Unknown"
 
 
+def check_entropy_fluxes(
+        model: "Model",
+        v1_tilde: float, v2_tilde: float,
+        w1: float, w2: float,
+        phase1: Phase, phase2: float,
+        allow_negative_entropy_flux_change: bool = False) -> tp.Tuple[bool, float, float]:
+    """False = OK, True = fail"""
+    s1 = model.s(w1, phase1)
+    s2 = model.s(w2, phase2)
+    entropy_flux1 = entropy_flux(v1_tilde, s1)
+    entropy_flux2 = entropy_flux(v2_tilde, s2)
+    fail_individual = entropy_flux1 < 0 or entropy_flux2 < 0
+    if allow_negative_entropy_flux_change:
+        fail_total = False
+    else:
+        fail_total = (
+            (phase1 == Phase.SYMMETRIC and phase2 == Phase.BROKEN and entropy_flux1 - entropy_flux2 < 0) or
+            (phase1 == Phase.BROKEN and phase2 == Phase.SYMMETRIC and entropy_flux2 - entropy_flux1 < 0)
+        )
+    # fail_total = False
+    return fail_individual or fail_total, entropy_flux1, entropy_flux2
+
+
 @numba.njit
 def enthalpy_ratio(v_m: th.FloatOrArr, v_p: th.FloatOrArr) -> th.FloatOrArr:
     r"""
@@ -76,6 +99,10 @@ def enthalpy_ratio(v_m: th.FloatOrArr, v_p: th.FloatOrArr) -> th.FloatOrArr:
     :return: enthalpy ratio
     """
     return relativity.gamma2(v_m) * v_m / (relativity.gamma2(v_p) * v_p)
+
+
+def entropy_flux(v_tilde: th.FloatOrArr, s: th.FloatOrArr):
+    return gamma(v_tilde) * v_tilde * s
 
 
 @numba.njit
@@ -234,6 +261,7 @@ def solve_junction(
         v2_tilde_guess: float,
         w2_guess: float,
         allow_failure: bool = False,
+        allow_negative_entropy_flux_change: bool = False,
         rtol: float = const.JUNCTION_RTOL,
         # atol: float = const.JUNCTION_ATOL
         ) -> tp.Tuple[float, float]:
@@ -293,19 +321,19 @@ def solve_junction(
         if not allow_failure:
             return np.nan, np.nan
 
-    s1 = model.s(w1, phase1)
-    s2 = model.s(w2, phase2)
-    # Todo: create a separate function for the entropy flux instead of having the formula explicitly here
-    entropy_flux1 = gamma(v1_tilde) * v1_tilde * s1
-    entropy_flux2 = gamma(v2_tilde) * v2_tilde * s2
-    if entropy_flux1 < 0 or entropy_flux2 < 0:
-            # or (phase1 == Phase.SYMMETRIC and phase2 == Phase.BROKEN and entropy_flux2 - entropy_flux1 < 0)\
-            # or (phase1 == Phase.BROKEN and phase2 == Phase.SYMMETRIC and entropy_flux1 - entropy_flux2 < 0):
+    fail, s_flux1, s_flux2 = check_entropy_fluxes(
+        model=model,
+        v1_tilde=v1_tilde, v2_tilde=v2_tilde,
+        w1=w1, w2=w2,
+        phase1=phase1, phase2=phase2,
+        allow_negative_entropy_flux_change=allow_negative_entropy_flux_change
+    )
+    if fail:
         logger.error(
             "The boundary solver gave an unphysical solution with "
             "v2_tilde=%s, w2=%s for model=%s, v1_tilde=%s, w1=%s, phase1=%s, phase2=%s, "
             "s_flux1=%s, s_flux2=%s.",
-            v2_tilde, w2, model.name, v1_tilde, w1, phase1, phase2, entropy_flux1, entropy_flux2
+            v2_tilde, w2, model.name, v1_tilde, w1, phase1, phase2, s_flux1, s_flux2
         )
         if not allow_failure:
             return np.nan, np.nan

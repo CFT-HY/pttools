@@ -53,7 +53,9 @@ def find_shock_index(
         cs_n: float,
         sol_type: SolutionType,
         v_shock_atol: float = 3.5e-8,
-        allow_failure: bool = False,
+        error_on_failure: bool = True,
+        zero_on_failure: bool = True,
+        log_failure: bool = True,
         warn_if_barely_exists: bool = True) -> int:
     if sol_type is SolutionType.DETON:
         return props.find_v_index(xi, v_wall)
@@ -67,12 +69,36 @@ def find_shock_index(
             return np.argmax(points_near_cs)
         raise RuntimeError("Did not find shock for the bag model.")
 
+    params = f"model={model.label_unicode}, sol_type={sol_type}, v_wall={v_wall}, wn={wn}, cs_n={cs_n}"
+
+    xi_nan = np.any(np.isnan(xi))
+    v_nan = np.any(np.isnan(v))
+    if xi_nan or v_nan:
+        if xi_nan and v_nan:
+            msg = f"xi and v have nan values for {params}"
+        elif xi_nan:
+            msg = f"xi has nan values for {params}"
+        else:  # if v_nan
+            msg = f"v has nan values for {params}"
+
+        if log_failure:
+            logger.error(msg)
+        if error_on_failure:
+            raise RuntimeError(msg)
+        if zero_on_failure:
+            return 0
+
     # Index of highest xi = where the curve turns backwards
     i_right: int = np.argmax(xi)
 
     if i_right == 0:
-        logger.error("The given xi array seems to be for a detonation, but got sol_type=%s.", sol_type)
-        return 0
+        msg = f"The given xi array seems to be for a detonation, but got {params}"
+        if log_failure:
+            logger.error(msg)
+        if error_on_failure:
+            raise RuntimeError(msg)
+        if zero_on_failure:
+            return 0
 
     # First index close to xi=cs_n, v=0
     i_close: int = np.argmax(np.logical_and(np.isclose(xi, cs_n), np.isclose(v, 0)))
@@ -86,12 +112,24 @@ def find_shock_index(
     # The lower limit for the shock search is where the shock curve hits v=0
     i_left = i_cs_n
 
+    if i_left > i_right:
+        msg = f"Shock index finder started with invalid values: i_left={i_left}, i_right={i_right}, cs_n={cs_n}, xi={xi}"
+        if log_failure:
+            logger.error(msg)
+        if error_on_failure:
+            raise RuntimeError(msg)
+        if zero_on_failure:
+            return 0
+
     # The curve should go to the right before turning back at xi_max
     if not np.all(np.diff(xi[i_left:i_right])):
-        msg = "xi is not monotonic from cs_n to xi_max"
-        logger.error(msg)
-        if not allow_failure:
+        msg = f"xi is not monotonic from cs_n to xi_max for {params}"
+        if log_failure:
+            logger.error(msg)
+        if error_on_failure:
             raise RuntimeError(msg)
+        if zero_on_failure:
+            return 0
 
     # if v[i_left] < v_shock(model, wn=wn, xi=xi[i_left], warn_if_barely_exists=warn_if_barely_exists):
     #     msg = "v at cs_n > v_shock"
@@ -119,7 +157,8 @@ def find_shock_index(
             f"cs_n={cs_n}, xi_max={xi[i_right]}, " + \
             f"v_cs_n={v[i_cs_n]}, v_xi_max={v[i_right]}, " + \
             f"v_sh_cs_n={v_sh_cs_n}, v_sh_xi_max={v_sh_xi_max}"
-        logger.error(msg)
+        if log_failure:
+            logger.error(msg)
 
         # Manual fallback to the old shock finder
         # This may not find the shock correctly until after the curve has turned backwards.
@@ -146,9 +185,10 @@ def find_shock_index(
         #         break
         # return i_sh
 
-        if not allow_failure:
+        if error_on_failure:
             raise RuntimeError(msg)
-        return 0
+        if zero_on_failure:
+            return 0
 
     # Binary search
     i_sh = 0
@@ -165,14 +205,24 @@ def find_shock_index(
             return i_sh + 1
 
     if i_sh == 0:
-        raise RuntimeError(
-            f"Shock index finder ended up in an invalid state with i_left={i_left}, i_right={i_right}, i_sh={i_sh}."
-        )
+        msg = f"Shock index finder ended up in an invalid state with i_left={i_left}, i_right={i_right}, i_sh={i_sh} for {params}."
+        if log_failure:
+            logger.error(msg)
+        if error_on_failure:
+            raise RuntimeError(msg)
+        if zero_on_failure:
+            return 0
 
     if v[i_sh] > v_shock(model, wn=wn, xi=xi[i_sh], cs_n=cs_n, warn_if_barely_exists=warn_if_barely_exists):
         # logger.warning("Manually correcting i_sh with +1 to %s", i_sh)
         if v[i_sh + 1] > v_shock(model, wn, xi[i_sh + 1], cs_n=cs_n, warn_if_barely_exists=warn_if_barely_exists):
-            raise RuntimeError("i_sh + 1 should be beyond the shock")
+            msg = f"i_sh + 1 should be beyond the shock for {params}"
+            if log_failure:
+                logger.error(msg)
+            if error_on_failure:
+                raise RuntimeError(msg)
+            if zero_on_failure:
+                return 0
         return i_sh + 1
     return i_sh
 

@@ -108,6 +108,8 @@ class KappaOmegaSumPlot(VwAlphaPlot):
         super().__init__(fig, ax)
 
         kappa_omega_sum = np.abs(grid.kappa() + grid.omega() - 1)
+        if np.all(np.isnan(kappa_omega_sum)):
+            raise ValueError(f"Something went wrong when generating kappa_omega_sum: {kappa_omega_sum}")
         cs: QuadContourSet = ax.contourf(grid.v_walls, grid.alpha_ns, kappa_omega_sum, locator=ticker.LogLocator())
         cbar = fig.colorbar(cs)
         cbar.ax.set_ylabel(r"$|\kappa + \omega - 1|$")

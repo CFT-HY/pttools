@@ -52,6 +52,7 @@ def sound_shell_deflagration(
         t_end: float = const.T_END_DEFAULT, n_xi: int = const.N_XI_DEFAULT,
         thin_shell_limit: int = const.THIN_SHELL_T_POINTS_MIN,
         allow_failure: bool = False,
+        allow_negative_entropy_flux_change: bool = False,
         warn_if_shock_barely_exists: bool = True) -> DeflagrationOutput:
     if vp_guess is None or np.isnan(vp_guess) or wp_guess is None or np.isnan(wp_guess):
         # Use bag model as the starting guess
@@ -111,6 +112,7 @@ def sound_shell_deflagration(
         t_end=t_end, n_xi=n_xi,
         thin_shell_limit=thin_shell_limit,
         allow_failure=allow_failure,
+        allow_negative_entropy_flux_change=allow_negative_entropy_flux_change,
         warn_if_shock_barely_exists=warn_if_shock_barely_exists
     )
 
@@ -126,6 +128,7 @@ def sound_shell_deflagration_common(
         n_xi: int, t_end: float,
         thin_shell_limit: int,
         allow_failure: bool,
+        allow_negative_entropy_flux_change: bool,
         warn_if_shock_barely_exists: bool) -> DeflagrationOutput:
     if v_wall < 0 or v_wall > 1 or vm_tilde < 0 or vm_tilde > 1 or wn < 0 or wm < 0 or cs_n < 0 or cs_n > 1 \
             or vp_tilde_guess < 0 or vp_tilde_guess > 1 or wp_guess < 0 or transition.is_surely_detonation(v_wall, v_cj):
@@ -140,7 +143,8 @@ def sound_shell_deflagration_common(
         model, vm_tilde, wm,
         Phase.BROKEN, Phase.SYMMETRIC,
         v2_tilde_guess=vp_tilde_guess, w2_guess=wp_guess,
-        allow_failure=allow_failure
+        allow_failure=allow_failure,
+        allow_negative_entropy_flux_change=allow_negative_entropy_flux_change
     )
     vp = -relativity.lorentz(vp_tilde, v_wall)
 
@@ -207,7 +211,9 @@ def sound_shell_deflagration_common(
     i_shock = shock.find_shock_index(
         model, v, xi, v_wall, wn,
         cs_n=cs_n, sol_type=sol_type,
-        allow_failure=allow_failure, warn_if_barely_exists=warn_if_shock_barely_exists
+        error_on_failure=False,
+        zero_on_failure=True,
+        warn_if_barely_exists=warn_if_shock_barely_exists
     )
     if i_shock == 0 or i_shock + 1 >= xi.size:
         logger.error("The shock was not found by the deflagration solver.")
@@ -236,18 +242,13 @@ def sound_shell_deflagration_common(
             if np.argmax(xi2) == 0:
                 logger.error("Adjusting t_end gave a detonation-like solution. Using the previous solution.")
                 break
-            try:
-                i_shock2 = shock.find_shock_index(
-                    model, v2, xi2, v_wall, wn,
-                    cs_n=cs_n, sol_type=sol_type,
-                    allow_failure=allow_failure, warn_if_barely_exists=warn_if_shock_barely_exists
-                )
-            except RuntimeError:
-                logger.error(
-                    "The shock finder crashed after t_end adjustment at i=%s/%s. Using the previous solution.",
-                    i+i, attempts
-                )
-                break
+            i_shock2 = shock.find_shock_index(
+                model, v2, xi2, v_wall, wn,
+                cs_n=cs_n, sol_type=sol_type,
+                error_on_failure=False,
+                zero_on_failure=True,
+                warn_if_barely_exists=warn_if_shock_barely_exists
+            )
             if i_shock2 == 0 or i_shock2 + i_shock_step >= xi2.size:
                 logger.error(
                     "The shock was not found after t_end adjustment at i=%s/%s. Using the previous solution.",
@@ -363,7 +364,8 @@ def sound_shell_detonation(
         model,
         v1_tilde=v_wall, w1=wn,
         phase1=Phase.SYMMETRIC, phase2=Phase.BROKEN,
-        v2_tilde_guess=vm_tilde_guess, w2_guess=wm_guess
+        v2_tilde_guess=vm_tilde_guess, w2_guess=wm_guess,
+        allow_negative_entropy_flux_change=True,
     )
 
     # Convert to the plasma frame
@@ -396,7 +398,9 @@ def sound_shell_hybrid(
         model: "Model", v_wall: float, wn: float, wm: float, cs_n: float, v_cj: float,
         vp_tilde_guess: float, wp_guess: float, t_end: float, n_xi: int,
         thin_shell_limit: int,
-        allow_failure: bool = False, warn_if_shock_barely_exists: bool = True) -> DeflagrationOutput:
+        allow_failure: bool = False,
+        allow_negative_entropy_flux_change: bool = False,
+        warn_if_shock_barely_exists: bool = True) -> DeflagrationOutput:
     # Exit velocity is at the sound speed
     vm_tilde = np.sqrt(model.cs2(wm, Phase.BROKEN))
 
@@ -415,6 +419,7 @@ def sound_shell_hybrid(
         t_end=t_end, n_xi=n_xi,
         thin_shell_limit=thin_shell_limit,
         allow_failure=allow_failure,
+        allow_negative_entropy_flux_change=allow_negative_entropy_flux_change,
         warn_if_shock_barely_exists=warn_if_shock_barely_exists
     )
 
@@ -442,7 +447,10 @@ def sound_shell_solvable_deflagration(
     v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = sound_shell_deflagration(
         model, v_wall=v_wall, wn=wn, w_center=w_center, cs_n=cs_n, v_cj=v_cj,
         vp_guess=vp_guess, wp_guess=wp_guess, t_end=t_end, n_xi=n_xi, thin_shell_limit=thin_shell_limit,
-        allow_failure=True, warn_if_shock_barely_exists=False)
+        allow_failure=True,
+        allow_negative_entropy_flux_change=True,
+        warn_if_shock_barely_exists=False
+    )
     return wn_estimate - wn
 
 
@@ -459,7 +467,10 @@ def sound_shell_solvable_hybrid(
         model, v_wall=v_wall, wn=wn, wm=wm,
         cs_n=cs_n, v_cj=v_cj,
         vp_tilde_guess=vp_tilde_guess, wp_guess=wp_guess, t_end=t_end, n_xi=n_xi, thin_shell_limit=thin_shell_limit,
-        allow_failure=True, warn_if_shock_barely_exists=False)
+        allow_failure=True,
+        allow_negative_entropy_flux_change=True,
+        warn_if_shock_barely_exists=False
+    )
     return wn_estimate - wn
 
 
@@ -505,7 +516,9 @@ def sound_shell_solver_deflagration(
         model, v_wall, wn, wm,
         cs_n=cs_n, v_cj=v_cj,
         vp_guess=vp_guess, wp_guess=wp_guess, t_end=t_end, n_xi=n_xi, thin_shell_limit=thin_shell_limit,
-        allow_failure=allow_failure, warn_if_shock_barely_exists=False
+        allow_failure=allow_failure,
+        allow_negative_entropy_flux_change=True,
+        warn_if_shock_barely_exists=False
     )
     if solution_found and not np.isclose(wn_estimate, wn, rtol=wn_rtol):
         solution_found = False
@@ -595,6 +608,7 @@ def sound_shell_solver_hybrid(
         t_end=t_end, n_xi=n_xi,
         thin_shell_limit=thin_shell_limit,
         allow_failure=allow_failure,
+        allow_negative_entropy_flux_change=True,
         warn_if_shock_barely_exists=False
     )
     # wp = w[0]

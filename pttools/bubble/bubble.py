@@ -284,7 +284,7 @@ class Bubble:
                 self.wp, self.wm, vp_tilde=self.vp_tilde, sol_type=self.sol_type,
                 error_on_invalid=False, nan_on_invalid=False, log_invalid=False
             )
-            msg = f"Got invalid alpha_plus={self.alpha_plus} with" \
+            msg = f"Got invalid alpha_plus={self.alpha_plus} with " \
                   f"model={self.model.label_unicode}, v_wall={self.v_wall}, " \
                   f"alpha_n={self.alpha_n}, sol_type={self.sol_type}."
             logger.error(msg)

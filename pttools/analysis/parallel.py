@@ -27,7 +27,8 @@ def create_bubble(
         *args, **kwargs) -> tp.Union[tp.Optional[Bubble], tp.Tuple[tp.Optional[Bubble], tp.Any]]:
     v_wall, alpha_n = params
     # This is a common error case and should be handled here to avoid polluting the logs with exceptions.
-    if alpha_n < model.alpha_n_min:
+    if alpha_n < model.alpha_n_min and bubble_kwargs is not None \
+            and ("allow_invalid" not in bubble_kwargs or not bubble_kwargs["allow_invalid"]):
         logger.error("Invalid alpha_n=%s. Minimum for the model: %s", alpha_n, model.alpha_n_min)
         return None, post_func.fail_value
     try:
