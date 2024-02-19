@@ -268,10 +268,11 @@ class ConstCSModel(AnalyticModel):
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
 
-    def alpha_theta_bar_n_max_lte(self, wn: float, sol_type: SolutionType) -> float:
+    def alpha_theta_bar_n_max_lte(self, wn: float, sol_type: SolutionType, Psi_n: float = None) -> float:
         r"""$\alpha_{n,\text{max}}^\text{def}$, :ai_2023:`\ `, eq. 28, 31"""
         if sol_type == SolutionType.DETON or sol_type == SolutionType.HYBRID:
-            Psi_n = self.Psi_n(wn)
+            if Psi_n is None or np.isnan(Psi_n):
+                Psi_n = self.Psi_n(wn)
             if np.max(np.abs(Psi_n - 1)) > 1:
                 logger.warning(
                     "alpha_n_bar_max_lte approximation is not valid, as |1 - Psi_n| > 1. "
@@ -283,9 +284,10 @@ class ConstCSModel(AnalyticModel):
             return (1 - Psi_n) / 3 * (1 + self.nu/3 * np.sqrt(sqrt_val))
         return np.inf
 
-    def alpha_theta_bar_n_min_lte(self, wn: th.FloatOrArr, sol_type: SolutionType) -> float:
+    def alpha_theta_bar_n_min_lte(self, wn: th.FloatOrArr, sol_type: SolutionType, Psi_n: float = None) -> float:
         r"""$\alpha_{n,\text{min}}^\text{def}$, :ai_2023:`\ `, eq. 27, 30"""
-        Psi_n = self.Psi_n(wn)
+        if Psi_n is None or np.isnan(Psi_n):
+            Psi_n = self.Psi_n(wn)
         if sol_type == SolutionType.DETON:
             if np.abs(self.nu - 4) < 1:
                 logger.warning(

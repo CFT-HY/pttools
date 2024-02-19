@@ -85,12 +85,14 @@ class Bubble:
             if not allow_invalid:
                 raise ValueError(msg)
 
+        self.Psi_n = model.Psi_n(self.wn)
+
         # if isinstance(model, ConstCSModel)
         if hasattr(model, "css2") and hasattr(model, "csb2"):
             model: ConstCSModel
             self.alpha_n_bar = model.alpha_theta_bar_n_from_alpha_n(alpha_n)
-            self.alpha_theta_bar_n_min_lte = model.alpha_theta_bar_n_min_lte(self.wn, self.sol_type)
-            self.alpha_theta_bar_n_max_lte = model.alpha_theta_bar_n_max_lte(self.wn, self.sol_type)
+            self.alpha_theta_bar_n_min_lte = model.alpha_theta_bar_n_min_lte(self.wn, self.sol_type, Psi_n=self.Psi_n)
+            self.alpha_theta_bar_n_max_lte = model.alpha_theta_bar_n_max_lte(self.wn, self.sol_type, Psi_n=self.Psi_n)
             if log_invalid and (self.alpha_theta_bar_n_max_lte < self.alpha_theta_bar_n_min_lte
                                 or self.alpha_theta_bar_n_max_lte < 0):
                 logger.error(
@@ -102,7 +104,6 @@ class Bubble:
             if log_invalid and self.alpha_n_bar > self.alpha_theta_bar_n_max_lte:
                 logger.warning("alpha_n_bar=%s > lte_max=%s", self.alpha_n_bar, self.alpha_theta_bar_n_max_lte)
 
-        self.Psi_n = model.Psi_n(self.wn)
         if log_invalid and self.sol_type == SolutionType.DETON and self.Psi_n < 0.75:
             logger.warning(
                 "This detonation should not exist, as LTE predicts a large alpha_n_hyb_max for Psi_n=%s < 0.75. "
