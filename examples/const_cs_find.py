@@ -1,4 +1,4 @@
-"""
+r"""
 Testing for finding $\alpha_{n,\text{min}}$ for ConstCSModel
 ============================================================
 """
