@@ -3,6 +3,7 @@
 import abc
 import logging
 import os
+import time
 import typing as tp
 
 import numpy as np
@@ -588,9 +589,13 @@ class Model(BaseModel, abc.ABC):
         if self.__df_dtau_ptr is not None:
             return self.__df_dtau_ptr
 
-        logger.debug("Compiling cs2 for %s in process %s", self.label_unicode, os.getpid())
+        start_time = time.perf_counter()
+        # logger.debug("Compiling cs2 for %s in process %s", self.label_unicode, os.getpid())
         val = add_df_dtau(f"{self.name}_{id(self)}", self.cs2)
-        logger.debug("Compiled cs2 for %s in process %s", self.label_unicode, os.getpid())
+        logger.debug(
+            "Compiled cs2 for %s in process %s in %s s",
+            self.label_unicode, os.getpid(), time.perf_counter() - start_time
+        )
         self.__df_dtau_ptr = val
         return val
 
