@@ -6,7 +6,7 @@ on:
 #    workflows: [ CI ]
 #    types: [ completed ]
 env:
-  PRIMARY_PYTHON_VERSION: '3.11'
+  PRIMARY_PYTHON_VERSION: '3.12'
 jobs:
   test:
     runs-on: macos-latest

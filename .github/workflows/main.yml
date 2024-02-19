@@ -1,7 +1,7 @@
 name: CI
 on: push
 env:
-  PRIMARY_PYTHON_VERSION: '3.11'
+  PRIMARY_PYTHON_VERSION: '3.12'
 jobs:
   graph:
     runs-on: ubuntu-latest
@@ -125,7 +125,7 @@ jobs:
     timeout-minutes: 20
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11']
+        python-version: ['3.9', '3.10', '3.11', '3.12']
     steps:
     - name: Setup Python
       uses: actions/setup-python@v5
@@ -231,7 +231,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11']
+        python-version: ['3.9', '3.10', '3.11', '3.12']
     steps:
     - name: Setup Python
       uses: actions/setup-python@v5
