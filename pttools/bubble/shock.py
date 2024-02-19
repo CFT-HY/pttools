@@ -48,7 +48,7 @@ def find_shock_index_bag(v_f: np.ndarray, xi: np.ndarray, v_wall: float, sol_typ
 
 def find_shock_index(
         model: "Model",
-        v: np.ndarray, xi: np.ndarray,
+        v: np.ndarray, w: np.ndarray, xi: np.ndarray,
         v_wall: float, wn: float,
         cs_n: float,
         sol_type: SolutionType,
@@ -88,9 +88,19 @@ def find_shock_index(
         if zero_on_failure:
             return 0
 
+    if not np.isclose(xi[0], v_wall):
+        msg = f"Invalid xi data: does not start with v_wall. Got xi[0]={xi[0]}, v_wall={v_wall}"
+        if log_failure:
+            logger.error(msg)
+        if error_on_failure:
+            raise RuntimeError(msg)
+        if zero_on_failure:
+            return 0
+
     # Index of highest xi = where the curve turns backwards
     i_right: int = np.argmax(xi)
 
+    # If the curve starts by going to the left, then it's a detonation.
     if i_right == 0:
         msg = f"The given xi array seems to be for a detonation, but got {params}"
         if log_failure:
@@ -106,6 +116,7 @@ def find_shock_index(
     i_cs_n: int = np.argmax(xi > cs_n)
 
     # If the curve goes directly to zero at cs_n
+    # = (if a point close to xi=cs_n, v=0 exists) and ((all points < cs_n) or (approaches cs_n from the left))
     if i_close != 0 and ((i_cs_n == 0 and xi[0] < cs_n) or i_close <= i_cs_n):
         return i_close
 
@@ -124,6 +135,16 @@ def find_shock_index(
     # The curve should go to the right before turning back at xi_max
     if not np.all(np.diff(xi[i_left:i_right])):
         msg = f"xi is not monotonic from cs_n to xi_max for {params}"
+        if log_failure:
+            logger.error(msg)
+        if error_on_failure:
+            raise RuntimeError(msg)
+        if zero_on_failure:
+            return 0
+
+    v_sh = v_shock(model, wn=wn, xi=xi[0], cs_n=cs_n, warn_if_barely_exists=warn_if_barely_exists)
+    if v[0] < v_sh:
+        msg = f"The starting point is already beyond the shock: xi={xi[0]}, v={v[0]}, w={w[0]}, v_shock={v_sh}"
         if log_failure:
             logger.error(msg)
         if error_on_failure:

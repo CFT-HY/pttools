@@ -209,7 +209,9 @@ def sound_shell_deflagration_common(
         logger.error("Deflagration solver gave a detonation-like solution.")
         return DEFLAGRATION_NAN
     i_shock = shock.find_shock_index(
-        model, v, xi, v_wall, wn,
+        model,
+        v=v, w=w, xi=xi,
+        v_wall=v_wall, wn=wn,
         cs_n=cs_n, sol_type=sol_type,
         error_on_failure=False,
         zero_on_failure=True,
@@ -243,7 +245,9 @@ def sound_shell_deflagration_common(
                 logger.error("Adjusting t_end gave a detonation-like solution. Using the previous solution.")
                 break
             i_shock2 = shock.find_shock_index(
-                model, v2, xi2, v_wall, wn,
+                model,
+                v=v2, w=w2, xi=xi2,
+                v_wall=v_wall, wn=wn,
                 cs_n=cs_n, sol_type=sol_type,
                 error_on_failure=False,
                 zero_on_failure=True,
@@ -404,10 +408,18 @@ def sound_shell_hybrid(
     # Exit velocity is at the sound speed
     vm_tilde = np.sqrt(model.cs2(wm, Phase.BROKEN))
 
+    using_arbitrary = False
     if np.isnan(vp_tilde_guess):
         vp_tilde_guess = 0.75*vm_tilde
+        using_arbitrary = True
     if np.isnan(wp_guess):
         wp_guess = 2*wm
+        using_arbitrary = True
+    if using_arbitrary:
+        logger.warning(
+            "vp_tilde_guess or wp_guess was not provided for the hybrid solver. "
+            f"Using arbitrary starting guesses. vp_tilde_guess={vp_tilde_guess}, wp_guess={wp_guess}"
+        )
     return sound_shell_deflagration_common(
         model,
         v_wall=v_wall,
@@ -471,7 +483,12 @@ def sound_shell_solvable_hybrid(
         allow_negative_entropy_flux_change=True,
         warn_if_shock_barely_exists=False
     )
-    return wn_estimate - wn
+    diff = wn_estimate - wn
+    logger.debug(
+        "Hybrid solvable results: wn_target=%s, wn_computed=%s, diff=%s, wm=%s, vp=%s",
+        wn, wn_estimate, diff, wm, vp
+    )
+    return diff
 
 
 # Solvers
@@ -577,28 +594,100 @@ def sound_shell_solver_hybrid(
     if v_wall >= v_cj:
         raise RuntimeError("Invalid v_wall for a hybrid")
 
-    sol = root_scalar(
-        sound_shell_solvable_hybrid,
-        x0=0.99*wm_guess,
-        x1=1.01*wm_guess,
-        args=(model, v_wall, wn, cs_n, v_cj, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit)
-    )
-    wm = sol.root
-    solution_found = sol.converged
-    reason = sol.flag
+    # This may not work, as we don't know whether the solvable has a different sign at the endpoints.
+    # sol = root_scalar(
+    #     sound_shell_solvable_hybrid,
+    #     x0=0.99*wm_guess,
+    #     x1=1.01*wm_guess,
+    #     args=(model, v_wall, wn, cs_n, v_cj, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit)
+    # )
+    # wm = sol.root
+    # solution_found = sol.converged
+    # reason = sol.flag
 
+    # if not high_alpha_n:
+    #     logger.error("FALLBACK")
+    sol = fsolve_vary(
+        sound_shell_solvable_hybrid,
+        np.array([wm_guess]),
+        args=(model, v_wall, wn, cs_n, v_cj, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit),
+        log_status=log_high_alpha_n_failures or not high_alpha_n
+    )
+    solution_found = sol[2] == 1
+    wm = sol[0][0]
+    reason = sol[3]
+
+    # If both solvers failed, then adjust the search range for wm
     if not solution_found:
-        # if not high_alpha_n:
-        #     logger.error("FALLBACK")
-        sol = fsolve_vary(
-            sound_shell_solvable_hybrid,
-            np.array([wm_guess]),
-            args=(model, v_wall, wn, cs_n, v_cj, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit),
-            log_status=log_high_alpha_n_failures or not high_alpha_n
+        logger.debug("Entering backup hybrid solver")
+        wms = np.linspace(0.3 * wm_guess, 3 * wm_guess, 20)
+        vps = np.zeros_like(wms)
+        v_sh = shock.v_shock(model, wn=wn, xi=v_wall, cs_n=cs_n)
+        for i, wm_i in enumerate(wms):
+            vp = boundary.v_plus_hybrid(
+                model,
+                v_wall=v_wall, wm=wm_i,
+                vp_tilde_guess=vp_tilde_guess, wp_guess=wp_guess,
+                allow_failure=allow_failure,
+                allow_negative_entropy_flux_change=allow_failure
+            )
+            # We must approach the shock curve from above
+            if vp > v_sh:
+                vps[i] = vp
+
+        valid_wm_inds = np.argwhere(vps != 0)
+        valid_wms = wms[valid_wm_inds][:, 0]
+        # if valid_wms.size >= 2:
+        #     wm_min = wms[valid_wms[0, 0]]
+        #     wm_max = wms[valid_wms[-1, 0]]
+        #
+        #     sol = root_scalar(
+        #         sound_shell_solvable_hybrid,
+        #         x0=wm_min,
+        #         x1=wm_max,
+        #         args=(model, v_wall, wn, cs_n, v_cj, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit)
+        #     )
+        #     if sol.converged:
+        #         solution_found = True
+        #         wm = sol.root
+        #         reason = sol.flag
+
+        logger.debug(f"Valid wms: {valid_wms}, inds: {valid_wm_inds}")
+        for i in range(vps.size):
+            if vps[i] == 0:
+                continue
+            vp_i = vps[i]
+            wm_i = wms[i]
+            logger.debug(f"wm={wm_i}, vp={vp_i}")
+            # sol = fsolve(
+            #     sound_shell_solvable_hybrid,
+            #     np.array([wm_i]),
+            #     args=(model, v_wall, wn, cs_n, v_cj, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit),
+            #     # log_status=log_high_alpha_n_failures or not high_alpha_n,
+            #     full_output=True
+            # )
+            # if sol[2] == 1:
+            #     solution_found = True
+            #     wm = sol[0][0]
+            #     reason = sol[3]
+            #     break
+
+            sol = fsolve(
+                sound_shell_solvable_hybrid,
+                x0=wm_i,
+                args=(model, v_wall, wn, cs_n, v_cj, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit),
+                full_output=True
+            )
+            if sol[2] == 1:
+                solution_found = True
+                wm = sol[0][0]
+                reason = sol[3]
+                break
+
+        logger.debug(
+            "Backup hybrid solver results: solution_found=%s, valid_wms=%s, vps=%s, v_sh=%s",
+            solution_found, valid_wms, vps, v_sh
         )
-        wm = sol[0][0]
-        solution_found = sol[2] == 1
-        reason = sol[3]
 
     v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = sound_shell_hybrid(
         model, v_wall, wn, wm,

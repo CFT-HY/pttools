@@ -581,6 +581,27 @@ def _v_plus_numba(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: b
         return _v_plus_arr_wrapper
 
 
+def v_plus_hybrid(
+        model: "Model",
+        v_wall: float, wm: float,
+        vp_tilde_guess: float, wp_guess: float,
+        allow_failure: bool = False,
+        allow_negative_entropy_flux_change: bool = False) -> float:
+    """Find $v_+$ for a hybrid"""
+    # Exit velocity is at the sound speed
+    vm_tilde = np.sqrt(model.cs2(wm, Phase.BROKEN))
+
+    # Solve the boundary conditions at the wall
+    vp_tilde, wp = solve_junction(
+        model, vm_tilde, wm,
+        Phase.BROKEN, Phase.SYMMETRIC,
+        v2_tilde_guess=vp_tilde_guess, w2_guess=wp_guess,
+        allow_failure=allow_failure,
+        allow_negative_entropy_flux_change=allow_negative_entropy_flux_change
+    )
+    return -relativity.lorentz(vp_tilde, v_wall)
+
+
 def v_plus_limit(ap: th.FloatOrArr, sol_type: SolutionType) -> th.FloatOrArr:
     r"""Limit for the values that $\tilde{v}_+$ can have.
 
