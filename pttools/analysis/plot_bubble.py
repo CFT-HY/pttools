@@ -21,8 +21,8 @@ def plot_bubble(bubble: Bubble, fig: plt.Figure = None, path: str = None, **kwar
 def plot_bubble_common(bubble: Bubble, fig: plt.Figure, ax: plt.Axes, path: str = None):
     ax.set_xlabel(r"$\xi$")
     ax.set_xlim(
-        max(bubble.xi[1] / 1.1, 0),
-        min(bubble.xi[-2] * 1.1, 1.0)
+        np.nanmax([bubble.xi[1] / 1.1, 0]),
+        np.nanmin([bubble.xi[-2] * 1.1, 1.0])
     )
     ax.grid()
 
@@ -55,9 +55,12 @@ def plot_bubble_w(bubble: Bubble, fig: plt.figure = None, ax: plt.Axes = None, p
 
     ax.plot(bubble.xi, bubble.w, **kwargs)
     ax.set_ylabel(r"$w$")
+    w_max = max(line.get_ydata().max() for line in ax.lines) * 1.1
+    if np.isnan(w_max):
+        w_max = 1
     ax.set_ylim(
-        min(line.get_ydata().min() for line in ax.lines) / 1.1,
-        max(line.get_ydata().max() for line in ax.lines) * 1.1
+        np.nanmax([min(line.get_ydata().min() for line in ax.lines) / 1.1, 0]),
+        w_max
     )
 
     return plot_bubble_common(bubble, fig, ax, path)
