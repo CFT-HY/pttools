@@ -8,7 +8,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
       - name: Print Python version
@@ -18,9 +18,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y graphviz
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Load pip cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .pip
           key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
@@ -47,7 +47,7 @@ jobs:
           ./gen_call_graphs.sh "ssmtools" "./pttools/ssmtools/**.py"
           ./gen_call_graphs.sh "tests" "./tests/**/*.py"
       - name: Upload results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Graph
           path: |
@@ -59,15 +59,15 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
       - name: Print Python version
         run: python -V
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Load pip cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .pip
           key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
@@ -82,7 +82,7 @@ jobs:
       - name: Run Pylint
         run: pylint pttools tests 2>&1 | tee pylint.txt
       - name: Upload results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Lint
           path: |
@@ -93,15 +93,15 @@ jobs:
 #    timeout-minutes: 5
 #    steps:
 #      - name: Setup Python
-#        uses: actions/setup-python@v4
+#        uses: actions/setup-python@v5
 #        with:
 #          python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
 #      - name: Print Python version
 #        run: python -V
 #      - name: Checkout
-#        uses: actions/checkout@v3
+#        uses: actions/checkout@v4
 #      - name: Load pip cache
-#        uses: actions/cache@v3
+#        uses: actions/cache@v4
 #        with:
 #          path: .pip
 #          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
@@ -128,7 +128,7 @@ jobs:
         python-version: ['3.9', '3.10', '3.11']
     steps:
     - name: Setup Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Print Python version
@@ -138,9 +138,9 @@ jobs:
         sudo apt-get update
         sudo apt-get install ffmpeg
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Load pip cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: .pip
         key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
@@ -164,7 +164,7 @@ jobs:
         pytest | tee test-output.txt
         coverage json
     - name: Upload results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: ${{ matrix.python-version == env.PRIMARY_PYTHON_VERSION }}
       with:
         name: Test results with Numba
@@ -186,15 +186,15 @@ jobs:
 #      PRIMARY_OLD_PYTHON_VERSION: '3.7'
 #    steps:
 #    - name: Setup Python
-#      uses: actions/setup-python@v4
+#      uses: actions/setup-python@v5
 #      with:
 #        python-version: ${{ matrix.python-version }}
 #    - name: Print Python version
 #      run: python -V
 #    - name: Checkout
-#      uses: actions/checkout@v3
+#      uses: actions/checkout@v4
 #    - name: Load pip cache
-#      uses: actions/cache@v3
+#      uses: actions/cache@v4
 #      with:
 #        path: .pip
 #        key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
@@ -214,7 +214,7 @@ jobs:
 #        pytest | tee test-output.txt
 #        coverage json
 #    - name: Upload results
-#      uses: actions/upload-artifact@v3
+#      uses: actions/upload-artifact@v4
 #      if: ${{ matrix.python-version == env.PRIMARY_OLD_PYTHON_VERSION }}
 #      with:
 #        name: Test results with old Numba
@@ -234,15 +234,15 @@ jobs:
         python-version: ['3.9', '3.10', '3.11']
     steps:
     - name: Setup Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Print Python version
       run: python -V
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Load pip cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: .pip
         key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
@@ -269,7 +269,7 @@ jobs:
         NUMBA_DISABLE_JIT=1 pytest | tee test-output.txt
         coverage json
     - name: Upload results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: ${{ matrix.python-version == env.PRIMARY_PYTHON_VERSION }}
       with:
         name: Test results without Numba
