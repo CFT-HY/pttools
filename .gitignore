@@ -20,6 +20,7 @@ packages.svg
 # Output files
 _build
 auto_examples
+docs/sg_execution_times.rst
 gen_modules
 logs
 test-results

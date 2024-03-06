@@ -173,10 +173,11 @@ class ConstCSModel(AnalyticModel):
             nan_on_invalid: bool = True,
             log_invalid: bool = True,
             cancel_on_invalid: bool = True) -> tp.Tuple[float, float, float, float]:
+        # This is an approximation and does not take into account all the terms
         theor_min = 4/3*(1/self.nu - 1/self.mu)
         if alpha_n_min_target < theor_min:
             alpha_n_min_target_new = theor_min / safety_factor_alpha
-            msg = f"alpha_n_min_target = {alpha_n_min_target} is below the theoretical minimum of {theor_min}. "\
+            msg = f"alpha_n_min_target = {alpha_n_min_target} is below a theoretical estimate of {theor_min}. "\
                   f"Setting it to {alpha_n_min_target_new}"
             logger.warning(msg)
             alpha_n_min_target = alpha_n_min_target_new
@@ -187,6 +188,7 @@ class ConstCSModel(AnalyticModel):
         if a_b is None:
             a_b = 1.
         model = ConstCSModel(css2=self.css2, csb2=self.csb2, a_s=a_s_default, a_b=a_b, V_s=V_s_default)
+        # If we are already below the target
         if model.alpha_n_min < alpha_n_min_target:
             return a_s_default, a_b, V_s_default, V_b
         sol: OptimizeResult = minimize(
@@ -438,6 +440,16 @@ class ConstCSModel(AnalyticModel):
         w_b = self.nu * self.a_b * (temp / self.T_ref) ** (self.nu - 4) * temp ** 4
         return w_b * phase + w_s * (1 - phase)
 
+    def __wn_error_msg(self, alpha_n: th.FloatOrArr, param: th.FloatOrArr, param_name: str) -> str:
+        if np.isscalar(alpha_n):
+            info = f"Got: alpha_n={alpha_n}, {param_name}={param}."
+        else:
+            i = np.argmin(param)
+            info = f"Most problematic values: alpha_n={alpha_n[i]}, {param_name}={param[i]}"
+        return \
+            f"Got small alpha_n for the model \"{self.label_unicode}\". {info} "\
+            f"Possible minimum: {self.const_cs_wn_const}"
+
     def w_n(
             self,
             alpha_n: th.FloatOrArr,
@@ -447,13 +459,7 @@ class ConstCSModel(AnalyticModel):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
-        r"""Enthalpy at nucleation temperature
-        $$w_n = \frac{a}{\alpha_n - b}$$
-        where
-        $$a = \frac{4}{3} (V_s - V_b)$$
-        $$b = \frac{4}{3} \left( \frac{1}{\mu} - \frac{1}{\nu} \right)$$
-        This can be derived from the equations for $\theta$ and $\alpha_n$.
-        """
+        r"""Enthalpy at nucleation temperature"""
         if theta_bar:
             return super().w_n(
                 alpha_n=alpha_n,
@@ -463,29 +469,24 @@ class ConstCSModel(AnalyticModel):
                 nan_on_invalid=nan_on_invalid,
                 log_invalid=log_invalid
             )
+        if analytical and np.isclose(self.csb2, 1/3):
+            wn = self.bag_wn_const / (alpha_n + (4/self.mu - 1)/3)
+            if np.any(wn < 0):
+                msg = self.__wn_error_msg(alpha_n=alpha_n, param=wn, param_name="wn")
+                if log_invalid:
+                    logger.error(msg)
+                if error_on_invalid:
+                    raise ValueError(msg)
+                if nan_on_invalid:
+                    if np.isscalar(alpha_n):
+                        return np.nan
+                    wn[wn < 0] = np.nan
+            return wn
 
         diff = alpha_n - self.const_cs_wn_const
-        if np.any(diff < 0):
-            if np.isscalar(alpha_n):
-                info = f"Got: wn={alpha_n}."
-            else:
-                i = np.argmin(diff)
-                info = f"Most problematic values: alpha_n={alpha_n[i]}, diff={diff[i]}."
-            msg = \
-                f"Got too small alpha_n for the model \"{self.name}\". {info} " \
-                f"The minimum with the given parameters is {self.const_cs_wn_const}."
-            if log_invalid:
-                logger.error(msg)
-            if error_on_invalid:
-                raise ValueError(msg)
-            # if nan_on_invalid:
-            #     if np.isscalar(alpha_n):
-            #         diff = np.nan
-            #     else:
-            #         diff[diff < 0] = np.nan
+        if np.any(diff < 0) and log_invalid:
+            logger.warning(self.__wn_error_msg(alpha_n=alpha_n, param=diff, param_name="diff"))
 
-        if analytical:
-            return self.bag_wn_const / (alpha_n - self.const_cs_wn_const)
         return super().w_n(
             alpha_n, wn_guess=wn_guess,
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
