@@ -32,7 +32,7 @@ def get_kappa(bubble: Bubble) -> float:
         return np.nan
     if bubble.numerical_error:
         return np.nan
-    return bubble.kappa
+    return bubble.kappa_giese
 
 
 get_kappa.return_type = float

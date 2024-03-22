@@ -138,6 +138,7 @@ class Bubble:
 
         # Output values
         self.alpha_plus: tp.Optional[float] = None
+        self.alpha_theta_bar_plus: tp.Optional[float] = None
         self.elapsed: tp.Optional[float] = None
         self.sp: tp.Optional[float] = None
         self.sm: tp.Optional[float] = None
@@ -275,11 +276,13 @@ class Bubble:
         self.solved = True
         self.phase = props.find_phase(self.xi, self.v_wall)
 
-        # Validity checking for the solution
         self.alpha_plus = self.model.alpha_plus(
             self.wp, self.wm, vp_tilde=self.vp_tilde, sol_type=self.sol_type,
             error_on_invalid=False, nan_on_invalid=True, log_invalid=True
         )
+        self.alpha_theta_bar_plus = self.model.alpha_theta_bar_plus(self.wp)
+
+        # Validity checking for the solution
         if np.isnan(self.alpha_plus):
             self.alpha_plus = self.model.alpha_plus(
                 self.wp, self.wm, vp_tilde=self.vp_tilde, sol_type=self.sol_type,
@@ -474,6 +477,12 @@ class Bubble:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.kappa(self.model, self.v, self.w, self.xi, self.v_wall, delta_e_theta=self.va_trace_anomaly_diff)
+
+    @functools.cached_property
+    def kappa_giese(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return 4 * self.kinetic_energy_density / (3 * self.alpha_theta_bar_plus * self.wp)
 
     @functools.cached_property
     def mean_adiabatic_index(self) -> float:
