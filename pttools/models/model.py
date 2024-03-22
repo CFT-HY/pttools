@@ -760,6 +760,15 @@ class Model(BaseModel, abc.ABC):
         a = vp_tilde*vm_tilde / cs2b - 1
         return (a + 3*alpha_tbp) / (a + 3*vp_tilde*vm_tilde*alpha_tbp)
 
+    def w_n_error_msg(self, alpha_n: th.FloatOrArr, param: th.FloatOrArr, param_name: str) -> str:
+        if np.isscalar(alpha_n):
+            info = f"Got: alpha_n={alpha_n}, {param_name}={param}."
+        else:
+            i = np.argmin(param)
+            info = f"Most problematic values: alpha_n={alpha_n[i]}, {param_name}={param[i]}"
+        return \
+            f"Got small alpha_n for the model \"{self.label_unicode}\". {info}"
+
     def _w_n_scalar(
             self,
             alpha_n: float,
@@ -854,6 +863,10 @@ class Model(BaseModel, abc.ABC):
         return ret
 
     # Abstract methods
+
+    def alpha_n_min_find_params(self, alpha_n_min_target: float):
+        r"""Find the model parameters that allow the given $\alpha_{n,\text{min,target}}$"""
+        raise NotImplementedError
 
     @abc.abstractmethod
     def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:

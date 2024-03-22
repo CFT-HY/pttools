@@ -5,7 +5,7 @@ import typing as tp
 
 import numba
 import numpy as np
-from scipy.optimize import minimize, OptimizeResult
+from scipy.optimize import minimize, minimize_scalar, OptimizeResult
 
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase, SolutionType
@@ -169,35 +169,138 @@ class ConstCSModel(AnalyticModel):
             safety_factor_alpha: float = 0.999,
             safety_factor_a: float = 1.001,
             safety_factor_V: float = 0.001,
+            a_max: float = 1e4,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True,
             cancel_on_invalid: bool = True) -> tp.Tuple[float, float, float, float]:
+        if safety_factor_a < 1 or safety_factor_V < 0:
+            raise ValueError(f"Got invalid safety factors: a={safety_factor_a}, V={safety_factor_V}")
+
+        if np.isclose(self.mu, 4) and np.isclose(self.nu, 4):
+            return BagModel.alpha_n_min_find_params(
+                alpha_n_min_target=alpha_n_min_target,
+                a_s_default=a_s_default,
+                a_b=a_b,
+                V_s_default=V_s_default,
+                V_b=V_b,
+                safety_factor_alpha=safety_factor_alpha
+            )
+
+        # alpha_n_min_limit = (self.mu - self.nu) / (3*self.mu)
+        # if alpha_n_min_target < alpha_n_min_limit:
+        #     msg = f"Got invalid alpha_n_min_target={alpha_n_min_target}, since "\
+        #           f"alpha_n_min_limit={alpha_n_min_limit} for css2={self.css2}, csb2={self.csb2}"
+        #     if cancel_on_invalid:
+        #         logger.error(
+        #             msg + ". Using given defaults a_s=%s, a_b=%s, V_s=%s, V_b=%s",
+        #             a_s_default, a_b, V_s_default, V_b, self.css2, self.csb2
+        #         )
+        #         return a_s_default, a_b, V_s_default, V_b
+        #     if log_invalid:
+        #         logger.error(msg)
+        #     if error_on_invalid:
+        #         raise ValueError(msg)
+        #     if nan_on_invalid:
+        #         return np.nan, a_b, np.nan, V_b
+        #
+        # if np.isclose(self.nu, 4):
+        #     # Assuming Tc = T0 = 1
+        #     tn_tc = 2 - safety_factor_a
+        #     if tn_tc < 0 or tn_tc > 1:
+        #         raise ValueError(f"Got invalid Tn/Tc={tn_tc}")
+        #     a_s = a_b / (tn_tc**(-self.mu) - self.mu/4*(alpha_n_min_target - (1 - 4/self.mu)/3))
+        #     if a_s < a_b:
+        #         msg = f"Got invalid a_s={a_s} for a_b={a_b}, mu_s={self.mu}, tn_tc={tn_tc}, alpha_n_min_target={alpha_n_min_target}"
+        #         if cancel_on_invalid:
+        #             logger.error(
+        #                 msg + ". Using given defaults a_s=%s, a_b=%s, V_s=%s, V_b=%s for css2=%s, csb2=%s.",
+        #                 a_s_default, a_b, V_s_default, V_b, self.css2, self.csb2
+        #             )
+        #             return a_s_default, a_b, V_s_default, V_b
+        #         if log_invalid:
+        #             logger.error(msg)
+        #         if error_on_invalid:
+        #             raise ValueError(msg)
+        #         if nan_on_invalid:
+        #             return np.nan, a_b, np.nan, V_b
+        #     V_s = a_s - a_b - V_b
+        #     if V_s < V_b:
+        #         msg = f"Got invalid V_s={V_s} for a_s={a_s}, a_b={a_b}, V_b={V_b}"
+        #         if cancel_on_invalid:
+        #             logger.error(
+        #                 msg + ". Using given defaults a_s=%s, a_b=%s, V_s=%s, V_b=%s for css2=%s, csb2=%s.",
+        #                 a_s_default, a_b, V_s_default, V_b, self.css2, self.csb2
+        #             )
+        #             return a_s_default, a_b, V_s_default, V_b
+        #         if log_invalid:
+        #             logger.error(msg)
+        #         if error_on_invalid:
+        #             raise ValueError(msg)
+        #         if nan_on_invalid:
+        #             return a_s, a_b, np.nan, V_b
+        #     return a_s, a_b, V_s, V_b
+
         # This is an approximation and does not take into account all the terms
-        theor_min = 4/3*(1/self.nu - 1/self.mu)
-        if alpha_n_min_target < theor_min:
-            alpha_n_min_target_new = theor_min / safety_factor_alpha
-            msg = f"alpha_n_min_target = {alpha_n_min_target} is below a theoretical estimate of {theor_min}. "\
-                  f"Setting it to {alpha_n_min_target_new}"
-            logger.warning(msg)
-            alpha_n_min_target = alpha_n_min_target_new
+        # theor_min = 4/3*(1/self.nu - 1/self.mu)
+        # if alpha_n_min_target < theor_min:
+        #     alpha_n_min_target_new = theor_min / safety_factor_alpha
+        #     msg = f"alpha_n_min_target = {alpha_n_min_target} is below a theoretical estimate of {theor_min}. "\
+        #           f"Setting it to {alpha_n_min_target_new}"
+        #     logger.warning(msg)
+        #     alpha_n_min_target = alpha_n_min_target_new
+
         if a_s_default is None:
             a_s_default = 1.1
         if V_s_default is None:
             V_s_default = 1.
         if a_b is None:
             a_b = 1.
+
+        # ---
+        # Solve numerically
+        # ---
         model = ConstCSModel(css2=self.css2, csb2=self.csb2, a_s=a_s_default, a_b=a_b, V_s=V_s_default)
         # If we are already below the target
         if model.alpha_n_min < alpha_n_min_target:
             return a_s_default, a_b, V_s_default, V_b
-        sol: OptimizeResult = minimize(
+
+        V_s = V_s_default
+        sol: OptimizeResult = minimize_scalar(
             self.alpha_n_min_find_params_solvable,
-            x0=np.array([a_s_default, V_s_default]),
-            bounds=((a_b * safety_factor_a, None), (safety_factor_V, None)),
-            args=(self.css2, self.csb2, a_b, V_b, safety_factor_alpha * alpha_n_min_target, )
+            bracket=((a_s_default + a_b)/2, a_s_default, 2*a_s_default),
+            bounds=(a_b * safety_factor_a, a_max),
+            args=(V_s, a_b, V_b, self.css2, self.csb2, safety_factor_alpha * alpha_n_min_target)
         )
-        if not sol.success:
+        a_s = sol.x
+        if sol.success:
+            model2 = ConstCSModel(css2=self.css2, csb2=self.csb2, a_s=a_s, a_b=a_b, V_s=V_s, V_b=V_b)
+            if model2.alpha_n_min <= alpha_n_min_target:
+                return a_s, a_b, V_s, V_b
+
+        V_s = V_s_default / 100
+        sol: OptimizeResult = minimize_scalar(
+            self.alpha_n_min_find_params_solvable,
+            bracket=((a_s_default + a_b)/2, a_s_default, 2*a_s_default),
+            bounds=(a_b * safety_factor_a, a_max),
+            args=(V_s, a_b, V_b, self.css2, self.csb2, safety_factor_alpha * alpha_n_min_target)
+        )
+        a_s = sol.x
+        if sol.success:
+            model2 = ConstCSModel(css2=self.css2, csb2=self.csb2, a_s=a_s, a_b=a_b, V_s=V_s, V_b=V_b)
+            if model2.alpha_n_min <= alpha_n_min_target:
+                return a_s, a_b, V_s, V_b
+
+        sol: OptimizeResult = minimize(
+            self.alpha_n_min_find_params_solvable2,
+            x0=np.array([a_s_default, V_s_default]),
+            bounds=((a_b * safety_factor_a, None), (V_b + safety_factor_V, None)),
+            args=(a_b, V_b, self.css2, self.csb2, safety_factor_alpha * alpha_n_min_target)
+        )
+        if sol.success:
+            a_s = sol.x[0]
+            V_s = sol.x[1]
+        else:
             msg = f"Failed to find alpha_n_min. Reason: {sol.message}"
             if cancel_on_invalid:
                 logger.error(
@@ -211,8 +314,8 @@ class ConstCSModel(AnalyticModel):
                 raise RuntimeError(msg)
             if nan_on_invalid:
                 return np.nan, a_b, np.nan, V_b
-        a_s = sol.x[0]
-        V_s = sol.x[1]
+
+        # If the solver returns a useless result
         model2 = ConstCSModel(css2=self.css2, csb2=self.csb2, a_s=a_s, a_b=a_b, V_s=V_s, V_b=V_b)
         if model2.alpha_n_min > model.alpha_n_min:
             logger.error(
@@ -225,18 +328,32 @@ class ConstCSModel(AnalyticModel):
 
     @staticmethod
     def alpha_n_min_find_params_solvable(
-            args: np.ndarray,
-            css2: float, csb2: float,
+            a_s: float, V_s: float,
             a_b: float, V_b: float,
+            css2: float, csb2: float,
             alpha_n_target: float):
-        a_s = args[0]
-        V_s = args[1]
         try:
             model = ConstCSModel(css2=css2, csb2=csb2, a_s=a_s, a_b=a_b, V_s=V_s, V_b=V_b)
         except (ValueError, RuntimeError):
             return np.nan
         diff = model.alpha_n_min - alpha_n_target
         return diff**2
+
+    @classmethod
+    def alpha_n_min_find_params_solvable2(
+            cls,
+            args: np.ndarray,
+            a_b: float, V_b: float,
+            css2: float, csb2: float,
+            alpha_n_target: float):
+        a_s = args[0]
+        V_s = args[1]
+        return cls.alpha_n_min_find_params_solvable(
+            a_s=a_s, V_s=V_s,
+            css2=css2, csb2=csb2,
+            a_b=a_b, V_b=V_b,
+            alpha_n_target=alpha_n_target
+        )
 
     def alpha_plus(
             self,
@@ -390,6 +507,9 @@ class ConstCSModel(AnalyticModel):
             "nu": self.nu
         }
 
+    def inverse_enthalpy_ratio(self, temp: th.FloatOrArr) -> th.FloatOrArr:
+        return self.a_b * self.nu / (self.a_s * self.mu)
+
     def params_str(self) -> str:
         return \
             f"css2={self.css2:.3f}, csb2={self.csb2:.3f}, alpha_n_min={self.alpha_n_min:.3f} " \
@@ -445,16 +565,6 @@ class ConstCSModel(AnalyticModel):
         w_b = self.nu * self.a_b * (temp / self.T_ref) ** (self.nu - 4) * temp ** 4
         return w_b * phase + w_s * (1 - phase)
 
-    def __wn_error_msg(self, alpha_n: th.FloatOrArr, param: th.FloatOrArr, param_name: str) -> str:
-        if np.isscalar(alpha_n):
-            info = f"Got: alpha_n={alpha_n}, {param_name}={param}."
-        else:
-            i = np.argmin(param)
-            info = f"Most problematic values: alpha_n={alpha_n[i]}, {param_name}={param[i]}"
-        return \
-            f"Got small alpha_n for the model \"{self.label_unicode}\". {info} "\
-            f"Possible minimum: {self.const_cs_wn_const}"
-
     def w_n(
             self,
             alpha_n: th.FloatOrArr,
@@ -474,10 +584,10 @@ class ConstCSModel(AnalyticModel):
                 nan_on_invalid=nan_on_invalid,
                 log_invalid=log_invalid
             )
-        if analytical and np.isclose(self.csb2, 1/3):
+        if analytical and np.isclose(self.nu, 4):
             wn = self.bag_wn_const / (alpha_n + (4/self.mu - 1)/3)
             if np.any(wn < 0):
-                msg = self.__wn_error_msg(alpha_n=alpha_n, param=wn, param_name="wn")
+                msg = self.w_n_error_msg(alpha_n=alpha_n, param=wn, param_name="wn")
                 if log_invalid:
                     logger.error(msg)
                 if error_on_invalid:
@@ -490,7 +600,7 @@ class ConstCSModel(AnalyticModel):
 
         diff = alpha_n - self.const_cs_wn_const
         if np.any(diff < 0) and log_invalid:
-            logger.warning(self.__wn_error_msg(alpha_n=alpha_n, param=diff, param_name="diff"))
+            logger.warning(self.w_n_error_msg(alpha_n=alpha_n, param=diff, param_name="diff"))
 
         return super().w_n(
             alpha_n, wn_guess=wn_guess,

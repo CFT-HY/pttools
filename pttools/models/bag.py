@@ -1,6 +1,7 @@
 """Bag model"""
 
 import logging
+import typing as tp
 
 import numba
 import numpy as np
@@ -39,6 +40,7 @@ class BagModel(AnalyticModel):
             a_s: float = None, a_b: float = None,
             g_s: float = None, g_b: float = None,
             T_min: float = None, T_max: float = None,
+            alpha_n_min: float = None,
             name: str = None,
             label_latex: str = None,
             label_unicode: str = None,
@@ -47,6 +49,9 @@ class BagModel(AnalyticModel):
         logger.debug("Initialising BagModel.")
         if V_b != 0:
             logger.warning("V_b has been specified for the bag model, even though it's usually omitted.")
+        if alpha_n_min is not None:
+            a_s, a_b, V_s, V_b = self.alpha_n_min_find_params(
+                alpha_n_min_target=alpha_n_min, a_s_default=a_s, a_b=a_b, V_s_default=V_s, V_b=V_b)
 
         super().__init__(
             V_s=V_s, V_b=V_b,
@@ -63,8 +68,8 @@ class BagModel(AnalyticModel):
                 "The bag model must have a_s > a_b for the critical temperature to be non-negative. "
                 f"Got: a_s={self.a_s}, a_b={self.a_b}"
             )
-        # The < case already generates an error in the base class.
-        if self.V_s == self.V_b:
+        # The < case already generates an error in the base class, but let's check that as well just to be sure.
+        if self.V_s <= self.V_b:
             msg = f"The bubble will not expand in the Bag model, when V_s <= V_b. Got: V_s = V_b = {V_s}"
             logger.error(msg)
             if not allow_invalid:
@@ -105,6 +110,26 @@ class BagModel(AnalyticModel):
         # self.check_p(wn, allow_fail=allow_no_transition)
         return self.bag_wn_const / wn
 
+    def alpha_n_min_find(self, w_min: float = None, w_max: float = None) -> tp.Tuple[float, float]:
+        return self.w_crit, self.alpha_n(self.w_crit)
+
+    @staticmethod
+    def alpha_n_min_find_params(
+            alpha_n_min_target: float,
+            a_s_default: float = None,
+            a_b: float = 1,
+            V_s_default: float = None,
+            V_b: float = 0,
+            safety_factor_alpha: float = 0.999) -> tp.Tuple[float, float, float, float]:
+        if a_s_default < 0 or a_b < 0 or V_s_default < 0 or V_b < 0:
+            raise ValueError(
+                f"Invalid parameters: a_s_default={a_s_default}, a_b={a_b}, V_s_default={V_s_default}, V_b={V_b}")
+        a_s = a_b / (1 - 3*alpha_n_min_target * safety_factor_alpha)
+        if a_s_default is not None and a_s_default < a_s:
+            a_s = a_s_default
+        V_s = 1 if V_s_default is None else V_s_default
+        return a_s, a_b, V_s, V_b
+
     def alpha_plus(
             self,
             wp: th.FloatOrArr,
@@ -136,8 +161,18 @@ class BagModel(AnalyticModel):
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
 
-    def alpha_theta_bar_n(self, alpha_n: float) -> float:
-        return alpha_n
+    def alpha_theta_bar_n(
+            self,
+            wn: th.FloatOrArr,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
+        return self.alpha_n(
+            wn=wn,
+            error_on_invalid=error_on_invalid,
+            nan_on_invalid=nan_on_invalid,
+            log_invalid=log_invalid
+        )
 
     def critical_temp(self, **kwargs) -> float:
         r"""Critical temperature for the bag model
