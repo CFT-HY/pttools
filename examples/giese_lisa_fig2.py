@@ -125,10 +125,7 @@ def main():
     ]
     # print(f"Minimum alpha_ns: {[model.alpha_n_min for model in models]}")
     for model in models:
-        print(
-            f"css2={model.css2:.3f}, csb2={model.csb2:.3f}, alpha_n_min={model.alpha_n_min:.3f} "
-            f"(a_s={model.a_s:.3f}, a_b={model.a_b:.3f}, V_s={model.V_s:.3f}, V_b={model.V_b:.3f})"
-        )
+        print(model.params_str())
 
     fig: plt.Figure = plt.figure(figsize=A4_PAPER_SIZE)
     axs = fig.subplots(2, 2)

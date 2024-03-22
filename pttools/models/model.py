@@ -887,6 +887,11 @@ class Model(BaseModel, abc.ABC):
         """
 
     @abc.abstractmethod
+    def params_str(self) -> str:
+        """Model parameters as a string"""
+        pass
+
+    @abc.abstractmethod
     def s_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Entropy density $s(T,\phi)=\frac{dp}{dT}$
 

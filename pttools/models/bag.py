@@ -189,6 +189,9 @@ class BagModel(AnalyticModel):
         p_b = self.a_b * temp**4 - self.V_b
         return p_b * phase + p_s * (1 - phase)
 
+    def params_str(self) -> str:
+        return f"a_s={self.a_s}, a_b={self.a_b}, V_s={self.V_s}, V_b={self.V_b}"
+
     def s_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Entropy density $s=\frac{dp}{dT}$
         $$s_s = 4 a_s T^3$$

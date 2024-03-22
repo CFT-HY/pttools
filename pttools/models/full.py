@@ -115,6 +115,9 @@ class FullModel(Model):
         self.validate_temp(temp)
         return np.pi**2 / 90 * self.thermo.gp(temp, phase) * temp**4 - self.V(phase)
 
+    def params_str(self) -> str:
+        return self.label_unicode
+
     def s_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Entropy density $s(T,\phi), using :borsanyi_2016:`\ `, eq. S12$
         $$ s(T,\phi) = \frac{2\pi^2}{45} g_s(T) T^3$$

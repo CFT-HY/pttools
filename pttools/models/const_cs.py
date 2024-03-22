@@ -390,6 +390,11 @@ class ConstCSModel(AnalyticModel):
             "nu": self.nu
         }
 
+    def params_str(self) -> str:
+        return \
+            f"css2={self.css2:.3f}, csb2={self.csb2:.3f}, alpha_n_min={self.alpha_n_min:.3f} " \
+            f"(a_s={self.a_s:.3f}, a_b={self.a_b:.3f}, V_s={self.V_s:.3f}, V_b={self.V_b:.3f})"
+
     def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Pressure $p(T,\phi)$
         $$p_s = a_s T^\mu - V_s$$
