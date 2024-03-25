@@ -151,7 +151,7 @@ extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
         "https://akareport.aka.fi/ibi_apps/WFServlet?IBIF_ex=x_hakkuvaus2&CLICKED_ON=&HAKNRO1=%s&UILANG=en&TULOSTE=HTML",
         "Academy of Finland grant %s"
     ),
-    "issue": ("https://github.com/hindmars-org/pttools/issues/%s", "issue %s"),
+    "issue": ("https://github.com/CFT-HY/pttools/issues/%s", "issue %s"),
     "rel_hydro_book": (
         "https://doi.org/10.1093/acprof:oso/9780198528906.001.0001%s",
         "Relativistic hydrodynamics, Rezzolla, Zanotti, 2013%s"),
@@ -185,7 +185,7 @@ linkcheck_ignore = [
     # This link redirects to a site that does not allow crawlers
     f"https://doi.org/10.1093/acprof:oso/9780198528906.001.0001",
     # The project repository will return 404 without authentication until it's published.
-    r"https://github\.com/hindmars-org/pttools/*",
+    r"https://github\.com/CFT-HY/pttools/*",
     # The anchors are valid but not detected by Sphinx.
     r"https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/*",
 ]
