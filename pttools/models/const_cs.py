@@ -9,6 +9,7 @@ from scipy.optimize import minimize, minimize_scalar, OptimizeResult
 
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase, SolutionType
+from pttools.bubble import transition
 from pttools.models.analytic import AnalyticModel
 from pttools.models.bag import BagModel
 
@@ -387,6 +388,19 @@ class ConstCSModel(AnalyticModel):
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
 
+    def alpha_theta_bar_n(
+            self,
+            wn: th.FloatOrArr,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
+        return (1 - self.nu/self.mu)/3 + self.nu/4 * self.alpha_n_bag(
+            wn=wn,
+            error_on_invalid=error_on_invalid,
+            nan_on_invalid=nan_on_invalid,
+            log_invalid=log_invalid
+        )
+
     def alpha_theta_bar_n_max_lte(self, wn: float, sol_type: SolutionType, Psi_n: float = None) -> float:
         r"""$\alpha_{n,\text{max}}^\text{def}$, :ai_2023:`\ `, eq. 28, 31"""
         if sol_type == SolutionType.DETON or sol_type == SolutionType.HYBRID:
@@ -420,6 +434,20 @@ class ConstCSModel(AnalyticModel):
             # Not known / no simple formula
             return 0
         raise ValueError(f"Invalid solution type: {sol_type}")
+
+    def alpha_theta_bar_plus(
+            self,
+            wp: th.FloatOrArr,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
+        return (1 - self.nu/self.mu)/3 + self.nu/4 * self.alpha_plus_bag(
+            wp=wp,
+            wm=np.nan,  # Not used
+            error_on_invalid=error_on_invalid,
+            nan_on_invalid=nan_on_invalid,
+            log_invalid=log_invalid
+        )
 
     def critical_temp_opt(self, temp: float) -> float:
         const = (self.V_b - self.V_s) * self.T_ref ** 4
@@ -536,6 +564,30 @@ class ConstCSModel(AnalyticModel):
         s_s = self.mu * self.a_s * (temp / self.T_ref) ** (self.mu - 4) * temp ** 3
         s_b = self.nu * self.a_b * (temp / self.T_ref) ** (self.nu - 4) * temp ** 3
         return s_b * phase + s_s * (1 - phase)
+
+    def solution_type(
+            self,
+            v_wall: float,
+            alpha_n: float,
+            wn: float = None,
+            wn_guess: float = None,
+            wm_guess: float = None) -> SolutionType:
+        if v_wall**2 < self.csb2:
+            return SolutionType.SUB_DEF
+        # For detonations alpha_theta_bar_plus = alpha_theta_bar_n
+        alpha_theta_bar_plus = self.alpha_theta_bar_n_from_alpha_n(alpha_n, wn=wn, wn_guess=wn_guess)
+        # Second-order equation for vm
+        b = 3 * alpha_theta_bar_plus - 1 - v_wall ** 2 * (1 / self.csb2 + 3 * alpha_theta_bar_plus)
+        # If the result were vm < 0
+        if b > 0:
+            return SolutionType.HYBRID
+        a = v_wall / self.csb2
+        c = v_wall
+        disc = b**2 - 4*a*c
+        if disc < 0:
+            return SolutionType.HYBRID
+        # A detonation solution exists
+        return SolutionType.DETON
 
     def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Temperature $T(w,\phi)$. Inverted from the equation of $w(T,\phi)$.

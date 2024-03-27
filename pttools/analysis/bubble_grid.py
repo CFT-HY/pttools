@@ -18,11 +18,15 @@ class BubbleGrid:
                 flags=("refs_ok", ),
                 op_flags=[["readonly"], ["writeonly", "allocate"]],
                 op_dtypes=(object, dtype)) as it:
-            for bubble, res in it:
-                try:
-                    res[...] = getattr(bubble.item(), name)
-                except NotYetSolvedError:
+            for bubble_container, res in it:
+                bubble = bubble_container.item()
+                if bubble is None:
                     res[...] = None
+                else:
+                    try:
+                        res[...] = getattr(bubble, name)
+                    except NotYetSolvedError:
+                        res[...] = None
             return it.operands[1]
 
     def elapsed(self) -> np.ndarray:
@@ -57,7 +61,7 @@ class BubbleGridVWAlpha(BubbleGrid):
             use_bag_solver: bool = False):
         data = create_bubbles(
                 model, v_walls, alpha_ns, func,
-                kwargs={"use_bag_solver": use_bag_solver}
+                kwargs={"use_bag_solver": use_bag_solver, "allow_bubble_failure": True}
         )
         if func is None:
             bubbles = data

@@ -13,6 +13,7 @@ import pttools.type_hints as th
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.check import find_most_negative_vals
 from pttools.bubble.integrate import add_df_dtau
+from pttools.bubble import transition
 from pttools.models.base import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -319,15 +320,21 @@ class Model(BaseModel, abc.ABC):
         )
         return self.delta_theta_bar(wn, Phase.SYMMETRIC) / (3 * wn)
 
-    def alpha_theta_bar_n_from_alpha_n(self, alpha_n: float, wn_guess: float = None) -> float:
+    def alpha_theta_bar_n_from_alpha_n(self, alpha_n: float, wn: float = None, wn_guess: float = None) -> float:
         r"""Conversion from $\alpha_n$ to $\alpha_{\bar{\theta}n}$ of :giese_2021:`\ `, eq. 13"""
-        wn = self.w_n(alpha_n, wn_guess=wn_guess)
+        if wn is None or np.isnan(wn):
+            wn = self.w_n(alpha_n, wn_guess=wn_guess)
         tn = self.temp(wn, Phase.SYMMETRIC)
         diff = (1 - 1 / (3 * self.cs2(wn, Phase.BROKEN))) * \
             (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN)) / wn
         return alpha_n + diff
 
-    def alpha_theta_bar_plus(self, wp: th.FloatOrArr) -> th.FloatOrArr:
+    def alpha_theta_bar_plus(
+            self,
+            wp: th.FloatOrArr,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
         r"""Transition strength parameter, :giese_2021:`\ `, eq. 9
 
         $$\alpha_{\bar{\theta}+} = \frac{D \bar{\theta}(T_+)}{3 w_+}$$
@@ -679,6 +686,29 @@ class Model(BaseModel, abc.ABC):
         :param phase: phase $\phi$
         """
         return self.s_temp(self.temp(w, phase), phase)
+
+    def solution_type(
+            self,
+            v_wall: float,
+            alpha_n: float,
+            wn: float = None,
+            wn_guess: float = None,
+            wm_guess: float = None) -> SolutionType:
+            if wn is None:
+                wn = self.w_n(alpha_n, wn_guess)
+            v_cj = transition.v_chapman_jouguet(self, alpha_n, wn=wn, wm_guess=wm_guess)
+
+            if transition.is_surely_detonation(v_wall, v_cj):
+                return SolutionType.DETON
+            if transition.is_surely_sub_def(self, v_wall, wn):
+                return SolutionType.SUB_DEF
+            if transition.cannot_be_detonation(v_wall, v_cj) and transition.cannot_be_sub_def(self, v_wall, wn):
+                return SolutionType.HYBRID
+            logger.warning(
+                f"Could not determine solution type for %s with v_wall=%s, alpha_n=%s, v_cj=%s",
+                self.name, v_wall, alpha_n, v_cj
+            )
+            return SolutionType.UNKNOWN
 
     def theta(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Trace anomaly $\theta(w,\phi)$, :notes:`\ `, eq. 7.24

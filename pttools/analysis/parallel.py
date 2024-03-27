@@ -41,6 +41,8 @@ def create_bubble(
             logger.exception("Failed to create a bubble:", exc_info=e)
             if post_func is None:
                 return None
+            if post_func_return_multiple:
+                return None, *post_func.fail_value
             return None, post_func.fail_value
         raise e
     bubble.solve(use_bag_solver=use_bag_solver)

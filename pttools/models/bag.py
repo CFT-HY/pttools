@@ -6,9 +6,11 @@ import typing as tp
 import numba
 import numpy as np
 
-import pttools.type_hints as th
 from pttools.bubble.boundary import SolutionType
+from pttools.bubble.transition import identify_solution_type_bag
 from pttools.models.analytic import AnalyticModel
+from pttools.speedup.utils import copy_doc
+import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
@@ -86,29 +88,19 @@ class BagModel(AnalyticModel):
                 f"Bag, a_s={self.a_s:.{label_prec}f}, a_b={self.a_b:.{label_prec}f}, " \
                 f"V_s={self.V_s:.{label_prec}f}, V_b={self.V_b:.{label_prec}f}"
 
+    @copy_doc(AnalyticModel.alpha_plus_bag)
     def alpha_n(
             self,
             wn: th.FloatOrArr,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
-        r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
-        $$\alpha_n = \frac{4}{3w_n}(V_s - V_b)$$
-
-        :param wn: $w_n$, enthalpy of the symmetric phase at the nucleation temperature
-        :param error_on_invalid: raise error for invalid values
-        :param nan_on_invalid: return nan for invalid values
-        :param log_invalid: log negative values
-        """
-        self.check_w_for_alpha(
-            wn,
+        return self.alpha_n_bag(
+            wn=wn,
             error_on_invalid=error_on_invalid,
             nan_on_invalid=nan_on_invalid,
-            log_invalid=log_invalid,
-            name="wn", alpha_name="alpha_n"
+            log_invalid=log_invalid
         )
-        # self.check_p(wn, allow_fail=allow_no_transition)
-        return self.bag_wn_const / wn
 
     def alpha_n_min_find(self, w_min: float = None, w_max: float = None) -> tp.Tuple[float, float]:
         return self.w_crit, self.alpha_n(self.w_crit)
@@ -130,6 +122,7 @@ class BagModel(AnalyticModel):
         V_s = 1 if V_s_default is None else V_s_default
         return a_s, a_b, V_s, V_b
 
+    @copy_doc(AnalyticModel.alpha_plus_bag)
     def alpha_plus(
             self,
             wp: th.FloatOrArr,
@@ -139,26 +132,12 @@ class BagModel(AnalyticModel):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
-        r"""Transition strength parameter $\alpha_+$, :notes:`\ `, eq. 7.25.
-        $$\alpha_+ = \frac{4}{3w_+}(V_s - V_b)$$
-
-        :param wp: $w_+$, enthalpy ahead of the wall
-        :param wm: $w_-$, enthalpy behind the wall (not used)
-        :param error_on_invalid: raise error for invalid values
-        :param nan_on_invalid: return nan for invalid values
-        :param log_invalid: whether to log invalid values
-        """
-        self.check_w_for_alpha(
-            wp,
-            # w_min=self.w_crit,
+        return self.alpha_plus_bag(
+            wp=wp, wm=wm, vp_tilde=vp_tilde,
+            sol_type=sol_type,
             error_on_invalid=error_on_invalid,
             nan_on_invalid=nan_on_invalid,
-            name="wp", alpha_name="alpha_plus"
-        )
-        alpha_plus = self.bag_wn_const / wp
-        return self.check_alpha_plus(
-            alpha_plus, vp_tilde=vp_tilde, sol_type=sol_type,
-            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
+            log_invalid=log_invalid
         )
 
     def alpha_theta_bar_n(
@@ -169,6 +148,20 @@ class BagModel(AnalyticModel):
             log_invalid: bool = True) -> th.FloatOrArr:
         return self.alpha_n(
             wn=wn,
+            error_on_invalid=error_on_invalid,
+            nan_on_invalid=nan_on_invalid,
+            log_invalid=log_invalid
+        )
+
+    def alpha_theta_bar_plus(
+            self,
+            wp: th.FloatOrArr,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
+        return self.alpha_plus(
+            wp=wp,
+            wm=np.nan,  # Not used
             error_on_invalid=error_on_invalid,
             nan_on_invalid=nan_on_invalid,
             log_invalid=log_invalid
@@ -237,6 +230,15 @@ class BagModel(AnalyticModel):
         s_s = 4*self.a_s*temp**3
         s_b = 4*self.a_b*temp**3
         return s_b * phase + s_s * (1 - phase)
+
+    def solution_type(
+            self,
+            v_wall: float,
+            alpha_n: float,
+            wn: float = None,
+            wn_guess: float = None,
+            wm_guess: float = None) -> SolutionType:
+        return identify_solution_type_bag(v_wall=v_wall, alpha_n=alpha_n)
 
     def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Temperature $T(w,\phi)$. Inverted from

@@ -143,6 +143,7 @@ def compute(bubble: Bubble):
 
 
 compute.return_type = (np.float_, ) * _NUM_VALUES
+compute.fail_value = COMPUTE_FAIL
 
 
 def gen_and_plot_entropy(

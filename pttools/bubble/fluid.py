@@ -351,7 +351,7 @@ def sound_shell_detonation(
         model: "Model", v_wall: float, alpha_n: float, wn: float, v_cj: float,
         vm_tilde_guess: float, wm_guess: float, t_end: float, n_xi: int) -> SolverOutput:
     if transition.cannot_be_detonation(v_wall, v_cj):
-        raise ValueError(f"Too slow wall speed for a detonation: v_wall={v_wall}, v_cj={v_cj}")
+        logger.error(f"Too slow wall speed for a detonation: v_wall={v_wall}, v_cj={v_cj}")
     # Use bag model as the starting point. This may fail for points near the v_cj curve.
     vp_tilde_bag, vm_tilde_bag, vp_bag, vm_bag = boundary.fluid_speeds_at_wall(
         v_wall, alpha_p=alpha_n, sol_type=SolutionType.DETON)
@@ -592,7 +592,7 @@ def sound_shell_solver_hybrid(
         thin_shell_limit: int,
         allow_failure: bool, log_high_alpha_n_failures: bool) -> SolverOutput:
     if v_wall >= v_cj:
-        raise RuntimeError("Invalid v_wall for a hybrid")
+        raise RuntimeError(f"Invalid v_wall for a hybrid: v_wall={v_wall}, v_cj={v_cj}")
 
     # This may not work, as we don't know whether the solvable has a different sign at the endpoints.
     # sol = root_scalar(

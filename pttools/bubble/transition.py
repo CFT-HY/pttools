@@ -9,7 +9,6 @@ import pttools.type_hints as th
 from . import alpha as alpha_tools
 from .boundary import Phase, SolutionType, v_plus
 from . import const
-from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
@@ -22,56 +21,27 @@ def identify_solution_type_bag(v_wall: float, alpha_n: float, exit_on_error: boo
     Determines wall type from wall speed and global strength parameter.
     solution_type = [ 'Detonation' | 'Deflagration' | 'Hybrid' ]
     """
-    # v_wall = wall velocity, alpha_n = relative trace anomaly at nucleation temp outside shell
-    sol_type = SolutionType.ERROR  # Default
     if alpha_n < alpha_tools.alpha_n_max_detonation_bag(v_wall):
-        # Must be detonation
-        sol_type = SolutionType.DETON
+        return SolutionType.DETON
     else:
         if alpha_n < alpha_tools.alpha_n_max_deflagration_bag(v_wall):
             if v_wall <= const.CS0:
-                sol_type = SolutionType.SUB_DEF
-            else:
-                sol_type = SolutionType.HYBRID
+                return SolutionType.SUB_DEF
+            return SolutionType.HYBRID
         # elif v_wall > const.CS0 and alpha_n < alpha_tools.alpha_n_max_hybrid_bag(v_wall):
         #     with numba.objmode:
         #         logger.warning(
         #             "Using an untested way to identify the solution as a hybrid with v_wall=%s, alpha_n=%s",
         #             v_wall, alpha_n
         #         )
-        #     sol_type = SolutionType.HYBRID
+        #     return SolutionType.HYBRID
 
-    if sol_type == SolutionType.ERROR and exit_on_error:
+    if exit_on_error:
         with numba.objmode:
             logger.error(f"No solution for v_wall=%s, alpha_n=%s", v_wall, alpha_n)
         raise RuntimeError("No solution for given v_wall, alpha_n")
 
-    return sol_type
-
-
-def identify_solution_type(
-        model: "Model",
-        v_wall: float,
-        alpha_n: float,
-        wn: float,
-        wn_guess: float,
-        wm_guess: float
-        ) -> SolutionType:
-    if wn is None:
-        wn = model.w_n(alpha_n, wn_guess)
-    v_cj = v_chapman_jouguet(model, alpha_n, wn=wn, wm_guess=wm_guess)
-
-    if is_surely_detonation(v_wall, v_cj):
-        return SolutionType.DETON
-    if is_surely_sub_def(model, v_wall, wn):
-        return SolutionType.SUB_DEF
-    if cannot_be_detonation(v_wall, v_cj) and cannot_be_sub_def(model, v_wall, wn):
-        return SolutionType.HYBRID
-    logger.warning(
-        f"Could not determine solution type for %s with v_wall=%s, alpha_n=%s, v_cj=%s",
-        model.name, v_wall, alpha_n, v_cj
-    )
-    return SolutionType.UNKNOWN
+    return SolutionType.ERROR
 
 
 def validate_solution_type(
@@ -83,13 +53,14 @@ def validate_solution_type(
         wn_guess: float = None,
         wm_guess: float = None) -> SolutionType:
     if sol_type is None or sol_type is SolutionType.UNKNOWN:
-        sol_type = identify_solution_type(
-            model, v_wall=v_wall, alpha_n=alpha_n, wn=wn, wn_guess=wn_guess, wm_guess=wm_guess
+        sol_type = model.solution_type(
+            v_wall=v_wall, alpha_n=alpha_n, wn=wn, wn_guess=wn_guess, wm_guess=wm_guess
         )
-    if sol_type is SolutionType.UNKNOWN:
+    if sol_type in [SolutionType.UNKNOWN, SolutionType.ERROR]:
         msg = \
-            f"Could not determine solution type automatically for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. " \
-            "Please choose it manually."
+            "Could not determine solution type automatically for " \
+            f"model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. " \
+            f"Got sol_type={sol_type}. Please choose it manually."
         logger.error(msg)
         raise ValueError(msg)
     return sol_type

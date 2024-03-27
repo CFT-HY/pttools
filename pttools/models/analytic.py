@@ -7,6 +7,7 @@ import typing as tp
 import numpy as np
 
 import pttools.type_hints as th
+from pttools.bubble.boundary import SolutionType
 from pttools.models.model import Model
 
 logger = logging.getLogger(__name__)
@@ -76,6 +77,61 @@ class AnalyticModel(Model, abc.ABC):
                 f"The model \"{self.name}\" does not satisfy a_s > a_b. "
                 "Please check that the critical temperature is non-negative. "
                 f"Got: a_s={self.a_s}, a_b={self.a_b}.")
+
+    def alpha_n_bag(
+            self,
+            wn: th.FloatOrArr,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
+        r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
+        $$\alpha_n = \frac{4}{3w_n}(V_s - V_b)$$
+
+        :param wn: $w_n$, enthalpy of the symmetric phase at the nucleation temperature
+        :param error_on_invalid: raise error for invalid values
+        :param nan_on_invalid: return nan for invalid values
+        :param log_invalid: log negative values
+        """
+        self.check_w_for_alpha(
+            wn,
+            error_on_invalid=error_on_invalid,
+            nan_on_invalid=nan_on_invalid,
+            log_invalid=log_invalid,
+            name="wn", alpha_name="alpha_n"
+        )
+        # self.check_p(wn, allow_fail=allow_no_transition)
+        return self.bag_wn_const / wn
+
+    def alpha_plus_bag(
+            self,
+            wp: th.FloatOrArr,
+            wm: th.FloatOrArr,
+            vp_tilde: float = None,
+            sol_type: SolutionType = None,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
+        r"""Transition strength parameter $\alpha_+$, :notes:`\ `, eq. 7.25.
+        $$\alpha_+ = \frac{4}{3w_+}(V_s - V_b)$$
+
+        :param wp: $w_+$, enthalpy ahead of the wall
+        :param wm: $w_-$, enthalpy behind the wall (not used)
+        :param error_on_invalid: raise error for invalid values
+        :param nan_on_invalid: return nan for invalid values
+        :param log_invalid: whether to log invalid values
+        """
+        self.check_w_for_alpha(
+            wp,
+            # w_min=self.w_crit,
+            error_on_invalid=error_on_invalid,
+            nan_on_invalid=nan_on_invalid,
+            name="wp", alpha_name="alpha_plus"
+        )
+        alpha_plus = self.bag_wn_const / wp
+        return self.check_alpha_plus(
+            alpha_plus, vp_tilde=vp_tilde, sol_type=sol_type,
+            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
+        )
 
     def export(self) -> tp.Dict[str, any]:
         return {
