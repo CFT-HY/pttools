@@ -22,8 +22,8 @@ except ImportError:
 
 
 def main():
-    alpha_theta_bar_n = 0.1
-    v_walls = np.array([0.4, 0.6, 0.8])
+    alpha_theta_bar_n = 0.01
+    v_walls = np.array([0.5, 0.6, 0.65])
     colors = ["r", "g", "b"]
     a_s = 5
     a_b = 1
@@ -31,10 +31,12 @@ def main():
     models = [
         # BagModel(a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_theta_bar_n)
         ConstCSModel(css2=1/3, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_theta_bar_n),
-        ConstCSModel(css2=1/3, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=0.3*alpha_theta_bar_n),
-        ConstCSModel(css2=1/4, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_theta_bar_n),
+        ConstCSModel(css2=1/3, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_theta_bar_n),
+        # ConstCSModel(css2=1/4, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_theta_bar_n),
         ConstCSModel(css2=1/4, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_theta_bar_n)
     ]
+    for model in models:
+        print(model.params_str(), model.tn(alpha_n=alpha_theta_bar_n)/model.critical_temp())
 
     fig: plt.Figure = plt.figure(figsize=A4_PAPER_SIZE)
     axs = fig.subplots(2, 2)
@@ -42,7 +44,7 @@ def main():
 
     for ax, model in zip(axs_flat, models):
         for v_wall, color in zip(v_walls, colors):
-            bubble = Bubble(model=model, v_wall=v_wall, alpha_n=alpha_theta_bar_n, theta_bar=True)
+            bubble = Bubble(model=model, v_wall=v_wall, alpha_n=alpha_theta_bar_n)  # , theta_bar=True)
             ax.plot(bubble.xi, bubble.v, label=f"$v_w={v_wall}$", c=color)
 
             kappa, v, w, xi, mode = kappaNuMuModel(
@@ -52,6 +54,8 @@ def main():
                 vw=v_wall
             )
             ax.plot(xi, v, ls=":", c=color)
+            if np.isclose(v_wall, 0.8):
+                print(np.nanmax(v))
 
         xi_mu = np.linspace(np.sqrt(model.csb2), 1, 20)
         v_mu = lorentz(xi_mu, np.sqrt(model.csb2))
