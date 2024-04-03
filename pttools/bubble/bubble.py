@@ -482,7 +482,7 @@ class Bubble:
     def kappa_giese(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
-        return 4 * self.kinetic_energy_density / (3 * self.alpha_theta_bar_plus * self.wp)
+        return 4 * self.kinetic_energy_density / (3 * self.alpha_theta_bar_n * self.wn)
 
     @functools.cached_property
     def mean_adiabatic_index(self) -> float:
