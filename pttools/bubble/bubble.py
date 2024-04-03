@@ -61,6 +61,7 @@ class Bubble:
             model.validate_alpha_n(self.alpha_n, allow_invalid=allow_invalid, log_invalid=log_invalid)
         else:
             self.alpha_n = alpha_n
+            self.alpha_theta_bar_n = model.alpha_theta_bar_n_from_alpha_n(alpha_n=alpha_n, wn=self.wn)
 
         self.sol_type = transition.validate_solution_type(
             model,
@@ -90,19 +91,19 @@ class Bubble:
         # if isinstance(model, ConstCSModel)
         if hasattr(model, "css2") and hasattr(model, "csb2"):
             model: ConstCSModel
-            self.alpha_n_bar = model.alpha_theta_bar_n_from_alpha_n(alpha_n)
+            self.alpha_theta_bar_n = model.alpha_theta_bar_n_from_alpha_n(alpha_n)
             self.alpha_theta_bar_n_min_lte = model.alpha_theta_bar_n_min_lte(self.wn, self.sol_type, Psi_n=self.Psi_n)
             self.alpha_theta_bar_n_max_lte = model.alpha_theta_bar_n_max_lte(self.wn, self.sol_type, Psi_n=self.Psi_n)
             if log_invalid and (self.alpha_theta_bar_n_max_lte < self.alpha_theta_bar_n_min_lte
                                 or self.alpha_theta_bar_n_max_lte < 0):
                 logger.error(
-                    "Got invalid limits for alpha_n_bar_lte: "
+                    "Got invalid limits for alpha_theta_bar_n_lte: "
                     f"min={self.alpha_theta_bar_n_min_lte}, max={self.alpha_theta_bar_n_max_lte}"
                 )
-            if log_invalid and self.alpha_n_bar < self.alpha_theta_bar_n_min_lte:
-                logger.warning("alpha_n_bar=%s < lte_min=%s", self.alpha_n_bar, self.alpha_theta_bar_n_min_lte)
-            if log_invalid and self.alpha_n_bar > self.alpha_theta_bar_n_max_lte:
-                logger.warning("alpha_n_bar=%s > lte_max=%s", self.alpha_n_bar, self.alpha_theta_bar_n_max_lte)
+            if log_invalid and self.alpha_theta_bar_n < self.alpha_theta_bar_n_min_lte:
+                logger.warning("alpha_theta_bar_n=%s < lte_min=%s", self.alpha_theta_bar_n, self.alpha_theta_bar_n_min_lte)
+            if log_invalid and self.alpha_theta_bar_n > self.alpha_theta_bar_n_max_lte:
+                logger.warning("alpha_theta_bar_n=%s > lte_max=%s", self.alpha_theta_bar_n, self.alpha_theta_bar_n_max_lte)
 
         if log_invalid and self.sol_type == SolutionType.DETON and self.Psi_n < 0.75:
             logger.warning(
