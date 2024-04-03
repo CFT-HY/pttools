@@ -56,8 +56,8 @@ def create_figure(
                     alpha_tbn_giese = alpha_n
                 else:
                     try:
-                        wn_guess = model.w_n(alpha_n, error_on_invalid=False)
-                        alpha_tbn_giese = model.alpha_n_from_alpha_theta_bar_n(alpha_theta_bar_n=alpha_n, wn_guess=wn_guess)
+                        wn = model.w_n(alpha_n, theta_bar=theta_bar)
+                        alpha_tbn_giese = model.alpha_n_from_alpha_theta_bar_n(alpha_theta_bar_n=alpha_n, wn=wn)
                         logger.info("Creating Giese plot for alpha_theta_bar_n: %s", alpha_tbn_giese)
                     except RuntimeError:
                         kappas[j, :] = np.nan
