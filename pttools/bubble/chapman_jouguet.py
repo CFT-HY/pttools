@@ -165,6 +165,9 @@ def v_chapman_jouguet(
     """
     if analytical and model.DEFAULT_NAME == "bag":
         return v_chapman_jouguet_bag(alpha_plus=alpha_n)
+    if analytical and model.DEFAULT_NAME == "const_cs":
+        alpha_theta_bar_plus = model.alpha_theta_bar_n_from_alpha_n(alpha_n=alpha_n, wn=wn, wn_guess=wn_guess)
+        return v_chapman_jouguet_const_cs(model, alpha_theta_bar_plus=alpha_theta_bar_plus)
 
     if isinstance(alpha_n, Iterable):
         return np.array([v_chapman_jouguet(
@@ -242,6 +245,21 @@ def v_chapman_jouguet_bag(alpha_plus: th.FloatOrArr) -> th.FloatOrArr:
     but for all detonations $v_w \geq v_{CJ,\text{bag}}$.
     """
     return 1/np.sqrt(3) * (1 + np.sqrt(2*alpha_plus + 3*alpha_plus**2)) / (1 + alpha_plus)
+
+
+def v_chapman_jouguet_const_cs(model: "ConstCSModel", alpha_theta_bar_plus: th.FloatOrArr):
+    discriminant = 3*alpha_theta_bar_plus * (1 - model.csb2 + 3 * model.csb2*alpha_theta_bar_plus)
+    denominator = 1/model.csb + 3 * model.csb * alpha_theta_bar_plus
+    ret = (1 + np.sqrt(discriminant)) / denominator
+    # if np.any(ret > 1):
+    #     if np.isscalar(ret):
+    #         ret = 1 - np.sqrt(discriminant) / denominator
+    #     else:
+    #         inds = ret > 1
+    #         ret[inds] = 1 - np.sqrt(discriminant[inds]) / denominator[inds]
+    if np.any(ret < model.csb) or np.any(ret > 1):
+        raise ValueError(f"Invalid v_CJ for alpha_theta_bar_plus={alpha_theta_bar_plus}: {ret}")
+    return ret
 
 
 def v_chapman_jouguet_const_cs_reference(alpha_n: np.ndarray, model: "ConstCSModel") -> np.ndarray:
