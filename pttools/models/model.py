@@ -213,13 +213,15 @@ class Model(BaseModel, abc.ABC):
     def alpha_n_from_alpha_theta_bar_n(
             self,
             alpha_theta_bar_n: th.FloatOrArr,
+            wn: float = None,
             wn_guess: float = None,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
-        wn = self.w_n(
-            alpha_theta_bar_n, wn_guess=wn_guess, theta_bar=True,
-            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid)
+        if wn is None or np.isnan(wn):
+            wn = self.w_n(
+                alpha_theta_bar_n, wn_guess=wn_guess, theta_bar=True,
+                error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid)
         tn = self.temp(wn, Phase.SYMMETRIC)
         diff = (1 - 1 / (3 * self.cs2(wn, Phase.BROKEN))) * \
             (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN)) / wn
@@ -849,6 +851,17 @@ class Model(BaseModel, abc.ABC):
                 raise RuntimeError(msg)
             if nan_on_invalid:
                 return np.nan
+
+        if wn < 0:
+            msg = f"Got wn < 0: wn={wn} for "\
+                  f"model={self.name}, alpha_n={alpha_n}, wn_guess={wn_guess}, theta_bar={theta_bar}"
+            if log_invalid:
+                logger.error(msg)
+            if error_on_invalid:
+                raise RuntimeError(msg)
+            if nan_on_invalid:
+                return np.nan
+
         return wn
 
     def _w_n_solvable(self, wn: th.FloatOrArr, alpha_n: float, theta_bar: bool) -> th.FloatOrArr:
@@ -869,6 +882,8 @@ class Model(BaseModel, abc.ABC):
         r"""Enthalpy at nucleation temperature with given $\alpha_n$"""
         # TODO: rename this to wn
         if wn_guess is None or np.isnan(wn_guess) or wn_guess < 0:
+            if self.w_crit is None or np.isnan(self.w_crit) or self.w_crit < 0:
+                raise ValueError(f"Invalid w_crit={self.w_crit}")
             wn_guess = 0.9 * self.w_crit
 
         if np.isscalar(alpha_n):
