@@ -59,7 +59,7 @@ def create_figure(
                         wn = model.w_n(alpha_n, theta_bar=theta_bar)
                         alpha_tbn_giese = model.alpha_n_from_alpha_theta_bar_n(alpha_theta_bar_n=alpha_n, wn=wn)
                         logger.info("Creating Giese plot for alpha_theta_bar_n: %s", alpha_tbn_giese)
-                    except RuntimeError:
+                    except (ValueError, RuntimeError):
                         kappas[j, :] = np.nan
                         continue
                 if kappaNuMuModel is None:
@@ -114,6 +114,8 @@ def main():
     alpha_thetabar_ns = np.array([0.01, 0.03, 0.1, 0.3, 1, 3])
     colors = ["b", "y", "r", "g", "purple", "grey"]
     v_walls = np.linspace(0.2, 0.95, 50)
+    print("v_walls")
+    print(v_walls)
     a_s = 5
     a_b = 1
     V_s = 1
@@ -136,6 +138,9 @@ def main():
     create_figure(axs[1, 1], models, alpha_ns=alpha_thetabar_ns, colors=colors, v_walls=v_walls, theta_bar=False, giese=True)
 
     fig.tight_layout()
+
+    print("v_walls")
+    print(v_walls)
     return fig
 
 
