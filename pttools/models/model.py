@@ -11,6 +11,7 @@ from scipy.optimize import fminbound, fsolve
 
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase, SolutionType
+from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 from pttools.bubble.check import find_most_negative_vals
 from pttools.bubble.integrate import add_df_dtau
 from pttools.bubble import transition
@@ -698,7 +699,7 @@ class Model(BaseModel, abc.ABC):
             wm_guess: float = None) -> SolutionType:
             if wn is None:
                 wn = self.w_n(alpha_n, wn_guess)
-            v_cj = transition.v_chapman_jouguet(self, alpha_n, wn=wn, wm_guess=wm_guess)
+            v_cj = v_chapman_jouguet(self, alpha_n, wn=wn, wm_guess=wm_guess)
 
             if transition.is_surely_detonation(v_wall, v_cj):
                 return SolutionType.DETON
