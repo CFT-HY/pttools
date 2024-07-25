@@ -117,6 +117,9 @@ class ThermoModel(BaseModel, abc.ABC):
 
         @numba.njit
         def cs2_arr_temp(temp: np.ndarray, phase: th.FloatOrArr) -> np.ndarray:
+            # This check somehow fixes a compilation bug in Numba 0.60.0
+            if np.isscalar(temp):
+                raise TypeError
             invalid = np.logical_or(temp < t_min, temp > t_max)
             if np.any(invalid):
                 temp2 = temp.copy()

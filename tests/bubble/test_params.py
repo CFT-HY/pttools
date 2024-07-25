@@ -34,7 +34,7 @@ class TestParams(unittest.TestCase):
         This test will alert, when the bug is fixed.
         https://github.com/numba/numba/issues/4820
         """
-        with self.assertRaises(numba.LoweringError):
+        with self.assertRaises((numba.LoweringError, TypeError)):
             params_without_nuc_args_numba()
         # self.assertIsNone(params.nuc_type)
         # self.assertIsNone(params.nuc_args)

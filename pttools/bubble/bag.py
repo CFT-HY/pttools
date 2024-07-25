@@ -6,6 +6,7 @@ See page 37 of :notes:`\ `.
 import logging
 
 import numba
+from numba.extending import overload
 import numpy as np
 
 import pttools.type_hints as th
@@ -33,7 +34,6 @@ def adiabatic_index_bag(
     return w / e_bag(w, phase, theta_s, theta_b)
 
 
-@numba.njit
 def check_thetas(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> None:
     r"""Check that $\theta_s \leq \theta_b$.
 
@@ -41,10 +41,32 @@ def check_thetas(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> None:
     :param theta_b: $\theta_b$
     """
     if np.any(theta_b > theta_s):
-        with numba.objmode:
-            logger.warning(
-                "theta_b should always be smaller than theta_s, "
-                "but got theta_s=%s, theta_b=%s", theta_s, theta_b)
+        _check_thetas_warning(theta_s, theta_b)
+
+
+@overload(check_thetas, jit_options={"nopython": True})
+def _check_thetas_numba(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr):
+    if isinstance(theta_s, numba.types.Array) or isinstance(theta_b, numba.types.Array):
+        return check_thetas
+    else:
+        return _check_thetas_scalar
+
+
+def _check_thetas_scalar(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> None:
+    """This is a workaround for a bug in Numba 0.60.0.
+    This fix was not needed for Numba 0.59.0.
+    https://github.com/numba/numba/issues/8270
+    """
+    if theta_b > theta_s:
+        _check_thetas_warning(theta_s, theta_b)
+
+
+@numba.njit
+def _check_thetas_warning(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> None:
+    with numba.objmode:
+        logger.warning(
+            "theta_b should always be smaller than theta_s, "
+            "but got theta_s=%s, theta_b=%s", theta_s, theta_b)
 
 
 @numba.njit
