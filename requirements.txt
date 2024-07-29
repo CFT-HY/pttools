@@ -28,4 +28,5 @@ plotly >= 5.23.0
 scipy >= 1.14.0
 # TBB can be used to speed up Numba threading
 # https://numba.pydata.org/numba-doc/latest/user/threading-layer.html#which-threading-layers-are-available
-tbb >= 2021.13.0
+# As of 2024-07-29, 2021.10.0 is the latest version available for macOS.
+tbb >= 2021.10.0
