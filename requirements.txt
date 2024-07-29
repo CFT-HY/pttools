@@ -21,7 +21,7 @@ numbalsoda >= 0.3.4; sys_platform != "win32"
 # "create_target_machine() got an unexpected keyword argument 'jitdebug'"
 # then you may have to downgrade llvmlite to 0.32.1
 # https://github.com/rapidsai/cuml/issues/2389#issuecomment-642645437
-numpy >= 1.26.4, < 2.0.0
+numpy >= 2.0.1
 orjson >= 3.10.6
 plotly >= 5.23.0
 scipy >= 1.14.0

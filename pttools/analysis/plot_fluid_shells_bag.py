@@ -197,5 +197,5 @@ def plot_fluid_shells_bag(
         data = [[np.nansum(arr) for arr in lst] for lst in [lst_v, lst_w, lst_xi, lst_v_sh, lst_w_sh]]
         if multi:
             data += [lst_ubarf2, lst_ke_frac, lst_kappa, lst_dw]
-        return fig, np.array(data, dtype=np.float_)
+        return fig, np.array(data, dtype=np.float64)
     return fig

@@ -142,7 +142,7 @@ def compute(bubble: Bubble):
         return COMPUTE_FAIL
 
 
-compute.return_type = (np.float_, ) * _NUM_VALUES
+compute.return_type = (np.float64, ) * _NUM_VALUES
 compute.fail_value = COMPUTE_FAIL
 
 

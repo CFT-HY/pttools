@@ -32,7 +32,7 @@ def color_region(
         color: str = "red", alpha: float = 1):
     cmp = ListedColormap([color], color, 1)
     # The data type must be supporte by np.isinf()
-    region2 = region.copy() if region.dtype is np.float_ else region.astype(np.float_)
+    region2 = region.copy() if region.dtype is np.float64 else region.astype(np.float64)
     region2[region2 == 0] = np.nan
     # region2[np.isinf(region2)] = np.nan
     return ax.contourf(x, y, region2, cmap=cmp, alpha=alpha)

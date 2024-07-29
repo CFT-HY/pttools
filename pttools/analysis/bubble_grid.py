@@ -30,16 +30,16 @@ class BubbleGrid:
             return it.operands[1]
 
     def elapsed(self) -> np.ndarray:
-        return self.get_value("elapsed", dtype=np.float_)
+        return self.get_value("elapsed", dtype=np.float64)
 
     def kappa(self) -> np.ndarray:
-        return self.get_value("kappa", dtype=np.float_)
+        return self.get_value("kappa", dtype=np.float64)
 
     def numerical_error(self) -> np.ndarray:
         return self.get_value("numerical_error", dtype=np.bool_)
 
     def omega(self) -> np.ndarray:
-        return self.get_value("omega", dtype=np.float_)
+        return self.get_value("omega", dtype=np.float64)
 
     def solver_failed(self) -> np.ndarray:
         return self.get_value("solver_failed", dtype=np.bool_)

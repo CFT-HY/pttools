@@ -99,7 +99,7 @@ class FluidReference:
                     params,
                     multiple_params=True,
                     unpack_params=True,
-                    output_dtypes=(np.int_, np.float_, np.float_, np.float_, np.float_, np.float_, np.float_),
+                    output_dtypes=(np.int_, np.float64, np.float64, np.float64, np.float64, np.float64, np.float64),
                     log_progress_percentage=5
                 )
                 file.create_dataset("v_wall", data=v_walls)
@@ -137,9 +137,9 @@ class FluidReference:
                             inds[sol_tp].append(i_alpha_n * v_walls.size + i_v_wall)
                             i += 1
 
-                file.create_dataset("coords_sub_def", data=np.array(coords[0], dtype=np.float_))
-                file.create_dataset("coords_hybrid", data=np.array(coords[1], dtype=np.float_))
-                file.create_dataset("coords_detonation", data=np.array(coords[2], dtype=np.float_))
+                file.create_dataset("coords_sub_def", data=np.array(coords[0], dtype=np.float64))
+                file.create_dataset("coords_hybrid", data=np.array(coords[1], dtype=np.float64))
+                file.create_dataset("coords_detonation", data=np.array(coords[2], dtype=np.float64))
                 file.create_dataset("inds_sub_def", data=np.array(inds[0], dtype=np.int_))
                 file.create_dataset("inds_hybrid", data=np.array(inds[1], dtype=np.int_))
                 file.create_dataset("inds_detonation", data=np.array(inds[2], dtype=np.int_))

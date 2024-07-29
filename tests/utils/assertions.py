@@ -18,7 +18,7 @@ def assert_allclose(
         err_msg: str = "",
         verbose: bool = True,
         fmt: str = printing.DEFAULT_FMT,
-        dtype: np.dtype = np.float_):
+        dtype: np.dtype = np.float64):
     """Assert that all array elements correspond to the reference within the given tolerances
 
     :param actual: actual data

@@ -6,7 +6,7 @@ import numpy as np
 
 
 #: Smallest float
-EPS: tp.Final[np.float_] = np.nextafter(0, 1)
+EPS: tp.Final[np.float64] = np.nextafter(0, 1)
 
 #: Default number of entries in $\xi$ array
 N_XI_DEFAULT: int = 5000
@@ -25,7 +25,7 @@ nan_arr.setflags(write=False)
 THIN_SHELL_T_POINTS_MIN: int = 100
 
 #: Ideal speed of sound
-CS0: tp.Final[np.float_] = 1 / np.sqrt(3)
+CS0: tp.Final[np.float64] = 1 / np.sqrt(3)
 #: Ideal speed of sound squared
 CS0_2: tp.Final[float] = 1/3
 

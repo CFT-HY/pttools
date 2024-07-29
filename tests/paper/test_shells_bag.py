@@ -36,7 +36,7 @@ class TestShellsBag(unittest.TestCase):
         # print([np.nansum(param) if isinstance(param, np.ndarray) else param for param in params.values()])
         data_numpy = np.array(
             [np.nansum(param) if isinstance(param, np.ndarray) else param for param in params.values()],
-            dtype=np.float_)
+            dtype=np.float64)
         # [np.nansum(arr) for arr in arrs.values()] + list(scalars.values()))
 
         # path_json = os.path.join(utils.TEST_DATA_PATH, "shell.json")
