@@ -3,7 +3,8 @@
 
 h5py >= 3.11.0
 # Intel Compile Runtime provides Intel SVML, which speeds up Numba
-icc-rt >= 2019.0 # As of 2023-10, this is the latest supported version on Windows and macOS
+# As of 2023-10, this is the latest supported version on Windows and macOS
+icc-rt >= 2019.0; sys_platform != "darwin"
 intel-openmp >= 2020.0.133; sys_platform == "darwin"
 # For Plotly image export
 kaleido >= 0.2.1
