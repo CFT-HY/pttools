@@ -10,6 +10,7 @@ import scipy.interpolate
 
 from pttools.bubble.boundary import Phase
 from pttools.models.base import BaseModel
+from pttools.speedup.overload import np_all_fix
 import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
@@ -94,9 +95,9 @@ class ThermoModel(BaseModel, abc.ABC):
 
         @numba.njit
         def cs2_compute(temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-            if np.all(phase == Phase.SYMMETRIC.value):
+            if np_all_fix(phase == Phase.SYMMETRIC.value):
                 return scipy.interpolate.splev(np.log10(temp), cs2_spl_s)
-            if np.all(phase == Phase.BROKEN.value):
+            if np_all_fix(phase == Phase.BROKEN.value):
                 return scipy.interpolate.splev(np.log10(temp), cs2_spl_b)
             return scipy.interpolate.splev(np.log10(temp), cs2_spl_b) * phase \
                 + scipy.interpolate.splev(np.log10(temp), cs2_spl_s) * (1 - phase)

@@ -11,6 +11,10 @@ from . import numba_wrapper
 logger = logging.getLogger(__name__)
 
 
+def do_nothing(x):
+    return x
+
+
 if numba_wrapper.NUMBA_VERSION < (0, 49, 0):
     logger.warning("Overloading numpy.flipud for old Numba")
 
@@ -24,25 +28,38 @@ if numba_wrapper.NUMBA_VERSION < (0, 49, 0):
 
 
 @overload(np.all, jit_options={"nopython": True})
-def np_all(a):
-    """Overload of :external:py:func:`numpy.all` for booleans"""
-    if isinstance(a, numba.types.Boolean):
-        def func(a):
-            return a
-        return func
+def np_all(x):
+    """Overload of :external:py:func:`numpy.all` for booleans
+
+    This seems not to be used properly in Numba 0.60.0.
+    """
+    if isinstance(x, numba.types.Boolean):
+        return do_nothing
+    if isinstance(x, numba.types.Number):
+        return bool
+
+
+def np_all_fix(x):
+    return np.all(x)
+
+
+@overload(np_all_fix, jit_options={"nopython": True})
+def np_all_fix_scalar(x):
+    if isinstance(x, numba.types.Boolean):
+        return do_nothing
+    if isinstance(x, numba.types.Number):
+        return bool
+    return np_all_fix
 
 
 @overload(np.any, jit_options={"nopython": True})
-def np_any(a):
+def np_any(x):
     """Overload of :external:py:func:`numpy.any` for booleans and scalars"""
-    if isinstance(a, numba.types.Boolean):
-        def func(a):
-            return a
-        return func
-    if isinstance(a, numba.types.Number):
-        def func(a):
-            return bool(a)
-        return func
+    if isinstance(x, numba.types.Boolean):
+        return do_nothing
+    if isinstance(x, numba.types.Number):
+        return bool
+
 
 # @overload(np.asanyarray, jit_options={"nopython": True})
 # def asanyarray(arr: np.ndarray):

@@ -11,6 +11,7 @@ from pttools.bubble.boundary import Phase
 from pttools.models.model import Model
 # if tp.TYPE_CHECKING:
 from pttools.models.thermo import ThermoModel
+from pttools.speedup.overload import np_all_fix
 
 logger = logging.getLogger(__name__)
 
@@ -76,9 +77,9 @@ class FullModel(Model):
 
         @numba.njit
         def cs2(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-            if np.all(phase == Phase.SYMMETRIC.value):
+            if np_all_fix(phase == Phase.SYMMETRIC.value):
                 return splev(np.log10(w), cs2_spl_s)
-            if np.all(phase == Phase.BROKEN.value):
+            if np_all_fix(phase == Phase.BROKEN.value):
                 return splev(np.log10(w), cs2_spl_b)
             return splev(np.log10(w), cs2_spl_b) * phase \
                 + splev(np.log10(w), cs2_spl_s) * (1 - phase)

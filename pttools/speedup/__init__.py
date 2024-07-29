@@ -1,5 +1,7 @@
 """Utilities for speeding up the simulations with Numba"""
 
+# This has to be first so that the overloads are applied to all other parts of this module.
+# The name "overload" may be overwritten later.
 from . import overload
 
 from .differential import *
