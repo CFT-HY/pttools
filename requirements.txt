@@ -9,7 +9,9 @@ icc-rt >= 2019.0; sys_platform != "darwin"
 # intel-openmp >= 2020.0.133; sys_platform == "darwin"
 # For Plotly image export
 kaleido >= 0.2.1
-matplotlib >= 3.9.1
+# Matplotlib 3.9.1 wheels are broken
+# https://pypi.org/project/matplotlib/3.9.1/
+matplotlib >= 3.9.0
 # Numba 0.55 breaks the unit tests
 # https://github.com/numba/numba/issues/7751
 # PyCharm does not understand a dependency if all the versions are conditional
