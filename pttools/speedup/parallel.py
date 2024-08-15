@@ -1,10 +1,12 @@
 import concurrent.futures as cf
 import logging
+import os
 import typing as tp
 
+from numba import get_num_threads, set_num_threads
 import numpy as np
 
-from pttools.speedup.options import MAX_WORKERS_DEFAULT
+from pttools.speedup.options import GITHUB_ACTIONS, MAX_WORKERS_DEFAULT
 
 logger = logging.getLogger(__name__)
 
@@ -162,3 +164,14 @@ def run_parallel(
                     logger.exception("Could not store result to output array. Got: %s", res, exc_info=e)
                     raise e
         return output_arrs
+
+
+if GITHUB_ACTIONS and os.name == "nt":
+    # This value is based on the output of Numba sysinfo on the GitHub Actions Windows runner
+    num_threads = 2
+    logger.warning(
+        "Detected GitHub Actions Windows runner with %s threads. "
+        "Setting the number of threads to %s to work around a Numba bug in detecting the number of CPUs.",
+        get_num_threads(), num_threads
+    )
+    set_num_threads(num_threads)
