@@ -68,7 +68,7 @@ class Spectrum:
         self.spec_den_gw: tp.Optional[np.ndarray] = None
         #: $\mathcal{P}_{\tilde{v}}(q)$
         self.pow_v: tp.Optional[np.ndarray] = None
-        #: ???
+        #: $\mathcal{P}_{\text{gw}}(k)$
         self.pow_gw: tp.Optional[np.ndarray] = None
 
         if compute:
@@ -258,34 +258,35 @@ def power_v_bag(
 
 @numba.njit(parallel=True)
 def _spec_den_gw_scaled_core(
-        xlookup: np.ndarray,
-        P_vlookup: np.ndarray,
-        z: np.ndarray,
+        z_lookup: np.ndarray,
+        P_v_lookup: np.ndarray,
+        y: np.ndarray,
         cs: float) -> tp.Tuple[np.ndarray, np.ndarray]:
     r""":gw_pt_ssm:`\ ` eq. 3.47
-
-    Variable z in paper is x here, and y in paper is z here
+    The variable naming corresponds to the article.
     """
-    cs2 = cs**2
-    nx = len(xlookup)
-    p_gw = np.zeros_like(z)
+    cs2: float = cs**2
+    nz: int = len(z_lookup)
+    p_gw: np.ndarray = np.zeros_like(y)
 
-    for i in numba.prange(z.size):
-        xplus = z[i] / cs * (1. + cs) / 2.
-        xminus = z[i] / cs * (1. - cs) / 2.
-        # x = np.logspace(np.log10(xminus), np.log10(xplus), nx)
-        x = speedup.logspace(np.log10(xminus), np.log10(xplus), nx)
+    for i in numba.prange(y.size):
+        # As defined on page 12 between eq. 3.44 and 3.45
+        z_plus = y[i] * (1 + cs) / (2 * cs)
+        z_minus = y[i] * (1 - cs) / (2 * cs)
+        # Create a range of z to integrate over
+        z = speedup.logspace(np.log10(z_minus), np.log10(z_plus), nz)
+        # The integrand in eq. 3.47
         integrand = \
-            (x - xplus) ** 2 * (x - xminus) ** 2 / x / (xplus + xminus - x) \
-            * np.interp(x, xlookup, P_vlookup) \
-            * np.interp((xplus + xminus - x), xlookup, P_vlookup)
-        p_gw_factor = ((1 - cs2) / cs2) ** 2 / (4 * np.pi * z[i] * cs)
-        p_gw[i] = p_gw_factor * np.trapz(integrand, x)
+            ((z - z_plus) ** 2 * (z - z_minus) ** 2) / (z * (z_plus + z_minus - z)) \
+            * np.interp(z, z_lookup, P_v_lookup) \
+            * np.interp((z_plus + z_minus - z), z_lookup, P_v_lookup)
+        p_gw_factor = ((1 - cs2) / cs2) ** 2 / (4 * np.pi * y[i] * cs)
+        p_gw[i] = p_gw_factor * np.trapz(integrand, z)
 
     # Here we are using G = 2P_v (v spec den is twice plane wave amplitude spec den).
     # Eq 3.48 in SSM paper gives a factor 3.Gamma^2.P_v.P_v = 3 * (4/3)^2.P_v.P_v
     # Hence overall should use (4/3).G.G
-    return (4. / 3.) * p_gw, z
+    return (4. / 3.) * p_gw, y
 
 
 def _spec_den_gw_scaled_z(
@@ -408,11 +409,11 @@ def spec_den_v(
         nt: int = const.NPTDEFAULT[1],
         z_st_thresh: float = const.Z_ST_THRESH,
         cs: float = None):
-    """The full spectral density of the velocity field
+    r"""The full spectral density of the velocity field
 
     This is twice the spectral density of the plane wave components of the velocity field
 
-    :return: 2 * $P_v(q)$ of eq. 4.17
+    :return: 2 * $P_v(q)$ of :gw_pt_ssm:`\ ` eq. 4.17
     """
     # z limits
     log10zmin = np.log10(np.min(z))
