@@ -39,3 +39,6 @@ DEFAULT_NUC_PARM: tp.Tuple[int] = (1,)
 
 #: Default sound speed
 CS0: tp.Final[np.float64] = bubble.CS0
+
+#: Default mean adiabatic index
+GAMMA: float = 4/3

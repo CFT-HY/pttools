@@ -261,18 +261,23 @@ def _spec_den_gw_scaled_core(
         z_lookup: np.ndarray,
         P_v_lookup: np.ndarray,
         y: np.ndarray,
-        cs: float) -> tp.Tuple[np.ndarray, np.ndarray]:
-    r""":gw_pt_ssm:`\ ` eq. 3.47
+        cs: float,
+        Gamma: float) -> tp.Tuple[np.ndarray, np.ndarray]:
+    r""":gw_pt_ssm:`\ ` eq. 3.47 and 3.48
     The variable naming corresponds to the article.
     """
-    cs2: float = cs**2
-    nz: int = len(z_lookup)
-    p_gw: np.ndarray = np.zeros_like(y)
+    # Precompute shared intermediate results
+    cs2: float = cs ** 2
+    nz: int = z_lookup.size
+    z_plus_factor = (1 + cs) / (2 * cs)
+    z_minus_factor = (1 - cs) / (2 * cs)
+    p_gw_factor = ((1 - cs2) / cs2) ** 2 / (4 * np.pi * cs)
 
+    p_gw: np.ndarray = np.zeros_like(y)
     for i in numba.prange(y.size):
         # As defined on page 12 between eq. 3.44 and 3.45
-        z_plus = y[i] * (1 + cs) / (2 * cs)
-        z_minus = y[i] * (1 - cs) / (2 * cs)
+        z_plus = y[i] * z_plus_factor
+        z_minus = y[i] * z_minus_factor
         # Create a range of z to integrate over
         z = speedup.logspace(np.log10(z_minus), np.log10(z_plus), nz)
         # The integrand in eq. 3.47
@@ -280,69 +285,71 @@ def _spec_den_gw_scaled_core(
             ((z - z_plus) ** 2 * (z - z_minus) ** 2) / (z * (z_plus + z_minus - z)) \
             * np.interp(z, z_lookup, P_v_lookup) \
             * np.interp((z_plus + z_minus - z), z_lookup, P_v_lookup)
-        p_gw_factor = ((1 - cs2) / cs2) ** 2 / (4 * np.pi * y[i] * cs)
-        p_gw[i] = p_gw_factor * np.trapz(integrand, z)
+        p_gw[i] = p_gw_factor / y[i] * np.trapz(integrand, z)
 
-    # Here we are using G = 2P_v (v spec den is twice plane wave amplitude spec den).
-    # Eq 3.48 in SSM paper gives a factor 3.Gamma^2.P_v.P_v = 3 * (4/3)^2.P_v.P_v
-    # Hence overall should use (4/3).G.G
-    return (4. / 3.) * p_gw, y
+    # Eq. 3.48 has a factor of 3 Gamma^2
+    # The P_v_lookup is 0.5 \tilde{P}_v, which gives a factor of (1/2)^2 = 1/4
+    # Combined, these result in 3/4 Gamma^2
+    return 0.75 * Gamma**2 * p_gw, y
 
 
-def _spec_den_gw_scaled_z(
-        xlookup: np.ndarray,
-        P_vlookup: np.ndarray,
-        z: np.ndarray,
-        cs: float) -> tp.Tuple[np.ndarray, np.ndarray]:
+def _spec_den_gw_scaled_y(
+        z_lookup: np.ndarray,
+        P_v_lookup: np.ndarray,
+        y: np.ndarray,
+        cs: float,
+        Gamma: float) -> tp.Tuple[np.ndarray, np.ndarray]:
     # nx = len(z)
     # nx = len(xlookup)
     # Integration limits
-    xlargest = max(z) * 0.5 * (1. + cs) / cs
-    xsmallest = min(z) * 0.5 * (1. - cs) / cs
+    z_largest = y.max() * 0.5 * (1. + cs) / cs
+    z_smallest = y.max() * 0.5 * (1. - cs) / cs
 
-    if max(xlookup) < xlargest or min(xlookup) > xsmallest:
-        raise ValueError("Range of xlookup is not large enough.")
+    if z_lookup.max() < z_largest or z_lookup.min() > z_smallest:
+        raise ValueError("Range of z_lookup is not large enough.")
 
-    return _spec_den_gw_scaled_core(xlookup, P_vlookup, z, cs)
+    return _spec_den_gw_scaled_core(z_lookup, P_v_lookup, y, cs, Gamma)
 
 
-def _spec_den_gw_scaled_no_z(
-        xlookup: np.ndarray,
-        P_vlookup: np.ndarray,
-        z: None,
-        cs: float) -> tp.Tuple[np.ndarray, np.ndarray]:
-    nx = len(xlookup)
-    zmax = max(xlookup) / (0.5 * (1. + cs) / cs)
-    zmin = min(xlookup) / (0.5 * (1. - cs) / cs)
-    new_z = speedup.logspace(np.log10(zmin), np.log10(zmax), nx)
-    return _spec_den_gw_scaled_core(xlookup, P_vlookup, new_z, cs)
+def _spec_den_gw_scaled_no_y(
+        z_lookup: np.ndarray,
+        P_v_lookup: np.ndarray,
+        y: None,
+        cs: float,
+        Gamma: float) -> tp.Tuple[np.ndarray, np.ndarray]:
+    zmax = z_lookup.max() / (0.5 * (1. + cs) / cs)
+    zmin = z_lookup.min() / (0.5 * (1. - cs) / cs)
+    new_z = speedup.logspace(np.log10(zmin), np.log10(zmax), z_lookup.size)
+    return _spec_den_gw_scaled_core(z_lookup, P_v_lookup, new_z, cs, Gamma)
 
 
 def spec_den_gw_scaled(
-        xlookup: np.ndarray,
-        P_vlookup: np.ndarray,
-        z: np.ndarray = None,
-        cs: float = const.CS0) -> tp.Union[tp.Tuple[np.ndarray, np.ndarray], th.NumbaFunc]:
+        z_lookup: np.ndarray,
+        P_v_lookup: np.ndarray,
+        y: np.ndarray = None,
+        cs: float = const.CS0,
+        Gamma: float = const.GAMMA) -> tp.Union[tp.Tuple[np.ndarray, np.ndarray], th.NumbaFunc]:
     r"""
-    Spectral density of scaled gravitational wave power at values of kR* given
-    by input z array, or at len(xlookup) values of kR* between the min and max
-    of xlookup where the GW power can be computed.
-    (xlookup, P_vlookup) is used as a lookup table to specify function.
-    P_vlookup is the spectral density of the FT of the velocity field,
-    not the spectral density of plane wave coeffs, which is lower by a
-    factor of 2.
+    Spectral density of scaled gravitational wave power
 
+    :param z_lookup: Lookup table for the $z = qL_f$ values corresponding to P_v_lookup
+    :param P_v_lookup: $\bar{U}_f^2 \tilde{P}_v (z)$,
+        a lookup table for the spectral density of the Fourier transform of the velocity field,
+        not the spectral density of plane wave coefficients, which is lower by a factor of 2.
+    :param y: $y = kL_f = kR*$ corresponding to z_lookup. If not given, will be created from z_lookup.
+    :param cs: Speed of sound (in the broken phase after the phase transition)
+    :param Gamma: Mean adiabatic index $\Gamma = \frac{\bar{w}}{\bar{e}}$
     :return: $\hat{\mathcal{P}}$ Eq. 3.33 of Chloe's thesis, which should be ($3\Gamma \bar{U}_f$) Eq. 3.47
         Eq. 3.46 converted to the spectral density and divided by (H L_f)
 
     The factor of 3 comes from the Friedmann equation
     3H^2/(8pi G)
     """
-    if isinstance(z, np.ndarray):
-        return _spec_den_gw_scaled_z(xlookup, P_vlookup, z, cs)
-    if z is None:
-        return _spec_den_gw_scaled_no_z(xlookup, P_vlookup, z, cs)
-    raise TypeError(f"Unknown type for z: {type(z)}")
+    if isinstance(y, np.ndarray):
+        return _spec_den_gw_scaled_y(z_lookup, P_v_lookup, y, cs, Gamma)
+    if y is None:
+        return _spec_den_gw_scaled_no_y(z_lookup, P_v_lookup, y, cs, Gamma)
+    raise TypeError(f"Unknown type for z: {type(y)}")
 
 
 @overload(spec_den_gw_scaled, jit_options={"nopython": True, "nogil": True})
@@ -352,9 +359,9 @@ def _spec_den_gw_scaled_numba(
         z: np.ndarray = None,
         cs: float = const.CS0) -> tp.Union[tp.Tuple[np.ndarray, np.ndarray], th.NumbaFunc]:
     if isinstance(z, numba.types.Array):
-        return _spec_den_gw_scaled_z
+        return _spec_den_gw_scaled_y
     if isinstance(z, (numba.types.NoneType, numba.types.Omitted)):
-        return _spec_den_gw_scaled_no_z
+        return _spec_den_gw_scaled_no_y
     raise TypeError(f"Unknown type for z: {type(z)}")
 
 
@@ -413,7 +420,7 @@ def spec_den_v(
 
     This is twice the spectral density of the plane wave components of the velocity field
 
-    :return: 2 * $P_v(q)$ of :gw_pt_ssm:`\ ` eq. 4.17
+    :return: $P_{\tilde{v}} = 2 * P_v(q)$ of :gw_pt_ssm:`\ ` eq. 4.17
     """
     # z limits
     log10zmin = np.log10(np.min(z))
