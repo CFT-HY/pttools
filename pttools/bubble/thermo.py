@@ -60,7 +60,7 @@ def thermal_energy_density(v_wall: float, eqp: float) -> float:
 
 
 def thermal_energy_density_diff(w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
-    r"""Bubble volume averaged thermal energy density"""
+    r"""Bubble volume averaged thermal energy density difference"""
     return 3/(4*np.pi * v_wall**3) * va_thermal_energy_density_diff(w, xi)
 
 

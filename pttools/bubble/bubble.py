@@ -453,6 +453,12 @@ class Bubble:
     def thermal_energy_density(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
+        return thermo.thermal_energy_density(v_wall=self.v_wall, eqp=self.va_thermal_energy_density)
+
+    @functools.cached_property
+    def thermal_energy_density_diff(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
         return thermo.thermal_energy_density_diff(self.w, self.xi, self.v_wall)
 
     @functools.cached_property
