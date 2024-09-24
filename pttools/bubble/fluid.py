@@ -352,6 +352,9 @@ def sound_shell_detonation(
         vm_tilde_guess: float, wm_guess: float, t_end: float, n_xi: int) -> SolverOutput:
     if transition.cannot_be_detonation(v_wall, v_cj):
         logger.error(f"Too slow wall speed for a detonation: v_wall={v_wall}, v_cj={v_cj}")
+
+    # Todo: use analytical ConstCSModel equations for both phases
+
     # Use bag model as the starting point. This may fail for points near the v_cj curve.
     vp_tilde_bag, vm_tilde_bag, vp_bag, vm_bag = boundary.fluid_speeds_at_wall(
         v_wall, alpha_p=alpha_n, sol_type=SolutionType.DETON)
@@ -393,6 +396,7 @@ def sound_shell_detonation(
     vm_sh = vm
     vm_tilde_sh = vm_tilde
 
+    # Todo: remove this line
     solution_found = True
     # Revert the order of points in the arrays for concatenation
     return np.flip(v), np.flip(w), np.flip(xi), vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wn, wm, wm, solution_found

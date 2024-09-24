@@ -248,6 +248,7 @@ def v_chapman_jouguet_bag(alpha_plus: th.FloatOrArr) -> th.FloatOrArr:
 
 
 def v_chapman_jouguet_const_cs(model: "ConstCSModel", alpha_theta_bar_plus: th.FloatOrArr):
+    # TODO: remove this duplicate function
     discriminant = 3*alpha_theta_bar_plus * (1 - model.csb2 + 3 * model.csb2*alpha_theta_bar_plus)
     denominator = 1/model.csb + 3 * model.csb * alpha_theta_bar_plus
     ret = (1 + np.sqrt(discriminant)) / denominator

@@ -103,7 +103,7 @@ class BubblePlot3D(PlotlyPlot):
 
         for i_xi, xi in enumerate(xi_arr):
             for i_wp, wp in enumerate(wp_arr):
-                vm_tilde, wm = solve_shock(self.model, xi, wp, backwards=True, warn_if_barely_exists=False)
+                vm_tilde, wm = solve_shock(self.model, v1_tilde=xi, w1=wp, backwards=True, warn_if_barely_exists=False)
                 vm_grid[i_xi, i_wp] = lorentz(xi, vm_tilde)
                 wm_grid[i_xi, i_wp] = wm
 

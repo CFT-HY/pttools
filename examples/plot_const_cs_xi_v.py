@@ -51,8 +51,7 @@ def main():
     det3 = Bubble(model3, v_wall=0.95, alpha_n=0.15, sol_type=SolutionType.DETON)
     ax.plot(det3.xi, det3.v, c="r", label=rf"$c_{{s}}={css:.3f}$")
     # This can be expected to fail due to the shape of the curve
-    def3 = Bubble(
-        model3, v_wall=0.4, alpha_n=0.6)
+    def3 = Bubble(model3, v_wall=0.4, alpha_n=0.6)
     ax.plot(def3.xi, def3.v, c="r")
 
     ax.legend()

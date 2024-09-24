@@ -279,6 +279,7 @@ class ConstCSModel(AnalyticModel):
             if model2.alpha_n_min <= alpha_n_min_target:
                 return a_s, a_b, V_s, V_b
 
+        # If no success, try with another V_s
         V_s = V_s_default / 100
         sol: OptimizeResult = minimize_scalar(
             self.alpha_n_min_find_params_solvable,
@@ -292,6 +293,7 @@ class ConstCSModel(AnalyticModel):
             if model2.alpha_n_min <= alpha_n_min_target:
                 return a_s, a_b, V_s, V_b
 
+        # If no success with minimize_scalar, try minimize
         sol: OptimizeResult = minimize(
             self.alpha_n_min_find_params_solvable2,
             x0=np.array([a_s_default, V_s_default]),
@@ -301,6 +303,7 @@ class ConstCSModel(AnalyticModel):
         if sol.success:
             a_s = sol.x[0]
             V_s = sol.x[1]
+        # If all solvers failed
         else:
             msg = f"Failed to find alpha_n_min. Reason: {sol.message}"
             if cancel_on_invalid:
