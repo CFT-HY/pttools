@@ -260,6 +260,10 @@ def solve_junction(
         phase2: Phase,
         v2_tilde_guess: float,
         w2_guess: float,
+        v2_tilde_min: float = None,
+        v2_tilde_max: float = None,
+        w2_min: float = None,
+        w2_max: float = None,
         allow_failure: bool = False,
         allow_negative_entropy_flux_change: bool = False,
         rtol: float = const.JUNCTION_RTOL,
@@ -277,6 +281,17 @@ def solve_junction(
             "Invalid input for junction solver. "
             f"Got: v1={v1_tilde}, w1={w1}, v2_guess={v2_tilde_guess}, w2_guess={w2_guess}")
         return np.nan, np.nan
+    if (v2_tilde_min is not None and (v2_tilde_min < 0 or v2_tilde_max > 0)) or \
+            (v2_tilde_max is not None and (v2_tilde_max < 0 or v2_tilde_min > 0)) or \
+            (w2_min is not None and (w2_min < 0 or w2_min > 1)) or \
+            (w2_max is not None and (w2_max < 0 or w2_max > 1)) or \
+            (v2_tilde_min is not None and v2_tilde_max is not None and v2_tilde_max <= v2_tilde_min) or \
+            (w2_min is not None and w2_max is not None and v2_tilde_max <= v2_tilde_min):
+        logger.error(
+            "Invalid limits for junction solver. "
+            f"Got: v2_tilde_min=%s, v2_tilde_max=%s, w2_min=%s, w2_max=%s"
+        )
+
 
     sol = solve_junction_internal(
         model=model, v1_tilde=v1_tilde, w1=w1,
