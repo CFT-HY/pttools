@@ -8,6 +8,8 @@ import numpy as np
 from pttools.bubble.bubble import Bubble
 from pttools.bubble import fluid_reference
 from pttools.bubble.integrate import precompile
+from pttools.ssmtools.spectrum import DEFAULT_NUC_TYPE, NucType, Spectrum
+from pttools.ssmtools.const import Z_ST_THRESH
 from pttools.speedup import options
 from pttools.speedup import parallel
 if tp.TYPE_CHECKING:
@@ -53,6 +55,33 @@ def create_bubble(
     return bubble
 
 
+def create_spectrum(
+        params: np.ndarray,
+        model: "Model",
+        post_func: callable = None,
+        post_func_return_multiple: bool = False,
+        use_bag_solver: bool = False,
+        bubble_kwargs: tp.Dict[str, any] = None,
+        allow_bubble_failure: bool = False,
+        z: np.ndarray = None,
+        z_st_thresh: float = Z_ST_THRESH,
+        nuc_type: NucType = DEFAULT_NUC_TYPE,
+        *args, **kwargs):
+    bubble = create_bubble(
+        params=params,
+        model=model,
+        use_bag_solver=use_bag_solver,
+        bubble_kwargs=bubble_kwargs,
+        allow_bubble_failure=allow_bubble_failure
+    )
+    spectrum = Spectrum(bubble=bubble, z=z, z_st_thresh=z_st_thresh, nuc_type=nuc_type)
+    if post_func is not None:
+        if post_func_return_multiple:
+            return spectrum, *post_func(spectrum, *args, **kwargs)
+        return spectrum, post_func(spectrum, *args, **kwargs)
+    return spectrum
+
+
 def create_bubbles(
         model: "Model",
         v_walls: np.ndarray,
@@ -62,7 +91,8 @@ def create_bubbles(
         max_workers: int = options.MAX_WORKERS_DEFAULT,
         allow_bubble_failure: bool = False,
         kwargs: tp.Dict[str, any] = None,
-        bubble_kwargs: tp.Dict[str, any] = None) -> tp.Union[np.ndarray, tp.Tuple[np.ndarray, np.ndarray]]:
+        bubble_kwargs: tp.Dict[str, any] = None,
+        bubble_func: callable = create_bubble) -> tp.Union[np.ndarray, tp.Tuple[np.ndarray, np.ndarray]]:
     start_time = time.perf_counter()
     post_func_return_multiple = False
     if func is None:
@@ -100,7 +130,7 @@ def create_bubbles(
 
     # Run the parallel processing
     ret = parallel.run_parallel(
-        create_bubble, params,
+        bubble_func, params,
         multiple_params=True,
         output_dtypes=output_dtypes,
         max_workers=max_workers,
@@ -112,6 +142,30 @@ def create_bubbles(
     elapsed_per_bubble = elapsed / bubble_count
     logger.debug("Creating %s bubbles took %s s in total, %s s per bubble", bubble_count, elapsed, elapsed_per_bubble)
     return ret
+
+
+def create_spectra(
+        model: "Model",
+        v_walls: np.ndarray,
+        alpha_ns: np.ndarray,
+        func: callable = None,
+        log_progress_percentage: float = 5,
+        max_workers: int = options.MAX_WORKERS_DEFAULT,
+        allow_bubble_failure: bool = False,
+        kwargs: tp.Dict[str, any] = None,
+        bubble_kwargs: tp.Dict[str, any] = None):
+    return create_bubbles(
+        model=model,
+        v_walls=v_walls,
+        alpha_ns=alpha_ns,
+        func=func,
+        log_progress_percentage=log_progress_percentage,
+        max_workers=max_workers,
+        allow_bubble_failure=allow_bubble_failure,
+        kwargs=kwargs,
+        bubble_kwargs=bubble_kwargs,
+        bubble_func=create_spectrum
+    )
 
 
 def solve_bubbles(bubbles: np.ndarray, max_workers: int = options.MAX_WORKERS_DEFAULT) -> None:
