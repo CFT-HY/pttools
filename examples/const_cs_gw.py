@@ -12,7 +12,7 @@ import numpy as np
 
 from examples import utils
 from pttools.bubble import lorentz
-from pttools.bubble.shock import solve_shock
+from pttools.bubble.shock import shock_curve
 from pttools.models import ConstCSModel
 from pttools.ssmtools import Spectrum
 from pttools.analysis.parallel import create_spectra
@@ -92,19 +92,23 @@ def main():
     for model in models:
         xi_arr: np.ndarray = np.linspace(model.css, 0.99, n_xi)
         for i_alpha_n, alpha_n in enumerate(alpha_ns):
-            vm_arr: np.ndarray = np.zeros_like(xi_arr)
-            for i_xi, xi in enumerate(xi_arr):
-                wn = model.w_n(alpha_n=alpha_n)
-                vm_tilde, wm = solve_shock(model, v1_tilde=xi, w1=wn, backwards=True, warn_if_barely_exists=False)
-                vm_arr[i_xi] = lorentz(xi, vm_tilde)
-
-            filter_arr = np.logical_or(vm_arr > 1, vm_arr <= 0)
-            # Do not filter the first point
-            filter_arr[0] = 0
-            vm_arr[filter_arr] = np.nan
+            vm_arr = shock_curve(model, alpha_n, xi_arr)
             for i_v_wall, v_wall in enumerate(v_walls):
                 ax = axs2[i_v_wall, i_alpha_n]
                 ax.plot(xi_arr, vm_arr, color="k")
+
+    # Lines
+    k_low = np.logspace(-1, -0.2, 10)
+    p_low = k_low**5 * 10**(-3.5)
+    for ax in axs.flat:
+        ax.plot(k_low, p_low, color="k")
+        ax.text(0.2, 10**(-6), "$k^5$")
+
+    k_high = np.logspace(1, 3, 10)
+    p_high = k_high**(-3) * 10**(-1)
+    for ax in axs.flat:
+        ax.plot(k_high, p_high, color="k")
+        ax.text(100, 10**(-6), "$k^{-3}$")
 
     for ax in axs.flat:
         ax.legend()

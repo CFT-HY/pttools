@@ -6,7 +6,7 @@ import typing as tp
 import numpy as np
 
 from pttools.bubble.bubble import Bubble
-from pttools.bubble import fluid_reference
+from pttools.bubble import fluid_reference, shock_curve
 from pttools.bubble.integrate import precompile
 from pttools.ssmtools.spectrum import DEFAULT_NUC_TYPE, NucType, Spectrum
 from pttools.ssmtools.const import Z_ST_THRESH
@@ -142,6 +142,16 @@ def create_bubbles(
     elapsed_per_bubble = elapsed / bubble_count
     logger.debug("Creating %s bubbles took %s s in total, %s s per bubble", bubble_count, elapsed, elapsed_per_bubble)
     return ret
+
+
+def create_shock_curves(
+        models: tp.List["Model"],
+        alpha_ns: np.ndarray):
+    ret = parallel.run_parallel(
+        shock_curve,
+        output_dtypes=(np.ndarray, ),
+        max_workers=max_workers
+    )
 
 
 def create_spectra(

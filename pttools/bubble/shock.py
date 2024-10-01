@@ -248,6 +248,20 @@ def find_shock_index(
     return i_sh
 
 
+def shock_curve(model: "Model", alpha_n: float, xi: np.ndarray = None):
+    vm_arr: np.ndarray = np.zeros_like(xi)
+    for i_xi, xi_i in enumerate(xi):
+        wn = model.w_n(alpha_n=alpha_n)
+        vm_tilde, wm = solve_shock(model, v1_tilde=xi_i, w1=wn, backwards=True, warn_if_barely_exists=False)
+        vm = relativity.lorentz(xi_i, vm_tilde)
+        # Filter invalid points, but not the first one
+        if i_xi > 0 and (vm > 1 or vm <= 0):
+            vm_arr[i_xi] = np.nan
+        else:
+            vm_arr[i_xi] = vm
+    return vm_arr
+
+
 @numba.njit
 def shock_zoom_last_element(
         v: np.ndarray,
