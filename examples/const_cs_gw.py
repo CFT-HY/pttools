@@ -16,7 +16,7 @@ from pttools.bubble.shock import shock_curve
 from pttools.models import ConstCSModel
 from pttools.ssmtools import Spectrum
 from pttools.analysis.parallel import create_spectra
-from pttools.analysis.utils import A4_PAPER_SIZE
+from pttools.analysis.utils import A3_PAPER_SIZE
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ def main():
     a_s = 5
     a_b = 1
     V_s = 1
-    v_walls: np.ndarray = np.array([0.44, 0.56])
+    v_walls: np.ndarray = np.array([0.44, 0.56, 0.92])
     alpha_ns: np.ndarray = np.array([0.07, 0.2])
     alpha_n_min = np.min(alpha_ns)
 
@@ -36,7 +36,7 @@ def main():
         ConstCSModel(css2=1/4, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_n_min, allow_invalid=allow_invalid),
         ConstCSModel(css2=1/4, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_n_min, allow_invalid=allow_invalid),
     ]
-    css2s = {model.css2 for model in models}
+    # css2s = {model.css2 for model in models}
     csb2s = {model.csb2 for model in models}
     alpha_n_mins = np.array([model.alpha_n_min for model in models])
     if np.any(alpha_n_mins > alpha_n_min):
@@ -51,14 +51,14 @@ def main():
             # bubble_kwargs={"allow_invalid": False}, allow_bubble_failure=True
         )
 
-    fig: plt.Figure = plt.figure(figsize=A4_PAPER_SIZE)
-    fig2: plt.Figure = plt.figure(figsize=A4_PAPER_SIZE)
-    axs: np.ndarray = fig.subplots(2, 2)
-    axs2: np.ndarray = fig2.subplots(2, 2)
+    fig: plt.Figure = plt.figure(figsize=A3_PAPER_SIZE)
+    fig2: plt.Figure = plt.figure(figsize=A3_PAPER_SIZE)
+    axs: np.ndarray = fig.subplots(alpha_ns.size, v_walls.size)
+    axs2: np.ndarray = fig2.subplots(alpha_ns.size, v_walls.size)
     for i_alpha_n, alpha_n in enumerate(alpha_ns):
         for i_v_wall, v_wall in enumerate(v_walls):
-            ax: plt.Axes = axs[i_v_wall, i_alpha_n]
-            ax2: plt.Axes = axs2[i_v_wall, i_alpha_n]
+            ax: plt.Axes = axs[i_alpha_n, i_v_wall]
+            ax2: plt.Axes = axs2[i_alpha_n, i_v_wall]
             for i_model, model in enumerate(models):
                 spectrum: Spectrum = spectra[i_model, i_alpha_n, i_v_wall]
                 if spectrum is not None:
@@ -94,7 +94,7 @@ def main():
         for i_alpha_n, alpha_n in enumerate(alpha_ns):
             vm_arr = shock_curve(model, alpha_n, xi_arr)
             for i_v_wall, v_wall in enumerate(v_walls):
-                ax = axs2[i_v_wall, i_alpha_n]
+                ax = axs2[i_alpha_n, i_v_wall]
                 ax.plot(xi_arr, vm_arr, color="k")
 
     # Lines
