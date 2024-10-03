@@ -45,9 +45,11 @@ def main():
         raise ValueError(msg)
 
     spectra: np.ndarray = np.zeros((len(models), alpha_ns.size, v_walls.size), dtype=object)
+    z = np.logspace(-2, 3, 5000)
     for i_model, model in enumerate(models):
         spectra[i_model, :, :] = create_spectra(
             model=model, v_walls=v_walls, alpha_ns=alpha_ns,
+            spectrum_kwargs={"z": z}
             # bubble_kwargs={"allow_invalid": False}, allow_bubble_failure=True
         )
 
