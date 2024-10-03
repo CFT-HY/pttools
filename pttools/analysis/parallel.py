@@ -62,10 +62,8 @@ def create_spectrum(
         post_func_return_multiple: bool = False,
         use_bag_solver: bool = False,
         bubble_kwargs: tp.Dict[str, any] = None,
+        spectrum_kwargs: tp.Dict[str, any] = None,
         allow_bubble_failure: bool = False,
-        z: np.ndarray = None,
-        z_st_thresh: float = Z_ST_THRESH,
-        nuc_type: NucType = DEFAULT_NUC_TYPE,
         *args, **kwargs):
     bubble = create_bubble(
         params=params,
@@ -74,7 +72,11 @@ def create_spectrum(
         bubble_kwargs=bubble_kwargs,
         allow_bubble_failure=allow_bubble_failure
     )
-    spectrum = Spectrum(bubble=bubble, z=z, z_st_thresh=z_st_thresh, nuc_type=nuc_type)
+    if spectrum_kwargs is None:
+        spectrum = Spectrum(bubble=bubble)
+    else:
+        spectrum = Spectrum(bubble=bubble, **spectrum_kwargs)
+
     if post_func is not None:
         if post_func_return_multiple:
             return spectrum, *post_func(spectrum, *args, **kwargs)
@@ -144,16 +146,6 @@ def create_bubbles(
     return ret
 
 
-def create_shock_curves(
-        models: tp.List["Model"],
-        alpha_ns: np.ndarray):
-    ret = parallel.run_parallel(
-        shock_curve,
-        output_dtypes=(np.ndarray, ),
-        max_workers=max_workers
-    )
-
-
 def create_spectra(
         model: "Model",
         v_walls: np.ndarray,
@@ -163,7 +155,13 @@ def create_spectra(
         max_workers: int = options.MAX_WORKERS_DEFAULT,
         allow_bubble_failure: bool = False,
         kwargs: tp.Dict[str, any] = None,
-        bubble_kwargs: tp.Dict[str, any] = None):
+        bubble_kwargs: tp.Dict[str, any] = None,
+        spectrum_kwargs: tp.Dict[str, any] = None):
+    if kwargs is None:
+        kwargs2 = {"spectrum_kwargs": spectrum_kwargs}
+    else:
+        kwargs2 = kwargs.copy()
+        kwargs2["spectrum_kwargs"] = spectrum_kwargs
     return create_bubbles(
         model=model,
         v_walls=v_walls,
@@ -172,7 +170,7 @@ def create_spectra(
         log_progress_percentage=log_progress_percentage,
         max_workers=max_workers,
         allow_bubble_failure=allow_bubble_failure,
-        kwargs=kwargs,
+        kwargs=kwargs2,
         bubble_kwargs=bubble_kwargs,
         bubble_func=create_spectrum
     )

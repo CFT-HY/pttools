@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from examples import utils
+from pttools.analysis.utils import A4_PAPER_SIZE
 from pttools.bubble import boundary
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.bubble import Bubble
@@ -16,6 +17,7 @@ from pttools.bubble import fluid_bag
 from pttools.bubble import relativity
 from pttools.models.model import Model
 from pttools.models.bag import BagModel
+from pttools.ssmtools.spectrum import Spectrum, power_gw_scaled_bag, spec_den_v_bag
 from tests.paper.plane import xiv_plane
 from tests.paper.plot_plane import plot_plane
 
@@ -77,27 +79,55 @@ def main():
     alpha_ns = [0.578, 0.151, 0.091]
     sol_types = [SolutionType.SUB_DEF, SolutionType.HYBRID, SolutionType.DETON]
 
-    bag_def = Bubble(bag, v_wall=v_walls[0], alpha_n=alpha_ns[0], sol_type=sol_types[0])
-    bag_hybrid = Bubble(bag, v_wall=v_walls[1], alpha_n=alpha_ns[1], sol_type=sol_types[1])
-    bag_det = Bubble(bag, v_wall=v_walls[2], alpha_n=alpha_ns[2], sol_type=sol_types[2])
+    spectra = [
+        Spectrum(
+            Bubble(bag, v_wall=v_walls[i], alpha_n=alpha_ns[i], sol_type=sol_types[i])
+        )
+        for i in range(len(v_walls))
+    ]
+    z = spectra[0].z
 
     data = xiv_plane(separate_phases=False)
-    fig: plt.Figure = plt.figure()
-    ax: plt.Axes = fig.add_subplot()
+    fig: plt.Figure = plt.figure(figsize=A4_PAPER_SIZE)
+    ax, ax2, ax3 = fig.subplots(1, 3)
     plot_plane(ax=ax, data_s=data, selected_solutions=False)
 
-    print("Solving & plotting old")
+    print("Solving & plotting old bubbles")
     for v_wall, alpha_n, sol_type in zip(v_walls, alpha_ns, sol_types):
         v, w, xi = fluid_bag.sound_shell_bag(v_wall=v_wall, alpha_n=alpha_n)
         ax.plot(xi, v, color="blue", label=rf"$v_w={v_wall}, \alpha_n={alpha_n}")
         validate(bag, v, w, xi, sol_type)
 
-    print("Plotting new")
-    for bubble in [bag_def, bag_hybrid, bag_det]:
+        sdv = spec_den_v_bag(z, (v_wall, alpha_n))
+        ax2.plot(z, sdv, label=rf"old, $v_w={v_wall}, \alpha_n={alpha_n}$")
+
+        gw = power_gw_scaled_bag(z, (v_wall, alpha_n))
+        ax3.plot(z, gw, label=rf"old, $v_w={v_wall}, \alpha_n={alpha_n}$")
+
+    print("Plotting new bubbles")
+    for spectrum in spectra:
+        bubble = spectrum.bubble
         ax.plot(bubble.xi, bubble.v, ls=":", color="red")
         validate(bag, bubble.v, bubble.w, bubble.xi, bubble.sol_type)
 
-    # ax.legend()
+        ax2.plot(spectrum.z, spectrum.spec_den_v, label=rf"new, $v_w={bubble.v_wall}, \alpha_n={bubble.alpha_n}$")
+        ax3.plot(spectrum.z, spectrum.pow_gw, label=rf"new, $v_w={bubble.v_wall}, \alpha_n={bubble.alpha_n}$")
+
+    ax.legend()
+
+    ax2.set_xscale("log")
+    ax2.set_yscale("log")
+    ax2.set_xlabel("$z = kR*$")
+    ax2.legend()
+
+    ax3.set_xscale("log")
+    ax3.set_yscale("log")
+    ax3.set_xlabel("$z = kR*$")
+    ax3.set_ylabel(r"$\mathcal{P}_{\text{gw}}(z)$")
+    ax3.legend()
+
+    fig.tight_layout()
+
     return fig
 
 

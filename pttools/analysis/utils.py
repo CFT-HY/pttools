@@ -10,6 +10,7 @@ from pttools.models.base import BaseModel
 from pttools import speedup
 
 A4_PAPER_SIZE: tp.Tuple[float, float] = (11.7, 8.3)
+A3_PAPER_SIZE: tp.Tuple[float, float] = (16.5, 11.7)
 ENABLE_DRAWING: bool = not speedup.GITHUB_ACTIONS
 FigAndAxes = tp.Tuple[plt.Figure, plt.Axes]
 

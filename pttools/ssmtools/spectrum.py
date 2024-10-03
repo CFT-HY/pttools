@@ -54,7 +54,7 @@ class Spectrum:
         # self.de_method = de_method
         # self.method = method
         self.nuc_type = nuc_type
-        self.z = np.logspace(np.log10(0.2), np.log10(1000), 5000) if z is None else z
+        self.z = np.logspace(np.log10(0.2), 3, 5000) if z is None else z
         self.z_st_thresh = z_st_thresh
         # self.nxi = nxi
         self.nt = nt
