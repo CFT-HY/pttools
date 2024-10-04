@@ -54,12 +54,15 @@ class Spectrum:
         # self.de_method = de_method
         # self.method = method
         self.nuc_type = nuc_type
-        self.z = np.logspace(np.log10(0.2), 3, 5000) if z is None else z
+        self.z = np.logspace(-1, 3, 5000) if z is None else z
         self.z_st_thresh = z_st_thresh
         # self.nxi = nxi
         self.nt = nt
         # self.nq = nq
 
+        # $|A(z)|^2$
+        self.a2: tp.Optional[np.ndarray] = None
+        #: $c_s(T_\text{gw})$
         self.cs: tp.Optional[float] = None
         # Todo: fill the missing descriptions
         #: $P_v(q)$
@@ -79,9 +82,9 @@ class Spectrum:
             self.bubble.solve()
         self.cs = np.sqrt(self.bubble.model.cs2(self.bubble.va_enthalpy_density, bubble.Phase.BROKEN))
 
-        self.spec_den_v = spec_den_v(
+        self.spec_den_v, self.a2 = spec_den_v(
             bub=self.bubble, z=self.z, a=1.,
-            nuc_type=self.nuc_type, nt=self.nt, z_st_thresh=self.z_st_thresh, cs=self.cs
+            nuc_type=self.nuc_type, nt=self.nt, z_st_thresh=self.z_st_thresh, cs=self.cs, return_a2=True
         )
         self.pow_v = pow_spec(self.z, spec_den=self.spec_den_v)
         # V2_pow_v = np.trapz(pow_v/self.z, self.z)
@@ -89,6 +92,8 @@ class Spectrum:
         self.spec_den_gw, y = spec_den_gw_scaled(self.z, self.spec_den_v, cs=self.cs)
         self.pow_gw = pow_spec(self.z, spec_den=self.spec_den_gw)
         # gw_power = np.trapz(self.pow_gw/y, y)
+
+    # Plotting
 
     def plot(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None, **kwargs) -> "FigAndAxes":
         from pttools.analysis.plot_spectrum import plot_spectrum
@@ -266,6 +271,9 @@ def _spec_den_gw_scaled_core(
     r""":gw_pt_ssm:`\ ` eq. 3.47 and 3.48
     The variable naming corresponds to the article.
     """
+    if z_lookup.shape != P_v_lookup.shape:
+        raise TypeError("z_lookup and P_v_lookup must be of the same shape.")
+
     # Precompute shared intermediate results
     cs2: float = cs ** 2
     nz: int = z_lookup.size
@@ -415,7 +423,8 @@ def spec_den_v(
         nuc_type: NucType,
         nt: int = const.NPTDEFAULT[1],
         z_st_thresh: float = const.Z_ST_THRESH,
-        cs: float = None):
+        cs: float = None,
+        return_a2: bool = False):
     r"""The full spectral density of the velocity field
 
     This is twice the spectral density of the plane wave components of the velocity field
@@ -434,11 +443,11 @@ def spec_den_v(
     log10tmax = np.log10(tmax)
 
     qT_lookup = 10 ** np.arange(log10zmin + log10tmin, log10zmax + log10tmax, dlog10z)
-    A2_lookup = ssm.a2_e_conserving(bub=bub, z=qT_lookup, z_st_thresh=z_st_thresh, cs=cs)[0]
+    A2_lookup = ssm.a2_e_conserving(bub=bub, z=qT_lookup, cs=cs, z_st_thresh=z_st_thresh)[0]
     # if qT_lookup.size != A2_lookup.size:
     #     raise ValueError(f"Lookup sizes don't match: {qT_lookup.size} != {A2_lookup.size}")
 
-    return _spec_den_v_core(
+    ret = _spec_den_v_core(
         a=a,
         A2_lookup=A2_lookup,
         log10tmin=log10tmin,
@@ -449,6 +458,9 @@ def spec_den_v(
         vw=bub.v_wall,
         z=z
     )
+    if return_a2:
+        return ret, A2_lookup
+    return ret
 
 
 def spec_den_v_bag(

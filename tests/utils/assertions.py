@@ -54,6 +54,11 @@ def assert_allclose(
                 np.testing.assert_allclose(actual, desired, rtol, atol, equal_nan, err_msg, verbose)
             return
 
+    if actual.shape != desired.shape:
+        raise TypeError(
+            f"The actual and desired arrays should of be the same shape. Got: {actual.shape}, {desired.shape}"
+        )
+
     close = np.isclose(actual, desired, rtol=rtol, atol=atol, equal_nan=equal_nan)
     if np.all(close):
         return
