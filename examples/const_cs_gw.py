@@ -100,17 +100,19 @@ def main():
                 ax.plot(xi_arr, vm_arr, color="k")
 
     # Lines
+    pow_low = 9
     k_low = np.logspace(-1, -0.2, 10)
-    p_low = k_low**5 * 10**(-3.5)
+    p_low = k_low**pow_low * 10**(-3.5)
     for ax in axs.flat:
         ax.plot(k_low, p_low, color="k")
-        ax.text(0.2, 10**(-6), "$k^5$")
+        ax.text(0.2, 10**(-6), f"$k^{pow_low}$")
 
+    pow_high = -3
     k_high = np.logspace(1, 3, 10)
-    p_high = k_high**(-3) * 10**(-1)
+    p_high = k_high**pow_high * 10**(-1)
     for ax in axs.flat:
         ax.plot(k_high, p_high, color="k")
-        ax.text(100, 10**(-6), "$k^{-3}$")
+        ax.text(100, 10**(-6), f"$k^{pow_high}$")
 
     for ax in axs.flat:
         ax.legend()
