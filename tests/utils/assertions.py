@@ -49,15 +49,15 @@ def assert_allclose(
         elif not isinstance(desired, np.ndarray):
             desired = np.array(desired, dtype=dtype)
 
+        if actual.shape != desired.shape:
+            raise TypeError(
+                f"The actual and desired arrays should of be the same shape. Got: {actual.shape}, {desired.shape}"
+            )
+
         if actual.ndim >= 3:
             with np.printoptions(edgeitems=30, linewidth=200):
                 np.testing.assert_allclose(actual, desired, rtol, atol, equal_nan, err_msg, verbose)
             return
-
-    if actual.shape != desired.shape:
-        raise TypeError(
-            f"The actual and desired arrays should of be the same shape. Got: {actual.shape}, {desired.shape}"
-        )
 
     close = np.isclose(actual, desired, rtol=rtol, atol=atol, equal_nan=equal_nan)
     if np.all(close):
