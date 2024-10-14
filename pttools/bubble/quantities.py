@@ -49,7 +49,7 @@ def de_from_w_bag(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) 
     :return: energy density difference de
     """
     check.check_physical_params((v_wall, alpha_n))
-    e_from_w = bag.e_bag(w, boundary.get_phase(xi, v_wall), 0.75 * w[-1] * alpha_n)
+    e_from_w = bag.e_bag(w=w, phase=boundary.get_phase(xi, v_wall), theta_s=0.75 * w[-1] * alpha_n)
 
     return e_from_w - e_from_w[-1]
 

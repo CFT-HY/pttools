@@ -4,6 +4,7 @@
 
 import logging
 import sys
+import typing as tp
 
 import numba
 try:
@@ -19,6 +20,7 @@ except ImportError:
     from numba.dispatcher import Dispatcher
     from numba.targets.registry import CPUDispatcher
     NUMBA_OLD_STRUCTURE = True
+import numpy as np
 
 from . import options
 OLD_NUMBALSODA = False
@@ -75,3 +77,7 @@ elif OLD_NUMBALSODA:
     logger.warning(
         "You are using an old version of NumbaLSODA. "
         "Please upgrade, as compatibility may break without notice.")
+
+# For the cases where Numba does not understand a None as a default value
+NAN_ARR: tp.Final[np.ndarray] = np.array([np.nan], dtype=np.float64)
+NAN_ARR.flags.writeable = False

@@ -55,6 +55,7 @@ def a2_e_conserving(
 
     v_ft = speedup.gradient(f) / speedup.gradient(z)
 
+    # This corresponds to de_from_w_bag
     e = bub.model.e(bub.w, bub.phase)
     lam_orig = (e - e[-1]) / w_ip[-1]
 
@@ -87,7 +88,11 @@ def a2_e_conserving_bag(
         alpha_n: float,
         npt: const.NptType = const.NPTDEFAULT,
         de_method: DE_Method = DE_Method.STANDARD,
-        z_st_thresh: float = const.Z_ST_THRESH):
+        z_st_thresh: float = const.Z_ST_THRESH,
+        v_sh: float = None,
+        v_ip: np.ndarray = speedup.NAN_ARR,
+        w_ip: np.ndarray = speedup.NAN_ARR,
+        xi: np.ndarray = speedup.NAN_ARR):
     r"""
     Returns the value of $|A(z)|^2$, where
     $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$,
@@ -103,8 +108,8 @@ def a2_e_conserving_bag(
     nxi = npt[0]
     #    xi_re = np.linspace(0,1-1/nxi,nxi)
     # need to resample for lam = de/w, as some non-zero points are very far apart
-    v_ip, w_ip, xi = bubble.sound_shell_bag(v_wall, alpha_n, nxi)
-    v_sh = None
+    if v_ip.size <= 1 or w_ip.size <= 1 or xi.size <= 1:
+        v_ip, w_ip, xi = bubble.sound_shell_bag(v_wall, alpha_n, nxi)
 
     #    f = np.zeros_like(z)
     #    for j in range(f.size):

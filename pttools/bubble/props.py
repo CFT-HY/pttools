@@ -22,11 +22,13 @@ def find_v_index(xi: np.ndarray, v_target: float) -> int:
 def find_phase(xi: np.ndarray, v_wall: float) -> np.ndarray:
     i_wall = find_v_index(xi, v_wall)
     # This presumes that Phase.SYMMETRIC = 0
-    phase = np.zeros_like(xi)
-    phase[:i_wall] = Phase.BROKEN
+    phase: np.ndarray = np.zeros_like(xi)
+    if i_wall == 0:
+        return phase
+    phase[:i_wall-1] = Phase.BROKEN
     # Fix for detonations
     if np.isclose(xi[i_wall], v_wall):
-        phase[i_wall] = Phase.BROKEN
+        phase[i_wall-1] = Phase.BROKEN
     return phase
 
 
