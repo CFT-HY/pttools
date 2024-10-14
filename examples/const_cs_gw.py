@@ -45,11 +45,11 @@ def main():
         raise ValueError(msg)
 
     spectra: np.ndarray = np.zeros((len(models), alpha_ns.size, v_walls.size), dtype=object)
-    z = np.logspace(-2, 3, 5000)
+    # z = np.logspace(-1, 3, 5000)
     for i_model, model in enumerate(models):
         spectra[i_model, :, :] = create_spectra(
             model=model, v_walls=v_walls, alpha_ns=alpha_ns,
-            spectrum_kwargs={"z": z}
+            # spectrum_kwargs={"z": z}
             # bubble_kwargs={"allow_invalid": False}, allow_bubble_failure=True
         )
 
@@ -70,11 +70,13 @@ def main():
             ax.set_yscale("log")
             ax.set_xlabel("$z = kR*$")
             ax.set_ylabel(r"$\mathcal{P}_{\text{gw}}(z)$")
+            ax.grid()
             title = rf"$\alpha_n={alpha_n}, v_\text{{wall}}={v_wall}$"
             ax.set_title(title)
 
             ax2.set_xlabel(r"$\xi$")
             ax2.set_ylabel(r"$v(\xi)$")
+            ax2.grid()
             ax2.set_title(title)
 
     # Mu curves
@@ -109,10 +111,10 @@ def main():
 
     pow_high = -3
     k_high = np.logspace(1, 3, 10)
-    p_high = k_high**pow_high * 10**(-1)
+    p_high = k_high**pow_high * 10**(-3)
     for ax in axs.flat:
         ax.plot(k_high, p_high, color="k")
-        ax.text(100, 10**(-6), f"$k^{pow_high}$")
+        ax.text(5, 10**(-6.5), f"$k^{pow_high}$")
 
     for ax in axs.flat:
         ax.legend()
