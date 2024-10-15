@@ -87,11 +87,26 @@ class Spectrum:
             nuc_type=self.nuc_type, nt=self.nt, z_st_thresh=self.z_st_thresh, cs=self.cs, return_a2=True
         )
         self.pow_v = pow_spec(self.z, spec_den=self.spec_den_v)
-        # V2_pow_v = np.trapz(pow_v/self.z, self.z)
 
-        self.spec_den_gw, y = spec_den_gw_scaled(self.z, self.spec_den_v, cs=self.cs)
+        # This gives different spectra than the old code
+        self.spec_den_gw, y = spec_den_gw_scaled(z_lookup=self.z, P_v_lookup=self.spec_den_v, cs=self.cs)
+
+        # This gives the same results as the old code
+        eps = 1e-8  # Seems to be needed for max(z) <= 100. Why?
+        nx = const.NPTDEFAULT[2] + 100
+        # Defined on p. 12 between eq. 3.44 and 3.45
+        # Todo: in the article the z here is y there ?! And y = k L_f
+        z_plus = np.max(self.z) * (0.5 * (1. + self.cs) / self.cs) + eps
+        z_minus = np.min(self.z) * (0.5 * (1. - self.cs) / self.cs) - eps
+        # The variable to integrate over in eq. 3.44 and 3.47
+        x = np.logspace(np.log10(z_minus), np.log10(z_plus), nx)
+        sdv2, a2_v2 = spec_den_v(
+            bub=self.bubble, z=x, a=1.,
+            nuc_type=self.nuc_type, nt=self.nt, z_st_thresh=self.z_st_thresh, cs=self.cs, return_a2=True
+        )
+        self.spec_den_gw, y = spec_den_gw_scaled(z_lookup=x, P_v_lookup=sdv2, y=self.z, cs=self.cs)
+
         self.pow_gw = pow_spec(self.z, spec_den=self.spec_den_gw)
-        # gw_power = np.trapz(self.pow_gw/y, y)
 
     # Plotting
 
@@ -328,6 +343,8 @@ def _spec_den_gw_scaled_no_y(
     zmax = z_lookup.max() / (0.5 * (1. + cs) / cs)
     zmin = z_lookup.min() / (0.5 * (1. - cs) / cs)
     new_z = speedup.logspace(np.log10(zmin), np.log10(zmax), z_lookup.size)
+    # Todo: think if this is right
+    # return _spec_den_gw_scaled_core(new_z, P_v_lookup, z_lookup, cs, Gamma)
     return _spec_den_gw_scaled_core(z_lookup, P_v_lookup, new_z, cs, Gamma)
 
 
