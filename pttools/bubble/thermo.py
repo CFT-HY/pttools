@@ -124,15 +124,13 @@ def ubarf2(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, ek_bva: 
 
 
 def wbar(w: np.ndarray, xi: np.ndarray, v_wall: float, wn: float):
-    logger.warning("wbar is not properly tested and may return false results")
-    return wn
-
-    # w_reverse = w[::-1]
-    # i_max = len(w_reverse) - np.argmax(w_reverse != w[-1]) - 1
-    # ret = 1/(v_wall**3) * np.trapz(w[:i_max], xi[:i_max]**3)
-    # if wn is not None and ret <= wn:
-    #     logger.warning(f"Should have wbar > wn. Got: wbar={wn}, wn={wn}")
-    # return ret
+    logger.warning("wbar is not properly tested and may return false results.")
+    w_reverse = w[::-1]
+    i_max = len(w_reverse) - np.argmax(w_reverse != w[-1]) - 1
+    ret = 1/v_wall**3 * np.trapezoid(w[:i_max], xi[:i_max]**3)
+    if not (ret is None or np.isnan(ret)) and ret <= wn:
+        logger.warning(f"Should have wbar > wn. Got: wbar={wn}, wn={wn}")
+    return ret
 
 
 def va_enthalpy_density(eq: float) -> float:
