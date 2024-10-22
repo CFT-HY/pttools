@@ -361,10 +361,30 @@ def sound_shell_detonation(
     wm_bag = boundary.w2_junction(v1=vp_tilde_bag, w1=wn, v2=vm_tilde_bag)
 
     # The bag model works for more points than the pre-generated guesses, so let's use the bag model if we can.
+    # Todo: replace this with the proper version below
     if not np.isnan(vm_tilde_bag):
         vm_tilde_guess = vm_tilde_bag
     if not np.isnan(wm_bag):
         wm_guess = wm_bag
+
+    # if (wm_guess is None or np.isnan(wm_guess)) and not np.isnan(wm_bag):
+    #     wm_guess = wm_bag
+    # if (vm_tilde_guess is None or np.isnan(vm_tilde_guess)) and not np.isnan(vm_tilde_bag):
+    #     vm_tilde_guess = vm_tilde_bag
+
+    # v_mu_tilde_guess = np.sqrt(model.cs2(w=wm_guess, phase=Phase.BROKEN))
+    # v_mu_guess = relativity.lorentz(xi=v_wall, v=v_mu_tilde_guess)
+    # vm_guess = relativity.lorentz(xi=v_wall, v=vm_tilde_guess)
+    # if vm_guess > v_mu_guess:
+    #     vm_guess_old = vm_guess
+    #     vm_guess = 0.5 * v_mu_guess
+    #     vm_tilde_guess = relativity.lorentz(xi=v_wall, v=vm_guess)
+    #     logger.warning(
+    #         "Got an invalid guess for detonation vm, adjusting from vm=%s to vm=%s, vm_tilde=%s",
+    #         vm_guess_old, vm_guess, vm_tilde_guess
+    #     )
+
+    # print(f"vm_guess={vm_tilde_guess}, v_mu_tilde={v_mu_tilde}")
 
     # Solve junction conditions
     vm_tilde, wm = boundary.solve_junction(
@@ -374,9 +394,21 @@ def sound_shell_detonation(
         v2_tilde_guess=vm_tilde_guess, w2_guess=wm_guess,
         allow_negative_entropy_flux_change=True,
     )
-
     # Convert to the plasma frame
     vm = relativity.lorentz(v_wall, vm_tilde)
+
+    # solution_found = True
+    # v_mu_tilde = np.sqrt(model.cs2(w=wm, phase=Phase.BROKEN))
+    # v_mu = relativity.lorentz(xi=v_wall, v=v_mu_tilde)
+    # if vm > v_mu:
+    #     solution_found = False
+    #     logger.error(
+    #         "The detonation solver converged to a hybrid solution. "
+    #         "vm=%s, v_mu=%s, vm_tilde=%s, v_mu_tilde=%s "
+    #         "vm_guess=%s, vm_tilde_guess=%s",
+    #         vm, v_mu, vm_tilde, v_mu_tilde,
+    #         vm_guess, vm_tilde_guess
+    #     )
 
     v, w, xi, t = integrate.fluid_integrate_param(
         v0=vm, w0=wm, xi0=v_wall,
