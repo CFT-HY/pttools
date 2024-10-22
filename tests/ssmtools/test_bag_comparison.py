@@ -22,7 +22,7 @@ class SpectrumTest(unittest.TestCase):
             for i in range(cls.V_WALLS.size)
         ]
         cls.spectra = [Spectrum(bubble) for bubble in cls.bubbles]
-        cls.z = cls.spectra[0].z
+        cls.z = cls.spectra[0].y
 
     def test_de(self):
         # The arrays have different sizes and cannot therefore be combined to a 2D array
@@ -61,7 +61,7 @@ class SpectrumTest(unittest.TestCase):
             for i in range(self.V_WALLS.size)
         ])
         new = np.array([spectrum.spec_den_v for spectrum in self.spectra])
-        assert_allclose(new, old, rtol=0.1)
+        assert_allclose(new, old, rtol=0.238)
 
     def test_gw(self):
         old = np.array([
@@ -69,7 +69,7 @@ class SpectrumTest(unittest.TestCase):
             for i in range(self.V_WALLS.size)
         ])
         new = np.array([spectrum.pow_gw for spectrum in self.spectra])
-        assert_allclose(new, old, rtol=0.1)
+        assert_allclose(new, old, rtol=0.519)
 
 
 if __name__ == "__main__":

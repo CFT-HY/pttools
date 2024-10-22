@@ -64,7 +64,7 @@ def main():
             for i_model, model in enumerate(models):
                 spectrum: Spectrum = spectra[i_model, i_alpha_n, i_v_wall]
                 if spectrum is not None:
-                    ax.plot(spectrum.z, spectrum.pow_gw, label=model.label_latex)
+                    ax.plot(spectrum.y, spectrum.pow_gw, label=model.label_latex)
                     ax2.plot(spectrum.bubble.xi, spectrum.bubble.v, label=model.label_latex)
             ax.set_xscale("log")
             ax.set_yscale("log")

@@ -85,7 +85,7 @@ def main():
         )
         for i in range(len(v_walls))
     ]
-    z = spectra[0].z
+    z = spectra[0].y
 
     data = xiv_plane(separate_phases=False)
     fig: plt.Figure = plt.figure(figsize=A3_PAPER_SIZE)
@@ -119,9 +119,9 @@ def main():
         validate(bag, bubble.v, bubble.w, bubble.xi, bubble.sol_type)
 
         label = rf"new, $v_w={bubble.v_wall}, \alpha_n={bubble.alpha_n}$"
-        ax2.plot(spectrum.z, spectrum.spec_den_v, label=label)
-        ax3.plot(spectrum.z, spectrum.pow_v, label=label)
-        ax4.plot(spectrum.z, spectrum.pow_gw, label=label)
+        ax2.plot(spectrum.z_lookup, spectrum.spec_den_v, label=label)
+        ax3.plot(spectrum.z_lookup, spectrum.pow_v, label=label)
+        ax4.plot(spectrum.y, spectrum.pow_gw, label=label)
 
     ax2.set_ylabel("spec_den_v")
     ax3.set_ylabel("pow_v")

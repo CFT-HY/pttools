@@ -14,14 +14,14 @@ def plot_spectrum(
         path: str = None,
         **kwargs) -> FigAndAxes:
     fig, ax = create_fig_ax(fig, ax)
-    ax.plot(spectrum.z, spectrum.pow_gw, **kwargs)
+    ax.plot(spectrum.y, spectrum.pow_gw, **kwargs)
     ax.set_ylabel("pow_gw")
     return plot_spectrum_common(spectrum, fig, ax, path)
 
 
 def plot_spectrum_common(spectrum: Spectrum, fig: plt.Figure, ax: plt.Axes, path: str = None) -> FigAndAxes:
     ax.set_xlabel("$z$")
-    ax.set_xlim(np.min(spectrum.z), np.max(spectrum.z))
+    ax.set_xlim(np.min(spectrum.y), np.max(spectrum.y))
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.grid()
@@ -51,7 +51,7 @@ def plot_spectrum_v(
         path: str = None,
         **kwargs) -> FigAndAxes:
     fig, ax = create_fig_ax(fig, ax)
-    ax.plot(spectrum.z, spectrum.pow_v, **kwargs)
+    ax.plot(spectrum.y, spectrum.pow_v, **kwargs)
     ax.set_ylabel("pow_v")
     return plot_spectrum_common(spectrum, fig, ax, path)
 
@@ -63,7 +63,7 @@ def plot_spectrum_spec_den_gw(
         path: str = None,
         **kwargs) -> FigAndAxes:
     fig, ax = create_fig_ax(fig, ax)
-    ax.plot(spectrum.z, spectrum.spec_den_gw, **kwargs)
+    ax.plot(spectrum.y, spectrum.spec_den_gw, **kwargs)
     ax.set_ylabel("spec_den_gw")
     return plot_spectrum_common(spectrum, fig, ax, path)
 
@@ -75,6 +75,6 @@ def plot_spectrum_spec_den_v(
         path: str = None,
         **kwargs) -> FigAndAxes:
     fig, ax = create_fig_ax(fig, ax)
-    ax.plot(spectrum.z, spectrum.spec_den_v, **kwargs)
+    ax.plot(spectrum.y, spectrum.spec_den_v, **kwargs)
     ax.set_ylabel("spec_den_v")
     return plot_spectrum_common(spectrum, fig, ax, path)

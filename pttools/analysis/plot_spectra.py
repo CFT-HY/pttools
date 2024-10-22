@@ -17,10 +17,10 @@ def plot_spectra(spectra: tp.List[Spectrum], fig: plt.Figure = None):
 
     for spectrum in spectra:
         label = rf"{spectrum.bubble.model.label_latex}, $v_w={spectrum.bubble.v_wall}, \alpha_n={spectrum.bubble.alpha_n}$"
-        ax_spec_den_v.plot(spectrum.z, spectrum.spec_den_v, label=label)
-        ax_spec_den_gw.plot(spectrum.z, spectrum.spec_den_gw, label=label)
-        ax_pow_v.plot(spectrum.z, spectrum.pow_v, label=label)
-        ax_pow_gw.plot(spectrum.z, spectrum.pow_gw, label=label)
+        ax_spec_den_v.plot(spectrum.y, spectrum.spec_den_v, label=label)
+        ax_spec_den_gw.plot(spectrum.y, spectrum.spec_den_gw, label=label)
+        ax_pow_v.plot(spectrum.y, spectrum.pow_v, label=label)
+        ax_pow_gw.plot(spectrum.y, spectrum.pow_gw, label=label)
 
     for ax in axs.flatten():
         ax.set_xlabel("$kR_*$")
