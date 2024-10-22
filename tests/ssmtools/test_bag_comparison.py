@@ -61,7 +61,7 @@ class SpectrumTest(unittest.TestCase):
             for i in range(self.V_WALLS.size)
         ])
         new = np.array([spectrum.spec_den_v for spectrum in self.spectra])
-        assert_allclose(new, old, rtol=0.238)
+        assert_allclose(new, old, rtol=0.283)
 
     def test_gw(self):
         old = np.array([

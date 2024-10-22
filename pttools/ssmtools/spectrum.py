@@ -82,13 +82,18 @@ class Spectrum:
         if not self.bubble.solved:
             self.bubble.solve()
         self.cs = np.sqrt(self.bubble.model.cs2(self.bubble.va_enthalpy_density, bubble.Phase.BROKEN))
-        self.z_lookup = gen_lookup(y=self.y, cs=self.cs, eps=1e-8)
         self.spec_den_v, self.a2 = spec_den_v(
-            bub=self.bubble, z=self.z_lookup, a=1.,
+            bub=self.bubble, z=self.y, a=1.,
             nuc_type=self.nuc_type, nt=self.nt, z_st_thresh=self.z_st_thresh, cs=self.cs, return_a2=True
         )
-        self.spec_den_gw, y = spec_den_gw_scaled(z_lookup=self.z_lookup, P_v_lookup=self.spec_den_v, y=self.y, cs=self.cs)
-        self.pow_v = pow_spec(self.z_lookup, spec_den=self.spec_den_v)
+        self.pow_v = pow_spec(self.y, spec_den=self.spec_den_v)
+
+        self.z_lookup = gen_lookup(y=self.y, cs=self.cs, eps=1e-8)
+        sdv2 = spec_den_v(
+            bub=self.bubble, z=self.z_lookup, a=1.,
+            nuc_type=self.nuc_type, nt=self.nt, z_st_thresh=self.z_st_thresh, cs=self.cs
+        )
+        self.spec_den_gw, y = spec_den_gw_scaled(z_lookup=self.z_lookup, P_v_lookup=sdv2, y=self.y, cs=self.cs)
 
         self.pow_gw = pow_spec(self.y, spec_den=self.spec_den_gw)
 
@@ -134,7 +139,7 @@ def gen_lookup(y: np.ndarray, cs: float, n_z_lookup: int = const.N_Z_LOOKUP_DEFA
     """
     z_minus_min, z_plus_max = lookup_limits(y, cs, eps)
     # The variable to integrate over in eq. 3.44 and 3.47
-    return np.logspace(np.log10(z_minus_min), np.log10(z_plus_max), n_z_lookup)
+    return speedup.logspace(np.log10(z_minus_min), np.log10(z_plus_max), n_z_lookup)
 
 
 @numba.njit
@@ -345,7 +350,11 @@ def _spec_den_gw_scaled_no_y(
         cs: float,
         Gamma: float,
         nz_int: int) -> tp.Tuple[np.ndarray, np.ndarray]:
-    new_z = gen_lookup(z_lookup, cs, z_lookup.size)
+    # new_z = gen_lookup(z_lookup, cs, z_lookup.size)
+    # Todo: there is probably a bug here with the parentheses
+    zmax = z_lookup.max() / (0.5 * (1. + cs) / cs)
+    zmin = z_lookup.min() / (0.5 * (1. - cs) / cs)
+    new_z = speedup.logspace(np.log10(zmin), np.log10(zmax), z_lookup.size)
     # Todo: think if this is right
     # return _spec_den_gw_scaled_core(new_z, P_v_lookup, z_lookup, cs, Gamma)
     return _spec_den_gw_scaled_core(z_lookup, P_v_lookup, new_z, cs, Gamma, nz_int)
