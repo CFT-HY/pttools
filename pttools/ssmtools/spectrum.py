@@ -353,14 +353,11 @@ def _spec_den_gw_scaled_no_y(
         cs: float,
         Gamma: float,
         nz_int: int) -> tp.Tuple[np.ndarray, np.ndarray]:
-    # new_z = gen_lookup(z_lookup, cs, z_lookup.size)
-    # Todo: there is probably a bug here with the parentheses
-    zmax = z_lookup.max() / (0.5 * (1. + cs) / cs)
-    zmin = z_lookup.min() / (0.5 * (1. - cs) / cs)
-    new_z = speedup.logspace(np.log10(zmin), np.log10(zmax), z_lookup.size)
-    # Todo: think if this is right
-    # return _spec_den_gw_scaled_core(new_z, P_v_lookup, z_lookup, cs, Gamma)
-    return _spec_den_gw_scaled_core(z_lookup, P_v_lookup, new_z, cs, Gamma, nz_int)
+    # This process is the reverse of to gen_lookup()
+    zmax = z_lookup.max() * 2. * cs / (1. + cs)
+    zmin = z_lookup.min() * 2. * cs / (1. - cs)
+    y = speedup.logspace(np.log10(zmin), np.log10(zmax), z_lookup.size)
+    return _spec_den_gw_scaled_core(z_lookup, P_v_lookup, y, cs, Gamma, nz_int)
 
 
 def spec_den_gw_scaled(
