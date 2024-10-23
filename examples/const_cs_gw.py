@@ -49,6 +49,7 @@ def main():
     for i_model, model in enumerate(models):
         spectra[i_model, :, :] = create_spectra(
             model=model, v_walls=v_walls, alpha_ns=alpha_ns,
+            # spectrum_kwargs={"source_duration": 1},
             # spectrum_kwargs={"z": z}
             # bubble_kwargs={"allow_invalid": False}, allow_bubble_failure=True
         )

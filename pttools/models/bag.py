@@ -206,7 +206,7 @@ class BagModel(AnalyticModel):
         e_b = 3*self.a_b * temp**4 + self.V_b
         return e_b * phase + e_s * (1 - phase)
 
-    def nu_lorenzo(self, w: th.FloatOrArr, phase: th.FloatOrArr = Phase.BROKEN) -> th.FloatOrArr:
+    def nu_gdh2024(self, w: th.FloatOrArr, phase: th.FloatOrArr = Phase.BROKEN) -> th.FloatOrArr:
         return np.zeros_like(w) * np.zeros_like(phase)
 
     def omega(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
