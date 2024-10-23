@@ -656,6 +656,16 @@ class Model(BaseModel, abc.ABC):
         temp = self.temp(w, phase)
         return self.ge_temp(temp, phase)
 
+    def nu_lorenzo(self, w: th.FloatOrArr, phase: th.FloatOrArr = Phase.BROKEN) -> th.FloatOrArr:
+        r"""$$\nu = \frac{1 - 3\omega}{1 + 3\omega}$$ of eq. 2.11 in :giombi_2024:`\ ` eq. 2.11"""
+        omega = self.omega(w, phase)
+        return (1 - 3*omega)/(1 + 3*omega)
+
+    def omega(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Barotropic equation of state parameter $\omega$"""
+        temp = self.temp(w, phase)
+        return self.p_temp(temp, phase) / self.e_temp(temp, phase)
+
     def p(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Pressure $p(w,\phi)$. Calls the temperature-based function.
 

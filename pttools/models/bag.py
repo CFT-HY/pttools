@@ -6,7 +6,7 @@ import typing as tp
 import numba
 import numpy as np
 
-from pttools.bubble.boundary import SolutionType
+from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.transition import identify_solution_type_bag
 from pttools.models.analytic import AnalyticModel
 from pttools.speedup.utils import copy_doc
@@ -205,6 +205,12 @@ class BagModel(AnalyticModel):
         e_s = 3*self.a_s * temp**4 + self.V_s
         e_b = 3*self.a_b * temp**4 + self.V_b
         return e_b * phase + e_s * (1 - phase)
+
+    def nu_lorenzo(self, w: th.FloatOrArr, phase: th.FloatOrArr = Phase.BROKEN) -> th.FloatOrArr:
+        return np.zeros_like(w) * np.zeros_like(phase)
+
+    def omega(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        return 1/3 * np.ones_like(w) * np.ones_like(phase)
 
     def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Pressure $p(T,\phi)$, :notes:`\ `, eq. 5.14, 7.1, 7.33, :giese_2021:`\ `, eq. 18

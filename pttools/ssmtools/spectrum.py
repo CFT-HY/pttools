@@ -322,6 +322,9 @@ def _spec_den_gw_scaled_core(
             * np.interp((z_plus + z_minus - z), z_lookup, P_v_lookup)
         p_gw[i] = p_gw_factor / y[i] * np.trapz(integrand, z)
 
+    # Giombi et al., 2024, eq. 3.13
+    # lorenzo_factor = 1 / (1 + 2*nu) * (1 - (1 + delta_eta_v / eta_star)**(-1 - 2*nu))
+
     # Eq. 3.48 has a factor of 3 Gamma^2
     # The P_v_lookup is 0.5 \tilde{P}_v, which gives a factor of (1/2)^2 = 1/4
     # Combined, these result in 3/4 Gamma^2
