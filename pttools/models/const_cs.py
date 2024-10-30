@@ -80,6 +80,8 @@ class ConstCSModel(AnalyticModel):
         self.mu = cs2_to_mu(css2)
         self.nu = cs2_to_mu(csb2)
         self.T_ref = T_ref
+        # This seems to contain invalid assumptions and approximations.
+        # self.alpha_n_min_limit_cs = (self.mu - self.nu) / (3*self.mu)
         self.const_cs_wn_const: float = 4 / 3 * (1 / self.nu - 1 / self.mu)
 
         if T_crit_guess is None:
@@ -103,6 +105,9 @@ class ConstCSModel(AnalyticModel):
             name=name, label_latex=label_latex, label_unicode=label_unicode,
             allow_invalid=allow_invalid
         )
+        # This can only be set after self.a_s and self.a_b are set.
+        # This seems to contain invalid assumptions and approximations.
+        # self.alpha_n_min_limit_a = (self.a_s - self.a_b) / (3 * self.a_s)
 
     @staticmethod
     def validate_cs2(cs2: float, name: str = "cs2") -> float:
@@ -112,6 +117,10 @@ class ConstCSModel(AnalyticModel):
             logger.warning(f"{name} is slightly over 1/3. Changing it to 1/3.")
             return 1/3
         return cs2
+
+    # def a_s_min(self, a_b: th.FloatOrArr, alpha_n: th.FloatOrArr) -> th.FloatOrArr:
+    #     """Theoretical minimum for $a_s$"""
+    #     return self.nu / (self.mu * (1 - 3*alpha_n)) * a_b
 
     def alpha_n(
             self,
@@ -153,6 +162,23 @@ class ConstCSModel(AnalyticModel):
                 ret[invalid] = np.nan
         return ret
 
+    # def alpha_n_error_msg(self, alpha_n: th.FloatOrArr, name: str = "alpha_n") -> str:
+    #     # Additional parameter: a_limit: bool = True
+    #
+    #     if not np.isscalar(alpha_n):
+    #         alpha_n = np.min(alpha_n)
+    #     # msg = \
+    #         f"Got invalid {name}={alpha_n}, since " \
+    #     #     f"alpha_n_min_limit_cs={self.alpha_n_min_limit_cs} for css2={self.css2}, csb2={self.csb2} "\
+    #     #     f"({'fail' if alpha_n < self.alpha_n_min_limit_cs else 'OK'})"
+    #     # if a_limit:
+    #     #     msg += \
+    #     msg = \
+    #         f"Got invalid {name}={alpha_n}, since " \
+    #         f"alpha_n_min_limit_a={self.alpha_n_min_limit_a} for a_s={self.a_s}, a_b={self.a_b} "\
+    #         f"({'fail' if alpha_n < self.alpha_n_min_limit_a else 'OK'})"
+    #     return msg
+
     def alpha_n_min_find(self, w_min: float = None, w_max: float = None) -> tp.Tuple[float, float]:
         # xopt, fval = super().alpha_n_min_find(w_min=w_min, w_max=w_max)
         analytical = self.alpha_n(self.w_crit)
@@ -188,10 +214,8 @@ class ConstCSModel(AnalyticModel):
                 safety_factor_alpha=safety_factor_alpha
             )
 
-        # alpha_n_min_limit = (self.mu - self.nu) / (3*self.mu)
-        # if alpha_n_min_target < alpha_n_min_limit:
-        #     msg = f"Got invalid alpha_n_min_target={alpha_n_min_target}, since "\
-        #           f"alpha_n_min_limit={alpha_n_min_limit} for css2={self.css2}, csb2={self.csb2}"
+        # if alpha_n_min_target < self.alpha_n_min_limit_cs:
+        #     msg = self.alpha_n_error_msg(alpha_n=alpha_n_min_target, name="alpha_n_min_target", a_limit=False)
         #     if cancel_on_invalid:
         #         logger.error(
         #             msg + ". Using given defaults a_s=%s, a_b=%s, V_s=%s, V_b=%s",
@@ -204,7 +228,7 @@ class ConstCSModel(AnalyticModel):
         #         raise ValueError(msg)
         #     if nan_on_invalid:
         #         return np.nan, a_b, np.nan, V_b
-        #
+
         # if np.isclose(self.nu, 4):
         #     # Assuming Tc = T0 = 1
         #     tn_tc = 2 - safety_factor_a
@@ -456,26 +480,6 @@ class ConstCSModel(AnalyticModel):
         const = (self.V_b - self.V_s) * self.T_ref ** 4
         return self.a_s * (temp / self.T_ref)**self.mu - self.a_b * (temp / self.T_ref)**self.nu + const
 
-    # def alpha_plus(
-    #         self,
-    #         wp: th.FloatOrArr, wm: th.FloatOrArr = None,
-    #         allow_negative: bool = False, analytical: bool = True) -> th.FloatOrArr:
-    #     r"""Transition strength parameter $\alpha_+$"""
-    #     if not analytical:
-    #         if wm is None:
-    #             raise ValueError("wm must be provided for non-analytical alpha_plus.")
-    #         return super().alpha_plus(wp, wm, allow_negative)
-    #
-    #
-    #
-    #     if wp < 0:
-    #         logger.error("Got negative wp for alpha_plus")
-    #         if not allow_negative:
-    #             raise ValueError("Got negative wp for alpha_plus")
-    #
-    #     # V_s > V_b is handled by BaseModel
-    #     return 4/(3*wp) * (self.V_s - self.V_b)
-
     def gen_cs2(self):
         # These become compile-time constants
         css2 = self.css2
@@ -639,6 +643,19 @@ class ConstCSModel(AnalyticModel):
                 nan_on_invalid=nan_on_invalid,
                 log_invalid=log_invalid
             )
+        # invalid_alpha_n = alpha_n < self.alpha_n_min_limit_a or alpha_n < self.alpha_n_min_limit_cs
+        # if np.any(invalid_alpha_n):
+        #     msg = self.alpha_n_error_msg(alpha_n=alpha_n)
+        #     if log_invalid:
+        #         logger.error(msg)
+        #     if error_on_invalid:
+        #         raise ValueError(msg)
+        #     if nan_on_invalid:
+        #         if np.isscalar(alpha_n):
+        #             return np.nan
+        #         alpha_n = alpha_n.copy()
+        #         alpha_n[invalid_alpha_n] = np.nan
+
         if analytical and np.isclose(self.nu, 4):
             wn = self.bag_wn_const / (alpha_n + (4/self.mu - 1)/3)
             if np.any(wn < 0):
