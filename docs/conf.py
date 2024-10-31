@@ -146,7 +146,7 @@ extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
     "borsanyi_2016": ("https://arxiv.org/abs/1606.07494%s", "Borsanyi et al., 2016%s"),
     "giese_2020": ("https://arxiv.org/abs/2004.06995%s", "Giese et al., 2020%s"),
     "giese_2021": ("https://arxiv.org/abs/2010.09744%s", "Giese et al., 2021%s"),
-    "giombi_2024": ("https://arxiv.org/abs/2409.01426", "Giombi et al., 2024%2"),
+    "giombi_2024": ("https://arxiv.org/abs/2409.01426", "Giombi et al., 2024%s"),
     # Other
     "aof_grant": (
         "https://akareport.aka.fi/ibi_apps/WFServlet?IBIF_ex=x_hakkuvaus2&CLICKED_ON=&HAKNRO1=%s&UILANG=en&TULOSTE=HTML",
