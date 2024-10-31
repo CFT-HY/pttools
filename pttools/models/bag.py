@@ -206,11 +206,13 @@ class BagModel(AnalyticModel):
         e_b = 3*self.a_b * temp**4 + self.V_b
         return e_b * phase + e_s * (1 - phase)
 
-    def nu_gdh2024(self, w: th.FloatOrArr, phase: th.FloatOrArr = Phase.BROKEN) -> th.FloatOrArr:
-        return np.zeros_like(w) * np.zeros_like(phase)
+    # def nu_gdh2024(self, w: th.FloatOrArr, phase: th.FloatOrArr = Phase.BROKEN) -> th.FloatOrArr:
+    #     """This is not the case when V != 0"""
+    #     return np.zeros_like(w) * np.zeros_like(phase)
 
-    def omega(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        return 1/3 * np.ones_like(w) * np.ones_like(phase)
+    # def omega(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    #     """This is not the case when V != 0"""
+    #     return 1/3 * np.ones_like(w) * np.ones_like(phase)
 
     def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Pressure $p(T,\phi)$, :notes:`\ `, eq. 5.14, 7.1, 7.33, :giese_2021:`\ `, eq. 18
