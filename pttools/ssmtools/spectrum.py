@@ -95,12 +95,15 @@ class Spectrum:
             bub=self.bubble, z=self.z_lookup, a=1.,
             nuc_type=self.nuc_type, nt=self.nt, z_st_thresh=self.z_st_thresh, cs=self.cs
         )
-        self.spec_den_gw, y = spec_den_gw_scaled(z_lookup=self.z_lookup, P_v_lookup=sdv2, y=self.y, cs=self.cs, sssd_factor=self.sssd_factor())
+        self.spec_den_gw, y = spec_den_gw_scaled(
+            z_lookup=self.z_lookup, P_v_lookup=sdv2, y=self.y, cs=self.cs,
+            source_lifetime_factor=self.source_lifetime_factor()
+        )
 
         self.pow_gw = pow_spec(self.y, spec_den=self.spec_den_gw)
 
-    def sssd_factor(self) -> float:
-        r"""Sound speed & source duration correction factor :giombi_2024:`\ `, eq. 3.13"""
+    def source_lifetime_factor(self) -> float:
+        r"""Source lifetime correction factor :giombi_2024:`\ `, eq. 3.13"""
         nu_gdh2024 = self.bubble.model.nu_gdh2024(self.bubble.va_enthalpy_density)
         ret = 1 / (1 + 2*nu_gdh2024)
         if not np.isinf(self.source_duration):
@@ -303,7 +306,7 @@ def _spec_den_gw_scaled_core(
         y: np.ndarray,
         cs: float,
         Gamma: float,
-        sssd_factor: float,
+        source_lifetime_factor: float,
         nz_int: int) -> tp.Tuple[np.ndarray, np.ndarray]:
     r""":gw_pt_ssm:`\ ` eq. 3.47 and 3.48
     The variable naming corresponds to the article.
@@ -337,7 +340,7 @@ def _spec_den_gw_scaled_core(
     # Eq. 3.48 has a factor of 3 Gamma^2
     # The P_v_lookup is 0.5 \tilde{P}_v, which gives a factor of (1/2)^2 = 1/4
     # Combined, these result in 3/4 Gamma^2
-    return 0.75 * Gamma**2 * p_gw * sssd_factor, y
+    return 0.75 * Gamma ** 2 * p_gw * source_lifetime_factor, y
 
 
 def _spec_den_gw_scaled_y(
@@ -346,14 +349,14 @@ def _spec_den_gw_scaled_y(
         y: np.ndarray,
         cs: float,
         Gamma: float,
-        sssd_factor: float,
+        source_lifetime_factor: float,
         nz_int: int) -> tp.Tuple[np.ndarray, np.ndarray]:
 
     z_lookup_min, z_lookup_max = lookup_limits(y, cs)
     if z_lookup.max() < z_lookup_max or z_lookup.min() > z_lookup_min:
         raise ValueError("Range of z_lookup is not large enough.")
 
-    return _spec_den_gw_scaled_core(z_lookup, P_v_lookup, y, cs, Gamma, sssd_factor, nz_int)
+    return _spec_den_gw_scaled_core(z_lookup, P_v_lookup, y, cs, Gamma, source_lifetime_factor, nz_int)
 
 
 def _spec_den_gw_scaled_no_y(
@@ -362,13 +365,13 @@ def _spec_den_gw_scaled_no_y(
         y: None,
         cs: float,
         Gamma: float,
-        sssd_factor: float,
+        source_lifetime_factor: float,
         nz_int: int) -> tp.Tuple[np.ndarray, np.ndarray]:
     # This process is the reverse of to gen_lookup()
     zmax = z_lookup.max() * 2. * cs / (1. + cs)
     zmin = z_lookup.min() * 2. * cs / (1. - cs)
     y = speedup.logspace(np.log10(zmin), np.log10(zmax), z_lookup.size)
-    return _spec_den_gw_scaled_core(z_lookup, P_v_lookup, y, cs, Gamma, sssd_factor, nz_int)
+    return _spec_den_gw_scaled_core(z_lookup, P_v_lookup, y, cs, Gamma, source_lifetime_factor, nz_int)
 
 
 def spec_den_gw_scaled(
@@ -377,7 +380,7 @@ def spec_den_gw_scaled(
         y: np.ndarray = None,
         cs: float = const.CS0,
         Gamma: float = const.GAMMA,
-        sssd_factor: float = 1.,
+        source_lifetime_factor: float = 1.,
         nz_int: int = None) -> tp.Union[tp.Tuple[np.ndarray, np.ndarray], th.NumbaFunc]:
     r"""
     Spectral density of scaled gravitational wave power
@@ -396,9 +399,9 @@ def spec_den_gw_scaled(
     3H^2/(8pi G)
     """
     if isinstance(y, np.ndarray):
-        return _spec_den_gw_scaled_y(z_lookup, P_v_lookup, y, cs, Gamma, sssd_factor, nz_int)
+        return _spec_den_gw_scaled_y(z_lookup, P_v_lookup, y, cs, Gamma, source_lifetime_factor, nz_int)
     if y is None:
-        return _spec_den_gw_scaled_no_y(z_lookup, P_v_lookup, y, cs, Gamma, sssd_factor, nz_int)
+        return _spec_den_gw_scaled_no_y(z_lookup, P_v_lookup, y, cs, Gamma, source_lifetime_factor, nz_int)
     raise TypeError(f"Unknown type for z: {type(y)}")
 
 
