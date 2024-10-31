@@ -46,6 +46,11 @@ class AnalyticModel(Model, abc.ABC):
             gen_cs2_neg: bool = True,
             allow_invalid: bool = False,
             auto_potential: bool = False):
+        if V_b != 0:
+            logger.warning(
+                "Got V_b = %s != 0. This may result in inaccurate results with the GW spectrum computation, "
+                "as the GW spectrum equations presume V_b = 0.", V_b)
+
         self.a_s: float
         self.a_b: float
         if a_s is not None and a_b is not None and g_s is None and g_b is None:
