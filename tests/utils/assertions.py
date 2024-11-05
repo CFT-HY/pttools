@@ -17,6 +17,7 @@ def assert_allclose(
         equal_nan: bool = True,
         err_msg: str = "",
         verbose: bool = True,
+        name: str = None,
         fmt: str = printing.DEFAULT_FMT,
         dtype: np.dtype = np.float64):
     """Assert that all array elements correspond to the reference within the given tolerances
@@ -28,6 +29,7 @@ def assert_allclose(
     :param equal_nan: whether NaN values should be considered as equal
     :param err_msg: the error message to be printed in case of failure for dim >= 3 arrays
     :param verbose: whether to print additional info
+    :param name: name of the array (printed to help identifying the cause of the error in for loops)
     :param fmt: formatting for printing the values
     :param dtype: data type for conversion from list to ndarray
     """
@@ -63,7 +65,7 @@ def assert_allclose(
     if np.all(close):
         return
 
-    print(f"assert_allclose failed in {inspect.stack()[1].function}")
+    print(f"assert_allclose failed {f'for {name} ' if name is not None else ''}in {inspect.stack()[1].function}")
     print(f"Not equal to tolerance rtol={rtol}, atol={atol}")
     if is_scalar:
         print(f"Absolute difference: {np.abs(actual - desired)}")

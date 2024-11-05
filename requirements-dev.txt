@@ -3,7 +3,7 @@
 # -r requirements.txt
 allure-pytest >= 2.13.5
 colorama >= 0.4.6
-# pandas
+pandas >= 2.2.3
 # For Numba system info
 psutil >= 6.0.0
 pyan3 >= 1.1.1, != 1.2.0
