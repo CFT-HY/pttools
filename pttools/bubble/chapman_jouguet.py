@@ -238,7 +238,8 @@ def v_chapman_jouguet_bag(alpha_plus: th.FloatOrArr) -> th.FloatOrArr:
     :notes:` \` p. 40
 
     $$v_{CJ}(\alpha_+) = \frac{1}{\sqrt{3}} \frac{1 + \sqrt{2\alpha_+ + 3 \alpha_+^2}}{1 + \alpha_+}$$
-    This differs from :notes:` \` eq. 7.34 and `\ ` eq. B.19 by a factor of 2.
+    This differs from :notes:` \` eq. 7.34 and `\ ` eq. B.19 and :giombi_2024_gr:`\ ` eq. 2.23 by a factor of 2.
+    Other sources: :gowling_2021:`\ ` eq. 2.4
     It should be noted that $v_{CJ} \in [0, 1] \forall \alpha_+ >= 0$.
 
     The Chapman-Jouguet speed can be different for other models,
