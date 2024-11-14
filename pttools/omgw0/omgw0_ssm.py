@@ -9,7 +9,7 @@ Created on 10/11/21
 
 import numpy as np
 
-import pttools.omgw0.ke_frac_approx as K
+import pttools.bubble.ke_frac_approx as K
 import pttools.omgw0.suppression as sup
 from pttools.ssmtools.const import NPTDEFAULT, NptType
 import pttools.ssmtools.spectrum as ssm
@@ -57,14 +57,14 @@ def F_gw0(
     r"""Power attenuation following the end of the radiation era
     $$F_{\text{gw},0} = \Omega_{\gamma,0} \left( \frac{g_{s0}}{g_{s*}} \right)^{4/9} \frac{g_*}{g_0}
     = (3.57 \pm 0.05) \cdot 10^{-5} \left( \frac{100}{g_*} \right)^{1/3}$$
-    :gowling_2021:`\ ` eq. 2.11
+    There is a typo in :gowling_2021:`\ ` eq. 2.11: the $\frac{4}{9}$ should be $\frac{4}{3}$.
     """
     if gs0 is None or gs_star is None or g0 is None or om_gamma0 is None:
         return 3.57e-5 * (100/g_star)**(1/3)
-    return om_gamma0 * (gs0 / gs_star)**(4/9) * g_star / g0
+    return om_gamma0 * (gs0 / gs_star)**(4/3) * g_star / g0
 
 
-def J(r_star: th.FloatOrArr, K_frac: th.FloatOrArr) -> th.FloatOrArr:
+def J(r_star: th.FloatOrArr, K_frac: th.FloatOrArr, nu: float = 0) -> th.FloatOrArr:
     r"""
     Pre-factor to convert power_gw_scaled to predicted spectrum
     approximation of $(H_n R_*)(H_n \tau_v)$
@@ -74,7 +74,7 @@ def J(r_star: th.FloatOrArr, K_frac: th.FloatOrArr) -> th.FloatOrArr:
     :gowling_2021:`\ ` eq. 2.8
     """
     sqrt_K = np.sqrt(K_frac)
-    return r_star * (1 - 1/(np.sqrt(1 + 2*r_star/sqrt_K)))
+    return r_star * (1 - (np.sqrt(1 + 2*r_star/sqrt_K)**(-1-2*nu)))
 
 
 def omgw0_bag(
@@ -84,7 +84,7 @@ def omgw0_bag(
         r_star: float,
         T: float = const.T_default,
         npt: NptType = NPTDEFAULT,
-        suppression: sup.SuppressionMethod = const.SUP_METHOD_DEFAULT):
+        suppression: sup.SuppressionMethod = sup.SuppressionMethod.DEFAULT):
     r"""
     For given set of thermodynamic parameters vw, alpha, rs and Tn calculates the power spectrum using
     the SSM as encoded in the PTtools module (omgwi)

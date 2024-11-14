@@ -7,13 +7,17 @@ Created on wed 4 Aug  2021
 """
 
 import enum
+import logging
 import os
+
 import numpy as np
 from scipy import interpolate
 from scipy.interpolate import InterpolatedUnivariateSpline
 
 from pttools.omgw0.suppression.suppression_ssm_data.suppression_ssm_calculator import SUPPRESSION_FOLDER
 import pttools.type_hints as th
+
+logger = logging.getLogger(__name__)
 
 SUPPRESSION_PATH = os.path.join(SUPPRESSION_FOLDER, "suppression_no_hybrids_ssm.npz")
 
@@ -82,24 +86,23 @@ def get_suppression_factor(vw: float, alpha: float, method: SuppressionMethod = 
     - "ext_constant" = extends the boundaries with a constant value
     - "ext_linear_Ubarf" = :TODO extend with linear Ubarf
     """
+    if method == SuppressionMethod.NONE:
+        return 1
     if alpha > alpha_n_max_approx(vw):
-        print("vw alpha combo unphysical")
         supp_factor = np.nan
     else:
         vv_n, aa_n = np.meshgrid(vw, alpha)
         if method == SuppressionMethod.NO_EXT:
             supp_factor = interpolate.griddata((vws_sim, alphas_sim), ssm_sup, (vv_n, aa_n), method="linear")[0]
-
         elif method == SuppressionMethod.EXT_CONSTANT:
-            if alpha < min(alphas_sim_ext):
+            if alpha < np.min(alphas_sim_ext):
                 supp_factor = 1
-
-            supp_factor = interpolate.griddata((vws_sim_ext, alphas_sim_ext), ssm_sup_ext, (vv_n, aa_n), method="linear")[0]
-
+            else:
+                supp_factor = interpolate.griddata((vws_sim_ext, alphas_sim_ext), ssm_sup_ext, (vv_n, aa_n), method="linear")[0]
         else:
-            supp_factor = np.nan
-            print("Invalid option given , options are method = \"no_ext\" or \"ext_constant\"")
-
+            raise ValueError(f"Got invalid suppression method: {method}")
+    if np.isnan(supp_factor):
+        logger.warning("Got NaN as the suppression factor. Are you outside the range?")
     return supp_factor
 
 
