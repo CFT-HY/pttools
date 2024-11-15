@@ -134,6 +134,9 @@ class Spectrum:
     def g_star(self) -> float:
         return self.bubble.model.gp(w=self.bubble.va_enthalpy_density, phase=bubble.Phase.BROKEN)
 
+    def noise(self) -> th.FloatOrArr:
+        return omgw0.omega_noise(self.f())
+
     def omgw0(
             self,
             g0: float = omgw0.G0,
@@ -141,6 +144,9 @@ class Spectrum:
             suppression: omgw0.SuppressionMethod = omgw0.SuppressionMethod.DEFAULT):
         sup = omgw0.get_suppression_factor(vw=self.bubble.v_wall, alpha=self.bubble.alpha_n, method=suppression)
         return self.F_gw0(g0=g0, gs0=gs0) * self.pow_gw * sup
+
+    def signal_to_noise_ratio(self) -> float:
+        return omgw0.signal_to_noise_ratio(f=self.f(), signal=self.omgw0(), noise=self.noise())
 
     @functools.cached_property
     def source_lifetime_factor(self) -> float:
