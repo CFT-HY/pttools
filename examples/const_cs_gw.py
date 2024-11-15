@@ -89,7 +89,7 @@ def main():
             ax.plot(xi_mu, v_mu, ls=":", c="k")
 
     for ax in axs2.flat:
-        ax.set_xlim(0.3, 0.7)
+        ax.set_xlim(0.4, 0.7)
         ax.set_ylim(0, 0.4)
 
     # Shock surfaces
@@ -108,14 +108,14 @@ def main():
     p_low = k_low**pow_low * 10**(-3.5)
     for ax in axs.flat:
         ax.plot(k_low, p_low, color="k")
-        ax.text(0.2, 10**(-6), f"$k^{pow_low}$")
+        ax.text(0.25, 10**(-6), f"$k^{pow_low}$")
 
     pow_high = -3
     k_high = np.logspace(1, 3, 10)
     p_high = k_high**pow_high * 10**(-3)
     for ax in axs.flat:
         ax.plot(k_high, p_high, color="k")
-        ax.text(5, 10**(-6.5), f"$k^{pow_high}$")
+        ax.text(5, 10**(-6.5), f"$k^{{{pow_high}}}$")
 
     for ax in axs.flat:
         ax.legend()
