@@ -5,7 +5,7 @@ import numpy as np
 from pttools.bubble import Bubble
 from pttools.bubble.quantities import de_from_w_bag
 from pttools.models import BagModel
-from pttools.ssmtools import Spectrum
+from pttools.ssmtools import SSMSpectrum
 from pttools import ssmtools
 from tests.utils.assertions import assert_allclose
 
@@ -21,7 +21,7 @@ class SpectrumTest(unittest.TestCase):
             Bubble(cls.model, v_wall=cls.V_WALLS[i], alpha_n=cls.ALPHA_NS[i])
             for i in range(cls.V_WALLS.size)
         ]
-        cls.spectra = [Spectrum(bubble) for bubble in cls.bubbles]
+        cls.spectra = [SSMSpectrum(bubble) for bubble in cls.bubbles]
         cls.z = cls.spectra[0].y
 
     def test_de(self):

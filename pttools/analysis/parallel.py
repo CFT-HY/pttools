@@ -6,10 +6,9 @@ import typing as tp
 import numpy as np
 
 from pttools.bubble.bubble import Bubble
-from pttools.bubble import fluid_reference, shock_curve
+from pttools.bubble import fluid_reference
 from pttools.bubble.integrate import precompile
-from pttools.ssmtools.spectrum import DEFAULT_NUC_TYPE, NucType, Spectrum
-from pttools.ssmtools.const import Z_ST_THRESH
+from pttools.omgw0.omgw0_ssm import Spectrum
 from pttools.speedup import options
 from pttools.speedup import parallel
 if tp.TYPE_CHECKING:

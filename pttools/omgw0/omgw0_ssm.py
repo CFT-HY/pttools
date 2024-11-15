@@ -7,19 +7,63 @@ Created on 10/11/21
 @author: chloeg, markh
 """
 
+import functools
+
 import numpy as np
 
+from pttools.bubble.boundary import Phase
 import pttools.bubble.ke_frac_approx as K
 import pttools.omgw0.suppression as sup
 from pttools.ssmtools.const import NPTDEFAULT, NptType
 import pttools.ssmtools.spectrum as ssm
 import pttools.type_hints as th
 from . import const
+from . import noise
 
 
-################################
-# SGWB as calculated by PTtools (SSM)
-################################
+class Spectrum(ssm.SSMSpectrum):
+    def f(self, z: np.ndarray = None) -> th.FloatOrArr:
+        if z is None:
+            z = self.y
+        return f(z=z, r_star=self.r_star, f_star0=self.f_star0)
+
+    @functools.cached_property
+    def f_star0(self) -> float:
+        return f_star0(
+            T_n=self.bubble.Tn,
+            g_star=self.g_star
+        )
+
+    def F_gw0(self, g0: float = const.G0, gs0: float = const.GS0) -> float:
+        return F_gw0(
+            g_star=self.g_star,
+            g0=g0,
+            gs0=gs0,
+            gs_star=self.bubble.model.gs(w=self.bubble.va_enthalpy_density, phase=Phase.BROKEN)
+        )
+
+    @functools.cached_property
+    def g_star(self) -> float:
+        return self.bubble.model.gp(w=self.bubble.va_enthalpy_density, phase=Phase.BROKEN)
+
+    def noise(self) -> np.ndarray:
+        return noise.omega_noise(self.f())
+
+    def noise_ins(self) -> np.ndarray:
+        return noise.omega_ins(self.f())
+
+    def omgw0(
+            self,
+            g0: float = const.G0,
+            gs0: float = const.GS0,
+            suppression: sup.SuppressionMethod = sup.SuppressionMethod.DEFAULT) -> np.ndarray:
+        supp = sup.get_suppression_factor(vw=self.bubble.v_wall, alpha=self.bubble.alpha_n, method=suppression)
+        # The r_star compensates the fact that the pow_gw includes a correction factor that is J without r_star
+        return self.r_star * self.F_gw0(g0=g0, gs0=gs0) * self.pow_gw * supp
+
+    def signal_to_noise_ratio(self) -> float:
+        return noise.signal_to_noise_ratio(f=self.f(), signal=self.omgw0(), noise=self.noise())
+
 
 def f(z: th.FloatOrArr, r_star: th.FloatOrArr, f_star0: th.FloatOrArr) -> th.FloatOrArr:
     r"""Convert the dimensionless wavenumber $z$ to frequency today by taking into account the redshift.

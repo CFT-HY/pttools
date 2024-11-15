@@ -14,7 +14,7 @@ from examples import utils
 from pttools.bubble import lorentz
 from pttools.bubble.shock import shock_curve
 from pttools.models import ConstCSModel
-from pttools.ssmtools import Spectrum
+from pttools.omgw0 import Spectrum, omega_noise, omega_ins
 from pttools.analysis.parallel import create_spectra
 from pttools.analysis.utils import A3_PAPER_SIZE
 
@@ -25,6 +25,7 @@ def main():
     a_s = 5
     a_b = 1
     V_s = 1
+    r_star = 0.1
     v_walls: np.ndarray = np.array([0.44, 0.56, 0.92])
     alpha_ns: np.ndarray = np.array([0.07, 0.2])
     alpha_n_min = np.min(alpha_ns)
@@ -50,23 +51,30 @@ def main():
         spectra[i_model, :, :] = create_spectra(
             model=model, v_walls=v_walls, alpha_ns=alpha_ns,
             # spectrum_kwargs={"source_duration": 1},
-            # spectrum_kwargs={"z": z}
+            spectrum_kwargs={
+                "r_star": r_star
+                # "z": z
+            }
             # bubble_kwargs={"allow_invalid": False}, allow_bubble_failure=True
         )
 
     fig: plt.Figure = plt.figure(figsize=A3_PAPER_SIZE)
     fig2: plt.Figure = plt.figure(figsize=A3_PAPER_SIZE)
+    fig3: plt.Figure = plt.figure(figsize=A3_PAPER_SIZE)
     axs: np.ndarray = fig.subplots(alpha_ns.size, v_walls.size)
     axs2: np.ndarray = fig2.subplots(alpha_ns.size, v_walls.size)
+    axs3: np.ndarray = fig3.subplots(alpha_ns.size, v_walls.size)
     for i_alpha_n, alpha_n in enumerate(alpha_ns):
         for i_v_wall, v_wall in enumerate(v_walls):
             ax: plt.Axes = axs[i_alpha_n, i_v_wall]
             ax2: plt.Axes = axs2[i_alpha_n, i_v_wall]
+            ax3: plt.Axes = axs3[i_alpha_n, i_v_wall]
             for i_model, model in enumerate(models):
                 spectrum: Spectrum = spectra[i_model, i_alpha_n, i_v_wall]
                 if spectrum is not None:
                     ax.plot(spectrum.y, spectrum.pow_gw, label=model.label_latex)
                     ax2.plot(spectrum.bubble.xi, spectrum.bubble.v, label=model.label_latex)
+                    ax3.plot(spectrum.f(), spectrum.omgw0(), label=model.label_latex)
             ax.set_xscale("log")
             ax.set_yscale("log")
             ax.set_xlabel("$z = kR*$")
@@ -79,6 +87,13 @@ def main():
             ax2.set_ylabel(r"$v(\xi)$")
             ax2.grid()
             ax2.set_title(title)
+
+            ax3.set_xscale("log")
+            ax3.set_yscale("log")
+            ax3.set_xlabel(r"$f(\text{Hz})$")
+            ax3.set_ylabel(r"$\Omega$")
+            ax3.grid()
+            ax3.set_title(title + rf", r_*={r_star}")
 
     # Mu curves
     for csb2 in csb2s:
@@ -102,6 +117,16 @@ def main():
                 ax = axs2[i_alpha_n, i_v_wall]
                 ax.plot(xi_arr, vm_arr, color="k")
 
+    # Noise curves
+    f_min = np.min([spectrum.f(z=spectrum.y[0]) for spectrum in spectra.flat])
+    f_max = np.max([spectrum.f(z=spectrum.y[-1]) for spectrum in spectra.flat])
+    f: np.ndarray = np.logspace(np.log10(f_min), np.log10(f_max), num=50)
+    for i_alpha_n, alpha_n in enumerate(alpha_ns):
+        for i_v_wall, v_wall in enumerate(v_walls):
+            ax = axs3[i_alpha_n, i_v_wall]
+            ax.plot(f, omega_noise(f), label="LISA overall noise")
+            ax.plot(f, omega_ins(f), label="LISA instrument noise")
+
     # Lines
     pow_low = 9
     k_low = np.logspace(-1, -0.2, 10)
@@ -124,8 +149,10 @@ def main():
 
     fig.tight_layout()
     fig2.tight_layout()
+    fig3.tight_layout()
     utils.save_and_show(fig, "const_cs_gw.png")
     utils.save_and_show(fig2, "const_cs_gw_v.png")
+    utils.save_and_show(fig3, "const_cs_gw_omgw0.png")
 
 
 if __name__ == "__main__":

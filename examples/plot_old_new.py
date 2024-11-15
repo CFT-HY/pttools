@@ -17,7 +17,7 @@ from pttools.bubble import fluid_bag
 from pttools.bubble import relativity
 from pttools.models.model import Model
 from pttools.models.bag import BagModel
-from pttools.ssmtools.spectrum import Spectrum, power_gw_scaled_bag, spec_den_v_bag, power_v_bag
+from pttools.ssmtools.spectrum import SSMSpectrum, power_gw_scaled_bag, spec_den_v_bag, power_v_bag
 from tests.paper.plane import xiv_plane
 from tests.paper.plot_plane import plot_plane
 
@@ -80,7 +80,7 @@ def main():
     sol_types = [SolutionType.SUB_DEF, SolutionType.HYBRID, SolutionType.DETON]
 
     spectra = [
-        Spectrum(
+        SSMSpectrum(
             Bubble(bag, v_wall=v_walls[i], alpha_n=alpha_ns[i], sol_type=sol_types[i])
         )
         for i in range(len(v_walls))

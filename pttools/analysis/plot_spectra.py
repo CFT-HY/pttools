@@ -2,10 +2,10 @@ import typing as tp
 
 import matplotlib.pyplot as plt
 
-from pttools.ssmtools.spectrum import Spectrum
+from pttools.ssmtools.spectrum import SSMSpectrum
 
 
-def plot_spectra(spectra: tp.List[Spectrum], fig: plt.Figure = None):
+def plot_spectra(spectra: tp.List[SSMSpectrum], fig: plt.Figure = None):
     if fig is None:
         fig = plt.figure(figsize=(11.7, 8.3))
 
