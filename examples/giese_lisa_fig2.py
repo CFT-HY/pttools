@@ -17,12 +17,14 @@ from pttools.analysis.utils import A4_PAPER_SIZE
 from pttools.bubble import Bubble, Phase
 from pttools.models import Model, ConstCSModel
 
+logger = logging.getLogger(__name__)
+
 try:
+    logger.info("Giese code imported successfully.")
     from giese.lisa import kappaNuMuModel
 except ImportError:
+    logger.info("Giese could not be imported.")
     kappaNuMuModel: tp.Optional[callable] = None
-
-logger = logging.getLogger(__name__)
 
 
 def get_kappa(bubble: Bubble) -> float:
@@ -86,14 +88,17 @@ def create_figure(
             except ValueError:
                 print(f"Could not produce bubbles with alpha_n={alpha_ns[j]} for {model.label_unicode}")
                 continue
-            ax.plot(v_walls, kappas[j], ls=ls, color=color, alpha=0.5)
+            kwargs = {}
+            if ls == "-":
+                kwargs["label"] = rf"$\alpha={alpha_ns[j]}$"
+            ax.plot(v_walls, kappas[j], ls=ls, color=color, alpha=0.5, **kwargs)
             print(
                 f"alpha_n={alpha_ns[j]}, kappa_max={kappas[j, i_max]}, i_max={i_max}, "
                 f"v_wall={v_walls[i_max]}, color={color}, ls={ls}, {model.label_unicode}"
             )
 
     ax.set_xlabel(r"$\xi_w$")
-    ax.set_ylabel(r"$\kappa$")
+    ax.set_ylabel(r"$\kappa_{\bar{\theta}_n}$")
     ax.set_yscale("log")
     ax.set_ylim(bottom=10**-2.5, top=1)
 
@@ -108,6 +113,7 @@ def create_figure(
     else:
         title += r"$\alpha_n$"
     ax.set_title(title)
+    # ax.legend()
 
 
 def main():
@@ -146,4 +152,4 @@ def main():
 
 if __name__ == "__main__":
     fig = main()
-    save_and_show(fig, "giese_lisa_fig2.png")
+    save_and_show(fig, "giese_lisa_fig2")

@@ -17,10 +17,14 @@ if os.path.exists(MSC2_PYTHON_PATH):
 
 
 def save(fig: plt.Figure, path: str):
-    if os.path.isabs(path):
-        fig.savefig(path)
-    else:
-        fig.savefig(os.path.join(FIG_DIR, path))
+    has_extension = "." in path
+    if not os.path.isabs(path):
+        path = os.path.join(FIG_DIR, path)
+        if has_extension:
+            fig.savefig(path)
+        else:
+            fig.savefig(f"{path}.eps")
+            fig.savefig(f"{path}.png")
 
 
 def save_and_show(fig: plt.Figure, path: str):
