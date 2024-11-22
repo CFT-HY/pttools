@@ -57,12 +57,14 @@ class Spectrum(ssm.SSMSpectrum):
             g0: float = const.G0,
             gs0: float = const.GS0,
             suppression: sup.SuppressionMethod = sup.SuppressionMethod.DEFAULT) -> np.ndarray:
-        supp = sup.get_suppression_factor(vw=self.bubble.v_wall, alpha=self.bubble.alpha_n, method=suppression)
         # The r_star compensates the fact that the pow_gw includes a correction factor that is J without r_star
-        return self.r_star * self.F_gw0(g0=g0, gs0=gs0) * self.pow_gw * supp
+        return self.r_star * self.F_gw0(g0=g0, gs0=gs0) * self.pow_gw * self.suppression_factor(method=suppression)
 
     def signal_to_noise_ratio(self) -> float:
         return noise.signal_to_noise_ratio(f=self.f(), signal=self.omgw0(), noise=self.noise())
+
+    def suppression_factor(self, method: sup.SuppressionMethod = sup.SuppressionMethod.DEFAULT) -> float:
+        return sup.get_suppression_factor(vw=self.bubble.v_wall, alpha=self.bubble.alpha_n, method=method)
 
 
 def f(z: th.FloatOrArr, r_star: th.FloatOrArr, f_star0: th.FloatOrArr) -> th.FloatOrArr:
