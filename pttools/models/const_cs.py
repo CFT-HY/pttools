@@ -29,6 +29,7 @@ class ConstCSModel(AnalyticModel):
     DEFAULT_LABEL_LATEX = "Constant $c_s$ model"
     DEFAULT_LABEL_UNICODE = "Constant cₛ model"
     DEFAULT_NAME = "const_cs"
+    TEMPERATURE_IS_PHYSICAL = False
 
     def __init__(
             self,

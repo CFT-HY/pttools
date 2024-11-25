@@ -54,6 +54,9 @@ def main():
             spectrum_kwargs={
                 "r_star": r_star
                 # "z": z
+                # "Tn": 100,
+                # "g_star": 100,
+                # "gs_star": 100
             }
             # bubble_kwargs={"allow_invalid": False}, allow_bubble_failure=True
         )
@@ -150,9 +153,9 @@ def main():
     fig.tight_layout()
     fig2.tight_layout()
     fig3.tight_layout()
-    utils.save_and_show(fig, "const_cs_gw.png")
-    utils.save_and_show(fig2, "const_cs_gw_v.png")
-    utils.save_and_show(fig3, "const_cs_gw_omgw0.png")
+    utils.save_and_show(fig, "const_cs_gw")
+    utils.save_and_show(fig2, "const_cs_gw_v")
+    utils.save_and_show(fig3, "const_cs_gw_omgw0")
 
 
 if __name__ == "__main__":

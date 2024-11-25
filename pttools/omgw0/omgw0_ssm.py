@@ -8,20 +8,70 @@ Created on 10/11/21
 """
 
 import functools
+import logging
 
 import numpy as np
 
 from pttools.bubble.boundary import Phase
+from pttools.bubble.bubble import Bubble
 import pttools.bubble.ke_frac_approx as K
 import pttools.omgw0.suppression as sup
 from pttools.ssmtools.const import NPTDEFAULT, NptType
-import pttools.ssmtools.spectrum as ssm
+import pttools.ssmtools as ssm
 import pttools.type_hints as th
 from . import const
 from . import noise
 
+logger = logging.getLogger(__name__)
+
 
 class Spectrum(ssm.SSMSpectrum):
+    r"""A spectrum object that includes $\Omega_{\text{gw},0}$"""
+    def __init__(
+            self,
+            bubble: Bubble,
+            y: np.ndarray = None,
+            z_st_thresh: float = ssm.Z_ST_THRESH,
+            nuc_type: ssm.NucType = ssm.DEFAULT_NUC_TYPE,
+            nt: int = 10000,
+            r_star: float = None,
+            lifetime_multiplier: float = 1,
+            compute: bool = True,
+            Tn: float = None,
+            g_star: float = None,
+            gs_star: float = None
+            ):
+        """
+        :param bubble: the Bubble object
+        :param y: $z = kR*$ array
+        :param z_st_thresh: for $z$ values above z_sh_tresh, use approximation rather than doing the sine transform integral.
+        :param nuc_type: nucleation type
+        :param nt: number of points in the t array
+        :param r_star: $r_*$
+        :param lifetime_multiplier: used for computing the source lifetime factor
+        :param compute: whether to compute the spectrum immediately
+        :param Tn: $T_n$, nucleation temperature override
+        :param g_star: $g_*$, degrees of freedom override at the time of GW production
+        :param gs_star: $g_{s,*}$ degrees of freedom override for entropy at the time of GW production
+        """
+        super().__init__(
+            bubble=bubble,
+            y=y,
+            z_st_thresh=z_st_thresh,
+            nuc_type=nuc_type,
+            nt=nt,
+            r_star=r_star,
+            lifetime_multiplier=lifetime_multiplier,
+            compute=compute
+        )
+        self.override_necessary = not self.bubble.model.temperature_is_physical
+        self.Tn_manual_override = Tn is not None
+        self.g_star_manual_override = g_star is not None
+        self.gs_star_manual_override = gs_star is not None
+        self.Tn_override = 100 if Tn is None else Tn
+        self.g_star_override = 100 if g_star is None else gs_star
+        self.gs_star_override = self.g_star_override if gs_star is None else gs_star
+
     def f(self, z: np.ndarray = None) -> th.FloatOrArr:
         if z is None:
             z = self.y
@@ -30,7 +80,7 @@ class Spectrum(ssm.SSMSpectrum):
     @functools.cached_property
     def f_star0(self) -> float:
         return f_star0(
-            T_n=self.bubble.Tn,
+            Tn=self.Tn,
             g_star=self.g_star
         )
 
@@ -39,12 +89,28 @@ class Spectrum(ssm.SSMSpectrum):
             g_star=self.g_star,
             g0=g0,
             gs0=gs0,
-            gs_star=self.bubble.model.gs(w=self.bubble.va_enthalpy_density, phase=Phase.BROKEN)
+            gs_star=self.gs_star
         )
 
     @functools.cached_property
     def g_star(self) -> float:
+        if self.override_necessary or self.gs_star_manual_override:
+            return self.g_star_override
+        return self.g_star_computed
+
+    @functools.cached_property
+    def g_star_computed(self):
         return self.bubble.model.gp(w=self.bubble.va_enthalpy_density, phase=Phase.BROKEN)
+
+    @functools.cached_property
+    def gs_star(self) -> float:
+        if self.override_necessary or self.gs_star_manual_override:
+            return self.gs_star_override
+        return self.gs_star_computed
+
+    @functools.cached_property
+    def gs_star_computed(self) -> float:
+        return self.bubble.model.gs(w=self.bubble.va_enthalpy_density, phase=Phase.BROKEN)
 
     def noise(self) -> np.ndarray:
         return noise.omega_noise(self.f())
@@ -66,6 +132,12 @@ class Spectrum(ssm.SSMSpectrum):
     def suppression_factor(self, method: sup.SuppressionMethod = sup.SuppressionMethod.DEFAULT) -> float:
         return sup.get_suppression_factor(vw=self.bubble.v_wall, alpha=self.bubble.alpha_n, method=method)
 
+    @functools.cached_property
+    def Tn(self) -> float:
+        if self.override_necessary or self.Tn_manual_override:
+            return self.Tn_override
+        return self.bubble.Tn
+
 
 def f(z: th.FloatOrArr, r_star: th.FloatOrArr, f_star0: th.FloatOrArr) -> th.FloatOrArr:
     r"""Convert the dimensionless wavenumber $z$ to frequency today by taking into account the redshift.
@@ -82,16 +154,16 @@ def f0(rs: th.FloatOrArr, T_n: th.FloatOrArr = const.T_default, g_star: float = 
     return f_star0(T_n, g_star) / rs
 
 
-def f_star0(T_n: th.FloatOrArr, g_star: th.FloatOrArr = 100) -> th.FloatOrArr:
+def f_star0(Tn: th.FloatOrArr, g_star: th.FloatOrArr = 100) -> th.FloatOrArr:
     r"""
     Conversion factor between the frequencies at the time of the nucleation and frequencies today.
     $$f_{*,0} = 2.6 \cdot 10^{-6} \text{Hz} \left( \frac{T_n}{100 \text{GeV}} \right) \left( \frac{g_*}{100} \right)^{\frac{1}{6}}$$,
     :gowling_2021:`\ ` eq. 2.13
-    :param T_n: Nucleation temperature
+    :param Tn: Nucleation temperature
     :param g_star: Degrees of freedom at the time the GWs were produced. The default value is from the article.
     :return:
     """
-    return const.fs0_ref * (T_n / 100) * (g_star / 100)**(1/6)
+    return const.fs0_ref * (Tn / 100) * (g_star / 100)**(1 / 6)
 
 
 def F_gw0(
@@ -165,7 +237,7 @@ def omgw0_bag(
 
 
 def r_star(H_n: th.FloatOrArr, R_star: th.FloatOrArr) -> th.FloatOrArr:
-    """
+    r"""
     $$r_* = H_n R_*$$
     :gowling_2021:`\ ` eq. 2.2
     """

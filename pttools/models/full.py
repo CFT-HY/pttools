@@ -49,7 +49,9 @@ class FullModel(Model):
             V_s=V_s, V_b=V_b,
             T_min=thermo.t_min, T_max=thermo.t_max,
             name=name, label_latex=label_latex, label_unicode=label_unicode,
-            gen_critical=False, gen_cs2=False, gen_cs2_neg=False, implicit_V=True)
+            gen_critical=False, gen_cs2=False, gen_cs2_neg=False, implicit_V=True,
+            temperature_is_physical=thermo.TEMPERATURE_IS_PHYSICAL
+        )
 
         self.temp_spline_s = splrep(
             np.log10(self.w(self.thermo.GEFF_DATA_TEMP, Phase.SYMMETRIC)), self.thermo.GEFF_DATA_LOG_TEMP
