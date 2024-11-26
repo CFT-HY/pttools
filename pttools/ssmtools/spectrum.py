@@ -41,20 +41,19 @@ class SSMSpectrum:
             y: np.ndarray = None,
             z_st_thresh: float = const.Z_ST_THRESH,
             nuc_type: NucType = DEFAULT_NUC_TYPE,
-            # method: ssm.Method = ssm.Method.E_CONSERVING,
-            # de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
-            # nxi: int = 5000,
             nt: int = 10000,
-            # nq: int = 1000,
             r_star: float = None,
             lifetime_multiplier: float = 1,
             compute: bool = True):
         r"""
-        :param bubble: Fluid simulation object
+        :param bubble: the Bubble object
         :param y: $z = kR*$ array
         :param z_st_thresh: for $z$ values above z_sh_tresh, use approximation rather than doing the sine transform integral.
         :param nuc_type: nucleation type
-        :param source_duration: $\frac{\Delta \eta_\text{v}}{\eta_*}$
+        :param nt: number of points in the t array
+        :param r_star: $r_*$
+        :param lifetime_multiplier: used for computing the source lifetime factor
+        :param compute: whether to compute the spectrum immediately
         """
         # Parameters
         self.bubble = bubble

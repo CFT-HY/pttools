@@ -35,6 +35,7 @@ class BagModel(AnalyticModel):
     DEFAULT_LABEL_LATEX = "Bag model"
     DEFAULT_LABEL_UNICODE = DEFAULT_LABEL_LATEX
     DEFAULT_NAME = "bag"
+    TEMPERATURE_IS_PHYSICAL = False
 
     def __init__(
             self,

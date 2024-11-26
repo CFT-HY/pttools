@@ -21,6 +21,8 @@ class StandardModel(ThermoModel):
     DEFAULT_LABEL_LATEX = "Standard Model"
     DEFAULT_LABEL_UNICODE = DEFAULT_LABEL_LATEX
     DEFAULT_NAME = "standard_model"
+    TEMPERATURE_IS_PHYSICAL = True
+
     # Copied from the ArXiv file som_eos.tex
     GEFF_DATA = np.array([
         [0.00, 10.71, 1.00228],

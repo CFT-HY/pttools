@@ -13,6 +13,7 @@ class ConstCSThermoModel(ThermoModel):
     DEFAULT_LABEL_LATEX = "Constant $c_s$ thermo-model"
     DEFAULT_LABEL_UNICODE = "Constant cₛ thermo-model"
     DEFAULT_NAME = "const_cs_thermo"
+    TEMPERATURE_IS_PHYSICAL = False
 
     GEFF_DATA_LOG_TEMP = np.linspace(-1, 3, 1000)
     GEFF_DATA_TEMP = 10**GEFF_DATA_LOG_TEMP

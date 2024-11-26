@@ -13,13 +13,19 @@ logger = logging.getLogger(__name__)
 
 
 class BaseModel(abc.ABC):
-    """The base for both Model and ThermoModel"""
+    """The base for both Model and ThermoModel
+
+    All temperatures must be in units of GeV for the frequency conversion in Spectrum to work.
+    """
     DEFAULT_LABEL_LATEX: str = None
     DEFAULT_LABEL_UNICODE: str = None
     DEFAULT_NAME: str = None
     # Zero temperature would break many of the equations
     DEFAULT_T_MIN: float = 1e-3
     DEFAULT_T_MAX: float = np.inf
+
+    #: Whether the temperature is in proper physics units
+    TEMPERATURE_IS_PHYSICAL: bool = None
 
     def __init__(
             self,
@@ -29,13 +35,15 @@ class BaseModel(abc.ABC):
             label_latex: str = None,
             label_unicode: str = None,
             gen_cs2: bool = True,
-            gen_cs2_neg: bool = True):
+            gen_cs2_neg: bool = True,
+            temperature_is_physical: bool = None):
         self.name = self.DEFAULT_NAME if name is None else name
         self.label_latex = self.DEFAULT_LABEL_LATEX if label_latex is None else label_latex
         self.label_unicode = self.DEFAULT_LABEL_UNICODE if label_unicode is None else label_unicode
         self.T_min = self.DEFAULT_T_MIN if T_min is None else T_min
         self.T_max = self.DEFAULT_T_MAX if T_max is None else T_max
         self.restrict_to_valid = restrict_to_valid
+        self.temperature_is_physical = self.TEMPERATURE_IS_PHYSICAL if temperature_is_physical is None else temperature_is_physical
 
         if self.name is None:
             raise ValueError("The model must have a name.")

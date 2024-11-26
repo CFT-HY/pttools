@@ -43,6 +43,7 @@ class Model(BaseModel, abc.ABC):
             gen_cs2: bool = True,
             gen_cs2_neg: bool = True,
             implicit_V: bool = False,
+            temperature_is_physical: bool = None,
             allow_invalid: bool = False):
 
         if implicit_V:
@@ -61,6 +62,13 @@ class Model(BaseModel, abc.ABC):
             # This should not be a problem as long as a critical temperature exists.
             # if V_s == V_b:
             #     logger.warning("The bubble will not expand, when V_s <= V_b. Got: V_b = V_s = %s.", V_s)
+
+        self.temperature_is_physical = self.TEMPERATURE_IS_PHYSICAL if temperature_is_physical is None else temperature_is_physical
+        if self.temperature_is_physical is None:
+            raise ValueError(
+                "It has not been specified whether the temperature scale for the model is physical. "
+                "Please specify it in the model definition."
+            )
 
         self.T_ref: float = T_ref
         self.V_s: float = V_s

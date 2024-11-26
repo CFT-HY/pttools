@@ -13,7 +13,8 @@ def signal_to_noise_ratio(
     $$\rho = \sqrt{T_{\text{obs}} \int_{f_\text{min}}^{f_\text{max}} df \frac{
     h^2 \Omega_{\text{gw},0}^2}{
     h^2 \Omega_{\text{n}}^2}}
-    :gowling_2021:`\ ` eq. 3.12
+    :gowling_2021:`\ ` eq. 3.12,
+    :smith_2019:`\ ` p. 1
 
     :param f: frequencies
     :param signal: signal array
@@ -27,22 +28,33 @@ def signal_to_noise_ratio(
 def ft(L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatOrArr:
     r"""Transfer frequency
     $$f_t = \frac{c}{2\pi L}$$
+    :gowling_2021:`\ ` p. 12
     """
     return const.c / (2*np.pi*L)
 
+FT_LISA = ft()
+_ft_func = ft
 
-# def N_AE(f: th.FloatOrArr, L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatOrArrNumba:
-#     r"""A and E channels of LISA instrument noise
-#     $$N_A = N_E = ...$$
-#     :gowling_2021:`\ ` eq. 3.4
-#     """
-#     f_frac = f/ft
-#     cos_f_frac = np.cos(f_frac)
-#     W = 1 - np.exp(-2j*f_frac)
-#     return ((4 + 2*cos_f_frac)*P_oms(L) + 8*(1 + cos_f_frac + cos_f_frac**2 * P_acc(f, L))) * np.abs(W)**2
+
+def N_AE(f: th.FloatOrArr, ft: th.FloatOrArr = FT_LISA, L: th.FloatOrArr = const.LISA_ARM_LENGTH, W_abs2: th.FloatOrArr = None) -> th.FloatOrArrNumba:
+    r"""A and E channels of LISA instrument noise
+    $$N_A = N_E = ...$$
+    :gowling_2021:`\ ` eq. 3.4
+    """
+    cos_f_frac = np.cos(f/ft)
+    if W_abs2 is None:
+        W_abs2 = np.abs(W(f, ft))**2
+    return ((4 + 2*cos_f_frac)*P_oms(L) + 8*(1 + cos_f_frac + cos_f_frac**2) * P_acc(f, L)) * W_abs2
 
 
 def omega(f: th.FloatOrArr, S: th.FloatOrArr) -> th.FloatOrArr:
+    r"""Convert an effective noise power spectral density (aka. sensitivity) $S$
+    to a fractional GW energy density power spectrum $\Omega$
+    $$\Omega = \frac{4 \pi^2}{3 H_0^2} f^3 S(f)$$
+    :gowling_2021:`\ ` eq. 3.8,
+    :gowling_2023:`\ ` eq. 3.8,
+    :smith_2019:`\ ` p. 1
+    """
     return 4*np.pi**2 / (3*const.H0_HZ**2) * f**3 * S
 
 
@@ -58,10 +70,11 @@ def omega_ins(f: th.FloatOrArr) -> th.FloatOrArr:
     r"""LISA instrument noise
     $$\Omega_\text{ins} = \left( \frac{4 \pi^2}{3 H_0^2} f^3 S_A(f)$$
     """
-    return omega(f, S_AE(f))
+    return omega(f=f, S=S_AE(f))
 
 
 def omega_noise(f: th.FloatOrArr) -> th.FloatOrArr:
+    r"""$$\Omega_\text{noise} = \Omega_\text{ins} + \Omega_\text{eb} + \Omega_\text{gb}$$"""
     return omega_ins(f) + omega_eb(f) + omega_gb(f)
 
 
@@ -79,13 +92,46 @@ def P_oms(L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatOrArr:
     $$P_\text{oms}(f) = \left( \frac{1.5 \cdot 10^{-11} \text{m}}{L} \right)^2 \text{Hz}^{-1}$$
     :gowling_2021:`\ ` eq. 3.2
     This is white noise and therefore independent of the frequency.
+    Note that there is a typo on :gowling_2021:`\ ` p. 12:
+    the correct $L = 2.5 \cdot 10^9 \text{m}$.
     """
     return (1.5e-11 / L)**2
 
 
-def S_AE(f: th.FloatOrArr, L: th.FloatOrArr = const.LISA_ARM_LENGTH, both_channels: bool = True) -> th.FloatOrArr:
+def R_AE(f: th.FloatOrArr, ft: th.FloatOrArr = FT_LISA, W_abs2: th.FloatOrArr = None) -> th.FloatOrArr:
+    r"""Gravitational wave response function for the A and E channels
+    :gowling_2021:`\ ` eq. 3.6
+    """
+    if W_abs2 is None:
+        W_abs2 = np.abs(W(f, ft))**2
+    return 9/20 * W_abs2 / (1 + (3*f/(4*ft))**2)
+
+
+def S(N: th.FloatOrArr, R: th.FloatOrArr) -> th.FloatOrArr:
+    r"""Noise power spectral density
+    $$S = \frac{N}{\mathcal{R}}$$
+    :gowling_2021:`\ ` eq. 3.1
+    """
+    return N / R
+
+
+def S_AE(f: th.FloatOrArr, ft: th.FloatOrArr = FT_LISA, L: th.FloatOrArr = const.LISA_ARM_LENGTH, both_channels: bool = True) -> th.FloatOrArr:
+    r"""Noise power spectral density for the LISA A and E channels
+    $$S_A = S_E = \frac{N_A}{\mathcal{R}_A}$$
+    :gowling_2021:`\ ` eq. 3.7
+    """
+    # The W_abs2 cancels and can therefore be set to unity
+    ret = S(N=N_AE(f=f, ft=ft, L=L, W_abs2=1), R=R_AE(f=f, ft=ft, W_abs2=1))
+    if both_channels:
+        return 1/np.sqrt(2) * ret
+    return ret
+
+
+def S_AE_approx(f: th.FloatOrArr, L: th.FloatOrArr = const.LISA_ARM_LENGTH, both_channels: bool = True) -> th.FloatOrArr:
     r"""Approximate noise power spectral density for the LISA A and E channels
-    $$S_A = S_E$
+    $$S_A = S_E = \frac{N_A}{\mathcal{R}_A}
+    \approx \frac{40}{3} (P_\text{oms} + 4P_\text{acc}) \left( 1 + \frac{3f}{4f_t} \right^2$$
+    :gowling_2021:`\ ` eq. 3.7
     """
     ret = 40/3 * (P_oms(L) + 4*P_acc(f, L)) * (1 + (3*f/(4*ft(L)))**2)
     if both_channels:
@@ -104,3 +150,11 @@ def S_gb(
         d: float = 1680) -> th.FloatOrArr:
     r"""Noise power spectral density for galactic binaries"""
     return A * (1e-3 / f)**(-7/3) * np.exp(-(f/f_ref_gb)**a - b*f*np.sin(c*f)) * (1 + np.tanh(d*(fk - f)))
+
+
+def W(f: th.FloatOrArr, ft: th.FloatOrArr) -> th.FloatOrArr:
+    r"""Round trip modulation
+    $$W(f,f_t) = 1 - e^{-2i \frac{f}{f_t}}$$
+    :gowling_2021:`\ ` p. 12
+    """
+    return 1 - np.exp(-2j * f / ft)
