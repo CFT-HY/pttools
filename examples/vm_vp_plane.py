@@ -81,7 +81,7 @@ def main():
     ax.set_xlabel(r'$\tilde{v}_{-}$')
     ax.set_ylabel(r'$\tilde{v}_{+}$')
     ax.text(0.25, 0.1, 'Deflagrations', fontsize=font_size)
-    ax.text(0.65, 0.7, 'Detonations', fontsize=font_size)
+    ax.text(0.72, 0.65, 'Detonations', fontsize=font_size)
     ax.legend(bbox_to_anchor=(0.02, 0.85), loc=2, prop={"size": 14})
     ax.grid()
 
