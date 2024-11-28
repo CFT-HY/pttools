@@ -1,3 +1,5 @@
+# For Sphinx-Gallery parallelism
+# joblib >= 1.4.2
 memory-profiler >= 0.61.0
 # myst-parser
 sphinx >= 8.1.3

@@ -215,6 +215,10 @@ sphinx_gallery_conf = {
     # "image_srcset": ["2x"],
     # "line_numbers": True,
     "matplotlib_animations": True,
+    # Parallelism cannot be enabled simultaneously with "show_memory"
+    # It may also produce errors with some IDEs:
+    # https://stackoverflow.com/questions/31080829/python-error-io-unsupportedoperation-fileno
+    # "parallel": True,
     "reference_url": {
         "pttools": None,
         "tests": None,
