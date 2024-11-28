@@ -76,7 +76,7 @@ def alpha_n_max(vw: float) -> float:
     return m2 * vw + c2
 
 
-def get_suppression_factor(vw: float, alpha: float, method: SuppressionMethod = SuppressionMethod.DEFAULT):
+def get_suppression_factor(vw: float, alpha: float, method: SuppressionMethod = SuppressionMethod.DEFAULT) -> float:
     """
     current simulation data bounds are
     0.24<vw<0.96
