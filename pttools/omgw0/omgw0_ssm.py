@@ -177,7 +177,7 @@ def F_gw0(
     = (3.57 \pm 0.05) \cdot 10^{-5} \left( \frac{100}{g_*} \right)^{1/3}$$
     There is a typo in :gowling_2021:`\ ` eq. 2.11: the $\frac{4}{9}$ should be $\frac{4}{3}$.
     """
-    if gs0 is None or gs_star is None or g0 is None or om_gamma0 is None:
+    if g0 is None or gs0 is None or gs_star is None or om_gamma0 is None:
         return 3.57e-5 * (100/g_star)**(1/3)
     return om_gamma0 * (gs0 / gs_star)**(4/3) * g_star / g0
 
