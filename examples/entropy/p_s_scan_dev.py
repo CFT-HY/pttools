@@ -5,6 +5,8 @@ Entropy data generator (old reference)
 Created on Wed Jun 23 15:53:31 2021
 
 @author: hindmars
+
+As of 2024, this file is unmaintained and the thermo module is not in this repository.
 """
 
 # import sys

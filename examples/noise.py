@@ -1,3 +1,10 @@
+"""
+LISA noise
+==========
+
+Plot LISA instrument and astrophysical noise as a function of frequency.
+"""
+
 from matplotlib import pyplot as plt
 import numpy as np
 

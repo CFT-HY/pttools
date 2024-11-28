@@ -30,5 +30,6 @@ ax.set_xlabel(r"$\alpha_{\bar{\theta}_n}$")
 ax.set_ylabel(r"$\alpha_n$")
 ax.grid()
 
-save_and_show(fig, "giese_testing.png")
-# plt.show()
+
+if __name__ == "__main__":
+    save_and_show(fig, "giese_testing.png")
