@@ -123,11 +123,13 @@ def ubarf2(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, ek_bva: 
     return ek_bva / w[-1]
 
 
-def wbar(w: np.ndarray, xi: np.ndarray, v_wall: float, wn: float):
-    logger.warning("wbar is not properly tested and may return false results.")
+def wbar(w: np.ndarray, xi: np.ndarray, v_wall: float, wn: float) -> float:
+    # https://stackoverflow.com/a/8768734
     w_reverse = w[::-1]
-    i_max = len(w_reverse) - np.argmax(w_reverse != w[-1]) - 1
-    ret = 1/v_wall**3 * np.trapezoid(w[:i_max], xi[:i_max]**3)
+    i_max = w.size - np.argmax(w_reverse != w[-1]) - 1
+    if i_max == 0:
+        i_max = -1
+    ret = 1/(xi[i_max]**3) * np.trapezoid(w[:i_max+1], xi[:i_max+1]**3)
     if not (ret is None or np.isnan(ret)) and ret <= wn:
         logger.warning(f"Should have wbar > wn. Got: wbar={wn}, wn={wn}")
     return ret

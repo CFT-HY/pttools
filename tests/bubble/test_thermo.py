@@ -4,6 +4,7 @@ import unittest
 import numpy as np
 
 from pttools.bubble.bubble import Bubble
+from pttools.bubble import thermo
 from pttools.models.model import Model
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
@@ -29,6 +30,19 @@ class ThermoTest:
             Bubble(cls.MODEL, v_wall=v_wall, alpha_n=alpha_n)
             for v_wall, alpha_n in zip(cls.V_WALLS, cls.ALPHA_NS)
         ]
+
+    def test_ebar(self):
+        assert_allclose(
+            [thermo.ebar(model=bubble.model, wn=bubble.wn) for bubble in self.bubbles],
+            [bubble.en() for bubble in self.bubbles]
+        )
+
+    def test_wbar(self):
+        """If there is no bubble, then wbar=wn"""
+        assert_allclose(
+            [thermo.wbar(w=np.ones_like(bubble.w)*bubble.wn, xi=bubble.xi, v_wall=bubble.v_wall, wn=bubble.wn) for bubble in self.bubbles],
+            [bubble.wn for bubble in self.bubbles]
+        )
 
     def test_kappa(self):
         assert_allclose([bubble.kappa for bubble in self.bubbles], self.KAPPA_REF, rtol=1.5e-2)
