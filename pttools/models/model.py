@@ -665,7 +665,9 @@ class Model(BaseModel, abc.ABC):
         return self.ge_temp(temp, phase)
 
     def nu_gdh2024(self, w: th.FloatOrArr, phase: th.FloatOrArr = Phase.BROKEN) -> th.FloatOrArr:
-        r"""$$\nu = \frac{1 - 3\omega}{1 + 3\omega}$$ of eq. 2.11 in :giombi_2024_cs:`\ ` eq. 2.11"""
+        r"""$$\nu = \frac{1 - 3\omega}{1 + 3\omega}$$
+        :giombi_2024_cs:`\ ` eq. 2.11
+        """
         omega = self.omega(w, phase)
         return (1 - 3*omega)/(1 + 3*omega)
 
