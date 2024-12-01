@@ -4,10 +4,12 @@ import ctypes
 import typing as tp
 
 import numba
+from numba.core.registry import CPUDispatcher
 import numpy as np
 import scipy.integrate as spi
 
-from pttools.speedup.numba_wrapper import CPUDispatcher
+# This adds quite a bit of startup time when only the type hints are needed, and not the rest of PTtools.
+# from pttools.speedup.numba_wrapper import CPUDispatcher
 
 # Function and object types
 #: Numba function
