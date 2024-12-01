@@ -26,8 +26,11 @@ def main():
     a_b = 1
     V_s = 1
     r_star = 0.1
-    v_walls: np.ndarray = np.array([0.44, 0.56, 0.92])
-    alpha_ns: np.ndarray = np.array([0.07, 0.2])
+    Tn = 1000
+    # v_walls: np.ndarray = np.array([0.4, 0.7, 0.8])
+    # v_walls: np.ndarray = np.array([0.4, 0.67, 0.84])
+    v_walls: np.ndarray = np.array([0.4, 0.68, 0.74])
+    alpha_ns: np.ndarray = np.array([0.1, 0.2])
     alpha_n_min = np.min(alpha_ns)
 
     allow_invalid = False
@@ -37,6 +40,7 @@ def main():
         ConstCSModel(css2=1/4, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_n_min, allow_invalid=allow_invalid),
         ConstCSModel(css2=1/4, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_n_min, allow_invalid=allow_invalid),
     ]
+    lss = ["solid", "dashed", "dotted", "dashdot"]
     # css2s = {model.css2 for model in models}
     csb2s = {model.csb2 for model in models}
     alpha_n_mins = np.array([model.alpha_n_min for model in models])
@@ -52,9 +56,9 @@ def main():
             model=model, v_walls=v_walls, alpha_ns=alpha_ns,
             # spectrum_kwargs={"source_duration": 1},
             spectrum_kwargs={
-                "r_star": r_star
+                "r_star": r_star,
                 # "z": z
-                # "Tn": 100,
+                "Tn": Tn,
                 # "g_star": 100,
                 # "gs_star": 100
             }
@@ -75,9 +79,11 @@ def main():
             for i_model, model in enumerate(models):
                 spectrum: Spectrum = spectra[i_model, i_alpha_n, i_v_wall]
                 if spectrum is not None:
-                    ax.plot(spectrum.y, spectrum.pow_gw, label=model.label_latex)
-                    ax2.plot(spectrum.bubble.xi, spectrum.bubble.v, label=model.label_latex)
-                    ax3.plot(spectrum.f(), spectrum.omgw0(), label=model.label_latex)
+                    label = model.label_latex_params
+                    ax.plot(spectrum.y, spectrum.pow_gw, label=label)
+                    ls = lss[i_model]
+                    ax2.plot(spectrum.bubble.xi, spectrum.bubble.v, label=label, ls=ls)
+                    ax3.plot(spectrum.f(), spectrum.omgw0(), label=label)
             ax.set_xscale("log")
             ax.set_yscale("log")
             ax.set_xlabel("$z = kR*$")
@@ -96,7 +102,7 @@ def main():
             ax3.set_xlabel(r"$f(\text{Hz})$")
             ax3.set_ylabel(r"$\Omega$")
             ax3.grid()
-            ax3.set_title(title + rf", r_*={r_star}")
+            ax3.set_title(title[:-1] + rf", r_*={r_star}, T_n={Tn}$")
 
     # Mu curves
     for csb2 in csb2s:
@@ -105,10 +111,6 @@ def main():
         v_mu = lorentz(xi=xi_mu, v=csb)
         for ax in axs2.flat:
             ax.plot(xi_mu, v_mu, ls=":", c="k")
-
-    for ax in axs2.flat:
-        ax.set_xlim(0.4, 0.7)
-        ax.set_ylim(0, 0.4)
 
     # Shock surfaces
     n_xi = 20
@@ -127,7 +129,7 @@ def main():
     for i_alpha_n, alpha_n in enumerate(alpha_ns):
         for i_v_wall, v_wall in enumerate(v_walls):
             ax = axs3[i_alpha_n, i_v_wall]
-            ax.plot(f, omega_noise(f), label="LISA overall noise")
+            # ax.plot(f, omega_noise(f), label="LISA overall noise")
             ax.plot(f, omega_ins(f), label="LISA instrument noise")
 
     # Lines
@@ -148,6 +150,12 @@ def main():
     for ax in axs.flat:
         ax.legend()
     for ax in axs2.flat:
+        ax.set_xlim(0.35, 0.85)
+        ax.set_ylim(0, 0.6)
+        ax.legend()
+    for ax in axs3.flat:
+        ax.set_xlim(f_min, f_max)
+        ax.set_ylim(1e-19, 1e-7)
         ax.legend()
 
     fig.tight_layout()
