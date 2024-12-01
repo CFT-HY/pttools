@@ -1,5 +1,6 @@
 r"""Constant sound speed model, aka. $\mu, \nu$ model"""
 
+from fractions import Fraction
 import logging
 import typing as tp
 
@@ -9,7 +10,6 @@ from scipy.optimize import minimize, minimize_scalar, OptimizeResult
 
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase, SolutionType
-from pttools.bubble import transition
 from pttools.models.analytic import AnalyticModel
 from pttools.models.bag import BagModel
 
@@ -24,6 +24,21 @@ def cs2_to_mu(cs2: th.FloatOrArr) -> th.FloatOrArr:
     return 1 + 1 / cs2
 
 
+def cs2_to_float_and_label(
+        cs2: tp.Union[float, Fraction],
+        max_denominator: int = 100,
+        label_prec: int = 3) -> tp.Tuple[float, str]:
+    if isinstance(cs2, Fraction):
+        cs2_flt = float(cs2)
+        cs2_frac = cs2
+    else:
+        cs2_flt = cs2
+        cs2_frac = Fraction.from_float(cs2).limit_denominator()
+    if cs2_frac.denominator < max_denominator:
+        return cs2_flt, f"{cs2_frac.numerator}/{cs2_frac.denominator}"
+    return cs2_flt, f"{cs2_flt:.{label_prec}f}"
+
+
 class ConstCSModel(AnalyticModel):
     r"""$\mu, \nu$-model"""
     DEFAULT_LABEL_LATEX = "Constant $c_s$ model"
@@ -33,7 +48,7 @@ class ConstCSModel(AnalyticModel):
 
     def __init__(
             self,
-            css2: float, csb2: float,
+            css2: tp.Union[float, Fraction], csb2: tp.Union[float, Fraction],
             V_s: float = None, V_b: float = 0,
             a_s: float = None, a_b: float = None,
             g_s: float = None, g_b: float = None,
@@ -60,15 +75,17 @@ class ConstCSModel(AnalyticModel):
         TODO: Rename mu to mu_s and nu to mu_b
         """
         logger.debug(f"Initialising ConstCSModel with css2={css2}, csb2={csb2}.")
-        self.css2 = self.validate_cs2(css2, "css2")
-        self.csb2 = self.validate_cs2(csb2, "csb2")
+        css2_flt, css2_label = cs2_to_float_and_label(css2)
+        csb2_flt, csb2_label = cs2_to_float_and_label(csb2)
+        self.css2 = self.validate_cs2(css2_flt, "css2")
+        self.csb2 = self.validate_cs2(csb2_flt, "csb2")
 
         if np.isnan(css2) or np.isnan(csb2):
             raise ValueError(
                 "c_{s,s}^2 and c_{s,b}^2 have to be 0 < c_s <= 1."
                 f"Got: c_{{s,s}}^2={css2}, c_{{s,b}}^2={csb2}."
             )
-        if css2 > 1/3 or csb2 > 1/3:
+        if css2_flt > 1/3 or csb2_flt > 1/3:
             logger.warning(
                 "c_{s,s}^2 > 1/3 or c_{s,b}^2 > 1/3. "
                 "Please ensure that g_eff is monotonic in your model. "
@@ -76,10 +93,10 @@ class ConstCSModel(AnalyticModel):
                 css2, csb2
             )
 
-        self.css = np.sqrt(css2)
-        self.csb = np.sqrt(csb2)
-        self.mu = cs2_to_mu(css2)
-        self.nu = cs2_to_mu(csb2)
+        self.css = np.sqrt(css2_flt)
+        self.csb = np.sqrt(csb2_flt)
+        self.mu = cs2_to_mu(css2_flt)
+        self.nu = cs2_to_mu(csb2_flt)
         self.T_ref = T_ref
         # This seems to contain invalid assumptions and approximations.
         # self.alpha_n_min_limit_cs = (self.mu - self.nu) / (3*self.mu)
@@ -92,10 +109,13 @@ class ConstCSModel(AnalyticModel):
             a_s, a_b, V_s, V_b = self.alpha_n_min_find_params(
                 alpha_n_min_target=alpha_n_min, a_s_default=a_s, a_b=a_b, V_s_default=V_s, V_b=V_b)
 
-        label_prec = 3
-        label_latex = f"Const. $c_s, c_{{ss}}^2={self.css2:.{label_prec}f}, c_{{sb}}^2={self.csb2:.{label_prec}f}$" \
+        self.label_latex_params = f"$c_{{s,s}}^2={css2_label}, c_{{s,b}}^2={csb2_label}$"
+        self.label_unicode_params = f", css2={css2_label}, csb2={csb2_label}"
+
+        label_latex = f"Const. $c_s" + self.label_latex_params[1:] \
             if not label_latex else label_latex
-        label_unicode = f"Const. cₛ, css2={self.css2:.{label_prec}f}, csb2={self.csb2:.{label_prec}f}" \
+        # There is no Unicode subscript of b
+        label_unicode = "Const. cₛ" + self.label_unicode_params \
             if not label_unicode else label_unicode
 
         super().__init__(
