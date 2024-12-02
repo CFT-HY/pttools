@@ -129,6 +129,9 @@ class Spectrum(ssm.SSMSpectrum):
     def signal_to_noise_ratio(self) -> float:
         return noise.signal_to_noise_ratio(f=self.f(), signal=self.omgw0(), noise=self.noise())
 
+    def signal_to_noise_ratio_instrument(self) -> float:
+        return noise.signal_to_noise_ratio(f=self.f(), signal=self.omgw0(), noise=self.noise_ins())
+
     def suppression_factor(self, method: sup.SuppressionMethod = sup.SuppressionMethod.DEFAULT) -> float:
         return sup.get_suppression_factor(vw=self.bubble.v_wall, alpha=self.bubble.alpha_n, method=method)
 

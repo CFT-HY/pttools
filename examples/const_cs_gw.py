@@ -16,7 +16,7 @@ from pttools.bubble.shock import shock_curve
 from pttools.models import ConstCSModel
 from pttools.omgw0 import Spectrum, omega_noise, omega_ins
 from pttools.analysis.parallel import create_spectra
-from pttools.analysis.utils import A3_PAPER_SIZE
+from pttools.analysis.utils import A3_PAPER_SIZE, A4_PAPER_SIZE
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ def main():
     a_b = 1
     V_s = 1
     r_star = 0.1
-    Tn = 1000
+    Tn = 200
     # v_walls: np.ndarray = np.array([0.4, 0.7, 0.8])
     # v_walls: np.ndarray = np.array([0.4, 0.67, 0.84])
     v_walls: np.ndarray = np.array([0.4, 0.68, 0.74])
@@ -65,9 +65,10 @@ def main():
             # bubble_kwargs={"allow_invalid": False}, allow_bubble_failure=True
         )
 
-    fig: plt.Figure = plt.figure(figsize=A3_PAPER_SIZE)
-    fig2: plt.Figure = plt.figure(figsize=A3_PAPER_SIZE)
-    fig3: plt.Figure = plt.figure(figsize=A3_PAPER_SIZE)
+    figsize = (12, 10)
+    fig: plt.Figure = plt.figure(figsize=figsize)
+    fig2: plt.Figure = plt.figure(figsize=figsize)
+    fig3: plt.Figure = plt.figure(figsize=figsize)
     axs: np.ndarray = fig.subplots(alpha_ns.size, v_walls.size)
     axs2: np.ndarray = fig2.subplots(alpha_ns.size, v_walls.size)
     axs3: np.ndarray = fig3.subplots(alpha_ns.size, v_walls.size)
@@ -80,10 +81,11 @@ def main():
                 spectrum: Spectrum = spectra[i_model, i_alpha_n, i_v_wall]
                 if spectrum is not None:
                     label = model.label_latex_params
+                    label2 = f"{label[:-1]}, SNR={spectrum.signal_to_noise_ratio_instrument():.1f}$"
                     ax.plot(spectrum.y, spectrum.pow_gw, label=label)
                     ls = lss[i_model]
                     ax2.plot(spectrum.bubble.xi, spectrum.bubble.v, label=label, ls=ls)
-                    ax3.plot(spectrum.f(), spectrum.omgw0(), label=label)
+                    ax3.plot(spectrum.f(), spectrum.omgw0(), label=label2)
             ax.set_xscale("log")
             ax.set_yscale("log")
             ax.set_xlabel("$z = kR*$")
@@ -102,25 +104,31 @@ def main():
             ax3.set_xlabel(r"$f(\text{Hz})$")
             ax3.set_ylabel(r"$\Omega$")
             ax3.grid()
-            ax3.set_title(title[:-1] + rf", r_*={r_star}, T_n={Tn}$")
-
-    # Mu curves
-    for csb2 in csb2s:
-        csb = np.sqrt(csb2)
-        xi_mu: np.ndarray = np.linspace(csb, 1, 20)
-        v_mu = lorentz(xi=xi_mu, v=csb)
-        for ax in axs2.flat:
-            ax.plot(xi_mu, v_mu, ls=":", c="k")
+            ax3.set_title(title[:-1] + rf", r_*={r_star}, T_n={Tn} \text{{GeV}}$")
 
     # Shock surfaces
     n_xi = 20
-    for model in models:
+    for i_model, model in enumerate(models):
         xi_arr: np.ndarray = np.linspace(model.css, 0.99, n_xi)
         for i_alpha_n, alpha_n in enumerate(alpha_ns):
             vm_arr = shock_curve(model, alpha_n, xi_arr)
             for i_v_wall, v_wall in enumerate(v_walls):
                 ax = axs2[i_alpha_n, i_v_wall]
-                ax.plot(xi_arr, vm_arr, color="k")
+                if i_model:
+                    ax.plot(xi_arr, vm_arr, color="k")
+                else:
+                    ax.plot(xi_arr, vm_arr, color="k", label=r"$v_{sh}(\xi, c_{s,s})$")
+
+    # Mu curves
+    for i_csb2, csb2 in enumerate(csb2s):
+        csb = np.sqrt(csb2)
+        xi_mu: np.ndarray = np.linspace(csb, 1, 20)
+        v_mu = lorentz(xi=xi_mu, v=csb)
+        for ax in axs2.flat:
+            if i_csb2:
+                ax.plot(xi_mu, v_mu, ls=":", c="k")
+            else:
+                ax.plot(xi_mu, v_mu, ls=":", c="k", label=r"$\mu(\xi, c_{s,b})$")
 
     # Noise curves
     f_min = np.min([spectrum.f(z=spectrum.y[0]) for spectrum in spectra.flat])
@@ -145,18 +153,18 @@ def main():
     p_high = k_high**pow_high * 10**(-3)
     for ax in axs.flat:
         ax.plot(k_high, p_high, color="k")
-        ax.text(5, 10**(-6.5), f"$k^{{{pow_high}}}$")
+        ax.text(5, 10**(-6.7), f"$k^{{{pow_high}}}$")
 
     for ax in axs.flat:
-        ax.legend()
+        ax.legend(loc="lower center")
     for ax in axs2.flat:
         ax.set_xlim(0.35, 0.85)
         ax.set_ylim(0, 0.6)
-        ax.legend()
+        ax.legend(loc="upper left")
     for ax in axs3.flat:
         ax.set_xlim(f_min, f_max)
         ax.set_ylim(1e-19, 1e-7)
-        ax.legend()
+        ax.legend(loc="lower left")
 
     fig.tight_layout()
     fig2.tight_layout()
