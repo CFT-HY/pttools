@@ -304,7 +304,7 @@ class Bubble:
             self.add_note(msg)
             self.negative_entropy_flux = True
         if self.va_entropy_density_diff < 0:
-            msg = "Entropy density should not be negative! Now entropy is decreasing. " \
+            msg = "Entropy density change should not be negative! Now entropy is decreasing. " \
                   f"Got: {self.va_entropy_density_diff} with " \
                   f"model={self.model.label_unicode}, v_wall={self.v_wall}, alpha_n={self.alpha_n}"
             if log_negative_entropy:
@@ -312,7 +312,7 @@ class Bubble:
             self.add_note(msg)
             self.negative_net_entropy_change = True
         if self.va_thermal_energy_density_diff < 0:
-            msg = "Thermal energy density is negative. The bubble is therefore working as a heat engine. " \
+            msg = "Thermal energy density change is negative. The bubble is therefore working as a heat engine. " \
                   f"Got: {self.va_thermal_energy_density_diff}"
             logger.warning(msg)
             self.add_note(msg)
