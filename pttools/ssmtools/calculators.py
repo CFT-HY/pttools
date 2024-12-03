@@ -271,9 +271,9 @@ def sin_transform_old(z: th.FloatOrArr, xi: np.ndarray, v: np.ndarray) -> th.Flo
     logger.warning("sin_transform_old is deprecated")
     if isinstance(z, np.ndarray):
         array = np.sin(np.outer(z, xi)) * v
-        integral = np.trapz(array, xi)
+        integral = np.trapezoid(array, xi)
     else:
         array = v * np.sin(z * xi)
-        integral = np.trapz(array, xi)
+        integral = np.trapezoid(array, xi)
 
     return integral

@@ -47,7 +47,7 @@ def calc_sup_ssm(path: str, save: bool = True) -> tp.Dict[str, tp.Union[np.ndarr
         alpha = sim_data[i, 1]
         params = (vw, alpha, ssm.NucType.EXPONENTIAL,(1,))
         out_ssm.append(ssm.power_gw_scaled_bag(z, params))  # omgw_ssm /(HnR*)(Hnt) ,:TODO check how to add these in new PTtools / are they still needed z_st_thresh=np.inf ,npt=[7000,200,1000]
-        out_ssm_tot.append(np.trapz(out_ssm[i], np.log(z)))
+        out_ssm_tot.append(np.trapezoid(out_ssm[i], np.log(z)))
         Ubarf_2_ssm.append(bbl.get_ubarf2_bag(vw, alpha))
 
         sim_omgw = sim_data[i, 3]  # omgw_sim_tot /(HnR*)(Hnt)

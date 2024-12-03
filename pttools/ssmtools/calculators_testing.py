@@ -60,7 +60,7 @@ def sin_transform(
     # integral = np.zeros_like(z)
     # for i, z_val in enumerate(z):
     #     arr_xi = np.interp(xi, x, arr)
-    #     integral[i] = np.trapz(arr_xi, xi * z_val)
+    #     integral[i] = np.trapezoid(arr_xi, xi * z_val)
     #
     # integral2 = sin_transform2(z, xi, f, z_st_thresh)
     # print("Test")
@@ -100,7 +100,7 @@ def sin_transform_debug(z: th.FloatOrArr, xi: np.ndarray, f: np.ndarray, z_st_th
 
     # Old sine transform
     integrand = f * np.sin(np.outer(z, xi))
-    integral = np.trapz(integrand, xi)
+    integral = np.trapezoid(integrand, xi)
     ax3.plot(z, np.abs(integral)**2)
     ax3.set_xscale("log")
     # ax3.set_yscale("log")

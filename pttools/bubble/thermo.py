@@ -146,7 +146,7 @@ def va_entropy_density_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wal
     """
     if phase is None:
         phase = props.find_phase(xi, v_wall)
-    return 4*np.pi/3 * np.trapz(model.s(w, phase) - model.s(w[-1], Phase.SYMMETRIC), xi**3)
+    return 4*np.pi/3 * np.trapezoid(model.s(w, phase) - model.s(w[-1], Phase.SYMMETRIC), xi**3)
 
 
 # @numba.njit
@@ -162,7 +162,7 @@ def va_kinetic_energy_density(v: np.ndarray, w: np.ndarray, xi: np.ndarray) -> f
     :param xi: $\xi$
     :return: $e_K$
     """
-    return 4*np.pi/3 * np.trapz(w * v**2 * relativity.gamma2(v), xi**3)
+    return 4*np.pi/3 * np.trapezoid(w * v**2 * relativity.gamma2(v), xi**3)
 
 
 def va_kinetic_energy_fraction(ek_va: float, eb: float) -> float:
@@ -184,7 +184,7 @@ def va_thermal_energy_density_diff(w: np.ndarray, xi: np.ndarray) -> float:
     r"""Volume-averaged thermal energy density
     $$\Delta e_Q = 4 \pi \int_0^{\xi_\text{max}} d\xi \xi^2 \frac{3}{4} (w - w_n)$$
     """
-    return 4*np.pi/3 * np.trapz(0.75*(w - w[-1]), xi**3)
+    return 4*np.pi/3 * np.trapezoid(0.75*(w - w[-1]), xi**3)
 
 
 def va_thermal_energy_fraction(eq_va: float, eb: float):
@@ -202,4 +202,4 @@ def va_trace_anomaly(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: floa
         phase = props.find_phase(xi, v_wall)
     theta = model.theta(w, phase)
     theta_n = model.theta(w[-1], Phase.SYMMETRIC)
-    return 4*np.pi/3 * np.trapz((theta - theta_n), xi**3)
+    return 4*np.pi/3 * np.trapezoid((theta - theta_n), xi**3)

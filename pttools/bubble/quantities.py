@@ -417,7 +417,7 @@ def mean_energy_change_bag(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall:
     #    int1, int2 = split_integrate(ene_diff, v, w, xi**3, v_wall)
     #    integral = int1 + int2
     check.check_physical_params((v_wall, alpha_n))
-    integral = np.trapz(de_from_w_bag(w, xi, v_wall, alpha_n), xi ** 3)
+    integral = np.trapezoid(de_from_w_bag(w, xi, v_wall, alpha_n), xi ** 3)
     return integral / v_wall ** 3
 
 
@@ -436,7 +436,7 @@ def mean_enthalpy_change(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: f
     #    int1, int2 = split_integrate(en_diff, v, w - w[-1], xi**3, v_wall)
     #    integral = int1 + int2
     check.check_wall_speed(v_wall)
-    integral = np.trapz((w - w[-1]), xi ** 3)
+    integral = np.trapezoid((w - w[-1]), xi ** 3)
     return integral / v_wall ** 3
 
 
@@ -476,7 +476,7 @@ def part_integrate(
     v_in = v[where_in]
     w_in = w[where_in]
     integrand = func(v_in, w_in, xi_in)
-    return np.trapz(integrand, xi_in)
+    return np.trapezoid(integrand, xi_in)
 
 
 def split_integrate(
