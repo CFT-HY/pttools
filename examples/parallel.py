@@ -7,20 +7,30 @@ Minimal example of parallel bubble solving
 
 import numpy as np
 
+from pttools.analysis import BubbleGridVWAlpha
+from pttools.bubble import Bubble
 from pttools.models import BagModel
-from pttools.analysis.parallel import create_bubbles
+
+
+def compute(bubble: Bubble):
+	if bubble.no_solution_found or bubble.solver_failed:
+		return np.nan, np.nan
+	return bubble.kappa, bubble.omega
+
+compute.return_type = (float, float)
 
 
 def main():
-    model = BagModel(a_s=1.5, a_b=1, V_s=1)
-
-    bubbles = create_bubbles(
-        model=model,
-        v_walls=np.linspace(0.1, 0.9, 3),
-        alpha_ns=np.linspace(model.alpha_n_min+0.01, 0.3, 3)
-    )
-
-    print(bubbles[0, 0].sol_type)
+    v_walls = np.linspace(0.1, 0.9, 5)
+    alpha_ns = np.linspace(0.1, 0.3, 5)
+    model = BagModel(a_s=1.1, a_b=1, V_s=1)
+    grid = BubbleGridVWAlpha(model, v_walls, alpha_ns, compute)
+    bubbles = grid.bubbles
+    kappas = grid.data[0]
+    omegas = grid.data[1]
+    print(bubbles.shape)
+    print(kappas.shape)
+    print(omegas.shape)
 
 
 if __name__ == "__main__":
