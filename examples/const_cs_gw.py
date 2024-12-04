@@ -66,15 +66,15 @@ def main():
         )
 
     figsize = (12, 10)
-    fig: plt.Figure = plt.figure(figsize=figsize)
+    fig1: plt.Figure = plt.figure(figsize=figsize)
     fig2: plt.Figure = plt.figure(figsize=figsize)
     fig3: plt.Figure = plt.figure(figsize=figsize)
-    axs: np.ndarray = fig.subplots(alpha_ns.size, v_walls.size)
+    axs1: np.ndarray = fig1.subplots(alpha_ns.size, v_walls.size)
     axs2: np.ndarray = fig2.subplots(alpha_ns.size, v_walls.size)
     axs3: np.ndarray = fig3.subplots(alpha_ns.size, v_walls.size)
     for i_alpha_n, alpha_n in enumerate(alpha_ns):
         for i_v_wall, v_wall in enumerate(v_walls):
-            ax: plt.Axes = axs[i_alpha_n, i_v_wall]
+            ax1: plt.Axes = axs1[i_alpha_n, i_v_wall]
             ax2: plt.Axes = axs2[i_alpha_n, i_v_wall]
             ax3: plt.Axes = axs3[i_alpha_n, i_v_wall]
             for i_model, model in enumerate(models):
@@ -82,20 +82,21 @@ def main():
                 if spectrum is not None:
                     label = model.label_latex_params
                     label2 = f"{label[:-1]}, SNR={spectrum.signal_to_noise_ratio_instrument():.1f}$"
-                    ax.plot(spectrum.y, spectrum.pow_gw, label=label)
                     ls = lss[i_model]
-                    ax2.plot(spectrum.bubble.xi, spectrum.bubble.v, label=label, ls=ls)
+                    ax1.plot(spectrum.bubble.xi, spectrum.bubble.v, label=label, ls=ls)
+                    ax2.plot(spectrum.y, spectrum.pow_gw, label=label)
                     ax3.plot(spectrum.f(), spectrum.omgw0(), label=label2)
-            ax.set_xscale("log")
-            ax.set_yscale("log")
-            ax.set_xlabel("$z = kR*$")
-            ax.set_ylabel(r"$\mathcal{P}_{\text{gw}}(z)$")
-            ax.grid()
-            title = rf"$\alpha_n={alpha_n}, v_\text{{wall}}={v_wall}$"
-            ax.set_title(title)
 
-            ax2.set_xlabel(r"$\xi$")
-            ax2.set_ylabel(r"$v(\xi)$")
+            title = rf"$\alpha_n={alpha_n}, v_\text{{wall}}={v_wall}$"
+            ax1.set_xlabel(r"$\xi$")
+            ax1.set_ylabel(r"$v(\xi)$")
+            ax1.grid()
+            ax1.set_title(title)
+
+            ax2.set_xscale("log")
+            ax2.set_yscale("log")
+            ax2.set_xlabel("$z = kR*$")
+            ax2.set_ylabel(r"$\mathcal{P}_{\text{gw}}(z)$")
             ax2.grid()
             ax2.set_title(title)
 
@@ -113,7 +114,7 @@ def main():
         for i_alpha_n, alpha_n in enumerate(alpha_ns):
             vm_arr = shock_curve(model, alpha_n, xi_arr)
             for i_v_wall, v_wall in enumerate(v_walls):
-                ax = axs2[i_alpha_n, i_v_wall]
+                ax = axs1[i_alpha_n, i_v_wall]
                 if i_model:
                     ax.plot(xi_arr, vm_arr, color="k")
                 else:
@@ -124,7 +125,7 @@ def main():
         csb = np.sqrt(csb2)
         xi_mu: np.ndarray = np.linspace(csb, 1, 20)
         v_mu = lorentz(xi=xi_mu, v=csb)
-        for ax in axs2.flat:
+        for ax in axs1.flat:
             if i_csb2:
                 ax.plot(xi_mu, v_mu, ls=":", c="k")
             else:
@@ -144,35 +145,37 @@ def main():
     pow_low = 9
     k_low = np.logspace(-1, -0.2, 10)
     p_low = k_low**pow_low * 10**(-3.5)
-    for ax in axs.flat:
+    for ax in axs2.flat:
         ax.plot(k_low, p_low, color="k")
         ax.text(0.25, 10**(-6), f"$k^{pow_low}$")
 
     pow_high = -3
     k_high = np.logspace(1, 3, 10)
     p_high = k_high**pow_high * 10**(-3)
-    for ax in axs.flat:
+    for ax in axs2.flat:
         ax.plot(k_high, p_high, color="k")
         ax.text(5, 10**(-6.7), f"$k^{{{pow_high}}}$")
 
-    for ax in axs.flat:
-        ax.legend(loc="lower center")
-    for ax in axs2.flat:
+    for ax in axs1.flat:
         ax.set_xlim(0.35, 0.85)
         ax.set_ylim(0, 0.6)
         ax.legend(loc="upper left")
+    for ax in axs2.flat:
+        ax.legend(loc="lower center")
     for ax in axs3.flat:
         ax.set_xlim(f_min, f_max)
         ax.set_ylim(1e-19, 1e-7)
         ax.legend(loc="lower left")
 
-    fig.tight_layout()
+    fig1.tight_layout()
     fig2.tight_layout()
     fig3.tight_layout()
-    utils.save_and_show(fig, "const_cs_gw")
-    utils.save_and_show(fig2, "const_cs_gw_v")
-    utils.save_and_show(fig3, "const_cs_gw_omgw0")
+    return fig1, fig2, fig3
 
 
 if __name__ == "__main__":
-    fig = main()
+    figs = main()
+    utils.save(figs[0], "const_cs_gw_v")
+    utils.save(figs[1], "const_cs_gw")
+    utils.save(figs[2], "const_cs_gw_omgw0")
+    plt.show()
