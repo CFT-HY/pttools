@@ -30,7 +30,6 @@ except ImportError:
     logger.info("Giese could not be imported.")
     kappaNuMuModel: tp.Optional[callable] = None
 
-
 def get_kappa(bubble: Bubble) -> float:
     if (not bubble.solved) or bubble.no_solution_found or bubble.solver_failed or bubble.numerical_error:
         return np.nan
@@ -100,6 +99,8 @@ def create_figure(
     for i, model in enumerate(models):
         ls = "--" if i in [2, 3] else "-"
         if giese:
+            if kappaNuMuModel is None:
+                continue
             kappas = kappas_giese(model=model, v_walls=v_walls, alpha_ns=alpha_ns, theta_bar=theta_bar)
         else:
             bubbles, kappas = create_bubbles(
