@@ -16,15 +16,15 @@ if os.path.exists(MSC2_PYTHON_PATH):
     sys.path.append(MSC2_PYTHON_PATH)
 
 
-def save(fig: plt.Figure, path: str):
+def save(fig: plt.Figure, path: str, **kwargs):
     has_extension = "." in path
     if not os.path.isabs(path):
         path = os.path.join(FIG_DIR, path)
-        if has_extension:
-            fig.savefig(path)
-        else:
-            for ext in ["eps", "pdf", "png", "svg"]:
-                fig.savefig(f"{path}.{ext}")
+    if has_extension:
+        fig.savefig(path, **kwargs)
+    else:
+        for ext in ["eps", "pdf", "png", "svg"]:
+            fig.savefig(f"{path}.{ext}", **kwargs)
 
 
 def save_and_show(fig: plt.Figure, path: str):
