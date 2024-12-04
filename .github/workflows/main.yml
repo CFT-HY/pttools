@@ -3,6 +3,18 @@ on: push
 env:
   PRIMARY_PYTHON_VERSION: '3.12'
 jobs:
+  cloc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Count Lines of Code (cloc) for the PTtools library
+        uses: djdefi/cloc-action@6
+        with:
+          options: pttools --exclude-list-file=.clocignore
+      - name: Count Lines of Code (cloc) for the repository
+        uses: djdefi/cloc-action@6
+        with:
+          options: --exclude-list-file=.clocignore
   graph:
     runs-on: ubuntu-latest
     timeout-minutes: 5
