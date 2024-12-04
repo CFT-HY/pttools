@@ -100,14 +100,15 @@ class Bubble:
                     "Got invalid limits for alpha_theta_bar_n_lte: "
                     f"min={self.alpha_theta_bar_n_min_lte}, max={self.alpha_theta_bar_n_max_lte}"
                 )
-            if log_invalid and self.alpha_theta_bar_n < self.alpha_theta_bar_n_min_lte:
-                logger.warning("alpha_theta_bar_n=%s < lte_min=%s", self.alpha_theta_bar_n, self.alpha_theta_bar_n_min_lte)
-            if log_invalid and self.alpha_theta_bar_n > self.alpha_theta_bar_n_max_lte:
-                logger.warning("alpha_theta_bar_n=%s > lte_max=%s", self.alpha_theta_bar_n, self.alpha_theta_bar_n_max_lte)
+            # LTE = no entropy generation
+            # if log_invalid and self.alpha_theta_bar_n < self.alpha_theta_bar_n_min_lte:
+            #     logger.warning("alpha_theta_bar_n=%s < lte_min=%s", self.alpha_theta_bar_n, self.alpha_theta_bar_n_min_lte)
+            # if log_invalid and self.alpha_theta_bar_n > self.alpha_theta_bar_n_max_lte:
+            #     logger.warning("alpha_theta_bar_n=%s > lte_max=%s", self.alpha_theta_bar_n, self.alpha_theta_bar_n_max_lte)
 
         if log_invalid and self.sol_type == SolutionType.DETON and self.Psi_n < 0.75:
-            logger.warning(
-                "This detonation should not exist, as LTE predicts a large alpha_n_hyb_max for Psi_n=%s < 0.75. "
+            logger.info(
+                "This detonation may not exist, as LTE predicts a large alpha_n_hyb_max for Psi_n=%s < 0.75. "
                 "Please see Ai et al. (2023), p. 15.",
                 self.Psi_n
             )
