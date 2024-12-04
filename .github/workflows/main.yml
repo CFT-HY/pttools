@@ -10,11 +10,11 @@ jobs:
       - name: Count Lines of Code (cloc) for the PTtools library
         uses: djdefi/cloc-action@6
         with:
-          options: pttools --exclude-list-file=.clocignore
+          options: ${{ github.workspace }}/pttools --exclude-list-file=.clocignore
       - name: Count Lines of Code (cloc) for the repository
         uses: djdefi/cloc-action@6
         with:
-          options: --exclude-list-file=.clocignore
+          options: ${{ github.workspace }} --exclude-list-file=.clocignore
   graph:
     runs-on: ubuntu-latest
     timeout-minutes: 5
