@@ -23,8 +23,8 @@ def save(fig: plt.Figure, path: str):
         if has_extension:
             fig.savefig(path)
         else:
-            fig.savefig(f"{path}.eps")
-            fig.savefig(f"{path}.png")
+            for ext in ["eps", "pdf", "png", "svg"]:
+                fig.savefig(f"{path}.{ext}")
 
 
 def save_and_show(fig: plt.Figure, path: str):
