@@ -573,7 +573,7 @@ class Bubble:
     def va_trace_anomaly_diff(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.va_trace_anomaly(self.model, self.w, self.xi, self.v_wall, self.phase)
+        return thermo.va_trace_anomaly_diff(self.model, self.w, self.xi, self.v_wall, self.phase)
 
     @functools.cached_property
     def wbar(self) -> float:

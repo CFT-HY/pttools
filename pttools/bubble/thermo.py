@@ -72,7 +72,7 @@ def trace_anomaly_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: fl
     r"""Bubble volume averaged trace anomaly
     $$\epsilon = \frac{3}{4\pi v_w^3} \Delta e_\theta$$
     """
-    return 3/(4*np.pi * v_wall**3) * va_trace_anomaly(model, w, xi, v_wall, phase)
+    return 3/(4*np.pi * v_wall**3) * va_trace_anomaly_diff(model, w, xi, v_wall, phase)
 
 
 def ebar(model: "Model", wn: float) -> float:
@@ -86,7 +86,7 @@ def kappa(
         v_wall: float,
         delta_e_theta: float = None) -> float:
     if delta_e_theta is None:
-        delta_e_theta = va_trace_anomaly(model, w, xi, v_wall)
+        delta_e_theta = va_trace_anomaly_diff(model, w, xi, v_wall)
     return va_kinetic_energy_density(v, w, xi) / np.abs(delta_e_theta)
 
 
@@ -108,7 +108,7 @@ def omega(
         v_wall: float,
         delta_e_theta: float = None) -> float:
     if delta_e_theta is None:
-        delta_e_theta = va_trace_anomaly(model, w, xi, v_wall)
+        delta_e_theta = va_trace_anomaly_diff(model, w, xi, v_wall)
     return va_thermal_energy_density_diff(w, xi) / np.abs(delta_e_theta)
 
 
@@ -194,8 +194,8 @@ def va_thermal_energy_fraction(eq_va: float, eb: float):
     return eq_va / eb
 
 
-def va_trace_anomaly(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
-    r"""Volume-averaged trace anomaly
+def va_trace_anomaly_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
+    r"""Volume-averaged trace anomaly difference
     $$\Delta e_\theta = 4 \pi \int_0^{\xi_\text{max}} d\xi \xi^2 (\theta - \theta_n)$$
     """
     if phase is None:
