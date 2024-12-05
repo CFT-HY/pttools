@@ -11,14 +11,12 @@ import typing as tp
 
 import matplotlib.pyplot as plt
 import numpy as np
-from numba.cuda.cudadrv.runtime import Runtime
 
-from examples.utils import save_and_show
-from pttools.analysis import A4_PAPER_SIZE
+from examples.utils import save
 from pttools.analysis.parallel import create_bubbles
-from pttools.analysis.utils import A4_PAPER_SIZE
+# from pttools.analysis.utils import A4_PAPER_SIZE
 from pttools.bubble import Bubble, Phase
-from pttools.models import Model, ConstCSModel
+from pttools.models import ConstCSModel
 from pttools.speedup import run_parallel, GITHUB_ACTIONS
 
 logger = logging.getLogger(__name__)
@@ -44,8 +42,10 @@ def kappa_giese(params: np.ndarray, model: ConstCSModel) -> float:
     v_wall, alpha_tbn_giese = params
     try:
         kappa, _, _, _, _ = kappaNuMuModel(
-            cs2s=model.cs2(model.w_crit, Phase.SYMMETRIC),
-            cs2b=model.cs2(model.w_crit, Phase.BROKEN),
+            # cs2s=model.cs2(model.w_crit, Phase.SYMMETRIC),
+            # cs2b=model.cs2(model.w_crit, Phase.BROKEN),
+            cs2s=model.css2,
+            cs2b=model.csb2,
             al=alpha_tbn_giese,
             vw=v_wall
         )
@@ -90,47 +90,48 @@ def kappas_giese(
 
 def create_figure(
         ax: plt.Axes,
-        models: tp.List[Model],
+        models: tp.List[ConstCSModel],
         alpha_ns: np.ndarray,
         colors: tp.List[str],
         v_walls: np.ndarray,
         theta_bar: bool = False,
         giese: bool = False):
+    kappas = np.empty((len(models), alpha_ns.size, v_walls.size))
     for i, model in enumerate(models):
         ls = "--" if i in [2, 3] else "-"
         if giese:
             if kappaNuMuModel is None:
-                continue
-            kappas = kappas_giese(model=model, v_walls=v_walls, alpha_ns=alpha_ns, theta_bar=theta_bar)
+                kappas[i, :, :] = np.nan
+            kappas[i, :, :] = kappas_giese(model=model, v_walls=v_walls, alpha_ns=alpha_ns, theta_bar=theta_bar)
         else:
-            bubbles, kappas = create_bubbles(
+            bubbles, kappas[i, :, :] = create_bubbles(
                 model=model, v_walls=v_walls, alpha_ns=alpha_ns, func=get_kappa,
                 bubble_kwargs={"theta_bar": theta_bar, "allow_invalid": False}, allow_bubble_failure=True
             )
         for j, color in enumerate(colors):
             try:
-                i_max = np.nanargmax(kappas[j])
+                i_max = np.nanargmax(kappas[i, j, :])
             except ValueError:
                 print(f"Could not produce bubbles with alpha_n={alpha_ns[j]} for {model.label_unicode}")
                 continue
             kwargs = {}
             if ls == "-":
                 kwargs["label"] = rf"$\alpha={alpha_ns[j]}$"
-            ax.plot(v_walls, kappas[j], ls=ls, color=color, alpha=0.5, **kwargs)
+            ax.plot(v_walls, kappas[i, j, :], ls=ls, color=color, alpha=0.5, **kwargs)
             print(
-                f"alpha_n={alpha_ns[j]}, kappa_max={kappas[j, i_max]}, i_max={i_max}, "
+                f"alpha_n={alpha_ns[j]}, kappa_max={kappas[i, j, i_max]}, i_max={i_max}, "
                 f"v_wall={v_walls[i_max]}, color={color}, ls={ls}, {model.label_unicode}"
             )
 
-    ax.set_xlabel(r"$\xi_w$")
     ax.set_ylabel(r"$\kappa_{\bar{\theta}_n}$")
+    ax.set_ylim(bottom=10 ** -2.5, top=1)
+    ax.set_xlabel(r"$v_\text{wall}$")
     ax.set_yscale("log")
-    ax.set_ylim(bottom=10**-2.5, top=1)
     ax.set_xlim(v_walls.min(), v_walls.max())
 
     title = ""
     if giese:
-        title += "Giese"
+        title += "Giese et al."
     else:
         title += "PTtools"
     title += ", "
@@ -139,7 +140,43 @@ def create_figure(
     else:
         title += r"$\alpha_n$"
     ax.set_title(title)
-    # ax.legend()
+    return kappas
+
+
+def create_diff_figure(
+        ax: plt.Axes,
+        kappas_pttools: np.ndarray,
+        kappas_giese: np.ndarray,
+        models: tp.List[ConstCSModel],
+        v_walls: np.ndarray,
+        colors: tp.List[str],
+        theta_bar: bool):
+    rel_diffs = np.abs(kappas_pttools - kappas_giese) / kappas_giese
+    if theta_bar:
+        title = r"$\alpha_{\bar{\theta}_n}$"
+    else:
+        title = r"$\alpha_n$"
+    print(title)
+    for i_model, model in enumerate(models):
+        ls = "--" if i_model in [2, 3] else "-"
+        for i_alpha in range(kappas_pttools.shape[1]):
+            ax.plot(
+                v_walls,
+                rel_diffs[i_model, i_alpha, :],
+                color=colors[i_alpha],
+                ls=ls,
+                # label=f"Model {i_model}, alpha {i_alpha}",
+            )
+        print(model.label_unicode)
+        print(np.nanmax(rel_diffs[i_model, :, :], axis=1))
+    ax.set_xlabel(r"$v_\text{wall}$")
+    ax.set_ylabel(
+        r"$|\kappa_{\bar{\theta}_n,\text{PTtools}} - \kappa_{\bar{\theta}_n,\text{ref}}|"
+        r" / \kappa_{\bar{\theta}_n,\text{ref}}$")
+    ax.set_yscale("log")
+    ax.set_ylim(10**(-6), 1)
+    ax.set_xlim(v_walls.min(), v_walls.max())
+    ax.set_title(title)
 
 
 def main():
@@ -160,26 +197,55 @@ def main():
     for model in models:
         logger.info("Model parameters: %s", model.params_str())
 
-    fig: plt.Figure = plt.figure(figsize=(10, 8))
-    axs = fig.subplots(2, 2)
+    figsize_x = 10
+    fig1: plt.Figure = plt.figure(figsize=(figsize_x, 8))
+    fig2: plt.Figure = plt.figure(figsize=(figsize_x, 6))
+    axs1 = fig1.subplots(2, 2)
+    axs2 = fig2.subplots(1, 2)
 
     start_time = time.perf_counter()
-    create_figure(
-        axs[1, 0], models, alpha_ns=alpha_thetabar_ns, colors=colors, v_walls=v_walls, theta_bar=True, giese=True)
-    create_figure(
-        axs[1, 1], models, alpha_ns=alpha_thetabar_ns, colors=colors, v_walls=v_walls, theta_bar=False, giese=True)
+    kappas_giese_atbn = create_figure(
+        ax=axs1[1, 0],
+        models=models, alpha_ns=alpha_thetabar_ns, colors=colors, v_walls=v_walls,
+        theta_bar=True, giese=True
+    )
+    kappas_giese_an = create_figure(
+        ax=axs1[1, 1],
+        models=models, alpha_ns=alpha_thetabar_ns, colors=colors, v_walls=v_walls,
+        theta_bar=False, giese=True
+    )
     giese_time = time.perf_counter()
     logger.info(f"Creating Giese kappa figures took {giese_time - start_time:.2f} s.")
-    create_figure(axs[0, 0], models, alpha_ns=alpha_thetabar_ns, colors=colors, v_walls=v_walls, theta_bar=True)
-    create_figure(axs[0, 1], models, alpha_ns=alpha_thetabar_ns, colors=colors, v_walls=v_walls, theta_bar=False)
-    logger.info(f"Creating PTtools kappa figures took {time.perf_counter() - giese_time:.2f} s.")
-    fig.tight_layout()
-
+    kappas_pttools_atbn = create_figure(
+        ax=axs1[0, 0],
+        models=models, alpha_ns=alpha_thetabar_ns, colors=colors, v_walls=v_walls,
+        theta_bar=True
+    )
+    kappas_pttools_an = create_figure(
+        ax=axs1[0, 1],
+        models=models, alpha_ns=alpha_thetabar_ns, colors=colors, v_walls=v_walls,
+        theta_bar=False
+    )
     print("v_walls")
     print(v_walls)
-    return fig
+    create_diff_figure(
+        ax=axs2[0],
+        kappas_pttools=kappas_pttools_atbn, kappas_giese=kappas_giese_atbn,
+        models=models, colors=colors, v_walls=v_walls, theta_bar=True
+    )
+    create_diff_figure(
+        ax=axs2[1],
+        kappas_pttools=kappas_pttools_an, kappas_giese=kappas_giese_an,
+        models=models, colors=colors, v_walls=v_walls, theta_bar=False
+    )
+    logger.info(f"Creating PTtools kappa figures took {time.perf_counter() - giese_time:.2f} s.")
+    fig1.tight_layout()
+    fig2.tight_layout()
+    return fig1, fig2
 
 
 if __name__ == "__main__":
-    fig = main()
-    save_and_show(fig, "giese_lisa_fig2")
+    fig, fig2 = main()
+    save(fig, "giese_lisa_fig2")
+    save(fig, "giese_lisa_fig2_diff")
+    plt.show()
