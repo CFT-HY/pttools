@@ -14,9 +14,9 @@ from examples import utils
 from pttools.bubble import lorentz
 from pttools.bubble.shock import shock_curve
 from pttools.models import ConstCSModel
-from pttools.omgw0 import Spectrum, omega_noise, omega_ins
+from pttools.omgw0 import Spectrum, omega_ins
 from pttools.analysis.parallel import create_spectra
-from pttools.analysis.utils import A3_PAPER_SIZE, A4_PAPER_SIZE
+# from pttools.analysis.utils import A3_PAPER_SIZE, A4_PAPER_SIZE
 
 logger = logging.getLogger(__name__)
 
