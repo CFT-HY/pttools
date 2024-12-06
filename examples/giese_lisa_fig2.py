@@ -97,31 +97,36 @@ def create_figure(
         theta_bar: bool = False,
         giese: bool = False):
     kappas = np.empty((len(models), alpha_ns.size, v_walls.size))
-    for i, model in enumerate(models):
-        ls = "--" if i in [2, 3] else "-"
+    for i_model, model in enumerate(models):
+        ls = "--" if i_model in [2, 3] else "-"
         if giese:
             if kappaNuMuModel is None:
-                kappas[i, :, :] = np.nan
-            kappas[i, :, :] = kappas_giese(model=model, v_walls=v_walls, alpha_ns=alpha_ns, theta_bar=theta_bar)
+                kappas[i_model, :, :] = np.nan
+            kappas[i_model, :, :] = kappas_giese(model=model, v_walls=v_walls, alpha_ns=alpha_ns, theta_bar=theta_bar)
         else:
-            bubbles, kappas[i, :, :] = create_bubbles(
+            bubbles, kappas[i_model, :, :] = create_bubbles(
                 model=model, v_walls=v_walls, alpha_ns=alpha_ns, func=get_kappa,
                 bubble_kwargs={"theta_bar": theta_bar, "allow_invalid": False}, allow_bubble_failure=True
             )
-        for j, color in enumerate(colors):
+        for i_alpha_n, (alpha_n, color) in enumerate(zip(alpha_ns, colors)):
             try:
-                i_max = np.nanargmax(kappas[i, j, :])
+                i_max = np.nanargmax(kappas[i_model, i_alpha_n, :])
             except ValueError:
-                print(f"Could not produce bubbles with alpha_n={alpha_ns[j]} for {model.label_unicode}")
+                logger.error(f"Could not produce bubbles with alpha_n={alpha_n} for {model.label_unicode}")
                 continue
             kwargs = {}
             if ls == "-":
-                kwargs["label"] = rf"$\alpha={alpha_ns[j]}$"
-            ax.plot(v_walls, kappas[i, j, :], ls=ls, color=color, alpha=0.5, **kwargs)
-            print(
-                f"alpha_n={alpha_ns[j]}, kappa_max={kappas[i, j, i_max]}, i_max={i_max}, "
+                kwargs["label"] = rf"$\alpha={alpha_ns[i_alpha_n]}$"
+            ax.plot(v_walls, kappas[i_model, i_alpha_n, :], ls=ls, color=color, alpha=0.5, **kwargs)
+            logger.info(
+                f"alpha_n={alpha_n}, kappa_max={kappas[i_model, i_alpha_n, i_max]}, i_max={i_max}, "
                 f"v_wall={v_walls[i_max]}, color={color}, ls={ls}, {model.label_unicode}"
             )
+            failed_inds = np.argwhere(np.isnan(kappas[i_model, i_alpha_n, :]))
+            if failed_inds.size:
+                logger.info(
+                    "Failed v_walls: %s",
+                    v_walls[failed_inds].flatten())
 
     ax.set_ylabel(r"$\kappa_{\bar{\theta}_n}$")
     ax.set_ylim(bottom=10 ** -2.5, top=1)

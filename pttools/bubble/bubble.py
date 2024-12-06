@@ -13,7 +13,7 @@ from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.fluid import sound_shell_generic
 from pttools.bubble import const
 from pttools.bubble import props
-from pttools.bubble.relativity import gamma
+from pttools.bubble.relativity import gamma, lorentz
 from pttools.bubble import thermo
 from pttools.bubble import transition
 from pttools.speedup.export import export_json
@@ -373,6 +373,10 @@ class Bubble:
     @property
     def vp_vm_tilde_ratio_giese_rel_diff(self) -> float:
         return np.abs(self.vp_vm_tilde_ratio_giese / self.vp_vm_tilde_ratio - 1)
+
+    @property
+    def v_mu(self):
+        return lorentz(xi=self.v_wall, v=np.sqrt(self.model.cs2(self.wm, Phase.BROKEN)))
 
     # Quantities
     def en(self) -> float:
