@@ -110,12 +110,12 @@ class ConstCSModel(AnalyticModel):
                 alpha_n_min_target=alpha_n_min, a_s_default=a_s, a_b=a_b, V_s_default=V_s, V_b=V_b)
 
         self.label_latex_params = f"$c_{{s,s}}^2={css2_label}, c_{{s,b}}^2={csb2_label}$"
-        self.label_unicode_params = f", css2={css2_label}, csb2={csb2_label}"
+        self.label_unicode_params = f"css2={css2_label}, csb2={csb2_label}"
 
-        label_latex = f"Const. $c_s" + self.label_latex_params[1:] \
+        label_latex = f"Const. $c_s, " + self.label_latex_params[1:] \
             if not label_latex else label_latex
         # There is no Unicode subscript of b
-        label_unicode = "Const. cₛ" + self.label_unicode_params \
+        label_unicode = "Const. cₛ, " + self.label_unicode_params \
             if not label_unicode else label_unicode
 
         super().__init__(
