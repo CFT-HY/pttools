@@ -94,13 +94,13 @@ class Bubble:
             self.alpha_theta_bar_n = model.alpha_theta_bar_n_from_alpha_n(alpha_n)
             self.alpha_theta_bar_n_min_lte = model.alpha_theta_bar_n_min_lte(self.wn, self.sol_type, Psi_n=self.Psi_n)
             self.alpha_theta_bar_n_max_lte = model.alpha_theta_bar_n_max_lte(self.wn, self.sol_type, Psi_n=self.Psi_n)
-            if log_invalid and (self.alpha_theta_bar_n_max_lte < self.alpha_theta_bar_n_min_lte
-                                or self.alpha_theta_bar_n_max_lte < 0):
-                logger.error(
-                    "Got invalid limits for alpha_theta_bar_n_lte: "
-                    f"min={self.alpha_theta_bar_n_min_lte}, max={self.alpha_theta_bar_n_max_lte}"
-                )
-            # LTE = no entropy generation
+            # Here LTE = no entropy generation
+            # if log_invalid and (self.alpha_theta_bar_n_max_lte < self.alpha_theta_bar_n_min_lte
+            #                     or self.alpha_theta_bar_n_max_lte < 0):
+            #     logger.error(
+            #         "Got invalid limits for alpha_theta_bar_n_lte: "
+            #         f"min={self.alpha_theta_bar_n_min_lte}, max={self.alpha_theta_bar_n_max_lte}"
+            #     )
             # if log_invalid and self.alpha_theta_bar_n < self.alpha_theta_bar_n_min_lte:
             #     logger.warning("alpha_theta_bar_n=%s < lte_min=%s", self.alpha_theta_bar_n, self.alpha_theta_bar_n_min_lte)
             # if log_invalid and self.alpha_theta_bar_n > self.alpha_theta_bar_n_max_lte:

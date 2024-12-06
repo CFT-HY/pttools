@@ -691,15 +691,15 @@ class Model(BaseModel, abc.ABC):
         """
         ret = self.inverse_enthalpy_ratio(self.temp(wn, Phase.SYMMETRIC))
         min_ret = np.min(ret)
-        if min_ret < 0.9:
-            logger.warning(
-                "Psi_n=%s < 0.9. "
-                "Local thermal equilibrium (LTE) approximations may not be valid, "
-                "and therefore the model may not allow a constant v_wall to exist "
-                "without accounting for out-of-equilibrium effects. "
-                "See Ai et al. (2023) p. 15.",
-                min_ret
-            )
+        # if min_ret < 0.9:
+        #     logger.warning(
+        #         "Psi_n=%s < 0.9. "
+        #         "Local thermal equilibrium (LTE) approximations may not be valid, "
+        #         "and therefore the model may not allow a constant v_wall to exist "
+        #         "without accounting for out-of-equilibrium effects. "
+        #         "See Ai et al. (2023) p. 15.",
+        #         min_ret
+        #     )
         return ret
 
     def s(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:

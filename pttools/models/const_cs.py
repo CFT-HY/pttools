@@ -454,11 +454,11 @@ class ConstCSModel(AnalyticModel):
         if sol_type == SolutionType.DETON or sol_type == SolutionType.HYBRID:
             if Psi_n is None or np.isnan(Psi_n):
                 Psi_n = self.Psi_n(wn)
-            if np.max(np.abs(Psi_n - 1)) > 1:
-                logger.warning(
-                    "alpha_theta_bar_n_max_lte approximation is not valid, as |1 - Psi_n| > 1. "
-                    "You have to check yourself that alpha_n is valid."
-                )
+            # if np.max(np.abs(Psi_n - 1)) > 1:
+            #     logger.warning(
+            #         "alpha_theta_bar_n_max_lte approximation is not valid, as |1 - Psi_n| > 1. "
+            #         "You have to check yourself that alpha_n is valid."
+            #     )
             sqrt_val = (1 - Psi_n)/((self.nu - 1)*(self.nu - 2))
             if sqrt_val < 0:
                 return np.nan
@@ -470,11 +470,11 @@ class ConstCSModel(AnalyticModel):
         if Psi_n is None or np.isnan(Psi_n):
             Psi_n = self.Psi_n(wn)
         if sol_type == SolutionType.DETON:
-            if np.abs(self.nu - 4) < 1:
-                logger.warning(
-                    "alpha_theta_bar_n_min_lte_det approximation is not valid, as |nu - 4| > 1. "
-                    "You have to check yourself that alpha_n is valid."
-                )
+            # if np.abs(self.nu - 4) < 1:
+            #     logger.warning(
+            #         "alpha_theta_bar_n_min_lte_det approximation is not valid, as |nu - 4| > 1. "
+            #         "You have to check yourself that alpha_n is valid."
+            #     )
             return (1 - Psi_n) / (12*Psi_n) * (4 - (1 - Psi_n)*(self.nu - 4))
         if sol_type == SolutionType.SUB_DEF:
             return np.maximum((1 - Psi_n)/3, (self.mu - self.nu)/(3*self.mu))
