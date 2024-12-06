@@ -361,30 +361,35 @@ def sound_shell_detonation(
     wm_bag = boundary.w2_junction(v1=vp_tilde_bag, w1=wn, v2=vm_tilde_bag)
 
     # The bag model works for more points than the pre-generated guesses, so let's use the bag model if we can.
-    # Todo: replace this with the proper version below
     if not np.isnan(vm_tilde_bag):
         vm_tilde_guess = vm_tilde_bag
     if not np.isnan(wm_bag):
         wm_guess = wm_bag
 
+    # Constant sound speed model vm_tilde
+    # csb2_guess = model.cs2(w=wm_guess, phase=Phase.BROKEN)
+    # atbn = model.alpha_theta_bar_n(wn)
+    # a = v_wall / csb2_guess
+    # b = 3*atbn - 1 - v_wall**2 * (1/csb2_guess + 3*atbn)
+    # c = v_wall
+    # vm_tilde_guess = -b + np.sqrt(b**2 - 4*a*c) / (2*a)
+
+    # This does not work as well
     # if (wm_guess is None or np.isnan(wm_guess)) and not np.isnan(wm_bag):
     #     wm_guess = wm_bag
     # if (vm_tilde_guess is None or np.isnan(vm_tilde_guess)) and not np.isnan(vm_tilde_bag):
     #     vm_tilde_guess = vm_tilde_bag
 
-    # v_mu_tilde_guess = np.sqrt(model.cs2(w=wm_guess, phase=Phase.BROKEN))
-    # v_mu_guess = relativity.lorentz(xi=v_wall, v=v_mu_tilde_guess)
-    # vm_guess = relativity.lorentz(xi=v_wall, v=vm_tilde_guess)
-    # if vm_guess > v_mu_guess:
-    #     vm_guess_old = vm_guess
-    #     vm_guess = 0.5 * v_mu_guess
-    #     vm_tilde_guess = relativity.lorentz(xi=v_wall, v=vm_guess)
-    #     logger.warning(
-    #         "Got an invalid guess for detonation vm, adjusting from vm=%s to vm=%s, vm_tilde=%s",
-    #         vm_guess_old, vm_guess, vm_tilde_guess
-    #     )
-
-    # print(f"vm_guess={vm_tilde_guess}, v_mu_tilde={v_mu_tilde}")
+    # If the guess is not a valid detonation, decrease vm
+    v_mu_tilde_guess = np.sqrt(model.cs2(w=wm_guess, phase=Phase.BROKEN))
+    v_mu_guess = relativity.lorentz(xi=v_wall, v=v_mu_tilde_guess)
+    vm_guess = relativity.lorentz(xi=v_wall, v=vm_tilde_guess)
+    if vm_guess > v_mu_guess:
+        vm_guess = v_mu_guess
+        vm_tilde_guess = relativity.lorentz(xi=v_wall, v=vm_guess)
+        # vm_guess2 = relativity.lorentz(xi=v_wall, v=vm_tilde_guess)
+        # if vm_guess2 > v_mu_guess or vm_tilde_guess < 0 or vm_tilde_guess > 1:
+        #     raise RuntimeError("This should not happen. There is something wrong with the math.")
 
     # Solve junction conditions
     vm_tilde, wm = boundary.solve_junction(
@@ -392,23 +397,63 @@ def sound_shell_detonation(
         v1_tilde=v_wall, w1=wn,
         phase1=Phase.SYMMETRIC, phase2=Phase.BROKEN,
         v2_tilde_guess=vm_tilde_guess, w2_guess=wm_guess,
+        w2_min=wn,
         allow_negative_entropy_flux_change=True,
     )
     # Convert to the plasma frame
     vm = relativity.lorentz(v_wall, vm_tilde)
-
-    # solution_found = True
-    # v_mu_tilde = np.sqrt(model.cs2(w=wm, phase=Phase.BROKEN))
-    # v_mu = relativity.lorentz(xi=v_wall, v=v_mu_tilde)
-    # if vm > v_mu:
-    #     solution_found = False
-    #     logger.error(
-    #         "The detonation solver converged to a hybrid solution. "
-    #         "vm=%s, v_mu=%s, vm_tilde=%s, v_mu_tilde=%s "
-    #         "vm_guess=%s, vm_tilde_guess=%s",
-    #         vm, v_mu, vm_tilde, v_mu_tilde,
-    #         vm_guess, vm_tilde_guess
-    #     )
+    csb = np.sqrt(model.cs2(w=wm, phase=Phase.BROKEN))
+    v_mu = relativity.lorentz(xi=v_wall, v=csb)
+    solution_found = vm <= v_mu
+    first_attempt_success = solution_found
+    if not solution_found:
+        vm_tilde2, wm2 = boundary.solve_junction(
+            model,
+            v1_tilde=v_wall, w1=wn,
+            phase1=Phase.SYMMETRIC, phase2=Phase.BROKEN,
+            v2_tilde_guess=0.7*csb, w2_guess=(wm_guess + wn) / 2,
+            w2_min=wn,
+            allow_negative_entropy_flux_change=True,
+        )
+        vm2 = relativity.lorentz(v_wall, vm_tilde2)
+        solution_found = vm2 < v_mu
+        if solution_found:
+            vm_tilde = vm_tilde2
+            vm = vm2
+            wm = wm2
+    if not solution_found:
+        csb_lower = relativity.lorentz(xi=v_wall, v=0.5*v_mu)
+        vm_tilde2, wm2 = boundary.solve_junction(
+            model,
+            v1_tilde=v_wall, w1=wn,
+            phase1=Phase.SYMMETRIC, phase2=Phase.BROKEN,
+            v2_tilde_guess=csb_lower, w2_guess=(wm_guess + wn) / 2,
+            w2_min=wn,
+            allow_negative_entropy_flux_change=True,
+        )
+        vm2 = relativity.lorentz(v_wall, vm_tilde2)
+        solution_found = vm2 < v_mu
+        if solution_found:
+            vm_tilde = vm_tilde2
+            vm = vm2
+            wm = wm2
+    if not first_attempt_success:
+        if solution_found:
+            logger.warning(
+                "The detonation solver converged to a hybrid solution, but the attempt to fix it succeeded. "
+                "v_wall=vp_tilde=%s, alpha_n=%s, "
+                "vm=%s, vm_tilde=%s, v_mu=%s, "
+                "vm_tilde_guess=%s",
+                v_wall, alpha_n, vm, vm_tilde, v_mu, vm_tilde_guess
+            )
+        else:
+            logger.error(
+                "The detonation solver converged to a hybrid solution, and the attempt to fix it failed. "
+                "v_wall=vp_tilde=%s, alpha_n=%s, "
+                "vm=%s, vm_tilde=%s, v_mu=%s, "
+                "vm_tilde_guess=%s",
+                v_wall, alpha_n, vm, vm_tilde, v_mu, vm_tilde_guess
+            )
 
     v, w, xi, t = integrate.fluid_integrate_param(
         v0=vm, w0=wm, xi0=v_wall,
@@ -428,8 +473,6 @@ def sound_shell_detonation(
     vm_sh = vm
     vm_tilde_sh = vm_tilde
 
-    # Todo: remove this line
-    solution_found = True
     # Revert the order of points in the arrays for concatenation
     return np.flip(v), np.flip(w), np.flip(xi), vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wn, wm, wm, solution_found
 
@@ -855,6 +898,7 @@ def sound_shell_generic(
     # The reference data has wn=1 and therefore has to be scaled with wn.
     if wp_guess is None or np.isnan(wp_guess):
         using_ref = True
+        # Deflagrations have their own method for guessing wp, so this can be nan.
         wp_guess = wp_ref * wn
     if wm_guess is None or np.isnan(wp_guess):
         using_ref = True
@@ -863,6 +907,7 @@ def sound_shell_generic(
                 "No reference data for v_wall=%s, alpha_n=%s. Using an arbitrary starting guess.",
                 v_wall, alpha_n
             )
+            # This is arbitrary, but seems to work OK.
             wm_guess = 0.3 * wn
         else:
             wm_guess = wm_ref * wn
