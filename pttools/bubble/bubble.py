@@ -46,9 +46,14 @@ class Bubble:
             t_end: float = const.T_END_DEFAULT,
             n_xi: int = const.N_XI_DEFAULT,
             thin_shell_t_points_min: int = const.THIN_SHELL_T_POINTS_MIN,
+            use_bag_solver: bool = False,
+            use_giese_solver: bool = False,
             log_success: bool = False,
             allow_invalid: bool = False,
             log_invalid: bool = True):
+        if use_bag_solver and use_giese_solver:
+            raise ValueError("Both bag and Giese solvers cannot be used at the same time.")
+
         if v_wall < 0 or v_wall > 1:
             raise ValueError(f"Invalid v_wall={v_wall}")
 
@@ -123,6 +128,8 @@ class Bubble:
         self.negative_net_entropy_change = False
         self.numerical_error = False
         self.unphysical_alpha_plus = False
+        self.use_bag_solver = use_bag_solver
+        self.use_giese_solver = use_giese_solver
 
         # LaTeX labels are not supported in Plotly 3D plots.
         # https://github.com/plotly/plotly.js/issues/608
@@ -224,12 +231,18 @@ class Bubble:
             sum_rtol_error: float = 5e-2,
             error_prec: str = ".4f",
             use_bag_solver: bool = False,
+            use_giese_solver: bool = False,
             log_high_alpha_n_failures: bool = True,
             log_negative_entropy: bool = True):
         if self.solved:
             msg = "Re-solving an already solved bubble! Already computed quantities will not be updated due to caching."
             logger.warning(msg)
             self.add_note(msg)
+
+        use_bag_solver = self.use_bag_solver or use_bag_solver
+        use_giese_solver = self.use_giese_solver or use_giese_solver
+        if use_bag_solver and use_giese_solver:
+            raise ValueError("Both bag and Giese solvers cannot be used at the same time.")
 
         alpha_n_max_bag = alpha_n_max_deflagration_bag(self.v_wall)
         high_alpha_n = alpha_n_max_bag - self.alpha_n < 0.05
@@ -246,7 +259,7 @@ class Bubble:
                     wn=self.wn,
                     alpha_n_max_bag=alpha_n_max_bag,
                     high_alpha_n=high_alpha_n, t_end=self.t_end, n_xi=self.n_xi, thin_shell_limit=self.thin_shell_t_points_min,
-                    use_bag_solver=use_bag_solver,
+                    use_bag_solver=use_bag_solver, use_giese_solver=use_giese_solver,
                     log_success=self.log_success, log_high_alpha_n_failures=log_high_alpha_n_failures
                 )
             self.sn = self.model.s(self.wn, Phase.SYMMETRIC)
