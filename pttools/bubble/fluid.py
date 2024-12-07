@@ -487,19 +487,13 @@ def sound_shell_hybrid(
     # Exit velocity is at the sound speed
     vm_tilde = np.sqrt(model.cs2(wm, Phase.BROKEN))
 
-    using_arbitrary = False
+    # Simple starting guesses
     if np.isnan(vp_tilde_guess):
-        vp_tilde_guess = 0.75*vm_tilde
-        using_arbitrary = True
+        vp_tilde_guess = 0.75 * vm_tilde
     if np.isnan(wp_guess):
         wp_guess = 2*wm
-        using_arbitrary = True
-    if using_arbitrary:
-        logger.warning(
-            "vp_tilde_guess or wp_guess was not provided for the hybrid solver. "
-            f"Using arbitrary starting guesses. vp_tilde_guess={vp_tilde_guess}, wp_guess={wp_guess}"
-        )
-    return sound_shell_deflagration_common(
+
+    ret = sound_shell_deflagration_common(
         model,
         v_wall=v_wall,
         vm_tilde=vm_tilde,
@@ -513,6 +507,42 @@ def sound_shell_hybrid(
         allow_negative_entropy_flux_change=allow_negative_entropy_flux_change,
         warn_if_shock_barely_exists=warn_if_shock_barely_exists
     )
+    if not np.isnan(ret[4]):
+        return ret
+
+    vm = relativity.lorentz(xi=v_wall, v=vm_tilde)
+    # Shock velocity at xi_wall
+    v_sh_estimate = shock.v_shock(model, wn=wn, xi=v_wall, cs_n=cs_n)
+    vp_guess = relativity.lorentz(xi=v_wall, v=vp_tilde_guess)
+
+    # More complex starting guesses
+    if np.isnan(vp_tilde_guess) or vp_guess < v_sh_estimate or vp_guess < vm or np.isnan(wp_guess) or wp_guess < wn or wp_guess < wm:
+        vp_guess = 1.05 * v_sh_estimate
+        vp_tilde_guess = relativity.lorentz(xi=v_wall, v=vp_guess)
+        wp_guess = wn + 1.3*np.abs(wm - wn)
+        logger.warning(
+            "vp_tilde_guess or wp_guess was not provided for the hybrid solver or was invalid. "
+            "Using automatic starting guesses. vp_guess=%s, vp_tilde_guess=%s, wp_guess=%s",
+            vp_guess, vp_tilde_guess, wp_guess
+        )
+
+    ret2 = sound_shell_deflagration_common(
+        model,
+        v_wall=v_wall,
+        vm_tilde=vm_tilde,
+        wn=wn, wm=wm,
+        cs_n=cs_n, v_cj=v_cj,
+        vp_tilde_guess=vp_tilde_guess, wp_guess=wp_guess,
+        sol_type=SolutionType.HYBRID,
+        t_end=t_end, n_xi=n_xi,
+        thin_shell_limit=thin_shell_limit,
+        allow_failure=allow_failure,
+        allow_negative_entropy_flux_change=allow_negative_entropy_flux_change,
+        warn_if_shock_barely_exists=warn_if_shock_barely_exists
+    )
+    if not np.isnan(ret2[4]):
+        return ret2
+    return ret
 
 
 # Solvables
