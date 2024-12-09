@@ -44,9 +44,10 @@ class Model(BaseModel, abc.ABC):
             gen_cs2_neg: bool = True,
             implicit_V: bool = False,
             temperature_is_physical: bool = None,
-            allow_invalid: bool = False):
+            allow_invalid: bool = False,
+            log_info: bool = True):
 
-        if implicit_V:
+        if log_info and implicit_V:
             if V_s != 0 or V_b != 0:
                 logger.warning(
                     "Potentials have been specified for the implicit model: %s. "
@@ -98,7 +99,7 @@ class Model(BaseModel, abc.ABC):
 
         if gen_critical:
             # w_crit = wn_max
-            self.T_crit, self.w_crit = self.criticals(T_crit_guess, allow_invalid)
+            self.T_crit, self.w_crit = self.criticals(T_crit_guess, allow_fail=allow_invalid, log_info=log_info)
             self.w_at_alpha_n_min, self.alpha_n_min = self.alpha_n_min_find()
 
     # Concrete methods
@@ -451,12 +452,13 @@ class Model(BaseModel, abc.ABC):
         wn_min = self.w(t_crit, Phase.SYMMETRIC)
         alpha_n_at_wn_min = self.alpha_n(wn_min)
 
-        logger.info(
-            f"Initialized model with name={self.name}, T_crit={t_crit}, alpha_n_at_wn_min={alpha_n_at_wn_min}. "
-            f"At T_crit: w_s={wn_min}, w_b={self.w(t_crit, Phase.BROKEN)}, "
-            f"e_s={self.e_temp(t_crit, Phase.SYMMETRIC)}, e_b={self.e_temp(t_crit, Phase.BROKEN)}, "
-            f"p_s={self.p_temp(t_crit, Phase.SYMMETRIC)}, p_b={self.p_temp(t_crit, Phase.BROKEN)}"
-        )
+        if log_info:
+            logger.info(
+                f"Initialised model with name={self.name}, T_crit={t_crit}, alpha_n_at_wn_min={alpha_n_at_wn_min}. "
+                f"At T_crit: w_s={wn_min}, w_b={self.w(t_crit, Phase.BROKEN)}, "
+                f"e_s={self.e_temp(t_crit, Phase.SYMMETRIC)}, e_b={self.e_temp(t_crit, Phase.BROKEN)}, "
+                f"p_s={self.p_temp(t_crit, Phase.SYMMETRIC)}, p_b={self.p_temp(t_crit, Phase.BROKEN)}"
+            )
         return t_crit, wn_min
 
     def critical_temp(

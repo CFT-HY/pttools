@@ -82,7 +82,7 @@ def kappas_giese(
         multiple_params=True,
         # output_dtypes=(float, ),
         # max_workers=max_workers,
-        log_progress_percentage=True,
+        log_progress_percentage=20,
         kwargs={"model": model}
     )
     return kappas

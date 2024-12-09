@@ -60,7 +60,8 @@ class ConstCSModel(AnalyticModel):
             name: str = None,
             label_latex: str = None,
             label_unicode: str = None,
-            allow_invalid: bool = False):
+            allow_invalid: bool = False,
+            log_info: bool = True):
         # Ensure that these descriptions correspond to those in the base class
         r"""
         :param a_s: prefactor of $p$ in the symmetric phase. The convention is as in :notes:`\ ` eq. 7.33.
@@ -72,7 +73,8 @@ class ConstCSModel(AnalyticModel):
         :param T_ref: reference temperature, usually 1 * unit of choice, e,g. 1 GeV
         :param name: custom name for the model
         """
-        logger.debug(f"Initialising ConstCSModel with css2={css2}, csb2={csb2}.")
+        if log_info:
+            logger.debug(f"Initialising ConstCSModel with css2={css2}, csb2={csb2}.")
         css2_flt, css2_label = cs2_to_float_and_label(css2)
         csb2_flt, csb2_label = cs2_to_float_and_label(csb2)
         self.css2 = self.validate_cs2(css2_flt, "css2")
@@ -83,7 +85,7 @@ class ConstCSModel(AnalyticModel):
                 "c_{s,s}^2 and c_{s,b}^2 have to be 0 < c_s <= 1."
                 f"Got: c_{{s,s}}^2={css2}, c_{{s,b}}^2={csb2}."
             )
-        if css2_flt > 1/3 or csb2_flt > 1/3:
+        if log_info and css2_flt > 1/3 or csb2_flt > 1/3:
             logger.warning(
                 "c_{s,s}^2 > 1/3 or c_{s,b}^2 > 1/3. "
                 "Please ensure that g_eff is monotonic in your model. "
@@ -122,7 +124,8 @@ class ConstCSModel(AnalyticModel):
             g_s=g_s, g_b=g_b,
             T_min=T_min, T_max=T_max, T_crit_guess=T_crit_guess,
             name=name, label_latex=label_latex, label_unicode=label_unicode,
-            allow_invalid=allow_invalid
+            allow_invalid=allow_invalid,
+            log_info=log_info
         )
         # This can only be set after self.a_s and self.a_b are set.
         # This seems to contain invalid assumptions and approximations.
@@ -304,7 +307,7 @@ class ConstCSModel(AnalyticModel):
         # ---
         # Solve numerically
         # ---
-        model = ConstCSModel(css2=self.css2, csb2=self.csb2, a_s=a_s_default, a_b=a_b, V_s=V_s_default)
+        model = ConstCSModel(css2=self.css2, csb2=self.csb2, a_s=a_s_default, a_b=a_b, V_s=V_s_default, log_info=False)
         # If we are already below the target
         if model.alpha_n_min < alpha_n_min_target:
             return a_s_default, a_b, V_s_default, V_b
@@ -380,7 +383,7 @@ class ConstCSModel(AnalyticModel):
             css2: float, csb2: float,
             alpha_n_target: float):
         try:
-            model = ConstCSModel(css2=css2, csb2=csb2, a_s=a_s, a_b=a_b, V_s=V_s, V_b=V_b)
+            model = ConstCSModel(css2=css2, csb2=csb2, a_s=a_s, a_b=a_b, V_s=V_s, V_b=V_b, log_info=False)
         except (ValueError, RuntimeError):
             return np.nan
         diff = model.alpha_n_min - alpha_n_target

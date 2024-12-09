@@ -88,7 +88,7 @@ def create_bubbles(
         v_walls: np.ndarray,
         alpha_ns: np.ndarray,
         func: callable = None,
-        log_progress_percentage: float = 5,
+        log_progress_percentage: float = 10,
         max_workers: int = options.MAX_WORKERS_DEFAULT,
         allow_bubble_failure: bool = False,
         kwargs: tp.Dict[str, any] = None,

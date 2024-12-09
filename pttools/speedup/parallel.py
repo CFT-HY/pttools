@@ -51,9 +51,9 @@ class LoggingRunner:
                     np.floor(percentage / self.log_progress_percentage) != np.floor(
                     percentage_prev / self.log_progress_percentage)):
                 if multi_index is None:
-                    logger.debug("Processed item %s/%s, %s %%", index, self.arr_size, percentage)
+                    logger.debug("Processed item %d/%d, %.2f %%", index, self.arr_size, percentage)
                 else:
-                    logger.debug("Processed item %s, %s/%s, %s %%", multi_index, index, self.arr_size, percentage)
+                    logger.debug("Processed item %s, %d/%d, %.2f %%", multi_index, index, self.arr_size, percentage)
 
         return ret
 

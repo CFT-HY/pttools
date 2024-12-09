@@ -45,8 +45,9 @@ class AnalyticModel(Model, abc.ABC):
             gen_cs2: bool = True,
             gen_cs2_neg: bool = True,
             allow_invalid: bool = False,
-            auto_potential: bool = False):
-        if V_b != 0:
+            auto_potential: bool = False,
+            log_info: bool = True):
+        if log_info and V_b != 0:
             logger.warning(
                 "Got V_b = %s != 0. This may result in inaccurate results with the GW spectrum computation, "
                 "as the GW spectrum equations presume V_b = 0.", V_b)
@@ -75,9 +76,9 @@ class AnalyticModel(Model, abc.ABC):
             T_min=T_min, T_max=T_max, T_crit_guess=T_crit_guess,
             name=name, label_latex=label_latex, label_unicode=label_unicode,
             gen_critical=gen_critical, gen_cs2=gen_cs2, gen_cs2_neg=gen_cs2_neg,
-            allow_invalid=allow_invalid
+            allow_invalid=allow_invalid, log_info=log_info
         )
-        if self.a_s <= self.a_b:
+        if log_info and self.a_s <= self.a_b:
             logger.warning(
                 f"The model \"{self.name}\" does not satisfy a_s > a_b. "
                 "Please check that the critical temperature is non-negative. "

@@ -100,7 +100,7 @@ class FluidReference:
                     multiple_params=True,
                     unpack_params=True,
                     output_dtypes=(np.int_, np.float64, np.float64, np.float64, np.float64, np.float64, np.float64),
-                    log_progress_percentage=5
+                    log_progress_percentage=10
                 )
                 file.create_dataset("v_wall", data=v_walls)
                 file.create_dataset("alpha_n", data=alpha_ns)
