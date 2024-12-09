@@ -1,3 +1,10 @@
+"""
+Giese testing 3
+===============
+
+Testing to find the properties of a single bubble with PTtools and Giese solvers
+"""
+
 import matplotlib.pyplot as plt
 
 from pttools.bubble import Bubble, SolutionType
