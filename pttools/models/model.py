@@ -855,9 +855,9 @@ class Model(BaseModel, abc.ABC):
             wn_sol = fsolve(self._wn_solvable, x0=np.array([1]), args=(alpha_n, theta_bar), full_output=True)
             solution_found = wn_sol[2] == 1
             # reason = wn_sol[3]
-            if solution_found or np.isnan(wn):
-                logger.debug("w_n solution was found with wn_guess=1, but not wn_guess=%s", wn_guess)
-                wn = wn_sol[0][0]
+            # if solution_found or np.isnan(wn):
+            #     logger.debug("wn solution was found with wn_guess=1, but not wn_guess=%s", wn_guess)
+            #     wn = wn_sol[0][0]
 
         if not solution_found:
             msg = (
