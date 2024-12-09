@@ -7,7 +7,7 @@ import time
 import typing as tp
 
 import numpy as np
-from scipy.optimize import fminbound, fsolve
+from scipy.optimize import fminbound, fsolve, root_scalar
 
 import pttools.type_hints as th
 from pttools.bubble.boundary import Phase, SolutionType
@@ -813,14 +813,16 @@ class Model(BaseModel, abc.ABC):
         a = vp_tilde*vm_tilde / cs2b - 1
         return (a + 3*alpha_tbp) / (a + 3*vp_tilde*vm_tilde*alpha_tbp)
 
-    def wn_error_msg(self, alpha_n: th.FloatOrArr, param: th.FloatOrArr, param_name: str) -> str:
+    def wn_error_msg(self, alpha_n: th.FloatOrArr, param: th.FloatOrArr, param_name: str, info: str = None) -> str:
         if np.isscalar(alpha_n):
-            info = f"Got: alpha_n={alpha_n}, {param_name}={param}."
+            info2 = f"Got: alpha_n={alpha_n}, {param_name}={param}."
         else:
             i = np.argmin(param)
-            info = f"Most problematic values: alpha_n={alpha_n[i]}, {param_name}={param[i]}"
+            info2 = f"Most problematic values: alpha_n={alpha_n[i]}, {param_name}={param[i]}"
+        if info is not None:
+            info2 += f", {info}"
         return \
-            f"Got small alpha_n for the model \"{self.label_unicode}\". {info}"
+            f"Got too small alpha_n for the model \"{self.label_unicode}\". {info2}"
 
     def _wn_scalar(
             self,
@@ -833,16 +835,6 @@ class Model(BaseModel, abc.ABC):
         wn = np.nan
         reason = None
         solution_found = False
-
-        # try:
-        #     wn_sol = root_scalar(self._w_n_solvable, x0=wn_guess, x1=self.w_crit, args=(alpha_n, ), bracket=(self.w_min, self.w_crit))
-        #     wn = wn_sol.root
-        #     solution_found = wn_sol.converged
-        #     reason = wn_sol.flag
-        #     if np.isclose(wn, 0):
-        #         solution_found = False
-        # except ValueError:
-        #     solution_found = False
 
         if not solution_found:
             wn_sol = fsolve(self._wn_solvable, x0=np.array([wn_guess]), args=(alpha_n, theta_bar), full_output=True)
@@ -859,10 +851,25 @@ class Model(BaseModel, abc.ABC):
                 # logger.debug("wn solution was found with wn_guess=1, but not wn_guess=%s", wn_guess)
                 wn = wn_sol[0][0]
 
+        if not (solution_found or self.w_crit is None or np.isnan(self.w_crit)):
+            try:
+                wn_sol = root_scalar(
+                    self._wn_solvable, x0=wn_guess, x1=0.99*self.w_crit,
+                    args=(alpha_n, theta_bar), bracket=(self.w_min, self.w_crit)
+                )
+                wn = wn_sol.root
+                solution_found = wn_sol.converged
+                if np.isclose(wn, 0):
+                    solution_found = False
+                if solution_found:
+                    reason = wn_sol.flag
+            except ValueError:
+                solution_found = False
+
         if not solution_found:
             msg = (
                 f"wn solution was not found for model={self.name}, "
-                f"alpha_n={alpha_n}, wn_guess={wn_guess}, theta_bar={theta_bar}. " +
+                f"alpha_n={alpha_n}, wn_guess={wn_guess}, theta_bar={theta_bar}, w_crit={self.w_crit}. " +
                 ("" if (error_on_invalid or nan_on_invalid) else f"Using wn={wn}. ") +
                 f"Reason: {reason}"
             )
@@ -901,10 +908,20 @@ class Model(BaseModel, abc.ABC):
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
         r"""Enthalpy at nucleation temperature with given $\alpha_n$"""
+        invalid_w_crit = self.w_crit is None or np.isnan(self.w_crit) or self.w_crit < 0
         if wn_guess is None or np.isnan(wn_guess) or wn_guess < 0:
-            if self.w_crit is None or np.isnan(self.w_crit) or self.w_crit < 0:
-                raise ValueError(f"Invalid w_crit={self.w_crit}")
+            if invalid_w_crit:
+                raise ValueError(
+                    f"Got invalid wn_guess={wn_guess} "
+                    f"and cannot fix it due to invalid w_crit={self.w_crit}")
             wn_guess = 0.9 * self.w_crit
+        elif not invalid_w_crit and wn_guess > self.w_crit:
+            wn_guess2 = 0.9 * self.w_crit
+            logger.warning(
+                "Got wn_guess > w_crit, wn_guess=%s, w_crit=%s, fixing with wn_guess=%s",
+                wn_guess, self.w_crit, wn_guess2
+            )
+            wn_guess = wn_guess2
 
         if np.isscalar(alpha_n):
             return self._wn_scalar(

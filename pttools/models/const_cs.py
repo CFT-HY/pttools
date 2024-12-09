@@ -673,7 +673,8 @@ class ConstCSModel(AnalyticModel):
         if analytical and np.isclose(self.mu_b, 4):
             wn = self.bag_wn_const / (alpha_n + (4 / self.mu_s - 1) / 3)
             if np.any(wn < 0):
-                msg = self.wn_error_msg(alpha_n=alpha_n, param=wn, param_name="wn")
+                msg = self.wn_error_msg(
+                    alpha_n=alpha_n, param=wn, param_name="wn", info="Based on analytical formula for nu=4")
                 if log_invalid:
                     logger.error(msg)
                 if error_on_invalid:
