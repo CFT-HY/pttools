@@ -861,9 +861,9 @@ class Model(BaseModel, abc.ABC):
 
         if not solution_found:
             msg = (
-                f"w_n solution was not found for model={self.name}, "
+                f"wn solution was not found for model={self.name}, "
                 f"alpha_n={alpha_n}, wn_guess={wn_guess}, theta_bar={theta_bar}. " +
-                ("" if error_on_invalid else f"Using w_n={wn}. ") +
+                ("" if (error_on_invalid or nan_on_invalid) else f"Using wn={wn}. ") +
                 f"Reason: {reason}"
             )
             if log_invalid:
