@@ -191,7 +191,7 @@ def create_diff_figure(
 
 
 def main():
-    alpha_thetabar_ns = np.array([0.01, 0.03, 0.1, 0.3, 1, 3])
+    alpha_ns = np.array([0.01, 0.03, 0.1, 0.3, 1, 3])
     colors = ["b", "y", "r", "g", "purple", "grey"]
     n_v_walls = 20 if GITHUB_ACTIONS else 50
     v_walls = np.linspace(0.2, 0.95, n_v_walls)
@@ -200,10 +200,10 @@ def main():
     a_b = 1
     V_s = 1
     models = [
-        ConstCSModel(css2=1/3, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_thetabar_ns[0]),
-        ConstCSModel(css2=1/3, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_thetabar_ns[0]),
-        ConstCSModel(css2=1/4, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_thetabar_ns[0]),
-        ConstCSModel(css2=1/4, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_thetabar_ns[0])
+        ConstCSModel(css2=1/3, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_ns[0]),
+        ConstCSModel(css2=1/3, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_ns[0]),
+        ConstCSModel(css2=1/4, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_ns[0]),
+        ConstCSModel(css2=1/4, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_ns[0])
     ]
     logger.info(f"Minimum alpha_ns: %s", [model.alpha_n_min for model in models])
     for model in models:
@@ -222,24 +222,24 @@ def main():
     start_time = time.perf_counter()
     kappas_giese_atbn = create_figure(
         axs=(axs1[1, 0], ),
-        models=models, alpha_ns=alpha_thetabar_ns, colors=colors, lss=lss, v_walls=v_walls,
+        models=models, alpha_ns=alpha_ns, colors=colors, lss=lss, v_walls=v_walls,
         theta_bar=True, giese=True
     )
     kappas_giese_an = create_figure(
         axs=(axs1[1, 1], axs3[1]),
-        models=models, alpha_ns=alpha_thetabar_ns, colors=colors, lss=lss, v_walls=v_walls,
+        models=models, alpha_ns=alpha_ns, colors=colors, lss=lss, v_walls=v_walls,
         theta_bar=False, giese=True
     )
     giese_time = time.perf_counter()
     logger.info(f"Creating Giese kappa figures took {giese_time - start_time:.2f} s.")
     kappas_pttools_atbn = create_figure(
         axs=(axs1[0, 0], ),
-        models=models, alpha_ns=alpha_thetabar_ns, colors=colors, lss=lss, v_walls=v_walls,
+        models=models, alpha_ns=alpha_ns, colors=colors, lss=lss, v_walls=v_walls,
         theta_bar=True
     )
     kappas_pttools_an = create_figure(
         axs=(axs1[0, 1], axs3[0]),
-        models=models, alpha_ns=alpha_thetabar_ns, colors=colors, lss=lss, v_walls=v_walls,
+        models=models, alpha_ns=alpha_ns, colors=colors, lss=lss, v_walls=v_walls,
         theta_bar=False
     )
     print("v_walls")
