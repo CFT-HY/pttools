@@ -268,7 +268,7 @@ def v_chapman_jouguet_const_cs_reference(alpha_n: np.ndarray, model: "ConstCSMod
     # Todo: Re-enable this when the circular imports have been solved.
     # if not isinstance(model, ConstCSModel):
     #     raise TypeError("This reference only works for ConstCSModel.")
-    if model.nu != 4:
+    if model.mu_b != 4:
         raise ValueError("This reference only works for nu=4.")
     wn = model.wn(alpha_n)
     ap = model.alpha_plus(wp=wn, wm=1)

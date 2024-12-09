@@ -71,8 +71,6 @@ class ConstCSModel(AnalyticModel):
         :param V_b: $V_b \equiv \epsilon_b$, the potential term of $p$ in the broken phase
         :param T_ref: reference temperature, usually 1 * unit of choice, e,g. 1 GeV
         :param name: custom name for the model
-
-        TODO: Rename mu to mu_s and nu to mu_b
         """
         logger.debug(f"Initialising ConstCSModel with css2={css2}, csb2={csb2}.")
         css2_flt, css2_label = cs2_to_float_and_label(css2)
@@ -95,12 +93,12 @@ class ConstCSModel(AnalyticModel):
 
         self.css = np.sqrt(css2_flt)
         self.csb = np.sqrt(csb2_flt)
-        self.mu = cs2_to_mu(css2_flt)
-        self.nu = cs2_to_mu(csb2_flt)
+        self.mu_s = cs2_to_mu(css2_flt)
+        self.mu_b = cs2_to_mu(csb2_flt)
         self.T_ref = T_ref
         # This seems to contain invalid assumptions and approximations.
         # self.alpha_n_min_limit_cs = (self.mu - self.nu) / (3*self.mu)
-        self.const_cs_wn_const: float = 4 / 3 * (1 / self.nu - 1 / self.mu)
+        self.const_cs_wn_const: float = 4 / 3 * (1 / self.mu_b - 1 / self.mu_s)
 
         if T_crit_guess is None:
             T_crit_guess = T_ref
@@ -165,14 +163,14 @@ class ConstCSModel(AnalyticModel):
         # self.check_p(wn, allow_fail=allow_no_transition)
 
         tn = self.temp(wn, Phase.SYMMETRIC)
-        ret = (1-4/self.mu)/3 - (1-4/self.nu)/3*self.w(tn, Phase.BROKEN)/wn + self.bag_wn_const/wn
+        ret = (1 - 4 / self.mu_s) / 3 - (1 - 4 / self.mu_b) / 3 * self.w(tn, Phase.BROKEN) / wn + self.bag_wn_const / wn
         invalid = ret < 0
         if (error_on_invalid or nan_on_invalid or log_invalid) and np.any(invalid):
             if np.isscalar(ret):
-                info = f"Got negative alpha_n={ret} with wn={wn}, mu={self.mu}, nu={self.nu}, t_crit={self.T_crit}."
+                info = f"Got negative alpha_n={ret} with wn={wn}, mu_s={self.mu_s}, mu_b={self.mu_b}, t_crit={self.T_crit}."
             else:
                 i = np.argmin(wn)
-                info = f"Got negative alpha_n. Most problematic values: alpha_n={ret[i]}, wn={wn[i]}, mu={self.mu}, nu={self.nu}"
+                info = f"Got negative alpha_n. Most problematic values: alpha_n={ret[i]}, wn={wn[i]}, mu={self.mu_s}, nu={self.mu_b}"
             if log_invalid:
                 logger.error(info)
             if error_on_invalid:
@@ -225,7 +223,7 @@ class ConstCSModel(AnalyticModel):
         if safety_factor_a < 1 or safety_factor_V < 0:
             raise ValueError(f"Got invalid safety factors: a={safety_factor_a}, V={safety_factor_V}")
 
-        if np.isclose(self.mu, 4) and np.isclose(self.nu, 4):
+        if np.isclose(self.mu_s, 4) and np.isclose(self.mu_b, 4):
             return BagModel.alpha_n_min_find_params(
                 alpha_n_min_target=alpha_n_min_target,
                 a_s_default=a_s_default,
@@ -413,7 +411,7 @@ class ConstCSModel(AnalyticModel):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
-        r"""If $\nu=4 \Leftrightarrow c_{sb}=\frac{1}{\sqrt{3}}$, then $w_-$ does not affect the result."""
+        r"""If $\mu_-=4 \Leftrightarrow c_{sb}=\frac{1}{\sqrt{3}}$, then $w_-$ does not affect the result."""
         self.check_w_for_alpha(
             wp,
             # w_min=self.w_crit,
@@ -430,7 +428,7 @@ class ConstCSModel(AnalyticModel):
             name="wm", alpha_name="alpha_plus"
         )
 
-        alpha_plus = (1 - 4/self.mu)/3 - (1 - 4/self.nu)*wm/(3*wp) + self.bag_wn_const/wp
+        alpha_plus = (1 - 4 / self.mu_s) / 3 - (1 - 4 / self.mu_b) * wm / (3 * wp) + self.bag_wn_const / wp
         return self.check_alpha_plus(
             alpha_plus, vp_tilde=vp_tilde, sol_type=sol_type,
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
@@ -442,7 +440,7 @@ class ConstCSModel(AnalyticModel):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
-        return (1 - self.nu/self.mu)/3 + self.nu/4 * self.alpha_n_bag(
+        return (1 - self.mu_b / self.mu_s)/3 + self.mu_b/4 * self.alpha_n_bag(
             wn=wn,
             error_on_invalid=error_on_invalid,
             nan_on_invalid=nan_on_invalid,
@@ -459,10 +457,10 @@ class ConstCSModel(AnalyticModel):
             #         "alpha_theta_bar_n_max_lte approximation is not valid, as |1 - Psi_n| > 1. "
             #         "You have to check yourself that alpha_n is valid."
             #     )
-            sqrt_val = (1 - Psi_n)/((self.nu - 1)*(self.nu - 2))
+            sqrt_val = (1 - Psi_n)/((self.mu_b - 1) * (self.mu_b - 2))
             if sqrt_val < 0:
                 return np.nan
-            return (1 - Psi_n) / 3 * (1 + self.nu/3 * np.sqrt(sqrt_val))
+            return (1 - Psi_n) / 3 * (1 + self.mu_b / 3 * np.sqrt(sqrt_val))
         return np.inf
 
     def alpha_theta_bar_n_min_lte(self, wn: th.FloatOrArr, sol_type: SolutionType, Psi_n: float = None) -> float:
@@ -475,9 +473,9 @@ class ConstCSModel(AnalyticModel):
             #         "alpha_theta_bar_n_min_lte_det approximation is not valid, as |nu - 4| > 1. "
             #         "You have to check yourself that alpha_n is valid."
             #     )
-            return (1 - Psi_n) / (12*Psi_n) * (4 - (1 - Psi_n)*(self.nu - 4))
+            return (1 - Psi_n) / (12*Psi_n) * (4 - (1 - Psi_n) * (self.mu_b - 4))
         if sol_type == SolutionType.SUB_DEF:
-            return np.maximum((1 - Psi_n)/3, (self.mu - self.nu)/(3*self.mu))
+            return np.maximum((1 - Psi_n) / 3, (self.mu_s - self.mu_b) / (3 * self.mu_s))
         if sol_type == SolutionType.HYBRID:
             # Not known / no simple formula
             return 0
@@ -489,7 +487,7 @@ class ConstCSModel(AnalyticModel):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
-        return (1 - self.nu/self.mu)/3 + self.nu/4 * self.alpha_plus_bag(
+        return (1 - self.mu_b / self.mu_s)/3 + self.mu_b/4 * self.alpha_plus_bag(
             wp=wp,
             wm=np.nan,  # Not used
             error_on_invalid=error_on_invalid,
@@ -499,7 +497,7 @@ class ConstCSModel(AnalyticModel):
 
     def critical_temp_opt(self, temp: float) -> float:
         const = (self.V_b - self.V_s) * self.T_ref ** 4
-        return self.a_s * (temp / self.T_ref)**self.mu - self.a_b * (temp / self.T_ref)**self.nu + const
+        return self.a_s * (temp / self.T_ref)**self.mu_s - self.a_b * (temp / self.T_ref)**self.mu_b + const
 
     def gen_cs2(self):
         # These become compile-time constants
@@ -536,7 +534,7 @@ class ConstCSModel(AnalyticModel):
             self,
             wp: th.FloatOrArr, wm: th.FloatOrArr,
             error_on_invalid: bool = True, nan_on_invalid: bool = True, log_invalid: bool = True) -> th.FloatOrArr:
-        ret = (1/4 - 1/self.mu)*wp/3 - (1/4 - 1/self.nu)*wm/3 + self.V_s - self.V_b
+        ret = (1 / 4 - 1 / self.mu_s) * wp / 3 - (1 / 4 - 1 / self.mu_b) * wm / 3 + self.V_s - self.V_b
         return self.check_delta_theta(
             ret, wp=wp, wm=wm,
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid
@@ -544,14 +542,13 @@ class ConstCSModel(AnalyticModel):
 
     def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Energy density $e(T,\phi)$
-        $$e_s = a_s (\mu - 1) T^\mu + V_s$$
-        $$e_b = a_b (\nu - 1) T^\nu + V_b$$
+        $$e_\pm = a_\pm (\mu_\pm - 1) T^{\mu_\pm} + V_\pm$$
         :giese_2021:`\ `, eq. 15.
         In the article there is a typo: the 4 there should be a $\mu$.
         """
         self.validate_temp(temp)
-        e_s = (self.mu - 1) * self.a_s * (temp / self.T_ref) ** (self.mu - 4) * temp ** 4 + self.V_s
-        e_b = (self.nu - 1) * self.a_b * (temp / self.T_ref) ** (self.nu - 4) * temp ** 4 + self.V_b
+        e_s = (self.mu_s - 1) * self.a_s * (temp / self.T_ref) ** (self.mu_s - 4) * temp ** 4 + self.V_s
+        e_b = (self.mu_b - 1) * self.a_b * (temp / self.T_ref) ** (self.mu_b - 4) * temp ** 4 + self.V_b
         return e_b * phase + e_s * (1 - phase)
 
     def export(self) -> tp.Dict[str, any]:
@@ -559,12 +556,12 @@ class ConstCSModel(AnalyticModel):
             **super().export(),
             "css2": self.css2,
             "csb2": self.csb2,
-            "mu": self.mu,
-            "nu": self.nu
+            "mu_s": self.mu_s,
+            "mu_b": self.mu_b
         }
 
     def inverse_enthalpy_ratio(self, temp: th.FloatOrArr) -> th.FloatOrArr:
-        return self.a_b * self.nu / (self.a_s * self.mu)
+        return self.a_b * self.mu_b / (self.a_s * self.mu_s)
 
     def params_str(self) -> str:
         return \
@@ -573,24 +570,22 @@ class ConstCSModel(AnalyticModel):
 
     def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Pressure $p(T,\phi)$
-        $$p_s = a_s T^\mu - V_s$$
-        $$p_b = a_b T^\nu - V_b$$
+        $$p_\pm = a_\pm T^{\mu_\pm} - V_\pm$$
         :giese_2021:`\ `, eq. 15.
         """
         self.validate_temp(temp)
-        p_s = self.a_s * (temp / self.T_ref) ** (self.mu - 4) * temp ** 4 - self.V_s
-        p_b = self.a_b * (temp / self.T_ref) ** (self.nu - 4) * temp ** 4 - self.V_b
+        p_s = self.a_s * (temp / self.T_ref) ** (self.mu_s - 4) * temp ** 4 - self.V_s
+        p_b = self.a_b * (temp / self.T_ref) ** (self.mu_b - 4) * temp ** 4 - self.V_b
         return p_b * phase + p_s * (1 - phase)
 
     def s_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Entropy density $s=\frac{dp}{dT}$
-        $$s_s = \mu a_s \left( \frac{T}{T_0} \right)^{\mu-1} T_0^3$$
-        $$s_b = \nu a-b \left( \frac{T}{T_0} \right)^{\nu-1} T_0^3$$
+        $$s_\pm = \mu a_\pm \left( \frac{T}{T_0} \right)^{\mu_\pm-1} T_0^3$$
         Derived from :giese_2021:`\ `, eq. 15.
         """
         self.validate_temp(temp)
-        s_s = self.mu * self.a_s * (temp / self.T_ref) ** (self.mu - 4) * temp ** 3
-        s_b = self.nu * self.a_b * (temp / self.T_ref) ** (self.nu - 4) * temp ** 3
+        s_s = self.mu_s * self.a_s * (temp / self.T_ref) ** (self.mu_s - 4) * temp ** 3
+        s_b = self.mu_b * self.a_b * (temp / self.T_ref) ** (self.mu_b - 4) * temp ** 3
         return s_b * phase + s_s * (1 - phase)
 
     def solution_type(
@@ -619,8 +614,7 @@ class ConstCSModel(AnalyticModel):
 
     def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Temperature $T(w,\phi)$. Inverted from the equation of $w(T,\phi)$.
-        $$T_s = T_0 \left( \frac{w}{\mu a_s T_0^4} \right)^\frac{1}{\mu}$$
-        $$T_b = T_0 \left( \frac{w}{\nu a_s T_0^4} \right)^\frac{1}{\nu}$$
+        $$T_\pm = T_0 \left( \frac{w}{\mu a_\pm T_0^4} \right)^\frac{1}{\mu_\pm}$$
         """
         # Some solvers may call this function with w < 0 when finding a solution, which causes NumPy to emit warnings.
         invalid = w < 0
@@ -631,18 +625,17 @@ class ConstCSModel(AnalyticModel):
             if np.any(invalid):
                 w = w.copy()
                 w[invalid] = np.nan
-        temp_s = self.T_ref * (w / (self.mu * self.a_s * self.T_ref ** 4)) ** (1 / self.mu)
-        temp_b = self.T_ref * (w / (self.nu * self.a_b * self.T_ref ** 4)) ** (1 / self.nu)
+        temp_s = self.T_ref * (w / (self.mu_s * self.a_s * self.T_ref ** 4)) ** (1 / self.mu_s)
+        temp_b = self.T_ref * (w / (self.mu_b * self.a_b * self.T_ref ** 4)) ** (1 / self.mu_b)
         return temp_b * phase + temp_s * (1 - phase)
 
     def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Enthalpy density $w(T,\phi)$
-        $$w_s = \mu a_s \left( \frac{T}{T_0} \right)^\mu T_0^4$$
-        $$w_s = \nu a_s \left( \frac{T}{T_0} \right)^\nu T_0^4$$
+        $$w_\pm = \mu a_\pm \left( \frac{T}{T_0} \right)^{\mu_\pm} T_0^4$$
         """
         self.validate_temp(temp)
-        w_s = self.mu * self.a_s * (temp / self.T_ref) ** (self.mu - 4) * temp ** 4
-        w_b = self.nu * self.a_b * (temp / self.T_ref) ** (self.nu - 4) * temp ** 4
+        w_s = self.mu_s * self.a_s * (temp / self.T_ref) ** (self.mu_s - 4) * temp ** 4
+        w_b = self.mu_b * self.a_b * (temp / self.T_ref) ** (self.mu_b - 4) * temp ** 4
         return w_b * phase + w_s * (1 - phase)
 
     def wn(
@@ -677,8 +670,8 @@ class ConstCSModel(AnalyticModel):
         #         alpha_n = alpha_n.copy()
         #         alpha_n[invalid_alpha_n] = np.nan
 
-        if analytical and np.isclose(self.nu, 4):
-            wn = self.bag_wn_const / (alpha_n + (4/self.mu - 1)/3)
+        if analytical and np.isclose(self.mu_b, 4):
+            wn = self.bag_wn_const / (alpha_n + (4 / self.mu_s - 1) / 3)
             if np.any(wn < 0):
                 msg = self.wn_error_msg(alpha_n=alpha_n, param=wn, param_name="wn")
                 if log_invalid:

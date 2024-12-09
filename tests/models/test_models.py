@@ -34,8 +34,8 @@ class TestConstCSLikeBag(BagBaseCase, unittest.TestCase):
         super().setUpClass(model)
 
     def test_constants(self):
-        self.assertAlmostEqual(self.model.mu, 4)
-        self.assertAlmostEqual(self.model.nu, 4)
+        self.assertAlmostEqual(self.model.mu_s, 4)
+        self.assertAlmostEqual(self.model.mu_b, 4)
         self.assertEqual(self.model.T_ref, 1)
 
     # @unittest.expectedFailure
