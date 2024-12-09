@@ -228,7 +228,7 @@ class Model(BaseModel, abc.ABC):
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
         if wn is None or np.isnan(wn):
-            wn = self.w_n(
+            wn = self.wn(
                 alpha_theta_bar_n, wn_guess=wn_guess, theta_bar=True,
                 error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid)
         tn = self.temp(wn, Phase.SYMMETRIC)
@@ -334,7 +334,7 @@ class Model(BaseModel, abc.ABC):
     def alpha_theta_bar_n_from_alpha_n(self, alpha_n: float, wn: float = None, wn_guess: float = None) -> float:
         r"""Conversion from $\alpha_n$ to $\alpha_{\bar{\theta}n}$ of :giese_2021:`\ `, eq. 13"""
         if wn is None or np.isnan(wn):
-            wn = self.w_n(alpha_n, wn_guess=wn_guess)
+            wn = self.wn(alpha_n, wn_guess=wn_guess)
         tn = self.temp(wn, Phase.SYMMETRIC)
         diff = (1 - 1 / (3 * self.cs2(wn, Phase.BROKEN))) * \
             (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN)) / wn
@@ -718,7 +718,7 @@ class Model(BaseModel, abc.ABC):
             wn_guess: float = None,
             wm_guess: float = None) -> SolutionType:
             if wn is None:
-                wn = self.w_n(alpha_n, wn_guess)
+                wn = self.wn(alpha_n, wn_guess)
             v_cj = v_chapman_jouguet(self, alpha_n, wn=wn, wm_guess=wm_guess)
 
             if transition.is_surely_detonation(v_wall, v_cj):
@@ -772,7 +772,7 @@ class Model(BaseModel, abc.ABC):
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
         return self.temp(
-            self.w_n(
+            self.wn(
                 alpha_n, wn_guess=wn_guess, theta_bar=theta_bar,
                 error_on_invalid=error_on_invalid,
                 nan_on_invalid=nan_on_invalid,
@@ -813,7 +813,7 @@ class Model(BaseModel, abc.ABC):
         a = vp_tilde*vm_tilde / cs2b - 1
         return (a + 3*alpha_tbp) / (a + 3*vp_tilde*vm_tilde*alpha_tbp)
 
-    def w_n_error_msg(self, alpha_n: th.FloatOrArr, param: th.FloatOrArr, param_name: str) -> str:
+    def wn_error_msg(self, alpha_n: th.FloatOrArr, param: th.FloatOrArr, param_name: str) -> str:
         if np.isscalar(alpha_n):
             info = f"Got: alpha_n={alpha_n}, {param_name}={param}."
         else:
@@ -822,7 +822,7 @@ class Model(BaseModel, abc.ABC):
         return \
             f"Got small alpha_n for the model \"{self.label_unicode}\". {info}"
 
-    def _w_n_scalar(
+    def _wn_scalar(
             self,
             alpha_n: float,
             wn_guess: float,
@@ -845,14 +845,14 @@ class Model(BaseModel, abc.ABC):
         #     solution_found = False
 
         if not solution_found:
-            wn_sol = fsolve(self._w_n_solvable, x0=np.array([wn_guess]), args=(alpha_n, theta_bar), full_output=True)
+            wn_sol = fsolve(self._wn_solvable, x0=np.array([wn_guess]), args=(alpha_n, theta_bar), full_output=True)
             solution_found = wn_sol[2] == 1
             reason = wn_sol[3]
             if solution_found or np.isnan(wn):
                 wn = wn_sol[0][0]
 
         if not solution_found:
-            wn_sol = fsolve(self._w_n_solvable, x0=np.array([1]), args=(alpha_n, theta_bar), full_output=True)
+            wn_sol = fsolve(self._wn_solvable, x0=np.array([1]), args=(alpha_n, theta_bar), full_output=True)
             solution_found = wn_sol[2] == 1
             # reason = wn_sol[3]
             if solution_found or np.isnan(wn):
@@ -885,14 +885,14 @@ class Model(BaseModel, abc.ABC):
 
         return wn
 
-    def _w_n_solvable(self, wn: th.FloatOrArr, alpha_n: float, theta_bar: bool) -> th.FloatOrArr:
+    def _wn_solvable(self, wn: th.FloatOrArr, alpha_n: float, theta_bar: bool) -> th.FloatOrArr:
         if not np.isscalar(wn):
             wn = wn[0]
         if theta_bar:
             return self.alpha_theta_bar_n(wn, error_on_invalid=False, nan_on_invalid=True, log_invalid=False) - alpha_n
         return self.alpha_n(wn, error_on_invalid=False, nan_on_invalid=True, log_invalid=False) - alpha_n
 
-    def w_n(
+    def wn(
             self,
             alpha_n: th.FloatOrArr,
             wn_guess: float = None,
@@ -901,14 +901,13 @@ class Model(BaseModel, abc.ABC):
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
         r"""Enthalpy at nucleation temperature with given $\alpha_n$"""
-        # TODO: rename this to wn
         if wn_guess is None or np.isnan(wn_guess) or wn_guess < 0:
             if self.w_crit is None or np.isnan(self.w_crit) or self.w_crit < 0:
                 raise ValueError(f"Invalid w_crit={self.w_crit}")
             wn_guess = 0.9 * self.w_crit
 
         if np.isscalar(alpha_n):
-            return self._w_n_scalar(
+            return self._wn_scalar(
                 alpha_n,
                 wn_guess=wn_guess,
                 theta_bar=theta_bar,
@@ -918,7 +917,7 @@ class Model(BaseModel, abc.ABC):
             )
         ret = np.zeros_like(alpha_n)
         for i in range(alpha_n.size):
-            ret[i] = self._w_n_scalar(
+            ret[i] = self._wn_scalar(
                 alpha_n[i],
                 wn_guess=wn_guess,
                 theta_bar=theta_bar,

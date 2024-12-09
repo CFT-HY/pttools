@@ -251,7 +251,7 @@ def find_shock_index(
 def shock_curve(model: "Model", alpha_n: float, xi: np.ndarray = None):
     vm_arr: np.ndarray = np.zeros_like(xi)
     for i_xi, xi_i in enumerate(xi):
-        wn = model.w_n(alpha_n=alpha_n)
+        wn = model.wn(alpha_n=alpha_n)
         vm_tilde, wm = solve_shock(model, v1_tilde=xi_i, w1=wn, backwards=True, warn_if_barely_exists=False)
         vm = relativity.lorentz(xi_i, vm_tilde)
         # Filter invalid points, but not the first one

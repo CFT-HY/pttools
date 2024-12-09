@@ -65,7 +65,7 @@ def kappas_giese(
         alpha_tbns = np.empty((alpha_ns.size,))
         for i, alpha_n in enumerate(alpha_ns):
             try:
-                wn = model.w_n(alpha_n, theta_bar=theta_bar)
+                wn = model.wn(alpha_n, theta_bar=theta_bar)
                 alpha_tbns[i] = model.alpha_theta_bar_n_from_alpha_n(alpha_n=alpha_n, wn=wn)
             except (ValueError, RuntimeError):
                 alpha_tbns[i] = np.nan

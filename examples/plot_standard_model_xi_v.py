@@ -19,7 +19,7 @@ setup_logging()
 
 sm = StandardModel(V_s=5e12, g_mult_s=1 + 1e-9)
 model = FullModel(sm, T_crit_guess=100e3)
-wn = model.w_n(alpha_n=0.1)
+wn = model.wn(alpha_n=0.1)
 tn = model.temp(wn, Phase.SYMMETRIC)
 print(wn, tn)
 bubble = Bubble(model, v_wall=0.3, alpha_n=0.05)

@@ -185,7 +185,7 @@ def v_chapman_jouguet(
     #         f"Reason: {wn_sol[3]}")
 
     if wn is None:
-        wn = model.w_n(
+        wn = model.wn(
             alpha_n, wn_guess=wn_guess,
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
@@ -270,7 +270,7 @@ def v_chapman_jouguet_const_cs_reference(alpha_n: np.ndarray, model: "ConstCSMod
     #     raise TypeError("This reference only works for ConstCSModel.")
     if model.nu != 4:
         raise ValueError("This reference only works for nu=4.")
-    wn = model.w_n(alpha_n)
+    wn = model.wn(alpha_n)
     ap = model.alpha_plus(wp=wn, wm=1)
     ret = np.zeros_like(ap)
     for i, a in enumerate(ap):

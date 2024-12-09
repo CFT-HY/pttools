@@ -93,5 +93,5 @@ class ModelBaseCase(JsonTestCase, abc.ABC):
         self.assert_json(data, "w")
 
     def test_w_n(self):
-        data = self.model.w_n(self.alpha_n)
+        data = self.model.wn(self.alpha_n)
         self.assert_json(data, "w_n")

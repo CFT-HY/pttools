@@ -889,7 +889,7 @@ def sound_shell_generic(
         high_alpha_n = alpha_n > alpha_n_max_bag
 
     if wn is None or np.isnan(wn):
-        wn = model.w_n(alpha_n, wn_guess=wn_guess)
+        wn = model.wn(alpha_n, wn_guess=wn_guess)
     # The shock curve hits v=0 here
     cs_n = np.sqrt(model.cs2(wn, Phase.SYMMETRIC))
 
@@ -1075,7 +1075,7 @@ def sound_shell_giese(
     start_time = time.perf_counter()
 
     if wn is None or np.isnan(wn):
-        wn = model.w_n(alpha_n, wn_guess=wn_guess)
+        wn = model.wn(alpha_n, wn_guess=wn_guess)
     if wm_guess is None or np.isnan(wm_guess):
         wm_guess = 1.
 

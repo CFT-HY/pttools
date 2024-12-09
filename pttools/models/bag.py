@@ -287,7 +287,7 @@ class BagModel(AnalyticModel):
         self.validate_temp(temp)
         return 4 * (self.a_b * phase + self.a_s * (1-phase))*temp**4
 
-    def w_n(
+    def wn(
             self,
             alpha_n: th.FloatOrArr,
             wn_guess: float = 1,
@@ -301,13 +301,13 @@ class BagModel(AnalyticModel):
         This can be derived from the equations for $\theta$ and $\alpha_n$.
         """
         if theta_bar:
-            super().w_n(
+            super().wn(
                 alpha_n, wn_guess=wn_guess, theta_bar=theta_bar,
                 error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
             )
         if analytical:
             return self.bag_wn_const / alpha_n
-        return super().w_n(
+        return super().wn(
             alpha_n, wn_guess,
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )

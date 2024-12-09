@@ -15,7 +15,7 @@ class TestBag(BagBaseCase, unittest.TestCase):
         super().setUpClass(model)
 
     def test_wn_full(self):
-        data = self.model.w_n(self.alpha_n, analytical=False)
+        data = self.model.wn(self.alpha_n, analytical=False)
         self.assert_json(data, "w_n", allow_save=False)
 
     def test_auto_potential(self):
@@ -44,7 +44,7 @@ class TestConstCSLikeBag(BagBaseCase, unittest.TestCase):
         # super().test_critical_temp()
 
     def test_wn_full(self):
-        data = self.model.w_n(self.alpha_n, analytical=False)
+        data = self.model.wn(self.alpha_n, analytical=False)
         self.assert_json(data, "w_n", allow_save=False)
 
 
@@ -80,7 +80,7 @@ class TestConstCS(ModelBaseCase, unittest.TestCase):
         super().setUpClass(model)
 
     def test_wn_full(self):
-        data = self.model.w_n(self.alpha_n, analytical=False)
+        data = self.model.wn(self.alpha_n, analytical=False)
         self.assert_json(data, "w_n", allow_save=False)
 
 

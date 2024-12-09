@@ -118,6 +118,6 @@ if __name__ == "__main__":
     setup_logging()
     model = ConstCSModel(css2=1/3 - 0.05, csb2=1/3, a_s=1.5, a_b=1, V_s=1)
     plot = XIVPlanePlot(model)
-    plot.curves(wn=model.w_n(0.3))
+    plot.curves(wn=model.wn(0.3))
     plot.fig.savefig("plane_test.png")
     plt.show()

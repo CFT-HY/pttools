@@ -645,7 +645,7 @@ class ConstCSModel(AnalyticModel):
         w_b = self.nu * self.a_b * (temp / self.T_ref) ** (self.nu - 4) * temp ** 4
         return w_b * phase + w_s * (1 - phase)
 
-    def w_n(
+    def wn(
             self,
             alpha_n: th.FloatOrArr,
             wn_guess: float = 1,
@@ -656,7 +656,7 @@ class ConstCSModel(AnalyticModel):
             log_invalid: bool = True) -> th.FloatOrArr:
         r"""Enthalpy at nucleation temperature"""
         if theta_bar:
-            return super().w_n(
+            return super().wn(
                 alpha_n=alpha_n,
                 wn_guess=wn_guess,
                 theta_bar=theta_bar,
@@ -680,7 +680,7 @@ class ConstCSModel(AnalyticModel):
         if analytical and np.isclose(self.nu, 4):
             wn = self.bag_wn_const / (alpha_n + (4/self.mu - 1)/3)
             if np.any(wn < 0):
-                msg = self.w_n_error_msg(alpha_n=alpha_n, param=wn, param_name="wn")
+                msg = self.wn_error_msg(alpha_n=alpha_n, param=wn, param_name="wn")
                 if log_invalid:
                     logger.error(msg)
                 if error_on_invalid:
@@ -693,9 +693,9 @@ class ConstCSModel(AnalyticModel):
 
         diff = alpha_n - self.const_cs_wn_const
         if np.any(diff < 0) and log_invalid:
-            logger.warning(self.w_n_error_msg(alpha_n=alpha_n, param=diff, param_name="diff"))
+            logger.warning(self.wn_error_msg(alpha_n=alpha_n, param=diff, param_name="diff"))
 
-        return super().w_n(
+        return super().wn(
             alpha_n, wn_guess=wn_guess,
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )

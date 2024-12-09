@@ -25,7 +25,7 @@ alpha_n = 0.2534507678410117
 
 
 vp_bag, vm_bag, vp_tilde_bag, vm_tilde_bag, wp_bag, wm_bag = ref().get(v_wall, alpha_n, SolutionType.SUB_DEF)
-wn = model.w_n(alpha_n)
+wn = model.wn(alpha_n)
 wm_bag *= wn
 wp_bag *= wn
 

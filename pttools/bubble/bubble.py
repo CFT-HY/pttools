@@ -59,7 +59,7 @@ class Bubble:
 
         if not theta_bar:
             model.validate_alpha_n(alpha_n, allow_invalid=allow_invalid, log_invalid=log_invalid)
-        self.wn = model.w_n(alpha_n, wn_guess, theta_bar=theta_bar)
+        self.wn = model.wn(alpha_n, wn_guess, theta_bar=theta_bar)
         if theta_bar:
             self.alpha_theta_bar_n = alpha_n
             self.alpha_n = model.alpha_n_from_alpha_theta_bar_n(alpha_theta_bar_n=alpha_n, wn=self.wn)
