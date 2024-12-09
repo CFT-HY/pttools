@@ -146,6 +146,7 @@ def create_figure(
         ax.set_yscale("log")
         ax.set_xlim(v_walls.min(), v_walls.max())
         ax.set_title(title)
+        ax.grid()
 
     return kappas
 
@@ -184,6 +185,7 @@ def create_diff_figure(
     ax.set_yscale("log")
     ax.set_ylim(10**(-6), 1)
     ax.set_xlim(v_walls.min(), v_walls.max())
+    ax.grid()
     if title:
         ax.set_title(title_str)
 
