@@ -2,7 +2,8 @@ r"""
 Giese LISA fig. 2
 =================
 
-Reproduction of :giese_2021:`\ `, fig. 2
+Reproduction of :giese_2021:`\ `, fig. 2.
+These figures are used in Mika's M.Sc. thesis.
 """
 
 import logging

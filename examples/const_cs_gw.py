@@ -3,9 +3,13 @@ GW spectra for ConstCSModel
 ===========================
 
 Plot GW spectra for various ConstCSModels
+
+These figures and this table are used in Mika's M.Sc. thesis.
 """
 
+import io
 import logging
+import os.path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -29,7 +33,7 @@ def main():
     Tn = 200
     # v_walls: np.ndarray = np.array([0.4, 0.7, 0.8])
     # v_walls: np.ndarray = np.array([0.4, 0.67, 0.84])
-    v_walls: np.ndarray = np.array([0.4, 0.68, 0.74])
+    v_walls: np.ndarray = np.array([0.4, 0.68, 0.9])
     alpha_ns: np.ndarray = np.array([0.1, 0.2])
     alpha_n_min = np.min(alpha_ns)
 
@@ -72,6 +76,7 @@ def main():
     axs1: np.ndarray = fig1.subplots(alpha_ns.size, v_walls.size)
     axs2: np.ndarray = fig2.subplots(alpha_ns.size, v_walls.size)
     axs3: np.ndarray = fig3.subplots(alpha_ns.size, v_walls.size)
+    snrs = np.zeros((len(alpha_ns), len(v_walls), len(models)))
     for i_alpha_n, alpha_n in enumerate(alpha_ns):
         for i_v_wall, v_wall in enumerate(v_walls):
             ax1: plt.Axes = axs1[i_alpha_n, i_v_wall]
@@ -81,7 +86,9 @@ def main():
                 spectrum: Spectrum = spectra[i_model, i_alpha_n, i_v_wall]
                 if spectrum is not None:
                     label = model.label_latex_params
-                    label2 = f"{label[:-1]}, SNR={spectrum.signal_to_noise_ratio_instrument():.1f}$"
+                    snr = spectrum.signal_to_noise_ratio_instrument()
+                    snrs[i_alpha_n, i_v_wall, i_model] = snr
+                    label2 = f"{label[:-1]}, SNR={snr:.1f}$"
                     ls = lss[i_model]
                     ax1.plot(spectrum.bubble.xi, spectrum.bubble.v, label=label, ls=ls)
                     ax2.plot(spectrum.y, spectrum.pow_gw, label=label)
@@ -107,6 +114,31 @@ def main():
             ax3.grid()
             ax3.set_title(title[:-1] + rf", r_*={r_star}, T_n={Tn} \text{{GeV}}$")
 
+    file: io.StringIO
+    with io.StringIO() as file:
+        file.writelines([
+            "\\begin{table}\n",
+            "\\centering\n",
+            "\\caption{Signal-to-noise ratios of the gravitational wave power spectra of fig \\ref{fig:omgw0}}\n",
+            "\\begin{tabular}{l|l|l|l}\n",
+            "Model & \\multicolumn{3}{l}{\\v_\\text{wall}}" + " & ".join([f"{v_wall:.2f}" for v_wall in v_walls]) + "\n",
+            "\\hline \\\\\n"
+        ])
+        for i_alpha_n, alpha_n in enumerate(alpha_ns):
+            for i_model, model in enumerate(models):
+                file.write(
+                    model.label_latex_params + " & " + \
+                    " & ".join([f"{snr:.1f}" for snr in snrs[i_alpha_n, :, i_model]]))
+                if i_model < len(models) - 1:
+                    file.write(" \\\\\n")
+            if i_alpha_n < len(alpha_ns) - 1:
+                file.write("\\hline \\\\\n")
+        file.writelines([
+            "\\end{tabular}\n",
+            "\\end{table}\n"
+        ])
+        table = file.getvalue()
+
     # Shock surfaces
     n_xi = 20
     for i_model, model in enumerate(models):
@@ -114,7 +146,7 @@ def main():
         for i_alpha_n, alpha_n in enumerate(alpha_ns):
             vm_arr = shock_curve(model, alpha_n, xi_arr)
             for i_v_wall, v_wall in enumerate(v_walls):
-                ax = axs1[i_alpha_n, i_v_wall]
+                ax: plt.Axes = axs1[i_alpha_n, i_v_wall]
                 if i_model:
                     ax.plot(xi_arr, vm_arr, color="k")
                 else:
@@ -137,7 +169,7 @@ def main():
     f: np.ndarray = np.logspace(np.log10(f_min), np.log10(f_max), num=50)
     for i_alpha_n, alpha_n in enumerate(alpha_ns):
         for i_v_wall, v_wall in enumerate(v_walls):
-            ax = axs3[i_alpha_n, i_v_wall]
+            ax: plt.Axes = axs3[i_alpha_n, i_v_wall]
             # ax.plot(f, omega_noise(f), label="LISA overall noise")
             ax.plot(f, omega_ins(f), label="LISA instrument noise")
 
@@ -157,7 +189,7 @@ def main():
         ax.text(5, 10**(-6.7), f"$k^{{{pow_high}}}$")
 
     for ax in axs1.flat:
-        ax.set_xlim(0.35, 0.85)
+        ax.set_xlim(0.35, 0.95)
         ax.set_ylim(0, 0.6)
         ax.legend(loc="upper left")
     for ax in axs2.flat:
@@ -170,7 +202,7 @@ def main():
     fig1.tight_layout()
     fig2.tight_layout()
     fig3.tight_layout()
-    return fig1, fig2, fig3
+    return fig1, fig2, fig3, table
 
 
 if __name__ == "__main__":
@@ -178,4 +210,6 @@ if __name__ == "__main__":
     utils.save(figs[0], "const_cs_gw_v")
     utils.save(figs[1], "const_cs_gw")
     utils.save(figs[2], "const_cs_gw_omgw0")
+    with open(os.path.join(utils.FIG_DIR, "const_cs_gw_snr.tex"), "w") as table_file:
+        table_file.write(figs[3])
     plt.show()
