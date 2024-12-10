@@ -12,7 +12,7 @@ from examples.utils import save_and_show
 from pttools import bubble
 
 
-def main():
+def main(dots: bool = False):
     # plt.rc('text', usetex=True)
     # plt.rc('font', family='serif')
 
@@ -69,9 +69,10 @@ def main():
         ax.plot(x2_grey, y2_grey, linestyle=ls, color=grey, linewidth=linewidth)
 
     # Blue dots
-    ax.plot([0.5], [bubble.v_plus(0.5, 0.263, bubble.SolutionType.SUB_DEF)], 'bo')
-    ax.plot([bubble.CS0], [bubble.v_plus(bubble.CS0, 0.052, bubble.SolutionType.SUB_DEF)], 'bo')
-    ax.plot([bubble.v_minus(0.77, 0.091, bubble.SolutionType.DETON)], 0.77, 'bo')
+    if dots:
+        ax.plot([0.5], [bubble.v_plus(0.5, 0.263, bubble.SolutionType.SUB_DEF)], 'bo')
+        ax.plot([bubble.CS0], [bubble.v_plus(bubble.CS0, 0.052, bubble.SolutionType.SUB_DEF)], 'bo')
+        ax.plot([bubble.v_minus(0.77, 0.091, bubble.SolutionType.DETON)], 0.77, 'bo')
 
     xmin = 0
     xmax = 1
