@@ -10,6 +10,7 @@ These figures and this table are used in Mika's M.Sc. thesis.
 import io
 import logging
 import os.path
+import time
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -26,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 def main():
+    start_time = time.perf_counter()
     a_s = 5
     a_b = 1
     V_s = 1
@@ -33,7 +35,7 @@ def main():
     Tn = 200
     # v_walls: np.ndarray = np.array([0.4, 0.7, 0.8])
     # v_walls: np.ndarray = np.array([0.4, 0.67, 0.84])
-    v_walls: np.ndarray = np.array([0.4, 0.68, 0.9])
+    v_walls: np.ndarray = np.array([0.3, 0.68, 0.9])
     alpha_ns: np.ndarray = np.array([0.1, 0.2])
     alpha_n_min = np.min(alpha_ns)
 
@@ -121,7 +123,8 @@ def main():
             "\\centering\n",
             "\\caption{Signal-to-noise ratios of the gravitational wave power spectra of fig \\ref{fig:omgw0}}\n",
             "\\begin{tabular}{l|l|l|l}\n",
-            "Model & \\multicolumn{3}{l}{\\v_\\text{wall}}" + " & ".join([f"{v_wall:.2f}" for v_wall in v_walls]) + "\n",
+            "Model & \\multicolumn{3}{l}{$\\v_\\text{wall}$} \\\\\n"
+            "& " + " & ".join([f"{v_wall:.2f}" for v_wall in v_walls]) + "\n",
             "\\hline \\\\\n"
         ])
         for i_alpha_n, alpha_n in enumerate(alpha_ns):
@@ -132,9 +135,12 @@ def main():
                 if i_model < len(models) - 1:
                     file.write(" \\\\\n")
             if i_alpha_n < len(alpha_ns) - 1:
-                file.write("\\hline \\\\\n")
+                file.write(" \\hline \\\\\n")
+            else:
+                file.write(" \\\\\n")
         file.writelines([
             "\\end{tabular}\n",
+            "\\label{table:const_cs_gw_snr}\n",
             "\\end{table}\n"
         ])
         table = file.getvalue()
@@ -186,13 +192,15 @@ def main():
     p_high = k_high**pow_high * 10**(-3)
     for ax in axs2.flat:
         ax.plot(k_high, p_high, color="k")
-        ax.text(5, 10**(-6.7), f"$k^{{{pow_high}}}$")
+        ax.text(5.3, 10**(-7), f"$k^{{{pow_high}}}$")
 
     for ax in axs1.flat:
-        ax.set_xlim(0.35, 0.95)
+        ax.set_xlim(0.25, 0.95)
         ax.set_ylim(0, 0.6)
         ax.legend(loc="upper left")
     for ax in axs2.flat:
+        ax.set_xlim(spectra[0, 0, 0].y[0], spectra[0, 0, 0].y[-1])
+        ax.set_ylim(10e-12, 10e-4)
         ax.legend(loc="lower center")
     for ax in axs3.flat:
         ax.set_xlim(f_min, f_max)
@@ -202,6 +210,7 @@ def main():
     fig1.tight_layout()
     fig2.tight_layout()
     fig3.tight_layout()
+    print(f"Generating the figures took {time.perf_counter() - start_time} s")
     return fig1, fig2, fig3, table
 
 
