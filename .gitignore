@@ -21,6 +21,7 @@ packages.svg
 _build
 auto_examples
 docs/sg_execution_times.rst
+examples/fig
 gen_modules
 logs
 test-results
