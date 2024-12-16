@@ -189,10 +189,10 @@ def main():
 
     pow_high = -3
     k_high = np.logspace(1, 3, 10)
-    p_high = k_high**pow_high * 10**(-3)
+    p_high = k_high**pow_high * 10**(-3.3)
     for ax in axs2.flat:
         ax.plot(k_high, p_high, color="k")
-        ax.text(5.3, 10**(-7), f"$k^{{{pow_high}}}$")
+        ax.text(5.3, 10**(-7.5), f"$k^{{{pow_high}}}$")
 
     for ax in axs1.flat:
         ax.set_xlim(0.25, 0.95)
