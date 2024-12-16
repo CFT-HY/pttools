@@ -5,6 +5,8 @@ ConstCSModel testing
 Simple testing for the constant sound speed model
 """
 
+import time
+
 import matplotlib.pyplot as plt
 
 from pttools.bubble import Bubble
@@ -18,10 +20,17 @@ const_cs = ConstCSModel(
 
 # Create a bubble and solve its fluid profile
 bubble = Bubble(const_cs, v_wall=0.5, alpha_n=0.2)
-bubble.plot()
 
 # Compute gravitational wave spectrum for the bubble
 spectrum = Spectrum(bubble)
+
+bubble.plot()
 spectrum.plot_multi()
+
+# Performance testing, now that the model is initialised
+start_time = time.perf_counter()
+bubble2 = Bubble(const_cs, v_wall=0.45, alpha_n=0.2)
+spectrum2 = Spectrum(bubble2)
+print(f"Bubble and spectrum computation took {time.perf_counter() - start_time} s")
 
 plt.show()
