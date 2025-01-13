@@ -11,6 +11,7 @@ If you're just using PTtools for your project,
 However, if you're developing PTtools itself, you should
 :ref:`work on a cloned repository <Local development>`.
 
+
 With pip
 --------
 Installing PTtools within a
@@ -51,13 +52,14 @@ Stable version
 
 .. code-block:: bash
 
-  pip3 install --upgrade "pttools-gw[NumbaLSODA,performance] @ git+ssh://git@github.com/CFT-HY/pttools.git"
+  pip3 install --upgrade "pttools-gw[numbalsoda,performance] @ git+https://github.com/CFT-HY/pttools.git"
 
 Development version
 
 .. code-block:: bash
 
-  pip3 install --upgrade "pttools-gw[NumbaLSODA,performance] @ git+ssh://git@github.com/CFT-HY/pttools.git@dev"
+  pip3 install --upgrade "pttools-gw[numbalsoda,performance] @ git+https://github.com/CFT-HY/pttools.git@dev"
+
 
 With conda
 ----------
@@ -67,13 +69,11 @@ package, as those are quite cumbersome to maintain.
 If you'd like to have one, please make a feature request in the
 :issue:`issue tracker <>`.
 
+
 With Docker
 -----------
-Before PTtools is published as open source, the direct Docker builds from Git require
-that Docker can find your SSH keys.
-This can be accomplished by running Docker
-`without sudo <https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user>`_.
-The Docker container is configured by the ``Dockerfile`` at the root of the repository.
+PTtools container has not yet been published in a container registry,
+and therefore you have to build it yourself.
 Once you have built the PTtools container,
 you can build your own containers which use PTtools by starting their Dockerfiles with ``FROM pttools``.
 
@@ -81,14 +81,14 @@ Stable version
 
 .. code-block:: bash
 
-  docker build "git@github.com:hindmars/pttools.git#main" --tag pttools
+  docker build "https://github.com/CFT-HY/pttools.git#main" --tag pttools
   docker run -it pttools
 
 Development version
 
 .. code-block:: bash
 
-  docker build "git@github.com:hindmars/pttools.git#dev" --tag pttools:dev
+  docker build "https://github.com/CFT-HY/pttools.git#dev" --tag pttools:dev
   docker run -it pttools:dev
 
 Local development version
@@ -100,6 +100,7 @@ Local development version
   git checkout dev
   docker build . --tag pttools:dev
   docker run -it pttools:dev
+
 
 Local development
 -----------------
@@ -118,10 +119,12 @@ You can set up a local development environment with the following commands.
   # Now you can run the unit tests to ensure that the installation was successful.
   pytest
 
+
 On a cluster
 ------------
 For running a local development installation of PTtools on a Slurm cluster,
 please see the job script templates in the tests folder.
+
 
 NumbaLSODA
 ----------
@@ -149,6 +152,7 @@ Once ``cmake`` is installed, run the pip installation above again.
 
   sudo apt-get update
   sudo apt-get install cmake
+
 
 Numba compatibility and nested parallelism
 ------------------------------------------
