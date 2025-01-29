@@ -2,6 +2,7 @@
 # if some of the packages are already installed with conda.
 # -r requirements.txt
 allure-pytest >= 2.13.5
+build >= 1.2.2
 colorama >= 0.4.6
 pandas >= 2.2.3
 # For Numba system info
@@ -13,4 +14,6 @@ pytest >= 8.3.3
 pytest-cov >= 6.0.0
 pytest-html >= 4.1.1
 pytest-xdist >= 3.6.1
+setuptools >= 75.8.0
+wheel >= 0.45.1
 yappi >= 1.6.10

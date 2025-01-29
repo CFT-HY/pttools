@@ -5,10 +5,92 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "pttools_gw"
+version = "0.0.1"
+description = "PTtools simulation framework for phase transitions in the early universe"
+readme = "README.md"
+# license = "MIT"
+keywords = [
+    "cosmology",
+    "phase transitions",
+    "gravitational waves",
+    "hydrodynamics",
+    "relativistic hydrodynamics",
+    "sound shell model"
+]
+authors = [
+    {name = "Mark Hindmarsh", email = "mark.hindmarsh@helsinki.fi"}
+]
+maintainers = [
+    {name = "Mark Hindmarsh", email = "mark.hindmarsh@helsinki.fi"}
+]
+classifiers = [
+    "Framework :: Matplotlib",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Topic :: Software Development :: Libraries",
+]
+# Keep this up to date with requirements.txt
+dependencies = [
+    "h5py >= 3.12.1",
+    "kaleido >= 0.2.1",
+    "matplotlib >= 3.9.2",
+    "numba >= 0.60.0",
+    "numbalsoda >= 0.3.4; sys_platform != 'win32'",
+    "numpy >= 2.0.2",
+    "orjson >= 3.10.12",
+    "plotly >= 5.24.1",
+    "scipy >= 1.14.1",
+]
+# dynamic = ["version"]
+
+[project.optional-dependencies]
+numbalsoda = ["numbalsoda >= 0.3.4"]
+performance = [
+    "icc-rt >= 2019.0; platform_machine != 'arm64'",
+    "intel-openmp >= 2020.0.133; sys_platform == 'darwin' and platform_machine != 'arm64'",
+    "tbb >= 2021.10.0; platform_machine != 'arm64'",
+]
+
+[project.urls]
+# homepage = ""
+repository = "https://github.com/CFT-HY/pttools"
+
+[tool.coverage.run]
+branch = true
+command_line = "manage.py test --noinput --parallel"
+concurrency = [
+    "thread",
+    "multiprocessing"
+]
+source = ["."]
+omit = [
+    "**/envs/*",
+    "**/venv/*"
+]
+parallel = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:"
+]
+show_missing = true
+
 [tool.pytest.ini_options]
 # On clusters "--numprocesses=auto" creates processes according to the total number of CPU cores
 # instead of the number of cores available to the job.
-# Therefore it may be wise to set the number of processes manually.
+# Therefore, it may be wise to set the number of processes manually.
 addopts = "--alluredir=test-results/allure --cov=. --cov-report=html --cov-report=term --cov-report=term-missing --cov-report=xml --dist=loadscope --html=test-results/html/test-report.html --numprocesses=auto"
 norecursedirs = "test_data"
 # python_paths = "tests"
@@ -17,3 +99,13 @@ testpaths = [
 ]
 # log_cli = true
 # log_cli_level = "INFO"
+
+[tool.setuptools.packages.find]
+include = [
+    "pttools*",
+]
+exclude = [
+    "docs",
+    "examples",
+    "tests",
+]
