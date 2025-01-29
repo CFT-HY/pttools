@@ -17,6 +17,7 @@ Welcome to PTtools's documentation!
    modules/index
    modules/tests/index
    acknowledgements
+   dev
 
 
 Indices and tables

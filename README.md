@@ -38,9 +38,6 @@ There you can find a zip file containing the documentation in various formats.
 - droplet-dev: Development of different solution types (legacy).
 - eos-dev: Development of support for different equations of state (legacy).
 
-### Requirements
-Python 3.10 - 3.12
-
 ### Who do I talk to?
 - Repo owner: [Mark Hindmarsh](https://github.com/hindmars/)
 
