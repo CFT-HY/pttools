@@ -288,7 +288,7 @@ jobs:
           test-results
         if-no-files-found: error
     - name: Upload results to Codecov
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v5
       if: ${{ matrix.python-version == env.PRIMARY_PYTHON_VERSION }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
