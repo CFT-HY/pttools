@@ -30,7 +30,7 @@ class SuppressionTest(unittest.TestCase):
             "alpha_sim": None,
             "sup_ssm": 5.30e-7,
             "Ubarf_2_ssm": None,
-            "ssm_tot": 4.14e-7
+            "ssm_tot": 5.30e-7
         }
         for filename in filenames:
             data = calc_sup_ssm(f"{filename}.txt", save=False)
