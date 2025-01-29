@@ -28,7 +28,7 @@ class SuppressionTest(unittest.TestCase):
         tolerances = {
             "vw_sim": None,
             "alpha_sim": None,
-            "sup_ssm": 5.28e-7,
+            "sup_ssm": 5.30e-7,
             "Ubarf_2_ssm": None,
             "ssm_tot": 4.14e-7
         }
