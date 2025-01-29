@@ -10,7 +10,7 @@ RUN apt-get update \
     && pip install --no-cache-dir --upgrade build
 COPY requirements.txt /pttools/
 RUN pip install --no-cache-dir -r /pttools/requirements.txt
-COPY pyproject.toml setup.cfg /pttools/
+COPY pyproject.toml /pttools/
 COPY pttools pttools/pttools
 RUN cd /pttools \
     && ls \
