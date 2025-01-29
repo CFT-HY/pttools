@@ -103,7 +103,8 @@ def create_figure(
         if giese:
             if kappaNuMuModel is None:
                 kappas[i_model, :, :] = np.nan
-            kappas[i_model, :, :] = kappas_giese(model=model, v_walls=v_walls, alpha_ns=alpha_ns, theta_bar=theta_bar)
+            else:
+                kappas[i_model, :, :] = kappas_giese(model=model, v_walls=v_walls, alpha_ns=alpha_ns, theta_bar=theta_bar)
         else:
             bubbles, kappas[i_model, :, :] = create_bubbles(
                 model=model, v_walls=v_walls, alpha_ns=alpha_ns, func=get_kappa,
