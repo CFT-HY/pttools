@@ -13,6 +13,7 @@ import numpy as np
 from examples.utils import save
 from pttools.analysis.parallel import create_bubbles
 from pttools.bubble import Bubble
+from pttools.bubble.fluid import kappaNuMuModel
 from pttools.models import ConstCSModel
 from pttools.speedup import GITHUB_ACTIONS
 
@@ -29,6 +30,8 @@ get_kappa.fail_value = np.nan
 
 
 def main():
+    if kappaNuMuModel is None:
+        logger.warning("Giese et al. code is not available. Skipping comparison.")
     alpha_ns = np.array([0.01, 0.03, 0.1, 0.3, 1, 3])
     colors = ["b", "y", "r", "g", "purple", "grey"]
     n_v_walls = 20 if GITHUB_ACTIONS else 50
@@ -62,16 +65,18 @@ def main():
             model=model, v_walls=v_walls, alpha_ns=alpha_ns, func=get_kappa,
             bubble_kwargs={"allow_invalid": False}, allow_bubble_failure=True
         )
-        bubbles_giese, kappas_giese[i_model, :, :] = create_bubbles(
-            model=model, v_walls=v_walls, alpha_ns=alpha_ns, func=get_kappa,
-            bubble_kwargs={"allow_invalid": False, "use_giese_solver": True}, allow_bubble_failure=True
-        )
+        if kappaNuMuModel is not None:
+            bubbles_giese, kappas_giese[i_model, :, :] = create_bubbles(
+                model=model, v_walls=v_walls, alpha_ns=alpha_ns, func=get_kappa,
+                bubble_kwargs={"allow_invalid": False, "use_giese_solver": True}, allow_bubble_failure=True
+            )
         for i_alpha_n, (alpha_n, color) in enumerate(zip(alpha_ns, colors)):
             kpt = kappas_pttools[i_model, i_alpha_n, :]
-            kg = kappas_giese[i_model, i_alpha_n, :]
             ax1.plot(v_walls, kpt, ls=ls, color=color, alpha=0.5)
-            ax2.plot(v_walls, kg, ls=ls, color=color, alpha=0.5)
-            ax3.plot(v_walls, (kpt - kg)/kg, color=color, alpha=0.5)
+            if kappaNuMuModel is not None:
+                kg = kappas_giese[i_model, i_alpha_n, :]
+                ax2.plot(v_walls, kg, ls=ls, color=color, alpha=0.5)
+                ax3.plot(v_walls, (kpt - kg)/kg, color=color, alpha=0.5)
 
     for ax in axs1.flat:
         ax.set_xlabel(r"$v_\text{wall}$")
