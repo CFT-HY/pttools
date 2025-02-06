@@ -31,6 +31,6 @@ def main():
     save(spectrum_fig, "const_cs_spectrum.png")
 
 
-if __name__ == "__main__" and "__file__" in globals():
+if __name__ == "__main__":
     main()
     plt.show()
