@@ -2,7 +2,7 @@ r"""
 Delta-Theta
 ===========
 
-Plot $\Delta \theta$ surfaces
+Plot $\Delta \theta$ surfaces as a function of $w_+$ and $w_-$.
 """
 
 import os.path

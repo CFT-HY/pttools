@@ -281,7 +281,7 @@ def v_chapman_jouguet_const_cs_reference(alpha_n: np.ndarray, model: "ConstCSMod
 def wm_chapman_jouguet(
         model: "Model", wp: float, wm_guess: float = None,
         error_on_invalid: bool = True, nan_on_invalid: bool = True, log_invalid: bool = True) -> float:
-    """Get $w_-$ for a transition that has $\tilde{v}_-=c_{s-}(w_-)
+    """Get ${w}_-$ for a transition that has $\tilde{v}_-=c_{{s},-}({w}_-)$
     such as a Chapman-Jouguet detonation or a Chapman-Jouguet deflagration.
     """
     if wm_guess is None:

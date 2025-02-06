@@ -1,5 +1,5 @@
 r"""
-Testing for finding $\alpha_{n,\text{min}}$ for ConstCSModel
+Finding $\alpha_{n,\text{min}}$ for ConstCSModel
 ============================================================
 """
 

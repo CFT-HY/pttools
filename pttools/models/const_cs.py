@@ -545,7 +545,7 @@ class ConstCSModel(AnalyticModel):
 
     def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Energy density $e(T,\phi)$
-        $$e_\pm = a_\pm (\mu_\pm - 1) T^{\mu_\pm} + V_\pm$$
+        $${e}_{\pm} = {a}_{\pm} (\mu_\pm - 1) T^{\mu_\pm} + {V}_\pm$$
         :giese_2021:`\ `, eq. 15.
         In the article there is a typo: the 4 there should be a $\mu$.
         """
@@ -573,7 +573,7 @@ class ConstCSModel(AnalyticModel):
 
     def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Pressure $p(T,\phi)$
-        $$p_\pm = a_\pm T^{\mu_\pm} - V_\pm$$
+        $$p_{\pm} = {a}_{\pm} T^{\mu_\pm} - {V}_{\pm}$$
         :giese_2021:`\ `, eq. 15.
         """
         self.validate_temp(temp)
@@ -617,7 +617,7 @@ class ConstCSModel(AnalyticModel):
 
     def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Temperature $T(w,\phi)$. Inverted from the equation of $w(T,\phi)$.
-        $$T_\pm = T_0 \left( \frac{w}{\mu a_\pm T_0^4} \right)^\frac{1}{\mu_\pm}$$
+        $$T_\pm = T_0 \left( \frac{w}{\mu a_{\pm} T_0^4} \right)^\frac{1}{\mu_\pm}$$
         """
         # Some solvers may call this function with w < 0 when finding a solution, which causes NumPy to emit warnings.
         invalid = w < 0
@@ -634,7 +634,7 @@ class ConstCSModel(AnalyticModel):
 
     def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Enthalpy density $w(T,\phi)$
-        $$w_\pm = \mu a_\pm \left( \frac{T}{T_0} \right)^{\mu_\pm} T_0^4$$
+        $$w_\pm = \mu a_{\pm} \left( \frac{T}{T_0} \right)^{\mu_\pm} T_0^4$$
         """
         self.validate_temp(temp)
         w_s = self.mu_s * self.a_s * (temp / self.T_ref) ** (self.mu_s - 4) * temp ** 4

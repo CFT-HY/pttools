@@ -1,15 +1,11 @@
 Installation
 ============
 
-Until the PTtools repository is made public, these downloads require
-`SSH authentication <https://docs.github.com/en/authentication/connecting-to-github-with-ssh>`_
-just like any GitHub repository cloning over SSH.
-Please request access to the repository from prof. Hindmarsh.
-
+There are multiple ways to install PTtools.
 If you're just using PTtools for your project,
-:ref:`installation using a package manager such as pip <With pip>` is recommended.
+:ref:`installation using pip <With pip>` or :ref:`Docker <With Docker>` is recommended.
 However, if you're developing PTtools itself, you should
-:ref:`work on a cloned repository <Local development>`.
+:ref:`clone the repository <Local development>`.
 
 
 With pip
@@ -22,16 +18,14 @@ The virtual environment can be created with the following commands.
 
 .. code-block:: bash
 
-  # The --upgrade-deps argument is not supported by Python versions older than 3.9
-  # and can be left out.
   python3 -m venv --upgrade-deps venv
   # This activates the virtual environment for the current shell session,
-  # and will have to be run again for each new shell session / console window.
+  # and will have to be run again for each new shell session or console window.
   source ./venv/bin/activate
 
 Once the virtual environment is activated with the commands above,
 you can install PTtools from the Git repository with pip.
-A PyPI package will be available later, once PTtools is made open source.
+A PyPI package will be available later.
 
 The ``[numbalsoda]`` flag installs the optional
 `NumbaLSODA <https://pypi.org/project/numbalsoda/>`_

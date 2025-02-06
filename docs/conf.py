@@ -12,10 +12,12 @@
 #
 import os.path
 import sys
+import tomllib
 import typing as tp
 import warnings
 
 dir_path = os.path.dirname(os.path.abspath(__file__))
+repo_path = os.path.dirname(dir_path)
 sys.path.insert(0, os.path.dirname(dir_path))
 
 from pttools.logging import setup_logging
@@ -27,17 +29,12 @@ os.makedirs(os.path.join(dir_path, "_static"), exist_ok=True)
 # -- Project information -----------------------------------------------------
 
 project = 'PTtools'
-_authors = [
-    "Mark Hindmarsh",
-    "Mulham Hijazi",
-    "Mudhahir Al-Ajmi",
-    "Mika Mäki",
-    "Chloe Gowling",
-    "Daniel Cutting"
-]
+with open(os.path.join(repo_path, "AUTHORS")) as file:
+    _authors = file.read().splitlines()
 author = f"{', '.join(_authors[:-1])} & {_authors[-1]}"
-copyright = f"2015-2024, {author}"
-version = "0.0.1"
+copyright = f"2015-2025, {author}"
+with open (os.path.join(repo_path, "pyproject.toml"), "rb") as file:
+    version = tomllib.load(file)["project"]["version"]
 release = version
 
 
@@ -204,6 +201,7 @@ if "GITHUB_ACTIONS" in os.environ:
 # Timeout had to be increased from 5 to prevent errors with slow ArXiv links
 linkcheck_timeout = 10
 linkcheck_workers = 10
+
 
 sphinx_gallery_conf = {
     "backreferences_dir": "gen_modules/backreferences",

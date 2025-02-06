@@ -1,6 +1,6 @@
 r"""
-$v_+, v_-$ plane
-================
+${v}_+, {v}_-$ plane
+====================
 
 Adapted from fig. 9 of :gw_pt_ssm:`\ `.
 """

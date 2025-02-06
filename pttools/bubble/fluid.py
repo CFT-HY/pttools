@@ -13,6 +13,7 @@ from . import boundary
 from .boundary import Phase, SolutionType
 from . import chapman_jouguet
 from . import const
+from .giese import kappaNuMuModel
 from . import integrate
 from . import fluid_bag
 from . import fluid_reference
@@ -25,11 +26,6 @@ if tp.TYPE_CHECKING:
     from pttools.models import Model
 
 logger = logging.getLogger(__name__)
-
-try:
-    from giese.lisa import kappaNuMuModel
-except ImportError:
-    kappaNuMuModel = None
 
 # The output consists of:
 # v, w, xi

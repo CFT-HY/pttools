@@ -6,9 +6,10 @@ import unittest
 import matplotlib.pyplot as plt
 
 import examples.plot_chapman_jouguet
-import examples.plot_const_cs_xi_v
 import examples.plot_model_comparison
 import examples.plot_old_new
+import examples.plot_delta_theta
+from examples.const_cs import plot_const_cs_xi_v
 
 logger = logging.getLogger(__name__)
 
@@ -21,12 +22,12 @@ class ExampleTest(unittest.TestCase):
 
     @staticmethod
     def test_plot_const_cs_xi_v():
-        fig = examples.plot_const_cs_xi_v.main()
+        fig = plot_const_cs_xi_v.main()
         plt.close(fig)
 
     @staticmethod
     def test_plot_const_cs_xi_v_w():
-        import examples.plot_const_cs_xi_v_w as script
+        import examples.const_cs.plot_const_cs_xi_v_w as script
         script.plot.fig()
 
     @staticmethod

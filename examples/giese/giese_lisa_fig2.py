@@ -16,18 +16,12 @@ import numpy as np
 from examples.utils import save
 from pttools.analysis.parallel import create_bubbles
 # from pttools.analysis.utils import A4_PAPER_SIZE
-from pttools.bubble import Bubble, Phase
+from pttools.bubble import Bubble
+from pttools.bubble.giese import kappaNuMuModel
 from pttools.models import ConstCSModel
 from pttools.speedup import run_parallel, GITHUB_ACTIONS
 
 logger = logging.getLogger(__name__)
-
-try:
-    logger.info("Giese code imported successfully.")
-    from giese.lisa import kappaNuMuModel
-except ImportError:
-    logger.info("Giese could not be imported.")
-    kappaNuMuModel: tp.Optional[callable] = None
 
 def get_kappa(bubble: Bubble) -> float:
     if (not bubble.solved) or bubble.no_solution_found or bubble.solver_failed or bubble.numerical_error:

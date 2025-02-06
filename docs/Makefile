@@ -3,8 +3,8 @@
 
 # You can set these variables from the command line, and also
 # from the environment for the first two.
-# The -j auto parameter has been added in the hope that it would enable parallelization.
-SPHINXOPTS    ?= -j auto
+# The --jobs auto parameter has been added in the hope that it would enable parallelization.
+SPHINXOPTS    ?= --jobs auto
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
@@ -24,11 +24,7 @@ all:
 	$(MAKE) epub
 
 clean:
-	rm -rf $(BUILDDIR)/*
-	rm -rf auto_examples/
-	rm -rf gen_modules/
-	rm -rf */gen_modules/
-	rm -rf */*/gen_modules/
+	rm -rf $(BUILDDIR)/* auto_examples/ **/gen_modules/
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).

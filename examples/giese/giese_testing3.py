@@ -5,19 +5,13 @@ Giese testing 3
 Testing to find the properties of a single bubble with PTtools and Giese solvers
 """
 
-import typing as tp
-
 import matplotlib.pyplot as plt
 
 from pttools.bubble import Bubble
 from pttools.models import ConstCSModel
+from pttools.bubble.giese import kappaNuMuModel
 from pttools.bubble.props import find_phase
 from pttools.bubble.thermo import kappa, kinetic_energy_density, va_trace_anomaly_diff
-
-try:
-    from giese.lisa import kappaNuMuModel
-except ImportError:
-    kappaNuMuModel: tp.Optional[callable] = None
 
 
 def main():

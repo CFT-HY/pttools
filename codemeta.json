@@ -8,7 +8,7 @@
             "type": "Person",
             "affiliation": {
                 "type": "Organization",
-                "name": "University of Helsinki, University of Sussex"
+                "name": "Computational Field Theory group, University of Helsinki, University of Sussex"
             },
             "email": "mark.hindmarsh@helsinki.fi",
             "familyName": "Hindmarsh",
@@ -30,7 +30,7 @@
             "type": "Person",
             "affiliation": {
                 "type": "Organization",
-                "name": "University of Helsinki"
+                "name": "Computational Field Theory group, University of Helsinki"
             },
             "email": "mika.x.maki@helsinki.fi",
             "familyName": "Mäki",
@@ -41,7 +41,7 @@
             "type": "Person",
             "affiliation": {
                 "type": "Organization",
-                "name": "University of Helsinki"
+                "name": "Computational Field Theory group, University of Helsinki"
             },
             "familyName": "Cutting",
             "givenName": "Daniel"

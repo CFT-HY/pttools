@@ -263,7 +263,7 @@ class Model(BaseModel, abc.ABC):
             log_invalid: bool = True) -> th.FloatOrArr:
         # Todo: This docstring causes the Sphinx error "ERROR: Unknown target name: "w"."
         r"""Transition strength parameter $\alpha_+$
-        $$\alpha_+ = \frac{4\Delta \theta}{3w_+} = \frac{4(\theta(w_+,\phi_s) - \theta(w_-,\phi_b)}{3w_+}$$
+        $$\alpha_+ = \frac{4\Delta \theta}{3{w}_+} = \frac{4(\theta({w}_+,\phi_s) - \theta({w}_-,\phi_b)}{3{w}_+}$$
 
         :param wp: $w_+$
         :param wm: $w_-$
@@ -809,6 +809,12 @@ class Model(BaseModel, abc.ABC):
             (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3\alpha_{\bar{\theta}_+} }{
             (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3 \tilde{v}_+ \tilde{v}_- \alpha_{\bar{\theta}}_+
         }$$
+
+        :param vp_tilde: $\tilde{v}_+$
+        :param vm_tilde: $\tilde{v}_-$
+        :param wp: $w_+$
+        :param wm: $w_-$
+        :return: $\frac{\tilde{v}_+}{\tilde{v}_-}$
         """
         alpha_tbp = self.alpha_theta_bar_plus(wp)
         cs2b = self.cs2(wm, Phase.BROKEN)

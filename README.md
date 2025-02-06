@@ -1,10 +1,12 @@
 # PTtools
-[![CI](https://github.com/hindmars-org/pttools/actions/workflows/main.yml/badge.svg)](https://github.com/hindmars-org/pttools/actions/workflows/main.yml)
-[![Docs](https://github.com/hindmars-org/pttools/actions/workflows/docs.yml/badge.svg)](https://github.com/hindmars-org/pttools/actions/workflows/docs.yml)
-[![macOS](https://github.com/hindmars-org/pttools/actions/workflows/mac.yml/badge.svg)](https://github.com/hindmars-org/pttools/actions/workflows/mac.yml)
-[![Windows](https://github.com/hindmars-org/pttools/actions/workflows/windows.yml/badge.svg)](https://github.com/hindmars-org/pttools/actions/workflows/windows.yml)
+[![DOI](https://zenodo.org/badge/373413324.svg)](https://zenodo.org/badge/latestdoi/373413324)
+[![ReadTheDocs](https://readthedocs.org/projects/pttools/badge/)](https://pttools.readthedocs.io/)
+[![CI](https://github.com/CFT-HY/pttools/actions/workflows/main.yml/badge.svg)](https://github.com/CFT-HY/pttools/actions/workflows/main.yml)
+[![Windows](https://github.com/CFT-HY/pttools/actions/workflows/windows.yml/badge.svg)](https://github.com/CFT-HY/pttools/actions/workflows/windows.yml)
+[![macOS](https://github.com/CFT-HY/pttools/actions/workflows/mac.yml/badge.svg)](https://github.com/CFT-HY/pttools/actions/workflows/mac.yml)
+[![codecov](https://codecov.io/gh/CFT-HY/pttools/graph/badge.svg?token=ALFVWC1LZR)](https://codecov.io/gh/CFT-HY/pttools)
 
-PTtools is Python library for calculating hydrodynamical quantities
+PTtools is a Python library for calculating hydrodynamical quantities
 around expanding bubbles of the new phase in an early universe phase transition,
 and the resulting gravitational wave power spectrum in the Sound Shell Model.
 
@@ -13,9 +15,9 @@ and the resulting gravitational wave power spectrum in the Sound Shell Model.
 ### Documentation
 The documentation is available online at [Read the Docs](https://pttools.readthedocs.io/).
 The documentation for previous releases can be found at the
-[releases](https://github.com/hindmars-org/pttools/releases) page.
+[releases](https://github.com/CFT-HY/pttools/releases) page.
 The documentation can also be downloaded from the
-[GitHub Actions results](https://github.com/hindmars-org/pttools/actions)
+[GitHub Actions results](https://github.com/CFT-HY/pttools/actions)
 by selecting the latest successful *docs* workflow and then scrolling down to the *artifacts* section.
 There you can find a zip file containing the documentation in various formats.
 

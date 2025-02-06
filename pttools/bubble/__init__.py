@@ -16,6 +16,7 @@ from .check import *
 from .const import *
 from .fluid import *
 from .fluid_bag import *
+from .giese import *
 from .integrate import *
 # from .physical_params import *
 from .props import *

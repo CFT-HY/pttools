@@ -3,9 +3,7 @@ Comparison of Giese and PTtools solvers
 =======================================
 """
 
-
 import logging
-
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,7 +11,7 @@ import numpy as np
 from examples.utils import save
 from pttools.analysis.parallel import create_bubbles
 from pttools.bubble import Bubble
-from pttools.bubble.fluid import kappaNuMuModel
+from pttools.bubble.giese import kappaNuMuModel
 from pttools.models import ConstCSModel
 from pttools.speedup import GITHUB_ACTIONS
 
@@ -94,5 +92,5 @@ def main():
 if __name__ == "__main__":
     fig, fig2 = main()
     save(fig, "giese_comparison")
-    save(fig, "giese_comparison_diff")
+    save(fig2, "giese_comparison_diff")
     plt.show()

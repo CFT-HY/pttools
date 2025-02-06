@@ -104,6 +104,9 @@ testpaths = [
 # log_cli = true
 # log_cli_level = "INFO"
 
+# [tool.setuptools.dynamic]
+# version = {attr = "docs.conf.version"}
+
 [tool.setuptools.packages.find]
 include = [
     "pttools*",
