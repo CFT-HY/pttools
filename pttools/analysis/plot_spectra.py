@@ -6,6 +6,7 @@ from pttools.ssmtools.spectrum import SSMSpectrum
 
 
 def plot_spectra(spectra: tp.List[SSMSpectrum], fig: plt.Figure = None):
+    # Todo: fix the labels here
     if fig is None:
         fig = plt.figure(figsize=(11.7, 8.3))
 

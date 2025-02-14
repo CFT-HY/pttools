@@ -31,6 +31,7 @@ def plot_spectrum_common(spectrum: SSMSpectrum, fig: plt.Figure, ax: plt.Axes, p
 
 
 def plot_spectrum_multi(spectrum: SSMSpectrum, fig: plt.Figure = None, path: str = None, **kwargs) -> plt.Figure:
+    # Todo: fix the axis labels
     if fig is None:
         fig = plt.figure(figsize=A4_PAPER_SIZE)
     axs = fig.subplots(2, 2)

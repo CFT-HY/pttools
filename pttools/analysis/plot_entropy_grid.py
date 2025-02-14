@@ -6,11 +6,10 @@ from matplotlib import ticker
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.analysis.cmap import cmap, color_region
 from pttools.analysis.bubble_grid import BubbleGridVWAlpha
+from pttools.analysis.colormap import cmap
 from pttools.analysis.plot_vw_alpha import VwAlphaPlot
 from pttools.bubble.bubble import Bubble
-from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
@@ -20,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class DurationPlot(VwAlphaPlot):
     def __init__(self, grid: BubbleGridVWAlpha, fig: plt.Figure = None, ax: plt.Axes = None):
-        super().__init__(fig, ax)
+        super().__init__(grid, fig, ax)
         img = ax.pcolor(grid.v_walls, grid.alpha_ns, np.log10(grid.elapsed()))
         cbar = ax.figure.colorbar(img, ax=ax)
 
@@ -42,17 +41,13 @@ class EntropyPlot(VwAlphaPlot):
             diff_level: float,
             fig: plt.Figure = None,
             ax: plt.Axes = None):
-        super().__init__(fig, ax)
+        super().__init__(grid, fig, ax, title=rf"$\Delta s / s_n$ for {grid.model.label_latex}")
         plot_entropy_data(entropy, grid.v_walls, grid.alpha_ns, min_level, max_level, diff_level, fig=fig, ax=ax)
 
-        color_region(self.ax, grid.v_walls, grid.alpha_ns, grid.numerical_error(), color="red", alpha=0.5)
-        color_region(self.ax, grid.v_walls, grid.alpha_ns, grid.unphysical_alpha_plus(), color="green", alpha=0.5)
-        color_region(self.ax, grid.v_walls, grid.alpha_ns, grid.solver_failed(), color="black")
-
-        self.ax.plot(v_chapman_jouguet(grid.model, grid.alpha_ns), grid.alpha_ns, 'k--', label=r'$v_{CJ}$')
-        self.ax.set_title(rf"$\Delta s / s_n$ for {grid.model.label_latex}")
-        self.ax.legend()
-        self.ax.set_title("Total net entropy change")
+        self.color_region(grid.numerical_error(), color="red", alpha=0.5)
+        self.color_region(grid.unphysical_alpha_plus(), color="green", alpha=0.5)
+        self.color_region(grid.solver_failed(), color="black")
+        self.chapman_jouguet()
 
 
 class DeltaEntropyPlot(VwAlphaPlot):
@@ -65,7 +60,7 @@ class DeltaEntropyPlot(VwAlphaPlot):
             title: str,
             fig: plt.Figure = None,
             ax: plt.Axes = None):
-        super().__init__(fig, ax)
+        super().__init__(grid, fig, ax)
         rel_change = (w1 - w2) / w_ref
         cs: QuadContourSet = ax.contourf(grid.v_walls, grid.alpha_ns, rel_change, locator=ticker.LinearLocator(numticks=20))
         cbar = self.fig.colorbar(cs)
@@ -79,33 +74,33 @@ class EntropyConservationPlot(VwAlphaPlot):
             diff: np.ndarray,
             fig: plt.Figure = None,
             ax: plt.Axes = None):
-        super().__init__(fig, ax)
+        super().__init__(grid, fig, ax)
         cs: QuadContourSet = ax.contourf(grid.v_walls, grid.alpha_ns, diff, locator=ticker.LinearLocator(numticks=20))
         cbar = self.fig.colorbar(cs)
         cbar.ax.set_ylabel(r"$\tilde{\gamma}_- \tilde{v}_- s_- - \tilde{\gamma}_+ \tilde{v}_+ s_+$")
         self.ax.set_title("Entropy generation at the wall")
 
-        self.ax.plot(v_chapman_jouguet(grid.model, grid.alpha_ns), grid.alpha_ns, 'k--', label=r'$v_{CJ}$')
-        color_region(self.ax, grid.v_walls, grid.alpha_ns, grid.solver_failed(), color="black")
+        self.color_region(grid.solver_failed(), color="black")
+        self.chapman_jouguet()
         self.ax.legend()
 
 
 class GieseApproximationPlot(VwAlphaPlot):
     def __init__(self, grid: BubbleGridVWAlpha, diff: np.ndarray, fig: plt.Figure = None, ax: plt.Axes = None):
-        super().__init__(fig, ax)
+        super().__init__(grid, fig, ax)
 
         cs: QuadContourSet = ax.contourf(grid.v_walls, grid.alpha_ns, diff, locator=ticker.LogLocator(numticks=20))
         cbar = fig.colorbar(cs)
         cbar.ax.set_ylabel("Rel. diff. of Giese approx.")
         self.ax.set_title("Rel. diff. of Giese approx.")
 
-        self.ax.plot(v_chapman_jouguet(grid.model, grid.alpha_ns), grid.alpha_ns, 'k--', label=r'$v_{CJ}$')
+        self.chapman_jouguet()
         self.ax.legend()
 
 
 class KappaOmegaSumPlot(VwAlphaPlot):
     def __init__(self, grid: BubbleGridVWAlpha, fig: plt.Figure = None, ax: plt.Axes = None):
-        super().__init__(fig, ax)
+        super().__init__(grid, fig, ax)
 
         kappa_omega_sum = np.abs(grid.kappa() + grid.omega() - 1)
         if np.all(np.isnan(kappa_omega_sum)):
@@ -199,6 +194,7 @@ def plot_entropy_data(
         min_level: float, max_level: float, diff_level: float,
         fig: plt.Figure = None,
         ax: plt.Axes = None) -> tp.Tuple[plt.Figure, plt.Axes]:
+    """This function can be used to plot entrpy data that is not from a BubbleGridVWAlpha object."""
     if fig is None or ax is None:
         fig: plt.Figure = plt.figure()
         ax: plt.Axes = fig.add_subplot()

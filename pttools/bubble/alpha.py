@@ -43,9 +43,6 @@ def alpha_n_max_bag(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th
 # @numba.njit
 def _alpha_n_max_deflagration_bag_scalar(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArr:
     check.check_wall_speed(v_wall)
-    # TODO: This seems to be specific to the bag model
-    # There is circular logic due to the call to fluid_shell_alpha_plus
-    # TODO: This line is for the bag model only, as cs should depend on enthalpy and phase
     sol_type = boundary.SolutionType.HYBRID.value if v_wall > const.CS0 else boundary.SolutionType.SUB_DEF.value
     ap = 1. / 3 - 1.0e-10  # Warning - this is not safe.  Causes warnings for v low vw
     _, w, xi = fluid_bag.sound_shell_alpha_plus(v_wall, ap, sol_type, n_xi)

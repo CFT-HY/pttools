@@ -12,7 +12,8 @@ from examples.utils import save
 from pttools.bubble import Bubble
 from pttools.models import ConstCSModel
 from pttools.analysis.plot_model import ModelPlot
-from pttools.ssmtools import SSMSpectrum, NucType
+from pttools.ssmtools import NucType
+from pttools.omgw0 import Spectrum
 
 
 def main():
@@ -26,7 +27,7 @@ def main():
     bubble_fig = bubble.plot()
     save(bubble_fig, "const_cs_bubble.png")
 
-    spectrum = SSMSpectrum(bubble, nuc_type=NucType.EXPONENTIAL)
+    spectrum = Spectrum(bubble, nuc_type=NucType.EXPONENTIAL)
     spectrum_fig = spectrum.plot_multi()
     save(spectrum_fig, "const_cs_spectrum.png")
 

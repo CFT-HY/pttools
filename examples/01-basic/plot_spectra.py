@@ -10,7 +10,7 @@ from pttools.analysis import plot_spectra
 from examples import utils
 from pttools.bubble import Bubble
 from pttools.models import BagModel, ConstCSModel
-from pttools.ssmtools import SSMSpectrum
+from pttools.omgw0 import Spectrum
 
 
 def main():
@@ -23,7 +23,7 @@ def main():
         Bubble(model1, v_wall=0.5, alpha_n=0.2),
         Bubble(model2, v_wall=0.5, alpha_n=0.2)
     ]
-    spectra = [SSMSpectrum(bubble) for bubble in bubbles]
+    spectra = [Spectrum(bubble) for bubble in bubbles]
 
     return plot_spectra(spectra)
 

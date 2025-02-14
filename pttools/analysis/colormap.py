@@ -4,13 +4,17 @@ from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
 import numpy as np
 
+CMAP_NEG_DEFAULT = "Blues"
+CMAP_POS_DEFAULT = "Reds"
+REGION_COLOR_DEFAULT = "red"
+
 
 def cmap(
         min_level: float,
         max_level: float,
         diff_level: float,
-        cmap_neg_name: str = "Blues",
-        cmap_pos_name: str = "Reds") -> tp.Tuple[np.ndarray, tp.List[float]]:
+        cmap_neg_name: str = CMAP_NEG_DEFAULT,
+        cmap_pos_name: str = CMAP_POS_DEFAULT) -> tp.Tuple[np.ndarray, tp.List[float]]:
     """Colormap for Matplotlib heatmap plots"""
     n_min = int(min_level / diff_level)
     n_max = int(max_level / diff_level)
@@ -19,17 +23,17 @@ def cmap(
     cmap_neg = plt.colormaps[cmap_neg_name]
     cmap_pos = plt.colormaps[cmap_pos_name]
 
-    cols = \
+    colors = \
         list(cmap_neg((levels[levels < 0] - diff_level) / (min_level - diff_level))) + \
         list(cmap_pos((levels[levels >= 0] + diff_level) / (max_level + diff_level)))
 
-    return levels, cols
+    return levels, colors
 
 
 def color_region(
         ax: plt.Axes,
         x: np.ndarray, y: np.ndarray, region: np.ndarray,
-        color: str = "red", alpha: float = 1):
+        color: str = REGION_COLOR_DEFAULT, alpha: float = 1):
     cmp = ListedColormap([color], color, 1)
     # The data type must be supporte by np.isinf()
     region2 = region.copy() if region.dtype is np.float64 else region.astype(np.float64)

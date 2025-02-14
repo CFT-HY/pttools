@@ -289,7 +289,8 @@ def solve_junction(
             (w2_min is not None and w2_max is not None and v2_tilde_max <= v2_tilde_min):
         logger.error(
             "Invalid limits for junction solver. "
-            f"Got: v2_tilde_min=%s, v2_tilde_max=%s, w2_min=%s, w2_max=%s"
+            f"Got: v2_tilde_min=%s, v2_tilde_max=%s, w2_min=%s, w2_max=%s",
+            v2_tilde_min, v2_tilde_max, w2_min, w2_max
         )
 
 
