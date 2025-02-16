@@ -110,7 +110,7 @@ class KappaOmegaSumPlot(VwAlphaPlot):
         cbar.ax.set_ylabel(r"$|\kappa + \omega - 1|$")
         self.ax.set_title(r"$|\kappa + \omega - 1|$")
 
-        self.ax.plot(v_chapman_jouguet(grid.model, grid.alpha_ns), grid.alpha_ns, 'k--', label=r'$v_{CJ}$')
+        self.chapman_jouguet()
         self.ax.legend()
 
 
