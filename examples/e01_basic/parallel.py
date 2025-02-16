@@ -35,7 +35,8 @@ def main():
 
     # Plotting
     plot = VwAlphaPlot(grid)
-    plot.colorbar()
+    plot.contourf(kappas, label=r"$\kappa$")
+    plot.chapman_jouguet()
 
 
 if __name__ == "__main__":
