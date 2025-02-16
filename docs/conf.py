@@ -21,6 +21,7 @@ repo_path = os.path.dirname(dir_path)
 sys.path.insert(0, os.path.dirname(dir_path))
 
 from pttools.logging import setup_logging
+# from pttools.speedup.options import GITHUB_ACTIONS
 setup_logging()
 
 # Create a directory for static files to avoid a warning when building.
@@ -202,6 +203,8 @@ if "GITHUB_ACTIONS" in os.environ:
 linkcheck_timeout = 10
 linkcheck_workers = 10
 
+# show_memory = GITHUB_ACTIONS
+show_memory = True
 
 sphinx_gallery_conf = {
     "backreferences_dir": "gen_modules/backreferences",
@@ -214,15 +217,15 @@ sphinx_gallery_conf = {
     # "image_srcset": ["2x"],
     # "line_numbers": True,
     "matplotlib_animations": True,
-    # Parallelism cannot be enabled simultaneously with "show_memory"
+    # Parallelism cannot be enabled simultaneously with "show_memory".
     # It may also produce errors with some IDEs:
     # https://stackoverflow.com/questions/31080829/python-error-io-unsupportedoperation-fileno
-    # "parallel": True,
+    "parallel": not show_memory,
     "reference_url": {
         "pttools": None,
         "tests": None,
     },
-    "show_memory": True,
+    "show_memory": show_memory,
 }
 autosummary_generate = True
 
