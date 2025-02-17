@@ -141,7 +141,10 @@ def create_bubbles(
     bubble_count = alpha_ns.size * v_walls.size
     elapsed = time.perf_counter() - start_time
     elapsed_per_bubble = elapsed / bubble_count
-    logger.debug("Creating %s bubbles took %s s in total, %s s per bubble", bubble_count, elapsed, elapsed_per_bubble)
+    logger.debug(
+        "Creating %s bubbles took %.3f s in total, %.3f s per bubble",
+        bubble_count, elapsed, elapsed_per_bubble
+    )
     return ret
 
 

@@ -1,4 +1,7 @@
+import typing as tp
+
 from matplotlib.contour import QuadContourSet
+from matplotlib.legend import Legend
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -35,7 +38,6 @@ class VwAlphaPlot:
         self.ax.grid()
         if title is not None:
             self.ax.set_title(title)
-        # self.ax.legend()
 
     def contourf(
             self,
@@ -55,12 +57,17 @@ class VwAlphaPlot:
         cbar = self.fig.colorbar(cs)
         cbar.ax.set_ylabel(label)
 
-    def color_region(self, region: np.ndarray, color: str = REGION_COLOR_DEFAULT, alpha: float = 1):
-        colormap.color_region(
+    def color_region(self, region: np.ndarray, color: str = REGION_COLOR_DEFAULT, alpha: float = 1) -> QuadContourSet:
+        return colormap.color_region(
             ax=self.ax, x=self.grid.v_walls, y=self.grid.alpha_ns,
             region=region, color=color, alpha=alpha
         )
 
-    def chapman_jouguet(self, ls: str = "k--", label: str = "$v_{CJ}$"):
-        self.ax.plot(
-            v_chapman_jouguet(self.grid.model, self.grid.alpha_ns), self.grid.alpha_ns, ls=ls, label=label)
+    def chapman_jouguet(self, color: str = "black", ls: str = "--", label: str = "$v_{CJ}$") -> tp.List[plt.Line2D]:
+        return self.ax.plot(
+            v_chapman_jouguet(self.grid.model, self.grid.alpha_ns),
+            self.grid.alpha_ns, color=color, ls=ls, label=label
+        )
+
+    def legend(self, *args, **kwargs) -> Legend:
+        return self.ax.legend(*args, **kwargs)

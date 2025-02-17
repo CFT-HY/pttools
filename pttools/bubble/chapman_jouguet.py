@@ -235,7 +235,7 @@ def v_chapman_jouguet_bag(alpha_plus: th.FloatOrArr) -> th.FloatOrArr:
     $\alpha_n$ can be given instead of $\alpha_+$, as
     "The two definitions of the transition strength coincide
     only in the case of detonations within the bag model."
-    :notes:` \` p. 40
+    :notes:`\ ` p. 40
 
     $$v_{CJ}(\alpha_+) = \frac{1}{\sqrt{3}} \frac{1 + \sqrt{2\alpha_+ + 3 \alpha_+^2}}{1 + \alpha_+}$$
     This differs from :notes:` \` eq. 7.34 and `\ ` eq. B.19 and :giombi_2024_gr:`\ ` eq. 2.23 by a factor of 2.

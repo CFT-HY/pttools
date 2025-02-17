@@ -1,5 +1,6 @@
 import typing as tp
 
+from matplotlib.contour import QuadContourSet
 from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
 import numpy as np
@@ -33,7 +34,7 @@ def cmap(
 def color_region(
         ax: plt.Axes,
         x: np.ndarray, y: np.ndarray, region: np.ndarray,
-        color: str = REGION_COLOR_DEFAULT, alpha: float = 1):
+        color: str = REGION_COLOR_DEFAULT, alpha: float = 1) -> QuadContourSet:
     cmp = ListedColormap([color], color, 1)
     # The data type must be supporte by np.isinf()
     region2 = region.copy() if region.dtype is np.float64 else region.astype(np.float64)
