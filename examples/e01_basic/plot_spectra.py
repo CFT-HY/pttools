@@ -1,8 +1,8 @@
 """
-Spectrum plotting
+Plot multiple spectra
 =================
 
-Plot velocity and GW spectra
+Plot the velocity and GW spectra of multiple bubbles
 """
 
 from pttools.analysis import plot_spectra
@@ -14,11 +14,8 @@ from pttools.omgw0 import Spectrum
 
 
 def main():
-    a_s = 100
-    a_b = 50
-    V_s = 1e-3
-    model1 = BagModel(a_s=a_s, a_b=a_b, V_s=V_s)
-    model2 = ConstCSModel(css2=1/4, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s)
+    model1 = BagModel(alpha_n_min=0.1)
+    model2 = ConstCSModel(css2=1/4, csb2=1/3, a_s=1.5, a_b=1, V_s=1)
     bubbles = [
         Bubble(model1, v_wall=0.5, alpha_n=0.2),
         Bubble(model2, v_wall=0.5, alpha_n=0.2)
