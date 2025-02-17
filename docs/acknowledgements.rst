@@ -4,12 +4,12 @@ The following people have contributed to the development of PTtools (in alphabet
 
 - Mudhahir Al-Ajmi
 - Danny Bail (Sussex MPhys RP projects 2016-18)
-- Daniel Cutting
-- Chloe Gowling
-- Mulham Hijazi
-- Mark Hindmarsh (2015 $\rightarrow$)
+- [Daniel Cutting](https://orcid.org/0000-0002-7395-7802)
+- [Chloe Hopling](https://orcid.org/0000-0002-7955-4465)
+- [Mulham Hijazi](https://orcid.org/0000-0002-1941-1518)
+- [Mark Hindmarsh](https://orcid.org/0000-0002-9307-437X) (2015 $\rightarrow$)
 - Jacky Lindsay
-- Mika Mäki (University of Helsinki summer employee 2021, MSc student 2022-2024, PhD student 2025->)
+- [Mika Mäki](https://orcid.org/0000-0001-8162-7101) (University of Helsinki summer employee 2021, MSc student 2022-2024, PhD student 2025->)
 - Mike Soughton (MPhys project 2017-18)
 
 The development of PTtools has been funded by

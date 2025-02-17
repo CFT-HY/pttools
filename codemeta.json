@@ -35,16 +35,6 @@
             "email": "mika.x.maki@helsinki.fi",
             "familyName": "Mäki",
             "givenName": "Mika"
-        },
-        {
-            "id": "https://orcid.org/0000-0002-7395-7802",
-            "type": "Person",
-            "affiliation": {
-                "type": "Organization",
-                "name": "Computational Field Theory group, University of Helsinki"
-            },
-            "familyName": "Cutting",
-            "givenName": "Daniel"
         }
     ],
     "codeRepository": "git+https://github.com/CFT-HY/pttools.git",

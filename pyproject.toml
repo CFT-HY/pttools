@@ -19,11 +19,15 @@ keywords = [
     "relativistic hydrodynamics",
     "sound shell model"
 ]
+# When updating these, also update acknowledgements.rst, AUTHORS, CITATION.cff and codemeta.json
 authors = [
-    {name = "Mark Hindmarsh", email = "mark.hindmarsh@helsinki.fi"}
+    {name = "Mark Hindmarsh", email = "mark.hindmarsh@helsinki.fi"},
+    {name = "Chloe Hopling", email = "c.hopling@sussex.ac.uk"},
+    {name = "Mika Mäki", email = "mika.x.maki@helsinki.fi"}
 ]
 maintainers = [
-    {name = "Mark Hindmarsh", email = "mark.hindmarsh@helsinki.fi"}
+    {name = "Mark Hindmarsh", email = "mark.hindmarsh@helsinki.fi"},
+    {name = "Mika Mäki", email = "mika.x.maki@helsinki.fi"}
 ]
 classifiers = [
     "Framework :: Matplotlib",

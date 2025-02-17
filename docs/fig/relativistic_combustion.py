@@ -14,6 +14,8 @@ from scipy.interpolate import interp1d
 from examples.utils import save
 from pttools import bubble
 
+__author__ = "Daniel Cutting"
+
 _VIRIDIS_BIG = plt.colormaps["autumn_r"]
 _NEW_COLORS = _VIRIDIS_BIG(np.linspace(0, 1, 256))
 _NEW_COLORS[0] = matplotlib.colors.to_rgba("white", alpha=0)
