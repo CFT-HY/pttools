@@ -1,7 +1,7 @@
 Installation
 ============
 
-There are multiple ways to install PTtools.
+PTtools is a Python library and can therefore be installed like any other Python library.
 If you're just using PTtools for your project,
 :ref:`installation using pip <With pip>` or :ref:`Docker <With Docker>` is recommended.
 However, if you're developing PTtools itself, you should
@@ -10,6 +10,10 @@ However, if you're developing PTtools itself, you should
 
 With pip
 --------
+To install PTtools with pip, you need to have Python installed.
+You can install Python from the `official website <https://www.python.org/>`_,
+or by using the package manager of your operating system (e.g. apt).
+
 Installing PTtools within a
 `virtual environment <https://docs.python.org/3/tutorial/venv.html>`_
 is highly recommended, as this enables the use of the latest versions
@@ -19,7 +23,7 @@ The virtual environment can be created with the following commands.
 .. code-block:: bash
 
   python3 -m venv --upgrade-deps venv
-  # This activates the virtual environment for the current shell session,
+  # The following command activates the virtual environment for the current shell session,
   # and will have to be run again for each new shell session or console window.
   source ./venv/bin/activate
 

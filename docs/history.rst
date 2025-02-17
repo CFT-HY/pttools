@@ -3,6 +3,7 @@ Version history
 
 1.0.0 (planned changes)
 -----------------------
+- GW power spectrum for low wavenumbers by using the formulae by :giombi_2024_cs:`\ `.
 - More polished documentation and examples.
 - Improve unit testing by using more comprehensive reference data, which are stored externally as HDF5.
   Test whether `Git LFS <https://git-lfs.com/>`_ on GitLab would be a suitable storage.
@@ -10,7 +11,7 @@ Version history
 
 0.9.0 (upcoming)
 ----------------
-These modifications were [Mika's master's thesis](https://github.com/AgenttiX/msc-thesis2).
+These modifications were `Mika's master's thesis <https://github.com/AgenttiX/msc-thesis2>`_.
 
 - PTtools published as open source with the MIT license
 - Documentation published at Read the Docs.

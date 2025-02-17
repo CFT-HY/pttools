@@ -1,6 +1,12 @@
 Usage
 =====
 
+Basic usage
+-----------
+To install PTtools, please first follow the instructions in the :doc:`installation guide <install>`.
+Then download and run one of the examples in the :doc:`example gallery <auto_examples/index>`.
+
+
 Numba performance
 -----------------
 The computationally intensive parts of PTtools are JIT-compiled using

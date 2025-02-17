@@ -44,6 +44,8 @@ There you can find a zip file containing the documentation in various formats.
 - Repo owner: [Mark Hindmarsh](https://github.com/hindmars/)
 
 ### Example figures
+Fluid velocity profiles
 ![Fluid velocity profiles](https://raw.githubusercontent.com/AgenttiX/msc-thesis2/refs/heads/main/msc2-python/fig/const_cs_gw_v.png)
 
-![Gravitational wave spectra](https://raw.githubusercontent.com/AgenttiX/msc-thesis2/refs/heads/main/msc2-python/fig/const_cs_gw_omgw0.png)
+Gravitational wave power spectra
+![Gravitational wave power spectra](https://raw.githubusercontent.com/AgenttiX/msc-thesis2/refs/heads/main/msc2-python/fig/const_cs_gw_omgw0.png)

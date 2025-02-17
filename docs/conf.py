@@ -234,9 +234,14 @@ autosummary_generate = True
 # From: https://github.com/sphinx-gallery/sphinx-gallery/blob/master/doc/conf.py
 warnings.filterwarnings(
     "ignore",
-    category=UserWarning,
+    category=RuntimeWarning,
     message="Matplotlib is currently using agg, which is a"
     " non-GUI backend, so cannot show the figure.",
+)
+warnings.filterwarnings(
+    "ignore",
+    category=RuntimeWarning,
+    message="invalid value encountered in multiply"
 )
 
 # numpydoc_show_class_members = False

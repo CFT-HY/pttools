@@ -6,6 +6,9 @@
 Welcome to the PTtools documentation!
 =====================================
 
+PTtools is a Python library for calculating hydrodynamical quantities around expanding bubbles
+of the new phase in an early universe phase transition, and the resulting gravitational wave power spectrum in the Sound Shell Model.
+
 .. toctree::
    :caption: Contents:
    :maxdepth: 2
