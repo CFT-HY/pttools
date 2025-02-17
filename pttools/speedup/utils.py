@@ -4,6 +4,8 @@ import collections
 import functools
 import threading
 
+import numpy as np
+
 
 def conditional_decorator(dec: callable, condition: bool, **kwargs) -> callable:
     """Applies the given decorator if the given condition is True.
@@ -41,6 +43,10 @@ def copy_doc(copy_func: callable) -> callable:
         return func
 
     return wrapped
+
+
+def is_nan_or_none(value: float = None) -> bool:
+    return value is None or np.isnan(value)
 
 
 def threadsafe_lru(func: callable) -> callable:

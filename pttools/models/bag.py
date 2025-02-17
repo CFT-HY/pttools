@@ -39,7 +39,7 @@ class BagModel(AnalyticModel):
 
     def __init__(
             self,
-            V_s: float, V_b: float = 0,
+            V_s: float = AnalyticModel.DEFAULT_V_S, V_b: float = AnalyticModel.DEFAULT_V_B,
             a_s: float = None, a_b: float = None,
             g_s: float = None, g_b: float = None,
             T_min: float = None, T_max: float = None,
@@ -53,8 +53,9 @@ class BagModel(AnalyticModel):
         if V_b != 0:
             logger.warning("V_b has been specified for the bag model, even though it's usually omitted.")
         if alpha_n_min is not None:
+            a_s, a_b, _, _ = self.get_a_g(a_s, a_b, g_s, g_b)
             a_s, a_b, V_s, V_b = self.alpha_n_min_find_params(
-                alpha_n_min_target=alpha_n_min, a_s_default=a_s, a_b=a_b, V_s_default=V_s, V_b=V_b)
+                alpha_n_min_target=alpha_n_min, a_s_default=a_s, a_b=a_b, V_s=V_s, V_b=V_b)
 
         super().__init__(
             V_s=V_s, V_b=V_b,
@@ -106,21 +107,23 @@ class BagModel(AnalyticModel):
     def alpha_n_min_find(self, w_min: float = None, w_max: float = None) -> tp.Tuple[float, float]:
         return self.w_crit, self.alpha_n(self.w_crit)
 
-    @staticmethod
+    @classmethod
     def alpha_n_min_find_params(
+            cls,
             alpha_n_min_target: float,
             a_s_default: float = None,
             a_b: float = 1,
-            V_s_default: float = None,
+            V_s: float = None,
             V_b: float = 0,
-            safety_factor_alpha: float = 0.999) -> tp.Tuple[float, float, float, float]:
-        if a_s_default < 0 or a_b < 0 or V_s_default < 0 or V_b < 0:
+            safety_factor_alpha: float = None) -> tp.Tuple[float, float, float, float]:
+        if a_s_default < 0 or a_b < 0 or V_s < 0 or V_b < 0:
             raise ValueError(
-                f"Invalid parameters: a_s_default={a_s_default}, a_b={a_b}, V_s_default={V_s_default}, V_b={V_b}")
+                f"Invalid parameters: a_s_default={a_s_default}, a_b={a_b}, V_s_default={V_s}, V_b={V_b}")
+        if safety_factor_alpha is None:
+            safety_factor_alpha = cls.ALPHA_N_MIN_FIND_SAFETY_FACTOR_ALPHA
         a_s = a_b / (1 - 3*alpha_n_min_target * safety_factor_alpha)
         if a_s_default is not None and a_s_default < a_s:
             a_s = a_s_default
-        V_s = 1 if V_s_default is None else V_s_default
         return a_s, a_b, V_s, V_b
 
     @copy_doc(AnalyticModel.alpha_plus_bag)

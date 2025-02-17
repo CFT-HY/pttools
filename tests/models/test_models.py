@@ -23,6 +23,32 @@ class TestBag(BagBaseCase, unittest.TestCase):
         model = models.BagModel(**params)
         self.assertAlmostEqual(model.critical_temp(), 1)
 
+    # Model initialisation tests
+
+    def test_alpha_n_min(self):
+        models.BagModel(alpha_n_min=0.01)
+
+    def test_g(self):
+        models.BagModel(g_s=120, g_b=100)
+
+    def test_g_s(self):
+        models.BagModel(g_s=120)
+
+    def test_g_b(self):
+        models.BagModel(g_b=100)
+
+    def test_a_g(self):
+        with self.assertRaises(ValueError):
+            models.BagModel(a_s=1.5, g_b=1)
+
+    def test_g_a(self):
+        with self.assertRaises(ValueError):
+            models.BagModel(g_s=100, a_b=1)
+
+    def test_a_g_all(self):
+        with self.assertRaises(ValueError):
+            models.BagModel(a_s=1.5, a_b=1, g_s=120, g_b=100)
+
 
 class TestConstCSLikeBag(BagBaseCase, unittest.TestCase):
     model: models.ConstCSModel

@@ -31,9 +31,12 @@ class Model(BaseModel, abc.ABC):
     :param name: custom name for the model
     :param gen_cs2: used internally for postponing the generation of the cs2 function
     """
+    ALPHA_N_MIN_FIND_SAFETY_FACTOR_ALPHA: float = 0.999
+    DEFAULT_V_B = 0
+
     def __init__(
             self,
-            V_s: float, V_b: float = 0,
+            V_s: float, V_b: float = DEFAULT_V_B,
             T_ref: float = 1, T_min: float = None, T_max: float = None,
             T_crit_guess: float = None,
             name: str = None,
@@ -954,7 +957,12 @@ class Model(BaseModel, abc.ABC):
 
     # Abstract methods
 
-    def alpha_n_min_find_params(self, alpha_n_min_target: float):
+    def alpha_n_min_find_params(
+            self,
+            alpha_n_min_target: float,
+            V_s_default: float,
+            V_b: float,
+            safety_factor_alpha: float = ALPHA_N_MIN_FIND_SAFETY_FACTOR_ALPHA):
         r"""Find the model parameters that allow the given $\alpha_{n,\text{min,target}}$"""
         raise NotImplementedError
 

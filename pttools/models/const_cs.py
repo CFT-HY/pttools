@@ -12,6 +12,7 @@ import pttools.type_hints as th
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.models.analytic import AnalyticModel
 from pttools.models.bag import BagModel
+from pttools.speedup import is_nan_or_none
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ class ConstCSModel(AnalyticModel):
     def __init__(
             self,
             css2: tp.Union[float, Fraction], csb2: tp.Union[float, Fraction],
-            V_s: float = None, V_b: float = 0,
+            V_s: float = AnalyticModel.DEFAULT_V_S, V_b: float = AnalyticModel.DEFAULT_V_B,
             a_s: float = None, a_b: float = None,
             g_s: float = None, g_b: float = None,
             alpha_n_min: float = None,
@@ -73,6 +74,9 @@ class ConstCSModel(AnalyticModel):
         :param T_ref: reference temperature, usually 1 * unit of choice, e,g. 1 GeV
         :param name: custom name for the model
         """
+        # -----
+        # Speeds of sound
+        # -----
         if log_info:
             logger.debug(f"Initialising ConstCSModel with css2={css2}, csb2={csb2}.")
         css2_flt, css2_label = cs2_to_float_and_label(css2)
@@ -97,15 +101,21 @@ class ConstCSModel(AnalyticModel):
         self.csb = np.sqrt(csb2_flt)
         self.mu_s = cs2_to_mu(css2_flt)
         self.mu_b = cs2_to_mu(csb2_flt)
-        self.T_ref = T_ref
+
         # This seems to contain invalid assumptions and approximations.
         # self.alpha_n_min_limit_cs = (self.mu - self.nu) / (3*self.mu)
         self.const_cs_wn_const: float = 4 / 3 * (1 / self.mu_b - 1 / self.mu_s)
 
+        # -----
+        # Other parameters
+        # -----
+
+        self.T_ref = T_ref
         if T_crit_guess is None:
             T_crit_guess = T_ref
 
         if alpha_n_min is not None:
+            a_s, a_b, _, _ = self.get_a_g(a_s, a_b, g_s, g_b)
             a_s, a_b, V_s, V_b = self.alpha_n_min_find_params(
                 alpha_n_min_target=alpha_n_min, a_s_default=a_s, a_b=a_b, V_s_default=V_s, V_b=V_b)
 
@@ -211,11 +221,11 @@ class ConstCSModel(AnalyticModel):
     def alpha_n_min_find_params(
             self,
             alpha_n_min_target: float,
-            a_s_default: float = None,
-            a_b: float = 1,
+            a_s_default: float,
+            a_b: float,
             V_s_default: float = None,
-            V_b: float = 0,
-            safety_factor_alpha: float = 0.999,
+            V_b: float = None,
+            safety_factor_alpha: float = None,
             safety_factor_a: float = 1.001,
             safety_factor_V: float = 0.001,
             a_max: float = 1e4,
@@ -225,13 +235,19 @@ class ConstCSModel(AnalyticModel):
             cancel_on_invalid: bool = True) -> tp.Tuple[float, float, float, float]:
         if safety_factor_a < 1 or safety_factor_V < 0:
             raise ValueError(f"Got invalid safety factors: a={safety_factor_a}, V={safety_factor_V}")
+        if V_s_default is None:
+            V_s_default = self.DEFAULT_V_S
+        if V_b is None:
+            V_b = self.DEFAULT_V_B
+        if safety_factor_alpha is None:
+            safety_factor_alpha = self.ALPHA_N_MIN_FIND_SAFETY_FACTOR_ALPHA
 
         if np.isclose(self.mu_s, 4) and np.isclose(self.mu_b, 4):
             return BagModel.alpha_n_min_find_params(
                 alpha_n_min_target=alpha_n_min_target,
                 a_s_default=a_s_default,
                 a_b=a_b,
-                V_s_default=V_s_default,
+                V_s=V_s_default,
                 V_b=V_b,
                 safety_factor_alpha=safety_factor_alpha
             )
@@ -296,13 +312,6 @@ class ConstCSModel(AnalyticModel):
         #           f"Setting it to {alpha_n_min_target_new}"
         #     logger.warning(msg)
         #     alpha_n_min_target = alpha_n_min_target_new
-
-        if a_s_default is None:
-            a_s_default = 1.1
-        if V_s_default is None:
-            V_s_default = 1.
-        if a_b is None:
-            a_b = 1.
 
         # ---
         # Solve numerically

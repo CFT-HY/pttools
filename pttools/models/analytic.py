@@ -9,6 +9,7 @@ import numpy as np
 import pttools.type_hints as th
 from pttools.bubble.boundary import SolutionType
 from pttools.models.model import Model
+from pttools.speedup.utils import is_nan_or_none
 
 logger = logging.getLogger(__name__)
 
@@ -32,9 +33,12 @@ class AnalyticModel(Model, abc.ABC):
     :param name: custom name for the model
     :param auto_potential: set V_s and V_b so that T_c = 1 (bag model only)
     """
+    DEFAULT_V_S = 1
+    DEFAULT_A_G_MULT = 1.1
+
     def __init__(
             self,
-            V_s: float, V_b: float = 0,
+            V_s: float = DEFAULT_V_S, V_b: float = None,
             a_s: float = None, a_b: float = None,
             g_s: float = None, g_b: float = None,
             T_min: float = None, T_max: float = None, T_crit_guess: float = None,
@@ -47,6 +51,8 @@ class AnalyticModel(Model, abc.ABC):
             allow_invalid: bool = False,
             auto_potential: bool = False,
             log_info: bool = True):
+        if V_b is None:
+            V_b = self.DEFAULT_V_B
         if log_info and V_b != 0:
             logger.warning(
                 "Got V_b = %s != 0. This may result in inaccurate results with the GW spectrum computation, "
@@ -54,17 +60,12 @@ class AnalyticModel(Model, abc.ABC):
 
         self.a_s: float
         self.a_b: float
-        if a_s is not None and a_b is not None and g_s is None and g_b is None:
-            self.a_s = a_s
-            self.a_b = a_b
-        elif a_s is None and a_b is None and g_s is not None and g_b is not None:
-            self.a_s = np.pi**2/90 * g_s
-            self.a_b = np.pi**2/90 * g_b
-        else:
-            raise ValueError("Specify either a_s and a_b or g_s and g_b")
+        self.g_s: float
+        self.g_b: float
+        self.a_s, self.a_b, self.g_s, self.g_b = self.get_a_g(a_s, a_b, g_s, g_b)
 
         if auto_potential:
-            if not ((V_s is None or V_s == 0) and (V_b is None or V_s == 0)):
+            if not ((is_nan_or_none(V_s) or V_s == 0) and (is_nan_or_none(V_b) or V_b == 0)):
                 raise ValueError("Cannot set manual potentials when automatic potential is enabled.")
             V_s = self.a_s - self.a_b
             V_b = 0
@@ -83,6 +84,10 @@ class AnalyticModel(Model, abc.ABC):
                 f"The model \"{self.name}\" does not satisfy a_s > a_b. "
                 "Please check that the critical temperature is non-negative. "
                 f"Got: a_s={self.a_s}, a_b={self.a_b}.")
+
+    @staticmethod
+    def a_from_g(g: th.FloatOrArr) -> th.FloatOrArr:
+        return np.pi**2 / 90 * g
 
     def alpha_n_bag(
             self,
@@ -146,8 +151,54 @@ class AnalyticModel(Model, abc.ABC):
             "a_b": self.a_b
         }
 
+    @staticmethod
+    def g_from_a(a: th.FloatOrArr) -> th.FloatOrArr:
+        return 90 / np.pi**2 * a
+
     def ge_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         return 30/np.pi**2 * self.e_temp(temp, phase) / temp**4
+
+    @classmethod
+    def get_a_g(cls, a_s: float, a_b: float, g_s: float, g_b: float, default_mult: float = DEFAULT_A_G_MULT):
+        a_s_none = is_nan_or_none(a_s)
+        a_b_none = is_nan_or_none(a_b)
+        g_s_none = is_nan_or_none(g_s)
+        g_b_none = is_nan_or_none(g_b)
+        a_none = a_s_none and a_b_none
+        g_none = g_s_none and g_b_none
+        if not g_none:
+            if not a_none:
+                raise ValueError("Specify either a or g values, not both.")
+            if g_s_none:
+                g_s = default_mult * g_b
+            elif g_b_none:
+                g_b = g_s / default_mult
+
+            a_s = cls.a_from_g(g_s)
+            a_b = cls.a_from_g(g_b)
+        else:
+            if a_b_none:
+                a_b = 1
+            if a_s_none:
+                a_s = default_mult * a_b
+
+            g_s = cls.g_from_a(a_s)
+            g_b = cls.g_from_a(a_b)
+
+        return a_s, a_b, g_s, g_b
+
+    @classmethod
+    def alpha_n_min_find_params_a_g(
+            cls,
+            a_s: float, a_b: float, g_s: float, g_b: float,
+            alpha_n_min_target: float, V_s_default: float, V_b: float,
+            default_mult: float = DEFAULT_A_G_MULT,
+            safety_factor_alpha = Model.ALPHA_N_MIN_FIND_SAFETY_FACTOR_ALPHA):
+        a_s, a_b, _, _ = cls.get_a_g(a_s, a_b, g_s, g_b, default_mult=default_mult)
+        return cls.alpha_n_min_find_params(
+            alpha_n_min_target=alpha_n_min_target, a_s_default=a_s, a_b=a_b, V_s_default=V_s, V_b=V_b,
+            safety_factor_alpha=safety_factor_alpha
+        )
 
     def gs_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr):
         return 45/(2*np.pi**2) * self.s_temp(temp, phase) / temp**4
