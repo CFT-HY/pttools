@@ -126,6 +126,15 @@ class Spectrum(ssm.SSMSpectrum):
         # The r_star compensates the fact that the pow_gw includes a correction factor that is J without r_star
         return self.r_star * self.F_gw0(g0=g0, gs0=gs0) * self.pow_gw * self.suppression_factor(method=suppression)
 
+    def omgw0_peak(
+            self,
+            g0: float = const.G0,
+            gs0: float = const.GS0,
+            suppression: sup.SuppressionMethod = sup.SuppressionMethod.DEFAULT):
+        omgw0 = self.omgw0(g0=g0, gs0=gs0, suppression=suppression)
+        i_max = np.argmax(omgw0)
+        return self.f()[i_max], omgw0[i_max]
+
     def signal_to_noise_ratio(self) -> float:
         return noise.signal_to_noise_ratio(f=self.f(), signal=self.omgw0(), noise=self.noise())
 

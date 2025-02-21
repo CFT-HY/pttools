@@ -102,7 +102,7 @@ def get_suppression_factor(vw: float, alpha: float, method: SuppressionMethod = 
         else:
             raise ValueError(f"Got invalid suppression method: {method}")
     if np.isnan(supp_factor):
-        logger.warning("Got NaN as the suppression factor. Are you outside the range?")
+        logger.warning("Got NaN as the suppression factor for v_wall=%s, alpha_n=%s. Are you outside the range?")
     return supp_factor
 
 

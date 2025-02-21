@@ -695,7 +695,8 @@ class Model(BaseModel, abc.ABC):
         With validation check
         """
         ret = self.inverse_enthalpy_ratio(self.temp(wn, Phase.SYMMETRIC))
-        min_ret = np.min(ret)
+        # The LTE violation merely means that entropy is being generated, which is totally normal.
+        # min_ret = np.min(ret)
         # if min_ret < 0.9:
         #     logger.warning(
         #         "Psi_n=%s < 0.9. "
