@@ -9,6 +9,7 @@ Constants for the omgw0 submodule of pttools
 # Speed of light (m/s)
 c: float = 299792458
 
+G_STAR_DEFAULT = 100
 T_default = 100  # GeV
 
 #: arXiv:1910.13125v1 eqn 20

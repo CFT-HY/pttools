@@ -68,8 +68,8 @@ class Spectrum(ssm.SSMSpectrum):
         self.Tn_manual_override = Tn is not None
         self.g_star_manual_override = g_star is not None
         self.gs_star_manual_override = gs_star is not None
-        self.Tn_override = 100 if Tn is None else Tn
-        self.g_star_override = 100 if g_star is None else gs_star
+        self.Tn_override = const.T_default if Tn is None else Tn
+        self.g_star_override = const.G_STAR_DEFAULT if g_star is None else gs_star
         self.gs_star_override = self.g_star_override if gs_star is None else gs_star
 
     def f(self, z: np.ndarray = None) -> th.FloatOrArr:
