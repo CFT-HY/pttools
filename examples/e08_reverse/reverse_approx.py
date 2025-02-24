@@ -53,6 +53,8 @@ def main():
     g_star = 100
     ret = solver(
         f_peak_target=6e-3, omega_peak_target=3e-11,
+        # f_peak_target = 1e-3, omega_peak_target=3e-11,
+        # f_peak_target = 6e-3, omega_peak_target=1e-11,
         v_wall_guess=0.5, alpha_n_guess=0.05, r_star_guess=0.1,
         temp=temp, g_star=g_star
     )
