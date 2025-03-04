@@ -12,6 +12,7 @@ import typing as tp
 import numpy as np
 
 import pttools.bubble as bbl
+import pttools.ssmtools.const as ssm_const
 import pttools.ssmtools.spectrum as ssm
 
 logger = logging.getLogger(__name__)
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 SUPPRESSION_FOLDER = os.path.dirname(os.path.abspath(__file__))
 
 
-def calc_sup_ssm(path: str, save: bool = True) -> tp.Dict[str, tp.Union[np.ndarray, tp.List[float]]]:
+def calc_sup_ssm(path: str, save: bool = True, npt: ssm_const.NptType = ssm_const.NPTDEFAULT) -> tp.Dict[str, tp.Union[np.ndarray, tp.List[float]]]:
     """
     file must be a txt file with data in columns as follows
     vw alpha suppression_sim sim_omgw exp_omgw exp_ubarf
@@ -46,7 +47,7 @@ def calc_sup_ssm(path: str, save: bool = True) -> tp.Dict[str, tp.Union[np.ndarr
         # print(vw)
         alpha = sim_data[i, 1]
         params = (vw, alpha, ssm.NucType.EXPONENTIAL,(1,))
-        out_ssm.append(ssm.power_gw_scaled_bag(z, params))  # omgw_ssm /(HnR*)(Hnt) ,:TODO check how to add these in new PTtools / are they still needed z_st_thresh=np.inf ,npt=[7000,200,1000]
+        out_ssm.append(ssm.power_gw_scaled_bag(z, params, npt=npt))  # omgw_ssm /(HnR*)(Hnt) ,:TODO check how to add these in new PTtools / are they still needed z_st_thresh=np.inf ,npt=[7000,200,1000]
         out_ssm_tot.append(np.trapezoid(out_ssm[i], np.log(z)))
         Ubarf_2_ssm.append(bbl.get_ubarf2_bag(vw, alpha))
 

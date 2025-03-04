@@ -6,6 +6,7 @@ from pandas.io.parsers import read_csv
 
 from pttools.omgw0.suppression.suppression_ssm_data.remove_hybrids import SUPPRESSION_FOLDER, remove_hybrids
 from pttools.omgw0.suppression.suppression_ssm_data.suppression_ssm_calculator import calc_sup_ssm
+import pttools.ssmtools.const as ssm_const
 from tests.utils.assertions import assert_allclose
 
 
@@ -33,7 +34,11 @@ class SuppressionTest(unittest.TestCase):
             "ssm_tot": 5.30e-7
         }
         for filename in filenames:
-            data = calc_sup_ssm(f"{filename}.txt", save=False)
+            data = calc_sup_ssm(
+                f"{filename}.txt",
+                save=False,
+                npt=(ssm_const.NXIDEFAULT, 200, ssm_const.N_Z_LOOKUP_DEFAULT)
+            )
             with np.load(os.path.join(SUPPRESSION_FOLDER, f"{filename}_ssm.npz")) as ref:
                 for key, rtol in tolerances.items():
                     if rtol is None:

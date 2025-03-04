@@ -9,7 +9,7 @@ from pttools import bubble
 #: Default number of xi points used in bubble profiles
 NXIDEFAULT: int = 2000
 #: Default number of T-tilde values for bubble lifetime distribution integration
-NTDEFAULT: int = 200
+NTDEFAULT: int = 10000
 #: Default number of wavevectors used in the velocity convolution integrations.
 N_Z_LOOKUP_DEFAULT: int = 320
 NptType = tp.Union[np.ndarray, tp.Tuple[int, int, int]]

@@ -16,7 +16,7 @@ from pttools.bubble.boundary import Phase
 from pttools.bubble.bubble import Bubble
 import pttools.bubble.ke_frac_approx as K
 import pttools.omgw0.suppression as sup
-from pttools.ssmtools.const import NPTDEFAULT, NptType
+from pttools.ssmtools.const import NPTDEFAULT, NTDEFAULT, N_Z_LOOKUP_DEFAULT, NptType
 import pttools.ssmtools as ssm
 import pttools.type_hints as th
 from . import const
@@ -33,7 +33,8 @@ class Spectrum(ssm.SSMSpectrum):
             y: np.ndarray = None,
             z_st_thresh: float = ssm.Z_ST_THRESH,
             nuc_type: ssm.NucType = ssm.DEFAULT_NUC_TYPE,
-            nt: int = 10000,
+            nt: int = NTDEFAULT,
+            n_z_lookup: int = N_Z_LOOKUP_DEFAULT,
             r_star: float = None,
             lifetime_multiplier: float = 1,
             compute: bool = True,
@@ -60,6 +61,7 @@ class Spectrum(ssm.SSMSpectrum):
             z_st_thresh=z_st_thresh,
             nuc_type=nuc_type,
             nt=nt,
+            n_z_lookup=n_z_lookup,
             r_star=r_star,
             lifetime_multiplier=lifetime_multiplier,
             compute=compute

@@ -41,7 +41,8 @@ class SSMSpectrum:
             y: np.ndarray = None,
             z_st_thresh: float = const.Z_ST_THRESH,
             nuc_type: NucType = DEFAULT_NUC_TYPE,
-            nt: int = 10000,
+            nt: int = const.NTDEFAULT,
+            n_z_lookup: int = const.N_Z_LOOKUP_DEFAULT,
             r_star: float = None,
             lifetime_multiplier: float = 1,
             compute: bool = True):
@@ -63,6 +64,7 @@ class SSMSpectrum:
         self.y = np.logspace(-1, 3, 1000) if y is None else y
         self.z_st_thresh = z_st_thresh
         self.nt = nt
+        self.n_z_lookup = n_z_lookup
         self.r_star = r_star
         self.lifetime_multiplier = lifetime_multiplier
 
@@ -95,7 +97,7 @@ class SSMSpectrum:
         )
         self.pow_v = pow_spec(self.y, spec_den=self.spec_den_v)
 
-        self.z_lookup = gen_lookup(y=self.y, cs=self.cs, eps=1e-8)
+        self.z_lookup = gen_lookup(y=self.y, cs=self.cs, n_z_lookup=self.n_z_lookup, eps=1e-8)
         sdv2 = spec_den_v(
             bub=self.bubble, z=self.z_lookup, a=1.,
             nuc_type=self.nuc_type, nt=self.nt, z_st_thresh=self.z_st_thresh, cs=self.cs
