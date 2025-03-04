@@ -34,7 +34,8 @@ def setup_logging(log_dir: str = None, enable_faulthandler: bool = True, silence
         format='%(asctime)s %(levelname)-8s %(module)-20s %(funcName)-32s %(lineno)-4d %(process)-3d %(message)s'
     )
     if silence_spam:
-        logging.getLogger("matplotlib").setLevel(logging.INFO)
+        logging.getLogger("h5py").setLevel(logging.INFO)
+        logging.getLogger("matplotlib").setLevel(logging.WARNING)
         logging.getLogger("numba").setLevel(logging.INFO)
         logging.getLogger("Pillow").setLevel(logging.INFO)
         logging.getLogger("PIL").setLevel(logging.INFO)
