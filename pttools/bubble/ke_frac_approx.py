@@ -63,7 +63,7 @@ def calc_ke_frac(xi_w: float, alpha_n: float):
         k_b_val = k_b(alpha_n)
         k_c_val = k_c(alpha_n)
         k = k_b_val + (xi_w - cs) * delta_k_val + ((xi_w - cs)/(xi_j_val - cs))**3 * (k_c_val - k_b -(xi_j_val - cs) * delta_k_val)
-    elif xi_w == xi_j:
+    elif xi_w == xi_j_val:
         k = k_c(alpha_n)
     elif xi_w > xi_j_val:
         k_c_val = k_c(alpha_n)
