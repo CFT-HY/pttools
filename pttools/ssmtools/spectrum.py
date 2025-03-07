@@ -61,7 +61,7 @@ class SSMSpectrum:
         # self.de_method = de_method
         # self.method = method
         self.nuc_type = nuc_type
-        self.y = np.logspace(-1, 3, 1000) if y is None else y
+        self.y = const.Y_DEFAULT if y is None else y
         self.z_st_thresh = z_st_thresh
         self.nt = nt
         self.n_z_lookup = n_z_lookup

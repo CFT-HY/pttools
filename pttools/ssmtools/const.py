@@ -11,9 +11,11 @@ NXIDEFAULT: int = 2000
 #: Default number of T-tilde values for bubble lifetime distribution integration
 NTDEFAULT: int = 10000
 #: Default number of wavevectors used in the velocity convolution integrations.
-N_Z_LOOKUP_DEFAULT: int = 320
+# This should be at least as large as the default number of GW frequencies.
+N_Z_LOOKUP_DEFAULT: int = 10000
 NptType = tp.Union[np.ndarray, tp.Tuple[int, int, int]]
 NPTDEFAULT: NptType = (NXIDEFAULT, NTDEFAULT, N_Z_LOOKUP_DEFAULT)
+Y_DEFAULT: np.ndarray = np.logspace(-1, 3, 1000)
 
 # It seems that NPTDEFAULT should be something like NXIDEFAULT/(2.pi), otherwise one
 # gets a GW power spectrum which drifts up at high k.
