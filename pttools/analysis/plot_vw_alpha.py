@@ -12,6 +12,7 @@ from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 
 
 class VwAlphaPlot:
+    """A plot with v_wall on the x-axis and alpha_n on the y-axis."""
     def __init__(
             self,
             grid: BubbleGridVWAlpha,

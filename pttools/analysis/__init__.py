@@ -6,6 +6,7 @@ from .entropy import *
 from .g_cs2 import *
 from .parallel import *
 from .plot_bubble import *
+from .plot_bubbles import *
 from .plot_chapman_jouguet import *
 from .plot_delta_theta import *
 from .plot_entropy import *

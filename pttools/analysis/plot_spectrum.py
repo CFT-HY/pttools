@@ -4,8 +4,11 @@ import numpy as np
 from pttools.analysis.utils import A4_PAPER_SIZE, FigAndAxes, create_fig_ax
 from pttools.ssmtools.spectrum import SSMSpectrum
 
-
-# TODO: set proper labels for these
+SPEC_DEN_V_LABEL = r"$\mathcal{P}_{v}(kR_*)$"
+SPEC_DEN_GW_LABEL = r"$\mathcal{P}_{gw}(kR_*)$"
+POW_V_LABEL = r"$\mathcal{P}_{\tilde{v}}(kR_*)$"
+POW_GW_LABEL = r"$\mathcal{P}_{\tilde{gw}}(kR_*)$"
+OMGW0_LABEL = r"$\Omega_{gw,0}$"
 
 def plot_spectrum(
         spectrum: SSMSpectrum,
@@ -15,7 +18,7 @@ def plot_spectrum(
         **kwargs) -> FigAndAxes:
     fig, ax = create_fig_ax(fig, ax)
     ax.plot(spectrum.y, spectrum.pow_gw, **kwargs)
-    ax.set_ylabel("pow_gw")
+    ax.set_ylabel(POW_GW_LABEL)
     return plot_spectrum_common(spectrum, fig, ax, path)
 
 
@@ -25,13 +28,14 @@ def plot_spectrum_common(spectrum: SSMSpectrum, fig: plt.Figure, ax: plt.Axes, p
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.grid()
+    if ax.get_legend_handles_labels() != ([], []):
+        ax.legend()
     if path is not None:
         fig.savefig(path)
     return fig, ax
 
 
 def plot_spectrum_multi(spectrum: SSMSpectrum, fig: plt.Figure = None, path: str = None, **kwargs) -> plt.Figure:
-    # Todo: fix the axis labels
     if fig is None:
         fig = plt.figure(figsize=A4_PAPER_SIZE)
     axs = fig.subplots(2, 2)
@@ -53,7 +57,7 @@ def plot_spectrum_v(
         **kwargs) -> FigAndAxes:
     fig, ax = create_fig_ax(fig, ax)
     ax.plot(spectrum.y, spectrum.pow_v, **kwargs)
-    ax.set_ylabel("pow_v")
+    ax.set_ylabel(POW_V_LABEL)
     return plot_spectrum_common(spectrum, fig, ax, path)
 
 
@@ -65,7 +69,7 @@ def plot_spectrum_spec_den_gw(
         **kwargs) -> FigAndAxes:
     fig, ax = create_fig_ax(fig, ax)
     ax.plot(spectrum.y, spectrum.spec_den_gw, **kwargs)
-    ax.set_ylabel("spec_den_gw")
+    ax.set_ylabel(SPEC_DEN_GW_LABEL)
     return plot_spectrum_common(spectrum, fig, ax, path)
 
 
@@ -77,5 +81,5 @@ def plot_spectrum_spec_den_v(
         **kwargs) -> FigAndAxes:
     fig, ax = create_fig_ax(fig, ax)
     ax.plot(spectrum.y, spectrum.spec_den_v, **kwargs)
-    ax.set_ylabel("spec_den_v")
+    ax.set_ylabel(SPEC_DEN_V_LABEL)
     return plot_spectrum_common(spectrum, fig, ax, path)

@@ -8,7 +8,7 @@ from pttools.bubble.bubble import Bubble
 
 
 def plot_bubble(bubble: Bubble, fig: plt.Figure = None, path: str = None, **kwargs):
-    fig, ax_v, ax_w = setup_bubble_plot(fig)
+    fig, ax_v, ax_w = setup_bubble_plot_multifig(fig)
     plot_bubble_v(bubble, fig, ax_v, **kwargs)
     plot_bubble_w(bubble, fig, ax_w, **kwargs)
     fig.suptitle(bubble.label_latex)
@@ -66,7 +66,7 @@ def plot_bubble_w(bubble: Bubble, fig: plt.figure = None, ax: plt.Axes = None, p
     return plot_bubble_common(bubble, fig, ax, path)
 
 
-def setup_bubble_plot(fig: plt.Figure = None) -> tp.Tuple[plt.Figure, plt.Axes, plt.Axes]:
+def setup_bubble_plot_multifig(fig: plt.Figure = None) -> tp.Tuple[plt.Figure, plt.Axes, plt.Axes]:
     if fig is None:
         fig = plt.figure(figsize=A4_PAPER_SIZE)
     ax_v = fig.add_subplot(211)

@@ -122,11 +122,15 @@ class ConstCSModel(AnalyticModel):
         self.label_latex_params = f"$c_{{s,s}}^2={css2_label}, c_{{s,b}}^2={csb2_label}$"
         self.label_unicode_params = f"css2={css2_label}, csb2={csb2_label}"
 
-        label_latex = f"Const. $c_s, " + self.label_latex_params[1:] \
-            if not label_latex else label_latex
-        # There is no Unicode subscript of b
-        label_unicode = "Const. cₛ, " + self.label_unicode_params \
-            if not label_unicode else label_unicode
+        # The "Const. c_s text takes unnecessary space on figures
+        # label_latex = f"Const. $c_s, " + self.label_latex_params[1:] \
+        #     if not label_latex else label_latex
+        # # There is no Unicode subscript of b
+        # label_unicode = "Const. cₛ, " + self.label_unicode_params \
+        #     if not label_unicode else label_unicode
+
+        label_latex = self.label_latex_params
+        label_unicode = self.label_unicode_params
 
         super().__init__(
             V_s=V_s, V_b=V_b,
@@ -316,10 +320,17 @@ class ConstCSModel(AnalyticModel):
         # ---
         # Solve numerically
         # ---
-        model = ConstCSModel(css2=self.css2, csb2=self.csb2, a_s=a_s_default, a_b=a_b, V_s=V_s_default, log_info=False)
-        # If we are already below the target
-        if model.alpha_n_min < alpha_n_min_target:
-            return a_s_default, a_b, V_s_default, V_b
+        try:
+            model = ConstCSModel(css2=self.css2, csb2=self.csb2, a_s=a_s_default, a_b=a_b, V_s=V_s_default, log_info=False)
+            # If we are already below the target
+            if model.alpha_n_min < alpha_n_min_target:
+                return a_s_default, a_b, V_s_default, V_b
+        except ValueError:
+            logger.debug(
+                "The default values for ConstCSModel result in an invalid model. The search for parameters may fail. "
+                "css2=%s, csb2=%s, a_s=%s, a_b=%s, V_s=%s",
+                self.css2, self.csb2, a_s_default, a_b, V_s_default
+            )
 
         V_s = V_s_default
         sol: OptimizeResult = minimize_scalar(

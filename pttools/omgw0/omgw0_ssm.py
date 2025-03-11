@@ -38,6 +38,8 @@ class Spectrum(ssm.SSMSpectrum):
             r_star: float = None,
             lifetime_multiplier: float = 1,
             compute: bool = True,
+            label_latex: str = None,
+            label_unicode: str = None,
             Tn: float = None,
             g_star: float = None,
             gs_star: float = None
@@ -64,7 +66,9 @@ class Spectrum(ssm.SSMSpectrum):
             n_z_lookup=n_z_lookup,
             r_star=r_star,
             lifetime_multiplier=lifetime_multiplier,
-            compute=compute
+            compute=compute,
+            label_latex=label_latex,
+            label_unicode=label_unicode
         )
         self.override_necessary = not self.bubble.model.temperature_is_physical
         self.Tn_manual_override = Tn is not None
