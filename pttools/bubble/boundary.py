@@ -281,8 +281,8 @@ def solve_junction(
             "Invalid input for junction solver. "
             f"Got: v1={v1_tilde}, w1={w1}, v2_guess={v2_tilde_guess}, w2_guess={w2_guess}")
         return np.nan, np.nan
-    if (v2_tilde_min is not None and (v2_tilde_min < 0 or v2_tilde_max > 0)) or \
-            (v2_tilde_max is not None and (v2_tilde_max < 0 or v2_tilde_min > 0)) or \
+    if (v2_tilde_min is not None and (v2_tilde_min < 0 or (v2_tilde_max is not None and v2_tilde_max > 0))) or \
+            (v2_tilde_max is not None and (v2_tilde_max < 0 or (v2_tilde_min is not None and v2_tilde_min > 0))) or \
             (w2_min is not None and (w2_min < 0 or w2_min > 1)) or \
             (w2_max is not None and (w2_max < 0 or w2_max > 1)) or \
             (v2_tilde_min is not None and v2_tilde_max is not None and v2_tilde_max <= v2_tilde_min) or \
