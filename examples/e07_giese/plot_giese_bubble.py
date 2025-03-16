@@ -22,7 +22,7 @@ theta_bar = False
 colors = ["b", "y", "r", "g", "purple", "grey"]
 v_wall = 0.7
 
-fig, ax_v, ax_w = analysis.setup_bubble_plot()
+fig, ax_v, ax_w = analysis.setup_bubble_plot_multifig()
 
 for alpha_n, color in zip(alpha_ns, colors):
     try:
