@@ -47,6 +47,7 @@ class Model(BaseModel, abc.ABC):
             gen_cs2_neg: bool = True,
             implicit_V: bool = False,
             temperature_is_physical: bool = None,
+            silence_temp: bool = False,
             allow_invalid: bool = False,
             log_info: bool = True):
 
@@ -85,7 +86,8 @@ class Model(BaseModel, abc.ABC):
         super().__init__(
             T_min=T_min, T_max=T_max,
             name=name, label_latex=label_latex, label_unicode=label_unicode,
-            gen_cs2=gen_cs2, gen_cs2_neg=gen_cs2_neg
+            gen_cs2=gen_cs2, gen_cs2_neg=gen_cs2_neg,
+            silence_temp=silence_temp
         )
         self.w_min_s = self.w(self.T_min, Phase.SYMMETRIC)
         self.w_min_b = self.w(self.T_min, Phase.BROKEN)

@@ -603,7 +603,7 @@ class ConstCSModel(AnalyticModel):
 
     def s_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Entropy density $s=\frac{dp}{dT}$
-        $$s_\pm = \mu a_\pm \left( \frac{T}{T_0} \right)^{\mu_\pm-1} T_0^3$$
+        $$s_\pm = \mu {a}_\pm \left( \frac{T}{T_0} \right)^{\mu_\pm-1} T_0^3$$
         Derived from :giese_2021:`\ `, eq. 15.
         """
         self.validate_temp(temp)

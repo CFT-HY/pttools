@@ -142,6 +142,7 @@ extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
     # Other articles
     "ai_2023": ("https://arxiv.org/abs/2303.10171%s", "Ai et al., 2023%s"),
     "borsanyi_2016": ("https://arxiv.org/abs/1606.07494%s", "Borsanyi et al., 2016%s"),
+    "caprini_2016": ("https://arxiv.org/abs/1512.06239%s", "Caprini et al., 2016%s"),
     "smith_2019": ("https://arxiv.org/abs/1908.00546%s", "Smith & Caldwell, 2019%s"),
     "caprini_2020": ("https://arxiv.org/abs/1910.13125%s", "Caprini et al., 2020%s"),
     "giese_2020": ("https://arxiv.org/abs/2004.06995%s", "Giese et al., 2020%s"),
@@ -213,7 +214,7 @@ sphinx_gallery_conf = {
     "examples_dirs": os.path.join(os.path.dirname(dir_path), "examples"),
     "filename_pattern": ".*",
     "gallery_dirs": "auto_examples",
-    "ignore_pattern": r"(__init__\.py|utils\.py|p_s_scan_dev\.py)",
+    "ignore_pattern": r"(__init__\.py|utils\.py|p_s_scan_dev\.py|/e03_standard_model|/e05_entropy|/e08_reverse)",
     # "image_srcset": ["2x"],
     # "line_numbers": True,
     "matplotlib_animations": True,

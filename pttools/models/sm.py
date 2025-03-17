@@ -64,7 +64,8 @@ class StandardModel(ThermoModel):
             restrict_to_valid: bool = True,
             label_latex: str = None,
             label_unicode: str = None,
-            gen_cs2: bool = True):
+            gen_cs2: bool = True,
+            silence_temp: bool = False):
         logger.debug(f"Creating Standard Model with g_mult_s={g_mult_s}, g_mult_b={g_mult_b}, V_s={V_s}, V_b={V_b}")
 
         self.g_mult_s = g_mult_s
@@ -76,7 +77,8 @@ class StandardModel(ThermoModel):
             T_min=T_min, T_max=T_max,
             restrict_to_valid=restrict_to_valid,
             name=name, label_latex=label_latex, label_unicode=label_unicode,
-            gen_cs2=gen_cs2
+            gen_cs2=gen_cs2,
+            silence_temp=silence_temp
         )
 
     def dge_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:

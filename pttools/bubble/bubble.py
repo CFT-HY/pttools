@@ -424,14 +424,14 @@ class Bubble:
     @functools.cached_property
     def entropy_flux_m(self) -> float:
         r"""Outgoing entropy flux at the wall
-        $$\tilde{\gamma}_- \tilde{v}_- s_- $$
+        $$\tilde{\gamma}_- \tilde{v}_- {s}_- $$
         """
         return gamma(self.vm_tilde) * self.vm_tilde * self.sm
 
     @functools.cached_property
     def entropy_flux_diff(self) -> float:
         r"""Entropy flux difference at the wall
-        $$\tilde{\gamma}_- \tilde{v}_- s_- - \tilde{\gamma}_+ \tilde{v}_+ s_+ $$
+        $$\tilde{\gamma}_- \tilde{v}_- {s}_- - \tilde{\gamma}_+ \tilde{v}_+ {s}_+ $$
         """
         return self.entropy_flux_m - self.entropy_flux_p
 

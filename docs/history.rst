@@ -54,7 +54,7 @@ These modifications were Mika's summer project in 2021.
   PTtools with
   `setuptools <https://pypi.org/project/setuptools/>`_
   so that it can be installed with pip.
-    - This prepares the project for being published on `PyPI <https://pypi.org/>`_.
+  - This prepares the project for being published on `PyPI <https://pypi.org/>`_.
 - Add example scripts for running on `Slurm <https://slurm.schedmd.com/>`_ clusters.
 - Add `Sphinx <https://www.sphinx-doc.org/en/master/>`_ documentation (the one you're currently reading).
 

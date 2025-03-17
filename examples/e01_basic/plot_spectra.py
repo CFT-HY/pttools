@@ -1,6 +1,6 @@
 """
 Plot multiple spectra
-=================
+=====================
 
 Plot the velocity and GW spectra of multiple bubbles
 """

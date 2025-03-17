@@ -37,7 +37,8 @@ class ThermoModel(BaseModel, abc.ABC):
             label_latex: str = None,
             label_unicode: str = None,
             gen_cs2: bool = True,
-            gen_cs2_neg: bool = False):
+            gen_cs2_neg: bool = False,
+            silence_temp: bool = False):
 
         temp_data_min = np.min(self.GEFF_DATA_TEMP)
         temp_data_max = np.max(self.GEFF_DATA_TEMP)
@@ -56,7 +57,8 @@ class ThermoModel(BaseModel, abc.ABC):
             T_min=T_min, T_max=T_max,
             restrict_to_valid=restrict_to_valid,
             label_latex=label_latex, label_unicode=label_unicode,
-            gen_cs2=gen_cs2, gen_cs2_neg=gen_cs2_neg
+            gen_cs2=gen_cs2, gen_cs2_neg=gen_cs2_neg,
+            silence_temp=silence_temp
         )
 
     def validate_cs2(self, cs2: np.ndarray, name: str) -> bool:

@@ -9,6 +9,11 @@ import time
 logging_lock = threading.Lock()
 
 
+class MatplotlibFilter(logging.Filter):
+    def filter(self, record):
+        return not record.funcName == "_is_transparent"
+
+
 def setup_logging(log_dir: str = None, enable_faulthandler: bool = True, silence_spam: bool = True):
     """Configure logging to both file and console and optionally silence spam"""
     # Allow running this function only once for each process
@@ -35,8 +40,11 @@ def setup_logging(log_dir: str = None, enable_faulthandler: bool = True, silence
     )
     if silence_spam:
         logging.getLogger("h5py").setLevel(logging.INFO)
-        logging.getLogger("matplotlib").setLevel(logging.WARNING)
         logging.getLogger("numba").setLevel(logging.INFO)
         logging.getLogger("Pillow").setLevel(logging.INFO)
         logging.getLogger("PIL").setLevel(logging.INFO)
         logging.getLogger("urllib3").setLevel(logging.INFO)
+
+        mpl_logger = logging.getLogger("matplotlib")
+        mpl_logger.setLevel(logging.WARNING)
+        mpl_logger.addFilter(MatplotlibFilter())
