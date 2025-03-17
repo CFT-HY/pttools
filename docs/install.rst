@@ -128,19 +128,13 @@ NumbaLSODA
 ----------
 `NumbaLSODA <https://pypi.org/project/numbalsoda/>`_
 is an optional dependency, which speeds up the integration of ordinary differential equations (ODE).
-It's in an early stage and may require build tools such as ``cmake`` for its installation,
+Due to its low-level design it may require build tools such as ``cmake`` and ``gfortran`` for its installation,
 and it seems not to compile yet on Windows.
 You can install NumbaLSODA manually with
 
 .. code-block:: bash
 
   pip3 install --upgrade numbalsoda
-
-You may also try building from the Git repository.
-
-.. code-block:: bash
-
-  pip3 install --upgrade "numbalsoda @ git+https://github.com/Nicholaswogan/numbalsoda.git"
 
 If you get an error about missing ``cmake``, you have to install it manually.
 On Debian- and Ubuntu-based systems this can be done with the following commands.
@@ -150,6 +144,22 @@ Once ``cmake`` is installed, run the pip installation above again.
 
   sudo apt-get update
   sudo apt-get install cmake
+
+If you get an error on macOS about missing ``gfortran``,
+you have to install the GCC compiler tools, which include ``gfortran``.
+You can do this e.g. with `Homebrew <https://brew.sh/>`_ or `MacPorts <https://www.macports.org/>`_.
+To install ``gfortran`` with MacPorts, please first install MacPorts and then run the following commands.
+
+.. code-block:: bash
+
+  sudo port install gcc14
+  sudo port select --set gcc mp-gcc14
+
+You may also try building NumbaLSODA from the Git repository.
+
+.. code-block:: bash
+
+  pip3 install --upgrade "numbalsoda @ git+https://github.com/Nicholaswogan/numbalsoda.git"
 
 
 Numba compatibility and nested parallelism
