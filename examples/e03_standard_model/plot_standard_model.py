@@ -5,7 +5,6 @@ Standard Model
 Figures for the Standard Model
 """
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from examples import utils
@@ -19,7 +18,8 @@ from pttools.models.sm import StandardModel
 # %%
 # g_eff
 # -----
-thermo = StandardModel()
+# The T_min parameter is for silencing log spam
+thermo = StandardModel(T_min=0.5)
 fig = plot_g_cs2(thermo)
 
 # %%
@@ -38,7 +38,7 @@ plot.process()
 # FullModel based on StandardModel
 # --------------------------------
 # thermo2 = StandardModel(V_s=5e12, g_mult_s=1 + 1e-9)
-thermo2 = StandardModel(V_s=5e15, g_mult_s=1 + 1e-5)
+thermo2 = StandardModel(V_s=5e15, g_mult_s=1 + 1e-5, T_min=0.5)
 model2 = FullModel(thermo2)
 plot2 = ModelPlot(model2)
 print(model2.t_crit, model2.T_max, model2.alpha_n_min, model2.w_crit)

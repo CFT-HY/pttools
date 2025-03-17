@@ -9,19 +9,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from examples import utils
+from pttools.bubble import get_ke_frac
 from pttools.analysis.bubble_grid import create_bubbles
-from pttools.bubble.bubble import Bubble
 from pttools.models.const_cs import ConstCSModel
-
-
-def ke_frac(bubble: Bubble):
-    if bubble.solved:
-        return bubble.kinetic_energy_fraction
-    return np.nan
-
-
-ke_frac.return_type = float
-ke_frac.fail_value = np.nan
 
 
 def main():
@@ -34,7 +24,7 @@ def main():
     alpha_ns = np.array([model.alpha_n_min + 0.01])
 
     bubbles, ke_fracs = create_bubbles(
-        model, v_walls=v_walls, alpha_ns=alpha_ns, func=ke_frac,
+        model, v_walls=v_walls, alpha_ns=alpha_ns, func=get_ke_frac,
         # allow_bubble_failure=True,
         # bubble_kwargs={"allow_invalid": True}
     )

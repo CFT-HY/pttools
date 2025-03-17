@@ -9,17 +9,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.analysis import BubbleGridVWAlpha, VwAlphaPlot
-from pttools.bubble import Bubble
+from pttools.bubble import get_kappa_omega
 from pttools.models import BagModel
-
-
-def compute(bubble: Bubble):
-    if bubble.no_solution_found or bubble.solver_failed:
-        return np.nan, np.nan
-    return bubble.kappa, bubble.omega
-
-compute.fail_value = (np.nan, np.nan)
-compute.return_type = (float, float)
 
 
 def main():
@@ -28,7 +19,7 @@ def main():
     model = BagModel(a_s=1.1, a_b=1, V_s=1)
 
     # Parallel computation
-    grid = BubbleGridVWAlpha(model, v_walls, alpha_ns, compute)
+    grid = BubbleGridVWAlpha(model, v_walls, alpha_ns, get_kappa_omega)
     # bubbles = grid.bubbles
     kappas = grid.data[0]
     # omegas = grid.data[1]

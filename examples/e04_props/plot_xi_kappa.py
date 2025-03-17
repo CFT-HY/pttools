@@ -5,7 +5,6 @@ Plot $\kappa(\xi)$ for various models
 
 import concurrent.futures as cf
 import logging
-import os
 import time
 
 import matplotlib.pyplot as plt
@@ -15,9 +14,9 @@ from examples import utils
 from pttools.logging import setup_logging
 from pttools.bubble.boundary import Phase
 from pttools.bubble.bubble import Bubble
-from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
 from pttools.bubble.fluid_reference import ref
+from pttools.speedup.options import MAX_WORKERS_DEFAULT
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +59,7 @@ def main():
     fig: plt.Figure = plt.figure()
     ax: plt.Axes = fig.add_subplot()
     futs = np.zeros((alpha_ns.size, len(models)), dtype=object)
-    with cf.ProcessPoolExecutor(max_workers=len(os.sched_getaffinity(0))) as ex:
+    with cf.ProcessPoolExecutor(max_workers=MAX_WORKERS_DEFAULT) as ex:
         for i_alpha, alpha_n in enumerate(alpha_ns):
             for i_model, model in enumerate(models):
                  futs[i_alpha, i_model] = ex.submit(kappa_vec, model, v_walls, alpha_n)

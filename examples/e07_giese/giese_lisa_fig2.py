@@ -16,21 +16,12 @@ import numpy as np
 from examples.utils import save
 from pttools.analysis.parallel import create_bubbles
 # from pttools.analysis.utils import A4_PAPER_SIZE
-from pttools.bubble import Bubble
+from pttools.bubble.bubble_quantities import get_kappa
 from pttools.bubble.giese import kappaNuMuModel
 from pttools.models import ConstCSModel
 from pttools.speedup import run_parallel, GITHUB_ACTIONS
 
 logger = logging.getLogger(__name__)
-
-def get_kappa(bubble: Bubble) -> float:
-    if (not bubble.solved) or bubble.no_solution_found or bubble.solver_failed or bubble.numerical_error:
-        return np.nan
-    return bubble.kappa_giese
-
-
-get_kappa.return_type = float
-get_kappa.fail_value = np.nan
 
 
 def kappa_giese(params: np.ndarray, model: ConstCSModel) -> float:
