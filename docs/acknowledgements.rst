@@ -33,14 +33,15 @@ The development of PTtools has been funded by
 - `University of Sussex <https://www.sussex.ac.uk/>`_
 - `Academy of Finland <https://www.aka.fi/>`_
   grants
-  :aof_grant:`286769 <286769>`
-  and
+  :aof_grant:`286769 <286769>`,
   :aof_grant:`333609 <333609>`
+  and
+  :aof_grant:`363676 <363676>`
 - `Science and Technology Facilities Council <https://www.ukri.org/councils/stfc/>`_
   grants
-  `ST/J000477/1 <https://gtr.ukri.org/projects?ref=ST%2FJ000477%2F1>`_
-  and
-  `ST/L000504/1 <https://gtr.ukri.org/projects?ref=ST%2FL000504%2F1>`_
+  `ST/J000477/1 <https://gtr.ukri.org/projects?ref=ST%2FJ000477%2F1>`_,
+  `ST/L000504/1 <https://gtr.ukri.org/projects?ref=ST%2FL000504%2F1>`_,
+  `ST/X000796/1 <https://gtr.ukri.org/projects?ref=ST%2FX000796%2F1>`_
 
 ..
   Attempting to use images stored on the Wikimedia servers results in an error:
