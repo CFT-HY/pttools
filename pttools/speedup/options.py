@@ -10,10 +10,10 @@ logger = logging.getLogger(__name__)
 GITHUB_ACTIONS: tp.Final[bool] = "GITHUB_ACTIONS" in os.environ
 
 #: Maximum workers for ProcessPoolExecutor (determined dynamically based on the available CPUs)
-if hasattr(os, "sched_getaffinity"):
+try:
     # This is available only on some platforms
     MAX_WORKERS_DEFAULT: int = len(os.sched_getaffinity(0))
-else:
+except AttributeError:
     # multiprocessing.cpu_count() is a wrapper around os.cpu_count()
     # https://stackoverflow.com/a/53537394
     logger.debug(
