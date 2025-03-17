@@ -32,16 +32,16 @@ There you can find a zip file containing the documentation in various formats.
   Also includes some scripts for plotting.
 - ssmttools: Tools for computing the GW spectra from the fluid shells.
 - speedup: Computational utilities used by the other modules.
-- omgw0: Tools for converting the GW spectra to frequencies and amplitudes today.
+- omgw0: Tools for converting the GW spectra to frequencies and amplitudes today. Includes utilities for approximations and noise.
 
 ### Branches
 - main: Stable version, from which releases are created.
 - dev: Developments for later inclusion in the main branch.
-- droplet-dev: Development of different solution types (legacy).
-- eos-dev: Development of support for different equations of state (legacy).
+- omgw0: Development of the omgw0 module. Has since been merged to dev.
 
 ### Who do I talk to?
 - Repo owner: [Mark Hindmarsh](https://github.com/hindmars/)
+- Main developer: [Mika Mäki](https://github.com/AgenttiX)
 
 ### Example figures
 Fluid velocity profiles

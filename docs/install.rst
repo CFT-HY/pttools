@@ -113,9 +113,16 @@ You can set up a local development environment with the following commands.
   # and can be left out.
   python3 -m venv --upgrade-deps venv
   source ./venv/bin/activate
-  pip3 install -r requirements.txt -r requirements-dev.txt
+  pip3 install -r requirements.txt -r requirements-dev.txt -r ./docs/requirements.txt
   # Now you can run the unit tests to ensure that the installation was successful.
   pytest
+
+You can build the documentation locally with the following commands.
+
+.. code-block:: bash
+
+  cd docs
+  make html
 
 
 On a cluster

@@ -1,12 +1,13 @@
 Acknowledgements
 ================
+
 Main contributors (in alphabetical order):
 - `Mark Hindmarsh <https://orcid.org/0000-0002-9307-437X>`_
-  - Creator of the Sound Shell Model, author of the first versions of PTtools (2015 $\rightarrow$)
+  - Creator of the Sound Shell Model, author of the first versions of PTtools (2015 →)
 - `Chloe Hopling <https://orcid.org/0000-0002-7955-4465>`_
   - Several scripts used for testing
 - `Mika Mäki <https://orcid.org/0000-0001-8162-7101>`_
-  - University of Helsinki summer employee 2021, MSc student 2022-2024, PhD student 2025->
+  - University of Helsinki summer employee 2021, MSc student 2022-2024, PhD student 2025→
   - Major rework of PTtools, current main developer
 
 In addition to the main contributors,
