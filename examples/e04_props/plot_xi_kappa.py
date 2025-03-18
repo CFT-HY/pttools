@@ -1,6 +1,6 @@
 r"""
-Plot $\kappa(\xi)$ for various models
-=====================================
+Plot kappa(xi) for various models
+=================================
 """
 
 import concurrent.futures as cf

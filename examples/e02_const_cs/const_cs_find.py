@@ -1,6 +1,6 @@
 r"""
-Finding $\alpha_{n,\text{min}}$ for ConstCSModel
-============================================================
+Finding alpha_n_min for ConstCSModel
+====================================
 """
 
 from pttools.models import ConstCSModel

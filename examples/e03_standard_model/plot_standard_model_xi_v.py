@@ -1,6 +1,6 @@
 r"""
-Standard Model $\xi, v$
-=======================
+Standard Model xi, v
+====================
 
 Example that the Standard Model can be used with the bubble solver
 """
