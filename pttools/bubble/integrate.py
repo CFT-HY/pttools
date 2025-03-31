@@ -132,7 +132,7 @@ def fluid_integrate_param(
                 v, w, xi, success = fluid_integrate_param_solve_ivp(
                     t=t, y0=y0, data=data, df_dtau_ptr=df_dtau_ptr, method=method)
     if not success:
-        raise RuntimeError("integration failed")
+        raise RuntimeError("Integration failed")
     return v, w, xi, t
 
 
@@ -175,7 +175,7 @@ def fluid_integrate_param_odeint(t: np.ndarray, y0: np.ndarray, data: np.ndarray
     """
     try:
         func = differentials.get_odeint(df_dtau_ptr)
-        # This function call seems to be necessary to avoid a segfault within SciPy.
+        # This function call that does nothing seems to be necessary to avoid a segfault within SciPy.
         # Probably it has something to do with the lifetime of the function object.
         func(y0, t[0], data)
         soln: np.ndarray = spi.odeint(func, y0=y0, t=t, args=(data,))
@@ -184,7 +184,7 @@ def fluid_integrate_param_odeint(t: np.ndarray, y0: np.ndarray, data: np.ndarray
         xi = soln[:, 2]
         success = True
     except Exception as e:
-        logger.exception("odeint failed", exc_info=e)
+        logger.exception("Integrating fluid shell with odeint failed", exc_info=e)
         v = w = xi = np.zeros_like(t)
         success = False
     return v, w, xi, success
@@ -208,7 +208,7 @@ def fluid_integrate_param_solve_ivp(
         xi = soln.y[2, :]
         success = True
     except Exception as e:
-        logger.exception("solve_ivp failed", exc_info=e)
+        logger.exception("Integrating fluid shell with solve_ivp failed", exc_info=e)
         v = w = xi = np.zeros_like(t)
         success = False
     return v, w, xi, success
