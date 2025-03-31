@@ -184,55 +184,6 @@ jobs:
           test-output.txt
           test-results
         if-no-files-found: error
-#  test-numba-old:
-#    runs-on: ubuntu-latest
-#    timeout-minutes: 10
-#    strategy:
-#      matrix:
-#        python-version: ['3.7']
-#    env:
-#      PRIMARY_OLD_PYTHON_VERSION: '3.7'
-#    steps:
-#    - name: Setup Python
-#      uses: actions/setup-python@v5
-#      with:
-#        python-version: ${{ matrix.python-version }}
-#    - name: Print Python version
-#      run: python -V
-#    - name: Checkout
-#      uses: actions/checkout@v4
-#    - name: Load pip cache
-#      uses: actions/cache@v4
-#      with:
-#        path: .pip
-#        key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-#        restore-keys: |
-#          pip-${{ runner.os }}-
-#          pip-
-#    - name: Install requirements
-#      run: |
-#        pip --cache-dir=.pip install --upgrade pip wheel
-#        pip --cache-dir=.pip install -r requirements-old.txt -r requirements-dev.txt
-#    - name: Print Numba sysinfo
-#      run: numba --sysinfo | tee numba-sysinfo.txt
-#    - name: Run tests
-#      run: |
-#        set -o pipefail
-#        pytest | tee test-output.txt
-#        coverage json
-#    - name: Upload results
-#      uses: actions/upload-artifact@v4
-#      if: ${{ matrix.python-version == env.PRIMARY_OLD_PYTHON_VERSION }}
-#      with:
-#        name: Test results with old Numba
-#        path: |
-#          coverage.xml
-#          coverage.json
-#          htmlcov
-#          numba-sysinfo.txt
-#          test-output.txt
-#          test-results
-#        if-no-files-found: error
   test-python:
     runs-on: ubuntu-latest
     timeout-minutes: 35
