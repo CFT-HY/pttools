@@ -73,6 +73,7 @@ class FluidReference:
         self.wp = self.data[:, :, 4]
         self.wm = self.data[:, :, 5]
 
+        # There is no need to add the PID number here, as that is done automatically by the logging system.
         logger.info("Loaded fluid reference with n_alpha_n=%s, n_v_wall=%s", self.data.shape[0], self.data.shape[1])
 
     def create(
@@ -196,8 +197,7 @@ def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tp.Tuple[int, 
     return sol_type_int, vp, vm, vp_tilde, vm_tilde, wp, wm
 
 
-# Todo: replace this with functools.cache when Python 3.9 is the oldest supported version
-@functools.lru_cache
+@functools.cache
 def ref():
     if multiprocessing.parent_process() is not None:
         msg = \
