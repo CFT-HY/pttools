@@ -2,6 +2,7 @@
 
 import abc
 import logging
+import multiprocessing
 import os
 import time
 import typing as tp
@@ -13,7 +14,7 @@ import pttools.type_hints as th
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 from pttools.bubble.check import find_most_negative_vals
-from pttools.bubble.integrate import add_df_dtau
+from pttools.bubble.integrate import add_df_dtau, differentials
 from pttools.bubble import transition
 from pttools.models.base import BaseModel
 
@@ -79,6 +80,7 @@ class Model(BaseModel, abc.ABC):
         self.V_s: float = V_s
         self.V_b: float = V_b
         self.__df_dtau_ptr = None
+        self.__df_dtau_pid = None
 
         #: $$\frac{90}{\pi^2} (V_b - V_s)$$
         self.critical_temp_const: float = 90 / np.pi ** 2 * (self.V_b - self.V_s)
@@ -612,17 +614,24 @@ class Model(BaseModel, abc.ABC):
 
     def df_dtau_ptr(self) -> int:
         if self.__df_dtau_ptr is not None:
-            return self.__df_dtau_ptr
+            if self.__df_dtau_ptr in differentials.keys():
+                return self.__df_dtau_ptr
+            if self.__df_dtau_pid == os.getpid() or multiprocessing.get_start_method() == "fork":
+                logger.warning(
+                    "Could not find cs2 in the cache for %s in process %s. Recreating.",
+                    self.name, os.getpid()
+                )
 
         start_time = time.perf_counter()
         # logger.debug("Compiling cs2 for %s in process %s", self.label_unicode, os.getpid())
-        val = add_df_dtau(f"{self.name}_{id(self)}", self.cs2)
+        ptr = add_df_dtau(f"{self.name}_{id(self)}", self.cs2)
         logger.debug(
-            "Compiled cs2 for %s in process %s in %s s",
+            "Compiled cs2 for %s in process %d in %.3f s",
             self.label_unicode, os.getpid(), time.perf_counter() - start_time
         )
-        self.__df_dtau_ptr = val
-        return val
+        self.__df_dtau_ptr = ptr
+        self.__df_dtau_pid = os.getpid()
+        return ptr
 
     def e(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Energy density $e(w,\phi)$. Calls the temperature-based function.

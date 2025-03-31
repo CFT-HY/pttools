@@ -36,7 +36,7 @@ def add_df_dtau(name: str, cs2_fun: th.CS2Fun) -> speedup.DifferentialPointer:
     return differentials.add(name, func)
 
 
-def gen_df_dtau(cs2_fun: th.CS2Fun) -> speedup.Differential:
+def gen_df_dtau(cs2_fun: th.CS2Fun) -> speedup.DifferentialCFunc:
     r"""Generate a function for the differentials of fluid variables $(v, w, \xi)$ in parametric form.
     The parametrised differential equation is as in :gw_pt_ssm:`\ ` eq. B.14-16:
 

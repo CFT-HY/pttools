@@ -1,5 +1,6 @@
 """Utilities for handling functions for the differential equations"""
 
+import logging
 import threading
 import typing as tp
 
@@ -9,9 +10,12 @@ import numpy as np
 from pttools.speedup.numba_wrapper import CFunc, CPUDispatcher, lsoda_sig
 from pttools.speedup.options import NUMBA_DISABLE_JIT
 
-Differential = tp.Union[tp.Callable[[float, np.ndarray, np.ndarray, tp.Optional[np.ndarray]], None], CFunc]
+logger = logging.getLogger(__name__)
+
+DifferentialCFunc = tp.Union[tp.Callable[[float, np.ndarray, np.ndarray, tp.Optional[np.ndarray]], None], CFunc]
 DifferentialOdeint = tp.Union[tp.Callable[[np.ndarray, float, tp.Optional[np.ndarray]], np.ndarray], CPUDispatcher]
 DifferentialSolveIVP = tp.Union[tp.Callable[[float, np.ndarray, tp.Optional[np.ndarray]], np.ndarray], CPUDispatcher]
+Differential = tp.Union[DifferentialCFunc, DifferentialOdeint, DifferentialSolveIVP]
 DifferentialPointer = numba.types.CPointer(lsoda_sig)
 
 
@@ -25,13 +29,13 @@ class DifferentialCache:
     """
     def __init__(self):
         self._lock = threading.Lock()
-        self._cache_cfunc: tp.Dict[DifferentialPointer, Differential] = {}
+        self._cache_cfunc: tp.Dict[DifferentialPointer, DifferentialCFunc] = {}
         self._cache_odeint: tp.Dict[DifferentialPointer, DifferentialOdeint] = {}
         self._cache_solve_ivp: tp.Dict[DifferentialPointer, DifferentialSolveIVP] = {}
 
     def add(
             self,
-            name: str, differential: Differential,
+            name: str, differential: DifferentialCFunc,
             p_last_is_backwards: bool = True,
             ndim: int = 3) -> DifferentialPointer:
         with self._lock:
@@ -77,14 +81,23 @@ class DifferentialCache:
             self._cache_solve_ivp[address] = differential_solve_ivp
             return address
 
-    def get_cfunc(self, key: DifferentialPointer) -> Differential:
-        with self._lock:
-            return self._cache_cfunc[key]
+    def _get_func(self, key: DifferentialPointer, cache: tp.Dict[DifferentialPointer, Differential]) -> Differential:
+        try:
+            with self._lock:
+                return cache[key]
+        except KeyError as error:
+            raise KeyError(
+                f"Could not find differential function in the cache with the key \"{key}\". "
+                "This may indicate an issue with parallelism. Available functions: {cache.keys()}") from error
+
+    def get_cfunc(self, key: DifferentialPointer) -> DifferentialCFunc:
+        return self._get_func(key, self._cache_cfunc)
 
     def get_odeint(self, key: DifferentialPointer) -> DifferentialOdeint:
-        with self._lock:
-            return self._cache_odeint[key]
+        return self._get_func(key, self._cache_odeint)
 
     def get_solve_ivp(self, key: DifferentialPointer) -> DifferentialSolveIVP:
-        with self._lock:
-            return self._cache_solve_ivp[key]
+        return self._get_func(key, self._cache_solve_ivp)
+
+    def keys(self):
+        return self._cache_cfunc.keys()
