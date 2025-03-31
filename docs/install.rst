@@ -2,9 +2,9 @@ Installation
 ============
 
 PTtools is a Python library and can therefore be installed like any other Python library.
-If you're just using PTtools for your project,
+If you're using PTtools for your project,
 :ref:`installation using pip <With pip>` or :ref:`Docker <With Docker>` is recommended.
-However, if you're developing PTtools itself, you should
+On the other hand if you're developing PTtools itself, you should
 :ref:`clone the repository <Local development>`.
 
 
@@ -31,6 +31,18 @@ Once the virtual environment is activated with the commands above,
 you can install PTtools from the Git repository with pip.
 A PyPI package will be available later.
 
+Stable version
+
+.. code-block:: bash
+
+  pip3 install --upgrade "pttools-gw[numbalsoda,performance] @ git+https://github.com/CFT-HY/pttools.git"
+
+Development version
+
+.. code-block:: bash
+
+  pip3 install --upgrade "pttools-gw[numbalsoda,performance] @ git+https://github.com/CFT-HY/pttools.git@dev"
+
 The ``[numbalsoda]`` flag installs the optional
 `NumbaLSODA <https://pypi.org/project/numbalsoda/>`_
 ordinary differential equation (ODE) solver library,
@@ -45,18 +57,6 @@ The ``[performance]`` flag installs additional libraries such as
 and
 `tbb <https://pypi.org/project/tbb/>`_
 for better performance with Numba.
-
-Stable version
-
-.. code-block:: bash
-
-  pip3 install --upgrade "pttools-gw[numbalsoda,performance] @ git+https://github.com/CFT-HY/pttools.git"
-
-Development version
-
-.. code-block:: bash
-
-  pip3 install --upgrade "pttools-gw[numbalsoda,performance] @ git+https://github.com/CFT-HY/pttools.git@dev"
 
 
 With conda
@@ -109,8 +109,6 @@ You can set up a local development environment with the following commands.
   git clone git@github.com:hindmars/pttools.git
   cd pttools
   git checkout dev
-  # The --upgrade-deps argument is not supported by Python versions older than 3.9
-  # and can be left out.
   python3 -m venv --upgrade-deps venv
   source ./venv/bin/activate
   pip3 install -r requirements.txt -r requirements-dev.txt -r ./docs/requirements.txt
