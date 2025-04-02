@@ -6,9 +6,11 @@ import typing as tp
 import numba
 import numpy as np
 
-from pttools.bubble.boundary import Phase, SolutionType
+from pttools.bubble.boundary import SolutionType
+from pttools.bubble.integrate import add_df_dtau, differentials
 from pttools.bubble.transition import identify_solution_type_bag
 from pttools.models.analytic import AnalyticModel
+from pttools.speedup.differential import DifferentialPointer
 from pttools.speedup.utils import copy_doc
 import pttools.type_hints as th
 
@@ -16,12 +18,14 @@ logger = logging.getLogger(__name__)
 
 
 @numba.njit
-def cs2(w: th.FloatOrArr = None, phase: th.FloatOrArr = None) -> th.FloatOrArr:
+def cs2_bag(w: th.FloatOrArr = None, phase: th.FloatOrArr = None) -> th.FloatOrArr:
     r"""Sound speed squared, $c_s^2=\frac{1}{3}$.
     :notes:`\ `, p. 37,
     :rel_hydro_book:`\ `, eq. 2.207
     """
     return 1/3 * np.ones_like(w) * np.ones_like(phase)
+
+df_dtau_ptr_bag = differentials.get_pointer("bag") if "bag" in differentials else add_df_dtau("bag", cs2_bag)
 
 
 class BagModel(AnalyticModel):
@@ -179,7 +183,7 @@ class BagModel(AnalyticModel):
         """
         return ((self.V_s - self.V_b) / (self.a_s - self.a_b))**0.25
 
-    cs2 = staticmethod(cs2)
+    cs2 = staticmethod(cs2_bag)
 
     @staticmethod
     @numba.njit
@@ -189,7 +193,7 @@ class BagModel(AnalyticModel):
     @staticmethod
     @numba.njit
     def cs2_temp(temp, phase):
-        return cs2(temp, phase)
+        return cs2_bag(temp, phase)
 
     def delta_theta(
             self,
@@ -200,6 +204,9 @@ class BagModel(AnalyticModel):
             delta_theta, wp=wp, wm=wm,
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
+
+    def df_dtau_ptr(self) -> DifferentialPointer:
+        return df_dtau_ptr_bag
 
     def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Energy density as a function of temperature, :giese_2021:`\ ` eq. 15, :borsanyi_2016:`\ `, eq. S12

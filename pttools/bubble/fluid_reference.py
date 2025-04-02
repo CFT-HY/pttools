@@ -15,7 +15,7 @@ from pttools.bubble.boundary import SolutionType
 from pttools.bubble.fluid_bag import sound_shell_bag
 from pttools.bubble import props
 from pttools.bubble import transition
-
+from pttools.speedup.options import FORKING
 from pttools.speedup.parallel import run_parallel
 
 logger = logging.getLogger(__name__)
@@ -200,7 +200,7 @@ def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tp.Tuple[int, 
 # On systems using the "spawn" method, the cache is per-process.
 @functools.cache
 def ref():
-    if multiprocessing.parent_process() is not None and multiprocessing.get_start_method() != "fork":
+    if not FORKING and multiprocessing.parent_process() is not None:
         logger.warning(
             "The reference data was attempted to be loaded in a subprocess. "
             "The reference data should be loaded in the main process before creating subprocesses "

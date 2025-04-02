@@ -7,7 +7,6 @@ import scipy.integrate as spi
 
 import pttools.type_hints as th
 from pttools import speedup
-from pttools.bubble.boundary import Phase
 from pttools.speedup.numba_wrapper import numbalsoda
 from pttools.speedup.options import NUMBA_DISABLE_JIT
 from . import bag

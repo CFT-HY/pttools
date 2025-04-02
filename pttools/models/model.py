@@ -2,7 +2,6 @@
 
 import abc
 import logging
-import multiprocessing
 import os
 import time
 import typing as tp
@@ -10,13 +9,15 @@ import typing as tp
 import numpy as np
 from scipy.optimize import fminbound, fsolve, root_scalar
 
-import pttools.type_hints as th
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 from pttools.bubble.check import find_most_negative_vals
 from pttools.bubble.integrate import add_df_dtau, differentials
 from pttools.bubble import transition
 from pttools.models.base import BaseModel
+from pttools.speedup.differential import DifferentialPointer
+from pttools.speedup.options import FORKING
+import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
@@ -612,11 +613,11 @@ class Model(BaseModel, abc.ABC):
         """
         return self.theta_bar_temp(temp, Phase.SYMMETRIC) - self.theta_bar_temp(temp, Phase.BROKEN)
 
-    def df_dtau_ptr(self) -> int:
+    def df_dtau_ptr(self) -> DifferentialPointer:
         if self.__df_dtau_ptr is not None:
-            if self.__df_dtau_ptr in differentials.keys():
+            if self.__df_dtau_ptr in differentials:
                 return self.__df_dtau_ptr
-            if self.__df_dtau_pid == os.getpid() or multiprocessing.get_start_method() == "fork":
+            if FORKING or self.__df_dtau_pid == os.getpid():
                 logger.warning(
                     "Could not find cs2 in the cache for %s in process %s. Recreating.",
                     self.name, os.getpid()

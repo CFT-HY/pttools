@@ -10,21 +10,12 @@ import numpy as np
 
 from examples.utils import save
 from pttools.analysis.parallel import create_bubbles
-from pttools.bubble import Bubble
+from pttools.bubble.bubble_quantities import get_kappa
 from pttools.bubble.giese import kappaNuMuModel
 from pttools.models import ConstCSModel
 from pttools.speedup import GITHUB_ACTIONS
 
 logger = logging.getLogger(__name__)
-
-
-def get_kappa(bubble: Bubble) -> float:
-    if (not bubble.solved) or bubble.no_solution_found or bubble.solver_failed or bubble.numerical_error:
-        return np.nan
-    return bubble.kappa
-
-get_kappa.return_type = float
-get_kappa.fail_value = np.nan
 
 
 def main():

@@ -16,7 +16,7 @@ import numpy as np
 from examples.utils import save
 from pttools.analysis.parallel import create_bubbles
 # from pttools.analysis.utils import A4_PAPER_SIZE
-from pttools.bubble.bubble_quantities import get_kappa
+from pttools.bubble.bubble_quantities import get_kappa_giese
 from pttools.bubble.giese import kappaNuMuModel
 from pttools.models import ConstCSModel
 from pttools.speedup import run_parallel, GITHUB_ACTIONS
@@ -92,7 +92,7 @@ def create_figure(
                 kappas[i_model, :, :] = kappas_giese(model=model, v_walls=v_walls, alpha_ns=alpha_ns, theta_bar=theta_bar)
         else:
             bubbles, kappas[i_model, :, :] = create_bubbles(
-                model=model, v_walls=v_walls, alpha_ns=alpha_ns, func=get_kappa,
+                model=model, v_walls=v_walls, alpha_ns=alpha_ns, func=get_kappa_giese,
                 bubble_kwargs={"theta_bar": theta_bar, "allow_invalid": False}, allow_bubble_failure=True
             )
         for i_alpha_n, (alpha_n, color) in enumerate(zip(alpha_ns, colors)):

@@ -17,6 +17,7 @@ DifferentialOdeint = tp.Union[tp.Callable[[np.ndarray, float, tp.Optional[np.nda
 DifferentialSolveIVP = tp.Union[tp.Callable[[float, np.ndarray, tp.Optional[np.ndarray]], np.ndarray], CPUDispatcher]
 Differential = tp.Union[DifferentialCFunc, DifferentialOdeint, DifferentialSolveIVP]
 DifferentialPointer = numba.types.CPointer(lsoda_sig)
+DifferentialKey = tp.Union[DifferentialPointer, str]
 
 
 class DifferentialCache:
@@ -29,9 +30,13 @@ class DifferentialCache:
     """
     def __init__(self):
         self._lock = threading.Lock()
-        self._cache_cfunc: tp.Dict[DifferentialPointer, DifferentialCFunc] = {}
-        self._cache_odeint: tp.Dict[DifferentialPointer, DifferentialOdeint] = {}
-        self._cache_solve_ivp: tp.Dict[DifferentialPointer, DifferentialSolveIVP] = {}
+        self._cache_njit: tp.Dict[DifferentialKey, DifferentialCFunc] = {}
+        self._cache_odeint: tp.Dict[DifferentialKey, DifferentialOdeint] = {}
+        self._cache_pointers: tp.Dict[str, DifferentialPointer] = {}
+        self._cache_solve_ivp: tp.Dict[DifferentialKey, DifferentialSolveIVP] = {}
+
+    def __contains__(self, item: DifferentialKey) -> bool:
+        return item in self._cache_njit
 
     def add(
             self,
@@ -39,10 +44,9 @@ class DifferentialCache:
             p_last_is_backwards: bool = True,
             ndim: int = 3) -> DifferentialPointer:
         with self._lock:
-            if name in self._cache_cfunc:
+            if name in self._cache_njit:
                 raise ValueError("The key is already in the cache")
             differential_njit = numba.njit(differential)
-            # differential_core = differential_cfunc if NUMBA_DISABLE_JIT else differential_njit
             if not NUMBA_DISABLE_JIT:
                 differential_cfunc = numba.cfunc(lsoda_sig)(differential)
                 if p_last_is_backwards:
@@ -75,29 +79,37 @@ class DifferentialCache:
                 address = id(differential_njit)
             else:
                 address = differential_numbalsoda.address
-            self._cache_odeint[name] = differential_odeint
-            self._cache_odeint[address] = differential_odeint
-            self._cache_solve_ivp[name] = differential_solve_ivp
-            self._cache_solve_ivp[address] = differential_solve_ivp
-            return address
+            self._cache_pointers[name] = address
 
-    def _get_func(self, key: DifferentialPointer, cache: tp.Dict[DifferentialPointer, Differential]) -> Differential:
+            self._cache_njit[address] = differential_njit
+            self._cache_odeint[address] = differential_odeint
+            self._cache_solve_ivp[address] = differential_solve_ivp
+
+            self._cache_njit[name] = differential_njit
+            self._cache_odeint[name] = differential_odeint
+            self._cache_solve_ivp[name] = differential_solve_ivp
+        return address
+
+    def _get_func(self, key: DifferentialKey, cache: tp.Dict[DifferentialKey, Differential]) -> Differential:
         try:
             with self._lock:
                 return cache[key]
         except KeyError as error:
             raise KeyError(
                 f"Could not find differential function in the cache with the key \"{key}\". "
-                "This may indicate an issue with parallelism. Available functions: {cache.keys()}") from error
+                f"This may indicate an issue with parallelism. Available functions: {cache.keys()}") from error
 
-    def get_cfunc(self, key: DifferentialPointer) -> DifferentialCFunc:
-        return self._get_func(key, self._cache_cfunc)
+    def get_njit(self, key: DifferentialKey) -> DifferentialCFunc:
+        return self._get_func(key, self._cache_njit)
 
-    def get_odeint(self, key: DifferentialPointer) -> DifferentialOdeint:
+    def get_odeint(self, key: DifferentialKey) -> DifferentialOdeint:
         return self._get_func(key, self._cache_odeint)
 
-    def get_solve_ivp(self, key: DifferentialPointer) -> DifferentialSolveIVP:
+    def get_pointer(self, name: str) -> DifferentialPointer:
+        return self._cache_pointers[name]
+
+    def get_solve_ivp(self, key: DifferentialKey) -> DifferentialSolveIVP:
         return self._get_func(key, self._cache_solve_ivp)
 
     def keys(self):
-        return self._cache_cfunc.keys()
+        return self._cache_njit.keys()
