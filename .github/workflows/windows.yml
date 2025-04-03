@@ -14,7 +14,8 @@ jobs:
     timeout-minutes: 35
     steps:
         # Fortran compiler is required for building numbalsoda if a wheel is not available
-        - uses: fortran-lang/setup-fortran@v1
+        - name: Install Fortran compiler
+          uses: fortran-lang/setup-fortran@v1
           id: setup-fortran
           with:
             compiler: "gcc"
