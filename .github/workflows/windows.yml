@@ -13,6 +13,12 @@ jobs:
     # if: ${{ github.event.workflow_run.conclusion == 'success' }}
     timeout-minutes: 35
     steps:
+        # Fortran compiler is required for building numbalsoda if a wheel is not available
+        - uses: fortran-lang/setup-fortran@v1
+          id: setup-fortran
+          with:
+            compiler: "gcc"
+            version: "13"
         - name: Setup Python
           uses: actions/setup-python@v5
           # Windows minutes cost 2x what Linux does, so testing multiple Python versions would be quite costly
