@@ -102,22 +102,22 @@ def generate_ps(
     params = (vw, alpha, const.NUC_TYPE, const.NUC_ARGS)
     sd_v = ssm.spec_den_v_bag(z, params, Np[1:], method=method)
     pow_v = ssm.pow_spec(z, sd_v)
-    V2_pow_v = np.trapz(pow_v/z, z)
+    V2_pow_v = np.trapezoid(pow_v/z, z)
 
     if v_xi_file is not None:
         sd_v2 = ssm.spec_den_v_bag(z, params, Np[1:], v_xi_file, method=method)
         pow_v2 = ssm.pow_spec(z, sd_v2)
-        V2_pow_v = np.trapz(pow_v2/z, z)
+        V2_pow_v = np.trapezoid(pow_v2/z, z)
 
     sd_gw, y = ssm.spec_den_gw_scaled(z, sd_v)
     pow_gw = ssm.pow_spec(y, sd_gw)
-    gw_power = np.trapz(pow_gw/y, y)
+    gw_power = np.trapezoid(pow_gw/y, y)
 
     if v_xi_file is not None:
         # TODO: This could be reordered to avoid the warning about the undefined variable
         sd_gw2, y = ssm.spec_den_gw_scaled(z, sd_v2)
         pow_gw2 = ssm.pow_spec(y, sd_gw2)
-        gw_power = np.trapz(pow_gw2/y, y)
+        gw_power = np.trapezoid(pow_gw2/y, y)
 
     # Now for some plotting if requested
     if save_ids[1] is not None or show:

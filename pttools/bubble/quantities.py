@@ -453,7 +453,7 @@ def mean_kinetic_energy(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: fl
     :return: mean kinetic energy
     """
     check.check_wall_speed(v_wall)
-    integral = np.trapz(w * v ** 2 * relativity.gamma2(v), xi ** 3)
+    integral = np.trapezoid(w * v ** 2 * relativity.gamma2(v), xi ** 3)
     return integral / (v_wall ** 3)
 
 
@@ -523,6 +523,6 @@ def ubarf_squared(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float) -
     #        return w * v**2 * gamma2(v)
     #    int1, int2 = split_integrate(fun, v, w, xi**3, v_wall)
     #    integral = int1 + int2
-    #    integral = np.trapz(w * v**2 * gamma2(v), xi**3)
+    #    integral = np.trapezoid(w * v**2 * gamma2(v), xi**3)
 
     return mean_kinetic_energy(v, w, xi, v_wall) / w[-1]

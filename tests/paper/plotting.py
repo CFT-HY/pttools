@@ -250,11 +250,11 @@ def plot_ps(
     if leg_list is None:
         for z, power, col, ls in zip(z_list, pow_list, col_list, ls_list):
             ax.loglog(z, power, color=col, linestyle=ls)
-            powers.append(np.trapz(power / z, z))
+            powers.append(np.trapezoid(power / z, z))
     else:
         for z, power, leg, col, ls in zip(z_list, pow_list, leg_list, col_list, ls_list):
             ax.loglog(z, power, color=col, linestyle=ls, label=leg)
-            powers.append(np.trapz(power / z, z))
+            powers.append(np.trapezoid(power / z, z))
 
     # Pretty graphs
     if pretty:

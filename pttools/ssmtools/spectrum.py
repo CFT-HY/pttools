@@ -360,7 +360,7 @@ def _spec_den_gw_scaled_core(
             ((z - z_plus) ** 2 * (z - z_minus) ** 2) / (z * (z_plus + z_minus - z)) \
             * np.interp(z, z_lookup, P_v_lookup) \
             * np.interp((z_plus + z_minus - z), z_lookup, P_v_lookup)
-        p_gw[i] = p_gw_factor / y[i] * np.trapz(integrand, z)
+        p_gw[i] = p_gw_factor / y[i] * np.trapezoid(integrand, z)
 
     # Eq. 3.48 has a factor of 3 Gamma^2
     # The P_v_lookup is 0.5 \tilde{P}_v, which gives a factor of (1/2)^2 = 1/4
@@ -455,7 +455,7 @@ def _spec_den_v_core_loop(
     qT = _qT_array(z_i, t_array, b_R, vw)
     A2_2d_array_z = np.interp(qT, qT_lookup, A2_lookup)
     array2 = t_array ** 6 * nu(t_array, nuc_type, a) * A2_2d_array_z
-    D = np.trapz(array2, t_array)
+    D = np.trapezoid(array2, t_array)
     return D * factor
 
 

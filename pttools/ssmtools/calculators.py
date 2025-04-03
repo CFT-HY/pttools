@@ -110,7 +110,7 @@ def _sin_transform_scalar(
         v_sh: float = None) -> th.FloatOrArrNumba:
     if z <= z_st_thresh:
         array = f * np.sin(z * xi)
-        integral = np.trapz(array, xi)
+        integral = np.trapezoid(array, xi)
     else:
         integral = sin_transform_approx(z, xi, f, v_wall=v_wall, v_sh=v_sh)
     return integral
@@ -129,7 +129,7 @@ def _sin_transform_arr(
     # This computation is O(len(z_lo) * len(xi)) = O(n^2)
     # array_lo = f * np.sin(np.outer(z_lo, xi))
     # For each z, integrate f * sin(z*xi) over xi
-    # integral: np.ndarray = np.trapz(array_lo, xi)
+    # integral: np.ndarray = np.trapezoid(array_lo, xi)
     integral = sin_transform_core(xi, f, z_lo)
 
     if len(lo) < len(z):
@@ -224,7 +224,7 @@ def sin_transform_core(t: np.ndarray, f: np.ndarray, freq: np.ndarray) -> np.nda
         integrand = f * np.sin(freq[i] * t)
         # If you get Numba errors here, ensure that t is contiguous.
         # This can be achieved with the use of t.copy() in the data pipeline leading to this function.
-        integral[i] = np.trapz(integrand, t)
+        integral[i] = np.trapezoid(integrand, t)
     return integral
 
 

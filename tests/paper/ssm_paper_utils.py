@@ -401,12 +401,12 @@ def ps_from_ssm(
     sd_v = ssm.spec_den_v_bag(z, (vw, alpha, nuc_type, nuc_args), Np[1:], method=method)
     pow_v = ssm.pow_spec(z, sd_v)
 
-    V2_pow_v = np.trapz(pow_v/z, z)
+    V2_pow_v = np.trapezoid(pow_v/z, z)
 
     sd_gw, y = ssm.spec_den_gw_scaled(z, sd_v)
     pow_gw = ssm.pow_spec(y, sd_gw)
 
-    gw_power = np.trapz(pow_gw/y, y)
+    gw_power = np.trapezoid(pow_gw/y, y)
 
     Ubarf = np.sqrt(V2_pow_v)
     AdInd = 4/(3*(1+alpha))
@@ -614,8 +614,8 @@ def plot_ps_compare_nuc(
             save_id = ''
 
         nuc_string_all += nuc_string
-        v2_list.append(np.trapz(pow_v/z, z))
-        Omgw_scaled_list.append(np.trapz(pow_gw/y, y))
+        v2_list.append(np.trapezoid(pow_v/z, z))
+        Omgw_scaled_list.append(np.trapezoid(pow_gw/y, y))
 
     fig_v = plotting.plot_ps(
         z_list, pow_v_list, utils.PSType.V,
@@ -764,25 +764,25 @@ def plot_and_save(vw: float, alpha: float, method: ssm.Method = ssm.Method.E_CON
     sd_v = ssm.spec_den_v_bag(z, params, Np[1:], method=method)
     pow_v = ssm.pow_spec(z, sd_v)
     ax_v.loglog(z, pow_v, color=col)
-    V2_pow_v.append(np.trapz(pow_v/z, z))
+    V2_pow_v.append(np.trapezoid(pow_v/z, z))
 
     if v_xi_file is not None:
         sd_v2 = ssm.spec_den_v_bag(z, params, Np[1:], v_xi_file, method=method)
         pow_v2 = ssm.pow_spec(z, sd_v2)
         ax_v.loglog(z, pow_v2, color=col, linestyle='--')
-        V2_pow_v.append(np.trapz(pow_v2/z, z))
+        V2_pow_v.append(np.trapezoid(pow_v2/z, z))
 
     sd_gw, y = ssm.spec_den_gw_scaled(z, sd_v)
     pow_gw = ssm.pow_spec(y, sd_gw)
 
     ax_gw.loglog(y, pow_gw, color=col)
-    gw_power.append(np.trapz(pow_gw/y, y))
+    gw_power.append(np.trapezoid(pow_gw/y, y))
 
     if v_xi_file is not None:
         sd_gw2, y = ssm.spec_den_gw_scaled(z, sd_v2)
         pow_gw2 = ssm.pow_spec(y, sd_gw2)
         ax_gw.loglog(y, pow_gw2, color=col, linestyle='--')
-        gw_power.append(np.trapz(pow_gw2/y, y))
+        gw_power.append(np.trapezoid(pow_gw2/y, y))
 
     inter_flag = (abs(bubble.CS0 - vw) < 0.05)  # Due intermediate power law
     plotting.plot_guide_power_laws_prace(f1, f2, z, pow_v, y, pow_gw, inter_flag=inter_flag)
