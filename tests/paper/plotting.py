@@ -149,7 +149,7 @@ def plot_guide_power_laws_prace(
     x_high = 10
     x_low = 2
     [nv_lo, ngw_lo] = np_lo
-    logger.debug("Plotting guide power laws")
+    # logger.debug("Plotting guide power laws")
     high_peak_v = np.where(z > x_high)
     high_peak_gw = np.where(y > x_high)
     plot_guide_power_law_prace(

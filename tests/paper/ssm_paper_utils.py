@@ -412,7 +412,7 @@ def ps_from_ssm(
     AdInd = 4/(3*(1+alpha))
     Omgwtil = gw_power/(AdInd*V2_pow_v)**2
 
-    logger.debug(f"{nuc_string:s} {alpha} {vw:.2f} {V2_pow_v:.3e} {1000*Ubarf:5.2f} {gw_power:.3e} {100*Omgwtil:.3f}")
+    # logger.debug(f"{nuc_string:s} {alpha} {vw:.2f} {V2_pow_v:.3e} {1000*Ubarf:5.2f} {gw_power:.3e} {100*Omgwtil:.3f}")
 
     return z, pow_v, y, pow_gw
 

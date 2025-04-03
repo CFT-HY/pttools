@@ -377,7 +377,6 @@ def get_ubarf2_new_bag(
     """
     w_mean = 1  # For bag, it doesn't matter
     Gamma = bag.adiabatic_index_bag(w_mean, Phase.BROKEN, bag.theta_bag(w_mean, Phase.BROKEN, alpha_n))
-    logger.debug(Gamma)
 
     it = np.nditer([v_wall, None])
     for vw, Ubarf2 in it:

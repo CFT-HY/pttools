@@ -37,11 +37,10 @@ def remove_hybrids(path: str = DEFAULT_PATH, suffix: str = "") -> str:
     cs = 1/np.sqrt(3)
 
     for i, vw in enumerate(sim_data[:, 0]):
-        logger.debug(vw)
         alpha = sim_data[i, 1]
 
         if cs < vw < bbl.v_chapman_jouguet_bag(alpha):
-            logger.debug("Ignoring hybrid")
+            # logger.debug("Ignoring hybrid for i=%s, vw=%s", i, vw)
             pass
         else:
             vw_no_hybrid.append(sim_data[i, 0])

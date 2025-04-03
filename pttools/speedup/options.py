@@ -24,6 +24,7 @@ except AttributeError:
     # https://stackoverflow.com/a/53537394
     MAX_WORKERS_DEFAULT: int = multiprocessing.cpu_count()
 
+# The choice of the Numba threading layer cannot be printed here, since it's not selected until needed.
 if not FORKING or not CPU_AFFINITY:
     msg = "Platform: %s (%s, %s) on %s (%s)."
     if not CPU_AFFINITY:

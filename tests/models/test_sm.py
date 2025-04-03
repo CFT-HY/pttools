@@ -26,6 +26,5 @@ class TestStandardModel(ThermoModelBaseCase, unittest.TestCase):
         self.assertEqual(self.thermo.GEFF_DATA_LOG_TEMP.ndim, 1)
         self.assertEqual(self.thermo.GEFF_DATA_TEMP.ndim, 1)
 
-    @unittest.expectedFailure
-    def test_phase_invariance(self):
-        raise NotImplementedError
+    # def test_phase_invariance(self):
+    #     raise NotImplementedError

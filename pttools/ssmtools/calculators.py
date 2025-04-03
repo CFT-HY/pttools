@@ -57,7 +57,7 @@ def envelope(xi: np.ndarray, f: np.ndarray, v_wall: float = None, v_sh: float = 
     f_max = f[i_max_f]
     xi_w = xi[i_max_f]  # max f always at wall
 
-    # TODO: this indexing fix has changed test_pow_specs.py results a bit
+    # This indexing fix has changed test_pow_specs.py results a bit
     if i_max_f + 1 == f.shape[0]:
         df_at_max = f[i_max_f] - f[i_max_f - 2]
         with numba.objmode:

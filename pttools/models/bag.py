@@ -52,7 +52,10 @@ class BagModel(AnalyticModel):
             label_latex: str = None,
             label_unicode: str = None,
             allow_invalid: bool = False,
-            auto_potential: bool = False):
+            auto_potential: bool = False,
+            log_info: bool = True):
+        if log_info:
+            logger.debug("Initialising BagModel")
         if V_b != 0:
             logger.warning("V_b has been specified for the bag model, even though it's usually omitted.")
         if alpha_n_min is not None:
@@ -68,7 +71,8 @@ class BagModel(AnalyticModel):
             name=name, label_latex=label_latex, label_unicode=label_unicode,
             gen_cs2=False, gen_cs2_neg=False,
             allow_invalid=allow_invalid,
-            auto_potential=auto_potential
+            auto_potential=auto_potential,
+            log_info=log_info
         )
         if self.a_s <= self.a_b:
             raise ValueError(
