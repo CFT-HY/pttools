@@ -594,10 +594,10 @@ def sound_shell_solvable_hybrid(
         warn_if_shock_barely_exists=False
     )
     diff = wn_estimate - wn
-    logger.debug(
-        "Hybrid solvable results: wn_target=%s, wn_computed=%s, diff=%s, wm=%s, vp=%s",
-        wn, wn_estimate, diff, wm, vp
-    )
+    # logger.debug(
+    #     "Hybrid solvable results: wn_target=%s, wn_computed=%s, diff=%s, wm=%s, vp=%s",
+    #     wn, wn_estimate, diff, wm, vp
+    # )
     return diff
 
 

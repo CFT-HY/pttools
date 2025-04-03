@@ -53,7 +53,6 @@ class BagModel(AnalyticModel):
             label_unicode: str = None,
             allow_invalid: bool = False,
             auto_potential: bool = False):
-        logger.debug("Initialising BagModel.")
         if V_b != 0:
             logger.warning("V_b has been specified for the bag model, even though it's usually omitted.")
         if alpha_n_min is not None:
