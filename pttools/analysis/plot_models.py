@@ -70,4 +70,4 @@ class ModelsPlot:
     def process(self) -> None:
         ax: plt.Axes
         for ax in self.axs.flat:
-            ax.legend(fontsize="x-small")
+            utils.legend(ax, fontsize="x-small")
