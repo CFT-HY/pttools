@@ -45,7 +45,11 @@ class DifferentialCache:
             ndim: int = 3) -> DifferentialPointer:
         with self._lock:
             if name in self._cache_njit:
-                raise ValueError("The key is already in the cache")
+                logger.warning(
+                    "Attempted to add a differential with the name \"%s\" which is already in the cache.",
+                    name
+                )
+                return self._cache_pointers[name]
             differential_njit = numba.njit(differential)
             if not NUMBA_DISABLE_JIT:
                 differential_cfunc = numba.cfunc(lsoda_sig)(differential)
