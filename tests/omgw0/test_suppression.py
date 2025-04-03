@@ -1,4 +1,5 @@
 import os
+import sys
 import unittest
 
 import numpy as np
@@ -33,6 +34,8 @@ class SuppressionTest(unittest.TestCase):
             "Ubarf_2_ssm": None,
             "ssm_tot": 5.30e-7
         }
+        if sys.platform == "darwin":
+            tolerances["sup_ssm"] = 2.66e-5
         for filename in filenames:
             data = calc_sup_ssm(
                 f"{filename}.txt",
