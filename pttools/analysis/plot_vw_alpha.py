@@ -1,5 +1,6 @@
 import typing as tp
 
+from matplotlib.colors import Colormap
 from matplotlib.contour import QuadContourSet
 from matplotlib.legend import Legend
 import matplotlib.pyplot as plt
@@ -40,18 +41,18 @@ class VwAlphaPlot:
         if title is not None:
             self.ax.set_title(title)
 
-    def contourf(
+    def contourf_plusminus(
             self,
             data: np.ndarray,
             label: str,
             diff_level: float = None,
-            cmap_neg_name: str = colormap.CMAP_NEG_DEFAULT,
-            cmap_pos_name: str = colormap.CMAP_POS_DEFAULT):
+            cmap_neg: tp.Union[Colormap, str] = colormap.CMAP_NEG_DEFAULT,
+            cmap_pos: tp.Union[Colormap, str] = colormap.CMAP_POS_DEFAULT):
         if diff_level is None:
             diff_level = 0.1
-        levels, colors = colormap.cmap(
+        levels, colors = colormap.cmap_plusminus(
             min_level=np.nanmin(data), max_level=np.nanmax(data), diff_level=diff_level,
-            cmap_neg_name=cmap_neg_name, cmap_pos_name=cmap_pos_name
+            cmap_neg=cmap_neg, cmap_pos=cmap_pos
         )
         cs: QuadContourSet = self.ax.contourf(
             self.grid.v_walls, self.grid.alpha_ns, data, levels=levels, colors=colors)

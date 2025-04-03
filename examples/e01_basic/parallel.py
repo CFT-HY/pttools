@@ -28,7 +28,7 @@ def main():
 
     # Plotting
     plot = VwAlphaPlot(grid)
-    plot.contourf(kappas, label=r"$\kappa$")
+    plot.contourf_plusminus(kappas, label=r"$\kappa$")
     plot.chapman_jouguet()
 
 

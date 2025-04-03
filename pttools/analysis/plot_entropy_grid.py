@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.analysis.bubble_grid import BubbleGridVWAlpha
-from pttools.analysis.colormap import cmap
+from pttools.analysis.colormap import cmap_plusminus
 from pttools.analysis.plot_vw_alpha import VwAlphaPlot
 from pttools.bubble.bubble import Bubble
 
@@ -199,7 +199,7 @@ def plot_entropy_data(
         fig: plt.Figure = plt.figure()
         ax: plt.Axes = fig.add_subplot()
 
-    levels, cols = cmap(min_level, max_level, diff_level)
+    levels, cols = cmap_plusminus(min_level, max_level, diff_level)
     cs: QuadContourSet = ax.contourf(v_walls, alpha_ns, data, levels=levels, colors=cols)
     cbar = fig.colorbar(cs)
     cbar.ax.set_ylabel(r'$\Delta s / s_n$')
