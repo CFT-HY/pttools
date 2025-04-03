@@ -16,6 +16,8 @@ import tomllib
 import typing as tp
 import warnings
 
+from sphinx_gallery.sorting import ExplicitOrder
+
 dir_path = os.path.dirname(os.path.abspath(__file__))
 repo_path = os.path.dirname(dir_path)
 sys.path.insert(0, os.path.dirname(dir_path))
@@ -214,7 +216,7 @@ sphinx_gallery_conf = {
     "examples_dirs": os.path.join(os.path.dirname(dir_path), "examples"),
     "filename_pattern": ".*",
     "gallery_dirs": "auto_examples",
-    "ignore_pattern": r"(__init__\.py|utils\.py|p_s_scan_dev\.py|/e03_standard_model|/e05_entropy|/e08_reverse)",
+    "ignore_pattern": r"(__init__\.py|utils\.py|p_s_scan_dev\.py|standard_model|entropy|reverse)",
     # "image_srcset": ["2x"],
     # "line_numbers": True,
     "matplotlib_animations": True,
@@ -222,11 +224,24 @@ sphinx_gallery_conf = {
     # It may also produce errors with some IDEs:
     # https://stackoverflow.com/questions/31080829/python-error-io-unsupportedoperation-fileno
     "parallel": not show_memory,
+    # "prefer_full_module": ...
     "reference_url": {
         "pttools": None,
         "tests": None,
     },
+    # "run_stale_examples": True
     "show_memory": show_memory,
+    "subsection_order": ExplicitOrder([
+        "../examples/basic",
+        "../examples/const_cs",
+        # "../examples/standard_model",
+        "../examples/props",
+        # "../examples/entropy",
+        "../examples/solvers",
+        "../examples/giese",
+        # "../examples/reverse",
+        # "*"
+    ])
 }
 autosummary_generate = True
 
