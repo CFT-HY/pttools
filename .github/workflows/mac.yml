@@ -14,11 +14,11 @@ jobs:
     timeout-minutes: 20
     steps:
         # Fortran compiler is required for building numbalsoda if a wheel is not available
-        - uses: awvwgk/setup-fortran@v1
+        - uses: fortran-lang/setup-fortran@v1
           id: setup-fortran
           with:
             compiler: "gcc"
-            version: "12"
+            version: "14"
         - name: Setup Python
           uses: actions/setup-python@v5
           # macOS minutes cost 10x what Linux does, so testing multiple Python versions would be quite costly
