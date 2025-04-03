@@ -12,16 +12,17 @@ class ModelsPlot:
         self.temp = temp
 
         self.fig: plt.Figure = plt.figure(figsize=(11.69, 8.27))
-        self.axs: np.ndarray = self.fig.subplots(nrows=3, ncols=3)
-        self.ax_p = self.axs[0, 0]
-        self.ax_s = self.axs[0, 1]
-        self.ax_w = self.axs[0, 2]
-        self.ax_e = self.axs[1, 0]
-        self.ax_temp = self.axs[1, 1]
-        self.ax_cs2 = self.axs[1, 2]
-        self.ax_alpha_n = self.axs[2, 0]
-        self.ax_alpha_plus = self.axs[2, 1]
+        self.axs = self.fig.subplots(nrows=3, ncols=3)
+        self.ax_p: plt.Axes = self.axs[0, 0]
+        self.ax_s: plt.Axes = self.axs[0, 1]
+        self.ax_w: plt.Axes = self.axs[0, 2]
+        self.ax_e: plt.Axes = self.axs[1, 0]
+        self.ax_temp: plt.Axes = self.axs[1, 1]
+        self.ax_cs2: plt.Axes = self.axs[1, 2]
+        self.ax_alpha_n: plt.Axes = self.axs[2, 0]
+        self.ax_alpha_plus: plt.Axes = self.axs[2, 1]
 
+        ax: plt.Axes
         for ax in [self.ax_p, self.ax_s, self.ax_w, self.ax_e, self.ax_alpha_n, self.ax_alpha_plus]:
             ax.set_yscale("log")
 
@@ -45,7 +46,7 @@ class ModelsPlot:
 
         self.fig.tight_layout()
 
-    def add(self, model: models.Model, phase: bubble.Phase, ls: str = "-", **kwargs):
+    def add(self, model: models.Model, phase: bubble.Phase, ls: str = "-", **kwargs) -> None:
         label = utils.model_phase_label(model, phase)
         w = model.w(self.temp, phase)
 
@@ -66,6 +67,7 @@ class ModelsPlot:
             label=label, ls=ls, **kwargs
         )
 
-    def process(self):
+    def process(self) -> None:
+        ax: plt.Axes
         for ax in self.axs.flat:
             ax.legend(fontsize="x-small")

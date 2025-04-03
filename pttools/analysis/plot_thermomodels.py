@@ -12,12 +12,12 @@ class ThermoModelsPlot:
         self.temp = temp
 
         self.fig: plt.Figure = plt.figure()
-        self.axs: np.ndarray = self.fig.subplots(nrows=2, ncols=2)
+        self.axs = self.fig.subplots(nrows=2, ncols=2)
 
-        self.ax_cs2 = self.axs[0, 0]
-        self.ax_g = self.axs[0, 1]
-        self.ax_dg_dT = self.axs[1, 0]
-        self.ax_dx_dT = self.axs[1, 1]
+        self.ax_cs2: plt.Axes = self.axs[0, 0]
+        self.ax_g: plt.Axes = self.axs[0, 1]
+        self.ax_dg_dT: plt.Axes = self.axs[1, 0]
+        self.ax_dx_dT: plt.Axes = self.axs[1, 1]
 
         self.ax_cs2.set_ylabel("$c_s^2$")
         self.ax_g.set_ylabel("g")
