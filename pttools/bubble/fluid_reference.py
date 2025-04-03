@@ -200,7 +200,7 @@ def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tp.Tuple[int, 
 # On systems using the "spawn" method, the cache is per-process.
 @functools.cache
 def ref():
-    if not FORKING and multiprocessing.parent_process() is not None:
+    if FORKING and multiprocessing.parent_process() is not None:
         logger.warning(
             "The reference data was attempted to be loaded in a subprocess. "
             "The reference data should be loaded in the main process before creating subprocesses "
