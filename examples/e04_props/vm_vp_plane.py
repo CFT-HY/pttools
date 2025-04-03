@@ -1,7 +1,8 @@
 r"""
-${v}_+, {v}_-$ plane
+v+, v-$ plane
 ====================
 
+${v}_+, {v}_-$ plane.
 Adapted from fig. 9 of :gw_pt_ssm:`\ `.
 """
 
