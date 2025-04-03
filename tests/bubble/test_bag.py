@@ -3,8 +3,6 @@ import unittest
 import numpy as np
 
 from pttools import bubble
-from pttools.bubble.boundary import Phase
-from pttools.models.bag import BagModel
 from tests import utils
 
 

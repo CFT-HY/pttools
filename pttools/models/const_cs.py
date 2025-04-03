@@ -12,7 +12,6 @@ import pttools.type_hints as th
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.models.analytic import AnalyticModel
 from pttools.models.bag import BagModel
-from pttools.speedup import is_nan_or_none
 
 logger = logging.getLogger(__name__)
 
