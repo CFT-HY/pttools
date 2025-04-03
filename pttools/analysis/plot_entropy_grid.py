@@ -210,6 +210,5 @@ def plot_entropy_data(
     ax.set_title(rf"$\Delta s / s_n$")
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
-    # ax.legend()
 
     return fig, ax

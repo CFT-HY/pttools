@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.analysis.utils import A4_PAPER_SIZE, FigAndAxes, create_fig_ax
+from pttools.analysis.utils import A4_PAPER_SIZE, FigAndAxes, create_fig_ax, legend
 from pttools.ssmtools.spectrum import SSMSpectrum
 
 SPEC_DEN_V_LABEL = r"$\mathcal{P}_{v}(kR_*)$"
@@ -9,6 +9,7 @@ SPEC_DEN_GW_LABEL = r"$\mathcal{P}_{gw}(kR_*)$"
 POW_V_LABEL = r"$\mathcal{P}_{\tilde{v}}(kR_*)$"
 POW_GW_LABEL = r"$\mathcal{P}_{\tilde{gw}}(kR_*)$"
 OMGW0_LABEL = r"$\Omega_{gw,0}$"
+
 
 def plot_spectrum(
         spectrum: SSMSpectrum,
@@ -28,8 +29,7 @@ def plot_spectrum_common(spectrum: SSMSpectrum, fig: plt.Figure, ax: plt.Axes, p
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.grid()
-    if ax.get_legend_handles_labels() != ([], []):
-        ax.legend()
+    legend(ax)
     if path is not None:
         fig.savefig(path)
     return fig, ax

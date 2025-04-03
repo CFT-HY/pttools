@@ -46,5 +46,6 @@ class ThermoModelsPlot:
         self.ax_dx_dT.plot(self.temp, model.dp_dt(self.temp, phase), label=label, **kwargs)
 
     def process(self):
+        ax: plt.Axes
         for ax in self.axs.flat:
-            ax.legend(fontsize="x-small")
+            utils.legend(ax, fontsize="x-small")

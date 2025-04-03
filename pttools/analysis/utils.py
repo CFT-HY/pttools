@@ -3,6 +3,7 @@
 import typing as tp
 
 import matplotlib as mpl
+from matplotlib.legend import Legend
 import matplotlib.pyplot as plt
 
 from pttools.bubble.boundary import Phase
@@ -25,6 +26,11 @@ def create_fig_ax(fig: plt.Figure = None, ax: plt.Axes = None) -> FigAndAxes:
     if ax is None:
         ax = fig.add_subplot()
     return fig, ax
+
+
+def legend(ax: plt.Axes, **kwargs) -> tp.Optional[Legend]:
+    if ax.get_legend_handles_labels() != ([], []):
+        return ax.legend(**kwargs)
 
 
 def model_phase_label(model: BaseModel, phase: Phase) -> str:

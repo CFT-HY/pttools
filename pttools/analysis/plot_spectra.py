@@ -3,7 +3,7 @@ import typing as tp
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.analysis.utils import A4_PAPER_SIZE, FigAndAxes, create_fig_ax
+from pttools.analysis.utils import A4_PAPER_SIZE, FigAndAxes, create_fig_ax, legend
 from pttools.ssmtools.spectrum import SSMSpectrum
 from pttools.omgw0 import Spectrum, omega_noise
 
@@ -18,8 +18,7 @@ def plot_spectra_common(spectra: tp.List[SSMSpectrum], fig: plt.Figure, ax: plt.
         )
     ax.set_yscale("log")
     ax.grid()
-    if ax.get_legend_handles_labels() != ([], []):
-        ax.legend(loc="lower left")
+    legend(ax, loc="lower left")
     if path is not None:
         fig.savefig(path)
     return fig, ax

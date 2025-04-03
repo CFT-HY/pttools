@@ -3,7 +3,7 @@ import typing as tp
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.analysis.utils import A4_PAPER_SIZE, create_fig_ax
+from pttools.analysis.utils import A4_PAPER_SIZE, create_fig_ax, legend
 from pttools.bubble.bubble import Bubble
 
 
@@ -25,9 +25,7 @@ def plot_bubble_common(bubble: Bubble, fig: plt.Figure, ax: plt.Axes, path: str 
         np.nanmin([bubble.xi[-2] * 1.1, 1.0])
     )
     ax.grid()
-
-    if ax.get_legend_handles_labels() != ([], []):
-        ax.legend()
+    legend(ax)
 
     if path is not None:
         fig.savefig(path)

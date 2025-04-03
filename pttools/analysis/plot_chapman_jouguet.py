@@ -1,8 +1,12 @@
 """Plot Chapman-Jouguet speed"""
 
+import typing as tp
+
+from matplotlib.legend import Legend
 import matplotlib.pyplot as plt
 import numpy as np
 
+from pttools.analysis.utils import legend
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 from pttools.models.model import Model
 
@@ -16,7 +20,6 @@ class ChapmanJouguetPlot:
 
         self.ax.set_xlabel(r"$\alpha_n$")
         self.ax.set_ylabel("$v_{CJ}$")
-        self.ax.legend()
         self.fig.tight_layout()
 
     def add(self, model: Model, analytical: bool = True, label: str = None, ls: str = "-"):
@@ -28,5 +31,5 @@ class ChapmanJouguetPlot:
             label = model.label_latex
         self.ax.plot(self.alpha_n, v_cj, label=label, ls=ls)
 
-    def process(self):
-        self.ax.legend(fontsize="x-small")
+    def process(self) -> tp.Optional[Legend]:
+        return legend(self.ax, fontsize="x-small")
