@@ -14,7 +14,7 @@ def omgw_approx(
         temp: th.FloatOrArr = const.T_default,
         g_star: th.FloatOrArr = const.G_STAR_DEFAULT,
         f0_peak: th.FloatOrArr = None) -> th.FloatOrArr:
-    """
+    r"""
     :caprini_2016:`\ ` eq. 13
     """
     # Todo: this function is missing a factor of h^2
@@ -27,7 +27,7 @@ def omgw_approx(
 
 
 def S_sw_approx(f: th.FloatOrArr, f_peak: th.FloatOrArr) -> th.FloatOrArr:
-    """
+    r"""
     :caprini_2016:`\ ` eq. 14
     """
     f_relative = f / f_peak
@@ -39,7 +39,7 @@ def f_peak_approx(v_wall: th.FloatOrArr, beta: th.FloatOrArr) -> th.FloatOrArr:
 
 
 def f0_peak_approx(temp: th.FloatOrArr, r_star: th.FloatOrArr, g_star: th.FloatOrArr) -> th.FloatOrArr:
-    """
+    r"""
     :caprini_2016:`\ ` eq. 15
     """
     # return 1.9e-5 * beta * temp / (v_wall * H_star * 100) * (g_star / 100) ** (1/6)
