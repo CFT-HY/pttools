@@ -166,12 +166,15 @@ def run_parallel(
         return output_arrs
 
 
-if GITHUB_ACTIONS and os.name == "nt":
-    # This value is based on the output of Numba sysinfo on the GitHub Actions Windows runner
-    num_threads = 2
-    logger.warning(
-        "Detected GitHub Actions Windows runner with %s threads. "
-        "Setting the number of threads to %s to work around a Numba bug in detecting the number of CPUs.",
-        get_num_threads(), num_threads
-    )
-    set_num_threads(num_threads)
+# This seems to be fixed as of 2025.
+# See this documentation for the number of CPU cores available on the GitHub Actions runners:
+# https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories
+# if GITHUB_ACTIONS and os.name == "nt":
+#     # This value is based on the output of Numba sysinfo on the GitHub Actions Windows runner
+#     num_threads = 4
+#     logger.warning(
+#         "Detected GitHub Actions Windows runner with %s threads. "
+#         "Setting the number of threads to %s to work around a Numba bug in detecting the number of CPUs.",
+#         get_num_threads(), num_threads
+#     )
+#     set_num_threads(num_threads)
