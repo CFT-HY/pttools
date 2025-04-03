@@ -88,7 +88,7 @@ class ThermoTestHindmarshHijazi(ThermoTest, unittest.TestCase):
 class ThermoTestBag(ThermoTest, unittest.TestCase):
     """Test that the results have not changed due to code changes
 
-    Reference data is has been generated with PTtools.
+    Reference data has been generated with PTtools.
     """
 
     ALPHA_NS = np.array(np.repeat([0.1, 0.2, 0.3], 3))
