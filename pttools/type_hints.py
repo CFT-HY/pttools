@@ -19,11 +19,11 @@ ODESolver = tp.Union[spi.OdeSolver, tp.Type[spi.OdeSolver], tp.Type[spi.odeint],
 
 # Numerical types
 #: Float list or a Numpy array
-FloatListOrArr = tp.Union[tp.List[float], np.ndarray]
+FloatListOrArr = tp.Union[tp.List[tp.Union[float, np.float64]], np.ndarray]
 #: Float or a Numpy array
-FloatOrArr = tp.Union[float, np.ndarray]
+FloatOrArr = tp.Union[float, np.float64, np.ndarray]
 #: The return type of a Numba function that returns a float or a Numpy array
-FloatOrArrNumba = tp.Union[float, np.ndarray, NumbaFunc]
+FloatOrArrNumba = tp.Union[float, np.float64, np.ndarray, NumbaFunc]
 #: Integer or a Numpy array
 IntOrArr = tp.Union[int, np.ndarray]
 
