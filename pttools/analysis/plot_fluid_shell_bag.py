@@ -86,67 +86,69 @@ def plot_fluid_shell_bag(
     yscale_enth_min = min(w) / 1.2
     xscale_min = xi[n_wall] * 0.5
 
-    fig = plt.figure(figsize=(7, 8))
+    fig: plt.Figure = plt.figure(figsize=(7, 8))
+    axs = fig.subplots(2, 1)
+    ax1: plt.Axes = axs[0]
+    ax2: plt.Axes = axs[1]
 
-    # First velocity
-    plt.subplot(2, 1, 1)
-
-    plt.title(
+    # Velocity plot
+    ax1.set_title(
         rf'$\xi_{{\rm w}} =  {v_wall}$, $\alpha_{{\rm n}} =  {alpha_n:.3}$, '
         rf'$\alpha_+ =  {alpha_plus:5.3f}$, $r =  {r:.3f}$, $\xi_{{\rm sh}} =  {xi[-2]:5.3f}$', size=16)
-    plt.plot(xi, v, 'b', label=r'$v(\xi)$')
+    ax1.plot(xi, v, 'b', label=r'$v(\xi)$')
 
     if not sol_type == boundary.SolutionType.DETON:
-        plt.plot(xi_even[n_cs:], v_sh[n_cs:], 'k--', label=r'$v_{\rm sh}(\xi_{\rm sh})$')
+        ax1.plot(xi_even[n_cs:], v_sh[n_cs:], 'k--', label=r'$v_{\rm sh}(\xi_{\rm sh})$')
         if high_v_approx:
-            plt.plot(xi[n_wall:n_sh], v_approx, 'b--', label=r'$v$ ($v < \xi$ approx)')
-            plt.plot(xi, xi, 'k--', label=r'$v = \xi$')
+            ax1.plot(xi[n_wall:n_sh], v_approx, 'b--', label=r'$v$ ($v < \xi$ approx)')
+            ax1.plot(xi, xi, 'k--', label=r'$v = \xi$')
 
     if not sol_type == boundary.SolutionType.SUB_DEF:
         v_minus_max = relativity.lorentz(xi_even, const.CS0)
-        plt.plot(xi_even[n_cs:], v_minus_max[n_cs:], 'k-.', label=r'$\mu(\xi,c_{\rm s})$')
+        ax1.plot(xi_even[n_cs:], v_minus_max[n_cs:], 'k-.', label=r'$\mu(\xi,c_{\rm s})$')
 
     if low_v_approx:
-        plt.plot(xi, v_approx, 'b--', label=r'$v$ low $\alpha$ approx')
+        ax1.plot(xi, v_approx, 'b--', label=r'$v$ low $\alpha$ approx')
 
-    plt.legend(loc='best')
+    ax1.legend(loc='best')
 
-    plt.ylabel(r'$v(\xi)$')
-    plt.xlabel(r'$\xi$')
-    plt.axis([xscale_min, xscale_max, 0.0, yscale_v])
-    plt.grid()
+    ax1.set_ylabel(r'$v(\xi)$')
+    ax1.set_xlabel(r'$\xi$')
+    ax1.set_xlim(xscale_min, xscale_max)
+    ax1.set_ylim(0, yscale_v)
+    ax1.grid()
 
-    # Then enthalpy
-    plt.subplot(2, 1, 2)
+    # Enthalpy plot
 
-    plt.title(
+    ax2.set_title(
         rf'$w_0/w_n = {w[0] / w[-1]:4.2}$, $\bar{{U}}_f = {ubarf2 ** 0.5:.3f}$, $K = {ke_frac:5.3g}$, '
         rf'$\kappa = {kappa:5.3f}$, $\omega = {dw:5.3f}$', size=16)
-    plt.plot(xi, np.ones_like(xi) * w[-1], '--', color='0.5')
-    plt.plot(xi, w, 'b', label=r'$w(\xi)$')
+    ax2.plot(xi, np.ones_like(xi) * w[-1], '--', color='0.5')
+    ax2.plot(xi, w, 'b', label=r'$w(\xi)$')
 
     if not sol_type == boundary.SolutionType.DETON:
-        plt.plot(xi_even[n_cs:], w_sh[n_cs:], 'k--', label=r'$w_{\rm sh}(\xi_{\rm sh})$')
+        ax2.plot(xi_even[n_cs:], w_sh[n_cs:], 'k--', label=r'$w_{\rm sh}(\xi_{\rm sh})$')
 
         if high_v_approx:
-            plt.plot(xi[n_wall:n_sh], w_approx[:], 'b--', label=r'$w$ ($v < \xi$ approx)')
+            ax2.plot(xi[n_wall:n_sh], w_approx[:], 'b--', label=r'$w$ ($v < \xi$ approx)')
 
     else:
         wmax_det = (xi_even / const.CS0) * relativity.gamma2(xi_even) / relativity.gamma2(const.CS0)
-        plt.plot(xi_even[n_cs:], wmax_det[n_cs:], 'k-.', label=r'$w_{\rm max}$')
+        ax2.plot(xi_even[n_cs:], wmax_det[n_cs:], 'k-.', label=r'$w_{\rm max}$')
 
     if low_v_approx:
-        plt.plot(xi, w_approx, 'b--', label=r'$w$ low $\alpha$ approx')
+        ax2.plot(xi, w_approx, 'b--', label=r'$w$ low $\alpha$ approx')
 
-    plt.legend(loc='best')
-    plt.ylabel(r'$w(\xi)$', size=16)
-    plt.xlabel(r'$\xi$', size=16)
-    plt.axis([xscale_min, xscale_max, yscale_enth_min, yscale_enth_max])
-    plt.grid()
+    ax2.legend(loc='best')
+    ax2.set_ylabel(r'$w(\xi)$', size=16)
+    ax2.set_xlabel(r'$\xi$', size=16)
+    ax2.set_xlim(xscale_min, xscale_max)
+    ax2.set_ylim(yscale_enth_min, yscale_enth_max)
+    ax2.grid()
 
     if draw:
-        plt.tight_layout()
+        fig.tight_layout()
     if save_string is not None:
-        plt.savefig(f"shell_plot_vw_{v_wall}_alphan_{alpha_n:.3}{save_string}")
+        fig.savefig(f"shell_plot_vw_{v_wall}_alphan_{alpha_n:.3}{save_string}")
 
     return fig, params

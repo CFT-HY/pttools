@@ -238,8 +238,8 @@ def plot_ps(
         ls_list = ['-'] * len(z_list)
 
     if fig is None:
-        fig = plt.figure(figsize=[8, 4])
-        ax = plt.gca()
+        fig = plt.figure(figsize=(8, 4))
+        ax = fig.add_subplot()
     else:
         raise NotImplementedError("TODO: axis is not defined")
 
