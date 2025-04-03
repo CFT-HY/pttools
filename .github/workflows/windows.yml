@@ -18,8 +18,10 @@ jobs:
           uses: fortran-lang/setup-fortran@v1
           id: setup-fortran
           with:
-            compiler: "gcc"
-            version: "13"
+            # compiler: "gcc"
+            # version: "13"
+            compiler: "intel"
+            version: "2025.0"
         - name: Setup Python
           uses: actions/setup-python@v5
           # Windows minutes cost 2x what Linux does, so testing multiple Python versions would be quite costly
