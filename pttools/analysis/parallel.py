@@ -1,3 +1,5 @@
+"""Utilities for parallel simulation of bubbles"""
+
 import concurrent.futures as cf
 import logging
 import time
@@ -10,7 +12,7 @@ from pttools.bubble import fluid_reference
 from pttools.bubble.integrate import precompile
 from pttools.omgw0.omgw0_ssm import Spectrum
 from pttools.speedup import options
-from pttools.speedup import parallel
+from pttools.speedup.parallel import run_parallel
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
@@ -26,6 +28,7 @@ def create_bubble(
         bubble_kwargs: tp.Dict[str, any] = None,
         allow_bubble_failure: bool = False,
         *args, **kwargs) -> tp.Union[tp.Optional[Bubble], tp.Tuple[tp.Optional[Bubble], tp.Any]]:
+    """Create a single bubble and apply post-processing functions to retrieve results from it"""
     v_wall, alpha_n = params
     # This is a common error case and should be handled here to avoid polluting the logs with exceptions.
     if alpha_n < model.alpha_n_min and bubble_kwargs is not None \
@@ -64,6 +67,7 @@ def create_spectrum(
         spectrum_kwargs: tp.Dict[str, any] = None,
         allow_bubble_failure: bool = False,
         *args, **kwargs):
+    """Create a single spectrum and apply post-processing functions to retrieve results from it"""
     bubble = create_bubble(
         params=params,
         model=model,
@@ -94,6 +98,7 @@ def create_bubbles(
         kwargs: tp.Dict[str, any] = None,
         bubble_kwargs: tp.Dict[str, any] = None,
         bubble_func: callable = create_bubble) -> tp.Union[np.ndarray, tp.Tuple[np.ndarray, np.ndarray]]:
+    """Create multiple bubbles in parallel"""
     start_time = time.perf_counter()
     post_func_return_multiple = False
     if func is None:
@@ -130,7 +135,7 @@ def create_bubbles(
     precompile()
 
     # Run the parallel processing
-    ret = parallel.run_parallel(
+    ret = run_parallel(
         bubble_func, params,
         multiple_params=True,
         output_dtypes=output_dtypes,
@@ -159,6 +164,7 @@ def create_spectra(
         kwargs: tp.Dict[str, any] = None,
         bubble_kwargs: tp.Dict[str, any] = None,
         spectrum_kwargs: tp.Dict[str, any] = None):
+    """Create multiple spectra in parallel"""
     if kwargs is None:
         kwargs2 = {"spectrum_kwargs": spectrum_kwargs}
     else:
@@ -179,6 +185,7 @@ def create_spectra(
 
 
 def solve_bubbles(bubbles: np.ndarray, max_workers: int = options.MAX_WORKERS_DEFAULT) -> None:
+    """Solve multiple existing bubbles in parallel"""
     futs: tp.List[cf.Future] = []
     with cf.ProcessPoolExecutor(max_workers=max_workers) as ex:
         for bubble in np.nditer(bubbles):

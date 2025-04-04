@@ -1,14 +1,15 @@
+"""Test the generation of the fluid reference"""
+
 import os
 import unittest
 
-import numpy as np
-
 from pttools.bubble import fluid_reference
 from tests.utils.const import TEST_DATA_PATH
-from tests.utils.test_assertions import assert_allclose
 
 
 class ReferenceTest(unittest.TestCase):
+    """Test the generation of the fluid reference"""
+
     def test_generation(self):
         path = os.path.join(TEST_DATA_PATH, "fluid_reference_indexing.hdf5")
         if os.path.exists(path):

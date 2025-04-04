@@ -1,7 +1,5 @@
-"""Functions for calculating approximate solutions
-
-TODO: remove duplicate check_wall_speed checks
-"""
+"""Functions for calculating approximate solutions"""
+# TODO: remove duplicate wall speed checks
 
 import numpy as np
 

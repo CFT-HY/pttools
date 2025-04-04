@@ -21,11 +21,11 @@ class PlotlyPlot(abc.ABC):
             self._fig = self.create_fig()
         return self._fig
 
-    def save(self, path: str):
+    def save(self, path: str) -> None:
         fig = self.fig()
         fig.write_html(f"{path}.html")
         fig.write_image(f"{path}.png")
 
-    def show(self):
+    def show(self) -> None:
         if ENABLE_DRAWING:
             self.fig().show()

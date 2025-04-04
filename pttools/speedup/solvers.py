@@ -1,3 +1,5 @@
+"""Equation solvers that improve upon the ones available in SciPy"""
+
 import logging
 import typing as tp
 

@@ -1,3 +1,5 @@
+"""Utilities for plotting the spectra of multiple bubbles"""
+
 import typing as tp
 
 import matplotlib.pyplot as plt
@@ -9,6 +11,7 @@ from pttools.omgw0 import Spectrum, omega_noise
 
 
 def plot_spectra_common(spectra: tp.List[SSMSpectrum], fig: plt.Figure, ax: plt.Axes, path: str = None, set_x: bool = True) -> FigAndAxes:
+    """Common steps for plotting spectra"""
     if set_x:
         ax.set_xlabel("$z$")
         ax.set_xscale("log")
@@ -25,6 +28,7 @@ def plot_spectra_common(spectra: tp.List[SSMSpectrum], fig: plt.Figure, ax: plt.
 
 
 def plot_spectra_omgw0(spectra: tp.List[Spectrum], ax: plt.Axes = None, fig: plt.Figure = None, path: str = None) -> FigAndAxes:
+    """Plot the GW spectra today"""
     fig, ax = create_fig_ax(fig, ax)
     for spectrum in spectra:
         snr = spectrum.signal_to_noise_ratio()
@@ -41,6 +45,7 @@ def plot_spectra_omgw0(spectra: tp.List[Spectrum], ax: plt.Axes = None, fig: plt
 
 
 def plot_spectra_spec_den_v(spectra: tp.List[Spectrum], ax: plt.Axes = None, fig: plt.Figure = None, path: str = None) -> FigAndAxes:
+    """Plot the velocity spectra"""
     fig, ax = create_fig_ax(fig, ax)
     for spectrum in spectra:
         ax.plot(spectrum.f(), spectrum.spec_den_v)
@@ -48,6 +53,7 @@ def plot_spectra_spec_den_v(spectra: tp.List[Spectrum], ax: plt.Axes = None, fig
 
 
 def plot_spectra(spectra: tp.List[SSMSpectrum], fig: plt.Figure = None, path: str = None) -> plt.Figure:
+    """Plot multiple types of spectra"""
     # Todo: fix the labels here
     if fig is None:
         fig = plt.figure(figsize=A4_PAPER_SIZE)

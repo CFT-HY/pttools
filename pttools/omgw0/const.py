@@ -1,10 +1,6 @@
-"""
-Created on Thu Jul 28 11:35:38 2022
+"""Constants for the omgw0 module"""
 
-Constants for the omgw0 submodule of pttools
-
-@author: hindmars
-"""
+__author__ = "Mark Hindmarsh"
 
 # Speed of light (m/s)
 c: float = 299792458

@@ -1,4 +1,4 @@
-"""Base class for models"""
+"""Template for equations of state"""
 
 import abc
 import logging
@@ -117,6 +117,7 @@ class Model(BaseModel, abc.ABC):
             w_max: float, phase: Phase,
             is_max: bool, cs2_fun: th.CS2Fun, w_min: float = 0,
             allow_fail: bool = False, **kwargs) -> tp.Tuple[float, float]:
+        r"""Find the minimum or maximum of $c_s^2(w)$ for $w \in [w_\text{min}, w_\text{max}]$"""
         name = "max" if is_max else "min"
         sol = fminbound(cs2_fun, x1=w_min, x2=w_max, args=(phase,), full_output=True, **kwargs)
         w: float = sol[0]
@@ -147,6 +148,7 @@ class Model(BaseModel, abc.ABC):
             log_invalid: bool = True,
             name: str = "w",
             alpha_name: str = "alpha") -> tp.Union[float, np.ndarray]:
+        r"""Check that $w \in ({w}_\text{min}, {w}_\text{max})$ for the given $w$."""
         too_small = False
         too_large = False
         if w_min is None:
@@ -236,6 +238,7 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
+        r"""Conversion from $\alpha_{\bar{\theta}_n}$ of :giese_2021:`\ `, eq. 13 to $\alpha_n$"""
         if wn is None or np.isnan(wn):
             wn = self.wn(
                 alpha_theta_bar_n, wn_guess=wn_guess, theta_bar=True,
@@ -246,6 +249,7 @@ class Model(BaseModel, abc.ABC):
         return alpha_theta_bar_n - diff
 
     def alpha_n_min_find(self, w_min: float = None, w_max: float = None) -> tp.Tuple[float, float]:
+        r"""Find $\text{min} \alpha_n(w)$ for $w \in ({w}_\text{min}, {w}_\text{max})$"""
         if w_min is None:
             w_min = self.w_min
         if w_max is None:
@@ -341,7 +345,7 @@ class Model(BaseModel, abc.ABC):
         return self.delta_theta_bar(wn, Phase.SYMMETRIC) / (3 * wn)
 
     def alpha_theta_bar_n_from_alpha_n(self, alpha_n: float, wn: float = None, wn_guess: float = None) -> float:
-        r"""Conversion from $\alpha_n$ to $\alpha_{\bar{\theta}n}$ of :giese_2021:`\ `, eq. 13"""
+        r"""Conversion from $\alpha_n$ to $\alpha_{\bar{\theta}_n}$ of :giese_2021:`\ `, eq. 13"""
         if wn is None or np.isnan(wn):
             wn = self.wn(alpha_n, wn_guess=wn_guess)
         tn = self.temp(wn, Phase.SYMMETRIC)
@@ -807,6 +811,7 @@ class Model(BaseModel, abc.ABC):
         return phase*self.V_b + (1 - phase)*self.V_s
 
     def validate_alpha_n(self, alpha_n: float, allow_invalid: bool = False, log_invalid: bool = True):
+        r"""Validate that $\alpha_{n,\text{min}} < \alpha_n < 1$"""
         if alpha_n < 0 or alpha_n < self.alpha_n_min:
             msg = f"Invalid alpha_n={alpha_n}. Minimum for the model: {self.alpha_n_min}"
             if log_invalid:
@@ -931,7 +936,7 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
-        r"""Enthalpy at nucleation temperature with given $\alpha_n$"""
+        r"""Enthalpy at nucleation temperature $w_n$ with given $\alpha_n$"""
         invalid_w_crit = self.w_crit is None or np.isnan(self.w_crit) or self.w_crit < 0
         if wn_guess is None or np.isnan(wn_guess) or wn_guess < 0:
             if invalid_w_crit:

@@ -1,3 +1,5 @@
+"""Utilties for plotting the spectrum of a single bubble"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -17,6 +19,7 @@ def plot_spectrum(
         ax: plt.Axes = None,
         path: str = None,
         **kwargs) -> FigAndAxes:
+    rf"""Plot the GW spectrum {POW_GW_LABEL} of a bubble"""
     fig, ax = create_fig_ax(fig, ax)
     ax.plot(spectrum.y, spectrum.pow_gw, **kwargs)
     ax.set_ylabel(POW_GW_LABEL)
@@ -24,6 +27,7 @@ def plot_spectrum(
 
 
 def plot_spectrum_common(spectrum: SSMSpectrum, fig: plt.Figure, ax: plt.Axes, path: str = None) -> FigAndAxes:
+    """Common steps for plotting a spectrum"""
     ax.set_xlabel("$z$")
     ax.set_xlim(np.min(spectrum.y), np.max(spectrum.y))
     ax.set_xscale("log")
@@ -36,6 +40,7 @@ def plot_spectrum_common(spectrum: SSMSpectrum, fig: plt.Figure, ax: plt.Axes, p
 
 
 def plot_spectrum_multi(spectrum: SSMSpectrum, fig: plt.Figure = None, path: str = None, **kwargs) -> plt.Figure:
+    """Plot multiple types of spectra for a bubble"""
     if fig is None:
         fig = plt.figure(figsize=A4_PAPER_SIZE)
     axs = fig.subplots(2, 2)
@@ -55,6 +60,7 @@ def plot_spectrum_v(
         ax: plt.Axes = None,
         path: str = None,
         **kwargs) -> FigAndAxes:
+    rf"""Plot the velocity power spectrum {POW_V_LABEL} of a bubble"""
     fig, ax = create_fig_ax(fig, ax)
     ax.plot(spectrum.y, spectrum.pow_v, **kwargs)
     ax.set_ylabel(POW_V_LABEL)
@@ -67,6 +73,7 @@ def plot_spectrum_spec_den_gw(
         ax: plt.Axes = None,
         path: str = None,
         **kwargs) -> FigAndAxes:
+    rf"""Plot the spectral density of GWs {SPEC_DEN_GW_LABEL} for a bubble"""
     fig, ax = create_fig_ax(fig, ax)
     ax.plot(spectrum.y, spectrum.spec_den_gw, **kwargs)
     ax.set_ylabel(SPEC_DEN_GW_LABEL)
@@ -79,6 +86,7 @@ def plot_spectrum_spec_den_v(
         ax: plt.Axes = None,
         path: str = None,
         **kwargs) -> FigAndAxes:
+    rf"""Plot the spectral density of velocity {SPEC_DEN_V_LABEL} for a bubble"""
     fig, ax = create_fig_ax(fig, ax)
     ax.plot(spectrum.y, spectrum.spec_den_v, **kwargs)
     ax.set_ylabel(SPEC_DEN_V_LABEL)

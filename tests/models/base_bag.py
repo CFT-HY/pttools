@@ -1,3 +1,5 @@
+"""Bag model tests"""
+
 import abc
 
 import numpy as np

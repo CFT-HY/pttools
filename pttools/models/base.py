@@ -70,7 +70,7 @@ class BaseModel(abc.ABC):
     # Concrete methods
 
     def export(self) -> tp.Dict[str, any]:
-        """User-created model classes should extend this"""
+        """Export the model parameters to a dictionary. User-created model classes should extend this."""
         return {
             "name": self.name,
             "label_latex": self.label_latex,
@@ -82,11 +82,11 @@ class BaseModel(abc.ABC):
         }
 
     def gen_cs2(self) -> th.CS2Fun:
-        r"""This function should generate a Numba-jitted $c_s^2$ function for the model."""
+        r"""This function generates a Numba-jitted $c_s^2$ function for the model."""
         raise NotImplementedError("This class does not have gen_cs2 defined")
 
     def gen_cs2_neg(self) -> th.CS2Fun:
-        r"""This function should generate a negative version of
+        r"""This function generates a negative version of
         the Numba-jitted $c_s^2$ function to be used for maximisation.
         """
         raise NotImplementedError("This class does not have gen_cs2_neg defined")
@@ -142,8 +142,10 @@ class BaseModel(abc.ABC):
 
     @abc.abstractmethod
     def cs2(self, *args, **kwargs) -> th.FloatOrArr:
+        """Speed of sound squared"""
         pass
 
     @abc.abstractmethod
     def cs2_neg(self, *args, **kwargs) -> th.FloatOrArr:
+        """Speed of sound squared with a minus sign. This is needed for finding the maximum of cs2."""
         pass

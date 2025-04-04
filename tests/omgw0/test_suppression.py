@@ -1,3 +1,5 @@
+"""Tests for the suppression module"""
+
 import os
 import sys
 import unittest
@@ -12,8 +14,10 @@ from tests.utils.assertions import assert_allclose
 
 
 class SuppressionTest(unittest.TestCase):
+    """Tests for the suppression module"""
     @staticmethod
     def test_remove_hybrids():
+        """Compare the data created by remove_hybrids to the reference"""
         path = remove_hybrids(suffix="test")
         settings = {
             "sep": " ",
@@ -26,6 +30,7 @@ class SuppressionTest(unittest.TestCase):
 
     @staticmethod
     def test_ssm_calculator():
+        """Compare the data created by calc_sup_ssm to the reference"""
         filenames = ["suppression_2", "suppression_no_hybrids"]
         tolerances = {
             "vw_sim": None,

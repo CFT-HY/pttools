@@ -1,10 +1,6 @@
-"""
-Created on Wed 4/8/2021
+"""Removes the unpublished hybrid data from the suppression data set"""
 
-@author: cg411
-
-Removes the unpublished hybrid data from the suppression data set
-"""
+__author__ = "Chloe Hopling"
 
 import logging
 import os.path

@@ -31,7 +31,7 @@ find_alpha_plus_scalar_lock = threading.Lock()
 def alpha_n_max_bag(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArr:
     r"""
     Calculates the maximum relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
-    for given $v_\text{wall}$, which is max $\alpha_n$ for (supersonic) deflagration.
+    in the Bag Model for given $v_\text{wall}$, which is max $\alpha_n$ for (supersonic) deflagration.
 
     :param v_wall: $v_\text{wall}$
     :param n_xi: number of $\xi$ points
@@ -71,7 +71,7 @@ def _alpha_n_max_deflagration_bag_arr_wrapper(v_wall: th.FloatOrArr, n_xi: int =
 def alpha_n_max_deflagration_bag(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArr:
     r"""
     Calculates the maximum relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
-    for given $v_\text{wall}$, for deflagration.
+    in the Bag Model for given $v_\text{wall}$, for deflagration.
     Works also for hybrids, as they are supersonic deflagrations.
 
     :param v_wall: $v_\text{wall}$
@@ -101,11 +101,9 @@ def _alpha_n_max_deflagration_bag_numba(v_wall: th.FloatOrArr, n_xi: int = const
 @numba.njit
 def alpha_n_max_detonation_bag(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
-    Maximum allowed value of $\alpha_n$ for a detonation with wall speed $v_\text{wall}$.
+    Maximum allowed value of $\alpha_n$ for a detonation with wall speed $v_\text{wall}$ in the Bag Model.
     Same as :func:`alpha_plus_max_detonation`, since for a detonation $\alpha_n = \alpha_+$,
     as there is no fluid movement outside the wall.
-
-    Bag model only!
 
     :param v_wall: $v_\text{wall}$
     :return: $\alpha_{n,\max,\text{detonation}}$
@@ -117,7 +115,7 @@ def alpha_n_max_detonation_bag(v_wall: th.FloatOrArr) -> th.FloatOrArr:
 def alpha_n_max_hybrid_bag(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> float:
     r"""
     Calculates the relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
-    for given $v_\text{wall}$, assuming hybrid fluid shell
+    in the Bag Model for given $v_\text{wall}$, assuming hybrid fluid shell
 
     :param v_wall: $v_\text{wall}$
     :param n_xi: number of $\xi$ points
@@ -141,7 +139,7 @@ def alpha_n_max_hybrid_bag(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> flo
 @numba.njit
 def alpha_n_min_deflagration_bag(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
-    Minimum $\alpha_n$ for a deflagration. Equal to maximum $\alpha_n$ for a detonation.
+    Minimum $\alpha_n$ for a deflagration in the Bag Model. Equal to maximum $\alpha_n$ for a detonation.
     Same as :func:`alpha_n_min_hybrid`, as a hybrid is a supersonic deflagration.
 
     :param v_wall: $v_\text{wall}$
@@ -155,7 +153,7 @@ def alpha_n_min_deflagration_bag(v_wall: th.FloatOrArr) -> th.FloatOrArr:
 @numba.njit
 def alpha_n_min_hybrid_bag(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
-    Minimum $\alpha_n$ for a hybrid. Equal to maximum $\alpha_n$ for a detonation.
+    Minimum $\alpha_n$ for a hybrid in the Bag Model. Equal to maximum $\alpha_n$ for a detonation.
     Same as :func:`alpha_n_min_deflagration`, as a hybrid is a supersonic deflagration.
 
     :param v_wall: $v_\text{wall}$
@@ -193,7 +191,7 @@ def alpha_plus_initial_guess(v_wall: th.FloatOrArr, alpha_n_given: float) -> th.
 @speedup.vectorize(nopython=True)
 def alpha_plus_max_detonation_bag(v_wall: th.FloatOrArr) -> th.FloatOrArrNumba:
     r"""
-    Maximum allowed value of $\alpha_+$ for a detonation with wall speed $v_\text{wall}$.
+    Maximum allowed value of $\alpha_+$ for a detonation with wall speed $v_\text{wall}$ in the Bag Model.
     Comes from inverting $v_w$ > $v_\text{Jouguet}$.
 
     $\alpha_{+,\max,\text{detonation}} = \frac{ (1 - \sqrt{3} v_\text{wall})^2 }{ 3(1 - v_\text{wall}^2 }$
@@ -209,7 +207,7 @@ def alpha_plus_max_detonation_bag(v_wall: th.FloatOrArr) -> th.FloatOrArrNumba:
 @speedup.vectorize(nopython=True)
 def alpha_plus_min_hybrid(v_wall: th.FloatOrArr) -> th.FloatOrArrNumba:
     r"""
-    Minimum allowed value of $\alpha_+$ for a hybrid with wall speed $v_\text{wall}$.
+    Minimum allowed value of $\alpha_+$ for a hybrid with wall speed $v_\text{wall}$ in the Bag Model.
     Condition from coincidence of wall and shock.
 
     $$\alpha_{+, \min, \text{hybrid}} = \frac{ (1 - \sqrt{3} v_\text{wall})^2 }{ 9 v_\text{wall}^2 - 1}$$
@@ -237,7 +235,7 @@ def find_alpha_n_bag(
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR) -> float:
     r"""
     Calculates the transition strength parameter at the nucleation temperature,
-    $\alpha_n$, from $\alpha_+$, for given $v_\text{wall}$.
+    $\alpha_n$, from $\alpha_+$, for given $v_\text{wall}$ in the Bag Model.
 
     $$\alpha_n = \frac{4 \Delta \theta (T_n)}{3 w(T_n)} = \frac{4}{3} \frac{ \theta_s(T_n) - \theta_b(T_n) }{w(T_n)}$$
 
@@ -311,12 +309,6 @@ def _find_alpha_plus_scalar_bag(
         cs2_fun_ptr: th.CS2FunScalarPtr = bag.CS2_BAG_SCALAR_PTR,
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR,
         xtol: float = const.FIND_ALPHA_PLUS_TOL) -> th.FloatOrArrNumba:
-    """
-    TODO: this might not generalize directly to models other than the bag model.
-    It's possibly that the equations don't require any modifications, but instead the optimizer will simply
-    fail in some cases.
-    At least the sol_type dependence in fluid_shell_alpha_plus should be removed.
-    """
     if alpha_n_given < alpha_n_max_detonation_bag(v_wall):
         # Must be detonation
         # sol_type = boundary.SolutionType.DETON
@@ -374,7 +366,7 @@ def find_alpha_plus_bag(
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR,
         xtol: float = const.FIND_ALPHA_PLUS_TOL) -> th.FloatOrArrNumba:
     r"""
-    Calculate the at-wall strength parameter $\alpha_+$ from given $\alpha_n$ and $v_\text{wall}$.
+    Calculate the at-wall strength parameter $\alpha_+$ from given $\alpha_n$ and $v_\text{wall}$ in the Bag Model.
 
     $$\alpha_+ = \frac{4 \Delta \theta (T_+)}{3 w_+} = \frac{4}{3} \frac{ \theta_s(T_+) - \theta_b(T_+) }{w(T_+)}$$
     (:gw_pt_ssm:`\ `, eq. 2.11)

@@ -1,3 +1,5 @@
+"""Unit tests for thermodynamic functions"""
+
 import typing as tp
 import unittest
 
@@ -12,6 +14,8 @@ from tests.utils.test_assertions import assert_allclose
 
 
 class ThermoTest:
+    """Unit tests for thermodynamic functions"""
+
     MODEL: Model = BagModel(a_s=1.1, a_b=1, V_s=1)
 
     ALPHA_NS: np.ndarray

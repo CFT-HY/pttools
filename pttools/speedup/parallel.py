@@ -1,12 +1,12 @@
 import concurrent.futures as cf
 import logging
-import os
+# import os
 import typing as tp
 
-from numba import get_num_threads, set_num_threads
+# from numba import get_num_threads, set_num_threads
 import numpy as np
 
-from pttools.speedup.options import GITHUB_ACTIONS, MAX_WORKERS_DEFAULT
+from pttools.speedup.options import MAX_WORKERS_DEFAULT  #, GITHUB_ACTIONS
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +20,7 @@ class FakeFuture:
 
 
 class LoggingRunner:
+    """A handler for logging the execution status of a function that is run in parallel"""
     def __init__(
             self,
             func: callable,

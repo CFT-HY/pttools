@@ -1,3 +1,5 @@
+r"""A plot with $v_\text{wall}$ on the x-axis and $\alpha_n$ on the y-axis."""
+
 import typing as tp
 
 from matplotlib.colors import Colormap
@@ -13,7 +15,7 @@ from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 
 
 class VwAlphaPlot:
-    """A plot with v_wall on the x-axis and alpha_n on the y-axis."""
+    r"""A plot with $v_\text{wall}$ on the x-axis and $\alpha_n$ on the y-axis."""
     def __init__(
             self,
             grid: BubbleGridVWAlpha,
@@ -48,6 +50,7 @@ class VwAlphaPlot:
             diff_level: float = None,
             cmap_neg: tp.Union[Colormap, str] = colormap.CMAP_NEG_DEFAULT,
             cmap_pos: tp.Union[Colormap, str] = colormap.CMAP_POS_DEFAULT):
+        """Add a contour plot to the figure"""
         if diff_level is None:
             diff_level = 0.1
         levels, colors = colormap.cmap_plusminus(
@@ -60,16 +63,19 @@ class VwAlphaPlot:
         cbar.ax.set_ylabel(label)
 
     def color_region(self, region: np.ndarray, color: str = REGION_COLOR_DEFAULT, alpha: float = 1) -> QuadContourSet:
+        """Color a region with a fixed color"""
         return colormap.color_region(
             ax=self.ax, x=self.grid.v_walls, y=self.grid.alpha_ns,
             region=region, color=color, alpha=alpha
         )
 
     def chapman_jouguet(self, color: str = "black", ls: str = "--", label: str = "$v_{CJ}$") -> tp.List[plt.Line2D]:
+        """Add a Chapman-Jouguet speed curve to the plot"""
         return self.ax.plot(
             v_chapman_jouguet(self.grid.model, self.grid.alpha_ns),
             self.grid.alpha_ns, color=color, ls=ls, label=label
         )
 
     def legend(self, *args, **kwargs) -> Legend:
+        """Add a legend to the plot"""
         return self.ax.legend(*args, **kwargs)

@@ -48,6 +48,8 @@ get_kappa.fail_value = np.nan
 
 
 class GieseTest(unittest.TestCase):
+    r"""Compare results with those from the code of :giese_2021:`\ `"""
+
     @staticmethod
     def test_bag():
         model = models.BagModel(a_s=1.1, a_b=1, V_s=1)

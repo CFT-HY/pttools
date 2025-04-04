@@ -13,7 +13,7 @@ from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.fluid import sound_shell_generic
 from pttools.bubble import const
 from pttools.bubble import props
-from pttools.bubble.relativity import gamma, lorentz
+from pttools.bubble.relativity import gamma
 from pttools.bubble import thermo
 from pttools.bubble import transition
 from pttools.speedup.export import export_json
@@ -177,9 +177,11 @@ class Bubble:
             )
 
     def add_note(self, note: str):
+        """Add a note to the bubble"""
         self.notes.append(note)
 
     def export(self, path: str = None) -> tp.Dict[str, any]:
+        """Export the bubble data as JSON"""
         data = {
             "datetime": datetime.datetime.now(),
             "notes": self.notes,
@@ -220,6 +222,7 @@ class Bubble:
         return data
 
     def info_str(self, prec: str = ".4f") -> str:
+        """Get a string describing the key quantities of the bubble"""
         return \
             f"{self.label_unicode}: w0/wn={self.w[0] / self.wn:{prec}}, " \
             f"Ubarf2={self.ubarf2:{prec}}, K={self.kinetic_energy_fraction:{prec}}, " \
@@ -235,6 +238,7 @@ class Bubble:
             use_giese_solver: bool = False,
             log_high_alpha_n_failures: bool = True,
             log_negative_entropy: bool = True):
+        """Simulate the fluid velocity profile of the bubble"""
         if self.solved:
             msg = "Re-solving an already solved bubble! Already computed quantities will not be updated due to caching."
             logger.warning(msg)
@@ -352,14 +356,17 @@ class Bubble:
     # ---
 
     def plot(self, fig: plt.Figure = None, path: str = None, **kwargs) -> plt.Figure:
+        """Plot the velocity and enthalpy profiles of the bubble"""
         from pttools.analysis.plot_bubble import plot_bubble
         return plot_bubble(self, fig, path, **kwargs)
 
     def plot_v(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None, **kwargs) -> "FigAndAxes":
+        """Plot the velocity profile of the bubble"""
         from pttools.analysis.plot_bubble import plot_bubble_v
         return plot_bubble_v(self, fig, ax, path, **kwargs)
 
     def plot_w(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None, **kwargs) -> "FigAndAxes":
+        """Plot the enthalpy profile of the bubble"""
         from pttools.analysis.plot_bubble import plot_bubble_w
         return plot_bubble_w(self, fig, ax, path, **kwargs)
 
@@ -378,19 +385,29 @@ class Bubble:
 
     @property
     def vp_vm_tilde_ratio(self) -> float:
+        r"""$$\frac{\tilde{v}_+}{\tilde{v}_-}$$"""
         return self.vp_tilde/self.vm_tilde
 
     @property
     def vp_vm_tilde_ratio_giese(self) -> float:
+        # This docstring is copied from the model function
+        r"""Giese approximation for $\frac{\tilde{v}_+}{\tilde{v}_-}$, :giese_2021:`\ ` eq. 11
+
+        $$\frac{\tilde{v}_+}{\tilde{v}_-} \approx \frac{
+            (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3\alpha_{\bar{\theta}_+} }{
+            (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3 \tilde{v}_+ \tilde{v}_- \alpha_{\bar{\theta}}_+
+        }$$"""
         return self.model.vp_vm_tilde_ratio_giese(vp_tilde=self.vp_tilde, vm_tilde=self.vm_tilde, wp=self.wp, wm=self.wm)
 
     @property
     def vp_vm_tilde_ratio_giese_rel_diff(self) -> float:
+        r"""Relative difference of the ratio of the exact and approximate $\tilde{v}_+, \tilde{v}_-$ ratios from unity"""
         return np.abs(self.vp_vm_tilde_ratio_giese / self.vp_vm_tilde_ratio - 1)
 
     @property
-    def v_mu(self):
-        return lorentz(xi=self.v_wall, v=np.sqrt(self.model.cs2(self.wm, Phase.BROKEN)))
+    def v_mu(self) -> float:
+        r"""Maximum fluid velocity behind the bubble wall, $\mu(\xi)$"""
+        return v_max_behind(xi=self.v_wall, v=np.sqrt(self.model.cs2(self.wm, Phase.BROKEN)))
 
     # Quantities
     def en(self) -> float:
@@ -404,22 +421,24 @@ class Bubble:
     # bva = bubble volume averaged
 
     @functools.cached_property
-    def entropy_density(self) -> float:
+    def entropy_density_diff(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.entropy_density_diff(self.model, self.w, self.xi, self.v_wall, self.phase)
 
     @functools.cached_property
-    def entropy_density_relative(self) -> float:
+    def entropy_density_diff_relative(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
-        return self.entropy_density / self.model.s(self.wn, Phase.SYMMETRIC)
+        return self.entropy_density_diff / self.model.s(self.wn, Phase.SYMMETRIC)
 
     @functools.cached_property
     def entropy_flux_p(self) -> float:
         r"""Incoming entropy flux at the wall
         $$\tilde{\gamma}_+ \tilde{v}_+ s_+$$
         """
+        if not self.solved:
+            raise NotYetSolvedError
         return gamma(self.vp_tilde) * self.vp_tilde * self.sp
 
     @functools.cached_property
@@ -427,6 +446,8 @@ class Bubble:
         r"""Outgoing entropy flux at the wall
         $$\tilde{\gamma}_- \tilde{v}_- {s}_- $$
         """
+        if not self.solved:
+            raise NotYetSolvedError
         return gamma(self.vm_tilde) * self.vm_tilde * self.sm
 
     @functools.cached_property
@@ -434,6 +455,8 @@ class Bubble:
         r"""Entropy flux difference at the wall
         $$\tilde{\gamma}_- \tilde{v}_- {s}_- - \tilde{\gamma}_+ \tilde{v}_+ {s}_+ $$
         """
+        if not self.solved:
+            raise NotYetSolvedError
         return self.entropy_flux_m - self.entropy_flux_p
 
     @functools.cached_property
@@ -441,12 +464,16 @@ class Bubble:
         r"""Incoming entropy flux at the shock
         $$\tilde{\gamma}_{+,sh} \tilde{v}_{+,sh} s_{+,sh}$$
         """
+        if not self.solved:
+            raise NotYetSolvedError
         return gamma(self.vp_tilde_sh) * self.vp_tilde_sh * self.sn
 
     @functools.cached_property
     def entropy_flux_m_sh(self) -> float:
         r"""Outgoing entropy flux at the shock
         $$\tilde{\gamma}_{-,sh} \tilde{v}_{-,sh} s_{-,sh}$$"""
+        if not self.solved:
+            raise NotYetSolvedError
         return gamma(self.vm_tilde_sh) * self.vm_tilde_sh * self.sm_sh
 
     @functools.cached_property
@@ -454,6 +481,8 @@ class Bubble:
         r"""Entropy flux difference at the wall
         $$\tilde{\gamma}_{-,sh} \tilde{v}_{-,sh} s_{-,sh} - \tilde{\gamma}_{+,sh} \tilde{v}_{+,sh} s_{+,sh}$$
         """
+        if not self.solved:
+            raise NotYetSolvedError
         return self.entropy_flux_m_sh - self.entropy_flux_p_sh
 
     @functools.cached_property

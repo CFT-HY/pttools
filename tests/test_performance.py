@@ -1,4 +1,4 @@
-"""Performance testing script"""
+"""Performance tests"""
 
 import logging
 import os

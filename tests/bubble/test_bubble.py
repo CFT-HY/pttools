@@ -1,3 +1,5 @@
+"""Unit tests for the properties of a bubble"""
+
 import numpy as np
 import unittest
 
@@ -6,6 +8,7 @@ from pttools.bubble.bubble import Bubble
 
 
 class BubbleTest(unittest.TestCase):
+    """Unit tests for the properties of a bubble"""
     @classmethod
     def setUpClass(cls) -> None:
         model = BagModel(a_s=1.1, a_b=1, V_s=1)

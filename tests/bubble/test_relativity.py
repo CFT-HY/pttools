@@ -1,3 +1,5 @@
+"""Unit tests for the functions of special relativity"""
+
 import unittest
 
 import numpy as np
@@ -6,6 +8,8 @@ from pttools.bubble import relativity
 
 
 class RelativityTest(unittest.TestCase):
+    """Unit tests for the functions of special relativity"""
+
     @classmethod
     def setUpClass(cls) -> None:
         cls.v = np.linspace(0.1, 0.9, 10)

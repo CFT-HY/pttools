@@ -10,7 +10,7 @@ def signal_to_noise_ratio(
         noise: np.ndarray,
         obs_time: float = const.LISA_OBS_TIME) -> th.FloatOrArr:
     r"""Signal-to-noise ratio
-    $$\rho = \sqrt{T_{\text{obs}} \int_{f_\text{min}}^{f_\text{max}} df \frac{
+    $$\rho = \sqrt{T_{\text{obs}} \int_{{f}_\text{min}}^{{f}_\text{max}} df \frac{
     h^2 \Omega_{\text{gw},0}^2}{
     h^2 \Omega_{\text{n}}^2}}
     :gowling_2021:`\ ` eq. 3.12,
@@ -130,7 +130,7 @@ def S_AE(f: th.FloatOrArr, ft: th.FloatOrArr = FT_LISA, L: th.FloatOrArr = const
 def S_AE_approx(f: th.FloatOrArr, L: th.FloatOrArr = const.LISA_ARM_LENGTH, both_channels: bool = True) -> th.FloatOrArr:
     r"""Approximate noise power spectral density for the LISA A and E channels
     $$S_A = S_E = \frac{N_A}{\mathcal{R}_A}
-    \approx \frac{40}{3} (P_\text{oms} + 4P_\text{acc}) \left( 1 + \frac{3f}{4f_t} \right^2$$
+    \approx \frac{40}{3} ({P}_\text{oms} + {4P}_\text{acc}) \left( 1 + \frac{3f}{4f_t} \right^2$$
     :gowling_2021:`\ ` eq. 3.7
     """
     ret = 40/3 * (P_oms(L) + 4*P_acc(f, L)) * (1 + (3*f/(4*ft(L)))**2)

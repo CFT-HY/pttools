@@ -1,6 +1,4 @@
-"""
-TODO: rename this to plot_plane_paper
-"""
+r"""$\xi, v$ plane plotting"""
 
 import matplotlib.pyplot as plt
 import numpy as np

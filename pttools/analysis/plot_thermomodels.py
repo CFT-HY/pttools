@@ -31,7 +31,7 @@ class ThermoModelsPlot:
 
         self.fig.tight_layout()
 
-    def add(self, model: models.ThermoModel, phase: bubble.Phase, **kwargs):
+    def add(self, model: models.ThermoModel, phase: bubble.Phase, **kwargs) -> None:
         label = utils.model_phase_label(model, phase)
         self.ax_cs2.plot(self.temp, model.cs2(self.temp, phase), label=label, **kwargs)
         self.ax_cs2.plot(self.temp, model.cs2_full(self.temp, phase), label=f"{label}, full", **kwargs)
@@ -45,7 +45,7 @@ class ThermoModelsPlot:
         self.ax_dx_dT.plot(self.temp, model.de_dt(self.temp, phase), label=label, **kwargs)
         self.ax_dx_dT.plot(self.temp, model.dp_dt(self.temp, phase), label=label, **kwargs)
 
-    def process(self):
+    def process(self) -> None:
         ax: plt.Axes
         for ax in self.axs.flat:
             utils.legend(ax, fontsize="x-small")

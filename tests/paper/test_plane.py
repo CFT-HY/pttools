@@ -18,7 +18,7 @@ import numpy as np
 from pttools import speedup
 from tests import utils
 from tests.paper import plane
-from tests.paper import plot_plane
+from tests.paper import plot_plane_paper
 from tests.test_performance import PERFORMANCE_DIR
 
 logger = logging.getLogger(__name__)
@@ -130,7 +130,7 @@ class TestPlane(unittest.TestCase):
             perf_iters: int = 10):
         if i in self.names:
             raise ValueError(f"Duplicate solver index: {i}")
-        name = plot_plane.get_solver_name(method)
+        name = plot_plane_paper.get_solver_name(method)
         self.names[i] = name
         # The actual results are computed first to ensure, that the code is JIT-compiled before testing performance
         data = plane.xiv_plane(method=method, separate_phases=False)
@@ -163,9 +163,9 @@ class TestPlane(unittest.TestCase):
                     (abs_tols, rel_tols)):
                 fig: plt.Figure = plt.figure()
                 ax2: plt.Axes = fig.add_subplot()
-                plot_plane.plot_plane(ax=axs[ax[0], ax[1]], data_s=data, method=method, deflag_ref=self.ref_data, **tols)
-                plot_plane.plot_plane(ax=ax2, data_s=data, method=method, deflag_ref=self.ref_data, **tols)
-                fig_name = os.path.join(self.FIG_PATH, f"integrators_{name}_{i}_{plot_plane.get_solver_name(method)}")
+                plot_plane_paper.plot_plane(ax=axs[ax[0], ax[1]], data_s=data, method=method, deflag_ref=self.ref_data, **tols)
+                plot_plane_paper.plot_plane(ax=ax2, data_s=data, method=method, deflag_ref=self.ref_data, **tols)
+                fig_name = os.path.join(self.FIG_PATH, f"integrators_{name}_{i}_{plot_plane_paper.get_solver_name(method)}")
                 utils.save_fig_multi(fig, fig_name)
                 plt.close(fig)
 

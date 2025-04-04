@@ -1,3 +1,5 @@
+"""Approximations for omgw0"""
+
 import pttools.type_hints as th
 
 import math

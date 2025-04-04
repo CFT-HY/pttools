@@ -106,16 +106,21 @@ class DifferentialCache:
                 f"This may indicate an issue with parallelism. Available functions: {cache.keys()}") from error
 
     def get_njit(self, key: DifferentialKey) -> DifferentialCFunc:
+        """Get a Numba-jitted function"""
         return self._get_func(key, self._cache_njit)
 
     def get_odeint(self, key: DifferentialKey) -> DifferentialOdeint:
+        """Get a function compatible with SciPy odeint"""
         return self._get_func(key, self._cache_odeint)
 
     def get_pointer(self, name: str) -> DifferentialPointer:
+        """Get a pointer to the function from its name"""
         return self._cache_pointers[name]
 
     def get_solve_ivp(self, key: DifferentialKey) -> DifferentialSolveIVP:
+        """Get a function compatible with SciPy solve_ivp"""
         return self._get_func(key, self._cache_solve_ivp)
 
     def keys(self):
+        """Get the keys in the cache"""
         return self._cache_njit.keys()

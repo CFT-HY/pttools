@@ -1,3 +1,5 @@
+"""Utilities for computing the entropy of a bubble"""
+
 import logging
 
 import numpy as np

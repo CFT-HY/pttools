@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class BubblePlot3D(PlotlyPlot):
+    r"""Create a 3D plot of bubbles in the $(v,w,\xi)$ space"""
     def __init__(self, model: Model = None, colorscale: str = "YlOrRd"):
         super().__init__()
         self.model = model
@@ -25,7 +26,8 @@ class BubblePlot3D(PlotlyPlot):
         self.plots: tp.List[BasePlotlyType] = []
         self.colorscale = colorscale
 
-    def add(self, bubble: Bubble, color: str = None):
+    def add(self, bubble: Bubble, color: str = None) -> go.Scatter3d:
+        """Add a bubble to the plot"""
         if not bubble.solved:
             bubble.solve()
 
@@ -35,16 +37,17 @@ class BubblePlot3D(PlotlyPlot):
             kwargs["line"] = {
                 "color": color
             }
-        self.plots.extend([
-            go.Scatter3d(
+        plot = go.Scatter3d(
                 x=bubble.w/bubble.model.w_crit, y=bubble.xi, z=bubble.v,
                 mode="lines",
                 name=bubble.label_unicode,
                 **kwargs
             )
-        ])
+        self.plots.extend([plot])
+        return plot
 
     def create_fig(self) -> go.Figure:
+        """Create the figure"""
         self.mu_surface()
         self.shock_surfaces()
         fig = go.Figure(
@@ -67,7 +70,8 @@ class BubblePlot3D(PlotlyPlot):
         })
         return fig
 
-    def mu_surface(self, n_xi: int = 20, n_w: int = 20, w_mult: float = 1.5):
+    def mu_surface(self, n_xi: int = 20, n_w: int = 20, w_mult: float = 1.5) -> go.Surface:
+        r"""Add the $\mu$ surface to the plot"""
         logger.info("Computing mu surface.")
         if self.model is None:
             return
@@ -78,7 +82,7 @@ class BubblePlot3D(PlotlyPlot):
         mu = lorentz(xi_grid, cs_grid)
         mu[mu < 0] = np.nan
 
-        self.plots.append(go.Surface(
+        surf = go.Surface(
             x=w/self.model.w_crit, y=xi, z=mu,
             opacity=0.5, name=r"µ(ξ, cₛ(w))",
             colorbar={
@@ -86,10 +90,13 @@ class BubblePlot3D(PlotlyPlot):
                 "len": 0.5
             },
             colorscale=self.colorscale
-        ))
+        )
+        self.plots.append(surf)
         logger.info("Mu surface ready.")
+        return surf
 
     def shock_surfaces(self, n_xi: int = 20, n_w: int = 30, w_mult: float = 1.5, wp_surface: bool = False):
+        """Add the shock surfaces to the plot"""
         if self.model is None:
             return
         logger.info("Computing shock surface.")

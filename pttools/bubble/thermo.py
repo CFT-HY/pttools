@@ -35,13 +35,15 @@ logger = logging.getLogger(__name__)
 
 def entropy_density_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
     r"""Bubble volume averaged entropy density
-    $$\frac{3}{4\pi v_w^3} s_\text{avg}
+    $$\frac{3}{4\pi v_w^3} s_\text{avg}$$
     """
     return 3/(4*np.pi * v_wall**3) * va_entropy_density_diff(model, w, xi, v_wall, phase)
 
 
 def kinetic_energy_density(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
-    r"""Bubble volume averaged kinetic energy density"""
+    r"""Bubble volume averaged kinetic energy density
+    $$\frac{3}{4\pi {v}_w^3} \Delta {e}_Q$$
+    """
     return 3/(4*np.pi * v_wall**3) * va_kinetic_energy_density(v, w, xi)
 
 
@@ -64,7 +66,13 @@ def thermal_energy_density_diff(w: np.ndarray, xi: np.ndarray, v_wall: float) ->
     return 3/(4*np.pi * v_wall**3) * va_thermal_energy_density_diff(w, xi)
 
 
-def thermal_energy_fraction(eq_bva: float, eb: float):
+def thermal_energy_fraction(eq_bva: th.FloatOrArr, eb: th.FloatOrArr) -> th.FloatOrArr:
+    r"""Thermal energy fraction $\frac{e_Q'}{\bar{e}}$
+
+    :param eq_bva: thermal energy density $e_Q'$
+    :param eb: average energy density $\bar{e}$
+    :return: thermal energy fraction
+    """
     return eq_bva / eb
 
 
@@ -85,12 +93,16 @@ def kappa(
         v: np.ndarray, w: np.ndarray, xi: np.ndarray,
         v_wall: float,
         delta_e_theta: float = None) -> float:
+    r"""Kinetic efficiency factor
+    $$\kappa = \frac{e_K}{\lvert\Delta {e}_\theta\rvert}$$
+    """
     if delta_e_theta is None:
         delta_e_theta = va_trace_anomaly_diff(model, w, xi, v_wall)
     return va_kinetic_energy_density(v, w, xi) / np.abs(delta_e_theta)
 
 
 def kappa_approx(alpha_n: th.FloatOrArr) -> th.FloatOrArr:
+    r"""Approximate kinetic efficiency factor"""
     return alpha_n / (0.73 + 0.083*np.sqrt(alpha_n) + alpha_n)
 
 
@@ -107,6 +119,9 @@ def omega(
         w: np.ndarray, xi: np.ndarray,
         v_wall: float,
         delta_e_theta: float = None) -> float:
+    r"""Thermal efficiency factor
+    $$\omega = \frac{\Delta {e}_Q}{\Delta {e}_\theta}$$
+    """
     if delta_e_theta is None:
         delta_e_theta = va_trace_anomaly_diff(model, w, xi, v_wall)
     return va_thermal_energy_density_diff(w, xi) / np.abs(delta_e_theta)
@@ -124,6 +139,7 @@ def ubarf2(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, ek_bva: 
 
 
 def wbar(w: np.ndarray, xi: np.ndarray, v_wall: float, wn: float) -> float:
+    r"""Average enthalpy density $\bar{w}$"""
     # https://stackoverflow.com/a/8768734
     w_reverse = w[::-1]
     i_max = w.size - np.argmax(w_reverse != w[-1]) - 1
@@ -136,13 +152,14 @@ def wbar(w: np.ndarray, xi: np.ndarray, v_wall: float, wn: float) -> float:
 
 
 def va_enthalpy_density(eq: float) -> float:
+    """Volume-averaged enthalpy density"""
     return 4/3 * eq
 
 
 def va_entropy_density_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
     r"""
     Volume-averaged entropy density
-    $$s_\text{avg} = \int d\xi \xi^2 (s(w,\phi) - s(w_n, \phi_s)$$
+    $${s}_\text{avg} = \int d\xi \xi^2 (s(w,\phi) - s(w_n, \phi_s)$$
     """
     if phase is None:
         phase = props.find_phase(xi, v_wall)
@@ -174,7 +191,7 @@ def va_kinetic_energy_fraction(ek_va: float, eb: float) -> float:
 
 def va_thermal_energy_density(v_shock: float, wn: float, ek: float, delta_e_theta: float) -> float:
     r"""Volume-averaged thermal energy density after the phase transition
-    $$e_Q' = e_Q + e_\theta - e_K' - e_\theta' = 4\pi \int_0^{\xi_\text{max}} d\xi \xi^2 \frac{3}{4}w_n - e_K' - \Delta e_\theta$$
+    $${e}_Q' = {e}_Q + {e}_\theta - {e}_K' - {e}_\theta' = 4\pi \int_0^{{\xi}_\text{max}} d\xi \xi^2 \frac{3}{4} {w}_n - {e}_K' - \Delta {e}_\theta$$
     """
     return np.pi * wn * v_shock**3 - ek - delta_e_theta
 
@@ -196,7 +213,7 @@ def va_thermal_energy_fraction(eq_va: float, eb: float):
 
 def va_trace_anomaly_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
     r"""Volume-averaged trace anomaly difference
-    $$\Delta e_\theta = 4 \pi \int_0^{\xi_\text{max}} d\xi \xi^2 (\theta - \theta_n)$$
+    $$\Delta {e}_\theta = 4 \pi \int_0^{{\xi}_\text{max}} d\xi \xi^2 (\theta - {\theta}_n)$$
     """
     if phase is None:
         phase = props.find_phase(xi, v_wall)

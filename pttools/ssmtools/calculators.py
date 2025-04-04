@@ -1,4 +1,4 @@
-"""Numerical utilities for SSMtools."""
+"""Numerical utilities for SSMtools"""
 
 import logging
 import typing as tp

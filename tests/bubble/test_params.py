@@ -1,3 +1,5 @@
+"""Test the experimental jitclass-based parameter storage"""
+
 import unittest
 
 import numba

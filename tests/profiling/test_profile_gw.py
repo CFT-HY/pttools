@@ -1,3 +1,5 @@
+"""Profile GW performance"""
+
 import logging
 import unittest
 
@@ -14,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class TestProfileGW(TestProfile):
+    """Profile GW performance"""
     name = "gw"
     z = np.logspace(0, 2, 100)
     params = (0.1, 0.1)

@@ -1,3 +1,5 @@
+r"""Test the conversion between wall frame fluid speeds $\tilde{v}_+$ and $\tilde{v}_-$"""
+
 import os.path
 import unittest
 

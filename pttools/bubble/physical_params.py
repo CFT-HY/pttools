@@ -1,13 +1,15 @@
 """
 Experimental data structures based on numba.jitclass
 
-TODO: when implementing these, remove the corresponding code from ssmtools/spectrum.py
+When implementing these, remove the corresponding code from ssmtools/spectrum.py
 
 Jitclasses are a highly experimental feature of Numba. Please see the following issues.
 https://github.com/numba/numba/issues/365
 https://github.com/numba/numba/issues/2933
 https://github.com/numba/numba/issues/4814
 https://github.com/numba/numba/issues/6648
+
+This has been replaced with the object-oriented Bubble interface and will probably be removed in the future.
 """
 
 import enum

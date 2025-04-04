@@ -1,3 +1,5 @@
+"""Profile the power spectrum calculation of the paper"""
+
 import logging
 import unittest
 
@@ -16,6 +18,7 @@ def pow_specs():
 
 
 class TestProfilePowSpecs(TestProfile):
+    """Profile the power spectrum calculation of the paper"""
     name = "pow_specs"
 
     @classmethod

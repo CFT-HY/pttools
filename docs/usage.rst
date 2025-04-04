@@ -11,10 +11,10 @@ Numba performance
 -----------------
 The computationally intensive parts of PTtools are JIT-compiled using
 `Numba <https://numba.pydata.org/>`_.
-Therefore the first calls to PTtools may take tens of seconds, but once the it's compiled,
+Therefore, the first calls to PTtools may take tens of seconds, but once the it's compiled,
 it's significantly faster than pure Python.
 
-Therefore if you are running several simulations, you can save time by running these as a single script
+Therefore, if you are running several simulations, you can save time by running these as a single script
 so that PTtools has to be compiled only once.
 Jupyter notebooks and IPython shells can also be used to effectively cache the compiled PTtools.
 

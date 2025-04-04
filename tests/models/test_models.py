@@ -1,3 +1,5 @@
+"""Tests for various models"""
+
 import unittest
 
 from pttools import models
@@ -6,6 +8,7 @@ from tests.models.base_bag import BagBaseCase
 
 
 class TestBag(BagBaseCase, unittest.TestCase):
+    """Tests for the bag model"""
     model: models.BagModel
     SAVE_NEW_DATA = True
 
@@ -51,6 +54,7 @@ class TestBag(BagBaseCase, unittest.TestCase):
 
 
 class TestConstCSLikeBag(BagBaseCase, unittest.TestCase):
+    """Tests for the constant sound speed model with css2=csb2=1/3"""
     model: models.ConstCSModel
 
     @classmethod
@@ -75,6 +79,7 @@ class TestConstCSLikeBag(BagBaseCase, unittest.TestCase):
 
 
 class TestConstCSThermoLikeBag(BagBaseCase, unittest.TestCase):
+    """Tests for the ThermoModel-based constant sound speed model with css2=csb2=1/3"""
     model: models.FullModel
 
     @classmethod
@@ -97,6 +102,7 @@ class TestConstCSThermoLikeBag(BagBaseCase, unittest.TestCase):
 
 
 class TestConstCS(ModelBaseCase, unittest.TestCase):
+    """Tests for the constant $c_s$ model"""
     model: models.ConstCSModel
     SAVE_NEW_DATA = True
 
@@ -111,6 +117,7 @@ class TestConstCS(ModelBaseCase, unittest.TestCase):
 
 
 class TestConstCSThermo(ModelBaseCase, unittest.TestCase):
+    """Tests for the ThermoModel-based constant $c_s$ model"""
     model: models.FullModel
     SAVE_NEW_DATA = False
 
@@ -126,6 +133,7 @@ class TestConstCSThermo(ModelBaseCase, unittest.TestCase):
 
 
 class TestSM(ModelBaseCase, unittest.TestCase):
+    """Tests for the Standard Model-based FullModel"""
     @classmethod
     def setUpClass(cls, *args, **kwargs) -> None:
         sm = models.StandardModel(V_s=1.3, g_mult_s=1.3)

@@ -1,11 +1,9 @@
 r"""
 Calculate the physical gravitational wave power spectrum $\Omega_{\rm gw}(f)$
 as a function of physical frequency $f$ in the Sound shell model.
-
-Created on 10/11/21
-
-@author: chloeg, markh
 """
+
+__author__ = "Chloe Hopling, Mark Hindmarsh"
 
 import functools
 import logging
@@ -161,8 +159,10 @@ def f(z: th.FloatOrArr, r_star: th.FloatOrArr, f_star0: th.FloatOrArr) -> th.Flo
     r"""Convert the dimensionless wavenumber $z$ to frequency today by taking into account the redshift.
     $$f = \frac{z}{r_*} f_{*,0}$$,
     :gowling_2021:`\ ` eq. 2.12
+
     :param z: dimensionless wavenumber $z$
     :param r_star: Hubble-scaled mean bubble spacing
+    :return: frequency $f$ today
     """
     return z/r_star * f_star0
 

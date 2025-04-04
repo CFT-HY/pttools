@@ -10,8 +10,9 @@ logging_lock = threading.Lock()
 
 
 class MatplotlibFilter(logging.Filter):
-    def filter(self, record):
-        return not record.funcName == "_is_transparent"
+    """Filter for excluding some matplotlib debug messages"""
+    def filter(self, record: logging.LogRecord) -> bool:
+        return record.funcName != "_is_transparent"
 
 
 def setup_logging(log_dir: str = None, enable_faulthandler: bool = True, silence_spam: bool = True):

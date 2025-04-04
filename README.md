@@ -34,11 +34,6 @@ There you can find a zip file containing the documentation in various formats.
 - speedup: Computational utilities used by the other modules.
 - omgw0: Tools for converting the GW spectra to frequencies and amplitudes today. Includes utilities for approximations and noise.
 
-### Branches
-- main: Stable version, from which releases are created.
-- dev: Developments for later inclusion in the main branch.
-- omgw0: Development of the omgw0 module. Has since been merged to dev.
-
 ### Who do I talk to?
 - Repo owner: [Mark Hindmarsh](https://github.com/hindmars/)
 - Main developer: [Mika Mäki](https://github.com/AgenttiX)

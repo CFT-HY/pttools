@@ -24,12 +24,12 @@ class ModelPlot:
         self.t_log = t_log
 
         self.fig: plt.Figure = plt.figure(figsize=(11.69, 8.27))
-        self.axs: np.ndarray = self.fig.subplots(nrows=3, ncols=3)
-        self.ax_p = self.axs[0, 0]
-        self.ax_s = self.axs[0, 1]
-        self.ax_w = self.axs[0, 2]
-        self.ax_e = self.axs[1, 0]
-        self.ax_cs2 = self.axs[1, 1]
+        self.axs = self.fig.subplots(nrows=3, ncols=3)
+        self.ax_p: plt.Axes = self.axs[0, 0]
+        self.ax_s: plt.Axes = self.axs[0, 1]
+        self.ax_w: plt.Axes = self.axs[0, 2]
+        self.ax_e: plt.Axes = self.axs[1, 0]
+        self.ax_cs2: plt.Axes = self.axs[1, 1]
         # self.ax_theta = self.axs[2, 0]
 
         if t_log:

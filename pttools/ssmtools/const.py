@@ -1,4 +1,4 @@
-"""Constants for the SSMtools module."""
+"""Constants for the SSMtools module"""
 
 import typing as tp
 

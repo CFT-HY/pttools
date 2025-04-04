@@ -1,3 +1,5 @@
+r"""$\xi, v$ plane generation"""
+
 import typing as tp
 
 import numpy as np

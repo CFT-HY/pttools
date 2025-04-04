@@ -1,3 +1,5 @@
+"""Utilities for plotting the entropy of bubbles"""
+
 import typing as tp
 
 import matplotlib.pyplot as plt

@@ -28,6 +28,7 @@ def cs2_to_float_and_label(
         cs2: tp.Union[float, Fraction],
         max_denominator: int = 100,
         label_prec: int = 3) -> tp.Tuple[float, str]:
+    """Convert the speed of sound value to a float and a string label."""
     if isinstance(cs2, Fraction):
         cs2_flt = float(cs2)
         cs2_frac = cs2
@@ -40,7 +41,7 @@ def cs2_to_float_and_label(
 
 
 class ConstCSModel(AnalyticModel):
-    r"""$\mu, \nu$-model"""
+    r"""Constant sound speed model, aka. $\mu, \nu$ model"""
     DEFAULT_LABEL_LATEX = "Constant $c_s$ model"
     DEFAULT_LABEL_UNICODE = "Constant cₛ model"
     DEFAULT_NAME = "const_cs"

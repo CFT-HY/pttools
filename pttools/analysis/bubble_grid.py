@@ -1,3 +1,5 @@
+"""Holders for a grid of Bubbles of various parameter combinations."""
+
 import typing as tp
 
 import numpy as np
@@ -9,6 +11,7 @@ if tp.TYPE_CHECKING:
 
 
 class BubbleGrid:
+    """A grid of bubbles"""
     def __init__(self, bubbles: np.ndarray):
         self.bubbles = bubbles
 
@@ -52,6 +55,7 @@ class BubbleGrid:
 
 
 class BubbleGridVWAlpha(BubbleGrid):
+    r"""A grid of bubbles with different $v_\text{wall}$ and $\alpha_n$ values."""
     def __init__(
             self,
             model: "Model",

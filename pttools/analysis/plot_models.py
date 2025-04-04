@@ -47,6 +47,7 @@ class ModelsPlot:
         self.fig.tight_layout()
 
     def add(self, model: models.Model, phase: bubble.Phase, ls: str = "-", **kwargs) -> None:
+        """Add a model to the plot"""
         label = utils.model_phase_label(model, phase)
         w = model.w(self.temp, phase)
 

@@ -1,9 +1,10 @@
 r"""
-Functions for calculating fluid velocity profile around expanding Higgs-phase bubble.
+This module contains the simulation framework for computing the fluid velocity profile
+as a function of the radius of a self-similar bubble in a relativistic fluid.
 
-Finds, analyses and plots self-similar functions $v$ (radial fluid velocity)
+Finds and analyses self-similar functions $v$ (radial fluid velocity)
 and $w$ (fluid enthalpy) as functions of the scaled radius $\xi = r/t$.
-Main inputs are wall speed $v_w$ and global transition strength parameter $\alpha_n$.
+Main inputs are the wall speed $v_w$ and the global transition strength parameter $\alpha_n$.
 """
 
 from .alpha import *

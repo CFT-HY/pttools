@@ -1,3 +1,5 @@
+"""Plot a single bubble"""
+
 import typing as tp
 
 import matplotlib.pyplot as plt
@@ -8,6 +10,7 @@ from pttools.bubble.bubble import Bubble
 
 
 def plot_bubble(bubble: Bubble, fig: plt.Figure = None, path: str = None, **kwargs):
+    """Plot the velocity and enthalpy profiles of a bubble"""
     fig, ax_v, ax_w = setup_bubble_plot_multifig(fig)
     plot_bubble_v(bubble, fig, ax_v, **kwargs)
     plot_bubble_w(bubble, fig, ax_w, **kwargs)
@@ -19,6 +22,7 @@ def plot_bubble(bubble: Bubble, fig: plt.Figure = None, path: str = None, **kwar
 
 
 def plot_bubble_common(bubble: Bubble, fig: plt.Figure, ax: plt.Axes, path: str = None):
+    """Common steps for plotting a bubble"""
     ax.set_xlabel(r"$\xi$")
     ax.set_xlim(
         np.nanmax([bubble.xi[1] / 1.1, 0]),
@@ -33,6 +37,7 @@ def plot_bubble_common(bubble: Bubble, fig: plt.Figure, ax: plt.Axes, path: str 
 
 
 def plot_bubble_v(bubble: Bubble, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None, **kwargs):
+    """Plot the velocity profile of a bubble"""
     if not bubble.solved:
         bubble.solve()
     fig, ax = create_fig_ax(fig, ax)
@@ -47,6 +52,7 @@ def plot_bubble_v(bubble: Bubble, fig: plt.Figure = None, ax: plt.Axes = None, p
 
 
 def plot_bubble_w(bubble: Bubble, fig: plt.figure = None, ax: plt.Axes = None, path: str = None, **kwargs):
+    """Plot the enthalpy profile of a bubble"""
     if not bubble.solved:
         bubble.solve()
     fig, ax = create_fig_ax(fig, ax)
@@ -65,6 +71,7 @@ def plot_bubble_w(bubble: Bubble, fig: plt.figure = None, ax: plt.Axes = None, p
 
 
 def setup_bubble_plot_multifig(fig: plt.Figure = None) -> tp.Tuple[plt.Figure, plt.Axes, plt.Axes]:
+    """Set up the figure and axes for a bubble plot"""
     if fig is None:
         fig = plt.figure(figsize=A4_PAPER_SIZE)
     ax_v = fig.add_subplot(211)

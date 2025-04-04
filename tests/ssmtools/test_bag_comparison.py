@@ -1,3 +1,5 @@
+"""Tests for comparing the results of the Spectrum class to the old bag model interface"""
+
 import unittest
 
 import numpy as np
@@ -11,6 +13,7 @@ from tests.utils.assertions import assert_allclose
 
 
 class SpectrumTest(unittest.TestCase):
+    """Tests for comparing the results of the Spectrum class to the old bag model interface"""
     V_WALLS: np.ndarray = np.array([0.5, 0.7, 0.77])
     ALPHA_NS: np.ndarray = np.array([0.578, 0.151, 0.091])
 

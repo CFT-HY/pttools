@@ -87,6 +87,7 @@ class AnalyticModel(Model, abc.ABC):
 
     @staticmethod
     def a_from_g(g: th.FloatOrArr) -> th.FloatOrArr:
+        """Get the prefactor $a$ from the relativistic degrees of freedom $g$."""
         return np.pi**2 / 90 * g
 
     def alpha_n_bag(

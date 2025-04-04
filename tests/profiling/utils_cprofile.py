@@ -1,3 +1,5 @@
+"""Wrapper for the cProfile profiler"""
+
 import cProfile
 import io
 import os
@@ -12,6 +14,7 @@ os.makedirs(PROFILE_DIR, exist_ok=True)
 
 
 class CProfiler(utils.Profiler):
+    """Wrapper for the cProfile profiler"""
     def __init__(self, name: str, print_to_console: bool = False):
         super().__init__(name, print_to_console)
         self.profiler = cProfile.Profile()

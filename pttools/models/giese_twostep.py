@@ -1,9 +1,16 @@
+"""Model for a two-step phase transition
+
+Does not work yet.
+"""
+
 from pttools.models.analytic import AnalyticModel
 import pttools.type_hints as th
 
 
 class GieseTwoStepModel(AnalyticModel):
-    """Does not work yet. Requires support for V(temp, phase) to work."""
+    """Model for a two-step phase transition
+
+    Does not work yet. Requires support for V(temp, phase) to work."""
     def __init__(self, b_s: float, b_b: float, d_s: float, d_b: float):
         self.b_s = b_s
         self.b_b = b_b

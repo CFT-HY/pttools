@@ -1,10 +1,10 @@
 Installation
 ============
 
-PTtools is a Python library and can therefore be installed like any other Python library.
+PTtools is a Python library and can therefore be installed with the same tools and commands as other Python libraries.
 If you're using PTtools for your project,
 :ref:`installation using pip <With pip>` or :ref:`Docker <With Docker>` is recommended.
-On the other hand if you're developing PTtools itself, you should
+If you're developing PTtools itself, you should
 :ref:`clone the repository <Local development>`.
 
 
@@ -169,7 +169,8 @@ You may also try building NumbaLSODA from the Git repository.
 
 Numba compatibility and nested parallelism
 ------------------------------------------
-Nested parallelism is currently disabled by default due to the difficulty
+Nested parallelism, which means running parallel code within parallel code,
+is currently disabled by default due to the difficulty
 in setting up OpenMP and TBB on cluster environments and macOS.
 
 Some parts of the code such as

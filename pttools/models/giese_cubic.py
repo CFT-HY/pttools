@@ -1,3 +1,8 @@
+"""SM-like model with a cubic term in the free energy density
+
+Not yet functional
+"""
+
 import numpy as np
 
 from pttools.models.analytic import AnalyticModel

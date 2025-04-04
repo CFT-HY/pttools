@@ -17,6 +17,7 @@ FigAndAxes = tp.Tuple[plt.Figure, plt.Axes]
 
 
 def create_fig_ax(fig: plt.Figure = None, ax: plt.Axes = None) -> FigAndAxes:
+    """Create a figure and axes if necessary"""
     if fig is None:
         if ax is None:
             fig = plt.figure()
@@ -29,11 +30,13 @@ def create_fig_ax(fig: plt.Figure = None, ax: plt.Axes = None) -> FigAndAxes:
 
 
 def legend(ax: plt.Axes, **kwargs) -> tp.Optional[Legend]:
+    """Add a legend to the axes if there are any legend labels"""
     if ax.get_legend_handles_labels() != ([], []):
         return ax.legend(**kwargs)
 
 
 def model_phase_label(model: BaseModel, phase: Phase) -> str:
+    """Get the label text for the model and phase"""
     if phase == Phase.SYMMETRIC:
         phase_str = "s"
     elif phase == Phase.BROKEN:

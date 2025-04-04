@@ -2,13 +2,14 @@ Unit tests
 ##########
 
 .. toctree::
-   :maxdepth: 1
+  :maxdepth: 1
 
-   bubble
-   models
-   paper
-   profiling
-   utils
-   misc
+  analysis
+  bubble
+  models
+  paper
+  profiling
+  utils
+  misc
 
 .. automodule:: tests

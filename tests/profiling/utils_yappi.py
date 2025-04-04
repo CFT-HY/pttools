@@ -1,3 +1,5 @@
+"""Wrapper for the YAPPI profiler"""
+
 import io
 import os
 import threading

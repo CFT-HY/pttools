@@ -52,6 +52,7 @@ def validate_solution_type(
         wn: float = None,
         wn_guess: float = None,
         wm_guess: float = None) -> SolutionType:
+    """Ensure that the solution type is determined or can be determined automatically"""
     if sol_type is None or sol_type is SolutionType.UNKNOWN:
         sol_type = model.solution_type(
             v_wall=v_wall, alpha_n=alpha_n, wn=wn, wn_guess=wn_guess, wm_guess=wm_guess

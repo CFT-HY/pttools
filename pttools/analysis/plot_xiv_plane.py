@@ -1,3 +1,5 @@
+r"""A plot of the $\xi-v$ plane"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -11,6 +13,7 @@ from pttools.models.model import Model
 
 
 class XIVPlanePlot:
+    r"""A plot of the $\xi-v$ plane"""
     def __init__(self, model: Model, fig: plt.Figure = None, ax: plt.Axes = None):
         self.fig: plt.Figure
         if fig is None:
@@ -41,6 +44,7 @@ class XIVPlanePlot:
             n_xi: int = const.N_XI_DEFAULT,
             t_forwards_end: float = const.T_END_DEFAULT,
             t_backwards_end: float = -const.T_END_DEFAULT):
+        """Add background curves to the plot"""
         if w0 is None:
             w0 = wn
         if w_mu is None:

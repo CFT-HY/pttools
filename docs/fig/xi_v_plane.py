@@ -3,7 +3,7 @@ r"""$(\xi, v)$ plane figure for the bag model"""
 import matplotlib.pyplot as plt
 
 from tests.paper.plane import xiv_plane
-from tests.paper.plot_plane import plot_plane
+from tests.paper.plot_plane_paper import plot_plane
 
 
 def main():

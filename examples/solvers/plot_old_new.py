@@ -19,7 +19,7 @@ from pttools.models.model import Model
 from pttools.models.bag import BagModel
 from pttools.ssmtools.spectrum import SSMSpectrum, power_gw_scaled_bag, spec_den_v_bag, power_v_bag
 from tests.paper.plane import xiv_plane
-from tests.paper.plot_plane import plot_plane
+from tests.paper.plot_plane_paper import plot_plane
 
 
 def validate(model: Model, v: np.ndarray, w: np.ndarray, xi: np.ndarray, sol_type: SolutionType):

@@ -1,3 +1,5 @@
+"""Unit tests for assertions"""
+
 import unittest
 
 import numpy as np
@@ -6,6 +8,7 @@ from tests.utils.assertions import assert_allclose
 
 
 class TestAllclose(unittest.TestCase):
+    """Test the assert_allclose function"""
     def test_float(self):
         assert_allclose(1.1, 1.1)
         with self.assertRaises(AssertionError):

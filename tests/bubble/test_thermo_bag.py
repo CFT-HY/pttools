@@ -1,3 +1,5 @@
+"""Compare thermodynamic quantities of the bag model to the values in articles."""
+
 # For debugging Numba issues
 # import os
 # os.environ["NUMBA_DEBUG"] = "1"

@@ -1,3 +1,5 @@
+"""Utilities for processing JSON data"""
+
 import abc
 import logging
 import os
@@ -14,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class JsonTestCase(abc.ABC):
+    """Base class for tests that compare to JSON data"""
     REF_DATA_PATH: str
     data: tp.Dict[str, th.FloatOrArr]
     ref_data: tp.Dict[str, th.FloatOrArr]

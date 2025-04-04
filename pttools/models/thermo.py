@@ -17,11 +17,9 @@ logger = logging.getLogger(__name__)
 
 
 class ThermoModel(BaseModel, abc.ABC):
-    """
-    The thermodynamics model characterizes the particle physics of interest.
+    """The thermodynamics model characterizes the particle physics of interest"""
+    # TODO: Some functions seem to return vertical arrays. Fix this!
 
-    TODO: Some functions seem to return vertical arrays. Fix this!
-    """
     #: Container for the log10 temperatures of $g_\text{eff}$ data
     GEFF_DATA_LOG_TEMP: np.ndarray
     #: Container for the temperatures of $g_\text{eff}$ data
@@ -62,6 +60,7 @@ class ThermoModel(BaseModel, abc.ABC):
         )
 
     def validate_cs2(self, cs2: np.ndarray, name: str) -> bool:
+        """Validate that $0 < c_s^2 < 1$"""
         err = []
         if np.any(cs2 < 0):
             err.append("cannot be negative")

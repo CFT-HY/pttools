@@ -1,3 +1,5 @@
+"""Math utilities for testing"""
+
 import numpy as np
 
 

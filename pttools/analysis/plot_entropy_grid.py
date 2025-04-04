@@ -1,3 +1,5 @@
+"""Utilities for plotting the entropy and related quantities of bubbles as contour plots"""
+
 import logging
 import typing as tp
 
@@ -18,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class DurationPlot(VwAlphaPlot):
+    """Plot the time it took to simulate each bubble"""
     def __init__(self, grid: BubbleGridVWAlpha, fig: plt.Figure = None, ax: plt.Axes = None):
         super().__init__(grid, fig, ax)
         img = ax.pcolor(grid.v_walls, grid.alpha_ns, np.log10(grid.elapsed()))
@@ -32,6 +35,7 @@ class DurationPlot(VwAlphaPlot):
 
 
 class EntropyPlot(VwAlphaPlot):
+    """Plot the entropy of bubbles as a contour plot"""
     def __init__(
             self,
             grid: BubbleGridVWAlpha,
@@ -51,6 +55,7 @@ class EntropyPlot(VwAlphaPlot):
 
 
 class DeltaEntropyPlot(VwAlphaPlot):
+    """Plot the relative difference of two entropy values as a contour plot"""
     def __init__(
             self,
             grid: BubbleGridVWAlpha,
@@ -68,6 +73,7 @@ class DeltaEntropyPlot(VwAlphaPlot):
 
 
 class EntropyConservationPlot(VwAlphaPlot):
+    """Plot the entropy generation at the wall"""
     def __init__(
             self,
             grid: BubbleGridVWAlpha,
@@ -86,6 +92,7 @@ class EntropyConservationPlot(VwAlphaPlot):
 
 
 class GieseApproximationPlot(VwAlphaPlot):
+    """Plot the Giese approximation vs. simulated value for $\frac{\tilde{v}_+}{\tilde{v}_-}$"""
     def __init__(self, grid: BubbleGridVWAlpha, diff: np.ndarray, fig: plt.Figure = None, ax: plt.Axes = None):
         super().__init__(grid, fig, ax)
 
@@ -99,6 +106,7 @@ class GieseApproximationPlot(VwAlphaPlot):
 
 
 class KappaOmegaSumPlot(VwAlphaPlot):
+    r"""Plot $\kappa$ + $\omega$ of bubbles as a contour plot"""
     def __init__(self, grid: BubbleGridVWAlpha, fig: plt.Figure = None, ax: plt.Axes = None):
         super().__init__(grid, fig, ax)
 
@@ -119,11 +127,12 @@ COMPUTE_FAIL = (np.nan, ) * _NUM_VALUES
 
 
 def compute(bubble: Bubble):
+    """Compute the entropy quantities of a bubble"""
     try:
         if bubble.no_solution_found or bubble.solver_failed:
             return COMPUTE_FAIL
         return (
-            bubble.entropy_density_relative,
+            bubble.entropy_density_diff_relative,
             bubble.sp,
             bubble.sm,
             bubble.sm_sh,
@@ -151,6 +160,7 @@ def gen_and_plot_entropy(
         use_bag_solver: bool = False,
         path: str = None,
         single_plot: bool = False) -> tp.Tuple[plt.Figure, np.ndarray]:
+    """Generate the entropy plots"""
     figsize = None if single_plot else (16*1.5, 9*1.5)
     fig: plt.Figure = plt.figure(figsize=figsize)
     axs = fig.subplots(nrows=len(models), ncols=1 if single_plot else 5)
@@ -194,7 +204,7 @@ def plot_entropy_data(
         min_level: float, max_level: float, diff_level: float,
         fig: plt.Figure = None,
         ax: plt.Axes = None) -> tp.Tuple[plt.Figure, plt.Axes]:
-    """This function can be used to plot entrpy data that is not from a BubbleGridVWAlpha object."""
+    """Plot entrpy data that is not from a BubbleGridVWAlpha object."""
     if fig is None or ax is None:
         fig: plt.Figure = plt.figure()
         ax: plt.Axes = fig.add_subplot()

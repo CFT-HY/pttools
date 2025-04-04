@@ -1,10 +1,6 @@
-"""
-Interpolate or extrapolate kinetic suppression data in the sound shell model.
+"""Interpolate or extrapolate kinetic suppression data in the sound shell model."""
 
-Created on wed 4 Aug  2021
-
-@author: chloeg
-"""
+__author__ = "Chloe Hopling"
 
 import enum
 import logging

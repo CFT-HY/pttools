@@ -1,3 +1,5 @@
+"""Base test case for models"""
+
 import abc
 import os.path
 
@@ -10,6 +12,7 @@ from tests.utils.json import JsonTestCase
 
 
 class ModelBaseCase(JsonTestCase, abc.ABC):
+    """Base test case for models"""
     model: Model
 
     EXPECT_MISSING_DATA = True

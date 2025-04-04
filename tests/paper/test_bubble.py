@@ -1,3 +1,5 @@
+"""Test the bubble functions in the paper code"""
+
 import logging
 import os.path
 import unittest
@@ -16,6 +18,7 @@ FIG_PATH = os.path.join(TEST_FIGURE_PATH, "bubble")
 
 
 class TestBubble(unittest.TestCase):
+    """Test the bubble functions in the paper code"""
     @staticmethod
     def test_bubble():
         figs, fig_ids, data = spu.do_all_plot_ps_1bubble(debug=True)

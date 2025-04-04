@@ -1,3 +1,5 @@
+"""Base test case for thermodynamic models"""
+
 import abc
 import os.path
 
@@ -10,6 +12,7 @@ from tests.utils.json import JsonTestCase
 
 
 class ThermoModelBaseCase(JsonTestCase, abc.ABC):
+    """Base test case for thermodynamic models"""
     thermo: ThermoModel
     temp_arr: np.ndarray
     phase_arr: np.ndarray
