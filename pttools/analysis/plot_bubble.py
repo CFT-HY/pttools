@@ -73,7 +73,7 @@ def plot_bubble_w(bubble: Bubble, fig: plt.figure = None, ax: plt.Axes = None, p
 def setup_bubble_plot_multifig(fig: plt.Figure = None) -> tp.Tuple[plt.Figure, plt.Axes, plt.Axes]:
     """Set up the figure and axes for a bubble plot"""
     if fig is None:
-        fig = plt.figure(figsize=A4_PAPER_SIZE)
+        fig = plt.figure()
     ax_v = fig.add_subplot(211)
     ax_w = fig.add_subplot(212, sharex=ax_v)
     ax_v.tick_params("x", labelbottom=False)
