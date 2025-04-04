@@ -1,9 +1,10 @@
 """A fix for loading Intel Thread Building Blocks (TBB) for Numba
 
-https://github.com/numba/numba/issues/7531#issuecomment-1614510255
+https://github.com/numba/numba/issues/7531
 
 Based on numba.np.ufunc.parallel._check_tbb_version_compatible()
 """
+# https://github.com/numba/numba/issues/7531#issuecomment-1614510255
 
 import logging
 import os

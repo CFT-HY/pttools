@@ -12,6 +12,7 @@ Omgw0
 .. autosummary::
   :toctree: gen_modules/
   :template: module.rst
+
   approx
   const
   noise

@@ -15,6 +15,7 @@ Modules
   analysis
   bubble
   models
+  omgw0
   ssmtools
   speedup
   misc

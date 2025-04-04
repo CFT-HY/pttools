@@ -29,13 +29,12 @@ if tp.TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-
 # Todo: Fix the equations in the docstrings
 
 
 def entropy_density_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
     r"""Bubble volume averaged entropy density
-    $$\frac{3}{4\pi v_w^3} s_\text{avg}$$
+    $$\frac{3}{4\pi v_w^3} {s}_\text{avg}$$
     """
     return 3/(4*np.pi * v_wall**3) * va_entropy_density_diff(model, w, xi, v_wall, phase)
 
@@ -56,7 +55,7 @@ def kinetic_energy_fraction(ek_bva: float, eb: float) -> float:
 
 def thermal_energy_density(v_wall: float, eqp: float) -> float:
     r"""Bubble volume averaged thermal energy density after the phase transition
-    $$e_Q' = e_Q + e_\theta - e_K' - e_\theta' = 4\pi \int_0^{\xi_\text{max}} d\xi \xi^2 \frac{3}{4}w_n - e_K' - \Delta e_\theta$$
+    $${e}_Q' = {e}_Q + {e}_\theta - {e}_K' - {e}_\theta' = 4\pi \int_0^{{\xi}_\text{max}} d\xi \xi^2 \frac{3}{4} {w}_n - {e}_K' - \Delta {e}_\theta$$
     """
     return 3/(4*np.pi * v_wall**3) * eqp
 
@@ -78,7 +77,7 @@ def thermal_energy_fraction(eq_bva: th.FloatOrArr, eb: th.FloatOrArr) -> th.Floa
 
 def trace_anomaly_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
     r"""Bubble volume averaged trace anomaly
-    $$\epsilon = \frac{3}{4\pi v_w^3} \Delta e_\theta$$
+    $$\epsilon = \frac{3}{4\pi {v}_w^3} \Delta {e}_\theta$$
     """
     return 3/(4*np.pi * v_wall**3) * va_trace_anomaly_diff(model, w, xi, v_wall, phase)
 
@@ -170,8 +169,8 @@ def va_entropy_density_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wal
 def va_kinetic_energy_density(v: np.ndarray, w: np.ndarray, xi: np.ndarray) -> float:
     r"""
     Volume-averaged kinetic energy density
-    $$e_K = 4 \pi \int_0^{xi_\text{max}} d\xi \xi^2 w \gamma^2 v^2$$
-    Each point is multiplied by $v$, and therefore having $\xi_{max}$ too far does not affect the results.
+    $${e}_K = 4 \pi \int_0^{{\xi}_\text{max}} d\xi \xi^2 w \gamma^2 v^2$$
+    Each point is multiplied by $v$, and therefore having ${\xi}_{max}$ too far does not affect the results.
     :gw_pt_ssm:`\ ` eq. B.22
 
     :param v: $v$

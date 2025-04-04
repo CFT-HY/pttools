@@ -1,5 +1,5 @@
 r"""
-Plot kappa(xi) for various models
+Plot κ(ξ) for various models
 =================================
 """
 

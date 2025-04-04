@@ -396,7 +396,8 @@ class Bubble:
         $$\frac{\tilde{v}_+}{\tilde{v}_-} \approx \frac{
             (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3\alpha_{\bar{\theta}_+} }{
             (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3 \tilde{v}_+ \tilde{v}_- \alpha_{\bar{\theta}}_+
-        }$$"""
+        }$$
+        """
         return self.model.vp_vm_tilde_ratio_giese(vp_tilde=self.vp_tilde, vm_tilde=self.vm_tilde, wp=self.wp, wm=self.wm)
 
     @property

@@ -1,4 +1,4 @@
-r"""Plot $\Delta \theta (w_+, w_-)$"""
+r"""Plot $\Delta \theta ({w}_+, {w}_-)$"""
 
 import typing as tp
 
