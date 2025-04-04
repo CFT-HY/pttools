@@ -6,6 +6,7 @@ import typing as tp
 import numba
 import numpy as np
 
+from pttools.bubble import Phase
 from pttools.bubble.boundary import SolutionType
 from pttools.bubble.integrate import add_df_dtau, differentials
 from pttools.bubble.transition import identify_solution_type_bag
@@ -187,6 +188,18 @@ class BagModel(AnalyticModel):
         return ((self.V_s - self.V_b) / (self.a_s - self.a_b))**0.25
 
     cs2 = staticmethod(cs2_bag)
+
+    def cs2_max(
+            self,
+            w_max: float, phase: Phase,
+            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tp.Tuple[float, float]:
+        return 1/3, np.nan
+
+    def cs2_min(
+                self,
+                w_max: float, phase: Phase,
+                w_min: float = 0, allow_fail: bool = False, **kwargs) -> tp.Tuple[float, float]:
+        return 1/3, np.nan
 
     @staticmethod
     @numba.njit

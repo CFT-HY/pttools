@@ -522,6 +522,25 @@ class ConstCSModel(AnalyticModel):
         const = (self.V_b - self.V_s) * self.T_ref ** 4
         return self.a_s * (temp / self.T_ref)**self.mu_s - self.a_b * (temp / self.T_ref)**self.mu_b + const
 
+    def _cs2_minmax(self, phase: Phase):
+        if phase == Phase.BROKEN:
+            return self.csb2, np.nan
+        elif phase == Phase.SYMMETRIC:
+            return self.css2, np.nan
+        raise ValueError("Invalid phase: {phase}")
+
+    def cs2_max(
+            self,
+            w_max: float, phase: Phase,
+            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tp.Tuple[float, float]:
+        return self._cs2_minmax(phase)
+
+    def cs2_min(
+            self,
+            w_max: float, phase: Phase,
+            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tp.Tuple[float, float]:
+        return self._cs2_minmax(phase)
+
     def gen_cs2(self):
         # These become compile-time constants
         css2 = self.css2

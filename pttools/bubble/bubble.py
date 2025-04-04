@@ -407,7 +407,9 @@ class Bubble:
     @property
     def v_mu(self) -> float:
         r"""Maximum fluid velocity behind the bubble wall, $\mu(\xi)$"""
-        return v_max_behind(xi=self.v_wall, v=np.sqrt(self.model.cs2(self.wm, Phase.BROKEN)))
+        # wm is the highest enthalpy inside the bubble
+        cs2 = self.model.cs2_max(w_max=self.wm, w_min=self.w_center, phase=Phase.BROKEN)
+        return props.v_max_behind(xi=self.v_wall, v=np.sqrt(cs2))
 
     # Quantities
     def en(self) -> float:
