@@ -206,7 +206,7 @@ def J(r_star: th.FloatOrArr, K_frac: th.FloatOrArr, nu: float = 0) -> th.FloatOr
     approximation of $(H_n R_*)(H_n \tau_v)$
     updating to properly convert from flow time to source time
 
-    $$J = H_n R_* H_n \tau_v = r_* \left(1 - \frac{1}{\sqrt{1 + 2x}}$$
+    $$J = H_n R_* H_n \tau_v = r_* \left(1 - \frac{1}{\sqrt{1 + 2x}} \right)$$
     :gowling_2021:`\ ` eq. 2.8
     """
     sqrt_K = np.sqrt(K_frac)

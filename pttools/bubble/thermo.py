@@ -83,7 +83,7 @@ def trace_anomaly_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: fl
 
 
 def ebar(model: "Model", wn: float) -> float:
-    """Energy is conserved, and therefore $\bar{e}=e_n$."""
+    r"""Energy is conserved, and therefore $\bar{e}=e_n$."""
     return model.e(wn, Phase.SYMMETRIC)
 
 

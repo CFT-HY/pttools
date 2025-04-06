@@ -68,7 +68,7 @@ def omega_gb(f: th.FloatOrArr) -> th.FloatOrArr:
 
 def omega_ins(f: th.FloatOrArr) -> th.FloatOrArr:
     r"""LISA instrument noise
-    $$\Omega_\text{ins} = \left( \frac{4 \pi^2}{3 H_0^2} f^3 S_A(f)$$
+    $$\Omega_\text{ins} = \frac{4 \pi^2}{3 H_0^2} f^3 S_A(f)$$
     """
     return omega(f=f, S=S_AE(f))
 
@@ -130,7 +130,7 @@ def S_AE(f: th.FloatOrArr, ft: th.FloatOrArr = FT_LISA, L: th.FloatOrArr = const
 def S_AE_approx(f: th.FloatOrArr, L: th.FloatOrArr = const.LISA_ARM_LENGTH, both_channels: bool = True) -> th.FloatOrArr:
     r"""Approximate noise power spectral density for the LISA A and E channels
     $$S_A = S_E = \frac{N_A}{\mathcal{R}_A}
-    \approx \frac{40}{3} ({P}_\text{oms} + {4P}_\text{acc}) \left( 1 + \frac{3f}{4f_t} \right^2$$
+    \approx \frac{40}{3} ({P}_\text{oms} + {4P}_\text{acc}) \left( 1 + \frac{3f}{4f_t} \right)^2$$
     :gowling_2021:`\ ` eq. 3.7
     """
     ret = 40/3 * (P_oms(L) + 4*P_acc(f, L)) * (1 + (3*f/(4*ft(L)))**2)
