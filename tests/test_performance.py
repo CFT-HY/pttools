@@ -59,7 +59,7 @@ class TestPerformance(unittest.TestCase):
                 logger.info(f"Numba threading layer used: {numba.threading_layer()}")
 
     @classmethod
-    @unittest.skipIf(not NUMBA_HAS_GET_NUM_THREADS, "Numba is too old for setting the number of threads.")
+    @unittest.skipIf(speedup.GITHUB_ACTIONS and speedup.IS_WINDOWS, reason="GitHub Actions Windows runners are slow")
     def test_performance_gw(cls):
         setup = textwrap.dedent("""
         import numpy as np
@@ -72,7 +72,7 @@ class TestPerformance(unittest.TestCase):
         cls.run_with_different_threads("GW", setup, command, 10)
 
     @classmethod
-    @unittest.skipIf(not NUMBA_HAS_GET_NUM_THREADS, "Numba is too old for setting the number of threads.")
+    @unittest.skipIf(speedup.GITHUB_ACTIONS and speedup.IS_WINDOWS, reason="GitHub Actions Windows runners are slow")
     def test_performance_sin_transform(cls):
         setup = textwrap.dedent("""
         import numpy as np
