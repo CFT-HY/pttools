@@ -1,0 +1,50 @@
+name: Publish PyPI package
+on:
+  release:
+    types: [published, created, edited]
+  workflow_dispatch:
+jobs:
+  deploy-pypi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # https://github.com/marketplace/actions/pypi-publish
+    environment:
+      name: pypi
+      url: https://pypi.org/p/pttools-gw
+    permissions:
+      id-token: write
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v5
+      - name: Print Python version
+        run: python -V
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Load pip cache
+        uses: actions/cache@v4
+        with:
+          path: .pip
+          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            pip-${{ runner.os }}-
+            pip-
+      - name: Install requirements
+        run: |
+          pip --cache-dir=.pip install --upgrade pip
+          pip --cache-dir=.pip install build twine
+      - name: Build
+        run: python -m build
+      - name: Run Twine checks
+        run: twine check dist/*
+      - name: Upload built artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pip packages
+          path: dist
+          if-no-files-found: error
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        # An API token is not needed with trusted publishing (OpenID Connect)
+        # with:
+        #   user: __token__
+        #   password: ${{ secrets.PYPI_API_TOKEN }}

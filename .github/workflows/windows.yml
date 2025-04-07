@@ -1,23 +1,38 @@
 name: Test on Windows
-on: [push, workflow_dispatch]
+on:
+  push:
+  workflow_dispatch:
+#  workflow_run:
+#    workflows: [ CI ]
+#    types: [ completed ]
 env:
-  PRIMARY_PYTHON_VERSION: 3.8
+  PRIMARY_PYTHON_VERSION: '3.13'
 jobs:
   test:
     runs-on: windows-latest
-    timeout-minutes: 15
+    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    timeout-minutes: 45
     steps:
+        # Fortran compiler is required for building numbalsoda if a wheel is not available
+        - name: Install Fortran compiler
+          uses: fortran-lang/setup-fortran@v1
+          id: setup-fortran
+          with:
+            # compiler: "gcc"
+            # version: "13"
+            compiler: "intel"
+            version: "2025.0"
         - name: Setup Python
-          uses: actions/setup-python@v2
+          uses: actions/setup-python@v5
           # Windows minutes cost 2x what Linux does, so testing multiple Python versions would be quite costly
           with:
             python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
         - name: Print Python version
           run: python -V
         - name: Checkout
-          uses: actions/checkout@v2
+          uses: actions/checkout@v4
         - name: Load pip cache
-          uses: actions/cache@v2
+          uses: actions/cache@v4
           with:
             path: .pip
             key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
@@ -33,6 +48,10 @@ jobs:
             pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
         - name: Print Numba sysinfo
           run: python -m numba --sysinfo | tee numba-sysinfo.txt
+        - name: Generate reference data
+          run: python3 pttools/bubble/fluid_reference.py
+          env:
+            PYTHONPATH: .
         - name: Run tests
           # Failures may not get processed properly, as pipefail is not supported on Windows.
           # set -o pipefail
@@ -40,7 +59,7 @@ jobs:
             pytest | tee test-output.txt
             coverage json
         - name: Upload results
-          uses: actions/upload-artifact@v2
+          uses: actions/upload-artifact@v4
           with:
             name: Test results with Numba
             path: |

@@ -1,4 +1,4 @@
-"""Performance testing script"""
+"""Performance tests"""
 
 import logging
 import os
@@ -13,7 +13,8 @@ from tests.utils.const import TEST_RESULT_PATH
 
 logger = logging.getLogger(__name__)
 
-NUMBA_HAS_GET_NUM_THREADS = hasattr(numba, "get_num_threads")
+#: Whether the installed Numba has support for setting the number of threads
+NUMBA_HAS_GET_NUM_THREADS: bool = hasattr(numba, "get_num_threads")
 PERFORMANCE_DIR = os.path.join(TEST_RESULT_PATH, "performance")
 os.makedirs(PERFORMANCE_DIR, exist_ok=True)
 
@@ -58,20 +59,20 @@ class TestPerformance(unittest.TestCase):
                 logger.info(f"Numba threading layer used: {numba.threading_layer()}")
 
     @classmethod
-    @unittest.skipIf(not NUMBA_HAS_GET_NUM_THREADS, "Numba is too old for setting the number of threads.")
+    @unittest.skipIf(speedup.GITHUB_ACTIONS and speedup.IS_WINDOWS, reason="GitHub Actions Windows runners are slow")
     def test_performance_gw(cls):
         setup = textwrap.dedent("""
         import numpy as np
         import pttools.ssmtools as ssm
 
         z = np.logspace(0,2,100)
-        gw = ssm.power_gw_scaled(z, (0.1,0.1))
+        gw = ssm.power_gw_scaled_bag(z, (0.1,0.1))
         """)
-        command = "gw = ssm.power_gw_scaled(z, (0.1,0.1))"
+        command = "gw = ssm.power_gw_scaled_bag(z, (0.1,0.1))"
         cls.run_with_different_threads("GW", setup, command, 10)
 
     @classmethod
-    @unittest.skipIf(not NUMBA_HAS_GET_NUM_THREADS, "Numba is too old for setting the number of threads.")
+    @unittest.skipIf(speedup.GITHUB_ACTIONS and speedup.IS_WINDOWS, reason="GitHub Actions Windows runners are slow")
     def test_performance_sin_transform(cls):
         setup = textwrap.dedent("""
         import numpy as np
@@ -79,8 +80,8 @@ class TestPerformance(unittest.TestCase):
 
         z = np.logspace(0, 2, 10000)
         xi = np.linspace(0, 1, 10000)
-        # TODO: put some better function here
-        f = np.amax([np.zeros_like(xi), np.sin(xi)], axis=0)
+        # This is an arbitrary function
+        f = np.amax([np.zeros_like(xi), np.cos(xi)], axis=0)
         """)
         command = "transformed = calc.sin_transform(z, xi, f)"
         cls.run_with_different_threads("sin_transform", setup, command, 10)

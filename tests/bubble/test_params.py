@@ -1,3 +1,5 @@
+"""Test the experimental jitclass-based parameter storage"""
+
 import unittest
 
 import numba
@@ -7,6 +9,7 @@ from pttools import speedup
 
 
 class TestParams(unittest.TestCase):
+    """Test the experimental jitclass-based parameter storage"""
     def test_nuc_args(self):
         pp.NucArgs(0.1)
 
@@ -33,7 +36,7 @@ class TestParams(unittest.TestCase):
         This test will alert, when the bug is fixed.
         https://github.com/numba/numba/issues/4820
         """
-        with self.assertRaises(numba.LoweringError):
+        with self.assertRaises((numba.LoweringError, TypeError)):
             params_without_nuc_args_numba()
         # self.assertIsNone(params.nuc_type)
         # self.assertIsNone(params.nuc_args)

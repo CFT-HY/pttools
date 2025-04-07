@@ -1,6 +1,10 @@
+"""Wrapper for importing Numba libraries without version dependencies"""
+
 # pylint: disable=unused-import
 
 import logging
+import sys
+import typing as tp
 
 import numba
 try:
@@ -16,10 +20,32 @@ except ImportError:
     from numba.dispatcher import Dispatcher
     from numba.targets.registry import CPUDispatcher
     NUMBA_OLD_STRUCTURE = True
-try:
-    import NumbaLSODA
-except ImportError:
-    NumbaLSODA = None
+import numpy as np
+
+from . import options
+OLD_NUMBALSODA = False
+if options.NUMBA_DISABLE_JIT:
+    # As of 0.3.3 NumbaLSODA can't be imported when Numba is disabled
+    # pylint: disable=invalid-name
+    numbalsoda = None
+else:
+    try:
+        import numbalsoda
+    except ImportError:
+        try:
+            import NumbaLSODA as numbalsoda
+            OLD_NUMBALSODA = True
+        except ImportError:
+            numbalsoda = None
+
+if numbalsoda is None:
+    lsoda_sig = numba.types.void(
+        numba.types.double,
+        numba.types.CPointer(numba.types.double),
+        numba.types.CPointer(numba.types.double),
+        numba.types.CPointer(numba.types.double))
+else:
+    lsoda_sig = numbalsoda.lsoda_sig
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +55,10 @@ NUMBA_VERSION = tuple(int(val) for val in numba.__version__.split("."))
 #: Whether the Numba version used is prone to segfaulting when profiled.
 #: https://github.com/numba/numba/issues/3229
 #: https://github.com/numba/numba/issues/3625
-NUMBA_SEGFAULTING_PROFILERS = NUMBA_VERSION < (0, 49, 0)
+NUMBA_SEGFAULTING_PROFILERS: bool = NUMBA_VERSION < (0, 49, 0)
+NUMBA_PYINSTRUMENT_INCOMPATIBLE_PYTHON_VERSION: bool = \
+    sys.version_info.major > 3 or \
+    (sys.version_info.major == 3 and sys.version_info.minor >= 11)
 
 if NUMBA_OLD_STRUCTURE:
     logger.warning(
@@ -38,9 +67,17 @@ if NUMBA_OLD_STRUCTURE:
 if NUMBA_SEGFAULTING_PROFILERS:
     logger.warning(
         "You are using an old Numba version, which is prone to segfaulting when profiled. Please upgrade.")
-if NumbaLSODA is None:
+if numbalsoda is None:
     logger.warning(
         "Could not import NumbaLSODA. "
         "As it's a relatively new library, it may not have been installed automatically by your package manager. "
         "To use NumbaLSODA, please see the PTtools documentation on how to install it manually."
     )
+elif OLD_NUMBALSODA:
+    logger.warning(
+        "You are using an old version of NumbaLSODA. "
+        "Please upgrade, as compatibility may break without notice.")
+
+# For the cases where Numba does not understand a None as a default value
+NAN_ARR: tp.Final[np.ndarray] = np.array([np.nan], dtype=np.float64)
+NAN_ARR.flags.writeable = False

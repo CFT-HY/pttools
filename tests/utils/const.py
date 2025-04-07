@@ -1,3 +1,5 @@
+"""Constants used by the unit tests"""
+
 import os.path
 
 TEST_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

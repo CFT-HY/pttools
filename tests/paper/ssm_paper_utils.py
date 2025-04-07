@@ -3,7 +3,7 @@ Creates and plots velocity and GW power spectra from SSM
 
 Modified from
 `sound-shell-model/paper/python/ssm_paper_utils.py
-<https://bitbucket.org/hindmars/sound-shell-model/src/master/paper/python/ssm_paper_utils.py>`_.
+<https://bitbucket.org/hindmars/sound-shell-model/src/master/paper/python/ssm_paper_utils.py>`__.
 """
 
 # import concurrent.futures as fut
@@ -34,6 +34,7 @@ MD_PATH = TEST_DATA_PATH + "/"
 
 # All run parameters
 
+#: Wall velocities for intermediate transition strength
 VW_INTER_LIST = [0.92, 0.80, 0.731, 0.56, 0.44]
 
 # NB1 prace runs did not include intermediate 0.80, 0.44.
@@ -162,7 +163,7 @@ def make_1dh_compare_table(
         vw = params[1]
         v2_sim = v2_list[n][0]
         v2_exp = v2_list[n][1]
-        Ubarf_1d_ssm = np.sqrt(bubble.get_ubarf2(vw, alpha))
+        Ubarf_1d_ssm = np.sqrt(bubble.get_ubarf2_bag(vw, alpha))
 
         f.write(tu.tex_sf(100*alpha) + ' & ')
         f.write(f'{vw:.2f} & ')
@@ -397,21 +398,21 @@ def ps_from_ssm(
 
     z = np.logspace(np.log10(const.Z_MIN), np.log10(const.Z_MAX), Np[0])
 
-    sd_v = ssm.spec_den_v(z, (vw, alpha, nuc_type, nuc_args), Np[1:], method=method)
+    sd_v = ssm.spec_den_v_bag(z, (vw, alpha, nuc_type, nuc_args), Np[1:], method=method)
     pow_v = ssm.pow_spec(z, sd_v)
 
-    V2_pow_v = np.trapz(pow_v/z, z)
+    V2_pow_v = np.trapezoid(pow_v/z, z)
 
     sd_gw, y = ssm.spec_den_gw_scaled(z, sd_v)
     pow_gw = ssm.pow_spec(y, sd_gw)
 
-    gw_power = np.trapz(pow_gw/y, y)
+    gw_power = np.trapezoid(pow_gw/y, y)
 
     Ubarf = np.sqrt(V2_pow_v)
     AdInd = 4/(3*(1+alpha))
     Omgwtil = gw_power/(AdInd*V2_pow_v)**2
 
-    logger.debug(f"{nuc_string:s} {alpha} {vw:.2f} {V2_pow_v:.3e} {1000*Ubarf:5.2f} {gw_power:.3e} {100*Omgwtil:.3f}")
+    # logger.debug(f"{nuc_string:s} {alpha} {vw:.2f} {V2_pow_v:.3e} {1000*Ubarf:5.2f} {gw_power:.3e} {100*Omgwtil:.3f}")
 
     return z, pow_v, y, pow_gw
 
@@ -509,9 +510,10 @@ def plot_ps_1bubble(
         graph_file_type: str = None,
         Np=const.NP_ARR[-1],
         debug: bool = False) -> tp.Union[plt.Figure, tp.Tuple[plt.Figure, np.ndarray]]:
-    """
+    # Sphinx considers vertical lines as substitution references. Therefore the command \mid has to be used instead.
+    r"""
     Plots power spectra predictions of 1 bubble. Shown are
-    |A|^2, |f'(z)|^2/2 and |l(z)|^2/2
+    $\mid A \mid^2, \mid f'(z) \mid^2/2$ and $\mid l(z) \mid^2/2$
     Saves data if save_id is set
     Saves graph file if graph_file_type is set
     """
@@ -526,7 +528,7 @@ def plot_ps_1bubble(
     nz_string = f'nz{Np[0] // 1000}k_'
     nx_string = f'nx{Np[1] // 1000}k-'
 
-    A2, fp2_2, lam2 = ssm.A2_e_conserving(z, vw, alpha, npt=Np[1:])
+    A2, fp2_2, lam2 = ssm.a2_e_conserving_bag(z, vw, alpha, npt=Np[1:])
 
     z_list = 3*[z]
     ph_sp_fac = z**3/(2*np.pi**2)
@@ -612,8 +614,8 @@ def plot_ps_compare_nuc(
             save_id = ''
 
         nuc_string_all += nuc_string
-        v2_list.append(np.trapz(pow_v/z, z))
-        Omgw_scaled_list.append(np.trapz(pow_gw/y, y))
+        v2_list.append(np.trapezoid(pow_v/z, z))
+        Omgw_scaled_list.append(np.trapezoid(pow_gw/y, y))
 
     fig_v = plotting.plot_ps(
         z_list, pow_v_list, utils.PSType.V,
@@ -639,8 +641,8 @@ def plot_ps_compare_nuc(
             + nz_string + nx_string + nT_string + save_id + '.' + graph_file_type
         fig_v.savefig(MD_PATH + "pow_v_" + graph_file_suffix)
         fig_gw.savefig(MD_PATH + "pow_gw_" + graph_file_suffix)
-        plt.close(fig_v)
-        plt.close(fig_gw)
+    plt.close(fig_v)
+    plt.close(fig_gw)
 
     return v2_list, Omgw_scaled_list, list(p_cwg), list(p_ssm)
 
@@ -759,28 +761,28 @@ def plot_and_save(vw: float, alpha: float, method: ssm.Method = ssm.Method.E_CON
     logger.debug(f"vw = {vw}, alpha = {alpha}, Np = {Np}")
 
     params = (vw, alpha, const.NUC_TYPE, const.NUC_ARGS)
-    sd_v = ssm.spec_den_v(z, params, Np[1:], method=method)
+    sd_v = ssm.spec_den_v_bag(z, params, Np[1:], method=method)
     pow_v = ssm.pow_spec(z, sd_v)
     ax_v.loglog(z, pow_v, color=col)
-    V2_pow_v.append(np.trapz(pow_v/z, z))
+    V2_pow_v.append(np.trapezoid(pow_v/z, z))
 
     if v_xi_file is not None:
-        sd_v2 = ssm.spec_den_v(z, params, Np[1:], v_xi_file, method=method)
+        sd_v2 = ssm.spec_den_v_bag(z, params, Np[1:], v_xi_file, method=method)
         pow_v2 = ssm.pow_spec(z, sd_v2)
         ax_v.loglog(z, pow_v2, color=col, linestyle='--')
-        V2_pow_v.append(np.trapz(pow_v2/z, z))
+        V2_pow_v.append(np.trapezoid(pow_v2/z, z))
 
     sd_gw, y = ssm.spec_den_gw_scaled(z, sd_v)
     pow_gw = ssm.pow_spec(y, sd_gw)
 
     ax_gw.loglog(y, pow_gw, color=col)
-    gw_power.append(np.trapz(pow_gw/y, y))
+    gw_power.append(np.trapezoid(pow_gw/y, y))
 
     if v_xi_file is not None:
         sd_gw2, y = ssm.spec_den_gw_scaled(z, sd_v2)
         pow_gw2 = ssm.pow_spec(y, sd_gw2)
         ax_gw.loglog(y, pow_gw2, color=col, linestyle='--')
-        gw_power.append(np.trapz(pow_gw2/y, y))
+        gw_power.append(np.trapezoid(pow_gw2/y, y))
 
     inter_flag = (abs(bubble.CS0 - vw) < 0.05)  # Due intermediate power law
     plotting.plot_guide_power_laws_prace(f1, f2, z, pow_v, y, pow_gw, inter_flag=inter_flag)
@@ -827,7 +829,7 @@ def plot_and_save(vw: float, alpha: float, method: ssm.Method = ssm.Method.E_CON
         f2.savefig(MD_PATH + "pow_gw_" + graph_file_suffix)
 
     # Now some comparisons between real space <v^2> and Fourier space already calculated
-    v_ip, w_ip, xi = bubble.fluid_shell(vw, alpha)
+    v_ip, w_ip, xi = bubble.sound_shell_bag(vw, alpha)
     Ubarf2 = bubble.Ubarf_squared(v_ip, w_ip, xi, vw)
 
     logger.debug(
@@ -883,7 +885,12 @@ def do_all_plot_ps_compare_nuc(save_id: str = None, graph_file_type: str = None)
     return param_list, v2_list, Omgw_scaled_list, p_cwg_list, p_ssm_list
 
 
-def do_all_plot_ps_1bubble(save_id: str = None, graph_file_type: str = None, debug: bool = False):
+def do_all_plot_ps_1bubble(
+        save_id: str = None,
+        graph_file_type: str = None,
+        debug: bool = False) -> tp.Union[
+            tp.Tuple[tp.List[plt.Figure], tp.List[str]],
+            tp.Tuple[tp.List[plt.Figure], tp.List[str], np.ndarray]]:
     vw_weak_list = [0.92, 0.56, 0.44]
     vw_inter_list = [0.92, 0.56, 0.44]
 
@@ -894,6 +901,7 @@ def do_all_plot_ps_1bubble(save_id: str = None, graph_file_type: str = None, deb
     alpha_list_all = [alpha_weak, alpha_inter]
 
     figs = []
+    fig_ids = []
     data_lst = []
     for vw_list, alpha, in zip(vw_list_all, alpha_list_all):
         for vw in vw_list:
@@ -902,7 +910,8 @@ def do_all_plot_ps_1bubble(save_id: str = None, graph_file_type: str = None, deb
                 data_lst.append(data)
             fig = plot_ps_1bubble(vw, alpha, save_id, graph_file_type)
             figs.append(fig)
+            fig_ids.append(f"vw{vw}_alpha{alpha}")
 
     if debug:
-        return figs, np.array(data_lst)
-    return figs
+        return figs, fig_ids, np.array(data_lst)
+    return figs, fig_ids

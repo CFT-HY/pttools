@@ -1,3 +1,5 @@
+"""Wrapper for the pyinstrument profiler"""
+
 import os
 
 import pyinstrument
@@ -9,6 +11,7 @@ os.makedirs(PROFILE_DIR, exist_ok=True)
 
 
 class PyInstrumentProfiler(utils.Profiler):
+    """Wrapper for the pyinstrument profiler"""
     def __init__(self, name: str, print_to_console: bool = False):
         super().__init__(name, print_to_console)
         self.profiler = pyinstrument.Profiler()

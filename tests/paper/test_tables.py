@@ -1,3 +1,5 @@
+"""Test the generation of data tables for the paper"""
+
 import io
 import os.path
 import unittest
@@ -10,6 +12,7 @@ from tests.utils.const import TEST_DATA_PATH
 
 
 class TestTables(unittest.TestCase):
+    """Test the generation of data tables for the paper"""
     @classmethod
     def setUpClass(cls) -> None:
         data = np.loadtxt(os.path.join(TEST_DATA_PATH, "data_compare_nuc-final3.txt"))

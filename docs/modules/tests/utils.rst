@@ -1,29 +1,22 @@
 Utilities
 =========
 
+.. currentmodule:: tests.utils
+
 .. automodule:: tests.utils
+   :no-members:
+   :no-inherited-members:
 
-Assertions
-----------
+:py:mod:`tests.utils`:
 
-.. automodule:: tests.utils.assertions
+.. autosummary::
+   :toctree: gen_modules/
+   :template: module.rst
 
-Constants
----------
-
-.. automodule:: tests.utils.const
-
-Mathematics
------------
-
-.. automodule:: tests.utils.math
-
-Plotting
---------
-
-.. automodule:: tests.utils.plotting
-
-Printing
---------
-
-.. automodule:: tests.utils.printing
+   assertions
+   const
+   json
+   math
+   plotting
+   printing
+   test_assertions

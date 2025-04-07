@@ -149,7 +149,7 @@ def plot_guide_power_laws_prace(
     x_high = 10
     x_low = 2
     [nv_lo, ngw_lo] = np_lo
-    logger.debug("Plotting guide power laws")
+    # logger.debug("Plotting guide power laws")
     high_peak_v = np.where(z > x_high)
     high_peak_gw = np.where(y > x_high)
     plot_guide_power_law_prace(
@@ -238,8 +238,8 @@ def plot_ps(
         ls_list = ['-'] * len(z_list)
 
     if fig is None:
-        fig = plt.figure(figsize=[8, 4])
-        ax = plt.gca()
+        fig = plt.figure(figsize=(8, 4))
+        ax = fig.add_subplot()
     else:
         raise NotImplementedError("TODO: axis is not defined")
 
@@ -250,11 +250,11 @@ def plot_ps(
     if leg_list is None:
         for z, power, col, ls in zip(z_list, pow_list, col_list, ls_list):
             ax.loglog(z, power, color=col, linestyle=ls)
-            powers.append(np.trapz(power / z, z))
+            powers.append(np.trapezoid(power / z, z))
     else:
         for z, power, leg, col, ls in zip(z_list, pow_list, leg_list, col_list, ls_list):
             ax.loglog(z, power, color=col, linestyle=ls, label=leg)
-            powers.append(np.trapz(power / z, z))
+            powers.append(np.trapezoid(power / z, z))
 
     # Pretty graphs
     if pretty:

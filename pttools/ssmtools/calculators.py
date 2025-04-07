@@ -1,9 +1,10 @@
-"""Numerical utilities for SSMtools."""
+"""Numerical utilities for SSMtools"""
 
 import logging
 import typing as tp
 
 import numba
+from numba.extending import overload
 import numba.types
 import numpy as np
 
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 @numba.njit
-def envelope(xi: np.ndarray, f: np.ndarray) -> np.ndarray:
+def envelope(xi: np.ndarray, f: np.ndarray, v_wall: float = None, v_sh: float = None) -> np.ndarray:
     r"""
     Helper function for :func:`sin_transform_approx`.
     Assumes that
@@ -33,8 +34,16 @@ def envelope(xi: np.ndarray, f: np.ndarray) -> np.ndarray:
 
     :param: xi: $\xi$
     :param f: function values $f$ at the points $\xi$
+    :param v_wall: wall speed
+    :param v_sh: shock speed
     :return: array of $\xi$, $f$ pairs "outlining" function $f$
     """
+    # if v_wall is None or v_sh is None:
+    #     with numba.objmode:
+    #         logger.warning(
+    #             "Please give v_wall and v_sh to envelope(). "
+    #             "They will be needed in the future for finding the discontinuities."
+    #         )
 
     xi_nonzero = xi[np.nonzero(f)]
     xi1 = np.min(xi_nonzero)
@@ -48,7 +57,7 @@ def envelope(xi: np.ndarray, f: np.ndarray) -> np.ndarray:
     f_max = f[i_max_f]
     xi_w = xi[i_max_f]  # max f always at wall
 
-    # TODO: this indexing fix has changed test_pow_specs.py results a bit
+    # This indexing fix has changed test_pow_specs.py results a bit
     if i_max_f + 1 == f.shape[0]:
         df_at_max = f[i_max_f] - f[i_max_f - 2]
         with numba.objmode:
@@ -92,31 +101,40 @@ def resample_uniform_xi(
     return xi_re, np.interp(xi_re, xi, f)
 
 
-@numba.njit
-def _sin_transform_scalar(z: float, xi: np.ndarray, f: np.ndarray, z_st_thresh: float = const.Z_ST_THRESH) -> float:
+def _sin_transform_scalar(
+        z: th.FloatOrArr,
+        xi: np.ndarray,
+        f: np.ndarray,
+        z_st_thresh: float = const.Z_ST_THRESH,
+        v_wall: float = None,
+        v_sh: float = None) -> th.FloatOrArrNumba:
     if z <= z_st_thresh:
         array = f * np.sin(z * xi)
-        integral = np.trapz(array, xi)
+        integral = np.trapezoid(array, xi)
     else:
-        integral = sin_transform_approx(z, xi, f)
+        integral = sin_transform_approx(z, xi, f, v_wall=v_wall, v_sh=v_sh)
     return integral
 
 
-@numba.njit(parallel=True)
 def _sin_transform_arr(
-        z: np.ndarray, xi: np.ndarray, f: np.ndarray, z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
+        z: th.FloatOrArr,
+        xi: np.ndarray,
+        f: np.ndarray,
+        z_st_thresh: float = const.Z_ST_THRESH,
+        v_wall: float = None,
+        v_sh: float = None) -> th.FloatOrArrNumba:
     lo = np.where(z <= z_st_thresh)
     z_lo = z[lo]
     # Integrand of the sine transform
     # This computation is O(len(z_lo) * len(xi)) = O(n^2)
     # array_lo = f * np.sin(np.outer(z_lo, xi))
     # For each z, integrate f * sin(z*xi) over xi
-    # integral: np.ndarray = np.trapz(array_lo, xi)
+    # integral: np.ndarray = np.trapezoid(array_lo, xi)
     integral = sin_transform_core(xi, f, z_lo)
 
     if len(lo) < len(z):
         z_hi = z[np.where(z > z_st_thresh - const.DZ_ST_BLEND)]
-        I_hi = sin_transform_approx(z_hi, xi, f)
+        I_hi = sin_transform_approx(z_hi, xi, f, v_wall=v_wall, v_sh=v_sh)
 
         if len(z_hi) + len(z_lo) > len(z):
             # If there are elements in the z blend range, then blend
@@ -140,12 +158,13 @@ def _sin_transform_arr(
     return integral
 
 
-@numba.generated_jit(nopython=True)
 def sin_transform(
         z: th.FloatOrArr,
         xi: np.ndarray,
         f: np.ndarray,
-        z_st_thresh: float = const.Z_ST_THRESH) -> th.FloatOrArrNumba:
+        z_st_thresh: float = const.Z_ST_THRESH,
+        v_wall: float = None,
+        v_sh: float = None) -> th.FloatOrArrNumba:
     r"""
     sin transform of $f(\xi)$, Fourier transform variable z.
     For z > z_st_thresh, use approximation rather than doing the integral.
@@ -154,22 +173,36 @@ def sin_transform(
     Without the approximations this function would compute
     $$\hat{f}(z) =  f(\xi) \int_{{\xi}_\text{min}}^{{\xi}_\text{max}} \sin(z \xi) d\xi$$.
 
+    Used in :gw_pt_ssm:`\ ` eq. 4.5, 4.8
+
     :param z: Fourier transform variable (any shape)
     :param xi: $\xi$ points over which to integrate
     :param f: function values at the points $\xi$, same shape as $\xi$
     :param z_st_thresh: for $z$ values above z_sh_tresh, use approximation rather than doing the integral.
+    :param v_wall: wall speed
+    :param v_sh: shock speed
     :return: sine transformed values $\hat{f}(z)$
     """
+    if isinstance(z, float):
+        return _sin_transform_scalar(z, xi, f, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
+    if isinstance(z, np.ndarray):
+        return _sin_transform_arr(z, xi, f, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
+    raise NotImplementedError
+
+
+@overload(sin_transform, jit_options={"parallel": True})
+def _sin_transform_numba(
+        z: th.FloatOrArr,
+        xi: np.ndarray,
+        f: np.ndarray,
+        z_st_thresh: float = const.Z_ST_THRESH,
+        v_wall: float = None,
+        v_sh: float = None) -> th.FloatOrArrNumba:
     if isinstance(z, numba.types.Float):
         return _sin_transform_scalar
     if isinstance(z, numba.types.Array):
         return _sin_transform_arr
-    if isinstance(z, float):
-        return _sin_transform_scalar(z, xi, f, z_st_thresh)
-    if isinstance(z, np.ndarray):
-        return _sin_transform_arr(z, xi, f, z_st_thresh)
-    else:
-        raise NotImplementedError
+    raise NotImplementedError
 
 
 @numba.njit(parallel=True)
@@ -186,16 +219,19 @@ def sin_transform_core(t: np.ndarray, f: np.ndarray, freq: np.ndarray) -> np.nda
     :return: value of the sine transformed function at each angular frequency $\omega$
     """
     integral = np.zeros_like(freq)
+    # pylint: disable=not-an-iterable
     for i in numba.prange(freq.size):
         integrand = f * np.sin(freq[i] * t)
         # If you get Numba errors here, ensure that t is contiguous.
         # This can be achieved with the use of t.copy() in the data pipeline leading to this function.
-        integral[i] = np.trapz(integrand, t)
+        integral[i] = np.trapezoid(integrand, t)
     return integral
 
 
 @numba.njit
-def sin_transform_approx(z: th.FloatOrArr, xi: np.ndarray, f: np.ndarray) -> np.ndarray:
+def sin_transform_approx(
+        z: th.FloatOrArr, xi: np.ndarray, f: np.ndarray,
+        v_wall: float = None, v_sh: float = None) -> np.ndarray:
     r"""
     Approximate sin transform of $f(\xi)$.
     For values $f_a$ and $f_b$, we have
@@ -213,7 +249,7 @@ def sin_transform_approx(z: th.FloatOrArr, xi: np.ndarray, f: np.ndarray) -> np.
     """
     # Old versions of Numba don't support unpacking 2D arrays
     # [[xi1, xi_w, _, xi2], [f1, f_m, f_p, f2]] = envelope(xi, f)
-    envelope_arr = envelope(xi, f)
+    envelope_arr = envelope(xi, f, v_wall=v_wall, v_sh=v_sh)
     [xi1, xi_w, _, xi2] = envelope_arr[0, :]
     [f1, f_m, f_p, f2] = envelope_arr[1, :]
 
@@ -235,9 +271,9 @@ def sin_transform_old(z: th.FloatOrArr, xi: np.ndarray, v: np.ndarray) -> th.Flo
     logger.warning("sin_transform_old is deprecated")
     if isinstance(z, np.ndarray):
         array = np.sin(np.outer(z, xi)) * v
-        integral = np.trapz(array, xi)
+        integral = np.trapezoid(array, xi)
     else:
         array = v * np.sin(z * xi)
-        integral = np.trapz(array, xi)
+        integral = np.trapezoid(array, xi)
 
     return integral

@@ -1,80 +1,30 @@
 Paper
 =====
 
+.. currentmodule:: tests.paper
+
 .. automodule:: tests.paper
+  :no-members:
+  :no-inherited-members:
 
+:py:mod:`tests.paper`:
 
-Constants
----------
+.. autosummary::
+  :toctree: gen_modules/
+  :template: module.rst
 
-.. automodule:: tests.paper.const
-
-Plane
------
-
-.. automodule:: tests.paper.plane
-
-Plane plotting
---------------
-
-.. automodule:: tests.paper.plot_plane
-
-Plotting
---------
-
-.. automodule:: tests.paper.plotting
-
-Significant figures
--------------------
-
-.. automodule:: tests.paper.sigfig
-
-SSM comparison
---------------
-
-.. automodule:: tests.paper.ssm_compare
-
-SSM paper utilities
--------------------
-
-.. automodule:: tests.paper.ssm_paper_utils
-
-Bubble tests
-------------
-
-.. automodule:: tests.paper.test_bubble
-
-Plane tests
------------
-
-.. automodule:: tests.paper.test_plane
-
-Power spectrum tests
---------------------
-
-.. automodule:: tests.paper.test_pow_specs
-
-Prace tests
------------
-
-.. automodule:: tests.paper.test_prace
-
-Fluid shell tests
------------------
-
-.. automodule:: tests.paper.test_shells
-
-Table tests
------------
-
-.. automodule:: tests.paper.test_tables
-
-LaTeX utilities
----------------
-
-.. automodule:: tests.paper.tex_utils
-
-Utilities
----------
-
-.. automodule:: tests.paper.utils
+  const
+  plane
+  plot_plane_paper
+  plotting
+  sigfig
+  ssm_compare
+  ssm_paper_utils
+  test_bubble
+  test_plane
+  test_pow_specs
+  test_prace
+  test_shells_bag
+  test_tables
+  tex_utils
+  utils

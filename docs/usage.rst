@@ -1,16 +1,39 @@
 Usage
 =====
 
+Basic usage
+-----------
+To install PTtools, please first follow the instructions in the :doc:`installation guide <install>`.
+Then download and run one of the examples in the :doc:`example gallery <auto_examples/index>`.
+
+
 Numba performance
 -----------------
 The computationally intensive parts of PTtools are JIT-compiled using
 `Numba <https://numba.pydata.org/>`_.
-Therefore the first calls to PTtools may take tens of seconds, but once the it's compiled,
+Therefore, the first calls to PTtools may take tens of seconds, but once the it's compiled,
 it's significantly faster than pure Python.
 
-Therefore if you are running several simulations, you can save time by running these as a single script
+Therefore, if you are running several simulations, you can save time by running these as a single script
 so that PTtools has to be compiled only once.
 Jupyter notebooks and IPython shells can also be used to effectively cache the compiled PTtools.
+
+If you're quickly developing scripts that don't need the power of Numba,
+`you can disable it <https://numba.pydata.org/numba-doc/dev/user/troubleshoot.html#disabling-jit-compilation>`_
+for your script.
+This is configured by an environment variable, which can be set in the Bash shell as:
+
+.. code-block:: bash
+
+  NUMBA_DISABLE_JIT=1 python3 your_script.py
+
+Alternatively you can set the environment variable in your Python code before importing Numba:
+
+.. code-block:: python
+
+  import os
+  os.environ["NUMBA_DISABLE_JIT"] = "1"
+  import numba
 
 Numba errors
 ------------

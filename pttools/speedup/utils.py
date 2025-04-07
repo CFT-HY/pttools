@@ -4,6 +4,8 @@ import collections
 import functools
 import threading
 
+import numpy as np
+
 
 def conditional_decorator(dec: callable, condition: bool, **kwargs) -> callable:
     """Applies the given decorator if the given condition is True.
@@ -20,9 +22,38 @@ def conditional_decorator(dec: callable, condition: bool, **kwargs) -> callable:
     return decorator
 
 
+def copy_doc(copy_func: callable) -> callable:
+    """Copies the docstring of the given function to another.
+    This function is intended to be used as a decorator.
+    From: https://stackoverflow.com/a/68901244
+
+    .. code-block:: python3
+
+        def foo():
+            '''This is a foo doc string'''
+            ...
+
+        @copy_doc(foo)
+        def bar():
+            ...
+    """
+
+    def wrapped(func: callable) -> callable:
+        func.__doc__ = copy_func.__doc__
+        return func
+
+    return wrapped
+
+
+def is_nan_or_none(value: float = None) -> bool:
+    return value is None or np.isnan(value)
+
+
 def threadsafe_lru(func: callable) -> callable:
-    """From
-    https://noamkremen.github.io/a-simple-threadsafe-caching-decorator.html
+    """
+    Thread-safe LRU cache
+
+    From https://noamkremen.github.io/a-simple-threadsafe-caching-decorator.html
     """
     func = functools.lru_cache()(func)
     lock_dict = collections.defaultdict(threading.Lock)

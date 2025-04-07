@@ -1,3 +1,5 @@
+"""Test the bubble functions in the paper code"""
+
 import logging
 import os.path
 import unittest
@@ -7,16 +9,21 @@ import numpy as np
 
 from pttools import speedup
 from tests.paper import ssm_paper_utils as spu
+from tests.utils.const import TEST_FIGURE_PATH
 from tests import utils
 
 logger = logging.getLogger(__name__)
 
+FIG_PATH = os.path.join(TEST_FIGURE_PATH, "bubble")
+
 
 class TestBubble(unittest.TestCase):
+    """Test the bubble functions in the paper code"""
     @staticmethod
     def test_bubble():
-        figs, data = spu.do_all_plot_ps_1bubble(debug=True)
-        for fig in figs:
+        figs, fig_ids, data = spu.do_all_plot_ps_1bubble(debug=True)
+        for fig, fig_id in zip(figs, fig_ids):
+            utils.save_fig_multi(fig, os.path.join(FIG_PATH, f"bubble_{fig_id}"))
             plt.close(fig)
         data_summed = np.sum(data, axis=2)
         file_path = os.path.join(utils.TEST_DATA_PATH, "bubble.txt")

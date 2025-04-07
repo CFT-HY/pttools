@@ -1,3 +1,5 @@
+"""Wrapper for the cProfile profiler"""
+
 import cProfile
 import io
 import os
@@ -12,6 +14,7 @@ os.makedirs(PROFILE_DIR, exist_ok=True)
 
 
 class CProfiler(utils.Profiler):
+    """Wrapper for the cProfile profiler"""
     def __init__(self, name: str, print_to_console: bool = False):
         super().__init__(name, print_to_console)
         self.profiler = cProfile.Profile()
@@ -40,8 +43,8 @@ def save_sorted(
         print_to_console: bool = False):
     # Save to file
     stream = io.StringIO()
-    ps = pstats.Stats(profile, stream=stream).sort_stats(sort)
-    ps.print_stats()
+    stats = pstats.Stats(profile, stream=stream).sort_stats(sort)
+    stats.print_stats()
     text = stream.getvalue()
     if print_to_console:
         print(text)

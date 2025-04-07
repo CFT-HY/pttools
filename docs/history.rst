@@ -1,16 +1,24 @@
 Version history
 ===============
 
-0.0.2 (planned changes)
+1.0.0 (planned changes)
 -----------------------
-- Publish PTtools as open source.
-- Publish documentation to Read the Docs.
-- Improve integration with Cobaya and add examples.
+- GW power spectrum for low wavenumbers by using the formulae by :giombi_2024_cs:`\ `.
+- More polished documentation and examples.
 - Improve unit testing by using more comprehensive reference data, which are stored externally as HDF5.
-  Test whether `Git LFS <https://git-lfs.github.com/>`_ on GitLab would be a suitable storage.
-- Improve the way physical parameters are handled in the code.
-  Replace the parameter tuple with a struct- or class-like data structure.
-- Further improve and expand the documentation.
+  Test whether `Git LFS <https://git-lfs.com/>`_ on GitLab would be a suitable storage.
+- Improve integration with Cobaya and add examples.
+
+0.9.0 (upcoming)
+----------------
+These modifications were `Mika's master's thesis <https://github.com/AgenttiX/msc-thesis2>`_.
+
+- PTtools published as open source with the MIT license
+- Documentation published at Read the Docs.
+- New fluid velocity profile solver and object-oriented interface.
+- Support for equations of state beyond the bag model.
+    - Temperature-dependent degrees of freedom and sound speed.
+- Support for computing the gravitational wave spectrum today ($\Omega_\text{gw,0}$).
 
 
 0.0.1
@@ -19,44 +27,36 @@ These modifications were Mika's summer project in 2021.
 
 - Improve code structure by splitting :mod:`pttools.bubble` and :mod:`pttools.ssmtools` to multiple submodules.
 - Improve code quality.
-
-    - Lint each commit automatically with `Pylint <https://pylint.org/>`_.
+    - Lint each commit automatically with `Pylint <https://pylint.pycqa.org/en/latest/>`_.
     - Improve compliance with PEP8.
-
 - Add support for other integrators in addition to
   :meth:`scipy.integrate.odeint`
   such as
   :meth:`scipy.integrate.solve_ivp`
   and NumbaLSODA.
 - Speed up the simulations with Numba and NumbaLSODA.
-
     - Full GW power spectrum calculations: 5x for 1 CPU, 7x for 4 CPUs
     - Sine transform: Nx for N CPU cores (trivially parallelisable, minus some overhead)
     - ODE integration: 20x faster than :meth:`scipy.integrate.odeint` with pure Python
-
 - Add unit testing.
-
-    - Set up `CI/CD pipeline on GitHub Actions <https://github.com/hindmars-org/pttools/actions>`_.
+    - Set up `CI/CD pipeline on GitHub Actions <https://github.com/CFT-HY/pttools/actions>`_.
     - Set up automatic testing with Python versions from 3.6 to 3.9
       and with multiple versions of Numba and other libraries.
     - Set up automatic testing with all major operating systems (GNU/Linux, Windows, macOS).
     - Set up automatic performance testing using `timeit <https://docs.python.org/3/library/timeit.html>`_.
-    - Set up automatic profiling (:module:`tests.profiling`) of the performance-critical parts of the code such as
+    - Set up automatic profiling (:mod:`tests.profiling`) of the performance-critical parts of the code such as
       :meth:`pttools.ssmtools.spectrum.power_gw_scaled` and
       :meth:`tests.paper.ssm_paper_utils.do_all_plot_ps_compare_nuc` using
       `cProfile <https://docs.python.org/3/library/profile.html>`_,
       `Pyinstrument <https://github.com/joerick/pyinstrument>`_ and
       `YAPPI <https://github.com/sumerc/yappi>`_.
-
-- `Package <https://packaging.python.org/tutorials/packaging-projects/>`_
+- `Package <https://packaging.python.org/en/latest/tutorials/packaging-projects/>`_
   PTtools with
   `setuptools <https://pypi.org/project/setuptools/>`_
   so that it can be installed with pip.
-
-    - This prepares the project for being published on `PyPI <https://pypi.org/>`_.
-
+  - This prepares the project for being published on `PyPI <https://pypi.org/>`_.
 - Add example scripts for running on `Slurm <https://slurm.schedmd.com/>`_ clusters.
-- Add `Sphinx <https://www.sphinx-doc.org/>`_ documentation (the one you're currently reading).
+- Add `Sphinx <https://www.sphinx-doc.org/en/master/>`_ documentation (the one you're currently reading).
 
 
 Previous development
@@ -84,15 +84,8 @@ Planned changes
 """""""""""""""
 Bubble
 
-- allow general equation of state (so integrate with $V, T$ together instead of $v, w$ separately)
-  Idea to introduce eos as a class. Need a new interface which uses eos variables rather than alpha.
 - Include bubble nucleation calculations of beta (from $V(T,\phi)$)
-- Now comments are docstrings, think about sphinx
-- Complete checks for physical ($v_\text{wall}, \alpha_n$)
 
 SSMtools
 
-- improve docstrings
-- introduce function for physical GW power spectrum today
 - Check default nucleation type for nu function.
-- Allow first three letters to specify nucleation type

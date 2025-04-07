@@ -1,3 +1,5 @@
+"""Utilities for profiling"""
+
 import abc
 import os
 
@@ -8,6 +10,7 @@ os.makedirs(PROFILE_DIR, exist_ok=True)
 
 
 class Profiler(abc.ABC):
+    """Base class for profilers"""
     def __init__(self, name: str, print_to_console: bool = False):
         self.name = name
         self.print_to_console = print_to_console

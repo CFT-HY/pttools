@@ -18,21 +18,12 @@ from . import utils
 logger = logging.getLogger(__name__)
 
 
-def generated_jit(func: callable):
-    if options.NUMBA_DISABLE_JIT:
-        return func
-    return numba.generated_jit(func, nopython=True, **options.NUMBA_OPTS)
-
-
 def njit(func: callable = None, **kwargs):
     """Wrapper for numba.njit.
 
     May cause segmentation faults with profilers.
     """
-    # print(func, kwargs)
-
     def _njit(func2):
-        # print("Jitting", func2)
         return numba.njit(func2, **options.NUMBA_OPTS, **kwargs)
     if func is None:
         return _njit

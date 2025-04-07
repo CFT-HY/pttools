@@ -17,15 +17,15 @@ import pttools.ssmtools as ssm
 from tests.paper import const
 from tests.paper import plotting
 from tests.paper import utils
-from tests.utils.const import TEST_DATA_PATH
+from tests.utils.const import TEST_DATA_PATH, TEST_FIGURE_PATH
 
 logger = logging.getLogger(__name__)
 
 # bubble.setup_plotting()
 
-MDP = os.path.join(TEST_DATA_PATH, "model_data/")
-GDP = os.path.join(TEST_DATA_PATH, "graphs/")
-os.makedirs(MDP, exist_ok=True)
+# MDP = os.path.join(TEST_DATA_PATH, "model_data")
+GDP = TEST_FIGURE_PATH
+# os.makedirs(MDP, exist_ok=True)
 os.makedirs(GDP, exist_ok=True)
 
 # All run parameters
@@ -100,23 +100,24 @@ def generate_ps(
     logger.debug(f"vw = {vw}, alpha = {alpha}, Np = {Np}")
 
     params = (vw, alpha, const.NUC_TYPE, const.NUC_ARGS)
-    sd_v = ssm.spec_den_v(z, params, Np[1:], method=method)
+    sd_v = ssm.spec_den_v_bag(z, params, Np[1:], method=method)
     pow_v = ssm.pow_spec(z, sd_v)
-    V2_pow_v = np.trapz(pow_v/z, z)
+    V2_pow_v = np.trapezoid(pow_v/z, z)
 
     if v_xi_file is not None:
-        sd_v2 = ssm.spec_den_v(z, params, Np[1:], v_xi_file, method=method)
+        sd_v2 = ssm.spec_den_v_bag(z, params, Np[1:], v_xi_file, method=method)
         pow_v2 = ssm.pow_spec(z, sd_v2)
-        V2_pow_v = np.trapz(pow_v2/z, z)
+        V2_pow_v = np.trapezoid(pow_v2/z, z)
 
     sd_gw, y = ssm.spec_den_gw_scaled(z, sd_v)
     pow_gw = ssm.pow_spec(y, sd_gw)
-    gw_power = np.trapz(pow_gw/y, y)
+    gw_power = np.trapezoid(pow_gw/y, y)
 
     if v_xi_file is not None:
+        # TODO: This could be reordered to avoid the warning about the undefined variable
         sd_gw2, y = ssm.spec_den_gw_scaled(z, sd_v2)
         pow_gw2 = ssm.pow_spec(y, sd_gw2)
-        gw_power = np.trapz(pow_gw2/y, y)
+        gw_power = np.trapezoid(pow_gw2/y, y)
 
     # Now for some plotting if requested
     if save_ids[1] is not None or show:
@@ -165,23 +166,23 @@ def generate_ps(
         data_file_suffix = file_suffix + save_ids[0] + '.txt'
 
         if v_xi_file is None:
-            np.savetxt(MDP + 'pow_v_' + data_file_suffix,
+            np.savetxt(os.path.join(MDP, 'pow_v_' + data_file_suffix),
                        np.stack((z, pow_v), axis=-1), fmt='%.18e %.18e')
-            np.savetxt(MDP + 'pow_gw_' + data_file_suffix,
+            np.savetxt(os.path.join(MDP, 'pow_gw_' + data_file_suffix),
                        np.stack((y, pow_gw), axis=-1), fmt='%.18e %.18e')
         else:
-            np.savetxt(MDP + 'pow_v_' + data_file_suffix,
+            np.savetxt(os.path.join(MDP, 'pow_v_' + data_file_suffix),
                        np.stack((z, pow_v, pow_v2), axis=-1), fmt='%.18e %.18e %.18e')
-            np.savetxt(MDP + 'pow_gw_' + data_file_suffix,
+            np.savetxt(os.path.join(MDP, 'pow_gw_' + data_file_suffix),
                        np.stack((y, pow_gw, pow_gw2), axis=-1), fmt='%.18e %.18e %.18e')
 
     if save_ids[1] is not None:
         graph_file_suffix = file_suffix + save_ids[1] + '.pdf'
-        f1.savefig(GDP + "pow_v_" + graph_file_suffix)
-        f2.savefig(GDP + "pow_gw_" + graph_file_suffix)
+        f1.savefig(os.path.join(GDP, "pow_v_" + graph_file_suffix))
+        f2.savefig(os.path.join(GDP, "pow_gw_" + graph_file_suffix))
 
     # Now some diagnostic comparisons between real space <v^2> and Fourier space already calculated
-    v_ip, w_ip, xi = bubble.fluid_shell(vw, alpha)
+    v_ip, w_ip, xi = bubble.sound_shell_bag(vw, alpha)
     Ubarf2 = bubble.ubarf_squared(v_ip, w_ip, xi, vw)
 
     logger.debug(

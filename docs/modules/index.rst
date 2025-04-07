@@ -1,8 +1,21 @@
 Modules
 #######
 
+..
+  At the moment all modules have to be specified manually.
+  This is a known limitation of Sphinx.
+  https://stackoverflow.com/a/11568225/
+  https://stackoverflow.com/a/2703173/
+  https://www.sphinx-doc.org/en/master/man/sphinx-apidoc.html
+
+
 .. toctree::
-   bubble
-   ssmtools
-   speedup
-   misc
+  :maxdepth: 1
+
+  analysis
+  bubble
+  models
+  omgw0
+  ssmtools
+  speedup
+  misc

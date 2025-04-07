@@ -1,33 +1,22 @@
 Profiling
 =========
 
+.. currentmodule:: tests.profiling
+
 .. automodule:: tests.profiling
+   :no-members:
+   :no-inherited-members:
 
-.. automodule:: tests.profiling.test_profile
+:py:mod:`tests.profiling`:
 
-GW power spectrum tests
------------------------
+.. autosummary::
+   :toctree: gen_modules/
+   :template: module.rst
 
-.. automodule:: tests.profiling.test_profile_gw
-
-.. automodule:: tests.profiling.test_profile_pow_specs
-
-Utilities
----------
-
-.. automodule:: tests.profiling.utils
-
-CProfile utilities
-------------------
-
-.. automodule:: tests.profiling.utils_cprofile
-
-Pyinstrument utilities
-----------------------
-
-.. automodule:: tests.profiling.utils_pyinstrument
-
-YAPPI utilities
----------------
-
-.. automodule:: tests.profiling.utils_yappi
+   test_profile
+   test_profile_gw
+   test_profile_pow_specs
+   utils
+   utils_cprofile
+   utils_pyinstrument
+   utils_yappi

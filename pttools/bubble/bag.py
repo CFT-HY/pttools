@@ -1,45 +1,23 @@
-"""Functions for the bag equation of state.
+r"""Functions for the bag equation of state.
 
-See page 37 of the :notes:`lecture notes <>`.
+See page 37 of :notes:`\ `.
 """
 
-# import enum
 import logging
-import typing as tp
 
 import numba
+from numba.extending import overload
 import numpy as np
 
 import pttools.type_hints as th
-from pttools import speedup
+from .boundary import Phase
 from . import const
 
 logger = logging.getLogger(__name__)
 
-CS2Fun = tp.Callable[[th.FloatOrArr], float]
-
-
-# TODO: think about using an enum for the phases
-# @enum.unique
-# class Phase(enum.IntEnum):
-#     SYMMETRIC = 0
-#     BROKEN = 1
-
-
-# def cs_w(w):
-#    # Speed of sound function, another label
-#    # to be adapted to more realistic equations of state, e.g. with interpolation
-#    return cs0
-#
-#
-# def cs2_w(w):
-#    # Speed of sound squared function
-#    # to be adapted to more realistic equations of state, e.g. with interpolation
-#    return cs0_2
-
 
 @numba.njit
-def adiabatic_index(
+def adiabatic_index_bag(
         w: th.FloatOrArr,
         phase: th.IntOrArr,
         theta_s: th.FloatOrArr,
@@ -53,10 +31,9 @@ def adiabatic_index(
     :param theta_b: $\theta$ for broken phase, behind bubble (phase = 1)
     :return: adiabatic index
     """
-    return w / get_e(w, phase, theta_s, theta_b)
+    return w / e_bag(w, phase, theta_s, theta_b)
 
 
-@numba.njit
 def check_thetas(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> None:
     r"""Check that $\theta_s \leq \theta_b$.
 
@@ -64,46 +41,77 @@ def check_thetas(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> None:
     :param theta_b: $\theta_b$
     """
     if np.any(theta_b > theta_s):
-        with numba.objmode:
-            logger.warning(
-                "theta_b should always be smaller than theta_s, "
-                f"but got theta_s=%s, theta_b=%s", theta_s, theta_b)
+        _check_thetas_warning(theta_s, theta_b)
+
+
+@overload(check_thetas, jit_options={"nopython": True})
+def _check_thetas_numba(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr):
+    if isinstance(theta_s, numba.types.Array) or isinstance(theta_b, numba.types.Array):
+        return check_thetas
+    else:
+        return _check_thetas_scalar
+
+
+def _check_thetas_scalar(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> None:
+    """This is a workaround for a bug in Numba 0.60.0.
+    This fix was not needed for Numba 0.59.0.
+    https://github.com/numba/numba/issues/8270
+    """
+    if theta_b > theta_s:
+        _check_thetas_warning(theta_s, theta_b)
 
 
 @numba.njit
-def cs2_bag_scalar(w: float) -> float:
+def _check_thetas_warning(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> None:
+    with numba.objmode:
+        logger.warning(
+            "theta_b should always be smaller than theta_s, "
+            "but got theta_s=%s, theta_b=%s", theta_s, theta_b)
+
+
+@numba.njit
+# pylint: disable=unused-argument
+def cs2_bag_scalar(w: float, phase: Phase) -> float:
     """The scalar versions of the bag functions have to be compiled to cfuncs if jitting is disabled,
     as otherwise the cfunc version of the differential cannot be created.
     """
     return const.CS0_2
 
 
+@numba.cfunc(th.CS2FunScalarSig)
+# pylint: disable=unused-argument
+def cs2_bag_scalar_cfunc(w: float, phase: Phase) -> float:
+    return const.CS0_2
+
+
+CS2_BAG_SCALAR_PTR = cs2_bag_scalar_cfunc.address
+CS2ScalarCType = cs2_bag_scalar_cfunc.ctypes
+
+
 @numba.njit
-def cs2_bag_arr(w: np.ndarray) -> np.ndarray:
+# pylint: disable=unused-argument
+def cs2_bag_arr(w: np.ndarray, phase: np.ndarray) -> np.ndarray:
     return const.CS0_2 * np.ones_like(w)
 
 
-@numba.generated_jit(nopython=True)
-def cs2_bag(w: th.FloatOrArr) -> th.FloatOrArrNumba:
+@numba.njit
+def cs2_bag(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Speed of sound squared in Bag model, equal to $\frac{1}{3}$ independent of enthalpy $w$.
 
     :param w: enthalpy $w$
+    :param phase: phase $\phi$
     :return: speed of sound squared $c_s^2$
     """
-    if isinstance(w, numba.types.Float):
-        return cs2_bag_scalar
-    if isinstance(w, numba.types.Array):
-        return cs2_bag_arr
     if isinstance(w, float):
-        return cs2_bag_scalar(w)
+        return cs2_bag_scalar(w, phase)
     if isinstance(w, np.ndarray):
-        return cs2_bag_arr(w)
+        return cs2_bag_arr(w, phase)
     raise TypeError(f"Unknown type for w: {type(w)}")
 
 
 @numba.njit
-def get_e(
+def e_bag(
         w: th.FloatOrArr,
         phase: th.IntOrArr,
         theta_s: th.FloatOrArr,
@@ -120,11 +128,11 @@ def get_e(
     :param theta_b: $\theta$ for broken phase, behind bubble (phase = 1)
     :return: energy density $e$
     """
-    return w - get_p(w, phase, theta_s, theta_b)
+    return w - p_bag(w, phase, theta_s, theta_b)
 
 
 @numba.njit
-def get_p(
+def p_bag(
         w: th.FloatOrArr,
         phase: th.IntOrArr,
         theta_s: th.FloatOrArr,
@@ -147,41 +155,7 @@ def get_p(
 
 
 @numba.njit
-def _get_phase_scalar(xi: float, v_w: float) -> int:
-    return const.BROK_PHASE if xi < v_w else const.SYMM_PHASE
-
-
-@numba.njit
-def _get_phase_arr(xi: np.ndarray, v_w: float) -> np.ndarray:
-    ph = np.zeros_like(xi)
-    ph[np.where(xi < v_w)] = const.BROK_PHASE
-    return ph
-
-
-@numba.generated_jit(nopython=True)
-def get_phase(xi: th.FloatOrArr, v_w: float) -> th.FloatOrArr:
-    r"""
-    Returns array indicating phase of system.
-    in symmetric phase $(\xi > v_w)$, phase = 0
-    in broken phase $(\xi < v_w)$, phase = 1
-
-    :return: phase
-    """
-    if isinstance(xi, numba.types.Float):
-        return _get_phase_scalar
-    if isinstance(xi, numba.types.Array):
-        if not xi.ndim:
-            return _get_phase_scalar
-        return _get_phase_arr
-    if isinstance(xi, float):
-        return _get_phase_scalar(xi, v_w)
-    if isinstance(xi, np.ndarray):
-        return _get_phase_arr(xi, v_w)
-    raise TypeError(f"Unknown type for {type(xi)}")
-
-
-@numba.njit
-def get_w(
+def w_bag(
         e: th.FloatOrArr,
         phase: th.IntOrArr,
         theta_s: th.FloatOrArr,
@@ -203,6 +177,23 @@ def get_w(
     # think about an fsolve?
     theta = theta_b * phase + theta_s * (1.0 - phase)
     return 4/3 * (e - theta)
+
+
+# def junction_bag(v1: th.FloatOrArr, w1: th.FloatOrArr, V1: th.FloatOrArr, V2: th.FloatOrArr, greater_branch: bool) -> tp.Tuple[th.FloatOrArr, th.FloatOrArr]:
+#     v2 = v2_tilde_bag(v1, w1, V1, V2, greater_branch)
+#     return v2, boundary.w2_junction(v1, w1, v2)
+#
+#
+# def v2_tilde_bag(v1: th.FloatOrArr, w1: th.FloatOrArr, V1: th.FloatOrArr, V2: th.FloatOrArr, greater_branch: bool) -> th.FloatOrArr:
+#     """This doesn't seem to work properly for the greater branch."""
+#     a = v1 + ((V2 - V1)/w1 + 1/4) / (relativity.gamma2(v1) * v1)
+#     sign = 1 if greater_branch else -1
+#     ret = (2*a + sign * np.sqrt(4*a**2 - 3)) / 3
+#     if np.any(ret < 0) and not greater_branch:
+#         logger.error(f"Got v2_tilde={ret} with the lesser branch. Should you select the greater branch?")
+#     if np.any(ret > 1) and greater_branch:
+#         logger.error(f"Got v2_tilde={ret} with the greater branch. Should you select the lesser branch?")
+#     return ret
 
 
 def theta_bag(w: th.FloatOrArr, phase: th.IntOrArr, alpha_n: th.FloatOrArr) -> th.FloatOrArr:

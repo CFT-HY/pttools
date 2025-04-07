@@ -19,6 +19,10 @@ packages.svg
 
 # Output files
 _build
+auto_examples
+docs/sg_execution_times.rst
+examples/fig
+gen_modules
 logs
 test-results
 tests/test_data/fluidprofiles
@@ -27,8 +31,11 @@ pow_*.txt
 pylint.txt
 test-output.txt
 *.dot
+*.eps
+*.hdf5
 *.html
 *.lprof
+*.npz
 *.pdf
 *.png
 *.svg
@@ -43,8 +50,10 @@ test-output.txt
 .DS_Store
 .pytest_cache
 .spyproject
+.vscode/*
 dist
 envs
 envs-old
 model_data
 venv
+!.vscode/settings.json

@@ -1,16 +1,32 @@
 Acknowledgements
 ================
-The following people have contributed to the development of PTtools (in alphabetical order).
 
-- Mudhahir Al-Ajmi
-- Danny Bail (Sussex MPhys RP projects 2016-18)
-- Daniel Cutting
-- Chloe Gowling
-- Mulham Hijazi
-- Mark Hindmarsh (2015 $\rightarrow$)
+Main contributors (in alphabetical order):
+- `Mark Hindmarsh <https://orcid.org/0000-0002-9307-437X>`_
+  - Creator of the Sound Shell Model, author of the first versions of PTtools (2015 →)
+- `Chloe Hopling <https://orcid.org/0000-0002-7955-4465>`_
+  - Several scripts used for testing
+- `Mika Mäki <https://orcid.org/0000-0001-8162-7101>`_
+  - University of Helsinki summer employee 2021, MSc student 2022-2024, PhD student 2025→
+  - Major rework of PTtools, current main developer
+
+In addition to the main contributors,
+the following people have contributed to the development of PTtools (in alphabetical order):
+
+- `Mudhahir Al-Ajmi <https://orcid.org/0000-0001-9888-5318>`_
+- Danny Bail
+  - Sussex MPhys RP projects 2016-2018
+- `Daniel Cutting <https://orcid.org/0000-0002-7395-7802>`_
+  - Plotting script for solution types
+- Beth Gould
+  - University of Sussex MPhys project 2015-2016
+- Nicola Hopkins
+  - University of Sussex PhD project 2013-2016
+- `Mulham Hijazi <https://orcid.org/0000-0002-1941-1518>`_
 - Jacky Lindsay
-- Mika Mäki (University of Helsinki summer employee 2021)
-- Mike Soughton (MPhys project 2017-18)
+  - University of Sussex MPhys project 2017-2018
+- Mike Soughton
+  - MPhys project 2017-2018
 
 The development of PTtools has been funded by
 
@@ -18,14 +34,15 @@ The development of PTtools has been funded by
 - `University of Sussex <https://www.sussex.ac.uk/>`_
 - `Academy of Finland <https://www.aka.fi/>`_
   grants
-  :aof_grant:`286769 <286769>`
-  and
+  :aof_grant:`286769 <286769>`,
   :aof_grant:`333609 <333609>`
-- `Science and Technology Facilities Council <https://stfc.ukri.org/>`_
-  grants
-  `ST/J000477/1 <https://gtr.ukri.org/projects?ref=ST%2FJ000477%2F1>`_
   and
-  `ST/L000504/1 <https://gtr.ukri.org/projects?ref=ST%2FL000504%2F1>`_
+  :aof_grant:`363676 <363676>`
+- `Science and Technology Facilities Council <https://www.ukri.org/councils/stfc/>`_
+  grants
+  `ST/J000477/1 <https://gtr.ukri.org/projects?ref=ST%2FJ000477%2F1>`_,
+  `ST/L000504/1 <https://gtr.ukri.org/projects?ref=ST%2FL000504%2F1>`_,
+  `ST/X000796/1 <https://gtr.ukri.org/projects?ref=ST%2FX000796%2F1>`_
 
 ..
   Attempting to use images stored on the Wikimedia servers results in an error:

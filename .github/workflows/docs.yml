@@ -1,24 +1,26 @@
 name: Docs
 on: push
 env:
-  PRIMARY_PYTHON_VERSION: 3.8
+  PRIMARY_PYTHON_VERSION: '3.13'
 jobs:
   docs:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
       - name: Print Python version
         run: python -V
       - name: Install LaTeX
-        run: sudo apt-get install -y cm-super dvipng latexmk texlive-latex-extra
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cm-super dvipng latexmk optipng texlive-latex-extra texlive-xetex fonts-freefont-otf xindy
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Load pip cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: .pip
           key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
@@ -27,15 +29,18 @@ jobs:
             pip-
       - name: Install requirements
         run: |
-          pip --cache-dir=.pip install --upgrade pip
-          pip --cache-dir=.pip install --upgrade wheel
+          pip --cache-dir=.pip install --upgrade pip wheel
           pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt -r docs/requirements.txt
+      - name: Generate reference data
+        run: python3 pttools/bubble/fluid_reference.py
+        env:
+          PYTHONPATH: .
       - name: Generate documentation
         run: |
           cd docs
           make all
       - name: Upload results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Documentation
           path: |

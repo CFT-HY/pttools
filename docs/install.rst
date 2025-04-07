@@ -1,18 +1,19 @@
 Installation
 ============
 
-Until the PTtools repository is made public, these downloads require
-`SSH authentication <https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh>`_
-just like any GitHub repository cloning over SSH.
-Please request access to the repository from prof. Hindmarsh.
+PTtools is a Python library and can therefore be installed with the same tools and commands as other Python libraries.
+If you're using PTtools for your project,
+:ref:`installation using pip <With pip>` or :ref:`Docker <With Docker>` is recommended.
+If you're developing PTtools itself, you should
+:ref:`clone the repository <Local development>`.
 
-If you're just using PTtools for your project,
-:ref:`installation using a package manager such as pip <With pip>` is recommended.
-However, if you're developing PTtools itself, you should
-:ref:`work on a cloned repository <Local development>`.
 
 With pip
 --------
+To install PTtools with pip, you need to have Python installed.
+You can install Python from the `official website <https://www.python.org/>`_,
+or by using the package manager of your operating system (e.g. apt).
+
 Installing PTtools within a
 `virtual environment <https://docs.python.org/3/tutorial/venv.html>`_
 is highly recommended, as this enables the use of the latest versions
@@ -21,23 +22,33 @@ The virtual environment can be created with the following commands.
 
 .. code-block:: bash
 
-  # The --upgrade-deps argument is not supported by Python versions older than 3.9
-  # and can be left out.
   python3 -m venv --upgrade-deps venv
-  # This activates the virtual environment for the current shell session,
-  # and will have to be run again for each new shell session / console window.
+  # The following command activates the virtual environment for the current shell session,
+  # and will have to be run again for each new shell session or console window.
   source ./venv/bin/activate
 
 Once the virtual environment is activated with the commands above,
 you can install PTtools from the Git repository with pip.
-A PyPI package will be available later, once PTtools is made open source.
+A PyPI package will be available later.
 
-The ``[NumbaLSODA]`` flag installs the optional
-`NumbaLSODA <https://pypi.org/project/NumbaLSODA/>`_
+Stable version
+
+.. code-block:: bash
+
+  pip3 install --upgrade "pttools-gw[numbalsoda,performance] @ git+https://github.com/CFT-HY/pttools.git"
+
+Development version
+
+.. code-block:: bash
+
+  pip3 install --upgrade "pttools-gw[numbalsoda,performance] @ git+https://github.com/CFT-HY/pttools.git@dev"
+
+The ``[numbalsoda]`` flag installs the optional
+`NumbaLSODA <https://pypi.org/project/numbalsoda/>`_
 ordinary differential equation (ODE) solver library,
 but it may not build on all platforms, especially Windows.
 Therefore if you get any build errors,
-please remove the ``[NumbaLSODA]`` flag and try the PTtools installation again.
+please remove the ``[numbalsoda]`` flag and try the PTtools installation again.
 You can then have a look at the
 :ref:`NumbaLSODA` section of the installation instructions.
 
@@ -47,17 +58,6 @@ and
 `tbb <https://pypi.org/project/tbb/>`_
 for better performance with Numba.
 
-Stable version
-
-.. code-block:: bash
-
-  pip3 install --upgrade "pttools-gw[NumbaLSODA,performance] @ git+ssh://git@github.com/hindmars-org/pttools.git"
-
-Development version
-
-.. code-block:: bash
-
-  pip3 install --upgrade "pttools-gw[NumbaLSODA,performance] @ git+ssh://git@github.com/hindmars-org/pttools.git@dev"
 
 With conda
 ----------
@@ -67,13 +67,11 @@ package, as those are quite cumbersome to maintain.
 If you'd like to have one, please make a feature request in the
 :issue:`issue tracker <>`.
 
+
 With Docker
 -----------
-Before PTtools is published as open source, the direct Docker builds from Git require
-that Docker can find your SSH keys.
-This can be accomplished by running Docker
-`without sudo <https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user>`_.
-The Docker container is configured by the ``Dockerfile`` at the root of the repository.
+PTtools container has not yet been published in a container registry,
+and therefore you have to build it yourself.
 Once you have built the PTtools container,
 you can build your own containers which use PTtools by starting their Dockerfiles with ``FROM pttools``.
 
@@ -81,14 +79,14 @@ Stable version
 
 .. code-block:: bash
 
-  docker build "git@github.com:hindmars/pttools.git#main" --tag pttools
+  docker build "https://github.com/CFT-HY/pttools.git#main" --tag pttools
   docker run -it pttools
 
 Development version
 
 .. code-block:: bash
 
-  docker build "git@github.com:hindmars/pttools.git#dev" --tag pttools:dev
+  docker build "https://github.com/CFT-HY/pttools.git#dev" --tag pttools:dev
   docker run -it pttools:dev
 
 Local development version
@@ -101,6 +99,7 @@ Local development version
   docker build . --tag pttools:dev
   docker run -it pttools:dev
 
+
 Local development
 -----------------
 You can set up a local development environment with the following commands.
@@ -110,36 +109,37 @@ You can set up a local development environment with the following commands.
   git clone git@github.com:hindmars/pttools.git
   cd pttools
   git checkout dev
-  # The --upgrade-deps argument is not supported by Python versions older than 3.9
-  # and can be left out.
   python3 -m venv --upgrade-deps venv
   source ./venv/bin/activate
-  pip3 install -r requirements.txt -r requirements-dev.txt
+  pip3 install -r requirements.txt -r requirements-dev.txt -r ./docs/requirements.txt
   # Now you can run the unit tests to ensure that the installation was successful.
   pytest
+
+You can build the documentation locally with the following commands.
+
+.. code-block:: bash
+
+  cd docs
+  make html
+
 
 On a cluster
 ------------
 For running a local development installation of PTtools on a Slurm cluster,
 please see the job script templates in the tests folder.
 
+
 NumbaLSODA
 ----------
-`NumbaLSODA <https://pypi.org/project/NumbaLSODA/>`_
+`NumbaLSODA <https://pypi.org/project/numbalsoda/>`_
 is an optional dependency, which speeds up the integration of ordinary differential equations (ODE).
-It's in an early stage and may require build tools such as ``cmake`` for its installation,
+Due to its low-level design it may require build tools such as ``cmake`` and ``gfortran`` for its installation,
 and it seems not to compile yet on Windows.
 You can install NumbaLSODA manually with
 
 .. code-block:: bash
 
-  pip3 install --upgrade NumbaLSODA
-
-You may also try building from the Git repository.
-
-.. code-block:: bash
-
-  pip3 install --upgrade "NumbaLSODA @ git+https://github.com/Nicholaswogan/NumbaLSODA.git"
+  pip3 install --upgrade numbalsoda
 
 If you get an error about missing ``cmake``, you have to install it manually.
 On Debian- and Ubuntu-based systems this can be done with the following commands.
@@ -150,9 +150,27 @@ Once ``cmake`` is installed, run the pip installation above again.
   sudo apt-get update
   sudo apt-get install cmake
 
+If you get an error on macOS about missing ``gfortran``,
+you have to install the GCC compiler tools, which include ``gfortran``.
+You can do this e.g. with `Homebrew <https://brew.sh/>`_ or `MacPorts <https://www.macports.org/>`_.
+To install ``gfortran`` with MacPorts, please first install MacPorts and then run the following commands.
+
+.. code-block:: bash
+
+  sudo port install gcc14
+  sudo port select --set gcc mp-gcc14
+
+You may also try building NumbaLSODA from the Git repository.
+
+.. code-block:: bash
+
+  pip3 install --upgrade "numbalsoda @ git+https://github.com/Nicholaswogan/numbalsoda.git"
+
+
 Numba compatibility and nested parallelism
 ------------------------------------------
-Nested parallelism is currently disabled by default due to the difficulty
+Nested parallelism, which means running parallel code within parallel code,
+is currently disabled by default due to the difficulty
 in setting up OpenMP and TBB on cluster environments and macOS.
 
 Some parts of the code such as

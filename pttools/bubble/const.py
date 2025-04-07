@@ -1,12 +1,12 @@
 """Constants for the bubble module"""
 
+import typing as tp
+
 import numpy as np
 
-# TODO: Use typing.Final, when the oldest supported Python version is 3.8
-# https://www.python.org/dev/peps/pep-0591/
 
 #: Smallest float
-EPS: np.float_ = np.nextafter(0, 1)
+EPS: tp.Final[np.float64] = np.nextafter(0, 1)
 
 #: Default number of entries in $\xi$ array
 N_XI_DEFAULT: int = 5000
@@ -18,17 +18,17 @@ FIND_ALPHA_PLUS_TOL: float = 1e-6
 T_END_DEFAULT: float = 50.
 #: Difference between consequent $\xi$ values
 DXI_SMALL: float = 1. / N_XI_DEFAULT
-
-# Some functions useful for the bag equation of state.
+#: Array with one NaN
+nan_arr: tp.Final[np.ndarray] = np.array([np.nan])
+nan_arr.setflags(write=False)
+#: Limit of points for a shell to be so thin that it should be re-computed with more points
+THIN_SHELL_T_POINTS_MIN: int = 100
 
 #: Ideal speed of sound
-CS0: np.float_ = 1 / np.sqrt(3)
+CS0: tp.Final[np.float64] = 1 / np.sqrt(3)
 #: Ideal speed of sound squared
-CS0_2: float = 1/3
+CS0_2: tp.Final[float] = 1/3
 
-# TODO: In general the phase is a scalar variable (real number).
-# However, in the bag model it's approximated as an integer.
-#: Symmetric phase
-SYMM_PHASE: int = 0
-#: Broken phase
-BROK_PHASE: int = 1
+# JUNCTION_ATOL: float = 2.4e-8
+JUNCTION_RTOL: float = 1e-6
+JUNCTION_CACHE_SIZE: int = 1024

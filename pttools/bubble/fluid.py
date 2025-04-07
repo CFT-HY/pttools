@@ -1,535 +1,1119 @@
-r"""Functions for fluid differential equations
-
-Now in parametric form (Jacky Lindsay and Mike Soughton MPhys project 2017-18).
-RHS is Eq (33) in Espinosa et al (plus $\frac{dw}{dt}$ not written there)
-"""
+r"""Solver for the fluid velocity profile of a bubble"""
 
 import logging
-# import threading
+import time
 import typing as tp
 
-import numba
-try:
-    import NumbaLSODA
-except ImportError:
-    NumbaLSODA = None
 import numpy as np
-import scipy.integrate as spi
+from scipy.optimize import fsolve, root_scalar
 
-import pttools.type_hints as th
-from pttools import speedup
+from pttools.speedup.solvers import fsolve_vary
 from . import alpha
-from . import approx
-from . import bag
 from . import boundary
-from . import check
+from .boundary import Phase, SolutionType
+from . import chapman_jouguet
 from . import const
+from .giese import kappaNuMuModel
+from . import integrate
+from . import fluid_bag
+from . import fluid_reference
 from . import props
-from . import quantities
+from . import relativity
+from . import shock
 from . import transition
+from . import trim
+if tp.TYPE_CHECKING:
+    from pttools.models import Model
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_DF_DTAU: str = "bag"
-# ODEINT_LOCK = threading.Lock()
-
-#: Cache for the differential equations.
-#: New differential equations have to be added here before usage so that they can be found by
-#: :func:`scipy.integrate.odeint` and :func:`scipy.integrate.solve_ivp`.
-differentials = speedup.DifferentialCache()
-
-#
-# class FluidShellParams:
-#     def __init__(self):
-#
-#
-# arrs = {
-#     "v": v,
-#     "w": w,
-#     "xi": xi,
-#     "v_sh": v_sh,
-#     "w_sh": w_sh
-# }
-# scalars = {
-#     "n_wall": n_wall,
-#     "n_cs": n_cs,
-#     "n_sh": n_sh,
-#     "r": r,
-#     "alpha_plus": alpha_plus,
-#     "ubarf2": ubarf2,
-#     "ke_frac": ke_frac,
-#     "kappa": kappa,
-#     "dw": dw
-# }
-
-def add_df_dtau(name: str, cs2_fun: bag.CS2Fun) -> speedup.DifferentialPointer:
-    """Add a new differential equation to the cache based on the given sound speed function.
-
-    :param name: the name of the function
-    :param cs2_fun: function, which gives the speed of sound squared $c_s^2$.
-    :return:
-    """
-    func = gen_df_dtau(cs2_fun)
-    return differentials.add(name, func)
+# The output consists of:
+# v, w, xi
+# vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh
+# solution_found
+SolverOutput = tp.Tuple[
+    np.ndarray, np.ndarray, np.ndarray,
+    float, float, float, float, float, float, float, float, float, float,
+    bool
+]
+DeflagrationOutput = tp.Tuple[
+    np.ndarray, np.ndarray, np.ndarray,
+    float, float, float, float, float, float, float, float, float, float
+]
+DEFLAGRATION_NAN: DeflagrationOutput = \
+    const.nan_arr, const.nan_arr, const.nan_arr, \
+    np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 
 
-def gen_df_dtau(cs2_fun: bag.CS2Fun) -> speedup.Differential:
-    r"""Generate a function for the differentials of fluid variables $(v, w, \xi)$ in parametric form.
+def sound_shell_deflagration(
+        model: "Model",
+        v_wall: float, wn: float, w_center: float,
+        cs_n: float, v_cj: float,
+        vp_guess: float = None, wp_guess: float = None,
+        t_end: float = const.T_END_DEFAULT, n_xi: int = const.N_XI_DEFAULT,
+        thin_shell_limit: int = const.THIN_SHELL_T_POINTS_MIN,
+        allow_failure: bool = False,
+        allow_negative_entropy_flux_change: bool = False,
+        warn_if_shock_barely_exists: bool = True) -> DeflagrationOutput:
+    if vp_guess is None or np.isnan(vp_guess) or wp_guess is None or np.isnan(wp_guess):
+        # Use bag model as the starting guess
 
-    :param cs2_fun: function, which gives the speed of sound squared $c_s^2$.
-    :return: function for the differential equation
-    """
-    cs2_fun_numba = cs2_fun \
-        if isinstance(cs2_fun, (speedup.CFunc, speedup.Dispatcher)) \
-        else numba.cfunc("float64(float64)")(cs2_fun)
+        # alpha_plus_bag = alpha.find_alpha_plus(v_wall, alpha_n, n_xi=const.N_XI_DEFAULT)
+        # vp_tilde_bag, vm_tilde_bag, vp_bag, vm_bag = boundary.fluid_speeds_at_wall(
+        #     v_wall, alpha_p=alpha_plus_bag, sol_type=SolutionType.SUB_DEF)
+        # wp_bag = boundary.w2_junction(vm_tilde_bag, w_center, vp_tilde_bag)
+        # vp_tilde_bag, wp_bag = bag.junction_bag(v_wall, w_center, 0, 1, greater_branch=False)
 
-    def df_dtau(t: float, u: np.ndarray, du: np.ndarray, p: np.ndarray = None) -> None:
-        r"""Computes the differentials of the variables $(v, w, \xi)$ for a given $c_s^2$ function
-
-        :return: $\frac{dv}{d\tau}, \frac{dw}{d\tau}, \frac{d\xi}{d\tau}$
-        """
-        v = u[0]
-        w = u[1]
-        xi = u[2]
-        cs2 = cs2_fun_numba(w)
-        xiXv = xi * v
-        xi_v = xi - v
-        v2 = v * v
-
-        du[0] = 2 * v * cs2 * (1 - v2) * (1 - xiXv)  # dv/dt
-        du[1] = (w / (1 - v2)) * (xi_v / (1 - xiXv)) * (1 / cs2 + 1) * du[0]  # dw_dt
-        du[2] = xi * (xi_v ** 2 - cs2 * (1 - xiXv) ** 2)  # dxi/dt
-    return df_dtau
-
-
-#: Pointer to the differential equation of the bag model
-DF_DTAU_BAG_PTR = add_df_dtau("bag", bag.cs2_bag_scalar)
-
-
-@numba.njit
-def fluid_integrate_param(
-        v0: float,
-        w0: float,
-        xi0: float,
-        t_end: float = const.T_END_DEFAULT,
-        n_xi: int = const.N_XI_DEFAULT,
-        df_dtau_ptr: speedup.DifferentialPointer = DF_DTAU_BAG_PTR,
-        method: str = "odeint") -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    r"""
-    Integrates parametric fluid equations in df_dtau from an initial condition.
-    Positive t_end integrates along curves from (v,w) = (0,cs0) to (1,1).
-    Negative t_end integrates towards (0,cs0).
-
-    :param v0: $v_0$
-    :param w0: $w_0$
-    :param xi0: $\xi_0$
-    :param t_end: $t_\text{end}$
-    :param n_xi: number of $\xi$ points
-    :param df_dtau_ptr: pointer to the differential equation function
-    :param method: differential equation solver to be used
-    :return: $v, w, \xi, t$
-    """
-
-    t = np.linspace(0., t_end, n_xi)
-    y0 = np.array([v0, w0, xi0])
-    if method == "numba_lsoda" or speedup.NUMBA_INTEGRATE:
-        if NumbaLSODA is None:
-            raise ImportError("NumbaLSODA is not loaded")
-        v, w, xi, success = fluid_integrate_param_numba(t, y0, df_dtau_ptr)
-
-    # This lock prevents a SystemError when running multiple threads
-    # with ODEINT_LOCK:
-
-    # SciPy differential equation solvers are not supported by Numba.
-    # Putting these within numba.objmode can also be challenging, as function-type arguments are not supported.
-    # For better performance, the "df_dtau" should be already fully Numba-compiled at this point instead
-    # of taking functions as its arguments.
+        # The boundary conditions are symmetric with respect to the indices,
+        # and can therefore be used with the opposite indices.
+        Vp = 1
+        Vm = 0
+        alpha_minus = 4*(Vm - Vp)/(3*w_center)
+        vp_tilde_guess = boundary.v_minus(vp=v_wall, ap=alpha_minus, sol_type=SolutionType.SUB_DEF)
+        vp_guess = -relativity.lorentz(vp_tilde_guess, v_wall)
+        wp_guess = boundary.w2_junction(v_wall, w_center, vp_tilde_guess)
     else:
-        with numba.objmode(v="float64[:]", w="float64[:]", xi="float64[:]", success="boolean"):
-            if method == "odeint":
-                v, w, xi, success = fluid_integrate_param_odeint(t, y0, df_dtau_ptr)
-            else:
-                v, w, xi, success = fluid_integrate_param_solve_ivp(t, y0, df_dtau_ptr, method)
-    if not success:
-        raise RuntimeError("integration failed")
-    return v, w, xi, t
+        # if vp_guess > v_wall:
+        #     logger.warning("Using invalid vp_guess=%s", vp_guess)
+        #     vp_guess = 0.9 * v_wall
+        vp_tilde_guess = -relativity.lorentz(vp_guess, v_wall)
+
+    invalid_param = None
+    if np.isnan(wn) or wn < 0:
+        invalid_param = "wn"
+    elif np.isnan(w_center) or w_center < 0:
+        invalid_param = "w_center"
+    elif np.isnan(vp_tilde_guess) or vp_tilde_guess < 0 or vp_tilde_guess > 1:
+        invalid_param = "vp_tilde_guess"
+    elif np.isnan(vp_guess) or vp_guess < 0:
+        invalid_param = "vp_guess"
+    elif np.isnan(wp_guess) or wp_guess < 0:
+        invalid_param = "wp_guess"
+
+    if invalid_param is not None:
+        logger.error(
+            f"Invalid parameter: {invalid_param}. Got: "
+            f"model={model.label_unicode}, v_wall={v_wall}, wn={wn}, w_center={w_center}, "
+            f"vp_guess={vp_guess}, vp_tilde_guess={vp_tilde_guess}, wp_guess={wp_guess}"
+        )
+        return DEFLAGRATION_NAN
+
+    if wp_guess < wn:
+        logger.warning("Using invalid wp_guess=%s", wp_guess)
+        wp_guess = 1.1 * wn
+
+    return sound_shell_deflagration_common(
+        model,
+        v_wall=v_wall,
+        vm_tilde=v_wall,
+        wn=wn, wm=w_center,
+        cs_n=cs_n, v_cj=v_cj,
+        vp_tilde_guess=vp_tilde_guess, wp_guess=wp_guess,
+        sol_type=SolutionType.SUB_DEF,
+        t_end=t_end, n_xi=n_xi,
+        thin_shell_limit=thin_shell_limit,
+        allow_failure=allow_failure,
+        allow_negative_entropy_flux_change=allow_negative_entropy_flux_change,
+        warn_if_shock_barely_exists=warn_if_shock_barely_exists
+    )
 
 
-@numba.njit
-def fluid_integrate_param_numba(t: np.ndarray, y0: np.ndarray, df_dtau_ptr: speedup.DifferentialPointer):
-    r"""Integrate a differential equation using NumbaLSODA.
-
-    :param t: time
-    :param y0: starting point
-    :param df_dtau_ptr: pointer to the differential equation function
-    :return: $v, w, \xi$, success status
-    """
-    backwards = t[-1] < 0
-    t_numba = -t if backwards else t
-    data = np.array([1 if backwards else 0])
-    usol, success = NumbaLSODA.lsoda(df_dtau_ptr, u0=y0, t_eval=t_numba, data=data)
-    if not success:
-        with numba.objmode:
-            logger.error(f"NumbaLSODA failed for %s integration", "backwards" if backwards else "forwards")
-    v = usol[:, 0]
-    w = usol[:, 1]
-    xi = usol[:, 2]
-    return v, w, xi, success
-
-
-def fluid_integrate_param_odeint(t: np.ndarray, y0: np.ndarray, df_dtau_ptr: speedup.DifferentialPointer):
-    r"""Integrate a differential equation using :func:`scipy.integrate.odeint`.
-
-    :param t: time
-    :param y0: starting point
-    :param df_dtau_ptr: pointer to the differential equation function, which is already in the cache
-    :return: $v, w, \xi$, success status
-    """
-    try:
-        func = differentials.get_odeint(df_dtau_ptr)
-        soln: np.ndarray = spi.odeint(func, y0, t)
-        v = soln[:, 0]
-        w = soln[:, 1]
-        xi = soln[:, 2]
-        success = True
-    except Exception as e:
-        logger.exception("odeint failed", exc_info=e)
-        v = w = xi = np.zeros_like(t)
-        success = False
-    return v, w, xi, success
-
-
-def fluid_integrate_param_solve_ivp(
-        t: np.ndarray, y0: np.ndarray, df_dtau_ptr: speedup.DifferentialPointer, method: str):
-    """Integrate a differential equation using :func:`scipy.integrate.solve_ivp`.
-
-    :param t: time
-    :param y0: starting point
-    :param df_dtau_ptr: pointer to the differential equation function, which is already in the cache
-    :method: name of the integrator to be used. See the :func:`scipy.integrate.solve_ivp` documentation.
-    """
-    try:
-        func = differentials.get_solve_ivp(df_dtau_ptr)
-        soln: spi._ivp.ivp.OdeResult = spi.solve_ivp(
-            func, t_span=(t[0], t[-1]), y0=y0, method=method, t_eval=t)
-        v = soln.y[0, :]
-        w = soln.y[1, :]
-        xi = soln.y[2, :]
-        success = True
-    except Exception as e:
-        logger.exception("solve_ivp failed", exc_info=e)
-        v = w = xi = np.zeros_like(t)
-        success = False
-    return v, w, xi, success
-
-
-# Main function for integrating fluid equations and deriving v, w
-# for complete range 0 < xi < 1
-
-@numba.njit
-def fluid_shell(
+def sound_shell_deflagration_common(
+        model: "Model",
         v_wall: float,
-        alpha_n: float,
-        n_xi: int = const.N_XI_DEFAULT) \
-        -> tp.Union[tp.Tuple[float, float, float], tp.Tuple[np.ndarray, np.ndarray, np.ndarray]]:
-    r"""
-    Finds fluid shell $(v, w, \xi)$ from a given $v_\text{wall}, \alpha_n$, which must be scalars.
+        vm_tilde: float,
+        wn: float, wm: float,
+        cs_n: float, v_cj: float,
+        vp_tilde_guess: float, wp_guess: float,
+        sol_type: SolutionType,
+        n_xi: int, t_end: float,
+        thin_shell_limit: int,
+        allow_failure: bool,
+        allow_negative_entropy_flux_change: bool,
+        warn_if_shock_barely_exists: bool) -> DeflagrationOutput:
+    if v_wall < 0 or v_wall > 1 or vm_tilde < 0 or vm_tilde > 1 or wn < 0 or wm < 0 or cs_n < 0 or cs_n > 1 \
+            or vp_tilde_guess < 0 or vp_tilde_guess > 1 or wp_guess < 0 or transition.is_surely_detonation(v_wall, v_cj):
+        logger.error(
+            "Invalid starting values: v_wall=%s, vm_tilde=%s, wn=%s, wm=%s, cs_n=%s, vp_tilde_guess=%s, wp_guess=%s",
+            v_wall, vm_tilde, wn, wm, cs_n, vp_tilde_guess, wp_guess
+        )
+        return DEFLAGRATION_NAN
 
-    :param v_wall: $v_\text{wall}$
-    :param alpha_n: $\alpha_n$
-    :param n_xi: number of $\xi$ points
-    :return: $v, w, \xi$
-    """
-    # check_physical_params([v_wall,alpha_n])
-    sol_type = transition.identify_solution_type(v_wall, alpha_n)
-    if sol_type == boundary.SolutionType.ERROR:
-        with numba.objmode:
-            logger.error("Giving up because of identify_solution_type error")
+    # Solve the boundary conditions at the wall
+    vp_tilde, wp = boundary.solve_junction(
+        model, vm_tilde, wm,
+        Phase.BROKEN, Phase.SYMMETRIC,
+        v2_tilde_guess=vp_tilde_guess, w2_guess=wp_guess,
+        allow_failure=allow_failure,
+        allow_negative_entropy_flux_change=allow_negative_entropy_flux_change
+    )
+    vp = -relativity.lorentz(vp_tilde, v_wall)
+
+    # Ensure that the junction solver converges to the correct solution
+    # print(v_wall, vp, vp_tilde, vp_tilde_guess, wp, wp_guess)
+    # if vp < 0:
+    #     vp_tilde2, wp2 = boundary.solve_junction(
+    #         model, vm_tilde, wm,
+    #         Phase.BROKEN, Phase.SYMMETRIC,
+    #         v2_tilde_guess=0.1*vp_tilde_guess, w2_guess=5*wp_guess,
+    #         allow_failure=allow_failure
+    #     )
+    #     vp2 = -relativity.lorentz(vp_tilde, v_wall)
+    #     if vp2 > 0:
+    #         print("SUCCESS")
+    #         vp = vp2
+    #         vp_tilde = vp_tilde2
+    #         wp = wp2
+    #     else:
+    #         print("FAILURE")
+    # print(v_wall, vp, vp_tilde, vp_tilde_guess, wp, wp_guess)
+
+    if vp < 0 or wp < 0:
+        logger.error(
+            "Junction solver gave an invalid starting point: "
+            "vp=%s, wp=%s, vp_tilde=%s for vp_tilde_guess=%s, wp_guess=%s",
+            vp, wp, vp_tilde, vp_tilde_guess, wp_guess)
+        return DEFLAGRATION_NAN
+
+    # Manual correction for hybrids
+    # if sol_type == SolutionType.HYBRID:
+    #     # If we are already below the shock velocity, then add a manual correction
+    #     vm_shock_tilde, w_shock = shock.solve_shock(
+    #         model,
+    #         # The fluid before the shock is still
+    #         v1_tilde=v_wall,
+    #         w1=wn,
+    #         csp=cs_n,
+    #         backwards=True, warn_if_barely_exists=warn_if_shock_barely_exists
+    #     )
+    #     vm_shock = relativity.lorentz(v_wall, vm_shock_tilde)
+    #     if vm_shock < 0 or vm_shock > 1:
+    #         raise RuntimeError(f"Got invalid vm_shock={vm_shock} when attempting to correct a hybrid.")
+    #     if vp < vm_shock:
+    #         logger.warning("vp < v_shock at the wall. Applying manual correction. Got: vp=%s, v_shock=%s", vp, vm_shock)
+    #         vp = vm_shock + 1e-3
+    #         wp = w_shock + 1e-3
+
+    # logger.debug(f"vp_tilde={vp_tilde}, vp={vp}, wp={wp}")
+
+    # Integrate from the wall to the shock
+    # pylint: disable=unused-variable
+    v, w, xi, t = integrate.fluid_integrate_param(
+        v0=vp, w0=wp, xi0=v_wall,
+        phase=Phase.SYMMETRIC,
+        t_end=-t_end,
+        n_xi=n_xi,
+        df_dtau_ptr=model.df_dtau_ptr(),
+        # method="RK45"
+    )
+    if np.argmax(xi) == 0:
+        logger.error("Deflagration solver gave a detonation-like solution.")
+        return DEFLAGRATION_NAN
+    i_shock = shock.find_shock_index(
+        model,
+        v=v, w=w, xi=xi,
+        v_wall=v_wall, wn=wn,
+        cs_n=cs_n, sol_type=sol_type,
+        error_on_failure=False,
+        zero_on_failure=True,
+        warn_if_barely_exists=warn_if_shock_barely_exists
+    )
+    if i_shock == 0 or i_shock + 1 >= xi.size:
+        logger.error("The shock was not found by the deflagration solver.")
+        return DEFLAGRATION_NAN
+
+    attempts = 5
+    if i_shock < thin_shell_limit:
+        i_shock_step = 20
+        t_end2 = t[i_shock + i_shock_step]
+        for i in range(attempts):
+            # if i_shock >= thin_shell_limit:
+            #     break
+            # logger.warning(
+            #     "The accuracy for locating the shock may not be sufficient, "
+            #     "as it was encountered early at i=%s/%s. Adjusting t_end=%s to compensate. Attempt %s/%s",
+            #     i_shock, xi.size, t_end2, i+1, attempts
+            # )
+            v2, w2, xi2, t2 = integrate.fluid_integrate_param(
+                v0=vp, w0=wp, xi0=v_wall,
+                phase=Phase.SYMMETRIC,
+                t_end=t_end2,
+                n_xi=n_xi,
+                df_dtau_ptr=model.df_dtau_ptr(),
+                # method="RK45"
+            )
+            if np.argmax(xi2) == 0:
+                logger.error("Adjusting t_end gave a detonation-like solution. Using the previous solution.")
+                break
+            i_shock2 = shock.find_shock_index(
+                model,
+                v=v2, w=w2, xi=xi2,
+                v_wall=v_wall, wn=wn,
+                cs_n=cs_n, sol_type=sol_type,
+                error_on_failure=False,
+                zero_on_failure=True,
+                warn_if_barely_exists=warn_if_shock_barely_exists
+            )
+            if i_shock2 == 0 or i_shock2 + i_shock_step >= xi2.size:
+                logger.error(
+                    "The shock was not found after t_end adjustment at i=%s/%s. Using the previous solution.",
+                    i+1, attempts
+                )
+                break
+            i_shock = i_shock2
+            v = v2
+            w = w2
+            xi = xi2
+            t = t2
+
+            if i_shock >= thin_shell_limit:
+                break
+            t_end2 = t[i_shock + i_shock_step]
+
+    if i_shock <= 1:
+        logger.error("The shock was not found for v_wall=%s despite %s t_end adjustments.", v_wall, attempts)
+        return DEFLAGRATION_NAN
+
+    v = v[:i_shock]
+    w = w[:i_shock]
+    xi = xi[:i_shock]
+
+    xi_sh = xi[-1]
+    vm_sh = v[-1]
+    wm_sh = w[-1]
+    vm_tilde_sh = relativity.lorentz(xi_sh, vm_sh)
+    wn_estimate = boundary.w2_junction(vm_tilde_sh, wm_sh, xi_sh)
+
+    vm = relativity.lorentz(vm_tilde, v_wall)
+    return v, w, xi, vp, vm, vp_tilde, vm_tilde, xi_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh
+
+
+def sound_shell_deflagration_reverse(
+        model: "Model", v_wall: float, wn: float, xi_sh: float, t_end: float, n_xi: int,
+        allow_failure: bool = False):
+    logger.warning("UNTESTED, will probably produce invalid results")
+
+    if np.isnan(v_wall) or v_wall < 0 or v_wall > 1 or np.isnan(xi_sh) or xi_sh < 0 or xi_sh > 1:
+        logger.error(f"Invalid parameters: v_wall={v_wall}, xi_sh={xi_sh}")
         nan_arr = np.array([np.nan])
-        return nan_arr, nan_arr, nan_arr
-    al_p = alpha.find_alpha_plus(v_wall, alpha_n, n_xi)
-    if not np.isnan(al_p):
-        # SolutionType has to be passed by its value when jitting
-        return fluid_shell_alpha_plus(v_wall, al_p, sol_type.value, n_xi)
-    nan_arr = np.array([np.nan])
-    return nan_arr, nan_arr, nan_arr
+        return nan_arr, nan_arr, nan_arr, np.nan, np.nan
 
+    # Solve boundary conditions at the shock
+    vm_sh = shock.v_shock_bag(xi_sh)
+    wm_sh = shock.wm_shock_bag(xi_sh, wn)
 
-@numba.njit
-def fluid_shell_alpha_plus(
-        v_wall: float,
-        alpha_plus: float,
-        sol_type: boundary.SolutionType = boundary.SolutionType.UNKNOWN,
-        n_xi: int = const.N_XI_DEFAULT,
-        w_n: float = 1.,
-        cs2_fun: bag.CS2Fun = bag.cs2_bag,
-        df_dtau_ptr: speedup.DifferentialPointer = DF_DTAU_BAG_PTR) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    r"""
-    Finds fluid shell (v, w, xi) from a given $v_\text{wall}, \alpha_+$ (at-wall strength parameter).
-    Where $v=0$ (behind and ahead of shell) uses only two points.
-
-    :param v_wall: $v_\text{wall}$
-    :param alpha_plus: $\alpha_+$
-    :param sol_type: specify wall type if more than one permitted.
-    :param n_xi: increase resolution
-    :param w_n: specify enthalpy outside fluid shell
-    :param cs2_fun: sound speed squared as a function of enthalpy, default
-    :param df_dtau_ptr: pointer to the differential equation function
-    :return: $v, w, \xi$
-    """
-    check.check_wall_speed(v_wall)
-
-    if sol_type == boundary.SolutionType.UNKNOWN.value:
-        sol_type = transition.identify_solution_type_alpha_plus(v_wall, alpha_plus).value
-    # The identification above may set sol_type to error
-    if sol_type == boundary.SolutionType.ERROR.value:
-        with numba.objmode:
-            logger.error("Giving up because of identify_solution_type error")
+    # Integrate from the shock to the wall
+    logger.info(
+        f"Integrating deflagration with v_wall={v_wall}, wn={wn} from vm_sh={vm_sh}, wm_sh={wm_sh}, xi_sh={xi_sh}")
+    v, w, xi, t = integrate.fluid_integrate_param(
+        v0=vm_sh, w0=wm_sh, xi0=xi_sh,
+        phase=Phase.SYMMETRIC,
+        t_end=t_end,
+        n_xi=n_xi,
+        df_dtau_ptr=model.df_dtau_ptr(),
+        # method="RK45"
+    )
+    # Trim the integration to the wall
+    v = np.flip(v)
+    w = np.flip(w)
+    xi = np.flip(xi)
+    # print(np.array([v, w, xi]).T)
+    i_min_xi = np.argmin(xi)
+    i_wall = np.argmax(xi[i_min_xi:] >= v_wall) + i_min_xi
+    # If the curve goes vertical before xi_wall is reached
+    if i_wall == i_min_xi:
         nan_arr = np.array([np.nan])
-        return nan_arr, nan_arr, nan_arr
+        return nan_arr, nan_arr, nan_arr, np.nan, np.nan
+    v = v[i_wall:]
+    w = w[i_wall:]
+    xi = xi[i_wall:]
 
-    # Solve boundary conditions at wall
-    vfp_w, vfm_w, vfp_p, vfm_p = boundary.fluid_speeds_at_wall(v_wall, alpha_plus, sol_type)
-    wp = 1.0  # Nominal value - will be rescaled later
-    wm = wp / boundary.enthalpy_ratio(vfm_w, vfp_w)  # enthalpy just behind wall
+    # Solve boundary conditions at the wall
+    vp = v[0]
+    wp = w[0]
+    vp_tilde = -relativity.lorentz(vp, v_wall)
+    if np.isnan(vp_tilde) or vp_tilde < 0:
+        logger.warning("Got vp_tilde < 0")
+        # nan_arr = np.array([np.nan])
+        # return nan_arr, nan_arr, nan_arr, np.nan, np.nan
 
+    vm_tilde, wm = boundary.solve_junction(
+        model, vp_tilde, wp,
+        Phase.SYMMETRIC, Phase.BROKEN,
+        v2_tilde_guess=v_wall, w2_guess=wp,
+        allow_failure=allow_failure
+    )
+    vm = relativity.lorentz(vm_tilde, v_wall)
+
+    return v, w, xi, wp, wm, vm
+
+
+def sound_shell_detonation(
+        model: "Model", v_wall: float, alpha_n: float, wn: float, v_cj: float,
+        vm_tilde_guess: float, wm_guess: float, t_end: float, n_xi: int) -> SolverOutput:
+    if transition.cannot_be_detonation(v_wall, v_cj):
+        logger.error(f"Too slow wall speed for a detonation: v_wall={v_wall}, v_cj={v_cj}")
+
+    # Todo: use analytical ConstCSModel equations for both phases
+
+    # Use bag model as the starting point. This may fail for points near the v_cj curve.
+    vp_tilde_bag, vm_tilde_bag, vp_bag, vm_bag = boundary.fluid_speeds_at_wall(
+        v_wall, alpha_p=alpha_n, sol_type=SolutionType.DETON)
+    wm_bag = boundary.w2_junction(v1=vp_tilde_bag, w1=wn, v2=vm_tilde_bag)
+
+    # The bag model works for more points than the pre-generated guesses, so let's use the bag model if we can.
+    if not np.isnan(vm_tilde_bag):
+        vm_tilde_guess = vm_tilde_bag
+    if not np.isnan(wm_bag):
+        wm_guess = wm_bag
+
+    # Constant sound speed model vm_tilde
+    # csb2_guess = model.cs2(w=wm_guess, phase=Phase.BROKEN)
+    # atbn = model.alpha_theta_bar_n(wn)
+    # a = v_wall / csb2_guess
+    # b = 3*atbn - 1 - v_wall**2 * (1/csb2_guess + 3*atbn)
+    # c = v_wall
+    # vm_tilde_guess = -b + np.sqrt(b**2 - 4*a*c) / (2*a)
+
+    # This does not work as well
+    # if (wm_guess is None or np.isnan(wm_guess)) and not np.isnan(wm_bag):
+    #     wm_guess = wm_bag
+    # if (vm_tilde_guess is None or np.isnan(vm_tilde_guess)) and not np.isnan(vm_tilde_bag):
+    #     vm_tilde_guess = vm_tilde_bag
+
+    # If the guess is not a valid detonation, decrease vm
+    v_mu_tilde_guess = np.sqrt(model.cs2(w=wm_guess, phase=Phase.BROKEN))
+    v_mu_guess = relativity.lorentz(xi=v_wall, v=v_mu_tilde_guess)
+    vm_guess = relativity.lorentz(xi=v_wall, v=vm_tilde_guess)
+    if vm_guess > v_mu_guess:
+        vm_guess = v_mu_guess
+        vm_tilde_guess = relativity.lorentz(xi=v_wall, v=vm_guess)
+        # vm_guess2 = relativity.lorentz(xi=v_wall, v=vm_tilde_guess)
+        # if vm_guess2 > v_mu_guess or vm_tilde_guess < 0 or vm_tilde_guess > 1:
+        #     raise RuntimeError("This should not happen. There is something wrong with the math.")
+
+    # Solve junction conditions
+    vm_tilde, wm = boundary.solve_junction(
+        model,
+        v1_tilde=v_wall, w1=wn,
+        phase1=Phase.SYMMETRIC, phase2=Phase.BROKEN,
+        v2_tilde_guess=vm_tilde_guess, w2_guess=wm_guess,
+        w2_min=wn,
+        allow_negative_entropy_flux_change=True,
+    )
+    # Convert to the plasma frame
+    vm = relativity.lorentz(v_wall, vm_tilde)
+    csb = np.sqrt(model.cs2(w=wm, phase=Phase.BROKEN))
+    v_mu = relativity.lorentz(xi=v_wall, v=csb)
+    solution_found = vm <= v_mu
+    first_attempt_success = solution_found
+    if not solution_found:
+        vm_tilde2, wm2 = boundary.solve_junction(
+            model,
+            v1_tilde=v_wall, w1=wn,
+            phase1=Phase.SYMMETRIC, phase2=Phase.BROKEN,
+            v2_tilde_guess=0.7*csb, w2_guess=(wm_guess + wn) / 2,
+            w2_min=wn,
+            allow_negative_entropy_flux_change=True,
+        )
+        vm2 = relativity.lorentz(v_wall, vm_tilde2)
+        solution_found = vm2 < v_mu
+        if solution_found:
+            vm_tilde = vm_tilde2
+            vm = vm2
+            wm = wm2
+    if not solution_found:
+        csb_lower = relativity.lorentz(xi=v_wall, v=0.5*v_mu)
+        vm_tilde2, wm2 = boundary.solve_junction(
+            model,
+            v1_tilde=v_wall, w1=wn,
+            phase1=Phase.SYMMETRIC, phase2=Phase.BROKEN,
+            v2_tilde_guess=csb_lower, w2_guess=(wm_guess + wn) / 2,
+            w2_min=wn,
+            allow_negative_entropy_flux_change=True,
+        )
+        vm2 = relativity.lorentz(v_wall, vm_tilde2)
+        solution_found = vm2 < v_mu
+        if solution_found:
+            vm_tilde = vm_tilde2
+            vm = vm2
+            wm = wm2
+    if not first_attempt_success:
+        if solution_found:
+            logger.warning(
+                "The detonation solver converged to a hybrid solution, but the attempt to fix it succeeded. "
+                "v_wall=vp_tilde=%s, alpha_n=%s, "
+                "vm=%s, vm_tilde=%s, v_mu=%s, "
+                "vm_tilde_guess=%s",
+                v_wall, alpha_n, vm, vm_tilde, v_mu, vm_tilde_guess
+            )
+        else:
+            logger.error(
+                "The detonation solver converged to a hybrid solution, and the attempt to fix it failed. "
+                "v_wall=vp_tilde=%s, alpha_n=%s, "
+                "vm=%s, vm_tilde=%s, v_mu=%s, "
+                "vm_tilde_guess=%s",
+                v_wall, alpha_n, vm, vm_tilde, v_mu, vm_tilde_guess
+            )
+
+    v, w, xi, t = integrate.fluid_integrate_param(
+        v0=vm, w0=wm, xi0=v_wall,
+        phase=Phase.BROKEN,
+        t_end=-t_end,
+        n_xi=n_xi,
+        df_dtau_ptr=model.df_dtau_ptr()
+    )
+    v, w, xi, t = trim.trim_fluid_wall_to_cs(v, w, xi, t, v_wall, SolutionType.DETON, cs2_fun=model.cs2)
+
+    # The fluid is still ahead of the wall
+    vp = 0
+    vp_tilde = v_wall
+
+    # Shock quantities are those of the wall
+    v_sh = v_wall
+    vm_sh = vm
+    vm_tilde_sh = vm_tilde
+
+    # Revert the order of points in the arrays for concatenation
+    return np.flip(v), np.flip(w), np.flip(xi), vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wn, wm, wm, solution_found
+
+
+def sound_shell_hybrid(
+        model: "Model", v_wall: float, wn: float, wm: float, cs_n: float, v_cj: float,
+        vp_tilde_guess: float, wp_guess: float, t_end: float, n_xi: int,
+        thin_shell_limit: int,
+        allow_failure: bool = False,
+        allow_negative_entropy_flux_change: bool = False,
+        warn_if_shock_barely_exists: bool = True) -> DeflagrationOutput:
+    # Exit velocity is at the sound speed
+    vm_tilde = np.sqrt(model.cs2(wm, Phase.BROKEN))
+
+    # Simple starting guesses
+    if np.isnan(vp_tilde_guess):
+        vp_tilde_guess = 0.75 * vm_tilde
+    if np.isnan(wp_guess):
+        wp_guess = 2*wm
+
+    ret = sound_shell_deflagration_common(
+        model,
+        v_wall=v_wall,
+        vm_tilde=vm_tilde,
+        wn=wn, wm=wm,
+        cs_n=cs_n, v_cj=v_cj,
+        vp_tilde_guess=vp_tilde_guess, wp_guess=wp_guess,
+        sol_type=SolutionType.HYBRID,
+        t_end=t_end, n_xi=n_xi,
+        thin_shell_limit=thin_shell_limit,
+        allow_failure=allow_failure,
+        allow_negative_entropy_flux_change=allow_negative_entropy_flux_change,
+        warn_if_shock_barely_exists=warn_if_shock_barely_exists
+    )
+    if not np.isnan(ret[4]):
+        return ret
+
+    vm = relativity.lorentz(xi=v_wall, v=vm_tilde)
+    # Shock velocity at xi_wall
+    v_sh_estimate = shock.v_shock(model, wn=wn, xi=v_wall, cs_n=cs_n)
+    vp_guess = relativity.lorentz(xi=v_wall, v=vp_tilde_guess)
+
+    # More complex starting guesses
+    if np.isnan(vp_tilde_guess) or vp_guess < v_sh_estimate or vp_guess < vm or np.isnan(wp_guess) or wp_guess < wn or wp_guess < wm:
+        vp_guess = 1.05 * v_sh_estimate
+        vp_tilde_guess = relativity.lorentz(xi=v_wall, v=vp_guess)
+        wp_guess = wn + 1.3*np.abs(wm - wn)
+        logger.warning(
+            "vp_tilde_guess or wp_guess was not provided for the hybrid solver or was invalid. "
+            "Using automatic starting guesses. vp_guess=%s, vp_tilde_guess=%s, wp_guess=%s",
+            vp_guess, vp_tilde_guess, wp_guess
+        )
+
+    ret2 = sound_shell_deflagration_common(
+        model,
+        v_wall=v_wall,
+        vm_tilde=vm_tilde,
+        wn=wn, wm=wm,
+        cs_n=cs_n, v_cj=v_cj,
+        vp_tilde_guess=vp_tilde_guess, wp_guess=wp_guess,
+        sol_type=SolutionType.HYBRID,
+        t_end=t_end, n_xi=n_xi,
+        thin_shell_limit=thin_shell_limit,
+        allow_failure=allow_failure,
+        allow_negative_entropy_flux_change=allow_negative_entropy_flux_change,
+        warn_if_shock_barely_exists=warn_if_shock_barely_exists
+    )
+    if not np.isnan(ret2[4]):
+        return ret2
+    return ret
+
+
+# Solvables
+
+def sound_shell_solvable_deflagration_reverse(
+        params: np.ndarray, model: "Model", v_wall: float, wn: float, t_end: float, n_xi: int) -> float:
+    xi_sh = params[0]
+    # pylint: disable=unused-variable
+    v, w, xi, vm, wm = sound_shell_deflagration_reverse(
+        model, v_wall, wn, xi_sh, t_end=t_end, n_xi=n_xi, allow_failure=True)
+    return vm
+
+
+def sound_shell_solvable_deflagration(
+        # params: np.ndarray,
+        w_center: float, model: "Model", v_wall: float, wn: float, cs_n: float, v_cj: float,
+        vp_guess: float, wp_guess: float, t_end: float, n_xi: int, thin_shell_limit: int) -> float:
+    if isinstance(w_center, np.ndarray):
+        w_center = w_center[0]
+    if np.isnan(w_center) or w_center < 0:
+        return np.nan
+    # pylint: disable=unused-variable
+    v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = sound_shell_deflagration(
+        model, v_wall=v_wall, wn=wn, w_center=w_center, cs_n=cs_n, v_cj=v_cj,
+        vp_guess=vp_guess, wp_guess=wp_guess, t_end=t_end, n_xi=n_xi, thin_shell_limit=thin_shell_limit,
+        allow_failure=True,
+        allow_negative_entropy_flux_change=True,
+        warn_if_shock_barely_exists=False
+    )
+    return wn_estimate - wn
+
+
+def sound_shell_solvable_hybrid(
+        # params: np.ndarray,
+        wm: float, model: "Model", v_wall: float, wn: float, cs_n: float, v_cj: float,
+        vp_tilde_guess: float, wp_guess: float, t_end: float, n_xi: int, thin_shell_limit: int) -> float:
+    if isinstance(wm, np.ndarray):
+        wm = wm[0]
+    if np.isnan(wm) or wm < 0:
+        return np.nan
+    # pylint: disable=unused-variable
+    v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = sound_shell_hybrid(
+        model, v_wall=v_wall, wn=wn, wm=wm,
+        cs_n=cs_n, v_cj=v_cj,
+        vp_tilde_guess=vp_tilde_guess, wp_guess=wp_guess, t_end=t_end, n_xi=n_xi, thin_shell_limit=thin_shell_limit,
+        allow_failure=True,
+        allow_negative_entropy_flux_change=True,
+        warn_if_shock_barely_exists=False
+    )
+    diff = wn_estimate - wn
+    # logger.debug(
+    #     "Hybrid solvable results: wn_target=%s, wn_computed=%s, diff=%s, wm=%s, vp=%s",
+    #     wn, wn_estimate, diff, wm, vp
+    # )
+    return diff
+
+
+# Solvers
+
+def sound_shell_solver_deflagration(
+        model: "Model",
+        start_time: float,
+        v_wall: float, alpha_n: float, wn: float, cs_n: float, v_cj: float, high_alpha_n: bool,
+        wm_guess: float, vp_guess: float, wp_guess: float, wn_rtol: float, t_end: float, n_xi: int,
+        thin_shell_limit: int,
+        allow_failure: bool, log_high_alpha_n_failures: bool = True) -> SolverOutput:
+    if vp_guess > v_wall:
+        vp_guess_new = 0.95 * v_wall
+        if log_high_alpha_n_failures or not high_alpha_n:
+            logger.error("Invalid vp_guess=%s > v_wall=%s, replacing with vp_guess=%s", vp_guess, v_wall, vp_guess_new)
+        vp_guess = vp_guess_new
+
+    sol = root_scalar(
+        sound_shell_solvable_deflagration,
+        x0=0.99*wm_guess,
+        x1=1.01*wm_guess,
+        args=(model, v_wall, wn, cs_n, v_cj, vp_guess, wp_guess, t_end, n_xi, thin_shell_limit),
+    )
+    wm = sol.root
+    solution_found = sol.converged
+    reason = sol.flag
+
+    if not solution_found:
+        # if not high_alpha_n:
+        #     logger.error("FALLBACK")
+        sol = fsolve_vary(
+            sound_shell_solvable_deflagration,
+            np.array([wm_guess]),
+            args=(model, v_wall, wn, cs_n, v_cj, vp_guess, wp_guess, t_end, n_xi, thin_shell_limit),
+            log_status=log_high_alpha_n_failures or not high_alpha_n
+        )
+        wm = sol[0][0]
+        solution_found = sol[2] == 1
+        reason = sol[3]
+
+    v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = sound_shell_deflagration(
+        model, v_wall, wn, wm,
+        cs_n=cs_n, v_cj=v_cj,
+        vp_guess=vp_guess, wp_guess=wp_guess, t_end=t_end, n_xi=n_xi, thin_shell_limit=thin_shell_limit,
+        allow_failure=allow_failure,
+        allow_negative_entropy_flux_change=True,
+        warn_if_shock_barely_exists=False
+    )
+    if solution_found and not np.isclose(wn_estimate, wn, rtol=wn_rtol):
+        solution_found = False
+        reason = f"Result not within rtol={wn_rtol}."
+    if not solution_found:
+        msg = (
+            f"Deflagration solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. " +
+            ("(as expected) " if high_alpha_n else "") +
+            f"Got wn_estimate={wn_estimate} for wn={wn}." +
+            f"Reason: {reason} " +
+            f"Elapsed: {time.perf_counter() - start_time} s."
+        )
+        if high_alpha_n:
+            if log_high_alpha_n_failures:
+                logger.warning(msg)
+        else:
+            logger.error(msg)
+    # print(np.array([v, w, xi]).T)
+    # print("wn, xi_sh", wn, xi_sh)
+
+    return v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, solution_found
+
+
+def sound_shell_solver_deflagration_reverse(
+        model: "Model",
+        start_time: float,
+        v_wall: float, alpha_n: float, wn: float, t_end: float, n_xi: int) -> SolverOutput:
+    # This is arbitrary and should be replaced by a value from the bag model
+    xi_sh_guess = 1.1 * np.sqrt(model.cs2_max(wn, Phase.BROKEN))
+    sol = fsolve(
+        sound_shell_solvable_deflagration_reverse,
+        xi_sh_guess,
+        args=(model, v_wall, wn, t_end, n_xi),
+        full_output=True
+    )
+    xi_sh = sol[0][0]
+    solution_found = True
+    if sol[2] != 1:
+        solution_found = False
+        logger.error(
+            f"Deflagration solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. "
+            f"Using xi_sh={xi_sh}. Reason: {sol[3]} Elapsed: {time.perf_counter() - start_time} s."
+        )
+    v, w, xi, wp, wm, vm = sound_shell_deflagration_reverse(model, v_wall, wn, xi_sh, t_end=t_end, n_xi=n_xi)
+
+    return v, w, xi, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, wp, wm, np.nan, solution_found
+
+
+def sound_shell_solver_hybrid(
+        model: "Model",
+        start_time: float,
+        v_wall: float, alpha_n: float, wn: float, cs_n: float, v_cj: float, high_alpha_n: bool,
+        vp_tilde_guess: float, wp_guess: float, wm_guess: float, wn_rtol: float, t_end: float, n_xi: int,
+        thin_shell_limit: int,
+        allow_failure: bool, log_high_alpha_n_failures: bool) -> SolverOutput:
+    if v_wall >= v_cj:
+        raise RuntimeError(f"Invalid v_wall for a hybrid: v_wall={v_wall}, v_cj={v_cj}")
+
+    # This may not work, as we don't know whether the solvable has a different sign at the endpoints.
+    # sol = root_scalar(
+    #     sound_shell_solvable_hybrid,
+    #     x0=0.99*wm_guess,
+    #     x1=1.01*wm_guess,
+    #     args=(model, v_wall, wn, cs_n, v_cj, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit)
+    # )
+    # wm = sol.root
+    # solution_found = sol.converged
+    # reason = sol.flag
+
+    # if not high_alpha_n:
+    #     logger.error("FALLBACK")
+    sol = fsolve_vary(
+        sound_shell_solvable_hybrid,
+        np.array([wm_guess]),
+        args=(model, v_wall, wn, cs_n, v_cj, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit),
+        log_status=log_high_alpha_n_failures or not high_alpha_n
+    )
+    solution_found = sol[2] == 1
+    wm = sol[0][0]
+    reason = sol[3]
+
+    # If both solvers failed, then adjust the search range for wm
+    if not solution_found:
+        logger.debug("Entering backup hybrid solver")
+        wms = np.linspace(0.3 * wm_guess, 3 * wm_guess, 20)
+        vps = np.zeros_like(wms)
+        v_sh = shock.v_shock(model, wn=wn, xi=v_wall, cs_n=cs_n)
+        for i, wm_i in enumerate(wms):
+            vp = boundary.v_plus_hybrid(
+                model,
+                v_wall=v_wall, wm=wm_i,
+                vp_tilde_guess=vp_tilde_guess, wp_guess=wp_guess,
+                allow_failure=allow_failure,
+                allow_negative_entropy_flux_change=allow_failure
+            )
+            # We must approach the shock curve from above
+            if vp > v_sh:
+                vps[i] = vp
+
+        valid_wm_inds = np.argwhere(vps != 0)
+        valid_wms = wms[valid_wm_inds][:, 0]
+        # if valid_wms.size >= 2:
+        #     wm_min = wms[valid_wms[0, 0]]
+        #     wm_max = wms[valid_wms[-1, 0]]
+        #
+        #     sol = root_scalar(
+        #         sound_shell_solvable_hybrid,
+        #         x0=wm_min,
+        #         x1=wm_max,
+        #         args=(model, v_wall, wn, cs_n, v_cj, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit)
+        #     )
+        #     if sol.converged:
+        #         solution_found = True
+        #         wm = sol.root
+        #         reason = sol.flag
+
+        logger.debug(f"Valid wms: {valid_wms}, inds: {valid_wm_inds}")
+        for i in range(vps.size):
+            if vps[i] == 0:
+                continue
+            vp_i = vps[i]
+            wm_i = wms[i]
+            logger.debug(f"wm={wm_i}, vp={vp_i}")
+            # sol = fsolve(
+            #     sound_shell_solvable_hybrid,
+            #     np.array([wm_i]),
+            #     args=(model, v_wall, wn, cs_n, v_cj, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit),
+            #     # log_status=log_high_alpha_n_failures or not high_alpha_n,
+            #     full_output=True
+            # )
+            # if sol[2] == 1:
+            #     solution_found = True
+            #     wm = sol[0][0]
+            #     reason = sol[3]
+            #     break
+
+            sol = fsolve(
+                sound_shell_solvable_hybrid,
+                x0=wm_i,
+                args=(model, v_wall, wn, cs_n, v_cj, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit),
+                full_output=True
+            )
+            if sol[2] == 1:
+                solution_found = True
+                wm = sol[0][0]
+                reason = sol[3]
+                break
+
+        logger.debug(
+            "Backup hybrid solver results: solution_found=%s, valid_wms=%s, vps=%s, v_sh=%s",
+            solution_found, valid_wms, vps, v_sh
+        )
+
+    v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = sound_shell_hybrid(
+        model, v_wall, wn, wm,
+        cs_n=cs_n, v_cj=v_cj,
+        vp_tilde_guess=vp_tilde_guess,
+        wp_guess=wp_guess,
+        t_end=t_end, n_xi=n_xi,
+        thin_shell_limit=thin_shell_limit,
+        allow_failure=allow_failure,
+        allow_negative_entropy_flux_change=True,
+        warn_if_shock_barely_exists=False
+    )
+    # wp = w[0]
+    if solution_found and not np.isclose(wn_estimate, wn, rtol=wn_rtol):
+        solution_found = False
+        reason = f"Result not within rtol={wn_rtol}."
+    if not solution_found:
+        msg = (
+            f"Hybrid solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. " +
+            f"Got wn_estimate={wn_estimate} for wn={wn}. " +
+            ("(as expected)" if high_alpha_n else "") +
+            f"Reason: {reason} " +
+            f"Elapsed: {time.perf_counter() - start_time} s."
+        )
+        if high_alpha_n:
+            if log_high_alpha_n_failures:
+                logger.warning(msg)
+        else:
+            logger.error(msg)
+
+    vm = relativity.lorentz(v_wall, np.sqrt(model.cs2(wm, Phase.BROKEN)))
+    v_tail, w_tail, xi_tail, t_tail = integrate.fluid_integrate_param(
+        vm, wm, v_wall,
+        phase=Phase.BROKEN,
+        t_end=-t_end,
+        n_xi=n_xi,
+        df_dtau_ptr=model.df_dtau_ptr()
+    )
+    v = np.concatenate((np.flip(v_tail), v))
+    w = np.concatenate((np.flip(w_tail), w))
+    xi = np.concatenate((np.flip(xi_tail), xi))
+
+    return v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, solution_found
+
+
+# Main function
+
+def sound_shell_generic(
+            model: "Model",
+            v_wall: float,
+            alpha_n: float,
+            sol_type: tp.Optional[SolutionType] = None,
+            wn: float = None,
+            vp_guess: float = None,
+            wn_guess: float = None,
+            wp_guess: float = None,
+            wm_guess: float = None,
+            wn_rtol: float = 1e-4,
+            alpha_n_max_bag: float = None,
+            high_alpha_n: bool = None,
+            t_end: float = const.T_END_DEFAULT,
+            n_xi: int = const.N_XI_DEFAULT,
+            thin_shell_limit: int = const.THIN_SHELL_T_POINTS_MIN,
+            reverse: bool = False,
+            allow_failure: bool = False,
+            use_bag_solver: bool = False,
+            use_giese_solver: bool = False,
+            log_success: bool = True,
+            log_high_alpha_n_failures: bool = False
+        ) -> tp.Tuple[
+            np.ndarray, np.ndarray, np.ndarray, SolutionType,
+            float, float, float, float, float, float, float, float, float, float, float, bool, float]:
+    """Generic fluid shell solver
+
+    In most cases you should not have to call this directly. Create a Bubble instead.
+    """
+    if use_giese_solver:
+        return sound_shell_giese(
+            model=model, v_wall=v_wall, alpha_n=alpha_n, wn=wn, wn_guess=wn_guess, wm_guess=wm_guess)
+
+    start_time = time.perf_counter()
+    if alpha_n_max_bag is None:
+        alpha_n_max_bag = alpha.alpha_n_max_deflagration_bag(v_wall)
+    if high_alpha_n is None:
+        high_alpha_n = alpha_n > alpha_n_max_bag
+
+    if wn is None or np.isnan(wn):
+        wn = model.wn(alpha_n, wn_guess=wn_guess)
+    # The shock curve hits v=0 here
+    cs_n = np.sqrt(model.cs2(wn, Phase.SYMMETRIC))
+
+    if use_bag_solver and model.DEFAULT_NAME == "bag":
+        if high_alpha_n:
+            logger.info("Got model=%s, v_wall=%s, alpha_n=%s, for which there is no solution.", model.label_unicode, v_wall, alpha_n)
+            return const.nan_arr, const.nan_arr, const.nan_arr, SolutionType.ERROR, \
+                np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, True, time.perf_counter() - start_time
+
+        logger.info("Using bag solver for model=%s, v_wall=%s, alpha_n=%s", model.label_unicode, v_wall, alpha_n)
+        sol_type2 = transition.identify_solution_type_bag(v_wall, alpha_n)
+        if sol_type is not None and sol_type != sol_type2:
+            raise ValueError(f"Bag model gave a different solution type ({sol_type2}) than what was given ({sol_type}).")
+
+        v, w, xi = fluid_bag.sound_shell_bag(v_wall, alpha_n)
+        # The results of the old solver are scaled to wn=1
+        w *= wn
+        if np.any(np.isnan(v)):
+            return v, w, xi, sol_type2, \
+                np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, True, time.perf_counter() - start_time
+
+        vp, vm, vp_tilde, vm_tilde, wp, wm, wn, wm_sh = props.v_and_w_from_solution(v, w, xi, v_wall, sol_type2)
+
+        # The wm_guess is not needed for the bag model
+        v_cj: float = chapman_jouguet.v_chapman_jouguet(model, alpha_n, wn=wn, wm_guess=wm)
+        return v, w, xi, sol_type2, \
+            vp, vm, vp_tilde, vm_tilde, np.nan, np.nan, np.nan, wp, wm, wm_sh, v_cj, False, time.perf_counter() - start_time
+
+    sol_type = transition.validate_solution_type(
+        model,
+        v_wall=v_wall, alpha_n=alpha_n, sol_type=sol_type,
+        wn=wn, wm_guess=wm_guess
+    )
+
+    # Load and scale reference data
+    using_ref = False
+    vp_ref, vm_ref, vp_tilde_ref, vm_tilde_ref, wp_ref, wm_ref = fluid_reference.ref().get(v_wall, alpha_n, sol_type)
+
+    if vp_guess is None or np.isnan(vp_guess):
+        using_ref = True
+        vp_guess = vp_ref
+        vp_tilde_guess = vp_tilde_ref
+    else:
+        vp_tilde_guess = relativity.lorentz(v_wall, vp_guess)
+
+    # The reference data has wn=1 and therefore has to be scaled with wn.
+    if wp_guess is None or np.isnan(wp_guess):
+        using_ref = True
+        # Deflagrations have their own method for guessing wp, so this can be nan.
+        wp_guess = wp_ref * wn
+    if wm_guess is None or np.isnan(wp_guess):
+        using_ref = True
+        if np.isnan(wm_ref):
+            logger.warning(
+                "No reference data for v_wall=%s, alpha_n=%s. Using an arbitrary starting guess.",
+                v_wall, alpha_n
+            )
+            # This is arbitrary, but seems to work OK.
+            wm_guess = 0.3 * wn
+        else:
+            wm_guess = wm_ref * wn
+    # if wn_guess is None:
+    #     wn_guess = min(wp_guess, wm_guess)
+
+    if using_ref and np.any(np.isnan((vp_ref, vm_ref, vp_tilde_ref, vm_tilde_ref, wp_ref, wm_ref))):
+        logger.warning(
+            "Using arbitrary starting guesses at v_wall=%s, alpha_n=%s,"
+            "as all starting guesses were not provided, and the reference has nan values."
+        )
+
+    if vp_guess < 0 or vp_guess > 1 or vp_tilde_guess < 0 or vp_tilde_guess > 1 or wm_guess < 0 or wp_guess < wn:
+        raise ValueError(
+            f"Got invalid guesses: vp_tilde={vp_tilde_guess}, wp={wp_guess}, wm={wm_guess}"
+            f"for v_wall={v_wall}, alpha_n={alpha_n}, wn={wn_guess}"
+        )
+
+    v_cj = chapman_jouguet.v_chapman_jouguet(model, alpha_n, wn=wn, wm_guess=wm_guess)
     dxi = 1. / n_xi
-    # dxi = 10*eps
 
-    # Set up parts outside shell where v=0. Need 2 points only.
-    xif = np.linspace(v_wall + dxi, 1.0, 2)
+    if log_success:
+        logger.info(
+            "Solving fluid shell for model=%s, v_wall=%s, alpha_n=%s " +
+            (f"(alpha_n_max_bag={alpha_n_max_bag}) " if high_alpha_n and sol_type != SolutionType.DETON else "") +
+            "with sol_type=%s, v_cj=%s, wn=%s "
+            "and starting guesses vp=%s vp_tilde=%s, wp=%s, wm=%s, wn=%s",
+            model.label_unicode, v_wall, alpha_n,
+            sol_type, v_cj, wn,
+            vp_guess, vp_tilde_guess, wp_guess, wm_guess, wn_guess
+        )
+
+    # Detonations are the simplest case
+    if sol_type == SolutionType.DETON:
+        v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, solution_found = \
+            sound_shell_detonation(
+                model, v_wall, alpha_n, wn, v_cj,
+                vm_tilde_guess=vm_tilde_ref, wm_guess=wm_ref, t_end=t_end, n_xi=n_xi,
+            )
+    elif sol_type == SolutionType.SUB_DEF:
+        if transition.cannot_be_sub_def(model, v_wall, wn):
+            raise ValueError(
+                f"Invalid parameters for a subsonic deflagration: model={model.name}, v_wall={v_wall}, wn={wn}. "
+                "Decrease v_wall or increase csb2."
+            )
+
+        # In more advanced models,
+        # the direction of the integration will probably have to be determined by trial and error.
+        if reverse:
+            logger.warning("Using reverse deflagration solver, which has not been properly tested.")
+            v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, solution_found = \
+                sound_shell_solver_deflagration_reverse(
+                    model, start_time, v_wall, alpha_n, wn,
+                    t_end=t_end, n_xi=n_xi
+                )
+        else:
+            v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, solution_found = \
+                sound_shell_solver_deflagration(
+                    model, start_time,
+                    v_wall, alpha_n, wn,
+                    cs_n=cs_n, v_cj=v_cj,
+                    high_alpha_n=high_alpha_n,
+                    wm_guess=wm_guess, vp_guess=vp_guess, wp_guess=wp_guess, wn_rtol=wn_rtol, t_end=t_end, n_xi=n_xi,
+                    thin_shell_limit=thin_shell_limit,
+                    allow_failure=allow_failure, log_high_alpha_n_failures=log_high_alpha_n_failures
+                )
+    elif sol_type == SolutionType.HYBRID:
+        v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, solution_found = \
+            sound_shell_solver_hybrid(
+                model, start_time,
+                v_wall, alpha_n, wn,
+                cs_n=cs_n,
+                v_cj=v_cj,
+                high_alpha_n=high_alpha_n,
+                vp_tilde_guess=vp_tilde_guess,
+                wp_guess=wp_guess,
+                wm_guess=wm_guess,
+                wn_rtol=wn_rtol,
+                t_end=t_end, n_xi=n_xi,
+                thin_shell_limit=thin_shell_limit,
+                allow_failure=allow_failure,
+                log_high_alpha_n_failures=log_high_alpha_n_failures
+            )
+    else:
+        raise ValueError(f"Invalid solution type: {sol_type}")
+
+    # Behind and ahead of the bubble the fluid is still
+    xif = np.linspace(xi[-1] + dxi, 1, 2)
+    xib = np.linspace(0, xi[0] - dxi, 2)
     vf = np.zeros_like(xif)
-    wf = np.ones_like(xif) * wp
-
-    xib = np.linspace(min(cs2_fun(w_n) ** 0.5, v_wall) - dxi, 0.0, 2)
     vb = np.zeros_like(xib)
-    wb = np.ones_like(xib) * wm
+    wf = np.ones_like(xif) * wn
+    w_center = min(wm, w[0])
+    wb = np.ones_like(vb) * w_center
 
-    # Integrate forward and find shock.
-    if not sol_type == boundary.SolutionType.DETON.value:
-        # First go
-        v, w, xi, t = fluid_integrate_param(vfp_p, wp, v_wall, -const.T_END_DEFAULT, const.N_XI_DEFAULT, df_dtau_ptr)
-        v, w, xi, t = trim_fluid_wall_to_shock(v, w, xi, t, sol_type)
-        # Now refine so that there are ~N points between wall and shock.  A bit excessive for thin
-        # shocks perhaps, but better safe than sorry. Then improve final point with shock_zoom...
-        t_end_refine = t[-1]
-        v, w, xi, t = fluid_integrate_param(vfp_p, wp, v_wall, t_end_refine, n_xi, df_dtau_ptr)
-        v, w, xi, t = trim_fluid_wall_to_shock(v, w, xi, t, sol_type)
-        v, w, xi = props.shock_zoom_last_element(v, w, xi)
-        # Now complete to xi = 1
-        vf = np.concatenate((v, vf))
-        # enthalpy
-        vfp_s = xi[-1]  # Fluid velocity just ahead of shock in shock frame = shock speed
-        vfm_s = 1 / (3 * vfp_s)  # Fluid velocity just behind shock in shock frame
-        wf = np.ones_like(xif) * w[-1] * boundary.enthalpy_ratio(vfm_s, vfp_s)
-        wf = np.concatenate((w, wf))
-        # xi
-        xif[0] = xi[-1]
-        xif = np.concatenate((xi, xif))
+    v = np.concatenate((vb, v, vf))
+    w = np.concatenate((wb, w, wf))
+    xi = np.concatenate((xib, xi, xif))
 
-    # Integrate backward to sound speed.
-    if not sol_type == boundary.SolutionType.SUB_DEF.value:
-        # First go
-        v, w, xi, t = fluid_integrate_param(vfm_p, wm, v_wall, -const.T_END_DEFAULT, const.N_XI_DEFAULT, df_dtau_ptr)
-        v, w, xi, t = trim_fluid_wall_to_cs(v, w, xi, t, v_wall, sol_type)
-        #    # Now refine so that there are ~N points between wall and point closest to cs
-        #    # For walls just faster than sound, will give very (too?) fine a resolution.
-        #        t_end_refine = t[-1]
-        #        v,w,xi,t = fluid_integrate_param(vfm_p, wm, v_wall, t_end_refine, n_xi, cs2_fun)
-        #        v, w, xi, t = trim_fluid_wall_to_cs(v, w, xi, t, v_wall, sol_type)
-
-        # Now complete to xi = 0
-        vb = np.concatenate((v, vb))
-        wb = np.ones_like(xib) * w[-1]
-        wb = np.concatenate((w, wb))
-        # Can afford to bring this point all the way to cs2.
-        xib[0] = cs2_fun(w[-1]) ** 0.5
-        xib = np.concatenate((xi, xib))
-
-    # Now put halves together in right order
-    # Need to fix this according to python version
-    #    v  = np.concatenate((np.flip(vb,0),vf))
-    #    w  = np.concatenate((np.flip(wb,0),wf))
-    #    w  = w*(w_n/w[-1])
-    #    xi = np.concatenate((np.flip(xib,0),xif))
-    v = np.concatenate((np.flipud(vb), vf))
-    w = np.concatenate((np.flipud(wb), wf))
-    w = w * (w_n / w[-1])
-    # The memory layout of the resulting xi array may cause problems with old Numba versions.
-    xi = np.concatenate((np.flipud(xib), xif))
-    # Using .copy() results in a contiguous memory layout, alleviating the issue above.
-    return v, w, xi.copy()
+    elapsed = time.perf_counter() - start_time
+    if solution_found and log_success:
+        logger.info(
+            "Solved fluid shell for model=%s, v_wall=%s, alpha_n=%s, sol_type=%s. Elapsed: %s s",
+            model.label_unicode, v_wall, alpha_n, sol_type, elapsed
+        )
+    return v, w, xi, sol_type, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, v_cj, not solution_found, elapsed
 
 
-def fluid_shell_params(
-        v_wall: float,
-        alpha_n: float,
-        Np: int = const.N_XI_DEFAULT,
-        low_v_approx: bool = False,
-        high_v_approx: bool = False):
-    if low_v_approx and high_v_approx:
-        raise ValueError("Both low and high v approximations can't be enabled at the same time.")
+fluid_shell_generic = sound_shell_generic
 
-    # TODO: use greek symbols for kappa and omega
-    check.check_physical_params((v_wall, alpha_n))
 
-    sol_type = transition.identify_solution_type(v_wall, alpha_n)
+def sound_shell_giese(
+            model: "Model",
+            v_wall: float,
+            alpha_n: float,
+            wn: float = None,
+            wn_guess: float = None,
+            wm_guess: float = None,
+        ) -> tp.Tuple[
+            np.ndarray, np.ndarray, np.ndarray, SolutionType,
+            float, float, float, float, float, float, float, float, float, float, float, bool, float]:
+    if kappaNuMuModel is None:
+        raise ImportError("The Giese code has to be installed to use this solver.")
 
-    if sol_type is boundary.SolutionType.ERROR:
-        raise RuntimeError(f"No solution for v_wall = {v_wall}, alpha_n = {alpha_n}")
+    start_time = time.perf_counter()
 
-    v, w, xi = fluid_shell(v_wall, alpha_n, Np)
+    if wn is None or np.isnan(wn):
+        wn = model.wn(alpha_n, wn_guess=wn_guess)
+    if wm_guess is None or np.isnan(wm_guess):
+        wm_guess = 1.
 
-    # vmax = max(v)
+    try:
+        kappa_theta_bar_n, v, wow, xi, mode, vp, vm = kappaNuMuModel(
+            cs2b=model.cs2(wm_guess, Phase.BROKEN),
+            cs2s=model.cs2(wn, Phase.SYMMETRIC),
+            al=model.alpha_theta_bar_n_from_alpha_n(alpha_n=alpha_n, wn=wn),
+            vw=v_wall
+           )
+    except ValueError:
+        return const.nan_arr, const.nan_arr, const.nan_arr, SolutionType.ERROR, \
+            np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, True, time.perf_counter() - start_time
 
-    xi_even = np.linspace(1 / Np, 1 - 1 / Np, Np)
-    v_sh = props.v_shock(xi_even)
-    w_sh = props.w_shock(xi_even)
-
-    n_wall = props.find_v_index(xi, v_wall)
-    n_cs = int(np.floor(const.CS0 * Np))
-    n_sh = xi.size - 2
-
-    r = w[n_wall] / w[n_wall - 1]
-    alpha_plus = alpha_n * w[-1] / w[n_wall]
-
-    ubarf2 = quantities.ubarf_squared(v, w, xi, v_wall)
-    # Kinetic energy fraction of total (Bag equation of state)
-    ke_frac = ubarf2 / (0.75 * (1 + alpha_n))
-    # Efficiency of turning Higgs potential into kinetic energy
-    kappa = ubarf2 / (0.75 * alpha_n)
-    # and efficiency of turning Higgs potential into thermal energy
-    dw = 0.75 * quantities.mean_enthalpy_change(v, w, xi, v_wall) / (0.75 * alpha_n * w[-1])
-
-    if high_v_approx:
-        v_approx = approx.v_approx_high_alpha(xi[n_wall:n_sh], v_wall, v[n_wall])
-        w_approx = approx.w_approx_high_alpha(xi[n_wall:n_sh], v_wall, v[n_wall], w[n_wall])
-    elif low_v_approx:
-        v_approx = approx.v_approx_low_alpha(xi, v_wall, alpha_plus)
-        w_approx = approx.w_approx_low_alpha(xi, v_wall, alpha_plus)
+    if mode == 0:
+        sol_type = SolutionType.SUB_DEF
+    elif mode == 1:
+        sol_type = SolutionType.HYBRID
+    elif mode == 2:
+        sol_type = SolutionType.DETON
     else:
-        v_approx = None
-        w_approx = None
+        raise ValueError("Got invalid mode from Giese solver:", mode)
+    w: np.ndarray = wow * wn
 
-    return {
-        # Arrays
-        "v": v,
-        "w": w,
-        "xi": xi,
-        "xi_even": xi_even,
-        "v_sh": v_sh,
-        "w_sh": w_sh,
-        "v_approx": v_approx,
-        "w_approx": w_approx,
-        # Scalars
-        "n_wall": n_wall,
-        "n_cs": n_cs,
-        "n_sh": n_sh,
-        "r": r,
-        "alpha_plus": alpha_plus,
-        "ubarf2": ubarf2,
-        "ke_frac": ke_frac,
-        "kappa": kappa,
-        "dw": dw,
-        "sol_type": sol_type
-    }
+    # Velocities in the wall frame
+    vp_tilde: float = relativity.lorentz(xi=v_wall, v=vp)
+    vm_tilde: float = relativity.lorentz(xi=v_wall, v=vm)
 
+    # Shock
+    v_sh: float = xi[-3]
+    vm_sh: float = v[-3]
+    vm_tilde_sh: float = relativity.lorentz(xi=v_sh, v=vm_sh)
+    wm_sh: float = w[-3]
 
-@numba.njit
-def trim_fluid_wall_to_cs(
-        v: np.ndarray,
-        w: np.ndarray,
-        xi: np.ndarray,
-        t: np.ndarray,
-        v_wall: th.FloatOrArr,
-        sol_type: boundary.SolutionType,
-        dxi_lim: float = const.DXI_SMALL,
-        cs2_fun: bag.CS2Fun = bag.cs2_bag) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    r"""
-    Picks out fluid variable arrays $(v, w, \xi, t)$ which are definitely behind
-    the wall for deflagration and hybrid.
-    Also removes negative fluid speeds and $\xi \leq c_s$, which might be left by
-    an inaccurate integration.
-    If the wall is within about 1e-16 of cs, rounding errors are flagged.
+    # Enthalpies
+    i_wall = np.argmax(v)
+    wp: float = w[i_wall]
+    wm: float = w[i_wall - 1]
 
-    :param v: $v$
-    :param w: $w$
-    :param xi: $\xi$
-    :param t: $t$
-    :param v_wall: $v_\text{wall}$
-    :param sol_type: solution type
-    :param dxi_lim: not used
-    :param cs2_fun: function, which gives $c_s^2$
-    :return: trimmed $v, w, \xi, t$
-    """
-    check.check_wall_speed(v_wall)
-    n_start = 0
+    # Other
+    v_cj = chapman_jouguet.v_chapman_jouguet(model, alpha_n=alpha_n, wn=wn, wn_guess=wn_guess)
+    solution_found = True
+    elapsed = time.perf_counter() - start_time
 
-    # TODO: should this be 0 to match with the error handling below?
-    n_stop_index = -2
-    # n_stop = 0
-    if not sol_type == boundary.SolutionType.SUB_DEF.value:
-        for i in range(v.size):
-            if v[i] <= 0 or xi[i] ** 2 <= cs2_fun(w[i]):
-                n_stop_index = i
-                break
-
-    if n_stop_index == 0:
-        with numba.objmode:
-            logger.warning((
-                "Integation gave v < 0 or xi <= cs. "
-                "sol_type: {}, v_wall: {}, xi[0] = {}, v[0] = {}. "
-                "Fluid profile has only one element between vw and cs. "
-                "Fix implemented by adding one extra point.").format(sol_type, v_wall, xi[0], v[0]))
-        n_stop = 1
-    else:
-        n_stop = n_stop_index
-
-    if (xi[0] == v_wall) and not (sol_type == boundary.SolutionType.DETON.value):
-        n_start = 1
-        n_stop += 1
-
-    return v[n_start:n_stop], w[n_start:n_stop], xi[n_start:n_stop], t[n_start:n_stop]
-
-
-@numba.njit
-def trim_fluid_wall_to_shock(
-        v: np.ndarray,
-        w: np.ndarray,
-        xi: np.ndarray,
-        t: np.ndarray,
-        sol_type: boundary.SolutionType) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    r"""
-    Trims fluid variable arrays $(v, w, \xi)$ so last element is just ahead of shock.
-
-    :param v: $v$
-    :param w: $w$
-    :param xi: $\xi$
-    :param t: $t$
-    :param sol_type: solution type
-    :return: trimmed $v, w, \xi, t$
-    """
-    # TODO: should this be 0 to match with the error handling below?
-    n_shock_index = -2
-    # n_shock = 0
-    if sol_type != boundary.SolutionType.DETON.value:
-        for i in range(v.size):
-            if v[i] <= props.v_shock(xi[i]):
-                n_shock_index = i
-                break
-
-    if n_shock_index == 0:
-        with numba.objmode:
-            # F-strings are not yet supported by Numba, even in object mode.
-            # https://github.com/numba/numba/issues/3250
-            logger.warning((
-                "v[0] < v_shock(xi[0]). "
-                "sol_type: {}, xi[0] = {}, v[0] = {}, v_sh(xi[0]) = {}. "
-                "Shock profile has only one element. Fix implemented by adding one extra point.").format(
-                sol_type, xi[0], v[0], props.v_shock(xi[0])
-            ))
-        n_shock = 1
-    else:
-        n_shock = n_shock_index
-
-    return v[:n_shock + 1], w[:n_shock + 1], xi[:n_shock + 1], t[:n_shock + 1]
+    return v, w, xi, sol_type, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, v_cj, not solution_found, elapsed

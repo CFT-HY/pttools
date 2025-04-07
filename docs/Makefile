@@ -1,9 +1,9 @@
 # Minimal makefile for Sphinx documentation
-#
 
 # You can set these variables from the command line, and also
 # from the environment for the first two.
-SPHINXOPTS    ?=
+# The --jobs auto parameter has been added in the hope that it would enable parallelization.
+SPHINXOPTS    ?= --jobs auto
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
@@ -15,10 +15,15 @@ help:
 .PHONY: help Makefile
 
 all:
+	# Cleaning helps in detecting changes to the Python files.
+	$(MAKE) clean
 	$(MAKE) linkcheck
 	$(MAKE) html
 	$(MAKE) latexpdf
 	$(MAKE) epub
+
+clean:
+	rm -rf $(BUILDDIR)/* auto_examples/ **/gen_modules/
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).

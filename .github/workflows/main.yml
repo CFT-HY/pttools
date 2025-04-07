@@ -1,14 +1,26 @@
 name: CI
 on: push
 env:
-  PRIMARY_PYTHON_VERSION: 3.8
+  PRIMARY_PYTHON_VERSION: '3.13'
 jobs:
+  cloc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Count Lines of Code (cloc) for the PTtools library
+        uses: djdefi/cloc-action@6
+        with:
+          options: ${{ github.workspace }}/pttools --exclude-list-file=.clocignore
+      - name: Count Lines of Code (cloc) for the repository
+        uses: djdefi/cloc-action@6
+        with:
+          options: ${{ github.workspace }} --exclude-list-file=.clocignore
   graph:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
       - name: Print Python version
@@ -18,9 +30,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y graphviz
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Load pip cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: .pip
           key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
@@ -29,8 +41,7 @@ jobs:
             pip-
       - name: Install requirements
         run: |
-          pip --cache-dir=.pip install --upgrade pip
-          pip --cache-dir=.pip install --upgrade wheel
+          pip --cache-dir=.pip install --upgrade pip wheel
           pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
       - name: Run Pyreverse
         run: |
@@ -38,6 +49,7 @@ jobs:
           pyreverse pttools -o png -d ./uml
           pyreverse pttools -o svg -d ./uml
       - name: Run Pyan
+        continue-on-error: true
         run: |
           ./gen_call_graphs.sh "all" "./**/*.py"
           ./gen_call_graphs.sh "bubble" "./pttools/bubble/**.py"
@@ -46,7 +58,7 @@ jobs:
           ./gen_call_graphs.sh "ssmtools" "./pttools/ssmtools/**.py"
           ./gen_call_graphs.sh "tests" "./tests/**/*.py"
       - name: Upload results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Graph
           path: |
@@ -58,15 +70,15 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
       - name: Print Python version
         run: python -V
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Load pip cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: .pip
           key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
@@ -75,27 +87,57 @@ jobs:
             pip-
       - name: Install requirements
         run: |
-          pip --cache-dir=.pip install --upgrade pip
-          pip --cache-dir=.pip install --upgrade wheel
+          pip --cache-dir=.pip install --upgrade pip wheel
           pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
       - name: Run Pylint
         run: pylint pttools tests 2>&1 | tee pylint.txt
       - name: Upload results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Lint
           path: |
             ${{ github.workspace }}/pylint.txt
           if-no-files-found: error
+#  fossa:
+#    runs-on: ubuntu-latest
+#    timeout-minutes: 5
+#    steps:
+#      - name: Setup Python
+#        uses: actions/setup-python@v5
+#        with:
+#          python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
+#      - name: Print Python version
+#        run: python -V
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#      - name: Load pip cache
+#        uses: actions/cache@v4
+#        with:
+#          path: .pip
+#          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+#          restore-keys: |
+#            pip-${{ runner.os }}-
+#            pip-
+#      - name: Install requirements
+#        run: |
+#          pip --cache-dir=.pip install --upgrade pip wheel
+#          pip --cache-dir=.pip install -r requirements.txt
+#      - name: Install FOSSA
+#        run: |
+#          curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | sudo bash
+#      - name: Run FOSSA
+#        run: fossa analyze
+#        env:
+#          FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
   test-numba:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     strategy:
       matrix:
-        python-version: [ 3.6, 3.7, 3.8, 3.9 ]
+        python-version: ['3.10', '3.11', '3.12', '3.13']
     steps:
     - name: Setup Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Print Python version
@@ -105,9 +147,9 @@ jobs:
         sudo apt-get update
         sudo apt-get install ffmpeg
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: Load pip cache
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: .pip
         key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
@@ -116,18 +158,21 @@ jobs:
           pip-
     - name: Install requirements
       run: |
-        pip --cache-dir=.pip install --upgrade pip
-        pip --cache-dir=.pip install --upgrade wheel
+        pip --cache-dir=.pip install --upgrade pip wheel
         pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
     - name: Print Numba sysinfo
       run: numba --sysinfo | tee numba-sysinfo.txt
+    - name: Generate reference data
+      run: python3 pttools/bubble/fluid_reference.py
+      env:
+        PYTHONPATH: .
     - name: Run tests
       run: |
         set -o pipefail
         pytest | tee test-output.txt
         coverage json
     - name: Upload results
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       if: ${{ matrix.python-version == env.PRIMARY_PYTHON_VERSION }}
       with:
         name: Test results with Numba
@@ -139,73 +184,23 @@ jobs:
           test-output.txt
           test-results
         if-no-files-found: error
-  test-numba-old:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    strategy:
-      matrix:
-        python-version: [ 3.6, 3.7 ]
-    env:
-      PRIMARY_OLD_PYTHON_VERSION: 3.7
-    steps:
-    - name: Setup Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Print Python version
-      run: python -V
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Load pip cache
-      uses: actions/cache@v2
-      with:
-        path: .pip
-        key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-        restore-keys: |
-          pip-${{ runner.os }}-
-          pip-
-    - name: Install requirements
-      run: |
-        pip --cache-dir=.pip install --upgrade pip
-        pip --cache-dir=.pip install --upgrade wheel
-        pip --cache-dir=.pip install -r requirements-old.txt -r requirements-dev.txt
-    - name: Print Numba sysinfo
-      run: numba --sysinfo | tee numba-sysinfo.txt
-    - name: Run tests
-      run: |
-        set -o pipefail
-        pytest | tee test-output.txt
-        coverage json
-    - name: Upload results
-      uses: actions/upload-artifact@v2
-      if: ${{ matrix.python-version == env.PRIMARY_OLD_PYTHON_VERSION }}
-      with:
-        name: Test results with old Numba
-        path: |
-          coverage.xml
-          coverage.json
-          htmlcov
-          numba-sysinfo.txt
-          test-output.txt
-          test-results
-        if-no-files-found: error
   test-python:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 35
     strategy:
       matrix:
-        python-version: [ 3.6, 3.7, 3.8, 3.9 ]
+        python-version: ['3.10', '3.11', '3.12', '3.13']
     steps:
     - name: Setup Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Print Python version
       run: python -V
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: Load pip cache
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: .pip
         key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
@@ -214,11 +209,14 @@ jobs:
           pip-
     - name: Install requirements
       run: |
-        pip --cache-dir=.pip install --upgrade pip
-        pip --cache-dir=.pip install --upgrade wheel
+        pip --cache-dir=.pip install --upgrade pip wheel
         pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
     - name: Print Numba sysinfo
       run: numba --sysinfo | tee numba-sysinfo.txt
+    - name: Generate reference data
+      run: python3 pttools/bubble/fluid_reference.py
+      env:
+        PYTHONPATH: .
     - name: Run tests with coverage
       # Without pytest-pythonpath the PYTHONPATH may have to be set manually
       # PYTHONPATH="${PYTHONPATH}${PYTHONPATH:+:}./tests" pytest | tee test-output.txt
@@ -228,7 +226,7 @@ jobs:
         NUMBA_DISABLE_JIT=1 pytest | tee test-output.txt
         coverage json
     - name: Upload results
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       if: ${{ matrix.python-version == env.PRIMARY_PYTHON_VERSION }}
       with:
         name: Test results without Numba
@@ -241,7 +239,7 @@ jobs:
           test-results
         if-no-files-found: error
     - name: Upload results to Codecov
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v5
       if: ${{ matrix.python-version == env.PRIMARY_PYTHON_VERSION }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}

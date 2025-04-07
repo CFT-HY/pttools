@@ -1,19 +1,23 @@
 Bubble
 ======
 
+.. currentmodule:: tests.bubble
+
 .. automodule:: tests.bubble
+  :no-members:
+  :no-inherited-members:
 
-Bag
----
+:py:mod:`tests.bubble`:
 
-.. automodule:: tests.bubble.test_bag
+.. autosummary::
+  :toctree: gen_modules/
+  :template: module.rst
 
-Parameters
-----------
-
-.. automodule:: tests.bubble.test_params
-
-v+ and v-
----------------
-
-.. automodule:: tests.bubble.test_vplusminus
+  test_bag
+  test_bubble
+  test_params
+  test_reference
+  test_relativity
+  test_thermo
+  test_thermo_bag
+  test_vplusminus
