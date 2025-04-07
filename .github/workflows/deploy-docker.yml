@@ -11,6 +11,7 @@ jobs:
   push_to_registries:
     name: Push Docker image to multiple registries
     runs-on: ubuntu-latest
+    environment: Deploy
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     permissions:
       attestations: write
