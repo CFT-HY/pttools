@@ -1,6 +1,5 @@
 """Utilities for parallel simulation of bubbles"""
 
-import concurrent.futures as cf
 import logging
 import time
 import typing as tp
@@ -97,7 +96,7 @@ def create_bubbles(
         allow_bubble_failure: bool = False,
         kwargs: tp.Dict[str, any] = None,
         bubble_kwargs: tp.Dict[str, any] = None,
-        bubble_func: callable = create_bubble) -> tp.Union[np.ndarray, tp.Tuple[np.ndarray, np.ndarray]]:
+        bubble_func: callable = create_bubble) -> tp.Union[np.ndarray, tp.Tuple[np.ndarray, np.ndarray, ...]]:
     """Create multiple bubbles in parallel"""
     start_time = time.perf_counter()
     post_func_return_multiple = False
@@ -163,7 +162,7 @@ def create_spectra(
         allow_bubble_failure: bool = False,
         kwargs: tp.Dict[str, any] = None,
         bubble_kwargs: tp.Dict[str, any] = None,
-        spectrum_kwargs: tp.Dict[str, any] = None):
+        spectrum_kwargs: tp.Dict[str, any] = None) -> np.ndarray:
     """Create multiple spectra in parallel"""
     if kwargs is None:
         kwargs2 = {"spectrum_kwargs": spectrum_kwargs}
@@ -184,10 +183,10 @@ def create_spectra(
     )
 
 
+def solve_bubble(bubble: Bubble) -> None:
+    bubble.solve()
+
+
 def solve_bubbles(bubbles: np.ndarray, max_workers: int = options.MAX_WORKERS_DEFAULT) -> None:
     """Solve multiple existing bubbles in parallel"""
-    futs: tp.List[cf.Future] = []
-    with cf.ProcessPoolExecutor(max_workers=max_workers) as ex:
-        for bubble in np.nditer(bubbles):
-            futs.append(ex.submit(bubble.solve))
-        cf.wait(futs)
+    run_parallel(solve_bubble, params=bubbles, max_workers=max_workers)

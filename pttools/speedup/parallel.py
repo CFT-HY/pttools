@@ -1,12 +1,17 @@
 import concurrent.futures as cf
+import multiprocessing
+from concurrent.futures.process import BrokenProcessPool
 import logging
-# import os
+import platform
 import typing as tp
 
-# from numba import get_num_threads, set_num_threads
 import numpy as np
+try:
+    import psutil
+except IndexError:
+    psutil = None
 
-from pttools.speedup.options import MAX_WORKERS_DEFAULT  #, GITHUB_ACTIONS
+from pttools.speedup.options import MAX_WORKERS_DEFAULT, UNAME, START_METHOD
 
 logger = logging.getLogger(__name__)
 
@@ -66,11 +71,12 @@ def run_parallel(
         multiple_params: bool = False,
         unpack_params: bool = False,
         output_dtypes: tp.Union[tp.Tuple[tp.Type, ...], tp.List[tp.Type]] = None,
+        return_arr_shape: tp.Tuple[int, ...] = None,
         log_progress_element: int = None,
         log_progress_percentage: float = None,
         args: tp.Union[list, tuple] = (),
         kwargs: tp.Dict[str, tp.Any] = None,
-        single_thread: bool = False) -> tp.Union[np.ndarray, tp.Tuple[np.ndarray, ...]]:
+        single_thread: bool = False) -> tp.Optional[tp.Union[np.ndarray, tp.Tuple[np.ndarray, ...]]]:
     """Run the given function with multiple parameters in parallel
 
     :param func: The function to be executed in parallel
@@ -79,6 +85,7 @@ def run_parallel(
     :param multiple_params: Whether the last dimension of the parameter array contains multiple parameters for each function call
     :param unpack_params: Whether the multiple parameters should be unpacked before giving them to the function
     :param output_dtypes: If the function has multiple output values, their types should be given here
+    :param return_arr_shape: Shape of the array given by func. If None, the function should return single values.
     :param log_progress_element: Log progress every n element
     :param log_progress_percentage: Log progress every x %
     :param args: common arguments for the function
@@ -108,64 +115,98 @@ def run_parallel(
         log_progress_element=log_progress_element, log_progress_percentage=log_progress_percentage
     )
 
-    with cf.ProcessPoolExecutor(max_workers=max_workers) as ex:
-        # Submit parallel execution
-        with np.nditer(
-                [params, None],
-                flags=flags,
-                op_flags=[["readonly"], ["readwrite", "allocate"]],
-                op_axes=op_axes,
-                op_dtypes=[params.dtype, object],
-                order="C") as it:
-            if single_thread:
-                for ind, (param, fut) in enumerate(it):
-                    multi_index = None if multiple_params else it.multi_index
-                    fut[...] = FakeFuture(runner.run, param, index=ind, multi_index=multi_index)
-            else:
-                for ind, (param, fut) in enumerate(it):
-                    multi_index = None if multiple_params else it.multi_index
-                    fut[...] = ex.submit(runner.run, param, index=ind, multi_index=multi_index)
-            futs = it.operands[1]
-
-        # Collect results
-
-        # Single output
-        single_output = False
-        if output_dtypes is None:
-            single_output = True
-            output_arr = None
-        elif len(output_dtypes) == 1:
-            single_output = True
-            output_arr = np.empty_like(futs, dtype=output_dtypes[0])
-
-        if single_output:
+    try:
+        with cf.ProcessPoolExecutor(max_workers=max_workers) as ex:
+            # Submit parallel execution
             with np.nditer(
-                    [futs, output_arr],
-                    flags=("refs_ok", "c_index", "multi_index"),
-                    # op_flags=[["readonly"], ["writeonly"]],
+                    [params, None],
+                    flags=flags,
+                    op_flags=[["readonly"], ["readwrite", "allocate"]],
+                    op_axes=op_axes,
+                    op_dtypes=[params.dtype, object],
                     order="C") as it:
-                for fut, res in it:
-                    res[...] = fut.item().result()
-                return it.operands[1]
+                if single_thread:
+                    for ind, (param, fut) in enumerate(it):
+                        multi_index = None if multiple_params else it.multi_index
+                        fut[...] = FakeFuture(runner.run, param, index=ind, multi_index=multi_index)
+                else:
+                    for ind, (param, fut) in enumerate(it):
+                        multi_index = None if multiple_params else it.multi_index
+                        fut[...] = ex.submit(runner.run, param, index=ind, multi_index=multi_index)
+                futs = it.operands[1]
 
-        # Multiple outputs
-        op_flags2 = [["readonly"], *[["writeonly"]] * len(output_dtypes)]
-        output_arrs = tuple(np.empty(futs.shape, dtype=dtype) for dtype in output_dtypes)
-        with np.nditer(
-                [futs, *output_arrs],
-                flags=("refs_ok", "c_index", "multi_index"),
-                op_flags=op_flags2,
-                order="C") as it:
-            for elems in it:
-                res = elems[0].item().result()
-                try:
-                    for arr, val in zip(elems[1:], res):
-                        arr[...] = val
-                except ValueError as e:
-                    logger.exception("Could not store result to output array. Got: %s", res, exc_info=e)
-                    raise e
-        return output_arrs
+            # Collect results
 
+            # No output
+            # if output_dtypes is None:
+            #     return None
+
+            # Array output
+            if return_arr_shape is not None:
+                output_arr = np.empty((*futs.shape, *return_arr_shape), dtype=output_dtypes[0])
+                # axes = list(range(futs.ndim)) # + list((-1, ) * len(return_arr_shape))
+                # op_axes = [axes, axes]
+                with np.nditer(
+                        futs,
+                        flags=("refs_ok", "c_index", "multi_index"),
+                        # op_flags=[["readonly"], ["writeonly"]],
+                        # op_axes=op_axes,
+                        order="C") as it:
+                    for fut in it:
+                        output_arr[*it.multi_index, :] = fut.item().result()
+                return output_arr
+
+            # Single output
+            single_output = False
+            if output_dtypes is None:
+                single_output = True
+                output_arr = None
+            elif len(output_dtypes) == 1:
+                single_output = True
+                output_arr = np.empty_like(futs, dtype=output_dtypes[0])
+
+            if single_output:
+                with np.nditer(
+                        [futs, output_arr],
+                        flags=("refs_ok", "c_index", "multi_index"),
+                        # op_flags=[["readonly"], ["writeonly"]],
+                        order="C") as it:
+                    for fut, res in it:
+                        res[...] = fut.item().result()
+                    return it.operands[1]
+
+            # Multiple outputs
+            op_flags2 = [["readonly"], *[["writeonly"]] * len(output_dtypes)]
+            output_arrs = tuple(np.empty(futs.shape, dtype=dtype) for dtype in output_dtypes)
+            with np.nditer(
+                    [futs, *output_arrs],
+                    flags=("refs_ok", "c_index", "multi_index"),
+                    op_flags=op_flags2,
+                    order="C") as it:
+                for elems in it:
+                    res = elems[0].item().result()
+                    try:
+                        for arr, val in zip(elems[1:], res):
+                            arr[...] = val
+                    except ValueError as e:
+                        logger.exception("Could not store result to output array. Got: %s", res, exc_info=e)
+                        raise e
+            return output_arrs
+    except BrokenProcessPool as err:
+        msg = (
+            "Parallel execution failed due to a system error. "
+            f"OS: {UNAME.system} ({UNAME.release}), CPU: {UNAME.processor} ({UNAME.machine}), "
+            f"Python: {platform.python_version()}, "
+            f"Start method: {START_METHOD}, available: {multiprocessing.get_all_start_methods()}. "
+        )
+        if psutil is None:
+            msg += "Please install psutil for more info."
+        else:
+            ram_use = psutil.virtual_memory().percent
+            msg += f"CPU use: {psutil.getloadavg()}, RAM use: {ram_use} %."
+            if ram_use > 80:
+                msg += " RAM use is high. Please reduce the number of worker processes or close applications running in the background."
+        raise BrokenProcessPool(msg) from err
 
 # This seems to be fixed as of 2025.
 # See this documentation for the number of CPU cores available on the GitHub Actions runners:

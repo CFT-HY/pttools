@@ -6,7 +6,6 @@ Modified from
 <https://bitbucket.org/hindmars/sound-shell-model/src/master/paper/python/ssm_paper_utils.py>`__.
 """
 
-# import concurrent.futures as fut
 import io
 import logging
 # import os
