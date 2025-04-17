@@ -14,9 +14,6 @@ kaleido == 0.2.1
 matplotlib == 3.10.0
 # Numba 0.55 breaks the unit tests
 # https://github.com/numba/numba/issues/7751
-# PyCharm does not understand a dependency if all the versions are conditional
-# numba != 0.55; python_version < "3.10"
-# numba >= 0.55.1; python_version >= "3.10"
 numba == 0.61.0
 # NumbaLSODA does not work yet on the GitHub Actions Windows runners
 numbalsoda == 0.3.4; sys_platform != "win32"

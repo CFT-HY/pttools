@@ -134,7 +134,7 @@ jobs:
     timeout-minutes: 20
     strategy:
       matrix:
-        python-version: ['3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.11', '3.12', '3.13']
     steps:
     - name: Setup Python
       uses: actions/setup-python@v5
@@ -189,7 +189,7 @@ jobs:
     timeout-minutes: 35
     strategy:
       matrix:
-        python-version: ['3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.11', '3.12', '3.13']
     steps:
     - name: Setup Python
       uses: actions/setup-python@v5
