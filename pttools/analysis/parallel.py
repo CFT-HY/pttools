@@ -93,6 +93,7 @@ def create_bubbles(
         func: callable = None,
         log_progress_percentage: float = 10,
         max_workers: int = options.MAX_WORKERS_DEFAULT,
+        single_thread: bool = False,
         allow_bubble_failure: bool = False,
         kwargs: tp.Dict[str, any] = None,
         bubble_kwargs: tp.Dict[str, any] = None,
@@ -139,6 +140,7 @@ def create_bubbles(
         multiple_params=True,
         output_dtypes=output_dtypes,
         max_workers=max_workers,
+        single_thread=single_thread,
         log_progress_percentage=log_progress_percentage,
         kwargs=kwargs2
     )
@@ -159,6 +161,7 @@ def create_spectra(
         func: callable = None,
         log_progress_percentage: float = 5,
         max_workers: int = options.MAX_WORKERS_DEFAULT,
+        single_thread: bool = False,
         allow_bubble_failure: bool = False,
         kwargs: tp.Dict[str, any] = None,
         bubble_kwargs: tp.Dict[str, any] = None,
@@ -176,6 +179,7 @@ def create_spectra(
         func=func,
         log_progress_percentage=log_progress_percentage,
         max_workers=max_workers,
+        single_thread=single_thread,
         allow_bubble_failure=allow_bubble_failure,
         kwargs=kwargs2,
         bubble_kwargs=bubble_kwargs,

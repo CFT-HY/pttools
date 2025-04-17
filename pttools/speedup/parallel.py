@@ -199,7 +199,8 @@ def run_parallel(
             "Parallel execution failed due to a system error. "
             f"OS: {UNAME.system} ({UNAME.release}), CPU: {UNAME.processor} ({UNAME.machine}), "
             f"Python: {platform.python_version()}, "
-            f"Start method: {START_METHOD}, available: {multiprocessing.get_all_start_methods()}. "
+            f"Start method: {START_METHOD}, available: {multiprocessing.get_all_start_methods()}, "
+            f"max_workers={max_workers}, single_thread={single_thread}."
         )
         if psutil is None:
             msg += "Please install psutil for more info."

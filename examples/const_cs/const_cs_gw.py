@@ -59,9 +59,6 @@ def main():
     spectra: np.ndarray = np.zeros((len(models), alpha_ns.size, v_walls.size), dtype=object)
     # z = np.logspace(-1, 3, 5000)
 
-    # This fixes a BrokenProcessPool error on Read the Docs
-    max_workers = 1 if IS_READ_THE_DOCS else None
-
     for i_model, model in enumerate(models):
         spectra[i_model, :, :] = create_spectra(
             model=model, v_walls=v_walls, alpha_ns=alpha_ns,
@@ -74,7 +71,8 @@ def main():
                 # "gs_star": 100
             },
             # bubble_kwargs={"allow_invalid": False}, allow_bubble_failure=True,
-            max_workers=max_workers
+            # This fixes a BrokenProcessPool error on Read the Docs
+            single_thread=IS_READ_THE_DOCS
         )
 
     figsize = (12, 10)
