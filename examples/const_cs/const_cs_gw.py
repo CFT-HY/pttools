@@ -22,6 +22,7 @@ from pttools.models import ConstCSModel
 from pttools.omgw0 import Spectrum, omega_ins
 from pttools.analysis.parallel import create_spectra
 # from pttools.analysis.utils import A3_PAPER_SIZE, A4_PAPER_SIZE
+from pttools.speedup.options import IS_READ_THE_DOCS
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +58,10 @@ def main():
 
     spectra: np.ndarray = np.zeros((len(models), alpha_ns.size, v_walls.size), dtype=object)
     # z = np.logspace(-1, 3, 5000)
+
+    # This fixes a BrokenProcessPool error on Read the Docs
+    max_workers = 1 if IS_READ_THE_DOCS else None
+
     for i_model, model in enumerate(models):
         spectra[i_model, :, :] = create_spectra(
             model=model, v_walls=v_walls, alpha_ns=alpha_ns,
@@ -67,8 +72,9 @@ def main():
                 "Tn": Tn,
                 # "g_star": 100,
                 # "gs_star": 100
-            }
-            # bubble_kwargs={"allow_invalid": False}, allow_bubble_failure=True
+            },
+            # bubble_kwargs={"allow_invalid": False}, allow_bubble_failure=True,
+            max_workers=max_workers
         )
 
     figsize = (12, 10)

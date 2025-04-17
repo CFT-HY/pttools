@@ -8,12 +8,13 @@ import typing as tp
 
 logger = logging.getLogger(__name__)
 
-GITHUB_ACTIONS: tp.Final[bool] = "GITHUB_ACTIONS" in os.environ
+GITHUB_ACTIONS: bool = "GITHUB_ACTIONS" in os.environ
 START_METHOD: str = multiprocessing.get_start_method()
 FORKING: bool = START_METHOD == "fork"
 UNAME = platform.uname()
 CPU_AFFINITY: bool = False
 IS_WINDOWS: bool = platform.system() == "Windows"
+IS_READ_THE_DOCS: bool = "READTHEDOCS_VIRTUALENV_PATH" in os.environ
 
 #: Maximum workers for ProcessPoolExecutor (determined dynamically based on the available CPUs)
 try:

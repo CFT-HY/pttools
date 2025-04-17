@@ -95,6 +95,8 @@ def run_parallel(
     """
     if kwargs is None:
         kwargs = {}
+    if max_workers is None:
+        max_workers = MAX_WORKERS_DEFAULT
 
     flags = ["refs_ok"]
     if multiple_params:
