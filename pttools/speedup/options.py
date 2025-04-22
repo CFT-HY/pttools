@@ -26,6 +26,11 @@ except AttributeError:
     # https://stackoverflow.com/a/53537394
     MAX_WORKERS_DEFAULT: int = multiprocessing.cpu_count()
 
+# On Windows, the maximum number of worker processes is limited to 61.
+# https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor
+if IS_WINDOWS and MAX_WORKERS_DEFAULT > 61:
+    MAX_WORKERS_DEFAULT = 61
+
 # The choice of the Numba threading layer cannot be printed here, since it's not selected until needed.
 if not FORKING or not CPU_AFFINITY:
     msg = "Platform: %s (%s, %s) on %s (%s)."
