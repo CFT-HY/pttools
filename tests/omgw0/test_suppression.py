@@ -42,6 +42,9 @@ class SuppressionTest(unittest.TestCase):
         if sys.platform == "darwin":
             tolerances["sup_ssm"] = 2.66e-5
             tolerances["Ubarf_2_ssm"] = 1.33e-5
+        elif sys.platform == "win32":
+            tolerances["sup_ssm"] = 5.68e-7
+            tolerances["ssm_tot"] = 5.63e-7
         for filename in filenames:
             data = calc_sup_ssm(
                 f"{filename}.txt",
