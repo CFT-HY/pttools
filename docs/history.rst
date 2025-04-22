@@ -9,17 +9,24 @@ Version history
   Test whether `Git LFS <https://git-lfs.com/>`_ on GitLab would be a suitable storage.
 - Improve integration with Cobaya and add examples.
 
-0.9.0 (upcoming)
-----------------
+0.9.0
+-----
 These modifications were `Mika's master's thesis <https://github.com/AgenttiX/msc-thesis2>`_.
 
-- PTtools published as open source with the MIT license
-- Documentation published at Read the Docs.
-- New fluid velocity profile solver and object-oriented interface.
-- Support for equations of state beyond the bag model.
-    - Temperature-dependent degrees of freedom and sound speed.
-- Support for computing the gravitational wave spectrum today ($\Omega_\text{gw,0}$).
-
+- Restructure the project
+- Provide an object-oriented interface for bubbles and spectra
+- Replace the fluid profile solver with a new implementation
+- Add support for equations of state beyond the bag model
+  - Temperature-dependent degrees of freedom and sound speed
+- Add conversion to the gravitational wave frequencies and amplitudes today ($\Omega_\text{gw,0}$): include the omgw0 branch by Chloe Hopling
+- Add analysis utilities
+- Improve error handling
+- Improve documentation and publish it on Read the Docs
+- Improve compatibility for macOS on ARM
+- Improve packaging for PyPI and Docker
+- Update dependencies
+- License the project with the MIT license
+- Fix various bugs
 
 0.0.1
 -----

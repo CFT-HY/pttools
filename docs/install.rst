@@ -133,23 +133,36 @@ NumbaLSODA
 ----------
 `NumbaLSODA <https://pypi.org/project/numbalsoda/>`_
 is an optional dependency, which speeds up the integration of ordinary differential equations (ODE).
-Due to its low-level design it may require build tools such as ``cmake`` and ``gfortran`` for its installation,
-and it seems not to compile yet on Windows.
 You can install NumbaLSODA manually with
 
 .. code-block:: bash
 
   pip3 install --upgrade numbalsoda
 
-If you get an error about missing ``cmake``, you have to install it manually.
+You may also try building NumbaLSODA from the Git repository.
+
+.. code-block:: bash
+
+  pip3 install --upgrade "numbalsoda @ git+https://github.com/Nicholaswogan/numbalsoda.git"
+
+Due to the low-level design of NumbaLSODA,
+if a pre-built binary is not available for your platform,
+you need to have CMake and compiler tools for C++ and Fortran installed.
+The steps for installing these depend on your platform.
+
+Linux
+^^^^^
+If you get an error about missing ``cmake`` or ``gfortran``, you have to install them manually.
 On Debian- and Ubuntu-based systems this can be done with the following commands.
-Once ``cmake`` is installed, run the pip installation above again.
+Once the packages are installed, run the pip installation above again.
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install cmake
+  sudo apt-get install cmake gfortran
 
+macOS
+^^^^^
 If you get an error on macOS about missing ``gfortran``,
 you have to install the GCC compiler tools, which include ``gfortran``.
 You can do this e.g. with `Homebrew <https://brew.sh/>`_ or `MacPorts <https://www.macports.org/>`_.
@@ -160,11 +173,13 @@ To install ``gfortran`` with MacPorts, please first install MacPorts and then ru
   sudo port install gcc14
   sudo port select --set gcc mp-gcc14
 
-You may also try building NumbaLSODA from the Git repository.
-
-.. code-block:: bash
-
-  pip3 install --upgrade "numbalsoda @ git+https://github.com/Nicholaswogan/numbalsoda.git"
+Windows
+^^^^^^^
+Installing NumbaLSODA on Windows requires the
+`Build Tools for Visual Studio <https://visualstudio.microsoft.com/downloads/?q=build+tools>`_
+and the
+`Intel Fortran Compiler <https://www.intel.com/content/www/us/en/developer/tools/oneapi/fortran-compiler-download.html>`_.
+In addition to these, you may also have to install CMake manually.
 
 
 Numba compatibility and nested parallelism
