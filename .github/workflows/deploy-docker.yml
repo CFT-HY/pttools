@@ -39,10 +39,9 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          # Enable Docker Hub by adding:
-          # my-docker-hub-namespace/my-docker-hub-repository
           images: |
             ghcr.io/${{ github.repository }}
+            cfthy/pttools
 
       - name: Build and push Docker images
         id: push
