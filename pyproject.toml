@@ -7,10 +7,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pttools_gw"
-version = "0.0.1"
+version = "0.9.0"
 description = "PTtools simulation framework for phase transitions in the early universe"
 readme = "README.md"
-# license = "MIT"
+license = "MIT"
 keywords = [
     "cosmology",
     "phase transitions",
@@ -34,7 +34,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Education",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.11",
@@ -69,7 +68,7 @@ performance = [
 ]
 
 [project.urls]
-# homepage = ""
+documentation = "https://pttools.readthedocs.io"
 repository = "https://github.com/CFT-HY/pttools"
 
 [tool.coverage.run]
