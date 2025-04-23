@@ -200,6 +200,7 @@ if GITHUB_ACTIONS:
     linkcheck_ignore += [
         r"https://akareport\.aka\.fi/ibi_apps/WFServlet*",
         r"https://gtr\.ukri\.org/*",
+        r"https://www\.intel\.com/*"
         r"https://stfc\.ukri\.org/",
     ]
 
