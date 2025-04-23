@@ -1,7 +1,7 @@
 name: Docs
 on: push
 env:
-  PRIMARY_PYTHON_VERSION: '3.13'
+  PYTHON_VERSION: '3.13'
 jobs:
   docs:
     runs-on: ubuntu-latest
@@ -10,7 +10,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
       - name: Print Python version
         run: python -V
       - name: Install LaTeX

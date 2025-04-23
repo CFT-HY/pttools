@@ -6,7 +6,7 @@ on:
 #    workflows: [ CI ]
 #    types: [ completed ]
 env:
-  PRIMARY_PYTHON_VERSION: '3.13'
+  PYTHON_VERSION: '3.13'
 jobs:
   test:
     runs-on: macos-latest
@@ -24,7 +24,7 @@ jobs:
           uses: actions/setup-python@v5
           # macOS minutes cost 10x what Linux does, so testing multiple Python versions would be quite costly
           with:
-            python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
+            python-version: ${{ env.PYTHON_VERSION }}
         - name: Print Python version
           run: python -V
         - name: Checkout
