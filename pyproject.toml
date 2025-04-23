@@ -6,7 +6,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pttools_gw"
+name = "pttools-gw"
 version = "0.9.0"
 description = "PTtools simulation framework for phase transitions in the early universe"
 readme = "README.md"
