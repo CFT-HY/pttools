@@ -12,7 +12,8 @@ jobs:
     name: Push Docker image to multiple registries
     runs-on: ubuntu-latest
     environment: Deploy
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # Allow running when the CI pipeline succeeded or when the workflow is triggered manually
+    if: ${{ github.event.release.tag_name != '' || github.event.workflow_run.conclusion == 'success' }}
     permissions:
       attestations: write
       contents: read
