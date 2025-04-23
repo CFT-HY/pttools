@@ -1,7 +1,7 @@
 name: Publish PyPI package
 on:
   release:
-    types: [published, created, edited]
+    types: [published]
   workflow_dispatch:
 jobs:
   deploy-pypi:
@@ -31,7 +31,7 @@ jobs:
       - name: Install requirements
         run: |
           pip --cache-dir=.pip install --upgrade pip
-          pip --cache-dir=.pip install build twine
+          pip --cache-dir=.pip install --upgrade build packaging twine
       - name: Build
         run: python -m build
       - name: Run Twine checks

@@ -11,6 +11,7 @@ version = "0.9.0"
 description = "PTtools simulation framework for phase transitions in the early universe"
 readme = "README.md"
 license = "MIT"
+license-files = ["LICENSE"]
 keywords = [
     "cosmology",
     "phase transitions",
