@@ -7,14 +7,14 @@ RUN apt-get update \
     && apt-get install -y cmake gfortran \
     && apt-get autoremove \
     && apt-get clean \
-    && pip install --no-cache-dir --upgrade build
+    && pip install --root-user-action=ignore --no-cache-dir --upgrade build
 COPY requirements.txt /pttools/
-RUN pip install --no-cache-dir -r /pttools/requirements.txt
+RUN pip install --root-user-action=ignore --no-cache-dir -r /pttools/requirements.txt
 COPY pyproject.toml /pttools/
 COPY pttools pttools/pttools
 RUN cd /pttools \
     && ls \
     && python -m build \
-    && pip install --no-cache-dir /pttools/dist/pttools*.whl \
+    && pip install --root-user-action=ignore --no-cache-dir /pttools/dist/pttools*.whl \
     && cd / \
     && rm -r /pttools \
