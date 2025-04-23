@@ -205,7 +205,7 @@ if GITHUB_ACTIONS:
     ]
 
 # Timeout had to be increased from 5 to prevent errors with slow ArXiv links
-linkcheck_timeout = 10
+linkcheck_timeout = 20
 linkcheck_workers = 10
 
 # show_memory = GITHUB_ACTIONS
