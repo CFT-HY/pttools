@@ -93,7 +93,7 @@ Local development version
 
 .. code-block:: bash
 
-  git clone git@github.com:hindmars/pttools.git
+  git clone git@github.com:CFT-HY/pttools.git
   cd pttools
   git checkout dev
   docker build . --tag pttools:dev
@@ -106,9 +106,8 @@ You can set up a local development environment with the following commands.
 
 .. code-block:: bash
 
-  git clone git@github.com:hindmars/pttools.git
+  git clone git@github.com:CFT-HY/pttools.git
   cd pttools
-  git checkout dev
   python3 -m venv --upgrade-deps venv
   source ./venv/bin/activate
   pip3 install -r requirements.txt -r requirements-dev.txt -r ./docs/requirements.txt
@@ -122,6 +121,17 @@ You can build the documentation locally with the following commands.
   cd docs
   make html
 
+With conda
+^^^^^^^^^^
+If you want to set up PTtools for local development and install the dependencies with conda,
+you can do so with the following commands.
+
+.. code-block:: bash
+
+  git clone git@github.com:CFT-HY/pttools.git
+  cd pttools
+  conda env create --file environment.yml
+  conda activate pttools
 
 On a cluster
 ------------
@@ -175,9 +185,9 @@ To install ``gfortran`` with MacPorts, please first install MacPorts and then ru
 
 Windows
 ^^^^^^^
-Installing NumbaLSODA on Windows requires the
+Installing NumbaLSODA on Windows requires build tools such as
 `Build Tools for Visual Studio <https://visualstudio.microsoft.com/downloads/?q=build+tools>`_
-and the
+and a Fortran compiler such as
 `Intel Fortran Compiler <https://www.intel.com/content/www/us/en/developer/tools/oneapi/fortran-compiler-download.html>`_.
 In addition to these, you may also have to install CMake manually.
 

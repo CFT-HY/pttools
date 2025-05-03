@@ -1,7 +1,7 @@
 # Anaconda environment configuration
 
 # Create the environment with:
-# conda env create --name pttools -f environment.yml
+# conda env create pttools -f environment.yml
 # Activate the environment with:
 # conda activate pttools
 
@@ -14,11 +14,43 @@
 
 name: pttools
 dependencies:
+  # The Python version is currently constrained by the NumbaLSODA package.
+  # Once it becomes compatible with newer Python, update this to the latest version.
   - python >= 3.11
-  # - icc_rt
-  - matplotlib
-  - numba
-  - numpy
-  - plotly
-  - scipy
-  - tbb
+  # -----
+  # Mandatory dependencies
+  # -----
+  - h5py >= 3.13.0
+  - matplotlib >= 3.10.1
+  - numba >= 0.61.2
+  - conda-forge::numbalsoda >= 0.3.5
+  - numpy >= 2.2.5
+  - orjson >= 3.10.16
+  - plotly >= 6.0.0
+  - python-kaleido >= 0.2.1
+  - scipy >= 1.15.2
+  # -----
+  # Optional dependencies
+  # -----
+  - conda-forge::tbb >= 2022.1.0
+  # This is not available for osx-arm64. If using osx-arm64, please disable this.
+  - numba::icc_rt >= 2020.2
+  # -----
+  # Development dependencies
+  # -----
+  - allure-pytest >= 2.14.1
+  - python-build >= 1.2.2.post1
+  - colorama >= 0.4.6
+  - pandas >= 2.2.3
+  - psutil >= 5.9.0
+  - pyan3 >= 1.2.0
+  - pyinstrument >= 5.0.1
+  - pylint >= 3.3.6
+  - pytest >= 8.3.5
+  - pytest-cov >= 6.1.1
+  - pytest-html >= 4.1.1
+  - pytest-xdist >= 3.6.1
+  - setuptools >= 79.0.1
+  - twine >= 6.1.0
+  - wheel >= 0.45.1
+  - yappi >= 1.6.0
