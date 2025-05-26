@@ -44,8 +44,7 @@ alphas_sim_ext = np.concatenate(([ssm_sup_vw_0_24_alphas_ext[0]], alphas_sim))
 ssm_sup_ext = np.concatenate(([ssm_sup_vw_0_24_ext[0]], ssm_sup))
 
 
-# Todo: Update this to enum.StrEnum, when Python 3.11 becomes the oldest supported version.
-class SuppressionMethod(str, enum.Enum):
+class SuppressionMethod(enum.StrEnum):
     NONE = "none"
     NO_EXT = DEFAULT = "no_ext"
     EXT_CONSTANT = "ext_constant"
