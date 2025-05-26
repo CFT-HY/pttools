@@ -5,8 +5,7 @@ FROM python:3.13
 
 RUN apt-get update \
     && apt-get install -y cmake gfortran \
-    && apt-get autoremove \
-    && apt-get clean \
+        && apt-get clean \
     && pip install --root-user-action=ignore --no-cache-dir --upgrade build
 COPY requirements.txt /pttools/
 RUN pip install --root-user-action=ignore --no-cache-dir -r /pttools/requirements.txt
