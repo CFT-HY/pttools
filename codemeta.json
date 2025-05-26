@@ -65,7 +65,7 @@
     ],
     "programmingLanguage": "Python",
     "relatedLink": "https://pttools.readthedocs.io/",
-    "version": "0.0.1",
+    "version": "0.9.0",
     "codemeta:contIntegration": {
         "id": "https://github.com/CFT-HY/pttools/actions"
     },

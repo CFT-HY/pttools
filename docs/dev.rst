@@ -16,6 +16,7 @@ Creating a new release
 ----------------------
 Update the PTtools version number in:
 
+- CITATION.cff
 - codemeta.json
 - pyproject.toml
 

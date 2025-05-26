@@ -12,7 +12,7 @@ authors:
   given-names: "Mika"
   orcid: "https://orcid.org/0000-0001-8162-7101"
 title: "PTtools"
-version: 0.0.1
+version: 0.9.0
 # doi: 10.1088/1475-7516/2019/12/062
 # date-released: 2023-01-16
 url: "https://github.com/CFT-HY/pttools"
