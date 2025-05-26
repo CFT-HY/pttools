@@ -8,7 +8,7 @@ import typing as tp
 import numpy as np
 try:
     import psutil
-except IndexError:
+except ModuleNotFoundError:
     psutil = None
 
 from pttools.speedup.options import MAX_WORKERS_DEFAULT, UNAME, START_METHOD
