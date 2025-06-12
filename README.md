@@ -12,6 +12,19 @@ and the resulting gravitational wave power spectrum in the Sound Shell Model.
 
 ![Types of solutions](https://raw.githubusercontent.com/AgenttiX/msc-thesis2/refs/heads/main/msc2-python/fig/relativistic_combustion.png)
 
+### Installation
+PTtools is [available on PyPI](https://pypi.org/project/pttools-gw/) and can be installed with pip:
+``` bash
+pip3 install --upgrade pttools-gw[numbalsoda,performance]
+```
+The `[numbalsoda]` and `[performance]` dependencies are optional,
+and you can omit them if they are not available on your platform.
+
+PTtools is also [available on Docker Hub](https://hub.docker.com/r/cfthy/pttools) and can be installed with:
+``` bash
+docker pull cfthy/pttools:main
+```
+
 ### Documentation
 The documentation is available online at [Read the Docs](https://pttools.readthedocs.io/).
 The documentation for previous releases can be found at the

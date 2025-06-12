@@ -28,20 +28,20 @@ The virtual environment can be created with the following commands.
   source ./venv/bin/activate
 
 Once the virtual environment is activated with the commands above,
-you can install PTtools from the Git repository with pip.
-A PyPI package will be available later.
+you can install PTtools with pip.
 
-Stable version
-
-.. code-block:: bash
-
-  pip3 install --upgrade "pttools-gw[numbalsoda,performance] @ git+https://github.com/CFT-HY/pttools.git"
-
-Development version
+Stable version from PyPI:
 
 .. code-block:: bash
 
-  pip3 install --upgrade "pttools-gw[numbalsoda,performance] @ git+https://github.com/CFT-HY/pttools.git@dev"
+  pip3 install --upgrade pttools-gw[numbalsoda,performance]
+
+From the Git repository. For the main branch, you can omit the "@BRANCH_NAME".
+
+.. code-block:: bash
+
+  pip3 install --upgrade "pttools-gw[numbalsoda,performance] @ git+https://github.com/CFT-HY/pttools.git@BRANCH_NAME"
+
 
 The ``[numbalsoda]`` flag installs the optional
 `NumbaLSODA <https://pypi.org/project/numbalsoda/>`_
@@ -70,24 +70,23 @@ If you'd like to have one, please make a feature request in the
 
 With Docker
 -----------
-PTtools container has not yet been published in a container registry,
-and therefore you have to build it yourself.
-Once you have built the PTtools container,
-you can build your own containers which use PTtools by starting their Dockerfiles with ``FROM pttools``.
+PTtools is
+[available on Docker Hub](https://hub.docker.com/r/cfthy/pttools).
+You can build your own container which uses PTtools by starting its Dockerfile with ``FROM cfthy/pttools:main``.
 
-Stable version
-
-.. code-block:: bash
-
-  docker build "https://github.com/CFT-HY/pttools.git#main" --tag pttools
-  docker run -it pttools
-
-Development version
+From Docker Hub:
 
 .. code-block:: bash
 
-  docker build "https://github.com/CFT-HY/pttools.git#dev" --tag pttools:dev
-  docker run -it pttools:dev
+  docker pull cfthy/pttools:main
+  docker run -it cfthy/pttools:main
+
+From the Git repository. For the main branch, you can omit the "#BRANCH_NAME".
+
+.. code-block:: bash
+
+  docker build "https://github.com/CFT-HY/pttools.git#BRANCH_NAME" --tag pttools:BRANCH_NAME
+  docker run -it pttools:BRANCH_NAME
 
 Local development version
 
@@ -95,9 +94,9 @@ Local development version
 
   git clone git@github.com:CFT-HY/pttools.git
   cd pttools
-  git checkout dev
-  docker build . --tag pttools:dev
-  docker run -it pttools:dev
+  git checkout BRANCH_NAME
+  docker build . --tag pttools:BRANCH_NAME
+  docker run -it pttools:BRANCH_NAME
 
 
 Local development
