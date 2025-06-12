@@ -6,6 +6,7 @@ Developing a new feature
 Create a new feature branch in the repo.
 If you don't have permissions to create a branch in the repo,
 you can either request the permissions or create a fork.
+Feature branches and forks should be merged with quashing.
 
 Developing a hotfix
 -------------------
