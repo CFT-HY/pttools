@@ -9,7 +9,8 @@
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#
+
+from datetime import date
 import os.path
 import sys
 import tomllib
@@ -35,7 +36,7 @@ project = 'PTtools'
 with open(os.path.join(repo_path, "AUTHORS")) as file:
     _authors = file.read().splitlines()
 author = f"{', '.join(_authors[:-1])} & {_authors[-1]}"
-copyright = f"2015-2025, {author}"
+copyright = f"2015-{date.today().year}, {author}"
 with open (os.path.join(repo_path, "pyproject.toml"), "rb") as file:
     version = tomllib.load(file)["project"]["version"]
 release = version
