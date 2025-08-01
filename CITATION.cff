@@ -13,24 +13,24 @@ authors:
   orcid: "https://orcid.org/0000-0001-8162-7101"
 title: "PTtools"
 version: 0.9.0
-# doi: 10.1088/1475-7516/2019/12/062
-# date-released: 2023-01-16
+doi: https://doi.org/10.5281/zenodo.15268219
+date-released: 2025-05-03
 url: "https://github.com/CFT-HY/pttools"
-preferred-citation:
-  type: article
-  authors:
-  - family-names: "Hindmarsh"
-    given-names: "Mark"
-    orcid: "https://orcid.org/0000-0002-9307-437X"
-  - family-names: "Hijazi"
-    given-names: "Mulham"
-    orcid: "https://orcid.org/0000-0002-1941-1518"
-  doi: "10.1088/1475-7516/2019/12/062"
-  journal: "Journal of Cosmology and Astroparticle Physics"
-  month: 12
-  start: 62
-  end: 62
-  title: "Gravitational waves from first order cosmological phase transitions in the Sound Shell Model"
-  issue: 12
-  volume: 2019
-  year: 2019
+# preferred-citation:
+#   type: article
+#   authors:
+#   - family-names: "Hindmarsh"
+#     given-names: "Mark"
+#     orcid: "https://orcid.org/0000-0002-9307-437X"
+#   - family-names: "Hijazi"
+#     given-names: "Mulham"
+#     orcid: "https://orcid.org/0000-0002-1941-1518"
+#   doi: "10.1088/1475-7516/2019/12/062"
+#   journal: "Journal of Cosmology and Astroparticle Physics"
+#   month: 12
+#   start: 62
+#   end: 62
+#   title: "Gravitational waves from first order cosmological phase transitions in the Sound Shell Model"
+#   issue: 12
+#   volume: 2019
+#   year: 2019
