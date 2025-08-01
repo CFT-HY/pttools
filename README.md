@@ -10,7 +10,7 @@ PTtools is a Python library for calculating hydrodynamical quantities
 around expanding bubbles of the new phase in an early universe phase transition,
 and the resulting gravitational wave power spectrum in the Sound Shell Model.
 
-![Types of solutions](https://raw.githubusercontent.com/AgenttiX/msc-thesis2/refs/heads/main/msc2-python/fig/relativistic_combustion.png)
+![Types of solutions](https://raw.githubusercontent.com/AgenttiX/msc-thesis2/refs/heads/main/msc2_python/fig/relativistic_combustion.png)
 
 ### Installation
 PTtools is [available on PyPI](https://pypi.org/project/pttools-gw/) and can be installed with pip:
@@ -53,7 +53,7 @@ There you can find a zip file containing the documentation in various formats.
 
 ### Example figures
 Fluid velocity profiles
-![Fluid velocity profiles](https://raw.githubusercontent.com/AgenttiX/msc-thesis2/refs/heads/main/msc2-python/fig/const_cs_gw_v.png)
+![Fluid velocity profiles](https://raw.githubusercontent.com/AgenttiX/msc-thesis2/refs/heads/main/msc2_python/fig/const_cs_gw_v.png)
 
 Gravitational wave power spectra
-![Gravitational wave power spectra](https://raw.githubusercontent.com/AgenttiX/msc-thesis2/refs/heads/main/msc2-python/fig/const_cs_gw_omgw0.png)
+![Gravitational wave power spectra](https://raw.githubusercontent.com/AgenttiX/msc-thesis2/refs/heads/main/msc2_python/fig/const_cs_gw_omgw0.png)
