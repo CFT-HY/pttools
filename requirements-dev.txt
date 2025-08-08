@@ -1,19 +1,19 @@
 # The dependency files could be combined with the line below, but this would double-install packages
 # if some of the packages are already installed with conda.
 # -r requirements.txt
-allure-pytest == 2.13.5
+allure-pytest == 2.15.0
 build == 1.2.2.post1
 colorama == 0.4.6
-pandas == 2.2.3
+pandas == 2.3.1
 # For Numba system info
-psutil == 6.1.1
+psutil == 7.0.0
 pyan3 == 1.1.1  #, != 1.2.0
-pyinstrument == 5.0.1
-pylint == 3.3.4
-pytest == 8.3.4
-pytest-cov == 6.0.0
+pyinstrument == 5.0.3
+pylint == 3.3.7
+pytest == 8.4.1
+pytest-cov == 6.2.1
 pytest-html == 4.1.1
-pytest-xdist == 3.6.1
+pytest-xdist == 3.8.0
 setuptools == 80.8.0
 twine == 6.1.0
 wheel == 0.45.1

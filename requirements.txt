@@ -1,7 +1,7 @@
 # List of project requirements for pip
 # https://pip.pypa.io/en/stable/user_guide/#requirements-files
 
-h5py == 3.12.1
+h5py == 3.14.0
 # Intel Compile Runtime provides Intel SVML, which speeds up Numba
 # As of 2023-10, this is the latest supported version on Windows and macOS
 icc-rt >= 2019.0; platform_machine != "arm64"
@@ -11,17 +11,17 @@ intel-openmp >= 2020.0.133; sys_platform == "darwin" and platform_machine != "ar
 kaleido == 0.2.1
 # Matplotlib 3.9.1 wheels are broken
 # https://pypi.org/project/matplotlib/3.9.1/
-matplotlib == 3.10.0
+matplotlib == 3.10.5
 # Numba 0.55 breaks the unit tests
 # https://github.com/numba/numba/issues/7751
-numba == 0.61.0
+numba == 0.61.2
 # NumbaLSODA does not work yet on the GitHub Actions Windows runners
 numbalsoda == 0.3.4; sys_platform != "win32"
 # If you're using an old version of Numba and get the error:
 # "create_target_machine() got an unexpected keyword argument 'jitdebug'"
 # then you may have to downgrade llvmlite to 0.32.1
 # https://github.com/rapidsai/cuml/issues/2389#issuecomment-642645437
-numpy == 2.1.3
+numpy == 2.2.6
 orjson >= 3.10.15
 plotly >= 6.0.0
 scipy >= 1.15.1
