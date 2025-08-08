@@ -137,22 +137,25 @@ autodoc_typehints = "description"
 # Sphinx 6.0 will require base URLs and caption strings to contain exactly one "%s",
 # and all other "%" need to be escaped as "%%".
 extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
+    # The articles are ordered by publication year
     # Hindmarsh articles
     "gw_ssm": ("https://arxiv.org/abs/1304.2433%s", "Hindmarsh et al., 2014%s"),
     "ssm": ("https://arxiv.org/abs/1608.04735%s", "Hindmarsh et al., 2018%s"),
     "gw_pt_ssm": ("https://arxiv.org/abs/1909.10040%s", "Hindmarsh et al., 2019%s"),
     "notes": ("https://arxiv.org/abs/2008.09136%s", "Hindmarsh et al., 2021%s"),
     # Other articles
-    "ai_2023": ("https://arxiv.org/abs/2303.10171%s", "Ai et al., 2023%s"),
+    "maggiore_1999": ("https://arxiv.org/abs/gr-qc/9909001", "Maggiore, 1999%s"),
     "borsanyi_2016": ("https://arxiv.org/abs/1606.07494%s", "Borsanyi et al., 2016%s"),
     "caprini_2016": ("https://arxiv.org/abs/1512.06239%s", "Caprini et al., 2016%s"),
+    "planck_2018": ("https://arxiv.org/abs/1807.06209%s", "Planck 2018 results%s"),
     "smith_2019": ("https://arxiv.org/abs/1908.00546%s", "Smith & Caldwell, 2019%s"),
     "caprini_2020": ("https://arxiv.org/abs/1910.13125%s", "Caprini et al., 2020%s"),
     "giese_2020": ("https://arxiv.org/abs/2004.06995%s", "Giese et al., 2020%s"),
     "giese_2021": ("https://arxiv.org/abs/2010.09744%s", "Giese et al., 2021%s"),
+    "gowling_2021": ("https://arxiv.org/abs/2106.05984%s", "Gowling & Hindmarsh, 2021%s"),
+    "ai_2023": ("https://arxiv.org/abs/2303.10171%s", "Ai et al., 2023%s"),
     "giombi_2024_cs": ("https://arxiv.org/abs/2409.01426%s", "Giombi et al., 2024%s"),
     "giombi_2024_gr": ("https://arxiv.org/abs/2307.12080%s", "Giombi & Hindmarsh, 2024%s"),
-    "gowling_2021": ("https://arxiv.org/abs/2106.05984%s", "Gowling & Hindmarsh, 2021%s"),
     "gowling_2023": ("https://arxiv.org/abs/2209.13551%s", "Gowling et al., 2023%s"),
     # Other
     "aof_grant": (
