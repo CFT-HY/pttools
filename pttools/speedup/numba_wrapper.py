@@ -3,6 +3,8 @@
 # pylint: disable=unused-import
 
 import logging
+import shutil
+import subprocess
 import sys
 import typing as tp
 
@@ -22,7 +24,7 @@ except ImportError:
     NUMBA_OLD_STRUCTURE = True
 import numpy as np
 
-from . import options
+from pttools.speedup import options
 OLD_NUMBALSODA = False
 if options.NUMBA_DISABLE_JIT:
     # As of 0.3.3 NumbaLSODA can't be imported when Numba is disabled
@@ -37,6 +39,19 @@ else:
             OLD_NUMBALSODA = True
         except ImportError:
             numbalsoda = None
+    except OSError as e:
+        # NumbaLSODA requires an executable stack, which is not enabled by default on Linux 6.14.
+        # https://github.com/Nicholaswogan/numbalsoda/issues/34
+        parts = str(e).split(": ", 1)
+        if len(parts) != 2 or parts[1] != "cannot enable executable stack as shared object requires: Invalid argument":
+            raise e
+        if shutil.which("execstack") is None:
+            raise OSError(
+                "NumbaLSODA requires an executable stack to run. To enable it,"
+                "please install execstack with e.g. \"sudo apt install execstack\" and run this program again."
+            ) from e
+        subprocess.run(["execstack", "-c", parts[0]])
+        import numbalsoda
 
 if numbalsoda is None:
     lsoda_sig = numba.types.void(
