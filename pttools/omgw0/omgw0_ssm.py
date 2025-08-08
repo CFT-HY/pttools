@@ -3,8 +3,6 @@ Calculate the physical gravitational wave power spectrum $\Omega_{\rm gw}(f)$
 as a function of physical frequency $f$ in the Sound shell model.
 """
 
-__author__ = "Chloe Hopling, Mark Hindmarsh"
-
 import functools
 import logging
 
@@ -13,7 +11,7 @@ import numpy as np
 from pttools.bubble.boundary import Phase
 from pttools.bubble.bubble import Bubble
 import pttools.bubble.ke_frac_approx as K
-import pttools.omgw0.suppression as sup
+import pttools.omgw0.suppression as sup_mod
 from pttools.ssmtools.const import NPTDEFAULT, NTDEFAULT, N_Z_LOOKUP_DEFAULT, NptType
 import pttools.ssmtools as ssm
 import pttools.type_hints as th
@@ -48,7 +46,7 @@ class Spectrum(ssm.SSMSpectrum):
         :param z_st_thresh: for $z$ values above z_sh_tresh, use approximation rather than doing the sine transform integral.
         :param nuc_type: nucleation type
         :param nt: number of points in the t array
-        :param r_star: $r_*$
+        :param r_star: Hubble-scaled mean bubble spacing $r_*$
         :param lifetime_multiplier: used for computing the source lifetime factor
         :param compute: whether to compute the spectrum immediately
         :param Tn: $T_n$, nucleation temperature override
@@ -126,16 +124,19 @@ class Spectrum(ssm.SSMSpectrum):
             self,
             g0: float = const.G0,
             gs0: float = const.GS0,
-            suppression: sup.SuppressionMethod = sup.SuppressionMethod.DEFAULT) -> np.ndarray:
+            sup: sup_mod.Suppression = sup_mod.DEFAULT,
+            sup_method: sup_mod.SuppressionMethod = sup_mod.SuppressionMethod.DEFAULT) -> np.ndarray:
         # The r_star compensates the fact that the pow_gw includes a correction factor that is J without r_star
-        return self.r_star * self.F_gw0(g0=g0, gs0=gs0) * self.pow_gw * self.suppression_factor(method=suppression)
+        return self.r_star * self.F_gw0(g0=g0, gs0=gs0) * self.pow_gw * \
+            self.suppression_factor(suppression=sup, method=sup_method)
 
     def omgw0_peak(
             self,
             g0: float = const.G0,
             gs0: float = const.GS0,
-            suppression: sup.SuppressionMethod = sup.SuppressionMethod.DEFAULT):
-        omgw0 = self.omgw0(g0=g0, gs0=gs0, suppression=suppression)
+            sup: sup_mod.Suppression = sup_mod.DEFAULT,
+            sup_method: sup_mod.SuppressionMethod = sup_mod.SuppressionMethod.DEFAULT):
+        omgw0 = self.omgw0(g0=g0, gs0=gs0, sup=sup, sup_method=sup_method)
         i_max = np.argmax(omgw0)
         return self.f()[i_max], omgw0[i_max]
 
@@ -145,8 +146,11 @@ class Spectrum(ssm.SSMSpectrum):
     def signal_to_noise_ratio_instrument(self) -> float:
         return noise.signal_to_noise_ratio(f=self.f(), signal=self.omgw0(), noise=self.noise_ins())
 
-    def suppression_factor(self, method: sup.SuppressionMethod = sup.SuppressionMethod.DEFAULT) -> float:
-        return sup.get_suppression_factor(vw=self.bubble.v_wall, alpha=self.bubble.alpha_n, method=method)
+    def suppression_factor(
+            self,
+            suppression: sup_mod.Suppression = sup_mod.DEFAULT,
+            method: sup_mod.SuppressionMethod = sup_mod.SuppressionMethod.DEFAULT) -> float:
+        return suppression.suppression(v_wall=self.bubble.v_wall, alpha_n=self.bubble.alpha_n, method=method)
 
     @functools.cached_property
     def Tn(self) -> float:
@@ -220,7 +224,8 @@ def omgw0_bag(
         r_star: float,
         T: float = const.T_default,
         npt: NptType = NPTDEFAULT,
-        suppression: sup.SuppressionMethod = sup.SuppressionMethod.DEFAULT):
+        sup: sup_mod.Suppression = sup_mod.DEFAULT,
+        sup_method: sup_mod.SuppressionMethod = sup_mod.SuppressionMethod.DEFAULT):
     r"""
     For given set of thermodynamic parameters vw, alpha, rs and Tn calculates the power spectrum using
     the SSM as encoded in the PTtools module (omgwi)
@@ -243,15 +248,15 @@ def omgw0_bag(
     #        de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
     #        z_st_thresh: float = const.Z_ST_THRESH)
 
-    if suppression == sup.SuppressionMethod.NONE:
+    if sup_method == sup_mod.SuppressionMethod.NONE:
         return const.Fgw0 * J(r_star, K_frac) * omgwi
-    elif suppression == sup.SuppressionMethod.NO_EXT:
-        sup_fac = sup.get_suppression_factor(vw, alpha, method=suppression)
+    elif sup_method == sup_mod.SuppressionMethod.NO_EXT:
+        sup_fac = sup.suppression(vw, alpha, method=sup_method)
         return const.Fgw0 * J(r_star, K_frac) * omgwi * sup_fac
-    elif suppression == sup.SuppressionMethod.EXT_CONSTANT:
-        sup_fac = sup.get_suppression_factor(vw, alpha, method=suppression)
+    elif sup_method == sup_mod.SuppressionMethod.EXT_CONSTANT:
+        sup_fac = sup.suppression(vw, alpha, method=sup_method)
         return const.Fgw0 * J(r_star, K_frac) * omgwi * sup_fac
-    raise ValueError(f"Invalid suppression: {suppression}")
+    raise ValueError(f"Invalid suppression method: {sup_method}")
 
 
 def r_star(H_n: th.FloatOrArr, R_star: th.FloatOrArr) -> th.FloatOrArr:

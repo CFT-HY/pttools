@@ -1,7 +1,5 @@
 """Constants for the omgw0 module"""
 
-__author__ = "Mark Hindmarsh"
-
 # Speed of light (m/s)
 c: float = 299792458
 

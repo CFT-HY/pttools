@@ -1,7 +1,5 @@
 """Utilities for plotting and analysing data"""
 
-import typing as tp
-
 import matplotlib as mpl
 from matplotlib.legend import Legend
 import matplotlib.pyplot as plt
@@ -10,17 +8,20 @@ from pttools.bubble.boundary import Phase
 from pttools.models.base import BaseModel
 from pttools import speedup
 
-A4_PAPER_SIZE: tp.Tuple[float, float] = (11.7, 8.3)
-A3_PAPER_SIZE: tp.Tuple[float, float] = (16.5, 11.7)
+A4_PAPER_SIZE: tuple[float, float] = (11.7, 8.3)
+A3_PAPER_SIZE: tuple[float, float] = (16.5, 11.7)
 ENABLE_DRAWING: bool = not speedup.GITHUB_ACTIONS
-FigAndAxes = tp.Tuple[plt.Figure, plt.Axes]
+FigAndAxes = tuple[plt.Figure, plt.Axes]
 
 
-def create_fig_ax(fig: plt.Figure = None, ax: plt.Axes = None) -> FigAndAxes:
+def create_fig_ax(
+        fig: plt.Figure = None,
+        ax: plt.Axes = None,
+        figsize: tuple[float, float] = None) -> FigAndAxes:
     """Create a figure and axes if necessary"""
     if fig is None:
         if ax is None:
-            fig = plt.figure()
+            fig = plt.figure(figsize=figsize)
             ax = fig.add_subplot()
         else:
             fig = ax.get_figure()
@@ -29,10 +30,9 @@ def create_fig_ax(fig: plt.Figure = None, ax: plt.Axes = None) -> FigAndAxes:
     return fig, ax
 
 
-def legend(ax: plt.Axes, **kwargs) -> tp.Optional[Legend]:
+def legend(ax: plt.Axes, **kwargs) -> Legend | None:
     """Add a legend to the axes if there are any legend labels"""
-    if ax.get_legend_handles_labels() != ([], []):
-        return ax.legend(**kwargs)
+    return None if ax.get_legend_handles_labels() == ([], []) else ax.legend(**kwargs)
 
 
 def model_phase_label(model: BaseModel, phase: Phase) -> str:

@@ -35,3 +35,6 @@ CS2FunScalarSig = numba.double(numba.double, numba.double)
 CS2FunScalarPtr = numba.types.CPointer(CS2FunScalarSig)
 #: ctypes type of a cs2 function
 CS2CFunc = ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double)
+
+# Other
+Interpolation = tp.Literal["nearest", "linear", "cubic"]
