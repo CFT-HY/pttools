@@ -15,8 +15,7 @@ import pttools.omgw0.suppression as sup_mod
 from pttools.ssmtools.const import NPTDEFAULT, NTDEFAULT, N_Z_LOOKUP_DEFAULT, NptType
 import pttools.ssmtools as ssm
 import pttools.type_hints as th
-from . import const
-from . import noise
+from pttools.omgw0 import const, noise
 
 logger = logging.getLogger(__name__)
 

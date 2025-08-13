@@ -13,7 +13,8 @@ import numpy as np
 
 import pttools.bubble as bbl
 import pttools.ssmtools.const as ssm_const
-import pttools.ssmtools.spectrum as ssm
+from pttools.ssmtools.spectrum import NucType
+from pttools.ssmtools.spectrum_bag import power_gw_scaled_bag
 
 logger = logging.getLogger(__name__)
 
@@ -46,8 +47,8 @@ def calc_sup_ssm(path: str, save: bool = True, npt: ssm_const.NptType = ssm_cons
     for i, vw in enumerate(sim_data[:, 0]):
         # print(vw)
         alpha = sim_data[i, 1]
-        params = (vw, alpha, ssm.NucType.EXPONENTIAL,(1,))
-        out_ssm.append(ssm.power_gw_scaled_bag(z, params, npt=npt))  # omgw_ssm /(HnR*)(Hnt) ,:TODO check how to add these in new PTtools / are they still needed z_st_thresh=np.inf ,npt=[7000,200,1000]
+        params = (vw, alpha, NucType.EXPONENTIAL,(1,))
+        out_ssm.append(power_gw_scaled_bag(z, params, npt=npt))  # omgw_ssm /(HnR*)(Hnt) ,:TODO check how to add these in new PTtools / are they still needed z_st_thresh=np.inf ,npt=[7000,200,1000]
         out_ssm_tot.append(np.trapezoid(out_ssm[i], np.log(z)))
         Ubarf_2_ssm.append(bbl.get_ubarf2_bag(vw, alpha))
 

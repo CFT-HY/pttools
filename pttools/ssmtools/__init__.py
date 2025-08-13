@@ -9,4 +9,6 @@ The Sound Shell Model is discussed in further detail in the article
 from .calculators import *
 from .const import *
 from .spectrum import *
+from .spectrum_bag import *
 from .ssm import *
+from .ssm_bag import *
