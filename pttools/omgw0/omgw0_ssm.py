@@ -70,7 +70,7 @@ class Spectrum(ssm.SSMSpectrum):
         self.g_star_manual_override = g_star is not None
         self.gs_star_manual_override = gs_star is not None
         self.Tn_override = const.T_default if Tn is None else Tn
-        self.g_star_override = const.G_STAR_DEFAULT if g_star is None else gs_star
+        self.g_star_override = const.G_STAR_DEFAULT if g_star is None else g_star
         self.gs_star_override = self.g_star_override if gs_star is None else gs_star
 
     def f(self, z: np.ndarray = None) -> th.FloatOrArr:
@@ -95,7 +95,7 @@ class Spectrum(ssm.SSMSpectrum):
 
     @functools.cached_property
     def g_star(self) -> float:
-        if self.override_necessary or self.gs_star_manual_override:
+        if self.override_necessary or self.g_star_manual_override:
             return self.g_star_override
         return self.g_star_computed
 
