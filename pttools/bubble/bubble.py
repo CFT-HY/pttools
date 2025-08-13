@@ -20,8 +20,6 @@ from pttools.speedup.export import export_json
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
     from pttools.models.const_cs import ConstCSModel
-
-if tp.TYPE_CHECKING:
     from pttools.analysis.utils import FigAndAxes
 
 logger = logging.getLogger(__name__)
@@ -54,7 +52,7 @@ class Bubble:
         if use_bag_solver and use_giese_solver:
             raise ValueError("Both bag and Giese solvers cannot be used at the same time.")
 
-        if v_wall < 0 or v_wall > 1:
+        if v_wall is None or np.isnan(v_wall) or v_wall < 0 or v_wall > 1:
             raise ValueError(f"Invalid v_wall={v_wall}")
 
         if not theta_bar:

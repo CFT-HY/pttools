@@ -812,7 +812,7 @@ class Model(BaseModel, abc.ABC):
 
     def validate_alpha_n(self, alpha_n: float, allow_invalid: bool = False, log_invalid: bool = True):
         r"""Validate that $\alpha_{n,\text{min}} < \alpha_n < 1$"""
-        if alpha_n < 0 or alpha_n < self.alpha_n_min:
+        if alpha_n is None or np.isnan(alpha_n) or alpha_n < 0 or alpha_n < self.alpha_n_min:
             msg = f"Invalid alpha_n={alpha_n}. Minimum for the model: {self.alpha_n_min}"
             if log_invalid:
                 logger.error(msg)
