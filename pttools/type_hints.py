@@ -13,22 +13,22 @@ import scipy.integrate as spi
 
 # Function and object types
 #: Numba function
-NumbaFunc = tp.Union[callable, CPUDispatcher]
+NumbaFunc = tp.Callable | CPUDispatcher
 #: ODE solver specifier
-ODESolver = tp.Union[spi.OdeSolver, tp.Type[spi.OdeSolver], tp.Type[spi.odeint], str]
+ODESolver = spi.OdeSolver | type[spi.OdeSolver] | type[spi.odeint] | str
 
 # Numerical types
 #: Float list or a Numpy array
-FloatListOrArr = tp.Union[tp.List[tp.Union[float, np.float64]], np.ndarray]
+FloatListOrArr = list[tp.Union[float, np.float64]] | np.ndarray
 #: Float or a Numpy array
-FloatOrArr = tp.Union[float, np.float64, np.ndarray]
+FloatOrArr = float | np.float64 | np.ndarray
 #: The return type of a Numba function that returns a float or a Numpy array
-FloatOrArrNumba = tp.Union[float, np.float64, np.ndarray, NumbaFunc]
+FloatOrArrNumba = float | np.float64 | np.ndarray | NumbaFunc
 #: Integer or a Numpy array
-IntOrArr = tp.Union[int, np.ndarray]
+IntOrArr = int | np.ndarray
 
 #: Type of a cs2 function
-CS2Fun = tp.Union[tp.Callable[[FloatOrArr, FloatOrArr], FloatOrArr], CPUDispatcher]
+CS2Fun = tp.Callable[[FloatOrArr, FloatOrArr], FloatOrArr] | CPUDispatcher
 #: Numba type of a cs2 function
 CS2FunScalarSig = numba.double(numba.double, numba.double)
 #: Numba pointer to a cs2 function

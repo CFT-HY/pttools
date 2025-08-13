@@ -13,9 +13,9 @@ NTDEFAULT: int = 10000
 #: Default number of wavevectors used in the velocity convolution integrations.
 # This should be at least as large as the default number of GW frequencies.
 N_Z_LOOKUP_DEFAULT: int = 10000
-NptType = tp.Union[np.ndarray, tp.Tuple[int, int, int]]
+NptType = np.ndarray[int, np.int64] | tuple[int, int, int]
 NPTDEFAULT: NptType = (NXIDEFAULT, NTDEFAULT, N_Z_LOOKUP_DEFAULT)
-Y_DEFAULT: np.ndarray = np.logspace(-1, 3, 1000)
+Y_DEFAULT: np.ndarray[int, np.float64] = np.logspace(-1, 3, 1000)
 
 # It seems that NPTDEFAULT should be something like NXIDEFAULT/(2.pi), otherwise one
 # gets a GW power spectrum which drifts up at high k.
@@ -37,7 +37,7 @@ T_TILDE_MAX: float = 20.0
 T_TILDE_MIN: float = 0.01
 
 #: Default nucleation parameters
-DEFAULT_NUC_PARM: tp.Tuple[int] = (1,)
+DEFAULT_NUC_PARM: tuple[int] = (1,)
 
 #: Default sound speed
 CS0: tp.Final[np.float64] = bubble.CS0
