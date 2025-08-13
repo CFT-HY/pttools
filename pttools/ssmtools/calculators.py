@@ -256,24 +256,3 @@ def sin_transform_approx(
     integral = -(f2 * np.cos(z * xi2) - f_p * np.cos(z * xi_w)) / z
     integral += -(f_m * np.cos(z * xi_w) - f1 * np.cos(z * xi1)) / z
     return integral
-
-
-def sin_transform_old(z: th.FloatOrArr, xi: np.ndarray, v: np.ndarray) -> th.FloatOrArr:
-    r"""
-    Old sin transform of $v(\xi)$
-
-    .. deprecated:: 0.0.1
-
-    :param z: Fourier transform variable (any shape)
-    :param xi: $\xi$
-    :param v: wall speed $v$, same shape as $\xi$
-    """
-    logger.warning("sin_transform_old is deprecated")
-    if isinstance(z, np.ndarray):
-        array = np.sin(np.outer(z, xi)) * v
-        integral = np.trapezoid(array, xi)
-    else:
-        array = v * np.sin(z * xi)
-        integral = np.trapezoid(array, xi)
-
-    return integral
