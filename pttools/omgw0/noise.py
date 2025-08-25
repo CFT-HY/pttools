@@ -5,13 +5,13 @@ from pttools.omgw0 import const
 
 
 def signal_to_noise_ratio(
-        f: np.ndarray,
-        signal: np.ndarray,
-        noise: np.ndarray,
-        f_noise: np.ndarray = None,
+        f: np.ndarray[int, np.float64],
+        signal: np.ndarray[int, np.float64],
+        noise: np.ndarray[int, np.float64],
+        f_noise: np.ndarray[int, np.float64] = None,
         obs_time: float = const.LISA_OBS_TIME,
         f_min: float = None,
-        f_max: float = None) -> th.FloatOrArr:
+        f_max: float = None) -> np.ndarray[int, np.float64]:
     r"""Signal-to-noise ratio
     $$\rho = \sqrt{T_{\text{obs}} \int_{{f}_\text{min}}^{{f}_\text{max}} df \frac{
     h^2 \Omega_{\text{signal}}^2}{
@@ -26,7 +26,9 @@ def signal_to_noise_ratio(
     :param signal: $\Omega_\text{signal}$
     :param noise: $\Omega_\text{noise}$
     :param f_noise: frequencies for the noise (assumed to be the same as for the signal, if not provided)
-    :obs_time: observation time (s)
+    :param obs_time: observation time (s)
+    :param f_min: minimum frequency to be considered (Hz)
+    :param f_max: maximum frequency to be considered (Hz)
     :return: signal-to-noise ratio SNR, aka. $\rho$
     """
     if f_noise is None:
@@ -101,6 +103,7 @@ def omega(f: th.FloatOrArr, S: th.FloatOrArr) -> th.FloatOrArr:
     r"""Convert an effective noise power spectral density (aka. sensitivity) $S$
     to a fractional GW energy density power spectrum $\Omega$
     $$\Omega = \frac{4 \pi^2}{3 H_0^2} f^3 S(f)$$
+    :lisa_conventions:`\ ` eq. 167,
     :gowling_2021:`\ ` eq. 3.8,
     :gowling_2023:`\ ` eq. 3.8,
     :smith_2019:`\ ` eq. 59
@@ -241,24 +244,45 @@ def S_I(f: th.FloatOrArr, L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatO
     return 4 * N_acc(L) * (1 + (const.F1_LISA/f)**2)
 
 
+# def S_gb(
+#         f: th.FloatOrArr,
+#         A: float = 9e-35,  # 1/mHz -> 10³
+#         f_ref_gb: float = 1,
+#         fk: float = 1.13e-3,
+#         a: float = 0.138,
+#         b: float = -221,
+#         c: float = 521,
+#         d: float = 1680) -> th.FloatOrArr:
+#     r"""Noise power spectral density for galactic binaries
+#     $$S_\text{gb}(f) = A
+#     \left( \frac{1 \text{mHz}}{f} \right)^{-\frac{7}{3}}
+#     \text{exp} \left( - \left( \frac{f}{f_\text{ref,gb}} \right^a - bf \sin(cf) \right)
+#     \left( 1 + \tanh(d(f_k - f)) \right)
+#     $$
+#     :gowling_2021:`\ ` eq. 3.10
+#     """
+#     # This result is wrong by several orders of magnitude
+#     return A * (1e-3 / f)**(-7/3) * np.exp(-(f/f_ref_gb)**a - b*f*np.sin(c*f)) * (1 + np.tanh(d*(fk - f)))
+
+
 def S_gb(
         f: th.FloatOrArr,
-        A: float = 9e-35,  # 1/mHz -> 10³
-        f_ref_gb: float = 1,
-        fk: float = 1.13e-3,
-        a: float = 0.138,
-        b: float = -221,
-        c: float = 521,
-        d: float = 1680) -> th.FloatOrArr:
+        t: th.FloatOrArr = 4,  # years
+        A: float = 1.8e-44) -> th.FloatOrArr:
+    alpha = np.interp(t, GB_TIMES, GB_ALPHAS)
+    beta = np.interp(t, GB_TIMES, GB_BETAS)
+    kappa = np.interp(t, GB_TIMES, GB_KAPPAS)
+    gamma = np.interp(t, GB_TIMES, GB_GAMMAS)
+    fk = np.interp(t, GB_TIMES, GB_FKS)
     r"""Noise power spectral density for galactic binaries
-    $$S_\text{gb}(f) = A
-    \left( \frac{1 \text{mHz}}{f} \right)^{-\frac{7}{3}}
-    \text{exp} \left( - \left( \frac{f}{f_\text{ref,gb}} \right^a - bf \sin(cf) \right)
-    \left( 1 + \tanh(d(f_k - f)) \right)
     $$
+    S_c(f) = A f^\frac{-7}{3} \exp \left( -f^\alpha + \beta f \sin(\kappa f) \right)
+    \left( 1 + \tanh(\gamma (f_k - f) \right) \text{Hz}^{-1}
+    $$
+    :cornish_2017:`\ ` eq. 3
     :gowling_2021:`\ ` eq. 3.10
     """
-    return A * (1e-3 / f)**(-7/3) * np.exp(-(f/f_ref_gb)**a - b*f*np.sin(c*f)) * (1 + np.tanh(d*(fk - f)))
+    return A * f**(-7/3) * np.exp(-f**alpha + beta * f * np.sin(kappa * f)) * (1 + np.tanh(gamma * (fk - f)))
 
 
 def W(f: th.FloatOrArr, ft: th.FloatOrArr) -> th.FloatOrArr:
@@ -267,3 +291,20 @@ def W(f: th.FloatOrArr, ft: th.FloatOrArr) -> th.FloatOrArr:
     :gowling_2021:`\ ` p. 12
     """
     return 1 - np.exp(-2j * f / ft)
+
+
+#: Coefficients for the galactic binary noise, :cornish_2017:`\ ` table 1
+GB_DATA: np.ndarray[tuple[int, int], np.float64] = np.array([
+    [0.5, 1, 2, 4],
+    [0.133, 0.171, 0.165, 0.138],
+    [243, 292, 299, -221],
+    [482, 1020, 611, 521],
+    [917, 1680, 1340, 1680],
+    [0.00258, 0.00215, 0.00173, 0.00113]
+])
+GB_TIMES: np.ndarray[int, np.float64] = GB_DATA[0, :]
+GB_ALPHAS: np.ndarray[int, np.float64] = GB_DATA[1, :]
+GB_BETAS: np.ndarray[int, np.float64] = GB_DATA[2, :]
+GB_KAPPAS: np.ndarray[int, np.float64] = GB_DATA[3, :]
+GB_GAMMAS: np.ndarray[int, np.float64] = GB_DATA[4, :]
+GB_FKS: np.ndarray[int, np.float64] = GB_DATA[5, :]

@@ -147,6 +147,7 @@ extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
     "maggiore_1999": ("https://arxiv.org/abs/gr-qc/9909001", "Maggiore, 1999%s"),
     "borsanyi_2016": ("https://arxiv.org/abs/1606.07494%s", "Borsanyi et al., 2016%s"),
     "caprini_2016": ("https://arxiv.org/abs/1512.06239%s", "Caprini et al., 2016%s"),
+    "cornish_2017": ("https://arxiv.org/abs/1703.09858%s", "Cornish & Robson, 2017%s"),
     "planck_2018": ("https://arxiv.org/abs/1807.06209%s", "Planck 2018 results%s"),
     "smith_2019": ("https://arxiv.org/abs/1908.00546%s", "Smith & Caldwell, 2019%s"),
     "caprini_2020": ("https://arxiv.org/abs/1910.13125%s", "Caprini et al., 2020%s"),
@@ -163,6 +164,7 @@ extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
         "Academy of Finland grant %s"
     ),
     "issue": ("https://github.com/CFT-HY/pttools/issues/%s", "issue %s"),
+    "lisa_conventions": ("https://gitlab.esa.int/lisa-sgs/sandbox/conventions-document%s", "LISA DDPC Conventions document%s"),
     "rel_hydro_book": (
         "https://doi.org/10.1093/acprof:oso/9780198528906.001.0001%s",
         "Relativistic hydrodynamics, Rezzolla, Zanotti, 2013%s"),
