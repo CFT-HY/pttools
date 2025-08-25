@@ -10,6 +10,10 @@ name = "pttools-gw"
 version = "0.9.0"
 description = "PTtools simulation framework for phase transitions in the early universe"
 readme = "README.md"
+# PTtools is licensed under the MIT License in accordance with the University of Helsinki recommendations.
+# https://www.helsinki.fi/en/helsinki-university-library/library-researchers/copyright-and-licenses
+# "We primarily recommend the MIT licence."
+# https://blogs.helsinki.fi/thinkopen/open-source-at-the-university-of-helsinki/
 license = "MIT"
 license-files = ["LICENSE"]
 keywords = [
