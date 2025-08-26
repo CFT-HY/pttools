@@ -35,6 +35,17 @@
             "email": "mika.x.maki@helsinki.fi",
             "familyName": "Mäki",
             "givenName": "Mika"
+        },
+        {
+            "id": "https://orcid.org/0009-0008-2919-022X",
+            "type": "Person",
+            "affiliation": {
+                "type": "Organization",
+                "name": "Computational Field Theory group, University of Helsinki"
+            },
+            "email": "lorenzo.giombi@helsinki.fi",
+            "familyName": "Giombi",
+            "givenName": "Lorenzo"
         }
     ],
     "codeRepository": "git+https://github.com/CFT-HY/pttools.git",

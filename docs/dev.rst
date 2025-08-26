@@ -18,7 +18,7 @@ Creating a new release
 Update the PTtools version number in:
 
 - CITATION.cff (update also the release date)
-- codemeta.json
+- codemeta.json (update also the release date)
 - pyproject.toml
 
 Updating Python version requirements

@@ -1,14 +1,17 @@
 Acknowledgements
 ================
 
-Main contributors (in alphabetical order):
+Main contributors (in order of contribution):
 - `Mark Hindmarsh <https://orcid.org/0000-0002-9307-437X>`_
   - Creator of the Sound Shell Model, author of the first versions of PTtools (2015 →)
 - `Chloe Hopling <https://orcid.org/0000-0002-7955-4465>`_
   - Several scripts used for testing
+  - Conversion to $\Omega_{\text{gw},0}$, including the suppression module
 - `Mika Mäki <https://orcid.org/0000-0001-8162-7101>`_
   - University of Helsinki summer employee 2021, MSc student 2022-2024, PhD student 2025→
   - Major rework of PTtools, current main developer
+- `Lorenzo Giombi <https://orcid.org/0009-0008-2919-022X>`_
+  - Low-k approximation module
 
 In addition to the main contributors,
 the following people have contributed to the development of PTtools (in alphabetical order):

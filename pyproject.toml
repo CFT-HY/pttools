@@ -28,7 +28,8 @@ keywords = [
 authors = [
     {name = "Mark Hindmarsh", email = "mark.hindmarsh@helsinki.fi"},
     {name = "Chloe Hopling", email = "c.hopling@sussex.ac.uk"},
-    {name = "Mika Mäki", email = "mika.x.maki@helsinki.fi"}
+    {name = "Mika Mäki", email = "mika.x.maki@helsinki.fi"},
+    {name = "Lorenzo Giombi", email = "lorenzo.giombi@helsinki.fi"}
 ]
 maintainers = [
     {name = "Mark Hindmarsh", email = "mark.hindmarsh@helsinki.fi"},
