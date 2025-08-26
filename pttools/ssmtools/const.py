@@ -44,3 +44,6 @@ CS0: tp.Final[np.float64] = bubble.CS0
 
 #: Default mean adiabatic index
 GAMMA: float = 4/3
+
+#: Gravitational constant in GeV
+G: float = 1.22e19**(-2)

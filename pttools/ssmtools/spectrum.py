@@ -1,35 +1,23 @@
 """Functions for computing GW power spectra"""
 
-import enum
 import functools
 import logging
 import typing as tp
 
 import matplotlib.pyplot as plt
-import numba
-from numba.extending import overload
 import numpy as np
 
 import pttools.type_hints as th
 from pttools import bubble
-from pttools import speedup
-from pttools.ssmtools import const, ssm
+from pttools.ssmtools import const
+from pttools.ssmtools.nucleation import NucType, DEFAULT_NUC_TYPE
+from pttools.ssmtools.spec_den_gw import gen_lookup, spec_den_gw_scaled
+from pttools.ssmtools.spec_den_v import spec_den_v
 
 if tp.TYPE_CHECKING:
     from pttools.analysis.utils import FigAndAxes
 
 logger = logging.getLogger(__name__)
-
-
-@enum.unique
-class NucType(str, enum.Enum):
-    """Nucleation type"""
-    EXPONENTIAL = "exponential"
-    SIMULTANEOUS = "simultaneous"
-
-
-#: Default nucleation type
-DEFAULT_NUC_TYPE = NucType.EXPONENTIAL
 
 
 class SSMSpectrum:
@@ -92,6 +80,25 @@ class SSMSpectrum:
         if compute:
             self.compute()
 
+    def beta(self, H_n: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Nucleation rate parameter $\beta$
+        $$\beta = (8 \pi)^\frac{1}{3} \frac{v_\text{wall}}{R_*}$$
+        :gw_pt_ssm:`\ ` eq. 4.16, A.14
+        :lecture_notes:`\ ` eq. 7.21
+
+        Simultaneous nucleation only!
+        """
+        return self.beta_tilde() * H_n
+
+    def beta_tilde(self):
+        r"""Nucleation rate parameter $\tilde{\beta}$, also known as "beta over H"
+        $$\tilde{\beta} \equiv \frac{\beta}{H_n} = (8 \pi)^\frac{1}{3} \frac{v_\text{wall}}{r_*}$$
+        :gowling_2021:`\ ` eq. 2.1
+
+        Simultaneous nucleation only!
+        """
+        return (8*np.pi)**(1/3) * self.bubble.v_wall / self.r_star
+
     def compute(self):
         if not self.bubble.solved:
             self.bubble.solve()
@@ -134,6 +141,15 @@ class SSMSpectrum:
             ret *= 1 - (1 + self.lifetime_multiplier * 2 * self.r_star / np.sqrt(self.bubble.kinetic_energy_fraction))**(-1 - 2*nu_gdh2024)
         return ret
 
+    def nonlinearity_timescale(self, H_n: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Timescale of nonlinearities $\tau_\text{nl}$
+        $$\tau_\text{nl} = \frac{R_*}{\bar{U}_f}$
+        :gw_pt_ssm:`\ ` p. 6
+        :lecture_notes:`\ ` p. 48
+        :giombi_2024_cs:`\ ` p. 2
+        """
+        return self.R_star(H_n) / self.bubble.ubarf
+
     # Plotting
 
     def plot(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None, **kwargs) -> "FigAndAxes":
@@ -157,45 +173,6 @@ class SSMSpectrum:
         return plot_spectrum_multi(self, fig, path, **kwargs)
 
 
-@numba.njit
-def gen_lookup(y: np.ndarray, cs: float, n_z_lookup: int = const.N_Z_LOOKUP_DEFAULT, eps: float = 0.) -> np.ndarray:
-    """
-    :param y: Input array
-    :param cs: Speed of sound $c_s$
-    :param n_z_lookup: Number of points for the generated lookup table
-    :param eps: Seems to be needed for max(z) <= 100. E.g. 1e-8. Why?
-    :return: Generated lookup array for z
-    """
-    z_minus_min, z_plus_max = lookup_limits(y, cs, eps)
-    # The variable to integrate over in eq. 3.44 and 3.47
-    return speedup.logspace(np.log10(z_minus_min), np.log10(z_plus_max), n_z_lookup)
-
-
-@numba.njit
-def lookup_limits(y: np.ndarray, cs: float, eps: float = 0.) -> tp.Tuple[float, float]:
-    """Defined on p. 12 between eq. 3.44 and 3.45"""
-    return y.min() * 0.5 * (1. - cs) / cs - eps, y.max() * 0.5 * (1. + cs) / cs + eps
-
-
-@numba.njit
-def nu(T: th.FloatOrArr, nuc_type: NucType = NucType.SIMULTANEOUS, a: float = 1.) -> th.FloatOrArr:
-    r"""
-    Bubble lifetime distribution function
-
-    :gw_pt_ssm:`\ ` eq. 4.27 & 4.32
-
-    :param T: dimensionless time
-    :param nuc_type: nucleation type, simultaneous or exponential
-    :return: bubble lifetime distribution $\nu$
-    """
-    if nuc_type == NucType.SIMULTANEOUS.value:
-        return 0.5 * a * (a*T)**2 * np.exp(-(a*T)**3 / 6)
-    if nuc_type == NucType.EXPONENTIAL.value:
-        return a * np.exp(-a*T)
-    # raise ValueError(f"Nucleation type not recognized: \"{nuc_type}\"")
-    raise ValueError("Nucleation type not recognized")
-
-
 def pow_spec(z: th.FloatOrArr, spec_den: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Power spectrum from spectral density at dimensionless wavenumber z.
@@ -207,212 +184,3 @@ def pow_spec(z: th.FloatOrArr, spec_den: th.FloatOrArr) -> th.FloatOrArr:
     :return: power spectrum
     """
     return z**3 / (2. * np.pi ** 2) * spec_den
-
-
-@numba.njit(parallel=True, nogil=True)
-def _spec_den_gw_scaled_core(
-        z_lookup: np.ndarray,
-        P_v_lookup: np.ndarray,
-        y: np.ndarray,
-        cs: float,
-        Gamma: float,
-        source_lifetime_factor: float,
-        nz_int: int) -> tp.Tuple[np.ndarray, np.ndarray]:
-    r""":gw_pt_ssm:`\ ` eq. 3.47 and 3.48
-    The variable naming corresponds to the article.
-    """
-    if z_lookup.shape != P_v_lookup.shape:
-        raise TypeError("z_lookup and P_v_lookup must be of the same shape.")
-
-    # This trickery is required by Numba
-    nz_int2 = z_lookup.size if nz_int is None else nz_int
-
-    # Precompute shared intermediate results
-    cs2: float = cs ** 2
-    z_plus_factor = (1 + cs) / (2 * cs)
-    z_minus_factor = (1 - cs) / (2 * cs)
-    p_gw_factor = ((1 - cs2) / cs2) ** 2 / (4 * np.pi * cs)
-
-    p_gw: np.ndarray = np.zeros_like(y)
-    for i in numba.prange(y.size):
-        # As defined on page 12 between eq. 3.44 and 3.45
-        z_plus = y[i] * z_plus_factor
-        z_minus = y[i] * z_minus_factor
-        # Create a range of z to integrate over
-        z = speedup.logspace(np.log10(z_minus), np.log10(z_plus), nz_int2)
-        # The integrand in eq. 3.47
-        integrand = \
-            ((z - z_plus) ** 2 * (z - z_minus) ** 2) / (z * (z_plus + z_minus - z)) \
-            * np.interp(z, z_lookup, P_v_lookup) \
-            * np.interp((z_plus + z_minus - z), z_lookup, P_v_lookup)
-        p_gw[i] = p_gw_factor / y[i] * np.trapezoid(integrand, z)
-
-    # Eq. 3.48 has a factor of 3 Gamma^2
-    # The P_v_lookup is 0.5 \tilde{P}_v, which gives a factor of (1/2)^2 = 1/4
-    # Combined, these result in 3/4 Gamma^2
-    return 0.75 * Gamma ** 2 * p_gw * source_lifetime_factor, y
-
-
-def _spec_den_gw_scaled_y(
-        z_lookup: np.ndarray,
-        P_v_lookup: np.ndarray,
-        y: np.ndarray,
-        cs: float,
-        Gamma: float,
-        source_lifetime_factor: float,
-        nz_int: int) -> tp.Tuple[np.ndarray, np.ndarray]:
-
-    z_lookup_min, z_lookup_max = lookup_limits(y, cs)
-    if z_lookup.max() < z_lookup_max or z_lookup.min() > z_lookup_min:
-        raise ValueError("Range of z_lookup is not large enough.")
-
-    return _spec_den_gw_scaled_core(z_lookup, P_v_lookup, y, cs, Gamma, source_lifetime_factor, nz_int)
-
-
-def _spec_den_gw_scaled_no_y(
-        z_lookup: np.ndarray,
-        P_v_lookup: np.ndarray,
-        y: None,
-        cs: float,
-        Gamma: float,
-        source_lifetime_factor: float,
-        nz_int: int) -> tp.Tuple[np.ndarray, np.ndarray]:
-    # This process is the reverse of to gen_lookup()
-    zmax = z_lookup.max() * 2. * cs / (1. + cs)
-    zmin = z_lookup.min() * 2. * cs / (1. - cs)
-    y = speedup.logspace(np.log10(zmin), np.log10(zmax), z_lookup.size)
-    return _spec_den_gw_scaled_core(z_lookup, P_v_lookup, y, cs, Gamma, source_lifetime_factor, nz_int)
-
-
-def spec_den_gw_scaled(
-        z_lookup: np.ndarray,
-        P_v_lookup: np.ndarray,
-        y: np.ndarray = None,
-        cs: float = const.CS0,
-        Gamma: float = const.GAMMA,
-        source_lifetime_factor: float = 1.,
-        nz_int: int = None) -> tp.Union[tp.Tuple[np.ndarray, np.ndarray], th.NumbaFunc]:
-    r"""
-    Spectral density of scaled gravitational wave power
-
-    :param z_lookup: Lookup table for the $z = qL_f$ values corresponding to P_v_lookup
-    :param P_v_lookup: $\bar{U}_f^2 \tilde{P}_v (z)$,
-        a lookup table for the spectral density of the Fourier transform of the velocity field,
-        not the spectral density of plane wave coefficients, which is lower by a factor of 2.
-    :param y: $y = kL_f = kR*$ corresponding to z_lookup. If not given, will be created from z_lookup.
-    :param cs: Speed of sound (in the broken phase after the phase transition)
-    :param Gamma: Mean adiabatic index $\Gamma = \frac{\bar{w}}{\bar{e}}$
-    :return: $\hat{\mathcal{P}}$ Eq. 3.33 of Chloe's thesis, which should be ($3\Gamma \bar{U}_f$) Eq. 3.47
-        Eq. 3.46 converted to the spectral density and divided by (H L_f)
-
-    The factor of 3 comes from the Friedmann equation
-    3H^2/(8pi G)
-    """
-    if isinstance(y, np.ndarray):
-        return _spec_den_gw_scaled_y(z_lookup, P_v_lookup, y, cs, Gamma, source_lifetime_factor, nz_int)
-    if y is None:
-        return _spec_den_gw_scaled_no_y(z_lookup, P_v_lookup, y, cs, Gamma, source_lifetime_factor, nz_int)
-    raise TypeError(f"Unknown type for z: {type(y)}")
-
-
-@overload(spec_den_gw_scaled, jit_options={"nopython": True, "nogil": True})
-def _spec_den_gw_scaled_numba(
-        xlookup: np.ndarray,
-        P_vlookup: np.ndarray,
-        z: np.ndarray = None,
-        cs: float = const.CS0) -> tp.Union[tp.Tuple[np.ndarray, np.ndarray], th.NumbaFunc]:
-    if isinstance(z, numba.types.Array):
-        return _spec_den_gw_scaled_y
-    if isinstance(z, (numba.types.NoneType, numba.types.Omitted)):
-        return _spec_den_gw_scaled_no_y
-    raise TypeError(f"Unknown type for z: {type(z)}")
-
-
-@numba.njit
-def _qT_array(qRstar, Ttilde, b_R, vw):
-    return qRstar * Ttilde / (b_R * vw)
-
-
-@numba.njit
-def _spec_den_v_core_loop(
-        z_i: float, t_array: np.ndarray, b_R: float, vw: float,
-        qT_lookup: np.ndarray, A2_lookup: np.ndarray, nuc_type: NucType, a: float, factor: float):
-    qT = _qT_array(z_i, t_array, b_R, vw)
-    A2_2d_array_z = np.interp(qT, qT_lookup, A2_lookup)
-    array2 = t_array ** 6 * nu(t_array, nuc_type, a) * A2_2d_array_z
-    D = np.trapezoid(array2, t_array)
-    return D * factor
-
-
-@numba.njit(parallel=True, nogil=True)
-def spec_den_v_core(
-        a: float,
-        A2_lookup: np.ndarray,
-        log10tmin: float,
-        log10tmax: float,
-        nuc_type: NucType,
-        nt: int,
-        qT_lookup: np.ndarray,
-        vw: float,
-        z: np.ndarray):
-    t_array = speedup.logspace(log10tmin, log10tmax, nt)
-    b_R = (8. * np.pi) ** (1. / 3.)  # $\beta R_* = b_R v_w $
-
-    # A2_2d_array = np.zeros((nz, nt))
-
-    # array2 = np.zeros(nt)
-    sd_v = np.zeros(z.size)  # array for spectral density of v
-    factor = 1. / (b_R * vw) ** 6
-    factor = 2 * factor  # because spectral density of v is 2 * P_v
-
-    for i in numba.prange(z.size):
-        sd_v[i] = _spec_den_v_core_loop(z[i], t_array, b_R, vw, qT_lookup, A2_lookup, nuc_type, a, factor)
-
-    return sd_v
-
-
-def spec_den_v(
-        bub: bubble.Bubble,
-        z: np.ndarray,
-        a: float,
-        nuc_type: NucType,
-        nt: int = const.NPTDEFAULT[1],
-        z_st_thresh: float = const.Z_ST_THRESH,
-        cs: float = None,
-        return_a2: bool = False):
-    r"""The full spectral density of the velocity field
-
-    This is twice the spectral density of the plane wave components of the velocity field
-
-    :return: $P_{\tilde{v}} = 2 * P_v(q)$ of :gw_pt_ssm:`\ ` eq. 4.17
-    """
-    # z limits
-    log10zmin = np.log10(np.min(z))
-    log10zmax = np.log10(np.max(z))
-    dlog10z = (log10zmax - log10zmin) / z.size
-
-    # t limits
-    tmin = const.T_TILDE_MIN
-    tmax = const.T_TILDE_MAX
-    log10tmin = np.log10(tmin)
-    log10tmax = np.log10(tmax)
-
-    qT_lookup = 10 ** np.arange(log10zmin + log10tmin, log10zmax + log10tmax, dlog10z)
-    A2_lookup = ssm.a2_e_conserving(bub=bub, z=qT_lookup, cs=cs, z_st_thresh=z_st_thresh)[0]
-    # if qT_lookup.size != A2_lookup.size:
-    #     raise ValueError(f"Lookup sizes don't match: {qT_lookup.size} != {A2_lookup.size}")
-
-    ret = spec_den_v_core(
-        a=a,
-        A2_lookup=A2_lookup,
-        log10tmin=log10tmin,
-        log10tmax=log10tmax,
-        nt=nt,
-        nuc_type=nuc_type,
-        qT_lookup=qT_lookup,
-        vw=bub.v_wall,
-        z=z
-    )
-    if return_a2:
-        return ret, A2_lookup
-    return ret

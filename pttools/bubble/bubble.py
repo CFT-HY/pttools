@@ -559,6 +559,11 @@ class Bubble:
         return self.model.s(self.w, self.phase)
 
     @functools.cached_property
+    def ubarf(self) -> float:
+        r"""Enthalpy-weighted RMS fluid velocity $\bar{U}_\text{f}$"""
+        return np.sqrt(self.ubarf2)
+
+    @functools.cached_property
     def ubarf2(self) -> float:
         if not self.solved:
             raise NotYetSolvedError

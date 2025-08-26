@@ -4,6 +4,7 @@ import numpy as np
 
 from pttools import bubble
 from pttools.ssmtools import const, ssm, ssm_bag, spectrum
+from pttools.ssmtools.spec_den_v import spec_den_v_core
 
 logger = logging.getLogger(__name__)
 
@@ -179,7 +180,7 @@ def spec_den_v_bag(
     # if qT_lookup.size != A2_lookup.size:
     #     raise ValueError(f"Lookup sizes don't match: {qT_lookup.size} != {A2_lookup.size}")
 
-    return spectrum.spec_den_v_core(
+    return spec_den_v_core(
         a=nuc_args[0],
         A2_lookup=A2_lookup,
         log10tmin=log10tmin,

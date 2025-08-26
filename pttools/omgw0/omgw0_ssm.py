@@ -113,6 +113,10 @@ class Spectrum(ssm.SSMSpectrum):
     def gs_star_computed(self) -> float:
         return self.bubble.model.gs(w=self.bubble.va_enthalpy_density, phase=Phase.BROKEN)
 
+    @property
+    def H_n(self):
+        return ssm.H(T=self.Tn)
+
     def noise(self) -> np.ndarray:
         return noise.omega_noise(self.f())
 
@@ -138,6 +142,15 @@ class Spectrum(ssm.SSMSpectrum):
         omgw0 = self.omgw0(g0=g0, gs0=gs0, sup=sup, sup_method=sup_method)
         i_max = np.argmax(omgw0)
         return self.f()[i_max], omgw0[i_max]
+
+    def R_star(self, H_n: th.FloatOrArr = None) -> th.FloatOrArr:
+        r"""Mean bubble separation $R_*$
+        $$R_* = \frac{r_*}{H_n}$$
+        :gowling_2021:`\ ` eq. 2.2
+        """
+        if H_n is None:
+            H_n = self.H_n
+        return self.r_star / H_n
 
     def signal_to_noise_ratio(self) -> float:
         return noise.signal_to_noise_ratio(f=self.f(), signal=self.omgw0(), noise=self.noise())
@@ -256,11 +269,3 @@ def omgw0_bag(
         sup_fac = sup.suppression(vw, alpha, method=sup_method)
         return const.Fgw0 * J(r_star, K_frac) * omgwi * sup_fac
     raise ValueError(f"Invalid suppression method: {sup_method}")
-
-
-def r_star(H_n: th.FloatOrArr, R_star: th.FloatOrArr) -> th.FloatOrArr:
-    r"""
-    $$r_* = H_n R_*$$
-    :gowling_2021:`\ ` eq. 2.2
-    """
-    return H_n * R_star
