@@ -17,12 +17,18 @@ logger = logging.getLogger(__name__)
 
 
 class SuppressionMethod(enum.StrEnum):
+    """Methods for enabling and disabling suppression and for handling extrapolation."""
+    #: Return 1 as the suppression factor.
     NONE = "none"
+    #: Return NaN outside the convex hull of the suppression points.
     NO_EXT = DEFAULT = "no_ext"
+    #: Return the nearest suppression value when outside the convex hull of the suppression points.
     EXT_CONSTANT = "ext_constant"
+    # EXT_LINEAR_UBARF = "ext_linear_ubarf"  # TODO: not implemented yet
 
 
 class Suppression:
+    """Suppression factors from a given dataset"""
     def __init__(
             self,
             v_walls: np.ndarray[int, np.float64],
@@ -39,6 +45,9 @@ class Suppression:
 
         self.points = (self.v_walls, self.alpha_ns)
         self.alpha_n_min: float = np.min(self.alpha_ns)
+        self.alpha_n_max: float = np.max(self.alpha_ns)
+        self.v_wall_min: float = np.min(self.v_walls)
+        self.v_wall_max: float = np.max(self.v_walls)
 
     @classmethod
     def from_file(cls, path: str, name: str = None) -> "Suppression":
@@ -47,24 +56,16 @@ class Suppression:
 
     def limits_str(self) -> str:
         return \
-            f"{self.v_walls.min():.3f} < v_wall < {self.v_walls.max():.3f}, " \
-            f"{self.alpha_n_min:.3f} < alpha_n < {self.alpha_ns.max():.3f}"
+            f"{self.v_wall_min:.3f} < v_wall < {self.v_wall_max:.3f}, " \
+            f"{self.alpha_n_min:.3f} < alpha_n < {self.alpha_n_max:.3f}"
 
     def suppression(
             self,
             v_wall: th.FloatOrArr,
             alpha_n: th.FloatOrArr,
-            method: SuppressionMethod,
+            method: SuppressionMethod = SuppressionMethod.DEFAULT,
             interpolation: th.Interpolation = "linear") -> th.FloatOrArr:
-        """
-        current simulation data bounds are
-        0.24<vw<0.96
-        0.05<alpha<0.67
-        methods options :
-        - "no_ext" = returns NaN outside of data region
-        - "ext_constant" = extends the boundaries with a constant value
-        - "ext_linear_Ubarf" = :TODO extend with linear Ubarf
-        """
+        """Compute the suppression factor for the given points"""
         is_scalar = np.isscalar(v_wall) and np.isscalar(alpha_n)
 
         if method == SuppressionMethod.NONE:
@@ -74,10 +75,8 @@ class Suppression:
 
         if is_scalar:
             mesh = (v_wall, alpha_n)
-            v_wall_mesh, alpha_n_mesh = v_wall, alpha_n
         else:
             mesh = np.meshgrid(v_wall, alpha_n)
-            v_wall_mesh, alpha_n_mesh = mesh
 
         sup = interpolate.griddata(
             self.points,
@@ -85,14 +84,34 @@ class Suppression:
             mesh,
             method=interpolation
         )
-        if method == SuppressionMethod.EXT_CONSTANT:
-            sup[alpha_n_mesh < self.alpha_n_min] = 1
         if is_scalar:
             if np.isnan(sup):
-                logger.warning(
-                    "Got NaN as the suppression factor for v_wall=%s, alpha_n=%s. Are you outside the range?")
+                if method == SuppressionMethod.EXT_CONSTANT:
+                    sup = interpolate.griddata(
+                        self.points,
+                        self.suppressions,
+                        mesh,
+                        method="nearest"
+                    )
+                else:
+                    logger.warning(
+                        "Got NaN as the suppression factor for v_wall=%s, alpha_n=%s. "
+                        "Are you outside the convex hull of suppression points? "
+                        "The points are in the range v_wall=[%s, %s], alpha_n=[%s, %s].",
+                        v_wall, alpha_n,
+                        self.v_wall_min, self.v_wall_max,
+                        self.alpha_n_min, self.alpha_n_max
+                    )
         else:
-            sup[alpha_n_mesh > alpha_n_max_approx(v_wall_mesh)] = np.nan
+            if method == SuppressionMethod.EXT_CONSTANT:
+                nans = np.isnan(sup)
+                if np.any(nans):
+                    sup[nans] = interpolate.griddata(
+                        self.points,
+                        self.suppressions,
+                        mesh[nans],
+                        method="nearest"
+                    )
         return sup
 
 
@@ -135,9 +154,9 @@ def extend(
     ssm_sup_vw_0_24_ext = spl(ssm_sup_vw_0_24_alphas_ext)
 
     # create the extrapolated dataset
-    v_walls_ext = np.concatenate(([0.24], v_walls))
-    alpha_ns_ext = np.concatenate(([ssm_sup_vw_0_24_alphas_ext[0]], alpha_ns))
-    suppressions_ext = np.concatenate(([ssm_sup_vw_0_24_ext[0]], suppressions))
+    v_walls_ext: np.ndarray[int, np.float64] = np.concatenate(([0.24], v_walls))
+    alpha_ns_ext: np.ndarray[int, np.float64] = np.concatenate(([ssm_sup_vw_0_24_alphas_ext[0]], alpha_ns))
+    suppressions_ext: np.ndarray[int, np.float64] = np.concatenate(([ssm_sup_vw_0_24_ext[0]], suppressions))
     return v_walls_ext, alpha_ns_ext, suppressions_ext
 
 
