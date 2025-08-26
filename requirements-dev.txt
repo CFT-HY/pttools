@@ -4,7 +4,9 @@
 allure-pytest == 2.15.0
 build == 1.2.2.post1
 colorama == 0.4.6
+mypy == 1.17.1
 pandas == 2.3.1
+pandas-stubs == 2.3.0.250703
 # For Numba system info
 psutil == 7.0.0
 pyan3 == 1.1.1  #, != 1.2.0
@@ -14,7 +16,10 @@ pytest == 8.4.1
 pytest-cov == 6.2.1
 pytest-html == 4.1.1
 pytest-xdist == 3.8.0
+scipy-stubs == 1.16.1.0
 setuptools == 80.8.0
 twine == 6.1.0
+types-defusedxml == 0.7.0.20250516
+types-psutil == 7.0.0.20250601
 wheel == 0.45.1
 yappi == 1.6.10
