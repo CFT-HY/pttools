@@ -49,7 +49,7 @@ def v_max_behind(xi: th.FloatOrArr, cs: float):
 
 
 def v_and_w_from_solution(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, sol_type: SolutionType) -> \
-        tp.Tuple[float, float, float, float, float, float, float, float]:
+        tuple[float, float, float, float, float, float, float, float]:
     i_wall = np.argmax(v)
     i_wall_w = np.argmax(w)
     if i_wall != i_wall_w:

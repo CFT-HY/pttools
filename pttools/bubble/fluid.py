@@ -31,12 +31,12 @@ logger = logging.getLogger(__name__)
 # v, w, xi
 # vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh
 # solution_found
-SolverOutput = tp.Tuple[
+SolverOutput = tuple[
     np.ndarray, np.ndarray, np.ndarray,
     float, float, float, float, float, float, float, float, float, float,
     bool
 ]
-DeflagrationOutput = tp.Tuple[
+DeflagrationOutput = tuple[
     np.ndarray, np.ndarray, np.ndarray,
     float, float, float, float, float, float, float, float, float, float
 ]
@@ -47,10 +47,15 @@ DEFLAGRATION_NAN: DeflagrationOutput = \
 
 def sound_shell_deflagration(
         model: "Model",
-        v_wall: float, wn: float, w_center: float,
-        cs_n: float, v_cj: float,
-        vp_guess: float = None, wp_guess: float = None,
-        t_end: float = const.T_END_DEFAULT, n_xi: int = const.N_XI_DEFAULT,
+        v_wall: float,
+        wn: float,
+        w_center: float,
+        cs_n: float,
+        v_cj: float,
+        vp_guess: float | None = None,
+        wp_guess: float | None = None,
+        t_end: float = const.T_END_DEFAULT,
+        n_xi: int = const.N_XI_DEFAULT,
         thin_shell_limit: int = const.THIN_SHELL_T_POINTS_MIN,
         allow_failure: bool = False,
         allow_negative_entropy_flux_change: bool = False,
@@ -849,15 +854,15 @@ def sound_shell_generic(
             model: "Model",
             v_wall: float,
             alpha_n: float,
-            sol_type: tp.Optional[SolutionType] = None,
-            wn: float = None,
-            vp_guess: float = None,
-            wn_guess: float = None,
-            wp_guess: float = None,
-            wm_guess: float = None,
+            sol_type: SolutionType | None = None,
+            wn: float | None = None,
+            vp_guess: float | None = None,
+            wn_guess: float | None = None,
+            wp_guess: float | None = None,
+            wm_guess: float | None = None,
             wn_rtol: float = 1e-4,
-            alpha_n_max_bag: float = None,
-            high_alpha_n: bool = None,
+            alpha_n_max_bag: float | None = None,
+            high_alpha_n: bool | None = None,
             t_end: float = const.T_END_DEFAULT,
             n_xi: int = const.N_XI_DEFAULT,
             thin_shell_limit: int = const.THIN_SHELL_T_POINTS_MIN,
@@ -867,7 +872,7 @@ def sound_shell_generic(
             use_giese_solver: bool = False,
             log_success: bool = True,
             log_high_alpha_n_failures: bool = False
-        ) -> tp.Tuple[
+        ) -> tuple[
             np.ndarray, np.ndarray, np.ndarray, SolutionType,
             float, float, float, float, float, float, float, float, float, float, float, bool, float]:
     """Generic fluid shell solver
@@ -1059,10 +1064,10 @@ def sound_shell_giese(
             model: "Model",
             v_wall: float,
             alpha_n: float,
-            wn: float = None,
-            wn_guess: float = None,
-            wm_guess: float = None,
-        ) -> tp.Tuple[
+            wn: float | None = None,
+            wn_guess: float | None = None,
+            wm_guess: float | None = None,
+        ) -> tuple[
             np.ndarray, np.ndarray, np.ndarray, SolutionType,
             float, float, float, float, float, float, float, float, float, float, float, bool, float]:
     if kappaNuMuModel is None:

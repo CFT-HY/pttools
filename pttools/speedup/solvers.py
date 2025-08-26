@@ -10,13 +10,13 @@ logger = logging.getLogger(__name__)
 
 
 def fsolve_vary(
-        func: callable,
+        func: tp.Callable,
         x0: np.ndarray,
         args: tp.Optional[tp.Union[tp.Iterable, tuple]] = None,
         abs_variations: tp.Union[float, np.ndarray] = 1e-3,
         rel_variations: tp.Union[float, np.ndarray] = 0.01,
         log_status: bool = True,
-        **kwargs) -> tp.Tuple[np.ndarray, dict, int, str]:
+        **kwargs) -> tuple[np.ndarray, dict, int, str]:
     """SciPy fsolve, but if it fails, it tries to vary the initial guess to find a solution"""
     if "full_output" in kwargs:
         raise ValueError("Cannot specify full_output, as it has to be True.")

@@ -7,7 +7,10 @@ from pttools.bubble.boundary import Phase
 from pttools.models.thermo import ThermoModel
 
 
-def plot_g_cs2(thermo: ThermoModel, phase: Phase = Phase.SYMMETRIC, fig: plt.Figure = None) -> plt.Figure:
+def plot_g_cs2(
+        thermo: ThermoModel,
+        phase: Phase = Phase.SYMMETRIC,
+        fig: plt.Figure | None = None) -> plt.Figure:
     if fig is None:
         fig = plt.figure()
     axs = fig.subplots(nrows=3, ncols=1, sharex=True)

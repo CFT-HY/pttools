@@ -14,7 +14,6 @@ from datetime import date
 import os.path
 import sys
 import tomllib
-import typing as tp
 import warnings
 
 from sphinx_gallery.sorting import ExplicitOrder
@@ -136,7 +135,7 @@ autodoc_typehints = "description"
 
 # Sphinx 6.0 will require base URLs and caption strings to contain exactly one "%s",
 # and all other "%" need to be escaped as "%%".
-extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
+extlinks: dict[str, tuple[str, str]] = {
     # The articles are ordered by publication year
     # Hindmarsh articles
     "gw_ssm": ("https://arxiv.org/abs/1304.2433%s", "Hindmarsh et al., 2014%s"),
@@ -170,7 +169,7 @@ extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
         "Relativistic hydrodynamics, Rezzolla, Zanotti, 2013%s"),
     "ssm_repo": ("https://bitbucket.org/hindmars/sound-shell-model/src/master/%s", "sound-shell-model/%s")
 }
-intersphinx_mapping: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
+intersphinx_mapping: dict[str, tuple[str, str | None]] = {
     "cobaya": ("https://cobaya.readthedocs.io/en/latest/", None),
     "h5py": ("https://docs.h5py.org/en/stable/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
@@ -182,14 +181,14 @@ intersphinx_mapping: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     # "yappi": ("https://yappi.readthedocs.io/en/latest/", None),
 }
-linkcheck_allowed_redirects = {
+linkcheck_allowed_redirects: dict[str, str] = {
     r"https://bitbucket\.org/*": r"https://id\.atlassian\.com/*",
     r"https://www.helsinki\.fi/": r"https://www.helsinki\.fi/en",
 }
 # The authentication info could be set up to work on the CI build
 # https://docs.github.com/en/actions/reference/authentication-in-a-workflow
 # linkcheck_auth = []
-linkcheck_ignore = [
+linkcheck_ignore: list[str] = [
     # These websites don't allow crawlers
     # r"https://academic.oup.com/book/*",
     r"https://www.aka.fi/*",

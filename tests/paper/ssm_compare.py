@@ -71,7 +71,7 @@ def generate_ps(
         alpha: float,
         method: ssm.Method = ssm.Method.E_CONSERVING,
         v_xi_file=None,
-        save_ids: tp.Tuple[str, str] = (None, None),
+        save_ids: tuple[str, str] = (None, None),
         show: bool = True,
         debug: bool = False):
     """
@@ -208,7 +208,7 @@ def generate_ps(
     return V2_pow_v, gw_power
 
 
-def all_generate_ps_prace(save_ids: tp.Tuple[str, str] = ('', ''), show=True, debug: bool = False):
+def all_generate_ps_prace(save_ids: tuple[str, str] = ('', ''), show=True, debug: bool = False):
     """
     Generate power spectra with Prace17 SSM parameters.
     Save data files and graphs.

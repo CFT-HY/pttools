@@ -23,7 +23,7 @@ IS_WINDOWS = sys.platform.startswith('win32')
 TBB_MIN_VERSION = 12060
 
 
-def get_tbb_version(path: str = None):
+def get_tbb_version(path: str | None = None):
     """Get TBB library version"""
     if IS_WINDOWS:
         libtbb_name = 'tbb12.dll'

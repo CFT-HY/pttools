@@ -27,7 +27,7 @@ def cs2_to_mu(cs2: th.FloatOrArr) -> th.FloatOrArr:
 def cs2_to_float_and_label(
         cs2: tp.Union[float, Fraction],
         max_denominator: int = 100,
-        label_prec: int = 3) -> tp.Tuple[float, str]:
+        label_prec: int = 3) -> tuple[float, str]:
     """Convert the speed of sound value to a float and a string label."""
     if isinstance(cs2, Fraction):
         cs2_flt = float(cs2)
@@ -51,16 +51,18 @@ class ConstCSModel(AnalyticModel):
             self,
             css2: tp.Union[float, Fraction], csb2: tp.Union[float, Fraction],
             V_s: float = AnalyticModel.DEFAULT_V_S, V_b: float = AnalyticModel.DEFAULT_V_B,
-            a_s: float = None, a_b: float = None,
-            g_s: float = None, g_b: float = None,
-            alpha_n_min: float = None,
-            T_min: float = None,
-            T_max: float = None,
+            a_s: float | None = None,
+            a_b: float | None = None,
+            g_s: float | None = None,
+            g_b: float | None = None,
+            alpha_n_min: float | None = None,
+            T_min: float | None = None,
+            T_max: float | None = None,
             T_ref: float = 1,
-            T_crit_guess: float = None,
-            name: str = None,
-            label_latex: str = None,
-            label_unicode: str = None,
+            T_crit_guess: float | None = None,
+            name: str | None = None,
+            label_latex: str | None = None,
+            label_unicode: str | None = None,
             allow_invalid: bool = False,
             log_info: bool = True):
         # Ensure that these descriptions correspond to those in the base class
@@ -215,7 +217,10 @@ class ConstCSModel(AnalyticModel):
     #         f"({'fail' if alpha_n < self.alpha_n_min_limit_a else 'OK'})"
     #     return msg
 
-    def alpha_n_min_find(self, w_min: float = None, w_max: float = None) -> tp.Tuple[float, float]:
+    def alpha_n_min_find(
+            self,
+            w_min: float | None = None,
+            w_max: float | None = None) -> tuple[float, float]:
         # xopt, fval = super().alpha_n_min_find(w_min=w_min, w_max=w_max)
         analytical = self.alpha_n(self.w_crit)
         # print(f"const_cs alpha_n_min: analytical={fval}, found={analytical}")
@@ -227,16 +232,16 @@ class ConstCSModel(AnalyticModel):
             alpha_n_min_target: float,
             a_s_default: float,
             a_b: float,
-            V_s_default: float = None,
-            V_b: float = None,
-            safety_factor_alpha: float = None,
+            V_s_default: float | None = None,
+            V_b: float | None = None,
+            safety_factor_alpha: float | None = None,
             safety_factor_a: float = 1.001,
             safety_factor_V: float = 0.001,
             a_max: float = 1e4,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True,
-            cancel_on_invalid: bool = True) -> tp.Tuple[float, float, float, float]:
+            cancel_on_invalid: bool = True) -> tuple[float, float, float, float]:
         if safety_factor_a < 1 or safety_factor_V < 0:
             raise ValueError(f"Got invalid safety factors: a={safety_factor_a}, V={safety_factor_V}")
         if V_s_default is None:
@@ -347,7 +352,7 @@ class ConstCSModel(AnalyticModel):
 
         # If no success, try with another V_s
         V_s = V_s_default / 100
-        sol: OptimizeResult = minimize_scalar(
+        sol = minimize_scalar(
             self.alpha_n_min_find_params_solvable,
             bracket=((a_s_default + a_b)/2, a_s_default, 2*a_s_default),
             bounds=(a_b * safety_factor_a, a_max),
@@ -360,7 +365,7 @@ class ConstCSModel(AnalyticModel):
                 return a_s, a_b, V_s, V_b
 
         # If no success with minimize_scalar, try minimize
-        sol: OptimizeResult = minimize(
+        sol = minimize(
             self.alpha_n_min_find_params_solvable2,
             x0=np.array([a_s_default, V_s_default]),
             bounds=((a_b * safety_factor_a, None), (V_b + safety_factor_V, None)),
@@ -429,8 +434,8 @@ class ConstCSModel(AnalyticModel):
             self,
             wp: th.FloatOrArr,
             wm: th.FloatOrArr,
-            vp_tilde: float = None,
-            sol_type: SolutionType = None,
+            vp_tilde: float | None = None,
+            sol_type: SolutionType | None = None,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
@@ -470,7 +475,7 @@ class ConstCSModel(AnalyticModel):
             log_invalid=log_invalid
         )
 
-    def alpha_theta_bar_n_max_lte(self, wn: float, sol_type: SolutionType, Psi_n: float = None) -> float:
+    def alpha_theta_bar_n_max_lte(self, wn: float, sol_type: SolutionType, Psi_n: float | None = None) -> float:
         r"""$\alpha_{n,\text{max}}^\text{def}$, :ai_2023:`\ `, eq. 28, 31"""
         if sol_type == SolutionType.DETON or sol_type == SolutionType.HYBRID:
             if Psi_n is None or np.isnan(Psi_n):
@@ -486,7 +491,7 @@ class ConstCSModel(AnalyticModel):
             return (1 - Psi_n) / 3 * (1 + self.mu_b / 3 * np.sqrt(sqrt_val))
         return np.inf
 
-    def alpha_theta_bar_n_min_lte(self, wn: th.FloatOrArr, sol_type: SolutionType, Psi_n: float = None) -> float:
+    def alpha_theta_bar_n_min_lte(self, wn: th.FloatOrArr, sol_type: SolutionType, Psi_n: float | None = None) -> float:
         r"""$\alpha_{n,\text{min}}^\text{def}$, :ai_2023:`\ `, eq. 27, 30"""
         if Psi_n is None or np.isnan(Psi_n):
             Psi_n = self.Psi_n(wn)
@@ -532,13 +537,13 @@ class ConstCSModel(AnalyticModel):
     def cs2_max(
             self,
             w_max: float, phase: Phase,
-            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tp.Tuple[float, float]:
+            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tuple[float, float]:
         return self._cs2_minmax(phase)
 
     def cs2_min(
             self,
             w_max: float, phase: Phase,
-            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tp.Tuple[float, float]:
+            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tuple[float, float]:
         return self._cs2_minmax(phase)
 
     def gen_cs2(self):
@@ -593,7 +598,7 @@ class ConstCSModel(AnalyticModel):
         e_b = (self.mu_b - 1) * self.a_b * (temp / self.T_ref) ** (self.mu_b - 4) * temp ** 4 + self.V_b
         return e_b * phase + e_s * (1 - phase)
 
-    def export(self) -> tp.Dict[str, any]:
+    def export(self) -> dict[str, tp.Any]:
         return {
             **super().export(),
             "css2": self.css2,
@@ -634,9 +639,9 @@ class ConstCSModel(AnalyticModel):
             self,
             v_wall: float,
             alpha_n: float,
-            wn: float = None,
-            wn_guess: float = None,
-            wm_guess: float = None) -> SolutionType:
+            wn: float | None = None,
+            wn_guess: float | None = None,
+            wm_guess: float | None = None) -> SolutionType:
         if v_wall**2 < self.csb2:
             return SolutionType.SUB_DEF
         # For detonations alpha_theta_bar_plus = alpha_theta_bar_n

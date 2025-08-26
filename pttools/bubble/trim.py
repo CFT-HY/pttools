@@ -25,7 +25,7 @@ def trim_fluid_wall_to_cs(
         v_wall: th.FloatOrArr,
         sol_type: SolutionType,
         dxi_lim: float = const.DXI_SMALL,
-        cs2_fun: th.CS2Fun = bag.cs2_bag) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        cs2_fun: th.CS2Fun = bag.cs2_bag) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""
     Picks out fluid variable arrays $(v, w, \xi, t)$ which are definitely behind
     the wall for detonation and hybrid.
@@ -79,7 +79,7 @@ def trim_fluid_wall_to_shock(
         w: np.ndarray,
         xi: np.ndarray,
         t: np.ndarray,
-        sol_type: SolutionType) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        sol_type: SolutionType) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""
     Trims fluid variable arrays $(v, w, \xi)$ so last element is just ahead of shock.
 

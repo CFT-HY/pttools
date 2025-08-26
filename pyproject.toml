@@ -101,6 +101,10 @@ show_missing = true
 
 [tool.mypy]
 
+[[tool.mypy.overrides]]
+module = ["h5py.*", "numba.*", "numbalsoda.*", "plotly.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 # On clusters "--numprocesses=auto" creates processes according to the total number of CPU cores
 # instead of the number of cores available to the job.

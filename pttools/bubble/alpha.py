@@ -23,7 +23,7 @@ from pttools.bubble import props
 from pttools.bubble import transition
 
 
-CS2CACHE: tp.Dict[th.CS2FunScalarPtr, th.CS2CFunc] = {}
+CS2CACHE: dict[th.CS2FunScalarPtr, th.CS2CFunc] = {}
 find_alpha_plus_scalar_lock = threading.Lock()
 
 

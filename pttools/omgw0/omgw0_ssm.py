@@ -5,6 +5,7 @@ as a function of physical frequency $f$ in the Sound shell model.
 
 import functools
 import logging
+import typing as tp
 
 import numpy as np
 
@@ -25,19 +26,19 @@ class Spectrum(ssm.SSMSpectrum):
     def __init__(
             self,
             bubble: Bubble,
-            y: np.ndarray = None,
+            y: tp.Union[np.ndarray[tuple[int], np.float64], None] = None,
             z_st_thresh: float = ssm.Z_ST_THRESH,
             nuc_type: ssm.NucType = ssm.DEFAULT_NUC_TYPE,
             nt: int = NTDEFAULT,
             n_z_lookup: int = N_Z_LOOKUP_DEFAULT,
-            r_star: float = None,
+            r_star: float | None = None,
             lifetime_multiplier: float = 1,
             compute: bool = True,
-            label_latex: str = None,
-            label_unicode: str = None,
-            Tn: float = None,
-            g_star: float = None,
-            gs_star: float = None
+            label_latex: str | None = None,
+            label_unicode: str | None = None,
+            Tn: float | None = None,
+            g_star: float | None = None,
+            gs_star: float | None = None
             ):
         """
         :param bubble: the Bubble object
@@ -73,7 +74,7 @@ class Spectrum(ssm.SSMSpectrum):
         self.g_star_override = const.G_STAR_DEFAULT if g_star is None else g_star
         self.gs_star_override = self.g_star_override if gs_star is None else gs_star
 
-    def f(self, z: np.ndarray = None) -> th.FloatOrArr:
+    def f(self, z: np.ndarray | None = None) -> th.FloatOrArr:
         if z is None:
             z = self.y
         return f(z=z, r_star=self.r_star, f_star0=self.f_star0)
@@ -143,7 +144,7 @@ class Spectrum(ssm.SSMSpectrum):
         i_max = np.argmax(omgw0)
         return self.f()[i_max], omgw0[i_max]
 
-    def R_star(self, H_n: th.FloatOrArr = None) -> th.FloatOrArr:
+    def R_star(self, H_n: th.FloatOrArr | None = None) -> th.FloatOrArr:
         r"""Mean bubble separation $R_*$
         $$R_* = \frac{r_*}{H_n}$$
         :gowling_2021:`\ ` eq. 2.2
@@ -204,7 +205,7 @@ def F_gw0(
         g_star: th.FloatOrArr,
         g0: th.FloatOrArr = const.G0,
         gs0: th.FloatOrArr = const.GS0,
-        gs_star: th.FloatOrArr = None,
+        gs_star: th.FloatOrArr | None = None,
         om_gamma0: th.FloatOrArr = const.OMEGA_RADIATION) -> th.FloatOrArr:
     r"""Power attenuation following the end of the radiation era
     $$F_{\text{gw},0} = \Omega_{\gamma,0} \left( \frac{g_{s0}}{g_{s*}} \right)^{4/9} \frac{g_*}{g_0}

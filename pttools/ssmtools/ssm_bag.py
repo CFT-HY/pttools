@@ -23,7 +23,7 @@ def a2_e_conserving_bag(
         npt: const.NptType = const.NPTDEFAULT,
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH,
-        v_sh: float = None,
+        v_sh: float | None = None,
         v_ip: np.ndarray = speedup.NAN_ARR,
         w_ip: np.ndarray = speedup.NAN_ARR,
         xi: np.ndarray = speedup.NAN_ARR):
@@ -216,7 +216,7 @@ def f_ssm_func_bag(
         z: th.FloatOrArr,
         v_wall: float,
         alpha_n: float,
-        v_sh: float = None,
+        v_sh: float | None = None,
         npt: const.NptType = const.NPTDEFAULT,
         z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
     r"""
@@ -263,7 +263,7 @@ def lam_ssm_func_bag(
         z: np.ndarray,
         v_wall: float,
         alpha_n: float,
-        v_sh: float = None,
+        v_sh: float | None = None,
         npt: const.NptType = const.NPTDEFAULT,
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH):

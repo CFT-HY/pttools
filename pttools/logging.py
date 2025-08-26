@@ -15,7 +15,10 @@ class MatplotlibFilter(logging.Filter):
         return record.funcName != "_is_transparent"
 
 
-def setup_logging(log_dir: str = None, enable_faulthandler: bool = True, silence_spam: bool = True):
+def setup_logging(
+        log_dir: str | None = None,
+        enable_faulthandler: bool = True,
+        silence_spam: bool = True):
     """Configure logging to both file and console and optionally silence spam"""
     # Allow running this function only once for each process
     if not logging_lock.acquire(blocking=False):

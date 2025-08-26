@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 @numba.njit
-def envelope(xi: np.ndarray, f: np.ndarray, v_wall: float = None, v_sh: float = None) -> np.ndarray:
+def envelope(xi: np.ndarray, f: np.ndarray, v_wall: float | None = None, v_sh: float | None = None) -> np.ndarray:
     r"""
     Helper function for :func:`sin_transform_approx`.
     Assumes that
@@ -88,7 +88,7 @@ def envelope(xi: np.ndarray, f: np.ndarray, v_wall: float = None, v_sh: float = 
 def resample_uniform_xi(
         xi: np.ndarray,
         f: th.FloatOrArr,
-        n_xi: int = const.NPTDEFAULT[0]) -> tp.Tuple[np.ndarray, th.FloatOrArr]:
+        n_xi: int = const.NPTDEFAULT[0]) -> tuple[np.ndarray, th.FloatOrArr]:
     r"""
     Provide uniform resample of function defined by $(x,y) = (\xi,f)$.
     Returns f interpolated and the uniform grid of n_xi points in range [0,1].
@@ -106,8 +106,8 @@ def _sin_transform_scalar(
         xi: np.ndarray,
         f: np.ndarray,
         z_st_thresh: float = const.Z_ST_THRESH,
-        v_wall: float = None,
-        v_sh: float = None) -> th.FloatOrArrNumba:
+        v_wall: float | None = None,
+        v_sh: float | None = None) -> th.FloatOrArrNumba:
     if z <= z_st_thresh:
         array = f * np.sin(z * xi)
         integral = np.trapezoid(array, xi)
@@ -121,8 +121,8 @@ def _sin_transform_arr(
         xi: np.ndarray,
         f: np.ndarray,
         z_st_thresh: float = const.Z_ST_THRESH,
-        v_wall: float = None,
-        v_sh: float = None) -> th.FloatOrArrNumba:
+        v_wall: float | None = None,
+        v_sh: float | None = None) -> th.FloatOrArrNumba:
     lo = np.where(z <= z_st_thresh)
     z_lo = z[lo]
     # Integrand of the sine transform
@@ -163,8 +163,8 @@ def sin_transform(
         xi: np.ndarray,
         f: np.ndarray,
         z_st_thresh: float = const.Z_ST_THRESH,
-        v_wall: float = None,
-        v_sh: float = None) -> th.FloatOrArrNumba:
+        v_wall: float | None = None,
+        v_sh: float | None = None) -> th.FloatOrArrNumba:
     r"""
     sin transform of $f(\xi)$, Fourier transform variable z.
     For z > z_st_thresh, use approximation rather than doing the integral.
@@ -196,8 +196,8 @@ def _sin_transform_numba(
         xi: np.ndarray,
         f: np.ndarray,
         z_st_thresh: float = const.Z_ST_THRESH,
-        v_wall: float = None,
-        v_sh: float = None) -> th.FloatOrArrNumba:
+        v_wall: float | None = None,
+        v_sh: float | None = None) -> th.FloatOrArrNumba:
     if isinstance(z, numba.types.Float):
         return _sin_transform_scalar
     if isinstance(z, numba.types.Array):
@@ -230,8 +230,11 @@ def sin_transform_core(t: np.ndarray, f: np.ndarray, freq: np.ndarray) -> np.nda
 
 @numba.njit
 def sin_transform_approx(
-        z: th.FloatOrArr, xi: np.ndarray, f: np.ndarray,
-        v_wall: float = None, v_sh: float = None) -> np.ndarray:
+        z: th.FloatOrArr,
+        xi: np.ndarray,
+        f: np.ndarray,
+        v_wall: float | None = None,
+        v_sh: float | None = None) -> np.ndarray:
     r"""
     Approximate sin transform of $f(\xi)$.
     For values $f_a$ and $f_b$, we have

@@ -29,7 +29,7 @@ PLOT = True
 class TestPlane(unittest.TestCase):
     FIGSIZE = np.array([16, 9])*1.7
     FIG_PATH = os.path.join(utils.TEST_FIGURE_PATH, "integrators")
-    grid_shape: tp.Tuple[int, int] = (2, 5)
+    grid_shape: tuple[int, int] = (2, 5)
     grid_fig_abs: plt.Figure
     grid_fig_rel: plt.Figure
     axs_abs: np.ndarray
@@ -37,10 +37,10 @@ class TestPlane(unittest.TestCase):
     ref_data: np.ndarray
 
     # Dicts for solvers
-    mean_rel_diffs: tp.Dict[int, float] = {}
-    mean_abs_diffs: tp.Dict[int, float] = {}
-    names: tp.Dict[int, str] = {}
-    iter_times: tp.Dict[int, float] = {}
+    mean_rel_diffs: dict[int, float] = {}
+    mean_abs_diffs: dict[int, float] = {}
+    names: dict[int, str] = {}
+    iter_times: dict[int, float] = {}
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -53,7 +53,7 @@ class TestPlane(unittest.TestCase):
             cls.ref_data = plane.xiv_plane(method="odeint", separate_phases=False)
 
     @classmethod
-    def process_output(cls, name: str, fig: plt.Figure, axs: np.ndarray, diffs: tp.Dict[int, float]):
+    def process_output(cls, name: str, fig: plt.Figure, axs: np.ndarray, diffs: dict[int, float]):
         cls.plot_perf(axs[0, 3])
         cls.plot_diff(axs[0, 4], name, diffs)
         fig.tight_layout()
@@ -110,7 +110,7 @@ class TestPlane(unittest.TestCase):
                 file.write(f"{name}: {time} s\n")
 
     @classmethod
-    def plot_diff(cls, ax: plt.Axes, name: str, diffs: tp.Dict[int, float]):
+    def plot_diff(cls, ax: plt.Axes, name: str, diffs: dict[int, float]):
         diff_dict = {ind: diff for ind, diff in diffs.items() if np.isfinite(diff)}
         inds = list(diff_dict.keys())
         names = [cls.names[i] for i in inds]
@@ -125,8 +125,8 @@ class TestPlane(unittest.TestCase):
             self,
             method: str = "odeint",
             rtol: float = 1e-7,
-            i: int = None,
-            ax: tp.Tuple[int, int] = None,
+            i: int | None = None,
+            ax: tuple[int, int] | None = None,
             perf_iters: int = 10):
         if i in self.names:
             raise ValueError(f"Duplicate solver index: {i}")

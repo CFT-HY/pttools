@@ -39,16 +39,18 @@ class Model(BaseModel, abc.ABC):
     def __init__(
             self,
             V_s: float, V_b: float = DEFAULT_V_B,
-            T_ref: float = 1, T_min: float = None, T_max: float = None,
-            T_crit_guess: float = None,
-            name: str = None,
-            label_latex: str = None,
-            label_unicode: str = None,
+            T_ref: float = 1,
+            T_min: float | None = None,
+            T_max: float | None = None,
+            T_crit_guess: float | None = None,
+            name: str | None = None,
+            label_latex: str | None = None,
+            label_unicode: str | None = None,
             gen_critical: bool = True,
             gen_cs2: bool = True,
             gen_cs2_neg: bool = True,
             implicit_V: bool = False,
-            temperature_is_physical: bool = None,
+            temperature_is_physical: bool | None = None,
             silence_temp: bool = False,
             allow_invalid: bool = False,
             log_info: bool = True):
@@ -114,9 +116,13 @@ class Model(BaseModel, abc.ABC):
 
     @staticmethod
     def _cs2_limit(
-            w_max: float, phase: Phase,
-            is_max: bool, cs2_fun: th.CS2Fun, w_min: float = 0,
-            allow_fail: bool = False, **kwargs) -> tp.Tuple[float, float]:
+            w_max: float,
+            phase: Phase,
+            is_max: bool,
+            cs2_fun: th.CS2Fun,
+            w_min: float = 0,
+            allow_fail: bool = False,
+            **kwargs) -> tuple[float, float]:
         r"""Find the minimum or maximum of $c_s^2(w)$ for $w \in [w_\text{min}, w_\text{max}]$"""
         name = "max" if is_max else "min"
         sol = fminbound(cs2_fun, x1=w_min, x2=w_max, args=(phase,), full_output=True, **kwargs)
@@ -141,8 +147,8 @@ class Model(BaseModel, abc.ABC):
     def check_w_for_alpha(
             self,
             w: th.FloatOrArr,
-            w_min: float = None,
-            w_max: float = None,
+            w_min: float | None = None,
+            w_max: float | None = None,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True,
@@ -233,8 +239,8 @@ class Model(BaseModel, abc.ABC):
     def alpha_n_from_alpha_theta_bar_n(
             self,
             alpha_theta_bar_n: th.FloatOrArr,
-            wn: float = None,
-            wn_guess: float = None,
+            wn: float | None = None,
+            wn_guess: float | None = None,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
@@ -248,7 +254,10 @@ class Model(BaseModel, abc.ABC):
             (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN)) / wn
         return alpha_theta_bar_n - diff
 
-    def alpha_n_min_find(self, w_min: float = None, w_max: float = None) -> tp.Tuple[float, float]:
+    def alpha_n_min_find(
+            self,
+            w_min: float | None = None,
+            w_max: float | None = None) -> tuple[float, float]:
         r"""Find $\text{min} \alpha_n(w)$ for $w \in ({w}_\text{min}, {w}_\text{max})$"""
         if w_min is None:
             w_min = self.w_min
@@ -268,8 +277,8 @@ class Model(BaseModel, abc.ABC):
             self,
             wp: th.FloatOrArr,
             wm: th.FloatOrArr,
-            vp_tilde: float = None,
-            sol_type: SolutionType = None,
+            vp_tilde: float | None = None,
+            sol_type: SolutionType | None = None,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
@@ -344,7 +353,11 @@ class Model(BaseModel, abc.ABC):
         )
         return self.delta_theta_bar(wn, Phase.SYMMETRIC) / (3 * wn)
 
-    def alpha_theta_bar_n_from_alpha_n(self, alpha_n: float, wn: float = None, wn_guess: float = None) -> float:
+    def alpha_theta_bar_n_from_alpha_n(
+            self,
+            alpha_n: float,
+            wn: float | None = None,
+            wn_guess: float | None = None) -> float:
         r"""Conversion from $\alpha_n$ to $\alpha_{\bar{\theta}_n}$ of :giese_2021:`\ `, eq. 13"""
         if wn is None or np.isnan(wn):
             wn = self.wn(alpha_n, wn_guess=wn_guess)
@@ -368,8 +381,8 @@ class Model(BaseModel, abc.ABC):
     @staticmethod
     def check_alpha_plus(
             alpha_plus: th.FloatOrArr,
-            vp_tilde: th.FloatOrArr = None,
-            sol_type: SolutionType = None,
+            vp_tilde: th.FloatOrArr | None = None,
+            sol_type: SolutionType | None = None,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
@@ -427,8 +440,11 @@ class Model(BaseModel, abc.ABC):
             delta_theta: th.FloatOrArr,
             wp: th.FloatOrArr,
             wm: th.FloatOrArr,
-            theta_s: th.FloatOrArr = None, theta_b: th.FloatOrArr = None,
-            error_on_invalid: bool = True, nan_on_invalid: bool = True, log_invalid: bool = True) -> th.FloatOrArr:
+            theta_s: th.FloatOrArr | None = None,
+            theta_b: th.FloatOrArr | None = None,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
         theta_given = theta_s is not None and theta_b is not None
         if theta_given:
             prob_diff, prob_wp, prob_wm, prob_theta_s, prob_theta_b = \
@@ -475,7 +491,7 @@ class Model(BaseModel, abc.ABC):
 
     def critical_temp(
             self,
-            guess: float = None,
+            guess: float | None = None,
             guess_backup: float = 2,
             t_max_backup: float = 10000,
             allow_fail: bool = False) -> float:
@@ -575,13 +591,13 @@ class Model(BaseModel, abc.ABC):
     def cs2_max(
             self,
             w_max: float, phase: Phase,
-            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tp.Tuple[float, float]:
+            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tuple[float, float]:
         return self._cs2_limit(w_max, phase, True, self.cs2_neg, w_min, allow_fail, **kwargs)
 
     def cs2_min(
             self,
             w_max: float, phase: Phase,
-            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tp.Tuple[float, float]:
+            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tuple[float, float]:
         return self._cs2_limit(w_max, phase, False, self.cs2, w_min, allow_fail, **kwargs)
 
     def cs2_neg(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -662,7 +678,7 @@ class Model(BaseModel, abc.ABC):
         """
         return self.w(temp, Phase.BROKEN) / self.w(temp, Phase.SYMMETRIC)
 
-    def export(self) -> tp.Dict[str, any]:
+    def export(self) -> dict[str, any]:
         return {
             **super().export(),
             "t_ref": self.T_ref,
@@ -736,9 +752,9 @@ class Model(BaseModel, abc.ABC):
             self,
             v_wall: float,
             alpha_n: float,
-            wn: float = None,
-            wn_guess: float = None,
-            wm_guess: float = None) -> SolutionType:
+            wn: float | None = None,
+            wn_guess: float | None = None,
+            wm_guess: float | None = None) -> SolutionType:
             if wn is None:
                 wn = self.wn(alpha_n, wn_guess)
             v_cj = v_chapman_jouguet(self, alpha_n, wn=wn, wm_guess=wm_guess)
@@ -788,7 +804,7 @@ class Model(BaseModel, abc.ABC):
     def tn(
             self,
             alpha_n: th.FloatOrArr,
-            wn_guess: float = None,
+            wn_guess: float | None = None,
             theta_bar: bool = False,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
@@ -931,7 +947,7 @@ class Model(BaseModel, abc.ABC):
     def wn(
             self,
             alpha_n: th.FloatOrArr,
-            wn_guess: float = None,
+            wn_guess: float | None = None,
             theta_bar: bool = False,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,

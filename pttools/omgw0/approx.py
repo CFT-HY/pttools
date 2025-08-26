@@ -15,7 +15,7 @@ def omgw_approx(
         r_star: th.FloatOrArr,
         temp: th.FloatOrArr = const.T_default,
         g_star: th.FloatOrArr = const.G_STAR_DEFAULT,
-        f0_peak: th.FloatOrArr = None) -> th.FloatOrArr:
+        f0_peak: th.FloatOrArr | None = None) -> th.FloatOrArr:
     r"""
     :caprini_2016:`\ ` eq. 13
     """

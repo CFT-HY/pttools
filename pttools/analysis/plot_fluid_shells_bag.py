@@ -14,10 +14,10 @@ def plot_fluid_shells_bag(
         v_wall_list: th.FloatListOrArr,
         alpha_n_list: tp.Union[tp.List[float], np.ndarray],
         multi: bool = False,
-        save_string: str = None,
+        save_string: str | None = None,
         Np: int = const.N_XI_DEFAULT,
         debug: bool = False,
-        draw: bool = None) -> tp.Union[plt.Figure, tp.Tuple[plt.Figure, np.ndarray]]:
+        draw: bool | None = None) -> tp.Union[plt.Figure, tuple[plt.Figure, np.ndarray]]:
     r"""
     Calls :func:`pttools.bubble.fluid.fluid_shell` and plots resulting v, w against xi.
     Annotates titles with:

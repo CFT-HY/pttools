@@ -32,7 +32,7 @@ def solver(
         alpha_n_guess: float,
         r_star_guess: float,
         temp: float,
-        g_star: float) -> tp.Tuple[tp.Optional[float], tp.Optional[float], tp.Optional[float], float]:
+        g_star: float) -> tuple[tp.Optional[float], tp.Optional[float], tp.Optional[float], float]:
     # The limits for v_wall and alpha_n come from the limits of the suppression data.
     x0 = np.array([v_wall_guess, alpha_n_guess, r_star_guess])
     sol: OptimizeResult = minimize(

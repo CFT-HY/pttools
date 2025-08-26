@@ -50,7 +50,7 @@ def gen_df_dtau(cs2_fun: th.CS2Fun) -> speedup.DifferentialCFunc:
         if isinstance(cs2_fun, (speedup.CFunc, speedup.Dispatcher)) or NUMBA_DISABLE_JIT \
         else numba.cfunc("float64(float64, float64)")(cs2_fun)
 
-    def df_dtau(t: float, u: np.ndarray, du: np.ndarray, args: np.ndarray = None) -> None:
+    def df_dtau(t: float, u: np.ndarray, du: np.ndarray, args: np.ndarray | None = None) -> None:
         r"""Computes the differentials of the variables $(v, w, \xi)$ for a given $c_s^2$ function
 
         :param t: "time"
@@ -87,7 +87,7 @@ def fluid_integrate_param(
         t_end: float = const.T_END_DEFAULT,
         n_xi: int = const.N_XI_DEFAULT,
         df_dtau_ptr: speedup.DifferentialPointer = DF_DTAU_BAG_PTR,
-        method: str = "odeint") -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        method: str = "odeint") -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""
     Integrates parametric fluid equations in df_dtau from an initial condition.
     Positive t_end integrates along curves from $(v,w) = (0,c_{s,0})$ to $(1,1)$.

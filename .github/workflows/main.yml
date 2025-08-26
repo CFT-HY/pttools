@@ -15,6 +15,37 @@ jobs:
         uses: djdefi/cloc-action@6
         with:
           options: ${{ github.workspace }} --exclude-list-file=.clocignore
+#  fossa:
+#    runs-on: ubuntu-latest
+#    timeout-minutes: 5
+#    steps:
+#      - name: Setup Python
+#        uses: actions/setup-python@v5
+#        with:
+#          python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
+#      - name: Print Python version
+#        run: python -V
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#      - name: Load pip cache
+#        uses: actions/cache@v4
+#        with:
+#          path: .pip
+#          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+#          restore-keys: |
+#            pip-${{ runner.os }}-
+#            pip-
+#      - name: Install requirements
+#        run: |
+#          pip --cache-dir=.pip install --upgrade pip wheel
+#          pip --cache-dir=.pip install -r requirements.txt
+#      - name: Install FOSSA
+#        run: |
+#          curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | sudo bash
+#      - name: Run FOSSA
+#        run: fossa analyze
+#        env:
+#          FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
   graph:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -98,37 +129,51 @@ jobs:
           path: |
             ${{ github.workspace }}/pylint.txt
           if-no-files-found: error
-#  fossa:
-#    runs-on: ubuntu-latest
-#    timeout-minutes: 5
-#    steps:
-#      - name: Setup Python
-#        uses: actions/setup-python@v5
-#        with:
-#          python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
-#      - name: Print Python version
-#        run: python -V
-#      - name: Checkout
-#        uses: actions/checkout@v4
-#      - name: Load pip cache
-#        uses: actions/cache@v4
-#        with:
-#          path: .pip
-#          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-#          restore-keys: |
-#            pip-${{ runner.os }}-
-#            pip-
-#      - name: Install requirements
-#        run: |
-#          pip --cache-dir=.pip install --upgrade pip wheel
-#          pip --cache-dir=.pip install -r requirements.txt
-#      - name: Install FOSSA
-#        run: |
-#          curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | sudo bash
-#      - name: Run FOSSA
-#        run: fossa analyze
-#        env:
-#          FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
+  mypy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
+      - name: Print Python version
+        run: python -V
+      - name: Install graphviz
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Load pip cache
+        uses: actions/cache@v4
+        with:
+          path: .pip
+          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            pip-${{ runner.os }}-
+            pip-
+      - name: Install requirements
+        run: |
+          pip --cache-dir=.pip install --upgrade pip wheel
+          pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
+      - name: Load mypy cache
+        uses: actions/cache@v4
+        with:
+          path: .mypy_cache
+          key: mypy-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            mypy-${{ runner.os }}-
+            mypy-
+      - name: Run mypy
+        run: mypy examples pttools tests 2>&1 | tee mypy.txt
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mypy
+          path: |
+            ${{ github.workspace }}/mypy.txt
+          if-no-files-found: error
   test-numba:
     runs-on: ubuntu-latest
     timeout-minutes: 20

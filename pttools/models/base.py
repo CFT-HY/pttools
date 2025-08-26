@@ -17,26 +17,27 @@ class BaseModel(abc.ABC):
 
     All temperatures must be in units of GeV for the frequency conversion in Spectrum to work.
     """
-    DEFAULT_LABEL_LATEX: str = None
-    DEFAULT_LABEL_UNICODE: str = None
-    DEFAULT_NAME: str = None
+    DEFAULT_LABEL_LATEX: str | None = None
+    DEFAULT_LABEL_UNICODE: str | None = None
+    DEFAULT_NAME: str | None = None
     # Zero temperature would break many of the equations
     DEFAULT_T_MIN: float = 1e-3
     DEFAULT_T_MAX: float = np.inf
 
     #: Whether the temperature is in proper physics units
-    TEMPERATURE_IS_PHYSICAL: bool = None
+    TEMPERATURE_IS_PHYSICAL: bool | None = None
 
     def __init__(
             self,
-            name: str = None,
-            T_min: float = None, T_max: float = None,
+            name: str | None = None,
+            T_min: float | None = None,
+            T_max: float | None= None,
             restrict_to_valid: bool = True,
-            label_latex: str = None,
-            label_unicode: str = None,
+            label_latex: str | None = None,
+            label_unicode: str | None = None,
             gen_cs2: bool = True,
             gen_cs2_neg: bool = True,
-            temperature_is_physical: bool = None,
+            temperature_is_physical: bool | None = None,
             silence_temp: bool = False):
         self.name = self.DEFAULT_NAME if name is None else name
         self.label_latex = self.DEFAULT_LABEL_LATEX if label_latex is None else label_latex
@@ -69,7 +70,7 @@ class BaseModel(abc.ABC):
 
     # Concrete methods
 
-    def export(self) -> tp.Dict[str, any]:
+    def export(self) -> dict[str, tp.Any]:
         """Export the model parameters to a dictionary. User-created model classes should extend this."""
         return {
             "name": self.name,

@@ -15,9 +15,9 @@ OMGW0_LABEL = r"$\Omega_{gw,0}$"
 
 def plot_spectrum(
         spectrum: SSMSpectrum,
-        fig: plt.Figure = None,
-        ax: plt.Axes = None,
-        path: str = None,
+        fig: plt.Figure | None = None,
+        ax: plt.Axes | None = None,
+        path: str | None = None,
         **kwargs) -> FigAndAxes:
     rf"""Plot the GW spectrum {POW_GW_LABEL} of a bubble"""
     fig, ax = create_fig_ax(fig, ax)
@@ -26,7 +26,11 @@ def plot_spectrum(
     return plot_spectrum_common(spectrum, fig, ax, path)
 
 
-def plot_spectrum_common(spectrum: SSMSpectrum, fig: plt.Figure, ax: plt.Axes, path: str = None) -> FigAndAxes:
+def plot_spectrum_common(
+        spectrum: SSMSpectrum,
+        fig: plt.Figure,
+        ax: plt.Axes,
+        path: str | None = None) -> FigAndAxes:
     """Common steps for plotting a spectrum"""
     ax.set_xlabel("$z$")
     ax.set_xlim(np.min(spectrum.y), np.max(spectrum.y))
@@ -39,7 +43,11 @@ def plot_spectrum_common(spectrum: SSMSpectrum, fig: plt.Figure, ax: plt.Axes, p
     return fig, ax
 
 
-def plot_spectrum_multi(spectrum: SSMSpectrum, fig: plt.Figure = None, path: str = None, **kwargs) -> plt.Figure:
+def plot_spectrum_multi(
+        spectrum: SSMSpectrum,
+        fig: plt.Figure | None = None,
+        path: str | None = None,
+        **kwargs) -> plt.Figure:
     """Plot multiple types of spectra for a bubble"""
     if fig is None:
         fig = plt.figure(figsize=A4_PAPER_SIZE)
@@ -56,9 +64,9 @@ def plot_spectrum_multi(spectrum: SSMSpectrum, fig: plt.Figure = None, path: str
 
 def plot_spectrum_v(
         spectrum: SSMSpectrum,
-        fig: plt.Figure = None,
-        ax: plt.Axes = None,
-        path: str = None,
+        fig: plt.Figure | None = None,
+        ax: plt.Axes | None = None,
+        path: str | None = None,
         **kwargs) -> FigAndAxes:
     rf"""Plot the velocity power spectrum {POW_V_LABEL} of a bubble"""
     fig, ax = create_fig_ax(fig, ax)
@@ -69,9 +77,9 @@ def plot_spectrum_v(
 
 def plot_spectrum_spec_den_gw(
         spectrum: SSMSpectrum,
-        fig: plt.Figure = None,
-        ax: plt.Axes = None,
-        path: str = None,
+        fig: plt.Figure | None = None,
+        ax: plt.Axes | None = None,
+        path: str | None = None,
         **kwargs) -> FigAndAxes:
     rf"""Plot the spectral density of GWs {SPEC_DEN_GW_LABEL} for a bubble"""
     fig, ax = create_fig_ax(fig, ax)
@@ -82,9 +90,9 @@ def plot_spectrum_spec_den_gw(
 
 def plot_spectrum_spec_den_v(
         spectrum: SSMSpectrum,
-        fig: plt.Figure = None,
-        ax: plt.Axes = None,
-        path: str = None,
+        fig: plt.Figure | None = None,
+        ax: plt.Axes | None = None,
+        path: str | None = None,
         **kwargs) -> FigAndAxes:
     rf"""Plot the spectral density of velocity {SPEC_DEN_V_LABEL} for a bubble"""
     fig, ax = create_fig_ax(fig, ax)

@@ -10,7 +10,12 @@ from pttools.ssmtools.spectrum import SSMSpectrum
 from pttools.omgw0 import Spectrum, omega_noise
 
 
-def plot_spectra_common(spectra: tp.List[SSMSpectrum], fig: plt.Figure, ax: plt.Axes, path: str = None, set_x: bool = True) -> FigAndAxes:
+def plot_spectra_common(
+        spectra: tp.List[SSMSpectrum],
+        fig: plt.Figure,
+        ax: plt.Axes,
+        path: str | None = None,
+        set_x: bool = True) -> FigAndAxes:
     """Common steps for plotting spectra"""
     if set_x:
         ax.set_xlabel("$z$")
@@ -27,7 +32,11 @@ def plot_spectra_common(spectra: tp.List[SSMSpectrum], fig: plt.Figure, ax: plt.
     return fig, ax
 
 
-def plot_spectra_omgw0(spectra: tp.List[Spectrum], ax: plt.Axes = None, fig: plt.Figure = None, path: str = None) -> FigAndAxes:
+def plot_spectra_omgw0(
+        spectra: tp.List[Spectrum],
+        ax: plt.Axes | None = None,
+        fig: plt.Figure | None = None,
+        path: str | None = None) -> FigAndAxes:
     """Plot the GW spectra today"""
     fig, ax = create_fig_ax(fig, ax)
     for spectrum in spectra:
@@ -44,7 +53,11 @@ def plot_spectra_omgw0(spectra: tp.List[Spectrum], ax: plt.Axes = None, fig: plt
     return plot_spectra_common(spectra, fig, ax, path, set_x=False)
 
 
-def plot_spectra_spec_den_v(spectra: tp.List[Spectrum], ax: plt.Axes = None, fig: plt.Figure = None, path: str = None) -> FigAndAxes:
+def plot_spectra_spec_den_v(
+        spectra: tp.List[Spectrum],
+        ax: plt.Axes | None = None,
+        fig: plt.Figure | None = None,
+        path: str | None = None) -> FigAndAxes:
     """Plot the velocity spectra"""
     fig, ax = create_fig_ax(fig, ax)
     for spectrum in spectra:
@@ -52,7 +65,10 @@ def plot_spectra_spec_den_v(spectra: tp.List[Spectrum], ax: plt.Axes = None, fig
     return plot_spectra_common(spectra, fig, ax, path)
 
 
-def plot_spectra(spectra: tp.List[SSMSpectrum], fig: plt.Figure = None, path: str = None) -> plt.Figure:
+def plot_spectra(
+        spectra: tp.List[SSMSpectrum],
+        fig: plt.Figure | None = None,
+        path: str | None = None) -> plt.Figure:
     """Plot multiple types of spectra"""
     # Todo: fix the labels here
     if fig is None:

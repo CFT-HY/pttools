@@ -421,7 +421,7 @@ def plot_ps_compare_res(
         alpha: float,
         nuc_type: ssm.NucType = ssm.NucType.SIMULTANEOUS,
         nuc_args: bubble.NucArgs = (1.,),
-        save_id: str = None,
+        save_id: str | None = None,
         graph_file_type=None,
         method: ssm.Method = ssm.Method.E_CONSERVING):
     """
@@ -505,10 +505,10 @@ def plot_ps_compare_res(
 def plot_ps_1bubble(
         vw: float,
         alpha: float,
-        save_id: str = None,
-        graph_file_type: str = None,
+        save_id: str | None = None,
+        graph_file_type: str | None = None,
         Np=const.NP_ARR[-1],
-        debug: bool = False) -> tp.Union[plt.Figure, tp.Tuple[plt.Figure, np.ndarray]]:
+        debug: bool = False) -> tp.Union[plt.Figure, tuple[plt.Figure, np.ndarray]]:
     # Sphinx considers vertical lines as substitution references. Therefore the command \mid has to be used instead.
     r"""
     Plots power spectra predictions of 1 bubble. Shown are
@@ -560,8 +560,8 @@ def plot_ps_1bubble(
 def plot_ps_compare_nuc(
         vw: float,
         alpha: float,
-        save_id: str = None,
-        graph_file_type: str = None) -> tp.Tuple[list, list, list, list]:
+        save_id: str | None = None,
+        graph_file_type: str | None = None) -> tuple[list, list, list, list]:
     """
     Plots power spectra predictions of SSM with different nucleation models
     Saves data if save_id is set.
@@ -842,7 +842,7 @@ def plot_and_save(vw: float, alpha: float, method: ssm.Method = ssm.Method.E_CON
     return V2_pow_v, gw_power
 
 
-def do_all_plot_ps_compare_nuc(save_id: str = None, graph_file_type: str = None):
+def do_all_plot_ps_compare_nuc(save_id: str | None = None, graph_file_type: str | None = None):
     v2_list = []
     Omgw_scaled_list = []
 
@@ -885,11 +885,11 @@ def do_all_plot_ps_compare_nuc(save_id: str = None, graph_file_type: str = None)
 
 
 def do_all_plot_ps_1bubble(
-        save_id: str = None,
-        graph_file_type: str = None,
+        save_id: str | None = None,
+        graph_file_type: str | None = None,
         debug: bool = False) -> tp.Union[
-            tp.Tuple[tp.List[plt.Figure], tp.List[str]],
-            tp.Tuple[tp.List[plt.Figure], tp.List[str], np.ndarray]]:
+            tuple[list[plt.Figure], list[str]],
+            tuple[list[plt.Figure], list[str], np.ndarray]]:
     vw_weak_list = [0.92, 0.56, 0.44]
     vw_inter_list = [0.92, 0.56, 0.44]
 

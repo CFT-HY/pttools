@@ -12,8 +12,8 @@ from . import alpha
 
 logger = logging.getLogger(__name__)
 
-NucArgs = tp.Tuple[float, ...]
-PhysicalParams = tp.Union[tp.Tuple[float, float], tp.Tuple[float, float, str, NucArgs]]
+NucArgs = tuple[float, ...]
+PhysicalParams = tp.Union[tuple[float, float], tuple[float, float, str, NucArgs]]
 
 
 @numba.njit

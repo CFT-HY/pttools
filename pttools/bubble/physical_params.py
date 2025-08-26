@@ -51,7 +51,12 @@ class NucArgs:
     ("nuc_args", NotImplemented if speedup.NUMBA_DISABLE_JIT else numba.optional(NucArgs.class_type.instance_type))
 ])
 class PhysicalParams:
-    def __init__(self, v_wall: float, alpha: float, nuc_type: NucType = None, nuc_args: NucArgs = None):
+    def __init__(
+            self,
+            v_wall: float,
+            alpha: float,
+            nuc_type: NucType | None = None,
+            nuc_args: NucArgs | None = None):
         self.v_wall = v_wall
         self.alpha = alpha
         self.nuc_type = nuc_type

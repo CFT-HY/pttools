@@ -8,7 +8,7 @@ from pttools.analysis import entropy
 from pttools.bubble.bubble import Bubble
 
 
-def plot_entropy(bubbles: tp.Iterable[Bubble], colors: tp.Iterable[str], fig: plt.Figure = None):
+def plot_entropy(bubbles: tp.Iterable[Bubble], colors: tp.Iterable[str], fig: plt.Figure | None = None):
     if fig is None:
         fig = plt.figure()
     ax1 = fig.add_subplot()

@@ -31,10 +31,10 @@ class Suppression:
     """Suppression factors from a given dataset"""
     def __init__(
             self,
-            v_walls: np.ndarray[int, np.float64],
-            alpha_ns: np.ndarray[int, np.float64],
-            suppressions: np.ndarray[int, np.float64],
-            name: str = None):
+            v_walls: np.ndarray[tuple[int], np.float64],
+            alpha_ns: np.ndarray[tuple[int], np.float64],
+            suppressions: np.ndarray[tuple[int], np.float64],
+            name: str | None = None):
         if not (v_walls.size == alpha_ns.size == suppressions.size):
             raise ValueError(
                 f"Input arrays must have the same size. Got: {v_walls.size}, {alpha_ns.size}, {suppressions.size}")
@@ -50,7 +50,7 @@ class Suppression:
         self.v_wall_max: float = np.max(self.v_walls)
 
     @classmethod
-    def from_file(cls, path: str, name: str = None) -> "Suppression":
+    def from_file(cls, path: str, name: str | None = None) -> "Suppression":
         data = np.load(path)
         return Suppression(v_walls=data["vw_sim"], alpha_ns=data["alpha_sim"], suppressions=data["sup_ssm"], name=name)
 
@@ -136,9 +136,9 @@ def alpha_n_max(v_wall: th.FloatOrArr) -> th.FloatOrArr:
 
 
 def extend(
-        v_walls: np.ndarray[int, np.float64],
-        alpha_ns: np.ndarray[int, np.float64],
-        suppressions: np.ndarray[int, np.float64]) -> tuple[np.ndarray[int, np.float64], np.ndarray[int, np.float64], np.ndarray[int, np.float64]]:
+        v_walls: np.ndarray[tuple[int], np.float64],
+        alpha_ns: np.ndarray[tuple[int], np.float64],
+        suppressions: np.ndarray[tuple[int], np.float64]) -> tuple[np.ndarray[tuple[int], np.float64], np.ndarray[tuple[int], np.float64], np.ndarray[tuple[int], np.float64]]:
     """
     To improve the extrapolation of the suppression factor when later using gridata, first extend the
     low vw and low alpha region as follows
@@ -154,9 +154,9 @@ def extend(
     ssm_sup_vw_0_24_ext = spl(ssm_sup_vw_0_24_alphas_ext)
 
     # create the extrapolated dataset
-    v_walls_ext: np.ndarray[int, np.float64] = np.concatenate(([0.24], v_walls))
-    alpha_ns_ext: np.ndarray[int, np.float64] = np.concatenate(([ssm_sup_vw_0_24_alphas_ext[0]], alpha_ns))
-    suppressions_ext: np.ndarray[int, np.float64] = np.concatenate(([ssm_sup_vw_0_24_ext[0]], suppressions))
+    v_walls_ext: np.ndarray[tuple[int], np.float64] = np.concatenate(([0.24], v_walls))
+    alpha_ns_ext: np.ndarray[tuple[int], np.float64] = np.concatenate(([ssm_sup_vw_0_24_alphas_ext[0]], alpha_ns))
+    suppressions_ext: np.ndarray[tuple[int], np.float64] = np.concatenate(([ssm_sup_vw_0_24_ext[0]], suppressions))
     return v_walls_ext, alpha_ns_ext, suppressions_ext
 
 

@@ -63,7 +63,7 @@ def spec_den_v(
         nuc_type: NucType,
         nt: int = const.NPTDEFAULT[1],
         z_st_thresh: float = const.Z_ST_THRESH,
-        cs: float = None,
+        cs: float | None = None,
         return_a2: bool = False):
     r"""The full spectral density of the velocity field
 

@@ -10,14 +10,14 @@ from . import printing
 
 
 def assert_allclose(
-        actual: tp.Union[float, tp.Union[tp.List[float], tp.List[list]], np.ndarray],
-        desired: tp.Union[float, tp.Union[tp.List[float], tp.List[list]], np.ndarray],
+        actual: tp.Union[float, tp.Union[list[float], list[list]], np.ndarray],
+        desired: tp.Union[float, tp.Union[list[float], list[list]], np.ndarray],
         rtol: float = 1e-7,
         atol: float = 0,
         equal_nan: bool = True,
         err_msg: str = "",
         verbose: bool = True,
-        name: str = None,
+        name: str | None = None,
         fmt: str = printing.DEFAULT_FMT,
         dtype: np.dtype = np.float64):
     """Assert that all array elements correspond to the reference within the given tolerances

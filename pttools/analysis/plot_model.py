@@ -1,6 +1,7 @@
 """Plot thermodynamic quantities for a model"""
 
 import logging
+import typing as tp
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +16,8 @@ class ModelPlot:
     def __init__(
             self,
             model: models.Model,
-            t_min: float = None, t_max: float = None,
+            t_min: float | None = None,
+            t_max: float | None = None,
             t_log_range: float = 2,
             t_log: bool = True,
             y_log: bool = True,
@@ -55,9 +57,12 @@ class ModelPlot:
 
     def plot(
             self,
-            ax: plt.Axes, func: callable,
-            label: str = None, label_s: str = None, label_b: str = None,
-            y_lim: bool = True, y_log: bool = True):
+            ax: plt.Axes, func: tp.Callable,
+            label: str | None = None,
+            label_s: str | None = None,
+            label_b: str | None = None,
+            y_lim: bool = True,
+            y_log: bool = True):
         if label_s is None and label is not None:
             label_s = f"${label}_s$"
         if label_b is None and label is not None:

@@ -39,10 +39,10 @@ def sound_shell_bag(
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR,
         # Implementing optional extra output did not work due to Numba typing constraints
         # extra_output: bool = False
-        ) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         # -> tp.Union[
-        #     tp.Tuple[np.ndarray, np.ndarray, np.ndarray],
-        #     tp.Tuple[np.ndarray, np.ndarray, np.ndarray, SolutionType, float, float, float, float, float]
+        #     tuple[np.ndarray, np.ndarray, np.ndarray],
+        #     tuple[np.ndarray, np.ndarray, np.ndarray, SolutionType, float, float, float, float, float]
         # ]:
     r"""
     Finds fluid shell $(v, w, \xi)$ from a given $v_\text{wall}, \alpha_n$, which must be scalars.
@@ -88,12 +88,12 @@ def sound_shell_alpha_plus(
         w_n: float = 1.,
         cs2_fun: th.CS2Fun = bag.cs2_bag,
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR,
-        sol_type_fun: callable = None,
+        sol_type_fun: tp.Callable | None = None,
         # extra_output: bool = False
-        ) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
             # tp.Union[
-                # tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
-                # tp.Tuple[np.ndarray, np.ndarray, np.ndarray, float, float, float, float]
+                # tuple[np.ndarray, np.ndarray, np.ndarray]:
+                # tuple[np.ndarray, np.ndarray, np.ndarray, float, float, float, float]
             # ]:
     r"""
     Finds the fluid shell profile (v, w, xi) from a given $v_\text{wall}, \alpha_+$ (at-wall strength parameter).

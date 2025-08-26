@@ -12,12 +12,12 @@ from pttools.bubble import boundary, const, fluid_bag, relativity
 def plot_fluid_shell_bag(
         v_wall: float,
         alpha_n: float,
-        save_string: str = None,
+        save_string: str | None = None,
         Np: int = const.N_XI_DEFAULT,
         low_v_approx: bool = False,
         high_v_approx: bool = False,
-        draw: bool = None) \
-        -> tp.Tuple[plt.Figure, tp.Dict[str, tp.Union[np.ndarray, float]]]:
+        draw: bool | None = None) \
+        -> tuple[plt.Figure, dict[str, tp.Union[np.ndarray, float]]]:
     r"""
     Calls :func:`pttools.bubble.fluid.fluid_shell` and plots resulting $v, w$ against $\xi$.
     Also plots:

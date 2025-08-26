@@ -56,7 +56,7 @@ from pttools.speedup import fitpack
 
 
 # @overload(scipy.interpolate.splev)
-def splev(x: np.ndarray, tck: tp.Tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
+def splev(x: np.ndarray, tck: tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
     """
     Modified from :external:py:func:`scipy.interpolate.splev`.
     See the SciPy documentation for details.
@@ -140,7 +140,7 @@ def splev_linear_validate(k: int, der: int) -> None:
         raise NotImplementedError("Derivatives are not yet implemented")
 
 
-def splev_linear_arr(x, tck: tp.Tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
+def splev_linear_arr(x, tck: tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
     t, c, k = tck
     splev_linear_validate(k, der)
 
@@ -151,14 +151,14 @@ def splev_linear_arr(x, tck: tp.Tuple[np.ndarray, np.ndarray, int], der: int = 0
     return y
 
 
-def splev_linear_scalar(x, tck: tp.Tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
+def splev_linear_scalar(x, tck: tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
     t, c, k = tck
     splev_linear_validate(k, der)
     return splev_linear_core(x, t, c, ext)
 
 
 @overload(scipy.interpolate.splev, jit_options={"nopython": True})
-def splev_linear(x, tck: tp.Tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
+def splev_linear(x, tck: tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
     """
     :param x: float or 1D array
     :param tck: Tuple of spline parameters as given by scipy.interpolate.splrep()

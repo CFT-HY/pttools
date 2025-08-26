@@ -24,12 +24,12 @@ class ConstCSThermoModel(ThermoModel):
             a_s: float, a_b: float,
             css2: float, csb2: float,
             V_s: float, V_b: float = 0,
-            T_min: float = None,
-            T_max: float = None,
+            T_min: float | None = None,
+            T_max: float | None = None,
             t_ref: float = 1,
-            name: str = None,
-            label_latex: str = None,
-            label_unicode: str = None,
+            name: str | None = None,
+            label_latex: str | None = None,
+            label_unicode: str | None = None,
             allow_invalid: bool = False):
         # For validation
         const_cs.ConstCSModel(css2=css2, csb2=csb2, V_s=V_s, V_b=V_b, a_s=a_s, a_b=a_b, allow_invalid=allow_invalid)
@@ -68,7 +68,7 @@ class ConstCSThermoModel(ThermoModel):
         dgs_b = 45/(2*np.pi**2) * self.mu_b * (self.mu_b - 4) * self.a_b * self.t_ref**(4 - self.mu_b) * temp**(self.mu_b - 5)
         return dgs_b * phase + dgs_s * (1 - phase)
 
-    def export(self) -> tp.Dict[str, any]:
+    def export(self) -> dict[str, tp.Any]:
         return {
             **super().export(),
             "t_ref": self.t_ref,

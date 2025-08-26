@@ -15,7 +15,7 @@ class BubbleGrid:
     def __init__(self, bubbles: np.ndarray):
         self.bubbles = bubbles
 
-    def get_value(self, name: str, dtype: tp.Type = None) -> np.ndarray:
+    def get_value(self, name: str, dtype: tp.Type | None = None) -> np.ndarray:
         with np.nditer(
                 [self.bubbles, None],
                 flags=("refs_ok", ),
@@ -61,7 +61,7 @@ class BubbleGridVWAlpha(BubbleGrid):
             model: "Model",
             v_walls: np.ndarray,
             alpha_ns: np.ndarray,
-            func: callable = None,
+            func: tp.Callable | None = None,
             use_bag_solver: bool = False):
         data = create_bubbles(
                 model, v_walls, alpha_ns, func,

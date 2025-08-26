@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 class JsonTestCase(abc.ABC):
     """Base class for tests that compare to JSON data"""
     REF_DATA_PATH: str
-    data: tp.Dict[str, th.FloatOrArr]
-    ref_data: tp.Dict[str, th.FloatOrArr]
+    data: dict[str, th.FloatOrArr]
+    ref_data: dict[str, th.FloatOrArr]
 
     EXPECT_MISSING_DATA: bool = False
     SAVE_NEW_DATA: bool = False

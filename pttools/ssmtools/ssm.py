@@ -32,7 +32,7 @@ def a2_e_conserving(
         cs: float,
         z_st_thresh: float = const.Z_ST_THRESH,
         nxi: int = const.NPTDEFAULT[0],
-        ) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     r"""
     Returns the value of $|A(z)|^2$, where
     $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$.

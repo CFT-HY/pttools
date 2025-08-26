@@ -67,7 +67,7 @@ def check_entropy_fluxes(
         v1_tilde: float, v2_tilde: float,
         w1: float, w2: float,
         phase1: Phase, phase2: float,
-        allow_negative_entropy_flux_change: bool = False) -> tp.Tuple[bool, float, float]:
+        allow_negative_entropy_flux_change: bool = False) -> tuple[bool, float, float]:
     """False = OK, True = fail"""
     s1 = model.s(w1, phase1)
     s2 = model.s(w2, phase2)
@@ -109,7 +109,7 @@ def entropy_flux(v_tilde: th.FloatOrArr, s: th.FloatOrArr):
 def fluid_speeds_at_wall(
         v_wall: float,
         alpha_p: th.FloatOrArr,
-        sol_type: SolutionType) -> tp.Tuple[float, float, float, float]:
+        sol_type: SolutionType) -> tuple[float, float, float, float]:
     r"""
     Solves fluid speed boundary conditions at the wall to obtain
     the fluid speeds both in the universe (plasma frame): $v_+$ and $v_+$
@@ -260,15 +260,15 @@ def solve_junction(
         phase2: Phase,
         v2_tilde_guess: float,
         w2_guess: float,
-        v2_tilde_min: float = None,
-        v2_tilde_max: float = None,
-        w2_min: float = None,
-        w2_max: float = None,
+        v2_tilde_min: float | None = None,
+        v2_tilde_max: float | None = None,
+        w2_min: float | None = None,
+        w2_max: float | None = None,
         allow_failure: bool = False,
         allow_negative_entropy_flux_change: bool = False,
         rtol: float = const.JUNCTION_RTOL,
         # atol: float = const.JUNCTION_ATOL
-        ) -> tp.Tuple[float, float]:
+        ) -> tuple[float, float]:
     """Model-independent junction condition solver
     Velocities are in the wall frame!
     """
@@ -362,7 +362,7 @@ def solve_junction_internal(
         model: "Model",
         v1_tilde: float, w1: float,
         phase1: Phase, phase2: Phase,
-        v2_tilde_guess: float, w2_guess: float) -> tp.Tuple[np.ndarray, dict, int, str]:
+        v2_tilde_guess: float, w2_guess: float) -> tuple[np.ndarray, dict, int, str]:
     # Using fsolve_vary helps in finding the solutions, but it can also make the overall solver a lot slower.
     return fsolve_vary(
         junction_conditions_solvable,

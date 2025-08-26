@@ -19,14 +19,14 @@ logger = logging.getLogger(__name__)
 
 class BubblePlot3D(PlotlyPlot):
     r"""Create a 3D plot of bubbles in the $(v,w,\xi)$ space"""
-    def __init__(self, model: Model = None, colorscale: str = "YlOrRd"):
+    def __init__(self, model: Model | None = None, colorscale: str = "YlOrRd"):
         super().__init__()
         self.model = model
         self.bubbles: tp.List[Bubble] = []
         self.plots: tp.List[BasePlotlyType] = []
         self.colorscale = colorscale
 
-    def add(self, bubble: Bubble, color: str = None) -> go.Scatter3d:
+    def add(self, bubble: Bubble, color: str | None = None) -> go.Scatter3d:
         """Add a bubble to the plot"""
         if not bubble.solved:
             bubble.solve()

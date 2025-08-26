@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 SUPPRESSION_FOLDER = os.path.dirname(os.path.abspath(__file__))
 
 
-def calc_sup_ssm(path: str, save: bool = True, npt: ssm_const.NptType = ssm_const.NPTDEFAULT) -> tp.Dict[str, tp.Union[np.ndarray, tp.List[float]]]:
+def calc_sup_ssm(path: str, save: bool = True, npt: ssm_const.NptType = ssm_const.NPTDEFAULT) -> dict[str, tp.Union[np.ndarray, tp.List[float]]]:
     """
     file must be a txt file with data in columns as follows
     vw alpha suppression_sim sim_omgw exp_omgw exp_ubarf

@@ -53,7 +53,7 @@ NUMBA_INTEGRATE_TOLERANCES: tp.Final[bool] = bool(
 #: Whether to use nested parallelism. This requires that either TBB or OpenMP is installed and working.
 NUMBA_NESTED_PARALLELISM: tp.Final[bool] = bool(int(os.getenv("NUMBA_NESTED_PARALLELISM", "0")))
 #: Default options for the custom njit decorator.
-NUMBA_OPTS: tp.Dict[str, any] = {
+NUMBA_OPTS: dict[str, tp.Any] = {
     # Caching does not work properly with functions that have dependencies across files
     # "cache": True
 }

@@ -179,7 +179,7 @@ def w_bag(
     return 4/3 * (e - theta)
 
 
-# def junction_bag(v1: th.FloatOrArr, w1: th.FloatOrArr, V1: th.FloatOrArr, V2: th.FloatOrArr, greater_branch: bool) -> tp.Tuple[th.FloatOrArr, th.FloatOrArr]:
+# def junction_bag(v1: th.FloatOrArr, w1: th.FloatOrArr, V1: th.FloatOrArr, V2: th.FloatOrArr, greater_branch: bool) -> tuple[th.FloatOrArr, th.FloatOrArr]:
 #     v2 = v2_tilde_bag(v1, w1, V1, V2, greater_branch)
 #     return v2, boundary.w2_junction(v1, w1, v2)
 #

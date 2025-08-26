@@ -1,3 +1,5 @@
+import typing as tp
+
 import numpy as np
 
 import pttools.type_hints as th
@@ -5,13 +7,13 @@ from pttools.omgw0 import const
 
 
 def signal_to_noise_ratio(
-        f: np.ndarray[int, np.float64],
-        signal: np.ndarray[int, np.float64],
-        noise: np.ndarray[int, np.float64],
-        f_noise: np.ndarray[int, np.float64] = None,
+        f: np.ndarray[tuple[int], np.float64],
+        signal: np.ndarray[tuple[int], np.float64],
+        noise: np.ndarray[tuple[int], np.float64],
+        f_noise: tp.Union[np.ndarray[tuple[int], np.float64], None] = None,
         obs_time: float = const.LISA_OBS_TIME,
-        f_min: float = None,
-        f_max: float = None) -> np.ndarray[int, np.float64]:
+        f_min: float | None = None,
+        f_max: float | None = None) -> np.ndarray[tuple[int], np.float64]:
     r"""Signal-to-noise ratio
     $$\rho = \sqrt{T_{\text{obs}} \int_{{f}_\text{min}}^{{f}_\text{max}} df \frac{
     h^2 \Omega_{\text{signal}}^2}{
@@ -83,7 +85,7 @@ def N_AE(
         f: th.FloatOrArr,
         ft: th.FloatOrArr = FT_LISA,
         L: th.FloatOrArr = const.LISA_ARM_LENGTH,
-        W_abs2: th.FloatOrArr = None) -> th.FloatOrArr:
+        W_abs2: th.FloatOrArr | None = None) -> th.FloatOrArr:
     r"""A and E channels of LISA instrument noise
     $$N_A = N_E = \left(\left(
     4 + 2 \cos \left( \frac{f}{f_t} \right)\right) P_\text{oms} +
@@ -174,7 +176,7 @@ def P_oms(L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatOrArr:
     return (1.5e-11 / L)**2
 
 
-def R_AE(f: th.FloatOrArr, ft: th.FloatOrArr = FT_LISA, W_abs2: th.FloatOrArr = None) -> th.FloatOrArr:
+def R_AE(f: th.FloatOrArr, ft: th.FloatOrArr = FT_LISA, W_abs2: th.FloatOrArr | None = None) -> th.FloatOrArr:
     r"""Gravitational wave response function for the A and E channels
     $$\mathcal{R}_A^\text{Fit} = \mathcal{R}_E^\text{Fit} \approx \frac{9}{20} |W|^2
     \left(1 + \left( \frac{3f}{4f_t} \right^2 \right)^{-1}$$
@@ -302,9 +304,9 @@ GB_DATA: np.ndarray[tuple[int, int], np.float64] = np.array([
     [917, 1680, 1340, 1680],
     [0.00258, 0.00215, 0.00173, 0.00113]
 ])
-GB_TIMES: np.ndarray[int, np.float64] = GB_DATA[0, :]
-GB_ALPHAS: np.ndarray[int, np.float64] = GB_DATA[1, :]
-GB_BETAS: np.ndarray[int, np.float64] = GB_DATA[2, :]
-GB_KAPPAS: np.ndarray[int, np.float64] = GB_DATA[3, :]
-GB_GAMMAS: np.ndarray[int, np.float64] = GB_DATA[4, :]
-GB_FKS: np.ndarray[int, np.float64] = GB_DATA[5, :]
+GB_TIMES: np.ndarray[tuple[int], np.float64] = GB_DATA[0, :]
+GB_ALPHAS: np.ndarray[tuple[int], np.float64] = GB_DATA[1, :]
+GB_BETAS: np.ndarray[tuple[int], np.float64] = GB_DATA[2, :]
+GB_KAPPAS: np.ndarray[tuple[int], np.float64] = GB_DATA[3, :]
+GB_GAMMAS: np.ndarray[tuple[int], np.float64] = GB_DATA[4, :]
+GB_FKS: np.ndarray[tuple[int], np.float64] = GB_DATA[5, :]

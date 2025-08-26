@@ -9,7 +9,10 @@ from pttools.analysis.utils import FigAndAxes, create_fig_ax, legend
 from pttools.bubble.bubble import Bubble
 
 
-def setup_bubbles_plot(bubbles: tp.List[Bubble], fig: plt.Figure = None, ax: plt.Axes = None) -> FigAndAxes:
+def setup_bubbles_plot(
+        bubbles: tp.List[Bubble],
+        fig: plt.Figure | None = None,
+        ax: plt.Axes | None = None) -> FigAndAxes:
     """Set up a figure for plotting multiple bubbles"""
     for bubble in bubbles:
         if not bubble.solved:
@@ -18,7 +21,11 @@ def setup_bubbles_plot(bubbles: tp.List[Bubble], fig: plt.Figure = None, ax: plt
     return fig, ax
 
 
-def plot_bubbles_common(bubbles: tp.List[Bubble], fig: plt.Figure = None, ax: plt.Axes = None, path: str = None) -> FigAndAxes:
+def plot_bubbles_common(
+        bubbles: tp.List[Bubble],
+        fig: plt.Figure | None = None,
+        ax: plt.Axes | None = None,
+        path: str | None = None) -> FigAndAxes:
     """Common steps for plotting multiple bubbles"""
     ax.set_xlabel(r"$\xi$")
     xi_min = np.nanmin([bubble.xi[1] for bubble in bubbles])
@@ -35,7 +42,12 @@ def plot_bubbles_common(bubbles: tp.List[Bubble], fig: plt.Figure = None, ax: pl
     return fig, ax
 
 
-def plot_bubbles_v(bubbles: tp.List[Bubble], fig: plt.Figure = None, ax: plt.Axes = None, path: str = None, v_max: float = 1) -> FigAndAxes:
+def plot_bubbles_v(
+        bubbles: tp.List[Bubble],
+        fig: plt.Figure | None = None,
+        ax: plt.Axes | None = None,
+        path: str | None = None,
+        v_max: float = 1) -> FigAndAxes:
     """Plot the velocity profile of multiple bubbles"""
     fig, ax = setup_bubbles_plot(bubbles, fig, ax)
     for bubble in bubbles:
@@ -45,7 +57,11 @@ def plot_bubbles_v(bubbles: tp.List[Bubble], fig: plt.Figure = None, ax: plt.Axe
     return plot_bubbles_common(bubbles, fig, ax, path)
 
 
-def plot_bubbles_w(bubbles: tp.List[Bubble], fig: plt.Figure = None, ax: plt.Axes = None, path: str = None) -> FigAndAxes:
+def plot_bubbles_w(
+        bubbles: tp.List[Bubble],
+        fig: plt.Figure | None = None,
+        ax: plt.Axes | None = None,
+        path: str | None = None) -> FigAndAxes:
     """Plot the enthalpy profile of multiple bubbles"""
     fig, ax = setup_bubbles_plot(bubbles, fig, ax)
     for bubble in bubbles:

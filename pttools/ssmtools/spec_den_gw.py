@@ -26,7 +26,7 @@ def gen_lookup(y: np.ndarray, cs: float, n_z_lookup: int = const.N_Z_LOOKUP_DEFA
 
 
 @numba.njit
-def lookup_limits(y: np.ndarray, cs: float, eps: float = 0.) -> tp.Tuple[float, float]:
+def lookup_limits(y: np.ndarray, cs: float, eps: float = 0.) -> tuple[float, float]:
     """Defined on p. 12 between eq. 3.44 and 3.45"""
     return y.min() * 0.5 * (1. - cs) / cs - eps, y.max() * 0.5 * (1. + cs) / cs + eps
 
@@ -39,7 +39,7 @@ def _spec_den_gw_scaled_core(
         cs: float,
         Gamma: float,
         source_lifetime_factor: float,
-        nz_int: int) -> tp.Tuple[np.ndarray, np.ndarray]:
+        nz_int: int) -> tuple[np.ndarray, np.ndarray]:
     r""":gw_pt_ssm:`\ ` eq. 3.47 and 3.48
     The variable naming corresponds to the article.
     """
@@ -82,7 +82,7 @@ def _spec_den_gw_scaled_y(
         cs: float,
         Gamma: float,
         source_lifetime_factor: float,
-        nz_int: int) -> tp.Tuple[np.ndarray, np.ndarray]:
+        nz_int: int) -> tuple[np.ndarray, np.ndarray]:
 
     z_lookup_min, z_lookup_max = lookup_limits(y, cs)
     if z_lookup.max() < z_lookup_max or z_lookup.min() > z_lookup_min:
@@ -98,7 +98,7 @@ def _spec_den_gw_scaled_no_y(
         cs: float,
         Gamma: float,
         source_lifetime_factor: float,
-        nz_int: int) -> tp.Tuple[np.ndarray, np.ndarray]:
+        nz_int: int) -> tuple[np.ndarray, np.ndarray]:
     # This process is the reverse of to gen_lookup()
     zmax = z_lookup.max() * 2. * cs / (1. + cs)
     zmin = z_lookup.min() * 2. * cs / (1. - cs)
@@ -109,11 +109,11 @@ def _spec_den_gw_scaled_no_y(
 def spec_den_gw_scaled(
         z_lookup: np.ndarray,
         P_v_lookup: np.ndarray,
-        y: np.ndarray = None,
+        y: tp.Union[np.ndarray, None] = None,
         cs: float = const.CS0,
         Gamma: float = const.GAMMA,
         source_lifetime_factor: float = 1.,
-        nz_int: int = None) -> tp.Union[tp.Tuple[np.ndarray, np.ndarray], th.NumbaFunc]:
+        nz_int: int | None = None) -> tp.Union[tuple[np.ndarray, np.ndarray], th.NumbaFunc]:
     r"""
     Spectral density of scaled gravitational wave power
 
@@ -142,7 +142,7 @@ def _spec_den_gw_scaled_numba(
         xlookup: np.ndarray,
         P_vlookup: np.ndarray,
         z: np.ndarray = None,
-        cs: float = const.CS0) -> tp.Union[tp.Tuple[np.ndarray, np.ndarray], th.NumbaFunc]:
+        cs: float = const.CS0) -> tp.Union[tuple[np.ndarray, np.ndarray], th.NumbaFunc]:
     if isinstance(z, numba.types.Array):
         return _spec_den_gw_scaled_y
     if isinstance(z, (numba.types.NoneType, numba.types.Omitted)):

@@ -56,7 +56,7 @@ def find_shock_index(
         error_on_failure: bool = True,
         zero_on_failure: bool = True,
         log_failure: bool = True,
-        warn_if_barely_exists: bool = True) -> int:
+        warn_if_barely_exists: bool = True) -> int | np.signedinteger:
     if sol_type is SolutionType.DETON:
         return props.find_v_index(xi, v_wall)
     # Todo: replace this with isinstance()
@@ -98,7 +98,7 @@ def find_shock_index(
             return 0
 
     # Index of highest xi = where the curve turns backwards
-    i_right: int = np.argmax(xi)
+    i_right: np.signedinteger = np.argmax(xi)
 
     # If the curve starts by going to the left, then it's a detonation.
     if i_right == 0:
@@ -111,9 +111,9 @@ def find_shock_index(
             return 0
 
     # First index close to xi=cs_n, v=0
-    i_close: int = np.argmax(np.logical_and(np.isclose(xi, cs_n), np.isclose(v, 0)))
+    i_close: np.signedinteger = np.argmax(np.logical_and(np.isclose(xi, cs_n), np.isclose(v, 0)))
     # First index where xi > cs_n
-    i_cs_n: int = np.argmax(xi > cs_n)
+    i_cs_n: np.signedinteger = np.argmax(xi > cs_n)
 
     # If the curve goes directly to zero at cs_n
     # = (if a point close to xi=cs_n, v=0 exists) and ((all points < cs_n) or (approaches cs_n from the left))
@@ -248,7 +248,10 @@ def find_shock_index(
     return i_sh
 
 
-def shock_curve(model: "Model", alpha_n: float, xi: np.ndarray = None):
+def shock_curve(
+        model: "Model",
+        alpha_n: float,
+        xi: tp.Union[np.ndarray, None] = None):
     vm_arr: np.ndarray = np.zeros_like(xi)
     for i_xi, xi_i in enumerate(xi):
         wn = model.wn(alpha_n=alpha_n)
@@ -266,7 +269,7 @@ def shock_curve(model: "Model", alpha_n: float, xi: np.ndarray = None):
 def shock_zoom_last_element(
         v: np.ndarray,
         w: np.ndarray,
-        xi: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        xi: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     r"""
     Replaces last element of $(v,w,\xi)$ arrays by better estimate of
     shock position and values of $v, w$ there.
@@ -299,12 +302,12 @@ def solve_shock(
             v1_tilde: float,
             w1: float,
             backwards: bool,
-            v2_tilde_guess: float = None,
-            w2_guess: float = None,
-            csp: float = None,
+            v2_tilde_guess: float | None = None,
+            w2_guess: float | None = None,
+            csp: float | None = None,
             phase: Phase = Phase.SYMMETRIC,
             allow_failure: bool = False,
-            warn_if_barely_exists: bool = True) -> tp.Tuple[float, float]:
+            warn_if_barely_exists: bool = True) -> tuple[float, float]:
     r"""Solve the boundary conditions at a shock
 
     :param model: Hydrodynamics model
@@ -411,7 +414,7 @@ def v_shock(model: "Model", wn: float, xi: float, cs_n: float, warn_if_barely_ex
 def v_shock_curve(
         model: "Model",
         wn: float, n_points: int = 20,
-        warn_if_barely_exists: bool = False) -> tp.Tuple[np.ndarray, np.ndarray]:
+        warn_if_barely_exists: bool = False) -> tuple[np.ndarray, np.ndarray]:
     cs_n = np.sqrt(model.cs2(wn, Phase.SYMMETRIC))
     # Create more points near cs_n, as there the accuracy is the most critical
     xi = cs_n + np.logspace(-4, 0, num=n_points) * (1 - cs_n)

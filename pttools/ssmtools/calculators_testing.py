@@ -30,8 +30,11 @@ def gen_piecewise(x, points: np.ndarray):
 
 
 def sin_transform(
-        z: th.FloatOrArr, xi: np.ndarray, f: np.ndarray,
-        v_wall: float = None, v_sh: float = None,
+        z: th.FloatOrArr,
+        xi: np.ndarray,
+        f: np.ndarray,
+        v_wall: float | None = None,
+        v_sh: float | None = None,
         z_st_thresh: float = const.Z_ST_THRESH) -> th.FloatOrArr:
 
     # Ensure that xi is monotonically increasing

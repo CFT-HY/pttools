@@ -25,16 +25,16 @@ class SSMSpectrum:
     def __init__(
             self,
             bubble: bubble.Bubble,
-            y: np.ndarray = None,
+            y: tp.Union[np.ndarray, None] = None,
             z_st_thresh: float = const.Z_ST_THRESH,
             nuc_type: NucType = DEFAULT_NUC_TYPE,
             nt: int = const.NTDEFAULT,
             n_z_lookup: int = const.N_Z_LOOKUP_DEFAULT,
-            r_star: float = None,
+            r_star: float | None = None,
             lifetime_multiplier: float = 1,
             compute: bool = True,
-            label_latex: str = None,
-            label_unicode: str = None):
+            label_latex: str | None = None,
+            label_unicode: str | None = None):
         r"""
         :param bubble: the Bubble object
         :param y: $z = kR*$ array
@@ -152,23 +152,47 @@ class SSMSpectrum:
 
     # Plotting
 
-    def plot(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None, **kwargs) -> "FigAndAxes":
+    def plot(
+            self,
+            fig: plt.Figure | None = None,
+            ax: plt.Axes | None = None,
+            path: str | None = None,
+            **kwargs) -> "FigAndAxes":
         from pttools.analysis.plot_spectrum import plot_spectrum
         return plot_spectrum(self, fig, ax, path, **kwargs)
 
-    def plot_v(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None, **kwargs) -> "FigAndAxes":
+    def plot_v(
+            self,
+            fig: plt.Figure | None = None,
+            ax: plt.Axes | None = None,
+            path: str | None = None,
+            **kwargs) -> "FigAndAxes":
         from pttools.analysis.plot_spectrum import plot_spectrum_v
         return plot_spectrum_v(self, fig, ax, path, **kwargs)
 
-    def plot_spec_den_gw(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None, **kwargs) -> "FigAndAxes":
+    def plot_spec_den_gw(
+            self,
+            fig: plt.Figure | None = None,
+            ax: plt.Axes | None = None,
+            path: str | None = None,
+            **kwargs) -> "FigAndAxes":
         from pttools.analysis.plot_spectrum import plot_spectrum_spec_den_gw
         return plot_spectrum_spec_den_gw(self, fig, ax, path, **kwargs)
 
-    def plot_spec_den_v(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None, **kwargs) -> "FigAndAxes":
+    def plot_spec_den_v(
+            self,
+            fig: plt.Figure | None = None,
+            ax: plt.Axes | None = None,
+            path: str | None = None,
+            **kwargs) -> "FigAndAxes":
         from pttools.analysis.plot_spectrum import plot_spectrum_spec_den_v
         return plot_spectrum_spec_den_v(self, fig, ax, path, **kwargs)
 
-    def plot_multi(self, fig: plt.Figure = None, path: str = None, **kwargs) -> plt.Figure:
+    def plot_multi(
+            self,
+            fig: plt.Figure | None = None,
+            path: str | None = None,
+            **kwargs) -> plt.Figure:
         from pttools.analysis.plot_spectrum import plot_spectrum_multi
         return plot_spectrum_multi(self, fig, path, **kwargs)
 

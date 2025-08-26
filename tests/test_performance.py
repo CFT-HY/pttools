@@ -26,7 +26,7 @@ if speedup.NUMBA_DISABLE_JIT:
 
 class TestPerformance(unittest.TestCase):
     @staticmethod
-    def run_and_log(name: str, setup: str, command: str, number: int, num_threads: int, file: tp.TextIO = None):
+    def run_and_log(name: str, setup: str, command: str, number: int, num_threads: int, file: tp.TextIO | None = None):
         result = timeit.timeit(command, setup=setup, number=number)
         text = f"{name} performance with {num_threads} threads and {number} iterations: "\
                f"{result:.2f} s, {result/number:.3f} s/iteration"

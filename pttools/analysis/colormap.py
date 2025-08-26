@@ -37,7 +37,7 @@ def cmap_plusminus(
         max_level: float,
         diff_level: float,
         cmap_neg: tp.Union[Colormap, str] = CMAP_NEG_DEFAULT,
-        cmap_pos: tp.Union[Colormap, str] = CMAP_POS_DEFAULT) -> tp.Tuple[np.ndarray, tp.List[float]]:
+        cmap_pos: tp.Union[Colormap, str] = CMAP_POS_DEFAULT) -> tuple[np.ndarray, tp.List[float]]:
     """Colormap for Matplotlib heatmap plots with different color schemes for positive and negative values"""
     n_min = math.floor(min_level / diff_level)
     n_max = math.ceil(max_level / diff_level)

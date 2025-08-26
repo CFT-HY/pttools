@@ -33,13 +33,15 @@ class Bubble:
     """A solution of the hydrodynamic equations"""
     def __init__(
             self,
-            model: "Model", v_wall: float, alpha_n: float,
+            model: "Model",
+            v_wall: float,
+            alpha_n: float,
             solve: bool = True,
-            sol_type: SolutionType = None,
-            label_latex: str = None,
-            label_unicode: str = None,
-            wn_guess: float = None,
-            wm_guess: float = None,
+            sol_type: SolutionType | None = None,
+            label_latex: str | None = None,
+            label_unicode: str | None = None,
+            wn_guess: float | None = None,
+            wm_guess: float | None = None,
             theta_bar: bool = False,
             t_end: float = const.T_END_DEFAULT,
             n_xi: int = const.N_XI_DEFAULT,
@@ -178,7 +180,7 @@ class Bubble:
         """Add a note to the bubble"""
         self.notes.append(note)
 
-    def export(self, path: str = None) -> tp.Dict[str, any]:
+    def export(self, path: str | None = None) -> dict[str, any]:
         """Export the bubble data as JSON"""
         data = {
             "datetime": datetime.datetime.now(),
@@ -353,17 +355,27 @@ class Bubble:
     # Plotting
     # ---
 
-    def plot(self, fig: plt.Figure = None, path: str = None, **kwargs) -> plt.Figure:
+    def plot(self, fig: plt.Figure | None = None, path: str | None = None, **kwargs) -> plt.Figure:
         """Plot the velocity and enthalpy profiles of the bubble"""
         from pttools.analysis.plot_bubble import plot_bubble
         return plot_bubble(self, fig, path, **kwargs)
 
-    def plot_v(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None, **kwargs) -> "FigAndAxes":
+    def plot_v(
+            self,
+            fig: plt.Figure | None = None,
+            ax: plt.Axes | None = None,
+            path: str | None = None,
+            **kwargs) -> "FigAndAxes":
         """Plot the velocity profile of the bubble"""
         from pttools.analysis.plot_bubble import plot_bubble_v
         return plot_bubble_v(self, fig, ax, path, **kwargs)
 
-    def plot_w(self, fig: plt.Figure = None, ax: plt.Axes = None, path: str = None, **kwargs) -> "FigAndAxes":
+    def plot_w(
+            self,
+            fig: plt.Figure | None = None,
+            ax: plt.Axes | None = None,
+            path: str | None = None,
+            **kwargs) -> "FigAndAxes":
         """Plot the enthalpy profile of the bubble"""
         from pttools.analysis.plot_bubble import plot_bubble_w
         return plot_bubble_w(self, fig, ax, path, **kwargs)
@@ -574,16 +586,16 @@ class Bubble:
     # va = volume averaged
 
     @functools.cached_property
-    def va_entropy_density_diff(self) -> float:
-        if not self.solved:
-            raise NotYetSolvedError
-        return thermo.va_entropy_density_diff(self.model, self.w, self.xi, self.v_wall, self.phase)
-
-    @functools.cached_property
     def va_enthalpy_density(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.va_enthalpy_density(eq=self.thermal_energy_density)
+
+    @functools.cached_property
+    def va_entropy_density_diff(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.va_entropy_density_diff(self.model, self.w, self.xi, self.v_wall, self.phase)
 
     @functools.cached_property
     def va_entropy_density_diff_relative(self) -> float:

@@ -16,7 +16,7 @@ from pttools.models import BagModel, Model
 from pttools.omgw0 import Spectrum, SuppressionMethod
 
 
-def solvable(params: np.ndarray, model: Model, f_peak_target: float, omega_peak_target: float) -> tp.Tuple[float, float]:
+def solvable(params: np.ndarray, model: Model, f_peak_target: float, omega_peak_target: float) -> tuple[float, float]:
     v_wall, alpha_n, r_star = params
     bubble = Bubble(model, v_wall=v_wall, alpha_n=alpha_n)
     spectrum = Spectrum(bubble, r_star=r_star)

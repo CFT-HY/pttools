@@ -32,7 +32,12 @@ logger = logging.getLogger(__name__)
 # Todo: Fix the equations in the docstrings
 
 
-def entropy_density_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
+def entropy_density_diff(
+        model: "Model",
+        w: np.ndarray,
+        xi: np.ndarray,
+        v_wall: float,
+        phase: tp.Union[np.ndarray, None] = None) -> float:
     r"""Bubble volume averaged entropy density
     $$\frac{3}{4\pi v_w^3} {s}_\text{avg}$$
     """
@@ -75,7 +80,12 @@ def thermal_energy_fraction(eq_bva: th.FloatOrArr, eb: th.FloatOrArr) -> th.Floa
     return eq_bva / eb
 
 
-def trace_anomaly_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
+def trace_anomaly_diff(
+        model: "Model",
+        w: np.ndarray,
+        xi: np.ndarray,
+        v_wall: float,
+        phase: tp.Union[np.ndarray, None] = None) -> float:
     r"""Bubble volume averaged trace anomaly
     $$\epsilon = \frac{3}{4\pi {v}_w^3} \Delta {e}_\theta$$
     """
@@ -89,9 +99,11 @@ def ebar(model: "Model", wn: float) -> float:
 
 def kappa(
         model: "Model",
-        v: np.ndarray, w: np.ndarray, xi: np.ndarray,
+        v: np.ndarray,
+        w: np.ndarray,
+        xi: np.ndarray,
         v_wall: float,
-        delta_e_theta: float = None) -> float:
+        delta_e_theta: float | None = None) -> float:
     r"""Kinetic efficiency factor
     $$\kappa = \frac{e_K}{\lvert\Delta {e}_\theta\rvert}$$
     """
@@ -117,7 +129,7 @@ def omega(
         model: "Model",
         w: np.ndarray, xi: np.ndarray,
         v_wall: float,
-        delta_e_theta: float = None) -> float:
+        delta_e_theta: float | None = None) -> float:
     r"""Thermal efficiency factor
     $$\omega = \frac{\Delta {e}_Q}{\Delta {e}_\theta}$$
     """
@@ -126,7 +138,7 @@ def omega(
     return va_thermal_energy_density_diff(w, xi) / np.abs(delta_e_theta)
 
 
-def ubarf2(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, ek_bva: float = None) -> float:
+def ubarf2(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, ek_bva: float | None = None) -> float:
     r"""Enthalpy-weighted mean square fluid 4-velocity around the bubble
     $$\bar{U}_f^2 = \frac{3}{4\pi \bar{w} v_w^3} e_K$$
 
@@ -155,7 +167,12 @@ def va_enthalpy_density(eq: float) -> float:
     return 4/3 * eq
 
 
-def va_entropy_density_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
+def va_entropy_density_diff(
+        model: "Model",
+        w: np.ndarray,
+        xi: np.ndarray,
+        v_wall: float,
+        phase: tp.Union[np.ndarray, None] = None) -> float:
     r"""
     Volume-averaged entropy density
     $${s}_\text{avg} = \int d\xi \xi^2 (s(w,\phi) - s(w_n, \phi_s)$$
@@ -210,7 +227,12 @@ def va_thermal_energy_fraction(eq_va: float, eb: float):
     return eq_va / eb
 
 
-def va_trace_anomaly_diff(model: "Model", w: np.ndarray, xi: np.ndarray, v_wall: float, phase: np.ndarray = None) -> float:
+def va_trace_anomaly_diff(
+        model: "Model",
+        w: np.ndarray,
+        xi: np.ndarray,
+        v_wall: float,
+        phase: tp.Union[np.ndarray, None] = None) -> float:
     r"""Volume-averaged trace anomaly difference
     $$\Delta {e}_\theta = 4 \pi \int_0^{{\xi}_\text{max}} d\xi \xi^2 (\theta - {\theta}_n)$$
     """

@@ -163,7 +163,7 @@ class FluidReference:
         return self.data[i_alpha_n, i_v_wall]
 
 
-def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tp.Tuple[int, float, float, float, float, float, float]:
+def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tuple[int, float, float, float, float, float, float]:
     if alpha_n > alpha_n_max:
         return -1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 

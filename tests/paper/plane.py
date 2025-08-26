@@ -19,7 +19,7 @@ def xiv_plane(
         cs2_s=bubble.CS0_2,
         cs2_b=bubble.CS0_2,
         separate_phases: bool = True
-    ) -> tp.Union[tp.Tuple[np.ndarray, np.ndarray], np.ndarray]:
+    ) -> tp.Union[tuple[np.ndarray, np.ndarray], np.ndarray]:
     """
     Modified from :ssm_repo:`paper/python/fig_8r_xi-v_plane.py`
     """

@@ -22,7 +22,7 @@ class ChapmanJouguetPlot:
         self.ax.set_ylabel("$v_{CJ}$")
         self.fig.tight_layout()
 
-    def add(self, model: Model, analytical: bool = True, label: str = None, ls: str = "-"):
+    def add(self, model: Model, analytical: bool = True, label: str | None = None, ls: str = "-"):
         v_cj = np.empty_like(self.alpha_n)
         for i in range(self.alpha_n.size):
             v_cj[i] = v_chapman_jouguet(alpha_n=self.alpha_n[i], model=model, analytical=analytical)

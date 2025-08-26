@@ -38,13 +38,18 @@ class AnalyticModel(Model, abc.ABC):
 
     def __init__(
             self,
-            V_s: float = DEFAULT_V_S, V_b: float = None,
-            a_s: float = None, a_b: float = None,
-            g_s: float = None, g_b: float = None,
-            T_min: float = None, T_max: float = None, T_crit_guess: float = None,
-            name: str = None,
-            label_latex: str = None,
-            label_unicode: str = None,
+            V_s: float = DEFAULT_V_S,
+            V_b: float | None = None,
+            a_s: float | None = None,
+            a_b: float | None = None,
+            g_s: float | None = None,
+            g_b: float | None = None,
+            T_min: float | None = None,
+            T_max: float | None = None,
+            T_crit_guess: float | None = None,
+            name: str | None = None,
+            label_latex: str | None = None,
+            label_unicode: str | None = None,
             gen_critical: bool = True,
             gen_cs2: bool = True,
             gen_cs2_neg: bool = True,
@@ -118,8 +123,8 @@ class AnalyticModel(Model, abc.ABC):
             self,
             wp: th.FloatOrArr,
             wm: th.FloatOrArr,
-            vp_tilde: float = None,
-            sol_type: SolutionType = None,
+            vp_tilde: float | None = None,
+            sol_type: SolutionType | None = None,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
@@ -145,7 +150,7 @@ class AnalyticModel(Model, abc.ABC):
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
 
-    def export(self) -> tp.Dict[str, any]:
+    def export(self) -> dict[str, tp.Any]:
         return {
             **super().export(),
             "a_s": self.a_s,

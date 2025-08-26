@@ -84,7 +84,7 @@ logger = logging.getLogger(__name__)
 #         wn_guess: float = None,
 #         wm_guess: float = None,
 #         extra_output: bool = False,
-#         analytical: bool = True) -> tp.Union[float, tp.Tuple[float, float, float]]:
+#         analytical: bool = True) -> tp.Union[float, tuple[float, float, float]]:
 #     if analytical and model.DEFAULT_NAME == "bag":
 #         return v_chapman_jouguet_bag(alpha_plus=alpha_n)
 #
@@ -113,7 +113,7 @@ logger = logging.getLogger(__name__)
 #         wn_guess: float = 1,
 #         wm_guess: float = 1,
 #         extra_output: bool = False,
-#         analytical: bool = True) -> tp.Union[float, tp.Tuple[float, float, float]]:
+#         analytical: bool = True) -> tp.Union[float, tuple[float, float, float]]:
 #     if analytical and model.DEFAULT_NAME == "bag":
 #         return v_chapman_jouguet_bag(alpha_plus=alpha_n)
 #
@@ -128,7 +128,7 @@ logger = logging.getLogger(__name__)
 #         wn_guess: float = 1,
 #         wm_guess: float = 1,
 #         extra_output: bool = False,
-#         analytical: bool = True) -> tp.Union[float, tp.Tuple[float, float, float]]:
+#         analytical: bool = True) -> tp.Union[float, tuple[float, float, float]]:
 #     if analytical and model.DEFAULT_NAME == "bag":
 #         return v_chapman_jouguet_bag(alpha_plus=alpha_n)
 #
@@ -151,14 +151,14 @@ logger = logging.getLogger(__name__)
 def v_chapman_jouguet(
         model: "Model",
         alpha_n: th.FloatOrArr,
-        wn: th.FloatOrArr = None,
-        wn_guess: float = None,
-        wm_guess: float = None,
+        wn: th.FloatOrArr | None = None,
+        wn_guess: float | None = None,
+        wm_guess: float | None = None,
         extra_output: bool = False,
         analytical: bool = True,
         error_on_invalid: bool = True,
         nan_on_invalid: bool = True,
-        log_invalid: bool = True) -> tp.Union[float, tp.Tuple[float, float, float], np.ndarray]:
+        log_invalid: bool = True) -> tp.Union[float, tuple[float, float, float], np.ndarray]:
     """Chapman-Jouguet speed
 
     This is the minimum wall speed for detonations.
@@ -279,8 +279,12 @@ def v_chapman_jouguet_const_cs_reference(alpha_n: np.ndarray, model: "ConstCSMod
 
 
 def wm_chapman_jouguet(
-        model: "Model", wp: float, wm_guess: float = None,
-        error_on_invalid: bool = True, nan_on_invalid: bool = True, log_invalid: bool = True) -> float:
+        model: "Model",
+        wp: float,
+        wm_guess: float | None = None,
+        error_on_invalid: bool = True,
+        nan_on_invalid: bool = True,
+        log_invalid: bool = True) -> float:
     """Get ${w}_-$ for a transition that has $\tilde{v}_-=c_{{s},-}({w}_-)$
     such as a Chapman-Jouguet detonation or a Chapman-Jouguet deflagration.
     """
