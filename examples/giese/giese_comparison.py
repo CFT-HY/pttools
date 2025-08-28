@@ -11,7 +11,7 @@ import numpy as np
 from examples.utils import save
 from pttools.analysis.parallel import create_bubbles
 from pttools.bubble.bubble_quantities import get_kappa
-from pttools.bubble.giese import kappaNuMuModel
+from pttools.bubble.gksvdv.gksvdv21 import kappaNuMuModel
 from pttools.models import ConstCSModel
 from pttools.speedup import GITHUB_ACTIONS
 

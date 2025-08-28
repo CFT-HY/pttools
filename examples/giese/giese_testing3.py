@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 from pttools.bubble import Bubble
 from pttools.models import ConstCSModel
-from pttools.bubble.giese import kappaNuMuModel
+from pttools.bubble.gksvdv.gksvdv21 import kappaNuMuModel
 from pttools.bubble.props import find_phase
 from pttools.bubble.thermo import kappa, kinetic_energy_density, va_trace_anomaly_diff
 

@@ -8,12 +8,12 @@ import numpy as np
 from scipy.optimize import fsolve, root_scalar
 
 from pttools.speedup.solvers import fsolve_vary
+from pttools.bubble.gksvdv.gksvdv21 import kappaNuMuModel
 from . import alpha
 from . import boundary
 from .boundary import Phase, SolutionType
 from . import chapman_jouguet
 from . import const
-from .giese import kappaNuMuModel
 from . import integrate
 from . import fluid_bag
 from . import fluid_reference
