@@ -202,7 +202,7 @@ class AnalyticModel(Model, abc.ABC):
             safety_factor_alpha = Model.ALPHA_N_MIN_FIND_SAFETY_FACTOR_ALPHA):
         a_s, a_b, _, _ = cls.get_a_g(a_s, a_b, g_s, g_b, default_mult=default_mult)
         return cls.alpha_n_min_find_params(
-            alpha_n_min_target=alpha_n_min_target, a_s_default=a_s, a_b=a_b, V_s_default=V_s, V_b=V_b,
+            alpha_n_min_target=alpha_n_min_target, a_s_default=a_s, a_b=a_b, V_s_default=V_s_default, V_b=V_b,
             safety_factor_alpha=safety_factor_alpha
         )
 
