@@ -581,6 +581,7 @@ class Bubble:
 
     @functools.cached_property
     def s(self):
+        r"""Entropy density $s(\xi)$"""
         if not self.solved:
             raise NotYetSolvedError
         return self.model.s(self.w, self.phase)
@@ -660,3 +661,28 @@ class Bubble:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.wbar(self.w, self.xi, self.v_wall, self.wn)
+
+
+# Copy docstrings from the thermo module
+# TODO: remove :param: lines
+Bubble.entropy_density_diff.__doc__ = thermo.entropy_density_diff.__doc__
+Bubble.kinetic_energy_density.__doc__ = thermo.kinetic_energy_density.__doc__
+Bubble.kinetic_energy_fraction.__doc__ = thermo.kinetic_energy_fraction.__doc__
+Bubble.thermal_energy_density.__doc__ = thermo.thermal_energy_density.__doc__
+Bubble.thermal_energy_density_diff.__doc__ = thermo.thermal_energy_density_diff.__doc__
+Bubble.thermal_energy_fraction.__doc__ = thermo.thermal_energy_fraction.__doc__
+Bubble.ebar.__doc__ = thermo.ebar.__doc__
+Bubble.kappa.__doc__ = thermo.kappa.__doc__
+Bubble.mean_adiabatic_index.__doc__ = thermo.mean_adiabatic_index.__doc__
+Bubble.omega.__doc__ = thermo.omega.__doc__
+Bubble.ubarf2.__doc__ = thermo.ubarf2.__doc__
+
+Bubble.va_enthalpy_density.__doc__ = thermo.va_enthalpy_density.__doc__
+Bubble.va_entropy_density_diff.__doc__ = thermo.va_entropy_density_diff.__doc__
+Bubble.va_kinetic_energy_density.__doc__ = thermo.va_kinetic_energy_density.__doc__
+Bubble.va_kinetic_energy_fraction.__doc__ = thermo.va_kinetic_energy_fraction.__doc__
+Bubble.va_thermal_energy_density.__doc__ = thermo.va_thermal_energy_density.__doc__
+Bubble.va_thermal_energy_density_diff.__doc__ = thermo.va_thermal_energy_density_diff.__doc__
+Bubble.va_thermal_energy_fraction.__doc__ = thermo.va_thermal_energy_fraction.__doc__
+Bubble.va_trace_anomaly_diff.__doc__ = thermo.va_trace_anomaly_diff.__doc__
+Bubble.wbar.__doc__ = thermo.wbar.__doc__
