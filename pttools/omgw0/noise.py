@@ -13,7 +13,7 @@ def signal_to_noise_ratio(
         f_noise: tp.Union[np.ndarray[tuple[int], np.float64], None] = None,
         obs_time: float = const.LISA_OBS_TIME,
         f_min: float | None = None,
-        f_max: float | None = None) -> np.ndarray[tuple[int], np.float64]:
+        f_max: float | None = None) -> float:
     r"""Signal-to-noise ratio
     $$\rho = \sqrt{T_{\text{obs}} \int_{{f}_\text{min}}^{{f}_\text{max}} df \frac{
     h^2 \Omega_{\text{signal}}^2}{

@@ -59,6 +59,7 @@ def plot_bubble_v(
         0,
         min(1, 1.1 * max(line.get_ydata().max() for line in ax.lines))
     )
+    ax.set_title("Fluid velocity profile")
     return plot_bubble_common(bubble, fig, ax, path)
 
 

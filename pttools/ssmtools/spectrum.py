@@ -236,6 +236,14 @@ class SSMSpectrum:
         from pttools.analysis.plot_spectrum import plot_spectrum_multi
         return plot_spectrum_multi(self, fig, path, **kwargs)
 
+    def plot_multi_flat(
+            self,
+            fig: plt.Figure | None = None,
+            path: str | None = None,
+            **kwargs) -> plt.Figure:
+        from pttools.analysis.plot_spectrum import plot_spectrum_multi_flat
+        return plot_spectrum_multi_flat(self, fig, path, **kwargs)
+
 
 def pow_spec(z: th.FloatOrArr, spec_den: th.FloatOrArr) -> th.FloatOrArr:
     r"""

@@ -34,6 +34,7 @@ class Spectrum(ssm.SSMSpectrum):
             r_star: float | None = None,
             lifetime_multiplier: float = 1,
             compute: bool = True,
+            low_k: bool = True,
             label_latex: str | None = None,
             label_unicode: str | None = None,
             Tn: float | None = None,
@@ -63,6 +64,7 @@ class Spectrum(ssm.SSMSpectrum):
             r_star=r_star,
             lifetime_multiplier=lifetime_multiplier,
             compute=compute,
+            low_k=low_k,
             label_latex=label_latex,
             label_unicode=label_unicode
         )
