@@ -74,7 +74,7 @@ class Spectrum(ssm.SSMSpectrum):
         self.g_star_override = const.G_STAR_DEFAULT if g_star is None else g_star
         self.gs_star_override = self.g_star_override if gs_star is None else gs_star
 
-    def f(self, z: np.ndarray | None = None) -> th.FloatOrArr:
+    def f(self, z: tp.Union[np.ndarray, None] = None) -> th.FloatOrArr:
         if z is None:
             z = self.y
         return f(z=z, r_star=self.r_star, f_star0=self.f_star0)
@@ -164,6 +164,15 @@ class Spectrum(ssm.SSMSpectrum):
             suppression: sup_mod.Suppression = sup_mod.DEFAULT,
             method: sup_mod.SuppressionMethod = sup_mod.SuppressionMethod.DEFAULT) -> float:
         return suppression.suppression(v_wall=self.bubble.v_wall, alpha_n=self.bubble.alpha_n, method=method)
+
+    def tau_nl(self, H_n: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Timescale of nonlinearities $\tau_\text{nl}$
+        $$\tau_\text{nl} = \frac{R_*}{\bar{U}_f}$
+        :gw_pt_ssm:`\ ` p. 6
+        :lecture_notes:`\ ` p. 48
+        :giombi_2024_cs:`\ ` p. 2
+        """
+        return self.R_star(H_n) / self.bubble.ubarf
 
     @functools.cached_property
     def Tn(self) -> float:

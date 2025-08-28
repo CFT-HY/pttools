@@ -559,10 +559,25 @@ class Bubble:
         return thermo.mean_adiabatic_index(self.wbar, self.ebar)
 
     @functools.cached_property
+    def nu_gdh2024(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return self.model.nu_gdh2024(self.va_enthalpy_density)
+
+    @functools.cached_property
     def omega(self) -> float:
+        r"""Thermal efficiency factor
+        $$\omega = \frac{\Delta {e}_Q}{\Delta {e}_\theta}$$
+        """
         if not self.solved:
             raise NotYetSolvedError
         return thermo.omega(self.model, self.w, self.xi, self.v_wall, delta_e_theta=self.va_trace_anomaly_diff)
+
+    @functools.cached_property
+    def omega_barotropic(self) -> float:
+        if not self.solved:
+            raise NotYetSolvedError
+        return self.model.omega(self.va_enthalpy_density, Phase.BROKEN)
 
     @functools.cached_property
     def s(self):

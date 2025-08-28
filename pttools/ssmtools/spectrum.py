@@ -8,11 +8,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import pttools.type_hints as th
-from pttools import bubble
+from pttools.bubble import Bubble, Phase
 from pttools.ssmtools import const
 from pttools.ssmtools.nucleation import NucType, DEFAULT_NUC_TYPE
 from pttools.ssmtools.spec_den_gw import gen_lookup, spec_den_gw_scaled
 from pttools.ssmtools.spec_den_v import spec_den_v
+from pttools.ssmtools.low_k import power_spectrum_integration_low, power_spectrum_integration_int, pow_gw_junction
 
 if tp.TYPE_CHECKING:
     from pttools.analysis.utils import FigAndAxes
@@ -24,15 +25,17 @@ class SSMSpectrum:
     """Gravitational wave simulation object"""
     def __init__(
             self,
-            bubble: bubble.Bubble,
-            y: tp.Union[np.ndarray, None] = None,
+            bubble: Bubble,
+            y: tp.Union[np.ndarray[tuple[int], np.float64], None] = None,
             z_st_thresh: float = const.Z_ST_THRESH,
             nuc_type: NucType = DEFAULT_NUC_TYPE,
             nt: int = const.NTDEFAULT,
             n_z_lookup: int = const.N_Z_LOOKUP_DEFAULT,
             r_star: float | None = None,
+            # eta_star: float = 1,
             lifetime_multiplier: float = 1,
             compute: bool = True,
+            low_k: bool = True,
             label_latex: str | None = None,
             label_unicode: str | None = None):
         r"""
@@ -55,7 +58,10 @@ class SSMSpectrum:
         self.nt = nt
         self.n_z_lookup = n_z_lookup
         self.r_star = r_star
+        # Todo: Make this an adjustable input parameter
+        self.eta_star = 1
         self.lifetime_multiplier = lifetime_multiplier
+        self.low_k = low_k
         label_suffix_latex = "" if r_star is None else f", r_*={r_star}$"
         label_suffix_unicode = "" if r_star is None else f", r⁎={r_star}"
         self.label_latex = self.bubble.label_latex[:-1] + label_suffix_latex if label_latex is None else label_latex
@@ -102,7 +108,8 @@ class SSMSpectrum:
     def compute(self):
         if not self.bubble.solved:
             self.bubble.solve()
-        self.cs = np.sqrt(self.bubble.model.cs2(self.bubble.va_enthalpy_density, bubble.Phase.BROKEN))
+
+        self.cs = np.sqrt(self.bubble.model.cs2(self.bubble.va_enthalpy_density, Phase.BROKEN))
         self.spec_den_v, self.a2 = spec_den_v(
             bub=self.bubble, z=self.y, a=1.,
             nuc_type=self.nuc_type, nt=self.nt, z_st_thresh=self.z_st_thresh, cs=self.cs, return_a2=True
@@ -110,15 +117,58 @@ class SSMSpectrum:
         self.pow_v = pow_spec(self.y, spec_den=self.spec_den_v)
 
         self.z_lookup = gen_lookup(y=self.y, cs=self.cs, n_z_lookup=self.n_z_lookup, eps=1e-8)
-        sdv2 = spec_den_v(
+        self.spec_den_v_lookup = spec_den_v(
             bub=self.bubble, z=self.z_lookup, a=1.,
             nuc_type=self.nuc_type, nt=self.nt, z_st_thresh=self.z_st_thresh, cs=self.cs
         )
         self.spec_den_gw, y = spec_den_gw_scaled(
-            z_lookup=self.z_lookup, P_v_lookup=sdv2, y=self.y, cs=self.cs,
+            z_lookup=self.z_lookup, P_v_lookup=self.spec_den_v_lookup, y=self.y, cs=self.cs,
             source_lifetime_factor=self.source_lifetime_factor
         )
-        self.pow_gw = pow_spec(self.y, spec_den=self.spec_den_gw)
+        self.pow_gw_ssm = pow_spec(self.y, spec_den=self.spec_den_gw)
+        self.pow_gw = self.pow_gw_ssm
+
+        if self.r_star is not None:
+            # Lorenzo 2024
+            eta_end = self.eta_star + self.Htau_nl
+            tau_star = self.eta_star / self.Lf
+            tau_end = eta_end / self.Lf
+
+            spec_den_low = 4/3 * power_spectrum_integration_low(self.y, self.spec_den_v, z=self.y, cs=self.cs, nu=self.bubble.nu_gdh2024, tau_star=tau_star, tau_end=tau_end)
+            spec_den_int = 4/3 * power_spectrum_integration_int(self.z_lookup, self.spec_den_v_lookup, z=self.y, cs=self.cs, tau_star=tau_star)
+
+            factor = self.r_star * self.Htau_nl
+            self.pow_gw_low = pow_spec(self.y, spec_den_low)
+            self.pow_gw_int = pow_spec(self.y, spec_den_int)
+            self.pow_gw_expanded = pow_gw_junction(
+                z=self.y,
+                Pgw_low=self.pow_gw_low * factor,
+                Pgw_int=self.pow_gw_int * factor,
+                Pgw_high=self.pow_gw_ssm * factor,
+                cs=self.cs, nu=self.bubble.nu_gdh2024, tau_star=tau_star, tau_end=tau_end
+            ) / factor
+            if self.low_k:
+                self.pow_gw = self.pow_gw_expanded
+
+    @functools.cached_property
+    def Htau_nl(self):
+        """$H \tau_\text{nl}$"""
+        return self.r_star / self.bubble.ubarf
+
+    @functools.cached_property
+    def k_peak(self):
+        """Peak wavenumber $k_\text{peak}$
+
+        Lorenzo"""
+        return 2 * np.pi / self.r_star * 2 / (1 + 3 * self.bubble.omega_barotropic)
+
+    @functools.cached_property
+    def Lf(self):
+        """Length-scale of the fluid $L_f$
+
+        Lorenzo
+        """
+        return 2 * np.pi / self.k_peak
 
     def label_latex(self) -> str:
         return self.bubble.label_latex
@@ -135,20 +185,10 @@ class SSMSpectrum:
         $$\frac{\Delta \eta}{\eta_*} = \lambda \frac{2 r_*}{\sqrt{K}}$$
         :giombi_2024_cs:`\ `, eq. 3.13
         """
-        nu_gdh2024 = self.bubble.model.nu_gdh2024(self.bubble.va_enthalpy_density)
-        ret = 1 / (1 + 2*nu_gdh2024)
+        ret = 1 / (1 + 2*self.bubble.nu_gdh2024)
         if self.r_star is not None and not np.isinf(self.lifetime_multiplier):
-            ret *= 1 - (1 + self.lifetime_multiplier * 2 * self.r_star / np.sqrt(self.bubble.kinetic_energy_fraction))**(-1 - 2*nu_gdh2024)
+            ret *= 1 - (1 + self.lifetime_multiplier * 2 * self.r_star / np.sqrt(self.bubble.kinetic_energy_fraction))**(-1 - 2*self.bubble.nu_gdh2024)
         return ret
-
-    def nonlinearity_timescale(self, H_n: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Timescale of nonlinearities $\tau_\text{nl}$
-        $$\tau_\text{nl} = \frac{R_*}{\bar{U}_f}$
-        :gw_pt_ssm:`\ ` p. 6
-        :lecture_notes:`\ ` p. 48
-        :giombi_2024_cs:`\ ` p. 2
-        """
-        return self.R_star(H_n) / self.bubble.ubarf
 
     # Plotting
 

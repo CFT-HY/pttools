@@ -1,37 +1,36 @@
 import numpy as np
 from scipy.special import erf, erfc
 
-from pttools.ssmtools.spectrum_bag import spec_den_v_bag
 from pttools.ssmtools.low_k import integration, intersection
-from pttools.ssmtools.low_k.utils import parse_params_gw
 
 
-def Pgw_junction(z, Pgw_low, Pgw_int, Pgw_high, params_gw):
-    """
-    Create the junction of the gravitaional wave power spectrum between different regimes
+def pow_gw_junction(
+        z: np.ndarray[tuple[int], np.float64],
+        Pgw_low: np.ndarray[tuple[int], np.float64],
+        Pgw_int: np.ndarray[tuple[int], np.float64],
+        Pgw_high: np.ndarray[tuple[int], np.float64],
+        cs: float,
+        nu: float,
+        tau_star: float,
+        tau_end: float):
+    r"""
+    Create the junction of the gravitational wave power spectrum between different regimes
     starting from the profiles in each regime.
-    Parameters:
-        - z: array of gravitational wave momentum values (kR_*)
-        - Pgw_low: array of gravitational wave power spectrum values in the low-frequency regime
-        - Pgw_int: array of gravitational wave power spectrum values in the intermediate-frequency regime
-        - Pgw_high: array of gravitational wave power spectrum values in the high-frequency regime
 
-    Input parameters for gravitational wave power spectrum:
-        cs = params_gw[0]       scalar  (required) [0 < cs < 1/sqrt(3)]
-        tau_star = params_gw[1] scalar  (required) [tau_star = eta_star/Lf]
-        tau_end = params_gw[2]  scalar  (required) [tau_end = eta_end/Lf]
-    Returns:
-        - Pgw: array of gravitational wave power spectrum values at the given momentum
+    :param z: gravitational wave momentum values (kR_*)
+    :param Pgw_low: array of gravitational wave power spectrum values in the low-frequency regime
+    :param Pgw_int: array of gravitational wave power spectrum values in the intermediate-frequency regime
+    :param Pgw_high: array of gravitational wave power spectrum values in the high-frequency regime
+    :param cs: sound speed, $0 < c_s < \frac{1}{\sqrt{3}}$
+    :param tau_star: $\tau_* = \frac{\eta_*}{L_f}$
+    :param tau_end: $\tau_{end} = \frac{\eta_{end}}{L_f}$
+    :return: gravitational wave power spectrum values at the given momentum
     """
-
-    cs, tau_star, tau_end = parse_params_gw(params_gw)  # unpack parameters for gravitational wave power spectrum
-    nu = (1 - 3 * cs ** 2) / (1 + 3 * cs ** 2)
     # z_star = 4*cs*np.pi * (1+nu) / HLf
     difference = Pgw_high - Pgw_int
     index = np.where(difference > 0)[0]
     z_star = z[index[0]]  # if len(index) > 0 else z_star
-    z_cross = intersection.cross_z_junction(params_gw)
-    # print(z_star)
+    z_cross = intersection.cross_z_junction(cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end)
 
     term_low = 0.5 * erfc(2 * np.pi * tau_star * (z - z_cross)) * Pgw_low
     term_int = 0.5 * (1 + erf(2 * np.pi * tau_star * (z - z_cross))) * Pgw_int * 0.5 * erfc(
@@ -41,43 +40,33 @@ def Pgw_junction(z, Pgw_low, Pgw_int, Pgw_high, params_gw):
     return term_low + term_int + term_high
 
 
-def Pgw_approximation(z, params_v, params_gw):
-    """
-    Spectral density of gravitaional waves computed with the sound shell model plus analytic approximation
+def pow_gw_approximation(
+        z: np.ndarray[tuple[int], np.float64],
+        spec_den_v: np.ndarray[tuple[int], np.float64],
+        cs: float,
+        tau_star: float,
+        tau_end: float,
+        eps: float = 1e-8) -> np.ndarray[tuple[int], np.float64]:
+    r"""
+    Spectral density of gravitational waves computed with the sound shell model plus analytic approximation
     in the low-frequency and intermediate-frequency regimes.
     Multiply by z**3/2/np.pi**2 * HR* Ht  to get the final power spectrum.
 
-    Input parameters for velocity spectral density:
-        vw = params_v[0]       scalar  (required) [0 < vw < 1]
-        alpha = params_v[1]    scalar  (required) [0 < alpha_n < alpha_n_max(v_w)]
-        nuc_type = params_v[2] string  (optional) [exponential* | simultaneous]
-        nuc_args = params_v[3] tuple   (optional) default (1,)
-
-    Input parameters for gravitational wave power spectrum:
-        cs = params_gw[0]       scalar  (required) [0 < cs < 1/sqrt(3)]
-        tau_star = params_gw[1] scalar  (required) [tau_star = eta_star/Lf]
-        tau_end = params_gw[2]  scalar  (required) [tau_end = eta_end/Lf]
-
-    Returns:
-        - Pgw: array of gravitational wave power spectrum values at the given momentum z = kR_*
+    :param z: gravitational wave momentum values (kR_*)
+    :param spec_den_v: spectral density of the velocity field at the given momenta
+    :param cs: sound speed, $0 < c_s < \frac{1}{\sqrt{3}}$
+    :param tau_star: $\tau_* = \frac{\eta_*}{L_f}$
+    :param tau_end: $\tau_{end} = \frac{\eta_{end}}{L_f}$
+    :param eps: $\epsilon$, a small correction the integration x-range
+    :return: gravitational wave power spectrum values at the given momentum z = kR_*
     """
+    # Todo: The eps of 1e-8 seems to be needed for max(z) <= 100. Why?
+    # nx = len(z) can be too few for velocity PS convolutions
+    xmax = z.max() * (0.5 * (1. + cs) / cs) + eps
+    xmin = z.min() * (0.5 * (1. - cs) / cs) - eps
+    x: np.ndarray[tuple[int], np.float64] = np.logspace(np.log10(xmin), np.log10(xmax), z.size)  # x = pR_*
 
-    cs, tau_star, tau_end = parse_params_gw(params_gw)  # unpack parameters for gravitational wave power spectrum
-
-    eps = 1e-8  # Seems to be needed for max(z) <= 100. Why?
-    #    nx = len(z) - this can be too few for velocity PS convolutions
-    npt = len(z)  # number of points for the logspace in the power spectrum integration
-    xmax = max(z) * (0.5 * (1. + cs) / cs) + eps
-    xmin = min(z) * (0.5 * (1. - cs) / cs) - eps
-
-    x = np.logspace(np.log10(xmin), np.log10(xmax), npt)  # x = pR_*
-
-    velocity_spectral_density = spec_den_v_bag(x, params_v)  # Pv from sound shell model
-    Pgw_high = 4 / 3 * integration.power_spectrum_integration_high(x, velocity_spectral_density, z, cs)
-    Pgw_low = 4 / 3 * integration.power_spectrum_integration_low(x, velocity_spectral_density, z, params_gw)
-    Pgw_int = 4 / 3 * integration.power_spectrum_integration_int(x, velocity_spectral_density, z, params_gw)
-    # spectal_densities = np.array([Pgw_low, Pgw_int, Pgw_peak], dtype = object)
-
-    Pgw_approx = Pgw_junction(z, Pgw_low, Pgw_int, Pgw_high, params_gw)
-
-    return Pgw_approx
+    Pgw_high = 4/3 * integration.power_spectrum_integration_high(x, spec_den_v, z, cs)
+    Pgw_low = 4/3 * integration.power_spectrum_integration_low(x, spec_den_v, z, cs=cs, tau_star=tau_star, tau_end=tau_end)
+    Pgw_int = 4/3 * integration.power_spectrum_integration_int(x, spec_den_v, z, cs=cs, tau_star=tau_star)
+    return pow_gw_junction(z, Pgw_low, Pgw_int, Pgw_high, cs=cs, tau_star=tau_star, tau_end=tau_end)
