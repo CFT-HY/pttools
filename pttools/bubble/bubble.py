@@ -580,6 +580,13 @@ class Bubble:
         return self.model.omega(self.va_enthalpy_density, Phase.BROKEN)
 
     @functools.cached_property
+    def p(self):
+        r"""Pressure $p(\xi)$"""
+        if not self.solved:
+            raise NotYetSolvedError
+        return self.model.p(self.w, self.phase)
+
+    @functools.cached_property
     def s(self):
         r"""Entropy density $s(\xi)$"""
         if not self.solved:
