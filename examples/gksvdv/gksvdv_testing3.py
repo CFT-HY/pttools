@@ -1,8 +1,8 @@
 """
-Giese testing 3
-===============
+Giese et al. testing 3
+======================
 
-Testing to find the properties of a single bubble with PTtools and Giese solvers
+Testing to find the properties of a single bubble with PTtools and Giese et al. solvers
 """
 
 import matplotlib.pyplot as plt

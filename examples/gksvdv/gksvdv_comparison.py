@@ -1,6 +1,6 @@
 r"""
-Comparison of Giese and PTtools solvers
-=======================================
+Comparison of Giese et al. and PTtools solvers
+==============================================
 """
 
 import logging

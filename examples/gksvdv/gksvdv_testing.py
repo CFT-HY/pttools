@@ -1,8 +1,8 @@
 """
-Giese testing
-=============
+Giese et al. testing
+====================
 
-Test comparison with Giese code and data
+Test comparison with Giese et al. code and data
 """
 
 import matplotlib.pyplot as plt

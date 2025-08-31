@@ -1,6 +1,6 @@
 r"""
-Giese bubble
-============
+Giese et al. bubble
+===================
 
 Plot a single bubble using parameters from the code of :giese_2021:`\ `
 """

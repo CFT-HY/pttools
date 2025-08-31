@@ -1,11 +1,9 @@
 """
-Giese testing 2
-===============
+Giese et al. testing 2
+======================
 
-Compare Giese fluid profiles with PTtools
+Compare Giese et al. fluid profiles with PTtools
 """
-
-import typing as tp
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,8 +11,7 @@ import numpy as np
 from examples import utils
 from pttools.analysis.utils import A4_PAPER_SIZE
 from pttools.bubble import Bubble, Phase, lorentz, kappaNuMuModel, v_chapman_jouguet_const_cs
-from pttools.models import Model, BagModel, ConstCSModel
-
+from pttools.models import ConstCSModel
 
 
 def main():

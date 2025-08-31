@@ -92,7 +92,7 @@ class EntropyConservationPlot(VwAlphaPlot):
 
 
 class GieseApproximationPlot(VwAlphaPlot):
-    """Plot the Giese approximation vs. simulated value for $\frac{\tilde{v}_+}{\tilde{v}_-}$"""
+    """Plot the Giese et al. approximation vs. simulated value for $\frac{\tilde{v}_+}{\tilde{v}_-}$"""
     def __init__(
             self,
             grid: BubbleGridVWAlpha,
