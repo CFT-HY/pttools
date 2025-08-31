@@ -13,5 +13,6 @@ Here is a non-comprehensive list of other simulation software that may be of int
 - `DRalgo <https://github.com/DR-algo/DRalgo>`_
 - `FindBounce <https://github.com/vguada/FindBounce>`_
 - `HILA <https://cft-hy.github.io/HILA.home/>`_
+- `Pencil Code <https://pencil-code.org/>`_
 - `PTPlot <https://www.ptplot.org>`_
 - `WallGo <https://wallgo.readthedocs.io>`_
