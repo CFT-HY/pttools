@@ -1,3 +1,5 @@
+"""Utilities for calculating the noise of gravitational wave detectors, especially LISA"""
+
 import typing as tp
 
 import numpy as np
@@ -63,6 +65,7 @@ def ft(L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatOrArr:
     """
     return const.c / (2*np.pi*L)
 
+#: Default LISA transfer frequency $f_t$
 FT_LISA: float = ft()
 #: $f_2$ from :lisa_sci_req:`\ ` eq. 3
 F2_LISA: float = 4/3 * FT_LISA

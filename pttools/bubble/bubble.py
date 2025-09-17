@@ -51,6 +51,26 @@ class Bubble:
             log_success: bool = False,
             allow_invalid: bool = False,
             log_invalid: bool = True):
+        r"""
+        :param model: The equation of state object
+        :param v_wall: Wall velocity $v_\text{wall}$
+        :param alpha_n: Transition strength $\alpha_n$
+        :param solve: Whether to solve the bubble immediately
+        :param sol_type: Solution type (deflagration, hybrid, detonation). If None, it will be determined automatically.
+        :param label_latex: LaTeX label for plots
+        :param label_unicode: Unicode label for plots
+        :param wn_guess: Initial guess for the enthalpy at the nucleation temperature $w_n$
+        :param wm_guess: Initial guess for the enthalpy behind the wall $w_-$
+        :param theta_bar: Whether the provided alpha_n is actually alpha_theta_bar_n
+        :param t_end: The maximum value for the fluid shell ODE integration parameter
+        :param n_xi: Number of points in the fluid velocity profile
+        :param thin_shell_t_points_min: Limit of points for a shell to be so thin that it should be re-computed with more points
+        :param use_bag_solver: Whether to use the bag model specific fluid shell solver
+        :param use_giese_solver: Whether to use the Giese et al. solver for the constant sound speed model
+        :param log_success: Whether to log successful solutions
+        :param allow_invalid: Whether to allow invalid solutions
+        :param log_invalid: Whether to log invalid solutions
+        """
         if use_bag_solver and use_giese_solver:
             raise ValueError("Both bag and Giese solvers cannot be used at the same time.")
 

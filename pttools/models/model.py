@@ -702,14 +702,18 @@ class Model(BaseModel, abc.ABC):
         return self.ge_temp(temp, phase)
 
     def nu_gdh2024(self, w: th.FloatOrArr, phase: th.FloatOrArr = Phase.BROKEN) -> th.FloatOrArr:
-        r"""$$\nu = \frac{1 - 3\omega}{1 + 3\omega}$$
+        r"""$$\nu = \frac{1 - 3\omega}{1 + 3\omega}$$,
+        where $\omega$ is the barotropic equation of state parameter.
         :giombi_2024_cs:`\ ` eq. 2.11
         """
         omega = self.omega(w, phase)
         return (1 - 3*omega)/(1 + 3*omega)
 
     def omega(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Barotropic equation of state parameter $\omega$"""
+        r"""Barotropic equation of state parameter $\omega$
+        $$\omega(T,\phi) = \frac{p(T,\phi)}{e(T,\phi)}$$
+        :giombi_2024_cs:`\ ` p. 3
+        """
         temp = self.temp(w, phase)
         return self.p_temp(temp, phase) / self.e_temp(temp, phase)
 
@@ -722,9 +726,8 @@ class Model(BaseModel, abc.ABC):
         return self.p_temp(self.temp(w, phase), phase)
 
     def Psi_n(self, wn: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Inverse enthalpy ratio at nucleation temperature $\psi_n$, :ai_2023:`\ `, p. 9
-
-        With validation check
+        r"""Inverse enthalpy ratio at nucleation temperature $\psi_n$,
+        :ai_2023:`\ ` p. 9
         """
         ret = self.inverse_enthalpy_ratio(self.temp(wn, Phase.SYMMETRIC))
         # The LTE violation merely means that entropy is being generated, which is totally normal.
@@ -741,7 +744,7 @@ class Model(BaseModel, abc.ABC):
         return ret
 
     def s(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Entropy density $s(w,\phi)$. Calls the temperature-based function.
+        r"""Entropy density $s(w,\phi) = \frac{dp}{dT} = \frac{w}{T}$
 
         :param w: enthalpy $w$
         :param phase: phase $\phi$
@@ -858,7 +861,7 @@ class Model(BaseModel, abc.ABC):
         a = vp_tilde*vm_tilde / cs2b - 1
         return (a + 3*alpha_tbp) / (a + 3*vp_tilde*vm_tilde*alpha_tbp)
 
-    def wn_error_msg(self, alpha_n: th.FloatOrArr, param: th.FloatOrArr, param_name: str, info: str = None) -> str:
+    def wn_error_msg(self, alpha_n: th.FloatOrArr, param: th.FloatOrArr, param_name: str, info: str | None = None) -> str:
         if np.isscalar(alpha_n):
             info2 = f"Got: alpha_n={alpha_n}, {param_name}={param}."
         else:

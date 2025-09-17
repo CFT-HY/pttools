@@ -6,7 +6,7 @@ from pttools.ssmtools.low_k.utils import Iv, U
 
 
 def cross_z(HLf: float, cs: float, nu: float, tau_star: float, tau_end: float) -> float:
-    """
+    r"""
     Calculate the cross-over point z_cross where the low and high frequency approximations are equal.
 
     :param HLf: $H L_f = r_*$
@@ -23,7 +23,7 @@ def cross_z(HLf: float, cs: float, nu: float, tau_star: float, tau_end: float) -
 
 
 def cross_z_junction(cs: float, nu: float, tau_star: float, tau_end: float) -> float:
-    """
+    r"""
     Calculate the cross-over point z_cross where the low and high frequency approximations are equal.
 
     :param cs: sound speed, $0 < c_s < \frac{1}{\sqrt{3}}$
