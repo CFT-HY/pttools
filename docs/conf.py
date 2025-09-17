@@ -245,7 +245,7 @@ sphinx_gallery_conf = {
         "../examples/props",
         # "../examples/entropy",
         "../examples/solvers",
-        "../examples/giese",
+        "../examples/gksvdv",
         # "../examples/reverse",
         # "*"
     ])

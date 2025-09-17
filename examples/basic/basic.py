@@ -26,7 +26,7 @@ def main():
     save(bubble_fig, "bag_bubble.png")
 
     # Compute the gravitational wave spectrum for the bubble.
-    spectrum = Spectrum(bubble, nuc_type=NucType.EXPONENTIAL)
+    spectrum = Spectrum(bubble, nuc_type=NucType.EXPONENTIAL, r_star=0.1)
     spectrum_fig = spectrum.plot_multi()
     save(spectrum_fig, "bag_spectrum.png")
 
