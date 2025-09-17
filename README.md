@@ -1,5 +1,6 @@
 # PTtools
 [![DOI](https://zenodo.org/badge/373413324.svg)](https://zenodo.org/badge/latestdoi/373413324)
+[![GitHub](https://img.shields.io/badge/GitHub-CFT--HY/pttools-blue)](https://github.com/CFT-HY/pttools)
 [![ReadTheDocs](https://readthedocs.org/projects/pttools/badge/)](https://pttools.readthedocs.io/)
 [![CI](https://github.com/CFT-HY/pttools/actions/workflows/main.yml/badge.svg)](https://github.com/CFT-HY/pttools/actions/workflows/main.yml)
 [![Windows](https://github.com/CFT-HY/pttools/actions/workflows/windows.yml/badge.svg)](https://github.com/CFT-HY/pttools/actions/workflows/windows.yml)
@@ -10,7 +11,7 @@ PTtools is a Python library for calculating hydrodynamical quantities
 around expanding bubbles of the new phase in an early universe phase transition,
 and the resulting gravitational wave power spectrum in the Sound Shell Model.
 
-![Types of solutions](https://raw.githubusercontent.com/AgenttiX/msc-thesis2/refs/heads/main/msc2_python/fig/relativistic_combustion.png)
+![Types of solutions](https://raw.githubusercontent.com/AgenttiX/msc-thesis2/refs/heads/main/fig/relativistic_combustion.svg)
 
 ### Installation
 PTtools is [available on PyPI](https://pypi.org/project/pttools-gw/) and can be installed with pip:
