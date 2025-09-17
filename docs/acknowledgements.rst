@@ -2,6 +2,7 @@ Acknowledgements
 ================
 
 Main contributors (in order of contribution):
+
 - `Mark Hindmarsh <https://orcid.org/0000-0002-9307-437X>`_
   - Creator of the Sound Shell Model, author of the first versions of PTtools (2015 →)
 - `Chloe Hopling <https://orcid.org/0000-0002-7955-4465>`_
