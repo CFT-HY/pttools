@@ -9,6 +9,8 @@ The Sound Shell Model is discussed in further detail in the article
 from .calculators import *
 from .const import *
 from .nucleation import *
+from .sin_transform import *
+from .sin_transform_approx import *
 from .spec_den_gw import *
 from .spec_den_v import *
 from .spectrum import *
