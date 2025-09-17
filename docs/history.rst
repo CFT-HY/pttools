@@ -86,13 +86,3 @@ SSMtools
   with 2-component params list, i.e. params = [v_wall, alpha_n] (parse_params)
   exponential nucleation with parameters (1,) assumed.
 - reduced NQDEFAULT from 2000 to 320, to reduce high-k numerical error when using numerical sin transform
-
-Planned changes
-"""""""""""""""
-Bubble
-
-- Include bubble nucleation calculations of beta (from $V(T,\phi)$)
-
-SSMtools
-
-- Check default nucleation type for nu function.
