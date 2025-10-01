@@ -9,7 +9,9 @@ from scipy.optimize import fsolve
 import pttools.type_hints as th
 from pttools import bubble
 from pttools import speedup
-from pttools.ssmtools import calculators, const
+from pttools.ssmtools import const
+from pttools.ssmtools.calculators import resample_uniform_xi
+from pttools.ssmtools.sin_transform import sin_transform
 from pttools.ssmtools.ssm import DE_Method, Method
 
 logger = logging.getLogger(__name__)
@@ -47,8 +49,8 @@ def a2_e_conserving_bag(
 
     #    f = np.zeros_like(z)
     #    for j in range(f.size):
-    #        f[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi, v_ip, z_st_thresh)
-    f = (4. * np.pi / z) * calculators.sin_transform(z, xi, v_ip, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
+    #        f[j] = (4.*np.pi/z[j]) * sin_transform(z[j], xi, v_ip, z_st_thresh)
+    f = (4. * np.pi / z) * sin_transform(z, xi, v_ip, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
 
     v_ft = speedup.gradient(f) / speedup.gradient(z)
 
@@ -59,14 +61,14 @@ def a2_e_conserving_bag(
         lam_orig = bubble.de_from_w_bag(w_ip, xi, v_wall, alpha_n) / w_ip[-1]
 
     lam_orig += w_ip * v_ip * v_ip / w_ip[-1]  # This doesn't make much difference at small alpha
-    xi_re, lam_re = calculators.resample_uniform_xi(xi, lam_orig, nxi)
+    xi_re, lam_re = resample_uniform_xi(xi, lam_orig, nxi)
 
     #    lam_re = np.interp(xi_re,xi,lam_orig)
     #    lam_ft = np.zeros_like(z)
     #    for j in range(lam_ft.size):
-    #        lam_ft[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi_re, xi_re*lam_re,
+    #        lam_ft[j] = (4.*np.pi/z[j]) * sin_transform(z[j], xi_re, xi_re*lam_re,
     #              z_st_thresh=max(z)) # Need to fix problem with ST of lam for detonations
-    lam_ft = (4. * np.pi / z) * calculators.sin_transform(
+    lam_ft = (4. * np.pi / z) * sin_transform(
         z, xi_re, xi_re * lam_re, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
 
     A2 = 0.25 * (v_ft ** 2 + (const.CS0 * lam_ft) ** 2)
@@ -107,8 +109,8 @@ def a2_e_conserving_bag_file(
     e_xi_lt1 = np.interp(xi_lt1, xi_all, e_all)
     #    f = np.zeros_like(z)
     #    for j in range(f.size):
-    #        f[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi_lt1, v_xi_lt1)
-    f = (4. * np.pi / z) * calculators.sin_transform(z, xi_lt1, v_xi_lt1, v_wall=None, v_sh=None)
+    #        f[j] = (4.*np.pi/z[j]) * sin_transform(z[j], xi_lt1, v_xi_lt1)
+    f = (4. * np.pi / z) * sin_transform(z, xi_lt1, v_xi_lt1, v_wall=None, v_sh=None)
 
     v_ft = np.gradient(f) / np.gradient(z)
     e_n = e_xi_lt1[-1]
@@ -123,10 +125,10 @@ def a2_e_conserving_bag_file(
 
     #    lam_ft = np.zeros_like(z)
     #    for j in range(lam_ft.size):
-    #        lam_ft[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi_lt1, xi_lt1*lam,
+    #        lam_ft[j] = (4.*np.pi/z[j]) * sin_transform(z[j], xi_lt1, xi_lt1*lam,
     #              z_st_thresh=max(z)) # Need to fix problem with ST of lam for detonations
     lam_ft = (4. * np.pi / z) * \
-        calculators.sin_transform(z, xi_lt1, xi_lt1 * lam, z_st_thresh, v_wall=None, v_sh=None)
+        sin_transform(z, xi_lt1, xi_lt1 * lam, z_st_thresh, v_wall=None, v_sh=None)
 
     return 0.25 * (v_ft ** 2 + (const.CS0 * lam_ft) ** 2)
 
@@ -205,8 +207,8 @@ def f_file_bag(
     xi_lt1, v_xi_lt1 = calculators.resample_uniform_xi(xi_all, v_all, npt[0])
     #    f = np.zeros_like(z_arr)
     #    for n, z in enumerate(z_arr):
-    #        f[n] = (4*np.pi/z)*calculators.sin_transform(z, xi_lt1, v_xi_lt1, z_st_thresh)
-    f = (4 * np.pi / z_arr) * calculators.sin_transform(z_arr, xi_lt1, v_xi_lt1, z_st_thresh, v_wall=None, v_sh=None)
+    #        f[n] = (4*np.pi/z)*sin_transform(z, xi_lt1, v_xi_lt1, z_st_thresh)
+    f = (4 * np.pi / z_arr) * sin_transform(z_arr, xi_lt1, v_xi_lt1, z_st_thresh, v_wall=None, v_sh=None)
 
     return f
 
@@ -233,8 +235,8 @@ def f_ssm_func_bag(
 
     # f_ssm = np.zeros_like(z)
     # for j in range(f_ssm.size):
-    #    f_ssm[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi, v_ip)
-    return (4.*np.pi/z) * calculators.sin_transform(z, xi, v_ip, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
+    #    f_ssm[j] = (4.*np.pi/z[j]) * sin_transform(z[j], xi, v_ip)
+    return (4.*np.pi/z) * sin_transform(z, xi, v_ip, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
 
 
 def g_file_bag(z: np.ndarray, t, filename: str, skip: int = 0) -> np.ndarray:
@@ -280,11 +282,11 @@ def lam_ssm_func_bag(
         lam_orig = bubble.de_from_w_new_bag(v_ip, w_ip, xi, v_wall, alpha_n) / w_ip[-1]
     else:
         lam_orig = bubble.de_from_w_bag(w_ip, xi, v_wall, alpha_n) / w_ip[-1]
-    xi_re, lam_re = calculators.resample_uniform_xi(xi, lam_orig, nxi)
+    xi_re, lam_re = resample_uniform_xi(xi, lam_orig, nxi)
 
     # lam_ft = np.zeros_like(z)
     # for j in range(lam_ft.size):
-    #    lam_ft[j] = (4.*np.pi/z[j]) * calculators.sin_transform(z[j], xi_re, xi_re*lam_re,
+    #    lam_ft[j] = (4.*np.pi/z[j]) * sin_transform(z[j], xi_re, xi_re*lam_re,
     #          z_st_thresh=max(z)) # Need to fix problem with ST of lam for detonations
 
-    return (4.*np.pi/z) * calculators.sin_transform(z, xi_re, xi_re*lam_re, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
+    return (4.*np.pi/z) * sin_transform(z, xi_re, xi_re*lam_re, z_st_thresh, v_wall=v_wall, v_sh=v_sh)

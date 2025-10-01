@@ -10,6 +10,7 @@ import sympy as sp
 import pttools.type_hints as th
 from . import const
 from . import calculators
+from .sin_transform import sin_transform as _sin_transform
 
 
 # @profile
@@ -47,7 +48,7 @@ def sin_transform(
     sin_transform_debug(z, xi, f, z_st_thresh)
 
     # start_time = time.perf_counter()
-    integral = calculators.sin_transform(z, xi, f, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
+    integral = _sin_transform(z, xi, f, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
     # end_time = time.perf_counter()
     # print("Numeric:", end_time - start_time)
     return integral

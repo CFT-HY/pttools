@@ -2,13 +2,14 @@
 
 import enum
 import logging
-import typing as tp
 
 import numpy as np
 
 from pttools.bubble.bubble import Bubble
 from pttools import speedup
-from pttools.ssmtools import calculators, const
+from pttools.ssmtools import const
+from pttools.ssmtools.calculators import resample_uniform_xi
+from pttools.ssmtools.sin_transform import sin_transform
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ def a2_e_conserving(
     v_ip, w_ip, xi = bub.v, bub.w, bub.xi
 
     # :gw_pt_ssm:`\ ` eq. 4.5
-    f = (4. * np.pi / z) * calculators.sin_transform(z, xi, v_ip, z_st_thresh, v_wall=bub.v_wall, v_sh=bub.v_sh)
+    f = (4. * np.pi / z) * sin_transform(z, xi, v_ip, z_st_thresh, v_wall=bub.v_wall, v_sh=bub.v_sh)
 
     v_ft = speedup.gradient(f) / speedup.gradient(z)
 
@@ -55,7 +56,7 @@ def a2_e_conserving(
 
     lam_orig += w_ip * v_ip * v_ip / w_ip[-1]  # This doesn't make much difference at small alpha
 
-    xi_re, lam_re = calculators.resample_uniform_xi(xi, lam_orig, nxi)
+    xi_re, lam_re = resample_uniform_xi(xi, lam_orig, nxi)
 
     # lam_re = np.interp(xi_re,xi,lam_orig)
     # lam_ft = np.zeros_like(z)
@@ -65,7 +66,7 @@ def a2_e_conserving(
     #         calculators.sin_transform(z[j], xi_re, xi_re*lam_re, z_st_thresh=max(z))
 
     # :gw_pt_ssm:`\ ` eq. 4.8
-    lam_ft = (4. * np.pi / z) * calculators.sin_transform(
+    lam_ft = (4. * np.pi / z) * sin_transform(
         z, xi_re, xi_re * lam_re, z_st_thresh, v_wall=bub.v_wall, v_sh=bub.v_sh)
 
     # :gw_pt_ssm:`\ ` eq. 4.11

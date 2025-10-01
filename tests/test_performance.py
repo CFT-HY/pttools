@@ -76,14 +76,14 @@ class TestPerformance(unittest.TestCase):
     def test_performance_sin_transform(cls):
         setup = textwrap.dedent("""
         import numpy as np
-        import pttools.ssmtools.calculators as calc
+        from pttools.ssmtools.sin_transform import sin_transform
 
         z = np.logspace(0, 2, 10000)
         xi = np.linspace(0, 1, 10000)
         # This is an arbitrary function
         f = np.amax([np.zeros_like(xi), np.cos(xi)], axis=0)
         """)
-        command = "transformed = calc.sin_transform(z, xi, f)"
+        command = "transformed = sin_transform(z, xi, f)"
         cls.run_with_different_threads("sin_transform", setup, command, 10)
 
 
