@@ -1,4 +1,4 @@
-"""Tests for the Spectrum class"""
+"""Tests for the SSMSpectrum class"""
 
 import unittest
 
@@ -7,8 +7,8 @@ from pttools.models import ConstCSModel
 from pttools.ssmtools import SSMSpectrum
 
 
-class SpectrumTest(unittest.TestCase):
-    """Tests for the Spectrum class"""
+class SSMSpectrumTest(unittest.TestCase):
+    """Tests for the SSMSpectrum class"""
     @staticmethod
     def test_spectrum():
         model = ConstCSModel(css2=1/3-0.01, csb2=1/3-0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)

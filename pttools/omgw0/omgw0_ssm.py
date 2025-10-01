@@ -146,6 +146,11 @@ class Spectrum(ssm.SSMSpectrum):
         i_max = np.argmax(omgw0)
         return self.f()[i_max], omgw0[i_max]
 
+    def omgw0_total(self, omgw0: np.ndarray = None) -> float:
+        if omgw0 is None:
+            omgw0 = self.omgw0()
+        return ssm.trapezoid_loglog(x=self.f(), y=omgw0)
+
     def R_star(self, H_n: th.FloatOrArr | None = None) -> th.FloatOrArr:
         r"""Mean bubble separation $R_*$
         $$R_* = \frac{r_*}{H_n}$$
