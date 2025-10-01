@@ -82,15 +82,23 @@ class SSMSpectrum:
         self.a2: tp.Optional[np.ndarray] = None
         #: $c_s({T}_\text{gw})$
         self.cs: tp.Optional[float] = None
-        # Todo: fill the missing descriptions
-        #: $P_v(q)$
+        #: $P_v(y)$
         self.spec_den_v: tp.Optional[np.ndarray] = None
-        #: ???
+        #: $P_v(z_\text{lookup})$
+        self.spec_den_v_lookup: tp.Optional[np.ndarray] = None
+        #: Spectral density of scaled gravitational wave power
         self.spec_den_gw: tp.Optional[np.ndarray] = None
         #: $\mathcal{P}_{\tilde{v}}(q)$
         self.pow_v: tp.Optional[np.ndarray] = None
         #: $\mathcal{P}_{\text{gw}}(k)$
         self.pow_gw: tp.Optional[np.ndarray] = None
+        #: $\mathcal{P}_{\text{gw}}(k)$ for intermediate frequencies
+        self.pow_gw_int: tp.Optional[np.ndarray] = None
+        #: $\mathcal{P}_{\text{gw}}(k)$ for low frequencies
+        self.pow_gw_low: tp.Optional[np.ndarray] = None
+        #: $\mathcal{P}_{\text{gw}}(k)$ using the Sound Shell Model (SSM) without the low-k approximation
+        self.pow_gw_ssm: tp.Optional[np.ndarray] = None
+        #: $z_\text{lookup}$
         self.z_lookup: tp.Optional[np.ndarray] = None
 
         if compute:
@@ -181,9 +189,11 @@ class SSMSpectrum:
         return 2 * np.pi / self.k_peak
 
     def label_latex(self) -> str:
+        """LaTeX label for spectrum plots"""
         return self.bubble.label_latex
 
     def label_unicode(self) -> str:
+        """Unicode label for spectrum plots"""
         return self.bubble.label_unicode
 
     @functools.cached_property
