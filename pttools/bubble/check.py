@@ -74,8 +74,7 @@ def _check_wall_speed_numba(v_wall: tp.Union[th.FloatOrArr, tp.List[float]]):
     raise TypeError(f"v_wall must be float, list or array. Got: {type(v_wall)}")
 
 
-def find_most_negative_vals(vals: th.FloatOrArr, *args) \
-        -> tp.List[tp.Optional[float]]:
+def find_most_negative_vals(vals: th.FloatOrArr, *args) -> tp.List[tp.Optional[float]]:
     if vals is None or (not np.any(vals < 0)):
         return [None]*(len(args)+1)
     if np.isscalar(vals):

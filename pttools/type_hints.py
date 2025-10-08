@@ -18,14 +18,19 @@ NumbaFunc = tp.Callable | CPUDispatcher
 ODESolver = spi.OdeSolver | type[spi.OdeSolver] | type[spi.odeint] | str
 
 # Numerical types
-#: Float list or a Numpy array
-FloatListOrArr = list[tp.Union[float, np.float64]] | np.ndarray
-#: Float or a Numpy array
-FloatOrArr = float | np.float64 | np.ndarray
+# np.float64 is a subclass of float, so there is no need to specify it explicitly for scalars.
+FloatArr = np.ndarray[tuple[int, ...], np.float64]
+FloatArr1D = np.ndarray[tuple[int], np.float64]
+# Float list or a Numpy array
+# FloatListOrArr = list[tp.Union[float, np.float64]] | np.ndarray
+#: Float or a Numpy array of floats
+FloatOrArr = float | FloatArr
+#: Float or a 1D Numpy array of floats
+FloatOrArr1D = float | FloatArr1D
 #: The return type of a Numba function that returns a float or a Numpy array
-FloatOrArrNumba = float | np.float64 | np.ndarray | NumbaFunc
-#: Integer or a Numpy array
-IntOrArr = int | np.ndarray
+FloatOrArrNumba = float | np.ndarray | NumbaFunc
+#: Integer or a Numpy array of integers
+IntOrArr = int | np.ndarray[tuple[int], np.int_]
 
 #: Type of a cs2 function
 CS2Fun = tp.Callable[[FloatOrArr, FloatOrArr], FloatOrArr] | CPUDispatcher

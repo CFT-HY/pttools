@@ -13,9 +13,9 @@ NTDEFAULT: int = 10000
 #: Default number of wavevectors used in the velocity convolution integrations.
 # This should be at least as large as the default number of GW frequencies.
 N_Z_LOOKUP_DEFAULT: int = 10000
-NptType = np.ndarray[tuple[int], np.int64] | tuple[int, int, int]
+NptType = np.ndarray[tuple[int], np.int_] | tuple[int, int, int]
 NPTDEFAULT: NptType = (NXIDEFAULT, NTDEFAULT, N_Z_LOOKUP_DEFAULT)
-Y_DEFAULT: np.ndarray[tuple[int], np.float64] = np.logspace(-1, 3, 1000)
+Y_DEFAULT: np.ndarray[tuple[int], np.float64] = np.logspace(-1, 3, 1000)  # type: ignore
 
 # It seems that NPTDEFAULT should be something like NXIDEFAULT/(2.pi), otherwise one
 # gets a GW power spectrum which drifts up at high k.

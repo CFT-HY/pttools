@@ -5,13 +5,12 @@ import typing as tp
 import matplotlib.pyplot as plt
 import numpy as np
 
-import pttools.type_hints as th
 from pttools.analysis import utils
 from pttools.bubble import boundary, check, const, fluid_bag, props, quantities, relativity, shock, transition
 
 
 def plot_fluid_shells_bag(
-        v_wall_list: th.FloatListOrArr,
+        v_wall_list: np.ndarray,
         alpha_n_list: tp.Union[tp.List[float], np.ndarray],
         multi: bool = False,
         save_string: str | None = None,
@@ -60,6 +59,7 @@ def plot_fluid_shells_bag(
         fig_width = ncols * 5
 
     fig: plt.Figure
+    ax: np.ndarray[tuple[int, int], plt.Axes]
     fig, ax = plt.subplots(2, ncols, figsize=(fig_width, 8), sharex='col', sharey='row', squeeze=False)
     fig.subplots_adjust(hspace=0)
     fig.subplots_adjust(wspace=0.1)
