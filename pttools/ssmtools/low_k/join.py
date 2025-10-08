@@ -1,7 +1,11 @@
+import logging
+
 import numpy as np
 from scipy.special import erf, erfc
 
 from pttools.ssmtools.low_k import integration, intersection
+
+logger = logging.getLogger(__name__)
 
 
 def pow_gw_junction(
@@ -12,7 +16,8 @@ def pow_gw_junction(
         cs: float,
         nu: float,
         tau_star: float,
-        tau_end: float):
+        tau_end: float,
+        HLf: float):
     r"""
     Create the junction of the gravitational wave power spectrum between different regimes
     starting from the profiles in each regime.
@@ -22,19 +27,30 @@ def pow_gw_junction(
     :param Pgw_int: array of gravitational wave power spectrum values in the intermediate-frequency regime
     :param Pgw_high: array of gravitational wave power spectrum values in the high-frequency regime
     :param cs: sound speed, $0 < c_s < \frac{1}{\sqrt{3}}$
+    :param nu: $\nu_\text{gdh2024}$
     :param tau_star: $\tau_* = \frac{\eta_*}{L_f}$
     :param tau_end: $\tau_{end} = \frac{\eta_{end}}{L_f}$
+    :param HLf: $H L_f = r_*$
     :return: gravitational wave power spectrum values at the given momentum
     """
-    # z_star = 4*cs*np.pi * (1+nu) / HLf
+    # if not (z.size and Pgw_low.size and Pgw_int.size and Pgw_high.size):
+    #     raise ValueError(
+    #         "Input arrays must not be empty. Got sizes: "
+    #         f"z={z.size}, Pgw_low={Pgw_low.size}, Pgw_int={Pgw_int.size}, Pgw_high={Pgw_high.size}"
+    #     )
+
     difference = Pgw_high - Pgw_int
     index = np.where(difference > 0)[0]
-    z_star = z[index[0]]  # if len(index) > 0 else z_star
+    if index.size:
+        z_star = z[index[0]]
+    else:
+        z_star = 4*cs*np.pi * (1+nu) / HLf
+        logger.warning("Using fallback z_star=%s for low-k junction.", z_star)
     z_cross = intersection.cross_z_junction(cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end)
 
     term_low = 0.5 * erfc(2 * np.pi * tau_star * (z - z_cross)) * Pgw_low
-    term_int = 0.5 * (1 + erf(2 * np.pi * tau_star * (z - z_cross))) * Pgw_int * 0.5 * erfc(
-        2 * np.pi * tau_star * (z - z_star))
+    term_int = 0.5 * (1 + erf(2 * np.pi * tau_star * (z - z_cross))) * Pgw_int * \
+               0.5 * erfc(2 * np.pi * tau_star * (z - z_star))
     term_high = 0.5 * (1 + erf(2 * np.pi * tau_star * (z - z_star))) * Pgw_high
 
     return term_low + term_int + term_high
