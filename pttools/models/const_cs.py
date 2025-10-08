@@ -12,6 +12,7 @@ import pttools.type_hints as th
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.models.analytic import AnalyticModel
 from pttools.models.bag import BagModel
+from pttools.models.utils import check_value_in_range
 
 logger = logging.getLogger(__name__)
 
@@ -174,10 +175,15 @@ class ConstCSModel(AnalyticModel):
         :param nan_on_invalid: return nan for invalid values
         :param log_invalid: whether to log invalid values
         """
-        self.check_w_for_alpha(
+        check_value_in_range(
             wn,
-            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid,
-            name="wn", alpha_name="alpha_n"
+            x_min=self.w_min,
+            x_max=self.w_max,
+            name="wn",
+            context="alpha_n",
+            error_on_invalid=error_on_invalid,
+            nan_on_invalid=nan_on_invalid,
+            log_invalid=log_invalid
         )
         # self.check_p(wn, allow_fail=allow_no_transition)
 
@@ -440,22 +446,27 @@ class ConstCSModel(AnalyticModel):
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
         r"""If $\mu_-=4 \Leftrightarrow c_{sb}=\frac{1}{\sqrt{3}}$, then $w_-$ does not affect the result."""
-        self.check_w_for_alpha(
+        check_value_in_range(
             wp,
             # w_min=self.w_crit,
+            x_min=self.w_min,
+            x_max=self.w_max,
+            name="wp",
+            context="alpha_plus",
             error_on_invalid=error_on_invalid,
             nan_on_invalid=nan_on_invalid,
-            log_invalid=log_invalid,
-            name="wp", alpha_name="alpha_plus"
+            log_invalid=log_invalid
         )
-        self.check_w_for_alpha(
+        check_value_in_range(
             wm,
+            x_min=self.w_min,
+            x_max=self.w_max,
+            name="wm",
+            context="alpha_plus",
             error_on_invalid=error_on_invalid,
             nan_on_invalid=nan_on_invalid,
-            log_invalid=log_invalid,
-            name="wm", alpha_name="alpha_plus"
+            log_invalid=log_invalid
         )
-
         alpha_plus = (1 - 4 / self.mu_s) / 3 - (1 - 4 / self.mu_b) * wm / (3 * wp) + self.bag_wn_const / wp
         return self.check_alpha_plus(
             alpha_plus, vp_tilde=vp_tilde, sol_type=sol_type,
@@ -583,7 +594,7 @@ class ConstCSModel(AnalyticModel):
             error_on_invalid: bool = True, nan_on_invalid: bool = True, log_invalid: bool = True) -> th.FloatOrArr:
         ret = (1 / 4 - 1 / self.mu_s) * wp / 3 - (1 / 4 - 1 / self.mu_b) * wm / 3 + self.V_s - self.V_b
         return self.check_delta_theta(
-            ret, wp=wp, wm=wm,
+            ret, xp=wp, xm=wm, x_name="w",
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid
         )
 

@@ -33,18 +33,24 @@ class ModelPlot:
         self.ax_w: plt.Axes = self.axs[0, 2]
         self.ax_e: plt.Axes = self.axs[1, 0]
         self.ax_cs2: plt.Axes = self.axs[1, 1]
+        self.ax_alpha_n: plt.Axes = self.axs[1, 2]
         # self.ax_theta = self.axs[2, 0]
 
+        self.temps: np.ndarray[tuple[int], np.float64]
         if t_log:
             self.t_min = max(model.T_min, 10 ** (-t_log_range) * model.T_crit) if t_min is None else t_min
             self.t_max = min(model.T_max, 10 ** t_log_range * model.T_crit) if t_max is None else t_max
+            self.temps = np.logspace(np.log10(self.t_min), np.log10(self.t_max), n_points)
             self.temps_b = np.logspace(np.log10(self.t_min), np.log10(model.T_crit), n_points)
             self.temps_s = np.logspace(np.log10(model.T_crit), np.log10(self.t_max), n_points)
+            self.w = np.logspace(np.log10(model.w_min), np.log10(model.w_max), n_points)
         else:
             self.t_min = max(model.T_min, 0.7 * model.T_crit) if t_min is None else t_min
             self.t_max = min(model.T_max, 1.3 * model.T_crit) if t_max is None else t_max
+            self.temps = np.linspace(self.t_min, self.t_max, n_points)
             self.temps_b = np.linspace(self.t_min, model.T_crit, n_points)
             self.temps_s = np.linspace(model.T_crit, self.t_max, n_points)
+            self.w = np.linspace(model.w_min, model.w_max, n_points)
 
         self.plot(self.ax_p, self.model.p_temp, "p", y_log=y_log)
         self.plot(self.ax_s, self.model.s_temp, "s", y_log=y_log)
@@ -54,6 +60,13 @@ class ModelPlot:
             self.ax_cs2, self.model.cs2_temp,
             label="c_s^2", label_s="$c_{s,s}^2$", label_b="$c_{s,b}^2$", y_lim=False, y_log=False
         )
+
+        # alpha_n = self.model.alpha_n_temp(Tn=self.temps)
+        alpha_n = self.model.alpha_n(wn=self.w)
+        self.ax_alpha_n.plot(self.temps, alpha_n)
+        self.ax_alpha_n.set_xlabel("$T$")
+        self.ax_alpha_n.set_ylabel(r"$\alpha_n$")
+
         self.fig.tight_layout()
 
     def plot(

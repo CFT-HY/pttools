@@ -9,6 +9,7 @@ import numpy as np
 import pttools.type_hints as th
 from pttools.bubble.boundary import SolutionType
 from pttools.models.model import Model
+from pttools.models.utils import check_value_in_range
 from pttools.speedup.utils import is_nan_or_none
 
 logger = logging.getLogger(__name__)
@@ -109,12 +110,15 @@ class AnalyticModel(Model, abc.ABC):
         :param nan_on_invalid: return nan for invalid values
         :param log_invalid: log negative values
         """
-        self.check_w_for_alpha(
+        check_value_in_range(
             wn,
+            x_min=self.w_min,
+            x_max=self.w_max,
+            name="wn",
+            context="alpha_n",
             error_on_invalid=error_on_invalid,
             nan_on_invalid=nan_on_invalid,
-            log_invalid=log_invalid,
-            name="wn", alpha_name="alpha_n"
+            log_invalid=log_invalid
         )
         # self.check_p(wn, allow_fail=allow_no_transition)
         return self.bag_wn_const / wn
@@ -137,12 +141,15 @@ class AnalyticModel(Model, abc.ABC):
         :param nan_on_invalid: return nan for invalid values
         :param log_invalid: whether to log invalid values
         """
-        self.check_w_for_alpha(
+        check_value_in_range(
             wp,
             # w_min=self.w_crit,
+            x_min=self.w_min,
+            x_max=self.w_max,
+            name="wp",
+            context="alpha_plus",
             error_on_invalid=error_on_invalid,
             nan_on_invalid=nan_on_invalid,
-            name="wp", alpha_name="alpha_plus"
         )
         alpha_plus = self.bag_wn_const / wp
         return self.check_alpha_plus(

@@ -223,7 +223,7 @@ class BagModel(AnalyticModel):
             error_on_invalid: bool = True, nan_on_invalid: bool = True, log_invalid: bool = True) -> th.FloatOrArr:
         delta_theta = (self.V_s - self.V_b) * np.ones_like(wp) * np.ones_like(wm)
         return self.check_delta_theta(
-            delta_theta, wp=wp, wm=wm,
+            delta_theta, xp=wp, xm=wm, x_name="w",
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
 

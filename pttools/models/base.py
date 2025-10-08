@@ -27,14 +27,20 @@ class BaseModel(abc.ABC):
     #: Whether the temperature is in proper physics units
     TEMPERATURE_IS_PHYSICAL: bool | None = None
 
+    #: String formatting for thermodynamical quantities
+    THERMO_FORMAT: str = "6e"
+
     def __init__(
             self,
+            # Basic info
             name: str | None = None,
-            T_min: float | None = None,
-            T_max: float | None= None,
-            restrict_to_valid: bool = True,
             label_latex: str | None = None,
             label_unicode: str | None = None,
+            # Numerical values
+            T_min: float | None = None,
+            T_max: float | None= None,
+            # Booleans
+            restrict_to_valid: bool = True,
             gen_cs2: bool = True,
             gen_cs2_neg: bool = True,
             temperature_is_physical: bool | None = None,
@@ -73,13 +79,18 @@ class BaseModel(abc.ABC):
     def export(self) -> dict[str, tp.Any]:
         """Export the model parameters to a dictionary. User-created model classes should extend this."""
         return {
+            # Basic info
             "name": self.name,
             "label_latex": self.label_latex,
             "label_unicode": self.label_unicode,
             "datetime": datetime.datetime.now(),
+            # Numerical values
             "T_min": self.T_min,
             "T_max": self.T_max,
-            "restrict_to_valid": self.restrict_to_valid
+            # Booleans
+            "restrict_to_valid": self.restrict_to_valid,
+            "silence_temp": self.silence_temp,
+            "temperature_is_physical": self.temperature_is_physical
         }
 
     def gen_cs2(self) -> th.CS2Fun:
@@ -91,6 +102,15 @@ class BaseModel(abc.ABC):
         the Numba-jitted $c_s^2$ function to be used for maximisation.
         """
         raise NotImplementedError("This class does not have gen_cs2_neg defined")
+
+    def info(self) -> str:
+        """Get a string with information about the model."""
+        data = self.export()
+        max_key_length = max(len(key) for key in data.keys()) + 1
+        return "\n".join(
+            f"{key:<{max_key_length}}: {f'{value:{self.THERMO_FORMAT}}' if isinstance(value, float) else value}"
+            for key, value in self.export().items()
+        )
 
     def validate_temp(self, temp: th.FloatOrArr) -> th.FloatOrArr:
         """Validate that the given temperatures are in the validity range of the model.
