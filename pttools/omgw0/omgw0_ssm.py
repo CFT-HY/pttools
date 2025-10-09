@@ -26,12 +26,12 @@ class Spectrum(ssm.SSMSpectrum):
     def __init__(
             self,
             bubble: Bubble,
+            r_star: float,
             y: tp.Union[np.ndarray[tuple[int], np.float64], None] = None,
             z_st_thresh: float = ssm.Z_ST_THRESH,
             nuc_type: ssm.NucType = ssm.DEFAULT_NUC_TYPE,
             nt: int = NTDEFAULT,
             n_z_lookup: int = N_Z_LOOKUP_DEFAULT,
-            r_star: float | None = None,
             lifetime_multiplier: float = 1,
             compute: bool = True,
             low_k: bool = True,
@@ -43,11 +43,11 @@ class Spectrum(ssm.SSMSpectrum):
             ):
         """
         :param bubble: the Bubble object
+        :param r_star: Hubble-scaled mean bubble spacing $r_*$
         :param y: $z = kR*$ array
         :param z_st_thresh: for $z$ values above z_sh_tresh, use approximation rather than doing the sine transform integral.
         :param nuc_type: nucleation type
         :param nt: number of points in the t array
-        :param r_star: Hubble-scaled mean bubble spacing $r_*$
         :param lifetime_multiplier: used for computing the source lifetime factor
         :param compute: whether to compute the spectrum immediately
         :param Tn: $T_n$, nucleation temperature override

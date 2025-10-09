@@ -31,7 +31,7 @@ def main() -> plt.Figure:
         Bubble(model2, v_wall=0.5, alpha_n=0.2)
     ]
     # Convert the bubbles to GW spectra
-    spectra = [Spectrum(bubble) for bubble in bubbles]
+    spectra = [Spectrum(bubble, r_star=0.1) for bubble in bubbles]
 
     return plot_spectra(spectra)
 
