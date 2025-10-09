@@ -17,6 +17,7 @@ from pttools.bubble.relativity import gamma
 from pttools.bubble import thermo
 from pttools.bubble import transition
 from pttools.speedup.export import export_json
+from pttools.utils.docstrings import copy_docstrings_without_params
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
     from pttools.models.const_cs import ConstCSModel
@@ -688,26 +689,25 @@ class Bubble:
         return thermo.wbar(self.w, self.xi, self.v_wall, self.wn)
 
 
-# Copy docstrings from the thermo module
-# TODO: remove :param: lines
-Bubble.entropy_density_diff.__doc__ = thermo.entropy_density_diff.__doc__
-Bubble.kinetic_energy_density.__doc__ = thermo.kinetic_energy_density.__doc__
-Bubble.kinetic_energy_fraction.__doc__ = thermo.kinetic_energy_fraction.__doc__
-Bubble.thermal_energy_density.__doc__ = thermo.thermal_energy_density.__doc__
-Bubble.thermal_energy_density_diff.__doc__ = thermo.thermal_energy_density_diff.__doc__
-Bubble.thermal_energy_fraction.__doc__ = thermo.thermal_energy_fraction.__doc__
-Bubble.ebar.__doc__ = thermo.ebar.__doc__
-Bubble.kappa.__doc__ = thermo.kappa.__doc__
-Bubble.mean_adiabatic_index.__doc__ = thermo.mean_adiabatic_index.__doc__
-Bubble.omega.__doc__ = thermo.omega.__doc__
-Bubble.ubarf2.__doc__ = thermo.ubarf2.__doc__
-
-Bubble.va_enthalpy_density.__doc__ = thermo.va_enthalpy_density.__doc__
-Bubble.va_entropy_density_diff.__doc__ = thermo.va_entropy_density_diff.__doc__
-Bubble.va_kinetic_energy_density.__doc__ = thermo.va_kinetic_energy_density.__doc__
-Bubble.va_kinetic_energy_fraction.__doc__ = thermo.va_kinetic_energy_fraction.__doc__
-Bubble.va_thermal_energy_density.__doc__ = thermo.va_thermal_energy_density.__doc__
-Bubble.va_thermal_energy_density_diff.__doc__ = thermo.va_thermal_energy_density_diff.__doc__
-Bubble.va_thermal_energy_fraction.__doc__ = thermo.va_thermal_energy_fraction.__doc__
-Bubble.va_trace_anomaly_diff.__doc__ = thermo.va_trace_anomaly_diff.__doc__
-Bubble.wbar.__doc__ = thermo.wbar.__doc__
+copy_docstrings_without_params({
+    Bubble.entropy_density_diff: thermo.entropy_density_diff,
+    Bubble.kinetic_energy_density: thermo.kinetic_energy_density,
+    Bubble.kinetic_energy_fraction: thermo.kinetic_energy_fraction,
+    Bubble.thermal_energy_density: thermo.thermal_energy_density,
+    Bubble.thermal_energy_density_diff: thermo.thermal_energy_density_diff,
+    Bubble.thermal_energy_fraction: thermo.thermal_energy_fraction,
+    Bubble.ebar: thermo.ebar,
+    Bubble.kappa: thermo.kappa,
+    Bubble.mean_adiabatic_index: thermo.mean_adiabatic_index,
+    Bubble.omega: thermo.omega,
+    Bubble.ubarf2: thermo.ubarf2,
+    Bubble.va_enthalpy_density: thermo.va_enthalpy_density,
+    Bubble.va_entropy_density_diff: thermo.va_entropy_density_diff,
+    Bubble.va_kinetic_energy_density: thermo.va_kinetic_energy_density,
+    Bubble.va_kinetic_energy_fraction: thermo.va_kinetic_energy_fraction,
+    Bubble.va_thermal_energy_density: thermo.va_thermal_energy_density,
+    Bubble.va_thermal_energy_density_diff: thermo.va_thermal_energy_density_diff,
+    Bubble.va_thermal_energy_fraction: thermo.va_thermal_energy_fraction,
+    Bubble.va_trace_anomaly_diff: thermo.va_trace_anomaly_diff,
+    Bubble.wbar: thermo.wbar
+})
