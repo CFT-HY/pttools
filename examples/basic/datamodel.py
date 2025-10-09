@@ -15,19 +15,19 @@ from pttools.bubble import Bubble
 from pttools.models import DataModel
 from pttools.analysis.plot_model import ModelPlot
 
-FILE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "thermodynamics_data.h5")
-
-model = DataModel.from_hdf5("thermodynamics_data.h5")
-print(model.info())
-
 # Todo: This example is preliminary, and the solvers don't yet work for this model.
-exit()
 
-fig = plt.figure()
-ax = fig.add_subplot()
-plot = ModelPlot(model)
-
-bubble = Bubble(model, v_wall=0.5, alpha_n=0.1)
-bubble.plot()
-
-plt.show()
+# Todo: __file__ is not supported for example files by sphinx-gallery
+# FILE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "thermodynamics_data.h5")
+#
+# model = DataModel.from_hdf5("thermodynamics_data.h5")
+# print(model.info())
+#
+# fig = plt.figure()
+# ax = fig.add_subplot()
+# plot = ModelPlot(model)
+#
+# bubble = Bubble(model, v_wall=0.5, alpha_n=0.1)
+# bubble.plot()
+#
+# plt.show()

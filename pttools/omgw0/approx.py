@@ -53,7 +53,7 @@ def R_star(v_wall: th.FloatOrArr, beta: th.FloatOrArr, cs: th.FloatOrArr = CS0) 
     r"""Mean bubble separation $R_*$
     $$R_* = \frac{(8 \pi)^\frac{1}{3}}{\beta} \max(v_w, c_s)$$
     :caprini_2020:`\ ` eq. 6
-    :hakkinen_2024:`\ ` eq. 2.6
+    :hakkinen_msc:`\ ` eq. 2.6
     The $c_s$ corrects the fact that the reheating of the plasma by the reaction front can suppress
     further bubble formation for large enough $\alpha$.
     """

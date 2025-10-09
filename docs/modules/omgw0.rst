@@ -17,3 +17,4 @@ Omgw0
   const
   noise
   omgw0_ssm
+  suppression

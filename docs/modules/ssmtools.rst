@@ -15,5 +15,13 @@ SSMtools
 
   calculators
   const
+  low_k
+  nucleation
+  sin_transform
+  sin_transform_approx
+  spec_den_gw
+  spec_den_v
   spectrum
+  spectrum_bag
   ssm
+  ssm_bag

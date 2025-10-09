@@ -421,12 +421,13 @@ class Bubble:
     @property
     def vp_vm_tilde_ratio_giese(self) -> float:
         # This docstring is copied from the model function
-        r"""Giese approximation for $\frac{\tilde{v}_+}{\tilde{v}_-}$, :giese_2021:`\ ` eq. 11
+        r"""Giese et al. approximation for $\frac{\tilde{v}_+}{\tilde{v}_-}$, :giese_2021:`\ ` eq. 11
 
         $$\frac{\tilde{v}_+}{\tilde{v}_-} \approx \frac{
             (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3\alpha_{\bar{\theta}_+} }{
             (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3 \tilde{v}_+ \tilde{v}_- \alpha_{\bar{\theta}}_+
         }$$
+        :return: Giese et al. approximation for $\frac{\tilde{v}_+}{\tilde{v}_-}$
         """
         return self.model.vp_vm_tilde_ratio_giese(vp_tilde=self.vp_tilde, vm_tilde=self.vm_tilde, wp=self.wp, wm=self.wm)
 
@@ -586,9 +587,6 @@ class Bubble:
 
     @functools.cached_property
     def omega(self) -> float:
-        r"""Thermal efficiency factor
-        $$\omega = \frac{\Delta {e}_Q}{\Delta {e}_\theta}$$
-        """
         if not self.solved:
             raise NotYetSolvedError
         return thermo.omega(self.model, self.w, self.xi, self.v_wall, delta_e_theta=self.va_trace_anomaly_diff)

@@ -93,8 +93,7 @@ def N_AE(
     $$N_A = N_E = \left(\left(
     4 + 2 \cos \left( \frac{f}{f_t} \right)\right) P_\text{oms} +
     8 \left( 1 + \cos \left( \frac{f}{f_t} \right) + \cos^2 \left( \frac{f}{f_t} \right) \right) P_\text{acc}
-    \right) |W|^2
-    $$
+    \right) |W|^2$$
     :gowling_2021:`\ ` eq. 3.4
     :smith_2019:`\ ` eq. 57
     """

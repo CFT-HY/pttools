@@ -143,7 +143,7 @@ extlinks: dict[str, tuple[str, str]] = {
     "gw_pt_ssm": ("https://arxiv.org/abs/1909.10040%s", "Hindmarsh et al., 2019%s"),
     "notes": ("https://arxiv.org/abs/2008.09136%s", "Hindmarsh et al., 2021%s"),
     # Other articles
-    "maggiore_1999": ("https://arxiv.org/abs/gr-qc/9909001", "Maggiore, 1999%s"),
+    "maggiore_1999": ("https://arxiv.org/abs/gr-qc/9909001%s", "Maggiore, 1999%s"),
     "borsanyi_2016": ("https://arxiv.org/abs/1606.07494%s", "Borsanyi et al., 2016%s"),
     "caprini_2016": ("https://arxiv.org/abs/1512.06239%s", "Caprini et al., 2016%s"),
     "cornish_2017": ("https://arxiv.org/abs/1703.09858%s", "Cornish & Robson, 2017%s"),
@@ -167,6 +167,7 @@ extlinks: dict[str, tuple[str, str]] = {
     ),
     "issue": ("https://github.com/CFT-HY/pttools/issues/%s", "issue %s"),
     "lisa_conventions": ("https://gitlab.esa.int/lisa-sgs/sandbox/conventions-document%s", "LISA DDPC Conventions document%s"),
+    "lisa_sci_req": ("https://www.cosmos.esa.int/web/lisa/documents%s", "LISA Science Requirements Document%s"),
     "rel_hydro_book": (
         "https://doi.org/10.1093/acprof:oso/9780198528906.001.0001%s",
         "Relativistic hydrodynamics, Rezzolla, Zanotti, 2013%s"),

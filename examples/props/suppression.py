@@ -1,4 +1,7 @@
-r"""Suppression factor $\Sigma(v_\text{wall}, \alpha_n)$"""
+r"""
+Suppression factor $\Sigma(v_\text{wall}, \alpha_n)$
+====================================================
+"""
 
 import matplotlib.pyplot as plt
 
