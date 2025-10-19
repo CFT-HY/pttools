@@ -62,7 +62,10 @@ class BagModel(AnalyticModel):
             auto_potential: bool = False,
             log_info: bool = True):
         if log_info:
-            logger.debug("Initialising BagModel")
+            logger.debug(
+                "Initialising BagModel with V_s=%s, V_b=%s, a_s=%s, a_b=%s, g_s=%s, g_b=%s, T_min=%s, T_max=%s, alpha_n_min=%s.",
+                V_s, V_b, a_s, a_b, g_s, g_b, T_min, T_max, alpha_n_min
+            )
         if V_b != 0:
             logger.warning("V_b has been specified for the bag model, even though it's usually omitted.")
         if alpha_n_min is not None:
