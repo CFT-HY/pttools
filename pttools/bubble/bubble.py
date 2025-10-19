@@ -378,8 +378,8 @@ class Bubble:
 
     def plot(self, fig: plt.Figure | None = None, path: str | None = None, **kwargs) -> plt.Figure:
         """Plot the velocity and enthalpy profiles of the bubble"""
-        from pttools.analysis.plot_bubble import plot_bubble
-        return plot_bubble(self, fig, path, **kwargs)
+        from pttools.analysis.plot_bubbles import plot_bubbles
+        return plot_bubbles([self], fig, path, **kwargs)
 
     def plot_v(
             self,
@@ -388,8 +388,8 @@ class Bubble:
             path: str | None = None,
             **kwargs) -> "FigAndAxes":
         """Plot the velocity profile of the bubble"""
-        from pttools.analysis.plot_bubble import plot_bubble_v
-        return plot_bubble_v(self, fig, ax, path, **kwargs)
+        from pttools.analysis.plot_bubbles import plot_bubbles_v
+        return plot_bubbles_v([self], fig, ax, path, **kwargs)
 
     def plot_w(
             self,
@@ -398,8 +398,8 @@ class Bubble:
             path: str | None = None,
             **kwargs) -> "FigAndAxes":
         """Plot the enthalpy profile of the bubble"""
-        from pttools.analysis.plot_bubble import plot_bubble_w
-        return plot_bubble_w(self, fig, ax, path, **kwargs)
+        from pttools.analysis.plot_bubbles import plot_bubbles_w
+        return plot_bubbles_w([self], fig, ax, path, **kwargs)
 
     # ---
     # Quantities
@@ -442,7 +442,7 @@ class Bubble:
         r"""Maximum fluid velocity behind the bubble wall, $\mu(\xi)$"""
         # wm is the highest enthalpy inside the bubble
         cs2 = self.model.cs2_max(w_max=self.wm, w_min=self.w_center, phase=Phase.BROKEN)
-        return props.v_max_behind(xi=self.v_wall, v=np.sqrt(cs2))
+        return props.v_max_behind(self.v_wall, np.sqrt(cs2))
 
     # Quantities
     def en(self) -> float:

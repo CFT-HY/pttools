@@ -28,7 +28,7 @@ def main():
     save(bubble_fig, "const_cs_bubble.png")
 
     spectrum = Spectrum(bubble, r_star=0.1, nuc_type=NucType.EXPONENTIAL)
-    spectrum_fig = spectrum.plot_multi()
+    spectrum_fig, axs = spectrum.plot_multi()
     save(spectrum_fig, "const_cs_spectrum.png")
 
 

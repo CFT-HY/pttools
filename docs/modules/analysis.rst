@@ -18,7 +18,6 @@ Analysis
   entropy
   g_cs2
   parallel
-  plot_bubble
   plot_bubbles
   plot_chapman_jouguet
   plot_delta_theta
@@ -31,7 +30,6 @@ Analysis
   plot_models
   plot_plotly
   plot_spectra
-  plot_spectrum
   plot_thermomodels
   plot_vw_alpha
   plot_xiv_plane

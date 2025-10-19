@@ -7,6 +7,7 @@ import functools
 import logging
 import typing as tp
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.bubble.boundary import Phase
@@ -17,6 +18,9 @@ from pttools.ssmtools.const import NPTDEFAULT, NTDEFAULT, N_Z_LOOKUP_DEFAULT, Np
 import pttools.ssmtools as ssm
 import pttools.type_hints as th
 from pttools.omgw0 import const, noise
+
+if tp.TYPE_CHECKING:
+    from pttools.analysis.utils import FigAndAxes
 
 logger = logging.getLogger(__name__)
 
@@ -186,6 +190,35 @@ class Spectrum(ssm.SSMSpectrum):
         if self.override_necessary or self.Tn_manual_override:
             return self.Tn_override
         return self.bubble.Tn
+
+    # -----
+    # Plotting
+    # -----
+
+    def plot(
+            self,
+            fig: plt.Figure | None = None,
+            ax: plt.Axes | None = None,
+            path: str | None = None,
+            **kwargs) -> "FigAndAxes":
+        from pttools.analysis.plot_spectra import plot_spectra
+        return plot_spectra([self], fig, ax, path, **kwargs)
+
+    def plot_multi(
+            self,
+            fig: plt.Figure | None = None,
+            path: str | None = None,
+            **kwargs) -> tuple[plt.Figure, np.ndarray[tuple[int, int], plt.Axes]]:
+        from pttools.analysis.plot_spectra import plot_spectra_multi
+        return plot_spectra_multi([self], fig, path, **kwargs)
+
+    def plot_multi_flat(
+            self,
+            fig: plt.Figure | None = None,
+            path: str | None = None,
+            **kwargs) -> tuple[plt.Figure, np.ndarray[tuple[int], plt.Axes]]:
+        from pttools.analysis.plot_spectra import plot_spectra_multi_flat
+        return plot_spectra_multi_flat([self], fig, path, **kwargs)
 
 
 def f(z: th.FloatOrArr, r_star: th.FloatOrArr, f_star0: th.FloatOrArr) -> th.FloatOrArr:
