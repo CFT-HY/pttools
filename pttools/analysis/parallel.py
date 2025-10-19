@@ -24,7 +24,7 @@ def create_bubble(
         post_func: tp.Callable | None = None,
         post_func_return_multiple: bool = False,
         use_bag_solver: bool = False,
-        bubble_kwargs: dict[str, any] | None = None,
+        bubble_kwargs: dict[str, tp.Any] | None = None,
         allow_bubble_failure: bool = False,
         *args, **kwargs) -> tp.Union[tp.Optional[Bubble], tuple[tp.Optional[Bubble], tp.Any]]:
     """Create a single bubble and apply post-processing functions to retrieve results from it"""
@@ -62,8 +62,8 @@ def create_spectrum(
         post_func: tp.Callable | None = None,
         post_func_return_multiple: bool = False,
         use_bag_solver: bool = False,
-        bubble_kwargs: dict[str, any]| None  = None,
-        spectrum_kwargs: dict[str, any] | None = None,
+        bubble_kwargs: dict[str, tp.Any]| None  = None,
+        spectrum_kwargs: dict[str, tp.Any] | None = None,
         allow_bubble_failure: bool = False,
         *args, **kwargs):
     """Create a single spectrum and apply post-processing functions to retrieve results from it"""
@@ -95,8 +95,8 @@ def create_bubbles(
         max_workers: int = options.MAX_WORKERS_DEFAULT,
         single_thread: bool = False,
         allow_bubble_failure: bool = False,
-        kwargs: dict[str, any] | None = None,
-        bubble_kwargs: dict[str, any] | None = None,
+        kwargs: dict[str, tp.Any] | None = None,
+        bubble_kwargs: dict[str, tp.Any] | None = None,
         bubble_func: tp.Callable = create_bubble) -> tp.Union[np.ndarray, tuple[np.ndarray, np.ndarray, ...]]:
     """Create multiple bubbles in parallel"""
     start_time = time.perf_counter()
@@ -163,9 +163,9 @@ def create_spectra(
         max_workers: int = options.MAX_WORKERS_DEFAULT,
         single_thread: bool = False,
         allow_bubble_failure: bool = False,
-        kwargs: dict[str, any] | None = None,
-        bubble_kwargs: dict[str, any] | None = None,
-        spectrum_kwargs: dict[str, any] | None = None) -> np.ndarray:
+        kwargs: dict[str, tp.Any] | None = None,
+        bubble_kwargs: dict[str, tp.Any] | None = None,
+        spectrum_kwargs: dict[str, tp.Any] | None = None) -> np.ndarray:
     """Create multiple spectra in parallel"""
     if kwargs is None:
         kwargs2 = {"spectrum_kwargs": spectrum_kwargs}
