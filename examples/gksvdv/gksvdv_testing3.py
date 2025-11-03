@@ -28,10 +28,6 @@ def main():
     bubble = Bubble(model, v_wall=v_wall, alpha_n=alpha_n)
     bubble_fig = bubble.plot()
 
-    # If the Giese code has not been loaded
-    if kappaNuMuModel is None:
-        return
-
     kappa_tbn_giese, v, wow, xi, mode, vp, vm = kappaNuMuModel(cs2b=csb2, cs2s=css2, al=alpha_tbn, vw=v_wall)
 
     phase_pttools = find_phase(bubble.xi, bubble.v_wall)

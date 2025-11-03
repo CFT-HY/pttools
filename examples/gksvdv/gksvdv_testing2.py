@@ -54,10 +54,6 @@ def main():
             else:
                 alpha_theta_bar_n = alpha_n
 
-            # If the Giese code has not been loaded
-            if kappaNuMuModel is None:
-                continue
-
             kappa, v, w, xi, mode, vp, vm = kappaNuMuModel(
                 cs2s=model.cs2(model.w_crit, Phase.SYMMETRIC),
                 cs2b=model.cs2(model.w_crit, Phase.BROKEN),

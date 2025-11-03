@@ -1070,9 +1070,6 @@ def sound_shell_giese(
         ) -> tuple[
             np.ndarray, np.ndarray, np.ndarray, SolutionType,
             float, float, float, float, float, float, float, float, float, float, float, bool, float]:
-    if kappaNuMuModel is None:
-        raise ImportError("The Giese code has to be installed to use this solver.")
-
     start_time = time.perf_counter()
 
     if wn is None or np.isnan(wn):
