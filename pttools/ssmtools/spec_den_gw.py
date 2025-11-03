@@ -69,9 +69,10 @@ def _spec_den_gw_scaled_core(
             * np.interp((z_plus + z_minus - z), z_lookup, P_v_lookup)
         p_gw[i] = p_gw_factor / y[i] * np.trapezoid(integrand, z)
 
-    # Eq. 3.48 has a factor of 3 Gamma^2
-    # The P_v_lookup is 0.5 \tilde{P}_v, which gives a factor of (1/2)^2 = 1/4
-    # Combined, these result in 3/4 Gamma^2
+    # Eq. 3.48 of gw_pt_ssm has a factor of 3 Gamma^2.
+    # The P_v_lookup is 0.5 * Ubarf2 * \tilde{P}_v, which gives a factor of (1/2)^2 = 1/4.
+    # Combined, these result in 3/4 Gamma^2.
+    # The P_v_lookup includes a factor of Ubarf2, and together these create a factor of 3K^2 with K = Gamma*Ubarf2
     return 0.75 * Gamma ** 2 * p_gw * source_lifetime_factor, y
 
 
@@ -116,19 +117,21 @@ def spec_den_gw_scaled(
         nz_int: int | None = None) -> tp.Union[tuple[np.ndarray, np.ndarray], th.NumbaFunc]:
     r"""
     Spectral density of scaled gravitational wave power
+    $$3K^2 (H\tau_\text{v})(H L_f) \tilde{P}_\text{gw}(z)$$
+    :gw_pt_ssm:`\ ` eq. 3.47, 3.48
+    :maki_msc:`\ ` eq. 3.47, 3.48
+    :gowling_phd:`\ ` eq. 3.33
+
+    The factor of 3 comes from the Friedmann equation $\frac{3H^2}{8\pi G}$.
 
     :param z_lookup: Lookup table for the $z = qL_f$ values corresponding to P_v_lookup
     :param P_v_lookup: $\bar{U}_f^2 \tilde{P}_v (z)$,
         a lookup table for the spectral density of the Fourier transform of the velocity field,
         not the spectral density of plane wave coefficients, which is lower by a factor of 2.
     :param y: $y = kL_f = kR*$ corresponding to z_lookup. If not given, will be created from z_lookup.
-    :param cs: Speed of sound (in the broken phase after the phase transition)
+    :param cs: Speed of sound $c_s$ in the broken phase after the phase transition
     :param Gamma: Mean adiabatic index $\Gamma = \frac{\bar{w}}{\bar{e}}$
-    :return: $\hat{\mathcal{P}}$ Eq. 3.33 of Chloe's thesis, which should be ($3\Gamma \bar{U}_f$) Eq. 3.47
-        Eq. 3.46 converted to the spectral density and divided by (H L_f)
-
-    The factor of 3 comes from the Friedmann equation
-    3H^2/(8pi G)
+    :return: $3K^2 (H\tau_\text{v})(H L_f) \tilde{P}_\text{gw}(z)$
     """
     if isinstance(y, np.ndarray):
         return _spec_den_gw_scaled_y(z_lookup, P_v_lookup, y, cs, Gamma, source_lifetime_factor, nz_int)

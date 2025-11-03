@@ -19,7 +19,7 @@ def signal_to_noise_ratio(
     r"""Signal-to-noise ratio
     $$\rho = \sqrt{T_{\text{obs}} \int_{{f}_\text{min}}^{{f}_\text{max}} df \frac{
     h^2 \Omega_{\text{signal}}^2}{
-    h^2 \Omega_{\text{noise}}^2}}
+    h^2 \Omega_{\text{noise}}^2}}$$
     :caprini_2020:`\ ` eq. 33
     :smith_2019:`\ ` eq. 60
 
