@@ -135,7 +135,7 @@ def setup_axes(
     return title, title_omgw0
 
 
-def main():
+def main(low_k: bool = True):
     start_time = time.perf_counter()
     a_s = 5
     a_b = 1
@@ -177,6 +177,7 @@ def main():
                 "Tn": Tn,
                 # "g_star": 100,
                 # "gs_star": 100
+                "low_k": low_k
             },
             # bubble_kwargs={"allow_invalid": False}, allow_bubble_failure=True,
             # This fixes a BrokenProcessPool error on Read the Docs
