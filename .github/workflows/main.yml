@@ -139,10 +139,6 @@ jobs:
           python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
       - name: Print Python version
         run: python -V
-      - name: Install graphviz
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y graphviz
       - name: Checkout
         uses: actions/checkout@v4
       - name: Load pip cache
