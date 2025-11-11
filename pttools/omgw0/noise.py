@@ -248,27 +248,6 @@ def S_I(f: th.FloatOrArr, L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatO
     return 4 * N_acc(L) * (1 + (const.F1_LISA/f)**2)
 
 
-# def S_gb(
-#         f: th.FloatOrArr,
-#         A: float = 9e-35,  # 1/mHz -> 10³
-#         f_ref_gb: float = 1,
-#         fk: float = 1.13e-3,
-#         a: float = 0.138,
-#         b: float = -221,
-#         c: float = 521,
-#         d: float = 1680) -> th.FloatOrArr:
-#     r"""Noise power spectral density for galactic binaries
-#     $$S_\text{gb}(f) = A
-#     \left( \frac{1 \text{mHz}}{f} \right)^{-\frac{7}{3}}
-#     \text{exp} \left( - \left( \frac{f}{f_\text{ref,gb}} \right^a - bf \sin(cf) \right)
-#     \left( 1 + \tanh(d(f_k - f)) \right)
-#     $$
-#     :gowling_2021:`\ ` eq. 3.10
-#     """
-#     # This result is wrong by several orders of magnitude
-#     return A * (1e-3 / f)**(-7/3) * np.exp(-(f/f_ref_gb)**a - b*f*np.sin(c*f)) * (1 + np.tanh(d*(fk - f)))
-
-
 def S_gb(
         f: th.FloatOrArr,
         t: th.FloatOrArr = 4,  # years
