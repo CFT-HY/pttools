@@ -82,7 +82,14 @@ def spec_den_v(
     log10tmin = np.log10(tmin)
     log10tmax = np.log10(tmax)
 
-    qT_lookup = 10 ** np.arange(log10zmin + log10tmin, log10zmax + log10tmax, dlog10z)
+    try:
+        qT_lookup = 10 ** np.arange(log10zmin + log10tmin, log10zmax + log10tmax, dlog10z)
+    except ValueError as e:
+        logger.error(
+            "Could not compute qT_lookup with log10zmin=%s, log10tmin=%s, log10zmax=%s, log10tmax=%s, dlog10z=%s",
+            log10zmin, log10tmin, log10zmax, log10tmax, dlog10z
+        )
+        raise e
     A2_lookup = ssm.a2_e_conserving(bub=bub, z=qT_lookup, cs=cs, z_st_thresh=z_st_thresh)[0]
     # if qT_lookup.size != A2_lookup.size:
     #     raise ValueError(f"Lookup sizes don't match: {qT_lookup.size} != {A2_lookup.size}")

@@ -48,12 +48,18 @@ class SSMSpectrum:
         :param lifetime_multiplier: used for computing the source lifetime factor
         :param compute: whether to compute the spectrum immediately
         """
+        if y is None:
+            self.y = const.Y_DEFAULT
+        elif np.isnan(y).any():
+            raise ValueError("y must not contain nan values.")
+        else:
+            self.y = y
+
         # Parameters
         self.bubble = bubble
         # self.de_method = de_method
         # self.method = method
         self.nuc_type = nuc_type
-        self.y = const.Y_DEFAULT if y is None else y
         self.z_st_thresh = z_st_thresh
         self.nt = nt
         self.n_z_lookup = n_z_lookup
@@ -126,20 +132,20 @@ class SSMSpectrum:
         """
         return (8*np.pi)**(1/3) * self.bubble.v_wall / self.r_star
 
-    def compute(self):
+    def compute(self, eps_lookup: float = 1e-8, lifetime_distribution_a: float = 1.):
         if not self.bubble.solved:
             self.bubble.solve()
 
         self.cs = np.sqrt(self.bubble.model.cs2(self.bubble.va_enthalpy_density, Phase.BROKEN))
         self.spec_den_v, self.a2 = spec_den_v(
-            bub=self.bubble, z=self.y, a=1.,
+            bub=self.bubble, z=self.y, a=lifetime_distribution_a,
             nuc_type=self.nuc_type, nt=self.nt, z_st_thresh=self.z_st_thresh, cs=self.cs, return_a2=True
         )
         self.pow_v = pow_spec(self.y, spec_den=self.spec_den_v)
 
-        self.z_lookup = gen_lookup(y=self.y, cs=self.cs, n_z_lookup=self.n_z_lookup, eps=1e-8)
+        self.z_lookup = gen_lookup(y=self.y, cs=self.cs, n_z_lookup=self.n_z_lookup, eps=eps_lookup)
         self.spec_den_v_lookup = spec_den_v(
-            bub=self.bubble, z=self.z_lookup, a=1.,
+            bub=self.bubble, z=self.z_lookup, a=lifetime_distribution_a,
             nuc_type=self.nuc_type, nt=self.nt, z_st_thresh=self.z_st_thresh, cs=self.cs
         )
         self.spec_den_gw, y = spec_den_gw_scaled(

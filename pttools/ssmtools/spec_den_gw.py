@@ -1,5 +1,6 @@
 """Functions for computing the spectral density of the gravitational waves"""
 
+# import logging
 import typing as tp
 
 import numba
@@ -9,6 +10,8 @@ import numpy as np
 import pttools.type_hints as th
 from pttools import speedup
 from pttools.ssmtools import const
+
+# logger = logging.getLogger(__name__)
 
 
 @numba.njit
@@ -21,6 +24,19 @@ def gen_lookup(y: np.ndarray, cs: float, n_z_lookup: int = const.N_Z_LOOKUP_DEFA
     :return: Generated lookup array for z
     """
     z_minus_min, z_plus_max = lookup_limits(y, cs, eps)
+    # If the eps were summed instead of multiplied, then we would have to check for negative z_minus_min.
+    # if z_minus_min <= 0:
+    #     z_minus_min_old = z_minus_min
+    #     eps_old = eps
+    #     while z_minus_min <= 0:
+    #         eps *= 0.1
+    #         z_minus_min, z_plus_max = lookup_limits(y, cs, eps)
+    #     with numba.objmode:
+    #         logger.warning(
+    #             "Got z_minus_min=%s <= 0 with eps=%s. Recomputed to %s with eps=%s.",
+    #             z_minus_min_old, eps_old, z_minus_min, eps
+    #         )
+
     # The variable to integrate over in eq. 3.44 and 3.47
     return speedup.logspace(np.log10(z_minus_min), np.log10(z_plus_max), n_z_lookup)
 
@@ -28,7 +44,9 @@ def gen_lookup(y: np.ndarray, cs: float, n_z_lookup: int = const.N_Z_LOOKUP_DEFA
 @numba.njit
 def lookup_limits(y: np.ndarray, cs: float, eps: float = 0.) -> tuple[float, float]:
     """Defined on p. 12 between eq. 3.44 and 3.45"""
-    return y.min() * 0.5 * (1. - cs) / cs - eps, y.max() * 0.5 * (1. + cs) / cs + eps
+    z_minus_min = y.min() * 0.5 * (1. - cs) / cs * (1 - eps)
+    z_plus_max = y.max() * 0.5 * (1. + cs) / cs * (1 + eps)
+    return z_minus_min, z_plus_max
 
 
 @numba.njit(parallel=True, nogil=True)
