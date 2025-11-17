@@ -187,9 +187,20 @@ class Spectrum(ssm.SSMSpectrum):
 
     @functools.cached_property
     def Tn(self) -> float:
+        """Nucleation temperature $T_n$"""
         if self.override_necessary or self.Tn_manual_override:
             return self.Tn_override
         return self.bubble.Tn
+
+    def z_from_f(self, f: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Convert from frequencies $f$ back to wavenumbers $z$
+
+        $$z(f) = \frac{f}{f_{*,0} r_*$$
+        Inverted from :gowling_2021:`\ ` eq. 2.12
+        :param f: frequencies $f$ today
+        :return: wavenumbers $z$
+        """
+        return f / self.f_star0 * self.r_star
 
     # -----
     # Plotting
