@@ -18,6 +18,7 @@ from pttools.ssmtools.const import NPTDEFAULT, NTDEFAULT, N_Z_LOOKUP_DEFAULT, Np
 import pttools.ssmtools as ssm
 import pttools.type_hints as th
 from pttools.omgw0 import const, noise
+from pttools.utils.docstrings import copy_docstrings_without_params
 
 if tp.TYPE_CHECKING:
     from pttools.analysis.utils import FigAndAxes
@@ -26,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 class Spectrum(ssm.SSMSpectrum):
-    r"""A spectrum object that includes $\Omega_{\text{gw},0}$"""
+    r"""A spectrum object that includes the conversion to the GW power spectrum today $\Omega_{\text{gw},0}$"""
     def __init__(
             self,
             bubble: Bubble,
@@ -122,6 +123,10 @@ class Spectrum(ssm.SSMSpectrum):
 
     @property
     def H_n(self):
+        """Hubble constant at nucleation temperature, $H_n$
+
+        $$H_n = H(T_n)$$
+        """
         return ssm.H(T=self.Tn)
 
     def noise(self) -> np.ndarray:
@@ -136,6 +141,7 @@ class Spectrum(ssm.SSMSpectrum):
             gs0: float = const.GS0,
             sup: sup_mod.Suppression = sup_mod.DEFAULT,
             sup_method: sup_mod.SuppressionMethod = sup_mod.SuppressionMethod.DEFAULT) -> np.ndarray:
+        r"""Gravitational wave power spectrum today $\Omega_{\text{gw},0}$"""
         # The r_star compensates the fact that the pow_gw includes a correction factor that is J without r_star
         return self.r_star * self.F_gw0(g0=g0, gs0=gs0) * self.pow_gw * \
             self.suppression_factor(suppression=sup, method=sup_method)
@@ -146,11 +152,18 @@ class Spectrum(ssm.SSMSpectrum):
             gs0: float = const.GS0,
             sup: sup_mod.Suppression = sup_mod.DEFAULT,
             sup_method: sup_mod.SuppressionMethod = sup_mod.SuppressionMethod.DEFAULT):
+        r"""Peak $\Omega_{\text{gw},0}
+        :param g0: Degrees of freedom today for pressure $g_0$
+        :param gs0: Degrees of freedom today for entropy $g_{s,0}$
+        :param sup: Suppression type
+        :param sup_method: Suppression method
+        """
         omgw0 = self.omgw0(g0=g0, gs0=gs0, sup=sup, sup_method=sup_method)
         i_max = np.argmax(omgw0)
         return self.f()[i_max], omgw0[i_max]
 
     def omgw0_total(self, omgw0: np.ndarray = None) -> float:
+        r"""Total $\Omega_{\text{gw},0} integrated over all frequencies"""
         if omgw0 is None:
             omgw0 = self.omgw0()
         return ssm.trapezoid_loglog(x=self.f(), y=omgw0)
@@ -165,9 +178,11 @@ class Spectrum(ssm.SSMSpectrum):
         return self.r_star / H_n
 
     def signal_to_noise_ratio(self) -> float:
+        """Signal-to-noise ratio for LISA, taking into account all noise sources"""
         return noise.signal_to_noise_ratio(f=self.f(), signal=self.omgw0(), noise=self.noise())
 
     def signal_to_noise_ratio_instrument(self) -> float:
+        """Signal-to-noise ratio for LISA, taking into account only the instrument noise"""
         return noise.signal_to_noise_ratio(f=self.f(), signal=self.omgw0(), noise=self.noise_ins())
 
     def suppression_factor(
@@ -330,3 +345,12 @@ def omgw0_bag(
         sup_fac = sup.suppression(vw, alpha, method=sup_method)
         return const.Fgw0 * J(r_star, K_frac) * omgwi * sup_fac
     raise ValueError(f"Invalid suppression method: {sup_method}")
+
+
+copy_docstrings_without_params({
+    Spectrum.f: f,
+    Spectrum.F_gw0: F_gw0,
+    Spectrum.f_star0: f_star0,
+    Spectrum.noise: noise.omega_noise,
+    Spectrum.noise_ins: noise.omega_ins
+})
