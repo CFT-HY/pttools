@@ -17,6 +17,7 @@ from pttools.bubble.relativity import gamma
 from pttools.bubble import thermo
 from pttools.bubble import transition
 from pttools.speedup.export import export_json
+import pttools.type_hints as th
 from pttools.utils.docstrings import copy_docstrings_without_params
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
@@ -31,7 +32,7 @@ class NotYetSolvedError(RuntimeError):
 
 
 class Bubble:
-    """A solution of the hydrodynamic equations"""
+    """A solution of the hydrodynamic equations, aka. a bubble"""
     def __init__(
             self,
             model: "Model",
@@ -52,7 +53,7 @@ class Bubble:
             log_success: bool = False,
             allow_invalid: bool = False,
             log_invalid: bool = True):
-        r"""
+        r"""Create a solution of the hydrodynamic equations, aka. a bubble
         :param model: The equation of state object
         :param v_wall: Wall velocity $v_\text{wall}$
         :param alpha_n: Transition strength $\alpha_n$
@@ -72,12 +73,17 @@ class Bubble:
         :param allow_invalid: Whether to allow invalid solutions
         :param log_invalid: Whether to log invalid solutions
         """
+        # -----
+        # Validate input parameters
+        # -----
         if use_bag_solver and use_giese_solver:
             raise ValueError("Both bag and Giese solvers cannot be used at the same time.")
-
         if v_wall is None or np.isnan(v_wall) or v_wall < 0 or v_wall > 1:
             raise ValueError(f"Invalid v_wall={v_wall}")
 
+        # -----
+        # Set and validate alpha_n and alpha_theta_bar_n
+        # -----
         if not theta_bar:
             model.validate_alpha_n(alpha_n, allow_invalid=allow_invalid, log_invalid=log_invalid)
         self.wn = model.wn(alpha_n, wn_guess, theta_bar=theta_bar)
@@ -95,7 +101,9 @@ class Bubble:
             wn=self.wn, wm_guess=wm_guess
         )
 
-        # Parameters
+        # -----
+        # Set parameters
+        # -----
         self.model: Model = model
         self.v_wall = v_wall
         self.t_end = t_end
@@ -103,7 +111,9 @@ class Bubble:
         self.thin_shell_t_points_min = thin_shell_t_points_min
         self.log_success = log_success
 
-        # Computed parameters
+        # -----
+        # Compute parameters
+        # -----
         self.Tn = model.temp(self.wn, Phase.SYMMETRIC)
         if self.Tn > model.T_crit:
             msg = f"Bubbles form only when T_nuc < T_crit. Got: T_nuc={self.Tn}, T_crit={model.T_crit}"
@@ -159,34 +169,70 @@ class Bubble:
             if label_latex is None else label_latex
         self.label_unicode = f"{self.model.label_unicode}, v_w={v_wall}, αₙ={alpha_n}" \
             if label_unicode is None else label_unicode
-        self.notes: tp.List[str] = []
+        self.notes: list[str] = []
 
+        # -----
         # Output arrays
-        self.v: tp.Optional[np.ndarray] = None
-        self.w: tp.Optional[np.ndarray] = None
-        self.xi: tp.Optional[np.ndarray] = None
-        self.phase: tp.Optional[np.ndarray] = None
+        # -----
+        #: Fluid velocity profile $v(\xi)$
+        self.v: th.FloatArr1D | None = None
+        #: Enthalpy profile $w(\xi)$
+        self.w: th.FloatArr1D | None = None
+        #: Self-similar bubble radius coordinates $\xi$
+        self.xi: th.FloatArr1D | None = None
+        #: Phase profile $\phi(\xi)$
+        self.phase: th.FloatArr1D | None = None
+        #: Temperature profile $T(\xi)$
+        self.T: th.FloatArr1D | None = None
 
+        # -----
         # Output values
-        self.alpha_plus: tp.Optional[float] = None
-        self.alpha_theta_bar_plus: tp.Optional[float] = None
-        self.elapsed: tp.Optional[float] = None
-        self.sp: tp.Optional[float] = None
-        self.sm: tp.Optional[float] = None
-        self.sm_sh: tp.Optional[float] = None
-        self.sn: tp.Optional[float] = None
-        self.vp: tp.Optional[float] = None
-        self.vm: tp.Optional[float] = None
-        self.vp_tilde: tp.Optional[float] = None
-        self.vm_tilde: tp.Optional[float] = None
-        self.v_sh: tp.Optional[float] = None
-        self.vm_sh: tp.Optional[float] = None
-        self.vm_tilde_sh: tp.Optional[float] = None
-        self.v_cj: tp.Optional[float] = None
-        self.w_center: tp.Optional[float] = None
-        self.wp: tp.Optional[float] = None
-        self.wm: tp.Optional[float] = None
-        self.wm_sh: tp.Optional[float] = None
+        # -----
+        #: $\alpha_+$
+        self.alpha_plus: float | None = None
+        #: $\alpha_{\bar{\theta}_+}$
+        self.alpha_theta_bar_plus: float | None = None
+        self.elapsed: float | None = None
+        #: $s_+$
+        self.sp: float | None = None
+        #: $s_-$
+        self.sm: float | None = None
+        #: $s_{-,\text{sh}}$
+        self.sm_sh: float | None = None
+        #: $s_n$
+        self.sn: float | None = None
+        #: $T_+$
+        self.Tp: float | None = None
+        #: $T_-$
+        self.Tm: float | None = None
+        #: $T_{-,\text{sh}}$
+        self.Tm_sh: float | None = None
+        #: $T_\text{center}$
+        self.T_center: float | None = None
+        #: $v_+$
+        self.vp: float | None = None
+        #: $v_-$
+        self.vm: float | None = None
+        #: $\tilde{v}_+$
+        self.vp_tilde: float | None = None
+        #: $\tilde{v}_-$
+        self.vm_tilde: float | None = None
+        #: $v_{\text{sh}}$
+        self.v_sh: float | None = None
+        #: $\tilde{v}_{-,\text{sh}}$
+        self.vm_sh: float | None = None
+        #: $\tilde{v}_{-,\text{sh}}$
+        self.vm_tilde_sh: float | None = None
+        #: $v_{CJ}$
+        self.v_cj: float | None = None
+        #: $w_\text{center}$
+        self.w_center: float | None = None
+        #: $w_+$
+        self.wp: float | None = None
+        #: $w_-$
+        self.wm: float | None = None
+        #: $w_{-,\text{sh}}$
+        self.wm_sh: float | None = None
 
         if solve:
             self.solve()
@@ -201,7 +247,7 @@ class Bubble:
         """Add a note to the bubble"""
         self.notes.append(note)
 
-    def export(self, path: str | None = None) -> dict[str, any]:
+    def export(self, path: str | None = None) -> dict[str, tp.Any]:
         """Export the bubble data as JSON"""
         data = {
             "datetime": datetime.datetime.now(),
@@ -218,12 +264,16 @@ class Bubble:
             "v": self.v,
             "w": self.w,
             "xi": self.xi,
+            "T": self.T,
             # Solution parameters
             "alpha_plus": self.alpha_plus,
             "sp": self.sp,
             "sm": self.sm,
             "sm_sh": self.sm_sh,
             "sn": self.sn,
+            "Tp": self.Tp,
+            "Tm": self.Tm,
+            "T_center": self.T_center,
             "Tn": self.Tn,
             "v_cj": self.v_cj,
             "vp": self.vp,
@@ -236,7 +286,8 @@ class Bubble:
             "wn": self.wn,
             "wp": self.wp,
             "wm": self.wm,
-            "wm_sh": self.wm_sh
+            "wm_sh": self.wm_sh,
+            "w_center": self.w_center
         }
         if path is not None:
             export_json(data, path)
@@ -284,24 +335,15 @@ class Bubble:
                     v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type,
                     wn=self.wn,
                     alpha_n_max_bag=alpha_n_max_bag,
-                    high_alpha_n=high_alpha_n, t_end=self.t_end, n_xi=self.n_xi, thin_shell_limit=self.thin_shell_t_points_min,
-                    use_bag_solver=use_bag_solver, use_giese_solver=use_giese_solver,
-                    log_success=self.log_success, log_high_alpha_n_failures=log_high_alpha_n_failures
+                    high_alpha_n=high_alpha_n,
+                    t_end=self.t_end,
+                    n_xi=self.n_xi,
+                    thin_shell_limit=self.thin_shell_t_points_min,
+                    use_bag_solver=use_bag_solver,
+                    use_giese_solver=use_giese_solver,
+                    log_success=self.log_success,
+                    log_high_alpha_n_failures=log_high_alpha_n_failures
                 )
-            self.sn = self.model.s(self.wn, Phase.SYMMETRIC)
-            self.sm = self.model.s(self.wm, Phase.BROKEN)
-            if self.sol_type == SolutionType.DETON:
-                self.sp = self.sn
-                self.sm_sh = self.sm
-            else:
-                self.sp = self.model.s(self.wp, Phase.SYMMETRIC)
-                self.sm_sh = self.model.s(
-                    self.wm_sh,
-                    # In detonations the shock and wall have merged
-                    Phase.BROKEN if self.sol_type == SolutionType.DETON else Phase.SYMMETRIC
-                )
-
-            self.w_center = self.w[0]
             if self.solver_failed:
                 # This is already reported by the individual solvers
                 msg = f"Solver failed with model={self.model.label_unicode}, " \
@@ -314,16 +356,41 @@ class Bubble:
             self.add_note(msg)
             self.no_solution_found = True
             return
-        self.solved = True
-        self.phase = props.find_phase(self.xi, self.v_wall)
 
+        # -----
+        # Additional properties for the solution
+        # -----
+
+        self.solved = True
         self.alpha_plus = self.model.alpha_plus(
             self.wp, self.wm, vp_tilde=self.vp_tilde, sol_type=self.sol_type,
             error_on_invalid=False, nan_on_invalid=True, log_invalid=True
         )
         self.alpha_theta_bar_plus = self.model.alpha_theta_bar_plus(self.wp)
+        self.phase = props.find_phase(self.xi, self.v_wall)
 
+        self.sn = self.model.s(self.wn, Phase.SYMMETRIC)
+        self.sm = self.model.s(self.wm, Phase.BROKEN)
+        self.Tm = self.model.temp(self.wm, Phase.BROKEN)
+        self.w_center = self.w[0]
+        self.T_center = self.model.temp(self.w_center, Phase.BROKEN)
+
+        # In detonations the shock and the wall have merged
+        if self.sol_type == SolutionType.DETON:
+            self.sp = self.sn
+            self.sm_sh = self.sm
+            self.Tp = self.Tn
+            self.Tm_sh = self.Tm
+        else:
+            self.sp = self.model.s(self.wp, Phase.SYMMETRIC)
+            self.sm_sh = self.model.s(self.wm_sh, Phase.SYMMETRIC)
+            self.Tp = self.model.temp(self.wp, Phase.SYMMETRIC)
+            self.Tm_sh = self.model.temp(self.wm_sh, Phase.SYMMETRIC)
+
+        # -----
         # Validity checking for the solution
+        # -----
+
         if np.isnan(self.alpha_plus):
             self.alpha_plus = self.model.alpha_plus(
                 self.wp, self.wm, vp_tilde=self.vp_tilde, sol_type=self.sol_type,
@@ -372,9 +439,9 @@ class Bubble:
                     logger.warning(msg)
             self.add_note(msg)
 
-    # ---
+    # -----
     # Plotting
-    # ---
+    # -----
 
     def plot(self, fig: plt.Figure | None = None, path: str | None = None, **kwargs) -> plt.Figure:
         """Plot the velocity and enthalpy profiles of the bubble"""
@@ -401,13 +468,13 @@ class Bubble:
         from pttools.analysis.plot_bubbles import plot_bubbles_w
         return plot_bubbles_w([self], fig, ax, path, **kwargs)
 
-    # ---
+    # -----
     # Quantities
-    # ---
+    # -----
 
     @property
     def vp_tilde_sh(self):
-        """Velocity in front of the shock in the shock frame
+        r"""Velocity in front of the shock in the shock frame
 
         The fluid ahead of the shock is still, and therefore
         $$\tilde{v}_{+,sh} = v_{sh}$$.
@@ -422,11 +489,12 @@ class Bubble:
     @property
     def vp_vm_tilde_ratio_giese(self) -> float:
         # This docstring is copied from the model function
-        r"""Giese et al. approximation for $\frac{\tilde{v}_+}{\tilde{v}_-}$, :giese_2021:`\ ` eq. 11
+        r"""Giese et al. approximation for $\frac{\tilde{v}_+}{\tilde{v}_-}$,
+        :giese_2021:`\ ` eq. 11
 
         $$\frac{\tilde{v}_+}{\tilde{v}_-} \approx \frac{
-            (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3\alpha_{\bar{\theta}_+} }{
-            (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3 \tilde{v}_+ \tilde{v}_- \alpha_{\bar{\theta}}_+
+        (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3\alpha_{\bar{\theta}_+} }{
+        (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3 \tilde{v}_+ \tilde{v}_- \alpha_{\bar{\theta}}_+
         }$$
         :return: Giese et al. approximation for $\frac{\tilde{v}_+}{\tilde{v}_-}$
         """
@@ -441,7 +509,7 @@ class Bubble:
     def v_mu(self) -> float:
         r"""Maximum fluid velocity behind the bubble wall, $\mu(\xi)$"""
         # wm is the highest enthalpy inside the bubble
-        cs2 = self.model.cs2_max(w_max=self.wm, w_min=self.w_center, phase=Phase.BROKEN)
+        cs2, _ = self.model.cs2_max(w_max=self.wm, w_min=self.w_center, phase=Phase.BROKEN)
         return props.v_max_behind(self.v_wall, np.sqrt(cs2))
 
     # Quantities
