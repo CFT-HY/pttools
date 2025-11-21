@@ -33,4 +33,5 @@ Analysis
   plot_thermomodels
   plot_vw_alpha
   plot_xiv_plane
+  suppression
   utils

@@ -61,7 +61,7 @@ dependencies = [
     "plotly >= 5.24.1",
     "scipy >= 1.14.1",
 ]
-# Note: LISA ProtoLab uses Python 3.12, and PTtools should therefore probably stay compliant with it.
+# Note: LISA ProtoLab uses Python 3.13, and PTtools should therefore probably stay compliant with it.
 # https://gitlab.esa.int/mika.x.maki/lisa-protolab
 requires-python = ">= 3.11"
 # dynamic = ["version"]
@@ -76,6 +76,7 @@ performance = [
 
 [project.urls]
 documentation = "https://pttools.readthedocs.io"
+issues = "https://github.com/CFT-HY/pttools/issues"
 repository = "https://github.com/CFT-HY/pttools"
 
 [tool.coverage.run]

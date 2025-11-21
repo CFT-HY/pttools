@@ -1,7 +1,5 @@
 """Useful functions for finding the properties of a solution."""
 
-import typing as tp
-
 import numba.types
 import numpy as np
 
