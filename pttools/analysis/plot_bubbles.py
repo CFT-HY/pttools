@@ -94,7 +94,8 @@ def plot_bubbles_v(
     for bubble in bubbles:
         if "label" in kwargs:
             ax.plot(bubble.xi, bubble.v, **kwargs)
-        ax.plot(bubble.xi, bubble.v, label=bubble.label_latex, **kwargs)
+        else:
+            ax.plot(bubble.xi, bubble.v, label=bubble.label_latex, **kwargs)
     ax.set_ylabel(V_LABEL)
     ax.set_ylim(0, v_max)
     return plot_bubbles_common(bubbles, fig, ax, path)
@@ -111,6 +112,7 @@ def plot_bubbles_w(
     for bubble in bubbles:
         if "label" in kwargs:
             ax.plot(bubble.xi, bubble.w, **kwargs)
-        ax.plot(bubble.xi, bubble.w, label=bubble.label_latex, **kwargs)
+        else:
+            ax.plot(bubble.xi, bubble.w, label=bubble.label_latex, **kwargs)
     ax.set_ylabel(W_LABEL)
     return plot_bubbles_common(bubbles, fig, ax, path)
