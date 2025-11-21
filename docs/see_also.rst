@@ -3,9 +3,9 @@ See also
 
 Here is a non-comprehensive list of other simulation software that may be of interest.
 
-- `BubbleDet <https://bubbledet.readthedocs.io>`_
+- `BubbleDet <https://bubbledet.readthedocs.io/en/latest/>`_
 - `BubbleProfiler <https://github.com/bubbleprofiler/bubbleprofiler>`_
-- `Cobaya <https://cobaya.readthedocs.io>`_
+- `Cobaya <https://cobaya.readthedocs.io/en/latest/>`_
 - `cosmoGW <https://github.com/CosmoGW/CosmoGW>`_
 - `CosmoLattice <https://cosmolattice.net>`_
 - `CosmoTransitions <https://clwainwright.net/CosmoTransitions>`_
@@ -15,4 +15,4 @@ Here is a non-comprehensive list of other simulation software that may be of int
 - `HILA <https://cft-hy.github.io/HILA.home/>`_
 - `Pencil Code <https://pencil-code.org/>`_
 - `PTPlot <https://www.ptplot.org>`_
-- `WallGo <https://wallgo.readthedocs.io>`_
+- `WallGo <https://wallgo.readthedocs.io/en/latest/>`_

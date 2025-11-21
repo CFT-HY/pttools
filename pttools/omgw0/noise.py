@@ -73,11 +73,12 @@ F2_LISA: float = 4/3 * FT_LISA
 
 def N_acc(L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatOrArr:
     r"""LISA acceleration noise
-    $$N_\text{acc} = \frac{3 \cdot 01^{-15} \frac{\text{m}}{\text{s^2}}{L}
+    $$N_\text{acc} = \frac{3 \cdot 10^{-15} \frac{\text{m}}{\text{s^2}}}{L}
     \approx 1.44 \cdot 10^{-48} \frac{1}{\text{s}^4 \text{Hz}}$$
+    :gowling_2021:`\ ` eq. 3.3
     :gowling_2023:`\ ` p. 6
 
-    $$4 N_\text{acc} \approx 5.76 \cdot 10^{-48} \frac{1}{\text{s}^4 \text{Hz}}$$
+    $$4 {N}_\text{acc} \approx 5.76 \cdot 10^{-48} \frac{1}{\text{s}^4 \text{Hz}}$$
     :smith_2019:`\ ` eq. 53
     :lisa_sci_req:`\ ` eq. 3
     """
@@ -91,9 +92,9 @@ def N_AE(
         W_abs2: th.FloatOrArr | None = None) -> th.FloatOrArr:
     r"""A and E channels of LISA instrument noise
     $$N_A = N_E = \left(\left(
-    4 + 2 \cos \left( \frac{f}{f_t} \right)\right) P_\text{oms} +
-    8 \left( 1 + \cos \left( \frac{f}{f_t} \right) + \cos^2 \left( \frac{f}{f_t} \right) \right) P_\text{acc}
-    \right) |W|^2$$
+    4 + 2 \cos \left( \frac{f}{f_t} \right)\right) {P}_\text{oms} +
+    8 \left( 1 + \cos \left( \frac{f}{f_t} \right) + \cos^2 \left( \frac{f}{f_t} \right) \right) {P}_\text{acc}
+    \right) \lvert W \rvert^2$$
     :gowling_2021:`\ ` eq. 3.4
     :smith_2019:`\ ` eq. 57
     """
@@ -122,7 +123,7 @@ def omega(f: th.FloatOrArr, S: th.FloatOrArr) -> th.FloatOrArr:
 def omega_eb(f: th.FloatOrArr, f_ref_eb: float = 25, omega_ref_eb: float = 8.9e-10) -> th.FloatOrArr:
     r"""
     Energy density of extragalactic compact binaries
-    $$\Omega_\text{eb}(f) = \Omega_\text{ref,eb} \left( \frac{f}{f_\text{ref,eb} \right)^\frac{2}{3}$$
+    $$\Omega_\text{eb}(f) = \Omega_\text{ref,eb} \left( \frac{f}{{f}_\text{ref,eb} \right)^\frac{2}{3}$$
     :gowling_2021:`\ ` eq. 3.9
     """
     return omega_ref_eb * (f/f_ref_eb)**(2/3)
@@ -131,7 +132,7 @@ def omega_eb(f: th.FloatOrArr, f_ref_eb: float = 25, omega_ref_eb: float = 8.9e-
 def omega_gb(f: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Energy density of unresolved galactic compact binaries
-    $$\Omega_\text{gb} = \left( \frac{4 \pi^2}{3 H_0^2} \right) f^3 S_\text{gb}(f)$$
+    $$\Omega_\text{gb} = \left( \frac{4 \pi^2}{3 H_0^2} \right) f^3 {S}_\text{gb}(f)$$
     :gowling_2021:`\ ` eq. 3.11
     """
     return omega(f, S_gb(f))
@@ -180,8 +181,8 @@ def P_oms(L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatOrArr:
 
 def R_AE(f: th.FloatOrArr, ft: th.FloatOrArr = FT_LISA, W_abs2: th.FloatOrArr | None = None) -> th.FloatOrArr:
     r"""Gravitational wave response function for the A and E channels
-    $$\mathcal{R}_A^\text{Fit} = \mathcal{R}_E^\text{Fit} \approx \frac{9}{20} |W|^2
-    \left(1 + \left( \frac{3f}{4f_t} \right^2 \right)^{-1}$$
+    $$\mathcal{R}_A^\text{Fit} = \mathcal{R}_E^\text{Fit} \approx \frac{9}{20} \lvert W \rvert^2
+    \left(1 + \left( \frac{3f}{4f_t} \right)^2 \right)^{-1}$$
     :gowling_2021:`\ ` eq. 3.6
     """
     if W_abs2 is None:

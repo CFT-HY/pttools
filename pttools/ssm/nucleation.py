@@ -40,7 +40,7 @@ def nu(T: th.FloatOrArr, nuc_type: NucType = NucType.SIMULTANEOUS, a: float = 1.
 def H(T: th.FloatOrArr, G: float = const.G) -> th.FloatOrArr:
     r"""Hubble parameter $H(T)$
     $$H(T) = \sqrt{G} T^2$$
-    :lecture_notes:`\ ` p. 47
+    :notes:`\ ` p. 47
 
     This is a rough approximation.
     TODO: Compute the gravitational constant in GeV properly

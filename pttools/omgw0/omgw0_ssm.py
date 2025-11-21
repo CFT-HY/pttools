@@ -195,7 +195,7 @@ class Spectrum(ssm.SSMSpectrum):
         r"""Timescale of nonlinearities $\tau_\text{nl}$
         $$\tau_\text{nl} = \frac{R_*}{\bar{U}_f}$
         :gw_pt_ssm:`\ ` p. 6
-        :lecture_notes:`\ ` p. 48
+        :notes:`\ ` p. 48
         :giombi_2024_cs:`\ ` p. 2
         """
         return self.R_star(H_n) / self.bubble.ubarf

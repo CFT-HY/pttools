@@ -91,7 +91,7 @@ class SSMSpectrum:
         self.cs: tp.Optional[float] = None
         #: $P_v(y)$
         self.spec_den_v: tp.Optional[np.ndarray] = None
-        #: $P_v(z_\text{lookup})$
+        #: $P_v({z}_\text{lookup})$
         self.spec_den_v_lookup: tp.Optional[np.ndarray] = None
         #: Spectral density of scaled gravitational wave power
         self.spec_den_gw: tp.Optional[np.ndarray] = None
@@ -115,9 +115,9 @@ class SSMSpectrum:
 
     def beta(self, H_n: th.FloatOrArr) -> th.FloatOrArr:
         r"""Nucleation rate parameter $\beta$
-        $$\beta = (8 \pi)^\frac{1}{3} \frac{v_\text{wall}}{R_*}$$
+        $$\beta = (8 \pi)^\frac{1}{3} \frac{{v}_\text{wall}}{{R}_*}$$
         :gw_pt_ssm:`\ ` eq. 4.16, A.14
-        :lecture_notes:`\ ` eq. 7.21
+        :notes:`\ ` eq. 7.21
 
         Simultaneous nucleation only!
         """
@@ -125,7 +125,7 @@ class SSMSpectrum:
 
     def beta_tilde(self):
         r"""Nucleation rate parameter $\tilde{\beta}$, also known as "beta over H"
-        $$\tilde{\beta} \equiv \frac{\beta}{H_n} = (8 \pi)^\frac{1}{3} \frac{v_\text{wall}}{r_*}$$
+        $$\tilde{\beta} \equiv \frac{\beta}{{H}_n} = (8 \pi)^\frac{1}{3} \frac{{v}_\text{wall}}{{r}_*}$$
         :gowling_2021:`\ ` eq. 2.1
 
         Simultaneous nucleation only!
@@ -180,7 +180,7 @@ class SSMSpectrum:
 
     @functools.cached_property
     def Htau_nl(self):
-        """$H \tau_\text{nl}$"""
+        r"""$H \tau_\text{nl}$"""
         return self.r_star / self.bubble.ubarf
 
     @functools.cached_property

@@ -898,11 +898,14 @@ class Model(BaseModel, abc.ABC):
                 logger.warning("Got alpha_n=%s > 1. Please be careful that it's valid.", alpha_n)
 
     def vp_vm_tilde_ratio_giese(
-            self, vp_tilde: th.FloatOrArr, vm_tilde: th.FloatOrArr, wp: float, wm: th.FloatOrArr) -> th.FloatOrArr:
+            self,
+            vp_tilde: th.FloatOrArr,
+            vm_tilde: th.FloatOrArr,
+            wp: float, wm: th.FloatOrArr) -> th.FloatOrArr:
         r"""Giese approximation for $\frac{\tilde{v}_+}{\tilde{v}_-}$, :giese_2021:`\ ` eq. 11
         $$\frac{\tilde{v}_+}{\tilde{v}_-} \approx \frac{
-            (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3\alpha_{\bar{\theta}_+} }{
-            (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3 \tilde{v}_+ \tilde{v}_- \alpha_{\bar{\theta}}_+
+        (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3\alpha_{\bar{\theta}_+} }{
+        (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3 \tilde{v}_+ \tilde{v}_- \alpha_{\bar{\theta}}_+
         }$$
         :param vp_tilde: $\tilde{v}_+$
         :param vm_tilde: $\tilde{v}_-$
