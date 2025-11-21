@@ -14,8 +14,8 @@ from pttools.bubble.boundary import Phase
 from pttools.bubble.bubble import Bubble
 import pttools.bubble.ke_frac_approx as K
 import pttools.omgw0.suppression as sup_mod
-from pttools.ssmtools.const import NPTDEFAULT, NTDEFAULT, N_Z_LOOKUP_DEFAULT, NptType
-import pttools.ssmtools as ssm
+from pttools.ssm.const import NPTDEFAULT, NTDEFAULT, N_Z_LOOKUP_DEFAULT, NptType
+from pttools import ssm
 import pttools.type_hints as th
 from pttools.omgw0 import const, noise
 from pttools.utils.docstrings import copy_docstrings_without_params

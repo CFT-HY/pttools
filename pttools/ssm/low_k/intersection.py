@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.special import gamma
 
-from pttools.ssmtools import const
-from pttools.ssmtools.low_k.utils import Iv, U
+from pttools.ssm import const
+from pttools.ssm.low_k.utils import Iv, U
 
 
 def cross_z(HLf: float, cs: float, nu: float, tau_star: float, tau_end: float) -> float:

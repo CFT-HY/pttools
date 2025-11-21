@@ -9,7 +9,7 @@ import numpy as np
 
 import pttools.type_hints as th
 from pttools import speedup
-from pttools.ssmtools import const
+from pttools.ssm import const
 
 # logger = logging.getLogger(__name__)
 

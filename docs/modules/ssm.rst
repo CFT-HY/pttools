@@ -1,13 +1,13 @@
-SSMtools
-========
+SSM
+===
 
-.. currentmodule:: pttools.ssmtools
+.. currentmodule:: pttools.ssm
 
-.. automodule:: pttools.ssmtools
+.. automodule:: pttools.ssm
   :no-members:
   :no-inherited-members:
 
-:py:mod:`pttools.ssmtools`:
+:py:mod:`pttools.ssm`:
 
 .. autosummary::
   :toctree: gen_modules/

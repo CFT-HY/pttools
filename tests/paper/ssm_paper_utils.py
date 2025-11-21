@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
 from pttools import bubble
-from pttools import ssmtools as ssm
+from pttools import ssm
 from tests.paper import const
 from tests.paper import plotting
 from tests.paper import utils

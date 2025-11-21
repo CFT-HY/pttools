@@ -1,4 +1,4 @@
-"""Numerical utilities for SSMtools"""
+"""Numerical utilities for the Sound Shell Model"""
 
 import logging
 

@@ -2,7 +2,7 @@ import numpy as np
 from scipy.integrate import simpson
 from scipy.special import gamma
 
-from pttools.ssmtools import const
+from pttools.ssm import const
 
 
 def power_spectrum_integration_low(

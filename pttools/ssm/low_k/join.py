@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from scipy.special import erf, erfc
 
-from pttools.ssmtools.low_k import integration, intersection
+from pttools.ssm.low_k import integration, intersection
 
 logger = logging.getLogger(__name__)
 

@@ -12,9 +12,9 @@ import typing as tp
 import numpy as np
 
 import pttools.bubble as bbl
-import pttools.ssmtools.const as ssm_const
-from pttools.ssmtools.spectrum import NucType
-from pttools.ssmtools.spectrum_bag import power_gw_scaled_bag
+import pttools.ssm.const as ssm_const
+from pttools.ssm.spectrum import NucType
+from pttools.ssm.spectrum_bag import power_gw_scaled_bag
 
 logger = logging.getLogger(__name__)
 

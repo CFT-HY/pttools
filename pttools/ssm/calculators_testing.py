@@ -1,4 +1,4 @@
-"""Testing utilities for the SSMtools calculators"""
+"""Testing utilities for the Sound Shell Model calculators"""
 
 import matplotlib.pyplot as plt
 import numpy as np

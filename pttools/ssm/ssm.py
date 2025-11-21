@@ -7,9 +7,9 @@ import numpy as np
 
 from pttools.bubble.bubble import Bubble
 from pttools import speedup
-from pttools.ssmtools import const
-from pttools.ssmtools.calculators import resample_uniform_xi
-from pttools.ssmtools.sin_transform import sin_transform
+from pttools.ssm import const
+from pttools.ssm.calculators import resample_uniform_xi
+from pttools.ssm.sin_transform import sin_transform
 
 logger = logging.getLogger(__name__)
 

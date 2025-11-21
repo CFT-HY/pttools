@@ -7,7 +7,7 @@ import numpy as np
 
 from pttools.analysis.plot_bubbles import plot_bubbles_v
 from pttools.analysis.utils import FigAndAxes, create_fig_ax, legend
-from pttools.ssmtools.spectrum import SSMSpectrum
+from pttools.ssm.spectrum import SSMSpectrum
 from pttools.omgw0 import Spectrum, omega_noise
 
 F_LABEL = r"$f$ (Hz)"

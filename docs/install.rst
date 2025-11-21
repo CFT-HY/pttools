@@ -199,7 +199,7 @@ is currently disabled by default due to the difficulty
 in setting up OpenMP and TBB on cluster environments and macOS.
 
 Some parts of the code such as
-:meth:`pttools.ssmtools.spectrum.spec_den_gw_scaled`
+:meth:`pttools.ssm.spectrum.spec_den_gw_scaled`
 can use nested parallelism to optimally use all available CPU resources.
 This requires that either OpenMP or Intel TBB is installed,
 as Numba's integrated workqueue backend does not support nested parallelism.

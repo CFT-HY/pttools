@@ -3,7 +3,7 @@ import enum
 import numba
 import numpy as np
 
-from pttools.ssmtools import const
+from pttools.ssm import const
 import pttools.type_hints as th
 
 

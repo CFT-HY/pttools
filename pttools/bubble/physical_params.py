@@ -1,7 +1,7 @@
 """
 Experimental data structures based on numba.jitclass
 
-When implementing these, remove the corresponding code from ssmtools/spectrum.py
+When implementing these, remove the corresponding code from ssm/spectrum.py
 
 Jitclasses are a highly experimental feature of Numba. Please see the following issues.
 https://github.com/numba/numba/issues/365

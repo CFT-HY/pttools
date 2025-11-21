@@ -9,10 +9,10 @@ from scipy.optimize import fsolve
 import pttools.type_hints as th
 from pttools import bubble
 from pttools import speedup
-from pttools.ssmtools import const
-from pttools.ssmtools.calculators import resample_uniform_xi
-from pttools.ssmtools.sin_transform import sin_transform
-from pttools.ssmtools.ssm import DE_Method, Method
+from pttools.ssm import const
+from pttools.ssm.calculators import resample_uniform_xi
+from pttools.ssm.sin_transform import sin_transform
+from pttools.ssm.ssm import DE_Method, Method
 
 logger = logging.getLogger(__name__)
 

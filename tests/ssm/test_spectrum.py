@@ -4,7 +4,7 @@ import unittest
 
 from pttools.bubble import Bubble
 from pttools.models import ConstCSModel
-from pttools.ssmtools import SSMSpectrum
+from pttools.ssm import SSMSpectrum
 
 
 class SSMSpectrumTest(unittest.TestCase):

@@ -7,8 +7,8 @@ import numpy as np
 from pttools.bubble import Bubble
 from pttools.bubble.quantities import de_from_w_bag
 from pttools.models import BagModel
-from pttools.ssmtools import SSMSpectrum
-from pttools import ssmtools
+from pttools.ssm import SSMSpectrum
+from pttools import ssm
 from tests.utils.assertions import assert_allclose
 
 
@@ -43,7 +43,7 @@ class SpectrumTest(unittest.TestCase):
 
     def test_a2(self):
         a2_old = np.array([
-            ssmtools.a2_e_conserving_bag(
+            ssm.a2_e_conserving_bag(
                 self.z, v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i],
                 v_ip=bubble.v, w_ip=bubble.w, xi=bubble.xi,
                 v_sh=bubble.v_sh
@@ -51,7 +51,7 @@ class SpectrumTest(unittest.TestCase):
             for i, bubble in enumerate(self.bubbles)
         ])
         a2_new = np.array([
-            ssmtools.a2_e_conserving(bubble, z=self.z, cs=ssmtools.CS0)[0]
+            ssm.a2_e_conserving(bubble, z=self.z, cs=ssm.CS0)[0]
             for bubble in self.bubbles
         ])
         # a2_new2 = np.array([spectrum.a2 for spectrum in self.spectra])
@@ -60,7 +60,7 @@ class SpectrumTest(unittest.TestCase):
 
     def test_spec_den_v(self):
         old = np.array([
-            ssmtools.spec_den_v_bag(self.z, (self.V_WALLS[i], self.ALPHA_NS[i]))
+            ssm.spec_den_v_bag(self.z, (self.V_WALLS[i], self.ALPHA_NS[i]))
             for i in range(self.V_WALLS.size)
         ])
         new = np.array([spectrum.spec_den_v for spectrum in self.spectra])
@@ -68,7 +68,7 @@ class SpectrumTest(unittest.TestCase):
 
     def test_gw(self):
         old = np.array([
-            ssmtools.power_gw_scaled_bag(self.z, (self.V_WALLS[i], self.ALPHA_NS[i]))
+            ssm.power_gw_scaled_bag(self.z, (self.V_WALLS[i], self.ALPHA_NS[i]))
             for i in range(self.V_WALLS.size)
         ])
         new = np.array([spectrum.pow_gw for spectrum in self.spectra])

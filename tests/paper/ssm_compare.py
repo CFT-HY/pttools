@@ -7,13 +7,12 @@ Modified from
 
 import logging
 import os
-import typing as tp
 
 import numpy as np
 import matplotlib.pyplot as plt
 
 from pttools import bubble
-import pttools.ssmtools as ssm
+from pttools import ssm
 from tests.paper import const
 from tests.paper import plotting
 from tests.paper import utils

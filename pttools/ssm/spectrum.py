@@ -9,11 +9,11 @@ import numpy as np
 
 import pttools.type_hints as th
 from pttools.bubble import Bubble, Phase
-from pttools.ssmtools import const
-from pttools.ssmtools.nucleation import NucType, DEFAULT_NUC_TYPE
-from pttools.ssmtools.spec_den_gw import gen_lookup, spec_den_gw_scaled
-from pttools.ssmtools.spec_den_v import spec_den_v
-from pttools.ssmtools.low_k import power_spectrum_integration_low, power_spectrum_integration_int, pow_gw_junction
+from pttools.ssm import const
+from pttools.ssm.nucleation import NucType, DEFAULT_NUC_TYPE
+from pttools.ssm.spec_den_gw import gen_lookup, spec_den_gw_scaled
+from pttools.ssm.spec_den_v import spec_den_v
+from pttools.ssm.low_k import power_spectrum_integration_low, power_spectrum_integration_int, pow_gw_junction
 
 if tp.TYPE_CHECKING:
     from pttools.analysis.utils import FigAndAxes

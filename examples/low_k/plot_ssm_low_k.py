@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from pttools.ssmtools.low_k import pow_gw_approximation, pow_gw_junction, power_spectrum_integration_low, power_spectrum_integration_int
+# from pttools.ssm.low_k import pow_gw_approximation, pow_gw_junction, power_spectrum_integration_low, power_spectrum_integration_int
 
 from pttools.bubble import Bubble
 from pttools.models import BagModel
@@ -112,7 +112,7 @@ Pgw_high = HR * Ht * spectrum_z.pow_gw
 # Pgw_approx_2 = pow_gw_junction(z, Pgw_low, Pgw_int, Pgw_high, cs=cs, tau_star=tau_star, tau_end=tau_end)
 
 
-# Pgw_exp = HR* Ht * ssmtools.power_gw_scaled(z, params_v)
+# Pgw_exp = HR* Ht * ssm.power_gw_scaled(z, params_v)
 # ax.plot(z, Pgw_high, color = 'blue', linestyle = '--', label = r'high-freq appox: PTtools')
 ax.plot(z, HR * Ht * spectrum_z.pow_gw_ssm, color = 'blue', linestyle = '--', label = r'high-freq appox: PTtools')
 

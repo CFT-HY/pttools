@@ -4,8 +4,8 @@ import numpy as np
 from scipy.integrate import quad
 from scipy.special import erf, erfc, gamma
 
-from pttools.ssmtools.low_k.utils import rho, Iv, U
-from pttools.ssmtools.low_k.intersection import cross_z
+from pttools.ssm.low_k.utils import rho, Iv, U
+from pttools.ssm.low_k.intersection import cross_z
 
 
 def GW_spectral_density_approx_low(z, HLf, cs, tau_end):

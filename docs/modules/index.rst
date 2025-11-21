@@ -16,6 +16,6 @@ Modules
   bubble
   models
   omgw0
-  ssmtools
+  ssm
   speedup
   misc

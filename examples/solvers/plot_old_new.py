@@ -17,7 +17,7 @@ from pttools.bubble import fluid_bag
 from pttools.bubble import relativity
 from pttools.models.model import Model
 from pttools.models.bag import BagModel
-from pttools.ssmtools import SSMSpectrum, power_gw_scaled_bag, spec_den_v_bag, power_v_bag
+from pttools.ssm import SSMSpectrum, power_gw_scaled_bag, spec_den_v_bag, power_v_bag
 from tests.paper.plane import xiv_plane
 from tests.paper.plot_plane_paper import plot_plane
 

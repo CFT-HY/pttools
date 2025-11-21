@@ -12,7 +12,7 @@ from examples.utils import save
 from pttools.bubble import Bubble
 from pttools.models import ConstCSModel
 from pttools.analysis.plot_model import ModelPlot
-from pttools.ssmtools import NucType
+from pttools.ssm import NucType
 from pttools.omgw0 import Spectrum
 
 

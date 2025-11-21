@@ -9,7 +9,7 @@ from pandas.io.parsers import read_csv
 
 from pttools.omgw0.suppression.suppression_ssm_data.remove_hybrids import SUPPRESSION_FOLDER, remove_hybrids
 from pttools.omgw0.suppression.suppression_ssm_data.suppression_ssm_calculator import calc_sup_ssm
-import pttools.ssmtools.const as ssm_const
+import pttools.ssm.const as ssm_const
 from tests.utils.assertions import assert_allclose
 
 

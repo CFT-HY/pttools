@@ -3,8 +3,8 @@ import logging
 import numpy as np
 
 from pttools import bubble
-from pttools.ssmtools import const, ssm, ssm_bag, spectrum
-from pttools.ssmtools.spec_den_v import spec_den_v_core
+from pttools.ssm import const, ssm, ssm_bag, spectrum
+from pttools.ssm.spec_den_v import spec_den_v_core
 
 logger = logging.getLogger(__name__)
 

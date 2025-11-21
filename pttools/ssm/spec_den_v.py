@@ -7,8 +7,8 @@ import numpy as np
 
 from pttools import bubble
 from pttools import speedup
-from pttools.ssmtools import const, ssm
-from pttools.ssmtools.nucleation import NucType, nu
+from pttools.ssm import const, ssm
+from pttools.ssm.nucleation import NucType, nu
 
 logger = logging.getLogger(__name__)
 
