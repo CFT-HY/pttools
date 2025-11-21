@@ -107,6 +107,7 @@ You can set up a local development environment with the following commands.
 
   git clone git@github.com:CFT-HY/pttools.git
   cd pttools
+  git switch BRANCH_NAME  # If you want to work on some other branch than main
   python3 -m venv --upgrade-deps venv
   source ./venv/bin/activate
   pip3 install -r requirements.txt -r requirements-dev.txt -r ./docs/requirements.txt
