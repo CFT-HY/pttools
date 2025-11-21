@@ -14,7 +14,10 @@ Omgw0
   :template: module.rst
 
   approx
+  bag
   const
+  factors
+  freq
   noise
-  omgw0_ssm
+  spectrum
   suppression

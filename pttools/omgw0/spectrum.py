@@ -1,29 +1,21 @@
-r"""
-Calculate the physical gravitational wave power spectrum $\Omega_{\rm gw}(f)$
-as a function of physical frequency $f$ in the Sound shell model.
-"""
-
 import functools
-import logging
 import typing as tp
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.bubble.boundary import Phase
-from pttools.bubble.bubble import Bubble
-import pttools.bubble.ke_frac_approx as K
-import pttools.omgw0.suppression as sup_mod
-from pttools.ssm.const import NPTDEFAULT, NTDEFAULT, N_Z_LOOKUP_DEFAULT, NptType
+from pttools.bubble import Bubble, Phase
+from pttools.omgw0 import const
+from pttools.omgw0.factors import F_gw0
+from pttools.omgw0 import freq
+from pttools.omgw0 import noise
+from pttools.omgw0 import suppression as sup_mod
 from pttools import ssm
 import pttools.type_hints as th
-from pttools.omgw0 import const, noise
 from pttools.utils.docstrings import copy_docstrings_without_params
 
 if tp.TYPE_CHECKING:
     from pttools.analysis.utils import FigAndAxes
-
-logger = logging.getLogger(__name__)
 
 
 class Spectrum(ssm.SSMSpectrum):
@@ -35,8 +27,8 @@ class Spectrum(ssm.SSMSpectrum):
             y: tp.Union[np.ndarray[tuple[int], np.float64], None] = None,
             z_st_thresh: float = ssm.Z_ST_THRESH,
             nuc_type: ssm.NucType = ssm.DEFAULT_NUC_TYPE,
-            nt: int = NTDEFAULT,
-            n_z_lookup: int = N_Z_LOOKUP_DEFAULT,
+            nt: int = ssm.NTDEFAULT,
+            n_z_lookup: int = ssm.N_Z_LOOKUP_DEFAULT,
             lifetime_multiplier: float = 1,
             compute: bool = True,
             low_k: bool = True,
@@ -84,11 +76,11 @@ class Spectrum(ssm.SSMSpectrum):
     def f(self, z: tp.Union[np.ndarray, None] = None) -> th.FloatOrArr:
         if z is None:
             z = self.y
-        return f(z=z, r_star=self.r_star, f_star0=self.f_star0)
+        return freq.f(z=z, r_star=self.r_star, f_star0=self.f_star0)
 
     @functools.cached_property
     def f_star0(self) -> float:
-        return f_star0(
+        return freq.f_star0(
             Tn=self.Tn,
             g_star=self.g_star
         )
@@ -247,110 +239,10 @@ class Spectrum(ssm.SSMSpectrum):
         return plot_spectra_multi_flat([self], fig, path, **kwargs)
 
 
-def f(z: th.FloatOrArr, r_star: th.FloatOrArr, f_star0: th.FloatOrArr) -> th.FloatOrArr:
-    r"""Convert the dimensionless wavenumber $z$ to frequency today by taking into account the redshift.
-    $$f = \frac{z}{r_*} f_{*,0}$$,
-    :gowling_2021:`\ ` eq. 2.12
-
-    :param z: dimensionless wavenumber $z$
-    :param r_star: Hubble-scaled mean bubble spacing
-    :return: frequency $f$ today
-    """
-    return z/r_star * f_star0
-
-
-def f0(rs: th.FloatOrArr, T_n: th.FloatOrArr = const.T_default, g_star: float = 100) -> th.FloatOrArr:
-    r"""Factor required to take into account the redshift of the frequency scale"""
-    return f_star0(T_n, g_star) / rs
-
-
-def f_star0(Tn: th.FloatOrArr, g_star: th.FloatOrArr = 100) -> th.FloatOrArr:
-    r"""
-    Conversion factor between the frequencies at the time of the nucleation and frequencies today.
-    $$f_{*,0} = 2.6 \cdot 10^{-6} \text{Hz} \left( \frac{T_n}{100 \text{GeV}} \right) \left( \frac{g_*}{100} \right)^{\frac{1}{6}}$$,
-    :gowling_2021:`\ ` eq. 2.13
-    :param Tn: Nucleation temperature
-    :param g_star: Degrees of freedom at the time the GWs were produced. The default value is from the article.
-    :return:
-    """
-    return const.fs0_ref * (Tn / 100) * (g_star / 100)**(1 / 6)
-
-
-def F_gw0(
-        g_star: th.FloatOrArr,
-        g0: th.FloatOrArr = const.G0,
-        gs0: th.FloatOrArr = const.GS0,
-        gs_star: th.FloatOrArr | None = None,
-        om_gamma0: th.FloatOrArr = const.OMEGA_RADIATION) -> th.FloatOrArr:
-    r"""Power attenuation following the end of the radiation era
-    $$F_{\text{gw},0} = \Omega_{\gamma,0} \left( \frac{g_{s0}}{g_{s*}} \right)^{4/9} \frac{g_*}{g_0}
-    = (3.57 \pm 0.05) \cdot 10^{-5} \left( \frac{100}{g_*} \right)^{1/3}$$
-    There is a typo in :gowling_2021:`\ ` eq. 2.11: the $\frac{4}{9}$ should be $\frac{4}{3}$.
-    """
-    if g0 is None or gs0 is None or gs_star is None or om_gamma0 is None:
-        return 3.57e-5 * (100/g_star)**(1/3)
-    return om_gamma0 * (gs0 / gs_star)**(4/3) * g_star / g0
-
-
-def J(r_star: th.FloatOrArr, K_frac: th.FloatOrArr, nu: float = 0) -> th.FloatOrArr:
-    r"""
-    Pre-factor to convert power_gw_scaled to predicted spectrum
-    approximation of $(H_n R_*)(H_n \tau_v)$
-    updating to properly convert from flow time to source time
-
-    $$J = H_n R_* H_n \tau_v = r_* \left(1 - \frac{1}{\sqrt{1 + 2x}} \right)$$
-    :gowling_2021:`\ ` eq. 2.8
-    """
-    sqrt_K = np.sqrt(K_frac)
-    return r_star * (1 - (np.sqrt(1 + 2*r_star/sqrt_K)**(-1-2*nu)))
-
-
-def omgw0_bag(
-        freqs: np.ndarray,
-        vw: float,
-        alpha: float,
-        r_star: float,
-        T: float = const.T_default,
-        npt: NptType = NPTDEFAULT,
-        sup: sup_mod.Suppression = sup_mod.DEFAULT,
-        sup_method: sup_mod.SuppressionMethod = sup_mod.SuppressionMethod.DEFAULT):
-    r"""
-    For given set of thermodynamic parameters vw, alpha, rs and Tn calculates the power spectrum using
-    the SSM as encoded in the PTtools module (omgwi)
-    :gowling_2021:`\ ` eq. 2.14
-    """
-    params = (vw, alpha, ssm.NucType.EXPONENTIAL, (1,))
-    fp0 = f0(r_star, T)
-    z = freqs/fp0
-
-    K_frac = K.calc_ke_frac(vw, alpha)
-    omgwi = ssm.power_gw_scaled_bag(z, params, npt=npt)
-
-    # entry options for power_gw_scaled
-    #          z: np.ndarray,
-    #        params: bubble.PHYSICAL_PARAMS_TYPE,
-    #        npt=const.NPTDEFAULT,
-    #        filename: str = None,
-    #        skip: int = 1,
-    #        method: ssm.Method = ssm.Method.E_CONSERVING,
-    #        de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
-    #        z_st_thresh: float = const.Z_ST_THRESH)
-
-    if sup_method == sup_mod.SuppressionMethod.NONE:
-        return const.Fgw0 * J(r_star, K_frac) * omgwi
-    elif sup_method == sup_mod.SuppressionMethod.NO_EXT:
-        sup_fac = sup.suppression(vw, alpha, method=sup_method)
-        return const.Fgw0 * J(r_star, K_frac) * omgwi * sup_fac
-    elif sup_method == sup_mod.SuppressionMethod.EXT_CONSTANT:
-        sup_fac = sup.suppression(vw, alpha, method=sup_method)
-        return const.Fgw0 * J(r_star, K_frac) * omgwi * sup_fac
-    raise ValueError(f"Invalid suppression method: {sup_method}")
-
-
 copy_docstrings_without_params({
-    Spectrum.f: f,
+    Spectrum.f: freq.f,
     Spectrum.F_gw0: F_gw0,
-    Spectrum.f_star0: f_star0,
+    Spectrum.f_star0: freq.f_star0,
     Spectrum.noise: noise.omega_noise,
     Spectrum.noise_ins: noise.omega_ins
 })

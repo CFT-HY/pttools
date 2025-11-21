@@ -1,4 +1,4 @@
-"""Approximations for omgw0"""
+r"""Approximations for $\Omega_{\text{gw},0}$"""
 
 import pttools.type_hints as th
 
