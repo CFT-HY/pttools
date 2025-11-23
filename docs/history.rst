@@ -3,11 +3,27 @@ Version history
 
 1.0.0 (planned changes)
 -----------------------
-- GW power spectrum for low wavenumbers by using the formulae by :giombi_2024_cs:`\ `.
 - More polished documentation and examples.
 - Improve unit testing by using more comprehensive reference data, which are stored externally as HDF5.
   Test whether `Git LFS <https://git-lfs.com/>`_ on GitLab would be a suitable storage.
 - Improve integration with Cobaya and add examples.
+
+0.10.0
+------
+- Restructure the project
+- Rename :mod:`pttools.ssmtools` to :mod:`pttools.ssm`
+- Add low-k approximation by :giombi_2024_cs:`\ `
+- Add :giese_2020:`\ ` and :giese_2020:`\ ` fluid solvers
+- Add computation for total integrated GW power using trapezoidal log-log integration
+- Add $c_s$ correction term for calculating $R_*({v}_\text{wall}, \beta)$
+- Add mypy type checking
+- Improve signal-to-noise calculations
+- Improve error handling
+- Improve plotting
+- Fix importing of examples
+- Fix extrapolation of the suppression factor
+- Fix various bugs
+
 
 0.9.0
 -----
