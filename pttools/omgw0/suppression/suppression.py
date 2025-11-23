@@ -112,12 +112,12 @@ class Suppression:
 
 
 def alpha_n_max_approx(vw: th.FloatOrArr) -> th.FloatOrArr:
-    r"""Approximate $\alpha_{n,\text{max}}(v_\text{wall})$"""
+    r"""Approximate $\alpha_{n,\text{max}}({v}_\text{wall})$"""
     return 1/3 * (1 + 3*vw**2) / (1 - vw**2)
 
 
 def alpha_n_max(v_wall: th.FloatOrArr) -> th.FloatOrArr:
-    r"""$\alpha_{n,\text{max}}(v_\text{wall})$"""
+    r"""$\alpha_{n,\text{max}}({v}_\text{wall})$"""
     # vw, al
     # [0.24000, 0.34000]
     # [0.44000, 0.50000]

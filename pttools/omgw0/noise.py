@@ -73,12 +73,12 @@ F2_LISA: float = 4/3 * FT_LISA
 
 def N_acc(L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatOrArr:
     r"""LISA acceleration noise
-    $$N_\text{acc} = \frac{3 \cdot 10^{-15} \frac{\text{m}}{\text{s^2}}}{L}
+    $${N}_\text{acc} = \frac{3 \cdot 10^{-15}}{L} \frac{\text{m}}{\text{s}^2}
     \approx 1.44 \cdot 10^{-48} \frac{1}{\text{s}^4 \text{Hz}}$$
     :gowling_2021:`\ ` eq. 3.3
     :gowling_2023:`\ ` p. 6
 
-    $$4 {N}_\text{acc} \approx 5.76 \cdot 10^{-48} \frac{1}{\text{s}^4 \text{Hz}}$$
+    $$4 {N}_\text{acc} \approx 5.76 \cdot 10^{-48} \frac{1}{{\text{s}}^4 \text{Hz}}$$
     :smith_2019:`\ ` eq. 53
     :lisa_sci_req:`\ ` eq. 3
     """
@@ -123,7 +123,7 @@ def omega(f: th.FloatOrArr, S: th.FloatOrArr) -> th.FloatOrArr:
 def omega_eb(f: th.FloatOrArr, f_ref_eb: float = 25, omega_ref_eb: float = 8.9e-10) -> th.FloatOrArr:
     r"""
     Energy density of extragalactic compact binaries
-    $$\Omega_\text{eb}(f) = \Omega_\text{ref,eb} \left( \frac{f}{{f}_\text{ref,eb} \right)^\frac{2}{3}$$
+    $$\Omega_\text{eb}(f) = \Omega_\text{ref,eb} \left( \frac{f}{{f}_\text{ref,eb}} \right)^\frac{2}{3}$$
     :gowling_2021:`\ ` eq. 3.9
     """
     return omega_ref_eb * (f/f_ref_eb)**(2/3)
@@ -253,19 +253,17 @@ def S_gb(
         f: th.FloatOrArr,
         t: th.FloatOrArr = 4,  # years
         A: float = 1.8e-44) -> th.FloatOrArr:
+    r"""Noise power spectral density for galactic binaries
+    $$S_c(f) = A f^\frac{-7}{3} \exp \left( -f^\alpha + \beta f \sin(\kappa f) \right)
+    \left( 1 + \tanh(\gamma (f_k - f) \right) \text{Hz}^{-1}$$
+    :cornish_2017:`\ ` eq. 3
+    :gowling_2021:`\ ` eq. 3.10
+    """
     alpha = np.interp(t, GB_TIMES, GB_ALPHAS)
     beta = np.interp(t, GB_TIMES, GB_BETAS)
     kappa = np.interp(t, GB_TIMES, GB_KAPPAS)
     gamma = np.interp(t, GB_TIMES, GB_GAMMAS)
     fk = np.interp(t, GB_TIMES, GB_FKS)
-    r"""Noise power spectral density for galactic binaries
-    $$
-    S_c(f) = A f^\frac{-7}{3} \exp \left( -f^\alpha + \beta f \sin(\kappa f) \right)
-    \left( 1 + \tanh(\gamma (f_k - f) \right) \text{Hz}^{-1}
-    $$
-    :cornish_2017:`\ ` eq. 3
-    :gowling_2021:`\ ` eq. 3.10
-    """
     return A * f**(-7/3) * np.exp(-f**alpha + beta * f * np.sin(kappa * f)) * (1 + np.tanh(gamma * (fk - f)))
 
 

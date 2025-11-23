@@ -502,7 +502,7 @@ class Bubble:
 
         $$\frac{\tilde{v}_+}{\tilde{v}_-} \approx \frac{
         (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3\alpha_{\bar{\theta}_+} }{
-        (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3 \tilde{v}_+ \tilde{v}_- \alpha_{\bar{\theta}}_+
+        (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3 \tilde{v}_+ \tilde{v}_- \alpha_{\bar{\theta}_+}
         }$$
         :return: Giese et al. approximation for $\frac{\tilde{v}_+}{\tilde{v}_-}$
         """

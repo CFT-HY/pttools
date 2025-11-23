@@ -348,7 +348,7 @@ class Model(BaseModel, abc.ABC):
             log_invalid: bool = True) -> th.FloatOrArr:
         r"""Transition strength parameter, :giese_2021:`\ `, eq. 13
 
-        $$\alpha_{\bar{\theta}+} = \frac{D \bar{\theta}(T_n)}{3 w_n}$$
+        $$\alpha_{\bar{\theta}_+} = \frac{D \bar{\theta}(T_n)}{3 w_n}$$
         """
         check_value_in_range(
             x=wn,
@@ -811,7 +811,8 @@ class Model(BaseModel, abc.ABC):
             wn: float | None = None,
             wn_guess: float | None = None,
             wm_guess: float | None = None) -> SolutionType:
-        """Find the type of the hydrodynamic solution
+        r"""Find the type of the hydrodynamic solution
+
         :param v_wall: wall velocity $v_\text{wall}$
         :param alpha_n: transition strength parameter $\alpha_n$
         :param wn: nucleation enthalpy $w_n$
@@ -920,7 +921,7 @@ class Model(BaseModel, abc.ABC):
         r"""Giese approximation for $\frac{\tilde{v}_+}{\tilde{v}_-}$, :giese_2021:`\ ` eq. 11
         $$\frac{\tilde{v}_+}{\tilde{v}_-} \approx \frac{
         (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3\alpha_{\bar{\theta}_+} }{
-        (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3 \tilde{v}_+ \tilde{v}_- \alpha_{\bar{\theta}}_+
+        (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3 \tilde{v}_+ \tilde{v}_- \alpha_{\bar{\theta}_+}
         }$$
         :param vp_tilde: $\tilde{v}_+$
         :param vm_tilde: $\tilde{v}_-$
@@ -1066,7 +1067,7 @@ class Model(BaseModel, abc.ABC):
 
     def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Enthalpy density $w(T,\phi)$
-        $$w \equiv \frəc{dH}{dV} = e + p = T \frac{\partial p}{\partial T} = Ts$$
+        $$w \equiv \frac{dH}{dV} = e + p = T \frac{\partial p}{\partial T} = Ts$$
         :param temp: temperature $T$
         :param phase: phase $\phi$
         :return: enthalpy density $w(T,\phi)$

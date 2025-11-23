@@ -1,6 +1,4 @@
-"""
-Chapman-Jouguet speed
-"""
+"""Chapman-Jouguet speed"""
 
 from collections.abc import Iterable
 import logging
@@ -10,7 +8,7 @@ import numba
 import numpy as np
 from scipy.optimize import fsolve
 
-from pttools.bubble import const
+# from pttools.bubble import const
 from pttools.bubble import boundary
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.relativity import gamma2

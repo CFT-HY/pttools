@@ -22,6 +22,7 @@ def mu(xi, v):
 def getwow(v1, v2):
     """Ratio of enthalpies across the bubble wall, "w over w"
     from the junction conditions
+
     :param v1: $v_a$
     :param v2: $v_b$
     """
@@ -103,7 +104,7 @@ def getKandWow(vw: float, v0: float, cs2: float) -> tp.Tuple[np.ndarray, np.ndar
 
 
 def alN(al, wow, cs2b, cs2s):
-    r"""$\alpha_{\bar{theta}n}$ in the nucleation phase (in front of the shock)"""
+    r"""$\alpha_{\bar{\theta}n}$ in the nucleation phase (in front of the shock)"""
     da = (1./cs2b - 1./cs2s)/(1./cs2s + 1.)/3.
     return (al + da)*wow - da
 
