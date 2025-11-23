@@ -73,10 +73,12 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
-# Automatic section labeling produces duplicated labels. This silences the warnings from those.
-# https://github.com/sphinx-doc/sphinx/issues/7728
-# https://github.com/sphinx-doc/sphinx/issues/7697
-suppress_warnings = ["autosectionlabel.*"]
+suppress_warnings = [
+    # Automatic section labeling produces duplicated labels. This silences the warnings from those.
+    # https://github.com/sphinx-doc/sphinx/issues/7728
+    # https://github.com/sphinx-doc/sphinx/issues/7697
+    "autosectionlabel.*",
+]
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -197,6 +199,7 @@ linkcheck_ignore: list[str] = [
     # These websites don't allow crawlers
     # r"https://academic.oup.com/book/*",
     r"https://www.aka.fi/*",
+    r"https://www.intel.com/*",
     # The private Bitbucket repos will also return 404 without authentication
     r"https://bitbucket.org/hindmars/sound-shell-model/*",
     # This link redirects to a site that does not allow crawlers

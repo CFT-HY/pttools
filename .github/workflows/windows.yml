@@ -43,8 +43,7 @@ jobs:
           # Todo: fix NumbaLSODA installation on Windows
           # Currently the requirements are specified manually to skip NumbaLSODA
           run: |
-            pip --cache-dir=.pip install --upgrade pip
-            pip --cache-dir=.pip install --upgrade wheel
+            pip --cache-dir=.pip install --upgrade pip wheel
             pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
         - name: Print Numba sysinfo
           run: python -m numba --sysinfo | tee numba-sysinfo.txt

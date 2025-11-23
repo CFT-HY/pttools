@@ -19,9 +19,8 @@ Creating a new release
 ----------------------
 - Update the PTtools version number in
     - CITATION.cff (update also the release date)
-    - codemeta.json (update also the release date)
+    - codemeta.json (update also the release date in the dateModified field)
     - pyproject.toml
-- Update the dateModified field in codemeta.json
 - Ensure that the unit tests pass and that the documentation is generated successfully
 - Check these for warnings, errors and unnecessary log output and fix them if necessary
     - Unit test logs
