@@ -50,7 +50,7 @@
     ],
     "codeRepository": "git+https://github.com/CFT-HY/pttools.git",
     "dateCreated": "2017-06-14",
-    "dateModified": "2023-01-16",
+    "dateModified": "2025-11-23",
     "datePublished": "2023-01-16",
     "description": "PTtools simulation framework for phase transitions in the early universe",
     "downloadUrl": "https://github.com/CFT-HY/pttools/releases",
@@ -76,7 +76,7 @@
     ],
     "programmingLanguage": "Python",
     "relatedLink": "https://pttools.readthedocs.io/",
-    "version": "0.9.0",
+    "version": "0.10.0",
     "codemeta:contIntegration": {
         "id": "https://github.com/CFT-HY/pttools/actions"
     },
