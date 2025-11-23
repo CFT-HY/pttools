@@ -21,10 +21,13 @@ Creating a new release
     - CITATION.cff (update also the release date)
     - codemeta.json (update also the release date)
     - pyproject.toml
-- Update the dateModified field in codemeta.json.
+- Update the dateModified field in codemeta.json
+- Ensure that the unit tests pass and that the documentation is generated successfully
 - Check these for warnings, errors and unnecessary log output and fix them if necessary
     - Unit test logs
     - Documentation logs
+    - Pylint logs
+    - Mypy logs
 
 
 Updating Python version requirements
