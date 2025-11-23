@@ -325,14 +325,14 @@ def solve_shock(
     """
     # Handle invalid inputs
     if v1_tilde < 0 or v1_tilde > 1 or np.isclose(v1_tilde, 0) or np.isnan(v1_tilde):
-        logger.error(f"Got invalid v1={v1_tilde} for shock solver.")
+        logger.error("Got invalid v1=%s for shock solver.", v1_tilde)
         return np.nan, np.nan
     if np.isclose(w1, 0) or np.isnan(w1):
-        logger.error(f"Got invalid w1={w1} for shock solver.")
+        logger.error("Got invalid w1=%s for shock solver.", w1)
         return np.nan, np.nan
 
     if np.isclose(v1_tilde, 1):
-        logger.error(f"Got v1={v1_tilde} for shock solver.")
+        logger.error("Got v1=%s for shock solver.", v1_tilde)
         return 1, np.nan
 
     if csp is None:
@@ -345,7 +345,7 @@ def solve_shock(
     # If the shock barely exists
     if np.isclose(v1_tilde, csp):
         if warn_if_barely_exists:
-            logger.warning(f"The shock barely exists. Got v1={v1_tilde}, w1={w1}")
+            logger.warning("The shock barely exists. Got v1=%s, w1=%s", v1_tilde, w1)
         return v1_tilde, w1
 
     if v2_tilde_guess is None:
@@ -354,11 +354,14 @@ def solve_shock(
         # General guess
         v2_tilde_guess = csp2 * v1_tilde
     if np.isclose(v2_tilde_guess, 0) or np.isclose(v2_tilde_guess, 1):
-        logger.error(f"Got invalid estimate for v2={v2_tilde_guess}")
+        logger.error("Got invalid estimate for v2=%s", v2_tilde_guess)
         return np.nan, np.nan
 
     if backwards and v1_tilde < csp:
-        logger.error(f"The shock must be supersonic. Got v1=vp={v1_tilde}, w1=wp={w1}, cs(wp)={csp}")
+        logger.error(
+            "The shock must be supersonic. Got v1=vp=%s, w1=wp=%s, cs(wp)=%s",
+            v1_tilde, w1, csp
+        )
         return np.nan, np.nan
 
     # Old guess based on the bag model. It does not work for xi**2 < 1/3.
@@ -376,7 +379,7 @@ def solve_shock(
         w2_guess = w2_junction(v1_tilde, w1, v2_tilde_guess)
 
     if w2_guess < 0 or np.isclose(w2_guess, 0):
-        logger.error(f"Got invalid estimate for w2={w2_guess}")
+        logger.error("Got invalid estimate for w2=%s", w2_guess)
         return np.nan, np.nan
 
     return solve_junction(
@@ -390,6 +393,7 @@ def solve_shock(
 
 @np.vectorize
 def v_shock(model: "Model", wn: float, xi: float, cs_n: float, warn_if_barely_exists: bool = True) -> float:
+    r"""Shock velocity $v_\text{sh}$"""
     if xi <= cs_n or np.isclose(xi, cs_n):
         return 0
     if np.isclose(xi, 1):
@@ -415,6 +419,7 @@ def v_shock_curve(
         model: "Model",
         wn: float, n_points: int = 20,
         warn_if_barely_exists: bool = False) -> tuple[np.ndarray, np.ndarray]:
+    """Shock velocity curve"""
     cs_n = np.sqrt(model.cs2(wn, Phase.SYMMETRIC))
     # Create more points near cs_n, as there the accuracy is the most critical
     xi = cs_n + np.logspace(-4, 0, num=n_points) * (1 - cs_n)

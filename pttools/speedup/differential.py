@@ -40,9 +40,11 @@ class DifferentialCache:
 
     def add(
             self,
-            name: str, differential: DifferentialCFunc,
+            name: str,
+            differential: DifferentialCFunc,
             p_last_is_backwards: bool = True,
             ndim: int = 3) -> DifferentialPointer:
+        """Add a differential function to the cache"""
         with self._lock:
             if name in self._cache_njit:
                 logger.warning(
@@ -84,7 +86,7 @@ class DifferentialCache:
             if NUMBA_DISABLE_JIT:
                 address = id(differential_njit)
             else:
-                address = differential_numbalsoda.address
+                address = differential_numbalsoda.address  # pylint: disable=possibly-used-before-assignment
             self._cache_pointers[name] = address
 
             self._cache_njit[address] = differential_njit

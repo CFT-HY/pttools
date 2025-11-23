@@ -9,7 +9,7 @@ import pytest
 from pttools import models
 from pttools.analysis.parallel import create_bubbles
 from pttools.bubble.bubble import Bubble
-from pttools.speedup import conditional_decorator, IS_OSX
+from pttools.speedup import IS_OSX
 from tests.utils import assert_allclose
 
 

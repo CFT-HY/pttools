@@ -7,6 +7,7 @@ The Sound Shell Model is discussed in further detail in the article
 """
 
 from .calculators import *
+# from .calculators_testing import *
 from .const import *
 from .nucleation import *
 from .sin_transform import *

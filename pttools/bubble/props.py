@@ -18,6 +18,7 @@ def find_v_index(xi: np.ndarray, v_target: float) -> int:
 
 
 def find_phase(xi: np.ndarray, v_wall: float) -> np.ndarray:
+    r"""Get the phase at each given $\xi$ value"""
     i_wall = find_v_index(xi, v_wall)
     # This presumes that Phase.SYMMETRIC = 0
     phase: np.ndarray = np.zeros_like(xi)

@@ -3,11 +3,11 @@
 import math
 import typing as tp
 
+from matplotlib import cm
 from matplotlib.contour import QuadContourSet
 from matplotlib.colors import Colormap, ListedColormap
 import matplotlib.pyplot as plt
 import numpy as np
-import matplotlib.cm as cm
 
 CMAP_DEFAULT: Colormap = cm.viridis
 CMAP_NEG_DEFAULT: Colormap = cm.Blues

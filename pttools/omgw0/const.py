@@ -4,10 +4,10 @@
 c: float = 299792458.
 
 G_STAR_DEFAULT: float = 100.
-T_default: float = 100.  # GeV
+T_DEFAULT: float = 100.  # GeV
 
 #: arXiv:1910.13125v1 eqn 20
-Fgw0: float = 3.57e-5
+FGW0: float = 3.57e-5
 
 #: # Eqn 2.13 of arXiv:2106.05984
 fs0_ref: float = 2.6e-6
@@ -37,4 +37,4 @@ YEAR_IN_SECONDS: float = 365.2425 * DAY_IN_SECONDS
 LISA_OBS_TIME: float = 4 * 0.75 * YEAR_IN_SECONDS
 
 #: $\Omega_{\gamma,0}$, the radiation density parameter today. Calculated from :caprini_2020:`\ ` p. 11-12
-OMEGA_RADIATION: float = Fgw0 * GS0**(4/3) / G0
+OMEGA_RADIATION: float = FGW0 * GS0**(4/3) / G0

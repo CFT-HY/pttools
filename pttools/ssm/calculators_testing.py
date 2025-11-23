@@ -9,12 +9,13 @@ import sympy as sp
 # from pttools import speedup
 import pttools.type_hints as th
 from . import const
-from . import calculators
+# from . import calculators
 from .sin_transform import sin_transform as _sin_transform
 
 
 # @profile
 def gen_piecewise(x, points: np.ndarray):
+    """Generate a piecewise defined function"""
     funcs = []
     lims = []
     for p1, p2 in zip(points[:-1], points[1:]):
@@ -37,6 +38,7 @@ def sin_transform(
         v_wall: float | None = None,
         v_sh: float | None = None,
         z_st_thresh: float = const.Z_ST_THRESH) -> th.FloatOrArr:
+    """Debugging for sin_transform"""
 
     # Ensure that xi is monotonically increasing
     if np.any(np.diff(xi) <= 0):
@@ -77,6 +79,7 @@ def sin_transform(
 
 
 def sin_transform_debug(z: th.FloatOrArr, xi: np.ndarray, f: np.ndarray, z_st_thresh: float = const.Z_ST_THRESH):
+    """Debugging for sin_transform"""
     fig: plt.Figure
     axs: np.ndarray
     fig, axs = plt.subplots(2, 3, figsize=(11.7, 8.3))

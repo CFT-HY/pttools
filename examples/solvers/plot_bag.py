@@ -5,8 +5,6 @@ Bag model
 Simple plots for the bag model
 """
 
-import os.path
-
 import matplotlib.pyplot as plt
 
 from examples import utils
@@ -14,10 +12,9 @@ from pttools.logging import setup_logging
 from pttools.bubble.fluid_bag import sound_shell_bag
 from pttools.bubble.fluid_reference import ref
 from pttools.models.bag import BagModel
-from pttools.models.const_cs import ConstCSModel
+# from pttools.models.const_cs import ConstCSModel
 from pttools.bubble import props
 from pttools.bubble.bubble import Bubble
-from pttools.bubble.boundary import SolutionType
 
 setup_logging()
 

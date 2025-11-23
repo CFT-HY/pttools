@@ -1,3 +1,5 @@
+"""Functions for joining the GW power spectrum regimes together"""
+
 import logging
 
 import numpy as np

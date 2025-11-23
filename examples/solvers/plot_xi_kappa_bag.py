@@ -1,6 +1,6 @@
 r"""
-Compare kappa(xi) for old and new solvers
-=========================================
+Compare κ(ξ) for old and new solvers
+====================================
 """
 
 import logging
@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 def main() -> plt.Figure:
+    r"""Compare $\kappa(\xi)$ for old and new solvers"""
     t_start = time.perf_counter()
     model = BagModel(a_s=1.1, a_b=1, V_s=1)
     v_walls = np.linspace(0.2, 0.95, 10)
@@ -36,7 +37,7 @@ def main() -> plt.Figure:
             new[i_v] = bubble.kappa
         ax.plot(v_walls, new)
 
-    logger.info(f"Elapsed time: {time.perf_counter() - t_start}")
+    logger.info("Elapsed time: %s s", time.perf_counter() - t_start)
     return fig
 
 

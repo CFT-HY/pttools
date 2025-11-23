@@ -9,7 +9,6 @@ import shutil
 import subprocess
 import sys
 import timeit
-import typing as tp
 import unittest
 
 import matplotlib.pyplot as plt

@@ -51,6 +51,7 @@ class NucArgs:
     ("nuc_args", NotImplemented if speedup.NUMBA_DISABLE_JIT else numba.optional(NucArgs.class_type.instance_type))
 ])
 class PhysicalParams:
+    """Physical parameters for a bubble"""
     def __init__(
             self,
             v_wall: float,

@@ -72,6 +72,7 @@ def compute_entropy_region(bubble: Bubble, start_ind: int, stop_ind: int, revers
 
 
 def compute_entropy(bubble: Bubble):
+    """Compute the entropy profile of a bubble"""
     s = bubble.s.copy()
 
     start_ind: int

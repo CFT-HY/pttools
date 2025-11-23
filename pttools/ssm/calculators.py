@@ -52,5 +52,9 @@ def trapezoid_loglog(x: np.ndarray, y: np.ndarray, minus1_atol: float = 1e-12) -
 
     integral = np.empty_like(m)
     integral[close_to_minus1] = k[close_to_minus1] * np.log(x[1:][close_to_minus1] / x[:-1][close_to_minus1])
-    integral[~close_to_minus1] = k[~close_to_minus1] * (x[1:][~close_to_minus1]**mp1_not_close_to_minus1 - x[:-1][~close_to_minus1]**mp1_not_close_to_minus1) / mp1_not_close_to_minus1
+    integral[~close_to_minus1] = (
+        k[~close_to_minus1] *
+        (x[1:][~close_to_minus1]**mp1_not_close_to_minus1 - x[:-1][~close_to_minus1]**mp1_not_close_to_minus1) /
+        mp1_not_close_to_minus1
+    )
     return np.sum(integral)

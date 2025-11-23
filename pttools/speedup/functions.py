@@ -15,8 +15,8 @@ def gradient(f: np.ndarray):
 
     out = np.empty_like(f)
     out[1:-1] = (f[2:] - f[:-2]) / 2.
-    out[0] = (f[1] - f[0])
-    out[-1] = (f[-1] - f[-2])
+    out[0] = f[1] - f[0]
+    out[-1] = f[-1] - f[-2]
     return out
 
 

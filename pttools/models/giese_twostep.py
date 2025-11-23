@@ -16,6 +16,7 @@ class GieseTwoStepModel(AnalyticModel):
         self.b_b = b_b
         self.d_s = d_s
         self.d_b = d_b
+        super().__init__()
 
     def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         return self.a_s/3*temp**4 + self.V(temp, phase)

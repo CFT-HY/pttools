@@ -16,12 +16,16 @@ logger = logging.getLogger(__name__)
 
 @enum.unique
 class DE_Method(str, enum.Enum):
+    r"""Method for computing $|A(z)|^2$"""
+    # TODO: Improve this docstring
     ALTERNATE = "alternate"
     STANDARD = "standard"
 
 
 @enum.unique
 class Method(str, enum.Enum):
+    r"""Method for computing $|A(z)|^2$"""
+    # TODO: Improve this docstring
     E_CONSERVING = "e_conserving"
     F_ONLY = "f_only"
     WITH_G = "with_g"

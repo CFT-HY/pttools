@@ -68,7 +68,10 @@ class StandardModel(ThermoModel):
             label_unicode: str | None = None,
             gen_cs2: bool = True,
             silence_temp: bool = False):
-        logger.debug(f"Creating Standard Model with g_mult_s={g_mult_s}, g_mult_b={g_mult_b}, V_s={V_s}, V_b={V_b}")
+        logger.debug(
+            "Creating Standard Model with g_mult_s=%s, g_mult_b=%s, V_s=%s, V_b=%s",
+            g_mult_s, g_mult_b, V_s, V_b
+        )
 
         self.g_mult_s = g_mult_s
         self.g_mult_b = g_mult_b

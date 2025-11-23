@@ -1,8 +1,8 @@
-"""
+r"""
 Giese et al. testing
 ====================
 
-Test comparison with Giese et al. code and data
+Test comparison with :giese_2021:`\ ` code and data
 """
 
 import matplotlib.pyplot as plt

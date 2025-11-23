@@ -2,7 +2,7 @@
 LISA noise
 ==========
 
-Plot LISA instrument and astrophysical noise as a function of frequency.
+Plot LISA instrument and astrophysical noise as a function of frequency
 """
 
 from matplotlib import pyplot as plt
@@ -14,6 +14,7 @@ from pttools.omgw0 import noise
 
 
 def main():
+    """Plot LISA instrument and astrophysical noise as a function of frequency"""
     fig: plt.Figure = plt.figure()
     axs = fig.subplots(2, 2)
 

@@ -124,7 +124,7 @@ class Model(BaseModel, abc.ABC):
             raise ValueError(f"T_ref should be lower than T_max. Got: T_ref={T_ref}, T_max={self.T_max}")
 
         if not (T_crit is None or np.isnan(T_crit)):
-            if not (self.T_min < T_crit < self.T_max):
+            if not self.T_min < T_crit < self.T_max:
                 raise ValueError(
                     "Invalid T_crit. Should have T_min < T_crit < T_max. Got: "
                     f"T_min={self.T_min}, T_crit={T_crit}, T_max={self.T_max}"
@@ -179,7 +179,10 @@ class Model(BaseModel, abc.ABC):
             if not allow_fail:
                 raise RuntimeError(msg)
         if cs2 > 1/3:
-            logger.warning(f"Got physically impossible cs2={cs2} > 1/3 at w={w}. Check that the model is valid.")
+            logger.warning(
+                "Got physically impossible cs2=%s > 1/3 at w=%s. Check that the model is valid.",
+                cs2, w
+            )
         return cs2, w
 
     def alpha_n(
@@ -398,7 +401,7 @@ class Model(BaseModel, abc.ABC):
         Modifies the given array.
         """
         if error_on_invalid or nan_on_invalid or log_invalid:
-            if sol_type == SolutionType.SUB_DEF or sol_type == SolutionType.HYBRID:
+            if sol_type in (SolutionType.SUB_DEF, SolutionType.HYBRID):
                 invalid = np.logical_or(alpha_plus < 0, alpha_plus >= 1/3)
             elif vp_tilde is not None:
                 # The square root in the vm_tilde equation must be positive
@@ -420,8 +423,7 @@ class Model(BaseModel, abc.ABC):
                 if nan_on_invalid:
                     if np.isscalar(alpha_plus):
                         return np.nan
-                    else:
-                        alpha_plus[invalid] = np.nan
+                    alpha_plus[invalid] = np.nan
         return alpha_plus
 
     def check_p(self, wn: th.FloatOrArr, allow_fail: bool = False):
@@ -454,6 +456,7 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
+        r"""Validate $\Delta \theta$"""
         theta_given = theta_s is not None and theta_b is not None
         if theta_given:
             prob_diff, prob_wp, prob_wm, prob_theta_s, prob_theta_b = \
@@ -491,10 +494,14 @@ class Model(BaseModel, abc.ABC):
 
         if log_info:
             logger.info(
-                f"Initialised model with name={self.name}, T_crit={t_crit}, alpha_n_at_wn_min={alpha_n_at_wn_min}. "
-                f"At T_crit: w_s={wn_min}, w_b={self.w(t_crit, Phase.BROKEN)}, "
-                f"e_s={self.e_temp(t_crit, Phase.SYMMETRIC)}, e_b={self.e_temp(t_crit, Phase.BROKEN)}, "
-                f"p_s={self.p_temp(t_crit, Phase.SYMMETRIC)}, p_b={self.p_temp(t_crit, Phase.BROKEN)}"
+                f"Initialised model with name=%s, T_crit=%s, alpha_n_at_wn_min=%s. "
+                f"At T_crit: w_s=%s, w_b=%s, e_s=%s, e_b=%s, p_s=%s, p_b=%s",
+                self.name, t_crit, alpha_n_at_wn_min,
+                wn_min, self.w(t_crit, Phase.BROKEN),
+                self.e_temp(t_crit, Phase.SYMMETRIC),
+                self.e_temp(t_crit, Phase.BROKEN),
+                self.p_temp(t_crit, Phase.SYMMETRIC),
+                self.p_temp(t_crit, Phase.BROKEN)
             )
         return t_crit, wn_min
 
@@ -804,21 +811,29 @@ class Model(BaseModel, abc.ABC):
             wn: float | None = None,
             wn_guess: float | None = None,
             wm_guess: float | None = None) -> SolutionType:
-            if wn is None:
-                wn = self.wn(alpha_n, wn_guess)
-            v_cj = v_chapman_jouguet(self, alpha_n, wn=wn, wm_guess=wm_guess)
+        """Find the type of the hydrodynamic solution
+        :param v_wall: wall velocity $v_\text{wall}$
+        :param alpha_n: transition strength parameter $\alpha_n$
+        :param wn: nucleation enthalpy $w_n$
+        :param wn_guess: initial guess for the nucleation enthalpy $w_n$
+        :param wm_guess: initial guess for enthalpy behind the wall $w_-$
+        :return: type of the hydrodynamic solution
+        """
+        if wn is None:
+            wn = self.wn(alpha_n, wn_guess)
+        v_cj = v_chapman_jouguet(self, alpha_n, wn=wn, wm_guess=wm_guess)
 
-            if transition.is_surely_detonation(v_wall, v_cj):
-                return SolutionType.DETON
-            if transition.is_surely_sub_def(self, v_wall, wn):
-                return SolutionType.SUB_DEF
-            if transition.cannot_be_detonation(v_wall, v_cj) and transition.cannot_be_sub_def(self, v_wall, wn):
-                return SolutionType.HYBRID
-            logger.warning(
-                f"Could not determine solution type for %s with v_wall=%s, alpha_n=%s, v_cj=%s",
-                self.name, v_wall, alpha_n, v_cj
-            )
-            return SolutionType.UNKNOWN
+        if transition.is_surely_detonation(v_wall, v_cj):
+            return SolutionType.DETON
+        if transition.is_surely_sub_def(self, v_wall, wn):
+            return SolutionType.SUB_DEF
+        if transition.cannot_be_detonation(v_wall, v_cj) and transition.cannot_be_sub_def(self, v_wall, wn):
+            return SolutionType.HYBRID
+        logger.warning(
+            "Could not determine solution type for %s with v_wall=%s, alpha_n=%s, v_cj=%s",
+            self.name, v_wall, alpha_n, v_cj
+        )
+        return SolutionType.UNKNOWN
 
     def theta(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Trace anomaly $\theta(w,\phi)$, :notes:`\ `, eq. 7.24
@@ -1081,12 +1096,27 @@ class Model(BaseModel, abc.ABC):
         """
 
     def ge_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Effective degrees of freedom for energy density, $g_{\text{eff},e}(T,\phi)$
+
+        :param temp: temperature $T$
+        :param phase: phase $\phi$
+        """
         raise NotImplementedError
 
     def gp_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(T,\phi)$
+
+        :param temp: temperature $T$
+        :param phase: phase $\phi$
+        """
         raise NotImplementedError
 
     def gs_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Effective degrees of freedom for entropy, $g_{\text{eff},s}(T,\phi)$
+
+        :param temp: temperature $T$
+        :param phase: phase $\phi$
+        """
         raise NotImplementedError
 
     @abc.abstractmethod

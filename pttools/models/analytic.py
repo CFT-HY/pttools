@@ -87,9 +87,11 @@ class AnalyticModel(Model, abc.ABC):
         )
         if log_info and self.a_s <= self.a_b:
             logger.warning(
-                f"The model \"{self.name}\" does not satisfy a_s > a_b. "
+                f"The model \"%s\" does not satisfy a_s > a_b. "
                 "Please check that the critical temperature is non-negative. "
-                f"Got: a_s={self.a_s}, a_b={self.a_b}.")
+                f"Got: a_s=%s, a_b=%s.",
+                self.name, self.a_s, self.a_b
+            )
 
     @staticmethod
     def a_from_g(g: th.FloatOrArr) -> th.FloatOrArr:
@@ -200,15 +202,14 @@ class AnalyticModel(Model, abc.ABC):
 
         return a_s, a_b, g_s, g_b
 
-    @classmethod
     def alpha_n_min_find_params_a_g(
-            cls,
+            self,
             a_s: float, a_b: float, g_s: float, g_b: float,
             alpha_n_min_target: float, V_s_default: float, V_b: float,
             default_mult: float = DEFAULT_A_G_MULT,
             safety_factor_alpha = Model.ALPHA_N_MIN_FIND_SAFETY_FACTOR_ALPHA):
-        a_s, a_b, _, _ = cls.get_a_g(a_s, a_b, g_s, g_b, default_mult=default_mult)
-        return cls.alpha_n_min_find_params(
+        a_s, a_b, _, _ = self.get_a_g(a_s, a_b, g_s, g_b, default_mult=default_mult)
+        return self.alpha_n_min_find_params(
             alpha_n_min_target=alpha_n_min_target, a_s_default=a_s, a_b=a_b, V_s_default=V_s_default, V_b=V_b,
             safety_factor_alpha=safety_factor_alpha
         )

@@ -11,6 +11,7 @@ from pttools.omgw0.suppression import WITH_HYBRIDS, NO_HYBRIDS, NO_HYBRIDS_EXT
 
 
 def main():
+    r"""Plot the suppression factor $\Sigma({v}_\text{wall}, \alpha_n)$"""
     return \
         SuppressionPlot(WITH_HYBRIDS), SuppressionPlot(NO_HYBRIDS), SuppressionPlot(NO_HYBRIDS_EXT), \
         SuppressionPlot(

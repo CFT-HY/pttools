@@ -20,8 +20,16 @@ def _qT_array(qRstar, Ttilde, b_R, vw):
 
 @numba.njit
 def _spec_den_v_core_loop(
-        z_i: float, t_array: np.ndarray, b_R: float, vw: float,
-        qT_lookup: np.ndarray, A2_lookup: np.ndarray, nuc_type: NucType, a: float, factor: float):
+        z_i: float,
+        t_array: np.ndarray,
+        b_R: float,
+        vw: float,
+        qT_lookup: np.ndarray,
+        A2_lookup: np.ndarray,
+        nuc_type: NucType,
+        a: float,
+        factor: float):
+    """Inner loop of spec_den_v_core"""
     qT = _qT_array(z_i, t_array, b_R, vw)
     A2_2d_array_z = np.interp(qT, qT_lookup, A2_lookup)
     array2 = t_array ** 6 * nu(t_array, nuc_type, a) * A2_2d_array_z
@@ -40,6 +48,7 @@ def spec_den_v_core(
         qT_lookup: np.ndarray,
         vw: float,
         z: np.ndarray):
+    """Numba-jitted core of spec_den_v"""
     t_array = speedup.logspace(log10tmin, log10tmax, nt)
     b_R = (8. * np.pi) ** (1. / 3.)  # $\beta R_* = b_R v_w $
 
@@ -50,7 +59,7 @@ def spec_den_v_core(
     factor = 1. / (b_R * vw) ** 6
     factor = 2 * factor  # because spectral density of v is 2 * P_v
 
-    for i in numba.prange(z.size):
+    for i in numba.prange(z.size):  # pylint: disable=not-an-iterable
         sd_v[i] = _spec_den_v_core_loop(z[i], t_array, b_R, vw, qT_lookup, A2_lookup, nuc_type, a, factor)
 
     return sd_v

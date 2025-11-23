@@ -32,6 +32,7 @@ def njit(func: tp.Callable | None = None, **kwargs):
 
 
 def njit_if_numba_integrate(func: tp.Callable | None = None, **kwargs) -> tp.Callable:
+    """Njit compile a function if Numba integration is enabled"""
     if func:
         return utils.conditional_decorator(numba.njit, options.NUMBA_INTEGRATE, **kwargs)(func)
     return utils.conditional_decorator(numba.njit, options.NUMBA_INTEGRATE, **kwargs)
@@ -48,8 +49,10 @@ def njit_module(**kwargs):
     # Replace functions in module with jit-wrapped versions
     for name, obj in module.__dict__.items():
         if inspect.isfunction(obj) and inspect.getmodule(obj) == module:
-            logger.debug("Auto decorating function {} from module {} with jit "
-                          "and options: {}".format(obj, module.__name__, kwargs))
+            logger.debug(
+                "Auto decorating function %s from module %s with jit and options: %s",
+                obj, module.__name__, kwargs
+            )
             module.__dict__[name] = numba.njit(obj, **options.NUMBA_OPTS, **kwargs)
 
 

@@ -65,16 +65,16 @@ def fpbspl(t: np.ndarray, n: int, k: int, x: float, l: int, h: np.ndarray):
 
 # @numba.njit
 def splder(
-    t: np.ndarray,
-    n: int,
-    c: np.ndarray,
-    k: int,
-    nu: int,
-    x: np.ndarray,
-    y: np.ndarray,
-    m: int,
-    e: int,
-    wrk: np.ndarray) -> int:
+        t: np.ndarray,
+        n: int,
+        c: np.ndarray,
+        k: int,
+        nu: int,
+        x: np.ndarray,
+        y: np.ndarray,
+        m: int,
+        e: int,
+        wrk: np.ndarray) -> int:
     """
     Modified from the
     `SciPy version <https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/splder.f#L67>`__.
@@ -341,10 +341,10 @@ def splev(t: np.ndarray, n: int, c: np.ndarray, k: int, x: np.ndarray, y: np.nda
             if e == 1:
                 y[i] = 0
                 continue
-            elif e == 2:
+            if e == 2:
                 ier = 1
                 return ier
-            elif e == 3:
+            if e == 3:
                 if arg < tb:
                     arg = tb
                 else:

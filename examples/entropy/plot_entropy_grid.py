@@ -2,7 +2,7 @@
 Entropy grid
 ============
 
-Plot the relative change in entropy density for a grid of bubbles.
+Plot the relative change in entropy density for a grid of bubbles
 """
 
 import os.path
@@ -24,6 +24,7 @@ from tests.profiling import utils_cprofile
 
 
 def main():
+    """Plot the relative change in entropy density for a grid of bubbles"""
     n_points = 10 if speedup.GITHUB_ACTIONS else 20
     # sm = StandardModel(V_s=5e12, g_mult_s=1 + 1e-9)
     models = [

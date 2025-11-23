@@ -137,9 +137,11 @@ def sound_shell_deflagration_common(
         allow_negative_entropy_flux_change: bool,
         warn_if_shock_barely_exists: bool) -> DeflagrationOutput:
     if v_wall < 0 or v_wall > 1 or vm_tilde < 0 or vm_tilde > 1 or wn < 0 or wm < 0 or cs_n < 0 or cs_n > 1 \
-            or vp_tilde_guess < 0 or vp_tilde_guess > 1 or wp_guess < 0 or transition.is_surely_detonation(v_wall, v_cj):
+            or vp_tilde_guess < 0 or vp_tilde_guess > 1 or wp_guess < 0 \
+            or transition.is_surely_detonation(v_wall, v_cj):
         logger.error(
-            "Invalid starting values: v_wall=%s, vm_tilde=%s, wn=%s, wm=%s, cs_n=%s, vp_tilde_guess=%s, wp_guess=%s",
+            "Invalid starting values: "
+            "v_wall=%s, vm_tilde=%s, wn=%s, wm=%s, cs_n=%s, vp_tilde_guess=%s, wp_guess=%s",
             v_wall, vm_tilde, wn, wm, cs_n, vp_tilde_guess, wp_guess
         )
         return DEFLAGRATION_NAN
@@ -195,7 +197,10 @@ def sound_shell_deflagration_common(
     #     if vm_shock < 0 or vm_shock > 1:
     #         raise RuntimeError(f"Got invalid vm_shock={vm_shock} when attempting to correct a hybrid.")
     #     if vp < vm_shock:
-    #         logger.warning("vp < v_shock at the wall. Applying manual correction. Got: vp=%s, v_shock=%s", vp, vm_shock)
+    #         logger.warning(
+    #             "vp < v_shock at the wall. Applying manual correction. Got: vp=%s, v_shock=%s",
+    #             vp, vm_shock
+    #         )
     #         vp = vm_shock + 1e-3
     #         wp = w_shock + 1e-3
 
@@ -276,7 +281,10 @@ def sound_shell_deflagration_common(
             t_end2 = t[i_shock + i_shock_step]
 
     if i_shock <= 1:
-        logger.error("The shock was not found for v_wall=%s despite %s t_end adjustments.", v_wall, attempts)
+        logger.error(
+            "The shock was not found for v_wall=%s despite %s t_end adjustments.",
+            v_wall, attempts
+        )
         return DEFLAGRATION_NAN
 
     v = v[:i_shock]
@@ -299,7 +307,10 @@ def sound_shell_deflagration_reverse(
     logger.warning("UNTESTED, will probably produce invalid results")
 
     if np.isnan(v_wall) or v_wall < 0 or v_wall > 1 or np.isnan(xi_sh) or xi_sh < 0 or xi_sh > 1:
-        logger.error(f"Invalid parameters: v_wall={v_wall}, xi_sh={xi_sh}")
+        logger.error(
+            "Invalid parameters: v_wall=%s, xi_sh=%s",
+            v_wall, xi_sh
+        )
         nan_arr = np.array([np.nan])
         return nan_arr, nan_arr, nan_arr, np.nan, np.nan
 
@@ -309,7 +320,9 @@ def sound_shell_deflagration_reverse(
 
     # Integrate from the shock to the wall
     logger.info(
-        f"Integrating deflagration with v_wall={v_wall}, wn={wn} from vm_sh={vm_sh}, wm_sh={wm_sh}, xi_sh={xi_sh}")
+        f"Integrating deflagration with v_wall=%s, wn=%s from vm_sh=%s, wm_sh=%s, xi_sh=%s",
+        v_wall, wn, vm_sh, wm_sh, xi_sh
+    )
     v, w, xi, t = integrate.fluid_integrate_param(
         v0=vm_sh, w0=wm_sh, xi0=xi_sh,
         phase=Phase.SYMMETRIC,
@@ -357,7 +370,7 @@ def sound_shell_detonation(
         model: "Model", v_wall: float, alpha_n: float, wn: float, v_cj: float,
         vm_tilde_guess: float, wm_guess: float, t_end: float, n_xi: int) -> SolverOutput:
     if transition.cannot_be_detonation(v_wall, v_cj):
-        logger.error(f"Too slow wall speed for a detonation: v_wall={v_wall}, v_cj={v_cj}")
+        logger.error("Too slow wall speed for a detonation: v_wall=%s, v_cj=%s", v_wall, v_cj)
 
     # Todo: use analytical ConstCSModel equations for both phases
 
@@ -480,7 +493,10 @@ def sound_shell_detonation(
     vm_tilde_sh = vm_tilde
 
     # Revert the order of points in the arrays for concatenation
-    return np.flip(v), np.flip(w), np.flip(xi), vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wn, wm, wm, solution_found
+    return np.flip(v), np.flip(w), np.flip(xi), \
+        vp, vm, vp_tilde, vm_tilde, \
+        v_sh, vm_sh, vm_tilde_sh, \
+        wn, wm, wm, solution_found
 
 
 def sound_shell_hybrid(
@@ -522,7 +538,8 @@ def sound_shell_hybrid(
     vp_guess = relativity.lorentz(xi=v_wall, v=vp_tilde_guess)
 
     # More complex starting guesses
-    if np.isnan(vp_tilde_guess) or vp_guess < v_sh_estimate or vp_guess < vm or np.isnan(wp_guess) or wp_guess < wn or wp_guess < wm:
+    if np.isnan(vp_tilde_guess) or vp_guess < v_sh_estimate or vp_guess < vm or np.isnan(wp_guess) \
+            or wp_guess < wn or wp_guess < wm:
         vp_guess = 1.05 * v_sh_estimate
         vp_tilde_guess = relativity.lorentz(xi=v_wall, v=vp_guess)
         wp_guess = wn + 1.3*np.abs(wm - wn)
@@ -618,7 +635,10 @@ def sound_shell_solver_deflagration(
     if vp_guess > v_wall:
         vp_guess_new = 0.95 * v_wall
         if log_high_alpha_n_failures or not high_alpha_n:
-            logger.error("Invalid vp_guess=%s > v_wall=%s, replacing with vp_guess=%s", vp_guess, v_wall, vp_guess_new)
+            logger.error(
+                "Invalid vp_guess=%s > v_wall=%s, replacing with vp_guess=%s",
+                vp_guess, v_wall, vp_guess_new
+            )
         vp_guess = vp_guess_new
 
     sol = root_scalar(
@@ -691,8 +711,9 @@ def sound_shell_solver_deflagration_reverse(
     if sol[2] != 1:
         solution_found = False
         logger.error(
-            f"Deflagration solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. "
-            f"Using xi_sh={xi_sh}. Reason: {sol[3]} Elapsed: {time.perf_counter() - start_time} s."
+            "Deflagration solution was not found for model=%s, v_wall=%s, alpha_n=%s. "
+            "Using xi_sh=%s. Reason: %s Elapsed: %s s.",
+            model.name, v_wall, alpha_n, xi_sh, sol[3], time.perf_counter() - start_time
         )
     v, w, xi, wp, wm, vm = sound_shell_deflagration_reverse(model, v_wall, wn, xi_sh, t_end=t_end, n_xi=n_xi)
 
@@ -767,13 +788,13 @@ def sound_shell_solver_hybrid(
         #         wm = sol.root
         #         reason = sol.flag
 
-        logger.debug(f"Valid wms: {valid_wms}, inds: {valid_wm_inds}")
+        logger.debug("Valid wms: %s, inds: %s", valid_wms, valid_wm_inds)
         for i in range(vps.size):
             if vps[i] == 0:
                 continue
             vp_i = vps[i]
             wm_i = wms[i]
-            logger.debug(f"wm={wm_i}, vp={vp_i}")
+            logger.debug("wm=%s, vp=%s", wm_i, vp_i)
             # sol = fsolve(
             #     sound_shell_solvable_hybrid,
             #     np.array([wm_i]),
@@ -896,11 +917,18 @@ def sound_shell_generic(
 
     if use_bag_solver and model.DEFAULT_NAME == "bag":
         if high_alpha_n:
-            logger.info("Got model=%s, v_wall=%s, alpha_n=%s, for which there is no solution.", model.label_unicode, v_wall, alpha_n)
+            logger.info(
+                "Got model=%s, v_wall=%s, alpha_n=%s, for which there is no solution.",
+                model.label_unicode, v_wall, alpha_n
+            )
             return const.nan_arr, const.nan_arr, const.nan_arr, SolutionType.ERROR, \
-                np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, True, time.perf_counter() - start_time
+                np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, \
+                True, time.perf_counter() - start_time
 
-        logger.info("Using bag solver for model=%s, v_wall=%s, alpha_n=%s", model.label_unicode, v_wall, alpha_n)
+        logger.info(
+            "Using bag solver for model=%s, v_wall=%s, alpha_n=%s",
+            model.label_unicode, v_wall, alpha_n
+        )
         sol_type2 = transition.identify_solution_type_bag(v_wall, alpha_n)
         if sol_type is not None and sol_type != sol_type2:
             raise ValueError(f"Bag model gave a different solution type ({sol_type2}) than what was given ({sol_type}).")
@@ -910,14 +938,16 @@ def sound_shell_generic(
         w *= wn
         if np.any(np.isnan(v)):
             return v, w, xi, sol_type2, \
-                np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, True, time.perf_counter() - start_time
+                np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, \
+                True, time.perf_counter() - start_time
 
         vp, vm, vp_tilde, vm_tilde, wp, wm, wn, wm_sh = props.v_and_w_from_solution(v, w, xi, v_wall, sol_type2)
 
         # The wm_guess is not needed for the bag model
         v_cj: float = chapman_jouguet.v_chapman_jouguet(model, alpha_n, wn=wn, wm_guess=wm)
         return v, w, xi, sol_type2, \
-            vp, vm, vp_tilde, vm_tilde, np.nan, np.nan, np.nan, wp, wm, wm_sh, v_cj, False, time.perf_counter() - start_time
+            vp, vm, vp_tilde, vm_tilde, np.nan, np.nan, np.nan, wp, wm, wm_sh, v_cj, \
+            False, time.perf_counter() - start_time
 
     sol_type = transition.validate_solution_type(
         model,
@@ -958,7 +988,8 @@ def sound_shell_generic(
     if using_ref and np.any(np.isnan((vp_ref, vm_ref, vp_tilde_ref, vm_tilde_ref, wp_ref, wm_ref))):
         logger.warning(
             "Using arbitrary starting guesses at v_wall=%s, alpha_n=%s,"
-            "as all starting guesses were not provided, and the reference has nan values."
+            "as all starting guesses were not provided, and the reference has nan values.",
+            v_wall, alpha_n
         )
 
     if vp_guess < 0 or vp_guess > 1 or vp_tilde_guess < 0 or vp_tilde_guess > 1 or wm_guess < 0 or wp_guess < wn:
@@ -1054,7 +1085,8 @@ def sound_shell_generic(
             "Solved fluid shell for model=%s, v_wall=%s, alpha_n=%s, sol_type=%s. Elapsed: %s s",
             model.label_unicode, v_wall, alpha_n, sol_type, elapsed
         )
-    return v, w, xi, sol_type, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, v_cj, not solution_found, elapsed
+    return v, w, xi, sol_type, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, v_cj, \
+        not solution_found, elapsed
 
 
 fluid_shell_generic = sound_shell_generic
@@ -1070,6 +1102,7 @@ def sound_shell_giese(
         ) -> tuple[
             np.ndarray, np.ndarray, np.ndarray, SolutionType,
             float, float, float, float, float, float, float, float, float, float, float, bool, float]:
+    r"""Fluid shell solver based on :giese_2021:`\ `"""
     start_time = time.perf_counter()
 
     if wn is None or np.isnan(wn):
@@ -1086,7 +1119,8 @@ def sound_shell_giese(
            )
     except ValueError:
         return const.nan_arr, const.nan_arr, const.nan_arr, SolutionType.ERROR, \
-            np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, True, time.perf_counter() - start_time
+            np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, \
+            True, time.perf_counter() - start_time
 
     if mode == 0:
         sol_type = SolutionType.SUB_DEF
@@ -1118,4 +1152,7 @@ def sound_shell_giese(
     solution_found = True
     elapsed = time.perf_counter() - start_time
 
-    return v, w, xi, sol_type, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, v_cj, not solution_found, elapsed
+    return v, w, xi, sol_type, \
+        vp, vm, vp_tilde, vm_tilde, \
+        v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh, v_cj, \
+        not solution_found, elapsed

@@ -38,14 +38,13 @@ def round_sig(x: float, n: int) -> str:
         if len(fs[1][expo:]) > 0:
             st += '.' + fs[1][expo:]
         return st
+    expo = -expo
+    if fs[0][0] == '-':
+        fs[0] = fs[0][1:]
+        sign = "-"
     else:
-        expo = -expo
-        if fs[0][0] == '-':
-            fs[0] = fs[0][1:]
-            sign = "-"
-        else:
-            sign = ""
-        return sign + "0." + "0" * (expo - 1) + fs[0] + fs[1]
+        sign = ""
+    return sign + "0." + "0" * (expo - 1) + fs[0] + fs[1]
 
 
 def round_sig_signed(x: float, n: int) -> str:
@@ -73,14 +72,13 @@ def round_sig_signed(x: float, n: int) -> str:
         if len(fs[1][expo:]) > 0:
             st += '.' + fs[1][expo:]
         return st
+    expo = -expo
+    if fs[0][0] == '-':
+        fs[0] = fs[0][1:]
+        sign = "-"
     else:
-        expo = -expo
-        if fs[0][0] == '-':
-            fs[0] = fs[0][1:]
-            sign = "-"
-        else:
-            sign = ""
-        return sign + "0." + "0" * (expo - 1) + fs[0] + fs[1]
+        sign = ""
+    return sign + "0." + "0" * (expo - 1) + fs[0] + fs[1]
 
 
 def round_sig_error(x: float, ex: float, n: int, paren: bool = False) -> tp.Union[str, tuple[str, str]]:

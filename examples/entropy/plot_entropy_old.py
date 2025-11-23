@@ -11,7 +11,6 @@ Requires input data as an npz file.
 
 import logging
 import os.path
-import typing as tp
 
 import matplotlib.pyplot as plt
 import numpy as np

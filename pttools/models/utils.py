@@ -1,3 +1,5 @@
+"""Utilities for PTtools models"""
+
 import logging
 
 import numpy as np
@@ -27,7 +29,7 @@ def check_value_in_range(
 
     # None and nan should give a warning, but not an exception.
     if x is None or np.any(np.isnan(x)):
-        logger.error(f"Got nan for {name}.")
+        logger.error("Got nan for %s", name)
         # Scalar None cannot be tested for negativity.
         if x is None or np.isscalar(x):
             return np.nan

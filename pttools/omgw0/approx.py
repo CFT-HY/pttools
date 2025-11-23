@@ -1,11 +1,11 @@
 r"""Approximations for $\Omega_{\text{gw},0}$"""
 
-import pttools.type_hints as th
-
 import math
+
 import numpy as np
 
 from pttools.bubble.const import CS0
+import pttools.type_hints as th
 from . import const
 
 
@@ -14,7 +14,7 @@ def omgw_approx(
         alpha: th.FloatOrArr,
         kappa_v: th.FloatOrArr,
         r_star: th.FloatOrArr,
-        temp: th.FloatOrArr = const.T_default,
+        temp: th.FloatOrArr = const.T_DEFAULT,
         g_star: th.FloatOrArr = const.G_STAR_DEFAULT,
         f0_peak: th.FloatOrArr | None = None) -> th.FloatOrArr:
     r"""

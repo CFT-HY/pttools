@@ -81,7 +81,7 @@ class ConstCSModel(AnalyticModel):
         # Speeds of sound
         # -----
         if log_info:
-            logger.debug(f"Initialising ConstCSModel with css2={css2}, csb2={csb2}.")
+            logger.debug("Initialising ConstCSModel with css2=%s, csb2=%s", css2, csb2)
         css2_flt, css2_label = cs2_to_float_and_label(css2)
         csb2_flt, csb2_label = cs2_to_float_and_label(csb2)
         self.css2 = self.validate_cs2(css2_flt, "css2")
@@ -96,7 +96,7 @@ class ConstCSModel(AnalyticModel):
             logger.warning(
                 "c_{s,s}^2 > 1/3 or c_{s,b}^2 > 1/3. "
                 "Please ensure that g_eff is monotonic in your model. "
-                f"Got: c_{{s,s}}^2=%s, c_{{s,b}}^2=%s.",
+                "Got: c_{s,s}^2=%s, c_{s,b}^2=%s.",
                 css2, csb2
             )
 
@@ -150,10 +150,11 @@ class ConstCSModel(AnalyticModel):
 
     @staticmethod
     def validate_cs2(cs2: float, name: str = "cs2") -> float:
+        """Validate the $c_s^2$ value"""
         if cs2 < 0 or cs2 > 1:
             return np.nan
         if cs2 > 1/3 and np.isclose(cs2, 1/3):
-            logger.warning(f"{name} is slightly over 1/3. Changing it to 1/3.")
+            logger.warning("%s is slightly over 1/3. Changing it to 1/3.", name)
             return 1/3
         return cs2
 
@@ -192,10 +193,16 @@ class ConstCSModel(AnalyticModel):
         invalid = ret < 0
         if (error_on_invalid or nan_on_invalid or log_invalid) and np.any(invalid):
             if np.isscalar(ret):
-                info = f"Got negative alpha_n={ret} with wn={wn}, mu_s={self.mu_s}, mu_b={self.mu_b}, t_crit={self.T_crit}."
+                info = (
+                    f"Got negative alpha_n={ret} with wn={wn}, "
+                    f"mu_s={self.mu_s}, mu_b={self.mu_b}, t_crit={self.T_crit}."
+                )
             else:
                 i = np.argmin(wn)
-                info = f"Got negative alpha_n. Most problematic values: alpha_n={ret[i]}, wn={wn[i]}, mu={self.mu_s}, nu={self.mu_b}"
+                info = (
+                    "Got negative alpha_n. Most problematic values: "
+                    f"alpha_n={ret[i]}, wn={wn[i]}, mu={self.mu_s}, nu={self.mu_b}"
+                )
             if log_invalid:
                 logger.error(info)
             if error_on_invalid:
@@ -289,7 +296,10 @@ class ConstCSModel(AnalyticModel):
         #         raise ValueError(f"Got invalid Tn/Tc={tn_tc}")
         #     a_s = a_b / (tn_tc**(-self.mu) - self.mu/4*(alpha_n_min_target - (1 - 4/self.mu)/3))
         #     if a_s < a_b:
-        #         msg = f"Got invalid a_s={a_s} for a_b={a_b}, mu_s={self.mu}, tn_tc={tn_tc}, alpha_n_min_target={alpha_n_min_target}"
+        #         msg = (
+        #             f"Got invalid a_s={a_s} for a_b={a_b}, mu_s={self.mu}, tn_tc={tn_tc}, "
+        #             f"alpha_n_min_target={alpha_n_min_target}"
+        #         )
         #         if cancel_on_invalid:
         #             logger.error(
         #                 msg + ". Using given defaults a_s=%s, a_b=%s, V_s=%s, V_b=%s for css2=%s, csb2=%s.",
@@ -332,13 +342,18 @@ class ConstCSModel(AnalyticModel):
         # Solve numerically
         # ---
         try:
-            model = ConstCSModel(css2=self.css2, csb2=self.csb2, a_s=a_s_default, a_b=a_b, V_s=V_s_default, log_info=False)
+            model = ConstCSModel(
+                css2=self.css2, csb2=self.csb2,
+                a_s=a_s_default, a_b=a_b,
+                V_s=V_s_default, log_info=False
+            )
             # If we are already below the target
             if model.alpha_n_min < alpha_n_min_target:
                 return a_s_default, a_b, V_s_default, V_b
         except ValueError:
             logger.debug(
-                "The default values for ConstCSModel result in an invalid model. The search for parameters may fail. "
+                "The default values for ConstCSModel result in an invalid model. "
+                "The search for parameters may fail. "
                 "css2=%s, csb2=%s, a_s=%s, a_b=%s, V_s=%s",
                 self.css2, self.csb2, a_s_default, a_b, V_s_default
             )
@@ -413,6 +428,7 @@ class ConstCSModel(AnalyticModel):
             a_b: float, V_b: float,
             css2: float, csb2: float,
             alpha_n_target: float):
+        """This function is minimized when the given parameters produce alpha_n_target"""
         try:
             model = ConstCSModel(css2=css2, csb2=csb2, a_s=a_s, a_b=a_b, V_s=V_s, V_b=V_b, log_info=False)
         except (ValueError, RuntimeError):
@@ -427,6 +443,7 @@ class ConstCSModel(AnalyticModel):
             a_b: float, V_b: float,
             css2: float, csb2: float,
             alpha_n_target: float):
+        """This function is minimized when the given parameters produce alpha_n_target"""
         a_s = args[0]
         V_s = args[1]
         return cls.alpha_n_min_find_params_solvable(
@@ -488,7 +505,7 @@ class ConstCSModel(AnalyticModel):
 
     def alpha_theta_bar_n_max_lte(self, wn: float, sol_type: SolutionType, Psi_n: float | None = None) -> float:
         r"""$\alpha_{n,\text{max}}^\text{def}$, :ai_2023:`\ `, eq. 28, 31"""
-        if sol_type == SolutionType.DETON or sol_type == SolutionType.HYBRID:
+        if sol_type in (SolutionType.DETON, SolutionType.HYBRID):
             if Psi_n is None or np.isnan(Psi_n):
                 Psi_n = self.Psi_n(wn)
             # if np.max(np.abs(Psi_n - 1)) > 1:
@@ -541,7 +558,7 @@ class ConstCSModel(AnalyticModel):
     def _cs2_minmax(self, phase: Phase):
         if phase == Phase.BROKEN:
             return self.csb2, np.nan
-        elif phase == Phase.SYMMETRIC:
+        if phase == Phase.SYMMETRIC:
             return self.css2, np.nan
         raise ValueError("Invalid phase: {phase}")
 

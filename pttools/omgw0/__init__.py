@@ -1,4 +1,4 @@
-"""
+r"""
 Functions for calculating the gravitational wave power spectrum $\Omega_{\text{gw}}(f)$
 as a function of physical frequency $f$ in the universe today
 """

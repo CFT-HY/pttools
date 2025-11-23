@@ -1,7 +1,6 @@
 """Bag model"""
 
 import logging
-import typing as tp
 
 import numba
 import numpy as np
@@ -63,7 +62,8 @@ class BagModel(AnalyticModel):
             log_info: bool = True):
         if log_info:
             logger.debug(
-                "Initialising BagModel with V_s=%s, V_b=%s, a_s=%s, a_b=%s, g_s=%s, g_b=%s, T_min=%s, T_max=%s, alpha_n_min=%s.",
+                "Initialising BagModel with V_s=%s, V_b=%s, a_s=%s, a_b=%s, "
+                "g_s=%s, g_b=%s, T_min=%s, T_max=%s, alpha_n_min=%s.",
                 V_s, V_b, a_s, a_b, g_s, g_b, T_min, T_max, alpha_n_min
             )
         if V_b != 0:
@@ -326,11 +326,11 @@ class BagModel(AnalyticModel):
             self,
             alpha_n: th.FloatOrArr,
             wn_guess: float = 1,
-            analytical: bool = True,
             theta_bar: bool = False,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True,
+            analytical: bool = True) -> th.FloatOrArr:
         r"""Enthalpy at nucleation temperature
         $$w_n = \frac{4}{3} \frac{V_s - V_b}{\alpha_n}$$
         This can be derived from the equations for $\theta$ and $\alpha_n$.

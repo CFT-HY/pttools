@@ -155,7 +155,7 @@ def sound_shell_alpha_plus(
     # - Otherwise compute both and then see which takes to the correct direction
 
     # Integrate forward and find shock.
-    if not sol_type == SolutionType.DETON.value:
+    if sol_type != SolutionType.DETON.value:
         # First go
         v, w, xi, t = integrate.fluid_integrate_param(
             v0=vfp_p, w0=wp, xi0=v_wall,
@@ -181,7 +181,7 @@ def sound_shell_alpha_plus(
         xif = np.concatenate((xi, xif))
 
     # Integrate backward to sound speed.
-    if not sol_type == SolutionType.SUB_DEF.value:
+    if sol_type != SolutionType.SUB_DEF.value:
         # First go
         v, w, xi, t = integrate.fluid_integrate_param(
             v0=vfm_p, w0=wm, xi0=v_wall,

@@ -179,12 +179,22 @@ def w_bag(
     return 4/3 * (e - theta)
 
 
-# def junction_bag(v1: th.FloatOrArr, w1: th.FloatOrArr, V1: th.FloatOrArr, V2: th.FloatOrArr, greater_branch: bool) -> tuple[th.FloatOrArr, th.FloatOrArr]:
+# def junction_bag(
+#         v1: th.FloatOrArr,
+#         w1: th.FloatOrArr,
+#         V1: th.FloatOrArr,
+#         V2: th.FloatOrArr,
+#         greater_branch: bool) -> tuple[th.FloatOrArr, th.FloatOrArr]:
 #     v2 = v2_tilde_bag(v1, w1, V1, V2, greater_branch)
 #     return v2, boundary.w2_junction(v1, w1, v2)
-#
-#
-# def v2_tilde_bag(v1: th.FloatOrArr, w1: th.FloatOrArr, V1: th.FloatOrArr, V2: th.FloatOrArr, greater_branch: bool) -> th.FloatOrArr:
+
+
+# def v2_tilde_bag(
+#         v1: th.FloatOrArr,
+#         w1: th.FloatOrArr,
+#         V1: th.FloatOrArr,
+#         V2: th.FloatOrArr,
+#         greater_branch: bool) -> th.FloatOrArr:
 #     """This doesn't seem to work properly for the greater branch."""
 #     a = v1 + ((V2 - V1)/w1 + 1/4) / (relativity.gamma2(v1) * v1)
 #     sign = 1 if greater_branch else -1

@@ -1,8 +1,8 @@
-"""
+r"""
 Giese et al. testing 2
 ======================
 
-Compare Giese et al. fluid profiles with PTtools
+Compare :giese_2021:`\ ` fluid profiles with PTtools
 """
 
 import matplotlib.pyplot as plt

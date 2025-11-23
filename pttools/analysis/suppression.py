@@ -1,3 +1,5 @@
+"""Analysis utilities for the suppression factor"""
+
 import matplotlib.pyplot as plt
 from matplotlib.tri import Triangulation
 import numpy as np

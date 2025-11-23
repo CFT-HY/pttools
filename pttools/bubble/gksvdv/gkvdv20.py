@@ -23,8 +23,8 @@ def kappaNuModel(cs2: float, al: float, vp: float) -> float:
         print("vp too small for detonation")
         return 0
     vm = (tmp + np.sqrt(disc))/2/(nu-1.)/vp
-    wm = (-1. + 3.*al + (vp/vm)*(-1. + nu + 3.*al))
-    wm /= (-1. + nu - vp/vm)
+    wm = -1. + 3.*al + (vp/vm)*(-1. + nu + 3.*al)
+    wm /= -1. + nu - vp/vm
 
     def dfdv(xiw, v, nu):
         """Integrand"""

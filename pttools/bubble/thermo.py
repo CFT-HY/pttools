@@ -141,7 +141,8 @@ def kappa(
     :param w: Enthalpy density $w$
     :param xi: $\xi$
     :param v_wall: Wall velocity ${v}_\text{wall}$
-    :param delta_e_theta: Trace anomaly difference $\Delta {e}_\theta$. If not given, it's computed from the other arguments.
+    :param delta_e_theta: Trace anomaly difference $\Delta {e}_\theta$.
+        If not given, it's computed from the other arguments.
     :return: Kinetic efficiency factor $\kappa$
     """
     if delta_e_theta is None:
@@ -184,7 +185,8 @@ def omega(
     :param w: Enthalpy density $w$
     :param xi: $\xi$
     :param v_wall: Wall velocity ${v}_\text{wall}$
-    :param delta_e_theta: Trace anomaly difference $\Delta {e}_\theta$. If not given, it's computed from the other arguments.
+    :param delta_e_theta: Trace anomaly difference $\Delta {e}_\theta$.
+        If not given, it's computed from the other arguments.
     :return: Thermal efficiency factor $\omega$
     """
     if delta_e_theta is None:
@@ -201,7 +203,8 @@ def ubarf2(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, ek_bva: 
     :param w: Enthalpy density $w$
     :param xi: $\xi$
     :param v_wall: Wall velocity ${v}_\text{wall}$
-    :param ek_bva: Bubble volume averaged kinetic energy density $e_{K,\text{bva}}$. If not given, it's computed from the other arguments.
+    :param ek_bva: Bubble volume averaged kinetic energy density $e_{K,\text{bva}}$.
+        If not given, it's computed from the other arguments.
     :return: Enthalpy-weighted mean square fluid 4-velocity around the bubble $\bar{U}_f^2$
     """
     if ek_bva is None:
@@ -224,7 +227,7 @@ def wbar(w: np.ndarray, xi: np.ndarray, v_wall: float, wn: float) -> float:
         i_max = -1
     ret = 1/(xi[i_max]**3) * np.trapezoid(w[:i_max+1], xi[:i_max+1]**3)
     if not (ret is None or np.isnan(ret)) and ret <= wn:
-        logger.warning(f"Should have wbar > wn. Got: wbar={wn}, wn={wn}")
+        logger.warning("Should have wbar > wn. Got: wbar=%s, wn=%s", ret, wn)
     return ret
 
 
@@ -276,7 +279,8 @@ def va_kinetic_energy_fraction(ek_va: float, eb: float) -> float:
 
 def va_thermal_energy_density(v_shock: float, wn: float, ek: float, delta_e_theta: float) -> float:
     r"""Volume-averaged thermal energy density after the phase transition
-    $${e}_Q' = {e}_Q + {e}_\theta - {e}_K' - {e}_\theta' = 4\pi \int_0^{{\xi}_\text{max}} d\xi \xi^2 \frac{3}{4} {w}_n - {e}_K' - \Delta {e}_\theta$$
+    $${e}_Q' = {e}_Q + {e}_\theta - {e}_K' - {e}_\theta'
+    = 4\pi \int_0^{{\xi}_\text{max}} d\xi \xi^2 \frac{3}{4} {w}_n - {e}_K' - \Delta {e}_\theta$$
     """
     return np.pi * wn * v_shock**3 - ek - delta_e_theta
 

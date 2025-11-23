@@ -1,3 +1,5 @@
+"""Sound Shell Model spectrum calculations specific to the bag equation of state"""
+
 import logging
 
 import numpy as np
@@ -140,7 +142,10 @@ def spec_den_v_bag(
     lifetime distribution $\nu(T \beta)$ specified by "nuc_type" and "nuc_args".
 
     :param z: array $z = qR_*$
-    :param params: tuple of vw (scalar), alpha (scalar), nuc_type (string [exponential* | simultaneous]), nuc_args (tuple, default (1,))
+    :param params: tuple of
+        vw (scalar), alpha (scalar),
+        nuc_type (string [exponential* | simultaneous]),
+        nuc_args (tuple, default (1,))
     :param npt: number of points
     :return: dimensionless velocity spectral density $\bar{P}_v$
     """

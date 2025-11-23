@@ -202,9 +202,12 @@ def junction_conditions_deviation(vp: th.FloatOrArr, vm: th.FloatOrArr, ap: th.F
     dev = (1/vm + 3*vm)*vp - 3*(1 + ap)*vp**2 + 3*ap - 1
     if not np.allclose(dev, 0):
         if np.isscalar(dev):
-            logger.error(f"Non-zero deviation from junction conditions: {dev} for vp={vp}, vm={vm}, ap={ap}")
+            logger.error(
+                "Non-zero deviation from junction conditions: %s for vp=%s, vm=%s, ap=%s",
+                dev, vp, vm, ap
+            )
         else:
-            logger.error(f"Non-zero deviation from junction conditions")
+            logger.error("Non-zero deviation from junction conditions")
     return dev
 
 
@@ -279,7 +282,9 @@ def solve_junction(
             or np.isclose(w1, 0) or np.isclose(w2_guess, 0):
         logger.warning(
             "Invalid input for junction solver. "
-            f"Got: v1={v1_tilde}, w1={w1}, v2_guess={v2_tilde_guess}, w2_guess={w2_guess}")
+            "Got: v1=%s, w1=%s, v2_guess=%s, w2_guess=%s",
+            v1_tilde, w1, v2_tilde_guess, w2_guess
+        )
         return np.nan, np.nan
     if (v2_tilde_min is not None and (v2_tilde_min < 0 or (v2_tilde_max is not None and v2_tilde_max > 0))) or \
             (v2_tilde_max is not None and (v2_tilde_max < 0 or (v2_tilde_min is not None and v2_tilde_min > 0))) or \
@@ -289,7 +294,7 @@ def solve_junction(
             (w2_min is not None and w2_max is not None and v2_tilde_max <= v2_tilde_min):
         logger.error(
             "Invalid limits for junction solver. "
-            f"Got: v2_tilde_min=%s, v2_tilde_max=%s, w2_min=%s, w2_max=%s",
+            "Got: v2_tilde_min=%s, v2_tilde_max=%s, w2_min=%s, w2_max=%s",
             v2_tilde_min, v2_tilde_max, w2_min, w2_max
         )
 
@@ -385,7 +390,7 @@ def _v_minus_scalar(
     # This has probably been written like this for numerical stability
     vp2 = vp ** 2
     y = vp2 + 1. / 3.
-    z = (y - ap * (1. - vp2))
+    z = y - ap * (1. - vp2)
     x = (4. / 3.) * vp2
     sqrt_arg = z**2 - x
 
@@ -395,7 +400,9 @@ def _v_minus_scalar(
 
     if debug and sqrt_arg < 0:
         with numba.objmode:
-            logger.error("Cannot compute vm, got imaginary result with: vp=%s, ap=%s in sqrt_arg=%s", vp, ap, sqrt_arg)
+            logger.error(
+                "Cannot compute vm, got imaginary result with: vp=%s, ap=%s in sqrt_arg=%s",
+                vp, ap, sqrt_arg)
         return np.nan
 
     # Finding the solution type automatically does not work in the general case

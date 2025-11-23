@@ -147,7 +147,10 @@ def compute(bubble: Bubble):
             bubble.vp_vm_tilde_ratio_giese_rel_diff
         )
     except IndexError as e:
-        logger.exception(f"Computing entropy quantities failed for {bubble.label_unicode}.", exc_info=e)
+        logger.exception(
+            "Computing entropy quantities failed for %s.",
+            bubble.label_unicode, exc_info=e
+        )
         return COMPUTE_FAIL
 
 
@@ -222,7 +225,7 @@ def plot_entropy_data(
     ax.grid()
     ax.set_xlabel(r"$v_w$")
     ax.set_ylabel(r"$\alpha_n$")
-    ax.set_title(rf"$\Delta s / s_n$")
+    ax.set_title(r"$\Delta s / s_n$")
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
 

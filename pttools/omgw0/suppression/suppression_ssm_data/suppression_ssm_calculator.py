@@ -1,10 +1,4 @@
-"""
-Created on Wed 4/8/2021
-
-@author: cg411
-
-Calculates the Kinetic energy suppression factor for a given set of simulation data
-"""
+"""Compute the kinetic energy suppression factor for a given set of simulation data"""
 import logging
 import os.path
 import typing as tp
@@ -21,7 +15,10 @@ logger = logging.getLogger(__name__)
 SUPPRESSION_FOLDER = os.path.dirname(os.path.abspath(__file__))
 
 
-def calc_sup_ssm(path: str, save: bool = True, npt: ssm_const.NptType = ssm_const.NPTDEFAULT) -> dict[str, tp.Union[np.ndarray, tp.List[float]]]:
+def calc_sup_ssm(
+        path: str,
+        save: bool = True,
+        npt: ssm_const.NptType = ssm_const.NPTDEFAULT) -> dict[str, tp.Union[np.ndarray, tp.List[float]]]:
     """
     file must be a txt file with data in columns as follows
     vw alpha suppression_sim sim_omgw exp_omgw exp_ubarf
@@ -48,7 +45,8 @@ def calc_sup_ssm(path: str, save: bool = True, npt: ssm_const.NptType = ssm_cons
         # print(vw)
         alpha = sim_data[i, 1]
         params = (vw, alpha, NucType.EXPONENTIAL,(1,))
-        out_ssm.append(power_gw_scaled_bag(z, params, npt=npt))  # omgw_ssm /(HnR*)(Hnt) ,:TODO check how to add these in new PTtools / are they still needed z_st_thresh=np.inf ,npt=[7000,200,1000]
+        # TODO: Check how to add these in new PTtools / are they still needed z_st_thresh=np.inf ,npt=[7000,200,1000]
+        out_ssm.append(power_gw_scaled_bag(z, params, npt=npt))  # omgw_ssm /(HnR*)(Hnt)
         out_ssm_tot.append(np.trapezoid(out_ssm[i], np.log(z)))
         Ubarf_2_ssm.append(bbl.get_ubarf2_bag(vw, alpha))
 

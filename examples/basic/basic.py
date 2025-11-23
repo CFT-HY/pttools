@@ -15,6 +15,7 @@ from pttools.omgw0 import Spectrum
 
 
 def main():
+    """Plot a single bubble"""
     # Create the equation of state.
     # If you don't specify a_s and a_b or g_s and g_b,
     # you have to specify a minimum alpha_n for which the model will be valid.

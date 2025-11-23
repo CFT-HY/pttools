@@ -16,6 +16,7 @@ from pttools.models.const_cs import ConstCSModel
 
 
 def main():
+    r"""Plot $\Delta \theta$ surfaces as a function of $w_+$ and $w_-$."""
     bag = BagModel(a_s=1.1, a_b=1, V_s=1)
     css = 1/np.sqrt(3) - 0.01
     csb = 1/np.sqrt(3) - 0.02

@@ -69,7 +69,10 @@ class ThermoModel(BaseModel, abc.ABC):
             err.append("cannot exceed 1")
         if err:
             msg = ", ".join(err)
-            logger.error(f"Invalid {name} for {self.name}: {msg}, got range: {np.min(cs2)} - {np.max(cs2)}")
+            logger.error(
+                "Invalid %s for %s: %s, got range: %s - %s",
+                name, self.name, msg, np.min(cs2), np.max(cs2)
+            )
             return False
         return True
 
@@ -138,7 +141,7 @@ class ThermoModel(BaseModel, abc.ABC):
                 if not temp.ndim:
                     return cs2_scalar_temp(temp.item(), phase)
                 return cs2_arr_temp(temp, phase)
-            raise TypeError(f"Unknown type for temp")
+            raise TypeError(f"Unknown type for temp: {type(temp)}")
 
         @overload(cs2, jit_options={"nopython": True})
         def cs2_numba(temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArrNumba:

@@ -1,3 +1,5 @@
+"""Utilities for the low-k SSM calculations"""
+
 import numpy as np
 
 import pttools.type_hints as th

@@ -41,7 +41,8 @@ class SSMSpectrum:
         r"""
         :param bubble: the Bubble object
         :param y: $z = kR*$ array
-        :param z_st_thresh: for $z$ values above z_sh_tresh, use approximation rather than doing the sine transform integral.
+        :param z_st_thresh: for $z$ values above z_sh_tresh,
+            use approximation rather than doing the sine transform integral.
         :param nuc_type: nucleation type
         :param nt: number of points in the t array
         :param r_star: $r_*$
@@ -70,8 +71,10 @@ class SSMSpectrum:
         self.low_k = low_k
         label_suffix_latex = "" if r_star is None else f", r_*={r_star}$"
         label_suffix_unicode = "" if r_star is None else f", r⁎={r_star}"
-        self.label_latex = self.bubble.label_latex[:-1] + label_suffix_latex if label_latex is None else label_latex
-        self.label_unicode = self.bubble.label_unicode + label_suffix_unicode if label_unicode is None else label_unicode
+        self.label_latex = self.bubble.label_latex[:-1] + label_suffix_latex \
+            if label_latex is None else label_latex
+        self.label_unicode = self.bubble.label_unicode + label_suffix_unicode \
+            if label_unicode is None else label_unicode
 
         if not (self.r_star is None or np.isnan(r_star)):
             if self.r_star <= 0:
@@ -161,8 +164,15 @@ class SSMSpectrum:
             tau_star = self.eta_star / self.Lf
             tau_end = eta_end / self.Lf
 
-            spec_den_low = 4/3 * power_spectrum_integration_low(self.y, self.spec_den_v, z=self.y, cs=self.cs, nu=self.bubble.nu_gdh2024, tau_star=tau_star, tau_end=tau_end)
-            spec_den_int = 4/3 * power_spectrum_integration_int(self.z_lookup, self.spec_den_v_lookup, z=self.y, cs=self.cs, tau_star=tau_star)
+            spec_den_low = 4/3 * power_spectrum_integration_low(
+                x_data=self.y, Pv_data=self.spec_den_v,
+                z=self.y, cs=self.cs, nu=self.bubble.nu_gdh2024,
+                tau_star=tau_star, tau_end=tau_end
+            )
+            spec_den_int = 4/3 * power_spectrum_integration_int(
+                x_data=self.z_lookup, Pv_data=self.spec_den_v_lookup,
+                z=self.y, cs=self.cs, tau_star=tau_star
+            )
 
             factor = self.r_star * self.Htau_nl
             self.pow_gw_low = pow_spec(self.y, spec_den_low)
@@ -199,14 +209,6 @@ class SSMSpectrum:
         """
         return 2 * np.pi / self.k_peak
 
-    def label_latex(self) -> str:
-        """LaTeX label for spectrum plots"""
-        return self.bubble.label_latex
-
-    def label_unicode(self) -> str:
-        """Unicode label for spectrum plots"""
-        return self.bubble.label_unicode
-
     @functools.cached_property
     def source_lifetime_factor(self) -> float:
         r"""
@@ -218,7 +220,10 @@ class SSMSpectrum:
         """
         ret = 1 / (1 + 2*self.bubble.nu_gdh2024)
         if self.r_star is not None and not np.isinf(self.lifetime_multiplier):
-            ret *= 1 - (1 + self.lifetime_multiplier * 2 * self.r_star / np.sqrt(self.bubble.kinetic_energy_fraction))**(-1 - 2*self.bubble.nu_gdh2024)
+            ret *= (
+                1 - (1 + self.lifetime_multiplier * 2 * self.r_star / np.sqrt(self.bubble.kinetic_energy_fraction)) **
+                (-1 - 2*self.bubble.nu_gdh2024)
+            )
         return ret
 
     # Plotting
@@ -229,6 +234,7 @@ class SSMSpectrum:
             ax: plt.Axes | None = None,
             path: str | None = None,
             **kwargs) -> "FigAndAxes":
+        r"""Plot GW power spectrum $\mathcal{P}_{\text{gw}}(k)$"""
         return self.plot_gw(fig, ax, path, **kwargs)
 
     def plot_gw(
@@ -237,6 +243,7 @@ class SSMSpectrum:
             ax: plt.Axes | None = None,
             path: str | None = None,
             **kwargs) -> "FigAndAxes":
+        r"""Plot GW power spectrum $\mathcal{P}_{\text{gw}}(k)$"""
         from pttools.analysis.plot_spectra import plot_spectra_gw
         return plot_spectra_gw([self], fig, ax, path, **kwargs)
 
@@ -246,6 +253,7 @@ class SSMSpectrum:
             ax: plt.Axes | None = None,
             path: str | None = None,
             **kwargs) -> "FigAndAxes":
+        r"""Plot velocity power spectrum $\mathcal{P}_{\tilde{v}}(q)$"""
         from pttools.analysis.plot_spectra import plot_spectra_v
         return plot_spectra_v([self], fig, ax, path, **kwargs)
 
@@ -255,6 +263,7 @@ class SSMSpectrum:
             ax: plt.Axes | None = None,
             path: str | None = None,
             **kwargs) -> "FigAndAxes":
+        """Plot spectral density of scaled GW power"""
         from pttools.analysis.plot_spectra import plot_spectra_spec_den_gw
         return plot_spectra_spec_den_gw([self], fig, ax, path, **kwargs)
 
@@ -264,6 +273,7 @@ class SSMSpectrum:
             ax: plt.Axes | None = None,
             path: str | None = None,
             **kwargs) -> "FigAndAxes":
+        """Plot spectral density of the velocity field $P_v(y)$"""
         from pttools.analysis.plot_spectra import plot_spectra_spec_den_v
         return plot_spectra_spec_den_v([self], fig, ax, path, **kwargs)
 

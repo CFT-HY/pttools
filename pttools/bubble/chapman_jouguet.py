@@ -200,7 +200,10 @@ def v_chapman_jouguet(
     # Get wm
     # For detonations wn = wp
 
-    wm = wm_chapman_jouguet(model, wp=wn, wm_guess=wm_guess, error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid)
+    wm = wm_chapman_jouguet(
+        model, wp=wn, wm_guess=wm_guess,
+        error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
+    )
     if wm is None or np.isnan(wm):
         msg = f"Failed to find wm for alpha_n={alpha_n}, wn={wn}"
         if log_invalid:

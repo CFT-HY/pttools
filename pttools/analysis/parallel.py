@@ -188,6 +188,7 @@ def create_spectra(
 
 
 def solve_bubble(bubble: Bubble) -> None:
+    """Solve a single existing bubble"""
     bubble.solve()
 
 

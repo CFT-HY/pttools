@@ -4,7 +4,6 @@ and $\alpha_+$, the strength parameter just in front of the wall.
 """
 
 import threading
-import typing as tp
 
 import numba
 from numba.extending import overload
@@ -56,7 +55,7 @@ _alpha_n_max_deflagration_bag_scalar_numba = numba.njit(_alpha_n_max_deflagratio
 @numba.njit(parallel=True)
 def _alpha_n_max_deflagration_bag_arr(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> np.ndarray:
     ret = np.zeros_like(v_wall)
-    for i in numba.prange(v_wall.size):
+    for i in numba.prange(v_wall.size):  # pylint: disable=not-an-iterable
         ret[i] = _alpha_n_max_deflagration_bag_scalar_numba(v_wall[i], n_xi)
     # alpha_N = (w_+/w_N)*alpha_+
     # w_ is normalised to 1 at large xi
@@ -250,7 +249,10 @@ def find_alpha_n_bag(
     check.check_wall_speed(v_wall)
     if sol_type == boundary.SolutionType.UNKNOWN.value:
         sol_type = transition.identify_solution_type_alpha_plus(v_wall, alpha_p).value
-    _, w, xi = fluid_bag.sound_shell_alpha_plus(v_wall, alpha_p, sol_type, n_xi, cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr)
+    _, w, xi = fluid_bag.sound_shell_alpha_plus(
+        v_wall, alpha_p, sol_type, n_xi,
+        cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr
+    )
     n_wall = props.find_v_index(xi, v_wall)
     return alpha_p * w[n_wall] / w[-1]
 
@@ -284,7 +286,10 @@ def _find_alpha_plus_optimizer_bag(
         cs2_fun: th.CS2Fun,
         df_dtau_ptr: speedup.DifferentialPointer) -> float:
     """find_alpha_plus() is looking for the zeroes of this function: $\alpha_n = \alpha_{n,\text{given}}$."""
-    return find_alpha_n_bag(v_wall, alpha.item(), sol_type, n_xi, cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr) - alpha_n_given
+    return find_alpha_n_bag(
+        v_wall, alpha.item(), sol_type, n_xi,
+        cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr
+    ) - alpha_n_given
 
 
 def _find_alpha_plus_scalar_cs2_converter(cs2_fun_ptr: th.CS2FunScalarPtr) -> th.CS2CFunc:
@@ -340,8 +345,11 @@ def _find_alpha_plus_bag_arr(
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR,
         xtol: float = const.FIND_ALPHA_PLUS_TOL) -> th.FloatOrArrNumba:
     ap = np.zeros_like(v_wall)
-    for i in numba.prange(v_wall.size):
-        ap[i] = _find_alpha_plus_scalar_bag(v_wall[i], alpha_n_given, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr)
+    for i in numba.prange(v_wall.size):  # pylint: disable=not-an-iterable
+        ap[i] = _find_alpha_plus_scalar_bag(
+            v_wall[i], alpha_n_given, n_xi,
+            cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr
+        )
     return ap
 
 
@@ -380,11 +388,20 @@ def find_alpha_plus_bag(
     :return: $\alpha_+$, the the at-wall strength parameter
     """
     if isinstance(v_wall, float):
-        return _find_alpha_plus_scalar_bag(v_wall, alpha_n_given, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, xtol=xtol)
+        return _find_alpha_plus_scalar_bag(
+            v_wall, alpha_n_given, n_xi,
+            cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, xtol=xtol
+        )
     if isinstance(v_wall, np.ndarray):
         if not v_wall.ndim:
-            return _find_alpha_plus_scalar_bag(v_wall.item(), alpha_n_given, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, xtol=xtol)
-        return _find_alpha_plus_bag_arr(v_wall, alpha_n_given, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, xtol=xtol)
+            return _find_alpha_plus_scalar_bag(
+                v_wall.item(), alpha_n_given, n_xi,
+                cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, xtol=xtol
+            )
+        return _find_alpha_plus_bag_arr(
+            v_wall, alpha_n_given, n_xi,
+            cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, xtol=xtol
+        )
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 

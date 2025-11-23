@@ -20,7 +20,7 @@ ODESolver = spi.OdeSolver | type[spi.OdeSolver] | type[spi.odeint] | str
 # Numerical types
 # np.float64 is a subclass of float, so there is no need to specify it explicitly for scalars.
 FloatArr = np.ndarray[tuple[int, ...], np.float64]
-FloatArr1D = np.ndarray[tuple[int], np.float64]
+FloatArr1D = np.ndarray[tuple[int], np.float64]  # pylint: disable=invalid-name
 # Float list or a Numpy array
 # FloatListOrArr = list[tp.Union[float, np.float64]] | np.ndarray
 #: Float or a Numpy array of floats

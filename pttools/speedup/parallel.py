@@ -1,3 +1,5 @@
+"""Utilities for parallel execution of functions using multiple Python processes with concurrent.futures"""
+
 import concurrent.futures as cf
 import multiprocessing
 from concurrent.futures.process import BrokenProcessPool
@@ -17,10 +19,14 @@ logger = logging.getLogger(__name__)
 
 
 class FakeFuture:
+    """A fake future object for single-threaded execution"""
+    # pylint: disable=too-few-public-methods
+
     def __init__(self, func: tp.Callable, *args, **kwargs):
         self._result = func(*args, **kwargs)
 
     def result(self):
+        """Get the result of the function execution"""
         return self._result
 
 
@@ -59,7 +65,10 @@ class LoggingRunner:
                 if multi_index is None:
                     logger.debug("Processed item %d/%d, %.2f %%", index, self.arr_size, percentage)
                 else:
-                    logger.debug("Processed item %s, %d/%d, %.2f %%", multi_index, index, self.arr_size, percentage)
+                    logger.debug(
+                        "Processed item %s, %d/%d, %.2f %%",
+                        multi_index, index, self.arr_size, percentage
+                    )
 
         return ret
 
@@ -209,7 +218,10 @@ def run_parallel(
             ram_use = psutil.virtual_memory().percent
             msg += f"CPU use: {psutil.getloadavg()}, RAM use: {ram_use} %."
             if ram_use > 80:
-                msg += " RAM use is high. Please reduce the number of worker processes or close applications running in the background."
+                msg += (
+                    " RAM use is high. "
+                    "Please reduce the number of worker processes or close applications running in the background."
+                )
         raise BrokenProcessPool(msg) from err
 
 # This seems to be fixed as of 2025.

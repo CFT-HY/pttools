@@ -107,7 +107,10 @@ def get_kappa_bag(
         else:
             kappa[...] = np.nan
         if verbosity > 0:
-            logger.debug(f"{vw:8.6f} {alpha_n:8.6f} {kappa}")
+            logger.debug(
+                "%8.6f %8.6f %f",
+                vw, alpha_n, kappa
+            )
 
     if isinstance(v_wall, np.ndarray):
         kappa_out = it.operands[1]
@@ -148,7 +151,10 @@ def get_kappa_de_bag(
             kappa[...] = np.nan
             de[...] = np.nan
         if verbosity > 0:
-            logger.debug(f"{vw:8.6f} {alpha_n:8.6f} {kappa} {de}")
+            logger.debug(
+                "%8.6f %8.6f %f %f",
+                vw, alpha_n, kappa, de
+            )
 
     if isinstance(v_wall, np.ndarray):
         kappa_out = it.operands[1]
@@ -193,7 +199,10 @@ def get_kappa_dq_bag(
             kappa[...] = np.nan
             dq[...] = np.nan
         if verbosity > 0:
-            logger.debug(f"{vw:8.6f} {alpha_n:8.6f} {kappa} {dq}")
+            logger.debug(
+                "%8.6f %8.6f %f %f",
+                vw, alpha_n, kappa, dq
+            )
 
     if isinstance(v_wall, np.ndarray):
         kappa_out = it.operands[1]
@@ -235,7 +244,10 @@ def get_ke_de_frac_bag(
             ke[...] = np.nan
             de[...] = np.nan
         if verbosity > 0:
-            logger.debug(f"{vw:8.6f} {alpha_n:8.6f} {ke} {de}")
+            logger.debug(
+                "%8.6f %8.6f %f %f",
+                vw, alpha_n, ke, de
+            )
 
     if isinstance(v_wall, np.ndarray):
         ke_out = it.operands[1]
@@ -291,7 +303,10 @@ def get_ke_frac_new_bag(
         else:
             ke[...] = np.nan
         if verbosity > 0:
-            logger.debug(f"{vw:8.6f} {alpha_n:8.6f} {ke}")
+            logger.debug(
+                "%8.6f %8.6f %f",
+                vw, alpha_n, ke
+            )
 
     # Symmetric phase energy density
     e_s = bag.e_bag(w[-1], 0, bag.theta_bag(w[-1], 0, alpha_n))
@@ -314,7 +329,10 @@ def _get_ubarf2_bag_scalar(v_wall: float, alpha_n: float, n_xi: int, verbosity: 
 
     if verbosity > 0:
         with numba.objmode:
-            logger.debug(f"v_wall=%8.6f, alpha_n=%8.6f, ubarf2=%f", v_wall, alpha_n, ubarf2)
+            logger.debug(
+                "v_wall=%8.6f, alpha_n=%8.6f, ubarf2=%f",
+                v_wall, alpha_n, ubarf2
+            )
     return ubarf2
 
 
@@ -389,7 +407,10 @@ def get_ubarf2_new_bag(
         else:
             Ubarf2[...] = np.nan
         if verbosity > 0:
-            logger.debug(f"{vw:8.6f} {alpha_n:8.6f} {Ubarf2}")
+            logger.debug(
+                "%8.6f %8.6f %f",
+                vw, alpha_n, Ubarf2
+            )
 
     # Ubarf2 is stored in it.operands[1]
     if isinstance(v_wall, np.ndarray):

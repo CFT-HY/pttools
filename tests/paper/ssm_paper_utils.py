@@ -485,7 +485,7 @@ def plot_ps_compare_res(
             nv_lo = 3
             ngw_lo = 5
 
-        inter_flag = (abs(bubble.CS0 - vw) < 0.05)
+        inter_flag = abs(bubble.CS0 - vw) < 0.05
         plotting.plot_guide_power_laws_prace(
             fig_v, fig_gw, z_list[0], pow_v_list[0], y_list[0], pow_gw_list[0],
             (nv_lo, ngw_lo), inter_flag)
@@ -538,7 +538,7 @@ def plot_ps_1bubble(
         z_list, ps_list, utils.PSType.UNKNOWN, ax_limits=strength,
         col_list=const.COLOURS, leg_list=leg_list)
 
-    inter_flag = (abs(bubble.CS0 - vw) < 0.05)
+    inter_flag = abs(bubble.CS0 - vw) < 0.05
     plotting.plot_guide_power_laws_ssm(fig, z, ph_sp_fac*A2, utils.PSType.V, inter_flag=inter_flag)
 
     if save_id is None:
@@ -623,7 +623,7 @@ def plot_ps_compare_nuc(
         y_list, pow_gw_list, utils.PSType.GW,
         ax_limits=strength, col_list=const.COLOURS, leg_list=nuc_type_list)
 
-    inter_flag = (abs(bubble.CS0 - vw) < 0.05)
+    inter_flag = abs(bubble.CS0 - vw) < 0.05
     plotting.plot_guide_power_laws_prace(
         fig_v, fig_gw, z_list[0], pow_v_list[0],
         y_list[0], pow_gw_list[0], inter_flag=inter_flag)
@@ -783,7 +783,7 @@ def plot_and_save(vw: float, alpha: float, method: ssm.Method = ssm.Method.E_CON
         ax_gw.loglog(y, pow_gw2, color=col, linestyle='--')
         gw_power.append(np.trapezoid(pow_gw2/y, y))
 
-    inter_flag = (abs(bubble.CS0 - vw) < 0.05)  # Due intermediate power law
+    inter_flag = abs(bubble.CS0 - vw) < 0.05  # Due intermediate power law
     plotting.plot_guide_power_laws_prace(f1, f2, z, pow_v, y, pow_gw, inter_flag=inter_flag)
 
     # Pretty graph 1

@@ -20,6 +20,7 @@ from tests.paper.plot_plane_paper import plot_plane
 
 
 def main():
+    r"""Plot the $\xi, v$ plane for the constant sound speed model"""
     css = 1 / np.sqrt(3) - 0.05
 
     fig: plt.Figure = plt.figure()

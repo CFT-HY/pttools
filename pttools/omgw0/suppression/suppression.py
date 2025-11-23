@@ -35,7 +35,7 @@ class Suppression:
             alpha_ns: np.ndarray[tuple[int], np.float64],
             suppressions: np.ndarray[tuple[int], np.float64],
             name: str | None = None):
-        if not (v_walls.size == alpha_ns.size == suppressions.size):
+        if not v_walls.size == alpha_ns.size == suppressions.size:
             raise ValueError(
                 f"Input arrays must have the same size. Got: {v_walls.size}, {alpha_ns.size}, {suppressions.size}")
         self.v_walls = v_walls
@@ -70,14 +70,10 @@ class Suppression:
 
         if method == SuppressionMethod.NONE:
             return 1. if is_scalar else np.ones_like((v_wall.size, alpha_n.size))
-        elif method not in (SuppressionMethod.NO_EXT, SuppressionMethod.EXT_CONSTANT):
+        if method not in (SuppressionMethod.NO_EXT, SuppressionMethod.EXT_CONSTANT):
             raise ValueError(f"Got invalid suppression method: {method}")
 
-        if is_scalar:
-            mesh = (v_wall, alpha_n)
-        else:
-            mesh = np.meshgrid(v_wall, alpha_n)
-
+        mesh = (v_wall, alpha_n) if is_scalar else np.meshgrid(v_wall, alpha_n)
         sup = interpolate.griddata(
             self.points,
             self.suppressions,
@@ -116,13 +112,12 @@ class Suppression:
 
 
 def alpha_n_max_approx(vw: th.FloatOrArr) -> th.FloatOrArr:
-    """
-    Approximate form of alpha_n_max function
-    """
+    r"""Approximate $\alpha_{n,\text{max}}(v_\text{wall})$"""
     return 1/3 * (1 + 3*vw**2) / (1 - vw**2)
 
 
 def alpha_n_max(v_wall: th.FloatOrArr) -> th.FloatOrArr:
+    r"""$\alpha_{n,\text{max}}(v_\text{wall})$"""
     # vw, al
     # [0.24000, 0.34000]
     # [0.44000, 0.50000]
@@ -138,9 +133,12 @@ def alpha_n_max(v_wall: th.FloatOrArr) -> th.FloatOrArr:
 def extend(
         v_walls: np.ndarray[tuple[int], np.float64],
         alpha_ns: np.ndarray[tuple[int], np.float64],
-        suppressions: np.ndarray[tuple[int], np.float64]) -> tuple[np.ndarray[tuple[int], np.float64], np.ndarray[tuple[int], np.float64], np.ndarray[tuple[int], np.float64]]:
+        suppressions: np.ndarray[tuple[int], np.float64]) -> tuple[
+            np.ndarray[tuple[int], np.float64],
+            np.ndarray[tuple[int], np.float64],
+            np.ndarray[tuple[int], np.float64]]:
     """
-    To improve the extrapolation of the suppression factor when later using gridata, first extend the
+    To improve the extrapolation of the suppression factor when later using grid data, first extend the
     low vw and low alpha region as follows
     """
     # alpha values in suppression dataset for vw = 0.24

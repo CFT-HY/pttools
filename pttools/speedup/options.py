@@ -35,11 +35,16 @@ if IS_WINDOWS and MAX_WORKERS_DEFAULT > 61:
 if not FORKING or not CPU_AFFINITY:
     msg = "Platform: %s (%s, %s) on %s (%s)."
     if not CPU_AFFINITY:
-        msg += " This platform does not provide info on which CPU cores are available for this process. Using all cores."
+        msg += (
+            " This platform does not provide info on which CPU cores are available for this process. "
+            "Using all cores."
+        )
     if START_METHOD != "fork":
-        msg += \
-            " This platform does not support forking." \
-            " Starting parallel processes will be slower, since the cs2 functions have to be compiled in each sub-process."
+        msg += (
+            " This platform does not support forking."
+            " Starting parallel processes will be slower, "
+            "since the cs2 functions have to be compiled in each sub-process."
+        )
     logger.debug(msg, UNAME.system, UNAME.release, START_METHOD, UNAME.processor, UNAME.machine)
 
 #: Whether Numba JIT compilation has been disabled.

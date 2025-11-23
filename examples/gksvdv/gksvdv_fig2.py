@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 def kappa_giese(params: np.ndarray, model: ConstCSModel) -> float:
+    r"""Compute $\kappa$ with the :giese_2021:`\ ` solver"""
     v_wall, alpha_tbn_giese = params
     try:
         kappa, v_arr, wow_arr, xi_arr, mode, vp, vm = kappaNuMuModel(
@@ -45,6 +46,7 @@ def kappas_giese(
         v_walls: np.ndarray,
         alpha_ns: np.ndarray,
         theta_bar: bool = False) -> np.ndarray:
+    r"""Compute $\kappa$ for several bubbles with the :giese_2021:`\ ` solver"""
     if theta_bar:
         alpha_tbns = alpha_ns
     else:
@@ -83,6 +85,7 @@ def create_figure(
         v_walls: np.ndarray,
         theta_bar: bool = False,
         giese: bool = False):
+    r"""Create a figure of $\kappa(v_\text{wall})$ similar to :giese_2021:`\ `, fig. 2"""
     kappas = np.empty((len(models), alpha_ns.size, v_walls.size))
     for i_model, (model, ls) in enumerate(zip(models, lss)):
         if giese:
@@ -96,7 +99,9 @@ def create_figure(
             try:
                 i_max = np.nanargmax(kappas[i_model, i_alpha_n, :])
             except ValueError:
-                logger.error(f"Could not produce bubbles with alpha_n={alpha_n} for {model.label_unicode}")
+                logger.error(
+                    "Could not produce bubbles with alpha_n=%s for %s",
+                    alpha_n, model.label_unicode)
                 continue
             kwargs = {}
             # if ls == "-":
@@ -104,14 +109,15 @@ def create_figure(
             for ax in axs:
                 ax.plot(v_walls, kappas[i_model, i_alpha_n, :], ls=ls, color=color, alpha=0.5, **kwargs)
             logger.info(
-                f"alpha_n={alpha_n}, kappa_max={kappas[i_model, i_alpha_n, i_max]}, i_max={i_max}, "
-                f"v_wall={v_walls[i_max]}, color={color}, ls={ls}, {model.label_unicode}"
+                "alpha_n=%s, kappa_max=%s, i_max=%s, v_wall=%s, color=%s, ls=%s, %s",
+                alpha_n, kappas[i_model, i_alpha_n, i_max], i_max, v_walls[i_max], color, ls, model.label_unicode
             )
             failed_inds = np.argwhere(np.isnan(kappas[i_model, i_alpha_n, :]))
             if failed_inds.size:
                 logger.info(
                     "Failed v_walls: %s",
-                    v_walls[failed_inds].flatten())
+                    v_walls[failed_inds].flatten()
+                )
     title = ""
     if giese:
         title += "Giese et al."
@@ -175,6 +181,7 @@ def create_diff_figure(
 
 
 def main():
+    r"""Reproduction of :giese_2021:`\ `, fig. 2"""
     alpha_ns = np.array([0.01, 0.03, 0.1, 0.3, 1, 3])
     colors = ["b", "y", "r", "g", "purple", "grey"]
     n_v_walls = 20 if GITHUB_ACTIONS else 50
@@ -189,7 +196,7 @@ def main():
         ConstCSModel(css2=1/4, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_ns[0]),
         ConstCSModel(css2=1/4, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_ns[0])
     ]
-    logger.info(f"Minimum alpha_ns: %s", [model.alpha_n_min for model in models])
+    logger.info("Minimum alpha_ns: %s", [model.alpha_n_min for model in models])
     for model in models:
         logger.info("Model parameters: %s", model.params_str())
 

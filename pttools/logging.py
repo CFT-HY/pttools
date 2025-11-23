@@ -21,7 +21,7 @@ def setup_logging(
         silence_spam: bool = True):
     """Configure logging to both file and console and optionally silence spam"""
     # Allow running this function only once for each process
-    if not logging_lock.acquire(blocking=False):
+    if not logging_lock.acquire(blocking=False):  # pylint: disable=consider-using-with
         return
 
     if enable_faulthandler and not faulthandler.is_enabled():

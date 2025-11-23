@@ -1,3 +1,5 @@
+"""Utilities for PTtools examples"""
+
 import os.path
 
 import matplotlib.pyplot as plt
@@ -7,6 +9,7 @@ os.makedirs(FIG_DIR, exist_ok=True)
 
 
 def save(fig: plt.Figure, path: str, **kwargs):
+    """Save a figure in the examples figure directory"""
     has_extension = "." in path
     if not os.path.isabs(path):
         path = os.path.join(FIG_DIR, path)
@@ -18,5 +21,6 @@ def save(fig: plt.Figure, path: str, **kwargs):
 
 
 def save_and_show(fig: plt.Figure, path: str):
+    """Save a figure in the examples figure directory and show it"""
     save(fig, path)
     plt.show()

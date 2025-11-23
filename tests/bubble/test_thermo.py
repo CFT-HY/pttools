@@ -1,6 +1,5 @@
 """Unit tests for thermodynamic functions"""
 
-import typing as tp
 import unittest
 
 import numpy as np

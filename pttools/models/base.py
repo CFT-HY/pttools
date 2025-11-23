@@ -38,32 +38,38 @@ class BaseModel(abc.ABC):
             label_unicode: str | None = None,
             # Numerical values
             T_min: float | None = None,
-            T_max: float | None= None,
+            T_max: float | None = None,
             # Booleans
             restrict_to_valid: bool = True,
             gen_cs2: bool = True,
             gen_cs2_neg: bool = True,
             temperature_is_physical: bool | None = None,
             silence_temp: bool = False):
-        self.name = self.DEFAULT_NAME if name is None else name
-        self.label_latex = self.DEFAULT_LABEL_LATEX if label_latex is None else label_latex
-        self.label_unicode = self.DEFAULT_LABEL_UNICODE if label_unicode is None else label_unicode
-        self.T_min = self.DEFAULT_T_MIN if T_min is None else T_min
-        self.T_max = self.DEFAULT_T_MAX if T_max is None else T_max
-        self.silence_temp = silence_temp
-        self.restrict_to_valid = restrict_to_valid
-        self.temperature_is_physical = self.TEMPERATURE_IS_PHYSICAL if temperature_is_physical is None else temperature_is_physical
+        self.name: str = self.DEFAULT_NAME if name is None else name
+        self.label_latex: str = self.DEFAULT_LABEL_LATEX if label_latex is None else label_latex
+        self.label_unicode: str = self.DEFAULT_LABEL_UNICODE if label_unicode is None else label_unicode
+        self.T_min: float = self.DEFAULT_T_MIN if T_min is None else T_min
+        self.T_max: float = self.DEFAULT_T_MAX if T_max is None else T_max
+        self.silence_temp: bool = silence_temp
+        self.restrict_to_valid: bool = restrict_to_valid
+        self.temperature_is_physical: bool = self.TEMPERATURE_IS_PHYSICAL \
+            if temperature_is_physical is None else temperature_is_physical
 
         if self.name is None:
             raise ValueError("The model must have a name.")
         if " " in self.name:
             logger.warning(
                 "Model names should not have spaces to ensure that the file names don't cause problems. "
-                f"Got: \"{self.name}\".")
+                "Got: \"%s\".",
+                self.name
+            )
         if not (self.label_latex and self.label_unicode):
             raise ValueError("The model must have labels.")
         if "$" in self.label_unicode:
-            logger.warning(f"The Unicode label of a model should not contain \"$\". Got: \"{self.label_unicode}\"")
+            logger.warning(
+                "The Unicode label of a model should not contain \"$\". Got: \"%s\"",
+                self.label_unicode
+            )
         if self.T_min <= 0:
             raise ValueError(f"T_min should be larger than zero. Got: {self.T_min}")
         if self.T_max <= self.T_min:
@@ -106,7 +112,7 @@ class BaseModel(abc.ABC):
     def info(self) -> str:
         """Get a string with information about the model."""
         data = self.export()
-        max_key_length = max(len(key) for key in data.keys()) + 1
+        max_key_length = max(len(key) for key in data) + 1
         return "\n".join(
             f"{key:<{max_key_length}}: {f'{value:{self.THERMO_FORMAT}}' if isinstance(value, float) else value}"
             for key, value in self.export().items()
@@ -121,16 +127,16 @@ class BaseModel(abc.ABC):
             if temp < self.T_min:
                 if not self.silence_temp:
                     logger.warning(
-                        f"The temperature {temp} "
-                        f"is below the minimum temperature {self.T_min} of the model \"{self.name}\"."
+                        "The temperature %s is below the minimum temperature %s of the model \"%s\".",
+                        temp, self.T_min, self.name
                     )
                 if self.restrict_to_valid:
                     return np.nan
             elif temp > self.T_max:
                 if not self.silence_temp:
                     logger.warning(
-                        f"The temperature {temp} "
-                        f"is above the maximum temperature {self.T_max} of the model \"{self.name}\"."
+                        "The temperature %s is above the maximum temperature %s of the model \"%s\".",
+                        temp, self.T_max, self.name
                     )
                 if self.restrict_to_valid:
                     return np.nan
@@ -144,16 +150,18 @@ class BaseModel(abc.ABC):
             if has_below:
                 if not self.silence_temp:
                     logger.warning(
-                        f"Some temperatures ({np.min(temp)} and possibly above) "
-                        f"are below the minimum temperature {self.T_min} of the model \"{self.name}\"."
+                        "Some temperatures (%s and possibly above) "
+                        "are below the minimum temperature %s of the model \"%s\".",
+                        np.min(temp), self.T_min, self.name
                     )
                 if self.restrict_to_valid:
                     temp[below] = np.nan
             if has_above:
                 if not self.silence_temp:
                     logger.warning(
-                        f"Some temperatures ({np.max(temp)} and possibly above) "
-                        f"are above the maximum temperature {self.T_max} of the model \"{self.name}\"."
+                        "Some temperatures (%s and possibly above) "
+                        "are above the maximum temperature %s of the model \"%s\".",
+                        np.max(temp), self.T_max, self.name
                     )
                 if self.restrict_to_valid:
                     temp[above] = np.nan
@@ -162,11 +170,9 @@ class BaseModel(abc.ABC):
     # Abstract methods
 
     @abc.abstractmethod
-    def cs2(self, *args, **kwargs) -> th.FloatOrArr:
-        """Speed of sound squared"""
-        pass
+    def cs2(self, *args, **kwargs) -> th.FloatOrArr:  # pylint: disable=method-hidden
+        """Speed of sound squared $c_s^2$"""
 
     @abc.abstractmethod
-    def cs2_neg(self, *args, **kwargs) -> th.FloatOrArr:
-        """Speed of sound squared with a minus sign. This is needed for finding the maximum of cs2."""
-        pass
+    def cs2_neg(self, *args, **kwargs) -> th.FloatOrArr:  # pylint: disable=method-hidden
+        """Speed of sound squared with a minus sign, $-c_s^2$. This is needed for finding the maximum of $c_s^2$."""

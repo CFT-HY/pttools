@@ -14,7 +14,7 @@ As of 2024, this file is unmaintained and the thermo module is not in this repos
 # sys.path.append('../thermo/')
 
 import pttools.bubble as b
-import thermo.eos as eos
+from thermo import eos
 import numpy as np
 
 # n_alpha = 100
@@ -46,16 +46,16 @@ def get_entropy_diff(v_wall, alpha, g_bro=eos.G_BRO_DEFAULT, n_xi=b.N_XI_DEFAULT
         dS_S0 = (S_tot - S_tot0)/S_in0
     else:
         dS_S0 = np.nan
-    
+
     return dS_S0
 
 
 def get_entropy_diff_arr(vw_list, alpha_list, g_bro=eos.G_BRO_DEFAULT):
     n_vw = len(vw_list)
     n_alpha = len(alpha_list)
-    
+
     ds_list = []
-    
+
     for alpha in alpha_list:
         for vw in vw_list:
             ds = get_entropy_diff(vw, alpha, g_bro)
@@ -77,20 +77,20 @@ def get_pressure_diff(v_wall, alpha, g_bro=eos.G_BRO_DEFAULT, n_xi=b.N_XI_DEFAUL
         p = bg.p(T, b.phase(xi,v_wall))
         p_nuc = p[xi > v_wall][-1]
         p_minus = p[xi < v_wall][-1]
-#        print(p_plus, p_minus, w[-1])
+        # print(p_plus, p_minus, w[-1])
         dp_wn = (p_minus - p_nuc)/w[-1]
     else:
         dp_wn = np.nan
-        
+
     return dp_wn
 
 
 def get_pressure_diff_arr(vw_list, alpha_list, g_bro=eos.G_BRO_DEFAULT):
     n_vw = len(vw_list)
     n_alpha = len(alpha_list)
-    
+
     dp_list = []
-    
+
     for alpha in alpha_list:
         for vw in vw_list:
             dp = get_pressure_diff(vw,alpha)
@@ -105,7 +105,7 @@ def get_pressure_diff_arr(vw_list, alpha_list, g_bro=eos.G_BRO_DEFAULT):
 def get_s_p_diffs_arr(vw_list, alpha_list, g_bro=eos.G_BRO_DEFAULT):
     n_vw = len(vw_list)
     n_alpha = len(alpha_list)
-    
+
     dp_list = []
     ds_list = []
 

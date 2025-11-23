@@ -1,7 +1,6 @@
 """Utility functions for trimming fluid solutions"""
 
 import logging
-import typing as tp
 
 import numba
 import numpy as np
@@ -57,11 +56,13 @@ def trim_fluid_wall_to_cs(
 
     if n_stop_index == 0:
         with numba.objmode:
-            logger.warning((
+            logger.warning(
                 "Integation gave v < 0 or xi <= cs. "
-                "sol_type: {}, v_wall: {}, xi[0] = {}, v[0] = {}. "
+                "sol_type: %s, v_wall: %s, xi[0] = %s, v[0] = %s. "
                 "Fluid profile has only one element between vw and cs. "
-                "Fix implemented by adding one extra point.").format(sol_type, v_wall, xi[0], v[0]))
+                "Fix implemented by adding one extra point.",
+                sol_type, v_wall, xi[0], v[0]
+            )
         n_stop = 1
     else:
         n_stop = n_stop_index
@@ -103,12 +104,12 @@ def trim_fluid_wall_to_shock(
         with numba.objmode:
             # F-strings are not yet supported by Numba, even in object mode.
             # https://github.com/numba/numba/issues/3250
-            logger.warning((
+            logger.warning(
                 "v[0] < v_shock(xi[0]). "
-                "sol_type: {}, xi[0] = {}, v[0] = {}, v_sh(xi[0]) = {}. "
-                "Shock profile has only one element. Fix implemented by adding one extra point.").format(
+                "sol_type: %s, xi[0] = %s, v[0] = %s, v_sh(xi[0]) = %s. "
+                "Shock profile has only one element. Fix implemented by adding one extra point.",
                 sol_type, xi[0], v[0], shock.v_shock_bag(xi[0])
-            ))
+            )
         n_shock = 1
     else:
         n_shock = n_shock_index

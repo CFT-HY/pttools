@@ -11,7 +11,6 @@ import numpy as np
 from examples.utils import save
 from pttools.analysis.parallel import create_bubbles
 from pttools.bubble.bubble_quantities import get_kappa
-from pttools.bubble.gksvdv.gksvdv21 import kappaNuMuModel
 from pttools.models import ConstCSModel
 from pttools.speedup import GITHUB_ACTIONS
 
@@ -19,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 def main():
+    """Comparison of Giese et al. and PTtools solvers"""
     alpha_ns = np.array([0.01, 0.03, 0.1, 0.3, 1, 3])
     colors = ["b", "y", "r", "g", "purple", "grey"]
     n_v_walls = 20 if GITHUB_ACTIONS else 50
@@ -32,7 +32,7 @@ def main():
         ConstCSModel(css2=1 / 4, csb2=1 / 3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_ns[0]),
         ConstCSModel(css2=1 / 4, csb2=1 / 4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_ns[0])
     ]
-    logger.info(f"Minimum alpha_ns: %s", [model.alpha_n_min for model in models])
+    logger.info("Minimum alpha_ns: %s", [model.alpha_n_min for model in models])
     for model in models:
         logger.info("Model parameters: %s", model.params_str())
 

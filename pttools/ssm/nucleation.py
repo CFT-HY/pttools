@@ -1,3 +1,5 @@
+"""Bubble nucleation"""
+
 import enum
 
 import numba

@@ -18,6 +18,7 @@ pytest-html == 4.1.1
 pytest-xdist == 3.8.0
 scipy-stubs == 1.16.3.0
 setuptools == 80.9.0
+sympy == 1.14.0
 twine == 6.2.0
 types-defusedxml == 0.7.0.20250822
 types-psutil == 7.0.0.20251001

@@ -15,6 +15,7 @@ from pttools.omgw0 import Spectrum
 
 
 def main() -> plt.Figure:
+    """Plot the velocity and GW spectra of multiple bubbles"""
     # Create the equations of state
     model1 = BagModel(alpha_n_min=0.1)
     # Instead of giving alpha_n_min you can give a_s, a_b and V_s to specify a model.

@@ -11,6 +11,7 @@ def plot_g_cs2(
         thermo: ThermoModel,
         phase: Phase = Phase.SYMMETRIC,
         fig: plt.Figure | None = None) -> plt.Figure:
+    """Plot the degrees of freedom $g$ and the speed of sound squared $c_s^2$"""
     if fig is None:
         fig = plt.figure()
     axs = fig.subplots(nrows=3, ncols=1, sharex=True)

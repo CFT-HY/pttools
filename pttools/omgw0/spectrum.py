@@ -69,23 +69,23 @@ class Spectrum(ssm.SSMSpectrum):
         self.Tn_manual_override = Tn is not None
         self.g_star_manual_override = g_star is not None
         self.gs_star_manual_override = gs_star is not None
-        self.Tn_override = const.T_default if Tn is None else Tn
+        self.Tn_override = const.T_DEFAULT if Tn is None else Tn
         self.g_star_override = const.G_STAR_DEFAULT if g_star is None else g_star
         self.gs_star_override = self.g_star_override if gs_star is None else gs_star
 
-    def f(self, z: tp.Union[np.ndarray, None] = None) -> th.FloatOrArr:
+    def f(self, z: tp.Union[np.ndarray, None] = None) -> th.FloatOrArr:  # pylint: disable=missing-function-docstring
         if z is None:
             z = self.y
         return freq.f(z=z, r_star=self.r_star, f_star0=self.f_star0)
 
     @functools.cached_property
-    def f_star0(self) -> float:
+    def f_star0(self) -> float:  # pylint: disable=missing-function-docstring
         return freq.f_star0(
             Tn=self.Tn,
             g_star=self.g_star
         )
 
-    def F_gw0(self, g0: float = const.G0, gs0: float = const.GS0) -> float:
+    def F_gw0(self, g0: float = const.G0, gs0: float = const.GS0) -> float:  # pylint: disable=missing-function-docstring
         return F_gw0(
             g_star=self.g_star,
             g0=g0,
@@ -121,10 +121,10 @@ class Spectrum(ssm.SSMSpectrum):
         """
         return ssm.H(T=self.Tn)
 
-    def noise(self) -> np.ndarray:
+    def noise(self) -> np.ndarray:  # pylint: disable=missing-function-docstring
         return noise.omega_noise(self.f())
 
-    def noise_ins(self) -> np.ndarray:
+    def noise_ins(self) -> np.ndarray:  # pylint: disable=missing-function-docstring
         return noise.omega_ins(self.f())
 
     def omgw0(

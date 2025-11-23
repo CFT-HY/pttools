@@ -1,3 +1,5 @@
+"""Power spectrum integration functions"""
+
 import numpy as np
 from scipy.integrate import simpson
 from scipy.special import gamma

@@ -1,5 +1,6 @@
+"""Functions for ODE integration of fluid profiles in parametric form"""
+
 import logging
-import typing as tp
 
 import numba
 import numpy as np
@@ -157,7 +158,10 @@ def fluid_integrate_param_numba(t: np.ndarray, y0: np.ndarray, data: np.ndarray,
     usol, success = numbalsoda.lsoda(df_dtau_ptr, u0=y0, t_eval=t_numba, data=data_numba)
     if not success:
         with numba.objmode:
-            logger.error(f"NumbaLSODA failed for %s integration", "backwards" if backwards else "forwards")
+            logger.error(
+                "NumbaLSODA failed for %s integration",
+                "backwards" if backwards else "forwards"
+            )
     v = usol[:, 0]
     w = usol[:, 1]
     xi = usol[:, 2]
@@ -214,4 +218,5 @@ def fluid_integrate_param_solve_ivp(
 
 
 def precompile():
+    """Run fluid_integrate_param once to precompile it with Numba"""
     fluid_integrate_param(v0=0.5, w0=0.5, xi0=0.5, phase=0., n_xi=2)

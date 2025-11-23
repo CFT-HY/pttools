@@ -11,6 +11,7 @@ from pttools import models
 
 
 def main():
+    """Comparison of BagModel and ConstCSModel"""
     model_bag = models.BagModel(a_s=1.1, a_b=1, V_s=1)
     # model_const_cs_like_bag = models.ConstCSModel(a_s=1.1, a_b=1, css2=1/3, csb2=1/3, V_s=1)
     model_thermo_bag = models.FullModel(thermo=models.ConstCSThermoModel(a_s=1.1, a_b=1, V_s=1, css2=1/3, csb2=1/3))

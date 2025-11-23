@@ -1,4 +1,4 @@
-"""low-k approximation"""
+"""Low-k approximation"""
 
 import numpy as np
 import matplotlib.pyplot as plt

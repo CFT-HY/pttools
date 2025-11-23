@@ -59,9 +59,12 @@ def plot_spectra_multi(
     x_right = 0.54
     y_top = 0.68
     y_bottom = 0.4
-    axs[0, 0].annotate("", xytext=(x_left, y_top), xy=(x_right, y_top), xycoords="figure fraction", arrowprops=arrowprops)
-    axs[0, 0].annotate("", xytext=(0.56, 0.56), xy=(x_left, 0.48), xycoords="figure fraction", arrowprops=arrowprops)
-    axs[0, 0].annotate("", xytext=(x_left, y_bottom), xy=(x_right, y_bottom), xycoords="figure fraction", arrowprops=arrowprops)
+    axs[0, 0].annotate(
+        "", xytext=(x_left, y_top), xy=(x_right, y_top), xycoords="figure fraction", arrowprops=arrowprops)
+    axs[0, 0].annotate(
+        "", xytext=(0.56, 0.56), xy=(x_left, 0.48), xycoords="figure fraction", arrowprops=arrowprops)
+    axs[0, 0].annotate(
+        "", xytext=(x_left, y_bottom), xy=(x_right, y_bottom), xycoords="figure fraction", arrowprops=arrowprops)
 
     if path is not None:
         fig.savefig(path)
@@ -75,6 +78,7 @@ def plot_spectra_multi_common(
         nrows: int,
         ncols: int,
         **kwargs):
+    """Common steps for plotting multiple spectra"""
     if fig is None:
         fig = plt.figure(figsize=figsize)
     axs = fig.subplots(nrows, ncols)
@@ -96,6 +100,7 @@ def plot_spectra_multi_flat(
         fig: plt.Figure,
         path: str | None = None,
         **kwargs):
+    """Plot multiple spectra in a flat layout"""
     fig, axs = plot_spectra_multi_common(spectra, fig, figsize=(14, 4), nrows=1, ncols=4, **kwargs)
     arrowprops = {"width": 7}
     y = 0.4

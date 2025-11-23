@@ -8,6 +8,7 @@ from pttools.analysis import utils
 
 
 class ModelsPlot:
+    """A plot of the thermodynamic quantities of multiple models"""
     def __init__(self, temp: np.ndarray):
         self.temp = temp
 
@@ -69,6 +70,7 @@ class ModelsPlot:
         )
 
     def process(self) -> None:
+        """Process the plot"""
         ax: plt.Axes
         for ax in self.axs.flat:
             utils.legend(ax, fontsize="x-small")

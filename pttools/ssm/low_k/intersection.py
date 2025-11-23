@@ -1,3 +1,5 @@
+"""Functions for computing the intersections of low and high frequency approximations"""
+
 import numpy as np
 from scipy.special import gamma
 
