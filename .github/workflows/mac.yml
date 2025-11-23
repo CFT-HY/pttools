@@ -9,10 +9,7 @@ env:
   PYTHON_VERSION: '3.13'
 jobs:
   test:
-    # As of 2025-11-23, hashFiles() does not work on macos-latest.
-    # https://github.com/actions/runner-images/issues/13341
-    runs-on: macos-14
-    # runs-on: macos-latest
+    runs-on: macos-latest
     # if: ${{ github.event.workflow_run.conclusion == 'success' }}
     timeout-minutes: 20
     steps:
@@ -32,14 +29,17 @@ jobs:
           run: python -V
         - name: Checkout
           uses: actions/checkout@v4
-        - name: Load pip cache
-          uses: actions/cache@v4
-          with:
-            path: .pip
-            key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-            restore-keys: |
-              pip-${{ runner.os }}-
-              pip-
+          # Please see this GitHub issue for the issues with hashFiles()
+          # https://github.com/actions/runner-images/issues/13341
+          # As a temporary workaround on 2025-11-23, the caching is disabled on macOS.
+#        - name: Load pip cache
+#          uses: actions/cache@v4
+#          with:
+#            path: .pip
+#            key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+#            restore-keys: |
+#              pip-${{ runner.os }}-
+#              pip-
         - name: Install requirements
           run: |
             pip --cache-dir=.pip install --upgrade pip wheel
