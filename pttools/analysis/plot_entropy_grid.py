@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 class DurationPlot(VwAlphaPlot):
     """Plot the time it took to simulate each bubble"""
-    def __init__(self, grid: BubbleGridVWAlpha, fig: plt.Figure = None, ax: plt.Axes = None):
+    def __init__(self, grid: BubbleGridVWAlpha, fig: plt.Figure | None = None, ax: plt.Axes | None = None):
         super().__init__(grid, fig, ax)
         img = ax.pcolor(grid.v_walls, grid.alpha_ns, np.log10(grid.elapsed()))
         cbar = ax.figure.colorbar(img, ax=ax)
@@ -43,8 +43,8 @@ class EntropyPlot(VwAlphaPlot):
             min_level: float,
             max_level: float,
             diff_level: float,
-            fig: plt.Figure = None,
-            ax: plt.Axes = None):
+            fig: plt.Figure | None = None,
+            ax: plt.Axes | None = None):
         super().__init__(grid, fig, ax, title=rf"$\Delta s / s_n$ for {grid.model.label_latex}")
         plot_entropy_data(entropy, grid.v_walls, grid.alpha_ns, min_level, max_level, diff_level, fig=fig, ax=ax)
 
@@ -63,8 +63,8 @@ class DeltaEntropyPlot(VwAlphaPlot):
             w2: np.ndarray,
             w_ref: np.ndarray,
             title: str,
-            fig: plt.Figure = None,
-            ax: plt.Axes = None):
+            fig: plt.Figure | None = None,
+            ax: plt.Axes | None = None):
         super().__init__(grid, fig, ax)
         rel_change = (w1 - w2) / w_ref
         cs: QuadContourSet = ax.contourf(grid.v_walls, grid.alpha_ns, rel_change, locator=ticker.LinearLocator(numticks=20))
@@ -78,8 +78,8 @@ class EntropyConservationPlot(VwAlphaPlot):
             self,
             grid: BubbleGridVWAlpha,
             diff: np.ndarray,
-            fig: plt.Figure = None,
-            ax: plt.Axes = None):
+            fig: plt.Figure | None = None,
+            ax: plt.Axes | None = None):
         super().__init__(grid, fig, ax)
         cs: QuadContourSet = ax.contourf(grid.v_walls, grid.alpha_ns, diff, locator=ticker.LinearLocator(numticks=20))
         cbar = self.fig.colorbar(cs)
@@ -92,8 +92,13 @@ class EntropyConservationPlot(VwAlphaPlot):
 
 
 class GieseApproximationPlot(VwAlphaPlot):
-    """Plot the Giese approximation vs. simulated value for $\frac{\tilde{v}_+}{\tilde{v}_-}$"""
-    def __init__(self, grid: BubbleGridVWAlpha, diff: np.ndarray, fig: plt.Figure = None, ax: plt.Axes = None):
+    """Plot the Giese et al. approximation vs. simulated value for $\frac{\tilde{v}_+}{\tilde{v}_-}$"""
+    def __init__(
+            self,
+            grid: BubbleGridVWAlpha,
+            diff: np.ndarray,
+            fig: plt.Figure | None = None,
+            ax: plt.Axes | None = None):
         super().__init__(grid, fig, ax)
 
         cs: QuadContourSet = ax.contourf(grid.v_walls, grid.alpha_ns, diff, locator=ticker.LogLocator(numticks=20))
@@ -107,7 +112,7 @@ class GieseApproximationPlot(VwAlphaPlot):
 
 class KappaOmegaSumPlot(VwAlphaPlot):
     r"""Plot $\kappa$ + $\omega$ of bubbles as a contour plot"""
-    def __init__(self, grid: BubbleGridVWAlpha, fig: plt.Figure = None, ax: plt.Axes = None):
+    def __init__(self, grid: BubbleGridVWAlpha, fig: plt.Figure | None = None, ax: plt.Axes | None = None):
         super().__init__(grid, fig, ax)
 
         kappa_omega_sum = np.abs(grid.kappa() + grid.omega() - 1)
@@ -142,7 +147,10 @@ def compute(bubble: Bubble):
             bubble.vp_vm_tilde_ratio_giese_rel_diff
         )
     except IndexError as e:
-        logger.exception(f"Computing entropy quantities failed for {bubble.label_unicode}.", exc_info=e)
+        logger.exception(
+            "Computing entropy quantities failed for %s.",
+            bubble.label_unicode, exc_info=e
+        )
         return COMPUTE_FAIL
 
 
@@ -158,8 +166,8 @@ def gen_and_plot_entropy(
         max_level: float,
         diff_level: float,
         use_bag_solver: bool = False,
-        path: str = None,
-        single_plot: bool = False) -> tp.Tuple[plt.Figure, np.ndarray]:
+        path: str | None = None,
+        single_plot: bool = False) -> tuple[plt.Figure, np.ndarray]:
     """Generate the entropy plots"""
     figsize = None if single_plot else (16*1.5, 9*1.5)
     fig: plt.Figure = plt.figure(figsize=figsize)
@@ -202,8 +210,8 @@ def plot_entropy_data(
         data: np.ndarray,
         v_walls: np.ndarray, alpha_ns: np.ndarray,
         min_level: float, max_level: float, diff_level: float,
-        fig: plt.Figure = None,
-        ax: plt.Axes = None) -> tp.Tuple[plt.Figure, plt.Axes]:
+        fig: plt.Figure | None = None,
+        ax: plt.Axes | None = None) -> tuple[plt.Figure, plt.Axes]:
     """Plot entrpy data that is not from a BubbleGridVWAlpha object."""
     if fig is None or ax is None:
         fig: plt.Figure = plt.figure()
@@ -217,7 +225,7 @@ def plot_entropy_data(
     ax.grid()
     ax.set_xlabel(r"$v_w$")
     ax.set_ylabel(r"$\alpha_n$")
-    ax.set_title(rf"$\Delta s / s_n$")
+    ax.set_title(r"$\Delta s / s_n$")
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
 

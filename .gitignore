@@ -32,6 +32,7 @@ pylint.txt
 test-output.txt
 *.dot
 *.eps
+*.h5
 *.hdf5
 *.html
 *.lprof
@@ -54,6 +55,9 @@ test-output.txt
 dist
 envs
 envs-old
+examples/cosmogw
+examples/testing
+examples/wallgo
 model_data
 venv
 !.vscode/settings.json

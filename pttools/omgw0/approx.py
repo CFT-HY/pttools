@@ -1,10 +1,11 @@
-"""Approximations for omgw0"""
-
-import pttools.type_hints as th
+r"""Approximations for $\Omega_{\text{gw},0}$"""
 
 import math
+
 import numpy as np
 
+from pttools.bubble.const import CS0
+import pttools.type_hints as th
 from . import const
 
 
@@ -13,9 +14,9 @@ def omgw_approx(
         alpha: th.FloatOrArr,
         kappa_v: th.FloatOrArr,
         r_star: th.FloatOrArr,
-        temp: th.FloatOrArr = const.T_default,
+        temp: th.FloatOrArr = const.T_DEFAULT,
         g_star: th.FloatOrArr = const.G_STAR_DEFAULT,
-        f0_peak: th.FloatOrArr = None) -> th.FloatOrArr:
+        f0_peak: th.FloatOrArr | None = None) -> th.FloatOrArr:
     r"""
     :caprini_2016:`\ ` eq. 13
     """
@@ -48,5 +49,12 @@ def f0_peak_approx(temp: th.FloatOrArr, r_star: th.FloatOrArr, g_star: th.FloatO
     return 1.9e-5 * (8 * np.pi)**(1/3) / r_star * temp / 100 * (g_star / 100) ** (1/6)
 
 
-def R_star(v_wall: th.FloatOrArr, beta: th.FloatOrArr) -> th.FloatOrArr:
-    return (8 * np.pi)**(1/3) * v_wall / beta
+def R_star(v_wall: th.FloatOrArr, beta: th.FloatOrArr, cs: th.FloatOrArr = CS0) -> th.FloatOrArr:
+    r"""Mean bubble separation $R_*$
+    $$R_* = \frac{(8 \pi)^\frac{1}{3}}{\beta} \max(v_w, c_s)$$
+    :caprini_2020:`\ ` eq. 6
+    :hakkinen_msc:`\ ` eq. 2.6
+    The $c_s$ corrects the fact that the reheating of the plasma by the reaction front can suppress
+    further bubble formation for large enough $\alpha$.
+    """
+    return (8 * np.pi)**(1/3) / beta * np.max(v_wall, cs)

@@ -15,10 +15,13 @@ class MatplotlibFilter(logging.Filter):
         return record.funcName != "_is_transparent"
 
 
-def setup_logging(log_dir: str = None, enable_faulthandler: bool = True, silence_spam: bool = True):
+def setup_logging(
+        log_dir: str | None = None,
+        enable_faulthandler: bool = True,
+        silence_spam: bool = True):
     """Configure logging to both file and console and optionally silence spam"""
     # Allow running this function only once for each process
-    if not logging_lock.acquire(blocking=False):
+    if not logging_lock.acquire(blocking=False):  # pylint: disable=consider-using-with
         return
 
     if enable_faulthandler and not faulthandler.is_enabled():
@@ -40,7 +43,9 @@ def setup_logging(log_dir: str = None, enable_faulthandler: bool = True, silence
         format='%(asctime)s %(levelname)-8s %(module)-20s %(funcName)-32s %(lineno)-4d %(process)-3d %(message)s'
     )
     if silence_spam:
+        logging.getLogger("choreographer").setLevel(logging.WARNING)
         logging.getLogger("h5py").setLevel(logging.INFO)
+        logging.getLogger("kaleido").setLevel(logging.WARNING)
         logging.getLogger("numba").setLevel(logging.INFO)
         logging.getLogger("Pillow").setLevel(logging.INFO)
         logging.getLogger("PIL").setLevel(logging.INFO)

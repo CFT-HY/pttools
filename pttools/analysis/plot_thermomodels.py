@@ -8,6 +8,7 @@ from pttools.analysis import utils
 
 
 class ThermoModelsPlot:
+    r"""A plot of the properties of multiple thermodynamic models"""
     def __init__(self, temp: np.ndarray):
         self.temp = temp
 
@@ -32,6 +33,7 @@ class ThermoModelsPlot:
         self.fig.tight_layout()
 
     def add(self, model: models.ThermoModel, phase: bubble.Phase, **kwargs) -> None:
+        """Add a model to the plot"""
         label = utils.model_phase_label(model, phase)
         self.ax_cs2.plot(self.temp, model.cs2(self.temp, phase), label=label, **kwargs)
         self.ax_cs2.plot(self.temp, model.cs2_full(self.temp, phase), label=f"{label}, full", **kwargs)
@@ -39,13 +41,14 @@ class ThermoModelsPlot:
         self.ax_g.plot(self.temp, model.ge(self.temp, phase), label=f"$g_e$, {label}", **kwargs)
         self.ax_g.plot(self.temp, model.gs(self.temp, phase), label=f"$g_s$, {label}", **kwargs)
 
-        self.ax_dg_dT.plot(self.temp, model.dge_dT(self.temp, phase), label=rf"$\frac{{dg_e}}{{dT}}$" + label, **kwargs)
-        self.ax_dg_dT.plot(self.temp, model.dgs_dT(self.temp, phase), label=rf"$\frac{{dg_s}}{{dT}}$" + label, **kwargs)
+        self.ax_dg_dT.plot(self.temp, model.dge_dT(self.temp, phase), label=rf"$\frac{{dg_e}}{{dT}}$ {label}", **kwargs)
+        self.ax_dg_dT.plot(self.temp, model.dgs_dT(self.temp, phase), label=rf"$\frac{{dg_s}}{{dT}}$ {label}", **kwargs)
 
         self.ax_dx_dT.plot(self.temp, model.de_dt(self.temp, phase), label=label, **kwargs)
         self.ax_dx_dT.plot(self.temp, model.dp_dt(self.temp, phase), label=label, **kwargs)
 
     def process(self) -> None:
+        """Process the plot"""
         ax: plt.Axes
         for ax in self.axs.flat:
             utils.legend(ax, fontsize="x-small")

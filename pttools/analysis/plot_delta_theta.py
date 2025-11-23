@@ -11,6 +11,7 @@ from pttools.models.model import Model
 
 
 class DeltaThetaPlot3D(PlotlyPlot):
+    r"""Plot $\Delta \theta ({w}_+, {w}_-)$"""
     def __init__(self):
         super().__init__()
         self.plots: tp.List[BasePlotlyType] = []

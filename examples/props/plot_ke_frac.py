@@ -15,6 +15,7 @@ from pttools.models.const_cs import ConstCSModel
 
 
 def main():
+    r"""Plot the kinetic energy fraction for various $\alpha_n$ as a function of $\xi_\text{wall}$"""
     # model = ConstCSModel(css2=1/3, csb2=1/3, a_s=100, a_b=50, V_s=1e-8, V_b=0)
     model = ConstCSModel(css2=1 / 3, csb2=1 / 4, a_s=5, a_b=1, V_s=1, V_b=0)
     print(model.alpha_n_min)

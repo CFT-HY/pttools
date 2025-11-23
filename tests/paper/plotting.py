@@ -19,7 +19,7 @@ from tests.paper import utils
 logger = logging.getLogger(__name__)
 
 
-def get_yaxis_limits(ps_type: utils.PSType, strength: utils.Strength = utils.Strength.WEAK) -> tp.Tuple[float, float]:
+def get_yaxis_limits(ps_type: utils.PSType, strength: utils.Strength = utils.Strength.WEAK) -> tuple[float, float]:
     if strength is utils.Strength.WEAK:
         if ps_type is utils.PSType.V:
             p_min = 1e-8
@@ -71,7 +71,7 @@ def plot_guide_power_law(
         power,
         xloglen=1,
         txt: str = "",
-        txt_shift: tp.Tuple[float, float] = (1, 1),
+        txt_shift: tuple[float, float] = (1, 1),
         color: str = "k",
         linestyle: str = "-"):
     """
@@ -140,8 +140,8 @@ def plot_guide_power_laws_prace(
         pow_v: np.ndarray,
         y: np.ndarray,
         pow_gw: np.ndarray,
-        np_lo: tp.Tuple[int, int] = (5, 9),
-        inter_flag: bool = False) -> tp.Tuple[plt.Figure, plt.Figure]:
+        np_lo: tuple[int, int] = (5, 9),
+        inter_flag: bool = False) -> tuple[plt.Figure, plt.Figure]:
     """
     Plot guide power laws (assumes params all same for list)
     Shifts designed for simulataneous nucleation lines
@@ -225,7 +225,7 @@ def plot_ps(
         leg_list=None,
         col_list=None,
         ls_list=None,
-        fig: plt.Figure = None,
+        fig: plt.Figure | None = None,
         pretty: bool = False) -> plt.Figure:
     """
     Plots a list of power spectra, with axis limits appropriate to prace runs

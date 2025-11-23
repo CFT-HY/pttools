@@ -14,6 +14,7 @@ from pttools import bubble
 
 
 def main(dots: bool = False):
+    r"""Plot the ${v}_+, {v}_-$ plane"""
     # plt.rc('text', usetex=True)
     # plt.rc('font', family='serif')
 

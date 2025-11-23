@@ -9,7 +9,7 @@ import numpy as np
 from pttools.bubble.bubble import Bubble
 from pttools.bubble import fluid_reference
 from pttools.bubble.integrate import precompile
-from pttools.omgw0.omgw0_ssm import Spectrum
+from pttools.omgw0 import Spectrum
 from pttools.speedup import options
 from pttools.speedup.parallel import run_parallel
 if tp.TYPE_CHECKING:
@@ -21,12 +21,12 @@ logger = logging.getLogger(__name__)
 def create_bubble(
         params: np.ndarray,
         model: "Model",
-        post_func: callable = None,
+        post_func: tp.Callable | None = None,
         post_func_return_multiple: bool = False,
         use_bag_solver: bool = False,
-        bubble_kwargs: tp.Dict[str, any] = None,
+        bubble_kwargs: dict[str, tp.Any] | None = None,
         allow_bubble_failure: bool = False,
-        *args, **kwargs) -> tp.Union[tp.Optional[Bubble], tp.Tuple[tp.Optional[Bubble], tp.Any]]:
+        *args, **kwargs) -> tp.Union[tp.Optional[Bubble], tuple[tp.Optional[Bubble], tp.Any]]:
     """Create a single bubble and apply post-processing functions to retrieve results from it"""
     v_wall, alpha_n = params
     # This is a common error case and should be handled here to avoid polluting the logs with exceptions.
@@ -59,11 +59,11 @@ def create_bubble(
 def create_spectrum(
         params: np.ndarray,
         model: "Model",
-        post_func: callable = None,
+        post_func: tp.Callable | None = None,
         post_func_return_multiple: bool = False,
         use_bag_solver: bool = False,
-        bubble_kwargs: tp.Dict[str, any] = None,
-        spectrum_kwargs: tp.Dict[str, any] = None,
+        bubble_kwargs: dict[str, tp.Any]| None  = None,
+        spectrum_kwargs: dict[str, tp.Any] | None = None,
         allow_bubble_failure: bool = False,
         *args, **kwargs):
     """Create a single spectrum and apply post-processing functions to retrieve results from it"""
@@ -90,14 +90,14 @@ def create_bubbles(
         model: "Model",
         v_walls: np.ndarray,
         alpha_ns: np.ndarray,
-        func: callable = None,
+        func: tp.Callable | None = None,
         log_progress_percentage: float = 10,
         max_workers: int = options.MAX_WORKERS_DEFAULT,
         single_thread: bool = False,
         allow_bubble_failure: bool = False,
-        kwargs: tp.Dict[str, any] = None,
-        bubble_kwargs: tp.Dict[str, any] = None,
-        bubble_func: callable = create_bubble) -> tp.Union[np.ndarray, tp.Tuple[np.ndarray, np.ndarray, ...]]:
+        kwargs: dict[str, tp.Any] | None = None,
+        bubble_kwargs: dict[str, tp.Any] | None = None,
+        bubble_func: tp.Callable = create_bubble) -> tp.Union[np.ndarray, tuple[np.ndarray, np.ndarray, ...]]:
     """Create multiple bubbles in parallel"""
     start_time = time.perf_counter()
     post_func_return_multiple = False
@@ -158,14 +158,14 @@ def create_spectra(
         model: "Model",
         v_walls: np.ndarray,
         alpha_ns: np.ndarray,
-        func: callable = None,
+        func: tp.Callable | None = None,
         log_progress_percentage: float = 5,
         max_workers: int = options.MAX_WORKERS_DEFAULT,
         single_thread: bool = False,
         allow_bubble_failure: bool = False,
-        kwargs: tp.Dict[str, any] = None,
-        bubble_kwargs: tp.Dict[str, any] = None,
-        spectrum_kwargs: tp.Dict[str, any] = None) -> np.ndarray:
+        kwargs: dict[str, tp.Any] | None = None,
+        bubble_kwargs: dict[str, tp.Any] | None = None,
+        spectrum_kwargs: dict[str, tp.Any] | None = None) -> np.ndarray:
     """Create multiple spectra in parallel"""
     if kwargs is None:
         kwargs2 = {"spectrum_kwargs": spectrum_kwargs}
@@ -188,6 +188,7 @@ def create_spectra(
 
 
 def solve_bubble(bubble: Bubble) -> None:
+    """Solve a single existing bubble"""
     bubble.solve()
 
 

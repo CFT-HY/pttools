@@ -1,7 +1,8 @@
 """Unit tests for the properties of a bubble"""
 
-import numpy as np
 import unittest
+
+import numpy as np
 
 from pttools.models.bag import BagModel
 from pttools.bubble.bubble import Bubble

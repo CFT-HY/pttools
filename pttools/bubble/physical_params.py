@@ -1,7 +1,7 @@
 """
 Experimental data structures based on numba.jitclass
 
-When implementing these, remove the corresponding code from ssmtools/spectrum.py
+When implementing these, remove the corresponding code from ssm/spectrum.py
 
 Jitclasses are a highly experimental feature of Numba. Please see the following issues.
 https://github.com/numba/numba/issues/365
@@ -51,7 +51,13 @@ class NucArgs:
     ("nuc_args", NotImplemented if speedup.NUMBA_DISABLE_JIT else numba.optional(NucArgs.class_type.instance_type))
 ])
 class PhysicalParams:
-    def __init__(self, v_wall: float, alpha: float, nuc_type: NucType = None, nuc_args: NucArgs = None):
+    """Physical parameters for a bubble"""
+    def __init__(
+            self,
+            v_wall: float,
+            alpha: float,
+            nuc_type: NucType | None = None,
+            nuc_args: NucArgs | None = None):
         self.v_wall = v_wall
         self.alpha = alpha
         self.nuc_type = nuc_type

@@ -23,22 +23,21 @@ def identify_solution_type_bag(v_wall: float, alpha_n: float, exit_on_error: boo
     """
     if alpha_n < alpha_tools.alpha_n_max_detonation_bag(v_wall):
         return SolutionType.DETON
-    else:
-        if alpha_n < alpha_tools.alpha_n_max_deflagration_bag(v_wall):
-            if v_wall <= const.CS0:
-                return SolutionType.SUB_DEF
-            return SolutionType.HYBRID
-        # elif v_wall > const.CS0 and alpha_n < alpha_tools.alpha_n_max_hybrid_bag(v_wall):
-        #     with numba.objmode:
-        #         logger.warning(
-        #             "Using an untested way to identify the solution as a hybrid with v_wall=%s, alpha_n=%s",
-        #             v_wall, alpha_n
-        #         )
-        #     return SolutionType.HYBRID
+    if alpha_n < alpha_tools.alpha_n_max_deflagration_bag(v_wall):
+        if v_wall <= const.CS0:
+            return SolutionType.SUB_DEF
+        return SolutionType.HYBRID
+    # elif v_wall > const.CS0 and alpha_n < alpha_tools.alpha_n_max_hybrid_bag(v_wall):
+    #     with numba.objmode:
+    #         logger.warning(
+    #             "Using an untested way to identify the solution as a hybrid with v_wall=%s, alpha_n=%s",
+    #             v_wall, alpha_n
+    #         )
+    #     return SolutionType.HYBRID
 
     if exit_on_error:
         with numba.objmode:
-            logger.error(f"No solution for v_wall=%s, alpha_n=%s", v_wall, alpha_n)
+            logger.error("No solution for v_wall=%s, alpha_n=%s", v_wall, alpha_n)
         raise RuntimeError("No solution for given v_wall, alpha_n")
 
     return SolutionType.ERROR
@@ -49,9 +48,9 @@ def validate_solution_type(
         v_wall: float,
         alpha_n: float,
         sol_type: SolutionType,
-        wn: float = None,
-        wn_guess: float = None,
-        wm_guess: float = None) -> SolutionType:
+        wn: float | None = None,
+        wn_guess: float | None = None,
+        wm_guess: float | None = None) -> SolutionType:
     """Ensure that the solution type is determined or can be determined automatically"""
     if sol_type is None or sol_type is SolutionType.UNKNOWN:
         sol_type = model.solution_type(
@@ -110,15 +109,20 @@ def identify_solution_type_alpha_plus(v_wall: float, alpha_p: float) -> Solution
             sol_type = SolutionType.DETON
             if alpha_tools.alpha_plus_min_hybrid(v_wall) < alpha_p < 1/3:
                 with numba.objmode:
-                    logger.warning((
-                        "Hybrid and detonation both possible for v_wall = {}, alpha_plus = {}. "
-                        "Choosing detonation.").format(v_wall, alpha_p))
+                    logger.warning(
+                        "Hybrid and detonation both possible for v_wall=%s, alpha_plus=%s. "
+                        "Choosing detonation.",
+                        v_wall, alpha_p
+                    )
         else:
             sol_type = SolutionType.HYBRID
 
     if alpha_p > 1/3 and sol_type != SolutionType.DETON:
         with numba.objmode:
-            logger.error("No solution for for v_wall = {}, alpha_plus = {}".format(v_wall, alpha_p))
+            logger.error(
+                "No solution for for v_wall=%s, alpha_plus=%s",
+                v_wall, alpha_p
+            )
         sol_type = SolutionType.ERROR
 
     return sol_type

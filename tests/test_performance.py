@@ -26,7 +26,7 @@ if speedup.NUMBA_DISABLE_JIT:
 
 class TestPerformance(unittest.TestCase):
     @staticmethod
-    def run_and_log(name: str, setup: str, command: str, number: int, num_threads: int, file: tp.TextIO = None):
+    def run_and_log(name: str, setup: str, command: str, number: int, num_threads: int, file: tp.TextIO | None = None):
         result = timeit.timeit(command, setup=setup, number=number)
         text = f"{name} performance with {num_threads} threads and {number} iterations: "\
                f"{result:.2f} s, {result/number:.3f} s/iteration"
@@ -63,7 +63,7 @@ class TestPerformance(unittest.TestCase):
     def test_performance_gw(cls):
         setup = textwrap.dedent("""
         import numpy as np
-        import pttools.ssmtools as ssm
+        from pttools import ssm
 
         z = np.logspace(0,2,100)
         gw = ssm.power_gw_scaled_bag(z, (0.1,0.1))
@@ -76,14 +76,14 @@ class TestPerformance(unittest.TestCase):
     def test_performance_sin_transform(cls):
         setup = textwrap.dedent("""
         import numpy as np
-        import pttools.ssmtools.calculators as calc
+        from pttools.ssm.sin_transform import sin_transform
 
         z = np.logspace(0, 2, 10000)
         xi = np.linspace(0, 1, 10000)
         # This is an arbitrary function
         f = np.amax([np.zeros_like(xi), np.cos(xi)], axis=0)
         """)
-        command = "transformed = calc.sin_transform(z, xi, f)"
+        command = "transformed = sin_transform(z, xi, f)"
         cls.run_with_different_threads("sin_transform", setup, command, 10)
 
 

@@ -1,6 +1,5 @@
 """Unit tests for thermodynamic functions"""
 
-import typing as tp
 import unittest
 
 import numpy as np
@@ -25,7 +24,7 @@ class ThermoTest:
     OMEGA_REF: np.ndarray
     BVA_KE_FRAC_REF: np.ndarray
 
-    bubbles: tp.List[Bubble]
+    bubbles: list[Bubble]
 
     @classmethod
     # pylint: disable=invalid-name

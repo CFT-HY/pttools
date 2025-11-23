@@ -19,9 +19,9 @@ class VwAlphaPlot:
     def __init__(
             self,
             grid: BubbleGridVWAlpha,
-            fig: plt.Figure = None,
-            ax: plt.Axes = None,
-            title: str = None,
+            fig: plt.Figure | None = None,
+            ax: plt.Axes | None = None,
+            title: str | None = None,
             alpha_label: str = r"$\alpha_n$"):
         self.grid = grid
 
@@ -47,7 +47,7 @@ class VwAlphaPlot:
             self,
             data: np.ndarray,
             label: str,
-            diff_level: float = None,
+            diff_level: float | None = None,
             cmap_neg: tp.Union[Colormap, str] = colormap.CMAP_NEG_DEFAULT,
             cmap_pos: tp.Union[Colormap, str] = colormap.CMAP_POS_DEFAULT):
         """Add a contour plot to the figure"""

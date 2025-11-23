@@ -10,6 +10,7 @@ from pttools import speedup
 
 
 class TestProfile(abc.ABC, unittest.TestCase):
+    """Base class for performance profiling tests"""
     @classmethod
     def setUpClass(cls) -> None:
         if not speedup.NUMBA_DISABLE_JIT:

@@ -29,11 +29,12 @@ class ThermoModel(BaseModel, abc.ABC):
 
     def __init__(
             self,
-            name: str = None,
-            T_min: float = None, T_max: float = None,
+            name: str | None = None,
+            T_min: float | None = None,
+            T_max: float | None = None,
             restrict_to_valid: bool = True,
-            label_latex: str = None,
-            label_unicode: str = None,
+            label_latex: str | None = None,
+            label_unicode: str | None = None,
             gen_cs2: bool = True,
             gen_cs2_neg: bool = False,
             silence_temp: bool = False):
@@ -41,12 +42,12 @@ class ThermoModel(BaseModel, abc.ABC):
         temp_data_min = np.min(self.GEFF_DATA_TEMP)
         temp_data_max = np.max(self.GEFF_DATA_TEMP)
         if T_min is None:
-            self.t_min = np.min(self.GEFF_DATA_TEMP)
+            self.t_min: float = np.min(self.GEFF_DATA_TEMP)
         elif T_min < temp_data_min:
             raise ValueError("Model must have spline data for its validity range.")
 
         if T_max is None:
-            self.t_max = np.max(self.GEFF_DATA_TEMP)
+            self.t_max: float = np.max(self.GEFF_DATA_TEMP)
         elif T_max > temp_data_max:
             raise ValueError("ThermoModel must have spline data for its validity range.")
 
@@ -68,7 +69,10 @@ class ThermoModel(BaseModel, abc.ABC):
             err.append("cannot exceed 1")
         if err:
             msg = ", ".join(err)
-            logger.error(f"Invalid {name} for {self.name}: {msg}, got range: {np.min(cs2)} - {np.max(cs2)}")
+            logger.error(
+                "Invalid %s for %s: %s, got range: %s - %s",
+                name, self.name, msg, np.min(cs2), np.max(cs2)
+            )
             return False
         return True
 
@@ -137,7 +141,7 @@ class ThermoModel(BaseModel, abc.ABC):
                 if not temp.ndim:
                     return cs2_scalar_temp(temp.item(), phase)
                 return cs2_arr_temp(temp, phase)
-            raise TypeError(f"Unknown type for temp")
+            raise TypeError(f"Unknown type for temp: {type(temp)}")
 
         @overload(cs2, jit_options={"nopython": True})
         def cs2_numba(temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArrNumba:

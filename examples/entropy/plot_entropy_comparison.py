@@ -22,6 +22,7 @@ from pttools import speedup
 
 
 def main(relative: bool = True, path: str = None):
+    """Plot the entropies of the old and new solvers"""
     n_points = 10 if speedup.GITHUB_ACTIONS else 20
     v_walls = np.linspace(0.05, 0.95, n_points, endpoint=True)
     alpha_ns = v_walls
@@ -39,7 +40,7 @@ def main(relative: bool = True, path: str = None):
     grid = BubbleGridVWAlpha(model, v_walls, alpha_ns, compute)
     entropy = grid.data[0]
     sn = grid.data[4]
-    diff = (entropy_old - entropy)
+    diff = entropy_old - entropy
 
     if relative:
         diff /= sn

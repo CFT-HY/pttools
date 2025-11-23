@@ -5,7 +5,7 @@ import unittest
 
 import numpy as np
 
-import pttools.ssmtools as ssm
+from pttools import ssm
 from pttools import speedup
 from .test_profile import TestProfile
 from . import utils_cprofile

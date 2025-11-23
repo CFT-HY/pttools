@@ -23,7 +23,7 @@ def row_to_str(row: np.ndarray, close: np.ndarray, fmt: str = DEFAULT_FMT) -> st
     return f"[{', '.join(lst)}]"
 
 
-def pairs_to_rows(actual: np.ndarray, desired: np.ndarray, close: np.ndarray, fmt: str = DEFAULT_FMT) -> tp.List[str]:
+def pairs_to_rows(actual: np.ndarray, desired: np.ndarray, close: np.ndarray, fmt: str = DEFAULT_FMT) -> list[str]:
     """Convert pairs of actual and desired values to string rows with color"""
     return [
         f"{'' if ok else colorama.Fore.RED}"

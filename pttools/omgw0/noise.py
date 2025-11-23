@@ -1,3 +1,7 @@
+"""Utilities for calculating the noise of gravitational wave detectors, especially LISA"""
+
+import typing as tp
+
 import numpy as np
 
 import pttools.type_hints as th
@@ -5,17 +9,17 @@ from pttools.omgw0 import const
 
 
 def signal_to_noise_ratio(
-        f: np.ndarray,
-        signal: np.ndarray,
-        noise: np.ndarray,
-        f_noise: np.ndarray = None,
+        f: np.ndarray[tuple[int], np.float64],
+        signal: np.ndarray[tuple[int], np.float64],
+        noise: np.ndarray[tuple[int], np.float64],
+        f_noise: tp.Union[np.ndarray[tuple[int], np.float64], None] = None,
         obs_time: float = const.LISA_OBS_TIME,
-        f_min: float = None,
-        f_max: float = None) -> th.FloatOrArr:
+        f_min: float | None = None,
+        f_max: float | None = None) -> float:
     r"""Signal-to-noise ratio
     $$\rho = \sqrt{T_{\text{obs}} \int_{{f}_\text{min}}^{{f}_\text{max}} df \frac{
     h^2 \Omega_{\text{signal}}^2}{
-    h^2 \Omega_{\text{noise}}^2}}
+    h^2 \Omega_{\text{noise}}^2}}$$
     :caprini_2020:`\ ` eq. 33
     :smith_2019:`\ ` eq. 60
 
@@ -26,7 +30,9 @@ def signal_to_noise_ratio(
     :param signal: $\Omega_\text{signal}$
     :param noise: $\Omega_\text{noise}$
     :param f_noise: frequencies for the noise (assumed to be the same as for the signal, if not provided)
-    :obs_time: observation time (s)
+    :param obs_time: observation time (s)
+    :param f_min: minimum frequency to be considered (Hz)
+    :param f_max: maximum frequency to be considered (Hz)
     :return: signal-to-noise ratio SNR, aka. $\rho$
     """
     if f_noise is None:
@@ -59,6 +65,7 @@ def ft(L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatOrArr:
     """
     return const.c / (2*np.pi*L)
 
+#: Default LISA transfer frequency $f_t$
 FT_LISA: float = ft()
 #: $f_2$ from :lisa_sci_req:`\ ` eq. 3
 F2_LISA: float = 4/3 * FT_LISA
@@ -66,11 +73,12 @@ F2_LISA: float = 4/3 * FT_LISA
 
 def N_acc(L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatOrArr:
     r"""LISA acceleration noise
-    $$N_\text{acc} = \frac{3 \cdot 01^{-15} \frac{\text{m}}{\text{s^2}}{L}
+    $${N}_\text{acc} = \frac{3 \cdot 10^{-15}}{L} \frac{\text{m}}{\text{s}^2}
     \approx 1.44 \cdot 10^{-48} \frac{1}{\text{s}^4 \text{Hz}}$$
+    :gowling_2021:`\ ` eq. 3.3
     :gowling_2023:`\ ` p. 6
 
-    $$4 N_\text{acc} \approx 5.76 \cdot 10^{-48} \frac{1}{\text{s}^4 \text{Hz}}$$
+    $$4 {N}_\text{acc} \approx 5.76 \cdot 10^{-48} \frac{1}{{\text{s}}^4 \text{Hz}}$$
     :smith_2019:`\ ` eq. 53
     :lisa_sci_req:`\ ` eq. 3
     """
@@ -81,13 +89,12 @@ def N_AE(
         f: th.FloatOrArr,
         ft: th.FloatOrArr = FT_LISA,
         L: th.FloatOrArr = const.LISA_ARM_LENGTH,
-        W_abs2: th.FloatOrArr = None) -> th.FloatOrArr:
+        W_abs2: th.FloatOrArr | None = None) -> th.FloatOrArr:
     r"""A and E channels of LISA instrument noise
     $$N_A = N_E = \left(\left(
-    4 + 2 \cos \left( \frac{f}{f_t} \right)\right) P_\text{oms} +
-    8 \left( 1 + \cos \left( \frac{f}{f_t} \right) + \cos^2 \left( \frac{f}{f_t} \right) \right) P_\text{acc}
-    \right) |W|^2
-    $$
+    4 + 2 \cos \left( \frac{f}{f_t} \right)\right) {P}_\text{oms} +
+    8 \left( 1 + \cos \left( \frac{f}{f_t} \right) + \cos^2 \left( \frac{f}{f_t} \right) \right) {P}_\text{acc}
+    \right) \lvert W \rvert^2$$
     :gowling_2021:`\ ` eq. 3.4
     :smith_2019:`\ ` eq. 57
     """
@@ -101,6 +108,7 @@ def omega(f: th.FloatOrArr, S: th.FloatOrArr) -> th.FloatOrArr:
     r"""Convert an effective noise power spectral density (aka. sensitivity) $S$
     to a fractional GW energy density power spectrum $\Omega$
     $$\Omega = \frac{4 \pi^2}{3 H_0^2} f^3 S(f)$$
+    :lisa_conventions:`\ ` eq. 167,
     :gowling_2021:`\ ` eq. 3.8,
     :gowling_2023:`\ ` eq. 3.8,
     :smith_2019:`\ ` eq. 59
@@ -115,7 +123,7 @@ def omega(f: th.FloatOrArr, S: th.FloatOrArr) -> th.FloatOrArr:
 def omega_eb(f: th.FloatOrArr, f_ref_eb: float = 25, omega_ref_eb: float = 8.9e-10) -> th.FloatOrArr:
     r"""
     Energy density of extragalactic compact binaries
-    $$\Omega_\text{eb}(f) = \Omega_\text{ref,eb} \left( \frac{f}{f_\text{ref,eb} \right)^\frac{2}{3}$$
+    $$\Omega_\text{eb}(f) = \Omega_\text{ref,eb} \left( \frac{f}{{f}_\text{ref,eb}} \right)^\frac{2}{3}$$
     :gowling_2021:`\ ` eq. 3.9
     """
     return omega_ref_eb * (f/f_ref_eb)**(2/3)
@@ -124,7 +132,7 @@ def omega_eb(f: th.FloatOrArr, f_ref_eb: float = 25, omega_ref_eb: float = 8.9e-
 def omega_gb(f: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Energy density of unresolved galactic compact binaries
-    $$\Omega_\text{gb} = \left( \frac{4 \pi^2}{3 H_0^2} \right) f^3 S_\text{gb}(f)$$
+    $$\Omega_\text{gb} = \left( \frac{4 \pi^2}{3 H_0^2} \right) f^3 {S}_\text{gb}(f)$$
     :gowling_2021:`\ ` eq. 3.11
     """
     return omega(f, S_gb(f))
@@ -171,10 +179,10 @@ def P_oms(L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatOrArr:
     return (1.5e-11 / L)**2
 
 
-def R_AE(f: th.FloatOrArr, ft: th.FloatOrArr = FT_LISA, W_abs2: th.FloatOrArr = None) -> th.FloatOrArr:
+def R_AE(f: th.FloatOrArr, ft: th.FloatOrArr = FT_LISA, W_abs2: th.FloatOrArr | None = None) -> th.FloatOrArr:
     r"""Gravitational wave response function for the A and E channels
-    $$\mathcal{R}_A^\text{Fit} = \mathcal{R}_E^\text{Fit} \approx \frac{9}{20} |W|^2
-    \left(1 + \left( \frac{3f}{4f_t} \right^2 \right)^{-1}$$
+    $$\mathcal{R}_A^\text{Fit} = \mathcal{R}_E^\text{Fit} \approx \frac{9}{20} \lvert W \rvert^2
+    \left(1 + \left( \frac{3f}{4f_t} \right)^2 \right)^{-1}$$
     :gowling_2021:`\ ` eq. 3.6
     """
     if W_abs2 is None:
@@ -243,22 +251,20 @@ def S_I(f: th.FloatOrArr, L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatO
 
 def S_gb(
         f: th.FloatOrArr,
-        A: float = 9e-35,  # 1/mHz -> 10³
-        f_ref_gb: float = 1,
-        fk: float = 1.13e-3,
-        a: float = 0.138,
-        b: float = -221,
-        c: float = 521,
-        d: float = 1680) -> th.FloatOrArr:
+        t: th.FloatOrArr = 4,  # years
+        A: float = 1.8e-44) -> th.FloatOrArr:
     r"""Noise power spectral density for galactic binaries
-    $$S_\text{gb}(f) = A
-    \left( \frac{1 \text{mHz}}{f} \right)^{-\frac{7}{3}}
-    \text{exp} \left( - \left( \frac{f}{f_\text{ref,gb}} \right^a - bf \sin(cf) \right)
-    \left( 1 + \tanh(d(f_k - f)) \right)
-    $$
+    $$S_c(f) = A f^\frac{-7}{3} \exp \left( -f^\alpha + \beta f \sin(\kappa f) \right)
+    \left( 1 + \tanh(\gamma (f_k - f) \right) \text{Hz}^{-1}$$
+    :cornish_2017:`\ ` eq. 3
     :gowling_2021:`\ ` eq. 3.10
     """
-    return A * (1e-3 / f)**(-7/3) * np.exp(-(f/f_ref_gb)**a - b*f*np.sin(c*f)) * (1 + np.tanh(d*(fk - f)))
+    alpha = np.interp(t, GB_TIMES, GB_ALPHAS)
+    beta = np.interp(t, GB_TIMES, GB_BETAS)
+    kappa = np.interp(t, GB_TIMES, GB_KAPPAS)
+    gamma = np.interp(t, GB_TIMES, GB_GAMMAS)
+    fk = np.interp(t, GB_TIMES, GB_FKS)
+    return A * f**(-7/3) * np.exp(-f**alpha + beta * f * np.sin(kappa * f)) * (1 + np.tanh(gamma * (fk - f)))
 
 
 def W(f: th.FloatOrArr, ft: th.FloatOrArr) -> th.FloatOrArr:
@@ -267,3 +273,20 @@ def W(f: th.FloatOrArr, ft: th.FloatOrArr) -> th.FloatOrArr:
     :gowling_2021:`\ ` p. 12
     """
     return 1 - np.exp(-2j * f / ft)
+
+
+#: Coefficients for the galactic binary noise, :cornish_2017:`\ ` table 1
+GB_DATA: np.ndarray[tuple[int, int], np.float64] = np.array([
+    [0.5, 1, 2, 4],
+    [0.133, 0.171, 0.165, 0.138],
+    [243, 292, 299, -221],
+    [482, 1020, 611, 521],
+    [917, 1680, 1340, 1680],
+    [0.00258, 0.00215, 0.00173, 0.00113]
+])
+GB_TIMES: np.ndarray[tuple[int], np.float64] = GB_DATA[0, :]
+GB_ALPHAS: np.ndarray[tuple[int], np.float64] = GB_DATA[1, :]
+GB_BETAS: np.ndarray[tuple[int], np.float64] = GB_DATA[2, :]
+GB_KAPPAS: np.ndarray[tuple[int], np.float64] = GB_DATA[3, :]
+GB_GAMMAS: np.ndarray[tuple[int], np.float64] = GB_DATA[4, :]
+GB_FKS: np.ndarray[tuple[int], np.float64] = GB_DATA[5, :]

@@ -2,21 +2,23 @@
 LISA noise
 ==========
 
-Plot LISA instrument and astrophysical noise as a function of frequency.
+Plot LISA instrument and astrophysical noise as a function of frequency
 """
 
 from matplotlib import pyplot as plt
 import numpy as np
 
 from examples.utils import save_and_show
+from pttools.analysis.utils import legend
 from pttools.omgw0 import noise
 
 
 def main():
+    """Plot LISA instrument and astrophysical noise as a function of frequency"""
     fig: plt.Figure = plt.figure()
     axs = fig.subplots(2, 2)
 
-    f = np.logspace(-4, -1, 50)
+    f = np.logspace(-5, -1, 50)
     ax1 = axs[0, 0]
     P_oms = noise.P_oms()
     ax1.plot([f.min(), f.max()], [P_oms, P_oms], label=r"$P_\text{oms}$")
@@ -28,6 +30,7 @@ def main():
     ax2.plot(f, noise.S_AE_approx(f), label=r"$S_{A,E,\text{approx}}$")
     ax2.plot(f, noise.S_gb(f), label=r"$S_\text{gb}$")
     ax2.set_ylabel("$S(f)$")
+    ax2.set_ylim(1e-40, 1e-34)
 
     ax3 = axs[1, 0]
     ax3.plot(f, noise.omega_ins(f), label=r"$\Omega_\text{ins}$")
@@ -35,12 +38,13 @@ def main():
     ax3.plot(f, noise.omega_gb(f), label=r"$\Omega_\text{gb}$")
     ax3.plot(f, noise.omega_noise(f), label=r"$\Omega_\text{noise}$")
     ax3.set_ylabel(r"$\Omega(f)$")
+    ax3.set_ylim(1e-14, 1e-7)
 
     for ax in axs.flat:
         ax.set_xlabel(r"$f(\text{Hz})$")
         ax.set_xscale("log")
         ax.set_yscale("log")
-        ax.legend()
+        legend(ax)
     fig.tight_layout()
 
     return fig

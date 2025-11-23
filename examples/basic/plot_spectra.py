@@ -8,13 +8,14 @@ Plot the velocity and GW spectra of multiple bubbles
 import matplotlib.pyplot as plt
 
 from examples import utils
-from pttools.analysis import plot_spectra
+from pttools.analysis import plot_spectra_multi
 from pttools.bubble import Bubble
 from pttools.models import BagModel, ConstCSModel
 from pttools.omgw0 import Spectrum
 
 
 def main() -> plt.Figure:
+    """Plot the velocity and GW spectra of multiple bubbles"""
     # Create the equations of state
     model1 = BagModel(alpha_n_min=0.1)
     # Instead of giving alpha_n_min you can give a_s, a_b and V_s to specify a model.
@@ -31,9 +32,10 @@ def main() -> plt.Figure:
         Bubble(model2, v_wall=0.5, alpha_n=0.2)
     ]
     # Convert the bubbles to GW spectra
-    spectra = [Spectrum(bubble) for bubble in bubbles]
+    spectra = [Spectrum(bubble, r_star=0.1) for bubble in bubbles]
 
-    return plot_spectra(spectra)
+    spectra_fig, axs = plot_spectra_multi(spectra)
+    return spectra_fig
 
 
 if __name__ == "__main__":

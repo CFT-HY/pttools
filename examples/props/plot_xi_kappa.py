@@ -20,11 +20,13 @@ from pttools.speedup.parallel import run_parallel
 logger = logging.getLogger(__name__)
 
 
-def alpha_thetabarn_to_alpha_n(model: ConstCSModel, alpha_thetabarn: float, wn: float):
+def alpha_theta_bar_n_to_alpha_n(model: ConstCSModel, alpha_thetabarn: float, wn: float):
+    r"""Convert $\alpha_{\bar{\theta}_n}$ to $\alpha_n$"""
     return alpha_thetabarn - 1/wn * (1 - 1/(3*model.csb2))*(model.p(wn, Phase.SYMMETRIC) - model.p(wn, Phase.BROKEN))
 
 
 def kappa_vec(params: np.ndarray, v_walls: np.ndarray) -> np.ndarray:
+    r"""Get $\kappa(v_\text{wall})$ for the given parameters"""
     model, alpha_n = params
     kappas = np.ones_like(v_walls) * np.nan
     v_wall: float
@@ -38,6 +40,7 @@ def kappa_vec(params: np.ndarray, v_walls: np.ndarray) -> np.ndarray:
 
 
 def main():
+    r"""Plot $\kappa(\xi)$ for various models"""
     ref()
     t_start = time.perf_counter()
     alpha_ns = np.array([0.01, 0.03, 0.1, 0.3, 1, 3])
@@ -79,7 +82,7 @@ def main():
     ax.set_ylabel(r"$\kappa$")
     ax.legend()
 
-    logger.info(f"Elapsed time: {time.perf_counter() - t_start:.2f}")
+    logger.info(f"Elapsed time: %.2f s", time.perf_counter() - t_start)
     return fig
 
 

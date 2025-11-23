@@ -54,9 +54,9 @@ def process_text_thread(stats: yappi.YThreadStats, path: str, print_to_console: 
 
 def process_text(
         stats: tp.Union[yappi.YFuncStats, yappi.YThreadStats],
-        path: str = None,
+        path: str | None = None,
         print_to_console: bool = False,
-        columns: tp.Dict[int, tp.Tuple[str, int]] = None) -> str:
+        columns: dict[int, tuple[str, int]] | None = None) -> str:
     """Convert YAPPI stats to str"""
     stream = io.StringIO()
     kwargs = {"out": stream}
@@ -74,7 +74,7 @@ def process_text(
     return text
 
 
-def process(name: str, print_to_console: bool = False) -> tp.Tuple[yappi.YFuncStats, yappi.YThreadStats]:
+def process(name: str, print_to_console: bool = False) -> tuple[yappi.YFuncStats, yappi.YThreadStats]:
     """Get stats from YAPPI and return them as str"""
     func_stats: yappi.YFuncStats = yappi.get_func_stats()
     thread_stats: yappi.YThreadStats = yappi.get_thread_stats()

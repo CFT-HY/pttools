@@ -3,12 +3,18 @@
 # and therefore the usual Python wheels don't work on Alpine.
 FROM python:3.13
 
+# Install generic dependencies
 RUN apt-get update \
     && apt-get install -y cmake gfortran \
-        && apt-get clean \
-    && pip install --root-user-action=ignore --no-cache-dir --upgrade build
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --upgrade --root-user-action=ignore --no-cache-dir build pip wheel
+
+# Install project dependencies
 COPY requirements.txt /pttools/
 RUN pip install --root-user-action=ignore --no-cache-dir -r /pttools/requirements.txt
+
+# Build the project
 COPY pyproject.toml /pttools/
 COPY pttools pttools/pttools
 RUN cd /pttools \

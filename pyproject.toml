@@ -7,9 +7,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pttools-gw"
-version = "0.9.0"
+version = "0.10.0"
 description = "PTtools simulation framework for phase transitions in the early universe"
 readme = "README.md"
+# PTtools is licensed under the MIT License in accordance with the University of Helsinki recommendations.
+# https://www.helsinki.fi/en/helsinki-university-library/library-researchers/copyright-and-licenses
+# "We primarily recommend the MIT licence."
+# https://blogs.helsinki.fi/thinkopen/open-source-at-the-university-of-helsinki/
 license = "MIT"
 license-files = ["LICENSE"]
 keywords = [
@@ -24,7 +28,8 @@ keywords = [
 authors = [
     {name = "Mark Hindmarsh", email = "mark.hindmarsh@helsinki.fi"},
     {name = "Chloe Hopling", email = "c.hopling@sussex.ac.uk"},
-    {name = "Mika Mäki", email = "mika.x.maki@helsinki.fi"}
+    {name = "Mika Mäki", email = "mika.x.maki@helsinki.fi"},
+    {name = "Lorenzo Giombi", email = "lorenzo.giombi@helsinki.fi"}
 ]
 maintainers = [
     {name = "Mark Hindmarsh", email = "mark.hindmarsh@helsinki.fi"},
@@ -47,15 +52,17 @@ classifiers = [
 ]
 # Keep this up to date with requirements.txt
 dependencies = [
-    "h5py >= 3.12.1",
-    "kaleido >= 0.2.1",
-    "matplotlib >= 3.9.2",
-    "numba >= 0.60.0",
-    "numpy >= 2.0.2",
-    "orjson >= 3.10.12",
-    "plotly >= 5.24.1",
-    "scipy >= 1.14.1",
+    "h5py >= 3.15.1",
+    "kaleido >= 1.1.0",
+    "matplotlib >= 3.10.7",
+    "numba >= 0.62.1",
+    "numpy >= 2.3.4",
+    "orjson >= 3.11.4",
+    "plotly >= 6.3.1",
+    "scipy >= 1.16.3",
 ]
+# Note: LISA ProtoLab uses Python 3.13, and PTtools should therefore probably stay compliant with it.
+# https://gitlab.esa.int/mika.x.maki/lisa-protolab
 requires-python = ">= 3.11"
 # dynamic = ["version"]
 
@@ -69,6 +76,7 @@ performance = [
 
 [project.urls]
 documentation = "https://pttools.readthedocs.io"
+issues = "https://github.com/CFT-HY/pttools/issues"
 repository = "https://github.com/CFT-HY/pttools"
 
 [tool.coverage.run]
@@ -92,6 +100,12 @@ exclude_lines = [
     "if __name__ == .__main__.:"
 ]
 show_missing = true
+
+[tool.mypy]
+
+[[tool.mypy.overrides]]
+module = ["h5py.*", "numba.*", "numbalsoda.*", "plotly.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 # On clusters "--numprocesses=auto" creates processes according to the total number of CPU cores

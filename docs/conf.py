@@ -14,7 +14,6 @@ from datetime import date
 import os.path
 import sys
 import tomllib
-import typing as tp
 import warnings
 
 from sphinx_gallery.sorting import ExplicitOrder
@@ -74,10 +73,12 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
-# Automatic section labeling produces duplicated labels. This silences the warnings from those.
-# https://github.com/sphinx-doc/sphinx/issues/7728
-# https://github.com/sphinx-doc/sphinx/issues/7697
-suppress_warnings = ["autosectionlabel.*"]
+suppress_warnings = [
+    # Automatic section labeling produces duplicated labels. This silences the warnings from those.
+    # https://github.com/sphinx-doc/sphinx/issues/7728
+    # https://github.com/sphinx-doc/sphinx/issues/7697
+    "autosectionlabel.*",
+]
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -136,7 +137,7 @@ autodoc_typehints = "description"
 
 # Sphinx 6.0 will require base URLs and caption strings to contain exactly one "%s",
 # and all other "%" need to be escaped as "%%".
-extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
+extlinks: dict[str, tuple[str, str]] = {
     # The articles are ordered by publication year
     # Hindmarsh articles
     "gw_ssm": ("https://arxiv.org/abs/1304.2433%s", "Hindmarsh et al., 2014%s"),
@@ -144,9 +145,10 @@ extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
     "gw_pt_ssm": ("https://arxiv.org/abs/1909.10040%s", "Hindmarsh et al., 2019%s"),
     "notes": ("https://arxiv.org/abs/2008.09136%s", "Hindmarsh et al., 2021%s"),
     # Other articles
-    "maggiore_1999": ("https://arxiv.org/abs/gr-qc/9909001", "Maggiore, 1999%s"),
+    "maggiore_1999": ("https://arxiv.org/abs/gr-qc/9909001%s", "Maggiore, 1999%s"),
     "borsanyi_2016": ("https://arxiv.org/abs/1606.07494%s", "Borsanyi et al., 2016%s"),
     "caprini_2016": ("https://arxiv.org/abs/1512.06239%s", "Caprini et al., 2016%s"),
+    "cornish_2017": ("https://arxiv.org/abs/1703.09858%s", "Cornish & Robson, 2017%s"),
     "planck_2018": ("https://arxiv.org/abs/1807.06209%s", "Planck 2018 results%s"),
     "smith_2019": ("https://arxiv.org/abs/1908.00546%s", "Smith & Caldwell, 2019%s"),
     "caprini_2020": ("https://arxiv.org/abs/1910.13125%s", "Caprini et al., 2020%s"),
@@ -157,18 +159,24 @@ extlinks: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
     "giombi_2024_cs": ("https://arxiv.org/abs/2409.01426%s", "Giombi et al., 2024%s"),
     "giombi_2024_gr": ("https://arxiv.org/abs/2307.12080%s", "Giombi & Hindmarsh, 2024%s"),
     "gowling_2023": ("https://arxiv.org/abs/2209.13551%s", "Gowling et al., 2023%s"),
+    # Theses
+    "gowling_phd": ("https://hdl.handle.net/10779/uos.23309135.v1%s", "Gowling, 2023%s"),
+    "hakkinen_msc": ("https://hdl.handle.net/10138/576963%s", "Häkkinen, 2024%s"),
+    "maki_msc": ("https://hdl.handle.net/10138/591514%s", "Mäki, 2024%s"),
     # Other
     "aof_grant": (
         "https://akareport.aka.fi/ibi_apps/WFServlet?IBIF_ex=x_hakkuvaus2&CLICKED_ON=&HAKNRO1=%s&UILANG=en&TULOSTE=HTML",
         "Academy of Finland grant %s"
     ),
     "issue": ("https://github.com/CFT-HY/pttools/issues/%s", "issue %s"),
+    "lisa_conventions": ("https://gitlab.esa.int/lisa-sgs/sandbox/conventions-document%s", "LISA DDPC Conventions document%s"),
+    "lisa_sci_req": ("https://www.cosmos.esa.int/web/lisa/documents%s", "LISA Science Requirements Document%s"),
     "rel_hydro_book": (
         "https://doi.org/10.1093/acprof:oso/9780198528906.001.0001%s",
         "Relativistic hydrodynamics, Rezzolla, Zanotti, 2013%s"),
     "ssm_repo": ("https://bitbucket.org/hindmars/sound-shell-model/src/master/%s", "sound-shell-model/%s")
 }
-intersphinx_mapping: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
+intersphinx_mapping: dict[str, tuple[str, str | None]] = {
     "cobaya": ("https://cobaya.readthedocs.io/en/latest/", None),
     "h5py": ("https://docs.h5py.org/en/stable/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
@@ -180,17 +188,18 @@ intersphinx_mapping: tp.Dict[str, tp.Tuple[str, tp.Optional[str]]] = {
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     # "yappi": ("https://yappi.readthedocs.io/en/latest/", None),
 }
-linkcheck_allowed_redirects = {
+linkcheck_allowed_redirects: dict[str, str] = {
     r"https://bitbucket\.org/*": r"https://id\.atlassian\.com/*",
     r"https://www.helsinki\.fi/": r"https://www.helsinki\.fi/en",
 }
 # The authentication info could be set up to work on the CI build
 # https://docs.github.com/en/actions/reference/authentication-in-a-workflow
 # linkcheck_auth = []
-linkcheck_ignore = [
+linkcheck_ignore: list[str] = [
     # These websites don't allow crawlers
     # r"https://academic.oup.com/book/*",
     r"https://www.aka.fi/*",
+    r"https://www.intel.com/*",
     # The private Bitbucket repos will also return 404 without authentication
     r"https://bitbucket.org/hindmars/sound-shell-model/*",
     # This link redirects to a site that does not allow crawlers
@@ -244,7 +253,8 @@ sphinx_gallery_conf = {
         "../examples/props",
         # "../examples/entropy",
         "../examples/solvers",
-        "../examples/giese",
+        "../examples/low_k",
+        "../examples/gksvdv",
         # "../examples/reverse",
         # "*"
     ])

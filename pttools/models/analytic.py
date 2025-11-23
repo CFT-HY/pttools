@@ -9,6 +9,7 @@ import numpy as np
 import pttools.type_hints as th
 from pttools.bubble.boundary import SolutionType
 from pttools.models.model import Model
+from pttools.models.utils import check_value_in_range
 from pttools.speedup.utils import is_nan_or_none
 
 logger = logging.getLogger(__name__)
@@ -38,13 +39,18 @@ class AnalyticModel(Model, abc.ABC):
 
     def __init__(
             self,
-            V_s: float = DEFAULT_V_S, V_b: float = None,
-            a_s: float = None, a_b: float = None,
-            g_s: float = None, g_b: float = None,
-            T_min: float = None, T_max: float = None, T_crit_guess: float = None,
-            name: str = None,
-            label_latex: str = None,
-            label_unicode: str = None,
+            V_s: float = DEFAULT_V_S,
+            V_b: float | None = None,
+            a_s: float | None = None,
+            a_b: float | None = None,
+            g_s: float | None = None,
+            g_b: float | None = None,
+            T_min: float | None = None,
+            T_max: float | None = None,
+            T_crit_guess: float | None = None,
+            name: str | None = None,
+            label_latex: str | None = None,
+            label_unicode: str | None = None,
             gen_critical: bool = True,
             gen_cs2: bool = True,
             gen_cs2_neg: bool = True,
@@ -81,9 +87,11 @@ class AnalyticModel(Model, abc.ABC):
         )
         if log_info and self.a_s <= self.a_b:
             logger.warning(
-                f"The model \"{self.name}\" does not satisfy a_s > a_b. "
+                f"The model \"%s\" does not satisfy a_s > a_b. "
                 "Please check that the critical temperature is non-negative. "
-                f"Got: a_s={self.a_s}, a_b={self.a_b}.")
+                f"Got: a_s=%s, a_b=%s.",
+                self.name, self.a_s, self.a_b
+            )
 
     @staticmethod
     def a_from_g(g: th.FloatOrArr) -> th.FloatOrArr:
@@ -104,12 +112,15 @@ class AnalyticModel(Model, abc.ABC):
         :param nan_on_invalid: return nan for invalid values
         :param log_invalid: log negative values
         """
-        self.check_w_for_alpha(
+        check_value_in_range(
             wn,
+            x_min=self.w_min,
+            x_max=self.w_max,
+            name="wn",
+            context="alpha_n",
             error_on_invalid=error_on_invalid,
             nan_on_invalid=nan_on_invalid,
-            log_invalid=log_invalid,
-            name="wn", alpha_name="alpha_n"
+            log_invalid=log_invalid
         )
         # self.check_p(wn, allow_fail=allow_no_transition)
         return self.bag_wn_const / wn
@@ -118,8 +129,8 @@ class AnalyticModel(Model, abc.ABC):
             self,
             wp: th.FloatOrArr,
             wm: th.FloatOrArr,
-            vp_tilde: float = None,
-            sol_type: SolutionType = None,
+            vp_tilde: float | None = None,
+            sol_type: SolutionType | None = None,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
@@ -132,12 +143,15 @@ class AnalyticModel(Model, abc.ABC):
         :param nan_on_invalid: return nan for invalid values
         :param log_invalid: whether to log invalid values
         """
-        self.check_w_for_alpha(
+        check_value_in_range(
             wp,
             # w_min=self.w_crit,
+            x_min=self.w_min,
+            x_max=self.w_max,
+            name="wp",
+            context="alpha_plus",
             error_on_invalid=error_on_invalid,
             nan_on_invalid=nan_on_invalid,
-            name="wp", alpha_name="alpha_plus"
         )
         alpha_plus = self.bag_wn_const / wp
         return self.check_alpha_plus(
@@ -145,7 +159,7 @@ class AnalyticModel(Model, abc.ABC):
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
 
-    def export(self) -> tp.Dict[str, any]:
+    def export(self) -> dict[str, tp.Any]:
         return {
             **super().export(),
             "a_s": self.a_s,
@@ -188,16 +202,15 @@ class AnalyticModel(Model, abc.ABC):
 
         return a_s, a_b, g_s, g_b
 
-    @classmethod
     def alpha_n_min_find_params_a_g(
-            cls,
+            self,
             a_s: float, a_b: float, g_s: float, g_b: float,
             alpha_n_min_target: float, V_s_default: float, V_b: float,
             default_mult: float = DEFAULT_A_G_MULT,
             safety_factor_alpha = Model.ALPHA_N_MIN_FIND_SAFETY_FACTOR_ALPHA):
-        a_s, a_b, _, _ = cls.get_a_g(a_s, a_b, g_s, g_b, default_mult=default_mult)
-        return cls.alpha_n_min_find_params(
-            alpha_n_min_target=alpha_n_min_target, a_s_default=a_s, a_b=a_b, V_s_default=V_s, V_b=V_b,
+        a_s, a_b, _, _ = self.get_a_g(a_s, a_b, g_s, g_b, default_mult=default_mult)
+        return self.alpha_n_min_find_params(
+            alpha_n_min_target=alpha_n_min_target, a_s_default=a_s, a_b=a_b, V_s_default=V_s_default, V_b=V_b,
             safety_factor_alpha=safety_factor_alpha
         )
 

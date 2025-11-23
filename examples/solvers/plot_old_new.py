@@ -17,12 +17,13 @@ from pttools.bubble import fluid_bag
 from pttools.bubble import relativity
 from pttools.models.model import Model
 from pttools.models.bag import BagModel
-from pttools.ssmtools.spectrum import SSMSpectrum, power_gw_scaled_bag, spec_den_v_bag, power_v_bag
+from pttools.ssm import SSMSpectrum, power_gw_scaled_bag, spec_den_v_bag, power_v_bag
 from tests.paper.plane import xiv_plane
 from tests.paper.plot_plane_paper import plot_plane
 
 
 def validate(model: Model, v: np.ndarray, w: np.ndarray, xi: np.ndarray, sol_type: SolutionType):
+    """Validate a bubble"""
     if sol_type == SolutionType.SUB_DEF:
         validate_def(model, v, w, xi, sol_type)
     elif sol_type == SolutionType.HYBRID:
@@ -33,6 +34,7 @@ def validate(model: Model, v: np.ndarray, w: np.ndarray, xi: np.ndarray, sol_typ
 
 
 def validate_def(model: Model, v: np.ndarray, w: np.ndarray, xi: np.ndarray, sol_type: SolutionType):
+    """Validate that a deflagration has been solved correctly"""
     i_wall = np.argmax(v)
     v_wall = xi[i_wall]
     v1p = v[i_wall-1]
@@ -45,6 +47,7 @@ def validate_def(model: Model, v: np.ndarray, w: np.ndarray, xi: np.ndarray, sol
 
 
 def validate_shock(model: Model, v: np.ndarray, w: np.ndarray, xi: np.ndarray, sol_type: SolutionType):
+    """Validate that a shock has been solved correctly"""
     v_wall = xi[-2]
     v1p = v[-3]
     v2p = 0
@@ -68,11 +71,13 @@ def validate2(
         w1: float, w2: float,
         phase1: Phase, phase2: Phase,
         sol_type: SolutionType):
+    """Validate that the junction conditions have been solved correctly"""
     dev = boundary.junction_conditions_solvable(np.array([v2w, w2]), model, v1w, w1, phase1, phase2)
     print(f"sol_type={sol_type}, v1p={v1p}, v2p={v2p}, v1w={v1w}, v2w={v2w}, w1={w1}, w2={w2}, dev={dev}")
 
 
 def main():
+    """Plot a comparison of the old and new solvers"""
     bag = BagModel(a_s=1.1, a_b=1, V_s=2)
 
     v_walls = [0.5, 0.7, 0.77]

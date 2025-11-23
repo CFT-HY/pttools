@@ -10,11 +10,12 @@ import matplotlib.pyplot as plt
 from examples.utils import save
 from pttools.bubble import Bubble
 from pttools.models import BagModel
-from pttools.ssmtools import NucType
+from pttools.ssm import NucType
 from pttools.omgw0 import Spectrum
 
 
 def main():
+    """Plot a single bubble"""
     # Create the equation of state.
     # If you don't specify a_s and a_b or g_s and g_b,
     # you have to specify a minimum alpha_n for which the model will be valid.
@@ -26,8 +27,8 @@ def main():
     save(bubble_fig, "bag_bubble.png")
 
     # Compute the gravitational wave spectrum for the bubble.
-    spectrum = Spectrum(bubble, nuc_type=NucType.EXPONENTIAL)
-    spectrum_fig = spectrum.plot_multi()
+    spectrum = Spectrum(bubble, nuc_type=NucType.EXPONENTIAL, r_star=0.1)
+    spectrum_fig, axs = spectrum.plot_multi()
     save(spectrum_fig, "bag_spectrum.png")
 
 

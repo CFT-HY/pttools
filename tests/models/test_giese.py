@@ -9,7 +9,7 @@ import pytest
 from pttools import models
 from pttools.analysis.parallel import create_bubbles
 from pttools.bubble.bubble import Bubble
-from pttools.speedup import conditional_decorator, IS_OSX
+from pttools.speedup import IS_OSX
 from tests.utils import assert_allclose
 
 
@@ -27,9 +27,9 @@ def assert_kappa(css2: float, csb2: float, kappa_ref: np.ndarray, rtol: float = 
 
 def compare(
         model: models.Model,
-        alpha_ns: tp.Union[np.ndarray, tp.List[float]],
-        v_walls: tp.Union[np.ndarray, tp.List[float]],
-        ref: tp.Union[np.ndarray, tp.List[float]], rtol: float):
+        alpha_ns: tp.Union[np.ndarray, list[float]],
+        v_walls: tp.Union[np.ndarray, list[float]],
+        ref: tp.Union[np.ndarray, list[float]], rtol: float):
     data = np.zeros_like(v_walls)
     for i, (alpha_n, v_wall) in enumerate(zip(alpha_ns, v_walls)):
         bubble = Bubble(model=model, v_wall=v_wall, alpha_n=alpha_n)

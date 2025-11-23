@@ -38,14 +38,13 @@ def round_sig(x: float, n: int) -> str:
         if len(fs[1][expo:]) > 0:
             st += '.' + fs[1][expo:]
         return st
+    expo = -expo
+    if fs[0][0] == '-':
+        fs[0] = fs[0][1:]
+        sign = "-"
     else:
-        expo = -expo
-        if fs[0][0] == '-':
-            fs[0] = fs[0][1:]
-            sign = "-"
-        else:
-            sign = ""
-        return sign + "0." + "0" * (expo - 1) + fs[0] + fs[1]
+        sign = ""
+    return sign + "0." + "0" * (expo - 1) + fs[0] + fs[1]
 
 
 def round_sig_signed(x: float, n: int) -> str:
@@ -73,17 +72,16 @@ def round_sig_signed(x: float, n: int) -> str:
         if len(fs[1][expo:]) > 0:
             st += '.' + fs[1][expo:]
         return st
+    expo = -expo
+    if fs[0][0] == '-':
+        fs[0] = fs[0][1:]
+        sign = "-"
     else:
-        expo = -expo
-        if fs[0][0] == '-':
-            fs[0] = fs[0][1:]
-            sign = "-"
-        else:
-            sign = ""
-        return sign + "0." + "0" * (expo - 1) + fs[0] + fs[1]
+        sign = ""
+    return sign + "0." + "0" * (expo - 1) + fs[0] + fs[1]
 
 
-def round_sig_error(x: float, ex: float, n: int, paren: bool = False) -> tp.Union[str, tp.Tuple[str, str]]:
+def round_sig_error(x: float, ex: float, n: int, paren: bool = False) -> tp.Union[str, tuple[str, str]]:
     """
     Find ex rounded to n sig-figs and make the floating point x
     match the number of decimals.  If [paren], the string is
@@ -105,11 +103,11 @@ def round_sig_error(x: float, ex: float, n: int, paren: bool = False) -> tp.Unio
 
 
 def format_table(
-        cols: tp.List[np.ndarray],
-        errors: tp.List[np.ndarray],
+        cols: list[np.ndarray],
+        errors: list[np.ndarray],
         n: int,
-        labels: tp.List[str] = None,
-        headers: tp.List[str] = None,
+        labels: list[str] | None = None,
+        headers: list[str] | None = None,
         latex: bool = False):
     """
     Format a table such that the errors have n significant figures.
@@ -183,7 +181,7 @@ def format_table(
     return output
 
 
-def round_sig_error2(x: float, ex1: float, ex2: float, n: int) -> tp.Tuple[str, str, str]:
+def round_sig_error2(x: float, ex1: float, ex2: float, n: int) -> tuple[str, str, str]:
     """
     Find min(ex1,ex2) rounded to n sig-figs and make the floating point x
     and max(ex,ex2) match the number of decimals.

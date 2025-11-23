@@ -29,18 +29,20 @@ jobs:
           run: python -V
         - name: Checkout
           uses: actions/checkout@v4
-        - name: Load pip cache
-          uses: actions/cache@v4
-          with:
-            path: .pip
-            key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-            restore-keys: |
-              pip-${{ runner.os }}-
-              pip-
+          # Please see this GitHub issue for the issues with hashFiles()
+          # https://github.com/actions/runner-images/issues/13341
+          # As a temporary workaround on 2025-11-23, the caching is disabled on macOS.
+#        - name: Load pip cache
+#          uses: actions/cache@v4
+#          with:
+#            path: .pip
+#            key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+#            restore-keys: |
+#              pip-${{ runner.os }}-
+#              pip-
         - name: Install requirements
           run: |
-            pip --cache-dir=.pip install --upgrade pip
-            pip --cache-dir=.pip install --upgrade wheel
+            pip --cache-dir=.pip install --upgrade pip wheel
             pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
         - name: Print Numba sysinfo
           # On macOS the Numba script is not executable by default and therefore has to be called as a Python module.

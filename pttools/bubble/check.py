@@ -12,14 +12,14 @@ from . import alpha
 
 logger = logging.getLogger(__name__)
 
-NucArgs = tp.Tuple[float, ...]
-PhysicalParams = tp.Union[tp.Tuple[float, float], tp.Tuple[float, float, str, NucArgs]]
+NucArgs = tuple[float, ...]
+PhysicalParams = tp.Union[tuple[float, float], tuple[float, float, str, NucArgs]]
 
 
 @numba.njit
 def check_physical_params(params: PhysicalParams) -> None:
     r"""
-    Checks that $v _\text{wall}$ = params[0], $\alpha_n$ = params[1] values are physical, i.e.
+    Check that $v _\text{wall}$ = params[0], $\alpha_n$ = params[1] values are physical, i.e.
     $0 < v _\text{wall} < 1$,
     $\alpha_n < \alpha_{n,\max(v _\text{wall})}$
     """
@@ -30,11 +30,11 @@ def check_physical_params(params: PhysicalParams) -> None:
     alpha_n_max = alpha.alpha_n_max_bag(v_wall)
     if alpha_n > alpha_n_max:
         with numba.objmode:
-            logger.error((
-                    "Unphysical parameter(s): v_wall = {}, alpha_n = {}. "
-                    "Required alpha_n < {}").format(
+            logger.error(
+                    "Unphysical parameter(s): v_wall = %s, alpha_n = %s. "
+                    "Required alpha_n < %s",
                     v_wall, alpha_n, alpha_n_max
-            ))
+            )
         raise ValueError("Unphysical parameter(s). See the log for details.")
 
 
@@ -51,9 +51,7 @@ def _check_wall_speed_scalar(v_wall: tp.Union[th.FloatOrArr, tp.List[float]]):
 
 
 def check_wall_speed(v_wall: tp.Union[th.FloatOrArr, tp.List[float]]):
-    r"""
-    Checks that $v _\text{wall}$ values are all physical: $(0 < v _\text{wall} < 1)$.
-    """
+    r"""Check that $v _\text{wall}$ values are all physical: $(0 < v _\text{wall} < 1)$"""
     if isinstance(v_wall, float):
         return _check_wall_speed_scalar(v_wall)
     if isinstance(v_wall, np.ndarray):
@@ -74,8 +72,8 @@ def _check_wall_speed_numba(v_wall: tp.Union[th.FloatOrArr, tp.List[float]]):
     raise TypeError(f"v_wall must be float, list or array. Got: {type(v_wall)}")
 
 
-def find_most_negative_vals(vals: th.FloatOrArr, *args) \
-        -> tp.List[tp.Optional[float]]:
+def find_most_negative_vals(vals: th.FloatOrArr, *args) -> tp.List[tp.Optional[float]]:
+    """Find the most negative values in the given array"""
     if vals is None or (not np.any(vals < 0)):
         return [None]*(len(args)+1)
     if np.isscalar(vals):

@@ -1,21 +1,25 @@
 """Plot thermodynamic quantities for a model"""
 
 import logging
+import typing as tp
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools import models
+from pttools.analysis.utils import A4_PAPER_SIZE
 from pttools.bubble import Phase
 
 logger = logging.getLogger(__name__)
 
 
 class ModelPlot:
+    """A plot of the thermodynamic quantities of a model"""
     def __init__(
             self,
             model: models.Model,
-            t_min: float = None, t_max: float = None,
+            t_min: float | None = None,
+            t_max: float | None = None,
             t_log_range: float = 2,
             t_log: bool = True,
             y_log: bool = True,
@@ -23,25 +27,31 @@ class ModelPlot:
         self.model = model
         self.t_log = t_log
 
-        self.fig: plt.Figure = plt.figure(figsize=(11.69, 8.27))
+        self.fig: plt.Figure = plt.figure(figsize=A4_PAPER_SIZE)
         self.axs = self.fig.subplots(nrows=3, ncols=3)
         self.ax_p: plt.Axes = self.axs[0, 0]
         self.ax_s: plt.Axes = self.axs[0, 1]
         self.ax_w: plt.Axes = self.axs[0, 2]
         self.ax_e: plt.Axes = self.axs[1, 0]
         self.ax_cs2: plt.Axes = self.axs[1, 1]
+        self.ax_alpha_n: plt.Axes = self.axs[1, 2]
         # self.ax_theta = self.axs[2, 0]
 
+        self.temps: np.ndarray[tuple[int], np.float64]
         if t_log:
             self.t_min = max(model.T_min, 10 ** (-t_log_range) * model.T_crit) if t_min is None else t_min
             self.t_max = min(model.T_max, 10 ** t_log_range * model.T_crit) if t_max is None else t_max
+            self.temps = np.logspace(np.log10(self.t_min), np.log10(self.t_max), n_points)
             self.temps_b = np.logspace(np.log10(self.t_min), np.log10(model.T_crit), n_points)
             self.temps_s = np.logspace(np.log10(model.T_crit), np.log10(self.t_max), n_points)
+            self.w = np.logspace(np.log10(model.w_min), np.log10(model.w_max), n_points)
         else:
             self.t_min = max(model.T_min, 0.7 * model.T_crit) if t_min is None else t_min
             self.t_max = min(model.T_max, 1.3 * model.T_crit) if t_max is None else t_max
+            self.temps = np.linspace(self.t_min, self.t_max, n_points)
             self.temps_b = np.linspace(self.t_min, model.T_crit, n_points)
             self.temps_s = np.linspace(model.T_crit, self.t_max, n_points)
+            self.w = np.linspace(model.w_min, model.w_max, n_points)
 
         self.plot(self.ax_p, self.model.p_temp, "p", y_log=y_log)
         self.plot(self.ax_s, self.model.s_temp, "s", y_log=y_log)
@@ -49,15 +59,28 @@ class ModelPlot:
         self.plot(self.ax_e, self.model.e_temp, "e", y_log=y_log)
         self.plot(
             self.ax_cs2, self.model.cs2_temp,
-            label="c_s^2", label_s="$c_{s,s}^2$", label_b="$c_{s,b}^2$", y_lim=False, y_log=False)
+            label="c_s^2", label_s="$c_{s,s}^2$", label_b="$c_{s,b}^2$", y_lim=False, y_log=False
+        )
+
+        # alpha_n = self.model.alpha_n_temp(Tn=self.temps)
+        alpha_n = self.model.alpha_n(wn=self.w)
+        self.ax_alpha_n.plot(self.temps, alpha_n)
+        self.ax_alpha_n.set_xlabel("$T$")
+        self.ax_alpha_n.set_ylabel(r"$\alpha_n$")
 
         self.fig.tight_layout()
 
     def plot(
             self,
-            ax: plt.Axes, func: callable,
-            label: str = None, label_s: str = None, label_b: str = None,
-            y_lim: bool = True, y_log: bool = True):
+            ax: plt.Axes,
+            func: tp.Callable,
+            label: str | None = None,
+            label_s: str | None = None,
+            label_b: str | None = None,
+            y_lim: bool = True,
+            y_log: bool = True,
+            ticks: bool = True):
+        """Plot the given function"""
         if label_s is None and label is not None:
             label_s = f"${label}_s$"
         if label_b is None and label is not None:
@@ -80,7 +103,7 @@ class ModelPlot:
         ax.plot(self.temps_b, vals_b_low, color="b", label=label_b)
         ax.plot(self.temps_s, vals_b_high, color="b", ls=":")
 
-        ax.axvline(self.model.T_crit, ls=":", label=r"$T_{crit}$")
+        ax.axvline(self.model.T_crit, ls="-.", label=r"$T_{crit}$", color="g")
         ax.set_xlabel("$T$")
         ax.set_ylabel(f"${label}$")
 
@@ -101,4 +124,7 @@ class ModelPlot:
             ax.set_xscale("log")
         if y_log:
             ax.set_yscale("log")
+        if not ticks:
+            ax.get_xaxis().set_ticks([])
+            ax.get_yaxis().set_ticks([])
         ax.legend()

@@ -35,11 +35,16 @@ if IS_WINDOWS and MAX_WORKERS_DEFAULT > 61:
 if not FORKING or not CPU_AFFINITY:
     msg = "Platform: %s (%s, %s) on %s (%s)."
     if not CPU_AFFINITY:
-        msg += " This platform does not provide info on which CPU cores are available for this process. Using all cores."
+        msg += (
+            " This platform does not provide info on which CPU cores are available for this process. "
+            "Using all cores."
+        )
     if START_METHOD != "fork":
-        msg += \
-            " This platform does not support forking." \
-            " Starting parallel processes will be slower, since the cs2 functions have to be compiled in each sub-process."
+        msg += (
+            " This platform does not support forking."
+            " Starting parallel processes will be slower, "
+            "since the cs2 functions have to be compiled in each sub-process."
+        )
     logger.debug(msg, UNAME.system, UNAME.release, START_METHOD, UNAME.processor, UNAME.machine)
 
 #: Whether Numba JIT compilation has been disabled.
@@ -53,7 +58,7 @@ NUMBA_INTEGRATE_TOLERANCES: tp.Final[bool] = bool(
 #: Whether to use nested parallelism. This requires that either TBB or OpenMP is installed and working.
 NUMBA_NESTED_PARALLELISM: tp.Final[bool] = bool(int(os.getenv("NUMBA_NESTED_PARALLELISM", "0")))
 #: Default options for the custom njit decorator.
-NUMBA_OPTS: tp.Dict[str, any] = {
+NUMBA_OPTS: dict[str, tp.Any] = {
     # Caching does not work properly with functions that have dependencies across files
     # "cache": True
 }

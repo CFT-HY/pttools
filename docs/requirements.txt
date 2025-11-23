@@ -1,5 +1,5 @@
 # Joblib is required for Sphinx-Gallery parallelism
-joblib == 1.5.1
+joblib == 1.5.2
 memory-profiler >= 0.61.0
 # myst-parser
 sphinx == 8.2.3

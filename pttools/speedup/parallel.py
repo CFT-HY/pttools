@@ -1,3 +1,5 @@
+"""Utilities for parallel execution of functions using multiple Python processes with concurrent.futures"""
+
 import concurrent.futures as cf
 import multiprocessing
 from concurrent.futures.process import BrokenProcessPool
@@ -17,10 +19,14 @@ logger = logging.getLogger(__name__)
 
 
 class FakeFuture:
-    def __init__(self, func: callable, *args, **kwargs):
+    """A fake future object for single-threaded execution"""
+    # pylint: disable=too-few-public-methods
+
+    def __init__(self, func: tp.Callable, *args, **kwargs):
         self._result = func(*args, **kwargs)
 
     def result(self):
+        """Get the result of the function execution"""
         return self._result
 
 
@@ -28,13 +34,13 @@ class LoggingRunner:
     """A handler for logging the execution status of a function that is run in parallel"""
     def __init__(
             self,
-            func: callable,
+            func: tp.Callable,
             arr_size: int,
             unpack_params: bool,
-            args: tuple = (),
-            kwargs: tp.Dict[str, any] = None,
-            log_progress_element: int = None,
-            log_progress_percentage: float = None):
+            args: tuple | list = (),
+            kwargs: dict[str, tp.Any] | None = None,
+            log_progress_element: int | None = None,
+            log_progress_percentage: float | None = None):
         self.func = func
         self.arr_size = arr_size
         self.unpack_params = unpack_params
@@ -43,7 +49,7 @@ class LoggingRunner:
         self.log_progress_element = log_progress_element
         self.log_progress_percentage = log_progress_percentage
 
-    def run(self, param, index: int = None, multi_index: tp.Iterable = None):
+    def run(self, param, index: int | None = None, multi_index: tp.Iterable | None = None):
         if self.unpack_params:
             ret = self.func(*param, *self.args, **self.kwargs)
         else:
@@ -59,24 +65,27 @@ class LoggingRunner:
                 if multi_index is None:
                     logger.debug("Processed item %d/%d, %.2f %%", index, self.arr_size, percentage)
                 else:
-                    logger.debug("Processed item %s, %d/%d, %.2f %%", multi_index, index, self.arr_size, percentage)
+                    logger.debug(
+                        "Processed item %s, %d/%d, %.2f %%",
+                        multi_index, index, self.arr_size, percentage
+                    )
 
         return ret
 
 
 def run_parallel(
-        func: callable,
+        func: tp.Callable,
         params: np.ndarray,
         max_workers: int = MAX_WORKERS_DEFAULT,
         multiple_params: bool = False,
         unpack_params: bool = False,
-        output_dtypes: tp.Union[tp.Tuple[tp.Type, ...], tp.List[tp.Type]] = None,
-        return_arr_shape: tp.Tuple[int, ...] = None,
-        log_progress_element: int = None,
-        log_progress_percentage: float = None,
+        output_dtypes: tuple[tp.Type, ...] | list[tp.Type] | None = None,
+        return_arr_shape: tuple[int, ...] | None = None,
+        log_progress_element: int | None = None,
+        log_progress_percentage: float | None = None,
         args: tp.Union[list, tuple] = (),
-        kwargs: tp.Dict[str, tp.Any] = None,
-        single_thread: bool = False) -> tp.Optional[tp.Union[np.ndarray, tp.Tuple[np.ndarray, ...]]]:
+        kwargs: dict[str, tp.Any] | None = None,
+        single_thread: bool = False) -> tp.Optional[tp.Union[np.ndarray, tuple[np.ndarray, ...]]]:
     """Run the given function with multiple parameters in parallel
 
     :param func: The function to be executed in parallel
@@ -99,16 +108,17 @@ def run_parallel(
         max_workers = MAX_WORKERS_DEFAULT
 
     flags = ["refs_ok"]
+    arr_size: int
     if multiple_params:
         flags.append("reduce_ok")
         flags.append("external_loop")
         op_axes = [None, [*list(range(params.ndim-1)), -1]]
-        arr_size: int = np.prod(params.shape[:-1])
+        arr_size = np.prod(params.shape[:-1])
     else:
         flags.append("c_index")
         flags.append("multi_index")
         op_axes = None
-        arr_size: int = np.prod(params.shape)
+        arr_size = np.prod(params.shape)
 
     runner = LoggingRunner(
         func,
@@ -208,7 +218,10 @@ def run_parallel(
             ram_use = psutil.virtual_memory().percent
             msg += f"CPU use: {psutil.getloadavg()}, RAM use: {ram_use} %."
             if ram_use > 80:
-                msg += " RAM use is high. Please reduce the number of worker processes or close applications running in the background."
+                msg += (
+                    " RAM use is high. "
+                    "Please reduce the number of worker processes or close applications running in the background."
+                )
         raise BrokenProcessPool(msg) from err
 
 # This seems to be fixed as of 2025.

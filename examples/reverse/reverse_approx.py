@@ -15,6 +15,7 @@ from pttools.omgw0.approx import f0_peak_approx, omgw_approx
 
 
 def solvable(params: np.ndarray, f_peak_target: float, omega_peak_target: float, temp: float, g_star: float) -> float:
+    """This function is minimized when the parameters produce the desired peak frequency and amplitude"""
     alpha, kappa_v, r_star = params
     f0_peak = f0_peak_approx(temp, r_star=r_star, g_star=g_star)
     omega_peak = omgw_approx(f=f0_peak, alpha=alpha, kappa_v=kappa_v, r_star=r_star, temp=temp, g_star=g_star, f0_peak=f0_peak)
@@ -32,7 +33,8 @@ def solver(
         alpha_n_guess: float,
         r_star_guess: float,
         temp: float,
-        g_star: float) -> tp.Tuple[tp.Optional[float], tp.Optional[float], tp.Optional[float], float]:
+        g_star: float) -> tuple[tp.Optional[float], tp.Optional[float], tp.Optional[float], float]:
+    """Find thermodynamic parameters for a given peak of the gravitational wave spectrum"""
     # The limits for v_wall and alpha_n come from the limits of the suppression data.
     x0 = np.array([v_wall_guess, alpha_n_guess, r_star_guess])
     sol: OptimizeResult = minimize(
@@ -48,6 +50,7 @@ def solver(
 
 
 def main():
+    """Usage example"""
     print("Starting solver")
     temp = 100  # GeV
     g_star = 100
@@ -63,8 +66,13 @@ def main():
     kappa_v = ret[1]
     r_star = ret[2]
     f0_peak = f0_peak_approx(temp, r_star=r_star, g_star=g_star)
-    omega_peak = omgw_approx(f=f0_peak, alpha=alpha, kappa_v=kappa_v, r_star=r_star, temp=temp, g_star=g_star, f0_peak=f0_peak)
-    print(f"v_wall={ret[0]}, alpha_n={ret[1]}, r_star={ret[2]}, f0_peak={f0_peak}, omega_peak={omega_peak}, diff={ret[3]}")
+    omega_peak = omgw_approx(
+        f=f0_peak, alpha=alpha, kappa_v=kappa_v, r_star=r_star, temp=temp, g_star=g_star, f0_peak=f0_peak
+    )
+    print(
+        f"v_wall={ret[0]}, alpha_n={ret[1]}, r_star={ret[2]}, "
+        f"f0_peak={f0_peak}, omega_peak={omega_peak}, diff={ret[3]}"
+    )
 
 
 if __name__ == "__main__":

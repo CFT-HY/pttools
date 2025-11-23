@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 @numba.njit
 def adiabatic_index_bag(
         w: th.FloatOrArr,
-        phase: th.IntOrArr,
+        phase: th.FloatOrArr,
         theta_s: th.FloatOrArr,
         theta_b: th.FloatOrArr = 0.) -> th.FloatOrArr:
     r"""
@@ -113,7 +113,7 @@ def cs2_bag(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
 @numba.njit
 def e_bag(
         w: th.FloatOrArr,
-        phase: th.IntOrArr,
+        phase: th.FloatOrArr,
         theta_s: th.FloatOrArr,
         theta_b: th.FloatOrArr = 0.) -> th.FloatOrArr:
     r"""
@@ -134,7 +134,7 @@ def e_bag(
 @numba.njit
 def p_bag(
         w: th.FloatOrArr,
-        phase: th.IntOrArr,
+        phase: th.FloatOrArr,
         theta_s: th.FloatOrArr,
         theta_b: th.FloatOrArr = 0.) -> th.FloatOrArr:
     r"""
@@ -157,7 +157,7 @@ def p_bag(
 @numba.njit
 def w_bag(
         e: th.FloatOrArr,
-        phase: th.IntOrArr,
+        phase: th.FloatOrArr,
         theta_s: th.FloatOrArr,
         theta_b: th.FloatOrArr = 0.) -> th.FloatOrArr:
     r"""
@@ -179,12 +179,22 @@ def w_bag(
     return 4/3 * (e - theta)
 
 
-# def junction_bag(v1: th.FloatOrArr, w1: th.FloatOrArr, V1: th.FloatOrArr, V2: th.FloatOrArr, greater_branch: bool) -> tp.Tuple[th.FloatOrArr, th.FloatOrArr]:
+# def junction_bag(
+#         v1: th.FloatOrArr,
+#         w1: th.FloatOrArr,
+#         V1: th.FloatOrArr,
+#         V2: th.FloatOrArr,
+#         greater_branch: bool) -> tuple[th.FloatOrArr, th.FloatOrArr]:
 #     v2 = v2_tilde_bag(v1, w1, V1, V2, greater_branch)
 #     return v2, boundary.w2_junction(v1, w1, v2)
-#
-#
-# def v2_tilde_bag(v1: th.FloatOrArr, w1: th.FloatOrArr, V1: th.FloatOrArr, V2: th.FloatOrArr, greater_branch: bool) -> th.FloatOrArr:
+
+
+# def v2_tilde_bag(
+#         v1: th.FloatOrArr,
+#         w1: th.FloatOrArr,
+#         V1: th.FloatOrArr,
+#         V2: th.FloatOrArr,
+#         greater_branch: bool) -> th.FloatOrArr:
 #     """This doesn't seem to work properly for the greater branch."""
 #     a = v1 + ((V2 - V1)/w1 + 1/4) / (relativity.gamma2(v1) * v1)
 #     sign = 1 if greater_branch else -1
@@ -196,7 +206,7 @@ def w_bag(
 #     return ret
 
 
-def theta_bag(w: th.FloatOrArr, phase: th.IntOrArr, alpha_n: th.FloatOrArr) -> th.FloatOrArr:
+def theta_bag(w: th.FloatOrArr, phase: th.FloatOrArr, alpha_n: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Trace anomaly $\theta = \frac{1}{4} (e - 3p)$ in the Bag model.
     Equation 7.24 in the lecture notes, equation 2.10 in the article.

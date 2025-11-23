@@ -6,8 +6,6 @@ Find thermodynamic parameters for a given peak of the gravitational wave spectru
 This is very much work in progress and not yet functional.
 """
 
-import typing as tp
-
 import numpy as np
 from scipy.optimize import minimize, OptimizeResult
 
@@ -16,7 +14,8 @@ from pttools.models import BagModel, Model
 from pttools.omgw0 import Spectrum, SuppressionMethod
 
 
-def solvable(params: np.ndarray, model: Model, f_peak_target: float, omega_peak_target: float) -> tp.Tuple[float, float]:
+def solvable(params: np.ndarray, model: Model, f_peak_target: float, omega_peak_target: float) -> tuple[float, float]:
+    """This function is minimized when the parameters produce the desired peak frequency and amplitude"""
     v_wall, alpha_n, r_star = params
     bubble = Bubble(model, v_wall=v_wall, alpha_n=alpha_n)
     spectrum = Spectrum(bubble, r_star=r_star)
@@ -36,6 +35,7 @@ def solver(
         alpha_n_guess: float,
         r_star_guess: float,
         alpha_n_max: float = 0.66):
+    """Find thermodynamic parameters for a given peak of the gravitational wave spectrum"""
     # The limits for v_wall and alpha_n come from the limits of the suppression data.
     x0 = np.array([v_wall_guess, alpha_n_guess, r_star_guess])
     sol: OptimizeResult = minimize(
@@ -51,6 +51,7 @@ def solver(
 
 
 def main():
+    """Usage example"""
     model = BagModel(alpha_n_min=0.01)
     print("Starting solver")
     ret = solver(

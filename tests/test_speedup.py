@@ -17,7 +17,7 @@ os.makedirs(utils.TEST_FIGURE_PATH, exist_ok=True)
 
 
 @numba.njit
-def jitted_spline(x: np.ndarray, tck: tp.Tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
+def jitted_spline(x: np.ndarray, tck: tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
     """JIT-compiled version of splev, which uses the Numba overload defined in the speedup module"""
     return scipy.interpolate.splev(x, tck, der, ext)
 

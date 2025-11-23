@@ -1,5 +1,6 @@
 # PTtools
 [![DOI](https://zenodo.org/badge/373413324.svg)](https://zenodo.org/badge/latestdoi/373413324)
+[![GitHub](https://img.shields.io/badge/GitHub-CFT--HY/pttools-blue)](https://github.com/CFT-HY/pttools)
 [![ReadTheDocs](https://readthedocs.org/projects/pttools/badge/)](https://pttools.readthedocs.io/)
 [![CI](https://github.com/CFT-HY/pttools/actions/workflows/main.yml/badge.svg)](https://github.com/CFT-HY/pttools/actions/workflows/main.yml)
 [![Windows](https://github.com/CFT-HY/pttools/actions/workflows/windows.yml/badge.svg)](https://github.com/CFT-HY/pttools/actions/workflows/windows.yml)
@@ -10,7 +11,8 @@ PTtools is a Python library for calculating hydrodynamical quantities
 around expanding bubbles of the new phase in an early universe phase transition,
 and the resulting gravitational wave power spectrum in the Sound Shell Model.
 
-![Types of solutions](https://raw.githubusercontent.com/AgenttiX/msc-thesis2/refs/heads/main/msc2_python/fig/relativistic_combustion.png)
+![Types of solutions](https://raw.githubusercontent.com/AgenttiX/msc-thesis2/refs/heads/main/fig/relativistic_combustion.svg)
+
 
 ### Installation
 PTtools is [available on PyPI](https://pypi.org/project/pttools-gw/) and can be installed with pip:
@@ -34,26 +36,31 @@ The documentation can also be downloaded from the
 by selecting the latest successful *docs* workflow and then scrolling down to the *artifacts* section.
 There you can find a zip file containing the documentation in various formats.
 
+
 ### References
 - [Mäki: The effect of sound speed on the gravitational wave spectrum of first order phase transitions in the early universe (2024)](https://github.com/AgenttiX/msc-thesis2)
 - [Hindmarsh et al.: Phase transitions in the early universe (2021)](https://arxiv.org/abs/2008.09136)
 - [Hindmarsh & Hijazi: Gravitational waves from first order cosmological phase transitions in the Sound Shell Model (2019)](https://arxiv.org/abs/1909.10040)
 - [Hindmarsh: Sound shell model for acoustic gravitational wave production at a first-order phase transition in the early Universe (2018)](https://arxiv.org/abs/1608.04735)
 
+
 ### Submodules
 - bubble: Tools for computing the fluid shells (velocity and enthalpy as a function of scaled radius).
   Also includes some scripts for plotting.
-- ssmttools: Tools for computing the GW spectra from the fluid shells.
+- omgw0: Tools for converting the GW spectra to frequencies and amplitudes today.
+  Includes utilities for approximations and noise.
+- ssm: Tools for computing the GW spectra from the fluid shells using the Sound Shell Model.
 - speedup: Computational utilities used by the other modules.
-- omgw0: Tools for converting the GW spectra to frequencies and amplitudes today. Includes utilities for approximations and noise.
+
 
 ### Who do I talk to?
 - Repo owner: [Mark Hindmarsh](https://github.com/hindmars/)
 - Main developer: [Mika Mäki](https://github.com/AgenttiX)
 
+
 ### Example figures
 Fluid velocity profiles
-![Fluid velocity profiles](https://raw.githubusercontent.com/AgenttiX/msc-thesis2/refs/heads/main/msc2_python/fig/const_cs_gw_v.png)
+![Fluid velocity profiles](https://raw.githubusercontent.com/AgenttiX/msc-thesis2/refs/heads/main/fig/const_cs_gw_v.svg)
 
 Gravitational wave power spectra
-![Gravitational wave power spectra](https://raw.githubusercontent.com/AgenttiX/msc-thesis2/refs/heads/main/msc2_python/fig/const_cs_gw_omgw0.png)
+![Gravitational wave power spectra](https://raw.githubusercontent.com/AgenttiX/msc-thesis2/refs/heads/main/fig/const_cs_gw_omgw0.svg)

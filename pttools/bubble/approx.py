@@ -30,7 +30,7 @@ def v_approx_high_alpha(xi: th.FloatOrArr, v_wall: th.FloatOrArr, v_xi_wall: th.
     """
     check.check_wall_speed(v_wall)
     xi0 = xi_zero(v_wall, v_xi_wall)
-    dv = (xi - xi0)
+    dv = xi - xi0
     return xi0 - 2 * dv - A2_approx(xi0) * dv ** 2
 
 

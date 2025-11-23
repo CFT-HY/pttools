@@ -33,11 +33,11 @@ class FullModel(Model):
             self,
             thermo: ThermoModel,
             V_s: float = 0, V_b: float = 0,
-            T_crit_guess: float = None,
+            T_crit_guess: float | None = None,
             allow_invalid: bool = False,
-            name: str = None,
-            label_latex: str = None,
-            label_unicode: str = None):
+            name: str | None = None,
+            label_latex: str | None = None,
+            label_unicode: str | None = None):
         logger.debug("Initialising FullModel.")
         if not label_latex:
             label_latex = f"Full ({thermo.label_latex})"

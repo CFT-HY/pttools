@@ -7,7 +7,27 @@ Welcome to the PTtools documentation!
 =====================================
 
 PTtools is a Python library for calculating hydrodynamical quantities around expanding bubbles
-of the new phase in an early universe phase transition, and the resulting gravitational wave power spectrum in the Sound Shell Model.
+of the new phase in an early universe phase transition,
+and the resulting gravitational wave power spectrum in the Sound Shell Model.
+
+Getting started
+---------------
+
+PTtools is `available on PyPI <https://pypi.org/project/pttools-gw/>`_ and can be installed with pip:
+
+.. code-block:: bash
+
+  pip3 install --upgrade pttools-gw[numbalsoda,performance]
+
+The ``[numbalsoda]`` and ``[performance]`` flags are optional,
+and you can omit them if they are not available on your platform.
+
+PTtools is also `available on Docker Hub <https://hub.docker.com/r/cfthy/pttools>`_ and can be installed with:
+
+.. code-block:: bash
+
+  docker pull cfthy/pttools:main
+
 
 .. toctree::
    :caption: Contents:
@@ -20,11 +40,12 @@ of the new phase in an early universe phase transition, and the resulting gravit
    modules/index
    modules/tests/index
    acknowledgements
+   see_also
    dev
 
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

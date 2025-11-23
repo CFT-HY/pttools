@@ -30,19 +30,21 @@ class DifferentialCache:
     """
     def __init__(self):
         self._lock = threading.Lock()
-        self._cache_njit: tp.Dict[DifferentialKey, DifferentialCFunc] = {}
-        self._cache_odeint: tp.Dict[DifferentialKey, DifferentialOdeint] = {}
-        self._cache_pointers: tp.Dict[str, DifferentialPointer] = {}
-        self._cache_solve_ivp: tp.Dict[DifferentialKey, DifferentialSolveIVP] = {}
+        self._cache_njit: dict[DifferentialKey, DifferentialCFunc] = {}
+        self._cache_odeint: dict[DifferentialKey, DifferentialOdeint] = {}
+        self._cache_pointers: dict[str, DifferentialPointer] = {}
+        self._cache_solve_ivp: dict[DifferentialKey, DifferentialSolveIVP] = {}
 
     def __contains__(self, item: DifferentialKey) -> bool:
         return item in self._cache_njit
 
     def add(
             self,
-            name: str, differential: DifferentialCFunc,
+            name: str,
+            differential: DifferentialCFunc,
             p_last_is_backwards: bool = True,
             ndim: int = 3) -> DifferentialPointer:
+        """Add a differential function to the cache"""
         with self._lock:
             if name in self._cache_njit:
                 logger.warning(
@@ -70,13 +72,13 @@ class DifferentialCache:
                     differential_numbalsoda = differential_cfunc
 
             @numba.njit
-            def differential_odeint(y: np.ndarray, t: float, p: np.ndarray = None) -> np.ndarray:
+            def differential_odeint(y: np.ndarray, t: float, p: tp.Union[np.ndarray, None] = None) -> np.ndarray:
                 du = np.empty_like(y)
                 differential_njit(t, y, du, p)
                 return du
 
             @numba.njit
-            def differential_solve_ivp(t: float, y: np.ndarray, p: np.ndarray = None) -> np.ndarray:
+            def differential_solve_ivp(t: float, y: np.ndarray, p: tp.Union[np.ndarray, None] = None) -> np.ndarray:
                 du = np.empty_like(y)
                 differential_njit(t, y, du, p)
                 return du
@@ -84,7 +86,7 @@ class DifferentialCache:
             if NUMBA_DISABLE_JIT:
                 address = id(differential_njit)
             else:
-                address = differential_numbalsoda.address
+                address = differential_numbalsoda.address  # pylint: disable=possibly-used-before-assignment
             self._cache_pointers[name] = address
 
             self._cache_njit[address] = differential_njit
@@ -96,7 +98,7 @@ class DifferentialCache:
             self._cache_solve_ivp[name] = differential_solve_ivp
         return address
 
-    def _get_func(self, key: DifferentialKey, cache: tp.Dict[DifferentialKey, Differential]) -> Differential:
+    def _get_func(self, key: DifferentialKey, cache: dict[DifferentialKey, Differential]) -> Differential:
         try:
             with self._lock:
                 return cache[key]

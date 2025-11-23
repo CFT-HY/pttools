@@ -50,8 +50,8 @@ else:
                 "NumbaLSODA requires an executable stack to run. To enable it,"
                 "please install execstack with e.g. \"sudo apt install execstack\" and run this program again."
             ) from e
-        subprocess.run(["execstack", "-c", parts[0]])
-        import numbalsoda
+        subprocess.run(["execstack", "-c", parts[0]], check=False)
+        import numbalsoda  # pylint: disable=ungrouped-imports
 
 if numbalsoda is None:
     lsoda_sig = numba.types.void(

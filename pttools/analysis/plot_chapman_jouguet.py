@@ -12,6 +12,7 @@ from pttools.models.model import Model
 
 
 class ChapmanJouguetPlot:
+    """Plot Chapman-Jouguet speed"""
     def __init__(self, alpha_n: np.ndarray):
         self.alpha_n = alpha_n
 
@@ -22,7 +23,8 @@ class ChapmanJouguetPlot:
         self.ax.set_ylabel("$v_{CJ}$")
         self.fig.tight_layout()
 
-    def add(self, model: Model, analytical: bool = True, label: str = None, ls: str = "-"):
+    def add(self, model: Model, analytical: bool = True, label: str | None = None, ls: str = "-"):
+        """Add a model to the plot"""
         v_cj = np.empty_like(self.alpha_n)
         for i in range(self.alpha_n.size):
             v_cj[i] = v_chapman_jouguet(alpha_n=self.alpha_n[i], model=model, analytical=analytical)
@@ -32,4 +34,5 @@ class ChapmanJouguetPlot:
         self.ax.plot(self.alpha_n, v_cj, label=label, ls=ls)
 
     def process(self) -> tp.Optional[Legend]:
+        """Process the plot"""
         return legend(self.ax, fontsize="x-small")

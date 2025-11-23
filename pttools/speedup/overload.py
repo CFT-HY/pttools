@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def do_nothing(x):
+    """Do nothing"""
     return x
 
 
@@ -37,14 +38,17 @@ def np_all(x):
         return do_nothing
     if isinstance(x, numba.types.Number):
         return bool
+    return np.all
 
 
 def np_all_fix(x):
+    """A fix for overloading :external:py:func:`numpy.all`"""
     return np.all(x)
 
 
 @overload(np_all_fix, jit_options={"nopython": True})
 def np_all_fix_scalar(x):
+    """Overload of :external:py:func:`numpy.all` for booleans and scalars"""
     if isinstance(x, numba.types.Boolean):
         return do_nothing
     if isinstance(x, numba.types.Number):
@@ -59,6 +63,7 @@ def np_any(x):
         return do_nothing
     if isinstance(x, numba.types.Number):
         return bool
+    return np.all
 
 
 # @overload(np.asanyarray, jit_options={"nopython": True})

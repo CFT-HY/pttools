@@ -1,3 +1,5 @@
+"""Analysis utilities for the suppression factor"""
+
 import matplotlib.pyplot as plt
 from matplotlib.tri import Triangulation
 import numpy as np
@@ -16,17 +18,17 @@ class SuppressionPlot:
     def __init__(
             self,
             sup: Suppression,
-            fig: plt.Figure = None,
-            ax: plt.Axes = None,
+            fig: plt.Figure | None = None,
+            ax: plt.Axes | None = None,
             v_wall_min: float = 0,
             v_wall_max: float = 1,
             alpha_n_min: float = 0,
             alpha_n_max: float = 1,
-            title: str = None,
+            title: str | None = None,
             alpha_n_max_lines: bool = True,
             v_cj: bool = True,
             figsize: tuple[float, float] = (4, 3),
-            # levels: np.ndarray[int, np.float64] = np.array([0.01, 0.03, 0.05, 0.1, 0.25, 0.5, 1, 1.5, 2, 2.5])
+            # levels: np.ndarray[tuple[int], np.float64] = np.array([0.01, 0.03, 0.05, 0.1, 0.25, 0.5, 1, 1.5, 2, 2.5])
         ):
         fig_was_none = fig is None
         self.fig, self.ax = create_fig_ax(fig, ax, figsize=figsize)

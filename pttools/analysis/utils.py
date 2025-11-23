@@ -15,9 +15,9 @@ FigAndAxes = tuple[plt.Figure, plt.Axes]
 
 
 def create_fig_ax(
-        fig: plt.Figure = None,
-        ax: plt.Axes = None,
-        figsize: tuple[float, float] = None) -> FigAndAxes:
+        fig: plt.Figure | None = None,
+        ax: plt.Axes | None = None,
+        figsize: tuple[float, float] | None = None) -> FigAndAxes:
     """Create a figure and axes if necessary"""
     if fig is None:
         if ax is None:

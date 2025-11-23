@@ -3,17 +3,18 @@
 import collections
 import functools
 import threading
+import typing as tp
 
 import numpy as np
 
 
-def conditional_decorator(dec: callable, condition: bool, **kwargs) -> callable:
+def conditional_decorator(dec: tp.Callable, condition: bool, **kwargs) -> tp.Callable:
     """Applies the given decorator if the given condition is True.
 
     :param dec: decorator
     :param condition: whether the decorator should be applied
     """
-    def decorator(func: callable) -> callable:
+    def decorator(func: tp.Callable) -> tp.Callable:
         if condition:
             if kwargs:
                 return functools.wraps(func)(dec(**kwargs)(func))
@@ -22,7 +23,7 @@ def conditional_decorator(dec: callable, condition: bool, **kwargs) -> callable:
     return decorator
 
 
-def copy_doc(copy_func: callable) -> callable:
+def copy_doc(copy_func: tp.Callable) -> tp.Callable:
     """Copies the docstring of the given function to another.
     This function is intended to be used as a decorator.
     From: https://stackoverflow.com/a/68901244
@@ -38,18 +39,19 @@ def copy_doc(copy_func: callable) -> callable:
             ...
     """
 
-    def wrapped(func: callable) -> callable:
+    def wrapped(func: tp.Callable) -> tp.Callable:
         func.__doc__ = copy_func.__doc__
         return func
 
     return wrapped
 
 
-def is_nan_or_none(value: float = None) -> bool:
+def is_nan_or_none(value: float | None = None) -> bool:
+    """Determine if a value is NaN or None"""
     return value is None or np.isnan(value)
 
 
-def threadsafe_lru(func: callable) -> callable:
+def threadsafe_lru(func: tp.Callable) -> tp.Callable:
     """
     Thread-safe LRU cache
 

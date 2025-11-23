@@ -1,6 +1,4 @@
-"""Removes the unpublished hybrid data from the suppression data set"""
-
-__author__ = "Chloe Hopling"
+"""Remove the unpublished hybrid data from the suppression data set"""
 
 import logging
 import os.path
@@ -47,14 +45,14 @@ def remove_hybrids(path: str = DEFAULT_PATH, suffix: str = "") -> str:
             exp_Ubarf_no_hybrids.append(sim_data[i, 5])
 
     out_path = os.path.join(SUPPRESSION_FOLDER, f"suppression_no_hybrids{f'_{suffix}' if suffix else ''}.txt")
-    with open(out_path, 'w') as f:
+    with open(out_path, "w") as f:
         f.write("vw" + " " + "alph" + " " + "suppress" + " " + "sim_omgw" + " " + "exp_omgw" + "exp_ubarf" )
         f.write('\n')
 
         for i in range(0, len(vw_no_hybrid)):
             line = str(vw_no_hybrid[i]) + " " + str(al_no_hybrid[i]) + " " + str(sup_sim_no_hybrids[i]) + " " + str(sim_omgw_no_hybrids[i]) + " " + str(exp_omgw_no_hybrids[i]) + " " + str(exp_Ubarf_no_hybrids[i])
             f.write(line)
-            f.write('\n')
+            f.write("\n")
 
     logger.debug("Simulation suppression data without hybrids file created.")
     return out_path

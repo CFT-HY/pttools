@@ -60,14 +60,18 @@ class StandardModel(ThermoModel):
             self,
             g_mult_s: float = 1, g_mult_b: float = 1,
             V_s: float = 0, V_b: float = 0,
-            name: str = None,
-            T_min: float = None, T_max: float = None,
+            name: str | None = None,
+            T_min: float | None = None,
+            T_max: float | None = None,
             restrict_to_valid: bool = True,
-            label_latex: str = None,
-            label_unicode: str = None,
+            label_latex: str | None = None,
+            label_unicode: str | None = None,
             gen_cs2: bool = True,
             silence_temp: bool = False):
-        logger.debug(f"Creating Standard Model with g_mult_s={g_mult_s}, g_mult_b={g_mult_b}, V_s={V_s}, V_b={V_b}")
+        logger.debug(
+            "Creating Standard Model with g_mult_s=%s, g_mult_b=%s, V_s=%s, V_b=%s",
+            g_mult_s, g_mult_b, V_s, V_b
+        )
 
         self.g_mult_s = g_mult_s
         self.g_mult_b = g_mult_b

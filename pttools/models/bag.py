@@ -1,7 +1,6 @@
 """Bag model"""
 
 import logging
-import typing as tp
 
 import numba
 import numpy as np
@@ -19,7 +18,9 @@ logger = logging.getLogger(__name__)
 
 
 @numba.njit
-def cs2_bag(w: th.FloatOrArr = None, phase: th.FloatOrArr = None) -> th.FloatOrArr:
+def cs2_bag(
+        w: th.FloatOrArr | None = None,
+        phase: th.FloatOrArr | None = None) -> th.FloatOrArr:
     r"""Sound speed squared, $c_s^2=\frac{1}{3}$.
     :notes:`\ `, p. 37,
     :rel_hydro_book:`\ `, eq. 2.207
@@ -44,19 +45,27 @@ class BagModel(AnalyticModel):
 
     def __init__(
             self,
-            V_s: float = AnalyticModel.DEFAULT_V_S, V_b: float = AnalyticModel.DEFAULT_V_B,
-            a_s: float = None, a_b: float = None,
-            g_s: float = None, g_b: float = None,
-            T_min: float = None, T_max: float = None,
-            alpha_n_min: float = None,
-            name: str = None,
-            label_latex: str = None,
-            label_unicode: str = None,
+            V_s: float = AnalyticModel.DEFAULT_V_S,
+            V_b: float = AnalyticModel.DEFAULT_V_B,
+            a_s: float | None = None,
+            a_b: float | None = None,
+            g_s: float | None = None,
+            g_b: float | None = None,
+            T_min: float | None = None,
+            T_max: float | None = None,
+            alpha_n_min: float | None = None,
+            name: str | None = None,
+            label_latex: str | None = None,
+            label_unicode: str | None = None,
             allow_invalid: bool = False,
             auto_potential: bool = False,
             log_info: bool = True):
         if log_info:
-            logger.debug("Initialising BagModel")
+            logger.debug(
+                "Initialising BagModel with V_s=%s, V_b=%s, a_s=%s, a_b=%s, "
+                "g_s=%s, g_b=%s, T_min=%s, T_max=%s, alpha_n_min=%s.",
+                V_s, V_b, a_s, a_b, g_s, g_b, T_min, T_max, alpha_n_min
+            )
         if V_b != 0:
             logger.warning("V_b has been specified for the bag model, even though it's usually omitted.")
         if alpha_n_min is not None:
@@ -112,18 +121,18 @@ class BagModel(AnalyticModel):
             log_invalid=log_invalid
         )
 
-    def alpha_n_min_find(self, w_min: float = None, w_max: float = None) -> tp.Tuple[float, float]:
+    def alpha_n_min_find(self, w_min: float | None = None, w_max: float | None = None) -> tuple[float, float]:
         return self.w_crit, self.alpha_n(self.w_crit)
 
     @classmethod
     def alpha_n_min_find_params(
             cls,
             alpha_n_min_target: float,
-            a_s_default: float = None,
+            a_s_default: float | None = None,
             a_b: float = 1,
-            V_s: float = None,
+            V_s: float | None = None,
             V_b: float = 0,
-            safety_factor_alpha: float = None) -> tp.Tuple[float, float, float, float]:
+            safety_factor_alpha: float | None = None) -> tuple[float, float, float, float]:
         if a_s_default < 0 or a_b < 0 or V_s < 0 or V_b < 0:
             raise ValueError(
                 f"Invalid parameters: a_s_default={a_s_default}, a_b={a_b}, V_s_default={V_s}, V_b={V_b}")
@@ -139,8 +148,8 @@ class BagModel(AnalyticModel):
             self,
             wp: th.FloatOrArr,
             wm: th.FloatOrArr,
-            vp_tilde: float = None,
-            sol_type: SolutionType = None,
+            vp_tilde: float | None = None,
+            sol_type: SolutionType | None = None,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
@@ -192,18 +201,18 @@ class BagModel(AnalyticModel):
     def cs2_max(
             self,
             w_max: float, phase: Phase,
-            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tp.Tuple[float, float]:
+            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tuple[float, float]:
         return 1/3, np.nan
 
     def cs2_min(
                 self,
                 w_max: float, phase: Phase,
-                w_min: float = 0, allow_fail: bool = False, **kwargs) -> tp.Tuple[float, float]:
+                w_min: float = 0, allow_fail: bool = False, **kwargs) -> tuple[float, float]:
         return 1/3, np.nan
 
     @staticmethod
     @numba.njit
-    def cs2_neg(w: th.FloatOrArr = None, phase: th.FloatOrArr = None) -> th.FloatOrArr:
+    def cs2_neg(w: th.FloatOrArr | None = None, phase: th.FloatOrArr | None = None) -> th.FloatOrArr:
         return - 1/3 * np.ones_like(w) * np.ones_like(phase)
 
     @staticmethod
@@ -217,7 +226,7 @@ class BagModel(AnalyticModel):
             error_on_invalid: bool = True, nan_on_invalid: bool = True, log_invalid: bool = True) -> th.FloatOrArr:
         delta_theta = (self.V_s - self.V_b) * np.ones_like(wp) * np.ones_like(wm)
         return self.check_delta_theta(
-            delta_theta, wp=wp, wm=wm,
+            delta_theta, xp=wp, xm=wm, x_name="w",
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
 
@@ -270,9 +279,9 @@ class BagModel(AnalyticModel):
             self,
             v_wall: float,
             alpha_n: float,
-            wn: float = None,
-            wn_guess: float = None,
-            wm_guess: float = None) -> SolutionType:
+            wn: float | None = None,
+            wn_guess: float | None = None,
+            wm_guess: float | None = None) -> SolutionType:
         return identify_solution_type_bag(v_wall=v_wall, alpha_n=alpha_n)
 
     def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -317,11 +326,11 @@ class BagModel(AnalyticModel):
             self,
             alpha_n: th.FloatOrArr,
             wn_guess: float = 1,
-            analytical: bool = True,
             theta_bar: bool = False,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True,
+            analytical: bool = True) -> th.FloatOrArr:
         r"""Enthalpy at nucleation temperature
         $$w_n = \frac{4}{3} \frac{V_s - V_b}{\alpha_n}$$
         This can be derived from the equations for $\theta$ and $\alpha_n$.

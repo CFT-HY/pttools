@@ -1,5 +1,6 @@
+"""Functions for ODE integration of fluid profiles in parametric form"""
+
 import logging
-import typing as tp
 
 import numba
 import numpy as np
@@ -50,7 +51,7 @@ def gen_df_dtau(cs2_fun: th.CS2Fun) -> speedup.DifferentialCFunc:
         if isinstance(cs2_fun, (speedup.CFunc, speedup.Dispatcher)) or NUMBA_DISABLE_JIT \
         else numba.cfunc("float64(float64, float64)")(cs2_fun)
 
-    def df_dtau(t: float, u: np.ndarray, du: np.ndarray, args: np.ndarray = None) -> None:
+    def df_dtau(t: float, u: np.ndarray, du: np.ndarray, args: np.ndarray | None = None) -> None:
         r"""Computes the differentials of the variables $(v, w, \xi)$ for a given $c_s^2$ function
 
         :param t: "time"
@@ -87,7 +88,7 @@ def fluid_integrate_param(
         t_end: float = const.T_END_DEFAULT,
         n_xi: int = const.N_XI_DEFAULT,
         df_dtau_ptr: speedup.DifferentialPointer = DF_DTAU_BAG_PTR,
-        method: str = "odeint") -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        method: str = "odeint") -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""
     Integrates parametric fluid equations in df_dtau from an initial condition.
     Positive t_end integrates along curves from $(v,w) = (0,c_{s,0})$ to $(1,1)$.
@@ -157,7 +158,10 @@ def fluid_integrate_param_numba(t: np.ndarray, y0: np.ndarray, data: np.ndarray,
     usol, success = numbalsoda.lsoda(df_dtau_ptr, u0=y0, t_eval=t_numba, data=data_numba)
     if not success:
         with numba.objmode:
-            logger.error(f"NumbaLSODA failed for %s integration", "backwards" if backwards else "forwards")
+            logger.error(
+                "NumbaLSODA failed for %s integration",
+                "backwards" if backwards else "forwards"
+            )
     v = usol[:, 0]
     w = usol[:, 1]
     xi = usol[:, 2]
@@ -214,4 +218,5 @@ def fluid_integrate_param_solve_ivp(
 
 
 def precompile():
+    """Run fluid_integrate_param once to precompile it with Numba"""
     fluid_integrate_param(v0=0.5, w0=0.5, xi0=0.5, phase=0., n_xi=2)

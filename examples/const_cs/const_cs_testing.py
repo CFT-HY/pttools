@@ -22,7 +22,7 @@ const_cs = ConstCSModel(
 bubble = Bubble(const_cs, v_wall=0.5, alpha_n=0.2)
 
 # Compute gravitational wave spectrum for the bubble
-spectrum = Spectrum(bubble)
+spectrum = Spectrum(bubble, r_star=0.1)
 
 bubble.plot()
 spectrum.plot_multi()
@@ -30,7 +30,7 @@ spectrum.plot_multi()
 # Performance testing, now that the model is initialised
 start_time = time.perf_counter()
 bubble2 = Bubble(const_cs, v_wall=0.45, alpha_n=0.2)
-spectrum2 = Spectrum(bubble2)
+spectrum2 = Spectrum(bubble2, r_star=0.1)
 print(f"Bubble and spectrum computation took {time.perf_counter() - start_time} s")
 
 plt.show()

@@ -11,7 +11,6 @@ Requires input data as an npz file.
 
 import logging
 import os.path
-import typing as tp
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 def load(n_alpha: int = 10, n_vw: int = 10, g_bro: int = 120, g_sym: int = 123) \
-        -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     file_name = f"s_change_gbro{g_bro:3.0f}_g_sym{g_sym:3.0f}_nalpha_{n_alpha}_nvw_{n_vw}.npz"
     d = np.load(file_name)
 

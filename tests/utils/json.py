@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 class JsonTestCase(abc.ABC):
     """Base class for tests that compare to JSON data"""
     REF_DATA_PATH: str
-    data: tp.Dict[str, th.FloatOrArr]
-    ref_data: tp.Dict[str, th.FloatOrArr]
+    data: dict[str, th.FloatOrArr]
+    ref_data: dict[str, th.FloatOrArr]
 
     EXPECT_MISSING_DATA: bool = False
     SAVE_NEW_DATA: bool = False
@@ -36,7 +36,7 @@ class JsonTestCase(abc.ABC):
             ref_data = self.ref_data[key]
             assert_allclose(data, ref_data, rtol=rtol, atol=atol)
         elif self.EXPECT_MISSING_DATA:
-            logger.warning(f"Reference data missing in %s: %s", type(self).__name__, key)
+            logger.warning("Reference data missing in %s: %s", type(self).__name__, key)
         else:
             raise KeyError(f"Reference data missing in {type(self).__name__}: {key}")
 

@@ -14,6 +14,7 @@ from pttools.bubble.transition import SolutionType
 
 
 def main() -> plt.Figure:
+    """Plot the parameters of fluid_reference"""
     ref = fluid_reference.ref()
 
     fig: plt.Figure = plt.figure()

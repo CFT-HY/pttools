@@ -8,6 +8,7 @@ https://github.com/numba/numba/issues/3625
 import functools
 import inspect
 import logging
+import typing as tp
 
 import numba
 import numpy as np
@@ -18,7 +19,7 @@ from . import utils
 logger = logging.getLogger(__name__)
 
 
-def njit(func: callable = None, **kwargs):
+def njit(func: tp.Callable | None = None, **kwargs):
     """Wrapper for numba.njit.
 
     May cause segmentation faults with profilers.
@@ -30,7 +31,8 @@ def njit(func: callable = None, **kwargs):
     return _njit(func)
 
 
-def njit_if_numba_integrate(func: callable = None, **kwargs) -> callable:
+def njit_if_numba_integrate(func: tp.Callable | None = None, **kwargs) -> tp.Callable:
+    """Njit compile a function if Numba integration is enabled"""
     if func:
         return utils.conditional_decorator(numba.njit, options.NUMBA_INTEGRATE, **kwargs)(func)
     return utils.conditional_decorator(numba.njit, options.NUMBA_INTEGRATE, **kwargs)
@@ -47,14 +49,16 @@ def njit_module(**kwargs):
     # Replace functions in module with jit-wrapped versions
     for name, obj in module.__dict__.items():
         if inspect.isfunction(obj) and inspect.getmodule(obj) == module:
-            logger.debug("Auto decorating function {} from module {} with jit "
-                          "and options: {}".format(obj, module.__name__, kwargs))
+            logger.debug(
+                "Auto decorating function %s from module %s with jit and options: %s",
+                obj, module.__name__, kwargs
+            )
             module.__dict__[name] = numba.njit(obj, **options.NUMBA_OPTS, **kwargs)
 
 
 def vectorize(**kwargs):
     """Extended version of numba.vectorize with support for NUMBA_DISABLE_JIT"""
-    def vectorize_inner(func: callable):
+    def vectorize_inner(func: tp.Callable):
         if options.NUMBA_DISABLE_JIT:
             # Using functools.wraps() ensures that docstrings etc. are preserved
             @functools.wraps(func)

@@ -1,9 +1,10 @@
+"""Compute reference values for the fluid solver"""
+
 import functools
 import logging
 import multiprocessing
 import os.path
 import time
-import typing as tp
 
 import h5py
 import numpy as np
@@ -15,6 +16,7 @@ from pttools.bubble.boundary import SolutionType
 from pttools.bubble.fluid_bag import sound_shell_bag
 from pttools.bubble import props
 from pttools.bubble import transition
+from pttools.logging import setup_logging
 from pttools.speedup.options import FORKING
 from pttools.speedup.parallel import run_parallel
 
@@ -22,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class FluidReference:
+    """A set of reference points for the fluid solver"""
     def __init__(
             self,
             path: str,
@@ -80,6 +83,7 @@ class FluidReference:
             v_wall_min: float, v_wall_max: float,
             alpha_n_min: float, alpha_n_max: float,
             n_v_wall: int, n_alpha_n: int):
+        """Create a fluid reference for the given range"""
         logger.info("Generating fluid reference")
         start_time = time.perf_counter()
         if os.path.exists(self.path):
@@ -150,6 +154,7 @@ class FluidReference:
         logger.info("Fluid reference ready, took: %s s", time.perf_counter() - start_time)
 
     def get(self, v_wall: float, alpha_n: float, sol_type: SolutionType) -> np.ndarray:
+        """Get the reference point that is closest to the given parameters"""
         if sol_type == SolutionType.SUB_DEF:
             ind = int(self.interp_sub_def(v_wall, alpha_n))
         elif sol_type == SolutionType.HYBRID:
@@ -163,7 +168,8 @@ class FluidReference:
         return self.data[i_alpha_n, i_v_wall]
 
 
-def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tp.Tuple[int, float, float, float, float, float, float]:
+def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tuple[int, float, float, float, float, float, float]:
+    """Create a reference point"""
     if alpha_n > alpha_n_max:
         return -1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 
@@ -181,7 +187,10 @@ def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tp.Tuple[int, 
 
     dev = boundary.junction_condition_deviation1(vp_tilde, wp, vm_tilde, wm)
     if not np.isclose(dev, 0, atol=0.025):
-        logger.warning(f"Deviation from boundary conditions: %s at v_wall=%s, alpha_n=%s", dev, v_wall, alpha_n)
+        logger.warning(
+            "Deviation from boundary conditions: %s at v_wall=%s, alpha_n=%s",
+            dev, v_wall, alpha_n
+        )
         if not np.isclose(dev, 0, atol=0.025):
             return -1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 
@@ -211,6 +220,5 @@ def ref():
 
 
 if __name__ == "__main__":
-    from pttools.logging import setup_logging
     setup_logging()
     ref()

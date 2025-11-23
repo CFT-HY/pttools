@@ -7,13 +7,12 @@ Modified from
 
 import logging
 import os
-import typing as tp
 
 import numpy as np
 import matplotlib.pyplot as plt
 
 from pttools import bubble
-import pttools.ssmtools as ssm
+from pttools import ssm
 from tests.paper import const
 from tests.paper import plotting
 from tests.paper import utils
@@ -71,7 +70,7 @@ def generate_ps(
         alpha: float,
         method: ssm.Method = ssm.Method.E_CONSERVING,
         v_xi_file=None,
-        save_ids: tp.Tuple[str, str] = (None, None),
+        save_ids: tuple[str, str] = (None, None),
         show: bool = True,
         debug: bool = False):
     """
@@ -134,7 +133,7 @@ def generate_ps(
             ax_v.loglog(z, pow_v2, color=col, linestyle='--')
             ax_gw.loglog(y, pow_gw2, color=col, linestyle='--')
 
-        inter_flag = (abs(bubble.CS0 - vw) < 0.05)  # Due intermediate power law
+        inter_flag = abs(bubble.CS0 - vw) < 0.05  # Due intermediate power law
         plotting.plot_guide_power_laws_prace(f1, f2, z, pow_v, y, pow_gw, inter_flag=inter_flag)
 
         # Pretty graph 1
@@ -186,10 +185,11 @@ def generate_ps(
     Ubarf2 = bubble.ubarf_squared(v_ip, w_ip, xi, vw)
 
     logger.debug(
-        f"vw = {vw}, alpha = {alpha}, nucleation = {const.NUC_STRING}, "
-        f"<v^2> = {V2_pow_v}, Ubarf2 (1 bubble) = {Ubarf2}, "
-        f"Ratio <v^2>/Ubarf2 = {V2_pow_v/Ubarf2}, "
-        f"gw power (scaled) = {gw_power}"
+        "vw = %s, alpha = %s, nucleation = %s, "
+        f"<v^2>=%s, Ubarf2 (1 bubble) = %s, "
+        f"Ratio <v^2>/Ubarf2 = %s, "
+        f"gw power (scaled) = %s",
+        vw, alpha, const.NUC_STRING, V2_pow_v, Ubarf2, V2_pow_v / Ubarf2, gw_power
     )
 
     if show:
@@ -208,7 +208,7 @@ def generate_ps(
     return V2_pow_v, gw_power
 
 
-def all_generate_ps_prace(save_ids: tp.Tuple[str, str] = ('', ''), show=True, debug: bool = False):
+def all_generate_ps_prace(save_ids: tuple[str, str] = ('', ''), show=True, debug: bool = False):
     """
     Generate power spectra with Prace17 SSM parameters.
     Save data files and graphs.
@@ -225,7 +225,7 @@ def all_generate_ps_prace(save_ids: tp.Tuple[str, str] = ('', ''), show=True, de
             zip(VW_LIST_ALL, const.ALPHA_LIST_ALL, STEP_LIST_ALL, PATH_LIST_ALL, DIR_LIST_ALL):
         for vw, step, dir_name in zip(vw_list, step_list, dir_list):
             v_xi_file = PATH_HEAD + path + dir_name + FILE_PATTERN.format(step)
-            logger.debug(f"v_xi_file: {v_xi_file}")
+            logger.debug("v_xi_file: %s", v_xi_file)
             if debug:
                 v2, Omgw, data = generate_ps(vw, alpha, method, v_xi_file, save_ids, show, debug=debug)
                 debug_data.append(data)

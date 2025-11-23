@@ -1,7 +1,5 @@
 """Useful functions for finding the properties of a solution."""
 
-import typing as tp
-
 import numba.types
 import numpy as np
 
@@ -20,6 +18,7 @@ def find_v_index(xi: np.ndarray, v_target: float) -> int:
 
 
 def find_phase(xi: np.ndarray, v_wall: float) -> np.ndarray:
+    r"""Get the phase at each given $\xi$ value"""
     i_wall = find_v_index(xi, v_wall)
     # This presumes that Phase.SYMMETRIC = 0
     phase: np.ndarray = np.zeros_like(xi)
@@ -49,7 +48,7 @@ def v_max_behind(xi: th.FloatOrArr, cs: float):
 
 
 def v_and_w_from_solution(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, sol_type: SolutionType) -> \
-        tp.Tuple[float, float, float, float, float, float, float, float]:
+        tuple[float, float, float, float, float, float, float, float]:
     i_wall = np.argmax(v)
     i_wall_w = np.argmax(w)
     if i_wall != i_wall_w:

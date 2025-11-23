@@ -7,7 +7,7 @@ and
 
 import numpy as np
 
-import pttools.ssmtools as ssm
+from pttools import ssm
 
 #: Weak transition strength
 ALPHA_WEAK = 0.0046

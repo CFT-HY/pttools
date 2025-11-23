@@ -14,7 +14,7 @@ from pttools.models.model import Model
 
 class XIVPlanePlot:
     r"""A plot of the $\xi-v$ plane"""
-    def __init__(self, model: Model, fig: plt.Figure = None, ax: plt.Axes = None):
+    def __init__(self, model: Model, fig: plt.Figure | None = None, ax: plt.Axes | None = None):
         self.fig: plt.Figure
         if fig is None:
             if ax is not None:
@@ -35,8 +35,8 @@ class XIVPlanePlot:
     def curves(
             self,
             wn: float,
-            w0: float = None,
-            w_mu: float = None,
+            w0: float | None = None,
+            w_mu: float | None = None,
             method: str = "odeint",
             n_curves_s: int = 6,
             n_curves_b: int = 6,

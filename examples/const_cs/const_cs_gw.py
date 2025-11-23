@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 def gw_lines(axs: tp.Iterable[plt.Axes]):
+    """Add the guideline power laws to the GW spectrum plot"""
     pow_low = 9
     k_low = np.logspace(-1, -0.2, 10)
     p_low = k_low ** pow_low * 10 ** (-3.5)
@@ -45,6 +46,7 @@ def gw_lines(axs: tp.Iterable[plt.Axes]):
 
 
 def mu_curves(axs: tp.Iterable[plt.Axes], csb2s: tp.Iterable[float], ls: str = ":", c: str = "k"):
+    """Add µ curves to the fluid velocity profile plot"""
     for i_csb2, csb2 in enumerate(csb2s):
         csb = np.sqrt(csb2)
         xi_mu: np.ndarray = np.linspace(csb, 1, 20)
@@ -58,8 +60,13 @@ def mu_curves(axs: tp.Iterable[plt.Axes], csb2s: tp.Iterable[float], ls: str = "
 
 def plot_spectrum(
         spectrum: Spectrum,
-        ax_v: plt.Axes, ax_gw: plt.Axes, ax_omgw0: plt.Axes,
-        ls_v: str, label: str, label_omgw0: str):
+        ax_v: plt.Axes,
+        ax_gw: plt.Axes,
+        ax_omgw0: plt.Axes,
+        ls_v: str,
+        label: str,
+        label_omgw0: str):
+    """Plot a GW spectrum"""
     ax_v.plot(spectrum.bubble.xi, spectrum.bubble.v, label=label, ls=ls_v)
     ax_gw.plot(spectrum.y, spectrum.pow_gw, label=label)
     ax_omgw0.plot(spectrum.f(), spectrum.omgw0(), label=label_omgw0)
@@ -99,9 +106,14 @@ def snr_table(snrs: np.ndarray, models: tp.Iterable[Model], v_walls: np.ndarray,
 
 def setup_axes(
         spectrum: Spectrum,
-        ax_v: plt.Axes, ax_gw: plt.Axes, ax_omgw0: plt.Axes,
-        y_min: float, y_max: float,
-        f_min: float, f_max: float):
+        ax_v: plt.Axes,
+        ax_gw: plt.Axes,
+        ax_omgw0: plt.Axes,
+        y_min: float,
+        y_max: float,
+        f_min: float,
+        f_max: float):
+    r"""Configure axes for the v, GW and $\Omega_{gw,0}$ plots"""
     title = rf"$\alpha_n={spectrum.bubble.alpha_n}, v_\text{{wall}}={spectrum.bubble.v_wall}$"
     title_omgw0 = title[:-1] + rf", r_*={spectrum.r_star}, T_n={spectrum.Tn} \text{{GeV}}$"
 
@@ -135,7 +147,8 @@ def setup_axes(
     return title, title_omgw0
 
 
-def main():
+def main(low_k: bool = True):
+    """Plot GW spectra for various ConstCSModel parameter combinations"""
     start_time = time.perf_counter()
     a_s = 5
     a_b = 1
@@ -150,21 +163,39 @@ def main():
 
     allow_invalid = False
     models = [
-        ConstCSModel(css2=1/3, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_n_min, allow_invalid=allow_invalid),
-        ConstCSModel(css2=1/3, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_n_min, allow_invalid=allow_invalid),
-        ConstCSModel(css2=1/4, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_n_min, allow_invalid=allow_invalid),
-        ConstCSModel(css2=1/4, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_n_min, allow_invalid=allow_invalid),
+        ConstCSModel(
+            css2=1/3, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s,
+            alpha_n_min=alpha_n_min, allow_invalid=allow_invalid
+        ),
+        ConstCSModel(
+            css2=1/3, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s,
+            alpha_n_min=alpha_n_min, allow_invalid=allow_invalid
+        ),
+        ConstCSModel(
+            css2=1/4, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s,
+            alpha_n_min=alpha_n_min, allow_invalid=allow_invalid
+        ),
+        ConstCSModel(
+            css2=1/4, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s,
+            alpha_n_min=alpha_n_min, allow_invalid=allow_invalid
+        )
     ]
     lss = ["solid", "dashed", "dotted", "dashdot"]
     # css2s = {model.css2 for model in models}
     csb2s = {model.csb2 for model in models}
     alpha_n_mins = np.array([model.alpha_n_min for model in models])
     if np.any(alpha_n_mins > alpha_n_min):
-        msg = f"A model has alpha_n_min > {alpha_n_min}. Please adjust the models. Currently alpha_n_mins={alpha_n_mins}",
+        msg = (
+            f"A model has alpha_n_min > {alpha_n_min}. "
+            f"Please adjust the models. Currently alpha_n_mins={alpha_n_mins}"
+        )
         logger.error(msg)
         raise ValueError(msg)
 
-    spectra: np.ndarray[tuple[int, int, int], Spectrum] = np.zeros((len(models), alpha_ns.size, v_walls.size), dtype=object)
+    spectra: np.ndarray[tuple[int, int, int], Spectrum] = np.zeros(
+        (len(models), alpha_ns.size, v_walls.size),
+        dtype=object
+    )
     # z = np.logspace(-1, 3, 5000)
 
     for i_model, model in enumerate(models):
@@ -177,6 +208,7 @@ def main():
                 "Tn": Tn,
                 # "g_star": 100,
                 # "gs_star": 100
+                "low_k": low_k
             },
             # bubble_kwargs={"allow_invalid": False}, allow_bubble_failure=True,
             # This fixes a BrokenProcessPool error on Read the Docs
@@ -185,10 +217,18 @@ def main():
 
     figsize = (12, 10)
     figsize2 = (12, 5)
-    figs: np.ndarray[tuple[int], plt.Figure] = np.array([plt.figure(figsize=figsize) for _ in range(3)])
-    figs2: np.ndarray[tuple[int, int], plt.Figure] = np.array([[plt.figure(figsize=figsize2) for _ in alpha_ns] for _ in range(3)])
-    axs: np.ndarray[tuple[int, int, int], plt.Axes] = np.stack([fig.subplots(alpha_ns.size, v_walls.size) for fig in figs])
-    axs2: np.ndarray[tuple[int, int, int], plt.Axes] = np.stack([np.stack([fig.subplots(1, v_walls.size) for fig in figs2_row]) for figs2_row in figs2])
+    figs: np.ndarray[tuple[int], plt.Figure] = np.array(
+        [plt.figure(figsize=figsize) for _ in range(3)]
+    )
+    figs2: np.ndarray[tuple[int, int], plt.Figure] = np.array(
+        [[plt.figure(figsize=figsize2) for _ in alpha_ns] for _ in range(3)]
+    )
+    axs: np.ndarray[tuple[int, int, int], plt.Axes] = np.stack(
+        [fig.subplots(alpha_ns.size, v_walls.size) for fig in figs]
+    )
+    axs2: np.ndarray[tuple[int, int, int], plt.Axes] = np.stack(
+        [np.stack([fig.subplots(1, v_walls.size) for fig in figs2_row]) for figs2_row in figs2]
+    )
 
     snrs = np.zeros((len(alpha_ns), len(v_walls), len(models)))
     for i_alpha_n, alpha_n in enumerate(alpha_ns):

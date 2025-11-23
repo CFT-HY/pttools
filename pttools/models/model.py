@@ -15,6 +15,7 @@ from pttools.bubble.check import find_most_negative_vals
 from pttools.bubble.integrate import add_df_dtau, differentials
 from pttools.bubble import transition
 from pttools.models.base import BaseModel
+from pttools.models.utils import check_value_in_range
 from pttools.speedup.differential import DifferentialPointer
 from pttools.speedup.options import FORKING
 import pttools.type_hints as th
@@ -34,25 +35,30 @@ class Model(BaseModel, abc.ABC):
     :param gen_cs2: used internally for postponing the generation of the cs2 function
     """
     ALPHA_N_MIN_FIND_SAFETY_FACTOR_ALPHA: float = 0.999
+    DEFAULT_V_S = 0
     DEFAULT_V_B = 0
 
     def __init__(
             self,
-            V_s: float, V_b: float = DEFAULT_V_B,
-            T_ref: float = 1, T_min: float = None, T_max: float = None,
-            T_crit_guess: float = None,
-            name: str = None,
-            label_latex: str = None,
-            label_unicode: str = None,
+            V_s: float = DEFAULT_V_S,
+            V_b: float = DEFAULT_V_B,
+            T_ref: float = 1.,
+            T_min: float | None = None,
+            T_max: float | None = None,
+            T_crit: float | None = None,
+            T_crit_guess: float | None = None,
+            name: str | None = None,
+            label_latex: str | None = None,
+            label_unicode: str | None = None,
             gen_critical: bool = True,
             gen_cs2: bool = True,
             gen_cs2_neg: bool = True,
             implicit_V: bool = False,
-            temperature_is_physical: bool = None,
+            temperature_is_physical: bool | None = None,
             silence_temp: bool = False,
             allow_invalid: bool = False,
             log_info: bool = True):
-
+        # Validate the potential
         if log_info and implicit_V:
             if V_s != 0 or V_b != 0:
                 logger.warning(
@@ -94,10 +100,22 @@ class Model(BaseModel, abc.ABC):
         )
         self.w_min_s = self.w(self.T_min, Phase.SYMMETRIC)
         self.w_min_b = self.w(self.T_min, Phase.BROKEN)
+        self.w_min = max(self.w_min_s, self.w_min_b)
         self.w_max_s = self.w(self.T_max, Phase.SYMMETRIC)
         self.w_max_b = self.w(self.T_max, Phase.BROKEN)
-        self.w_min = max(self.w_min_s, self.w_min_b)
         self.w_max = min(self.w_max_s, self.w_max_b)
+        if self.w_min >= self.w_max:
+            logger.warning(
+                "Please provide a wider temperature range for the model. "
+                "The current temperature range of T_min=%s, T_max=%s may cause problems in initializing the model.",
+                self.T_min, self.T_max
+            )
+            self.w_min = min(self.w_min_s, self.w_min_b)
+            self.w_max = max(self.w_max_s, self.w_max_b)
+        # else:
+        #     # Update the temperature range so that for all temperatures there exists both a symmetric and a broken phase
+        #     self.T_min = max(self.temp(self.w_min, Phase.SYMMETRIC), self.temp(self.w_min, Phase.BROKEN))
+        #     self.T_max = min(self.temp(self.w_max, Phase.SYMMETRIC), self.temp(self.w_max, Phase.BROKEN))
 
         # A model could have t_ref = 1 GeV and be valid only for e.g. > 10 GeV
         # if t_ref < self.t_min:
@@ -105,18 +123,44 @@ class Model(BaseModel, abc.ABC):
         if T_ref >= self.T_max:
             raise ValueError(f"T_ref should be lower than T_max. Got: T_ref={T_ref}, T_max={self.T_max}")
 
-        if gen_critical:
+        if not (T_crit is None or np.isnan(T_crit)):
+            if not self.T_min < T_crit < self.T_max:
+                raise ValueError(
+                    "Invalid T_crit. Should have T_min < T_crit < T_max. Got: "
+                    f"T_min={self.T_min}, T_crit={T_crit}, T_max={self.T_max}"
+                )
+            self.T_crit = T_crit
+            self.w_crit = self.w(self.T_crit, Phase.SYMMETRIC)
+        elif gen_critical:
             # w_crit = wn_max
             self.T_crit, self.w_crit = self.criticals(T_crit_guess, allow_fail=allow_invalid, log_info=log_info)
+        else:
+            self.T_crit = np.nan
+            self.w_crit = np.nan
+
+        if self.w_crit < self.w_min or self.w_crit > self.w_max:
+            raise ValueError(
+                "Invalid w_crit. Should have w_min < w_crit < w_max, got: "
+                f"w_min={self.w_min:{self.THERMO_FORMAT}}, w_crit={self.w_crit:{self.THERMO_FORMAT}}, w_max={self.w_max:{self.THERMO_FORMAT}}"
+            )
+
+        if gen_critical:
             self.w_at_alpha_n_min, self.alpha_n_min = self.alpha_n_min_find()
+        else:
+            self.w_at_alpha_n_min = None
+            self.alpha_n_min = 0
 
     # Concrete methods
 
     @staticmethod
     def _cs2_limit(
-            w_max: float, phase: Phase,
-            is_max: bool, cs2_fun: th.CS2Fun, w_min: float = 0,
-            allow_fail: bool = False, **kwargs) -> tp.Tuple[float, float]:
+            w_max: float,
+            phase: Phase,
+            is_max: bool,
+            cs2_fun: th.CS2Fun,
+            w_min: float = 0,
+            allow_fail: bool = False,
+            **kwargs) -> tuple[float, float]:
         r"""Find the minimum or maximum of $c_s^2(w)$ for $w \in [w_\text{min}, w_\text{max}]$"""
         name = "max" if is_max else "min"
         sol = fminbound(cs2_fun, x1=w_min, x2=w_max, args=(phase,), full_output=True, **kwargs)
@@ -135,64 +179,11 @@ class Model(BaseModel, abc.ABC):
             if not allow_fail:
                 raise RuntimeError(msg)
         if cs2 > 1/3:
-            logger.warning(f"Got physically impossible cs2={cs2} > 1/3 at w={w}. Check that the model is valid.")
+            logger.warning(
+                "Got physically impossible cs2=%s > 1/3 at w=%s. Check that the model is valid.",
+                cs2, w
+            )
         return cs2, w
-
-    def check_w_for_alpha(
-            self,
-            w: th.FloatOrArr,
-            w_min: float = None,
-            w_max: float = None,
-            error_on_invalid: bool = True,
-            nan_on_invalid: bool = True,
-            log_invalid: bool = True,
-            name: str = "w",
-            alpha_name: str = "alpha") -> tp.Union[float, np.ndarray]:
-        r"""Check that $w \in ({w}_\text{min}, {w}_\text{max})$ for the given $w$."""
-        too_small = False
-        too_large = False
-        if w_min is None:
-            w_min = self.w_min
-        if w_max is None:
-            w_max = self.w_max
-
-        if w is None or np.any(np.isnan(w)):
-            if log_invalid:
-                logger.error(f"Got w=nan for {name}.")
-            # Scalar None cannot be tested for negativity.
-            if w is None:
-                return np.nan
-        elif np.any(w < w_min):
-            if np.isscalar(w):
-                info = f"Got {name}={w} < w_min={w_min} for {alpha_name}."
-            else:
-                info = f"Got {name} < w_min={w_min} for {alpha_name}. Most problematic value: w={np.min(w)}"
-            if log_invalid:
-                logger.error(info)
-            if error_on_invalid:
-                raise ValueError(info)
-            too_small = True
-        elif np.any(w > w_max):
-            if np.isscalar(w):
-                info = f"Got {name}={w} > w_max={w_max} for {alpha_name}."
-            else:
-                info = f"Got {name} > w_max={w_max} for {alpha_name}. Most problematic value: w={np.max(w)}"
-            if log_invalid:
-                logger.error(info)
-            if error_on_invalid:
-                raise ValueError(info)
-            too_large = True
-
-        if nan_on_invalid:
-            if too_small or too_large:
-                if np.isscalar(w):
-                    return np.nan
-                w = w.copy()
-            if too_small:
-                w[w < w_min] = np.nan
-            if too_large:
-                w[w > w_max] = np.nan
-        return w
 
     def alpha_n(
             self,
@@ -208,33 +199,30 @@ class Model(BaseModel, abc.ABC):
         :param nan_on_invalid: return nan for invalid values
         :param log_invalid: log negative values
         """
-        self.check_w_for_alpha(
-            wn,
+        check_value_in_range(
+            x=wn,
+            x_min=self.w_min,
+            x_max=self.w_max,
+            name="wn",
+            context="alpha_n",
+            x_format=self.THERMO_FORMAT,
             error_on_invalid=error_on_invalid,
             nan_on_invalid=nan_on_invalid,
-            log_invalid=log_invalid,
-            name="wn", alpha_name="alpha_n"
+            log_invalid=log_invalid
         )
-        # if np.isscalar(wn):
-        #     if not self.w_min < wn < self.w_max:
-        #         return np.nan
-        # else:
-        #     wn_invalid = np.logical_or(wn < self.w_min, wn > self.w_max)
-        #     if np.any(wn_invalid):
-        #         wn = wn.copy()
-        #         wn[wn_invalid] = np.nan
-
         # :param allow_no_transition: allow $w_n$ for which there is no phase transition
         # self.check_p(wn, allow_fail=allow_no_transition)
-        diff = self.delta_theta(wp=wn, wm=wn, error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid)
-
+        diff = self.delta_theta(
+            wp=wn, wm=wn,
+            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
+        )
         return 4 * diff / (3 * wn)
 
     def alpha_n_from_alpha_theta_bar_n(
             self,
             alpha_theta_bar_n: th.FloatOrArr,
-            wn: float = None,
-            wn_guess: float = None,
+            wn: float | None = None,
+            wn_guess: float | None = None,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
@@ -248,7 +236,10 @@ class Model(BaseModel, abc.ABC):
             (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN)) / wn
         return alpha_theta_bar_n - diff
 
-    def alpha_n_min_find(self, w_min: float = None, w_max: float = None) -> tp.Tuple[float, float]:
+    def alpha_n_min_find(
+            self,
+            w_min: float | None = None,
+            w_max: float | None = None) -> tuple[float, float]:
         r"""Find $\text{min} \alpha_n(w)$ for $w \in ({w}_\text{min}, {w}_\text{max})$"""
         if w_min is None:
             w_min = self.w_min
@@ -264,12 +255,46 @@ class Model(BaseModel, abc.ABC):
         logger.debug("alpha_n_min=%s found at w=%s in range w_min=%s, w_max=%s", fval, xopt, w_min, w_max)
         return xopt, fval
 
+    def alpha_n_temp(
+            self,
+            Tn: th.FloatOrArr,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
+        r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
+        $$\alpha_n = \frac{4(\theta(w_n,\phi_s) - \theta(w_n,\phi_b)}{3w_n}$$
+
+        :param Tn: nucleation temperature $T_n$
+        :param error_on_invalid: raise error for invalid values
+        :param nan_on_invalid: return nan for invalid values
+        :param log_invalid: log negative values
+        """
+        check_value_in_range(
+            x=Tn,
+            x_min=self.T_min,
+            x_max=self.T_max,
+            name="Tn",
+            context="alpha_n",
+            x_format=self.THERMO_FORMAT,
+            error_on_invalid=error_on_invalid,
+            nan_on_invalid=nan_on_invalid,
+            log_invalid=log_invalid
+        )
+        diff = self.delta_theta_temp(
+            Ts=Tn, Tb=Tn,
+            error_on_invalid=error_on_invalid,
+            nan_on_invalid=nan_on_invalid,
+            log_invalid=log_invalid
+        )
+        wn = self.w(Tn, Phase.SYMMETRIC)
+        return 4 * diff / (3 * wn)
+
     def alpha_plus(
             self,
             wp: th.FloatOrArr,
             wm: th.FloatOrArr,
-            vp_tilde: float = None,
-            sol_type: SolutionType = None,
+            vp_tilde: float | None = None,
+            sol_type: SolutionType | None = None,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
@@ -283,40 +308,30 @@ class Model(BaseModel, abc.ABC):
         :param nan_on_invalid: return nan for invalid values
         :param log_invalid: whether to log invalid values
         """
-        self.check_w_for_alpha(
-            wp,
+        check_value_in_range(
+            x=wp,
             # wp can be lower than w_crit when wn < w_crit
-            # w_min=self.w_crit,
+            # x_min=self.w_crit,
+            x_min=self.w_min,
+            x_max=self.w_max,
+            name="wp",
+            context="alpha_plus",
+            x_format=self.THERMO_FORMAT,
             error_on_invalid=error_on_invalid,
             nan_on_invalid=nan_on_invalid,
-            log_invalid=log_invalid,
-            name="wp", alpha_name="alpha_plus"
+            log_invalid=log_invalid
         )
-        self.check_w_for_alpha(
-            wm,
+        check_value_in_range(
+            x=wm,
+            x_min=self.w_min,
+            x_max=self.w_max,
+            name="wm",
+            context="alpha_plus",
+            x_format=self.THERMO_FORMAT,
             error_on_invalid=error_on_invalid,
             nan_on_invalid=nan_on_invalid,
-            log_invalid=log_invalid,
-            name="wm", alpha_name="alpha_plus"
+            log_invalid=log_invalid
         )
-        # if np.isscalar(wp):
-        #     if not self.w_crit < wp < self.w_max:
-        #         wp = np.nan
-        # else:
-        #     wp_invalid = np.logical_or(wp < self.w_crit, wp > self.w_max)
-        #     if np.any(wp_invalid):
-        #         wp = wp.copy()
-        #         wp[wp_invalid] = np.nan
-        #
-        # if np.isscalar(wm):
-        #     if not self.w_min < wm < self.w_max:
-        #         wm = np.nan
-        # else:
-        #     wm_invalid = np.logical_or(wm < self.w_min, wm > self.w_max)
-        #     if np.any(wm_invalid):
-        #         wm = wm.copy()
-        #         wm[wm_invalid] = np.nan
-
         alpha_plus = 4 * self.delta_theta(
             wp, wm, error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         ) / (3 * wp)
@@ -333,18 +348,26 @@ class Model(BaseModel, abc.ABC):
             log_invalid: bool = True) -> th.FloatOrArr:
         r"""Transition strength parameter, :giese_2021:`\ `, eq. 13
 
-        $$\alpha_{\bar{\theta}+} = \frac{D \bar{\theta}(T_n)}{3 w_n}$$
+        $$\alpha_{\bar{\theta}_+} = \frac{D \bar{\theta}(T_n)}{3 w_n}$$
         """
-        self.check_w_for_alpha(
-            wn,
+        check_value_in_range(
+            x=wn,
+            x_min=self.w_min,
+            x_max=self.w_max,
+            name="wn",
+            context="alpha_theta_bar_n",
+            x_format=self.THERMO_FORMAT,
             error_on_invalid=error_on_invalid,
             nan_on_invalid=nan_on_invalid,
-            log_invalid=log_invalid,
-            name="wn", alpha_name="alpha_theta_bar_n"
+            log_invalid=log_invalid
         )
         return self.delta_theta_bar(wn, Phase.SYMMETRIC) / (3 * wn)
 
-    def alpha_theta_bar_n_from_alpha_n(self, alpha_n: float, wn: float = None, wn_guess: float = None) -> float:
+    def alpha_theta_bar_n_from_alpha_n(
+            self,
+            alpha_n: float,
+            wn: float | None = None,
+            wn_guess: float | None = None) -> float:
         r"""Conversion from $\alpha_n$ to $\alpha_{\bar{\theta}_n}$ of :giese_2021:`\ `, eq. 13"""
         if wn is None or np.isnan(wn):
             wn = self.wn(alpha_n, wn_guess=wn_guess)
@@ -368,8 +391,8 @@ class Model(BaseModel, abc.ABC):
     @staticmethod
     def check_alpha_plus(
             alpha_plus: th.FloatOrArr,
-            vp_tilde: th.FloatOrArr = None,
-            sol_type: SolutionType = None,
+            vp_tilde: th.FloatOrArr | None = None,
+            sol_type: SolutionType | None = None,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
@@ -378,7 +401,7 @@ class Model(BaseModel, abc.ABC):
         Modifies the given array.
         """
         if error_on_invalid or nan_on_invalid or log_invalid:
-            if sol_type == SolutionType.SUB_DEF or sol_type == SolutionType.HYBRID:
+            if sol_type in (SolutionType.SUB_DEF, SolutionType.HYBRID):
                 invalid = np.logical_or(alpha_plus < 0, alpha_plus >= 1/3)
             elif vp_tilde is not None:
                 # The square root in the vm_tilde equation must be positive
@@ -400,8 +423,7 @@ class Model(BaseModel, abc.ABC):
                 if nan_on_invalid:
                     if np.isscalar(alpha_plus):
                         return np.nan
-                    else:
-                        alpha_plus[invalid] = np.nan
+                    alpha_plus[invalid] = np.nan
         return alpha_plus
 
     def check_p(self, wn: th.FloatOrArr, allow_fail: bool = False):
@@ -422,27 +444,33 @@ class Model(BaseModel, abc.ABC):
             if not allow_fail:
                 raise ValueError(msg)
 
-    @staticmethod
+    @classmethod
     def check_delta_theta(
+            cls,
             delta_theta: th.FloatOrArr,
-            wp: th.FloatOrArr,
-            wm: th.FloatOrArr,
-            theta_s: th.FloatOrArr = None, theta_b: th.FloatOrArr = None,
-            error_on_invalid: bool = True, nan_on_invalid: bool = True, log_invalid: bool = True) -> th.FloatOrArr:
+            xp: th.FloatOrArr,
+            xm: th.FloatOrArr,
+            x_name: str,
+            theta_s: th.FloatOrArr | None = None,
+            theta_b: th.FloatOrArr | None = None,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
+        r"""Validate $\Delta \theta$"""
         theta_given = theta_s is not None and theta_b is not None
         if theta_given:
             prob_diff, prob_wp, prob_wm, prob_theta_s, prob_theta_b = \
-                find_most_negative_vals(delta_theta, wp, wm, theta_s, theta_b)
+                find_most_negative_vals(delta_theta, xp, xm, theta_s, theta_b)
         else:
-            prob_diff, prob_wp, prob_wm = find_most_negative_vals(delta_theta, wp, wm)
+            prob_diff, prob_wp, prob_wm = find_most_negative_vals(delta_theta, xp, xm)
             prob_theta_s = prob_theta_b = None
 
         if prob_diff is not None:
             text = "Got" if np.isscalar(delta_theta) else "Most problematic values"
             msg = (
                 "For a physical equation of state theta_+ > theta_-. "
-                f"{text}: wp={prob_wp}, wm={prob_wm}, "
-                f"theta_s={prob_theta_s}, theta_b={prob_theta_b}" if theta_given else ""
+                f"{text}: {x_name}p={prob_wp:{cls.THERMO_FORMAT}}, {x_name}m={prob_wm:{cls.THERMO_FORMAT}}, "
+                f"theta_s={prob_theta_s:{cls.THERMO_FORMAT}}, theta_b={prob_theta_b:{cls.THERMO_FORMAT}}" if theta_given else ""
                 f"theta_diff={prob_diff}. "
                 "See p. 33 of Hindmarsh and Hijazi, 2019."
             )
@@ -466,16 +494,20 @@ class Model(BaseModel, abc.ABC):
 
         if log_info:
             logger.info(
-                f"Initialised model with name={self.name}, T_crit={t_crit}, alpha_n_at_wn_min={alpha_n_at_wn_min}. "
-                f"At T_crit: w_s={wn_min}, w_b={self.w(t_crit, Phase.BROKEN)}, "
-                f"e_s={self.e_temp(t_crit, Phase.SYMMETRIC)}, e_b={self.e_temp(t_crit, Phase.BROKEN)}, "
-                f"p_s={self.p_temp(t_crit, Phase.SYMMETRIC)}, p_b={self.p_temp(t_crit, Phase.BROKEN)}"
+                f"Initialised model with name=%s, T_crit=%s, alpha_n_at_wn_min=%s. "
+                f"At T_crit: w_s=%s, w_b=%s, e_s=%s, e_b=%s, p_s=%s, p_b=%s",
+                self.name, t_crit, alpha_n_at_wn_min,
+                wn_min, self.w(t_crit, Phase.BROKEN),
+                self.e_temp(t_crit, Phase.SYMMETRIC),
+                self.e_temp(t_crit, Phase.BROKEN),
+                self.p_temp(t_crit, Phase.SYMMETRIC),
+                self.p_temp(t_crit, Phase.BROKEN)
             )
         return t_crit, wn_min
 
     def critical_temp(
             self,
-            guess: float = None,
+            guess: float | None = None,
             guess_backup: float = 2,
             t_max_backup: float = 10000,
             allow_fail: bool = False) -> float:
@@ -575,13 +607,13 @@ class Model(BaseModel, abc.ABC):
     def cs2_max(
             self,
             w_max: float, phase: Phase,
-            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tp.Tuple[float, float]:
+            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tuple[float, float]:
         return self._cs2_limit(w_max, phase, True, self.cs2_neg, w_min, allow_fail, **kwargs)
 
     def cs2_min(
             self,
             w_max: float, phase: Phase,
-            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tp.Tuple[float, float]:
+            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tuple[float, float]:
         return self._cs2_limit(w_max, phase, False, self.cs2, w_min, allow_fail, **kwargs)
 
     def cs2_neg(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -592,13 +624,16 @@ class Model(BaseModel, abc.ABC):
 
     def delta_theta(
             self,
-            wp: th.FloatOrArr, wm: th.FloatOrArr,
-            error_on_invalid: bool = True, nan_on_invalid: bool = True, log_invalid: bool = True) -> th.FloatOrArr:
+            wp: th.FloatOrArr,
+            wm: th.FloatOrArr,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
         theta_s = self.theta(wp, Phase.SYMMETRIC)
         theta_b = self.theta(wm, Phase.BROKEN)
         diff = theta_s - theta_b
         return self.check_delta_theta(
-            diff, wp=wp, wm=wm,
+            diff, xp=wp, xm=wm, x_name="w",
             theta_s=theta_s, theta_b=theta_b,
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
@@ -616,6 +651,22 @@ class Model(BaseModel, abc.ABC):
         $$D\bar{\theta}(T) = \bar{\theta}(T) - \bar{\theta}(T)$$
         """
         return self.theta_bar_temp(temp, Phase.SYMMETRIC) - self.theta_bar_temp(temp, Phase.BROKEN)
+
+    def delta_theta_temp(
+            self,
+            Ts: th.FloatOrArr,
+            Tb: th.FloatOrArr,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
+        theta_s = self.theta_temp(Ts, Phase.SYMMETRIC)
+        theta_b = self.theta_temp(Tb, Phase.BROKEN)
+        diff = theta_s - theta_b
+        return self.check_delta_theta(
+            diff, xp=Ts, xm=Tb, x_name="T",
+            theta_s=theta_s, theta_b=theta_b,
+            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
+        )
 
     def df_dtau_ptr(self) -> DifferentialPointer:
         if self.__df_dtau_ptr is not None:
@@ -662,12 +713,22 @@ class Model(BaseModel, abc.ABC):
         """
         return self.w(temp, Phase.BROKEN) / self.w(temp, Phase.SYMMETRIC)
 
-    def export(self) -> tp.Dict[str, any]:
+    def export(self) -> dict[str, tp.Any]:
         return {
             **super().export(),
-            "t_ref": self.T_ref,
+            "T_ref": self.T_ref,
+            "T_crit": self.T_crit,
             "V_s": self.V_s,
-            "V_b": self.V_b
+            "V_b": self.V_b,
+            "w_crit": self.w_crit,
+            "w_min": self.w_min,
+            "w_max": self.w_max,
+            "w_min_s": self.w_min_s,
+            "w_min_b": self.w_min_b,
+            "w_max_s": self.w_max_s,
+            "w_max_b": self.w_max_b,
+            "alpha_n_min": self.alpha_n_min,
+            "w_at_alpha_n_min": self.w_at_alpha_n_min,
         }
 
     def ge(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -686,14 +747,18 @@ class Model(BaseModel, abc.ABC):
         return self.ge_temp(temp, phase)
 
     def nu_gdh2024(self, w: th.FloatOrArr, phase: th.FloatOrArr = Phase.BROKEN) -> th.FloatOrArr:
-        r"""$$\nu = \frac{1 - 3\omega}{1 + 3\omega}$$
+        r"""$$\nu = \frac{1 - 3\omega}{1 + 3\omega}$$,
+        where $\omega$ is the barotropic equation of state parameter.
         :giombi_2024_cs:`\ ` eq. 2.11
         """
         omega = self.omega(w, phase)
         return (1 - 3*omega)/(1 + 3*omega)
 
     def omega(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Barotropic equation of state parameter $\omega$"""
+        r"""Barotropic equation of state parameter $\omega$
+        $$\omega(T,\phi) = \frac{p(T,\phi)}{e(T,\phi)}$$
+        :giombi_2024_cs:`\ ` p. 3
+        """
         temp = self.temp(w, phase)
         return self.p_temp(temp, phase) / self.e_temp(temp, phase)
 
@@ -706,9 +771,8 @@ class Model(BaseModel, abc.ABC):
         return self.p_temp(self.temp(w, phase), phase)
 
     def Psi_n(self, wn: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Inverse enthalpy ratio at nucleation temperature $\psi_n$, :ai_2023:`\ `, p. 9
-
-        With validation check
+        r"""Inverse enthalpy ratio at nucleation temperature $\psi_n$,
+        :ai_2023:`\ ` p. 9
         """
         ret = self.inverse_enthalpy_ratio(self.temp(wn, Phase.SYMMETRIC))
         # The LTE violation merely means that entropy is being generated, which is totally normal.
@@ -725,35 +789,52 @@ class Model(BaseModel, abc.ABC):
         return ret
 
     def s(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Entropy density $s(w,\phi)$. Calls the temperature-based function.
+        r"""Entropy density $s(w,\phi) = \frac{dp}{dT} = \frac{w}{T}$
 
         :param w: enthalpy $w$
         :param phase: phase $\phi$
         """
-        return self.s_temp(self.temp(w, phase), phase)
+        return w / self.temp(w, phase)
+
+    def s_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Entropy density $s(T,\phi) = \frac{dp}{dT} = \frac{w}{T}$
+
+        :param temp: temperature $T$
+        :param phase: phase $\phi$
+        """
+        return self.w(temp, phase) / temp
 
     def solution_type(
             self,
             v_wall: float,
             alpha_n: float,
-            wn: float = None,
-            wn_guess: float = None,
-            wm_guess: float = None) -> SolutionType:
-            if wn is None:
-                wn = self.wn(alpha_n, wn_guess)
-            v_cj = v_chapman_jouguet(self, alpha_n, wn=wn, wm_guess=wm_guess)
+            wn: float | None = None,
+            wn_guess: float | None = None,
+            wm_guess: float | None = None) -> SolutionType:
+        r"""Find the type of the hydrodynamic solution
 
-            if transition.is_surely_detonation(v_wall, v_cj):
-                return SolutionType.DETON
-            if transition.is_surely_sub_def(self, v_wall, wn):
-                return SolutionType.SUB_DEF
-            if transition.cannot_be_detonation(v_wall, v_cj) and transition.cannot_be_sub_def(self, v_wall, wn):
-                return SolutionType.HYBRID
-            logger.warning(
-                f"Could not determine solution type for %s with v_wall=%s, alpha_n=%s, v_cj=%s",
-                self.name, v_wall, alpha_n, v_cj
-            )
-            return SolutionType.UNKNOWN
+        :param v_wall: wall velocity $v_\text{wall}$
+        :param alpha_n: transition strength parameter $\alpha_n$
+        :param wn: nucleation enthalpy $w_n$
+        :param wn_guess: initial guess for the nucleation enthalpy $w_n$
+        :param wm_guess: initial guess for enthalpy behind the wall $w_-$
+        :return: type of the hydrodynamic solution
+        """
+        if wn is None:
+            wn = self.wn(alpha_n, wn_guess)
+        v_cj = v_chapman_jouguet(self, alpha_n, wn=wn, wm_guess=wm_guess)
+
+        if transition.is_surely_detonation(v_wall, v_cj):
+            return SolutionType.DETON
+        if transition.is_surely_sub_def(self, v_wall, wn):
+            return SolutionType.SUB_DEF
+        if transition.cannot_be_detonation(v_wall, v_cj) and transition.cannot_be_sub_def(self, v_wall, wn):
+            return SolutionType.HYBRID
+        logger.warning(
+            "Could not determine solution type for %s with v_wall=%s, alpha_n=%s, v_cj=%s",
+            self.name, v_wall, alpha_n, v_cj
+        )
+        return SolutionType.UNKNOWN
 
     def theta(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Trace anomaly $\theta(w,\phi)$, :notes:`\ `, eq. 7.24
@@ -785,10 +866,20 @@ class Model(BaseModel, abc.ABC):
         """
         return self.e_temp(temp, phase) - self.p_temp(temp, phase) / self.cs2_temp(temp, Phase.BROKEN)
 
+    def theta_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Trace anomaly $\theta(T,\phi)$, :notes:`\ `, eq. 7.24
+
+        $$\theta = \frac{1}{4}(e - 3p)$$
+
+        :param temp: temperature $T$
+        :param phase: phase $\phi$
+        """
+        return 1/4 * (self.e_temp(temp, phase) - 3*self.p_temp(temp, phase))
+
     def tn(
             self,
             alpha_n: th.FloatOrArr,
-            wn_guess: float = None,
+            wn_guess: float | None = None,
             theta_bar: bool = False,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
@@ -812,7 +903,7 @@ class Model(BaseModel, abc.ABC):
 
     def validate_alpha_n(self, alpha_n: float, allow_invalid: bool = False, log_invalid: bool = True):
         r"""Validate that $\alpha_{n,\text{min}} < \alpha_n < 1$"""
-        if alpha_n < 0 or alpha_n < self.alpha_n_min:
+        if alpha_n is None or np.isnan(alpha_n) or alpha_n < 0 or alpha_n < self.alpha_n_min:
             msg = f"Invalid alpha_n={alpha_n}. Minimum for the model: {self.alpha_n_min}"
             if log_invalid:
                 logger.error(msg)
@@ -823,14 +914,15 @@ class Model(BaseModel, abc.ABC):
                 logger.warning("Got alpha_n=%s > 1. Please be careful that it's valid.", alpha_n)
 
     def vp_vm_tilde_ratio_giese(
-            self, vp_tilde: th.FloatOrArr, vm_tilde: th.FloatOrArr, wp: float, wm: th.FloatOrArr) -> th.FloatOrArr:
+            self,
+            vp_tilde: th.FloatOrArr,
+            vm_tilde: th.FloatOrArr,
+            wp: float, wm: th.FloatOrArr) -> th.FloatOrArr:
         r"""Giese approximation for $\frac{\tilde{v}_+}{\tilde{v}_-}$, :giese_2021:`\ ` eq. 11
-
         $$\frac{\tilde{v}_+}{\tilde{v}_-} \approx \frac{
-            (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3\alpha_{\bar{\theta}_+} }{
-            (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3 \tilde{v}_+ \tilde{v}_- \alpha_{\bar{\theta}}_+
+        (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3\alpha_{\bar{\theta}_+} }{
+        (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3 \tilde{v}_+ \tilde{v}_- \alpha_{\bar{\theta}_+}
         }$$
-
         :param vp_tilde: $\tilde{v}_+$
         :param vm_tilde: $\tilde{v}_-$
         :param wp: $w_+$
@@ -842,7 +934,7 @@ class Model(BaseModel, abc.ABC):
         a = vp_tilde*vm_tilde / cs2b - 1
         return (a + 3*alpha_tbp) / (a + 3*vp_tilde*vm_tilde*alpha_tbp)
 
-    def wn_error_msg(self, alpha_n: th.FloatOrArr, param: th.FloatOrArr, param_name: str, info: str = None) -> str:
+    def wn_error_msg(self, alpha_n: th.FloatOrArr, param: th.FloatOrArr, param_name: str, info: str | None = None) -> str:
         if np.isscalar(alpha_n):
             info2 = f"Got: alpha_n={alpha_n}, {param_name}={param}."
         else:
@@ -898,8 +990,8 @@ class Model(BaseModel, abc.ABC):
         if not solution_found:
             msg = (
                 f"wn solution was not found for model={self.name}, "
-                f"alpha_n={alpha_n}, wn_guess={wn_guess}, theta_bar={theta_bar}, w_crit={self.w_crit}. " +
-                ("" if (error_on_invalid or nan_on_invalid) else f"Using wn={wn}. ") +
+                f"alpha_n={alpha_n}, wn_guess={wn_guess:{self.THERMO_FORMAT}}, theta_bar={theta_bar}, w_crit={self.w_crit:{self.THERMO_FORMAT}}. " +
+                ("" if (error_on_invalid or nan_on_invalid) else f"Using wn={wn:{self.THERMO_FORMAT}}. ") +
                 f"Reason: {reason}"
             )
             if log_invalid:
@@ -910,8 +1002,8 @@ class Model(BaseModel, abc.ABC):
                 return np.nan
 
         if wn < 0:
-            msg = f"Got wn < 0: wn={wn} for "\
-                  f"model={self.name}, alpha_n={alpha_n}, wn_guess={wn_guess}, theta_bar={theta_bar}"
+            msg = f"Got wn < 0: wn={wn:{self.THERMO_FORMAT}} for "\
+                  f"model={self.name}, alpha_n={alpha_n}, wn_guess={wn_guess:{self.THERMO_FORMAT}}, theta_bar={theta_bar}"
             if log_invalid:
                 logger.error(msg)
             if error_on_invalid:
@@ -931,7 +1023,7 @@ class Model(BaseModel, abc.ABC):
     def wn(
             self,
             alpha_n: th.FloatOrArr,
-            wn_guess: float = None,
+            wn_guess: float | None = None,
             theta_bar: bool = False,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
@@ -973,6 +1065,15 @@ class Model(BaseModel, abc.ABC):
             )
         return ret
 
+    def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Enthalpy density $w(T,\phi)$
+        $$w \equiv \frac{dH}{dV} = e + p = T \frac{\partial p}{\partial T} = Ts$$
+        :param temp: temperature $T$
+        :param phase: phase $\phi$
+        :return: enthalpy density $w(T,\phi)$
+        """
+        return self.p_temp(temp, phase) + self.e_temp(temp, phase)
+
     # Abstract methods
 
     def alpha_n_min_find_params(
@@ -995,17 +1096,29 @@ class Model(BaseModel, abc.ABC):
         :param phase: phase $\phi$
         """
 
-    @abc.abstractmethod
     def ge_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        pass
+        r"""Effective degrees of freedom for energy density, $g_{\text{eff},e}(T,\phi)$
 
-    @abc.abstractmethod
+        :param temp: temperature $T$
+        :param phase: phase $\phi$
+        """
+        raise NotImplementedError
+
     def gp_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        pass
+        r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(T,\phi)$
 
-    @abc.abstractmethod
+        :param temp: temperature $T$
+        :param phase: phase $\phi$
+        """
+        raise NotImplementedError
+
     def gs_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        pass
+        r"""Effective degrees of freedom for entropy, $g_{\text{eff},s}(T,\phi)$
+
+        :param temp: temperature $T$
+        :param phase: phase $\phi$
+        """
+        raise NotImplementedError
 
     @abc.abstractmethod
     def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -1021,25 +1134,9 @@ class Model(BaseModel, abc.ABC):
         pass
 
     @abc.abstractmethod
-    def s_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Entropy density $s(T,\phi)=\frac{dp}{dT}$
-
-        :param temp: temperature $T$
-        :param phase: phase $\phi$
-        """
-
-    @abc.abstractmethod
     def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Temperature $T(w,\phi)$
 
         :param w: enthalpy $w$
-        :param phase: phase $\phi$
-        """
-
-    @abc.abstractmethod
-    def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Enthalpy $w(T,\phi)$
-
-        :param temp: temperature $T$
         :param phase: phase $\phi$
         """

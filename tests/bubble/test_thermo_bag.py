@@ -62,6 +62,7 @@ class ThermoBagTest:
 
 
 class ThermoBagTestLectureNotes(ThermoBagTest, unittest.TestCase):
+    r"""Compare thermodynamic quantities to the values in :notes:`\ `"""
     # Input parameters
     ALPHA_NS = np.array([0.1, 0.1, 0.1])
     V_WALLS = np.array([0.4, 0.7, 0.8])
@@ -85,6 +86,7 @@ class ThermoBagTestLectureNotes(ThermoBagTest, unittest.TestCase):
 
 
 class ThermoBagTestHindmarshHijazi(ThermoBagTest, unittest.TestCase):
+    r"""Compare thermodynamic quantities to the values in :gw_pt_ssm:`\ `"""
     # Input parameters
     ALPHA_NS = np.array([0.578, 0.151, 0.091])
     V_WALLS = np.array([0.5, 0.7, 0.77])

@@ -2,7 +2,7 @@
 Entropy profiles
 ================
 
-Plot the entropy profiles of a few bubbles.
+Plot the entropy profiles of a few bubbles
 """
 
 from examples import utils
@@ -12,6 +12,7 @@ from pttools.models.bag import BagModel
 
 
 def main():
+    """Plot the entropy profiles of a few bubbles"""
     model = BagModel(a_s=1.1, a_b=1, V_s=1)
     bubbles = [
         Bubble(model, v_wall=0.9, alpha_n=0.1),

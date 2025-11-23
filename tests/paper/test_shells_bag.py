@@ -1,3 +1,5 @@
+"""Test bubbles that use the bag model"""
+
 import logging
 import os.path
 import sys
@@ -21,6 +23,7 @@ FIG_PATH = os.path.join(utils.TEST_FIGURE_PATH, "fluid_shells")
 
 
 class TestShellsBag(unittest.TestCase):
+    """Test bubbles that use the bag model"""
     @staticmethod
     def shell_file_path(name: str) -> str:
         return os.path.join(utils.TEST_DATA_PATH, f"shells_{name}.txt")

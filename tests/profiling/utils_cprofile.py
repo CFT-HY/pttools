@@ -28,6 +28,7 @@ class CProfiler(utils.Profiler):
 
 
 def process(name: str, profile: cProfile.Profile, print_to_console: bool = False):
+    """Process and save cProfile results"""
     path = os.path.join(PROFILE_DIR, f"{name}")
     profile.dump_stats(f"{path}.pstat")
 
@@ -41,6 +42,7 @@ def save_sorted(
         path: str,
         sort: tp.Union["pstats.SortKey", str],
         print_to_console: bool = False):
+    """Save sorted cProfile results to file"""
     # Save to file
     stream = io.StringIO()
     stats = pstats.Stats(profile, stream=stream).sort_stats(sort)

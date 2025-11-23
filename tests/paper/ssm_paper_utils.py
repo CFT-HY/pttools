@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
 from pttools import bubble
-from pttools import ssmtools as ssm
+from pttools import ssm
 from tests.paper import const
 from tests.paper import plotting
 from tests.paper import utils
@@ -421,7 +421,7 @@ def plot_ps_compare_res(
         alpha: float,
         nuc_type: ssm.NucType = ssm.NucType.SIMULTANEOUS,
         nuc_args: bubble.NucArgs = (1.,),
-        save_id: str = None,
+        save_id: str | None = None,
         graph_file_type=None,
         method: ssm.Method = ssm.Method.E_CONSERVING):
     """
@@ -485,7 +485,7 @@ def plot_ps_compare_res(
             nv_lo = 3
             ngw_lo = 5
 
-        inter_flag = (abs(bubble.CS0 - vw) < 0.05)
+        inter_flag = abs(bubble.CS0 - vw) < 0.05
         plotting.plot_guide_power_laws_prace(
             fig_v, fig_gw, z_list[0], pow_v_list[0], y_list[0], pow_gw_list[0],
             (nv_lo, ngw_lo), inter_flag)
@@ -505,10 +505,10 @@ def plot_ps_compare_res(
 def plot_ps_1bubble(
         vw: float,
         alpha: float,
-        save_id: str = None,
-        graph_file_type: str = None,
+        save_id: str | None = None,
+        graph_file_type: str | None = None,
         Np=const.NP_ARR[-1],
-        debug: bool = False) -> tp.Union[plt.Figure, tp.Tuple[plt.Figure, np.ndarray]]:
+        debug: bool = False) -> tp.Union[plt.Figure, tuple[plt.Figure, np.ndarray]]:
     # Sphinx considers vertical lines as substitution references. Therefore the command \mid has to be used instead.
     r"""
     Plots power spectra predictions of 1 bubble. Shown are
@@ -538,7 +538,7 @@ def plot_ps_1bubble(
         z_list, ps_list, utils.PSType.UNKNOWN, ax_limits=strength,
         col_list=const.COLOURS, leg_list=leg_list)
 
-    inter_flag = (abs(bubble.CS0 - vw) < 0.05)
+    inter_flag = abs(bubble.CS0 - vw) < 0.05
     plotting.plot_guide_power_laws_ssm(fig, z, ph_sp_fac*A2, utils.PSType.V, inter_flag=inter_flag)
 
     if save_id is None:
@@ -560,8 +560,8 @@ def plot_ps_1bubble(
 def plot_ps_compare_nuc(
         vw: float,
         alpha: float,
-        save_id: str = None,
-        graph_file_type: str = None) -> tp.Tuple[list, list, list, list]:
+        save_id: str | None = None,
+        graph_file_type: str | None = None) -> tuple[list, list, list, list]:
     """
     Plots power spectra predictions of SSM with different nucleation models
     Saves data if save_id is set.
@@ -623,7 +623,7 @@ def plot_ps_compare_nuc(
         y_list, pow_gw_list, utils.PSType.GW,
         ax_limits=strength, col_list=const.COLOURS, leg_list=nuc_type_list)
 
-    inter_flag = (abs(bubble.CS0 - vw) < 0.05)
+    inter_flag = abs(bubble.CS0 - vw) < 0.05
     plotting.plot_guide_power_laws_prace(
         fig_v, fig_gw, z_list[0], pow_v_list[0],
         y_list[0], pow_gw_list[0], inter_flag=inter_flag)
@@ -783,7 +783,7 @@ def plot_and_save(vw: float, alpha: float, method: ssm.Method = ssm.Method.E_CON
         ax_gw.loglog(y, pow_gw2, color=col, linestyle='--')
         gw_power.append(np.trapezoid(pow_gw2/y, y))
 
-    inter_flag = (abs(bubble.CS0 - vw) < 0.05)  # Due intermediate power law
+    inter_flag = abs(bubble.CS0 - vw) < 0.05  # Due intermediate power law
     plotting.plot_guide_power_laws_prace(f1, f2, z, pow_v, y, pow_gw, inter_flag=inter_flag)
 
     # Pretty graph 1
@@ -842,7 +842,7 @@ def plot_and_save(vw: float, alpha: float, method: ssm.Method = ssm.Method.E_CON
     return V2_pow_v, gw_power
 
 
-def do_all_plot_ps_compare_nuc(save_id: str = None, graph_file_type: str = None):
+def do_all_plot_ps_compare_nuc(save_id: str | None = None, graph_file_type: str | None = None):
     v2_list = []
     Omgw_scaled_list = []
 
@@ -885,11 +885,11 @@ def do_all_plot_ps_compare_nuc(save_id: str = None, graph_file_type: str = None)
 
 
 def do_all_plot_ps_1bubble(
-        save_id: str = None,
-        graph_file_type: str = None,
+        save_id: str | None = None,
+        graph_file_type: str | None = None,
         debug: bool = False) -> tp.Union[
-            tp.Tuple[tp.List[plt.Figure], tp.List[str]],
-            tp.Tuple[tp.List[plt.Figure], tp.List[str], np.ndarray]]:
+            tuple[list[plt.Figure], list[str]],
+            tuple[list[plt.Figure], list[str], np.ndarray]]:
     vw_weak_list = [0.92, 0.56, 0.44]
     vw_inter_list = [0.92, 0.56, 0.44]
 

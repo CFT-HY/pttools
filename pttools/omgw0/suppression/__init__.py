@@ -1,1 +1,3 @@
-r"""Functions for calculating the kinetic energy suppression factor."""from .suppression import *
+"""Functions for calculating the kinetic energy suppression factor"""
+
+from .suppression import *

@@ -14,6 +14,7 @@ from pttools.models import BagModel
 
 
 def main():
+    """Minimal example of parallel bubble solving"""
     # Create the arrays of v_wall and alpha_n points that will be used for the grid
     v_walls = np.linspace(0.05, 0.95, 20)
     alpha_ns = np.linspace(0.05, 0.3, 20)

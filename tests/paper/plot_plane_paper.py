@@ -1,5 +1,7 @@
 r"""$\xi, v$ plane plotting"""
 
+import typing as tp
+
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.integrate as spi
@@ -144,9 +146,9 @@ def plot_differing(
 def plot_plane(
         ax: plt.Axes,
         data_s: np.ndarray,
-        data_b: np.ndarray = None,
-        method: th.ODESolver = None,
-        deflag_ref: np.ndarray = None,
+        data_b: tp.Union[np.ndarray, None] = None,
+        method: th.ODESolver | None = None,
+        deflag_ref: tp.Union[np.ndarray, None] = None,
         rtol_small_diff: float = 1e-4,
         rtol_mid_diff: float = 1e-3,
         rtol_high_diff: float = 1e-2,
