@@ -9,7 +9,10 @@ env:
   PYTHON_VERSION: '3.13'
 jobs:
   test:
-    runs-on: macos-latest
+    # As of 2025-11-23, hashFiles() does not work on macos-latest.
+    # https://github.com/actions/runner-images/issues/13341
+    runs-on: macos-14
+    # runs-on: macos-latest
     # if: ${{ github.event.workflow_run.conclusion == 'success' }}
     timeout-minutes: 20
     steps:
@@ -39,8 +42,7 @@ jobs:
               pip-
         - name: Install requirements
           run: |
-            pip --cache-dir=.pip install --upgrade pip
-            pip --cache-dir=.pip install --upgrade wheel
+            pip --cache-dir=.pip install --upgrade pip wheel
             pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
         - name: Print Numba sysinfo
           # On macOS the Numba script is not executable by default and therefore has to be called as a Python module.
