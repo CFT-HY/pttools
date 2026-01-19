@@ -1,5 +1,7 @@
 name: Remove old artifacts
 on: push
+permissions:
+  actions: write
 jobs:
   remove-old-artifacts:
     runs-on: ubuntu-latest

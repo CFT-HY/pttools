@@ -1,12 +1,14 @@
 name: Publish Docker image
-
 on:
   release:
     types: [published]
   workflow_run:
     workflows: [CI]
     types: [completed]
-
+permissions:
+  attestations: write
+  contents: read
+  packages: write
 jobs:
   push_to_registries:
     name: Push Docker image to multiple registries

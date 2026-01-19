@@ -1,5 +1,7 @@
 name: CI
 on: push
+permissions:
+  contents: read
 env:
   PRIMARY_PYTHON_VERSION: '3.13'
 jobs:
