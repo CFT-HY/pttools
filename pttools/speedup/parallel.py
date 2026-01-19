@@ -1,10 +1,14 @@
 """Utilities for parallel execution of functions using multiple Python processes with concurrent.futures"""
 
 import concurrent.futures as cf
+# import datetime
 import multiprocessing
 from concurrent.futures.process import BrokenProcessPool
 import logging
+import os
 import platform
+import subprocess
+import time
 import typing as tp
 
 import numpy as np
@@ -13,7 +17,7 @@ try:
 except ModuleNotFoundError:
     psutil = None
 
-from pttools.speedup.options import MAX_WORKERS_DEFAULT, UNAME, START_METHOD
+from pttools.speedup.options import IS_LINUX, MAX_WORKERS_DEFAULT, UNAME, START_METHOD
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +77,67 @@ class LoggingRunner:
         return ret
 
 
+def parallel_debug_message(
+        info: str = None,
+        err: Exception = None,
+        max_workers: int = None,
+        single_thread: bool = None,
+        start_time: float = None,
+        n_dmesg_lines: int = 100) -> str:
+    end_time = time.perf_counter()
+    msg = info
+    if info is not None and info[-1] != " ":
+        msg += " "
+    if err is not None:
+        msg += f"Exception arguments: {err.args}. "
+    if start_time is not None:
+        msg += f"Executor runtime: {end_time - start_time:.2f} s. "
+    msg += (
+        f"OS: {UNAME.system} ({UNAME.release}), CPU: {UNAME.processor} ({UNAME.machine}), "
+        f"Python: {platform.python_version()}, "
+        f"Start method: {START_METHOD}, available: {multiprocessing.get_all_start_methods()}"
+    )
+    if max_workers is not None:
+        msg += f", max_workers={max_workers}"
+    if single_thread is not None:
+        msg += f", single_thread={single_thread}"
+
+    if psutil is None:
+        msg += ". Please install psutil for more info."
+    else:
+        cpu = psutil.getloadavg()
+        cpu_count = psutil.cpu_count()
+        ram = psutil.virtual_memory()
+        msg += (
+            f". CPU cores: {cpu_count}, CPU use: "
+            f"1 min {cpu[0] / cpu_count * 100} %, "
+            f"5 min {cpu[1] / cpu_count * 100} %, "
+            f"15 min {cpu[2] / cpu_count * 100} %. "
+            f"RAM use: {ram.used * 1e-9:.2f} / {ram.total * 1e-9:.2f} GB = {ram.percent} %, "
+            f"available {ram.available} GB."
+        )
+        if ram.percent > 80:
+            msg += (
+                " RAM use is high. "
+                "Please reduce the number of worker processes or close applications running in the background."
+            )
+    if IS_LINUX:
+        if os.geteuid() == 0:
+            try:
+                dmesg = subprocess.run(
+                    ["dmesg", "|", "tail", "-n", str(n_dmesg_lines)],
+                    capture_output=True,
+                    stderr=subprocess.STDOUT
+                )
+                print(f"Last {n_dmesg_lines} lines from dmesg:")
+                print(dmesg.stdout.decode("utf-8"))
+            except Exception as e:
+                msg += f" Failed to get dmesg for more info: {e}"
+        else:
+            msg += " Skipping dmesg printing since not running as root."
+    return msg
+
+
 def run_parallel(
         func: tp.Callable,
         params: np.ndarray,
@@ -127,6 +192,8 @@ def run_parallel(
         log_progress_element=log_progress_element, log_progress_percentage=log_progress_percentage
     )
 
+    start_time = time.perf_counter()
+    # start_datetime = datetime.datetime.now().astimezone().isoformat()
     try:
         with cf.ProcessPoolExecutor(max_workers=max_workers) as ex:
             # Submit parallel execution
@@ -205,24 +272,15 @@ def run_parallel(
                         raise e
             return output_arrs
     except BrokenProcessPool as err:
-        msg = (
-            "Parallel execution failed due to a system error. "
-            f"OS: {UNAME.system} ({UNAME.release}), CPU: {UNAME.processor} ({UNAME.machine}), "
-            f"Python: {platform.python_version()}, "
-            f"Start method: {START_METHOD}, available: {multiprocessing.get_all_start_methods()}, "
-            f"max_workers={max_workers}, single_thread={single_thread}."
+        msg = parallel_debug_message(
+            info="Parallel execution failed due to a system error. ",
+            err=err,
+            max_workers=max_workers,
+            single_thread=single_thread,
+            start_time=start_time
         )
-        if psutil is None:
-            msg += "Please install psutil for more info."
-        else:
-            ram_use = psutil.virtual_memory().percent
-            msg += f"CPU use: {psutil.getloadavg()}, RAM use: {ram_use} %."
-            if ram_use > 80:
-                msg += (
-                    " RAM use is high. "
-                    "Please reduce the number of worker processes or close applications running in the background."
-                )
         raise BrokenProcessPool(msg) from err
+
 
 # This seems to be fixed as of 2025.
 # See this documentation for the number of CPU cores available on the GitHub Actions runners:

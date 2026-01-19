@@ -1,7 +1,6 @@
 """Unit tests for the speedup module"""
 
 import os.path
-import typing as tp
 import unittest
 
 import matplotlib.pyplot as plt
@@ -11,6 +10,7 @@ import scipy.interpolate
 
 from pttools import speedup
 from pttools.speedup import spline
+from pttools.speedup.parallel import parallel_debug_message
 from . import utils
 
 os.makedirs(utils.TEST_FIGURE_PATH, exist_ok=True)
@@ -32,6 +32,10 @@ class TestSpeedup(unittest.TestCase):
     @staticmethod
     def test_logspace():
         utils.assert_allclose(speedup.logspace(1, 5, 10), np.logspace(1, 5, 10))
+
+    @staticmethod
+    def test_parallel_debug():
+        parallel_debug_message("test")
 
     @staticmethod
     @unittest.expectedFailure

@@ -8,16 +8,14 @@ Based on numba.np.ufunc.parallel._check_tbb_version_compatible()
 
 import logging
 import os
-import sys
 import typing as tp
 from ctypes import CDLL, c_int
+
+from pttools.speedup.options import IS_LINUX, IS_OSX, IS_WINDOWS
 
 logger = logging.getLogger(__name__)
 
 # From numba.np.ufunc.parallel
-IS_OSX = sys.platform.startswith('darwin')
-IS_LINUX = sys.platform.startswith('linux')
-IS_WINDOWS = sys.platform.startswith('win32')
 
 # As required by Numba in numba.np.ufunc.parallel._check_tbb_version_compatible()
 TBB_MIN_VERSION = 12060
