@@ -42,9 +42,9 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Physics",
     "Topic :: Scientific/Engineering :: Visualization",
@@ -53,17 +53,17 @@ classifiers = [
 # Keep this up to date with requirements.txt
 dependencies = [
     "h5py >= 3.15.1",
-    "kaleido >= 1.1.0",
-    "matplotlib >= 3.10.7",
-    "numba >= 0.62.1",
-    "numpy >= 2.3.4",
-    "orjson >= 3.11.4",
-    "plotly >= 6.3.1",
-    "scipy >= 1.16.3",
+    "kaleido >= 1.2.0",
+    "matplotlib >= 3.10.8",
+    "numba >= 0.63.1",
+    "numpy >= 2.3.5",
+    "orjson >= 3.11.5",
+    "plotly >= 6.5.2",
+    "scipy >= 1.17.0",
 ]
 # Note: LISA ProtoLab uses Python 3.13, and PTtools should therefore probably stay compliant with it.
 # https://gitlab.esa.int/mika.x.maki/lisa-protolab
-requires-python = ">= 3.11"
+requires-python = ">= 3.12"
 # dynamic = ["version"]
 
 [project.optional-dependencies]
