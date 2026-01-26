@@ -1,5 +1,6 @@
 # PTtools
 [![DOI](https://zenodo.org/badge/373413324.svg)](https://zenodo.org/badge/latestdoi/373413324)
+[![arXiv](https://img.shields.io/badge/arXiv-2511.20436-b31b1b.svg)](https://arxiv.org/abs/2511.20436)
 [![GitHub](https://img.shields.io/badge/GitHub-CFT--HY/pttools-blue)](https://github.com/CFT-HY/pttools)
 [![ReadTheDocs](https://readthedocs.org/projects/pttools/badge/)](https://pttools.readthedocs.io/)
 [![CI](https://github.com/CFT-HY/pttools/actions/workflows/main.yml/badge.svg)](https://github.com/CFT-HY/pttools/actions/workflows/main.yml)
