@@ -1,54 +1,44 @@
 """Options for JIT-compilation and other speedups"""
 
 import logging
-import multiprocessing
 import os
-import platform
-import sys
 import typing as tp
+
+from pttools.utils import system
 
 logger = logging.getLogger(__name__)
 
-GITHUB_ACTIONS: bool = "GITHUB_ACTIONS" in os.environ
-START_METHOD: str = multiprocessing.get_start_method()
-FORKING: bool = START_METHOD == "fork"
-UNAME: platform.uname_result = platform.uname()
-CPU_AFFINITY: bool = False
-IS_LINUX = sys.platform.startswith('linux')
-IS_OSX = sys.platform.startswith('darwin')
-IS_WINDOWS = sys.platform.startswith('win32')
-IS_READ_THE_DOCS: bool = "READTHEDOCS_VIRTUALENV_PATH" in os.environ
-
-#: Maximum workers for ProcessPoolExecutor (determined dynamically based on the available CPUs)
-try:
-    # This is available only on some platforms
-    MAX_WORKERS_DEFAULT: int = len(os.sched_getaffinity(0))
-    CPU_AFFINITY = True
-except AttributeError:
-    # multiprocessing.cpu_count() is a wrapper around os.cpu_count()
-    # https://stackoverflow.com/a/53537394
-    MAX_WORKERS_DEFAULT: int = multiprocessing.cpu_count()
-
-# On Windows, the maximum number of worker processes is limited to 61.
-# https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor
-if IS_WINDOWS and MAX_WORKERS_DEFAULT > 61:
+MAX_WORKERS_DEFAULT: int
+if system.AVAILABLE_CPU_CORES is None:
+    MAX_WORKERS_DEFAULT = 1
+    logger.warning(
+        "This platform does not provide info on the number of available CPU cores. Using 1 core. %s",
+        system.platform_info()
+    )
+elif system.IS_WINDOWS and system.AVAILABLE_CPU_CORES > 61:
+    # On Windows, the maximum number of worker processes is limited to 61.
+    # https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor
     MAX_WORKERS_DEFAULT = 61
+else:
+    MAX_WORKERS_DEFAULT = system.AVAILABLE_CPU_CORES
+
 
 # The choice of the Numba threading layer cannot be printed here, since it's not selected until needed.
-if not FORKING or not CPU_AFFINITY:
-    msg = "Platform: %s (%s, %s) on %s (%s)."
-    if not CPU_AFFINITY:
+if not system.FORKING or not system.CPU_AFFINITY:
+    msg = system.platform_info()
+    if not system.CPU_AFFINITY:
         msg += (
             " This platform does not provide info on which CPU cores are available for this process. "
             "Using all cores."
         )
-    if START_METHOD != "fork":
+    if not system.FORKING:
         msg += (
             " This platform does not support forking."
             " Starting parallel processes will be slower, "
             "since the cs2 functions have to be compiled in each sub-process."
         )
-    logger.debug(msg, UNAME.system, UNAME.release, START_METHOD, UNAME.processor, UNAME.machine)
+    logger.debug(msg)
+
 
 #: Whether Numba JIT compilation has been disabled.
 NUMBA_DISABLE_JIT: tp.Final[bool] = bool(int(os.getenv("NUMBA_DISABLE_JIT", "0")))

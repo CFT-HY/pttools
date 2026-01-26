@@ -16,9 +16,9 @@ from pttools.bubble import props
 from pttools.bubble.relativity import gamma
 from pttools.bubble import thermo
 from pttools.bubble import transition
-from pttools.speedup.export import export_json
 import pttools.type_hints as th
-from pttools.utils.docstrings import copy_docstrings_without_params
+from pttools.utils.docstrings import copy_docstrings
+from pttools.utils.json import export_json
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
     from pttools.models.const_cs import ConstCSModel
@@ -771,7 +771,7 @@ class Bubble:
         return thermo.wbar(self.w, self.xi, self.v_wall, self.wn)
 
 
-copy_docstrings_without_params({
+copy_docstrings({
     Bubble.entropy_density_diff: thermo.entropy_density_diff,
     Bubble.kinetic_energy_density: thermo.kinetic_energy_density,
     Bubble.kinetic_energy_fraction: thermo.kinetic_energy_fraction,
@@ -792,4 +792,4 @@ copy_docstrings_without_params({
     Bubble.va_thermal_energy_fraction: thermo.va_thermal_energy_fraction,
     Bubble.va_trace_anomaly_diff: thermo.va_trace_anomaly_diff,
     Bubble.wbar: thermo.wbar
-})
+}, without_params=True)

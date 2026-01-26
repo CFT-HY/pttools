@@ -23,7 +23,7 @@ repo_path = os.path.dirname(dir_path)
 sys.path.insert(0, os.path.dirname(dir_path))
 
 from pttools.logging import setup_logging
-from pttools.speedup.options import GITHUB_ACTIONS
+from pttools.utils.system import GITHUB_ACTIONS
 setup_logging()
 
 # Create a directory for static files to avoid a warning when building.

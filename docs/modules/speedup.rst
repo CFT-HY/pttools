@@ -14,7 +14,6 @@ Speedup
   :template: module.rst
 
   differential
-  export
   fitpack
   functions
   jit

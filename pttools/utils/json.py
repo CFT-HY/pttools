@@ -1,4 +1,4 @@
-"""Utilities for exporting data"""
+"""Utilities for exporting data as JSON"""
 
 import typing as tp
 

@@ -8,7 +8,8 @@ import textwrap
 import typing as tp
 
 import numba
-from pttools import speedup
+from pttools.speedup import NUMBA_DISABLE_JIT
+from pttools.utils.system import GITHUB_ACTIONS, IS_WINDOWS
 from tests.utils.const import TEST_RESULT_PATH
 
 logger = logging.getLogger(__name__)
@@ -18,7 +19,7 @@ NUMBA_HAS_GET_NUM_THREADS: bool = hasattr(numba, "get_num_threads")
 PERFORMANCE_DIR = os.path.join(TEST_RESULT_PATH, "performance")
 os.makedirs(PERFORMANCE_DIR, exist_ok=True)
 
-if speedup.NUMBA_DISABLE_JIT:
+if NUMBA_DISABLE_JIT:
     __TEXT = "Numba JIT is disabled. Performance tests will be single-threaded."
     print(__TEXT)
     logger.warning(__TEXT)
@@ -39,7 +40,7 @@ class TestPerformance(unittest.TestCase):
     @classmethod
     def run_with_different_threads(cls, name: str, setup: str, command: str, number: int):
         with open(os.path.join(PERFORMANCE_DIR, f"{name}.txt"), "w") as file:
-            if speedup.NUMBA_DISABLE_JIT:
+            if NUMBA_DISABLE_JIT:
                 cls.run_and_log(name, setup, command, number, 1, file)
             else:
                 default_threads = numba.get_num_threads()
@@ -59,7 +60,7 @@ class TestPerformance(unittest.TestCase):
                 logger.info(f"Numba threading layer used: {numba.threading_layer()}")
 
     @classmethod
-    @unittest.skipIf(speedup.GITHUB_ACTIONS and speedup.IS_WINDOWS, reason="GitHub Actions Windows runners are slow")
+    @unittest.skipIf(GITHUB_ACTIONS and IS_WINDOWS, reason="GitHub Actions Windows runners are slow")
     def test_performance_gw(cls):
         setup = textwrap.dedent("""
         import numpy as np
@@ -72,7 +73,7 @@ class TestPerformance(unittest.TestCase):
         cls.run_with_different_threads("GW", setup, command, 10)
 
     @classmethod
-    @unittest.skipIf(speedup.GITHUB_ACTIONS and speedup.IS_WINDOWS, reason="GitHub Actions Windows runners are slow")
+    @unittest.skipIf(GITHUB_ACTIONS and IS_WINDOWS, reason="GitHub Actions Windows runners are slow")
     def test_performance_sin_transform(cls):
         setup = textwrap.dedent("""
         import numpy as np

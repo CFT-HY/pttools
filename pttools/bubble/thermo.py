@@ -77,7 +77,7 @@ def thermal_energy_density(v_wall: float, eqp: float) -> float:
 
     :param v_wall: Wall velocity ${v}_\text{wall}$
     :param eqp: Volume-averaged thermal energy density ${e}_Q'$
-    :return Bubble volume averaged thermal energy density after the phase transition
+    :return: Bubble volume averaged thermal energy density after the phase transition
     """
     return 3/(4*np.pi * v_wall**3) * eqp
 

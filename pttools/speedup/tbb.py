@@ -11,7 +11,7 @@ import os
 import typing as tp
 from ctypes import CDLL, c_int
 
-from pttools.speedup.options import IS_LINUX, IS_OSX, IS_WINDOWS
+from pttools.utils.system import IS_LINUX, IS_OSX, IS_WINDOWS
 
 logger = logging.getLogger(__name__)
 

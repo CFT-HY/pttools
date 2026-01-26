@@ -6,11 +6,11 @@ import matplotlib.pyplot as plt
 
 from pttools.bubble.boundary import Phase
 from pttools.models.base import BaseModel
-from pttools import speedup
+from pttools.utils.system import GITHUB_ACTIONS
 
 A4_PAPER_SIZE: tuple[float, float] = (11.7, 8.3)
 A3_PAPER_SIZE: tuple[float, float] = (16.5, 11.7)
-ENABLE_DRAWING: bool = not speedup.GITHUB_ACTIONS
+ENABLE_DRAWING: bool = not GITHUB_ACTIONS
 FigAndAxes = tuple[plt.Figure, plt.Axes]
 
 

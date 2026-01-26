@@ -10,7 +10,7 @@ import pttools.type_hints as th
 from pttools.bubble.boundary import SolutionType
 from pttools.models.model import Model
 from pttools.models.utils import check_value_in_range
-from pttools.speedup.utils import is_nan_or_none
+from pttools.utils.misc import is_nan_or_none
 
 logger = logging.getLogger(__name__)
 

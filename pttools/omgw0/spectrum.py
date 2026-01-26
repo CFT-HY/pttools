@@ -12,7 +12,7 @@ from pttools.omgw0 import noise
 from pttools.omgw0 import suppression as sup_mod
 from pttools import ssm
 import pttools.type_hints as th
-from pttools.utils.docstrings import copy_docstrings_without_params
+from pttools.utils.docstrings import copy_docstrings
 
 if tp.TYPE_CHECKING:
     from pttools.analysis.utils import FigAndAxes
@@ -239,10 +239,10 @@ class Spectrum(ssm.SSMSpectrum):
         return plot_spectra_multi_flat([self], fig, path, **kwargs)
 
 
-copy_docstrings_without_params({
+copy_docstrings({
     Spectrum.f: freq.f,
     Spectrum.F_gw0: F_gw0,
     Spectrum.f_star0: freq.f_star0,
     Spectrum.noise: noise.omega_noise,
     Spectrum.noise_ins: noise.omega_ins
-})
+}, without_params=True)

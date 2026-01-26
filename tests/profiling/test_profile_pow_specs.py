@@ -4,7 +4,10 @@ import logging
 import unittest
 
 import tests.paper.ssm_paper_utils as spu
-from pttools import speedup
+from pttools.speedup.numba_wrapper import \
+    NUMBA_PYINSTRUMENT_INCOMPATIBLE_PYTHON_VERSION, \
+    NUMBA_SEGFAULTING_PROFILERS
+from pttools.utils.system import GITHUB_ACTIONS
 from .test_profile import TestProfile
 from . import utils_cprofile
 from . import utils_pyinstrument
@@ -23,7 +26,7 @@ class TestProfilePowSpecs(TestProfile):
 
     @classmethod
     def setUpClass(cls) -> None:
-        if speedup.GITHUB_ACTIONS:
+        if GITHUB_ACTIONS:
             raise unittest.SkipTest("This test would take too long on GitHub Actions")
         super().setUpClass()
 
@@ -38,7 +41,7 @@ class TestProfilePowSpecs(TestProfile):
 
     @classmethod
     @unittest.skipIf(
-        speedup.NUMBA_SEGFAULTING_PROFILERS,
+        NUMBA_SEGFAULTING_PROFILERS,
         "Pyinstrument may segfault with old Numba versions")
     def test_profile_pow_specs_pyinstrument(cls):
         try:
@@ -46,7 +49,7 @@ class TestProfilePowSpecs(TestProfile):
                 pow_specs()
         except (AssertionError, UnboundLocalError) as e:
             logger.exception("Pyinstrument crashed", exc_info=e)
-            if not speedup.NUMBA_PYINSTRUMENT_INCOMPATIBLE_PYTHON_VERSION:
+            if not NUMBA_PYINSTRUMENT_INCOMPATIBLE_PYTHON_VERSION:
                 raise e
 
     @classmethod

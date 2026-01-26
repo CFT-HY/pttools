@@ -23,7 +23,7 @@ from pttools.models import ConstCSModel, Model
 from pttools.omgw0 import Spectrum, omega_ins
 from pttools.analysis.parallel import create_spectra
 # from pttools.analysis.utils import A3_PAPER_SIZE, A4_PAPER_SIZE
-from pttools.speedup.options import IS_READ_THE_DOCS
+from pttools.utils.system import IS_READ_THE_DOCS
 
 logger = logging.getLogger(__name__)
 

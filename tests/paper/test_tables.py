@@ -2,11 +2,13 @@
 
 import io
 import os.path
+import typing as tp
 import unittest
 
 import numpy as np
 
-from pttools import speedup
+from pttools.speedup.options import NUMBA_INTEGRATE
+from pttools.utils.decorators import conditional_decorator
 from tests.paper import ssm_paper_utils as spu
 from tests.utils.const import TEST_DATA_PATH
 
@@ -22,7 +24,7 @@ class TestTables(unittest.TestCase):
         cls.pfit_sim = data[:, 6:8]
         cls.pfit_exp = data[:, 8:]
 
-    def validate(self, name: str, func: callable, args):
+    def validate(self, name: str, func: tp.Callable, args):
         path = os.path.join(TEST_DATA_PATH, name)
 
         # Generate new reference data
@@ -36,7 +38,7 @@ class TestTables(unittest.TestCase):
         buffer.seek(0)
         self.assertEqual(buffer.read(), ref_data)
 
-    @speedup.conditional_decorator(unittest.expectedFailure, speedup.NUMBA_INTEGRATE)
+    @conditional_decorator(unittest.expectedFailure, NUMBA_INTEGRATE)
     def test_1dh_compare_table(self):
         self.validate(
             "table_1dh_compare.tex",

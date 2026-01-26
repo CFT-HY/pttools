@@ -17,8 +17,8 @@ from pttools.bubble.fluid_bag import sound_shell_bag
 from pttools.bubble import props
 from pttools.bubble import transition
 from pttools.logging import setup_logging
-from pttools.speedup.options import FORKING
 from pttools.speedup.parallel import run_parallel
+from pttools.utils.system import FORKING
 
 logger = logging.getLogger(__name__)
 

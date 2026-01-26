@@ -2,22 +2,14 @@
 
 import concurrent.futures as cf
 # import datetime
-import multiprocessing
 from concurrent.futures.process import BrokenProcessPool
 import logging
-import os
-import platform
-import subprocess
 import time
 import typing as tp
 
 import numpy as np
-try:
-    import psutil
-except ModuleNotFoundError:
-    psutil = None
 
-from pttools.speedup.options import IS_LINUX, MAX_WORKERS_DEFAULT, UNAME, START_METHOD
+from pttools.speedup.options import MAX_WORKERS_DEFAULT
 
 logger = logging.getLogger(__name__)
 
@@ -92,49 +84,12 @@ def parallel_debug_message(
         msg += f"Exception arguments: {err.args}. "
     if start_time is not None:
         msg += f"Executor runtime: {end_time - start_time:.2f} s. "
-    msg += (
-        f"OS: {UNAME.system} ({UNAME.release}), CPU: {UNAME.processor} ({UNAME.machine}), "
-        f"Python: {platform.python_version()}, "
-        f"Start method: {START_METHOD}, available: {multiprocessing.get_all_start_methods()}"
-    )
+
     if max_workers is not None:
         msg += f", max_workers={max_workers}"
     if single_thread is not None:
         msg += f", single_thread={single_thread}"
 
-    if psutil is None:
-        msg += ". Please install psutil for more info."
-    else:
-        cpu = psutil.getloadavg()
-        cpu_count = psutil.cpu_count()
-        ram = psutil.virtual_memory()
-        msg += (
-            f". CPU cores: {cpu_count}, CPU use: "
-            f"1 min {cpu[0] / cpu_count * 100} %, "
-            f"5 min {cpu[1] / cpu_count * 100} %, "
-            f"15 min {cpu[2] / cpu_count * 100} %. "
-            f"RAM use: {ram.used * 1e-9:.2f} / {ram.total * 1e-9:.2f} GB = {ram.percent} %, "
-            f"available {ram.available} GB."
-        )
-        if ram.percent > 80:
-            msg += (
-                " RAM use is high. "
-                "Please reduce the number of worker processes or close applications running in the background."
-            )
-    if IS_LINUX:
-        if os.geteuid() == 0:
-            try:
-                dmesg = subprocess.run(
-                    ["dmesg", "|", "tail", "-n", str(n_dmesg_lines)],
-                    capture_output=True,
-                    stderr=subprocess.STDOUT
-                )
-                print(f"Last {n_dmesg_lines} lines from dmesg:")
-                print(dmesg.stdout.decode("utf-8"))
-            except Exception as e:
-                msg += f" Failed to get dmesg for more info: {e}"
-        else:
-            msg += " Skipping dmesg printing since not running as root."
     return msg
 
 

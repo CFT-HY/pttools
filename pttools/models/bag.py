@@ -11,7 +11,7 @@ from pttools.bubble.integrate import add_df_dtau, differentials
 from pttools.bubble.transition import identify_solution_type_bag
 from pttools.models.analytic import AnalyticModel
 from pttools.speedup.differential import DifferentialPointer
-from pttools.speedup.utils import copy_doc
+from pttools.utils.docstrings import copy_docstring_dec
 import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
@@ -107,7 +107,7 @@ class BagModel(AnalyticModel):
                 f"Bag, a_s={self.a_s:.{label_prec}f}, a_b={self.a_b:.{label_prec}f}, " \
                 f"V_s={self.V_s:.{label_prec}f}, V_b={self.V_b:.{label_prec}f}"
 
-    @copy_doc(AnalyticModel.alpha_plus_bag)
+    @copy_docstring_dec(AnalyticModel.alpha_plus_bag)
     def alpha_n(
             self,
             wn: th.FloatOrArr,
@@ -143,7 +143,7 @@ class BagModel(AnalyticModel):
             a_s = a_s_default
         return a_s, a_b, V_s, V_b
 
-    @copy_doc(AnalyticModel.alpha_plus_bag)
+    @copy_docstring_dec(AnalyticModel.alpha_plus_bag)
     def alpha_plus(
             self,
             wp: th.FloatOrArr,

@@ -5,31 +5,70 @@ import typing as tp
 
 logger = logging.getLogger(__name__)
 
+T = tp.TypeVar("T")
+P = tp.ParamSpec("P")
+WrappedDecoratorFunction: tp.TypeAlias = tp.Callable[[tp.Callable[P, T]], tp.Callable[P, T]]
 
-def copy_docstring_without_params(target: tp.Any, source: tp.Callable) -> None:
-    """Copy a docstring from source to target, excluding parameter documentation."""
-    target.__doc__ = source.__doc__.split("\n:param", 1)[0]
+
+class HasDocstring(tp.Protocol):
+    __doc__: str | None
 
 
-def copy_docstrings_without_params(mapping: dict[tp.Any, tp.Callable]) -> tp.List[str]:
-    """Copy docstrings from sources to targets, excluding parameter documentation.
+def copy_docstring_dec(source: HasDocstring, without_params: bool = False) -> WrappedDecoratorFunction[P, T]:
+    """Copies the docstring of the given function to another.
+
+    This function is intended to be used as a decorator.
+    From: https://stackoverflow.com/a/68901244
+
+    .. code-block:: python3
+
+        def foo():
+            '''This is a foo docstring'''
+            ...
+
+        @copy_doc(foo)
+        def bar():
+            ...
+    """
+
+    def wrapped(target: tp.Callable[P, T]) -> tp.Callable[P, T]:
+        copy_docstring(target, source, without_params=without_params)
+        return target
+
+    return wrapped
+
+
+def copy_docstring(target: tp.Any, source: HasDocstring, without_params: bool = False) -> None:
+    """Copy a docstring from source to target"""
+    if without_params:
+        target.__doc__ = source.__doc__.split("\n:param", 1)[0]
+    else:
+        target.__doc__ = source.__doc__
+
+
+def copy_docstrings(mapping: dict[tp.Any, HasDocstring], without_params: bool = False) -> tp.List[str]:
+    """Copy docstrings from sources to targets
     :param mapping: A dictionary of (target, source) pairs
+    :param without_params: Whether to exclude parameter documentation
     :return: A list of target names that already had docstrings
     """
     already_had_docstrings = []
     for target, source in mapping.items():
         if hasattr(target, "__doc__") and target.__doc__ is not None:
-            if hasattr(target, "__name__"):
-                name = target.__name__
-            elif hasattr(target, "attrname"):
-                name = target.attrname
-            else:
-                name = str(target)
-            already_had_docstrings.append(name)
-        copy_docstring_without_params(target, source)
+            already_had_docstrings.append(get_name(target))
+        copy_docstring(target, source, without_params=without_params)
     if already_had_docstrings:
         logger.warning(
             "These targets already had docstrings, which were overwritten: %s",
             already_had_docstrings
         )
     return already_had_docstrings
+
+
+def get_name(obj: tp.Any) -> str:
+    """Get the name of an object"""
+    if hasattr(obj, "__name__") and obj.__name__ is not None:
+        return obj.__name__
+    elif hasattr(obj, "attrname") and obj.attrname is not None:
+        return obj.attrname
+    return str(obj)

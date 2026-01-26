@@ -17,7 +17,7 @@ from pttools.bubble import transition
 from pttools.models.base import BaseModel
 from pttools.models.utils import check_value_in_range
 from pttools.speedup.differential import DifferentialPointer
-from pttools.speedup.options import FORKING
+from pttools.utils.system import FORKING
 import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)

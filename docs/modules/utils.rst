@@ -13,4 +13,8 @@ Utils
   :toctree: gen_modules/
   :template: module.rst
 
+  decorators
   docstrings
+  json
+  misc
+  system

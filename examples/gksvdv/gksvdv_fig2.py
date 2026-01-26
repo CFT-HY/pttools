@@ -19,7 +19,8 @@ from pttools.analysis.parallel import create_bubbles
 from pttools.bubble.bubble_quantities import get_kappa_giese
 from pttools.bubble.gksvdv.gksvdv21 import kappaNuMuModel
 from pttools.models import ConstCSModel
-from pttools.speedup import run_parallel, GITHUB_ACTIONS
+from pttools.speedup import run_parallel
+from pttools.utils.system import GITHUB_ACTIONS
 
 logger = logging.getLogger(__name__)
 
