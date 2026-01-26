@@ -42,13 +42,19 @@ def trim_fluid_wall_to_cs(
     :param cs2_fun: function, which gives $c_s^2$
     :return: trimmed $v, w, \xi, t$
     """
-    check.check_wall_speed(v_wall)
+    droplet = sol_type == SolutionType.DROPLET.value
+    check.check_wall_speed(v_wall, droplet=droplet)
     n_start = 0
 
     # TODO: should this be 0 to match with the error handling below?
     n_stop_index = -2
     # n_stop = 0
-    if sol_type != SolutionType.SUB_DEF.value:
+    if droplet:
+        for i in range(v.size):
+            if v[i] <= 0 or xi[i] ** 2 > cs2_fun(w[i], Phase.BROKEN.value):
+                n_stop_index = i
+                break
+    elif sol_type != SolutionType.SUB_DEF.value:
         for i in range(v.size):
             if v[i] <= 0 or xi[i] ** 2 <= cs2_fun(w[i], Phase.BROKEN.value):
                 n_stop_index = i

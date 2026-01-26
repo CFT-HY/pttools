@@ -38,31 +38,39 @@ def check_physical_params(params: PhysicalParams) -> None:
         raise ValueError("Unphysical parameter(s). See the log for details.")
 
 
-def _check_wall_speed_arr(v_wall: tp.Union[th.FloatOrArr, tp.List[float]]):
-    if np.logical_or(np.any(v_wall >= 1.0), np.any(v_wall <= 0.0)):
-        raise ValueError("Unphysical parameter(s): at least one value outside 0 < v_wall < 1.")
+def _check_wall_speed_arr(v_wall: tp.Union[th.FloatOrArr, tp.List[float]], droplet: bool = False):
+    if droplet:
+        if np.logical_or(np.any(v_wall <= -1.), np.any(v_wall >= 0.)):
+            raise ValueError(
+                f"Unphysical v_wall for a droplet: min(v_wall)={np.min(v_wall)}, max(v_wall)={np.max(v_wall)}"
+            )
+    elif np.logical_or(np.any(v_wall >= 1.), np.any(v_wall <= 0.)):
+        raise ValueError(
+            f"Unphysical v_wall for a bubble: min(v_wall)={np.min(v_wall)}, max(v_wall)={np.max(v_wall)}"
+        )
 
 
-def _check_wall_speed_scalar(v_wall: tp.Union[th.FloatOrArr, tp.List[float]]):
-    if not 0.0 <= v_wall <= 1.0:
-        with numba.objmode:
-            logger.error("Unphysical parameter(s): v_wall = {}, required 0 < v_wall < 1.".format(v_wall))
-        raise ValueError("Unphysical parameter: v_wall. See the log for details.")
+def _check_wall_speed_scalar(v_wall: tp.Union[th.FloatOrArr, tp.List[float]], droplet: bool = False):
+    if droplet:
+        if not -1. <= v_wall <= 0.:
+            raise ValueError(f"v_wall={v_wall} is not physical for a droplet.")
+    elif not 0.0 <= v_wall <= 1.0:
+        raise ValueError(f"v_wall={v_wall} is not physical for a bubble.")
 
 
-def check_wall_speed(v_wall: tp.Union[th.FloatOrArr, tp.List[float]]):
+def check_wall_speed(v_wall: tp.Union[th.FloatOrArr, tp.List[float]], droplet: bool = False):
     r"""Check that $v _\text{wall}$ values are all physical: $(0 < v _\text{wall} < 1)$"""
     if isinstance(v_wall, float):
-        return _check_wall_speed_scalar(v_wall)
+        return _check_wall_speed_scalar(v_wall, droplet)
     if isinstance(v_wall, np.ndarray):
-        return _check_wall_speed_arr(v_wall)
+        return _check_wall_speed_arr(v_wall, droplet)
     if isinstance(v_wall, list):
-        return _check_wall_speed_arr(np.array(v_wall))
+        return _check_wall_speed_arr(np.array(v_wall), droplet)
     raise TypeError(f"v_wall must be float, list or array. Got: {type(v_wall)}")
 
 
 @overload(check_wall_speed, jit_options={"nopython": True})
-def _check_wall_speed_numba(v_wall: tp.Union[th.FloatOrArr, tp.List[float]]):
+def _check_wall_speed_numba(v_wall: tp.Union[th.FloatOrArr, tp.List[float]], droplet: bool = False):
     if isinstance(v_wall, numba.types.Float):
         return _check_wall_speed_scalar
     if isinstance(v_wall, numba.types.Array):

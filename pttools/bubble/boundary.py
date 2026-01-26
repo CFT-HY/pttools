@@ -47,6 +47,9 @@ class SolutionType(str, enum.Enum):
     #: In a detonation the fluid outside the bubble is at rest and the wall moves at a supersonic speed.
     DETON = "Detonation"
 
+    #: Droplets are contracting solutions where the wall speed is negative.
+    DROPLET = "Droplet"
+
     #: This value is used to inform, that determining the type of the
     #: relativistic combustion failed.
     ERROR = "Error"
@@ -102,6 +105,7 @@ def enthalpy_ratio(v_m: th.FloatOrArr, v_p: th.FloatOrArr) -> th.FloatOrArr:
 
 
 def entropy_flux(v_tilde: th.FloatOrArr, s: th.FloatOrArr):
+    r"""Entropy flux $\gamma(\tilde{v}) \tilde{v} s$"""
     return gamma(v_tilde) * v_tilde * s
 
 
@@ -238,6 +242,7 @@ def junction_condition_deviation1(
     r"""Deviation from the first junction condition
     $$w_- \tilde{\gamma}_-^2 \tilde{v}_- - w_+ \tilde{\gamma}_-^2 \tilde{v}_+$$
     :notes:`\ `, eq. 7.22
+    :cutting_2022:`\ `, eq. 19
     """
     return w1 * relativity.gamma2(v1) * v1 - w2 * relativity.gamma2(v2) * v2
 
@@ -247,10 +252,10 @@ def junction_condition_deviation2(
         v1: th.FloatOrArr, w1: th.FloatOrArr, p1: th.FloatOrArr,
         v2: th.FloatOrArr, w2: th.FloatOrArr, p2: th.FloatOrArr
     ):
-    # Todo: This docstring causes the error "ERROR: Unknown target name: "p"" with Sphinx.
     r"""Deviation from the second junction condition
-    $$w_1 \tilde{\gamma}_1^2 \tilde{v}_1^2 + p_1 - w_2 \tilde{\gamma}_2^2 \tilde{v}_2^2 - p_2$$
+    $$w_1 \tilde{\gamma}_1^2 \tilde{v}_1^2 + {p}_1 - {w}_2 \tilde{\gamma}_2^2 \tilde{v}_2^2 - {p}_2$$
     :notes:`\ `, eq. 7.22
+    :notes:`\ `, eq. 18
     """
     return w1 * relativity.gamma2(v1) * v1**2 + p1 - w2 * relativity.gamma2(v2) * v2**2 - p2
 
@@ -270,9 +275,10 @@ def solve_junction(
         allow_failure: bool = False,
         allow_negative_entropy_flux_change: bool = False,
         rtol: float = const.JUNCTION_RTOL,
-        # atol: float = const.JUNCTION_ATOL
-        ) -> tuple[float, float]:
+        # atol: float = const.JUNCTION_ATOL,
+        debug: bool = False) -> tuple[float, float]:
     """Model-independent junction condition solver
+
     Velocities are in the wall frame!
     """
     if np.isnan(v1_tilde) or np.isnan(w1) or np.isnan(v2_tilde_guess) or np.isnan(w2_guess) \
@@ -281,28 +287,28 @@ def solve_junction(
             or np.isclose(v2_tilde_guess, 0) or np.isclose(v2_tilde_guess, 1) \
             or np.isclose(w1, 0) or np.isclose(w2_guess, 0):
         logger.warning(
-            "Invalid input for junction solver. "
+            "Invalid input for junction solver. The inputs must have 0<v<1 and w>0. "
             "Got: v1=%s, w1=%s, v2_guess=%s, w2_guess=%s",
             v1_tilde, w1, v2_tilde_guess, w2_guess
         )
         return np.nan, np.nan
     if (v2_tilde_min is not None and (v2_tilde_min < 0 or (v2_tilde_max is not None and v2_tilde_max > 0))) or \
             (v2_tilde_max is not None and (v2_tilde_max < 0 or (v2_tilde_min is not None and v2_tilde_min > 0))) or \
-            (w2_min is not None and (w2_min < 0 or w2_min > 1)) or \
-            (w2_max is not None and (w2_max < 0 or w2_max > 1)) or \
+            (w2_min is not None and w2_min < 0) or \
+            (w2_max is not None and w2_max < 0) or \
             (v2_tilde_min is not None and v2_tilde_max is not None and v2_tilde_max <= v2_tilde_min) or \
-            (w2_min is not None and w2_max is not None and v2_tilde_max <= v2_tilde_min):
+            (w2_min is not None and w2_max is not None and w2_max <= w2_min):
         logger.error(
             "Invalid limits for junction solver. "
             "Got: v2_tilde_min=%s, v2_tilde_max=%s, w2_min=%s, w2_max=%s",
             v2_tilde_min, v2_tilde_max, w2_min, w2_max
         )
 
-
     sol = solve_junction_internal(
         model=model, v1_tilde=v1_tilde, w1=w1,
         phase1=phase1, phase2=phase2,
-        v2_tilde_guess=v2_tilde_guess, w2_guess=w2_guess
+        v2_tilde_guess=v2_tilde_guess, w2_guess=w2_guess,
+        log_status=debug
     )
     v2_tilde = sol[0][0]
     w2 = sol[0][1]
@@ -367,14 +373,15 @@ def solve_junction_internal(
         model: "Model",
         v1_tilde: float, w1: float,
         phase1: Phase, phase2: Phase,
-        v2_tilde_guess: float, w2_guess: float) -> tuple[np.ndarray, dict, int, str]:
+        v2_tilde_guess: float, w2_guess: float,
+        log_status: bool = False) -> tuple[np.ndarray, dict, int, str]:
     # Using fsolve_vary helps in finding the solutions, but it can also make the overall solver a lot slower.
     return fsolve_vary(
         junction_conditions_solvable,
         x0=np.array([v2_tilde_guess, w2_guess]),
         args=(model, v1_tilde, w1, phase1, phase2),
         # This would create a lot of log spam
-        log_status=False
+        log_status=log_status
     )
 
 

@@ -999,7 +999,6 @@ def sound_shell_generic(
         )
 
     v_cj = chapman_jouguet.v_chapman_jouguet(model, alpha_n, wn=wn, wm_guess=wm_guess)
-    dxi = 1. / n_xi
 
     if log_success:
         logger.info(
@@ -1066,11 +1065,11 @@ def sound_shell_generic(
     else:
         raise ValueError(f"Invalid solution type: {sol_type}")
 
+    dxi = 1. / n_xi
     # Behind and ahead of the bubble the fluid is still
-    xif = np.linspace(xi[-1] + dxi, 1, 2)
-    xib = np.linspace(0, xi[0] - dxi, 2)
-    vf = np.zeros_like(xif)
-    vb = np.zeros_like(xib)
+    xif = np.array([xi[-1] + dxi, 1])
+    xib = np.array([0, xi[0] - dxi])
+    vf = vb = np.zeros_like(xif)
     wf = np.ones_like(xif) * wn
     w_center = min(wm, w[0])
     wb = np.ones_like(vb) * w_center

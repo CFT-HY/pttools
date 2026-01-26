@@ -1,5 +1,5 @@
 """A solution of the hydrodynamic equations"""
-
+import abc
 import datetime
 import functools
 import logging
@@ -31,7 +31,188 @@ class NotYetSolvedError(RuntimeError):
     """Error for accessing the properties of a bubble that has not been solved yet"""
 
 
-class Bubble:
+class BaseBubble(abc.ABC):
+    """A common base class for bubbles and droplets"""
+    def __init__(
+            self,
+            model: "Model",
+            v_wall: float,
+            w_center: float | None = None,
+            wm_guess: float | None = None,
+            t_end: float = const.T_END_DEFAULT,
+            n_xi: int = const.N_XI_DEFAULT):
+        # -----
+        # Set parameters
+        # -----
+        self.model: Model = model
+        self.v_wall: float = v_wall
+        self.t_end: float = t_end
+        self.n_xi: int = n_xi
+        #: $w_\text{center}$
+        self.w_center: float | None = w_center
+        #: $w_{-,\text{guess}}$
+        self.wm_guess: float | None = wm_guess
+
+        # -----
+        # Output arrays
+        # -----
+        #: Fluid velocity profile $v(\xi)$
+        self.v: th.FloatArr1D | None = None
+        #: Enthalpy profile $w(\xi)$
+        self.w: th.FloatArr1D | None = None
+        #: Self-similar droplet radius coordinates $\xi$
+        self.xi: th.FloatArr1D | None = None
+        #: Phase profile $\phi(\xi)$
+        self.phase: th.FloatArr1D | None = None
+        #: Temperature profile $T(\xi)$
+        self.T: th.FloatArr1D | None = None
+
+        # -----
+        # Output values
+        # -----
+        self.label_latex: str
+        self.label_unicode: str
+        self.solution_found: bool | None = None
+        self.solved: bool | None = None
+        self.vm: float | None = None
+        self.wm: float | None = None
+        self.notes: list[str] = []
+        #: $s_+$
+        self.sp: float | None = None
+        #: $s_-$
+        self.sm: float | None = None
+        #: $s_{-,\text{sh}}$
+        self.sm_sh: float | None = None
+        #: $s_n$
+        self.sn: float | None = None
+        #: $T_+$
+        self.Tp: float | None = None
+        #: $T_-$
+        self.Tm: float | None = None
+        #: $T_\text{center}$
+        self.T_center: float | None = None
+        #: $v_+$
+        self.vp: float | None = None
+        #: $v_-$
+        self.vm: float | None = None
+        #: $\tilde{v}_+$
+        self.vp_tilde: float | None = None
+        #: $\tilde{v}_-$
+        self.vm_tilde: float | None = None
+        #: $w_+$
+        self.wp: float | None = None
+        #: $w_-$
+        self.wm: float | None = None
+
+        # Flags
+        self.no_solution_found: bool = False
+        self.solved: bool = False
+
+    def add_note(self, note: str):
+        """Add a note to the solution"""
+        self.notes.append(note)
+
+    @abc.abstractmethod
+    def solve(self):
+        if self.solved:
+            msg = (
+                "Re-solving an already solved fluid profile! "
+                "Already computed quantities will not be updated due to caching."
+            )
+            logger.warning(msg)
+            self.add_note(msg)
+
+    # -----
+    # Plotting
+    # -----
+
+    def plot(
+            self,
+            fig: plt.Figure | None = None,
+            path: str | None = None,
+            **kwargs) -> plt.Figure:
+        """Plot the velocity and enthalpy profiles of the bubble"""
+        from pttools.analysis.plot_bubbles import plot_bubbles
+        return plot_bubbles([self], fig, path, **kwargs)
+
+    def plot_v(
+            self,
+            fig: plt.Figure | None = None,
+            ax: plt.Axes | None = None,
+            path: str | None = None,
+            **kwargs) -> "FigAndAxes":
+        """Plot the velocity profile of the bubble"""
+        from pttools.analysis.plot_bubbles import plot_bubbles_v
+        return plot_bubbles_v([self], fig, ax, path, **kwargs)
+
+    def plot_w(
+            self,
+            fig: plt.Figure | None = None,
+            ax: plt.Axes | None = None,
+            path: str | None = None,
+            **kwargs) -> "FigAndAxes":
+        """Plot the enthalpy profile of the bubble"""
+        from pttools.analysis.plot_bubbles import plot_bubbles_w
+        return plot_bubbles_w([self], fig, ax, path, **kwargs)
+
+    # -----
+    # Quantities
+    # -----
+
+    @functools.cached_property
+    def entropy_flux_p(self) -> float:
+        r"""Incoming entropy flux at the wall
+        $$\tilde{\gamma}_+ \tilde{v}_+ s_+$$
+        """
+        if not self.solved:
+            raise NotYetSolvedError
+        return gamma(self.vp_tilde) * self.vp_tilde * self.sp
+
+    @functools.cached_property
+    def entropy_flux_m(self) -> float:
+        r"""Outgoing entropy flux at the wall
+        $$\tilde{\gamma}_- \tilde{v}_- {s}_- $$
+        """
+        if not self.solved:
+            raise NotYetSolvedError
+        return gamma(self.vm_tilde) * self.vm_tilde * self.sm
+
+    @functools.cached_property
+    def entropy_flux_diff(self) -> float:
+        r"""Entropy flux difference at the wall
+        $$\tilde{\gamma}_- \tilde{v}_- {s}_- - \tilde{\gamma}_+ \tilde{v}_+ {s}_+ $$
+        """
+        if not self.solved:
+            raise NotYetSolvedError
+        return self.entropy_flux_m - self.entropy_flux_p
+
+    @functools.cached_property
+    def p(self):
+        r"""Pressure $p(\xi)$"""
+        if not self.solved:
+            raise NotYetSolvedError
+        return self.model.p(self.w, self.phase)
+
+    @functools.cached_property
+    def s(self):
+        r"""Entropy density $s(\xi)$"""
+        if not self.solved:
+            raise NotYetSolvedError
+        return self.model.s(self.w, self.phase)
+
+    @functools.cached_property
+    def va_kinetic_energy_density(self) -> float:  # pylint: disable=missing-function-docstring
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.va_kinetic_energy_density(self.v, self.w, self.xi)
+
+    @property
+    def vp_vm_tilde_ratio(self) -> float:
+        r"""$$\frac{\tilde{v}_+}{\tilde{v}_-}$$"""
+        return self.vp_tilde / self.vm_tilde
+
+
+class Bubble(BaseBubble):
     """A solution of the hydrodynamic equations, aka. a bubble"""
     def __init__(
             self,
@@ -75,11 +256,13 @@ class Bubble:
         :param allow_invalid: Whether to allow invalid solutions
         :param log_invalid: Whether to log invalid solutions
         """
+        super().__init__(model=model, v_wall=v_wall, wm_guess=wm_guess, t_end=t_end, n_xi=n_xi)
+
         # -----
         # Validate input parameters
         # -----
         if use_bag_solver and use_giese_solver:
-            raise ValueError("Both bag and Giese solvers cannot be used at the same time.")
+            raise ValueError("Both bag and Giese et al. solvers cannot be used at the same time.")
         if v_wall is None or np.isnan(v_wall) or v_wall < 0 or v_wall > 1:
             raise ValueError(f"Invalid v_wall={v_wall}")
 
@@ -106,10 +289,6 @@ class Bubble:
         # -----
         # Set parameters
         # -----
-        self.model: Model = model
-        self.v_wall = v_wall
-        self.t_end = t_end
-        self.n_xi = n_xi
         self.thin_shell_t_points_min = thin_shell_t_points_min
         self.log_success = log_success
 
@@ -159,7 +338,6 @@ class Bubble:
         #     )
 
         # Flags
-        self.solved = False
         # Todo: clarify the differences between these
         self.solver_failed = False
         self.no_solution_found = False
@@ -177,21 +355,6 @@ class Bubble:
             if label_latex is None else label_latex
         self.label_unicode = f"{self.model.label_unicode}, v_w={v_wall}, αₙ={alpha_n}" \
             if label_unicode is None else label_unicode
-        self.notes: list[str] = []
-
-        # -----
-        # Output arrays
-        # -----
-        #: Fluid velocity profile $v(\xi)$
-        self.v: th.FloatArr1D | None = None
-        #: Enthalpy profile $w(\xi)$
-        self.w: th.FloatArr1D | None = None
-        #: Self-similar bubble radius coordinates $\xi$
-        self.xi: th.FloatArr1D | None = None
-        #: Phase profile $\phi(\xi)$
-        self.phase: th.FloatArr1D | None = None
-        #: Temperature profile $T(\xi)$
-        self.T: th.FloatArr1D | None = None
 
         # -----
         # Output values
@@ -201,30 +364,8 @@ class Bubble:
         #: $\alpha_{\bar{\theta}_+}$
         self.alpha_theta_bar_plus: float | None = None
         self.elapsed: float | None = None
-        #: $s_+$
-        self.sp: float | None = None
-        #: $s_-$
-        self.sm: float | None = None
-        #: $s_{-,\text{sh}}$
-        self.sm_sh: float | None = None
-        #: $s_n$
-        self.sn: float | None = None
-        #: $T_+$
-        self.Tp: float | None = None
-        #: $T_-$
-        self.Tm: float | None = None
         #: $T_{-,\text{sh}}$
         self.Tm_sh: float | None = None
-        #: $T_\text{center}$
-        self.T_center: float | None = None
-        #: $v_+$
-        self.vp: float | None = None
-        #: $v_-$
-        self.vm: float | None = None
-        #: $\tilde{v}_+$
-        self.vp_tilde: float | None = None
-        #: $\tilde{v}_-$
-        self.vm_tilde: float | None = None
         #: $v_{\text{sh}}$
         self.v_sh: float | None = None
         #: $\tilde{v}_{-,\text{sh}}$
@@ -233,12 +374,6 @@ class Bubble:
         self.vm_tilde_sh: float | None = None
         #: $v_{CJ}$
         self.v_cj: float | None = None
-        #: $w_\text{center}$
-        self.w_center: float | None = None
-        #: $w_+$
-        self.wp: float | None = None
-        #: $w_-$
-        self.wm: float | None = None
         #: $w_{-,\text{sh}}$
         self.wm_sh: float | None = None
 
@@ -250,10 +385,6 @@ class Bubble:
                 "model=%s, v_w=%s, alpha_n=%s, T_nuc=%s, w_nuc=%s",
                 self.model.label_unicode, v_wall, alpha_n, self.Tn, self.wn
             )
-
-    def add_note(self, note: str):
-        """Add a note to the bubble"""
-        self.notes.append(note)
 
     def export(self, path: str | None = None) -> dict[str, tp.Any]:
         """Export the bubble data as JSON"""
@@ -303,11 +434,12 @@ class Bubble:
 
     def info_str(self, prec: str = ".4f") -> str:
         """Get a string describing the key quantities of the bubble"""
-        return \
-            f"{self.label_unicode}: w0/wn={self.w[0] / self.wn:{prec}}, " \
-            f"Ubarf2={self.ubarf2:{prec}}, K={self.kinetic_energy_fraction:{prec}}, " \
-            f"κ={self.kappa:{prec}}, ω={self.omega:{prec}}, κ+ω={self.kappa + self.omega:{prec}}, " \
+        return (
+            f"{self.label_unicode}: w0/wn={self.w[0] / self.wn:{prec}}, "
+            f"Ubarf2={self.ubarf2:{prec}}, K={self.kinetic_energy_fraction:{prec}}, "
+            f"κ={self.kappa:{prec}}, ω={self.omega:{prec}}, κ+ω={self.kappa + self.omega:{prec}}, "
             f"V-avg. trace anomaly={self.va_trace_anomaly_diff:{prec}}"
+        )
 
     def solve(
             self,
@@ -319,10 +451,7 @@ class Bubble:
             log_high_alpha_n_failures: bool = True,
             log_negative_entropy: bool = True):
         """Simulate the fluid velocity profile of the bubble"""
-        if self.solved:
-            msg = "Re-solving an already solved bubble! Already computed quantities will not be updated due to caching."
-            logger.warning(msg)
-            self.add_note(msg)
+        super().solve()
 
         use_bag_solver = self.use_bag_solver or use_bag_solver
         use_giese_solver = self.use_giese_solver or use_giese_solver
@@ -448,35 +577,6 @@ class Bubble:
             self.add_note(msg)
 
     # -----
-    # Plotting
-    # -----
-
-    def plot(self, fig: plt.Figure | None = None, path: str | None = None, **kwargs) -> plt.Figure:
-        """Plot the velocity and enthalpy profiles of the bubble"""
-        from pttools.analysis.plot_bubbles import plot_bubbles
-        return plot_bubbles([self], fig, path, **kwargs)
-
-    def plot_v(
-            self,
-            fig: plt.Figure | None = None,
-            ax: plt.Axes | None = None,
-            path: str | None = None,
-            **kwargs) -> "FigAndAxes":
-        """Plot the velocity profile of the bubble"""
-        from pttools.analysis.plot_bubbles import plot_bubbles_v
-        return plot_bubbles_v([self], fig, ax, path, **kwargs)
-
-    def plot_w(
-            self,
-            fig: plt.Figure | None = None,
-            ax: plt.Axes | None = None,
-            path: str | None = None,
-            **kwargs) -> "FigAndAxes":
-        """Plot the enthalpy profile of the bubble"""
-        from pttools.analysis.plot_bubbles import plot_bubbles_w
-        return plot_bubbles_w([self], fig, ax, path, **kwargs)
-
-    # -----
     # Quantities
     # -----
 
@@ -488,11 +588,6 @@ class Bubble:
         $$\tilde{v}_{+,sh} = v_{sh}$$.
         """
         return self.v_sh
-
-    @property
-    def vp_vm_tilde_ratio(self) -> float:
-        r"""$$\frac{\tilde{v}_+}{\tilde{v}_-}$$"""
-        return self.vp_tilde/self.vm_tilde
 
     @property
     def vp_vm_tilde_ratio_giese(self) -> float:
@@ -548,33 +643,6 @@ class Bubble:
         if not self.solved:
             raise NotYetSolvedError
         return self.entropy_density_diff / self.model.s(self.wn, Phase.SYMMETRIC)
-
-    @functools.cached_property
-    def entropy_flux_p(self) -> float:
-        r"""Incoming entropy flux at the wall
-        $$\tilde{\gamma}_+ \tilde{v}_+ s_+$$
-        """
-        if not self.solved:
-            raise NotYetSolvedError
-        return gamma(self.vp_tilde) * self.vp_tilde * self.sp
-
-    @functools.cached_property
-    def entropy_flux_m(self) -> float:
-        r"""Outgoing entropy flux at the wall
-        $$\tilde{\gamma}_- \tilde{v}_- {s}_- $$
-        """
-        if not self.solved:
-            raise NotYetSolvedError
-        return gamma(self.vm_tilde) * self.vm_tilde * self.sm
-
-    @functools.cached_property
-    def entropy_flux_diff(self) -> float:
-        r"""Entropy flux difference at the wall
-        $$\tilde{\gamma}_- \tilde{v}_- {s}_- - \tilde{\gamma}_+ \tilde{v}_+ {s}_+ $$
-        """
-        if not self.solved:
-            raise NotYetSolvedError
-        return self.entropy_flux_m - self.entropy_flux_p
 
     @functools.cached_property
     def entropy_flux_p_sh(self) -> float:
@@ -681,20 +749,6 @@ class Bubble:
         return self.model.omega(self.va_enthalpy_density, Phase.BROKEN)
 
     @functools.cached_property
-    def p(self):
-        r"""Pressure $p(\xi)$"""
-        if not self.solved:
-            raise NotYetSolvedError
-        return self.model.p(self.w, self.phase)
-
-    @functools.cached_property
-    def s(self):
-        r"""Entropy density $s(\xi)$"""
-        if not self.solved:
-            raise NotYetSolvedError
-        return self.model.s(self.w, self.phase)
-
-    @functools.cached_property
     def ubarf(self) -> float:
         r"""Enthalpy-weighted RMS fluid velocity $\bar{U}_\text{f}$"""
         return np.sqrt(self.ubarf2)
@@ -705,7 +759,8 @@ class Bubble:
             raise NotYetSolvedError
         return thermo.ubarf2(
             self.v, self.w, self.xi,
-            self.v_wall, ek_bva=self.kinetic_energy_density)
+            self.v_wall, ek_bva=self.kinetic_energy_density
+        )
 
     # va = volume averaged
 
@@ -726,12 +781,6 @@ class Bubble:
         if not self.solved:
             raise NotYetSolvedError
         return self.va_entropy_density_diff / self.model.s(self.wn, Phase.SYMMETRIC)
-
-    @functools.cached_property
-    def va_kinetic_energy_density(self) -> float:  # pylint: disable=missing-function-docstring
-        if not self.solved:
-            raise NotYetSolvedError
-        return thermo.va_kinetic_energy_density(self.v, self.w, self.xi)
 
     @functools.cached_property
     def va_kinetic_energy_fraction(self) -> float:  # pylint: disable=missing-function-docstring

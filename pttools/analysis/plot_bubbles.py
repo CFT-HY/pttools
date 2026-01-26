@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.analysis.utils import FigAndAxes, create_fig_ax, legend
-from pttools.bubble.bubble import Bubble
+from pttools.bubble.bubble import BaseBubble
 
 XI_LABEL = r"$\xi$"
 V_LABEL = "$v$"
@@ -18,7 +18,7 @@ W_LABEL = "$w$"
 # -----
 
 def setup_bubbles_plot(
-        bubbles: tp.Collection[Bubble],
+        bubbles: tp.Collection[BaseBubble],
         fig: plt.Figure | None = None,
         ax: plt.Axes | None = None) -> FigAndAxes:
     """Set up a figure for plotting multiple bubbles"""
@@ -41,7 +41,7 @@ def setup_bubbles_plot_multifig(fig: plt.Figure | None = None) -> tuple[plt.Figu
 
 
 def plot_bubbles_common(
-        bubbles: tp.Collection[Bubble],
+        bubbles: tp.Collection[BaseBubble],
         fig: plt.Figure | None = None,
         ax: plt.Axes | None = None,
         path: str | None = None) -> FigAndAxes:
@@ -50,7 +50,7 @@ def plot_bubbles_common(
     xi_min = np.nanmin([bubble.xi[1] for bubble in bubbles])
     xi_max = np.nanmax([bubble.xi[-2] for bubble in bubbles])
     ax.set_xlim(
-        np.nanmax([xi_min / 1.1, 0]),
+        np.nanmax([xi_min * 0.9, 0]),
         np.nanmin([xi_max * 1.1, 1])
     )
     ax.grid()
@@ -63,7 +63,7 @@ def plot_bubbles_common(
 
 
 def plot_bubbles(
-        bubbles: tp.Collection[Bubble],
+        bubbles: tp.Collection[BaseBubble],
         fig: plt.Figure | None = None,
         path: str | None = None,
         **kwargs) -> plt.Figure:
@@ -73,6 +73,7 @@ def plot_bubbles(
     plot_bubbles_w(bubbles, fig, ax_w, **kwargs)
     if len(bubbles) == 1:
         fig.suptitle(bubbles[0].label_latex)
+    fig.tight_layout()
     if path is not None:
         fig.savefig(path)
     return fig
@@ -83,7 +84,7 @@ def plot_bubbles(
 # -----
 
 def plot_bubbles_v(
-        bubbles: tp.Collection[Bubble],
+        bubbles: tp.Collection[BaseBubble],
         fig: plt.Figure | None = None,
         ax: plt.Axes | None = None,
         path: str | None = None,
@@ -102,7 +103,7 @@ def plot_bubbles_v(
 
 
 def plot_bubbles_w(
-        bubbles: tp.Collection[Bubble],
+        bubbles: tp.Collection[BaseBubble],
         fig: plt.Figure | None = None,
         ax: plt.Axes | None = None,
         path: str | None = None,
