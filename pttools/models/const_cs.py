@@ -9,6 +9,7 @@ import numpy as np
 from scipy.optimize import minimize, minimize_scalar, OptimizeResult
 
 import pttools.type_hints as th
+from pttools.bubble.const import CS0_2
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.models.analytic import AnalyticModel
 from pttools.models.bag import BagModel
@@ -50,8 +51,10 @@ class ConstCSModel(AnalyticModel):
 
     def __init__(
             self,
-            css2: tp.Union[float, Fraction], csb2: tp.Union[float, Fraction],
-            V_s: float = AnalyticModel.DEFAULT_V_S, V_b: float = AnalyticModel.DEFAULT_V_B,
+            css2: float | Fraction = CS0_2,
+            csb2: float | Fraction = CS0_2,
+            V_s: float = AnalyticModel.DEFAULT_V_S,
+            V_b: float = AnalyticModel.DEFAULT_V_B,
             a_s: float | None = None,
             a_b: float | None = None,
             g_s: float | None = None,
