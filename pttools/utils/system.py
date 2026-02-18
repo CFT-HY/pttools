@@ -71,17 +71,19 @@ def psutil_info() -> str:
         return "Please install psutil for more info."
     cpu = psutil.getloadavg()
     cpu_count = psutil.cpu_count()
+    msg_cpu = "Could not determine the number of CPU cores." if cpu_count is None else (
+        f"CPU cores: {cpu_count}, CPU use: "
+        f"1 min {cpu[0] / cpu_count * 100} %, "
+        f"5 min {cpu[1] / cpu_count * 100} %, "
+        f"15 min {cpu[2] / cpu_count * 100} %."
+    )
     ram = psutil.virtual_memory()
     msg_ram_high = (
         " RAM use is high. "
         "Please reduce the number of worker processes or close applications running in the background."
     ) if ram.percent > 80 else ""
     msg = (
-        f"CPU cores: {cpu_count}, CPU use: "
-        f"1 min {cpu[0] / cpu_count * 100} %, "
-        f"5 min {cpu[1] / cpu_count * 100} %, "
-        f"15 min {cpu[2] / cpu_count * 100} %. "
-        f"RAM use: {ram.used * 1e-9:.2f} / {ram.total * 1e-9:.2f} GB = {ram.percent} %, "
+        f"{msg_cpu} RAM use: {ram.used * 1e-9:.2f} / {ram.total * 1e-9:.2f} GB = {ram.percent} %, "
         f"available {ram.available} GB.{msg_ram_high}"
     )
     return msg

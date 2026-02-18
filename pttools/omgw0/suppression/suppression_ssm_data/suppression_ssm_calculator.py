@@ -28,7 +28,6 @@ def calc_sup_ssm(
     sim_omgw = total (integrated (omgw_ssm /(HnR*)(Hnt)) )
     exp_omgw = same as above but expected quantity
     exp_ubarf = expected quantity for ubarf
-
     """
     if not os.path.isabs(path):
         path = os.path.join(SUPPRESSION_FOLDER, path)

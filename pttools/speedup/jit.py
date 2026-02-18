@@ -14,7 +14,7 @@ import numba
 import numpy as np
 
 from . import options
-from . import utils
+from pttools.utils import conditional_decorator
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +34,8 @@ def njit(func: tp.Callable | None = None, **kwargs):
 def njit_if_numba_integrate(func: tp.Callable | None = None, **kwargs) -> tp.Callable:
     """Njit compile a function if Numba integration is enabled"""
     if func:
-        return utils.conditional_decorator(numba.njit, options.NUMBA_INTEGRATE, **kwargs)(func)
-    return utils.conditional_decorator(numba.njit, options.NUMBA_INTEGRATE, **kwargs)
+        return conditional_decorator(numba.njit, options.NUMBA_INTEGRATE, **kwargs)(func)
+    return conditional_decorator(numba.njit, options.NUMBA_INTEGRATE, **kwargs)
 
 
 def njit_module(**kwargs):

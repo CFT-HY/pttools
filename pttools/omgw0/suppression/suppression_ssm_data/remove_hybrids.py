@@ -15,7 +15,8 @@ DEFAULT_PATH = os.path.join(SUPPRESSION_FOLDER, "suppression_2.txt")
 def remove_hybrids(path: str = DEFAULT_PATH, suffix: str = "") -> str:
     """
     Removing hybrids from simulation data
-    order of entries in txt file
+
+    The order of entries in txt file should be:
     vw alph suppress sim_omgw exp_omgw exp_ubarf
     """
     sim_data: np.ndarray = np.loadtxt(path, skiprows=1)
@@ -27,13 +28,10 @@ def remove_hybrids(path: str = DEFAULT_PATH, suffix: str = "") -> str:
     exp_omgw_no_hybrids = []
     exp_Ubarf_no_hybrids = []
 
-    # speed of sound
-    cs = 1/np.sqrt(3)
-
     for i, vw in enumerate(sim_data[:, 0]):
         alpha = sim_data[i, 1]
 
-        if cs < vw < bbl.v_chapman_jouguet_bag(alpha):
+        if bbl.CS0 < vw < bbl.v_chapman_jouguet_bag(alpha):
             # logger.debug("Ignoring hybrid for i=%s, vw=%s", i, vw)
             pass
         else:

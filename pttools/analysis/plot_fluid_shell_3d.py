@@ -38,7 +38,7 @@ class BubblePlot3D(PlotlyPlot):
                 "color": color
             }
         plot = go.Scatter3d(
-                x=bubble.w/bubble.model.w_crit, y=bubble.xi, z=bubble.v,
+                x=bubble.w / bubble.model.w_crit, y=bubble.xi, z=bubble.v,
                 mode="lines",
                 name=bubble.label_unicode,
                 **kwargs
