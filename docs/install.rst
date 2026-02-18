@@ -40,6 +40,10 @@ From the Git repository. For the main branch, you can omit the "@BRANCH_NAME".
 
 .. code-block:: bash
 
+  # If you have an older version of PTtools already installed,
+  # and if it has the same version number as in the branch you're installing,
+  # you may have to uninstall the old version first.
+  pip3 uninstall pttools-gw
   pip3 install --upgrade "pttools-gw[numbalsoda,performance] @ git+https://github.com/CFT-HY/pttools.git@BRANCH_NAME"
 
 
