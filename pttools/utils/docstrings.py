@@ -40,7 +40,7 @@ def copy_docstring_dec(source: HasDocstring, without_params: bool = False) -> Wr
 
 def copy_docstring(target: tp.Any, source: HasDocstring, without_params: bool = False) -> None:
     """Copy a docstring from source to target"""
-    if without_params:
+    if without_params and source.__doc__ is not None:
         target.__doc__ = source.__doc__.split("\n:param", 1)[0]
     else:
         target.__doc__ = source.__doc__
