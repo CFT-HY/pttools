@@ -9,8 +9,18 @@ T_DEFAULT: float = 100.  # GeV
 #: arXiv:1910.13125v1 eqn 20
 FGW0: float = 3.57e-5
 
-#: # Eqn 2.13 of arXiv:2106.05984
-fs0_ref: float = 2.6e-6
+F_STAR0_REF: float = 2.6e-6
+r"""
+$f_{*,0,\text{ref}$, the factor used for converting from frequencies at the time of the GW formation to frequencies today.
+This value is valid as long as the universe is radiation dominated at the time of GW production.
+This value is used in:
+:caprini_2020:`\ ` eq. 31
+:gowling_2021:`\ `, eq. 2.13
+:gowling_2023:`\ `, eq. 2.9
+
+It's derived in
+:croon_2024:`\ `, eq. 38
+"""
 
 #: :lisa_sci_req:`\ ` eq. 3 (Hz)
 F1_LISA: float = 4e-4

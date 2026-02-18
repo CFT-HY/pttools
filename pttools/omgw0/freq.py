@@ -8,29 +8,49 @@ def f(z: th.FloatOrArr, r_star: th.FloatOrArr, f_star0: th.FloatOrArr) -> th.Flo
     r"""Convert the dimensionless wavenumber $z$ to frequency today by taking into account the redshift.
     $$f = \frac{z}{r_*} f_{*,0}$$,
     :gowling_2021:`\ ` eq. 2.12
+    :gowling_2023:`\ ` eq. 2.8
 
     :param z: dimensionless wavenumber $z$
     :param r_star: Hubble-scaled mean bubble spacing
     :return: frequency $f$ today
     """
-    return z/r_star * f_star0
+    return z / r_star * f_star0
 
 
-def f0(rs: th.FloatOrArr, T_n: th.FloatOrArr = const.T_DEFAULT, g_star: float = 100) -> th.FloatOrArr:
+def f0(r_star: th.FloatOrArr, T_star: th.FloatOrArr = const.T_DEFAULT, g_star: th.FloatOrArr = 100) -> th.FloatOrArr:
     r"""Factor required to take into account the redshift of the frequency scale"""
-    return f_star0(T_n, g_star) / rs
+    return f_star0(T_star, g_star) / r_star
 
 
-def f_star0(Tn: th.FloatOrArr, g_star: th.FloatOrArr = 100) -> th.FloatOrArr:
+def f_star0(T: th.FloatOrArr, g_star: th.FloatOrArr = 100, f_star0_ref: float = const.F_STAR0_REF) -> th.FloatOrArr:
     r"""
-    Conversion factor between the frequencies at the time of the nucleation and frequencies today.
-    $$f_{*,0} = 2.6 \cdot 10^{-6} \text{Hz}
+    Conversion factor $f_{*,0}$ between the frequencies at the time of the GW formation and frequencies today.
+    $$f_{*,0} = f_{*,0,\text{ref}
     \left( \frac{T_n}{100 \text{GeV}} \right)
-    \left( \frac{g_*}{100} \right)^{\frac{1}{6}}$$,
+    \left( \frac{g_*}{100} \right)^{\frac{1}{6}} \text{Hz}$$,
+    :croon_2024:`\ `, eq. 38
+    :caprini_2020:`\ ` eq. 31
     :gowling_2021:`\ ` eq. 2.13
+    :gowling_2023:`\ ` eq. 2.9
 
-    :param Tn: Nucleation temperature
+    :param T: Temperature, e.g. $T_n$ or $T_*$
     :param g_star: Degrees of freedom at the time the GWs were produced. The default value is from the article.
+    :param f_star0_ref: The constant $f_{*,0,\text{ref}$ in the front of the formula
     :return: $f_{*,0}$
     """
-    return const.fs0_ref * (Tn / 100) * (g_star / 100)**(1 / 6)
+    return f_star0_ref * (T / 100) * (g_star / 100)**(1 / 6)
+
+
+def z(f: th.FloatOrArr, Tn: th.FloatOrArr, r_star: th.FloatOrArr, g_star: th.FloatOrArr = 100) -> th.FloatOrArr:
+    r"""Convert from frequencies $f$ back to wavenumbers $z$
+
+    $$z(f) = \frac{f}{f_{*,0} r_*$$
+    Inverted from :gowling_2021:`\ ` eq. 2.12
+
+    :param f: frequencies $f$ today
+    :param Tn: Nucleation temperature
+    :param g_star: Degrees of freedom at the time the GWs were produced. The default value is from the article.
+    :param r_star: Hubble-scaled mean bubble spacing
+    :return: wavenumbers $z$
+    """
+    return f / f_star0(T=Tn, g_star=g_star) * r_star

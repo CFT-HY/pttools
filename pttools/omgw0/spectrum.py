@@ -81,7 +81,7 @@ class Spectrum(ssm.SSMSpectrum):
     @functools.cached_property
     def f_star0(self) -> float:  # pylint: disable=missing-function-docstring
         return freq.f_star0(
-            Tn=self.Tn,
+            T=self.Tn,
             g_star=self.g_star
         )
 
@@ -95,22 +95,26 @@ class Spectrum(ssm.SSMSpectrum):
 
     @functools.cached_property
     def g_star(self) -> float:
+        """Degrees of freedom $g_*$ for pressure at the time the GWs were produced"""
         if self.override_necessary or self.g_star_manual_override:
             return self.g_star_override
         return self.g_star_computed
 
     @functools.cached_property
     def g_star_computed(self):
+        """Degrees of freedom $g_*$ for pressure at the time the GWs were produced, computed from the solution"""
         return self.bubble.model.gp(w=self.bubble.va_enthalpy_density, phase=Phase.BROKEN)
 
     @functools.cached_property
     def gs_star(self) -> float:
+        """Degrees of freedom $g_{s,*}$ for entropy at the time the GWs were produced"""
         if self.override_necessary or self.gs_star_manual_override:
             return self.gs_star_override
         return self.gs_star_computed
 
     @functools.cached_property
     def gs_star_computed(self) -> float:
+        """Degrees of freedom $g_{s,*}$ for entropy at the time the GWs were produced, computed from the solution"""
         return self.bubble.model.gs(w=self.bubble.va_enthalpy_density, phase=Phase.BROKEN)
 
     @property
@@ -207,7 +211,7 @@ class Spectrum(ssm.SSMSpectrum):
         :param f: frequencies $f$ today
         :return: wavenumbers $z$
         """
-        return f / self.f_star0 * self.r_star
+        return freq.z(f=f, Tn=self.Tn, r_star=self.r_star, g_star=self.g_star)
 
     # -----
     # Plotting

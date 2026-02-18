@@ -1,8 +1,9 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# This file only contains a selection of the most common options. For a full
-# list see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""
+Configuration file for the Sphinx documentation builder.
+
+For the full list of built-in configuration values, see the documentation:
+https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""
 
 # -- Path setup --------------------------------------------------------------
 
@@ -158,9 +159,10 @@ extlinks: dict[str, tuple[str, str]] = {
     "gowling_2021": ("https://arxiv.org/abs/2106.05984%s", "Gowling & Hindmarsh, 2021%s"),
     "cutting_2022": ("https://arxiv.org/abs/2204.03396%s", "Cutting, Vilhonen & Weir, 2022%s"),
     "ai_2023": ("https://arxiv.org/abs/2303.10171%s", "Ai et al., 2023%s"),
+    "gowling_2023": ("https://arxiv.org/abs/2209.13551%s", "Gowling et al., 2023%s"),
+    "croon_2024": ("https://arxiv.org/abs/2410.21509%s", "Croon & Weir, 2024%s"),
     "giombi_2024_cs": ("https://arxiv.org/abs/2409.01426%s", "Giombi et al., 2024%s"),
     "giombi_2024_gr": ("https://arxiv.org/abs/2307.12080%s", "Giombi & Hindmarsh, 2024%s"),
-    "gowling_2023": ("https://arxiv.org/abs/2209.13551%s", "Gowling et al., 2023%s"),
     # Theses
     "gowling_phd": ("https://hdl.handle.net/10779/uos.23309135.v1%s", "Gowling, 2023%s"),
     "hakkinen_msc": ("https://hdl.handle.net/10138/576963%s", "Häkkinen, 2024%s"),
