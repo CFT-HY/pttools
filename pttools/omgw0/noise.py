@@ -1,7 +1,5 @@
 """Utilities for calculating the noise of gravitational wave detectors, especially LISA"""
 
-import typing as tp
-
 import numpy as np
 
 import pttools.type_hints as th
@@ -15,7 +13,8 @@ def signal_to_noise_ratio(
         f_noise: th.FloatArr1D | None = None,
         obs_time: float = const.LISA_OBS_TIME,
         f_min: float | None = None,
-        f_max: float | None = None) -> float:
+        f_max: float | None = None,
+        f_range: bool = False) -> float | tuple[float, float, float]:
     r"""Signal-to-noise ratio
     $$\rho = \sqrt{T_{\text{obs}} \int_{{f}_\text{min}}^{{f}_\text{max}} df \frac{
     h^2 \Omega_{\text{signal}}^2}{
@@ -33,6 +32,7 @@ def signal_to_noise_ratio(
     :param obs_time: observation time (s)
     :param f_min: minimum frequency to be considered (Hz)
     :param f_max: maximum frequency to be considered (Hz)
+    :param f_range: whether to output the frequency range $(f_\text{min}, f_\text{max})$
     :return: signal-to-noise ratio SNR, aka. $\rho$
     """
     if f_noise is None:
@@ -55,7 +55,10 @@ def signal_to_noise_ratio(
         noise = noise[i_f_min:i_f_max]
         signal = 10.**np.interp(np.log10(f), np.log10(f_gw), np.log10(signal))
 
-    return np.sqrt(obs_time * np.trapezoid(signal**2 / noise**2, f))
+    snr = np.sqrt(obs_time * np.trapezoid(signal**2 / noise**2, f))
+    if f_range:
+        return snr, f_min, f_max
+    return snr
 
 
 def ft(L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatOrArr:
