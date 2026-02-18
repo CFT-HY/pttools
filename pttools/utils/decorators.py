@@ -2,7 +2,7 @@ import functools
 from typing import Callable
 
 
-def conditional_decorator[T: Callable](dec: Callable, condition: bool, **kwargs) -> T:
+def conditional_decorator[T: Callable](dec: T, condition: bool, **kwargs) -> T:
     """Applies the given decorator if the given condition is True.
 
     :param dec: decorator

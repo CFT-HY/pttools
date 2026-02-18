@@ -6,15 +6,16 @@ import numpy as np
 from scipy.special import erf, erfc
 
 from pttools.ssm.low_k import integration, intersection
+import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
 
 def pow_gw_junction(
-        z: np.ndarray[tuple[int], np.float64],
-        Pgw_low: np.ndarray[tuple[int], np.float64],
-        Pgw_int: np.ndarray[tuple[int], np.float64],
-        Pgw_high: np.ndarray[tuple[int], np.float64],
+        z: th.FloatArr1D,
+        Pgw_low: th.FloatArr1D,
+        Pgw_int: th.FloatArr1D,
+        Pgw_high: th.FloatArr1D,
         cs: float,
         nu: float,
         tau_star: float,

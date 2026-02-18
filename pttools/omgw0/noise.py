@@ -9,10 +9,10 @@ from pttools.omgw0 import const
 
 
 def signal_to_noise_ratio(
-        f: np.ndarray[tuple[int], np.float64],
-        signal: np.ndarray[tuple[int], np.float64],
-        noise: np.ndarray[tuple[int], np.float64],
-        f_noise: tp.Union[np.ndarray[tuple[int], np.float64], None] = None,
+        f: th.FloatArr1D,
+        signal: th.FloatArr1D,
+        noise: th.FloatArr1D,
+        f_noise: th.FloatArr1D | None = None,
         obs_time: float = const.LISA_OBS_TIME,
         f_min: float | None = None,
         f_max: float | None = None) -> float:
@@ -276,7 +276,7 @@ def W(f: th.FloatOrArr, ft: th.FloatOrArr) -> th.FloatOrArr:
 
 
 #: Coefficients for the galactic binary noise, :cornish_2017:`\ ` table 1
-GB_DATA: np.ndarray[tuple[int, int], np.float64] = np.array([
+GB_DATA: th.FloatArr2D = np.array([
     [0.5, 1, 2, 4],
     [0.133, 0.171, 0.165, 0.138],
     [243, 292, 299, -221],
@@ -284,9 +284,9 @@ GB_DATA: np.ndarray[tuple[int, int], np.float64] = np.array([
     [917, 1680, 1340, 1680],
     [0.00258, 0.00215, 0.00173, 0.00113]
 ])
-GB_TIMES: np.ndarray[tuple[int], np.float64] = GB_DATA[0, :]
-GB_ALPHAS: np.ndarray[tuple[int], np.float64] = GB_DATA[1, :]
-GB_BETAS: np.ndarray[tuple[int], np.float64] = GB_DATA[2, :]
-GB_KAPPAS: np.ndarray[tuple[int], np.float64] = GB_DATA[3, :]
-GB_GAMMAS: np.ndarray[tuple[int], np.float64] = GB_DATA[4, :]
-GB_FKS: np.ndarray[tuple[int], np.float64] = GB_DATA[5, :]
+GB_TIMES: th.FloatArr1D = GB_DATA[0, :]
+GB_ALPHAS: th.FloatArr1D = GB_DATA[1, :]
+GB_BETAS: th.FloatArr1D = GB_DATA[2, :]
+GB_KAPPAS: th.FloatArr1D = GB_DATA[3, :]
+GB_GAMMAS: th.FloatArr1D = GB_DATA[4, :]
+GB_FKS: th.FloatArr1D = GB_DATA[5, :]

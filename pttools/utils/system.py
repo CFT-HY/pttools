@@ -11,15 +11,15 @@ try:
 except ModuleNotFoundError:
     psutil = None
 
-AVAILABLE_CPU_CORES: int
+AVAILABLE_CPU_CORES: int | None
 GITHUB_ACTIONS: bool = "GITHUB_ACTIONS" in os.environ
 START_METHOD: str = multiprocessing.get_start_method()
 FORKING: bool = START_METHOD == "fork"
 UNAME: platform.uname_result = platform.uname()
 CPU_AFFINITY: bool = False
-IS_LINUX = sys.platform.startswith('linux')
-IS_OSX = sys.platform.startswith('darwin')
-IS_WINDOWS = sys.platform.startswith('win32')
+IS_LINUX: bool = sys.platform.startswith('linux')
+IS_OSX: bool = sys.platform.startswith('darwin')
+IS_WINDOWS: bool = sys.platform.startswith('win32')
 IS_READ_THE_DOCS: bool = "READTHEDOCS_VIRTUALENV_PATH" in os.environ
 
 try:

@@ -70,11 +70,11 @@ class LoggingRunner:
 
 
 def parallel_debug_message(
-        info: str = None,
-        err: Exception = None,
-        max_workers: int = None,
-        single_thread: bool = None,
-        start_time: float = None,
+        info: str | None = None,
+        err: Exception | None = None,
+        max_workers: int | None = None,
+        single_thread: bool | None = None,
+        start_time: float | None = None,
         n_dmesg_lines: int = 100) -> str:
     end_time = time.perf_counter()
     msg = info
@@ -105,7 +105,7 @@ def run_parallel(
         log_progress_percentage: float | None = None,
         args: tp.Union[list, tuple] = (),
         kwargs: dict[str, tp.Any] | None = None,
-        single_thread: bool = False) -> tp.Optional[tp.Union[np.ndarray, tuple[np.ndarray, ...]]]:
+        single_thread: bool = False) -> NDArray | tuple[NDArray] | None:
     """Run the given function with multiple parameters in parallel
 
     :param func: The function to be executed in parallel
@@ -127,8 +127,8 @@ def run_parallel(
     if max_workers is None:
         max_workers = MAX_WORKERS_DEFAULT
 
-    flags = ["refs_ok"]
-    arr_size: int
+    flags: list[tp.Literal["c_index", "external_loop", "multi_index", "reduce_ok", "refs_ok"]] = ["refs_ok"]
+    arr_size: int | np.signedinteger
     if multiple_params:
         flags.append("reduce_ok")
         flags.append("external_loop")
@@ -182,7 +182,7 @@ def run_parallel(
                 # op_axes = [axes, axes]
                 with np.nditer(
                         futs,
-                        flags=("refs_ok", "c_index", "multi_index"),
+                        flags=["refs_ok", "c_index", "multi_index"],
                         # op_flags=[["readonly"], ["writeonly"]],
                         # op_axes=op_axes,
                         order="C") as it:
@@ -202,7 +202,7 @@ def run_parallel(
             if single_output:
                 with np.nditer(
                         [futs, output_arr],
-                        flags=("refs_ok", "c_index", "multi_index"),
+                        flags=["refs_ok", "c_index", "multi_index"],
                         # op_flags=[["readonly"], ["writeonly"]],
                         order="C") as it:
                     for fut, res in it:
@@ -214,7 +214,7 @@ def run_parallel(
             output_arrs = tuple(np.empty(futs.shape, dtype=dtype) for dtype in output_dtypes)
             with np.nditer(
                     [futs, *output_arrs],
-                    flags=("refs_ok", "c_index", "multi_index"),
+                    flags=["refs_ok", "c_index", "multi_index"],
                     op_flags=op_flags2,
                     order="C") as it:
                 for elems in it:

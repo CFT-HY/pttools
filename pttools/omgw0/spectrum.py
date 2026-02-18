@@ -24,7 +24,7 @@ class Spectrum(ssm.SSMSpectrum):
             self,
             bubble: Bubble,
             r_star: float,
-            y: tp.Union[np.ndarray[tuple[int], np.float64], None] = None,
+            y: th.FloatArr1D | None = None,
             z_st_thresh: float = ssm.Z_ST_THRESH,
             nuc_type: ssm.NucType = ssm.DEFAULT_NUC_TYPE,
             nt: int = ssm.NTDEFAULT,
@@ -154,7 +154,7 @@ class Spectrum(ssm.SSMSpectrum):
         i_max = np.argmax(omgw0)
         return self.f()[i_max], omgw0[i_max]
 
-    def omgw0_total(self, omgw0: np.ndarray = None) -> float:
+    def omgw0_total(self, omgw0: np.ndarray | None = None) -> float:
         r"""Total $\Omega_{\text{gw},0} integrated over all frequencies"""
         if omgw0 is None:
             omgw0 = self.omgw0()
@@ -226,7 +226,7 @@ class Spectrum(ssm.SSMSpectrum):
             self,
             fig: plt.Figure | None = None,
             path: str | None = None,
-            **kwargs) -> tuple[plt.Figure, np.ndarray[tuple[int, int], plt.Axes]]:
+            **kwargs) -> tuple[plt.Figure, np.ndarray[tuple[int, int], np.dtype[plt.Axes]]]:
         from pttools.analysis.plot_spectra import plot_spectra_multi
         return plot_spectra_multi([self], fig, path, **kwargs)
 
@@ -234,7 +234,7 @@ class Spectrum(ssm.SSMSpectrum):
             self,
             fig: plt.Figure | None = None,
             path: str | None = None,
-            **kwargs) -> tuple[plt.Figure, np.ndarray[tuple[int], plt.Axes]]:
+            **kwargs) -> tuple[plt.Figure, np.ndarray[tuple[int], np.dtype[plt.Axes]]]:
         from pttools.analysis.plot_spectra import plot_spectra_multi_flat
         return plot_spectra_multi_flat([self], fig, path, **kwargs)
 

@@ -32,7 +32,7 @@ class VwAlphaPlot:
         else:
             self.fig = fig
 
-        self.ax = self.fig.add_subplot() if ax is None else ax
+        self.ax: plt.Axes = self.fig.add_subplot() if ax is None else ax
         self.ax.set_xlabel(r"$v_\text{wall}$")
         self.ax.set_ylabel(alpha_label)
         self.ax.set_xlim(grid.v_walls.min(), grid.v_walls.max())

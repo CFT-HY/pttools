@@ -31,9 +31,9 @@ class Suppression:
     """Suppression factors from a given dataset"""
     def __init__(
             self,
-            v_walls: np.ndarray[tuple[int], np.float64],
-            alpha_ns: np.ndarray[tuple[int], np.float64],
-            suppressions: np.ndarray[tuple[int], np.float64],
+            v_walls: th.FloatArr1D,
+            alpha_ns: th.FloatArr1D,
+            suppressions: th.FloatArr1D,
             name: str | None = None):
         if not v_walls.size == alpha_ns.size == suppressions.size:
             raise ValueError(
@@ -131,12 +131,9 @@ def alpha_n_max(v_wall: th.FloatOrArr) -> th.FloatOrArr:
 
 
 def extend(
-        v_walls: np.ndarray[tuple[int], np.float64],
-        alpha_ns: np.ndarray[tuple[int], np.float64],
-        suppressions: np.ndarray[tuple[int], np.float64]) -> tuple[
-            np.ndarray[tuple[int], np.float64],
-            np.ndarray[tuple[int], np.float64],
-            np.ndarray[tuple[int], np.float64]]:
+        v_walls: th.FloatArr1D,
+        alpha_ns: th.FloatArr1D,
+        suppressions: th.FloatArr1D) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     """
     To improve the extrapolation of the suppression factor when later using grid data, first extend the
     low vw and low alpha region as follows
@@ -152,9 +149,9 @@ def extend(
     ssm_sup_vw_0_24_ext = spl(ssm_sup_vw_0_24_alphas_ext)
 
     # create the extrapolated dataset
-    v_walls_ext: np.ndarray[tuple[int], np.float64] = np.concatenate(([0.24], v_walls))
-    alpha_ns_ext: np.ndarray[tuple[int], np.float64] = np.concatenate(([ssm_sup_vw_0_24_alphas_ext[0]], alpha_ns))
-    suppressions_ext: np.ndarray[tuple[int], np.float64] = np.concatenate(([ssm_sup_vw_0_24_ext[0]], suppressions))
+    v_walls_ext: th.FloatArr1D = np.concatenate(([0.24], v_walls))
+    alpha_ns_ext: th.FloatArr1D = np.concatenate(([ssm_sup_vw_0_24_alphas_ext[0]], alpha_ns))
+    suppressions_ext: th.FloatArr1D = np.concatenate(([ssm_sup_vw_0_24_ext[0]], suppressions))
     return v_walls_ext, alpha_ns_ext, suppressions_ext
 
 

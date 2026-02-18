@@ -9,6 +9,7 @@ from pttools.analysis.plot_bubbles import plot_bubbles_v
 from pttools.analysis.utils import FigAndAxes, create_fig_ax, legend
 from pttools.ssm.spectrum import SSMSpectrum
 from pttools.omgw0 import Spectrum, omega_noise
+import pttools.type_hints as th
 
 F_LABEL = r"$f$ (Hz)"
 SPEC_DEN_V_LABEL = r"$\mathcal{P}_{v}(kR_*)$"
@@ -50,7 +51,7 @@ def plot_spectra_multi(
         spectra: tp.Collection[Spectrum],
         fig: plt.Figure | None = None,
         path: str | None = None,
-        **kwargs) -> tuple[plt.Figure, np.ndarray[tuple[int, int], plt.Axes]]:
+        **kwargs) -> tuple[plt.Figure, np.ndarray[tuple[int, int], np.dtype[plt.Axes]]]:
     """Plot multiple types of spectra"""
     fig, axs = plot_spectra_multi_common(spectra, fig, figsize=(7, 5), nrows=2, ncols=2, **kwargs)
 
@@ -122,8 +123,8 @@ def plot_spectra_multi_flat(
 
 def plot_spectra(
         spectra: tp.Collection[Spectrum],
-        ax: plt.Axes | None = None,
         fig: plt.Figure | None = None,
+        ax: plt.Axes | None = None,
         path: str | None = None,
         **kwargs) -> FigAndAxes:
     f"""Plot the GW spectra today {OMGW0_LABEL}"""
@@ -133,7 +134,7 @@ def plot_spectra(
         ax.plot(spectrum.f(), spectrum.omgw0(), label=f"{spectrum.label_latex[:-1]}, SNR={snr:.2f}$", **kwargs)
     f_min = np.nanmin([np.nanmin(spectrum.f()) for spectrum in spectra])
     f_max = np.nanmax([np.nanmax(spectrum.f()) for spectrum in spectra])
-    f_noise: np.ndarray[tuple[int], np.float64] = np.logspace(np.log10(f_min), np.log10(f_max), 100)
+    f_noise: th.FloatArr1D = np.logspace(np.log10(f_min), np.log10(f_max), 100)
     ax.plot(f_noise, omega_noise(f_noise), label=r"LISA noise")
     ax.set_xlabel(F_LABEL)
     ax.set_xscale("log")

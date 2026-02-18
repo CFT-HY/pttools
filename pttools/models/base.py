@@ -76,9 +76,9 @@ class BaseModel(abc.ABC):
             raise ValueError(f"T_max ({self.T_max}) should be higher than T_min ({self.T_min}).")
 
         if gen_cs2:
-            self.cs2 = self.gen_cs2()
+            self.cs2 = self.gen_cs2()  # type: ignore
         if gen_cs2_neg:
-            self.cs2_neg = self.gen_cs2_neg()
+            self.cs2_neg = self.gen_cs2_neg()  # type: ignore
 
     # Concrete methods
 

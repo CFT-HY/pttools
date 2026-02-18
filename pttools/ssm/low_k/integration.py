@@ -5,16 +5,17 @@ from scipy.integrate import simpson
 from scipy.special import gamma
 
 from pttools.ssm import const
+import pttools.type_hints as th
 
 
 def power_spectrum_integration_low(
-        x_data: np.ndarray[tuple[int], np.float64],
-        Pv_data: np.ndarray[tuple[int], np.float64],
-        z: np.ndarray[tuple[int], np.float64],
+        x_data: th.FloatArr1D,
+        Pv_data: th.FloatArr1D,
+        z: th.FloatArr1D,
         cs: float,
         nu: float,
         tau_star: float,
-        tau_end: float) -> np.ndarray[tuple[int], np.float64]:
+        tau_end: float) -> th.FloatArr1D:
     r"""
     Calculate the low-frequency approximation (kR_* << 1) of the gravitational wave power spectrum.
     One dimensional integration over sound wave momentum.
@@ -51,11 +52,11 @@ def power_spectrum_integration_low(
 
 
 def power_spectrum_integration_int(
-        x_data: np.ndarray[tuple[int], np.float64],
-        Pv_data: np.ndarray[tuple[int], np.float64],
-        z: np.ndarray[tuple[int], np.float64],
+        x_data: th.FloatArr1D,
+        Pv_data: th.FloatArr1D,
+        z: th.FloatArr1D,
         cs: float,
-        tau_star: float) -> np.ndarray[tuple[int], np.float64]:
+        tau_star: float) -> th.FloatArr1D:
     r"""
     Calculate the intermediate-frequency approximation (1 << k eta_* << kp eta_*) of the gravitational wave power spectrum.
     One dimensional integration over sound wave momentum.
@@ -84,10 +85,10 @@ def power_spectrum_integration_int(
 
 
 def power_spectrum_integration_high(
-        x_data: np.ndarray[tuple[int], np.float64],
-        Pv_data: np.ndarray[tuple[int], np.float64],
-        z: np.ndarray[tuple[int], np.float64],
-        cs: float = const.CS0) -> np.ndarray[tuple[int], np.float64]:
+        x_data: th.FloatArr1D,
+        Pv_data: th.FloatArr1D,
+        z: th.FloatArr1D,
+        cs: float = const.CS0) -> th.FloatArr1D:
     r"""Previously known as _peak
 
     :param x_data: array of momentum values (pR_*)

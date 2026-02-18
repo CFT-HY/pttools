@@ -12,12 +12,12 @@ from pttools.speedup.options import NUMBA_DISABLE_JIT
 
 logger = logging.getLogger(__name__)
 
-DifferentialCFunc = tp.Union[tp.Callable[[float, np.ndarray, np.ndarray, tp.Optional[np.ndarray]], None], CFunc]
-DifferentialOdeint = tp.Union[tp.Callable[[np.ndarray, float, tp.Optional[np.ndarray]], np.ndarray], CPUDispatcher]
-DifferentialSolveIVP = tp.Union[tp.Callable[[float, np.ndarray, tp.Optional[np.ndarray]], np.ndarray], CPUDispatcher]
-Differential = tp.Union[DifferentialCFunc, DifferentialOdeint, DifferentialSolveIVP]
-DifferentialPointer = numba.types.CPointer(lsoda_sig)
-DifferentialKey = tp.Union[DifferentialPointer, str]
+type DifferentialCFunc = tp.Callable[[float, np.ndarray, np.ndarray, tp.Optional[np.ndarray]], None] | CFunc
+type DifferentialOdeint = tp.Callable[[np.ndarray, float, tp.Optional[np.ndarray]], np.ndarray] | CPUDispatcher
+type DifferentialSolveIVP = tp.Callable[[float, np.ndarray, tp.Optional[np.ndarray]], np.ndarray] | CPUDispatcher
+type Differential = DifferentialCFunc | DifferentialOdeint | DifferentialSolveIVP
+type DifferentialPointer = numba.types.CPointer  # CPointer(lsoda_sig)
+type DifferentialKey = DifferentialPointer | str
 
 
 class DifferentialCache:
