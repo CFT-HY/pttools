@@ -175,11 +175,13 @@ class Spectrum(ssm.SSMSpectrum):
 
     def signal_to_noise_ratio(self) -> float:
         """Signal-to-noise ratio for LISA, taking into account all noise sources"""
-        return noise.signal_to_noise_ratio(f=self.f(), signal=self.omgw0(), noise=self.noise())
+        snr, f_min, f_max = noise.signal_to_noise_ratio(f=self.f(), signal=self.omgw0(), noise=self.noise())
+        return snr
 
     def signal_to_noise_ratio_instrument(self) -> float:
         """Signal-to-noise ratio for LISA, taking into account only the instrument noise"""
-        return noise.signal_to_noise_ratio(f=self.f(), signal=self.omgw0(), noise=self.noise_ins())
+        snr, f_min, f_max = noise.signal_to_noise_ratio(f=self.f(), signal=self.omgw0(), noise=self.noise_ins())
+        return snr
 
     def suppression_factor(
             self,

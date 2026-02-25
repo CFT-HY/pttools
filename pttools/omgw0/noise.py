@@ -1,11 +1,13 @@
 """Utilities for calculating the noise of gravitational wave detectors, especially LISA"""
 
+import numba
 import numpy as np
 
 import pttools.type_hints as th
 from pttools.omgw0 import const
 
 
+@numba.njit
 def signal_to_noise_ratio(
         f: th.FloatArr1D,
         signal: th.FloatArr1D,
@@ -13,8 +15,7 @@ def signal_to_noise_ratio(
         f_noise: th.FloatArr1D | None = None,
         obs_time: float = const.LISA_OBS_TIME,
         f_min: float | None = None,
-        f_max: float | None = None,
-        f_range: bool = False) -> float | tuple[float, float, float]:
+        f_max: float | None = None) -> float | tuple[float, float, float]:
     r"""Signal-to-noise ratio
     $$\rho = \sqrt{T_{\text{obs}} \int_{{f}_\text{min}}^{{f}_\text{max}} df \frac{
     h^2 \Omega_{\text{signal}}^2}{
@@ -56,9 +57,7 @@ def signal_to_noise_ratio(
         signal = 10.**np.interp(np.log10(f), np.log10(f_gw), np.log10(signal))
 
     snr = np.sqrt(obs_time * np.trapezoid(signal**2 / noise**2, f))
-    if f_range:
-        return snr, f_min, f_max
-    return snr
+    return snr, f_min, f_max
 
 
 def ft(L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatOrArr:
