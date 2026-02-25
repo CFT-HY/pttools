@@ -16,6 +16,7 @@ class MatplotlibFilter(logging.Filter):
 
 
 def setup_logging(
+        name: str = "pttools",
         log_dir: str | None = None,
         enable_faulthandler: bool = True,
         silence_spam: bool = True):
@@ -30,7 +31,7 @@ def setup_logging(
     if log_dir is None:
         log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs")
     os.makedirs(log_dir, exist_ok=True)
-    log_file_path = os.path.join(log_dir, f"pttools_{time.strftime('%Y-%m-%d_%H-%M-%S')}_{os.getpid()}.log")
+    log_file_path = os.path.join(log_dir, f"{name}_{time.strftime('%Y-%m-%d_%H-%M-%S')}_{os.getpid()}.log")
     if os.path.exists(log_file_path):
         raise FileExistsError(f"The log file already exists, even though it should be per-process: {log_file_path}")
     logging.basicConfig(
