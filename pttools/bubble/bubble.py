@@ -43,9 +43,11 @@ class BaseBubble(abc.ABC):
             t_end: float = const.T_END_DEFAULT,
             n_xi: int = const.N_XI_DEFAULT):
         # Some functions such as np.vectorize tend to give 0D arrays, which may cause subtle errors later on.
-        if not np.isscalar(v_wall):
+        if v_wall is None or not np.isscalar(v_wall):
             raise ValueError(f"v_wall should be scalar. Did you give e.g. a 0D array instead? Got: v_wall={v_wall}")
-        if not np.isscalar(alpha_n):
+        if isinstance(v_wall, int):
+            v_wall = float(v_wall)
+        if alpha_n is None or not np.isscalar(alpha_n):
             raise ValueError(f"alpha_n should be scalar. Did you give e.g. a 0D array instead? Got: alpha_n={v_wall}")
         if not (w_center is None or np.isscalar(w_center)):
             raise ValueError(
@@ -278,12 +280,14 @@ class Bubble(BaseBubble):
         # -----
         if use_bag_solver and use_giese_solver:
             raise ValueError("Both bag and Giese et al. solvers cannot be used at the same time.")
-        if v_wall is None or np.isnan(v_wall) or v_wall < 0 or v_wall > 1:
-            raise ValueError(f"Invalid v_wall={v_wall}")
+        if not 0 < self.v_wall <= 1:
+            raise ValueError(f"Invalid v_wall={self.v_wall}")
 
         # -----
         # Set and validate alpha_n and alpha_theta_bar_n
         # -----
+        if isinstance(alpha_n, int):
+            alpha_n = float(alpha_n)
         if not theta_bar:
             model.validate_alpha_n(alpha_n, allow_invalid=allow_invalid, log_invalid=log_invalid)
         self.wn = model.wn(alpha_n, wn_guess, theta_bar=theta_bar)
@@ -297,7 +301,7 @@ class Bubble(BaseBubble):
 
         self.sol_type = transition.validate_solution_type(
             model,
-            v_wall=v_wall, alpha_n=alpha_n, sol_type=sol_type,
+            v_wall=self.v_wall, alpha_n=alpha_n, sol_type=sol_type,
             wn=self.wn, wm_guess=wm_guess
         )
 
@@ -471,7 +475,7 @@ class Bubble(BaseBubble):
         use_bag_solver = self.use_bag_solver or use_bag_solver
         use_giese_solver = self.use_giese_solver or use_giese_solver
         if use_bag_solver and use_giese_solver:
-            raise ValueError("Both bag and Giese solvers cannot be used at the same time.")
+            raise ValueError("Both bag and Giese et al. solvers cannot be used at the same time.")
 
         alpha_n_max_bag = alpha_n_max_deflagration_bag(self.v_wall)
         high_alpha_n = alpha_n_max_bag - self.alpha_n < 0.05
