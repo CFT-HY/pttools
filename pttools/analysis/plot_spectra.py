@@ -40,6 +40,7 @@ def plot_spectra_common(
         )
     ax.set_yscale("log")
     ax.grid()
+    ax.legend(fontsize=7)
     if len(spectra) > 1:
         legend(ax, loc="lower left")
     if path is not None:
@@ -131,7 +132,12 @@ def plot_spectra(
     fig, ax = create_fig_ax(fig, ax)
     for spectrum in spectra:
         snr = spectrum.signal_to_noise_ratio()
-        ax.plot(spectrum.f(), spectrum.omgw0(), label=f"{spectrum.label_latex[:-1]}, SNR={snr:.2f}$", **kwargs)
+        ax.plot(
+            spectrum.f(),
+            spectrum.omgw0(),
+            label=rf"{spectrum.label_latex[:-1]}, \text{{SNR}}={snr:.3e}$",
+            **kwargs
+        )
     f_min = np.nanmin([np.nanmin(spectrum.f()) for spectrum in spectra])
     f_max = np.nanmax([np.nanmax(spectrum.f()) for spectrum in spectra])
     f_noise: th.FloatArr1D = np.logspace(np.log10(f_min), np.log10(f_max), 100)

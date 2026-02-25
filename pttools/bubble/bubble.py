@@ -366,9 +366,9 @@ class Bubble(BaseBubble):
 
         # LaTeX labels are not supported in Plotly 3D plots.
         # https://github.com/plotly/plotly.js/issues/608
-        self.label_latex = rf"{self.model.label_latex}, $v_w={v_wall}, \alpha_n={alpha_n}$" \
+        self.label_latex = rf"{self.model.label_latex}, $v_w={v_wall:.3f}, \alpha_n={alpha_n:.3f}$" \
             if label_latex is None else label_latex
-        self.label_unicode = f"{self.model.label_unicode}, v_w={v_wall}, αₙ={alpha_n}" \
+        self.label_unicode = f"{self.model.label_unicode}, v_w={v_wall:3f}, αₙ={alpha_n:.3f}" \
             if label_unicode is None else label_unicode
 
         # -----
