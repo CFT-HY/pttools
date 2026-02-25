@@ -12,8 +12,8 @@ class BubbleTest(unittest.TestCase):
     """Unit tests for the properties of a bubble"""
     @classmethod
     def setUpClass(cls) -> None:
-        model = BagModel(a_s=1.1, a_b=1, V_s=1)
-        cls.bubble = Bubble(model, v_wall=0.5, alpha_n=0.1)
+        cls.model = BagModel(a_s=1.1, a_b=1, V_s=1)
+        cls.bubble = Bubble(cls.model, v_wall=0.5, alpha_n=0.1)
 
     def test_ebar(self):
         ebar = self.bubble.ebar
@@ -62,3 +62,13 @@ class BubbleTest(unittest.TestCase):
     def test_va_trace_anomaly(self):
         trace_anomaly = self.bubble.va_trace_anomaly_diff
         self.assertTrue(np.isfinite(trace_anomaly))
+
+    @unittest.expectedFailure
+    def test_v_wall_1(self):
+        Bubble(self.model, v_wall=1, alpha_n=0.1)
+
+    def test_v_wall_high(self):
+        Bubble(self.model, v_wall=0.95, alpha_n=0.1)
+
+    def test_v_wall_low(self):
+        Bubble(self.model, v_wall=0.1, alpha_n=0.1)

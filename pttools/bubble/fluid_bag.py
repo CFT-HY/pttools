@@ -72,7 +72,7 @@ def sound_shell_bag(
         #     return nan_arr, nan_arr, nan_arr, sol_type, np.nan, np.nan, np.nan, np.nan, np.nan
         return nan_arr, nan_arr, nan_arr
     # SolutionType has to be passed by its value when jitting
-    return sound_shell_alpha_plus(v_wall, al_p, sol_type.value, n_xi, cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr)
+    return sound_shell_alpha_plus_bag(v_wall, al_p, sol_type.value, n_xi, cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr)
     # if extra_output:
     #     v, w, xi, vfp_w, vfm_w, vfp_p, vfm_p = ret
     #     return v, w, xi, sol_type, al_p, vfp_w, vfm_w, vfp_p, vfm_p
@@ -80,7 +80,7 @@ def sound_shell_bag(
 
 
 @numba.njit
-def sound_shell_alpha_plus(
+def sound_shell_alpha_plus_bag(
         v_wall: float,
         alpha_plus: float,
         sol_type: SolutionType = SolutionType.UNKNOWN,
@@ -99,7 +99,7 @@ def sound_shell_alpha_plus(
     Finds the fluid shell profile (v, w, xi) from a given $v_\text{wall}, \alpha_+$ (at-wall strength parameter).
     When $v=0$ (behind and ahead of shell), this uses only two points.
 
-    Bag model only!
+    Assumes the bag model, but can also create rough approximations for other models.
 
     :param v_wall: $v_\text{wall}$
     :param alpha_plus: $\alpha_+$
@@ -300,5 +300,5 @@ def sound_shell_dict(
 
 
 fluid_shell_bag = sound_shell_bag
-fluid_shell_alpha_plus = sound_shell_alpha_plus
+fluid_shell_alpha_plus = sound_shell_alpha_plus_bag
 fluid_shell_dict = sound_shell_dict

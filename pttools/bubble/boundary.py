@@ -34,7 +34,7 @@ class Phase(float, enum.Enum):
 
 
 @enum.unique
-class SolutionType(str, enum.Enum):
+class SolutionType(enum.StrEnum):
     r"""There are three different types of relativistic combustion.
     For further details, please see chapter 7.2 and figure 14
     of :notes:`\ `.
@@ -112,7 +112,7 @@ def entropy_flux(v_tilde: th.FloatOrArr, s: th.FloatOrArr):
 @numba.njit
 def fluid_speeds_at_wall(
         v_wall: float,
-        alpha_p: th.FloatOrArr,
+        alpha_plus: th.FloatOrArr,
         sol_type: SolutionType) -> tuple[float, float, float, float]:
     r"""
     Solves fluid speed boundary conditions at the wall to obtain
@@ -127,7 +127,7 @@ def fluid_speeds_at_wall(
     TODO: add a validity check for v_minus
 
     :param v_wall: $v_\text{wall}$
-    :param alpha_p: $\alpha_+$
+    :param alpha_plus: $\alpha_+$
     :param sol_type: solution type
     :return: $\tilde{v}_+,\tilde{v}_-,v_+,v_-$
     """
@@ -136,22 +136,22 @@ def fluid_speeds_at_wall(
             logger.error("v_wall > 1: v_wall = %s", v_wall)
         raise ValueError("v_wall > 1")
 
-    # print( "max_speed_deflag(alpha_p)= ", max_speed_deflag(alpha_p))
-    #     if v_wall < max_speed_deflag(alpha_p) and v_wall <= cs and alpha_p <= 1/3.:
+    # print("max_speed_deflag(alpha_plus)=", max_speed_deflag(alpha_plus))
+    # if v_wall < max_speed_deflag(alpha_plus) and v_wall <= cs and alpha_p <= 1/3.:
     if sol_type == SolutionType.SUB_DEF.value:
         # For clarity these are defined here in the same order as returned
-        vfp_w = v_plus(v_wall, alpha_p, sol_type)  # Fluid velocity just ahead of the wall in wall frame (v+)
+        vfp_w = v_plus(v_wall, alpha_plus, sol_type)  # Fluid velocity just ahead of the wall in wall frame (v+)
         vfm_w = v_wall  # Fluid velocity just behind the wall in wall frame (v-)
         vfp_p = relativity.lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
         vfm_p = relativity.lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
     elif sol_type == SolutionType.HYBRID.value:
-        vfp_w = v_plus(const.CS0, alpha_p, sol_type)  # Fluid velocity just ahead of the wall in wall frame (v+)
+        vfp_w = v_plus(const.CS0, alpha_plus, sol_type)  # Fluid velocity just ahead of the wall in wall frame (v+)
         vfm_w = const.CS0  # Fluid velocity just behind the wall in plasma frame (hybrid)
         vfp_p = relativity.lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
         vfm_p = relativity.lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
     elif sol_type == SolutionType.DETON.value:
         vfp_w = v_wall  # Fluid velocity just ahead of the wall in wall frame (v+)
-        vfm_w = v_minus(v_wall, alpha_p)  # Fluid velocity just behind the wall in wall frame (v-)
+        vfm_w = v_minus(v_wall, alpha_plus)  # Fluid velocity just behind the wall in wall frame (v-)
         vfp_p = relativity.lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
         vfm_p = relativity.lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
     else:
@@ -394,12 +394,11 @@ def _v_minus_scalar(
     # Fluid must flow through the wall from the outside to the inside of the bubble.
     if vp < 0:
         return np.nan
+    # Todo: Make this implementation more readable.
     # This has probably been written like this for numerical stability
-    vp2 = vp ** 2
-    y = vp2 + 1. / 3.
-    z = y - ap * (1. - vp2)
-    x = (4. / 3.) * vp2
-    sqrt_arg = z**2 - x
+    vp2 = vp**2
+    z = vp2 + 1/3 - ap * (1. - vp2)
+    sqrt_arg = z**2 - (4/3) * vp2
 
     # Way 2
     # x = (1 + ap)*vp + (1 - 3*ap)/(3*vp)

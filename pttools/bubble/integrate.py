@@ -112,6 +112,7 @@ def fluid_integrate_param(
     y0 = np.array([v0, w0, xi0])
     # The second value ensures that the Numba typing is correct.
     data = np.array([phase, 0.])
+    success: bool = False
     if method == "numba_lsoda" or speedup.NUMBA_INTEGRATE:
         if numbalsoda is None:
             raise ImportError("NumbaLSODA is not loaded")
@@ -132,7 +133,10 @@ def fluid_integrate_param(
                 v, w, xi, success = fluid_integrate_param_solve_ivp(
                     t=t, y0=y0, data=data, df_dtau_ptr=df_dtau_ptr, method=method)
     if not success:
-        raise RuntimeError("Integration failed")
+        raise RuntimeError(
+            f"Integration failed for v0={v0}, w0={w0}, xi0={xi0}, phase={phase}, "
+            f"t_end={t_end}, n_xi={n_xi}, method={method}"
+        )
     return v, w, xi, t
 
 
@@ -210,8 +214,8 @@ def fluid_integrate_param_solve_ivp(
         w = soln.y[1, :]
         xi = soln.y[2, :]
         success = True
-    except Exception as e:
-        logger.exception("Integrating fluid shell with solve_ivp failed", exc_info=e)
+    except Exception as exc:
+        logger.exception("Integrating fluid shell with solve_ivp failed", exc_info=exc)
         v = w = xi = np.zeros_like(t)
         success = False
     return v, w, xi, success

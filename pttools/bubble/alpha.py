@@ -3,6 +3,7 @@ Functions for computing $\alpha_n$, the strength parameter at nucleation tempera
 and $\alpha_+$, the strength parameter just in front of the wall.
 """
 
+import logging
 import threading
 
 import numba
@@ -21,6 +22,7 @@ from pttools.bubble import integrate
 from pttools.bubble import props
 from pttools.bubble import transition
 
+logger = logging.getLogger(__name__)
 
 CS2CACHE: dict[th.CS2FunScalarPtr, th.CS2CFunc] = {}
 find_alpha_plus_scalar_lock = threading.Lock()
@@ -39,12 +41,14 @@ def alpha_n_max_bag(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th
     return alpha_n_max_deflagration_bag(v_wall, n_xi)
 
 
-# @numba.njit
 def _alpha_n_max_deflagration_bag_scalar(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArr:
     check.check_wall_speed(v_wall)
+    if v_wall > 0.9999:
+        # Alpha_n_max diverges as v_wall -> 1, and the solver fails to find the correct solution.
+        return np.nan
     sol_type = boundary.SolutionType.HYBRID.value if v_wall > const.CS0 else boundary.SolutionType.SUB_DEF.value
-    ap = 1. / 3 - 1.0e-10  # Warning - this is not safe.  Causes warnings for v low vw
-    _, w, xi = fluid_bag.sound_shell_alpha_plus(v_wall, ap, sol_type, n_xi)
+    ap = 1. / 3 - 1.0e-10  # Warning - this is not safe. Causes warnings for low v_wall.
+    _, w, xi = fluid_bag.sound_shell_alpha_plus_bag(v_wall, ap, sol_type, n_xi)
     n_wall = props.find_v_index(xi, v_wall)
     return w[n_wall + 1] * (1. / 3)
 
@@ -58,7 +62,7 @@ def _alpha_n_max_deflagration_bag_arr(v_wall: th.FloatOrArr, n_xi: int = const.N
     for i in numba.prange(v_wall.size):  # pylint: disable=not-an-iterable
         ret[i] = _alpha_n_max_deflagration_bag_scalar_numba(v_wall[i], n_xi)
     # alpha_N = (w_+/w_N)*alpha_+
-    # w_ is normalised to 1 at large xi
+    # w_ is normalized to 1 at large xi
     # Need n_wall+1, as w is an integral of v, and lags by 1 step
     return ret
 
@@ -69,7 +73,7 @@ def _alpha_n_max_deflagration_bag_arr_wrapper(v_wall: th.FloatOrArr, n_xi: int =
 
 def alpha_n_max_deflagration_bag(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArr:
     r"""
-    Calculates the maximum relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
+    Calculates the maximum phase transition strength $\alpha_{n,\max}$,
     in the Bag Model for given $v_\text{wall}$, for deflagration.
     Works also for hybrids, as they are supersonic deflagrations.
 
@@ -127,7 +131,7 @@ def alpha_n_max_hybrid_bag(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> flo
     # Might have been returned as "Detonation, which takes precedence over Hybrid
     sol_type = boundary.SolutionType.HYBRID.value
     ap = 1/3 - 1e-8
-    _, w, xi = fluid_bag.sound_shell_alpha_plus(v_wall, ap, sol_type, n_xi)
+    _, w, xi = fluid_bag.sound_shell_alpha_plus_bag(v_wall, ap, sol_type, n_xi)
     n_wall = props.find_v_index(xi, v_wall)
 
     # alpha_N = (w_+/w_N)*alpha_+
@@ -249,7 +253,7 @@ def find_alpha_n_bag(
     check.check_wall_speed(v_wall)
     if sol_type == boundary.SolutionType.UNKNOWN.value:
         sol_type = transition.identify_solution_type_alpha_plus(v_wall, alpha_p).value
-    _, w, xi = fluid_bag.sound_shell_alpha_plus(
+    _, w, xi = fluid_bag.sound_shell_alpha_plus_bag(
         v_wall, alpha_p, sol_type, n_xi,
         cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr
     )

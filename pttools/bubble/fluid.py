@@ -376,7 +376,7 @@ def sound_shell_detonation(
 
     # Use bag model as the starting point. This may fail for points near the v_cj curve.
     vp_tilde_bag, vm_tilde_bag, vp_bag, vm_bag = boundary.fluid_speeds_at_wall(
-        v_wall, alpha_p=alpha_n, sol_type=SolutionType.DETON)
+        v_wall, alpha_plus=alpha_n, sol_type=SolutionType.DETON)
     wm_bag = boundary.w2_junction(v1=vp_tilde_bag, w1=wn, v2=vm_tilde_bag)
 
     # The bag model works for more points than the pre-generated guesses, so let's use the bag model if we can.
@@ -902,7 +902,8 @@ def sound_shell_generic(
     """
     if use_giese_solver:
         return sound_shell_giese(
-            model=model, v_wall=v_wall, alpha_n=alpha_n, wn=wn, wn_guess=wn_guess, wm_guess=wm_guess)
+            model=model, v_wall=v_wall, alpha_n=alpha_n, wn=wn, wn_guess=wn_guess, wm_guess=wm_guess
+        )
 
     start_time = time.perf_counter()
     if alpha_n_max_bag is None:
@@ -912,13 +913,13 @@ def sound_shell_generic(
 
     if wn is None or np.isnan(wn):
         wn = model.wn(alpha_n, wn_guess=wn_guess)
-    # The shock curve hits v=0 here
+    # The shock curve hits v=0 here.
     cs_n = np.sqrt(model.cs2(wn, Phase.SYMMETRIC))
 
     if use_bag_solver and model.DEFAULT_NAME == "bag":
         if high_alpha_n:
             logger.info(
-                "Got model=%s, v_wall=%s, alpha_n=%s, for which there is no solution.",
+                "Got model=%s, v_wall=%s, alpha_n=%s, for which there is no bag model solution.",
                 model.label_unicode, v_wall, alpha_n
             )
             return const.nan_arr, const.nan_arr, const.nan_arr, SolutionType.ERROR, \
@@ -931,7 +932,9 @@ def sound_shell_generic(
         )
         sol_type2 = transition.identify_solution_type_bag(v_wall, alpha_n)
         if sol_type is not None and sol_type != sol_type2:
-            raise ValueError(f"Bag model gave a different solution type ({sol_type2}) than what was given ({sol_type}).")
+            raise ValueError(
+                f"Bag model gave a different solution type ({sol_type2}) than what was given ({sol_type})."
+            )
 
         v, w, xi = fluid_bag.sound_shell_bag(v_wall, alpha_n)
         # The results of the old solver are scaled to wn=1
