@@ -12,11 +12,11 @@ jobs:
       - name: Count Lines of Code (cloc) for the PTtools library
         uses: djdefi/cloc-action@6
         with:
-          options: ${{ github.workspace }}/pttools --by-file-by-lang --exclude-list-file=.clocignore
+          options: ${{ github.workspace }}/pttools --by-file-by-lang --exclude-list-file=.clocignore  --vcs=git
       - name: Count Lines of Code (cloc) for the repository
         uses: djdefi/cloc-action@6
         with:
-          options: ${{ github.workspace }} --by-file-by-lang --exclude-list-file=.clocignore
+          options: ${{ github.workspace }} --by-file-by-lang --exclude-list-file=.clocignore  --vcs=git
 #  fossa:
 #    runs-on: ubuntu-latest
 #    timeout-minutes: 5
@@ -123,7 +123,7 @@ jobs:
           pip --cache-dir=.pip install --upgrade pip wheel
           pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
       - name: Run Pylint
-        run: pylint examples pttools tests 2>&1 | tee pylint.txt
+        run: pylint docs examples pttools tests 2>&1 | tee pylint.txt
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
