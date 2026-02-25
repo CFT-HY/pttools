@@ -1,9 +1,12 @@
 """Utilities for parallel execution of functions using multiple Python processes with concurrent.futures"""
 
-import concurrent.futures as cf
-# import datetime
+import atexit
+from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
+from contextlib import contextmanager
+# import datetime
 import logging
+from threading import Lock
 import time
 import typing as tp
 
@@ -13,6 +16,19 @@ from numpy.typing import NDArray
 from pttools.speedup.options import MAX_WORKERS_DEFAULT
 
 logger = logging.getLogger(__name__)
+
+POOL: ProcessPoolExecutor | None = None
+POOL_LOCK: Lock = Lock()
+
+
+class FakeExecutor:
+    """A fake executor for single-threaded execution"""
+    # pylint: disable=too-few-public-methods
+
+    @staticmethod
+    def submit(func: tp.Callable, *args, **kwargs) -> "FakeFuture":
+        """Submit a function for execution and return a future object"""
+        return FakeFuture(func, *args, **kwargs)
 
 
 class FakeFuture:
@@ -68,6 +84,30 @@ class LoggingRunner:
                     )
 
         return ret
+
+
+def get_process_pool(max_workers: int = MAX_WORKERS_DEFAULT) -> ProcessPoolExecutor:
+    global POOL
+    with POOL_LOCK:
+        if POOL is None:
+            POOL = ProcessPoolExecutor(max_workers=max_workers)
+            atexit.register(POOL.shutdown)
+        return POOL
+
+
+@contextmanager
+def global_process_pool(
+        max_workers: int = MAX_WORKERS_DEFAULT,
+        single_thread: bool = False) -> tp.Iterator[FakeExecutor | ProcessPoolExecutor]:
+    """Get the global process pool for parallel execution.
+
+    This pool is shared across the entire program
+    and should be used for all parallel execution to avoid creating multiple pools.
+    """
+    if single_thread:
+        yield FakeExecutor()
+    else:
+        yield get_process_pool(max_workers=max_workers)
 
 
 def parallel_debug_message(
@@ -150,7 +190,7 @@ def run_parallel(
     start_time = time.perf_counter()
     # start_datetime = datetime.datetime.now().astimezone().isoformat()
     try:
-        with cf.ProcessPoolExecutor(max_workers=max_workers) as ex:
+        with global_process_pool(max_workers=max_workers, single_thread=single_thread) as ex:
             # Submit parallel execution
             with np.nditer(
                     [params, None],
@@ -159,14 +199,9 @@ def run_parallel(
                     op_axes=op_axes,
                     op_dtypes=[params.dtype, object],
                     order="C") as it:
-                if single_thread:
-                    for ind, (param, fut) in enumerate(it):
-                        multi_index = None if multiple_params else it.multi_index
-                        fut[...] = FakeFuture(runner.run, param, index=ind, multi_index=multi_index)
-                else:
-                    for ind, (param, fut) in enumerate(it):
-                        multi_index = None if multiple_params else it.multi_index
-                        fut[...] = ex.submit(runner.run, param, index=ind, multi_index=multi_index)
+                for ind, (param, fut) in enumerate(it):
+                    multi_index = None if multiple_params else it.multi_index
+                    fut[...] = ex.submit(runner.run, param, index=ind, multi_index=multi_index)
                 futs = it.operands[1]
 
             # Collect results
