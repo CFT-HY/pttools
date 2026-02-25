@@ -5,6 +5,8 @@ For the full list of built-in configuration values, see the documentation:
 https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
+# pylint: disable=invalid-name, redefined-builtin
+
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -33,7 +35,7 @@ os.makedirs(os.path.join(dir_path, "_static"), exist_ok=True)
 # -- Project information -----------------------------------------------------
 
 project = 'PTtools'
-with open(os.path.join(repo_path, "AUTHORS")) as file:
+with open(os.path.join(repo_path, "AUTHORS"), "r") as file:
     _authors = file.read().splitlines()
 author = f"{', '.join(_authors[:-1])} & {_authors[-1]}"
 copyright = f"2015-{date.today().year}, {author}"

@@ -8,6 +8,7 @@ import time
 import typing as tp
 
 import numpy as np
+from numpy.typing import NDArray
 
 from pttools.speedup.options import MAX_WORKERS_DEFAULT
 
@@ -74,8 +75,7 @@ def parallel_debug_message(
         err: Exception | None = None,
         max_workers: int | None = None,
         single_thread: bool | None = None,
-        start_time: float | None = None,
-        n_dmesg_lines: int = 100) -> str:
+        start_time: float | None = None) -> str:
     end_time = time.perf_counter()
     msg = info
     if info is not None and info[-1] != " ":
@@ -95,7 +95,7 @@ def parallel_debug_message(
 
 def run_parallel(
         func: tp.Callable,
-        params: np.ndarray,
+        params: NDArray,
         max_workers: int = MAX_WORKERS_DEFAULT,
         multiple_params: bool = False,
         unpack_params: bool = False,
@@ -103,7 +103,7 @@ def run_parallel(
         return_arr_shape: tuple[int, ...] | None = None,
         log_progress_element: int | None = None,
         log_progress_percentage: float | None = None,
-        args: tp.Union[list, tuple] = (),
+        args: list | tuple = (),
         kwargs: dict[str, tp.Any] | None = None,
         single_thread: bool = False) -> NDArray | tuple[NDArray] | None:
     """Run the given function with multiple parameters in parallel

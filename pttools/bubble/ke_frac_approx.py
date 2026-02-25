@@ -5,8 +5,7 @@ import numpy as np
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet_bag
 import pttools.type_hints as th
 
-
-# Todo: the approximations come from Espinoza et al. 2010
+# Todo: replace these with the PTPlot versions
 
 def delta_k(alpha_n: th.FloatOrArr) -> th.FloatOrArr:
     return -0.9 * np.log(np.sqrt(alpha_n) / (1 + np.sqrt(alpha_n)))  # natural log

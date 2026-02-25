@@ -18,6 +18,7 @@ from .check import *
 from .const import *
 from .fluid import *
 from .fluid_bag import *
+from .fluid_reference import *
 # from .gksvdv import *
 from .integrate import *
 # from .physical_params import *
