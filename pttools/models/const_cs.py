@@ -13,7 +13,7 @@ from pttools.bubble.const import CS0_2
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.models.analytic import AnalyticModel
 from pttools.models.bag import BagModel
-from pttools.models.utils import check_value_in_range
+from pttools.utils.validation import check_value_in_range
 
 logger = logging.getLogger(__name__)
 

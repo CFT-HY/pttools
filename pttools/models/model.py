@@ -15,7 +15,7 @@ from pttools.bubble.check import find_most_negative_vals
 from pttools.bubble.integrate import add_df_dtau, differentials
 from pttools.bubble import transition
 from pttools.models.base import BaseModel
-from pttools.models.utils import check_value_in_range
+from pttools.utils.validation import check_value_in_range
 from pttools.speedup.differential import DifferentialPointer
 from pttools.utils.system import FORKING
 import pttools.type_hints as th
