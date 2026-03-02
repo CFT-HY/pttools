@@ -8,12 +8,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import pttools.type_hints as th
+from pttools.type_hints import FloatArr
 from pttools.bubble import Bubble, Phase
 from pttools.ssm import const
-from pttools.ssm.nucleation import NucType, DEFAULT_NUC_TYPE
+from pttools.ssm.nucleation import NucType, DEFAULT_NUC_TYPE, beta, beta_over_H
 from pttools.ssm.spec_den_gw import gen_lookup, spec_den_gw_scaled
 from pttools.ssm.spec_den_v import spec_den_v
 from pttools.ssm.low_k import power_spectrum_integration_low, power_spectrum_integration_int, pow_gw_junction
+from pttools.utils import copy_docstrings
 
 if tp.TYPE_CHECKING:
     from pttools.analysis.utils import FigAndAxes
@@ -33,7 +35,7 @@ class SSMSpectrum:
             n_z_lookup: int = const.N_Z_LOOKUP_DEFAULT,
             r_star: float | None = None,
             # eta_star: float = 1,
-            lifetime_multiplier: float = 1,
+            lifetime_multiplier: float = 1.,
             compute: bool = True,
             low_k: bool = True,
             label_latex: str | None = None,
@@ -45,7 +47,7 @@ class SSMSpectrum:
             use approximation rather than doing the sine transform integral.
         :param nuc_type: nucleation type
         :param nt: number of points in the t array
-        :param r_star: $r_*$
+        :param r_star: Hubble-scaled mean bubble spacing $r_*$
         :param lifetime_multiplier: used for computing the source lifetime factor
         :param compute: whether to compute the spectrum immediately
         """
@@ -80,7 +82,7 @@ class SSMSpectrum:
 
         if not (self.r_star is None or np.isnan(r_star)):
             if self.r_star <= 0:
-                raise ValueError("r_star must be positive. Got r_star={r_star}.")
+                raise ValueError(f"r_star must be positive. Got r_star={r_star}.")
             if self.r_star >= 1:
                 # Todo: Find a better reference for this.
                 logger.warning(
@@ -120,24 +122,11 @@ class SSMSpectrum:
         if compute:
             self.compute()
 
-    def beta(self, H_n: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Nucleation rate parameter $\beta$
-        $$\beta = (8 \pi)^\frac{1}{3} \frac{{v}_\text{wall}}{{R}_*}$$
-        :gw_pt_ssm:`\ ` eq. 4.16, A.14
-        :notes:`\ ` eq. 7.21
+    def beta[T: (float, FloatArr)](self, H_n: T) -> T:  # pylint: disable=missing-function-docstring
+        return self.beta_over_H() * H_n
 
-        Simultaneous nucleation only!
-        """
-        return self.beta_tilde() * H_n
-
-    def beta_tilde(self):
-        r"""Nucleation rate parameter $\tilde{\beta}$, also known as "beta over H"
-        $$\tilde{\beta} \equiv \frac{\beta}{{H}_n} = (8 \pi)^\frac{1}{3} \frac{{v}_\text{wall}}{{r}_*}$$
-        :gowling_2021:`\ ` eq. 2.1
-
-        Simultaneous nucleation only!
-        """
-        return (8*np.pi)**(1/3) * self.bubble.v_wall / self.r_star
+    def beta_over_H(self) -> float:  # pylint: disable=missing-function-docstring
+        return beta_over_H(r_star=self.r_star, v_wall=self.bubble.v_wall, cs=self.cs)
 
     def compute(self, eps_lookup: float = 1e-8, lifetime_distribution_a: float = 1.):
         if not self.bubble.solved:
@@ -230,7 +219,9 @@ class SSMSpectrum:
             )
         return ret
 
+    # -----
     # Plotting
+    # -----
 
     def plot(
             self,
@@ -295,3 +286,9 @@ def pow_spec(z: th.FloatOrArr, spec_den: th.FloatOrArr) -> th.FloatOrArr:
     :return: power spectrum
     """
     return z**3 / (2. * np.pi ** 2) * spec_den
+
+
+copy_docstrings({
+    SSMSpectrum.beta: beta,
+    SSMSpectrum.beta_over_H: beta_over_H,
+}, without_params=True)
