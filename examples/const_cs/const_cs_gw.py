@@ -115,7 +115,7 @@ def setup_axes(
         f_max: float):
     r"""Configure axes for the v, GW and $\Omega_{gw,0}$ plots"""
     title = rf"$\alpha_n={spectrum.bubble.alpha_n}, v_\text{{wall}}={spectrum.bubble.v_wall}$"
-    title_omgw0 = title[:-1] + rf", r_*={spectrum.r_star}, T_n={spectrum.Tn} \text{{GeV}}$"
+    title_omgw0 = title[:-1] + rf", r_*={spectrum.r_star}, T_*={spectrum.T_star} \text{{GeV}}$"
 
     ax_v.set_xlim(0.25, 0.95)
     ax_v.set_ylim(0, 0.6)

@@ -16,17 +16,17 @@ def omgw0_bag(
         vw: float,
         alpha: float,
         r_star: float,
-        T: float = const.T_DEFAULT,
+        T_star: float = const.T_STAR_DEFAULT,
         npt: NptType = NPTDEFAULT,
         sup: sup_mod.Suppression = sup_mod.DEFAULT,
         sup_method: sup_mod.SuppressionMethod = sup_mod.SuppressionMethod.DEFAULT):
     r"""
-    For given set of thermodynamic parameters vw, alpha, rs and Tn calculates the power spectrum using
+    For given set of thermodynamic parameters vw, alpha, rs and T_star calculates the power spectrum using
     the SSM as encoded in the PTtools module (omgwi)
     :gowling_2021:`\ ` eq. 2.14
     """
     params = (vw, alpha, ssm.NucType.EXPONENTIAL, (1,))
-    fp0 = f0(r_star, T)
+    fp0 = f0(r_star, T_star)
     z = freqs/fp0
 
     K_frac = K.calc_ke_frac(vw, alpha)

@@ -37,7 +37,7 @@ class ThermoTest:
     def test_ebar(self):
         assert_allclose(
             [thermo.ebar(model=bubble.model, wn=bubble.wn) for bubble in self.bubbles],
-            [bubble.en() for bubble in self.bubbles]
+            [bubble.en for bubble in self.bubbles]
         )
 
     def test_wbar(self):

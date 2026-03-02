@@ -4,7 +4,7 @@ import typing as tp
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.bubble import Bubble, Phase
+from pttools.bubble import Bubble
 from pttools.omgw0 import const
 from pttools.omgw0.factors import F_gw0
 from pttools.omgw0 import freq
@@ -34,7 +34,7 @@ class Spectrum(ssm.SSMSpectrum):
             low_k: bool = True,
             label_latex: str | None = None,
             label_unicode: str | None = None,
-            Tn: float | None = None,
+            T_star: float | None = None,
             g_star: float | None = None,
             gs_star: float | None = None
             ):
@@ -47,7 +47,7 @@ class Spectrum(ssm.SSMSpectrum):
         :param nt: number of points in the t array
         :param lifetime_multiplier: used for computing the source lifetime factor
         :param compute: whether to compute the spectrum immediately
-        :param Tn: $T_n$, nucleation temperature override
+        :param T_star: $T_*$, temperature at the time of GW production
         :param g_star: $g_*$, degrees of freedom override at the time of GW production
         :param gs_star: $g_{s,*}$ degrees of freedom override for entropy at the time of GW production
         """
@@ -65,25 +65,51 @@ class Spectrum(ssm.SSMSpectrum):
             label_latex=label_latex,
             label_unicode=label_unicode
         )
-        self.override_necessary = not self.bubble.model.temperature_is_physical
-        self.Tn_manual_override = Tn is not None
-        self.g_star_manual_override = g_star is not None
-        self.gs_star_manual_override = gs_star is not None
-        self.Tn_override = const.T_DEFAULT if Tn is None else Tn
-        self.g_star_override = const.G_STAR_DEFAULT if g_star is None else g_star
-        self.gs_star_override = self.g_star_override if gs_star is None else gs_star
+        # This is needed for T_star, g_star and gs_star
+        if not self.bubble.solved:
+            self.bubble.solve()
 
-    def f(self, z: tp.Union[np.ndarray, None] = None) -> th.FloatOrArr:  # pylint: disable=missing-function-docstring
-        if z is None:
-            z = self.y
-        return freq.f(z=z, r_star=self.r_star, f_star0=self.f_star0)
+        bubble_temp_physical = bubble.model.temperature_is_physical
+        #: Temperature $T_*$ at the time of GW production
+        self.T_star: float = T_star if T_star is not None \
+            else bubble.T_star if bubble_temp_physical \
+            else const.T_STAR_DEFAULT
+        #: Degrees of freedom $g_*$ for pressure at the time the GWs were produced
+        self.g_star: float = g_star if g_star is not None \
+            else bubble.g_star if bubble_temp_physical \
+            else const.G_STAR_DEFAULT
+        #: Degrees of freedom $g_{s,*}$ for entropy at the time the GWs were produced
+        self.gs_star: float = gs_star if gs_star is not None \
+            else bubble.gs_star if bubble_temp_physical \
+            else const.G_STAR_DEFAULT
+
+    # =====
+    # Properties
+    # =====
 
     @functools.cached_property
     def f_star0(self) -> float:  # pylint: disable=missing-function-docstring
         return freq.f_star0(
-            T=self.Tn,
+            T_star=self.T_star,
             g_star=self.g_star
         )
+
+    @property
+    def H_n(self):
+        """Hubble constant at nucleation temperature, $H_n$
+
+        $$H_n = H(T_n)$$
+        """
+        return ssm.H(T=self.T_star)
+
+    # =====
+    # Methods
+    # =====
+
+    def f(self, z: th.FloatArr | None = None) -> th.FloatOrArr:  # pylint: disable=missing-function-docstring
+        if z is None:
+            z = self.y
+        return freq.f(z=z, r_star=self.r_star, f_star0=self.f_star0)
 
     def F_gw0(self, g0: float = const.G0, gs0: float = const.GS0) -> float:  # pylint: disable=missing-function-docstring
         return F_gw0(
@@ -93,42 +119,10 @@ class Spectrum(ssm.SSMSpectrum):
             gs_star=self.gs_star
         )
 
-    @functools.cached_property
-    def g_star(self) -> float:
-        """Degrees of freedom $g_*$ for pressure at the time the GWs were produced"""
-        if self.override_necessary or self.g_star_manual_override:
-            return self.g_star_override
-        return self.g_star_computed
-
-    @functools.cached_property
-    def g_star_computed(self):
-        """Degrees of freedom $g_*$ for pressure at the time the GWs were produced, computed from the solution"""
-        return self.bubble.model.gp(w=self.bubble.va_enthalpy_density, phase=Phase.BROKEN)
-
-    @functools.cached_property
-    def gs_star(self) -> float:
-        """Degrees of freedom $g_{s,*}$ for entropy at the time the GWs were produced"""
-        if self.override_necessary or self.gs_star_manual_override:
-            return self.gs_star_override
-        return self.gs_star_computed
-
-    @functools.cached_property
-    def gs_star_computed(self) -> float:
-        """Degrees of freedom $g_{s,*}$ for entropy at the time the GWs were produced, computed from the solution"""
-        return self.bubble.model.gs(w=self.bubble.va_enthalpy_density, phase=Phase.BROKEN)
-
-    @property
-    def H_n(self):
-        """Hubble constant at nucleation temperature, $H_n$
-
-        $$H_n = H(T_n)$$
-        """
-        return ssm.H(T=self.Tn)
-
-    def noise(self) -> np.ndarray:  # pylint: disable=missing-function-docstring
+    def noise(self) -> th.FloatArr1D:  # pylint: disable=missing-function-docstring
         return noise.omega_noise(self.f())
 
-    def noise_ins(self) -> np.ndarray:  # pylint: disable=missing-function-docstring
+    def noise_ins(self) -> th.FloatArr1D:  # pylint: disable=missing-function-docstring
         return noise.omega_ins(self.f())
 
     def omgw0(
@@ -136,7 +130,7 @@ class Spectrum(ssm.SSMSpectrum):
             g0: float = const.G0,
             gs0: float = const.GS0,
             sup: sup_mod.Suppression = sup_mod.DEFAULT,
-            sup_method: sup_mod.SuppressionMethod = sup_mod.SuppressionMethod.DEFAULT) -> np.ndarray:
+            sup_method: sup_mod.SuppressionMethod = sup_mod.SuppressionMethod.DEFAULT) -> th.FloatArr1D:
         r"""Gravitational wave power spectrum today $\Omega_{\text{gw},0}$"""
         # The r_star compensates the fact that the pow_gw includes a correction factor that is J without r_star
         return self.r_star * self.F_gw0(g0=g0, gs0=gs0) * self.pow_gw * \
@@ -158,7 +152,7 @@ class Spectrum(ssm.SSMSpectrum):
         i_max = np.argmax(omgw0)
         return self.f()[i_max], omgw0[i_max]
 
-    def omgw0_total(self, omgw0: np.ndarray | None = None) -> float:
+    def omgw0_total(self, omgw0: th.FloatArr1D | None = None) -> float:
         r"""Total $\Omega_{\text{gw},0} integrated over all frequencies"""
         if omgw0 is None:
             omgw0 = self.omgw0()
@@ -198,13 +192,6 @@ class Spectrum(ssm.SSMSpectrum):
         """
         return self.R_star(H_n) / self.bubble.ubarf
 
-    @functools.cached_property
-    def Tn(self) -> float:
-        """Nucleation temperature $T_n$"""
-        if self.override_necessary or self.Tn_manual_override:
-            return self.Tn_override
-        return self.bubble.Tn
-
     def z_from_f(self, f: th.FloatOrArr) -> th.FloatOrArr:
         r"""Convert from frequencies $f$ back to wavenumbers $z$
 
@@ -213,7 +200,7 @@ class Spectrum(ssm.SSMSpectrum):
         :param f: frequencies $f$ today
         :return: wavenumbers $z$
         """
-        return freq.z(f=f, Tn=self.Tn, r_star=self.r_star, g_star=self.g_star)
+        return freq.z(f=f, T_star=self.T_star, r_star=self.r_star, g_star=self.g_star)
 
     # -----
     # Plotting
