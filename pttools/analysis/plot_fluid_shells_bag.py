@@ -7,6 +7,7 @@ import numpy as np
 
 from pttools.analysis import utils
 from pttools.bubble import boundary, check, const, fluid_bag, props, quantities, relativity, shock, transition
+import pttools.type_hints as th
 
 
 def plot_fluid_shells_bag(
@@ -59,7 +60,7 @@ def plot_fluid_shells_bag(
         fig_width = ncols * 5
 
     fig: plt.Figure
-    ax: np.ndarray[tuple[int, int], plt.Axes]
+    ax: th.AxesArr2D
     fig, ax = plt.subplots(2, ncols, figsize=(fig_width, 8), sharex='col', sharey='row', squeeze=False)
     fig.subplots_adjust(hspace=0)
     fig.subplots_adjust(wspace=0.1)

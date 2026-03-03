@@ -2,6 +2,8 @@
 
 import typing as tp
 
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -26,8 +28,8 @@ Z_LABEL = r"$z = kR_*$"
 
 def plot_spectra_common(
         spectra: tp.Collection[SSMSpectrum],
-        fig: plt.Figure,
-        ax: plt.Axes,
+        fig: Figure,
+        ax: Axes,
         path: str | None = None,
         set_x: bool = True) -> FigAndAxes:
     """Common steps for plotting spectra"""
@@ -50,9 +52,9 @@ def plot_spectra_common(
 
 def plot_spectra_multi(
         spectra: tp.Collection[Spectrum],
-        fig: plt.Figure | None = None,
+        fig: Figure | None = None,
         path: str | None = None,
-        **kwargs) -> tuple[plt.Figure, np.ndarray[tuple[int, int], np.dtype[plt.Axes]]]:
+        **kwargs) -> tuple[Figure, th.AxesArr2D]:
     """Plot multiple types of spectra"""
     fig, axs = plot_spectra_multi_common(spectra, fig, figsize=(7, 5), nrows=2, ncols=2, **kwargs)
 
@@ -75,7 +77,7 @@ def plot_spectra_multi(
 
 def plot_spectra_multi_common(
         spectra: tp.Collection[Spectrum],
-        fig: plt.Figure,
+        fig: Figure,
         figsize: tuple[float, float],
         nrows: int,
         ncols: int,
@@ -99,7 +101,7 @@ def plot_spectra_multi_common(
 
 def plot_spectra_multi_flat(
         spectra: tp.Collection[Spectrum],
-        fig: plt.Figure,
+        fig: Figure,
         path: str | None = None,
         **kwargs):
     """Plot multiple spectra in a flat layout"""
@@ -124,8 +126,8 @@ def plot_spectra_multi_flat(
 
 def plot_spectra(
         spectra: tp.Collection[Spectrum],
-        fig: plt.Figure | None = None,
-        ax: plt.Axes | None = None,
+        fig: Figure | None = None,
+        ax: Axes | None = None,
         path: str | None = None,
         **kwargs) -> FigAndAxes:
     f"""Plot the GW spectra today {OMGW0_LABEL}"""
@@ -151,8 +153,8 @@ def plot_spectra(
 
 def plot_spectra_gw(
         spectra: tp.Collection[SSMSpectrum],
-        ax: plt.Axes | None = None,
-        fig: plt.Figure | None = None,
+        ax: Axes | None = None,
+        fig: Figure | None = None,
         path: str | None = None,
         **kwargs) -> FigAndAxes:
     f"""Plot the GW power spectra {POW_GW_LABEL}"""
@@ -165,8 +167,8 @@ def plot_spectra_gw(
 
 def plot_spectra_v(
         spectra: tp.Collection[SSMSpectrum],
-        ax: plt.Axes | None = None,
-        fig: plt.Figure | None = None,
+        ax: Axes | None = None,
+        fig: Figure | None = None,
         path: str | None = None,
         **kwargs) -> FigAndAxes:
     f"""Plot the velocity power spectra {POW_V_LABEL}"""
@@ -179,8 +181,8 @@ def plot_spectra_v(
 
 def plot_spectra_spec_den_gw(
         spectra: tp.Collection[SSMSpectrum],
-        ax: plt.Axes | None = None,
-        fig: plt.Figure | None = None,
+        ax: Axes | None = None,
+        fig: Figure | None = None,
         path: str | None = None,
         **kwargs) -> FigAndAxes:
     f"""Plot the GW spectral densities {SPEC_DEN_GW_LABEL}"""
@@ -193,8 +195,8 @@ def plot_spectra_spec_den_gw(
 
 def plot_spectra_spec_den_v(
         spectra: tp.Collection[SSMSpectrum],
-        ax: plt.Axes | None = None,
-        fig: plt.Figure | None = None,
+        ax: Axes | None = None,
+        fig: Figure | None = None,
         path: str | None = None,
         **kwargs) -> FigAndAxes:
     f"""Plot the velocity spectral densities {SPEC_DEN_V_LABEL}"""

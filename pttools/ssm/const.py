@@ -5,6 +5,7 @@ import typing as tp
 import numpy as np
 
 from pttools import bubble
+import pttools.type_hints as th
 
 #: Default number of xi points used in bubble profiles
 NXIDEFAULT: int = 2000
@@ -13,9 +14,9 @@ NTDEFAULT: int = 10000
 #: Default number of wavevectors used in the velocity convolution integrations.
 # This should be at least as large as the default number of GW frequencies.
 N_Z_LOOKUP_DEFAULT: int = 10000
-NptType = np.ndarray[tuple[int], np.int_] | tuple[int, int, int]
+NptType = th.IntArr1D | tuple[int, int, int]
 NPTDEFAULT: NptType = (NXIDEFAULT, NTDEFAULT, N_Z_LOOKUP_DEFAULT)
-Y_DEFAULT: np.ndarray[tuple[int], np.float64] = np.logspace(-1, 3, 1000)  # type: ignore
+Y_DEFAULT: th.FloatArr1D = np.logspace(-1, 3, 1000)  # type: ignore
 
 # It seems that NPTDEFAULT should be something like NXIDEFAULT/(2.pi), otherwise one
 # gets a GW power spectrum which drifts up at high k.

@@ -1,7 +1,8 @@
 import functools
 import typing as tp
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import numpy as np
 
 from pttools.bubble import Bubble
@@ -208,8 +209,8 @@ class Spectrum(ssm.SSMSpectrum):
 
     def plot(
             self,
-            fig: plt.Figure | None = None,
-            ax: plt.Axes | None = None,
+            fig: Figure | None = None,
+            ax: Axes | None = None,
             path: str | None = None,
             **kwargs) -> "FigAndAxes":
         from pttools.analysis.plot_spectra import plot_spectra
@@ -217,17 +218,17 @@ class Spectrum(ssm.SSMSpectrum):
 
     def plot_multi(
             self,
-            fig: plt.Figure | None = None,
+            fig: Figure | None = None,
             path: str | None = None,
-            **kwargs) -> tuple[plt.Figure, np.ndarray[tuple[int, int], np.dtype[plt.Axes]]]:
+            **kwargs) -> tuple[Figure, th.AxesArr2D]:
         from pttools.analysis.plot_spectra import plot_spectra_multi
         return plot_spectra_multi([self], fig, path, **kwargs)
 
     def plot_multi_flat(
             self,
-            fig: plt.Figure | None = None,
+            fig: Figure | None = None,
             path: str | None = None,
-            **kwargs) -> tuple[plt.Figure, np.ndarray[tuple[int], np.dtype[plt.Axes]]]:
+            **kwargs) -> tuple[Figure, th.AxesArr1D]:
         from pttools.analysis.plot_spectra import plot_spectra_multi_flat
         return plot_spectra_multi_flat([self], fig, path, **kwargs)
 

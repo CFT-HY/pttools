@@ -4,6 +4,8 @@ import typing as tp
 
 import numpy as np
 
+import pttools.type_hints as th
+
 
 #: Smallest float
 EPS: tp.Final[np.float64] = np.nextafter(0, 1)
@@ -19,7 +21,7 @@ T_END_DEFAULT: float = 50.
 #: Difference between consequent $\xi$ values
 DXI_SMALL: float = 1. / N_XI_DEFAULT
 #: Array with one NaN
-nan_arr: tp.Final[np.ndarray] = np.array([np.nan])
+nan_arr: tp.Final[th.FloatArr1D] = np.array([np.nan])
 nan_arr.setflags(write=False)
 #: Limit of points for a shell to be so thin that it should be re-computed with more points
 THIN_SHELL_T_POINTS_MIN: int = 100

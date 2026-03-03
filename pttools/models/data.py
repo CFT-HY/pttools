@@ -14,20 +14,18 @@ from pttools.models.model import Model
 import pttools.type_hints as th
 from pttools.speedup.overload import np_all_fix
 
-Float1DArray = np.ndarray[tuple[int], np.float64]
-
 
 class DataModel(Model):
     def __init__(
             self,
-            T_s: Float1DArray,
-            T_b: Float1DArray,
-            p_s: Float1DArray,
-            p_b: Float1DArray,
-            e_s: Float1DArray,
-            e_b: Float1DArray,
-            cs2_s: tp.Union[Float1DArray, None] = None,
-            cs2_b: tp.Union[Float1DArray, None] = None,
+            T_s: th.FloatArr1D,
+            T_b: th.FloatArr1D,
+            p_s: th.FloatArr1D,
+            p_b: th.FloatArr1D,
+            e_s: th.FloatArr1D,
+            e_b: th.FloatArr1D,
+            cs2_s: tp.Union[th.FloatArr1D, None] = None,
+            cs2_b: tp.Union[th.FloatArr1D, None] = None,
             T_crit: float | None = None,
             T_nucl: float | None = None,
             T_min: float | None = None,

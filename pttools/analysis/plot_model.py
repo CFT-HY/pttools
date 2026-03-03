@@ -9,6 +9,7 @@ import numpy as np
 from pttools import models
 from pttools.analysis.utils import A4_PAPER_SIZE
 from pttools.bubble import Phase
+import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ class ModelPlot:
         self.ax_alpha_n: plt.Axes = self.axs[1, 2]
         # self.ax_theta = self.axs[2, 0]
 
-        self.temps: np.ndarray[tuple[int], np.float64]
+        self.temps: th.FloatArr1D
         if t_log:
             self.t_min = max(model.T_min, 10 ** (-t_log_range) * model.T_crit) if t_min is None else t_min
             self.t_max = min(model.T_max, 10 ** t_log_range * model.T_crit) if t_max is None else t_max

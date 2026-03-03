@@ -3,6 +3,7 @@
 import ctypes
 import typing as tp
 
+from matplotlib.axes import Axes
 import numba
 from numba.core.registry import CPUDispatcher
 import numpy as np
@@ -13,6 +14,8 @@ import scipy.integrate as spi
 # from pttools.speedup.numba_wrapper import CPUDispatcher
 
 # Function and object types
+type AxesArr1D = np.ndarray[tuple[int], np.dtype[Axes]]
+type AxesArr2D = np.ndarray[tuple[int, int], np.dtype[Axes]]
 #: Numba function
 type NumbaFunc = tp.Callable | CPUDispatcher
 #: ODE solver specifier
@@ -33,6 +36,8 @@ type FloatOrArr1D = float | FloatArr1D
 #: The return type of Numba function that returns a float or a Numpy array
 type FloatOrArrNumba = float | np.ndarray | NumbaFunc
 #: Integer or a Numpy array of integers
+type Int = np.dtype[np.int_]
+type IntArr1D = np.ndarray[tuple[int], Int]
 type IntOrArr = int | NDArray[np.int_]
 
 #: Type of cs2 function

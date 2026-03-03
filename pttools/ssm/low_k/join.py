@@ -60,12 +60,12 @@ def pow_gw_junction(
 
 
 def pow_gw_approximation(
-        z: np.ndarray[tuple[int], np.float64],
-        spec_den_v: np.ndarray[tuple[int], np.float64],
+        z: th.FloatArr1D,
+        spec_den_v: th.FloatArr1D,
         cs: float,
         tau_star: float,
         tau_end: float,
-        eps: float = 1e-8) -> np.ndarray[tuple[int], np.float64]:
+        eps: float = 1e-8) -> th.FloatArr1D:
     r"""
     Spectral density of gravitational waves computed with the sound shell model plus analytic approximation
     in the low-frequency and intermediate-frequency regimes.
@@ -83,7 +83,7 @@ def pow_gw_approximation(
     # nx = len(z) can be too few for velocity PS convolutions
     xmax = z.max() * (0.5 * (1. + cs) / cs) + eps
     xmin = z.min() * (0.5 * (1. - cs) / cs) - eps
-    x: np.ndarray[tuple[int], np.float64] = np.logspace(np.log10(xmin), np.log10(xmax), z.size)  # x = pR_*
+    x: th.FloatArr1D = np.logspace(np.log10(xmin), np.log10(xmax), z.size)  # x = pR_*
 
     Pgw_high = 4/3 * integration.power_spectrum_integration_high(x, spec_den_v, z, cs)
     Pgw_low = 4/3 * integration.power_spectrum_integration_low(x, spec_den_v, z, cs=cs, tau_star=tau_star, tau_end=tau_end)

@@ -28,7 +28,7 @@ class SuppressionPlot:
             alpha_n_max_lines: bool = True,
             v_cj: bool = True,
             figsize: tuple[float, float] = (4, 3),
-            # levels: np.ndarray[tuple[int], np.float64] = np.array([0.01, 0.03, 0.05, 0.1, 0.25, 0.5, 1, 1.5, 2, 2.5])
+            # levels: th.FloatArr1D = np.array([0.01, 0.03, 0.05, 0.1, 0.25, 0.5, 1, 1.5, 2, 2.5])
         ):
         fig_was_none = fig is None
         self.fig, self.ax = create_fig_ax(fig, ax, figsize=figsize)

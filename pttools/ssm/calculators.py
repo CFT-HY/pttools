@@ -13,9 +13,9 @@ logger = logging.getLogger(__name__)
 
 @numba.njit
 def resample_uniform_xi(
-        xi: np.ndarray,
+        xi: th.FloatArr1D,
         f: th.FloatOrArr,
-        n_xi: int = const.NPTDEFAULT[0]) -> tuple[np.ndarray, th.FloatOrArr]:
+        n_xi: int = const.NPTDEFAULT[0]) -> tuple[th.FloatArr1D, th.FloatOrArr]:
     r"""
     Provide uniform resample of function defined by $(x,y) = (\xi,f)$.
     Returns f interpolated and the uniform grid of n_xi points in range [0,1].
@@ -29,7 +29,7 @@ def resample_uniform_xi(
 
 
 @numba.njit
-def trapezoid_loglog(x: np.ndarray, y: np.ndarray, minus1_atol: float = 1e-12) -> float:
+def trapezoid_loglog(x: th.FloatArr1D, y: th.FloatArr1D, minus1_atol: float = 1e-12) -> float:
     """Power-law (log-log) trapezoidal integration
 
     Based on https://scicomp.stackexchange.com/a/31374

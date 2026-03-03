@@ -24,6 +24,7 @@ from pttools.omgw0 import Spectrum, omega_ins
 from pttools.analysis.parallel import create_spectra
 # from pttools.analysis.utils import A3_PAPER_SIZE, A4_PAPER_SIZE
 from pttools.utils.system import IS_READ_THE_DOCS
+import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
@@ -155,10 +156,10 @@ def main(low_k: bool = True):
     V_s = 1
     r_star = 0.1
     Tn = 200
-    # v_walls: np.ndarray = np.array([0.4, 0.7, 0.8])
-    # v_walls: np.ndarray = np.array([0.4, 0.67, 0.84])
-    v_walls: np.ndarray[tuple[int], np.float64] = np.array([0.3, 0.68, 0.9])
-    alpha_ns: np.ndarray[tuple[int], np.float64] = np.array([0.1, 0.2])
+    # v_walls: th.FloatArr1D = np.array([0.4, 0.7, 0.8])
+    # v_walls: th.FloatArr1D = np.array([0.4, 0.67, 0.84])
+    v_walls: th.FloatArr1D = np.array([0.3, 0.68, 0.9])
+    alpha_ns: th.FloatArr1D = np.array([0.1, 0.2])
     alpha_n_min = np.min(alpha_ns)
 
     allow_invalid = False
@@ -217,16 +218,16 @@ def main(low_k: bool = True):
 
     figsize = (12, 10)
     figsize2 = (12, 5)
-    figs: np.ndarray[tuple[int], plt.Figure] = np.array(
+    figs: np.ndarray[tuple[int], np.dtype[plt.Figure]] = np.array(
         [plt.figure(figsize=figsize) for _ in range(3)]
     )
-    figs2: np.ndarray[tuple[int, int], plt.Figure] = np.array(
+    figs2: np.ndarray[tuple[int, int], np.dtype[plt.Figure]] = np.array(
         [[plt.figure(figsize=figsize2) for _ in alpha_ns] for _ in range(3)]
     )
-    axs: np.ndarray[tuple[int, int, int], plt.Axes] = np.stack(
+    axs: np.ndarray[tuple[int, int, int], np.dtype[plt.Axes]] = np.stack(
         [fig.subplots(alpha_ns.size, v_walls.size) for fig in figs]
     )
-    axs2: np.ndarray[tuple[int, int, int], plt.Axes] = np.stack(
+    axs2: np.ndarray[tuple[int, int, int], np.dtype[plt.Axes]] = np.stack(
         [np.stack([fig.subplots(1, v_walls.size) for fig in figs2_row]) for figs2_row in figs2]
     )
 
