@@ -635,8 +635,9 @@ def sound_shell_solver_deflagration(
     if vp_guess > v_wall:
         vp_guess_new = 0.95 * v_wall
         if log_high_alpha_n_failures or not high_alpha_n:
-            logger.error(
-                "Invalid vp_guess=%s > v_wall=%s, replacing with vp_guess=%s",
+            logger.warning(
+                "Invalid vp_guess=%s > v_wall=%s, replacing with vp_guess=%s. "
+                "This can occur when v_wall < v_wall_min of the reference data.",
                 vp_guess, v_wall, vp_guess_new
             )
         vp_guess = vp_guess_new
