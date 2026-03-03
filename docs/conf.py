@@ -148,7 +148,8 @@ extlinks: dict[str, tuple[str, str]] = {
     "gw_pt_ssm": ("https://arxiv.org/abs/1909.10040%s", "Hindmarsh et al., 2019%s"),
     "notes": ("https://arxiv.org/abs/2008.09136%s", "Hindmarsh et al., 2021%s"),
     # Other articles
-    "kurki-suonio_1995": ("https://arxiv.org/abs/hep-ph/9512202", "Kurki-Suonio & Laine, 1995%s"),
+    "enqvist_1992": ("https://doi.org/10.1103/PhysRevD.45.3415%s", "Enqvist et al., 1992%s"),
+    "kurki-suonio_1995": ("https://arxiv.org/abs/hep-ph/9512202%s", "Kurki-Suonio & Laine, 1995%s"),
     "maggiore_1999": ("https://arxiv.org/abs/gr-qc/9909001%s", "Maggiore, 1999%s"),
     "borsanyi_2016": ("https://arxiv.org/abs/1606.07494%s", "Borsanyi et al., 2016%s"),
     "caprini_2016": ("https://arxiv.org/abs/1512.06239%s", "Caprini et al., 2016%s"),
