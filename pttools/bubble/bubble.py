@@ -246,6 +246,8 @@ class Bubble(BaseBubble):
             t_end: float = const.T_END_DEFAULT,
             n_xi: int = const.N_XI_DEFAULT,
             thin_shell_t_points_min: int = const.THIN_SHELL_T_POINTS_MIN,
+            low_v_wall_threshold: float = 0.1,
+            n_xi_fix_factor: int = 10,
             use_bag_solver: bool = False,
             use_giese_solver: bool = False,
             log_success: bool = False,
@@ -282,6 +284,21 @@ class Bubble(BaseBubble):
             raise ValueError("Both bag and Giese et al. solvers cannot be used at the same time.")
         if not 0 < self.v_wall <= 1:
             raise ValueError(f"Invalid v_wall={self.v_wall}")
+        if self.v_wall < low_v_wall_threshold:
+            if self.n_xi == const.N_XI_DEFAULT:
+                n_xi_fix_factor = n_xi_fix_factor
+                logger.info(
+                    "Got n_xi=%s for v_wall=%s < 0.1. This may lead to an inaccurate solution. "
+                    "Since n_xi = N_XI_DEFAULT, multiplying n_xi by %s for an automatic fix.",
+                    n_xi, v_wall, n_xi_fix_factor
+                )
+                self.n_xi *= n_xi_fix_factor
+            elif self.n_xi < const.N_XI_DEFAULT:
+                logger.warning(
+                    "Got n_xi=%s for v_wall=%s < 0.1. This may lead to an inaccurate solution. "
+                    "Please increase n_xi.",
+                    n_xi, v_wall
+                )
 
         # -----
         # Set and validate alpha_n and alpha_theta_bar_n

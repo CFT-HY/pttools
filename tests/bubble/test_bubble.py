@@ -4,8 +4,8 @@ import unittest
 
 import numpy as np
 
+from pttools.bubble import N_XI_DEFAULT, Bubble
 from pttools.models.bag import BagModel
-from pttools.bubble.bubble import Bubble
 
 
 class BubbleTest(unittest.TestCase):
@@ -71,4 +71,8 @@ class BubbleTest(unittest.TestCase):
         Bubble(self.model, v_wall=0.95, alpha_n=0.1)
 
     def test_v_wall_low(self):
-        Bubble(self.model, v_wall=0.1, alpha_n=0.1)
+        Bubble(self.model, v_wall=0.01, alpha_n=0.1)
+
+    def test_v_wall_low_custom_low_n_xi(self):
+        """Test that the warning message for low v_wall and low n_xi is generated properly"""
+        Bubble(self.model, v_wall=0.01, alpha_n=0.1, n_xi=N_XI_DEFAULT // 2)
