@@ -37,7 +37,6 @@ class BaseBubble(abc.ABC):
             self,
             model: "Model",
             v_wall: float,
-            alpha_n: float,
             w_center: float | None = None,
             wm_guess: float | None = None,
             t_end: float = const.T_END_DEFAULT,
@@ -47,8 +46,6 @@ class BaseBubble(abc.ABC):
             raise ValueError(f"v_wall should be scalar. Did you give e.g. a 0D array instead? Got: v_wall={v_wall}")
         if isinstance(v_wall, int):
             v_wall = float(v_wall)
-        if alpha_n is None or not np.isscalar(alpha_n):
-            raise ValueError(f"alpha_n should be scalar. Did you give e.g. a 0D array instead? Got: alpha_n={v_wall}")
         if not (w_center is None or np.isscalar(w_center)):
             raise ValueError(
                 f"w_center should be scalar. Did you give e.g. a 0D array instead? Got: w_center={w_center}"
@@ -275,7 +272,7 @@ class Bubble(BaseBubble):
         :param allow_invalid: Whether to allow invalid solutions
         :param log_invalid: Whether to log invalid solutions
         """
-        super().__init__(model=model, v_wall=v_wall, alpha_n=alpha_n, wm_guess=wm_guess, t_end=t_end, n_xi=n_xi)
+        super().__init__(model=model, v_wall=v_wall, wm_guess=wm_guess, t_end=t_end, n_xi=n_xi)
 
         # -----
         # Validate input parameters
@@ -299,6 +296,9 @@ class Bubble(BaseBubble):
                     "Please increase n_xi.",
                     n_xi, v_wall
                 )
+        # Some functions such as np.vectorize tend to give 0D arrays, which may cause subtle errors later on.
+        if alpha_n is None or not np.isscalar(alpha_n):
+            raise ValueError(f"alpha_n should be scalar. Did you give e.g. a 0D array instead? Got: alpha_n={v_wall}")
 
         # -----
         # Set and validate alpha_n and alpha_theta_bar_n
