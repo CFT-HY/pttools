@@ -9,6 +9,7 @@ from pttools.omgw0.freq import f0
 import pttools.omgw0.suppression as sup_mod
 from pttools.ssm import NptType, NPTDEFAULT
 from pttools import ssm
+import pttools.type_hints as th
 
 
 def omgw0_bag(
@@ -19,7 +20,8 @@ def omgw0_bag(
         T_star: float = const.T_STAR_DEFAULT,
         npt: NptType = NPTDEFAULT,
         sup: sup_mod.Suppression = sup_mod.DEFAULT,
-        sup_method: sup_mod.SuppressionMethod = sup_mod.SuppressionMethod.DEFAULT):
+        sup_method: sup_mod.SuppressionMethod = sup_mod.SuppressionMethod.DEFAULT,
+        parallel: bool = True) -> th.FloatArr1D:
     r"""
     For given set of thermodynamic parameters vw, alpha, rs and T_star calculates the power spectrum using
     the SSM as encoded in the PTtools module (omgwi)
@@ -30,7 +32,7 @@ def omgw0_bag(
     z = freqs/fp0
 
     K_frac = K.calc_ke_frac(vw, alpha)
-    omgwi = ssm.power_gw_scaled_bag(z, params, npt=npt)
+    omgwi = ssm.power_gw_scaled_bag(z, params, npt=npt, parallel=parallel)
 
     # entry options for power_gw_scaled
     #          z: np.ndarray,

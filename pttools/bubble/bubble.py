@@ -122,7 +122,7 @@ class BaseBubble(abc.ABC):
         self.no_solution_found: bool = False
         self.solved: bool = False
 
-    def add_note(self, note: str):
+    def add_note(self, note: str) -> None:
         """Add a note to the solution"""
         self.notes.append(note)
 
@@ -172,6 +172,13 @@ class BaseBubble(abc.ABC):
     # =====
     # Quantities
     # =====
+
+    @functools.cached_property
+    def e(self):
+        r"""Energy density $e(\xi)$"""
+        if not self.solved:
+            raise NotYetSolvedError
+        return self.model.e(self.w, self.phase)
 
     @functools.cached_property
     def entropy_flux_p(self) -> float:
@@ -626,7 +633,7 @@ class Bubble(BaseBubble):
     # -----
 
     @property
-    def vp_tilde_sh(self):
+    def vp_tilde_sh(self) -> float:
         r"""Velocity in front of the shock in the shock frame
 
         The fluid ahead of the shock is still, and therefore

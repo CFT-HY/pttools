@@ -5,6 +5,7 @@ import logging
 import typing as tp
 
 import matplotlib.pyplot as plt
+import numba
 import numpy as np
 
 import pttools.type_hints as th
@@ -13,7 +14,7 @@ from pttools.bubble import Bubble, Phase
 from pttools.ssm import const
 from pttools.ssm.nucleation import NucType, DEFAULT_NUC_TYPE, beta, beta_over_H
 from pttools.ssm.spec_den_gw import gen_lookup, spec_den_gw_scaled
-from pttools.ssm.spec_den_v import spec_den_v
+from pttools.ssm.spec_den_v import spec_den_v as spec_den_v_func
 from pttools.ssm.low_k import power_spectrum_integration_low, power_spectrum_integration_int, pow_gw_junction
 from pttools.utils import copy_docstrings
 
@@ -37,6 +38,7 @@ class SSMSpectrum:
             # eta_star: float = 1,
             lifetime_multiplier: float = 1.,
             compute: bool = True,
+            parallel: bool = True,
             low_k: bool = True,
             label_latex: str | None = None,
             label_unicode: str | None = None):
@@ -120,7 +122,7 @@ class SSMSpectrum:
         self.z_lookup: th.FloatArr1D | None = None
 
         if compute:
-            self.compute()
+            self.compute(parallel=parallel)
 
     def beta[T: (float, FloatArr)](self, H_n: T) -> T:  # pylint: disable=missing-function-docstring
         return self.beta_over_H() * H_n
@@ -128,27 +130,30 @@ class SSMSpectrum:
     def beta_over_H(self) -> float:  # pylint: disable=missing-function-docstring
         return beta_over_H(r_star=self.r_star, v_wall=self.bubble.v_wall, cs=self.cs)
 
-    def compute(self, eps_lookup: float = 1e-8, lifetime_distribution_a: float = 1.):
+    def compute(self, eps_lookup: float = 1e-8, lifetime_distribution_a: float = 1., parallel: bool = True):
         if not self.bubble.solved:
             self.bubble.solve()
 
         self.cs = np.sqrt(self.bubble.model.cs2(self.bubble.va_enthalpy_density, Phase.BROKEN))
-        self.spec_den_v, self.a2 = spec_den_v(
-            bub=self.bubble, z=self.y, a=lifetime_distribution_a,
-            nuc_type=self.nuc_type, nt=self.nt, z_st_thresh=self.z_st_thresh, cs=self.cs, return_a2=True
+        self.spec_den_v, self.spec_den_v_lookup, self.spec_den_gw, \
+            self.pow_v, self.pow_gw_ssm, self.a2, self.z_lookup = compute(
+            v=self.bubble.v,
+            w=self.bubble.w,
+            xi=self.bubble.xi,
+            e=self.bubble.e,
+            y=self.y,
+            v_wall=self.bubble.v_wall,
+            v_sh=self.bubble.v_sh,
+            lifetime_distribution_a=lifetime_distribution_a,
+            nuc_type=self.nuc_type,
+            nt=self.nt,
+            n_z_lookup=self.n_z_lookup,
+            eps_lookup=eps_lookup,
+            z_st_thresh=self.z_st_thresh,
+            cs=self.cs,
+            source_lifetime_factor=self.source_lifetime_factor,
+            parallel=parallel
         )
-        self.pow_v = pow_spec(self.y, spec_den=self.spec_den_v)
-
-        self.z_lookup = gen_lookup(y=self.y, cs=self.cs, n_z_lookup=self.n_z_lookup, eps=eps_lookup)
-        self.spec_den_v_lookup = spec_den_v(
-            bub=self.bubble, z=self.z_lookup, a=lifetime_distribution_a,
-            nuc_type=self.nuc_type, nt=self.nt, z_st_thresh=self.z_st_thresh, cs=self.cs
-        )
-        self.spec_den_gw, y = spec_den_gw_scaled(
-            z_lookup=self.z_lookup, P_v_lookup=self.spec_den_v_lookup, y=self.y, cs=self.cs,
-            source_lifetime_factor=self.source_lifetime_factor
-        )
-        self.pow_gw_ssm = pow_spec(self.y, spec_den=self.spec_den_gw)
         self.pow_gw = self.pow_gw_ssm
 
         if self.r_star is not None:
@@ -273,6 +278,53 @@ class SSMSpectrum:
         return plot_spectra_spec_den_v([self], fig, ax, path, **kwargs)
 
 
+@numba.njit(nogil=True)
+def compute(
+        v: th.FloatArr1D,
+        w: th.FloatArr1D,
+        xi: th.FloatArr1D,
+        e: th.FloatArr1D,
+        y: th.FloatArr1D,
+        v_wall: float,
+        v_sh: float,
+        lifetime_distribution_a: float,
+        nuc_type: NucType,
+        nt: int,
+        n_z_lookup: int,
+        eps_lookup: float,
+        z_st_thresh: float,
+        cs: float,
+        source_lifetime_factor: float,
+        parallel: bool = True):
+    """Compute the Sound Shell Model spectra for a fluid profile
+
+    This is in one Numba-compiled function so that the GIL is released for the entire computation.
+    """
+    spec_den_v, a2 = spec_den_v_func(
+        v=v, w=w, xi=xi, e=e, z=y,
+        v_wall=v_wall, v_sh=v_sh, a=lifetime_distribution_a,
+        nuc_type=nuc_type, nt=nt, z_st_thresh=z_st_thresh, cs=cs,
+        parallel=parallel
+    )
+    pow_v = pow_spec(y, spec_den=spec_den_v)
+
+    z_lookup = gen_lookup(y=y, cs=cs, n_z_lookup=n_z_lookup, eps=eps_lookup)
+    spec_den_v_lookup, a2_lookup = spec_den_v_func(
+        v=v, w=w, xi=xi, e=e, z=z_lookup,
+        v_wall=v_wall, v_sh=v_sh, a=lifetime_distribution_a,
+        nuc_type=nuc_type, nt=nt, z_st_thresh=z_st_thresh, cs=cs,
+        parallel=parallel
+    )
+    spec_den_gw, y = spec_den_gw_scaled(
+        z_lookup=z_lookup, P_v_lookup=spec_den_v_lookup, y=y, cs=cs,
+        source_lifetime_factor=source_lifetime_factor, parallel=parallel
+    )
+    pow_gw = pow_spec(y, spec_den=spec_den_gw)
+
+    return spec_den_v, spec_den_v_lookup, spec_den_gw, pow_v, pow_gw, a2, z_lookup
+
+
+@numba.njit
 def pow_spec(z: th.FloatOrArr, spec_den: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Power spectrum from spectral density at dimensionless wavenumber z.

@@ -75,9 +75,9 @@ def create_spectrum(
         allow_bubble_failure=allow_bubble_failure
     )
     if spectrum_kwargs is None:
-        spectrum = Spectrum(bubble=bubble)
+        spectrum = Spectrum(bubble=bubble, parallel=False)
     else:
-        spectrum = Spectrum(bubble=bubble, **spectrum_kwargs)
+        spectrum = Spectrum(bubble=bubble, parallel=False, **spectrum_kwargs)
 
     if post_func is not None:
         if post_func_return_multiple:

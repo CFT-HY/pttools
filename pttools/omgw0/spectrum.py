@@ -32,6 +32,7 @@ class Spectrum(ssm.SSMSpectrum):
             n_z_lookup: int = ssm.N_Z_LOOKUP_DEFAULT,
             lifetime_multiplier: float = 1,
             compute: bool = True,
+            parallel: bool = True,
             low_k: bool = True,
             label_latex: str | None = None,
             label_unicode: str | None = None,
@@ -62,6 +63,7 @@ class Spectrum(ssm.SSMSpectrum):
             r_star=r_star,
             lifetime_multiplier=lifetime_multiplier,
             compute=compute,
+            parallel=parallel,
             low_k=low_k,
             label_latex=label_latex,
             label_unicode=label_unicode

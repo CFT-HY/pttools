@@ -1,7 +1,6 @@
 """Functions for computing the spectral density of the gravitational waves"""
 
 # import logging
-import typing as tp
 
 import numba
 from numba.extending import overload
@@ -15,7 +14,11 @@ from pttools.ssm import const
 
 
 @numba.njit
-def gen_lookup(y: np.ndarray, cs: float, n_z_lookup: int = const.N_Z_LOOKUP_DEFAULT, eps: float = 0.) -> np.ndarray:
+def gen_lookup(
+        y: th.FloatArr1D,
+        cs: float,
+        n_z_lookup: int = const.N_Z_LOOKUP_DEFAULT,
+        eps: float = 0.) -> th.FloatArr1D:
     """
     :param y: Input array
     :param cs: Speed of sound $c_s$
@@ -42,18 +45,17 @@ def gen_lookup(y: np.ndarray, cs: float, n_z_lookup: int = const.N_Z_LOOKUP_DEFA
 
 
 @numba.njit
-def lookup_limits(y: np.ndarray, cs: float, eps: float = 0.) -> tuple[float, float]:
+def lookup_limits(y: th.FloatArr1D, cs: float, eps: float = 0.) -> tuple[float, float]:
     """Defined on p. 12 between eq. 3.44 and 3.45"""
     z_minus_min = y.min() * 0.5 * (1. - cs) / cs * (1 - eps)
     z_plus_max = y.max() * 0.5 * (1. + cs) / cs * (1 + eps)
     return z_minus_min, z_plus_max
 
 
-@numba.njit(parallel=True, nogil=True)
 def _spec_den_gw_scaled_core(
-        z_lookup: np.ndarray,
-        P_v_lookup: np.ndarray,
-        y: np.ndarray,
+        z_lookup: th.FloatArr1D,
+        P_v_lookup: th.FloatArr1D,
+        y: th.FloatArr1D,
         cs: float,
         Gamma: float,
         source_lifetime_factor: float,
@@ -94,45 +96,68 @@ def _spec_den_gw_scaled_core(
     return 0.75 * Gamma ** 2 * p_gw * source_lifetime_factor, y
 
 
+_spec_den_gw_scaled_core_single = numba.njit(nogil=True)(_spec_den_gw_scaled_core)
+_spec_den_gw_scaled_core_parallel = numba.njit(parallel=True, nogil=True)(_spec_den_gw_scaled_core)
+
+
 def _spec_den_gw_scaled_y(
-        z_lookup: np.ndarray,
-        P_v_lookup: np.ndarray,
-        y: np.ndarray,
-        cs: float,
-        Gamma: float,
-        source_lifetime_factor: float,
-        nz_int: int) -> tuple[np.ndarray, np.ndarray]:
+        z_lookup: th.FloatArr1D,
+        P_v_lookup: th.FloatArr1D,
+        y: th.FloatArr1D | None = None,
+        cs: float = const.CS0,
+        Gamma: float = const.GAMMA,
+        source_lifetime_factor: float = 1.,
+        nz_int: int | None = None,
+        parallel: bool = True) -> tuple[np.ndarray, np.ndarray]:
 
     z_lookup_min, z_lookup_max = lookup_limits(y, cs)
     if z_lookup.max() < z_lookup_max or z_lookup.min() > z_lookup_min:
         raise ValueError("Range of z_lookup is not large enough.")
 
-    return _spec_den_gw_scaled_core(z_lookup, P_v_lookup, y, cs, Gamma, source_lifetime_factor, nz_int)
+    if parallel:
+        return _spec_den_gw_scaled_core_parallel(
+            z_lookup=z_lookup, P_v_lookup=P_v_lookup, y=y,
+            cs=cs, Gamma=Gamma, source_lifetime_factor=source_lifetime_factor, nz_int=nz_int
+        )
+    return _spec_den_gw_scaled_core_single(
+        z_lookup=z_lookup, P_v_lookup=P_v_lookup, y=y,
+        cs=cs, Gamma=Gamma, source_lifetime_factor=source_lifetime_factor, nz_int=nz_int
+    )
 
 
 def _spec_den_gw_scaled_no_y(
-        z_lookup: np.ndarray,
-        P_v_lookup: np.ndarray,
-        y: None,
-        cs: float,
-        Gamma: float,
-        source_lifetime_factor: float,
-        nz_int: int) -> tuple[np.ndarray, np.ndarray]:
+        z_lookup: th.FloatArr1D,
+        P_v_lookup: th.FloatArr1D,
+        y: th.FloatArr1D | None = None,
+        cs: float = const.CS0,
+        Gamma: float = const.GAMMA,
+        source_lifetime_factor: float = 1.,
+        nz_int: int | None = None,
+        parallel: bool = True) -> tuple[np.ndarray, np.ndarray]:
     # This process is the reverse of to gen_lookup()
     zmax = z_lookup.max() * 2. * cs / (1. + cs)
     zmin = z_lookup.min() * 2. * cs / (1. - cs)
     y = speedup.logspace(np.log10(zmin), np.log10(zmax), z_lookup.size)
-    return _spec_den_gw_scaled_core(z_lookup, P_v_lookup, y, cs, Gamma, source_lifetime_factor, nz_int)
+    if parallel:
+        return _spec_den_gw_scaled_core_parallel(
+            z_lookup=z_lookup, P_v_lookup=P_v_lookup, y=y,
+            cs=cs, Gamma=Gamma, source_lifetime_factor=source_lifetime_factor, nz_int=nz_int
+        )
+    return _spec_den_gw_scaled_core_single(
+        z_lookup=z_lookup, P_v_lookup=P_v_lookup, y=y,
+        cs=cs, Gamma=Gamma, source_lifetime_factor=source_lifetime_factor, nz_int=nz_int
+    )
 
 
 def spec_den_gw_scaled(
-        z_lookup: np.ndarray,
-        P_v_lookup: np.ndarray,
-        y: tp.Union[np.ndarray, None] = None,
+        z_lookup: th.FloatArr1D,
+        P_v_lookup: th.FloatArr1D,
+        y: th.FloatArr1D | None = None,
         cs: float = const.CS0,
         Gamma: float = const.GAMMA,
         source_lifetime_factor: float = 1.,
-        nz_int: int | None = None) -> tp.Union[tuple[np.ndarray, np.ndarray], th.NumbaFunc]:
+        nz_int: int | None = None,
+        parallel: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D] | th.NumbaFunc:
     r"""
     Spectral density of scaled gravitational wave power
     $$3K^2 (H\tau_\text{v})(H L_f) \tilde{P}_\text{gw}(z)$$
@@ -152,20 +177,30 @@ def spec_den_gw_scaled(
     :return: $3K^2 (H\tau_\text{v})(H L_f) \tilde{P}_\text{gw}(z)$
     """
     if isinstance(y, np.ndarray):
-        return _spec_den_gw_scaled_y(z_lookup, P_v_lookup, y, cs, Gamma, source_lifetime_factor, nz_int)
+        return _spec_den_gw_scaled_y(
+            z_lookup=z_lookup, P_v_lookup=P_v_lookup, y=y,
+            cs=cs, Gamma=Gamma, source_lifetime_factor=source_lifetime_factor, nz_int=nz_int, parallel=parallel
+        )
     if y is None:
-        return _spec_den_gw_scaled_no_y(z_lookup, P_v_lookup, y, cs, Gamma, source_lifetime_factor, nz_int)
-    raise TypeError(f"Unknown type for z: {type(y)}")
+        return _spec_den_gw_scaled_no_y(
+            z_lookup=z_lookup, P_v_lookup=P_v_lookup, y=y,
+            cs=cs, Gamma=Gamma, source_lifetime_factor=source_lifetime_factor, nz_int=nz_int, parallel=parallel
+        )
+    raise TypeError(f"Unknown type for y: {type(y)}")
 
 
 @overload(spec_den_gw_scaled, jit_options={"nopython": True, "nogil": True})
 def _spec_den_gw_scaled_numba(
-        xlookup: np.ndarray,
-        P_vlookup: np.ndarray,
-        z: np.ndarray = None,
-        cs: float = const.CS0) -> tp.Union[tuple[np.ndarray, np.ndarray], th.NumbaFunc]:
-    if isinstance(z, numba.types.Array):
+        z_lookup: th.FloatArr1D,
+        P_v_lookup: th.FloatArr1D,
+        y: th.FloatArr1D | None = None,
+        cs: float = const.CS0,
+        Gamma: float = const.GAMMA,
+        source_lifetime_factor: float = 1.,
+        nz_int: int | None = None,
+        parallel: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D] | th.NumbaFunc:
+    if isinstance(y, numba.types.Array):
         return _spec_den_gw_scaled_y
-    if isinstance(z, (numba.types.NoneType, numba.types.Omitted)):
+    if isinstance(y, (numba.types.NoneType, numba.types.Omitted)):
         return _spec_den_gw_scaled_no_y
-    raise TypeError(f"Unknown type for z: {type(z)}")
+    raise TypeError(f"Unknown type for y: {type(y)}")

@@ -24,4 +24,3 @@ Models
   sigmoid
   sm
   thermo
-  utils

@@ -1,7 +1,7 @@
 r"""Functions for fluid differential equations with the bag model
 
 Now in parametric form (Jacky Lindsay and Mike Soughton MPhys project 2017-18).
-RHS is Eq (33) in Espinosa et al (plus $\frac{dw}{dt}$ not written there)
+RHS is Eq (33) in Espinosa et al. (plus $\frac{dw}{dt}$ not written there)
 """
 
 import logging
@@ -29,6 +29,7 @@ from . import trim
 logger = logging.getLogger(__name__)
 
 
+# This cannot be compiled with nogil=True, since find_alpha_plus_bag() uses "with numba.objmode".
 @numba.njit
 def sound_shell_bag(
         v_wall: float,
@@ -59,27 +60,33 @@ def sound_shell_bag(
     # check_physical_params([v_wall,alpha_n])
     sol_type = transition.identify_solution_type_bag(v_wall, alpha_n)
     if sol_type == SolutionType.ERROR:
-        with numba.objmode:
-            logger.error("Could not indentify solution type for v_wall=%s, alpha_n=%s", v_wall, alpha_n)
+        # with numba.objmode:
+        #     logger.error("Could not indentify solution type for v_wall=%s, alpha_n=%s", v_wall, alpha_n)
         nan_arr = np.array([np.nan])
         # if extra_output:
         #     return nan_arr, nan_arr, nan_arr, sol_type, np.nan, np.nan, np.nan, np.nan, np.nan
         return nan_arr, nan_arr, nan_arr
-    al_p = alpha.find_alpha_plus_bag(v_wall, alpha_n, n_xi, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr)
+    al_p = alpha.find_alpha_plus_bag(
+        v_wall=v_wall, alpha_n_given=alpha_n, n_xi=n_xi,
+        cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr
+    )
     if np.isnan(al_p):
         nan_arr = np.array([np.nan])
         # if extra_output:
         #     return nan_arr, nan_arr, nan_arr, sol_type, np.nan, np.nan, np.nan, np.nan, np.nan
         return nan_arr, nan_arr, nan_arr
     # SolutionType has to be passed by its value when jitting
-    return sound_shell_alpha_plus_bag(v_wall, al_p, sol_type.value, n_xi, cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr)
+    return sound_shell_alpha_plus_bag(
+        v_wall=v_wall, alpha_plus=al_p, sol_type=sol_type.value,
+        n_xi=n_xi, cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr
+    )
     # if extra_output:
     #     v, w, xi, vfp_w, vfm_w, vfp_p, vfm_p = ret
     #     return v, w, xi, sol_type, al_p, vfp_w, vfm_w, vfp_p, vfm_p
     # return ret
 
 
-@numba.njit
+@numba.njit(nogil=True)
 def sound_shell_alpha_plus_bag(
         v_wall: float,
         alpha_plus: float,
@@ -120,8 +127,9 @@ def sound_shell_alpha_plus_bag(
         sol_type = transition.identify_solution_type_alpha_plus(v_wall, alpha_plus).value
     # The identification above may set sol_type to error
     if sol_type == SolutionType.ERROR.value:
-        with numba.objmode:
-            logger.error("Solution type could not be found for v_wall=%s, alpha_n=%s", v_wall, alpha_plus)
+        # Todo: better error handling and logging
+        # with numba.objmode:
+        #     logger.error("Solution type could not be found for v_wall=%s, alpha_n=%s", v_wall, alpha_plus)
         nan_arr = np.array([np.nan])
         # if extra_output:
         #     return nan_arr, nan_arr, nan_arr, np.nan, np.nan, np.nan, np.nan

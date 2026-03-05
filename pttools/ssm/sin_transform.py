@@ -16,12 +16,13 @@ def _sin_transform_scalar(
         f: np.ndarray,
         z_st_thresh: float = const.Z_ST_THRESH,
         v_wall: float | None = None,
-        v_sh: float | None = None) -> th.FloatOrArrNumba:
+        v_sh: float | None = None,
+        parallel: bool = True) -> th.FloatOrArrNumba:
     if z <= z_st_thresh:
         array = f * np.sin(z * xi)
         integral = np.trapezoid(array, xi)
     else:
-        integral = sin_transform_approx(z, xi, f, v_wall=v_wall, v_sh=v_sh)
+        integral = sin_transform_approx(z=z, xi=xi, f=f, v_wall=v_wall, v_sh=v_sh)
     return integral
 
 
@@ -31,7 +32,8 @@ def _sin_transform_arr(
         f: np.ndarray,
         z_st_thresh: float = const.Z_ST_THRESH,
         v_wall: float | None = None,
-        v_sh: float | None = None) -> th.FloatOrArrNumba:
+        v_sh: float | None = None,
+        parallel: bool = True) -> th.FloatOrArrNumba:
     lo = np.where(z <= z_st_thresh)
     z_lo = z[lo]
     # Integrand of the sine transform
@@ -39,7 +41,7 @@ def _sin_transform_arr(
     # array_lo = f * np.sin(np.outer(z_lo, xi))
     # For each z, integrate f * sin(z*xi) over xi
     # integral: np.ndarray = np.trapezoid(array_lo, xi)
-    integral = sin_transform_core(xi, f, z_lo)
+    integral = sin_transform_core(xi, f, z_lo) if parallel else sin_transform_core_single(xi, f, z_lo)
 
     if len(lo) < len(z):
         z_hi = z[np.where(z > z_st_thresh - const.DZ_ST_BLEND)]
@@ -73,7 +75,8 @@ def sin_transform(
         f: np.ndarray,
         z_st_thresh: float = const.Z_ST_THRESH,
         v_wall: float | None = None,
-        v_sh: float | None = None) -> th.FloatOrArrNumba:
+        v_sh: float | None = None,
+        parallel: bool = True) -> th.FloatOrArrNumba:
     r"""
     sin transform of $f(\xi)$, Fourier transform variable z.
     For z > z_st_thresh, use approximation rather than doing the integral.
@@ -93,20 +96,21 @@ def sin_transform(
     :return: sine transformed values $\hat{f}(z)$
     """
     if isinstance(z, float):
-        return _sin_transform_scalar(z, xi, f, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
+        return _sin_transform_scalar(z=z, xi=xi, f=f, z_st_thresh=z_st_thresh, v_wall=v_wall, v_sh=v_sh)
     if isinstance(z, np.ndarray):
-        return _sin_transform_arr(z, xi, f, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
+        return _sin_transform_arr(z=z, xi=xi, f=f, z_st_thresh=z_st_thresh, v_wall=v_wall, v_sh=v_sh, parallel=parallel)
     raise NotImplementedError
 
 
-@overload(sin_transform, jit_options={"parallel": True})
+@overload(sin_transform, jit_options={"parallel": True, "nogil": True})
 def _sin_transform_numba(
         z: th.FloatOrArr,
         xi: np.ndarray,
         f: np.ndarray,
         z_st_thresh: float = const.Z_ST_THRESH,
         v_wall: float | None = None,
-        v_sh: float | None = None) -> th.FloatOrArrNumba:
+        v_sh: float | None = None,
+        parallel: bool = True) -> th.FloatOrArrNumba:
     if isinstance(z, numba.types.Float):
         return _sin_transform_scalar
     if isinstance(z, numba.types.Array):
@@ -114,8 +118,7 @@ def _sin_transform_numba(
     raise NotImplementedError
 
 
-@numba.njit(parallel=True)
-def sin_transform_core(t: np.ndarray, f: np.ndarray, freq: np.ndarray) -> np.ndarray:
+def _sin_transform_core(t: np.ndarray, f: np.ndarray, freq: np.ndarray) -> np.ndarray:
     r"""
     The `sine transform <https://en.wikipedia.org/wiki/Sine_and_cosine_transforms>`_
     for multiple values of $\omega$ without any approximations.
@@ -135,3 +138,7 @@ def sin_transform_core(t: np.ndarray, f: np.ndarray, freq: np.ndarray) -> np.nda
         # This can be achieved with the use of t.copy() in the data pipeline leading to this function.
         integral[i] = np.trapezoid(integrand, t)
     return integral
+
+
+sin_transform_core = numba.njit(parallel=True, nogil=True)(_sin_transform_core)
+sin_transform_core_single = numba.njit(nogil=True)(_sin_transform_core)

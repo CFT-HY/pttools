@@ -49,7 +49,7 @@ class DifferentialCache:
             if name in self._cache_njit:
                 logger.warning(
                     "Attempted to add a differential with the name \"%s\" which is already in the cache. "
-                    "This may be caused by multiprocessing giving the same id to a different object in a different process."
+                    "This may be caused by multiprocessing giving the same id to a different object in a different process. "
                     "Creating a new differential. This will ensure that the new differential is correct, "
                     "and it will not affect access to the old differential using its pointer.",
                     name

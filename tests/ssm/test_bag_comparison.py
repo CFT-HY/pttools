@@ -51,7 +51,9 @@ class SpectrumTest(unittest.TestCase):
             for i, bubble in enumerate(self.bubbles)
         ])
         a2_new = np.array([
-            ssm.a2_e_conserving(bubble, z=self.z, cs=ssm.CS0)[0]
+            ssm.a2_e_conserving(
+                v=bubble.v, w=bubble.w, xi=bubble.xi, e=bubble.e, z=self.z,
+                v_wall=bubble.v_wall, v_sh=bubble.v_sh, cs=ssm.CS0)[0]
             for bubble in self.bubbles
         ])
         # a2_new2 = np.array([spectrum.a2 for spectrum in self.spectra])

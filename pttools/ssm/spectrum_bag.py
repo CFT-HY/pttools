@@ -49,7 +49,8 @@ def power_gw_scaled_bag(
         skip: int = 1,
         method: ssm.Method = ssm.Method.E_CONSERVING,
         de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
-        z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
+        z_st_thresh: float = const.Z_ST_THRESH,
+        parallel: bool = True) -> np.ndarray:
     """
     Scaled GW power spectrum at array of z = kR* values, where R* is mean bubble centre
     separation and k is comoving wavenumber.  To convert to predicted spectrum,
@@ -91,7 +92,7 @@ def power_gw_scaled_bag(
     x = np.logspace(np.log10(xmin), np.log10(xmax), nx)
 
     sd_v = spec_den_v_bag(x, params, npt, filename, skip, method, de_method, z_st_thresh)
-    sd_gw, y = spectrum.spec_den_gw_scaled(x, sd_v, z)
+    sd_gw, y = spectrum.spec_den_gw_scaled(x, sd_v, z, parallel=parallel)
     return spectrum.pow_spec(z, sd_gw)
 
 
@@ -170,10 +171,10 @@ def spec_den_v_bag(
 
     qT_lookup = 10 ** np.arange(log10zmin + log10tmin, log10zmax + log10tmax, dlog10z)
 
-    vw, alpha, nuc_type, nuc_args = parse_params(params)
+    v_wall, alpha, nuc_type, nuc_args = parse_params(params)
     if filename is None:
         A2_lookup = ssm_bag.a2_ssm_func_bag(
-            z=qT_lookup, v_wall=vw, alpha=alpha,
+            z=qT_lookup, v_wall=v_wall, alpha=alpha,
             npt=npt, method=method, de_method=de_method, z_st_thresh=z_st_thresh
         )
     else:
@@ -193,6 +194,6 @@ def spec_den_v_bag(
         nt=nt,
         nuc_type=nuc_type,
         qT_lookup=qT_lookup,
-        vw=vw,
+        v_wall=v_wall,
         z=z
     )

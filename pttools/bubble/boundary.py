@@ -132,9 +132,10 @@ def fluid_speeds_at_wall(
     :return: $\tilde{v}_+,\tilde{v}_-,v_+,v_-$
     """
     if v_wall > 1:
-        with numba.objmode:
-            logger.error("v_wall > 1: v_wall = %s", v_wall)
-        raise ValueError("v_wall > 1")
+        # Todo: better error handling and logging
+        # with numba.objmode:
+        #     logger.error("v_wall > 1: v_wall = %s", v_wall)
+        raise ValueError(f"Got v_wall = {v_wall} > 1")
 
     # print("max_speed_deflag(alpha_plus)=", max_speed_deflag(alpha_plus))
     # if v_wall < max_speed_deflag(alpha_plus) and v_wall <= cs and alpha_p <= 1/3.:
@@ -155,9 +156,10 @@ def fluid_speeds_at_wall(
         vfp_p = relativity.lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
         vfm_p = relativity.lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
     else:
-        with numba.objmode:
-            logger.error("Unknown sol_type: %s", sol_type)
-        raise ValueError("Unknown sol_type")
+        # Todo: better error handling and logging
+        # with numba.objmode:
+        #     logger.error("Unknown sol_type: %s", sol_type)
+        raise ValueError(f"Unknown sol_type={sol_type}")
 
     return vfp_w, vfm_w, vfp_p, vfm_p
 
@@ -326,7 +328,7 @@ def solve_junction(
             # logger.error("ERROR")
             # raise ValueError(msg)
 
-    # TODO: add the Giese junction solver option here (Giese eq. 11)
+    # TODO: add the Giese et al. junction solver option here (Giese et al. eq. 11)
 
     devs = junction_conditions_solvable(np.array([v2_tilde, w2]), model, v1_tilde, w1, phase1, phase2)
     devs_rel = devs / w1
@@ -390,7 +392,8 @@ def _v_minus_scalar(
         ap: float,
         sol_type: SolutionType = SolutionType.DETON,
         strong_branch: bool = False,
-        debug: bool = False) -> th.FloatOrArrNumba:
+        debug: bool = False,
+        parallel: bool = True) -> th.FloatOrArrNumba:
     # Fluid must flow through the wall from the outside to the inside of the bubble.
     if vp < 0:
         return np.nan
@@ -405,10 +408,11 @@ def _v_minus_scalar(
     # sqrt_arg = x**2 - 4/3
 
     if debug and sqrt_arg < 0:
-        with numba.objmode:
-            logger.error(
-                "Cannot compute vm, got imaginary result with: vp=%s, ap=%s in sqrt_arg=%s",
-                vp, ap, sqrt_arg)
+        # Todo: better error handling and logging
+        # with numba.objmode:
+        #     logger.error(
+        #         "Cannot compute vm, got imaginary result with: vp=%s, ap=%s in sqrt_arg=%s",
+        #         vp, ap, sqrt_arg)
         return np.nan
 
     # Finding the solution type automatically does not work in the general case
@@ -436,7 +440,6 @@ def _v_minus_scalar(
 _v_minus_scalar_numba = numba.njit(_v_minus_scalar)
 
 
-@numba.njit(parallel=True)
 def _v_minus_arr(
         vp: th.FloatOrArr,
         ap: float,
@@ -458,14 +461,20 @@ def _v_minus_arr(
     #             "Check the types of the arguments.")
     # return ret
 
+_v_minus_arr_parallel = numba.njit(parallel=True, nogil=True)(_v_minus_arr)
+_v_minus_arr_single = numba.njit(nogil=True)(_v_minus_arr)
+
 
 def _v_minus_arr_wrapper(
         vp: th.FloatOrArr,
         ap: float,
         sol_type: SolutionType = SolutionType.DETON,
         strong_branch: bool = False,
-        debug: bool = False) -> th.FloatOrArrNumba:
-    return _v_minus_arr(vp=vp, ap=ap, sol_type=sol_type, strong_branch=strong_branch, debug=debug)
+        debug: bool = False,
+        parallel: bool = True) -> th.FloatOrArrNumba:
+    if parallel:
+        return _v_minus_arr_parallel(vp=vp, ap=ap, sol_type=sol_type, strong_branch=strong_branch, debug=debug)
+    return _v_minus_arr_single(vp=vp, ap=ap, sol_type=sol_type, strong_branch=strong_branch, debug=debug)
 
 
 def v_minus(
@@ -473,7 +482,8 @@ def v_minus(
         ap: float,
         sol_type: SolutionType = SolutionType.DETON,
         strong_branch: bool = False,
-        debug: bool = False) -> th.FloatOrArrNumba:
+        debug: bool = False,
+        parallel: bool = True) -> th.FloatOrArrNumba:
     r"""
     Fluid speed $\tilde{v}_-$ behind the wall in the wall frame
     $$\tilde{v}_- = \frac{1}{2} \left[
@@ -500,13 +510,14 @@ def v_minus(
     raise TypeError(f"Unknown argument types: vp = {type(vp)}, ap = {type(ap)}")
 
 
-@overload(v_minus, jit_options={"nopython": True})
+@overload(v_minus, jit_options={"nopython": True, "nogil": True})
 def _v_minus_numba(
         vp: th.FloatOrArr,
         ap: float,
         sol_type: SolutionType = SolutionType.DETON,
         strong_branch: bool = False,
-        debug: bool = False) -> th.FloatOrArrNumba:
+        debug: bool = False,
+        parallel: bool = True) -> th.FloatOrArrNumba:
     if isinstance(vp, numba.types.Float):
         return _v_minus_scalar
     if isinstance(vp, numba.types.Array):
@@ -514,7 +525,12 @@ def _v_minus_numba(
     raise TypeError(f"Unknown argument types: vp = {type(vp)}, ap = {type(ap)}")
 
 
-def _v_plus_scalar(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: bool = True) -> th.FloatOrArrNumba:
+def _v_plus_scalar(
+        vm: th.FloatOrArr,
+        ap: float,
+        sol_type: SolutionType,
+        debug: bool = True,
+        parallel: bool = True) -> th.FloatOrArrNumba:
     x = vm + 1. / (3 * vm)
     # Finding the SolutionType automatically does not work in the general case
     # if sol_type is None:
@@ -523,9 +539,10 @@ def _v_plus_scalar(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: 
     b = 1. if sol_type == SolutionType.DETON.value else -1.
     # Fluid must flow through the wall from the outside to the inside of the bubble.
     if b == -1 and ap > 1/3:
-        if debug:
-            with numba.objmode:
-                logger.error("v_plus would be negative for a deflagration with ap > 1/3, got ap=%s", ap)
+        # Todo: better error handling and logging
+        # if debug:
+        #     with numba.objmode:
+        #         logger.error("v_plus would be negative for a deflagration with ap > 1/3, got ap=%s", ap)
         return np.nan
 
     return (0.5 / (1 + ap)) * (x + b * np.sqrt(x ** 2 + 4. * ap ** 2 + (8. / 3.) * ap - (4. / 3.)))
@@ -551,7 +568,6 @@ def _v_plus_scalar(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: 
 _v_plus_scalar_numba = numba.njit(_v_plus_scalar)
 
 
-@numba.njit(parallel=True)
 def _v_plus_arr(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: bool = True) -> th.FloatOrArrNumba:
     ret = np.empty_like(vm)
     # pylint: disable=not-an-iterable
@@ -569,11 +585,27 @@ def _v_plus_arr(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: boo
     # return np.real(ret)
 
 
-def _v_plus_arr_wrapper(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: bool = True) -> th.FloatOrArrNumba:
-    return _v_plus_arr(vm=vm, ap=ap, sol_type=sol_type, debug=debug)
+_v_plus_arr_parallel = numba.njit(parallel=True, nogil=True)(_v_plus_arr)
+_v_plus_arr_single = numba.njit(nogil=True)(_v_plus_arr)
 
 
-def v_plus(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: bool = True) -> th.FloatOrArrNumba:
+def _v_plus_arr_wrapper(
+        vm: th.FloatOrArr,
+        ap: float,
+        sol_type: SolutionType,
+        debug: bool = True,
+        parallel: bool = True) -> th.FloatOrArrNumba:
+    if parallel:
+        return _v_plus_arr_parallel(vm=vm, ap=ap, sol_type=sol_type, debug=debug)
+    return _v_plus_arr_single(vm=vm, ap=ap, sol_type=sol_type, debug=debug)
+
+
+def v_plus(
+        vm: th.FloatOrArr,
+        ap: float,
+        sol_type: SolutionType,
+        debug: bool = True,
+        parallel: bool = True) -> th.FloatOrArrNumba:
     r"""
     Fluid speed $\tilde{v}_+$ ahead of the wall in the wall frame
     $$\tilde{v}_+ = \frac{1}{2(1 + \alpha_+)}
@@ -602,18 +634,26 @@ def v_plus(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: bool = T
     raise TypeError(f"Unknown argument types: vm = {type(vm)}, ap = {type(ap)}")
 
 
-@overload(v_plus, jit_options={"nopython": True})
-def _v_plus_numba(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: bool = True) -> th.FloatOrArrNumba:
+@overload(v_plus, jit_options={"nopython": True, "nogil": True})
+def _v_plus_numba(
+        vm: th.FloatOrArr,
+        ap: float,
+        sol_type: SolutionType,
+        debug: bool = True,
+        parallel: bool = True) -> th.FloatOrArrNumba:
     if isinstance(vm, numba.types.Float):
         return _v_plus_scalar
     if isinstance(vm, numba.types.Array):
         return _v_plus_arr_wrapper
+    raise TypeError(f"Unknown argument types: vm = {type(vm)}, ap = {type(ap)}")
 
 
 def v_plus_hybrid(
         model: "Model",
-        v_wall: float, wm: float,
-        vp_tilde_guess: float, wp_guess: float,
+        v_wall: float,
+        wm: float,
+        vp_tilde_guess: float,
+        wp_guess: float,
         allow_failure: bool = False,
         allow_negative_entropy_flux_change: bool = False) -> float:
     """Find $v_+$ for a hybrid"""
