@@ -18,7 +18,8 @@ class ReferenceTest(unittest.TestCase):
             os.remove(path)
         fluid_reference.FluidReference(
             path=path,
-            n_v_wall=5, n_alpha_n=6)
+            n_v_wall=5, n_alpha_n=6
+        )
 
     # def test_nearest(self):
     #     ref = fluid_reference.ref()

@@ -38,13 +38,20 @@ class FluidReference:
 
         if not os.path.exists(path):
             self.create(v_wall_min, v_wall_max, alpha_n_min, alpha_n_max, n_v_wall, n_alpha_n)
+            # Ensure that the file is closed before attempting to open it again.
+            time.sleep(1)
 
         try:
             file = h5py.File(path, "r")
-        except (KeyError, OSError) as e:
+        except BlockingIOError as err:
+            raise BlockingIOError(
+                "Could not open the fluid reference file at \"%s\". "
+                "This is likely because another process is currently writing to it."
+            ) from err
+        except (KeyError, OSError) as err:
             logger.exception(
                 "Could not open the fluid reference file at \"%s\". Generating a new one.",
-                path, exc_info=e
+                path, exc_info=err
             )
             os.remove(self.path)
             self.create(v_wall_min, v_wall_max, alpha_n_min, alpha_n_max, n_v_wall, n_alpha_n)
@@ -147,10 +154,10 @@ class FluidReference:
                 file.create_dataset("inds_sub_def", data=np.array(inds[0], dtype=np.int_))
                 file.create_dataset("inds_hybrid", data=np.array(inds[1], dtype=np.int_))
                 file.create_dataset("inds_detonation", data=np.array(inds[2], dtype=np.int_))
-        except Exception as e:
+        except Exception as exc:
             # Remove broken file
             os.remove(self.path)
-            raise e
+            raise exc
         logger.info("Fluid reference ready, took: %s s", time.perf_counter() - start_time)
 
     def get(self, v_wall: float, alpha_n: float, sol_type: SolutionType) -> np.ndarray:
