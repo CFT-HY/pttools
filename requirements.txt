@@ -1,5 +1,6 @@
 # List of project requirements for pip
 # https://pip.pypa.io/en/stable/user_guide/#requirements-files
+# Keep this up to date with pyproject.toml
 
 h5py == 3.15.1
 # Intel Compile Runtime provides Intel SVML, which speeds up Numba
@@ -14,17 +15,17 @@ kaleido == 1.2.0
 matplotlib == 3.10.8
 # Numba 0.55 breaks the unit tests
 # https://github.com/numba/numba/issues/7751
-numba == 0.63.1
+numba == 0.64.0
 # NumbaLSODA does not work yet on the GitHub Actions Windows runners
 numbalsoda == 0.3.4; sys_platform != "win32"
 # If you're using an old version of Numba and get the error:
 # "create_target_machine() got an unexpected keyword argument 'jitdebug'"
 # then you may have to downgrade llvmlite to 0.32.1
 # https://github.com/rapidsai/cuml/issues/2389#issuecomment-642645437
-numpy == 2.3.5
-orjson == 3.11.5
-plotly == 6.5.2
-scipy == 1.17.0
+numpy == 2.4.2
+orjson == 3.11.7
+plotly == 6.6.0
+scipy == 1.17.1
 # TBB can be used to speed up Numba threading
 # https://numba.pydata.org/numba-doc/latest/user/threading-layer.html#which-threading-layers-are-available
 # As of 2024-07-29, 2021.10.0 is the latest version available for macOS, and there is no image for arm64 macOS.
