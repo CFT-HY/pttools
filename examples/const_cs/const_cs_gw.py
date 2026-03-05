@@ -193,7 +193,7 @@ def main(low_k: bool = True):
         logger.error(msg)
         raise ValueError(msg)
 
-    spectra: np.ndarray[tuple[int, int, int], Spectrum] = np.zeros(
+    spectra: np.ndarray[tuple[int, int, int], np.dtype[Spectrum]] = np.zeros(
         (len(models), alpha_ns.size, v_walls.size),
         dtype=object
     )
@@ -206,7 +206,7 @@ def main(low_k: bool = True):
             spectrum_kwargs={
                 "r_star": r_star,
                 # "z": z
-                "Tn": Tn,
+                "T_star": Tn,
                 # "g_star": 100,
                 # "gs_star": 100
                 "low_k": low_k
