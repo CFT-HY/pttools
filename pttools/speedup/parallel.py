@@ -86,7 +86,7 @@ class LoggingRunner:
         return ret
 
 
-def get_process_pool(max_workers: int = MAX_WORKERS_DEFAULT) -> ProcessPoolExecutor:
+def get_global_process_pool(max_workers: int = MAX_WORKERS_DEFAULT) -> ProcessPoolExecutor:
     global POOL
     with POOL_LOCK:
         if POOL is None:
@@ -96,9 +96,10 @@ def get_process_pool(max_workers: int = MAX_WORKERS_DEFAULT) -> ProcessPoolExecu
 
 
 @contextmanager
-def global_process_pool(
+def get_process_pool(
         max_workers: int = MAX_WORKERS_DEFAULT,
-        single_thread: bool = False) -> tp.Iterator[FakeExecutor | ProcessPoolExecutor]:
+        single_thread: bool = False,
+        global_pool: bool = False) -> tp.Iterator[FakeExecutor | ProcessPoolExecutor]:
     """Get the global process pool for parallel execution.
 
     This pool is shared across the entire program
@@ -106,8 +107,10 @@ def global_process_pool(
     """
     if single_thread:
         yield FakeExecutor()
+    if global_pool:
+        yield get_global_process_pool(max_workers=max_workers)
     else:
-        yield get_process_pool(max_workers=max_workers)
+        yield ProcessPoolExecutor(max_workers=max_workers)
 
 
 def parallel_debug_message(
@@ -115,7 +118,8 @@ def parallel_debug_message(
         err: Exception | None = None,
         max_workers: int | None = None,
         single_thread: bool | None = None,
-        start_time: float | None = None) -> str:
+        start_time: float | None = None,
+        kwargs: dict[str, tp.Any] | None = None) -> str:
     end_time = time.perf_counter()
     msg = info
     if info is not None and info[-1] != " ":
@@ -129,6 +133,9 @@ def parallel_debug_message(
         msg += f", max_workers={max_workers}"
     if single_thread is not None:
         msg += f", single_thread={single_thread}"
+
+    if kwargs:
+        msg += ", ".join([f"{name}={value}" for name, value in kwargs.items()])
 
     return msg
 
@@ -145,7 +152,8 @@ def run_parallel(
         log_progress_percentage: float | None = None,
         args: list | tuple = (),
         kwargs: dict[str, tp.Any] | None = None,
-        single_thread: bool = False) -> NDArray | tuple[NDArray] | None:
+        single_thread: bool = False,
+        global_pool: bool = False) -> NDArray | tuple[NDArray] | None:
     """Run the given function with multiple parameters in parallel
 
     :param func: The function to be executed in parallel
@@ -160,6 +168,10 @@ def run_parallel(
     :param args: common arguments for the function
     :param kwargs: common kwargs for the function
     :param single_thread: disable parallelism for debugging and profiling
+    :param global_pool: Whether to use a global process pool for parallel execution.
+        This removes the overhead of recreating the process pool,
+        but updates in the global state (such as caches)
+        after the pool is first created will not be updated to the subprocesses.
     :return: Numpy arrays for each output value
     """
     if kwargs is None:
@@ -190,7 +202,7 @@ def run_parallel(
     start_time = time.perf_counter()
     # start_datetime = datetime.datetime.now().astimezone().isoformat()
     try:
-        with global_process_pool(max_workers=max_workers, single_thread=single_thread) as ex:
+        with get_process_pool(max_workers=max_workers, single_thread=single_thread, global_pool=global_pool) as ex:
             # Submit parallel execution
             with np.nditer(
                     [params, None],
@@ -267,7 +279,23 @@ def run_parallel(
             err=err,
             max_workers=max_workers,
             single_thread=single_thread,
-            start_time=start_time
+            start_time=start_time,
+            kwargs={
+                # Internal variables
+                "flags": flags,
+                "arr_size": arr_size,
+                "op_axes": op_axes,
+                # Arguments
+                "func": func,
+                "params.shape": params.shape,
+                # "params": params,
+                "multiple_params": multiple_params,
+                "unpack_params": unpack_params,
+                "output_dtypes": output_dtypes,
+                "return_arr_shape": return_arr_shape,
+                "args": args,
+                "kwargs": kwargs
+            }
         )
         raise BrokenProcessPool(msg) from err
 

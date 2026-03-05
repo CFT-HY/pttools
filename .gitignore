@@ -24,6 +24,7 @@ docs/sg_execution_times.rst
 examples/fig
 gen_modules
 logs
+mprofile_*.dat
 test-results
 tests/test_data/fluidprofiles
 tests/test_data/graphs
