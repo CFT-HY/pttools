@@ -12,7 +12,8 @@ import pttools.type_hints as th
 from pttools.bubble.const import CS0_2
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.models.analytic import AnalyticModel
-from pttools.models.bag import BagModel
+from pttools.models.bag import BagModel, df_dtau_ptr_bag
+from pttools.speedup import DifferentialPointer
 from pttools.utils.validation import check_value_in_range
 
 logger = logging.getLogger(__name__)
@@ -107,6 +108,7 @@ class ConstCSModel(AnalyticModel):
         self.csb = np.sqrt(csb2_flt)
         self.mu_s = cs2_to_mu(css2_flt)
         self.mu_b = cs2_to_mu(csb2_flt)
+        self.is_bag = np.isclose(self.mu_s, 4) and np.isclose(self.mu_b, 4)
 
         # This seems to contain invalid assumptions and approximations.
         # self.alpha_n_min_limit_cs = (self.mu - self.nu) / (3*self.mu)
@@ -267,7 +269,7 @@ class ConstCSModel(AnalyticModel):
         if safety_factor_alpha is None:
             safety_factor_alpha = self.ALPHA_N_MIN_FIND_SAFETY_FACTOR_ALPHA
 
-        if np.isclose(self.mu_s, 4) and np.isclose(self.mu_b, 4):
+        if self.is_bag:
             return BagModel.alpha_n_min_find_params(
                 alpha_n_min_target=alpha_n_min_target,
                 a_s_default=a_s_default,
@@ -577,13 +579,18 @@ class ConstCSModel(AnalyticModel):
             w_min: float = 0, allow_fail: bool = False, **kwargs) -> tuple[float, float]:
         return self._cs2_minmax(phase)
 
+    def df_dtau_ptr(self) -> DifferentialPointer:
+        if self.is_bag:
+            return df_dtau_ptr_bag
+        return super().df_dtau_ptr()
+
     def gen_cs2(self):
         # These become compile-time constants
         css2 = self.css2
         csb2 = self.csb2
 
         # Using the BagModel cs2 saves us from having to compile additional Numba functions
-        if css2 == 1/3 and csb2 == 1/3:
+        if self.is_bag:
             return BagModel.cs2
 
         @numba.njit
@@ -596,7 +603,7 @@ class ConstCSModel(AnalyticModel):
         css2 = self.css2
         csb2 = self.csb2
 
-        if css2 == 1/3 and csb2 == 1/3:
+        if self.is_bag:
             return BagModel.cs2_neg
 
         @numba.njit
