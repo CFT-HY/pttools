@@ -5,7 +5,6 @@ Plot κ(ξ) for various models
 
 import logging
 import time
-import typing as tp
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,30 +12,20 @@ import numpy as np
 from examples import utils
 from pttools.logging import setup_logging
 from pttools.bubble.boundary import Phase
-from pttools.bubble.bubble import Bubble
+from pttools.bubble.bubble_quantities import get_kappa_for_v_walls
 from pttools.models.const_cs import ConstCSModel
 from pttools.bubble.fluid_reference import ref
 from pttools.speedup.parallel import run_parallel
-import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
 
 def alpha_theta_bar_n_to_alpha_n(model: ConstCSModel, alpha_thetabarn: float, wn: float):
-    r"""Convert $\alpha_{\bar{\theta}_n}$ to $\alpha_n$"""
+    r"""Convert $\alpha_{\bar{\theta}_n}$ to $\alpha_n$
+
+    Not used at the moment
+    """
     return alpha_thetabarn - 1/wn * (1 - 1/(3*model.csb2))*(model.p(wn, Phase.SYMMETRIC) - model.p(wn, Phase.BROKEN))
-
-
-def kappa_vec(params: np.ndarray[tuple[int], tp.Any], v_walls: th.FloatArr1D) -> th.FloatArr1D:
-    r"""Get $\kappa(v_\text{wall})$ for the given parameters"""
-    model, alpha_n = params
-    kappas = np.full_like(v_walls, np.nan)
-    for i, v_wall in enumerate(v_walls):
-        try:
-            kappas[i] = Bubble(model, v_wall=v_wall, alpha_n=alpha_n).kappa
-        except (IndexError, ValueError, RuntimeError):
-            continue
-    return kappas
 
 
 def main() -> plt.Figure:
@@ -66,7 +55,7 @@ def main() -> plt.Figure:
         for i_alpha, alpha_n in enumerate(alpha_ns):
             params[i_model, i_alpha, :] = (model, alpha_n)
     kappas = run_parallel(
-        func=kappa_vec, params=params, multiple_params=True, args=(v_walls, ),
+        func=get_kappa_for_v_walls, params=params, multiple_params=True, args=(v_walls, ),
         return_arr_shape=(v_walls.size, ), output_dtypes=(np.float64, )
     )
     for i_alpha, color in enumerate(colors):

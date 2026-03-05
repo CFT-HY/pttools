@@ -47,6 +47,7 @@ def setup_logging(
         logging.getLogger("choreographer").setLevel(logging.WARNING)
         logging.getLogger("h5py").setLevel(logging.INFO)
         logging.getLogger("kaleido").setLevel(logging.WARNING)
+        logging.getLogger("logistro").setLevel(logging.WARNING)  # Used by Choreographer
         logging.getLogger("numba").setLevel(logging.INFO)
         logging.getLogger("Pillow").setLevel(logging.INFO)
         logging.getLogger("PIL").setLevel(logging.INFO)

@@ -4,9 +4,12 @@ These are useful for parallel processing where one should do
 as much of the processing in the parallel execution as possible.
 """
 
+import typing as tp
+
 import numpy as np
 
 from pttools.bubble.bubble import Bubble
+import pttools.type_hints as th
 
 
 def get_ke_frac(bubble: Bubble):
@@ -27,6 +30,19 @@ def get_kappa(bubble: Bubble) -> float:
 
 get_kappa.return_type = float
 get_kappa.fail_value = np.nan
+
+
+def get_kappa_for_v_walls(params: np.ndarray[tuple[int], tp.Any], v_walls: th.FloatArr1D) -> th.FloatArr1D:
+    r"""Get $\kappa(v_\text{wall})$ for the given parameters"""
+    # Todo: replace the uses of this with a solution that uses get_kappa() instead.
+    model, alpha_n = params
+    kappas = np.full_like(v_walls, np.nan)
+    for i, v_wall in enumerate(v_walls):
+        try:
+            kappas[i] = Bubble(model, v_wall=v_wall, alpha_n=alpha_n).kappa
+        except (IndexError, ValueError, RuntimeError):
+            continue
+    return kappas
 
 
 def get_kappa_giese(bubble: Bubble) -> float:

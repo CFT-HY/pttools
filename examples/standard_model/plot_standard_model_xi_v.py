@@ -17,7 +17,7 @@ from examples import utils
 
 setup_logging()
 
-sm = StandardModel(V_s=5e12, g_mult_s=1 + 1e-9)
+sm = StandardModel(V_s=5e12, g_mult_s=1 + 1e-9, silence_temp=True)
 model = FullModel(sm, T_crit_guess=100e3)
 wn = model.wn(alpha_n=0.1)
 tn = model.temp(wn, Phase.SYMMETRIC)
