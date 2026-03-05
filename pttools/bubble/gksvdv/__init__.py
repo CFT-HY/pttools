@@ -14,3 +14,4 @@ The original code is also published on arXiv with
 
 from .gksvdv21 import *
 from .gkvdv20 import *
+from .quantities import *

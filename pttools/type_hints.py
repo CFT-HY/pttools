@@ -27,6 +27,7 @@ type Float64 = np.dtype[np.float64]
 type FloatArr = NDArray[np.float64]
 type FloatArr1D = np.ndarray[tuple[int], Float64]  # pylint: disable=invalid-name
 type FloatArr2D = np.ndarray[tuple[int, int], Float64]  # pylint: disable=invalid-name
+type FloatArr3D = np.ndarray[tuple[int, int, int], Float64]  # pylint: disable=invalid-name
 # Float list or a Numpy array
 # FloatListOrArr = list[tp.Union[float, Float64] | np.ndarray
 #: Float or a Numpy array of floats

@@ -5,6 +5,7 @@ Plot κ(ξ) for various models
 
 import logging
 import time
+import typing as tp
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,6 +17,7 @@ from pttools.bubble.bubble import Bubble
 from pttools.models.const_cs import ConstCSModel
 from pttools.bubble.fluid_reference import ref
 from pttools.speedup.parallel import run_parallel
+import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
@@ -25,21 +27,19 @@ def alpha_theta_bar_n_to_alpha_n(model: ConstCSModel, alpha_thetabarn: float, wn
     return alpha_thetabarn - 1/wn * (1 - 1/(3*model.csb2))*(model.p(wn, Phase.SYMMETRIC) - model.p(wn, Phase.BROKEN))
 
 
-def kappa_vec(params: np.ndarray, v_walls: np.ndarray) -> np.ndarray:
+def kappa_vec(params: np.ndarray[tuple[int], tp.Any], v_walls: th.FloatArr1D) -> th.FloatArr1D:
     r"""Get $\kappa(v_\text{wall})$ for the given parameters"""
     model, alpha_n = params
-    kappas = np.ones_like(v_walls) * np.nan
-    v_wall: float
+    kappas = np.full_like(v_walls, np.nan)
     for i, v_wall in enumerate(v_walls):
         try:
-            bubble = Bubble(model, v_wall=v_wall, alpha_n=alpha_n)
-            kappas[i] = bubble.kappa
+            kappas[i] = Bubble(model, v_wall=v_wall, alpha_n=alpha_n).kappa
         except (IndexError, ValueError, RuntimeError):
             continue
     return kappas
 
 
-def main():
+def main() -> plt.Figure:
     r"""Plot $\kappa(\xi)$ for various models"""
     ref()
     t_start = time.perf_counter()

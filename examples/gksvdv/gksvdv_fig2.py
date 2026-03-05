@@ -17,36 +17,20 @@ from examples.utils import save
 from pttools.analysis.parallel import create_bubbles
 # from pttools.analysis.utils import A4_PAPER_SIZE
 from pttools.bubble.bubble_quantities import get_kappa_giese
-from pttools.bubble.gksvdv.gksvdv21 import kappaNuMuModel
+from pttools.bubble.gksvdv.quantities import kappa_gksvdv
 from pttools.models import ConstCSModel
 from pttools.speedup import run_parallel
+import pttools.type_hints as th
 from pttools.utils.system import GITHUB_ACTIONS
 
 logger = logging.getLogger(__name__)
 
 
-def kappa_giese(params: np.ndarray, model: ConstCSModel) -> float:
-    r"""Compute $\kappa$ with the :giese_2021:`\ ` solver"""
-    v_wall, alpha_tbn_giese = params
-    try:
-        kappa, v_arr, wow_arr, xi_arr, mode, vp, vm = kappaNuMuModel(
-            # cs2s=model.cs2(model.w_crit, Phase.SYMMETRIC),
-            # cs2b=model.cs2(model.w_crit, Phase.BROKEN),
-            cs2s=model.css2,
-            cs2b=model.csb2,
-            al=alpha_tbn_giese,
-            vw=v_wall
-        )
-    except ValueError:
-        return np.nan
-    return kappa
-
-
 def kappas_giese(
         model: ConstCSModel,
-        v_walls: np.ndarray,
-        alpha_ns: np.ndarray,
-        theta_bar: bool = False) -> np.ndarray:
+        v_walls: th.FloatArr1D,
+        alpha_ns: th.FloatArr1D,
+        theta_bar: bool = False) -> th.FloatArr2D:
     r"""Compute $\kappa$ for several bubbles with the :giese_2021:`\ ` solver"""
     if theta_bar:
         alpha_tbns = alpha_ns
@@ -66,13 +50,16 @@ def kappas_giese(
             params[i_alpha_tbn, i_v_wall, 1] = alpha_tbn
 
     kappas = run_parallel(
-        func=kappa_giese,
+        func=kappa_gksvdv,
         params=params,
         multiple_params=True,
         # output_dtypes=(float, ),
         # max_workers=max_workers,
         log_progress_percentage=20,
-        kwargs={"model": model}
+        kwargs={
+            "css2": model.css2,
+            "csb2": model.csb2
+        }
     )
     return kappas
 
@@ -80,12 +67,12 @@ def kappas_giese(
 def create_figure(
         axs: tp.Iterable[plt.Axes],
         models: tp.List[ConstCSModel],
-        alpha_ns: np.ndarray,
+        alpha_ns: th.FloatArr1D,
         colors: tp.List[str],
         lss: tp.List[str],
-        v_walls: np.ndarray,
+        v_walls: th.FloatArr1D,
         theta_bar: bool = False,
-        giese: bool = False):
+        giese: bool = False) -> th.FloatArr3D:
     r"""Create a figure of $\kappa(v_\text{wall})$ similar to :giese_2021:`\ `, fig. 2"""
     kappas = np.empty((len(models), alpha_ns.size, v_walls.size))
     for i_model, (model, ls) in enumerate(zip(models, lss)):
@@ -144,10 +131,10 @@ def create_figure(
 
 def create_diff_figure(
         ax: plt.Axes,
-        kappas_pttools: np.ndarray,
-        kappas_giese: np.ndarray,
+        kappas_pttools: th.FloatArr3D,
+        kappas_giese: th.FloatArr3D,
         models: tp.List[ConstCSModel],
-        v_walls: np.ndarray,
+        v_walls: th.FloatArr1D,
         colors: tp.List[str],
         lss: tp.List[str],
         theta_bar: bool,
