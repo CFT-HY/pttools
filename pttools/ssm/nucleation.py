@@ -112,11 +112,11 @@ def R_star(beta: th.FloatOrArr, v_wall: th.FloatOrArr, cs: th.FloatOrArr = const
     :caprini_2020:`\ ` eq. 6
     :hakkinen_msc:`\ ` eq. 2.6
 
-    For detonations ($v_\text{wall} > c_s$),
+    For detonations (${v}_\text{wall} > c_s$),
     the typical separation between bubbles is set by the wall velocity $v_\text{wall}$.
-    For bubbles expanding as deflagrations ($v_\text{wall} < c_s$),
+    For bubbles expanding as deflagrations (${v}_\text{wall} < c_s$),
     the reheating of the plasma by the reaction front can suppress further bubble formation for large enough $\alpha$.
-    This is approximated by $\max (v_\text{wall}, c_s)$ in the formula above.
+    This is approximated by $\max ({v}_\text{wall}, c_s)$ in the formula above.
     Please note that for very slow PTs ($\frac{\beta}{H_*} \approx 1$),
     this approximation breaks down,
     and the mean bubble separation $R_*$ must be calculated directly from first principles.
@@ -130,7 +130,7 @@ def R_star(beta: th.FloatOrArr, v_wall: th.FloatOrArr, cs: th.FloatOrArr = const
     :caprini_2020:`\ ` p. 16
 
     :param beta: Nucleation rate parameter $\beta$
-    :param v_wall: Wall velocity $v_w$
+    :param v_wall: Wall velocity ${v}_w$
     :param cs: Sound speed $c_s$
     :return: Mean bubble separation $R_*$
     """

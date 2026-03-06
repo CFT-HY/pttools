@@ -197,8 +197,14 @@ intersphinx_mapping: dict[str, tuple[str, str | None]] = {
     # "yappi": ("https://yappi.readthedocs.io/en/latest/", None),
 }
 linkcheck_allowed_redirects: dict[str, str] = {
-    r"https://bitbucket\.org/*": r"https://id\.atlassian\.com/*",
-    r"https://www.helsinki\.fi/": r"https://www.helsinki\.fi/en",
+    "https://akareport.aka.fi/*": "https://tiedejatutkimus.fi/*",
+    "https://bitbucket.org/*": "https://id.atlassian.com/*",
+    "https://gitlab.esa.int/*": "https://gitlab.esa.int/users/sign_in",
+    "https://www.helsinki.fi/": "https://www.helsinki.fi/en",
+    "https://hdl.handle.net/*": "(https://helda.helsinki.fi/handle/*|https://sussex.figshare.com/*)",
+    "https://www.ptplot.org": "https://www.ptplot.org/ptplot/",
+    r"https://.*\.stackexchange.com/a/.*": r"https://.*\.stackexchange.com/questions/.*",
+    "https://stackoverflow.com/a/*": "https://stackoverflow.com/questions/*",
 }
 # The authentication info could be set up to work on the CI build
 # https://docs.github.com/en/actions/reference/authentication-in-a-workflow
@@ -206,16 +212,17 @@ linkcheck_allowed_redirects: dict[str, str] = {
 linkcheck_ignore: list[str] = [
     # These websites don't allow crawlers
     # r"https://academic.oup.com/book/*",
-    r"https://www.aka.fi/*",
-    r"https://www.intel.com/*",
+    "https://link.aps.org/*",
+    "https://www.aka.fi/*",
+    "https://www.intel.com/*",
     # The private Bitbucket repos will also return 404 without authentication
-    r"https://bitbucket.org/hindmars/sound-shell-model/*",
+    "https://bitbucket.org/hindmars/sound-shell-model/*",
     # This link redirects to a site that does not allow crawlers
-    f"https://doi.org/10.1093/acprof:oso/9780198528906.001.0001",
+    "https://doi.org/10.1093/acprof:oso/9780198528906.001.0001",
     # The project repository will return 404 without authentication until it's published.
-    r"https://github\.com/CFT-HY/pttools/*",
+    "https://github.com/CFT-HY/pttools/*",
     # The anchors are valid but not detected by Sphinx.
-    r"https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/*",
+    "https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/*",
 ]
 if GITHUB_ACTIONS:
     linkcheck_ignore += [
