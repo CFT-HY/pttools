@@ -7,7 +7,7 @@ env:
 jobs:
   docs:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
     steps:
       - name: Setup Python
         uses: actions/setup-python@v5

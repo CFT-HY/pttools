@@ -198,7 +198,7 @@ class Spectrum(ssm.SSMSpectrum):
     def z_from_f(self, f: th.FloatOrArr) -> th.FloatOrArr:
         r"""Convert from frequencies $f$ back to wavenumbers $z$
 
-        $$z(f) = \frac{f}{f_{*,0} r_*$$
+        $$z(f) = \frac{f}{{f}_{*,0} {r}_*$$
         Inverted from :gowling_2021:`\ ` eq. 2.12
         :param f: frequencies $f$ today
         :return: wavenumbers $z$

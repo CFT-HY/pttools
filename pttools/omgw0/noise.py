@@ -33,7 +33,7 @@ def signal_to_noise_ratio(
     :param obs_time: observation time (s)
     :param f_min: minimum frequency to be considered (Hz)
     :param f_max: maximum frequency to be considered (Hz)
-    :param f_range: whether to output the frequency range $(f_\text{min}, f_\text{max})$
+    :param f_range: whether to output the frequency range $({f}_\text{min}, {f}_\text{max})$
     :return: signal-to-noise ratio SNR, aka. $\rho$
     """
     if f_noise is None:

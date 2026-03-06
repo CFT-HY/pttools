@@ -144,6 +144,7 @@ extlinks: dict[str, tuple[str, str]] = {
     # The articles are ordered by publication year
     # Hindmarsh articles
     "gw_ssm": ("https://arxiv.org/abs/1304.2433%s", "Hindmarsh et al., 2014%s"),
+    "hindmarsh_2017": ("https://arxiv.org/abs/1704.05871%s", "Hindmarsh et al., 2017%s"),
     "ssm": ("https://arxiv.org/abs/1608.04735%s", "Hindmarsh et al., 2018%s"),
     "gw_pt_ssm": ("https://arxiv.org/abs/1909.10040%s", "Hindmarsh et al., 2019%s"),
     "notes": ("https://arxiv.org/abs/2008.09136%s", "Hindmarsh et al., 2021%s"),
