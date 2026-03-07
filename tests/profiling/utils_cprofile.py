@@ -7,7 +7,7 @@ import pstats
 import sys
 import typing as tp
 
-from . import utils
+from tests.profiling import utils
 
 PROFILE_DIR = os.path.join(utils.PROFILE_DIR, "cprofile")
 os.makedirs(PROFILE_DIR, exist_ok=True)

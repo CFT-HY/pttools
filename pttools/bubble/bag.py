@@ -11,7 +11,7 @@ import numpy as np
 
 import pttools.type_hints as th
 from .boundary import Phase
-from . import const
+from pttools.bubble import const
 
 logger = logging.getLogger(__name__)
 

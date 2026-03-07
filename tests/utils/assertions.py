@@ -5,8 +5,8 @@ import inspect
 import numpy as np
 
 import pttools.type_hints as th
-from . import math as test_math
-from . import printing
+import tests.utils.math as test_math
+from tests.utils import printing
 
 
 def assert_allclose(

@@ -5,10 +5,11 @@ import typing as tp
 
 import numba
 
+import pttools.bubble.alpha as alpha_tools
+from pttools.bubble.boundary import Phase, SolutionType, v_plus
+from pttools.bubble import const
 import pttools.type_hints as th
-from . import alpha as alpha_tools
-from .boundary import Phase, SolutionType, v_plus
-from . import const
+
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 

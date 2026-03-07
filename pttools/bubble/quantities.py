@@ -11,15 +11,15 @@ import numba
 from numba.extending import overload
 import numpy as np
 
+from pttools.bubble import bag
+from pttools.bubble import boundary
+from pttools.bubble.boundary import Phase
+from pttools.bubble import check
+from pttools.bubble import const
+from pttools.bubble import fluid_bag
+from pttools.bubble import relativity
+from pttools.bubble import transition
 import pttools.type_hints as th
-from . import bag
-from . import boundary
-from .boundary import Phase
-from . import check
-from . import const
-from . import fluid_bag
-from . import relativity
-from . import transition
 from pttools.type_hints import FloatOrArr, FloatOrArr1D
 
 type Integrand = \

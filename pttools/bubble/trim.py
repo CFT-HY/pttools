@@ -5,11 +5,11 @@ import logging
 import numba
 
 import pttools.type_hints as th
-from . import bag
-from .boundary import Phase, SolutionType
-from . import check
-from . import const
-from . import shock
+from pttools.bubble import bag
+from pttools.bubble.boundary import Phase, SolutionType
+from pttools.bubble import check
+from pttools.bubble import const
+from pttools.bubble import shock
 
 logger = logging.getLogger(__name__)
 

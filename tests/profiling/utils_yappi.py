@@ -7,7 +7,7 @@ import typing as tp
 
 import yappi
 
-from . import utils
+from tests.profiling import utils
 
 PROFILE_DIR = os.path.join(utils.PROFILE_DIR, "yappi")
 os.makedirs(PROFILE_DIR, exist_ok=True)

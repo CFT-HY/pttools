@@ -1,14 +1,11 @@
 r"""$\Omega_{\text{gw},0}$ for the bag model"""
 
-import numpy as np
-
 import pttools.bubble.ke_frac_approx as K
 from pttools.omgw0 import const
 from pttools.omgw0.factors import J
 from pttools.omgw0.freq import f0
 import pttools.omgw0.suppression as sup_mod
-from pttools.ssm import NptType, NPTDEFAULT
-from pttools import ssm
+from pttools.ssm import NPTDEFAULT, NptType, NucType, power_gw_scaled_bag
 import pttools.type_hints as th
 
 
@@ -27,15 +24,15 @@ def omgw0_bag(
     the SSM as encoded in the PTtools module (omgwi)
     :gowling_2021:`\ ` eq. 2.14
     """
-    params = (vw, alpha, ssm.NucType.EXPONENTIAL, (1,))
+    params = (vw, alpha, NucType.EXPONENTIAL, (1,))
     fp0 = f0(r_star, T_star)
     z = freqs / fp0
 
     K_frac = K.calc_ke_frac(vw, alpha)
-    omgwi = ssm.power_gw_scaled_bag(z, params, npt=npt, parallel=parallel)
+    omgwi = power_gw_scaled_bag(z, params, npt=npt, parallel=parallel)
 
     # entry options for power_gw_scaled
-    #          z: np.ndarray,
+    #          z: th.FloatArr1D,
     #        params: bubble.PHYSICAL_PARAMS_TYPE,
     #        npt=const.NPTDEFAULT,
     #        filename: str = None,

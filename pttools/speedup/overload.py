@@ -6,7 +6,7 @@ import numba
 from numba.extending import overload
 import numpy as np
 
-from . import numba_wrapper
+from pttools.speedup import numba_wrapper
 
 logger = logging.getLogger(__name__)
 

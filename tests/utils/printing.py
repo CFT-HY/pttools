@@ -6,7 +6,7 @@ import colorama
 import numpy as np
 
 import pttools.type_hints as th
-from . import math as test_math
+import tests.utils.math as test_math
 
 DEFAULT_FMT = ".8e"
 HIGH_PREC = 10

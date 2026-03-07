@@ -7,10 +7,10 @@ import numpy as np
 
 from pttools import ssm
 from pttools import speedup
-from .test_profile import TestProfile
-from . import utils_cprofile
-from . import utils_pyinstrument
-from . import utils_yappi
+from tests.profiling.test_profile import TestProfile
+from tests.profiling import utils_cprofile
+from tests.profiling import utils_pyinstrument
+from tests.profiling import utils_yappi
 
 logger = logging.getLogger(__name__)
 

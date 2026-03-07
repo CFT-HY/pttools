@@ -4,7 +4,7 @@ import os
 
 import pyinstrument
 
-from . import utils
+from tests.profiling import utils
 
 PROFILE_DIR = os.path.join(utils.PROFILE_DIR, "pyinstrument")
 os.makedirs(PROFILE_DIR, exist_ok=True)

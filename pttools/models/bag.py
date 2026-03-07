@@ -5,15 +5,14 @@ import logging
 import numba
 import numpy as np
 
-from pttools.bubble import Phase
-from pttools.bubble.boundary import SolutionType
 from pttools.bubble.integrate import add_df_dtau, differentials
+from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.transition import identify_solution_type_bag
 from pttools.models.analytic import AnalyticModel
 from pttools.speedup.differential import DifferentialPointer
-from pttools.utils.docstrings import copy_docstring_dec
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
+from pttools.utils.docstrings import copy_docstring_dec
 
 logger = logging.getLogger(__name__)
 

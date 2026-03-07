@@ -20,15 +20,18 @@ import typing as tp
 
 import numpy as np
 
+from pttools.bubble.boundary import Phase
+from pttools.bubble import props
+from pttools.bubble import relativity
 import pttools.type_hints as th
-from .boundary import Phase
-from . import props
-from . import relativity
+
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
 logger = logging.getLogger(__name__)
 
+
+# Todo: Reorder these functions e.g. alphabetically.
 
 def entropy_density_diff(
         model: "Model",

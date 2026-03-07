@@ -8,6 +8,7 @@ import typing as tp
 import numpy as np
 
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 logger = logging.getLogger(__name__)
 

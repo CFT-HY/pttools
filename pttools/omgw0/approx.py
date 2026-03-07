@@ -4,9 +4,8 @@ import math
 
 import numpy as np
 
-from pttools.bubble.const import CS0
+from pttools.bubble import const
 import pttools.type_hints as th
-from . import const
 
 
 def omgw_approx(

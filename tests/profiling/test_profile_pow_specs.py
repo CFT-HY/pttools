@@ -8,10 +8,10 @@ from pttools.speedup.numba_wrapper import \
     NUMBA_PYINSTRUMENT_INCOMPATIBLE_PYTHON_VERSION, \
     NUMBA_SEGFAULTING_PROFILERS
 from pttools.utils.system import IS_GITHUB_ACTIONS
-from .test_profile import TestProfile
-from . import utils_cprofile
-from . import utils_pyinstrument
-from . import utils_yappi
+from tests.profiling.test_profile import TestProfile
+from tests.profiling import utils_cprofile
+from tests.profiling import utils_pyinstrument
+from tests.profiling import utils_yappi
 
 logger = logging.getLogger(__name__)
 

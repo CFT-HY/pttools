@@ -10,21 +10,21 @@ import typing as tp
 import numba
 import numpy as np
 
+from pttools.bubble import alpha
+from pttools.bubble import approx
+from pttools.bubble import bag
+from pttools.bubble import boundary
+from pttools.bubble.boundary import Phase, SolutionType
+from pttools.bubble import check
+from pttools.bubble import const
+from pttools.bubble import integrate
+from pttools.bubble import props
+from pttools.bubble import quantities
+from pttools.bubble import shock
+from pttools.bubble import transition
+from pttools.bubble import trim
 from pttools import speedup
 import pttools.type_hints as th
-from . import alpha
-from . import approx
-from . import bag
-from . import boundary
-from .boundary import Phase, SolutionType
-from . import check
-from . import const
-from . import integrate
-from . import props
-from . import quantities
-from . import shock
-from . import transition
-from . import trim
 
 logger = logging.getLogger(__name__)
 

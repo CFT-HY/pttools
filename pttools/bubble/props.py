@@ -3,10 +3,10 @@
 import numba.types
 import numpy as np
 
+from pttools.bubble.boundary import Phase, SolutionType
+from pttools.bubble import relativity
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
-from .boundary import Phase, SolutionType
-from . import relativity
 
 
 @numba.njit

@@ -4,9 +4,9 @@ import typing as tp
 
 import numpy as np
 
+from pttools.models.const_cs import ConstCSModel, cs2_to_mu
+from pttools.models.thermo import ThermoModel
 import pttools.type_hints as th
-from .thermo import ThermoModel
-from . import const_cs
 
 
 class ConstCSThermoModel(ThermoModel):
@@ -32,7 +32,7 @@ class ConstCSThermoModel(ThermoModel):
             label_unicode: str | None = None,
             allow_invalid: bool = False):
         # For validation
-        const_cs.ConstCSModel(css2=css2, csb2=csb2, V_s=V_s, V_b=V_b, a_s=a_s, a_b=a_b, allow_invalid=allow_invalid)
+        ConstCSModel(css2=css2, csb2=csb2, V_s=V_s, V_b=V_b, a_s=a_s, a_b=a_b, allow_invalid=allow_invalid)
 
         self.a_s = a_s
         self.a_b = a_b
@@ -43,8 +43,8 @@ class ConstCSThermoModel(ThermoModel):
         self.csb2 = csb2
         self.css = np.sqrt(css2)
         self.csb = np.sqrt(csb2)
-        self.mu_s = const_cs.cs2_to_mu(css2)
-        self.mu_b = const_cs.cs2_to_mu(csb2)
+        self.mu_s = cs2_to_mu(css2)
+        self.mu_b = cs2_to_mu(csb2)
         # TODO: Generate reference values for g0 here (corresponding to a_s, a_b)
 
         super().__init__(

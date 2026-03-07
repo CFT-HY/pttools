@@ -4,8 +4,8 @@
 import numpy as np
 
 import pttools.type_hints as th
-from . import check
-from . import const
+from pttools.bubble import check
+from pttools.bubble import const
 
 
 def A2_approx(xi0: th.FloatOrArr) -> th.FloatOrArr:

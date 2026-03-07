@@ -6,11 +6,11 @@ import typing as tp
 
 import numpy as np
 
-import pttools.type_hints as th
 from pttools.bubble.boundary import SolutionType
 from pttools.models.model import Model
 from pttools.utils.validation import check_value_in_range
 from pttools.utils.misc import is_nan_or_none
+import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
 logger = logging.getLogger(__name__)

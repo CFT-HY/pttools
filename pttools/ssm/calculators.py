@@ -5,8 +5,8 @@ import logging
 import numba
 import numpy as np
 
+from pttools.ssm import const
 import pttools.type_hints as th
-from . import const
 
 logger = logging.getLogger(__name__)
 

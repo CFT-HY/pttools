@@ -13,7 +13,7 @@ import typing as tp
 import numba
 import numpy as np
 
-from . import options
+from pttools.speedup import options
 from pttools.utils import conditional_decorator
 
 logger = logging.getLogger(__name__)

@@ -9,6 +9,7 @@ import pytest
 from pttools import models
 from pttools.analysis.parallel import create_bubbles
 from pttools.bubble.bubble import Bubble
+from pttools.bubble.bubble_quantities import get_kappa
 from pttools.speedup import IS_OSX
 import pttools.type_hints as th
 from tests.utils import assert_allclose
@@ -37,16 +38,6 @@ def compare(
         bubble = Bubble(model=model, v_wall=v_wall, alpha_n=alpha_n)
         data[i] = bubble.kappa
     assert_allclose(data, ref, rtol=rtol)
-
-
-def get_kappa(bubble: Bubble) -> float:
-    if not bubble.solved:
-        return np.nan
-    return bubble.kappa
-
-
-get_kappa.return_type = float
-get_kappa.fail_value = np.nan
 
 
 class GieseTest(unittest.TestCase):

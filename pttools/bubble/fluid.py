@@ -7,23 +7,24 @@ import typing as tp
 import numpy as np
 from scipy.optimize import fsolve, root_scalar
 
-from pttools.speedup.solvers import fsolve_vary
+from pttools.bubble import alpha
+from pttools.bubble import boundary
+from pttools.bubble.boundary import Phase, SolutionType
+from pttools.bubble import chapman_jouguet
+from pttools.bubble import const
 from pttools.bubble.gksvdv.gksvdv21 import kappaNuMuModel
-from . import alpha
-from . import boundary
-from .boundary import Phase, SolutionType
-from . import chapman_jouguet
-from . import const
-from . import integrate
-from . import fluid_bag
-from . import fluid_reference
-from . import props
-from . import relativity
-from . import shock
-from . import transition
-from . import trim
+from pttools.bubble import fluid_bag
+from pttools.bubble import fluid_reference
+from pttools.bubble import integrate
+from pttools.bubble import props
+from pttools.bubble import relativity
+from pttools.bubble import shock
+from pttools.bubble import transition
+from pttools.bubble import trim
+from pttools.speedup.solvers import fsolve_vary
 from pttools.speedup import NAN_ARR
 import pttools.type_hints as th
+
 if tp.TYPE_CHECKING:
     from pttools.models import Model
 
