@@ -7,7 +7,7 @@ import tests.paper.ssm_paper_utils as spu
 from pttools.speedup.numba_wrapper import \
     NUMBA_PYINSTRUMENT_INCOMPATIBLE_PYTHON_VERSION, \
     NUMBA_SEGFAULTING_PROFILERS
-from pttools.utils.system import GITHUB_ACTIONS
+from pttools.utils.system import IS_GITHUB_ACTIONS
 from .test_profile import TestProfile
 from . import utils_cprofile
 from . import utils_pyinstrument
@@ -26,7 +26,7 @@ class TestProfilePowSpecs(TestProfile):
 
     @classmethod
     def setUpClass(cls) -> None:
-        if GITHUB_ACTIONS:
+        if IS_GITHUB_ACTIONS:
             raise unittest.SkipTest("This test would take too long on GitHub Actions")
         super().setUpClass()
 

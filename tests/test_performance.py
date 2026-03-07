@@ -9,7 +9,7 @@ import typing as tp
 
 import numba
 from pttools.speedup import NUMBA_DISABLE_JIT
-from pttools.utils.system import GITHUB_ACTIONS, IS_WINDOWS
+from pttools.utils.system import IS_GITHUB_ACTIONS, IS_WINDOWS
 from tests.utils.const import TEST_RESULT_PATH
 
 logger = logging.getLogger(__name__)
@@ -60,7 +60,7 @@ class TestPerformance(unittest.TestCase):
                 logger.info(f"Numba threading layer used: {numba.threading_layer()}")
 
     @classmethod
-    @unittest.skipIf(GITHUB_ACTIONS and IS_WINDOWS, reason="GitHub Actions Windows runners are slow")
+    @unittest.skipIf(IS_GITHUB_ACTIONS and IS_WINDOWS, reason="GitHub Actions Windows runners are slow")
     def test_performance_gw(cls):
         setup = textwrap.dedent("""
         import numpy as np
@@ -73,7 +73,7 @@ class TestPerformance(unittest.TestCase):
         cls.run_with_different_threads("GW", setup, command, 10)
 
     @classmethod
-    @unittest.skipIf(GITHUB_ACTIONS and IS_WINDOWS, reason="GitHub Actions Windows runners are slow")
+    @unittest.skipIf(IS_GITHUB_ACTIONS and IS_WINDOWS, reason="GitHub Actions Windows runners are slow")
     def test_performance_sin_transform(cls):
         setup = textwrap.dedent("""
         import numpy as np

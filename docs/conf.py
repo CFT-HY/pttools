@@ -26,7 +26,7 @@ repo_path = os.path.dirname(dir_path)
 sys.path.insert(0, os.path.dirname(dir_path))
 
 from pttools.logging import setup_logging
-from pttools.utils.system import GITHUB_ACTIONS
+from pttools.utils.system import IS_GITHUB_ACTIONS
 setup_logging()
 
 # Create a directory for static files to avoid a warning when building.
@@ -224,7 +224,7 @@ linkcheck_ignore: list[str] = [
     # The anchors are valid but not detected by Sphinx.
     "https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/*",
 ]
-if GITHUB_ACTIONS:
+if IS_GITHUB_ACTIONS:
     linkcheck_ignore += [
         r"https://akareport\.aka\.fi/ibi_apps/WFServlet*",
         r"https://www\.intel\.com/*",

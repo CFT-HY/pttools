@@ -12,7 +12,7 @@ from examples.utils import save
 from pttools.analysis.parallel import create_bubbles
 from pttools.bubble.bubble_quantities import get_kappa
 from pttools.models import ConstCSModel
-from pttools.utils.system import GITHUB_ACTIONS
+from pttools.utils.system import IS_GITHUB_ACTIONS
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ def main():
     """Comparison of Giese et al. and PTtools solvers"""
     alpha_ns = np.array([0.01, 0.03, 0.1, 0.3, 1, 3])
     colors = ["b", "y", "r", "g", "purple", "grey"]
-    n_v_walls = 20 if GITHUB_ACTIONS else 50
+    n_v_walls = 20 if IS_GITHUB_ACTIONS else 50
     v_walls = np.linspace(0.2, 0.95, n_v_walls)
     a_s = 5
     a_b = 1
