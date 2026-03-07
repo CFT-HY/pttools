@@ -28,6 +28,7 @@ from .props import *
 from .quantities import *
 from .relativity import *
 from .shock import *
+from .shock_bag import *
 from .solution_type import *
 from .solution_type_bag import *
 from .trim import *

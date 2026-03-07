@@ -1,4 +1,4 @@
-r"""Solver for the fluid velocity profile of a bubble"""
+"""Solver for the fluid velocity profile of a bubble"""
 
 import logging
 import time
@@ -19,7 +19,8 @@ from pttools.bubble.junction import solve_junction, v_plus_hybrid, w2_junction
 from pttools.bubble.junction_bag import fluid_speeds_at_wall_bag
 from pttools.bubble import props
 from pttools.bubble import relativity
-from pttools.bubble import shock
+from pttools.bubble.shock import find_shock_index, v_shock
+from pttools.bubble.shock_bag import v_shock_bag, wm_shock_bag
 from pttools.bubble.solution_type import \
     SolutionType, cannot_be_detonation, cannot_be_sub_def, is_surely_detonation, validate_solution_type
 from pttools.bubble.solution_type_bag import identify_solution_type_bag
@@ -197,7 +198,7 @@ def sound_shell_deflagration_common(
     # Manual correction for hybrids
     # if sol_type == SolutionType.HYBRID:
     #     # If we are already below the shock velocity, then add a manual correction
-    #     vm_shock_tilde, w_shock = shock.solve_shock(
+    #     vm_shock_tilde, w_shock = solve_shock(
     #         model,
     #         # The fluid before the shock is still
     #         v1_tilde=v_wall,
@@ -231,7 +232,7 @@ def sound_shell_deflagration_common(
     if np.argmax(xi) == 0:
         logger.error("Deflagration solver gave a detonation-like solution.")
         return DEFLAGRATION_NAN
-    i_shock = shock.find_shock_index(
+    i_shock = find_shock_index(
         model,
         v=v, w=w, xi=xi,
         v_wall=v_wall, wn=wn,
@@ -267,7 +268,7 @@ def sound_shell_deflagration_common(
             if np.argmax(xi2) == 0:
                 logger.error("Adjusting t_end gave a detonation-like solution. Using the previous solution.")
                 break
-            i_shock2 = shock.find_shock_index(
+            i_shock2 = find_shock_index(
                 model,
                 v=v2, w=w2, xi=xi2,
                 v_wall=v_wall, wn=wn,
@@ -327,8 +328,8 @@ def sound_shell_deflagration_reverse(
         return nan_arr, nan_arr, nan_arr, np.nan, np.nan
 
     # Solve boundary conditions at the shock
-    vm_sh = shock.v_shock_bag(xi_sh)
-    wm_sh = shock.wm_shock_bag(xi_sh, wn)
+    vm_sh = v_shock_bag(xi_sh)
+    wm_sh = wm_shock_bag(xi_sh, wn)
 
     # Integrate from the shock to the wall
     logger.info(
@@ -546,7 +547,7 @@ def sound_shell_hybrid(
 
     vm = relativity.lorentz(xi=v_wall, v=vm_tilde)
     # Shock velocity at xi_wall
-    v_sh_estimate = shock.v_shock(model, wn=wn, xi=v_wall, cs_n=cs_n)
+    v_sh_estimate = v_shock(model, wn=wn, xi=v_wall, cs_n=cs_n)
     vp_guess = relativity.lorentz(xi=v_wall, v=vp_tilde_guess)
 
     # More complex starting guesses
@@ -771,7 +772,7 @@ def sound_shell_solver_hybrid(
         logger.debug("Entering backup hybrid solver")
         wms = np.linspace(0.3 * wm_guess, 3 * wm_guess, 20)
         vps = np.zeros_like(wms)
-        v_sh = shock.v_shock(model, wn=wn, xi=v_wall, cs_n=cs_n)
+        v_sh = v_shock(model, wn=wn, xi=v_wall, cs_n=cs_n)
         for i, wm_i in enumerate(wms):
             vp = v_plus_hybrid(
                 model,

@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.analysis import utils
-from pttools.bubble import check, const, fluid_bag, props, quantities, relativity, shock, SolutionType
+from pttools.bubble import check, const, fluid_bag, props, quantities, relativity, SolutionType
+from pttools.bubble.shock_bag import v_shock_bag, wm_shock_bag
 from pttools.bubble.solution_type_bag import identify_solution_type_bag
 import pttools.type_hints as th
 
@@ -90,8 +91,8 @@ def plot_fluid_shells_bag(
         v, w, xi = fluid_bag.sound_shell_bag(v_wall, alpha_n, Np)
         n_cs = int(np.floor(const.CS0 * Np))
         n_sh = xi.size - 2
-        v_sh = shock.v_shock_bag(xi_even)
-        w_sh = shock.wm_shock_bag(xi_even)
+        v_sh = v_shock_bag(xi_even)
+        w_sh = wm_shock_bag(xi_even)
 
         # n_wall = find_v_index(xi, v_wall)
         # n_cs = np.int(np.floor(cs0*Np))

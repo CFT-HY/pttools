@@ -8,7 +8,7 @@ from pttools.bubble import bag
 from pttools.bubble import check
 from pttools.bubble import const
 from pttools.bubble.phase import Phase
-from pttools.bubble import shock
+from pttools.bubble.shock_bag import v_shock_bag
 from pttools.bubble.solution_type import SolutionType
 import pttools.type_hints as th
 
@@ -102,7 +102,7 @@ def trim_fluid_wall_to_shock(
     # n_shock = 0
     if sol_type != SolutionType.DETON.value:
         for i in range(v.size):
-            if v[i] <= shock.v_shock_bag(xi[i]):
+            if v[i] <= v_shock_bag(xi[i]):
                 n_shock_index = i
                 break
 
@@ -114,7 +114,7 @@ def trim_fluid_wall_to_shock(
                 "v[0] < v_shock(xi[0]). "
                 "sol_type: %s, xi[0] = %s, v[0] = %s, v_sh(xi[0]) = %s. "
                 "Shock profile has only one element. Fix implemented by adding one extra point.",
-                sol_type, xi[0], v[0], shock.v_shock_bag(xi[0])
+                sol_type, xi[0], v[0], v_shock_bag(xi[0])
             )
         n_shock = 1
     else:

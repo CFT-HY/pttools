@@ -7,7 +7,7 @@ from pttools.bubble.phase import Phase
 from pttools.bubble import const
 from pttools.bubble.integrate import fluid_integrate_param
 from pttools.bubble import props
-from pttools.bubble import shock
+from pttools.bubble.shock import v_shock_curve
 from pttools.models.const_cs import ConstCSModel
 from pttools.models.model import Model
 
@@ -61,7 +61,7 @@ class XIVPlanePlot:
         v_mu = props.v_max_behind(xi_mu, csb_mu)
         self.ax.plot(xi_mu, v_mu, label=r"$\mu$")
 
-        xi_sh, v_sh = shock.v_shock_curve(model=self.model, wn=wn)
+        xi_sh, v_sh = v_shock_curve(model=self.model, wn=wn)
         print(xi_sh, v_sh)
         self.ax.plot(xi_sh, v_sh, label="$v_{sh}$")
 

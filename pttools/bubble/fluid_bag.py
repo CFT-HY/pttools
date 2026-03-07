@@ -21,7 +21,8 @@ from pttools.bubble.junction_bag import fluid_speeds_at_wall_bag
 from pttools.bubble.phase import Phase
 from pttools.bubble import props
 from pttools.bubble import quantities
-from pttools.bubble import shock
+from pttools.bubble.shock import shock_zoom_last_element
+from pttools.bubble.shock_bag import v_shock_bag, wm_shock_bag
 from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.solution_type_bag import identify_solution_type_bag, identify_solution_type_alpha_plus_bag
 from pttools.bubble import trim
@@ -170,7 +171,7 @@ def sound_shell_alpha_plus_bag(
             v0=vfp_p, w0=wp, xi0=v_wall,
             phase=Phase.SYMMETRIC.value, t_end=t_end_refine, n_xi=n_xi, df_dtau_ptr=df_dtau_ptr)
         v, w, xi, t = trim.trim_fluid_wall_to_shock(v, w, xi, t, sol_type)
-        v, w, xi = shock.shock_zoom_last_element(v, w, xi)
+        v, w, xi = shock_zoom_last_element(v, w, xi)
         # Now complete to xi = 1
         vf = np.concatenate((v, vf))
         # enthalpy
@@ -246,8 +247,8 @@ def sound_shell_dict(
     # vmax = max(v)
 
     xi_even = np.linspace(1 / Np, 1 - 1 / Np, Np)
-    v_sh = shock.v_shock_bag(xi_even)
-    w_sh = shock.wm_shock_bag(xi_even)
+    v_sh = v_shock_bag(xi_even)
+    w_sh = wm_shock_bag(xi_even)
 
     n_wall = props.find_v_index(xi, v_wall)
     n_cs = int(np.floor(const.CS0 * Np))
