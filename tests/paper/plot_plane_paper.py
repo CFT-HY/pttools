@@ -116,31 +116,31 @@ def plot_conditions(ax: plt.Axes, cs2_s: float, cs2_b: float) -> None:
     ax.plot(xi_line, vb_max_line, 'k-.', label=r'$v = \mu(\xi, c_s)$')
 
 
-def plot_differing(
-        ax: plt.Axes,
-        data: np.ndarray,
-        ref: np.ndarray,
-        rtol_diffs: np.ndarray,
-        atol_diffs: np.ndarray
-        ):
-    diff_small = get_differing_inds(data_b, deflag_ref, i, rtol=rtol_small_diff, atol=atol_small_diff)
-    diff_mid = get_differing_inds(data_b, deflag_ref, i, rtol=rtol_mid_diff, atol=atol_mid_diff)
-    diff_high = get_differing_inds(data_b, deflag_ref, i, rtol=rtol_high_diff, atol=atol_high_diff)
-    diff_small[diff_mid] = 0
-    diff_mid[diff_high] = 0
-
-    for diff, color, rtol, atol in zip(
-        (diff_small, diff_mid, diff_high),
-        ("yellow", "orange", "red"),
-        rtol_diffs,
-        atol_diffs):
-        label = get_label(rtol, atol) if not i else None
-        ax.plot(
-            filter_not(deflag_xi_b, diff[0, :]), filter_not(deflag_v_b, diff[0, :]),
-            color=color, label=label)
-        ax.plot(
-            filter_not(deflag_xi_f, diff[1, :]), filter_not(deflag_v_f, diff[1, :]),
-            color=color)
+# def plot_differing(
+#         ax: plt.Axes,
+#         data: np.ndarray,
+#         ref: np.ndarray,
+#         rtol_diffs: np.ndarray,
+#         atol_diffs: np.ndarray
+#         ) -> None:
+#     diff_small = get_differing_inds(data_b, deflag_ref, i, rtol=rtol_small_diff, atol=atol_small_diff)
+#     diff_mid = get_differing_inds(data_b, deflag_ref, i, rtol=rtol_mid_diff, atol=atol_mid_diff)
+#     diff_high = get_differing_inds(data_b, deflag_ref, i, rtol=rtol_high_diff, atol=atol_high_diff)
+#     diff_small[diff_mid] = 0
+#     diff_mid[diff_high] = 0
+#
+#     for diff, color, rtol, atol in zip(
+#         (diff_small, diff_mid, diff_high),
+#         ("yellow", "orange", "red"),
+#         rtol_diffs,
+#         atol_diffs):
+#         label = get_label(rtol, atol) if not i else None
+#         ax.plot(
+#             filter_not(deflag_xi_b, diff[0, :]), filter_not(deflag_v_b, diff[0, :]),
+#             color=color, label=label)
+#         ax.plot(
+#             filter_not(deflag_xi_f, diff[1, :]), filter_not(deflag_v_f, diff[1, :]),
+#             color=color)
 
 
 def plot_plane(
