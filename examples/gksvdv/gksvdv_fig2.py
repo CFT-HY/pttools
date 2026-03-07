@@ -16,7 +16,7 @@ import numpy as np
 from examples.utils import save
 from pttools.analysis.parallel import create_bubbles
 # from pttools.analysis.utils import A4_PAPER_SIZE
-from pttools.bubble.bubble_quantities import get_kappa_giese
+from pttools.bubble.bubble import get_kappa_giese
 from pttools.bubble.gksvdv.quantities import kappa_gksvdv
 from pttools.models import ConstCSModel
 from pttools.speedup import run_parallel

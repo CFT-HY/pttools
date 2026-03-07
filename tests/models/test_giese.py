@@ -1,7 +1,6 @@
 r"""Compare results with those from the code of :giese_2021:`\ `"""
 
 import unittest
-import typing as tp
 
 import numpy as np
 import pytest
@@ -9,7 +8,7 @@ import pytest
 from pttools import models
 from pttools.analysis.parallel import create_bubbles
 from pttools.bubble.bubble import Bubble
-from pttools.bubble.bubble_quantities import get_kappa
+from pttools.bubble.bubble import get_kappa
 from pttools.speedup import IS_OSX
 import pttools.type_hints as th
 from tests.utils import assert_allclose
