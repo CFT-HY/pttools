@@ -190,7 +190,7 @@ class Spectrum(ssm.SSMSpectrum):
 
     def tau_nl[T: FloatOrArr](self, H_n: T) -> T:
         r"""Timescale of nonlinearities $\tau_\text{nl}$
-        $$\tau_\text{nl} = \frac{R_*}{\bar{U}_f}$
+        $$\tau_\text{nl} = \frac{{R}_\ast}{\bar{U}_f}$
         :gw_pt_ssm:`\ ` p. 6
         :notes:`\ ` p. 48
         :giombi_2024_cs:`\ ` p. 2
@@ -200,7 +200,7 @@ class Spectrum(ssm.SSMSpectrum):
     def z_from_f[T: FloatOrArr](self, f: T) -> T:
         r"""Convert from frequencies $f$ back to wavenumbers $z$
 
-        $$z(f) = \frac{f}{{f}_{*,0} {r}_*$$
+        $$z(f) = \frac{f}{{f}_{\ast,0} {r}_*$$
         Inverted from :gowling_2021:`\ ` eq. 2.12
         :param f: frequencies $f$ today
         :return: wavenumbers $z$

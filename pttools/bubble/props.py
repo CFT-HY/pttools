@@ -39,7 +39,7 @@ def v_max_behind[T: FloatOrArr](xi: T, cs: float) -> T:
     r"""Maximum fluid velocity behind the wall.
     Given by the condition $\mu(\xi, v) = c_s$.
     This results in:
-    $$ v_\text{max} = \frac{c_s-\xi}{c_s \xi - 1} $$
+    $$ {v}_\text{max} = \frac{c_s-\xi}{c_s \xi - 1} $$
 
     Requires that the sound speed is a constant!
 

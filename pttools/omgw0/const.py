@@ -11,7 +11,7 @@ FGW0: float = 3.57e-5
 
 F_STAR0_REF: float = 2.6e-6
 r"""
-$f_{*,0,\text{ref}$, the factor used for converting from frequencies at the time of the GW formation to frequencies today.
+$f_{\ast,0,\text{ref}$, the factor used for converting from frequencies at the time of the GW formation to frequencies today.
 This value is valid as long as the universe is radiation dominated at the time of GW production.
 This value is used in:
 :caprini_2020:`\ ` eq. 31

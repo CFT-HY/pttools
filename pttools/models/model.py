@@ -616,7 +616,7 @@ class Model(BaseModel, abc.ABC):
             w_min: float = 0,
             allow_fail: bool = False,
             **kwargs) -> tuple[float, float]:
-        r"""Minimum of $c_s^2(w)$ for $w \in [w_\text{min}, w_\text{max}]$"""
+        r"""Minimum of $c_s^2(w)$ for $w \in [{w}_\text{min}, {w}_\text{max}]$"""
         return self._cs2_limit(w_max, phase, True, self.cs2_neg, w_min, allow_fail, **kwargs)
 
     def cs2_min(
@@ -625,7 +625,7 @@ class Model(BaseModel, abc.ABC):
             phase: Phase,
             w_min: float = 0,
             allow_fail: bool = False, **kwargs) -> tuple[float, float]:
-        r"""Maximum of $c_s^2(w)$ for $w \in [w_\text{min}, w_\text{max}]$"""
+        r"""Maximum of $c_s^2(w)$ for $w \in [{w}_\text{min}, {w}_\text{max}]$"""
         return self._cs2_limit(w_max, phase, False, self.cs2, w_min, allow_fail, **kwargs)
 
     def cs2_neg(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
