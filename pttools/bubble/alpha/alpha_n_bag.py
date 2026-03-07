@@ -3,7 +3,7 @@ r"""$\alpha_n$ functions for the Bag Model"""
 import numba
 
 from pttools import speedup
-from pttools.bubble import bag
+from pttools.bubble.cs2_bag import cs2_bag_scalar
 from pttools.bubble import const
 from pttools.bubble import fluid_bag
 from pttools.bubble import check
@@ -21,7 +21,7 @@ def find_alpha_n_bag(
         alpha_p: float,
         sol_type: SolutionType = SolutionType.UNKNOWN,
         n_xi: int = const.N_XI_DEFAULT,
-        cs2_fun: th.CS2Fun = bag.cs2_bag_scalar,
+        cs2_fun: th.CS2Fun = cs2_bag_scalar,
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG) -> float:
     r"""
     Calculates the transition strength parameter at the nucleation temperature,

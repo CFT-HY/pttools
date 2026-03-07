@@ -12,7 +12,7 @@ import numpy as np
 
 from pttools.bubble import alpha
 from pttools.bubble import approx
-from pttools.bubble import bag
+from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR, cs2_bag_scalar
 from pttools.bubble import check
 from pttools.bubble import const
 from pttools.bubble import integrate
@@ -38,8 +38,8 @@ def sound_shell_bag(
         v_wall: float,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
-        cs2_fun: th.CS2Fun = bag.cs2_bag_scalar,
-        cs2_fun_ptr: th.CS2FunScalarPtr = bag.CS2_BAG_SCALAR_PTR,
+        cs2_fun: th.CS2Fun = cs2_bag_scalar,
+        cs2_fun_ptr: th.CS2FunScalarPtr = CS2_BAG_SCALAR_PTR,
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG,
         # Implementing optional extra output did not work due to Numba typing constraints
         # extra_output: bool = False
@@ -92,7 +92,7 @@ def sound_shell_alpha_plus_bag(
         sol_type: SolutionType = SolutionType.UNKNOWN,
         n_xi: int = const.N_XI_DEFAULT,
         w_n: float = 1.,
-        cs2_fun: th.CS2Fun = bag.cs2_bag_scalar,
+        cs2_fun: th.CS2Fun = cs2_bag_scalar,
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG,
         sol_type_fun: tp.Callable | None = None,
         # extra_output: bool = False
@@ -113,7 +113,7 @@ def sound_shell_alpha_plus_bag(
     :return: $v, w, \xi$
     """
     # These didn't work, and therefore this function gets cs2_fun as a function instead of a pointer
-    # cs2_fun = bag.CS2ScalarCType(cs2_fun_ptr)
+    # cs2_fun = CS2ScalarCType(cs2_fun_ptr)
     # cs2_fun = ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double)(cs2_fun)
 
     check.check_wall_speed(v_wall)

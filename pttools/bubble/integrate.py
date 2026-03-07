@@ -11,7 +11,7 @@ import scipy.integrate as spi
 # from scipy.integrate._ivp.ivp import _IVPMethod
 from scipy.integrate._ivp.ivp import OdeResult
 
-from pttools.bubble.bag import cs2_bag, cs2_bag_scalar_cfunc
+from pttools.bubble.cs2_bag import cs2_bag, cs2_bag_scalar_cfunc
 from pttools.bubble.const import N_XI_DEFAULT, T_END_DEFAULT
 from pttools.speedup.differential import DifferentialCache, DifferentialCFunc, DifferentialPointer
 from pttools.speedup.numba_wrapper import numbalsoda

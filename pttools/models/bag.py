@@ -4,7 +4,7 @@ import logging
 
 import numpy as np
 
-from pttools.bubble.bag import cs2_bag_multi, cs2_bag_neg, cs2_bag_temp
+from pttools.bubble.cs2_bag import cs2_bag_multi, cs2_bag_neg, cs2_bag_temp
 from pttools.bubble.integrate import DF_DTAU_PTR_BAG
 from pttools.bubble.phase import Phase
 from pttools.bubble.solution_type import SolutionType
@@ -25,6 +25,7 @@ class BagModel(AnalyticModel):
 
     .. plot:: fig/xi_v_plane.py
 
+    :notes:`\ `, p. 37
     """
     DEFAULT_LABEL_LATEX = "Bag model"
     DEFAULT_LABEL_UNICODE = DEFAULT_LABEL_LATEX

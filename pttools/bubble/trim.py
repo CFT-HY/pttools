@@ -4,7 +4,7 @@ import logging
 
 import numba
 
-from pttools.bubble import bag
+from pttools.bubble.cs2_bag import cs2_bag_scalar
 from pttools.bubble import check
 from pttools.bubble import const
 from pttools.bubble.phase import Phase
@@ -24,7 +24,7 @@ def trim_fluid_wall_to_cs(
         v_wall: th.FloatOrArr,
         sol_type: SolutionType,
         dxi_lim: float = const.DXI_SMALL,
-        cs2_fun: th.CS2Fun = bag.cs2_bag_scalar) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
+        cs2_fun: th.CS2Fun = cs2_bag_scalar) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
     Picks out fluid variable arrays $(v, w, \xi, t)$ which are definitely behind
     the wall for detonation and hybrid.
