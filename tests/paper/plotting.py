@@ -8,11 +8,11 @@ In the :ssm_repo:`sound-shell-model repository <>` these methods are included in
 """
 
 import logging
-import typing as tp
 
 import matplotlib.pyplot as plt
 import numpy as np
 
+import pttools.type_hints as th
 from tests.paper import const
 from tests.paper import utils
 
@@ -67,7 +67,7 @@ def get_yaxis_limits(ps_type: utils.PSType, strength: utils.Strength = utils.Str
 
 def plot_guide_power_law(
         ax: plt.Axes,
-        loc: np.ndarray,
+        loc: th.FloatArr2D,
         power,
         xloglen=1,
         txt: str = "",
@@ -92,7 +92,13 @@ def plot_guide_power_law(
     return x_guide, y_guide
 
 
-def plot_guide_power_law_prace(ax: plt.Axes, x: np.ndarray, y: np.ndarray, n, position: utils.Position, shifts=None):
+def plot_guide_power_law_prace(
+        ax: plt.Axes,
+        x: th.FloatArr1D,
+        y: th.FloatArr1D,
+        n,
+        position: utils.Position,
+        shifts=None):
     """
     Wrapper for plot_guide_power_law, with power laws and line
     shifts appropriate for velocity and GW spectra of prace runs
@@ -136,10 +142,10 @@ def plot_guide_power_law_prace(ax: plt.Axes, x: np.ndarray, y: np.ndarray, n, po
 def plot_guide_power_laws_prace(
         f_v: plt.Figure,
         f_gw: plt.Figure,
-        z: np.ndarray,
-        pow_v: np.ndarray,
-        y: np.ndarray,
-        pow_gw: np.ndarray,
+        z: th.FloatArr1D,
+        pow_v: th.FloatArr1D,
+        y: th.FloatArr1D,
+        pow_gw: th.FloatArr1D,
         np_lo: tuple[int, int] = (5, 9),
         inter_flag: bool = False) -> tuple[plt.Figure, plt.Figure]:
     """
@@ -180,8 +186,8 @@ def plot_guide_power_laws_prace(
 
 def plot_guide_power_laws_ssm(
         fig: plt.Figure,
-        z: np.ndarray,
-        powers: np.ndarray,
+        z: th.FloatArr1D,
+        powers: th.FloatArr1D,
         ps_type: utils.PSType = utils.PSType.V,
         inter_flag: bool = False) -> plt.Figure:
     """

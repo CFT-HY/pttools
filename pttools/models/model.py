@@ -185,12 +185,12 @@ class Model(BaseModel, abc.ABC):
             )
         return cs2, w
 
-    def alpha_n(
+    def alpha_n[T: FloatOrArr](
             self,
-            wn: th.FloatOrArr,
+            wn: T,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True) -> T:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
         $$\alpha_n = \frac{4(\theta(w_n,\phi_s) - \theta(w_n,\phi_b)}{3w_n}$$
 
@@ -218,14 +218,14 @@ class Model(BaseModel, abc.ABC):
         )
         return 4 * diff / (3 * wn)
 
-    def alpha_n_from_alpha_theta_bar_n(
+    def alpha_n_from_alpha_theta_bar_n[T: FloatOrArr](
             self,
-            alpha_theta_bar_n: th.FloatOrArr,
+            alpha_theta_bar_n: T,
             wn: float | None = None,
             wn_guess: float | None = None,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True) -> T:
         r"""Conversion from $\alpha_{\bar{\theta}_n}$ of :giese_2021:`\ `, eq. 13 to $\alpha_n$"""
         if wn is None or np.isnan(wn):
             wn = self.wn(
@@ -255,12 +255,12 @@ class Model(BaseModel, abc.ABC):
         logger.debug("alpha_n_min=%s found at w=%s in range w_min=%s, w_max=%s", fval, xopt, w_min, w_max)
         return xopt, fval
 
-    def alpha_n_temp(
+    def alpha_n_temp[T: FloatOrArr](
             self,
-            Tn: th.FloatOrArr,
+            Tn: T,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True) -> T:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
         $$\alpha_n = \frac{4(\theta(w_n,\phi_s) - \theta(w_n,\phi_b)}{3w_n}$$
 
@@ -340,12 +340,12 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
 
-    def alpha_theta_bar_n(
+    def alpha_theta_bar_n[T: FloatOrArr](
             self,
-            wn: th.FloatOrArr,
+            wn: T,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True) -> T:
         r"""Transition strength parameter, :giese_2021:`\ `, eq. 13
 
         $$\alpha_{\bar{\theta}_+} = \frac{D \bar{\theta}(T_n)}{3 w_n}$$
@@ -363,11 +363,11 @@ class Model(BaseModel, abc.ABC):
         )
         return self.delta_theta_bar(wn, Phase.SYMMETRIC) / (3 * wn)
 
-    def alpha_theta_bar_n_from_alpha_n(
+    def alpha_theta_bar_n_from_alpha_n[T: FloatOrArr](
             self,
-            alpha_n: float,
+            alpha_n: T,
             wn: float | None = None,
-            wn_guess: float | None = None) -> float:
+            wn_guess: float | None = None) -> T:
         r"""Conversion from $\alpha_n$ to $\alpha_{\bar{\theta}_n}$ of :giese_2021:`\ `, eq. 13"""
         if wn is None or np.isnan(wn):
             wn = self.wn(alpha_n, wn_guess=wn_guess)
@@ -376,12 +376,12 @@ class Model(BaseModel, abc.ABC):
             (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN)) / wn
         return alpha_n + diff
 
-    def alpha_theta_bar_plus(
+    def alpha_theta_bar_plus[T: FloatOrArr](
             self,
-            wp: th.FloatOrArr,
+            wp: T,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True) -> T:
         r"""Transition strength parameter, :giese_2021:`\ `, eq. 9
 
         $$\alpha_{\bar{\theta}+} = \frac{D \bar{\theta}(T_+)}{3 w_+}$$
@@ -389,13 +389,13 @@ class Model(BaseModel, abc.ABC):
         return self.delta_theta_bar(wp, Phase.SYMMETRIC) / (3 * wp)
 
     @staticmethod
-    def check_alpha_plus(
-            alpha_plus: th.FloatOrArr,
+    def check_alpha_plus[T: FloatOrArr](
+            alpha_plus: T,
             vp_tilde: th.FloatOrArr | None = None,
             sol_type: SolutionType | None = None,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True) -> T:
         r"""Check that the given $\alpha_+$ values are in the valid range $0 <= \alpha_+ < 1/3
 
         Modifies the given array.
@@ -426,11 +426,11 @@ class Model(BaseModel, abc.ABC):
                     alpha_plus[invalid] = np.nan
         return alpha_plus
 
-    def check_p(self, wn: th.FloatOrArr, allow_fail: bool = False):
+    def check_p(self, wn: th.FloatOrArr, allow_fail: bool = False) -> None:
         temp = self.temp(wn, Phase.SYMMETRIC)
         self.check_p_temp(temp, allow_fail=allow_fail)
 
-    def check_p_temp(self, temp_n: th.FloatOrArr, allow_fail: bool = False):
+    def check_p_temp(self, temp_n: th.FloatOrArr, allow_fail: bool = False) -> None:
         """For the phase transition to happen $p_s(T_n) < p_b(T_n)$"""
         p_s = self.p_temp(temp_n, Phase.SYMMETRIC)
         p_b = self.p_temp(temp_n, Phase.BROKEN)
@@ -445,9 +445,9 @@ class Model(BaseModel, abc.ABC):
                 raise ValueError(msg)
 
     @classmethod
-    def check_delta_theta(
+    def check_delta_theta[T: FloatOrArr](
             cls,
-            delta_theta: th.FloatOrArr,
+            delta_theta: T,
             xp: th.FloatOrArr,
             xm: th.FloatOrArr,
             x_name: str,
@@ -455,7 +455,7 @@ class Model(BaseModel, abc.ABC):
             theta_b: th.FloatOrArr | None = None,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True) -> T:
         r"""Validate $\Delta \theta$"""
         theta_given = theta_s is not None and theta_b is not None
         if theta_given:
@@ -485,7 +485,7 @@ class Model(BaseModel, abc.ABC):
 
         return delta_theta
 
-    def criticals(self, t_crit_guess: float, allow_fail: bool = False, log_info: bool = True):
+    def criticals(self, t_crit_guess: float, allow_fail: bool = False, log_info: bool = True) -> tuple[float, float]:
         t_crit = self.critical_temp(guess=t_crit_guess, allow_fail=allow_fail)
         # self.t_crit has to be set already here for alpha_n error messages to work.
         self.T_crit = t_crit
@@ -606,14 +606,19 @@ class Model(BaseModel, abc.ABC):
 
     def cs2_max(
             self,
-            w_max: float, phase: Phase,
-            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tuple[float, float]:
+            w_max: float,
+            phase: Phase,
+            w_min: float = 0,
+            allow_fail: bool = False,
+            **kwargs) -> tuple[float, float]:
         return self._cs2_limit(w_max, phase, True, self.cs2_neg, w_min, allow_fail, **kwargs)
 
     def cs2_min(
             self,
-            w_max: float, phase: Phase,
-            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tuple[float, float]:
+            w_max: float,
+            phase: Phase,
+            w_min: float = 0,
+            allow_fail: bool = False, **kwargs) -> tuple[float, float]:
         return self._cs2_limit(w_max, phase, False, self.cs2, w_min, allow_fail, **kwargs)
 
     def cs2_neg(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -645,7 +650,7 @@ class Model(BaseModel, abc.ABC):
         """
         return self.delta_theta_bar_temp(self.temp(w, phase_of_w))
 
-    def delta_theta_bar_temp(self, temp: th.FloatOrArr) -> th.FloatOrArr:
+    def delta_theta_bar_temp[T: FloatOrArr](self, temp: T) -> T:
         r"""Pseudotrace difference $D\bar{\theta}(T)$, :giese_2021:`\ `, eq. 10
 
         $$D\bar{\theta}(T) = \bar{\theta}(T) - \bar{\theta}(T)$$
@@ -697,7 +702,7 @@ class Model(BaseModel, abc.ABC):
         """
         return self.e_temp(self.temp(w, phase), phase)
 
-    def enthalpy_ratio(self, temp: th.FloatOrArr) -> th.FloatOrArr:
+    def enthalpy_ratio[T: FloatOrArr](self, temp: T) -> T:
         r"""Enthalpy ratio $r(T)$
 
         $$r(T) = \frac{w_s(T)}{w_b(T)}$$
@@ -705,7 +710,7 @@ class Model(BaseModel, abc.ABC):
         """
         return self.w(temp, Phase.SYMMETRIC) / self.w(temp, Phase.BROKEN)
 
-    def inverse_enthalpy_ratio(self, temp: th.FloatOrArr) -> th.FloatOrArr:
+    def inverse_enthalpy_ratio[T: FloatOrArr](self, temp: T) -> T:
         r"""Inverse enthalpy ratio $\Psi(T)$ :ai_2023:`\ `, eq. 19
 
         $$\Psi(T) = \frac{w_b(T)}{w_s(T)}$$
@@ -770,7 +775,7 @@ class Model(BaseModel, abc.ABC):
         """
         return self.p_temp(self.temp(w, phase), phase)
 
-    def Psi_n(self, wn: th.FloatOrArr) -> th.FloatOrArr:
+    def Psi_n[T: FloatOrArr](self, wn: T) -> T:
         r"""Inverse enthalpy ratio at nucleation temperature $\psi_n$,
         :ai_2023:`\ ` p. 9
         """
@@ -876,14 +881,14 @@ class Model(BaseModel, abc.ABC):
         """
         return 1/4 * (self.e_temp(temp, phase) - 3*self.p_temp(temp, phase))
 
-    def tn(
+    def tn[T: FloatOrArr](
             self,
-            alpha_n: th.FloatOrArr,
+            alpha_n: T,
             wn_guess: float | None = None,
             theta_bar: bool = False,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True) -> T:
         return self.temp(
             self.wn(
                 alpha_n, wn_guess=wn_guess, theta_bar=theta_bar,
@@ -894,14 +899,14 @@ class Model(BaseModel, abc.ABC):
             Phase.SYMMETRIC
         )
 
-    def V(self, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def V[T: FloatOrArr](self, phase: T) -> T:
         r"""Potential $V(\phi)$
 
         :param phase: phase $\phi$
         """
         return phase*self.V_b + (1 - phase)*self.V_s
 
-    def validate_alpha_n(self, alpha_n: float, allow_invalid: bool = False, log_invalid: bool = True):
+    def validate_alpha_n(self, alpha_n: float, allow_invalid: bool = False, log_invalid: bool = True) -> None:
         r"""Validate that $\alpha_{n,\text{min}} < \alpha_n < 1$"""
         if alpha_n is None or np.isnan(alpha_n) or alpha_n < 0 or alpha_n < self.alpha_n_min:
             msg = f"Invalid alpha_n={alpha_n}. Minimum for the model: {self.alpha_n_min}"
@@ -934,7 +939,12 @@ class Model(BaseModel, abc.ABC):
         a = vp_tilde*vm_tilde / cs2b - 1
         return (a + 3*alpha_tbp) / (a + 3*vp_tilde*vm_tilde*alpha_tbp)
 
-    def wn_error_msg(self, alpha_n: th.FloatOrArr, param: th.FloatOrArr, param_name: str, info: str | None = None) -> str:
+    def wn_error_msg(
+            self,
+            alpha_n: th.FloatOrArr,
+            param: th.FloatOrArr,
+            param_name: str,
+            info: str | None = None) -> str:
         if np.isscalar(alpha_n):
             info2 = f"Got: alpha_n={alpha_n}, {param_name}={param}."
         else:
@@ -990,7 +1000,8 @@ class Model(BaseModel, abc.ABC):
         if not solution_found:
             msg = (
                 f"wn solution was not found for model={self.name}, "
-                f"alpha_n={alpha_n}, wn_guess={wn_guess:{self.THERMO_FORMAT}}, theta_bar={theta_bar}, w_crit={self.w_crit:{self.THERMO_FORMAT}}. " +
+                f"alpha_n={alpha_n}, wn_guess={wn_guess:{self.THERMO_FORMAT}}, "
+                f"theta_bar={theta_bar}, w_crit={self.w_crit:{self.THERMO_FORMAT}}. " +
                 ("" if (error_on_invalid or nan_on_invalid) else f"Using wn={wn:{self.THERMO_FORMAT}}. ") +
                 f"Reason: {reason}"
             )
@@ -1003,7 +1014,8 @@ class Model(BaseModel, abc.ABC):
 
         if wn < 0:
             msg = f"Got wn < 0: wn={wn:{self.THERMO_FORMAT}} for "\
-                  f"model={self.name}, alpha_n={alpha_n}, wn_guess={wn_guess:{self.THERMO_FORMAT}}, theta_bar={theta_bar}"
+                  f"model={self.name}, alpha_n={alpha_n}, "\
+                  f"wn_guess={wn_guess:{self.THERMO_FORMAT}}, theta_bar={theta_bar}"
             if log_invalid:
                 logger.error(msg)
             if error_on_invalid:
@@ -1020,14 +1032,14 @@ class Model(BaseModel, abc.ABC):
             return self.alpha_theta_bar_n(wn, error_on_invalid=False, nan_on_invalid=True, log_invalid=False) - alpha_n
         return self.alpha_n(wn, error_on_invalid=False, nan_on_invalid=True, log_invalid=False) - alpha_n
 
-    def wn(
+    def wn[T: FloatOrArr](
             self,
-            alpha_n: th.FloatOrArr,
+            alpha_n: T,
             wn_guess: float | None = None,
             theta_bar: bool = False,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True) -> T:
         r"""Enthalpy at nucleation temperature $w_n$ with given $\alpha_n$"""
         invalid_w_crit = self.w_crit is None or np.isnan(self.w_crit) or self.w_crit < 0
         if wn_guess is None or np.isnan(wn_guess) or wn_guess < 0:

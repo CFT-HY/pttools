@@ -38,13 +38,13 @@ def a2_e_conserving(
         w: th.FloatArr1D,
         xi: th.FloatArr1D,
         e: th.FloatArr1D,
-        z: np.ndarray,
+        z: th.FloatArr1D,
         v_wall: float,
         v_sh: float,
         cs: float,
         z_st_thresh: float = const.Z_ST_THRESH,
         nxi: int = const.NPTDEFAULT[0],
-        parallel: bool = True) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        parallel: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
     Returns the value of $|A(z)|^2$, where
     $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$.
@@ -63,8 +63,8 @@ def a2_e_conserving(
     # This corresponds to de_from_w_bag
     # e = bub.model.e(bub.w, bub.phase)
     lam_orig = (e - e[-1]) / w[-1]
-
-    lam_orig += w * v * v / w[-1]  # This doesn't make much difference at small alpha
+    # This doesn't make much difference at small alpha
+    lam_orig += w * v * v / w[-1]
 
     xi_re, lam_re = resample_uniform_xi(xi, lam_orig, nxi)
 
@@ -81,7 +81,5 @@ def a2_e_conserving(
     )
 
     # :gw_pt_ssm:`\ ` eq. 4.11
-
     A2 = 0.25 * (v_ft ** 2 + (cs * lam_ft) ** 2)
-
     return A2, v_ft ** 2 / 2, (cs * lam_ft) ** 2 / 2

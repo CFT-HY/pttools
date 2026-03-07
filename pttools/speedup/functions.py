@@ -3,11 +3,13 @@
 import numba
 import numpy as np
 
-# from . import options
+# from pttools.speedup.options import NUMBA_NESTED_PARALLELISM
+import pttools.type_hints as th
+from pttools.type_hints import FloatArr
 
 
 @numba.njit
-def gradient(f: np.ndarray):
+def gradient[T: FloatArr](f: T) -> T:
     """Numba version of :func:`np.gradient`."""
 
     if f.ndim > 1:
@@ -22,7 +24,7 @@ def gradient(f: np.ndarray):
 
 # @numba.njit(parallel=options.NUMBA_NESTED_PARALLELISM)
 @numba.njit
-def logspace(start: float, stop: float, num: int, base: float = 10.) -> np.ndarray:
+def logspace(start: float, stop: float, num: int, base: float = 10.) -> th.FloatArr1D:
     """Numba version of :func:`numpy.logspace`."""
     y = np.linspace(start, stop, num)
     return base**y

@@ -5,13 +5,15 @@ import time
 import typing as tp
 
 import numpy as np
+from numpy.typing import NDArray
 
-from pttools.bubble.bubble import Bubble
+from pttools.bubble.bubble import Bubble, BubbleArr, BubbleArr2D
 from pttools.bubble import fluid_reference
 from pttools.bubble.integrate import precompile
-from pttools.omgw0 import Spectrum
+from pttools.omgw0 import Spectrum, SpectrumArr2D
 from pttools.speedup import options
 from pttools.speedup.parallel import run_parallel
+import pttools.type_hints as th
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
@@ -19,14 +21,14 @@ logger = logging.getLogger(__name__)
 
 
 def create_bubble(
-        params: np.ndarray,
+        params: th.FloatArr1D,
         model: "Model",
         post_func: tp.Callable | None = None,
         post_func_return_multiple: bool = False,
         use_bag_solver: bool = False,
         bubble_kwargs: dict[str, tp.Any] | None = None,
         allow_bubble_failure: bool = False,
-        *args, **kwargs) -> tp.Union[tp.Optional[Bubble], tuple[tp.Optional[Bubble], tp.Any]]:
+        *args, **kwargs) -> Bubble | None | tuple[Bubble | None, ...]:
     """Create a single bubble and apply post-processing functions to retrieve results from it"""
     v_wall, alpha_n = params
     # This is a common error case and should be handled here to avoid polluting the logs with exceptions.
@@ -57,7 +59,7 @@ def create_bubble(
 
 
 def create_spectrum(
-        params: np.ndarray,
+        params: th.FloatArr1D,
         model: "Model",
         post_func: tp.Callable | None = None,
         post_func_return_multiple: bool = False,
@@ -65,7 +67,7 @@ def create_spectrum(
         bubble_kwargs: dict[str, tp.Any]| None  = None,
         spectrum_kwargs: dict[str, tp.Any] | None = None,
         allow_bubble_failure: bool = False,
-        *args, **kwargs):
+        *args, **kwargs) -> Spectrum | tuple[Spectrum, ...]:
     """Create a single spectrum and apply post-processing functions to retrieve results from it"""
     bubble = create_bubble(
         params=params,
@@ -88,8 +90,8 @@ def create_spectrum(
 
 def create_bubbles(
         model: "Model",
-        v_walls: np.ndarray,
-        alpha_ns: np.ndarray,
+        v_walls: th.FloatArr1D,
+        alpha_ns: th.FloatArr1D,
         func: tp.Callable | None = None,
         log_progress_percentage: float = 10,
         max_workers: int = options.MAX_WORKERS_DEFAULT,
@@ -97,7 +99,7 @@ def create_bubbles(
         allow_bubble_failure: bool = False,
         kwargs: dict[str, tp.Any] | None = None,
         bubble_kwargs: dict[str, tp.Any] | None = None,
-        bubble_func: tp.Callable = create_bubble) -> tp.Union[np.ndarray, tuple[np.ndarray, np.ndarray, ...]]:
+        bubble_func: tp.Callable = create_bubble) -> BubbleArr2D | tuple[NDArray, NDArray, ...]:
     """Create multiple bubbles in parallel"""
     start_time = time.perf_counter()
     post_func_return_multiple = False
@@ -156,8 +158,8 @@ def create_bubbles(
 
 def create_spectra(
         model: "Model",
-        v_walls: np.ndarray,
-        alpha_ns: np.ndarray,
+        v_walls: th.FloatArr1D,
+        alpha_ns: th.FloatArr1D,
         func: tp.Callable | None = None,
         log_progress_percentage: float = 5,
         max_workers: int = options.MAX_WORKERS_DEFAULT,
@@ -165,7 +167,7 @@ def create_spectra(
         allow_bubble_failure: bool = False,
         kwargs: dict[str, tp.Any] | None = None,
         bubble_kwargs: dict[str, tp.Any] | None = None,
-        spectrum_kwargs: dict[str, tp.Any] | None = None) -> np.ndarray:
+        spectrum_kwargs: dict[str, tp.Any] | None = None) -> SpectrumArr2D | tuple[NDArray, NDArray, ...]:
     """Create multiple spectra in parallel"""
     if kwargs is None:
         kwargs2 = {"spectrum_kwargs": spectrum_kwargs}
@@ -192,6 +194,6 @@ def solve_bubble(bubble: Bubble) -> None:
     bubble.solve()
 
 
-def solve_bubbles(bubbles: np.ndarray, max_workers: int = options.MAX_WORKERS_DEFAULT) -> None:
+def solve_bubbles(bubbles: BubbleArr, max_workers: int = options.MAX_WORKERS_DEFAULT) -> None:
     """Solve multiple existing bubbles in parallel"""
     run_parallel(solve_bubble, params=bubbles, max_workers=max_workers)

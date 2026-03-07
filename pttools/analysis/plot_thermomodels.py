@@ -1,15 +1,15 @@
 r"""Compare the properties of multiple thermodynamic models"""
 
 import matplotlib.pyplot as plt
-import numpy as np
 
 from pttools import bubble, models
 from pttools.analysis import utils
+import pttools.type_hints as th
 
 
 class ThermoModelsPlot:
     r"""A plot of the properties of multiple thermodynamic models"""
-    def __init__(self, temp: np.ndarray):
+    def __init__(self, temp: th.FloatArr1D):
         self.temp = temp
 
         self.fig: plt.Figure = plt.figure()

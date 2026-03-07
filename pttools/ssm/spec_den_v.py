@@ -21,11 +21,11 @@ def _qT_array(qRstar, Ttilde, b_R, v_wall):
 @numba.njit
 def _spec_den_v_core_loop(
         z_i: float,
-        t_array: np.ndarray,
+        t_array: th.FloatArr1D,
         b_R: float,
         v_wall: float,
-        qT_lookup: np.ndarray,
-        A2_lookup: np.ndarray,
+        qT_lookup: th.FloatArr1D,
+        A2_lookup: th.FloatArr1D,
         nuc_type: NucType,
         a: float,
         factor: float):
@@ -39,14 +39,14 @@ def _spec_den_v_core_loop(
 
 def _spec_den_v_core(
         a: float,
-        A2_lookup: np.ndarray,
+        A2_lookup: th.FloatArr1D,
         log10tmin: float,
         log10tmax: float,
         nuc_type: NucType,
         nt: int,
-        qT_lookup: np.ndarray,
+        qT_lookup: th.FloatArr1D,
         v_wall: float,
-        z: np.ndarray):
+        z: th.FloatArr1D):
     """Numba-jitted core of spec_den_v"""
     t_array = speedup.logspace(log10tmin, log10tmax, nt)
     b_R = (8. * np.pi) ** (1. / 3.)  # $\beta R_* = b_R v_w $

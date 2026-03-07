@@ -9,6 +9,7 @@ import pttools.bubble as bbl
 import pttools.ssm.const as ssm_const
 from pttools.ssm.spectrum import NucType
 from pttools.ssm.spectrum_bag import power_gw_scaled_bag
+import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ SUPPRESSION_FOLDER = os.path.dirname(os.path.abspath(__file__))
 def calc_sup_ssm(
         path: str,
         save: bool = True,
-        npt: ssm_const.NptType = ssm_const.NPTDEFAULT) -> dict[str, tp.Union[np.ndarray, tp.List[float]]]:
+        npt: ssm_const.NptType = ssm_const.NPTDEFAULT) -> dict[str, th.FloatArr1DOrList]:
     """
     file must be a txt file with data in columns as follows
     vw alpha suppression_sim sim_omgw exp_omgw exp_ubarf
@@ -31,7 +32,7 @@ def calc_sup_ssm(
     """
     if not os.path.isabs(path):
         path = os.path.join(SUPPRESSION_FOLDER, path)
-    sim_data: np.ndarray = np.loadtxt(path, skiprows=1)
+    sim_data = np.loadtxt(path, skiprows=1)
     # Calculating the suppression factor for the SSM
     out_ssm = []
     out_ssm_tot = []

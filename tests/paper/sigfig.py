@@ -8,7 +8,7 @@ Modified from
 import re
 import typing as tp
 
-import numpy as np
+import pttools.type_hints as th
 
 EPAT = re.compile(r'^([^e]+)e(.+)$')
 
@@ -103,8 +103,8 @@ def round_sig_error(x: float, ex: float, n: int, paren: bool = False) -> tp.Unio
 
 
 def format_table(
-        cols: list[np.ndarray],
-        errors: list[np.ndarray],
+        cols: list[th.FloatArr1D],
+        errors: list[th.FloatArr1D],
         n: int,
         labels: list[str] | None = None,
         headers: list[str] | None = None,
@@ -118,7 +118,7 @@ def format_table(
     If [latex] is true, format the table so that it can be included in a LaTeX table
     """
     if len(cols) != len(errors):
-        raise ValueError("Error:  cols and errors must have same length")
+        raise ValueError("Error: cols and errors must have same length")
 
     n_cols = len(cols)
     n_rows = len(cols[0])

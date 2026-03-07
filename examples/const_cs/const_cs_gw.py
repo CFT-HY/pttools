@@ -20,7 +20,7 @@ from examples import utils
 from pttools.bubble import lorentz
 from pttools.bubble.shock import shock_curve
 from pttools.models import ConstCSModel, Model
-from pttools.omgw0 import Spectrum, omega_ins
+from pttools.omgw0 import Spectrum, SpectrumArr3D, omega_ins
 from pttools.analysis.parallel import create_spectra
 # from pttools.analysis.utils import A3_PAPER_SIZE, A4_PAPER_SIZE
 from pttools.utils.system import IS_READ_THE_DOCS
@@ -50,7 +50,7 @@ def mu_curves(axs: tp.Iterable[plt.Axes], csb2s: tp.Iterable[float], ls: str = "
     """Add µ curves to the fluid velocity profile plot"""
     for i_csb2, csb2 in enumerate(csb2s):
         csb = np.sqrt(csb2)
-        xi_mu: np.ndarray = np.linspace(csb, 1, 20)
+        xi_mu = np.linspace(csb, 1, 20)
         v_mu = lorentz(xi=xi_mu, v=csb)
         for ax in axs:
             if i_csb2:
@@ -73,7 +73,7 @@ def plot_spectrum(
     ax_omgw0.plot(spectrum.f(), spectrum.omgw0(), label=label_omgw0)
 
 
-def snr_table(snrs: np.ndarray, models: tp.Iterable[Model], v_walls: np.ndarray, alpha_ns: np.ndarray) -> str:
+def snr_table(snrs: th.FloatArr3D, models: list[Model], v_walls: th.FloatArr1D, alpha_ns: th.FloatArr1D) -> str:
     """Save the signal-to-noise ratios in a LaTeX table"""
     file: io.StringIO
     with io.StringIO() as file:
@@ -193,7 +193,7 @@ def main(low_k: bool = True):
         logger.error(msg)
         raise ValueError(msg)
 
-    spectra: np.ndarray[tuple[int, int, int], np.dtype[Spectrum]] = np.zeros(
+    spectra: SpectrumArr3D = np.zeros(
         (len(models), alpha_ns.size, v_walls.size),
         dtype=object
     )
@@ -218,16 +218,16 @@ def main(low_k: bool = True):
 
     figsize = (12, 10)
     figsize2 = (12, 5)
-    figs: np.ndarray[tuple[int], np.dtype[plt.Figure]] = np.array(
+    figs: th.FigArr1D = np.array(
         [plt.figure(figsize=figsize) for _ in range(3)]
     )
-    figs2: np.ndarray[tuple[int, int], np.dtype[plt.Figure]] = np.array(
+    figs2: th.FigArr2D = np.array(
         [[plt.figure(figsize=figsize2) for _ in alpha_ns] for _ in range(3)]
     )
-    axs: np.ndarray[tuple[int, int, int], np.dtype[plt.Axes]] = np.stack(
+    axs: th.AxesArr3D = np.stack(
         [fig.subplots(alpha_ns.size, v_walls.size) for fig in figs]
     )
-    axs2: np.ndarray[tuple[int, int, int], np.dtype[plt.Axes]] = np.stack(
+    axs2: th.AxesArr3D = np.stack(
         [np.stack([fig.subplots(1, v_walls.size) for fig in figs2_row]) for figs2_row in figs2]
     )
 
@@ -257,7 +257,7 @@ def main(low_k: bool = True):
     n_xi = 20
     ls = "--"
     for i_model, model in enumerate(models):
-        xi_arr: np.ndarray = np.linspace(model.css, 0.99, n_xi)
+        xi_arr = np.linspace(model.css, 0.99, n_xi)
         for i_alpha_n, alpha_n in enumerate(alpha_ns):
             vm_arr = shock_curve(model, alpha_n, xi_arr)
             for i_v_wall, v_wall in enumerate(v_walls):
@@ -277,7 +277,7 @@ def main(low_k: bool = True):
     y_max = np.min([spectrum.y[-1] for spectrum in spectra.flat])
     f_min = np.min([spectrum.f(z=spectrum.y[0]) for spectrum in spectra.flat])
     f_max = np.max([spectrum.f(z=spectrum.y[-1]) for spectrum in spectra.flat])
-    f: np.ndarray = np.logspace(np.log10(f_min), np.log10(f_max), num=50)
+    f = np.logspace(np.log10(f_min), np.log10(f_max), num=50)
     for i_alpha_n, alpha_n in enumerate(alpha_ns):
         for i_v_wall, v_wall in enumerate(v_walls):
             om_ins = omega_ins(f)

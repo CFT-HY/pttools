@@ -16,6 +16,7 @@ import numpy as np
 import scipy.interpolate
 
 from pttools.speedup import fitpack
+import pttools.type_hints as th
 
 # interpolate_dir = os.path.dirname(os.path.abspath(scipy.interpolate.fitpack.__file__))
 # fitpack_files = glob.glob(os.path.join(interpolate_dir, "_fitpack.*.so"))
@@ -55,7 +56,7 @@ from pttools.speedup import fitpack
 
 
 # @overload(scipy.interpolate.splev)
-def splev(x: np.ndarray, tck: tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
+def splev(x: th.FloatArr1D, tck: tuple[th.FloatArr1D, th.FloatArr1D, int], der: int = 0, ext: int = 0):
     """
     Modified from :external:py:func:`scipy.interpolate.splev`.
     See the SciPy documentation for details.
@@ -100,7 +101,7 @@ def splev(x: np.ndarray, tck: tuple[np.ndarray, np.ndarray, int], der: int = 0, 
 
 
 @numba.njit
-def splev_linear_core(xp: float, t: np.ndarray, c: np.ndarray, ext: int) -> float:
+def splev_linear_core(xp: float, t: th.FloatArr1D, c: th.FloatArr1D, ext: int) -> float:
     """Numba-jitted core of the linear spline evaluation"""
     if xp < t[0]:
         if ext == 0:
@@ -140,7 +141,7 @@ def splev_linear_validate(k: int, der: int) -> None:
         raise NotImplementedError("Derivatives are not yet implemented")
 
 
-def splev_linear_arr(x, tck: tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
+def splev_linear_arr(x, tck: tuple[th.FloatArr1D, th.FloatArr1D, int], der: int = 0, ext: int = 0):
     """Linear spline evaluation for arrays"""
     t, c, k = tck
     splev_linear_validate(k, der)
@@ -152,7 +153,7 @@ def splev_linear_arr(x, tck: tuple[np.ndarray, np.ndarray, int], der: int = 0, e
     return y
 
 
-def splev_linear_scalar(x, tck: tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
+def splev_linear_scalar(x, tck: tuple[th.FloatArr1D, th.FloatArr1D, int], der: int = 0, ext: int = 0):
     """Linear spline evaluation for scalars"""
     t, c, k = tck
     splev_linear_validate(k, der)
@@ -160,7 +161,7 @@ def splev_linear_scalar(x, tck: tuple[np.ndarray, np.ndarray, int], der: int = 0
 
 
 @overload(scipy.interpolate.splev, jit_options={"nopython": True})
-def splev_linear(x, tck: tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
+def splev_linear(x, tck: tuple[th.FloatArr1D, th.FloatArr1D, int], der: int = 0, ext: int = 0):
     """
     :param x: float or 1D array
     :param tck: Tuple of spline parameters as given by scipy.interpolate.splrep()
@@ -173,7 +174,7 @@ def splev_linear(x, tck: tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: 
 
 
 # @numba.njit
-def fitpack_spl_(x: np.ndarray, nu: int, t: np.ndarray, c: np.ndarray, k: int, e: int):
+def fitpack_spl_(x: th.FloatArr1D, nu: int, t: th.FloatArr1D, c: th.FloatArr1D, k: int, e: int):
     """
     Numba implementation of the
     `SciPy C wrapper for spline interpolation <https://github.com/scipy/scipy/blob/main/scipy/interpolate/src/_fitpackmodule.c>`_.

@@ -13,7 +13,7 @@ import pttools.type_hints as th
 
 
 def omgw0_bag(
-        freqs: np.ndarray,
+        freqs: th.FloatArr1D,
         vw: float,
         alpha: float,
         r_star: float,
@@ -29,7 +29,7 @@ def omgw0_bag(
     """
     params = (vw, alpha, ssm.NucType.EXPONENTIAL, (1,))
     fp0 = f0(r_star, T_star)
-    z = freqs/fp0
+    z = freqs / fp0
 
     K_frac = K.calc_ke_frac(vw, alpha)
     omgwi = ssm.power_gw_scaled_bag(z, params, npt=npt, parallel=parallel)

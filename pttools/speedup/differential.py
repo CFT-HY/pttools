@@ -9,12 +9,13 @@ import numpy as np
 
 from pttools.speedup.numba_wrapper import CFunc, CPUDispatcher, lsoda_sig
 from pttools.speedup.options import NUMBA_DISABLE_JIT
+import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
-type DifferentialCFunc = tp.Callable[[float, np.ndarray, np.ndarray, tp.Optional[np.ndarray]], None] | CFunc
-type DifferentialOdeint = tp.Callable[[np.ndarray, float, tp.Optional[np.ndarray]], np.ndarray] | CPUDispatcher
-type DifferentialSolveIVP = tp.Callable[[float, np.ndarray, tp.Optional[np.ndarray]], np.ndarray] | CPUDispatcher
+type DifferentialCFunc = tp.Callable[[float, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D | None], None] | CFunc
+type DifferentialOdeint = tp.Callable[[th.FloatArr1D, float, th.FloatArr1D | None], th.FloatArr1D] | CPUDispatcher
+type DifferentialSolveIVP = tp.Callable[[float, th.FloatArr1D, th.FloatArr1D | None], th.FloatArr1D] | CPUDispatcher
 type Differential = DifferentialCFunc | DifferentialOdeint | DifferentialSolveIVP
 type DifferentialPointer = numba.types.CPointer  # CPointer(lsoda_sig)
 type DifferentialKey = DifferentialPointer | str
@@ -59,7 +60,11 @@ class DifferentialCache:
                 differential_cfunc = numba.cfunc(lsoda_sig)(differential)
                 if p_last_is_backwards:
                     @numba.cfunc(lsoda_sig)
-                    def differential_numbalsoda(t: float, u: np.ndarray, du: np.ndarray, p: np.ndarray):
+                    def differential_numbalsoda(
+                            t: float,
+                            u: th.FloatArr1D,
+                            du: th.FloatArr1D,
+                            p: th.FloatArr1D) -> None:
                         differential_njit(t, u, du, p)
                         # TODO: implement support for arbitrarily long p
                         # This cannot be used when jitting is disabled
@@ -72,13 +77,13 @@ class DifferentialCache:
                     differential_numbalsoda = differential_cfunc
 
             @numba.njit
-            def differential_odeint(y: np.ndarray, t: float, p: tp.Union[np.ndarray, None] = None) -> np.ndarray:
+            def differential_odeint(y: th.FloatArr1D, t: float, p: th.FloatArr1D | None = None) -> th.FloatArr1D:
                 du = np.empty_like(y)
                 differential_njit(t, y, du, p)
                 return du
 
             @numba.njit
-            def differential_solve_ivp(t: float, y: np.ndarray, p: tp.Union[np.ndarray, None] = None) -> np.ndarray:
+            def differential_solve_ivp(t: float, y: th.FloatArr1D, p: th.FloatArr1D | None = None) -> th.FloatArr1D:
                 du = np.empty_like(y)
                 differential_njit(t, y, du, p)
                 return du

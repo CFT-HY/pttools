@@ -59,7 +59,7 @@ def _spec_den_gw_scaled_core(
         cs: float,
         Gamma: float,
         source_lifetime_factor: float,
-        nz_int: int) -> tuple[np.ndarray, np.ndarray]:
+        nz_int: int) -> tuple[th.FloatArr1D, th.FloatArr1D]:
     r""":gw_pt_ssm:`\ ` eq. 3.47 and 3.48
     The variable naming corresponds to the article.
     """
@@ -75,7 +75,7 @@ def _spec_den_gw_scaled_core(
     z_minus_factor = (1 - cs) / (2 * cs)
     p_gw_factor = ((1 - cs2) / cs2) ** 2 / (4 * np.pi * cs)
 
-    p_gw: np.ndarray = np.zeros_like(y)
+    p_gw = np.zeros_like(y)
     for i in numba.prange(y.size):
         # As defined on page 12 between eq. 3.44 and 3.45
         z_plus = y[i] * z_plus_factor
@@ -108,7 +108,7 @@ def _spec_den_gw_scaled_y(
         Gamma: float = const.GAMMA,
         source_lifetime_factor: float = 1.,
         nz_int: int | None = None,
-        parallel: bool = True) -> tuple[np.ndarray, np.ndarray]:
+        parallel: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D]:
 
     z_lookup_min, z_lookup_max = lookup_limits(y, cs)
     if z_lookup.max() < z_lookup_max or z_lookup.min() > z_lookup_min:
@@ -133,7 +133,7 @@ def _spec_den_gw_scaled_no_y(
         Gamma: float = const.GAMMA,
         source_lifetime_factor: float = 1.,
         nz_int: int | None = None,
-        parallel: bool = True) -> tuple[np.ndarray, np.ndarray]:
+        parallel: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D]:
     # This process is the reverse of to gen_lookup()
     zmax = z_lookup.max() * 2. * cs / (1. + cs)
     zmin = z_lookup.min() * 2. * cs / (1. - cs)

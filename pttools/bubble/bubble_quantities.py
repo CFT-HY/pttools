@@ -12,7 +12,7 @@ from pttools.bubble.bubble import Bubble
 import pttools.type_hints as th
 
 
-def get_ke_frac(bubble: Bubble):
+def get_ke_frac(bubble: Bubble) -> float:
     """Get kinetic energy fraction $K$ of a Bubble"""
     if bubble.solved:
         return bubble.kinetic_energy_fraction
@@ -55,7 +55,7 @@ get_kappa_giese.return_type = float
 get_kappa_giese.fail_value = np.nan
 
 
-def get_kappa_omega(bubble: Bubble):
+def get_kappa_omega(bubble: Bubble) -> tuple[float, float]:
     r"""Get both $\kappa$ and $\omega$ of a Bubble"""
     if bubble.no_solution_found or bubble.solver_failed:
         return np.nan, np.nan

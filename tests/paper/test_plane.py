@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools import speedup
+import pttools.type_hints as th
 from tests import utils
 from tests.paper import plane
 from tests.paper import plot_plane_paper
@@ -31,9 +32,9 @@ class TestPlane(unittest.TestCase):
     grid_shape: tuple[int, int] = (2, 5)
     grid_fig_abs: plt.Figure
     grid_fig_rel: plt.Figure
-    axs_abs: np.ndarray
-    axs_rel: np.ndarray
-    ref_data: np.ndarray
+    axs_abs: th.AxesArr2D
+    axs_rel: th.AxesArr2D
+    ref_data: th.FloatArr3D
 
     # Dicts for solvers
     mean_rel_diffs: dict[int, float] = {}
@@ -52,7 +53,7 @@ class TestPlane(unittest.TestCase):
             cls.ref_data = plane.xiv_plane(method="odeint", separate_phases=False)
 
     @classmethod
-    def process_output(cls, name: str, fig: plt.Figure, axs: np.ndarray, diffs: dict[int, float]):
+    def process_output(cls, name: str, fig: plt.Figure, axs: th.AxesArr2D, diffs: dict[int, float]):
         cls.plot_perf(axs[0, 3])
         cls.plot_diff(axs[0, 4], name, diffs)
         fig.tight_layout()

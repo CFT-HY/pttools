@@ -4,10 +4,11 @@ import numba
 import numpy as np
 
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 
 @numba.njit
-def gamma(v: th.FloatOrArr) -> th.FloatOrArr:
+def gamma[T: FloatOrArr](v: T) -> T:
     r"""
     Lorentz gamma, $\gamma = (1 - v^2)^{-\frac{1}{2}}$.
 
@@ -18,7 +19,7 @@ def gamma(v: th.FloatOrArr) -> th.FloatOrArr:
 
 
 @numba.njit(error_model="numpy")
-def gamma2(v: th.FloatOrArr) -> th.FloatOrArr:
+def gamma2[T: FloatOrArr](v: T) -> T:
     r"""
     Square of Lorentz gamma, $\gamma^2 = \frac{1}{1 - v^2}$.
 

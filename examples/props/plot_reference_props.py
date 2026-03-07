@@ -6,7 +6,6 @@ Plot the parameters of fluid_reference
 """
 
 import matplotlib.pyplot as plt
-import numpy as np
 
 from examples import utils
 from pttools.bubble import fluid_reference
@@ -18,7 +17,7 @@ def main() -> plt.Figure:
     ref = fluid_reference.ref()
 
     fig: plt.Figure = plt.figure()
-    axs: np.ndarray = fig.subplots(nrows=2, ncols=3)
+    axs = fig.subplots(nrows=2, ncols=3)
 
     ax_vp: plt.Axes = axs[0, 0]
     ax_vm: plt.Axes = axs[1, 0]

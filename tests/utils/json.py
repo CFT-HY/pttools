@@ -4,7 +4,6 @@ import abc
 import logging
 import os
 import os.path
-import typing as tp
 
 import numpy as np
 import orjson

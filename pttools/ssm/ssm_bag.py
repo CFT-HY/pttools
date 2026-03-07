@@ -6,29 +6,29 @@ import numba
 import numpy as np
 from scipy.optimize import fsolve
 
-import pttools.type_hints as th
 from pttools import bubble
 from pttools import speedup
 from pttools.ssm import const
 from pttools.ssm.calculators import resample_uniform_xi
 from pttools.ssm.sin_transform import sin_transform
 from pttools.ssm.ssm import DE_Method, Method
+import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
 
 @numba.njit
 def a2_e_conserving_bag(
-        z: np.ndarray,
+        z: th.FloatArr1D,
         v_wall: float,
         alpha_n: float,
         npt: const.NptType = const.NPTDEFAULT,
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH,
         v_sh: float | None = None,
-        v_ip: np.ndarray = speedup.NAN_ARR,
-        w_ip: np.ndarray = speedup.NAN_ARR,
-        xi: np.ndarray = speedup.NAN_ARR):
+        v_ip: th.FloatArr1D = speedup.NAN_ARR,
+        w_ip: th.FloatArr1D = speedup.NAN_ARR,
+        xi: th.FloatArr1D = speedup.NAN_ARR):
     r"""
     Returns the value of $|A(z)|^2$, where
     $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$,
@@ -77,7 +77,7 @@ def a2_e_conserving_bag(
 
 
 def a2_e_conserving_bag_file(
-        z: np.ndarray,
+        z: th.FloatArr1D,
         filename: str,
         alpha: float,
         skip: int = 1,
@@ -135,7 +135,7 @@ def a2_e_conserving_bag_file(
 
 @numba.njit
 def a2_ssm_func_bag(
-        z: np.ndarray,
+        z: th.FloatArr1D,
         v_wall: float,
         alpha: float,
         npt: const.NptType = const.NPTDEFAULT,
@@ -182,12 +182,12 @@ def a2_ssm_func_bag(
 
 
 def f_file_bag(
-        z_arr: np.ndarray,
+        z_arr: th.FloatArr1D,
         t,
         filename: str,
         skip: int = 0,
         npt: const.NptType = const.NPTDEFAULT,
-        z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
+        z_st_thresh: float = const.Z_ST_THRESH) -> th.FloatArr1D:
     r"""
     3D FT of radial fluid velocity v(r) from file.
 
@@ -220,7 +220,7 @@ def f_ssm_func_bag(
         alpha_n: float,
         v_sh: float | None = None,
         npt: const.NptType = const.NPTDEFAULT,
-        z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
+        z_st_thresh: float = const.Z_ST_THRESH) -> th.FloatArr1D:
     r"""
     3D FT of radial fluid velocity v(r) from Sound Shell Model fluid profile.
 
@@ -239,7 +239,7 @@ def f_ssm_func_bag(
     return (4.*np.pi/z) * sin_transform(z, xi, v_ip, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
 
 
-def g_file_bag(z: np.ndarray, t, filename: str, skip: int = 0) -> np.ndarray:
+def g_file_bag(z: th.FloatArr1D, t, filename: str, skip: int = 0) -> th.FloatArr1D:
     r"""
     3D FT of radial fluid acceleration \dot{v}(r) from file
 
@@ -250,7 +250,7 @@ def g_file_bag(z: np.ndarray, t, filename: str, skip: int = 0) -> np.ndarray:
     return z * df_dz + 2. * f
 
 
-def g_ssm_func_bag(z: np.ndarray, v_wall, alpha, npt: const.NptType = const.NPTDEFAULT) -> np.ndarray:
+def g_ssm_func_bag(z: th.FloatArr1D, v_wall, alpha, npt: const.NptType = const.NPTDEFAULT) -> th.FloatArr1D:
     r"""
     3D FT of radial fluid acceleration $\dot{v}$(r) from Sound Shell Model fluid profile.
 
@@ -262,7 +262,7 @@ def g_ssm_func_bag(z: np.ndarray, v_wall, alpha, npt: const.NptType = const.NPTD
 
 
 def lam_ssm_func_bag(
-        z: np.ndarray,
+        z: th.FloatArr1D,
         v_wall: float,
         alpha_n: float,
         v_sh: float | None = None,

@@ -21,11 +21,9 @@ class ThermoModel(BaseModel, abc.ABC):
     # TODO: Some functions seem to return vertical arrays. Fix this!
 
     #: Container for the log10 temperatures of $g_\text{eff}$ data
-    GEFF_DATA_LOG_TEMP: np.ndarray
+    GEFF_DATA_LOG_TEMP: th.FloatArr1D
     #: Container for the temperatures of $g_\text{eff}$ data
-    GEFF_DATA_TEMP: np.ndarray
-
-    # Concrete methods
+    GEFF_DATA_TEMP: th.FloatArr1D
 
     def __init__(
             self,
@@ -60,7 +58,11 @@ class ThermoModel(BaseModel, abc.ABC):
             silence_temp=silence_temp
         )
 
-    def validate_cs2(self, cs2: np.ndarray, name: str) -> bool:
+    # -----
+    # Concrete methods
+    # -----
+
+    def validate_cs2(self, cs2: th.FloatOrArr, name: str) -> bool:
         """Validate that $0 < c_s^2 < 1$"""
         err = []
         if np.any(cs2 < 0):
@@ -122,7 +124,7 @@ class ThermoModel(BaseModel, abc.ABC):
             return cs2_compute(temp, phase)
 
         @numba.njit
-        def cs2_arr_temp(temp: np.ndarray, phase: th.FloatOrArr) -> np.ndarray:
+        def cs2_arr_temp(temp: th.FloatArr1D, phase: th.FloatOrArr) -> th.FloatArr1D:
             # This check somehow fixes a compilation bug in Numba 0.60.0
             if np.isscalar(temp):
                 raise TypeError
@@ -200,7 +202,9 @@ class ThermoModel(BaseModel, abc.ABC):
         self.validate_temp(temp)
         return 4*self.gs(temp, phase) - 3*self.ge(temp, phase)
 
+    # -----
     # Abstract methods
+    # -----
 
     @abc.abstractmethod
     def dge_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:

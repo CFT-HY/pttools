@@ -13,6 +13,7 @@ from pttools.bubble import boundary
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.relativity import gamma2
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr, FloatOrArr1D
 if tp.TYPE_CHECKING:
     from pttools.models.const_cs import ConstCSModel
     from pttools.models.model import Model
@@ -21,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 # def gen_wn_solvable(model: "Model", alpha_n: float):
-#     def wn_solvable(params: np.ndarray) -> float:
+#     def wn_solvable(params: th.FloatArr1D) -> float:
 #         r"""This function is zero when $w_n$ corresponds to the given $\alpha_n$"""
 #         wn = params[0]
 #         # return model.theta(wn, Phase.SYMMETRIC) - model.theta(wn, Phase.BROKEN) - 3/4 * wn * alpha_n
@@ -29,7 +30,7 @@ logger = logging.getLogger(__name__)
 #     return wn_solvable
 
 
-# def chapman_jouguet_solvable(params: np.ndarray, model: "Model", wn: float, wm_guess: float):
+# def chapman_jouguet_solvable(params: th.FloatArr1D, model: "Model", wn: float, wm_guess: float):
 #     v_wall = params[0]
 #     vm_guess = np.sqrt(model.cs2(wm_guess, Phase.BROKEN))
 #     _, _, vm, wm = boundary.solve_boundary(
@@ -37,7 +38,7 @@ logger = logging.getLogger(__name__)
 #     return vm - np.sqrt(model.cs2(wm, Phase.BROKEN))
 #
 #
-# def chapman_jouguet_vm_solvable(params: np.ndarray, model: "Model", vp: float, wp: float):
+# def chapman_jouguet_vm_solvable(params: th.FloatArr1D, model: "Model", vp: float, wp: float):
 #     """Not useful, as we don't know vp."""
 #     vm = params[0]
 #     wm = wp * gamma2(vp) * vp / (gamma2(vm) * vm)
@@ -45,7 +46,7 @@ logger = logging.getLogger(__name__)
 #     return cs - vm
 
 
-# def wm_vw_solvable(params: np.ndarray, model: "Model", vp: float, wp: float):
+# def wm_vw_solvable(params: th.FloatArr1D, model: "Model", vp: float, wp: float):
 #     r"""$$\Delta_\text{junc1}(w_-)$$ for detonations"""
 #     wm = params[0]
 #     vm = boundary.v_minus(vp, model.alpha_plus(wp, wm), SolutionType.DETON)
@@ -65,7 +66,7 @@ logger = logging.getLogger(__name__)
 #     return wm
 #
 #
-# def v_chapman_jouguet_solvable(params: np.ndarray, model: "Model", wp: float, wm_guess: float = None):
+# def v_chapman_jouguet_solvable(params: th.FloatArr1D, model: "Model", wp: float, wm_guess: float = None):
 #     vp = params[0]
 #     # If a guess is not provided, use the bag model value.
 #     wm_guess = boundary.w2_junction(vp, wp, const.CS0) if wm_guess is None else wm_guess
@@ -148,15 +149,15 @@ logger = logging.getLogger(__name__)
 
 def v_chapman_jouguet(
         model: "Model",
-        alpha_n: th.FloatOrArr,
-        wn: th.FloatOrArr | None = None,
+        alpha_n: th.FloatOrArr1D,
+        wn: th.FloatOrArr1D | None = None,
         wn_guess: float | None = None,
         wm_guess: float | None = None,
         extra_output: bool = False,
         analytical: bool = True,
         error_on_invalid: bool = True,
         nan_on_invalid: bool = True,
-        log_invalid: bool = True) -> tp.Union[float, tuple[float, float, float], np.ndarray]:
+        log_invalid: bool = True) -> float | tuple[float, float, float] | th.FloatArr1D:
     """Chapman-Jouguet speed
 
     This is the minimum wall speed for detonations.
@@ -230,7 +231,7 @@ def v_chapman_jouguet(
 
 
 @numba.njit
-def v_chapman_jouguet_bag(alpha_plus: th.FloatOrArr) -> th.FloatOrArr:
+def v_chapman_jouguet_bag[T: FloatOrArr](alpha_plus: T) -> T:
     r"""Chapman-Jouguet speed for the bag model
 
     $\alpha_n$ can be given instead of $\alpha_+$, as
@@ -249,9 +250,9 @@ def v_chapman_jouguet_bag(alpha_plus: th.FloatOrArr) -> th.FloatOrArr:
     return 1/np.sqrt(3) * (1 + np.sqrt(2*alpha_plus + 3*alpha_plus**2)) / (1 + alpha_plus)
 
 
-def v_chapman_jouguet_const_cs(model: "ConstCSModel", alpha_theta_bar_plus: th.FloatOrArr):
+def v_chapman_jouguet_const_cs[T: FloatOrArr](model: "ConstCSModel", alpha_theta_bar_plus: T) -> T:
     # TODO: remove this duplicate function
-    discriminant = 3*alpha_theta_bar_plus * (1 - model.csb2 + 3 * model.csb2*alpha_theta_bar_plus)
+    discriminant = 3*alpha_theta_bar_plus * (1 - model.csb2 + 3 * model.csb2 * alpha_theta_bar_plus)
     denominator = 1/model.csb + 3 * model.csb * alpha_theta_bar_plus
     ret = (1 + np.sqrt(discriminant)) / denominator
     # if np.any(ret > 1):
@@ -265,7 +266,7 @@ def v_chapman_jouguet_const_cs(model: "ConstCSModel", alpha_theta_bar_plus: th.F
     return ret
 
 
-def v_chapman_jouguet_const_cs_reference(alpha_n: np.ndarray, model: "ConstCSModel") -> np.ndarray:
+def v_chapman_jouguet_const_cs_reference[T: FloatOrArr1D](alpha_n: T, model: "ConstCSModel") -> T:
     # Todo: Re-enable this when the circular imports have been solved.
     # if not isinstance(model, ConstCSModel):
     #     raise TypeError("This reference only works for ConstCSModel.")
@@ -316,7 +317,7 @@ def wm_chapman_jouguet(
     return wm
 
 
-def wm_solvable_chapman_jouguet(params: np.ndarray, model: "Model", wp: float):
+def wm_solvable_chapman_jouguet(params: th.FloatArr1D, model: "Model", wp: float) -> float:
     wm_param = params[0]
     # This assumes that the solution is a Chapman-Jouguet one
     vm2 = model.cs2(wm_param, Phase.BROKEN)

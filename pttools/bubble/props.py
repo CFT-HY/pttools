@@ -4,12 +4,13 @@ import numba.types
 import numpy as np
 
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 from .boundary import Phase, SolutionType
 from . import relativity
 
 
 @numba.njit
-def find_v_index(xi: np.ndarray, v_target: float) -> int:
+def find_v_index(xi: th.FloatArr, v_target: float) -> int:
     r"""
     The first array index of $\xi$ where value is just above $v_\text{target}$.
     If no xi > v_target is found, returns 0.
@@ -17,11 +18,11 @@ def find_v_index(xi: np.ndarray, v_target: float) -> int:
     return np.argmax(xi >= v_target)
 
 
-def find_phase(xi: np.ndarray, v_wall: float) -> np.ndarray:
+def find_phase(xi: th.FloatArr1D, v_wall: float) -> th.FloatArr1D:
     r"""Get the phase at each given $\xi$ value"""
     i_wall = find_v_index(xi, v_wall)
     # This presumes that Phase.SYMMETRIC = 0
-    phase: np.ndarray = np.zeros_like(xi)
+    phase = np.zeros_like(xi)
     if i_wall == 0:
         return phase
     phase[:i_wall-1] = Phase.BROKEN
@@ -31,8 +32,8 @@ def find_phase(xi: np.ndarray, v_wall: float) -> np.ndarray:
     return phase
 
 
-@numba.vectorize
-def v_max_behind(xi: th.FloatOrArr, cs: float):
+@numba.njit
+def v_max_behind[T: FloatOrArr](xi: T, cs: float) -> T:
     r"""Maximum fluid velocity behind the wall.
     Given by the condition $\mu(\xi, v) = c_s$.
     This results in:
@@ -47,8 +48,13 @@ def v_max_behind(xi: th.FloatOrArr, cs: float):
     return relativity.lorentz(xi, cs)
 
 
-def v_and_w_from_solution(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, sol_type: SolutionType) -> \
-        tuple[float, float, float, float, float, float, float, float]:
+def v_and_w_from_solution(
+        v: th.FloatArr1D,
+        w: th.FloatArr1D,
+        xi: th.FloatArr1D,
+        v_wall: float,
+        sol_type: SolutionType) \
+        -> tuple[float, float, float, float, float, float, float, float]:
     i_wall = np.argmax(v)
     i_wall_w = np.argmax(w)
     if i_wall != i_wall_w:

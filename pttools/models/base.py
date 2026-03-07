@@ -105,7 +105,7 @@ class BaseModel(abc.ABC):
 
     def gen_cs2_neg(self) -> th.CS2Fun:
         r"""This function generates a negative version of
-        the Numba-jitted $c_s^2$ function to be used for maximisation.
+        the Numba-jitted $c_s^2$ function to be used for maximization.
         """
         raise NotImplementedError("This class does not have gen_cs2_neg defined")
 
@@ -118,7 +118,7 @@ class BaseModel(abc.ABC):
             for key, value in self.export().items()
         )
 
-    def validate_temp(self, temp: th.FloatOrArr) -> th.FloatOrArr:
+    def validate_temp[T: FloatOrArr](self, temp: T) -> T:
         """Validate that the given temperatures are in the validity range of the model.
 
         If invalid values are found, a copy of the array is created where those are set to np.nan.

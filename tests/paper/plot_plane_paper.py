@@ -1,16 +1,16 @@
 r"""$\xi, v$ plane plotting"""
 
-import typing as tp
-
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy import dtype
+from numpy.typing import NDArray
 import scipy.integrate as spi
 
-import pttools.type_hints as th
 from pttools import bubble
+import pttools.type_hints as th
 
 
-def filter_not(arr: np.ndarray, mask: np.ndarray) -> np.ndarray:
+def filter_not[T: tuple, U: dtype](arr: np.ndarray[T, U], mask: np.ndarray[T, th.Bool]) -> np.ndarray[T, U]:
     """Replace the elements that are False in the mask with np.nan"""
     arr2 = arr.copy()
     arr2[np.logical_not(mask)] = np.nan
@@ -38,11 +38,11 @@ def get_solver_name(method: th.ODESolver) -> str:
 
 
 def get_differing_inds(
-        data: np.ndarray,
-        data_ref: np.ndarray,
+        data: th.FloatArr3D,
+        data_ref: th.FloatArr3D,
         i: int,
         rtol: float,
-        atol: float = 0) -> np.ndarray:
+        atol: float = 0) -> th.FloatArr2D:
     r"""Get the indices where $v$, $w$ or $\xi$ values do not meet the given tolerances"""
     # differing_b = np.isclose(data[:3, i, :], data_ref[:3, i, :], rtol=rtol, atol=atol)
     # differing_f = np.isclose(data[3:, i, :], data_ref[:3, i, :], rtol=rtol, atol=atol)
@@ -61,17 +61,17 @@ def get_differing_inds(
     return np.array([differing_b, differing_f])
 
 
-def set_invalid_v_to_nan(v: np.ndarray):
+def set_invalid_v_to_nan(v: th.FloatArr) -> None:
     v[v < 0] = np.nan
     v[v > 1] = np.nan
 
 
-def v_ahead_max(xi):
+def v_ahead_max[T](xi: T) -> T:
     """Maximum fluid velocity allowed"""
     return xi
 
 
-def plot_v_excerpt(ax: plt.Axes, v_wall: float, alpha_plus: float, n_xi: int = 500):
+def plot_v_excerpt(ax: plt.Axes, v_wall: float, alpha_plus: float, n_xi: int = 500) -> None:
     """Plots parts of solution obtained by integration of fluid equations.
     Supersonic deflagration solution comes in two parts, ahead and behind wall,
     each with about npts values."""
@@ -93,7 +93,7 @@ def plot_v_excerpt(ax: plt.Axes, v_wall: float, alpha_plus: float, n_xi: int = 5
         ax.plot([xi_b[-1]], [v_b[-1]], "bo")
 
 
-def plot_conditions(ax: plt.Axes, cs2_s: float, cs2_b: float):
+def plot_conditions(ax: plt.Axes, cs2_s: float, cs2_b: float) -> None:
     # Create a line v(xi) = xi to start solving on with forwards and backwards solutions
     # This is the maximum fluid speed ahead of wall for deflagrations
     xi_min = 0.0 + 1 / bubble.N_XI_DEFAULT
@@ -145,10 +145,10 @@ def plot_differing(
 
 def plot_plane(
         ax: plt.Axes,
-        data_s: np.ndarray,
-        data_b: tp.Union[np.ndarray, None] = None,
+        data_s: th.FloatArr3D,
+        data_b: th.FloatArr3D | None = None,
         method: th.ODESolver | None = None,
-        deflag_ref: tp.Union[np.ndarray, None] = None,
+        deflag_ref: NDArray | None = None,
         rtol_small_diff: float = 1e-4,
         rtol_mid_diff: float = 1e-3,
         rtol_high_diff: float = 1e-2,
@@ -159,7 +159,7 @@ def plot_plane(
         cs2_s: float = bubble.const.CS0_2,
         cs2_b: float = bubble.const.CS0_2,
         selected_solutions: bool = True
-    ):
+    ) -> None:
     """
     Modified from
     `sound-shell-model/paper/python/fig_8r_xi-v_plane.py

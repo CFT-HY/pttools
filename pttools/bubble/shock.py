@@ -8,6 +8,7 @@ import numba.types
 import numpy as np
 
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr1D
 from .boundary import Phase, SolutionType, solve_junction, w2_junction
 from . import check
 from . import const
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 @numba.njit
-def find_shock_index_bag(v_f: np.ndarray, xi: np.ndarray, v_wall: float, sol_type: SolutionType) -> int:
+def find_shock_index_bag(v_f: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float, sol_type: SolutionType) -> int:
     r"""
     Array index of shock from first point where fluid velocity $v_f$ goes below $v_\text{shock}$.
     For detonation, returns wall position.
@@ -48,8 +49,11 @@ def find_shock_index_bag(v_f: np.ndarray, xi: np.ndarray, v_wall: float, sol_typ
 
 def find_shock_index(
         model: "Model",
-        v: np.ndarray, w: np.ndarray, xi: np.ndarray,
-        v_wall: float, wn: float,
+        v: th.FloatArr1D,
+        w: th.FloatArr1D,
+        xi: th.FloatArr1D,
+        v_wall: float,
+        wn: float,
         cs_n: float,
         sol_type: SolutionType,
         v_shock_atol: float = 3.5e-8,
@@ -251,8 +255,8 @@ def find_shock_index(
 def shock_curve(
         model: "Model",
         alpha_n: float,
-        xi: tp.Union[np.ndarray, None] = None):
-    vm_arr: np.ndarray = np.zeros_like(xi)
+        xi: th.FloatArr1D) -> th.FloatArr1D:
+    vm_arr = np.zeros_like(xi)
     for i_xi, xi_i in enumerate(xi):
         wn = model.wn(alpha_n=alpha_n)
         vm_tilde, wm = solve_shock(model, v1_tilde=xi_i, w1=wn, backwards=True, warn_if_barely_exists=False)
@@ -267,9 +271,9 @@ def shock_curve(
 
 @numba.njit
 def shock_zoom_last_element(
-        v: np.ndarray,
-        w: np.ndarray,
-        xi: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        v: th.FloatArr1D,
+        w: th.FloatArr1D,
+        xi: th.FloatArr1D) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
     Replaces last element of $(v,w,\xi)$ arrays by better estimate of
     shock position and values of $v, w$ there.
@@ -418,7 +422,7 @@ def v_shock(model: "Model", wn: float, xi: float, cs_n: float, warn_if_barely_ex
 def v_shock_curve(
         model: "Model",
         wn: float, n_points: int = 20,
-        warn_if_barely_exists: bool = False) -> tuple[np.ndarray, np.ndarray]:
+        warn_if_barely_exists: bool = False) -> tuple[th.FloatArr1D, th.FloatArr1D]:
     """Shock velocity curve"""
     cs_n = np.sqrt(model.cs2(wn, Phase.SYMMETRIC))
     # Create more points near cs_n, as there the accuracy is the most critical
@@ -443,7 +447,7 @@ _v_shock_bag_scalar_numba = numba.njit(_v_shock_bag_scalar)
 
 def _v_shock_bag_arr(xi: th.FloatOrArr) -> th.FloatOrArrNumba:
     ret = np.zeros_like(xi)
-    for i in range(xi.size):
+    for i in numba.prange(xi.size):
         ret[i] = _v_shock_bag_scalar_numba(xi[i])
     return ret
 
@@ -529,7 +533,7 @@ def _wp_shock_bag_scalar(xi: float, wm: float) -> float:
     # This has nothing to do with the sound speed!
     if xi < const.CS0:
         return np.nan
-    return wm * (3*(1-xi**2))/(9*xi**2 - 1)
+    return wm * (3*(1-xi**2)) / (9*xi**2 - 1)
 
 
 def _wp_shock_bag_arr(xi: np.ndarray, wm: float) -> np.ndarray:

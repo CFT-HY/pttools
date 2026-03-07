@@ -8,12 +8,13 @@ import numba
 import numpy as np
 from scipy.optimize import minimize, minimize_scalar, OptimizeResult
 
-import pttools.type_hints as th
 from pttools.bubble.const import CS0_2
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.models.analytic import AnalyticModel
 from pttools.models.bag import BagModel, df_dtau_ptr_bag
 from pttools.speedup import DifferentialPointer
+import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 from pttools.utils.validation import check_value_in_range
 
 logger = logging.getLogger(__name__)
@@ -28,7 +29,7 @@ def cs2_to_mu(cs2: th.FloatOrArr) -> th.FloatOrArr:
 
 
 def cs2_to_float_and_label(
-        cs2: tp.Union[float, Fraction],
+        cs2: float | Fraction,
         max_denominator: int = 100,
         label_prec: int = 3) -> tuple[float, str]:
     """Convert the speed of sound value to a float and a string label."""
@@ -167,12 +168,12 @@ class ConstCSModel(AnalyticModel):
     #     """Theoretical minimum for $a_s$"""
     #     return self.nu / (self.mu * (1 - 3*alpha_n)) * a_b
 
-    def alpha_n(
+    def alpha_n[T: FloatOrArr](
             self,
-            wn: th.FloatOrArr,
+            wn: T,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True) -> T:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
         $$\alpha_n = \frac{4}{3} \left( \frac{1}{\nu} - \frac{1}{\mu} + \frac{1}{w_n} (V_s - V_b) \right)$$
 
@@ -432,7 +433,7 @@ class ConstCSModel(AnalyticModel):
             a_s: float, V_s: float,
             a_b: float, V_b: float,
             css2: float, csb2: float,
-            alpha_n_target: float):
+            alpha_n_target: float) -> float:
         """This function is minimized when the given parameters produce alpha_n_target"""
         try:
             model = ConstCSModel(css2=css2, csb2=csb2, a_s=a_s, a_b=a_b, V_s=V_s, V_b=V_b, log_info=False)
@@ -444,10 +445,10 @@ class ConstCSModel(AnalyticModel):
     @classmethod
     def alpha_n_min_find_params_solvable2(
             cls,
-            args: np.ndarray,
+            args: th.FloatArr1D,
             a_b: float, V_b: float,
             css2: float, csb2: float,
-            alpha_n_target: float):
+            alpha_n_target: float) -> float:
         """This function is minimized when the given parameters produce alpha_n_target"""
         a_s = args[0]
         V_s = args[1]
@@ -495,12 +496,12 @@ class ConstCSModel(AnalyticModel):
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
 
-    def alpha_theta_bar_n(
+    def alpha_theta_bar_n[T: FloatOrArr](
             self,
-            wn: th.FloatOrArr,
+            wn: T,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True) -> T:
         return (1 - self.mu_b / self.mu_s)/3 + self.mu_b/4 * self.alpha_n_bag(
             wn=wn,
             error_on_invalid=error_on_invalid,
@@ -524,7 +525,11 @@ class ConstCSModel(AnalyticModel):
             return (1 - Psi_n) / 3 * (1 + self.mu_b / 3 * np.sqrt(sqrt_val))
         return np.inf
 
-    def alpha_theta_bar_n_min_lte(self, wn: th.FloatOrArr, sol_type: SolutionType, Psi_n: float | None = None) -> float:
+    def alpha_theta_bar_n_min_lte(
+            self,
+            wn: th.FloatOrArr,
+            sol_type: SolutionType,
+            Psi_n: th.FloatOrArr | None = None) -> th.FloatOrArr:
         r"""$\alpha_{n,\text{min}}^\text{def}$, :ai_2023:`\ `, eq. 27, 30"""
         if Psi_n is None or np.isnan(Psi_n):
             Psi_n = self.Psi_n(wn)
@@ -539,15 +544,15 @@ class ConstCSModel(AnalyticModel):
             return np.maximum((1 - Psi_n) / 3, (self.mu_s - self.mu_b) / (3 * self.mu_s))
         if sol_type == SolutionType.HYBRID:
             # Not known / no simple formula
-            return 0
+            return 0. if np.isscalar(wn) else np.zeros_like(wn)
         raise ValueError(f"Invalid solution type: {sol_type}")
 
-    def alpha_theta_bar_plus(
+    def alpha_theta_bar_plus[T: FloatOrArr](
             self,
-            wp: th.FloatOrArr,
+            wp: T,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True) -> T:
         return (1 - self.mu_b / self.mu_s)/3 + self.mu_b/4 * self.alpha_plus_bag(
             wp=wp,
             wm=np.nan,  # Not used
@@ -556,11 +561,11 @@ class ConstCSModel(AnalyticModel):
             log_invalid=log_invalid
         )
 
-    def critical_temp_opt(self, temp: float) -> float:
+    def critical_temp_opt[T: FloatOrArr](self, temp: T) -> T:
         const = (self.V_b - self.V_s) * self.T_ref ** 4
         return self.a_s * (temp / self.T_ref)**self.mu_s - self.a_b * (temp / self.T_ref)**self.mu_b + const
 
-    def _cs2_minmax(self, phase: Phase):
+    def _cs2_minmax(self, phase: Phase) -> tuple[float, float]:
         if phase == Phase.BROKEN:
             return self.csb2, np.nan
         if phase == Phase.SYMMETRIC:
@@ -569,14 +574,20 @@ class ConstCSModel(AnalyticModel):
 
     def cs2_max(
             self,
-            w_max: float, phase: Phase,
-            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tuple[float, float]:
+            w_max: float,
+            phase: Phase,
+            w_min: float = 0,
+            allow_fail: bool = False,
+            **kwargs) -> tuple[float, float]:
         return self._cs2_minmax(phase)
 
     def cs2_min(
             self,
-            w_max: float, phase: Phase,
-            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tuple[float, float]:
+            w_max: float,
+            phase: Phase,
+            w_min: float = 0,
+            allow_fail: bool = False,
+            **kwargs) -> tuple[float, float]:
         return self._cs2_minmax(phase)
 
     def df_dtau_ptr(self) -> DifferentialPointer:
@@ -617,8 +628,11 @@ class ConstCSModel(AnalyticModel):
 
     def delta_theta(
             self,
-            wp: th.FloatOrArr, wm: th.FloatOrArr,
-            error_on_invalid: bool = True, nan_on_invalid: bool = True, log_invalid: bool = True) -> th.FloatOrArr:
+            wp: th.FloatOrArr,
+            wm: th.FloatOrArr,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
         ret = (1 / 4 - 1 / self.mu_s) * wp / 3 - (1 / 4 - 1 / self.mu_b) * wm / 3 + self.V_s - self.V_b
         return self.check_delta_theta(
             ret, xp=wp, xm=wm, x_name="w",
@@ -645,7 +659,7 @@ class ConstCSModel(AnalyticModel):
             "mu_b": self.mu_b
         }
 
-    def inverse_enthalpy_ratio(self, temp: th.FloatOrArr) -> th.FloatOrArr:
+    def inverse_enthalpy_ratio[T: FloatOrArr](self, temp: T) -> T:
         return self.a_b * self.mu_b / (self.a_s * self.mu_s)
 
     def params_str(self) -> str:
@@ -723,15 +737,15 @@ class ConstCSModel(AnalyticModel):
         w_b = self.mu_b * self.a_b * (temp / self.T_ref) ** (self.mu_b - 4) * temp ** 4
         return w_b * phase + w_s * (1 - phase)
 
-    def wn(
+    def wn[T: FloatOrArr](
             self,
-            alpha_n: th.FloatOrArr,
+            alpha_n: T,
             wn_guess: float = 1,
             analytical: bool = True,
             theta_bar: bool = False,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True) -> T:
         r"""Enthalpy at nucleation temperature"""
         if theta_bar:
             return super().wn(

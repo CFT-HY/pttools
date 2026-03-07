@@ -7,6 +7,7 @@ import numpy as np
 
 
 from pttools.models import ThermoModel
+import pttools.type_hints as th
 from tests.utils.const import TEST_DATA_PATH
 from tests.utils.json import JsonTestCase
 
@@ -14,8 +15,8 @@ from tests.utils.json import JsonTestCase
 class ThermoModelBaseCase(JsonTestCase, abc.ABC):
     """Base test case for thermodynamic models"""
     thermo: ThermoModel
-    temp_arr: np.ndarray
-    phase_arr: np.ndarray
+    temp_arr: th.FloatArr1D
+    phase_arr: th.FloatArr1D
 
     EXPECT_MISSING_DATA = True
     SAVE_NEW_DATA = True

@@ -1,7 +1,5 @@
 """Plot Chapman-Jouguet speed"""
 
-import typing as tp
-
 from matplotlib.legend import Legend
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,11 +7,12 @@ import numpy as np
 from pttools.analysis.utils import legend
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 from pttools.models.model import Model
+import pttools.type_hints as th
 
 
 class ChapmanJouguetPlot:
     """Plot Chapman-Jouguet speed"""
-    def __init__(self, alpha_n: np.ndarray):
+    def __init__(self, alpha_n: th.FloatArr1D):
         self.alpha_n = alpha_n
 
         self.fig: plt.Figure = plt.figure()
@@ -33,6 +32,6 @@ class ChapmanJouguetPlot:
             label = model.label_latex
         self.ax.plot(self.alpha_n, v_cj, label=label, ls=ls)
 
-    def process(self) -> tp.Optional[Legend]:
+    def process(self) -> Legend | None:
         """Process the plot"""
         return legend(self.ax, fontsize="x-small")

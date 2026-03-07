@@ -3,8 +3,9 @@
 import numba
 import numpy as np
 
-import pttools.type_hints as th
 from pttools.omgw0 import const
+import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 
 @numba.njit
@@ -60,7 +61,7 @@ def signal_to_noise_ratio(
     return snr, f_min, f_max
 
 
-def ft(L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatOrArr:
+def ft[T: FloatOrArr](L: T = const.LISA_ARM_LENGTH) -> T:
     r"""Transfer frequency
     $$f_t = \frac{c}{2\pi L}$$
     :gowling_2021:`\ ` p. 12
@@ -73,7 +74,7 @@ FT_LISA: float = ft()
 F2_LISA: float = 4/3 * FT_LISA
 
 
-def N_acc(L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatOrArr:
+def N_acc[T: FloatOrArr](L: T = const.LISA_ARM_LENGTH) -> T:
     r"""LISA acceleration noise
     $${N}_\text{acc} = \frac{3 \cdot 10^{-15}}{L} \frac{\text{m}}{\text{s}^2}
     \approx 1.44 \cdot 10^{-48} \frac{1}{\text{s}^4 \text{Hz}}$$
@@ -131,23 +132,23 @@ def omega_eb(f: th.FloatOrArr, f_ref_eb: float = 25, omega_ref_eb: float = 8.9e-
     return omega_ref_eb * (f/f_ref_eb)**(2/3)
 
 
-def omega_gb(f: th.FloatOrArr) -> th.FloatOrArr:
+def omega_gb[T: FloatOrArr](f: T) -> T:
     r"""
     Energy density of unresolved galactic compact binaries
     $$\Omega_\text{gb} = \left( \frac{4 \pi^2}{3 H_0^2} \right) f^3 {S}_\text{gb}(f)$$
     :gowling_2021:`\ ` eq. 3.11
     """
-    return omega(f, S_gb(f))
+    return omega(f=f, S=S_gb(f))
 
 
-def omega_ins(f: th.FloatOrArr) -> th.FloatOrArr:
+def omega_ins[T: FloatOrArr](f: T) -> T:
     r"""LISA instrument noise
     $$\Omega_\text{ins} = \frac{4 \pi^2}{3 H_0^2} f^3 S_A(f)$$
     """
     return omega(f=f, S=S_AE(f))
 
 
-def omega_noise(f: th.FloatOrArr) -> th.FloatOrArr:
+def omega_noise[T: FloatOrArr](f: T) -> T:
     r"""
     Total energy density of noise
     $$\Omega_\text{noise} = \Omega_\text{ins} + \Omega_\text{eb} + \Omega_\text{gb}$$
@@ -166,7 +167,7 @@ def P_acc(f: th.FloatOrArr, L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.Floa
     return S_I(f, L) / (4 * (2*np.pi*f)**4)
 
 
-def P_oms(L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatOrArr:
+def P_oms[T: FloatOrArr](L: T = const.LISA_ARM_LENGTH) -> T:
     r"""
     LISA optical metrology noise $P_\text{oms}$, aka. $S_II$ or $S_s$
     $$P_\text{oms}(f) = \left( \frac{1.5 \cdot 10^{-11} \text{m}}{L} \right)^2 \text{Hz}^{-1}$$

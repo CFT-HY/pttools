@@ -11,7 +11,6 @@ from numba.extending import overload
 import numpy as np
 from scipy.optimize import fsolve
 
-import pttools.type_hints as th
 from pttools import speedup
 from pttools.bubble import bag
 from pttools.bubble import boundary
@@ -21,6 +20,8 @@ from pttools.bubble import check
 from pttools.bubble import integrate
 from pttools.bubble import props
 from pttools.bubble import transition
+import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 logger = logging.getLogger(__name__)
 
@@ -140,9 +141,11 @@ def alpha_n_max_hybrid_bag(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> flo
     :param n_xi: number of $\xi$ points
     :return: $\alpha_{n,\max}$
     """
-    sol_type = transition.identify_solution_type_alpha_plus(v_wall, 1/3).value
+    sol_type = transition.identify_solution_type_alpha_plus(v_wall=v_wall, alpha_p=1/3).value
     if sol_type == boundary.SolutionType.SUB_DEF:
-        raise ValueError("Alpha_n_max_hybrid was called with v_wall < cs. Use alpha_n_max_deflagration instead.")
+        raise ValueError(
+            f"Alpha_n_max_hybrid was called with v_wall={v_wall} < cs. Use alpha_n_max_deflagration instead."
+        )
 
     # Might have been returned as Detonation, which takes precedence over Hybrid
     sol_type = boundary.SolutionType.HYBRID.value
@@ -156,7 +159,7 @@ def alpha_n_max_hybrid_bag(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> flo
 
 
 @numba.njit
-def alpha_n_min_deflagration_bag(v_wall: th.FloatOrArr) -> th.FloatOrArr:
+def alpha_n_min_deflagration_bag[T: FloatOrArr](v_wall: T) -> T:
     r"""
     Minimum $\alpha_n$ for a deflagration in the Bag Model. Equal to maximum $\alpha_n$ for a detonation.
     Same as :func:`alpha_n_min_hybrid`, as a hybrid is a supersonic deflagration.
@@ -170,7 +173,7 @@ def alpha_n_min_deflagration_bag(v_wall: th.FloatOrArr) -> th.FloatOrArr:
 
 
 @numba.njit
-def alpha_n_min_hybrid_bag(v_wall: th.FloatOrArr) -> th.FloatOrArr:
+def alpha_n_min_hybrid_bag[T: FloatOrArr](v_wall: T) -> T:
     r"""
     Minimum $\alpha_n$ for a hybrid in the Bag Model. Equal to maximum $\alpha_n$ for a detonation.
     Same as :func:`alpha_n_min_deflagration`, as a hybrid is a supersonic deflagration.
@@ -198,7 +201,7 @@ def alpha_plus_initial_guess(v_wall: th.FloatOrArr, alpha_n_given: float) -> th.
         return alpha_n_given
 
     alpha_plus_min = alpha_plus_min_hybrid(v_wall)
-    alpha_plus_max = 1. / 3
+    alpha_plus_max = 1/3
 
     alpha_n_min = alpha_n_min_hybrid_bag(v_wall)
     alpha_n_max = alpha_n_max_deflagration_bag(v_wall)
@@ -278,7 +281,7 @@ def find_alpha_n_bag(
 
 
 @numba.njit
-def find_alpha_n_from_w_xi(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_p: th.FloatOrArr) -> th.FloatOrArr:
+def find_alpha_n_from_w_xi(w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float, alpha_p: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Calculates the transition strength parameter with
     $$\alpha_n = \frac{w_+}{w_n} \alpha_p$$.
@@ -298,7 +301,7 @@ def find_alpha_n_from_w_xi(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_p
 
 @numba.njit
 def _find_alpha_plus_optimizer_bag(
-        alpha: np.ndarray,
+        alpha: th.FloatArr1D,
         v_wall: float,
         sol_type: boundary.SolutionType,
         n_xi: int,

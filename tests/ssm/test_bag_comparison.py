@@ -9,13 +9,14 @@ from pttools.bubble.quantities import de_from_w_bag
 from pttools.models import BagModel
 from pttools.ssm import SSMSpectrum
 from pttools import ssm
+import pttools.type_hints as th
 from tests.utils.assertions import assert_allclose
 
 
 class SpectrumTest(unittest.TestCase):
     """Tests for comparing the results of the Spectrum class to the old bag model interface"""
-    V_WALLS: np.ndarray = np.array([0.5, 0.7, 0.77])
-    ALPHA_NS: np.ndarray = np.array([0.578, 0.151, 0.091])
+    V_WALLS: th.FloatArr1D = np.array([0.5, 0.7, 0.77])
+    ALPHA_NS: th.FloatArr1D = np.array([0.578, 0.151, 0.091])
 
     @classmethod
     def setUpClass(cls) -> None:

@@ -1,17 +1,17 @@
 """Utility functions and constants for unit testing"""
 
 import inspect
-import typing as tp
 
 import numpy as np
 
+import pttools.type_hints as th
 from . import math as test_math
 from . import printing
 
 
 def assert_allclose(
-        actual: tp.Union[float, tp.Union[list[float], list[list]], np.ndarray],
-        desired: tp.Union[float, tp.Union[list[float], list[list]], np.ndarray],
+        actual: th.FloatOrArr1D2D | list[float] | list[list[float]],
+        desired: th.FloatOrArr1D2D | list[float] | list[list[float]],
         rtol: float = 1e-7,
         atol: float = 0,
         equal_nan: bool = True,
@@ -19,7 +19,7 @@ def assert_allclose(
         verbose: bool = True,
         name: str | None = None,
         fmt: str = printing.DEFAULT_FMT,
-        dtype: np.dtype = np.float64):
+        dtype: np.dtype = np.float64) -> None:
     """Assert that all array elements correspond to the reference within the given tolerances
 
     :param actual: actual data

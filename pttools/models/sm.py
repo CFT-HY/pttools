@@ -5,8 +5,9 @@ import logging
 import numpy as np
 from scipy import interpolate
 
-import pttools.type_hints as th
 from pttools.models.thermo import ThermoModel
+import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 logger = logging.getLogger(__name__)
 
@@ -58,8 +59,10 @@ class StandardModel(ThermoModel):
 
     def __init__(
             self,
-            g_mult_s: float = 1, g_mult_b: float = 1,
-            V_s: float = 0, V_b: float = 0,
+            g_mult_s: float = 1,
+            g_mult_b: float = 1,
+            V_s: float = 0,
+            V_b: float = 0,
             name: str | None = None,
             T_min: float | None = None,
             T_max: float | None = None,
@@ -110,10 +113,10 @@ class StandardModel(ThermoModel):
             return interpolate.splev(np.log10(temp), self.GE_GS_RATIO_SPLINE)
         return self.ge(temp, phase) / self.gs(temp, phase)
 
-    def g_mult(self, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def g_mult[T: FloatOrArr](self, phase: T) -> T:
         return self.g_mult_b * phase + self.g_mult_s * (1 - phase)
 
-    def V(self, phase: np.ndarray) -> np.ndarray:
+    def V[T: FloatOrArr](self, phase: T) -> T:
         return self.V_b * phase + self.V_s * (1 - phase)
 
 

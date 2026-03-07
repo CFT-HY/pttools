@@ -7,6 +7,7 @@ import numpy as np
 from pttools import bubble
 from pttools.ssm import const, ssm, ssm_bag, spectrum
 from pttools.ssm.spec_den_v import spec_den_v_core
+import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ def parse_params(params: bubble.PhysicalParams) -> tuple[float, float, spectrum.
 
 
 def power_gw_scaled_bag(
-        z: np.ndarray,
+        z: th.FloatArr1D,
         params: bubble.PhysicalParams,
         npt: const.NptType = const.NPTDEFAULT,
         filename: str | None = None,
@@ -50,7 +51,7 @@ def power_gw_scaled_bag(
         method: ssm.Method = ssm.Method.E_CONSERVING,
         de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH,
-        parallel: bool = True) -> np.ndarray:
+        parallel: bool = True) -> th.FloatArr1D:
     """
     Scaled GW power spectrum at array of z = kR* values, where R* is mean bubble centre
     separation and k is comoving wavenumber.  To convert to predicted spectrum,
@@ -97,14 +98,14 @@ def power_gw_scaled_bag(
 
 
 def power_v_bag(
-        z: np.ndarray,
+        z: th.FloatArr1D,
         params: bubble.PhysicalParams,
         npt: const.NptType = const.NPTDEFAULT,
         filename: str | None = None,
         skip: int = 1,
         method: ssm.Method = ssm.Method.E_CONSERVING,
         de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
-        z_st_thresh: float = const.Z_ST_THRESH) -> np.ndarray:
+        z_st_thresh: float = const.Z_ST_THRESH) -> th.FloatArr1D:
     """
     Power spectrum of the velocity field in the Sound Shell Model.
 
@@ -127,7 +128,7 @@ def power_v_bag(
 
 
 def spec_den_v_bag(
-        z: np.ndarray,
+        z: th.FloatArr1D,
         params: bubble.PhysicalParams,
         npt: const.NptType = const.NPTDEFAULT,
         filename: str | None = None,

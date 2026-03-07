@@ -1,19 +1,18 @@
 """Validation tools"""
 
 import logging
-import typing as tp
 
 import numba
 from numba.extending import overload
 import numpy as np
 
+from pttools.bubble import alpha
 import pttools.type_hints as th
-from . import alpha
 
 logger = logging.getLogger(__name__)
 
-NucArgs = tuple[float, ...]
-PhysicalParams = tp.Union[tuple[float, float], tuple[float, float, str, NucArgs]]
+type NucArgs = tuple[float, ...]
+type PhysicalParams = tuple[float, float] | tuple[float, float, str, NucArgs]
 
 
 @numba.njit
@@ -38,7 +37,7 @@ def check_physical_params(params: PhysicalParams) -> None:
         raise ValueError("Unphysical parameter(s). See the log for details.")
 
 
-def _check_wall_speed_arr(v_wall: th.FloatOrArr, droplet: bool = False):
+def _check_wall_speed_arr(v_wall: th.FloatOrArr, droplet: bool = False) -> None:
     if droplet:
         if np.logical_or(np.any(v_wall <= -1.), np.any(v_wall >= 0.)):
             raise ValueError(
@@ -50,7 +49,7 @@ def _check_wall_speed_arr(v_wall: th.FloatOrArr, droplet: bool = False):
         )
 
 
-def _check_wall_speed_scalar(v_wall: th.FloatOrArr, droplet: bool = False):
+def _check_wall_speed_scalar(v_wall: th.FloatOrArr, droplet: bool = False) -> None:
     if droplet:
         if not -1. <= v_wall <= 0.:
             raise ValueError(f"v_wall={v_wall} is not physical for a droplet.")
@@ -58,7 +57,7 @@ def _check_wall_speed_scalar(v_wall: th.FloatOrArr, droplet: bool = False):
         raise ValueError(f"v_wall={v_wall} is not physical for a bubble.")
 
 
-def check_wall_speed(v_wall: th.FloatOrArr, droplet: bool = False):
+def check_wall_speed(v_wall: th.FloatOrArr, droplet: bool = False) -> None:
     r"""Check that $v _\text{wall}$ values are all physical: $(0 < v _\text{wall} < 1)$"""
     if isinstance(v_wall, float):
         return _check_wall_speed_scalar(v_wall, droplet)
@@ -70,7 +69,7 @@ def check_wall_speed(v_wall: th.FloatOrArr, droplet: bool = False):
 
 
 @overload(check_wall_speed, jit_options={"nopython": True})
-def _check_wall_speed_numba(v_wall: th.FloatOrArr, droplet: bool = False):
+def _check_wall_speed_numba(v_wall: th.FloatOrArr, droplet: bool = False) -> None:
     if isinstance(v_wall, numba.types.Float):
         return _check_wall_speed_scalar
     if isinstance(v_wall, numba.types.Array):
@@ -80,7 +79,7 @@ def _check_wall_speed_numba(v_wall: th.FloatOrArr, droplet: bool = False):
     raise TypeError(f"v_wall must be float, list or array. Got: {type(v_wall)}")
 
 
-def find_most_negative_vals(vals: th.FloatOrArr, *args) -> tp.List[tp.Optional[float]]:
+def find_most_negative_vals(vals: th.FloatOrArr, *args) -> list[float | None]:
     """Find the most negative values in the given array"""
     if vals is None or (not np.any(vals < 0)):
         return [None]*(len(args)+1)

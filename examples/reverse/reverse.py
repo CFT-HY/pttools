@@ -12,9 +12,14 @@ from scipy.optimize import minimize, OptimizeResult
 from pttools.bubble import Bubble
 from pttools.models import BagModel, Model
 from pttools.omgw0 import Spectrum, SuppressionMethod
+import pttools.type_hints as th
 
 
-def solvable(params: np.ndarray, model: Model, f_peak_target: float, omega_peak_target: float) -> tuple[float, float]:
+def solvable(
+        params: th.FloatArr1D,
+        model: Model,
+        f_peak_target: float,
+        omega_peak_target: float) -> tuple[float, float]:
     """This function is minimized when the parameters produce the desired peak frequency and amplitude"""
     v_wall, alpha_n, r_star = params
     bubble = Bubble(model, v_wall=v_wall, alpha_n=alpha_n)

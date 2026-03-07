@@ -9,6 +9,7 @@ import unittest
 import numpy as np
 
 from pttools.bubble import quantities
+import pttools.type_hints as th
 from tests.utils.test_assertions import assert_allclose
 # For debugging Numba issues
 # from pttools.logging import setup_logging
@@ -17,11 +18,11 @@ from tests.utils.test_assertions import assert_allclose
 
 class ThermoBagTest:
     """Compare thermodynamic quantities of the bag model to the values in articles."""
-    ALPHA_NS: np.ndarray
-    V_WALLS: np.ndarray
+    ALPHA_NS: th.FloatArr1D
+    V_WALLS: th.FloatArr1D
 
-    KAPPA_REF: np.ndarray
-    KE_FRAC_REF: np.ndarray
+    KAPPA_REF: th.FloatArr1D
+    KE_FRAC_REF: th.FloatArr1D
 
     def test_kappa(self):
         kappas = np.zeros_like(self.KAPPA_REF)

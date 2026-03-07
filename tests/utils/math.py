@@ -1,12 +1,13 @@
 """Math utilities for testing"""
 
 import numpy as np
+from numpy.typing import NDArray
 
 
-def rel_diff_arr(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+def rel_diff_arr[T: NDArray](x: T, y: T) -> T:
     """Relative differences of two arrays"""
     if not np.count_nonzero(y):
-        return np.nan * np.ones_like(x)
+        return np.full_like(x, np.nan)
     nonzero = y != 0
     return np.abs(x - y)[nonzero] / np.abs(y[nonzero])
 

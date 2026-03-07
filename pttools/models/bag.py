@@ -13,6 +13,7 @@ from pttools.models.analytic import AnalyticModel
 from pttools.speedup.differential import DifferentialPointer
 from pttools.utils.docstrings import copy_docstring_dec
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 logger = logging.getLogger(__name__)
 
@@ -306,7 +307,7 @@ class BagModel(AnalyticModel):
         return (self.V_b * phase + self.V_s * (1 - phase)) * np.ones_like(w)
 
     @staticmethod
-    def v_shock(xi: th.FloatOrArr) -> th.FloatOrArr:
+    def v_shock[T: FloatOrArr](xi: T) -> T:
         r"""Velocity at the shock, :gw_pt_ssm:`\ ` eq. B.17
         $$v_\text{sh}(\xi) = \frac{3\xi^22 - 1}{2\xi}$$
         """
@@ -322,15 +323,15 @@ class BagModel(AnalyticModel):
         self.validate_temp(temp)
         return 4 * (self.a_b * phase + self.a_s * (1-phase))*temp**4
 
-    def wn(
+    def wn[T: FloatOrArr](
             self,
-            alpha_n: th.FloatOrArr,
+            alpha_n: T,
             wn_guess: float = 1,
             theta_bar: bool = False,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True,
-            analytical: bool = True) -> th.FloatOrArr:
+            analytical: bool = True) -> T:
         r"""Enthalpy at nucleation temperature
         $$w_n = \frac{4}{3} \frac{V_s - V_b}{\alpha_n}$$
         This can be derived from the equations for $\theta$ and $\alpha_n$.

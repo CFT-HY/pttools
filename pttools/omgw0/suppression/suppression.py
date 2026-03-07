@@ -10,6 +10,7 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 
 from pttools.omgw0.suppression.suppression_ssm_data.suppression_ssm_calculator import SUPPRESSION_FOLDER
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 logger = logging.getLogger(__name__)
 
@@ -111,12 +112,12 @@ class Suppression:
         return sup
 
 
-def alpha_n_max_approx(vw: th.FloatOrArr) -> th.FloatOrArr:
+def alpha_n_max_approx[T: FloatOrArr](vw: T) -> T:
     r"""Approximate $\alpha_{n,\text{max}}({v}_\text{wall})$"""
     return 1/3 * (1 + 3*vw**2) / (1 - vw**2)
 
 
-def alpha_n_max(v_wall: th.FloatOrArr) -> th.FloatOrArr:
+def alpha_n_max[T: FloatOrArr](v_wall: T) -> T:
     r"""$\alpha_{n,\text{max}}({v}_\text{wall})$"""
     # vw, al
     # [0.24000, 0.34000]
@@ -149,9 +150,9 @@ def extend(
     ssm_sup_vw_0_24_ext = spl(ssm_sup_vw_0_24_alphas_ext)
 
     # create the extrapolated dataset
-    v_walls_ext: th.FloatArr1D = np.concatenate(([0.24], v_walls))
-    alpha_ns_ext: th.FloatArr1D = np.concatenate(([ssm_sup_vw_0_24_alphas_ext[0]], alpha_ns))
-    suppressions_ext: th.FloatArr1D = np.concatenate(([ssm_sup_vw_0_24_ext[0]], suppressions))
+    v_walls_ext = np.concatenate(([0.24], v_walls))
+    alpha_ns_ext = np.concatenate(([ssm_sup_vw_0_24_alphas_ext[0]], alpha_ns))
+    suppressions_ext = np.concatenate(([ssm_sup_vw_0_24_ext[0]], suppressions))
     return v_walls_ext, alpha_ns_ext, suppressions_ext
 
 

@@ -182,7 +182,7 @@ class DataModel(Model):
             return cs2_compute(w, phase)
 
         @numba.njit
-        def cs2_arr(w: np.ndarray, phase: th.FloatOrArr) -> np.ndarray:
+        def cs2_arr(w: th.FloatArr1D, phase: th.FloatOrArr) -> th.FloatArr1D:
             # This check somehow fixes a compilation bug in Numba 0.60.0
             if np.isscalar(w):
                 raise TypeError

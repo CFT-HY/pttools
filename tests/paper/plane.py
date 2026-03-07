@@ -1,11 +1,10 @@
 r"""$\xi, v$ plane generation"""
 
-import typing as tp
-
 import numpy as np
 
 from pttools import bubble
 from pttools import speedup
+import pttools.type_hints as th
 
 
 def xiv_plane(
@@ -15,11 +14,11 @@ def xiv_plane(
         n_xi0_b: int = 6,
         n_xi0_s: int = 9,
         n_xi: int = 1000,
-        df_dtau_ptr: speedup.DifferentialPointer = bubble.DF_DTAU_BAG_PTR,
+        df_dtau_ptr: speedup.DifferentialPointer = bubble.DF_DTAU_PTR_BAG,
         cs2_s=bubble.CS0_2,
         cs2_b=bubble.CS0_2,
         separate_phases: bool = True
-    ) -> tp.Union[tuple[np.ndarray, np.ndarray], np.ndarray]:
+    ) -> th.FloatArr3D | tuple[th.FloatArr3D, th.FloatArr3D]:
     """
     Modified from :ssm_repo:`paper/python/fig_8r_xi-v_plane.py`
     """

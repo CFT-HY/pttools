@@ -28,7 +28,7 @@ class TestBag(unittest.TestCase):
     # @staticmethod
     # def junction_bag(
     #         model: BagModel,
-    #         v1: np.ndarray, w1: np.ndarray,
+    #         v1: th.FloatArr1D, w1: th.FloatArr1D,
     #         phase1: Phase, phase2: Phase,
     #         greater_branch: bool,
     #         atol=1.3e-14):

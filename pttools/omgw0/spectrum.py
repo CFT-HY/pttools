@@ -4,6 +4,7 @@ import typing as tp
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 import numpy as np
+from numpy.typing import NDArray
 
 from pttools.bubble import Bubble
 from pttools.omgw0 import const
@@ -13,6 +14,7 @@ from pttools.omgw0 import noise
 from pttools.omgw0 import suppression as sup_mod
 from pttools import ssm
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 from pttools.utils.docstrings import copy_docstrings
 
 if tp.TYPE_CHECKING:
@@ -186,7 +188,7 @@ class Spectrum(ssm.SSMSpectrum):
             method: sup_mod.SuppressionMethod = sup_mod.SuppressionMethod.DEFAULT) -> float:
         return suppression.suppression(v_wall=self.bubble.v_wall, alpha_n=self.bubble.alpha_n, method=method)
 
-    def tau_nl(self, H_n: th.FloatOrArr) -> th.FloatOrArr:
+    def tau_nl[T: FloatOrArr](self, H_n: T) -> T:
         r"""Timescale of nonlinearities $\tau_\text{nl}$
         $$\tau_\text{nl} = \frac{R_*}{\bar{U}_f}$
         :gw_pt_ssm:`\ ` p. 6
@@ -195,7 +197,7 @@ class Spectrum(ssm.SSMSpectrum):
         """
         return self.R_star(H_n) / self.bubble.ubarf
 
-    def z_from_f(self, f: th.FloatOrArr) -> th.FloatOrArr:
+    def z_from_f[T: FloatOrArr](self, f: T) -> T:
         r"""Convert from frequencies $f$ back to wavenumbers $z$
 
         $$z(f) = \frac{f}{{f}_{*,0} {r}_*$$
@@ -234,6 +236,10 @@ class Spectrum(ssm.SSMSpectrum):
         from pttools.analysis.plot_spectra import plot_spectra_multi_flat
         return plot_spectra_multi_flat([self], fig, path, **kwargs)
 
+
+type SpectrumArr = NDArray[Spectrum]
+type SpectrumArr2D = np.ndarray[tuple[int, int], np.dtype[Spectrum]]
+type SpectrumArr3D = np.ndarray[tuple[int, int, int], np.dtype[Spectrum]]
 
 copy_docstrings({
     Spectrum.f: freq.f,

@@ -9,6 +9,7 @@ from pttools.bubble import thermo
 from pttools.models.model import Model
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
+import pttools.type_hints as th
 from tests.utils.test_assertions import assert_allclose
 
 
@@ -17,12 +18,12 @@ class ThermoTest:
 
     MODEL: Model = BagModel(a_s=1.1, a_b=1, V_s=1)
 
-    ALPHA_NS: np.ndarray
-    V_WALLS: np.ndarray
+    ALPHA_NS: th.FloatArr1D
+    V_WALLS: th.FloatArr1D
 
-    KAPPA_REF: np.ndarray
-    OMEGA_REF: np.ndarray
-    BVA_KE_FRAC_REF: np.ndarray
+    KAPPA_REF: th.FloatArr1D
+    OMEGA_REF: th.FloatArr1D
+    BVA_KE_FRAC_REF: th.FloatArr2D
 
     bubbles: list[Bubble]
 

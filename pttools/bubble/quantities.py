@@ -20,23 +20,23 @@ from . import const
 from . import fluid_bag
 from . import relativity
 from . import transition
+from pttools.type_hints import FloatOrArr, FloatOrArr1D
 
-Integrand = tp.Union[
+type Integrand = \
     tp.Callable[
-        [np.ndarray, np.ndarray, np.ndarray],
-        np.ndarray
-    ],
+        [th.FloatArr1D, th.FloatArr1D, th.FloatArr1D],
+        th.FloatArr1D
+    ] | \
     tp.Callable[
         [float, float, float],
         float
     ]
-]
 
 logger = logging.getLogger(__name__)
 
 
 @numba.njit
-def de_from_w_bag(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> np.ndarray:
+def de_from_w_bag(w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float, alpha_n: float) -> th.FloatArr1D:
     r"""
     Calculates energy density difference ``de = e - e[-1]`` from enthalpy, assuming
     bag equation of state.
@@ -55,7 +55,12 @@ def de_from_w_bag(w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) 
 
 
 @numba.njit
-def de_from_w_new_bag(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> np.ndarray:
+def de_from_w_new_bag(
+        v: th.FloatArr1D,
+        w: th.FloatArr1D,
+        xi: th.FloatArr1D,
+        v_wall: float,
+        alpha_n: float) -> th.FloatArr1D:
     r"""
     For exploring new methods of calculating energy density difference
     from velocity and enthalpy, assuming bag equation of state.
@@ -78,11 +83,11 @@ def de_from_w_new_bag(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: floa
     return de
 
 
-def get_kappa_bag(
-        v_wall: th.FloatOrArr,
+def get_kappa_bag[T: FloatOrArr](
+        v_wall: T,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
-        verbosity: int = 0) -> th.FloatOrArr:
+        verbosity: int = 0) -> T:
     r"""
     Efficiency factor $\kappa$ from $v_\text{wall}$ and $\alpha_n$.
 
@@ -120,11 +125,11 @@ def get_kappa_bag(
     return kappa_out
 
 
-def get_kappa_de_bag(
-        v_wall: th.FloatOrArr,
+def get_kappa_de_bag[T: FloatOrArr](
+        v_wall: T,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
-        verbosity: int = 0) -> tp.Union[tuple[float, float], tuple[np.ndarray, np.ndarray]]:
+        verbosity: int = 0) -> tuple[T, T]:
     r"""
     Calculates efficiency factor $\kappa$ and fractional change in energy
     from $v_\text{wall}$ and $\alpha_n$. $v_\text{wall}$ can be an array.
@@ -166,11 +171,11 @@ def get_kappa_de_bag(
     return kappa_out, de_out
 
 
-def get_kappa_dq_bag(
-        v_wall: th.FloatOrArr,
+def get_kappa_dq_bag[T: FloatOrArr](
+        v_wall: T,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
-        verbosity: int = 0) -> tp.Union[tuple[float, float], tuple[np.ndarray, np.ndarray]]:
+        verbosity: int = 0) -> tuple[T, T]:
     r"""
     Calculates efficiency factor $\kappa$ and fractional change in thermal energy
     from $v_\text{wall}$ and $\alpha_n$.
@@ -214,11 +219,11 @@ def get_kappa_dq_bag(
     return kappa_out, dq_out
 
 
-def get_ke_de_frac_bag(
-        v_wall: th.FloatOrArr,
+def get_ke_de_frac_bag[T: FloatOrArr](
+        v_wall: T,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
-        verbosity: int = 0) -> tp.Union[tuple[float, float], tuple[np.ndarray, np.ndarray]]:
+        verbosity: int = 0) -> tuple[T, T]:
     r"""
     Kinetic energy fraction and fractional change in energy
     from wall velocity array. Sum should be 0. Assumes bag model.
@@ -259,7 +264,7 @@ def get_ke_de_frac_bag(
     return ke_out, de_out
 
 
-def get_ke_frac_bag(v_wall: th.FloatOrArr, alpha_n: float, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArr:
+def get_ke_frac_bag[T: FloatOrArr](v_wall: T, alpha_n: float, n_xi: int = const.N_XI_DEFAULT) -> T:
     r"""
     Determine kinetic energy fraction (of total energy).
     Bag equation of state only so far, as it takes
@@ -275,11 +280,11 @@ def get_ke_frac_bag(v_wall: th.FloatOrArr, alpha_n: float, n_xi: int = const.N_X
     return ubar2 / (0.75 * (1 + alpha_n))
 
 
-def get_ke_frac_new_bag(
-        v_wall: th.FloatOrArr,
+def get_ke_frac_new_bag[T: FloatOrArr](
+        v_wall: T,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
-        verbosity: int = 0) -> th.FloatOrArr:
+        verbosity: int = 0) -> T:
     r"""
     Determine kinetic energy fraction (of total energy).
     Bag equation of state only so far, as it takes
@@ -319,7 +324,7 @@ def get_ke_frac_new_bag(
     return ke_frac_out
 
 
-def _get_ubarf2_bag_scalar(v_wall: float, alpha_n: float, n_xi: int, verbosity: int) -> float:
+def _get_ubarf2_bag_scalar[T: FloatOrArr1D](v_wall: T, alpha_n: float, n_xi: int, verbosity: int) -> T:
     if transition.identify_solution_type_bag(v_wall, alpha_n) == boundary.SolutionType.ERROR:
         ubarf2 = np.nan
     else:
@@ -336,18 +341,18 @@ def _get_ubarf2_bag_scalar(v_wall: float, alpha_n: float, n_xi: int, verbosity: 
     return ubarf2
 
 
-def _get_ubarf2_bag_arr(v_wall: np.ndarray, alpha_n: float, n_xi: int, verbosity: int) -> np.ndarray:
+def _get_ubarf2_bag_arr[T: FloatOrArr1D](v_wall: T, alpha_n: float, n_xi: int, verbosity: int) -> T:
     ubarf2 = np.zeros_like(v_wall)
     for i in numba.prange(v_wall.size):
         ubarf2[i] = _get_ubarf2_bag_scalar(v_wall[i], alpha_n, n_xi, verbosity)
     return ubarf2
 
 
-def get_ubarf2_bag(
-        v_wall: th.FloatOrArr,
+def get_ubarf2_bag[T: FloatOrArr1D](
+        v_wall: T,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
-        verbosity: int = 0) -> th.FloatOrArrNumba:
+        verbosity: int = 0) -> T:
     r"""
     Get mean square fluid velocity from $v_\text{wall}$ and $\alpha_n$.
 
@@ -365,11 +370,11 @@ def get_ubarf2_bag(
 
 
 @overload(get_ubarf2_bag, jit_options={"nopython": True, "parallel": True})
-def _get_ubarf2_bag_numba(
-        v_wall: th.FloatOrArr,
+def _get_ubarf2_bag_numba[T: FloatOrArr1D](
+        v_wall: T,
         alpha_n: float,
         n_xi: int = const.N_XI_DEFAULT,
-        verbosity: int = 0) -> th.FloatOrArrNumba:
+        verbosity: int = 0) -> T:
     if isinstance(v_wall, numba.types.Float):
         return _get_ubarf2_bag_scalar
     if isinstance(v_wall, numba.types.Array):
@@ -421,7 +426,12 @@ def get_ubarf2_new_bag(
     return ubarf2_out
 
 
-def mean_energy_change_bag(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float, alpha_n: float) -> float:
+def mean_energy_change_bag(
+        v: th.FloatArr1D,
+        w: th.FloatArr1D,
+        xi: th.FloatArr1D,
+        v_wall: float,
+        alpha_n: float) -> float:
     r"""
     Bubble-averaged change in energy density in bubble relative to outside value.
 
@@ -441,7 +451,7 @@ def mean_energy_change_bag(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall:
     return integral / v_wall ** 3
 
 
-def mean_enthalpy_change(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
+def mean_enthalpy_change(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float) -> float:
     r"""
     Mean change in enthalpy in bubble relative to outside value.
 
@@ -461,7 +471,7 @@ def mean_enthalpy_change(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: f
 
 
 @numba.njit
-def mean_kinetic_energy(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
+def mean_kinetic_energy(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float) -> float:
     r"""
     Kinetic energy of fluid in bubble, averaged over bubble volume,
     from fluid shell functions.
@@ -479,9 +489,9 @@ def mean_kinetic_energy(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: fl
 
 def part_integrate(
         func: Integrand,
-        v: np.ndarray,
-        w: np.ndarray,
-        xi: np.ndarray,
+        v: th.FloatArr1D,
+        w: th.FloatArr1D,
+        xi: th.FloatArr1D,
         where_in: th.IntOrArr) -> float:
     r"""
     Integrate a function func of arrays $v, w, \xi$ over index selection where_in.
@@ -501,9 +511,9 @@ def part_integrate(
 
 def split_integrate(
         func: Integrand,
-        v: np.ndarray,
-        w: np.ndarray,
-        xi: np.ndarray,
+        v: th.FloatArr1D,
+        w: th.FloatArr1D,
+        xi: th.FloatArr1D,
         v_wall: float) -> tuple[float, float]:
     r"""
     Split an integration of a function func of arrays $v, w, \xi$
@@ -528,7 +538,7 @@ def split_integrate(
 
 
 @numba.njit
-def ubarf_squared(v: np.ndarray, w: np.ndarray, xi: np.ndarray, v_wall: float) -> float:
+def ubarf_squared(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float) -> float:
     r"""
     Enthalpy-weighted mean square space components of 4-velocity of fluid in bubble,
     from fluid shell functions.

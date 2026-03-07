@@ -75,7 +75,7 @@ def nu(T: th.FloatOrArr, nuc_type: NucType = NucType.SIMULTANEOUS, a: float = 1.
     raise ValueError("Nucleation type not recognized")
 
 
-def H(T: th.FloatOrArr, G: float = const.G) -> th.FloatOrArr:
+def H(T: th.FloatOrArr, G: th.FloatOrArr = const.G) -> th.FloatOrArr:
     r"""Hubble parameter $H(T)$
     $$H(T) = \sqrt{G} T^2$$
     :notes:`\ ` p. 47

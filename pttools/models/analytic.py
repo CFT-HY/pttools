@@ -11,6 +11,7 @@ from pttools.bubble.boundary import SolutionType
 from pttools.models.model import Model
 from pttools.utils.validation import check_value_in_range
 from pttools.utils.misc import is_nan_or_none
+from pttools.type_hints import FloatOrArr
 
 logger = logging.getLogger(__name__)
 
@@ -94,16 +95,16 @@ class AnalyticModel(Model, abc.ABC):
             )
 
     @staticmethod
-    def a_from_g(g: th.FloatOrArr) -> th.FloatOrArr:
+    def a_from_g[T: FloatOrArr](g: T) -> T:
         """Get the prefactor $a$ from the relativistic degrees of freedom $g$."""
         return np.pi**2 / 90 * g
 
-    def alpha_n_bag(
+    def alpha_n_bag[T: FloatOrArr](
             self,
-            wn: th.FloatOrArr,
+            wn: T,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True) -> T:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
         $$\alpha_n = \frac{4}{3w_n}(V_s - V_b)$$
 
@@ -125,15 +126,15 @@ class AnalyticModel(Model, abc.ABC):
         # self.check_p(wn, allow_fail=allow_no_transition)
         return self.bag_wn_const / wn
 
-    def alpha_plus_bag(
+    def alpha_plus_bag[T: FloatOrArr](
             self,
-            wp: th.FloatOrArr,
+            wp: T,
             wm: th.FloatOrArr,
             vp_tilde: float | None = None,
             sol_type: SolutionType | None = None,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True) -> T:
         r"""Transition strength parameter $\alpha_+$, :notes:`\ `, eq. 7.25.
         $$\alpha_+ = \frac{4}{3w_+}(V_s - V_b)$$
 
@@ -167,14 +168,20 @@ class AnalyticModel(Model, abc.ABC):
         }
 
     @staticmethod
-    def g_from_a(a: th.FloatOrArr) -> th.FloatOrArr:
+    def g_from_a[T: FloatOrArr](a: T) -> T:
         return 90 / np.pi**2 * a
 
     def ge_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         return 30/np.pi**2 * self.e_temp(temp, phase) / temp**4
 
     @classmethod
-    def get_a_g(cls, a_s: float, a_b: float, g_s: float, g_b: float, default_mult: float = DEFAULT_A_G_MULT):
+    def get_a_g(
+            cls,
+            a_s: float,
+            a_b: float,
+            g_s: float,
+            g_b: float,
+            default_mult: float = DEFAULT_A_G_MULT) -> tuple[float, float, float, float]:
         a_s_none = is_nan_or_none(a_s)
         a_b_none = is_nan_or_none(a_b)
         g_s_none = is_nan_or_none(g_s)
@@ -204,8 +211,13 @@ class AnalyticModel(Model, abc.ABC):
 
     def alpha_n_min_find_params_a_g(
             self,
-            a_s: float, a_b: float, g_s: float, g_b: float,
-            alpha_n_min_target: float, V_s_default: float, V_b: float,
+            a_s: float,
+            a_b: float,
+            g_s: float,
+            g_b: float,
+            alpha_n_min_target: float,
+            V_s_default: float,
+            V_b: float,
             default_mult: float = DEFAULT_A_G_MULT,
             safety_factor_alpha = Model.ALPHA_N_MIN_FIND_SAFETY_FACTOR_ALPHA):
         a_s, a_b, _, _ = self.get_a_g(a_s, a_b, g_s, g_b, default_mult=default_mult)
@@ -214,8 +226,8 @@ class AnalyticModel(Model, abc.ABC):
             safety_factor_alpha=safety_factor_alpha
         )
 
-    def gs_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr):
+    def gs_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         return 45/(2*np.pi**2) * self.s_temp(temp, phase) / temp**4
 
-    def gp_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr):
+    def gp_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         return 90/np.pi**2 * self.p_temp(temp, phase) / temp**4

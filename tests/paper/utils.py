@@ -5,6 +5,8 @@ import logging
 
 import numpy as np
 
+import pttools.type_hints as th
+
 logger = logging.getLogger(__name__)
 
 
@@ -29,8 +31,8 @@ class Strength(str, enum.Enum):
     WEAK = "weak"
 
 
-def get_ymax_location(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+def get_ymax_location(x: th.FloatArr1D, y: th.FloatArr1D) -> th.FloatArr1D:
     """Returns x, y coordinates of maximum of array y"""
-    ymax = max(y)
+    ymax = np.max(y)
     xmax = x[np.where(y == ymax)][0]
     return np.array([xmax, ymax])

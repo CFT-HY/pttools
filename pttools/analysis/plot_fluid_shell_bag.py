@@ -1,12 +1,11 @@
 r"""Plot $v(\xi)$ and $w(\xi)$ for a fluid shell using the bag model"""
 
-import typing as tp
-
 import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.analysis import utils
 from pttools.bubble import boundary, const, fluid_bag, relativity
+import pttools.type_hints as th
 
 
 def plot_fluid_shell_bag(
@@ -17,7 +16,7 @@ def plot_fluid_shell_bag(
         low_v_approx: bool = False,
         high_v_approx: bool = False,
         draw: bool | None = None) \
-        -> tuple[plt.Figure, dict[str, tp.Union[np.ndarray, float]]]:
+        -> tuple[plt.Figure, dict[str, th.FloatOrArr1D]]:
     r"""
     Calls :func:`pttools.bubble.fluid.fluid_shell` and plots resulting $v, w$ against $\xi$.
     Also plots:

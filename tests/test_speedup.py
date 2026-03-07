@@ -11,13 +11,18 @@ import scipy.interpolate
 from pttools import speedup
 from pttools.speedup import spline
 from pttools.speedup.parallel import parallel_debug_message
-from . import utils
+import pttools.type_hints as th
+from tests import utils
 
 os.makedirs(utils.TEST_FIGURE_PATH, exist_ok=True)
 
 
 @numba.njit
-def jitted_spline(x: np.ndarray, tck: tuple[np.ndarray, np.ndarray, int], der: int = 0, ext: int = 0):
+def jitted_spline(
+        x: th.FloatArr1D,
+        tck: tuple[th.FloatArr1D, th.FloatArr1D, int],
+        der: int = 0,
+        ext: int = 0) -> th.FloatArr1D:
     """JIT-compiled version of splev, which uses the Numba overload defined in the speedup module"""
     return scipy.interpolate.splev(x, tck, der, ext)
 

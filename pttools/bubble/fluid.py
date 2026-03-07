@@ -22,6 +22,8 @@ from . import relativity
 from . import shock
 from . import transition
 from . import trim
+from pttools.speedup import NAN_ARR
+import pttools.type_hints as th
 if tp.TYPE_CHECKING:
     from pttools.models import Model
 
@@ -31,17 +33,22 @@ logger = logging.getLogger(__name__)
 # v, w, xi
 # vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh
 # solution_found
-SolverOutput = tuple[
-    np.ndarray, np.ndarray, np.ndarray,
+type GenericSolverOutput = tuple[
+    th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, SolutionType,
+    float, float, float, float, float, float, float, float, float, float,
+    float, bool, float
+]
+type SolverOutput = tuple[
+    th.FloatArr1D, th.FloatArr1D, th.FloatArr1D,
     float, float, float, float, float, float, float, float, float, float,
     bool
 ]
-DeflagrationOutput = tuple[
-    np.ndarray, np.ndarray, np.ndarray,
+type DeflagrationOutput = tuple[
+    th.FloatArr1D, th.FloatArr1D, th.FloatArr1D,
     float, float, float, float, float, float, float, float, float, float
 ]
 DEFLAGRATION_NAN: DeflagrationOutput = \
-    const.nan_arr, const.nan_arr, const.nan_arr, \
+    NAN_ARR, NAN_ARR, NAN_ARR, \
     np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 
 
@@ -571,7 +578,7 @@ def sound_shell_hybrid(
 # Solvables
 
 def sound_shell_solvable_deflagration_reverse(
-        params: np.ndarray, model: "Model", v_wall: float, wn: float, t_end: float, n_xi: int) -> float:
+        params: th.FloatArr1D, model: "Model", v_wall: float, wn: float, t_end: float, n_xi: int) -> float:
     xi_sh = params[0]
     # pylint: disable=unused-variable
     v, w, xi, vm, wm = sound_shell_deflagration_reverse(
@@ -580,7 +587,7 @@ def sound_shell_solvable_deflagration_reverse(
 
 
 def sound_shell_solvable_deflagration(
-        # params: np.ndarray,
+        # params: th.FloatArr1D,
         w_center: float, model: "Model", v_wall: float, wn: float, cs_n: float, v_cj: float,
         vp_guess: float, wp_guess: float, t_end: float, n_xi: int, thin_shell_limit: int) -> float:
     if isinstance(w_center, np.ndarray):
@@ -599,7 +606,7 @@ def sound_shell_solvable_deflagration(
 
 
 def sound_shell_solvable_hybrid(
-        # params: np.ndarray,
+        # params: th.FloatArr1D,
         wm: float, model: "Model", v_wall: float, wn: float, cs_n: float, v_cj: float,
         vp_tilde_guess: float, wp_guess: float, t_end: float, n_xi: int, thin_shell_limit: int) -> float:
     if isinstance(wm, np.ndarray):
@@ -894,9 +901,7 @@ def sound_shell_generic(
             use_giese_solver: bool = False,
             log_success: bool = True,
             log_high_alpha_n_failures: bool = False
-        ) -> tuple[
-            np.ndarray, np.ndarray, np.ndarray, SolutionType,
-            float, float, float, float, float, float, float, float, float, float, float, bool, float]:
+        ) -> GenericSolverOutput:
     """Generic fluid shell solver
 
     In most cases you should not have to call this directly. Create a Bubble instead.
@@ -1102,9 +1107,7 @@ def sound_shell_giese(
             wn: float | None = None,
             wn_guess: float | None = None,
             wm_guess: float | None = None,
-        ) -> tuple[
-            np.ndarray, np.ndarray, np.ndarray, SolutionType,
-            float, float, float, float, float, float, float, float, float, float, float, bool, float]:
+        ) -> GenericSolverOutput:
     r"""Fluid shell solver based on :giese_2021:`\ `"""
     start_time = time.perf_counter()
 
@@ -1133,7 +1136,7 @@ def sound_shell_giese(
         sol_type = SolutionType.DETON
     else:
         raise ValueError("Got invalid mode from Giese solver:", mode)
-    w: np.ndarray = wow * wn
+    w = wow * wn
 
     # Velocities in the wall frame
     vp_tilde: float = relativity.lorentz(xi=v_wall, v=vp)

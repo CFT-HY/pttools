@@ -1,11 +1,11 @@
 """Printing utilities for testing"""
 
 import decimal
-import typing as tp
 
 import colorama
 import numpy as np
 
+import pttools.type_hints as th
 from . import math as test_math
 
 DEFAULT_FMT = ".8e"
@@ -14,7 +14,7 @@ HIGH_PREC = 10
 colorama.init()
 
 
-def row_to_str(row: np.ndarray, close: np.ndarray, fmt: str = DEFAULT_FMT) -> str:
+def row_to_str(row: th.FloatArr1D, close: th.BoolArr1D, fmt: str = DEFAULT_FMT) -> str:
     """Convert an array row to string with color"""
     lst = [
         f"{'' if ok else colorama.Fore.RED}{act:{fmt}}{''if ok else colorama.Fore.RESET}"
@@ -23,7 +23,10 @@ def row_to_str(row: np.ndarray, close: np.ndarray, fmt: str = DEFAULT_FMT) -> st
     return f"[{', '.join(lst)}]"
 
 
-def pairs_to_rows(actual: np.ndarray, desired: np.ndarray, close: np.ndarray, fmt: str = DEFAULT_FMT) -> list[str]:
+def pairs_to_rows(
+        actual: th.FloatArr1D,
+        desired: th.FloatArr1D,
+        close: th.BoolArr1D, fmt: str = DEFAULT_FMT) -> list[str]:
     """Convert pairs of actual and desired values to string rows with color"""
     return [
         f"{'' if ok else colorama.Fore.RED}"
@@ -33,7 +36,7 @@ def pairs_to_rows(actual: np.ndarray, desired: np.ndarray, close: np.ndarray, fm
     ]
 
 
-def print_1d_small(actual: np.ndarray, desired: np.ndarray, close: np.ndarray, fmt: str = DEFAULT_FMT):
+def print_1d_small(actual: th.FloatArr1D, desired: th.FloatArr1D, close: th.BoolArr1D, fmt: str = DEFAULT_FMT) -> None:
     """Print a small 1D array"""
     print("actual:")
     print(row_to_str(actual, close, fmt))
@@ -45,13 +48,13 @@ def print_1d_small(actual: np.ndarray, desired: np.ndarray, close: np.ndarray, f
     print(row_to_str(actual - desired, close, fmt))
 
 
-def print_1d_large(actual: np.ndarray, desired: np.ndarray, close: np.ndarray, fmt: str = DEFAULT_FMT):
+def print_1d_large(actual: th.FloatArr1D, desired: th.FloatArr1D, close: th.BoolArr1D, fmt: str = DEFAULT_FMT) -> None:
     """Print a large 1D array"""
     print("actual          desired         rdiff           adiff")
     print("\n".join(pairs_to_rows(actual, desired, close, fmt)))
 
 
-def print_1d(actual: np.ndarray, desired: np.ndarray, close: np.ndarray):
+def print_1d(actual: th.FloatArr1D, desired: th.FloatArr1D, close: th.BoolArr1D) -> None:
     """Print a 1D array"""
     if actual.size < 10:
         print_1d_small(actual, desired, close)
@@ -59,13 +62,13 @@ def print_1d(actual: np.ndarray, desired: np.ndarray, close: np.ndarray):
         print_1d_large(actual, desired, close)
 
 
-def print_2d(arr: np.ndarray, close: np.ndarray, fmt: str = DEFAULT_FMT):
+def print_2d(arr: th.FloatArr2D, close: th.BoolArr2D, fmt: str = DEFAULT_FMT) -> None:
     """Print a 2D array"""
     rows = "\n ".join([row_to_str(row, ok, fmt) for row, ok in zip(arr, close)])
     print(f"[{rows}]")
 
 
-def print_full_prec(x: float):
+def print_full_prec(x: float) -> None:
     """Print a float with full precision"""
     print(decimal.Decimal(x))
 
@@ -75,7 +78,7 @@ def high_prec_float_str(x: float) -> str:
     return f"{x:.{HIGH_PREC}g}"
 
 
-def print_high_prec(x: tp.Union[float, np.ndarray]):
+def print_high_prec(x: th.FloatOrArr) -> None:
     """Print a value or an array with high precision"""
     if isinstance(x, np.ndarray):
         if x.ndim == 1:

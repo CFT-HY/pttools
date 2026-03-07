@@ -11,6 +11,8 @@ import typing as tp
 import numpy as np
 from scipy.integrate import odeint, simpson
 
+import pttools.type_hints as th
+
 logger = logging.getLogger(__name__)
 
 
@@ -49,7 +51,7 @@ def getvm(al: float, vw: float, cs2b: float) -> tp.Tuple[float, int]:
     return (cc + np.sqrt(disc))/2.*cs2b/vw, 2
 
 
-def dfdv(xiw: tp.Union[tp.Tuple[float, float], np.ndarray], v: float, cs2: float) -> tp.Tuple[float, float]:
+def dfdv(xiw: tuple[float, float] | th.FloatArr1D, v: float, cs2: float) -> tp.Tuple[float, float]:
     """The differential equation that is solved in the shock/rarefaction wave
 
     Rarefaction = the opposite of compression
@@ -61,7 +63,7 @@ def dfdv(xiw: tp.Union[tp.Tuple[float, float], np.ndarray], v: float, cs2: float
     return dxidv, dwdv
 
 
-def getKandWow(vw: float, v0: float, cs2: float) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray, float, float]:
+def getKandWow(vw: float, v0: float, cs2: float) -> tp.Tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, float, float]:
     """
     Returns two values
     - Enthalpy-weighted kinetic energy in the shock/rarefaction wave
@@ -120,8 +122,10 @@ def getalNwow(vp, vm, vw, cs2b, cs2s):
 
 
 def kappaNuMuModel(
-        cs2b: float, cs2s: float,
-        al: float, vw: float) -> tp.Tuple[float, np.ndarray, np.ndarray, np.ndarray, int, float, float]:
+        cs2b: float,
+        cs2s: float,
+        al: float,
+        vw: float) -> tp.Tuple[float, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, int, float, float]:
     r"""Calculate the efficiency factor $\kappa$.
     This uses the other functions.
 

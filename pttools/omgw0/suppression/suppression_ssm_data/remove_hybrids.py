@@ -19,7 +19,7 @@ def remove_hybrids(path: str = DEFAULT_PATH, suffix: str = "") -> str:
     The order of entries in txt file should be:
     vw alph suppress sim_omgw exp_omgw exp_ubarf
     """
-    sim_data: np.ndarray = np.loadtxt(path, skiprows=1)
+    sim_data = np.loadtxt(path, skiprows=1)
 
     vw_no_hybrid = []
     al_no_hybrid = []

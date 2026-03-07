@@ -10,10 +10,11 @@ from pttools import models
 from pttools.analysis.parallel import create_bubbles
 from pttools.bubble.bubble import Bubble
 from pttools.speedup import IS_OSX
+import pttools.type_hints as th
 from tests.utils import assert_allclose
 
 
-def assert_kappa(css2: float, csb2: float, kappa_ref: np.ndarray, rtol: float = 1e-7, atol: float = 0):
+def assert_kappa(css2: float, csb2: float, kappa_ref: th.FloatArr1D, rtol: float = 1e-7, atol: float = 0):
     r"""Compare kappa results to those of figure 2 of :giese_2021:`\ `"""
     alpha_thetabar_ns = np.array([0.01, 0.1, 0.3])
     v_walls = np.linspace(0.2, 0.9, 8, endpoint=True)
@@ -27,9 +28,10 @@ def assert_kappa(css2: float, csb2: float, kappa_ref: np.ndarray, rtol: float = 
 
 def compare(
         model: models.Model,
-        alpha_ns: tp.Union[np.ndarray, list[float]],
-        v_walls: tp.Union[np.ndarray, list[float]],
-        ref: tp.Union[np.ndarray, list[float]], rtol: float):
+        alpha_ns: th.FloatArr1DOrList,
+        v_walls: th.FloatArr1DOrList,
+        ref: th.FloatArr1DOrList,
+        rtol: float) -> None:
     data = np.zeros_like(v_walls)
     for i, (alpha_n, v_wall) in enumerate(zip(alpha_ns, v_walls)):
         bubble = Bubble(model=model, v_wall=v_wall, alpha_n=alpha_n)

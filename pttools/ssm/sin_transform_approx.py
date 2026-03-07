@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 @numba.njit
-def envelope(xi: np.ndarray, f: np.ndarray, v_wall: float | None = None, v_sh: float | None = None) -> np.ndarray:
+def envelope(xi: th.FloatArr1D, f: th.FloatArr1D, v_wall: float | None = None, v_sh: float | None = None) -> th.FloatArr1D:
     r"""
     Helper function for :func:`sin_transform_approx`.
     Assumes that
@@ -83,10 +83,10 @@ def envelope(xi: np.ndarray, f: np.ndarray, v_wall: float | None = None, v_sh: f
 @numba.njit
 def sin_transform_approx(
         z: th.FloatOrArr,
-        xi: np.ndarray,
-        f: np.ndarray,
+        xi: th.FloatArr1D,
+        f: th.FloatArr1D,
         v_wall: float | None = None,
-        v_sh: float | None = None) -> np.ndarray:
+        v_sh: float | None = None) -> th.FloatArr1D:
     r"""
     Approximate sin transform of $f(\xi)$.
     For values $f_a$ and $f_b$, we have

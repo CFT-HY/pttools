@@ -3,7 +3,6 @@
 import logging
 
 import numba
-import numpy as np
 
 import pttools.type_hints as th
 from . import bag
@@ -17,14 +16,14 @@ logger = logging.getLogger(__name__)
 
 @numba.njit
 def trim_fluid_wall_to_cs(
-        v: np.ndarray,
-        w: np.ndarray,
-        xi: np.ndarray,
-        t: np.ndarray,
+        v: th.FloatArr1D,
+        w: th.FloatArr1D,
+        xi: th.FloatArr1D,
+        t: th.FloatArr1D,
         v_wall: th.FloatOrArr,
         sol_type: SolutionType,
         dxi_lim: float = const.DXI_SMALL,
-        cs2_fun: th.CS2Fun = bag.cs2_bag) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        cs2_fun: th.CS2Fun = bag.cs2_bag_scalar) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
     Picks out fluid variable arrays $(v, w, \xi, t)$ which are definitely behind
     the wall for detonation and hybrid.
@@ -82,11 +81,11 @@ def trim_fluid_wall_to_cs(
 
 @numba.njit
 def trim_fluid_wall_to_shock(
-        v: np.ndarray,
-        w: np.ndarray,
-        xi: np.ndarray,
-        t: np.ndarray,
-        sol_type: SolutionType) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        v: th.FloatArr1D,
+        w: th.FloatArr1D,
+        xi: th.FloatArr1D,
+        t: th.FloatArr1D,
+        sol_type: SolutionType) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
     Trims fluid variable arrays $(v, w, \xi)$ so last element is just ahead of shock.
 

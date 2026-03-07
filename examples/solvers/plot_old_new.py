@@ -18,11 +18,12 @@ from pttools.bubble import relativity
 from pttools.models.model import Model
 from pttools.models.bag import BagModel
 from pttools.ssm import SSMSpectrum, power_gw_scaled_bag, spec_den_v_bag, power_v_bag
+import pttools.type_hints as th
 from tests.paper.plane import xiv_plane
 from tests.paper.plot_plane_paper import plot_plane
 
 
-def validate(model: Model, v: np.ndarray, w: np.ndarray, xi: np.ndarray, sol_type: SolutionType):
+def validate(model: Model, v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, sol_type: SolutionType):
     """Validate a bubble"""
     if sol_type == SolutionType.SUB_DEF:
         validate_def(model, v, w, xi, sol_type)
@@ -33,7 +34,7 @@ def validate(model: Model, v: np.ndarray, w: np.ndarray, xi: np.ndarray, sol_typ
         validate_shock(model, v, w, xi, sol_type)
 
 
-def validate_def(model: Model, v: np.ndarray, w: np.ndarray, xi: np.ndarray, sol_type: SolutionType):
+def validate_def(model: Model, v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, sol_type: SolutionType):
     """Validate that a deflagration has been solved correctly"""
     i_wall = np.argmax(v)
     v_wall = xi[i_wall]
@@ -46,7 +47,7 @@ def validate_def(model: Model, v: np.ndarray, w: np.ndarray, xi: np.ndarray, sol
     validate2(model, v1p, v2p, v1w, v2w, w1, w2, Phase.BROKEN, Phase.SYMMETRIC, sol_type)
 
 
-def validate_shock(model: Model, v: np.ndarray, w: np.ndarray, xi: np.ndarray, sol_type: SolutionType):
+def validate_shock(model: Model, v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, sol_type: SolutionType):
     """Validate that a shock has been solved correctly"""
     v_wall = xi[-2]
     v1p = v[-3]

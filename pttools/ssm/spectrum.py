@@ -9,13 +9,13 @@ import numba
 import numpy as np
 
 import pttools.type_hints as th
-from pttools.type_hints import FloatArr
 from pttools.bubble import Bubble, Phase
 from pttools.ssm import const
 from pttools.ssm.nucleation import NucType, DEFAULT_NUC_TYPE, beta, beta_over_H
 from pttools.ssm.spec_den_gw import gen_lookup, spec_den_gw_scaled
 from pttools.ssm.spec_den_v import spec_den_v as spec_den_v_func
 from pttools.ssm.low_k import power_spectrum_integration_low, power_spectrum_integration_int, pow_gw_junction
+from pttools.type_hints import FloatArr
 from pttools.utils import copy_docstrings
 
 if tp.TYPE_CHECKING:

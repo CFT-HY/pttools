@@ -5,15 +5,15 @@ from numba.extending import overload
 import numba.types
 import numpy as np
 
-import pttools.type_hints as th
 from pttools.ssm import const
 from pttools.ssm.sin_transform_approx import sin_transform_approx
+import pttools.type_hints as th
 
 
 def _sin_transform_scalar(
         z: th.FloatOrArr,
-        xi: np.ndarray,
-        f: np.ndarray,
+        xi: th.FloatArr1D,
+        f: th.FloatArr1D,
         z_st_thresh: float = const.Z_ST_THRESH,
         v_wall: float | None = None,
         v_sh: float | None = None,
@@ -28,8 +28,8 @@ def _sin_transform_scalar(
 
 def _sin_transform_arr(
         z: th.FloatOrArr,
-        xi: np.ndarray,
-        f: np.ndarray,
+        xi: th.FloatArr1D,
+        f: th.FloatArr1D,
         z_st_thresh: float = const.Z_ST_THRESH,
         v_wall: float | None = None,
         v_sh: float | None = None,
@@ -40,7 +40,7 @@ def _sin_transform_arr(
     # This computation is O(len(z_lo) * len(xi)) = O(n^2)
     # array_lo = f * np.sin(np.outer(z_lo, xi))
     # For each z, integrate f * sin(z*xi) over xi
-    # integral: np.ndarray = np.trapezoid(array_lo, xi)
+    # integral = np.trapezoid(array_lo, xi)
     integral = sin_transform_core(xi, f, z_lo) if parallel else sin_transform_core_single(xi, f, z_lo)
 
     if len(lo) < len(z):
@@ -71,8 +71,8 @@ def _sin_transform_arr(
 
 def sin_transform(
         z: th.FloatOrArr,
-        xi: np.ndarray,
-        f: np.ndarray,
+        xi: th.FloatArr1D,
+        f: th.FloatArr1D,
         z_st_thresh: float = const.Z_ST_THRESH,
         v_wall: float | None = None,
         v_sh: float | None = None,
@@ -105,8 +105,8 @@ def sin_transform(
 @overload(sin_transform, jit_options={"parallel": True, "nogil": True})
 def _sin_transform_numba(
         z: th.FloatOrArr,
-        xi: np.ndarray,
-        f: np.ndarray,
+        xi: th.FloatArr1D,
+        f: th.FloatArr1D,
         z_st_thresh: float = const.Z_ST_THRESH,
         v_wall: float | None = None,
         v_sh: float | None = None,
@@ -118,7 +118,7 @@ def _sin_transform_numba(
     raise NotImplementedError
 
 
-def _sin_transform_core(t: np.ndarray, f: np.ndarray, freq: np.ndarray) -> np.ndarray:
+def _sin_transform_core(t: th.FloatArr1D, f: th.FloatArr1D, freq: th.FloatArr1D) -> th.FloatArr1D:
     r"""
     The `sine transform <https://en.wikipedia.org/wiki/Sine_and_cosine_transforms>`_
     for multiple values of $\omega$ without any approximations.

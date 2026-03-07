@@ -17,12 +17,18 @@ def f(z: th.FloatOrArr, r_star: th.FloatOrArr, f_star0: th.FloatOrArr) -> th.Flo
     return z / r_star * f_star0
 
 
-def f0(r_star: th.FloatOrArr, T_star: th.FloatOrArr = const.T_STAR_DEFAULT, g_star: th.FloatOrArr = 100) -> th.FloatOrArr:
+def f0(
+        r_star: th.FloatOrArr,
+        T_star: th.FloatOrArr = const.T_STAR_DEFAULT,
+        g_star: th.FloatOrArr = 100) -> th.FloatOrArr:
     r"""Factor required to take into account the redshift of the frequency scale"""
     return f_star0(T_star, g_star) / r_star
 
 
-def f_star0(T_star: th.FloatOrArr, g_star: th.FloatOrArr = 100, f_star0_ref: float = const.F_STAR0_REF) -> th.FloatOrArr:
+def f_star0(
+        T_star: th.FloatOrArr,
+        g_star: th.FloatOrArr = 100,
+        f_star0_ref: float = const.F_STAR0_REF) -> th.FloatOrArr:
     r"""
     Conversion factor $f_{*,0}$ between the frequencies at the time of the GW formation and frequencies today.
     $$f_{*,0} = f_{*,0,\text{ref}

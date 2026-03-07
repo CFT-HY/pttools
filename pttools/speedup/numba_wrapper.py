@@ -25,6 +25,8 @@ except ImportError:
 import numpy as np
 
 from pttools.speedup import options
+import pttools.type_hints as th
+
 OLD_NUMBALSODA = False
 if options.NUMBA_DISABLE_JIT:
     # As of 0.3.3 NumbaLSODA can't be imported when Numba is disabled
@@ -65,7 +67,7 @@ else:
 logger = logging.getLogger(__name__)
 
 #: Numba version number
-#: (The value shown in the documentation is the version the documentation has been built with.)
+#: (The value shown in the PTtools documentation is the version the documentation has been built with.)
 NUMBA_VERSION = tuple(int(val) for val in numba.__version__.split("."))
 #: Whether the Numba version used is prone to segfaulting when profiled.
 #: https://github.com/numba/numba/issues/3229
@@ -94,5 +96,6 @@ elif OLD_NUMBALSODA:
         "Please upgrade, as compatibility may break without notice.")
 
 # For the cases where Numba does not understand a None as a default value
-NAN_ARR: tp.Final[np.ndarray] = np.array([np.nan], dtype=np.float64)
+NAN_ARR: tp.Final[th.FloatArr1D] = np.array([np.nan], dtype=np.float64)
 NAN_ARR.flags.writeable = False
+# nan_arr.setflags(write=False)

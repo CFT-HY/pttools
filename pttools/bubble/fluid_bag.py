@@ -10,8 +10,8 @@ import typing as tp
 import numba
 import numpy as np
 
-import pttools.type_hints as th
 from pttools import speedup
+import pttools.type_hints as th
 from . import alpha
 from . import approx
 from . import bag
@@ -40,11 +40,7 @@ def sound_shell_bag(
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR,
         # Implementing optional extra output did not work due to Numba typing constraints
         # extra_output: bool = False
-        ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-        # -> tp.Union[
-        #     tuple[np.ndarray, np.ndarray, np.ndarray],
-        #     tuple[np.ndarray, np.ndarray, np.ndarray, SolutionType, float, float, float, float, float]
-        # ]:
+        ) -> th.VWXi:
     r"""
     Finds fluid shell $(v, w, \xi)$ from a given $v_\text{wall}, \alpha_n$, which must be scalars.
 
@@ -97,11 +93,7 @@ def sound_shell_alpha_plus_bag(
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR,
         sol_type_fun: tp.Callable | None = None,
         # extra_output: bool = False
-        ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-            # tp.Union[
-                # tuple[np.ndarray, np.ndarray, np.ndarray]:
-                # tuple[np.ndarray, np.ndarray, np.ndarray, float, float, float, float]
-            # ]:
+        ) -> th.VWXi:
     r"""
     Finds the fluid shell profile (v, w, xi) from a given $v_\text{wall}, \alpha_+$ (at-wall strength parameter).
     When $v=0$ (behind and ahead of shell), this uses only two points.
@@ -235,7 +227,7 @@ def sound_shell_dict(
         alpha_n: float,
         Np: int = const.N_XI_DEFAULT,
         low_v_approx: bool = False,
-        high_v_approx: bool = False):
+        high_v_approx: bool = False) -> dict[str, float | int | SolutionType | th.FloatArr1D]:
     if low_v_approx and high_v_approx:
         raise ValueError("Both low and high v approximations can't be enabled at the same time.")
 

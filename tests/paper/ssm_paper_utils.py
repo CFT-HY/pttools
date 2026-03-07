@@ -18,6 +18,7 @@ from scipy.optimize import curve_fit
 
 from pttools import bubble
 from pttools import ssm
+import pttools.type_hints as th
 from tests.paper import const
 from tests.paper import plotting
 from tests.paper import utils
@@ -111,21 +112,21 @@ def ssm_fitfun(z, A, z0, z1):
     return double_broken_power_law(z, A, z0, z1, 9, 1, -4)
 
 
-def get_cwg_fit_pars(y: np.ndarray, pow_gw: np.ndarray):
+def get_cwg_fit_pars(y: th.FloatArr1D, pow_gw: th.FloatArr1D):
     frange = np.where(y > 10)
     pars0 = (pow_gw[frange][0], 10)
     pars, _ = curve_fit(cwg_fitfun, y[frange], pow_gw[frange], pars0)
     return pars[0], pars[1]
 
 
-def get_ssm_fit_pars(y: np.ndarray, pow_gw: np.ndarray):
+def get_ssm_fit_pars(y: th.FloatArr1D, pow_gw: th.FloatArr1D):
     frange = np.where(y > 1e-8)
     pars0 = (pow_gw[frange][0], 3, 20)
     pars, _ = curve_fit(ssm_fitfun, y[frange], pow_gw[frange], pars0, sigma=np.sqrt(pow_gw[frange]))
     return pars
 
 
-def add_cwg_fit(f_gw: plt.Figure, y: np.ndarray, pow_gw: np.ndarray):
+def add_cwg_fit(f_gw: plt.Figure, y: th.FloatArr1D, pow_gw: th.FloatArr1D):
     p = get_cwg_fit_pars(y, pow_gw)
     pow_gw_sim_cwg = cwg_fitfun(y, p[0], p[1])
     f_gw.axes[0].loglog(y, pow_gw_sim_cwg, 'k-.', label='CWG fit')
@@ -142,8 +143,8 @@ def add_ssm_fit(f_gw: plt.Figure, y, pow_gw):
 
 
 def make_1dh_compare_table(
-        params_list: np.ndarray,
-        v2_list: np.ndarray,
+        params_list: th.FloatArr2D,
+        v2_list: th.FloatArr2D,
         file_name: tp.Union[str, io.TextIOBase] = 'table_1dh_compare.tex') -> None:
     f = file_name if isinstance(file_name, io.TextIOBase) else open(file_name, "w")
     f.write('\\begin{tabular}{cc | rrr }\n')
@@ -387,7 +388,7 @@ def ps_from_ssm(
         alpha: float,
         nuc_type: ssm.NucType = ssm.NucType.SIMULTANEOUS,
         nuc_args: bubble.NucArgs = (1.,),
-        Np: np.ndarray = const.NP_ARR[-1],
+        Np: th.IntArr1D = const.NP_ARR[-1],
         method: ssm.Method = ssm.Method.E_CONSERVING):
     """Get velocity and GW power spectra from SSM"""
 
@@ -507,8 +508,8 @@ def plot_ps_1bubble(
         alpha: float,
         save_id: str | None = None,
         graph_file_type: str | None = None,
-        Np=const.NP_ARR[-1],
-        debug: bool = False) -> tp.Union[plt.Figure, tuple[plt.Figure, np.ndarray]]:
+        Np: th.IntArr1D = const.NP_ARR[-1],
+        debug: bool = False) -> tp.Union[plt.Figure, tuple[plt.Figure, th.FloatArr2D]]:
     # Sphinx considers vertical lines as substitution references. Therefore the command \mid has to be used instead.
     r"""
     Plots power spectra predictions of 1 bubble. Shown are
@@ -887,9 +888,9 @@ def do_all_plot_ps_compare_nuc(save_id: str | None = None, graph_file_type: str 
 def do_all_plot_ps_1bubble(
         save_id: str | None = None,
         graph_file_type: str | None = None,
-        debug: bool = False) -> tp.Union[
-            tuple[list[plt.Figure], list[str]],
-            tuple[list[plt.Figure], list[str], np.ndarray]]:
+        debug: bool = False) -> \
+            tuple[list[plt.Figure], list[str]] | \
+            tuple[list[plt.Figure], list[str], th.FloatArr4D]:
     vw_weak_list = [0.92, 0.56, 0.44]
     vw_inter_list = [0.92, 0.56, 0.44]
 

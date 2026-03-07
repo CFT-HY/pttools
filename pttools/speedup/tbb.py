@@ -8,7 +8,6 @@ Based on numba.np.ufunc.parallel._check_tbb_version_compatible()
 
 import logging
 import os
-import typing as tp
 from ctypes import CDLL, c_int
 
 from pttools.utils.system import IS_LINUX, IS_OSX, IS_WINDOWS
@@ -21,7 +20,7 @@ logger = logging.getLogger(__name__)
 TBB_MIN_VERSION = 12060
 
 
-def get_tbb_version(path: str | None = None):
+def get_tbb_version(path: str | None = None) -> int:
     """Get TBB library version"""
     if IS_WINDOWS:
         libtbb_name = 'tbb12.dll'
@@ -41,7 +40,7 @@ def get_tbb_version(path: str | None = None):
     return version_func()
 
 
-def load_tbb() -> tp.Optional[int]:
+def load_tbb() -> int | None:
     """Update environment variables so that the proper TBB is found
 
     This may not work

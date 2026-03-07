@@ -7,6 +7,7 @@ import typing as tp
 
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.typing import NDArray
 
 from pttools.bubble.alpha import alpha_n_max_deflagration_bag
 from pttools.bubble.boundary import Phase, SolutionType
@@ -127,7 +128,7 @@ class BaseBubble(abc.ABC):
         self.notes.append(note)
 
     @abc.abstractmethod
-    def solve(self):
+    def solve(self) -> None:
         if self.solved:
             msg = (
                 "Re-solving an already solved fluid profile! "
@@ -492,7 +493,7 @@ class Bubble(BaseBubble):
             use_bag_solver: bool = False,
             use_giese_solver: bool = False,
             log_high_alpha_n_failures: bool = True,
-            log_negative_entropy: bool = True):
+            log_negative_entropy: bool = True) -> None:
         """Simulate the fluid velocity profile of the bubble"""
         super().solve()
 
@@ -891,6 +892,9 @@ class Bubble(BaseBubble):
             raise NotYetSolvedError
         return thermo.va_trace_anomaly_diff(self.model, self.w, self.xi, self.v_wall, self.phase)
 
+
+type BubbleArr = NDArray[Bubble]
+type BubbleArr2D = np.ndarray[tuple[int, int], np.dtype[Bubble]]
 
 copy_docstrings({
     Bubble.ebar: thermo.ebar,

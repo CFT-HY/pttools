@@ -7,14 +7,14 @@ import sympy as sp
 # import time
 
 # from pttools import speedup
+# from pttools.ssm import calculators
+from pttools.ssm import const
+from pttools.ssm.sin_transform import sin_transform as _sin_transform
 import pttools.type_hints as th
-from . import const
-# from . import calculators
-from .sin_transform import sin_transform as _sin_transform
 
 
 # @profile
-def gen_piecewise(x, points: np.ndarray):
+def gen_piecewise(x: th.FloatArr1D, points: th.FloatArr1D) -> sp.Piecewise:
     """Generate a piecewise defined function"""
     funcs = []
     lims = []
@@ -33,8 +33,8 @@ def gen_piecewise(x, points: np.ndarray):
 
 def sin_transform(
         z: th.FloatOrArr,
-        xi: np.ndarray,
-        f: np.ndarray,
+        xi: th.FloatArr1D,
+        f: th.FloatArr1D,
         v_wall: float | None = None,
         v_sh: float | None = None,
         z_st_thresh: float = const.Z_ST_THRESH) -> th.FloatOrArr:
@@ -78,10 +78,9 @@ def sin_transform(
     # return integral2
 
 
-def sin_transform_debug(z: th.FloatOrArr, xi: np.ndarray, f: np.ndarray, z_st_thresh: float = const.Z_ST_THRESH):
+def sin_transform_debug(z: th.FloatOrArr, xi: th.FloatArr1D, f: th.FloatArr1D, z_st_thresh: float = const.Z_ST_THRESH):
     """Debugging for sin_transform"""
     fig: plt.Figure
-    axs: np.ndarray
     fig, axs = plt.subplots(2, 3, figsize=(11.7, 8.3))
     ax1: plt.Axes = axs[0, 0]
     ax2: plt.Axes = axs[0, 1]

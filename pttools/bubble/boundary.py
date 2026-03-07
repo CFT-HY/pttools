@@ -12,11 +12,11 @@ import numba
 from numba.extending import overload
 import numpy as np
 
-from pttools.bubble.relativity import gamma
+from pttools.bubble import const
+from pttools.bubble.relativity import gamma, gamma2, lorentz
 from pttools.speedup.solvers import fsolve_vary
 import pttools.type_hints as th
-from . import const
-from . import relativity
+from pttools.type_hints import FloatOrArr
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
@@ -67,9 +67,12 @@ class SolutionType(enum.StrEnum):
 
 def check_entropy_fluxes(
         model: "Model",
-        v1_tilde: float, v2_tilde: float,
-        w1: float, w2: float,
-        phase1: Phase, phase2: float,
+        v1_tilde: float,
+        v2_tilde: float,
+        w1: float,
+        w2: float,
+        phase1: Phase,
+        phase2: float,
         allow_negative_entropy_flux_change: bool = False) -> tuple[bool, float, float]:
     """False = OK, True = fail"""
     s1 = model.s(w1, phase1)
@@ -101,10 +104,10 @@ def enthalpy_ratio(v_m: th.FloatOrArr, v_p: th.FloatOrArr) -> th.FloatOrArr:
     :param v_p: $v_+$
     :return: enthalpy ratio
     """
-    return relativity.gamma2(v_m) * v_m / (relativity.gamma2(v_p) * v_p)
+    return gamma2(v_m) * v_m / (gamma2(v_p) * v_p)
 
 
-def entropy_flux(v_tilde: th.FloatOrArr, s: th.FloatOrArr):
+def entropy_flux(v_tilde: th.FloatOrArr, s: th.FloatOrArr) -> th.FloatOrArr:
     r"""Entropy flux $\gamma(\tilde{v}) \tilde{v} s$"""
     return gamma(v_tilde) * v_tilde * s
 
@@ -112,7 +115,7 @@ def entropy_flux(v_tilde: th.FloatOrArr, s: th.FloatOrArr):
 @numba.njit
 def fluid_speeds_at_wall(
         v_wall: float,
-        alpha_plus: th.FloatOrArr,
+        alpha_plus: float,
         sol_type: SolutionType) -> tuple[float, float, float, float]:
     r"""
     Solves fluid speed boundary conditions at the wall to obtain
@@ -143,18 +146,18 @@ def fluid_speeds_at_wall(
         # For clarity these are defined here in the same order as returned
         vfp_w = v_plus(v_wall, alpha_plus, sol_type)  # Fluid velocity just ahead of the wall in wall frame (v+)
         vfm_w = v_wall  # Fluid velocity just behind the wall in wall frame (v-)
-        vfp_p = relativity.lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
-        vfm_p = relativity.lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
+        vfp_p = lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
+        vfm_p = lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
     elif sol_type == SolutionType.HYBRID.value:
         vfp_w = v_plus(const.CS0, alpha_plus, sol_type)  # Fluid velocity just ahead of the wall in wall frame (v+)
         vfm_w = const.CS0  # Fluid velocity just behind the wall in plasma frame (hybrid)
-        vfp_p = relativity.lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
-        vfm_p = relativity.lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
+        vfp_p = lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
+        vfm_p = lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
     elif sol_type == SolutionType.DETON.value:
         vfp_w = v_wall  # Fluid velocity just ahead of the wall in wall frame (v+)
         vfm_w = v_minus(v_wall, alpha_plus)  # Fluid velocity just behind the wall in wall frame (v-)
-        vfp_p = relativity.lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
-        vfm_p = relativity.lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
+        vfp_p = lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
+        vfm_p = lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
     else:
         # Todo: better error handling and logging
         # with numba.objmode:
@@ -218,10 +221,12 @@ def junction_conditions_deviation(vp: th.FloatOrArr, vm: th.FloatOrArr, ap: th.F
 
 
 def junction_conditions_solvable(
-        params: np.ndarray,
+        params: th.FloatArr1D,
         model: "Model",
-        v1: float, w1: float,
-        phase1: float, phase2: float):
+        v1: float,
+        w1: float,
+        phase1: float,
+        phase2: float) -> th.FloatArr1D:
     """Get the deviation from both boundary conditions simultaneously."""
     v2 = params[0]
     w2 = params[1]
@@ -246,7 +251,7 @@ def junction_condition_deviation1(
     :notes:`\ `, eq. 7.22
     :cutting_2022:`\ `, eq. 19
     """
-    return w1 * relativity.gamma2(v1) * v1 - w2 * relativity.gamma2(v2) * v2
+    return w1 * gamma2(v1) * v1 - w2 * gamma2(v2) * v2
 
 
 @numba.njit
@@ -259,7 +264,7 @@ def junction_condition_deviation2(
     :notes:`\ `, eq. 7.22
     :notes:`\ `, eq. 18
     """
-    return w1 * relativity.gamma2(v1) * v1**2 + p1 - w2 * relativity.gamma2(v2) * v2**2 - p2
+    return w1 * gamma2(v1) * v1**2 + p1 - w2 * gamma2(v2) * v2**2 - p2
 
 
 def solve_junction(
@@ -373,10 +378,13 @@ def solve_junction(
 @functools.lru_cache(maxsize=const.JUNCTION_CACHE_SIZE)
 def solve_junction_internal(
         model: "Model",
-        v1_tilde: float, w1: float,
-        phase1: Phase, phase2: Phase,
-        v2_tilde_guess: float, w2_guess: float,
-        log_status: bool = False) -> tuple[np.ndarray, dict, int, str]:
+        v1_tilde: float,
+        w1: float,
+        phase1: Phase,
+        phase2: Phase,
+        v2_tilde_guess: float,
+        w2_guess: float,
+        log_status: bool = False) -> th.FSolveOutput:
     # Using fsolve_vary helps in finding the solutions, but it can also make the overall solver a lot slower.
     return fsolve_vary(
         junction_conditions_solvable,
@@ -668,7 +676,7 @@ def v_plus_hybrid(
         allow_failure=allow_failure,
         allow_negative_entropy_flux_change=allow_negative_entropy_flux_change
     )
-    return -relativity.lorentz(vp_tilde, v_wall)
+    return -lorentz(vp_tilde, v_wall)
 
 
 def v_plus_limit(ap: th.FloatOrArr, sol_type: SolutionType) -> th.FloatOrArr:
@@ -694,7 +702,7 @@ def w2_junction(v1: th.FloatOrArr, w1: th.FloatOrArr, v2: th.FloatOrArr) -> th.F
     :notes:`\ `, eq. 7.22
     """
     # Todo: use enthalpy_ratio() for this
-    wm = w1 * relativity.gamma2(v1) * v1 / (relativity.gamma2(v2) * v2)
+    wm = w1 * gamma2(v1) * v1 / (gamma2(v2) * v2)
     # wm > wp for detonations
     # if wm > wp:
     #     logger.warning(f"wm_junction resulted in wm > wp: vp={vp}, wp={wp}, vm={vm}, wm={wm}")

@@ -17,14 +17,15 @@ import numpy as np
 
 from examples.utils import FIG_DIR
 from pttools.analysis.plot_entropy_grid import plot_entropy_data
-from pttools.bubble.chapman_jouguet import v_chapman_jouguet_bag
 from pttools.bubble.alpha import alpha_n_max_bag, alpha_n_max_detonation_bag
+from pttools.bubble.chapman_jouguet import v_chapman_jouguet_bag
+import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
 
 def load(n_alpha: int = 10, n_vw: int = 10, g_bro: int = 120, g_sym: int = 123) \
-        -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     file_name = f"s_change_gbro{g_bro:3.0f}_g_sym{g_sym:3.0f}_nalpha_{n_alpha}_nvw_{n_vw}.npz"
     d = np.load(file_name)
 
@@ -44,7 +45,7 @@ def main(n_alpha: int = 10, n_vw: int = 10, g_bro: int = 120, g_sym: int = 123, 
     except FileNotFoundError as e:
         msg = f"The entropy data file was not found: {e}"
         logger.error(msg)
-        return
+        return None
 
     fig, ax = plot_entropy_data(
         ds_arr,

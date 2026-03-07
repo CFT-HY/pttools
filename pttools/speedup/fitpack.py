@@ -12,9 +12,11 @@ These don't work yet and are therefore not used.
 # import numba
 import numpy as np
 
+import pttools.type_hints as th
+
 
 # @numba.njit
-def fpbspl(t: np.ndarray, n: int, k: int, x: float, l: int, h: np.ndarray):
+def fpbspl(t: th.FloatArr1D, n: int, k: int, x: float, l: int, h: th.FloatArr1D):
     """
     Modified from the
     `SciPy version <https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/fpbspl.f#L19>`__.
@@ -37,7 +39,7 @@ def fpbspl(t: np.ndarray, n: int, k: int, x: float, l: int, h: np.ndarray):
     :param l: ?
     :param h: ?
     """
-    f: np.ndarray
+    f
     one: float
     i: int
     j: int
@@ -47,7 +49,7 @@ def fpbspl(t: np.ndarray, n: int, k: int, x: float, l: int, h: np.ndarray):
     one = 0.1e01
     h[0] = one
 
-    hh: np.ndarray = np.zeros((19,))
+    hh = np.zeros((19,))
     for j in range(0, k):
         for i in range(0, j):
             hh[i] = h[i]
@@ -65,16 +67,16 @@ def fpbspl(t: np.ndarray, n: int, k: int, x: float, l: int, h: np.ndarray):
 
 # @numba.njit
 def splder(
-        t: np.ndarray,
+        t: th.FloatArr1D,
         n: int,
-        c: np.ndarray,
+        c: th.FloatArr1D,
         k: int,
         nu: int,
-        x: np.ndarray,
-        y: np.ndarray,
+        x: th.FloatArr1D,
+        y: th.FloatArr1D,
         m: int,
         e: int,
-        wrk: np.ndarray) -> int:
+        wrk: th.FloatArr1D) -> int:
     """
     Modified from the
     `SciPy version <https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/splder.f#L67>`__.
@@ -149,7 +151,7 @@ def splder(
     tb: float
     te: float
     k3: int
-    h: np.ndarray = np.zeros((6,))
+    h = np.zeros((6,))
 
     # Before starting computations a data check is made. if the input data
     # are invalid control is immediately repassed to the calling program.
@@ -249,7 +251,7 @@ def splder(
 
 
 # @numba.njit
-def splev(t: np.ndarray, n: int, c: np.ndarray, k: int, x: np.ndarray, y: np.ndarray, m: int, e: int) -> int:
+def splev(t: th.FloatArr1D, n: int, c: th.FloatArr1D, k: int, x: th.FloatArr1D, y: th.FloatArr1D, m: int, e: int) -> int:
     """
     Modified from the
     `SciPy version <https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/splev.f>`__.
@@ -314,7 +316,7 @@ def splev(t: np.ndarray, n: int, c: np.ndarray, k: int, x: np.ndarray, y: np.nda
     tb: float
     te: float
 
-    h: np.ndarray = np.empty((20,))
+    h = np.empty((20,))
 
     ier = 10
     if m < 1:

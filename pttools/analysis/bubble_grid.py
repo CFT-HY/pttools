@@ -3,19 +3,21 @@
 import typing as tp
 
 import numpy as np
+from numpy.typing import NDArray
 
-from pttools.bubble.bubble import NotYetSolvedError
+from pttools.bubble.bubble import BubbleArr, NotYetSolvedError
 from pttools.analysis.parallel import create_bubbles
+import pttools.type_hints as th
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
 
 class BubbleGrid:
     """A grid of bubbles"""
-    def __init__(self, bubbles: np.ndarray):
+    def __init__(self, bubbles: BubbleArr):
         self.bubbles = bubbles
 
-    def get_value(self, name: str, dtype: tp.Type | None = None) -> np.ndarray:
+    def get_value(self, name: str, dtype: tp.Type | None = None) -> NDArray:
         with np.nditer(
                 [self.bubbles, None],
                 flags=("refs_ok", ),
@@ -32,25 +34,25 @@ class BubbleGrid:
                         res[...] = None
             return it.operands[1]
 
-    def elapsed(self) -> np.ndarray:
+    def elapsed(self) -> th.FloatArr:
         return self.get_value("elapsed", dtype=np.float64)
 
-    def kappa(self) -> np.ndarray:
+    def kappa(self) -> th.FloatArr:
         return self.get_value("kappa", dtype=np.float64)
 
-    def numerical_error(self) -> np.ndarray:
+    def numerical_error(self) -> th.BoolArr:
         return self.get_value("numerical_error", dtype=np.bool_)
 
-    def omega(self) -> np.ndarray:
+    def omega(self) -> th.FloatArr:
         return self.get_value("omega", dtype=np.float64)
 
-    def solver_failed(self) -> np.ndarray:
+    def solver_failed(self) -> th.BoolArr:
         return self.get_value("solver_failed", dtype=np.bool_)
 
-    def unphysical_alpha_plus(self) -> np.ndarray:
+    def unphysical_alpha_plus(self) -> th.BoolArr:
         return self.get_value("unphysical_alpha_plus", dtype=np.bool_)
 
-    def negative_net_entropy_change(self) -> np.ndarray:
+    def negative_net_entropy_change(self) -> th.BoolArr:
         return self.get_value("negative_net_entropy_change", dtype=np.bool_)
 
 
@@ -59,8 +61,8 @@ class BubbleGridVWAlpha(BubbleGrid):
     def __init__(
             self,
             model: "Model",
-            v_walls: np.ndarray,
-            alpha_ns: np.ndarray,
+            v_walls: th.FloatArr1D,
+            alpha_ns: th.FloatArr1D,
             func: tp.Callable | None = None,
             use_bag_solver: bool = False):
         data = create_bubbles(

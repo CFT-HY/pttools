@@ -6,17 +6,19 @@ import typing as tp
 import numpy as np
 from scipy.optimize import fsolve
 
+import pttools.type_hints as th
+
 logger = logging.getLogger(__name__)
 
 
 def fsolve_vary(
         func: tp.Callable,
-        x0: np.ndarray,
-        args: tp.Optional[tp.Union[tp.Iterable, tuple]] = None,
-        abs_variations: tp.Union[float, np.ndarray] = 1e-3,
-        rel_variations: tp.Union[float, np.ndarray] = 0.01,
+        x0: th.FloatArr,
+        args: tp.Iterable | tuple | None = None,
+        abs_variations: float | th.FloatArr1D = 1e-3,
+        rel_variations: float | th.FloatArr1D = 0.01,
         log_status: bool = True,
-        **kwargs) -> tuple[np.ndarray, dict, int, str]:
+        **kwargs) -> th.FSolveOutput:
     """SciPy fsolve, but if it fails, it tries to vary the initial guess to find a solution"""
     if "full_output" in kwargs:
         raise ValueError("Cannot specify full_output, as it has to be True.")

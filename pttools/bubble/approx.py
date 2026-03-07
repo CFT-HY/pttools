@@ -47,7 +47,7 @@ def v_approx_hybrid(xi: th.FloatOrArr, v_wall: th.FloatOrArr, v_xi_wall: th.Floa
     return v_approx_high_alpha(xi, v_wall, v_xi_wall)
 
 
-def v_approx_low_alpha(xi: np.ndarray, v_wall: float, alpha: float) -> np.ndarray:
+def v_approx_low_alpha(xi: th.FloatArr1D, v_wall: float, alpha: float) -> th.FloatArr1D:
     r"""
     Approximate solution for fluid velocity $v(\xi)$ at low $\alpha_+ = \alpha_n$.
 
@@ -87,7 +87,7 @@ def w_approx_high_alpha(
     return w_xi_wall * np.exp(-12 * (xi - xi0) ** 2 / (1 - xi0 ** 2) ** 2)
 
 
-def w_approx_low_alpha(xi: np.ndarray, v_wall: float, alpha: float) -> np.ndarray:
+def w_approx_low_alpha(xi: th.FloatArr1D, v_wall: float, alpha: float) -> th.FloatArr1D:
     r"""
     Approximate solution for enthalpy $w(\xi)$ at low $\alpha_+ = \alpha_n$.
     (Not complete for $\xi < \min(v _\text{wall}, cs_0)$).
