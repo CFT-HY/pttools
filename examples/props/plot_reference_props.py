@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 from examples import utils
 from pttools.bubble import fluid_reference
-from pttools.bubble.transition import SolutionType
+from pttools.bubble.solution_type import SolutionType
 
 
 def main() -> plt.Figure:

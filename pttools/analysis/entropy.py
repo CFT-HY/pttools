@@ -5,7 +5,7 @@ import logging
 import numpy as np
 
 from pttools.bubble.bubble import Bubble
-from pttools.bubble.boundary import SolutionType
+from pttools.bubble.solution_type import SolutionType
 from pttools.bubble import relativity
 
 logger = logging.getLogger(__name__)

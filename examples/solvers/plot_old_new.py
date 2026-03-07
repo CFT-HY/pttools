@@ -11,12 +11,11 @@ import numpy as np
 from examples import utils
 from pttools.analysis.utils import A3_PAPER_SIZE
 from pttools.bubble import boundary
-from pttools.bubble.boundary import Phase, SolutionType
+from pttools.bubble import Phase, SolutionType
 from pttools.bubble.bubble import Bubble
 from pttools.bubble import fluid_bag
 from pttools.bubble import relativity
-from pttools.models.model import Model
-from pttools.models.bag import BagModel
+from pttools.models import BagModel, Model
 from pttools.ssm import SSMSpectrum, power_gw_scaled_bag, spec_den_v_bag, power_v_bag
 import pttools.type_hints as th
 from tests.paper.plane import xiv_plane

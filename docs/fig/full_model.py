@@ -3,7 +3,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.bubble.boundary import Phase
+from pttools.bubble.phase import Phase
 from pttools.models import FullModel, StandardModel
 
 

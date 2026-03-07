@@ -5,9 +5,10 @@ import logging
 import numpy as np
 
 from pttools.bubble.bag import cs2_bag_multi, cs2_bag_neg, cs2_bag_temp
-from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.integrate import DF_DTAU_PTR_BAG
-from pttools.bubble.transition import identify_solution_type_bag
+from pttools.bubble.phase import Phase
+from pttools.bubble.solution_type import SolutionType
+from pttools.bubble.solution_type_bag import identify_solution_type_bag
 from pttools.models.analytic import AnalyticModel
 from pttools.speedup.differential import DifferentialPointer
 import pttools.type_hints as th
@@ -185,7 +186,7 @@ class BagModel(AnalyticModel):
 
     cs2 = staticmethod(cs2_bag_multi)
     cs2_neg = staticmethod(cs2_bag_neg)
-    cs2_temp = staticmethod(cs2_bag_multi)
+    cs2_temp = staticmethod(cs2_bag_temp)
 
     def cs2_max(
             self,

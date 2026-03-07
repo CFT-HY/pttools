@@ -10,7 +10,7 @@ import numpy as np
 
 from examples import utils
 from pttools.bubble import fluid
-from pttools.bubble.boundary import SolutionType
+from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 from pttools.bubble.fluid_reference import ref
 # from pttools.models.bag import BagModel

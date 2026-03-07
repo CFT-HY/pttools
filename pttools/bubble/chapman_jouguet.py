@@ -10,8 +10,9 @@ from scipy.optimize import fsolve
 
 # from pttools.bubble import const
 from pttools.bubble import boundary
-from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.relativity import gamma2
+from pttools.bubble.phase import Phase
+from pttools.bubble.solution_type import SolutionType
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr, FloatOrArr1D
 if tp.TYPE_CHECKING:

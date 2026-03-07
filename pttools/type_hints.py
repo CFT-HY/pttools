@@ -36,7 +36,9 @@ type BoolArr1D = np.ndarray[tuple[int], Bool]  # pylint: disable=invalid-name
 type BoolArr2D = np.ndarray[tuple[int, int], Bool]  # pylint: disable=invalid-name
 # np.float64 is a subclass of float, so for scalars specifying "float" is sufficient.
 type Float64 = np.dtype[np.float64]
+#: Numpy array of floats
 type FloatArr = NDArray[np.float64]
+#: 1D Numpy array of floats
 type FloatArr1D = np.ndarray[tuple[int], Float64]  # pylint: disable=invalid-name
 type FloatArr1DOrList = FloatArr1D | list[float]
 type FloatArr2D = np.ndarray[tuple[int, int], Float64]  # pylint: disable=invalid-name
@@ -62,15 +64,15 @@ type VWXi = tuple[FloatArr1D, FloatArr1D, FloatArr1D]
 # -----
 # CS2
 # -----
-#: Type of $c_s^2$ function$
+#: Type of $c_s^2$ function
 type CS2Fun = tp.Callable[[FloatOrArr, FloatOrArr], FloatOrArr] | CPUDispatcher
-#: Numba type of $c_s^2$ function$
+#: Numba type of $c_s^2$ function
 CS2FunScalarSig = numba.double(numba.double, numba.double)
-#: Numba pointer to a $c_s^2$ function$
+#: Numba pointer to a $c_s^2$ function
 type CS2FunScalarPtr = numba.types.CPointer  # CPointer(CS2FunScalarSig)
-#: ctypes type of $c_s^2$ function$
+#: ctypes type of $c_s^2$ function
 CS2CFunc = ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double)
-#: Python type of $c_s^2$ function$
+#: Python type of $c_s^2$ function
 type CS2CFuncType = tp.Type[CS2CFunc]
 
 # -----

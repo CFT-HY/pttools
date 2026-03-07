@@ -7,7 +7,7 @@ Example that the Standard Model can be used with the bubble solver
 
 import matplotlib.pyplot as plt
 
-from pttools.bubble.boundary import Phase
+from pttools.bubble.phase import Phase
 from pttools.bubble.bubble import Bubble
 from pttools.logging import setup_logging
 from pttools.models.full import FullModel

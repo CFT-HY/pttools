@@ -6,7 +6,7 @@ import typing as tp
 
 import numpy as np
 
-from pttools.bubble.boundary import SolutionType
+from pttools.bubble.solution_type import SolutionType
 from pttools.models.model import Model
 from pttools.utils.validation import check_value_in_range
 from pttools.utils.misc import is_nan_or_none

@@ -11,7 +11,7 @@ import numpy as np
 from examples import utils
 from pttools.bubble.bubble import Bubble
 from pttools.bubble.fluid_bag import sound_shell_bag
-from pttools.bubble.boundary import SolutionType
+from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.integrate import add_df_dtau
 from pttools.bubble.relativity import lorentz
 from pttools.models.const_cs import ConstCSModel

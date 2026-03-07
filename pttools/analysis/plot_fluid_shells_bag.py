@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.analysis import utils
-from pttools.bubble import boundary, check, const, fluid_bag, props, quantities, relativity, shock, transition
+from pttools.bubble import boundary, check, const, fluid_bag, props, quantities, relativity, shock
+from pttools.bubble.solution_type_bag import identify_solution_type_bag
 import pttools.type_hints as th
 
 
@@ -82,7 +83,7 @@ def plot_fluid_shells_bag(
     for v_wall, alpha_n in zip(v_wall_list, alpha_n_list):
         check.check_physical_params((v_wall, alpha_n))
 
-        sol_type = transition.identify_solution_type_bag(v_wall, alpha_n)
+        sol_type = identify_solution_type_bag(v_wall, alpha_n)
         if sol_type == boundary.SolutionType.ERROR:
             raise RuntimeError(f"No solution for v_wall = {v_wall}, alpha_n = {alpha_n}.")
 

@@ -6,7 +6,9 @@ import unittest
 
 import numpy as np
 
-from pttools.bubble.boundary import SolutionType, v_plus, v_minus
+from pttools.bubble.solution_type import SolutionType
+from pttools.bubble.v_minus import v_minus
+from pttools.bubble.v_plus import v_plus
 import pttools.type_hints as th
 from tests.utils.assertions import assert_allclose
 from tests.utils.const import TEST_DATA_PATH

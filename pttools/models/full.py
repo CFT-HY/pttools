@@ -7,7 +7,7 @@ import numpy as np
 from scipy.interpolate import splev, splrep
 
 import pttools.type_hints as th
-from pttools.bubble.boundary import Phase
+from pttools.bubble.phase import Phase
 from pttools.models.model import Model
 # if tp.TYPE_CHECKING:
 from pttools.models.thermo import ThermoModel

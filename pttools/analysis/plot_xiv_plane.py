@@ -3,7 +3,7 @@ r"""A plot of the $\xi-v$ plane"""
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.bubble.boundary import Phase
+from pttools.bubble.phase import Phase
 from pttools.bubble import const
 from pttools.bubble.integrate import fluid_integrate_param
 from pttools.bubble import props

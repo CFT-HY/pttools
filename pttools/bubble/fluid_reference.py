@@ -12,10 +12,10 @@ from scipy.interpolate import NearestNDInterpolator
 
 from pttools.bubble import boundary
 from pttools.bubble.alpha import alpha_n_max_bag
-from pttools.bubble.boundary import SolutionType
+from pttools.bubble.solution_type import SolutionType
+from pttools.bubble.solution_type_bag import identify_solution_type_bag
 from pttools.bubble.fluid_bag import sound_shell_bag
 from pttools.bubble import props
-from pttools.bubble import transition
 from pttools.logging import setup_logging
 from pttools.speedup.parallel import run_parallel
 from pttools.utils.system import FORKING
@@ -181,7 +181,7 @@ def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tuple[int, flo
         return -1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 
     v, w, xi = sound_shell_bag(v_wall, alpha_n)
-    sol_type = transition.identify_solution_type_bag(v_wall, alpha_n)
+    sol_type = identify_solution_type_bag(v_wall, alpha_n)
 
     if np.any(np.isnan(v)) or np.any(np.isnan(w)) or np.any(np.isnan(xi)):
         logger.error("Got nan values from the integration at v_wall=%s, alpha_n=%s", v_wall, alpha_n)

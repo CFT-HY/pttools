@@ -9,11 +9,12 @@ import typing as tp
 import numpy as np
 from scipy.optimize import fminbound, fsolve, root_scalar
 
-from pttools.bubble.boundary import Phase, SolutionType
+from pttools.bubble.phase import Phase
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 from pttools.bubble.check import find_most_negative_vals
 from pttools.bubble.integrate import add_df_dtau, differentials
-from pttools.bubble import transition
+from pttools.bubble import solution_type
+from pttools.bubble.solution_type import SolutionType
 from pttools.models.base import BaseModel
 from pttools.type_hints import FloatOrArr
 from pttools.utils.validation import check_value_in_range
@@ -845,11 +846,11 @@ class Model(BaseModel, abc.ABC):
             wn = self.wn(alpha_n, wn_guess)
         v_cj = v_chapman_jouguet(self, alpha_n, wn=wn, wm_guess=wm_guess)
 
-        if transition.is_surely_detonation(v_wall, v_cj):
+        if solution_type.is_surely_detonation(v_wall, v_cj):
             return SolutionType.DETON
-        if transition.is_surely_sub_def(self, v_wall, wn):
+        if solution_type.is_surely_sub_def(self, v_wall, wn):
             return SolutionType.SUB_DEF
-        if transition.cannot_be_detonation(v_wall, v_cj) and transition.cannot_be_sub_def(self, v_wall, wn):
+        if solution_type.cannot_be_detonation(v_wall, v_cj) and solution_type.cannot_be_sub_def(self, v_wall, wn):
             return SolutionType.HYBRID
         logger.warning(
             "Could not determine solution type for %s with v_wall=%s, alpha_n=%s, v_cj=%s",

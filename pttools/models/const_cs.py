@@ -10,7 +10,8 @@ from scipy.optimize import minimize, minimize_scalar, OptimizeResult
 
 from pttools.bubble import DF_DTAU_PTR_BAG, cs2_bag_multi
 from pttools.bubble.const import CS0_2
-from pttools.bubble.boundary import Phase, SolutionType
+from pttools.bubble.phase import Phase
+from pttools.bubble.solution_type import SolutionType
 from pttools.models.analytic import AnalyticModel
 from pttools.models.bag import BagModel
 from pttools.speedup import DifferentialPointer

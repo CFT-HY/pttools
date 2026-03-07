@@ -11,7 +11,7 @@ import numpy as np
 
 from examples import utils
 from pttools.logging import setup_logging
-from pttools.bubble.boundary import Phase
+from pttools.bubble.phase import Phase
 from pttools.bubble.bubble import get_kappa_for_v_walls
 from pttools.models.const_cs import ConstCSModel
 from pttools.bubble.fluid_reference import ref

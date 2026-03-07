@@ -8,7 +8,7 @@ from numba.extending import overload
 import numpy as np
 import scipy.interpolate
 
-from pttools.bubble.boundary import Phase
+from pttools.bubble.phase import Phase
 from pttools.models.base import BaseModel
 from pttools.speedup.overload import np_all_fix
 import pttools.type_hints as th

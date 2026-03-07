@@ -9,7 +9,7 @@ from numba.extending import overload
 import numpy as np
 from scipy.interpolate import splev, splrep
 
-from pttools.bubble.boundary import Phase
+from pttools.bubble.phase import Phase
 from pttools.models.model import Model
 import pttools.type_hints as th
 from pttools.speedup.overload import np_all_fix

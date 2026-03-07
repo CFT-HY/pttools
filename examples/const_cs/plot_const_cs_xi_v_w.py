@@ -11,7 +11,7 @@ import numpy as np
 
 from examples.utils import FIG_DIR
 from pttools.analysis.plot_fluid_shell_3d import BubblePlot3D
-from pttools.bubble.boundary import SolutionType
+from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.bubble import Bubble
 from pttools.bubble import quantities
 # from pttools.logging import setup_logging

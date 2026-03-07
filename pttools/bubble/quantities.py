@@ -13,12 +13,12 @@ import numpy as np
 
 from pttools.bubble import bag
 from pttools.bubble import boundary
-from pttools.bubble.boundary import Phase
+from pttools.bubble.phase import Phase, get_phase
 from pttools.bubble import check
 from pttools.bubble import const
 from pttools.bubble import fluid_bag
 from pttools.bubble import relativity
-from pttools.bubble import transition
+from pttools.bubble.solution_type_bag import identify_solution_type_bag
 import pttools.type_hints as th
 from pttools.speedup import NUMBA_ENABLE_CACHE
 from pttools.type_hints import FloatOrArr, FloatOrArr1D
@@ -50,7 +50,7 @@ def de_from_w_bag(w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float, alpha_n: f
     :return: energy density difference de
     """
     check.check_physical_params((v_wall, alpha_n))
-    e_from_w = bag.e_bag(w=w, phase=boundary.get_phase(xi, v_wall), theta_s=0.75 * w[-1] * alpha_n)
+    e_from_w = bag.e_bag(w=w, phase=get_phase(xi, v_wall), theta_s=0.75 * w[-1] * alpha_n)
 
     return e_from_w - e_from_w[-1]
 
@@ -74,7 +74,7 @@ def de_from_w_new_bag(
     :return: energy density difference de
     """
     check.check_physical_params((v_wall, alpha_n))
-    e_from_w = bag.e_bag(w=w, phase=boundary.get_phase(xi, v_wall), theta_s=0.75 * w[-1] * alpha_n)
+    e_from_w = bag.e_bag(w=w, phase=get_phase(xi, v_wall), theta_s=0.75 * w[-1] * alpha_n)
 
     de = e_from_w - e_from_w[-1]
 
@@ -103,7 +103,7 @@ def get_kappa_bag[T: FloatOrArr](
     for vw, kappa in it:
         # This is necessary for Numba
         vw = vw.item()
-        sol_type = transition.identify_solution_type_bag(vw, alpha_n)
+        sol_type = identify_solution_type_bag(vw, alpha_n)
 
         if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
@@ -145,7 +145,7 @@ def get_kappa_de_bag[T: FloatOrArr](
     it = np.nditer([v_wall, None, None])
     for vw, kappa, de in it:
         vw = vw.item()
-        sol_type = transition.identify_solution_type_bag(vw, alpha_n)
+        sol_type = identify_solution_type_bag(vw, alpha_n)
 
         if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
@@ -193,7 +193,7 @@ def get_kappa_dq_bag[T: FloatOrArr](
     it = np.nditer([v_wall, None, None])
     for vw, kappa, dq in it:
         vw = vw.item()
-        sol_type = transition.identify_solution_type_bag(vw, alpha_n)
+        sol_type = identify_solution_type_bag(vw, alpha_n)
 
         if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
@@ -238,7 +238,7 @@ def get_ke_de_frac_bag[T: FloatOrArr](
     it = np.nditer([v_wall, None, None])
     for vw, ke, de in it:
         vw = vw.item()
-        sol_type = transition.identify_solution_type_bag(vw, alpha_n)
+        sol_type = identify_solution_type_bag(vw, alpha_n)
 
         if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
@@ -301,7 +301,7 @@ def get_ke_frac_new_bag[T: FloatOrArr](
     it = np.nditer([v_wall, None])
     for vw, ke in it:
         vw = vw.item()
-        sol_type = transition.identify_solution_type_bag(vw, alpha_n)
+        sol_type = identify_solution_type_bag(vw, alpha_n)
         if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(vw, alpha_n, n_xi)
@@ -326,7 +326,7 @@ def get_ke_frac_new_bag[T: FloatOrArr](
 
 
 def _get_ubarf2_bag_scalar[T: FloatOrArr1D](v_wall: T, alpha_n: float, n_xi: int, verbosity: int) -> T:
-    if transition.identify_solution_type_bag(v_wall, alpha_n) == boundary.SolutionType.ERROR:
+    if identify_solution_type_bag(v_wall, alpha_n) == boundary.SolutionType.ERROR:
         ubarf2 = np.nan
     else:
         # Now ready to solve for fluid profile
@@ -405,7 +405,7 @@ def get_ubarf2_new_bag(
     it = np.nditer([v_wall, None])
     for vw, Ubarf2 in it:
         vw = vw.item()
-        sol_type = transition.identify_solution_type_bag(vw, alpha_n)
+        sol_type = identify_solution_type_bag(vw, alpha_n)
         if not sol_type == boundary.SolutionType.ERROR:
             # Now ready to get Ubarf2
             ke_frac = get_ke_frac_new_bag(vw, alpha_n)

@@ -3,23 +3,16 @@
 import numba.types
 import numpy as np
 
-from pttools.bubble.boundary import Phase, SolutionType
+from pttools.bubble.phase import Phase
+from pttools.bubble.solution_type import SolutionType
 from pttools.bubble import relativity
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
 
-@numba.njit
-def find_v_index(xi: th.FloatArr, v_target: float) -> int:
-    r"""
-    The first array index of $\xi$ where value is just above $v_\text{target}$.
-    If no xi > v_target is found, returns 0.
-    """
-    return np.argmax(xi >= v_target)
-
-
 def find_phase(xi: th.FloatArr1D, v_wall: float) -> th.FloatArr1D:
     r"""Get the phase at each given $\xi$ value"""
+    # Todo: Replace this with pttools.bubble.phase.get_phase
     i_wall = find_v_index(xi, v_wall)
     # This presumes that Phase.SYMMETRIC = 0
     phase = np.zeros_like(xi)
@@ -30,6 +23,15 @@ def find_phase(xi: th.FloatArr1D, v_wall: float) -> th.FloatArr1D:
     if np.isclose(xi[i_wall], v_wall):
         phase[i_wall-1] = Phase.BROKEN
     return phase
+
+
+@numba.njit
+def find_v_index(xi: th.FloatArr, v_target: float) -> int:
+    r"""
+    The first array index of $\xi$ where value is just above $v_\text{target}$.
+    If no xi > v_target is found, returns 0.
+    """
+    return np.argmax(xi >= v_target)
 
 
 @numba.njit

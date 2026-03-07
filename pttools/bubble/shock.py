@@ -7,14 +7,15 @@ from numba.extending import overload
 import numba.types
 import numpy as np
 
-from pttools.bubble.boundary import Phase, SolutionType, solve_junction, w2_junction
+from pttools.bubble.boundary import solve_junction, w2_junction
 from pttools.bubble import check
 from pttools.bubble import const
 from pttools.bubble import props
+from pttools.bubble.phase import Phase
 from pttools.bubble import relativity
+from pttools.bubble.solution_type import SolutionType
 from pttools.speedup import NUMBA_ENABLE_CACHE
 import pttools.type_hints as th
-from pttools.type_hints import FloatOrArr1D
 
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model

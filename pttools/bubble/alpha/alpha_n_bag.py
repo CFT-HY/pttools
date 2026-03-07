@@ -10,7 +10,7 @@ from pttools.bubble import fluid_bag
 from pttools.bubble import check
 from pttools.bubble import integrate
 from pttools.bubble import props
-from pttools.bubble import transition
+from pttools.bubble.solution_type_bag import identify_solution_type_alpha_plus_bag
 from pttools.speedup import NUMBA_ENABLE_CACHE
 import pttools.type_hints as th
 
@@ -39,7 +39,7 @@ def find_alpha_n_bag(
     """
     check.check_wall_speed(v_wall)
     if sol_type == boundary.SolutionType.UNKNOWN.value:
-        sol_type = transition.identify_solution_type_alpha_plus(v_wall, alpha_p).value
+        sol_type = identify_solution_type_alpha_plus_bag(v_wall, alpha_p).value
     _, w, xi = fluid_bag.sound_shell_alpha_plus_bag(
         v_wall, alpha_p, sol_type, n_xi,
         cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr

@@ -10,7 +10,7 @@ from pttools.bubble import const
 from pttools.bubble import fluid_bag
 from pttools.bubble import check
 from pttools.bubble import props
-from pttools.bubble import transition
+from pttools.bubble.solution_type_bag import identify_solution_type_alpha_plus_bag
 from pttools.speedup import NUMBA_ENABLE_CACHE
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
@@ -128,7 +128,7 @@ def alpha_n_max_hybrid_bag(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> flo
     :param n_xi: number of $\xi$ points
     :return: $\alpha_{n,\max}$
     """
-    sol_type = transition.identify_solution_type_alpha_plus(v_wall=v_wall, alpha_p=1/3).value
+    sol_type = identify_solution_type_alpha_plus_bag(v_wall=v_wall, alpha_p=1 / 3).value
     if sol_type == boundary.SolutionType.SUB_DEF:
         raise ValueError(
             f"Alpha_n_max_hybrid was called with v_wall={v_wall} < cs. Use alpha_n_max_deflagration instead."

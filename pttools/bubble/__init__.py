@@ -21,9 +21,13 @@ from .fluid_reference import *
 # from .gksvdv import *
 from .integrate import *
 # from .physical_params import *
+from .phase import *
 from .props import *
 from .quantities import *
 from .relativity import *
 from .shock import *
-from .transition import *
+from .solution_type import *
+from .solution_type_bag import *
 from .trim import *
+from .v_minus import *
+from .v_plus import *

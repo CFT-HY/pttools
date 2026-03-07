@@ -14,14 +14,15 @@ from pttools.bubble import alpha
 from pttools.bubble import approx
 from pttools.bubble import bag
 from pttools.bubble import boundary
-from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble import check
 from pttools.bubble import const
 from pttools.bubble import integrate
+from pttools.bubble.phase import Phase
 from pttools.bubble import props
 from pttools.bubble import quantities
 from pttools.bubble import shock
-from pttools.bubble import transition
+from pttools.bubble.solution_type import SolutionType
+from pttools.bubble.solution_type_bag import identify_solution_type_bag, identify_solution_type_alpha_plus_bag
 from pttools.bubble import trim
 from pttools import speedup
 import pttools.type_hints as th
@@ -54,7 +55,7 @@ def sound_shell_bag(
     :return: $v, w, \xi$ or alternatively $v, w, \xi$, sol_type
     """
     # check_physical_params([v_wall,alpha_n])
-    sol_type = transition.identify_solution_type_bag(v_wall, alpha_n)
+    sol_type = identify_solution_type_bag(v_wall, alpha_n)
     if sol_type == SolutionType.ERROR:
         # with numba.objmode:
         #     logger.error("Could not indentify solution type for v_wall=%s, alpha_n=%s", v_wall, alpha_n)
@@ -116,7 +117,7 @@ def sound_shell_alpha_plus_bag(
     check.check_wall_speed(v_wall)
 
     if sol_type == SolutionType.UNKNOWN.value:
-        sol_type = transition.identify_solution_type_alpha_plus(v_wall, alpha_plus).value
+        sol_type = identify_solution_type_alpha_plus_bag(v_wall, alpha_plus).value
     # The identification above may set sol_type to error
     if sol_type == SolutionType.ERROR.value:
         # Todo: better error handling and logging
@@ -234,7 +235,7 @@ def sound_shell_dict(
     # TODO: use greek symbols for kappa and omega
     check.check_physical_params((v_wall, alpha_n))
 
-    sol_type = transition.identify_solution_type_bag(v_wall, alpha_n)
+    sol_type = identify_solution_type_bag(v_wall, alpha_n)
 
     if sol_type is SolutionType.ERROR:
         raise RuntimeError(f"No solution for v_wall = {v_wall}, alpha_n = {alpha_n}")

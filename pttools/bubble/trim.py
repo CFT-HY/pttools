@@ -4,12 +4,13 @@ import logging
 
 import numba
 
-import pttools.type_hints as th
 from pttools.bubble import bag
-from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble import check
 from pttools.bubble import const
+from pttools.bubble.phase import Phase
 from pttools.bubble import shock
+from pttools.bubble.solution_type import SolutionType
+import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 

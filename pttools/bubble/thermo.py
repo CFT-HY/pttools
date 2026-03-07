@@ -20,7 +20,7 @@ import typing as tp
 
 import numpy as np
 
-from pttools.bubble.boundary import Phase
+from pttools.bubble.phase import Phase
 from pttools.bubble import props
 from pttools.bubble import relativity
 import pttools.type_hints as th

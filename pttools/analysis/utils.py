@@ -4,7 +4,7 @@ import matplotlib as mpl
 from matplotlib.legend import Legend
 import matplotlib.pyplot as plt
 
-from pttools.bubble.boundary import Phase
+from pttools.bubble.phase import Phase
 from pttools.models.base import BaseModel
 from pttools.utils.system import IS_GITHUB_ACTIONS
 

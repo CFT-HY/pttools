@@ -4,7 +4,7 @@ import abc
 
 import numpy as np
 
-from pttools.bubble.boundary import Phase
+from pttools.bubble.phase import Phase
 from tests.models.base_model import ModelBaseCase
 from tests.utils.assertions import assert_allclose
 

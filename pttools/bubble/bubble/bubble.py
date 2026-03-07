@@ -9,14 +9,15 @@ import numpy as np
 from numpy.typing import NDArray
 
 from pttools.bubble.alpha import alpha_n_max_deflagration_bag
-from pttools.bubble.boundary import Phase, SolutionType
 from pttools.bubble.bubble.base import BaseBubble, NotYetSolvedError
 from pttools.bubble.fluid import sound_shell_generic
 from pttools.bubble import const
+from pttools.bubble.phase import Phase
 from pttools.bubble import props
+from pttools.bubble.props import find_phase
 from pttools.bubble.relativity import gamma
+from pttools.bubble.solution_type import SolutionType, validate_solution_type
 from pttools.bubble import thermo
-from pttools.bubble import transition
 from pttools.utils.docstrings import copy_docstrings
 from pttools.utils.json import export_json
 if tp.TYPE_CHECKING:
@@ -116,7 +117,7 @@ class Bubble(BaseBubble):
             self.alpha_n = alpha_n
             self.alpha_theta_bar_n = model.alpha_theta_bar_n_from_alpha_n(alpha_n=alpha_n, wn=self.wn)
 
-        self.sol_type = transition.validate_solution_type(
+        self.sol_type = validate_solution_type(
             model,
             v_wall=self.v_wall, alpha_n=alpha_n, sol_type=sol_type,
             wn=self.wn, wm_guess=wm_guess
@@ -340,7 +341,7 @@ class Bubble(BaseBubble):
             error_on_invalid=False, nan_on_invalid=True, log_invalid=True
         )
         self.alpha_theta_bar_plus = self.model.alpha_theta_bar_plus(self.wp)
-        self.phase = props.find_phase(self.xi, self.v_wall)
+        self.phase = find_phase(self.xi, self.v_wall)
 
         self.sn = self.model.s(self.wn, Phase.SYMMETRIC)
         self.sm = self.model.s(self.wm, Phase.BROKEN)

@@ -3,7 +3,7 @@ r"""Plot $g_\text{eff}$ and $c_s^2$"""
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.bubble.boundary import Phase
+from pttools.bubble.phase import Phase
 from pttools.models.thermo import ThermoModel
 
 

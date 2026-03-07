@@ -9,7 +9,7 @@ from scipy.optimize import fsolve, root_scalar
 
 from pttools.bubble import alpha
 from pttools.bubble import boundary
-from pttools.bubble.boundary import Phase, SolutionType
+from pttools.bubble.phase import Phase
 from pttools.bubble import chapman_jouguet
 from pttools.bubble import const
 from pttools.bubble.gksvdv.gksvdv21 import kappaNuMuModel
@@ -19,7 +19,9 @@ from pttools.bubble import integrate
 from pttools.bubble import props
 from pttools.bubble import relativity
 from pttools.bubble import shock
-from pttools.bubble import transition
+from pttools.bubble.solution_type import \
+    SolutionType, cannot_be_detonation, cannot_be_sub_def, is_surely_detonation, validate_solution_type
+from pttools.bubble.solution_type_bag import identify_solution_type_bag
 from pttools.bubble import trim
 from pttools.speedup.solvers import fsolve_vary
 from pttools.speedup import NAN_ARR
@@ -146,7 +148,7 @@ def sound_shell_deflagration_common(
         warn_if_shock_barely_exists: bool) -> DeflagrationOutput:
     if v_wall < 0 or v_wall > 1 or vm_tilde < 0 or vm_tilde > 1 or wn < 0 or wm < 0 or cs_n < 0 or cs_n > 1 \
             or vp_tilde_guess < 0 or vp_tilde_guess > 1 or wp_guess < 0 \
-            or transition.is_surely_detonation(v_wall, v_cj):
+            or is_surely_detonation(v_wall, v_cj):
         logger.error(
             "Invalid starting values: "
             "v_wall=%s, vm_tilde=%s, wn=%s, wm=%s, cs_n=%s, vp_tilde_guess=%s, wp_guess=%s",
@@ -377,7 +379,7 @@ def sound_shell_deflagration_reverse(
 def sound_shell_detonation(
         model: "Model", v_wall: float, alpha_n: float, wn: float, v_cj: float,
         vm_tilde_guess: float, wm_guess: float, t_end: float, n_xi: int) -> SolverOutput:
-    if transition.cannot_be_detonation(v_wall, v_cj):
+    if cannot_be_detonation(v_wall, v_cj):
         logger.error("Too slow wall speed for a detonation: v_wall=%s, v_cj=%s", v_wall, v_cj)
 
     # Todo: use analytical ConstCSModel equations for both phases
@@ -929,7 +931,7 @@ def sound_shell_generic(
                 "Got model=%s, v_wall=%s, alpha_n=%s, for which there is no bag model solution.",
                 model.label_unicode, v_wall, alpha_n
             )
-            return const.nan_arr, const.nan_arr, const.nan_arr, SolutionType.ERROR, \
+            return NAN_ARR, NAN_ARR, NAN_ARR, SolutionType.ERROR, \
                 np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, \
                 True, time.perf_counter() - start_time
 
@@ -937,7 +939,7 @@ def sound_shell_generic(
             "Using bag solver for model=%s, v_wall=%s, alpha_n=%s",
             model.label_unicode, v_wall, alpha_n
         )
-        sol_type2 = transition.identify_solution_type_bag(v_wall, alpha_n)
+        sol_type2 = identify_solution_type_bag(v_wall, alpha_n)
         if sol_type is not None and sol_type != sol_type2:
             raise ValueError(
                 f"Bag model gave a different solution type ({sol_type2}) than what was given ({sol_type})."
@@ -959,7 +961,7 @@ def sound_shell_generic(
             vp, vm, vp_tilde, vm_tilde, np.nan, np.nan, np.nan, wp, wm, wm_sh, v_cj, \
             False, time.perf_counter() - start_time
 
-    sol_type = transition.validate_solution_type(
+    sol_type = validate_solution_type(
         model,
         v_wall=v_wall, alpha_n=alpha_n, sol_type=sol_type,
         wn=wn, wm_guess=wm_guess
@@ -1029,7 +1031,7 @@ def sound_shell_generic(
                 vm_tilde_guess=vm_tilde_ref, wm_guess=wm_ref, t_end=t_end, n_xi=n_xi,
             )
     elif sol_type == SolutionType.SUB_DEF:
-        if transition.cannot_be_sub_def(model, v_wall, wn):
+        if cannot_be_sub_def(model, v_wall, wn):
             raise ValueError(
                 f"Invalid parameters for a subsonic deflagration: model={model.name}, v_wall={v_wall}, wn={wn}. "
                 "Decrease v_wall or increase csb2."
@@ -1125,7 +1127,7 @@ def sound_shell_giese(
             vw=v_wall
            )
     except ValueError:
-        return const.nan_arr, const.nan_arr, const.nan_arr, SolutionType.ERROR, \
+        return NAN_ARR, NAN_ARR, NAN_ARR, SolutionType.ERROR, \
             np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, \
             True, time.perf_counter() - start_time
 

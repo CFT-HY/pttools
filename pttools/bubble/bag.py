@@ -10,7 +10,7 @@ from numba.extending import overload
 import numpy as np
 
 import pttools.type_hints as th
-from pttools.bubble.boundary import Phase
+from pttools.bubble.phase import Phase
 from pttools.bubble import const
 
 logger = logging.getLogger(__name__)
