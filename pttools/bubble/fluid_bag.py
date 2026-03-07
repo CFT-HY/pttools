@@ -37,7 +37,7 @@ def sound_shell_bag(
         n_xi: int = const.N_XI_DEFAULT,
         cs2_fun: th.CS2Fun = bag.cs2_bag_scalar,
         cs2_fun_ptr: th.CS2FunScalarPtr = bag.CS2_BAG_SCALAR_PTR,
-        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR,
+        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG,
         # Implementing optional extra output did not work due to Numba typing constraints
         # extra_output: bool = False
         ) -> th.VWXi:
@@ -89,8 +89,8 @@ def sound_shell_alpha_plus_bag(
         sol_type: SolutionType = SolutionType.UNKNOWN,
         n_xi: int = const.N_XI_DEFAULT,
         w_n: float = 1.,
-        cs2_fun: th.CS2Fun = bag.cs2_bag,
-        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR,
+        cs2_fun: th.CS2Fun = bag.cs2_bag_scalar,
+        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG,
         sol_type_fun: tp.Callable | None = None,
         # extra_output: bool = False
         ) -> th.VWXi:

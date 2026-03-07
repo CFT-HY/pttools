@@ -1,4 +1,7 @@
-"""Sigmoid-based model"""
+"""Sigmoid-based model
+
+Not yet functional
+"""
 
 import numba
 import numpy as np

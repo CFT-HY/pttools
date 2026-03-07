@@ -11,13 +11,11 @@ import scipy.integrate as spi
 # from scipy.integrate._ivp.ivp import _IVPMethod
 from scipy.integrate._ivp.ivp import OdeResult
 
-from pttools import speedup
+from pttools.bubble.bag import cs2_bag, cs2_bag_scalar_cfunc
+from pttools.bubble.const import N_XI_DEFAULT, T_END_DEFAULT
 from pttools.speedup.differential import DifferentialCache, DifferentialCFunc, DifferentialPointer
 from pttools.speedup.numba_wrapper import numbalsoda
-from pttools.speedup.options import NUMBA_DISABLE_JIT
-from . import bag
-from . import const
-
+from pttools.speedup.options import NUMBA_DISABLE_JIT, NUMBA_ENABLE_CACHE, NUMBA_INTEGRATE
 import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
@@ -87,19 +85,22 @@ def gen_df_dtau(cs2_fun: th.CS2Fun) -> DifferentialCFunc:
 
 
 #: Pointer to the differential equation of the bag model
-DF_DTAU_BAG_PTR = add_df_dtau("bag", bag.cs2_bag_scalar_cfunc if speedup.NUMBA_DISABLE_JIT else bag.cs2_bag)
+DF_DTAU_PTR_BAG: DifferentialPointer = add_df_dtau(
+    name="bag",
+    cs2_fun=cs2_bag_scalar_cfunc if NUMBA_DISABLE_JIT else cs2_bag
+)
 
 
-@numba.njit
+@numba.njit(cache=NUMBA_ENABLE_CACHE)
 def fluid_integrate_param(
         v0: float,
         w0: float,
         xi0: float,
         phase: float = -1.,
-        t_end: float = const.T_END_DEFAULT,
-        n_xi: int = const.N_XI_DEFAULT,
-        df_dtau_ptr: speedup.DifferentialPointer = DF_DTAU_BAG_PTR,
-        method: str = "odeint") -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        t_end: float = T_END_DEFAULT,
+        n_xi: int = N_XI_DEFAULT,
+        df_dtau_ptr: DifferentialPointer = DF_DTAU_PTR_BAG,
+        method: FluidIntegrateMethod = "odeint") -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
     Integrates parametric fluid equations in df_dtau from an initial condition.
     Positive t_end integrates along curves from $(v,w) = (0,c_{s,0})$ to $(1,1)$.
@@ -124,7 +125,7 @@ def fluid_integrate_param(
     # The second value ensures that the Numba typing is correct.
     data = np.array([phase, 0.])
     success: bool = False
-    if method == "numba_lsoda" or speedup.NUMBA_INTEGRATE:
+    if method == "numba_lsoda" or NUMBA_INTEGRATE:
         if numbalsoda is None:
             raise ImportError("NumbaLSODA is not loaded")
         v, w, xi, success = fluid_integrate_param_numba(t=t, y0=y0, data=data, df_dtau_ptr=df_dtau_ptr)
@@ -151,7 +152,7 @@ def fluid_integrate_param(
     return v, w, xi, t
 
 
-@numba.njit
+@numba.njit(nogil=True)
 def fluid_integrate_param_numba(
         t: th.FloatArr1D,
         y0: th.FloatArr1D,
@@ -165,7 +166,7 @@ def fluid_integrate_param_numba(
     :param df_dtau_ptr: pointer to the differential equation function
     :return: $v, w, \xi$, success status
     """
-    if speedup.NUMBA_DISABLE_JIT:
+    if NUMBA_DISABLE_JIT:
         raise NotImplementedError("NumbaLSODA is supported only when jitting is enabled")
 
     backwards = t[-1] < 0
@@ -175,12 +176,13 @@ def fluid_integrate_param_numba(
     # Numba does not support float(bool)
     data_numba[-1] = int(backwards)
     usol, success = numbalsoda.lsoda(df_dtau_ptr, u0=y0, t_eval=t_numba, data=data_numba)
-    if not success:
-        with numba.objmode:
-            logger.error(
-                "NumbaLSODA failed for %s integration",
-                "backwards" if backwards else "forwards"
-            )
+    # Error reporting is handled by fluid_integrate_param()
+    # if not success:
+    #     with numba.objmode:
+    #         logger.error(
+    #             "NumbaLSODA failed for %s integration",
+    #             "backwards" if backwards else "forwards"
+    #         )
     v = usol[:, 0]
     w = usol[:, 1]
     xi = usol[:, 2]

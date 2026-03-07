@@ -87,8 +87,8 @@ class Model(BaseModel, abc.ABC):
         self.T_ref: float = T_ref
         self.V_s: float = V_s
         self.V_b: float = V_b
-        self.__df_dtau_ptr = None
-        self.__df_dtau_pid = None
+        self.__df_dtau_ptr: DifferentialPointer | None = None
+        self.__df_dtau_pid: int | None = None
 
         #: $$\frac{90}{\pi^2} (V_b - V_s)$$
         self.critical_temp_const: float = 90 / np.pi ** 2 * (self.V_b - self.V_s)
@@ -99,6 +99,9 @@ class Model(BaseModel, abc.ABC):
             gen_cs2=gen_cs2, gen_cs2_neg=gen_cs2_neg,
             silence_temp=silence_temp
         )
+        if gen_cs2:
+            self.df_dtau_ptr()
+
         self.w_min_s = self.w(self.T_min, Phase.SYMMETRIC)
         self.w_min_b = self.w(self.T_min, Phase.BROKEN)
         self.w_min = max(self.w_min_s, self.w_min_b)
@@ -612,6 +615,7 @@ class Model(BaseModel, abc.ABC):
             w_min: float = 0,
             allow_fail: bool = False,
             **kwargs) -> tuple[float, float]:
+        r"""Minimum of $c_s^2(w)$ for $w \in [w_\text{min}, w_\text{max}]$"""
         return self._cs2_limit(w_max, phase, True, self.cs2_neg, w_min, allow_fail, **kwargs)
 
     def cs2_min(
@@ -620,12 +624,16 @@ class Model(BaseModel, abc.ABC):
             phase: Phase,
             w_min: float = 0,
             allow_fail: bool = False, **kwargs) -> tuple[float, float]:
+        r"""Maximum of $c_s^2(w)$ for $w \in [w_\text{min}, w_\text{max}]$"""
         return self._cs2_limit(w_max, phase, False, self.cs2, w_min, allow_fail, **kwargs)
 
     def cs2_neg(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        """Negative speed of sound squared, for finding the maximum of cs2."""
         return -self.cs2(w, phase)
 
     def cs2_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Speed of sound squared $c_s^2(T,\phi)$.
+        By default, this is implemented as $c_s^2(T(w,\phi),\phi)$."""
         return self.cs2(self.w(temp, phase), phase)
 
     def delta_theta(
@@ -675,18 +683,25 @@ class Model(BaseModel, abc.ABC):
         )
 
     def df_dtau_ptr(self) -> DifferentialPointer:
+        ptr_label = f"{self.name}_{self.id}"
+        if ptr_label in differentials:
+            return differentials.get_pointer(ptr_label)
+
         if self.__df_dtau_ptr is not None:
-            if self.__df_dtau_ptr in differentials:
-                return self.__df_dtau_ptr
+            # Todo: This does not work. Why?
+            # if self.__df_dtau_ptr in differentials:
+            #     return self.__df_dtau_ptr
+
             if FORKING or self.__df_dtau_pid == os.getpid():
                 logger.warning(
-                    "Could not find cs2 in the cache for %s in process %s. Recreating.",
-                    self.name, os.getpid()
+                    "Could not find cs2 (ptr=%s) in the cache for %s (id=%s) in process %s. "
+                    "Generating. Cache size: %s. Cache keys: %s",
+                    self.__df_dtau_ptr, self.name, self.id, os.getpid(), differentials.size, differentials.keys()
                 )
 
         start_time = time.perf_counter()
         # logger.debug("Compiling cs2 for %s in process %s", self.label_unicode, os.getpid())
-        ptr = add_df_dtau(f"{self.name}_{id(self)}", self.cs2)
+        ptr = add_df_dtau(ptr_label, self.cs2)
         logger.debug(
             "Compiled cs2 for %s in process %d in %.3f s",
             self.label_unicode, os.getpid(), time.perf_counter() - start_time

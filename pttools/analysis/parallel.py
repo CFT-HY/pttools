@@ -133,7 +133,7 @@ def create_bubbles(
 
     # Pre-do shared steps so that they don't have to be done for each process
     fluid_reference.ref()
-    model.df_dtau_ptr()
+    # model.df_dtau_ptr()  # This should no longer be necessary
     precompile()
 
     # Run the parallel processing

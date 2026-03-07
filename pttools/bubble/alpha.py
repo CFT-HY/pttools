@@ -20,12 +20,13 @@ from pttools.bubble import check
 from pttools.bubble import integrate
 from pttools.bubble import props
 from pttools.bubble import transition
+from pttools.speedup import NUMBA_ENABLE_CACHE
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
 logger = logging.getLogger(__name__)
 
-CS2CACHE: dict[th.CS2FunScalarPtr, th.CS2CFunc] = {}
+CS2_CACHE: dict[th.CS2FunScalarPtr, th.CS2CFuncType] = {}
 find_alpha_plus_scalar_lock = threading.Lock()
 
 
@@ -253,8 +254,8 @@ def find_alpha_n_bag(
         alpha_p: float,
         sol_type: boundary.SolutionType = boundary.SolutionType.UNKNOWN,
         n_xi: int = const.N_XI_DEFAULT,
-        cs2_fun: th.CS2Fun = bag.cs2_bag,
-        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR) -> float:
+        cs2_fun: th.CS2Fun = bag.cs2_bag_scalar,
+        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG) -> float:
     r"""
     Calculates the transition strength parameter at the nucleation temperature,
     $\alpha_n$, from $\alpha_+$, for given $v_\text{wall}$ in the Bag Model.
@@ -315,17 +316,17 @@ def _find_alpha_plus_optimizer_bag(
     ) - alpha_n_given
 
 
-def _find_alpha_plus_scalar_cs2_converter(cs2_fun_ptr: th.CS2FunScalarPtr) -> th.CS2CFunc:
+def _find_alpha_plus_scalar_cs2_converter(cs2_fun_ptr: th.CS2FunScalarPtr) -> th.CS2CFuncType:
     r"""Converter for getting a $c_s^2$ ctypes function from a pointer
 
     This is a rather ugly hack. There should be a better way to call a function by a pointer!
     """
     with find_alpha_plus_scalar_lock:
-        if cs2_fun_ptr in CS2CACHE:
-            return CS2CACHE[cs2_fun_ptr]
+        if cs2_fun_ptr in CS2_CACHE:
+            return CS2_CACHE[cs2_fun_ptr]
         # https://numba.pydata.org/numba-doc/0.15.1/interface_c.html
         cs2_fun = th.CS2CFunc(cs2_fun_ptr)
-        CS2CACHE[cs2_fun_ptr] = cs2_fun
+        CS2_CACHE[cs2_fun_ptr] = cs2_fun
         return cs2_fun
 
 
@@ -334,7 +335,7 @@ def _find_alpha_plus_bag_scalar(
         alpha_n_given: float,
         n_xi: int = const.N_XI_DEFAULT,
         cs2_fun_ptr: th.CS2FunScalarPtr = bag.CS2_BAG_SCALAR_PTR,
-        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR,
+        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG,
         xtol: float = const.FIND_ALPHA_PLUS_TOL,
         # parallel: bool = True
         ) -> th.FloatOrArrNumba:
@@ -365,7 +366,7 @@ def _find_alpha_plus_bag_arr(
         alpha_n_given: float,
         n_xi: int = const.N_XI_DEFAULT,
         cs2_fun_ptr: th.CS2FunScalarPtr = bag.CS2_BAG_SCALAR_PTR,
-        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR,
+        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG,
         xtol: float = const.FIND_ALPHA_PLUS_TOL) -> th.FloatOrArrNumba:
     ap = np.zeros_like(v_wall)
     for i in numba.prange(v_wall.size):  # pylint: disable=not-an-iterable
@@ -385,7 +386,7 @@ def _find_alpha_plus_bag_arr_wrapper(
         alpha_n_given: float,
         n_xi: int = const.N_XI_DEFAULT,
         cs2_fun_ptr: th.CS2FunScalarPtr = bag.CS2_BAG_SCALAR_PTR,
-        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR,
+        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG,
         xtol: float = const.FIND_ALPHA_PLUS_TOL,
         # parallel: bool = True
         ) -> th.FloatOrArrNumba:
@@ -405,7 +406,7 @@ def find_alpha_plus_bag(
         alpha_n_given: float,
         n_xi: int = const.N_XI_DEFAULT,
         cs2_fun_ptr: th.CS2FunScalarPtr = bag.CS2_BAG_SCALAR_PTR,
-        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR,
+        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG,
         xtol: float = const.FIND_ALPHA_PLUS_TOL,
         # parallel: bool = True
         ) -> th.FloatOrArrNumba:
@@ -447,7 +448,7 @@ def _find_alpha_plus_bag_numba(
         alpha_n_given: float,
         n_xi: int = const.N_XI_DEFAULT,
         cs2_fun_ptr: th.CS2FunScalarPtr = bag.CS2_BAG_SCALAR_PTR,
-        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_BAG_PTR,
+        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG,
         xtol: float = const.FIND_ALPHA_PLUS_TOL,
         # parallel: bool = True
         ) -> th.FloatOrArrNumba:

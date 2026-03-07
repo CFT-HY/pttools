@@ -64,6 +64,7 @@ class FullModel(Model):
         self.w_at_alpha_n_min, self.alpha_n_min = self.alpha_n_min_find()
 
         self.cs2 = self.gen_cs2()
+        self.df_dtau_ptr()
 
     def gen_cs2(self):
         """This function generates the Numba-jitted cs2 function to be used by the fluid integrator"""

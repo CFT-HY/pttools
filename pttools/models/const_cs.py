@@ -8,10 +8,11 @@ import numba
 import numpy as np
 from scipy.optimize import minimize, minimize_scalar, OptimizeResult
 
+from pttools.bubble import DF_DTAU_PTR_BAG, cs2_bag_multi
 from pttools.bubble.const import CS0_2
 from pttools.bubble.boundary import Phase, SolutionType
 from pttools.models.analytic import AnalyticModel
-from pttools.models.bag import BagModel, df_dtau_ptr_bag
+from pttools.models.bag import BagModel
 from pttools.speedup import DifferentialPointer
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
@@ -592,7 +593,7 @@ class ConstCSModel(AnalyticModel):
 
     def df_dtau_ptr(self) -> DifferentialPointer:
         if self.is_bag:
-            return df_dtau_ptr_bag
+            return DF_DTAU_PTR_BAG
         return super().df_dtau_ptr()
 
     def gen_cs2(self):
@@ -602,7 +603,7 @@ class ConstCSModel(AnalyticModel):
 
         # Using the BagModel cs2 saves us from having to compile additional Numba functions
         if self.is_bag:
-            return BagModel.cs2
+            return cs2_bag_multi
 
         @numba.njit
         def cs2(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:

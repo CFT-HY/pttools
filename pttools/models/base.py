@@ -46,6 +46,7 @@ class BaseModel(abc.ABC):
             gen_cs2_neg: bool = True,
             temperature_is_physical: bool | None = None,
             silence_temp: bool = False):
+        self.id: int = id(self)
         self.name: str = self.DEFAULT_NAME if name is None else name
         self.label_latex: str = self.DEFAULT_LABEL_LATEX if label_latex is None else label_latex
         self.label_unicode: str = self.DEFAULT_LABEL_UNICODE if label_unicode is None else label_unicode

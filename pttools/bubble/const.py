@@ -1,5 +1,6 @@
 """Constants for the bubble module"""
 
+import math
 import typing as tp
 
 import numpy as np
@@ -21,7 +22,7 @@ DXI_SMALL: float = 1. / N_XI_DEFAULT
 THIN_SHELL_T_POINTS_MIN: int = 100
 
 #: Ideal speed of sound
-CS0: tp.Final[np.float64] = 1 / np.sqrt(3)
+CS0: tp.Final[float] = 1 / math.sqrt(3)
 #: Ideal speed of sound squared
 CS0_2: tp.Final[float] = 1/3
 

@@ -131,3 +131,9 @@ class DifferentialCache:
     def keys(self):
         """Get the keys in the cache"""
         return self._cache_njit.keys()
+
+    @property
+    def size(self) -> int:
+        """Get the number of differentials in the cache"""
+        with self._lock:
+            return len(self._cache_pointers)

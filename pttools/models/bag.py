@@ -2,11 +2,11 @@
 
 import logging
 
-import numba
 import numpy as np
 
-from pttools.bubble.integrate import add_df_dtau, differentials
+from pttools.bubble.bag import cs2_bag_multi, cs2_bag_neg, cs2_bag_temp
 from pttools.bubble.boundary import Phase, SolutionType
+from pttools.bubble.integrate import DF_DTAU_PTR_BAG
 from pttools.bubble.transition import identify_solution_type_bag
 from pttools.models.analytic import AnalyticModel
 from pttools.speedup.differential import DifferentialPointer
@@ -15,19 +15,6 @@ from pttools.type_hints import FloatOrArr
 from pttools.utils.docstrings import copy_docstring_dec
 
 logger = logging.getLogger(__name__)
-
-
-@numba.njit
-def cs2_bag(
-        w: th.FloatOrArr | None = None,
-        phase: th.FloatOrArr | None = None) -> th.FloatOrArr:
-    r"""Sound speed squared, $c_s^2=\frac{1}{3}$.
-    :notes:`\ `, p. 37,
-    :rel_hydro_book:`\ `, eq. 2.207
-    """
-    return 1/3 * np.ones_like(w) * np.ones_like(phase)
-
-df_dtau_ptr_bag = differentials.get_pointer("bag") if "bag" in differentials else add_df_dtau("bag", cs2_bag)
 
 
 class BagModel(AnalyticModel):
@@ -196,7 +183,9 @@ class BagModel(AnalyticModel):
         """
         return ((self.V_s - self.V_b) / (self.a_s - self.a_b))**0.25
 
-    cs2 = staticmethod(cs2_bag)
+    cs2 = staticmethod(cs2_bag_multi)
+    cs2_neg = staticmethod(cs2_bag_neg)
+    cs2_temp = staticmethod(cs2_bag_multi)
 
     def cs2_max(
             self,
@@ -210,16 +199,6 @@ class BagModel(AnalyticModel):
                 w_min: float = 0, allow_fail: bool = False, **kwargs) -> tuple[float, float]:
         return 1/3, np.nan
 
-    @staticmethod
-    @numba.njit
-    def cs2_neg(w: th.FloatOrArr | None = None, phase: th.FloatOrArr | None = None) -> th.FloatOrArr:
-        return - 1/3 * np.ones_like(w) * np.ones_like(phase)
-
-    @staticmethod
-    @numba.njit
-    def cs2_temp(temp, phase):
-        return cs2_bag(temp, phase)
-
     def delta_theta(
             self,
             wp: th.FloatOrArr, wm: th.FloatOrArr,
@@ -231,7 +210,7 @@ class BagModel(AnalyticModel):
         )
 
     def df_dtau_ptr(self) -> DifferentialPointer:
-        return df_dtau_ptr_bag
+        return DF_DTAU_PTR_BAG
 
     def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Energy density as a function of temperature, :giese_2021:`\ ` eq. 15, :borsanyi_2016:`\ `, eq. S12
