@@ -36,20 +36,27 @@ maintainers = [
     {name = "Mika Mäki", email = "mika.x.maki@helsinki.fi"}
 ]
 classifiers = [
+    "Development Status :: 4 - Beta",
     "Framework :: Matplotlib",
     "Intended Audience :: Developers",
     "Intended Audience :: Education",
     "Intended Audience :: Science/Research",
+    "Operating System :: MacOS",
     "Operating System :: OS Independent",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Windows",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Free Threading :: 1 - Unstable",
     "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Astronomy",
     "Topic :: Scientific/Engineering :: Physics",
     "Topic :: Scientific/Engineering :: Visualization",
     "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed"
 ]
 # Keep this up to date with requirements.txt
 dependencies = [
