@@ -18,11 +18,13 @@ IS_LINUX: bool = sys.platform.startswith('linux')
 IS_OSX: bool = sys.platform.startswith('darwin')
 IS_WINDOWS: bool = sys.platform.startswith('win32')
 IS_READ_THE_DOCS: bool = "READTHEDOCS_VIRTUALENV_PATH" in os.environ
+PTTOOLS_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 START_METHOD: str = multiprocessing.get_start_method()
 UNAME: platform.uname_result = platform.uname()
 
 # Constants determined by other constants
 FORKING: bool = START_METHOD == "fork"
+IS_PIP_PACKAGE: bool = os.path.basename(os.path.dirname(PTTOOLS_DIR)) == "site-packages"
 
 try:
     # This is available only on some platforms

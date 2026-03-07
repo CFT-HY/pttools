@@ -4,7 +4,7 @@ import math
 
 import numpy as np
 
-from pttools.bubble import const
+from pttools.omgw0 import const
 import pttools.type_hints as th
 
 

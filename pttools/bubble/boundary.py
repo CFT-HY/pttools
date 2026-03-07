@@ -14,6 +14,7 @@ import numpy as np
 
 from pttools.bubble import const
 from pttools.bubble.relativity import gamma, gamma2, lorentz
+from pttools.speedup import NUMBA_ENABLE_CACHE
 from pttools.speedup.solvers import fsolve_vary
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
@@ -518,7 +519,7 @@ def v_minus(
     raise TypeError(f"Unknown argument types: vp = {type(vp)}, ap = {type(ap)}")
 
 
-@overload(v_minus, jit_options={"nopython": True, "nogil": True})
+@overload(v_minus, jit_options={"nopython": True, "nogil": True, "cache": NUMBA_ENABLE_CACHE})
 def _v_minus_numba(
         vp: th.FloatOrArr,
         ap: float,
@@ -642,7 +643,7 @@ def v_plus(
     raise TypeError(f"Unknown argument types: vm = {type(vm)}, ap = {type(ap)}")
 
 
-@overload(v_plus, jit_options={"nopython": True, "nogil": True})
+@overload(v_plus, jit_options={"nopython": True, "nogil": True, "cache": NUMBA_ENABLE_CACHE})
 def _v_plus_numba(
         vm: th.FloatOrArr,
         ap: float,
@@ -679,7 +680,7 @@ def v_plus_hybrid(
     return -lorentz(vp_tilde, v_wall)
 
 
-def v_plus_limit(ap: th.FloatOrArr, sol_type: SolutionType) -> th.FloatOrArr:
+def v_plus_limit[T: FloatOrArr](ap: T, sol_type: SolutionType) -> T:
     r"""Limit for the values that $\tilde{v}_+$ can have.
 
     TODO this is the Chapman-Jouguet speed, not a separate limit!
@@ -687,10 +688,10 @@ def v_plus_limit(ap: th.FloatOrArr, sol_type: SolutionType) -> th.FloatOrArr:
     $$\frac{1}{1+\alpha_+} \left( \frac{1}{\sqrt{3}} \pm \sqrt{\alpha_+ ( \alpha_+ + \frac{2}{3})} \right)
     """
     b = 1 if sol_type == SolutionType.DETON.value else -1
-    return 1/(1 + ap) * (1/np.sqrt(3) + b*np.sqrt(ap*(ap+2/3)))
+    return 1/(1 + ap) * (1/np.sqrt(3) + b * np.sqrt(ap * (ap + 2/3)))
 
 
-def v_plus_off_limits(vp: float, ap: float, sol_type: SolutionType):
+def v_plus_off_limits(vp: float, ap: float, sol_type: SolutionType) -> bool:
     if sol_type == SolutionType.DETON.value:
         return vp < v_plus_limit(ap, sol_type)
     return vp > v_plus_limit(ap, sol_type)

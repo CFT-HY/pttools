@@ -20,6 +20,7 @@ from pttools.bubble import fluid_bag
 from pttools.bubble import relativity
 from pttools.bubble import transition
 import pttools.type_hints as th
+from pttools.speedup import NUMBA_ENABLE_CACHE
 from pttools.type_hints import FloatOrArr, FloatOrArr1D
 
 type Integrand = \
@@ -369,7 +370,7 @@ def get_ubarf2_bag[T: FloatOrArr1D](
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
-@overload(get_ubarf2_bag, jit_options={"nopython": True, "parallel": True})
+@overload(get_ubarf2_bag, jit_options={"nopython": True, "parallel": True, "cache": NUMBA_ENABLE_CACHE})
 def _get_ubarf2_bag_numba[T: FloatOrArr1D](
         v_wall: T,
         alpha_n: float,

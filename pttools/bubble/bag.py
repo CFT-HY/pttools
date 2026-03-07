@@ -10,10 +10,16 @@ from numba.extending import overload
 import numpy as np
 
 import pttools.type_hints as th
-from .boundary import Phase
+from pttools.bubble.boundary import Phase
 from pttools.bubble import const
 
 logger = logging.getLogger(__name__)
+
+NUMBA_CACHE_CS2_BAG: bool = True
+"""Whether to cache the Numba-compiled $c_s^2$ functions
+
+This is enabled by default, since these functions are not expected to change between runs.
+"""
 
 
 @numba.njit
@@ -71,14 +77,14 @@ def _check_thetas_warning(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> Non
 
 @numba.njit
 # pylint: disable=unused-argument
-def cs2_bag_scalar(w: float, phase: Phase) -> float:
+def _cs2_bag_scalar(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
     """The scalar versions of the bag functions have to be compiled to cfuncs if jitting is disabled,
     as otherwise the cfunc version of the differential cannot be created.
     """
     return const.CS0_2
 
 
-@numba.cfunc(th.CS2FunScalarSig)
+@numba.cfunc(th.CS2FunScalarSig, cache=NUMBA_CACHE_CS2_BAG)
 # pylint: disable=unused-argument
 def cs2_bag_scalar_cfunc(w: float, phase: Phase) -> float:
     return const.CS0_2
@@ -97,7 +103,10 @@ def cs2_bag_arr(w: np.ndarray, phase: np.ndarray) -> np.ndarray:
 @numba.njit
 def cs2_bag(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
     r"""
-    Speed of sound squared in Bag model, equal to $\frac{1}{3}$ independent of enthalpy $w$.
+    Speed of sound squared in Bag model, equal to $\frac{1}{3}$, independent of enthalpy $w$.
+
+    :notes:`\ `, p. 37,
+    :rel_hydro_book:`\ `, eq. 2.207
 
     :param w: enthalpy $w$
     :param phase: phase $\phi$

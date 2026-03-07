@@ -12,8 +12,10 @@ from pttools.bubble import check
 from pttools.bubble import const
 from pttools.bubble import props
 from pttools.bubble import relativity
+from pttools.speedup import NUMBA_ENABLE_CACHE
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr1D
+
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
@@ -469,7 +471,7 @@ def v_shock_bag(xi: th.FloatOrArr) -> th.FloatOrArrNumba:
     raise TypeError(f"Unknown type for xi: {type(xi)}")
 
 
-@overload(v_shock_bag, jit_options={"nopython": True})
+@overload(v_shock_bag, jit_options={"nopython": True, "cache": NUMBA_ENABLE_CACHE})
 def _v_shock_bag_numba(xi: th.FloatOrArr) -> th.FloatOrArrNumba:
     if isinstance(xi, numba.types.Float):
         return _v_shock_bag_scalar
@@ -517,7 +519,7 @@ def wm_shock_bag(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = Tru
     raise TypeError(f"Unknown type for xi: {type(xi)}")
 
 
-@overload(wm_shock_bag, jit_options={"nopython": True})
+@overload(wm_shock_bag, jit_options={"nopython": True, "cache": NUMBA_ENABLE_CACHE})
 def _wm_shock_bag_numba(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = True) -> th.FloatOrArrNumba:
     if isinstance(xi, numba.types.Float):
         return _wm_shock_bag_scalar
@@ -565,7 +567,7 @@ def wp_shock_bag(xi: th.FloatOrArr, wm: float) -> th.FloatOrArrNumba:
     raise TypeError(f"Unknown type for xi: {type(xi)}")
 
 
-@overload(wp_shock_bag, jit_options={"nopython": True})
+@overload(wp_shock_bag, jit_options={"nopython": True, "cache": NUMBA_ENABLE_CACHE})
 def _wp_shock_bag_numba(xi: th.FloatOrArr, wm: float) -> th.FloatOrArrNumba:
     if isinstance(xi, numba.types.Float):
         return _wp_shock_bag_scalar

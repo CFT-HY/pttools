@@ -8,6 +8,7 @@ import numpy as np
 
 import pttools.type_hints as th
 from pttools import speedup
+from pttools.speedup import NUMBA_ENABLE_CACHE
 from pttools.ssm import const
 
 # logger = logging.getLogger(__name__)
@@ -189,7 +190,7 @@ def spec_den_gw_scaled(
     raise TypeError(f"Unknown type for y: {type(y)}")
 
 
-@overload(spec_den_gw_scaled, jit_options={"nopython": True, "nogil": True})
+@overload(spec_den_gw_scaled, jit_options={"nopython": True, "nogil": True, "cache": NUMBA_ENABLE_CACHE})
 def _spec_den_gw_scaled_numba(
         z_lookup: th.FloatArr1D,
         P_v_lookup: th.FloatArr1D,

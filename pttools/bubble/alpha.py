@@ -29,7 +29,7 @@ CS2CACHE: dict[th.CS2FunScalarPtr, th.CS2CFunc] = {}
 find_alpha_plus_scalar_lock = threading.Lock()
 
 
-@numba.njit(nogil=True)
+@numba.njit(nogil=True, cache=NUMBA_ENABLE_CACHE)
 def alpha_n_max_bag(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArr:
     r"""
     Calculates the maximum relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
@@ -104,7 +104,7 @@ def alpha_n_max_deflagration_bag(
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
-@overload(alpha_n_max_deflagration_bag, jit_options={"nopython": True, "nogil": True})
+@overload(alpha_n_max_deflagration_bag, jit_options={"nopython": True, "nogil": True, "cache": NUMBA_ENABLE_CACHE})
 def _alpha_n_max_deflagration_bag_numba(
         v_wall: th.FloatOrArr,
         n_xi: int = const.N_XI_DEFAULT,
@@ -247,7 +247,7 @@ def alpha_plus_min_hybrid(v_wall: th.FloatOrArr) -> th.FloatOrArrNumba:
     return b / c
 
 
-@numba.njit(nogil=True)
+@numba.njit(nogil=True, cache=NUMBA_ENABLE_CACHE)
 def find_alpha_n_bag(
         v_wall: th.FloatOrArr,
         alpha_p: float,

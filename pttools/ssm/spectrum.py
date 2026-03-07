@@ -10,6 +10,7 @@ import numpy as np
 
 import pttools.type_hints as th
 from pttools.bubble import Bubble, Phase
+from pttools.speedup import NUMBA_ENABLE_CACHE
 from pttools.ssm import const
 from pttools.ssm.nucleation import NucType, DEFAULT_NUC_TYPE, beta, beta_over_H
 from pttools.ssm.spec_den_gw import gen_lookup, spec_den_gw_scaled
@@ -151,11 +152,13 @@ class SSMSpectrum:
             eps_lookup=eps_lookup,
             z_st_thresh=self.z_st_thresh,
             cs=self.cs,
+            # This requires r_star to be known.
             source_lifetime_factor=self.source_lifetime_factor,
             parallel=parallel
         )
         self.pow_gw = self.pow_gw_ssm
 
+        # Todo: Compile these with Numba.
         if self.r_star is not None:
             # Lorenzo 2024
             eta_end = self.eta_star + self.Htau_nl
@@ -278,7 +281,7 @@ class SSMSpectrum:
         return plot_spectra_spec_den_v([self], fig, ax, path, **kwargs)
 
 
-@numba.njit(nogil=True)
+@numba.njit(nogil=True, cache=NUMBA_ENABLE_CACHE)
 def compute(
         v: th.FloatArr1D,
         w: th.FloatArr1D,
