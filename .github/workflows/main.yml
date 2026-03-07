@@ -286,4 +286,3 @@ jobs:
       if: ${{ matrix.python-version == env.PRIMARY_PYTHON_VERSION }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: ${{ github.workspace }}/coverage.xml
