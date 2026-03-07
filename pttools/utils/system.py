@@ -5,6 +5,7 @@ import os
 import platform
 import subprocess
 import sys
+import sysconfig
 
 try:
     import psutil
@@ -19,11 +20,13 @@ IS_OSX: bool = sys.platform.startswith('darwin')
 IS_WINDOWS: bool = sys.platform.startswith('win32')
 IS_READ_THE_DOCS: bool = "READTHEDOCS_VIRTUALENV_PATH" in os.environ
 PTTOOLS_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-START_METHOD: str = multiprocessing.get_start_method()
+PROCESS_START_METHOD: str = multiprocessing.get_start_method()
+SUPPORTS_FREETHREADING: bool = bool(sysconfig.get_config_var("Py_GIL_DISABLED"))
+SUPPORTS_INTERPRETER_POOL: bool = hasattr(multiprocessing, "InterpreterPoolExecutor")
 UNAME: platform.uname_result = platform.uname()
 
 # Constants determined by other constants
-FORKING: bool = START_METHOD == "fork"
+FORKING: bool = PROCESS_START_METHOD == "fork"
 IS_PIP_PACKAGE: bool = os.path.basename(os.path.dirname(PTTOOLS_DIR)) == "site-packages"
 
 try:
@@ -66,7 +69,7 @@ def platform_info() -> str:
     return (
         f"OS: {UNAME.system} ({UNAME.release}), CPU: {UNAME.processor} ({UNAME.machine}), "
         f"Python: {platform.python_version()}, "
-        f"Start method: {START_METHOD}, available: {multiprocessing.get_all_start_methods()}."
+        f"Start method: {PROCESS_START_METHOD}, available: {multiprocessing.get_all_start_methods()}."
     )
 
 

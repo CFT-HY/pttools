@@ -1,11 +1,13 @@
 """Utilities for parallel execution of functions using multiple Python processes with concurrent.futures"""
 
 import atexit
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
 from contextlib import contextmanager
 # import datetime
 import logging
+from multiprocessing import set_forkserver_preload
+import sys
 from threading import Lock
 import time
 import typing as tp
@@ -14,11 +16,29 @@ import numpy as np
 from numpy.typing import NDArray
 
 from pttools.speedup.options import MAX_WORKERS_DEFAULT
+from pttools.utils import SUPPORTS_FREETHREADING, SUPPORTS_INTERPRETER_POOL
+
+try:
+    from concurrent.futures import InterpreterPoolExecutor
+except ImportError:
+    class InterpreterPoolExecutor:
+        def __enter__(self):
+            raise NotImplementedError("InterpreterPoolExecutor is only available in Python 3.14 and later.")
+
+        def __init__(self, *args, **kwargs):
+            raise NotImplementedError("InterpreterPoolExecutor is only available in Python 3.14 and later.")
 
 logger = logging.getLogger(__name__)
 
 POOL: ProcessPoolExecutor | None = None
 POOL_LOCK: Lock = Lock()
+
+set_forkserver_preload([
+    "numba", "numpy", "scipy",
+    "pttools.analysis", "pttools.bubble", "pttools.models",
+    "pttools.omgw0", "pttools.speedup", "pttools.ssm", "pttools.utils",
+    "pttools.logging", "pttools.type_hints"
+])
 
 
 class FakeExecutor:
@@ -100,14 +120,48 @@ def get_process_pool(
         max_workers: int = MAX_WORKERS_DEFAULT,
         single_thread: bool = False,
         global_pool: bool = False) -> tp.Iterator[FakeExecutor | ProcessPoolExecutor]:
-    """Get the global process pool for parallel execution.
+    """Get a process pool for parallel execution.
 
-    This pool is shared across the entire program
-    and should be used for all parallel execution to avoid creating multiple pools.
+    :param max_workers: Maximum number of worker processes
+    :param single_thread: Whether to disable parallelism for debugging and profiling
+    :param global_pool: Whether to use a global process pool for parallel execution.
+        This avoids the overhead of creating a new process pool for each parallel execution.
+    :return: The pool executor
     """
     if single_thread:
         yield FakeExecutor()
-    if global_pool:
+    elif global_pool:
+        yield get_global_process_pool(max_workers=max_workers)
+    else:
+        yield ProcessPoolExecutor(max_workers=max_workers)
+
+
+@contextmanager
+def get_pool(
+        max_workers: int = MAX_WORKERS_DEFAULT,
+        single_thread: bool = False,
+        global_pool: bool = False) \
+        -> tp.Iterator[FakeExecutor | InterpreterPoolExecutor | ProcessPoolExecutor | ThreadPoolExecutor]:
+    """Get a pool for parallel execution
+
+    Returns a ThreadPoolExecutor if free-threading is supported and the GIL is disabled.
+    Otherwise, returns an InterpreterPoolExecutor if supported, or a ProcessPoolExecutor otherwise.
+
+    This is not yet used by the rest of PTtools, since free-threading and InterpreterPoolExecutor are experimental.
+
+    :param max_workers: Maximum number of worker processes or threads
+    :param single_thread: Whether to disable parallelism for debugging and profiling
+    :param global_pool: Whether to use a global process pool for parallel execution.
+        This avoids the overhead of creating a new process pool for each parallel execution.
+    :return: The pool executor
+    """
+    if single_thread:
+        yield FakeExecutor()
+    elif SUPPORTS_FREETHREADING and not sys._is_gil_enabled():
+        yield ThreadPoolExecutor(max_workers=max_workers)
+    elif SUPPORTS_INTERPRETER_POOL:
+        yield InterpreterPoolExecutor(max_workers=max_workers)
+    elif global_pool:
         yield get_global_process_pool(max_workers=max_workers)
     else:
         yield ProcessPoolExecutor(max_workers=max_workers)
