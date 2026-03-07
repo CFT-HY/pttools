@@ -18,6 +18,11 @@ from .cs2 import *
 from .cs2_bag import *
 from .fluid import *
 from .fluid_bag import *
+from .fluid_base import *
+from .fluid_detonation import *
+from .fluid_gksvdv import *
+from .fluid_hybrid import *
+from .fluid_sub_def import *
 from .fluid_reference import *
 # from .gksvdv import *
 from .integrate import *

@@ -10,7 +10,8 @@ import numpy as np
 
 from examples import utils
 from pttools.analysis.utils import A4_PAPER_SIZE
-from pttools.bubble import Bubble, Phase, lorentz, kappaNuMuModel, v_chapman_jouguet_const_cs
+from pttools.bubble import Bubble, Phase, lorentz, v_chapman_jouguet_const_cs
+from pttools.bubble.gksvdv import kappaNuMuModel
 from pttools.models import ConstCSModel
 
 

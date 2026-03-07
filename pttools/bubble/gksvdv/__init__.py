@@ -1,6 +1,6 @@
 r"""Giese et al. template model code
 
-The files in this directory are based on the code from the articles
+The files gksvdv21.py and gkvdv20.py in this directory are based on the code from the articles
 :giese_2020:`\ ` and
 :giese_2021:`\ `.
 
