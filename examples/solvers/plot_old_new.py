@@ -10,10 +10,10 @@ import numpy as np
 
 from examples import utils
 from pttools.analysis.utils import A3_PAPER_SIZE
-from pttools.bubble import boundary
 from pttools.bubble import Phase, SolutionType
 from pttools.bubble.bubble import Bubble
 from pttools.bubble import fluid_bag
+from pttools.bubble.junction import junction_conditions_solvable
 from pttools.bubble import relativity
 from pttools.models import BagModel, Model
 from pttools.ssm import SSMSpectrum, power_gw_scaled_bag, spec_den_v_bag, power_v_bag
@@ -72,7 +72,7 @@ def validate2(
         phase1: Phase, phase2: Phase,
         sol_type: SolutionType):
     """Validate that the junction conditions have been solved correctly"""
-    dev = boundary.junction_conditions_solvable(np.array([v2w, w2]), model, v1w, w1, phase1, phase2)
+    dev = junction_conditions_solvable(np.array([v2w, w2]), model, v1w, w1, phase1, phase2)
     print(f"sol_type={sol_type}, v1p={v1p}, v2p={v2p}, v1w={v1w}, v2w={v2w}, w1={w1}, w2={w2}, dev={dev}")
 
 

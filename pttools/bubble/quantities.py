@@ -12,13 +12,12 @@ from numba.extending import overload
 import numpy as np
 
 from pttools.bubble import bag
-from pttools.bubble import boundary
 from pttools.bubble.phase import Phase, get_phase
 from pttools.bubble import check
 from pttools.bubble import const
 from pttools.bubble import fluid_bag
 from pttools.bubble import relativity
-from pttools.bubble.solution_type_bag import identify_solution_type_bag
+from pttools.bubble.solution_type_bag import SolutionType, identify_solution_type_bag
 import pttools.type_hints as th
 from pttools.speedup import NUMBA_ENABLE_CACHE
 from pttools.type_hints import FloatOrArr, FloatOrArr1D
@@ -105,7 +104,7 @@ def get_kappa_bag[T: FloatOrArr](
         vw = vw.item()
         sol_type = identify_solution_type_bag(vw, alpha_n)
 
-        if not sol_type == boundary.SolutionType.ERROR:
+        if not sol_type == SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(vw, alpha_n, n_xi)
 
@@ -147,7 +146,7 @@ def get_kappa_de_bag[T: FloatOrArr](
         vw = vw.item()
         sol_type = identify_solution_type_bag(vw, alpha_n)
 
-        if not sol_type == boundary.SolutionType.ERROR:
+        if not sol_type == SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(vw, alpha_n, n_xi)
             # Esp+ epsilon is alpha_n * 0.75*w_n
@@ -195,7 +194,7 @@ def get_kappa_dq_bag[T: FloatOrArr](
         vw = vw.item()
         sol_type = identify_solution_type_bag(vw, alpha_n)
 
-        if not sol_type == boundary.SolutionType.ERROR:
+        if not sol_type == SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(vw, alpha_n, n_xi)
             # Esp+ epsilon is alpha_n * 0.75*w_n
@@ -240,7 +239,7 @@ def get_ke_de_frac_bag[T: FloatOrArr](
         vw = vw.item()
         sol_type = identify_solution_type_bag(vw, alpha_n)
 
-        if not sol_type == boundary.SolutionType.ERROR:
+        if not sol_type == SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(vw, alpha_n, n_xi)
             # Esp+ epsilon is alpha_n * 0.75*w_n
@@ -302,7 +301,7 @@ def get_ke_frac_new_bag[T: FloatOrArr](
     for vw, ke in it:
         vw = vw.item()
         sol_type = identify_solution_type_bag(vw, alpha_n)
-        if not sol_type == boundary.SolutionType.ERROR:
+        if not sol_type == SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(vw, alpha_n, n_xi)
             ke[...] = mean_kinetic_energy(v, w, xi, vw)
@@ -326,7 +325,7 @@ def get_ke_frac_new_bag[T: FloatOrArr](
 
 
 def _get_ubarf2_bag_scalar[T: FloatOrArr1D](v_wall: T, alpha_n: float, n_xi: int, verbosity: int) -> T:
-    if identify_solution_type_bag(v_wall, alpha_n) == boundary.SolutionType.ERROR:
+    if identify_solution_type_bag(v_wall, alpha_n) == SolutionType.ERROR:
         ubarf2 = np.nan
     else:
         # Now ready to solve for fluid profile
@@ -406,7 +405,7 @@ def get_ubarf2_new_bag(
     for vw, Ubarf2 in it:
         vw = vw.item()
         sol_type = identify_solution_type_bag(vw, alpha_n)
-        if not sol_type == boundary.SolutionType.ERROR:
+        if not sol_type == SolutionType.ERROR:
             # Now ready to get Ubarf2
             ke_frac = get_ke_frac_new_bag(vw, alpha_n)
             Ubarf2[...] = ke_frac / Gamma

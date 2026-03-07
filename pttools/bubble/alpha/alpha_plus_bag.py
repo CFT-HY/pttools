@@ -10,10 +10,10 @@ from pttools.bubble.alpha.alpha_limits_bag import alpha_n_max_deflagration_bag, 
 from pttools.bubble.alpha.alpha_n_bag import find_alpha_n_bag
 from pttools.bubble.alpha.alpha_plus import alpha_plus_initial_guess
 from pttools.bubble import bag
-from pttools.bubble import boundary
 from pttools.bubble import const
 from pttools.bubble.cs2 import cs2_converter
 from pttools.bubble import integrate
+from pttools.bubble.solution_type import SolutionType
 import pttools.type_hints as th
 
 
@@ -28,12 +28,12 @@ def _find_alpha_plus_bag_scalar(
         ) -> th.FloatOrArrNumba:
     if alpha_n_given < alpha_n_max_detonation_bag(v_wall):
         # Must be detonation
-        # sol_type = boundary.SolutionType.DETON
+        # sol_type = SolutionType.DETON
         return alpha_n_given
     if alpha_n_given >= alpha_n_max_deflagration_bag(v_wall):
         # Greater than the maximum possible -> fail
         return np.nan
-    sol_type = boundary.SolutionType.SUB_DEF if v_wall <= const.CS0 else boundary.SolutionType.HYBRID
+    sol_type = SolutionType.SUB_DEF if v_wall <= const.CS0 else SolutionType.HYBRID
     ap_initial_guess = alpha_plus_initial_guess(v_wall, alpha_n_given)
     with numba.objmode(ret="float64"):
         cs2_fun = cs2_converter(cs2_fun_ptr)
@@ -155,7 +155,7 @@ def _find_alpha_plus_bag_numba(
 def _find_alpha_plus_optimizer_bag(
         alpha: th.FloatArr1D,
         v_wall: float,
-        sol_type: boundary.SolutionType,
+        sol_type: SolutionType,
         n_xi: int,
         alpha_n_given: float,
         cs2_fun: th.CS2Fun,

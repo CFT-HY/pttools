@@ -1,4 +1,6 @@
-"""Functions for calculating the properties of the bubble boundaries
+"""Junction conditions
+
+At the bubble wall (phase boundary), or shock.
 
 .. plot:: fig/vm_vp_plane.py
 """
@@ -11,43 +13,15 @@ import numba
 import numpy as np
 
 from pttools.bubble import const
-from pttools.bubble.relativity import gamma, gamma2, lorentz
+from pttools.bubble.junction_entropy import check_entropy_fluxes
+from pttools.bubble.relativity import gamma2, lorentz
 from pttools.bubble.phase import Phase
-from pttools.bubble.solution_type import SolutionType
-from pttools.bubble.v_plus import v_plus
-from pttools.bubble.v_minus import v_minus
 from pttools.speedup.solvers import fsolve_vary
 import pttools.type_hints as th
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
 logger = logging.getLogger(__name__)
-
-
-def check_entropy_fluxes(
-        model: "Model",
-        v1_tilde: float,
-        v2_tilde: float,
-        w1: float,
-        w2: float,
-        phase1: Phase,
-        phase2: float,
-        allow_negative_entropy_flux_change: bool = False) -> tuple[bool, float, float]:
-    """False = OK, True = fail"""
-    s1 = model.s(w1, phase1)
-    s2 = model.s(w2, phase2)
-    entropy_flux1 = entropy_flux(v1_tilde, s1)
-    entropy_flux2 = entropy_flux(v2_tilde, s2)
-    fail_individual = entropy_flux1 < 0 or entropy_flux2 < 0
-    if allow_negative_entropy_flux_change:
-        fail_total = False
-    else:
-        fail_total = (
-            (phase1 == Phase.SYMMETRIC and phase2 == Phase.BROKEN and entropy_flux1 - entropy_flux2 < 0) or
-            (phase1 == Phase.BROKEN and phase2 == Phase.SYMMETRIC and entropy_flux2 - entropy_flux1 < 0)
-        )
-    # fail_total = False
-    return fail_individual or fail_total, entropy_flux1, entropy_flux2
 
 
 @numba.njit
@@ -64,66 +38,6 @@ def enthalpy_ratio(v_m: th.FloatOrArr, v_p: th.FloatOrArr) -> th.FloatOrArr:
     :return: enthalpy ratio
     """
     return gamma2(v_m) * v_m / (gamma2(v_p) * v_p)
-
-
-def entropy_flux(v_tilde: th.FloatOrArr, s: th.FloatOrArr) -> th.FloatOrArr:
-    r"""Entropy flux $\gamma(\tilde{v}) \tilde{v} s$"""
-    return gamma(v_tilde) * v_tilde * s
-
-
-@numba.njit
-def fluid_speeds_at_wall(
-        v_wall: float,
-        alpha_plus: float,
-        sol_type: SolutionType) -> tuple[float, float, float, float]:
-    r"""
-    Solves fluid speed boundary conditions at the wall to obtain
-    the fluid speeds both in the universe (plasma frame): $v_+$ and $v_+$
-    and in the wall frame: $\tilde{v}_+, \tilde{v}_-$.
-
-    Bag model only!
-
-    The abbreviations are: fluid speed (vf) just behind (m=minus) and just ahead (p=plus) of wall,
-    in wall (_w) and plasma/universe (_p) frames.
-
-    TODO: add a validity check for v_minus
-
-    :param v_wall: $v_\text{wall}$
-    :param alpha_plus: $\alpha_+$
-    :param sol_type: solution type
-    :return: $\tilde{v}_+,\tilde{v}_-,v_+,v_-$
-    """
-    if v_wall > 1:
-        # Todo: better error handling and logging
-        # with numba.objmode:
-        #     logger.error("v_wall > 1: v_wall = %s", v_wall)
-        raise ValueError(f"Got v_wall = {v_wall} > 1")
-
-    # print("max_speed_deflag(alpha_plus)=", max_speed_deflag(alpha_plus))
-    # if v_wall < max_speed_deflag(alpha_plus) and v_wall <= cs and alpha_p <= 1/3.:
-    if sol_type == SolutionType.SUB_DEF.value:
-        # For clarity these are defined here in the same order as returned
-        vfp_w = v_plus(v_wall, alpha_plus, sol_type)  # Fluid velocity just ahead of the wall in wall frame (v+)
-        vfm_w = v_wall  # Fluid velocity just behind the wall in wall frame (v-)
-        vfp_p = lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
-        vfm_p = lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
-    elif sol_type == SolutionType.HYBRID.value:
-        vfp_w = v_plus(const.CS0, alpha_plus, sol_type)  # Fluid velocity just ahead of the wall in wall frame (v+)
-        vfm_w = const.CS0  # Fluid velocity just behind the wall in plasma frame (hybrid)
-        vfp_p = lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
-        vfm_p = lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
-    elif sol_type == SolutionType.DETON.value:
-        vfp_w = v_wall  # Fluid velocity just ahead of the wall in wall frame (v+)
-        vfm_w = v_minus(v_wall, alpha_plus)  # Fluid velocity just behind the wall in wall frame (v-)
-        vfp_p = lorentz(v_wall, vfp_w)  # Fluid velocity just ahead of the wall in plasma frame
-        vfm_p = lorentz(v_wall, vfm_w)  # Fluid velocity just behind the wall in plasma frame
-    else:
-        # Todo: better error handling and logging
-        # with numba.objmode:
-        #     logger.error("Unknown sol_type: %s", sol_type)
-        raise ValueError(f"Unknown sol_type={sol_type}")
-
-    return vfp_w, vfm_w, vfp_p, vfm_p
 
 
 def junction_conditions_deviation(vp: th.FloatOrArr, vm: th.FloatOrArr, ap: th.FloatOrArr) -> th.FloatOrArr:

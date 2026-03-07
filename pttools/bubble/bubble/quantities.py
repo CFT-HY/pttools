@@ -8,7 +8,7 @@ import typing as tp
 
 import numpy as np
 
-from pttools.bubble.bubble import Bubble
+from pttools.bubble.bubble.bubble import Bubble
 import pttools.type_hints as th
 
 

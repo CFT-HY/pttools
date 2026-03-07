@@ -7,7 +7,7 @@ from numba.extending import overload
 import numba.types
 import numpy as np
 
-from pttools.bubble.boundary import solve_junction, w2_junction
+from pttools.bubble.junction import solve_junction, w2_junction
 from pttools.bubble import check
 from pttools.bubble import const
 from pttools.bubble import props

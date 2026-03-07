@@ -5,11 +5,11 @@ from numba.extending import overload
 import numpy as np
 
 from pttools import speedup
-from pttools.bubble import boundary
 from pttools.bubble import const
 from pttools.bubble import fluid_bag
 from pttools.bubble import check
 from pttools.bubble import props
+from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.solution_type_bag import identify_solution_type_alpha_plus_bag
 from pttools.speedup import NUMBA_ENABLE_CACHE
 import pttools.type_hints as th
@@ -37,7 +37,7 @@ def _alpha_n_max_deflagration_bag_scalar(
     if v_wall > 0.9999:
         # Alpha_n_max diverges as v_wall -> 1, and the solver fails to find the correct solution.
         return np.nan
-    sol_type = boundary.SolutionType.HYBRID.value if v_wall > const.CS0 else boundary.SolutionType.SUB_DEF.value
+    sol_type = SolutionType.HYBRID.value if v_wall > const.CS0 else SolutionType.SUB_DEF.value
     ap = 1. / 3 - 1.0e-10  # Warning - this is not safe. Causes warnings for low v_wall.
     _, w, xi = fluid_bag.sound_shell_alpha_plus_bag(v_wall, ap, sol_type, n_xi)
     n_wall = props.find_v_index(xi, v_wall)
@@ -129,13 +129,13 @@ def alpha_n_max_hybrid_bag(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> flo
     :return: $\alpha_{n,\max}$
     """
     sol_type = identify_solution_type_alpha_plus_bag(v_wall=v_wall, alpha_p=1 / 3).value
-    if sol_type == boundary.SolutionType.SUB_DEF:
+    if sol_type == SolutionType.SUB_DEF:
         raise ValueError(
             f"Alpha_n_max_hybrid was called with v_wall={v_wall} < cs. Use alpha_n_max_deflagration instead."
         )
 
     # Might have been returned as Detonation, which takes precedence over Hybrid
-    sol_type = boundary.SolutionType.HYBRID.value
+    sol_type = SolutionType.HYBRID.value
     ap = 1/3 - 1e-8
     _, w, xi = fluid_bag.sound_shell_alpha_plus_bag(v_wall, ap, sol_type, n_xi)
     n_wall = props.find_v_index(xi, v_wall)

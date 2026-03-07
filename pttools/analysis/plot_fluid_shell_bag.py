@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.analysis import utils
-from pttools.bubble import boundary, const, fluid_bag, relativity
+from pttools.bubble import const, fluid_bag, relativity, SolutionType
 import pttools.type_hints as th
 
 
@@ -96,13 +96,13 @@ def plot_fluid_shell_bag(
         rf'$\alpha_+ =  {alpha_plus:5.3f}$, $r =  {r:.3f}$, $\xi_{{\rm sh}} =  {xi[-2]:5.3f}$', size=16)
     ax1.plot(xi, v, 'b', label=r'$v(\xi)$')
 
-    if not sol_type == boundary.SolutionType.DETON:
+    if not sol_type == SolutionType.DETON:
         ax1.plot(xi_even[n_cs:], v_sh[n_cs:], 'k--', label=r'$v_{\rm sh}(\xi_{\rm sh})$')
         if high_v_approx:
             ax1.plot(xi[n_wall:n_sh], v_approx, 'b--', label=r'$v$ ($v < \xi$ approx)')
             ax1.plot(xi, xi, 'k--', label=r'$v = \xi$')
 
-    if not sol_type == boundary.SolutionType.SUB_DEF:
+    if not sol_type == SolutionType.SUB_DEF:
         v_minus_max = relativity.lorentz(xi_even, const.CS0)
         ax1.plot(xi_even[n_cs:], v_minus_max[n_cs:], 'k-.', label=r'$\mu(\xi,c_{\rm s})$')
 
@@ -125,7 +125,7 @@ def plot_fluid_shell_bag(
     ax2.plot(xi, np.ones_like(xi) * w[-1], '--', color='0.5')
     ax2.plot(xi, w, 'b', label=r'$w(\xi)$')
 
-    if not sol_type == boundary.SolutionType.DETON:
+    if not sol_type == SolutionType.DETON:
         ax2.plot(xi_even[n_cs:], w_sh[n_cs:], 'k--', label=r'$w_{\rm sh}(\xi_{\rm sh})$')
 
         if high_v_approx:

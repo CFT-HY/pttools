@@ -8,7 +8,6 @@ import numpy as np
 from scipy.optimize import fsolve, root_scalar
 
 from pttools.bubble import alpha
-from pttools.bubble import boundary
 from pttools.bubble.phase import Phase
 from pttools.bubble import chapman_jouguet
 from pttools.bubble import const
@@ -16,6 +15,8 @@ from pttools.bubble.gksvdv.gksvdv21 import kappaNuMuModel
 from pttools.bubble import fluid_bag
 from pttools.bubble import fluid_reference
 from pttools.bubble import integrate
+from pttools.bubble.junction import solve_junction, v_plus_hybrid, w2_junction
+from pttools.bubble.junction_bag import fluid_speeds_at_wall_bag
 from pttools.bubble import props
 from pttools.bubble import relativity
 from pttools.bubble import shock
@@ -23,6 +24,7 @@ from pttools.bubble.solution_type import \
     SolutionType, cannot_be_detonation, cannot_be_sub_def, is_surely_detonation, validate_solution_type
 from pttools.bubble.solution_type_bag import identify_solution_type_bag
 from pttools.bubble import trim
+from pttools.bubble import v_minus
 from pttools.speedup.solvers import fsolve_vary
 from pttools.speedup import NAN_ARR
 import pttools.type_hints as th
@@ -84,9 +86,9 @@ def sound_shell_deflagration(
         Vp = 1
         Vm = 0
         alpha_minus = 4*(Vm - Vp)/(3*w_center)
-        vp_tilde_guess = boundary.v_minus(vp=v_wall, ap=alpha_minus, sol_type=SolutionType.SUB_DEF)
+        vp_tilde_guess = v_minus(vp=v_wall, ap=alpha_minus, sol_type=SolutionType.SUB_DEF)
         vp_guess = -relativity.lorentz(vp_tilde_guess, v_wall)
-        wp_guess = boundary.w2_junction(v_wall, w_center, vp_tilde_guess)
+        wp_guess = w2_junction(v_wall, w_center, vp_tilde_guess)
     else:
         # if vp_guess > v_wall:
         #     logger.warning("Using invalid vp_guess=%s", vp_guess)
@@ -157,7 +159,7 @@ def sound_shell_deflagration_common(
         return DEFLAGRATION_NAN
 
     # Solve the boundary conditions at the wall
-    vp_tilde, wp = boundary.solve_junction(
+    vp_tilde, wp = solve_junction(
         model, vm_tilde, wm,
         Phase.BROKEN, Phase.SYMMETRIC,
         v2_tilde_guess=vp_tilde_guess, w2_guess=wp_guess,
@@ -305,7 +307,7 @@ def sound_shell_deflagration_common(
     vm_sh = v[-1]
     wm_sh = w[-1]
     vm_tilde_sh = relativity.lorentz(xi_sh, vm_sh)
-    wn_estimate = boundary.w2_junction(vm_tilde_sh, wm_sh, xi_sh)
+    wn_estimate = w2_junction(vm_tilde_sh, wm_sh, xi_sh)
 
     vm = relativity.lorentz(vm_tilde, v_wall)
     return v, w, xi, vp, vm, vp_tilde, vm_tilde, xi_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh
@@ -365,7 +367,7 @@ def sound_shell_deflagration_reverse(
         # nan_arr = np.array([np.nan])
         # return nan_arr, nan_arr, nan_arr, np.nan, np.nan
 
-    vm_tilde, wm = boundary.solve_junction(
+    vm_tilde, wm = solve_junction(
         model, vp_tilde, wp,
         Phase.SYMMETRIC, Phase.BROKEN,
         v2_tilde_guess=v_wall, w2_guess=wp,
@@ -385,9 +387,9 @@ def sound_shell_detonation(
     # Todo: use analytical ConstCSModel equations for both phases
 
     # Use bag model as the starting point. This may fail for points near the v_cj curve.
-    vp_tilde_bag, vm_tilde_bag, vp_bag, vm_bag = boundary.fluid_speeds_at_wall(
+    vp_tilde_bag, vm_tilde_bag, vp_bag, vm_bag = fluid_speeds_at_wall_bag(
         v_wall, alpha_plus=alpha_n, sol_type=SolutionType.DETON)
-    wm_bag = boundary.w2_junction(v1=vp_tilde_bag, w1=wn, v2=vm_tilde_bag)
+    wm_bag = w2_junction(v1=vp_tilde_bag, w1=wn, v2=vm_tilde_bag)
 
     # The bag model works for more points than the pre-generated guesses, so let's use the bag model if we can.
     if not np.isnan(vm_tilde_bag):
@@ -421,7 +423,7 @@ def sound_shell_detonation(
         #     raise RuntimeError("This should not happen. There is something wrong with the math.")
 
     # Solve junction conditions
-    vm_tilde, wm = boundary.solve_junction(
+    vm_tilde, wm = solve_junction(
         model,
         v1_tilde=v_wall, w1=wn,
         phase1=Phase.SYMMETRIC, phase2=Phase.BROKEN,
@@ -436,7 +438,7 @@ def sound_shell_detonation(
     solution_found = vm <= v_mu
     first_attempt_success = solution_found
     if not solution_found:
-        vm_tilde2, wm2 = boundary.solve_junction(
+        vm_tilde2, wm2 = solve_junction(
             model,
             v1_tilde=v_wall, w1=wn,
             phase1=Phase.SYMMETRIC, phase2=Phase.BROKEN,
@@ -452,7 +454,7 @@ def sound_shell_detonation(
             wm = wm2
     if not solution_found:
         csb_lower = relativity.lorentz(xi=v_wall, v=0.5*v_mu)
-        vm_tilde2, wm2 = boundary.solve_junction(
+        vm_tilde2, wm2 = solve_junction(
             model,
             v1_tilde=v_wall, w1=wn,
             phase1=Phase.SYMMETRIC, phase2=Phase.BROKEN,
@@ -771,7 +773,7 @@ def sound_shell_solver_hybrid(
         vps = np.zeros_like(wms)
         v_sh = shock.v_shock(model, wn=wn, xi=v_wall, cs_n=cs_n)
         for i, wm_i in enumerate(wms):
-            vp = boundary.v_plus_hybrid(
+            vp = v_plus_hybrid(
                 model,
                 v_wall=v_wall, wm=wm_i,
                 vp_tilde_guess=vp_tilde_guess, wp_guess=wp_guess,

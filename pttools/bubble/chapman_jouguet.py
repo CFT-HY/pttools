@@ -9,10 +9,10 @@ import numpy as np
 from scipy.optimize import fsolve
 
 # from pttools.bubble import const
-from pttools.bubble import boundary
 from pttools.bubble.relativity import gamma2
 from pttools.bubble.phase import Phase
 from pttools.bubble.solution_type import SolutionType
+from pttools.bubble.v_plus import v_plus
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr, FloatOrArr1D
 if tp.TYPE_CHECKING:
@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 # def chapman_jouguet_solvable(params: th.FloatArr1D, model: "Model", wn: float, wm_guess: float):
 #     v_wall = params[0]
 #     vm_guess = np.sqrt(model.cs2(wm_guess, Phase.BROKEN))
-#     _, _, vm, wm = boundary.solve_boundary(
+#     _, _, vm, wm = solve_boundary(
 #         v_wall, wn, SolutionType.SUB_DEF, model, vm_guess=vm_guess, wm_guess=wm_guess)
 #     return vm - np.sqrt(model.cs2(wm, Phase.BROKEN))
 #
@@ -50,8 +50,8 @@ logger = logging.getLogger(__name__)
 # def wm_vw_solvable(params: th.FloatArr1D, model: "Model", vp: float, wp: float):
 #     r"""$$\Delta_\text{junc1}(w_-)$$ for detonations"""
 #     wm = params[0]
-#     vm = boundary.v_minus(vp, model.alpha_plus(wp, wm), SolutionType.DETON)
-#     return boundary.junction_condition_deviation1(vp, wp, vm, wm)
+#     vm = v_minus(vp, model.alpha_plus(wp, wm), SolutionType.DETON)
+#     return junction_condition_deviation1(vp, wp, vm, wm)
 #
 #
 # def wm_vw(wm_guess: float, model: "Model", vp: float, wp: float):
@@ -70,9 +70,9 @@ logger = logging.getLogger(__name__)
 # def v_chapman_jouguet_solvable(params: th.FloatArr1D, model: "Model", wp: float, wm_guess: float = None):
 #     vp = params[0]
 #     # If a guess is not provided, use the bag model value.
-#     wm_guess = boundary.w2_junction(vp, wp, const.CS0) if wm_guess is None else wm_guess
+#     wm_guess = w2_junction(vp, wp, const.CS0) if wm_guess is None else wm_guess
 #     wm = wm_vw(wm_guess, model, vp, wp)
-#     vm = boundary.v_minus(vp, model.alpha_plus(wp, wm))
+#     vm = v_minus(vp, model.alpha_plus(wp, wm))
 #     cs = model.cs2(wm, Phase.BROKEN)
 #     return vm - cs
 
@@ -225,7 +225,7 @@ def v_chapman_jouguet(
             logger.error(msg)
         if error_on_invalid:
             raise RuntimeError(msg)
-    v_cj = boundary.v_plus(vm_cj, ap_cj, sol_type=SolutionType.DETON)
+    v_cj = v_plus(vm_cj, ap_cj, sol_type=SolutionType.DETON)
     if extra_output:
         return v_cj, vm_cj, ap_cj
     return v_cj
@@ -277,7 +277,7 @@ def v_chapman_jouguet_const_cs_reference[T: FloatOrArr1D](alpha_n: T, model: "Co
     ap = model.alpha_plus(wp=wn, wm=1)
     ret = np.zeros_like(ap)
     for i, a in enumerate(ap):
-        ret[i] = boundary.v_plus(model.csb, a, sol_type=SolutionType.DETON)
+        ret[i] = v_plus(model.csb, a, sol_type=SolutionType.DETON)
     return ret
 
 
@@ -327,7 +327,7 @@ def wm_solvable_chapman_jouguet(params: th.FloatArr1D, model: "Model", wp: float
         wp=wp, wm=wm_param, sol_type=SolutionType.DETON,
         error_on_invalid=False, nan_on_invalid=False, log_invalid=False
     )
-    vp = boundary.v_plus(vm, ap, sol_type=SolutionType.DETON)
+    vp = v_plus(vm, ap, sol_type=SolutionType.DETON)
     # print(f"vm={vm}, ap={ap}, vp={vp}")
 
     # What was this?

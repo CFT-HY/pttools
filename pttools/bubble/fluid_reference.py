@@ -10,12 +10,12 @@ import h5py
 import numpy as np
 from scipy.interpolate import NearestNDInterpolator
 
-from pttools.bubble import boundary
 from pttools.bubble.alpha import alpha_n_max_bag
+from pttools.bubble.fluid_bag import sound_shell_bag
+from pttools.bubble.junction import junction_condition_deviation1
+from pttools.bubble import props
 from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.solution_type_bag import identify_solution_type_bag
-from pttools.bubble.fluid_bag import sound_shell_bag
-from pttools.bubble import props
 from pttools.logging import setup_logging
 from pttools.speedup.parallel import run_parallel
 from pttools.utils.system import FORKING
@@ -192,7 +192,7 @@ def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tuple[int, flo
     if not np.isclose(wn, 1):
         raise ValueError(f"The old solver should always have wn=1, got wn={wn}")
 
-    dev = boundary.junction_condition_deviation1(vp_tilde, wp, vm_tilde, wm)
+    dev = junction_condition_deviation1(vp_tilde, wp, vm_tilde, wm)
     if not np.isclose(dev, 0, atol=0.025):
         logger.warning(
             "Deviation from boundary conditions: %s at v_wall=%s, alpha_n=%s",

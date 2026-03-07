@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.analysis import utils
-from pttools.bubble import boundary, check, const, fluid_bag, props, quantities, relativity, shock
+from pttools.bubble import check, const, fluid_bag, props, quantities, relativity, shock, SolutionType
 from pttools.bubble.solution_type_bag import identify_solution_type_bag
 import pttools.type_hints as th
 
@@ -84,7 +84,7 @@ def plot_fluid_shells_bag(
         check.check_physical_params((v_wall, alpha_n))
 
         sol_type = identify_solution_type_bag(v_wall, alpha_n)
-        if sol_type == boundary.SolutionType.ERROR:
+        if sol_type == SolutionType.ERROR:
             raise RuntimeError(f"No solution for v_wall = {v_wall}, alpha_n = {alpha_n}.")
 
         v, w, xi = fluid_bag.sound_shell_bag(v_wall, alpha_n, Np)
@@ -109,9 +109,9 @@ def plot_fluid_shells_bag(
 
         # First velocity v
         ax[0, n].plot(xi, v, 'b')
-        if not sol_type == boundary.SolutionType.DETON:
+        if not sol_type == SolutionType.DETON:
             ax[0, n].plot(xi_even[n_cs:], v_sh[n_cs:], 'k--', label=r'$v_{\rm sh}(\xi_{\rm sh})$')
-        if not sol_type == boundary.SolutionType.SUB_DEF:
+        if not sol_type == SolutionType.SUB_DEF:
             v_minus_max = relativity.lorentz(xi_even, const.CS0)
             ax[0, n].plot(xi_even[n_cs:], v_minus_max[n_cs:], 'k-.', label=r'$\mu(\xi,c_{\rm s})$')
 
@@ -129,7 +129,7 @@ def plot_fluid_shells_bag(
         # Then enthalpy w
         # ax[1,n].plot(xi, np.ones_like(xi)*w[-1], '--', color='0.5')
         ax[1, n].plot(xi, w, 'b')
-        if not sol_type == boundary.SolutionType.DETON:
+        if not sol_type == SolutionType.DETON:
             ax[1, n].plot(xi_even[n_cs:n_sh], w_sh[n_cs:n_sh], 'k--', label=r'$w_{\rm sh}(\xi_{\rm sh})$')
         else:
             wmax_det = (xi_even / const.CS0) * relativity.gamma2(xi_even) / relativity.gamma2(const.CS0)

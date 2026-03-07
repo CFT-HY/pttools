@@ -13,10 +13,11 @@ import numpy as np
 from pttools.bubble import alpha
 from pttools.bubble import approx
 from pttools.bubble import bag
-from pttools.bubble import boundary
 from pttools.bubble import check
 from pttools.bubble import const
 from pttools.bubble import integrate
+from pttools.bubble.junction import enthalpy_ratio
+from pttools.bubble.junction_bag import fluid_speeds_at_wall_bag
 from pttools.bubble.phase import Phase
 from pttools.bubble import props
 from pttools.bubble import quantities
@@ -130,9 +131,9 @@ def sound_shell_alpha_plus_bag(
 
     # Solve boundary conditions at wall
     # See the function docstring for the abbreviations
-    vfp_w, vfm_w, vfp_p, vfm_p = boundary.fluid_speeds_at_wall(v_wall, alpha_plus, sol_type)
+    vfp_w, vfm_w, vfp_p, vfm_p = fluid_speeds_at_wall_bag(v_wall, alpha_plus, sol_type)
     wp = 1.0  # Nominal value - will be rescaled later
-    wm = wp / boundary.enthalpy_ratio(vfm_w, vfp_w)  # enthalpy just behind wall
+    wm = wp / enthalpy_ratio(vfm_w, vfp_w)  # enthalpy just behind wall
 
     dxi = 1. / n_xi
     # dxi = 10*eps
@@ -175,7 +176,7 @@ def sound_shell_alpha_plus_bag(
         # enthalpy
         vfp_s = xi[-1]  # Fluid velocity just ahead of shock in shock frame = shock speed
         vfm_s = 1 / (3 * vfp_s)  # Fluid velocity just behind shock in shock frame
-        wf = np.ones_like(xif) * w[-1] * boundary.enthalpy_ratio(vfm_s, vfp_s)
+        wf = np.ones_like(xif) * w[-1] * enthalpy_ratio(vfm_s, vfp_s)
         wf = np.concatenate((w, wf))
         # xi
         xif[0] = xi[-1]

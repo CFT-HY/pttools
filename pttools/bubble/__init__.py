@@ -10,7 +10,6 @@ Main inputs are the wall speed $v_w$ and the global transition strength paramete
 from .alpha import *
 from .approx import *
 from .bag import *
-from .boundary import *
 from .bubble import *
 from .chapman_jouguet import *
 from .check import *
@@ -20,6 +19,9 @@ from .fluid_bag import *
 from .fluid_reference import *
 # from .gksvdv import *
 from .integrate import *
+from .junction import *
+from .junction_bag import *
+from .junction_entropy import *
 # from .physical_params import *
 from .phase import *
 from .props import *
