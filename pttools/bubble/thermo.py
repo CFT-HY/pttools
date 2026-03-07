@@ -18,8 +18,10 @@ which would break this useful property and require a more dense grid of points.
 import logging
 import typing as tp
 
+import numba
 import numpy as np
 
+from pttools.bubble.check import check_wall_speed
 from pttools.bubble.phase import Phase
 from pttools.bubble import props
 from pttools.bubble import relativity
@@ -31,7 +33,16 @@ if tp.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-# Todo: Reorder these functions e.g. alphabetically.
+def ebar(model: "Model", wn: float) -> float:
+    r"""Average energy density outside the bubble.
+    Energy is conserved, and therefore $\bar{e}={e}_n$.
+
+    :param model: Equation of state model
+    :param wn: Nucleation enthalpy density ${w}_n$
+    :return: Average energy density $\bar{e}$
+    """
+    return model.e(wn, Phase.SYMMETRIC)
+
 
 def entropy_density_diff(
         model: "Model",
@@ -51,6 +62,42 @@ def entropy_density_diff(
     return 3/(4*np.pi * v_wall**3) * va_entropy_density_diff(model, w, xi, v_wall, phase)
 
 
+def kappa(
+        model: "Model",
+        v: th.FloatArr1D,
+        w: th.FloatArr1D,
+        xi: th.FloatArr1D,
+        v_wall: float,
+        delta_e_theta: float | None = None) -> float:
+    r"""Kinetic efficiency factor
+    $$\kappa = \frac{{e}_K}{\lvert\Delta {e}_\theta\rvert}$$
+
+    :param model: Equation of state model
+    :param v: Fluid velocity $v$
+    :param w: Enthalpy density $w$
+    :param xi: $\xi$
+    :param v_wall: Wall velocity ${v}_\text{wall}$
+    :param delta_e_theta: Trace anomaly difference $\Delta {e}_\theta$.
+        If not given, it's computed from the other arguments.
+    :return: Kinetic efficiency factor $\kappa$
+    """
+    if delta_e_theta is None:
+        delta_e_theta = va_trace_anomaly_diff(model, w, xi, v_wall)
+    return va_kinetic_energy_density(v, w, xi) / np.abs(delta_e_theta)
+
+
+def kappa_approx(alpha_n: th.FloatOrArr) -> th.FloatOrArr:
+    r"""Approximate kinetic efficiency factor $\kappa$
+    $$\kappa \approx \frac{\alpha_n}{0.73 + 0.083\sqrt{\alpha_n} + \alpha_n}$$
+    :notes:`\ ` eq. 7.44
+
+    :param alpha_n: Transition strength $\alpha_n$
+    :return: Approximate kinetic efficiency factor $\kappa$
+    """
+    return alpha_n / (0.73 + 0.083*np.sqrt(alpha_n) + alpha_n)
+
+
+@numba.njit
 def kinetic_energy_density(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float) -> float:
     r"""Bubble volume averaged kinetic energy density
     $$\frac{3}{4\pi {v}_w^3} {e}_K$$
@@ -72,6 +119,38 @@ def kinetic_energy_fraction(ek_bva: float, eb: float) -> float:
     :return: Bubble volume averaged kinetic energy fraction $K_\text{bva}$
     """
     return ek_bva / eb
+
+
+# @numba.njit
+def mean_adiabatic_index(wb: th.FloatOrArr, eb: th.FloatOrArr) -> th.FloatOrArr:
+    r"""Mean adiabatic index
+    $$\Gamma = \frac{\bar{w}}{\bar{e}}$$
+    :gw_pt_ssm:`\ ` eq. B.33
+
+    :param wb: Average enthalpy density $\bar{w}$
+    :param eb: Average energy density $\bar{e}$
+    :return: Mean adiabatic index $\Gamma$
+    """
+    return wb / eb
+
+
+def mean_enthalpy_change(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float) -> float:
+    r"""
+    Mean change in enthalpy in bubble relative to outside value.
+
+    :param v: $v$
+    :param w: $w$
+    :param xi: $\xi$
+    :param v_wall: $v_\text{wall}$
+    :return: mean enthalpy change
+    """
+    #    def en_diff(v, dw, xi):
+    #        return dw
+    #    int1, int2 = split_integrate(en_diff, v, w - w[-1], xi**3, v_wall)
+    #    integral = int1 + int2
+    check_wall_speed(v_wall)
+    integral = np.trapezoid((w - w[-1]), xi ** 3)
+    return integral / v_wall ** 3
 
 
 def thermal_energy_density(v_wall: float, eqp: float) -> float:
@@ -126,65 +205,6 @@ def trace_anomaly_diff(
     return 3/(4*np.pi * v_wall**3) * va_trace_anomaly_diff(model, w, xi, v_wall, phase)
 
 
-def ebar(model: "Model", wn: float) -> float:
-    r"""Average energy density outside the bubble.
-    Energy is conserved, and therefore $\bar{e}={e}_n$.
-
-    :param model: Equation of state model
-    :param wn: Nucleation enthalpy density ${w}_n$
-    :return: Average energy density $\bar{e}$
-    """
-    return model.e(wn, Phase.SYMMETRIC)
-
-
-def kappa(
-        model: "Model",
-        v: th.FloatArr1D,
-        w: th.FloatArr1D,
-        xi: th.FloatArr1D,
-        v_wall: float,
-        delta_e_theta: float | None = None) -> float:
-    r"""Kinetic efficiency factor
-    $$\kappa = \frac{{e}_K}{\lvert\Delta {e}_\theta\rvert}$$
-
-    :param model: Equation of state model
-    :param v: Fluid velocity $v$
-    :param w: Enthalpy density $w$
-    :param xi: $\xi$
-    :param v_wall: Wall velocity ${v}_\text{wall}$
-    :param delta_e_theta: Trace anomaly difference $\Delta {e}_\theta$.
-        If not given, it's computed from the other arguments.
-    :return: Kinetic efficiency factor $\kappa$
-    """
-    if delta_e_theta is None:
-        delta_e_theta = va_trace_anomaly_diff(model, w, xi, v_wall)
-    return va_kinetic_energy_density(v, w, xi) / np.abs(delta_e_theta)
-
-
-def kappa_approx(alpha_n: th.FloatOrArr) -> th.FloatOrArr:
-    r"""Approximate kinetic efficiency factor $\kappa$
-    $$\kappa \approx \frac{\alpha_n}{0.73 + 0.083\sqrt{\alpha_n} + \alpha_n}$$
-    :notes:`\ ` eq. 7.44
-
-    :param alpha_n: Transition strength $\alpha_n$
-    :return: Approximate kinetic efficiency factor $\kappa$
-    """
-    return alpha_n / (0.73 + 0.083*np.sqrt(alpha_n) + alpha_n)
-
-
-# @numba.njit
-def mean_adiabatic_index(wb: th.FloatOrArr, eb: th.FloatOrArr) -> th.FloatOrArr:
-    r"""Mean adiabatic index
-    $$\Gamma = \frac{\bar{w}}{\bar{e}}$$
-    :gw_pt_ssm:`\ ` eq. B.33
-
-    :param wb: Average enthalpy density $\bar{w}$
-    :param eb: Average energy density $\bar{e}$
-    :return: Mean adiabatic index $\Gamma$
-    """
-    return wb / eb
-
-
 def omega(
         model: "Model",
         w: th.FloatArr1D,
@@ -208,6 +228,7 @@ def omega(
     return va_thermal_energy_density_diff(w, xi) / np.abs(delta_e_theta)
 
 
+@numba.njit
 def ubarf2(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float, ek_bva: float | None = None) -> float:
     r"""Enthalpy-weighted mean square fluid 4-velocity around the bubble
     $$\bar{U}_f^2 = \frac{3}{4\pi \bar{w} {v}_\text{wall}^3} {e}_K$$
@@ -225,26 +246,6 @@ def ubarf2(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float,
     if ek_bva is None:
         ek_bva = kinetic_energy_density(v, w, xi, v_wall)
     return ek_bva / w[-1]
-
-
-def wbar(w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float, wn: float) -> float:
-    r"""Average enthalpy density $\bar{w}$
-
-    :param w: Enthalpy density $w$
-    :param xi: $\xi$
-    :param v_wall: Wall velocity ${v}_\text{wall}$
-    :param wn: Nucleation enthalpy density ${w}_n$
-    :return: Average enthalpy density $\bar{w}$
-    """
-    # https://stackoverflow.com/a/8768734
-    w_reverse = w[::-1]
-    i_max = w.size - np.argmax(w_reverse != w[-1]) - 1
-    if i_max == 0:
-        i_max = -1
-    ret = 1/(xi[i_max]**3) * np.trapezoid(w[:i_max+1], xi[:i_max+1]**3)
-    if not (ret is None or np.isnan(ret)) and ret <= wn:
-        logger.warning("Should have wbar > wn. Got: wbar=%s, wn=%s", ret, wn)
-    return ret
 
 
 def va_enthalpy_density(eq: float) -> float:
@@ -271,7 +272,7 @@ def va_entropy_density_diff(
     return 4*np.pi/3 * np.trapezoid(model.s(w, phase) - model.s(w[-1], Phase.SYMMETRIC), xi**3)
 
 
-# @numba.njit
+@numba.njit
 def va_kinetic_energy_density(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D) -> float:
     r"""
     Volume-averaged kinetic energy density
@@ -348,3 +349,23 @@ def va_trace_anomaly_diff(
     theta = model.theta(w, phase)
     theta_n = model.theta(w[-1], Phase.SYMMETRIC)
     return 4*np.pi/3 * np.trapezoid((theta - theta_n), xi**3)
+
+
+def wbar(w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float, wn: float) -> float:
+    r"""Average enthalpy density $\bar{w}$
+
+    :param w: Enthalpy density $w$
+    :param xi: $\xi$
+    :param v_wall: Wall velocity ${v}_\text{wall}$
+    :param wn: Nucleation enthalpy density ${w}_n$
+    :return: Average enthalpy density $\bar{w}$
+    """
+    # https://stackoverflow.com/a/8768734
+    w_reverse = w[::-1]
+    i_max = w.size - np.argmax(w_reverse != w[-1]) - 1
+    if i_max == 0:
+        i_max = -1
+    ret = 1/(xi[i_max]**3) * np.trapezoid(w[:i_max+1], xi[:i_max+1]**3)
+    if not (ret is None or np.isnan(ret)) and ret <= wn:
+        logger.warning("Should have wbar > wn. Got: wbar=%s, wn=%s", ret, wn)
+    return ret

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.analysis import utils
-from pttools.bubble import check, const, fluid_bag, props, quantities, relativity, SolutionType
+from pttools.bubble import check, const, fluid_bag, props, thermo, relativity, SolutionType
 from pttools.bubble.shock_bag import v_shock_bag, wm_shock_bag
 from pttools.bubble.solution_type_bag import identify_solution_type_bag
 import pttools.type_hints as th
@@ -137,13 +137,13 @@ def plot_fluid_shells_bag(
             ax[1, n].plot(xi_even[n_cs:], wmax_det[n_cs:], 'k-.', label=r'$w_{\rm max}$')
 
         if multi:
-            ubarf2 = quantities.ubarf_squared(v, w, xi, v_wall)
+            ubarf2 = thermo.ubarf2(v, w, xi, v_wall)
             # Kinetic energy fraction of total (Bag equation of state)
             ke_frac = ubarf2 / (0.75 * (1 + alpha_n))
             # Efficiency of turning Higgs potential into kinetic energy
             kappa = ubarf2 / (0.75 * alpha_n)
             # and efficiency of turning Higgs potential into thermal energy
-            dw = 0.75 * quantities.mean_enthalpy_change(v, w, xi, v_wall) / (0.75 * alpha_n * w[-1])
+            dw = 0.75 * thermo.mean_enthalpy_change(v, w, xi, v_wall) / (0.75 * alpha_n * w[-1])
             # ax[1,n].set_title(r'$w_0/w_n = {:4.2}$, $\bar{{U}}_f = {:.3f}$, '
             # r'$K = {:5.3g}$, $\kappa = {:5.3f}$, $\omega = {:5.3f}$'.format(
             #     w[0]/w[-1],ubarf2**0.5,ke_frac, kappa, dw),size=14)

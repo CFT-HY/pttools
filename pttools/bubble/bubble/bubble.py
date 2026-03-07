@@ -15,9 +15,9 @@ from pttools.bubble import const
 from pttools.bubble.phase import Phase
 from pttools.bubble import props
 from pttools.bubble.props import find_phase
+from pttools.bubble import thermo
 from pttools.bubble.relativity import gamma
 from pttools.bubble.solution_type import SolutionType, validate_solution_type
-from pttools.bubble import thermo
 from pttools.utils.docstrings import copy_docstrings
 from pttools.utils.json import export_json
 if tp.TYPE_CHECKING:

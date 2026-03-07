@@ -13,7 +13,7 @@ from examples.utils import FIG_DIR
 from pttools.analysis.plot_fluid_shell_3d import BubblePlot3D
 from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.bubble import Bubble
-from pttools.bubble import quantities
+from pttools.bubble import thermo_bag
 # from pttools.logging import setup_logging
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
@@ -38,9 +38,9 @@ def main():
     for bubble in [bag_def, bag_hybrid, bag_det]:
         plot.add(bubble, color="blue")
         print(bubble.info_str())
-        kappa = quantities.get_kappa_bag(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n)
-        ubarf2 = quantities.get_ubarf2_new_bag(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n)
-        ke_frac = quantities.get_ke_frac_bag(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n)
+        kappa = thermo_bag.get_kappa_bag(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n)
+        ubarf2 = thermo_bag.get_ubarf2_new_bag(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n)
+        ke_frac = thermo_bag.get_ke_frac_bag(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n)
         print(f"Reference kappa={kappa:.4f}, relative error={(bubble.kappa - kappa)/kappa}")
         print(f"Reference ubarf2={ubarf2:.4f}, relative error={(bubble.ubarf2 - ubarf2)/ubarf2}")
         print(

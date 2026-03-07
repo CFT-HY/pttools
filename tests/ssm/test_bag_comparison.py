@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 
 from pttools.bubble import Bubble
-from pttools.bubble.quantities import de_from_w_bag
+from pttools.bubble.thermo_bag import de_from_w_bag
 from pttools.models import BagModel
 from pttools.ssm import SSMSpectrum
 from pttools import ssm

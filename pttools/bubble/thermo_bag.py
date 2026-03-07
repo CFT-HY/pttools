@@ -1,7 +1,4 @@
-"""Functions for calculating quantities derived from solutions
-
-TODO: Should this be renamed as thermodynamics?
-"""
+"""Thermodynamic quantities for the Bag Model"""
 
 import logging
 
@@ -16,7 +13,7 @@ from pttools.bubble.phase import Phase, get_phase
 from pttools.bubble import check
 from pttools.bubble import const
 from pttools.bubble import fluid_bag
-from pttools.bubble import relativity
+from pttools.bubble.thermo import kinetic_energy_density, mean_enthalpy_change, ubarf2
 from pttools.bubble.solution_type_bag import SolutionType, identify_solution_type_bag
 import pttools.type_hints as th
 from pttools.speedup import NUMBA_ENABLE_CACHE
@@ -108,7 +105,7 @@ def get_kappa_bag[T: FloatOrArr](
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(vw, alpha_n, n_xi)
 
-            kappa[...] = ubarf_squared(v, w, xi, vw) / (0.75 * alpha_n)
+            kappa[...] = ubarf2(v, w, xi, vw) / (0.75 * alpha_n)
         else:
             kappa[...] = np.nan
         if verbosity > 0:
@@ -150,7 +147,7 @@ def get_kappa_de_bag[T: FloatOrArr](
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(vw, alpha_n, n_xi)
             # Esp+ epsilon is alpha_n * 0.75*w_n
-            kappa[...] = ubarf_squared(v, w, xi, vw) / (0.75 * alpha_n)
+            kappa[...] = ubarf2(v, w, xi, vw) / (0.75 * alpha_n)
             de[...] = mean_energy_change_bag(v, w, xi, vw, alpha_n)
         else:
             kappa[...] = np.nan
@@ -198,7 +195,7 @@ def get_kappa_dq_bag[T: FloatOrArr](
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(vw, alpha_n, n_xi)
             # Esp+ epsilon is alpha_n * 0.75*w_n
-            kappa[...] = ubarf_squared(v, w, xi, vw) / (0.75 * alpha_n)
+            kappa[...] = ubarf2(v, w, xi, vw) / (0.75 * alpha_n)
             dq[...] = 0.75 * mean_enthalpy_change(v, w, xi, vw) / (0.75 * alpha_n * w[-1])
         else:
             kappa[...] = np.nan
@@ -243,7 +240,7 @@ def get_ke_de_frac_bag[T: FloatOrArr](
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(vw, alpha_n, n_xi)
             # Esp+ epsilon is alpha_n * 0.75*w_n
-            ke[...] = ubarf_squared(v, w, xi, vw) / (0.75 * (1 + alpha_n))
+            ke[...] = ubarf2(v, w, xi, vw) / (0.75 * (1 + alpha_n))
             de[...] = mean_energy_change_bag(v, w, xi, vw, alpha_n) / (0.75 * w[-1] * (1 + alpha_n))
         else:
             ke[...] = np.nan
@@ -304,7 +301,7 @@ def get_ke_frac_new_bag[T: FloatOrArr](
         if not sol_type == SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(vw, alpha_n, n_xi)
-            ke[...] = mean_kinetic_energy(v, w, xi, vw)
+            ke[...] = kinetic_energy_density(v, w, xi, vw)
         else:
             ke[...] = np.nan
         if verbosity > 0:
@@ -326,19 +323,19 @@ def get_ke_frac_new_bag[T: FloatOrArr](
 
 def _get_ubarf2_bag_scalar[T: FloatOrArr1D](v_wall: T, alpha_n: float, n_xi: int, verbosity: int) -> T:
     if identify_solution_type_bag(v_wall, alpha_n) == SolutionType.ERROR:
-        ubarf2 = np.nan
+        ub2 = np.nan
     else:
         # Now ready to solve for fluid profile
         v, w, xi = fluid_bag.sound_shell_bag(v_wall, alpha_n, n_xi)
-        ubarf2 = ubarf_squared(v, w, xi, v_wall)
+        ub2 = ubarf2(v, w, xi, v_wall)
 
     if verbosity > 0:
         with numba.objmode:
             logger.debug(
                 "v_wall=%8.6f, alpha_n=%8.6f, ubarf2=%f",
-                v_wall, alpha_n, ubarf2
+                v_wall, alpha_n, ub2
             )
-    return ubarf2
+    return ub2
 
 
 def _get_ubarf2_bag_arr[T: FloatOrArr1D](v_wall: T, alpha_n: float, n_xi: int, verbosity: int) -> T:
@@ -451,42 +448,6 @@ def mean_energy_change_bag(
     return integral / v_wall ** 3
 
 
-def mean_enthalpy_change(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float) -> float:
-    r"""
-    Mean change in enthalpy in bubble relative to outside value.
-
-    :param v: $v$
-    :param w: $w$
-    :param xi: $\xi$
-    :param v_wall: $v_\text{wall}$
-    :return: mean enthalpy change
-    """
-    #    def en_diff(v, dw, xi):
-    #        return dw
-    #    int1, int2 = split_integrate(en_diff, v, w - w[-1], xi**3, v_wall)
-    #    integral = int1 + int2
-    check.check_wall_speed(v_wall)
-    integral = np.trapezoid((w - w[-1]), xi ** 3)
-    return integral / v_wall ** 3
-
-
-@numba.njit
-def mean_kinetic_energy(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float) -> float:
-    r"""
-    Kinetic energy of fluid in bubble, averaged over bubble volume,
-    from fluid shell functions.
-
-    :param v: $v$
-    :param w: $w$
-    :param xi: $\xi$
-    :param v_wall: $v_\text{wall}$
-    :return: mean kinetic energy
-    """
-    check.check_wall_speed(v_wall)
-    integral = np.trapezoid(w * v ** 2 * relativity.gamma2(v), xi ** 3)
-    return integral / (v_wall ** 3)
-
-
 def part_integrate(
         func: Integrand,
         v: th.FloatArr1D,
@@ -535,24 +496,3 @@ def split_integrate(
     if v[outside].size >= 3:
         int2 = part_integrate(func, v, w, xi, outside)
     return int1, int2
-
-
-@numba.njit
-def ubarf_squared(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float) -> float:
-    r"""
-    Enthalpy-weighted mean square space components of 4-velocity of fluid in bubble,
-    from fluid shell functions.
-
-    :param v: $v$
-    :param w: $w$
-    :param xi: $\xi$
-    :param v_wall: $v_\text{wall}$
-    """
-    check.check_wall_speed(v_wall)
-    #    def fun(v,w,xi):
-    #        return w * v**2 * gamma2(v)
-    #    int1, int2 = split_integrate(fun, v, w, xi**3, v_wall)
-    #    integral = int1 + int2
-    #    integral = np.trapezoid(w * v**2 * gamma2(v), xi**3)
-
-    return mean_kinetic_energy(v, w, xi, v_wall) / w[-1]

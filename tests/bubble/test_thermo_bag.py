@@ -8,7 +8,7 @@ import unittest
 
 import numpy as np
 
-from pttools.bubble import quantities
+from pttools.bubble import thermo_bag
 import pttools.type_hints as th
 from tests.utils.test_assertions import assert_allclose
 # For debugging Numba issues
@@ -27,38 +27,38 @@ class ThermoBagTest:
     def test_kappa(self):
         kappas = np.zeros_like(self.KAPPA_REF)
         for i in range(self.ALPHA_NS.size):
-            kappas[i] = quantities.get_kappa_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i])
+            kappas[i] = thermo_bag.get_kappa_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i])
         assert_allclose(kappas, self.KAPPA_REF, rtol=6.7e-3)
 
     def test_kappa_de(self):
         kappas = np.zeros_like(self.KAPPA_REF)
         for i in range(self.ALPHA_NS.size):
-            kappas[i], _ = quantities.get_kappa_de_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i])
+            kappas[i], _ = thermo_bag.get_kappa_de_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i])
         assert_allclose(kappas, self.KAPPA_REF, rtol=6.7e-3)
 
     def test_kappa_dq(self):
         kappas = np.zeros_like(self.KAPPA_REF)
         for i in range(self.ALPHA_NS.size):
-            kappas[i], _ = quantities.get_kappa_dq_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i])
+            kappas[i], _ = thermo_bag.get_kappa_dq_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i])
         assert_allclose(kappas, self.KAPPA_REF, rtol=6.7e-3)
 
     def test_ke_de_frac_bag(self):
         ke_fracs = np.zeros_like(self.KAPPA_REF)
         de_fracs = np.zeros_like(self.KAPPA_REF)
         for i in range(self.ALPHA_NS.size):
-            ke_fracs[i], de_fracs[i] = quantities.get_ke_de_frac_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i])
+            ke_fracs[i], de_fracs[i] = thermo_bag.get_ke_de_frac_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i])
         assert_allclose(ke_fracs, self.KE_FRAC_REF, rtol=6.9e-3)
 
     def test_ke_frac_bag(self):
         ke_fracs = np.zeros_like(self.KAPPA_REF)
         for i in range(self.ALPHA_NS.size):
-            ke_fracs[i] = quantities.get_ke_frac_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i])
+            ke_fracs[i] = thermo_bag.get_ke_frac_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i])
         assert_allclose(ke_fracs, self.KE_FRAC_REF, rtol=6.9e-3)
 
     def test_ke_frac_new_bag(self):
         ke_fracs = np.zeros_like(self.KAPPA_REF)
         for i in range(self.ALPHA_NS.size):
-            ke_fracs[i] = quantities.get_ke_frac_new_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i])
+            ke_fracs[i] = thermo_bag.get_ke_frac_new_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i])
         assert_allclose(ke_fracs, self.KE_FRAC_REF, rtol=6.9e-3)
 
 
@@ -76,13 +76,13 @@ class ThermoBagTestLectureNotes(ThermoBagTest, unittest.TestCase):
     def test_ubarf2(self):
         ubarfs = np.zeros_like(self.KAPPA_REF)
         for i in range(self.ALPHA_NS.size):
-            ubarfs[i] = np.sqrt(quantities.get_ubarf2_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i]))
+            ubarfs[i] = np.sqrt(thermo_bag.get_ubarf2_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i]))
         assert_allclose(ubarfs, self.UBARFS_REF, rtol=2.7e-3)
 
     def test_ubarf2_new_bag(self):
         ubarfs = np.zeros_like(self.KAPPA_REF)
         for i in range(self.ALPHA_NS.size):
-            ubarfs[i] = np.sqrt(quantities.get_ubarf2_new_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i]))
+            ubarfs[i] = np.sqrt(thermo_bag.get_ubarf2_new_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i]))
         assert_allclose(ubarfs, self.UBARFS_REF, rtol=5.0e-2)
 
 

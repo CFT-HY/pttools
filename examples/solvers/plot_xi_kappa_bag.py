@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from examples import utils
-from pttools.bubble import quantities
+from pttools.bubble.thermo_bag import get_kappa_de_bag
 from pttools.bubble.bubble import Bubble
 from pttools.models.bag import BagModel
 
@@ -31,7 +31,7 @@ def main() -> plt.Figure:
         new = np.zeros_like(v_walls)
         for i_v, v_wall in enumerate(v_walls):
             # Old
-            old[i_v], _ = quantities.get_kappa_de_bag(v_wall, alpha_n)
+            old[i_v], _ = get_kappa_de_bag(v_wall, alpha_n)
             # New
             bubble = Bubble(model, v_wall, alpha_n)
             new[i_v] = bubble.kappa

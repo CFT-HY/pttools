@@ -27,7 +27,8 @@ from .junction_entropy import *
 # from .physical_params import *
 from .phase import *
 from .props import *
-from .quantities import *
+from .thermo import *
+from .thermo_bag import *
 from .relativity import *
 from .shock import *
 from .shock_bag import *

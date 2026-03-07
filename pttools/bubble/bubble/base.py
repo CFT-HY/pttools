@@ -9,7 +9,7 @@ import numpy as np
 
 from pttools.bubble import const
 from pttools.bubble.relativity import gamma
-from pttools.bubble import thermo
+from pttools.bubble.thermo import va_kinetic_energy_density
 import pttools.type_hints as th
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
@@ -212,7 +212,7 @@ class BaseBubble(abc.ABC):
     def va_kinetic_energy_density(self) -> float:  # pylint: disable=missing-function-docstring
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.va_kinetic_energy_density(self.v, self.w, self.xi)
+        return va_kinetic_energy_density(self.v, self.w, self.xi)
 
     @property
     def vp_vm_tilde_ratio(self) -> float:

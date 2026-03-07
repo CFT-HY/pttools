@@ -20,7 +20,7 @@ from pttools.bubble.junction import enthalpy_ratio
 from pttools.bubble.junction_bag import fluid_speeds_at_wall_bag
 from pttools.bubble.phase import Phase
 from pttools.bubble import props
-from pttools.bubble import quantities
+from pttools.bubble import thermo
 from pttools.bubble.shock import shock_zoom_last_element
 from pttools.bubble.shock_bag import v_shock_bag, wm_shock_bag
 from pttools.bubble.solution_type import SolutionType
@@ -260,13 +260,13 @@ def sound_shell_dict(
         r = w[n_wall] / w[n_wall - 1]
     alpha_plus = alpha_n * w[-1] / w[n_wall]
 
-    ubarf2 = quantities.ubarf_squared(v, w, xi, v_wall)
+    ubarf2 = thermo.ubarf2(v, w, xi, v_wall)
     # Kinetic energy fraction of total (Bag equation of state)
     ke_frac = ubarf2 / (0.75 * (1 + alpha_n))
     # Efficiency of turning Higgs potential into kinetic energy
     kappa = ubarf2 / (0.75 * alpha_n)
     # and efficiency of turning Higgs potential into thermal energy
-    dw = 0.75 * quantities.mean_enthalpy_change(v, w, xi, v_wall) / (0.75 * alpha_n * w[-1])
+    dw = 0.75 * thermo.mean_enthalpy_change(v, w, xi, v_wall) / (0.75 * alpha_n * w[-1])
 
     if high_v_approx:
         v_approx = approx.v_approx_high_alpha(xi[n_wall:n_sh], v_wall, v[n_wall])
