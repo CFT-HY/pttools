@@ -52,8 +52,11 @@ release = version
 extensions = [
     "matplotlib.sphinxext.plot_directive",
     # Automatic documentation for Python code
+    "sphinx.ext.apidoc",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
+    "sphinx.ext.viewcode",
+    # "sphinx_autodoc_typehints",
     # Automatic labeling for documentation sections
     "sphinx.ext.autosectionlabel",
     # External links
@@ -111,14 +114,29 @@ mathjax3_config = {
     },
 }
 
+# -- Apidoc  -----------------------------------------------------------------
+apidoc_modules = [
+    {
+        "path": os.path.join(repo_path, "pttools"),
+        "destination": "gen_modules/pttools"
+    },
+    {
+        "path": os.path.join(repo_path, "tests"),
+        "destination": "gen_modules/tests"
+    }
+]
+# apidoc_max_depth = 6
+apidoc_module_first = True
+apidoc_separate_modules = True
+
 # -- Autodoc -----------------------------------------------------------------
 
-autodoc_default_options = {
-    # This would result in duplicate class descriptions when using a template.
-    # "members": True,
-    "show-inheritance": True,
-    "undoc-members": True,
-}
+# autodoc_default_options = {
+#     # This would result in duplicate class descriptions when using a template.
+#     "members": True,
+#     "show-inheritance": True,
+#     "undoc-members": True,
+# }
 autodoc_preserve_defaults = True
 autodoc_typehints = "description"
 
@@ -134,6 +152,13 @@ autodoc_typehints = "description"
 #
 # def setup(app):
 #     app.connect("autodoc-skip-member", skip)
+
+
+# -- Type hints -----------------------------------------------------------------
+
+# always_document_param_types = True
+# always_use_bars_union = True  # This is the default on Python 3.14 ->
+# typehints_defaults = "braces"
 
 
 # -- Other -------------------------------------------------------------------
