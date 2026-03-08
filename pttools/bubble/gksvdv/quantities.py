@@ -6,7 +6,7 @@ import pttools.type_hints as th
 from pttools.speedup import NUMBA_ENABLE_CACHE
 
 
-@numba.njit(nogil=True, cache=NUMBA_ENABLE_CACHE)
+# @numba.njit(nogil=True, cache=NUMBA_ENABLE_CACHE)
 def kappa_gksvdv(params: th.FloatArr1D, css2: float, csb2: float) -> float:
     r"""Compute $\kappa$ with the :giese_2021:`\ ` solver"""
     v_wall, alpha_tbn_giese = params
