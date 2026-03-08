@@ -1,6 +1,6 @@
 r"""$\Omega_{\text{gw},0}$ for the bag model"""
 
-import pttools.bubble.ke_frac_approx as K
+from pttools.bubble.energy_budget import kinetic_energy_fraction_approx
 from pttools.omgw0 import const
 from pttools.omgw0.factors import J
 from pttools.omgw0.freq import f0
@@ -28,7 +28,7 @@ def omgw0_bag(
     fp0 = f0(r_star, T_star)
     z = freqs / fp0
 
-    K_frac = K.calc_ke_frac(vw, alpha)
+    K_frac = kinetic_energy_fraction_approx(vw, alpha)
     omgwi = power_gw_scaled_bag(z, params, npt=npt, parallel=parallel)
 
     # entry options for power_gw_scaled

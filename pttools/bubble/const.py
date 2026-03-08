@@ -20,6 +20,8 @@ T_END_DEFAULT: float = 50.
 DXI_SMALL: float = 1. / N_XI_DEFAULT
 #: Limit of points for a shell to be so thin that it should be re-computed with more points
 THIN_SHELL_T_POINTS_MIN: int = 100
+#: Default adiabatic ratio $\Gamma$
+DEFAULT_ADIABATIC_RATIO: float = 4 / 3
 
 #: Ideal speed of sound
 CS0: tp.Final[float] = 1 / math.sqrt(3)
