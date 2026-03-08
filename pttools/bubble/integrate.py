@@ -15,7 +15,7 @@ from pttools.bubble.cs2_bag import cs2_bag, cs2_bag_scalar_cfunc
 from pttools.bubble.const import N_XI_DEFAULT, T_END_DEFAULT
 from pttools.speedup.differential import DifferentialCache, DifferentialCFunc, DifferentialPointer
 from pttools.speedup.numba_wrapper import numbalsoda
-from pttools.speedup.options import NUMBA_DISABLE_JIT, NUMBA_ENABLE_CACHE, NUMBA_INTEGRATE
+from pttools.speedup.options import NUMBA_DISABLE_JIT, NUMBA_INTEGRATE
 import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,11 @@ DEFAULT_DF_DTAU: str = "bag"
 differentials: DifferentialCache = DifferentialCache()
 
 
-def add_df_dtau(name: str, cs2_fun: th.CS2Fun) -> DifferentialPointer:
+def add_df_dtau(
+        name: str,
+        cs2_fun: th.CS2Fun,
+        # special_key: DifferentialPointer | None = None
+        ) -> DifferentialPointer:
     """Add a new differential equation to the cache based on the given sound speed function.
 
     :param name: the name of the function
@@ -47,7 +51,7 @@ def add_df_dtau(name: str, cs2_fun: th.CS2Fun) -> DifferentialPointer:
 
 def gen_df_dtau(cs2_fun: th.CS2Fun) -> DifferentialCFunc:
     r"""Generate a function for the differentials of fluid variables $(v, w, \xi)$ in parametric form.
-    The parametrised differential equation is as in :gw_pt_ssm:`\ ` eq. B.14-16:
+    The parametrized differential equation is as in :gw_pt_ssm:`\ ` eq. B.14-16:
 
     - $\frac{dv}{dt} = 2v c_s^2 (1-v^2) (1 - \xi v)$
     - $\frac{dw}{dt} = \frac{w}{1-v^2} \frac{\xi - v}{1 - \xi v} (\frac{1}{c_s^2}+1) \frac{dv}{dt}$
@@ -91,7 +95,9 @@ DF_DTAU_PTR_BAG: DifferentialPointer = add_df_dtau(
 )
 
 
-@numba.njit(cache=NUMBA_ENABLE_CACHE)
+# This function and functions that use it should not be cached,
+# so that df_dtau_ptr is correct for the process in which they run.
+@numba.njit
 def fluid_integrate_param(
         v0: float,
         w0: float,

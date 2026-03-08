@@ -43,6 +43,7 @@ class DifferentialCache:
             self,
             name: str,
             differential: DifferentialCFunc,
+            # special_key: DifferentialPointer | None = None,
             p_last_is_backwards: bool = True,
             ndim: int = 3) -> DifferentialPointer:
         """Add a differential function to the cache"""
@@ -88,10 +89,7 @@ class DifferentialCache:
                 differential_njit(t, y, du, p)
                 return du
 
-            if NUMBA_DISABLE_JIT:
-                address = id(differential_njit)
-            else:
-                address = differential_numbalsoda.address  # pylint: disable=possibly-used-before-assignment
+            address = id(differential_njit) if NUMBA_DISABLE_JIT else differential_numbalsoda.address
             self._cache_pointers[name] = address
 
             self._cache_njit[address] = differential_njit
@@ -101,6 +99,13 @@ class DifferentialCache:
             self._cache_njit[name] = differential_njit
             self._cache_odeint[name] = differential_odeint
             self._cache_solve_ivp[name] = differential_solve_ivp
+
+            # if special_key is not None:
+            #     self._cache_pointers[special_key] = address
+            #     self._cache_njit[special_key] = differential_njit
+            #     self._cache_odeint[special_key] = differential_odeint
+            #     self._cache_solve_ivp[special_key] = differential_solve_ivp
+
         return address
 
     def _get_func(self, key: DifferentialKey, cache: dict[DifferentialKey, Differential]) -> Differential:
@@ -110,7 +115,9 @@ class DifferentialCache:
         except KeyError as error:
             raise KeyError(
                 f"Could not find differential function in the cache with the key \"{key}\". "
-                f"This may indicate an issue with parallelism. Available functions: {cache.keys()}") from error
+                "This may indicate an issue with parallelism. "
+                "Have you perhaps used Numba caching, which has cached the pointer when the function was compiled? "
+                f"Available functions: {cache.keys()}") from error
 
     def get_njit(self, key: DifferentialKey) -> DifferentialCFunc:
         """Get a Numba-jitted function"""

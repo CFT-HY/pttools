@@ -273,8 +273,8 @@ def get_ke_frac_bag[T: FloatOrArr](v_wall: T, alpha_n: float, n_xi: int = const.
     :param n_xi: number of $\xi$ points
     :return: kinetic energy fraction
     """
-    ubar2 = get_ubarf2_bag(v_wall, alpha_n, n_xi)
-    return ubar2 / (0.75 * (1 + alpha_n))
+    ubarf2 = get_ubarf2_bag(v_wall, alpha_n, n_xi)
+    return ubarf2 / (0.75 * (1 + alpha_n))
 
 
 def get_ke_frac_new_bag[T: FloatOrArr](
@@ -366,7 +366,7 @@ def get_ubarf2_bag[T: FloatOrArr1D](
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
-@overload(get_ubarf2_bag, jit_options={"nopython": True, "parallel": True, "cache": NUMBA_ENABLE_CACHE})
+@overload(get_ubarf2_bag, jit_options={"nopython": True, "parallel": True})
 def _get_ubarf2_bag_numba[T: FloatOrArr1D](
         v_wall: T,
         alpha_n: float,

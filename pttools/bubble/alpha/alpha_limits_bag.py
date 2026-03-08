@@ -16,7 +16,7 @@ import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
 
-@numba.njit(nogil=True, cache=NUMBA_ENABLE_CACHE)
+@numba.njit(nogil=True)
 def alpha_n_max_bag(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArr:
     r"""
     Calculates the maximum relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
@@ -91,7 +91,7 @@ def alpha_n_max_deflagration_bag(
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
-@overload(alpha_n_max_deflagration_bag, jit_options={"nopython": True, "nogil": True, "cache": NUMBA_ENABLE_CACHE})
+@overload(alpha_n_max_deflagration_bag, jit_options={"nopython": True, "nogil": True})
 def _alpha_n_max_deflagration_bag_numba(
         v_wall: th.FloatOrArr,
         n_xi: int = const.N_XI_DEFAULT,

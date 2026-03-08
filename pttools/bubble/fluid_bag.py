@@ -85,7 +85,7 @@ def sound_shell_bag(
     # return ret
 
 
-@numba.njit(nogil=True)
+@numba.njit
 def sound_shell_alpha_plus_bag(
         v_wall: float,
         alpha_plus: float,
@@ -94,7 +94,7 @@ def sound_shell_alpha_plus_bag(
         w_n: float = 1.,
         cs2_fun: th.CS2Fun = cs2_bag_scalar,
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG,
-        sol_type_fun: tp.Callable | None = None,
+        # sol_type_fun: tp.Callable | None = None,
         # extra_output: bool = False
         ) -> th.VWXi:
     r"""
