@@ -5,22 +5,21 @@ This is the example code from
 Commented for better readability.
 """
 
-import logging
-import typing as tp
-
+import numba
 import numpy as np
 from scipy.integrate import odeint, simpson
 
 import pttools.type_hints as th
+from pttools.speedup import NUMBA_ENABLE_CACHE
 
-logger = logging.getLogger(__name__)
 
-
+@numba.njit
 def mu(xi, v):
     """Relative velocity (special relativistic)"""
     return (xi - v)/(1. - xi*v)
 
 
+@numba.njit
 def getwow(v1, v2):
     """Ratio of enthalpies across the bubble wall, "w over w"
     from the junction conditions
@@ -31,7 +30,8 @@ def getwow(v1, v2):
     return v1/(1. - v1 ** 2)/v2*(1. - v2 ** 2)
 
 
-def getvm(al: float, vw: float, cs2b: float) -> tp.Tuple[float, int]:
+@numba.njit
+def getvm(al: float, vw: float, cs2b: float) -> tuple[float, int]:
     r"""Fluid velocity behind the wall, $\tilde{v}_-$, and the expansion mode
     0 = deflagration
     1 = hybrid
@@ -51,7 +51,8 @@ def getvm(al: float, vw: float, cs2b: float) -> tp.Tuple[float, int]:
     return (cc + np.sqrt(disc))/2.*cs2b/vw, 2
 
 
-def dfdv(xiw: tuple[float, float] | th.FloatArr1D, v: float, cs2: float) -> tp.Tuple[float, float]:
+@numba.njit
+def dfdv(xiw: tuple[float, float] | th.FloatArr1D, v: float, cs2: float) -> tuple[float, float]:
     """The differential equation that is solved in the shock/rarefaction wave
 
     Rarefaction = the opposite of compression
@@ -63,14 +64,16 @@ def dfdv(xiw: tuple[float, float] | th.FloatArr1D, v: float, cs2: float) -> tp.T
     return dxidv, dwdv
 
 
-def getKandWow(vw: float, v0: float, cs2: float) -> tp.Tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, float, float]:
+@numba.njit
+def getKandWow(vw: float, v0: float, cs2: float) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, float, float]:
     """
     Returns two values
     - Enthalpy-weighted kinetic energy in the shock/rarefaction wave
     - Ratio between the enthalpy density at the start of the shock/rarefaction compared to its end
 
     For the shocks the end is in the phase in front of the shock
-    For the rarefaction wave, the enthalpy density is normalized to 1 behind the wall and has to be rescaled in the other part of the code.
+    For the rarefaction wave, the enthalpy density is normalized to 1 behind the wall
+    and has to be rescaled in the other part of the code.
 
     :param vw: wall velocity
     :param v0: starting point of the integration (?)
@@ -105,15 +108,17 @@ def getKandWow(vw: float, v0: float, cs2: float) -> tp.Tuple[th.FloatArr1D, th.F
     return vs, wows, xis, Kint*4./vw**3, wows[0]
 
 
+@numba.njit
 def alN(al, wow, cs2b, cs2s):
     r"""$\alpha_{\bar{\theta}n}$ in the nucleation phase (in front of the shock)"""
     da = (1./cs2b - 1./cs2s)/(1./cs2s + 1.)/3.
     return (al + da)*wow - da
 
 
+@numba.njit
 def getalNwow(vp, vm, vw, cs2b, cs2s):
     r"""Get
-    - $\alpha_{\bar{\theta}}n}$ in the nucleation phase
+    - $\alpha_{\bar{\theta}n}$ in the nucleation phase
     - Ratio of the enthalpies for fixed boundary conditions at the wall
     """
     _, _, _, Ksh, wow = getKandWow(vw, mu(vw, vp), cs2s)
@@ -121,11 +126,13 @@ def getalNwow(vp, vm, vw, cs2b, cs2s):
     return alN(al, wow, cs2b, cs2s), wow
 
 
+# This function does not call functions from other files, and can therefore be safely cached.
+@numba.njit(nogil=True, cache=True)
 def kappaNuMuModel(
         cs2b: float,
         cs2s: float,
         al: float,
-        vw: float) -> tp.Tuple[float, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, int, float, float]:
+        vw: float) -> tuple[float, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, int, float, float]:
     r"""Calculate the efficiency factor $\kappa$.
     This uses the other functions.
 
@@ -140,19 +147,11 @@ def kappaNuMuModel(
         # Validate alpha
         almax, wow = getalNwow(0, vm, vw, cs2b, cs2s)
         if almax < al:
-            logger.error(
-                "alpha too large for shock, alpha=%s, max=%s",
-                al, almax
-            )
-            raise ValueError
+            raise ValueError(f"alpha too large for shock, alpha={al}, max={almax}")
         vp = min(cs2s/vw, vw)
         almin, wow = getalNwow(vp, vm, vw, cs2b, cs2s)
         if almin > al:
-            logger.error(
-                "alpha too small for shock, alpha=%s, min=%s",
-                al, almin
-            )
-            raise ValueError
+            raise ValueError(f"alpha too small for shock, alpha={al}, min={almin}")
         # Iterate to find v+ using binary search until the corresponding alpha matches the given value.
         # Set binary search limits.
         iv = [[vp, almin], [0, almax]]
@@ -174,7 +173,7 @@ def kappaNuMuModel(
         Ksh, wow, vp = 0, 1, vw
         v_out = wow_out = xi_out = np.array([])
     else:
-        raise ValueError("Invalid mode")
+        raise ValueError(f"Invalid mode={mode}")
 
     # If the model is a detonation or a hybrid
     if mode > 0:
@@ -203,8 +202,8 @@ def kappaNuMuModel(
     xi_arr = np.concatenate((xi_b, xi_arr, xi_f))
 
     if np.any(xi_arr < 0) or np.any(xi_arr > 1):
-        logger.error("Invalid xi values")
+        raise ValueError("Invalid xi values")
     if np.any(v_arr < 0) or np.any(v_arr > 1):
-        logger.error("Invalid v values")
+        raise ValueError("Invalid v values")
 
     return (Ksh + Krf)/al, v_arr, wow_arr, xi_arr, mode, vp, vm
