@@ -58,7 +58,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed"
 ]
-# Keep this up to date with requirements.txt
+# When updating these, also update environment.yml and requirements.txt.
 dependencies = [
     "h5py >= 3.15.1",
     "kaleido >= 1.2.0",

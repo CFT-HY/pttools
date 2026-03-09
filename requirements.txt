@@ -1,6 +1,7 @@
 # List of project requirements for pip
 # https://pip.pypa.io/en/stable/user_guide/#requirements-files
-# Keep this up to date with pyproject.toml
+
+# When updating these, also update environment.yml and pyproject.toml.
 
 # h5py does not yet support free-threading.
 # https://github.com/h5py/h5py/issues/2475

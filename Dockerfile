@@ -21,5 +21,3 @@ RUN cd /pttools \
     && ls \
     && python -m build \
     && pip install --root-user-action=ignore --no-cache-dir /pttools/dist/pttools*.whl \
-    && cd / \
-    && rm -r /pttools \

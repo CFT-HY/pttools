@@ -1,7 +1,7 @@
 # Anaconda environment configuration
 
 # Create the environment with:
-# conda env create pttools -f environment.yml
+# conda env create --name pttools --file environment.yml
 # Activate the environment with:
 # conda activate pttools
 
@@ -13,44 +13,88 @@
 # conda install matplotlib-base
 
 name: pttools
+channels:
+  - conda-forge
+  - defaults
+  # - numba
+  # - nvidia
 dependencies:
   # The Python version is currently constrained by the NumbaLSODA package.
   # Once it becomes compatible with newer Python, update this to the latest version.
-  - python >= 3.11
+  # https://anaconda.org/channels/conda-forge/packages/python/overview
+  - python == 3.14.3
   # -----
   # Mandatory dependencies
   # -----
-  - h5py >= 3.13.0
-  - matplotlib >= 3.10.1
-  - numba >= 0.61.2
-  - conda-forge::numbalsoda >= 0.3.5
-  - numpy >= 2.2.5
-  - orjson >= 3.10.16
-  - plotly >= 6.0.0
-  - python-kaleido >= 0.2.1
-  - scipy >= 1.15.2
+  # https://anaconda.org/channels/conda-forge/packages/h5py/overview
+  - h5py == 3.15.1
+  # https://anaconda.org/channels/conda-forge/packages/h5py/overview
+  - matplotlib == 3.10.8
+  # https://anaconda.org/channels/conda-forge/packages/numba/overview
+  - numba == 0.64.0
+  # https://anaconda.org/channels/conda-forge/packages/numpy/overview
+  - numpy == 2.4.2
+  # https://anaconda.org/channels/conda-forge/packages/orjson/overview
+  - orjson == 3.11.7
+  # https://anaconda.org/channels/conda-forge/packages/pip/overview
+  - pip == 26.0.1
+  # https://anaconda.org/channels/conda-forge/packages/plotly/overview
+  - plotly == 6.5.0
+  # https://anaconda.org/channels/conda-forge/packages/python-kaleido/overview
+  - python-kaleido == 0.2.1
+  # https://anaconda.org/channels/conda-forge/packages/scipy/overview
+  - scipy == 1.17.0
   # -----
   # Optional dependencies
   # -----
-  - conda-forge::tbb >= 2022.1.0
-  # This is not available for osx-arm64. If using osx-arm64, please disable this.
-  - numba::icc_rt >= 2020.2
+  # Intel SVML for Numba
+  # https://anaconda.org/channels/conda-forge/packages/intel-cmplr-lib-rt/overview
+  # https://numba.readthedocs.io/en/stable/user/performance-tips.html#intel-svml
+  - intel-cmplr-lib-rt >= 2025.3.2
+  # Numbalsoda
+  # The conda package requires Python <= 3.11
+  # https://anaconda.org/channels/conda-forge/packages/numbalsoda/overview
+  # - numbalsoda == 0.3.5
+  # https://anaconda.org/channels/conda-forge/packages/tbb/overview
+  - tbb >= 2022.3.0
   # -----
   # Development dependencies
   # -----
-  - allure-pytest >= 2.14.1
-  - python-build >= 1.2.2.post1
-  - colorama >= 0.4.6
-  - pandas >= 2.2.3
-  - psutil >= 5.9.0
-  - pyan3 >= 1.2.0
-  - pyinstrument >= 5.0.1
-  - pylint >= 3.3.6
-  - pytest >= 8.3.5
-  - pytest-cov >= 6.1.1
-  - pytest-html >= 4.1.1
-  - pytest-xdist >= 3.6.1
-  - setuptools >= 79.0.1
-  - twine >= 6.1.0
-  - wheel >= 0.45.1
-  - yappi >= 1.6.0
+  # https://anaconda.org/channels/conda-forge/packages/allure-pytest/overview
+  - allure-pytest == 2.15.3
+  # https://anaconda.org/channels/conda-forge/packages/python-build/overview
+  - python-build == 1.4.0
+  # https://anaconda.org/channels/conda-forge/packages/colorama/overview
+  - colorama == 0.4.6
+  # https://anaconda.org/channels/conda-forge/packages/pandas/overview
+  - pandas == 3.0.1
+  # https://anaconda.org/channels/conda-forge/packages/psutil/overview
+  - psutil == 7.2.2
+  # https://anaconda.org/channels/conda-forge/packages/pyan3/overview
+  - pyan3 == 2.0.0
+  # https://anaconda.org/channels/conda-forge/packages/pyinstrument/overview
+  - pyinstrument == 5.1.2
+  # https://anaconda.org/channels/conda-forge/packages/pylint/overview
+  - pylint == 4.0.5
+  # https://anaconda.org/conda-forge/pytest
+  - pytest == 9.0.2
+  # https://anaconda.org/channels/conda-forge/packages/pytest-cov/overview
+  - pytest-cov == 7.0.0
+  # https://anaconda.org/channels/conda-forge/packages/pytest-html/overview
+  - pytest-html == 4.2.0
+  # https://anaconda.org/channels/conda-forge/packages/pytest-xdist/overview
+  - pytest-xdist == 3.8.0
+  # https://anaconda.org/channels/conda-forge/packages/setuptools/overview
+  - setuptools == 82.0.0
+  # https://anaconda.org/channels/conda-forge/packages/twine/overview
+  - twine == 6.2.0
+  # https://anaconda.org/channels/conda-forge/packages/wheel/overview
+  - wheel == 0.46.3
+  # https://anaconda.org/channels/conda-forge/packages/yappi/overview
+  - yappi == 1.7.3
+  # -----
+  # Pip packages
+  # -----
+  - pip:
+    # https://pypi.org/project/numbalsoda/
+    - numbalsoda == 0.3.4
