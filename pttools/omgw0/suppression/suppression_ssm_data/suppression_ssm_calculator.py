@@ -19,7 +19,7 @@ SUPPRESSION_FOLDER = os.path.dirname(os.path.abspath(__file__))
 def calc_sup_ssm(
         path: str,
         save: bool = True,
-        npt: ssm_const.NptType = ssm_const.NPTDEFAULT) -> dict[str, th.FloatArr1DOrList]:
+        npt: ssm_const.NptType = ssm_const.DEFAULT_N_PT) -> dict[str, th.FloatArr1DOrList]:
     """
     file must be a txt file with data in columns as follows
     vw alpha suppression_sim sim_omgw exp_omgw exp_ubarf

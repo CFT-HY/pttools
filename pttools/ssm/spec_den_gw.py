@@ -18,7 +18,7 @@ from pttools.ssm import const
 def gen_lookup(
         y: th.FloatArr1D,
         cs: float,
-        n_z_lookup: int = const.N_Z_LOOKUP_DEFAULT,
+        n_z_lookup: int = const.DEFAULT_N_Z_LOOKUP,
         eps: float = 0.) -> th.FloatArr1D:
     """
     :param y: Input array

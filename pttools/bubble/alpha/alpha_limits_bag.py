@@ -16,7 +16,7 @@ from pttools.type_hints import FloatOrArr
 
 
 @numba.njit(nogil=True)
-def alpha_n_max_bag(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArr:
+def alpha_n_max_bag(v_wall: th.FloatOrArr, n_xi: int = const.DEFAULT_N_XI) -> th.FloatOrArr:
     r"""
     Calculates the maximum relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
     in the Bag Model for given $v_\text{wall}$, which is max $\alpha_n$ for (supersonic) deflagration.
@@ -30,7 +30,7 @@ def alpha_n_max_bag(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th
 
 def _alpha_n_max_deflagration_bag_scalar(
         v_wall: th.FloatOrArr,
-        n_xi: int = const.N_XI_DEFAULT,
+        n_xi: int = const.DEFAULT_N_XI,
         parallel: bool = True) -> th.FloatOrArr:
     check.check_wall_speed(v_wall)
     if v_wall > 0.9999:
@@ -46,7 +46,7 @@ def _alpha_n_max_deflagration_bag_scalar(
 _alpha_n_max_deflagration_bag_scalar_numba = numba.njit(_alpha_n_max_deflagration_bag_scalar)
 
 
-def _alpha_n_max_deflagration_bag_arr(v_wall: th.FloatOrArr, n_xi: int = const.N_XI_DEFAULT) -> th.FloatOrArr:
+def _alpha_n_max_deflagration_bag_arr(v_wall: th.FloatOrArr, n_xi: int = const.DEFAULT_N_XI) -> th.FloatOrArr:
     ret = np.zeros_like(v_wall)
     for i in numba.prange(v_wall.size):  # pylint: disable=not-an-iterable
         ret[i] = _alpha_n_max_deflagration_bag_scalar_numba(v_wall[i], n_xi)
@@ -61,7 +61,7 @@ _alpha_n_max_deflagration_bag_arr_single = numba.njit(nogil=True)(_alpha_n_max_d
 
 def _alpha_n_max_deflagration_bag_arr_wrapper(
         v_wall: th.FloatOrArr,
-        n_xi: int = const.N_XI_DEFAULT,
+        n_xi: int = const.DEFAULT_N_XI,
         parallel: bool = True) -> th.FloatOrArr:
     if parallel:
         return _alpha_n_max_deflagration_bag_arr_parallel(v_wall=v_wall, n_xi=n_xi)
@@ -70,7 +70,7 @@ def _alpha_n_max_deflagration_bag_arr_wrapper(
 
 def alpha_n_max_deflagration_bag(
         v_wall: th.FloatOrArr,
-        n_xi: int = const.N_XI_DEFAULT,
+        n_xi: int = const.DEFAULT_N_XI,
         parallel: bool = True) -> th.FloatOrArr:
     r"""
     Calculates the maximum phase transition strength $\alpha_{n,\max}$,
@@ -93,7 +93,7 @@ def alpha_n_max_deflagration_bag(
 @overload(alpha_n_max_deflagration_bag, jit_options={"nopython": True, "nogil": True})
 def _alpha_n_max_deflagration_bag_numba(
         v_wall: th.FloatOrArr,
-        n_xi: int = const.N_XI_DEFAULT,
+        n_xi: int = const.DEFAULT_N_XI,
         parallel: bool = True) -> th.FloatOrArr:
     if isinstance(v_wall, numba.types.Float):
         return _alpha_n_max_deflagration_bag_scalar
@@ -118,7 +118,7 @@ def alpha_n_max_detonation_bag(v_wall: th.FloatOrArr) -> th.FloatOrArr:
 
 
 @numba.njit
-def alpha_n_max_hybrid_bag(v_wall: float, n_xi: int = const.N_XI_DEFAULT) -> float:
+def alpha_n_max_hybrid_bag(v_wall: float, n_xi: int = const.DEFAULT_N_XI) -> float:
     r"""
     Calculates the relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
     in the Bag Model for given $v_\text{wall}$, assuming hybrid fluid shell

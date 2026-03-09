@@ -41,8 +41,8 @@ class Bubble(BaseBubble):
             wn_guess: float | None = None,
             wm_guess: float | None = None,
             theta_bar: bool = False,
-            t_end: float = const.T_END_DEFAULT,
-            n_xi: int = const.N_XI_DEFAULT,
+            t_end: float = const.DEFAULT_T_END,
+            n_xi: int = const.DEFAULT_N_XI,
             thin_shell_t_points_min: int = const.THIN_SHELL_T_POINTS_MIN,
             low_v_wall_threshold: float = 0.1,
             n_xi_fix_factor: int = 10,
@@ -83,7 +83,7 @@ class Bubble(BaseBubble):
         if not 0 < self.v_wall <= 1:
             raise ValueError(f"Invalid v_wall={self.v_wall}")
         if self.v_wall < low_v_wall_threshold:
-            if self.n_xi == const.N_XI_DEFAULT:
+            if self.n_xi == const.DEFAULT_N_XI:
                 n_xi_fix_factor = n_xi_fix_factor
                 logger.info(
                     "Got n_xi=%s for v_wall=%s < 0.1. This may lead to an inaccurate solution. "
@@ -91,7 +91,7 @@ class Bubble(BaseBubble):
                     n_xi, v_wall, n_xi_fix_factor
                 )
                 self.n_xi *= n_xi_fix_factor
-            elif self.n_xi < const.N_XI_DEFAULT:
+            elif self.n_xi < const.DEFAULT_N_XI:
                 logger.warning(
                     "Got n_xi=%s for v_wall=%s < 0.1. This may lead to an inaccurate solution. "
                     "Please increase n_xi.",

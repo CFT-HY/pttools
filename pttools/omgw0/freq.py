@@ -19,7 +19,7 @@ def f(z: th.FloatOrArr, r_star: th.FloatOrArr, f_star0: th.FloatOrArr) -> th.Flo
 
 def f0(
         r_star: th.FloatOrArr,
-        T_star: th.FloatOrArr = const.T_STAR_DEFAULT,
+        T_star: th.FloatOrArr = const.DEFAULT_T_STAR,
         g_star: th.FloatOrArr = 100) -> th.FloatOrArr:
     r"""Factor required to take into account the redshift of the frequency scale"""
     return f_star0(T_star, g_star) / r_star

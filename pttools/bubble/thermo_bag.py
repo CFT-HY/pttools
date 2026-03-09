@@ -83,7 +83,7 @@ def de_from_w_new_bag(
 def get_kappa_bag[T: FloatOrArr](
         v_wall: T,
         alpha_n: float,
-        n_xi: int = const.N_XI_DEFAULT,
+        n_xi: int = const.DEFAULT_N_XI,
         verbosity: int = 0) -> T:
     r"""
     Efficiency factor $\kappa$ from $v_\text{wall}$ and $\alpha_n$.
@@ -125,7 +125,7 @@ def get_kappa_bag[T: FloatOrArr](
 def get_kappa_de_bag[T: FloatOrArr](
         v_wall: T,
         alpha_n: float,
-        n_xi: int = const.N_XI_DEFAULT,
+        n_xi: int = const.DEFAULT_N_XI,
         verbosity: int = 0) -> tuple[T, T]:
     r"""
     Calculates efficiency factor $\kappa$ and fractional change in energy
@@ -171,7 +171,7 @@ def get_kappa_de_bag[T: FloatOrArr](
 def get_kappa_dq_bag[T: FloatOrArr](
         v_wall: T,
         alpha_n: float,
-        n_xi: int = const.N_XI_DEFAULT,
+        n_xi: int = const.DEFAULT_N_XI,
         verbosity: int = 0) -> tuple[T, T]:
     r"""
     Calculates efficiency factor $\kappa$ and fractional change in thermal energy
@@ -219,7 +219,7 @@ def get_kappa_dq_bag[T: FloatOrArr](
 def get_ke_de_frac_bag[T: FloatOrArr](
         v_wall: T,
         alpha_n: float,
-        n_xi: int = const.N_XI_DEFAULT,
+        n_xi: int = const.DEFAULT_N_XI,
         verbosity: int = 0) -> tuple[T, T]:
     r"""
     Kinetic energy fraction and fractional change in energy
@@ -261,7 +261,7 @@ def get_ke_de_frac_bag[T: FloatOrArr](
     return ke_out, de_out
 
 
-def get_ke_frac_bag[T: FloatOrArr](v_wall: T, alpha_n: float, n_xi: int = const.N_XI_DEFAULT) -> T:
+def get_ke_frac_bag[T: FloatOrArr](v_wall: T, alpha_n: float, n_xi: int = const.DEFAULT_N_XI) -> T:
     r"""
     Determine kinetic energy fraction (of total energy).
     Bag equation of state only so far, as it takes
@@ -280,7 +280,7 @@ def get_ke_frac_bag[T: FloatOrArr](v_wall: T, alpha_n: float, n_xi: int = const.
 def get_ke_frac_new_bag[T: FloatOrArr](
         v_wall: T,
         alpha_n: float,
-        n_xi: int = const.N_XI_DEFAULT,
+        n_xi: int = const.DEFAULT_N_XI,
         verbosity: int = 0) -> T:
     r"""
     Determine kinetic energy fraction (of total energy).
@@ -348,7 +348,7 @@ def _get_ubarf2_bag_arr[T: FloatOrArr1D](v_wall: T, alpha_n: float, n_xi: int, v
 def get_ubarf2_bag[T: FloatOrArr1D](
         v_wall: T,
         alpha_n: float,
-        n_xi: int = const.N_XI_DEFAULT,
+        n_xi: int = const.DEFAULT_N_XI,
         verbosity: int = 0) -> T:
     r"""
     Get mean square fluid velocity from $v_\text{wall}$ and $\alpha_n$.
@@ -370,7 +370,7 @@ def get_ubarf2_bag[T: FloatOrArr1D](
 def _get_ubarf2_bag_numba[T: FloatOrArr1D](
         v_wall: T,
         alpha_n: float,
-        n_xi: int = const.N_XI_DEFAULT,
+        n_xi: int = const.DEFAULT_N_XI,
         verbosity: int = 0) -> T:
     if isinstance(v_wall, numba.types.Float):
         return _get_ubarf2_bag_scalar
@@ -384,7 +384,7 @@ def _get_ubarf2_bag_numba[T: FloatOrArr1D](
 def get_ubarf2_new_bag(
         v_wall: th.FloatOrArr,
         alpha_n: float,
-        n_xi: int = const.N_XI_DEFAULT,
+        n_xi: int = const.DEFAULT_N_XI,
         verbosity: int = 0) -> th.FloatOrArr:
     r"""
     Get mean square fluid velocity from $v_\text{wall}$ and $\alpha_n$.

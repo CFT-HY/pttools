@@ -3,8 +3,8 @@
 # Speed of light (m/s)
 c: float = 299792458.
 
-G_STAR_DEFAULT: float = 100.
-T_STAR_DEFAULT: float = 100.  # GeV
+DEFAULT_G_STAR: float = 100.
+DEFAULT_T_STAR: float = 100.  # GeV
 
 #: :caprini_2020:`\ `, eq. 20
 FGW0: float = 3.57e-5

@@ -96,9 +96,9 @@ def plot_v_excerpt(ax: plt.Axes, v_wall: float, alpha_plus: float, n_xi: int = 5
 def plot_conditions(ax: plt.Axes, cs2_s: float, cs2_b: float) -> None:
     # Create a line v(xi) = xi to start solving on with forwards and backwards solutions
     # This is the maximum fluid speed ahead of wall for deflagrations
-    xi_min = 0.0 + 1 / bubble.N_XI_DEFAULT
+    xi_min = 0.0 + 1 / bubble.DEFAULT_N_XI
     xi_max = 1.0
-    xi_line = np.linspace(xi_min, xi_max, bubble.N_XI_DEFAULT)
+    xi_line = np.linspace(xi_min, xi_max, bubble.DEFAULT_N_XI)
     va_max_line = v_ahead_max(xi_line)
 
     # Create the shock line for deflagrations

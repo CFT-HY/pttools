@@ -33,8 +33,8 @@ class SSMSpectrum:
             y: th.FloatArr1D | None = None,
             z_st_thresh: float = const.Z_ST_THRESH,
             nuc_type: NucType = DEFAULT_NUC_TYPE,
-            nt: int = const.NTDEFAULT,
-            n_z_lookup: int = const.N_Z_LOOKUP_DEFAULT,
+            nt: int = const.DEFAULT_N_T,
+            n_z_lookup: int = const.DEFAULT_N_Z_LOOKUP,
             r_star: float | None = None,
             # eta_star: float = 1,
             lifetime_multiplier: float = 1.,
@@ -55,7 +55,7 @@ class SSMSpectrum:
         :param compute: whether to compute the spectrum immediately
         """
         if y is None:
-            self.y = const.Y_DEFAULT
+            self.y = const.DEFAULT_Y
         elif np.isnan(y).any():
             raise ValueError("y must not contain nan values.")
         else:

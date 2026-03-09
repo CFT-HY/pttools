@@ -11,10 +11,10 @@ import numpy as np
 
 import pttools.type_hints as th
 
-CMAP_DEFAULT: Colormap = cm.viridis
-CMAP_NEG_DEFAULT: Colormap = cm.Blues
-CMAP_POS_DEFAULT: Colormap = cm.Reds
-REGION_COLOR_DEFAULT = "red"
+DEFAULT_CMAP: Colormap = cm.viridis
+DEFAULT_CMAP_NEG: Colormap = cm.Blues
+DEFAULT_CMAP_POS: Colormap = cm.Reds
+DEFAULT_REGION_COLOR = "red"
 
 
 def get_cmap(cmap: Colormap | str) -> Colormap:
@@ -27,7 +27,7 @@ def get_cmap(cmap: Colormap | str) -> Colormap:
     return cmap
 
 
-def cmap_lines(n, cmap: Colormap | str = CMAP_DEFAULT) -> th.FloatArr1D:
+def cmap_lines(n, cmap: Colormap | str = DEFAULT_CMAP) -> th.FloatArr1D:
     arr = np.linspace(0, 1, n)
     if isinstance(cmap, str):
         return plt.colormaps[cmap](arr)
@@ -38,8 +38,8 @@ def cmap_plusminus(
         min_level: float,
         max_level: float,
         diff_level: float,
-        cmap_neg: Colormap | str = CMAP_NEG_DEFAULT,
-        cmap_pos: Colormap | str = CMAP_POS_DEFAULT) -> tuple[th.FloatArr1D, tp.List[float]]:
+        cmap_neg: Colormap | str = DEFAULT_CMAP_NEG,
+        cmap_pos: Colormap | str = DEFAULT_CMAP_POS) -> tuple[th.FloatArr1D, tp.List[float]]:
     """Colormap for Matplotlib heatmap plots with different color schemes for positive and negative values"""
     n_min = math.floor(min_level / diff_level)
     n_max = math.ceil(max_level / diff_level)
@@ -60,7 +60,7 @@ def color_region(
         x: th.FloatArr1D,
         y: th.FloatArr1D,
         region: th.FloatArr2D,
-        color: str = REGION_COLOR_DEFAULT, alpha: float = 1) -> QuadContourSet:
+        color: str = DEFAULT_REGION_COLOR, alpha: float = 1) -> QuadContourSet:
     """Set a region on a plot to a fixed color"""
     cmp = ListedColormap([color], color, 1)
     # The data type must be supported by np.isinf()

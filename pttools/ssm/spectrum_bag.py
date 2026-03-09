@@ -45,7 +45,7 @@ def parse_params(params: bubble.PhysicalParams) -> tuple[float, float, spectrum.
 def power_gw_scaled_bag(
         z: th.FloatArr1D,
         params: bubble.PhysicalParams,
-        npt: const.NptType = const.NPTDEFAULT,
+        npt: const.NptType = const.DEFAULT_N_PT,
         filename: str | None = None,
         skip: int = 1,
         method: ssm.Method = ssm.Method.E_CONSERVING,
@@ -100,7 +100,7 @@ def power_gw_scaled_bag(
 def power_v_bag(
         z: th.FloatArr1D,
         params: bubble.PhysicalParams,
-        npt: const.NptType = const.NPTDEFAULT,
+        npt: const.NptType = const.DEFAULT_N_PT,
         filename: str | None = None,
         skip: int = 1,
         method: ssm.Method = ssm.Method.E_CONSERVING,
@@ -130,7 +130,7 @@ def power_v_bag(
 def spec_den_v_bag(
         z: th.FloatArr1D,
         params: bubble.PhysicalParams,
-        npt: const.NptType = const.NPTDEFAULT,
+        npt: const.NptType = const.DEFAULT_N_PT,
         filename: str | None = None,
         skip: int = 1,
         method: ssm.Method = ssm.Method.E_CONSERVING,

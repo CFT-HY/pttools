@@ -30,8 +30,8 @@ class Spectrum(ssm.SSMSpectrum):
             y: th.FloatArr1D | None = None,
             z_st_thresh: float = ssm.Z_ST_THRESH,
             nuc_type: ssm.NucType = ssm.DEFAULT_NUC_TYPE,
-            nt: int = ssm.NTDEFAULT,
-            n_z_lookup: int = ssm.N_Z_LOOKUP_DEFAULT,
+            nt: int = ssm.DEFAULT_N_T,
+            n_z_lookup: int = ssm.DEFAULT_N_Z_LOOKUP,
             lifetime_multiplier: float = 1,
             compute: bool = True,
             parallel: bool = True,
@@ -78,15 +78,15 @@ class Spectrum(ssm.SSMSpectrum):
         #: Temperature $T_*$ at the time of GW production
         self.T_star: float = T_star if T_star is not None \
             else bubble.T_star if bubble_temp_physical \
-            else const.T_STAR_DEFAULT
+            else const.DEFAULT_T_STAR
         #: Degrees of freedom $g_*$ for pressure at the time the GWs were produced
         self.g_star: float = g_star if g_star is not None \
             else bubble.g_star if bubble_temp_physical \
-            else const.G_STAR_DEFAULT
+            else const.DEFAULT_G_STAR
         #: Degrees of freedom $g_{s,*}$ for entropy at the time the GWs were produced
         self.gs_star: float = gs_star if gs_star is not None \
             else bubble.gs_star if bubble_temp_physical \
-            else const.G_STAR_DEFAULT
+            else const.DEFAULT_G_STAR
 
     # =====
     # Properties

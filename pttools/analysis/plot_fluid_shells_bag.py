@@ -15,7 +15,7 @@ def plot_fluid_shells_bag(
         alpha_n_list: th.FloatArr1DOrList,
         multi: bool = False,
         save_string: str | None = None,
-        Np: int = const.N_XI_DEFAULT,
+        Np: int = const.DEFAULT_N_XI,
         debug: bool = False,
         draw: bool | None = None) -> plt.Figure | tuple[plt.Figure, th.FloatArr1D]:
     r"""

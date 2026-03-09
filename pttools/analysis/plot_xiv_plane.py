@@ -41,9 +41,9 @@ class XIVPlanePlot:
             n_curves_s: int = 6,
             n_curves_b: int = 6,
             n_curves_right: int = 3,
-            n_xi: int = const.N_XI_DEFAULT,
-            t_forwards_end: float = const.T_END_DEFAULT,
-            t_backwards_end: float = -const.T_END_DEFAULT):
+            n_xi: int = const.DEFAULT_N_XI,
+            t_forwards_end: float = const.DEFAULT_T_END,
+            t_backwards_end: float = -const.DEFAULT_T_END):
         """Add background curves to the plot"""
         if w0 is None:
             w0 = wn

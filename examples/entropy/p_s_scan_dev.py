@@ -32,7 +32,7 @@ vw_list = np.linspace(0.05, 0.95, n_vw)
 g_bro = 120
 
 
-def get_entropy_diff(v_wall, alpha, g_bro=eos.G_BRO_DEFAULT, n_xi=b.N_XI_DEFAULT):
+def get_entropy_diff(v_wall, alpha, g_bro=eos.G_BRO_DEFAULT, n_xi=b.DEFAULT_N_XI):
     bg = eos.bag_model(alpha, g_bro=g_bro)
 
     v,w,xi = b.sound_shell_bag(v_wall, alpha, n_xi=n_xi)
@@ -67,7 +67,7 @@ def get_entropy_diff_arr(vw_list, alpha_list, g_bro=eos.G_BRO_DEFAULT):
     return ds_arr, np.array(vw_list), np.array(alpha_list)
 
 
-def get_pressure_diff(v_wall, alpha, g_bro=eos.G_BRO_DEFAULT, n_xi=b.N_XI_DEFAULT):
+def get_pressure_diff(v_wall, alpha, g_bro=eos.G_BRO_DEFAULT, n_xi=b.DEFAULT_N_XI):
     bg = eos.bag_model(alpha, g_bro=g_bro)
 
     v,w,xi = b.sound_shell_bag(v_wall, alpha, n_xi=n_xi)

@@ -22,7 +22,7 @@ def a2_e_conserving_bag(
         z: th.FloatArr1D,
         v_wall: float,
         alpha_n: float,
-        npt: const.NptType = const.NPTDEFAULT,
+        npt: const.NptType = const.DEFAULT_N_PT,
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH,
         v_sh: float | None = None,
@@ -81,7 +81,7 @@ def a2_e_conserving_bag_file(
         filename: str,
         alpha: float,
         skip: int = 1,
-        npt: const.NptType = const.NPTDEFAULT,
+        npt: const.NptType = const.DEFAULT_N_PT,
         z_st_thresh: float = const.Z_ST_THRESH):
     r"""
     Returns the value of $|A(z)|^2$, where $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$,
@@ -138,7 +138,7 @@ def a2_ssm_func_bag(
         z: th.FloatArr1D,
         v_wall: float,
         alpha: float,
-        npt: const.NptType = const.NPTDEFAULT,
+        npt: const.NptType = const.DEFAULT_N_PT,
         method: Method = Method.E_CONSERVING,
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH):
@@ -186,7 +186,7 @@ def f_file_bag(
         t,
         filename: str,
         skip: int = 0,
-        npt: const.NptType = const.NPTDEFAULT,
+        npt: const.NptType = const.DEFAULT_N_PT,
         z_st_thresh: float = const.Z_ST_THRESH) -> th.FloatArr1D:
     r"""
     3D FT of radial fluid velocity v(r) from file.
@@ -219,7 +219,7 @@ def f_ssm_func_bag(
         v_wall: float,
         alpha_n: float,
         v_sh: float | None = None,
-        npt: const.NptType = const.NPTDEFAULT,
+        npt: const.NptType = const.DEFAULT_N_PT,
         z_st_thresh: float = const.Z_ST_THRESH) -> th.FloatArr1D:
     r"""
     3D FT of radial fluid velocity v(r) from Sound Shell Model fluid profile.
@@ -250,7 +250,7 @@ def g_file_bag(z: th.FloatArr1D, t, filename: str, skip: int = 0) -> th.FloatArr
     return z * df_dz + 2. * f
 
 
-def g_ssm_func_bag(z: th.FloatArr1D, v_wall, alpha, npt: const.NptType = const.NPTDEFAULT) -> th.FloatArr1D:
+def g_ssm_func_bag(z: th.FloatArr1D, v_wall, alpha, npt: const.NptType = const.DEFAULT_N_PT) -> th.FloatArr1D:
     r"""
     3D FT of radial fluid acceleration $\dot{v}$(r) from Sound Shell Model fluid profile.
 
@@ -266,7 +266,7 @@ def lam_ssm_func_bag(
         v_wall: float,
         alpha_n: float,
         v_sh: float | None = None,
-        npt: const.NptType = const.NPTDEFAULT,
+        npt: const.NptType = const.DEFAULT_N_PT,
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH):
     """

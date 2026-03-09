@@ -20,7 +20,7 @@ import pttools.type_hints as th
 def _find_alpha_plus_bag_scalar(
         v_wall: th.FloatOrArr,
         alpha_n_given: float,
-        n_xi: int = const.N_XI_DEFAULT,
+        n_xi: int = const.DEFAULT_N_XI,
         cs2_fun_ptr: th.CS2FunScalarPtr = CS2_BAG_SCALAR_PTR,
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG,
         xtol: float = const.FIND_ALPHA_PLUS_TOL,
@@ -51,7 +51,7 @@ def _find_alpha_plus_bag_scalar(
 def _find_alpha_plus_bag_arr(
         v_wall: th.FloatOrArr,
         alpha_n_given: float,
-        n_xi: int = const.N_XI_DEFAULT,
+        n_xi: int = const.DEFAULT_N_XI,
         cs2_fun_ptr: th.CS2FunScalarPtr = CS2_BAG_SCALAR_PTR,
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG,
         xtol: float = const.FIND_ALPHA_PLUS_TOL) -> th.FloatOrArrNumba:
@@ -71,7 +71,7 @@ _find_alpha_plus_bag_arr_single = numba.njit(_find_alpha_plus_bag_arr)  # nogil=
 def _find_alpha_plus_bag_arr_wrapper(
         v_wall: th.FloatOrArr,
         alpha_n_given: float,
-        n_xi: int = const.N_XI_DEFAULT,
+        n_xi: int = const.DEFAULT_N_XI,
         cs2_fun_ptr: th.CS2FunScalarPtr = CS2_BAG_SCALAR_PTR,
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG,
         xtol: float = const.FIND_ALPHA_PLUS_TOL,
@@ -91,7 +91,7 @@ def _find_alpha_plus_bag_arr_wrapper(
 def find_alpha_plus_bag(
         v_wall: th.FloatOrArr,
         alpha_n_given: float,
-        n_xi: int = const.N_XI_DEFAULT,
+        n_xi: int = const.DEFAULT_N_XI,
         cs2_fun_ptr: th.CS2FunScalarPtr = CS2_BAG_SCALAR_PTR,
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG,
         xtol: float = const.FIND_ALPHA_PLUS_TOL,
@@ -133,7 +133,7 @@ def find_alpha_plus_bag(
 def _find_alpha_plus_bag_numba(
         v_wall: th.FloatOrArr,
         alpha_n_given: float,
-        n_xi: int = const.N_XI_DEFAULT,
+        n_xi: int = const.DEFAULT_N_XI,
         cs2_fun_ptr: th.CS2FunScalarPtr = CS2_BAG_SCALAR_PTR,
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG,
         xtol: float = const.FIND_ALPHA_PLUS_TOL,

@@ -19,7 +19,7 @@ def find_alpha_n_bag(
         v_wall: th.FloatOrArr,
         alpha_p: float,
         sol_type: SolutionType = SolutionType.UNKNOWN,
-        n_xi: int = const.N_XI_DEFAULT,
+        n_xi: int = const.DEFAULT_N_XI,
         cs2_fun: th.CS2Fun = cs2_bag_scalar,
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG) -> float:
     r"""

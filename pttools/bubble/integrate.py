@@ -12,7 +12,7 @@ import scipy.integrate as spi
 from scipy.integrate._ivp.ivp import OdeResult
 
 from pttools.bubble.cs2_bag import cs2_bag, cs2_bag_scalar_cfunc
-from pttools.bubble.const import N_XI_DEFAULT, T_END_DEFAULT
+from pttools.bubble.const import DEFAULT_N_XI, DEFAULT_T_END
 from pttools.speedup.differential import DifferentialCache, DifferentialCFunc, DifferentialPointer
 from pttools.speedup.numba_wrapper import numbalsoda
 from pttools.speedup.options import NUMBA_DISABLE_JIT, NUMBA_INTEGRATE
@@ -103,8 +103,8 @@ def fluid_integrate_param(
         w0: float,
         xi0: float,
         phase: float = -1.,
-        t_end: float = T_END_DEFAULT,
-        n_xi: int = N_XI_DEFAULT,
+        t_end: float = DEFAULT_T_END,
+        n_xi: int = DEFAULT_N_XI,
         df_dtau_ptr: DifferentialPointer = DF_DTAU_PTR_BAG,
         method: FluidIntegrateMethod = "odeint") -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""

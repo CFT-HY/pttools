@@ -12,7 +12,7 @@ def plot_fluid_shell_bag(
         v_wall: float,
         alpha_n: float,
         save_string: str | None = None,
-        Np: int = const.N_XI_DEFAULT,
+        Np: int = const.DEFAULT_N_XI,
         low_v_approx: bool = False,
         high_v_approx: bool = False,
         draw: bool | None = None) \

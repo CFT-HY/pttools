@@ -26,8 +26,8 @@ class BaseBubble(abc.ABC):
             v_wall: float,
             w_center: float | None = None,
             wm_guess: float | None = None,
-            t_end: float = const.T_END_DEFAULT,
-            n_xi: int = const.N_XI_DEFAULT):
+            t_end: float = const.DEFAULT_T_END,
+            n_xi: int = const.DEFAULT_N_XI):
         # Some functions such as np.vectorize tend to give 0D arrays, which may cause subtle errors later on.
         if v_wall is None or not np.isscalar(v_wall):
             raise ValueError(f"v_wall should be scalar. Did you give e.g. a 0D array instead? Got: v_wall={v_wall}")

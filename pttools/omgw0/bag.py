@@ -5,7 +5,7 @@ from pttools.omgw0 import const
 from pttools.omgw0.factors import J
 from pttools.omgw0.freq import f0
 import pttools.omgw0.suppression as sup_mod
-from pttools.ssm import NPTDEFAULT, NptType, NucType, power_gw_scaled_bag
+from pttools.ssm import DEFAULT_N_PT, NptType, NucType, power_gw_scaled_bag
 import pttools.type_hints as th
 
 
@@ -14,8 +14,8 @@ def omgw0_bag(
         vw: float,
         alpha: float,
         r_star: float,
-        T_star: float = const.T_STAR_DEFAULT,
-        npt: NptType = NPTDEFAULT,
+        T_star: float = const.DEFAULT_T_STAR,
+        npt: NptType = DEFAULT_N_PT,
         sup: sup_mod.Suppression = sup_mod.DEFAULT,
         sup_method: sup_mod.SuppressionMethod = sup_mod.SuppressionMethod.DEFAULT,
         parallel: bool = True) -> th.FloatArr1D:

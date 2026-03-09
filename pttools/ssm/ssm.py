@@ -43,7 +43,7 @@ def a2_e_conserving(
         v_sh: float,
         cs: float,
         z_st_thresh: float = const.Z_ST_THRESH,
-        nxi: int = const.NPTDEFAULT[0],
+        nxi: int = const.DEFAULT_N_PT[0],
         parallel: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
     Returns the value of $|A(z)|^2$, where

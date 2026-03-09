@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 def sound_shell_bag(
         v_wall: float,
         alpha_n: float,
-        n_xi: int = const.N_XI_DEFAULT,
+        n_xi: int = const.DEFAULT_N_XI,
         cs2_fun: th.CS2Fun = cs2_bag_scalar,
         cs2_fun_ptr: th.CS2FunScalarPtr = CS2_BAG_SCALAR_PTR,
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG,
@@ -90,7 +90,7 @@ def sound_shell_alpha_plus_bag(
         v_wall: float,
         alpha_plus: float,
         sol_type: SolutionType = SolutionType.UNKNOWN,
-        n_xi: int = const.N_XI_DEFAULT,
+        n_xi: int = const.DEFAULT_N_XI,
         w_n: float = 1.,
         cs2_fun: th.CS2Fun = cs2_bag_scalar,
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG,
@@ -162,7 +162,7 @@ def sound_shell_alpha_plus_bag(
         # First go
         v, w, xi, t = integrate.fluid_integrate_param(
             v0=vfp_p, w0=wp, xi0=v_wall,
-            phase=Phase.SYMMETRIC.value, t_end=-const.T_END_DEFAULT, n_xi=const.N_XI_DEFAULT, df_dtau_ptr=df_dtau_ptr)
+            phase=Phase.SYMMETRIC.value, t_end=-const.DEFAULT_T_END, n_xi=const.DEFAULT_N_XI, df_dtau_ptr=df_dtau_ptr)
         v, w, xi, t = trim.trim_fluid_wall_to_shock(v, w, xi, t, sol_type)
         # Now refine so that there are ~N points between wall and shock.  A bit excessive for thin
         # shocks perhaps, but better safe than sorry. Then improve final point with shock_zoom...
@@ -188,7 +188,7 @@ def sound_shell_alpha_plus_bag(
         # First go
         v, w, xi, t = integrate.fluid_integrate_param(
             v0=vfm_p, w0=wm, xi0=v_wall,
-            phase=Phase.BROKEN.value, t_end=-const.T_END_DEFAULT, n_xi=const.N_XI_DEFAULT, df_dtau_ptr=df_dtau_ptr)
+            phase=Phase.BROKEN.value, t_end=-const.DEFAULT_T_END, n_xi=const.DEFAULT_N_XI, df_dtau_ptr=df_dtau_ptr)
         v, w, xi, t = trim.trim_fluid_wall_to_cs(v, w, xi, t, v_wall, sol_type)
         #    # Now refine so that there are ~N points between wall and point closest to cs
         #    # For walls just faster than sound, will give very (too?) fine a resolution.
@@ -228,7 +228,7 @@ def sound_shell_alpha_plus_bag(
 def sound_shell_dict(
         v_wall: float,
         alpha_n: float,
-        Np: int = const.N_XI_DEFAULT,
+        Np: int = const.DEFAULT_N_XI,
         low_v_approx: bool = False,
         high_v_approx: bool = False) -> dict[str, float | int | SolutionType | th.FloatArr1D]:
     if low_v_approx and high_v_approx:

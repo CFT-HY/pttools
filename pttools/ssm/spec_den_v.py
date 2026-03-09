@@ -78,7 +78,7 @@ def spec_den_v(
         v_sh: float,
         a: float,
         nuc_type: NucType,
-        nt: int = const.NPTDEFAULT[1],
+        nt: int = const.DEFAULT_N_PT[1],
         z_st_thresh: float = const.Z_ST_THRESH,
         cs: float | None = None,
         parallel: bool = True):

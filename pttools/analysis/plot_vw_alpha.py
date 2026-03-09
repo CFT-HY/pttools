@@ -10,7 +10,7 @@ import numpy as np
 
 from pttools.analysis.bubble_grid import BubbleGridVWAlpha
 from pttools.analysis import colormap
-from pttools.analysis.colormap import REGION_COLOR_DEFAULT
+from pttools.analysis.colormap import DEFAULT_REGION_COLOR
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 import pttools.type_hints as th
 
@@ -49,8 +49,8 @@ class VwAlphaPlot:
             data: th.FloatArr2D,
             label: str,
             diff_level: float | None = None,
-            cmap_neg: tp.Union[Colormap, str] = colormap.CMAP_NEG_DEFAULT,
-            cmap_pos: tp.Union[Colormap, str] = colormap.CMAP_POS_DEFAULT):
+            cmap_neg: tp.Union[Colormap, str] = colormap.DEFAULT_CMAP_NEG,
+            cmap_pos: tp.Union[Colormap, str] = colormap.DEFAULT_CMAP_POS):
         """Add a contour plot to the figure"""
         if diff_level is None:
             diff_level = 0.1
@@ -66,7 +66,7 @@ class VwAlphaPlot:
     def color_region(
             self,
             region: th.FloatArr2D,
-            color: str = REGION_COLOR_DEFAULT,
+            color: str = DEFAULT_REGION_COLOR,
             alpha: float = 1) -> QuadContourSet:
         """Color a region with a fixed color"""
         return colormap.color_region(
