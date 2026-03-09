@@ -1,5 +1,8 @@
 """Utilities for plotting and analysing data"""
 
+import os
+import os.path
+
 import matplotlib as mpl
 from matplotlib.legend import Legend
 import matplotlib.pyplot as plt
@@ -11,6 +14,7 @@ from pttools.utils.system import IS_GITHUB_ACTIONS
 A4_PAPER_SIZE: tuple[float, float] = (11.7, 8.3)
 A3_PAPER_SIZE: tuple[float, float] = (16.5, 11.7)
 ENABLE_DRAWING: bool = not IS_GITHUB_ACTIONS
+FIG_FORMATS = ("pdf", "png", "svg")
 FigAndAxes = tuple[plt.Figure, plt.Axes]
 
 
@@ -44,6 +48,15 @@ def model_phase_label(model: BaseModel, phase: Phase) -> str:
     else:
         phase_str = f"{phase:.2f}"
     return rf"{model.label_latex}, $\phi$={phase_str}"
+
+
+def save_fig_multi(fig: plt.Figure, path: str, makedirs: bool = True):
+    """Save the figure in multiple formats"""
+    if makedirs:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+    for fmt in FIG_FORMATS:
+        fig.savefig(f"{path}.{fmt}")
+
 
 
 def setup_plotting(font: str = "serif", font_size: int = 20, usetex: bool = True) -> None:

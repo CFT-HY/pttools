@@ -2,22 +2,30 @@
 
 import decimal
 
-import colorama
 import numpy as np
 
 import pttools.type_hints as th
-import tests.utils.math as test_math
+from pttools.utils.math import rel_diff_arr, rel_diff_scalar
 
 DEFAULT_FMT = ".8e"
 HIGH_PREC = 10
 
-colorama.init()
+RED: str
+RESET: str
+try:
+    import colorama
+    colorama.init()
+    RED = colorama.Fore.RED
+    RESET = colorama.Fore.RESET
+except ModuleNotFoundError:
+    RED = ""
+    RESET = ""
 
 
 def row_to_str(row: th.FloatArr1D, close: th.BoolArr1D, fmt: str = DEFAULT_FMT) -> str:
     """Convert an array row to string with color"""
     lst = [
-        f"{'' if ok else colorama.Fore.RED}{act:{fmt}}{''if ok else colorama.Fore.RESET}"
+        f"{'' if ok else RED}{act:{fmt}}{''if ok else RESET}"
         for act, ok in zip(row, close)
     ]
     return f"[{', '.join(lst)}]"
@@ -29,9 +37,9 @@ def pairs_to_rows(
         close: th.BoolArr1D, fmt: str = DEFAULT_FMT) -> list[str]:
     """Convert pairs of actual and desired values to string rows with color"""
     return [
-        f"{'' if ok else colorama.Fore.RED}"
-        f"{act:{fmt}}, {des:{fmt}}, {test_math.rel_diff_scalar(act, des):{fmt}}, {act - des:{fmt}}"
-        f"{'' if ok else colorama.Fore.RESET}"
+        f"{'' if ok else RED}"
+        f"{act:{fmt}}, {des:{fmt}}, {rel_diff_scalar(act, des):{fmt}}, {act - des:{fmt}}"
+        f"{'' if ok else RESET}"
         for act, des, ok in zip(actual, desired, close)
     ]
 
@@ -43,7 +51,7 @@ def print_1d_small(actual: th.FloatArr1D, desired: th.FloatArr1D, close: th.Bool
     print("desired:")
     print(row_to_str(desired, close, fmt))
     print("rdiff:")
-    print(row_to_str(test_math.rel_diff_arr(actual, desired), close, fmt))
+    print(row_to_str(rel_diff_arr(actual, desired), close, fmt))
     print("adiff:")
     print(row_to_str(actual - desired, close, fmt))
 

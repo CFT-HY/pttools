@@ -4,7 +4,7 @@ import unittest
 
 import numpy as np
 
-from tests.utils.assertions import assert_allclose
+from pttools.utils.assertions import assert_allclose
 
 
 class TestAllclose(unittest.TestCase):

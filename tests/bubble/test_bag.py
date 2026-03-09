@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 
 from pttools import bubble
-from tests import utils
+from pttools.utils import assert_allclose
 
 
 class TestBag(unittest.TestCase):
@@ -35,13 +35,13 @@ class TestBag(unittest.TestCase):
     #     zeros = np.zeros_like(v1)
     #     v2, w2 = bubble.junction_bag(v1, w1, model.V_b, model.V_s, greater_branch=greater_branch)
     #     data1 = bubble.junction_condition_deviation1(v1, w1, v2, w2)
-    #     utils.assert_allclose(data1, zeros, atol=atol)
+    #     assert_allclose(data1, zeros, atol=atol)
     #
     #     data2 = bubble.junction_condition_deviation2(
     #         v1, w1, model.p(w1, phase1),
     #         v2, w2, model.p(w2, phase2)
     #     )
-    #     utils.assert_allclose(data2, zeros, atol=atol)
+    #     assert_allclose(data2, zeros, atol=atol)
 
     # def test_adiabatic_index(self):
     #     pass
@@ -49,7 +49,7 @@ class TestBag(unittest.TestCase):
     def test_e(self):
         ref_data = np.array([1.175, 1.2125, 1.25, 1.2875, 1.325])
         data = bubble.e_bag(self.w_arr, self.phase, self.theta_s, self.theta_b)
-        utils.assert_allclose(data, ref_data)
+        assert_allclose(data, ref_data)
 
     # def test_junction_bag_lesser(self):
     #     model = BagModel(V_s=1, a_s=1.1, a_b=1)
@@ -66,7 +66,7 @@ class TestBag(unittest.TestCase):
     def test_p(self):
         ref_data = np.array([-0.275, -0.2625, -0.25, -0.2375, -0.225])
         data = bubble.p_bag(self.w_arr, self.phase, self.theta_s, self.theta_b)
-        utils.assert_allclose(data, ref_data)
+        assert_allclose(data, ref_data)
 
     # def test_phase_scalar(self):
     #     pass
@@ -83,7 +83,7 @@ class TestBag(unittest.TestCase):
         ref_data = np.array([0.9, 0.95, 1, 1.05, 1.1])
         e = bubble.e_bag(self.w_arr, self.phase, self.theta_s, self.theta_b)
         data = bubble.w_bag(e, self.phase, self.theta_s, self.theta_b)
-        utils.assert_allclose(data, ref_data)
+        assert_allclose(data, ref_data)
 
 
 if __name__ == "__main__":

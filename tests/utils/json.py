@@ -9,7 +9,7 @@ import numpy as np
 import orjson
 
 import pttools.type_hints as th
-from tests.utils.assertions import assert_allclose
+from pttools.utils.assertions import assert_allclose
 
 logger = logging.getLogger(__name__)
 

@@ -11,8 +11,9 @@ import numba
 import numpy as np
 
 from pttools.speedup import NUMBA_DISABLE_JIT, NUMBA_INTEGRATE_TOLERANCES
+from pttools.utils.assertions import assert_allclose
 from tests.paper import ssm_paper_utils as spu
-from tests import utils
+from tests.utils import TEST_DATA_PATH
 
 logger = logging.getLogger(__name__)
 
@@ -25,19 +26,22 @@ class TestPowSpecs(unittest.TestCase):
 
 
 def pow_specs():
-    params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list = spu.do_all_plot_ps_compare_nuc('final3', None)
+    params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list = spu.do_all_plot_ps_compare_nuc(
+        save_id='final3',
+        graph_file_type=None
+    )
 
     save_id = 'test'
     file = 'data_compare_nuc-' + save_id + '.txt'
 
     spu.save_compare_nuc_data(
-        os.path.join(utils.TEST_DATA_PATH, file),
+        os.path.join(TEST_DATA_PATH, file),
         params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list
     )
 
-    data_article = np.loadtxt(os.path.join(utils.TEST_DATA_PATH, "data_compare_nuc-final3.txt"))
-    data_reference = np.loadtxt(os.path.join(utils.TEST_DATA_PATH, "data_compare_nuc-test_reference.txt"))
-    data_test = np.loadtxt(os.path.join(utils.TEST_DATA_PATH, "data_compare_nuc-test.txt"))
+    data_article = np.loadtxt(os.path.join(TEST_DATA_PATH, "data_compare_nuc-final3.txt"))
+    data_reference = np.loadtxt(os.path.join(TEST_DATA_PATH, "data_compare_nuc-test_reference.txt"))
+    data_test = np.loadtxt(os.path.join(TEST_DATA_PATH, "data_compare_nuc-test.txt"))
 
     # The sign of p_cwg does not matter
     data_article[:, 9] = np.abs(data_article[:, 9])
@@ -66,11 +70,11 @@ def pow_specs():
     if NUMBA_INTEGRATE_TOLERANCES:
         logger.warning("test_pow_specs tolerances have been loosened for Numba")
         rtol = 0.013
-    utils.assert_allclose(data_test, data_reference, rtol=rtol, atol=0)
+    assert_allclose(data_test, data_reference, rtol=rtol, atol=0)
 
     # PTtools has been changed since the article has been written,
     # and therefore there are slight differences in the results.
-    utils.assert_allclose(data_test, data_article, rtol=0.14, atol=0)
+    assert_allclose(data_test, data_article, rtol=0.14, atol=0)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-"""Math utilities for testing"""
+"""Mathematic utilities"""
 
 import numpy as np
 from numpy.typing import NDArray

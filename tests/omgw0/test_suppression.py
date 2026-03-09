@@ -11,7 +11,7 @@ from pttools.omgw0.suppression import DEFAULT
 from pttools.omgw0.suppression.suppression_ssm_data.remove_hybrids import SUPPRESSION_FOLDER, remove_hybrids
 from pttools.omgw0.suppression.suppression_ssm_data.suppression_ssm_calculator import calc_sup_ssm
 import pttools.ssm.const as ssm_const
-from tests.utils.assertions import assert_allclose
+from pttools.utils.assertions import assert_allclose
 
 
 class SuppressionTest(unittest.TestCase):

@@ -1,4 +1,4 @@
-r"""Plot the absolute and relative relative errors of different integrators for the $\xi, v$ plane.
+r"""Plot the absolute and relative errors of different integrators for the $\xi, v$ plane.
 See :gw_pt_ssm:`\ ` fig. 9
 Excerpts of these plots are in :gw_pt_ssm:`\ ` fig. 10 and :notes:`\ ` fig. 15.
 """
@@ -14,7 +14,9 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 
+from pttools.analysis import save_fig_multi
 from pttools import speedup
+from pttools.utils import assert_allclose
 import pttools.type_hints as th
 from tests import utils
 from tests.paper import plane
@@ -23,7 +25,7 @@ from tests.test_performance import PERFORMANCE_DIR
 
 logger = logging.getLogger(__name__)
 
-PLOT = True
+PLOT: bool = True
 
 
 class TestPlane(unittest.TestCase):
@@ -58,7 +60,7 @@ class TestPlane(unittest.TestCase):
         cls.plot_diff(axs[0, 4], name, diffs)
         fig.tight_layout()
         path = os.path.join(cls.FIG_PATH, f"integrators_{name}")
-        utils.save_fig_multi(fig, path)
+        save_fig_multi(fig, path)
         plt.close(fig)
         if shutil.which("ffmpeg"):
             video_path = f"{path}.mp4"
@@ -166,7 +168,7 @@ class TestPlane(unittest.TestCase):
                 plot_plane_paper.plot_plane(ax=axs[ax[0], ax[1]], data_s=data, method=method, deflag_ref=self.ref_data, **tols)
                 plot_plane_paper.plot_plane(ax=ax2, data_s=data, method=method, deflag_ref=self.ref_data, **tols)
                 fig_name = os.path.join(self.FIG_PATH, f"integrators_{name}_{i}_{plot_plane_paper.get_solver_name(method)}")
-                utils.save_fig_multi(fig, fig_name)
+                save_fig_multi(fig, fig_name)
                 plt.close(fig)
 
         data_summed = np.nansum(data, axis=2)
@@ -178,7 +180,7 @@ class TestPlane(unittest.TestCase):
 
         data_ref = np.loadtxt(file_path)
         # Asserting is the last step to ensure, that the plots are created regardless of the results
-        utils.assert_allclose(data_summed, data_ref, rtol=rtol)
+        assert_allclose(data_summed, data_ref, rtol=rtol)
 
     def test_plane_bdf(self):
         self.validate_plane(method="BDF", rtol=5e-3, i=5, ax=(1, 2))

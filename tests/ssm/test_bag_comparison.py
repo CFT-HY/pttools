@@ -10,7 +10,7 @@ from pttools.models import BagModel
 from pttools.ssm import SSMSpectrum
 from pttools import ssm
 import pttools.type_hints as th
-from tests.utils.assertions import assert_allclose
+from pttools.utils.assertions import assert_allclose
 
 
 class SpectrumTest(unittest.TestCase):

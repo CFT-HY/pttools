@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 # MDP = os.path.join(TEST_DATA_PATH, "model_data")
 GDP = TEST_FIGURE_PATH
 # os.makedirs(MDP, exist_ok=True)
-os.makedirs(GDP, exist_ok=True)
+# os.makedirs(GDP, exist_ok=True)
 
 # All run parameters
 

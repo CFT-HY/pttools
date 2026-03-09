@@ -5,8 +5,8 @@ import inspect
 import numpy as np
 
 import pttools.type_hints as th
-import tests.utils.math as test_math
-from tests.utils import printing
+from pttools.utils.math import rel_diff_arr, rel_diff_scalar
+from pttools.utils.printing import DEFAULT_FMT, print_1d, print_2d
 
 
 def assert_allclose(
@@ -18,7 +18,7 @@ def assert_allclose(
         err_msg: str = "",
         verbose: bool = True,
         name: str | None = None,
-        fmt: str = printing.DEFAULT_FMT,
+        fmt: str = DEFAULT_FMT,
         dtype: np.dtype = np.float64) -> None:
     """Assert that all array elements correspond to the reference within the given tolerances
 
@@ -69,20 +69,20 @@ def assert_allclose(
     print(f"Not equal to tolerance rtol={rtol}, atol={atol}")
     if is_scalar:
         print(f"Absolute difference: {np.abs(actual - desired)}")
-        print(f"Relative difference: {test_math.rel_diff_scalar(actual, desired)}")
+        print(f"Relative difference: {rel_diff_scalar(actual, desired)}")
         print(f"actual: {actual}, desired: {desired}")
     else:
         mismatched = actual.size - np.sum(close)
         print(f"Mismatched elements: {mismatched} / {actual.size} ({mismatched / actual.size * 100:.1f}%)")
         print(f"Max absolute difference: {np.nanmax(np.abs(actual - desired))}")
-        print(f"Max relative difference: {np.nanmax(test_math.rel_diff_arr(actual, desired))}")
+        print(f"Max relative difference: {np.nanmax(rel_diff_arr(actual, desired))}")
 
         if actual.ndim == 1:
-            printing.print_1d(actual, desired, close)
+            print_1d(actual, desired, close)
         elif actual.ndim == 2:
             print("actual:")
-            printing.print_2d(actual, close, fmt)
+            print_2d(actual, close, fmt)
             print("desired:")
-            printing.print_2d(desired, close, fmt)
+            print_2d(desired, close, fmt)
 
     raise AssertionError(f"assert_allclose failed: not equal to tolerance rtol={rtol}, atol={atol}")

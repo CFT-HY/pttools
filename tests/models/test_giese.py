@@ -11,7 +11,7 @@ from pttools.bubble.bubble import Bubble
 from pttools.bubble.bubble import get_kappa
 from pttools.speedup import IS_OSX
 import pttools.type_hints as th
-from tests.utils import assert_allclose
+from pttools.utils.assertions import assert_allclose
 
 
 def assert_kappa(css2: float, csb2: float, kappa_ref: th.FloatArr1D, rtol: float = 1e-7, atol: float = 0):

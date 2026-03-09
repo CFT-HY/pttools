@@ -6,7 +6,7 @@ import numpy as np
 
 from pttools.bubble.phase import Phase
 from tests.models.base_model import ModelBaseCase
-from tests.utils.assertions import assert_allclose
+from pttools.utils.assertions import assert_allclose
 
 
 class BagBaseCase(ModelBaseCase, abc.ABC):
