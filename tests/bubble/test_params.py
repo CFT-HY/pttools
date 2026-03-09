@@ -4,28 +4,29 @@ import unittest
 
 import numba
 
-import pttools.bubble.physical_params as pp
+from pttools.bubble.physical_params import NucArgs, PhysicalParams
+from pttools.ssm.nucleation import NucType
 from pttools import speedup
 
 
 class TestParams(unittest.TestCase):
     """Test the experimental jitclass-based parameter storage"""
     def test_nuc_args(self):
-        pp.NucArgs(0.1)
+        NucArgs(0.1)
 
     def test_params_without_nuc(self):
-        params = pp.PhysicalParams(0.1, 0.2)
+        params = PhysicalParams(0.1, 0.2)
         self.assertIsNone(params.nuc_type)
         self.assertIsNone(params.nuc_args)
 
     def test_params_with_nuc(self):
-        params = pp.PhysicalParams(0.1, 0.2, pp.NucType.SIMULTANEOUS)
+        params = PhysicalParams(0.1, 0.2, NucType.SIMULTANEOUS)
         self.assertIsNotNone(params.nuc_type)
         self.assertIsNone(params.nuc_args)
 
     def test_params_with_nuc_args(self):
-        nuc_args = pp.NucArgs(0.1)
-        params = pp.PhysicalParams(0.1, 0.2, pp.NucType.SIMULTANEOUS, nuc_args)
+        nuc_args = NucArgs(0.1)
+        params = PhysicalParams(0.1, 0.2, NucType.SIMULTANEOUS, nuc_args)
         self.assertIsNotNone(params.nuc_type)
         self.assertIsNotNone(params.nuc_args)
 
@@ -54,18 +55,18 @@ class TestParams(unittest.TestCase):
 
 @numba.njit
 def params_without_nuc_args_numba():
-    return pp.PhysicalParams(0.1, 0.2)
+    return PhysicalParams(0.1, 0.2)
 
 
 @numba.njit
 def params_without_nuc_args_numba_nones():
-    return pp.PhysicalParams(0.1, 0.2, None, None)
+    return PhysicalParams(0.1, 0.2, None, None)
 
 
 @numba.njit
 def params_with_nuc_args_numba():
-    nuc_args = pp.NucArgs(0.1)
-    return pp.PhysicalParams(0.1, 0.2, pp.NucType.SIMULTANEOUS.value, nuc_args)
+    nuc_args = NucArgs(0.1)
+    return PhysicalParams(0.1, 0.2, NucType.SIMULTANEOUS.value, nuc_args)
 
 
 if __name__ == "__main__":

@@ -11,7 +11,6 @@ from pttools.bubble import check
 from pttools.bubble import props
 from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.solution_type_bag import identify_solution_type_alpha_plus_bag
-from pttools.speedup import NUMBA_ENABLE_CACHE
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 

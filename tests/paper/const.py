@@ -53,7 +53,7 @@ NUC_STRING: str = NUC_TYPE[0:3] + "_" + "_".join(str(arg) for arg in NUC_ARGS) +
 # NT_STRING = f"_nT{NP_ARR[0][2]}"
 
 #: Wall velocities for testing with weak transition strength
-VW_WEAK_LIST: list[float] = [0.92, 0.80, 0.68, 0.56, 0.44]
+VW_WEAK_LIST: th.FloatArr1D = np.array([0.92, 0.80, 0.68, 0.56, 0.44])
 
 Z_MIN: float = 0.2   # Minimum z = k.R* array value
 Z_MAX: float = 1000.  # Maximum z = k.R* array value

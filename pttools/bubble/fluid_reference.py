@@ -46,7 +46,10 @@ class FluidReference:
         except BlockingIOError as err:
             raise BlockingIOError(
                 "Could not open the fluid reference file at \"%s\". "
-                "This is likely because another process is currently writing to it."
+                "This is likely because another process is currently writing to it. "
+                "If you are running the unit tests for the first time "
+                "without having run the reference generation beforehand, "
+                "then this is normal."
             ) from err
         except (KeyError, OSError) as err:
             logger.exception(

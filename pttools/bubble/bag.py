@@ -127,8 +127,7 @@ def w_bag(
     :return: enthalpy $w$
     """
     check_thetas(theta_s, theta_b)
-    # Actually, theta is often known only from alpha_n and w, so should
-    # think about an fsolve?
+    # Actually, theta is often known only from alpha_n and w, so should think about an fsolve?
     theta = theta_b * phase + theta_s * (1.0 - phase)
     return 4/3 * (e - theta)
 

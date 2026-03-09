@@ -12,22 +12,15 @@ https://github.com/numba/numba/issues/6648
 This has been replaced with the object-oriented Bubble interface and will probably be removed in the future.
 """
 
-import enum
+import typing as tp
 
 import numba
 # import numpy as np
 
 from pttools import speedup
 
-
-@enum.unique
-class NucType(str, enum.Enum):
-    """Nucleation type"""
-    EXPONENTIAL = "exponential"
-    SIMULTANEOUS = "simultaneous"
-
-
-DEFAULT_NUC_TYPE = NucType.EXPONENTIAL
+if tp.TYPE_CHECKING:
+    from pttools.ssm.nucleation import NucType
 
 
 @speedup.jitclass([
@@ -56,7 +49,7 @@ class PhysicalParams:
             self,
             v_wall: float,
             alpha: float,
-            nuc_type: NucType | None = None,
+            nuc_type: "NucType | None" = None,
             nuc_args: NucArgs | None = None):
         self.v_wall = v_wall
         self.alpha = alpha

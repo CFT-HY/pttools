@@ -11,11 +11,10 @@ from pttools.bubble import integrate
 from pttools.bubble import props
 from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.solution_type_bag import identify_solution_type_alpha_plus_bag
-from pttools.speedup import NUMBA_ENABLE_CACHE
 import pttools.type_hints as th
 
 
-@numba.njit(nogil=True, cache=NUMBA_ENABLE_CACHE)
+@numba.njit(nogil=True)
 def find_alpha_n_bag(
         v_wall: th.FloatOrArr,
         alpha_p: float,
