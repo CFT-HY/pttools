@@ -23,6 +23,14 @@ DEFAULT_Y: th.FloatArr1D = np.logspace(-1, 3, 1000)
 #
 # NTDEFAULT can be left as it is, or even reduced to 100
 
+BETA_OVER_H_LIMIT: float = 10.
+r"""
+Lower limit for $\beta/H_*$, under which the conversion to or from $r_*$ should give a warning.
+This is because the $\beta/H_* \leftrightarrow r_*$ conversion breaks down
+in the case of a very slow phase transition, which corresponds to $\beta/H_* \approx 1$.
+:caprini_2020:`\ ` p. 6
+"""
+
 #: Default dimensionless wavenumber above which to use approximation for sin_transform, sin_transform_approx.
 Z_ST_THRESH: float = 50.
 
