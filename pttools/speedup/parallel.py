@@ -1,7 +1,7 @@
 """Utilities for parallel execution of functions using multiple Python processes with concurrent.futures"""
 
 import atexit
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from concurrent.futures import Executor, ProcessPoolExecutor, ThreadPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
 from contextlib import contextmanager
 # import datetime
@@ -194,6 +194,19 @@ def parallel_debug_message(
     return msg
 
 
+def log_parallel_ready(
+        executor: Executor,
+        n_workers: int,
+        n_tasks: int,
+        start_time: float) -> None:
+    elapsed = time.perf_counter() - start_time
+    cpu_time_per_task = elapsed * n_workers / n_tasks
+    logger.info(
+        "Parallel processing ready. Executor: %s, workers: %s, tasks: %s, time: %s, thread time / task: %s",
+        executor, n_workers, n_tasks, elapsed, cpu_time_per_task
+    )
+
+
 def run_parallel(
         func: tp.Callable,
         params: NDArray,
@@ -204,6 +217,7 @@ def run_parallel(
         return_arr_shape: tuple[int, ...] | None = None,
         log_progress_element: int | None = None,
         log_progress_percentage: float | None = None,
+        log_start_finish: bool = True,
         args: list | tuple = (),
         kwargs: dict[str, tp.Any] | None = None,
         single_thread: bool = False,
@@ -219,6 +233,7 @@ def run_parallel(
     :param return_arr_shape: Shape of the array given by func. If None, the function should return single values.
     :param log_progress_element: Log progress every n element
     :param log_progress_percentage: Log progress every x %
+    :param log_start_finish: Log start and finish of parallel processing
     :param args: common arguments for the function
     :param kwargs: common kwargs for the function
     :param single_thread: disable parallelism for debugging and profiling
@@ -232,6 +247,9 @@ def run_parallel(
         kwargs = {}
     if max_workers is None:
         max_workers = MAX_WORKERS_DEFAULT
+
+    n_tasks = np.prod(params.shape[:-1]) if multiple_params else params.size
+    n_workers = 1 if single_thread else max_workers
 
     flags: list[tp.Literal["c_index", "external_loop", "multi_index", "reduce_ok", "refs_ok"]] = ["refs_ok"]
     arr_size: int | np.signedinteger
@@ -257,6 +275,12 @@ def run_parallel(
     # start_datetime = datetime.datetime.now().astimezone().isoformat()
     try:
         with get_process_pool(max_workers=max_workers, single_thread=single_thread, global_pool=global_pool) as ex:
+            if log_start_finish:
+                logger.info(
+                    "Starting parallel processing. Executor: %s, workers: %s, tasks: %s",
+                    ex, n_workers, n_tasks
+                )
+
             # Submit parallel execution
             with np.nditer(
                     [params, None],
@@ -289,6 +313,8 @@ def run_parallel(
                         order="C") as it:
                     for fut in it:
                         output_arr[*it.multi_index, :] = fut.item().result()
+                if log_start_finish:
+                    log_parallel_ready(executor=ex, n_workers=n_workers, n_tasks=n_tasks, start_time=start_time)
                 return output_arr
 
             # Single output
@@ -308,6 +334,8 @@ def run_parallel(
                         order="C") as it:
                     for fut, res in it:
                         res[...] = fut.item().result()
+                    if log_start_finish:
+                        log_parallel_ready(executor=ex, n_workers=n_workers, n_tasks=n_tasks, start_time=start_time)
                     return it.operands[1]
 
             # Multiple outputs
@@ -326,6 +354,8 @@ def run_parallel(
                     except ValueError as e:
                         logger.exception("Could not store result to output array. Got: %s", res, exc_info=e)
                         raise e
+            if log_start_finish:
+                log_parallel_ready(executor=ex, n_workers=n_workers, n_tasks=n_tasks, start_time=start_time)
             return output_arrs
     except BrokenProcessPool as err:
         msg = parallel_debug_message(
