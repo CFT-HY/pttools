@@ -37,14 +37,14 @@ PTtools is also `available on Docker Hub <https://hub.docker.com/r/cfthy/pttools
 
    install
    usage
-   history
-   auto_examples/index
-   sg_execution_times
+   auto_examples/ind
    gen_modules/pttools/pttools
    gen_modules/tests/tests
+   history
    acknowledgements
    see_also
    dev
+   sg_execution_times
 
 
 Indices and tables
