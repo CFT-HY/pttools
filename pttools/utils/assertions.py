@@ -65,24 +65,32 @@ def assert_allclose(
     if np.all(close):
         return
 
-    print(f"assert_allclose failed {f'for {name} ' if name is not None else ''}in {inspect.stack()[1].function}")
-    print(f"Not equal to tolerance rtol={rtol}, atol={atol}")
+    lines = [
+        f"assert_allclose failed {f'for {name} ' if name is not None else ''}in {inspect.stack()[1].function}",
+        f"Not equal to tolerance rtol={rtol}, atol={atol}"
+    ]
     if is_scalar:
-        print(f"Absolute difference: {np.abs(actual - desired)}")
-        print(f"Relative difference: {rel_diff_scalar(actual, desired)}")
-        print(f"actual: {actual}, desired: {desired}")
+        lines += [
+            f"Absolute difference: {np.abs(actual - desired)}",
+            f"Relative difference: {rel_diff_scalar(actual, desired)}"
+            f"Actual: {actual}, desired: {desired}"
+        ]
     else:
         mismatched = actual.size - np.sum(close)
-        print(f"Mismatched elements: {mismatched} / {actual.size} ({mismatched / actual.size * 100:.1f}%)")
-        print(f"Max absolute difference: {np.nanmax(np.abs(actual - desired))}")
-        print(f"Max relative difference: {np.nanmax(rel_diff_arr(actual, desired))}")
+        lines += [
+            f"Mismatched elements: {mismatched} / {actual.size} ({mismatched / actual.size * 100:.1f}%)",
+            f"Max absolute difference: {np.nanmax(np.abs(actual - desired))}",
+            f"Max relative difference: {np.nanmax(rel_diff_arr(actual, desired))}"
+        ]
+    print("\n".join(lines))
 
+    if not is_scalar:
         if actual.ndim == 1:
             print_1d(actual, desired, close)
         elif actual.ndim == 2:
-            print("actual:")
+            print("Actual:")
             print_2d(actual, close, fmt)
-            print("desired:")
+            print("Desired:")
             print_2d(desired, close, fmt)
 
-    raise AssertionError(f"assert_allclose failed: not equal to tolerance rtol={rtol}, atol={atol}")
+    raise AssertionError(". ".join(lines) + ".")
