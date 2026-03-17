@@ -2,20 +2,17 @@
 
 import logging
 import os
-import timeit
 import unittest
 import textwrap
-import typing as tp
 
-import numba
-from pttools.speedup import NUMBA_DISABLE_JIT
+from pttools.analysis import time_and_plot_threads
+from pttools.speedup import DEFAULT_VARYING_NUMBA_THREADS, NUMBA_DISABLE_JIT
+import pttools.type_hints as th
 from pttools.utils.system import IS_GITHUB_ACTIONS, IS_WINDOWS
 from tests.utils.const import TEST_RESULT_PATH
 
 logger = logging.getLogger(__name__)
 
-#: Whether the installed Numba has support for setting the number of threads
-NUMBA_HAS_GET_NUM_THREADS: bool = hasattr(numba, "get_num_threads")
 PERFORMANCE_DIR = os.path.join(TEST_RESULT_PATH, "performance")
 os.makedirs(PERFORMANCE_DIR, exist_ok=True)
 
@@ -27,37 +24,45 @@ if NUMBA_DISABLE_JIT:
 
 class TestPerformance(unittest.TestCase):
     @staticmethod
-    def run_and_log(name: str, setup: str, command: str, number: int, num_threads: int, file: tp.TextIO | None = None):
-        result = timeit.timeit(command, setup=setup, number=number)
-        text = f"{name} performance with {num_threads} threads and {number} iterations: "\
-               f"{result:.2f} s, {result/number:.3f} s/iteration"
-        # Ensure output to stdout and therefore testing pipeline logs
-        print(text)
-        logger.info(text)
-        if file is not None:
-            file.write(f"{text}\n")
+    def time_and_plot(
+            name: str, filename: str, stmt: str, setup: str,
+            n_iterations: int, n_threads: th.IntArr1D = DEFAULT_VARYING_NUMBA_THREADS):
+        return time_and_plot_threads(
+            name=name, filename=filename, path=PERFORMANCE_DIR,
+            stmt=stmt, setup=setup,
+            n_iterations=n_iterations, n_threads=n_threads
+        )
 
     @classmethod
-    def run_with_different_threads(cls, name: str, setup: str, command: str, number: int):
-        with open(os.path.join(PERFORMANCE_DIR, f"{name}.txt"), "w") as file:
-            if NUMBA_DISABLE_JIT:
-                cls.run_and_log(name, setup, command, number, 1, file)
-            else:
-                default_threads = numba.get_num_threads()
-                numba.set_num_threads(1)
-                cls.run_and_log(name, setup, command, number, 1, file)
-                numba.set_num_threads(2)
-                cls.run_and_log(name, setup, command, number, 2, file)
-                if default_threads > 4:
-                    numba.set_num_threads(4)
-                    cls.run_and_log(name, setup, command, number, 4, file)
-                if default_threads > 8:
-                    numba.set_num_threads(8)
-                    cls.run_and_log(name, setup, command, number, 8, file)
-                numba.set_num_threads(default_threads)
-                if default_threads > 2:
-                    cls.run_and_log(name, setup, command, number, default_threads, file)
-                logger.info(f"Numba threading layer used: {numba.threading_layer()}")
+    @unittest.skipIf(IS_GITHUB_ACTIONS and IS_WINDOWS, reason="GitHub Actions Windows runners are slow")
+    def test_performance_bubble(cls):
+        setup = textwrap.dedent("""
+        from pttools.bubble import Bubble
+        from pttools.models import BagModel
+
+        model = BagModel()
+        Bubble(model, v_wall=0.3, alpha_n=0.1)
+        """)
+        command = "Bubble(model, v_wall=0.3, alpha_n=0.1)"
+        cls.time_and_plot("Bubble", "bubble", command, setup, 10)
+
+    @classmethod
+    @unittest.skipIf(IS_GITHUB_ACTIONS and IS_WINDOWS, reason="GitHub Actions Windows runners are slow")
+    def test_performance_bubble_and_spectrum(cls):
+        setup = textwrap.dedent("""
+        from pttools.bubble import Bubble
+        from pttools.models import BagModel
+        from pttools.omgw0 import Spectrum
+
+        model = BagModel()
+        bubble = Bubble(model, v_wall=0.3, alpha_n=0.1)
+        Spectrum(bubble, r_star=0.1)
+        """)
+        command = textwrap.dedent("""
+        bubble = Bubble(model, v_wall=0.3, alpha_n=0.1)
+        Spectrum(bubble, r_star=0.1)
+        """)
+        cls.time_and_plot("Bubble and Spectrum", "bubble_and_spectrum", command, setup, 10)
 
     @classmethod
     @unittest.skipIf(IS_GITHUB_ACTIONS and IS_WINDOWS, reason="GitHub Actions Windows runners are slow")
@@ -66,11 +71,11 @@ class TestPerformance(unittest.TestCase):
         import numpy as np
         from pttools import ssm
 
-        z = np.logspace(0,2,100)
-        gw = ssm.power_gw_scaled_bag(z, (0.1,0.1))
+        z = np.logspace(0, 2, 100)
+        ssm.power_gw_scaled_bag(z, (0.1, 0.1))
         """)
-        command = "gw = ssm.power_gw_scaled_bag(z, (0.1,0.1))"
-        cls.run_with_different_threads("GW", setup, command, 10)
+        command = "ssm.power_gw_scaled_bag(z, (0.1, 0.1))"
+        cls.time_and_plot("power_gw_scaled_bag", "power_gw_scaled_bag", command, setup, 10)
 
     @classmethod
     @unittest.skipIf(IS_GITHUB_ACTIONS and IS_WINDOWS, reason="GitHub Actions Windows runners are slow")
@@ -83,9 +88,25 @@ class TestPerformance(unittest.TestCase):
         xi = np.linspace(0, 1, 10000)
         # This is an arbitrary function
         f = np.amax([np.zeros_like(xi), np.cos(xi)], axis=0)
+        sin_transform(z, xi, f)
         """)
-        command = "transformed = sin_transform(z, xi, f)"
-        cls.run_with_different_threads("sin_transform", setup, command, 10)
+        command = "sin_transform(z, xi, f)"
+        cls.time_and_plot("sin_transform", "sin_transform", command, setup, 10)
+
+    @classmethod
+    @unittest.skipIf(IS_GITHUB_ACTIONS and IS_WINDOWS, reason="GitHub Actions Windows runners are slow")
+    def test_performance_spectrum(cls):
+        setup = textwrap.dedent("""
+        from pttools.bubble import Bubble
+        from pttools.models import BagModel
+        from pttools.omgw0 import Spectrum
+
+        model = BagModel()
+        bubble = Bubble(model, v_wall=0.3, alpha_n=0.1)
+        Spectrum(bubble, r_star=0.1)
+        """)
+        command = "Spectrum(bubble, r_star=0.1)"
+        cls.time_and_plot("Spectrum", "spectrum", command, setup, 10)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,19 @@
-"""Mathematic utilities"""
+"""Mathematical utilities"""
 
+import math
 import numpy as np
 from numpy.typing import NDArray
+
+import pttools.type_hints as th
+
+
+def powers_of_2(max_val: int, start_exp: int = 0, min_end_exp: int = 0, include_max: bool = False) -> th.IntArr1D:
+    """Get the powers of 2 up to a certain value"""
+    ret = [2 ** i for i in range(start_exp, max(min_end_exp, int(math.log2(max_val)) + 1))]
+    # If max_val is not a power of 2
+    if include_max and max_val.bit_count() != 1:
+        ret.append(max_val)
+    return np.array(ret)
 
 
 def rel_diff_arr[T: NDArray](x: T, y: T) -> T:

@@ -13,3 +13,4 @@ from .options import *
 from .parallel import *
 from .spline import *
 from .tbb import *
+from .threads import *
