@@ -51,6 +51,11 @@ dependencies:
   # https://anaconda.org/channels/conda-forge/packages/intel-cmplr-lib-rt/overview
   # https://numba.readthedocs.io/en/stable/user/performance-tips.html#intel-svml
   - intel-cmplr-lib-rt >= 2025.3.2
+  # LLVM OpenMP
+  # This may be needed to enable Numba threading on OSX.
+  # https://anaconda.org/channels/conda-forge/packages/llvm-openmp/overview
+  # https://numba.readthedocs.io/en/stable/user/threading-layer.html
+  - llvm-openmp >= 22.1.0
   # Numbalsoda
   # The conda package requires Python <= 3.11
   # https://anaconda.org/channels/conda-forge/packages/numbalsoda/overview
