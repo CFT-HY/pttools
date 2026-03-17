@@ -28,7 +28,8 @@ def a2_e_conserving_bag(
         v_sh: float | None = None,
         v_ip: th.FloatArr1D = speedup.NAN_ARR,
         w_ip: th.FloatArr1D = speedup.NAN_ARR,
-        xi: th.FloatArr1D = speedup.NAN_ARR):
+        xi: th.FloatArr1D = speedup.NAN_ARR,
+        parallel: bool = True):
     r"""
     Returns the value of $|A(z)|^2$, where
     $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$,
@@ -50,7 +51,7 @@ def a2_e_conserving_bag(
     #    f = np.zeros_like(z)
     #    for j in range(f.size):
     #        f[j] = (4.*np.pi/z[j]) * sin_transform(z[j], xi, v_ip, z_st_thresh)
-    f = (4. * np.pi / z) * sin_transform(z, xi, v_ip, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
+    f = (4. * np.pi / z) * sin_transform(z, xi, v_ip, z_st_thresh, v_wall=v_wall, v_sh=v_sh, parallel=parallel)
 
     v_ft = speedup.gradient(f) / speedup.gradient(z)
 
@@ -69,8 +70,8 @@ def a2_e_conserving_bag(
     #        lam_ft[j] = (4.*np.pi/z[j]) * sin_transform(z[j], xi_re, xi_re*lam_re,
     #              z_st_thresh=max(z)) # Need to fix problem with ST of lam for detonations
     lam_ft = (4. * np.pi / z) * sin_transform(
-        z, xi_re, xi_re * lam_re, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
-
+        z, xi_re, xi_re * lam_re, z_st_thresh, v_wall=v_wall, v_sh=v_sh, parallel=parallel
+    )
     A2 = 0.25 * (v_ft ** 2 + (const.CS0 * lam_ft) ** 2)
 
     return A2, v_ft ** 2 / 2, (const.CS0 * lam_ft) ** 2 / 2
@@ -82,7 +83,8 @@ def a2_e_conserving_bag_file(
         alpha: float,
         skip: int = 1,
         npt: const.NptType = const.DEFAULT_N_PT,
-        z_st_thresh: float = const.Z_ST_THRESH):
+        z_st_thresh: float = const.Z_ST_THRESH,
+        parallel: bool = True):
     r"""
     Returns the value of $|A(z)|^2$, where $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$,
     calculated from file, output by "spherical-hydro-code".
@@ -110,7 +112,7 @@ def a2_e_conserving_bag_file(
     #    f = np.zeros_like(z)
     #    for j in range(f.size):
     #        f[j] = (4.*np.pi/z[j]) * sin_transform(z[j], xi_lt1, v_xi_lt1)
-    f = (4. * np.pi / z) * sin_transform(z, xi_lt1, v_xi_lt1, v_wall=None, v_sh=None)
+    f = (4. * np.pi / z) * sin_transform(z, xi_lt1, v_xi_lt1, v_wall=None, v_sh=None, parallel=parallel)
 
     v_ft = np.gradient(f) / np.gradient(z)
     e_n = e_xi_lt1[-1]
@@ -128,7 +130,7 @@ def a2_e_conserving_bag_file(
     #        lam_ft[j] = (4.*np.pi/z[j]) * sin_transform(z[j], xi_lt1, xi_lt1*lam,
     #              z_st_thresh=max(z)) # Need to fix problem with ST of lam for detonations
     lam_ft = (4. * np.pi / z) * \
-        sin_transform(z, xi_lt1, xi_lt1 * lam, z_st_thresh, v_wall=None, v_sh=None)
+        sin_transform(z, xi_lt1, xi_lt1 * lam, z_st_thresh, v_wall=None, v_sh=None, parallel=parallel)
 
     return 0.25 * (v_ft ** 2 + (const.CS0 * lam_ft) ** 2)
 
@@ -141,7 +143,8 @@ def a2_ssm_func_bag(
         npt: const.NptType = const.DEFAULT_N_PT,
         method: Method = Method.E_CONSERVING,
         de_method: DE_Method = DE_Method.STANDARD,
-        z_st_thresh: float = const.Z_ST_THRESH):
+        z_st_thresh: float = const.Z_ST_THRESH,
+        parallel: bool = True):
     r"""
     Returns the value of $|A(z)|^2$.
     $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$
@@ -156,18 +159,18 @@ def a2_ssm_func_bag(
     """
     if method == Method.E_CONSERVING.value:
         # This is the correct method (as of 12.18)
-        A2 = a2_e_conserving_bag(z, v_wall, alpha, npt, de_method, z_st_thresh)[0]
+        A2 = a2_e_conserving_bag(z, v_wall, alpha, npt, de_method, z_st_thresh, parallel=parallel)[0]
     elif method == Method.F_ONLY.value:
         with numba.objmode:
             logger.debug("f_only method, multiplying (f\')^2 by 2")
-        f = f_ssm_func_bag(z, v_wall, alpha, npt=npt)
+        f = f_ssm_func_bag(z, v_wall, alpha, npt=npt, parallel=parallel)
         df_dz = speedup.gradient(f) / speedup.gradient(z)
         A2 = 0.25 * (df_dz ** 2)
         A2 = A2 * 2
     elif method == Method.WITH_G.value:
         with numba.objmode:
             logger.debug("With_g method")
-        f = f_ssm_func_bag(z, v_wall, alpha, npt=npt)
+        f = f_ssm_func_bag(z, v_wall, alpha, npt=npt, parallel=parallel)
         df_dz = speedup.gradient(f) / speedup.gradient(z)
         g = (z * df_dz + 2. * f)
         dg_dz = speedup.gradient(g) / speedup.gradient(z)
@@ -176,7 +179,7 @@ def a2_ssm_func_bag(
     else:
         with numba.objmode:
             logger.warning("Method not known, should be [e_conserving | f_only | with_g]. Defaulting to e_conserving.")
-        A2 = a2_e_conserving_bag(z, v_wall, alpha, npt=npt)[0]
+        A2 = a2_e_conserving_bag(z, v_wall, alpha, npt=npt, parallel=parallel)[0]
 
     return A2
 
@@ -187,7 +190,8 @@ def f_file_bag(
         filename: str,
         skip: int = 0,
         npt: const.NptType = const.DEFAULT_N_PT,
-        z_st_thresh: float = const.Z_ST_THRESH) -> th.FloatArr1D:
+        z_st_thresh: float = const.Z_ST_THRESH,
+        parallel: bool = True) -> th.FloatArr1D:
     r"""
     3D FT of radial fluid velocity v(r) from file.
 
@@ -208,7 +212,9 @@ def f_file_bag(
     #    f = np.zeros_like(z_arr)
     #    for n, z in enumerate(z_arr):
     #        f[n] = (4*np.pi/z)*sin_transform(z, xi_lt1, v_xi_lt1, z_st_thresh)
-    f = (4 * np.pi / z_arr) * sin_transform(z_arr, xi_lt1, v_xi_lt1, z_st_thresh, v_wall=None, v_sh=None)
+    f = (4 * np.pi / z_arr) * sin_transform(
+        z_arr, xi_lt1, v_xi_lt1, z_st_thresh, v_wall=None, v_sh=None, parallel=parallel
+    )
 
     return f
 
@@ -220,7 +226,8 @@ def f_ssm_func_bag(
         alpha_n: float,
         v_sh: float | None = None,
         npt: const.NptType = const.DEFAULT_N_PT,
-        z_st_thresh: float = const.Z_ST_THRESH) -> th.FloatArr1D:
+        z_st_thresh: float = const.Z_ST_THRESH,
+        parallel: bool = True) -> th.FloatArr1D:
     r"""
     3D FT of radial fluid velocity v(r) from Sound Shell Model fluid profile.
 
@@ -236,7 +243,7 @@ def f_ssm_func_bag(
     # f_ssm = np.zeros_like(z)
     # for j in range(f_ssm.size):
     #    f_ssm[j] = (4.*np.pi/z[j]) * sin_transform(z[j], xi, v_ip)
-    return (4.*np.pi/z) * sin_transform(z, xi, v_ip, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
+    return (4.*np.pi/z) * sin_transform(z, xi, v_ip, z_st_thresh, v_wall=v_wall, v_sh=v_sh, parallel=parallel)
 
 
 def g_file_bag(z: th.FloatArr1D, t, filename: str, skip: int = 0) -> th.FloatArr1D:
@@ -268,7 +275,8 @@ def lam_ssm_func_bag(
         v_sh: float | None = None,
         npt: const.NptType = const.DEFAULT_N_PT,
         de_method: DE_Method = DE_Method.STANDARD,
-        z_st_thresh: float = const.Z_ST_THRESH):
+        z_st_thresh: float = const.Z_ST_THRESH,
+        parallel: bool = True):
     """
     3D FT of radial energy perturbation from Sound Shell Model fluid profile
 
@@ -289,4 +297,6 @@ def lam_ssm_func_bag(
     #    lam_ft[j] = (4.*np.pi/z[j]) * sin_transform(z[j], xi_re, xi_re*lam_re,
     #          z_st_thresh=max(z)) # Need to fix problem with ST of lam for detonations
 
-    return (4.*np.pi/z) * sin_transform(z, xi_re, xi_re*lam_re, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
+    return (4.*np.pi/z) * sin_transform(
+        z, xi_re, xi_re*lam_re, z_st_thresh, v_wall=v_wall, v_sh=v_sh, parallel=parallel
+    )

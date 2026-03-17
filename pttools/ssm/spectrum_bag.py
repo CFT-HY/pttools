@@ -6,7 +6,7 @@ import numpy as np
 
 from pttools import bubble
 from pttools.ssm import const, ssm, ssm_bag, spectrum
-from pttools.ssm.spec_den_v import spec_den_v_core
+from pttools.ssm.spec_den_v import spec_den_v_core, spec_den_v_core_single
 import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
@@ -92,7 +92,7 @@ def power_gw_scaled_bag(
 
     x = np.logspace(np.log10(xmin), np.log10(xmax), nx)
 
-    sd_v = spec_den_v_bag(x, params, npt, filename, skip, method, de_method, z_st_thresh)
+    sd_v = spec_den_v_bag(x, params, npt, filename, skip, method, de_method, z_st_thresh, parallel=parallel)
     sd_gw, y = spectrum.spec_den_gw_scaled(x, sd_v, z, parallel=parallel)
     return spectrum.pow_spec(z, sd_gw)
 
@@ -105,7 +105,8 @@ def power_v_bag(
         skip: int = 1,
         method: ssm.Method = ssm.Method.E_CONSERVING,
         de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
-        z_st_thresh: float = const.Z_ST_THRESH) -> th.FloatArr1D:
+        z_st_thresh: float = const.Z_ST_THRESH,
+        parallel: bool = True) -> th.FloatArr1D:
     """
     Power spectrum of the velocity field in the Sound Shell Model.
 
@@ -123,7 +124,7 @@ def power_v_bag(
     """
     bubble.check_physical_params(params)
 
-    p_v = spec_den_v_bag(z, params, npt, filename, skip, method, de_method)
+    p_v = spec_den_v_bag(z, params, npt, filename, skip, method, de_method, parallel=parallel)
     return spectrum.pow_spec(z, p_v)
 
 
@@ -135,7 +136,8 @@ def spec_den_v_bag(
         skip: int = 1,
         method: ssm.Method = ssm.Method.E_CONSERVING,
         de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
-        z_st_thresh=const.Z_ST_THRESH):
+        z_st_thresh=const.Z_ST_THRESH,
+        parallel: bool = True):
     r"""
     Get dimensionless velocity spectral density $\bar{P}_v$.
 
@@ -156,7 +158,7 @@ def spec_den_v_bag(
 
     nz = z.size
     # nxi = npt[0]
-    nt = npt[1]
+    nT = npt[1]
     # nq = npt[2]
 
     # z limits
@@ -165,12 +167,12 @@ def spec_den_v_bag(
     dlog10z = (log10zmax - log10zmin) / nz
 
     # t limits
-    tmin = const.T_TILDE_MIN
-    tmax = const.T_TILDE_MAX
-    log10tmin = np.log10(tmin)
-    log10tmax = np.log10(tmax)
+    T_min = const.T_TILDE_MIN
+    T_max = const.T_TILDE_MAX
+    log10_T_min = np.log10(T_min)
+    log10_T_max = np.log10(T_max)
 
-    qT_lookup = 10 ** np.arange(log10zmin + log10tmin, log10zmax + log10tmax, dlog10z)
+    qT_lookup = 10 ** np.arange(log10zmin + log10_T_min, log10zmax + log10_T_max, dlog10z)
 
     v_wall, alpha, nuc_type, nuc_args = parse_params(params)
     if filename is None:
@@ -187,12 +189,24 @@ def spec_den_v_bag(
     # if qT_lookup.size != A2_lookup.size:
     #     raise ValueError(f"Lookup sizes don't match: {qT_lookup.size} != {A2_lookup.size}")
 
-    return spec_den_v_core(
+    if parallel:
+        return spec_den_v_core(
+            a=nuc_args[0],
+            A2_lookup=A2_lookup,
+            log10tmin=log10_T_min,
+            log10tmax=log10_T_max,
+            nt=nT,
+            nuc_type=nuc_type,
+            qT_lookup=qT_lookup,
+            v_wall=v_wall,
+            z=z
+        )
+    return spec_den_v_core_single(
         a=nuc_args[0],
         A2_lookup=A2_lookup,
-        log10tmin=log10tmin,
-        log10tmax=log10tmax,
-        nt=nt,
+        log10tmin=log10_T_min,
+        log10tmax=log10_T_max,
+        nt=nT,
         nuc_type=nuc_type,
         qT_lookup=qT_lookup,
         v_wall=v_wall,
