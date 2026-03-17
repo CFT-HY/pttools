@@ -46,4 +46,5 @@ def J(r_star: th.FloatOrArr, K: th.FloatOrArr, nu: th.FloatOrArr = 0.) -> th.Flo
     $$J = H_n {R}_\ast H_n \tau_v = {r}_\ast \left(1 - \frac{1}{\sqrt{1 + 2x}} \right)$$
     :gowling_2021:`\ ` eq. 2.8
     """
+    # Todo: Unify the sqrt and exponent
     return r_star * (1 - (np.sqrt(1 + 2 * r_star / np.sqrt(K)) ** (-1 - 2 * nu)))

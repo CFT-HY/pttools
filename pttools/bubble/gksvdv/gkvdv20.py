@@ -10,7 +10,7 @@ from scipy.integrate import odeint, simpson
 
 
 def kappaNuModel(cs2: float, al: float, vp: float) -> float:
-    r"""Calculate the efficiency factor $\kappa_\bar{\theta}$
+    r"""Calculate the efficiency factor $\kappa_{\bar{\theta}}$
 
     :param cs2: speed of sound squared
     :param al: strength parameter $\alpha$

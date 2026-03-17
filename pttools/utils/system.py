@@ -29,6 +29,8 @@ UNAME: platform.uname_result = platform.uname()
 FORKING: bool = PROCESS_START_METHOD == "fork"
 IS_PIP_PACKAGE: bool = os.path.basename(os.path.dirname(PTTOOLS_DIR)) == "site-packages"
 
+# This is the same implementation as in Numba.
+# https://numba.readthedocs.io/en/stable/user/threading-layer.html
 try:
     # This is available only on some platforms
     AVAILABLE_CPU_CORES = len(os.sched_getaffinity(0))

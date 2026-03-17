@@ -88,7 +88,7 @@ def H(T: th.FloatOrArr, G: th.FloatOrArr = const.G) -> th.FloatOrArr:
 
 def r_star(beta_over_H: th.FloatOrArr, v_wall: th.FloatOrArr, cs: th.FloatOrArr = const.CS0) -> th.FloatOrArr:
     r"""Hubble-scaled mean bubble spacing $r_*(\beta)
-    $$r_* = \frac{8\pi}{3} \frac{\max ({v}_\text{wall}, c_s) H_*}{\beta}$$
+    $$r_* = \frac{(8\pi)^\frac{1}{3} H_*}{\beta} \max ({v}_\text{wall}, c_s)$$
     Derived from :caprini_2020:`\ ` eq. 6
 
     Please see :py:func:`pttools.bubble.nucleation.R_star` for further information.
@@ -108,7 +108,7 @@ def r_star_product(H_star: th.FloatOrArr, R_star: th.FloatOrArr) -> th.FloatOrAr
 def R_star(beta: th.FloatOrArr, v_wall: th.FloatOrArr, cs: th.FloatOrArr = const.CS0) -> th.FloatOrArr:
     r"""Mean bubble separation $R_*$
 
-    $$R_* = \frac{8\pi}{3} \frac{\max ({v}_\text{wall}, c_s)}{\beta}$$
+    $$R_* = \frac{(8\pi)^\frac{1}{3}}{\beta} \max ({v}_\text{wall}, c_s)$$
     :caprini_2020:`\ ` eq. 6
     :hakkinen_msc:`\ ` eq. 2.6
 
