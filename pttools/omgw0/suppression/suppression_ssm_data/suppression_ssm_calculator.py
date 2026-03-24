@@ -1,7 +1,6 @@
 """Compute the kinetic energy suppression factor for a given set of simulation data"""
 import logging
 import os.path
-import typing as tp
 
 import numpy as np
 

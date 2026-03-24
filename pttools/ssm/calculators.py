@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 def resample_uniform_xi(
         xi: th.FloatArr1D,
         f: th.FloatOrArr,
-        n_xi: int = const.DEFAULT_N_PT[0]) -> tuple[th.FloatArr1D, th.FloatOrArr]:
+        n_xi: int = const.DEFAULT_N_XI_SSM) -> tuple[th.FloatArr1D, th.FloatOrArr]:
     r"""
     Provide uniform resample of function defined by $(x,y) = (\xi,f)$.
     Returns f interpolated and the uniform grid of n_xi points in range [0,1].

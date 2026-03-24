@@ -9,11 +9,13 @@ import pttools.type_hints as th
 
 #: Default number of T-tilde values for bubble lifetime distribution integration
 DEFAULT_N_T: int = 10000
+#: Default number of $\xi$ points used in SSM computations
+DEFAULT_N_XI_SSM: int = 2000
 #: Default number of wavevectors used in the velocity convolution integrations.
 # This should be at least as large as the default number of GW frequencies.
 DEFAULT_N_Z_LOOKUP: int = 10000
 NptType = th.IntArr1D | tuple[int, int, int]
-DEFAULT_N_PT: NptType = (bubble.DEFAULT_N_XI, DEFAULT_N_T, DEFAULT_N_Z_LOOKUP)
+DEFAULT_N_PT: NptType = (DEFAULT_N_XI_SSM, DEFAULT_N_T, DEFAULT_N_Z_LOOKUP)
 DEFAULT_Y: th.FloatArr1D = np.logspace(-1, 3, 1000)
 
 # It seems that NPTDEFAULT should be something like NXIDEFAULT/(2.pi), otherwise one

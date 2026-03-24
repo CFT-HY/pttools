@@ -7,11 +7,10 @@ import unittest
 import numpy as np
 from pandas.io.parsers import read_csv
 
-from pttools.bubble.const import DEFAULT_N_XI
 from pttools.omgw0.suppression import DEFAULT
 from pttools.omgw0.suppression.suppression_ssm_data.remove_hybrids import SUPPRESSION_FOLDER, remove_hybrids
 from pttools.omgw0.suppression.suppression_ssm_data.suppression_ssm_calculator import calc_sup_ssm
-import pttools.ssm.const as ssm_const
+from pttools.ssm.const import DEFAULT_N_XI_SSM
 from pttools.utils.assertions import assert_allclose
 
 
@@ -51,7 +50,7 @@ class SuppressionTest(unittest.TestCase):
             data = calc_sup_ssm(
                 f"{filename}.txt",
                 save=False,
-                npt=(DEFAULT_N_XI, 200, 320)
+                npt=(DEFAULT_N_XI_SSM, 200, 320)
             )
             with np.load(os.path.join(SUPPRESSION_FOLDER, f"{filename}_ssm.npz")) as ref:
                 for key, rtol in tolerances.items():
