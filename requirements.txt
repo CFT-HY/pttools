@@ -6,11 +6,16 @@
 # h5py does not yet support free-threading.
 # https://github.com/h5py/h5py/issues/2475
 h5py == 3.15.1
-# Intel Compile Runtime provides Intel SVML, which speeds up Numba
-# As of 2023-10, this is the latest supported version on Windows and macOS
-icc-rt >= 2019.0; platform_machine != "arm64"
-# As of ~ 2024-07-29, this is no longer available for the GitHub macOS runners.
-intel-openmp >= 2020.0.133; sys_platform == "darwin" and platform_machine != "arm64"
+# Intel SVML for Numba
+# https://pypi.org/project/icc-rt/
+# https://pypi.org/project/intel-cmplr-lib-rt/
+# https://numba.readthedocs.io/en/stable/user/performance-tips.html#intel-svml
+# As of 2026-03, this is the latest version with support for macOS.
+icc-rt >= 2019.0; platform_machine != "arm64" and sys_platform == "darwin"
+# This replaces icc-rt for Windows and Linux.
+intel-cmplr-lib-rt >= 2025.3.3; platform_machine != "arm64" and sys_platform != "darwin"
+# As of 2026-03, this is the latest version with support for macOS.
+intel-openmp >= 2023.2.0; platform_machine != "arm64" and sys_platform == "darwin"
 # For Plotly image export
 kaleido == 1.2.0
 # Matplotlib 3.9.1 wheels are broken
@@ -32,6 +37,7 @@ orjson == 3.11.7  # Orjson does not yet support free-threading.
 plotly == 6.6.0
 scipy == 1.17.1
 # TBB can be used to speed up Numba threading
+# https://pypi.org/project/tbb/
 # https://numba.pydata.org/numba-doc/latest/user/threading-layer.html#which-threading-layers-are-available
-# As of 2024-07-29, 2021.10.0 is the latest version available for macOS, and there is no image for arm64 macOS.
+# As of 2026-03, this is the latest version with support for macOS.
 tbb >= 2021.10.0; platform_machine != "arm64"
