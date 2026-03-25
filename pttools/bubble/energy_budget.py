@@ -66,7 +66,7 @@ def alpha_n_from_ubarf_solvable(
 def chapman_jouguet_approx[T: FloatOrArr](alpha_n: T) -> T:
     r"""Approximation for the Chapman-Jouguet velocity $\v_{CJ}$, aka. $\xi_J$
 
-    $$\v_{CJ} \approx \frac{\sqrt{\frac{2}{3} \alpha_n + \alpha_n^2} + \sqrt{\frac{1}{3}}{1 + \alpha_n}$$
+    $$v_{CJ} \approx \frac{\sqrt{\frac{2}{3} \alpha_n + \alpha_n^2} + \sqrt{\frac{1}{3}}{1 + \alpha_n}$$
     :espinosa_2010:`\ `, eq. 97
     """
     return (np.sqrt(2/3 * alpha_n + alpha_n**2) + np.sqrt(1/3)) / (1 + alpha_n)

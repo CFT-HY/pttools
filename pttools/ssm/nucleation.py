@@ -90,6 +90,7 @@ def nu[T: FloatOrArr](T_tilde: T, nuc_type: NucType = NucType.SIMULTANEOUS, a: f
     :param T_tilde: dimensionless time $\tilde{T}$
     :param nuc_type: nucleation type, simultaneous or exponential
     :param a: normalization factor $a$
+        (This is an old debugging parameter, and $\nu$ should be normalized regardless of its value.)
     :return: bubble lifetime distribution $\nu$
     """
     if nuc_type == NucType.EXPONENTIAL.value:
@@ -116,7 +117,7 @@ def r_star(
         cs: th.FloatOrArr = const.CS0,
         beta_over_H_limit: float = const.BETA_OVER_H_LIMIT) -> th.FloatOrArr:
     r"""Hubble-scaled mean bubble spacing $r_*(\beta)
-    $$r_* = \frac{(8\pi)^\frac{1}{3} H_*}{\beta} \max ({v}_\text{wall}, c_s)$$
+    $$r_* = (8\pi)^\frac{1}{3} \frac{H_*}{\beta} \max ({v}_\text{wall}, c_s)$$
     Derived from :caprini_2020:`\ ` eq. 6
 
     Please see :py:func:`pttools.bubble.nucleation.R_star` for further information.

@@ -37,7 +37,7 @@ PTtools is also `available on Docker Hub <https://hub.docker.com/r/cfthy/pttools
 
    install
    usage
-   auto_examples/ind
+   auto_examples/index
    gen_modules/pttools/pttools
    gen_modules/tests/tests
    history
