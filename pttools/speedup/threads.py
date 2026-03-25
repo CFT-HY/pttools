@@ -41,9 +41,9 @@ def time_with_varying_numba_threads(
     n_iterations: int,
     n_threads: th.IntArr1D = DEFAULT_VARYING_NUMBA_THREADS,
     log: bool = True,
-    file: tp.TextIO | None = None) -> th.FloatArr1D:
+    file: tp.TextIO | None = None) -> tuple[th.IntArr1D, th.FloatArr1D]:
     if NUMBA_DISABLE_JIT:
-        return np.array([time_and_log(name, stmt, setup, n_iterations, 1, log, file)])
+        return np.array([1]), np.array([time_and_log(name, stmt, setup, n_iterations, 1, log, file)])
 
     default_threads = numba.get_num_threads()
     times = []
@@ -53,12 +53,10 @@ def time_with_varying_numba_threads(
             times.append(time_and_log(name, stmt, setup, n_iterations, n, log, file))
     finally:
         numba.set_num_threads(default_threads)
-    if default_threads not in n_threads:
-        times.append(time_and_log(name, stmt, setup, n_iterations, default_threads, log, file))
 
     if log:
         text = f"Numba threading layer: {numba.threading_layer()}, CPU cores: {AVAILABLE_CPU_CORES}"
         logger.debug(text)
         if file is not None:
             file.write(f"{text}\n")
-    return np.array(times)
+    return n_threads, np.array(times)

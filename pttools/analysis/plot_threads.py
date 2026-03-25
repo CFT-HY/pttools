@@ -41,7 +41,7 @@ def time_and_plot_threads(
     """Plot and save to a file the execution times for different thread counts"""
     path2 = os.path.join(path, filename)
     with open(f"{path2}.txt", "w") as file:
-        times = time_with_varying_numba_threads(
+        n_threads, times = time_with_varying_numba_threads(
             name=name, stmt=stmt, setup=setup, n_iterations=n_iterations, n_threads=n_threads, file=file
         )
     fig, ax = plot_threads(name=name, n_threads=n_threads, times=times, n_iterations=n_iterations)
