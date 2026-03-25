@@ -39,7 +39,7 @@ class FluidReference:
         if not os.path.exists(path):
             self.create(v_wall_min, v_wall_max, alpha_n_min, alpha_n_max, n_v_wall, n_alpha_n)
             # Ensure that the file is closed before attempting to open it again.
-            time.sleep(1)
+            # time.sleep(1)
 
         try:
             file = h5py.File(path, "r")
@@ -98,24 +98,51 @@ class FluidReference:
         start_time = time.perf_counter()
         if os.path.exists(self.path):
             os.remove(self.path)
+
+        v_walls = np.linspace(v_wall_min, v_wall_max, n_v_wall, endpoint=True)
+        alpha_ns = np.linspace(alpha_n_min, alpha_n_max, n_alpha_n, endpoint=True)
+        alpha_n_max = alpha_n_max_bag(v_walls)
+
+        params = np.empty((alpha_ns.size, v_walls.size, 3))
+        params[:, :, 0], params[:, :, 1] = np.meshgrid(v_walls, alpha_ns)
+        params[:, :, 2], _ = np.meshgrid(alpha_n_max, alpha_ns)
+
+        sol_type, vp, vm, vp_tilde, vm_tilde, wp, wm = run_parallel(
+            compute,
+            params,
+            multiple_params=True,
+            unpack_params=True,
+            output_dtypes=(np.int_, np.float64, np.float64, np.float64, np.float64, np.float64, np.float64),
+            log_progress_percentage=10
+        )
+
+        data = np.empty((alpha_ns.size, v_walls.size, 6))
+        data[:, :, 0] = vp
+        data[:, :, 1] = vm
+        data[:, :, 2] = vp_tilde
+        data[:, :, 3] = vm_tilde
+        data[:, :, 4] = wp
+        data[:, :, 5] = wm
+
+        # Nearest neighbor interpolator set-up
+        valids = np.logical_not(np.any(np.isnan(data), axis=2))
+        coords = [[], [], []]
+        inds = [[], [], []]
+        i = 0
+        for i_alpha_n, alpha_n in enumerate(alpha_ns):
+            for i_v_wall, v_wall in enumerate(v_walls):
+                if valids[i_alpha_n, i_v_wall]:
+                    if np.any(np.isnan(data[i_alpha_n, i_v_wall, :])):
+                        raise RuntimeError(
+                            "nan values should not be picked up for the nearest neighbour set-up"
+                        )
+                    sol_tp = sol_type[i_alpha_n, i_v_wall]
+                    coords[sol_tp].append([v_walls[i_v_wall], alpha_ns[i_alpha_n]])
+                    inds[sol_tp].append(i_alpha_n * v_walls.size + i_v_wall)
+                    i += 1
+
         try:
             with h5py.File(self.path, "w") as file:
-                v_walls = np.linspace(v_wall_min, v_wall_max, n_v_wall, endpoint=True)
-                alpha_ns = np.linspace(alpha_n_min, alpha_n_max, n_alpha_n, endpoint=True)
-                alpha_n_max = alpha_n_max_bag(v_walls)
-
-                params = np.empty((alpha_ns.size, v_walls.size, 3))
-                params[:, :, 0], params[:, :, 1] = np.meshgrid(v_walls, alpha_ns)
-                params[:, :, 2], _ = np.meshgrid(alpha_n_max, alpha_ns)
-
-                sol_type, vp, vm, vp_tilde, vm_tilde, wp, wm = run_parallel(
-                    compute,
-                    params,
-                    multiple_params=True,
-                    unpack_params=True,
-                    output_dtypes=(np.int_, np.float64, np.float64, np.float64, np.float64, np.float64, np.float64),
-                    log_progress_percentage=10
-                )
                 file.create_dataset("v_wall", data=v_walls)
                 file.create_dataset("alpha_n", data=alpha_ns)
                 file.create_dataset("vp", data=vp)
@@ -125,31 +152,6 @@ class FluidReference:
                 file.create_dataset("wp", data=wp)
                 file.create_dataset("wm", data=wm)
                 # file.create_dataset("wn", data=wn)
-
-                data = np.empty((alpha_ns.size, v_walls.size, 6))
-                data[:, :, 0] = vp
-                data[:, :, 1] = vm
-                data[:, :, 2] = vp_tilde
-                data[:, :, 3] = vm_tilde
-                data[:, :, 4] = wp
-                data[:, :, 5] = wm
-
-                # Nearest neighbour interpolator set-up
-                valids = np.logical_not(np.any(np.isnan(data), axis=2))
-                coords = [[], [], []]
-                inds = [[], [], []]
-                i = 0
-                for i_alpha_n, alpha_n in enumerate(alpha_ns):
-                    for i_v_wall, v_wall in enumerate(v_walls):
-                        if valids[i_alpha_n, i_v_wall]:
-                            if np.any(np.isnan(data[i_alpha_n, i_v_wall, :])):
-                                raise RuntimeError(
-                                    "nan values should not be picked up for the nearest neighbour set-up"
-                                )
-                            sol_tp = sol_type[i_alpha_n, i_v_wall]
-                            coords[sol_tp].append([v_walls[i_v_wall], alpha_ns[i_alpha_n]])
-                            inds[sol_tp].append(i_alpha_n * v_walls.size + i_v_wall)
-                            i += 1
 
                 file.create_dataset("coords_sub_def", data=np.array(coords[0], dtype=np.float64))
                 file.create_dataset("coords_hybrid", data=np.array(coords[1], dtype=np.float64))
@@ -161,7 +163,7 @@ class FluidReference:
             # Remove broken file
             os.remove(self.path)
             raise exc
-        logger.info("Fluid reference ready, took: %s s", time.perf_counter() - start_time)
+        logger.info("Fluid reference ready, took: %.2f s", time.perf_counter() - start_time)
 
     def get(self, v_wall: float, alpha_n: float, sol_type: SolutionType) -> np.ndarray:
         """Get the reference point that is closest to the given parameters"""

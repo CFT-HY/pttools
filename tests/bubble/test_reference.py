@@ -13,12 +13,13 @@ class ReferenceTest(unittest.TestCase):
 
     @unittest.skipIf(IS_GITHUB_ACTIONS and IS_WINDOWS, reason="GitHub Actions Windows runners are slow")
     def test_generation(self):
-        path = os.path.join(TEST_DATA_PATH, "fluid_reference_indexing.hdf5")
+        path = os.path.join(TEST_DATA_PATH, f"fluid_reference_test.hdf5")
         if os.path.exists(path):
             os.remove(path)
         fluid_reference.FluidReference(
             path=path,
-            n_v_wall=5, n_alpha_n=6
+            n_v_wall=5,
+            n_alpha_n=6
         )
 
     # def test_nearest(self):
