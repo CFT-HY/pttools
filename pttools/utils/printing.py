@@ -22,6 +22,11 @@ except ModuleNotFoundError:
     RESET = ""
 
 
+def high_prec_float_str(x: float) -> str:
+    """Convert a float to a string with high precision"""
+    return f"{x:.{HIGH_PREC}g}"
+
+
 def row_to_str(row: th.FloatArr1D, close: th.BoolArr1D, fmt: str = DEFAULT_FMT) -> str:
     """Convert an array row to string with color"""
     lst = [
@@ -79,11 +84,6 @@ def print_2d(arr: th.FloatArr2D, close: th.BoolArr2D, fmt: str = DEFAULT_FMT) ->
 def print_full_prec(x: float) -> None:
     """Print a float with full precision"""
     print(decimal.Decimal(x))
-
-
-def high_prec_float_str(x: float) -> str:
-    """Convert a float to a string with high precision"""
-    return f"{x:.{HIGH_PREC}g}"
 
 
 def print_high_prec(x: th.FloatOrArr) -> None:

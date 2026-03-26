@@ -31,12 +31,6 @@ if not system.FORKING or not system.CPU_AFFINITY:
             " This platform does not provide info on which CPU cores are available for this process. "
             "Using all cores."
         )
-    if not system.FORKING:
-        msg += (
-            " This platform does not support forking."
-            " Starting parallel processes will be slower, "
-            "since the cs2 functions have to be compiled in each sub-process."
-        )
     logger.debug(msg)
 
 

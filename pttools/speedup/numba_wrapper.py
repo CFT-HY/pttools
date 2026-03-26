@@ -96,6 +96,7 @@ elif OLD_NUMBALSODA:
         "Please upgrade, as compatibility may break without notice.")
 
 # For e.g. the cases where Numba does not understand a None as a default value
+# TODO: Move this to utils
 NAN_ARR: tp.Final[th.FloatArr1D] = np.array([np.nan], dtype=np.float64)
 NAN_ARR.flags.writeable = False
 # nan_arr.setflags(write=False)
