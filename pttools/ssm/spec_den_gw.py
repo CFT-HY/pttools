@@ -46,8 +46,23 @@ def gen_lookup(
 
 
 @numba.njit
+def limits_from_lookup(z_lookup: th.FloatArr1D, cs: float) -> tuple[float, float]:
+    r"""Limits of z from a lookup
+    $$y_\pm = 2 z_\pm \frac{c_s}{1 \pm c_s)$$
+    The inverse of :py:func:lookup_limits: from :gw_pt_ssm:`\ ` p. 12
+    """
+    # This process is the reverse of to gen_lookup()
+    y_min = z_lookup.min() * 2. * cs / (1. - cs)
+    y_max = z_lookup.max() * 2. * cs / (1. + cs)
+    return y_min, y_max
+
+
+@numba.njit
 def lookup_limits(y: th.FloatArr1D, cs: float, eps: float = 0.) -> tuple[float, float]:
-    """Defined on p. 12 between eq. 3.44 and 3.45"""
+    r"""
+    $$z_\pm = y \frac{1 \pm c_s}{2c_s}$$
+    :gw_pt_ssm:`\ ` p. 12
+    """
     z_minus_min = y.min() * 0.5 * (1. - cs) / cs * (1 - eps)
     z_plus_max = y.max() * 0.5 * (1. + cs) / cs * (1 + eps)
     return z_minus_min, z_plus_max
@@ -65,7 +80,7 @@ def _spec_den_gw_scaled_core(
     The variable naming corresponds to the article.
     """
     if z_lookup.shape != P_v_lookup.shape:
-        raise TypeError("z_lookup and P_v_lookup must be of the same shape.")
+        raise TypeError(f"z_lookup and P_v_lookup must be of the same shape. Got: {z_lookup.shape}, {P_v_lookup.shape}")
 
     # This trickery is required by Numba
     nz_int2 = z_lookup.size if nz_int is None else nz_int
@@ -135,10 +150,8 @@ def _spec_den_gw_scaled_no_y(
         source_lifetime_factor: float = 1.,
         nz_int: int | None = None,
         parallel: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D]:
-    # This process is the reverse of to gen_lookup()
-    zmax = z_lookup.max() * 2. * cs / (1. + cs)
-    zmin = z_lookup.min() * 2. * cs / (1. - cs)
-    y = speedup.logspace(np.log10(zmin), np.log10(zmax), z_lookup.size)
+    z_min, z_max = limits_from_lookup(z_lookup, cs=cs)
+    y = speedup.logspace(np.log10(z_min), np.log10(z_max), z_lookup.size)
     if parallel:
         return _spec_den_gw_scaled_core_parallel(
             z_lookup=z_lookup, P_v_lookup=P_v_lookup, y=y,
@@ -161,7 +174,7 @@ def spec_den_gw_scaled(
         parallel: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D] | th.NumbaFunc:
     r"""
     Spectral density of scaled gravitational wave power
-    $$3K^2 (H\tau_\text{v})(H L_f) \tilde{P}_\text{gw}(z)$$
+    $$3K^2 (H \tau_\text{v})(H L_f) \tilde{P}_\text{gw}(z)$$
     :gw_pt_ssm:`\ ` eq. 3.47, 3.48
     :maki_msc:`\ ` eq. 3.47, 3.48
     :gowling_phd:`\ ` eq. 3.33
@@ -175,8 +188,13 @@ def spec_den_gw_scaled(
     :param y: $y = kL_f = kR*$ corresponding to z_lookup. If not given, will be created from z_lookup.
     :param cs: Speed of sound $c_s$ in the broken phase after the phase transition
     :param Gamma: Mean adiabatic index $\Gamma = \frac{\bar{w}}{\bar{e}}$
+    :param source_lifetime_factor: Normalization factor $a$ for the source lifetime (for debugging)
+    :param nz_int: Number of $z$ points for integration
+    :param parallel: Whether to run with multiple threads
     :return: $3K^2 (H\tau_\text{v})(H L_f) \tilde{P}_\text{gw}(z)$
     """
+    # The equation numbers in gw_pt_ssm and maki_msc above happen to be the same.
+
     if isinstance(y, np.ndarray):
         return _spec_den_gw_scaled_y(
             z_lookup=z_lookup, P_v_lookup=P_v_lookup, y=y,

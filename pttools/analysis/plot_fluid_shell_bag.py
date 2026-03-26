@@ -52,7 +52,7 @@ def plot_fluid_shell_bag(
     params = fluid_bag.sound_shell_dict(
         v_wall=v_wall,
         alpha_n=alpha_n,
-        Np=Np,
+        n_xi=Np,
         low_v_approx=low_v_approx,
         high_v_approx=high_v_approx
     )

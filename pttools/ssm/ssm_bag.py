@@ -208,7 +208,7 @@ def f_file_bag(
     logger.debug(f"Interpolating v(xi) from {len(wh_xi_lt1[0])} to {npt[0]} points")
     #    xi_lt1 = np.linspace(0.,1.,npt[0])
     #    v_xi_lt1 = np.interp(xi_lt1,xi_all,v_all)
-    xi_lt1, v_xi_lt1 = calculators.resample_uniform_xi(xi_all, v_all, npt[0])
+    xi_lt1, v_xi_lt1 = resample_uniform_xi(xi_all, v_all, npt[0])
     #    f = np.zeros_like(z_arr)
     #    for n, z in enumerate(z_arr):
     #        f[n] = (4*np.pi/z)*sin_transform(z, xi_lt1, v_xi_lt1, z_st_thresh)

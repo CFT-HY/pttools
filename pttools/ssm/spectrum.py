@@ -306,7 +306,7 @@ def compute(
     spec_den_v, a2 = spec_den_v_func(
         v=v, w=w, xi=xi, e=e, z=y,
         v_wall=v_wall, v_sh=v_sh, a=lifetime_distribution_a,
-        nuc_type=nuc_type, nt=nt, z_st_thresh=z_st_thresh, cs=cs,
+        nuc_type=nuc_type, nT=nt, z_st_thresh=z_st_thresh, cs=cs,
         parallel=parallel
     )
     pow_v = pow_spec(y, spec_den=spec_den_v)
@@ -315,7 +315,7 @@ def compute(
     spec_den_v_lookup, a2_lookup = spec_den_v_func(
         v=v, w=w, xi=xi, e=e, z=z_lookup,
         v_wall=v_wall, v_sh=v_sh, a=lifetime_distribution_a,
-        nuc_type=nuc_type, nt=nt, z_st_thresh=z_st_thresh, cs=cs,
+        nuc_type=nuc_type, nT=nt, z_st_thresh=z_st_thresh, cs=cs,
         parallel=parallel
     )
     spec_den_gw, y = spec_den_gw_scaled(

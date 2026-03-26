@@ -43,7 +43,7 @@ def a2_e_conserving(
         v_sh: float,
         cs: float,
         z_st_thresh: float = const.Z_ST_THRESH,
-        nxi: int = const.DEFAULT_N_PT[0],
+        n_xi: int = const.DEFAULT_N_XI_SSM,
         parallel: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
     Returns the value of $|A(z)|^2$, where
@@ -52,22 +52,61 @@ def a2_e_conserving(
     :param z: array of scaled wavenumbers $z = kR_*$.
     :return: $|A(z)|^2$, fp2_2, lam2
     """
+    f_val = f(z=z, xi=xi, v=v, v_wall=v_wall, v_sh=v_sh, z_st_thresh=z_st_thresh, parallel=parallel)
 
-    # :gw_pt_ssm:`\ ` eq. 4.5
-    f = (4. * np.pi / z) * sin_transform(
+    v_ft = speedup.gradient(f_val) / speedup.gradient(z)
+
+    lm = lam(v=v, w=w, e=e)
+    lam_ft = l(z=z, xi=xi, lam=lm, v_wall=v_wall, v_sh=v_sh, z_st_thresh=z_st_thresh, n_xi=n_xi, parallel=parallel)
+
+    return a2_fp_csl(fp=v_ft, cs=cs, l=lam_ft), v_ft ** 2 / 2, (cs * lam_ft) ** 2 / 2
+
+
+@numba.njit
+def a2_fp_csl(fp: th.FloatArr, cs: float, l: th.FloatArr) -> th.FloatArr:
+    r"""$|A(z)|^2$
+    $$|A(z)|^2 = = \frac{1}{4} \left[ (f'(z))^2 + (c_s l(z))^2 \right]$$
+    :gw_pt_ssm:`\ ` eq. 4.11
+    This contains information about the shape of the fluid shells.
+    """
+    return 0.25 * (fp ** 2 + (cs * l) ** 2)
+
+
+@numba.njit
+def f(
+        z: th.FloatArr,
+        xi: th.FloatArr,
+        v: th.FloatArr,
+        v_wall: float,
+        v_sh: float,
+        z_st_thresh: float = const.Z_ST_THRESH,
+        parallel: bool = True) -> th.FloatArr:
+    r"""$f(z)$
+    $$f(z) = \frac{4\pi}{z} \int_0^\infty d\xi v_\text{ip}(\xi) \sin(z\xi)$$
+    :gw_pt_ssm:`\ ` eq. 4.5
+    """
+    return 4. * np.pi / z * sin_transform(
         z=z, xi=xi, f=v, z_st_thresh=z_st_thresh, v_wall=v_wall, v_sh=v_sh, parallel=parallel
     )
 
-    v_ft = speedup.gradient(f) / speedup.gradient(z)
 
-    # This corresponds to de_from_w_bag
-    # e = bub.model.e(bub.w, bub.phase)
-    lam_orig = (e - e[-1]) / w[-1]
-    # This doesn't make much difference at small alpha
-    lam_orig += w * v * v / w[-1]
+@numba.njit(nogil=True)
+def l(
+        z: th.FloatArr,
+        xi: th.FloatArr,
+        lam: th.FloatArr,
+        v_wall: float,
+        v_sh: float,
+        z_st_thresh: float = const.Z_ST_THRESH,
+        n_xi: int = const.DEFAULT_N_XI_SSM,
+        parallel: bool = True) -> th.FloatArr:
+    r"""$l(z)$
+    $$l(z) = \frac{4\pi}{z} \int_0^\infty d\xi \lambda_\text{ip}(\xi) \xi \sin(z\xi)$$
+    :gw_pt_ssm:`\ ` eq. 4.8
+    """
+    xi_re, lam_re = resample_uniform_xi(xi, lam, n_xi)
 
-    xi_re, lam_re = resample_uniform_xi(xi, lam_orig, nxi)
-
+    # Some old implementation
     # lam_re = np.interp(xi_re,xi,lam_orig)
     # lam_ft = np.zeros_like(z)
     # for j in range(lam_ft.size):
@@ -75,11 +114,21 @@ def a2_e_conserving(
     #     lam_ft[j] = (4.*np.pi/z[j]) * \
     #         calculators.sin_transform(z[j], xi_re, xi_re*lam_re, z_st_thresh=max(z))
 
-    # :gw_pt_ssm:`\ ` eq. 4.8
-    lam_ft = (4. * np.pi / z) * sin_transform(
+    return 4. * np.pi / z * sin_transform(
         z=z, xi=xi_re, f=xi_re * lam_re, z_st_thresh=z_st_thresh, v_wall=v_wall, v_sh=v_sh, parallel=parallel
     )
 
-    # :gw_pt_ssm:`\ ` eq. 4.11
-    A2 = 0.25 * (v_ft ** 2 + (cs * lam_ft) ** 2)
-    return A2, v_ft ** 2 / 2, (cs * lam_ft) ** 2 / 2
+
+@numba.njit
+def lam(v: th.FloatArr, w: th.FloatArr, e: th.FloatArr) -> th.FloatArr:
+    r"""Energy fluctuation variable $\lambda(x)$
+    $$\lambda(x) = \frac{e(x) - \bar{e}}{\bar{w}}$$
+    :gw_pt_ssm:`\ ` eq. 3.20
+    """
+    # This corresponds to de_from_w_bag
+    # TODO: Is w[-1]=wn the same as \bar{w}?
+    lm = (e - e[-1]) / w[-1]
+    # This doesn't make much difference at small alpha
+    # TODO: Why is this done?
+    lm += w * v * v / w[-1]
+    return lm

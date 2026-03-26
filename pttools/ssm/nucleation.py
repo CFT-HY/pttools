@@ -90,7 +90,7 @@ def nu[T: FloatOrArr](T_tilde: T, nuc_type: NucType = NucType.SIMULTANEOUS, a: f
     :param T_tilde: dimensionless time $\tilde{T}$
     :param nuc_type: nucleation type, simultaneous or exponential
     :param a: normalization factor $a$
-        (This is an old debugging parameter, and $\nu$ should be normalized regardless of its value.)
+        (This is for debugging, and $\nu$ should be normalized regardless of its value.)
     :return: bubble lifetime distribution $\nu$
     """
     if nuc_type == NucType.EXPONENTIAL.value:
