@@ -62,7 +62,7 @@ def _v_minus_scalar(
     # return ret
 
 
-_v_minus_scalar_numba = numba.njit(_v_minus_scalar)
+_v_minus_scalar_numba = numba.njit(_v_minus_scalar, nogil=True)
 
 
 def _v_minus_arr(

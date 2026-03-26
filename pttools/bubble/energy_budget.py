@@ -64,7 +64,7 @@ def alpha_n_from_ubarf_solvable(
 
 @numba.njit(cache=True)
 def chapman_jouguet_approx[T: FloatOrArr](alpha_n: T) -> T:
-    r"""Approximation for the Chapman-Jouguet velocity $\v_{CJ}$, aka. $\xi_J$
+    r"""Approximation for the Chapman-Jouguet velocity $v_{CJ}$, aka. $\xi_J$
 
     $$v_{CJ} \approx \frac{\sqrt{\frac{2}{3} \alpha_n + \alpha_n^2} + \sqrt{\frac{1}{3}}{1 + \alpha_n}$$
     :espinosa_2010:`\ `, eq. 97
@@ -97,7 +97,7 @@ def delta_n[T: FloatOrArr](model: "Model", wn: T) -> T:
 def kappa_a(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr) -> th.FloatOrArr:
     r"""Approximation for $\kappa_a$
 
-    $$\kappa_A \approx \v_\text{wall} \frac{6.9 \alpha_n}{1.36 - 0.037 \sqrt{\alpha_n} + \alpha_n}$$
+    $$\kappa_A \approx v_\text{wall} \frac{6.9 \alpha_n}{1.36 - 0.037 \sqrt{\alpha_n} + \alpha_n}$$
     :espinosa_2010:`\ `, eq. 95
     For small wall speeds xi_w << cs
     """

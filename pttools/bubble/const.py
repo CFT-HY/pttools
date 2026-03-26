@@ -30,6 +30,19 @@ FIND_ALPHA_PLUS_TOL: float = 1e-6
 #: Relative tolerance of the junction solver
 JUNCTION_RTOL: float = 1e-6
 
+# -----
+# Constants
+# -----
+ALPHA_PLUS_MAX_DEF: tp.Final[float] = 1 / 3
+r"""
+Fluid must flow into the bubble
+($\tilde{v}_+ > 0$) in :py:func:`pttools.bubble.v_plus`.
+For the deflagration branch, which has the negative sign,
+this requires that $\alpha_+ < \frac{1}{3}$.
+This applies for both subsonic deflagrations and hybrids.
+:notes:`\ ` p. 36
+"""
+
 #: Ideal speed of sound
 CS0: tp.Final[float] = 1 / math.sqrt(3)
 #: Ideal speed of sound squared

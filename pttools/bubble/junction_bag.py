@@ -24,16 +24,17 @@ def fluid_speeds_at_wall_bag(
 
     Bag model only.
 
-    The abbreviations are: fluid speed (vf) just behind (m=minus) and just ahead (p=plus) of wall,
+    The abbreviations in the code are:
+    fluid speed (vf) just behind (m=minus) and just ahead (p=plus) of wall,
     in wall (_w) and plasma/universe (_p) frames.
-
-    TODO: add a validity check for v_minus
 
     :param v_wall: $v_\text{wall}$
     :param alpha_plus: $\alpha_+$
     :param sol_type: solution type
     :return: $\tilde{v}_+,\tilde{v}_-,v_+,v_-$
     """
+    # TODO: add a validity check for v_minus
+
     if v_wall > 1:
         # Todo: better error handling and logging
         # with numba.objmode:

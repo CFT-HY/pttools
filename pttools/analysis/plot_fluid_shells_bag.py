@@ -179,6 +179,8 @@ def plot_fluid_shells_bag(
         fig.canvas.draw()
     ylabels = [tick.get_text() for tick in ax[1, 0].get_yticklabels()]
     # TODO: Fix the warning "FixedFormatter should only be used together with FixedLocator"
+    # UserWarning: set_ticklabels() should only be used with a fixed number of ticks,
+    # i.e. after set_ticks() or using a FixedLocator.
     ax[1, 0].set_yticklabels(ylabels[:-1])
 
     ax[0, 0].set_ylabel(r'$v(\xi)$')

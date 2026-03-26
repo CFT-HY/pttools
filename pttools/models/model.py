@@ -12,6 +12,7 @@ from scipy.optimize import fminbound, fsolve, root_scalar
 from pttools.bubble.phase import Phase
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 from pttools.bubble.check import find_most_negative_vals
+from pttools.bubble.const import ALPHA_PLUS_MAX_DEF
 from pttools.bubble.integrate import add_df_dtau, differentials
 from pttools.bubble import solution_type
 from pttools.bubble.solution_type import SolutionType
@@ -303,7 +304,6 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
-        # Todo: This docstring causes the Sphinx error "ERROR: Unknown target name: "w"."
         r"""Transition strength parameter $\alpha_+$
         $$\alpha_+ = \frac{4\Delta \theta}{3{w}_+} = \frac{4(\theta({w}_+,\phi_s) - \theta({w}_-,\phi_b)}{3{w}_+}$$
 
@@ -407,7 +407,7 @@ class Model(BaseModel, abc.ABC):
         """
         if error_on_invalid or nan_on_invalid or log_invalid:
             if sol_type in (SolutionType.SUB_DEF, SolutionType.HYBRID):
-                invalid = np.logical_or(alpha_plus < 0, alpha_plus >= 1/3)
+                invalid = np.logical_or(alpha_plus < 0, alpha_plus >= ALPHA_PLUS_MAX_DEF)
             elif vp_tilde is not None:
                 # The square root in the vm_tilde equation must be positive
                 sqrt_invalid = ((1 + alpha_plus) * vp_tilde + (1 - 3 * alpha_plus) / (3 * vp_tilde)) ** 2 - 4 / 3 < 0

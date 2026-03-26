@@ -5,7 +5,7 @@ RHS is Eq (33) in Espinosa et al. (plus $\frac{dw}{dt}$ not written there)
 """
 
 import logging
-import typing as tp
+import math
 
 import numba
 import numpy as np
@@ -28,6 +28,7 @@ from pttools.bubble.solution_type_bag import identify_solution_type_bag, identif
 from pttools.bubble import trim
 from pttools import speedup
 import pttools.type_hints as th
+from pttools.speedup import NAN_ARR
 
 logger = logging.getLogger(__name__)
 
@@ -54,26 +55,27 @@ def sound_shell_bag(
     :param v_wall: $v_\text{wall}$
     :param alpha_n: $\alpha_n$
     :param n_xi: number of $\xi$ points
-    :return: $v, w, \xi$ or alternatively $v, w, \xi$, sol_type
+    :param cs2_fun: $c_s^2$ function
+    :param cs2_fun_ptr: Pointer to the $c_s^2$ function
+    :param df_dtau_ptr: Pointer to the $\frac{df}{d\tau}$ function
+    :return: $v, w, \xi$
     """
     # check_physical_params([v_wall,alpha_n])
     sol_type = identify_solution_type_bag(v_wall, alpha_n)
     if sol_type == SolutionType.ERROR:
         # with numba.objmode:
         #     logger.error("Could not indentify solution type for v_wall=%s, alpha_n=%s", v_wall, alpha_n)
-        nan_arr = np.array([np.nan])
         # if extra_output:
         #     return nan_arr, nan_arr, nan_arr, sol_type, np.nan, np.nan, np.nan, np.nan, np.nan
-        return nan_arr, nan_arr, nan_arr
+        return NAN_ARR, NAN_ARR, NAN_ARR
     al_p = alpha.find_alpha_plus_bag(
         v_wall=v_wall, alpha_n_given=alpha_n, n_xi=n_xi,
         cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr
     )
     if np.isnan(al_p):
-        nan_arr = np.array([np.nan])
         # if extra_output:
         #     return nan_arr, nan_arr, nan_arr, sol_type, np.nan, np.nan, np.nan, np.nan, np.nan
-        return nan_arr, nan_arr, nan_arr
+        return NAN_ARR, NAN_ARR, NAN_ARR
     # SolutionType has to be passed by its value when jitting
     return sound_shell_alpha_plus_bag(
         v_wall=v_wall, alpha_plus=al_p, sol_type=sol_type.value,
@@ -125,10 +127,9 @@ def sound_shell_alpha_plus_bag(
         # Todo: better error handling and logging
         # with numba.objmode:
         #     logger.error("Solution type could not be found for v_wall=%s, alpha_n=%s", v_wall, alpha_plus)
-        nan_arr = np.array([np.nan])
         # if extra_output:
         #     return nan_arr, nan_arr, nan_arr, np.nan, np.nan, np.nan, np.nan
-        return nan_arr, nan_arr, nan_arr
+        return NAN_ARR, NAN_ARR, NAN_ARR
 
     # Solve boundary conditions at wall
     # See the function docstring for the abbreviations
@@ -146,8 +147,7 @@ def sound_shell_alpha_plus_bag(
     wf = np.ones_like(xif) * wp
 
     # Backwards integration, from cs or 0 to v_wall
-    # TODO: set a value for the phase
-    xib = np.linspace(min(cs2_fun(w_n, 0) ** 0.5, v_wall) - dxi, 0.0, 2)
+    xib = np.linspace(min(math.sqrt(cs2_fun(w_n, Phase.BROKEN.value)), v_wall) - dxi, 0.0, 2)
     vb = np.zeros_like(xib)
     wb = np.ones_like(xib) * wm
 
@@ -201,8 +201,7 @@ def sound_shell_alpha_plus_bag(
         wb = np.ones_like(xib) * w[-1]
         wb = np.concatenate((w, wb))
         # Can afford to bring this point all the way to cs2.
-        # TODO: set a value for the phase
-        xib[0] = cs2_fun(w[-1], 0) ** 0.5
+        xib[0] = math.sqrt(cs2_fun(w[-1], Phase.BROKEN.value))
         xib = np.concatenate((xi, xib))
 
     # Now put halves together in right order
@@ -215,7 +214,7 @@ def sound_shell_alpha_plus_bag(
     w = np.concatenate((np.flipud(wb), wf))
     # This fixes the scaling of the results.
     # The original scaling does not matter for computing the problem, but the endpoint w[-1] has to match w_n.
-    w = w * (w_n / w[-1])
+    w *= w_n / w[-1]
     # The memory layout of the resulting xi array may cause problems with old Numba versions.
     xi = np.concatenate((np.flipud(xib), xif))
     # Using .copy() results in a contiguous memory layout, alleviating the issue above.
@@ -228,30 +227,26 @@ def sound_shell_alpha_plus_bag(
 def sound_shell_dict(
         v_wall: float,
         alpha_n: float,
-        Np: int = const.DEFAULT_N_XI,
+        n_xi: int = const.DEFAULT_N_XI,
         low_v_approx: bool = False,
         high_v_approx: bool = False) -> dict[str, float | int | SolutionType | th.FloatArr1D]:
     if low_v_approx and high_v_approx:
         raise ValueError("Both low and high v approximations can't be enabled at the same time.")
-
-    # TODO: use greek symbols for kappa and omega
     check.check_physical_params((v_wall, alpha_n))
-
     sol_type = identify_solution_type_bag(v_wall, alpha_n)
-
     if sol_type is SolutionType.ERROR:
         raise RuntimeError(f"No solution for v_wall = {v_wall}, alpha_n = {alpha_n}")
 
-    v, w, xi = sound_shell_bag(v_wall, alpha_n, Np)
+    v, w, xi = sound_shell_bag(v_wall, alpha_n, n_xi)
 
     # vmax = max(v)
 
-    xi_even = np.linspace(1 / Np, 1 - 1 / Np, Np)
+    xi_even = np.linspace(1 / n_xi, 1 - 1 / n_xi, n_xi)
     v_sh = v_shock_bag(xi_even)
     w_sh = wm_shock_bag(xi_even)
 
     n_wall = props.find_v_index(xi, v_wall)
-    n_cs = int(np.floor(const.CS0 * Np))
+    n_cs = int(np.floor(const.CS0 * n_xi))
     n_sh = xi.size - 2
 
     if sol_type == SolutionType.DETON:
