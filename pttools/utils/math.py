@@ -1,10 +1,15 @@
 """Mathematical utilities"""
 
 import math
+import typing as tp
+
 import numpy as np
 from numpy.typing import NDArray
 
 import pttools.type_hints as th
+
+#: Smallest float
+EPS: tp.Final[np.float64] = np.nextafter(0, 1)
 
 
 def powers_of_2(max_val: int, start_exp: int = 0, min_end_exp: int = 0, include_max: bool = False) -> th.IntArr1D:
