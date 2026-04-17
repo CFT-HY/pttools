@@ -72,8 +72,8 @@ def _spec_den_v_core(
         sd_v[i] = _spec_den_v_core_loop(
             z_i=z[i], T_tilde=T_tilde, beta_R=beta_R,
             qT_lookup=qT_lookup, A2_lookup=A2_lookup,
-            nuc_type=nuc_type, a=a, factor=factor)
-
+            nuc_type=nuc_type, a=a, factor=factor
+        )
     return sd_v
 
 spec_den_v_core = numba.njit(parallel=True, nogil=True)(_spec_den_v_core)
@@ -96,7 +96,8 @@ def spec_den_v(
         T_tilde_min: float = const.T_TILDE_MIN,
         T_tilde_max: float = const.T_TILDE_MAX,
         cs: float | None = None,
-        parallel: bool = True):
+        parallel: bool = True,
+        lambda_correction: bool = False):
     r"""The full spectral density of the velocity field
 
     This is twice the spectral density of the plane wave components of the velocity field, and therefore given by
@@ -121,6 +122,7 @@ def spec_den_v(
     :param T_tilde_max: maximum $\tilde{T}$ for the integration
     :param cs: speed of sound $c_s$
     :param parallel: whether to compute the result for each $z$ in parallel
+    :param lambda_correction: whether to enable a non-linear correction for $\lambda$
     :return: $P_{\tilde{v}} = 2 * P_v(q)$
     """
     # z limits
@@ -145,7 +147,8 @@ def spec_den_v(
     #     raise e
     A2_lookup = ssm.a2_e_conserving(
         v=v, w=w, xi=xi, e=e, z=qT_lookup,
-        v_wall=v_wall, v_sh=v_sh, cs=cs, z_st_thresh=z_st_thresh, parallel=parallel
+        v_wall=v_wall, v_sh=v_sh, cs=cs, z_st_thresh=z_st_thresh,
+        parallel=parallel, lambda_correction=lambda_correction
     )[0]
     # if qT_lookup.size != A2_lookup.size:
     #     raise ValueError(f"Lookup sizes don't match: {qT_lookup.size} != {A2_lookup.size}")

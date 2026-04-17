@@ -389,7 +389,8 @@ def ps_from_ssm(
         nuc_type: ssm.NucType = ssm.NucType.SIMULTANEOUS,
         nuc_args: bubble.NucArgs = (1.,),
         Np: th.IntArr1D = const.NP_ARR[-1],
-        method: ssm.Method = ssm.Method.E_CONSERVING):
+        method: ssm.Method = ssm.Method.E_CONSERVING,
+        lambda_correction: bool = False):
     """Get velocity and GW power spectra from SSM"""
 
     nuc_string = nuc_type[0:3] + '_'
@@ -398,7 +399,11 @@ def ps_from_ssm(
 
     z = np.logspace(np.log10(const.Z_MIN), np.log10(const.Z_MAX), Np[0])
 
-    sd_v = ssm.spec_den_v_bag(z, (vw, alpha, nuc_type, nuc_args), Np[1:], method=method)
+    sd_v = ssm.spec_den_v_bag(
+        z,
+        (vw, alpha, nuc_type, nuc_args),
+        Np[1:], method=method, lambda_correction=lambda_correction
+    )
     pow_v = ssm.pow_spec(z, sd_v)
 
     V2_pow_v = np.trapezoid(pow_v/z, z)
@@ -408,9 +413,9 @@ def ps_from_ssm(
 
     gw_power = np.trapezoid(pow_gw/y, y)
 
-    Ubarf = np.sqrt(V2_pow_v)
+    # Ubarf = np.sqrt(V2_pow_v)
     AdInd = 4/(3*(1+alpha))
-    Omgwtil = gw_power/(AdInd*V2_pow_v)**2
+    # Omgwtil = gw_power/(AdInd*V2_pow_v)**2
 
     # logger.debug(f"{nuc_string:s} {alpha} {vw:.2f} {V2_pow_v:.3e} {1000*Ubarf:5.2f} {gw_power:.3e} {100*Omgwtil:.3f}")
 
@@ -509,7 +514,8 @@ def plot_ps_1bubble(
         save_id: str | None = None,
         graph_file_type: str | None = None,
         Np: th.IntArr1D = const.NP_ARR[-1],
-        debug: bool = False) -> tp.Union[plt.Figure, tuple[plt.Figure, th.FloatArr2D]]:
+        debug: bool = False,
+        lambda_correction: bool = False) -> tp.Union[plt.Figure, tuple[plt.Figure, th.FloatArr2D]]:
     # Sphinx considers vertical lines as substitution references. Therefore the command \mid has to be used instead.
     r"""
     Plots power spectra predictions of 1 bubble. Shown are
@@ -528,7 +534,7 @@ def plot_ps_1bubble(
     nz_string = f'nz{Np[0] // 1000}k_'
     nx_string = f'nx{Np[1] // 1000}k-'
 
-    A2, fp2_2, lam2 = ssm.a2_e_conserving_bag(z, vw, alpha, npt=Np[1:])
+    A2, fp2_2, lam2 = ssm.a2_e_conserving_bag(z, vw, alpha, npt=Np[1:], lambda_correction=lambda_correction)
 
     z_list = 3*[z]
     ph_sp_fac = z**3/(2*np.pi**2)
@@ -562,7 +568,8 @@ def plot_ps_compare_nuc(
         vw: float,
         alpha: float,
         save_id: str | None = None,
-        graph_file_type: str | None = None) -> tuple[list, list, list, list]:
+        graph_file_type: str | None = None,
+        lambda_correction: bool = False) -> tuple[list, list, list, list]:
     """
     Plots power spectra predictions of SSM with different nucleation models
     Saves data if save_id is set.
@@ -595,7 +602,9 @@ def plot_ps_compare_nuc(
     nuc_string_all = ''
 
     for nuc_type, nuc_args in zip(nuc_type_list, nuc_args_list):
-        z, pow_v, y, pow_gw = ps_from_ssm(vw, alpha, nuc_type, nuc_args, Np, method)
+        z, pow_v, y, pow_gw = ps_from_ssm(
+            vw, alpha, nuc_type, nuc_args, Np, method, lambda_correction=lambda_correction
+        )
         z_list.append(z)
         pow_v_list.append(pow_v)
         y_list.append(y)
@@ -843,7 +852,10 @@ def plot_and_save(vw: float, alpha: float, method: ssm.Method = ssm.Method.E_CON
     return V2_pow_v, gw_power
 
 
-def do_all_plot_ps_compare_nuc(save_id: str | None = None, graph_file_type: str | None = None):
+def do_all_plot_ps_compare_nuc(
+        save_id: str | None = None,
+        graph_file_type: str | None = None,
+        lambda_correction: bool = False):
     v2_list = []
     Omgw_scaled_list = []
 
@@ -854,7 +866,9 @@ def do_all_plot_ps_compare_nuc(save_id: str | None = None, graph_file_type: str 
     # This loop cannot be multi-threaded, as Matplotlib is not thread-safe
     for vw_list, alpha, in zip(VW_LIST_ALL, const.ALPHA_LIST_ALL):
         for vw in vw_list:
-            v2, Omgw_scaled, p_cwg, p_ssm = plot_ps_compare_nuc(vw, alpha, save_id, graph_file_type)
+            v2, Omgw_scaled, p_cwg, p_ssm = plot_ps_compare_nuc(
+                vw, alpha, save_id, graph_file_type, lambda_correction=lambda_correction
+            )
             v2_list.append(v2)
             Omgw_scaled_list.append(Omgw_scaled)
             param_list.append([alpha, vw])
@@ -888,7 +902,8 @@ def do_all_plot_ps_compare_nuc(save_id: str | None = None, graph_file_type: str 
 def do_all_plot_ps_1bubble(
         save_id: str | None = None,
         graph_file_type: str | None = None,
-        debug: bool = False) -> \
+        debug: bool = False,
+        lambda_correction: bool = False) -> \
             tuple[list[plt.Figure], list[str]] | \
             tuple[list[plt.Figure], list[str], th.FloatArr4D]:
     vw_weak_list = [0.92, 0.56, 0.44]
@@ -906,7 +921,10 @@ def do_all_plot_ps_1bubble(
     for vw_list, alpha, in zip(vw_list_all, alpha_list_all):
         for vw in vw_list:
             if debug:
-                fig, data = plot_ps_1bubble(vw, alpha, save_id, graph_file_type, debug=debug)
+                fig, data = plot_ps_1bubble(
+                    vw, alpha, save_id, graph_file_type,
+                    debug=debug, lambda_correction=lambda_correction
+                )
                 data_lst.append(data)
             fig = plot_ps_1bubble(vw, alpha, save_id, graph_file_type)
             figs.append(fig)

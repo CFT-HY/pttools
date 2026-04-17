@@ -50,7 +50,8 @@ class SuppressionTest(unittest.TestCase):
             data = calc_sup_ssm(
                 f"{filename}.txt",
                 save=False,
-                npt=(DEFAULT_N_XI_SSM, 200, 320)
+                npt=(DEFAULT_N_XI_SSM, 200, 320),
+                lambda_correction=True
             )
             with np.load(os.path.join(SUPPRESSION_FOLDER, f"{filename}_ssm.npz")) as ref:
                 for key, rtol in tolerances.items():

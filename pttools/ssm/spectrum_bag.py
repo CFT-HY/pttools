@@ -51,6 +51,7 @@ def power_gw_scaled_bag(
         method: ssm.Method = ssm.Method.E_CONSERVING,
         de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH,
+        lambda_correction: bool = False,
         parallel: bool = True) -> th.FloatArr1D:
     """
     Scaled GW power spectrum at array of z = kR* values, where R* is mean bubble centre
@@ -92,7 +93,10 @@ def power_gw_scaled_bag(
 
     x = np.logspace(np.log10(xmin), np.log10(xmax), nx)
 
-    sd_v = spec_den_v_bag(x, params, npt, filename, skip, method, de_method, z_st_thresh, parallel=parallel)
+    sd_v = spec_den_v_bag(
+        x, params, npt, filename, skip, method, de_method, z_st_thresh,
+        lambda_correction=lambda_correction, parallel=parallel
+    )
     sd_gw, y = spectrum.spec_den_gw_scaled(x, sd_v, z, parallel=parallel)
     return spectrum.pow_spec(z, sd_gw)
 
@@ -137,6 +141,7 @@ def spec_den_v_bag(
         method: ssm.Method = ssm.Method.E_CONSERVING,
         de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
         z_st_thresh=const.Z_ST_THRESH,
+        lambda_correction: bool = False,
         parallel: bool = True):
     r"""
     Get dimensionless velocity spectral density $\bar{P}_v$.
@@ -178,12 +183,13 @@ def spec_den_v_bag(
     if filename is None:
         A2_lookup = ssm_bag.a2_ssm_func_bag(
             z=qT_lookup, v_wall=v_wall, alpha=alpha,
-            npt=npt, method=method, de_method=de_method, z_st_thresh=z_st_thresh
+            npt=npt, method=method, de_method=de_method, z_st_thresh=z_st_thresh,
+            lambda_correction=lambda_correction, parallel=parallel
         )
     else:
         A2_lookup = ssm_bag.a2_e_conserving_bag_file(
             z=qT_lookup, filename=filename, alpha=alpha,
-            skip=skip, npt=npt, z_st_thresh=z_st_thresh
+            skip=skip, npt=npt, z_st_thresh=z_st_thresh, parallel=parallel
         )
 
     # if qT_lookup.size != A2_lookup.size:

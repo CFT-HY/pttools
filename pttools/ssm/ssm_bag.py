@@ -29,6 +29,7 @@ def a2_e_conserving_bag(
         v_ip: th.FloatArr1D = speedup.NAN_ARR,
         w_ip: th.FloatArr1D = speedup.NAN_ARR,
         xi: th.FloatArr1D = speedup.NAN_ARR,
+        lambda_correction: bool = False,
         parallel: bool = True):
     r"""
     Returns the value of $|A(z)|^2$, where
@@ -61,7 +62,10 @@ def a2_e_conserving_bag(
     else:
         lam_orig = bubble.de_from_w_bag(w_ip, xi, v_wall, alpha_n) / w_ip[-1]
 
-    lam_orig += w_ip * v_ip * v_ip / w_ip[-1]  # This doesn't make much difference at small alpha
+    # This doesn't make much difference at small alpha
+    if lambda_correction:
+        lam_orig += w_ip * v_ip * v_ip / w_ip[-1]
+
     xi_re, lam_re = resample_uniform_xi(xi, lam_orig, nxi)
 
     #    lam_re = np.interp(xi_re,xi,lam_orig)
@@ -144,6 +148,7 @@ def a2_ssm_func_bag(
         method: Method = Method.E_CONSERVING,
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH,
+        lambda_correction: bool = False,
         parallel: bool = True):
     r"""
     Returns the value of $|A(z)|^2$.
@@ -159,7 +164,10 @@ def a2_ssm_func_bag(
     """
     if method == Method.E_CONSERVING.value:
         # This is the correct method (as of 12.18)
-        A2 = a2_e_conserving_bag(z, v_wall, alpha, npt, de_method, z_st_thresh, parallel=parallel)[0]
+        A2 = a2_e_conserving_bag(
+            z, v_wall, alpha, npt, de_method, z_st_thresh,
+            lambda_correction=lambda_correction, parallel=parallel
+        )[0]
     elif method == Method.F_ONLY.value:
         with numba.objmode:
             logger.debug("f_only method, multiplying (f\')^2 by 2")

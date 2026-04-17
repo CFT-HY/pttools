@@ -1,4 +1,5 @@
 """Compute the kinetic energy suppression factor for a given set of simulation data"""
+
 import logging
 import os.path
 
@@ -18,7 +19,8 @@ SUPPRESSION_FOLDER = os.path.dirname(os.path.abspath(__file__))
 def calc_sup_ssm(
         path: str,
         save: bool = True,
-        npt: ssm_const.NptType = ssm_const.DEFAULT_N_PT) -> dict[str, th.FloatArr1DOrList]:
+        npt: ssm_const.NptType = ssm_const.DEFAULT_N_PT,
+        lambda_correction: bool = False) -> dict[str, th.FloatArr1DOrList]:
     """
     file must be a txt file with data in columns as follows
     vw alpha suppression_sim sim_omgw exp_omgw exp_ubarf
@@ -45,7 +47,7 @@ def calc_sup_ssm(
         alpha = sim_data[i, 1]
         params = (vw, alpha, NucType.EXPONENTIAL,(1,))
         # TODO: Check how to add these in new PTtools / are they still needed z_st_thresh=np.inf ,npt=[7000,200,1000]
-        out_ssm.append(power_gw_scaled_bag(z, params, npt=npt))  # omgw_ssm /(HnR*)(Hnt)
+        out_ssm.append(power_gw_scaled_bag(z, params, npt=npt, lambda_correction=lambda_correction))  # omgw_ssm /(HnR*)(Hnt)
         out_ssm_tot.append(np.trapezoid(out_ssm[i], np.log(z)))
         Ubarf_2_ssm.append(bbl.get_ubarf2_bag(vw, alpha))
 

@@ -131,7 +131,12 @@ class SSMSpectrum:
     def beta_over_H(self) -> float:  # pylint: disable=missing-function-docstring
         return beta_over_H(r_star=self.r_star, v_wall=self.bubble.v_wall, cs=self.cs)
 
-    def compute(self, eps_lookup: float = 1e-8, lifetime_distribution_a: float = 1., parallel: bool = True):
+    def compute(
+            self,
+            eps_lookup: float = 1e-8,
+            lifetime_distribution_a: float = 1.,
+            lambda_correction: bool = False,
+            parallel: bool = True):
         if not self.bubble.solved:
             self.bubble.solve()
 
@@ -155,6 +160,7 @@ class SSMSpectrum:
             # This requires r_star to be known.
             source_lifetime_factor=self.source_lifetime_factor,
             parallel=parallel
+            lambda_correction=lambda_correction,
         )
         self.pow_gw = self.pow_gw_ssm
 
@@ -298,6 +304,7 @@ def compute(
         z_st_thresh: float,
         cs: float,
         source_lifetime_factor: float,
+        lambda_correction: bool = False,
         parallel: bool = True):
     """Compute the Sound Shell Model spectra for a fluid profile
 
@@ -306,8 +313,8 @@ def compute(
     spec_den_v, a2 = spec_den_v_func(
         v=v, w=w, xi=xi, e=e, z=y,
         v_wall=v_wall, v_sh=v_sh, a=lifetime_distribution_a,
-        nuc_type=nuc_type, nT=nt, z_st_thresh=z_st_thresh, cs=cs,
-        parallel=parallel
+        nuc_type=nuc_type, nT=nT, z_st_thresh=z_st_thresh, cs=cs,
+        parallel=parallel, lambda_correction=lambda_correction
     )
     pow_v = pow_spec(y, spec_den=spec_den_v)
 
@@ -315,8 +322,8 @@ def compute(
     spec_den_v_lookup, a2_lookup = spec_den_v_func(
         v=v, w=w, xi=xi, e=e, z=z_lookup,
         v_wall=v_wall, v_sh=v_sh, a=lifetime_distribution_a,
-        nuc_type=nuc_type, nT=nt, z_st_thresh=z_st_thresh, cs=cs,
-        parallel=parallel
+        nuc_type=nuc_type, nT=nT, z_st_thresh=z_st_thresh, cs=cs,
+        parallel=parallel, lambda_correction=lambda_correction
     )
     spec_den_gw, y = spec_den_gw_scaled(
         z_lookup=z_lookup, P_v_lookup=spec_den_v_lookup, y=y, cs=cs,

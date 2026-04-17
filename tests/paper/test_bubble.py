@@ -22,7 +22,7 @@ class TestBubble(unittest.TestCase):
     """Test the bubble functions in the paper code"""
     @staticmethod
     def test_bubble():
-        figs, fig_ids, data = spu.do_all_plot_ps_1bubble(debug=True)
+        figs, fig_ids, data = spu.do_all_plot_ps_1bubble(debug=True, lambda_correction=True)
         for fig, fig_id in zip(figs, fig_ids):
             save_fig_multi(fig, os.path.join(FIG_PATH, f"bubble_{fig_id}"))
             plt.close(fig)

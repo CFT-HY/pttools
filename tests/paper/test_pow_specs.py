@@ -28,7 +28,8 @@ class TestPowSpecs(unittest.TestCase):
 def pow_specs():
     params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list = spu.do_all_plot_ps_compare_nuc(
         save_id='final3',
-        graph_file_type=None
+        graph_file_type=None,
+        lambda_correction=True
     )
 
     save_id = 'test'

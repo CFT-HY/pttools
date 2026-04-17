@@ -44,19 +44,21 @@ def a2_e_conserving(
         cs: float,
         z_st_thresh: float = const.Z_ST_THRESH,
         n_xi: int = const.DEFAULT_N_XI_SSM,
-        parallel: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
+        parallel: bool = True,
+        lambda_correction: bool = False) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
     Returns the value of $|A(z)|^2$, where
     $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$.
 
     :param z: array of scaled wavenumbers $z = kR_*$.
+    :param lambda_correction: whether to enable a non-linear correction for $\lambda$
     :return: $|A(z)|^2$, fp2_2, lam2
     """
     f_val = f(z=z, xi=xi, v=v, v_wall=v_wall, v_sh=v_sh, z_st_thresh=z_st_thresh, parallel=parallel)
 
     v_ft = speedup.gradient(f_val) / speedup.gradient(z)
 
-    lm = lam(v=v, w=w, e=e)
+    lm = lam(v=v, w=w, e=e, non_linear_correction=lambda_correction)
     lam_ft = l(z=z, xi=xi, lam=lm, v_wall=v_wall, v_sh=v_sh, z_st_thresh=z_st_thresh, n_xi=n_xi, parallel=parallel)
 
     return a2_fp_csl(fp=v_ft, cs=cs, l=lam_ft), v_ft ** 2 / 2, (cs * lam_ft) ** 2 / 2
@@ -120,15 +122,21 @@ def l(
 
 
 @numba.njit
-def lam(v: th.FloatArr, w: th.FloatArr, e: th.FloatArr) -> th.FloatArr:
+def lam(v: th.FloatArr, w: th.FloatArr, e: th.FloatArr, non_linear_correction: bool = False) -> th.FloatArr:
     r"""Energy fluctuation variable $\lambda(x)$
     $$\lambda(x) = \frac{e(x) - \bar{e}}{\bar{w}}$$
     :gw_pt_ssm:`\ ` eq. 3.20
+
+    :param v: $v$
+    :param w: $w$
+    :param e: $e$
+    :param non_linear_correction:
+        Enable a non-linear correction.
+        This is a remnant from Mark's old experiments and doesn't make much difference at small $\alpha_n$.
     """
     # This corresponds to de_from_w_bag
     # TODO: Is w[-1]=wn the same as \bar{w}?
     lm = (e - e[-1]) / w[-1]
-    # This doesn't make much difference at small alpha
-    # TODO: Why is this done?
-    lm += w * v * v / w[-1]
+    if non_linear_correction:
+        lm += w * v * v / w[-1]
     return lm
