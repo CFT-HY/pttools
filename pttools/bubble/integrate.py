@@ -13,6 +13,7 @@ from scipy.integrate._ivp.ivp import OdeResult
 
 from pttools.bubble.cs2_bag import cs2_bag, cs2_bag_scalar_cfunc
 from pttools.bubble.const import DEFAULT_N_XI, DEFAULT_T_END
+from pttools.bubble.phase import Phase
 from pttools.speedup.differential import DifferentialCache, DifferentialCFunc, DifferentialPointer
 from pttools.speedup.numba_wrapper import numbalsoda
 from pttools.speedup.options import NUMBA_DISABLE_JIT, NUMBA_INTEGRATE
@@ -102,7 +103,7 @@ def fluid_integrate_param(
         v0: float,
         w0: float,
         xi0: float,
-        phase: float = -1.,
+        phase: Phase,
         t_end: float = DEFAULT_T_END,
         n_xi: int = DEFAULT_N_XI,
         df_dtau_ptr: DifferentialPointer = DF_DTAU_PTR_BAG,
@@ -122,10 +123,6 @@ def fluid_integrate_param(
     :param method: differential equation solver to be used
     :return: $v, w, \xi, t$
     """
-    if phase < 0.:
-        print("The phase has not been set! Assuming symmetric phase.")
-        phase = 0.
-
     t = np.linspace(0., t_end, n_xi)
     y0 = np.array([v0, w0, xi0])
     # The second value ensures that the Numba typing is correct.
@@ -256,4 +253,4 @@ def fluid_integrate_param_solve_ivp(
 
 def precompile() -> None:
     """Run fluid_integrate_param once to precompile it with Numba"""
-    fluid_integrate_param(v0=0.5, w0=0.5, xi0=0.5, phase=0., n_xi=2)
+    fluid_integrate_param(v0=0.5, w0=0.5, xi0=0.5, phase=Phase.SYMMETRIC, n_xi=2)
