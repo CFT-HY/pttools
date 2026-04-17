@@ -159,8 +159,8 @@ class SSMSpectrum:
             cs=self.cs,
             # This requires r_star to be known.
             source_lifetime_factor=self.source_lifetime_factor,
-            parallel=parallel
             lambda_correction=lambda_correction,
+            parallel=parallel
         )
         self.pow_gw = self.pow_gw_ssm
 
