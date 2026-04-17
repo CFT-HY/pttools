@@ -5,10 +5,11 @@ import unittest
 
 import matplotlib.pyplot as plt
 
-from  examples.const_cs import plot_model_comparison
+from examples.const_cs import plot_model_comparison
 from examples.props import plot_chapman_jouguet
 from examples.solvers import plot_old_new
 from examples.const_cs import plot_const_cs_xi_v
+from pttools.analysis.plotly import plotly_fix
 
 logger = logging.getLogger(__name__)
 
@@ -25,11 +26,13 @@ class ExampleTest(unittest.TestCase):
         plt.close(fig)
 
     @staticmethod
+    @plotly_fix
     def test_plot_const_cs_xi_v_w():
         import examples.const_cs.plot_const_cs_xi_v_w as script
         script.plot.fig()
 
     @staticmethod
+    @plotly_fix
     def test_plot_delta_theta():
         from examples.props import plot_delta_theta
         plot_delta_theta.plot.fig()
