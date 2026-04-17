@@ -243,6 +243,7 @@ def ubarf2(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float,
         If not given, it's computed from the other arguments.
     :return: Enthalpy-weighted mean square fluid 4-velocity around the bubble $\bar{U}_f^2$
     """
+    # Todo: Does this presume wbar in addition to wn, or only wn?
     if ek_bva is None:
         ek_bva = kinetic_energy_density(v, w, xi, v_wall)
     return ek_bva / w[-1]

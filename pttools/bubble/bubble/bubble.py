@@ -568,7 +568,9 @@ class Bubble(BaseBubble):
 
     @functools.cached_property
     def ubarf(self) -> float:
-        r"""Enthalpy-weighted RMS fluid velocity $\bar{U}_\text{f}$"""
+        r"""Enthalpy-weighted RMS fluid velocity $\bar{U}_\text{f}$
+        In some sources such as :giombi_2024_cs:`\ `, this is denoted as $v_\text{rms}$.
+        """
         return np.sqrt(self.ubarf2)
 
     @functools.cached_property

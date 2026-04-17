@@ -75,7 +75,7 @@ def _spec_den_gw_scaled_core(
         cs: float,
         Gamma: float,
         source_lifetime_factor: float,
-        nz_int: int) -> tuple[th.FloatArr1D, th.FloatArr1D]:
+        nz_int: int | None = None) -> tuple[th.FloatArr1D, th.FloatArr1D]:
     r""":gw_pt_ssm:`\ ` eq. 3.47 and 3.48
     The variable naming corresponds to the article.
     """

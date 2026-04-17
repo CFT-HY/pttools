@@ -78,7 +78,8 @@ def sin_transform(
         v_sh: float | None = None,
         parallel: bool = True) -> th.FloatOrArrNumba:
     r"""
-    sin transform of $f(\xi)$, Fourier transform variable z.
+    Sine transform $\hat{f}(z)$ of $f(\xi)$
+
     For z > z_st_thresh, use approximation rather than doing the integral.
     Interpolate between  z_st_thresh - dz_blend < z < z_st_thresh.
 
@@ -86,6 +87,8 @@ def sin_transform(
     $$\hat{f}(z) =  f(\xi) \int_{{\xi}_\text{min}}^{{\xi}_\text{max}} \sin(z \xi) d\xi$$.
 
     Used in :gw_pt_ssm:`\ ` eq. 4.5, 4.8
+
+    Todo: It may be computationally more efficient to re-sample the points to a uniform grid and then use FFT.
 
     :param z: Fourier transform variable (any shape)
     :param xi: $\xi$ points over which to integrate

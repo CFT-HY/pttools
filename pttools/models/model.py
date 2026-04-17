@@ -79,7 +79,8 @@ class Model(BaseModel, abc.ABC):
             # if V_s == V_b:
             #     logger.warning("The bubble will not expand, when V_s <= V_b. Got: V_b = V_s = %s.", V_s)
 
-        self.temperature_is_physical = self.TEMPERATURE_IS_PHYSICAL if temperature_is_physical is None else temperature_is_physical
+        self.temperature_is_physical = self.TEMPERATURE_IS_PHYSICAL \
+            if temperature_is_physical is None else temperature_is_physical
         if self.temperature_is_physical is None:
             raise ValueError(
                 "It has not been specified whether the temperature scale for the model is physical. "
@@ -769,9 +770,9 @@ class Model(BaseModel, abc.ABC):
         return self.ge_temp(temp, phase)
 
     def nu_gdh2024(self, w: th.FloatOrArr, phase: th.FloatOrArr = Phase.BROKEN) -> th.FloatOrArr:
-        r"""$$\nu = \frac{1 - 3\omega}{1 + 3\omega}$$,
+        r"""$$\nu_\text{gdh2024} = \frac{1 - 3\omega}{1 + 3\omega}$$,
         where $\omega$ is the barotropic equation of state parameter.
-        :giombi_2024_cs:`\ ` eq. 2.11
+        :giombi_2024_cs:`\ ` eq. 2.11, 2.41
         """
         omega = self.omega(w, phase)
         return (1 - 3*omega)/(1 + 3*omega)
@@ -780,6 +781,8 @@ class Model(BaseModel, abc.ABC):
         r"""Barotropic equation of state parameter $\omega$
         $$\omega(T,\phi) = \frac{p(T,\phi)}{e(T,\phi)}$$
         :giombi_2024_cs:`\ ` p. 3
+        In some sources this is known as the equation-of-state parameter for short, and denoted as $w$.
+
         """
         temp = self.temp(w, phase)
         return self.p_temp(temp, phase) / self.e_temp(temp, phase)
