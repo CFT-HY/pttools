@@ -66,7 +66,9 @@ def alpha_n_from_ubarf_solvable(
 def chapman_jouguet_approx[T: FloatOrArr](alpha_n: T) -> T:
     r"""Approximation for the Chapman-Jouguet velocity $v_{CJ}$, aka. $\xi_J$
 
-    $$v_{CJ} \approx \frac{\sqrt{\frac{2}{3} \alpha_n + \alpha_n^2} + \sqrt{\frac{1}{3}}{1 + \alpha_n}$$
+    $$v_{CJ} \approx \frac{
+    \sqrt{\frac{2}{3} \alpha_n + \alpha_n^2} + \sqrt{\frac{1}{3}}
+    }{1 + \alpha_n}$$
     :espinosa_2010:`\ `, eq. 97
     """
     return (np.sqrt(2/3 * alpha_n + alpha_n**2) + np.sqrt(1/3)) / (1 + alpha_n)
@@ -235,7 +237,7 @@ def kinetic_energy_fraction_approx[T: FloatOrArr](
         alpha_n: T,
         cs: float = CS0,
         v_cj: float | None = None) -> T:
-    """Approximation for the kinetic energy fraction $K$
+    r"""Approximation for the kinetic energy fraction $K$
 
     :notes:`\ ` eq. 7.43 with $\delta_n = 0$ as is the case for the bag model
     """
