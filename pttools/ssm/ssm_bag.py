@@ -187,7 +187,7 @@ def a2_ssm_func_bag(
     else:
         with numba.objmode:
             logger.warning("Method not known, should be [e_conserving | f_only | with_g]. Defaulting to e_conserving.")
-        A2 = a2_e_conserving_bag(z, v_wall, alpha, npt=npt, parallel=parallel)[0]
+        A2 = a2_e_conserving_bag(z, v_wall, alpha, npt=npt, lambda_correction=lambda_correction, parallel=parallel)[0]
 
     return A2
 

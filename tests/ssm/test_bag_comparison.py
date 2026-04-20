@@ -26,6 +26,11 @@ class SpectrumTest(unittest.TestCase):
             for i in range(cls.V_WALLS.size)
         ]
         cls.spectra = [SSMSpectrum(bubble) for bubble in cls.bubbles]
+        cls.spectra_lambda = []
+        for bubble in cls.bubbles:
+            spectrum = SSMSpectrum(bubble, compute=False)
+            spectrum.compute(lambda_correction=True)
+            cls.spectra_lambda.append(spectrum)
         cls.z = cls.spectra[0].y
 
     def test_de(self):
@@ -62,19 +67,33 @@ class SpectrumTest(unittest.TestCase):
         # assert_allclose(a2_new2, a2_old)
 
     def test_spec_den_v(self):
+        """This test has lambda_correction=True,
+        as disabling it would require a somewhat looser tolerance for some of the points.
+        """
         old = np.array([
-            ssm.spec_den_v_bag(self.z, (self.V_WALLS[i], self.ALPHA_NS[i]))
+            ssm.spec_den_v_bag(
+                self.z,
+                (self.V_WALLS[i], self.ALPHA_NS[i]),
+                lambda_correction=True
+            )
             for i in range(self.V_WALLS.size)
         ])
-        new = np.array([spectrum.spec_den_v for spectrum in self.spectra])
+        new = np.array([spectrum.spec_den_v for spectrum in self.spectra_lambda])
         assert_allclose(new, old, rtol=0.283)
 
     def test_gw(self):
+        """This test has lambda_correction=True,
+        as disabling it would require a somewhat looser tolerance for some of the points.
+        """
         old = np.array([
-            ssm.power_gw_scaled_bag(self.z, (self.V_WALLS[i], self.ALPHA_NS[i]))
+            ssm.power_gw_scaled_bag(
+                self.z,
+                (self.V_WALLS[i], self.ALPHA_NS[i]),
+                lambda_correction=True
+            )
             for i in range(self.V_WALLS.size)
         ])
-        new = np.array([spectrum.pow_gw for spectrum in self.spectra])
+        new = np.array([spectrum.pow_gw_ssm for spectrum in self.spectra_lambda])
         assert_allclose(new, old, rtol=0.519)
 
 
