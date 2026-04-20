@@ -33,7 +33,7 @@ class SSMSpectrum:
             y: th.FloatArr1D | None = None,
             z_st_thresh: float = const.Z_ST_THRESH,
             nuc_type: NucType = DEFAULT_NUC_TYPE,
-            nt: int = const.DEFAULT_N_T,
+            nT: int = const.DEFAULT_N_T,
             n_z_lookup: int = const.DEFAULT_N_Z_LOOKUP,
             r_star: float | None = None,
             # eta_star: float = 1,
@@ -69,7 +69,7 @@ class SSMSpectrum:
         # self.method = method
         self.nuc_type = nuc_type
         self.z_st_thresh = z_st_thresh
-        self.nt = nt
+        self.nT = nT
         self.n_z_lookup = n_z_lookup
         self.r_star = r_star
         # Todo: Make this an adjustable input parameter
@@ -152,7 +152,6 @@ class SSMSpectrum:
             v_sh=self.bubble.v_sh,
             lifetime_distribution_a=lifetime_distribution_a,
             nuc_type=self.nuc_type,
-            nt=self.nt,
             n_z_lookup=self.n_z_lookup,
             eps_lookup=eps_lookup,
             z_st_thresh=self.z_st_thresh,
@@ -160,7 +159,8 @@ class SSMSpectrum:
             # This requires r_star to be known.
             source_lifetime_factor=self.source_lifetime_factor,
             lambda_correction=lambda_correction,
-            parallel=parallel
+            parallel=parallel,
+            nT=self.nT
         )
         self.pow_gw = self.pow_gw_ssm
 
@@ -298,9 +298,9 @@ def compute(
         v_sh: float,
         lifetime_distribution_a: float,
         nuc_type: NucType,
-        nt: int,
         n_z_lookup: int,
         eps_lookup: float,
+        nT: int,
         z_st_thresh: float,
         cs: float,
         source_lifetime_factor: float,
