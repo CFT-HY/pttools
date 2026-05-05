@@ -28,6 +28,14 @@ PTtools is also [available on Docker Hub](https://hub.docker.com/r/cfthy/pttools
 docker pull cfthy/pttools:main
 ```
 
+If you are a member of the
+Laser Interferometer Space Antenna (LISA)
+Software Ground Segment (SGS)
+or Distributed Data Processing Centre (DDPC),
+you may also use PTtools with the
+[LISA ProtoLab](https://gitlab.esa.int/lisa-sgs/sys/protolab).
+
+
 ### Documentation
 The documentation is available online at [Read the Docs](https://pttools.readthedocs.io/).
 The documentation for previous releases can be found at the
