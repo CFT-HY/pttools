@@ -42,9 +42,8 @@ def plot_spectra_common(
         )
     ax.set_yscale("log")
     ax.grid()
-    ax.legend(fontsize=7)
     if len(spectra) > 1:
-        legend(ax, loc="lower left")
+        ax.legend(fontsize=7, loc="lower left")
     if path is not None:
         fig.savefig(path)
     return fig, ax
@@ -58,6 +57,7 @@ def plot_spectra_multi(
     """Plot multiple types of spectra"""
     fig, axs = plot_spectra_multi_common(spectra, fig, figsize=(7, 5), nrows=2, ncols=2, **kwargs)
 
+    # Arrows between the sub-figures
     arrowprops = {"width": 7}
     x_left = 0.48
     x_right = 0.54
