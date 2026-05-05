@@ -94,7 +94,11 @@ class FluidReference:
             alpha_n_min: float, alpha_n_max: float,
             n_v_wall: int, n_alpha_n: int):
         """Create a fluid reference for the given range"""
-        logger.info("Generating fluid reference")
+        msg = "Generating reference data for the fluid solver. This may take several minutes."
+        logger.info(msg)
+        # This should also be printed so that first-time users know why the first startup can take a long time.
+        print(msg)
+
         start_time = time.perf_counter()
         if os.path.exists(self.path):
             os.remove(self.path)
