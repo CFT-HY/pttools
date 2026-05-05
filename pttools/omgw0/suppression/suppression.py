@@ -99,16 +99,17 @@ class Suppression:
                         self.v_wall_min, self.v_wall_max,
                         self.alpha_n_min, self.alpha_n_max
                     )
-        else:
-            if method == SuppressionMethod.EXT_CONSTANT:
-                nans = np.isnan(sup)
-                if np.any(nans):
-                    sup[nans] = interpolate.griddata(
-                        self.points,
-                        self.suppressions,
-                        mesh[nans],
-                        method="nearest"
-                    )
+            return sup.item()
+
+        if method == SuppressionMethod.EXT_CONSTANT:
+            nans = np.isnan(sup)
+            if np.any(nans):
+                sup[nans] = interpolate.griddata(
+                    self.points,
+                    self.suppressions,
+                    mesh[nans],
+                    method="nearest"
+                )
         return sup
 
 
