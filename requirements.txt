@@ -5,7 +5,7 @@
 
 # h5py does not yet support free-threading.
 # https://github.com/h5py/h5py/issues/2475
-h5py == 3.15.1
+h5py == 3.16.0
 # Intel SVML for Numba
 # https://pypi.org/project/icc-rt/
 # https://pypi.org/project/intel-cmplr-lib-rt/
@@ -13,28 +13,28 @@ h5py == 3.15.1
 # As of 2026-03, this is the latest version with support for macOS.
 icc-rt >= 2019.0; platform_machine != "arm64" and sys_platform == "darwin"
 # This replaces icc-rt for Windows and Linux.
-intel-cmplr-lib-rt >= 2025.3.3; platform_machine != "arm64" and sys_platform != "darwin"
+intel-cmplr-lib-rt >= 2026.0.0; platform_machine != "arm64" and sys_platform != "darwin"
 # As of 2026-03, this is the latest version with support for macOS.
-intel-openmp >= 2023.2.0; platform_machine != "arm64" and sys_platform == "darwin"
+intel-openmp >= 2026.0.0; platform_machine != "arm64" and sys_platform == "darwin"
 # For Plotly image export
-kaleido == 1.2.0
+kaleido == 1.3.0
 # Matplotlib 3.9.1 wheels are broken
 # https://pypi.org/project/matplotlib/3.9.1/
-matplotlib == 3.10.8
+matplotlib == 3.10.9
 # Numba 0.55 breaks the unit tests
 # https://github.com/numba/numba/issues/7751
 # Numba does not yet support free-threading.
 # https://github.com/numba/numba/issues/9928
-numba == 0.64.0
+numba == 0.65.1
 # NumbaLSODA does not work yet on the GitHub Actions Windows runners
 numbalsoda == 0.3.4; sys_platform != "win32"
 # If you're using an old version of Numba and get the error:
 # "create_target_machine() got an unexpected keyword argument 'jitdebug'"
 # then you may have to downgrade llvmlite to 0.32.1
 # https://github.com/rapidsai/cuml/issues/2389#issuecomment-642645437
-numpy == 2.4.2
-orjson == 3.11.7  # Orjson does not yet support free-threading.
-plotly == 6.6.0
+numpy == 2.4.4
+orjson == 3.11.9  # Orjson does not yet support free-threading.
+plotly == 6.7.0
 scipy == 1.17.1
 # TBB can be used to speed up Numba threading
 # https://pypi.org/project/tbb/
