@@ -1,7 +1,5 @@
 r"""Factors used in calculating $\Omega_{\text{gw},0}$"""
 
-import numpy as np
-
 from pttools.omgw0 import const
 import pttools.type_hints as th
 
@@ -33,18 +31,5 @@ def F_gw0(
     :return: Power attenuation factor $F_{\text{gw},0}$
     """
     if g0 is None or gs0 is None or gs_star is None or om_gamma0 is None:
-        return 3.57e-5 * (100 / g_star)**(1/3)
+        return const.F_GW0 * (100 / g_star)**(1/3)
     return om_gamma0 * (gs0 / gs_star)**(4/3) * g_star / g0
-
-
-def J(r_star: th.FloatOrArr, K: th.FloatOrArr, nu: th.FloatOrArr = 0.) -> th.FloatOrArr:
-    r"""
-    Pre-factor to convert power_gw_scaled to predicted spectrum
-    approximation of $(H_n {R}_\ast)(H_n \tau_v)$
-    updating to properly convert from flow time to source time
-
-    $$J = H_n {R}_\ast H_n \tau_v = {r}_\ast \left(1 - \frac{1}{\sqrt{1 + 2x}} \right)$$
-    :gowling_2021:`\ ` eq. 2.8
-    """
-    # Todo: Unify the sqrt and exponent
-    return r_star * (1 - (np.sqrt(1 + 2 * r_star / np.sqrt(K)) ** (-1 - 2 * nu)))

@@ -1,11 +1,13 @@
 """Unit tests for the properties of a bubble"""
 
+import os.path
 import unittest
 
 import numpy as np
 
 from pttools.bubble import DEFAULT_N_XI, Bubble
 from pttools.models.bag import BagModel
+from tests.utils import TEST_JSON_PATH
 
 
 class BubbleTest(unittest.TestCase):
@@ -18,6 +20,9 @@ class BubbleTest(unittest.TestCase):
     def test_ebar(self):
         ebar = self.bubble.ebar
         self.assertGreater(ebar, 0)
+
+    def test_export(self):
+        self.bubble.export(os.path.join(TEST_JSON_PATH, "bubble.json"))
 
     def test_kappa(self):
         kappa = self.bubble.kappa

@@ -228,9 +228,9 @@ def plot_ps(
         pow_list,
         ps_type: utils.PSType,
         ax_limits: utils.Strength = utils.Strength.WEAK,
-        leg_list=None,
-        col_list=None,
-        ls_list=None,
+        leg_list: list[str] | None = None,
+        col_list: list[str] | None = None,
+        ls_list: list[str] | None = None,
         fig: plt.Figure | None = None,
         pretty: bool = False) -> plt.Figure:
     """
@@ -239,7 +239,6 @@ def plot_ps(
     """
     if col_list is None:
         col_list = ['b'] * len(z_list)
-
     if ls_list is None:
         ls_list = ['-'] * len(z_list)
 

@@ -4,7 +4,8 @@ Based on :giombi_2024_cs:`\ `
 """
 
 from .analytical import *
+from .const import *
 from .integration import *
 from .intersection import *
 from .join import *
-from .utils import *
+from .kernel import *

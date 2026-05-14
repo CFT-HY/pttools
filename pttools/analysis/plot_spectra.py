@@ -14,10 +14,10 @@ from pttools.omgw0 import Spectrum, omega_noise
 import pttools.type_hints as th
 
 F_LABEL = r"$f$ (Hz)"
-SPEC_DEN_V_LABEL = r"$\mathcal{P}_{v}(kR_*)$"
-SPEC_DEN_GW_LABEL = r"$\mathcal{P}_{gw}(kR_*)$"
-POW_V_LABEL = r"$\mathcal{P}_{\tilde{v}}(kR_*)$"
-POW_GW_LABEL = r"$\mathcal{P}_{\tilde{gw}}(kR_*)$"
+SPEC_DEN_V_TILDE_LABEL = r"$\tilde{P}_{\tilde{v}}(kR_*)$"
+SPEC_DEN_GW_LABEL = r"$\mathcal{P}_\text{gw}(kR_*)$"
+POW_V_TILDE_LABEL = r"$\tilde{\mathcal{P}}_{\tilde{v}}(kR_*)$"
+POW_GW_LABEL = r"$\mathcal{P}_\text{gw}(kR_*)$"
 OMGW0_LABEL = r"$\Omega_{gw,0}$"
 Z_LABEL = r"$z = kR_*$"
 
@@ -171,11 +171,11 @@ def plot_spectra_v(
         fig: Figure | None = None,
         path: str | None = None,
         **kwargs) -> FigAndAxes:
-    f"""Plot the velocity power spectra {POW_V_LABEL}"""
+    f"""Plot the velocity power spectra {POW_V_TILDE_LABEL}"""
     fig, ax = create_fig_ax(fig, ax)
     for spectrum in spectra:
-        ax.plot(spectrum.y, spectrum.pow_v, label=spectrum.label_latex, **kwargs)
-    ax.set_ylabel(POW_V_LABEL)
+        ax.plot(spectrum.y, spectrum.pow_v_tilde, label=spectrum.label_latex, **kwargs)
+    ax.set_ylabel(POW_V_TILDE_LABEL)
     return plot_spectra_common(spectra, fig, ax, path)
 
 
@@ -199,9 +199,9 @@ def plot_spectra_spec_den_v(
         fig: Figure | None = None,
         path: str | None = None,
         **kwargs) -> FigAndAxes:
-    f"""Plot the velocity spectral densities {SPEC_DEN_V_LABEL}"""
+    f"""Plot the velocity spectral densities {SPEC_DEN_V_TILDE_LABEL}"""
     fig, ax = create_fig_ax(fig, ax)
     for spectrum in spectra:
-        ax.plot(spectrum.y, spectrum.spec_den_v, label=spectrum.label_latex, **kwargs)
-    ax.set_ylabel(SPEC_DEN_V_LABEL)
+        ax.plot(spectrum.y, spectrum.spec_den_v_tilde, label=spectrum.label_latex, **kwargs)
+    ax.set_ylabel(SPEC_DEN_V_TILDE_LABEL)
     return plot_spectra_common(spectra, fig, ax, path)

@@ -10,6 +10,8 @@ import typing as tp
 DEFAULT_ADIABATIC_RATIO: float = 4 / 3
 #: Default number of entries in $\xi$ array
 DEFAULT_N_XI: int = 5000
+#: $\nu_\text{gdh2024}$ of :giombi_2024_cs:`\ ` eq. 2.11 for the bag model
+DEFAULT_NU_GDH2024: float = 0.
 #: Integration limit for the parametric form of the fluid equations
 DEFAULT_T_END: float = 50.
 

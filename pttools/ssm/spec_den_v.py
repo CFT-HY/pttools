@@ -7,7 +7,7 @@ import numpy as np
 
 from pttools import speedup
 from pttools.ssm import const, ssm
-from pttools.ssm.nucleation import NucType, nu
+from pttools.ssm.nucleation import NucType, beta_R_star0, nu
 import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ def qT_from_z(
         z: th.FloatOrArr,
         T_tilde: th.FloatOrArr,
         beta_R: th.FloatOrArr) -> th.FloatOrArr:
-    """
+    r"""$qT$
     $$qT = \frac{z \tilde{T}}{\beta R_*} = \frac{\tilde{T}q}{\beta}$$
     where $z = q L_f = q R_*$
     """
@@ -27,15 +27,17 @@ def qT_from_z(
 
 @numba.njit
 def _spec_den_v_core_loop(
-        z_i: float,
-        T_tilde: th.FloatArr1D,
-        beta_R: float,
-        qT_lookup: th.FloatArr1D,
+        # Arrays
         A2_lookup: th.FloatArr1D,
-        nuc_type: NucType,
+        qT_lookup: th.FloatArr1D,
+        T_tilde: th.FloatArr1D,
+        # Scalars
         a: float,
-        factor: float) -> float:
-    """P_{\tilde{v}}(z) for an individual z"""
+        beta_R: float,
+        factor: float,
+        nuc_type: NucType,
+        z_i: float) -> float:
+    """spec_den_v for an individual z"""
     # The argument of A(qT)
     qT = qT_from_z(z_i, T_tilde, beta_R)
     # |A(qT)|^2
@@ -47,32 +49,36 @@ def _spec_den_v_core_loop(
 
 
 def _spec_den_v_core(
-        a: float,
+        # Arrays
         A2_lookup: th.FloatArr1D,
+        qT_lookup: th.FloatArr1D,
+        z: th.FloatArr1D,
+        # Scalars
+        a: float,
+        bubble_spacing_enlargement_factor: float,
         log10_T_tilde_min: float,
         log10_T_tilde_max: float,
-        nuc_type: NucType,
         nT: int,
-        qT_lookup: th.FloatArr1D,
-        v_wall: float,
-        z: th.FloatArr1D):
+        nuc_type: NucType,
+        ubarf2: float,
+        v_wall: float) -> th.FloatArr1D:
     """Parallel core of spec_den_v"""
+    # $\beta R_*$ = beta, but without dividing by R_* in its equation
+    # The choice of beta is somewhat arbitrary.
+    # It has been chosen to correspond to the nucleation rate (beta), and is therefore called beta as well.
+    # However, please note that R_* must correspond to the value used elsewhere.
+    # Todo: The power of the bubble spacing enlargement factor needs to be looked into.
+    # The power of 3 coming from the internal beta_R may be scaled away, leaving only a power of 3.
+    beta_R = beta_R_star0(v_wall) / bubble_spacing_enlargement_factor
+    factor = 1. / (ubarf2 * beta_R ** 6)
+
     T_tilde = speedup.logspace(log10_T_tilde_min, log10_T_tilde_max, nT)
-    # $\beta R_*$ = beta without dividing by R_*
-    # The choice of this function is somewhat arbitrary,
-    # and it just happens to be the same as beta in general (and is therefore called with the same name).
-    beta_R = (8. * np.pi) ** (1. / 3.) * v_wall
 
-    # Spectral density of v
     sd_v = np.empty_like(z)
-    # The 2 comes from the fact that the spectral density of v is 2 * P_v
-    factor = 2 / (beta_R ** 6)
-
     for i in numba.prange(z.size):  # pylint: disable=not-an-iterable
         sd_v[i] = _spec_den_v_core_loop(
-            z_i=z[i], T_tilde=T_tilde, beta_R=beta_R,
-            qT_lookup=qT_lookup, A2_lookup=A2_lookup,
-            nuc_type=nuc_type, a=a, factor=factor
+            A2_lookup=A2_lookup, qT_lookup=qT_lookup, T_tilde=T_tilde,
+            a=a, beta_R=beta_R, factor=factor, nuc_type=nuc_type, z_i=z[i]
         )
     return sd_v
 
@@ -82,30 +88,49 @@ spec_den_v_core_single = numba.njit(parallel=False, nogil=True)(_spec_den_v_core
 
 @numba.njit(nogil=True)
 def spec_den_v(
+        # Arrays
         v: th.FloatArr1D,
         w: th.FloatArr1D,
         xi: th.FloatArr1D,
         e: th.FloatArr1D,
         z: th.FloatArr1D,
-        v_wall: float,
-        v_sh: float,
+        # Scalars and other inputs
         a: float,
+        cs: float,
         nuc_type: NucType,
+        ubarf2: float,
+        v_sh: float,
+        v_wall: float,
+        bubble_spacing_enlargement_factor: float = 1.,
+        # Settings
         nT: int = const.DEFAULT_N_T,
         z_st_thresh: float = const.Z_ST_THRESH,
         T_tilde_min: float = const.T_TILDE_MIN,
         T_tilde_max: float = const.T_TILDE_MAX,
-        cs: float | None = None,
         parallel: bool = True,
-        lambda_correction: bool = False):
-    r"""The full spectral density of the velocity field
+        lambda_correction: bool = False) -> tuple[th.FloatArr1D, th.FloatArr1D]:
+    r"""Spectral density of the velocity field $\tilde{P}_v$
 
-    This is twice the spectral density of the plane wave components of the velocity field, and therefore given by
-    $$P_{\tilde{v}}
-    = 2 * P_v(q)
-    = 2 \frac{1}{\beta^6 R_*^3} \int d\tilde{T} \nu(\tilde{T}) \tilde{T}^6
+    $$\tilde{P}_v(q)
+    = \frac{1}{\bar{U}_f^2 R_*^3} P_v(q)
+    = \frac{1}{\bar{U}_f^2 (\beta R_*)^6} \int d\tilde{T} \nu(\tilde{T}) \tilde{T}^6
+    \left| A \left( \frac{\tilde{T}q}{\beta} \right) \right|^2
+    = \frac{\Lambda_\text{nucl}^6}{\bar{U}_f^2 (\beta R_{*,0})^6} \int d\tilde{T} \nu(\tilde{T}) \tilde{T}^6
+    \left| A \left( \frac{\tilde{T}q}{\beta} \right) \right|^2$$
+
+    Please note that
+    $$P_v(q) = L_f^3 \bar{U}_f^2 \tilde{P}_v(qL_f)$$
+    :gw_pt_ssm:`\ ` eq. 3.43
+    and therefore
+    $$\tilde{P}_v = \frac{P_v}{L_f^3 \bar{U}_f^2}$$
+
+    $$P_v(q) = \frac{1}{\beta^6 R_*^3} \int d\tilde{T}
+    \nu(\tilde{T}) \tilde{T}^6
     \left| A \left( \frac{\tilde{T}q}{\beta} \right) \right|^2$$
     :gw_pt_ssm:`\ ` eq. 4.17
+
+    $$\Lambda_\text{nucl} \equiv \frac{R_*}{R_{*,0}}$$
+    :ajmi_2022:`\ ` eq. 77
 
     :param v: velocity profile $v$
     :param w: enthalpy profile $w$
@@ -123,7 +148,7 @@ def spec_den_v(
     :param cs: speed of sound $c_s$
     :param parallel: whether to compute the result for each $z$ in parallel
     :param lambda_correction: whether to enable a non-linear correction for $\lambda$
-    :return: $P_{\tilde{v}} = 2 * P_v(q)$
+    :return: $\tilde{P}_\tilde{v}$
     """
     # z limits
     log10_z_min = np.log10(np.min(z))
@@ -134,6 +159,7 @@ def spec_den_v(
     log10_T_max = np.log10(T_tilde_max)
 
     # try:
+    # Todo: Check whether this could be replaced by logspace
     qT_lookup = 10 ** np.arange(
         log10_z_min + log10_T_min,
         log10_z_max + log10_T_max,
@@ -155,26 +181,30 @@ def spec_den_v(
 
     if parallel:
         ret = spec_den_v_core(
-            a=a,
             A2_lookup=A2_lookup,
+            qT_lookup=qT_lookup,
+            z=z,
+            a=a,
+            bubble_spacing_enlargement_factor=bubble_spacing_enlargement_factor,
             log10_T_tilde_min=log10_T_min,
             log10_T_tilde_max=log10_T_max,
             nT=nT,
             nuc_type=nuc_type,
-            qT_lookup=qT_lookup,
-            v_wall=v_wall,
-            z=z
+            ubarf2=ubarf2,
+            v_wall=v_wall
         )
     else:
         ret = spec_den_v_core_single(
-            a=a,
             A2_lookup=A2_lookup,
+            qT_lookup=qT_lookup,
+            z=z,
+            a=a,
+            bubble_spacing_enlargement_factor=bubble_spacing_enlargement_factor,
             log10_T_tilde_min=log10_T_min,
             log10_T_tilde_max=log10_T_max,
             nT=nT,
             nuc_type=nuc_type,
-            qT_lookup=qT_lookup,
-            v_wall=v_wall,
-            z=z
+            ubarf2=ubarf2,
+            v_wall=v_wall
         )
     return ret, A2_lookup

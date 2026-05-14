@@ -1,5 +1,6 @@
 """Tests for the Spectrum class"""
 
+import os.path
 import unittest
 
 import numpy as np
@@ -7,6 +8,7 @@ import numpy as np
 from pttools.bubble import Bubble
 from pttools.models import ConstCSModel
 from pttools.omgw0 import Spectrum
+from tests.utils import TEST_JSON_PATH
 
 
 class SpectrumTest(unittest.TestCase):
@@ -17,17 +19,28 @@ class SpectrumTest(unittest.TestCase):
         bubble = Bubble(model, v_wall=0.5, alpha_n=0.2)
         cls.spectrum = Spectrum(bubble, r_star=0.1)
 
+    def test_export(self):
+        self.spectrum.export(os.path.join(TEST_JSON_PATH, "spectrum.json"))
+
     def test_noise(self):
-        self.spectrum.signal_to_noise_ratio()
+        self.assertGreater(self.spectrum.signal_to_noise_ratio(), 0)
 
     def test_noise_instrument(self):
-        self.spectrum.signal_to_noise_ratio_instrument()
+        self.assertGreater(self.spectrum.signal_to_noise_ratio_instrument(), 0)
 
     def test_peak(self):
-        self.spectrum.omgw0_peak()
+        peak = self.spectrum.omgw0_peak()
+        self.assertGreater(peak[0], 0)
+        self.assertGreater(peak[1], 0)
+        self.assertLess(peak[1], 1)
 
     def test_R_star(self):
-        self.spectrum.R_star()
+        """Test that $0 < R_* < 1 \text{mm}$"""
+        self.assertGreater(self.spectrum.R_star, 0)
+        self.assertLess(self.spectrum.R_star, 1e-3)
+
+    def test_spectrum(self):
+        self.assertEqual(np.isnan(self.spectrum.omgw0()).sum(), 0)
 
     def test_total(self):
         val = self.spectrum.omgw0_total()

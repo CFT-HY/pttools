@@ -16,7 +16,7 @@ from pttools.bubble import fluid_bag
 from pttools.bubble.junction import junction_conditions_solvable
 from pttools.bubble import relativity
 from pttools.models import BagModel, Model
-from pttools.ssm import SSMSpectrum, power_gw_scaled_bag, spec_den_v_bag, power_v_bag
+from pttools.ssm import SSMSpectrum, power_gw_bag, spec_den_v_bag, power_v_bag
 import pttools.type_hints as th
 from tests.paper.plane import xiv_plane
 from tests.paper.plot_plane_paper import plot_plane
@@ -114,7 +114,7 @@ def main():
         pow_v = power_v_bag(z, (v_wall, alpha_n))
         ax3.plot(z, pow_v, label=label)
 
-        gw = power_gw_scaled_bag(z, (v_wall, alpha_n))
+        gw = power_gw_bag(z, (v_wall, alpha_n))
         ax4.plot(z, gw, label=label)
 
     print("Plotting new bubbles")

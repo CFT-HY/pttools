@@ -108,13 +108,13 @@ def generate_ps(
         pow_v2 = ssm.pow_spec(z, sd_v2)
         V2_pow_v = np.trapezoid(pow_v2/z, z)
 
-    sd_gw, y = ssm.spec_den_gw_scaled(z, sd_v)
+    sd_gw, y = ssm.spec_den_gw(z, sd_v)
     pow_gw = ssm.pow_spec(y, sd_gw)
     gw_power = np.trapezoid(pow_gw/y, y)
 
     if v_xi_file is not None:
         # TODO: This could be reordered to avoid the warning about the undefined variable
-        sd_gw2, y = ssm.spec_den_gw_scaled(z, sd_v2)
+        sd_gw2, y = ssm.spec_den_gw(z, sd_v2)
         pow_gw2 = ssm.pow_spec(y, sd_gw2)
         gw_power = np.trapezoid(pow_gw2/y, y)
 

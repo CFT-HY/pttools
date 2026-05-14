@@ -15,7 +15,7 @@ ALPHA_WEAK: float = 0.0046
 #: Intermediate transition strength
 ALPHA_INTER: float = 0.050
 #: Transition strengths to plot with
-ALPHA_LIST_ALL: list[float] = [ALPHA_WEAK, ALPHA_INTER]
+ALPHA_LIST_ALL: th.FloatArr1D = np.array([ALPHA_WEAK, ALPHA_INTER])
 
 #: Colours for comparison plots
 COLOURS = ("b", "r", "g")

@@ -19,11 +19,16 @@ from scipy.optimize import curve_fit
 from pttools import bubble
 from pttools import ssm
 import pttools.type_hints as th
+from pttools.ssm import GAMMA
 from tests.paper import const
 from tests.paper import plotting
 from tests.paper import utils
 import tests.paper.tex_utils as tu
 from tests.utils.const import TEST_DATA_PATH
+
+type FitParsCWG = tuple[float, float]
+type FitParsSSM = tuple[float, float, float]
+type ListListFloatArr1D = list[list[th.FloatArr1D]]
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +40,7 @@ MD_PATH = TEST_DATA_PATH + "/"
 # All run parameters
 
 #: Wall velocities for intermediate transition strength
-VW_INTER_LIST = [0.92, 0.80, 0.731, 0.56, 0.44]
+VW_INTER_LIST: th.FloatArr1D = np.array([0.92, 0.80, 0.731, 0.56, 0.44])
 
 # NB1 prace runs did not include intermediate 0.80, 0.44.
 # NB2 prace runs had high-T approximation to effective potential, not bag.
@@ -93,7 +98,7 @@ VW_LIST_ALL = [const.VW_WEAK_LIST, VW_INTER_LIST]
 
 @numba.njit
 def cwg_fitfun(k, p0, p1):
-    return p0 * np.power(k/p1, 3.0)*np.power(7.0/(4.0 + 3.0*np.power(k/p1, 2.0)), 7.0/2.0)
+    return p0 * np.power(k/p1, 3.0) * np.power(7.0 / (4.0 + 3.0 * np.power(k / p1, 2.0)), 7.0 / 2.0)
 
 
 @numba.njit
@@ -112,21 +117,23 @@ def ssm_fitfun(z, A, z0, z1):
     return double_broken_power_law(z, A, z0, z1, 9, 1, -4)
 
 
-def get_cwg_fit_pars(y: th.FloatArr1D, pow_gw: th.FloatArr1D):
+def get_cwg_fit_pars(y: th.FloatArr1D, pow_gw: th.FloatArr1D) -> FitParsCWG:
     frange = np.where(y > 10)
-    pars0 = (pow_gw[frange][0], 10)
-    pars, _ = curve_fit(cwg_fitfun, y[frange], pow_gw[frange], pars0)
+    pars, _ = curve_fit(cwg_fitfun, y[frange], pow_gw[frange], p0=(pow_gw[frange][0], 10))
     return pars[0], pars[1]
 
 
-def get_ssm_fit_pars(y: th.FloatArr1D, pow_gw: th.FloatArr1D):
+def get_ssm_fit_pars(y: th.FloatArr1D, pow_gw: th.FloatArr1D) -> FitParsSSM:
     frange = np.where(y > 1e-8)
-    pars0 = (pow_gw[frange][0], 3, 20)
-    pars, _ = curve_fit(ssm_fitfun, y[frange], pow_gw[frange], pars0, sigma=np.sqrt(pow_gw[frange]))
+    pars, _ = curve_fit(
+        ssm_fitfun, y[frange], pow_gw[frange],
+        p0=(pow_gw[frange][0], 3, 20),
+        sigma=np.sqrt(pow_gw[frange])
+    )
     return pars
 
 
-def add_cwg_fit(f_gw: plt.Figure, y: th.FloatArr1D, pow_gw: th.FloatArr1D):
+def add_cwg_fit(f_gw: plt.Figure, y: th.FloatArr1D, pow_gw: th.FloatArr1D) -> FitParsCWG:
     p = get_cwg_fit_pars(y, pow_gw)
     pow_gw_sim_cwg = cwg_fitfun(y, p[0], p[1])
     f_gw.axes[0].loglog(y, pow_gw_sim_cwg, 'k-.', label='CWG fit')
@@ -134,7 +141,7 @@ def add_cwg_fit(f_gw: plt.Figure, y: th.FloatArr1D, pow_gw: th.FloatArr1D):
     return p
 
 
-def add_ssm_fit(f_gw: plt.Figure, y, pow_gw):
+def add_ssm_fit(f_gw: plt.Figure, y, pow_gw) -> FitParsSSM:
     p = get_ssm_fit_pars(y, pow_gw)
     pow_gw_sim_ssm = ssm_fitfun(y, p[0], p[1], p[2])
     f_gw.axes[0].loglog(y, pow_gw_sim_ssm, 'k--', label='SSM fit')
@@ -349,13 +356,12 @@ def make_nuc_compare_table(
         f.close()
 
 
-def save_compare_nuc_data(file, params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list) -> list:
+def save_compare_nuc_data(file: str, params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list) -> list:
     data = []
     for params, v2, Omgw, pc, ps in zip(params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list):
         data.append(params + v2 + Omgw + pc + ps)
 
     np.savetxt(file, data)
-
     return data
 
 
@@ -390,7 +396,7 @@ def ps_from_ssm(
         nuc_args: bubble.NucArgs = (1.,),
         Np: th.IntArr1D = const.NP_ARR[-1],
         method: ssm.Method = ssm.Method.E_CONSERVING,
-        lambda_correction: bool = False):
+        lambda_correction: bool = False) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     """Get velocity and GW power spectra from SSM"""
 
     nuc_string = nuc_type[0:3] + '_'
@@ -404,17 +410,18 @@ def ps_from_ssm(
         (vw, alpha, nuc_type, nuc_args),
         Np[1:], method=method, lambda_correction=lambda_correction
     )
-    pow_v = ssm.pow_spec(z, sd_v)
+    # The factor of 2 compensates for the changed definition of spec_den_v
+    pow_v = 2 * ssm.pow_spec(z, sd_v)
 
-    V2_pow_v = np.trapezoid(pow_v/z, z)
+    sd_gw, y = ssm.spec_den_gw(z, sd_v)
+    # The factor of 3 * Gamma^2 compensates for the changed definition of spec_den_gw
+    pow_gw = 3. * ssm.GAMMA**2 * ssm.pow_spec(y, sd_gw)
 
-    sd_gw, y = ssm.spec_den_gw_scaled(z, sd_v)
-    pow_gw = ssm.pow_spec(y, sd_gw)
-
-    gw_power = np.trapezoid(pow_gw/y, y)
+    # V2_pow_v = np.trapezoid(pow_v/z, z)
+    # gw_power = np.trapezoid(pow_gw/y, y)
 
     # Ubarf = np.sqrt(V2_pow_v)
-    AdInd = 4/(3*(1+alpha))
+    # AdInd = 4/(3*(1+alpha))
     # Omgwtil = gw_power/(AdInd*V2_pow_v)**2
 
     # logger.debug(f"{nuc_string:s} {alpha} {vw:.2f} {V2_pow_v:.3e} {1000*Ubarf:5.2f} {gw_power:.3e} {100*Omgwtil:.3f}")
@@ -569,13 +576,14 @@ def plot_ps_compare_nuc(
         alpha: float,
         save_id: str | None = None,
         graph_file_type: str | None = None,
-        lambda_correction: bool = False) -> tuple[list, list, list, list]:
+        method: ssm.Method = ssm.Method.E_CONSERVING,
+        lambda_correction: bool = False) -> \
+            tuple[list[float], list[float], list[float], list[float]]:
     """
     Plots power spectra predictions of SSM with different nucleation models
     Saves data if save_id is set.
     Saves graph file if graph_file_type is set.
     """
-    method = ssm.Method.E_CONSERVING
     nuc_type_list = [ssm.NucType.SIMULTANEOUS, ssm.NucType.EXPONENTIAL]
     nuc_args_list = [(1.,), (1.,)]
 
@@ -585,11 +593,12 @@ def plot_ps_compare_nuc(
     if alpha >= 0.5:
         strength = utils.Strength.STRONG
 
+    # Lists of arrays
     z_list = []
     pow_v_list = []
     y_list = []
     pow_gw_list = []
-
+    # Lists of scalars
     v2_list = []
     Omgw_scaled_list = []
 
@@ -615,12 +624,9 @@ def plot_ps_compare_nuc(
             nuc_string += str(nuc_args[n]) + '_'
 
         if save_id is not None:
-            data_file_suffix = f"vw{vw:.2f}alpha{alpha}_" + nuc_string \
-                + nz_string + nx_string + nT_string + save_id + '.txt'
-            np.savetxt(MD_PATH + 'pow_v_' + data_file_suffix, np.stack((z, pow_v), axis=-1), fmt='%.18e %.18e')
-            np.savetxt(MD_PATH + 'pow_gw_' + data_file_suffix, np.stack((y, pow_gw), axis=-1), fmt='%.18e %.18e')
-        else:
-            save_id = ''
+            data_file_suffix = f"vw{vw:.2f}alpha{alpha}_{nuc_string}{nz_string}{nx_string}{nT_string}{save_id}.txt"
+            np.savetxt(f"{MD_PATH}pow_v_{data_file_suffix}", np.stack((z, pow_v), axis=-1), fmt='%.18e %.18e')
+            np.savetxt(f"{MD_PATH}pow_gw_{data_file_suffix}", np.stack((y, pow_gw), axis=-1), fmt='%.18e %.18e')
 
         nuc_string_all += nuc_string
         v2_list.append(np.trapezoid(pow_v/z, z))
@@ -628,10 +634,12 @@ def plot_ps_compare_nuc(
 
     fig_v = plotting.plot_ps(
         z_list, pow_v_list, utils.PSType.V,
-        ax_limits=strength, col_list=const.COLOURS, leg_list=nuc_type_list)
+        ax_limits=strength, col_list=const.COLOURS, leg_list=nuc_type_list
+    )
     fig_gw = plotting.plot_ps(
         y_list, pow_gw_list, utils.PSType.GW,
-        ax_limits=strength, col_list=const.COLOURS, leg_list=nuc_type_list)
+        ax_limits=strength, col_list=const.COLOURS, leg_list=nuc_type_list
+    )
 
     inter_flag = abs(bubble.CS0 - vw) < 0.05
     plotting.plot_guide_power_laws_prace(
@@ -641,13 +649,10 @@ def plot_ps_compare_nuc(
     p_cwg = add_cwg_fit(fig_gw, y_list[0], pow_gw_list[0])
     p_ssm = add_ssm_fit(fig_gw, y_list[1], pow_gw_list[1])
 
-    if save_id is None:
-        save_id = ''
-
     # Save graph if asked for
     if graph_file_type is not None:
         graph_file_suffix = f"vw{vw:.2f}alpha{alpha}_" + nuc_string_all \
-            + nz_string + nx_string + nT_string + save_id + '.' + graph_file_type
+            + nz_string + nx_string + nT_string + ("" if save_id is None else save_id) + '.' + graph_file_type
         fig_v.savefig(MD_PATH + "pow_v_" + graph_file_suffix)
         fig_gw.savefig(MD_PATH + "pow_gw_" + graph_file_suffix)
     plt.close(fig_v)
@@ -738,7 +743,12 @@ def plot_ps_compare_nuc(
 #    return f_v_list, f_gw_list
 
 
-def plot_and_save(vw: float, alpha: float, method: ssm.Method = ssm.Method.E_CONSERVING, v_xi_file=None, suffix=None):
+def plot_and_save(
+        vw: float,
+        alpha: float,
+        method: ssm.Method = ssm.Method.E_CONSERVING,
+        v_xi_file: str | None = None,
+        suffix: str | None =None):
     """
     Plots the Velocity power spectrum as a function of $kR_*$.
     Plots the scaled GW power spectrum as a function of $kR_*$.
@@ -781,14 +791,14 @@ def plot_and_save(vw: float, alpha: float, method: ssm.Method = ssm.Method.E_CON
         ax_v.loglog(z, pow_v2, color=col, linestyle='--')
         V2_pow_v.append(np.trapezoid(pow_v2/z, z))
 
-    sd_gw, y = ssm.spec_den_gw_scaled(z, sd_v)
+    sd_gw, y = ssm.spec_den_gw(z, sd_v)
     pow_gw = ssm.pow_spec(y, sd_gw)
 
     ax_gw.loglog(y, pow_gw, color=col)
     gw_power.append(np.trapezoid(pow_gw/y, y))
 
     if v_xi_file is not None:
-        sd_gw2, y = ssm.spec_den_gw_scaled(z, sd_v2)
+        sd_gw2, y = ssm.spec_den_gw(z, sd_v2)
         pow_gw2 = ssm.pow_spec(y, sd_gw2)
         ax_gw.loglog(y, pow_gw2, color=col, linestyle='--')
         gw_power.append(np.trapezoid(pow_gw2/y, y))
@@ -855,13 +865,13 @@ def plot_and_save(vw: float, alpha: float, method: ssm.Method = ssm.Method.E_CON
 def do_all_plot_ps_compare_nuc(
         save_id: str | None = None,
         graph_file_type: str | None = None,
-        lambda_correction: bool = False):
-    v2_list = []
+        lambda_correction: bool = False) \
+        -> tuple[list[list[float]], ListListFloatArr1D, ListListFloatArr1D, ListListFloatArr1D, ListListFloatArr1D]:
     Omgw_scaled_list = []
-
     param_list = []
     p_cwg_list = []
     p_ssm_list = []
+    v2_list = []
 
     # This loop cannot be multi-threaded, as Matplotlib is not thread-safe
     for vw_list, alpha, in zip(VW_LIST_ALL, const.ALPHA_LIST_ALL):
@@ -874,27 +884,6 @@ def do_all_plot_ps_compare_nuc(
             param_list.append([alpha, vw])
             p_cwg_list.append(p_cwg)
             p_ssm_list.append(p_ssm)
-
-    # Get the number of CPUs available to the current process
-    # https://stackoverflow.com/a/55423170/
-    # n_cpus = len(os.sched_getaffinity(0))
-    # logger.debug(f"Parallelising do_all_plot_ps_compare_nuc across {n_cpus} CPU cores.")
-
-    # futures = []
-    # with fut.ThreadPoolExecutor(max_workers=n_cpus) as e:
-    #     for vw_list, alpha, in zip(VW_LIST_ALL, const.ALPHA_LIST_ALL):
-    #         for vw in vw_list:
-    #             future = e.submit(plot_ps_compare_nuc, vw, alpha, save_id, graph_file_type)
-    #             futures.append(future)
-    #             param_list.append([alpha, vw])
-    #
-    #     for future in futures:
-    #         v2, Omgw_scaled, p_cwg, p_ssm = future.result()
-    #         v2_list.append(v2)
-    #         Omgw_scaled_list.append(Omgw_scaled)
-    #
-    #         p_cwg_list.append(p_cwg)
-    #         p_ssm_list.append(p_ssm)
 
     return param_list, v2_list, Omgw_scaled_list, p_cwg_list, p_ssm_list
 

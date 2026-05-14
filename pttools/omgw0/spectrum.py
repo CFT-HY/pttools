@@ -1,4 +1,5 @@
 import functools
+import math
 import typing as tp
 
 from matplotlib.axes import Axes
@@ -15,7 +16,7 @@ from pttools.omgw0 import suppression as sup_mod
 from pttools import ssm
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
-from pttools.utils.docstrings import copy_docstrings
+from pttools.utils import copy_docstrings, export_json
 
 if tp.TYPE_CHECKING:
     from pttools.analysis.utils import FigAndAxes
@@ -26,51 +27,64 @@ class Spectrum(ssm.SSMSpectrum):
     def __init__(
             self,
             bubble: Bubble,
-            r_star: float,
+            # Input parameters
+            beta_tilde: float | None = None,
+            r_star: float | None = None,
             y: th.FloatArr1D | None = None,
-            z_st_thresh: float = ssm.Z_ST_THRESH,
+            a_star_a_r_ratio: float = ssm.DEFAULT_A_STAR_A_R_RATIO,
+            N_sh: float = ssm.DEFAULT_N_SH,
             nuc_type: ssm.NucType = ssm.DEFAULT_NUC_TYPE,
-            nT: int = ssm.DEFAULT_N_T,
-            n_z_lookup: int = ssm.DEFAULT_N_Z_LOOKUP,
-            lifetime_multiplier: float = 1,
-            compute: bool = True,
-            parallel: bool = True,
-            low_k: bool = True,
-            label_latex: str | None = None,
-            label_unicode: str | None = None,
+            # Omega_gw_0 input parameters
             T_star: float | None = None,
             g_star: float | None = None,
-            gs_star: float | None = None
-            ):
-        """
+            gs_star: float | None = None,
+            # Accuracy settings
+            nT: int = ssm.DEFAULT_N_T,
+            n_z_lookup: int = ssm.DEFAULT_N_Z_LOOKUP,
+            z_st_thresh: float = ssm.Z_ST_THRESH,
+            # Switches
+            compute: bool = True,
+            low_k: bool = True,
+            parallel: bool = True,
+            # Labels
+            label_latex: str | None = None,
+            label_unicode: str | None = None):
+        r"""
         :param bubble: the Bubble object
+        :param beta_tilde: nucleation rate parameter $\tilde{\beta} \equiv \frac{\beta}{H_*}$
         :param r_star: Hubble-scaled mean bubble spacing $r_*$
-        :param y: $z = kR*$ array
-        :param z_st_thresh: for $z$ values above z_sh_tresh, use approximation rather than doing the sine transform integral.
+        :param y: $z = k R_*$ array
+        :param N_sh: $N_\text{sh}$, number of shock formation times
         :param nuc_type: nucleation type
-        :param nt: number of points in the t array
-        :param lifetime_multiplier: used for computing the source lifetime factor
-        :param compute: whether to compute the spectrum immediately
         :param T_star: $T_*$, temperature at the time of GW production
         :param g_star: $g_*$, degrees of freedom override at the time of GW production
         :param gs_star: $g_{s,*}$ degrees of freedom override for entropy at the time of GW production
+        :param nT: number of points in the t array
+        :param n_z_lookup: number of points in the lookup arrays
+        :param z_st_thresh: for $z$ values above z_sh_tresh,
+            use approximation rather than doing the sine transform integral.
+        :param compute: whether to compute the spectrum immediately
+        :param low_k: whether to use the :giombi_2024_cs: approximation for low $k$
+        :param parallel: whether to use multiple CPU cores
         """
         super().__init__(
             bubble=bubble,
+            beta_tilde=beta_tilde,
+            r_star=r_star,
             y=y,
             z_st_thresh=z_st_thresh,
             nuc_type=nuc_type,
+            a_star_a_r_ratio=a_star_a_r_ratio,
+            N_sh=N_sh,
             nT=nT,
             n_z_lookup=n_z_lookup,
-            r_star=r_star,
-            lifetime_multiplier=lifetime_multiplier,
             compute=compute,
             parallel=parallel,
             low_k=low_k,
             label_latex=label_latex,
             label_unicode=label_unicode
         )
-        # This is needed for T_star, g_star and gs_star
+        # This is needed for T_star, g_star and gs_star, and beta_tilde -> r_star conversion
         if not self.bubble.solved:
             self.bubble.solve()
 
@@ -93,23 +107,86 @@ class Spectrum(ssm.SSMSpectrum):
     # =====
 
     @functools.cached_property
+    def ge_star(self) -> float:
+        r"""Degrees of freedom $g_{e,*}$ for energy density at the time the GWs were produced
+        $$g_{e,*} = \frac{1}{3}(4 g_s - g_p)$$
+        :maki_msc:`\ ` eq. 2.108
+        """
+        return (4 * self.gs_star - self.g_star) / 3
+
+    @functools.cached_property
+    def e_star(self) -> float:
+        r"""Energy density $e_*$ at GW formation
+        $$e_* = \frac{\pi^2}{30} g_e(T_*) T_*^4$$
+        :maki_msc:`\ ` eq. 2.105
+        This presumes that $V(T_*, \phi_b) = 0$.
+        """
+        return np.pi**2 / 30 * self.ge_star * self.T_star ** 4
+
+    @functools.cached_property
     def f_star0(self) -> float:  # pylint: disable=missing-function-docstring
         return freq.f_star0(
             T_star=self.T_star,
             g_star=self.g_star
         )
 
-    @property
-    def H_n(self):
-        """Hubble constant at nucleation temperature, $H_n$
-
-        $$H_n = H(T_n)$$
+    @functools.cached_property
+    def H_star(self):
+        r"""Hubble rate $H_*$ at GW formation, in units of $T^2$
+        $$H = \sqrt{8 \pi \frac{e_*}{3}} \frac{1}{m_\text{pl}}$$
+        This is a direct consequence of the Friedmann equation
+        $$H^2 + \frac{K}{a^2} = \frac{8 \pi G}{3} e$$
+        with $K = 0$ and $m_\text{pl} = \frac{1}{G}$.
+        Note that here $m_pl = 1$ in natural units.
         """
-        return ssm.H(T=self.T_star)
+        return math.sqrt(8 * math.pi * self.e_star / 3)
+
+    @functools.cached_property
+    def R_star(self) -> th.FloatOrArr:
+        r"""Mean bubble separation $R_*$, in units of $T^{-2}$
+        $$R_* = \frac{r_*}{H_*}$$
+        :gowling_2021:`\ ` eq. 2.2
+        """
+        return self.r_star / self.H_star
+
+    @functools.cached_property
+    def R_star_m(self) -> th.FloatOrArr:
+        r"""Mean bubble separation $R_*$, in meters, presuming that $T$ is in GeV"""
+        return self.R_star * const.GEV_IN_J * const.PLANCK_LENGTH
 
     # =====
     # Methods
     # =====
+
+    def export(self, path: str | None = None) -> dict[str, tp.Any]:
+        omgw0_peak = self.omgw0_peak()
+        f = self.f()
+        data = {
+            **super().export(),
+            # Input parameters
+            "g_star": self.g_star,
+            "gs_star": self.gs_star,
+            "T_star": self.T_star,
+            # Computed values
+            "F_gw0": self.F_gw0(),
+            "ge_star": self.ge_star,
+            "e_star": self.e_star,
+            "f_max": f.max(),
+            "f_min": f.min(),
+            "f_star0": self.f_star0,
+            "H_star": self.H_star,
+            "omgw0_peak_f": omgw0_peak[0],
+            "omgw0_peak": omgw0_peak[1],
+            "omgw0_total": self.omgw0_total(),
+            "R_star": self.R_star,
+            "R_star_m": self.R_star_m,
+            "signal_to_noise_ratio": self.signal_to_noise_ratio(),
+            "signal_to_noise_ratio_instrument": self.signal_to_noise_ratio_instrument(),
+            "suppression_factor": self.suppression_factor()
+        }
+        if path is not None:
+            export_json(data, path)
+        return data
 
     def f(self, z: th.FloatArr | None = None) -> th.FloatOrArr:  # pylint: disable=missing-function-docstring
         if z is None:
@@ -137,9 +214,7 @@ class Spectrum(ssm.SSMSpectrum):
             sup: sup_mod.Suppression = sup_mod.DEFAULT,
             sup_method: sup_mod.SuppressionMethod = sup_mod.SuppressionMethod.DEFAULT) -> th.FloatArr1D:
         r"""Gravitational wave power spectrum today $\Omega_{\text{gw},0}$"""
-        # The r_star compensates the fact that the pow_gw includes a correction factor that is J without r_star
-        return self.r_star * self.F_gw0(g0=g0, gs0=gs0) * self.pow_gw * \
-            self.suppression_factor(suppression=sup, method=sup_method)
+        return self.F_gw0(g0=g0, gs0=gs0) * self.suppression_factor(suppression=sup, method=sup_method) * self.pow_gw
 
     def omgw0_peak(
             self,
@@ -163,15 +238,6 @@ class Spectrum(ssm.SSMSpectrum):
             omgw0 = self.omgw0()
         return ssm.trapezoid_loglog(x=self.f(), y=omgw0)
 
-    def R_star(self, H_n: th.FloatOrArr | None = None) -> th.FloatOrArr:
-        r"""Mean bubble separation $R_*$
-        $$R_* = \frac{r_*}{H_n}$$
-        :gowling_2021:`\ ` eq. 2.2
-        """
-        if H_n is None:
-            H_n = self.H_n
-        return self.r_star / H_n
-
     def signal_to_noise_ratio(self) -> float:
         """Signal-to-noise ratio for LISA, taking into account all noise sources"""
         snr, f_min, f_max = noise.signal_to_noise_ratio(f=self.f(), signal=self.omgw0(), noise=self.noise())
@@ -188,19 +254,10 @@ class Spectrum(ssm.SSMSpectrum):
             method: sup_mod.SuppressionMethod = sup_mod.SuppressionMethod.DEFAULT) -> float:
         return suppression.suppression(v_wall=self.bubble.v_wall, alpha_n=self.bubble.alpha_n, method=method)
 
-    def tau_nl[T: FloatOrArr](self, H_n: T) -> T:
-        r"""Timescale of nonlinearities $\tau_\text{nl}$
-        $$\tau_\text{nl} = \frac{{R}_\ast}{\bar{U}_f}$
-        :gw_pt_ssm:`\ ` p. 6
-        :notes:`\ ` p. 48
-        :giombi_2024_cs:`\ ` p. 2
-        """
-        return self.R_star(H_n) / self.bubble.ubarf
-
     def z_from_f[T: FloatOrArr](self, f: T) -> T:
         r"""Convert from frequencies $f$ back to wavenumbers $z$
 
-        $$z(f) = \frac{f}{{f}_{\ast,0} {r}_*$$
+        $$z(f) = \frac{f}{{f}_{\ast,0}} {r}_\ast$$
         Inverted from :gowling_2021:`\ ` eq. 2.12
         :param f: frequencies $f$ today
         :return: wavenumbers $z$
@@ -246,5 +303,6 @@ copy_docstrings({
     Spectrum.F_gw0: F_gw0,
     Spectrum.f_star0: freq.f_star0,
     Spectrum.noise: noise.omega_noise,
-    Spectrum.noise_ins: noise.omega_ins
+    Spectrum.noise_ins: noise.omega_ins,
+    Spectrum.suppression_factor: sup_mod.Suppression.suppression
 }, without_params=True)

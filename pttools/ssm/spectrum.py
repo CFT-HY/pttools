@@ -5,19 +5,21 @@ import logging
 import typing as tp
 
 import matplotlib.pyplot as plt
-import numba
+
 import numpy as np
 
-import pttools.type_hints as th
 from pttools.bubble import Bubble, Phase
-from pttools.speedup import NUMBA_ENABLE_CACHE
 from pttools.ssm import const
-from pttools.ssm.nucleation import NucType, DEFAULT_NUC_TYPE, beta, beta_over_H
-from pttools.ssm.spec_den_gw import gen_lookup, spec_den_gw_scaled
-from pttools.ssm.spec_den_v import spec_den_v as spec_den_v_func
-from pttools.ssm.low_k import power_spectrum_integration_low, power_spectrum_integration_int, pow_gw_junction
-from pttools.type_hints import FloatArr
-from pttools.utils import copy_docstrings
+from pttools.ssm.barotropic import dilution_of_e, eta_ratio, H_eta, source_lifetime_factor
+from pttools.ssm.compute import compute
+from pttools.ssm.nucleation import \
+    NucType, DEFAULT_NUC_TYPE, beta, bubble_spacing_enlargement_factor, hx, nucleation_f, r_star as r_star_func
+from pttools.ssm.pow_spec import pow_spec
+from pttools.ssm.scaling import H_star_tau_sh, H_star_tau_v, H_star_tau_v_old, J
+from pttools.ssm.spec_den_gw import spec_den_gw_scaling
+from pttools.ssm.low_k.intersection import z_cross_approx
+from pttools.type_hints import FloatArr, FloatArr1D
+from pttools.utils import copy_docstrings, export_json
 
 if tp.TYPE_CHECKING:
     from pttools.analysis.utils import FigAndAxes
@@ -30,29 +32,38 @@ class SSMSpectrum:
     def __init__(
             self,
             bubble: Bubble,
-            y: th.FloatArr1D | None = None,
-            z_st_thresh: float = const.Z_ST_THRESH,
+            # Input parameters
+            beta_tilde: float | None = None,
+            r_star: float | None = None,
+            y: FloatArr1D | None = None,
+            a_star_a_r_ratio: float = const.DEFAULT_A_STAR_A_R_RATIO,
+            N_sh: float = const.DEFAULT_N_SH,
             nuc_type: NucType = DEFAULT_NUC_TYPE,
+            # Accuracy settings
             nT: int = const.DEFAULT_N_T,
             n_z_lookup: int = const.DEFAULT_N_Z_LOOKUP,
-            r_star: float | None = None,
-            # eta_star: float = 1,
-            lifetime_multiplier: float = 1.,
+            z_st_thresh: float = const.Z_ST_THRESH,
+            # Switches
             compute: bool = True,
-            parallel: bool = True,
             low_k: bool = True,
+            parallel: bool = True,
+            # Labels
             label_latex: str | None = None,
             label_unicode: str | None = None):
         r"""
         :param bubble: the Bubble object
-        :param y: $z = kR*$ array
+        :param beta_tilde: nucleation rate parameter $\tilde{\beta} \equiv \frac{\beta}{H_*}$
+        :param r_star: Hubble-scaled mean bubble spacing $r_*$
+        :param y: $z = k R_*$ array
+        :param N_sh: $N_\text{sh}$, number of shock formation times
+        :param nuc_type: nucleation type
+        :param nT: number of points in the t array
+        :param n_z_lookup: number of points in the lookup arrays
         :param z_st_thresh: for $z$ values above z_sh_tresh,
             use approximation rather than doing the sine transform integral.
-        :param nuc_type: nucleation type
-        :param nt: number of points in the t array
-        :param r_star: Hubble-scaled mean bubble spacing $r_*$
-        :param lifetime_multiplier: used for computing the source lifetime factor
         :param compute: whether to compute the spectrum immediately
+        :param low_k: whether to use the :giombi_2024_cs: approximation for low $k$
+        :param parallel: whether to use multiple CPU cores
         """
         if y is None:
             self.y = const.DEFAULT_Y
@@ -62,74 +73,98 @@ class SSMSpectrum:
             self.y = y
 
         # -----
+        # r_star
+        # -----
+        self.r_star: float
+        if beta_tilde is None:
+            if r_star is None:
+                self.r_star = const.DEFAULT_R_STAR
+            elif np.isnan(r_star):
+                raise ValueError(f"Got invalid r_star={r_star}")
+            else:
+                self.r_star = r_star
+        else:
+            if r_star is not None:
+                raise ValueError(
+                    "Either beta_tilde or r_star must be provided, but not both. "
+                    f"Got beta_tilde={beta_tilde}, r_star={r_star}."
+                )
+            if np.isnan(beta_tilde) or beta_tilde <= 0:
+                raise ValueError(f"beta_tilde must be positive. Got beta_tilde={beta_tilde}.")
+            if beta_tilde < const.BETA_TILDE_MIN:
+                logger.warning(
+                    "Got beta_tilde=%s < %s. "
+                    "This is experimentally excluded due to primordial black hole formation. "
+                    "Please see Lewicki et al. (2023) for details.",
+                    beta_tilde, const.BETA_TILDE_MIN
+                )
+            if not bubble.solved:
+                bubble.solve()
+            self.r_star = r_star_func(
+                beta_over_H=beta_tilde, v_wall=bubble.v_wall, xi=bubble.xi, T=bubble.T, sol_type=bubble.sol_type
+            )
+
+        if np.isnan(self.r_star) or self.r_star <= 0:
+            raise ValueError(f"r_star must be positive. Got r_star={r_star}.")
+        elif self.r_star >= 1:
+            # Todo: Find a better reference for this.
+            logger.warning(
+                "r_star < 1 is required for the phase transition to complete. "
+                "Got r_star=%s. See Hindmarsh & Hijazi 2019, p. 6.",
+                r_star
+            )
+
+        # -----
         # Parameters
         # -----
         self.bubble = bubble
-        # self.de_method = de_method
-        # self.method = method
+        self.beta_tilde = beta_tilde
+        self.a_star_a_r_ratio = a_star_a_r_ratio
+        self.N_sh = N_sh
         self.nuc_type = nuc_type
+        # Accuracy
         self.z_st_thresh = z_st_thresh
         self.nT = nT
         self.n_z_lookup = n_z_lookup
-        self.r_star = r_star
-        # Todo: Make this an adjustable input parameter
-        self.eta_star = 1
-        self.lifetime_multiplier = lifetime_multiplier
+        # Switches
         self.low_k = low_k
-        label_suffix_latex = "" if r_star is None else f", r_*={r_star:.3f}$"
-        label_suffix_unicode = "" if r_star is None else f", r⁎={r_star:.3f}"
-        self.label_latex = self.bubble.label_latex[:-1] + label_suffix_latex \
+        # Labels
+        self.label_latex = self.bubble.label_latex[:-1] + f", r_*={self.r_star:.3f}$" \
             if label_latex is None else label_latex
-        self.label_unicode = self.bubble.label_unicode + label_suffix_unicode \
+        self.label_unicode = self.bubble.label_unicode + f", r⁎={self.r_star:.3f}" \
             if label_unicode is None else label_unicode
-
-        if not (self.r_star is None or np.isnan(r_star)):
-            if self.r_star <= 0:
-                raise ValueError(f"r_star must be positive. Got r_star={r_star}.")
-            if self.r_star >= 1:
-                # Todo: Find a better reference for this.
-                logger.warning(
-                    "r_star < 1 is required for the phase transition to complete. "
-                    "Got r_star=%s. See Hindmarsh & Hijazi 2019, p. 6.",
-                    self.r_star
-                )
 
         # -----
         # Values generated by compute()
         # -----
         #: $|A(z)|^2$
-        self.a2: th.FloatArr1D | None = None
+        self.a2: FloatArr1D | None = None
+        #: $|A_\text{lookup}(z)|^2$
+        self.a2_lookup: FloatArr1D | None = None
         #: $c_s({T}_\text{gw})$
         self.cs: float | None = None
-        #: $P_v(y)$
-        self.spec_den_v: th.FloatArr1D | None = None
-        #: $P_v({z}_\text{lookup})$
-        self.spec_den_v_lookup: th.FloatArr1D | None = None
-        #: Spectral density of scaled gravitational wave power
-        self.spec_den_gw: th.FloatArr1D | None = None
-        #: $\mathcal{P}_{\tilde{v}}(q)$
-        self.pow_v: th.FloatArr1D | None = None
-        #: $\mathcal{P}_{\text{gw}}(k)$
-        self.pow_gw: th.FloatArr1D | None = None
-        #: $\mathcal{P}_{\text{gw}}(k)$, expanded to low frequencies
-        self.pow_gw_expanded: th.FloatArr1D | None = None
-        #: $\mathcal{P}_{\text{gw}}(k)$ for intermediate frequencies
-        self.pow_gw_int: th.FloatArr1D | None = None
-        #: $\mathcal{P}_{\text{gw}}(k)$ for low frequencies
-        self.pow_gw_low: th.FloatArr1D | None = None
-        #: $\mathcal{P}_{\text{gw}}(k)$ using the Sound Shell Model (SSM) without the low-k approximation
-        self.pow_gw_ssm: th.FloatArr1D | None = None
+        #: $\tilde{P}_v(z)$
+        self.spec_den_v: FloatArr1D | None = None
+        #: $\tilde{P}_v({z}_\text{lookup})$
+        self.spec_den_v_lookup: FloatArr1D | None = None
+        #: $\tilde{P}_\text{gw}$
+        self.spec_den_gw: FloatArr1D | None = None
+        #: $\tilde{P}_\text{gw,expanded}$
+        self.spec_den_gw_expanded: FloatArr1D | None = None
+        #: $\tilde{P}_\text{gw,ssm}$
+        self.spec_den_gw_ssm: FloatArr1D | None = None
+        #: $\tilde{P}_\text{gw,int}$
+        self.spec_den_gw_int: FloatArr1D | None = None
+        #: $\tilde{P}_\text{gw,low}$
+        self.spec_den_gw_low: FloatArr1D | None = None
         #: $z_\text{lookup}$
-        self.z_lookup: th.FloatArr1D | None = None
+        self.z_lookup: FloatArr1D | None = None
 
         if compute:
             self.compute(parallel=parallel)
 
     def beta[T: (float, FloatArr)](self, H_n: T) -> T:  # pylint: disable=missing-function-docstring
-        return self.beta_over_H() * H_n
-
-    def beta_over_H(self) -> float:  # pylint: disable=missing-function-docstring
-        return beta_over_H(r_star=self.r_star, v_wall=self.bubble.v_wall, cs=self.cs)
+        return self.beta_tilde * H_n
 
     def compute(
             self,
@@ -141,97 +176,235 @@ class SSMSpectrum:
             self.bubble.solve()
 
         self.cs = np.sqrt(self.bubble.model.cs2(self.bubble.va_enthalpy_density, Phase.BROKEN))
-        self.spec_den_v, self.spec_den_v_lookup, self.spec_den_gw, \
-            self.pow_v, self.pow_gw_ssm, self.a2, self.z_lookup = compute(
-            v=self.bubble.v,
-            w=self.bubble.w,
-            xi=self.bubble.xi,
-            e=self.bubble.e,
-            y=self.y,
-            v_wall=self.bubble.v_wall,
-            v_sh=self.bubble.v_sh,
-            lifetime_distribution_a=lifetime_distribution_a,
-            nuc_type=self.nuc_type,
-            n_z_lookup=self.n_z_lookup,
-            eps_lookup=eps_lookup,
-            z_st_thresh=self.z_st_thresh,
-            cs=self.cs,
-            # This requires r_star to be known.
-            source_lifetime_factor=self.source_lifetime_factor,
-            lambda_correction=lambda_correction,
-            parallel=parallel,
-            nT=self.nT
+        self.spec_den_v, self.spec_den_v_lookup, self.spec_den_gw_ssm, self.a2, self.a2_lookup, self.z_lookup, \
+            self.spec_den_gw_low, self.spec_den_gw_int, self.spec_den_gw_expanded = compute(
+                # Arrays
+                e=self.bubble.e,
+                v=self.bubble.v,
+                w=self.bubble.w,
+                xi=self.bubble.xi,
+                y=self.y,
+                # Scalars
+                bubble_spacing_enlargement_factor=self.bubble_spacing_enlargement_factor,
+                cs=self.cs,
+                H_star_tau_nl=self.H_star_tau_nl,
+                lifetime_distribution_a=lifetime_distribution_a,
+                nu_gdh2024=self.bubble.nu_gdh2024,
+                r_star=self.r_star,
+                source_lifetime_factor=self.source_lifetime_factor,
+                tau_end=self.tau_end,
+                tau_star=self.tau_star,
+                ubarf2=self.bubble.ubarf2,
+                v_wall=self.bubble.v_wall,
+                v_sh=self.bubble.v_sh,
+                # Accuracy
+                eps_lookup=eps_lookup,
+                nT=self.nT,
+                n_z_lookup=self.n_z_lookup,
+                z_st_thresh=self.z_st_thresh,
+                # Other
+                nuc_type=self.nuc_type,
+                lambda_correction=lambda_correction,
+                parallel=parallel
         )
-        self.pow_gw = self.pow_gw_ssm
+        self.spec_den_gw = self.spec_den_gw_expanded if self.low_k else self.spec_den_gw_ssm
 
-        # Todo: Compile these with Numba.
-        if self.r_star is not None:
-            # Lorenzo 2024
-            eta_end = self.eta_star + self.Htau_nl
-            tau_star = self.eta_star / self.Lf
-            tau_end = eta_end / self.Lf
+    def export(self, path: str | None = None) -> dict[str, tp.Any]:
+        data = {
+            "bubble": self.bubble.export(),
+            # Input parameters
+            "beta_tilde": self.beta_tilde,
+            "r_star": self.r_star,
+            "a_star_a_r_ratio": self.a_star_a_r_ratio,
+            "N_sh": self.N_sh,
+            "nuc_type": self.nuc_type,
+            "nT": self.nT,
+            "n_z_lookup": self.n_z_lookup,
+            "z_st_thresh": self.z_st_thresh,
+            # Computed values
+            "delta_tau_v": self.delta_tau_v,
+            "dilution_of_e": self.dilution_of_e,
+            "H_star_eta_star": self.H_star_eta_star,
+            "H_star_tau_nl": self.H_star_tau_nl,
+            "H_star_tau_sh": self.H_star_tau_sh,
+            "H_star_tau_v": self.H_star_tau_v,
+            "H_star_tau_v_old": self.H_star_tau_v_old,
+            "k_peak_eta_star": self.k_peak_eta_star,
+            "J": self.J,
+            "label_latex": self.label_latex,
+            "label_unicode": self.label_unicode,
+            "source_lifetime_factor": self.source_lifetime_factor,
+            "tau_end": self.tau_end,
+            "tau_star": self.tau_star
+        }
+        if path is not None:
+            export_json(data, path)
+        return data
 
-            spec_den_low = 4/3 * power_spectrum_integration_low(
-                x_data=self.y, Pv_data=self.spec_den_v,
-                z=self.y, cs=self.cs, nu=self.bubble.nu_gdh2024,
-                tau_star=tau_star, tau_end=tau_end
-            )
-            spec_den_int = 4/3 * power_spectrum_integration_int(
-                x_data=self.z_lookup, Pv_data=self.spec_den_v_lookup,
-                z=self.y, cs=self.cs, tau_star=tau_star
-            )
-
-            factor = self.r_star * self.Htau_nl
-            self.pow_gw_low = pow_spec(self.y, spec_den_low)
-            self.pow_gw_int = pow_spec(self.y, spec_den_int)
-            self.pow_gw_expanded = pow_gw_junction(
-                z=self.y,
-                Pgw_low=self.pow_gw_low * factor,
-                Pgw_int=self.pow_gw_int * factor,
-                Pgw_high=self.pow_gw_ssm * factor,
-                cs=self.cs, nu=self.bubble.nu_gdh2024, tau_star=tau_star, tau_end=tau_end,
-                HLf=self.r_star
-            ) / factor
-            if self.low_k:
-                self.pow_gw = self.pow_gw_expanded
+    # -----
+    # Properties
+    # -----
 
     @functools.cached_property
-    def Htau_nl(self):
-        r"""$H \tau_\text{nl}$"""
+    def bubble_spacing_enlargement_factor(self) -> float:
+        return 1. if self.beta_tilde is None else bubble_spacing_enlargement_factor(hx=self.hx)
+
+    @functools.cached_property
+    def delta_tau_v(self) -> float:
+        r"""$\Delta \tau_v$
+        $$\Delta \tau_v \equiv \frac{\delta \eta_v}{R_*} = \frac{\eta_sh N_sh}{R_*} = \frac{N_sh}{\bar{U}_f}$$
+        """
+        return self.N_sh / self.bubble.ubarf
+
+    @functools.cached_property
+    def dilution_of_e(self) -> float:
+        return dilution_of_e(a_star_a_r_ratio=self.a_star_a_r_ratio, nu=self.bubble.nu_gdh2024)
+
+    @functools.cached_property
+    def eta_ratio(self) -> float:
+        return eta_ratio(ubarf=self.bubble.ubarf, r_star=self.r_star, N_sh=self.N_sh, nu=self.bubble.nu_gdh2024)
+
+    @functools.cached_property
+    def H_star_eta_star(self) -> float:
+        r"""$H_* \eta_*$
+        $$H_* \eta_* = 1 + \nu_\text{gdh2024}$$
+        """
+        return H_eta(nu=self.bubble.nu_gdh2024)
+
+    @functools.cached_property
+    def H_star_tau_nl(self) -> float:
+        r"""Hubble-scaled timescale of non-linearities $H \tau_\text{nl}$
+        $$H_* \tau_\text{nl} = \frac{r_*}{\bar{U}_f}$$,
+        where $\bar{U}_f \equiv v_\text{rms}$
+        :gw_pt_ssm:`\ ` p. 6, 13
+        :notes:`\ ` p. 48
+        :giombi_2024_cs:`\ ` p. 2
+
+        Please note that $\tau_\text{nl}$ and $\tau_\text{v}$ are different quantities.
+        If $H \tau_\text{nl} \gg 1$, then $H \tau_\text{v} \rightarrow 1$.
+        :gw_pt_ssm:`\ ` p. 13
+        """
         return self.r_star / self.bubble.ubarf
 
     @functools.cached_property
-    def k_peak(self):
-        """Peak wavenumber $k_\text{peak}$
-
-        Lorenzo
-        """
-        return 2 * np.pi / self.r_star * 2 / (1 + 3 * self.bubble.omega_barotropic)
+    def H_star_tau_sh(self) -> float:  # pylint: disable=missing-function-docstring
+        return H_star_tau_sh(r_star=self.r_star, ubarf=self.bubble.ubarf)
 
     @functools.cached_property
-    def Lf(self):
-        """Length-scale of the fluid $L_f$
+    def H_star_tau_v(self) -> float:  # pylint: disable=missing-function-docstring
+        return H_star_tau_v(source_lifetime_factor=self.source_lifetime_factor, nu=self.bubble.nu_gdh2024)
 
-        Lorenzo
+    @functools.cached_property
+    def H_star_tau_v_old(self) -> float:  # pylint: disable=missing-function-docstring
+        return H_star_tau_v_old(H_star_tau_sh=self.H_star_tau_sh)
+
+    @functools.cached_property
+    def hx(self):
+        return hx(self.nucleation_f)
+
+    @functools.cached_property
+    def k_peak_eta_star(self) -> float:
+        r"""Peak wavenumber, scaled by conformal time at GW formation $k_\text{peak} \eta_*$
+        $$k_p = \frac{2 \pi}{R_*} \Rightarrow k_p \eta_* = (1 + \nu_\text{gdh2024}) \frac{2\pi}{r_*}$$
+        :giombi_2024_cs:`\ ` p. 2
         """
-        return 2 * np.pi / self.k_peak
+        return (1 + self.bubble.nu_gdh2024) * 2 * np.pi / self.r_star
+
+    @functools.cached_property
+    def J(self) -> float:
+        return J(r_star=self.r_star, H_star_tau_v=self.H_star_tau_v)
+
+    @functools.cached_property
+    def nucleation_f(self) -> float:
+        return nucleation_f(
+            xi=self.bubble.xi, T=self.bubble.T,
+            beta_tilde=self.beta_tilde, v_wall=self.bubble.v_wall, v_sh=self.bubble.v_sh
+        )
+
+    @functools.cached_property
+    def pow_gw(self) -> FloatArr1D:
+        r"""$\mathcal{P}_\text{gw}$"""
+        return self.spec_den_gw_scaling * pow_spec(z=self.y, spec_den=self.spec_den_gw)
+
+    @functools.cached_property
+    def pow_gw_expanded(self) -> FloatArr1D:
+        r"""$\mathcal{P}_\text{gw,ext}$"""
+        return self.spec_den_gw_scaling * pow_spec(z=self.y, spec_den=self.spec_den_gw_expanded)
+
+    @functools.cached_property
+    def pow_gw_int(self) -> FloatArr1D:
+        r"""$\mathcal{P}_\text{gw,int}$"""
+        return self.spec_den_gw_scaling * pow_spec(z=self.y, spec_den=self.spec_den_gw_int)
+
+    @functools.cached_property
+    def pow_gw_low(self) -> FloatArr1D:
+        r"""$\mathcal{P}_\text{gw,low}$"""
+        return self.spec_den_gw_scaling * pow_spec(z=self.y, spec_den=self.spec_den_gw_low)
+
+    @functools.cached_property
+    def pow_gw_ssm(self) -> FloatArr1D:
+        r"""$\mathcal{P}_\text{gw,ssm}$"""
+        return self.spec_den_gw_scaling * pow_spec(z=self.y, spec_den=self.spec_den_gw_ssm)
+
+    @functools.cached_property
+    def pow_v(self) -> FloatArr1D:
+        r"""$\mathcal{P}_v"""
+        return pow_spec(z=self.y, spec_den=self.spec_den_v)
+
+    @functools.cached_property
+    def pow_v_tilde(self) -> FloatArr1D:
+        r"""$\mathcal{P}_\tilde{v}$"""
+        return 2 * self.pow_v
 
     @functools.cached_property
     def source_lifetime_factor(self) -> float:
-        r"""
-        Source lifetime correction factor
-        $$\frac{1}{1 + 2\nu} \left(1 - \left(1 + \frac{\Delta \eta}{\eta_*} \right) \right)^{-1-2\nu}$$
-        where
-        $$\frac{\Delta \eta}{\eta_*} = \lambda \frac{2 r_*}{\sqrt{K}}$$
-        :giombi_2024_cs:`\ `, eq. 3.13
+        return source_lifetime_factor(
+            ubarf=self.bubble.ubarf,
+            r_star=self.r_star,
+            N_sh=self.N_sh,
+            nu=self.bubble.nu_gdh2024
+        )
+
+    @functools.cached_property
+    def spec_den_gw_scaling(self) -> float:
+        return spec_den_gw_scaling(
+            ubarf2=self.bubble.ubarf2,
+            # TODO: Implement Gamma properly
+            Gamma=const.GAMMA,
+            r_star=self.r_star,
+            nu=self.bubble.nu_gdh2024,
+            dilution_of_e=self.dilution_of_e
+        )
+
+    @functools.cached_property
+    def spec_den_v_tilde(self) -> FloatArr1D:
+        r"""Spectral density $\tilde{P}_\tilde{v}$ of the velocity field $v$
+        This includes
+        $$\tilde{P}_\tilde{v}(q) = 2 \tilde{P}_v(q)$$
+        :gw_pt_ssm:`\ ` eq. 4.18
         """
-        ret = 1 / (1 + 2*self.bubble.nu_gdh2024)
-        if self.r_star is not None and not np.isinf(self.lifetime_multiplier):
-            ret *= (
-                1 - (1 + self.lifetime_multiplier * 2 * self.r_star / np.sqrt(self.bubble.kinetic_energy_fraction)) **
-                (-1 - 2*self.bubble.nu_gdh2024)
-            )
-        return ret
+        return 2 * self.spec_den_v
+
+    @functools.cached_property
+    def tau_end(self):
+        r"""
+        Time $\tau_\text{end}$ when the anisotropic stress turns off
+        $$\tau_\text{end} \equiv \frac{\eta_\text{end}}{R_*}$$
+        :giombi_2024_cs:`\ ` p. 8
+        """
+        return self.tau_star + self.delta_tau_v
+
+    @functools.cached_property
+    def tau_star(self):
+        r"""Time $\tau_*$ when the anisotropic stress turns on
+        $$\tau_* \equiv \frac{\eta_*}{R_*} = \frac{1 + \nu_\text{gdh2024}}{r_*}$$
+        :giombi_2024_cs:`\ ` p. 8
+        """
+        return (1 + self.bubble.nu_gdh2024) / self.r_star
+
+    @functools.cached_property
+    def z_cross_approx(self):
+        return z_cross_approx(cs=self.cs, eta_ratio=self.eta_ratio, nu=self.bubble.nu_gdh2024, r_star=self.r_star)
 
     # -----
     # Plotting
@@ -287,70 +460,16 @@ class SSMSpectrum:
         return plot_spectra_spec_den_v([self], fig, ax, path, **kwargs)
 
 
-@numba.njit(nogil=True, cache=NUMBA_ENABLE_CACHE)
-def compute(
-        v: th.FloatArr1D,
-        w: th.FloatArr1D,
-        xi: th.FloatArr1D,
-        e: th.FloatArr1D,
-        y: th.FloatArr1D,
-        v_wall: float,
-        v_sh: float,
-        lifetime_distribution_a: float,
-        nuc_type: NucType,
-        n_z_lookup: int,
-        eps_lookup: float,
-        nT: int,
-        z_st_thresh: float,
-        cs: float,
-        source_lifetime_factor: float,
-        lambda_correction: bool = False,
-        parallel: bool = True):
-    """Compute the Sound Shell Model spectra for a fluid profile
-
-    This is in one Numba-compiled function so that the GIL is released for the entire computation.
-    """
-    spec_den_v, a2 = spec_den_v_func(
-        v=v, w=w, xi=xi, e=e, z=y,
-        v_wall=v_wall, v_sh=v_sh, a=lifetime_distribution_a,
-        nuc_type=nuc_type, nT=nT, z_st_thresh=z_st_thresh, cs=cs,
-        parallel=parallel, lambda_correction=lambda_correction
-    )
-    pow_v = pow_spec(y, spec_den=spec_den_v)
-
-    z_lookup = gen_lookup(y=y, cs=cs, n_z_lookup=n_z_lookup, eps=eps_lookup)
-    spec_den_v_lookup, a2_lookup = spec_den_v_func(
-        v=v, w=w, xi=xi, e=e, z=z_lookup,
-        v_wall=v_wall, v_sh=v_sh, a=lifetime_distribution_a,
-        nuc_type=nuc_type, nT=nT, z_st_thresh=z_st_thresh, cs=cs,
-        parallel=parallel, lambda_correction=lambda_correction
-    )
-    spec_den_gw, y = spec_den_gw_scaled(
-        z_lookup=z_lookup, P_v_lookup=spec_den_v_lookup, y=y, cs=cs,
-        source_lifetime_factor=source_lifetime_factor, parallel=parallel
-    )
-    pow_gw = pow_spec(y, spec_den=spec_den_gw)
-
-    return spec_den_v, spec_den_v_lookup, spec_den_gw, pow_v, pow_gw, a2, z_lookup
-
-
-@numba.njit
-def pow_spec(z: th.FloatOrArr, spec_den: th.FloatOrArr) -> th.FloatOrArr:
-    r"""
-    Power spectrum from spectral density at dimensionless wavenumber z.
-    $$\mathcal{P}(z) = \frac{z^3}{2 \pi^2} \tilde{P}(z)$$
-
-    :gw_pt_ssm:`\ ` eq. 4.18, but without the factor of 2.
-    :gowling_2021:`\ ` eq. 2.14, but without the factor of $3K^2$
-
-    :param z: dimensionless wavenumber $z$
-    :param spec_den: spectral density
-    :return: power spectrum
-    """
-    return z**3 / (2. * np.pi ** 2) * spec_den
-
-
 copy_docstrings({
     SSMSpectrum.beta: beta,
-    SSMSpectrum.beta_over_H: beta_over_H,
+    SSMSpectrum.bubble_spacing_enlargement_factor: bubble_spacing_enlargement_factor,
+    SSMSpectrum.eta_ratio: eta_ratio,
+    SSMSpectrum.H_star_tau_sh: H_star_tau_sh,
+    SSMSpectrum.H_star_tau_v: H_star_tau_v,
+    SSMSpectrum.hx: hx,
+    SSMSpectrum.J: J,
+    SSMSpectrum.nucleation_f: nucleation_f,
+    SSMSpectrum.source_lifetime_factor: source_lifetime_factor,
+    SSMSpectrum.spec_den_gw_scaling: spec_den_gw_scaling,
+    SSMSpectrum.z_cross_approx: z_cross_approx
 }, without_params=True)

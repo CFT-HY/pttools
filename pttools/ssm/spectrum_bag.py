@@ -5,7 +5,12 @@ import logging
 import numpy as np
 
 from pttools import bubble
-from pttools.ssm import const, ssm, ssm_bag, spectrum
+from pttools.ssm import const
+from pttools.ssm.pow_spec import pow_spec
+from pttools.ssm.spec_den_gw import spec_den_gw
+from pttools.ssm.ssm import DE_Method, Method
+from pttools.ssm.ssm_bag import a2_e_conserving_bag_file, a2_ssm_func_bag
+from pttools.ssm.spectrum import DEFAULT_NUC_TYPE, NucType
 from pttools.ssm.spec_den_v import spec_den_v_core, spec_den_v_core_single
 import pttools.type_hints as th
 
@@ -21,7 +26,7 @@ def convert_params(params: bubble.PhysicalParams) -> bubble.PhysicalParams:
 
 
 # @numba.njit
-def parse_params(params: bubble.PhysicalParams) -> tuple[float, float, spectrum.NucType, bubble.NucArgs]:
+def parse_params(params: bubble.PhysicalParams) -> tuple[float, float, NucType, bubble.NucArgs]:
     r"""
     Parse physical parameters from the tuple.
 
@@ -33,7 +38,7 @@ def parse_params(params: bubble.PhysicalParams) -> tuple[float, float, spectrum.
     if len(params) > 2:
         nuc_type = params[2]
     else:
-        nuc_type = spectrum.DEFAULT_NUC_TYPE
+        nuc_type = DEFAULT_NUC_TYPE
     if len(params) > 3:
         nuc_args = params[3]
     else:
@@ -42,14 +47,14 @@ def parse_params(params: bubble.PhysicalParams) -> tuple[float, float, spectrum.
     return v_wall, alpha, nuc_type, nuc_args
 
 
-def power_gw_scaled_bag(
+def power_gw_bag(
         z: th.FloatArr1D,
         params: bubble.PhysicalParams,
         npt: const.NptType = const.DEFAULT_N_PT,
         filename: str | None = None,
         skip: int = 1,
-        method: ssm.Method = ssm.Method.E_CONSERVING,
-        de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
+        method: Method = Method.E_CONSERVING,
+        de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH,
         lambda_correction: bool = False,
         parallel: bool = True) -> th.FloatArr1D:
@@ -97,8 +102,8 @@ def power_gw_scaled_bag(
         x, params, npt, filename, skip, method, de_method, z_st_thresh,
         lambda_correction=lambda_correction, parallel=parallel
     )
-    sd_gw, y = spectrum.spec_den_gw_scaled(x, sd_v, z, parallel=parallel)
-    return spectrum.pow_spec(z, sd_gw)
+    sd_gw, y = spec_den_gw(x, sd_v, z, parallel=parallel)
+    return pow_spec(z, sd_gw)
 
 
 def power_v_bag(
@@ -107,8 +112,8 @@ def power_v_bag(
         npt: const.NptType = const.DEFAULT_N_PT,
         filename: str | None = None,
         skip: int = 1,
-        method: ssm.Method = ssm.Method.E_CONSERVING,
-        de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
+        method: Method = Method.E_CONSERVING,
+        de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH,
         parallel: bool = True) -> th.FloatArr1D:
     """
@@ -127,9 +132,7 @@ def power_v_bag(
     :return: power spectrum of the velocity field
     """
     bubble.check_physical_params(params)
-
-    p_v = spec_den_v_bag(z, params, npt, filename, skip, method, de_method, parallel=parallel)
-    return spectrum.pow_spec(z, p_v)
+    return pow_spec(z=z, spec_den=spec_den_v_bag(z, params, npt, filename, skip, method, de_method, parallel=parallel))
 
 
 def spec_den_v_bag(
@@ -138,17 +141,22 @@ def spec_den_v_bag(
         npt: const.NptType = const.DEFAULT_N_PT,
         filename: str | None = None,
         skip: int = 1,
-        method: ssm.Method = ssm.Method.E_CONSERVING,
-        de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
+        method: Method = Method.E_CONSERVING,
+        de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh=const.Z_ST_THRESH,
+        bubble_spacing_enlargement_factor: float = 1.,
+        ubarf2: float = 1.,
         lambda_correction: bool = False,
-        parallel: bool = True):
+        parallel: bool = True) -> th.FloatArr1D:
     r"""
-    Get dimensionless velocity spectral density $\bar{P}_v$.
+    Get dimensionless velocity spectral density $\tilde{P}_v$.
 
     Gets fluid velocity profile from bubble toolbox or from file if specified.
     Convolves 1-bubble Fourier transform $|A(q T)|^2$ with bubble wall
     lifetime distribution $\nu(T \beta)$ specified by "nuc_type" and "nuc_args".
+
+    $\bar{U}_f^2$ needs to be given for scaling.
+    Without it, this function will return $\bar{U}_f^2 \tilde{P}_v$ instead.
 
     :param z: array $z = qR_*$
     :param params: tuple of
@@ -156,7 +164,7 @@ def spec_den_v_bag(
         nuc_type (string [exponential* | simultaneous]),
         nuc_args (tuple, default (1,))
     :param npt: number of points
-    :return: dimensionless velocity spectral density $\bar{P}_v$
+    :return: dimensionless velocity spectral density $\tilde{P}_v$
     """
     params = convert_params(params)
     bubble.check_physical_params(params)
@@ -181,13 +189,13 @@ def spec_den_v_bag(
 
     v_wall, alpha, nuc_type, nuc_args = parse_params(params)
     if filename is None:
-        A2_lookup = ssm_bag.a2_ssm_func_bag(
+        A2_lookup = a2_ssm_func_bag(
             z=qT_lookup, v_wall=v_wall, alpha=alpha,
             npt=npt, method=method, de_method=de_method, z_st_thresh=z_st_thresh,
             lambda_correction=lambda_correction, parallel=parallel
         )
     else:
-        A2_lookup = ssm_bag.a2_e_conserving_bag_file(
+        A2_lookup = a2_e_conserving_bag_file(
             z=qT_lookup, filename=filename, alpha=alpha,
             skip=skip, npt=npt, z_st_thresh=z_st_thresh, parallel=parallel
         )
@@ -197,24 +205,28 @@ def spec_den_v_bag(
 
     if parallel:
         return spec_den_v_core(
-            a=nuc_args[0],
             A2_lookup=A2_lookup,
+            qT_lookup=qT_lookup,
+            z=z,
+            a=nuc_args[0],
+            bubble_spacing_enlargement_factor=bubble_spacing_enlargement_factor,
             log10_T_tilde_min=log10_T_min,
             log10_T_tilde_max=log10_T_max,
             nT=nT,
             nuc_type=nuc_type,
-            qT_lookup=qT_lookup,
-            v_wall=v_wall,
-            z=z
+            ubarf2=ubarf2,
+            v_wall=v_wall
         )
     return spec_den_v_core_single(
-        a=nuc_args[0],
         A2_lookup=A2_lookup,
+        qT_lookup=qT_lookup,
+        z=z,
+        a=nuc_args[0],
+        bubble_spacing_enlargement_factor=bubble_spacing_enlargement_factor,
         log10_T_tilde_min=log10_T_min,
         log10_T_tilde_max=log10_T_max,
         nT=nT,
         nuc_type=nuc_type,
-        qT_lookup=qT_lookup,
-        v_wall=v_wall,
-        z=z
+        ubarf2=ubarf2,
+        v_wall=v_wall
     )

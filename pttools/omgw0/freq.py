@@ -31,7 +31,7 @@ def f_star0(
         f_star0_ref: float = const.F_STAR0_REF) -> th.FloatOrArr:
     r"""
     Conversion factor $f_{\ast,0}$ between the frequencies at the time of the GW formation and frequencies today.
-    $$f_{\ast,0} = f_{\ast,0,\text{ref}
+    $$f_{\ast,0} = f_{\ast,0,\text{ref}}
     \left( \frac{T_n}{100 \text{GeV}} \right)
     \left( \frac{{g}_\ast}{100} \right)^{\frac{1}{6}} \text{Hz}$$,
     :croon_2024:`\ `, eq. 38
@@ -41,7 +41,7 @@ def f_star0(
 
     :param T_star: Temperature $T_\ast$ at the time of GW production
     :param g_star: Degrees of freedom at the time the GWs were produced. The default value is from the article.
-    :param f_star0_ref: The constant $f_{\ast,0,\text{ref}$ in the front of the formula
+    :param f_star0_ref: The constant $f_{\ast,0,\text{ref}}$ in the front of the formula
     :return: $f_{\ast,0}$
     """
     return f_star0_ref * (T_star / 100) * (g_star / 100)**(1 / 6)
@@ -50,7 +50,7 @@ def f_star0(
 def z(f: th.FloatOrArr, T_star: th.FloatOrArr, r_star: th.FloatOrArr, g_star: th.FloatOrArr = 100) -> th.FloatOrArr:
     r"""Convert from frequencies $f$ back to wavenumbers $z$
 
-    $$z(f) = \frac{f}{f_{\ast,0} {r}_\ast$$
+    $$z(f) = \frac{f}{f_{\ast,0}} {r}_\ast$$
     Inverted from :gowling_2021:`\ ` eq. 2.12
 
     :param f: frequencies $f$ today

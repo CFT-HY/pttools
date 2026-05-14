@@ -7,7 +7,7 @@ import numpy as np
 from pttools.bubble import Bubble
 from pttools.bubble.thermo_bag import de_from_w_bag
 from pttools.models import BagModel
-from pttools.ssm import SSMSpectrum
+from pttools.ssm import SSMSpectrum, pow_spec
 from pttools import ssm
 import pttools.type_hints as th
 from pttools.utils.assertions import assert_allclose
@@ -73,27 +73,31 @@ class SpectrumTest(unittest.TestCase):
         old = np.array([
             ssm.spec_den_v_bag(
                 self.z,
-                (self.V_WALLS[i], self.ALPHA_NS[i]),
+                (v_wall, alpha_n),
                 lambda_correction=True
             )
-            for i in range(self.V_WALLS.size)
+            for v_wall, alpha_n in zip(self.V_WALLS, self.ALPHA_NS)
         ])
-        new = np.array([spectrum.spec_den_v for spectrum in self.spectra_lambda])
+        new = np.array([spectrum.spec_den_v * spectrum.bubble.ubarf2 for spectrum in self.spectra_lambda])
         assert_allclose(new, old, rtol=0.283)
 
     def test_gw(self):
         """This test has lambda_correction=True,
         as disabling it would require a somewhat looser tolerance for some of the points.
+        This may be either due to numerical differences, or lambda_correction might hide some other difference.
         """
         old = np.array([
-            ssm.power_gw_scaled_bag(
+            ssm.power_gw_bag(
                 self.z,
-                (self.V_WALLS[i], self.ALPHA_NS[i]),
+                (v_wall, alpha_n),
                 lambda_correction=True
-            )
-            for i in range(self.V_WALLS.size)
+            ) * spectrum.source_lifetime_factor
+            for v_wall, alpha_n, spectrum in zip(self.V_WALLS, self.ALPHA_NS, self.spectra_lambda)
         ])
-        new = np.array([spectrum.pow_gw_ssm for spectrum in self.spectra_lambda])
+        new = np.array([
+            pow_spec(z=spectrum.y, spec_den=spectrum.spec_den_gw_ssm) * spectrum.bubble.ubarf2**2
+            for spectrum in self.spectra_lambda
+        ])
         assert_allclose(new, old, rtol=0.519)
 
 

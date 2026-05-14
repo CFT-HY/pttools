@@ -12,7 +12,7 @@ import numpy as np
 
 from pttools.speedup import NUMBA_DISABLE_JIT, NUMBA_INTEGRATE_TOLERANCES
 from pttools.utils.assertions import assert_allclose
-from tests.paper import ssm_paper_utils as spu
+from tests.paper.ssm_paper_utils import do_all_plot_ps_compare_nuc, save_compare_nuc_data
 from tests.utils import TEST_DATA_PATH
 
 logger = logging.getLogger(__name__)
@@ -25,24 +25,20 @@ class TestPowSpecs(unittest.TestCase):
         pow_specs()
 
 
-def pow_specs():
-    params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list = spu.do_all_plot_ps_compare_nuc(
-        save_id='final3',
+def pow_specs(filename: str = "data_compare_nuc-test.txt"):
+    params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list = do_all_plot_ps_compare_nuc(
+        save_id="final3",
         graph_file_type=None,
         lambda_correction=True
     )
-
-    save_id = 'test'
-    file = 'data_compare_nuc-' + save_id + '.txt'
-
-    spu.save_compare_nuc_data(
-        os.path.join(TEST_DATA_PATH, file),
+    save_compare_nuc_data(
+        os.path.join(TEST_DATA_PATH, filename),
         params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list
     )
 
     data_article = np.loadtxt(os.path.join(TEST_DATA_PATH, "data_compare_nuc-final3.txt"))
     data_reference = np.loadtxt(os.path.join(TEST_DATA_PATH, "data_compare_nuc-test_reference.txt"))
-    data_test = np.loadtxt(os.path.join(TEST_DATA_PATH, "data_compare_nuc-test.txt"))
+    data_test = np.loadtxt(os.path.join(TEST_DATA_PATH, filename))
 
     # The sign of p_cwg does not matter
     data_article[:, 9] = np.abs(data_article[:, 9])

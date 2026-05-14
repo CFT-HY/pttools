@@ -5,10 +5,10 @@ import os.path
 
 import numpy as np
 
-import pttools.bubble as bbl
-import pttools.ssm.const as ssm_const
+from pttools.bubble import get_ubarf2_bag
+from pttools.ssm.const import NptType, DEFAULT_N_PT, GAMMA
 from pttools.ssm.spectrum import NucType
-from pttools.ssm.spectrum_bag import power_gw_scaled_bag
+from pttools.ssm.spectrum_bag import power_gw_bag
 import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ SUPPRESSION_FOLDER = os.path.dirname(os.path.abspath(__file__))
 def calc_sup_ssm(
         path: str,
         save: bool = True,
-        npt: ssm_const.NptType = ssm_const.DEFAULT_N_PT,
+        npt: NptType = DEFAULT_N_PT,
         lambda_correction: bool = False) -> dict[str, th.FloatArr1DOrList]:
     """
     file must be a txt file with data in columns as follows
@@ -34,8 +34,7 @@ def calc_sup_ssm(
     if not os.path.isabs(path):
         path = os.path.join(SUPPRESSION_FOLDER, path)
     sim_data = np.loadtxt(path, skiprows=1)
-    # Calculating the suppression factor for the SSM
-    out_ssm = []
+
     out_ssm_tot = []
     Ubarf_2_ssm = []
     sup_ssm_all = []
@@ -43,17 +42,21 @@ def calc_sup_ssm(
     z = np.logspace(0, 3, 100)
 
     for i, vw in enumerate(sim_data[:, 0]):
-        # print(vw)
         alpha = sim_data[i, 1]
-        params = (vw, alpha, NucType.EXPONENTIAL,(1,))
-        # TODO: Check how to add these in new PTtools / are they still needed z_st_thresh=np.inf ,npt=[7000,200,1000]
-        out_ssm.append(power_gw_scaled_bag(z, params, npt=npt, lambda_correction=lambda_correction))  # omgw_ssm /(HnR*)(Hnt)
-        out_ssm_tot.append(np.trapezoid(out_ssm[i], np.log(z)))
-        Ubarf_2_ssm.append(bbl.get_ubarf2_bag(vw, alpha))
-
         sim_omgw = sim_data[i, 3]  # omgw_sim_tot /(HnR*)(Hnt)
-        expected_Ubarf2 = sim_data[i, 5]**2  # Ubarf_exp^2
-        sup_ssm = (Ubarf_2_ssm[i]/expected_Ubarf2)**2 * sim_omgw/out_ssm_tot[i]
+        expected_Ubarf2 = sim_data[i, 5] ** 2  # Ubarf_exp^2
+
+        # TODO: Check how to add these in new PTtools / are they still needed: z_st_thresh=np.inf, npt=[7000,200,1000]
+        out_ssm = 3 * GAMMA ** 2 * power_gw_bag(
+            z=z,
+            params=(vw, alpha, NucType.EXPONENTIAL,(1,)),
+            npt=npt,
+            lambda_correction=lambda_correction
+        )  # omgw_ssm /(HnR*)(Hnt)
+        out_ssm_tot.append(np.trapezoid(out_ssm, np.log(z)))
+        Ubarf_2_ssm.append(get_ubarf2_bag(vw, alpha))
+
+        sup_ssm = (Ubarf_2_ssm[i] / expected_Ubarf2)**2 * sim_omgw / out_ssm_tot[i]
         sup_ssm_all.append(sup_ssm)
 
     ssm_sup_data = {
@@ -66,10 +69,7 @@ def calc_sup_ssm(
 
     if save:
         x = path.split(".txt")
-        # print(x)
-        new_filename = f"{x[0]}_ssm"
-        np.savez(new_filename, **ssm_sup_data)
-        # print("SSM suppression file ", new_filename, " created")
+        np.savez(f"{x[0]}_ssm", **ssm_sup_data)
 
     return ssm_sup_data
 

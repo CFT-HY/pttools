@@ -168,7 +168,8 @@ autodoc_typehints = "description"
 extlinks: dict[str, tuple[str, str]] = {
     # The articles are ordered by publication year
     # Hindmarsh articles
-    "gw_ssm": ("https://arxiv.org/abs/1304.2433%s", "Hindmarsh et al., 2014%s"),
+    "hindmarsh_2014": ("https://arxiv.org/abs/1304.2433%s", "Hindmarsh et al., 2014%s"),
+    "hindmarsh_2015": ("https://arxiv.org/abs/1504.03291%s", "Hindmarsh et al., 2015%s"),
     "hindmarsh_2017": ("https://arxiv.org/abs/1704.05871%s", "Hindmarsh et al., 2017%s"),
     "ssm": ("https://arxiv.org/abs/1608.04735%s", "Hindmarsh et al., 2018%s"),
     "gw_pt_ssm": ("https://arxiv.org/abs/1909.10040%s", "Hindmarsh et al., 2019%s"),
@@ -186,16 +187,19 @@ extlinks: dict[str, tuple[str, str]] = {
     "giese_2020": ("https://arxiv.org/abs/2004.06995%s", "Giese et al., 2020%s"),
     "giese_2021": ("https://arxiv.org/abs/2010.09744%s", "Giese et al., 2021%s"),
     "gowling_2021": ("https://arxiv.org/abs/2106.05984%s", "Gowling & Hindmarsh, 2021%s"),
+    "ajmi_2022": ("https://arxiv.org/abs/2205.04097%s", "Ajmi & Hindmarsh, 2022%s"),
     "cutting_2022": ("https://arxiv.org/abs/2204.03396%s", "Cutting, Vilhonen & Weir, 2022%s"),
     "ai_2023": ("https://arxiv.org/abs/2303.10171%s", "Ai et al., 2023%s"),
     "gowling_2023": ("https://arxiv.org/abs/2209.13551%s", "Gowling et al., 2023%s"),
+    "lewicki_2023": ("https://arxiv.org/abs/2305.04924%s", "Lewicki et al., 2023%s"),
     "croon_2024": ("https://arxiv.org/abs/2410.21509%s", "Croon & Weir, 2024%s"),
     "giombi_2024_cs": ("https://arxiv.org/abs/2409.01426%s", "Giombi et al., 2024%s"),
     "giombi_2024_gr": ("https://arxiv.org/abs/2307.12080%s", "Giombi & Hindmarsh, 2024%s"),
+    "giombi_2026": ("https://arxiv.org/abs/2504.08037%s", "Giombi et al., 2026%s"),
     # Theses
     "gowling_phd": ("https://hdl.handle.net/10779/uos.23309135.v1%s", "Gowling, 2023%s"),
     "hakkinen_msc": ("https://hdl.handle.net/10138/576963%s", "Häkkinen, 2024%s"),
-    "maki_msc": ("https://hdl.handle.net/10138/591514%s", "Mäki, 2024%s"),
+    "maki_msc": ("https://arxiv.org/abs/2511.20436%s", "Mäki, 2025%s"),
     # Other
     "aof_grant": (
         "https://akareport.aka.fi/ibi_apps/WFServlet?IBIF_ex=x_hakkuvaus2&CLICKED_ON=&HAKNRO1=%s&UILANG=en&TULOSTE=HTML",

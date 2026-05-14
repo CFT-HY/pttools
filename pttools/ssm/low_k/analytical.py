@@ -1,11 +1,14 @@
-"""These are not relevant for the SSM"""
+"""Analytical models for a simplified $P_v(p)$"""
 
 import numpy as np
 from scipy.integrate import quad
 from scipy.special import erf, erfc, gamma
 
-from pttools.ssm.low_k.utils import rho, Iv, U
-from pttools.ssm.low_k.intersection import cross_z
+from pttools.ssm.barotropic import Upsilon
+from pttools.ssm.rho import rho
+from pttools.ssm.low_k.const import IV_ANALYTICAL
+from pttools.ssm.low_k.intersection import z_cross
+from pttools.type_hints import FloatOrArr
 
 
 def gw_spectral_density_approx_low(z, HLf, cs, tau_end):
@@ -15,16 +18,16 @@ def gw_spectral_density_approx_low(z, HLf, cs, tau_end):
     # HL = (1+nu)/tau_star
     # z = k*Lf
     if cs >= np.sqrt(1 / 3) - 1e-6:
-        return (np.log(tau_star / tau_end)) ** 2 * 8 / 15 * Iv * tau_star
+        return (np.log(tau_star / tau_end)) ** 2 * 8 / 15 * IV_ANALYTICAL * tau_star
     return HLf ** (-1 + 2 * nu) * (0.5 * (1 + nu)) ** (-2 * nu) * z ** (-2 * nu) * (1 + nu) * gamma(
-        0.5 + nu) ** 2 / 2 / np.pi * U(tau_star / tau_end, 2 * nu) ** 2 * 16 / 15 * Iv
+        0.5 + nu) ** 2 / 2 / np.pi * Upsilon(r=tau_star / tau_end, l=2 * nu) ** 2 * 16 / 15 * IV_ANALYTICAL
 
 
 def gw_spectral_density_approx_int(z, HLf, cs):
     """GW spectral density approximation for intermediate frequencies"""
     nu = (1 - 3 * cs ** 2) / (1 + 3 * cs ** 2)
     tau_star = (1. + nu) / HLf
-    return 4 / 3 / cs ** 4 * (3 - 2 * cs ** 2 - 3 / cs * (1 - cs ** 2) * np.arctanh(cs)) * Iv / tau_star / z ** 2
+    return 4 / 3 / cs ** 4 * (3 - 2 * cs ** 2 - 3 / cs * (1 - cs ** 2) * np.arctanh(cs)) * IV_ANALYTICAL / tau_star / z ** 2
 
 
 def gw_spectral_density_approx_high(z, HLf, cs, tau_end):
@@ -51,10 +54,21 @@ def Pgw_approx(z, HLf, cs, tau_star, tau_end):
 
     nu = (1 - 3 * cs ** 2) / (1 + 3 * cs ** 2)
     z_star = 4 * cs * np.pi * (1 + nu) / HLf
-    z_cross = cross_z(HLf, cs, tau_star, tau_end)
+    z_cr = z_cross(HLf, cs, nu, tau_star, tau_end)
 
-    term_low = 0.5 * erfc(2 * np.pi * tau_star * (z - z_cross)) * P_low
-    term_int = 0.5 * (1 + erf(2 * np.pi * tau_star * (z - z_cross))) * P_int * 0.5 * erfc(
+    term_low = 0.5 * erfc(2 * np.pi * tau_star * (z - z_cr)) * P_low
+    term_int = 0.5 * (1 + erf(2 * np.pi * tau_star * (z - z_cr))) * P_int * 0.5 * erfc(
         2 * np.pi * tau_star * (z - 0.5 * z_star))
 
     return term_low + term_int + P_high
+
+
+def Pv_analytical(k: FloatOrArr, kp: FloatOrArr, ubarf2: FloatOrArr) -> FloatOrArr:
+    r"""Analytical ansatz for $P_v(k)$
+    $$P_v(p) = 3 \pi \frac{\bar{U}_f^2}{k_p^3} \frac{(p/k_p)^2}{1 + (p/k_p)^6}$$
+    :giombi_2024_cs:`\ ` eq. 3.1
+    :giombi_2026:`\ ` eq. 3.1
+    """
+    # The equation numbers in the articles happen to be the same.
+    k_rel = k / kp
+    return 3 * np.pi * ubarf2 / kp**3 * k_rel **2 / (1 + k_rel ** 6)

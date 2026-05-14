@@ -1,17 +1,33 @@
 """Constants for the omgw0 module"""
 
-# Speed of light (m/s)
+import math
+
+#: Speed of light (m/s)
 c: float = 299792458.
+
+#: Elementary charge $e$ in C
+e: float = 1.602176634e-19
+
+#: 1 eV in J
+EV_IN_J: float = e
+
+#: 1 GeV in J
+GEV_IN_J: float = 1e9 * EV_IN_J
 
 DEFAULT_G_STAR: float = 100.
 DEFAULT_T_STAR: float = 100.  # GeV
 
-#: :caprini_2020:`\ `, eq. 20
-FGW0: float = 3.57e-5
+
+F_GW0: float = 3.57e-5
+r"""$F_{\text{gw},0}$
+$$F_{\text{gw},0} = (3.57 \pm 0.05) \cdot 10^{-5} \left( \frac{100}{g_*} \right)^\frac{1}{3}$$
+:caprini_2020:`\ `, eq. 20
+Note that this constant assumes that $g_* = 100$, and the corresponding factor will have to be implemented elsewhere.
+"""
 
 F_STAR0_REF: float = 2.6e-6
 r"""
-$f_{\ast,0,\text{ref}$, the factor used for converting from frequencies at the time of the GW formation to frequencies today.
+$f_{\ast,0,\text{ref}}$, the factor used for converting from frequencies at the time of the GW formation to frequencies today.
 This value is valid as long as the universe is radiation dominated at the time of GW production.
 This value is used in:
 :caprini_2020:`\ ` eq. 31
@@ -25,10 +41,19 @@ It's derived in
 #: :lisa_sci_req:`\ ` eq. 3 (Hz)
 F1_LISA: float = 4e-4
 
+#: Gravitational constant $G$ in SI units $\frac{\text{m}^3}{\text{kg s}^2}$
+G: float = 6.67430e-11
+
+#: Gravitational constant $G$ in GeV
+# G_GEV: float = 1.22e19**(-2)
+
 #: :caprini_2020:`\ ` p. 12
 G0: float = 2.
 #: :caprini_2020:`\ ` p. 12
 GS0: float = 3.91
+
+#: Reduced Planck constant in SI units $\text{J} \cdot \text{s}$
+H_BAR: float = 1.054571817e-34
 
 #: Parsec to meters
 PC_TO_M: float = 3.0857e16
@@ -46,7 +71,12 @@ YEAR_IN_SECONDS: float = 365.2425 * DAY_IN_SECONDS
 #: LISA observation time (s)
 LISA_OBS_TIME: float = 4 * 0.75 * YEAR_IN_SECONDS
 
-OMEGA_RADIATION: float = FGW0 * GS0**(4/3) / G0
+PLANCK_LENGTH: float = math.sqrt(H_BAR * G / (c**3))
+r"""Planck length $l_\text{P}$
+$$l_P = \sqrt{\frac{\hbar G}{c^3}}$$
+"""
+
+OMEGA_RADIATION: float = F_GW0 * GS0 ** (4 / 3) / G0
 r"""
 $\Omega_{\gamma,0}$, the radiation density parameter today.
 Calculated from :caprini_2020:`\ ` p. 11-12.

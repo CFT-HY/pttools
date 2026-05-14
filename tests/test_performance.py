@@ -72,10 +72,10 @@ class TestPerformance(unittest.TestCase):
         from pttools import ssm
 
         z = np.logspace(0, 2, 100)
-        ssm.power_gw_scaled_bag(z, (0.1, 0.1))
+        ssm.power_gw_bag(z, (0.1, 0.1))
         """)
-        command = "ssm.power_gw_scaled_bag(z, (0.1, 0.1))"
-        cls.time_and_plot("power_gw_scaled_bag", "power_gw_scaled_bag", command, setup, 10)
+        command = "ssm.power_gw_bag(z, (0.1, 0.1))"
+        cls.time_and_plot("power_gw_bag", "power_gw_bag", command, setup, 10)
 
     @classmethod
     @unittest.skipIf(IS_GITHUB_ACTIONS and IS_WINDOWS, reason="GitHub Actions Windows runners are slow")
