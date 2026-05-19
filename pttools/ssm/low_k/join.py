@@ -26,9 +26,9 @@ def gw_junction(
     starting from the profiles in each regime.
 
     $\tilde{P}_\text{gw}(kR_*) =
-    \tilde{P}_\text{gw}^\text{low} (kR_*) \frac{1}{2} \erfc \left( 2 \pi \eta_* (k - k_\times) \right) +
-    \frac{1}{2} \left[ 1 + \erf \left( 2 \pi \eta_* (k - k_\times) \right) \right] \tilde{P}_\text{gw}^\text{int}
-    \frac{1}{2} \erfc \left( 2 \pi \eta_* (k - k_\star) \right) +
+    \tilde{P}_\text{gw}^\text{low} (kR_*) \frac{1}{2} \erfc \left( 2 \pi \eta_* (k - k_{\times}) \right) +
+    \frac{1}{2} \left[ 1 + \erf \left( 2 \pi \eta_* (k - k_{\times}) \right) \right] \tilde{P}_\text{gw}^\text{int}
+    \frac{1}{2} \erfc \left( 2 \pi \eta_* (k - k_{\star}) \right) +
     \tilde{P}_\text{gw}^\text{high} (kR_*)
     This is a part of :giombi_2024_cs:`\ ` eq. 4.9
 

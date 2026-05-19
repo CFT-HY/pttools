@@ -24,7 +24,7 @@ def rho(z: FloatOrArr, x: FloatOrArr, y: FloatOrArr) -> FloatOrArr:
 @numba.njit
 def rho_delta(z: FloatOrArr, x: FloatOrArr, xp: FloatOrArr, xm: FloatOrArr, cs2: FloatOrArr = CS0_2) -> FloatOrArr:
     r"""$\rho(z,x)$
-    $$\rho(z,x) = z^2 \left( \frac{1 - c_s^2}{c_s^2} \right)^2 \frac{(x - x_+)^2(x - x_-)^2}{x(x_+ + x_- - x)}$$
+    $$\rho(z,x) = z^2 \left( \frac{1 - c_s^2}{c_s^2} \right)^2 \frac{(x - x_+)^2(x - x_{-})^2}{x(x_+ + x_{-} - x)}$$
     :giombi_2024_cs:`\ ` eq. B.21
     This is obtained by integrating $y$ (aka. $\tilde{x}$) out using a delta function in the kernel.
     """
@@ -42,8 +42,8 @@ def rho_delta_factor[T: FloatOrArr](cs2: T = CS0_2) -> T:
 
 @numba.njit
 def rho_delta_frac(x: FloatOrArr, xp: FloatOrArr, xm: FloatOrArr) -> FloatOrArr:
-    r"""The $(x,x_+, x_-)$ fraction in $\rho(z,x)$
-    $$\frac{(x - x_+)^2(x - x_-)^2}{x(x_+ + x_- - x)}$$
+    r"""The $(x,x_+, x_{-})$ fraction in $\rho(z,x)$
+    $$\frac{(x - x_+)^2(x - x_{-})^2}{x(x_+ + x_{-} - x)}$$
     :giombi_2024_cs:`\ ` eq. B.21
     """
     return (x - xp)**2 * (x - xm)**2 / (x * (xp + xm - x))
@@ -52,7 +52,7 @@ def rho_delta_frac(x: FloatOrArr, xp: FloatOrArr, xm: FloatOrArr) -> FloatOrArr:
 @numba.njit
 def rho_pm(z: FloatOrArr, x: FloatOrArr, cs: FloatOrArr = CS0) -> FloatOrArr:
     r"""Geometric function $\rho(z,x,y)$
-    Here $y \equiv x_+ + x_- - x$
+    Here $y \equiv x_+ + x_{-} - x$
     :giombi_2026:`\ ` p. 25
     """
     return rho(z=z, x=x, y=x_plus(z=z, cs=cs) + x_minus(z=z, cs=cs) - x)

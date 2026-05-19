@@ -17,7 +17,7 @@ def H_star_tau_sh(r_star: FloatOrArr, ubarf: FloatOrArr) -> FloatOrArr:
 
 def H_star_tau_sh_approx(r_star: FloatOrArr, K: FloatOrArr) -> FloatOrArr:
     r"""Approximation of Hubble-scaled shock appearance timescale $H_* \tau_\text{sh}$
-    $$H_* \tau_\text{sh} = \frac{r_*}{\bar{U}_f} \approx \frac{r_*}{\sqrt{K}$$
+    $$H_* \tau_\text{sh} = \frac{r_*}{\bar{U}_f} \approx \frac{r_*}{\sqrt{K}}$$
     :ajmi_2022:`\ ` p. 9
     """
     return r_star / np.sqrt(K)
@@ -46,7 +46,7 @@ def H_star_tau_v_old[T: FloatOrArr](H_star_tau_sh: T) -> T:
 
 
 def J(r_star: FloatOrArr, H_star_tau_v: FloatOrArr) -> FloatOrArr:
-    """$J = H_* R_* H_* \tau_v$
+    r"""$J = H_* R_* H_* \tau_v$
     :ajmi_2022:`\ ` eq. 81
     :gowling_2021:`\ ` eq. 2.8
     This is an approximation, and the source lifetime factor should be used instead.

@@ -99,7 +99,7 @@ def delta_n[T: FloatOrArr](model: "Model", wn: T) -> T:
 def kappa_a(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr) -> th.FloatOrArr:
     r"""Approximation for $\kappa_a$
 
-    $$\kappa_A \approx v_\text{wall} \frac{6.9 \alpha_n}{1.36 - 0.037 \sqrt{\alpha_n} + \alpha_n}$$
+    $$\kappa_A \approx v_{\text{wall}} \frac{6.9 \alpha_n}{1.36 - 0.037 \sqrt{\alpha_n} + \alpha_n}$$
     :espinosa_2010:`\ `, eq. 95
     For small wall speeds xi_w << cs
     """
@@ -144,10 +144,10 @@ def kappa_detonation_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, v_cj:
     r"""Approximation of $\kappa$ for detonations
 
     $$
-    \kappa(v_\text{wall} > v_{CJ}) \approx \frac{
-        (v_{CJ} - 1)^3 * v_{CJ}^{5/2} * v_\text{wall}^{-5/2} * \kappa_C * \kappa_D
+    \kappa(v_{\text{wall}} > v_{CJ}) \approx \frac{
+        (v_{CJ} - 1)^3 * v_{CJ}^{5/2} * v_{\text{wall}}^{-5/2} * \kappa_C * \kappa_D
     }{
-        ((v_{CJ} - 1)^3 - (v_\text{wall} - 1)^3)) * v_{CJ}^{5/2} + \kappa_C + (v_\text{wall} - 1)^3 * \kappa_D
+        ((v_{CJ} - 1)^3 - (v_{\text{wall}} - 1)^3)) * v_{CJ}^{5/2} + \kappa_C + (v_{\text{wall}} - 1)^3 * \kappa_D
     }
     $$
     :espinosa_2010:`\ `, eq. 100
@@ -167,9 +167,9 @@ def kappa_hybrid_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, cs: th.Fl
     r"""Approximation of $\kappa$ for hybrids, aka. supersonic deflagrations
 
     $$
-    \kappa(c_s < v_\text{wall} < v_{CJ}) \approx \kappa_B
-    + (v_\text{wall} - c_s) \delta \kappa
-    + \frac{(v_\text{wall} - c_s)^3}{(v_{CJ} - c_s)^3} \left(\kappa_C - \kappa_B - (v_{CJ} - c_s) \delta \kappa \right)
+    \kappa(c_s < v_{\text{wall}} < v_{CJ}) \approx \kappa_B
+    + (v_{\text{wall}} - c_s) \delta \kappa
+    + \frac{(v_{\text{wall}} - c_s)^3}{(v_{CJ} - c_s)^3} \left(\kappa_C - \kappa_B - (v_{CJ} - c_s) \delta \kappa \right)
     $$
     :espinosa_2010:`\ `, eq. 102
     """
@@ -184,10 +184,10 @@ def kappa_hybrid_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, cs: th.Fl
 def kappa_sub_def_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, cs: th.FloatOrArr = CS0) -> th.FloatOrArr:
     r"""Approximation of $\kappa$ for subsonic deflagrations
 
-    $$\kappa(v_\text{wall} < c_s) \approx \frac{
+    $$\kappa(v_{\text{wall}} < c_s) \approx \frac{
         c_s^\frac{11}{5} \kappa_A \kappa_B
     }{
-        (c_s^\frac{11}{5} - v_\text{wall}^\frac{11}{5}) \kappa_B + v_\text{wall} c_s^\frac{6}{5} \kappa_A
+        (c_s^\frac{11}{5} - v_{\text{wall}}^\frac{11}{5}) \kappa_B + v_{\text{wall}} c_s^\frac{6}{5} \kappa_A
     }$$
     :espinosa_2010:`\ `, eq. 99
     """

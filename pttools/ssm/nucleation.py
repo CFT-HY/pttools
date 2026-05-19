@@ -73,8 +73,8 @@ def beta_tilde(
 
 @numba.njit
 def beta_R_star0[T: FloatOrArr](v_wall: T) -> T:
-    r"""$\beta R_{*,0}$
-    $$\beta R_{*,0} = (8 \pi)^\frac{1}{3} v_\text{wall}$$
+    r"""$\beta R_{\ast,0}$
+    $$\beta R_{\ast,0} = (8 \pi)^\frac{1}{3} v_{\text{wall}}$$
     This is a direct consequence of :py:func:beta:.
     This does not take into account the nucleation suppression.
 
@@ -87,10 +87,26 @@ def beta_R_star0[T: FloatOrArr](v_wall: T) -> T:
 
 def bubble_spacing_enlargement_factor[T: FloatOrArr](hx: T) -> T:
     r"""Bubble spacing enlargement factor $\Lambda$
-    $$\Lambda(h_x) \equiv \frac{R_*}{R_*(0)} = I_h^{-\frac{1}{3}}(h_x)$$
+    $$\Lambda(h_x) \equiv \frac{R_{\ast}}{R_{\ast}(0)} = I_h^{-\frac{1}{3}}(h_x)$$
     :ajmi_2022:`\ ` eq. 77
     """
     return Ih_approx(hx)**(-1/3)
+
+
+def hx[T: FloatOrArr](f: T) -> T:
+    r"""Fractional volume $h_x$ at which the symmetric phase is reheated enough to prevent further bubble nucleation
+    $$h_x = \frac{f}{1 + f} = 1 - \frac{v_{\text{wall}}^3}{v_{\text{eff}}^3}$$
+    :ajmi_2022:`\ ` eq. 56
+    """
+    return f / (1 + f)
+
+
+def Ih_approx[T: FloatOrArr](hx: T) -> T:
+    r"""Approximate $I_h(h_x)$
+    $$I_h(h_x) = 1 + \frac{h_x \ln h_x}{1 - h_x}$$
+    :ajmi_2022:`\ ` eq. 78
+    """
+    return 1 + (hx * np.log(hx)) / (1 - hx)
 
 
 @numba.njit
@@ -126,7 +142,7 @@ def nu[T: FloatOrArr](T_tilde: T, nuc_type: NucType = NucType.SIMULTANEOUS, a: f
 
 def nucleation_f(xi: th.FloatArr1D, T: th.FloatArr1D, beta_tilde: float, v_wall: float, v_sh: float):
     r"""Relative increase $f$ in the effective volume of the bubble
-    $$f = \frac{3}{v_\text{wall}^3} \int_{v_\text{wall}}^{v_\text{sh}} \xi^2
+    $$f = \frac{3}{v_{\text{wall}}^3} \int_{v_{\text{wall}}}^{v_{\text{sh}}} \xi^2
     \left( 1 - e^{-\Delta S} \right) d\xi$$,
     where
     $$\Delta S
@@ -139,22 +155,6 @@ def nucleation_f(xi: th.FloatArr1D, T: th.FloatArr1D, beta_tilde: float, v_wall:
     inds = np.logical_and(v_wall < xi, xi < v_sh)
     xi_cut = xi[inds]
     return 3 / v_wall**3 * np.trapezoid(xi_cut**2 * (1 - np.exp(-beta_tilde * (T[inds] - T[-1]) / T[-1])), xi_cut)
-
-
-def hx[T: FloatOrArr](f: T) -> T:
-    r"""Fractional volume $h_x$ at which the symmetric phase is reheated enough to prevent further bubble nucleation
-    $$h_x = \frac{f}{1 + f} = 1 - \frac{v_\text{wall}^3}{v_\text{eff}^3}$$
-    :ajmi_2022:`\ ` eq. 56
-    """
-    return f / (1 + f)
-
-
-def Ih_approx[T: FloatOrArr](hx: T) -> T:
-    r"""Approximate $I_h(h_x)$
-    $$I_h(h_x) = 1 + \frac{h_x \ln h_x}{1 - h_x}$$
-    :ajmi_2022:`\ ` eq. 78
-    """
-    return 1 + (hx * np.log(hx)) / (1 - hx)
 
 
 def r_star(

@@ -275,7 +275,7 @@ class SSMSpectrum:
     def H_star_tau_nl(self) -> float:
         r"""Hubble-scaled timescale of non-linearities $H \tau_\text{nl}$
         $$H_* \tau_\text{nl} = \frac{r_*}{\bar{U}_f}$$,
-        where $\bar{U}_f \equiv v_\text{rms}$
+        where $\bar{U}_f \equiv v_{\text{rms}}$
         :gw_pt_ssm:`\ ` p. 6, 13
         :notes:`\ ` p. 48
         :giombi_2024_cs:`\ ` p. 2
@@ -353,7 +353,7 @@ class SSMSpectrum:
 
     @functools.cached_property
     def pow_v_tilde(self) -> FloatArr1D:
-        r"""$\mathcal{P}_\tilde{v}$"""
+        r"""$\mathcal{P}_{\tilde{v}}$"""
         return 2 * self.pow_v
 
     @functools.cached_property
@@ -378,9 +378,9 @@ class SSMSpectrum:
 
     @functools.cached_property
     def spec_den_v_tilde(self) -> FloatArr1D:
-        r"""Spectral density $\tilde{P}_\tilde{v}$ of the velocity field $v$
+        r"""Spectral density $\tilde{P}_{\tilde{v}}$ of the velocity field $v$
         This includes
-        $$\tilde{P}_\tilde{v}(q) = 2 \tilde{P}_v(q)$$
+        $$\tilde{P}_{\tilde{v}}(q) = 2 \tilde{P}_v(q)$$
         :gw_pt_ssm:`\ ` eq. 4.18
         """
         return 2 * self.spec_den_v

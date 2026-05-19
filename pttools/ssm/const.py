@@ -22,7 +22,7 @@ the ratio of the scale factor $a_*$ at GW formation and $a_r$ at return to radia
 DEFAULT_N_SH: float = 1.
 r"""
 Default number of shock formation times $N_\text{sh}$
-Note that $\N_\text{sh}$ is not necessarily an integer.
+Note that $N_\text{sh}$ is not necessarily an integer.
 :giombi_2024_cs:`\ ` eq. 4.1
 """
 

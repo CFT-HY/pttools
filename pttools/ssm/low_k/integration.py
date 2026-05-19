@@ -94,7 +94,7 @@ def power_spectrum_integration_int(
     during the acoustic sourcing (eta_end - eta_* >> eta_*)
 
     $$\tilde{P}_\text{gw}^\text{int}(kR_*) \approx_{\Delta \eta_\text{v} \gg \eta_*}
-    \frac{4}{3 c_s^4} \left( 3 - 2c_s^2 - \frac{3}{c_s}(1 - c_s^2) \arctanh(c_s) \right)
+    \frac{4}{3 c_s^4} \left( 3 - 2c_s^2 - \frac{3}{c_s}(1 - c_s^2) \text{arctanh}(c_s) \right)
     \frac{\mathcal{I}_v}{\tau_* z^2}$$
     :giombi_2024_cs:`\ ` eq. 3.11
 

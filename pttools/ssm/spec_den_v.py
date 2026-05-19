@@ -112,10 +112,10 @@ def spec_den_v(
     r"""Spectral density of the velocity field $\tilde{P}_v$
 
     $$\tilde{P}_v(q)
-    = \frac{1}{\bar{U}_f^2 R_*^3} P_v(q)
-    = \frac{1}{\bar{U}_f^2 (\beta R_*)^6} \int d\tilde{T} \nu(\tilde{T}) \tilde{T}^6
+    = \frac{1}{\bar{U}_f^2 R_{\ast}^3} P_v(q)
+    = \frac{1}{\bar{U}_f^2 (\beta R_{\ast})^6} \int d\tilde{T} \nu(\tilde{T}) \tilde{T}^6
     \left| A \left( \frac{\tilde{T}q}{\beta} \right) \right|^2
-    = \frac{\Lambda_\text{nucl}^6}{\bar{U}_f^2 (\beta R_{*,0})^6} \int d\tilde{T} \nu(\tilde{T}) \tilde{T}^6
+    = \frac{\Lambda_\text{nucl}^6}{\bar{U}_f^2 (\beta R_{\ast,0})^6} \int d\tilde{T} \nu(\tilde{T}) \tilde{T}^6
     \left| A \left( \frac{\tilde{T}q}{\beta} \right) \right|^2$$
 
     Please note that
@@ -129,7 +129,7 @@ def spec_den_v(
     \left| A \left( \frac{\tilde{T}q}{\beta} \right) \right|^2$$
     :gw_pt_ssm:`\ ` eq. 4.17
 
-    $$\Lambda_\text{nucl} \equiv \frac{R_*}{R_{*,0}}$$
+    $$\Lambda_\text{nucl} \equiv \frac{R_{\ast}}{R_{\ast,0}}$$
     :ajmi_2022:`\ ` eq. 77
 
     :param v: velocity profile $v$
@@ -148,7 +148,7 @@ def spec_den_v(
     :param cs: speed of sound $c_s$
     :param parallel: whether to compute the result for each $z$ in parallel
     :param lambda_correction: whether to enable a non-linear correction for $\lambda$
-    :return: $\tilde{P}_\tilde{v}$
+    :return: $\tilde{P}_{\tilde{v}}$
     """
     # z limits
     log10_z_min = np.log10(np.min(z))

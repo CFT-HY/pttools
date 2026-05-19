@@ -33,13 +33,13 @@ def z_cross_approx(cs: FloatOrArr, nu: FloatOrArr, eta_ratio: FloatOrArr, r_star
     r"""Approximation for $z_\times$
 
     $$z_\times = \frac{\sqrt{5}}{\sqrt{2} c_s^2} \frac{\nu}{1 + \nu}
-    \frac{\sqrt{3 - 2 c_s^2 - \frac{3}{c_s}(1 - c_s^2) \arctanh(c_s)}}
-    {1 - \left( 1 + \frac{\Delta \eta_\text{v}}{\eta_*} \right)^{-\nu} r_*$$
+    \frac{\sqrt{3 - 2 c_s^2 - \frac{3}{c_s}(1 - c_s^2) \text{arctanh}(c_s)}}
+    {1 - \left( 1 + \frac{\Delta \eta_\text{v}}{\eta_*} \right)^{-\nu}} r_*$$
 
     This is derived by multiplying $R_*$ with
     $$k_\times = \frac{\sqrt{5}}{\sqrt{2} c_s^2} \frac{\nu}{1 + \nu}
-    \frac{\sqrt{3 - 2 c_s^2 - \frac{3}{c_s}(1 - c_s^2) \arctanh(c_s)}}
-    {1 - \left( 1 + \frac{\Delta \eta_\text{v}}{\eta_*} \right)^{-\nu} \mathcal{H}$$
+    \frac{\sqrt{3 - 2 c_s^2 - \frac{3}{c_s}(1 - c_s^2) \text{arctanh}(c_s)}}
+    {1 - \left( 1 + \frac{\Delta \eta_\text{v}}{\eta_*} \right)^{-\nu}} \mathcal{H}$$
     :giombi_2024_cs:`\ ` eq. 4.10
     """
     return np.sqrt(5/2) / (cs**2 * (1 + nu)) * \

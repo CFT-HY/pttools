@@ -50,7 +50,7 @@ def gen_lookup(
 @numba.njit
 def limits_from_lookup[T: FloatOrArr](x_lookup: FloatArr1D, cs: T) -> tuple[T, T]:
     r"""Limits of x from a lookup
-    $$y_\pm = 2 x_\pm \frac{c_s}{1 \pm c_s)$$
+    $$y_\pm = 2 x_{\pm} \frac{c_s}{1 \pm c_s}$$
     The inverse of :py:func:lookup_limits: from :gw_pt_ssm:`\ ` p. 12
     """
     y_min = x_lookup.min() * 2. * cs / (1. - cs)
@@ -206,14 +206,14 @@ def spec_den_gw(
 
     $$\tilde{P}_\text{gw}(z) =
     \frac{1}{4\pi z c_s} \left( \frac{1 - c_s^2}{c_s^2} \right)^2 \Upsilon_\ell
-    \int_{x_-}^{x_+} dx \frac{(x-x_+)^2(x-x_-)^2}{x(x_+ + x_- - x)} \tilde{P}_v(x) \tilde{P}_v(x_+ + x_- - x)$$
+    \int_{x_{-}}^{x_+} dx \frac{(x - x_+)^2(x - x_{-})^2}{x(x_+ + x_{-} - x)} \tilde{P}_v(x) \tilde{P}_v(x_+ + x_{-} - x)$$
     :giombi_2024_cs:`\ ` eq. 3.13
     Older versions of this formula are available in
     :gw_pt_ssm:`\ ` eq. 3.47, 3.48
     :maki_msc:`\ ` eq. 3.47, 3.48
     :gowling_phd:`\ ` eq. 3.33
 
-    If you give this function $\bar{U}_f^2 \tilde{P}_\tilde{v}$ instead of $\tilde{P}_\tilde{v}$, then
+    If you give this function $\bar{U}_f^2 \tilde{P}_{\tilde{v}}$ instead of $\tilde{P}_{\tilde{v}}$, then
     you get $\bar{U}_f^4 \tilde{P}_\text{gw}$ as output.
 
     :param z_lookup: Lookup table for the $z = qL_f$ values corresponding to P_v_lookup
