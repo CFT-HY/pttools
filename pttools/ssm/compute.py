@@ -23,7 +23,6 @@ def compute(
         # Scalars (in alphabetical order)
         bubble_spacing_enlargement_factor: float,
         cs: float,
-        H_star_tau_nl: float,
         lifetime_distribution_a: float,
         nu_gdh2024: float,
         r_star: float,
@@ -62,7 +61,7 @@ def compute(
         P_tilde_v=spec_den_v,
         P_tilde_v_lookup=spec_den_v_lookup,
         y=y, z_lookup=z_lookup,
-        cs=cs, H_star_tau_nl=H_star_tau_nl, nu_gdh2024=nu_gdh2024, r_star=r_star,
+        cs=cs, nu_gdh2024=nu_gdh2024, r_star=r_star,
         tau_end=tau_end, tau_star=tau_star
     )
     return \
@@ -80,7 +79,6 @@ def compute_low_k(
         z_lookup: FloatArr1D,
         # Scalars (in alphabetical order)
         cs: float,
-        H_star_tau_nl: float,
         nu_gdh2024: float,
         r_star: float,
         tau_end: float,

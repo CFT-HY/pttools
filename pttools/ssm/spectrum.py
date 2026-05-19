@@ -187,7 +187,6 @@ class SSMSpectrum:
                 # Scalars
                 bubble_spacing_enlargement_factor=self.bubble_spacing_enlargement_factor,
                 cs=self.cs,
-                H_star_tau_nl=self.H_star_tau_nl,
                 lifetime_distribution_a=lifetime_distribution_a,
                 nu_gdh2024=self.bubble.nu_gdh2024,
                 r_star=self.r_star,
