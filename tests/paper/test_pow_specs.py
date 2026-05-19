@@ -54,7 +54,9 @@ def pow_specs(filename: str = "data_compare_nuc-test.txt"):
         # Changes continue
         # rtol = 1.14e-6
         # More changes in 2023-07
-        rtol = 1.24e-6
+        # rtol = 1.24e-6
+        # Nucleation suppression and scaling changes in 2026-05
+        rtol = 6.74e-6
     else:
         # Since this was a heavy computation, let's print info on the threading layer used
         logger.info(f"Numba threading layer used: {numba.threading_layer()}")
