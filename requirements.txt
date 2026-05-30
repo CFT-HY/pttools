@@ -32,8 +32,8 @@ numbalsoda == 0.3.4; sys_platform != "win32"
 # "create_target_machine() got an unexpected keyword argument 'jitdebug'"
 # then you may have to downgrade llvmlite to 0.32.1
 # https://github.com/rapidsai/cuml/issues/2389#issuecomment-642645437
-numpy == 2.4.4
-orjson == 3.11.9  # Orjson does not yet support free-threading.
+numpy == 2.4.6
+orjson == 3.11.9  # As of 2026-05, Orjson does not yet support free-threading.
 plotly == 6.7.0
 scipy == 1.17.1
 # TBB can be used to speed up Numba threading
