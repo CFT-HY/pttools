@@ -6,8 +6,8 @@ import numpy as np
 
 from pttools.analysis.utils import create_fig_ax
 from pttools.bubble import v_chapman_jouguet_bag
-from pttools.omgw0.suppression import Suppression, alpha_n_max_approx
-from pttools.omgw0.suppression import alpha_n_max as alpha_n_max_func
+from pttools.suppression import Suppression, alpha_n_max_approx
+from pttools.suppression import alpha_n_max as alpha_n_max_func
 
 
 class SuppressionPlot:

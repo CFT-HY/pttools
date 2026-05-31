@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 from examples import utils
 from pttools.analysis.suppression import SuppressionPlot
-from pttools.omgw0.suppression import WITH_HYBRIDS, NO_HYBRIDS, NO_HYBRIDS_EXT
+from pttools.suppression import WITH_HYBRIDS, NO_HYBRIDS, NO_HYBRIDS_EXT
 
 
 def main():

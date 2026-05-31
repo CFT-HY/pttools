@@ -12,8 +12,8 @@ from pttools.omgw0 import const
 from pttools.omgw0.factors import F_gw0
 from pttools.omgw0 import freq
 from pttools.omgw0 import noise
-from pttools.omgw0 import suppression as sup_mod
 from pttools import ssm
+import pttools.suppression as sup_mod
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 from pttools.utils import copy_docstrings, export_json
