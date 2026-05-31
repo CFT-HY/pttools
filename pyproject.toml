@@ -36,7 +36,7 @@ maintainers = [
     {name = "Mika Mäki", email = "mika.x.maki@helsinki.fi"}
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Framework :: Matplotlib",
     "Intended Audience :: Developers",
     "Intended Audience :: Education",
