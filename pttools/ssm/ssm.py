@@ -9,6 +9,7 @@ import numpy as np
 from pttools import speedup
 from pttools.ssm import const
 from pttools.ssm.calculators import resample_uniform_xi
+from pttools.ssm.nucleation import beta_R_star0, nu
 from pttools.ssm.sin_transform import sin_transform
 import pttools.type_hints as th
 
@@ -140,3 +141,27 @@ def lam(v: th.FloatArr, w: th.FloatArr, e: th.FloatArr, non_linear_correction: b
     if non_linear_correction:
         lm += w * v * v / w[-1]
     return lm
+
+
+@numba.njit
+def ubarf2_from_a2(
+        T_tilde: th.FloatArr1D,
+        z: th.FloatArr1D,
+        a2: th.FloatArr1D,
+        v_wall: float,
+        bubble_spacing_enlargement_factor: float = 1.) -> th.FloatArr1D:
+    r"""$\bar{U}_f^2 \left( |A(z)|^2 \right)$
+    $$\bar{U}_f^2
+    = \int \frac{dq}{q} \mathcal{P}_\tilde{v}(a)
+    = \frac{2}{(\beta R_*)^3}
+    \int d\tilde{T} \nu(\tilde{T}) \tilde{T}^3
+    \int dz \frac{z^2}{2\pi^2} |A(z)|^2$$
+    :gw_pt_ssm:`\ ` eq. 4.33
+
+    The use of $\Lambda_{\text{nuc}}$ needs to be kept consistent with
+    :py:func:pttools.ssm.spec_den_v.spec_den_v:.
+    """
+    beta_R = beta_R_star0(v_wall) / bubble_spacing_enlargement_factor
+    return 2 / (beta_R**3 * 2 * np.pi**2) * \
+        np.trapezoid(nu(T_tilde) * T_tilde**3, T_tilde) * \
+        np.trapezoid(z**2 * a2, z)

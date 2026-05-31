@@ -118,6 +118,9 @@ def spec_den_v(
     = \frac{\Lambda_\text{nucl}^6}{\bar{U}_f^2 (\beta R_{\ast,0})^6} \int d\tilde{T} \nu(\tilde{T}) \tilde{T}^6
     \left| A \left( \frac{\tilde{T}q}{\beta} \right) \right|^2$$
 
+    The bubble spacing enlargement factor $\Lambda_\text{nucl}$ also affects
+    :py:func:pttools.ssm.ssm.ubarf2_from_a2:.
+
     Please note that
     $$P_v(q) = L_f^3 \bar{U}_f^2 \tilde{P}_v(qL_f)$$
     :gw_pt_ssm:`\ ` eq. 3.43
