@@ -26,13 +26,23 @@ Note that $N_\text{sh}$ is not necessarily an integer.
 :giombi_2024_cs:`\ ` eq. 4.1
 """
 
-#: Default number of T-tilde values for bubble lifetime distribution integration
 DEFAULT_N_T: int = 10000
-#: Default number of $\xi$ points used in SSM computations
+r"""Default number $N_\text{T}$ of T (and $\tilde{T}$) values for bubble lifetime distribution integration
+See :gw_pt_ssm:`\ ` p. 20
+"""
+
 DEFAULT_N_XI_SSM: int = 2000
-#: Default number of wavevectors used in the velocity convolution integrations.
-# This should be at least as large as the default number of GW frequencies.
+r"""Default number $N_\xi$ of $\xi$ points used in SSM computations
+See :gw_pt_ssm:`\ ` p. 20
+"""
+
 DEFAULT_N_Z_LOOKUP: int = 10000
+r"""
+Default number of wavevectors used in the velocity convolution integrations.
+This should be at least as large as the default number of GW frequencies.
+From :gw_pt_ssm:`\ ` p. 20
+"""
+
 DEFAULT_N_PT: NptType = (DEFAULT_N_XI_SSM, DEFAULT_N_T, DEFAULT_N_Z_LOOKUP)
 
 #: Default nucleation parameters
@@ -41,8 +51,10 @@ DEFAULT_NUC_PARM: tuple[int] = (1,)
 #: Default $r_*$
 DEFAULT_R_STAR: float = 1.
 
-#: Default range for wavenumbers $y$
 DEFAULT_Y: th.FloatArr1D = np.logspace(-1, 3, 1000)
+r"""Default range for wavenumbers $y$
+The range is from :gw_pt_ssm:`\ ` p. 20, but there TODO
+"""
 
 # It seems that NPTDEFAULT should be something like NXIDEFAULT/(2.pi), otherwise one
 # gets a GW power spectrum which drifts up at high k.
@@ -74,10 +86,17 @@ Below this value, the abundance of primordial black holes would be too high.
 :lewicki_2023:`\ `
 """
 
-#: Maximum in bubble lifetime distribution integration
 T_TILDE_MAX: float = 20.0
-#: Minimum in bubble lifetime distribution integration
+r"""
+Maximum $\tilde{T}$ in bubble lifetime distribution integration
+From :gw_pt_ssm:`\ ` p. 20
+"""
+
 T_TILDE_MIN: float = 0.01
+r"""
+Minimum $\tilde{T}$ in bubble lifetime distribution integration
+From :gw_pt_ssm:`\ ` p. 20
+"""
 
 #: Default dimensionless wavenumber above which to use approximation for sin_transform, sin_transform_approx.
 Z_ST_THRESH: float = 50.

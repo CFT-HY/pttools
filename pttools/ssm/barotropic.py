@@ -56,6 +56,7 @@ def H_eta[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:
 
 def l[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:
     r"""$\ell(\nu)
+    $$\ell(\nu) = 1 + 2\nu$$
     :giombi_2026:`\ ` p. 25
     """
     return 1 + 2 * nu
