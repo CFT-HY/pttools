@@ -13,7 +13,6 @@ from pttools.omgw0.factors import F_gw0
 from pttools.omgw0 import freq
 from pttools.omgw0 import noise
 from pttools import ssm
-import pttools.suppression as sup_mod
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 from pttools.utils import copy_docstrings, export_json
@@ -181,8 +180,7 @@ class Spectrum(ssm.SSMSpectrum):
             "R_star": self.R_star,
             "R_star_m": self.R_star_m,
             "signal_to_noise_ratio": self.signal_to_noise_ratio(),
-            "signal_to_noise_ratio_instrument": self.signal_to_noise_ratio_instrument(),
-            "suppression_factor": self.suppression_factor()
+            "signal_to_noise_ratio_instrument": self.signal_to_noise_ratio_instrument()
         }
         if path is not None:
             export_json(data, path)
@@ -210,25 +208,21 @@ class Spectrum(ssm.SSMSpectrum):
     def omgw0(
             self,
             g0: float = const.G0,
-            gs0: float = const.GS0,
-            sup: sup_mod.Suppression = sup_mod.DEFAULT,
-            sup_method: sup_mod.SuppressionMethod = sup_mod.SuppressionMethod.DEFAULT) -> th.FloatArr1D:
+            gs0: float = const.GS0) -> th.FloatArr1D:
         r"""Gravitational wave power spectrum today $\Omega_{\text{gw},0}$"""
-        return self.F_gw0(g0=g0, gs0=gs0) * self.suppression_factor(suppression=sup, method=sup_method) * self.pow_gw
+        return self.F_gw0(g0=g0, gs0=gs0) * self.pow_gw
 
     def omgw0_peak(
             self,
             g0: float = const.G0,
-            gs0: float = const.GS0,
-            sup: sup_mod.Suppression = sup_mod.DEFAULT,
-            sup_method: sup_mod.SuppressionMethod = sup_mod.SuppressionMethod.DEFAULT):
+            gs0: float = const.GS0):
         r"""Peak $\Omega_{\text{gw},0}
         :param g0: Degrees of freedom today for pressure $g_0$
         :param gs0: Degrees of freedom today for entropy $g_{s,0}$
         :param sup: Suppression type
         :param sup_method: Suppression method
         """
-        omgw0 = self.omgw0(g0=g0, gs0=gs0, sup=sup, sup_method=sup_method)
+        omgw0 = self.omgw0(g0=g0, gs0=gs0)
         i_max = np.argmax(omgw0)
         return self.f()[i_max], omgw0[i_max]
 
@@ -247,12 +241,6 @@ class Spectrum(ssm.SSMSpectrum):
         """Signal-to-noise ratio for LISA, taking into account only the instrument noise"""
         snr, f_min, f_max = noise.signal_to_noise_ratio(f=self.f(), signal=self.omgw0(), noise=self.noise_ins())
         return snr
-
-    def suppression_factor(
-            self,
-            suppression: sup_mod.Suppression = sup_mod.DEFAULT,
-            method: sup_mod.SuppressionMethod = sup_mod.SuppressionMethod.DEFAULT) -> float:
-        return suppression.suppression(v_wall=self.bubble.v_wall, alpha_n=self.bubble.alpha_n, method=method)
 
     def z_from_f[T: FloatOrArr](self, f: T) -> T:
         r"""Convert from frequencies $f$ back to wavenumbers $z$
@@ -304,5 +292,4 @@ copy_docstrings({
     Spectrum.f_star0: freq.f_star0,
     Spectrum.noise: noise.omega_noise,
     Spectrum.noise_ins: noise.omega_ins,
-    Spectrum.suppression_factor: sup_mod.Suppression.suppression
 }, without_params=True)

@@ -76,12 +76,14 @@ def spec_den_gw_scaling(
         Gamma: FloatOrArr = GAMMA,
         r_star: FloatOrArr = DEFAULT_R_STAR,
         nu: FloatOrArr = DEFAULT_NU_GDH2024,
-        dilution_of_e: FloatOrArr = 1.) -> FloatOrArr:
+        dilution_of_e: FloatOrArr = 1.,
+        suppression_factor: FloatOrArr = 1.) -> FloatOrArr:
     r"""Scaling factor for $\tilde{P}_\text{gw}$
 
     $$3 K^2 r_* \mathcal{H} \eta_*
     \left( \frac{a_*}{a_r} \right)^\frac{2\nu}{1 + \nu}
-    \bar{U}_f^4 \tilde{P}_\text{gw}$$
+    \Sigma
+    \tilde{P}_\text{gw}$$
     :giombi_2026:`\ ` eq. 3.9a
     The factor of 3 comes from the Friedmann equation $\frac{3H^2}{8\pi G}$.
 
@@ -91,7 +93,7 @@ def spec_den_gw_scaling(
     to ensure that the $\bar{U}_f^2$ cancels out exactly the $\bar{U}_f^{-2}$ in
     :py:func:spec_den_v:.
     """
-    return 3. * (Gamma * ubarf2)**2 * r_star * H_eta(nu) * dilution_of_e
+    return 3. * (Gamma * ubarf2)**2 * r_star * H_eta(nu) * dilution_of_e * suppression_factor
 
 
 def _spec_den_gw_core(

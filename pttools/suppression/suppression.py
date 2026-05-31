@@ -169,5 +169,5 @@ NO_HYBRIDS_EXT = Suppression(
     name="No hybrids, extended"
 )
 WITH_HYBRIDS = Suppression.from_file(os.path.join(SUPPRESSION_FOLDER, "suppression_2_ssm.npz"), name="With hybrids")
-DEFAULT = NO_HYBRIDS_EXT
+DEFAULT_SUPPRESSION = NO_HYBRIDS_EXT
 SUPPRESSIONS = [NO_HYBRIDS, NO_HYBRIDS_EXT, WITH_HYBRIDS]

@@ -4,7 +4,7 @@ import logging
 import os.path
 
 import numpy as np
-import pttools.bubble as bbl
+from pttools.bubble import CS0, v_chapman_jouguet_bag
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ def remove_hybrids(path: str = DEFAULT_PATH, suffix: str = "") -> str:
     for i, vw in enumerate(sim_data[:, 0]):
         alpha = sim_data[i, 1]
 
-        if bbl.CS0 < vw < bbl.v_chapman_jouguet_bag(alpha):
+        if CS0 < vw < v_chapman_jouguet_bag(alpha):
             # logger.debug("Ignoring hybrid for i=%s, vw=%s", i, vw)
             pass
         else:

@@ -7,7 +7,7 @@ import unittest
 import numpy as np
 from pandas.io.parsers import read_csv
 
-from pttools.suppression import DEFAULT
+from pttools.suppression import DEFAULT_SUPPRESSION
 from pttools.suppression.suppression_ssm_data.remove_hybrids import SUPPRESSION_FOLDER, remove_hybrids
 from pttools.suppression.suppression_ssm_data.suppression_ssm_calculator import calc_sup_ssm
 from pttools.ssm.const import DEFAULT_N_XI_SSM
@@ -64,6 +64,6 @@ class SuppressionTest(unittest.TestCase):
     def test_suppression():
         v_walls = np.linspace(0.1, 0.9, 5)
         alpha_ns = np.linspace(0.01, 0.1, 5)
-        DEFAULT.suppression(v_wall=v_walls[0], alpha_n=alpha_ns[0])
-        DEFAULT.suppression(v_wall=v_walls, alpha_n=alpha_ns[0])
-        DEFAULT.suppression(v_wall=v_walls, alpha_n=alpha_ns)
+        DEFAULT_SUPPRESSION.suppression(v_wall=v_walls[0], alpha_n=alpha_ns[0])
+        DEFAULT_SUPPRESSION.suppression(v_wall=v_walls, alpha_n=alpha_ns[0])
+        DEFAULT_SUPPRESSION.suppression(v_wall=v_walls, alpha_n=alpha_ns)

@@ -13,11 +13,12 @@ from pttools.ssm import const
 from pttools.ssm.barotropic import dilution_of_e, eta_ratio, H_eta, source_lifetime_factor
 from pttools.ssm.compute import compute
 from pttools.ssm.nucleation import \
-    NucType, DEFAULT_NUC_TYPE, beta, bubble_spacing_enlargement_factor, hx, nucleation_f, r_star as r_star_func
+    DEFAULT_NUC_TYPE, NucType, beta, bubble_spacing_enlargement_factor, hx, nucleation_f, r_star as r_star_func
 from pttools.ssm.pow_spec import pow_spec
 from pttools.ssm.scaling import H_star_tau_sh, H_star_tau_v, H_star_tau_v_old, J
 from pttools.ssm.spec_den_gw import spec_den_gw_scaling
 from pttools.ssm.low_k.intersection import z_cross_approx
+from pttools.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 from pttools.type_hints import FloatArr, FloatArr1D
 from pttools.utils import copy_docstrings, export_json
 
@@ -39,6 +40,9 @@ class SSMSpectrum:
             a_star_a_r_ratio: float = const.DEFAULT_A_STAR_A_R_RATIO,
             N_sh: float = const.DEFAULT_N_SH,
             nuc_type: NucType = DEFAULT_NUC_TYPE,
+            # Suppression
+            suppression: Suppression = DEFAULT_SUPPRESSION,
+            suppression_method: SuppressionMethod = SuppressionMethod.DEFAULT,
             # Accuracy settings
             nT: int = const.DEFAULT_N_T,
             n_z_lookup: int = const.DEFAULT_N_Z_LOOKUP,
@@ -122,6 +126,9 @@ class SSMSpectrum:
         self.a_star_a_r_ratio = a_star_a_r_ratio
         self.N_sh = N_sh
         self.nuc_type = nuc_type
+        # Suppression
+        self.suppression = suppression
+        self.suppression_method = suppression_method
         # Accuracy
         self.z_st_thresh = z_st_thresh
         self.nT = nT
@@ -157,6 +164,8 @@ class SSMSpectrum:
         self.spec_den_gw_int: FloatArr1D | None = None
         #: $\tilde{P}_\text{gw,low}$
         self.spec_den_gw_low: FloatArr1D | None = None
+        #: Suppression factor $\Sigma$
+        self.suppression_factor: float | None = None
         #: $z_\text{lookup}$
         self.z_lookup: FloatArr1D | None = None
 
@@ -174,7 +183,6 @@ class SSMSpectrum:
             parallel: bool = True):
         if not self.bubble.solved:
             self.bubble.solve()
-
         self.cs = np.sqrt(self.bubble.model.cs2(self.bubble.va_enthalpy_density, Phase.BROKEN))
         self.spec_den_v, self.spec_den_v_lookup, self.spec_den_gw_ssm, self.a2, self.a2_lookup, self.z_lookup, \
             self.spec_den_gw_low, self.spec_den_gw_int, self.spec_den_gw_expanded = compute(
@@ -233,6 +241,7 @@ class SSMSpectrum:
             "label_latex": self.label_latex,
             "label_unicode": self.label_unicode,
             "source_lifetime_factor": self.source_lifetime_factor,
+            "suppression_factor": self.suppression_factor,
             "tau_end": self.tau_end,
             "tau_star": self.tau_star
         }
@@ -372,7 +381,8 @@ class SSMSpectrum:
             Gamma=const.GAMMA,
             r_star=self.r_star,
             nu=self.bubble.nu_gdh2024,
-            dilution_of_e=self.dilution_of_e
+            dilution_of_e=self.dilution_of_e,
+            suppression_factor=self.suppression_factor
         )
 
     @functools.cached_property
@@ -385,7 +395,13 @@ class SSMSpectrum:
         return 2 * self.spec_den_v
 
     @functools.cached_property
-    def tau_end(self):
+    def suppression_factor(self) -> float:
+        return self.suppression.suppression(
+            v_wall=self.bubble.v_wall, alpha_n=self.bubble.alpha_n, method=self.suppression_method
+        )
+
+    @functools.cached_property
+    def tau_end(self) -> float:
         r"""
         Time $\tau_\text{end}$ when the anisotropic stress turns off
         $$\tau_\text{end} \equiv \frac{\eta_\text{end}}{R_*}$$
@@ -394,7 +410,7 @@ class SSMSpectrum:
         return self.tau_star + self.delta_tau_v
 
     @functools.cached_property
-    def tau_star(self):
+    def tau_star(self) -> float:
         r"""Time $\tau_*$ when the anisotropic stress turns on
         $$\tau_* \equiv \frac{\eta_*}{R_*} = \frac{1 + \nu_\text{gdh2024}}{r_*}$$
         :giombi_2024_cs:`\ ` p. 8
@@ -402,7 +418,7 @@ class SSMSpectrum:
         return (1 + self.bubble.nu_gdh2024) / self.r_star
 
     @functools.cached_property
-    def z_cross_approx(self):
+    def z_cross_approx(self) -> float:
         return z_cross_approx(cs=self.cs, eta_ratio=self.eta_ratio, nu=self.bubble.nu_gdh2024, r_star=self.r_star)
 
     # -----
@@ -470,5 +486,6 @@ copy_docstrings({
     SSMSpectrum.nucleation_f: nucleation_f,
     SSMSpectrum.source_lifetime_factor: source_lifetime_factor,
     SSMSpectrum.spec_den_gw_scaling: spec_den_gw_scaling,
+    SSMSpectrum.suppression_factor: Suppression.suppression,
     SSMSpectrum.z_cross_approx: z_cross_approx
 }, without_params=True)
