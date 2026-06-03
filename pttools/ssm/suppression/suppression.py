@@ -14,7 +14,7 @@ from pttools.type_hints import FloatOrArr
 
 logger = logging.getLogger(__name__)
 
-# :TODO why is there a difference in the low-alpha low-vw region between hybrids and no hybrids data set?
+# TODO: Why is there a difference in the low-alpha low-vw region between hybrids and no hybrids data set?
 
 
 class SuppressionMethod(enum.StrEnum):
@@ -22,9 +22,9 @@ class SuppressionMethod(enum.StrEnum):
     #: Return 1 as the suppression factor.
     NONE = "none"
     #: Return NaN outside the convex hull of the suppression points.
-    NO_EXT = DEFAULT = "no_ext"
+    NO_EXT = "no_ext"
     #: Return the nearest suppression value when outside the convex hull of the suppression points.
-    EXT_CONSTANT = "ext_constant"
+    EXT_CONSTANT = DEFAULT = "ext_constant"
     # EXT_LINEAR_UBARF = "ext_linear_ubarf"  # TODO: not implemented yet
 
 
@@ -65,6 +65,7 @@ class Suppression:
         data = np.load(path)
         return Suppression(v_walls=data["vw_sim"], alpha_ns=data["alpha_sim"], suppressions=data["sup_ssm"], name=name)
 
+    @property
     def limits_str(self) -> str:
         return \
             f"{self.v_wall_min:.3f} < v_wall < {self.v_wall_max:.3f}, " \
@@ -84,20 +85,20 @@ class Suppression:
         if method not in (SuppressionMethod.NO_EXT, SuppressionMethod.EXT_CONSTANT):
             raise ValueError(f"Got invalid suppression method: {method}")
 
-        mesh = (v_wall, alpha_n) if is_scalar else np.meshgrid(v_wall, alpha_n)
+        mesh: tuple[th.FloatOrArr, th.FloatOrArr] = (v_wall, alpha_n) if is_scalar else np.meshgrid(v_wall, alpha_n)
         sup = interpolate.griddata(
-            self.points,
-            self.suppressions,
-            mesh,
+            points=self.points,
+            values=self.suppressions,
+            xi=mesh,
             method=interpolation
         )
         if is_scalar:
             if np.isnan(sup):
                 if method == SuppressionMethod.EXT_CONSTANT:
                     sup = interpolate.griddata(
-                        self.points,
-                        self.suppressions,
-                        mesh,
+                        points=self.points,
+                        values=self.suppressions,
+                        xi=mesh,
                         method="nearest"
                     )
                 else:
@@ -115,17 +116,17 @@ class Suppression:
             nans = np.isnan(sup)
             if np.any(nans):
                 sup[nans] = interpolate.griddata(
-                    self.points,
-                    self.suppressions,
-                    mesh[nans],
+                    points=self.points,
+                    values=self.suppressions,
+                    xi=(mesh[0][nans], mesh[1][nans]),
                     method="nearest"
                 )
         return sup
 
 
-def alpha_n_max_approx[T: FloatOrArr](vw: T) -> T:
+def alpha_n_max_approx[T: FloatOrArr](v_wall: T) -> T:
     r"""Approximate $\alpha_{n,\text{max}}({v}_\text{wall})$"""
-    return 1/3 * (1 + 3*vw**2) / (1 - vw**2)
+    return 1/3 * (1 + 3 * v_wall ** 2) / (1 - v_wall ** 2)
 
 
 def alpha_n_max[T: FloatOrArr](v_wall: T) -> T:
@@ -134,7 +135,7 @@ def alpha_n_max[T: FloatOrArr](v_wall: T) -> T:
     # [0.24000, 0.34000]
     # [0.44000, 0.50000]
     # [0.56000, 0.67000]
-    if np.isscalar(v_wall) and np.all(v_wall < 0.44):
+    if np.isscalar(v_wall) and v_wall < 0.44:
         return M1 * v_wall + C1
     ret = M2 * v_wall + C2
     small_vws = v_wall < 0.44
