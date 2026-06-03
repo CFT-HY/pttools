@@ -112,6 +112,16 @@ exclude_lines = [
 show_missing = true
 
 [tool.mypy]
+exclude = [
+    "_build",
+    "auto_examples"
+]
+files = [
+    "docs",
+    "examples",
+    "pttools",
+    "tests"
+]
 
 [[tool.mypy.overrides]]
 module = ["h5py.*", "numba.*", "numbalsoda.*", "plotly.*"]

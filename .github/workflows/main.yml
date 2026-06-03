@@ -164,7 +164,7 @@ jobs:
             mypy-${{ runner.os }}-
             mypy-
       - name: Run mypy
-        run: mypy examples pttools tests 2>&1 | tee mypy.txt
+        run: mypy 2>&1 | tee mypy.txt
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
