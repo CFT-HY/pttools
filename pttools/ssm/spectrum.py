@@ -164,8 +164,6 @@ class SSMSpectrum:
         self.spec_den_gw_int: FloatArr1D | None = None
         #: $\tilde{P}_\text{gw,low}$
         self.spec_den_gw_low: FloatArr1D | None = None
-        #: Suppression factor $\Sigma$
-        self.suppression_factor: float | None = None
         #: $z_\text{lookup}$
         self.z_lookup: FloatArr1D | None = None
 
@@ -397,7 +395,9 @@ class SSMSpectrum:
     @functools.cached_property
     def suppression_factor(self) -> float:
         return self.suppression.suppression(
-            v_wall=self.bubble.v_wall, alpha_n=self.bubble.alpha_n, method=self.suppression_method
+            v_wall=self.bubble.v_wall,
+            alpha_n=self.bubble.alpha_n,
+            method=self.suppression_method
         )
 
     @functools.cached_property
