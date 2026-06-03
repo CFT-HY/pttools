@@ -1,4 +1,8 @@
-"""Fluid shell solver for hybrids"""
+"""Fluid shell solver for hybrids
+
+This is an extended version of the subsonic deflagration solver,
+as this also adds the part of the fluid shell behind the bubble wall.
+"""
 
 import logging
 import time

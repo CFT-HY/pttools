@@ -19,7 +19,7 @@ from pttools.type_hints import FloatArr1D, FloatOrArr, NumbaFunc
 @numba.njit
 def gen_lookup(
         y: FloatArr1D,
-        cs: float,
+        cs: float = CS0,
         n_x_lookup: int = DEFAULT_N_Z_LOOKUP,
         eps: float = 0.) -> FloatArr1D:
     """
@@ -48,7 +48,7 @@ def gen_lookup(
 
 
 @numba.njit
-def limits_from_lookup[T: FloatOrArr](x_lookup: FloatArr1D, cs: T) -> tuple[T, T]:
+def limits_from_lookup[T: FloatOrArr](x_lookup: FloatArr1D, cs: T = CS0) -> tuple[T, T]:
     r"""Limits of x from a lookup
     $$y_\pm = 2 x_{\pm} \frac{c_s}{1 \pm c_s}$$
     The inverse of :py:func:lookup_limits: from :gw_pt_ssm:`\ ` p. 12
@@ -59,7 +59,7 @@ def limits_from_lookup[T: FloatOrArr](x_lookup: FloatArr1D, cs: T) -> tuple[T, T
 
 
 @numba.njit
-def lookup_limits(z: FloatArr1D, cs: float, eps: float = 0.) -> tuple[float, float]:
+def lookup_limits(z: FloatArr1D, cs: float = CS0, eps: float = 0.) -> tuple[float, float]:
     r"""
     $$x_\pm = z \frac{1 \pm c_s}{2c_s}$$
     :giombi_2024_cs: \ ` p. 13
@@ -100,8 +100,8 @@ def _spec_den_gw_core(
         z_lookup: FloatArr1D,
         P_tilde_v_lookup: FloatArr1D,
         y: FloatArr1D,
-        cs: float,
-        source_lifetime_factor: float,
+        cs: float = CS0,
+        source_lifetime_factor: float = 1.,
         nz_int: int | None = None) -> tuple[FloatArr1D, FloatArr1D]:
     r"""Core computation for :py:func:spec_den_gw_scaled:
     :giombi_2024_cs:`\ ` eq. 3.13

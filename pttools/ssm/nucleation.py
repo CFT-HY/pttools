@@ -140,7 +140,12 @@ def nu[T: FloatOrArr](T_tilde: T, nuc_type: NucType = NucType.SIMULTANEOUS, a: f
     raise ValueError(f"Nucleation type not recognized: \"{nuc_type}\"")
 
 
-def nucleation_f(xi: th.FloatArr1D, T: th.FloatArr1D, beta_tilde: float, v_wall: float, v_sh: float):
+def nucleation_f(
+        xi: th.FloatArr1D,
+        T: th.FloatArr1D,
+        beta_tilde: float,
+        v_wall: float,
+        v_sh: float) -> float:
     r"""Relative increase $f$ in the effective volume of the bubble
     $$f = \frac{3}{v_{\text{wall}}^3} \int_{v_{\text{wall}}}^{v_{\text{sh}}} \xi^2
     \left( 1 - e^{-\Delta S} \right) d\xi$$,

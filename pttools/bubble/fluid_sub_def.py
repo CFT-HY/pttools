@@ -1,4 +1,9 @@
-"""Fluid shell solver for subsonic deflagrations"""
+r"""Fluid shell solver for subsonic deflagrations
+
+This solver uses a shooting method, as
+"As a shooting method is always required if the speed of sound depends on the temperature."
+:gw_pt_ssm:`\ ` p. 35
+"""
 
 import logging
 import time
@@ -95,7 +100,8 @@ def sound_shell_deflagration(
         vm_tilde=v_wall,
         wn=wn, wm=w_center,
         cs_n=cs_n, v_cj=v_cj,
-        vp_tilde_guess=vp_tilde_guess, wp_guess=wp_guess,
+        vp_tilde_guess=vp_tilde_guess,
+        wp_guess=wp_guess,
         sol_type=SolutionType.SUB_DEF,
         t_end=t_end, n_xi=n_xi,
         thin_shell_limit=thin_shell_limit,
@@ -133,7 +139,8 @@ def sound_shell_deflagration_common(
     vp_tilde, wp = solve_junction(
         model, vm_tilde, wm,
         Phase.BROKEN, Phase.SYMMETRIC,
-        v2_tilde_guess=vp_tilde_guess, w2_guess=wp_guess,
+        v2_tilde_guess=vp_tilde_guess,
+        w2_guess=wp_guess,
         allow_failure=allow_failure,
         allow_negative_entropy_flux_change=allow_negative_entropy_flux_change
     )

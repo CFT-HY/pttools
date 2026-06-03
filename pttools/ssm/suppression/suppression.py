@@ -14,7 +14,7 @@ from pttools.type_hints import FloatOrArr
 
 logger = logging.getLogger(__name__)
 
-# :TODO why is there a difference in the low alpha low vw region between hybrids and no hybrids data set?
+# :TODO why is there a difference in the low-alpha low-vw region between hybrids and no hybrids data set?
 
 
 class SuppressionMethod(enum.StrEnum):
@@ -29,7 +29,17 @@ class SuppressionMethod(enum.StrEnum):
 
 
 class Suppression:
-    """Suppression factors from a given dataset"""
+    r"""Suppression factors from a given dataset
+
+    When adding corrections and extensions to the GW spectra,
+    please ensure that the suppression factor datasets are still valid.
+    If not, please recompute the datasets by comparing the new PTtools GW spectra to the lattice results.
+    (When recomputing, remember to disable suppression from PTtools
+    so that the spectrum is not scaled by the old suppression.)
+    The suppression datasets of :gowling_2021:`\ ` use $R_*$ instead of $\beta$,
+    and therefore the thermal suppression of bubble nucleation of :ajmi_2022:`\ ` and
+    :py:func:pttools.ssm.nucleation.r_star: does not affect them.
+    """
     def __init__(
             self,
             v_walls: th.FloatArr1D,
@@ -124,7 +134,7 @@ def alpha_n_max[T: FloatOrArr](v_wall: T) -> T:
     # [0.24000, 0.34000]
     # [0.44000, 0.50000]
     # [0.56000, 0.67000]
-    if np.isscalar(v_wall) and v_wall < 0.44:
+    if np.isscalar(v_wall) and np.all(v_wall < 0.44):
         return M1 * v_wall + C1
     ret = M2 * v_wall + C2
     small_vws = v_wall < 0.44
@@ -158,10 +168,10 @@ def extend(
 
 
 # Constants for alpha_n_max
-M1 = (0.5 - 0.34) / (0.44 - 0.24)  # dal/dvw
-M2 = (0.67 - 0.5) / (0.56 - 0.44)
-C1 = 0.34 - M1 * 0.24
-C2 = 0.67000 - M2 * 0.56000
+M1: float = (0.5 - 0.34) / (0.44 - 0.24)  # dal/dvw
+M2: float = (0.67 - 0.5) / (0.56 - 0.44)
+C1: float = 0.34 - M1 * 0.24
+C2: float = 0.67000 - M2 * 0.56000
 
 NO_HYBRIDS = Suppression.from_file(os.path.join(SUPPRESSION_FOLDER, "suppression_no_hybrids_ssm.npz"), name="No hybrids")
 NO_HYBRIDS_EXT = Suppression(

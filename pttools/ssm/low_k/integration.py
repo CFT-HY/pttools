@@ -50,7 +50,7 @@ def power_spectrum_integration_low(
         tau_end: float) -> th.FloatArr1D:
     r"""
     Calculate the low-frequency approximation (kR_* << 1) of the gravitational wave power spectrum.
-    One dimensional integration over sound wave momentum.
+    One-dimensional integration over sound wave momentum.
 
     $$\tilde{P}_\text{gw}^\text{low} = \frac{16 \tau_*}{15 \pi^2}
     \int_0^\infty dx x^2 \tilde{P}_v^2(x) \Delta_\text{low}(x, \tau_*, \tau_\text{end})$$

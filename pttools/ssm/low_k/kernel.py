@@ -17,7 +17,8 @@ def kernel_int_bracket[T: FloatOrArr](cs: T) -> T:
 
 def kernel_low(z: FloatOrArr, nu: FloatOrArr, tau_star: FloatOrArr, tau_end: FloatOrArr) -> FloatOrArr:
     r"""Low-frequency kernel $\Delta_\text{low}$ for $c_s \neq \frac{1}{\sqrt{3}}$
-    $$\Delta_\text{low} = \left( \frac{z \tau_*}{2} \right)^{-2\nu}
+    $$\Delta_\text{low} =
+    \left( \frac{z \tau_*}{2} \right)^{-2\nu}
     \frac{\Gamma^2 \left( \frac{1}{2} + \nu \right)}{4 \pi}
     \Upsilon_{2\nu} \left( \frac{\tau_*}{\tau_\text{end}} \right)$$
     This is a part of
@@ -30,7 +31,7 @@ def kernel_low(z: FloatOrArr, nu: FloatOrArr, tau_star: FloatOrArr, tau_end: Flo
         Upsilon(r=tau_star / tau_end, l=2 * nu)
 
 
-def kernel_low_bag(tau_star: FloatOrArr, tau_end: FloatOrArr):
+def kernel_low_bag(tau_star: FloatOrArr, tau_end: FloatOrArr) -> FloatOrArr:
     r"""Low-frequency kernel for bag model (radiation domination)
     $$\Delta_\text{low}^{\eta=0} (x, \tau_*, \tau_\text{end}) \rightarrow_{k \rightarrow 0}
     \frac{1}{4} \ln^2 \left( \frac{\tau_\text{end}}{\tau_*} \right)$$
