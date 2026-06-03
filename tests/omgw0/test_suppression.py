@@ -7,9 +7,9 @@ import unittest
 import numpy as np
 from pandas.io.parsers import read_csv
 
-from pttools.suppression import DEFAULT_SUPPRESSION
-from pttools.suppression.suppression_ssm_data.remove_hybrids import SUPPRESSION_FOLDER, remove_hybrids
-from pttools.suppression.suppression_ssm_data.suppression_ssm_calculator import calc_sup_ssm
+from pttools.ssm.suppression import DEFAULT_SUPPRESSION
+from pttools.ssm.suppression.suppression_ssm_data.remove_hybrids import SUPPRESSION_FOLDER, remove_hybrids
+from pttools.ssm.suppression.suppression_ssm_data.suppression_ssm_calculator import calc_sup_ssm
 from pttools.ssm.const import DEFAULT_N_XI_SSM
 from pttools.utils.assertions import assert_allclose
 

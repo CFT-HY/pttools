@@ -8,7 +8,7 @@ import numpy as np
 from scipy import interpolate
 from scipy.interpolate import InterpolatedUnivariateSpline
 
-from pttools.suppression.suppression_ssm_data.suppression_ssm_calculator import SUPPRESSION_FOLDER
+from pttools.ssm.suppression.suppression_ssm_data.suppression_ssm_calculator import SUPPRESSION_FOLDER
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 

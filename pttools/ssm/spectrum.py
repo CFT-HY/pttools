@@ -18,7 +18,7 @@ from pttools.ssm.pow_spec import pow_spec
 from pttools.ssm.scaling import H_star_tau_sh, H_star_tau_v, H_star_tau_v_old, J
 from pttools.ssm.spec_den_gw import spec_den_gw_scaling
 from pttools.ssm.low_k.intersection import z_cross_approx
-from pttools.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
+from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 from pttools.type_hints import FloatArr, FloatArr1D
 from pttools.utils import copy_docstrings, export_json
 

@@ -5,7 +5,7 @@ from pttools.omgw0 import const
 from pttools.omgw0.freq import f0
 from pttools.ssm import DEFAULT_N_PT, NptType, NucType, \
     H_star_tau_sh_approx, H_star_tau_v_old, J as J_func, power_gw_bag
-from pttools.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
+from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 import pttools.type_hints as th
 
 
