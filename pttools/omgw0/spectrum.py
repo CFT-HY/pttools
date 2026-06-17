@@ -13,6 +13,7 @@ from pttools.omgw0.factors import F_gw0
 from pttools.omgw0 import freq
 from pttools.omgw0 import noise
 from pttools import ssm
+from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 from pttools.utils import copy_docstrings, export_json
@@ -33,6 +34,9 @@ class Spectrum(ssm.SSMSpectrum):
             a_star_a_r_ratio: float = ssm.DEFAULT_A_STAR_A_R_RATIO,
             N_sh: float = ssm.DEFAULT_N_SH,
             nuc_type: ssm.NucType = ssm.DEFAULT_NUC_TYPE,
+            # Suppression
+            suppression: Suppression = DEFAULT_SUPPRESSION,
+            suppression_method: SuppressionMethod = SuppressionMethod.DEFAULT,
             # Omega_gw_0 input parameters
             T_star: float | None = None,
             g_star: float | None = None,
@@ -73,6 +77,8 @@ class Spectrum(ssm.SSMSpectrum):
             y=y,
             z_st_thresh=z_st_thresh,
             nuc_type=nuc_type,
+            suppression=suppression,
+            suppression_method=suppression_method,
             a_star_a_r_ratio=a_star_a_r_ratio,
             N_sh=N_sh,
             nT=nT,
