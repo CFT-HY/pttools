@@ -30,5 +30,7 @@ Modules:
 - `ssm`: Sound Shell Model, provides the `SSMSpectrum` class
 - `utils`: generic utilities
 
+Examples are available in `examples`.
 The primary use case is that the user provides the input parameters by creating instances of the `Model`, `Bubble` and `Spectrum` classes,
 and plots the resulting fluid velocity profile from `Bubble` and the gravitational wave power spectrum from `Spectrum`.
+For an example of this primary use case, see `examples/basic/basic.py`.

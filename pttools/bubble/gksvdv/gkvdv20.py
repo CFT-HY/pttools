@@ -14,7 +14,7 @@ def kappaNuModel(cs2: float, al: float, vp: float) -> float:
 
     :param cs2: speed of sound squared
     :param al: strength parameter $\alpha$
-    :param vp:
+    :param vp: $v_+$
     """
     nu = 1./cs2 + 1.
     tmp = 1. - 3.*al + vp**2 * (1./cs2 + 3.*al)

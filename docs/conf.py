@@ -193,9 +193,11 @@ extlinks: dict[str, tuple[str, str]] = {
     "ai_2023": ("https://arxiv.org/abs/2303.10171%s", "Ai et al., 2023%s"),
     "gowling_2023": ("https://arxiv.org/abs/2209.13551%s", "Gowling et al., 2023%s"),
     "lewicki_2023": ("https://arxiv.org/abs/2305.04924%s", "Lewicki et al., 2023%s"),
+    "barni_2024": ("https://arxiv.org/abs/2406.01596%s", "Barni et al., 2024%s"),
     "croon_2024": ("https://arxiv.org/abs/2410.21509%s", "Croon & Weir, 2024%s"),
     "giombi_2024_cs": ("https://arxiv.org/abs/2409.01426%s", "Giombi et al., 2024%s"),
     "giombi_2024_gr": ("https://arxiv.org/abs/2307.12080%s", "Giombi & Hindmarsh, 2024%s"),
+    "barni_2026": ("https://arxiv.org/abs/2510.21439%s", "Barni et al., 2026%s"),
     "giombi_2026": ("https://arxiv.org/abs/2504.08037%s", "Giombi et al., 2026%s"),
     # Theses
     "gowling_phd": ("https://hdl.handle.net/10779/uos.23309135.v1%s", "Gowling, 2023%s"),
