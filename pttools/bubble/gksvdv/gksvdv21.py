@@ -9,14 +9,9 @@ Commented for better readability.
 import numpy as np
 from scipy.integrate import odeint, simpson
 
+from pttools.bubble.relativity import lorentz as mu
 import pttools.type_hints as th
 # from pttools.speedup import NUMBA_ENABLE_CACHE
-
-
-# @numba.njit
-def mu(xi, v):
-    """Relative velocity (special relativistic)"""
-    return (xi - v)/(1. - xi*v)
 
 
 # @numba.njit

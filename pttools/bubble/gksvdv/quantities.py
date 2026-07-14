@@ -1,9 +1,9 @@
-import numba
+# import numba
 import numpy as np
 
 from pttools.bubble.gksvdv.gksvdv21 import kappaNuMuModel
 import pttools.type_hints as th
-from pttools.speedup import NUMBA_ENABLE_CACHE
+# from pttools.speedup import NUMBA_ENABLE_CACHE
 
 
 # @numba.njit(nogil=True, cache=NUMBA_ENABLE_CACHE)

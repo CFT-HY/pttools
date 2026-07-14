@@ -1,4 +1,5 @@
 """A solution of the hydrodynamic equations"""
+
 import abc
 import functools
 import logging

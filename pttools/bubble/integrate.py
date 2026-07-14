@@ -27,6 +27,7 @@ type FluidIntegrateMethod = tp.Literal["RK23", "RK45", "DOP853", "Radau", "BDF",
 type FluidIntegrateOutput = tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, bool]
 
 DEFAULT_DF_DTAU: str = "bag"
+DEFAULT_FLUID_INTEGRATE_METHOD = "odeint"
 # ODEINT_LOCK = threading.Lock()
 
 #: Cache for the differential equations.
@@ -107,7 +108,8 @@ def fluid_integrate_param(
         t_end: float = DEFAULT_T_END,
         n_xi: int = DEFAULT_N_XI,
         df_dtau_ptr: DifferentialPointer = DF_DTAU_PTR_BAG,
-        method: FluidIntegrateMethod = "odeint") -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
+        method: FluidIntegrateMethod = DEFAULT_FLUID_INTEGRATE_METHOD) \
+        -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
     Integrates parametric fluid equations in df_dtau from an initial condition.
     Positive t_end integrates along curves from $(v,w) = (0,c_{s,0})$ to $(1,1)$.

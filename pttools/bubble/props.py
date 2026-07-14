@@ -35,7 +35,7 @@ def find_v_index(xi: th.FloatArr, v_target: float) -> int:
 
 
 @numba.njit
-def v_max_behind[T: FloatOrArr](xi: T, cs: float) -> T:
+def v_max_behind(xi: FloatOrArr, cs: FloatOrArr) -> FloatOrArr:
     r"""Maximum fluid velocity behind the wall.
     Given by the condition $\mu(\xi, v) = c_s$.
     This results in:
@@ -47,7 +47,7 @@ def v_max_behind[T: FloatOrArr](xi: T, cs: float) -> T:
     :param cs: $c_s$, speed of sound behind the wall (=in the broken phase)
     :return: $v_\text{max,behind}$
     """
-    return relativity.lorentz(xi, cs)
+    return relativity.lorentz(xi=xi, v=cs)
 
 
 def v_and_w_from_solution(

@@ -9,12 +9,13 @@ import numpy as np
 from scipy.integrate import odeint, simpson
 
 
-def kappaNuModel(cs2: float, al: float, vp: float) -> float:
+def kappaNuModel(cs2: float, al: float, vp: float, n: int = 501) -> float:
     r"""Calculate the efficiency factor $\kappa_{\bar{\theta}}$
 
     :param cs2: speed of sound squared
     :param al: strength parameter $\alpha$
     :param vp: $v_+$
+    :param n: number of points for the integration
     """
     nu = 1./cs2 + 1.
     tmp = 1. - 3.*al + vp**2 * (1./cs2 + 3.*al)
@@ -34,7 +35,6 @@ def kappaNuModel(cs2: float, al: float, vp: float) -> float:
         dwdv = nu*(xi-v)/(1.-xi*v)*w/(1.-v**2)
         return [dxidv, dwdv]
 
-    n = 501  # change accuracy here
     vs = np.linspace((vp-vm)/(1.-vp*vm), 0, n)
     sol = odeint(dfdv, [vp, 1.], vs, args=(nu,))
     xis, ws = sol[:, 0], -sol[:, 1]*wm/al*4./vp**3

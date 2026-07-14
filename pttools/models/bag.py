@@ -219,8 +219,8 @@ class BagModel(AnalyticModel):
         The convention for $a_s$ and $a_b$ is that of :notes:`\ `, eq. 7.33.
         """
         self.validate_temp(temp)
-        e_s = 3*self.a_s * temp**4 + self.V_s
-        e_b = 3*self.a_b * temp**4 + self.V_b
+        e_s = 3 * self.a_s * temp**4 + self.V_s
+        e_b = 3 * self.a_b * temp**4 + self.V_b
         return e_b * phase + e_s * (1 - phase)
 
     # def nu_gdh2024(self, w: th.FloatOrArr, phase: th.FloatOrArr = Phase.BROKEN) -> th.FloatOrArr:
@@ -252,8 +252,8 @@ class BagModel(AnalyticModel):
         Derived from :notes:`\ ` eq. 7.33.
         """
         self.validate_temp(temp)
-        s_s = 4*self.a_s*temp**3
-        s_b = 4*self.a_b*temp**3
+        s_s = 4 * self.a_s * temp**3
+        s_b = 4 * self.a_b * temp**3
         return s_b * phase + s_s * (1 - phase)
 
     def solution_type(
@@ -275,8 +275,8 @@ class BagModel(AnalyticModel):
         """
         # return (w / (4*(self.a_b*phase + self.a_s*(1-phase))))**(1/4)
         # Defined in the same way as for ConstCSModel
-        temp_s = (w / (4*self.a_s))**0.25
-        temp_b = (w / (4*self.a_b))**0.25
+        temp_s = (w / (4 * self.a_s))**0.25
+        temp_b = (w / (4 * self.a_b))**0.25
         return temp_b * phase + temp_s * (1 - phase)
 
     def theta(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -291,7 +291,7 @@ class BagModel(AnalyticModel):
         r"""Velocity at the shock, :gw_pt_ssm:`\ ` eq. B.17
         $$v_\text{sh}(\xi) = \frac{3\xi^22 - 1}{2\xi}$$
         """
-        return (3*xi**2 - 1)/(2*xi)
+        return (3 * xi**2 - 1) / (2 * xi)
 
     def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Enthalpy $w(T)$
@@ -301,7 +301,7 @@ class BagModel(AnalyticModel):
         :param phase: phase $\phi$
         """
         self.validate_temp(temp)
-        return 4 * (self.a_b * phase + self.a_s * (1-phase))*temp**4
+        return 4 * (self.a_b * phase + self.a_s * (1 - phase)) * temp**4
 
     def wn[T: FloatOrArr](
             self,
@@ -333,4 +333,4 @@ class BagModel(AnalyticModel):
         r"""Enthalpy at the shock, :gw_pt_ssm:`\ ` eq. B.18
         $$w_\text{sh}(\xi) = w_n \frac{9\xi^2 - 1}{3(1-\xi^2)}$$
         """
-        return w_n * (9*xi**2 - 1)/(2*(1-xi**2))
+        return w_n * (9 * xi**2 - 1) / (2 * (1 - xi**2))
