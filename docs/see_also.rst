@@ -18,6 +18,7 @@ Here is a non-comprehensive list of other simulation software that may be of int
 - `HILA <https://cft-hy.github.io/HILA.home/>`_
 - `Inverse PT Calculator <https://github.com/eric-madge/inverse_pt>`_
 - `Pencil Code <https://pencil-code.org/>`_
+- `PT2GWFinder <https://github.com/finshky/PT2GW>`_
 - `PTPlot <https://www.ptplot.org>`_
 - `TransitionListener <https://tasillo.de/TransitionListener/>`_
 - `WallGo <https://wallgo.readthedocs.io/en/latest/>`_
