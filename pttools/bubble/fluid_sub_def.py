@@ -13,7 +13,7 @@ import numpy as np
 from scipy.optimize import fsolve, root_scalar
 
 from pttools.bubble.phase import Phase
-from pttools.bubble import const
+from pttools.bubble.const import DEFAULT_N_XI, DEFAULT_SOLVER_RTOL, DEFAULT_T_END, THIN_SHELL_T_POINTS_MIN
 from pttools.bubble.fluid_base import DEFLAGRATION_NAN, DeflagrationOutput, SolverOutput
 from pttools.bubble import integrate
 from pttools.bubble.junction import solve_junction, w2_junction
@@ -40,9 +40,9 @@ def sound_shell_deflagration(
         v_cj: float,
         vp_guess: float | None = None,
         wp_guess: float | None = None,
-        t_end: float = const.DEFAULT_T_END,
-        n_xi: int = const.DEFAULT_N_XI,
-        thin_shell_limit: int = const.THIN_SHELL_T_POINTS_MIN,
+        t_end: float = DEFAULT_T_END,
+        n_xi: int = DEFAULT_N_XI,
+        thin_shell_limit: int = THIN_SHELL_T_POINTS_MIN,
         allow_failure: bool = False,
         allow_negative_entropy_flux_change: bool = False,
         warn_if_shock_barely_exists: bool = True) -> DeflagrationOutput:
@@ -119,11 +119,12 @@ def sound_shell_deflagration_common(
         cs_n: float, v_cj: float,
         vp_tilde_guess: float, wp_guess: float,
         sol_type: SolutionType,
-        n_xi: int, t_end: float,
-        thin_shell_limit: int,
-        allow_failure: bool,
-        allow_negative_entropy_flux_change: bool,
-        warn_if_shock_barely_exists: bool) -> DeflagrationOutput:
+        n_xi: int = DEFAULT_N_XI,
+        t_end: float = DEFAULT_T_END,
+        thin_shell_limit: int = THIN_SHELL_T_POINTS_MIN,
+        allow_failure: bool = False,
+        allow_negative_entropy_flux_change: bool = False,
+        warn_if_shock_barely_exists: bool = True) -> DeflagrationOutput:
     """Common component of subsonic deflagration and supersonic deflagration (hybrid) fluid shell solvers"""
     if v_wall < 0 or v_wall > 1 or vm_tilde < 0 or vm_tilde > 1 or wn < 0 or wm < 0 or cs_n < 0 or cs_n > 1 \
             or vp_tilde_guess < 0 or vp_tilde_guess > 1 or wp_guess < 0 \
@@ -292,7 +293,9 @@ def sound_shell_deflagration_common(
 
 
 def sound_shell_deflagration_reverse(
-        model: "Model", v_wall: float, wn: float, xi_sh: float, t_end: float, n_xi: int,
+        model: "Model", v_wall: float, wn: float, xi_sh: float,
+        t_end: float = DEFAULT_T_END,
+        n_xi: int = DEFAULT_N_XI,
         allow_failure: bool = False):
     logger.warning("UNTESTED, will probably produce invalid results")
 
@@ -357,7 +360,12 @@ def sound_shell_deflagration_reverse(
 
 
 def sound_shell_solvable_deflagration_reverse(
-        params: th.FloatArr1D, model: "Model", v_wall: float, wn: float, t_end: float, n_xi: int) -> float:
+        params: th.FloatArr1D,
+        model: "Model",
+        v_wall: float,
+        wn: float,
+        t_end: float = DEFAULT_T_END,
+        n_xi: int = DEFAULT_N_XI) -> float:
     xi_sh = params[0]
     # pylint: disable=unused-variable
     v, w, xi, vm, wm = sound_shell_deflagration_reverse(
@@ -367,8 +375,12 @@ def sound_shell_solvable_deflagration_reverse(
 
 def sound_shell_solvable_deflagration(
         # params: th.FloatArr1D,
-        w_center: float, model: "Model", v_wall: float, wn: float, cs_n: float, v_cj: float,
-        vp_guess: float, wp_guess: float, t_end: float, n_xi: int, thin_shell_limit: int) -> float:
+        w_center: float,
+        model: "Model", v_wall: float, wn: float, cs_n: float, v_cj: float,
+        vp_guess: float, wp_guess: float,
+        t_end: float = DEFAULT_T_END,
+        n_xi: int = DEFAULT_N_XI,
+        thin_shell_limit: int = THIN_SHELL_T_POINTS_MIN) -> float:
     if isinstance(w_center, np.ndarray):
         w_center = w_center[0]
     if np.isnan(w_center) or w_center < 0:
@@ -388,9 +400,12 @@ def sound_shell_solver_deflagration(
         model: "Model",
         start_time: float,
         v_wall: float, alpha_n: float, wn: float, cs_n: float, v_cj: float, high_alpha_n: bool,
-        wm_guess: float, vp_guess: float, wp_guess: float, wn_rtol: float, t_end: float, n_xi: int,
-        thin_shell_limit: int,
-        allow_failure: bool, log_high_alpha_n_failures: bool = True) -> SolverOutput:
+        wm_guess: float, vp_guess: float, wp_guess: float, wn_rtol: float, t_end: float,
+        n_xi: int = DEFAULT_N_XI,
+        thin_shell_limit: int = THIN_SHELL_T_POINTS_MIN,
+        rtol: float = DEFAULT_SOLVER_RTOL,
+        allow_failure: bool = False,
+        log_high_alpha_n_failures: bool = True) -> SolverOutput:
     """Solve for the fluid shell profile of a subsonic deflagration"""
     if vp_guess > v_wall:
         vp_guess_new = 0.95 * v_wall
@@ -407,6 +422,7 @@ def sound_shell_solver_deflagration(
         x0=0.99*wm_guess,
         x1=1.01*wm_guess,
         args=(model, v_wall, wn, cs_n, v_cj, vp_guess, wp_guess, t_end, n_xi, thin_shell_limit),
+        rtol=rtol
     )
     wm = sol.root
     solution_found = sol.converged
@@ -419,7 +435,8 @@ def sound_shell_solver_deflagration(
             sound_shell_solvable_deflagration,
             np.array([wm_guess]),
             args=(model, v_wall, wn, cs_n, v_cj, vp_guess, wp_guess, t_end, n_xi, thin_shell_limit),
-            log_status=log_high_alpha_n_failures or not high_alpha_n
+            log_status=log_high_alpha_n_failures or not high_alpha_n,
+            xtol=rtol
         )
         wm = sol[0][0]
         solution_found = sol[2] == 1
@@ -458,14 +475,18 @@ def sound_shell_solver_deflagration(
 def sound_shell_solver_deflagration_reverse(
         model: "Model",
         start_time: float,
-        v_wall: float, alpha_n: float, wn: float, t_end: float, n_xi: int) -> SolverOutput:
+        v_wall: float, alpha_n: float, wn: float,
+        t_end: float = DEFAULT_T_END,
+        n_xi: int = DEFAULT_N_XI,
+        rtol: float = DEFAULT_SOLVER_RTOL) -> SolverOutput:
     # This is arbitrary and should be replaced by a value from the bag model
     xi_sh_guess = 1.1 * np.sqrt(model.cs2_max(wn, Phase.BROKEN))
     sol = fsolve(
         sound_shell_solvable_deflagration_reverse,
         xi_sh_guess,
         args=(model, v_wall, wn, t_end, n_xi),
-        full_output=True
+        full_output=True,
+        xtol=rtol
     )
     xi_sh = sol[0][0]
     solution_found = True

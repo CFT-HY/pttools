@@ -14,6 +14,7 @@ from scipy.optimize import fsolve
 from pttools.bubble.fluid_base import DeflagrationOutput, SolverOutput
 from pttools.bubble.fluid_sub_def import sound_shell_deflagration_common
 from pttools.bubble import integrate
+from pttools.bubble.const import DEFAULT_N_XI, DEFAULT_SOLVER_RTOL, DEFAULT_T_END, THIN_SHELL_T_POINTS_MIN
 from pttools.bubble.junction import v_plus_hybrid
 from pttools.bubble.phase import Phase
 from pttools.bubble import relativity
@@ -29,8 +30,11 @@ logger = logging.getLogger(__name__)
 
 def sound_shell_hybrid(
         model: "Model", v_wall: float, wn: float, wm: float, cs_n: float, v_cj: float,
-        vp_tilde_guess: float, wp_guess: float, t_end: float, n_xi: int,
-        thin_shell_limit: int,
+        vp_tilde_guess: float | None = None,
+        wp_guess: float | None = None,
+        t_end: float = DEFAULT_T_END,
+        n_xi: int = DEFAULT_N_XI,
+        thin_shell_limit: int = THIN_SHELL_T_POINTS_MIN,
         allow_failure: bool = False,
         allow_negative_entropy_flux_change: bool = False,
         warn_if_shock_barely_exists: bool = True) -> DeflagrationOutput:
@@ -39,9 +43,9 @@ def sound_shell_hybrid(
     vm_tilde = np.sqrt(model.cs2(wm, Phase.BROKEN))
 
     # Simple starting guesses
-    if np.isnan(vp_tilde_guess):
+    if vp_tilde_guess is None or np.isnan(vp_tilde_guess):
         vp_tilde_guess = 0.75 * vm_tilde
-    if np.isnan(wp_guess):
+    if wp_guess is None or np.isnan(wp_guess):
         wp_guess = 2*wm
 
     ret = sound_shell_deflagration_common(
@@ -71,7 +75,7 @@ def sound_shell_hybrid(
             or wp_guess < wn or wp_guess < wm:
         vp_guess = 1.05 * v_sh_estimate
         vp_tilde_guess = relativity.lorentz(xi=v_wall, v=vp_guess)
-        wp_guess = wn + 1.3*np.abs(wm - wn)
+        wp_guess = wn + 1.3 * np.abs(wm - wn)
         logger.warning(
             "vp_tilde_guess or wp_guess was not provided for the hybrid solver or was invalid. "
             "Using automatic starting guesses. vp_guess=%s, vp_tilde_guess=%s, wp_guess=%s",
@@ -100,7 +104,11 @@ def sound_shell_hybrid(
 def sound_shell_solvable_hybrid(
         # params: th.FloatArr1D,
         wm: float, model: "Model", v_wall: float, wn: float, cs_n: float, v_cj: float,
-        vp_tilde_guess: float, wp_guess: float, t_end: float, n_xi: int, thin_shell_limit: int) -> float:
+        vp_tilde_guess: float | None = None,
+        wp_guess: float | None = None,
+        t_end: float = DEFAULT_T_END,
+        n_xi: int = DEFAULT_N_XI,
+        thin_shell_limit: int = THIN_SHELL_T_POINTS_MIN) -> float:
     if isinstance(wm, np.ndarray):
         wm = wm[0]
     if np.isnan(wm) or wm < 0:
@@ -126,9 +134,13 @@ def sound_shell_solver_hybrid(
         model: "Model",
         start_time: float,
         v_wall: float, alpha_n: float, wn: float, cs_n: float, v_cj: float, high_alpha_n: bool,
-        vp_tilde_guess: float, wp_guess: float, wm_guess: float, wn_rtol: float, t_end: float, n_xi: int,
-        thin_shell_limit: int,
-        allow_failure: bool, log_high_alpha_n_failures: bool) -> SolverOutput:
+        vp_tilde_guess: float, wp_guess: float, wm_guess: float, wn_rtol: float,
+        t_end: float = DEFAULT_T_END,
+        n_xi: int = DEFAULT_N_XI,
+        thin_shell_limit: int = THIN_SHELL_T_POINTS_MIN,
+        rtol: float = DEFAULT_SOLVER_RTOL,
+        allow_failure: bool = False,
+        log_high_alpha_n_failures: bool = True) -> SolverOutput:
     """Solve for the fluid shell profile of a hybrid"""
     if v_wall >= v_cj:
         raise RuntimeError(f"Invalid v_wall for a hybrid: v_wall={v_wall}, v_cj={v_cj}")
@@ -150,7 +162,8 @@ def sound_shell_solver_hybrid(
         sound_shell_solvable_hybrid,
         np.array([wm_guess]),
         args=(model, v_wall, wn, cs_n, v_cj, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit),
-        log_status=log_high_alpha_n_failures or not high_alpha_n
+        log_status=log_high_alpha_n_failures or not high_alpha_n,
+        xtol=rtol
     )
     solution_found = sol[2] == 1
     wm = sol[0][0]
@@ -203,7 +216,8 @@ def sound_shell_solver_hybrid(
             #     np.array([wm_i]),
             #     args=(model, v_wall, wn, cs_n, v_cj, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit),
             #     # log_status=log_high_alpha_n_failures or not high_alpha_n,
-            #     full_output=True
+            #     full_output=True,
+            #     xtol=rtol
             # )
             # if sol[2] == 1:
             #     solution_found = True
@@ -215,7 +229,8 @@ def sound_shell_solver_hybrid(
                 sound_shell_solvable_hybrid,
                 x0=wm_i,
                 args=(model, v_wall, wn, cs_n, v_cj, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit),
-                full_output=True
+                full_output=True,
+                xtol=rtol
             )
             if sol[2] == 1:
                 solution_found = True

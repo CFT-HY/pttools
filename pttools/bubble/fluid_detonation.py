@@ -7,6 +7,7 @@ import numpy as np
 
 from pttools.bubble.fluid_base import SolverOutput
 from pttools.bubble import integrate
+from pttools.bubble.const import DEFAULT_N_XI, DEFAULT_T_END
 from pttools.bubble.junction import solve_junction, w2_junction
 from pttools.bubble.junction_bag import fluid_speeds_at_wall_bag
 from pttools.bubble.phase import Phase
@@ -23,7 +24,9 @@ logger = logging.getLogger(__name__)
 
 def sound_shell_detonation(
         model: "Model", v_wall: float, alpha_n: float, wn: float, v_cj: float,
-        vm_tilde_guess: float, wm_guess: float, t_end: float, n_xi: int) -> SolverOutput:
+        vm_tilde_guess: float, wm_guess: float,
+        t_end: float = DEFAULT_T_END,
+        n_xi: int = DEFAULT_N_XI) -> SolverOutput:
     """Get the fluid shell profile of a detonation"""
     if cannot_be_detonation(v_wall, v_cj):
         logger.error("Too slow wall speed for a detonation: v_wall=%s, v_cj=%s", v_wall, v_cj)
