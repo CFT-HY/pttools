@@ -19,8 +19,8 @@ jobs:
     with:
       cache: true
       meta-images: |
-        ghcr.io/${{ github.repository }}
         cfthy/pttools
+        ghcr.io/${{ github.repository }}
       meta-tags: |
         type=ref,event=branch
         type=semver,pattern={{version}}

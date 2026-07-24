@@ -6,7 +6,7 @@ env:
   PRIMARY_PYTHON_VERSION: '3.14'
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -39,7 +39,7 @@ jobs:
           path: dist
           if-no-files-found: error
   cloc:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v4
       - name: Count Lines of Code (cloc) for the PTtools library
