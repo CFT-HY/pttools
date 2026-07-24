@@ -13,19 +13,19 @@ h5py == 3.16.0
 # As of 2026-03, this is the latest version with support for macOS.
 icc-rt >= 2019.0; platform_machine != "arm64" and sys_platform == "darwin"
 # This replaces icc-rt for Windows and Linux.
-intel-cmplr-lib-rt >= 2026.0.0; platform_machine != "arm64" and sys_platform != "darwin"
+intel-cmplr-lib-rt >= 2026.1.0; platform_machine != "arm64" and sys_platform != "darwin"
 # As of 2026-03, this is the latest version with support for macOS.
-intel-openmp >= 2026.0.0; platform_machine != "arm64" and sys_platform == "darwin"
+intel-openmp >= 2023.2.0; platform_machine != "arm64" and sys_platform == "darwin"
 # For Plotly image export
 kaleido == 1.3.0
 # Matplotlib 3.9.1 wheels are broken
 # https://pypi.org/project/matplotlib/3.9.1/
-matplotlib == 3.10.9
+matplotlib == 3.11.1
 # Numba 0.55 breaks the unit tests
 # https://github.com/numba/numba/issues/7751
 # Numba does not yet support free-threading.
 # https://github.com/numba/numba/issues/9928
-numba == 0.65.1
+numba == 0.66.0
 # NumbaLSODA does not work yet on the GitHub Actions Windows runners
 numbalsoda == 0.3.4; sys_platform != "win32"
 # If you're using an old version of Numba and get the error:
@@ -34,8 +34,8 @@ numbalsoda == 0.3.4; sys_platform != "win32"
 # https://github.com/rapidsai/cuml/issues/2389#issuecomment-642645437
 numpy == 2.4.6
 orjson == 3.11.9  # As of 2026-05, Orjson does not yet support free-threading.
-plotly == 6.7.0
-scipy == 1.17.1
+plotly == 6.9.0
+scipy == 1.18.0
 # TBB can be used to speed up Numba threading
 # https://pypi.org/project/tbb/
 # https://numba.pydata.org/numba-doc/latest/user/threading-layer.html#which-threading-layers-are-available
