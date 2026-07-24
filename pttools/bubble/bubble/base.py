@@ -1,17 +1,18 @@
 """A solution of the hydrodynamic equations"""
 
 import abc
+import datetime
 import functools
 import logging
 import typing as tp
 
 import matplotlib.pyplot as plt
-import numpy as np
 
 from pttools.bubble import const
-from pttools.bubble.relativity import gamma
 from pttools.bubble.thermo import va_kinetic_energy_density
 import pttools.type_hints as th
+from pttools.utils.json import export_json
+from pttools.utils.validation import ensure_floats
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
     from pttools.analysis.utils import FigAndAxes
@@ -26,32 +27,30 @@ class BaseBubble(abc.ABC):
             model: "Model",
             v_wall: float,
             w_center: float | None = None,
+            w_outside: float | None = None,
             wm_guess: float | None = None,
             t_end: float = const.DEFAULT_T_END,
             n_xi: int = const.DEFAULT_N_XI):
-        # Some functions such as np.vectorize tend to give 0D arrays, which may cause subtle errors later on.
-        if v_wall is None or not np.isscalar(v_wall):
-            raise ValueError(f"v_wall should be scalar. Did you give e.g. a 0D array instead? Got: v_wall={v_wall}")
-        if isinstance(v_wall, int):
-            v_wall = float(v_wall)
-        if not (w_center is None or np.isscalar(w_center)):
-            raise ValueError(
-                f"w_center should be scalar. Did you give e.g. a 0D array instead? Got: w_center={w_center}"
-            )
-        if not (wm_guess is None or np.isscalar(wm_guess)):
-            raise ValueError(
-                f"wm_guess should be scalar. Did you give e.g. a 0D array instead? Got: wm_guess={wm_guess}"
-            )
+        v_wall, w_center, wm_guess = ensure_floats(
+            {"v_wall": v_wall, "w_center": w_center, "wm_guess": wm_guess},
+            allow_none=True
+        )
 
         # -----
         # Set parameters
         # -----
+        #: Equation of state
         self.model: Model = model
+        #: Wall speed $v_\text{wall}$
         self.v_wall: float = v_wall
+        #: Fluid shell integration cut-off $t_\text{end}$
         self.t_end: float = t_end
+        #: Number of $\xi$ points, $n_\xi$
         self.n_xi: int = n_xi
         #: $w_\text{center}$
         self.w_center: float | None = w_center
+        #: $w_\text{outside}$ (far away)
+        self.w_outside: float | None = w_outside
         #: $w_{-,\text{guess}}$
         self.wm_guess: float | None = wm_guess
 
@@ -74,19 +73,29 @@ class BaseBubble(abc.ABC):
         # -----
         self.label_latex: str
         self.label_unicode: str
-        self.solution_found: bool | None = None
-        self.solved: bool | None = None
-        self.vm: float | None = None
-        self.wm: float | None = None
         self.notes: list[str] = []
+        self.solved: bool | None = None
+        self.solving_duration: float | None = None
+
+        self.entropy_flux_p: float | None = None
+        r"""Incoming entropy flux at the wall
+        $$\tilde{\gamma}_+ \tilde{v}_+ {s}_+$$
+        """
+
+        self.entropy_flux_m: float | None = None
+        r"""Outgoing entropy flux at the wall
+        $$\tilde{\gamma}_- \tilde{v}_- {s}_- $$
+        """
+
+        self.entropy_flux_diff: float | None = None
+        r"""Entropy flux difference at the wall
+        $$\tilde{\gamma}_- \tilde{v}_- {s}_- - \tilde{\gamma}_+ \tilde{v}_+ {s}_+ $$
+        """
+
         #: $s_+$
         self.sp: float | None = None
         #: $s_-$
         self.sm: float | None = None
-        #: $s_{-,\text{sh}}$
-        self.sm_sh: float | None = None
-        #: $s_n$
-        self.sn: float | None = None
         #: $T_+$
         self.Tp: float | None = None
         #: $T_-$
@@ -95,10 +104,10 @@ class BaseBubble(abc.ABC):
         self.T_center: float | None = None
         #: $v_+$
         self.vp: float | None = None
-        #: $v_-$
-        self.vm: float | None = None
         #: $\tilde{v}_+$
         self.vp_tilde: float | None = None
+        #: $v_-$
+        self.vm: float | None = None
         #: $\tilde{v}_-$
         self.vm_tilde: float | None = None
         #: $w_+$
@@ -108,17 +117,52 @@ class BaseBubble(abc.ABC):
 
         # Flags
         self.no_solution_found: bool = False
+        self.solution_found: bool | None = None
         self.solved: bool = False
 
     def add_note(self, note: str) -> None:
         """Add a note to the solution"""
         self.notes.append(note)
 
+    def export(self, path: str | None = None) -> dict[str, tp.Any]:
+        """Export the bubble data"""
+        data = {
+            "datetime": datetime.datetime.now(),
+            "solving_duration": self.solving_duration,
+            "notes": self.notes,
+            # Input parameters
+            "model": self.model.export(),
+            "v_wall": self.v_wall,
+            "t_end": self.t_end,
+            "n_xi": self.n_xi,
+            # Solution
+            "v": self.v,
+            "w": self.w,
+            "xi": self.xi,
+            "T": self.T,
+            # Solution parameters
+            "sp": self.sp,
+            "sm": self.sm,
+            "Tp": self.Tp,
+            "Tm": self.Tm,
+            "T_center": self.T_center,
+            "vp": self.vp,
+            "vm": self.vm,
+            "vp_tilde": self.vp_tilde,
+            "vm_tilde": self.vm_tilde,
+            "wp": self.wp,
+            "wm": self.wm,
+            "w_center": self.w_center
+        }
+        if path is not None:
+            export_json(data, path)
+        return data
+
     @abc.abstractmethod
     def solve(self) -> None:
         if self.solved:
             msg = (
-                "Re-solving an already solved fluid profile! "
+                "Re-solving an already solved bubble! "
                 "Already computed quantities will not be updated due to caching."
             )
             logger.warning(msg)
@@ -132,30 +176,33 @@ class BaseBubble(abc.ABC):
             self,
             fig: plt.Figure | None = None,
             path: str | None = None,
+            full_range: bool = False,
             **kwargs) -> plt.Figure:
         """Plot the velocity and enthalpy profiles of the bubble"""
         from pttools.analysis.plot_bubbles import plot_bubbles
-        return plot_bubbles([self], fig, path, **kwargs)
+        return plot_bubbles([self], fig, path, full_range=full_range, **kwargs)
 
     def plot_v(
             self,
             fig: plt.Figure | None = None,
             ax: plt.Axes | None = None,
             path: str | None = None,
+            full_range: bool = False,
             **kwargs) -> "FigAndAxes":
         """Plot the velocity profile of the bubble"""
         from pttools.analysis.plot_bubbles import plot_bubbles_v
-        return plot_bubbles_v([self], fig, ax, path, **kwargs)
+        return plot_bubbles_v([self], fig, ax, path, full_range=full_range, **kwargs)
 
     def plot_w(
             self,
             fig: plt.Figure | None = None,
             ax: plt.Axes | None = None,
             path: str | None = None,
+            full_range: bool = False,
             **kwargs) -> "FigAndAxes":
         """Plot the enthalpy profile of the bubble"""
         from pttools.analysis.plot_bubbles import plot_bubbles_w
-        return plot_bubbles_w([self], fig, ax, path, **kwargs)
+        return plot_bubbles_w([self], fig, ax, path, full_range=full_range, **kwargs)
 
     # =====
     # Quantities
@@ -167,33 +214,6 @@ class BaseBubble(abc.ABC):
         if not self.solved:
             raise NotYetSolvedError
         return self.model.e(self.w, self.phase)
-
-    @functools.cached_property
-    def entropy_flux_p(self) -> float:
-        r"""Incoming entropy flux at the wall
-        $$\tilde{\gamma}_+ \tilde{v}_+ s_+$$
-        """
-        if not self.solved:
-            raise NotYetSolvedError
-        return gamma(self.vp_tilde) * self.vp_tilde * self.sp
-
-    @functools.cached_property
-    def entropy_flux_m(self) -> float:
-        r"""Outgoing entropy flux at the wall
-        $$\tilde{\gamma}_- \tilde{v}_- {s}_- $$
-        """
-        if not self.solved:
-            raise NotYetSolvedError
-        return gamma(self.vm_tilde) * self.vm_tilde * self.sm
-
-    @functools.cached_property
-    def entropy_flux_diff(self) -> float:
-        r"""Entropy flux difference at the wall
-        $$\tilde{\gamma}_- \tilde{v}_- {s}_- - \tilde{\gamma}_+ \tilde{v}_+ {s}_+ $$
-        """
-        if not self.solved:
-            raise NotYetSolvedError
-        return self.entropy_flux_m - self.entropy_flux_p
 
     @functools.cached_property
     def p(self):
@@ -218,6 +238,8 @@ class BaseBubble(abc.ABC):
     @property
     def vp_vm_tilde_ratio(self) -> float:
         r"""$$\frac{\tilde{v}_+}{\tilde{v}_-}$$"""
+        if not self.solved:
+            raise NotYetSolvedError
         return self.vp_tilde / self.vm_tilde
 
 

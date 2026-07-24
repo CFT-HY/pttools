@@ -102,7 +102,9 @@ def find_shock_index(
     i_left = i_cs_n
 
     if i_left > i_right:
-        msg = f"Shock index finder started with invalid values: i_left={i_left}, i_right={i_right}, cs_n={cs_n}, xi={xi}"
+        msg = \
+            "Shock index finder started with invalid values: " \
+            f"i_left={i_left}, i_right={i_right}, cs_n={cs_n}, xi={xi}"
         if log_failure:
             logger.error(msg)
         if error_on_failure:
@@ -189,7 +191,9 @@ def find_shock_index(
         if zero_on_failure:
             return 0
 
+    # -----
     # Binary search
+    # -----
     i_sh = 0
     while i_right - i_left > 1:
         i_sh = i_left + (i_right - i_left) // 2
@@ -203,8 +207,13 @@ def find_shock_index(
         else:
             return i_sh + 1
 
+    # -----
+    # Output validation
+    # -----
     if i_sh == 0:
-        msg = f"Shock index finder ended up in an invalid state with i_left={i_left}, i_right={i_right}, i_sh={i_sh} for {params}."
+        msg = \
+            "Shock index finder ended up in an invalid state with " \
+            f"i_left={i_left}, i_right={i_right}, i_sh={i_sh} for {params}."
         if log_failure:
             logger.error(msg)
         if error_on_failure:
@@ -224,23 +233,6 @@ def find_shock_index(
                 return 0
         return i_sh + 1
     return i_sh
-
-
-def shock_curve(
-        model: "Model",
-        alpha_n: float,
-        xi: th.FloatArr1D) -> th.FloatArr1D:
-    vm_arr = np.zeros_like(xi)
-    for i_xi, xi_i in enumerate(xi):
-        wn = model.wn(alpha_n=alpha_n)
-        vm_tilde, wm = solve_shock(model, v1_tilde=xi_i, w1=wn, backwards=True, warn_if_barely_exists=False)
-        vm = relativity.lorentz(xi_i, vm_tilde)
-        # Filter invalid points, but not the first one
-        if i_xi > 0 and (vm > 1 or vm <= 0):
-            vm_arr[i_xi] = np.nan
-        else:
-            vm_arr[i_xi] = vm
-    return vm_arr
 
 
 @numba.njit
@@ -373,9 +365,9 @@ def solve_shock(
 def v_shock(model: "Model", wn: float, xi: float, cs_n: float, warn_if_barely_exists: bool = True) -> float:
     r"""Shock velocity $v_\text{sh}$"""
     if xi <= cs_n or np.isclose(xi, cs_n):
-        return 0
-    if np.isclose(xi, 1):
-        return 1
+        return 0.
+    if np.isclose(xi, 1.):
+        return 1.
 
     # This can emit a lot of log spam if the warning of a barely existing shock is enabled.
     # pylint: disable=unused-variable
@@ -385,22 +377,27 @@ def v_shock(model: "Model", wn: float, xi: float, cs_n: float, warn_if_barely_ex
         csp=cs_n,
         backwards=True, warn_if_barely_exists=warn_if_barely_exists
     )
-    ret = relativity.lorentz(xi, v_shock_tilde)
+    v_sh = relativity.lorentz(xi, v_shock_tilde)
     # print(f"v1=0, v2={ret}, v2_tilde={v_shock_tilde}, wn={wn}, w_sh={w_shock}")
 
-    if ret < 0:
-        return 0
-    return ret
+    if v_sh > 1.:
+        return 1.
+    if v_sh < 0.:
+        return 0.
+    return v_sh
 
 
 def v_shock_curve(
         model: "Model",
-        wn: float, n_points: int = 20,
+        wn: float,
+        xi: th.FloatArr1D | None = None,
+        n_points: int = 20,
         warn_if_barely_exists: bool = False) -> tuple[th.FloatArr1D, th.FloatArr1D]:
-    """Shock velocity curve"""
-    cs_n = np.sqrt(model.cs2(wn, Phase.SYMMETRIC))
-    # Create more points near cs_n, as there the accuracy is the most critical
-    xi = cs_n + np.logspace(-4, 0, num=n_points) * (1 - cs_n)
-    # Ensure that the shock curve starts from xi=cs_n, v=0
-    xi[0] = cs_n
+    r"""Shock velocity curve $(\xi, v_\text{sh})$"""
+    if xi is None:
+        cs_n = np.sqrt(model.cs2(wn, Phase.SYMMETRIC))
+        # Create more points near cs_n, as there the accuracy is the most critical
+        xi = cs_n + np.logspace(-4, 0, num=n_points) * (1 - cs_n)
+        # Ensure that the shock curve starts from xi=cs_n, v=0
+        xi[0] = cs_n
     return xi, v_shock(model, wn, xi, warn_if_barely_exists)

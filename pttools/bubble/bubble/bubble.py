@@ -1,6 +1,5 @@
 """A solution of the hydrodynamic equations"""
 
-import datetime
 import functools
 import logging
 import typing as tp
@@ -10,16 +9,18 @@ from numpy.typing import NDArray
 
 from pttools.bubble.alpha import alpha_n_max_deflagration_bag
 from pttools.bubble.bubble.base import BaseBubble, NotYetSolvedError
+from pttools.bubble.const import DEFAULT_N_XI, DEFAULT_T_END, JUNCTION_RTOL, THIN_SHELL_T_POINTS_MIN
 from pttools.bubble.fluid import sound_shell_generic
-from pttools.bubble import const
+from pttools.bubble.junction import junction_condition_deviations
+from pttools.bubble.junction_entropy import check_entropy_fluxes, entropy_flux
 from pttools.bubble.phase import Phase
 from pttools.bubble import props
 from pttools.bubble.props import find_phase
 from pttools.bubble import thermo
-from pttools.bubble.relativity import gamma
 from pttools.bubble.solution_type import SolutionType, validate_solution_type
 from pttools.utils.docstrings import copy_docstrings
 from pttools.utils.json import export_json
+from pttools.utils.validation import ensure_float
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
     from pttools.models.const_cs import ConstCSModel
@@ -41,9 +42,9 @@ class Bubble(BaseBubble):
             wn_guess: float | None = None,
             wm_guess: float | None = None,
             theta_bar: bool = False,
-            t_end: float = const.DEFAULT_T_END,
-            n_xi: int = const.DEFAULT_N_XI,
-            thin_shell_t_points_min: int = const.THIN_SHELL_T_POINTS_MIN,
+            t_end: float = DEFAULT_T_END,
+            n_xi: int = DEFAULT_N_XI,
+            thin_shell_t_points_min: int = THIN_SHELL_T_POINTS_MIN,
             low_v_wall_threshold: float = 0.1,
             n_xi_fix_factor: int = 10,
             use_bag_solver: bool = False,
@@ -81,9 +82,9 @@ class Bubble(BaseBubble):
         if use_bag_solver and use_giese_solver:
             raise ValueError("Both bag and Giese et al. solvers cannot be used at the same time.")
         if not 0 < self.v_wall <= 1:
-            raise ValueError(f"Invalid v_wall={self.v_wall}")
+            raise ValueError(f"Invalid v_wall={self.v_wall}. Should have 0 < v_wall <= 1.")
         if self.v_wall < low_v_wall_threshold:
-            if self.n_xi == const.DEFAULT_N_XI:
+            if self.n_xi == DEFAULT_N_XI:
                 n_xi_fix_factor = n_xi_fix_factor
                 logger.info(
                     "Got n_xi=%s for v_wall=%s < 0.1. This may lead to an inaccurate solution. "
@@ -91,24 +92,22 @@ class Bubble(BaseBubble):
                     n_xi, v_wall, n_xi_fix_factor
                 )
                 self.n_xi *= n_xi_fix_factor
-            elif self.n_xi < const.DEFAULT_N_XI:
+            elif self.n_xi < DEFAULT_N_XI:
                 logger.warning(
                     "Got n_xi=%s for v_wall=%s < 0.1. This may lead to an inaccurate solution. "
                     "Please increase n_xi.",
                     n_xi, v_wall
                 )
-        # Some functions such as np.vectorize tend to give 0D arrays, which may cause subtle errors later on.
-        if alpha_n is None or not np.isscalar(alpha_n):
-            raise ValueError(f"alpha_n should be scalar. Did you give e.g. a 0D array instead? Got: alpha_n={v_wall}")
 
         # -----
         # Set and validate alpha_n and alpha_theta_bar_n
         # -----
-        if isinstance(alpha_n, int):
-            alpha_n = float(alpha_n)
+        alpha_n = ensure_float(alpha_n, "alpha_n")
         if not theta_bar:
             model.validate_alpha_n(alpha_n, allow_invalid=allow_invalid, log_invalid=log_invalid)
         self.wn = model.wn(alpha_n, wn_guess, theta_bar=theta_bar)
+        self.alpha_n: float
+        self.alpha_theta_bar_n: float
         if theta_bar:
             self.alpha_theta_bar_n = alpha_n
             self.alpha_n = model.alpha_n_from_alpha_theta_bar_n(alpha_theta_bar_n=alpha_n, wn=self.wn)
@@ -126,13 +125,13 @@ class Bubble(BaseBubble):
         # -----
         # Set parameters
         # -----
-        self.thin_shell_t_points_min = thin_shell_t_points_min
-        self.log_success = log_success
+        self.thin_shell_t_points_min: int = thin_shell_t_points_min
+        self.log_success: bool = log_success
 
         # -----
         # Compute parameters
         # -----
-        self.Tn = model.temp(self.wn, Phase.SYMMETRIC)
+        self.Tn: float = model.temp(self.wn, Phase.SYMMETRIC)
         if self.Tn > model.T_crit:
             msg = f"Bubbles form only when T_nuc < T_crit. Got: T_nuc={self.Tn}, T_crit={model.T_crit}"
             if log_invalid:
@@ -140,12 +139,11 @@ class Bubble(BaseBubble):
             if not allow_invalid:
                 raise ValueError(msg)
 
-        self.Psi_n = model.Psi_n(self.wn)
+        self.Psi_n: float = model.Psi_n(self.wn)
 
         # if isinstance(model, ConstCSModel)
         if hasattr(model, "css2") and hasattr(model, "csb2"):
             model: ConstCSModel
-            self.alpha_theta_bar_n = model.alpha_theta_bar_n_from_alpha_n(alpha_n)
             self.alpha_theta_bar_n_min_lte = model.alpha_theta_bar_n_min_lte(self.wn, self.sol_type, Psi_n=self.Psi_n)
             self.alpha_theta_bar_n_max_lte = model.alpha_theta_bar_n_max_lte(self.wn, self.sol_type, Psi_n=self.Psi_n)
             # Here LTE = no entropy generation
@@ -200,7 +198,25 @@ class Bubble(BaseBubble):
         self.alpha_plus: float | None = None
         #: $\alpha_{\bar{\theta}_+}$
         self.alpha_theta_bar_plus: float | None = None
-        self.elapsed: float | None = None
+
+        self.entropy_flux_p_sh: float | None = None
+        r"""Incoming entropy flux at the shock
+        $$\tilde{\gamma}_{+,sh} \tilde{v}_{+,sh} s_{+,sh}$$
+        """
+
+        self.entropy_flux_m_sh: float | None = None
+        r"""Outgoing entropy flux at the shock
+        $$\tilde{\gamma}_{-,sh} \tilde{v}_{-,sh} s_{-,sh}$$"""
+
+        self.entropy_flux_diff_sh: float | None = None
+        r"""Entropy flux difference at the shock
+        $$\tilde{\gamma}_{-,sh} \tilde{v}_{-,sh} s_{-,sh} - \tilde{\gamma}_{+,sh} \tilde{v}_{+,sh} s_{+,sh}$$
+        """
+
+        #: $s_n$
+        self.sn: float | None = None
+        #: $s_{-,\text{sh}}$
+        self.sm_sh: float | None = None
         #: $T_{-,\text{sh}}$
         self.Tm_sh: float | None = None
         #: $v_{\text{sh}}$
@@ -226,44 +242,21 @@ class Bubble(BaseBubble):
     def export(self, path: str | None = None) -> dict[str, tp.Any]:
         """Export the bubble data as JSON"""
         data = {
-            "datetime": datetime.datetime.now(),
-            "notes": self.notes,
+            **super().export(),
             # Input parameters
-            "model": self.model.export(),
-            "v_wall": self.v_wall,
             "alpha_n": self.alpha_n,
             "sol_type": self.sol_type,
-            "t_end": self.t_end,
-            "n_xi": self.n_xi,
             "thin_shell_limit": self.thin_shell_t_points_min,
-            # Solution
-            "v": self.v,
-            "w": self.w,
-            "xi": self.xi,
-            "T": self.T,
             # Solution parameters
             "alpha_plus": self.alpha_plus,
-            "sp": self.sp,
-            "sm": self.sm,
             "sm_sh": self.sm_sh,
             "sn": self.sn,
-            "Tp": self.Tp,
-            "Tm": self.Tm,
-            "T_center": self.T_center,
             "Tn": self.Tn,
             "v_cj": self.v_cj,
-            "vp": self.vp,
-            "vm": self.vm,
-            "vp_tilde": self.vp_tilde,
-            "vm_tilde": self.vm_tilde,
             "v_sh": self.v_sh,
             "vm_sh": self.vm_sh,
             "vm_tilde_sh": self.vm_tilde_sh,
             "wn": self.wn,
-            "wp": self.wp,
-            "wm": self.wm,
-            "wm_sh": self.wm_sh,
-            "w_center": self.w_center
         }
         if path is not None:
             export_json(data, path)
@@ -277,6 +270,34 @@ class Bubble(BaseBubble):
             f"κ={self.kappa:{prec}}, ω={self.omega:{prec}}, κ+ω={self.kappa + self.omega:{prec}}, "
             f"V-avg. trace anomaly={self.va_trace_anomaly_diff:{prec}}"
         )
+
+    def _set_properties(self) -> None:
+        """Extract properties from the solution"""
+        self.solved = True
+        self.alpha_plus = self.model.alpha_plus(
+            self.wp, self.wm, vp_tilde=self.vp_tilde, sol_type=self.sol_type,
+            error_on_invalid=False, nan_on_invalid=True, log_invalid=True
+        )
+        self.alpha_theta_bar_plus = self.model.alpha_theta_bar_plus(self.wp)
+        self.phase = find_phase(self.xi, self.v_wall)
+
+        self.sn = self.model.s(self.wn, Phase.SYMMETRIC)
+        self.sm = self.model.s(self.wm, Phase.BROKEN)
+        self.Tm = self.model.temp(self.wm, Phase.BROKEN)
+        self.w_center = self.w[0]
+        self.T_center = self.model.temp(self.w_center, Phase.BROKEN)
+
+        # In detonations the shock and the wall have merged
+        if self.sol_type == SolutionType.DETON:
+            self.sp = self.sn
+            self.sm_sh = self.sm
+            self.Tp = self.Tn
+            self.Tm_sh = self.Tm
+        else:
+            self.sp = self.model.s(self.wp, Phase.SYMMETRIC)
+            self.sm_sh = self.model.s(self.wm_sh, Phase.SYMMETRIC)
+            self.Tp = self.model.temp(self.wp, Phase.SYMMETRIC)
+            self.Tm_sh = self.model.temp(self.wm_sh, Phase.SYMMETRIC)
 
     def solve(
             self,
@@ -303,7 +324,7 @@ class Bubble(BaseBubble):
             self.v, self.w, self.xi, self.sol_type, \
                 self.vp, self.vm, self.vp_tilde, self.vm_tilde, \
                 self.v_sh, self.vm_sh, self.vm_tilde_sh, \
-                self.wp, self.wm, self.wm_sh, self.v_cj, self.solver_failed, self.elapsed = \
+                self.wp, self.wm, self.wm_sh, self.v_cj, self.solver_failed, self.solving_duration = \
                 sound_shell_generic(
                     model=self.model,
                     v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=self.sol_type,
@@ -331,41 +352,30 @@ class Bubble(BaseBubble):
             self.no_solution_found = True
             return
 
-        # -----
-        # Additional properties for the solution
-        # -----
+        self._set_properties()
 
-        self.solved = True
-        self.alpha_plus = self.model.alpha_plus(
-            self.wp, self.wm, vp_tilde=self.vp_tilde, sol_type=self.sol_type,
-            error_on_invalid=False, nan_on_invalid=True, log_invalid=True
-        )
-        self.alpha_theta_bar_plus = self.model.alpha_theta_bar_plus(self.wp)
-        self.phase = find_phase(self.xi, self.v_wall)
-
-        self.sn = self.model.s(self.wn, Phase.SYMMETRIC)
-        self.sm = self.model.s(self.wm, Phase.BROKEN)
-        self.Tm = self.model.temp(self.wm, Phase.BROKEN)
-        self.w_center = self.w[0]
-        self.T_center = self.model.temp(self.w_center, Phase.BROKEN)
-
-        # In detonations the shock and the wall have merged
-        if self.sol_type == SolutionType.DETON:
-            self.sp = self.sn
-            self.sm_sh = self.sm
-            self.Tp = self.Tn
-            self.Tm_sh = self.Tm
-        else:
-            self.sp = self.model.s(self.wp, Phase.SYMMETRIC)
-            self.sm_sh = self.model.s(self.wm_sh, Phase.SYMMETRIC)
-            self.Tp = self.model.temp(self.wp, Phase.SYMMETRIC)
-            self.Tm_sh = self.model.temp(self.wm_sh, Phase.SYMMETRIC)
-
-        # -----
         # Validity checking for the solution
-        # -----
+        self.validate_junction()
+        self.validate_alpha_plus()
+        self.validate_entropy_flux()
+        self.validate_entropy_density(log_negative=log_negative_entropy)
+        self.validate_thermal_energy_density()
+        self.validate_kappa_omega(
+            sum_rtol_warning=sum_rtol_warning,
+            sum_rtol_error=sum_rtol_error,
+            error_prec=error_prec,
+            high_alpha_n=high_alpha_n,
+            log_high_alpha_n_failures=log_high_alpha_n_failures
+        )
 
-        if np.isnan(self.alpha_plus):
+    # =====
+    # Validation
+    # =====
+
+    def validate_alpha_plus(self) -> bool:
+        r"""Validate $\alpha_+$"""
+        fail = np.isnan(self.alpha_plus)
+        if fail:
             self.alpha_plus = self.model.alpha_plus(
                 self.wp, self.wm, vp_tilde=self.vp_tilde, sol_type=self.sol_type,
                 error_on_invalid=False, nan_on_invalid=False, log_invalid=False
@@ -376,28 +386,94 @@ class Bubble(BaseBubble):
             logger.error(msg)
             self.add_note(msg)
             self.unphysical_alpha_plus = True
-        if self.entropy_flux_p < 0 or self.entropy_flux_m < 0 or self.entropy_flux_diff < 0:
+        return fail
+
+    def validate_entropy_density(self, log_negative: bool = True) -> bool:
+        """Validate that the total entropy density is not decreasing"""
+        fail = self.va_entropy_density_diff < 0
+        if fail:
+            msg = "Entropy density change should not be negative! Now entropy is decreasing. " \
+                  f"Got: {self.va_entropy_density_diff} with " \
+                  f"model={self.model.label_unicode}, v_wall={self.v_wall}, alpha_n={self.alpha_n}"
+            if log_negative:
+                logger.warning(msg)
+            self.add_note(msg)
+            self.negative_net_entropy_change = True
+        return fail
+
+    def validate_entropy_flux(self) -> bool:
+        """Validate entropy fluxes at the bubble wall"""
+        fail_wall, self.entropy_flux_p, self.entropy_flux_m, self.entropy_flux_diff = check_entropy_fluxes(
+            self.model,
+            v1_tilde=self.vp_tilde, v2_tilde=self.vm_tilde,
+            w1=self.wp, w2=self.wm,
+            phase1=Phase.SYMMETRIC, phase2=Phase.BROKEN
+        )
+        fail_sh, self.entropy_flux_p_sh, self.entropy_flux_m_sh, self.entropy_flux_diff_sh = check_entropy_fluxes(
+            self.model,
+            v1_tilde=self.vp_tilde_sh, v2_tilde=self.vm_tilde_sh,
+            w1=self.wn, w2=self.wm_sh,
+            phase1=Phase.SYMMETRIC, phase2=Phase.BROKEN if self.sol_type == SolutionType.DETON else Phase.SYMMETRIC
+        )
+        fail = fail_wall or fail_sh
+        if fail:
             msg = "Entropy fluxes should not be negative! " \
                 f"Got entropy_flux_p={self.entropy_flux_p}, entropy_flux_m={self.entropy_flux_m}, " \
-                f"entropy_flux_diff={self.entropy_flux_diff} with " \
+                f"entropy_flux_diff={self.entropy_flux_diff}, " \
+                f"entropy_flux_p_sh={self.entropy_flux_p_sh}, entropy_flux_m_sh={self.entropy_flux_m_sh}, " \
+                f"entropy_flux_diff_sh={self.entropy_flux_diff_sh} with " \
                 f"model={self.model.label_unicode}, v_wall={self.v_wall}, alpha_n={self.alpha_n}"
             logger.error(msg)
             self.add_note(msg)
             self.negative_entropy_flux = True
-        if self.va_entropy_density_diff < 0:
-            msg = "Entropy density change should not be negative! Now entropy is decreasing. " \
-                  f"Got: {self.va_entropy_density_diff} with " \
-                  f"model={self.model.label_unicode}, v_wall={self.v_wall}, alpha_n={self.alpha_n}"
-            if log_negative_entropy:
-                logger.warning(msg)
+        return fail
+
+    def validate_junction(self, rtol: float = JUNCTION_RTOL) -> bool:
+        """Validate that the junction conditions at the bubble wall have been solved correctly"""
+        devs_wall = junction_condition_deviations(
+            v1=self.vp_tilde, w1=self.wp, p1=self.model.p(self.wp, Phase.SYMMETRIC),
+            v2=self.vm_tilde, w2=self.wm, p2=self.model.p(self.wm, Phase.BROKEN)
+        )
+        devs_sh = junction_condition_deviations(
+            v1=self.vp_tilde_sh, w1=self.wn, p1=self.model.p(self.wn, Phase.SYMMETRIC),
+            v2=self.vm_tilde_sh, w2=self.wm_sh,
+            p2=self.model.p(
+                w=self.wm_sh,
+                phase=Phase.BROKEN if self.sol_type == SolutionType.DETON else Phase.SYMMETRIC
+            )
+        )
+        # This should be the same as in the junction solver, as the choice there depends on the direction of the solving.
+        w = self.wp if self.sol_type == SolutionType.DETON else self.wm
+
+        devs_rel_wall = devs_wall / w
+        devs_rel_sh = devs_sh / self.wm_sh
+
+        # The shock is found by selecting a point of the curve instead of solving exactly.
+        # Therefore, it may not quite fit within the desired tolerance.
+        fail = np.max(np.abs(devs_rel_wall)) > rtol or np.max(np.abs(devs_rel_sh)) > 2 * rtol
+        if fail:
+            msg = \
+                "The solution deviates too much from the junction conditions. " \
+                "This indicates a numerical error or a bug. " \
+                f"Got dev1={devs_wall[0]}, dev2={devs_wall[1]}, " \
+                f"dev1_rel={devs_rel_wall[0]}, dev2_rel{devs_rel_wall[1]}, "\
+                f"dev1_sh={devs_sh[0]}, dev2_sh={devs_sh[1]}, " \
+                f"dev1_rel_sh={devs_rel_sh[0]}, dev2_rel_sh={devs_rel_sh[1]} with " \
+                f"model={self.model.label_unicode}, v_wall={self.v_wall}, alpha_n={self.alpha_n}"
+            logger.error(msg)
             self.add_note(msg)
-            self.negative_net_entropy_change = True
-        if self.va_thermal_energy_density_diff < 0:
-            msg = "Thermal energy density change is negative. The bubble is therefore working as a heat engine. " \
-                  f"Got: {self.va_thermal_energy_density_diff}"
-            logger.warning(msg)
-            self.add_note(msg)
-        if not np.isclose(self.kappa + self.omega, 1, rtol=sum_rtol_warning):
+        return fail
+
+    def validate_kappa_omega(
+            self,
+            sum_rtol_warning: float,
+            sum_rtol_error: float,
+            error_prec: str,
+            high_alpha_n: bool,
+            log_high_alpha_n_failures: bool = True) -> bool:
+        r"""Validate that $\kappa + \omega = 1$"""
+        fail = not np.isclose(self.kappa + self.omega, 1, rtol=sum_rtol_warning)
+        if fail:
             sum_err = not np.isclose(self.kappa + self.omega, 1, rtol=sum_rtol_error)
             if sum_err:
                 self.numerical_error = True
@@ -412,6 +488,16 @@ class Bubble(BaseBubble):
                 else:
                     logger.warning(msg)
             self.add_note(msg)
+        return fail
+
+    def validate_thermal_energy_density(self) -> bool:
+        fail = self.va_thermal_energy_density_diff < 0
+        if fail:
+            msg = "Thermal energy density change is negative. The bubble is therefore working as a heat engine. " \
+                  f"Got: {self.va_thermal_energy_density_diff}"
+            logger.warning(msg)
+            self.add_note(msg)
+        return fail
 
     # =====
     # Quantities
@@ -421,6 +507,18 @@ class Bubble(BaseBubble):
     def en(self) -> float:
         r"""Nucleation energy density $e_n = e(T_n, \phi_s)$"""
         return self.model.e(self.wn, Phase.SYMMETRIC)
+
+    @property
+    def wn(self) -> float:
+        r"""Nucleation enthalpy $w_n = w(T_n, \phi_s)$
+
+        $$w_n \equiv w_\text{outside}$$
+        """
+        return self.w_outside
+
+    @wn.setter
+    def wn(self, wn: float) -> None:
+        self.w_outside = wn
 
     # -----
     # At the wall
@@ -466,36 +564,6 @@ class Bubble(BaseBubble):
         # wm is the highest enthalpy inside the bubble
         cs2, _ = self.model.cs2_max(w_max=self.wm, w_min=self.w_center, phase=Phase.BROKEN)
         return props.v_max_behind(self.v_wall, np.sqrt(cs2))
-
-    # -----
-    # At the shock
-    # -----
-
-    @functools.cached_property
-    def entropy_flux_p_sh(self) -> float:
-        r"""Incoming entropy flux at the shock
-        $$\tilde{\gamma}_{+,sh} \tilde{v}_{+,sh} s_{+,sh}$$
-        """
-        if not self.solved:
-            raise NotYetSolvedError
-        return gamma(self.vp_tilde_sh) * self.vp_tilde_sh * self.sn
-
-    @functools.cached_property
-    def entropy_flux_m_sh(self) -> float:
-        r"""Outgoing entropy flux at the shock
-        $$\tilde{\gamma}_{-,sh} \tilde{v}_{-,sh} s_{-,sh}$$"""
-        if not self.solved:
-            raise NotYetSolvedError
-        return gamma(self.vm_tilde_sh) * self.vm_tilde_sh * self.sm_sh
-
-    @functools.cached_property
-    def entropy_flux_diff_sh(self) -> float:
-        r"""Entropy flux difference at the shock
-        $$\tilde{\gamma}_{-,sh} \tilde{v}_{-,sh} s_{-,sh} - \tilde{\gamma}_{+,sh} \tilde{v}_{+,sh} s_{+,sh}$$
-        """
-        if not self.solved:
-            raise NotYetSolvedError
-        return self.entropy_flux_m_sh - self.entropy_flux_p_sh
 
     # -----
     # Averaged

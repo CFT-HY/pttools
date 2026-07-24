@@ -18,7 +18,7 @@ import numpy as np
 
 from examples import utils
 from pttools.bubble import lorentz
-from pttools.bubble.shock import shock_curve
+from pttools.bubble.shock import v_shock_curve
 from pttools.models import ConstCSModel, Model
 from pttools.omgw0 import Spectrum, SpectrumArr3D, omega_ins
 from pttools.analysis.parallel import create_spectra
@@ -259,7 +259,8 @@ def main(low_k: bool = True):
     for i_model, model in enumerate(models):
         xi_arr = np.linspace(model.css, 0.99, n_xi)
         for i_alpha_n, alpha_n in enumerate(alpha_ns):
-            vm_arr = shock_curve(model, alpha_n, xi_arr)
+            wn = model.wn(alpha_n)
+            _, vm_arr = v_shock_curve(model, wn=wn, xi=xi_arr)
             for i_v_wall, v_wall in enumerate(v_walls):
                 ax: plt.Axes = axs[0, i_alpha_n, i_v_wall]
                 ax2: plt.Axes = axs2[0, i_alpha_n, i_v_wall]
