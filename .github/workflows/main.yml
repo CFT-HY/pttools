@@ -114,15 +114,15 @@ jobs:
           mkdir uml
           pyreverse pttools -o png -d ./uml
           pyreverse pttools -o svg -d ./uml
-      - name: Run Pyan
-        continue-on-error: true
-        run: |
-          ./gen_call_graphs.sh "all" "./**/*.py"
-          ./gen_call_graphs.sh "bubble" "./pttools/bubble/**.py"
-          ./gen_call_graphs.sh "pttools" "./pttools/**.py"
-          ./gen_call_graphs.sh "pttools_tests" "./pttools/**.py" "./pttools/**/*.py" "./tests/**.py"
-          ./gen_call_graphs.sh "ssm" "./pttools/ssm/**.py"
-          ./gen_call_graphs.sh "tests" "./tests/**/*.py"
+#      - name: Run Pyan
+#        continue-on-error: true
+#        run: |
+#          ./gen_call_graphs.sh "all" "./**/*.py"
+#          ./gen_call_graphs.sh "bubble" "./pttools/bubble/**.py"
+#          ./gen_call_graphs.sh "pttools" "./pttools/**.py"
+#          ./gen_call_graphs.sh "pttools_tests" "./pttools/**.py" "./pttools/**/*.py" "./tests/**.py"
+#          ./gen_call_graphs.sh "ssm" "./pttools/ssm/**.py"
+#          ./gen_call_graphs.sh "tests" "./tests/**/*.py"
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
