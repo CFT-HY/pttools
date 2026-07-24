@@ -44,15 +44,19 @@ def plot_bubbles_common(
         bubbles: tp.Collection[BaseBubble],
         fig: plt.Figure | None = None,
         ax: plt.Axes | None = None,
-        path: str | None = None) -> FigAndAxes:
+        path: str | None = None,
+        full_range: bool = False) -> FigAndAxes:
     """Common steps for plotting multiple bubbles"""
     ax.set_xlabel(XI_LABEL)
-    xi_min = np.nanmin([bubble.xi[1] for bubble in bubbles])
-    xi_max = np.nanmax([bubble.xi[-2] for bubble in bubbles])
-    ax.set_xlim(
-        np.nanmax([xi_min * 0.9, 0]),
-        np.nanmin([xi_max * 1.1, 1])
-    )
+    if full_range:
+        ax.set_xlim(-1, 1)
+    else:
+        xi_min = np.nanmin([bubble.xi[1] for bubble in bubbles])
+        xi_max = np.nanmax([bubble.xi[-2] for bubble in bubbles])
+        ax.set_xlim(
+            np.nanmax([xi_min * 1.1, -1]) if xi_min < 0 else np.nanmin([xi_min * 0.9]),
+            np.nanmin([xi_max * 0.9, 0]) if xi_max < 0 else np.nanmin([xi_max * 1.1, 1])
+        )
     ax.grid()
     if len(bubbles) > 1:
         legend(ax)
@@ -66,11 +70,12 @@ def plot_bubbles(
         bubbles: tp.Collection[BaseBubble],
         fig: plt.Figure | None = None,
         path: str | None = None,
+        full_range: bool = False,
         **kwargs) -> plt.Figure:
     """Plot the velocity and enthalpy profiles of bubbles"""
     fig, ax_v, ax_w = setup_bubbles_plot_multifig(fig)
-    plot_bubbles_v(bubbles, fig, ax_v, **kwargs)
-    plot_bubbles_w(bubbles, fig, ax_w, **kwargs)
+    plot_bubbles_v(bubbles, fig, ax_v, full_range=full_range, **kwargs)
+    plot_bubbles_w(bubbles, fig, ax_w, full_range=full_range, **kwargs)
     if len(bubbles) == 1:
         fig.suptitle(bubbles[0].label_latex)
     fig.tight_layout()
@@ -89,17 +94,25 @@ def plot_bubbles_v(
         ax: plt.Axes | None = None,
         path: str | None = None,
         v_max: float = 1,
+        full_range: bool = False,
         **kwargs) -> FigAndAxes:
     """Plot the velocity profile of multiple bubbles"""
     fig, ax = setup_bubbles_plot(bubbles, fig, ax)
+    ax.fill_between([-1, 0, 0, 1], [-1, -1, 0, 1], [-1, 0, 1, 1], facecolor="gray", alpha=0.2)
+
     for bubble in bubbles:
         if "label" in kwargs:
             ax.plot(bubble.xi, bubble.v, **kwargs)
         else:
             ax.plot(bubble.xi, bubble.v, label=bubble.label_latex, **kwargs)
     ax.set_ylabel(V_LABEL)
-    ax.set_ylim(0, v_max)
-    return plot_bubbles_common(bubbles, fig, ax, path)
+    v_bubbles_max = np.nanmax([np.nanmax(bubble.v) for bubble in bubbles])
+    v_bubbles_min = np.nanmin([np.nanmin(bubble.v) for bubble in bubbles])
+    ax.set_ylim(
+        -1 if full_range or v_bubbles_min < 0 else 0,
+        1 if full_range else (v_max if v_bubbles_max > 0 else 0)
+    )
+    return plot_bubbles_common(bubbles, fig, ax, path, full_range=full_range)
 
 
 def plot_bubbles_w(
@@ -107,6 +120,7 @@ def plot_bubbles_w(
         fig: plt.Figure | None = None,
         ax: plt.Axes | None = None,
         path: str | None = None,
+        full_range: bool = False,
         **kwargs) -> FigAndAxes:
     """Plot the enthalpy profile of multiple bubbles"""
     fig, ax = setup_bubbles_plot(bubbles, fig, ax)
@@ -116,4 +130,4 @@ def plot_bubbles_w(
         else:
             ax.plot(bubble.xi, bubble.w, label=bubble.label_latex, **kwargs)
     ax.set_ylabel(W_LABEL)
-    return plot_bubbles_common(bubbles, fig, ax, path)
+    return plot_bubbles_common(bubbles, fig, ax, path, full_range=full_range)

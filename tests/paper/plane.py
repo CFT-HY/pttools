@@ -22,6 +22,8 @@ def xiv_plane(
     """
     Modified from :ssm_repo:`paper/python/fig_8r_xi-v_plane.py`
     """
+    # Todo: Replace this with the methods from pttools.analysis
+
     # Define a suitable number of default lines to plot
     xi0_step_b = (1 - np.sqrt(cs2_b)) / (n_xi0_b + 1)
     xi0_step_s = 1 / (n_xi0_s + 1)
