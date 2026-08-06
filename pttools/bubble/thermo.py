@@ -26,6 +26,7 @@ from pttools.bubble.phase import Phase
 from pttools.bubble import props
 from pttools.bubble import relativity
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
@@ -153,6 +154,14 @@ def mean_enthalpy_change(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, 
     return integral / v_wall ** 3
 
 
+def nu_gdh2024[T: FloatOrArr](omega: T) -> T:
+    r"""$$\nu_\text{gdh2024} = \frac{1 - 3\omega}{1 + 3\omega}$$,
+    where $\omega$ is the barotropic equation of state parameter.
+    :giombi_2024_cs:`\ ` eq. 2.11, 2.41
+    """
+    return (1 - 3 * omega) / (1 + 3 * omega)
+
+
 def thermal_energy_density(v_wall: float, eqp: float) -> float:
     r"""Bubble volume averaged thermal energy density after the phase transition
     $$\frac{3}{4\pi {v}_w^3} {e}_Q'$$
@@ -226,6 +235,15 @@ def omega(
     if delta_e_theta is None:
         delta_e_theta = va_trace_anomaly_diff(model, w, xi, v_wall)
     return va_thermal_energy_density_diff(w, xi) / np.abs(delta_e_theta)
+
+
+def omega_barotropic(p: th.FloatOrArr, e: th.FloatOrArr) -> th.FloatOrArr:
+    r"""Barotropic equation of state parameter $\omega$
+    $$\omega(T,\phi) = \frac{p(T,\phi)}{e(T,\phi)}$$
+    :giombi_2024_cs:`\ ` p. 3
+    In some sources this is known as the equation-of-state parameter for short, and denoted as $w$.
+    """
+    return p / e
 
 
 @numba.njit

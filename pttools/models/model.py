@@ -14,12 +14,15 @@ from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 from pttools.bubble.check import find_most_negative_vals
 from pttools.bubble.const import ALPHA_PLUS_MAX_DEF
 from pttools.bubble.integrate import add_df_dtau, differentials
-from pttools.bubble import solution_type
-from pttools.bubble.solution_type import SolutionType
+from pttools.bubble.thermo import nu_gdh2024, omega_barotropic
+from pttools.bubble.solution_type import SolutionType, \
+    cannot_be_detonation, cannot_be_sub_def, \
+    is_surely_detonation, is_surely_sub_def
 from pttools.models.base import BaseModel
 from pttools.speedup.differential import DifferentialPointer
 from pttools.type_hints import FloatOrArr
 import pttools.type_hints as th
+from pttools.utils.docstrings import copy_docstrings
 from pttools.utils.system import FORKING
 from pttools.utils.validation import check_value_in_range
 
@@ -827,23 +830,12 @@ class Model(BaseModel, abc.ABC):
         temp = self.temp(w, phase)
         return self.ge_temp(temp, phase)
 
-    def nu_gdh2024(self, w: th.FloatOrArr, phase: th.FloatOrArr = Phase.BROKEN) -> th.FloatOrArr:
-        r"""$$\nu_\text{gdh2024} = \frac{1 - 3\omega}{1 + 3\omega}$$,
-        where $\omega$ is the barotropic equation of state parameter.
-        :giombi_2024_cs:`\ ` eq. 2.11, 2.41
-        """
-        omega = self.omega(w, phase)
-        return (1 - 3*omega)/(1 + 3*omega)
+    def nu_gdh2024(self, w: th.FloatOrArr, phase: th.FloatOrArr = Phase.BROKEN) -> th.FloatOrArr:  # pylint: disable=missing-function-docstring
+        return nu_gdh2024(self.omega(w, phase))
 
-    def omega(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Barotropic equation of state parameter $\omega$
-        $$\omega(T,\phi) = \frac{p(T,\phi)}{e(T,\phi)}$$
-        :giombi_2024_cs:`\ ` p. 3
-        In some sources this is known as the equation-of-state parameter for short, and denoted as $w$.
-
-        """
+    def omega(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:  # pylint: disable=missing-function-docstring
         temp = self.temp(w, phase)
-        return self.p_temp(temp, phase) / self.e_temp(temp, phase)
+        return omega_barotropic(self.p_temp(temp, phase), self.e_temp(temp, phase))
 
     def p(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Pressure $p(w,\phi)$. Calls the temperature-based function.
@@ -907,11 +899,11 @@ class Model(BaseModel, abc.ABC):
             wn = self.wn(alpha_n, wn_guess)
         v_cj = v_chapman_jouguet(self, alpha_n, wn=wn, wm_guess=wm_guess)
 
-        if solution_type.is_surely_detonation(v_wall, v_cj):
+        if is_surely_detonation(v_wall, v_cj):
             return SolutionType.DETON
-        if solution_type.is_surely_sub_def(self, v_wall, wn):
+        if is_surely_sub_def(self, v_wall, wn):
             return SolutionType.SUB_DEF
-        if solution_type.cannot_be_detonation(v_wall, v_cj) and solution_type.cannot_be_sub_def(self, v_wall, wn):
+        if cannot_be_detonation(v_wall, v_cj) and cannot_be_sub_def(self, v_wall, wn):
             return SolutionType.HYBRID
         logger.warning(
             "Could not determine solution type for %s with v_wall=%s, alpha_n=%s, v_cj=%s",
@@ -1230,3 +1222,9 @@ class Model(BaseModel, abc.ABC):
         :param w: enthalpy $w$
         :param phase: phase $\phi$
         """
+
+
+copy_docstrings({
+    Model.nu_gdh2024: nu_gdh2024,
+    Model.omega: omega_barotropic
+}, without_params=True)
