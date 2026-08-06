@@ -22,7 +22,7 @@ from pttools.utils.validation import check_value_in_range
 logger = logging.getLogger(__name__)
 
 
-def cs2_to_mu(cs2: th.FloatOrArr) -> th.FloatOrArr:
+def cs2_to_mu[T: FloatOrArr](cs2: T) -> T:
     r"""Convert speed of sound squared $c_s^2$ to $\mu$
 
     $$\mu = 1 + \frac{1}{c_s^2}$$
@@ -107,11 +107,11 @@ class ConstCSModel(AnalyticModel):
                 css2, csb2
             )
 
-        self.css = np.sqrt(css2_flt)
-        self.csb = np.sqrt(csb2_flt)
-        self.mu_s = cs2_to_mu(css2_flt)
-        self.mu_b = cs2_to_mu(csb2_flt)
-        self.is_bag = np.isclose(self.mu_s, 4) and np.isclose(self.mu_b, 4)
+        self.css: float = np.sqrt(css2_flt)
+        self.csb: float = np.sqrt(csb2_flt)
+        self.mu_s: float = cs2_to_mu(css2_flt)
+        self.mu_b: float = cs2_to_mu(csb2_flt)
+        self.is_bag: bool = np.isclose(self.mu_s, 4) and np.isclose(self.mu_b, 4)
 
         # This seems to contain invalid assumptions and approximations.
         # self.alpha_n_min_limit_cs = (self.mu - self.nu) / (3*self.mu)
@@ -511,43 +511,30 @@ class ConstCSModel(AnalyticModel):
             log_invalid=log_invalid
         )
 
-    def alpha_theta_bar_n_max_lte(self, wn: float, sol_type: SolutionType, Psi_n: float | None = None) -> float:
-        r"""$\alpha_{n,\text{max}}^\text{def}$, :ai_2023:`\ `, eq. 28, 31"""
-        if sol_type in (SolutionType.DETON, SolutionType.HYBRID):
-            if Psi_n is None or np.isnan(Psi_n):
-                Psi_n = self.Psi_n(wn)
-            # if np.max(np.abs(Psi_n - 1)) > 1:
-            #     logger.warning(
-            #         "alpha_theta_bar_n_max_lte approximation is not valid, as |1 - Psi_n| > 1. "
-            #         "You have to check yourself that alpha_n is valid."
-            #     )
-            sqrt_val = (1 - Psi_n)/((self.mu_b - 1) * (self.mu_b - 2))
-            if sqrt_val < 0:
-                return np.nan
-            return (1 - Psi_n) / 3 * (1 + self.mu_b / 3 * np.sqrt(sqrt_val))
-        return np.inf
+    def alpha_theta_bar_n_max_lte(
+            self,
+            wn: th.FloatOrArr,
+            sol_type: SolutionType,
+            mu_b: th.FloatOrArr | None = None,
+            Psi_n: th.FloatOrArr | None = None) -> th.FloatOrArr:
+        return super().alpha_theta_bar_n_max_lte(
+            wn=wn, sol_type=sol_type, mu_b=self.mu_b if mu_b is None else mu_b, Psi_n=Psi_n
+        )
 
     def alpha_theta_bar_n_min_lte(
             self,
             wn: th.FloatOrArr,
             sol_type: SolutionType,
+            mu_s: th.FloatOrArr | None = None,
+            mu_b: th.FloatOrArr | None = None,
             Psi_n: th.FloatOrArr | None = None) -> th.FloatOrArr:
-        r"""$\alpha_{n,\text{min}}^\text{def}$, :ai_2023:`\ `, eq. 27, 30"""
-        if Psi_n is None or np.isnan(Psi_n):
-            Psi_n = self.Psi_n(wn)
-        if sol_type == SolutionType.DETON:
-            # if np.abs(self.nu - 4) < 1:
-            #     logger.warning(
-            #         "alpha_theta_bar_n_min_lte_det approximation is not valid, as |nu - 4| > 1. "
-            #         "You have to check yourself that alpha_n is valid."
-            #     )
-            return (1 - Psi_n) / (12*Psi_n) * (4 - (1 - Psi_n) * (self.mu_b - 4))
-        if sol_type == SolutionType.SUB_DEF:
-            return np.maximum((1 - Psi_n) / 3, (self.mu_s - self.mu_b) / (3 * self.mu_s))
-        if sol_type == SolutionType.HYBRID:
-            # Not known / no simple formula
-            return 0. if np.isscalar(wn) else np.zeros_like(wn)
-        raise ValueError(f"Invalid solution type: {sol_type}")
+        return super().alpha_theta_bar_n_min_lte(
+            wn=wn,
+            sol_type=sol_type,
+            mu_s=self.mu_s if mu_s is None else mu_s,
+            mu_b=self.mu_b if mu_b is None else mu_b,
+            Psi_n=Psi_n
+        )
 
     def alpha_theta_bar_plus[T: FloatOrArr](
             self,

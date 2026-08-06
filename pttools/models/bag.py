@@ -1,6 +1,7 @@
 """Bag model"""
 
 import logging
+import typing as tp
 
 import numpy as np
 
@@ -31,6 +32,10 @@ class BagModel(AnalyticModel):
     DEFAULT_LABEL_UNICODE = DEFAULT_LABEL_LATEX
     DEFAULT_NAME = "bag"
     TEMPERATURE_IS_PHYSICAL = False
+
+    # These can be used in functions designed for ConstCSModel
+    mu_s: tp.Final[float] = 4.
+    mu_b: tp.Final[float] = 4.
 
     def __init__(
             self,
@@ -162,6 +167,23 @@ class BagModel(AnalyticModel):
             nan_on_invalid=nan_on_invalid,
             log_invalid=log_invalid
         )
+
+    def alpha_theta_bar_n_max_lte(
+            self,
+            wn: th.FloatOrArr,
+            sol_type: SolutionType,
+            mu_b: th.FloatOrArr = 4.,
+            Psi_n: th.FloatOrArr | None = None) -> th.FloatOrArr:
+        return super().alpha_theta_bar_n_max_lte(wn=wn, sol_type=sol_type, mu_b=mu_b, Psi_n=Psi_n)
+
+    def alpha_theta_bar_n_min_lte(
+            self,
+            wn: th.FloatOrArr,
+            sol_type: SolutionType,
+            mu_s: th.FloatOrArr = 4.,
+            mu_b: th.FloatOrArr = 4.,
+            Psi_n: th.FloatOrArr | None = None) -> th.FloatOrArr:
+        return super().alpha_theta_bar_n_min_lte(wn=wn, sol_type=sol_type, mu_s=mu_s, mu_b=mu_b, Psi_n=Psi_n)
 
     def alpha_theta_bar_plus(
             self,

@@ -17,11 +17,11 @@ from pttools.bubble.integrate import add_df_dtau, differentials
 from pttools.bubble import solution_type
 from pttools.bubble.solution_type import SolutionType
 from pttools.models.base import BaseModel
-from pttools.type_hints import FloatOrArr
-from pttools.utils.validation import check_value_in_range
 from pttools.speedup.differential import DifferentialPointer
+from pttools.type_hints import FloatOrArr
 import pttools.type_hints as th
 from pttools.utils.system import FORKING
+from pttools.utils.validation import check_value_in_range
 
 logger = logging.getLogger(__name__)
 
@@ -381,6 +381,64 @@ class Model(BaseModel, abc.ABC):
         diff = (1 - 1 / (3 * self.cs2(wn, Phase.BROKEN))) * \
             (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN)) / wn
         return alpha_n + diff
+
+    def alpha_theta_bar_n_max_lte(
+            self,
+            wn: th.FloatOrArr,
+            sol_type: SolutionType,
+            mu_b: th.FloatOrArr,
+            Psi_n: th.FloatOrArr | None = None) -> th.FloatOrArr:
+        r"""$\alpha_{n,\text{max}}^\text{def}$, :ai_2023:`\ `, eq. 28, 31"""
+        if sol_type == SolutionType.SUB_DEF:
+            # The article doesn't define an upper limit for deflagrations.
+            return np.inf
+
+        # P. 13: "Interestingly, the transition from deflagration to hybrid is continuous with respect to alpha_n.
+        # Thus, in most applications, it is not necessary to make any distinction between the two."
+        # Could we therefore use the same upper limit for deflagrations as for hybrids?
+
+        # Detonations are also defined to have the same limit as for hybrids.
+        # Eq. 31: alpha_theta_bar_n_max_hybrid = alpha_theta_bar_n_max_detonation
+        if sol_type in (SolutionType.DETON, SolutionType.HYBRID, SolutionType.SUB_DEF):
+            if Psi_n is None or np.isnan(Psi_n):
+                Psi_n = self.Psi_n(wn)
+            # if np.max(np.abs(Psi_n - 1)) > 1:
+            #     logger.warning(
+            #         "alpha_theta_bar_n_max_lte approximation is not valid, as |1 - Psi_n| > 1. "
+            #         "You have to check yourself that alpha_n is valid."
+            #     )
+            # Eq. 28
+            sqrt_val = (1 - Psi_n) / ((mu_b - 1) * (mu_b - 2))
+            if sqrt_val < 0:
+                return np.nan
+            return (1 - Psi_n) / 3 * (1 + mu_b / 3 * np.sqrt(sqrt_val))
+        raise ValueError(f"Invalid solution type: {sol_type}")
+
+    def alpha_theta_bar_n_min_lte(
+            self,
+            wn: th.FloatOrArr,
+            sol_type: SolutionType,
+            mu_s: th.FloatOrArr,
+            mu_b: th.FloatOrArr,
+            Psi_n: th.FloatOrArr | None = None) -> th.FloatOrArr:
+        r"""$\alpha_{n,\text{min}}^\text{def}$, :ai_2023:`\ `, eq. 27, 30"""
+        if Psi_n is None or np.isnan(Psi_n):
+            Psi_n = self.Psi_n(wn)
+        if sol_type == SolutionType.DETON:
+            # if np.abs(self.nu - 4) < 1:
+            #     logger.warning(
+            #         "alpha_theta_bar_n_min_lte_det approximation is not valid, as |nu - 4| > 1. "
+            #         "You have to check yourself that alpha_n is valid."
+            #     )
+            # Eq. 27
+            return (1 - Psi_n) / (12*Psi_n) * (4 - (1 - Psi_n) * (mu_b - 4))
+        if sol_type == SolutionType.SUB_DEF:
+            # Eq. 30
+            return np.maximum((1 - Psi_n) / 3, (mu_s - mu_b) / (3 * mu_s))
+        if sol_type == SolutionType.HYBRID:
+            # Not known / no simple formula. Or the same as for deflagrations?
+            return 0. if np.isscalar(wn) else np.zeros_like(wn)
+        raise ValueError(f"Invalid solution type: {sol_type}")
 
     def alpha_theta_bar_plus[T: FloatOrArr](
             self,

@@ -73,7 +73,7 @@ def validate_solution_type(
         model: "Model",
         v_wall: float,
         alpha_n: float,
-        sol_type: SolutionType,
+        sol_type: SolutionType | None,
         wn: float | None = None,
         wn_guess: float | None = None,
         wm_guess: float | None = None) -> SolutionType:

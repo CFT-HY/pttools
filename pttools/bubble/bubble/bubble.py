@@ -22,8 +22,9 @@ from pttools.utils.docstrings import copy_docstrings
 from pttools.utils.json import export_json
 from pttools.utils.validation import ensure_float
 if tp.TYPE_CHECKING:
-    from pttools.models.model import Model
+    from pttools.models.bag import BagModel
     from pttools.models.const_cs import ConstCSModel
+    from pttools.models.model import Model
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +75,19 @@ class Bubble(BaseBubble):
         :param allow_invalid: Whether to allow invalid solutions
         :param log_invalid: Whether to log invalid solutions
         """
-        super().__init__(model=model, v_wall=v_wall, wm_guess=wm_guess, t_end=t_end, n_xi=n_xi)
+
+        # Validate alpha_n for computing wn
+        alpha_n = ensure_float(alpha_n, "alpha_n")
+        if not theta_bar:
+            model.validate_alpha_n(alpha_n, allow_invalid=allow_invalid, log_invalid=log_invalid)
+
+        # w_outside=wn and is therefore never None for Bubble
+        self.w_outside: float
+        super().__init__(
+            model=model, v_wall=v_wall,
+            w_outside=model.wn(alpha_n, wn_guess=wn_guess, theta_bar=theta_bar),
+            wm_guess=wm_guess, t_end=t_end, n_xi=n_xi
+        )
 
         # -----
         # Validate input parameters
@@ -85,10 +98,9 @@ class Bubble(BaseBubble):
             raise ValueError(f"Invalid v_wall={self.v_wall}. Should have 0 < v_wall <= 1.")
         if self.v_wall < low_v_wall_threshold:
             if self.n_xi == DEFAULT_N_XI:
-                n_xi_fix_factor = n_xi_fix_factor
                 logger.info(
                     "Got n_xi=%s for v_wall=%s < 0.1. This may lead to an inaccurate solution. "
-                    "Since n_xi = N_XI_DEFAULT, multiplying n_xi by %s for an automatic fix.",
+                    "Since n_xi = DEFAULT_N_XI, multiplying n_xi by %s for an automatic fix.",
                     n_xi, v_wall, n_xi_fix_factor
                 )
                 self.n_xi *= n_xi_fix_factor
@@ -100,12 +112,8 @@ class Bubble(BaseBubble):
                 )
 
         # -----
-        # Set and validate alpha_n and alpha_theta_bar_n
+        # Set alpha_n and alpha_theta_bar_n
         # -----
-        alpha_n = ensure_float(alpha_n, "alpha_n")
-        if not theta_bar:
-            model.validate_alpha_n(alpha_n, allow_invalid=allow_invalid, log_invalid=log_invalid)
-        self.wn = model.wn(alpha_n, wn_guess, theta_bar=theta_bar)
         self.alpha_n: float
         self.alpha_theta_bar_n: float
         if theta_bar:
@@ -140,37 +148,9 @@ class Bubble(BaseBubble):
                 raise ValueError(msg)
 
         self.Psi_n: float = model.Psi_n(self.wn)
-
-        # if isinstance(model, ConstCSModel)
-        if hasattr(model, "css2") and hasattr(model, "csb2"):
-            model: ConstCSModel
-            self.alpha_theta_bar_n_min_lte = model.alpha_theta_bar_n_min_lte(self.wn, self.sol_type, Psi_n=self.Psi_n)
-            self.alpha_theta_bar_n_max_lte = model.alpha_theta_bar_n_max_lte(self.wn, self.sol_type, Psi_n=self.Psi_n)
-            # Here LTE = no entropy generation
-            # if log_invalid and (self.alpha_theta_bar_n_max_lte < self.alpha_theta_bar_n_min_lte
-            #                     or self.alpha_theta_bar_n_max_lte < 0):
-            #     logger.error(
-            #         "Got invalid limits for alpha_theta_bar_n_lte: "
-            #         f"min={self.alpha_theta_bar_n_min_lte}, max={self.alpha_theta_bar_n_max_lte}"
-            #     )
-            # if log_invalid and self.alpha_theta_bar_n < self.alpha_theta_bar_n_min_lte:
-            #     logger.warning(
-            #         "alpha_theta_bar_n=%s < lte_min=%s",
-            #         self.alpha_theta_bar_n, self.alpha_theta_bar_n_min_lte
-            #     )
-            # if log_invalid and self.alpha_theta_bar_n > self.alpha_theta_bar_n_max_lte:
-            #     logger.warning(
-            #         "alpha_theta_bar_n=%s > lte_max=%s",
-            #         self.alpha_theta_bar_n, self.alpha_theta_bar_n_max_lte
-            #     )
-
-        # Here LTE = no entropy generation
-        # if log_invalid and self.sol_type == SolutionType.DETON and self.Psi_n < 0.75:
-        #     logger.info(
-        #         "This detonation may not exist, as LTE predicts a large alpha_n_hyb_max for Psi_n=%s < 0.75. "
-        #         "Please see Ai et al. (2023), p. 15.",
-        #         self.Psi_n
-        #     )
+        self.alpha_theta_bar_n_min_lte: float
+        self.alpha_theta_bar_n_max_lte: float
+        self.alpha_theta_bar_n_min_lte, self.alpha_theta_bar_n_max_lte = self.validate_lte(log_invalid=True)
 
         # Flags
         # Todo: clarify the differences between these
@@ -270,6 +250,12 @@ class Bubble(BaseBubble):
             f"κ={self.kappa:{prec}}, ω={self.omega:{prec}}, κ+ω={self.kappa + self.omega:{prec}}, "
             f"V-avg. trace anomaly={self.va_trace_anomaly_diff:{prec}}"
         )
+
+    def lte_params_str(self, model: "BagModel | ConstCSModel") -> str:
+        """LTE parameters as a string for debug messages"""
+        return \
+            f"wn={self.wn}, sol_type={self.sol_type}, Psi_n={self.Psi_n}, " \
+            f"mu_s={model.mu_s}, mu_b={model.mu_b}"
 
     def _set_properties(self) -> None:
         """Extract properties from the solution"""
@@ -489,6 +475,46 @@ class Bubble(BaseBubble):
                     logger.warning(msg)
             self.add_note(msg)
         return fail
+
+    def validate_lte(self, log_invalid: bool = True) -> tuple[float, float]:
+        r"""Validate whether the parameters are within the limits permitted by the LTE approximation
+
+        In this context, the local thermal equilibrium (LTE) approximation means no entropy generation.
+
+        "if a deflagration or hybrid solution exists within LTE,
+        it will also exist when the out-of-equilibrium effects are considered."
+        :ai_2023:`\ ` p. 16
+        """
+        if log_invalid and self.sol_type == SolutionType.DETON and self.Psi_n < 0.75:
+            logger.info(
+                "This detonation may not exist, as LTE predicts a large alpha_n_hyb_max for Psi_n=%s < 0.75. "
+                "Please see Ai et al. (2023), p. 16.",
+                self.Psi_n
+            )
+
+        if self.model.DEFAULT_NAME not in ("bag", "const_cs"):
+            return 0., np.inf
+
+        model: "BagModel | ConstCSModel" = self.model
+        alpha_theta_bar_n_min_lte: float = model.alpha_theta_bar_n_min_lte(self.wn, self.sol_type, Psi_n=self.Psi_n)
+        alpha_theta_bar_n_max_lte: float = model.alpha_theta_bar_n_max_lte(self.wn, self.sol_type, Psi_n=self.Psi_n)
+        if log_invalid and (alpha_theta_bar_n_max_lte < alpha_theta_bar_n_min_lte
+                            or alpha_theta_bar_n_max_lte < 0):
+            logger.error(
+                "Got invalid limits for alpha_theta_bar_n_lte: min=%s, max=%s for %s",
+                alpha_theta_bar_n_min_lte, alpha_theta_bar_n_max_lte, self.lte_params_str(model)
+            )
+        if log_invalid and self.alpha_theta_bar_n < alpha_theta_bar_n_min_lte:
+            logger.info(
+                "Got alpha_theta_bar_n=%s < lte_min=%s for %s",
+                self.alpha_theta_bar_n, alpha_theta_bar_n_min_lte, self.lte_params_str(model)
+            )
+        if log_invalid and self.alpha_theta_bar_n > alpha_theta_bar_n_max_lte:
+            logger.info(
+                "alpha_theta_bar_n=%s > lte_max=%s for %s",
+                self.alpha_theta_bar_n, alpha_theta_bar_n_max_lte, self.lte_params_str(model)
+            )
+        return alpha_theta_bar_n_min_lte, alpha_theta_bar_n_max_lte
 
     def validate_thermal_energy_density(self) -> bool:
         fail = self.va_thermal_energy_density_diff < 0

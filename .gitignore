@@ -58,6 +58,7 @@ envs
 envs-old
 examples/cosmogw
 examples/droplet
+examples/test
 examples/testing
 examples/wallgo
 model_data
