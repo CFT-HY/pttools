@@ -27,6 +27,8 @@ import numpy as np
 from pttools.speedup import options
 import pttools.type_hints as th
 
+logger = logging.getLogger(__name__)
+
 OLD_NUMBALSODA = False
 if options.NUMBA_DISABLE_JIT:
     # As of 0.3.3 NumbaLSODA can't be imported when Numba is disabled
@@ -39,8 +41,17 @@ else:
         try:
             import NumbaLSODA as numbalsoda
             OLD_NUMBALSODA = True
+            logger.warning(
+                "You are using an old version of NumbaLSODA. "
+                "Please upgrade, as compatibility may break without notice."
+            )
         except ImportError:
             numbalsoda = None
+            logger.warning(
+                "Could not import NumbaLSODA. "
+                "As it's a relatively new library, it may not have been installed automatically by your package manager. "
+                "To use NumbaLSODA, please see the PTtools documentation on how to install it manually."
+            )
     except OSError as e:
         # NumbaLSODA requires an executable stack, which is not enabled by default on Linux 6.14.
         # https://github.com/Nicholaswogan/numbalsoda/issues/34
@@ -64,8 +75,6 @@ if numbalsoda is None:
 else:
     lsoda_sig = numbalsoda.lsoda_sig
 
-logger = logging.getLogger(__name__)
-
 #: Numba version number
 #: (The value shown in the PTtools documentation is the version the documentation has been built with.)
 NUMBA_VERSION = tuple(int(val) for val in numba.__version__.split("."))
@@ -84,16 +93,6 @@ if NUMBA_OLD_STRUCTURE:
 if NUMBA_SEGFAULTING_PROFILERS:
     logger.warning(
         "You are using an old Numba version, which is prone to segfaulting when profiled. Please upgrade.")
-if numbalsoda is None:
-    logger.warning(
-        "Could not import NumbaLSODA. "
-        "As it's a relatively new library, it may not have been installed automatically by your package manager. "
-        "To use NumbaLSODA, please see the PTtools documentation on how to install it manually."
-    )
-elif OLD_NUMBALSODA:
-    logger.warning(
-        "You are using an old version of NumbaLSODA. "
-        "Please upgrade, as compatibility may break without notice.")
 
 # For e.g. the cases where Numba does not understand a None as a default value
 # TODO: Move this to utils
