@@ -41,7 +41,7 @@ def _sin_transform_arr(
     # array_lo = f * np.sin(np.outer(z_lo, xi))
     # For each z, integrate f * sin(z*xi) over xi
     # integral = np.trapezoid(array_lo, xi)
-    integral = sin_transform_core(xi, f, z_lo) if parallel else sin_transform_core_single(xi, f, z_lo)
+    integral = sin_transform_core(t=xi, f=f, freq=z_lo) if parallel else sin_transform_core_single(t=xi, f=f, freq=z_lo)
 
     if len(lo) < len(z):
         z_hi = z[np.where(z > z_st_thresh - const.DZ_ST_BLEND)]
@@ -96,7 +96,7 @@ def sin_transform(
     :param z_st_thresh: for $z$ values above z_sh_tresh, use approximation rather than doing the integral.
     :param v_wall: wall speed
     :param v_sh: shock speed
-    :return: sine transformed values $\hat{f}(z)$
+    :return: sine transformed values $\hat{f}(z)$ (same size as $z$)
     """
     if isinstance(z, float):
         return _sin_transform_scalar(z=z, xi=xi, f=f, z_st_thresh=z_st_thresh, v_wall=v_wall, v_sh=v_sh)
@@ -143,5 +143,5 @@ def _sin_transform_core(t: th.FloatArr1D, f: th.FloatArr1D, freq: th.FloatArr1D)
     return integral
 
 
-sin_transform_core = numba.njit(parallel=True, nogil=True)(_sin_transform_core)
-sin_transform_core_single = numba.njit(nogil=True)(_sin_transform_core)
+sin_transform_core = numba.njit(parallel=True, nogil=True, cache=True)(_sin_transform_core)
+sin_transform_core_single = numba.njit(nogil=True, cache=True)(_sin_transform_core)

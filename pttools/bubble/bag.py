@@ -56,7 +56,7 @@ def _check_thetas_scalar(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> None
         _check_thetas_warning(theta_s, theta_b)
 
 
-@numba.njit
+@numba.njit(cache=True)
 def _check_thetas_warning(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> None:
     with numba.objmode:
         logger.warning(

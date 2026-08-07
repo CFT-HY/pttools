@@ -34,9 +34,12 @@ if tp.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def ebar(model: "Model", wn: float) -> float:
-    r"""Average energy density outside the bubble.
-    Energy is conserved, and therefore $\bar{e}={e}_n$.
+def e_bar(model: "Model", wn: float) -> float:
+    r"""Total average energy density $\bar{e}$
+
+    This function assumes that the phase transition is rapid enough that the expansion of the universe can be neglected,
+    and therefore energy is conserved, and $\bar{e}={e}_n$.
+    :gw_pt_ssm:`\ ` p. 39
 
     :param model: Equation of state model
     :param wn: Nucleation enthalpy density ${w}_n$
@@ -114,9 +117,16 @@ def kinetic_energy_density(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D
 def kinetic_energy_fraction(ek_bva: float, eb: float) -> float:
     r"""Bubble volume averaged kinetic energy fraction
     $$K_\text{bva} = \frac{{e}_{K,\text{bva}}}{\bar{e}}$$
+    This definition is independent of the equation of state.
+
+    Please note that the enumerator of :gw_pt_ssm:`\ ` eq. B.35 assumes that
+    $\alpha_n = \frac{4 \epsilon}{3 w_n}$.
+    This corresponds to assuming the bag model.
+    The denominator in turn assumes that
+    $\bar{e} = e_n$, and by definition $e_n = 1 + \alpha_n + \delta_n$.
 
     :param ek_bva: Bubble volume averaged kinetic energy density ${e}_{K,\text{bva}}$
-    :param eb: Average energy density $\bar{e}$
+    :param eb: Total average energy density $\bar{e}$
     :return: Bubble volume averaged kinetic energy fraction $K_\text{bva}$
     """
     return ek_bva / eb
@@ -160,6 +170,38 @@ def nu_gdh2024[T: FloatOrArr](omega: T) -> T:
     :giombi_2024_cs:`\ ` eq. 2.11, 2.41
     """
     return (1 - 3 * omega) / (1 + 3 * omega)
+
+
+def omega(
+        model: "Model",
+        w: th.FloatArr1D,
+        xi: th.FloatArr1D,
+        v_wall: float,
+        delta_e_theta: float | None = None) -> float:
+    r"""Thermal efficiency factor
+    $$\omega = \frac{\Delta {e}_Q}{\Delta {e}_\theta}$$
+    :gw_pt_ssm:`\ ` eq. B.28
+
+    :param model: Equation of state model
+    :param w: Enthalpy density $w$
+    :param xi: $\xi$
+    :param v_wall: Wall velocity ${v}_\text{wall}$
+    :param delta_e_theta: Trace anomaly difference $\Delta {e}_\theta$.
+        If not given, it's computed from the other arguments.
+    :return: Thermal efficiency factor $\omega$
+    """
+    if delta_e_theta is None:
+        delta_e_theta = va_trace_anomaly_diff(model, w, xi, v_wall)
+    return va_thermal_energy_density_diff(w, xi) / np.abs(delta_e_theta)
+
+
+def omega_barotropic(p: th.FloatOrArr, e: th.FloatOrArr) -> th.FloatOrArr:
+    r"""Barotropic equation of state parameter $\omega$
+    $$\omega(T,\phi) = \frac{p(T,\phi)}{e(T,\phi)}$$
+    :giombi_2024_cs:`\ ` p. 3
+    In some sources this is known as the equation-of-state parameter for short, and denoted as $w$.
+    """
+    return p / e
 
 
 def thermal_energy_density(v_wall: float, eqp: float) -> float:
@@ -214,44 +256,24 @@ def trace_anomaly_diff(
     return 3/(4*np.pi * v_wall**3) * va_trace_anomaly_diff(model, w, xi, v_wall, phase)
 
 
-def omega(
-        model: "Model",
+@numba.njit
+def ubarf2(
+        v: th.FloatArr1D,
         w: th.FloatArr1D,
         xi: th.FloatArr1D,
         v_wall: float,
-        delta_e_theta: float | None = None) -> float:
-    r"""Thermal efficiency factor
-    $$\omega = \frac{\Delta {e}_Q}{\Delta {e}_\theta}$$
-    :gw_pt_ssm:`\ ` eq. B.28
-
-    :param model: Equation of state model
-    :param w: Enthalpy density $w$
-    :param xi: $\xi$
-    :param v_wall: Wall velocity ${v}_\text{wall}$
-    :param delta_e_theta: Trace anomaly difference $\Delta {e}_\theta$.
-        If not given, it's computed from the other arguments.
-    :return: Thermal efficiency factor $\omega$
-    """
-    if delta_e_theta is None:
-        delta_e_theta = va_trace_anomaly_diff(model, w, xi, v_wall)
-    return va_thermal_energy_density_diff(w, xi) / np.abs(delta_e_theta)
-
-
-def omega_barotropic(p: th.FloatOrArr, e: th.FloatOrArr) -> th.FloatOrArr:
-    r"""Barotropic equation of state parameter $\omega$
-    $$\omega(T,\phi) = \frac{p(T,\phi)}{e(T,\phi)}$$
-    :giombi_2024_cs:`\ ` p. 3
-    In some sources this is known as the equation-of-state parameter for short, and denoted as $w$.
-    """
-    return p / e
-
-
-@numba.njit
-def ubarf2(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float, ek_bva: float | None = None) -> float:
+        ek_bva: float | None = None,
+        w_bar: float | None = None) -> float:
     r"""Enthalpy-weighted mean square fluid 4-velocity around the bubble
     $$\bar{U}_f^2 = \frac{3}{4\pi \bar{w} {v}_\text{wall}^3} {e}_K$$
     :gw_pt_ssm:`\ ` eq. B.30
-    Presumes that w[-1] = wn = wbar.
+    In some sources such as :giombi_2024_cs:`\ `, this is denoted as $v_\text{rms}^2$.
+
+    This $\bar{U}_f^2$ should not be used with
+    :py:func:pttools.ssm.spec_den_v.spec_den_v: or
+    :py:func:pttools.ssm.spec_den_gw.spec_den_gw_scaling:,
+    as they expect
+    :py:func:pttools.ssm.ssm.ubarf2_from_a2: instead.
 
     :param v: Fluid velocity $v$
     :param w: Enthalpy density $w$
@@ -259,12 +281,15 @@ def ubarf2(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float,
     :param v_wall: Wall velocity ${v}_\text{wall}$
     :param ek_bva: Bubble volume averaged kinetic energy density $e_{K,\text{bva}}$.
         If not given, it's computed from the other arguments.
+    :param w_bar: Average enthalpy density $\bar{w}$.
+        In various legacy functions that call this function, this is approximated as $\bar{w}=w_n$.
     :return: Enthalpy-weighted mean square fluid 4-velocity around the bubble $\bar{U}_f^2$
     """
-    # Todo: Does this presume wbar in addition to wn, or only wn?
     if ek_bva is None:
         ek_bva = kinetic_energy_density(v, w, xi, v_wall)
-    return ek_bva / w[-1]
+    if w_bar is None:
+        w_bar = __w_bar(w=w, xi=xi, v_wall=v_wall)
+    return ek_bva / w_bar
 
 
 def va_enthalpy_density(eq: float) -> float:
@@ -370,13 +395,13 @@ def va_trace_anomaly_diff(
     return 4*np.pi/3 * np.trapezoid((theta - theta_n), xi**3)
 
 
-def wbar(w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float, wn: float) -> float:
+@numba.njit
+def w_bar(w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float) -> float:
     r"""Average enthalpy density $\bar{w}$
 
     :param w: Enthalpy density $w$
     :param xi: $\xi$
     :param v_wall: Wall velocity ${v}_\text{wall}$
-    :param wn: Nucleation enthalpy density ${w}_n$
     :return: Average enthalpy density $\bar{w}$
     """
     # https://stackoverflow.com/a/8768734
@@ -385,6 +410,11 @@ def wbar(w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float, wn: float) -> float
     if i_max == 0:
         i_max = -1
     ret = 1/(xi[i_max]**3) * np.trapezoid(w[:i_max+1], xi[:i_max+1]**3)
+    wn = w[-1]
     if not (ret is None or np.isnan(ret)) and ret <= wn:
-        logger.warning("Should have wbar > wn. Got: wbar=%s, wn=%s", ret, wn)
+        with numba.objmode:
+            logger.warning("Should have w_bar > wn. Got: w_bar=%s, wn=%s", ret, wn)
     return ret
+
+
+__w_bar = w_bar

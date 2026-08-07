@@ -8,7 +8,7 @@ from pttools import bubble
 from pttools.ssm import const
 from pttools.ssm.pow_spec import pow_spec
 from pttools.ssm.spec_den_gw import spec_den_gw
-from pttools.ssm.ssm import DE_Method, Method
+from pttools.ssm.ssm import DE_Method, Method, T_tilde as T_tilde_func
 from pttools.ssm.ssm_bag import a2_e_conserving_bag_file, a2_ssm_func_bag
 from pttools.ssm.spectrum import DEFAULT_NUC_TYPE, NucType
 from pttools.ssm.spec_den_v import spec_den_v_core, spec_den_v_core_single
@@ -185,6 +185,7 @@ def spec_den_v_bag(
     log10_T_min = np.log10(T_min)
     log10_T_max = np.log10(T_max)
 
+    T_tilde = T_tilde_func(T_tilde_min=T_min, T_tilde_max=T_max, n=nT)
     qT_lookup = 10 ** np.arange(log10zmin + log10_T_min, log10zmax + log10_T_max, dlog10z)
 
     v_wall, alpha, nuc_type, nuc_args = parse_params(params)
@@ -210,9 +211,7 @@ def spec_den_v_bag(
             z=z,
             a=nuc_args[0],
             bubble_spacing_enlargement_factor=bubble_spacing_enlargement_factor,
-            log10_T_tilde_min=log10_T_min,
-            log10_T_tilde_max=log10_T_max,
-            nT=nT,
+            T_tilde=T_tilde,
             nuc_type=nuc_type,
             ubarf2=ubarf2,
             v_wall=v_wall
@@ -223,9 +222,7 @@ def spec_den_v_bag(
         z=z,
         a=nuc_args[0],
         bubble_spacing_enlargement_factor=bubble_spacing_enlargement_factor,
-        log10_T_tilde_min=log10_T_min,
-        log10_T_tilde_max=log10_T_max,
-        nT=nT,
+        T_tilde=T_tilde,
         nuc_type=nuc_type,
         ubarf2=ubarf2,
         v_wall=v_wall

@@ -105,7 +105,7 @@ def get_kappa_bag[T: FloatOrArr](
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(vw, alpha_n, n_xi)
 
-            kappa[...] = ubarf2(v, w, xi, vw) / (0.75 * alpha_n)
+            kappa[...] = ubarf2(v, w, xi, vw, w_bar=w[-1]) / (0.75 * alpha_n)
         else:
             kappa[...] = np.nan
         if verbosity > 0:
@@ -147,7 +147,7 @@ def get_kappa_de_bag[T: FloatOrArr](
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(vw, alpha_n, n_xi)
             # Esp+ epsilon is alpha_n * 0.75*w_n
-            kappa[...] = ubarf2(v, w, xi, vw) / (0.75 * alpha_n)
+            kappa[...] = ubarf2(v, w, xi, vw, w_bar=w[-1]) / (0.75 * alpha_n)
             de[...] = mean_energy_change_bag(v, w, xi, vw, alpha_n)
         else:
             kappa[...] = np.nan
@@ -195,7 +195,7 @@ def get_kappa_dq_bag[T: FloatOrArr](
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(vw, alpha_n, n_xi)
             # Esp+ epsilon is alpha_n * 0.75*w_n
-            kappa[...] = ubarf2(v, w, xi, vw) / (0.75 * alpha_n)
+            kappa[...] = ubarf2(v, w, xi, vw, w_bar=w[-1]) / (0.75 * alpha_n)
             dq[...] = 0.75 * mean_enthalpy_change(v, w, xi, vw) / (0.75 * alpha_n * w[-1])
         else:
             kappa[...] = np.nan
@@ -240,7 +240,7 @@ def get_ke_de_frac_bag[T: FloatOrArr](
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(vw, alpha_n, n_xi)
             # Esp+ epsilon is alpha_n * 0.75*w_n
-            ke[...] = ubarf2(v, w, xi, vw) / (0.75 * (1 + alpha_n))
+            ke[...] = ubarf2(v, w, xi, vw, w_bar=w[-1]) / (0.75 * (1 + alpha_n))
             de[...] = mean_energy_change_bag(v, w, xi, vw, alpha_n) / (0.75 * w[-1] * (1 + alpha_n))
         else:
             ke[...] = np.nan
@@ -327,7 +327,7 @@ def _get_ubarf2_bag_scalar[T: FloatOrArr1D](v_wall: T, alpha_n: float, n_xi: int
     else:
         # Now ready to solve for fluid profile
         v, w, xi = fluid_bag.sound_shell_bag(v_wall, alpha_n, n_xi)
-        ub2 = ubarf2(v, w, xi, v_wall)
+        ub2 = ubarf2(v, w, xi, v_wall, w_bar=w[-1])
 
     if verbosity > 0:
         with numba.objmode:

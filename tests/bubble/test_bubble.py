@@ -18,7 +18,7 @@ class BubbleTest(unittest.TestCase):
         cls.bubble = Bubble(cls.model, v_wall=0.5, alpha_n=0.1)
 
     def test_ebar(self):
-        ebar = self.bubble.ebar
+        ebar = self.bubble.e_bar
         self.assertGreater(ebar, 0)
 
     def test_export(self):

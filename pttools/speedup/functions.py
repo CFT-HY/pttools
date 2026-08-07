@@ -8,7 +8,7 @@ import pttools.type_hints as th
 from pttools.type_hints import FloatArr, FloatArr1D
 
 
-@numba.njit
+@numba.njit(cache=True)
 def gradient[T: FloatArr](f: T) -> T:
     """Numba version of :func:`np.gradient`."""
 
@@ -23,14 +23,13 @@ def gradient[T: FloatArr](f: T) -> T:
 
 
 # @numba.njit(parallel=options.NUMBA_NESTED_PARALLELISM)
-@numba.njit
+@numba.njit(cache=True)
 def logspace(start: float, stop: float, num: int, base: float = 10.) -> th.FloatArr1D:
     """Numba version of :func:`numpy.logspace`."""
-    y = np.linspace(start, stop, num)
-    return base**y
+    return base ** np.linspace(start, stop, num)
 
 
-@numba.njit
+@numba.njit(cache=True)
 def resample_log(x: FloatArr1D, nx: int) -> FloatArr1D:
     """Resample a variable over a logarithmic range"""
     return logspace(np.log10(x.min()), np.log10(x.max()), num=nx)

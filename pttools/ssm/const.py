@@ -113,6 +113,3 @@ CS0_2: tp.Final[float] = bubble.CS0_2
 
 #: Default wavenumber overlap for matching sin_transform_approx
 DZ_ST_BLEND: float = np.pi
-
-#: Default mean adiabatic index $\Gamma$
-GAMMA: float = 4/3

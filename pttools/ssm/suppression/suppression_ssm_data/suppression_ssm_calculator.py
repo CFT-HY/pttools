@@ -5,8 +5,8 @@ import os.path
 
 import numpy as np
 
-from pttools.bubble import get_ubarf2_bag
-from pttools.ssm.const import NptType, DEFAULT_N_PT, GAMMA
+from pttools.bubble import DEFAULT_ADIABATIC_INDEX, get_ubarf2_bag
+from pttools.ssm.const import NptType, DEFAULT_N_PT
 from pttools.ssm.spectrum import NucType
 from pttools.ssm.spectrum_bag import power_gw_bag
 import pttools.type_hints as th
@@ -47,7 +47,7 @@ def calc_sup_ssm(
         expected_Ubarf2 = sim_data[i, 5] ** 2  # Ubarf_exp^2
 
         # TODO: Check how to add these in new PTtools / are they still needed: z_st_thresh=np.inf, npt=[7000,200,1000]
-        out_ssm = 3 * GAMMA ** 2 * power_gw_bag(
+        out_ssm = 3 * DEFAULT_ADIABATIC_INDEX ** 2 * power_gw_bag(
             z=z,
             params=(vw, alpha, NucType.EXPONENTIAL,(1,)),
             npt=npt,

@@ -9,6 +9,11 @@ from pttools.ssm.low_k.integration import \
 from pttools.ssm.low_k.join import gw_junction
 from pttools.ssm.nucleation import NucType
 from pttools.ssm.spec_den_gw import gen_lookup, spec_den_gw
+from pttools.ssm.ssm import \
+    A2_e_conserving, \
+    qT_lookup as qT_lookup_func, \
+    T_tilde as T_tilde_func, \
+    ubarf2_from_a2
 from pttools.type_hints import FloatArr1D
 
 
@@ -29,31 +34,34 @@ def compute(
         source_lifetime_factor: float,
         tau_end: float,
         tau_star: float,
-        ubarf2: float,
         v_wall: float,
         v_sh: float,
         # Accuracy parameters
         eps_lookup: float,
         nT: int,
         n_z_lookup: int,
+        T_tilde_min: float,
+        T_tilde_max: float,
         z_st_thresh: float,
         # Other
         nuc_type: NucType,
         lambda_correction: bool = False,
         parallel: bool = True) -> tuple[
-            FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D,
-            FloatArr1D, FloatArr1D, FloatArr1D]:
+            FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D,
+            FloatArr1D, float, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D]:
     """Compute the Sound Shell Model spectra for a fluid profile, including the low-k approximation
 
     This is in one Numba-compiled function so that the GIL is released for the entire computation.
     """
-    spec_den_v, spec_den_v_lookup, spec_den_gw_ssm, a2, a2_lookup, z_lookup = compute_ssm(
+    spec_den_v, spec_den_v_lookup, spec_den_gw_ssm, \
+            A2, A2_lookup, qT_lookup, qT_gw_lookup, T_tilde, ubarf2, z_lookup = compute_ssm(
         e=e, v=v, w=w, xi=xi, y=y,
         bubble_spacing_enlargement_factor=bubble_spacing_enlargement_factor,
         cs=cs, lifetime_distribution_a=lifetime_distribution_a,
-        source_lifetime_factor=source_lifetime_factor, ubarf2=ubarf2,
+        source_lifetime_factor=source_lifetime_factor,
         v_sh=v_sh, v_wall=v_wall,
-        eps_lookup=eps_lookup, nT=nT, n_z_lookup=n_z_lookup, z_st_thresh=z_st_thresh,
+        eps_lookup=eps_lookup, nT=nT, n_z_lookup=n_z_lookup,
+        T_tilde_min=T_tilde_min, T_tilde_max=T_tilde_max, z_st_thresh=z_st_thresh,
         nuc_type=nuc_type, lambda_correction=lambda_correction, parallel=parallel
     )
     spec_den_gw_low, spec_den_gw_int, spec_den_gw_expanded = compute_low_k(
@@ -65,7 +73,8 @@ def compute(
         tau_end=tau_end, tau_star=tau_star
     )
     return \
-        spec_den_v, spec_den_v_lookup, spec_den_gw_ssm, a2, a2_lookup, z_lookup, \
+        spec_den_v, spec_den_v_lookup, spec_den_gw_ssm, \
+        A2, A2_lookup, qT_lookup, qT_gw_lookup, T_tilde, ubarf2, z_lookup, \
         spec_den_gw_low, spec_den_gw_int, spec_den_gw_expanded
 
 
@@ -119,36 +128,66 @@ def compute_ssm(
         cs: float,
         lifetime_distribution_a: float,
         source_lifetime_factor: float,
-        ubarf2: float,
         v_sh: float,
         v_wall: float,
         # Accuracy parameters
         eps_lookup: float,
         nT: int,
         n_z_lookup: int,
+        T_tilde_min: float,
+        T_tilde_max: float,
         z_st_thresh: float,
         # Other
         nuc_type: NucType,
         lambda_correction: bool = False,
-        parallel: bool = True) -> tuple[FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D]:
+        parallel: bool = True) -> tuple[
+            FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D,
+            FloatArr1D, FloatArr1D, FloatArr1D, float, FloatArr1D]:
     """Compute the Sound Shell Model spectra for the given fluid profile"""
-    spec_den_v, a2 = spec_den_v_func(
-        v=v, w=w, xi=xi, e=e, z=y,
-        a=lifetime_distribution_a, cs=cs, nuc_type=nuc_type, ubarf2=ubarf2,
-        v_sh=v_sh, v_wall=v_wall, bubble_spacing_enlargement_factor=bubble_spacing_enlargement_factor,
-        nT=nT, z_st_thresh=z_st_thresh,
+    # -----
+    # Shared factors
+    # -----
+    T_tilde = T_tilde_func(T_tilde_min=T_tilde_min, T_tilde_max=T_tilde_max, n=nT)
+    qT_lookup = qT_lookup_func(T_tilde=T_tilde, z=y)
+    A2 = A2_e_conserving(
+        v=v, w=w, xi=xi, e=e, z=qT_lookup,
+        v_wall=v_wall, v_sh=v_sh, cs=cs, z_st_thresh=z_st_thresh,
         parallel=parallel, lambda_correction=lambda_correction
+    )[0]
+    # Todo: Think which z and A2 to use here and in Spectrum.ubarf2_custom_nucleation()
+    ubarf2 = ubarf2_from_a2(
+        T_tilde=T_tilde, z=qT_lookup, A2=A2, v_wall=v_wall, nuc_type=nuc_type,
+        bubble_spacing_enlargement_factor=bubble_spacing_enlargement_factor
     )
-    z_lookup = gen_lookup(y=y, cs=cs, n_x_lookup=n_z_lookup, eps=eps_lookup)
-    spec_den_v_lookup, a2_lookup = spec_den_v_func(
-        v=v, w=w, xi=xi, e=e, z=z_lookup,
-        a=lifetime_distribution_a, cs=cs, nuc_type=nuc_type, ubarf2=ubarf2,
-        v_sh=v_sh, v_wall=v_wall, bubble_spacing_enlargement_factor=bubble_spacing_enlargement_factor,
-        nT=nT, z_st_thresh=z_st_thresh,
+
+    # -----
+    # spec_den_v generation
+    # -----
+    spec_den_v = spec_den_v_func(
+        z=y, A2_lookup=A2, qT_lookup=qT_lookup, T_tilde=T_tilde,
+        a=lifetime_distribution_a, nuc_type=nuc_type, ubarf2=ubarf2,
+        v_wall=v_wall, bubble_spacing_enlargement_factor=bubble_spacing_enlargement_factor,
+        parallel=parallel
+    )
+
+    # -----
+    # spec_den_gw generation
+    # -----
+    z_gw_lookup = gen_lookup(y=y, cs=cs, n_x_lookup=n_z_lookup, eps=eps_lookup)
+    qT_gw_lookup = qT_lookup_func(T_tilde=T_tilde, z=z_gw_lookup)
+    A2_gw_lookup = A2_e_conserving(
+        v=v, w=w, xi=xi, e=e, z=qT_gw_lookup,
+        v_wall=v_wall, v_sh=v_sh, cs=cs, z_st_thresh=z_st_thresh,
         parallel=parallel, lambda_correction=lambda_correction
+    )[0]
+    spec_den_v_lookup = spec_den_v_func(
+        z=z_gw_lookup, A2_lookup=A2_gw_lookup, qT_lookup=qT_gw_lookup, T_tilde=T_tilde,
+        a=lifetime_distribution_a, nuc_type=nuc_type, ubarf2=ubarf2,
+        v_wall=v_wall, bubble_spacing_enlargement_factor=bubble_spacing_enlargement_factor,
+        parallel=parallel,
     )
     spec_den_gw_ssm, y = spec_den_gw(
-        z_lookup=z_lookup,
+        z_lookup=z_gw_lookup,
         P_tilde_v_lookup=spec_den_v_lookup,
         y=y,
         cs=cs,
@@ -157,4 +196,5 @@ def compute_ssm(
         # nz_int=nz_int,
         parallel=parallel
     )
-    return spec_den_v, spec_den_v_lookup, spec_den_gw_ssm, a2, a2_lookup, z_lookup
+    return spec_den_v, spec_den_v_lookup, spec_den_gw_ssm, \
+        A2, A2_gw_lookup, qT_lookup, qT_gw_lookup, T_tilde, ubarf2, z_gw_lookup

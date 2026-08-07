@@ -5,6 +5,7 @@ import unittest
 import numpy as np
 
 from pttools.bubble import Bubble
+from pttools.bubble.thermo import ubarf2
 from pttools.bubble.thermo_bag import de_from_w_bag
 from pttools.models import BagModel
 from pttools.ssm import SSMSpectrum, pow_spec
@@ -57,7 +58,7 @@ class SpectrumTest(unittest.TestCase):
             for i, bubble in enumerate(self.bubbles)
         ])
         a2_new = np.array([
-            ssm.a2_e_conserving(
+            ssm.A2_e_conserving(
                 v=bubble.v, w=bubble.w, xi=bubble.xi, e=bubble.e, z=self.z,
                 v_wall=bubble.v_wall, v_sh=bubble.v_sh, cs=ssm.CS0)[0]
             for bubble in self.bubbles
@@ -78,8 +79,24 @@ class SpectrumTest(unittest.TestCase):
             )
             for v_wall, alpha_n in zip(self.V_WALLS, self.ALPHA_NS)
         ])
-        new = np.array([spectrum.spec_den_v * spectrum.bubble.ubarf2 for spectrum in self.spectra_lambda])
-        assert_allclose(new, old, rtol=0.283)
+        new = np.array([
+            spectrum.spec_den_v * \
+            ubarf2(
+                v=spectrum.bubble.v,
+                w=spectrum.bubble.w,
+                xi=spectrum.bubble.xi,
+                v_wall=spectrum.bubble.v_wall,
+                ek_bva=spectrum.bubble.kinetic_energy_density,
+                w_bar=spectrum.bubble.wn
+            )
+            for spectrum in self.spectra_lambda
+        ])
+        assert_allclose(
+            new, old,
+            # This tolerance had to be loosened when upgrading the implementations of A2, Gamma, ubarf2 and w_bar.
+            # rtol=0.283
+            rtol=0.329
+        )
 
     def test_gw(self):
         """This test has lambda_correction=True,
@@ -95,10 +112,23 @@ class SpectrumTest(unittest.TestCase):
             for v_wall, alpha_n, spectrum in zip(self.V_WALLS, self.ALPHA_NS, self.spectra_lambda)
         ])
         new = np.array([
-            pow_spec(z=spectrum.y, spec_den=spectrum.spec_den_gw_ssm) * spectrum.bubble.ubarf2**2
+            pow_spec(z=spectrum.y, spec_den=spectrum.spec_den_gw_ssm) * \
+            ubarf2(
+                v=spectrum.bubble.v,
+                w=spectrum.bubble.w,
+                xi=spectrum.bubble.xi,
+                v_wall=spectrum.bubble.v_wall,
+                ek_bva=spectrum.bubble.kinetic_energy_density,
+                w_bar=spectrum.bubble.wn
+            ) ** 2
             for spectrum in self.spectra_lambda
         ])
-        assert_allclose(new, old, rtol=0.519)
+        assert_allclose(
+            new, old,
+            # This tolerance had to be loosened when upgrading the implementations of A2, Gamma, ubarf2 and w_bar.
+            # rtol=0.519
+            rtol=0.551
+        )
 
 
 if __name__ == "__main__":

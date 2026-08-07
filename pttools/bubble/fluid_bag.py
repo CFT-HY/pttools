@@ -255,7 +255,7 @@ def sound_shell_dict(
         r = w[n_wall] / w[n_wall - 1]
     alpha_plus = alpha_n * w[-1] / w[n_wall]
 
-    ubarf2 = thermo.ubarf2(v, w, xi, v_wall)
+    ubarf2 = thermo.ubarf2(v, w, xi, v_wall, w_bar=w[-1])
     # Kinetic energy fraction of total (Bag equation of state)
     ke_frac = ubarf2 / (0.75 * (1 + alpha_n))
     # Efficiency of turning Higgs potential into kinetic energy

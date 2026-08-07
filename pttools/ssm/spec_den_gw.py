@@ -1,19 +1,15 @@
 """Functions for computing the spectral density of the gravitational waves"""
 
-# import logging
-
 import numba
 from numba.extending import overload
 import numpy as np
 
-from pttools.bubble.const import DEFAULT_NU_GDH2024
+from pttools.bubble.const import DEFAULT_ADIABATIC_INDEX, DEFAULT_NU_GDH2024
 from pttools.speedup import NUMBA_ENABLE_CACHE, logspace
 from pttools.ssm.barotropic import H_eta
-from pttools.ssm.const import CS0, DEFAULT_N_Z_LOOKUP, DEFAULT_R_STAR, GAMMA
+from pttools.ssm.const import CS0, DEFAULT_N_Z_LOOKUP, DEFAULT_R_STAR
 from pttools.ssm.rho import rho_delta_factor, rho_delta_frac, x_minus, x_plus
 from pttools.type_hints import FloatArr1D, FloatOrArr, NumbaFunc
-
-# logger = logging.getLogger(__name__)
 
 
 @numba.njit
@@ -73,27 +69,46 @@ def lookup_limits(z: FloatArr1D, cs: float = CS0, eps: float = 0.) -> tuple[floa
 
 def spec_den_gw_scaling(
         ubarf2: float,
-        Gamma: FloatOrArr = GAMMA,
+        mean_adiabatic_index: FloatOrArr = DEFAULT_ADIABATIC_INDEX,
         r_star: FloatOrArr = DEFAULT_R_STAR,
         nu: FloatOrArr = DEFAULT_NU_GDH2024,
         dilution_of_e: FloatOrArr = 1.,
         suppression_factor: FloatOrArr = 1.) -> FloatOrArr:
     r"""Scaling factor for $\tilde{P}_\text{gw}$
 
-    $$3 K^2 r_* \mathcal{H} \eta_*
+    $$3 (\Gamma \bar{U}_f)^2 r_* \mathcal{H} \eta_*
     \left( \frac{a_*}{a_r} \right)^\frac{2\nu}{1 + \nu}
     \Sigma
     \tilde{P}_\text{gw}$$
     :giombi_2026:`\ ` eq. 3.9a
-    The factor of 3 comes from the Friedmann equation $\frac{3H^2}{8\pi G}$.
 
-    $$K = \Gamma \bar{U}_f^2$$
+    The pre-factors of :gw_pt_ssm:`\ ` eq. 3.44, 3.45 and 3.56 provide
+    $$\frac{1}{H} \frac{1}{12 H^2} \frac{k^3}{2 \pi^2} \left( 16 \pi G \bar{w} \bar{U}_f^2 \right)^2 L_f^4
+    = 3 \left( \frac{\bar{w}}{\bar{e}} \bar{U}_f^2 \right)^2 H L_f \frac{(k L_f)^3}{2 \pi^2}
+    = 3 \left( \Gamma \bar{U}_f^2 \right)^2 r_* \frac{z}{2 \pi^2}$$
+    In the first intermediate step, we have used the Friedmann equation $H^2 = \frac{8\pi G}{3} \bar{e}$.
+    In the second step, we have defined $\Gamma \equiv \frac{\bar{w}}{\bar{e}}$ and $r_* \equiv H L_f$.
+
+    The pre-factor can be related to the kinetic energy fraction with
+    $$K = \Gamma \bar{U}_f^2.$$
     :gw_pt_ssm:`\ ` eq. B.32
-    This function takes in $\Gamma$ and $\bar{U}_f^2$ as separate input parameters
-    to ensure that the $\bar{U}_f^2$ cancels out exactly the $\bar{U}_f^{-2}$ in
+    However, this is exact only when using the definitions $\Gamma \equiv \frac{\bar{w}{\bar{e}}$ and
+    $\bar{U}_f^2 \equiv \frac{3}{4 \pi \bar{w} v_\text{wall}^3} e_K$.
+    Therefore, this function takes in $\Gamma$ and $\bar{U}_f^2$ as separate input arguments instead of $K$.
+
+    Another reason that this function takes in $\Gamma$ and $\bar{U}_f^2$ as separate input parameters
+    is to ensure that the $\bar{U}_f^2$ cancels out exactly the $\bar{U}_f^{-2}$ in
     :py:func:spec_den_v:.
+    Therefore, please ensure that you give the same $\bar{U}_f^2$ to both functions.
+
+    :param ubarf2: $\bar{U}_f^2$. Use the same value as for :py:func:spec_den_v:.
+    :param mean_adiabatic_index: Mean adiabatic index $\Gamma \equiv \frac{\bar{w}}{\bar{e}}$.
+    :param r_star: Hubble-scaled mean bubble separation $r_* \equiv H R_* \equiv H L_f$.
+    :param nu: $\nu_\text{gdh2024}$
+    :param dilution_of_e: energy dilution factor
+    :param suppression_factor: Suppression factor from comparison with lattice simulations
     """
-    return 3. * (Gamma * ubarf2)**2 * r_star * H_eta(nu) * dilution_of_e * suppression_factor
+    return 3. * (mean_adiabatic_index * ubarf2)**2 * r_star * H_eta(nu) * dilution_of_e * suppression_factor
 
 
 def _spec_den_gw_core(
@@ -110,13 +125,7 @@ def _spec_den_gw_core(
 
     Please note that in the older formulas the variable $x$ is called $z$.
     """
-    if z_lookup.shape != P_tilde_v_lookup.shape:
-        raise TypeError(
-            "z_lookup and P_v_lookup must be of the same shape. "
-            f"Got: {z_lookup.shape}, {P_tilde_v_lookup.shape}"
-        )
-
-    # This trickery is required by Numba
+    # Creating a second variable is required by Numba
     nz_int2 = z_lookup.size if nz_int is None else nz_int
 
     # Precompute shared intermediate results
@@ -230,6 +239,12 @@ def spec_den_gw(
     :return: $\tilde{P}_\text{gw}(z)$
     """
     # The equation numbers in gw_pt_ssm and maki_msc happen to be the same.
+
+    if z_lookup.shape != P_tilde_v_lookup.shape:
+        raise TypeError(
+            "z_lookup and P_tilde_v_lookup must be of the same shape. "
+            f"Got z_lookup.shape={z_lookup.shape}, P_tilde_v_lookup.shape={P_tilde_v_lookup.shape}"
+        )
 
     if isinstance(y, np.ndarray):
         return _spec_den_gw_y(

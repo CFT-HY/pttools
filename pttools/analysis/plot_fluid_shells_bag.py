@@ -137,7 +137,7 @@ def plot_fluid_shells_bag(
             ax[1, n].plot(xi_even[n_cs:], wmax_det[n_cs:], 'k-.', label=r'$w_{\rm max}$')
 
         if multi:
-            ubarf2 = thermo.ubarf2(v, w, xi, v_wall)
+            ubarf2 = thermo.ubarf2(v, w, xi, v_wall, w_bar=w[-1])
             # Kinetic energy fraction of total (Bag equation of state)
             ke_frac = ubarf2 / (0.75 * (1 + alpha_n))
             # Efficiency of turning Higgs potential into kinetic energy

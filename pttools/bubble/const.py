@@ -6,8 +6,14 @@ import typing as tp
 # -----
 # Default values
 # -----
-#: Default adiabatic ratio $\Gamma$
-DEFAULT_ADIABATIC_RATIO: float = 4 / 3
+DEFAULT_ADIABATIC_INDEX: float = 4 / 3
+r"""
+Default adiabatic index $\Gamma$, aka. adiabatic ratio.
+This is the value for an ultrarelativistic plasma, or the bag model with $V = 0$.
+
+$$\Gamma = \frac{w}{e} = \frac{4aT^4}{3aT^4 + V} \approx \frac{4}{3}$$
+"""
+
 #: Default number of entries in $\xi$ array
 DEFAULT_N_XI: int = 5000
 #: $\nu_\text{gdh2024}$ of :giombi_2024_cs:`\ ` eq. 2.11 for the bag model

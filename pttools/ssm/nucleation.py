@@ -9,7 +9,7 @@ import numpy as np
 from pttools.bubble.solution_type import SolutionType
 from pttools.ssm import const
 import pttools.type_hints as th
-from pttools.type_hints import FloatOrArr
+from pttools.type_hints import FloatArr1D, FloatOrArr
 
 logger = logging.getLogger(__name__)
 
@@ -109,10 +109,13 @@ def Ih_approx[T: FloatOrArr](hx: T) -> T:
     return 1 + (hx * np.log(hx)) / (1 - hx)
 
 
-@numba.njit
-def nu[T: FloatOrArr](T_tilde: T, nuc_type: NucType = NucType.SIMULTANEOUS, a: float = 1.) -> T:
+@numba.njit(cache=True)
+def lifetime_distribution[T: FloatOrArr](
+        T_tilde: T,
+        nuc_type: NucType = NucType.SIMULTANEOUS,
+        a: float = 1.) -> T:
     r"""
-    Bubble lifetime distribution function
+    Bubble lifetime distribution function $\nu$
 
     This is normalized so that
     $$\int \nu(x) dx = 1$$
@@ -138,6 +141,17 @@ def nu[T: FloatOrArr](T_tilde: T, nuc_type: NucType = NucType.SIMULTANEOUS, a: f
     if nuc_type == NucType.SIMULTANEOUS.value:
         return 0.5 * a * (a * T_tilde)**2 * np.exp(-(a * T_tilde) ** 3 / 6)
     raise ValueError(f"Nucleation type not recognized: \"{nuc_type}\"")
+
+
+@numba.njit(cache=True)
+def lifetime_distribution_momentum(nu: FloatArr1D, T_tilde: FloatArr1D, n: int):
+    r"""$\nu_n$, nth momentum of the lifetime distribution $\nu$
+    $$\nu_n \equiv \int d\tilde{T} \nu(\tilde{T}) \tilde{T}^n$$
+    :gw_pt_ssm:`\ ` p. 20
+
+    For both simultaneous and exponential nucleation, $\nu_3 = 6$.
+    """
+    return np.trapezoid(nu * T_tilde**n, T_tilde)
 
 
 def nucleation_f(

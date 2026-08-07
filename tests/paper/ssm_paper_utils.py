@@ -17,9 +17,9 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
 from pttools import bubble
+from pttools.bubble import DEFAULT_ADIABATIC_INDEX
 from pttools import ssm
 import pttools.type_hints as th
-from pttools.ssm import GAMMA
 from tests.paper import const
 from tests.paper import plotting
 from tests.paper import utils
@@ -415,7 +415,7 @@ def ps_from_ssm(
 
     sd_gw, y = ssm.spec_den_gw(z, sd_v)
     # The factor of 3 * Gamma^2 compensates for the changed definition of spec_den_gw
-    pow_gw = 3. * ssm.GAMMA**2 * ssm.pow_spec(y, sd_gw)
+    pow_gw = 3. * DEFAULT_ADIABATIC_INDEX**2 * ssm.pow_spec(y, sd_gw)
 
     # V2_pow_v = np.trapezoid(pow_v/z, z)
     # gw_power = np.trapezoid(pow_gw/y, y)

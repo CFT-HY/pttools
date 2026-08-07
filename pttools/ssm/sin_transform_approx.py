@@ -10,8 +10,12 @@ import pttools.type_hints as th
 logger = logging.getLogger(__name__)
 
 
-@numba.njit
-def envelope(xi: th.FloatArr1D, f: th.FloatArr1D, v_wall: float | None = None, v_sh: float | None = None) -> th.FloatArr1D:
+@numba.njit(cache=True)
+def envelope(
+        xi: th.FloatArr1D,
+        f: th.FloatArr1D,
+        v_wall: float | None = None,
+        v_sh: float | None = None) -> th.FloatArr1D:
     r"""
     Helper function for :func:`sin_transform_approx`.
     Assumes that
@@ -80,7 +84,7 @@ def envelope(xi: th.FloatArr1D, f: th.FloatArr1D, v_wall: float | None = None, v
     ])
 
 
-@numba.njit
+@numba.njit(cache=True)
 def sin_transform_approx(
         z: th.FloatOrArr,
         xi: th.FloatArr1D,

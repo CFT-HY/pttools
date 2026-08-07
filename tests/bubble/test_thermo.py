@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 
 from pttools.bubble.bubble import Bubble
-from pttools.bubble.thermo import ebar, wbar
+from pttools.bubble.thermo import e_bar, ubarf2, w_bar
 from pttools.models.model import Model
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
@@ -37,14 +37,14 @@ class ThermoTest:
 
     def test_ebar(self):
         assert_allclose(
-            [ebar(model=bubble.model, wn=bubble.wn) for bubble in self.bubbles],
+            [e_bar(model=bubble.model, wn=bubble.wn) for bubble in self.bubbles],
             [bubble.en for bubble in self.bubbles]
         )
 
     def test_wbar(self):
         """If there is no bubble, then wbar=wn"""
         assert_allclose(
-            [wbar(w=np.ones_like(bubble.w)*bubble.wn, xi=bubble.xi, v_wall=bubble.v_wall, wn=bubble.wn) for bubble in self.bubbles],
+            [w_bar(w=np.ones_like(bubble.w) * bubble.wn, xi=bubble.xi, v_wall=bubble.v_wall) for bubble in self.bubbles],
             [bubble.wn for bubble in self.bubbles]
         )
 
@@ -76,7 +76,14 @@ class ThermoTestLectureNotes(ThermoTest, unittest.TestCase):
     UBARFS_REF = np.array([0.119, 0.184, 0.133])
 
     def test_ubarf(self):
-        assert_allclose([np.sqrt(bubble.ubarf2) for bubble in self.bubbles], self.UBARFS_REF, rtol=6.8e-3)
+        assert_allclose(
+            [np.sqrt(ubarf2(
+                v=bubble.v, w=bubble.w, xi=bubble.xi,
+                v_wall=bubble.v_wall, ek_bva=bubble.kinetic_energy_density, w_bar=bubble.wn
+            )) for bubble in self.bubbles],
+            self.UBARFS_REF, rtol=6.8e-3
+        )
+        assert_allclose([np.sqrt(bubble.ubarf2) for bubble in self.bubbles], self.UBARFS_REF, rtol=0.039)
 
 
 class ThermoTestHindmarshHijazi(ThermoTest, unittest.TestCase):

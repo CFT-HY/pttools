@@ -6,6 +6,7 @@ import typing as tp
 
 import matplotlib.pyplot as plt
 
+from math import sqrt
 import numpy as np
 
 from pttools.bubble import Bubble, Phase
@@ -18,6 +19,7 @@ from pttools.ssm.pow_spec import pow_spec
 from pttools.ssm.scaling import H_star_tau_sh, H_star_tau_v, H_star_tau_v_old, J
 from pttools.ssm.spec_den_gw import spec_den_gw_scaling
 from pttools.ssm.low_k.intersection import z_cross_approx
+from pttools.ssm.ssm import ubarf2_from_a2
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 from pttools.type_hints import FloatArr, FloatArr1D
 from pttools.utils import copy_docstrings, export_json
@@ -46,6 +48,8 @@ class SSMSpectrum:
             # Accuracy settings
             nT: int = const.DEFAULT_N_T,
             n_z_lookup: int = const.DEFAULT_N_Z_LOOKUP,
+            T_tilde_min: float = const.T_TILDE_MIN,
+            T_tilde_max: float = const.T_TILDE_MAX,
             z_st_thresh: float = const.Z_ST_THRESH,
             # Switches
             compute: bool = True,
@@ -79,6 +83,7 @@ class SSMSpectrum:
         # -----
         # r_star
         # -----
+        # Todo: Move this to a separate function
         self.r_star: float
         if beta_tilde is None:
             if r_star is None:
@@ -109,13 +114,13 @@ class SSMSpectrum:
             )
 
         if np.isnan(self.r_star) or self.r_star <= 0:
-            raise ValueError(f"r_star must be positive. Got r_star={r_star}.")
+            raise ValueError(f"r_star must be positive. Got r_star={self.r_star}.")
         elif self.r_star >= 1:
             # Todo: Find a better reference for this.
             logger.warning(
                 "r_star < 1 is required for the phase transition to complete. "
                 "Got r_star=%s. See Hindmarsh & Hijazi 2019, p. 6.",
-                r_star
+                self.r_star
             )
 
         # -----
@@ -133,6 +138,8 @@ class SSMSpectrum:
         self.z_st_thresh = z_st_thresh
         self.nT = nT
         self.n_z_lookup = n_z_lookup
+        self.T_tilde_min = T_tilde_min
+        self.T_tilde_max = T_tilde_max
         # Switches
         self.low_k = low_k
         # Labels
@@ -148,8 +155,12 @@ class SSMSpectrum:
         self.a2: FloatArr1D | None = None
         #: $|A_\text{lookup}(z)|^2$
         self.a2_lookup: FloatArr1D | None = None
-        #: $c_s({T}_\text{gw})$
-        self.cs: float | None = None
+        #: $c_s^2({T}_\text{gw})$
+        self.cs2: float | None = None
+        #: $qT_\text{lookup}$
+        self.qT_lookup: FloatArr1D | None = None
+        #: $qT_\text{gw,lookup}$
+        self.qT_gw_lookup: FloatArr1D | None = None
         #: $\tilde{P}_v(z)$
         self.spec_den_v: FloatArr1D | None = None
         #: $\tilde{P}_v({z}_\text{lookup})$
@@ -164,6 +175,10 @@ class SSMSpectrum:
         self.spec_den_gw_int: FloatArr1D | None = None
         #: $\tilde{P}_\text{gw,low}$
         self.spec_den_gw_low: FloatArr1D | None = None
+        #: $\tilde{T}$
+        self.T_tilde: FloatArr1D | None = None
+        #: $\bar{U}_f^2$
+        self.ubarf2: float | None = None
         #: $z_\text{lookup}$
         self.z_lookup: FloatArr1D | None = None
 
@@ -181,8 +196,9 @@ class SSMSpectrum:
             parallel: bool = True):
         if not self.bubble.solved:
             self.bubble.solve()
-        self.cs = np.sqrt(self.bubble.model.cs2(self.bubble.va_enthalpy_density, Phase.BROKEN))
-        self.spec_den_v, self.spec_den_v_lookup, self.spec_den_gw_ssm, self.a2, self.a2_lookup, self.z_lookup, \
+        self.cs2 = self.bubble.model.cs2(self.bubble.va_enthalpy_density, Phase.BROKEN)
+        self.spec_den_v, self.spec_den_v_lookup, self.spec_den_gw_ssm, \
+            self.a2, self.a2_lookup, self.qT_lookup, self.qT_gw_lookup, self.T_tilde, self.ubarf2, self.z_lookup, \
             self.spec_den_gw_low, self.spec_den_gw_int, self.spec_den_gw_expanded = compute(
                 # Arrays
                 e=self.bubble.e,
@@ -192,20 +208,21 @@ class SSMSpectrum:
                 y=self.y,
                 # Scalars
                 bubble_spacing_enlargement_factor=self.bubble_spacing_enlargement_factor,
-                cs=self.cs,
+                cs=sqrt(self.cs2),
                 lifetime_distribution_a=lifetime_distribution_a,
                 nu_gdh2024=self.bubble.nu_gdh2024,
                 r_star=self.r_star,
                 source_lifetime_factor=self.source_lifetime_factor,
                 tau_end=self.tau_end,
                 tau_star=self.tau_star,
-                ubarf2=self.bubble.ubarf2,
                 v_wall=self.bubble.v_wall,
                 v_sh=self.bubble.v_sh,
                 # Accuracy
                 eps_lookup=eps_lookup,
                 nT=self.nT,
                 n_z_lookup=self.n_z_lookup,
+                T_tilde_min=self.T_tilde_min,
+                T_tilde_max=self.T_tilde_max,
                 z_st_thresh=self.z_st_thresh,
                 # Other
                 nuc_type=self.nuc_type,
@@ -221,12 +238,26 @@ class SSMSpectrum:
             "beta_tilde": self.beta_tilde,
             "r_star": self.r_star,
             "a_star_a_r_ratio": self.a_star_a_r_ratio,
+            "low_k": self.low_k,
             "N_sh": self.N_sh,
             "nuc_type": self.nuc_type,
             "nT": self.nT,
             "n_z_lookup": self.n_z_lookup,
             "z_st_thresh": self.z_st_thresh,
+            # Computed arrays
+            "a2": self.a2,
+            "a2_lookup": self.a2_lookup,
+            "spec_den_gw_ssm": self.spec_den_gw_ssm,
+            "spec_den_gw_expanded": self.spec_den_gw_expanded,
+            "spec_den_gw_int": self.spec_den_gw_int,
+            "spec_den_gw_low": self.spec_den_gw_low,
+            "spec_den_v": self.spec_den_v,
+            "spec_den_v_lookup": self.spec_den_v_lookup,
+            "T_tilde": self.T_tilde,
+            "y": self.y,
+            "z_lookup": self.z_lookup,
             # Computed values
+            "cs2": self.cs2,
             "delta_tau_v": self.delta_tau_v,
             "dilution_of_e": self.dilution_of_e,
             "H_star_eta_star": self.H_star_eta_star,
@@ -241,7 +272,8 @@ class SSMSpectrum:
             "source_lifetime_factor": self.source_lifetime_factor,
             "suppression_factor": self.suppression_factor,
             "tau_end": self.tau_end,
-            "tau_star": self.tau_star
+            "tau_star": self.tau_star,
+            "ubarf2": self.ubarf2
         }
         if path is not None:
             export_json(data, path)
@@ -374,9 +406,8 @@ class SSMSpectrum:
     @functools.cached_property
     def spec_den_gw_scaling(self) -> float:
         return spec_den_gw_scaling(
-            ubarf2=self.bubble.ubarf2,
-            # TODO: Implement Gamma properly
-            Gamma=const.GAMMA,
+            ubarf2=self.ubarf2,
+            mean_adiabatic_index=self.bubble.mean_adiabatic_index,
             r_star=self.r_star,
             nu=self.bubble.nu_gdh2024,
             dilution_of_e=self.dilution_of_e,
@@ -416,6 +447,24 @@ class SSMSpectrum:
         :giombi_2024_cs:`\ ` p. 8
         """
         return (1 + self.bubble.nu_gdh2024) / self.r_star
+
+    def ubarf(self) -> float:
+        return sqrt(self.ubarf2)
+
+    def ubarf_custom_nucleation(self, nuc_type: NucType | None = None) -> float:
+        return sqrt(self.ubarf2_custom_nucleation(nuc_type=nuc_type))
+
+    def ubarf2_custom_nucleation(self, nuc_type: NucType | None = None) -> float:
+        r"""$\bar{U}_f^2$ using $z$ and $|A|^2$
+        The arguments $z, |A|^2, v_\text{wall}$ and the bubble spacing enlargement factor $\Lambda$
+        are not directly dependent on the nucleation type, and therefore it's an adjustable parameter.
+        """
+        # Todo: Think which z and A2 to use here and in compute_ssm()
+        return ubarf2_from_a2(
+            T_tilde=self.T_tilde, z=self.qT_lookup, A2=self.a2, v_wall=self.bubble.v_wall,
+            nuc_type=self.nuc_type if nuc_type is None else nuc_type,
+            bubble_spacing_enlargement_factor=self.bubble_spacing_enlargement_factor
+        )
 
     @functools.cached_property
     def z_cross_approx(self) -> float:

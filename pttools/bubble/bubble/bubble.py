@@ -237,6 +237,8 @@ class Bubble(BaseBubble):
             "vm_sh": self.vm_sh,
             "vm_tilde_sh": self.vm_tilde_sh,
             "wn": self.wn,
+            # Computed values
+            "mean_adiabatic_index": self.mean_adiabatic_index,
         }
         if path is not None:
             export_json(data, path)
@@ -596,10 +598,10 @@ class Bubble(BaseBubble):
     # -----
 
     @functools.cached_property
-    def ebar(self) -> float:  # pylint: disable=missing-function-docstring
+    def e_bar(self) -> float:  # pylint: disable=missing-function-docstring
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.ebar(self.model, self.wn)
+        return thermo.e_bar(self.model, self.wn)
 
     @functools.cached_property
     def kappa(self) -> float:  # pylint: disable=missing-function-docstring
@@ -617,7 +619,7 @@ class Bubble(BaseBubble):
     def mean_adiabatic_index(self) -> float:  # pylint: disable=missing-function-docstring
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.mean_adiabatic_index(self.wbar, self.ebar)
+        return thermo.mean_adiabatic_index(self.w_bar, self.e_bar)
 
     @functools.cached_property
     def nu_gdh2024(self) -> float:  # pylint: disable=missing-function-docstring
@@ -651,7 +653,7 @@ class Bubble(BaseBubble):
     def thermal_energy_fraction(self) -> float:  # pylint: disable=missing-function-docstring
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.thermal_energy_fraction(eq_bva=self.thermal_energy_density, eb=self.ebar)
+        return thermo.thermal_energy_fraction(eq_bva=self.thermal_energy_density, eb=self.e_bar)
 
     @functools.cached_property
     def T_star(self) -> float:
@@ -673,14 +675,16 @@ class Bubble(BaseBubble):
             raise NotYetSolvedError
         return thermo.ubarf2(
             self.v, self.w, self.xi,
-            self.v_wall, ek_bva=self.kinetic_energy_density
+            v_wall=self.v_wall,
+            ek_bva=self.kinetic_energy_density,
+            w_bar=self.w_bar
         )
 
     @functools.cached_property
-    def wbar(self) -> float:  # pylint: disable=missing-function-docstring
+    def w_bar(self) -> float:  # pylint: disable=missing-function-docstring
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.wbar(self.w, self.xi, self.v_wall, self.wn)
+        return thermo.w_bar(self.w, self.xi, self.v_wall)
 
     # -----
     # bva = bubble volume averaged
@@ -708,7 +712,7 @@ class Bubble(BaseBubble):
     def kinetic_energy_fraction(self) -> float:  # pylint: disable=missing-function-docstring
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.kinetic_energy_fraction(ek_bva=self.kinetic_energy_density, eb=self.ebar)
+        return thermo.kinetic_energy_fraction(ek_bva=self.kinetic_energy_density, eb=self.e_bar)
 
     @functools.cached_property
     def thermal_energy_density(self) -> float:  # pylint: disable=missing-function-docstring
@@ -754,7 +758,7 @@ class Bubble(BaseBubble):
     def va_kinetic_energy_fraction(self) -> float:  # pylint: disable=missing-function-docstring
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.va_kinetic_energy_fraction(ek_va=self.va_kinetic_energy_density, eb=self.ebar)
+        return thermo.va_kinetic_energy_fraction(ek_va=self.va_kinetic_energy_density, eb=self.e_bar)
 
     @functools.cached_property
     def va_thermal_energy_density(self) -> float:  # pylint: disable=missing-function-docstring
@@ -773,7 +777,7 @@ class Bubble(BaseBubble):
     def va_thermal_energy_fraction(self) -> float:  # pylint: disable=missing-function-docstring
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.va_thermal_energy_fraction(eq_va=self.va_thermal_energy_density, eb=self.ebar)
+        return thermo.va_thermal_energy_fraction(eq_va=self.va_thermal_energy_density, eb=self.e_bar)
 
     @functools.cached_property
     def va_trace_anomaly_diff(self) -> float:  # pylint: disable=missing-function-docstring
@@ -786,7 +790,7 @@ type BubbleArr = NDArray[Bubble]
 type BubbleArr2D = np.ndarray[tuple[int, int], np.dtype[Bubble]]
 
 copy_docstrings({
-    Bubble.ebar: thermo.ebar,
+    Bubble.e_bar: thermo.e_bar,
     Bubble.entropy_density_diff: thermo.entropy_density_diff,
     Bubble.kappa: thermo.kappa,
     Bubble.kinetic_energy_density: thermo.kinetic_energy_density,
@@ -805,5 +809,5 @@ copy_docstrings({
     Bubble.va_thermal_energy_density_diff: thermo.va_thermal_energy_density_diff,
     Bubble.va_thermal_energy_fraction: thermo.va_thermal_energy_fraction,
     Bubble.va_trace_anomaly_diff: thermo.va_trace_anomaly_diff,
-    Bubble.wbar: thermo.wbar
+    Bubble.w_bar: thermo.w_bar
 }, without_params=True)
