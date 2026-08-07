@@ -252,6 +252,7 @@ linkcheck_ignore: list[str] = [
     "https://www.aka.fi/*",
     "https://www.intel.com/*",
     # The private Bitbucket repos will also return 404 without authentication
+    "https://bitbucket.org/cgowling/pttools_omgw0_addons/*",
     "https://bitbucket.org/hindmars/sound-shell-model/*",
     # This link redirects to a site that does not allow crawlers
     "https://doi.org/10.1093/acprof:oso/9780198528906.001.0001",
@@ -265,6 +266,8 @@ if IS_GITHUB_ACTIONS:
         r"https://akareport\.aka\.fi/ibi_apps/WFServlet*",
         r"https://www\.intel\.com/*",
         r"https://gtr\.ukri\.org/*",
+        # r"https://scicomp\.stackexchange\.com/*",
+        # r"https://stackoverflow\.com/*",
         r"https://stfc\.ukri\.org/",
     ]
 
