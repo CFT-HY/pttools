@@ -830,6 +830,14 @@ class Model(BaseModel, abc.ABC):
         temp = self.temp(w, phase)
         return self.ge_temp(temp, phase)
 
+    @property
+    def latent_heat_density(self) -> float:
+        r"""Latent heat density $L$
+        $$L = w_s(T_c) - w_b(T_c)$$
+        :gw_pt_ssm:`\ ` p. 5
+        """
+        return self.w(self.T_crit, Phase.SYMMETRIC) - self.w(self.T_crit, Phase.BROKEN)
+
     def nu_gdh2024(self, w: th.FloatOrArr, phase: th.FloatOrArr = Phase.BROKEN) -> th.FloatOrArr:  # pylint: disable=missing-function-docstring
         return nu_gdh2024(self.omega(w, phase))
 
