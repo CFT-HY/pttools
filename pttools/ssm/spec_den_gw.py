@@ -117,7 +117,7 @@ def _spec_den_gw_core(
         y: FloatArr1D,
         cs: float = CS0,
         source_lifetime_factor: float = 1.,
-        nz_int: int | None = None) -> tuple[FloatArr1D, FloatArr1D]:
+        nx_P_tilde_gw: int | None = None) -> tuple[FloatArr1D, FloatArr1D]:
     r"""Core computation for :py:func:spec_den_gw_scaled:
     :giombi_2024_cs:`\ ` eq. 3.13
     Old version:
@@ -126,7 +126,7 @@ def _spec_den_gw_core(
     Please note that in the older formulas the variable $x$ is called $z$.
     """
     # Creating a second variable is required by Numba
-    nz_int2 = z_lookup.size if nz_int is None else nz_int
+    nx_P_tilde_gw2 = z_lookup.size if nx_P_tilde_gw is None else nx_P_tilde_gw
 
     # Precompute shared intermediate results
     x_plus_factor = x_plus(z=1., cs=cs)
@@ -139,7 +139,7 @@ def _spec_den_gw_core(
         xp = y[i] * x_plus_factor
         xm = y[i] * x_minus_factor
         # Create a range of x to integrate over
-        x = logspace(np.log10(xm), np.log10(xp), nz_int2)
+        x = logspace(np.log10(xm), np.log10(xp), nx_P_tilde_gw2)
         # The integrand in eq. 3.47
         integrand = rho_delta_frac(x=x, xp=xp, xm=xm) * \
                     np.interp(x, z_lookup, P_tilde_v_lookup) * \
@@ -158,7 +158,7 @@ def _spec_den_gw_y(
         y: FloatArr1D | None = None,
         cs: float = CS0,
         source_lifetime_factor: float = 1.,
-        nz_int: int | None = None,
+        nx_P_tilde_gw: int | None = None,
         parallel: bool = True) -> tuple[FloatArr1D, FloatArr1D]:
 
     z_lookup_min, z_lookup_max = lookup_limits(y, cs)
@@ -169,12 +169,12 @@ def _spec_den_gw_y(
         return _spec_den_gw_core_parallel(
             z_lookup=z_lookup, P_tilde_v_lookup=P_tilde_v_lookup, y=y,
             cs=cs, source_lifetime_factor=source_lifetime_factor,
-            nz_int=nz_int
+            nx_P_tilde_gw=nx_P_tilde_gw
         )
     return _spec_den_gw_core_single(
         z_lookup=z_lookup, P_tilde_v_lookup=P_tilde_v_lookup, y=y,
         cs=cs, source_lifetime_factor=source_lifetime_factor,
-        nz_int=nz_int
+        nx_P_tilde_gw=nx_P_tilde_gw
     )
 
 
@@ -184,7 +184,7 @@ def _spec_den_gw_no_y(
         y: FloatArr1D | None = None,
         cs: float = CS0,
         source_lifetime_factor: float = 1.,
-        nz_int: int | None = None,
+        nx_P_tilde_gw: int | None = None,
         parallel: bool = True) -> tuple[FloatArr1D, FloatArr1D]:
     z_min, z_max = limits_from_lookup(z_lookup, cs=cs)
     y = logspace(np.log10(z_min), np.log10(z_max), z_lookup.size)
@@ -192,12 +192,12 @@ def _spec_den_gw_no_y(
         return _spec_den_gw_core_parallel(
             z_lookup=z_lookup, P_tilde_v_lookup=P_tilde_v_lookup, y=y,
             cs=cs, source_lifetime_factor=source_lifetime_factor,
-            nz_int=nz_int
+            nx_P_tilde_gw=nx_P_tilde_gw
         )
     return _spec_den_gw_core_single(
         z_lookup=z_lookup, P_tilde_v_lookup=P_tilde_v_lookup, y=y,
         cs=cs, source_lifetime_factor=source_lifetime_factor,
-        nz_int=nz_int
+        nx_P_tilde_gw=nx_P_tilde_gw
     )
 
 
@@ -210,7 +210,7 @@ def spec_den_gw(
         cs: float = CS0,
         source_lifetime_factor: float = 1.,
         # Settings
-        nz_int: int | None = None,
+        nx_P_tilde_gw: int | None = None,
         parallel: bool = True) -> tuple[FloatArr1D, FloatArr1D] | NumbaFunc:
     r"""
     Spectral density of gravitational wave power, $\tilde{P}_\text{gw}(z)$
@@ -234,7 +234,7 @@ def spec_den_gw(
     :param y: $y = kL_f = kR*$ corresponding to z_lookup. If not given, will be created from z_lookup.
     :param cs: Speed of sound $c_s$ in the broken phase after the phase transition
     :param source_lifetime_factor: Source lifetime factor $\Upsilon_l$
-    :param nz_int: Number of $z$ points for integration
+    :param nx_P_tilde_gw: Number of $z$ points for integration
     :param parallel: Whether to run with multiple threads
     :return: $\tilde{P}_\text{gw}(z)$
     """
@@ -250,19 +250,19 @@ def spec_den_gw(
         return _spec_den_gw_y(
             z_lookup=z_lookup, P_tilde_v_lookup=P_tilde_v_lookup, y=y,
             cs=cs, source_lifetime_factor=source_lifetime_factor,
-            nz_int=nz_int, parallel=parallel
+            nx_P_tilde_gw=nx_P_tilde_gw, parallel=parallel
         )
     if y is None:
         return _spec_den_gw_no_y(
             z_lookup=z_lookup, P_tilde_v_lookup=P_tilde_v_lookup, y=y,
             cs=cs, source_lifetime_factor=source_lifetime_factor,
-            nz_int=nz_int, parallel=parallel
+            nx_P_tilde_gw=nx_P_tilde_gw, parallel=parallel
         )
     raise TypeError(f"Unknown type for y: {type(y)}")
 
 
 @overload(spec_den_gw, jit_options={"nopython": True, "nogil": True, "cache": NUMBA_ENABLE_CACHE})
-def _spec_den_gw_scaled_numba(
+def _spec_den_gw_numba(
         # Arrays
         z_lookup: FloatArr1D,
         P_tilde_v_lookup: FloatArr1D,
@@ -271,7 +271,7 @@ def _spec_den_gw_scaled_numba(
         cs: float = CS0,
         source_lifetime_factor: float = 1.,
         # Settings
-        nz_int: int | None = None,
+        nx_P_tilde_gw: int | None = None,
         parallel: bool = True) -> tuple[FloatArr1D, FloatArr1D] | NumbaFunc:
     if isinstance(y, numba.types.Array):
         return _spec_den_gw_y

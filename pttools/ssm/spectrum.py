@@ -47,6 +47,7 @@ class SSMSpectrum:
             suppression_method: SuppressionMethod = SuppressionMethod.DEFAULT,
             # Accuracy settings
             nT: int = const.DEFAULT_N_T,
+            nx_P_tilde_gw: int | None = None,
             n_z_lookup: int = const.DEFAULT_N_Z_LOOKUP,
             T_tilde_min: float = const.T_TILDE_MIN,
             T_tilde_max: float = const.T_TILDE_MAX,
@@ -137,6 +138,7 @@ class SSMSpectrum:
         # Accuracy
         self.z_st_thresh = z_st_thresh
         self.nT = nT
+        self.nx_P_tilde_gw = nx_P_tilde_gw
         self.n_z_lookup = n_z_lookup
         self.T_tilde_min = T_tilde_min
         self.T_tilde_max = T_tilde_max
@@ -220,6 +222,7 @@ class SSMSpectrum:
                 # Accuracy
                 eps_lookup=eps_lookup,
                 nT=self.nT,
+                nx_P_tilde_gw=self.nx_P_tilde_gw,
                 n_z_lookup=self.n_z_lookup,
                 T_tilde_min=self.T_tilde_min,
                 T_tilde_max=self.T_tilde_max,
@@ -242,6 +245,7 @@ class SSMSpectrum:
             "N_sh": self.N_sh,
             "nuc_type": self.nuc_type,
             "nT": self.nT,
+            "nx_P_tilde_gw": self.nx_P_tilde_gw,
             "n_z_lookup": self.n_z_lookup,
             "z_st_thresh": self.z_st_thresh,
             # Computed arrays

@@ -40,6 +40,7 @@ def compute(
         eps_lookup: float,
         nT: int,
         n_z_lookup: int,
+        nx_P_tilde_gw: int | None,
         T_tilde_min: float,
         T_tilde_max: float,
         z_st_thresh: float,
@@ -60,7 +61,7 @@ def compute(
         cs=cs, lifetime_distribution_a=lifetime_distribution_a,
         source_lifetime_factor=source_lifetime_factor,
         v_sh=v_sh, v_wall=v_wall,
-        eps_lookup=eps_lookup, nT=nT, n_z_lookup=n_z_lookup,
+        eps_lookup=eps_lookup, nT=nT, n_z_lookup=n_z_lookup, nx_P_tilde_gw=nx_P_tilde_gw,
         T_tilde_min=T_tilde_min, T_tilde_max=T_tilde_max, z_st_thresh=z_st_thresh,
         nuc_type=nuc_type, lambda_correction=lambda_correction, parallel=parallel
     )
@@ -134,6 +135,7 @@ def compute_ssm(
         eps_lookup: float,
         nT: int,
         n_z_lookup: int,
+        nx_P_tilde_gw: int,
         T_tilde_min: float,
         T_tilde_max: float,
         z_st_thresh: float,
@@ -192,8 +194,7 @@ def compute_ssm(
         y=y,
         cs=cs,
         source_lifetime_factor=source_lifetime_factor,
-        # Todo: make this adjustable
-        # nz_int=nz_int,
+        nx_P_tilde_gw=nx_P_tilde_gw,
         parallel=parallel
     )
     return spec_den_v, spec_den_v_lookup, spec_den_gw_ssm, \

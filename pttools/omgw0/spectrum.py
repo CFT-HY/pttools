@@ -43,6 +43,7 @@ class Spectrum(ssm.SSMSpectrum):
             gs_star: float | None = None,
             # Accuracy settings
             nT: int = ssm.DEFAULT_N_T,
+            nx_P_tilde_gw: int | None = None,
             n_z_lookup: int = ssm.DEFAULT_N_Z_LOOKUP,
             z_st_thresh: float = ssm.Z_ST_THRESH,
             # Switches
@@ -82,6 +83,7 @@ class Spectrum(ssm.SSMSpectrum):
             a_star_a_r_ratio=a_star_a_r_ratio,
             N_sh=N_sh,
             nT=nT,
+            nx_P_tilde_gw=nx_P_tilde_gw,
             n_z_lookup=n_z_lookup,
             compute=compute,
             parallel=parallel,
