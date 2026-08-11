@@ -38,7 +38,7 @@ class SSMSpectrum:
             # Input parameters
             beta_tilde: float | None = None,
             r_star: float | None = None,
-            y: FloatArr1D | None = None,
+            y: FloatArr1D = const.DEFAULT_Y,
             a_star_a_r_ratio: float = const.DEFAULT_A_STAR_A_R_RATIO,
             N_sh: float = const.DEFAULT_N_SH,
             nuc_type: NucType = DEFAULT_NUC_TYPE,
@@ -74,13 +74,8 @@ class SSMSpectrum:
         :param low_k: whether to use the :giombi_2024_cs: approximation for low $k$
         :param parallel: whether to use multiple CPU cores
         """
-        if y is None:
-            self.y = const.DEFAULT_Y
-        elif np.isnan(y).any():
+        if np.isnan(y).any():
             raise ValueError("y must not contain nan values.")
-        else:
-            self.y = y
-
 
         # -----
         # Parameters
@@ -91,6 +86,7 @@ class SSMSpectrum:
         self.N_sh = N_sh
         self.nuc_type = nuc_type
         self.r_star: float = self.validate_nucleation(bubble=bubble, r_star=r_star, beta_tilde=beta_tilde)
+        self.y = y
         # Suppression
         self.suppression = suppression
         self.suppression_method = suppression_method

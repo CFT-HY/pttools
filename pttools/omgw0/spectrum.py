@@ -13,6 +13,7 @@ from pttools.omgw0.factors import F_gw0
 from pttools.omgw0 import freq
 from pttools.omgw0 import noise
 from pttools import ssm
+from pttools.ssm.const import DEFAULT_Y
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
@@ -30,7 +31,7 @@ class Spectrum(ssm.SSMSpectrum):
             # Input parameters
             beta_tilde: float | None = None,
             r_star: float | None = None,
-            y: th.FloatArr1D | None = None,
+            y: th.FloatArr1D = DEFAULT_Y,
             a_star_a_r_ratio: float = ssm.DEFAULT_A_STAR_A_R_RATIO,
             N_sh: float = ssm.DEFAULT_N_SH,
             nuc_type: ssm.NucType = ssm.DEFAULT_NUC_TYPE,
