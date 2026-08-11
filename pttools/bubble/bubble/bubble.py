@@ -604,6 +604,16 @@ class Bubble(BaseBubble):
         return thermo.e_bar(self.model, self.wn)
 
     @functools.cached_property
+    def g_star(self):
+        """Degrees of freedom $g_*$ for pressure after the bubble nucleation"""
+        return self.model.gp(w=self.va_enthalpy_density, phase=Phase.BROKEN)
+
+    @functools.cached_property
+    def gs_star(self) -> float:
+        """Degrees of freedom $g_{s,*}$ for entropy after the bubble nucleation"""
+        return self.model.gs(w=self.va_enthalpy_density, phase=Phase.BROKEN)
+
+    @functools.cached_property
     def kappa(self) -> float:  # pylint: disable=missing-function-docstring
         if not self.solved:
             raise NotYetSolvedError
@@ -640,22 +650,6 @@ class Bubble(BaseBubble):
         return self.model.omega(self.va_enthalpy_density, Phase.BROKEN)
 
     @functools.cached_property
-    def g_star(self):
-        """Degrees of freedom $g_*$ for pressure after the bubble nucleation"""
-        return self.model.gp(w=self.va_enthalpy_density, phase=Phase.BROKEN)
-
-    @functools.cached_property
-    def gs_star(self) -> float:
-        """Degrees of freedom $g_{s,*}$ for entropy after the bubble nucleation"""
-        return self.model.gs(w=self.va_enthalpy_density, phase=Phase.BROKEN)
-
-    @functools.cached_property
-    def thermal_energy_fraction(self) -> float:  # pylint: disable=missing-function-docstring
-        if not self.solved:
-            raise NotYetSolvedError
-        return thermo.thermal_energy_fraction(eq_bva=self.thermal_energy_density, eb=self.e_bar)
-
-    @functools.cached_property
     def T_star(self) -> float:
         r"""Average temperature $T_*$ after the bubble nucleation"""
         if not self.solved:
@@ -689,7 +683,6 @@ class Bubble(BaseBubble):
     # -----
     # bva = bubble volume averaged
     # -----
-
     @functools.cached_property
     def entropy_density_diff(self) -> float:  # pylint: disable=missing-function-docstring
         if not self.solved:
@@ -727,6 +720,12 @@ class Bubble(BaseBubble):
         return thermo.thermal_energy_density_diff(self.w, self.xi, self.v_wall)
 
     @functools.cached_property
+    def thermal_energy_fraction(self) -> float:  # pylint: disable=missing-function-docstring
+        if not self.solved:
+            raise NotYetSolvedError
+        return thermo.thermal_energy_fraction(eq_bva=self.thermal_energy_density, eb=self.e_bar)
+
+    @functools.cached_property
     def trace_anomaly(self) -> float:  # pylint: disable=missing-function-docstring
         if not self.solved:
             raise NotYetSolvedError
@@ -735,7 +734,6 @@ class Bubble(BaseBubble):
     # -----
     # va = volume averaged
     # -----
-
     @functools.cached_property
     def va_enthalpy_density(self) -> float:  # pylint: disable=missing-function-docstring
         if not self.solved:

@@ -154,6 +154,7 @@ class SSMSpectrum:
         if not self.bubble.solved:
             self.bubble.solve()
         self.cs2 = self.bubble.model.cs2(self.bubble.va_enthalpy_density, Phase.BROKEN)
+        self.cs = sqrt(self.cs2)
         self.spec_den_v, self.spec_den_v_lookup, self.spec_den_gw_ssm, \
             self.a2, self.a2_lookup, self.qT_lookup, self.qT_gw_lookup, self.T_tilde, self.ubarf2, self.z_lookup, \
             self.spec_den_gw_low, self.spec_den_gw_int, self.spec_den_gw_expanded = compute(
@@ -165,7 +166,7 @@ class SSMSpectrum:
                 y=self.y,
                 # Scalars
                 bubble_spacing_enlargement_factor=self.bubble_spacing_enlargement_factor,
-                cs=sqrt(self.cs2),
+                cs=self.cs,
                 lifetime_distribution_a=lifetime_distribution_a,
                 nu_gdh2024=self.bubble.nu_gdh2024,
                 r_star=self.r_star,
@@ -315,7 +316,7 @@ class SSMSpectrum:
     def nucleation_f(self) -> float:
         return nucleation_f(
             xi=self.bubble.xi, T=self.bubble.T,
-            beta_tilde=self.beta_tilde, v_wall=self.bubble.v_wall, v_sh=self.bubble.v_sh
+            beta_tilde=self.beta_tilde, v_wall=self.bubble.v_wall
         )
 
     @functools.cached_property
@@ -407,6 +408,7 @@ class SSMSpectrum:
         """
         return (1 + self.bubble.nu_gdh2024) / self.r_star
 
+    @property
     def ubarf(self) -> float:
         return sqrt(self.ubarf2)
 
