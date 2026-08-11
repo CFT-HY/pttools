@@ -1114,6 +1114,7 @@ class Model(BaseModel, abc.ABC):
             self,
             alpha_n: T,
             wn_guess: float | None = None,
+            # analytical: bool = False,
             theta_bar: bool = False,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,

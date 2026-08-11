@@ -52,6 +52,9 @@ G0: float = 2.
 #: :caprini_2020:`\ ` p. 12
 GS0: float = 3.91
 
+#: :notes:`\ ` p. 10
+# G_EFF_SM: float = 106.75
+
 #: Reduced Planck constant in SI units $\text{J} \cdot \text{s}$
 H_BAR: float = 1.054571817e-34
 

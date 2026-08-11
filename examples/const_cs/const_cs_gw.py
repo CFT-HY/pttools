@@ -29,7 +29,7 @@ import pttools.type_hints as th
 logger = logging.getLogger(__name__)
 
 
-def gw_lines(axs: tp.Iterable[plt.Axes]):
+def gw_lines(axs: tp.Iterable[plt.Axes]) -> None:
     """Add the guideline power laws to the GW spectrum plot"""
     pow_low = 9
     k_low = np.logspace(-1, -0.2, 10)
@@ -46,7 +46,7 @@ def gw_lines(axs: tp.Iterable[plt.Axes]):
         ax.text(5.3, 10 ** (-7.5), f"$k^{{{pow_high}}}$")
 
 
-def mu_curves(axs: tp.Iterable[plt.Axes], csb2s: tp.Iterable[float], ls: str = ":", c: str = "k"):
+def mu_curves(axs: tp.Iterable[plt.Axes], csb2s: tp.Iterable[float], ls: str = ":", c: str = "k") -> None:
     """Add µ curves to the fluid velocity profile plot"""
     for i_csb2, csb2 in enumerate(csb2s):
         csb = np.sqrt(csb2)
@@ -66,7 +66,7 @@ def plot_spectrum(
         ax_omgw0: plt.Axes,
         ls_v: str,
         label: str,
-        label_omgw0: str):
+        label_omgw0: str) -> None:
     """Plot a GW spectrum"""
     ax_v.plot(spectrum.bubble.xi, spectrum.bubble.v, label=label, ls=ls_v)
     ax_gw.plot(spectrum.y, spectrum.pow_gw, label=label)
@@ -113,7 +113,7 @@ def setup_axes(
         y_min: float,
         y_max: float,
         f_min: float,
-        f_max: float):
+        f_max: float) -> tuple[str, str]:
     r"""Configure axes for the v, GW and $\Omega_{gw,0}$ plots"""
     title = rf"$\alpha_n={spectrum.bubble.alpha_n}, v_\text{{wall}}={spectrum.bubble.v_wall}$"
     title_omgw0 = title[:-1] + rf", r_*={spectrum.r_star}, T_*={spectrum.T_star} \text{{GeV}}$"
@@ -148,7 +148,7 @@ def setup_axes(
     return title, title_omgw0
 
 
-def main(low_k: bool = True):
+def main(low_k: bool = True) -> tuple[th.FigArr1D, th.FigArr2D, str]:
     """Plot GW spectra for various ConstCSModel parameter combinations"""
     start_time = time.perf_counter()
     a_s = 5
@@ -197,8 +197,6 @@ def main(low_k: bool = True):
         (len(models), alpha_ns.size, v_walls.size),
         dtype=object
     )
-    # z = np.logspace(-1, 3, 5000)
-
     for i_model, model in enumerate(models):
         spectra[i_model, :, :] = create_spectra(
             model=model, v_walls=v_walls, alpha_ns=alpha_ns,
@@ -216,13 +214,11 @@ def main(low_k: bool = True):
             single_thread=IS_READ_THE_DOCS
         )
 
-    figsize = (12, 10)
-    figsize2 = (12, 5)
     figs: th.FigArr1D = np.array(
-        [plt.figure(figsize=figsize) for _ in range(3)]
+        [plt.figure(figsize=(12, 10)) for _ in range(3)]
     )
     figs2: th.FigArr2D = np.array(
-        [[plt.figure(figsize=figsize2) for _ in alpha_ns] for _ in range(3)]
+        [[plt.figure(figsize=(12, 5)) for _ in alpha_ns] for _ in range(3)]
     )
     axs: th.AxesArr3D = np.stack(
         [fig.subplots(alpha_ns.size, v_walls.size) for fig in figs]
@@ -254,10 +250,9 @@ def main(low_k: bool = True):
     table = snr_table(snrs, models, v_walls, alpha_ns)
 
     # Shock surfaces
-    n_xi = 20
     ls = "--"
     for i_model, model in enumerate(models):
-        xi_arr = np.linspace(model.css, 0.99, n_xi)
+        xi_arr = np.linspace(model.css, 0.99, 20)
         for i_alpha_n, alpha_n in enumerate(alpha_ns):
             wn = model.wn(alpha_n)
             _, vm_arr = v_shock_curve(model, wn=wn, xi=xi_arr)
