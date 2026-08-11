@@ -81,48 +81,6 @@ class SSMSpectrum:
         else:
             self.y = y
 
-        # -----
-        # r_star
-        # -----
-        # Todo: Move this to a separate function
-        self.r_star: float
-        if beta_tilde is None:
-            if r_star is None:
-                self.r_star = const.DEFAULT_R_STAR
-            elif np.isnan(r_star):
-                raise ValueError(f"Got invalid r_star={r_star}")
-            else:
-                self.r_star = r_star
-        else:
-            if r_star is not None:
-                raise ValueError(
-                    "Either beta_tilde or r_star must be provided, but not both. "
-                    f"Got beta_tilde={beta_tilde}, r_star={r_star}."
-                )
-            if np.isnan(beta_tilde) or beta_tilde <= 0:
-                raise ValueError(f"beta_tilde must be positive. Got beta_tilde={beta_tilde}.")
-            if beta_tilde < const.BETA_TILDE_MIN:
-                logger.warning(
-                    "Got beta_tilde=%s < %s. "
-                    "This is experimentally excluded due to primordial black hole formation. "
-                    "Please see Lewicki et al. (2023) for details.",
-                    beta_tilde, const.BETA_TILDE_MIN
-                )
-            if not bubble.solved:
-                bubble.solve()
-            self.r_star = r_star_func(
-                beta_over_H=beta_tilde, v_wall=bubble.v_wall, xi=bubble.xi, T=bubble.T, sol_type=bubble.sol_type
-            )
-
-        if np.isnan(self.r_star) or self.r_star <= 0:
-            raise ValueError(f"r_star must be positive. Got r_star={self.r_star}.")
-        elif self.r_star >= 1:
-            # Todo: Find a better reference for this.
-            logger.warning(
-                "r_star < 1 is required for the phase transition to complete. "
-                "Got r_star=%s. See Hindmarsh & Hijazi 2019, p. 6.",
-                self.r_star
-            )
 
         # -----
         # Parameters
@@ -132,6 +90,7 @@ class SSMSpectrum:
         self.a_star_a_r_ratio = a_star_a_r_ratio
         self.N_sh = N_sh
         self.nuc_type = nuc_type
+        self.r_star: float = self.validate_nucleation(bubble=bubble, r_star=r_star, beta_tilde=beta_tilde)
         # Suppression
         self.suppression = suppression
         self.suppression_method = suppression_method
@@ -469,6 +428,47 @@ class SSMSpectrum:
             nuc_type=self.nuc_type if nuc_type is None else nuc_type,
             bubble_spacing_enlargement_factor=self.bubble_spacing_enlargement_factor
         )
+
+    @staticmethod
+    def validate_nucleation(
+            bubble: Bubble,
+            r_star: float | None,
+            beta_tilde: float | None = None) -> float:
+        r_star_set: float
+        if beta_tilde is None:
+            r_star_set = const.DEFAULT_R_STAR if r_star is None else r_star
+        # If beta_tilde is set, use it to obtain r_star.
+        else:
+            if r_star is not None:
+                raise ValueError(
+                    "Either beta_tilde or r_star must be provided, but not both. "
+                    f"Got beta_tilde={beta_tilde}, r_star={r_star}."
+                )
+            if np.isnan(beta_tilde) or beta_tilde <= 0:
+                raise ValueError(f"beta_tilde must be positive. Got beta_tilde={beta_tilde}.")
+            if beta_tilde < const.BETA_TILDE_MIN:
+                logger.warning(
+                    "Got beta_tilde=%s < %s. "
+                    "This is experimentally excluded due to primordial black hole formation. "
+                    "Please see Lewicki et al. (2023) for details.",
+                    beta_tilde, const.BETA_TILDE_MIN
+                )
+            if not bubble.solved:
+                bubble.solve()
+            r_star_set = r_star_func(
+                beta_over_H=beta_tilde, v_wall=bubble.v_wall, xi=bubble.xi, T=bubble.T, sol_type=bubble.sol_type
+            )
+
+        if np.isnan(r_star_set) or r_star_set <= 0:
+            raise ValueError(f"r_star must be positive. Got r_star={r_star_set}.")
+        elif r_star_set >= 1:
+            # Todo: Find a better reference for this.
+            logger.warning(
+                "r_star < 1 is required for the phase transition to complete. "
+                "Got r_star=%s. See Hindmarsh & Hijazi 2019, p. 6.",
+                r_star_set
+            )
+        return r_star_set
 
     @functools.cached_property
     def z_cross_approx(self) -> float:
