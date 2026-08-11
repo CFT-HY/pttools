@@ -8,11 +8,17 @@ which is equivalent.
 The volume-averaged and bubble volume averaged quantities are different, and should not be confused with each other.
 
 The integrals are computed using the trapezoidal rule and with respect to $\xi^3$,
-since the functions are constant outside the bubble, where the functions are constant, but very few points are given.
+since outside the bubble the functions are constant, but with very few given points.
 This scheme gives the correct results for these ranges,
 as the trapezoidal rule computes the integral of a constant function exactly, even when only the endpoints are given.
 If the integrals were with respect to $\xi$, the functions would have the factor $\xi^2$,
 which would break this useful property and require a more dense grid of points.
+
+Integration of an angle-independent function over a spherical shell:
+$$\int f dV
+= \int_{R_\text{min}^{R_\text{max} dr \int_0^{2\pi} d\phi \int_0^\pi d\theta f r^2 \sin \theta
+= 4 \pi \int_{R_\text{min}}^{R_\text{max}} dr r^2 f
+= \frac{4\pi}{3} \int_{R_\text{min}^3}^{R_\text{max}^3} dr^3 f$$
 """
 
 import logging
@@ -115,8 +121,10 @@ def kinetic_energy_density(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D
 
 
 def kinetic_energy_fraction(ek_bva: float, eb: float) -> float:
-    r"""Bubble volume averaged kinetic energy fraction
+    r"""Bubble volume averaged kinetic energy fraction $K_\text{bva}$
     $$K_\text{bva} = \frac{{e}_{K,\text{bva}}}{\bar{e}}$$
+    :gw_pt_ssm:`\ ` eq. B.31
+    :caprini_2020:`\ ` eq. 22
     This definition is independent of the equation of state.
 
     Please note that the enumerator of :gw_pt_ssm:`\ ` eq. B.35 assumes that
@@ -329,7 +337,7 @@ def va_kinetic_energy_density(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatAr
     :param xi: $\xi$
     :return: Volume-averaged kinetic energy density ${e}_K$
     """
-    return 4*np.pi/3 * np.trapezoid(w * v**2 * relativity.gamma2(v), xi**3)
+    return 4*np.pi/3 * np.trapezoid(w * relativity.gamma2(v) * v**2, xi**3)
 
 
 def va_kinetic_energy_fraction(ek_va: float, eb: float) -> float:
