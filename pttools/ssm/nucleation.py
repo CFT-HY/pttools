@@ -158,30 +158,36 @@ def nucleation_f(
         xi: th.FloatArr1D,
         T: th.FloatArr1D,
         beta_tilde: float,
-        v_wall: float,
-        v_sh: float) -> float:
+        v_wall: float) -> float:
     r"""Relative increase $f$ in the effective volume of the bubble
     $$f = \frac{3}{v_{\text{wall}}^3} \int_{v_{\text{wall}}}^{v_{\text{sh}}} \xi^2
-    \left( 1 - e^{-\Delta S} \right) d\xi$$,
+    \left( 1 - e^{-\Delta S} \right) d\xi
+    = \frac{1}{v_{\text{wall}}^3} \int_{v_{\text{wall}}}^{v_{\text{sh}}}
+    \left( 1 - e^{-\Delta S} \right) d\xi^3
+    $$,
     where
     $$\Delta S
     \approx \frac{\partial S}{\partial t}
     = \frac{\partial t}{\partial T} \Delta T
     = \frac{\tilde{\beta} \Delta T(\xi)}{T_n}$$
     :ajmi_2022:`\ ` eq. 47-50
+
+    :param xi: $\xi$
+    :param T: $T$
+    :param beta_tilde: $\tilde{\beta}$
+    :param v_wall: $v_{\text{wall}}$
     """
-    # Todo: Integrate with respect to xi^3
-    inds = np.logical_and(v_wall < xi, xi < v_sh)
-    xi_cut = xi[inds]
-    return 3 / v_wall**3 * np.trapezoid(xi_cut**2 * (1 - np.exp(-beta_tilde * (T[inds] - T[-1]) / T[-1])), xi_cut)
+    # The integral is zero outside v_sh.
+    inds = v_wall < xi
+    return 1 / v_wall**3 * np.trapezoid((1 - np.exp(-beta_tilde * (T[inds] - T[-1]) / T[-1])), xi[inds]**3)
 
 
-def r_star(
-        beta_over_H: float,
+def r_star[T2: FloatOrArr](
+        beta_over_H: T2,
         v_wall: float,
         xi: th.FloatArr1D,
         T: th.FloatArr1D,
-        sol_type: SolutionType) -> th.FloatOrArr:
+        sol_type: SolutionType) -> T2:
     r"""Hubble-scaled mean bubble spacing $r_*(\beta)
     $$r_* = \Lambda(h_x) r_*(0)$$
     :ajmi_2022:`\ ` eq. 77
@@ -215,13 +221,13 @@ def r_star_product(H_star: th.FloatOrArr, R_star: th.FloatOrArr) -> th.FloatOrAr
     return H_star * R_star
 
 
-def R_star(
-        beta: float,
+def R_star[T2: FloatOrArr](
+        beta: T2,
         v_wall: float,
         xi: th.FloatArr1D,
         T: th.FloatArr1D,
         beta_tilde: float,
-        sol_type: SolutionType) -> float:
+        sol_type: SolutionType) -> T2:
     r"""Mean bubble separation $R_*$
     $$R_* = \Lambda(h_x) R_*(0)$$
     :ajmi_2022:`\ ` eq. 77
@@ -249,7 +255,7 @@ def R_star(
     if sol_type == SolutionType.DETON:
         return R_star0(beta, v_wall)
     elif sol_type in (SolutionType.SUB_DEF, SolutionType.HYBRID):
-        f = nucleation_f(xi, T, beta_tilde, v_wall)
+        f = nucleation_f(xi=xi, T=T, beta_tilde=beta_tilde, v_wall=v_wall)
         return bubble_spacing_enlargement_factor(hx=hx(f)) * R_star0(beta, v_wall)
     raise ValueError(f"Invalid solution type: {sol_type}")
 
