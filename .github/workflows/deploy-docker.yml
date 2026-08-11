@@ -2,17 +2,16 @@ name: Publish Docker image
 on:
   release:
     types: [published]
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
+  workflow_dispatch:
+# The workflow_run trigger works only on the default branch.
+#  workflow_run:
+#    workflows: [CI]
+#    types: [completed]
 jobs:
   push_to_registries:
     name: Push Docker image to multiple registries
     uses: docker/github-builder/.github/workflows/build.yml@v1
-    # Allow running when the CI pipeline succeeded or when the workflow is triggered manually
-    if: ${{ github.event.release.tag_name != '' || github.event.workflow_run.conclusion == 'success' }}
     permissions:
-      attestations: write
       contents: read
       id-token: write
       packages: write
@@ -25,11 +24,9 @@ jobs:
         type=ref,event=branch
         type=semver,pattern={{version}}
       output: image
-      push: ${{ github.event_name != 'pull_request' }}
+      push: true
       platforms: linux/amd64,linux/arm64
-      # Enabling SBOM results in this error:
-      # "ERROR: failed to build: Attestation is not supported for the docker driver."
-      # sbom: true
+      sbom: true
       set-meta-labels: true
     secrets:
       registry-auths: |
