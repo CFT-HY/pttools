@@ -65,8 +65,6 @@ class BaseBubble(abc.ABC):
         self.xi: th.FloatArr1D | None = None
         #: Phase profile $\phi(\xi)$
         self.phase: th.FloatArr1D | None = None
-        #: Temperature profile $T(\xi)$
-        self.T: th.FloatArr1D | None = None
 
         # -----
         # Output values
@@ -228,6 +226,11 @@ class BaseBubble(abc.ABC):
         if not self.solved:
             raise NotYetSolvedError
         return self.model.s(self.w, self.phase)
+
+    @functools.cached_property
+    def T(self):
+        r"""Temperature profile $T(\xi)$"""
+        return self.model.temp(w=self.w, phase=self.phase)
 
     @functools.cached_property
     def va_kinetic_energy_density(self) -> float:  # pylint: disable=missing-function-docstring
