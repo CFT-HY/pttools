@@ -46,11 +46,11 @@ jobs:
       - name: Count Lines of Code (cloc) for the PTtools library
         uses: djdefi/cloc-action@6
         with:
-          options: ${{ github.workspace }}/pttools --by-file-by-lang --exclude-list-file=.clocignore  --vcs=git
+          options: ${{ github.workspace }}/pttools --by-file-by-lang --vcs=git
       - name: Count Lines of Code (cloc) for the repository
         uses: djdefi/cloc-action@6
         with:
-          options: ${{ github.workspace }} --by-file-by-lang --exclude-list-file=.clocignore  --vcs=git
+          options: ${{ github.workspace }} --by-file-by-lang --vcs=git
 #  fossa:
 #    runs-on: ubuntu-latest
 #    timeout-minutes: 5
