@@ -266,8 +266,8 @@ if IS_GITHUB_ACTIONS:
         r"https://akareport\.aka\.fi/ibi_apps/WFServlet*",
         r"https://www\.intel\.com/*",
         r"https://gtr\.ukri\.org/*",
-        # r"https://scicomp\.stackexchange\.com/*",
-        # r"https://stackoverflow\.com/*",
+        r"https://scicomp\.stackexchange\.com/*",
+        r"https://stackoverflow\.com/*",
         r"https://stfc\.ukri\.org/",
     ]
 
