@@ -3,6 +3,7 @@ joblib == 1.5.3
 memory-profiler >= 0.61.0
 # myst-parser
 sphinx == 9.1.0
+sphinxcontrib-video == 0.4.2
 # sphinx-autodoc-typehints == 3.9.7
 sphinx-gallery == 0.21.0
 sphinx-math-dollar == 1.3

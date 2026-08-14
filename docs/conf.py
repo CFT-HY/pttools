@@ -14,11 +14,13 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
 from datetime import date
+import logging
 import os.path
 import sys
 import tomllib
 import warnings
 
+from matplotlib.animation import FFMpegWriter
 from sphinx_gallery.sorting import ExplicitOrder
 
 dir_path = os.path.dirname(os.path.abspath(__file__))
@@ -28,6 +30,7 @@ sys.path.insert(0, os.path.dirname(dir_path))
 from pttools.logging import setup_logging
 from pttools.utils.system import IS_GITHUB_ACTIONS
 setup_logging()
+logger = logging.getLogger(__name__)
 
 # Create a directory for static files to avoid a warning when building.
 os.makedirs(os.path.join(dir_path, "_static"), exist_ok=True)
@@ -288,7 +291,7 @@ sphinx_gallery_conf = {
     "ignore_pattern": r"(__init__\.py|utils\.py|p_s_scan_dev\.py|droplet|standard_model|entropy|reverse)",
     # "image_srcset": ["2x"],
     # "line_numbers": True,
-    "matplotlib_animations": True,
+    "matplotlib_animations": (True, "mp4"),
     # Parallelism cannot be enabled simultaneously with "show_memory".
     # It may also produce errors with some IDEs:
     # https://stackoverflow.com/questions/31080829/python-error-io-unsupportedoperation-fileno
@@ -317,6 +320,9 @@ sphinx_gallery_conf = {
     ])
 }
 autosummary_generate = True
+
+if not FFMpegWriter.isAvailable():
+    logger.error("FFmpeg is not available. Animations will not be rendered in the documentation.")
 
 
 # Remove matplotlib agg warnings from generated doc when using plt.show
