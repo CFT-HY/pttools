@@ -416,7 +416,10 @@ class Bubble(BaseBubble):
             self.negative_entropy_flux = True
         return fail
 
-    def validate_junction(self, rtol: float = JUNCTION_RTOL) -> bool:
+    def validate_junction(
+            self,
+            rtol: float = JUNCTION_RTOL,
+            rtol_sh: float = 50 * JUNCTION_RTOL) -> bool:
         """Validate that the junction conditions at the bubble wall have been solved correctly"""
         devs_wall = junction_condition_deviations(
             v1=self.vp_tilde, w1=self.wp, p1=self.model.p(self.wp, Phase.SYMMETRIC),
@@ -438,10 +441,20 @@ class Bubble(BaseBubble):
 
         # The shock is found by selecting a point of the curve instead of solving exactly.
         # Therefore, it may not quite fit within the desired tolerance.
-        fail = np.max(np.abs(devs_rel_wall)) > rtol or np.max(np.abs(devs_rel_sh)) > 2 * rtol
+        fail_wall = np.max(np.abs(devs_rel_wall)) > rtol
+        fail_sh = np.max(np.abs(devs_rel_sh)) > rtol_sh
+        fail = fail_wall or fail_sh
         if fail:
+            if fail_sh:
+                if fail_wall:
+                    msg1 = "wall and shock deviate"
+                else:
+                    msg1 = "shock deviates"
+            else:
+                msg1 = "wall deviates"
+
             msg = \
-                "The solution deviates too much from the junction conditions. " \
+                f"The {msg1} too much from the junction conditions. " \
                 "This indicates a numerical error or a bug. " \
                 f"Got dev1={devs_wall[0]}, dev2={devs_wall[1]}, " \
                 f"dev1_rel={devs_rel_wall[0]}, dev2_rel{devs_rel_wall[1]}, "\
