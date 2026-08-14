@@ -1,0 +1,1 @@
+"""Examples on solution properties"""

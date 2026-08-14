@@ -8,12 +8,12 @@ Plot LISA instrument and astrophysical noise as a function of frequency
 from matplotlib import pyplot as plt
 import numpy as np
 
-from examples.utils import save_and_show
+from examples.utils import save_and_show_fig
 from pttools.analysis.utils import legend
 from pttools.omgw0 import noise
 
 
-def main():
+def main() -> plt.Figure:
     """Plot LISA instrument and astrophysical noise as a function of frequency"""
     fig: plt.Figure = plt.figure()
     axs = fig.subplots(2, 2)
@@ -51,5 +51,5 @@ def main():
 
 
 if __name__ == '__main__':
-    fig = main()
-    save_and_show(fig, "noise")
+    _fig = main()
+    save_and_show_fig(_fig, "noise")

@@ -8,7 +8,7 @@ Comparison of old and new solvers
 import matplotlib.pyplot as plt
 import numpy as np
 
-from examples import utils
+from examples.utils import save_and_show_fig
 from pttools.analysis.utils import A3_PAPER_SIZE
 from pttools.bubble import Phase, SolutionType
 from pttools.bubble.bubble import Bubble
@@ -22,18 +22,30 @@ from tests.paper.plane import xiv_plane
 from tests.paper.plot_plane_paper import plot_plane
 
 
-def validate(model: Model, v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, sol_type: SolutionType):
+def validate(
+        model: Model,
+        v: th.FloatArr1D,
+        w: th.FloatArr1D,
+        xi: th.FloatArr1D,
+        sol_type: SolutionType) -> th.FloatArr1D:
     """Validate a bubble"""
     if sol_type == SolutionType.SUB_DEF:
-        validate_def(model, v, w, xi, sol_type)
-    elif sol_type == SolutionType.HYBRID:
-        validate_def(model, v, w, xi, sol_type)
+        return validate_def(model, v, w, xi, sol_type)
+    if sol_type == SolutionType.HYBRID:
+        ret = validate_def(model, v, w, xi, sol_type)
         validate_shock(model, v, w, xi, sol_type)
-    elif sol_type == SolutionType.DETON:
-        validate_shock(model, v, w, xi, sol_type)
+        return ret
+    if sol_type == SolutionType.DETON:
+        return validate_shock(model, v, w, xi, sol_type)
+    raise ValueError(f"Invalid solution type: \"{sol_type}\"")
 
 
-def validate_def(model: Model, v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, sol_type: SolutionType):
+def validate_def(
+        model: Model,
+        v: th.FloatArr1D,
+        w: th.FloatArr1D,
+        xi: th.FloatArr1D,
+        sol_type: SolutionType) -> th.FloatArr1D:
     """Validate that a deflagration has been solved correctly"""
     i_wall = np.argmax(v)
     v_wall = xi[i_wall]
@@ -43,10 +55,15 @@ def validate_def(model: Model, v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatA
     v2w = -relativity.lorentz(v2p, v_wall)
     w1 = w[i_wall-1]
     w2 = w[i_wall]
-    validate2(model, v1p, v2p, v1w, v2w, w1, w2, Phase.BROKEN, Phase.SYMMETRIC, sol_type)
+    return validate2(model, v1p, v2p, v1w, v2w, w1, w2, Phase.BROKEN, Phase.SYMMETRIC, sol_type)
 
 
-def validate_shock(model: Model, v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, sol_type: SolutionType):
+def validate_shock(
+        model: Model,
+        v: th.FloatArr1D,
+        w: th.FloatArr1D,
+        xi: th.FloatArr1D,
+        sol_type: SolutionType) -> th.FloatArr1D:
     """Validate that a shock has been solved correctly"""
     v_wall = xi[-2]
     v1p = v[-3]
@@ -61,7 +78,7 @@ def validate_shock(model: Model, v: th.FloatArr1D, w: th.FloatArr1D, xi: th.Floa
     else:
         phase1 = Phase.SYMMETRIC
         phase2 = Phase.SYMMETRIC
-    validate2(model, v1p, v2p, v1w, v2w, w1, w2, phase1, phase2, sol_type)
+    return validate2(model, v1p, v2p, v1w, v2w, w1, w2, phase1, phase2, sol_type)
 
 
 def validate2(
@@ -70,10 +87,11 @@ def validate2(
         v1w: float, v2w: float,
         w1: float, w2: float,
         phase1: Phase, phase2: Phase,
-        sol_type: SolutionType):
+        sol_type: SolutionType) -> th.FloatArr1D:
     """Validate that the junction conditions have been solved correctly"""
     dev = junction_conditions_solvable(np.array([v2w, w2]), model, v1w, w1, phase1, phase2)
     print(f"sol_type={sol_type}, v1p={v1p}, v2p={v2p}, v1w={v1w}, v2w={v2w}, w1={w1}, w2={w2}, dev={dev}")
+    return dev
 
 
 def main():
@@ -141,10 +159,9 @@ def main():
         ax.legend()
 
     fig.tight_layout()
-
     return fig
 
 
 if __name__ == "__main__":
-    fig = main()
-    utils.save_and_show(fig, "old_new.png")
+    _fig = main()
+    save_and_show_fig(_fig, "old_new")

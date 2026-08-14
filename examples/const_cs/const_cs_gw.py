@@ -13,23 +13,23 @@ import os.path
 import time
 import typing as tp
 
+from matplotlib.axes import Axes
 import matplotlib.pyplot as plt
 import numpy as np
 
-from examples import utils
+from examples.utils import FIG_DIR, save_and_show_figs
 from pttools.bubble import lorentz
 from pttools.bubble.shock import v_shock_curve
 from pttools.models import ConstCSModel, Model
 from pttools.omgw0 import Spectrum, SpectrumArr3D, omega_ins
 from pttools.analysis.parallel import create_spectra
-# from pttools.analysis.utils import A3_PAPER_SIZE, A4_PAPER_SIZE
 from pttools.utils.system import IS_READ_THE_DOCS
 import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
 
-def gw_lines(axs: tp.Iterable[plt.Axes]) -> None:
+def gw_lines(axs: tp.Iterable[Axes]) -> None:
     """Add the guideline power laws to the GW spectrum plot"""
     pow_low = 9
     k_low = np.logspace(-1, -0.2, 10)
@@ -46,7 +46,7 @@ def gw_lines(axs: tp.Iterable[plt.Axes]) -> None:
         ax.text(5.3, 10 ** (-7.5), f"$k^{{{pow_high}}}$")
 
 
-def mu_curves(axs: tp.Iterable[plt.Axes], csb2s: tp.Iterable[float], ls: str = ":", c: str = "k") -> None:
+def mu_curves(axs: tp.Iterable[Axes], csb2s: tp.Iterable[float], ls: str = ":", c: str = "k") -> None:
     """Add µ curves to the fluid velocity profile plot"""
     for i_csb2, csb2 in enumerate(csb2s):
         csb = np.sqrt(csb2)
@@ -61,9 +61,9 @@ def mu_curves(axs: tp.Iterable[plt.Axes], csb2s: tp.Iterable[float], ls: str = "
 
 def plot_spectrum(
         spectrum: Spectrum,
-        ax_v: plt.Axes,
-        ax_gw: plt.Axes,
-        ax_omgw0: plt.Axes,
+        ax_v: Axes,
+        ax_gw: Axes,
+        ax_omgw0: Axes,
         ls_v: str,
         label: str,
         label_omgw0: str) -> None:
@@ -107,9 +107,9 @@ def snr_table(snrs: th.FloatArr3D, models: list[Model], v_walls: th.FloatArr1D, 
 
 def setup_axes(
         spectrum: Spectrum,
-        ax_v: plt.Axes,
-        ax_gw: plt.Axes,
-        ax_omgw0: plt.Axes,
+        ax_v: Axes,
+        ax_gw: Axes,
+        ax_omgw0: Axes,
         y_min: float,
         y_max: float,
         f_min: float,
@@ -230,12 +230,12 @@ def main(low_k: bool = True) -> tuple[th.FigArr1D, th.FigArr2D, str]:
     snrs = np.zeros((len(alpha_ns), len(v_walls), len(models)))
     for i_alpha_n, alpha_n in enumerate(alpha_ns):
         for i_v_wall, v_wall in enumerate(v_walls):
-            ax_v: plt.Axes = axs[0, i_alpha_n, i_v_wall]
-            ax_gw: plt.Axes = axs[1, i_alpha_n, i_v_wall]
-            ax_omgw0: plt.Axes = axs[2, i_alpha_n, i_v_wall]
-            ax_v2: plt.Axes = axs2[0, i_alpha_n, i_v_wall]
-            ax_gw2: plt.Axes = axs2[1, i_alpha_n, i_v_wall]
-            ax_omgw02: plt.Axes = axs2[2, i_alpha_n, i_v_wall]
+            ax_v: Axes = axs[0, i_alpha_n, i_v_wall]
+            ax_gw: Axes = axs[1, i_alpha_n, i_v_wall]
+            ax_omgw0: Axes = axs[2, i_alpha_n, i_v_wall]
+            ax_v2: Axes = axs2[0, i_alpha_n, i_v_wall]
+            ax_gw2: Axes = axs2[1, i_alpha_n, i_v_wall]
+            ax_omgw02: Axes = axs2[2, i_alpha_n, i_v_wall]
             for i_model, model in enumerate(models):
                 spectrum: Spectrum = spectra[i_model, i_alpha_n, i_v_wall]
                 if spectrum is not None:
@@ -257,8 +257,8 @@ def main(low_k: bool = True) -> tuple[th.FigArr1D, th.FigArr2D, str]:
             wn = model.wn(alpha_n)
             _, vm_arr = v_shock_curve(model, wn=wn, xi=xi_arr)
             for i_v_wall, v_wall in enumerate(v_walls):
-                ax: plt.Axes = axs[0, i_alpha_n, i_v_wall]
-                ax2: plt.Axes = axs2[0, i_alpha_n, i_v_wall]
+                ax: Axes = axs[0, i_alpha_n, i_v_wall]
+                ax2: Axes = axs2[0, i_alpha_n, i_v_wall]
                 if i_model:
                     ax.plot(xi_arr, vm_arr, color="k", ls=ls)
                     ax2.plot(xi_arr, vm_arr, color="k", ls=ls)
@@ -277,8 +277,8 @@ def main(low_k: bool = True) -> tuple[th.FigArr1D, th.FigArr2D, str]:
     for i_alpha_n, alpha_n in enumerate(alpha_ns):
         for i_v_wall, v_wall in enumerate(v_walls):
             om_ins = omega_ins(f)
-            ax: plt.Axes = axs[2, i_alpha_n, i_v_wall]
-            ax2: plt.Axes = axs2[2, i_alpha_n, i_v_wall]
+            ax: Axes = axs[2, i_alpha_n, i_v_wall]
+            ax2: Axes = axs2[2, i_alpha_n, i_v_wall]
             ax.plot(f, om_ins, label="LISA instrument noise")
             ax2.plot(f, om_ins, label="LISA instrument noise")
 
@@ -316,16 +316,17 @@ def main(low_k: bool = True) -> tuple[th.FigArr1D, th.FigArr2D, str]:
 
 
 if __name__ == "__main__":
-    figs, figs2, table2 = main()
-    utils.save(figs[0], "const_cs_gw_v")
-    utils.save(figs[1], "const_cs_gw")
-    utils.save(figs[2], "const_cs_gw_omgw0")
-    utils.save(figs2[0][0], "const_cs_gw_v_1")
-    utils.save(figs2[0][1], "const_cs_gw_v_2")
-    utils.save(figs2[1][0], "const_cs_gw_1")
-    utils.save(figs2[1][1], "const_cs_gw_2")
-    utils.save(figs2[2][0], "const_cs_gw_omgw0_1")
-    utils.save(figs2[2][1], "const_cs_gw_omgw0_2")
-    with open(os.path.join(utils.FIG_DIR, "const_cs_gw_snr.tex"), "w") as table_file:
-        table_file.write(table2)
-    plt.show()
+    _figs, _figs2, _table2 = main()
+    with open(os.path.join(FIG_DIR, "const_cs_gw_snr.tex"), "w") as table_file:
+        table_file.write(_table2)
+    save_and_show_figs({
+        "const_cs_gw_v": _figs[0],
+        "const_cs_gw": _figs[1],
+        "const_cs_gw_omgw0": _figs[2],
+        "const_cs_gw_v_1": _figs2[0][0],
+        "const_cs_gw_v_2": _figs2[0][1],
+        "const_cs_gw_1": _figs2[1][0],
+        "const_cs_gw_2": _figs2[1][1],
+        "const_cs_gw_omgw0_1": _figs2[2][0],
+        "const_cs_gw_omgw0_2": _figs2[2][1]
+    })

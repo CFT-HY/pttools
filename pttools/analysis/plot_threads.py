@@ -2,7 +2,7 @@ import os
 
 import matplotlib.pyplot as plt
 
-from pttools.analysis.utils import FigAndAxes, create_fig_ax, save_fig_multi
+from pttools.analysis.utils import FigAndAxes, save_fig
 from pttools.speedup.threads import DEFAULT_VARYING_NUMBA_THREADS, time_with_varying_numba_threads
 import pttools.type_hints as th
 
@@ -45,5 +45,5 @@ def time_and_plot_threads(
             name=name, stmt=stmt, setup=setup, n_iterations=n_iterations, n_threads=n_threads, file=file
         )
     fig, ax = plot_threads(name=name, n_threads=n_threads, times=times, n_iterations=n_iterations)
-    save_fig_multi(fig, path2)
+    save_fig(fig, path2)
     return fig, ax

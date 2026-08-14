@@ -3,7 +3,7 @@ import numpy as np
 # import sympy as sp
 # from sympy import abc
 
-from examples.utils import save_and_show
+from examples.utils import save_and_show_fig
 import pttools.type_hints as th
 
 
@@ -49,5 +49,5 @@ def main():
 
 if __name__ == "__main__":
     # solver()
-    fig = main()
-    save_and_show(fig, "potential")
+    _fig = main()
+    save_and_show_fig(_fig, "potential")

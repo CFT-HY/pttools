@@ -5,16 +5,16 @@ Plot multiple spectra
 Plot the velocity and GW spectra of multiple bubbles
 """
 
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 
-from examples import utils
+from examples.utils import save_and_show_fig
 from pttools.analysis import plot_spectra_multi
 from pttools.bubble import Bubble
 from pttools.models import BagModel, ConstCSModel
 from pttools.omgw0 import Spectrum
 
 
-def main() -> plt.Figure:
+def main() -> Figure:
     """Plot the velocity and GW spectra of multiple bubbles"""
     # Create the equations of state
     model1 = BagModel(alpha_n_min=0.1)
@@ -34,10 +34,10 @@ def main() -> plt.Figure:
     # Convert the bubbles to GW spectra
     spectra = [Spectrum(bubble, r_star=0.1) for bubble in bubbles]
 
-    spectra_fig, axs = plot_spectra_multi(spectra)
-    return spectra_fig
+    fig, axs = plot_spectra_multi(spectra)
+    return fig
 
 
 if __name__ == "__main__":
-    fig = main()
-    utils.save_and_show(fig, "spectra.png")
+    _fig = main()
+    save_and_show_fig(_fig, "spectra")

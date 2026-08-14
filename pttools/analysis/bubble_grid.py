@@ -34,9 +34,6 @@ class BubbleGrid:
                         res[...] = None
             return it.operands[1]
 
-    def elapsed(self) -> th.FloatArr:
-        return self.get_value("elapsed", dtype=np.float64)
-
     def kappa(self) -> th.FloatArr:
         return self.get_value("kappa", dtype=np.float64)
 
@@ -48,6 +45,9 @@ class BubbleGrid:
 
     def solver_failed(self) -> th.BoolArr:
         return self.get_value("solver_failed", dtype=np.bool_)
+
+    def solving_duration(self) -> th.FloatArr:
+        return self.get_value("solving_duration", dtype=np.float64)
 
     def unphysical_alpha_plus(self) -> th.BoolArr:
         return self.get_value("unphysical_alpha_plus", dtype=np.bool_)

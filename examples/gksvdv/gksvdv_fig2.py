@@ -13,9 +13,8 @@ import typing as tp
 import matplotlib.pyplot as plt
 import numpy as np
 
-from examples.utils import save
+from examples.utils import save_and_show_figs
 from pttools.analysis.parallel import create_bubbles
-# from pttools.analysis.utils import A4_PAPER_SIZE
 from pttools.bubble.bubble import get_kappa_giese
 from pttools.bubble.gksvdv.quantities import kappa_gksvdv
 from pttools.models import ConstCSModel
@@ -168,16 +167,17 @@ def create_diff_figure(
         ax.set_title(title_str)
 
 
-def main():
+def main(
+        a_s: float = 5,
+        a_b: float = 1,
+        V_s: float = 1,
+        colors = ("b", "y", "r", "g", "purple", "grey"),
+        lss = ("-", "--", ":", "-."),
+        n_v_walls = 20 if IS_GITHUB_ACTIONS else 50) \
+        -> tuple[plt.Figure, plt.Figure, plt.Figure, plt.Figure]:
     r"""Reproduction of :giese_2021:`\ `, fig. 2"""
     alpha_ns = np.array([0.01, 0.03, 0.1, 0.3, 1, 3])
-    colors = ["b", "y", "r", "g", "purple", "grey"]
-    n_v_walls = 20 if IS_GITHUB_ACTIONS else 50
     v_walls = np.linspace(0.2, 0.95, n_v_walls)
-    lss = ["-", "--", ":", "-."]
-    a_s = 5
-    a_b = 1
-    V_s = 1
     models = [
         ConstCSModel(css2=1/3, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_ns[0]),
         ConstCSModel(css2=1/3, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_ns[0]),
@@ -193,6 +193,7 @@ def main():
     fig2: plt.Figure = plt.figure(figsize=(figsize_x, 4))
     fig3: plt.Figure = plt.figure(figsize=(figsize_x, 4))
     fig4: plt.Figure = plt.figure(figsize=(figsize_x, 4))
+    figs = (fig1, fig2, fig3, fig4)
     axs1 = fig1.subplots(2, 2)
     axs2 = fig2.subplots(1, 2)
     axs3 = fig3.subplots(1, 2)
@@ -210,7 +211,7 @@ def main():
         theta_bar=False, giese=True
     )
     giese_time = time.perf_counter()
-    logger.info(f"Creating Giese kappa figures took {giese_time - start_time:.2f} s.")
+    logger.info(f"Creating Giese et al. kappa figures took {giese_time - start_time:.2f} s.")
     kappas_pttools_atbn = create_figure(
         axs=(axs1[0, 0], ),
         models=models, alpha_ns=alpha_ns, colors=colors, lss=lss, v_walls=v_walls,
@@ -239,17 +240,16 @@ def main():
         models=models, colors=colors, lss=lss, v_walls=v_walls, theta_bar=False, title=False
     )
     logger.info(f"Creating PTtools kappa figures took {time.perf_counter() - giese_time:.2f} s.")
-    fig1.tight_layout()
-    fig2.tight_layout()
-    fig3.tight_layout()
-    fig4.tight_layout()
-    return fig1, fig2, fig3, fig4
+    for fig in figs:
+        fig.tight_layout()
+    return figs
 
 
 if __name__ == "__main__":
-    fig, fig2, fig3, fig4 = main()
-    save(fig, "giese_lisa_fig2")
-    save(fig2, "giese_lisa_fig2_diff")
-    save(fig3, "giese_lisa_fig2_alpha_n")
-    save(fig4, "giese_lisa_fig2_alpha_n_diff")
-    plt.show()
+    _fig1, _fig2, _fig3, _fig4 = main()
+    save_and_show_figs({
+        "giese_lisa_fig2": _fig1,
+        "giese_lisa_fig2_diff": _fig2,
+        "giese_lisa_fig2_alpha_n": _fig3,
+        "giese_lisa_fig2_alpha_n_diff": _fig4
+    })

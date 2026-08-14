@@ -5,8 +5,9 @@ Giese et al. testing 3
 Testing to find the properties of a single bubble with PTtools and :giese_2021:`\ ` solvers
 """
 
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 
+from examples.utils import save_and_show_fig
 from pttools.bubble import Bubble
 from pttools.models import ConstCSModel
 from pttools.bubble.gksvdv.gksvdv21 import kappaNuMuModel
@@ -14,14 +15,14 @@ from pttools.bubble.props import find_phase
 from pttools.bubble.thermo import kappa, kinetic_energy_density, va_trace_anomaly_diff
 
 
-def main():
-    css2 = 1/4
-    csb2 = 1/4
-    # This is a problematic point
-    v_wall = 0.56734694
-    # v_wall = 0.85
-    # v_wall = 0.86
-    alpha_n = 0.01
+def main(
+        css2: float = 1/4,
+        csb2: float = 1/4,
+        # This is a problematic point
+        v_wall: float = 0.56734694,
+        # v_wall: float = 0.85,
+        # v_wall: float = 0.86,
+        alpha_n: float = 0.01) -> Figure:
     model = ConstCSModel(a_s=5, a_b=1, css2=css2, csb2=csb2, V_s=1, alpha_n_min=0.01)
     alpha_tbn = model.alpha_theta_bar_n_from_alpha_n(alpha_n)
 
@@ -77,10 +78,9 @@ def main():
     bubble_fig.axes[1].scatter(xi, w, c="r")
     for ax in bubble_fig.axes:
         ax.set_xlim(0, 1)
-
-    # save(bubble_fig, "const_cs_bubble.png")
+    return bubble_fig
 
 
 if __name__ == "__main__":
-    main()
-    plt.show()
+    _fig = main()
+    save_and_show_fig(_fig, "gksvdv_testing3")

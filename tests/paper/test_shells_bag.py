@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 # import orjson
 
-from pttools.analysis import save_fig_multi
+from pttools.analysis import save_fig
 from pttools import bubble
 from pttools.analysis.plot_fluid_shell_bag import plot_fluid_shell_bag
 from pttools.analysis.plot_fluid_shells_bag import plot_fluid_shells_bag
@@ -82,7 +82,7 @@ class TestShellsBag(unittest.TestCase):
         fig_esp, data_esp = plot_fluid_shells_bag(vw_list_esp, alpha_n_list_esp, multi=True, debug=True)
 
         for fig, name in zip([fig_weak, fig_inter, fig_esp], ["weak", "inter", "esp"]):
-            save_fig_multi(fig, os.path.join(FIG_PATH, name))
+            save_fig(fig, os.path.join(FIG_PATH, name))
             plt.close(fig)
 
         # Generate new reference data
@@ -111,7 +111,7 @@ class TestShellsBag(unittest.TestCase):
 
     def test_plot_fluid_shell(self):
         fig, params = plot_fluid_shell_bag(v_wall=0.7, alpha_n=0.052)
-        save_fig_multi(fig, os.path.join(FIG_PATH, "fluid_shell_single"))
+        save_fig(fig, os.path.join(FIG_PATH, "fluid_shell_single"))
         plt.close(fig)
 
 

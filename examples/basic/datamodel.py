@@ -12,8 +12,9 @@ Todo: This example is preliminary, and the solvers don't yet work properly for t
 import logging
 import os.path
 
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 
+from examples.utils import save_and_show_fig
 from pttools.bubble import Bubble
 from pttools.models import DataModel
 # from pttools.analysis.plot_model import ModelPlot
@@ -21,12 +22,14 @@ from pttools.models import DataModel
 logger = logging.getLogger(__name__)
 
 
-def main(data_path: str = "thermodynamics_data.h5"):
+def main(data_path: str = "thermodynamics_data.h5") -> Figure:
     """Plot a bubble using a DataModel from an HDF5 data file"""
     # __file__ is not supported for example files by sphinx-gallery
     if not os.path.isfile(data_path):
-        print("The data file was not found. Please generate it and place in the current directory.")
-        return
+        raise FileNotFoundError(
+            f"The data file was not found at \"{data_path}\". "
+            "Please generate it and place in the current directory."
+        )
     model = DataModel.from_hdf5(data_path)
     print(model.info())
 
@@ -36,11 +39,11 @@ def main(data_path: str = "thermodynamics_data.h5"):
 
     try:
         bubble = Bubble(model, v_wall=0.5, alpha_n=0.1)
-        bubble.plot()
+        return bubble.plot()
     except RuntimeError as e:
         logger.exception("Failed to create a bubble using DataModel.", exc_info=e)
 
 
 if __name__ == "__main__":
-    main()
-    plt.show()
+    _fig = main()
+    save_and_show_fig(_fig, "datamodel")

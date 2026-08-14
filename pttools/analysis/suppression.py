@@ -47,7 +47,7 @@ class SuppressionPlot:
             alpha_ns = np.linspace(alpha_n_min, alpha_n_max, 20)
             self.ax.plot(v_chapman_jouguet_bag(alpha_ns), alpha_ns, label=r"$v_\text{CJ}$", ls="--")
 
-        self.ax.set_xlabel(r"$v_\text{wall}$")
+        self.ax.set_xlabel(r"$v_{\text{wall}}$")
         self.ax.set_ylabel(r"$\alpha_n$")
         self.ax.set_xlim(v_wall_min, v_wall_max)
         self.ax.set_ylim(alpha_n_min, alpha_n_max)

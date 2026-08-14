@@ -94,7 +94,7 @@ def sound_shell_generic(
 
         v, w, xi = fluid_bag.sound_shell_bag(v_wall, alpha_n)
         # The results of the old solver are scaled to wn=1
-        w *= wn
+        w = w * wn
         if np.any(np.isnan(v)):
             return v, w, xi, sol_type2, \
                 np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, \

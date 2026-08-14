@@ -5,25 +5,24 @@ Entropy comparison
 Comparison of the entropies of the old and new solvers
 """
 
-import os.path
-
 from matplotlib import ticker
 import matplotlib.pyplot as plt
 import numpy as np
 
-from examples.utils import FIG_DIR
+from examples.utils import save_and_show_fig
 # from plot_entropy_old import load
 # from pttools.analysis.cmap import cmap
 from pttools.analysis.bubble_grid import BubbleGridVWAlpha
 from pttools.analysis.plot_entropy_grid import compute
 from pttools.logging import setup_logging
 from pttools.models.bag import BagModel
-from pttools import speedup
+from pttools.utils import IS_GITHUB_ACTIONS
 
 
-def main(relative: bool = True, path: str = None):
+def main(
+        relative: bool = True,
+        n_points = 10 if IS_GITHUB_ACTIONS else 20) -> plt.Figure:
     """Plot the entropies of the old and new solvers"""
-    n_points = 10 if speedup.GITHUB_ACTIONS else 20
     v_walls = np.linspace(0.05, 0.95, n_points, endpoint=True)
     alpha_ns = v_walls
     # entropy_ref, v_walls, alpha_ns = load()
@@ -54,10 +53,11 @@ def main(relative: bool = True, path: str = None):
     # cbar.ax.set_ylabel(r'$\Delta s / s_n$')
 
     cbar = fig.colorbar(cs)
-    if relative:
-        cbar.ax.set_ylabel(r"$\frac{\Delta s_{new} - \Delta s_{old}}{s_n}$")
-    else:
-        cbar.ax.set_ylabel(r"$\Delta s_{new} - \Delta s_{old}$")
+    cbar.ax.set_ylabel(
+        r"$\frac{\Delta s_{new} - \Delta s_{old}}{s_n}$"
+        if relative else
+        r"$\Delta s_{new} - \Delta s_{old}$"
+    )
 
     ax.grid()
     ax.set_xlabel(r"$v_w$")
@@ -67,13 +67,10 @@ def main(relative: bool = True, path: str = None):
     ax.set_ylim(0, 1)
     # ax.legend()
 
-    if path is not None:
-        fig.savefig(path)
-
     return fig
 
 
 if __name__ == "__main__":
     setup_logging()
-    main(path=os.path.join(FIG_DIR, "entropy_comparison.png"))
-    plt.show()
+    fig = main()
+    save_and_show_fig(fig, "entropy_comparison")

@@ -8,7 +8,7 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 
-from examples.utils import save
+from examples.utils import save_and_show_figs
 from pttools.analysis.parallel import create_bubbles
 from pttools.bubble.bubble import get_kappa
 from pttools.models import ConstCSModel
@@ -17,15 +17,15 @@ from pttools.utils.system import IS_GITHUB_ACTIONS
 logger = logging.getLogger(__name__)
 
 
-def main():
+def main(
+        a_s: float = 5,
+        a_b: float = 1,
+        V_s: float = 1,
+        colors = ("b", "y", "r", "g", "purple", "grey"),
+        n_v_walls = 20 if IS_GITHUB_ACTIONS else 50) -> tuple[plt.Figure, plt.Figure]:
     """Comparison of Giese et al. and PTtools solvers"""
     alpha_ns = np.array([0.01, 0.03, 0.1, 0.3, 1, 3])
-    colors = ["b", "y", "r", "g", "purple", "grey"]
-    n_v_walls = 20 if IS_GITHUB_ACTIONS else 50
     v_walls = np.linspace(0.2, 0.95, n_v_walls)
-    a_s = 5
-    a_b = 1
-    V_s = 1
     models = [
         ConstCSModel(css2=1 / 3, csb2=1 / 3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_ns[0]),
         ConstCSModel(css2=1 / 3, csb2=1 / 4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_ns[0]),
@@ -77,7 +77,8 @@ def main():
 
 
 if __name__ == "__main__":
-    fig, fig2 = main()
-    save(fig, "giese_comparison")
-    save(fig2, "giese_comparison_diff")
-    plt.show()
+    _fig1, _fig2 = main()
+    save_and_show_figs({
+        "giese_comparison": _fig1,
+        "giese_comparison_diff": _fig2
+    })

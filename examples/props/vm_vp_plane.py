@@ -9,11 +9,11 @@ Adapted from fig. 9 of :gw_pt_ssm:`\ `.
 import numpy as np
 import matplotlib.pyplot as plt
 
-from examples.utils import save_and_show
+from examples.utils import save_and_show_fig
 from pttools import bubble
 
 
-def main(dots: bool = False):
+def main(dots: bool = False) -> plt.Figure:
     r"""Plot the ${v}_+, {v}_-$ plane"""
     # plt.rc('text', usetex=True)
     # plt.rc('font', family='serif')
@@ -99,5 +99,5 @@ def main(dots: bool = False):
 
 
 if __name__ == "__main__":
-    fig = main()
-    save_and_show(fig, "vm_vp_plane")
+    _fig = main()
+    save_and_show_fig(_fig, "vm_vp_plane")

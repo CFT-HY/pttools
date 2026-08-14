@@ -8,22 +8,23 @@ Compare :giese_2021:`\ ` fluid profiles with PTtools
 import matplotlib.pyplot as plt
 import numpy as np
 
-from examples import utils
+from examples.utils import save_and_show_fig
 from pttools.analysis.utils import A4_PAPER_SIZE
 from pttools.bubble import Bubble, Phase, lorentz, v_chapman_jouguet_const_cs
 from pttools.bubble.gksvdv import kappaNuMuModel
 from pttools.models import ConstCSModel
 
 
-def main():
-    alpha_n = 0.3
-    theta_bar = False
+def main(
+        a_s: float = 5,
+        a_b: float = 1,
+        V_s: float = 1,
+        alpha_n = 0.3,
+        theta_bar = False,
+        colors = ("r", "g", "b", "orange")
+    ) -> plt.Figure:
     # v_walls = np.array([0.5, 0.6, 0.65])
     v_walls = np.array([0.8122449, 0.82755102, 0.84285714, 0.85816327])
-    colors = ["r", "g", "b", "orange"]
-    a_s = 5
-    a_b = 1
-    V_s = 1
     models = [
         # BagModel(a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_theta_bar_n)
         ConstCSModel(css2=1/3, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_n),
@@ -78,10 +79,9 @@ def main():
         ax.legend()
 
     fig.tight_layout()
-    utils.save(fig, "giese_testing2.png")
     return fig
 
 
 if __name__ == "__main__":
-    main()
-    plt.show()
+    _fig = main()
+    save_and_show_fig(_fig, "gksvdv_testing2")

@@ -7,7 +7,7 @@ Plot the parameters of fluid_reference
 
 import matplotlib.pyplot as plt
 
-from examples import utils
+from examples.utils import save_and_show_fig
 from pttools.bubble import fluid_reference
 from pttools.bubble.solution_type import SolutionType
 
@@ -54,5 +54,5 @@ def main() -> plt.Figure:
 
 
 if __name__ == "__main__":
-    fig = main()
-    utils.save_and_show(fig, "reference_props.png")
+    _fig = main()
+    save_and_show_fig(_fig, "reference_props")

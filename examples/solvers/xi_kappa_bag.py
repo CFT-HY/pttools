@@ -9,7 +9,7 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 
-from examples import utils
+from examples.utils import save_and_show_fig
 from pttools.bubble.thermo_bag import get_kappa_de_bag
 from pttools.bubble.bubble import Bubble
 from pttools.models.bag import BagModel
@@ -42,5 +42,5 @@ def main() -> plt.Figure:
 
 
 if __name__ == "__main__":
-    fig = main()
-    utils.save_and_show(fig, "xi_kappa_bag.png")
+    _fig = main()
+    save_and_show_fig(_fig, "xi_kappa_bag")

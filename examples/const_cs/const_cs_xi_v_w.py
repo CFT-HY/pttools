@@ -14,14 +14,11 @@ from pttools.analysis.plot_fluid_shell_3d import BubblePlot3D
 from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.bubble import Bubble
 from pttools.bubble import thermo_bag
-# from pttools.logging import setup_logging
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
 
 
-# setup_logging()
-
-def main():
+def main() -> BubblePlot3D:
     bag = BagModel(a_s=1.1, a_b=1, V_s=1)
     # css = 1/np.sqrt(3) - 0.05
     # csb = 1/np.sqrt(3) - 0.1

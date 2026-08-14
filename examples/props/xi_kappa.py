@@ -9,7 +9,7 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 
-from examples import utils
+from examples.utils import save_and_show_fig
 from pttools.logging import setup_logging
 from pttools.bubble.phase import Phase
 from pttools.bubble.bubble import get_kappa_for_v_walls
@@ -77,5 +77,5 @@ def main() -> plt.Figure:
 
 if __name__ == "__main__":
     setup_logging()
-    fig = main()
-    utils.save_and_show(fig, "plot_xi_kappa.png")
+    _fig = main()
+    save_and_show_fig(_fig, "xi_kappa")

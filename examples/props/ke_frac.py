@@ -8,13 +8,13 @@ Plot the kinetic energy fraction for various $\alpha_n$ as a function of $\xi_\t
 import matplotlib.pyplot as plt
 import numpy as np
 
-from examples import utils
+from examples.utils import save_and_show_fig
 from pttools.bubble import get_ke_frac
 from pttools.analysis.bubble_grid import create_bubbles
 from pttools.models.const_cs import ConstCSModel
 
 
-def main():
+def main() -> plt.Figure:
     r"""Plot the kinetic energy fraction for various $\alpha_n$ as a function of $\xi_\text{wall}$"""
     # model = ConstCSModel(css2=1/3, csb2=1/3, a_s=100, a_b=50, V_s=1e-8, V_b=0)
     model = ConstCSModel(css2=1 / 3, csb2=1 / 4, a_s=5, a_b=1, V_s=1, V_b=0)
@@ -46,5 +46,5 @@ def main():
 
 
 if __name__ == "__main__":
-    fig = main()
-    utils.save_and_show(fig, "ke_frac.png")
+    _fig = main()
+    save_and_show_fig(_fig, "ke_frac")

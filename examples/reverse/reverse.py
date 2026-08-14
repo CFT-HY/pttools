@@ -24,7 +24,7 @@ def solvable(
     v_wall, alpha_n, r_star = params
     bubble = Bubble(model, v_wall=v_wall, alpha_n=alpha_n)
     spectrum = Spectrum(bubble, r_star=r_star)
-    f_peak, omega_peak = spectrum.omgw0_peak(suppression=SuppressionMethod.EXT_CONSTANT)
+    f_peak, omega_peak = spectrum.omgw0_peak()  # suppression=SuppressionMethod.EXT_CONSTANT
     f_diff = np.log10(f_peak) - np.log10(f_peak_target)
     omega_diff = np.log10(omega_peak) - np.log10(omega_peak_target)
     diff = f_diff**2 + omega_diff**2
@@ -66,6 +66,7 @@ def main():
     )
     print("Results:")
     print(f"v_wall={ret[0]}, alpha_n={ret[1]}, r_star={ret[2]}, diff={ret[3]}")
+    return ret
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ Figures for the Standard Model
 
 import numpy as np
 
-from examples import utils
+from examples.utils import save_and_show_figs
 from pttools.analysis.g_cs2 import plot_g_cs2
 from pttools.analysis.plot_model import ModelPlot
 from pttools.analysis.plot_thermomodels import ThermoModelsPlot
@@ -43,5 +43,9 @@ model2 = FullModel(thermo2)
 plot2 = ModelPlot(model2)
 print(model2.t_crit, model2.T_max, model2.alpha_n_min, model2.w_crit)
 
+
 if __name__ == "__main__":
-    utils.save_and_show(fig, "standard_model.png")
+    save_and_show_figs({
+        "standard_model": fig,
+        "standard_model_thermo": plot2.fig
+    })

@@ -11,6 +11,7 @@ import numpy as np
 from pttools.analysis.bubble_grid import BubbleGridVWAlpha
 from pttools.analysis.colormap import cmap_plusminus
 from pttools.analysis.plot_vw_alpha import VwAlphaPlot
+from pttools.analysis.utils import save_fig
 from pttools.bubble.bubble import Bubble
 import pttools.type_hints as th
 
@@ -24,7 +25,7 @@ class DurationPlot(VwAlphaPlot):
     """Plot the time it took to simulate each bubble"""
     def __init__(self, grid: BubbleGridVWAlpha, fig: plt.Figure | None = None, ax: plt.Axes | None = None):
         super().__init__(grid, fig, ax)
-        img = self.ax.pcolor(grid.v_walls, grid.alpha_ns, np.log10(grid.elapsed()))
+        img = self.ax.pcolor(grid.v_walls, grid.alpha_ns, np.log10(grid.solving_duration()))
         cbar = self.ax.figure.colorbar(img, ax=ax)
 
         # cs: QuadContourSet = ax.contourf(grid.v_walls, grid.alpha_ns, grid.elapsed(),
@@ -214,7 +215,7 @@ def gen_and_plot_entropy(
     # fig.tight_layout()
 
     if path is not None:
-        fig.savefig(path)
+        save_fig(fig, path)
 
     return fig, axs
 

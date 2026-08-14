@@ -11,7 +11,7 @@ from matplotlib.image import AxesImage
 import numpy as np
 from scipy.interpolate import interp1d
 
-from examples.utils import save
+from examples.utils import save_fig
 from pttools import bubble
 
 __author__ = "Daniel Cutting"
@@ -121,7 +121,7 @@ def main(
 
         # These have to be inside the plt.rc_context environment for its settings to work.
         if path is not None:
-            save(fig, path, bbox_inches="tight")
+            save_fig(fig, path, bbox_inches="tight")
         if show:
             plt.show()
         return fig
@@ -130,5 +130,5 @@ def main(
 if __name__ == "__main__":
     main(
         show=True,
-        # path="relativistic_combustion.png"
+        path="relativistic_combustion"
     )

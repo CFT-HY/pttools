@@ -14,7 +14,7 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.analysis import save_fig_multi
+from pttools.analysis import save_fig
 from pttools import speedup
 from pttools.utils import assert_allclose
 import pttools.type_hints as th
@@ -60,7 +60,7 @@ class TestPlane(unittest.TestCase):
         cls.plot_diff(axs[0, 4], name, diffs)
         fig.tight_layout()
         path = os.path.join(cls.FIG_PATH, f"integrators_{name}")
-        save_fig_multi(fig, path)
+        save_fig(fig, path)
         plt.close(fig)
         if shutil.which("ffmpeg"):
             video_path = f"{path}.mp4"
@@ -168,7 +168,7 @@ class TestPlane(unittest.TestCase):
                 plot_plane_paper.plot_plane(ax=axs[ax[0], ax[1]], data_s=data, method=method, deflag_ref=self.ref_data, **tols)
                 plot_plane_paper.plot_plane(ax=ax2, data_s=data, method=method, deflag_ref=self.ref_data, **tols)
                 fig_name = os.path.join(self.FIG_PATH, f"integrators_{name}_{i}_{plot_plane_paper.get_solver_name(method)}")
-                save_fig_multi(fig, fig_name)
+                save_fig(fig, fig_name)
                 plt.close(fig)
 
         data_summed = np.nansum(data, axis=2)

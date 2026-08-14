@@ -5,11 +5,9 @@ Entropy grid
 Plot the relative change in entropy density for a grid of bubbles
 """
 
-import os.path
-
-import matplotlib.pyplot as plt
 import numpy as np
 
+from examples.utils import save_and_show_fig
 from pttools.analysis import gen_and_plot_entropy
 from pttools.bubble.junction import solve_junction_internal
 from pttools.logging import setup_logging
@@ -17,15 +15,12 @@ from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
 # from pttools.models.full import FullModel
 # from pttools.models.sm import StandardModel
-from pttools import speedup
-
-from examples.utils import FIG_DIR
+from pttools.utils import IS_GITHUB_ACTIONS
 from tests.profiling import utils_cprofile
 
 
-def main():
+def main(n_points = 10 if IS_GITHUB_ACTIONS else 20):
     """Plot the relative change in entropy density for a grid of bubbles"""
-    n_points = 10 if speedup.GITHUB_ACTIONS else 20
     # sm = StandardModel(V_s=5e12, g_mult_s=1 + 1e-9)
     models = [
         # BagModel(a_s=1.1, a_b=1, V_s=1),
@@ -36,7 +31,7 @@ def main():
     ]
     alpha_n_min = np.max([model.alpha_n_min for model in models]) + 0.01
 
-    gen_and_plot_entropy(
+    fig, _ = gen_and_plot_entropy(
         models=models,
         v_walls=np.linspace(0.05, 0.95, n_points),
         alpha_ns=np.linspace(alpha_n_min, 0.95, n_points),
@@ -46,9 +41,9 @@ def main():
         max_level=0.4,
         diff_level=0.05,
         # use_bag_solver=True,
-        path=os.path.join(FIG_DIR, "entropy_grid.png"),
         # single_plot=True
     )
+    return fig
 
 
 if __name__ == "__main__":
@@ -56,9 +51,9 @@ if __name__ == "__main__":
     profiling = False
     if profiling:
         with utils_cprofile.CProfiler("plot_entropy_grid"):
-            main()
+            _fig = main()
             # The cache info is per-process
             print(solve_junction_internal.cache_info())
     else:
-        main()
-    plt.show()
+        _fig = main()
+    save_and_show_fig(_fig, "entropy_grid")

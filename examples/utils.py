@@ -1,27 +1,62 @@
 """Utilities for PTtools examples"""
 
 import os.path
+import typing as tp
 
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
+
+import pttools.analysis.utils as plot_utils
+from pttools.analysis.utils import FIG_FORMATS
+from pttools.utils.docstrings import copy_docstrings
 
 FIG_DIR: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fig")
 os.makedirs(FIG_DIR, exist_ok=True)
 
 
-def save(fig: Figure, path: str, **kwargs):
-    """Save a figure in the examples figure directory"""
-    has_extension = "." in path
-    if not os.path.isabs(path):
-        path = os.path.join(FIG_DIR, path)
-    if has_extension:
-        fig.savefig(path, **kwargs)
-    else:
-        for ext in ["eps", "pdf", "png", "svg"]:
-            fig.savefig(f"{path}.{ext}", **kwargs)
-
-
-def save_and_show(fig: Figure, path: str):
-    """Save a figure in the examples figure directory and show it"""
-    save(fig, path)
+def save_and_show_fig(
+        fig: Figure,
+        path: str,
+        fig_dir: str | None = FIG_DIR,
+        formats: tp.Iterable[str] = FIG_FORMATS,
+        makedirs: bool = True,
+        **kwargs) -> None:
+    save_fig(fig=fig, path=path, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
     plt.show()
+
+
+def save_and_show_figs(
+        figs: dict[str, Figure],
+        fig_dir: str | None = FIG_DIR,
+        formats: tp.Iterable[str] = FIG_FORMATS,
+        makedirs: bool = True,
+        **kwargs) -> None:
+    save_figs(figs=figs, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
+    plt.show()
+
+
+def save_fig(
+        fig: Figure,
+        path: str,
+        fig_dir: str | None = FIG_DIR,
+        formats: tp.Iterable[str] = FIG_FORMATS,
+        makedirs: bool = True,
+        **kwargs) -> None:
+    plot_utils.save_fig(fig=fig, path=path, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
+
+
+def save_figs(
+        figs: dict[str, Figure],
+        fig_dir: str | None = FIG_DIR,
+        formats: tp.Iterable[str] = FIG_FORMATS,
+        makedirs: bool = True,
+        **kwargs) -> None:
+    plot_utils.save_figs(figs=figs, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
+
+
+copy_docstrings({
+    save_and_show_fig: plot_utils.save_and_show_fig,
+    save_and_show_figs: plot_utils.save_and_show_figs,
+    save_fig: plot_utils.save_fig,
+    save_figs: plot_utils.save_figs,
+})

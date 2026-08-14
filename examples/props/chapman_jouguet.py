@@ -7,7 +7,7 @@ Plot $v_{CJ} (\alpha_n)$
 
 import numpy as np
 
-from examples import utils
+from examples.utils import save_and_show_fig
 from pttools import models
 from pttools.analysis.plot_chapman_jouguet import ChapmanJouguetPlot
 
@@ -48,5 +48,5 @@ def main() -> ChapmanJouguetPlot:
 
 
 if __name__ == "__main__":
-    plot = main()
-    utils.save_and_show(plot.fig, "chapman_jouguet.png")
+    _plot = main()
+    save_and_show_fig(_plot.fig, "chapman_jouguet")

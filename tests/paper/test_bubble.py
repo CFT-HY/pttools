@@ -7,7 +7,7 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.analysis import save_fig_multi
+from pttools.analysis import save_fig
 from pttools.speedup import NUMBA_INTEGRATE
 from pttools.utils import assert_allclose
 from tests.paper import ssm_paper_utils as spu
@@ -24,7 +24,7 @@ class TestBubble(unittest.TestCase):
     def test_bubble():
         figs, fig_ids, data = spu.do_all_plot_ps_1bubble(debug=True, lambda_correction=True)
         for fig, fig_id in zip(figs, fig_ids):
-            save_fig_multi(fig, os.path.join(FIG_PATH, f"bubble_{fig_id}"))
+            save_fig(fig, os.path.join(FIG_PATH, f"bubble_{fig_id}"), force_formats=True)
             plt.close(fig)
         data_summed = np.sum(data, axis=2)
         file_path = os.path.join(TEST_DATA_PATH, "bubble.txt")
