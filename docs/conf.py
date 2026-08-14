@@ -293,6 +293,9 @@ sphinx_gallery_conf = {
     # It may also produce errors with some IDEs:
     # https://stackoverflow.com/questions/31080829/python-error-io-unsupportedoperation-fileno
     "parallel": not show_memory,
+    # This has to be set in order to avoid a warning when disabling it with a command line option.
+    # https://sphinx-gallery.github.io/stable/configuration.html#building-without-executing-examples
+    "plot_gallery": "True",
     # "prefer_full_module": ...
     "reference_url": {
         "pttools": None,
