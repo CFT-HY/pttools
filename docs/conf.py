@@ -24,26 +24,28 @@ from matplotlib.animation import FFMpegWriter
 # import plotly.io as pio
 from sphinx_gallery.sorting import ExplicitOrder
 
-dir_path = os.path.dirname(os.path.abspath(__file__))
-repo_path = os.path.dirname(dir_path)
-sys.path.insert(0, os.path.dirname(dir_path))
+DOCS_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_DIR = os.path.dirname(DOCS_DIR)
+EXAMPLES_DIR = os.path.join(REPO_DIR, "examples")
+TESTS_DIR = os.path.join(REPO_DIR, "tests")
+sys.path.insert(0, REPO_DIR)
 
 from pttools.logging import setup_logging
-from pttools.utils.system import IS_GITHUB_ACTIONS
+from pttools.utils.system import IS_GITHUB_ACTIONS, PTTOOLS_DIR
 setup_logging()
 logger = logging.getLogger(__name__)
 
 # Create a directory for static files to avoid a warning when building.
-os.makedirs(os.path.join(dir_path, "_static"), exist_ok=True)
+os.makedirs(os.path.join(DOCS_DIR, "_static"), exist_ok=True)
 
 # -- Project information -----------------------------------------------------
 
 project = 'PTtools'
-with open(os.path.join(repo_path, "AUTHORS"), "r") as file:
+with open(os.path.join(REPO_DIR, "AUTHORS"), "r") as file:
     _authors = file.read().splitlines()
 author = f"{', '.join(_authors[:-1])} & {_authors[-1]}"
 copyright = f"2015-{date.today().year}, {author}"
-with open (os.path.join(repo_path, "pyproject.toml"), "rb") as file:
+with open (os.path.join(REPO_DIR, "pyproject.toml"), "rb") as file:
     version = tomllib.load(file)["project"]["version"]
 release = version
 
@@ -121,11 +123,11 @@ mathjax3_config = {
 # -- Apidoc  -----------------------------------------------------------------
 apidoc_modules = [
     {
-        "path": os.path.join(repo_path, "pttools"),
+        "path": PTTOOLS_DIR,
         "destination": "gen_modules/pttools"
     },
     {
-        "path": os.path.join(repo_path, "tests"),
+        "path": TESTS_DIR,
         "destination": "gen_modules/tests"
     }
 ]
@@ -289,7 +291,7 @@ sphinx_gallery_conf = {
     "backreferences_dir": "gen_modules/backreferences",
     "compress_images": ("images", "thumbnails"),
     "doc_module": ("pttools", ),
-    "examples_dirs": os.path.join(os.path.dirname(dir_path), "examples"),
+    "examples_dirs": EXAMPLES_DIR,
     "filename_pattern": ".*",
     "gallery_dirs": "auto_examples",
     "ignore_pattern": r"(__init__\.py|utils\.py|p_s_scan_dev\.py|droplet|standard_model|entropy|reverse)",
