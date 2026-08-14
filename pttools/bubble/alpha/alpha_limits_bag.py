@@ -18,13 +18,13 @@ from pttools.type_hints import FloatOrArr
 @numba.njit(nogil=True)
 def alpha_n_max_bag(v_wall: th.FloatOrArr, n_xi: int = DEFAULT_N_XI) -> th.FloatOrArr:
     r"""
-    Calculates the maximum relative trace anomaly outside the bubble, $\alpha_{n,\max,\text{bag}}(v_\text{wall})$.
+    Calculates the maximum relative trace anomaly outside the bubble, $\alpha_{n,\max,\text{bag}}({v}_\text{wall})$.
     Bag model only.
 
     This limit is for subsonic deflagrations and supersonic deflagrations (hybrids),
     as increasing $\alpha_n$ for a detonation would make it a hybrid.
 
-    :param v_wall: $v_\text{wall}$
+    :param v_wall: ${v}_\text{wall}$
     :param n_xi: number of $\xi$ points
     :return: $\alpha_{n,\max}$, the relative trace anomaly outside the bubble
     """

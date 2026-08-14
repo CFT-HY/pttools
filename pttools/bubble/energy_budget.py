@@ -142,12 +142,11 @@ def kappa_d[T: FloatOrArr](alpha_n: T) -> T:
 @numba.njit(cache=True)
 def kappa_detonation_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, v_cj: float | None = None) -> th.FloatOrArr:
     r"""Approximation of $\kappa$ for detonations
-
     $$
     \kappa(v_{\text{wall}} > v_{CJ}) \approx \frac{
-        (v_{CJ} - 1)^3 * v_{CJ}^{5/2} * v_{\text{wall}}^{-5/2} * \kappa_C * \kappa_D
+    (v_{CJ} - 1)^3 * v_{CJ}^{5/2} * v_{\text{wall}}^{-5/2} * \kappa_C * \kappa_D
     }{
-        ((v_{CJ} - 1)^3 - (v_{\text{wall}} - 1)^3)) * v_{CJ}^{5/2} + \kappa_C + (v_{\text{wall}} - 1)^3 * \kappa_D
+    ((v_{CJ} - 1)^3 - (v_{\text{wall}} - 1)^3)) * v_{CJ}^{5/2} + \kappa_C + (v_{\text{wall}} - 1)^3 * \kappa_D
     }
     $$
     :espinosa_2010:`\ `, eq. 100

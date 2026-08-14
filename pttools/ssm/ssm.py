@@ -97,7 +97,7 @@ def f(
         z_st_thresh: float = const.Z_ST_THRESH,
         parallel: bool = True) -> th.FloatArr:
     r"""$f(z)$
-    $$f(z) = \frac{4\pi}{z} \int_0^\infty d\xi v_\text{ip}(\xi) \sin(z\xi)$$
+    $$f(z) = \frac{4\pi}{z} \int_0^\infty d\xi v_{\text{ip}}(\xi) \sin(z\xi)$$
     :gw_pt_ssm:`\ ` eq. 4.5
     """
     return 4. * np.pi / z * sin_transform(
@@ -206,7 +206,7 @@ def ubarf2_from_a2(
         v_wall: float,
         nuc_type: NucType,
         bubble_spacing_enlargement_factor: float = 1.) -> float:
-    r"""Mean square fluid velocity $\bar{U}_f^2 \left( |A(z)|^2 \right)$
+    r"""Mean square fluid velocity $\bar{U}_f^2 \left( {|A(z)|}^2 \right)$
     $$\bar{U}_f^2
     = \int \frac{dq}{q} \mathcal{P}_\tilde{v}(a)
     = \frac{2}{(\beta R_*)^3}
@@ -218,7 +218,7 @@ def ubarf2_from_a2(
 
     The use of $\Lambda_{\text{nuc}}$ needs to be kept consistent with
     :py:func:pttools.ssm.spec_den_v.spec_den_v:.
-    Please note that eq. 4.34 assumes that $R_* = R_{*,0}$,
+    Please note that eq. 4.34 assumes that $R_{*} = R_{*,0}$,
     which is why it's not used here.
     """
     if z.shape != A2.shape:

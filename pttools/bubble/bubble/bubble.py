@@ -540,7 +540,7 @@ class Bubble(BaseBubble):
     def wn(self) -> float:
         r"""Nucleation enthalpy $w_n = w(T_n, \phi_s)$
 
-        $$w_n \equiv w_\text{outside}$$
+        $$w_n \equiv w_{\text{outside}}$$
         """
         return self.w_outside
 

@@ -393,7 +393,7 @@ def v_shock_curve(
         xi: th.FloatArr1D | None = None,
         n_points: int = 20,
         warn_if_barely_exists: bool = False) -> tuple[th.FloatArr1D, th.FloatArr1D]:
-    r"""Shock velocity curve $(\xi, v_\text{sh})$"""
+    r"""Shock velocity curve $(\xi, v_{\text{sh}})$"""
     if xi is None:
         cs_n = np.sqrt(model.cs2(wn, Phase.SYMMETRIC))
         # Create more points near cs_n, as there the accuracy is the most critical

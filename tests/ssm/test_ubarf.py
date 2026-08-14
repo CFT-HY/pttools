@@ -73,7 +73,7 @@ class UbarfTest(unittest.TestCase):
         )
 
     def test_w_bar(self):
-        """$\bar{w}$ and $w_n$ are not the same, but they should be somewhat close."""
+        r"""$\bar{w}$ and $w_n$ are not the same, but they should be somewhat close."""
         assert_allclose(
             [bubble.w_bar for bubble in self.bubbles],
             [bubble.wn for bubble in self.bubbles],

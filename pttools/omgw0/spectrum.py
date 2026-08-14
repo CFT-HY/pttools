@@ -141,10 +141,10 @@ class Spectrum(ssm.SSMSpectrum):
     @functools.cached_property
     def H_star(self):
         r"""Hubble rate $H_*$ at GW formation, in units of $T^2$
-        $$H = \sqrt{8 \pi \frac{e_*}{3}} \frac{1}{m_\text{pl}}$$
+        $$H = \sqrt{8 \pi \frac{e_*}{3}} \frac{1}{m_{\text{pl}}}$$
         This is a direct consequence of the Friedmann equation
         $$H^2 + \frac{K}{a^2} = \frac{8 \pi G}{3} e$$
-        with $K = 0$ and $m_\text{pl} = \frac{1}{G}$.
+        with $K = 0$ and $m_{\text{pl}} = \frac{1}{G}$.
         Note that here $m_pl = 1$ in natural units.
         """
         return math.sqrt(8 * math.pi * self.e_star / 3)

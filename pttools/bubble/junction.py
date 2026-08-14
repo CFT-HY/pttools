@@ -154,12 +154,12 @@ def solve_junction(
     :param w1: $w_1$
     :param phase1: $\phi_1$
     :param phase2: $\phi_2$
-    :param v2_tilde_guess: $\tilde{v}_{2,\text{guess}$
-    :param w2_guess: $w_{2,\text{guess}$
-    :param v2_tilde_min: $v_{2,\text{min}$
-    :param v2_tilde_max: $v_{2,\text{max}$
-    :param w2_min: $w_{2,\text{min}$
-    :param w2_max: $w_{2,\text{max}$
+    :param v2_tilde_guess: $\tilde{v}_{2,\text{guess}}$
+    :param w2_guess: $w_{2,\text{guess}}$
+    :param v2_tilde_min: $v_{2,\text{min}}$
+    :param v2_tilde_max: $v_{2,\text{max}}$
+    :param w2_min: $w_{2,\text{min}}$
+    :param w2_max: $w_{2,\text{max}}$
     :param allow_failure: Whether to allow or return nan on failure
     :param allow_negative_entropy_flux_change: Whether to allow or return nan on negative entropy flux change
     :param rtol: Relative tolerance

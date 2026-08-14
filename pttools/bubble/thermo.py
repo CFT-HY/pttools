@@ -16,9 +16,9 @@ which would break this useful property and require a more dense grid of points.
 
 Integration of an angle-independent function over a spherical shell:
 $$\int f dV
-= \int_{R_\text{min}^{R_\text{max} dr \int_0^{2\pi} d\phi \int_0^\pi d\theta f r^2 \sin \theta
-= 4 \pi \int_{R_\text{min}}^{R_\text{max}} dr r^2 f
-= \frac{4\pi}{3} \int_{R_\text{min}^3}^{R_\text{max}^3} dr^3 f$$
+= \int_{R_{\text{min}}}^{R_{\text{max}}} dr \int_0^{2\pi} d\phi \int_0^\pi d\theta f r^2 \sin \theta
+= 4 \pi \int_{R_{\text{min}}}^{R_{\text{max}}} dr r^2 f
+= \frac{4\pi}{3} \int_{R_{\text{min}}^3}^{R_{\text{max}}^3} dr^3 f$$
 """
 
 import logging

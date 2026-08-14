@@ -92,8 +92,8 @@ def spec_den_gw_scaling(
     The pre-factor can be related to the kinetic energy fraction with
     $$K = \Gamma \bar{U}_f^2.$$
     :gw_pt_ssm:`\ ` eq. B.32
-    However, this is exact only when using the definitions $\Gamma \equiv \frac{\bar{w}{\bar{e}}$ and
-    $\bar{U}_f^2 \equiv \frac{3}{4 \pi \bar{w} v_\text{wall}^3} e_K$.
+    However, this is exact only when using the definitions $\Gamma \equiv \frac{\bar{w}}{\bar{e}}$ and
+    $\bar{U}_f^2 \equiv \frac{3}{4 \pi \bar{w} v_{\text{wall}}^3} e_K$.
     Therefore, this function takes in $\Gamma$ and $\bar{U}_f^2$ as separate input arguments instead of $K$.
 
     Another reason that this function takes in $\Gamma$ and $\bar{U}_f^2$ as separate input parameters
