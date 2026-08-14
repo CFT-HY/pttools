@@ -184,9 +184,9 @@ def kappa_sub_def_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, cs: th.F
     r"""Approximation of $\kappa$ for subsonic deflagrations
 
     $$\kappa(v_{\text{wall}} < c_s) \approx \frac{
-        c_s^\frac{11}{5} \kappa_A \kappa_B
+    c_s^\frac{11}{5} \kappa_A \kappa_B
     }{
-        (c_s^\frac{11}{5} - v_{\text{wall}}^\frac{11}{5}) \kappa_B + v_{\text{wall}} c_s^\frac{6}{5} \kappa_A
+    (c_s^\frac{11}{5} - v_{\text{wall}}^\frac{11}{5}) \kappa_B + v_{\text{wall}} c_s^\frac{6}{5} \kappa_A
     }$$
     :espinosa_2010:`\ `, eq. 99
     """

@@ -14,6 +14,7 @@ except ModuleNotFoundError:
 
 AVAILABLE_CPU_CORES: int | None
 CPU_AFFINITY: bool = False
+IS_CFT_BIG_MACHINE: bool = platform.node() == "dx2-528-26839.ad.helsinki.fi"
 IS_GITHUB_ACTIONS: bool = "GITHUB_ACTIONS" in os.environ
 IS_LINUX: bool = sys.platform.startswith('linux')
 IS_OSX: bool = sys.platform.startswith('darwin')

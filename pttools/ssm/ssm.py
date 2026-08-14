@@ -48,8 +48,8 @@ def A2_e_conserving(
         parallel: bool = True,
         lambda_correction: bool = False) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
-    Returns the value of $|A(z)|^2$, where
-    $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$.
+    Returns the value of $| A(z) |^2$, where
+    $|\text{Plane wave amplitude}|^2 = T^3 | A(z) |^2$.
 
     :param v: velocity profile $v$
     :param w: enthalpy profile $w$

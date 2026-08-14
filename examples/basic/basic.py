@@ -27,13 +27,13 @@ def main():
     bubble = Bubble(model, v_wall=0.5, alpha_n=0.2)
     bubble_fig = bubble.plot()
     save(bubble_fig, "bag_bubble")
-    bubble.export(os.path.join(FIG_DIR, "bubble.json"))
+    bubble.export(os.path.join(FIG_DIR, "bag_bubble.json"))
 
     # Compute the gravitational wave spectrum for the bubble.
     spectrum = Spectrum(bubble, nuc_type=NucType.EXPONENTIAL, r_star=0.1)
     spectrum_fig, axs = spectrum.plot_multi()
     save(spectrum_fig, "bag_spectrum")
-    bubble.export(os.path.join(FIG_DIR, "spectrum.json"))
+    bubble.export(os.path.join(FIG_DIR, "bag_spectrum.json"))
 
 
 if __name__ == "__main__":

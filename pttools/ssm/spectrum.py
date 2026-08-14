@@ -416,8 +416,8 @@ class SSMSpectrum:
         return sqrt(self.ubarf2_custom_nucleation(nuc_type=nuc_type))
 
     def ubarf2_custom_nucleation(self, nuc_type: NucType | None = None) -> float:
-        r"""$\bar{U}_f^2$ using $z$ and ${|A|}^2$
-        The arguments $z, |A|^2, v_{\text{wall}}$ and the bubble spacing enlargement factor $\Lambda$
+        r"""$\bar{U}_f^2$ using $z$ and ${| A |}^2$
+        The arguments $z, {| A |}^2, v_{\text{wall}}$ and the bubble spacing enlargement factor $\Lambda$
         are not directly dependent on the nucleation type, and therefore it's an adjustable parameter.
         """
         # Todo: Think which z and A2 to use here and in compute_ssm()

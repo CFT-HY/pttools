@@ -17,6 +17,8 @@ from pttools.ssm.ssm import \
 from pttools.type_hints import FloatArr1D
 
 
+# When this function can be Numba-jitted, also create a version that includes signal_to_noise_ratio().
+# This will be useful for PTPlot.
 # @numba.njit(nogil=True, cache=NUMBA_ENABLE_CACHE)
 def compute(
         # Arrays (in alphabetical order)

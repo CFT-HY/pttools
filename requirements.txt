@@ -5,6 +5,7 @@
 
 # h5py does not yet support free-threading.
 # https://github.com/h5py/h5py/issues/2475
+# https://docs.h5py.org/en/latest/threads.html#free-threading
 h5py == 3.16.0
 # Intel SVML for Numba
 # https://pypi.org/project/icc-rt/
