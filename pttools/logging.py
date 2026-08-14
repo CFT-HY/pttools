@@ -9,10 +9,21 @@ import time
 logging_lock = threading.Lock()
 
 
-class MatplotlibFilter(logging.Filter):
-    """Filter for excluding some matplotlib debug messages"""
+class MessageFilter(logging.Filter):
+    """Exclude log records whose messages start with any of the given texts
+
+    This filter has to be attached to the logger that emits the record,
+    since the filters of higher-level loggers are not applied to propagated records.
+    This filter could be attached to a logging handler instead,
+    but then the records would still be emitted to the other handlers.
+    """
+    def __init__(self, *texts: str):
+        super().__init__()
+        self.texts = texts
+
     def filter(self, record: logging.LogRecord) -> bool:
-        return record.funcName != "_is_transparent"
+        msg = record.getMessage()
+        return not any(msg.startswith(text) for text in self.texts)
 
 
 def setup_logging(
@@ -44,15 +55,11 @@ def setup_logging(
         format='%(asctime)s %(levelname)-8s %(module)-20s %(funcName)-32s %(lineno)-4d %(process)-3d %(message)s'
     )
     if silence_spam:
-        logging.getLogger("choreographer").setLevel(logging.WARNING)
-        logging.getLogger("h5py").setLevel(logging.INFO)
-        logging.getLogger("kaleido").setLevel(logging.WARNING)
-        logging.getLogger("logistro").setLevel(logging.WARNING)  # Used by Choreographer
-        logging.getLogger("numba").setLevel(logging.INFO)
-        logging.getLogger("Pillow").setLevel(logging.INFO)
-        logging.getLogger("PIL").setLevel(logging.INFO)
-        logging.getLogger("urllib3").setLevel(logging.INFO)
+        for name in ["choreographer", "kaleido", "logistro", "matplotlib"]:
+            logging.getLogger(name).setLevel(logging.WARNING)
+        for name in ["h5py", "numba", "Pillow", "PIL", "urllib3"]:
+            logging.getLogger(name).setLevel(logging.INFO)
 
-        mpl_logger = logging.getLogger("matplotlib")
-        mpl_logger.setLevel(logging.WARNING)
-        mpl_logger.addFilter(MatplotlibFilter())
+        logging.getLogger("matplotlib.backends.backend_ps").addFilter(MessageFilter(
+            "The PostScript backend does not support transparency"
+        ))
