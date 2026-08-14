@@ -21,6 +21,7 @@ import tomllib
 import warnings
 
 from matplotlib.animation import FFMpegWriter
+# import plotly.io as pio
 from sphinx_gallery.sorting import ExplicitOrder
 
 dir_path = os.path.dirname(os.path.abspath(__file__))
@@ -263,20 +264,23 @@ linkcheck_ignore: list[str] = [
     "https://github.com/CFT-HY/pttools/*",
     # The anchors are valid but not detected by Sphinx.
     "https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/*",
+    r"https://scicomp\.stackexchange\.com/*",
+    r"https://stackoverflow\.com/*",
 ]
 if IS_GITHUB_ACTIONS:
     linkcheck_ignore += [
         r"https://akareport\.aka\.fi/ibi_apps/WFServlet*",
         r"https://www\.intel\.com/*",
         r"https://gtr\.ukri\.org/*",
-        r"https://scicomp\.stackexchange\.com/*",
-        r"https://stackoverflow\.com/*",
         r"https://stfc\.ukri\.org/",
     ]
 
 # Timeout had to be increased from 5 to prevent errors with slow ArXiv links
 linkcheck_timeout = 20
 linkcheck_workers = 10
+
+# pio.renderers.default = "sphinx_gallery"
+# pio.renderers.default = "sphinx_gallery_png"
 
 # show_memory = GITHUB_ACTIONS
 show_memory = True
@@ -289,7 +293,8 @@ sphinx_gallery_conf = {
     "filename_pattern": ".*",
     "gallery_dirs": "auto_examples",
     "ignore_pattern": r"(__init__\.py|utils\.py|p_s_scan_dev\.py|droplet|standard_model|entropy|reverse)",
-    # "image_srcset": ["2x"],
+    # "image_scrapers": ("matplotlib", "plotly.io._sg_scraper.plotly_sg_scraper"),
+    "image_srcset": ["2x"],
     # "line_numbers": True,
     "matplotlib_animations": (True, "mp4"),
     # Parallelism cannot be enabled simultaneously with "show_memory".
@@ -305,6 +310,7 @@ sphinx_gallery_conf = {
         "tests": None,
     },
     # "run_stale_examples": True
+    "show_api_usage": True,
     "show_memory": show_memory,
     "subsection_order": ExplicitOrder([
         "../examples/basic",
