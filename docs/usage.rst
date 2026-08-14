@@ -51,5 +51,5 @@ Parallelism
 The most of the computation is serial, but some steps benefit significantly from parallel CPU resources.
 These include:
 
-- :meth:`pttools.ssm.calculators.sin_transform()`
-- :meth:`pttools.ssm.spectrum.spec_den_v()`
+- :meth:`pttools.ssm.sin_transform.sin_transform()`
+- :meth:`pttools.ssm.spec_den_v.spec_den_v()`
