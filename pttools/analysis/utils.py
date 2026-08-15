@@ -21,9 +21,10 @@ FIG_FORMATS = ("eps", "pdf", "png", "svg")
 type FigAndAxes = tuple[Figure, Axes]
 
 
-def close_figs(*figs: Figure) -> None:
+def close_figs(*figs: Figure | None) -> None:
     for fig in figs:
-        plt.close(fig)
+        if fig is not None:
+            plt.close(fig)
 
 
 def create_fig_ax(
@@ -67,7 +68,8 @@ def save_and_show_fig(
         **kwargs) -> None:
     """Save and show a figure"""
     save_fig(fig=fig, path=path, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
-    plt.show()
+    if ENABLE_DRAWING:
+        plt.show()
 
 
 def save_and_show_figs(
@@ -78,7 +80,8 @@ def save_and_show_figs(
         **kwargs) -> None:
     """Save and show figures"""
     save_figs(figs=figs, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
-    plt.show()
+    if ENABLE_DRAWING:
+        plt.show()
 
 
 def save_fig(

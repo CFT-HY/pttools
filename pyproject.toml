@@ -99,7 +99,8 @@ concurrency = [
 source = ["."]
 omit = [
     "**/envs/*",
-    "**/venv/*"
+    "**/venv/*",
+    "docs/conf.py"
 ]
 parallel = true
 

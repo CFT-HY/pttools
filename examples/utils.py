@@ -4,7 +4,6 @@ import os.path
 import typing as tp
 
 from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
 
 import pttools.analysis.utils as plot_utils
 from pttools.analysis.utils import FIG_FORMATS
@@ -21,8 +20,7 @@ def save_and_show_fig(
         formats: tp.Iterable[str] = FIG_FORMATS,
         makedirs: bool = True,
         **kwargs) -> None:
-    save_fig(fig=fig, path=path, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
-    plt.show()
+    plot_utils.save_and_show_fig(fig=fig, path=path, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
 
 
 def save_and_show_figs(
@@ -31,8 +29,7 @@ def save_and_show_figs(
         formats: tp.Iterable[str] = FIG_FORMATS,
         makedirs: bool = True,
         **kwargs) -> None:
-    save_figs(figs=figs, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
-    plt.show()
+    plot_utils.save_and_show_figs(figs=figs, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
 
 
 def save_fig(

@@ -22,14 +22,15 @@ from pttools.models import DataModel
 logger = logging.getLogger(__name__)
 
 
-def main(data_path: str = "thermodynamics_data.h5") -> Figure:
+def main(data_path: str = "thermodynamics_data.h5") -> Figure | None:
     """Plot a bubble using a DataModel from an HDF5 data file"""
     # __file__ is not supported for example files by sphinx-gallery
     if not os.path.isfile(data_path):
-        raise FileNotFoundError(
+        print(
             f"The data file was not found at \"{data_path}\". "
             "Please generate it and place in the current directory."
         )
+        return None
     model = DataModel.from_hdf5(data_path)
     print(model.info())
 
@@ -46,4 +47,5 @@ def main(data_path: str = "thermodynamics_data.h5") -> Figure:
 
 if __name__ == "__main__":
     _fig = main()
-    save_and_show_fig(_fig, "datamodel")
+    if _fig is not None:
+        save_and_show_fig(_fig, "datamodel")

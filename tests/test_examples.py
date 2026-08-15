@@ -25,9 +25,8 @@ class ExampleTest(unittest.TestCase):
         close_figs(*basic.main())
 
     @staticmethod
-    @unittest.expectedFailure
     def test_datamodel():
-        close(datamodel.main())
+        close_figs(datamodel.main())
 
     @staticmethod
     def test_parallel():

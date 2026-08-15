@@ -338,8 +338,7 @@ if not FFMpegWriter.isAvailable():
 warnings.filterwarnings(
     "ignore",
     category=RuntimeWarning,
-    message="Matplotlib is currently using agg, which is a"
-    " non-GUI backend, so cannot show the figure.",
+    message="Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure."
 )
 warnings.filterwarnings(
     "ignore",

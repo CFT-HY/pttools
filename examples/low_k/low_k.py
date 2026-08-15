@@ -1,4 +1,9 @@
-"""Low-k approximation"""
+"""
+Low-k approximation
+===================
+
+Create an illustrative plot on the properties of the low-k approximation.
+"""
 
 import numpy as np
 from matplotlib import rc_context
@@ -17,7 +22,7 @@ def main(path: str | None = None) -> plt.Figure:
 
     # Choose fixed parameters
     omega = 1/3
-    cs = np.sqrt(omega)
+    # cs = np.sqrt(omega)
     # nu = (1 - 3 * cs**2) / (1 + 3 * cs**2)
     vw = 0.8
     alpha = 0.01

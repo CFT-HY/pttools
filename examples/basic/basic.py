@@ -25,6 +25,7 @@ def main() -> tuple[plt.Figure, plt.Figure]:
 
     # Create and simulate the fluid profile of a bubble.
     bubble = Bubble(model, v_wall=0.5, alpha_n=0.2)
+    bubble_fig = bubble.plot()
     save_fig(bubble_fig, "bag_bubble")
     bubble.export(os.path.join(FIG_DIR, "bag_bubble.json"))
 
