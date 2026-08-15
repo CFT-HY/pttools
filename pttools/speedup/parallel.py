@@ -33,6 +33,10 @@ logger = logging.getLogger(__name__)
 POOL: ProcessPoolExecutor | None = None
 POOL_LOCK: Lock = Lock()
 
+# On Linux, forkserver is the default start method since Python 3.14.
+# On Windows and macOS, the default start method is spawn, which is slow.
+# This config preloads the target libraries in the forkserver process before forking it,
+# to speed up the start of new processes.
 set_forkserver_preload([
     "numba", "numpy", "scipy",
     "pttools.analysis", "pttools.bubble", "pttools.models",
@@ -175,9 +179,13 @@ def parallel_debug_message(
         start_time: float | None = None,
         kwargs: dict[str, tp.Any] | None = None) -> str:
     end_time = time.perf_counter()
-    msg = info
-    if info is not None and info[-1] != " ":
-        msg += " "
+    if info is None:
+        msg = ""
+    elif info[-1] == " ":
+        msg = info
+    else:
+        msg = f"{info} "
+
     if err is not None:
         msg += f"Exception arguments: {err.args}. "
     if start_time is not None:
@@ -246,7 +254,7 @@ def run_parallel(
     if kwargs is None:
         kwargs = {}
     if max_workers is None:
-        max_workers = MAX_WORKERS_DEFAULT
+        raise ValueError(f"Got invalid max_workers: {max_workers}")
 
     n_tasks = np.prod(params.shape[:-1]) if multiple_params else params.size
     n_workers = 1 if single_thread else max_workers
