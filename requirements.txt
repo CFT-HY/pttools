@@ -11,12 +11,16 @@ h5py == 3.16.0
 # https://pypi.org/project/icc-rt/
 # https://pypi.org/project/intel-cmplr-lib-rt/
 # https://numba.readthedocs.io/en/stable/user/performance-tips.html#intel-svml
+# These Intel libraries are available for x86-64 only.
+# The architecture has to be matched positively, as its name depends on the platform:
+# Linux and macOS report "x86_64", Windows reports "AMD64",
+# and the ARM architecture is "arm64" on macOS, "aarch64" on Linux and "ARM64" on Windows.
 # As of 2026-03, this is the latest version with support for macOS.
-icc-rt >= 2019.0; platform_machine != "arm64" and sys_platform == "darwin"
+icc-rt >= 2019.0; platform_machine == "x86_64" and sys_platform == "darwin"
 # This replaces icc-rt for Windows and Linux.
-intel-cmplr-lib-rt >= 2026.1.0; platform_machine != "arm64" and sys_platform != "darwin"
+intel-cmplr-lib-rt >= 2026.1.0; (platform_machine == "x86_64" or platform_machine == "AMD64") and sys_platform != "darwin"
 # As of 2026-03, this is the latest version with support for macOS.
-intel-openmp >= 2023.2.0; platform_machine != "arm64" and sys_platform == "darwin"
+intel-openmp >= 2023.2.0; platform_machine == "x86_64" and sys_platform == "darwin"
 # For Plotly image export
 kaleido == 1.3.0
 # Matplotlib 3.9.1 wheels are broken
@@ -40,5 +44,6 @@ scipy == 1.18.0
 # TBB can be used to speed up Numba threading
 # https://pypi.org/project/tbb/
 # https://numba.pydata.org/numba-doc/latest/user/threading-layer.html#which-threading-layers-are-available
+# TBB is available for x86-64 only. See the note on the architecture names above.
 # As of 2026-03, this is the latest version with support for macOS.
-tbb >= 2021.10.0; platform_machine != "arm64"
+tbb >= 2021.10.0; platform_machine == "x86_64" or platform_machine == "AMD64"

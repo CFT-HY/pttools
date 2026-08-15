@@ -77,11 +77,15 @@ requires-python = ">= 3.12"
 
 [project.optional-dependencies]
 numbalsoda = ["numbalsoda >= 0.3.4"]
+# These libraries are available for x86-64 only.
+# The architecture has to be matched positively, as its name depends on the platform:
+# Linux and macOS report "x86_64", Windows reports "AMD64",
+# and the ARM architecture is "arm64" on macOS, "aarch64" on Linux and "ARM64" on Windows.
 performance = [
-    "icc-rt >= 2019.0; platform_machine != 'arm64' and sys_platform == 'darwin'",
-    "intel-cmplr-lib-rt >= 2025.3.3; platform_machine != 'arm64' and sys_platform != 'darwin'",
-    "intel-openmp >= 2023.2.0; platform_machine != 'arm64' and sys_platform == 'darwin'",
-    "tbb >= 2021.10.0; platform_machine != 'arm64'",
+    "icc-rt >= 2019.0; platform_machine == 'x86_64' and sys_platform == 'darwin'",
+    "intel-cmplr-lib-rt >= 2025.3.3; (platform_machine == 'x86_64' or platform_machine == 'AMD64') and sys_platform != 'darwin'",
+    "intel-openmp >= 2023.2.0; platform_machine == 'x86_64' and sys_platform == 'darwin'",
+    "tbb >= 2021.10.0; platform_machine == 'x86_64' or platform_machine == 'AMD64'",
 ]
 
 [project.urls]
