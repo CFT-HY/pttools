@@ -15,6 +15,7 @@ from examples.reverse import reverse, reverse_approx
 from examples.solvers import bag, old_new, xi_kappa_bag
 from examples.standard_model import standard_model_xi_v
 from pttools.analysis import close_figs
+from pttools.speedup import NUMBA_DISABLE_JIT
 
 
 class ExampleTest(unittest.TestCase):
@@ -51,6 +52,7 @@ class ExampleTest(unittest.TestCase):
         const_cs_find.main()
 
     @staticmethod
+    @unittest.skipIf(NUMBA_DISABLE_JIT, "Multiprocessing without Numba is not supported for non-bag models")
     def test_const_cs_gw():
         figs1, figs2, table = const_cs_gw.main()
         close_figs(*figs1)
@@ -71,6 +73,7 @@ class ExampleTest(unittest.TestCase):
         entropy_comparison.main()
 
     @staticmethod
+    @unittest.skipIf(NUMBA_DISABLE_JIT, "Multiprocessing without Numba is not supported for non-bag models")
     def test_entropy_grid():
         close(entropy_grid.main())
 
@@ -89,10 +92,12 @@ class ExampleTest(unittest.TestCase):
         close(gksvdv_bubble.main())
 
     @staticmethod
+    @unittest.skipIf(NUMBA_DISABLE_JIT, "Multiprocessing without Numba is not supported for non-bag models")
     def test_gksvdv_comparison():
         close_figs(*gksvdv_comparison.main())
 
     @staticmethod
+    @unittest.skipIf(NUMBA_DISABLE_JIT, "Multiprocessing without Numba is not supported for non-bag models")
     def test_gksvdv_fig2():
         close_figs(*gksvdv_fig2.main())
 
@@ -123,6 +128,7 @@ class ExampleTest(unittest.TestCase):
         delta_theta.plot.fig()
 
     @staticmethod
+    @unittest.skipIf(NUMBA_DISABLE_JIT, "Multiprocessing without Numba is not supported for non-bag models")
     def test_ke_frac():
         close(ke_frac.main())
 
@@ -147,6 +153,7 @@ class ExampleTest(unittest.TestCase):
         close(w_by_w.main())
 
     @staticmethod
+    @unittest.skipIf(NUMBA_DISABLE_JIT, "Multiprocessing without Numba is not supported for non-bag models")
     def test_xi_kappa():
         close(xi_kappa.main())
 
