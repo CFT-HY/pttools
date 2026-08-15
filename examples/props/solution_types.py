@@ -1,5 +1,8 @@
-r"""Script for generating a figure of the three different types of relativistic combustion
+r"""
+Solution types
+==============
 
+Script for generating a figure of the three different types of relativistic combustion.
 Original version was developed by Daniel Cutting for the figure 14 of :notes:`\ `.
 """
 
@@ -13,6 +16,7 @@ from scipy.interpolate import interp1d
 
 from examples.utils import save_fig
 from pttools import bubble
+from pttools.utils import IS_GITHUB_ACTIONS
 
 __author__ = "Daniel Cutting"
 
@@ -122,7 +126,7 @@ def main(
         # These have to be inside the plt.rc_context environment for its settings to work.
         if path is not None:
             save_fig(fig, path, bbox_inches="tight")
-        if show:
+        if show and not IS_GITHUB_ACTIONS:
             plt.show()
         return fig
 

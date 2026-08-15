@@ -1,6 +1,6 @@
 """Junction conditions for the Bag Model
 
-.. plot:: fig/vm_vp_plane.py
+.. plot:: fig/vp_vm_plane.py
 """
 
 import numba

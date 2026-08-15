@@ -18,7 +18,7 @@ class SolutionType(enum.StrEnum):
     For further details, please see chapter 7.2 and figure 14
     of :notes:`\ `.
 
-    .. plot:: fig/relativistic_combustion.py
+    .. plot:: fig/solution_types.py
     """
     # Todo: Should the strong and weak branches of the solutions (vplus, vminus signs) be distinquished here?
 

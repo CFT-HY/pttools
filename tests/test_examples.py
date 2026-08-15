@@ -10,7 +10,7 @@ from examples.entropy import entropy_comparison, entropy_grid, entropy_old, entr
 from examples.gksvdv import gksvdv_bubble, gksvdv_comparison, gksvdv_fig2, \
     gksvdv_testing, gksvdv_testing2, gksvdv_testing3
 from examples.low_k import low_k
-from examples.props import chapman_jouguet, ke_frac, noise, reference_props, suppression, vm_vp_plane, w_by_w, xi_kappa
+from examples.props import chapman_jouguet, ke_frac, noise, reference_props, suppression, vp_vm_plane, w_by_w, xi_kappa
 from examples.reverse import reverse, reverse_approx
 from examples.solvers import bag, old_new, xi_kappa_bag
 from examples.standard_model import standard_model_xi_v
@@ -145,7 +145,7 @@ class ExampleTest(unittest.TestCase):
 
     @staticmethod
     def test_vm_vp_plane():
-        close(vm_vp_plane.main())
+        close(vp_vm_plane.main())
 
     @staticmethod
     def test_w_by_w():

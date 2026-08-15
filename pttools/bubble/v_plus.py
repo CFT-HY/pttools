@@ -1,6 +1,6 @@
 r"""Fluid speed $\tilde{v}_+$ ahead of the wall in the wall frame
 
-.. plot:: fig/vm_vp_plane.py
+.. plot:: fig/vp_vm_plane.py
 
 Please also see :barni_2026:`\ ` fig. 1 and :barni_2024:`\ ` fig. 3 and 5.
 """
