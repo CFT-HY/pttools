@@ -30,7 +30,7 @@ class TestParams(unittest.TestCase):
         self.assertIsNotNone(params.nuc_type)
         self.assertIsNotNone(params.nuc_args)
 
-    @unittest.skipIf(speedup.NUMBA_DISABLE_JIT, "Numba errors cannot be tested when JIT-compilation is disabled.")
+    @unittest.skipIf(speedup.NUMBA_DISABLE_JIT, "Numba errors cannot be tested when JIT compilation is disabled.")
     def test_params_without_nuc_args_numba(self):
         """Calling jitclass constructor within jitted code without specifying all arguments fails.
         This is a known bug in Numba.
