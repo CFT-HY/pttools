@@ -125,6 +125,12 @@ def _spec_den_gw_core(
 
     Please note that in the older formulas the variable $x$ is called $z$.
     """
+    if z_lookup.shape != P_tilde_v_lookup.shape:
+        raise TypeError(
+            "z_lookup and P_tilde_v_lookup must be of the same shape. "
+            f"Got z_lookup.shape={z_lookup.shape}, P_tilde_v_lookup.shape={P_tilde_v_lookup.shape}"
+        )
+
     # Creating a second variable is required by Numba
     nx_P_tilde_gw2 = z_lookup.size if nx_P_tilde_gw is None else nx_P_tilde_gw
 
@@ -239,13 +245,6 @@ def spec_den_gw(
     :return: $\tilde{P}_\text{gw}(z)$
     """
     # The equation numbers in gw_pt_ssm and maki_msc happen to be the same.
-
-    if z_lookup.shape != P_tilde_v_lookup.shape:
-        raise TypeError(
-            "z_lookup and P_tilde_v_lookup must be of the same shape. "
-            f"Got z_lookup.shape={z_lookup.shape}, P_tilde_v_lookup.shape={P_tilde_v_lookup.shape}"
-        )
-
     if isinstance(y, np.ndarray):
         return _spec_den_gw_y(
             z_lookup=z_lookup, P_tilde_v_lookup=P_tilde_v_lookup, y=y,
