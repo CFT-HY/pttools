@@ -2,12 +2,13 @@
 
 import numba
 
+from pttools.bubble.solution_type import SolutionType
 from pttools.speedup import NUMBA_ENABLE_CACHE
 from pttools.ssm.spec_den_v import spec_den_v as spec_den_v_func
 from pttools.ssm.low_k.integration import \
     power_spectrum_integration_low, power_spectrum_integration_int, Iv_resampled
 from pttools.ssm.low_k.join import gw_junction
-from pttools.ssm.nucleation import NucType
+from pttools.ssm.nucleation import NucType, bubble_spacing_enlargement
 from pttools.ssm.spec_den_gw import gen_lookup, spec_den_gw
 from pttools.ssm.ssm import \
     A2_e_conserving, \
@@ -23,12 +24,13 @@ from pttools.type_hints import FloatArr1D
 def compute(
         # Arrays (in alphabetical order)
         e: FloatArr1D,
+        T: FloatArr1D,
         v: FloatArr1D,
         w: FloatArr1D,
         xi: FloatArr1D,
         y: FloatArr1D,
         # Scalars (in alphabetical order)
-        bubble_spacing_enlargement_factor: float,
+        beta_tilde: float | None,
         cs: float,
         lifetime_distribution_a: float,
         nu_gdh2024: float,
@@ -48,24 +50,26 @@ def compute(
         z_st_thresh: float,
         # Other
         nuc_type: NucType,
+        sol_type: SolutionType,
         lambda_correction: bool = False,
         parallel: bool = True) -> tuple[
             FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D,
-            FloatArr1D, float, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D]:
+            FloatArr1D, float, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D,
+            float, float, float]:
     """Compute the Sound Shell Model spectra for a fluid profile, including the low-k approximation
 
     This is in one Numba-compiled function so that the GIL is released for the entire computation.
     """
     spec_den_v, spec_den_v_lookup, spec_den_gw_ssm, \
-            A2, A2_lookup, qT_lookup, qT_gw_lookup, T_tilde, ubarf2, z_lookup = compute_ssm(
-        e=e, v=v, w=w, xi=xi, y=y,
-        bubble_spacing_enlargement_factor=bubble_spacing_enlargement_factor,
-        cs=cs, lifetime_distribution_a=lifetime_distribution_a,
+            A2, A2_lookup, qT_lookup, qT_gw_lookup, T_tilde, ubarf2, z_lookup,\
+            f, hx, bubble_spacing_enlargement_factor = compute_ssm(
+        e=e, T=T, v=v, w=w, xi=xi, y=y,
+        beta_tilde=beta_tilde, cs=cs, lifetime_distribution_a=lifetime_distribution_a,
         source_lifetime_factor=source_lifetime_factor,
         v_sh=v_sh, v_wall=v_wall,
         eps_lookup=eps_lookup, nT=nT, n_z_lookup=n_z_lookup, nx_P_tilde_gw=nx_P_tilde_gw,
         T_tilde_min=T_tilde_min, T_tilde_max=T_tilde_max, z_st_thresh=z_st_thresh,
-        nuc_type=nuc_type, lambda_correction=lambda_correction, parallel=parallel
+        nuc_type=nuc_type, sol_type=sol_type, lambda_correction=lambda_correction, parallel=parallel
     )
     spec_den_gw_low, spec_den_gw_int, spec_den_gw_expanded = compute_low_k(
         spec_den_gw_ssm=spec_den_gw_ssm,
@@ -78,7 +82,8 @@ def compute(
     return \
         spec_den_v, spec_den_v_lookup, spec_den_gw_ssm, \
         A2, A2_lookup, qT_lookup, qT_gw_lookup, T_tilde, ubarf2, z_lookup, \
-        spec_den_gw_low, spec_den_gw_int, spec_den_gw_expanded
+        spec_den_gw_low, spec_den_gw_int, spec_den_gw_expanded, \
+        f, hx, bubble_spacing_enlargement_factor
 
 
 # @numba.njit(nogil=True)
@@ -122,12 +127,13 @@ def compute_low_k(
 def compute_ssm(
         # Arrays (in alphabetical order)
         e: FloatArr1D,
+        T: FloatArr1D,
         v: FloatArr1D,
         w: FloatArr1D,
         xi: FloatArr1D,
         y: FloatArr1D,
         # Scalars (in alphabetical order)
-        bubble_spacing_enlargement_factor: float,
+        beta_tilde: float | None,
         cs: float,
         lifetime_distribution_a: float,
         source_lifetime_factor: float,
@@ -143,11 +149,17 @@ def compute_ssm(
         z_st_thresh: float,
         # Other
         nuc_type: NucType,
+        sol_type: SolutionType,
         lambda_correction: bool = False,
         parallel: bool = True) -> tuple[
             FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D,
-            FloatArr1D, FloatArr1D, FloatArr1D, float, FloatArr1D]:
+            FloatArr1D, FloatArr1D, FloatArr1D, float, FloatArr1D,
+            float, float, float]:
     """Compute the Sound Shell Model spectra for the given fluid profile"""
+    f, hx, bubble_spacing_enlargement_factor = bubble_spacing_enlargement(
+        xi=xi, T=T, beta_tilde=beta_tilde, v_wall=v_wall, sol_type=sol_type
+    )
+
     # -----
     # Shared factors
     # -----
@@ -200,4 +212,5 @@ def compute_ssm(
         parallel=parallel
     )
     return spec_den_v, spec_den_v_lookup, spec_den_gw_ssm, \
-        A2, A2_gw_lookup, qT_lookup, qT_gw_lookup, T_tilde, ubarf2, z_gw_lookup
+        A2, A2_gw_lookup, qT_lookup, qT_gw_lookup, T_tilde, ubarf2, z_gw_lookup, \
+        f, hx, bubble_spacing_enlargement_factor

@@ -14,7 +14,7 @@ from pttools.ssm import const
 from pttools.ssm.barotropic import dilution_of_e, eta_ratio, H_eta, source_lifetime_factor
 from pttools.ssm.compute import compute
 from pttools.ssm.nucleation import \
-    DEFAULT_NUC_TYPE, NucType, beta, bubble_spacing_enlargement_factor, hx, nucleation_f, r_star as r_star_func
+    DEFAULT_NUC_TYPE, NucType, beta, r_star as r_star_func
 from pttools.ssm.pow_spec import pow_spec
 from pttools.ssm.scaling import H_star_tau_sh, H_star_tau_v, H_star_tau_v_old, J
 from pttools.ssm.spec_den_gw import spec_den_gw_scaling
@@ -112,8 +112,14 @@ class SSMSpectrum:
         self.a2: FloatArr1D | None = None
         #: $|A_\text{lookup}(z)|^2$
         self.a2_lookup: FloatArr1D | None = None
+        #: Bubble spacing enlargement factor $\Lambda$
+        self.bubble_spacing_enlargement_factor: float | None
         #: $c_s^2({T}_\text{gw})$
         self.cs2: float | None = None
+        #: Nucleation $f$
+        self.nucleation_f: float | None = None
+        #: Nucleation $h_x$
+        self.hx: float | None = None
         #: $qT_\text{lookup}$
         self.qT_lookup: FloatArr1D | None = None
         #: $qT_\text{gw,lookup}$
@@ -157,15 +163,17 @@ class SSMSpectrum:
         self.cs = sqrt(self.cs2)
         self.spec_den_v, self.spec_den_v_lookup, self.spec_den_gw_ssm, \
             self.a2, self.a2_lookup, self.qT_lookup, self.qT_gw_lookup, self.T_tilde, self.ubarf2, self.z_lookup, \
-            self.spec_den_gw_low, self.spec_den_gw_int, self.spec_den_gw_expanded = compute(
+            self.spec_den_gw_low, self.spec_den_gw_int, self.spec_den_gw_expanded, \
+            self.nucleation_f, self.hx, self.bubble_spacing_enlargement_factor = compute(
                 # Arrays
                 e=self.bubble.e,
+                T=self.bubble.T,
                 v=self.bubble.v,
                 w=self.bubble.w,
                 xi=self.bubble.xi,
                 y=self.y,
                 # Scalars
-                bubble_spacing_enlargement_factor=self.bubble_spacing_enlargement_factor,
+                beta_tilde=self.beta_tilde,
                 cs=self.cs,
                 lifetime_distribution_a=lifetime_distribution_a,
                 nu_gdh2024=self.bubble.nu_gdh2024,
@@ -185,6 +193,7 @@ class SSMSpectrum:
                 z_st_thresh=self.z_st_thresh,
                 # Other
                 nuc_type=self.nuc_type,
+                sol_type=self.bubble.sol_type,
                 lambda_correction=lambda_correction,
                 parallel=parallel
         )
@@ -244,10 +253,6 @@ class SSMSpectrum:
     # -----
 
     @functools.cached_property
-    def bubble_spacing_enlargement_factor(self) -> float:
-        return 1. if self.beta_tilde is None else bubble_spacing_enlargement_factor(hx=self.hx)
-
-    @functools.cached_property
     def delta_tau_v(self) -> float:
         r"""$\Delta \tau_v$
         $$\Delta \tau_v \equiv \frac{\delta \eta_v}{R_*} = \frac{\eta_sh N_sh}{R_*} = \frac{N_sh}{\bar{U}_f}$$
@@ -297,10 +302,6 @@ class SSMSpectrum:
         return H_star_tau_v_old(H_star_tau_sh=self.H_star_tau_sh)
 
     @functools.cached_property
-    def hx(self):
-        return hx(self.nucleation_f)
-
-    @functools.cached_property
     def k_peak_eta_star(self) -> float:
         r"""Peak wavenumber, scaled by conformal time at GW formation $k_\text{peak} \eta_*$
         $$k_p = \frac{2 \pi}{R_*} \Rightarrow k_p \eta_* = (1 + \nu_\text{gdh2024}) \frac{2\pi}{r_*}$$
@@ -311,13 +312,6 @@ class SSMSpectrum:
     @functools.cached_property
     def J(self) -> float:
         return J(r_star=self.r_star, H_star_tau_v=self.H_star_tau_v)
-
-    @functools.cached_property
-    def nucleation_f(self) -> float:
-        return nucleation_f(
-            xi=self.bubble.xi, T=self.bubble.T,
-            beta_tilde=self.beta_tilde, v_wall=self.bubble.v_wall
-        )
 
     @functools.cached_property
     def pow_gw(self) -> FloatArr1D:
@@ -528,13 +522,10 @@ class SSMSpectrum:
 
 copy_docstrings({
     SSMSpectrum.beta: beta,
-    SSMSpectrum.bubble_spacing_enlargement_factor: bubble_spacing_enlargement_factor,
     SSMSpectrum.eta_ratio: eta_ratio,
     SSMSpectrum.H_star_tau_sh: H_star_tau_sh,
     SSMSpectrum.H_star_tau_v: H_star_tau_v,
-    SSMSpectrum.hx: hx,
     SSMSpectrum.J: J,
-    SSMSpectrum.nucleation_f: nucleation_f,
     SSMSpectrum.source_lifetime_factor: source_lifetime_factor,
     SSMSpectrum.spec_den_gw_scaling: spec_den_gw_scaling,
     SSMSpectrum.suppression_factor: Suppression.suppression,
