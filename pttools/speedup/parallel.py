@@ -315,6 +315,10 @@ def run_parallel(
 
             # Array output
             if return_arr_shape is not None:
+                if output_dtypes is None or not len(output_dtypes):
+                    raise ValueError("Please give the output dtype.")
+                elif len(output_dtypes) > 1:
+                    raise ValueError("Array output is currently supported for only one array.")
                 output_arr = np.empty((*futs.shape, *return_arr_shape), dtype=output_dtypes[0])
                 # axes = list(range(futs.ndim)) # + list((-1, ) * len(return_arr_shape))
                 # op_axes = [axes, axes]
