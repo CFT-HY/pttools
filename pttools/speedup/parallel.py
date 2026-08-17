@@ -37,12 +37,13 @@ POOL_LOCK: Lock = Lock()
 # On Windows and macOS, the default start method is spawn, which is slow.
 # This config preloads the target libraries in the forkserver process before forking it,
 # to speed up the start of new processes.
-set_forkserver_preload([
+DEFAULT_FORKSERVER_PRELOAD: list[str] = [
     "numba", "numpy", "scipy",
     "pttools.analysis", "pttools.bubble", "pttools.models",
     "pttools.omgw0", "pttools.speedup", "pttools.ssm", "pttools.utils",
     "pttools.logging", "pttools.type_hints"
-])
+]
+set_forkserver_preload(DEFAULT_FORKSERVER_PRELOAD)
 
 
 class FakeExecutor:
@@ -289,7 +290,9 @@ def run_parallel(
                     ex, n_workers, n_tasks
                 )
 
+            # -----
             # Submit parallel execution
+            # -----
             with np.nditer(
                     [params, None],
                     flags=flags,
@@ -302,7 +305,9 @@ def run_parallel(
                     fut[...] = ex.submit(runner.run, param, index=ind, multi_index=multi_index)
                 futs = it.operands[1]
 
+            # -----
             # Collect results
+            # -----
 
             # No output
             # if output_dtypes is None:
