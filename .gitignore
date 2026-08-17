@@ -18,6 +18,7 @@ packages.png
 packages.svg
 
 # Output files
+.test_durations
 _build
 auto_examples
 docs/sg_api_usage.rst

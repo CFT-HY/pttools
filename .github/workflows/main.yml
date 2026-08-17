@@ -246,14 +246,14 @@ jobs:
     - name: Run tests
       run: |
         set -o pipefail
-        pytest | tee test-output.txt
-        coverage json
+        pytest --store-durations | tee test-output.txt
     - name: Upload results
       uses: actions/upload-artifact@v4
       if: ${{ matrix.python-version == env.PRIMARY_PYTHON_VERSION }}
       with:
         name: Test results with Numba
         path: |
+          .test_durations
           coverage.xml
           coverage.json
           htmlcov
