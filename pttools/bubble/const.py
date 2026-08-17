@@ -1,6 +1,6 @@
 """Constants for the bubble module"""
 
-import math
+from math import sqrt
 import typing as tp
 
 # -----
@@ -53,9 +53,9 @@ This applies for both subsonic deflagrations and hybrids.
 :notes:`\ ` p. 36
 """
 
-#: Ideal speed of sound
-CS0: tp.Final[float] = 1 / math.sqrt(3)
-#: Ideal speed of sound squared
+#: $c_s$, bag model sound speed
+CS0: tp.Final[float] = 1 / sqrt(3)
+#: $c_s^2$, bag model sound speed squared
 CS0_2: tp.Final[float] = 1 / 3
 
 #: Difference between consequent $\xi$ values
