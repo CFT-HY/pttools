@@ -91,6 +91,7 @@ def save_fig(
         formats: tp.Iterable[str] = FIG_FORMATS,
         force_formats: bool = False,
         makedirs: bool = True,
+        close: bool = False,
         **kwargs) -> None:
     """Save a figure"""
     is_abs = os.path.isabs(path)
@@ -108,6 +109,8 @@ def save_fig(
             if makedirs and not os.path.exists(format_dir):
                 os.makedirs(format_dir, exist_ok=True)
             fig.savefig(f"{os.path.join(format_dir, path)}.{ext}", **kwargs)
+    if close:
+        plt.close(fig)
 
 
 def save_figs(
@@ -115,10 +118,11 @@ def save_figs(
         fig_dir: str | None = None,
         formats: tp.Iterable[str] = FIG_FORMATS,
         makedirs: bool = True,
+        close: bool = False,
         **kwargs) -> None:
     """Save figures"""
     for path, fig in figs.items():
-        save_fig(fig=fig, path=path, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
+        save_fig(fig=fig, path=path, fig_dir=fig_dir, formats=formats, makedirs=makedirs, close=close, **kwargs)
 
 
 def setup_plotting(
