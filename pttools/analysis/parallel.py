@@ -125,12 +125,6 @@ def create_bubbles(
     if kwargs is not None:
         kwargs2.update(kwargs)
 
-    params = np.empty((alpha_ns.size, v_walls.size, 2))
-    for i_alpha_n, alpha_n in enumerate(alpha_ns):
-        for i_v_wall, v_wall in enumerate(v_walls):
-            params[i_alpha_n, i_v_wall, 0] = v_wall
-            params[i_alpha_n, i_v_wall, 1] = alpha_n
-
     # Pre-do shared steps so that they don't have to be done for each process
     fluid_reference.ref()
     # model.df_dtau_ptr()  # This should no longer be necessary
@@ -138,7 +132,7 @@ def create_bubbles(
 
     # Run the parallel processing
     ret = run_parallel(
-        bubble_func, params,
+        bubble_func, params=v_wall_alpha_n_grid(v_walls=v_walls, alpha_ns=alpha_ns),
         multiple_params=True,
         output_dtypes=output_dtypes,
         max_workers=max_workers,
@@ -197,3 +191,12 @@ def solve_bubble(bubble: Bubble) -> None:
 def solve_bubbles(bubbles: BubbleArr, max_workers: int = options.MAX_WORKERS_DEFAULT) -> None:
     """Solve multiple existing bubbles in parallel"""
     run_parallel(solve_bubble, params=bubbles, max_workers=max_workers)
+
+
+def v_wall_alpha_n_grid(v_walls: th.FloatArr1D, alpha_ns: th.FloatArr1D) -> th.FloatArr3D:
+    params = np.empty((alpha_ns.size, v_walls.size, 2))
+    for i_alpha_n, alpha_n in enumerate(alpha_ns):
+        for i_v_wall, v_wall in enumerate(v_walls):
+            params[i_alpha_n, i_v_wall, 0] = v_wall
+            params[i_alpha_n, i_v_wall, 1] = alpha_n
+    return params

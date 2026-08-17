@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from examples.utils import save_and_show_figs
-from pttools.analysis.parallel import create_bubbles
+from pttools.analysis.parallel import create_bubbles, v_wall_alpha_n_grid
 from pttools.bubble.bubble import get_kappa_giese
 from pttools.bubble.gksvdv.quantities import kappa_gksvdv
 from pttools.models import ConstCSModel
@@ -42,15 +42,9 @@ def kappas_giese(
             except (ValueError, RuntimeError):
                 alpha_tbns[i] = np.nan
 
-    params = np.empty((alpha_ns.size, v_walls.size, 2))
-    for i_alpha_tbn, alpha_tbn in enumerate(alpha_tbns):
-        for i_v_wall, v_wall in enumerate(v_walls):
-            params[i_alpha_tbn, i_v_wall, 0] = v_wall
-            params[i_alpha_tbn, i_v_wall, 1] = alpha_tbn
-
     kappas = run_parallel(
         func=kappa_gksvdv,
-        params=params,
+        params=v_wall_alpha_n_grid(v_walls=v_walls, alpha_ns=alpha_ns),
         multiple_params=True,
         # output_dtypes=(float, ),
         # max_workers=max_workers,
