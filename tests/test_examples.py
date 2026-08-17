@@ -17,6 +17,7 @@ from examples.solvers import bag, old_new, xi_kappa_bag
 from examples.standard_model import standard_model_xi_v
 from pttools.analysis import close_figs
 from pttools.speedup import NUMBA_DISABLE_JIT
+from pttools.utils import IS_GITHUB_ACTIONS, IS_WINDOWS
 
 
 class ExampleTest(unittest.TestCase):
@@ -53,6 +54,9 @@ class ExampleTest(unittest.TestCase):
 
     @staticmethod
     @pytest.mark.xfail(NUMBA_DISABLE_JIT, reason="Multiprocessing without Numba is not supported for non-bag models")
+    @unittest.skipIf(
+        IS_GITHUB_ACTIONS and IS_WINDOWS,
+        reason="GitHub Actions Windows runners run out of memory with parallel processing")
     def test_const_cs_gw():
         figs1, figs2, table = const_cs_gw.main()
         close_figs(*figs1)
@@ -74,6 +78,9 @@ class ExampleTest(unittest.TestCase):
 
     @staticmethod
     @pytest.mark.xfail(NUMBA_DISABLE_JIT, reason="Multiprocessing without Numba is not supported for non-bag models")
+    @unittest.skipIf(
+        IS_GITHUB_ACTIONS and IS_WINDOWS,
+        reason="GitHub Actions Windows runners run out of memory with parallel processing")
     def test_entropy_grid():
         close(entropy_grid.main())
 
@@ -93,11 +100,17 @@ class ExampleTest(unittest.TestCase):
 
     @staticmethod
     @pytest.mark.xfail(NUMBA_DISABLE_JIT, reason="Multiprocessing without Numba is not supported for non-bag models")
+    @unittest.skipIf(
+        IS_GITHUB_ACTIONS and IS_WINDOWS,
+        reason="GitHub Actions Windows runners run out of memory with parallel processing")
     def test_gksvdv_comparison():
         close_figs(*gksvdv_comparison.main())
 
     @staticmethod
     @pytest.mark.xfail(NUMBA_DISABLE_JIT, reason="Multiprocessing without Numba is not supported for non-bag models")
+    @unittest.skipIf(
+        IS_GITHUB_ACTIONS and IS_WINDOWS,
+        reason="GitHub Actions Windows runners run out of memory with parallel processing")
     def test_gksvdv_fig2():
         close_figs(*gksvdv_fig2.main())
 
@@ -129,6 +142,9 @@ class ExampleTest(unittest.TestCase):
 
     @staticmethod
     @pytest.mark.xfail(NUMBA_DISABLE_JIT, reason="Multiprocessing without Numba is not supported for non-bag models")
+    @unittest.skipIf(
+        IS_GITHUB_ACTIONS and IS_WINDOWS,
+        reason="GitHub Actions Windows runners run out of memory with parallel processing")
     def test_ke_frac():
         close(ke_frac.main())
 
@@ -154,6 +170,9 @@ class ExampleTest(unittest.TestCase):
 
     @staticmethod
     @pytest.mark.xfail(NUMBA_DISABLE_JIT, reason="Multiprocessing without Numba is not supported for non-bag models")
+    @unittest.skipIf(
+        IS_GITHUB_ACTIONS and IS_WINDOWS,
+        reason="GitHub Actions Windows runners run out of memory with parallel processing")
     def test_xi_kappa():
         close(xi_kappa.main())
 

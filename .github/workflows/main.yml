@@ -263,7 +263,7 @@ jobs:
         if-no-files-found: error
   test-python:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 40
     strategy:
       matrix:
         python-version: ['3.12', '3.13', '3.14']  # '3.14t'
