@@ -211,7 +211,7 @@ def log_parallel_ready(
     elapsed = time.perf_counter() - start_time
     cpu_time_per_task = elapsed * n_workers / n_tasks
     logger.info(
-        "Parallel processing ready. Executor: %s, workers: %s, tasks: %s, time: %s, thread time / task: %s",
+        "Parallel processing ready. Executor: %s, workers: %s, tasks: %s, time: %.3f s, thread time / task: %.3f s",
         executor, n_workers, n_tasks, elapsed, cpu_time_per_task
     )
 

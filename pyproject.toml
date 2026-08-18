@@ -147,6 +147,7 @@ addopts = [
     "--durations=50",
     "--durations-min=1.0",
     "--dist=loadscope",  # This ensures that tests from the same class are run on the same worker.
+    # "--dist=loadgroup",
     "--html=test-results/html/test-report.html",
     "--numprocesses=auto"
 ]
