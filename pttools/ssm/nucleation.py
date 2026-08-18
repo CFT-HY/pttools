@@ -301,3 +301,15 @@ def R_star0(beta: th.FloatOrArr, v_wall: th.FloatOrArr) -> th.FloatOrArr:
     :return: Mean bubble separation $R_*$
     """
     return (8 * np.pi)**(1/3) * v_wall / beta
+
+
+@numba.njit(cache=True)
+def v_eff(f: FloatOrArr, v_wall: FloatOrArr) -> FloatOrArr:
+    r"""Effective suppression speed $v_{\text{eff}}$
+
+    This is the expansion speed of the spherical shell inside which
+    further bubble nucleation is effectively suppressed.
+    $$v_{\text{eff}} = (1 + f)^{\frac{1}{3}} v_{\text{wall}}$$
+    :ajmi_2022:`\ ` eq. 51
+    """
+    return (1 + f)**(1/3) * v_wall

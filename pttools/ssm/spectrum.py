@@ -14,7 +14,7 @@ from pttools.ssm import const
 from pttools.ssm.barotropic import dilution_of_e, eta_ratio, H_eta, source_lifetime_factor
 from pttools.ssm.compute import compute
 from pttools.ssm.nucleation import \
-    DEFAULT_NUC_TYPE, NucType, beta, r_star as r_star_func
+    DEFAULT_NUC_TYPE, NucType, beta, r_star as r_star_func, v_eff
 from pttools.ssm.pow_spec import pow_spec
 from pttools.ssm.scaling import H_star_tau_sh, H_star_tau_v, H_star_tau_v_old, J
 from pttools.ssm.spec_den_gw import spec_den_gw_scaling
@@ -423,6 +423,10 @@ class SSMSpectrum:
             bubble_spacing_enlargement_factor=self.bubble_spacing_enlargement_factor
         )
 
+    @functools.cached_property
+    def v_eff(self) -> float:
+        return v_eff(self.nucleation_f, self.bubble.v_wall)
+
     @staticmethod
     def validate_nucleation(
             bubble: Bubble,
@@ -531,5 +535,6 @@ copy_docstrings({
     SSMSpectrum.source_lifetime_factor: source_lifetime_factor,
     SSMSpectrum.spec_den_gw_scaling: spec_den_gw_scaling,
     SSMSpectrum.suppression_factor: Suppression.suppression,
+    SSMSpectrum.v_eff: v_eff,
     SSMSpectrum.z_cross_approx: z_cross_approx
 }, without_params=True)
