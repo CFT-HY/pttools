@@ -60,6 +60,8 @@ class SSMSpectrum:
             label_latex: str | None = None,
             label_unicode: str | None = None):
         r"""
+        .. minigallery:: pttools.ssm.SSMSpectrum
+
         :param bubble: the Bubble object
         :param beta_tilde: nucleation rate parameter $\tilde{\beta} \equiv \frac{\beta}{H_*}$
         :param r_star: Hubble-scaled mean bubble spacing $r_*$

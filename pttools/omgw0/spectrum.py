@@ -24,7 +24,10 @@ if tp.TYPE_CHECKING:
 
 
 class Spectrum(ssm.SSMSpectrum):
-    r"""A spectrum object that includes the conversion to the GW power spectrum today $\Omega_{\text{gw},0}$"""
+    r"""A spectrum object that includes the conversion to the GW power spectrum today $\Omega_{\text{gw},0}$
+
+    .. minigallery:: pttools.omgw0.Spectrum
+    """
     def __init__(
             self,
             bubble: Bubble,

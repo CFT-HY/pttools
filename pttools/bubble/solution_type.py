@@ -19,6 +19,7 @@ class SolutionType(enum.StrEnum):
     of :notes:`\ `.
 
     .. plot:: fig/solution_types.py
+    .. minigallery:: ../../examples/props/solution_types.py
     """
     # Todo: Should the strong and weak branches of the solutions (vplus, vminus signs) be distinquished here?
 
