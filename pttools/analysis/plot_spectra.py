@@ -31,6 +31,7 @@ def plot_spectra_common(
         fig: Figure,
         ax: Axes,
         path: str | None = None,
+        legend: bool | None = None,
         set_x: bool = True) -> FigAndAxes:
     """Common steps for plotting spectra"""
     if set_x:
@@ -42,7 +43,7 @@ def plot_spectra_common(
         )
     ax.set_yscale("log")
     ax.grid()
-    if len(spectra) > 1:
+    if (legend is None and len(spectra) > 1) or legend:
         ax.legend(fontsize=7, loc="lower left")
     if path is not None:
         fig.savefig(path)
@@ -55,7 +56,7 @@ def plot_spectra_multi(
         path: str | None = None,
         **kwargs) -> tuple[Figure, th.AxesArr2D]:
     """Plot multiple types of spectra"""
-    fig, axs = plot_spectra_multi_common(spectra, fig, figsize=(7, 5), nrows=2, ncols=2, **kwargs)
+    fig, axs = plot_spectra_multi_common(spectra, fig, **kwargs)
 
     # Arrows between the sub-figures
     arrowprops = {"width": 7}
@@ -77,20 +78,22 @@ def plot_spectra_multi(
 
 def plot_spectra_multi_common(
         spectra: tp.Collection[Spectrum],
-        fig: Figure,
-        figsize: tuple[float, float],
-        nrows: int,
-        ncols: int,
+        fig: Figure | None,
+        figsize: tuple[float, float] = (7, 5),
+        nrows: int = 2,
+        ncols: int = 2,
+        labels: list[str | None] | None = None,
+        legend: bool | None = None,
         **kwargs):
     """Common steps for plotting multiple spectra"""
     if fig is None:
         fig = plt.figure(figsize=figsize)
     axs = fig.subplots(nrows, ncols)
     flat = axs.flat
-    plot_bubbles_v([spectrum.bubble for spectrum in spectra], fig, flat[0], **kwargs)
+    plot_bubbles_v([spectrum.bubble for spectrum in spectra], fig, flat[0], legend=legend, **kwargs)
     plot_spectra_v(spectra, fig=fig, ax=flat[1], **kwargs)
     plot_spectra_gw(spectra, fig=fig, ax=flat[2], **kwargs)
-    plot_spectra(spectra, fig=fig, ax=flat[3], **kwargs)
+    plot_spectra(spectra, fig=fig, ax=flat[3], labels=labels, legend=legend, **kwargs)
     flat[0].set_title("Fluid velocity profile")
     flat[1].set_title("Power spectrum of the velocity field")
     flat[2].set_title("GW power spectrum")
@@ -101,20 +104,31 @@ def plot_spectra_multi_common(
 
 def plot_spectra_multi_flat(
         spectra: tp.Collection[Spectrum],
-        fig: Figure,
+        fig: Figure | None = None,
         path: str | None = None,
+        labels: list[str | None] | None = None,
+        legend: bool | None = None,
         **kwargs):
     """Plot multiple spectra in a flat layout"""
-    fig, axs = plot_spectra_multi_common(spectra, fig, figsize=(14, 4), nrows=1, ncols=4, **kwargs)
+    fig, axs = plot_spectra_multi_common(
+        spectra, fig,
+        figsize=(14, 4),
+        nrows=1, ncols=4,
+        labels=labels, legend=legend,
+        **kwargs
+    )
+
+    # Arrows
     arrowprops = {"width": 7}
     y = 0.4
     length = 0.03
     x1 = 0.24
     x2 = 0.49
     x3 = 0.75
-    axs[0].annotate("", xytext=(0.24, y), xy=(x1 + length, y), xycoords="figure fraction", arrowprops=arrowprops)
-    axs[0].annotate("", xytext=(0.49, y), xy=(x2 + length, y), xycoords="figure fraction", arrowprops=arrowprops)
-    axs[0].annotate("", xytext=(0.75, y), xy=(x3 + length, y), xycoords="figure fraction", arrowprops=arrowprops)
+    axs[0].annotate("", xytext=(x1, y), xy=(x1 + length, y), xycoords="figure fraction", arrowprops=arrowprops)
+    axs[0].annotate("", xytext=(x2, y), xy=(x2 + length, y), xycoords="figure fraction", arrowprops=arrowprops)
+    axs[0].annotate("", xytext=(x3, y), xy=(x3 + length, y), xycoords="figure fraction", arrowprops=arrowprops)
+
     if path is not None:
         fig.savefig(path)
     return fig, axs
@@ -129,26 +143,29 @@ def plot_spectra(
         fig: Figure | None = None,
         ax: Axes | None = None,
         path: str | None = None,
+        labels: list[str] | None = None,
+        legend: bool | None = None,
         **kwargs) -> FigAndAxes:
     f"""Plot the GW spectra today {OMGW0_LABEL}"""
     fig, ax = create_fig_ax(fig, ax)
-    for spectrum in spectra:
+    for i, spectrum in enumerate(spectra):
         snr = spectrum.signal_to_noise_ratio()
         ax.plot(
             spectrum.f(),
             spectrum.omgw0(),
-            label=rf"{spectrum.label_latex[:-1]}, \text{{SNR}}={snr:.3e}$",
+            label=rf"{spectrum.label_latex[:-1]}, \text{{SNR}}={snr:.3e}$"
+                if labels is None or labels[i] is None else labels[i],
             **kwargs
         )
     f_min = np.nanmin([np.nanmin(spectrum.f()) for spectrum in spectra])
     f_max = np.nanmax([np.nanmax(spectrum.f()) for spectrum in spectra])
     f_noise: th.FloatArr1D = np.logspace(np.log10(f_min), np.log10(f_max), 100)
-    ax.plot(f_noise, omega_noise(f_noise), label=r"LISA noise")
+    ax.plot(f_noise, omega_noise(f_noise), label=r"LISA + EB + GB noise")
     ax.set_xlabel(F_LABEL)
     ax.set_xscale("log")
     ax.set_xlim(f_min, f_max)
     ax.set_ylabel(OMGW0_LABEL)
-    return plot_spectra_common(spectra, fig, ax, path, set_x=False)
+    return plot_spectra_common(spectra, fig, ax, path, legend=legend, set_x=False)
 
 
 def plot_spectra_gw(

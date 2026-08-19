@@ -5,7 +5,7 @@ import typing as tp
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.analysis.utils import FigAndAxes, create_fig_ax, legend
+from pttools.analysis.utils import FigAndAxes, create_fig_ax, legend as legend_func
 from pttools.bubble.bubble import BaseBubble
 
 XI_LABEL = r"$\xi$"
@@ -42,9 +42,11 @@ def setup_bubbles_plot_multifig(fig: plt.Figure | None = None) -> tuple[plt.Figu
 
 def plot_bubbles_common(
         bubbles: tp.Collection[BaseBubble],
-        fig: plt.Figure | None = None,
-        ax: plt.Axes | None = None,
+        fig: plt.Figure,
+        ax: plt.Axes,
         path: str | None = None,
+        legend: bool | None = None,
+        legend_fontsize: int | None = None,
         full_range: bool = False) -> FigAndAxes:
     """Common steps for plotting multiple bubbles"""
     ax.set_xlabel(XI_LABEL)
@@ -58,8 +60,8 @@ def plot_bubbles_common(
             np.nanmin([xi_max * 0.9, 0]) if xi_max < 0 else np.nanmin([xi_max * 1.1, 1])
         )
     ax.grid()
-    if len(bubbles) > 1:
-        legend(ax)
+    if (legend is None and len(bubbles) > 1) or legend:
+        legend_func(ax, fontsize=legend_fontsize)
 
     if path is not None:
         fig.savefig(path)
@@ -95,6 +97,7 @@ def plot_bubbles_v(
         path: str | None = None,
         v_max: float = 1,
         full_range: bool = False,
+        legend: bool | None = None,
         **kwargs) -> FigAndAxes:
     """Plot the velocity profile of multiple bubbles"""
     fig, ax = setup_bubbles_plot(bubbles, fig, ax)
@@ -112,7 +115,7 @@ def plot_bubbles_v(
         -1 if full_range or v_bubbles_min < 0 else 0,
         1 if full_range else (v_max if v_bubbles_max > 0 else 0)
     )
-    return plot_bubbles_common(bubbles, fig, ax, path, full_range=full_range)
+    return plot_bubbles_common(bubbles, fig, ax, path, full_range=full_range, legend=legend)
 
 
 def plot_bubbles_w(

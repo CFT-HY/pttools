@@ -236,6 +236,8 @@ def sound_shell_generic(
     v = np.concatenate((vb, v, vf))
     w = np.concatenate((wb, w, wf))
     xi = np.concatenate((xib, xi, xif))
+    if sol_type in (SolutionType.SUB_DEF, SolutionType.HYBRID, SolutionType.DETON):
+        v[v < 0] = 0.
 
     elapsed = time.perf_counter() - start_time
     if solution_found and log_success:

@@ -34,7 +34,7 @@ def create_fig_ax(
     """Create a figure and axes if necessary"""
     if fig is None:
         if ax is None:
-            fig = Figure(figsize=figsize)
+            fig = plt.figure(figsize=figsize)
             ax = fig.add_subplot()
         else:
             fig = ax.get_figure()

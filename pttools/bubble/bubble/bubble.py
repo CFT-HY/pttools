@@ -40,6 +40,7 @@ class Bubble(BaseBubble):
             sol_type: SolutionType | None = None,
             label_latex: str | None = None,
             label_unicode: str | None = None,
+            label_with_model: bool = True,
             wn_guess: float | None = None,
             wm_guess: float | None = None,
             theta_bar: bool = False,
@@ -166,9 +167,9 @@ class Bubble(BaseBubble):
 
         # LaTeX labels are not supported in Plotly 3D plots.
         # https://github.com/plotly/plotly.js/issues/608
-        self.label_latex = rf"{self.model.label_latex}, $v_w={v_wall:.3f}, \alpha_n={alpha_n:.3f}$" \
+        self.label_latex = rf"{f"{self.model.label_latex}, " if label_with_model else ""}$v_w={v_wall:.3f}, \alpha_n={alpha_n:.3f}$" \
             if label_latex is None else label_latex
-        self.label_unicode = f"{self.model.label_unicode}, v_w={v_wall:3f}, αₙ={alpha_n:.3f}" \
+        self.label_unicode = f"{f"{self.model.label_unicode}, " if label_with_model else ""}v_w={v_wall:3f}, αₙ={alpha_n:.3f}" \
             if label_unicode is None else label_unicode
 
         # -----

@@ -289,9 +289,11 @@ class Spectrum(ssm.SSMSpectrum):
             self,
             fig: Figure | None = None,
             path: str | None = None,
+            label: str | None = None,
+            legend: bool = False,
             **kwargs) -> tuple[Figure, th.AxesArr1D]:
         from pttools.analysis.plot_spectra import plot_spectra_multi_flat
-        return plot_spectra_multi_flat([self], fig, path, **kwargs)
+        return plot_spectra_multi_flat([self], fig=fig, path=path, labels=[label], legend=legend, **kwargs)
 
 
 type SpectrumArr = NDArray[Spectrum]
