@@ -1,13 +1,17 @@
 """Analysis utilities for the suppression factor"""
 
+import logging
+
 import matplotlib.pyplot as plt
 from matplotlib.tri import Triangulation
 import numpy as np
 
 from pttools.analysis.utils import create_fig_ax
-from pttools.bubble import v_chapman_jouguet_bag
+from pttools.bubble import CS0, v_chapman_jouguet_bag
 from pttools.ssm.suppression import Suppression, alpha_n_max_approx
 from pttools.ssm.suppression import alpha_n_max as alpha_n_max_func
+
+logger = logging.getLogger(__name__)
 
 
 class SuppressionPlot:
@@ -24,6 +28,7 @@ class SuppressionPlot:
             v_wall_max: float = 1,
             alpha_n_min: float = 0,
             alpha_n_max: float = 1,
+            cs: float | None = CS0,
             title: str | None = None,
             alpha_n_max_lines: bool = True,
             v_cj: bool = True,
@@ -43,6 +48,8 @@ class SuppressionPlot:
             self.line_v_walls = np.linspace(0, 1, 20, endpoint=False)
             self.ax.plot(self.line_v_walls, alpha_n_max_func(self.line_v_walls), label=r"$\alpha_{n,\text{max}}$")
             self.ax.plot(self.line_v_walls, alpha_n_max_approx(self.line_v_walls), label=r"$\alpha_{n,\text{max,approx}}$")
+        if cs is not None:
+            self.ax.axvline(x=cs, label="$c_s$", ls=":", c="k")
         if v_cj:
             alpha_ns = np.linspace(alpha_n_min, alpha_n_max, 20)
             self.ax.plot(v_chapman_jouguet_bag(alpha_ns), alpha_ns, label=r"$v_\text{CJ}$", ls="--")
@@ -55,3 +62,5 @@ class SuppressionPlot:
         self.ax.legend()
         if fig_was_none:
             self.fig.tight_layout()
+
+        logger.info("Peak of suppression: v_wall=%s, alpha_n=%s, suppression=%s", *self.sup.peak())

@@ -45,25 +45,30 @@ class Suppression:
             v_walls: th.FloatArr1D,
             alpha_ns: th.FloatArr1D,
             suppressions: th.FloatArr1D,
-            name: str | None = None):
+            name: str):
         if not v_walls.size == alpha_ns.size == suppressions.size:
             raise ValueError(
                 f"Input arrays must have the same size. Got: {v_walls.size}, {alpha_ns.size}, {suppressions.size}")
-        self.v_walls = v_walls
-        self.alpha_ns = alpha_ns
-        self.suppressions = suppressions
-        self.name = name
+        self.v_walls: th.FloatArr1D = v_walls
+        self.alpha_ns: th.FloatArr1D = alpha_ns
+        self.suppressions: th.FloatArr1D = suppressions
+        self.name: str = name
 
         self.points = (self.v_walls, self.alpha_ns)
-        self.alpha_n_min: float = np.min(self.alpha_ns)
-        self.alpha_n_max: float = np.max(self.alpha_ns)
-        self.v_wall_min: float = np.min(self.v_walls)
-        self.v_wall_max: float = np.max(self.v_walls)
+        self.alpha_n_min: float = self.alpha_ns.min()
+        self.alpha_n_max: float = self.alpha_ns.max()
+        self.v_wall_min: float = self.v_walls.min()
+        self.v_wall_max: float = self.v_walls.max()
 
     @classmethod
-    def from_file(cls, path: str, name: str | None = None) -> "Suppression":
-        data = np.load(path)
-        return Suppression(v_walls=data["vw_sim"], alpha_ns=data["alpha_sim"], suppressions=data["sup_ssm"], name=name)
+    def from_file(cls, path: str, name: str) -> "Suppression":
+        with np.load(path) as data:
+            return Suppression(
+                v_walls=data["vw_sim"],
+                alpha_ns=data["alpha_sim"],
+                suppressions=data["sup_ssm"],
+                name=name
+            )
 
     @property
     def limits_str(self) -> str:
@@ -71,13 +76,20 @@ class Suppression:
             f"{self.v_wall_min:.3f} < v_wall < {self.v_wall_max:.3f}, " \
             f"{self.alpha_n_min:.3f} < alpha_n < {self.alpha_n_max:.3f}"
 
+    def peak(self) -> tuple[float, float, float]:
+        ind = self.suppressions.argmax()
+        return self.v_walls[ind], self.alpha_ns[ind], self.suppressions[ind]
+
     def suppression(
             self,
             v_wall: th.FloatOrArr,
             alpha_n: th.FloatOrArr,
             method: SuppressionMethod = SuppressionMethod.DEFAULT,
             interpolation: th.Interpolation = "linear") -> th.FloatOrArr:
-        """Compute the suppression factor for the given points"""
+        """Interpolate the suppression factor for the given points
+
+        If given arrays, this will return a 2D grid.
+        """
         is_scalar = np.isscalar(v_wall) and np.isscalar(alpha_n)
 
         if method == SuppressionMethod.NONE:
@@ -180,5 +192,5 @@ NO_HYBRIDS_EXT = Suppression(
     name="No hybrids, extended"
 )
 WITH_HYBRIDS = Suppression.from_file(os.path.join(SUPPRESSION_FOLDER, "suppression_2_ssm.npz"), name="With hybrids")
-DEFAULT_SUPPRESSION = NO_HYBRIDS_EXT
-SUPPRESSIONS = [NO_HYBRIDS, NO_HYBRIDS_EXT, WITH_HYBRIDS]
+DEFAULT_SUPPRESSION: Suppression = NO_HYBRIDS_EXT
+SUPPRESSIONS: list[Suppression] = [NO_HYBRIDS, NO_HYBRIDS_EXT, WITH_HYBRIDS]

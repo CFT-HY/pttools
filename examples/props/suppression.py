@@ -1,6 +1,7 @@
 r"""
+Suppression factor
+==================
 Suppression factor $\Sigma({v}_\text{wall}, \alpha_n)$
-======================================================
 
 :gowling_2021:`\ ` fig. 10
 """
