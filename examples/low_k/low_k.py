@@ -108,16 +108,16 @@ def main(path: str | None = None) -> plt.Figure:
         fig, ax = plt.subplots(1, 1, figsize=(9, 5))
 
         # Pgw_exp = HR* Ht * ssm.power_gw_scaled(z, params_v)
-        # ax.plot(z, Pgw_high, color = 'blue', linestyle = '--', label = r'high-freq appox: PTtools')
-        ax.plot(z, HR * Ht * spectrum_z.pow_gw_ssm, color = 'blue', linestyle = '--', label = r'high-freq appox: PTtools')
+        # ax.plot(z, Pgw_high, color='blue', linestyle='--', label=r'high-freq appox: PTtools')
+        ax.plot(z, HR * Ht * spectrum_z.pow_gw_ssm, color='blue', linestyle='--', label=r'high-freq approx (original SSM)')
 
-        # ax.plot(z, Pgw_peak, color = 'red', linestyle = '--', label = r'Lorenzo integrator')
-        # ax.plot(z, Pgw_low, color = 'orange', linestyle = '--', label = r'low-freq approx')
-        # ax.plot(z, Pgw_int, color = 'cyan', linestyle = '--', label = r'intermediate-freq approx')
-        # ax.plot(z, Pgw_approx_2, color = 'k', linestyle = '-', label = r'full approx')
-        ax.plot(z, HR * Ht * spectrum_z.pow_gw_low, color = 'orange', linestyle = '--', label = r'low-freq approx')
-        ax.plot(z, HR * Ht * spectrum_z.pow_gw_int, color = 'cyan', linestyle = '--', label = r'intermediate-freq approx')
-        ax.plot(z, HR * Ht * spectrum_z.pow_gw, color = 'k', linestyle = '-', label = r'full approx')
+        # ax.plot(z, Pgw_peak, color='red', linestyle='--', label=r'Lorenzo integrator')
+        # ax.plot(z, Pgw_low, color='orange', linestyle='--', label=r'low-freq approx')
+        # ax.plot(z, Pgw_int, color='cyan', linestyle='--', label=r'intermediate-freq approx')
+        # ax.plot(z, Pgw_approx_2, color='k', linestyle='-', label=r'full approx')
+        ax.plot(z, HR * Ht * spectrum_z.pow_gw_low, color='orange', linestyle='--', label=r'low-freq approx')
+        ax.plot(z, HR * Ht * spectrum_z.pow_gw_int, color='cyan', linestyle='--', label=r'intermediate-freq approx')
+        ax.plot(z, HR * Ht * spectrum_z.pow_gw, color='k', linestyle='-', label=r'full approx')
         # ax.set_title(r'$\alpha = {:5.2f}, \; \xi_w = {:5.1f}, \; \eta_{{\rm end}} = {:5.3f}, \; H_*R_* = {:5.2f}, \; {{\bar U}} = {:5.3f}, \; H_*\tau_v = {:5.3f}$'.format(alpha, vw, eta_end, HR, bubble.ubarf, Ht), fontsize=font_size-1)
         ax.set_title(
             rf"$\alpha = {alpha:5.2f}, \; \xi_w = {vw:5.1f}, \; \eta_{{\rm end}} = {eta_end:5.3f}, \; "
@@ -132,6 +132,7 @@ def main(path: str | None = None) -> plt.Figure:
         ax.set_ylim(bottom=1e-19, top=1e-10)
         ax.set_xlim(left=1e-3, right=2e+2)
         # ax.legend(loc='upper left')
+        ax.set_xlabel("$z = k R_*$")
         ax.set_ylabel(r'$\mathcal{P}_{{\rm gw}}(kR_*) $', labelpad=10)
         ax.legend(loc='upper left')
         # fig.legend(bbox_to_anchor=(1., 0.5), loc='center right')
