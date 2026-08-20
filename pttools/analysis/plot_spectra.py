@@ -12,6 +12,7 @@ from pttools.analysis.utils import FigAndAxes, create_fig_ax, legend
 from pttools.ssm.spectrum import SSMSpectrum
 from pttools.omgw0 import Spectrum, omega_noise
 import pttools.type_hints as th
+from pttools.utils.formatting import as_latex
 
 F_LABEL = r"$f$ (Hz)"
 SPEC_DEN_V_TILDE_LABEL = r"$\tilde{P}_{\tilde{v}}(kR_*)$"
@@ -153,7 +154,7 @@ def plot_spectra(
         ax.plot(
             spectrum.f(),
             spectrum.omgw0(),
-            label=rf"{spectrum.label_latex[:-1]}, \text{{SNR}}={snr:.3e}$"
+            label=rf"{spectrum.label_latex.rstrip("$")}, \mathrm{{SNR}}={as_latex(snr)}$"
                 if labels is None or labels[i] is None else labels[i],
             **kwargs
         )

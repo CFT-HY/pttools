@@ -231,8 +231,6 @@ class Spectrum(ssm.SSMSpectrum):
         r"""Peak $\Omega_{\text{gw},0}
         :param g0: Degrees of freedom today for pressure $g_0$
         :param gs0: Degrees of freedom today for entropy $g_{s,0}$
-        :param sup: Suppression type
-        :param sup_method: Suppression method
         """
         omgw0 = self.omgw0(g0=g0, gs0=gs0)
         i_max = np.argmax(omgw0)

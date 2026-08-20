@@ -18,15 +18,15 @@ class BaseModel(abc.ABC):
 
     All temperatures must be in units of GeV for the frequency conversion in Spectrum to work.
     """
-    DEFAULT_LABEL_LATEX: str | None = None
-    DEFAULT_LABEL_UNICODE: str | None = None
-    DEFAULT_NAME: str | None = None
+    DEFAULT_LABEL_LATEX: str
+    DEFAULT_LABEL_UNICODE: str
+    DEFAULT_NAME: str
     # Zero temperature would break many of the equations
     DEFAULT_T_MIN: float = 1e-3
     DEFAULT_T_MAX: float = np.inf
 
     #: Whether the temperature is in proper physics units
-    TEMPERATURE_IS_PHYSICAL: bool | None = None
+    TEMPERATURE_IS_PHYSICAL: bool
 
     #: String formatting for thermodynamical quantities
     THERMO_FORMAT: str = "6e"

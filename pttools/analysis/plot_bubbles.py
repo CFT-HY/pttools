@@ -113,7 +113,7 @@ def plot_bubbles_v(
     v_bubbles_min = np.nanmin([np.nanmin(bubble.v) for bubble in bubbles])
     ax.set_ylim(
         -1 if full_range or v_bubbles_min < 0 else 0,
-        1 if full_range else (v_max if v_bubbles_max > 0 else 0)
+        1 if full_range else ((1.2 * v_bubbles_max if v_bubbles_max < 0.5 else v_max) if v_bubbles_max > 0 else 0)
     )
     return plot_bubbles_common(bubbles, fig, ax, path, full_range=full_range, legend=legend)
 

@@ -22,7 +22,9 @@ from pttools.ssm.low_k.intersection import z_cross_approx
 from pttools.ssm.ssm import ubarf2_from_a2
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 from pttools.type_hints import FloatArr, FloatArr1D
-from pttools.utils import copy_docstrings, export_json
+from pttools.utils.docstrings import copy_docstrings
+from pttools.utils.formatting import as_latex, as_unicode
+from pttools.utils.json import export_json
 
 if tp.TYPE_CHECKING:
     from pttools.analysis.utils import FigAndAxes
@@ -102,9 +104,9 @@ class SSMSpectrum:
         # Switches
         self.low_k = low_k
         # Labels
-        self.label_latex = self.bubble.label_latex[:-1] + f", r_*={self.r_star:.3f}$" \
+        self.label_latex = self.bubble.label_latex.rstrip("$") + f", r_*={as_latex(r_star)}$" \
             if label_latex is None else label_latex
-        self.label_unicode = self.bubble.label_unicode + f", r⁎={self.r_star:.3f}" \
+        self.label_unicode = self.bubble.label_unicode + f", r⁎={as_unicode(r_star)}" \
             if label_unicode is None else label_unicode
 
         # -----

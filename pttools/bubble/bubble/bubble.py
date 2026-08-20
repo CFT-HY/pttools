@@ -12,13 +12,14 @@ from pttools.bubble.bubble.base import BaseBubble, NotYetSolvedError
 from pttools.bubble.const import DEFAULT_N_XI, DEFAULT_T_END, JUNCTION_RTOL, THIN_SHELL_T_POINTS_MIN
 from pttools.bubble.fluid import sound_shell_generic
 from pttools.bubble.junction import junction_condition_deviations
-from pttools.bubble.junction_entropy import check_entropy_fluxes, entropy_flux
+from pttools.bubble.junction_entropy import check_entropy_fluxes
 from pttools.bubble.phase import Phase
 from pttools.bubble import props
 from pttools.bubble.props import find_phase
 from pttools.bubble import thermo
 from pttools.bubble.solution_type import SolutionType, validate_solution_type
 from pttools.utils.docstrings import copy_docstrings
+from pttools.utils.formatting import as_latex, as_unicode
 from pttools.utils.json import export_json
 from pttools.utils.validation import ensure_float
 if tp.TYPE_CHECKING:
@@ -167,9 +168,9 @@ class Bubble(BaseBubble):
 
         # LaTeX labels are not supported in Plotly 3D plots.
         # https://github.com/plotly/plotly.js/issues/608
-        self.label_latex = rf"{f"{self.model.label_latex}, " if label_with_model else ""}$v_w={v_wall:.3f}, \alpha_n={alpha_n:.3f}$" \
+        self.label_latex = rf"{f"{self.model.label_latex}, " if label_with_model else ""}$v_w={as_latex(v_wall)}, \alpha_n={as_latex(alpha_n)}$" \
             if label_latex is None else label_latex
-        self.label_unicode = f"{f"{self.model.label_unicode}, " if label_with_model else ""}v_w={v_wall:3f}, αₙ={alpha_n:.3f}" \
+        self.label_unicode = f"{f"{self.model.label_unicode}, " if label_with_model else ""}v_w={as_unicode(v_wall)}, αₙ={as_unicode(alpha_n)}" \
             if label_unicode is None else label_unicode
 
         # -----
