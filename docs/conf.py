@@ -205,6 +205,7 @@ extlinks: dict[str, tuple[str, str]] = {
     "giombi_2024_gr": ("https://arxiv.org/abs/2307.12080%s", "Giombi & Hindmarsh, 2024%s"),
     "barni_2026": ("https://arxiv.org/abs/2510.21439%s", "Barni et al., 2026%s"),
     "bhusal_2026": ("https://arxiv.org/abs/2603.22397%s", "Bhusal et al., 2026%s"),
+    "correia_2026": ("https://arxiv.org/abs/2505.17824", "Correia et al., 2026%s"),
     "giombi_2026": ("https://arxiv.org/abs/2504.08037%s", "Giombi et al., 2026%s"),
     # Theses
     "gowling_phd": ("https://hdl.handle.net/10779/uos.23309135.v1%s", "Gowling, 2023%s"),
