@@ -146,8 +146,9 @@ addopts = [
     "--cov-report=xml",
     "--durations=50",
     "--durations-min=1.0",
-    "--dist=loadscope",  # This ensures that tests from the same class are run on the same worker.
-    # "--dist=loadgroup",
+    # The tests that have to be run on the same worker are grouped with the "xdist_group" marker.
+    # See the "pytest_collection_modifyitems" hook in conftest.py for details.
+    "--dist=loadgroup",
     "--html=test-results/html/test-report.html",
     "--numprocesses=auto"
 ]
