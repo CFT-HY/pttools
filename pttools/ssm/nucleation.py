@@ -7,6 +7,7 @@ import numba
 import numpy as np
 
 from pttools.bubble.solution_type import SolutionType
+from pttools.speedup import vectorize
 from pttools.ssm import const
 import pttools.type_hints as th
 from pttools.type_hints import FloatArr1D, FloatOrArr
@@ -121,7 +122,7 @@ def hx[T: FloatOrArr](f: T) -> T:
     return f / (1 + f)
 
 
-@numba.vectorize([numba.float64(numba.float64)], cache=True)
+@vectorize(cache=True, nopython=True)
 def Ih_approx[T: FloatOrArr](hx: T) -> T:
     r"""Approximate $I_h(h_x)$
     $$I_h(h_x) = 1 + \frac{h_x \ln h_x}{1 - h_x}$$
