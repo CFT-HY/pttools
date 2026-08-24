@@ -25,7 +25,6 @@ class BagModel(AnalyticModel):
     Each integration corresponds to a line on the figure below (fig. 9 of :gw_pt_ssm:`\ `).
 
     .. plot:: fig/xi_v_plane.py
-    .. minigallery:: pttools.models.bag.BagModel
 
     :notes:`\ `, p. 37
     """

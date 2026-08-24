@@ -47,10 +47,7 @@ def cs2_to_float_and_label(
 
 
 class ConstCSModel(AnalyticModel):
-    r"""Constant sound speed model, aka. $\mu, \nu$ model
-
-    .. minigallery:: pttools.models.const_cs.ConstCSModel
-    """
+    r"""Constant sound speed model, aka. $\mu, \nu$ model"""
     DEFAULT_LABEL_LATEX = "Constant $c_s$ model"
     DEFAULT_LABEL_UNICODE = "Constant cₛ model"
     DEFAULT_NAME = "const_cs"

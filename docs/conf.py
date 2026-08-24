@@ -22,14 +22,16 @@ import warnings
 
 from matplotlib.animation import FFMpegWriter
 # import plotly.io as pio
+from sphinx.application import Sphinx
 from sphinx_gallery.sorting import ExplicitOrder
 
-DOCS_DIR = os.path.dirname(os.path.abspath(__file__))
-REPO_DIR = os.path.dirname(DOCS_DIR)
-EXAMPLES_DIR = os.path.join(REPO_DIR, "examples")
-TESTS_DIR = os.path.join(REPO_DIR, "tests")
+DOCS_DIR: str = os.path.dirname(os.path.abspath(__file__))
+REPO_DIR: str = os.path.dirname(DOCS_DIR)
+EXAMPLES_DIR: str = os.path.join(REPO_DIR, "examples")
+TESTS_DIR: str = os.path.join(REPO_DIR, "tests")
 sys.path.insert(0, REPO_DIR)
 
+from docs.minigallery import add_minigalleries
 from pttools.logging import setup_logging
 from pttools.utils.system import IS_GITHUB_ACTIONS, PTTOOLS_DIR
 setup_logging()
@@ -51,6 +53,11 @@ release = version
 
 
 # -- General configuration ---------------------------------------------------
+
+def setup(app: Sphinx) -> None:
+    """Set up the customisations of the PTtools documentation"""
+    app.connect("autodoc-process-docstring", add_minigalleries)
+
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -310,7 +317,7 @@ sphinx_gallery_conf = {
     # "prefer_full_module": ...
     "reference_url": {
         "pttools": None,
-        "tests": None,
+        # "tests": None,
     },
     # "run_stale_examples": True
     "show_api_usage": True,

@@ -14,12 +14,17 @@
 - JIT compile heavy computations with Numba
 
 ## General instructions
-- When working on code that has physics equations, ensure that the equations are not changed.
+- Before editing code that has physics equations, ensure that there are unit tests that verify the results of that code.
+  If there are no such unit tests yet, create them. Use the existing output of the code as a reference,
+  and also reference values from the literature, if there are any.
+- If you change any of the physics, inform the user explicitly and exactly what has been changed and why.
 
 ## Description of PTtools
 PTtools is a library for computing the gravitational wave spectra of first-order cosmological phase transitions.
-It is based on the Sound Shell Model, which is introduced in the article "Gravitational waves from first order cosmological phase transitions in the Sound Shell Model" by Hindmarsh & Hijazi (2019).
+It is based on the Sound Shell Model, which is introduced in the article
+"Gravitational waves from first order cosmological phase transitions in the Sound Shell Model" by Hindmarsh & Hijazi (2019).
 The article is available here: https://ar5iv.labs.arxiv.org/html/1909.10040
+Links to other relevant articles are in the `extlinks` dict of `./docs/conf.py`. (Remove the trailing `%s`.)
 
 Modules:
 - `analysis`: plotting and data analysis tools.
