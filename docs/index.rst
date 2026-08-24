@@ -10,7 +10,8 @@ PTtools is a Python library for calculating hydrodynamical quantities around exp
 of the new phase in an early universe phase transition,
 and the resulting gravitational wave power spectrum in the Sound Shell Model.
 
-.. plot:: fig/relativistic_combustion.py
+.. plot:: fig/solution_types.py
+.. plot:: fig/ssm_process.py
 
 Getting started
 ---------------
