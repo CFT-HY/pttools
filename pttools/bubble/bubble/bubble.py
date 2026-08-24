@@ -55,7 +55,7 @@ class Bubble(BaseBubble):
             log_success: bool = False,
             allow_invalid: bool = False,
             log_invalid: bool = True):
-        r"""Create a solution of the hydrodynamic equations, aka. a bubble
+        r"""
         :param model: The equation of state object
         :param v_wall: Wall velocity $v_\text{wall}$
         :param alpha_n: Transition strength $\alpha_n$

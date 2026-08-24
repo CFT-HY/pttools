@@ -151,6 +151,7 @@ apidoc_separate_modules = True
 #     "show-inheritance": True,
 #     "undoc-members": True,
 # }
+autoclass_content = "both"
 autodoc_preserve_defaults = True
 autodoc_typehints = "description"
 
