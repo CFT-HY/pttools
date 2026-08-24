@@ -5,6 +5,7 @@ import json
 import logging
 import os.path
 import sys
+from threading import Lock
 import typing as tp
 
 from sphinx.application import Sphinx
@@ -13,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 #: Sentinel for objects that could not be resolved
 MISSING = object()
+BACKREFERENCES_WARNING_LOCK = Lock()
 
 
 @functools.cache
@@ -28,7 +30,7 @@ def get_backreferences(path: str) -> dict[str, list]:
             backrefs = json.load(json_file)
     except (OSError, json.JSONDecodeError):
         backrefs = {}
-    if not backrefs:
+    if (not backrefs) and BACKREFERENCES_WARNING_LOCK.acquire(blocking=False):  # pylint: disable=consider-using-with
         logger.warning(
             "Sphinx-Gallery backreferences were not found at \"%s\", so no mini-galleries are created. "
             "Sphinx-Gallery collects the backreferences only from the examples that it (re)generates, "

@@ -3,10 +3,10 @@
 import faulthandler
 import logging
 import os
-import threading
+from threading import Lock
 import time
 
-logging_lock = threading.Lock()
+LOGGING_LOCK = Lock()
 
 
 class MessageFilter(logging.Filter):
@@ -33,7 +33,7 @@ def setup_logging(
         silence_spam: bool = True):
     """Configure logging to both file and console and optionally silence spam"""
     # Allow running this function only once for each process
-    if not logging_lock.acquire(blocking=False):  # pylint: disable=consider-using-with
+    if not LOGGING_LOCK.acquire(blocking=False):  # pylint: disable=consider-using-with
         return
 
     if enable_faulthandler and not faulthandler.is_enabled():
