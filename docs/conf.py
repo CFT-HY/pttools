@@ -32,7 +32,7 @@ TESTS_DIR: str = os.path.join(REPO_DIR, "tests")
 sys.path.insert(0, REPO_DIR)
 
 from docs.links import ExtLinks, arxiv_link, convert_extlinks, doi_link, hdl_link
-from docs.minigallery import add_minigalleries
+from docs.minigallery import add_minigalleries, remove_duplicate_minigalleries
 from pttools.logging import setup_logging
 from pttools.utils.system import IS_GITHUB_ACTIONS, PTTOOLS_DIR
 setup_logging()
@@ -58,6 +58,7 @@ release = version
 def setup(app: Sphinx) -> None:
     """Set up the customisations of the PTtools documentation"""
     app.connect("autodoc-process-docstring", add_minigalleries)
+    app.connect("object-description-transform", remove_duplicate_minigalleries)
 
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -192,7 +193,7 @@ EXTLINKS_STATIC: ExtLinks = {
     # Other articles
     "enqvist_1992": doi_link("10.1103/PhysRevD.45.3415", "Enqvist et al.", 1992),
     "kurki-suonio_1995": arxiv_link("hep-ph/9512202", "Kurki-Suonio & Laine", 1995),
-    "maggiore": arxiv_link("gr-qc/9909001", "Maggiore", 1999),
+    "maggiore_1999": arxiv_link("gr-qc/9909001", "Maggiore", 1999),
     "espinosa_2010": arxiv_link("1004.4187", "Espinosa"),
     "borsanyi_2016": arxiv_link("1606.07494", "Borsanyi et al."),
     "caprini_2016": arxiv_link("1512.06239", "Caprini et al.", 2016),
@@ -202,6 +203,7 @@ EXTLINKS_STATIC: ExtLinks = {
     "caprini_2020": arxiv_link("1910.13125", "Caprini et al.", 2020),
     "giese_2020": arxiv_link("2004.06995", "Giese et al."),
     "giese_2021": arxiv_link("2010.09744", "Giese et al.", 2021),
+    "gowling_2021": arxiv_link("2106.05984", "Gowling & Hindmarsh"),
     "ajmi_2022": arxiv_link("2205.04097", "Ajmi & Hindmarsh"),
     "cutting_2022": arxiv_link("2204.03396", "Cutting, Vilhonen & Weir"),
     "ai_2023": arxiv_link("2303.10171", "Ai et al."),
@@ -294,7 +296,7 @@ linkcheck_workers = 10
 # pio.renderers.default = "sphinx_gallery"
 # pio.renderers.default = "sphinx_gallery_png"
 
-# show_memory = GITHUB_ACTIONS
+# show_memory = IS_GITHUB_ACTIONS
 show_memory = True
 
 sphinx_gallery_conf = {
@@ -316,10 +318,17 @@ sphinx_gallery_conf = {
     # This has to be set in order to avoid a warning when disabling it with a command line option.
     # https://sphinx-gallery.github.io/stable/configuration.html#building-without-executing-examples
     "plot_gallery": "True",
-    # "prefer_full_module": ...
+    # By default, Sphinx-Gallery refers to the objects by the shortest name with which they are accessible,
+    # e.g. "pttools.models.BagModel", but Sphinx documents them by the module in which they are defined,
+    # e.g. "pttools.models.bag.BagModel". Without this, the hyperlinks from the examples to the API documentation
+    # cannot be resolved, and the backreferences, that the mini-galleries are based on, are stored under names
+    # that don't correspond to the documented objects.
+    "prefer_full_module": {r"^pttools\."},
     "reference_url": {
+        "docs": None,
+        "examples": None,
         "pttools": None,
-        # "tests": None,
+        "tests": None,
     },
     # "run_stale_examples": True
     "show_api_usage": True,

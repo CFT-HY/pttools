@@ -6,6 +6,7 @@ https://sphinx-gallery.github.io/stable/configuration.html#adding-mini-galleries
 import re
 import typing as tp
 
+from docutils import nodes
 from sphinx.application import Sphinx
 
 from docs.utils import backreference_names
@@ -17,6 +18,8 @@ MINIGALLERY_TYPES: frozenset[str] = frozenset({
 })
 #: Regex for finding minigallery directives that have been added to a docstring manually
 MINIGALLERY_REGEX: re.Pattern[str] = re.compile(r"^\s*\.\.\s+minigallery::(.*)$")
+#: CSS class with which the automatically added mini-galleries are marked
+MINIGALLERY_CLASS: str = "sphx-glr-minigallery-auto"
 
 
 def add_minigalleries(  # pylint: disable=too-many-positional-arguments, unused-argument
@@ -39,10 +42,32 @@ def add_minigalleries(  # pylint: disable=too-many-positional-arguments, unused-
             if new_names:
                 lines[i] = f"{line.rstrip()} {' '.join(new_names)}"
             return
+    # The mini-gallery is wrapped in a container so that the duplicates,
+    # which are created when a class has both a class and an __init__ docstring, can be removed later.
     lines += [
         "",
-        f".. rubric:: Examples using ``{name}``",
+        f".. container:: {MINIGALLERY_CLASS}",
         "",
-        f".. minigallery:: {' '.join(names)}",
+        f"   .. rubric:: Examples using ``{name}``",
+        "",
+        f"   .. minigallery:: {' '.join(names)}",
         ""
     ]
+
+
+def remove_duplicate_minigalleries(  # pylint: disable=unused-argument
+        app: Sphinx, domain: str, objtype: str, contentnode: nodes.Element) -> None:
+    """Remove all but the last of the automatic mini-galleries of an object.
+
+    Autodoc processes the class and __init__ docstrings of a class separately when
+    autoclass_content is "both", which would result in two mini-galleries.
+    Keeping the last one places the mini-gallery after the parameter list.
+    Only the direct children are inspected, so that the mini-galleries of
+    the methods and attributes of a class are not affected.
+    """
+    galleries = [
+        child for child in contentnode.children
+        if isinstance(child, nodes.container) and MINIGALLERY_CLASS in child["classes"]
+    ]
+    for gallery in galleries[:-1]:
+        contentnode.remove(gallery)

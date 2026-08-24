@@ -23,5 +23,6 @@ setuptools == 83.0.0
 sympy == 1.14.0
 twine == 6.2.0
 types-defusedxml == 0.7.0.20260504
+types-docutils == 0.22.3.20260724
 types-psutil == 7.2.2.20260518
 yappi == 1.7.6
