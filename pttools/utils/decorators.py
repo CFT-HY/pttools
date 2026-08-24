@@ -15,3 +15,15 @@ def conditional_decorator[T: Callable](dec: T, condition: bool, **kwargs) -> T:
             return functools.wraps(func)(dec(func))
         return func
     return decorator
+
+
+def for_all_methods(decorator):
+    """Apply a decorator to all methods of a class
+    https://stackoverflow.com/a/6307868
+    """
+    def decorate(cls):
+        for attr in cls.__dict__:  # there's probably a better way to do this
+            if callable(getattr(cls, attr)):
+                setattr(cls, attr, decorator(getattr(cls, attr)))
+        return cls
+    return decorate
