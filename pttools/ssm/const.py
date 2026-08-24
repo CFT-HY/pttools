@@ -7,6 +7,7 @@ import numpy as np
 from pttools import bubble
 import pttools.type_hints as th
 
+#: Number of points (in old bag code)
 NptType = th.IntArr1D | tuple[int, int, int]
 
 # -----
@@ -43,6 +44,7 @@ This should be at least as large as the default number of GW frequencies.
 From :gw_pt_ssm:`\ ` p. 20
 """
 
+#: Default number of points (in old bag code)
 DEFAULT_N_PT: NptType = (DEFAULT_N_XI_SSM, DEFAULT_N_T, DEFAULT_N_Z_LOOKUP)
 
 #: Default nucleation parameters

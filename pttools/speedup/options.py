@@ -8,6 +8,7 @@ from pttools.utils import system
 
 logger = logging.getLogger(__name__)
 
+#: Default maximum number of parallel worker processes
 MAX_WORKERS_DEFAULT: int
 if system.AVAILABLE_CPU_CORES is None:
     MAX_WORKERS_DEFAULT = 1

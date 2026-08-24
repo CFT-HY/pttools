@@ -12,22 +12,37 @@ try:
 except ModuleNotFoundError:
     psutil = None
 
+#: The number of available CPU cores
 AVAILABLE_CPU_CORES: int | None
+#: Whether the system provides information on which CPU cores are available for this process
 CPU_AFFINITY: bool = False
+#: Whether running on the CFT Big Machine
 IS_CFT_BIG_MACHINE: bool = platform.node() == "dx2-528-26839.ad.helsinki.fi"
+#: Whether running on GitHub Actions
 IS_GITHUB_ACTIONS: bool = "GITHUB_ACTIONS" in os.environ
+#: Whether running on Linux
 IS_LINUX: bool = sys.platform.startswith('linux')
+#: Whether running on macOS
 IS_OSX: bool = sys.platform.startswith('darwin')
+#: Whether running on Windows
 IS_WINDOWS: bool = sys.platform.startswith('win32')
+#: Whether running on the Read the Docs builder
 IS_READ_THE_DOCS: bool = "READTHEDOCS_VIRTUALENV_PATH" in os.environ
+#: PTtools installation directory
 PTTOOLS_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+#: The method used by `multiprocessing` to start parallel processes
 PROCESS_START_METHOD: str = multiprocessing.get_start_method()
+#: Whether this Python installation supports free threading
 SUPPORTS_FREETHREADING: bool = bool(sysconfig.get_config_var("Py_GIL_DISABLED"))
+#: Whether this Python installation supports :py:class:`multiprocessing.InterpreterPoolExecutor`
 SUPPORTS_INTERPRETER_POOL: bool = hasattr(multiprocessing, "InterpreterPoolExecutor")
+#: Uname information of the current platform
 UNAME: platform.uname_result = platform.uname()
 
 # Constants determined by other constants
+#: Whether parallel processes are started by forking
 FORKING: bool = PROCESS_START_METHOD == "fork"
+#: Whether PTtools is installed as a pip package
 IS_PIP_PACKAGE: bool = os.path.basename(os.path.dirname(PTTOOLS_DIR)) == "site-packages"
 
 # This is the same implementation as in Numba.

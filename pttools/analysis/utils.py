@@ -14,10 +14,15 @@ from pttools.bubble.phase import Phase
 from pttools.models.base import BaseModel
 from pttools.utils.system import IS_GITHUB_ACTIONS
 
+#: A4 paper size in inches
 A4_PAPER_SIZE: tuple[float, float] = (11.7, 8.3)
+#: A3 paper size in inches
 A3_PAPER_SIZE: tuple[float, float] = (16.5, 11.7)
+#: Whether to enable drawing of the plots
 ENABLE_DRAWING: bool = not IS_GITHUB_ACTIONS
+#: File formats in which to save the figures by default
 FIG_FORMATS = ("eps", "pdf", "png", "svg")
+
 type FigAndAxes = tuple[Figure, Axes]
 
 

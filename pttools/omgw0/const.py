@@ -4,18 +4,16 @@ import math
 
 #: Speed of light (m/s)
 c: float = 299792458.
-
 #: Elementary charge $e$ in C
 e: float = 1.602176634e-19
-
 #: 1 eV in J
 EV_IN_J: float = e
-
 #: 1 GeV in J
 GEV_IN_J: float = 1e9 * EV_IN_J
-
+#: Default $g_*$
 DEFAULT_G_STAR: float = 100.
-DEFAULT_T_STAR: float = 100.  # GeV
+#: Default $T_*$ in GeV
+DEFAULT_T_STAR: float = 100.
 
 
 F_GW0: float = 3.57e-5
@@ -69,7 +67,9 @@ H0_HZ: float = H0_KM_S_MPC * 1e3 / (PC_TO_M * 1e6)
 #: LISA arm length (m)
 LISA_ARM_LENGTH: float = 2.5e9
 
+#: Number of seconds in a day
 DAY_IN_SECONDS: float = 24 * 60 * 60
+# Number of seconds in a year
 YEAR_IN_SECONDS: float = 365.2425 * DAY_IN_SECONDS
 #: LISA observation time (s)
 LISA_OBS_TIME: float = 4 * 0.75 * YEAR_IN_SECONDS

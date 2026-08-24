@@ -9,6 +9,7 @@ import pttools.analysis.utils as plot_utils
 from pttools.analysis.utils import FIG_FORMATS
 from pttools.utils.docstrings import copy_docstrings
 
+#: Figures directory for the examples
 FIG_DIR: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fig")
 os.makedirs(FIG_DIR, exist_ok=True)
 
