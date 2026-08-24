@@ -24,6 +24,7 @@ class ThermoModel(BaseModel, abc.ABC):
     GEFF_DATA_LOG_TEMP: th.FloatArr1D
     #: Container for the temperatures of $g_\text{eff}$ data
     GEFF_DATA_TEMP: th.FloatArr1D
+    TEMPERATURE_IS_PHYSICAL = True
 
     def __init__(
             self,

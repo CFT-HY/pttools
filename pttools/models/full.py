@@ -28,6 +28,8 @@ class FullModel(Model):
     """
     DEFAULT_LABEL = "Full model"
     DEFAULT_NAME = "full"
+    # Todo: Configure this automatically from the ThermoModel
+    TEMPERATURE_IS_PHYSICAL = None
 
     def __init__(
             self,
