@@ -31,12 +31,15 @@ EXAMPLES_DIR: str = os.path.join(REPO_DIR, "examples")
 TESTS_DIR: str = os.path.join(REPO_DIR, "tests")
 sys.path.insert(0, REPO_DIR)
 
+from docs.backreferences import patch_sphinx_gallery
+from docs.utils import DOC_MODULES
 from docs.links import ExtLinks, arxiv_link, convert_extlinks, doi_link, hdl_link
 from docs.minigallery import add_minigalleries, remove_duplicate_minigalleries
 from pttools.logging import setup_logging
 from pttools.utils.system import IS_GITHUB_ACTIONS, PTTOOLS_DIR
 setup_logging()
 logger = logging.getLogger(__name__)
+patch_sphinx_gallery()
 
 # Create a directory for static files to avoid a warning when building.
 os.makedirs(os.path.join(DOCS_DIR, "_static"), exist_ok=True)
@@ -135,10 +138,24 @@ apidoc_modules = [
         "path": PTTOOLS_DIR,
         "destination": "gen_modules/pttools"
     },
+    # {
+    #     # Only the utilities are documented, as the examples themselves are in the gallery,
+    #     # and importing them for autodoc would run them a second time.
+    #     "path": EXAMPLES_DIR,
+    #     "destination": "gen_modules/examples",
+    #     "exclude_patterns": [os.path.join(EXAMPLES_DIR, "*", "*")]
+    # },
     {
         "path": TESTS_DIR,
         "destination": "gen_modules/tests"
-    }
+    },
+    # {
+    #     # This file is excluded, since importing it for autodoc would run it a second time.
+    #     # The figure scripts are excluded, as they are already included with the plot directive.
+    #     "path": DOCS_DIR,
+    #     "destination": "gen_modules/docs",
+    #     "exclude_patterns": [os.path.join(DOCS_DIR, "conf.py"), os.path.join(DOCS_DIR, "fig")]
+    # }
 ]
 # apidoc_max_depth = 6
 apidoc_module_first = True
@@ -302,7 +319,7 @@ show_memory = True
 sphinx_gallery_conf = {
     "backreferences_dir": "gen_modules/backreferences",
     "compress_images": ("images", "thumbnails"),
-    "doc_module": ("pttools", ),
+    "doc_module": DOC_MODULES,
     "examples_dirs": EXAMPLES_DIR,
     "filename_pattern": ".*",
     "gallery_dirs": "auto_examples",
@@ -323,13 +340,9 @@ sphinx_gallery_conf = {
     # e.g. "pttools.models.bag.BagModel". Without this, the hyperlinks from the examples to the API documentation
     # cannot be resolved, and the backreferences, that the mini-galleries are based on, are stored under names
     # that don't correspond to the documented objects.
-    "prefer_full_module": {r"^pttools\."},
-    "reference_url": {
-        "docs": None,
-        "examples": None,
-        "pttools": None,
-        "tests": None,
-    },
+    "prefer_full_module": {rf"^{module}\." for module in DOC_MODULES},
+    # The None values mean that the objects are documented in this documentation instead of an external one.
+    "reference_url": {module: None for module in DOC_MODULES},
     # "run_stale_examples": True
     "show_api_usage": True,
     "show_memory": show_memory,

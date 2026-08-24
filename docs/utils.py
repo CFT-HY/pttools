@@ -12,6 +12,9 @@ from sphinx.application import Sphinx
 
 logger = logging.getLogger(__name__)
 
+#: The packages of this repository, which are documented in this documentation.
+#: Sphinx-Gallery creates hyperlinks from the examples and mini-galleries for the objects of these packages.
+DOC_MODULES: tuple[str, ...] = ("docs", "examples", "pttools", "tests")
 #: Sentinel for objects that could not be resolved
 MISSING = object()
 BACKREFERENCES_WARNING_LOCK = Lock()

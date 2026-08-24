@@ -129,7 +129,7 @@ files = [
 ]
 
 [[tool.mypy.overrides]]
-module = ["h5py.*", "numba.*", "numbalsoda.*", "plotly.*"]
+module = ["h5py.*", "numba.*", "numbalsoda.*", "plotly.*", "sphinx_gallery.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
