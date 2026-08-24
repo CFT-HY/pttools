@@ -138,24 +138,24 @@ apidoc_modules = [
         "path": PTTOOLS_DIR,
         "destination": "gen_modules/pttools"
     },
-    # {
-    #     # Only the utilities are documented, as the examples themselves are in the gallery,
-    #     # and importing them for autodoc would run them a second time.
-    #     "path": EXAMPLES_DIR,
-    #     "destination": "gen_modules/examples",
-    #     "exclude_patterns": [os.path.join(EXAMPLES_DIR, "*", "*")]
-    # },
+    {
+        # Only the utilities are documented, as the examples themselves are in the gallery,
+        # and importing them for autodoc would run them a second time.
+        "path": EXAMPLES_DIR,
+        "destination": "gen_modules/examples",
+        "exclude_patterns": [os.path.join(EXAMPLES_DIR, "*", "*")]
+    },
     {
         "path": TESTS_DIR,
         "destination": "gen_modules/tests"
     },
-    # {
-    #     # This file is excluded, since importing it for autodoc would run it a second time.
-    #     # The figure scripts are excluded, as they are already included with the plot directive.
-    #     "path": DOCS_DIR,
-    #     "destination": "gen_modules/docs",
-    #     "exclude_patterns": [os.path.join(DOCS_DIR, "conf.py"), os.path.join(DOCS_DIR, "fig")]
-    # }
+    {
+        # This file is excluded, since importing it for autodoc would run it a second time.
+        # The figure scripts are excluded, as they are already included with the plot directive.
+        "path": DOCS_DIR,
+        "destination": "gen_modules/docs",
+        "exclude_patterns": [os.path.join(DOCS_DIR, "conf.py"), os.path.join(DOCS_DIR, "fig")]
+    }
 ]
 # apidoc_max_depth = 6
 apidoc_module_first = True
