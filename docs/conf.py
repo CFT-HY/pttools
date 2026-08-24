@@ -31,6 +31,7 @@ EXAMPLES_DIR: str = os.path.join(REPO_DIR, "examples")
 TESTS_DIR: str = os.path.join(REPO_DIR, "tests")
 sys.path.insert(0, REPO_DIR)
 
+from docs.links import ExtLinks, arxiv_link, convert_extlinks, doi_link, hdl_link
 from docs.minigallery import add_minigalleries
 from pttools.logging import setup_logging
 from pttools.utils.system import IS_GITHUB_ACTIONS, PTTOOLS_DIR
@@ -178,59 +179,61 @@ autodoc_typehints = "description"
 
 # Sphinx 6.0 will require base URLs and caption strings to contain exactly one "%s",
 # and all other "%" need to be escaped as "%%".
-extlinks: dict[str, tuple[str, str]] = {
-    # The articles are ordered by publication year
+HINDMARSH_ET_AL: str = "Hindmarsh et al."
+EXTLINKS_STATIC: ExtLinks = {
     # Hindmarsh articles
-    "hindmarsh_2014": ("https://arxiv.org/abs/1304.2433%s", "Hindmarsh et al., 2014%s"),
-    "hindmarsh_2015": ("https://arxiv.org/abs/1504.03291%s", "Hindmarsh et al., 2015%s"),
-    "hindmarsh_2017": ("https://arxiv.org/abs/1704.05871%s", "Hindmarsh et al., 2017%s"),
-    "ssm": ("https://arxiv.org/abs/1608.04735%s", "Hindmarsh et al., 2018%s"),
-    "gw_pt_ssm": ("https://arxiv.org/abs/1909.10040%s", "Hindmarsh et al., 2019%s"),
-    "notes": ("https://arxiv.org/abs/2008.09136%s", "Hindmarsh et al., 2021%s"),
+    "hindmarsh_2014": arxiv_link("1304.2433", HINDMARSH_ET_AL),
+    "hindmarsh_2015": arxiv_link("1504.03291", HINDMARSH_ET_AL),
+    "hindmarsh_2017": arxiv_link("1704.05871", HINDMARSH_ET_AL),
+    "ssm": arxiv_link("1608.04735", HINDMARSH_ET_AL),
+    "gw_pt_ssm": arxiv_link("1909.10040", HINDMARSH_ET_AL),
+    "notes": arxiv_link("2008.09136", HINDMARSH_ET_AL),
     # Other articles
-    "enqvist_1992": ("https://doi.org/10.1103/PhysRevD.45.3415%s", "Enqvist et al., 1992%s"),
-    "kurki-suonio_1995": ("https://arxiv.org/abs/hep-ph/9512202%s", "Kurki-Suonio & Laine, 1995%s"),
-    "maggiore_1999": ("https://arxiv.org/abs/gr-qc/9909001%s", "Maggiore, 1999%s"),
-    "espinosa_2010": ("https://arxiv.org/abs/1004.4187%s", "Espinosa et al., 2010%s"),
-    "borsanyi_2016": ("https://arxiv.org/abs/1606.07494%s", "Borsanyi et al., 2016%s"),
-    "caprini_2016": ("https://arxiv.org/abs/1512.06239%s", "Caprini et al., 2016%s"),
-    "cornish_2017": ("https://arxiv.org/abs/1703.09858%s", "Cornish & Robson, 2017%s"),
-    "planck_2018": ("https://arxiv.org/abs/1807.06209%s", "Planck 2018 results%s"),
-    "smith_2019": ("https://arxiv.org/abs/1908.00546%s", "Smith & Caldwell, 2019%s"),
-    "caprini_2020": ("https://arxiv.org/abs/1910.13125%s", "Caprini et al., 2020%s"),
-    "giese_2020": ("https://arxiv.org/abs/2004.06995%s", "Giese et al., 2020%s"),
-    "giese_2021": ("https://arxiv.org/abs/2010.09744%s", "Giese et al., 2021%s"),
-    "gowling_2021": ("https://arxiv.org/abs/2106.05984%s", "Gowling & Hindmarsh, 2021%s"),
-    "ajmi_2022": ("https://arxiv.org/abs/2205.04097%s", "Ajmi & Hindmarsh, 2022%s"),
-    "cutting_2022": ("https://arxiv.org/abs/2204.03396%s", "Cutting, Vilhonen & Weir, 2022%s"),
-    "ai_2023": ("https://arxiv.org/abs/2303.10171%s", "Ai et al., 2023%s"),
-    "gowling_2023": ("https://arxiv.org/abs/2209.13551%s", "Gowling et al., 2023%s"),
-    "lewicki_2023": ("https://arxiv.org/abs/2305.04924%s", "Lewicki et al., 2023%s"),
-    "barni_2024": ("https://arxiv.org/abs/2406.01596%s", "Barni et al., 2024%s"),
-    "croon_2024": ("https://arxiv.org/abs/2410.21509%s", "Croon & Weir, 2024%s"),
-    "giombi_2024_cs": ("https://arxiv.org/abs/2409.01426%s", "Giombi et al., 2024%s"),
-    "giombi_2024_gr": ("https://arxiv.org/abs/2307.12080%s", "Giombi & Hindmarsh, 2024%s"),
-    "barni_2026": ("https://arxiv.org/abs/2510.21439%s", "Barni et al., 2026%s"),
-    "bhusal_2026": ("https://arxiv.org/abs/2603.22397%s", "Bhusal et al., 2026%s"),
-    "correia_2026": ("https://arxiv.org/abs/2505.17824", "Correia et al., 2026%s"),
-    "giombi_2026": ("https://arxiv.org/abs/2504.08037%s", "Giombi et al., 2026%s"),
+    "enqvist_1992": doi_link("10.1103/PhysRevD.45.3415", "Enqvist et al.", 1992),
+    "kurki-suonio_1995": arxiv_link("hep-ph/9512202", "Kurki-Suonio & Laine", 1995),
+    "maggiore": arxiv_link("gr-qc/9909001", "Maggiore", 1999),
+    "espinosa_2010": arxiv_link("1004.4187", "Espinosa"),
+    "borsanyi_2016": arxiv_link("1606.07494", "Borsanyi et al."),
+    "caprini_2016": arxiv_link("1512.06239", "Caprini et al.", 2016),
+    "cornish_2017": arxiv_link("1703.09858", "Cornish & Robson"),
+    "planck_2018": arxiv_link("1807.06209", "Planck 2018 results"),
+    "smith_2019": arxiv_link("1908.00546", "Smith & Caldwell"),
+    "caprini_2020": arxiv_link("1910.13125", "Caprini et al.", 2020),
+    "giese_2020": arxiv_link("2004.06995", "Giese et al."),
+    "giese_2021": arxiv_link("2010.09744", "Giese et al.", 2021),
+    "ajmi_2022": arxiv_link("2205.04097", "Ajmi & Hindmarsh"),
+    "cutting_2022": arxiv_link("2204.03396", "Cutting, Vilhonen & Weir"),
+    "ai_2023": arxiv_link("2303.10171", "Ai et al."),
+    "gowling_2023": arxiv_link("2209.13551", "Gowling et al.", 2023),
+    "lewicki_2023": arxiv_link("2305.04924", "Lewicki et al."),
+    "barni_2024": arxiv_link("2406.01596", "Barni et al."),
+    "croon_2024": arxiv_link("2410.21509", "Croon & Weir"),
+    "giombi_2024_cs": arxiv_link("2409.01426", "Giombi et al."),
+    "giombi_2024_gr": arxiv_link("2307.12080", "Giombi & Hindmarsh", 2024),
+    "barni_2026": arxiv_link("2510.21439", "Barni et al.", 2026),
+    "bhusal_2026": arxiv_link("2603.22397", "Bhusal et al."),
+    "correia_2026": arxiv_link("2505.17824", "Correia et al.", 2026),
+    "giombi_2026": arxiv_link("2504.08037", "Giombi et al.", 2026),
     # Theses
-    "gowling_phd": ("https://hdl.handle.net/10779/uos.23309135.v1%s", "Gowling, 2023%s"),
-    "hakkinen_msc": ("https://hdl.handle.net/10138/576963%s", "Häkkinen, 2024%s"),
-    "maki_msc": ("https://arxiv.org/abs/2511.20436%s", "Mäki, 2025%s"),
+    "gowling_phd": hdl_link("10779/uos.23309135.v1", "Gowling", 2023),
+    "hakkinen_msc": hdl_link("10138/576963", "Häkkinen", 2024),
+    "maki_msc": arxiv_link("2511.20436", "Mäki", 2025),
+    # Other
+    "lisa_conventions": ("https://gitlab.esa.int/lisa-sgs/sandbox/conventions-document", "LISA DDPC Conventions document"),
+    "lisa_sci_req": ("https://www.cosmos.esa.int/web/lisa/documents", "LISA Science Requirements Document"),
+    "rel_hydro_book": doi_link("10.1093/acprof:oso/9780198528906.001.0001", "Relativistic hydrodynamics: Rezzolla, Zanotti", 2013)
+}
+extlinks: ExtLinks = {
+    **convert_extlinks(EXTLINKS_STATIC),
     # Other
     "aof_grant": (
-        "https://akareport.aka.fi/ibi_apps/WFServlet?IBIF_ex=x_hakkuvaus2&CLICKED_ON=&HAKNRO1=%s&UILANG=en&TULOSTE=HTML",
+        "https://akareport.aka.fi/ibi_apps/WFServlet?IBIF_ex=x_hakkuvaus2&CLICKED_ON=&UILANG=en&TULOSTE=HTML&HAKNRO1=%s",
         "Academy of Finland grant %s"
     ),
     "issue": ("https://github.com/CFT-HY/pttools/issues/%s", "issue %s"),
-    "lisa_conventions": ("https://gitlab.esa.int/lisa-sgs/sandbox/conventions-document%s", "LISA DDPC Conventions document%s"),
-    "lisa_sci_req": ("https://www.cosmos.esa.int/web/lisa/documents%s", "LISA Science Requirements Document%s"),
-    "rel_hydro_book": (
-        "https://doi.org/10.1093/acprof:oso/9780198528906.001.0001%s",
-        "Relativistic hydrodynamics, Rezzolla, Zanotti, 2013%s"),
     "ssm_repo": ("https://bitbucket.org/hindmars/sound-shell-model/src/master/%s", "sound-shell-model/%s")
 }
+extlinks_detect_hardcoded_links: bool = True
 intersphinx_mapping: dict[str, tuple[str, str | None]] = {
     "cobaya": ("https://cobaya.readthedocs.io/en/latest/", None),
     "h5py": ("https://docs.h5py.org/en/stable/", None),
@@ -270,8 +273,6 @@ linkcheck_ignore: list[str] = [
     "https://bitbucket.org/hindmars/sound-shell-model/*",
     # This link redirects to a site that does not allow crawlers
     "https://doi.org/10.1093/acprof:oso/9780198528906.001.0001",
-    # The project repository will return 404 without authentication until it's published.
-    "https://github.com/CFT-HY/pttools/*",
     # The anchors are valid but not detected by Sphinx.
     "https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/*",
     r"https://scicomp\.stackexchange\.com/*",
