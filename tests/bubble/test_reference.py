@@ -4,14 +4,14 @@ import os
 import unittest
 
 from pttools.bubble import fluid_reference
-from pttools.utils.system import IS_GITHUB_ACTIONS, IS_WINDOWS
 from tests.utils.const import TEST_DATA_PATH
+from tests.utils.mark import skip_slow
 
 
 class ReferenceTest(unittest.TestCase):
     """Test the generation of the fluid reference"""
 
-    @unittest.skipIf(IS_GITHUB_ACTIONS and IS_WINDOWS, reason="GitHub Actions Windows runners are slow")
+    @skip_slow
     def test_generation(self):
         path = os.path.join(TEST_DATA_PATH, f"fluid_reference_test.hdf5")
         if os.path.exists(path):

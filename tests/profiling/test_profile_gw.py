@@ -11,6 +11,7 @@ from tests.profiling.test_profile import TestProfile
 from tests.profiling import utils_cprofile
 from tests.profiling import utils_pyinstrument
 from tests.profiling import utils_yappi
+from tests.utils.mark import skip_slow
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +27,13 @@ class TestProfileGW(TestProfile):
         ssm.power_gw_bag(cls.z, cls.params)
 
     @classmethod
+    @skip_slow
     def test_profile_gw_cprofile(cls):
         with utils_cprofile.CProfiler(cls.name):
             ssm.power_gw_bag(cls.z, cls.params)
 
     @classmethod
+    @skip_slow
     @unittest.skipIf(
         speedup.NUMBA_SEGFAULTING_PROFILERS,
         "Pyinstrument may segfault with old Numba versions")
@@ -46,6 +49,7 @@ class TestProfileGW(TestProfile):
                 raise e
 
     @classmethod
+    @skip_slow
     def test_profile_gw_yappi(cls):
         with utils_yappi.YappiProfiler(cls.name):
             ssm.power_gw_bag(cls.z, cls.params)

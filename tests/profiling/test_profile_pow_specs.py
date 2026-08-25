@@ -12,6 +12,7 @@ from tests.profiling.test_profile import TestProfile
 from tests.profiling import utils_cprofile
 from tests.profiling import utils_pyinstrument
 from tests.profiling import utils_yappi
+from tests.utils.mark import skip_slow
 
 logger = logging.getLogger(__name__)
 
@@ -35,11 +36,13 @@ class TestProfilePowSpecs(TestProfile):
         pow_specs()
 
     @classmethod
+    @skip_slow
     def test_profile_pow_specs_cprofile(cls):
         with utils_cprofile.CProfiler(cls.name):
             pow_specs()
 
     @classmethod
+    @skip_slow
     @unittest.skipIf(
         NUMBA_SEGFAULTING_PROFILERS,
         "Pyinstrument may segfault with old Numba versions")
@@ -53,6 +56,7 @@ class TestProfilePowSpecs(TestProfile):
                 raise e
 
     @classmethod
+    @skip_slow
     def test_profile_pow_specs_yappi(cls):
         with utils_yappi.YappiProfiler(cls.name):
             pow_specs()
