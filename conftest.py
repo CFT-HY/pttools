@@ -6,6 +6,7 @@ import logging
 import pytest
 
 from pttools.logging import setup_logging
+from pttools.utils.system import AVAILABLE_CPU_CORES
 
 # if tp.TYPE_CHECKING:
 #     from _pytest.fixtures import SubRequest
@@ -65,6 +66,16 @@ def xdist_group_name(item: pytest.Item, cls: type) -> str:
         # The group name is separated from the node ID with "@", and must therefore not contain it.
         return parent.nodeid.replace("@", "_")
     return f"{cls.__module__}.{cls.__qualname__}".replace("@", "_")
+
+
+def pytest_xdist_auto_num_workers() -> int | None:
+    """Number of pytest-xdist workers to use for ``--numprocesses=auto``
+
+    :return: Number of workers (None = auto)
+    """
+    if AVAILABLE_CPU_CORES >= 8:
+        return 8
+    return None
 
 
 def pytest_configure(config: pytest.Config) -> None:
