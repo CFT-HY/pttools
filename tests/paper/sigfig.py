@@ -139,7 +139,7 @@ def format_table(
         if len(labels) != n_rows:
             raise ValueError("length of labels should be %d" % n_rows)
 
-    str_cols = []
+    str_cols: list[list[str]] = []
     for col, error in zip(cols, errors):
         str_cols.append([])
         str_cols.append([])

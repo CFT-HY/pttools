@@ -5,7 +5,6 @@ import numpy as np
 
 from pttools.analysis import utils
 from pttools.bubble import const, fluid_bag, relativity, SolutionType
-import pttools.type_hints as th
 
 
 def plot_fluid_shell_bag(
@@ -16,7 +15,7 @@ def plot_fluid_shell_bag(
         low_v_approx: bool = False,
         high_v_approx: bool = False,
         draw: bool | None = None) \
-        -> tuple[plt.Figure, dict[str, th.FloatOrArr1D]]:
+        -> tuple[plt.Figure, fluid_bag.SoundShellDict]:
     r"""
     Calls :func:`pttools.bubble.fluid.fluid_shell` and plots resulting $v, w$ against $\xi$.
     Also plots:

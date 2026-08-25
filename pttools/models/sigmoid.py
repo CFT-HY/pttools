@@ -7,6 +7,7 @@ import numba
 import numpy as np
 
 from pttools import type_hints as th
+from pttools.type_hints import FloatOrArr
 from pttools.models.thermo import ThermoModel
 
 
@@ -60,14 +61,14 @@ class SigmoidModel(ThermoModel):
 
         raise NotImplementedError
 
-    def dge_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        pass
+    def dge_dT[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+        raise NotImplementedError
 
-    def dgs_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        pass
+    def dgs_dT[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+        raise NotImplementedError
 
-    def ge(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        pass
+    def ge[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+        raise NotImplementedError
 
-    def gs(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        pass
+    def gs[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+        raise NotImplementedError

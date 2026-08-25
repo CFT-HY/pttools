@@ -156,7 +156,7 @@ class TestPlane(unittest.TestCase):
             "rtol_mid_diff": 0,
             "rtol_high_diff": 0
         }
-        rel_tols = {}
+        rel_tols: dict[str, float] = {}
 
         if PLOT and ax:
             for name, axs, tols in zip(

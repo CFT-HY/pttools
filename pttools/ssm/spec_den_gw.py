@@ -44,7 +44,7 @@ def gen_lookup(
 
 
 @numba.njit
-def limits_from_lookup[T: FloatOrArr](x_lookup: FloatArr1D, cs: T = CS0) -> tuple[T, T]:
+def limits_from_lookup[T: FloatOrArr](x_lookup: FloatArr1D, cs: T = CS0) -> tuple[T, T]:  # type: ignore[assignment]
     r"""Limits of x from a lookup
     $$y_\pm = 2 x_{\pm} \frac{c_s}{1 \pm c_s}$$
     The inverse of :py:func:lookup_limits: from :gw_pt_ssm:`\ ` p. 12

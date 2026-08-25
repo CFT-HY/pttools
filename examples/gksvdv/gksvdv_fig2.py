@@ -84,7 +84,7 @@ def create_figure(
                     "Could not produce bubbles with alpha_n=%s for %s",
                     alpha_n, model.label_unicode)
                 continue
-            kwargs = {}
+            kwargs: dict[str, tp.Any] = {}
             # if ls == "-":
             #     kwargs["label"] = rf"$\alpha={alpha_ns[i_alpha_n]}$"
             for ax in axs:

@@ -12,6 +12,9 @@ from tests.utils import TEST_JSON_PATH
 
 class BubbleTest(unittest.TestCase):
     """Unit tests for the properties of a bubble"""
+    model: BagModel
+    bubble: Bubble
+
     @classmethod
     def setUpClass(cls) -> None:
         cls.model = BagModel(a_s=1.1, a_b=1, V_s=1)

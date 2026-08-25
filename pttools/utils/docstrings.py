@@ -5,16 +5,22 @@ import typing as tp
 
 logger = logging.getLogger(__name__)
 
-T = tp.TypeVar("T")
-P = tp.ParamSpec("P")
-WrappedDecoratorFunction: tp.TypeAlias = tp.Callable[[tp.Callable[P, T]], tp.Callable[P, T]]
-
 
 class HasDocstring(tp.Protocol):
     __doc__: str | None
 
 
-def copy_docstring_dec(source: HasDocstring, without_params: bool = False) -> WrappedDecoratorFunction[P, T]:
+class WrappedDecoratorFunction(tp.Protocol):
+    """A decorator that returns the decorated callable unchanged
+
+    This is a callback protocol instead of a type alias,
+    so that the signature of the decorated callable is preserved.
+    """
+    # pylint: disable=too-few-public-methods
+    def __call__[**P, T](self, target: tp.Callable[P, T]) -> tp.Callable[P, T]: ...
+
+
+def copy_docstring_dec(source: HasDocstring, without_params: bool = False) -> WrappedDecoratorFunction:
     """Copies the docstring of the given function to another.
 
     This function is intended to be used as a decorator.
@@ -31,7 +37,7 @@ def copy_docstring_dec(source: HasDocstring, without_params: bool = False) -> Wr
             ...
     """
 
-    def wrapped(target: tp.Callable[P, T]) -> tp.Callable[P, T]:
+    def wrapped[**P, T](target: tp.Callable[P, T]) -> tp.Callable[P, T]:
         copy_docstring(target, source, without_params=without_params)
         return target
 

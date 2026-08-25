@@ -42,7 +42,8 @@ def H_star_tau_v_old[T: FloatOrArr](H_star_tau_sh: T) -> T:
 
     :param H_star_tau_sh: $H_* \tau_\text{sh}$
     """
-    return 1 - (1 + 2 * H_star_tau_sh) ** (-0.5)
+    # typing.cast() is not used below, since Numba cannot compile it.
+    return 1 - (1 + 2 * H_star_tau_sh) ** (-0.5)  # type: ignore[return-value]
 
 
 def J(r_star: FloatOrArr, H_star_tau_v: FloatOrArr) -> FloatOrArr:

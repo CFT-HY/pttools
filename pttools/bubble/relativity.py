@@ -26,7 +26,8 @@ def gamma2[T: FloatOrArr](v: T) -> T:
     :param v: [fluid] speed $v$
     :return: $\gamma^2$
     """
-    return 1. / (1. - v**2)
+    # typing.cast() is not used below, since Numba cannot compile it.
+    return 1. / (1. - v**2)  # type: ignore[return-value]
 
 
 @numba.njit(cache=True)

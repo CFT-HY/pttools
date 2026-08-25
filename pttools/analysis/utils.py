@@ -42,7 +42,7 @@ def create_fig_ax(
             fig = plt.figure(figsize=figsize)
             ax = fig.add_subplot()
         else:
-            fig = ax.get_figure()
+            fig = tp.cast(Figure, ax.get_figure())
     elif ax is None:
         ax = fig.add_subplot()
     return fig, ax

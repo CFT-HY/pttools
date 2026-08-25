@@ -147,7 +147,7 @@ class ThermoModel(BaseModel, abc.ABC):
             raise TypeError(f"Unknown type for temp: {type(temp)}")
 
         @overload(cs2, jit_options={"nopython": True})
-        def cs2_numba(temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArrNumba:
+        def cs2_numba(temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.NumbaFunc:
             if isinstance(temp, numba.types.Float):
                 return cs2_scalar_temp
             if isinstance(temp, numba.types.Array):

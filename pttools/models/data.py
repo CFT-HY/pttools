@@ -86,7 +86,7 @@ class DataModel(Model):
             gen_cs2_neg=False,
             gen_critical=False
         )
-        self.cs2 = self.gen_cs2()
+        self.cs2 = self.gen_cs2()  # type: ignore[method-assign]
 
     @classmethod
     def from_hdf5(cls, path: str, name: str | None = None, T_is_physical: bool = False) -> "DataModel":

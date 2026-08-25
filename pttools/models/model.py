@@ -226,7 +226,7 @@ class Model(BaseModel, abc.ABC):
             wp=wn, wm=wn,
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
-        return 4 * diff / (3 * wn)
+        return tp.cast(T, 4 * diff / (3 * wn))
 
     def alpha_n_from_alpha_theta_bar_n[T: FloatOrArr](
             self,
@@ -237,14 +237,17 @@ class Model(BaseModel, abc.ABC):
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
         r"""Conversion from $\alpha_{\bar{\theta}_n}$ of :giese_2021:`\ `, eq. 13 to $\alpha_n$"""
+        wn_solved: th.FloatOrArr
         if wn is None or np.isnan(wn):
-            wn = self.wn(
+            wn_solved = self.wn(
                 alpha_theta_bar_n, wn_guess=wn_guess, theta_bar=True,
                 error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid)
-        tn = self.temp(wn, Phase.SYMMETRIC)
-        diff = (1 - 1 / (3 * self.cs2(wn, Phase.BROKEN))) * \
-            (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN)) / wn
-        return alpha_theta_bar_n - diff
+        else:
+            wn_solved = wn
+        tn = self.temp(wn_solved, Phase.SYMMETRIC)
+        diff = (1 - 1 / (3 * self.cs2(wn_solved, Phase.BROKEN))) * \
+            (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN)) / wn_solved
+        return tp.cast(T, alpha_theta_bar_n - diff)
 
     def alpha_n_min_find(
             self,
@@ -297,7 +300,7 @@ class Model(BaseModel, abc.ABC):
             log_invalid=log_invalid
         )
         wn = self.w(Tn, Phase.SYMMETRIC)
-        return 4 * diff / (3 * wn)
+        return tp.cast(T, 4 * diff / (3 * wn))
 
     def alpha_plus(
             self,
@@ -378,12 +381,15 @@ class Model(BaseModel, abc.ABC):
             wn: float | None = None,
             wn_guess: float | None = None) -> T:
         r"""Conversion from $\alpha_n$ to $\alpha_{\bar{\theta}_n}$ of :giese_2021:`\ `, eq. 13"""
+        wn_solved: th.FloatOrArr
         if wn is None or np.isnan(wn):
-            wn = self.wn(alpha_n, wn_guess=wn_guess)
-        tn = self.temp(wn, Phase.SYMMETRIC)
-        diff = (1 - 1 / (3 * self.cs2(wn, Phase.BROKEN))) * \
-            (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN)) / wn
-        return alpha_n + diff
+            wn_solved = self.wn(alpha_n, wn_guess=wn_guess)
+        else:
+            wn_solved = wn
+        tn = self.temp(wn_solved, Phase.SYMMETRIC)
+        diff = (1 - 1 / (3 * self.cs2(wn_solved, Phase.BROKEN))) * \
+            (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN)) / wn_solved
+        return tp.cast(T, alpha_n + diff)
 
     def alpha_theta_bar_n_max_lte(
             self,
@@ -453,7 +459,7 @@ class Model(BaseModel, abc.ABC):
 
         $$\alpha_{\bar{\theta}+} = \frac{D \bar{\theta}(T_+)}{3 w_+}$$
         """
-        return self.delta_theta_bar(wp, Phase.SYMMETRIC) / (3 * wp)
+        return tp.cast(T, self.delta_theta_bar(wp, Phase.SYMMETRIC) / (3 * wp))
 
     @staticmethod
     def check_alpha_plus[T: FloatOrArr](
@@ -489,8 +495,9 @@ class Model(BaseModel, abc.ABC):
                     raise ValueError(info)
                 if nan_on_invalid:
                     if np.isscalar(alpha_plus):
-                        return np.nan
-                    alpha_plus[invalid] = np.nan
+                        return tp.cast(T, np.nan)
+                    # np.isscalar() does not narrow the type for the type checker.
+                    tp.cast(th.FloatArr, alpha_plus)[invalid] = np.nan
         return alpha_plus
 
     def check_p(self, wn: th.FloatOrArr, allow_fail: bool = False) -> None:
@@ -547,12 +554,18 @@ class Model(BaseModel, abc.ABC):
                 raise ValueError(msg)
             if nan_on_invalid:
                 if np.isscalar(delta_theta):
-                    return np.nan
-                delta_theta[delta_theta < 0] = np.nan
+                    return tp.cast(T, np.nan)
+                # np.isscalar() does not narrow the type for the type checker.
+                delta_theta_arr = tp.cast(th.FloatArr, delta_theta)
+                delta_theta_arr[delta_theta_arr < 0] = np.nan
 
         return delta_theta
 
-    def criticals(self, t_crit_guess: float, allow_fail: bool = False, log_info: bool = True) -> tuple[float, float]:
+    def criticals(
+            self,
+            t_crit_guess: float | None,
+            allow_fail: bool = False,
+            log_info: bool = True) -> tuple[float, float]:
         t_crit = self.critical_temp(guess=t_crit_guess, allow_fail=allow_fail)
         # self.t_crit has to be set already here for alpha_n error messages to work.
         self.T_crit = t_crit
@@ -982,7 +995,7 @@ class Model(BaseModel, abc.ABC):
 
         :param phase: phase $\phi$
         """
-        return phase*self.V_b + (1 - phase)*self.V_s
+        return tp.cast(T, phase*self.V_b + (1 - phase)*self.V_s)
 
     def validate_alpha_n(self, alpha_n: float, allow_invalid: bool = False, log_invalid: bool = True) -> None:
         r"""Validate that $\alpha_{n,\text{min}} < \alpha_n < 1$"""
@@ -1104,11 +1117,11 @@ class Model(BaseModel, abc.ABC):
         return wn
 
     def _wn_solvable(self, wn: th.FloatOrArr, alpha_n: float, theta_bar: bool) -> th.FloatOrArr:
-        if not np.isscalar(wn):
-            wn = wn[0]
+        wn_scalar: float = wn if np.isscalar(wn) else tp.cast(th.FloatArr, wn)[0]
         if theta_bar:
-            return self.alpha_theta_bar_n(wn, error_on_invalid=False, nan_on_invalid=True, log_invalid=False) - alpha_n
-        return self.alpha_n(wn, error_on_invalid=False, nan_on_invalid=True, log_invalid=False) - alpha_n
+            return self.alpha_theta_bar_n(
+                wn_scalar, error_on_invalid=False, nan_on_invalid=True, log_invalid=False) - alpha_n
+        return self.alpha_n(wn_scalar, error_on_invalid=False, nan_on_invalid=True, log_invalid=False) - alpha_n
 
     def wn[T: FloatOrArr](
             self,
@@ -1136,25 +1149,27 @@ class Model(BaseModel, abc.ABC):
             wn_guess = wn_guess2
 
         if np.isscalar(alpha_n):
-            return self._wn_scalar(
+            return tp.cast(T, self._wn_scalar(
                 alpha_n,
                 wn_guess=wn_guess,
                 theta_bar=theta_bar,
                 error_on_invalid=error_on_invalid,
                 nan_on_invalid=nan_on_invalid,
                 log_invalid=log_invalid
-            )
-        ret = np.zeros_like(alpha_n)
-        for i in range(alpha_n.size):
+            ))
+        # np.isscalar() does not narrow the type for the type checker.
+        alpha_n_arr = tp.cast(th.FloatArr, alpha_n)
+        ret = np.zeros_like(alpha_n_arr)
+        for i in range(alpha_n_arr.size):
             ret[i] = self._wn_scalar(
-                alpha_n[i],
+                alpha_n_arr[i],
                 wn_guess=wn_guess,
                 theta_bar=theta_bar,
                 error_on_invalid=error_on_invalid,
                 nan_on_invalid=nan_on_invalid,
                 log_invalid=log_invalid
             )
-        return ret
+        return tp.cast(T, ret)
 
     def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Enthalpy density $w(T,\phi)$

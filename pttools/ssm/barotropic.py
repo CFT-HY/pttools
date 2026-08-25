@@ -41,7 +41,7 @@ def eta_ratio(
     return N_sh * r_star / ((1 + nu) * ubarf)
 
 
-def H_eta[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:
+def H_eta[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:  # type: ignore[assignment]
     r"""$H \eta$ for a barotropic EoS
     $$H \eta = \frac{\dot{a}}{a} = 1 + \nu_\text{gdh2024} = \frac{2}{1 + 3 \omega}$$
 
@@ -51,15 +51,16 @@ def H_eta[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:
     and that
     $$\frac{2}{1+3\omega} = 1 + \nu_\text{gdh2024}$$
     """
-    return 1 + nu
+    # typing.cast() is not used below, since Numba cannot compile it.
+    return 1 + nu  # type: ignore[return-value]
 
 
-def l[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:
+def l[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:  # type: ignore[assignment]
     r"""$\ell(\nu)
     $$\ell(\nu) = 1 + 2\nu$$
     :giombi_2026:`\ ` p. 25
     """
-    return 1 + 2 * nu
+    return 1 + 2 * nu  # type: ignore[return-value]
 
 
 def source_lifetime_factor(

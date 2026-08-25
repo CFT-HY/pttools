@@ -17,7 +17,7 @@ def _sin_transform_scalar(
         z_st_thresh: float = const.Z_ST_THRESH,
         v_wall: float | None = None,
         v_sh: float | None = None,
-        parallel: bool = True) -> th.FloatOrArrNumba:
+        parallel: bool = True) -> th.FloatOrArr:
     if z <= z_st_thresh:
         array = f * np.sin(z * xi)
         integral = np.trapezoid(array, xi)
@@ -33,7 +33,7 @@ def _sin_transform_arr(
         z_st_thresh: float = const.Z_ST_THRESH,
         v_wall: float | None = None,
         v_sh: float | None = None,
-        parallel: bool = True) -> th.FloatOrArrNumba:
+        parallel: bool = True) -> th.FloatArr1D:
     lo = np.where(z <= z_st_thresh)
     z_lo = z[lo]
     # Integrand of the sine transform
@@ -76,7 +76,7 @@ def sin_transform(
         z_st_thresh: float = const.Z_ST_THRESH,
         v_wall: float | None = None,
         v_sh: float | None = None,
-        parallel: bool = True) -> th.FloatOrArrNumba:
+        parallel: bool = True) -> th.FloatOrArr:
     r"""
     Sine transform $\hat{f}(z)$ of $f(\xi)$
 
@@ -113,7 +113,7 @@ def _sin_transform_numba(
         z_st_thresh: float = const.Z_ST_THRESH,
         v_wall: float | None = None,
         v_sh: float | None = None,
-        parallel: bool = True) -> th.FloatOrArrNumba:
+        parallel: bool = True) -> th.NumbaFunc:
     if isinstance(z, numba.types.Float):
         return _sin_transform_scalar
     if isinstance(z, numba.types.Array):

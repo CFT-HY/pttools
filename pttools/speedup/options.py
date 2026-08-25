@@ -39,7 +39,7 @@ if not system.FORKING or not system.CPU_AFFINITY:
 NUMBA_DISABLE_JIT: tp.Final[bool] = bool(int(os.getenv("NUMBA_DISABLE_JIT", "0")))
 
 NUMBA_ENABLE_CACHE: bool = \
-    bool(int(os.getenv("NUMBA_ENABLE_CACHE"))) \
+    bool(int(os.environ["NUMBA_ENABLE_CACHE"])) \
         if "NUMBA_ENABLE_CACHE" in os.environ \
         else (system.IS_GITHUB_ACTIONS or system.IS_PIP_PACKAGE)
 """Whether to enable caching for Numba-jitted functions

@@ -119,7 +119,8 @@ def hx[T: FloatOrArr](f: T) -> T:
     $$h_x = \frac{f}{1 + f} = 1 - \frac{v_{\text{wall}}^3}{v_{\text{eff}}^3}$$
     :ajmi_2022:`\ ` eq. 56
     """
-    return f / (1 + f)
+    # typing.cast() is not used below, since Numba cannot compile it.
+    return f / (1 + f)  # type: ignore[return-value]
 
 
 @vectorize(cache=True, nopython=True)
@@ -129,10 +130,10 @@ def Ih_approx[T: FloatOrArr](hx: T) -> T:
     :ajmi_2022:`\ ` eq. 78
     """
     if hx == 0.:
-        return 1.
+        return 1.  # type: ignore[return-value]
     if hx >= 1.:
         raise ValueError(f"Got hx={hx}>=1. See Ajmi & Hindmarsh (2022) p. 9.")
-    return 1. + (hx * np.log(hx)) / (1. - hx)
+    return 1. + (hx * np.log(hx)) / (1. - hx)  # type: ignore[return-value]
 
 
 @numba.njit(cache=True)
@@ -163,9 +164,9 @@ def lifetime_distribution[T: FloatOrArr](
     """
     # The exponential and simultaneous functions have been verified to be properly normalized regardless of a.
     if nuc_type == NucType.EXPONENTIAL.value:
-        return a * np.exp(-a * T_tilde)
+        return a * np.exp(-a * T_tilde)  # type: ignore[return-value]
     if nuc_type == NucType.SIMULTANEOUS.value:
-        return 0.5 * a * (a * T_tilde)**2 * np.exp(-(a * T_tilde) ** 3 / 6)
+        return 0.5 * a * (a * T_tilde)**2 * np.exp(-(a * T_tilde) ** 3 / 6)  # type: ignore[return-value]
     raise ValueError(f"Nucleation type not recognized: \"{nuc_type}\"")
 
 

@@ -11,7 +11,7 @@ import numpy as np
 from pttools.analysis.bubble_grid import BubbleGridVWAlpha
 from pttools.analysis.colormap import cmap_plusminus
 from pttools.analysis.plot_vw_alpha import VwAlphaPlot
-from pttools.analysis.utils import save_fig
+from pttools.analysis.utils import create_fig_ax, save_fig
 from pttools.bubble.bubble import Bubble
 import pttools.type_hints as th
 
@@ -48,7 +48,9 @@ class EntropyPlot(VwAlphaPlot):
             fig: plt.Figure | None = None,
             ax: plt.Axes | None = None):
         super().__init__(grid, fig, ax, title=rf"$\Delta s / s_n$ for {grid.model.label_latex}")
-        plot_entropy_data(entropy, grid.v_walls, grid.alpha_ns, min_level, max_level, diff_level, fig=fig, ax=ax)
+        plot_entropy_data(
+            entropy, grid.v_walls, grid.alpha_ns, min_level, max_level, diff_level,
+            fig=self.fig, ax=self.ax)
 
         self.color_region(grid.numerical_error(), color="red", alpha=0.5)
         self.color_region(grid.unphysical_alpha_plus(), color="green", alpha=0.5)
@@ -69,7 +71,7 @@ class DeltaEntropyPlot(VwAlphaPlot):
             ax: plt.Axes | None = None):
         super().__init__(grid, fig, ax)
         rel_change = (w1 - w2) / w_ref
-        cs: QuadContourSet = ax.contourf(
+        cs: QuadContourSet = self.ax.contourf(
             grid.v_walls, grid.alpha_ns, rel_change,
             locator=ticker.LinearLocator(numticks=20)
         )
@@ -86,7 +88,7 @@ class EntropyConservationPlot(VwAlphaPlot):
             fig: plt.Figure | None = None,
             ax: plt.Axes | None = None):
         super().__init__(grid, fig, ax)
-        cs: QuadContourSet = ax.contourf(
+        cs: QuadContourSet = self.ax.contourf(
             grid.v_walls, grid.alpha_ns, diff,
             locator=ticker.LinearLocator(numticks=20)
         )
@@ -109,11 +111,11 @@ class GieseApproximationPlot(VwAlphaPlot):
             ax: plt.Axes | None = None):
         super().__init__(grid, fig, ax)
 
-        cs: QuadContourSet = ax.contourf(
+        cs: QuadContourSet = self.ax.contourf(
             grid.v_walls, grid.alpha_ns, diff,
             locator=ticker.LogLocator(numticks=20)
         )
-        cbar = fig.colorbar(cs)
+        cbar = self.fig.colorbar(cs)
         cbar.ax.set_ylabel("Rel. diff. of Giese approx.")
         self.ax.set_title("Rel. diff. of Giese approx.")
 
@@ -129,11 +131,11 @@ class KappaOmegaSumPlot(VwAlphaPlot):
         kappa_omega_sum = np.abs(grid.kappa() + grid.omega() - 1)
         if np.all(np.isnan(kappa_omega_sum)):
             raise ValueError(f"Something went wrong when generating kappa_omega_sum: {kappa_omega_sum}")
-        cs: QuadContourSet = ax.contourf(
+        cs: QuadContourSet = self.ax.contourf(
             grid.v_walls, grid.alpha_ns, kappa_omega_sum,
             locator=ticker.LogLocator()
         )
-        cbar = fig.colorbar(cs)
+        cbar = self.fig.colorbar(cs)
         cbar.ax.set_ylabel(r"$|\kappa + \omega - 1|$")
         self.ax.set_title(r"$|\kappa + \omega - 1|$")
 
@@ -231,8 +233,7 @@ def plot_entropy_data(
         ax: plt.Axes | None = None) -> tuple[plt.Figure, plt.Axes]:
     """Plot entrpy data that is not from a BubbleGridVWAlpha object."""
     if fig is None or ax is None:
-        fig: plt.Figure = plt.figure()
-        ax: plt.Axes = fig.add_subplot()
+        fig, ax = create_fig_ax()
 
     levels, cols = cmap_plusminus(min_level, max_level, diff_level)
     cs: QuadContourSet = ax.contourf(v_walls, alpha_ns, data, levels=levels, colors=cols)

@@ -181,7 +181,8 @@ def nu_gdh2024[T: FloatOrArr](omega: T) -> T:
     where $\omega$ is the barotropic equation of state parameter.
     :giombi_2024_cs:`\ ` eq. 2.11, 2.41
     """
-    return (1 - 3 * omega) / (1 + 3 * omega)
+    # typing.cast() is not used below, since Numba cannot compile it.
+    return (1 - 3 * omega) / (1 + 3 * omega)  # type: ignore[return-value]
 
 
 def omega(

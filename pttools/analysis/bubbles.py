@@ -2,7 +2,7 @@ import typing as tp
 
 import numpy as np
 
-from pttools.bubble import BaseBubble, Bubble, Phase, SolutionType
+from pttools.bubble import BaseBubble, Phase
 
 
 def cs2_common(
@@ -18,7 +18,9 @@ def cs2_common(
     :param cs2_default: default value if there are no bubbles, or if the values are different
     :return: $c_s^2$ that is common for the given bubbles
     """
-    cs2 = None
+    if w is None:
+        raise ValueError("The enthalpy w has to be given.")
+    cs2: float | None = None
     for bubble in bubbles:
         cs2_new = bubble.model.cs2(w=w, phase=phase)
         if cs2 is None:

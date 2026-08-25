@@ -7,9 +7,11 @@ import logging
 import typing as tp
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 from pttools.bubble import const
 from pttools.bubble.thermo import va_kinetic_energy_density
+from pttools.speedup import NAN_ARR
 import pttools.type_hints as th
 from pttools.utils.json import export_json
 from pttools.utils.validation import ensure_floats
@@ -58,13 +60,13 @@ class BaseBubble(abc.ABC):
         # Output arrays
         # -----
         #: Fluid velocity profile $v(\xi)$
-        self.v: th.FloatArr1D | None = None
+        self.v: th.FloatArr1D = NAN_ARR
         #: Enthalpy profile $w(\xi)$
-        self.w: th.FloatArr1D | None = None
+        self.w: th.FloatArr1D = NAN_ARR
         #: Self-similar droplet radius coordinates $\xi$
-        self.xi: th.FloatArr1D | None = None
+        self.xi: th.FloatArr1D = NAN_ARR
         #: Phase profile $\phi(\xi)$
-        self.phase: th.FloatArr1D | None = None
+        self.phase: th.FloatArr1D = NAN_ARR
 
         # -----
         # Output values
@@ -72,46 +74,45 @@ class BaseBubble(abc.ABC):
         self.label_latex: str
         self.label_unicode: str
         self.notes: list[str] = []
-        self.solved: bool | None = None
-        self.solving_duration: float | None = None
+        self.solving_duration: float = np.nan
 
-        self.entropy_flux_p: float | None = None
+        self.entropy_flux_p: float = np.nan
         r"""Incoming entropy flux at the wall
         $$\tilde{\gamma}_+ \tilde{v}_+ {s}_+$$
         """
 
-        self.entropy_flux_m: float | None = None
+        self.entropy_flux_m: float = np.nan
         r"""Outgoing entropy flux at the wall
         $$\tilde{\gamma}_- \tilde{v}_- {s}_- $$
         """
 
-        self.entropy_flux_diff: float | None = None
+        self.entropy_flux_diff: float = np.nan
         r"""Entropy flux difference at the wall
         $$\tilde{\gamma}_- \tilde{v}_- {s}_- - \tilde{\gamma}_+ \tilde{v}_+ {s}_+ $$
         """
 
         #: $s_+$
-        self.sp: float | None = None
+        self.sp: float = np.nan
         #: $s_-$
-        self.sm: float | None = None
+        self.sm: float = np.nan
         #: $T_+$
-        self.Tp: float | None = None
+        self.Tp: float = np.nan
         #: $T_-$
-        self.Tm: float | None = None
+        self.Tm: float = np.nan
         #: $T_\text{center}$
-        self.T_center: float | None = None
+        self.T_center: float = np.nan
         #: $v_+$
-        self.vp: float | None = None
+        self.vp: float = np.nan
         #: $\tilde{v}_+$
-        self.vp_tilde: float | None = None
+        self.vp_tilde: float = np.nan
         #: $v_-$
-        self.vm: float | None = None
+        self.vm: float = np.nan
         #: $\tilde{v}_-$
-        self.vm_tilde: float | None = None
+        self.vm_tilde: float = np.nan
         #: $w_+$
-        self.wp: float | None = None
+        self.wp: float = np.nan
         #: $w_-$
-        self.wm: float | None = None
+        self.wm: float = np.nan
 
         # Flags
         self.no_solution_found: bool = False

@@ -1,6 +1,7 @@
 """Standard Model equation of state"""
 
 import logging
+import typing as tp
 
 import numpy as np
 from scipy import interpolate
@@ -114,10 +115,10 @@ class StandardModel(ThermoModel):
         return self.ge(temp, phase) / self.gs(temp, phase)
 
     def g_mult[T: FloatOrArr](self, phase: T) -> T:
-        return self.g_mult_b * phase + self.g_mult_s * (1 - phase)
+        return tp.cast(T, self.g_mult_b * phase + self.g_mult_s * (1 - phase))
 
     def V[T: FloatOrArr](self, phase: T) -> T:
-        return self.V_b * phase + self.V_s * (1 - phase)
+        return tp.cast(T, self.V_b * phase + self.V_s * (1 - phase))
 
 
 if __name__ == "__main__":

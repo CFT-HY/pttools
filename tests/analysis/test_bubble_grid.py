@@ -9,6 +9,8 @@ from pttools.models.bag import BagModel
 
 
 class BubbleGridTest(unittest.TestCase):
+    grid: BubbleGridVWAlpha
+
     @classmethod
     def setUpClass(cls) -> None:
         arr = np.linspace(0.1, 0.9, 3)

@@ -179,7 +179,7 @@ def alpha_n_min_hybrid_bag[T: FloatOrArr](v_wall: T) -> T:
 
 
 @speedup.vectorize(nopython=True)
-def alpha_plus_max_detonation_bag(v_wall: th.FloatOrArr) -> th.FloatOrArrNumba:
+def alpha_plus_max_detonation_bag(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Maximum allowed value of $\alpha_+$ for a detonation with wall speed $v_\text{wall}$ in the Bag Model.
 
@@ -199,7 +199,7 @@ def alpha_plus_max_detonation_bag(v_wall: th.FloatOrArr) -> th.FloatOrArrNumba:
 
 
 @speedup.vectorize(nopython=True)
-def alpha_plus_min_hybrid(v_wall: th.FloatOrArr) -> th.FloatOrArrNumba:
+def alpha_plus_min_hybrid(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Minimum allowed value of $\alpha_+$ for a hybrid with wall speed $v_\text{wall}$ in the Bag Model.
     Condition from coincidence of wall and shock.

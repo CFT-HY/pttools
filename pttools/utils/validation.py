@@ -106,4 +106,4 @@ def ensure_scalar(value: tp.Any, name: str, allow_none: bool = False) -> None:
 
 def ensure_type[T](value: tp.Any, cls: tp.Type[T], allow_none: bool = False) -> T:
     """Ensure that the given value is of the given type, and convert if necessary"""
-    return value if (value is None and allow_none) or isinstance(value, cls) else cls(value)
+    return tp.cast(T, value if (value is None and allow_none) or isinstance(value, cls) else cls(value))

@@ -129,8 +129,18 @@ files = [
 ]
 
 [[tool.mypy.overrides]]
-module = ["h5py.*", "numba.*", "numbalsoda.*", "plotly.*", "sphinx_gallery.*"]
+module = ["h5py.*", "kaleido.*", "numba.*", "numbalsoda.*", "NumbaLSODA.*", "plotly.*", "sphinx_gallery.*", "sympy.*", "yappi.*"]
 ignore_missing_imports = true
+
+# The type stubs shipped with Numba are incomplete:
+# - The jit options of the _JITOptions TypedDict are missing e.g. "cache" and "nopython".
+# - numba.prange is not declared to be iterable.
+# - Decorating a generic function with numba.njit resolves its type parameters to Never.
+# Therefore the stubs are skipped until these have been fixed upstream.
+[[tool.mypy.overrides]]
+module = ["numba.*"]
+follow_imports = "skip"
+follow_imports_for_stubs = true
 
 [tool.pytest.ini_options]
 # On clusters "--numprocesses=auto" creates processes according to the total number of CPU cores

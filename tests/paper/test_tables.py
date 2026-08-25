@@ -8,6 +8,7 @@ import unittest
 import numpy as np
 
 from pttools.speedup.options import NUMBA_INTEGRATE
+import pttools.type_hints as th
 from pttools.utils.decorators import conditional_decorator
 from tests.paper import ssm_paper_utils as spu
 from tests.utils.const import TEST_DATA_PATH
@@ -15,6 +16,12 @@ from tests.utils.const import TEST_DATA_PATH
 
 class TestTables(unittest.TestCase):
     """Test the generation of data tables for the paper"""
+    params: th.FloatArr2D
+    v2: th.FloatArr2D
+    Omgw: th.FloatArr2D
+    pfit_sim: th.FloatArr2D
+    pfit_exp: th.FloatArr2D
+
     @classmethod
     def setUpClass(cls) -> None:
         data = np.loadtxt(os.path.join(TEST_DATA_PATH, "data_compare_nuc-final3.txt"))

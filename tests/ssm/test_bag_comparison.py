@@ -18,6 +18,11 @@ class SpectrumTest(unittest.TestCase):
     """Tests for comparing the results of the Spectrum class to the old bag model interface"""
     V_WALLS: th.FloatArr1D = np.array([0.5, 0.7, 0.77])
     ALPHA_NS: th.FloatArr1D = np.array([0.578, 0.151, 0.091])
+    model: BagModel
+    bubbles: list[Bubble]
+    spectra: list[SSMSpectrum]
+    spectra_lambda: list[SSMSpectrum]
+    z: th.FloatArr1D
 
     @classmethod
     def setUpClass(cls) -> None:

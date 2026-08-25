@@ -31,7 +31,7 @@ def _get_phase_arr(xi: th.FloatOrArr, v_wall: float) -> th.FloatOrArr:
     return phase
 
 
-def get_phase(xi: th.FloatOrArr, v_wall: float) -> th.FloatOrArrNumba:
+def get_phase(xi: th.FloatOrArr, v_wall: float) -> th.FloatOrArr:
     r"""
     Returns array indicating phase of system.
     in symmetric phase $(\xi > v_w)$, phase = 0
@@ -47,7 +47,7 @@ def get_phase(xi: th.FloatOrArr, v_wall: float) -> th.FloatOrArrNumba:
 
 
 @overload(get_phase, jit_options={"nopython": True})
-def _get_phase_numba(xi: th.FloatOrArr, v_wall: float) -> th.FloatOrArrNumba:
+def _get_phase_numba(xi: th.FloatOrArr, v_wall: float) -> th.NumbaFunc:
     if isinstance(xi, numba.types.Float):
         return _get_phase_scalar
     if isinstance(xi, numba.types.Array):

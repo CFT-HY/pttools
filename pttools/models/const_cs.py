@@ -27,7 +27,7 @@ def cs2_to_mu[T: FloatOrArr](cs2: T) -> T:
 
     $$\mu = 1 + \frac{1}{c_s^2}$$
     """
-    return 1 + 1 / cs2
+    return tp.cast(T, 1 + 1 / cs2)
 
 
 def cs2_to_float_and_label(

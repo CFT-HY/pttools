@@ -270,7 +270,8 @@ def v_chapman_jouguet_const_cs[T: FloatOrArr](model: "ConstCSModel", alpha_theta
     #         ret[inds] = 1 - np.sqrt(discriminant[inds]) / denominator[inds]
     if np.any(ret < model.csb) or np.any(ret > 1):
         raise ValueError(f"Invalid v_CJ for alpha_theta_bar_plus={alpha_theta_bar_plus}: {ret}")
-    return ret
+    # typing.cast() is not used below, since Numba cannot compile it.
+    return ret  # type: ignore[return-value]
 
 
 def v_chapman_jouguet_const_cs_reference[T: FloatOrArr1D](alpha_n: T, model: "ConstCSModel") -> T:
@@ -284,7 +285,7 @@ def v_chapman_jouguet_const_cs_reference[T: FloatOrArr1D](alpha_n: T, model: "Co
     ret = np.zeros_like(ap)
     for i, a in enumerate(ap):
         ret[i] = v_plus(model.csb, a, sol_type=SolutionType.DETON)
-    return ret
+    return ret  # type: ignore[return-value]
 
 
 def wm_chapman_jouguet(

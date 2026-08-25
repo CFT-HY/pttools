@@ -130,8 +130,8 @@ class FluidReference:
 
         # Nearest neighbor interpolator set-up
         valids = np.logical_not(np.any(np.isnan(data), axis=2))
-        coords = [[], [], []]
-        inds = [[], [], []]
+        coords: list[list[float]] = [[], [], []]
+        inds: list[list[int]] = [[], [], []]
         i = 0
         for i_alpha_n, alpha_n in enumerate(alpha_ns):
             for i_v_wall, v_wall in enumerate(v_walls):

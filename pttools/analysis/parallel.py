@@ -99,7 +99,7 @@ def create_bubbles(
         allow_bubble_failure: bool = False,
         kwargs: dict[str, tp.Any] | None = None,
         bubble_kwargs: dict[str, tp.Any] | None = None,
-        bubble_func: tp.Callable = create_bubble) -> BubbleArr2D | tuple[NDArray, NDArray, ...]:
+        bubble_func: tp.Callable = create_bubble) -> BubbleArr2D | tuple[NDArray, ...]:
     """Create multiple bubbles in parallel"""
     start_time = time.perf_counter()
     post_func_return_multiple = False
@@ -161,7 +161,7 @@ def create_spectra(
         allow_bubble_failure: bool = False,
         kwargs: dict[str, tp.Any] | None = None,
         bubble_kwargs: dict[str, tp.Any] | None = None,
-        spectrum_kwargs: dict[str, tp.Any] | None = None) -> SpectrumArr2D | tuple[NDArray, NDArray, ...]:
+        spectrum_kwargs: dict[str, tp.Any] | None = None) -> SpectrumArr2D | tuple[NDArray, ...]:
     """Create multiple spectra in parallel"""
     if kwargs is None:
         kwargs2 = {"spectrum_kwargs": spectrum_kwargs}

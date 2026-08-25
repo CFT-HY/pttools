@@ -61,12 +61,13 @@ def signal_to_noise_ratio(
     return snr, f_min, f_max
 
 
-def ft[T: FloatOrArr](L: T = const.LISA_ARM_LENGTH) -> T:
+def ft[T: FloatOrArr](L: T = const.LISA_ARM_LENGTH) -> T:  # type: ignore[assignment]
     r"""Transfer frequency
     $$f_t = \frac{c}{2\pi L}$$
     :gowling_2021:`\ ` p. 12
     """
-    return const.c / (2*np.pi*L)
+    # typing.cast() is not used below, since Numba cannot compile it.
+    return const.c / (2*np.pi*L)  # type: ignore[return-value]
 
 #: Default LISA transfer frequency $f_t$
 FT_LISA: float = ft()
@@ -74,7 +75,7 @@ FT_LISA: float = ft()
 F2_LISA: float = 4/3 * FT_LISA
 
 
-def N_acc[T: FloatOrArr](L: T = const.LISA_ARM_LENGTH) -> T:
+def N_acc[T: FloatOrArr](L: T = const.LISA_ARM_LENGTH) -> T:  # type: ignore[assignment]
     r"""LISA acceleration noise
     $${N}_\text{acc} = \frac{3 \cdot 10^{-15}}{L} \frac{\text{m}}{\text{s}^2}
     \approx 1.44 \cdot 10^{-48} \frac{1}{\text{s}^4 \text{Hz}}$$
@@ -85,7 +86,7 @@ def N_acc[T: FloatOrArr](L: T = const.LISA_ARM_LENGTH) -> T:
     :smith_2019:`\ ` eq. 53
     :lisa_sci_req:`\ ` eq. 3
     """
-    return (3e-15 / L)**2
+    return (3e-15 / L)**2  # type: ignore[return-value]
 
 
 def N_AE(
@@ -138,14 +139,14 @@ def omega_gb[T: FloatOrArr](f: T) -> T:
     $$\Omega_\text{gb} = \left( \frac{4 \pi^2}{3 H_0^2} \right) f^3 {S}_\text{gb}(f)$$
     :gowling_2021:`\ ` eq. 3.11
     """
-    return omega(f=f, S=S_gb(f))
+    return omega(f=f, S=S_gb(f))  # type: ignore[return-value]
 
 
 def omega_ins[T: FloatOrArr](f: T) -> T:
     r"""LISA instrument noise
     $$\Omega_\text{ins} = \frac{4 \pi^2}{3 H_0^2} f^3 S_A(f)$$
     """
-    return omega(f=f, S=S_AE(f))
+    return omega(f=f, S=S_AE(f))  # type: ignore[return-value]
 
 
 def omega_noise[T: FloatOrArr](f: T) -> T:
@@ -154,7 +155,7 @@ def omega_noise[T: FloatOrArr](f: T) -> T:
     $$\Omega_\text{noise} = \Omega_\text{ins} + \Omega_\text{eb} + \Omega_\text{gb}$$
     :gowling_2021:`\ ` eq. 3.13
     """
-    return omega_ins(f) + omega_eb(f) + omega_gb(f)
+    return omega_ins(f) + omega_eb(f) + omega_gb(f)  # type: ignore[return-value]
 
 
 def P_acc(f: th.FloatOrArr, L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatOrArr:
@@ -167,7 +168,7 @@ def P_acc(f: th.FloatOrArr, L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.Floa
     return S_I(f, L) / (4 * (2*np.pi*f)**4)
 
 
-def P_oms[T: FloatOrArr](L: T = const.LISA_ARM_LENGTH) -> T:
+def P_oms[T: FloatOrArr](L: T = const.LISA_ARM_LENGTH) -> T:  # type: ignore[assignment]
     r"""
     LISA optical metrology noise $P_\text{oms}$, aka. $S_II$ or $S_s$
     $$P_\text{oms}(f) = \left( \frac{1.5 \cdot 10^{-11} \text{m}}{L} \right)^2 \text{Hz}^{-1}$$
@@ -179,7 +180,7 @@ def P_oms[T: FloatOrArr](L: T = const.LISA_ARM_LENGTH) -> T:
     the correct $L = 2.5 \cdot 10^9 \text{m}$.
     For this $L$, $P_oms = 3.59 \cdot 10^{-41} Hz^{-1}$.
     """
-    return (1.5e-11 / L)**2
+    return (1.5e-11 / L)**2  # type: ignore[return-value]
 
 
 def R_AE(f: th.FloatOrArr, ft: th.FloatOrArr = FT_LISA, W_abs2: th.FloatOrArr | None = None) -> th.FloatOrArr:

@@ -33,7 +33,7 @@ def _v_plus_scalar(
         ap: float,
         sol_type: SolutionType,
         debug: bool = True,
-        parallel: bool = True) -> th.FloatOrArrNumba:
+        parallel: bool = True) -> th.FloatOrArr:
     x = vm + 1. / (3 * vm)
     # Finding the SolutionType automatically does not work in the general case
     # if sol_type is None:
@@ -71,7 +71,7 @@ def _v_plus_scalar(
 _v_plus_scalar_numba = numba.njit(_v_plus_scalar)
 
 
-def _v_plus_arr(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: bool = True) -> th.FloatOrArrNumba:
+def _v_plus_arr(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: bool = True) -> th.FloatArr:
     ret = np.empty_like(vm)
     # pylint: disable=not-an-iterable
     for i in numba.prange(vm.size):
@@ -97,7 +97,7 @@ def _v_plus_arr_wrapper(
         ap: float,
         sol_type: SolutionType,
         debug: bool = True,
-        parallel: bool = True) -> th.FloatOrArrNumba:
+        parallel: bool = True) -> th.FloatArr:
     if parallel:
         return _v_plus_arr_parallel(vm=vm, ap=ap, sol_type=sol_type, debug=debug)
     return _v_plus_arr_single(vm=vm, ap=ap, sol_type=sol_type, debug=debug)
@@ -108,7 +108,7 @@ def v_plus(
         ap: float,
         sol_type: SolutionType,
         debug: bool = True,
-        parallel: bool = True) -> th.FloatOrArrNumba:
+        parallel: bool = True) -> th.FloatOrArr:
     r"""
     Fluid speed $\tilde{v}_+$ ahead of the wall in the wall frame
     $$\tilde{v}_+ = \frac{1}{2(1 + \alpha_+)}
@@ -143,7 +143,7 @@ def _v_plus_numba(
         ap: float,
         sol_type: SolutionType,
         debug: bool = True,
-        parallel: bool = True) -> th.FloatOrArrNumba:
+        parallel: bool = True) -> th.NumbaFunc:
     if isinstance(vm, numba.types.Float):
         return _v_plus_scalar
     if isinstance(vm, numba.types.Array):

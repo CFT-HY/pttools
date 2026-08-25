@@ -25,8 +25,9 @@ class BaseModel(abc.ABC):
     DEFAULT_T_MIN: float = 1e-3
     DEFAULT_T_MAX: float = np.inf
 
-    #: Whether the temperature is in proper physics units
-    TEMPERATURE_IS_PHYSICAL: bool
+    #: Whether the temperature is in proper physics units.
+    #: This is None for models that determine it at run time.
+    TEMPERATURE_IS_PHYSICAL: bool | None
 
     #: String formatting for thermodynamical quantities
     THERMO_FORMAT: str = "6e"
@@ -54,7 +55,7 @@ class BaseModel(abc.ABC):
         self.T_max: float = self.DEFAULT_T_MAX if T_max is None else T_max
         self.silence_temp: bool = silence_temp
         self.restrict_to_valid: bool = restrict_to_valid
-        self.temperature_is_physical: bool = self.TEMPERATURE_IS_PHYSICAL \
+        self.temperature_is_physical: bool | None = self.TEMPERATURE_IS_PHYSICAL \
             if temperature_is_physical is None else temperature_is_physical
 
         if self.name is None:
@@ -126,48 +127,53 @@ class BaseModel(abc.ABC):
         If invalid values are found, a copy of the array is created where those are set to np.nan.
         """
         if np.isscalar(temp):
-            if temp < self.T_min:
+            temp_scalar = tp.cast(float, temp)
+            if temp_scalar < self.T_min:
                 if not self.silence_temp:
                     logger.warning(
                         "The temperature %s is below the minimum temperature %s of the model \"%s\".",
                         temp, self.T_min, self.name
                     )
                 if self.restrict_to_valid:
-                    return np.nan
-            elif temp > self.T_max:
+                    return tp.cast(T, np.nan)
+            elif temp_scalar > self.T_max:
                 if not self.silence_temp:
                     logger.warning(
                         "The temperature %s is above the maximum temperature %s of the model \"%s\".",
                         temp, self.T_max, self.name
                     )
                 if self.restrict_to_valid:
-                    return np.nan
+                    return tp.cast(T, np.nan)
         else:
-            below = temp < self.T_min
-            above = temp > self.T_max
+            # np.isscalar() does not narrow the type for the type checker.
+            temp_arr = tp.cast(th.FloatArr, temp)
+            below = temp_arr < self.T_min
+            above = temp_arr > self.T_max
             has_below = np.any(below)
             has_above = np.any(above)
             if self.restrict_to_valid and (has_below or has_above):
-                temp = np.copy(temp)
+                temp_arr = np.copy(temp_arr)
             if has_below:
                 if not self.silence_temp:
                     logger.warning(
                         "Some temperatures (%s and possibly above) "
                         "are below the minimum temperature %s of the model \"%s\".",
-                        np.min(temp), self.T_min, self.name
+                        np.min(temp_arr), self.T_min, self.name
                     )
                 if self.restrict_to_valid:
-                    temp[below] = np.nan
+                    temp_arr[below] = np.nan
             if has_above:
                 if not self.silence_temp:
                     logger.warning(
                         "Some temperatures (%s and possibly above) "
                         "are above the maximum temperature %s of the model \"%s\".",
-                        np.max(temp), self.T_max, self.name
+                        np.max(temp_arr), self.T_max, self.name
                     )
                 if self.restrict_to_valid:
-                    temp[above] = np.nan
-        return temp
+                    temp_arr[above] = np.nan
+            return tp.cast(T, temp_arr)
+        # np.isscalar() narrows the type to a union that does not include T.
+        return tp.cast(T, temp)
 
     # Abstract methods
 

@@ -32,12 +32,13 @@ def rho_delta(z: FloatOrArr, x: FloatOrArr, xp: FloatOrArr, xm: FloatOrArr, cs2:
 
 
 @numba.njit(cache=True)
-def rho_delta_factor[T: FloatOrArr](cs2: T = CS0_2) -> T:
+def rho_delta_factor[T: FloatOrArr](cs2: T = CS0_2) -> T:  # type: ignore[assignment]
     r"""The $c_s^2$ factor in $\rho(z,x)$
     $$\left( \frac{1 - c_s^2}{c_s^2} \right)^2$$
     :giombi_2024_cs:`\ ` eq. B.21
     """
-    return ((1 - cs2) / cs2)**2
+    # typing.cast() is not used below, since Numba cannot compile it.
+    return ((1 - cs2) / cs2)**2  # type: ignore[return-value]
 
 
 @numba.njit(cache=True)

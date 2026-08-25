@@ -177,40 +177,40 @@ class Bubble(BaseBubble):
         # Output values
         # -----
         #: $\alpha_+$
-        self.alpha_plus: float | None = None
+        self.alpha_plus: float = np.nan
         #: $\alpha_{\bar{\theta}_+}$
-        self.alpha_theta_bar_plus: float | None = None
+        self.alpha_theta_bar_plus: float = np.nan
 
-        self.entropy_flux_p_sh: float | None = None
+        self.entropy_flux_p_sh: float = np.nan
         r"""Incoming entropy flux at the shock
         $$\tilde{\gamma}_{+,sh} \tilde{v}_{+,sh} s_{+,sh}$$
         """
 
-        self.entropy_flux_m_sh: float | None = None
+        self.entropy_flux_m_sh: float = np.nan
         r"""Outgoing entropy flux at the shock
         $$\tilde{\gamma}_{-,sh} \tilde{v}_{-,sh} s_{-,sh}$$"""
 
-        self.entropy_flux_diff_sh: float | None = None
+        self.entropy_flux_diff_sh: float = np.nan
         r"""Entropy flux difference at the shock
         $$\tilde{\gamma}_{-,sh} \tilde{v}_{-,sh} s_{-,sh} - \tilde{\gamma}_{+,sh} \tilde{v}_{+,sh} s_{+,sh}$$
         """
 
         #: $s_n$
-        self.sn: float | None = None
+        self.sn: float = np.nan
         #: $s_{-,\text{sh}}$
-        self.sm_sh: float | None = None
+        self.sm_sh: float = np.nan
         #: $T_{-,\text{sh}}$
-        self.Tm_sh: float | None = None
+        self.Tm_sh: float = np.nan
         #: $v_{\text{sh}}$
-        self.v_sh: float | None = None
+        self.v_sh: float = np.nan
         #: $\tilde{v}_{-,\text{sh}}$
-        self.vm_sh: float | None = None
+        self.vm_sh: float = np.nan
         #: $\tilde{v}_{-,\text{sh}}$
-        self.vm_tilde_sh: float | None = None
+        self.vm_tilde_sh: float = np.nan
         #: $v_{CJ}$
-        self.v_cj: float | None = None
+        self.v_cj: float = np.nan
         #: $w_{-,\text{sh}}$
-        self.wm_sh: float | None = None
+        self.wm_sh: float = np.nan
 
         if solve:
             self.solve()

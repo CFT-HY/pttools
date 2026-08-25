@@ -17,15 +17,18 @@ import scipy.integrate as spi
 # -----
 # Function and object types
 # -----
-type AxesArr1D = np.ndarray[tuple[int], np.dtype[Axes]]
-type AxesArr2D = np.ndarray[tuple[int, int], np.dtype[Axes]]
-type AxesArr3D = np.ndarray[tuple[int, int, int], np.dtype[Axes]]
-type FigArr1D = np.ndarray[tuple[int], np.dtype[Figure]]
-type FigArr2D = np.ndarray[tuple[int, int], np.dtype[Figure]]
+# These are object arrays. Numpy typing has no way of expressing the element type of an object array,
+# but declaring the element type here does give the correct types when the arrays are indexed.
+# The type: ignore comments are needed, since Matplotlib objects are not subclasses of np.generic.
+type AxesArr1D = np.ndarray[tuple[int], np.dtype[Axes]]  # type: ignore[type-var]
+type AxesArr2D = np.ndarray[tuple[int, int], np.dtype[Axes]]  # type: ignore[type-var]
+type AxesArr3D = np.ndarray[tuple[int, int, int], np.dtype[Axes]]  # type: ignore[type-var]
+type FigArr1D = np.ndarray[tuple[int], np.dtype[Figure]]  # type: ignore[type-var]
+type FigArr2D = np.ndarray[tuple[int, int], np.dtype[Figure]]  # type: ignore[type-var]
 #: Numba function
 type NumbaFunc = tp.Callable | CPUDispatcher
 #: ODE solver specifier
-type ODESolver = spi.OdeSolver | type[spi.OdeSolver] | type[spi.odeint] | str
+type ODESolver = spi.OdeSolver | type[spi.OdeSolver] | tp.Callable | str
 
 # -----
 # Numerical types
@@ -68,12 +71,13 @@ type VWXi = tuple[FloatArr1D, FloatArr1D, FloatArr1D]
 type CS2Fun = tp.Callable[[FloatOrArr, FloatOrArr], FloatOrArr] | CPUDispatcher
 #: Numba type of $c_s^2$ function
 CS2FunScalarSig = numba.double(numba.double, numba.double)
-#: Numba pointer to a $c_s^2$ function
-type CS2FunScalarPtr = numba.types.CPointer  # CPointer(CS2FunScalarSig)
+#: Pointer to a $c_s^2$ function, i.e. the address of a Numba cfunc
+type CS2FunScalarPtr = int
 #: ctypes type of $c_s^2$ function
 CS2CFunc = ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double)
-#: Python type of $c_s^2$ function
-type CS2CFuncType = tp.Type[CS2CFunc]
+#: Python type of a $c_s^2$ ctypes function pointer instance,
+#: as created by calling :py:data:`CS2CFunc`
+type CS2CFuncType = tp.Callable[[float, float], float]
 
 # -----
 # Other

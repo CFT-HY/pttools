@@ -114,8 +114,10 @@ def get_kappa_bag[T: FloatOrArr](
                 vw, alpha_n, kappa
             )
 
+    kappa_out: T
     if isinstance(v_wall, np.ndarray):
-        kappa_out = it.operands[1]
+        # typing.cast() is not used below, since Numba cannot compile it.
+        kappa_out = it.operands[1]  # type: ignore[assignment]
     else:
         kappa_out = type(v_wall)(it.operands[1])
 
@@ -158,9 +160,11 @@ def get_kappa_de_bag[T: FloatOrArr](
                 vw, alpha_n, kappa, de
             )
 
+    kappa_out: T
+    de_out: T
     if isinstance(v_wall, np.ndarray):
-        kappa_out = it.operands[1]
-        de_out = it.operands[2]
+        kappa_out = it.operands[1]  # type: ignore[assignment]
+        de_out = it.operands[2]  # type: ignore[assignment]
     else:
         kappa_out = type(v_wall)(it.operands[1])
         de_out = type(v_wall)(it.operands[2])
@@ -206,9 +210,11 @@ def get_kappa_dq_bag[T: FloatOrArr](
                 vw, alpha_n, kappa, dq
             )
 
+    kappa_out: T
+    dq_out: T
     if isinstance(v_wall, np.ndarray):
-        kappa_out = it.operands[1]
-        dq_out = it.operands[2]
+        kappa_out = it.operands[1]  # type: ignore[assignment]
+        dq_out = it.operands[2]  # type: ignore[assignment]
     else:
         kappa_out = type(v_wall)(it.operands[1])
         dq_out = type(v_wall)(it.operands[2])
@@ -251,9 +257,11 @@ def get_ke_de_frac_bag[T: FloatOrArr](
                 vw, alpha_n, ke, de
             )
 
+    ke_out: T
+    de_out: T
     if isinstance(v_wall, np.ndarray):
-        ke_out = it.operands[1]
-        de_out = it.operands[2]
+        ke_out = it.operands[1]  # type: ignore[assignment]
+        de_out = it.operands[2]  # type: ignore[assignment]
     else:
         ke_out = type(v_wall)(it.operands[1])
         de_out = type(v_wall)(it.operands[2])
@@ -274,7 +282,7 @@ def get_ke_frac_bag[T: FloatOrArr](v_wall: T, alpha_n: float, n_xi: int = const.
     :return: kinetic energy fraction
     """
     ubarf2 = get_ubarf2_bag(v_wall, alpha_n, n_xi)
-    return ubarf2 / (0.75 * (1 + alpha_n))
+    return ubarf2 / (0.75 * (1 + alpha_n))  # type: ignore[return-value]
 
 
 def get_ke_frac_new_bag[T: FloatOrArr](
@@ -313,6 +321,7 @@ def get_ke_frac_new_bag[T: FloatOrArr](
     # Symmetric phase energy density
     e_s = bag.e_bag(w[-1], 0, bag.theta_bag(w[-1], 0, alpha_n))
     # result is stored in it.operands[1]
+    ke_frac_out: T
     if isinstance(v_wall, np.ndarray):
         ke_frac_out = it.operands[1] / e_s
     else:
@@ -321,7 +330,7 @@ def get_ke_frac_new_bag[T: FloatOrArr](
     return ke_frac_out
 
 
-def _get_ubarf2_bag_scalar[T: FloatOrArr1D](v_wall: T, alpha_n: float, n_xi: int, verbosity: int) -> T:
+def _get_ubarf2_bag_scalar(v_wall: float, alpha_n: float, n_xi: int, verbosity: int) -> float:
     if identify_solution_type_bag(v_wall, alpha_n) == SolutionType.ERROR:
         ub2 = np.nan
     else:
@@ -338,7 +347,7 @@ def _get_ubarf2_bag_scalar[T: FloatOrArr1D](v_wall: T, alpha_n: float, n_xi: int
     return ub2
 
 
-def _get_ubarf2_bag_arr[T: FloatOrArr1D](v_wall: T, alpha_n: float, n_xi: int, verbosity: int) -> T:
+def _get_ubarf2_bag_arr(v_wall: th.FloatArr1D, alpha_n: float, n_xi: int, verbosity: int) -> th.FloatArr1D:
     ubarf2 = np.zeros_like(v_wall)
     for i in numba.prange(v_wall.size):
         ubarf2[i] = _get_ubarf2_bag_scalar(v_wall[i], alpha_n, n_xi, verbosity)
@@ -360,18 +369,18 @@ def get_ubarf2_bag[T: FloatOrArr1D](
     :return: mean square fluid velocity
     """
     if isinstance(v_wall, float):
-        return _get_ubarf2_bag_scalar(v_wall, alpha_n, n_xi, verbosity)
+        return _get_ubarf2_bag_scalar(v_wall, alpha_n, n_xi, verbosity)  # type: ignore[return-value]
     if isinstance(v_wall, np.ndarray):
-        return _get_ubarf2_bag_arr(v_wall, alpha_n, n_xi, verbosity)
+        return _get_ubarf2_bag_arr(v_wall, alpha_n, n_xi, verbosity)  # type: ignore[return-value]
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
 @overload(get_ubarf2_bag, jit_options={"nopython": True, "parallel": True})
-def _get_ubarf2_bag_numba[T: FloatOrArr1D](
-        v_wall: T,
+def _get_ubarf2_bag_numba(
+        v_wall: th.FloatOrArr1D,
         alpha_n: float,
         n_xi: int = const.DEFAULT_N_XI,
-        verbosity: int = 0) -> T:
+        verbosity: int = 0) -> th.NumbaFunc:
     if isinstance(v_wall, numba.types.Float):
         return _get_ubarf2_bag_scalar
     if isinstance(v_wall, numba.types.Array):
@@ -415,6 +424,7 @@ def get_ubarf2_new_bag(
             )
 
     # Ubarf2 is stored in it.operands[1]
+    ubarf2_out: th.FloatOrArr
     if isinstance(v_wall, np.ndarray):
         ubarf2_out = it.operands[1]
     else:

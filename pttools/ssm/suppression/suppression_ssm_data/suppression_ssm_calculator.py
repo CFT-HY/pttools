@@ -13,7 +13,7 @@ import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
-SUPPRESSION_FOLDER = os.path.dirname(os.path.abspath(__file__))
+SUPPRESSION_FOLDER: str = os.path.dirname(os.path.abspath(__file__))
 
 
 def calc_sup_ssm(

@@ -39,7 +39,7 @@ def fpbspl(t: th.FloatArr1D, n: int, k: int, x: float, l: int, h: th.FloatArr1D)
     :param l: ?
     :param h: ?
     """
-    f
+    f: float
     one: float
     i: int
     j: int

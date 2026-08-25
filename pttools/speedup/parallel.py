@@ -19,9 +19,9 @@ from pttools.speedup.options import MAX_WORKERS_DEFAULT
 from pttools.utils import SUPPORTS_FREETHREADING, SUPPORTS_INTERPRETER_POOL
 
 try:
-    from concurrent.futures import InterpreterPoolExecutor
+    from concurrent.futures import InterpreterPoolExecutor  # type: ignore[attr-defined]
 except ImportError:
-    class InterpreterPoolExecutor:
+    class InterpreterPoolExecutor:  # type: ignore[no-redef]
         def __enter__(self):
             raise NotImplementedError("InterpreterPoolExecutor is only available in Python 3.14 and later.")
 
@@ -162,7 +162,7 @@ def get_pool(
     """
     if single_thread:
         yield FakeExecutor()
-    elif SUPPORTS_FREETHREADING and not sys._is_gil_enabled():
+    elif SUPPORTS_FREETHREADING and not sys._is_gil_enabled():  # type: ignore[attr-defined]
         yield ThreadPoolExecutor(max_workers=max_workers)
     elif SUPPORTS_INTERPRETER_POOL:
         yield InterpreterPoolExecutor(max_workers=max_workers)
@@ -204,7 +204,7 @@ def parallel_debug_message(
 
 
 def log_parallel_ready(
-        executor: Executor,
+        executor: Executor | FakeExecutor,
         n_workers: int,
         n_tasks: int,
         start_time: float) -> None:
@@ -257,21 +257,21 @@ def run_parallel(
     if max_workers is None:
         raise ValueError(f"Got invalid max_workers: {max_workers}")
 
-    n_tasks = np.prod(params.shape[:-1]) if multiple_params else params.size
+    n_tasks = int(np.prod(params.shape[:-1])) if multiple_params else params.size
     n_workers = 1 if single_thread else max_workers
 
     flags: list[tp.Literal["c_index", "external_loop", "multi_index", "reduce_ok", "refs_ok"]] = ["refs_ok"]
-    arr_size: int | np.signedinteger
+    arr_size: int
     if multiple_params:
         flags.append("reduce_ok")
         flags.append("external_loop")
         op_axes = [None, [*list(range(params.ndim-1)), -1]]
-        arr_size = np.prod(params.shape[:-1])
+        arr_size = int(np.prod(params.shape[:-1]))
     else:
         flags.append("c_index")
         flags.append("multi_index")
         op_axes = None
-        arr_size = np.prod(params.shape)
+        arr_size = int(np.prod(params.shape))
 
     runner = LoggingRunner(
         func,

@@ -5,10 +5,12 @@ import unittest
 import numpy as np
 
 from pttools.bubble import relativity
+import pttools.type_hints as th
 
 
 class RelativityTest(unittest.TestCase):
     """Unit tests for the functions of special relativity"""
+    v: th.FloatArr1D
 
     @classmethod
     def setUpClass(cls) -> None:

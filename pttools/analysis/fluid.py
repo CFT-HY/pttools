@@ -54,7 +54,7 @@ def curves_inverse(
 
 def curves_symmetric(
         v0: FloatArr1D = DEFAULT_CURVES_SYMMETRIC_V,
-        csb: float = None,
+        csb: float | None = None,
         w0: float = 1.,
         df_dtau_ptr: DifferentialPointer = DF_DTAU_PTR_BAG,
         method: FluidIntegrateMethod = DEFAULT_FLUID_INTEGRATE_METHOD,

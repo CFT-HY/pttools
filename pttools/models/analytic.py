@@ -97,7 +97,7 @@ class AnalyticModel(Model, abc.ABC):
     @staticmethod
     def a_from_g[T: FloatOrArr](g: T) -> T:
         """Get the prefactor $a$ from the relativistic degrees of freedom $g$."""
-        return np.pi**2 / 90 * g
+        return tp.cast(T, np.pi**2 / 90 * g)
 
     def alpha_n_bag[T: FloatOrArr](
             self,
@@ -124,7 +124,7 @@ class AnalyticModel(Model, abc.ABC):
             log_invalid=log_invalid
         )
         # self.check_p(wn, allow_fail=allow_no_transition)
-        return self.bag_wn_const / wn
+        return tp.cast(T, self.bag_wn_const / wn)
 
     def alpha_plus_bag[T: FloatOrArr](
             self,
@@ -155,10 +155,10 @@ class AnalyticModel(Model, abc.ABC):
             nan_on_invalid=nan_on_invalid,
         )
         alpha_plus = self.bag_wn_const / wp
-        return self.check_alpha_plus(
+        return tp.cast(T, self.check_alpha_plus(
             alpha_plus, vp_tilde=vp_tilde, sol_type=sol_type,
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
-        )
+        ))
 
     def export(self) -> dict[str, tp.Any]:
         return {
@@ -169,18 +169,18 @@ class AnalyticModel(Model, abc.ABC):
 
     @staticmethod
     def g_from_a[T: FloatOrArr](a: T) -> T:
-        return 90 / np.pi**2 * a
+        return tp.cast(T, 90 / np.pi**2 * a)
 
-    def ge_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        return 30/np.pi**2 * self.e_temp(temp, phase) / temp**4
+    def ge_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+        return tp.cast(T, 30/np.pi**2 * self.e_temp(temp, phase) / temp**4)
 
     @classmethod
     def get_a_g(
             cls,
-            a_s: float,
-            a_b: float,
-            g_s: float,
-            g_b: float,
+            a_s: float | None,
+            a_b: float | None,
+            g_s: float | None,
+            g_b: float | None,
             default_mult: float = DEFAULT_A_G_MULT) -> tuple[float, float, float, float]:
         a_s_none = is_nan_or_none(a_s)
         a_b_none = is_nan_or_none(a_b)
@@ -188,26 +188,34 @@ class AnalyticModel(Model, abc.ABC):
         g_b_none = is_nan_or_none(g_b)
         a_none = a_s_none and a_b_none
         g_none = g_s_none and g_b_none
+        # is_nan_or_none() does not narrow the types for the type checker.
+        a_s2: float
+        a_b2: float
+        g_s2: float
+        g_b2: float
         if not g_none:
             if not a_none:
                 raise ValueError("Specify either a or g values, not both.")
             if g_s_none:
-                g_s = default_mult * g_b
+                g_b2 = tp.cast(float, g_b)
+                g_s2 = default_mult * g_b2
             elif g_b_none:
-                g_b = g_s / default_mult
+                g_s2 = tp.cast(float, g_s)
+                g_b2 = g_s2 / default_mult
+            else:
+                g_s2 = tp.cast(float, g_s)
+                g_b2 = tp.cast(float, g_b)
 
-            a_s = cls.a_from_g(g_s)
-            a_b = cls.a_from_g(g_b)
+            a_s2 = cls.a_from_g(g_s2)
+            a_b2 = cls.a_from_g(g_b2)
         else:
-            if a_b_none:
-                a_b = 1
-            if a_s_none:
-                a_s = default_mult * a_b
+            a_b2 = 1 if a_b_none else tp.cast(float, a_b)
+            a_s2 = default_mult * a_b2 if a_s_none else tp.cast(float, a_s)
 
-            g_s = cls.g_from_a(a_s)
-            g_b = cls.g_from_a(a_b)
+            g_s2 = cls.g_from_a(a_s2)
+            g_b2 = cls.g_from_a(a_b2)
 
-        return a_s, a_b, g_s, g_b
+        return a_s2, a_b2, g_s2, g_b2
 
     def alpha_n_min_find_params_a_g(
             self,
@@ -226,8 +234,8 @@ class AnalyticModel(Model, abc.ABC):
             safety_factor_alpha=safety_factor_alpha
         )
 
-    def gs_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        return 45/(2*np.pi**2) * self.s_temp(temp, phase) / temp**4
+    def gs_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+        return tp.cast(T, 45/(2*np.pi**2) * self.s_temp(temp, phase) / temp**4)
 
-    def gp_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        return 90/np.pi**2 * self.p_temp(temp, phase) / temp**4
+    def gp_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+        return tp.cast(T, 90/np.pi**2 * self.p_temp(temp, phase) / temp**4)

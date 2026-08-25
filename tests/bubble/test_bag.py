@@ -5,11 +5,19 @@ import unittest
 import numpy as np
 
 from pttools import bubble
+import pttools.type_hints as th
 from pttools.utils import assert_allclose
 
 
 class TestBag(unittest.TestCase):
     """Unit tests for the bag model functions"""
+    alpha_n: float
+    phase: int
+    theta_s: float
+    theta_b: float
+    w: float
+    w_arr: th.FloatArr1D
+
     @classmethod
     def setUpClass(cls) -> None:
         """

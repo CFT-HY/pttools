@@ -257,7 +257,7 @@ class Spectrum(ssm.SSMSpectrum):
         :param f: frequencies $f$ today
         :return: wavenumbers $z$
         """
-        return freq.z(f=f, T_star=self.T_star, r_star=self.r_star, g_star=self.g_star)
+        return tp.cast(T, freq.z(f=f, T_star=self.T_star, r_star=self.r_star, g_star=self.g_star))
 
     # -----
     # Plotting

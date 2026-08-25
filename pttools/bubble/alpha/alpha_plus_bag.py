@@ -25,7 +25,7 @@ def _find_alpha_plus_bag_scalar(
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG,
         xtol: float = const.FIND_ALPHA_PLUS_TOL,
         # parallel: bool = True
-        ) -> th.FloatOrArrNumba:
+        ) -> th.FloatOrArr:
     if alpha_n_given < alpha_n_max_detonation_bag(v_wall):
         # Must be detonation
         # sol_type = SolutionType.DETON
@@ -54,7 +54,7 @@ def _find_alpha_plus_bag_arr(
         n_xi: int = const.DEFAULT_N_XI,
         cs2_fun_ptr: th.CS2FunScalarPtr = CS2_BAG_SCALAR_PTR,
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG,
-        xtol: float = const.FIND_ALPHA_PLUS_TOL) -> th.FloatOrArrNumba:
+        xtol: float = const.FIND_ALPHA_PLUS_TOL) -> th.FloatArr:
     ap = np.zeros_like(v_wall)
     for i in numba.prange(v_wall.size):  # pylint: disable=not-an-iterable
         ap[i] = _find_alpha_plus_bag_scalar(
@@ -76,7 +76,7 @@ def _find_alpha_plus_bag_arr_wrapper(
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG,
         xtol: float = const.FIND_ALPHA_PLUS_TOL,
         # parallel: bool = True
-        ) -> th.FloatOrArrNumba:
+        ) -> th.FloatArr:
     # if parallel:
     #     return _find_alpha_plus_bag_arr_parallel(
     #         v_wall=v_wall, alpha_n_given=alpha_n_given, n_xi=n_xi,
@@ -96,7 +96,7 @@ def find_alpha_plus_bag(
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG,
         xtol: float = const.FIND_ALPHA_PLUS_TOL,
         # parallel: bool = True
-        ) -> th.FloatOrArrNumba:
+        ) -> th.FloatOrArr:
     r"""
     Calculate the at-wall strength parameter $\alpha_+$ from given $\alpha_n$ and $v_\text{wall}$ in the Bag Model.
 
@@ -138,7 +138,7 @@ def _find_alpha_plus_bag_numba(
         df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG,
         xtol: float = const.FIND_ALPHA_PLUS_TOL,
         # parallel: bool = True
-        ) -> th.FloatOrArrNumba:
+        ) -> th.NumbaFunc:
     """This cannot be compiled with nogil=True,
     since this uses :func:`scipy.optimize.fsolve`, which requires "with numba.objmode".
     """

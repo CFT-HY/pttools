@@ -11,6 +11,6 @@ from .numba_wrapper import *
 from .utils import *
 from .options import *
 from .parallel import *
-from .spline import *
+from .spline import *  # type: ignore[no-redef]
 from .tbb import *
 from .threads import *

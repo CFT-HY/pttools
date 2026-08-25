@@ -12,7 +12,8 @@ def kernel_int_bracket[T: FloatOrArr](cs: T) -> T:
     $$3 - 2 c_s^2 - \frac{3}{c_s}(1 - c_s^2) \text{arctanh}(c_s)$$
     :giombi_2024_cs:`\ ` eq. 3.11
     """
-    return 3 - 2 * cs ** 2 - 3 / cs * (1 - cs ** 2) * np.arctanh(cs)
+    # typing.cast() is not used below, since Numba cannot compile it.
+    return 3 - 2 * cs ** 2 - 3 / cs * (1 - cs ** 2) * np.arctanh(cs)  # type: ignore[return-value]
 
 
 def kernel_low(z: FloatOrArr, nu: FloatOrArr, tau_star: FloatOrArr, tau_end: FloatOrArr) -> FloatOrArr:

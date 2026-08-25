@@ -20,7 +20,7 @@ def _v_minus_scalar(
         sol_type: SolutionType = SolutionType.DETON,
         strong_branch: bool = False,
         debug: bool = False,
-        parallel: bool = True) -> th.FloatOrArrNumba:
+        parallel: bool = True) -> th.FloatOrArr:
     # Fluid must flow through the wall from the outside to the inside of the bubble.
     if vp < 0:
         return np.nan
@@ -72,7 +72,7 @@ def _v_minus_arr(
         ap: float,
         sol_type: SolutionType = SolutionType.DETON,
         strong_branch: bool = False,
-        debug: bool = False) -> th.FloatOrArrNumba:
+        debug: bool = False) -> th.FloatArr:
     ret = np.empty_like(vp)
     # pylint: disable=not-an-iterable
     for i in numba.prange(vp.size):
@@ -98,7 +98,7 @@ def _v_minus_arr_wrapper(
         sol_type: SolutionType = SolutionType.DETON,
         strong_branch: bool = False,
         debug: bool = False,
-        parallel: bool = True) -> th.FloatOrArrNumba:
+        parallel: bool = True) -> th.FloatArr:
     if parallel:
         return _v_minus_arr_parallel(vp=vp, ap=ap, sol_type=sol_type, strong_branch=strong_branch, debug=debug)
     return _v_minus_arr_single(vp=vp, ap=ap, sol_type=sol_type, strong_branch=strong_branch, debug=debug)
@@ -110,7 +110,7 @@ def v_minus(
         sol_type: SolutionType = SolutionType.DETON,
         strong_branch: bool = False,
         debug: bool = False,
-        parallel: bool = True) -> th.FloatOrArrNumba:
+        parallel: bool = True) -> th.FloatOrArr:
     r"""
     Fluid speed $\tilde{v}_-$ behind the wall in the wall frame
     $$\tilde{v}_- = \frac{1}{2} \left[
@@ -144,7 +144,7 @@ def _v_minus_numba(
         sol_type: SolutionType = SolutionType.DETON,
         strong_branch: bool = False,
         debug: bool = False,
-        parallel: bool = True) -> th.FloatOrArrNumba:
+        parallel: bool = True) -> th.NumbaFunc:
     if isinstance(vp, numba.types.Float):
         return _v_minus_scalar
     if isinstance(vp, numba.types.Array):

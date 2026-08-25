@@ -277,8 +277,8 @@ def main(low_k: bool = True) -> tuple[th.FigArr1D, th.FigArr2D, str]:
     for i_alpha_n, alpha_n in enumerate(alpha_ns):
         for i_v_wall, v_wall in enumerate(v_walls):
             om_ins = omega_ins(f)
-            ax: Axes = axs[2, i_alpha_n, i_v_wall]
-            ax2: Axes = axs2[2, i_alpha_n, i_v_wall]
+            ax = axs[2, i_alpha_n, i_v_wall]
+            ax2 = axs2[2, i_alpha_n, i_v_wall]
             ax.plot(f, om_ins, label="LISA instrument noise")
             ax2.plot(f, om_ins, label="LISA instrument noise")
 

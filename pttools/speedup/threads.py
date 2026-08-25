@@ -12,7 +12,8 @@ from pttools.utils import AVAILABLE_CPU_CORES, powers_of_2
 logger = logging.getLogger(__name__)
 
 #: Default numbers of threads for performance comparisons
-DEFAULT_VARYING_NUMBA_THREADS: th.IntArr1D = powers_of_2(AVAILABLE_CPU_CORES)
+DEFAULT_VARYING_NUMBA_THREADS: th.IntArr1D = powers_of_2(
+    1 if AVAILABLE_CPU_CORES is None else AVAILABLE_CPU_CORES)
 
 
 def time_and_log(

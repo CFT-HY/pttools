@@ -1,4 +1,5 @@
 import functools
+import typing as tp
 from typing import Callable
 
 
@@ -14,7 +15,7 @@ def conditional_decorator[T: Callable](dec: T, condition: bool, **kwargs) -> T:
                 return functools.wraps(func)(dec(**kwargs)(func))
             return functools.wraps(func)(dec(func))
         return func
-    return decorator
+    return tp.cast(T, decorator)
 
 
 def for_all_methods(decorator):

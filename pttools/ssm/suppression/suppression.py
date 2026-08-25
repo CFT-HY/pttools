@@ -138,7 +138,8 @@ class Suppression:
 
 def alpha_n_max_approx[T: FloatOrArr](v_wall: T) -> T:
     r"""Approximate $\alpha_{n,\text{max}}({v}_\text{wall})$"""
-    return 1/3 * (1 + 3 * v_wall ** 2) / (1 - v_wall ** 2)
+    # typing.cast() is not used below, since Numba cannot compile it.
+    return 1/3 * (1 + 3 * v_wall ** 2) / (1 - v_wall ** 2)  # type: ignore[return-value]
 
 
 def alpha_n_max[T: FloatOrArr](v_wall: T) -> T:
@@ -148,11 +149,11 @@ def alpha_n_max[T: FloatOrArr](v_wall: T) -> T:
     # [0.44000, 0.50000]
     # [0.56000, 0.67000]
     if np.isscalar(v_wall) and v_wall < 0.44:
-        return M1 * v_wall + C1
+        return M1 * v_wall + C1  # type: ignore[return-value]
     ret = M2 * v_wall + C2
     small_vws = v_wall < 0.44
     ret[small_vws] = M1 * v_wall[small_vws] + C1
-    return ret
+    return ret  # type: ignore[return-value]
 
 
 def extend(

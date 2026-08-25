@@ -1,6 +1,6 @@
 """Utilities for configuring the mini-galleries of Sphinx-Gallery
 
-https://sphinx-gallery.github.io/stable/configuration.html#adding-mini-galleries-for-api-documentation
+https://sphinx-gallery.github.io/stable/configuration.html#add-mini-galleries-for-api-documentation
 """
 
 import re

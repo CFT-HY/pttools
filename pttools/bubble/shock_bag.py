@@ -43,7 +43,7 @@ def find_shock_index_bag(v_f: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float, s
     return n_shock
 
 
-def _v_shock_bag_scalar(xi: th.FloatOrArr) -> th.FloatOrArrNumba:
+def _v_shock_bag_scalar(xi: th.FloatOrArr) -> th.FloatOrArr:
     # const.CS0 is used only because it corresponds to the 1/sqrt(3) we need.
     # This has nothing to do with the sound speed!
     if xi < const.CS0:
@@ -56,14 +56,14 @@ def _v_shock_bag_scalar(xi: th.FloatOrArr) -> th.FloatOrArrNumba:
 _v_shock_bag_scalar_numba = numba.njit(_v_shock_bag_scalar)
 
 
-def _v_shock_bag_arr(xi: th.FloatOrArr) -> th.FloatOrArrNumba:
+def _v_shock_bag_arr(xi: th.FloatOrArr) -> th.FloatArr:
     ret = np.zeros_like(xi)
     for i in numba.prange(xi.size):
         ret[i] = _v_shock_bag_scalar_numba(xi[i])
     return ret
 
 
-def v_shock_bag(xi: th.FloatOrArr) -> th.FloatOrArrNumba:
+def v_shock_bag(xi: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Fluid velocity at a shock at $\xi$.
     No shocks exist for $\xi < \frac{1}{\sqrt{3}}$, so this returns zero.
@@ -81,7 +81,7 @@ def v_shock_bag(xi: th.FloatOrArr) -> th.FloatOrArrNumba:
 
 
 @overload(v_shock_bag, jit_options={"nopython": True, "cache": NUMBA_ENABLE_CACHE})
-def _v_shock_bag_numba(xi: th.FloatOrArr) -> th.FloatOrArrNumba:
+def _v_shock_bag_numba(xi: th.FloatOrArr) -> th.NumbaFunc:
     if isinstance(xi, numba.types.Float):
         return _v_shock_bag_scalar
     if isinstance(xi, numba.types.Array):
@@ -89,7 +89,7 @@ def _v_shock_bag_numba(xi: th.FloatOrArr) -> th.FloatOrArrNumba:
     raise TypeError(f"Unknown type for xi: {type(xi)}")
 
 
-def _wm_shock_bag_scalar(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = True) -> th.FloatOrArrNumba:
+def _wm_shock_bag_scalar(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = True) -> th.FloatOrArr:
     # const.CS0 is used only because it corresponds to the 1/sqrt(3) we need.
     # This has nothing to do with the sound speed!
     if nan_on_negative and xi < const.CS0:
@@ -99,7 +99,7 @@ def _wm_shock_bag_scalar(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bo
     return w_n * (9*xi**2 - 1)/(3*(1-xi**2))
 
 
-def _wm_shock_bag_arr(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = True) -> th.FloatOrArrNumba:
+def _wm_shock_bag_arr(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = True) -> th.FloatArr:
     ret = np.zeros_like(xi)
     for i in range(xi.size):
         ret[i] = _wm_shock_bag_scalar(xi[i], w_n, nan_on_negative)
@@ -107,7 +107,7 @@ def _wm_shock_bag_arr(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool 
 
 
 # This cannot be vectorized with numba.vectorize due to the keyword argument, but guvectorize might work
-def wm_shock_bag(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = True) -> th.FloatOrArrNumba:
+def wm_shock_bag(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = True) -> th.FloatOrArr:
     r"""
     Fluid enthalpy behind a shock at $\xi$ in the bag model.
     No shocks exist for $\xi < c_s$, so returns nan.
@@ -129,7 +129,7 @@ def wm_shock_bag(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = Tru
 
 
 @overload(wm_shock_bag, jit_options={"nopython": True, "cache": NUMBA_ENABLE_CACHE})
-def _wm_shock_bag_numba(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = True) -> th.FloatOrArrNumba:
+def _wm_shock_bag_numba(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = True) -> th.NumbaFunc:
     if isinstance(xi, numba.types.Float):
         return _wm_shock_bag_scalar
     if isinstance(xi, numba.types.Array):
@@ -155,7 +155,7 @@ def _wp_shock_bag_arr(xi: np.ndarray, wm: float) -> np.ndarray:
 
 
 # This cannot be vectorized with numba.vectorize due to the keyword argument, but guvectorize might work
-def wp_shock_bag(xi: th.FloatOrArr, wm: float) -> th.FloatOrArrNumba:
+def wp_shock_bag(xi: th.FloatOrArr, wm: float) -> th.FloatOrArr:
     r"""
     Fluid enthalpy in front of a shock at $\xi$ in the bag model.
     No shocks exist for $\xi < cs$, so returns nan.
@@ -177,7 +177,7 @@ def wp_shock_bag(xi: th.FloatOrArr, wm: float) -> th.FloatOrArrNumba:
 
 
 @overload(wp_shock_bag, jit_options={"nopython": True, "cache": NUMBA_ENABLE_CACHE})
-def _wp_shock_bag_numba(xi: th.FloatOrArr, wm: float) -> th.FloatOrArrNumba:
+def _wp_shock_bag_numba(xi: th.FloatOrArr, wm: float) -> th.NumbaFunc:
     if isinstance(xi, numba.types.Float):
         return _wp_shock_bag_scalar
     if isinstance(xi, numba.types.Array):

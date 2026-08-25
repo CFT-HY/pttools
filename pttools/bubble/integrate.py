@@ -27,7 +27,7 @@ type FluidIntegrateMethod = tp.Literal["RK23", "RK45", "DOP853", "Radau", "BDF",
 type FluidIntegrateOutput = tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, bool]
 
 DEFAULT_DF_DTAU: str = "bag"
-DEFAULT_FLUID_INTEGRATE_METHOD = "odeint"
+DEFAULT_FLUID_INTEGRATE_METHOD: FluidIntegrateMethod = "odeint"
 # ODEINT_LOCK = threading.Lock()
 
 #: Cache for the differential equations.

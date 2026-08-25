@@ -3,6 +3,7 @@ r"""Energy budget approximations
 These approximations are based on :espinosa_2010:`\ `.
 """
 
+
 import numba
 import scipy.optimize
 import numpy as np
@@ -92,7 +93,8 @@ def delta_n[T: FloatOrArr](model: "Model", wn: T) -> T:
     :notes:`\ `, eq. 7.43
     """
     # Todo: Check which enthalpies this expression should use.
-    return 4 * model.theta(wn, Phase.BROKEN) / (3 * wn)
+    # typing.cast() is not used below, since Numba cannot compile it.
+    return 4 * model.theta(wn, Phase.BROKEN) / (3 * wn)  # type: ignore[return-value]
 
 
 @numba.njit(cache=True)
@@ -114,7 +116,7 @@ def kappa_b[T: FloatOrArr](alpha_n: T) -> T:
     :espinosa_2010:`\ `, eq. 96
     For the transition from subsonic to supersonic deflagrations, xi_w = cs
     """
-    return alpha_n**(2/5) / (0.017 + (0.997 + alpha_n)**(2/5))
+    return alpha_n**(2/5) / (0.017 + (0.997 + alpha_n)**(2/5))  # type: ignore[return-value]
 
 
 @numba.njit(cache=True)
@@ -125,7 +127,7 @@ def kappa_c[T: FloatOrArr](alpha_n: T) -> T:
     :espinosa_2010:`\ `, eq. 97
     For Jouguet detonations xi_w = xi_j
     """
-    return np.sqrt(alpha_n) / (0.135 + np.sqrt(0.98 + alpha_n))
+    return np.sqrt(alpha_n) / (0.135 + np.sqrt(0.98 + alpha_n))  # type: ignore[return-value]
 
 
 @numba.njit(cache=True)
@@ -136,7 +138,7 @@ def kappa_d[T: FloatOrArr](alpha_n: T) -> T:
     :espinosa_2010:`\ `, eq. 98
     $\xi_w$ => 1 v. large wall speed
     """
-    return alpha_n / (0.73 + 0.083 * np.sqrt(alpha_n) + alpha_n)
+    return alpha_n / (0.73 + 0.083 * np.sqrt(alpha_n) + alpha_n)  # type: ignore[return-value]
 
 
 @numba.njit(cache=True)

@@ -6,6 +6,7 @@ RHS is Eq (33) in Espinosa et al. (plus $\frac{dw}{dt}$ not written there)
 
 import logging
 import math
+import typing as tp
 
 import numba
 import numpy as np
@@ -224,12 +225,52 @@ def sound_shell_alpha_plus_bag(
     return v, w, xi
 
 
+class SoundShellDict(tp.TypedDict):
+    r"""Return value of :func:`sound_shell_dict`"""
+    #: Fluid velocity profile $v(\xi)$
+    v: th.FloatArr1D
+    #: Enthalpy profile $w(\xi)$
+    w: th.FloatArr1D
+    #: Self-similar coordinate $\xi$
+    xi: th.FloatArr1D
+    #: Evenly spaced $\xi$
+    xi_even: th.FloatArr1D
+    #: Shock velocity curve $v_{sh}(\xi)$
+    v_sh: th.FloatArr1D
+    #: Shock enthalpy curve $w_{sh}(\xi)$
+    w_sh: th.FloatArr1D
+    #: Approximation for $v(\xi)$, if requested
+    v_approx: th.FloatArr1D | None
+    #: Approximation for $w(\xi)$, if requested
+    w_approx: th.FloatArr1D | None
+    #: Index of the wall
+    n_wall: int
+    #: Index of the sound speed
+    n_cs: int
+    #: Index of the shock
+    n_sh: int
+    #: Ratio of the enthalpies on the two sides of the wall
+    r: float
+    #: $\alpha_+$
+    alpha_plus: float
+    #: $\bar{U}_f^2$
+    ubarf2: float
+    #: Kinetic energy fraction of the total
+    ke_frac: float
+    #: $\kappa$
+    kappa: float
+    #: $\omega$
+    dw: float
+    #: Solution type
+    sol_type: SolutionType
+
+
 def sound_shell_dict(
         v_wall: float,
         alpha_n: float,
         n_xi: int = const.DEFAULT_N_XI,
         low_v_approx: bool = False,
-        high_v_approx: bool = False) -> dict[str, float | int | SolutionType | th.FloatArr1D]:
+        high_v_approx: bool = False) -> SoundShellDict:
     if low_v_approx and high_v_approx:
         raise ValueError("Both low and high v approximations can't be enabled at the same time.")
     check.check_physical_params((v_wall, alpha_n))
