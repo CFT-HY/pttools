@@ -495,7 +495,7 @@ def sound_shell_solver_deflagration_reverse(
         logger.error(
             "Deflagration solution was not found for model=%s, v_wall=%s, alpha_n=%s. "
             "Using xi_sh=%s. Reason: %s Elapsed: %s s.",
-            model.name, v_wall, alpha_n, xi_sh, sol[3], time.perf_counter() - start_time
+            model.name, v_wall, alpha_n, xi_sh, sol[3].replace("\n ", ""), time.perf_counter() - start_time
         )
     v, w, xi, wp, wm, vm = sound_shell_deflagration_reverse(model, v_wall, wn, xi_sh, t_end=t_end, n_xi=n_xi)
 

@@ -205,7 +205,7 @@ def solve_junction(
             f"Using v2_tilde={v2_tilde}, w2={w2}. Guess was v2_tilde={v2_tilde_guess}, w2={w2_guess}. " \
             f"Deviations={devs}. " + \
             ("" if (0 < v2_tilde < 1) else "This is unphysical! ") + \
-            f"Reason: {sol[3]}"
+            f"Reason: {sol[3].replace("\n ", "")}"
         logger.error(msg)
         if not allow_failure:
             return np.nan, np.nan

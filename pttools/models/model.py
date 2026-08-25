@@ -177,7 +177,7 @@ class Model(BaseModel, abc.ABC):
         w: float = sol[0]
         cs2: float = -sol[1] if is_max else sol[1]
         if sol[2]:
-            msg = f"Could not find cs2_{name}. Using cs2_{name}={cs2} at w={w}. Iterations: {sol[3]}"
+            msg = f"Could not find cs2_{name}. Using cs2_{name}={cs2} at w={w}. Iterations: {sol[3].replace("\n ", "")}"
             logger.error(msg)
             if not allow_fail:
                 raise RuntimeError(msg)
@@ -635,7 +635,7 @@ class Model(BaseModel, abc.ABC):
         if sol[2] != 1:
             msg = \
                 f"Could not find Tc with guess={guess}. " \
-                f"Using Tc={t_crit}. Reason: {sol[3]}"
+                f"Using Tc={t_crit}. Reason: {sol[3].replace("\n ", "")}"
             logger.error(msg)
             if not allow_fail:
                 raise RuntimeError(msg)
@@ -1061,7 +1061,7 @@ class Model(BaseModel, abc.ABC):
         if not solution_found:
             wn_sol = fsolve(self._wn_solvable, x0=np.array([wn_guess]), args=(alpha_n, theta_bar), full_output=True)
             solution_found = wn_sol[2] == 1
-            reason = wn_sol[3]
+            reason = wn_sol[3].replace("\n ", "")
             if solution_found or np.isnan(wn):
                 wn = wn_sol[0][0]
 

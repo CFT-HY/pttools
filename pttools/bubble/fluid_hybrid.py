@@ -263,7 +263,7 @@ def sound_shell_solver_hybrid(
             f"Hybrid solution was not found for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}. " +
             f"Got wn_estimate={wn_estimate} for wn={wn}. " +
             ("(as expected)" if high_alpha_n else "") +
-            f"Reason: {reason} " +
+            f"Reason: {reason.replace("\n ", "")} " +
             f"Elapsed: {time.perf_counter() - start_time} s."
         )
         if high_alpha_n:

@@ -314,7 +314,7 @@ def wm_chapman_jouguet(
         msg = (
             f"w_- solution was not found for w_+={wp}, model={model.name}, wm_guess={wm_guess}. " +
             ("" if error_on_invalid else f"Using w_-={wm}. ") +
-            f"Reason: {wm_sol[3]}"
+            f"Reason: {wm_sol[3].replace("\n ", "")}"
         )
         if log_invalid:
             logger.error(msg)
