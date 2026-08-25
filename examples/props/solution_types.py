@@ -109,9 +109,9 @@ def main(
         fig, axs = plt.subplots(1, len(v_walls), figsize=figsize)
 
         labels = [
-            "subsonic deflagration" + "\n" + r"$v_\mathrm{w} \leq c_s$",
-            "supersonic deflagration" + "\n" + r"$c_s<v_\mathrm{w} < c_\mathrm{J}$",
-            "detonation" + "\n" + r"$c_s<c_\mathrm{J}\leq v_\mathrm{w}$"
+            "subsonic deflagration\n$v_\\mathrm{wall} \\leq c_s$",
+            "supersonic deflagration\n$c_s < v_\\mathrm{wall} < v_\\mathrm{CJ}$",
+            "detonation\n$c_s < v_\\mathrm{CJ}\\leq v_\\mathrm{wall}$"
         ]
 
         for ax, label, v_wall, plot_cbar in zip(axs, labels, v_walls, plot_cbars):
@@ -134,5 +134,5 @@ def main(
 if __name__ == "__main__":
     main(
         show=True,
-        path="relativistic_combustion"
+        path="solution_types"
     )

@@ -94,7 +94,7 @@ def main(path: str | None = None) -> plt.Figure:
     # Pgw_int = 4/3* z**3/2/np.pi**2 * HR * Ht * power_spectrum_integration_int(x, Pv_exp, z, cs=cs, tau_star=tau_star)
     # Pgw_approx_2 = pow_gw_junction(z, Pgw_low, Pgw_int, Pgw_high, cs=cs, tau_star=tau_star, tau_end=tau_end)
 
-    font_size = 20
+    font_size = 16
     with rc_context({
         "axes.labelsize": font_size + 1,
         "axes.linewidth": 1.,
