@@ -19,7 +19,7 @@ SPEC_DEN_V_TILDE_LABEL = r"$\tilde{P}_{\tilde{v}}(kR_*)$"
 SPEC_DEN_GW_LABEL = r"$\mathcal{P}_\text{gw}(kR_*)$"
 POW_V_TILDE_LABEL = r"$\tilde{\mathcal{P}}_{\tilde{v}}(kR_*)$"
 POW_GW_LABEL = r"$\mathcal{P}_\text{gw}(kR_*)$"
-OMGW0_LABEL = r"$\Omega_{gw,0}$"
+POW_GW0_LABEL = r"$\mathcal{P}_{\text{gw},0}(f)$"
 Z_LABEL = r"$z = kR_*$"
 
 
@@ -147,7 +147,7 @@ def plot_spectra(
         labels: list[str] | None = None,
         legend: bool | None = None,
         **kwargs) -> FigAndAxes:
-    f"""Plot the GW spectra today {OMGW0_LABEL}"""
+    f"""Plot the GW spectra today {POW_GW0_LABEL}"""
     fig, ax = create_fig_ax(fig, ax)
     for i, spectrum in enumerate(spectra):
         snr = spectrum.signal_to_noise_ratio()
@@ -165,7 +165,7 @@ def plot_spectra(
     ax.set_xlabel(F_LABEL)
     ax.set_xscale("log")
     ax.set_xlim(f_min, f_max)
-    ax.set_ylabel(OMGW0_LABEL)
+    ax.set_ylabel(POW_GW0_LABEL)
     return plot_spectra_common(spectra, fig, ax, path, legend=legend, set_x=False)
 
 
