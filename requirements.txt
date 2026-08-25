@@ -32,7 +32,7 @@ matplotlib == 3.11.1
 # https://github.com/numba/numba/issues/9928
 numba == 0.66.0
 # NumbaLSODA does not work yet on the GitHub Actions Windows runners
-numbalsoda == 0.3.4; sys_platform != "win32"
+numbalsoda == 0.3.4
 # If you're using an old version of Numba and get the error:
 # "create_target_machine() got an unexpected keyword argument 'jitdebug'"
 # then you may have to downgrade llvmlite to 0.32.1
