@@ -55,6 +55,7 @@ test-output.txt
 .pytest_cache
 .spyproject
 .vscode/*
+dev
 dist
 envs
 envs-old

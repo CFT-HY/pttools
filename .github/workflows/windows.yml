@@ -20,10 +20,11 @@ jobs:
           uses: fortran-lang/setup-fortran@v1
           id: setup-fortran
           with:
-            # compiler: "gcc"
-            # version: "13"
-            compiler: "intel"
-            version: "2025.0"
+            # The Intel oneAPI compilers cannot be used on the windows-2025-vs2026 runner image,
+            # since their installer requires Visual Studio 2019 or 2022 and the image ships Visual Studio 2026.
+            # The installer then crashes with a segmentation fault (exit code 139).
+            compiler: "gcc"
+            version: "15"
         - name: Setup Python
           uses: actions/setup-python@v5
           # Windows minutes cost 2x what Linux does, so testing multiple Python versions would be quite costly
