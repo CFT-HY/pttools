@@ -147,10 +147,10 @@ _NUM_VALUES = 8
 COMPUTE_FAIL = (np.nan, ) * _NUM_VALUES
 
 
-def compute(bubble: Bubble):
+def compute(bubble: Bubble) -> tuple[float, float, float, float, float, float, float, float]:
     """Compute the entropy quantities of a bubble"""
     try:
-        if bubble.no_solution_found or bubble.solver_failed:
+        if bubble.solver_failed:
             return COMPUTE_FAIL
         return (
             bubble.entropy_density_diff_relative,

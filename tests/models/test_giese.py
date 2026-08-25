@@ -14,7 +14,12 @@ import pttools.type_hints as th
 from pttools.utils.assertions import assert_allclose
 
 
-def assert_kappa(css2: float, csb2: float, kappa_ref: th.FloatArr1D, rtol: float = 1e-7, atol: float = 0):
+def assert_kappa(
+        css2: float,
+        csb2: float,
+        kappa_ref: th.FloatArr1D,
+        rtol: float = 1e-7,
+        atol: float = 0) -> None:
     r"""Compare kappa results to those of figure 2 of :giese_2021:`\ `"""
     alpha_thetabar_ns = np.array([0.01, 0.1, 0.3])
     v_walls = np.linspace(0.2, 0.9, 8, endpoint=True)

@@ -32,9 +32,11 @@ class BaseBubble(abc.ABC):
             w_outside: float | None = None,
             wm_guess: float | None = None,
             t_end: float = const.DEFAULT_T_END,
-            n_xi: int = const.DEFAULT_N_XI):
-        v_wall, w_center, wm_guess = ensure_floats(
-            {"v_wall": v_wall, "w_center": w_center, "wm_guess": wm_guess},
+            n_xi: int = const.DEFAULT_N_XI,
+            label_latex: str = "UNSET",
+            label_unicode: str = "UNSET"):
+        v_wall, w_center, w_outside, wm_guess = ensure_floats(
+            {"v_wall": v_wall, "w_center": w_center, "w_outside": w_outside, "wm_guess": wm_guess},
             allow_none=True
         )
 
@@ -50,9 +52,9 @@ class BaseBubble(abc.ABC):
         #: Number of $\xi$ points, $n_\xi$
         self.n_xi: int = n_xi
         #: $w_\text{center}$
-        self.w_center: float | None = w_center
+        self.w_center: float = np.nan if w_center is None else w_center
         #: $w_\text{outside}$ (far away)
-        self.w_outside: float | None = w_outside
+        self.w_outside: float = np.nan if w_outside is None else w_outside
         #: $w_{-,\text{guess}}$
         self.wm_guess: float | None = wm_guess
 
@@ -71,8 +73,8 @@ class BaseBubble(abc.ABC):
         # -----
         # Output values
         # -----
-        self.label_latex: str
-        self.label_unicode: str
+        self.label_latex: str = label_latex
+        self.label_unicode: str = label_unicode
         self.notes: list[str] = []
         self.solving_duration: float = np.nan
 
@@ -115,9 +117,25 @@ class BaseBubble(abc.ABC):
         self.wm: float = np.nan
 
         # Flags
-        self.no_solution_found: bool = False
-        self.solution_found: bool | None = None
-        self.solved: bool = False
+        #: Whether the solution has errors
+        self.failed = False
+        #: Whether the solver provided a solution (not necessarily a valid one)
+        self.solved = False
+        #: Whether the solving has been attempted
+        self.solving_attempted = False
+        # Specific errors
+        #: Whether the junction conditions were not solved correctly
+        self.invalid_junction = False
+        #: Whether there is a negative entropy flux across a junction
+        self.negative_entropy_flux = False
+        #: Whether there is a total negative net enropy change in the system
+        self.negative_net_entropy_change = False
+        #: Whether there is a numerical error, e.g. $\kappa + \omega \neq 1$
+        self.numerical_error = False
+        #: Whether the solver crashed without returning output
+        self.solver_crashed = False
+        #: Whether the solver failed but returned output
+        self.solver_failed = False
 
     def add_note(self, note: str) -> None:
         """Add a note to the solution"""
@@ -159,13 +177,14 @@ class BaseBubble(abc.ABC):
 
     @abc.abstractmethod
     def solve(self) -> None:
-        if self.solved:
+        if self.solving_attempted:
             msg = (
-                "Re-solving an already solved bubble! "
+                "Re-solving a bubble! "
                 "Already computed quantities will not be updated due to caching."
             )
             logger.warning(msg)
             self.add_note(msg)
+        self.solving_attempted = True
 
     # =====
     # Plotting

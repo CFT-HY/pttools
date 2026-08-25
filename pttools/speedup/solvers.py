@@ -34,15 +34,8 @@ def fsolve_vary(
     for i in range(x0.shape[0]):
         for sign in (1, -1):
             x0_var = x0.copy()
-            if scalar_rel_var:
-                x0_var[i] *= 1 + sign*rel_variations
-            else:
-                x0_var[i] *= 1 + sign*rel_variations[i]
-
-            if scalar_abs_var:
-                x0_var[i] += sign * abs_variations
-            else:
-                x0_var[i] += sign * abs_variations[i]
+            x0_var[i] *= 1 + sign * (rel_variations if scalar_rel_var else rel_variations[i])
+            x0_var[i] += sign * (abs_variations if scalar_abs_var else abs_variations[i])
 
             sol2 = fsolve(func, x0=x0_var, args=args, full_output=True, **kwargs)
             if sol2[2] == 1:

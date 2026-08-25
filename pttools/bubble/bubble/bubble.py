@@ -83,19 +83,21 @@ class Bubble(BaseBubble):
         if not theta_bar:
             model.validate_alpha_n(alpha_n, allow_invalid=allow_invalid, log_invalid=log_invalid)
 
-        # w_outside=wn and is therefore never None for Bubble
-        self.w_outside: float
         super().__init__(
             model=model, v_wall=v_wall,
             w_outside=model.wn(alpha_n, wn_guess=wn_guess, theta_bar=theta_bar),
             wm_guess=wm_guess, t_end=t_end, n_xi=n_xi
         )
+        # Below this line, use self.v_wall, self.wn and self.wm_guess
 
         # -----
         # Validate input parameters
         # -----
         if use_bag_solver and use_giese_solver:
             raise ValueError("Both bag and Giese et al. solvers cannot be used at the same time.")
+        self.use_bag_solver = use_bag_solver
+        self.use_giese_solver = use_giese_solver
+
         if not 0 < self.v_wall <= 1:
             raise ValueError(f"Invalid v_wall={self.v_wall}. Should have 0 < v_wall <= 1.")
         if self.v_wall < low_v_wall_threshold:
@@ -116,15 +118,13 @@ class Bubble(BaseBubble):
         # -----
         # Set alpha_n and alpha_theta_bar_n
         # -----
-        self.alpha_n: float
-        self.alpha_theta_bar_n: float
+        self.alpha_n: float = model.alpha_n_from_alpha_theta_bar_n(alpha_theta_bar_n=alpha_n, wn=self.wn) \
+            if theta_bar else alpha_n
+        self.alpha_theta_bar_n: float = alpha_n \
+            if theta_bar else \
+            model.alpha_theta_bar_n_from_alpha_n(alpha_n=alpha_n, wn=self.wn)
         if theta_bar:
-            self.alpha_theta_bar_n = alpha_n
-            self.alpha_n = model.alpha_n_from_alpha_theta_bar_n(alpha_theta_bar_n=alpha_n, wn=self.wn)
             model.validate_alpha_n(self.alpha_n, allow_invalid=allow_invalid, log_invalid=log_invalid)
-        else:
-            self.alpha_n = alpha_n
-            self.alpha_theta_bar_n = model.alpha_theta_bar_n_from_alpha_n(alpha_n=alpha_n, wn=self.wn)
 
         self.sol_type = validate_solution_type(
             model,
@@ -154,20 +154,9 @@ class Bubble(BaseBubble):
         self.alpha_theta_bar_n_max_lte: float
         self.alpha_theta_bar_n_min_lte, self.alpha_theta_bar_n_max_lte = self.validate_lte(log_invalid=True)
 
-        # Flags
-        # Todo: clarify the differences between these
-        self.solver_failed = False
-        self.no_solution_found = False
-        # Specific errors
-        self.negative_entropy_flux = False
-        self.negative_net_entropy_change = False
-        self.numerical_error = False
-        self.unphysical_alpha_plus = False
-        self.use_bag_solver = use_bag_solver
-        self.use_giese_solver = use_giese_solver
-
         # LaTeX labels are not supported in Plotly 3D plots.
         # https://github.com/plotly/plotly.js/issues/608
+        # These require alpha_n and therefore cannot be before its validation.
         self.label_latex = rf"{f"{self.model.label_latex}, " if label_with_model else ""}$v_w={as_latex(v_wall)}, \alpha_n={as_latex(alpha_n)}$" \
             if label_latex is None else label_latex
         self.label_unicode = f"{f"{self.model.label_unicode}, " if label_with_model else ""}v_w={as_unicode(v_wall)}, αₙ={as_unicode(alpha_n)}" \
@@ -211,6 +200,10 @@ class Bubble(BaseBubble):
         self.v_cj: float = np.nan
         #: $w_{-,\text{sh}}$
         self.wm_sh: float = np.nan
+
+        # Flags
+        #: Unphysical $\alpha_+$
+        self.unphysical_alpha_plus = False
 
         if solve:
             self.solve()
@@ -339,24 +332,29 @@ class Bubble(BaseBubble):
             msg = f"Solver crashed with model={self.model.label_unicode}, v_wall={self.v_wall}, alpha_n={self.alpha_n}."
             logger.exception(msg, exc_info=e)
             self.add_note(msg)
-            self.no_solution_found = True
+            self.solving_attempted = True
+            self.solver_crashed = True
             return
 
         self._set_properties()
 
         # Validity checking for the solution
-        self.validate_junction()
-        self.validate_alpha_plus()
-        self.validate_entropy_flux()
-        self.validate_entropy_density(log_negative=log_negative_entropy)
-        self.validate_thermal_energy_density()
-        self.validate_kappa_omega(
-            sum_rtol_warning=sum_rtol_warning,
-            sum_rtol_error=sum_rtol_error,
-            error_prec=error_prec,
-            high_alpha_n=high_alpha_n,
-            log_high_alpha_n_failures=log_high_alpha_n_failures
-        )
+        self.failed = any([
+            self.solver_crashed,
+            self.solver_failed,
+            self.validate_junction(),
+            self.validate_alpha_plus(),
+            self.validate_entropy_flux(),
+            self.validate_entropy_density(log_negative=log_negative_entropy),
+            self.validate_thermal_energy_density(),
+            self.validate_kappa_omega(
+                sum_rtol_warning=sum_rtol_warning,
+                sum_rtol_error=sum_rtol_error,
+                error_prec=error_prec,
+                high_alpha_n=high_alpha_n,
+                log_high_alpha_n_failures=log_high_alpha_n_failures
+            )
+        ])
 
     # =====
     # Validation
@@ -465,6 +463,7 @@ class Bubble(BaseBubble):
                 f"model={self.model.label_unicode}, v_wall={self.v_wall}, alpha_n={self.alpha_n}"
             logger.error(msg)
             self.add_note(msg)
+        self.invalid_junction = fail
         return fail
 
     def validate_kappa_omega(
