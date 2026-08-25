@@ -26,7 +26,7 @@ def main() -> Figure:
     spectrum = Spectrum(
         bubble, nuc_type=NucType.EXPONENTIAL, r_star=0.1, low_k=False,
         y=np.logspace(-0.5, 3, 1000),
-        label_latex=f"$T_*={as_latex(DEFAULT_T_STAR)}$"
+        label_latex=rf"$T_*={as_latex(DEFAULT_T_STAR)} \ \mathrm{{GeV}}$"
     )
     fig, axs = spectrum.plot_multi_flat(legend=True)
     return fig
