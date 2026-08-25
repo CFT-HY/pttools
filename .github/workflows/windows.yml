@@ -43,11 +43,25 @@ jobs:
               pip-${{ runner.os }}-
               pip-
         - name: Install requirements
-          # Todo: fix NumbaLSODA installation on Windows
-          # Currently the requirements are specified manually to skip NumbaLSODA
+          # NumbaLSODA does not provide wheels for recent Python versions, so it's built from source.
+          # Its build backend, scikit-build, probes only MSVC-based CMake generators on Windows.
+          # Those are rejected here, since $CC and $CXX point to the MinGW toolchain,
+          # and the Visual Studio generator does not support Fortran at all,
+          # which results in "No CMAKE_Fortran_COMPILER could be found".
+          # Selecting a generator that scikit-build does not have built-in defaults for
+          # skips the probing entirely and lets CMake use the MinGW toolchain from $FC, $CC and $CXX.
+          # The MinGW runtime has to be linked statically, since NumbaLSODA loads its shared libraries
+          # with ctypes, which does not search the PATH for their dependencies on Python 3.8 and newer.
+          env:
+            CMAKE_GENERATOR: "Ninja Multi-Config"
+            CMAKE_ARGS: "-DCMAKE_SHARED_LINKER_FLAGS=-static"
           run: |
             pip --cache-dir=.pip install --upgrade pip wheel
             pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
+        - name: Print NumbaLSODA location
+          # PTtools falls back to other ODE solvers if NumbaLSODA cannot be imported,
+          # so this ensures that a broken NumbaLSODA build fails the workflow instead of being skipped silently.
+          run: python -c "import numbalsoda; print(numbalsoda.__file__)"
         - name: Print Numba sysinfo
           run: python -m numba --sysinfo | tee numba-sysinfo.txt
         - name: Generate reference data
