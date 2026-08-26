@@ -300,14 +300,14 @@ jobs:
       # Coverage of Numba-compiled functions does not get reported
       run: |
         set -o pipefail
-        NUMBA_DISABLE_JIT=1 pytest | tee test-output.txt
-        coverage json
+        NUMBA_DISABLE_JIT=1 pytest --store-durations | tee test-output.txt
     - name: Upload results
       uses: actions/upload-artifact@v4
       if: ${{ matrix.python-version == env.PRIMARY_PYTHON_VERSION }}
       with:
         name: Test results without Numba
         path: |
+          .test_durations
           coverage.xml
           coverage.json
           htmlcov
