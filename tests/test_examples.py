@@ -15,7 +15,7 @@ from examples.reverse import reverse, reverse_approx
 from examples.solvers import bag, old_new, xi_kappa_bag
 from examples.standard_model import standard_model_xi_v
 from pttools.analysis import close_figs
-from tests.utils.mark import mark_xfail_multiprocessing_jit, skip_slow
+from tests.utils.mark import mark_xfail_multiprocessing_jit, skip_slow, uses_multiprocessing
 
 
 class ExampleTest(unittest.TestCase):
@@ -53,6 +53,7 @@ class ExampleTest(unittest.TestCase):
     @staticmethod
     @mark_xfail_multiprocessing_jit
     @skip_slow
+    @uses_multiprocessing
     def test_const_cs_gw():
         figs1, figs2, table = const_cs_gw.main()
         close_figs(*figs1)
@@ -75,6 +76,7 @@ class ExampleTest(unittest.TestCase):
     @staticmethod
     @mark_xfail_multiprocessing_jit
     @skip_slow
+    @uses_multiprocessing
     def test_entropy_grid():
         close(entropy_grid.main())
 
@@ -95,12 +97,14 @@ class ExampleTest(unittest.TestCase):
     @staticmethod
     @mark_xfail_multiprocessing_jit
     @skip_slow
+    @uses_multiprocessing
     def test_gksvdv_comparison():
         close_figs(*gksvdv_comparison.main())
 
     @staticmethod
     @mark_xfail_multiprocessing_jit
     @skip_slow
+    @uses_multiprocessing
     def test_gksvdv_fig2():
         close_figs(*gksvdv_fig2.main())
 
@@ -133,6 +137,7 @@ class ExampleTest(unittest.TestCase):
     @staticmethod
     @mark_xfail_multiprocessing_jit
     @skip_slow
+    @uses_multiprocessing
     def test_ke_frac():
         close(ke_frac.main())
 
@@ -159,6 +164,7 @@ class ExampleTest(unittest.TestCase):
     @staticmethod
     @mark_xfail_multiprocessing_jit
     @skip_slow
+    @uses_multiprocessing
     def test_xi_kappa():
         close(xi_kappa.main())
 

@@ -8,7 +8,6 @@ import textwrap
 from pttools.analysis import time_and_plot_threads
 from pttools.speedup import DEFAULT_VARYING_NUMBA_THREADS, NUMBA_DISABLE_JIT
 import pttools.type_hints as th
-from pttools.utils.system import IS_GITHUB_ACTIONS, IS_WINDOWS
 from tests.utils.const import TEST_RESULT_PATH
 from tests.utils.mark import skip_slow
 

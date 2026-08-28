@@ -12,6 +12,7 @@ from pttools.bubble.bubble import get_kappa
 from pttools.speedup import IS_OSX
 import pttools.type_hints as th
 from pttools.utils.assertions import assert_allclose
+from tests.utils.mark import uses_multiprocessing
 
 
 def assert_kappa(
@@ -68,6 +69,7 @@ class GieseTest(unittest.TestCase):
         compare(model, alpha_ns, v_walls, kappa_ref, rtol=0.085)
 
     @pytest.mark.xfail(IS_OSX, reason="Bug on macOS")
+    @uses_multiprocessing
     def test_kappa33(self):
         # The top-right value had to be adjusted from 0.01816217 when adding the -1 to the indexing in find_phase()
         kappa_ref = np.array([
@@ -79,6 +81,7 @@ class GieseTest(unittest.TestCase):
 
     @staticmethod
     @unittest.expectedFailure
+    @uses_multiprocessing
     def test_kappa34():
         kappa_ref = np.array([
             [0.00709227, 0.01341795, 0.02375007, 0.05032617, 0.04033708, 0.01933255, 0.01273443, 0.00937875],
@@ -89,6 +92,7 @@ class GieseTest(unittest.TestCase):
 
     @staticmethod
     @unittest.expectedFailure
+    @uses_multiprocessing
     def test_kappa43():
         kappa_ref = np.array([
             [0.00730452, 0.01543951, 0.0342464, 0.1244067, np.nan, 0.04904255, 0.0265001, 0.01816217],
@@ -99,6 +103,7 @@ class GieseTest(unittest.TestCase):
 
     @staticmethod
     @unittest.expectedFailure
+    @uses_multiprocessing
     def test_kappa44():
         kappa_ref = np.array([
             [0.00700235, 0.01434407, 0.03086914, 0.11071288, 0.04033708, 0.01933255, 0.01273443, 0.00937875],
