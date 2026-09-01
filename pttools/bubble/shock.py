@@ -3,7 +3,6 @@
 import logging
 import typing as tp
 
-import numba.types
 import numpy as np
 
 from pttools.bubble.junction import solve_junction, w2_junction
@@ -13,6 +12,7 @@ from pttools.bubble.phase import Phase
 from pttools.bubble import relativity
 from pttools.bubble.shock_bag import v_shock_bag
 from pttools.bubble.solution_type import SolutionType
+from pttools.speedup import njit
 import pttools.type_hints as th
 
 if tp.TYPE_CHECKING:
@@ -235,7 +235,7 @@ def find_shock_index(
     return i_sh
 
 
-@numba.njit
+@njit
 def shock_zoom_last_element(
         v: th.FloatArr1D,
         w: th.FloatArr1D,

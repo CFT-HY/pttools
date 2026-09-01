@@ -14,7 +14,7 @@ import pttools.type_hints as th
 # from pttools.speedup import NUMBA_ENABLE_CACHE
 
 
-# @numba.njit
+# @njit
 def getwow(v1, v2):
     """Ratio of enthalpies across the bubble wall, "w over w"
     from the junction conditions
@@ -25,7 +25,7 @@ def getwow(v1, v2):
     return v1/(1. - v1 ** 2)/v2*(1. - v2 ** 2)
 
 
-# @numba.njit
+# @njit
 def getvm(al: float, vw: float, cs2b: float) -> tuple[float, int]:
     r"""Fluid velocity behind the wall, $\tilde{v}_-$, and the expansion mode
     0 = deflagration
@@ -46,7 +46,7 @@ def getvm(al: float, vw: float, cs2b: float) -> tuple[float, int]:
     return (cc + np.sqrt(disc))/2.*cs2b/vw, 2
 
 
-# @numba.njit
+# @njit
 def dfdv(xiw: tuple[float, float] | th.FloatArr1D, v: float, cs2: float) -> tuple[float, float]:
     """The differential equation that is solved in the shock/rarefaction wave
 
@@ -60,7 +60,7 @@ def dfdv(xiw: tuple[float, float] | th.FloatArr1D, v: float, cs2: float) -> tupl
 
 
 # This uses odeint and simpson, and therefore compiling would not benefit much.
-# @numba.njit
+# @njit
 def getKandWow(vw: float, v0: float, cs2: float) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, float, float]:
     """
     Returns two values
@@ -104,14 +104,14 @@ def getKandWow(vw: float, v0: float, cs2: float) -> tuple[th.FloatArr1D, th.Floa
     return vs, wows, xis, Kint*4./vw**3, wows[0]
 
 
-# @numba.njit
+# @njit
 def alN(al, wow, cs2b, cs2s):
     r"""$\alpha_{\bar{\theta}n}$ in the nucleation phase (in front of the shock)"""
     da = (1./cs2b - 1./cs2s)/(1./cs2s + 1.)/3.
     return (al + da)*wow - da
 
 
-# @numba.njit
+# @njit
 def getalNwow(vp, vm, vw, cs2b, cs2s):
     r"""Get
     - $\alpha_{\bar{\theta}n}$ in the nucleation phase
@@ -123,7 +123,7 @@ def getalNwow(vp, vm, vw, cs2b, cs2s):
 
 
 # This function does not call functions from other files, and can therefore be safely cached.
-# @numba.njit(nogil=True, cache=True)
+# @njit(nogil=True, cache=True)
 def kappaNuMuModel(
         cs2b: float,
         cs2s: float,

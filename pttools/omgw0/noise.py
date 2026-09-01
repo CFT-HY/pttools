@@ -1,14 +1,14 @@
 """Utilities for calculating the noise of gravitational wave detectors, especially LISA"""
 
-import numba
 import numpy as np
 
 from pttools.omgw0 import const
+from pttools.speedup import njit
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def signal_to_noise_ratio(
         f: th.FloatArr1D,
         signal: th.FloatArr1D,

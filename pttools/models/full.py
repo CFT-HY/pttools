@@ -2,10 +2,10 @@
 
 import logging
 
-import numba
 import numpy as np
 from scipy.interpolate import splev, splrep
 
+from pttools.speedup import njit
 import pttools.type_hints as th
 from pttools.bubble.phase import Phase
 from pttools.models.model import Model
@@ -70,6 +70,7 @@ class FullModel(Model):
 
     def gen_cs2(self):
         """This function generates the Numba-jitted cs2 function to be used by the fluid integrator"""
+        # Numba caching is disabled for the functions below, as they are created dynamically.
         cs2_spl_s = splrep(
             np.log10(self.w(self.thermo.GEFF_DATA_TEMP, Phase.SYMMETRIC)),
             self.thermo.cs2_full(self.thermo.GEFF_DATA_TEMP, Phase.SYMMETRIC),
@@ -81,7 +82,7 @@ class FullModel(Model):
             k=1
         )
 
-        @numba.njit
+        @njit(cache=False)
         def cs2(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
             if np_all_fix(phase == Phase.SYMMETRIC.value):
                 return splev(np.log10(w), cs2_spl_s)

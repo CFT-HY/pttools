@@ -10,9 +10,10 @@ import numpy as np
 
 from examples.utils import save_and_show_fig
 from pttools.bubble.bubble import Bubble
+from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR
 from pttools.bubble.fluid_bag import sound_shell_bag
 from pttools.bubble.solution_type import SolutionType
-from pttools.bubble.integrate import add_df_dtau
+from pttools.bubble.integrate import DF_DTAU_PTR_BAG, add_df_dtau
 from pttools.bubble.relativity import lorentz
 from pttools.models.const_cs import ConstCSModel
 from tests.paper.plane import xiv_plane
@@ -36,11 +37,13 @@ def main() -> plt.Figure:
     model2 = ConstCSModel(a_s=1.1, a_b=1, css2=1/3, csb2=1/3, V_s=1, V_b=0)
     det2 = Bubble(model2, v_wall=0.85, alpha_n=0.05, sol_type=SolutionType.DETON)
     ax.plot(det2.xi, det2.v, c="b", label=r"$c_{sb}=\frac{1}{\sqrt{3}}$")
-    v, w, xi = sound_shell_bag(v_wall=0.85, alpha_n=0.05)
+    v, w, xi = sound_shell_bag(
+        v_wall=0.85, alpha_n=0.05, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG)
     ax.plot(xi, v, c="g", label="bag", ls=":")
     def2 = Bubble(model2, v_wall=0.5, alpha_n=0.578, sol_type=SolutionType.SUB_DEF)
     ax.plot(def2.xi, def2.v, c="b")
-    v, w, xi = sound_shell_bag(v_wall=0.5, alpha_n=0.578)
+    v, w, xi = sound_shell_bag(
+        v_wall=0.5, alpha_n=0.578, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG)
     ax.plot(xi, v, c="g", ls=":")
 
     xi = np.linspace(css, 1, 20)

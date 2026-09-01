@@ -10,13 +10,13 @@ from pttools.bubble import check
 from pttools.bubble import const
 from pttools.bubble import props
 from pttools.bubble.solution_type import SolutionType
-from pttools.speedup import NUMBA_ENABLE_CACHE
+from pttools.speedup import njit
 import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
 
-@numba.njit
+@njit
 def find_shock_index_bag(v_f: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float, sol_type: SolutionType) -> int:
     r"""
     Array index of shock from first point where fluid velocity $v_f$ goes below $v_\text{shock}$.
@@ -53,7 +53,7 @@ def _v_shock_bag_scalar(xi: th.FloatOrArr) -> th.FloatOrArr:
     return v
 
 
-_v_shock_bag_scalar_numba = numba.njit(_v_shock_bag_scalar)
+_v_shock_bag_scalar_numba = njit(_v_shock_bag_scalar, cache=True)
 
 
 def _v_shock_bag_arr(xi: th.FloatOrArr) -> th.FloatArr:
@@ -80,7 +80,9 @@ def v_shock_bag(xi: th.FloatOrArr) -> th.FloatOrArr:
     raise TypeError(f"Unknown type for xi: {type(xi)}")
 
 
-@overload(v_shock_bag, jit_options={"nopython": True, "cache": NUMBA_ENABLE_CACHE})
+# The Numba caching of the overload implementations is disabled, as their cache files collide
+# with those of the njit-compiled versions of the same functions, which results in segmentation faults.
+@overload(v_shock_bag, jit_options={"nopython": True})
 def _v_shock_bag_numba(xi: th.FloatOrArr) -> th.NumbaFunc:
     if isinstance(xi, numba.types.Float):
         return _v_shock_bag_scalar
@@ -128,7 +130,7 @@ def wm_shock_bag(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = Tru
     raise TypeError(f"Unknown type for xi: {type(xi)}")
 
 
-@overload(wm_shock_bag, jit_options={"nopython": True, "cache": NUMBA_ENABLE_CACHE})
+@overload(wm_shock_bag, jit_options={"nopython": True})
 def _wm_shock_bag_numba(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = True) -> th.NumbaFunc:
     if isinstance(xi, numba.types.Float):
         return _wm_shock_bag_scalar
@@ -176,7 +178,7 @@ def wp_shock_bag(xi: th.FloatOrArr, wm: float) -> th.FloatOrArr:
     raise TypeError(f"Unknown type for xi: {type(xi)}")
 
 
-@overload(wp_shock_bag, jit_options={"nopython": True, "cache": NUMBA_ENABLE_CACHE})
+@overload(wp_shock_bag, jit_options={"nopython": True})
 def _wp_shock_bag_numba(xi: th.FloatOrArr, wm: float) -> th.NumbaFunc:
     if isinstance(xi, numba.types.Float):
         return _wp_shock_bag_scalar

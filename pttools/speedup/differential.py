@@ -7,6 +7,7 @@ import typing as tp
 import numba
 import numpy as np
 
+from pttools.speedup.jit import njit
 from pttools.speedup.numba_wrapper import CFunc, CPUDispatcher, lsoda_sig
 from pttools.speedup.options import NUMBA_DISABLE_JIT
 import pttools.type_hints as th
@@ -56,7 +57,8 @@ class DifferentialCache:
                     "and it will not affect access to the old differential using its pointer.",
                     name
                 )
-            differential_njit = numba.njit(differential)
+            # Caching is disabled, as the differentials are created dynamically.
+            differential_njit = njit(differential, cache=False)
             if not NUMBA_DISABLE_JIT:
                 differential_cfunc = numba.cfunc(lsoda_sig)(differential)
                 if p_last_is_backwards:
@@ -77,13 +79,13 @@ class DifferentialCache:
                 else:
                     differential_numbalsoda = differential_cfunc
 
-            @numba.njit
+            @njit(cache=False)
             def differential_odeint(y: th.FloatArr1D, t: float, p: th.FloatArr1D | None = None) -> th.FloatArr1D:
                 du = np.empty_like(y)
                 differential_njit(t, y, du, p)
                 return du
 
-            @numba.njit
+            @njit(cache=False)
             def differential_solve_ivp(t: float, y: th.FloatArr1D, p: th.FloatArr1D | None = None) -> th.FloatArr1D:
                 du = np.empty_like(y)
                 differential_njit(t, y, du, p)

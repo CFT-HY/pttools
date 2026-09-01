@@ -77,7 +77,10 @@ class TestShellsBag(unittest.TestCase):
         # Espinosa et al. 2010 comparisons
         vw_list_esp = np.array([0.5, 0.7, 0.77])
         alpha_plus_list_esp = [0.263, 0.052, 0.091]
-        alpha_n_list_esp = [bubble.find_alpha_n_bag(vw, ap) for vw, ap in zip(vw_list_esp, alpha_plus_list_esp)]
+        alpha_n_list_esp = [
+            bubble.find_alpha_n_bag(vw, ap, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG)
+            for vw, ap in zip(vw_list_esp, alpha_plus_list_esp)
+        ]
 
         fig_esp, data_esp = plot_fluid_shells_bag(vw_list_esp, alpha_n_list_esp, multi=True, debug=True)
 

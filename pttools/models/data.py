@@ -11,6 +11,7 @@ from scipy.interpolate import splev, splrep
 
 from pttools.bubble.phase import Phase
 from pttools.models.model import Model
+from pttools.speedup import njit
 import pttools.type_hints as th
 from pttools.speedup.overload import np_all_fix
 
@@ -155,6 +156,7 @@ class DataModel(Model):
             splev(np.log10(temp), spline_b) * (1 - phase)
 
     def gen_cs2(self):
+        # Numba caching is disabled for the functions below, as they are created dynamically.
         # T_min = self.T_min
         # T_max = self.T_max
         w_min = self.w_min
@@ -166,7 +168,7 @@ class DataModel(Model):
         spline_cs2_w_s = splrep(data_w_s, self.data_cs2_s, k=1)
         spline_cs2_w_b = splrep(data_w_b, self.data_cs2_b, k=1)
 
-        @numba.njit
+        @njit(cache=False)
         def cs2_compute(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
             if np_all_fix(phase == Phase.SYMMETRIC.value):
                 return splev(w, spline_cs2_w_s)
@@ -175,13 +177,13 @@ class DataModel(Model):
             return splev(w, spline_cs2_w_s) * phase \
                 + splev(w, spline_cs2_w_b) * (1 - phase)
 
-        @numba.njit
+        @njit(cache=False)
         def cs2_scalar(w: float, phase: th.FloatOrArr) -> th.FloatOrArr:
             if w < w_min or w > w_max:
                 return np.nan
             return cs2_compute(w, phase)
 
-        @numba.njit
+        @njit(cache=False)
         def cs2_arr(w: th.FloatArr1D, phase: th.FloatOrArr) -> th.FloatArr1D:
             # This check somehow fixes a compilation bug in Numba 0.60.0
             if np.isscalar(w):

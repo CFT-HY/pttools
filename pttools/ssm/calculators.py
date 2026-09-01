@@ -2,16 +2,16 @@
 
 import logging
 
-import numba
 import numpy as np
 
+from pttools.speedup import njit
 from pttools.ssm import const
 import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
 
-@numba.njit
+@njit(cache=True)
 def resample_uniform_xi(
         xi: th.FloatArr1D,
         f: th.FloatOrArr,
@@ -28,7 +28,7 @@ def resample_uniform_xi(
     return xi_re, np.interp(xi_re, xi, f)
 
 
-@numba.njit
+@njit(cache=True)
 def trapezoid_loglog(x: th.FloatArr1D, y: th.FloatArr1D, minus1_atol: float = 1e-12) -> float:
     """Power-law (log-log) trapezoidal integration
 

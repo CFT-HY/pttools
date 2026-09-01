@@ -11,7 +11,6 @@ import logging
 # import os
 import typing as tp
 
-import numba
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
@@ -19,6 +18,7 @@ from scipy.optimize import curve_fit
 from pttools import bubble
 from pttools.bubble import DEFAULT_ADIABATIC_INDEX
 from pttools import ssm
+from pttools.speedup import njit
 import pttools.type_hints as th
 from tests.paper import const
 from tests.paper import plotting
@@ -96,12 +96,13 @@ VW_LIST_ALL = [const.VW_WEAK_LIST, VW_INTER_LIST]
 
 # Functions
 
-@numba.njit
+
+@njit(cache=True)
 def cwg_fitfun(k, p0, p1):
     return p0 * np.power(k/p1, 3.0) * np.power(7.0 / (4.0 + 3.0 * np.power(k / p1, 2.0)), 7.0 / 2.0)
 
 
-@numba.njit
+@njit(cache=True)
 def double_broken_power_law(z, A, z0, z1, a, b, c, d: float = 4., e: float = 2.):
     s = z/z1
     D = z1/z0
@@ -112,7 +113,7 @@ def double_broken_power_law(z, A, z0, z1, a, b, c, d: float = 4., e: float = 2.)
     return A * norm*s**a/(1 + (D*s)**d)**((a-b)/d) / (b-c-m + m*s**e)**((b-c)/e)
 
 
-@numba.njit
+@njit(cache=True)
 def ssm_fitfun(z, A, z0, z1):
     return double_broken_power_law(z, A, z0, z1, 9, 1, -4)
 
@@ -170,7 +171,8 @@ def make_1dh_compare_table(
         vw = params[1]
         v2_sim = v2_list[n][0]
         v2_exp = v2_list[n][1]
-        Ubarf_1d_ssm = np.sqrt(bubble.get_ubarf2_bag(vw, alpha))
+        Ubarf_1d_ssm = np.sqrt(bubble.get_ubarf2_bag(
+            vw, alpha, cs2_fun_ptr=bubble.CS2_BAG_SCALAR_PTR, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG))
 
         f.write(tu.tex_sf(100*alpha) + ' & ')
         f.write(f'{vw:.2f} & ')
@@ -541,7 +543,9 @@ def plot_ps_1bubble(
     nz_string = f'nz{Np[0] // 1000}k_'
     nx_string = f'nx{Np[1] // 1000}k-'
 
-    A2, fp2_2, lam2 = ssm.a2_e_conserving_bag(z, vw, alpha, npt=Np[1:], lambda_correction=lambda_correction)
+    A2, fp2_2, lam2 = ssm.a2_e_conserving_bag(
+        z, vw, alpha, cs2_fun_ptr=bubble.CS2_BAG_SCALAR_PTR, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
+        npt=Np[1:], lambda_correction=lambda_correction)
 
     z_list = 3*[z]
     ph_sp_fac = z**3/(2*np.pi**2)
@@ -848,7 +852,8 @@ def plot_and_save(
         f2.savefig(MD_PATH + "pow_gw_" + graph_file_suffix)
 
     # Now some comparisons between real space <v^2> and Fourier space already calculated
-    v_ip, w_ip, xi = bubble.sound_shell_bag(vw, alpha)
+    v_ip, w_ip, xi = bubble.sound_shell_bag(
+        vw, alpha, cs2_fun_ptr=bubble.CS2_BAG_SCALAR_PTR, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG)
     Ubarf2 = bubble.Ubarf_squared(v_ip, w_ip, xi, vw)
 
     logger.debug(

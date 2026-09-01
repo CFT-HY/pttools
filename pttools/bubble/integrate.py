@@ -14,6 +14,7 @@ from scipy.integrate._ivp.ivp import OdeResult
 from pttools.bubble.cs2_bag import cs2_bag, cs2_bag_scalar_cfunc
 from pttools.bubble.const import DEFAULT_N_XI, DEFAULT_T_END
 from pttools.bubble.phase import Phase
+from pttools.speedup import njit
 from pttools.speedup.differential import DifferentialCache, DifferentialCFunc, DifferentialPointer
 from pttools.speedup.numba_wrapper import numbalsoda
 from pttools.speedup.options import NUMBA_DISABLE_JIT, NUMBA_INTEGRATE
@@ -97,17 +98,16 @@ DF_DTAU_PTR_BAG: DifferentialPointer = add_df_dtau(
 )
 
 
-# This function and functions that use it should not be cached,
-# so that df_dtau_ptr is correct for the process in which they run.
-@numba.njit
+# This function calls only functions of this file, and can therefore be cached safely.
+@njit(cache=True)
 def fluid_integrate_param(
         v0: float,
         w0: float,
         xi0: float,
         phase: Phase,
+        df_dtau_ptr: DifferentialPointer,
         t_end: float = DEFAULT_T_END,
         n_xi: int = DEFAULT_N_XI,
-        df_dtau_ptr: DifferentialPointer = DF_DTAU_PTR_BAG,
         method: FluidIntegrateMethod = DEFAULT_FLUID_INTEGRATE_METHOD) \
         -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
@@ -119,9 +119,9 @@ def fluid_integrate_param(
     :param w0: $w_0$
     :param xi0: $\xi_0$
     :param phase: phase $\phi$
+    :param df_dtau_ptr: pointer to the differential equation function
     :param t_end: $t_\text{end}$
     :param n_xi: number of $\xi$ points
-    :param df_dtau_ptr: pointer to the differential equation function
     :param method: differential equation solver to be used
     :return: $v, w, \xi, t$
     """
@@ -157,7 +157,7 @@ def fluid_integrate_param(
     return v, w, xi, t
 
 
-@numba.njit(nogil=True)
+@njit(nogil=True)
 def fluid_integrate_param_numba(
         t: th.FloatArr1D,
         y0: th.FloatArr1D,
@@ -255,4 +255,4 @@ def fluid_integrate_param_solve_ivp(
 
 def precompile() -> None:
     """Run fluid_integrate_param once to precompile it with Numba"""
-    fluid_integrate_param(v0=0.5, w0=0.5, xi0=0.5, phase=Phase.SYMMETRIC, n_xi=2)
+    fluid_integrate_param(v0=0.5, w0=0.5, xi0=0.5, phase=Phase.SYMMETRIC, df_dtau_ptr=DF_DTAU_PTR_BAG, n_xi=2)

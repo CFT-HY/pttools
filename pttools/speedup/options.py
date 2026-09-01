@@ -58,8 +58,7 @@ NUMBA_INTEGRATE_TOLERANCES: tp.Final[bool] = bool(
 NUMBA_NESTED_PARALLELISM: tp.Final[bool] = bool(int(os.getenv("NUMBA_NESTED_PARALLELISM", "0")))
 #: Default options for the custom njit decorator.
 NUMBA_OPTS: dict[str, tp.Any] = {
-    # Caching does not work properly with functions that have dependencies across files
-    # "cache": True
+    "cache": NUMBA_ENABLE_CACHE
 }
 
 if NUMBA_INTEGRATE:

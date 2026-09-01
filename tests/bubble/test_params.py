@@ -7,6 +7,7 @@ import numba
 from pttools.bubble.physical_params import NucArgs, PhysicalParams
 from pttools.ssm.nucleation import NucType
 from pttools import speedup
+from pttools.speedup import njit
 
 
 class TestParams(unittest.TestCase):
@@ -53,17 +54,17 @@ class TestParams(unittest.TestCase):
         self.assertIsNotNone(params.nuc_args)
 
 
-@numba.njit
+@njit
 def params_without_nuc_args_numba():
     return PhysicalParams(0.1, 0.2)
 
 
-@numba.njit
+@njit
 def params_without_nuc_args_numba_nones():
     return PhysicalParams(0.1, 0.2, None, None)
 
 
-@numba.njit
+@njit
 def params_with_nuc_args_numba():
     nuc_args = NucArgs(0.1)
     return PhysicalParams(0.1, 0.2, NucType.SIMULTANEOUS.value, nuc_args)

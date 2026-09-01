@@ -9,7 +9,9 @@ import matplotlib.pyplot as plt
 
 from examples.utils import save_and_show_fig
 from pttools.logging import setup_logging
+from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR
 from pttools.bubble.fluid_bag import sound_shell_bag
+from pttools.bubble.integrate import DF_DTAU_PTR_BAG
 from pttools.bubble.fluid_reference import ref
 from pttools.models.bag import BagModel
 # from pttools.models.const_cs import ConstCSModel
@@ -28,7 +30,8 @@ def main(
     # model = ConstCSModel(css2=0.323, csb2=0.322, g_s=123, g_b=120, V_s=0.9)
 
     print("Solving with old solver")
-    v, w, xi = sound_shell_bag(v_wall, alpha_n)
+    v, w, xi = sound_shell_bag(
+        v_wall, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG)
     # print(v, w, xi)
 
     print("Solving with new solver")

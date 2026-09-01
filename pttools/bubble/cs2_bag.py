@@ -4,6 +4,7 @@ import numba
 from numba.extending import overload
 import numpy as np
 
+from pttools.speedup import njit
 import pttools.type_hints as th
 from pttools.bubble.phase import Phase
 from pttools.bubble import const
@@ -16,7 +17,7 @@ This is enabled by default, since these functions are not expected to change bet
 """
 
 
-@numba.njit(cache=NUMBA_CACHE_CS2_BAG)
+@njit(cache=NUMBA_CACHE_CS2_BAG)
 def cs2_bag_multi(
         w: th.FloatOrArr,
         phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -27,7 +28,7 @@ def cs2_bag_multi(
     return np.ones_like(w) * np.ones_like(phase) / 3.
 
 
-@numba.njit(cache=NUMBA_CACHE_CS2_BAG)
+@njit(cache=NUMBA_CACHE_CS2_BAG)
 def cs2_bag_neg(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
     return - cs2_bag_multi(w, phase)
 
@@ -45,9 +46,11 @@ def _cs2_bag_scalar(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
 def cs2_bag_scalar_cfunc(w: float, phase: Phase) -> float:
     return const.CS0_2
 
-@numba.njit(cache=NUMBA_CACHE_CS2_BAG)
+
+@njit(cache=NUMBA_CACHE_CS2_BAG)
 def cs2_bag_temp(temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
     return cs2_bag_multi(temp, phase)
+
 
 # pylint: disable=unused-argument
 def _cs2_bag_arr(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -72,7 +75,9 @@ def cs2_bag(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
     raise TypeError(f"Unknown type for w: {type(w)}")
 
 
-@overload(cs2_bag, jit_options={"nopython": True, "cache": NUMBA_CACHE_CS2_BAG})
+# The Numba caching of the overload implementations is disabled, as their cache files collide
+# with those of the njit-compiled versions of the same functions, which results in segmentation faults.
+@overload(cs2_bag, jit_options={"nopython": True})
 def cs2_bag_numba(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
     if isinstance(w, numba.types.Float):
         return _cs2_bag_scalar
@@ -83,5 +88,5 @@ def cs2_bag_numba(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
 
 CS2_BAG_SCALAR_PTR: int = cs2_bag_scalar_cfunc.address
 CS2ScalarCType = cs2_bag_scalar_cfunc.ctypes
-cs2_bag_scalar = numba.njit(cache=NUMBA_CACHE_CS2_BAG)(_cs2_bag_scalar)
-cs2_bag_arr = numba.njit(cache=NUMBA_CACHE_CS2_BAG)(_cs2_bag_arr)
+cs2_bag_scalar = njit(cache=NUMBA_CACHE_CS2_BAG)(_cs2_bag_scalar)
+cs2_bag_arr = njit(cache=NUMBA_CACHE_CS2_BAG)(_cs2_bag_arr)

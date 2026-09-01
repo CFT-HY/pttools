@@ -5,12 +5,13 @@ import logging
 import numba
 import numpy as np
 
+from pttools.speedup import njit
 import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def envelope(
         xi: th.FloatArr1D,
         f: th.FloatArr1D,
@@ -84,7 +85,7 @@ def envelope(
     ])
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def sin_transform_approx(
         z: th.FloatOrArr,
         xi: th.FloatArr1D,

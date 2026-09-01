@@ -1,27 +1,25 @@
 r"""$\alpha_n$ functions for the Bag Model"""
 
-import numba
-
 from pttools import speedup
 from pttools.bubble.cs2_bag import cs2_bag_scalar
 from pttools.bubble import const
 from pttools.bubble import fluid_bag
 from pttools.bubble import check
-from pttools.bubble import integrate
 from pttools.bubble import props
 from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.solution_type_bag import identify_solution_type_alpha_plus_bag
+from pttools.speedup import njit
 import pttools.type_hints as th
 
 
-@numba.njit(nogil=True)
+@njit(nogil=True)
 def find_alpha_n_bag(
         v_wall: th.FloatOrArr,
         alpha_p: float,
+        df_dtau_ptr: speedup.DifferentialPointer,
         sol_type: SolutionType = SolutionType.UNKNOWN,
         n_xi: int = const.DEFAULT_N_XI,
-        cs2_fun: th.CS2Fun = cs2_bag_scalar,
-        df_dtau_ptr: speedup.DifferentialPointer = integrate.DF_DTAU_PTR_BAG) -> float:
+        cs2_fun: th.CS2Fun = cs2_bag_scalar) -> float:
     r"""
     Calculates the transition strength parameter at the nucleation temperature,
     $\alpha_n$, from $\alpha_+$, for given $v_\text{wall}$ in the Bag Model.
@@ -30,18 +28,18 @@ def find_alpha_n_bag(
 
     :param v_wall: $v_\text{wall}$, wall speed
     :param alpha_p: $\alpha_+$, the at-wall strength parameter.
+    :param df_dtau_ptr: pointer to the differential equations
     :param sol_type: type of the bubble (detonation, deflagration etc.)
     :param n_xi: number of $\xi$ values to investigate
     :param cs2_fun: $c_s^2$ function
-    :param df_dtau_ptr: pointer to the differential equations
     :return: $\alpha_n$, global strength parameter
     """
     check.check_wall_speed(v_wall)
     if sol_type == SolutionType.UNKNOWN.value:
         sol_type = identify_solution_type_alpha_plus_bag(v_wall, alpha_p).value
     _, w, xi = fluid_bag.sound_shell_alpha_plus_bag(
-        v_wall, alpha_p, sol_type, n_xi,
-        cs2_fun=cs2_fun, df_dtau_ptr=df_dtau_ptr
+        v_wall, alpha_p,
+        df_dtau_ptr=df_dtau_ptr, sol_type=sol_type, n_xi=n_xi, cs2_fun=cs2_fun
     )
     n_wall = props.find_v_index(xi, v_wall)
     return alpha_p * w[n_wall] / w[-1]

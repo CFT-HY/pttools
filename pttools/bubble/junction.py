@@ -9,13 +9,13 @@ import functools
 import logging
 import typing as tp
 
-import numba
 import numpy as np
 
 from pttools.bubble import const
 from pttools.bubble.junction_entropy import check_entropy_fluxes
 from pttools.bubble.relativity import gamma2, lorentz
 from pttools.bubble.phase import Phase
+from pttools.speedup import njit
 from pttools.speedup.solvers import fsolve_vary
 import pttools.type_hints as th
 if tp.TYPE_CHECKING:
@@ -24,7 +24,7 @@ if tp.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def enthalpy_ratio(v1: th.FloatOrArr, v2: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Ratio of enthalpies $w$ on both sides of a transition front.
@@ -75,7 +75,7 @@ def junction_conditions_solvable(
     )
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def junction_condition_deviation1(
         v1: th.FloatOrArr, w1: th.FloatOrArr,
         v2: th.FloatOrArr, w2: th.FloatOrArr) -> th.FloatOrArr:
@@ -92,7 +92,7 @@ def junction_condition_deviation1(
     return w1 * gamma2(v1) * v1 - w2 * gamma2(v2) * v2
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def junction_condition_deviation2(
         v1: th.FloatOrArr, w1: th.FloatOrArr, p1: th.FloatOrArr,
         v2: th.FloatOrArr, w2: th.FloatOrArr, p2: th.FloatOrArr
@@ -112,7 +112,7 @@ def junction_condition_deviation2(
     return w1 * gamma2(v1) * v1**2 + p1 - w2 * gamma2(v2) * v2**2 - p2
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def junction_condition_deviations(
         v1: th.FloatOrArr, w1: th.FloatOrArr, p1: th.FloatOrArr,
         v2: th.FloatOrArr, w2: th.FloatOrArr, p2: th.FloatOrArr) -> th.FloatArr1D:
@@ -294,7 +294,7 @@ def v_plus_hybrid(
     return -lorentz(vp_tilde, v_wall)
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def w2_junction(v1: th.FloatOrArr, w1: th.FloatOrArr, v2: th.FloatOrArr) -> th.FloatOrArr:
     r"""Get $w_-$ from the junction condition 1
     $$w_1 = w_2 \frac{\tilde{\gamma}_2^2 \tilde{v}_2}{\tilde{\gamma}_1^2 \tilde{v}_1}$$

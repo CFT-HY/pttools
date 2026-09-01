@@ -1,9 +1,7 @@
 """Functions for organizing the computation of the GW spectra"""
 
-import numba
-
 from pttools.bubble.solution_type import SolutionType
-from pttools.speedup import NUMBA_ENABLE_CACHE
+from pttools.speedup import njit
 from pttools.ssm.spec_den_v import spec_den_v as spec_den_v_func
 from pttools.ssm.low_k.integration import \
     power_spectrum_integration_low, power_spectrum_integration_int, Iv_resampled
@@ -17,10 +15,11 @@ from pttools.ssm.ssm import \
     ubarf2_from_a2
 from pttools.type_hints import FloatArr1D
 
-
 # When this function can be Numba-jitted, also create a version that includes signal_to_noise_ratio().
 # This will be useful for PTPlot.
-# @numba.njit(nogil=True, cache=NUMBA_ENABLE_CACHE)
+
+
+# @njit(nogil=True)
 def compute(
         # Arrays (in alphabetical order)
         e: FloatArr1D,
@@ -86,7 +85,7 @@ def compute(
         f, hx, bubble_spacing_enlargement_factor
 
 
-# @numba.njit(nogil=True)
+# @njit(nogil=True)
 def compute_low_k(
         # Arrays (in alphabetical order)
         spec_den_gw_ssm: FloatArr1D,
@@ -123,7 +122,7 @@ def compute_low_k(
     return spec_den_gw_low, spec_den_gw_int, spec_den_gw_expanded
 
 
-@numba.njit(nogil=True, cache=NUMBA_ENABLE_CACHE)
+@njit(nogil=True)
 def compute_ssm(
         # Arrays (in alphabetical order)
         e: FloatArr1D,

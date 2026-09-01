@@ -25,7 +25,7 @@ def convert_params(params: bubble.PhysicalParams) -> bubble.PhysicalParams:
     return params
 
 
-# @numba.njit
+# @njit
 def parse_params(params: bubble.PhysicalParams) -> tuple[float, float, NucType, bubble.NucArgs]:
     r"""
     Parse physical parameters from the tuple.
@@ -87,7 +87,7 @@ def power_gw_bag(
         raise ValueError("z values must all be positive.")
     params = convert_params(params)
 
-    bubble.check_physical_params(params)
+    bubble.check_physical_params(params, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG)
 
     # Todo: unify this generation
     eps = 1e-8  # Seems to be needed for max(z) <= 100. Why?
@@ -131,7 +131,7 @@ def power_v_bag(
     :param z_st_thresh: not used
     :return: power spectrum of the velocity field
     """
-    bubble.check_physical_params(params)
+    bubble.check_physical_params(params, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG)
     return pow_spec(z=z, spec_den=spec_den_v_bag(z, params, npt, filename, skip, method, de_method, parallel=parallel))
 
 
@@ -167,7 +167,7 @@ def spec_den_v_bag(
     :return: dimensionless velocity spectral density $\tilde{P}_v$
     """
     params = convert_params(params)
-    bubble.check_physical_params(params)
+    bubble.check_physical_params(params, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG)
 
     nz = z.size
     # nxi = npt[0]
@@ -192,6 +192,7 @@ def spec_den_v_bag(
     if filename is None:
         A2_lookup = a2_ssm_func_bag(
             z=qT_lookup, v_wall=v_wall, alpha=alpha,
+            cs2_fun_ptr=bubble.CS2_BAG_SCALAR_PTR, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
             npt=npt, method=method, de_method=de_method, z_st_thresh=z_st_thresh,
             lambda_correction=lambda_correction, parallel=parallel
         )

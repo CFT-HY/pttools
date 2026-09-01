@@ -285,7 +285,7 @@ class BagModel(AnalyticModel):
             wn: float | None = None,
             wn_guess: float | None = None,
             wm_guess: float | None = None) -> SolutionType:
-        return identify_solution_type_bag(v_wall=v_wall, alpha_n=alpha_n)
+        return identify_solution_type_bag(v_wall=v_wall, alpha_n=alpha_n, df_dtau_ptr=self.df_dtau_ptr())
 
     def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Temperature $T(w,\phi)$. Inverted from

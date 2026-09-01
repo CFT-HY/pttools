@@ -75,8 +75,10 @@ def plot_v_excerpt(ax: plt.Axes, v_wall: float, alpha_plus: float, n_xi: int = 5
     """Plots parts of solution obtained by integration of fluid equations.
     Supersonic deflagration solution comes in two parts, ahead and behind wall,
     each with about npts values."""
-    v, w, xi = bubble.sound_shell_alpha_plus_bag(v_wall, alpha_plus, n_xi=n_xi)
-    wall_type = bubble.identify_solution_type_bag(v_wall, alpha_plus)
+    v, w, xi = bubble.sound_shell_alpha_plus_bag(
+        v_wall, alpha_plus, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG, n_xi=n_xi)
+    wall_type = bubble.identify_solution_type_bag(
+        v_wall, alpha_plus, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG)
     if wall_type != bubble.SolutionType.DETON:
         ahead = np.where((xi > v_wall) & (v > 0))
         xi_a = xi[ahead]

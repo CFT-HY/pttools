@@ -1,12 +1,12 @@
 """Power spectrum functions"""
 
-import numba
 import numpy as np
 
+from pttools.speedup import njit
 import pttools.type_hints as th
 
 
-@numba.njit
+@njit(cache=True)
 def pow_spec(z: th.FloatOrArr, spec_den: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Power spectrum from spectral density at dimensionless wavenumber z.

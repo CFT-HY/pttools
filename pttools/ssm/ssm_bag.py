@@ -8,6 +8,7 @@ from scipy.optimize import fsolve
 
 from pttools import bubble
 from pttools import speedup
+from pttools.speedup import njit
 from pttools.ssm import const
 from pttools.ssm.calculators import resample_uniform_xi
 from pttools.ssm.sin_transform import sin_transform
@@ -17,11 +18,13 @@ import pttools.type_hints as th
 logger = logging.getLogger(__name__)
 
 
-@numba.njit
+@njit
 def a2_e_conserving_bag(
         z: th.FloatArr1D,
         v_wall: float,
         alpha_n: float,
+        cs2_fun_ptr: th.CS2FunScalarPtr,
+        df_dtau_ptr: speedup.DifferentialPointer,
         npt: const.NptType = const.DEFAULT_N_PT,
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH,
@@ -37,6 +40,8 @@ def a2_e_conserving_bag(
     calculated from self-similar hydro solution obtained with "bubble.fluid_shell".
 
     :param z: array of scaled wavenumbers $z = kR_*$.
+    :param cs2_fun_ptr: pointer to the $c_s^2$ function
+    :param df_dtau_ptr: pointer to the differential equation function
     :param de_method: Note that 'standard' (e-conserving) method is only accurate to
       linear order, meaning that there is an apparent $z^0$ piece at very low $z$,
       and may exaggerate the GWs at low vw. ATM no other de_methods, but argument
@@ -47,7 +52,8 @@ def a2_e_conserving_bag(
     #    xi_re = np.linspace(0,1-1/nxi,nxi)
     # need to resample for lam = de/w, as some non-zero points are very far apart
     if v_ip.size <= 1 or w_ip.size <= 1 or xi.size <= 1:
-        v_ip, w_ip, xi = bubble.sound_shell_bag(v_wall, alpha_n, nxi)
+        v_ip, w_ip, xi = bubble.sound_shell_bag(
+            v_wall, alpha_n, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, n_xi=nxi)
 
     #    f = np.zeros_like(z)
     #    for j in range(f.size):
@@ -58,9 +64,10 @@ def a2_e_conserving_bag(
 
     # Now get and resample lam = de/w
     if de_method == DE_Method.ALTERNATE.value:
-        lam_orig = bubble.de_from_w_new_bag(v_ip, w_ip, xi, v_wall, alpha_n) / w_ip[-1]
+        lam_orig = bubble.de_from_w_new_bag(
+            v_ip, w_ip, xi, v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr) / w_ip[-1]
     else:
-        lam_orig = bubble.de_from_w_bag(w_ip, xi, v_wall, alpha_n) / w_ip[-1]
+        lam_orig = bubble.de_from_w_bag(w_ip, xi, v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr) / w_ip[-1]
 
     # This doesn't make much difference at small alpha
     if lambda_correction:
@@ -139,11 +146,13 @@ def a2_e_conserving_bag_file(
     return 0.25 * (v_ft ** 2 + (const.CS0 * lam_ft) ** 2)
 
 
-@numba.njit
+@njit
 def a2_ssm_func_bag(
         z: th.FloatArr1D,
         v_wall: float,
         alpha: float,
+        cs2_fun_ptr: th.CS2FunScalarPtr,
+        df_dtau_ptr: speedup.DifferentialPointer,
         npt: const.NptType = const.DEFAULT_N_PT,
         method: Method = Method.E_CONSERVING,
         de_method: DE_Method = DE_Method.STANDARD,
@@ -155,6 +164,8 @@ def a2_ssm_func_bag(
     $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$
 
     :param z: array of scaled wavenumbers $z = kR_*$
+    :param cs2_fun_ptr: pointer to the $c_s^2$ function
+    :param df_dtau_ptr: pointer to the differential equation function
     :param method: correct method for SSM is "e_conserving".
       Also allows exploring effect of other incorrect
       methods ``f_only`` and ``with_g``.
@@ -165,20 +176,23 @@ def a2_ssm_func_bag(
     if method == Method.E_CONSERVING.value:
         # This is the correct method (as of 12.18)
         A2 = a2_e_conserving_bag(
-            z, v_wall, alpha, npt, de_method, z_st_thresh,
+            z, v_wall, alpha, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr,
+            npt=npt, de_method=de_method, z_st_thresh=z_st_thresh,
             lambda_correction=lambda_correction, parallel=parallel
         )[0]
     elif method == Method.F_ONLY.value:
         with numba.objmode:
             logger.debug("f_only method, multiplying (f\')^2 by 2")
-        f = f_ssm_func_bag(z, v_wall, alpha, npt=npt, parallel=parallel)
+        f = f_ssm_func_bag(
+            z, v_wall, alpha, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, npt=npt, parallel=parallel)
         df_dz = speedup.gradient(f) / speedup.gradient(z)
         A2 = 0.25 * (df_dz ** 2)
         A2 = A2 * 2
     elif method == Method.WITH_G.value:
         with numba.objmode:
             logger.debug("With_g method")
-        f = f_ssm_func_bag(z, v_wall, alpha, npt=npt, parallel=parallel)
+        f = f_ssm_func_bag(
+            z, v_wall, alpha, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, npt=npt, parallel=parallel)
         df_dz = speedup.gradient(f) / speedup.gradient(z)
         g = (z * df_dz + 2. * f)
         dg_dz = speedup.gradient(g) / speedup.gradient(z)
@@ -187,7 +201,10 @@ def a2_ssm_func_bag(
     else:
         with numba.objmode:
             logger.warning("Method not known, should be [e_conserving | f_only | with_g]. Defaulting to e_conserving.")
-        A2 = a2_e_conserving_bag(z, v_wall, alpha, npt=npt, lambda_correction=lambda_correction, parallel=parallel)[0]
+        A2 = a2_e_conserving_bag(
+            z, v_wall, alpha, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr,
+            npt=npt, lambda_correction=lambda_correction, parallel=parallel
+        )[0]
 
     return A2
 
@@ -227,11 +244,13 @@ def f_file_bag(
     return f
 
 
-@numba.njit
+@njit
 def f_ssm_func_bag(
         z: th.FloatOrArr,
         v_wall: float,
         alpha_n: float,
+        cs2_fun_ptr: th.CS2FunScalarPtr,
+        df_dtau_ptr: speedup.DifferentialPointer,
         v_sh: float | None = None,
         npt: const.NptType = const.DEFAULT_N_PT,
         z_st_thresh: float = const.Z_ST_THRESH,
@@ -242,11 +261,14 @@ def f_ssm_func_bag(
     :param z: array of scaled wavenumbers $z = kR_*$
     :param v_wall: $v_\text{wall}$
     :param alpha_n: $\alpha_n$
+    :param cs2_fun_ptr: pointer to the $c_s^2$ function
+    :param df_dtau_ptr: pointer to the differential equation function
     :param v_sh: shock speed
     :param npt: number of points
     """
     nxi = npt[0]
-    v_ip, _, xi = bubble.sound_shell_bag(v_wall, alpha_n, nxi)
+    v_ip, _, xi = bubble.sound_shell_bag(
+        v_wall, alpha_n, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, n_xi=nxi)
 
     # f_ssm = np.zeros_like(z)
     # for j in range(f_ssm.size):
@@ -271,7 +293,9 @@ def g_ssm_func_bag(z: th.FloatArr1D, v_wall, alpha, npt: const.NptType = const.D
 
     :param z: array of scaled wavenumbers $z = kR_*$
     """
-    f_ssm = f_ssm_func_bag(z, v_wall, alpha, npt=npt)
+    f_ssm = f_ssm_func_bag(
+        z, v_wall, alpha,
+        cs2_fun_ptr=bubble.CS2_BAG_SCALAR_PTR, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG, npt=npt)
     df_ssmdz = np.gradient(f_ssm) / np.gradient(z)
     return z * df_ssmdz + 2. * f_ssm
 
@@ -292,12 +316,16 @@ def lam_ssm_func_bag(
     """
     nxi = npt[0]
     # xi_re = np.linspace(0,1-1/nxi,nxi) # need to resample for lam = de/w
-    v_ip, w_ip, xi = bubble.sound_shell_bag(v_wall, alpha_n, nxi)
+    v_ip, w_ip, xi = bubble.sound_shell_bag(
+        v_wall, alpha_n,
+        cs2_fun_ptr=bubble.CS2_BAG_SCALAR_PTR, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG, n_xi=nxi)
 
     if de_method == DE_Method.ALTERNATE:
-        lam_orig = bubble.de_from_w_new_bag(v_ip, w_ip, xi, v_wall, alpha_n) / w_ip[-1]
+        lam_orig = bubble.de_from_w_new_bag(
+            v_ip, w_ip, xi, v_wall, alpha_n, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG) / w_ip[-1]
     else:
-        lam_orig = bubble.de_from_w_bag(w_ip, xi, v_wall, alpha_n) / w_ip[-1]
+        lam_orig = bubble.de_from_w_bag(
+            w_ip, xi, v_wall, alpha_n, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG) / w_ip[-1]
     xi_re, lam_re = resample_uniform_xi(xi, lam_orig, nxi)
 
     # lam_ft = np.zeros_like(z)

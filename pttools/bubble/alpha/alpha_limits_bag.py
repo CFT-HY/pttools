@@ -4,19 +4,23 @@ import numba
 from numba.extending import overload
 import numpy as np
 
-from pttools import speedup
 from pttools.bubble.const import ALPHA_PLUS_MAX_DEF, CS0, DEFAULT_N_XI
 from pttools.bubble.fluid_bag import sound_shell_alpha_plus_bag
 from pttools.bubble import check
 from pttools.bubble import props
 from pttools.bubble.solution_type import SolutionType
 # from pttools.bubble.solution_type_bag import identify_solution_type_alpha_plus_bag
+from pttools.speedup import njit, vectorize
+from pttools.speedup.differential import DifferentialPointer
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
 
-@numba.njit(nogil=True)
-def alpha_n_max_bag(v_wall: th.FloatOrArr, n_xi: int = DEFAULT_N_XI) -> th.FloatOrArr:
+@njit(nogil=True)
+def alpha_n_max_bag(
+        v_wall: th.FloatOrArr,
+        df_dtau_ptr: DifferentialPointer,
+        n_xi: int = DEFAULT_N_XI) -> th.FloatOrArr:
     r"""
     Calculates the maximum relative trace anomaly outside the bubble, $\alpha_{n,\max,\text{bag}}({v}_\text{wall})$.
     Bag model only.
@@ -25,14 +29,16 @@ def alpha_n_max_bag(v_wall: th.FloatOrArr, n_xi: int = DEFAULT_N_XI) -> th.Float
     as increasing $\alpha_n$ for a detonation would make it a hybrid.
 
     :param v_wall: ${v}_\text{wall}$
+    :param df_dtau_ptr: pointer to the differential equation function
     :param n_xi: number of $\xi$ points
     :return: $\alpha_{n,\max}$, the relative trace anomaly outside the bubble
     """
-    return alpha_n_max_deflagration_bag(v_wall, n_xi)
+    return alpha_n_max_deflagration_bag(v_wall, df_dtau_ptr=df_dtau_ptr, n_xi=n_xi)
 
 
 def _alpha_n_max_deflagration_bag_scalar(
         v_wall: th.FloatOrArr,
+        df_dtau_ptr: DifferentialPointer,
         n_xi: int = DEFAULT_N_XI,
         parallel: bool = True) -> th.FloatOrArr:
     check.check_wall_speed(v_wall)
@@ -43,6 +49,7 @@ def _alpha_n_max_deflagration_bag_scalar(
         v_wall=v_wall,
         # Warning: this is not safe. Causes warnings for low v_wall.
         alpha_plus=ALPHA_PLUS_MAX_DEF - 1e-10,
+        df_dtau_ptr=df_dtau_ptr,
         sol_type=SolutionType.HYBRID.value if v_wall > CS0 else SolutionType.SUB_DEF.value,
         n_xi=n_xi
     )
@@ -52,30 +59,36 @@ def _alpha_n_max_deflagration_bag_scalar(
     # Need n_wall+1, as w is an integral of v, and lags by 1 step
     return w[i_wall + 1] * ALPHA_PLUS_MAX_DEF
 
-_alpha_n_max_deflagration_bag_scalar_numba = numba.njit(_alpha_n_max_deflagration_bag_scalar)
+_alpha_n_max_deflagration_bag_scalar_numba = njit(_alpha_n_max_deflagration_bag_scalar)
 
 
-def _alpha_n_max_deflagration_bag_arr(v_wall: th.FloatOrArr, n_xi: int = DEFAULT_N_XI) -> th.FloatOrArr:
+def _alpha_n_max_deflagration_bag_arr(
+        v_wall: th.FloatOrArr,
+        df_dtau_ptr: DifferentialPointer,
+        n_xi: int = DEFAULT_N_XI) -> th.FloatOrArr:
     ret = np.zeros_like(v_wall)
     for i in numba.prange(v_wall.size):  # pylint: disable=not-an-iterable
-        ret[i] = _alpha_n_max_deflagration_bag_scalar_numba(v_wall[i], n_xi)
+        ret[i] = _alpha_n_max_deflagration_bag_scalar_numba(
+            v_wall[i], df_dtau_ptr=df_dtau_ptr, n_xi=n_xi)
     return ret
 
-_alpha_n_max_deflagration_bag_arr_parallel = numba.njit(parallel=True, nogil=True)(_alpha_n_max_deflagration_bag_arr)
-_alpha_n_max_deflagration_bag_arr_single = numba.njit(nogil=True)(_alpha_n_max_deflagration_bag_arr)
+_alpha_n_max_deflagration_bag_arr_parallel = njit(parallel=True, nogil=True)(_alpha_n_max_deflagration_bag_arr)
+_alpha_n_max_deflagration_bag_arr_single = njit(nogil=True)(_alpha_n_max_deflagration_bag_arr)
 
 
 def _alpha_n_max_deflagration_bag_arr_wrapper(
         v_wall: th.FloatOrArr,
+        df_dtau_ptr: DifferentialPointer,
         n_xi: int = DEFAULT_N_XI,
         parallel: bool = True) -> th.FloatOrArr:
     if parallel:
-        return _alpha_n_max_deflagration_bag_arr_parallel(v_wall=v_wall, n_xi=n_xi)
-    return _alpha_n_max_deflagration_bag_arr_single(v_wall=v_wall, n_xi=n_xi)
+        return _alpha_n_max_deflagration_bag_arr_parallel(v_wall=v_wall, df_dtau_ptr=df_dtau_ptr, n_xi=n_xi)
+    return _alpha_n_max_deflagration_bag_arr_single(v_wall=v_wall, df_dtau_ptr=df_dtau_ptr, n_xi=n_xi)
 
 
 def alpha_n_max_deflagration_bag(
         v_wall: th.FloatOrArr,
+        df_dtau_ptr: DifferentialPointer,
         n_xi: int = DEFAULT_N_XI,
         parallel: bool = True) -> th.FloatOrArr:
     r"""
@@ -87,21 +100,24 @@ def alpha_n_max_deflagration_bag(
     $$\alpha_n = \frac{w_+}{w_n} \alpha_+$$.
 
     :param v_wall: $v_\text{wall}$
+    :param df_dtau_ptr: pointer to the differential equation function
     :param n_xi: number of $\xi$ points
     :return: $\alpha_{n,\max}$
     """
     if isinstance(v_wall, float):
-        return _alpha_n_max_deflagration_bag_scalar(v_wall=v_wall, n_xi=n_xi)
+        return _alpha_n_max_deflagration_bag_scalar(v_wall=v_wall, df_dtau_ptr=df_dtau_ptr, n_xi=n_xi)
     if isinstance(v_wall, np.ndarray):
         if not v_wall.ndim:
-            return _alpha_n_max_deflagration_bag_scalar(v_wall=v_wall.item(), n_xi=n_xi)
-        return _alpha_n_max_deflagration_bag_arr(v_wall=v_wall, n_xi=n_xi)
+            return _alpha_n_max_deflagration_bag_scalar(
+                v_wall=v_wall.item(), df_dtau_ptr=df_dtau_ptr, n_xi=n_xi)
+        return _alpha_n_max_deflagration_bag_arr(v_wall=v_wall, df_dtau_ptr=df_dtau_ptr, n_xi=n_xi)
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
 @overload(alpha_n_max_deflagration_bag, jit_options={"nopython": True, "nogil": True})
 def _alpha_n_max_deflagration_bag_numba(
         v_wall: th.FloatOrArr,
+        df_dtau_ptr: DifferentialPointer,
         n_xi: int = DEFAULT_N_XI,
         parallel: bool = True) -> th.FloatOrArr:
     if isinstance(v_wall, numba.types.Float):
@@ -113,7 +129,7 @@ def _alpha_n_max_deflagration_bag_numba(
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
-@numba.njit
+@njit
 def alpha_n_max_detonation_bag(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Maximum allowed value of $\alpha_n$ for a detonation with wall speed $v_\text{wall}$ in the Bag Model.
@@ -126,7 +142,7 @@ def alpha_n_max_detonation_bag(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     return alpha_plus_max_detonation_bag(v_wall)
 
 
-# @numba.njit
+# @njit
 # def alpha_n_max_hybrid_bag(v_wall: float, n_xi: int = DEFAULT_N_XI) -> float:
 #     r"""
 #     Calculates the relative trace anomaly outside the bubble, $\alpha_{n,\max}$,
@@ -154,7 +170,7 @@ def alpha_n_max_detonation_bag(v_wall: th.FloatOrArr) -> th.FloatOrArr:
 #     return w[n_wall] * ALPHA_PLUS_MAX
 
 
-@numba.njit
+@njit
 def alpha_n_min_deflagration_bag[T: FloatOrArr](v_wall: T) -> T:
     r"""
     Minimum $\alpha_n$ for a deflagration in the Bag Model. Equal to maximum $\alpha_n$ for a detonation.
@@ -166,7 +182,7 @@ def alpha_n_min_deflagration_bag[T: FloatOrArr](v_wall: T) -> T:
     return alpha_n_max_detonation_bag(v_wall)
 
 
-@numba.njit
+@njit
 def alpha_n_min_hybrid_bag[T: FloatOrArr](v_wall: T) -> T:
     r"""
     Minimum $\alpha_n$ for a hybrid in the Bag Model. Equal to maximum $\alpha_n$ for a detonation.
@@ -178,7 +194,7 @@ def alpha_n_min_hybrid_bag[T: FloatOrArr](v_wall: T) -> T:
     return alpha_n_max_detonation_bag(v_wall)
 
 
-@speedup.vectorize(nopython=True)
+@vectorize(nopython=True)
 def alpha_plus_max_detonation_bag(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Maximum allowed value of $\alpha_+$ for a detonation with wall speed $v_\text{wall}$ in the Bag Model.
@@ -198,7 +214,7 @@ def alpha_plus_max_detonation_bag(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     return a / b
 
 
-@speedup.vectorize(nopython=True)
+@vectorize(nopython=True)
 def alpha_plus_min_hybrid(v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Minimum allowed value of $\alpha_+$ for a hybrid with wall speed $v_\text{wall}$ in the Bag Model.

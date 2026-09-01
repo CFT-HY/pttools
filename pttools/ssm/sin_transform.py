@@ -5,6 +5,7 @@ from numba.extending import overload
 import numba.types
 import numpy as np
 
+from pttools.speedup import njit
 from pttools.ssm import const
 from pttools.ssm.sin_transform_approx import sin_transform_approx
 import pttools.type_hints as th
@@ -143,5 +144,5 @@ def _sin_transform_core(t: th.FloatArr1D, f: th.FloatArr1D, freq: th.FloatArr1D)
     return integral
 
 
-sin_transform_core = numba.njit(parallel=True, nogil=True, cache=True)(_sin_transform_core)
-sin_transform_core_single = numba.njit(nogil=True, cache=True)(_sin_transform_core)
+sin_transform_core = njit(parallel=True, nogil=True, cache=True)(_sin_transform_core)
+sin_transform_core_single = njit(nogil=True, cache=True)(_sin_transform_core)

@@ -6,12 +6,13 @@ import numba
 from numba.extending import overload
 import numpy as np
 
+from pttools.speedup import njit
 import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
 
-@numba.njit
+@njit(cache=True)
 def adiabatic_index_bag(
         w: th.FloatOrArr,
         phase: th.FloatOrArr,
@@ -56,7 +57,7 @@ def _check_thetas_scalar(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> None
         _check_thetas_warning(theta_s, theta_b)
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def _check_thetas_warning(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> None:
     with numba.objmode:
         logger.warning(
@@ -64,7 +65,7 @@ def _check_thetas_warning(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> Non
             "but got theta_s=%s, theta_b=%s", theta_s, theta_b)
 
 
-@numba.njit
+@njit(cache=True)
 def e_bag(
         w: th.FloatOrArr,
         phase: th.FloatOrArr,
@@ -85,7 +86,7 @@ def e_bag(
     return w - p_bag(w, phase, theta_s, theta_b)
 
 
-@numba.njit
+@njit(cache=True)
 def p_bag(
         w: th.FloatOrArr,
         phase: th.FloatOrArr,
@@ -108,7 +109,7 @@ def p_bag(
     return 0.25 * w - theta
 
 
-@numba.njit
+@njit(cache=True)
 def w_bag(
         e: th.FloatOrArr,
         phase: th.FloatOrArr,

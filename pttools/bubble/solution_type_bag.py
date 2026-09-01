@@ -7,19 +7,25 @@ import numba
 import pttools.bubble.alpha as alpha_tools
 from pttools.bubble.const import ALPHA_PLUS_MAX_DEF, CS0
 from pttools.bubble.solution_type import SolutionType
+from pttools.speedup import njit
+from pttools.speedup.differential import DifferentialPointer
 
 logger = logging.getLogger(__name__)
 
 
-@numba.njit
-def identify_solution_type_bag(v_wall: float, alpha_n: float, exit_on_error: bool = False) -> SolutionType:
+@njit
+def identify_solution_type_bag(
+        v_wall: float,
+        alpha_n: float,
+        df_dtau_ptr: DifferentialPointer,
+        exit_on_error: bool = False) -> SolutionType:
     """
     Determines wall type from wall speed and global strength parameter.
     solution_type = [ 'Detonation' | 'Deflagration' | 'Hybrid' ]
     """
     if alpha_n < alpha_tools.alpha_n_max_detonation_bag(v_wall):
         return SolutionType.DETON
-    if alpha_n < alpha_tools.alpha_n_max_deflagration_bag(v_wall):
+    if alpha_n < alpha_tools.alpha_n_max_deflagration_bag(v_wall, df_dtau_ptr=df_dtau_ptr):
         if v_wall <= CS0:
             return SolutionType.SUB_DEF
         return SolutionType.HYBRID
@@ -39,7 +45,7 @@ def identify_solution_type_bag(v_wall: float, alpha_n: float, exit_on_error: boo
     return SolutionType.ERROR
 
 
-@numba.njit
+@njit
 def identify_solution_type_alpha_plus_bag(v_wall: float, alpha_plus: float) -> SolutionType:
     r"""
     Determines wall type from wall speed $v_\text{wall}$ and at-wall strength parameter $\alpha_+$.

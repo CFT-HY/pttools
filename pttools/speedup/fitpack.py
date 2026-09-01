@@ -15,7 +15,7 @@ import numpy as np
 import pttools.type_hints as th
 
 
-# @numba.njit
+# @njit
 def fpbspl(t: th.FloatArr1D, n: int, k: int, x: float, l: int, h: th.FloatArr1D):
     """
     Modified from the
@@ -65,7 +65,7 @@ def fpbspl(t: th.FloatArr1D, n: int, k: int, x: float, l: int, h: th.FloatArr1D)
                 h[i+1] = f*(x-t[lj])
 
 
-# @numba.njit
+# @njit
 def splder(
         t: th.FloatArr1D,
         n: int,
@@ -250,7 +250,7 @@ def splder(
         y[i] = sp
 
 
-# @numba.njit
+# @njit
 def splev(t: th.FloatArr1D, n: int, c: th.FloatArr1D, k: int, x: th.FloatArr1D, y: th.FloatArr1D, m: int, e: int) -> int:
     """
     Modified from the

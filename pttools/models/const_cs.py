@@ -4,7 +4,6 @@ from fractions import Fraction
 import logging
 import typing as tp
 
-import numba
 import numpy as np
 from scipy.optimize import minimize, minimize_scalar, OptimizeResult
 
@@ -14,7 +13,7 @@ from pttools.bubble.phase import Phase
 from pttools.bubble.solution_type import SolutionType
 from pttools.models.analytic import AnalyticModel
 from pttools.models.bag import BagModel
-from pttools.speedup import DifferentialPointer
+from pttools.speedup import DifferentialPointer, njit
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 from pttools.utils.validation import check_value_in_range
@@ -585,6 +584,7 @@ class ConstCSModel(AnalyticModel):
         return super().df_dtau_ptr()
 
     def gen_cs2(self):
+        # Numba caching is disabled for the functions below, as they are created dynamically.
         # These become compile-time constants
         css2 = self.css2
         csb2 = self.csb2
@@ -593,20 +593,21 @@ class ConstCSModel(AnalyticModel):
         if self.is_bag:
             return cs2_bag_multi
 
-        @numba.njit
+        @njit(cache=False)
         def cs2(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
             # Mathematical operations should be faster than conditional logic in compiled functions.
             return (phase*csb2 + (1 - phase)*css2) * np.ones_like(w)
         return cs2
 
     def gen_cs2_neg(self) -> th.CS2Fun:
+        # Numba caching is disabled for the functions below, as they are created dynamically.
         css2 = self.css2
         csb2 = self.csb2
 
         if self.is_bag:
             return BagModel.cs2_neg
 
-        @numba.njit
+        @njit(cache=False)
         def cs2_neg(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
             return -(phase*csb2 + (1 - phase)*css2) * np.ones_like(w)
         return cs2_neg

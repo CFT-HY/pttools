@@ -3,7 +3,7 @@
 import enum
 import logging
 
-import numba
+from pttools.speedup import njit
 import numpy as np
 
 from pttools import speedup
@@ -33,7 +33,7 @@ class Method(str, enum.Enum):
     WITH_G = "with_g"
 
 
-@numba.njit(nogil=True)
+@njit(nogil=True)
 def A2_e_conserving(
         v: th.FloatArr1D,
         w: th.FloatArr1D,
@@ -77,7 +77,7 @@ def A2_e_conserving(
     return A2_fp_csl(fp=fp_val, cs=cs, l=l_val), 0.5 * fp_val ** 2, 0.5 * (cs * l_val) ** 2
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def A2_fp_csl(fp: th.FloatArr, cs: float, l: th.FloatArr) -> th.FloatArr:
     r"""$|A(z)|^2$ from $f'(z)$ and $c_s l(z)$
     $$|A(z)|^2 = = \frac{1}{4} \left[ (f'(z))^2 + (c_s l(z))^2 \right]$$
@@ -87,7 +87,7 @@ def A2_fp_csl(fp: th.FloatArr, cs: float, l: th.FloatArr) -> th.FloatArr:
     return 0.25 * (fp ** 2 + (cs * l) ** 2)
 
 
-@numba.njit
+@njit
 def f(
         z: th.FloatArr,
         xi: th.FloatArr,
@@ -105,7 +105,7 @@ def f(
     )
 
 
-@numba.njit(nogil=True)
+@njit(nogil=True)
 def l(
         z: th.FloatArr,
         xi: th.FloatArr,
@@ -134,7 +134,7 @@ def l(
     )
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def lam(
         v: th.FloatArr,
         w: th.FloatArr,
@@ -166,7 +166,7 @@ def lam(
     return lm
 
 
-@numba.njit
+@njit(cache=True)
 def qT_lookup(T_tilde: th.FloatArr1D, z: th.FloatArr1D) -> th.FloatArr1D:
     """$z=qT$ lookup
     This is used by
@@ -192,13 +192,13 @@ def qT_lookup(T_tilde: th.FloatArr1D, z: th.FloatArr1D) -> th.FloatArr1D:
     #     raise e
 
 
-@numba.njit
+@njit
 def T_tilde(T_tilde_min: float, T_tilde_max: float, n: int):
     r"""Generate $\tilde{T}$ array"""
     return speedup.logspace(np.log10(T_tilde_min), np.log10(T_tilde_max), n)
 
 
-@numba.njit
+@njit
 def ubarf2_from_a2(
         T_tilde: th.FloatArr1D,
         z: th.FloatArr1D,

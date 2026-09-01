@@ -16,6 +16,7 @@ import numpy as np
 
 from examples.utils import save_and_show_fig
 from pttools.analysis.plot_entropy_grid import plot_entropy_data
+from pttools.bubble import DF_DTAU_PTR_BAG
 from pttools.bubble.alpha import alpha_n_max_bag, alpha_n_max_detonation_bag
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet_bag
 import pttools.type_hints as th
@@ -59,7 +60,7 @@ def main(n_alpha: int = 10, n_vw: int = 10, g_bro: int = 120, g_sym: int = 123) 
     ax.plot(v_chapman_jouguet_bag(alpha_arr), alpha_arr, 'k--', label=r'$v_{\rm J}$')
     # ax.plot(vw_arr, b.alpha_n_max(vw_arr), 'k', label=r'$\alpha_{\rm max}$', linewidth=2)
 
-    ax.plot(vw_arr, alpha_n_max_bag(vw_arr), label=r"$\alpha_{n,max}$")
+    ax.plot(vw_arr, alpha_n_max_bag(vw_arr, df_dtau_ptr=DF_DTAU_PTR_BAG), label=r"$\alpha_{n,max}$")
     ax.plot(vw_arr, alpha_n_max_detonation_bag(vw_arr), label=r"$\alpha_{n,max,det}$")
 
     ax.legend()

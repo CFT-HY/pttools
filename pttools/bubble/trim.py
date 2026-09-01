@@ -10,12 +10,13 @@ from pttools.bubble import const
 from pttools.bubble.phase import Phase
 from pttools.bubble.shock_bag import v_shock_bag
 from pttools.bubble.solution_type import SolutionType
+from pttools.speedup import njit
 import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
 
-@numba.njit
+@njit
 def trim_fluid_wall_to_cs(
         v: th.FloatArr1D,
         w: th.FloatArr1D,
@@ -80,7 +81,7 @@ def trim_fluid_wall_to_cs(
     return v[n_start:n_stop], w[n_start:n_stop], xi[n_start:n_stop], t[n_start:n_stop]
 
 
-@numba.njit
+@njit
 def trim_fluid_wall_to_shock(
         v: th.FloatArr1D,
         w: th.FloatArr1D,

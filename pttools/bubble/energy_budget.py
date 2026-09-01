@@ -3,14 +3,13 @@ r"""Energy budget approximations
 These approximations are based on :espinosa_2010:`\ `.
 """
 
-
-import numba
 import scipy.optimize
 import numpy as np
 from pttools.bubble import Phase
 from pttools.models import Model
 
 from pttools.bubble.const import CS0, DEFAULT_ADIABATIC_INDEX
+from pttools.speedup import njit
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
@@ -53,7 +52,7 @@ def alpha_n_from_ubarf(
     #     raise err
 
 
-@numba.njit(nogil=True, cache=True)
+@njit(nogil=True, cache=True)
 def alpha_n_from_ubarf_solvable(
         alpha_n: float,
         ubarf_target: float,
@@ -63,7 +62,7 @@ def alpha_n_from_ubarf_solvable(
     return ubarf_approx(v_wall=v_wall, alpha_n=alpha_n, cs=cs, adiabatic_index=adiabatic_index) - ubarf_target
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def chapman_jouguet_approx[T: FloatOrArr](alpha_n: T) -> T:
     r"""Approximation for the Chapman-Jouguet velocity $v_{CJ}$, aka. $\xi_J$
 
@@ -75,7 +74,7 @@ def chapman_jouguet_approx[T: FloatOrArr](alpha_n: T) -> T:
     return (np.sqrt(2/3 * alpha_n + alpha_n**2) + np.sqrt(1/3)) / (1 + alpha_n)
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def delta_kappa_approx[T: FloatOrArr](alpha_n: T) -> T:
     r"""Approximation for $\delta \kappa$
 
@@ -97,7 +96,7 @@ def delta_n[T: FloatOrArr](model: "Model", wn: T) -> T:
     return 4 * model.theta(wn, Phase.BROKEN) / (3 * wn)  # type: ignore[return-value]
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def kappa_a(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr) -> th.FloatOrArr:
     r"""Approximation for $\kappa_a$
 
@@ -108,7 +107,7 @@ def kappa_a(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr) -> th.FloatOrArr:
     return v_wall**(6/5) * 6.9 * alpha_n / (1.36 - 0.037 * np.sqrt(alpha_n) + alpha_n)
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def kappa_b[T: FloatOrArr](alpha_n: T) -> T:
     r"""Approximation for $\kappa_b$
 
@@ -119,7 +118,7 @@ def kappa_b[T: FloatOrArr](alpha_n: T) -> T:
     return alpha_n**(2/5) / (0.017 + (0.997 + alpha_n)**(2/5))  # type: ignore[return-value]
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def kappa_c[T: FloatOrArr](alpha_n: T) -> T:
     r"""Approximation for $\kappa_c$
 
@@ -130,7 +129,7 @@ def kappa_c[T: FloatOrArr](alpha_n: T) -> T:
     return np.sqrt(alpha_n) / (0.135 + np.sqrt(0.98 + alpha_n))  # type: ignore[return-value]
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def kappa_d[T: FloatOrArr](alpha_n: T) -> T:
     r"""Approximation for $\kappa_d$
 
@@ -141,7 +140,7 @@ def kappa_d[T: FloatOrArr](alpha_n: T) -> T:
     return alpha_n / (0.73 + 0.083 * np.sqrt(alpha_n) + alpha_n)  # type: ignore[return-value]
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def kappa_detonation_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, v_cj: float | None = None) -> th.FloatOrArr:
     r"""Approximation of $\kappa$ for detonations
     $$
@@ -163,7 +162,7 @@ def kappa_detonation_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, v_cj:
     )
 
 
-@numba.njit(cache=True, nogil=True)
+@njit(cache=True, nogil=True)
 def kappa_hybrid_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, cs: th.FloatOrArr = CS0) -> th.FloatOrArr:
     r"""Approximation of $\kappa$ for hybrids, aka. supersonic deflagrations
 
@@ -181,7 +180,7 @@ def kappa_hybrid_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, cs: th.Fl
     return kb + (v_wall - cs) * dk + ((v_wall - cs)**3 / (v_cj - cs)**3) * (kc - kb - (v_cj - cs) * dk)
 
 
-@numba.njit(cache=True, nogil=True)
+@njit(cache=True, nogil=True)
 def kappa_sub_def_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, cs: th.FloatOrArr = CS0) -> th.FloatOrArr:
     r"""Approximation of $\kappa$ for subsonic deflagrations
 
@@ -197,7 +196,7 @@ def kappa_sub_def_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, cs: th.F
     return cs**(11/5) * ka * kb / ((cs**(11/5) - v_wall**(11/5)) * kb + v_wall * cs**(6/5) * ka)
 
 
-@numba.njit(cache=True, nogil=True)
+@njit(cache=True, nogil=True)
 def kappa_v_approx(
         v_wall: float,
         alpha_n: th.FloatOrArr,
@@ -232,7 +231,7 @@ def kappa_v_approx(
     return kappa_hybrid_approx(v_wall, alpha_n, cs)
 
 
-@numba.njit(cache=True, nogil=True)
+@njit(cache=True, nogil=True)
 def kinetic_energy_fraction_approx[T: FloatOrArr](
         v_wall: float,
         alpha_n: T,
@@ -245,7 +244,7 @@ def kinetic_energy_fraction_approx[T: FloatOrArr](
     return kappa_v_approx(v_wall=v_wall, alpha_n=alpha_n, cs=cs, v_cj=v_cj) * alpha_n / (1 + alpha_n)
 
 
-@numba.njit(cache=True, nogil=True)
+@njit(cache=True, nogil=True)
 def ubarf_approx(
         v_wall: float,
         alpha_n: th.FloatOrArr,

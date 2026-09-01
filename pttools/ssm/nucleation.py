@@ -7,7 +7,7 @@ import numba
 import numpy as np
 
 from pttools.bubble.solution_type import SolutionType
-from pttools.speedup import vectorize
+from pttools.speedup import njit, vectorize
 from pttools.ssm import const
 import pttools.type_hints as th
 from pttools.type_hints import FloatArr1D, FloatOrArr
@@ -26,7 +26,7 @@ class NucType(str, enum.Enum):
 DEFAULT_NUC_TYPE = NucType.EXPONENTIAL
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def beta(R_star: th.FloatOrArr, v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""Nucleation rate parameter $\beta$, aka. inverse phase transition duration
 
@@ -44,7 +44,7 @@ def beta(R_star: th.FloatOrArr, v_wall: th.FloatOrArr) -> th.FloatOrArr:
     return (8 * np.pi)**(1/3) * v_wall / R_star
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def beta_tilde(
         r_star: th.FloatOrArr,
         v_wall: th.FloatOrArr,
@@ -75,7 +75,7 @@ def beta_tilde(
     return b
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def beta_R_star0[T: FloatOrArr](v_wall: T) -> T:
     r"""$\beta R_{\ast,0}$
     $$\beta R_{\ast,0} = (8 \pi)^\frac{1}{3} v_{\text{wall}}$$
@@ -89,7 +89,7 @@ def beta_R_star0[T: FloatOrArr](v_wall: T) -> T:
     return (8. * np.pi) ** (1. / 3.) * v_wall
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def bubble_spacing_enlargement(
         xi: FloatArr1D,
         T: FloatArr1D,
@@ -104,7 +104,7 @@ def bubble_spacing_enlargement(
     return f, hx_val, bubble_spacing_enlargement_factor(hx_val)
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def bubble_spacing_enlargement_factor[T: FloatOrArr](hx: T) -> T:
     r"""Bubble spacing enlargement factor $\Lambda$
     $$\Lambda(h_x) \equiv \frac{R_{\ast}}{R_{\ast}(0)} = I_h^{-\frac{1}{3}}(h_x)$$
@@ -113,7 +113,7 @@ def bubble_spacing_enlargement_factor[T: FloatOrArr](hx: T) -> T:
     return Ih_approx(hx)**(-1/3)
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def hx[T: FloatOrArr](f: T) -> T:
     r"""Fractional volume $h_x$ at which the symmetric phase is reheated enough to prevent further bubble nucleation
     $$h_x = \frac{f}{1 + f} = 1 - \frac{v_{\text{wall}}^3}{v_{\text{eff}}^3}$$
@@ -136,7 +136,7 @@ def Ih_approx[T: FloatOrArr](hx: T) -> T:
     return 1. + (hx * np.log(hx)) / (1. - hx)  # type: ignore[return-value]
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def lifetime_distribution[T: FloatOrArr](
         T_tilde: T,
         nuc_type: NucType = NucType.SIMULTANEOUS,
@@ -170,7 +170,7 @@ def lifetime_distribution[T: FloatOrArr](
     raise ValueError(f"Nucleation type not recognized: \"{nuc_type}\"")
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def lifetime_distribution_momentum(nu: FloatArr1D, T_tilde: FloatArr1D, n: int) -> float:
     r"""$\nu_n$, nth momentum of the lifetime distribution $\nu$
     $$\nu_n \equiv \int d\tilde{T} \nu(\tilde{T}) \tilde{T}^n$$
@@ -181,7 +181,7 @@ def lifetime_distribution_momentum(nu: FloatArr1D, T_tilde: FloatArr1D, n: int) 
     return np.trapezoid(nu * T_tilde**n, T_tilde)
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def nucleation_f(
         xi: th.FloatArr1D,
         T: th.FloatArr1D,
@@ -210,7 +210,7 @@ def nucleation_f(
     return 1 / v_wall**3 * np.trapezoid((1 - np.exp(-beta_tilde * (T[inds] - T[-1]) / T[-1])), xi[inds]**3)
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def r_star[T2: FloatOrArr](
         beta_over_H: T2,
         v_wall: float,
@@ -232,7 +232,7 @@ def r_star[T2: FloatOrArr](
     return R_star(beta=beta_over_H, v_wall=v_wall, xi=xi, T=T, beta_tilde=beta_over_H, sol_type=sol_type)
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def r_star0(beta_over_H: th.FloatOrArr, v_wall: th.FloatOrArr):
     r"""Hubble-scaled mean bubble separation $r_*(0)$ in the absence of nucleation suppression
     $$r_* = (8\pi)^\frac{1}{3} \frac{{v}_\text{wall}}{\tilde{\beta}}$$
@@ -242,7 +242,7 @@ def r_star0(beta_over_H: th.FloatOrArr, v_wall: th.FloatOrArr):
     return R_star0(beta=beta_over_H, v_wall=v_wall)
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def r_star_product(H_star: th.FloatOrArr, R_star: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Hubble-scaled mean bubble spacing $r_*$
@@ -252,7 +252,7 @@ def r_star_product(H_star: th.FloatOrArr, R_star: th.FloatOrArr) -> th.FloatOrAr
     return H_star * R_star
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def R_star[T2: FloatOrArr](
         beta: T2,
         v_wall: float,
@@ -292,7 +292,7 @@ def R_star[T2: FloatOrArr](
     raise ValueError(f"Invalid solution type: {sol_type}")
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def R_star0(beta: th.FloatOrArr, v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""Mean bubble separation $R_*(0)$ in the absence of nucleation suppression
     $$R_*(0) = n_*^{-\frac{1}{3}} = \frac{(8\pi)^\frac{1}{3}}{\beta} {v}_\text{wall}$$
@@ -305,7 +305,7 @@ def R_star0(beta: th.FloatOrArr, v_wall: th.FloatOrArr) -> th.FloatOrArr:
     return (8 * np.pi)**(1/3) * v_wall / beta
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def v_eff(f: FloatOrArr, v_wall: FloatOrArr) -> FloatOrArr:
     r"""Effective suppression speed $v_{\text{eff}}$
 

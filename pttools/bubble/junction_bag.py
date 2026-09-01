@@ -3,16 +3,15 @@
 .. plot:: fig/vp_vm_plane.py
 """
 
-import numba
-
 from pttools.bubble import const
 from pttools.bubble.relativity import lorentz
 from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.v_plus import v_plus
 from pttools.bubble.v_minus import v_minus
+from pttools.speedup import njit
 
 
-@numba.njit
+@njit
 def fluid_speeds_at_wall_bag(
         v_wall: float,
         alpha_plus: float,

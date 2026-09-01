@@ -11,12 +11,12 @@ import numpy as np
 
 from pttools.bubble.const import CS0
 from pttools.bubble.solution_type import SolutionType
-from pttools.speedup import NUMBA_ENABLE_CACHE
+from pttools.speedup import njit
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
 
-@numba.njit
+@njit(cache=True)
 def max_speed_deflag(alpha_p: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Maximum speed for a deflagration: speed where wall and shock are coincident.
@@ -68,7 +68,7 @@ def _v_plus_scalar(
     # return ret
 
 
-_v_plus_scalar_numba = numba.njit(_v_plus_scalar)
+_v_plus_scalar_numba = njit(_v_plus_scalar, cache=True)
 
 
 def _v_plus_arr(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: bool = True) -> th.FloatArr:
@@ -88,8 +88,8 @@ def _v_plus_arr(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: boo
     # return np.real(ret)
 
 
-_v_plus_arr_parallel = numba.njit(parallel=True, nogil=True)(_v_plus_arr)
-_v_plus_arr_single = numba.njit(nogil=True)(_v_plus_arr)
+_v_plus_arr_parallel = njit(parallel=True, nogil=True, cache=True)(_v_plus_arr)
+_v_plus_arr_single = njit(nogil=True, cache=True)(_v_plus_arr)
 
 
 def _v_plus_arr_wrapper(
@@ -137,7 +137,9 @@ def v_plus(
     raise TypeError(f"Unknown argument types: vm = {type(vm)}, ap = {type(ap)}")
 
 
-@overload(v_plus, jit_options={"nopython": True, "nogil": True, "cache": NUMBA_ENABLE_CACHE})
+# The Numba caching of the overload implementations is disabled, as their cache files collide
+# with those of the njit-compiled versions of the same functions, which results in segmentation faults.
+@overload(v_plus, jit_options={"nopython": True, "nogil": True})
 def _v_plus_numba(
         vm: th.FloatOrArr,
         ap: float,

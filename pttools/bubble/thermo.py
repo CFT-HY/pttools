@@ -31,6 +31,7 @@ from pttools.bubble.check import check_wall_speed
 from pttools.bubble.phase import Phase
 from pttools.bubble import props
 from pttools.bubble import relativity
+from pttools.speedup import njit
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
@@ -107,7 +108,7 @@ def kappa_approx(alpha_n: th.FloatOrArr) -> th.FloatOrArr:
     return alpha_n / (0.73 + 0.083*np.sqrt(alpha_n) + alpha_n)
 
 
-@numba.njit
+@njit
 def kinetic_energy_density(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float) -> float:
     r"""Bubble volume averaged kinetic energy density
     $$\frac{3}{4\pi {v}_w^3} {e}_K$$
@@ -140,7 +141,7 @@ def kinetic_energy_fraction(ek_bva: float, eb: float) -> float:
     return ek_bva / eb
 
 
-# @numba.njit
+# @njit
 def mean_adiabatic_index(wb: th.FloatOrArr, eb: th.FloatOrArr) -> th.FloatOrArr:
     r"""Mean adiabatic index
     $$\Gamma = \frac{\bar{w}}{\bar{e}}$$
@@ -269,7 +270,7 @@ def trace_anomaly_diff(
     return 3/(4*np.pi * v_wall**3) * va_trace_anomaly_diff(model, w, xi, v_wall, phase)
 
 
-@numba.njit
+@njit
 def ubarf2(
         v: th.FloatArr1D,
         w: th.FloatArr1D,
@@ -329,7 +330,7 @@ def va_entropy_density_diff(
     return 4*np.pi/3 * np.trapezoid(model.s(w, phase) - model.s(w[-1], Phase.SYMMETRIC), xi**3)
 
 
-@numba.njit
+@njit
 def va_kinetic_energy_density(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D) -> float:
     r"""
     Volume-averaged kinetic energy density
@@ -360,7 +361,7 @@ def va_thermal_energy_density(v_shock: float, wn: float, ek: float, delta_e_thet
     return np.pi * wn * v_shock**3 - ek - delta_e_theta
 
 
-# @numba.njit
+# @njit
 def va_thermal_energy_density_diff(w: th.FloatArr1D, xi: th.FloatArr1D) -> float:
     r"""Volume-averaged thermal energy density difference
     $$\Delta {e}_Q = 4 \pi \int_0^{\xi_\text{max}} d\xi \xi^2 \frac{3}{4} (w - {w}_n)$$
@@ -408,7 +409,7 @@ def va_trace_anomaly_diff(
     return 4*np.pi/3 * np.trapezoid((theta - theta_n), xi**3)
 
 
-@numba.njit
+@njit(cache=True)
 def w_bar(w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float) -> float:
     r"""Average enthalpy density $\bar{w}$
 

@@ -10,6 +10,7 @@ import scipy.interpolate
 
 from pttools.bubble.phase import Phase
 from pttools.models.base import BaseModel
+from pttools.speedup import njit
 from pttools.speedup.overload import np_all_fix
 import pttools.type_hints as th
 
@@ -80,6 +81,7 @@ class ThermoModel(BaseModel, abc.ABC):
         return True
 
     def gen_cs2(self) -> th.CS2Fun:
+        # Numba caching is disabled for the functions below, as they are created dynamically.
         cs2_s = self.cs2_full(self.GEFF_DATA_TEMP, Phase.SYMMETRIC)
         cs2_b = self.cs2_full(self.GEFF_DATA_TEMP, Phase.BROKEN)
         self.validate_cs2(cs2_s, "cs2_s")
@@ -101,7 +103,7 @@ class ThermoModel(BaseModel, abc.ABC):
         t_min = self.t_min
         t_max = self.t_max
 
-        @numba.njit
+        @njit(cache=False)
         def cs2_compute(temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
             if np_all_fix(phase == Phase.SYMMETRIC.value):
                 return scipy.interpolate.splev(np.log10(temp), cs2_spl_s)
@@ -118,13 +120,13 @@ class ThermoModel(BaseModel, abc.ABC):
             #         logger.warning("Got cs2 < 0: %s", np.min(ret))
             # return ret
 
-        @numba.njit
+        @njit(cache=False)
         def cs2_scalar_temp(temp: float, phase: th.FloatOrArr) -> th.FloatOrArr:
             if temp < t_min or temp > t_max:
                 return np.nan
             return cs2_compute(temp, phase)
 
-        @numba.njit
+        @njit(cache=False)
         def cs2_arr_temp(temp: th.FloatArr1D, phase: th.FloatOrArr) -> th.FloatArr1D:
             # This check somehow fixes a compilation bug in Numba 0.60.0
             if np.isscalar(temp):

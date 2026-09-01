@@ -16,6 +16,7 @@ import numpy as np
 import scipy.interpolate
 
 from pttools.speedup import fitpack
+from pttools.speedup.jit import njit
 import pttools.type_hints as th
 
 # interpolate_dir = os.path.dirname(os.path.abspath(scipy.interpolate.fitpack.__file__))
@@ -100,7 +101,7 @@ def splev(x: th.FloatArr1D, tck: tuple[th.FloatArr1D, th.FloatArr1D, int], der: 
     return y.reshape(shape)
 
 
-@numba.njit
+@njit(cache=True)
 def splev_linear_core(xp: float, t: th.FloatArr1D, c: th.FloatArr1D, ext: int) -> float:
     """Numba-jitted core of the linear spline evaluation"""
     if xp < t[0]:
@@ -131,7 +132,7 @@ def splev_linear_core(xp: float, t: th.FloatArr1D, c: th.FloatArr1D, ext: int) -
     raise ValueError("Invalid ext")
 
 
-@numba.njit
+@njit(cache=True)
 def splev_linear_validate(k: int, der: int) -> None:
     """Validate the type of spline evaluation"""
     if k != 1:
@@ -173,7 +174,7 @@ def splev_linear(x, tck: tuple[th.FloatArr1D, th.FloatArr1D, int], der: int = 0,
     return splev_linear_arr
 
 
-# @numba.njit
+# @njit
 def fitpack_spl_(x: th.FloatArr1D, nu: int, t: th.FloatArr1D, c: th.FloatArr1D, k: int, e: int):
     """
     Numba implementation of the

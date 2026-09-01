@@ -4,20 +4,19 @@ import os.path
 import unittest
 
 import matplotlib.pyplot as plt
-import numba
 import numpy as np
 import scipy.interpolate
 
 from pttools.analysis import save_fig
 from pttools import speedup
-from pttools.speedup import spline
+from pttools.speedup import njit, spline
 from pttools.speedup.parallel import parallel_debug_message
 from pttools.utils import assert_allclose
 import pttools.type_hints as th
 from tests.utils import TEST_FIGURE_PATH
 
 
-@numba.njit
+@njit
 def jitted_spline(
         x: th.FloatArr1D,
         tck: tuple[th.FloatArr1D, th.FloatArr1D, int],

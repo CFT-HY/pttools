@@ -8,6 +8,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from pttools.bubble.alpha import alpha_n_max_deflagration_bag
+from pttools.bubble.integrate import DF_DTAU_PTR_BAG
 from pttools.bubble.bubble.base import BaseBubble, NotYetSolvedError
 from pttools.bubble.const import DEFAULT_N_XI, DEFAULT_T_END, JUNCTION_RTOL, THIN_SHELL_T_POINTS_MIN
 from pttools.bubble.fluid import sound_shell_generic
@@ -299,7 +300,7 @@ class Bubble(BaseBubble):
         if use_bag_solver and use_giese_solver:
             raise ValueError("Both bag and Giese et al. solvers cannot be used at the same time.")
 
-        alpha_n_max_bag = alpha_n_max_deflagration_bag(self.v_wall)
+        alpha_n_max_bag = alpha_n_max_deflagration_bag(self.v_wall, df_dtau_ptr=DF_DTAU_PTR_BAG)
         high_alpha_n = alpha_n_max_bag - self.alpha_n < 0.05
 
         try:

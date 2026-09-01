@@ -4,7 +4,6 @@ from collections.abc import Iterable
 import logging
 import typing as tp
 
-import numba
 import numpy as np
 from scipy.optimize import fsolve
 
@@ -13,6 +12,7 @@ from pttools.bubble.relativity import gamma2
 from pttools.bubble.phase import Phase
 from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.v_plus import v_plus
+from pttools.speedup import njit
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr, FloatOrArr1D
 if tp.TYPE_CHECKING:
@@ -231,7 +231,7 @@ def v_chapman_jouguet(
     return v_cj
 
 
-@numba.njit
+@njit(cache=True)
 def v_chapman_jouguet_bag[T: FloatOrArr](alpha_plus: T) -> T:
     r"""Chapman-Jouguet speed for the bag model
 

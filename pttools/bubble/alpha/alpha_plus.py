@@ -1,14 +1,17 @@
 r"""$\alpha_+$ functions"""
 
-import numba
-
 from pttools.bubble.alpha.alpha_limits_bag import \
     alpha_n_min_hybrid_bag, alpha_n_max_deflagration_bag, alpha_plus_min_hybrid
+from pttools.speedup import njit
+from pttools.speedup.differential import DifferentialPointer
 import pttools.type_hints as th
 
 
-@numba.njit
-def alpha_plus_initial_guess(v_wall: th.FloatOrArr, alpha_n_given: float) -> th.FloatOrArr:
+@njit
+def alpha_plus_initial_guess(
+        v_wall: th.FloatOrArr,
+        alpha_n_given: float,
+        df_dtau_ptr: DifferentialPointer) -> th.FloatOrArr:
     r"""
     Initial guess for root-finding of $\alpha_+$ from $\alpha_n$.
     Linear approx between $\alpha_{n,\min}$ and $\alpha_{n,\max}$.
@@ -16,6 +19,7 @@ def alpha_plus_initial_guess(v_wall: th.FloatOrArr, alpha_n_given: float) -> th.
 
     :param v_wall: $v_\text{wall}$, wall speed
     :param alpha_n_given: $\alpha_{n, \text{given}}$
+    :param df_dtau_ptr: pointer to the differential equation function
     :return: initial guess for $\alpha_+$
     """
     if alpha_n_given < 0.05:
@@ -25,7 +29,7 @@ def alpha_plus_initial_guess(v_wall: th.FloatOrArr, alpha_n_given: float) -> th.
     alpha_plus_max = 1/3
 
     alpha_n_min = alpha_n_min_hybrid_bag(v_wall)
-    alpha_n_max = alpha_n_max_deflagration_bag(v_wall)
+    alpha_n_max = alpha_n_max_deflagration_bag(v_wall, df_dtau_ptr=df_dtau_ptr)
 
     slope = (alpha_plus_max - alpha_plus_min) / (alpha_n_max - alpha_n_min)
     return alpha_plus_min + slope * (alpha_n_given - alpha_n_min)

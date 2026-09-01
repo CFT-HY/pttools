@@ -5,13 +5,14 @@ import logging
 import numba
 import numpy as np
 
+from pttools.speedup import njit
 from pttools.ssm.nucleation import NucType, beta_R_star0, lifetime_distribution
 import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
 
-@numba.njit(cache=True)
+@njit(cache=True)
 def qT_from_z(
         z: th.FloatOrArr,
         T_tilde: th.FloatOrArr,
@@ -23,7 +24,7 @@ def qT_from_z(
     return z * T_tilde / beta_R
 
 
-@numba.njit
+@njit
 def _spec_den_v_core_loop(
         # Arrays
         A2_lookup: th.FloatArr1D,
@@ -76,11 +77,11 @@ def _spec_den_v_core(
         )
     return sd_v
 
-spec_den_v_core = numba.njit(parallel=True, nogil=True)(_spec_den_v_core)
-spec_den_v_core_single = numba.njit(parallel=False, nogil=True)(_spec_den_v_core)
+spec_den_v_core = njit(parallel=True, nogil=True)(_spec_den_v_core)
+spec_den_v_core_single = njit(parallel=False, nogil=True)(_spec_den_v_core)
 
 
-@numba.njit(nogil=True)
+@njit(nogil=True)
 def spec_den_v(
         # Arrays
         z: th.FloatArr1D,

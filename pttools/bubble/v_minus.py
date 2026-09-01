@@ -10,7 +10,7 @@ from numba.extending import overload
 import numpy as np
 
 from pttools.bubble.solution_type import SolutionType
-from pttools.speedup import NUMBA_ENABLE_CACHE
+from pttools.speedup import njit
 import pttools.type_hints as th
 
 
@@ -64,7 +64,7 @@ def _v_minus_scalar(
     # return ret
 
 
-_v_minus_scalar_numba = numba.njit(_v_minus_scalar, nogil=True)
+_v_minus_scalar_numba = njit(_v_minus_scalar, nogil=True, cache=True)
 
 
 def _v_minus_arr(
@@ -88,8 +88,8 @@ def _v_minus_arr(
     #             "Check the types of the arguments.")
     # return ret
 
-_v_minus_arr_parallel = numba.njit(parallel=True, nogil=True)(_v_minus_arr)
-_v_minus_arr_single = numba.njit(nogil=True)(_v_minus_arr)
+_v_minus_arr_parallel = njit(parallel=True, nogil=True, cache=True)(_v_minus_arr)
+_v_minus_arr_single = njit(nogil=True, cache=True)(_v_minus_arr)
 
 
 def _v_minus_arr_wrapper(
@@ -137,7 +137,9 @@ def v_minus(
     raise TypeError(f"Unknown argument types: vp = {type(vp)}, ap = {type(ap)}")
 
 
-@overload(v_minus, jit_options={"nopython": True, "nogil": True, "cache": NUMBA_ENABLE_CACHE})
+# The Numba caching of the overload implementations is disabled, as their cache files collide
+# with those of the njit-compiled versions of the same functions, which results in segmentation faults.
+@overload(v_minus, jit_options={"nopython": True, "nogil": True})
 def _v_minus_numba(
         vp: th.FloatOrArr,
         ap: float,

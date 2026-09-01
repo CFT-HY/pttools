@@ -2,10 +2,9 @@
 
 import typing as tp
 
-import numba
-
 from pttools.bubble.relativity import gamma
 from pttools.bubble.phase import Phase
+from pttools.speedup import njit
 import pttools.type_hints as th
 
 if tp.TYPE_CHECKING:
@@ -36,7 +35,7 @@ def check_entropy_fluxes(
 
 
 # This uses gamma(), but it's so unlikely to change, that caching this is OK.
-@numba.njit(cache=True)
+@njit(cache=True)
 def entropy_flux(v_tilde: th.FloatOrArr, s: th.FloatOrArr) -> th.FloatOrArr:
     r"""Entropy flux $S$
     $$S^z = su^z = \gamma(\tilde{v}) \tilde{v} s$$

@@ -1,11 +1,11 @@
 """Useful functions for finding the properties of a solution."""
 
-import numba.types
 import numpy as np
 
 from pttools.bubble.phase import Phase
 from pttools.bubble.solution_type import SolutionType
 from pttools.bubble import relativity
+from pttools.speedup import njit
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
@@ -25,7 +25,7 @@ def find_phase(xi: th.FloatArr1D, v_wall: float) -> th.FloatArr1D:
     return phase
 
 
-@numba.njit
+@njit(cache=True)
 def find_v_index(xi: th.FloatArr, v_target: float) -> int:
     r"""
     The first array index of $\xi$ where value is just above $v_\text{target}$.
@@ -34,7 +34,7 @@ def find_v_index(xi: th.FloatArr, v_target: float) -> int:
     return np.argmax(xi >= v_target)
 
 
-@numba.njit
+@njit
 def v_max_behind(xi: FloatOrArr, cs: FloatOrArr) -> FloatOrArr:
     r"""Maximum fluid velocity behind the wall.
     Given by the condition $\mu(\xi, v) = c_s$.

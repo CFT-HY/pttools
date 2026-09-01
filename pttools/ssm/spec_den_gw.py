@@ -5,14 +5,14 @@ from numba.extending import overload
 import numpy as np
 
 from pttools.bubble.const import DEFAULT_ADIABATIC_INDEX, DEFAULT_NU_GDH2024
-from pttools.speedup import NUMBA_ENABLE_CACHE, logspace
+from pttools.speedup import logspace, njit
 from pttools.ssm.barotropic import H_eta
 from pttools.ssm.const import CS0, DEFAULT_N_Z_LOOKUP, DEFAULT_R_STAR
 from pttools.ssm.rho import rho_delta_factor, rho_delta_frac, x_minus, x_plus
 from pttools.type_hints import FloatArr1D, FloatOrArr, NumbaFunc
 
 
-@numba.njit
+@njit
 def gen_lookup(
         y: FloatArr1D,
         cs: float = CS0,
@@ -43,7 +43,7 @@ def gen_lookup(
     return logspace(np.log10(x_minus_min), np.log10(x_plus_max), n_x_lookup)
 
 
-@numba.njit
+@njit(cache=True)
 def limits_from_lookup[T: FloatOrArr](x_lookup: FloatArr1D, cs: T = CS0) -> tuple[T, T]:  # type: ignore[assignment]
     r"""Limits of x from a lookup
     $$y_\pm = 2 x_{\pm} \frac{c_s}{1 \pm c_s}$$
@@ -54,7 +54,7 @@ def limits_from_lookup[T: FloatOrArr](x_lookup: FloatArr1D, cs: T = CS0) -> tupl
     return y_min, y_max
 
 
-@numba.njit
+@njit
 def lookup_limits(z: FloatArr1D, cs: float = CS0, eps: float = 0.) -> tuple[float, float]:
     r"""
     $$x_\pm = z \frac{1 \pm c_s}{2c_s}$$
@@ -154,8 +154,8 @@ def _spec_den_gw_core(
 
     return p_gw, y
 
-_spec_den_gw_core_single = numba.njit(nogil=True)(_spec_den_gw_core)
-_spec_den_gw_core_parallel = numba.njit(parallel=True, nogil=True)(_spec_den_gw_core)
+_spec_den_gw_core_single = njit(nogil=True)(_spec_den_gw_core)
+_spec_den_gw_core_parallel = njit(parallel=True, nogil=True)(_spec_den_gw_core)
 
 
 def _spec_den_gw_y(
@@ -260,7 +260,9 @@ def spec_den_gw(
     raise TypeError(f"Unknown type for y: {type(y)}")
 
 
-@overload(spec_den_gw, jit_options={"nopython": True, "nogil": True, "cache": NUMBA_ENABLE_CACHE})
+# The Numba caching of the overload implementations is disabled, as their cache files collide
+# with those of the njit-compiled versions of the same functions, which results in segmentation faults.
+@overload(spec_den_gw, jit_options={"nopython": True, "nogil": True})
 def _spec_den_gw_numba(
         # Arrays
         z_lookup: FloatArr1D,

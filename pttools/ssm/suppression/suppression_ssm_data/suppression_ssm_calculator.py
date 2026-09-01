@@ -5,7 +5,8 @@ import os.path
 
 import numpy as np
 
-from pttools.bubble import DEFAULT_ADIABATIC_INDEX, get_ubarf2_bag
+from pttools.bubble import \
+    CS2_BAG_SCALAR_PTR, DEFAULT_ADIABATIC_INDEX, DF_DTAU_PTR_BAG, get_ubarf2_bag
 from pttools.ssm.const import NptType, DEFAULT_N_PT
 from pttools.ssm.spectrum import NucType
 from pttools.ssm.spectrum_bag import power_gw_bag
@@ -54,7 +55,8 @@ def calc_sup_ssm(
             lambda_correction=lambda_correction
         )  # omgw_ssm /(HnR*)(Hnt)
         out_ssm_tot.append(np.trapezoid(out_ssm, np.log(z)))
-        Ubarf_2_ssm.append(get_ubarf2_bag(vw, alpha))
+        Ubarf_2_ssm.append(get_ubarf2_bag(
+            vw, alpha, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG))
 
         sup_ssm = (Ubarf_2_ssm[i] / expected_Ubarf2)**2 * sim_omgw / out_ssm_tot[i]
         sup_ssm_all.append(sup_ssm)

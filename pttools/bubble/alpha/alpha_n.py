@@ -1,12 +1,11 @@
 r"""$\alpha_n$ functions"""
 
-import numba
-
 from pttools.bubble import props
+from pttools.speedup import njit
 import pttools.type_hints as th
 
 
-@numba.njit
+@njit
 def find_alpha_n_from_w_xi(w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float, alpha_p: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Calculates the transition strength parameter with

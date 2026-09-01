@@ -181,7 +181,8 @@ def generate_ps(
         f2.savefig(os.path.join(GDP, "pow_gw_" + graph_file_suffix))
 
     # Now some diagnostic comparisons between real space <v^2> and Fourier space already calculated
-    v_ip, w_ip, xi = bubble.sound_shell_bag(vw, alpha)
+    v_ip, w_ip, xi = bubble.sound_shell_bag(
+        vw, alpha, cs2_fun_ptr=bubble.CS2_BAG_SCALAR_PTR, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG)
     Ubarf2 = bubble.ubarf_squared(v_ip, w_ip, xi, vw)
 
     logger.debug(

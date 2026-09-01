@@ -13,19 +13,25 @@ import typing as tp
 import numba
 import numpy as np
 
-from pttools.speedup import options
+from pttools.speedup.options import NUMBA_DISABLE_JIT, NUMBA_INTEGRATE, NUMBA_OPTS
 from pttools.utils import conditional_decorator
 
 logger = logging.getLogger(__name__)
 
 
 def njit(func: tp.Callable | None = None, **kwargs):
-    """Wrapper for numba.njit.
+    """Wrapper for numba.njit, which applies the default options of :data:`NUMBA_OPTS`.
+
+    Options given as keyword arguments override the defaults.
+    For example, ``cache=True`` enables caching regardless of :data:`NUMBA_ENABLE_CACHE`.
+    This should be used only for functions that do not call code from other files,
+    and which can therefore be cached safely even when developing PTtools.
 
     May cause segmentation faults with profilers.
     """
+    opts = {**NUMBA_OPTS, **kwargs}
     def _njit(func2):
-        return numba.njit(func2, **options.NUMBA_OPTS, **kwargs)
+        return numba.njit(func2, **opts)
     if func is None:
         return _njit
     return _njit(func)
@@ -34,8 +40,8 @@ def njit(func: tp.Callable | None = None, **kwargs):
 def njit_if_numba_integrate(func: tp.Callable | None = None, **kwargs) -> tp.Callable:
     """Njit compile a function if Numba integration is enabled"""
     if func:
-        return conditional_decorator(numba.njit, options.NUMBA_INTEGRATE, **kwargs)(func)
-    return conditional_decorator(numba.njit, options.NUMBA_INTEGRATE, **kwargs)
+        return conditional_decorator(njit, NUMBA_INTEGRATE, **kwargs)(func)
+    return conditional_decorator(njit, NUMBA_INTEGRATE, **kwargs)
 
 
 def njit_module(**kwargs):
@@ -53,13 +59,13 @@ def njit_module(**kwargs):
                 "Auto decorating function %s from module %s with jit and options: %s",
                 obj, module.__name__, kwargs
             )
-            module.__dict__[name] = numba.njit(obj, **options.NUMBA_OPTS, **kwargs)
+            module.__dict__[name] = njit(obj, **kwargs)
 
 
 def vectorize(**kwargs):
     """Extended version of numba.vectorize with support for NUMBA_DISABLE_JIT"""
     def vectorize_inner(func: tp.Callable):
-        if options.NUMBA_DISABLE_JIT:
+        if NUMBA_DISABLE_JIT:
             # Using functools.wraps() ensures that docstrings etc. are preserved
             @functools.wraps(func)
             def wrapper(*func_args, **func_kwargs):

@@ -3,15 +3,15 @@
 Not yet functional
 """
 
-import numba
 import numpy as np
 
 from pttools import type_hints as th
+from pttools.speedup import njit
 from pttools.type_hints import FloatOrArr
 from pttools.models.thermo import ThermoModel
 
 
-@numba.njit
+@njit(cache=True)
 def sigmoid(
         x: th.FloatOrArr,
         midpoint: th.FloatOrArr,
@@ -21,7 +21,7 @@ def sigmoid(
     return max_val / (1 + np.exp(-steepness*(x - midpoint)))
 
 
-@numba.njit
+@njit(cache=True)
 def sigmoid_derivative(
         x: th.FloatOrArr,
         midpoint: th.FloatOrArr,
