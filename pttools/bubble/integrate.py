@@ -17,7 +17,7 @@ from pttools.bubble.phase import Phase
 from pttools.speedup import njit
 from pttools.speedup.differential import DifferentialCache, DifferentialCFunc, DifferentialPointer
 from pttools.speedup.numba_wrapper import numbalsoda
-from pttools.speedup.options import NUMBA_DISABLE_JIT, NUMBA_ENABLE_CACHE, NUMBA_INTEGRATE
+from pttools.speedup.options import NUMBA_DISABLE_JIT, NUMBA_INTEGRATE
 import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
@@ -101,10 +101,8 @@ DF_DTAU_PTR_BAG: DifferentialPointer = add_df_dtau(
 )
 
 
-# This function calls only functions of this file, and could therefore be cached safely.
-# However, caching is possible only when the literal typing below is in use,
-# and it is therefore left to the default instead of being forced with cache=True.
-@njit
+# This function calls only functions of this file, and can therefore be cached safely.
+@njit(cache=True)
 def fluid_integrate_param(
         v0: float,
         w0: float,
@@ -136,17 +134,6 @@ def fluid_integrate_param(
     # The second value ensures that the Numba typing is correct.
     data = np.array([phase, 0.])
     success: bool = False
-    # numba.literally() types the method as a string literal.
-    # This way Numba can prune the branch that is not used, so that the functions that call this one
-    # don't get tainted by the ctypes pointer of NumbaLSODA and can therefore still be cached.
-    # The literal is a part of the Numba signature, and therefore of the cache key.
-    # Forcing the literal typing requires an additional compilation round,
-    # which roughly triples the compilation time of the fluid solver.
-    # This is worth it only when the results of the compilation are cached for the following runs.
-    if NUMBA_ENABLE_CACHE:
-        numba.literally(method)
-    if method == "numba_lsoda":
-        v, w, xi, success = fluid_integrate_param_numba(t=t, y0=y0, data=data, df_dtau_ptr=df_dtau_ptr)
 
     # This lock prevents a SystemError when running multiple threads
     # with ODEINT_LOCK:
@@ -155,13 +142,22 @@ def fluid_integrate_param(
     # Putting these within numba.objmode can also be challenging, as function-type arguments are not supported.
     # For better performance, the "df_dtau" should be already fully Numba-compiled at this point instead
     # of taking functions as its arguments.
-    else:
-        with numba.objmode(v="float64[:]", w="float64[:]", xi="float64[:]", success="boolean"):
-            if method == "odeint":
-                v, w, xi, success = fluid_integrate_param_odeint(t=t, y0=y0, data=data, df_dtau_ptr=df_dtau_ptr)
-            else:
-                v, w, xi, success = fluid_integrate_param_solve_ivp(
-                    t=t, y0=y0, data=data, df_dtau_ptr=df_dtau_ptr, method=method)
+
+    # NumbaLSODA is called from within objmode as well, even though it supports nopython mode.
+    # Calling it from nopython mode would link its ctypes pointer to the LSODA library into this function,
+    # which Numba reports as a dynamic global, and which would prevent the caching of this function
+    # and of every function that calls it.
+    # The solver is selected within objmode instead of with a nopython branch,
+    # since branching on the method in nopython mode would compile the NumbaLSODA call into this function
+    # regardless of the method that is actually used.
+    with numba.objmode(v="float64[:]", w="float64[:]", xi="float64[:]", success="boolean"):
+        if method == "numba_lsoda":
+            v, w, xi, success = fluid_integrate_param_numba(t=t, y0=y0, data=data, df_dtau_ptr=df_dtau_ptr)
+        elif method == "odeint":
+            v, w, xi, success = fluid_integrate_param_odeint(t=t, y0=y0, data=data, df_dtau_ptr=df_dtau_ptr)
+        else:
+            v, w, xi, success = fluid_integrate_param_solve_ivp(
+                t=t, y0=y0, data=data, df_dtau_ptr=df_dtau_ptr, method=method)
     if not success:
         raise RuntimeError(
             f"Integration failed for v0={v0}, w0={w0}, xi0={xi0}, phase={phase}, "
