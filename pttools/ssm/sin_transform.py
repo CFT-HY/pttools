@@ -11,22 +11,6 @@ from pttools.ssm.sin_transform_approx import sin_transform_approx
 import pttools.type_hints as th
 
 
-def _sin_transform_scalar(
-        z: th.FloatOrArr,
-        xi: th.FloatArr1D,
-        f: th.FloatArr1D,
-        z_st_thresh: float = const.Z_ST_THRESH,
-        v_wall: float | None = None,
-        v_sh: float | None = None,
-        parallel: bool = True) -> th.FloatOrArr:
-    if z <= z_st_thresh:
-        array = f * np.sin(z * xi)
-        integral = np.trapezoid(array, xi)
-    else:
-        integral = sin_transform_approx(z=z, xi=xi, f=f, v_wall=v_wall, v_sh=v_sh)
-    return integral
-
-
 def _sin_transform_arr(
         z: th.FloatOrArr,
         xi: th.FloatArr1D,
@@ -67,6 +51,48 @@ def _sin_transform_arr(
     # if len(integral) != len(z):
     #     raise RuntimeError
 
+    return integral
+
+
+def _sin_transform_core(t: th.FloatArr1D, f: th.FloatArr1D, freq: th.FloatArr1D) -> th.FloatArr1D:
+    r"""
+    The `sine transform <https://en.wikipedia.org/wiki/Sine_and_cosine_transforms>`_
+    for multiple values of $\omega$ without any approximations.
+    Computes the following for each angular frequency $\omega$.
+    $$\hat{f}(\omega) = \int_{{t}_\text{min}}^{{t}_\text{max}} f(t) \sin(\omega t) dt$$
+
+    :param t: variable of the real space ($t$ or $x$)
+    :param f: function values at the points $t$
+    :param freq: frequencies $\omega$
+    :return: value of the sine transformed function at each angular frequency $\omega$
+    """
+    integral = np.zeros_like(freq)
+    # pylint: disable=not-an-iterable
+    for i in numba.prange(freq.size):
+        integrand = f * np.sin(freq[i] * t)
+        # If you get Numba errors here, ensure that t is contiguous.
+        # This can be achieved with the use of t.copy() in the data pipeline leading to this function.
+        integral[i] = np.trapezoid(integrand, t)
+    return integral
+
+
+sin_transform_core = njit(parallel=True, nogil=True, cache=True)(_sin_transform_core)
+sin_transform_core_single = njit(nogil=True, cache=True)(_sin_transform_core)
+
+
+def _sin_transform_scalar(
+        z: th.FloatOrArr,
+        xi: th.FloatArr1D,
+        f: th.FloatArr1D,
+        z_st_thresh: float = const.Z_ST_THRESH,
+        v_wall: float | None = None,
+        v_sh: float | None = None,
+        parallel: bool = True) -> th.FloatOrArr:
+    if z <= z_st_thresh:
+        array = f * np.sin(z * xi)
+        integral = np.trapezoid(array, xi)
+    else:
+        integral = sin_transform_approx(z=z, xi=xi, f=f, v_wall=v_wall, v_sh=v_sh)
     return integral
 
 
@@ -120,29 +146,3 @@ def _sin_transform_numba(
     if isinstance(z, numba.types.Array):
         return _sin_transform_arr
     raise NotImplementedError
-
-
-def _sin_transform_core(t: th.FloatArr1D, f: th.FloatArr1D, freq: th.FloatArr1D) -> th.FloatArr1D:
-    r"""
-    The `sine transform <https://en.wikipedia.org/wiki/Sine_and_cosine_transforms>`_
-    for multiple values of $\omega$ without any approximations.
-    Computes the following for each angular frequency $\omega$.
-    $$\hat{f}(\omega) = \int_{{t}_\text{min}}^{{t}_\text{max}} f(t) \sin(\omega t) dt$$
-
-    :param t: variable of the real space ($t$ or $x$)
-    :param f: function values at the points $t$
-    :param freq: frequencies $\omega$
-    :return: value of the sine transformed function at each angular frequency $\omega$
-    """
-    integral = np.zeros_like(freq)
-    # pylint: disable=not-an-iterable
-    for i in numba.prange(freq.size):
-        integrand = f * np.sin(freq[i] * t)
-        # If you get Numba errors here, ensure that t is contiguous.
-        # This can be achieved with the use of t.copy() in the data pipeline leading to this function.
-        integral[i] = np.trapezoid(integrand, t)
-    return integral
-
-
-sin_transform_core = njit(parallel=True, nogil=True, cache=True)(_sin_transform_core)
-sin_transform_core_single = njit(nogil=True, cache=True)(_sin_transform_core)
