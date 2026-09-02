@@ -238,7 +238,7 @@ def run_parallel(
         args: list | tuple = (),
         kwargs: dict[str, tp.Any] | None = None,
         single_thread: bool = False,
-        global_pool: bool = False) -> NDArray | tuple[NDArray, ...] | None:
+        global_pool: bool = True) -> NDArray | tuple[NDArray, ...] | None:
     """Run the given function with multiple parameters in parallel
 
     :param func: The function to be executed in parallel
