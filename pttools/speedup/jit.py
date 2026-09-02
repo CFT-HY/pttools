@@ -29,19 +29,13 @@ def njit(func: tp.Callable | None = None, **kwargs):
 
     May cause segmentation faults with profilers.
     """
+    # Creating the dictionary before passing it to the function is necessary for handling duplicate values.
     opts = {**NUMBA_OPTS, **kwargs}
     def _njit(func2):
         return numba.njit(func2, **opts)
     if func is None:
         return _njit
     return _njit(func)
-
-
-def njit_if_numba_integrate(func: tp.Callable | None = None, **kwargs) -> tp.Callable:
-    """Njit compile a function if Numba integration is enabled"""
-    if func:
-        return conditional_decorator(njit, NUMBA_INTEGRATE, **kwargs)(func)
-    return conditional_decorator(njit, NUMBA_INTEGRATE, **kwargs)
 
 
 def njit_module(**kwargs):
