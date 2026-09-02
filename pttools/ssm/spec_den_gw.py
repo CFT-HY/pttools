@@ -5,7 +5,7 @@ from numba.extending import overload
 import numpy as np
 
 from pttools.bubble.const import DEFAULT_ADIABATIC_INDEX, DEFAULT_NU_GDH2024
-from pttools.speedup import logspace, njit
+from pttools.speedup import logspace, njit, njit_parallel_pair
 from pttools.ssm.barotropic import H_eta
 from pttools.ssm.const import CS0, DEFAULT_N_Z_LOOKUP, DEFAULT_R_STAR
 from pttools.ssm.rho import rho_delta_factor, rho_delta_frac, x_minus, x_plus
@@ -154,8 +154,7 @@ def _spec_den_gw_core(
 
     return p_gw, y
 
-_spec_den_gw_core_single = njit(nogil=True)(_spec_den_gw_core)
-_spec_den_gw_core_parallel = njit(parallel=True, nogil=True)(_spec_den_gw_core)
+_spec_den_gw_core_parallel, _spec_den_gw_core_single = njit_parallel_pair(_spec_den_gw_core, nogil=True)
 
 
 def _spec_den_gw_y(

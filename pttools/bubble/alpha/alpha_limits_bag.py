@@ -10,7 +10,7 @@ from pttools.bubble import check
 from pttools.bubble import props
 from pttools.bubble.solution_type import SolutionType
 # from pttools.bubble.solution_type_bag import identify_solution_type_alpha_plus_bag
-from pttools.speedup import njit, vectorize
+from pttools.speedup import njit, njit_parallel_pair, vectorize
 from pttools.bubble.integrate import FluidIntegrateMethod
 from pttools.speedup.differential import DifferentialPointer
 import pttools.type_hints as th
@@ -79,8 +79,8 @@ def _alpha_n_max_deflagration_bag_arr(
             v_wall[i], df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, n_xi=n_xi)
     return ret
 
-_alpha_n_max_deflagration_bag_arr_parallel = njit(parallel=True, nogil=True)(_alpha_n_max_deflagration_bag_arr)
-_alpha_n_max_deflagration_bag_arr_single = njit(nogil=True)(_alpha_n_max_deflagration_bag_arr)
+_alpha_n_max_deflagration_bag_arr_parallel, _alpha_n_max_deflagration_bag_arr_single = \
+    njit_parallel_pair(_alpha_n_max_deflagration_bag_arr, nogil=True)
 
 
 def _alpha_n_max_deflagration_bag_arr_wrapper(

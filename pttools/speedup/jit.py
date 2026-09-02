@@ -8,13 +8,13 @@ https://github.com/numba/numba/issues/3625
 import functools
 import inspect
 import logging
+import types
 import typing as tp
 
 import numba
 import numpy as np
 
-from pttools.speedup.options import NUMBA_DISABLE_JIT, NUMBA_INTEGRATE, NUMBA_OPTS
-from pttools.utils import conditional_decorator
+from pttools.speedup.options import NUMBA_DISABLE_JIT, NUMBA_OPTS
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,44 @@ def njit(func: tp.Callable | None = None, **kwargs):
     if func is None:
         return _njit
     return _njit(func)
+
+
+def _renamed_func(func: tp.Callable, suffix: str) -> tp.Callable:
+    """Create a copy of the given function with the given suffix appended to its name"""
+    renamed = types.FunctionType(
+        func.__code__, func.__globals__, f"{func.__name__}{suffix}", func.__defaults__, func.__closure__
+    )
+    renamed.__qualname__ = f"{func.__qualname__}{suffix}"
+    renamed.__module__ = func.__module__
+    renamed.__doc__ = func.__doc__
+    renamed.__annotations__ = func.__annotations__
+    renamed.__kwdefaults__ = func.__kwdefaults__
+    return renamed
+
+
+def njit_parallel_pair(func: tp.Callable, **kwargs) -> tuple[tp.Callable, tp.Callable]:
+    """Compile both a parallel and a serial version of the given function.
+
+    The parallel version runs its ``numba.prange`` loops with multiple threads,
+    whereas in the serial version ``numba.prange`` behaves like ``range``.
+    Having both versions available makes it possible to disable the thread-based parallelism
+    of an individual function, e.g. when the caller is already running in parallel.
+
+    Compiling the same function twice with different options is not safe with the Numba cache,
+    as the name of the cache file is based on the module, qualified name and first line number
+    of the Python function, and the cache key on a hash of its bytecode.
+    None of these depend on the compilation options, and therefore the two versions
+    would share the same cache entry and silently overwrite each other's compiled code.
+    This is avoided by compiling each version from a separately named copy of the function.
+
+    :param func: the function to be compiled
+    :param kwargs: additional options for :func:`njit`
+    :return: the parallel version and the serial version of the function
+    """
+    return (
+        njit(_renamed_func(func, "_parallel"), parallel=True, **kwargs),
+        njit(_renamed_func(func, "_serial"), parallel=False, **kwargs)
+    )
 
 
 def njit_module(**kwargs):

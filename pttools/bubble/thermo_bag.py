@@ -18,8 +18,8 @@ from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR
 from pttools.bubble.thermo import kinetic_energy_density, mean_enthalpy_change, ubarf2
 from pttools.bubble.solution_type_bag import SolutionType, identify_solution_type_bag
 import pttools.type_hints as th
-from pttools.speedup import njit
 from pttools.speedup.differential import DifferentialPointer
+from pttools.speedup.jit import njit, njit_parallel_pair
 from pttools.type_hints import FloatOrArr, FloatOrArr1D
 
 type Integrand = \
@@ -363,13 +363,14 @@ def get_ke_frac_new_bag[T: FloatOrArr](
 
 
 def _get_ubarf2_bag_scalar(
-        v_wall: float,
+        v_wall: th.FloatOrArr1D,
         alpha_n: float,
         cs2_fun_ptr: th.CS2FunScalarPtr,
         df_dtau_ptr: DifferentialPointer,
         ode_method: FluidIntegrateMethod,
-        n_xi: int,
-        verbosity: int) -> float:
+        n_xi: int = const.DEFAULT_N_XI,
+        verbosity: int = 0,
+        parallel: bool = True) -> float:
     if identify_solution_type_bag(
             v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method) == SolutionType.ERROR:
         ub2 = np.nan
@@ -389,20 +390,44 @@ def _get_ubarf2_bag_scalar(
     return ub2
 
 
+_get_ubarf2_bag_scalar_numba = njit(_get_ubarf2_bag_scalar, nogil=True)
+
+
 def _get_ubarf2_bag_arr(
         v_wall: th.FloatArr1D,
         alpha_n: float,
         cs2_fun_ptr: th.CS2FunScalarPtr,
         df_dtau_ptr: DifferentialPointer,
         ode_method: FluidIntegrateMethod,
-        n_xi: int,
-        verbosity: int) -> th.FloatArr1D:
+        n_xi: int = const.DEFAULT_N_XI,
+        verbosity: int = 0) -> th.FloatArr1D:
     ubarf2 = np.zeros_like(v_wall)
+    # pylint: disable=not-an-iterable
     for i in numba.prange(v_wall.size):
-        ubarf2[i] = _get_ubarf2_bag_scalar(
+        ubarf2[i] = _get_ubarf2_bag_scalar_numba(
             v_wall[i], alpha_n, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr,
             ode_method=ode_method, n_xi=n_xi, verbosity=verbosity)
     return ubarf2
+
+_get_ubarf2_bag_arr_parallel, _get_ubarf2_bag_arr_single = njit_parallel_pair(_get_ubarf2_bag_arr, nogil=True)
+
+
+def _get_ubarf2_bag_arr_wrapper(
+        v_wall: th.FloatOrArr1D,
+        alpha_n: float,
+        cs2_fun_ptr: th.CS2FunScalarPtr,
+        df_dtau_ptr: DifferentialPointer,
+        ode_method: FluidIntegrateMethod,
+        n_xi: int = const.DEFAULT_N_XI,
+        verbosity: int = 0,
+        parallel: bool = True) -> th.FloatArr1D:
+    if parallel:
+        return _get_ubarf2_bag_arr_parallel(
+            v_wall, alpha_n, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr,
+            ode_method=ode_method, n_xi=n_xi, verbosity=verbosity)
+    return _get_ubarf2_bag_arr_single(
+        v_wall, alpha_n, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr,
+        ode_method=ode_method, n_xi=n_xi, verbosity=verbosity)
 
 
 def get_ubarf2_bag[T: FloatOrArr1D](
@@ -412,7 +437,8 @@ def get_ubarf2_bag[T: FloatOrArr1D](
         df_dtau_ptr: DifferentialPointer,
         ode_method: FluidIntegrateMethod,
         n_xi: int = const.DEFAULT_N_XI,
-        verbosity: int = 0) -> T:
+        verbosity: int = 0,
+        parallel: bool = True) -> T:
     r"""
     Get mean square fluid velocity from $v_\text{wall}$ and $\alpha_n$.
 
@@ -423,6 +449,7 @@ def get_ubarf2_bag[T: FloatOrArr1D](
     :param ode_method: differential equation solver to be used
     :param n_xi: number of $\xi$ points
     :param verbosity: logging verbosity
+    :param parallel: whether to compute the values for the elements of an array with multiple threads
     :return: mean square fluid velocity
     """
     if isinstance(v_wall, float):
@@ -436,7 +463,9 @@ def get_ubarf2_bag[T: FloatOrArr1D](
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
-@overload(get_ubarf2_bag, jit_options={"nopython": True, "parallel": True})
+# The parallelism is selected at run time by _get_ubarf2_bag_arr_wrapper instead of with jit_options,
+# so that the caller can disable it, e.g. when it's already running in parallel.
+@overload(get_ubarf2_bag, jit_options={"nopython": True, "nogil": True})
 def _get_ubarf2_bag_numba(
         v_wall: th.FloatOrArr1D,
         alpha_n: float,
@@ -444,13 +473,14 @@ def _get_ubarf2_bag_numba(
         df_dtau_ptr: DifferentialPointer,
         ode_method: FluidIntegrateMethod,
         n_xi: int = const.DEFAULT_N_XI,
-        verbosity: int = 0) -> th.NumbaFunc:
+        verbosity: int = 0,
+        parallel: bool = True) -> th.NumbaFunc:
     if isinstance(v_wall, numba.types.Float):
         return _get_ubarf2_bag_scalar
     if isinstance(v_wall, numba.types.Array):
         if not v_wall.ndim:
             return _get_ubarf2_bag_scalar
-        return _get_ubarf2_bag_arr
+        return _get_ubarf2_bag_arr_wrapper
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 

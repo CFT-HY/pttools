@@ -5,7 +5,7 @@ import logging
 import numba
 import numpy as np
 
-from pttools.speedup import njit
+from pttools.speedup import njit, njit_parallel_pair
 from pttools.ssm.nucleation import NucType, beta_R_star0, lifetime_distribution
 import pttools.type_hints as th
 
@@ -77,8 +77,7 @@ def _spec_den_v_core(
         )
     return sd_v
 
-spec_den_v_core = njit(parallel=True, nogil=True)(_spec_den_v_core)
-spec_den_v_core_single = njit(parallel=False, nogil=True)(_spec_den_v_core)
+spec_den_v_core, spec_den_v_core_single = njit_parallel_pair(_spec_den_v_core, nogil=True)
 
 
 @njit(nogil=True)

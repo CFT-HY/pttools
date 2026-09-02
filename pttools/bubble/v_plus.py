@@ -11,7 +11,7 @@ import numpy as np
 
 from pttools.bubble.const import CS0
 from pttools.bubble.solution_type import SolutionType
-from pttools.speedup import njit
+from pttools.speedup import njit, njit_parallel_pair
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
@@ -88,8 +88,7 @@ def _v_plus_arr(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: boo
     # return np.real(ret)
 
 
-_v_plus_arr_parallel = njit(parallel=True, nogil=True, cache=True)(_v_plus_arr)
-_v_plus_arr_single = njit(nogil=True, cache=True)(_v_plus_arr)
+_v_plus_arr_parallel, _v_plus_arr_single = njit_parallel_pair(_v_plus_arr, nogil=True, cache=True)
 
 
 def _v_plus_arr_wrapper(

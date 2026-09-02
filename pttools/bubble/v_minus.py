@@ -10,7 +10,7 @@ from numba.extending import overload
 import numpy as np
 
 from pttools.bubble.solution_type import SolutionType
-from pttools.speedup import njit
+from pttools.speedup import njit, njit_parallel_pair
 import pttools.type_hints as th
 
 
@@ -88,8 +88,7 @@ def _v_minus_arr(
     #             "Check the types of the arguments.")
     # return ret
 
-_v_minus_arr_parallel = njit(parallel=True, nogil=True, cache=True)(_v_minus_arr)
-_v_minus_arr_single = njit(nogil=True, cache=True)(_v_minus_arr)
+_v_minus_arr_parallel, _v_minus_arr_single = njit_parallel_pair(_v_minus_arr, nogil=True, cache=True)
 
 
 def _v_minus_arr_wrapper(

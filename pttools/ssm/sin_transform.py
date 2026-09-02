@@ -5,7 +5,7 @@ from numba.extending import overload
 import numba.types
 import numpy as np
 
-from pttools.speedup import njit
+from pttools.speedup import njit_parallel_pair
 from pttools.ssm import const
 from pttools.ssm.sin_transform_approx import sin_transform_approx
 import pttools.type_hints as th
@@ -26,7 +26,8 @@ def _sin_transform_arr(
     # array_lo = f * np.sin(np.outer(z_lo, xi))
     # For each z, integrate f * sin(z*xi) over xi
     # integral = np.trapezoid(array_lo, xi)
-    integral = sin_transform_core(t=xi, f=f, freq=z_lo) if parallel else sin_transform_core_single(t=xi, f=f, freq=z_lo)
+    integral = sin_transform_core_parallel(t=xi, f=f, freq=z_lo) \
+        if parallel else sin_transform_core_single(t=xi, f=f, freq=z_lo)
 
     if len(lo) < len(z):
         z_hi = z[np.where(z > z_st_thresh - const.DZ_ST_BLEND)]
@@ -76,8 +77,7 @@ def _sin_transform_core(t: th.FloatArr1D, f: th.FloatArr1D, freq: th.FloatArr1D)
     return integral
 
 
-sin_transform_core = njit(parallel=True, nogil=True, cache=True)(_sin_transform_core)
-sin_transform_core_single = njit(nogil=True, cache=True)(_sin_transform_core)
+sin_transform_core_parallel, sin_transform_core_single = njit_parallel_pair(_sin_transform_core, nogil=True, cache=True)
 
 
 def _sin_transform_scalar(
@@ -123,6 +123,7 @@ def sin_transform(
     :param z_st_thresh: for $z$ values above z_sh_tresh, use approximation rather than doing the integral.
     :param v_wall: wall speed
     :param v_sh: shock speed
+    :param parallel: whether to use multiple threads
     :return: sine transformed values $\hat{f}(z)$ (same size as $z$)
     """
     if isinstance(z, float):
@@ -132,7 +133,7 @@ def sin_transform(
     raise NotImplementedError
 
 
-@overload(sin_transform, jit_options={"parallel": True, "nogil": True})
+@overload(sin_transform, jit_options={"nogil": True})
 def _sin_transform_numba(
         z: th.FloatOrArr,
         xi: th.FloatArr1D,
