@@ -7,7 +7,8 @@ How to integrate a fluid shell profile manually
 
 import matplotlib.pyplot as plt
 
-from pttools.bubble import DEFAULT_T_END, Phase, add_df_dtau, fluid_integrate_param
+from pttools.bubble import \
+    DEFAULT_FLUID_INTEGRATE_METHOD, DEFAULT_T_END, Phase, add_df_dtau, fluid_integrate_param
 
 
 def cs2(w: float, phase: float) -> float:
@@ -22,6 +23,7 @@ def main():
         t_end=-DEFAULT_T_END,
         # Add this argument if you have a non-bag EoS
         df_dtau_ptr=df_dtau_ptr,
+        method=DEFAULT_FLUID_INTEGRATE_METHOD,
     )
 
     fig = plt.figure()

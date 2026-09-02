@@ -8,7 +8,8 @@ import unittest
 
 import numpy as np
 
-from pttools.bubble import CS2_BAG_SCALAR_PTR, DF_DTAU_PTR_BAG, thermo_bag
+from pttools.bubble import \
+    CS2_BAG_SCALAR_PTR, DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG, thermo_bag
 import pttools.type_hints as th
 from tests.utils.test_assertions import assert_allclose
 # For debugging Numba issues
@@ -78,7 +79,8 @@ class ThermoBagTestLectureNotes(ThermoBagTest, unittest.TestCase):
         for i in range(self.ALPHA_NS.size):
             ubarfs[i] = np.sqrt(thermo_bag.get_ubarf2_bag(
                 v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i],
-                cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG))
+                cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
+                ode_method=DEFAULT_FLUID_INTEGRATE_METHOD))
         assert_allclose(ubarfs, self.UBARFS_REF, rtol=2.7e-3)
 
     def test_ubarf2_new_bag(self):

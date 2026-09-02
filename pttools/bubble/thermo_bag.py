@@ -14,7 +14,7 @@ from pttools.bubble.phase import Phase, get_phase
 from pttools.bubble import check
 from pttools.bubble import const
 from pttools.bubble import fluid_bag
-from pttools.bubble.integrate import DF_DTAU_PTR_BAG
+from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG, FluidIntegrateMethod
 from pttools.bubble.thermo import kinetic_energy_density, mean_enthalpy_change, ubarf2
 from pttools.bubble.solution_type_bag import SolutionType, identify_solution_type_bag
 import pttools.type_hints as th
@@ -41,7 +41,8 @@ def de_from_w_bag(
         xi: th.FloatArr1D,
         v_wall: float,
         alpha_n: float,
-        df_dtau_ptr: DifferentialPointer) -> th.FloatArr1D:
+        df_dtau_ptr: DifferentialPointer,
+        ode_method: FluidIntegrateMethod) -> th.FloatArr1D:
     r"""
     Calculates energy density difference ``de = e - e[-1]`` from enthalpy, assuming
     bag equation of state.
@@ -52,9 +53,10 @@ def de_from_w_bag(
     :param v_wall: $v_\text{wall}$
     :param alpha_n: $\alpha_n$
     :param df_dtau_ptr: pointer to the differential equation function
+    :param ode_method: differential equation solver to be used
     :return: energy density difference de
     """
-    check.check_physical_params((v_wall, alpha_n), df_dtau_ptr=df_dtau_ptr)
+    check.check_physical_params((v_wall, alpha_n), df_dtau_ptr=df_dtau_ptr, ode_method=ode_method)
     e_from_w = bag.e_bag(w=w, phase=get_phase(xi, v_wall), theta_s=0.75 * w[-1] * alpha_n)
 
     return e_from_w - e_from_w[-1]
@@ -67,7 +69,8 @@ def de_from_w_new_bag(
         xi: th.FloatArr1D,
         v_wall: float,
         alpha_n: float,
-        df_dtau_ptr: DifferentialPointer) -> th.FloatArr1D:
+        df_dtau_ptr: DifferentialPointer,
+        ode_method: FluidIntegrateMethod) -> th.FloatArr1D:
     r"""
     For exploring new methods of calculating energy density difference
     from velocity and enthalpy, assuming bag equation of state.
@@ -78,9 +81,10 @@ def de_from_w_new_bag(
     :param v_wall: $v_\text{wall}$
     :param alpha_n: $\alpha_n$
     :param df_dtau_ptr: pointer to the differential equation function
+    :param ode_method: differential equation solver to be used
     :return: energy density difference de
     """
-    check.check_physical_params((v_wall, alpha_n), df_dtau_ptr=df_dtau_ptr)
+    check.check_physical_params((v_wall, alpha_n), df_dtau_ptr=df_dtau_ptr, ode_method=ode_method)
     e_from_w = bag.e_bag(w=w, phase=get_phase(xi, v_wall), theta_s=0.75 * w[-1] * alpha_n)
 
     de = e_from_w - e_from_w[-1]
@@ -110,12 +114,14 @@ def get_kappa_bag[T: FloatOrArr](
     for vw, kappa in it:
         # This is necessary for Numba
         vw = vw.item()
-        sol_type = identify_solution_type_bag(vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG)
+        sol_type = identify_solution_type_bag(
+            vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD)
 
         if not sol_type == SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(
-                vw, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG, n_xi=n_xi)
+                vw, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
+                ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, n_xi=n_xi)
 
             kappa[...] = ubarf2(v, w, xi, vw, w_bar=w[-1]) / (0.75 * alpha_n)
         else:
@@ -155,12 +161,14 @@ def get_kappa_de_bag[T: FloatOrArr](
     it = np.nditer([v_wall, None, None])
     for vw, kappa, de in it:
         vw = vw.item()
-        sol_type = identify_solution_type_bag(vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG)
+        sol_type = identify_solution_type_bag(
+            vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD)
 
         if not sol_type == SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(
-                vw, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG, n_xi=n_xi)
+                vw, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
+                ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, n_xi=n_xi)
             # Esp+ epsilon is alpha_n * 0.75*w_n
             kappa[...] = ubarf2(v, w, xi, vw, w_bar=w[-1]) / (0.75 * alpha_n)
             de[...] = mean_energy_change_bag(v, w, xi, vw, alpha_n)
@@ -206,12 +214,14 @@ def get_kappa_dq_bag[T: FloatOrArr](
     it = np.nditer([v_wall, None, None])
     for vw, kappa, dq in it:
         vw = vw.item()
-        sol_type = identify_solution_type_bag(vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG)
+        sol_type = identify_solution_type_bag(
+            vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD)
 
         if not sol_type == SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(
-                vw, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG, n_xi=n_xi)
+                vw, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
+                ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, n_xi=n_xi)
             # Esp+ epsilon is alpha_n * 0.75*w_n
             kappa[...] = ubarf2(v, w, xi, vw, w_bar=w[-1]) / (0.75 * alpha_n)
             dq[...] = 0.75 * mean_enthalpy_change(v, w, xi, vw) / (0.75 * alpha_n * w[-1])
@@ -254,12 +264,14 @@ def get_ke_de_frac_bag[T: FloatOrArr](
     it = np.nditer([v_wall, None, None])
     for vw, ke, de in it:
         vw = vw.item()
-        sol_type = identify_solution_type_bag(vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG)
+        sol_type = identify_solution_type_bag(
+            vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD)
 
         if not sol_type == SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(
-                vw, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG, n_xi=n_xi)
+                vw, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
+                ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, n_xi=n_xi)
             # Esp+ epsilon is alpha_n * 0.75*w_n
             ke[...] = ubarf2(v, w, xi, vw, w_bar=w[-1]) / (0.75 * (1 + alpha_n))
             de[...] = mean_energy_change_bag(v, w, xi, vw, alpha_n) / (0.75 * w[-1] * (1 + alpha_n))
@@ -297,7 +309,8 @@ def get_ke_frac_bag[T: FloatOrArr](v_wall: T, alpha_n: float, n_xi: int = const.
     :return: kinetic energy fraction
     """
     ubarf2 = get_ubarf2_bag(
-        v_wall, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG, n_xi=n_xi)
+        v_wall, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
+        ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, n_xi=n_xi)
     return ubarf2 / (0.75 * (1 + alpha_n))  # type: ignore[return-value]
 
 
@@ -321,11 +334,13 @@ def get_ke_frac_new_bag[T: FloatOrArr](
     it = np.nditer([v_wall, None])
     for vw, ke in it:
         vw = vw.item()
-        sol_type = identify_solution_type_bag(vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG)
+        sol_type = identify_solution_type_bag(
+            vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD)
         if not sol_type == SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(
-                vw, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG, n_xi=n_xi)
+                vw, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
+                ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, n_xi=n_xi)
             ke[...] = kinetic_energy_density(v, w, xi, vw)
         else:
             ke[...] = np.nan
@@ -352,14 +367,17 @@ def _get_ubarf2_bag_scalar(
         alpha_n: float,
         cs2_fun_ptr: th.CS2FunScalarPtr,
         df_dtau_ptr: DifferentialPointer,
+        ode_method: FluidIntegrateMethod,
         n_xi: int,
         verbosity: int) -> float:
-    if identify_solution_type_bag(v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr) == SolutionType.ERROR:
+    if identify_solution_type_bag(
+            v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method) == SolutionType.ERROR:
         ub2 = np.nan
     else:
         # Now ready to solve for fluid profile
         v, w, xi = fluid_bag.sound_shell_bag(
-            v_wall, alpha_n, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, n_xi=n_xi)
+            v_wall, alpha_n, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr,
+            ode_method=ode_method, n_xi=n_xi)
         ub2 = ubarf2(v, w, xi, v_wall, w_bar=w[-1])
 
     if verbosity > 0:
@@ -376,13 +394,14 @@ def _get_ubarf2_bag_arr(
         alpha_n: float,
         cs2_fun_ptr: th.CS2FunScalarPtr,
         df_dtau_ptr: DifferentialPointer,
+        ode_method: FluidIntegrateMethod,
         n_xi: int,
         verbosity: int) -> th.FloatArr1D:
     ubarf2 = np.zeros_like(v_wall)
     for i in numba.prange(v_wall.size):
         ubarf2[i] = _get_ubarf2_bag_scalar(
-            v_wall[i], alpha_n,
-            cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, n_xi=n_xi, verbosity=verbosity)
+            v_wall[i], alpha_n, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr,
+            ode_method=ode_method, n_xi=n_xi, verbosity=verbosity)
     return ubarf2
 
 
@@ -391,6 +410,7 @@ def get_ubarf2_bag[T: FloatOrArr1D](
         alpha_n: float,
         cs2_fun_ptr: th.CS2FunScalarPtr,
         df_dtau_ptr: DifferentialPointer,
+        ode_method: FluidIntegrateMethod,
         n_xi: int = const.DEFAULT_N_XI,
         verbosity: int = 0) -> T:
     r"""
@@ -400,18 +420,19 @@ def get_ubarf2_bag[T: FloatOrArr1D](
     :param alpha_n: $\alpha_n$
     :param cs2_fun_ptr: pointer to the $c_s^2$ function
     :param df_dtau_ptr: pointer to the differential equation function
+    :param ode_method: differential equation solver to be used
     :param n_xi: number of $\xi$ points
     :param verbosity: logging verbosity
     :return: mean square fluid velocity
     """
     if isinstance(v_wall, float):
         return _get_ubarf2_bag_scalar(  # type: ignore[return-value]
-            v_wall, alpha_n,
-            cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, n_xi=n_xi, verbosity=verbosity)
+            v_wall, alpha_n, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr,
+            ode_method=ode_method, n_xi=n_xi, verbosity=verbosity)
     if isinstance(v_wall, np.ndarray):
         return _get_ubarf2_bag_arr(  # type: ignore[return-value]
-            v_wall, alpha_n,
-            cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, n_xi=n_xi, verbosity=verbosity)
+            v_wall, alpha_n, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr,
+            ode_method=ode_method, n_xi=n_xi, verbosity=verbosity)
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
@@ -421,6 +442,7 @@ def _get_ubarf2_bag_numba(
         alpha_n: float,
         cs2_fun_ptr: th.CS2FunScalarPtr,
         df_dtau_ptr: DifferentialPointer,
+        ode_method: FluidIntegrateMethod,
         n_xi: int = const.DEFAULT_N_XI,
         verbosity: int = 0) -> th.NumbaFunc:
     if isinstance(v_wall, numba.types.Float):
@@ -452,7 +474,8 @@ def get_ubarf2_new_bag(
     it = np.nditer([v_wall, None])
     for vw, Ubarf2 in it:
         vw = vw.item()
-        sol_type = identify_solution_type_bag(vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG)
+        sol_type = identify_solution_type_bag(
+            vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD)
         if not sol_type == SolutionType.ERROR:
             # Now ready to get Ubarf2
             ke_frac = get_ke_frac_new_bag(vw, alpha_n)
@@ -495,9 +518,13 @@ def mean_energy_change_bag(
     #        return de_from_w(w, xi, v_wall, alpha_n)
     #    int1, int2 = split_integrate(ene_diff, v, w, xi**3, v_wall)
     #    integral = int1 + int2
-    check.check_physical_params((v_wall, alpha_n), df_dtau_ptr=DF_DTAU_PTR_BAG)
+    check.check_physical_params(
+        (v_wall, alpha_n), df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD)
     integral = np.trapezoid(
-        de_from_w_bag(w, xi, v_wall, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG), xi ** 3)
+        de_from_w_bag(
+            w, xi, v_wall, alpha_n,
+            df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD),
+        xi ** 3)
     return integral / v_wall ** 3
 
 

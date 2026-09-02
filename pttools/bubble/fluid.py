@@ -18,7 +18,7 @@ from pttools.bubble.fluid_gksvdv import sound_shell_gksvdv
 from pttools.bubble.fluid_hybrid import sound_shell_solver_hybrid
 from pttools.bubble.fluid_sub_def import sound_shell_solver_deflagration, sound_shell_solver_deflagration_reverse
 from pttools.bubble import fluid_reference
-from pttools.bubble.integrate import DF_DTAU_PTR_BAG
+from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG
 from pttools.bubble import props
 from pttools.bubble import relativity
 from pttools.bubble.solution_type import SolutionType, cannot_be_sub_def, validate_solution_type
@@ -65,7 +65,8 @@ def sound_shell_generic(
 
     start_time = time.perf_counter()
     if alpha_n_max_bag is None:
-        alpha_n_max_bag = alpha.alpha_n_max_deflagration_bag(v_wall, df_dtau_ptr=DF_DTAU_PTR_BAG)
+        alpha_n_max_bag = alpha.alpha_n_max_deflagration_bag(
+            v_wall, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD)
     if high_alpha_n is None:
         high_alpha_n = alpha_n > alpha_n_max_bag
 
@@ -88,14 +89,16 @@ def sound_shell_generic(
             "Using bag solver for model=%s, v_wall=%s, alpha_n=%s",
             model.label_unicode, v_wall, alpha_n
         )
-        sol_type2 = identify_solution_type_bag(v_wall, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG)
+        sol_type2 = identify_solution_type_bag(
+            v_wall, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD)
         if sol_type is not None and sol_type != sol_type2:
             raise ValueError(
                 f"Bag model gave a different solution type ({sol_type2}) than what was given ({sol_type})."
             )
 
         v, w, xi = fluid_bag.sound_shell_bag(
-            v_wall, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG)
+            v_wall, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
+            ode_method=DEFAULT_FLUID_INTEGRATE_METHOD)
         # The results of the old solver are scaled to wn=1
         w = w * wn
         if np.any(np.isnan(v)):

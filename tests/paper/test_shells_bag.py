@@ -78,7 +78,9 @@ class TestShellsBag(unittest.TestCase):
         vw_list_esp = np.array([0.5, 0.7, 0.77])
         alpha_plus_list_esp = [0.263, 0.052, 0.091]
         alpha_n_list_esp = [
-            bubble.find_alpha_n_bag(vw, ap, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG)
+            bubble.find_alpha_n_bag(
+                vw, ap,
+                df_dtau_ptr=bubble.DF_DTAU_PTR_BAG, ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD)
             for vw, ap in zip(vw_list_esp, alpha_plus_list_esp)
         ]
 

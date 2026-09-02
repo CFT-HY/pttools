@@ -278,7 +278,8 @@ def sound_shell_solver_hybrid(
         phase=Phase.BROKEN,
         t_end=-t_end,
         n_xi=n_xi,
-        df_dtau_ptr=model.df_dtau_ptr()
+        df_dtau_ptr=model.df_dtau_ptr(),
+        method=integrate.DEFAULT_FLUID_INTEGRATE_METHOD
     )
     v = np.concatenate((np.flip(v_tail), v))
     w = np.concatenate((np.flip(w_tail), w))

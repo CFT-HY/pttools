@@ -11,6 +11,7 @@ from pttools.bubble import props
 from pttools.bubble.solution_type import SolutionType
 # from pttools.bubble.solution_type_bag import identify_solution_type_alpha_plus_bag
 from pttools.speedup import njit, vectorize
+from pttools.bubble.integrate import FluidIntegrateMethod
 from pttools.speedup.differential import DifferentialPointer
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
@@ -20,6 +21,7 @@ from pttools.type_hints import FloatOrArr
 def alpha_n_max_bag(
         v_wall: th.FloatOrArr,
         df_dtau_ptr: DifferentialPointer,
+        ode_method: FluidIntegrateMethod,
         n_xi: int = DEFAULT_N_XI) -> th.FloatOrArr:
     r"""
     Calculates the maximum relative trace anomaly outside the bubble, $\alpha_{n,\max,\text{bag}}({v}_\text{wall})$.
@@ -30,15 +32,18 @@ def alpha_n_max_bag(
 
     :param v_wall: ${v}_\text{wall}$
     :param df_dtau_ptr: pointer to the differential equation function
+    :param ode_method: differential equation solver to be used
     :param n_xi: number of $\xi$ points
     :return: $\alpha_{n,\max}$, the relative trace anomaly outside the bubble
     """
-    return alpha_n_max_deflagration_bag(v_wall, df_dtau_ptr=df_dtau_ptr, n_xi=n_xi)
+    return alpha_n_max_deflagration_bag(
+        v_wall, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, n_xi=n_xi)
 
 
 def _alpha_n_max_deflagration_bag_scalar(
         v_wall: th.FloatOrArr,
         df_dtau_ptr: DifferentialPointer,
+        ode_method: FluidIntegrateMethod,
         n_xi: int = DEFAULT_N_XI,
         parallel: bool = True) -> th.FloatOrArr:
     check.check_wall_speed(v_wall)
@@ -50,6 +55,7 @@ def _alpha_n_max_deflagration_bag_scalar(
         # Warning: this is not safe. Causes warnings for low v_wall.
         alpha_plus=ALPHA_PLUS_MAX_DEF - 1e-10,
         df_dtau_ptr=df_dtau_ptr,
+        ode_method=ode_method,
         sol_type=SolutionType.HYBRID.value if v_wall > CS0 else SolutionType.SUB_DEF.value,
         n_xi=n_xi
     )
@@ -65,11 +71,12 @@ _alpha_n_max_deflagration_bag_scalar_numba = njit(_alpha_n_max_deflagration_bag_
 def _alpha_n_max_deflagration_bag_arr(
         v_wall: th.FloatOrArr,
         df_dtau_ptr: DifferentialPointer,
+        ode_method: FluidIntegrateMethod,
         n_xi: int = DEFAULT_N_XI) -> th.FloatOrArr:
     ret = np.zeros_like(v_wall)
     for i in numba.prange(v_wall.size):  # pylint: disable=not-an-iterable
         ret[i] = _alpha_n_max_deflagration_bag_scalar_numba(
-            v_wall[i], df_dtau_ptr=df_dtau_ptr, n_xi=n_xi)
+            v_wall[i], df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, n_xi=n_xi)
     return ret
 
 _alpha_n_max_deflagration_bag_arr_parallel = njit(parallel=True, nogil=True)(_alpha_n_max_deflagration_bag_arr)
@@ -79,16 +86,20 @@ _alpha_n_max_deflagration_bag_arr_single = njit(nogil=True)(_alpha_n_max_deflagr
 def _alpha_n_max_deflagration_bag_arr_wrapper(
         v_wall: th.FloatOrArr,
         df_dtau_ptr: DifferentialPointer,
+        ode_method: FluidIntegrateMethod,
         n_xi: int = DEFAULT_N_XI,
         parallel: bool = True) -> th.FloatOrArr:
     if parallel:
-        return _alpha_n_max_deflagration_bag_arr_parallel(v_wall=v_wall, df_dtau_ptr=df_dtau_ptr, n_xi=n_xi)
-    return _alpha_n_max_deflagration_bag_arr_single(v_wall=v_wall, df_dtau_ptr=df_dtau_ptr, n_xi=n_xi)
+        return _alpha_n_max_deflagration_bag_arr_parallel(
+            v_wall=v_wall, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, n_xi=n_xi)
+    return _alpha_n_max_deflagration_bag_arr_single(
+        v_wall=v_wall, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, n_xi=n_xi)
 
 
 def alpha_n_max_deflagration_bag(
         v_wall: th.FloatOrArr,
         df_dtau_ptr: DifferentialPointer,
+        ode_method: FluidIntegrateMethod,
         n_xi: int = DEFAULT_N_XI,
         parallel: bool = True) -> th.FloatOrArr:
     r"""
@@ -101,16 +112,19 @@ def alpha_n_max_deflagration_bag(
 
     :param v_wall: $v_\text{wall}$
     :param df_dtau_ptr: pointer to the differential equation function
+    :param ode_method: differential equation solver to be used
     :param n_xi: number of $\xi$ points
     :return: $\alpha_{n,\max}$
     """
     if isinstance(v_wall, float):
-        return _alpha_n_max_deflagration_bag_scalar(v_wall=v_wall, df_dtau_ptr=df_dtau_ptr, n_xi=n_xi)
+        return _alpha_n_max_deflagration_bag_scalar(
+            v_wall=v_wall, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, n_xi=n_xi)
     if isinstance(v_wall, np.ndarray):
         if not v_wall.ndim:
             return _alpha_n_max_deflagration_bag_scalar(
-                v_wall=v_wall.item(), df_dtau_ptr=df_dtau_ptr, n_xi=n_xi)
-        return _alpha_n_max_deflagration_bag_arr(v_wall=v_wall, df_dtau_ptr=df_dtau_ptr, n_xi=n_xi)
+                v_wall=v_wall.item(), df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, n_xi=n_xi)
+        return _alpha_n_max_deflagration_bag_arr(
+            v_wall=v_wall, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, n_xi=n_xi)
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
@@ -118,6 +132,7 @@ def alpha_n_max_deflagration_bag(
 def _alpha_n_max_deflagration_bag_numba(
         v_wall: th.FloatOrArr,
         df_dtau_ptr: DifferentialPointer,
+        ode_method: FluidIntegrateMethod,
         n_xi: int = DEFAULT_N_XI,
         parallel: bool = True) -> th.FloatOrArr:
     if isinstance(v_wall, numba.types.Float):

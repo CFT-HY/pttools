@@ -138,7 +138,8 @@ def sound_shell_detonation(
         phase=Phase.BROKEN,
         t_end=-t_end,
         n_xi=n_xi,
-        df_dtau_ptr=model.df_dtau_ptr()
+        df_dtau_ptr=model.df_dtau_ptr(),
+        method=integrate.DEFAULT_FLUID_INTEGRATE_METHOD
     )
     v, w, xi, t = trim.trim_fluid_wall_to_cs(v, w, xi, t, v_wall, SolutionType.DETON, cs2_fun=model.cs2)
 

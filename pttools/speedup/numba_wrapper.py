@@ -67,6 +67,8 @@ else:
         import numbalsoda  # type: ignore[no-redef]  # pylint: disable=ungrouped-imports
 
 if numbalsoda is None:
+    if options.NUMBA_INTEGRATE:
+        raise ImportError("Numba-jitted integration has been enabled, but NumbaLSODA is not available.")
     lsoda_sig = numba.types.void(
         numba.types.double,
         numba.types.CPointer(numba.types.double),

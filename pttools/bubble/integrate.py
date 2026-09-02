@@ -17,7 +17,7 @@ from pttools.bubble.phase import Phase
 from pttools.speedup import njit
 from pttools.speedup.differential import DifferentialCache, DifferentialCFunc, DifferentialPointer
 from pttools.speedup.numba_wrapper import numbalsoda
-from pttools.speedup.options import NUMBA_DISABLE_JIT, NUMBA_INTEGRATE
+from pttools.speedup.options import NUMBA_DISABLE_JIT, NUMBA_ENABLE_CACHE, NUMBA_INTEGRATE
 import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,10 @@ type FluidIntegrateMethod = tp.Literal["RK23", "RK45", "DOP853", "Radau", "BDF",
 type FluidIntegrateOutput = tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, bool]
 
 DEFAULT_DF_DTAU: str = "bag"
-DEFAULT_FLUID_INTEGRATE_METHOD: FluidIntegrateMethod = "odeint"
+
+#: Default ODE solver of :func:`fluid_integrate_param`
+DEFAULT_FLUID_INTEGRATE_METHOD: FluidIntegrateMethod = "numba_lsoda" if NUMBA_INTEGRATE else "odeint"
+
 # ODEINT_LOCK = threading.Lock()
 
 #: Cache for the differential equations.
@@ -98,17 +101,19 @@ DF_DTAU_PTR_BAG: DifferentialPointer = add_df_dtau(
 )
 
 
-# This function calls only functions of this file, and can therefore be cached safely.
-@njit(cache=True)
+# This function calls only functions of this file, and could therefore be cached safely.
+# However, caching is possible only when the literal typing below is in use,
+# and it is therefore left to the default instead of being forced with cache=True.
+@njit
 def fluid_integrate_param(
         v0: float,
         w0: float,
         xi0: float,
         phase: Phase,
         df_dtau_ptr: DifferentialPointer,
+        method: FluidIntegrateMethod,
         t_end: float = DEFAULT_T_END,
-        n_xi: int = DEFAULT_N_XI,
-        method: FluidIntegrateMethod = DEFAULT_FLUID_INTEGRATE_METHOD) \
+        n_xi: int = DEFAULT_N_XI) \
         -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
     Integrates parametric fluid equations in df_dtau from an initial condition.
@@ -120,9 +125,10 @@ def fluid_integrate_param(
     :param xi0: $\xi_0$
     :param phase: phase $\phi$
     :param df_dtau_ptr: pointer to the differential equation function
+    :param method: differential equation solver to be used.
+        The non-jitted callers should pass :data:`DEFAULT_FLUID_INTEGRATE_METHOD`.
     :param t_end: $t_\text{end}$
     :param n_xi: number of $\xi$ points
-    :param method: differential equation solver to be used
     :return: $v, w, \xi, t$
     """
     t = np.linspace(0., t_end, n_xi)
@@ -130,9 +136,16 @@ def fluid_integrate_param(
     # The second value ensures that the Numba typing is correct.
     data = np.array([phase, 0.])
     success: bool = False
-    if method == "numba_lsoda" or NUMBA_INTEGRATE:
-        if numbalsoda is None:
-            raise ImportError("NumbaLSODA is not loaded")
+    # numba.literally() types the method as a string literal.
+    # This way Numba can prune the branch that is not used, so that the functions that call this one
+    # don't get tainted by the ctypes pointer of NumbaLSODA and can therefore still be cached.
+    # The literal is a part of the Numba signature, and therefore of the cache key.
+    # Forcing the literal typing requires an additional compilation round,
+    # which roughly triples the compilation time of the fluid solver.
+    # This is worth it only when the results of the compilation are cached for the following runs.
+    if NUMBA_ENABLE_CACHE:
+        numba.literally(method)
+    if method == "numba_lsoda":
         v, w, xi, success = fluid_integrate_param_numba(t=t, y0=y0, data=data, df_dtau_ptr=df_dtau_ptr)
 
     # This lock prevents a SystemError when running multiple threads
@@ -157,6 +170,8 @@ def fluid_integrate_param(
     return v, w, xi, t
 
 
+# This function cannot be cached, since NumbaLSODA calls the LSODA library through a ctypes pointer,
+# which Numba reports as a dynamic global. The same applies to the functions that call this one.
 @njit(nogil=True)
 def fluid_integrate_param_numba(
         t: th.FloatArr1D,
@@ -255,4 +270,6 @@ def fluid_integrate_param_solve_ivp(
 
 def precompile() -> None:
     """Run fluid_integrate_param once to precompile it with Numba"""
-    fluid_integrate_param(v0=0.5, w0=0.5, xi0=0.5, phase=Phase.SYMMETRIC, df_dtau_ptr=DF_DTAU_PTR_BAG, n_xi=2)
+    fluid_integrate_param(
+        v0=0.5, w0=0.5, xi0=0.5, phase=Phase.SYMMETRIC,
+        df_dtau_ptr=DF_DTAU_PTR_BAG, method=DEFAULT_FLUID_INTEGRATE_METHOD, n_xi=2)

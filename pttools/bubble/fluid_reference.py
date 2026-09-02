@@ -13,7 +13,7 @@ from scipy.interpolate import NearestNDInterpolator
 from pttools.bubble.alpha import alpha_n_max_bag
 from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR
 from pttools.bubble.fluid_bag import sound_shell_bag
-from pttools.bubble.integrate import DF_DTAU_PTR_BAG
+from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG
 from pttools.bubble.junction import junction_condition_deviation1
 from pttools.bubble import props
 from pttools.bubble.solution_type import SolutionType
@@ -107,7 +107,8 @@ class FluidReference:
 
         v_walls = np.linspace(v_wall_min, v_wall_max, n_v_wall, endpoint=True)
         alpha_ns = np.linspace(alpha_n_min, alpha_n_max, n_alpha_n, endpoint=True)
-        alpha_n_max = alpha_n_max_bag(v_walls, df_dtau_ptr=DF_DTAU_PTR_BAG)
+        alpha_n_max = alpha_n_max_bag(
+            v_walls, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD)
 
         params = np.empty((alpha_ns.size, v_walls.size, 3))
         params[:, :, 0], params[:, :, 1] = np.meshgrid(v_walls, alpha_ns)
@@ -192,8 +193,10 @@ def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tuple[int, flo
         return -1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 
     v, w, xi = sound_shell_bag(
-        v_wall, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG)
-    sol_type = identify_solution_type_bag(v_wall, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG)
+        v_wall, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
+        ode_method=DEFAULT_FLUID_INTEGRATE_METHOD)
+    sol_type = identify_solution_type_bag(
+        v_wall, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD)
 
     if np.any(np.isnan(v)) or np.any(np.isnan(w)) or np.any(np.isnan(xi)):
         logger.error("Got nan values from the integration at v_wall=%s, alpha_n=%s", v_wall, alpha_n)

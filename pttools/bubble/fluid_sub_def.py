@@ -205,7 +205,7 @@ def sound_shell_deflagration_common(
         t_end=-t_end,
         n_xi=n_xi,
         df_dtau_ptr=model.df_dtau_ptr(),
-        # method="RK45"
+        method=integrate.DEFAULT_FLUID_INTEGRATE_METHOD,
     )
     if np.argmax(xi) == 0:
         logger.error("Deflagration solver gave a detonation-like solution.")
@@ -241,7 +241,7 @@ def sound_shell_deflagration_common(
                 t_end=t_end2,
                 n_xi=n_xi,
                 df_dtau_ptr=model.df_dtau_ptr(),
-                # method="RK45"
+                method=integrate.DEFAULT_FLUID_INTEGRATE_METHOD,
             )
             if np.argmax(xi2) == 0:
                 logger.error("Adjusting t_end gave a detonation-like solution. Using the previous solution.")
@@ -322,7 +322,7 @@ def sound_shell_deflagration_reverse(
         t_end=t_end,
         n_xi=n_xi,
         df_dtau_ptr=model.df_dtau_ptr(),
-        # method="RK45"
+        method=integrate.DEFAULT_FLUID_INTEGRATE_METHOD,
     )
     # Trim the integration to the wall
     v = np.flip(v)

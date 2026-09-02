@@ -36,7 +36,8 @@ def get_entropy_diff(v_wall, alpha, g_bro=eos.G_BRO_DEFAULT, n_xi=b.DEFAULT_N_XI
     bg = eos.bag_model(alpha, g_bro=g_bro)
 
     v,w,xi = b.sound_shell_bag(
-        v_wall, alpha, cs2_fun_ptr=b.CS2_BAG_SCALAR_PTR, df_dtau_ptr=b.DF_DTAU_PTR_BAG, n_xi=n_xi)
+        v_wall, alpha, cs2_fun_ptr=b.CS2_BAG_SCALAR_PTR, df_dtau_ptr=b.DF_DTAU_PTR_BAG,
+        ode_method=b.DEFAULT_FLUID_INTEGRATE_METHOD, n_xi=n_xi)
     if not any(np.isnan(v)):
         # entropy change
         T = bg.T(w,b.phase(xi,v_wall))
@@ -72,7 +73,8 @@ def get_pressure_diff(v_wall, alpha, g_bro=eos.G_BRO_DEFAULT, n_xi=b.DEFAULT_N_X
     bg = eos.bag_model(alpha, g_bro=g_bro)
 
     v,w,xi = b.sound_shell_bag(
-        v_wall, alpha, cs2_fun_ptr=b.CS2_BAG_SCALAR_PTR, df_dtau_ptr=b.DF_DTAU_PTR_BAG, n_xi=n_xi)
+        v_wall, alpha, cs2_fun_ptr=b.CS2_BAG_SCALAR_PTR, df_dtau_ptr=b.DF_DTAU_PTR_BAG,
+        ode_method=b.DEFAULT_FLUID_INTEGRATE_METHOD, n_xi=n_xi)
     if not any(np.isnan(v)):
         # pressure change
         T = bg.T(w,b.phase(xi,v_wall))
