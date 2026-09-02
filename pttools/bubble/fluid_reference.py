@@ -115,6 +115,14 @@ class FluidReference:
         params[:, :, 0], params[:, :, 1] = np.meshgrid(v_walls, alpha_ns)
         params[:, :, 2], _ = np.meshgrid(alpha_n_max, alpha_ns)
 
+        # JIT compile the functions beforehand
+        compile_start_time = time.perf_counter()
+        compute(v_wall=v_walls[0], alpha_n=0.1, alpha_n_max=alpha_n_max[0])
+        logger.debug(
+            "Compilation and first run of compute function took %.3f s.",
+            time.perf_counter() - compile_start_time
+        )
+
         sol_type, vp, vm, vp_tilde, vm_tilde, wp, wm = run_parallel(
             compute,
             params,
