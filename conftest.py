@@ -47,7 +47,7 @@ def run_on_same_worker(cls: type) -> bool:
     """Whether all tests of the given test class should be run on the same pytest-xdist worker.
 
     This can be configured manually by setting the ``RUN_ON_SAME_WORKER`` class attribute.
-    Otherwise it's deduced from the presence of class-level setup or teardown methods.
+    Otherwise, it's deduced from the presence of class-level setup or teardown methods.
     """
     manual = getattr(cls, RUN_ON_SAME_WORKER_ATTR, None)
     if manual is not None:

@@ -136,9 +136,12 @@ def get_process_pool(
     if single_thread:
         yield FakeExecutor()
     elif global_pool:
+        # The global pool is shut down at exit, not here, so that it can be reused.
         yield get_global_process_pool(max_workers=max_workers)
     else:
-        yield ProcessPoolExecutor(max_workers=max_workers)
+        # The "with" ensures that the worker processes are shut down when the pool is no longer needed.
+        with ProcessPoolExecutor(max_workers=max_workers) as pool:
+            yield pool
 
 
 @contextmanager
@@ -163,13 +166,18 @@ def get_pool(
     if single_thread:
         yield FakeExecutor()
     elif SUPPORTS_FREETHREADING and not sys._is_gil_enabled():  # type: ignore[attr-defined]
-        yield ThreadPoolExecutor(max_workers=max_workers)
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            yield pool
     elif SUPPORTS_INTERPRETER_POOL:
-        yield InterpreterPoolExecutor(max_workers=max_workers)
+        with InterpreterPoolExecutor(max_workers=max_workers) as pool:
+            yield pool
     elif global_pool:
+        # The global pool is shut down at exit, not here, so that it can be reused.
         yield get_global_process_pool(max_workers=max_workers)
     else:
-        yield ProcessPoolExecutor(max_workers=max_workers)
+        # The "with" ensures that the worker processes are shut down when the pool is no longer needed.
+        with ProcessPoolExecutor(max_workers=max_workers) as pool:
+            yield pool
 
 
 def parallel_debug_message(
@@ -236,7 +244,8 @@ def run_parallel(
     :param func: The function to be executed in parallel
     :param params: Array of the function parameters
     :param max_workers: Maximum number of worker processes
-    :param multiple_params: Whether the last dimension of the parameter array contains multiple parameters for each function call
+    :param multiple_params:
+        Whether the last dimension of the parameter array contains multiple parameters for each function call
     :param unpack_params: Whether the multiple parameters should be unpacked before giving them to the function
     :param output_dtypes: If the function has multiple output values, their types should be given here
     :param return_arr_shape: Shape of the array given by func. If None, the function should return single values.
