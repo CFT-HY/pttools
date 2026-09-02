@@ -5,7 +5,7 @@ import numpy as np
 
 from pttools.analysis import utils
 from pttools.bubble import check, const, fluid_bag, props, thermo, relativity, SolutionType
-from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR
+from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR, cs2_bag_scalar
 from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG
 from pttools.bubble.shock_bag import v_shock_bag, wm_shock_bag
 from pttools.bubble.solution_type_bag import identify_solution_type_bag
@@ -85,16 +85,18 @@ def plot_fluid_shells_bag(
 
     for v_wall, alpha_n in zip(v_wall_list, alpha_n_list):
         check.check_physical_params(
-            (v_wall, alpha_n), df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD)
+            (v_wall, alpha_n), df_dtau_ptr=DF_DTAU_PTR_BAG,
+            ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=cs2_bag_scalar)
 
         sol_type = identify_solution_type_bag(
-            v_wall, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD)
+            v_wall, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG,
+            ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=cs2_bag_scalar)
         if sol_type == SolutionType.ERROR:
             raise RuntimeError(f"No solution for v_wall = {v_wall}, alpha_n = {alpha_n}.")
 
         v, w, xi = fluid_bag.sound_shell_bag(
             v_wall, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
-            ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, n_xi=Np)
+            ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=cs2_bag_scalar, n_xi=Np)
         n_cs = int(np.floor(const.CS0 * Np))
         n_sh = xi.size - 2
         v_sh = v_shock_bag(xi_even)

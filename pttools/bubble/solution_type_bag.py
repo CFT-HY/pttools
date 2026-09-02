@@ -7,6 +7,7 @@ import numba
 import pttools.bubble.alpha as alpha_tools
 from pttools.bubble.const import ALPHA_PLUS_MAX_DEF, CS0
 from pttools.bubble.solution_type import SolutionType
+import pttools.type_hints as th
 from pttools.speedup import njit
 from pttools.bubble.integrate import FluidIntegrateMethod
 from pttools.speedup.differential import DifferentialPointer
@@ -20,6 +21,7 @@ def identify_solution_type_bag(
         alpha_n: float,
         df_dtau_ptr: DifferentialPointer,
         ode_method: FluidIntegrateMethod,
+        cs2_fun: th.CS2Fun,
         exit_on_error: bool = False) -> SolutionType:
     """
     Determines wall type from wall speed and global strength parameter.
@@ -28,7 +30,7 @@ def identify_solution_type_bag(
     if alpha_n < alpha_tools.alpha_n_max_detonation_bag(v_wall):
         return SolutionType.DETON
     if alpha_n < alpha_tools.alpha_n_max_deflagration_bag(
-            v_wall, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method):
+            v_wall, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_fun=cs2_fun):
         if v_wall <= CS0:
             return SolutionType.SUB_DEF
         return SolutionType.HYBRID

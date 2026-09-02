@@ -1,7 +1,6 @@
 r"""$\alpha_n$ functions for the Bag Model"""
 
 from pttools import speedup
-from pttools.bubble.cs2_bag import cs2_bag_scalar
 from pttools.bubble import const
 from pttools.bubble import fluid_bag
 from pttools.bubble.integrate import FluidIntegrateMethod
@@ -19,9 +18,9 @@ def find_alpha_n_bag(
         alpha_p: float,
         df_dtau_ptr: speedup.DifferentialPointer,
         ode_method: FluidIntegrateMethod,
+        cs2_fun: th.CS2Fun,
         sol_type: SolutionType = SolutionType.UNKNOWN,
-        n_xi: int = const.DEFAULT_N_XI,
-        cs2_fun: th.CS2Fun = cs2_bag_scalar) -> float:
+        n_xi: int = const.DEFAULT_N_XI) -> float:
     r"""
     Calculates the transition strength parameter at the nucleation temperature,
     $\alpha_n$, from $\alpha_+$, for given $v_\text{wall}$ in the Bag Model.
@@ -32,9 +31,9 @@ def find_alpha_n_bag(
     :param alpha_p: $\alpha_+$, the at-wall strength parameter.
     :param df_dtau_ptr: pointer to the differential equations
     :param ode_method: differential equation solver to be used
+    :param cs2_fun: $c_s^2$ function
     :param sol_type: type of the bubble (detonation, deflagration etc.)
     :param n_xi: number of $\xi$ values to investigate
-    :param cs2_fun: $c_s^2$ function
     :return: $\alpha_n$, global strength parameter
     """
     check.check_wall_speed(v_wall)
@@ -42,7 +41,7 @@ def find_alpha_n_bag(
         sol_type = identify_solution_type_alpha_plus_bag(v_wall, alpha_p).value
     _, w, xi = fluid_bag.sound_shell_alpha_plus_bag(
         v_wall, alpha_p,
-        df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, sol_type=sol_type, n_xi=n_xi, cs2_fun=cs2_fun
+        df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_fun=cs2_fun, sol_type=sol_type, n_xi=n_xi
     )
     n_wall = props.find_v_index(xi, v_wall)
     return alpha_p * w[n_wall] / w[-1]

@@ -42,8 +42,8 @@ def sound_shell_bag(
         cs2_fun_ptr: th.CS2FunScalarPtr,
         df_dtau_ptr: speedup.DifferentialPointer,
         ode_method: integrate.FluidIntegrateMethod,
+        cs2_fun: th.CS2Fun,
         n_xi: int = const.DEFAULT_N_XI,
-        cs2_fun: th.CS2Fun = cs2_bag_scalar,
         # Implementing optional extra output did not work due to Numba typing constraints
         # extra_output: bool = False
         ) -> th.VWXi:
@@ -59,13 +59,13 @@ def sound_shell_bag(
     :param cs2_fun_ptr: Pointer to the $c_s^2$ function
     :param df_dtau_ptr: Pointer to the $\frac{df}{d\tau}$ function
     :param ode_method: differential equation solver to be used
-    :param n_xi: number of $\xi$ points
     :param cs2_fun: $c_s^2$ function
+    :param n_xi: number of $\xi$ points
     :return: $v, w, \xi$
     """
     # check_physical_params([v_wall,alpha_n])
     sol_type = identify_solution_type_bag(
-        v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method)
+        v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_fun=cs2_fun)
     if sol_type == SolutionType.ERROR:
         # with numba.objmode:
         #     logger.error("Could not indentify solution type for v_wall=%s, alpha_n=%s", v_wall, alpha_n)
@@ -74,7 +74,8 @@ def sound_shell_bag(
         return NAN_ARR, NAN_ARR, NAN_ARR
     al_p = alpha.find_alpha_plus_bag(
         v_wall=v_wall, alpha_n_given=alpha_n,
-        cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, n_xi=n_xi
+        cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method,
+        cs2_fun=cs2_fun, n_xi=n_xi
     )
     if np.isnan(al_p):
         # if extra_output:
@@ -83,7 +84,7 @@ def sound_shell_bag(
     # SolutionType has to be passed by its value when jitting
     return sound_shell_alpha_plus_bag(
         v_wall=v_wall, alpha_plus=al_p, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method,
-        sol_type=sol_type.value, n_xi=n_xi, cs2_fun=cs2_fun
+        cs2_fun=cs2_fun, sol_type=sol_type.value, n_xi=n_xi
     )
     # if extra_output:
     #     v, w, xi, vfp_w, vfm_w, vfp_p, vfm_p = ret
@@ -97,10 +98,10 @@ def sound_shell_alpha_plus_bag(
         alpha_plus: float,
         df_dtau_ptr: speedup.DifferentialPointer,
         ode_method: integrate.FluidIntegrateMethod,
+        cs2_fun: th.CS2Fun,
         sol_type: SolutionType = SolutionType.UNKNOWN,
         n_xi: int = const.DEFAULT_N_XI,
         w_n: float = 1.,
-        cs2_fun: th.CS2Fun = cs2_bag_scalar,
         # sol_type_fun: tp.Callable | None = None,
         # extra_output: bool = False
         ) -> th.VWXi:
@@ -114,10 +115,10 @@ def sound_shell_alpha_plus_bag(
     :param alpha_plus: $\alpha_+$
     :param df_dtau_ptr: pointer to the differential equation function
     :param ode_method: differential equation solver to be used
+    :param cs2_fun: sound speed squared as a function of enthalpy
     :param sol_type: specify wall type if more than one permitted.
     :param n_xi: increase resolution
     :param w_n: specify enthalpy outside fluid shell
-    :param cs2_fun: sound speed squared as a function of enthalpy, default
     :return: $v, w, \xi$
     """
     # These didn't work, and therefore this function gets cs2_fun as a function instead of a pointer
@@ -283,17 +284,19 @@ def sound_shell_dict(
         raise ValueError("Both low and high v approximations can't be enabled at the same time.")
     check.check_physical_params(
         (v_wall, alpha_n),
-        df_dtau_ptr=integrate.DF_DTAU_PTR_BAG, ode_method=integrate.DEFAULT_FLUID_INTEGRATE_METHOD)
+        df_dtau_ptr=integrate.DF_DTAU_PTR_BAG, ode_method=integrate.DEFAULT_FLUID_INTEGRATE_METHOD,
+        cs2_fun=cs2_bag_scalar)
     sol_type = identify_solution_type_bag(
         v_wall, alpha_n,
-        df_dtau_ptr=integrate.DF_DTAU_PTR_BAG, ode_method=integrate.DEFAULT_FLUID_INTEGRATE_METHOD)
+        df_dtau_ptr=integrate.DF_DTAU_PTR_BAG, ode_method=integrate.DEFAULT_FLUID_INTEGRATE_METHOD,
+        cs2_fun=cs2_bag_scalar)
     if sol_type is SolutionType.ERROR:
         raise RuntimeError(f"No solution for v_wall = {v_wall}, alpha_n = {alpha_n}")
 
     v, w, xi = sound_shell_bag(
         v_wall, alpha_n,
         cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=integrate.DF_DTAU_PTR_BAG,
-        ode_method=integrate.DEFAULT_FLUID_INTEGRATE_METHOD, n_xi=n_xi)
+        ode_method=integrate.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=cs2_bag_scalar, n_xi=n_xi)
 
     # vmax = max(v)
 

@@ -173,7 +173,7 @@ def make_1dh_compare_table(
         v2_exp = v2_list[n][1]
         Ubarf_1d_ssm = np.sqrt(bubble.get_ubarf2_bag(
             vw, alpha, cs2_fun_ptr=bubble.CS2_BAG_SCALAR_PTR, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
-            ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD))
+            ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=bubble.cs2_bag_scalar))
 
         f.write(tu.tex_sf(100*alpha) + ' & ')
         f.write(f'{vw:.2f} & ')
@@ -546,7 +546,7 @@ def plot_ps_1bubble(
 
     A2, fp2_2, lam2 = ssm.a2_e_conserving_bag(
         z, vw, alpha, cs2_fun_ptr=bubble.CS2_BAG_SCALAR_PTR, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
-        ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD,
+        ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=bubble.cs2_bag_scalar,
         npt=Np[1:], lambda_correction=lambda_correction)
 
     z_list = 3*[z]
@@ -856,7 +856,7 @@ def plot_and_save(
     # Now some comparisons between real space <v^2> and Fourier space already calculated
     v_ip, w_ip, xi = bubble.sound_shell_bag(
         vw, alpha, cs2_fun_ptr=bubble.CS2_BAG_SCALAR_PTR, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
-        ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD)
+        ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=bubble.cs2_bag_scalar)
     Ubarf2 = bubble.Ubarf_squared(v_ip, w_ip, xi, vw)
 
     logger.debug(

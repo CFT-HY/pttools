@@ -11,7 +11,8 @@ import numpy as np
 from examples.utils import save_and_show_fig
 from pttools.analysis.utils import A3_PAPER_SIZE
 from pttools.bubble import \
-    CS2_BAG_SCALAR_PTR, DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG, Phase, SolutionType
+    CS2_BAG_SCALAR_PTR, DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG, Phase, SolutionType, \
+    cs2_bag_scalar
 from pttools.bubble.bubble import Bubble
 from pttools.bubble import fluid_bag
 from pttools.bubble.junction import junction_conditions_solvable
@@ -125,7 +126,7 @@ def main():
         v, w, xi = fluid_bag.sound_shell_bag(
             v_wall=v_wall, alpha_n=alpha_n,
             cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
-            ode_method=DEFAULT_FLUID_INTEGRATE_METHOD)
+            ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=cs2_bag_scalar)
         ax1.plot(xi, v, color="blue", label=rf"$v_w={v_wall}, \alpha_n={alpha_n}$")
         validate(bag, v, w, xi, sol_type)
 

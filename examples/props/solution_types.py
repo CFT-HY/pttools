@@ -30,7 +30,7 @@ def plot_bubble(ax: plt.Axes, label: str, v_wall: float, alpha: float, n_xi: int
     v_f, enthalp, xi = bubble.sound_shell_bag(
         v_wall=v_wall, alpha_n=alpha,
         cs2_fun_ptr=bubble.CS2_BAG_SCALAR_PTR, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
-        ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD, n_xi=n_xi
+        ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=bubble.cs2_bag_scalar, n_xi=n_xi
     )
     n_wall = bubble.find_v_index(xi, v_wall)
     v_fluid = interp1d(xi, v_f, fill_value=0, bounds_error=False)

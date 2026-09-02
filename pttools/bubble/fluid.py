@@ -10,7 +10,7 @@ from pttools.bubble import alpha
 from pttools.bubble.phase import Phase
 from pttools.bubble import chapman_jouguet
 from pttools.bubble import const
-from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR
+from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR, cs2_bag_scalar
 from pttools.bubble import fluid_bag
 from pttools.bubble.fluid_base import GenericSolverOutput
 from pttools.bubble.fluid_detonation import sound_shell_detonation
@@ -66,7 +66,8 @@ def sound_shell_generic(
     start_time = time.perf_counter()
     if alpha_n_max_bag is None:
         alpha_n_max_bag = alpha.alpha_n_max_deflagration_bag(
-            v_wall, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD)
+            v_wall, df_dtau_ptr=DF_DTAU_PTR_BAG,
+            ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=cs2_bag_scalar)
     if high_alpha_n is None:
         high_alpha_n = alpha_n > alpha_n_max_bag
 
@@ -90,7 +91,8 @@ def sound_shell_generic(
             model.label_unicode, v_wall, alpha_n
         )
         sol_type2 = identify_solution_type_bag(
-            v_wall, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD)
+            v_wall, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG,
+            ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=cs2_bag_scalar)
         if sol_type is not None and sol_type != sol_type2:
             raise ValueError(
                 f"Bag model gave a different solution type ({sol_type2}) than what was given ({sol_type})."
@@ -98,7 +100,7 @@ def sound_shell_generic(
 
         v, w, xi = fluid_bag.sound_shell_bag(
             v_wall, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
-            ode_method=DEFAULT_FLUID_INTEGRATE_METHOD)
+            ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=cs2_bag_scalar)
         # The results of the old solver are scaled to wn=1
         w = w * wn
         if np.any(np.isnan(v)):

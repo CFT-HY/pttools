@@ -171,8 +171,9 @@ def fluid_integrate_param(
 
 
 # This function cannot be cached, since NumbaLSODA calls the LSODA library through a ctypes pointer,
-# which Numba reports as a dynamic global. The same applies to the functions that call this one.
-@njit(nogil=True)
+# which Numba reports as a dynamic global.
+# Caching is therefore disabled explicitly to avoid a warning on every run.
+@njit(nogil=True, cache=False)
 def fluid_integrate_param_numba(
         t: th.FloatArr1D,
         y0: th.FloatArr1D,

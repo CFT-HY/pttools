@@ -23,6 +23,7 @@ def _find_alpha_plus_bag_scalar(
         cs2_fun_ptr: th.CS2FunScalarPtr,
         df_dtau_ptr: speedup.DifferentialPointer,
         ode_method: FluidIntegrateMethod,
+        cs2_fun: th.CS2Fun,
         n_xi: int = const.DEFAULT_N_XI,
         xtol: float = const.FIND_ALPHA_PLUS_TOL,
         # parallel: bool = True
@@ -32,20 +33,20 @@ def _find_alpha_plus_bag_scalar(
         # sol_type = SolutionType.DETON
         return alpha_n_given
     if alpha_n_given >= alpha_n_max_deflagration_bag(
-            v_wall, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method):
+            v_wall, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_fun=cs2_fun):
         # Greater than the maximum possible -> fail
         return np.nan
     sol_type = SolutionType.SUB_DEF if v_wall <= const.CS0 else SolutionType.HYBRID
     ap_initial_guess = alpha_plus_initial_guess(
-        v_wall, alpha_n_given, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method)
+        v_wall, alpha_n_given, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_fun=cs2_fun)
     with numba.objmode(ret="float64"):
-        cs2_fun = cs2_converter(cs2_fun_ptr)
+        cs2_cfunc = cs2_converter(cs2_fun_ptr)
 
         # This returns np.float64
         ret: float = fsolve(
             _find_alpha_plus_optimizer_bag,
             ap_initial_guess,
-            args=(v_wall, sol_type, n_xi, alpha_n_given, cs2_fun, df_dtau_ptr, ode_method),
+            args=(v_wall, sol_type, n_xi, alpha_n_given, cs2_cfunc, df_dtau_ptr, ode_method),
             xtol=xtol,
             factor=0.1)[0]
     return ret
@@ -57,13 +58,15 @@ def _find_alpha_plus_bag_arr(
         cs2_fun_ptr: th.CS2FunScalarPtr,
         df_dtau_ptr: speedup.DifferentialPointer,
         ode_method: FluidIntegrateMethod,
+        cs2_fun: th.CS2Fun,
         n_xi: int = const.DEFAULT_N_XI,
         xtol: float = const.FIND_ALPHA_PLUS_TOL) -> th.FloatArr:
     ap = np.zeros_like(v_wall)
     for i in numba.prange(v_wall.size):  # pylint: disable=not-an-iterable
         ap[i] = _find_alpha_plus_bag_scalar(
             v_wall[i], alpha_n_given,
-            cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, n_xi=n_xi
+            cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method,
+            cs2_fun=cs2_fun, n_xi=n_xi
         )
     return ap
 
@@ -78,6 +81,7 @@ def _find_alpha_plus_bag_arr_wrapper(
         cs2_fun_ptr: th.CS2FunScalarPtr,
         df_dtau_ptr: speedup.DifferentialPointer,
         ode_method: FluidIntegrateMethod,
+        cs2_fun: th.CS2Fun,
         n_xi: int = const.DEFAULT_N_XI,
         xtol: float = const.FIND_ALPHA_PLUS_TOL,
         # parallel: bool = True
@@ -89,7 +93,8 @@ def _find_alpha_plus_bag_arr_wrapper(
     #     )
     return _find_alpha_plus_bag_arr_single(
         v_wall=v_wall, alpha_n_given=alpha_n_given,
-        cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, n_xi=n_xi, xtol=xtol
+        cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method,
+        cs2_fun=cs2_fun, n_xi=n_xi, xtol=xtol
     )
 
 
@@ -99,6 +104,7 @@ def find_alpha_plus_bag(
         cs2_fun_ptr: th.CS2FunScalarPtr,
         df_dtau_ptr: speedup.DifferentialPointer,
         ode_method: FluidIntegrateMethod,
+        cs2_fun: th.CS2Fun,
         n_xi: int = const.DEFAULT_N_XI,
         xtol: float = const.FIND_ALPHA_PLUS_TOL,
         # parallel: bool = True
@@ -117,6 +123,7 @@ def find_alpha_plus_bag(
     :param cs2_fun_ptr: pointer to the $c_s^2$ function
     :param df_dtau_ptr: pointer to the differential equation function
     :param ode_method: differential equation solver to be used
+    :param cs2_fun: $c_s^2$ function
     :param n_xi: number of $\xi$ points
     :return: $\alpha_+$, the at-wall strength parameter
     """
@@ -124,18 +131,19 @@ def find_alpha_plus_bag(
         return _find_alpha_plus_bag_scalar(
             v_wall, alpha_n_given,
             cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method,
-            n_xi=n_xi, xtol=xtol  # , parallel=parallel
+            cs2_fun=cs2_fun, n_xi=n_xi, xtol=xtol  # , parallel=parallel
         )
     if isinstance(v_wall, np.ndarray):
         if not v_wall.ndim:
             return _find_alpha_plus_bag_scalar(
                 v_wall.item(), alpha_n_given,
                 cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method,
-                n_xi=n_xi, xtol=xtol  # , parallel=parallel
+                cs2_fun=cs2_fun, n_xi=n_xi, xtol=xtol  # , parallel=parallel
             )
         return _find_alpha_plus_bag_arr(
             v_wall, alpha_n_given,
-            cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, n_xi=n_xi, xtol=xtol
+            cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method,
+            cs2_fun=cs2_fun, n_xi=n_xi, xtol=xtol
         )
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
@@ -147,6 +155,7 @@ def _find_alpha_plus_bag_numba(
         cs2_fun_ptr: th.CS2FunScalarPtr,
         df_dtau_ptr: speedup.DifferentialPointer,
         ode_method: FluidIntegrateMethod,
+        cs2_fun: th.CS2Fun,
         n_xi: int = const.DEFAULT_N_XI,
         xtol: float = const.FIND_ALPHA_PLUS_TOL,
         # parallel: bool = True
@@ -176,5 +185,5 @@ def _find_alpha_plus_optimizer_bag(
     """find_alpha_plus() is looking for the zeroes of this function: $\alpha_n = \alpha_{n,\text{given}}$."""
     return find_alpha_n_bag(
         v_wall, alpha.item(),
-        df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, sol_type=sol_type, n_xi=n_xi, cs2_fun=cs2_fun
+        df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_fun=cs2_fun, sol_type=sol_type, n_xi=n_xi
     ) - alpha_n_given

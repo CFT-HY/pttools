@@ -13,7 +13,8 @@ def alpha_plus_initial_guess(
         v_wall: th.FloatOrArr,
         alpha_n_given: float,
         df_dtau_ptr: DifferentialPointer,
-        ode_method: FluidIntegrateMethod) -> th.FloatOrArr:
+        ode_method: FluidIntegrateMethod,
+        cs2_fun: th.CS2Fun) -> th.FloatOrArr:
     r"""
     Initial guess for root-finding of $\alpha_+$ from $\alpha_n$.
     Linear approx between $\alpha_{n,\min}$ and $\alpha_{n,\max}$.
@@ -23,6 +24,7 @@ def alpha_plus_initial_guess(
     :param alpha_n_given: $\alpha_{n, \text{given}}$
     :param df_dtau_ptr: pointer to the differential equation function
     :param ode_method: differential equation solver to be used
+    :param cs2_fun: $c_s^2$ function
     :return: initial guess for $\alpha_+$
     """
     if alpha_n_given < 0.05:
@@ -32,7 +34,8 @@ def alpha_plus_initial_guess(
     alpha_plus_max = 1/3
 
     alpha_n_min = alpha_n_min_hybrid_bag(v_wall)
-    alpha_n_max = alpha_n_max_deflagration_bag(v_wall, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method)
+    alpha_n_max = alpha_n_max_deflagration_bag(
+        v_wall, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_fun=cs2_fun)
 
     slope = (alpha_plus_max - alpha_plus_min) / (alpha_n_max - alpha_n_min)
     return alpha_plus_min + slope * (alpha_n_given - alpha_n_min)

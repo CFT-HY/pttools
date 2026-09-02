@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 from examples.utils import save_and_show_fig
 from pttools.logging import setup_logging
-from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR
+from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR, cs2_bag_scalar
 from pttools.bubble.fluid_bag import sound_shell_bag
 from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG
 from pttools.bubble.fluid_reference import ref
@@ -32,7 +32,7 @@ def main(
     print("Solving with old solver")
     v, w, xi = sound_shell_bag(
         v_wall, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
-        ode_method=DEFAULT_FLUID_INTEGRATE_METHOD)
+        ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=cs2_bag_scalar)
     # print(v, w, xi)
 
     print("Solving with new solver")
