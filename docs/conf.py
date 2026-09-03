@@ -46,7 +46,7 @@ os.makedirs(os.path.join(DOCS_DIR, "_static"), exist_ok=True)
 
 # -- Project information -----------------------------------------------------
 
-project = 'PTtools'
+project = "PTtools"
 with open(os.path.join(REPO_DIR, "AUTHORS"), "r") as file:
     _authors = file.read().splitlines()
 author = f"{', '.join(_authors[:-1])} & {_authors[-1]}"
@@ -313,6 +313,7 @@ if IS_GITHUB_ACTIONS:
         r"https://stfc\.ukri\.org/",
     ]
 
+linkcheck_retries = 3
 # Timeout had to be increased from 5 to prevent errors with slow ArXiv links
 linkcheck_timeout = 20
 linkcheck_workers = 10
