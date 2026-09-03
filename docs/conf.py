@@ -196,25 +196,29 @@ autodoc_typehints = "description"
 
 # -- Other -------------------------------------------------------------------
 
-# Sphinx 6.0 will require base URLs and caption strings to contain exactly one "%s",
+# Sphinx requires base URLs and caption strings to contain exactly one "%s",
 # and all other "%" need to be escaped as "%%".
 HINDMARSH_ET_AL: str = "Hindmarsh et al."
 EXTLINKS_STATIC: ExtLinks = {
+    # Order of articles: year, name of author
     # Hindmarsh articles
-    "hindmarsh_2014": arxiv_link("1304.2433", HINDMARSH_ET_AL),
-    "hindmarsh_2015": arxiv_link("1504.03291", HINDMARSH_ET_AL),
+    "hindmarsh_2014": arxiv_link("1304.2433", HINDMARSH_ET_AL, 2014),
+    "hindmarsh_2015": arxiv_link("1504.03291", HINDMARSH_ET_AL, 2015),
     "hindmarsh_2017": arxiv_link("1704.05871", HINDMARSH_ET_AL),
-    "ssm": arxiv_link("1608.04735", HINDMARSH_ET_AL),
+    "ssm": arxiv_link("1608.04735", HINDMARSH_ET_AL, 2018),
     "gw_pt_ssm": arxiv_link("1909.10040", HINDMARSH_ET_AL),
-    "notes": arxiv_link("2008.09136", HINDMARSH_ET_AL),
+    "notes": arxiv_link("2008.09136", HINDMARSH_ET_AL, 2021),
     # Other articles
     "enqvist_1992": doi_link("10.1103/PhysRevD.45.3415", "Enqvist et al.", 1992),
     "kurki-suonio_1995": arxiv_link("hep-ph/9512202", "Kurki-Suonio & Laine", 1995),
     "maggiore_1999": arxiv_link("gr-qc/9909001", "Maggiore", 1999),
+    "fixsen_2009": arxiv_link("0911.1955", "Fixsen"),
     "espinosa_2010": arxiv_link("1004.4187", "Espinosa"),
+    "planck_2015": arxiv_link("1502.01589", "Planck 2015 results"),
     "borsanyi_2016": arxiv_link("1606.07494", "Borsanyi et al."),
     "caprini_2016": arxiv_link("1512.06239", "Caprini et al.", 2016),
     "cornish_2017": arxiv_link("1703.09858", "Cornish & Robson"),
+    "codata_2018": doi_link("10.1103/RevModPhys.93.025010", "CODATA", 2018),
     "planck_2018": arxiv_link("1807.06209", "Planck 2018 results"),
     "smith_2019": arxiv_link("1908.00546", "Smith & Caldwell"),
     "caprini_2020": arxiv_link("1910.13125", "Caprini et al.", 2020),
@@ -233,6 +237,7 @@ EXTLINKS_STATIC: ExtLinks = {
     "barni_2026": arxiv_link("2510.21439", "Barni et al.", 2026),
     "bhusal_2026": arxiv_link("2603.22397", "Bhusal et al."),
     "correia_2026": arxiv_link("2505.17824", "Correia et al.", 2026),
+    "escudero_2026": arxiv_link("2511.04747", "Escudero et al.", 2026),
     "giombi_2026": arxiv_link("2504.08037", "Giombi et al.", 2026),
     # Theses
     "gowling_phd": hdl_link("10779/uos.23309135.v1", "Gowling", 2023),
@@ -241,7 +246,8 @@ EXTLINKS_STATIC: ExtLinks = {
     # Other
     "lisa_conventions": ("https://gitlab.esa.int/lisa-sgs/sandbox/conventions-document", "LISA DDPC Conventions document"),
     "lisa_sci_req": ("https://www.cosmos.esa.int/web/lisa/documents", "LISA Science Requirements Document"),
-    "rel_hydro_book": doi_link("10.1093/acprof:oso/9780198528906.001.0001", "Relativistic hydrodynamics: Rezzolla, Zanotti", 2013)
+    "rel_hydro_book": doi_link("10.1093/acprof:oso/9780198528906.001.0001", "Relativistic hydrodynamics: Rezzolla, Zanotti", 2013),
+    "schroeder_book": ("https://physics.weber.edu/thermal/", "Thermal physics: Schroeder (2000)")
 }
 extlinks: ExtLinks = {
     **convert_extlinks(EXTLINKS_STATIC),
@@ -251,7 +257,8 @@ extlinks: ExtLinks = {
         "Academy of Finland grant %s"
     ),
     "issue": ("https://github.com/CFT-HY/pttools/issues/%s", "issue %s"),
-    "ssm_repo": ("https://bitbucket.org/hindmars/sound-shell-model/src/master/%s", "sound-shell-model/%s")
+    "ssm_repo": ("https://bitbucket.org/hindmars/sound-shell-model/src/master/%s", "sound-shell-model/%s"),
+    "wikipedia": ("https://en.wikipedia.org/wiki/%s", "Wikipedia: %s")
 }
 extlinks_detect_hardcoded_links: bool = True
 intersphinx_mapping: dict[str, tuple[str, str | None]] = {
