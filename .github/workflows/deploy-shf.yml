@@ -12,6 +12,6 @@ jobs:
     # https://github.com/marketplace/actions/save-to-software-heritage
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Publish to Software Heritage Foundation
         uses: sdruskat/swh-save-action@v1.0.1

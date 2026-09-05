@@ -25,23 +25,19 @@ jobs:
             # The installer then crashes with a segmentation fault (exit code 139).
             compiler: "gcc"
             version: "15"
+        - name: Checkout
+          uses: actions/checkout@v7
         - name: Setup Python
-          uses: actions/setup-python@v5
+          uses: actions/setup-python@v7
           # Windows minutes cost 2x what Linux does, so testing multiple Python versions would be quite costly
           with:
             python-version: ${{ env.PYTHON_VERSION }}
+            cache: pip
+            cache-dependency-path: |
+              requirements.txt
+              requirements-dev.txt
         - name: Print Python version
           run: python -V
-        - name: Checkout
-          uses: actions/checkout@v4
-        - name: Load pip cache
-          uses: actions/cache@v4
-          with:
-            path: .pip
-            key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-            restore-keys: |
-              pip-${{ runner.os }}-
-              pip-
         - name: Install requirements
           # NumbaLSODA does not provide wheels for recent Python versions, so it's built from source.
           # Its build backend, scikit-build, probes only MSVC-based CMake generators on Windows.
@@ -56,8 +52,8 @@ jobs:
             CMAKE_GENERATOR: "Ninja Multi-Config"
             CMAKE_ARGS: "-DCMAKE_SHARED_LINKER_FLAGS=-static"
           run: |
-            pip --cache-dir=.pip install --upgrade pip wheel
-            pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
+            pip install --upgrade pip wheel
+            pip install -r requirements.txt -r requirements-dev.txt
         - name: Print NumbaLSODA location
           # PTtools falls back to other ODE solvers if NumbaLSODA cannot be imported,
           # so this ensures that a broken NumbaLSODA build fails the workflow instead of being skipped silently.
@@ -75,7 +71,7 @@ jobs:
             pytest | tee test-output.txt
             coverage json
         - name: Upload results
-          uses: actions/upload-artifact@v4
+          uses: actions/upload-artifact@v7
           with:
             name: Test results with Numba
             path: |

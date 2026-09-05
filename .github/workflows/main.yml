@@ -8,32 +8,26 @@ jobs:
   build:
     runs-on: ubuntu-slim
     steps:
+      - name: Checkout
+        uses: actions/checkout@v7
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
       - name: Print Python version
         run: python -V
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Load pip cache
-        uses: actions/cache@v4
-        with:
-          path: .pip
-          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            pip-${{ runner.os }}-
-            pip-
       - name: Install requirements
         run: |
-          pip --cache-dir=.pip install --upgrade pip
-          pip --cache-dir=.pip install --upgrade build packaging twine
+          pip install --upgrade pip
+          pip install --upgrade build packaging twine
       - name: Build
         run: python -m build
       - name: Run Twine checks
         run: twine check dist/*
       - name: Upload built artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pip packages
           path: dist
@@ -42,7 +36,7 @@ jobs:
     # The djdefi/cloc-action does not run on ubuntu-slim.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Count Lines of Code (cloc) for the PTtools library
         uses: djdefi/cloc-action@6
         with:
@@ -55,26 +49,20 @@ jobs:
 #    runs-on: ubuntu-latest
 #    timeout-minutes: 5
 #    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v7
 #      - name: Setup Python
-#        uses: actions/setup-python@v5
+#        uses: actions/setup-python@v7
 #        with:
 #          python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
+#          cache: pip
+#          cache-dependency-path: requirements.txt
 #      - name: Print Python version
 #        run: python -V
-#      - name: Checkout
-#        uses: actions/checkout@v4
-#      - name: Load pip cache
-#        uses: actions/cache@v4
-#        with:
-#          path: .pip
-#          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-#          restore-keys: |
-#            pip-${{ runner.os }}-
-#            pip-
 #      - name: Install requirements
 #        run: |
-#          pip --cache-dir=.pip install --upgrade pip wheel
-#          pip --cache-dir=.pip install -r requirements.txt
+#          pip install --upgrade pip wheel
+#          pip install -r requirements.txt
 #      - name: Install FOSSA
 #        run: |
 #          curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | sudo bash
@@ -86,30 +74,26 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - name: Checkout
+        uses: actions/checkout@v7
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
       - name: Print Python version
         run: python -V
       - name: Install graphviz
         run: |
           sudo apt-get update
           sudo apt-get install -y graphviz
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Load pip cache
-        uses: actions/cache@v4
-        with:
-          path: .pip
-          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            pip-${{ runner.os }}-
-            pip-
       - name: Install requirements
         run: |
-          pip --cache-dir=.pip install --upgrade pip wheel
-          pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
+          pip install --upgrade pip wheel
+          pip install -r requirements.txt -r requirements-dev.txt
       - name: Run Pyreverse
         run: |
           mkdir uml
@@ -125,7 +109,7 @@ jobs:
 #          ./gen_call_graphs.sh "ssm" "./pttools/ssm/**.py"
 #          ./gen_call_graphs.sh "tests" "./tests/**/*.py"
       - name: Upload results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Graph
           path: |
@@ -136,30 +120,26 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - name: Checkout
+        uses: actions/checkout@v7
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
       - name: Print Python version
         run: python -V
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Load pip cache
-        uses: actions/cache@v4
-        with:
-          path: .pip
-          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            pip-${{ runner.os }}-
-            pip-
       - name: Install requirements
         run: |
-          pip --cache-dir=.pip install --upgrade pip wheel
-          pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
+          pip install --upgrade pip wheel
+          pip install -r requirements.txt -r requirements-dev.txt
       - name: Run Ruff
         run: ruff check --output-format=full 2>&1 | tee ruff.txt
       - name: Upload results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Lint
           path: |
@@ -169,30 +149,26 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      - name: Checkout
+        uses: actions/checkout@v7
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
       - name: Print Python version
         run: python -V
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Load pip cache
-        uses: actions/cache@v4
-        with:
-          path: .pip
-          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            pip-${{ runner.os }}-
-            pip-
       - name: Install requirements
         run: |
-          pip --cache-dir=.pip install --upgrade pip wheel
-          pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
+          pip install --upgrade pip wheel
+          pip install -r requirements.txt -r requirements-dev.txt
       - name: Run Pyrefly
         run: pyrefly check 2>&1 | tee pyrefly.txt
       - name: Upload results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Pyrefly
           path: |
@@ -205,30 +181,26 @@ jobs:
       matrix:
         python-version: ['3.12', '3.13', '3.14']  # '3.14t'
     steps:
+    - name: Checkout
+      uses: actions/checkout@v7
     - name: Setup Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
+        cache: pip
+        cache-dependency-path: |
+          requirements.txt
+          requirements-dev.txt
     - name: Print Python version
       run: python -V
     - name: Install ffmpeg
       run: |
         sudo apt-get update
         sudo apt-get install ffmpeg
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Load pip cache
-      uses: actions/cache@v4
-      with:
-        path: .pip
-        key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-        restore-keys: |
-          pip-${{ runner.os }}-
-          pip-
     - name: Install requirements
       run: |
-        pip --cache-dir=.pip install --upgrade pip wheel
-        pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
+        pip install --upgrade pip wheel
+        pip install -r requirements.txt -r requirements-dev.txt
     - name: Print Numba sysinfo
       run: numba --sysinfo | tee numba-sysinfo.txt
     - name: Generate reference data
@@ -240,7 +212,7 @@ jobs:
         set -o pipefail
         pytest --store-durations | tee test-output.txt
     - name: Upload results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: ${{ matrix.python-version == env.PRIMARY_PYTHON_VERSION }}
       with:
         name: Test results with Numba
@@ -260,26 +232,22 @@ jobs:
       matrix:
         python-version: ['3.12', '3.13', '3.14']  # '3.14t'
     steps:
+    - name: Checkout
+      uses: actions/checkout@v7
     - name: Setup Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
+        cache: pip
+        cache-dependency-path: |
+          requirements.txt
+          requirements-dev.txt
     - name: Print Python version
       run: python -V
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Load pip cache
-      uses: actions/cache@v4
-      with:
-        path: .pip
-        key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-        restore-keys: |
-          pip-${{ runner.os }}-
-          pip-
     - name: Install requirements
       run: |
-        pip --cache-dir=.pip install --upgrade pip wheel
-        pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
+        pip install --upgrade pip wheel
+        pip install -r requirements.txt -r requirements-dev.txt
     - name: Print Numba sysinfo
       run: numba --sysinfo | tee numba-sysinfo.txt
     - name: Generate reference data
@@ -294,7 +262,7 @@ jobs:
         set -o pipefail
         NUMBA_DISABLE_JIT=1 pytest --store-durations | tee test-output.txt
     - name: Upload results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: ${{ matrix.python-version == env.PRIMARY_PYTHON_VERSION }}
       with:
         name: Test results without Numba
@@ -308,7 +276,7 @@ jobs:
           test-results
         if-no-files-found: error
     - name: Upload results to Codecov
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v7
       if: ${{ matrix.python-version == env.PRIMARY_PYTHON_VERSION }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}

@@ -8,7 +8,7 @@ on:
 permissions:
   contents: read
 env:
-  PYTHON_VERSION: '3.14'
+  PYTHON_VERSION: "3.14"
 jobs:
   test:
     runs-on: macos-latest
@@ -21,31 +21,24 @@ jobs:
           id: setup-fortran
           with:
             compiler: "gcc"
-            version: "13"
+            version: "15"
+        - name: Checkout
+          uses: actions/checkout@v7
         - name: Setup Python
-          uses: actions/setup-python@v5
-          # macOS minutes cost 10x what Linux does, so testing multiple Python versions would be quite costly
+          uses: actions/setup-python@v7
+          # macOS minutes cost 10x what Linux does, so testing multiple Python versions would be quite costly.
           with:
             python-version: ${{ env.PYTHON_VERSION }}
+            cache: pip
+            cache-dependency-path: |
+              requirements.txt
+              requirements-dev.txt
         - name: Print Python version
           run: python -V
-        - name: Checkout
-          uses: actions/checkout@v4
-          # Please see this GitHub issue for the issues with hashFiles()
-          # https://github.com/actions/runner-images/issues/13341
-          # As a temporary workaround on 2025-11-23, the caching is disabled on macOS.
-#        - name: Load pip cache
-#          uses: actions/cache@v4
-#          with:
-#            path: .pip
-#            key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-#            restore-keys: |
-#              pip-${{ runner.os }}-
-#              pip-
         - name: Install requirements
           run: |
-            pip --cache-dir=.pip install --upgrade pip wheel
-            pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
+            pip install --upgrade pip wheel
+            pip install -r requirements.txt -r requirements-dev.txt
         - name: Print Numba sysinfo
           # On macOS the Numba script is not executable by default and therefore has to be called as a Python module.
           run: |
@@ -60,7 +53,7 @@ jobs:
             NUMBA_NESTED_PARALLELISM=0 pytest | tee test-output.txt
             coverage json
         - name: Upload results
-          uses: actions/upload-artifact@v4
+          uses: actions/upload-artifact@v7
           with:
             name: Test results with Numba
             path: |
