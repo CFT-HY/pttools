@@ -16,7 +16,6 @@ class WrappedDecoratorFunction(tp.Protocol):
     This is a callback protocol instead of a type alias,
     so that the signature of the decorated callable is preserved.
     """
-    # pylint: disable=too-few-public-methods
     def __call__[**P, T](self, target: tp.Callable[P, T]) -> tp.Callable[P, T]: ...
 
 

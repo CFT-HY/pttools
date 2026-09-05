@@ -174,7 +174,6 @@ def find_shock_index(
         #     if xi_i < cs_n:
         #         continue
         #     # This can emit a lot of log spam if the warning of a barely existing shock is enabled.
-        #     # pylint: disable=unused-variable
         #     v_shock_tilde, w_shock = solve_shock(
         #         model,
         #         v1_tilde=xi_i, w1=wn,
@@ -370,8 +369,7 @@ def v_shock(model: "Model", wn: float, xi: float, cs_n: float, warn_if_barely_ex
         return 1.
 
     # This can emit a lot of log spam if the warning of a barely existing shock is enabled.
-    # pylint: disable=unused-variable
-    v_shock_tilde, w_shock = solve_shock(
+    v_shock_tilde, w_shock = solve_shock(  # noqa: RUF059
         model,
         v1_tilde=xi, w1=wn,
         csp=cs_n,

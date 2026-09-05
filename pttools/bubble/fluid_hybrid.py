@@ -113,8 +113,7 @@ def sound_shell_solvable_hybrid(
         wm = wm[0]
     if np.isnan(wm) or wm < 0:
         return np.nan
-    # pylint: disable=unused-variable
-    v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = sound_shell_hybrid(
+    v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = sound_shell_hybrid(  # noqa: RUF059
         model, v_wall=v_wall, wn=wn, wm=wm,
         cs_n=cs_n, v_cj=v_cj,
         vp_tilde_guess=vp_tilde_guess, wp_guess=wp_guess, t_end=t_end, n_xi=n_xi, thin_shell_limit=thin_shell_limit,

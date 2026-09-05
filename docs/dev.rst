@@ -25,8 +25,8 @@ Creating a new release
 - Check these for warnings, errors and unnecessary log output and fix them if necessary
     - Unit test logs
     - Documentation logs
-    - Pylint logs
-    - Mypy logs
+    - Ruff logs
+    - Pyrefly logs
 
 
 Updating Python version requirements

@@ -48,7 +48,6 @@ set_forkserver_preload(DEFAULT_FORKSERVER_PRELOAD)
 
 class FakeExecutor:
     """A fake executor for single-threaded execution"""
-    # pylint: disable=too-few-public-methods
 
     @staticmethod
     def submit(func: tp.Callable, *args, **kwargs) -> "FakeFuture":
@@ -58,7 +57,6 @@ class FakeExecutor:
 
 class FakeFuture:
     """A fake future object for single-threaded execution"""
-    # pylint: disable=too-few-public-methods
 
     def __init__(self, func: tp.Callable, *args, **kwargs):
         self._result = func(*args, **kwargs)

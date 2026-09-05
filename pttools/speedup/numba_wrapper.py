@@ -1,6 +1,6 @@
 """Wrapper for importing Numba libraries without version dependencies"""
 
-# pylint: disable=unused-import
+# ruff: noqa: F401
 
 import logging
 import shutil
@@ -32,7 +32,6 @@ logger = logging.getLogger(__name__)
 OLD_NUMBALSODA = False
 if options.NUMBA_DISABLE_JIT:
     # As of 0.3.3 NumbaLSODA can't be imported when Numba is disabled
-    # pylint: disable=invalid-name
     numbalsoda = None
 else:
     try:
@@ -64,7 +63,7 @@ else:
                 "please install execstack with e.g. \"sudo apt install execstack\" and run this program again."
             ) from e
         subprocess.run(["execstack", "-c", parts[0]], check=False)
-        import numbalsoda  # type: ignore[no-redef]  # pylint: disable=ungrouped-imports
+        import numbalsoda  # type: ignore[no-redef]
 
 if numbalsoda is None:
     if options.NUMBA_INTEGRATE:

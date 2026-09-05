@@ -79,7 +79,7 @@ def _alpha_n_max_deflagration_bag_arr(
         cs2_fun: th.CS2Fun,
         n_xi: int = DEFAULT_N_XI) -> th.FloatOrArr:
     ret = np.zeros_like(v_wall)
-    for i in numba.prange(v_wall.size):  # pylint: disable=not-an-iterable
+    for i in numba.prange(v_wall.size):
         ret[i] = _alpha_n_max_deflagration_bag_scalar_numba(
             v_wall[i], df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_fun=cs2_fun, n_xi=n_xi)
     return ret

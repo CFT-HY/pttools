@@ -116,31 +116,104 @@ exclude_lines = [
 ]
 show_missing = true
 
-[tool.mypy]
-exclude = [
-    "_build",
-    "auto_examples"
-]
-files = [
+[tool.pyrefly]
+project-includes = [
+    "conftest.py",
     "docs",
     "examples",
     "pttools",
     "tests"
 ]
-
-[[tool.mypy.overrides]]
-module = ["h5py.*", "kaleido.*", "numba.*", "numbalsoda.*", "NumbaLSODA.*", "plotly.*", "sphinx_gallery.*", "sympy.*", "yappi.*"]
-ignore_missing_imports = true
-
+project-excludes = [
+    "**/_build*",
+    "**/auto_examples*",
+    "**/__pycache__/**",
+    "**/*venv/**",
+    "**/.[!/.]*"
+]
+# The "legacy" preset corresponds most closely to the previously used mypy configuration.
+# preset = "legacy"
+ignore-missing-imports = [
+    "h5py.*",
+    "kaleido.*",
+    "numbalsoda.*",
+    "NumbaLSODA.*",
+    "plotly.*",
+    "sphinx_gallery.*",
+    "sympy.*",
+    "yappi.*"
+]
 # The type stubs shipped with Numba are incomplete:
 # - The jit options of the _JITOptions TypedDict are missing e.g. "cache" and "nopython".
 # - numba.prange is not declared to be iterable.
 # - Decorating a generic function with numba.njit resolves its type parameters to Never.
-# Therefore the stubs are skipped until these have been fixed upstream.
-[[tool.mypy.overrides]]
-module = ["numba.*"]
-follow_imports = "skip"
-follow_imports_for_stubs = true
+# Therefore, the stubs are skipped until these have been fixed upstream.
+replace-imports-with-any = [
+    "numba.*"
+]
+
+[tool.ruff]
+line-length = 120
+extend-exclude = [
+    "call_graphs",
+    "dev",
+    "docs/_build",
+    "docs/auto_examples",
+    "docs/gen_modules",
+    "htmlcov",
+    "logs",
+    "test-results"
+]
+
+[tool.ruff.lint]
+select = [
+    "A",    # flake8-builtins
+    "ARG",  # flake8-unused-arguments
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "E",    # pycodestyle errors
+    "F",    # Pyflakes
+    "N",    # pep8-naming
+    "NPY",  # NumPy-specific rules
+    "PIE",  # flake8-pie
+    "PL",   # Pylint
+    "RET",  # flake8-return
+    "RUF",  # Ruff-specific rules
+    "RUF100",  # Unused noqa directives, which have to be selected explicitly
+    "SIM",  # flake8-simplify
+    "UP",   # pyupgrade
+    "W"     # pycodestyle warnings
+]
+ignore = [
+    # Corresponds to the Pylint message "too-many-arguments", which was disabled as well.
+    "PLR0913",
+    # Corresponds to the Pylint message "too-many-positional-arguments".
+    # Scientific functions have a lot of parameters, and adding "*" to all of them would be tedious.
+    "PLR0917"
+]
+# The equivalent of the Pylint option "dummy-variables-rgx"
+dummy-variable-rgx = "^(_+$|(_[a-zA-Z0-9_]*[a-zA-Z0-9]+?$)|dummy|ignored_|unused_)"
+
+[tool.ruff.lint.flake8-unused-arguments]
+ignore-variadic-names = true
+
+# These correspond to the "good-names" of the previously used Pylint configuration.
+[tool.ruff.lint.pep8-naming]
+extend-ignore-names = [
+    "i", "j", "k", "ex", "Run", "_", "_qT_array", "a", "alN", "am", "ap", "ax_dg_dT", "A", "A2", "A2_2d_array_z",
+    "A2_approx", "A2_lookup", "ax", "b", "b_R", "c", "cs", "cs2", "CPU_AFFINITY", "data_T_b", "data_T_b_log",
+    "data_T_s", "data_T_s_log", "de", "dge_dT", "dgp_dT", "dgs_dT", "dq", "du", "dv", "dw", "D", "Delta_bar",
+    "DifferentialCFunc", "DifferentialSolveIVP", "DE_Method", "e", "eb", "ek", "expected_Ubarf2", "E", "f", "f1",
+    "f2", "Fgw0", "g", "ge", "getKandWow", "gp", "gs", "G", "Gamma", "H", "HLf", "Htau_nl", "H_n", "it", "I_hi",
+    "J", "kappaNuModel", "Kint", "Krf", "Ksh", "K_frac", "ls", "L", "Lf", "mu", "n", "nu", "nt", "nx", "nz", "N",
+    "Np", "N_acc", "N_AE", "Omgw", "p", "p1", "p2", "psutil", "Pgw", "Pgw_high", "Pgw_int", "Pgw_low", "Psi_n",
+    "Pv_data", "P_acc", "P_oms", "P_v_lookup", "qRstar", "qT", "qT_lookup", "r", "R", "R_star", "R_AE", "R_LISA",
+    "s", "sqrt_K", "S", "S_gb", "S_sw_approx", "S_AE", "S_AE_approx", "S_I", "t", "tn", "T", "Tb", "Tm", "Tm_sh",
+    "Tn", "Tn_manual_override", "Tn_override", "Tp", "Ts", "Ttilde", "T_center", "T_crit", "T_is_physical", "T_max",
+    "T_min", "T_n", "T_nucl", "T_ref", "u", "Ubarf", "Ubarf2", "Ubarf_2_ssm", "v", "v0", "v1", "v2", "vb", "vf",
+    "vm", "vp", "vw", "V", "V2_pow_v", "Vm", "Vp", "V_s", "V_s_default", "V_b", "w", "w0", "w1", "w2", "wb", "wf",
+    "wm", "wn", "wp", "W", "W_abs2", "x", "x2", "xi", "y", "y0", "z", "z0", "z1",
+]
 
 [tool.pytest.ini_options]
 # On clusters "--numprocesses=auto" creates processes according to the total number of CPU cores

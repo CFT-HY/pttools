@@ -68,7 +68,6 @@ def _sin_transform_core(t: th.FloatArr1D, f: th.FloatArr1D, freq: th.FloatArr1D)
     :return: value of the sine transformed function at each angular frequency $\omega$
     """
     integral = np.zeros_like(freq)
-    # pylint: disable=not-an-iterable
     for i in numba.prange(freq.size):
         integrand = f * np.sin(freq[i] * t)
         # If you get Numba errors here, ensure that t is contiguous.

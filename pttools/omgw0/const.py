@@ -168,7 +168,7 @@ LISA_ARM_LENGTH: float = 2.5e9
 
 #: Number of seconds in a day
 DAY_IN_SECONDS: float = 24 * 60 * 60
-# Number of seconds in a year
+#: Number of seconds in a year
 YEAR_IN_SECONDS: float = 365.2425 * DAY_IN_SECONDS
 #: LISA observation time (s)
 LISA_OBS_TIME: float = 4 * 0.75 * YEAR_IN_SECONDS

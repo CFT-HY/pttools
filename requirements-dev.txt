@@ -5,19 +5,21 @@ allure-pytest == 2.16.0
 build == 1.5.0
 colorama == 0.4.6
 # hypothesis[numpy] == 6.155.1
-mypy == 2.3.0
 pandas == 3.0.5
 pandas-stubs == 3.0.3.260530
 pip-check == 3.2.1
 psutil == 7.2.2  # For Numba system info
 pyan3 == 2.6.2
 pyinstrument == 5.1.2
+pyrefly == 1.2.0
+# Pylint is no longer used for linting, but its Pyreverse tool is used for generating the UML diagrams.
 pylint == 4.0.6
 pytest == 9.1.1
 pytest-cov == 7.1.0
 pytest-html == 4.2.0
 pytest-split == 0.11.0
 pytest-xdist[psutil] == 3.8.0
+ruff == 0.16.6
 scipy-stubs == 1.18.0.1
 setuptools == 83.0.0
 sympy == 1.14.0

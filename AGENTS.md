@@ -4,8 +4,8 @@
 - Install dependencies: `./install_requirements.sh`
 - Run tests: `pytest`
   - The full test suite can take up to 20 min to run. For faster results, you can run only some tests.
-- Lint: `pylint`
-- Type checking: `mypy`
+- Lint: `ruff check`
+- Type checking: `pyrefly check`
 - Build documentation: `cd docs && make all`
   - Building the documentation will run the examples and can therefore take up to 35 min to run.
 

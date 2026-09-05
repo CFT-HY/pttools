@@ -62,7 +62,7 @@ def _find_alpha_plus_bag_arr(
         n_xi: int = const.DEFAULT_N_XI,
         xtol: float = const.FIND_ALPHA_PLUS_TOL) -> th.FloatArr:
     ap = np.zeros_like(v_wall)
-    for i in numba.prange(v_wall.size):  # pylint: disable=not-an-iterable
+    for i in numba.prange(v_wall.size):
         ap[i] = _find_alpha_plus_bag_scalar(
             v_wall[i], alpha_n_given,
             cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method,

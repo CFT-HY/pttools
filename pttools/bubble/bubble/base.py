@@ -253,7 +253,7 @@ class BaseBubble(abc.ABC):
         return self.model.temp(w=self.w, phase=self.phase)
 
     @functools.cached_property
-    def va_kinetic_energy_density(self) -> float:  # pylint: disable=missing-function-docstring
+    def va_kinetic_energy_density(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return va_kinetic_energy_density(self.v, self.w, self.xi)

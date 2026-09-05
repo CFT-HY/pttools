@@ -156,16 +156,16 @@ jobs:
         run: |
           pip --cache-dir=.pip install --upgrade pip wheel
           pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
-      - name: Run Pylint
-        run: pylint docs examples pttools tests conftest.py 2>&1 | tee pylint.txt
+      - name: Run Ruff
+        run: ruff check --output-format=full 2>&1 | tee ruff.txt
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
           name: Lint
           path: |
-            ${{ github.workspace }}/pylint.txt
+            ${{ github.workspace }}/ruff.txt
           if-no-files-found: error
-  mypy:
+  pyrefly:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -189,22 +189,14 @@ jobs:
         run: |
           pip --cache-dir=.pip install --upgrade pip wheel
           pip --cache-dir=.pip install -r requirements.txt -r requirements-dev.txt
-      - name: Load mypy cache
-        uses: actions/cache@v4
-        with:
-          path: .mypy_cache
-          key: mypy-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            mypy-${{ runner.os }}-
-            mypy-
-      - name: Run mypy
-        run: mypy 2>&1 | tee mypy.txt
+      - name: Run Pyrefly
+        run: pyrefly check 2>&1 | tee pyrefly.txt
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
-          name: Mypy
+          name: Pyrefly
           path: |
-            ${{ github.workspace }}/mypy.txt
+            ${{ github.workspace }}/pyrefly.txt
           if-no-files-found: error
   test-numba:
     runs-on: ubuntu-latest

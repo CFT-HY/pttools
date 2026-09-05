@@ -1,5 +1,8 @@
 """Speed of sound for the Bag Model"""
 
+# The bag model functions have to keep the signature of the generic model functions.
+# ruff: noqa: ARG001
+
 import numba
 from numba.extending import overload
 import numpy as np
@@ -33,7 +36,6 @@ def cs2_bag_neg(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
     return - cs2_bag_multi(w, phase)
 
 
-# pylint: disable=unused-argument
 def _cs2_bag_scalar(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
     """The scalar versions of the bag functions have to be compiled to cfuncs if jitting is disabled,
     as otherwise the cfunc version of the differential cannot be created.
@@ -42,7 +44,6 @@ def _cs2_bag_scalar(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
 
 
 @numba.cfunc(th.CS2FunScalarSig, cache=NUMBA_CACHE_CS2_BAG)
-# pylint: disable=unused-argument
 def cs2_bag_scalar_cfunc(w: float, phase: Phase) -> float:
     return const.CS0_2
 
@@ -52,7 +53,6 @@ def cs2_bag_temp(temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
     return cs2_bag_multi(temp, phase)
 
 
-# pylint: disable=unused-argument
 def _cs2_bag_arr(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
     return np.full_like(w, const.CS0_2)
 

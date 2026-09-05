@@ -151,7 +151,7 @@ class SSMSpectrum:
         if compute:
             self.compute(parallel=parallel)
 
-    def beta[T: (float, FloatArr)](self, H_n: T) -> T:  # pylint: disable=missing-function-docstring
+    def beta[T: (float, FloatArr)](self, H_n: T) -> T:
         return self.beta_tilde * H_n
 
     def compute(
@@ -293,15 +293,15 @@ class SSMSpectrum:
         return self.r_star / self.bubble.ubarf
 
     @functools.cached_property
-    def H_star_tau_sh(self) -> float:  # pylint: disable=missing-function-docstring
+    def H_star_tau_sh(self) -> float:
         return H_star_tau_sh(r_star=self.r_star, ubarf=self.bubble.ubarf)
 
     @functools.cached_property
-    def H_star_tau_v(self) -> float:  # pylint: disable=missing-function-docstring
+    def H_star_tau_v(self) -> float:
         return H_star_tau_v(source_lifetime_factor=self.source_lifetime_factor, nu=self.bubble.nu_gdh2024)
 
     @functools.cached_property
-    def H_star_tau_v_old(self) -> float:  # pylint: disable=missing-function-docstring
+    def H_star_tau_v_old(self) -> float:
         return H_star_tau_v_old(H_star_tau_sh=self.H_star_tau_sh)
 
     @functools.cached_property

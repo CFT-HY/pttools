@@ -1,6 +1,6 @@
 .coverage
 .idea
-.mypy_cache
+.pyrefly_cache
 .pytest_cache
 coverage.xml
 docs/_build
@@ -14,7 +14,8 @@ examples/test-results
 htmlcov
 logs
 pttools/omgw0/suppression/suppression_ssm_data/*.txt
-pylint.txt
+pyrefly.txt
+ruff.txt
 test-results
 tests/bubble/coverage.xml
 tests/bubble/htmlcov

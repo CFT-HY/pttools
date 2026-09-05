@@ -79,8 +79,11 @@ dependencies:
   - pyan3 == 2.0.0
   # https://anaconda.org/channels/conda-forge/packages/pyinstrument/overview
   - pyinstrument == 5.1.2
+  # Pylint is no longer used for linting, but its Pyreverse tool is used for generating the UML diagrams.
   # https://anaconda.org/channels/conda-forge/packages/pylint/overview
   - pylint == 4.0.5
+  # https://anaconda.org/channels/conda-forge/packages/pyrefly/overview
+  - pyrefly == 1.2.0
   # https://anaconda.org/conda-forge/pytest
   - pytest == 9.0.2
   # https://anaconda.org/channels/conda-forge/packages/pytest-cov/overview
@@ -89,6 +92,8 @@ dependencies:
   - pytest-html == 4.2.0
   # https://anaconda.org/channels/conda-forge/packages/pytest-xdist/overview
   - pytest-xdist == 3.8.0
+  # https://anaconda.org/channels/conda-forge/packages/ruff/overview
+  - ruff == 0.16.6
   # https://anaconda.org/channels/conda-forge/packages/setuptools/overview
   - setuptools == 82.0.0
   # https://anaconda.org/channels/conda-forge/packages/twine/overview

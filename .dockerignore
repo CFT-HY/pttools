@@ -24,7 +24,8 @@ test-results
 tests/test_data/fluidprofiles
 tests/test_data/graphs
 pow_*.txt
-pylint.txt
+pyrefly.txt
+ruff.txt
 test-output.txt
 *.dot
 *.html
@@ -42,6 +43,8 @@ test-output.txt
 .idea
 .DS_Store
 .pytest_cache
+.pyrefly_cache
+.ruff_cache
 .spyproject
 dist
 envs

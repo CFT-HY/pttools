@@ -22,8 +22,8 @@ MINIGALLERY_REGEX: re.Pattern[str] = re.compile(r"^\s*\.\.\s+minigallery::(.*)$"
 MINIGALLERY_CLASS: str = "sphx-glr-minigallery-auto"
 
 
-def add_minigalleries(  # pylint: disable=too-many-positional-arguments, unused-argument
-        app: Sphinx, what: str, name: str, obj: tp.Any, options: tp.Any, lines: list[str]) -> None:
+def add_minigalleries(
+        app: Sphinx, what: str, name: str, obj: tp.Any, options: tp.Any, lines: list[str]) -> None:  # noqa: ARG001
     """Add a mini-gallery of the examples that use the object being documented.
 
     If the docstring already contains a minigallery directive,
@@ -55,8 +55,8 @@ def add_minigalleries(  # pylint: disable=too-many-positional-arguments, unused-
     ]
 
 
-def remove_duplicate_minigalleries(  # pylint: disable=unused-argument
-        app: Sphinx, domain: str, objtype: str, contentnode: nodes.Element) -> None:
+def remove_duplicate_minigalleries(
+        app: Sphinx, domain: str, objtype: str, contentnode: nodes.Element) -> None:  # noqa: ARG001
     """Remove all but the last of the automatic mini-galleries of an object.
 
     Autodoc processes the class and __init__ docstrings of a class separately when

@@ -73,7 +73,6 @@ _v_plus_scalar_numba = njit(_v_plus_scalar, cache=True)
 
 def _v_plus_arr(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: bool = True) -> th.FloatArr:
     ret = np.empty_like(vm)
-    # pylint: disable=not-an-iterable
     for i in numba.prange(vm.size):
         ret[i] = _v_plus_scalar_numba(vm[i], ap, sol_type, debug)
     return ret

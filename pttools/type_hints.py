@@ -35,17 +35,17 @@ type ODESolver = spi.OdeSolver | type[spi.OdeSolver] | tp.Callable | str
 # -----
 type Bool = np.dtype[np.bool_]
 type BoolArr = NDArray[np.bool_]
-type BoolArr1D = np.ndarray[tuple[int], Bool]  # pylint: disable=invalid-name
-type BoolArr2D = np.ndarray[tuple[int, int], Bool]  # pylint: disable=invalid-name
+type BoolArr1D = np.ndarray[tuple[int], Bool]
+type BoolArr2D = np.ndarray[tuple[int, int], Bool]
 # np.float64 is a subclass of float, so for scalars specifying "float" is sufficient.
 type Float64 = np.dtype[np.float64]
 #: Numpy array of floats
 type FloatArr = NDArray[np.float64]
 #: 1D Numpy array of floats
-type FloatArr1D = np.ndarray[tuple[int], Float64]  # pylint: disable=invalid-name
+type FloatArr1D = np.ndarray[tuple[int], Float64]
 type FloatArr1DOrList = FloatArr1D | list[float]
-type FloatArr2D = np.ndarray[tuple[int, int], Float64]  # pylint: disable=invalid-name
-type FloatArr3D = np.ndarray[tuple[int, int, int], Float64]  # pylint: disable=invalid-name
+type FloatArr2D = np.ndarray[tuple[int, int], Float64]
+type FloatArr3D = np.ndarray[tuple[int, int, int], Float64]
 type FloatArr4D = np.ndarray[tuple[int, int, int, int], Float64]
 # Float list or a Numpy array
 # FloatListOrArr = list[tp.Union[float, Float64] | np.ndarray

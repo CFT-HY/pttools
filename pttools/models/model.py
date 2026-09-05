@@ -851,10 +851,10 @@ class Model(BaseModel, abc.ABC):
         """
         return self.w(self.T_crit, Phase.SYMMETRIC) - self.w(self.T_crit, Phase.BROKEN)
 
-    def nu_gdh2024(self, w: th.FloatOrArr, phase: th.FloatOrArr = Phase.BROKEN) -> th.FloatOrArr:  # pylint: disable=missing-function-docstring
+    def nu_gdh2024(self, w: th.FloatOrArr, phase: th.FloatOrArr = Phase.BROKEN) -> th.FloatOrArr:
         return nu_gdh2024(self.omega(w, phase))
 
-    def omega(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:  # pylint: disable=missing-function-docstring
+    def omega(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         temp = self.temp(w, phase)
         return omega_barotropic(self.p_temp(temp, phase), self.e_temp(temp, phase))
 

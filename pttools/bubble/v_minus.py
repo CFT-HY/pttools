@@ -74,7 +74,6 @@ def _v_minus_arr(
         strong_branch: bool = False,
         debug: bool = False) -> th.FloatArr:
     ret = np.empty_like(vp)
-    # pylint: disable=not-an-iterable
     for i in numba.prange(vp.size):
         ret[i] = _v_minus_scalar_numba(vp[i], ap, sol_type, strong_branch, debug)
     return ret

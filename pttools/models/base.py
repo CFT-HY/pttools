@@ -178,9 +178,9 @@ class BaseModel(abc.ABC):
     # Abstract methods
 
     @abc.abstractmethod
-    def cs2(self, *args, **kwargs) -> th.FloatOrArr:  # pylint: disable=method-hidden
+    def cs2(self, *args, **kwargs) -> th.FloatOrArr:
         """Speed of sound squared $c_s^2$"""
 
     @abc.abstractmethod
-    def cs2_neg(self, *args, **kwargs) -> th.FloatOrArr:  # pylint: disable=method-hidden
+    def cs2_neg(self, *args, **kwargs) -> th.FloatOrArr:
         """Speed of sound squared with a minus sign, $-c_s^2$. This is needed for finding the maximum of $c_s^2$."""

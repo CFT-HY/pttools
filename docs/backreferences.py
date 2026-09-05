@@ -103,7 +103,6 @@ def add_defining_modules(code_objects: dict[str, list[CodeObject]]) -> dict[str,
             cobjs.insert(0, {
                 **cobj,
                 "module": module,
-                # pylint: disable-next=protected-access
                 "module_short": backreferences._get_short_module_name(module, cobj["name"]) or module,
                 "is_class": inspect.isclass(resolve_object(module, cobj["name"].split(".")))
             })

@@ -132,7 +132,7 @@ class Spectrum(ssm.SSMSpectrum):
         return np.pi**2 / 30 * self.ge_star * self.T_star ** 4
 
     @functools.cached_property
-    def f_star0(self) -> float:  # pylint: disable=missing-function-docstring
+    def f_star0(self) -> float:
         return freq.f_star0(
             T_star=self.T_star,
             g_star=self.g_star
@@ -195,12 +195,12 @@ class Spectrum(ssm.SSMSpectrum):
             export_json(data, path)
         return data
 
-    def f(self, z: th.FloatArr | None = None) -> th.FloatOrArr:  # pylint: disable=missing-function-docstring
+    def f(self, z: th.FloatArr | None = None) -> th.FloatOrArr:
         if z is None:
             z = self.y
         return freq.f(z=z, r_star=self.r_star, f_star0=self.f_star0)
 
-    def F_gw0(self, g0: float = const.G0, gs0: float = const.GS0) -> float:  # pylint: disable=missing-function-docstring
+    def F_gw0(self, g0: float = const.G0, gs0: float = const.GS0) -> float:
         return F_gw0(
             g_star=self.g_star,
             g0=g0,
@@ -208,10 +208,10 @@ class Spectrum(ssm.SSMSpectrum):
             gs_star=self.gs_star
         )
 
-    def noise(self) -> th.FloatArr1D:  # pylint: disable=missing-function-docstring
+    def noise(self) -> th.FloatArr1D:
         return noise.omega_noise(self.f())
 
-    def noise_ins(self) -> th.FloatArr1D:  # pylint: disable=missing-function-docstring
+    def noise_ins(self) -> th.FloatArr1D:
         return noise.omega_ins(self.f())
 
     def omgw0(

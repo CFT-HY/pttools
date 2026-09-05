@@ -33,7 +33,7 @@ def get_backreferences(path: str) -> dict[str, list]:
             backrefs = json.load(json_file)
     except (OSError, json.JSONDecodeError):
         backrefs = {}
-    if (not backrefs) and BACKREFERENCES_WARNING_LOCK.acquire(blocking=False):  # pylint: disable=consider-using-with
+    if (not backrefs) and BACKREFERENCES_WARNING_LOCK.acquire(blocking=False):
         logger.warning(
             "Sphinx-Gallery backreferences were not found at \"%s\", so no mini-galleries are created. "
             "Sphinx-Gallery collects the backreferences only from the examples that it (re)generates, "

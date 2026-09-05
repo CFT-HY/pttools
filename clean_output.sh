@@ -13,5 +13,6 @@ rm -rf \
   ./**/logs \
   ./**/htmlcov \
   ./**/output.html \
-  ./**/pylint.txt \
+  ./**/pyrefly.txt \
+  ./**/ruff.txt \
   ./**/test-results \

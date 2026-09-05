@@ -70,7 +70,7 @@ def _spec_den_v_core(
     factor = 1. / (ubarf2 * beta_R ** 6)
 
     sd_v = np.empty_like(z)
-    for i in numba.prange(z.size):  # pylint: disable=not-an-iterable
+    for i in numba.prange(z.size):
         sd_v[i] = _spec_den_v_core_loop(
             A2_lookup=A2_lookup, qT_lookup=qT_lookup, T_tilde=T_tilde,
             a=a, beta_R=beta_R, factor=factor, nuc_type=nuc_type, z_i=z[i]

@@ -416,7 +416,6 @@ def _get_ubarf2_bag_arr(
         n_xi: int = const.DEFAULT_N_XI,
         verbosity: int = 0) -> th.FloatArr1D:
     ubarf2 = np.zeros_like(v_wall)
-    # pylint: disable=not-an-iterable
     for i in numba.prange(v_wall.size):
         ubarf2[i] = _get_ubarf2_bag_scalar_numba(
             v_wall[i], alpha_n, cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr,

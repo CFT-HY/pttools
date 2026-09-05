@@ -616,7 +616,7 @@ class Bubble(BaseBubble):
     # -----
 
     @functools.cached_property
-    def e_bar(self) -> float:  # pylint: disable=missing-function-docstring
+    def e_bar(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.e_bar(self.model, self.wn)
@@ -632,7 +632,7 @@ class Bubble(BaseBubble):
         return self.model.gs(w=self.va_enthalpy_density, phase=Phase.BROKEN)
 
     @functools.cached_property
-    def kappa(self) -> float:  # pylint: disable=missing-function-docstring
+    def kappa(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.kappa(self.model, self.v, self.w, self.xi, self.v_wall, delta_e_theta=self.va_trace_anomaly_diff)
@@ -644,25 +644,25 @@ class Bubble(BaseBubble):
         return 4 * self.kinetic_energy_density / (3 * self.alpha_theta_bar_n * self.wn)
 
     @functools.cached_property
-    def mean_adiabatic_index(self) -> float:  # pylint: disable=missing-function-docstring
+    def mean_adiabatic_index(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.mean_adiabatic_index(self.w_bar, self.e_bar)
 
     @functools.cached_property
-    def nu_gdh2024(self) -> float:  # pylint: disable=missing-function-docstring
+    def nu_gdh2024(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return self.model.nu_gdh2024(self.va_enthalpy_density)
 
     @functools.cached_property
-    def omega(self) -> float:  # pylint: disable=missing-function-docstring
+    def omega(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.omega(self.model, self.w, self.xi, self.v_wall, delta_e_theta=self.va_trace_anomaly_diff)
 
     @functools.cached_property
-    def omega_barotropic(self) -> float:  # pylint: disable=missing-function-docstring
+    def omega_barotropic(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return self.model.omega(self.va_enthalpy_density, Phase.BROKEN)
@@ -693,7 +693,7 @@ class Bubble(BaseBubble):
         )
 
     @functools.cached_property
-    def w_bar(self) -> float:  # pylint: disable=missing-function-docstring
+    def w_bar(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.w_bar(self.w, self.xi, self.v_wall)
@@ -702,7 +702,7 @@ class Bubble(BaseBubble):
     # bva = bubble volume averaged
     # -----
     @functools.cached_property
-    def entropy_density_diff(self) -> float:  # pylint: disable=missing-function-docstring
+    def entropy_density_diff(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.entropy_density_diff(self.model, self.w, self.xi, self.v_wall, self.phase)
@@ -714,37 +714,37 @@ class Bubble(BaseBubble):
         return self.entropy_density_diff / self.model.s(self.wn, Phase.SYMMETRIC)
 
     @functools.cached_property
-    def kinetic_energy_density(self) -> float:  # pylint: disable=missing-function-docstring
+    def kinetic_energy_density(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.kinetic_energy_density(self.v, self.w, self.xi, self.v_wall)
 
     @functools.cached_property
-    def kinetic_energy_fraction(self) -> float:  # pylint: disable=missing-function-docstring
+    def kinetic_energy_fraction(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.kinetic_energy_fraction(ek_bva=self.kinetic_energy_density, eb=self.e_bar)
 
     @functools.cached_property
-    def thermal_energy_density(self) -> float:  # pylint: disable=missing-function-docstring
+    def thermal_energy_density(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.thermal_energy_density(v_wall=self.v_wall, eqp=self.va_thermal_energy_density)
 
     @functools.cached_property
-    def thermal_energy_density_diff(self) -> float:  # pylint: disable=missing-function-docstring
+    def thermal_energy_density_diff(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.thermal_energy_density_diff(self.w, self.xi, self.v_wall)
 
     @functools.cached_property
-    def thermal_energy_fraction(self) -> float:  # pylint: disable=missing-function-docstring
+    def thermal_energy_fraction(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.thermal_energy_fraction(eq_bva=self.thermal_energy_density, eb=self.e_bar)
 
     @functools.cached_property
-    def trace_anomaly(self) -> float:  # pylint: disable=missing-function-docstring
+    def trace_anomaly(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.trace_anomaly_diff(self.model, self.w, self.xi, self.v_wall, self.phase)
@@ -753,50 +753,50 @@ class Bubble(BaseBubble):
     # va = volume averaged
     # -----
     @functools.cached_property
-    def va_enthalpy_density(self) -> float:  # pylint: disable=missing-function-docstring
+    def va_enthalpy_density(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.va_enthalpy_density(eq=self.thermal_energy_density)
 
     @functools.cached_property
-    def va_entropy_density_diff(self) -> float:  # pylint: disable=missing-function-docstring
+    def va_entropy_density_diff(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.va_entropy_density_diff(self.model, self.w, self.xi, self.v_wall, self.phase)
 
     @functools.cached_property
-    def va_entropy_density_diff_relative(self) -> float:  # pylint: disable=missing-function-docstring
+    def va_entropy_density_diff_relative(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return self.va_entropy_density_diff / self.model.s(self.wn, Phase.SYMMETRIC)
 
     @functools.cached_property
-    def va_kinetic_energy_fraction(self) -> float:  # pylint: disable=missing-function-docstring
+    def va_kinetic_energy_fraction(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.va_kinetic_energy_fraction(ek_va=self.va_kinetic_energy_density, eb=self.e_bar)
 
     @functools.cached_property
-    def va_thermal_energy_density(self) -> float:  # pylint: disable=missing-function-docstring
+    def va_thermal_energy_density(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.va_thermal_energy_density(
             v_shock=self.v_sh, wn=self.wn, ek=self.va_kinetic_energy_density, delta_e_theta=self.va_trace_anomaly_diff)
 
     @functools.cached_property
-    def va_thermal_energy_density_diff(self) -> float:  # pylint: disable=missing-function-docstring
+    def va_thermal_energy_density_diff(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.va_thermal_energy_density_diff(self.w, self.xi)
 
     @functools.cached_property
-    def va_thermal_energy_fraction(self) -> float:  # pylint: disable=missing-function-docstring
+    def va_thermal_energy_fraction(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.va_thermal_energy_fraction(eq_va=self.va_thermal_energy_density, eb=self.e_bar)
 
     @functools.cached_property
-    def va_trace_anomaly_diff(self) -> float:  # pylint: disable=missing-function-docstring
+    def va_trace_anomaly_diff(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.va_trace_anomaly_diff(self.model, self.w, self.xi, self.v_wall, self.phase)
