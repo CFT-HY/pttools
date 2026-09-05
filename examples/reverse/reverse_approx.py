@@ -22,7 +22,8 @@ def solvable(
     """This function is minimized when the parameters produce the desired peak frequency and amplitude"""
     alpha, kappa_v, r_star = params
     f0_peak = f0_peak_approx(temp, r_star=r_star, g_star=g_star)
-    omega_peak = omgw_approx(f=f0_peak, alpha=alpha, kappa_v=kappa_v, r_star=r_star, temp=temp, g_star=g_star, f0_peak=f0_peak)
+    omega_peak = omgw_approx(
+        f=f0_peak, alpha=alpha, kappa_v=kappa_v, r_star=r_star, temp=temp, g_star=g_star, f0_peak=f0_peak)
     f_diff = np.log10(f0_peak) - np.log10(f_peak_target)
     omega_diff = np.log10(omega_peak) - np.log10(omega_peak_target)
     diff = f_diff**2 + omega_diff**2

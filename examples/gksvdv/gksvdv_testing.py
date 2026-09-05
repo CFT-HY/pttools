@@ -5,6 +5,8 @@ Giese et al. testing
 Test comparison with :giese_2021:`\ ` code and data
 """
 
+import contextlib
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -18,10 +20,8 @@ def main() -> plt.Figure:
     atbs = np.linspace(0.01, 3, 30)
     alpha_ns = np.zeros_like(atbs)
     for i, alpha_theta_bar_n in enumerate(atbs):
-        try:
+        with contextlib.suppress(RuntimeError):
             alpha_ns[i] = model.alpha_n_from_alpha_theta_bar_n(alpha_theta_bar_n=alpha_theta_bar_n)
-        except RuntimeError:
-            pass
 
     print(alpha_ns)
     fig = plt.figure()

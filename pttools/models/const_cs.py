@@ -98,7 +98,7 @@ class ConstCSModel(AnalyticModel):
                 "c_{s,s}^2 and c_{s,b}^2 have to be 0 < c_s <= 1."
                 f"Got: c_{{s,s}}^2={css2}, c_{{s,b}}^2={csb2}."
             )
-        if log_info and css2_flt > 1/3 or csb2_flt > 1/3:
+        if (log_info and css2_flt > 1/3) or csb2_flt > 1/3:
             logger.warning(
                 "c_{s,s}^2 > 1/3 or c_{s,b}^2 > 1/3. "
                 "Please ensure that g_eff is monotonic in your model. "
@@ -276,7 +276,7 @@ class ConstCSModel(AnalyticModel):
                 alpha_n_min_target=alpha_n_min_target,
                 a_s_default=a_s_default,
                 a_b=a_b,
-                V_s=V_s_default,
+                V_s_default=V_s_default,
                 V_b=V_b,
                 safety_factor_alpha=safety_factor_alpha
             )
@@ -710,10 +710,9 @@ class ConstCSModel(AnalyticModel):
         if np.isscalar(w):
             if invalid:
                 w = np.nan
-        else:
-            if np.any(invalid):
-                w = w.copy()
-                w[invalid] = np.nan
+        elif np.any(invalid):
+            w = w.copy()
+            w[invalid] = np.nan
         temp_s = self.T_ref * (w / (self.mu_s * self.a_s * self.T_ref ** 4)) ** (1 / self.mu_s)
         temp_b = self.T_ref * (w / (self.mu_b * self.a_b * self.T_ref ** 4)) ** (1 / self.mu_b)
         return temp_b * phase + temp_s * (1 - phase)

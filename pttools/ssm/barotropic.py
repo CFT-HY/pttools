@@ -55,7 +55,7 @@ def H_eta[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:  # type: ignore[assig
     return 1 + nu  # type: ignore[return-value]
 
 
-def l[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:  # type: ignore[assignment]
+def l[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:  # noqa: E743  # type: ignore[assignment]
     r"""$\ell(\nu)
     $$\ell(\nu) = 1 + 2\nu$$
     :giombi_2026:`\ ` p. 25
@@ -82,7 +82,7 @@ def source_lifetime_factor(
     return -Upsilon(r=1 + eta_ratio(ubarf=ubarf, r_star=r_star, N_sh=N_sh, nu=nu), l=-l(nu))
 
 
-def Upsilon(r: FloatOrArr, l: FloatOrArr) -> FloatOrArr:
+def Upsilon(r: FloatOrArr, l: FloatOrArr) -> FloatOrArr:  # noqa: E741
     r"""$\Upsilon_\ell$ for arbitrary $\ell$
     $$\Upsilon_\ell (r) = \frac{1}{\ell} \left( 1 - r^\ell \right)$$
     :giombi_2026:`\ ` eq. 3.6

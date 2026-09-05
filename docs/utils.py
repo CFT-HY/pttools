@@ -29,7 +29,7 @@ def get_backreferences(path: str) -> dict[str, list]:
     They are loaded only once and then cached.
     """
     try:
-        with open(path, "r", encoding="utf-8") as json_file:
+        with open(path, encoding="utf-8") as json_file:
             backrefs = json.load(json_file)
     except (OSError, json.JSONDecodeError):
         backrefs = {}

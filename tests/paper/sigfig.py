@@ -6,7 +6,6 @@ Modified from
 """
 
 import re
-import typing as tp
 
 import pttools.type_hints as th
 
@@ -19,8 +18,8 @@ def round_sig(x: float, n: int) -> str:
         raise TypeError("n must be an integer")
     try:
         x = float(x)
-    except ValueError:
-        raise TypeError("x must be a floating point object")
+    except ValueError as e:
+        raise TypeError("x must be a floating point object") from e
     form = "%0." + str(n - 1) + "e"
     st = form % x
     num, expo = EPAT.findall(st)[0]
@@ -53,8 +52,8 @@ def round_sig_signed(x: float, n: int) -> str:
         raise TypeError("n must be an integer")
     try:
         x = float(x)
-    except ValueError:
-        raise TypeError("x must be a floating point object")
+    except ValueError as e:
+        raise TypeError("x must be a floating point object") from e
     form = "%+0." + str(n - 1) + "e"
     st = form % x
     num, expo = EPAT.findall(st)[0]
@@ -81,7 +80,7 @@ def round_sig_signed(x: float, n: int) -> str:
     return sign + "0." + "0" * (expo - 1) + fs[0] + fs[1]
 
 
-def round_sig_error(x: float, ex: float, n: int, paren: bool = False) -> tp.Union[str, tuple[str, str]]:
+def round_sig_error(x: float, ex: float, n: int, paren: bool = False) -> str | tuple[str, str]:
     """
     Find ex rounded to n sig-figs and make the floating point x
     match the number of decimals.  If [paren], the string is
@@ -98,7 +97,7 @@ def round_sig_error(x: float, ex: float, n: int, paren: bool = False) -> tp.Unio
     if paren:
         if stex.find('.') >= 0:
             stex = stex[stex.find('.') + 1:]
-        return "%s(%s)" % (stx, stex)
+        return f"{stx}({stex})"
     return stx, stex
 
 
@@ -126,21 +125,19 @@ def format_table(
     if headers is not None:
         if labels is not None:
             if len(headers) == n_cols:
-                headers = [""] + headers
+                headers = ["", *headers]
             elif len(headers) == n_cols + 1:
                 pass
             else:
                 raise ValueError("length of headers should be %d" % (n_cols + 1))
-        else:
-            if len(headers) != n_cols:
-                raise ValueError("length of headers should be %d" % n_cols)
+        elif len(headers) != n_cols:
+            raise ValueError("length of headers should be %d" % n_cols)
 
-    if labels is not None:
-        if len(labels) != n_rows:
-            raise ValueError("length of labels should be %d" % n_rows)
+    if labels is not None and len(labels) != n_rows:
+        raise ValueError("length of labels should be %d" % n_rows)
 
     str_cols: list[list[str]] = []
-    for col, error in zip(cols, errors):
+    for col, error in zip(cols, errors, strict=False):
         str_cols.append([])
         str_cols.append([])
         for i in range(n_rows):

@@ -55,7 +55,7 @@ class SpectrumTest(unittest.TestCase):
             for bubble in self.bubbles
         ]
         de = [ei - ei[-1] for ei in e]
-        for de_i, de_bag_i in zip(de, de_bag):
+        for de_i, de_bag_i in zip(de, de_bag, strict=False):
             assert_allclose(de_i, de_bag_i)
 
     def test_a2(self):
@@ -89,7 +89,7 @@ class SpectrumTest(unittest.TestCase):
                 (v_wall, alpha_n),
                 lambda_correction=True
             )
-            for v_wall, alpha_n in zip(self.V_WALLS, self.ALPHA_NS)
+            for v_wall, alpha_n in zip(self.V_WALLS, self.ALPHA_NS, strict=False)
         ])
         new = np.array([
             spectrum.spec_den_v * \
@@ -121,7 +121,7 @@ class SpectrumTest(unittest.TestCase):
                 (v_wall, alpha_n),
                 lambda_correction=True
             ) * spectrum.source_lifetime_factor
-            for v_wall, alpha_n, spectrum in zip(self.V_WALLS, self.ALPHA_NS, self.spectra_lambda)
+            for v_wall, alpha_n, spectrum in zip(self.V_WALLS, self.ALPHA_NS, self.spectra_lambda, strict=False)
         ])
         new = np.array([
             pow_spec(z=spectrum.y, spec_den=spectrum.spec_den_gw_ssm) * \

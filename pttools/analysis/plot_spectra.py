@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.analysis.plot_bubbles import plot_bubbles_v
-from pttools.analysis.utils import FigAndAxes, create_fig_ax, legend
+from pttools.analysis.utils import FigAndAxes, create_fig_ax
 from pttools.ssm.spectrum import SSMSpectrum
 from pttools.omgw0 import Spectrum, omega_noise
 import pttools.type_hints as th
@@ -147,7 +147,7 @@ def plot_spectra(
         labels: list[str] | None = None,
         legend: bool | None = None,
         **kwargs) -> FigAndAxes:
-    f"""Plot the GW spectra today {POW_GW0_LABEL}"""
+    r"""Plot the GW spectra today $\mathcal{P}_{\text{gw},0}(f)$"""
     fig, ax = create_fig_ax(fig, ax)
     for i, spectrum in enumerate(spectra):
         snr = spectrum.signal_to_noise_ratio()
@@ -175,7 +175,7 @@ def plot_spectra_gw(
         fig: Figure | None = None,
         path: str | None = None,
         **kwargs) -> FigAndAxes:
-    f"""Plot the GW power spectra {POW_GW_LABEL}"""
+    r"""Plot the GW power spectra $\mathcal{P}_\text{gw}(kR_*)$"""
     fig, ax = create_fig_ax(fig, ax)
     for spectrum in spectra:
         ax.plot(spectrum.y, spectrum.pow_gw, label=spectrum.label_latex, **kwargs)
@@ -189,7 +189,7 @@ def plot_spectra_v(
         fig: Figure | None = None,
         path: str | None = None,
         **kwargs) -> FigAndAxes:
-    f"""Plot the velocity power spectra {POW_V_TILDE_LABEL}"""
+    r"""Plot the velocity power spectra $\tilde{\mathcal{P}}_{\tilde{v}}(kR_*)$"""
     fig, ax = create_fig_ax(fig, ax)
     for spectrum in spectra:
         ax.plot(spectrum.y, spectrum.pow_v_tilde, label=spectrum.label_latex, **kwargs)
@@ -203,7 +203,7 @@ def plot_spectra_spec_den_gw(
         fig: Figure | None = None,
         path: str | None = None,
         **kwargs) -> FigAndAxes:
-    f"""Plot the GW spectral densities {SPEC_DEN_GW_LABEL}"""
+    r"""Plot the GW spectral densities $\mathcal{P}_\text{gw}(kR_*)$"""
     fig, ax = create_fig_ax(fig, ax)
     for spectrum in spectra:
         ax.plot(spectrum.y, spectrum.spec_den_gw, label=spectrum.label_latex, **kwargs)
@@ -217,7 +217,7 @@ def plot_spectra_spec_den_v(
         fig: Figure | None = None,
         path: str | None = None,
         **kwargs) -> FigAndAxes:
-    f"""Plot the velocity spectral densities {SPEC_DEN_V_TILDE_LABEL}"""
+    r"""Plot the velocity spectral densities $\tilde{P}_{\tilde{v}}(kR_*)$"""
     fig, ax = create_fig_ax(fig, ax)
     for spectrum in spectra:
         ax.plot(spectrum.y, spectrum.spec_den_v_tilde, label=spectrum.label_latex, **kwargs)

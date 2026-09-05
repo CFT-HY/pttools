@@ -72,12 +72,11 @@ class Model(BaseModel, abc.ABC):
                     "This is for debugging purposes only. Be careful that the definitions of g and V are consistent.",
                     self.DEFAULT_NAME if name is None else name
                 )
-        else:
-            if V_s < V_b:
-                msg = f"The bubble will not expand, when V_s < V_b. Got: V_s={V_s}, V_b={V_b}."
-                logger.error(msg)
-                if not allow_invalid:
-                    raise ValueError(msg)
+        elif V_s < V_b:
+            msg = f"The bubble will not expand, when V_s < V_b. Got: V_s={V_s}, V_b={V_b}."
+            logger.error(msg)
+            if not allow_invalid:
+                raise ValueError(msg)
             # This should not be a problem as long as a critical temperature exists.
             # if V_s == V_b:
             #     logger.warning("The bubble will not expand, when V_s <= V_b. Got: V_b = V_s = %s.", V_s)
@@ -123,7 +122,8 @@ class Model(BaseModel, abc.ABC):
             self.w_min = min(self.w_min_s, self.w_min_b)
             self.w_max = max(self.w_max_s, self.w_max_b)
         # else:
-        #     # Update the temperature range so that for all temperatures there exists both a symmetric and a broken phase
+        #     # Update the temperature range so that for all temperatures
+        #     # there exists both a symmetric and a broken phase
         #     self.T_min = max(self.temp(self.w_min, Phase.SYMMETRIC), self.temp(self.w_min, Phase.BROKEN))
         #     self.T_max = min(self.temp(self.w_max, Phase.SYMMETRIC), self.temp(self.w_max, Phase.BROKEN))
 
@@ -151,7 +151,8 @@ class Model(BaseModel, abc.ABC):
         if self.w_crit < self.w_min or self.w_crit > self.w_max:
             raise ValueError(
                 "Invalid w_crit. Should have w_min < w_crit < w_max, got: "
-                f"w_min={self.w_min:{self.THERMO_FORMAT}}, w_crit={self.w_crit:{self.THERMO_FORMAT}}, w_max={self.w_max:{self.THERMO_FORMAT}}"
+                f"w_min={self.w_min:{self.THERMO_FORMAT}}, w_crit={self.w_crit:{self.THERMO_FORMAT}}, "
+                f"w_max={self.w_max:{self.THERMO_FORMAT}}"
             )
 
         if gen_critical:
@@ -382,10 +383,7 @@ class Model(BaseModel, abc.ABC):
             wn_guess: float | None = None) -> T:
         r"""Conversion from $\alpha_n$ to $\alpha_{\bar{\theta}_n}$ of :giese_2021:`\ `, eq. 13"""
         wn_solved: th.FloatOrArr
-        if wn is None or np.isnan(wn):
-            wn_solved = self.wn(alpha_n, wn_guess=wn_guess)
-        else:
-            wn_solved = wn
+        wn_solved = self.wn(alpha_n, wn_guess=wn_guess) if wn is None or np.isnan(wn) else wn
         tn = self.temp(wn_solved, Phase.SYMMETRIC)
         diff = (1 - 1 / (3 * self.cs2(wn_solved, Phase.BROKEN))) * \
             (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN)) / wn_solved
@@ -544,8 +542,11 @@ class Model(BaseModel, abc.ABC):
             msg = (
                 "For a physical equation of state theta_+ > theta_-. "
                 f"{text}: {x_name}p={prob_wp:{cls.THERMO_FORMAT}}, {x_name}m={prob_wm:{cls.THERMO_FORMAT}}, "
-                f"theta_s={prob_theta_s:{cls.THERMO_FORMAT}}, theta_b={prob_theta_b:{cls.THERMO_FORMAT}}" if theta_given else ""
-                f"theta_diff={prob_diff}. "
+                + (
+                    f"theta_s={prob_theta_s:{cls.THERMO_FORMAT}}, "
+                    f"theta_b={prob_theta_b:{cls.THERMO_FORMAT}}, " if theta_given else ""
+                )
+                + f"theta_diff={prob_diff}. "
                 "See p. 33 of Hindmarsh and Hijazi, 2019."
             )
             if log_invalid:
@@ -574,8 +575,8 @@ class Model(BaseModel, abc.ABC):
 
         if log_info:
             logger.info(
-                f"Initialised model with name=%s, T_crit=%s, alpha_n_at_wn_min=%s. "
-                f"At T_crit: w_s=%s, w_b=%s, e_s=%s, e_b=%s, p_s=%s, p_b=%s",
+                "Initialised model with name=%s, T_crit=%s, alpha_n_at_wn_min=%s. "
+                "At T_crit: w_s=%s, w_b=%s, e_s=%s, e_b=%s, p_s=%s, p_b=%s",
                 self.name, t_crit, alpha_n_at_wn_min,
                 wn_min, self.w(t_crit, Phase.BROKEN),
                 self.e_temp(t_crit, Phase.SYMMETRIC),
@@ -599,10 +600,7 @@ class Model(BaseModel, abc.ABC):
         :param allow_fail: do not raise exceptions on errors
         """
         if guess is None:
-            if np.isfinite(self.T_max):
-                guess = np.exp((np.log(self.T_min) + np.log(self.T_max)) / 2)
-            else:
-                guess = guess_backup
+            guess = np.exp((np.log(self.T_min) + np.log(self.T_max)) / 2) if np.isfinite(self.T_max) else guess_backup
 
         p_s_min = self.p_temp(self.T_min, Phase.SYMMETRIC)
         p_b_min = self.p_temp(self.T_min, Phase.BROKEN)
@@ -882,7 +880,7 @@ class Model(BaseModel, abc.ABC):
         #         "See Ai et al. (2023) p. 15.",
         #         min_ret
         #     )
-        return ret
+        return ret  # noqa: RET504
 
     def s(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Entropy density $s(w,\phi) = \frac{dp}{dT} = \frac{w}{T}$
@@ -1185,9 +1183,12 @@ class Model(BaseModel, abc.ABC):
     def alpha_n_min_find_params(
             self,
             alpha_n_min_target: float,
-            V_s_default: float,
-            V_b: float,
-            safety_factor_alpha: float = ALPHA_N_MIN_FIND_SAFETY_FACTOR_ALPHA):
+            a_s_default: float | None = None,
+            a_b: float = 1,
+            V_s_default: float | None = None,
+            V_b: float | None = None,
+            safety_factor_alpha: float | None = None,
+            **kwargs) -> tuple[float, float, float, float]:
         r"""Find the model parameters that allow the given $\alpha_{n,\text{min,target}}$"""
         raise NotImplementedError
 
@@ -1237,7 +1238,6 @@ class Model(BaseModel, abc.ABC):
     @abc.abstractmethod
     def params_str(self) -> str:
         """Model parameters as a string"""
-        pass
 
     @abc.abstractmethod
     def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:

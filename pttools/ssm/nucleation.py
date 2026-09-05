@@ -286,7 +286,7 @@ def R_star[T2: FloatOrArr](
     """
     if sol_type == SolutionType.DETON.value:
         return R_star0(beta, v_wall)
-    elif sol_type == SolutionType.SUB_DEF.value or sol_type == SolutionType.HYBRID.value:
+    if sol_type in (SolutionType.SUB_DEF.value, SolutionType.HYBRID.value):
         f = nucleation_f(xi=xi, T=T, beta_tilde=beta_tilde, v_wall=v_wall)
         return bubble_spacing_enlargement_factor(hx=hx(f)) * R_star0(beta, v_wall)
     raise ValueError(f"Invalid solution type: {sol_type}")

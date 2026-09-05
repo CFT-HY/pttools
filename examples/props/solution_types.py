@@ -6,7 +6,6 @@ Script for generating a figure of the three different types of relativistic comb
 Original version was developed by Daniel Cutting for the figure 14 of :notes:`\ `.
 """
 
-import typing as tp
 
 import matplotlib.pyplot as plt
 import matplotlib.colors
@@ -95,11 +94,11 @@ def plot_bubble(ax: plt.Axes, label: str, v_wall: float, alpha: float, n_xi: int
 
 def main(
         alpha: float = 0.5,
-        v_walls: tp.Tuple[float, ...] = (0.44, 0.72, 0.92),
-        plot_cbars: tp.Tuple[bool, ...] = (False, False, True),
+        v_walls: tuple[float, ...] = (0.44, 0.72, 0.92),
+        plot_cbars: tuple[bool, ...] = (False, False, True),
         n_xi: int = 5000,
-        figsize: tp.Tuple[int, int] = (27, 9),
-        path: str = None,
+        figsize: tuple[int, int] = (27, 9),
+        path: str | None = None,
         show: bool = False) -> plt.Figure:
     with plt.rc_context({
                 "text.usetex": True,
@@ -118,7 +117,7 @@ def main(
             "detonation\n$c_s < v_\\mathrm{CJ}\\leq v_\\mathrm{wall}$"
         ]
 
-        for ax, label, v_wall, plot_cbar in zip(axs, labels, v_walls, plot_cbars):
+        for ax, label, v_wall, plot_cbar in zip(axs, labels, v_walls, plot_cbars, strict=False):
             cs = plot_bubble(ax, label, v_wall, alpha, n_xi)
             if plot_cbar:
                 cbar = fig.colorbar(cs, ax=axs)

@@ -19,6 +19,19 @@ from pttools.speedup.options import NUMBA_DISABLE_JIT, NUMBA_OPTS
 logger = logging.getLogger(__name__)
 
 
+class Decorator(tp.Protocol):
+    """A decorator that preserves the signature of the decorated function"""
+    def __call__[T: tp.Callable](self, func: T) -> T: ...
+
+
+@tp.overload
+def njit[T: tp.Callable](func: T, **kwargs) -> T: ...
+
+
+@tp.overload
+def njit(func: None = None, **kwargs) -> Decorator: ...
+
+
 def njit(func: tp.Callable | None = None, **kwargs):
     """Wrapper for numba.njit, which applies the default options of :data:`NUMBA_OPTS`.
 
@@ -115,7 +128,7 @@ def vectorize(**kwargs):
                 # If called with arrays
                 return np.array([
                     func(*i_args, **{name: value[i] for name, value in func_kwargs.items()})
-                    for i, i_args in enumerate(zip(*func_args))
+                    for i, i_args in enumerate(zip(*func_args, strict=False))
                 ])
             return wrapper
         return functools.wraps(func)(numba.vectorize(**kwargs)(func))

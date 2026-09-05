@@ -70,8 +70,10 @@ def pow_gw_approximation(
         z: th.FloatArr1D,
         spec_den_v: th.FloatArr1D,
         cs: float,
+        nu: float,
         tau_star: float,
         tau_end: float,
+        r_star: float,
         eps: float = 1e-8) -> th.FloatArr1D:
     r"""
     Spectral density of gravitational waves computed with the sound shell model plus analytic approximation
@@ -81,8 +83,10 @@ def pow_gw_approximation(
     :param z: gravitational wave momentum values (kR_*)
     :param spec_den_v: spectral density of the velocity field at the given momenta
     :param cs: sound speed, $0 < c_s < \frac{1}{\sqrt{3}}$
+    :param nu: $\nu_\text{gdh2024}$
     :param tau_star: $\tau_* = \frac{\eta_*}{L_f}$
     :param tau_end: $\tau_{end} = \frac{\eta_{end}}{L_f}$
+    :param r_star: $H L_f = r_*$
     :param eps: $\epsilon$, a small correction the integration x-range
     :return: gravitational wave power spectrum values at the given momentum z = kR_*
     """
@@ -93,6 +97,8 @@ def pow_gw_approximation(
     x: th.FloatArr1D = np.logspace(np.log10(xmin), np.log10(xmax), z.size)  # x = pR_*
 
     Pgw_high = 4/3 * integration.power_spectrum_integration_high(x, spec_den_v, z, cs)
-    Pgw_low = 4/3 * integration.power_spectrum_integration_low(x, spec_den_v, z, cs=cs, tau_star=tau_star, tau_end=tau_end)
+    Pgw_low = 4/3 * integration.power_spectrum_integration_low(
+        x, spec_den_v, z, cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end)
     Pgw_int = 4/3 * integration.power_spectrum_integration_int(x, spec_den_v, z, cs=cs, tau_star=tau_star)
-    return gw_junction(z, Pgw_low, Pgw_int, Pgw_high, cs=cs, tau_star=tau_star, tau_end=tau_end)
+    return gw_junction(
+        z, Pgw_low, Pgw_int, Pgw_high, cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end, r_star=r_star)

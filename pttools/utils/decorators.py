@@ -1,6 +1,6 @@
 import functools
 import typing as tp
-from typing import Callable
+from collections.abc import Callable
 
 
 def conditional_decorator[T: Callable](dec: T, condition: bool, **kwargs) -> T:

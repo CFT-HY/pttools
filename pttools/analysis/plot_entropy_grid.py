@@ -175,7 +175,7 @@ compute.fail_value = COMPUTE_FAIL
 
 
 def gen_and_plot_entropy(
-        models: tp.List["Model"],
+        models: list["Model"],
         v_walls: th.FloatArr1D,
         alpha_ns: th.FloatArr1D,
         min_level: float,
@@ -193,12 +193,12 @@ def gen_and_plot_entropy(
         grid = BubbleGridVWAlpha(model, v_walls, alpha_ns, compute, use_bag_solver=use_bag_solver)
         # These are declared explicitly as above to avoid indexing errors
         s_total_rel = grid.data[0]
-        sp = grid.data[1]
-        sm = grid.data[2]
-        sm_sh = grid.data[3]
-        sn = grid.data[4]
+        sp = grid.data[1]  # noqa: F841
+        sm = grid.data[2]  # noqa: F841
+        sm_sh = grid.data[3]  # noqa: F841
+        sn = grid.data[4]  # noqa: F841
         diff = grid.data[5]
-        diff_sh = grid.data[6]
+        diff_sh = grid.data[6]  # noqa: F841
         ratio = grid.data[7]
 
         EntropyPlot(grid, s_total_rel, min_level, max_level, diff_level, fig=fig, ax=axs[i_model, 0])

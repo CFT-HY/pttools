@@ -187,7 +187,8 @@ M2: float = (0.67 - 0.5) / (0.56 - 0.44)
 C1: float = 0.34 - M1 * 0.24
 C2: float = 0.67000 - M2 * 0.56000
 
-NO_HYBRIDS = Suppression.from_file(os.path.join(SUPPRESSION_FOLDER, "suppression_no_hybrids_ssm.npz"), name="No hybrids")
+NO_HYBRIDS = Suppression.from_file(
+    os.path.join(SUPPRESSION_FOLDER, "suppression_no_hybrids_ssm.npz"), name="No hybrids")
 NO_HYBRIDS_EXT = Suppression(
     *extend(v_walls=NO_HYBRIDS.v_walls, alpha_ns=NO_HYBRIDS.alpha_ns, suppressions=NO_HYBRIDS.suppressions),
     name="No hybrids, extended"

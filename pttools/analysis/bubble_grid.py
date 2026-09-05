@@ -17,7 +17,7 @@ class BubbleGrid:
     def __init__(self, bubbles: BubbleArr):
         self.bubbles = bubbles
 
-    def get_value(self, name: str, dtype: tp.Type | None = None) -> NDArray:
+    def get_value(self, name: str, dtype: type | None = None) -> NDArray:
         with np.nditer(
                 [self.bubbles, None],
                 flags=("refs_ok", ),

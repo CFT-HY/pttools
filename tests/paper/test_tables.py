@@ -39,7 +39,7 @@ class TestTables(unittest.TestCase):
 
         buffer = io.StringIO()
         func(*args, file_name=buffer)
-        with open(path, "r") as file:
+        with open(path) as file:
             ref_data = file.read()
 
         buffer.seek(0)

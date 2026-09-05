@@ -46,7 +46,7 @@ class CorreiaTest2026(unittest.TestCase):
         model = BagModel()
         bubbles = [
             Bubble(model, v_wall=v_wall, alpha_n=alpha_n)
-            for v_wall, alpha_n in zip(CORREIA_2026_V_WALL, CORREIA_2026_ALPHA_N)
+            for v_wall, alpha_n in zip(CORREIA_2026_V_WALL, CORREIA_2026_ALPHA_N, strict=False)
         ]
         spectra = [Spectrum(bubble) for bubble in bubbles]
         ubarf = [spectrum.ubarf for spectrum in spectra]

@@ -86,7 +86,7 @@ def snr_table(snrs: th.FloatArr3D, models: list[Model], v_walls: th.FloatArr1D, 
             "& " + " & ".join([f"{v_wall:.2f}" for v_wall in v_walls]) + "\n",
             "\\hline \\\\\n"
         ])
-        for i_alpha_n, alpha_n in enumerate(alpha_ns):
+        for i_alpha_n, _alpha_n in enumerate(alpha_ns):
             for i_model, model in enumerate(models):
                 file.write(
                     model.label_latex_params + " & " + \
@@ -229,7 +229,7 @@ def main(low_k: bool = True) -> tuple[th.FigArr1D, th.FigArr2D, str]:
 
     snrs = np.zeros((len(alpha_ns), len(v_walls), len(models)))
     for i_alpha_n, alpha_n in enumerate(alpha_ns):
-        for i_v_wall, v_wall in enumerate(v_walls):
+        for i_v_wall, _v_wall in enumerate(v_walls):
             ax_v: Axes = axs[0, i_alpha_n, i_v_wall]
             ax_gw: Axes = axs[1, i_alpha_n, i_v_wall]
             ax_omgw0: Axes = axs[2, i_alpha_n, i_v_wall]
@@ -256,7 +256,7 @@ def main(low_k: bool = True) -> tuple[th.FigArr1D, th.FigArr2D, str]:
         for i_alpha_n, alpha_n in enumerate(alpha_ns):
             wn = model.wn(alpha_n)
             _, vm_arr = v_shock_curve(model, wn=wn, xi=xi_arr)
-            for i_v_wall, v_wall in enumerate(v_walls):
+            for i_v_wall, _v_wall in enumerate(v_walls):
                 ax: Axes = axs[0, i_alpha_n, i_v_wall]
                 ax2: Axes = axs2[0, i_alpha_n, i_v_wall]
                 if i_model:
@@ -275,7 +275,7 @@ def main(low_k: bool = True) -> tuple[th.FigArr1D, th.FigArr2D, str]:
     f_max = np.max([spectrum.f(z=spectrum.y[-1]) for spectrum in spectra.flat])
     f = np.logspace(np.log10(f_min), np.log10(f_max), num=50)
     for i_alpha_n, alpha_n in enumerate(alpha_ns):
-        for i_v_wall, v_wall in enumerate(v_walls):
+        for i_v_wall, _v_wall in enumerate(v_walls):
             om_ins = omega_ins(f)
             ax = axs[2, i_alpha_n, i_v_wall]
             ax2 = axs2[2, i_alpha_n, i_v_wall]

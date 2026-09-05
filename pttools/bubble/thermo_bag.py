@@ -98,7 +98,7 @@ def de_from_w_new_bag(
     # Try adjusting by a factor - currently doesn't do anything
     # de *= 1.0
 
-    return de
+    return de  # noqa: RET504
 
 
 def get_kappa_bag[T: FloatOrArr](
@@ -124,7 +124,7 @@ def get_kappa_bag[T: FloatOrArr](
             vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD,
             cs2_fun=cs2_bag_scalar)
 
-        if not sol_type == SolutionType.ERROR:
+        if sol_type != SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(
                 vw, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
@@ -172,7 +172,7 @@ def get_kappa_de_bag[T: FloatOrArr](
             vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD,
             cs2_fun=cs2_bag_scalar)
 
-        if not sol_type == SolutionType.ERROR:
+        if sol_type != SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(
                 vw, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
@@ -226,7 +226,7 @@ def get_kappa_dq_bag[T: FloatOrArr](
             vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD,
             cs2_fun=cs2_bag_scalar)
 
-        if not sol_type == SolutionType.ERROR:
+        if sol_type != SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(
                 vw, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
@@ -277,7 +277,7 @@ def get_ke_de_frac_bag[T: FloatOrArr](
             vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD,
             cs2_fun=cs2_bag_scalar)
 
-        if not sol_type == SolutionType.ERROR:
+        if sol_type != SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(
                 vw, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
@@ -347,7 +347,7 @@ def get_ke_frac_new_bag[T: FloatOrArr](
         sol_type = identify_solution_type_bag(
             vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD,
             cs2_fun=cs2_bag_scalar)
-        if not sol_type == SolutionType.ERROR:
+        if sol_type != SolutionType.ERROR:
             # Now ready to solve for fluid profile
             v, w, xi = fluid_bag.sound_shell_bag(
                 vw, alpha_n, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
@@ -365,10 +365,7 @@ def get_ke_frac_new_bag[T: FloatOrArr](
     e_s = bag.e_bag(w[-1], 0, bag.theta_bag(w[-1], 0, alpha_n))
     # result is stored in it.operands[1]
     ke_frac_out: T
-    if isinstance(v_wall, np.ndarray):
-        ke_frac_out = it.operands[1] / e_s
-    else:
-        ke_frac_out = type(v_wall)(it.operands[1]) / e_s
+    ke_frac_out = it.operands[1] / e_s if isinstance(v_wall, np.ndarray) else type(v_wall)(it.operands[1]) / e_s
 
     return ke_frac_out
 
@@ -524,7 +521,7 @@ def get_ubarf2_new_bag(
         sol_type = identify_solution_type_bag(
             vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD,
             cs2_fun=cs2_bag_scalar)
-        if not sol_type == SolutionType.ERROR:
+        if sol_type != SolutionType.ERROR:
             # Now ready to get Ubarf2
             ke_frac = get_ke_frac_new_bag(vw, alpha_n)
             Ubarf2[...] = ke_frac / Gamma
@@ -538,10 +535,7 @@ def get_ubarf2_new_bag(
 
     # Ubarf2 is stored in it.operands[1]
     ubarf2_out: th.FloatOrArr
-    if isinstance(v_wall, np.ndarray):
-        ubarf2_out = it.operands[1]
-    else:
-        ubarf2_out = type(v_wall)(it.operands[1])
+    ubarf2_out = it.operands[1] if isinstance(v_wall, np.ndarray) else type(v_wall)(it.operands[1])
 
     return ubarf2_out
 

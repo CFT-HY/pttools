@@ -55,10 +55,10 @@ def setup_logging(
         format='%(asctime)s %(levelname)-8s %(module)-20s %(funcName)-32s %(lineno)-4d %(process)-3d %(message)s'
     )
     if silence_spam:
-        for name in ["choreographer", "kaleido", "logistro", "matplotlib"]:
-            logging.getLogger(name).setLevel(logging.WARNING)
-        for name in ["h5py", "numba", "Pillow", "PIL", "urllib3"]:
-            logging.getLogger(name).setLevel(logging.INFO)
+        for logger_name in ["choreographer", "kaleido", "logistro", "matplotlib"]:
+            logging.getLogger(logger_name).setLevel(logging.WARNING)
+        for logger_name in ["h5py", "numba", "Pillow", "PIL", "urllib3"]:
+            logging.getLogger(logger_name).setLevel(logging.INFO)
 
         logging.getLogger("matplotlib.backends.backend_ps").addFilter(MessageFilter(
             "The PostScript backend does not support transparency"

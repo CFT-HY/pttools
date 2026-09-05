@@ -66,7 +66,7 @@ class BagModel(AnalyticModel):
         if alpha_n_min is not None:
             a_s, a_b, _, _ = self.get_a_g(a_s, a_b, g_s, g_b)
             a_s, a_b, V_s, V_b = self.alpha_n_min_find_params(
-                alpha_n_min_target=alpha_n_min, a_s_default=a_s, a_b=a_b, V_s=V_s, V_b=V_b)
+                alpha_n_min_target=alpha_n_min, a_s_default=a_s, a_b=a_b, V_s_default=V_s, V_b=V_b)
 
         super().__init__(
             V_s=V_s, V_b=V_b,
@@ -125,18 +125,19 @@ class BagModel(AnalyticModel):
             alpha_n_min_target: float,
             a_s_default: float | None = None,
             a_b: float = 1,
-            V_s: float | None = None,
+            V_s_default: float | None = None,
             V_b: float = 0,
-            safety_factor_alpha: float | None = None) -> tuple[float, float, float, float]:
-        if a_s_default < 0 or a_b < 0 or V_s < 0 or V_b < 0:
+            safety_factor_alpha: float | None = None,
+            **kwargs) -> tuple[float, float, float, float]:
+        if a_s_default < 0 or a_b < 0 or V_s_default < 0 or V_b < 0:
             raise ValueError(
-                f"Invalid parameters: a_s_default={a_s_default}, a_b={a_b}, V_s_default={V_s}, V_b={V_b}")
+                f"Invalid parameters: a_s_default={a_s_default}, a_b={a_b}, V_s_default={V_s_default}, V_b={V_b}")
         if safety_factor_alpha is None:
             safety_factor_alpha = cls.ALPHA_N_MIN_FIND_SAFETY_FACTOR_ALPHA
         a_s = a_b / (1 - 3*alpha_n_min_target * safety_factor_alpha)
         if a_s_default is not None and a_s_default < a_s:
             a_s = a_s_default
-        return a_s, a_b, V_s, V_b
+        return a_s, a_b, V_s_default, V_b
 
     @copy_docstring_dec(AnalyticModel.alpha_plus_bag)
     def alpha_plus(

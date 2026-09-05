@@ -122,7 +122,7 @@ def main():
     plot_plane(ax=ax1, data_s=data, selected_solutions=False)
 
     print("Solving & plotting old bubbles")
-    for v_wall, alpha_n, sol_type in zip(v_walls, alpha_ns, sol_types):
+    for v_wall, alpha_n, sol_type in zip(v_walls, alpha_ns, sol_types, strict=False):
         v, w, xi = fluid_bag.sound_shell_bag(
             v_wall=v_wall, alpha_n=alpha_n,
             cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,

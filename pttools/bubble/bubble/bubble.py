@@ -159,10 +159,14 @@ class Bubble(BaseBubble):
         # LaTeX labels are not supported in Plotly 3D plots.
         # https://github.com/plotly/plotly.js/issues/608
         # These require alpha_n and therefore cannot be before its validation.
-        self.label_latex = rf"{f"{self.model.label_latex}, " if label_with_model else ""}$v_w={as_latex(v_wall)}, \alpha_n={as_latex(alpha_n)}$" \
-            if label_latex is None else label_latex
-        self.label_unicode = f"{f"{self.model.label_unicode}, " if label_with_model else ""}v_w={as_unicode(v_wall)}, αₙ={as_unicode(alpha_n)}" \
-            if label_unicode is None else label_unicode
+        if label_latex is None:
+            model_latex = f"{self.model.label_latex}, " if label_with_model else ""
+            label_latex = rf"{model_latex}$v_w={as_latex(v_wall)}, \alpha_n={as_latex(alpha_n)}$"
+        self.label_latex = label_latex
+        if label_unicode is None:
+            model_unicode = f"{self.model.label_unicode}, " if label_with_model else ""
+            label_unicode = f"{model_unicode}v_w={as_unicode(v_wall)}, αₙ={as_unicode(alpha_n)}"
+        self.label_unicode = label_unicode
 
         # -----
         # Output values
@@ -437,7 +441,8 @@ class Bubble(BaseBubble):
                 phase=Phase.BROKEN if self.sol_type == SolutionType.DETON else Phase.SYMMETRIC
             )
         )
-        # This should be the same as in the junction solver, as the choice there depends on the direction of the solving.
+        # This should be the same as in the junction solver,
+        # as the choice there depends on the direction of the solving.
         w = self.wp if self.sol_type == SolutionType.DETON else self.wm
 
         devs_rel_wall = devs_wall / w
@@ -449,13 +454,7 @@ class Bubble(BaseBubble):
         fail_sh = np.max(np.abs(devs_rel_sh)) > rtol_sh
         fail = fail_wall or fail_sh
         if fail:
-            if fail_sh:
-                if fail_wall:
-                    msg1 = "wall and shock deviate"
-                else:
-                    msg1 = "shock deviates"
-            else:
-                msg1 = "wall deviates"
+            msg1 = ("wall and shock deviate" if fail_wall else "shock deviates") if fail_sh else "wall deviates"
 
             msg = \
                 f"The {msg1} too much from the junction conditions. " \
@@ -515,7 +514,7 @@ class Bubble(BaseBubble):
         if self.model.DEFAULT_NAME not in ("bag", "const_cs"):
             return 0., np.inf
 
-        model: "BagModel | ConstCSModel" = self.model
+        model: BagModel | ConstCSModel = self.model
         alpha_theta_bar_n_min_lte: float = model.alpha_theta_bar_n_min_lte(self.wn, self.sol_type, Psi_n=self.Psi_n)
         alpha_theta_bar_n_max_lte: float = model.alpha_theta_bar_n_max_lte(self.wn, self.sol_type, Psi_n=self.Psi_n)
         if log_invalid and (alpha_theta_bar_n_max_lte < alpha_theta_bar_n_min_lte

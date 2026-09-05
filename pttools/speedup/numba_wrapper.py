@@ -38,7 +38,7 @@ else:
         import numbalsoda  # type: ignore[no-redef]
     except ImportError:
         try:
-            import NumbaLSODA as numbalsoda  # type: ignore[no-redef]
+            import NumbaLSODA as numbalsoda  # type: ignore[no-redef]  # noqa: N813
             OLD_NUMBALSODA = True
             logger.warning(
                 "You are using an old version of NumbaLSODA. "
@@ -48,7 +48,8 @@ else:
             numbalsoda = None
             logger.warning(
                 "Could not import NumbaLSODA. "
-                "As it's a relatively new library, it may not have been installed automatically by your package manager. "
+                "As it's a relatively new library, "
+                "it may not have been installed automatically by your package manager. "
                 "To use NumbaLSODA, please see the PTtools documentation on how to install it manually."
             )
     except OSError as e:

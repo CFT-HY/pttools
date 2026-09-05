@@ -51,7 +51,7 @@ def compute_entropy_region(bubble: Bubble, start_ind: int, stop_ind: int, revers
         2 * v_cut / xi_cut + (1 - relativity.gamma2(v_cut) * v_cut * (xi_cut - v_cut)) * v_xi_diff
     )
 
-    for i in range(0, s.size-2):
+    for i in range(s.size-2):
         # Derivative at point i+1, using s_prev of point i+1
         s_diff = s_prev * s_diff_rel[i]
         # New point i+2

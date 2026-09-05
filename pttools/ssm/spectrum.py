@@ -460,7 +460,7 @@ class SSMSpectrum:
 
         if np.isnan(r_star_set) or r_star_set <= 0:
             raise ValueError(f"r_star must be positive. Got r_star={r_star_set}.")
-        elif r_star_set >= 1:
+        if r_star_set >= 1:
             # Todo: Find a better reference for this.
             logger.warning(
                 "r_star < 1 is required for the phase transition to complete. "

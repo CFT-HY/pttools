@@ -27,7 +27,8 @@ def gw_spectral_density_approx_int(z, HLf, cs):
     """GW spectral density approximation for intermediate frequencies"""
     nu = (1 - 3 * cs ** 2) / (1 + 3 * cs ** 2)
     tau_star = (1. + nu) / HLf
-    return 4 / 3 / cs ** 4 * (3 - 2 * cs ** 2 - 3 / cs * (1 - cs ** 2) * np.arctanh(cs)) * IV_ANALYTICAL / tau_star / z ** 2
+    return 4 / 3 / cs ** 4 * (3 - 2 * cs ** 2 - 3 / cs * (1 - cs ** 2) * np.arctanh(cs)) \
+        * IV_ANALYTICAL / tau_star / z ** 2
 
 
 def gw_spectral_density_approx_high(z, HLf, cs, tau_end):
@@ -37,13 +38,16 @@ def gw_spectral_density_approx_high(z, HLf, cs, tau_end):
     delta = tau_end - tau_star
     xp = 0.5 * z * (1 + cs) / cs
     xm = 0.5 * z * (1 - cs) / cs
-    integrand = lambda x, z, delta, tau_star, cs: (4 * np.pi * cs * z ** 3) ** (-1) * (
-        rho(z, x, cs) *
-        3 * np.pi / (2 * np.pi) ** 3 * (x / (2 * np.pi)) ** 2 / (1 + (x / (2 * np.pi)) ** 6) *
-        3 * np.pi / (2 * np.pi) ** 3 * ((z / cs - x) / (2 * np.pi)) ** 2 / (1 + ((z / cs - x) / (2 * np.pi)) ** 6) *
-        (1 + 2 * nu) ** (-1) * (1 - (1 + delta / tau_star) ** (-1 - 2 * nu)))
-    integral = quad(integrand, xm, xp, args=(z, delta, tau_star, cs))[0]
-    return integral
+
+    def integrand(x, z, delta, tau_star, cs):
+        return (4 * np.pi * cs * z ** 3) ** (-1) * (
+            rho(z, x, cs) *
+            3 * np.pi / (2 * np.pi) ** 3 * (x / (2 * np.pi)) ** 2 / (1 + (x / (2 * np.pi)) ** 6) *
+            3 * np.pi / (2 * np.pi) ** 3 * ((z / cs - x) / (2 * np.pi)) ** 2 /
+            (1 + ((z / cs - x) / (2 * np.pi)) ** 6) *
+            (1 + 2 * nu) ** (-1) * (1 - (1 + delta / tau_star) ** (-1 - 2 * nu)))
+
+    return quad(integrand, xm, xp, args=(z, delta, tau_star, cs))[0]
 
 
 def Pgw_approx(z, HLf, cs, tau_star, tau_end):

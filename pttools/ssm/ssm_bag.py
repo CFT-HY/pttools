@@ -118,8 +118,8 @@ def a2_e_conserving_bag_file(
         with open(filename) as f:
             t = float(f.readline())
         r, v_all, e_all = np.loadtxt(filename, usecols=(0, 1, 4), unpack=True, skiprows=skip)
-    except IOError as error:
-        raise IOError(f"Error loading file: \"{filename}\"") from error
+    except OSError as error:
+        raise OSError(f"Error loading file: \"{filename}\"") from error
 
     xi_all = r / t
     wh_xi_lt1 = np.where(xi_all < 1.)
@@ -243,8 +243,8 @@ def f_file_bag(
     logger.debug(f"Loading v(xi) from {filename} at time {t}")
     try:
         r, v_all = np.loadtxt(filename, usecols=(0, 1), unpack=True, skiprows=skip)
-    except IOError as error:
-        raise IOError(f"Error loading file: \"{filename}\"") from error
+    except OSError as error:
+        raise OSError(f"Error loading file: \"{filename}\"") from error
 
     xi_all = r / t
     wh_xi_lt1 = np.where(xi_all < 1.)
@@ -255,11 +255,10 @@ def f_file_bag(
     #    f = np.zeros_like(z_arr)
     #    for n, z in enumerate(z_arr):
     #        f[n] = (4*np.pi/z)*sin_transform(z, xi_lt1, v_xi_lt1, z_st_thresh)
-    f = (4 * np.pi / z_arr) * sin_transform(
+    return (4 * np.pi / z_arr) * sin_transform(
         z_arr, xi_lt1, v_xi_lt1, z_st_thresh, v_wall=None, v_sh=None, parallel=parallel
     )
 
-    return f
 
 
 @njit

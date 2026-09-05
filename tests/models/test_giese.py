@@ -39,7 +39,7 @@ def compare(
         ref: th.FloatArr1DOrList,
         rtol: float) -> None:
     data = np.zeros_like(v_walls)
-    for i, (alpha_n, v_wall) in enumerate(zip(alpha_ns, v_walls)):
+    for i, (alpha_n, v_wall) in enumerate(zip(alpha_ns, v_walls, strict=False)):
         bubble = Bubble(model=model, v_wall=v_wall, alpha_n=alpha_n)
         data[i] = bubble.kappa
     assert_allclose(data, ref, rtol=rtol)

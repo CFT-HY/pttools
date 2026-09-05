@@ -82,12 +82,12 @@ class TestShellsBag(unittest.TestCase):
                 vw, ap,
                 df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
                 ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=bubble.cs2_bag_scalar)
-            for vw, ap in zip(vw_list_esp, alpha_plus_list_esp)
+            for vw, ap in zip(vw_list_esp, alpha_plus_list_esp, strict=False)
         ]
 
         fig_esp, data_esp = plot_fluid_shells_bag(vw_list_esp, alpha_n_list_esp, multi=True, debug=True)
 
-        for fig, name in zip([fig_weak, fig_inter, fig_esp], ["weak", "inter", "esp"]):
+        for fig, name in zip([fig_weak, fig_inter, fig_esp], ["weak", "inter", "esp"], strict=False):
             save_fig(fig, os.path.join(FIG_PATH, name))
             plt.close(fig)
 

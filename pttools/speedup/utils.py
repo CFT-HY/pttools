@@ -4,7 +4,7 @@ import collections
 import functools
 import threading
 import typing as tp
-from typing import Callable
+from collections.abc import Callable
 
 
 def threadsafe_lru[T: Callable](func: T) -> T:

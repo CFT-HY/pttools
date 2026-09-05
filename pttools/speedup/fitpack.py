@@ -7,7 +7,8 @@ of
 These don't work yet and are therefore not used.
 """
 
-# ruff: noqa: ARG001
+# The names and the structure of the code are kept the same as in the Fortran original.
+# ruff: noqa: ARG001, E741, F842
 
 # import numba
 import numpy as np
@@ -50,11 +51,11 @@ def fpbspl(t: th.FloatArr1D, n: int, k: int, x: float, l: int, h: th.FloatArr1D)
     h[0] = one
 
     hh = np.zeros((19,))
-    for j in range(0, k):
-        for i in range(0, j):
+    for j in range(k):
+        for i in range(j):
             hh[i] = h[i]
         h[0] = 0.
-        for i in range(0, j):
+        for i in range(j):
             li = l+i
             lj = li-j
             if t[li] == t[lj]:
@@ -174,15 +175,15 @@ def splder(
     l = 1
     kk = k
     # nn = n
-    for i in range(0, nk1):
+    for i in range(nk1):
         wrk[i] = c[i]
     if nu != 0:
         nk2 = nk1
-        for j in range(0, nu):
+        for j in range(nu):
             ak = kk
             nk2 = nk2-1
             l1 = l
-            for i in range(0, nk2):
+            for i in range(nk2):
                 l1 = l1+1
                 l2 = l1+kk
                 fac = t[l2] - t[l1]
@@ -192,7 +193,7 @@ def splder(
             kk = kk-1
     if kk == 0:
         j = 1
-        for i in range(0, m):
+        for i in range(m):
             arg = x[i]
 
             # check if arg is in the support
@@ -203,8 +204,7 @@ def splder(
                     y[i] = 0
                     continue
                 elif e == 2:
-                    ier = 1
-                    return ier
+                    return 1
 
             # search for knot interval t(l) <= arg < t(l+1)
             while not (arg >= t[l] or l+1 == k3):
@@ -222,7 +222,7 @@ def splder(
     l = k1
     l1 = l+1
     k2 = k1-nu
-    for i in range(0, m):
+    for i in range(m):
         arg = x[i]
         if arg < tb or arg > te:
             if e == 0:
@@ -231,8 +231,7 @@ def splder(
                 y[i] = 0
                 continue
             elif e == 2:
-                ier = 1
-                return ier
+                return 1
         while not (arg >= t[l] or l1 == k3):
             l1 = l
             l = l-1
@@ -244,14 +243,17 @@ def splder(
         # find the value of the derivative at x=arg.
         sp = 0.0e0
         ll = l-k1
-        for j in range(0, k2):
+        for j in range(k2):
             ll = ll+1
             sp = sp + wrk[ll] * h[j]
         y[i] = sp
+    return None
 
 
 # @njit
-def splev(t: th.FloatArr1D, n: int, c: th.FloatArr1D, k: int, x: th.FloatArr1D, y: th.FloatArr1D, m: int, e: int) -> int:
+def splev(
+        t: th.FloatArr1D, n: int, c: th.FloatArr1D, k: int,
+        x: th.FloatArr1D, y: th.FloatArr1D, m: int, e: int) -> int:
     """
     Modified from the
     `SciPy version <https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/splev.f>`__.
@@ -344,13 +346,9 @@ def splev(t: th.FloatArr1D, n: int, c: th.FloatArr1D, k: int, x: th.FloatArr1D, 
                 y[i] = 0
                 continue
             if e == 2:
-                ier = 1
-                return ier
+                return 1
             if e == 3:
-                if arg < tb:
-                    arg = tb
-                else:
-                    arg = te
+                arg = tb if arg < tb else te
 
         # search for knot interval t(l) <= arg < t(l+1)
         while not (arg >= t[l] or l1 == k2):
@@ -365,7 +363,7 @@ def splev(t: th.FloatArr1D, n: int, c: th.FloatArr1D, k: int, x: th.FloatArr1D, 
 
         sp = 0.
         ll = l-k1
-        for j in range(0, k1):
+        for j in range(k1):
             ll = ll + 1
             sp = sp + c[ll] * h[j]
         y[i] = sp

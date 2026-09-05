@@ -1,7 +1,6 @@
 """Model defined by data arrays loaded from an HDF5 file"""
 
 import os.path
-import typing as tp
 
 from h5py import File
 import numba
@@ -25,8 +24,8 @@ class DataModel(Model):
             p_b: th.FloatArr1D,
             e_s: th.FloatArr1D,
             e_b: th.FloatArr1D,
-            cs2_s: tp.Union[th.FloatArr1D, None] = None,
-            cs2_b: tp.Union[th.FloatArr1D, None] = None,
+            cs2_s: th.FloatArr1D | None = None,
+            cs2_b: th.FloatArr1D | None = None,
             T_crit: float | None = None,
             T_nucl: float | None = None,
             T_min: float | None = None,
@@ -99,18 +98,16 @@ class DataModel(Model):
                     if "model_label" in file.attrs
                     else os.path.splitext(os.path.basename(path))[0]
                 )
-            T_crit = file.attrs["critical_temperature"] if "critical_temperature" in file.attrs else None
-            T_nucl = file.attrs["nucleation_temperature"] if "nucleation_temperature" in file.attrs else None
+            T_crit = file.attrs.get("critical_temperature", None)
+            T_nucl = file.attrs.get("nucleation_temperature", None)
             if "high_temperature_phase" in file and "low_temperature_phase" in file:
                 phase_s = file["high_temperature_phase"]
                 phase_b = file["low_temperature_phase"]
                 T_min = (
-                    phase_b.attrs["min_possible_temperature"]
-                    if "min_possible_temperature" in phase_b.attrs else None
+                    phase_b.attrs.get("min_possible_temperature", None)
                 )
                 T_max = (
-                    phase_s.attrs["max_possible_temperature"]
-                    if "max_possible_temperature" in phase_s.attrs else None
+                    phase_s.attrs.get("max_possible_temperature", None)
                 )
                 return cls(
                     T_s=phase_s["temperature"][:],

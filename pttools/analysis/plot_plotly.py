@@ -19,7 +19,6 @@ class PlotlyPlot(abc.ABC):
     @abc.abstractmethod
     def create_fig(self):
         """Create the figure"""
-        pass
 
     def fig(self) -> go.Figure:
         """Get the figure"""

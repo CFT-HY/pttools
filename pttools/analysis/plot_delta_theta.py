@@ -1,6 +1,5 @@
 r"""Plot $\Delta \theta ({w}_+, {w}_-)$"""
 
-import typing as tp
 
 import numpy as np
 from plotly.basedatatypes import BasePlotlyType
@@ -14,7 +13,7 @@ class DeltaThetaPlot3D(PlotlyPlot):
     r"""Plot $\Delta \theta ({w}_+, {w}_-)$"""
     def __init__(self):
         super().__init__()
-        self.plots: tp.List[BasePlotlyType] = []
+        self.plots: list[BasePlotlyType] = []
 
     def add(self, model: Model):
         wp = np.linspace(0, model.w_crit)

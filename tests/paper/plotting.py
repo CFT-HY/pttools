@@ -211,7 +211,8 @@ def plot_guide_power_laws_ssm(
     logger.debug("Plotting guide power laws")
 
     high_peak = np.where(z > x_high)
-    plot_guide_power_law_prace(fig.axes[0], z[high_peak], powers[high_peak], n_hi, utils.Position.HIGH, shifts=shifts_hi)
+    plot_guide_power_law_prace(
+        fig.axes[0], z[high_peak], powers[high_peak], n_hi, utils.Position.HIGH, shifts=shifts_hi)
 
     if inter_flag:
         # intermediate power law to be plotted
@@ -253,11 +254,11 @@ def plot_ps(
     powers = []
 
     if leg_list is None:
-        for z, power, col, ls in zip(z_list, pow_list, col_list, ls_list):
+        for z, power, col, ls in zip(z_list, pow_list, col_list, ls_list, strict=False):
             ax.loglog(z, power, color=col, linestyle=ls)
             powers.append(np.trapezoid(power / z, z))
     else:
-        for z, power, leg, col, ls in zip(z_list, pow_list, leg_list, col_list, ls_list):
+        for z, power, leg, col, ls in zip(z_list, pow_list, leg_list, col_list, ls_list, strict=False):
             ax.loglog(z, power, color=col, linestyle=ls, label=leg)
             powers.append(np.trapezoid(power / z, z))
 

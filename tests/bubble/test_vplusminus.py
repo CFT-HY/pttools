@@ -30,7 +30,7 @@ class TestVPlusMinus(unittest.TestCase):
             ref_path: str,
             v_first: th.FloatArr1D) -> None:
         data = [v_first]
-        for i_alpha, alpha in enumerate(self.alpha_plus_list):
+        for _i_alpha, alpha in enumerate(self.alpha_plus_list):
             data.append(func(v_first, alpha, SolutionType.DETON))
             data.append(func(v_first, alpha, SolutionType.SUB_DEF))
 

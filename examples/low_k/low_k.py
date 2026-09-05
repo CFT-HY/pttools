@@ -81,7 +81,8 @@ def main(path: str | None = None) -> plt.Figure:
     # sd_v = spec_den_v(x, params, npt, filename, skip, method, de_method, z_st_thresh)
     # sd_gw, y = spec_den_gw_scaled(x, sd_v, z)
 
-    # Pgw_approx = z**3/2/np.pi**2 * HR * Ht * Pgw_approximation(z, spectrum_x.spec_den_v, cs=cs, tau_star=tau_star, tau_end=tau_end)
+    # Pgw_approx = z**3/2/np.pi**2 * HR * Ht * Pgw_approximation(
+    #     z, spectrum_x.spec_den_v, cs=cs, tau_star=tau_star, tau_end=tau_end)
 
     # The above is equal to the following
     # Pv_exp = spec_den_v_bag(x, params_v)
@@ -90,7 +91,8 @@ def main(path: str | None = None) -> plt.Figure:
     # Pv_inf = spectrum_inf.spec_den_v
     # Pgw_high = HR * Ht * power_gw_scaled_bag(z, (vw, alpha))
     # Pgw_high = HR * Ht * spectrum_z.pow_gw
-    # Pgw_low = 4/3* z**3/2/np.pi**2 * HR * Ht * power_spectrum_integration_low(x_inf, Pv_inf, z, cs=cs, tau_star=tau_star, tau_end=tau_end)
+    # Pgw_low = 4/3* z**3/2/np.pi**2 * HR * Ht * power_spectrum_integration_low(
+    #     x_inf, Pv_inf, z, cs=cs, tau_star=tau_star, tau_end=tau_end)
     # Pgw_int = 4/3* z**3/2/np.pi**2 * HR * Ht * power_spectrum_integration_int(x, Pv_exp, z, cs=cs, tau_star=tau_star)
     # Pgw_approx_2 = pow_gw_junction(z, Pgw_low, Pgw_int, Pgw_high, cs=cs, tau_star=tau_star, tau_end=tau_end)
 
@@ -109,7 +111,9 @@ def main(path: str | None = None) -> plt.Figure:
 
         # Pgw_exp = HR* Ht * ssm.power_gw_scaled(z, params_v)
         # ax.plot(z, Pgw_high, color='blue', linestyle='--', label=r'high-freq appox: PTtools')
-        ax.plot(z, HR * Ht * spectrum_z.pow_gw_ssm, color='blue', linestyle='--', label=r'high-freq approx (original SSM)')
+        ax.plot(
+            z, HR * Ht * spectrum_z.pow_gw_ssm,
+            color='blue', linestyle='--', label=r'high-freq approx (original SSM)')
 
         # ax.plot(z, Pgw_peak, color='red', linestyle='--', label=r'Lorenzo integrator')
         # ax.plot(z, Pgw_low, color='orange', linestyle='--', label=r'low-freq approx')
@@ -118,7 +122,11 @@ def main(path: str | None = None) -> plt.Figure:
         ax.plot(z, HR * Ht * spectrum_z.pow_gw_low, color='orange', linestyle='--', label=r'low-freq approx')
         ax.plot(z, HR * Ht * spectrum_z.pow_gw_int, color='cyan', linestyle='--', label=r'intermediate-freq approx')
         ax.plot(z, HR * Ht * spectrum_z.pow_gw, color='k', linestyle='-', label=r'full approx')
-        # ax.set_title(r'$\alpha = {:5.2f}, \; \xi_w = {:5.1f}, \; \eta_{{\rm end}} = {:5.3f}, \; H_*R_* = {:5.2f}, \; {{\bar U}} = {:5.3f}, \; H_*\tau_v = {:5.3f}$'.format(alpha, vw, eta_end, HR, bubble.ubarf, Ht), fontsize=font_size-1)
+        # ax.set_title(
+        #     r'$\alpha = {:5.2f}, \; \xi_w = {:5.1f}, \; \eta_{{\rm end}} = {:5.3f}, \; H_*R_* = {:5.2f}, '
+        #     r'\; {{\bar U}} = {:5.3f}, \; H_*\tau_v = {:5.3f}$'.format(
+        #         alpha, vw, eta_end, HR, bubble.ubarf, Ht),
+        #     fontsize=font_size-1)
         ax.set_title(
             rf"$\alpha = {alpha:5.2f}, \; \xi_w = {vw:5.1f}, \; \eta_{{\rm end}} = {eta_end:5.3f}, \; "
             rf"H_*R_* = {HR:5.2f}, \; {{\bar U}} = {bubble.ubarf:5.3f}, \; H_*\tau_v = {Ht:5.3f}$",

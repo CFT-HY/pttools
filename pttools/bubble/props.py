@@ -85,9 +85,8 @@ def v_and_w_from_solution(
     if sol_type == SolutionType.DETON:
         if wp > wm:
             raise ValueError("Got wp > wm for a detonation")
-    else:
-        if wp < wm:
-            raise ValueError("Got wp < wm for a deflagration or hybrid")
+    elif wp < wm:
+        raise ValueError("Got wp < wm for a deflagration or hybrid")
 
     wn = w[-1]
     wm_sh: float = w[np.argmax(np.flip(w) > wn)]

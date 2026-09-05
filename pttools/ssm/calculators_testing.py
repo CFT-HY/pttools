@@ -11,6 +11,7 @@ import sympy as sp
 from pttools.ssm import const
 from pttools.ssm.sin_transform import sin_transform as _sin_transform
 import pttools.type_hints as th
+import itertools
 
 
 # @profile
@@ -18,7 +19,7 @@ def gen_piecewise(x: th.FloatArr1D, points: th.FloatArr1D) -> sp.Piecewise:
     """Generate a piecewise defined function"""
     funcs = []
     lims = []
-    for p1, p2 in zip(points[:-1], points[1:]):
+    for p1, p2 in itertools.pairwise(points):
         # Linear
         fit = np.polyfit([p1[0], p2[0]], [p1[1], p2[1]], deg=1)
         lims.append((float(p1[0]) < x) & (x < float(p2[0])))
@@ -26,7 +27,7 @@ def gen_piecewise(x: th.FloatArr1D, points: th.FloatArr1D) -> sp.Piecewise:
     lims.append(True)
     funcs.append(0)
 
-    args = list(zip(funcs, lims))
+    args = list(zip(funcs, lims, strict=False))
     # print(args)
     return sp.Piecewise(*args)
 
@@ -50,10 +51,9 @@ def sin_transform(
     sin_transform_debug(z, xi, f, z_st_thresh)
 
     # start_time = time.perf_counter()
-    integral = _sin_transform(z, xi, f, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
+    return _sin_transform(z, xi, f, z_st_thresh, v_wall=v_wall, v_sh=v_sh)
     # end_time = time.perf_counter()
     # print("Numeric:", end_time - start_time)
-    return integral
 
     # if np.max(xi) > 1 or np.min(xi) < 0:
     #     raise ValueError

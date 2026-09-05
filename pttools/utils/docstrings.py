@@ -51,7 +51,7 @@ def copy_docstring(target: tp.Any, source: HasDocstring, without_params: bool = 
         target.__doc__ = source.__doc__
 
 
-def copy_docstrings(mapping: dict[tp.Any, HasDocstring], without_params: bool = False) -> tp.List[str]:
+def copy_docstrings(mapping: dict[tp.Any, HasDocstring], without_params: bool = False) -> list[str]:
     """Copy docstrings from sources to targets
     :param mapping: A dictionary of (target, source) pairs
     :param without_params: Whether to exclude parameter documentation
@@ -74,6 +74,6 @@ def get_name(obj: tp.Any) -> str:
     """Get the name of an object"""
     if hasattr(obj, "__name__") and obj.__name__ is not None:
         return obj.__name__
-    elif hasattr(obj, "attrname") and obj.attrname is not None:
+    if hasattr(obj, "attrname") and obj.attrname is not None:
         return obj.attrname
     return str(obj)

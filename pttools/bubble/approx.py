@@ -118,5 +118,4 @@ def xi_zero(v_wall: th.FloatOrArr, v_xi_wall: th.FloatOrArr) -> th.FloatOrArr:
     :return: $\xi_0$
     """
     check.check_wall_speed(v_wall)
-    xi0 = (v_xi_wall + 2 * v_wall) / 3.
-    return xi0
+    return (v_xi_wall + 2 * v_wall) / 3.

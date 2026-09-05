@@ -126,7 +126,7 @@ def sound_shell_solvable_hybrid(
     #     "Hybrid solvable results: wn_target=%s, wn_computed=%s, diff=%s, wm=%s, vp=%s",
     #     wn, wn_estimate, diff, wm, vp
     # )
-    return diff
+    return diff  # noqa: RET504
 
 
 def sound_shell_solver_hybrid(

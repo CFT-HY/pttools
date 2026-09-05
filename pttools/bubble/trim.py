@@ -74,7 +74,7 @@ def trim_fluid_wall_to_cs(
     else:
         n_stop = n_stop_index
 
-    if (xi[0] == v_wall) and not (sol_type == SolutionType.DETON.value):
+    if (xi[0] == v_wall) and sol_type != SolutionType.DETON.value:
         n_start = 1
         n_stop += 1
 

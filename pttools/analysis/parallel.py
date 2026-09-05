@@ -28,7 +28,7 @@ def create_bubble(
         use_bag_solver: bool = False,
         bubble_kwargs: dict[str, tp.Any] | None = None,
         allow_bubble_failure: bool = False,
-        *args, **kwargs) -> Bubble | None | tuple[Bubble | None, ...]:
+        *args, **kwargs) -> Bubble | tuple[Bubble | None, ...] | None:
     """Create a single bubble and apply post-processing functions to retrieve results from it"""
     v_wall, alpha_n = params
     # This is a common error case and should be handled here to avoid polluting the logs with exceptions.

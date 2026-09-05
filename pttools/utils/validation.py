@@ -53,18 +53,17 @@ def check_value_in_range(
             info = f"Got {name}={x:{x_format}} < {name}_min={x_min:{x_format}}{context_str}."
         elif too_large:
             info = f"Got {name}={x:{x_format}} > w_max={x_max:{x_format}}{context_str}."
-    else:
-        if too_small and too_large:
-            info = \
+    elif too_small and too_large:
+        info = \
                 f"Got {np.sum(too_smalls)} point(s) with {name} < {name}_min={x_min:{x_format}} " \
                 f"and {np.sum(too_larges)} point(s) with {name} > {name}_max{context_str}. " \
                 f"Most problematic values: {name}={np.min(x):{x_format}}, {name}={np.max(x):{x_format}}"
-        elif too_small:
-            info = \
+    elif too_small:
+        info = \
                 f"Got {np.sum(too_smalls)} point(s) with {name} < {name}_min={x_min:{x_format}}{context_str}. " \
                 f"Most problematic value: {name}={np.min(x):{x_format}}."
-        elif too_large:
-            info = \
+    elif too_large:
+        info = \
                 f"Got {np.sum(too_larges)} point(s) with {name} > {name}_max={x_max:{x_format}}{context_str}. " \
                 f"Most problematic value: {name}={np.max(x):{x_format}}."
 
@@ -104,6 +103,6 @@ def ensure_scalar(value: tp.Any, name: str, allow_none: bool = False) -> None:
         raise ValueError(f"{name} should be a scalar. Did you give e.g. a 0D array instead? Got: {name}={value}")
 
 
-def ensure_type[T](value: tp.Any, cls: tp.Type[T], allow_none: bool = False) -> T:
+def ensure_type[T](value: tp.Any, cls: type[T], allow_none: bool = False) -> T:
     """Ensure that the given value is of the given type, and convert if necessary"""
     return tp.cast(T, value if (value is None and allow_none) or isinstance(value, cls) else cls(value))

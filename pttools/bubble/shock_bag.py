@@ -35,7 +35,7 @@ def find_shock_index_bag(v_f: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float, s
     if sol_type == SolutionType.DETON:
         n_shock = props.find_v_index(xi, v_wall)
     else:
-        for i, (v, x) in enumerate(zip(v_f, xi)):
+        for i, (v, x) in enumerate(zip(v_f, xi, strict=False)):
             if x > v_wall and v <= v_shock_bag(x):
                 n_shock = i
                 break
@@ -49,8 +49,7 @@ def _v_shock_bag_scalar(xi: th.FloatOrArr) -> th.FloatOrArr:
     if xi < const.CS0:
         return np.nan
 
-    v = (3 * xi**2 - 1) / (2 * xi)
-    return v
+    return (3 * xi**2 - 1) / (2 * xi)
 
 
 _v_shock_bag_scalar_numba = njit(_v_shock_bag_scalar, cache=True)

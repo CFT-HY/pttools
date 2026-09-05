@@ -22,10 +22,13 @@ try:
     from concurrent.futures import InterpreterPoolExecutor  # type: ignore[attr-defined]
 except ImportError:
     class InterpreterPoolExecutor:  # type: ignore[no-redef]
+        def __init__(self, *args, **kwargs):
+            raise NotImplementedError("InterpreterPoolExecutor is only available in Python 3.14 and later.")
+
         def __enter__(self):
             raise NotImplementedError("InterpreterPoolExecutor is only available in Python 3.14 and later.")
 
-        def __init__(self, *args, **kwargs):
+        def __exit__(self, exc_type, exc_value, traceback):
             raise NotImplementedError("InterpreterPoolExecutor is only available in Python 3.14 and later.")
 
 logger = logging.getLogger(__name__)
@@ -110,7 +113,7 @@ class LoggingRunner:
 
 
 def get_global_process_pool(max_workers: int = MAX_WORKERS_DEFAULT) -> ProcessPoolExecutor:
-    global POOL
+    global POOL  # noqa: PLW0603
     with POOL_LOCK:
         if POOL is None:
             POOL = ProcessPoolExecutor(max_workers=max_workers)
@@ -228,7 +231,7 @@ def run_parallel(
         max_workers: int = MAX_WORKERS_DEFAULT,
         multiple_params: bool = False,
         unpack_params: bool = False,
-        output_dtypes: tuple[tp.Type, ...] | list[tp.Type] | None = None,
+        output_dtypes: tuple[type, ...] | list[type] | None = None,
         return_arr_shape: tuple[int, ...] | None = None,
         log_progress_element: int | None = None,
         log_progress_percentage: float | None = None,
@@ -324,7 +327,7 @@ def run_parallel(
             if return_arr_shape is not None:
                 if output_dtypes is None or not len(output_dtypes):
                     raise ValueError("Please give the output dtype.")
-                elif len(output_dtypes) > 1:
+                if len(output_dtypes) > 1:
                     raise ValueError("Array output is currently supported for only one array.")
                 output_arr = np.empty((*futs.shape, *return_arr_shape), dtype=output_dtypes[0])
                 # axes = list(range(futs.ndim)) # + list((-1, ) * len(return_arr_shape))
@@ -373,7 +376,7 @@ def run_parallel(
                 for elems in it:
                     res = elems[0].item().result()
                     try:
-                        for arr, val in zip(elems[1:], res):
+                        for arr, val in zip(elems[1:], res, strict=False):
                             arr[...] = val
                     except ValueError as e:
                         logger.exception("Could not store result to output array. Got: %s", res, exc_info=e)

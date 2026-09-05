@@ -72,6 +72,7 @@ def dmesg(n_lines: int = 100, print_output: bool = False) -> str:
         process = subprocess.run(
             ["dmesg", "|", "tail", "-n", str(n_lines)],
             capture_output=True,
+            check=False,
             stderr=subprocess.STDOUT
         )
         output = process.stdout.decode("utf-8")
@@ -107,11 +108,10 @@ def psutil_info() -> str:
         " RAM use is high. "
         "Please reduce the number of worker processes or close applications running in the background."
     ) if ram.percent > 80 else ""
-    msg = (
+    return (
         f"{msg_cpu} RAM use: {ram.used * 1e-9:.2f} / {ram.total * 1e-9:.2f} GB = {ram.percent} %, "
         f"available {ram.available} GB.{msg_ram_high}"
     )
-    return msg
 
 
 def system_info() -> str:

@@ -7,8 +7,8 @@ import logging
 import os.path
 import shutil
 import subprocess
-import sys
 import timeit
+import typing as tp
 import unittest
 
 import matplotlib.pyplot as plt
@@ -39,10 +39,10 @@ class TestPlane(unittest.TestCase):
     ref_data: th.FloatArr3D
 
     # Dicts for solvers
-    mean_rel_diffs: dict[int, float] = {}
-    mean_abs_diffs: dict[int, float] = {}
-    names: dict[int, str] = {}
-    iter_times: dict[int, float] = {}
+    mean_rel_diffs: tp.ClassVar[dict[int, float]] = {}
+    mean_abs_diffs: tp.ClassVar[dict[int, float]] = {}
+    names: tp.ClassVar[dict[int, str]] = {}
+    iter_times: tp.ClassVar[dict[int, float]] = {}
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -67,8 +67,7 @@ class TestPlane(unittest.TestCase):
             if os.path.exists(video_path):
                 os.remove(video_path)
             kwargs = {}
-            if sys.version_info >= (3, 7):
-                kwargs["capture_output"] = True
+            kwargs["capture_output"] = True
             ret: subprocess.CompletedProcess = subprocess.run(
                 [
                     "ffmpeg",
@@ -101,14 +100,14 @@ class TestPlane(unittest.TestCase):
         inds = list(cls.names.keys())
         names = [cls.names[i] for i in inds]
         # None is not supported here in old Matplotlib, so 0 is used instead
-        iter_times = [cls.iter_times[i] if i in cls.iter_times else 0 for i in inds]
+        iter_times = [cls.iter_times.get(i, 0) for i in inds]
         ax.bar(inds, iter_times, tick_label=names)
         ax.set_title("Execution time per run")
         ax.set_xlabel("Solver")
         ax.set_ylabel("Time (s)")
         ax.set_yscale("log")
         with open(os.path.join(PERFORMANCE_DIR, "plane.txt"), "w") as file:
-            for name, time in zip(names, iter_times):
+            for name, time in zip(names, iter_times, strict=False):
                 file.write(f"{name}: {time} s\n")
 
     @classmethod
@@ -162,12 +161,14 @@ class TestPlane(unittest.TestCase):
             for name, axs, tols in zip(
                     ("absolute", "relative"),
                     (self.axs_abs, self.axs_rel),
-                    (abs_tols, rel_tols)):
+                    (abs_tols, rel_tols), strict=False):
                 fig: plt.Figure = plt.figure()
                 ax2: plt.Axes = fig.add_subplot()
-                plot_plane_paper.plot_plane(ax=axs[ax[0], ax[1]], data_s=data, method=method, deflag_ref=self.ref_data, **tols)
+                plot_plane_paper.plot_plane(
+                    ax=axs[ax[0], ax[1]], data_s=data, method=method, deflag_ref=self.ref_data, **tols)
                 plot_plane_paper.plot_plane(ax=ax2, data_s=data, method=method, deflag_ref=self.ref_data, **tols)
-                fig_name = os.path.join(self.FIG_PATH, f"integrators_{name}_{i}_{plot_plane_paper.get_solver_name(method)}")
+                fig_name = os.path.join(
+                    self.FIG_PATH, f"integrators_{name}_{i}_{plot_plane_paper.get_solver_name(method)}")
                 save_fig(fig, fig_name)
                 plt.close(fig)
 

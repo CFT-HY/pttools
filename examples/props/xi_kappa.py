@@ -59,7 +59,7 @@ def main() -> plt.Figure:
         return_arr_shape=(v_walls.size, ), output_dtypes=(np.float64, )
     )
     for i_alpha, color in enumerate(colors):
-        for i_model, (model, ls) in enumerate(zip(models, lines)):
+        for i_model, (model, ls) in enumerate(zip(models, lines, strict=False)):
             ax.plot(
                 v_walls, kappas[i_model, i_alpha, :], color=color, ls=ls,
                 label=f"{alpha_ns[i_alpha]}, css2={model.css2:.3f}, csb={model.csb2:.3f}"
@@ -71,7 +71,7 @@ def main() -> plt.Figure:
     ax.set_ylabel(r"$\kappa$")
     ax.legend()
 
-    logger.info(f"Elapsed time: %.2f s", time.perf_counter() - t_start)
+    logger.info("Elapsed time: %.2f s", time.perf_counter() - t_start)
     return fig
 
 

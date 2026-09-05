@@ -10,7 +10,8 @@ The original code is also published on arXiv with
 `the arXiv.org perpetual, non-exclusive license 1.0 <https://arxiv.org/licenses/nonexclusive-distrib/1.0/license.html>`_.
 """
 
-# The permission for including the solvers in PTtools was provided by Jorinde van de Vis to Mika Mäki by e-mail on 11.7.2025.
+# The permission for including the solvers in PTtools was provided by Jorinde van de Vis
+# to Mika Mäki by e-mail on 11.7.2025.
 
 from .gksvdv21 import *
 from .gkvdv20 import *

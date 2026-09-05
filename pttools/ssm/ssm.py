@@ -78,7 +78,7 @@ def A2_e_conserving(
 
 
 @njit(cache=True)
-def A2_fp_csl(fp: th.FloatArr, cs: float, l: th.FloatArr) -> th.FloatArr:
+def A2_fp_csl(fp: th.FloatArr, cs: float, l: th.FloatArr) -> th.FloatArr:  # noqa: E741
     r"""$|A(z)|^2$ from $f'(z)$ and $c_s l(z)$
     $$|A(z)|^2 = = \frac{1}{4} \left[ (f'(z))^2 + (c_s l(z))^2 \right]$$
     :gw_pt_ssm:`\ ` eq. 4.11
@@ -106,7 +106,7 @@ def f(
 
 
 @njit(nogil=True)
-def l(
+def l(  # noqa: E743
         z: th.FloatArr,
         xi: th.FloatArr,
         lam: th.FloatArr,
@@ -186,7 +186,8 @@ def qT_lookup(T_tilde: th.FloatArr1D, z: th.FloatArr1D) -> th.FloatArr1D:
     )
     # except ValueError as e:
     #     logger.error(
-    #         "Could not compute qT_lookup with log10_z_min=%s, log10_T_min=%s, log10_z_max=%s, log10_T_max=%s, dlog10z=%s",
+    #         "Could not compute qT_lookup with log10_z_min=%s, log10_T_min=%s, "
+    #         "log10_z_max=%s, log10_T_max=%s, dlog10z=%s",
     #         log10_z_min, log10_T_min, log10_z_max, log10_T_max, dlog10z
     #     )
     #     raise e

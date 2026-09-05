@@ -222,7 +222,8 @@ def spec_den_gw(
 
     $$\tilde{P}_\text{gw}(z) =
     \frac{1}{4\pi z c_s} \left( \frac{1 - c_s^2}{c_s^2} \right)^2 \Upsilon_\ell
-    \int_{x_{-}}^{x_+} dx \frac{(x - x_+)^2(x - x_{-})^2}{x(x_+ + x_{-} - x)} \tilde{P}_v(x) \tilde{P}_v(x_+ + x_{-} - x)$$
+    \int_{x_{-}}^{x_+} dx \frac{(x - x_+)^2(x - x_{-})^2}{x(x_+ + x_{-} - x)}
+    \tilde{P}_v(x) \tilde{P}_v(x_+ + x_{-} - x)$$
     :giombi_2024_cs:`\ ` eq. 3.13
     Older versions of this formula are available in
     :gw_pt_ssm:`\ ` eq. 3.47, 3.48

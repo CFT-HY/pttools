@@ -312,7 +312,7 @@ def sound_shell_deflagration_reverse(
 
     # Integrate from the shock to the wall
     logger.info(
-        f"Integrating deflagration with v_wall=%s, wn=%s from vm_sh=%s, wm_sh=%s, xi_sh=%s",
+        "Integrating deflagration with v_wall=%s, wn=%s from vm_sh=%s, wm_sh=%s, xi_sh=%s",
         v_wall, wn, vm_sh, wm_sh, xi_sh
     )
     v, w, xi, t = integrate.fluid_integrate_param(

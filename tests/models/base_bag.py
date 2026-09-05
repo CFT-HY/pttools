@@ -1,6 +1,7 @@
 """Bag model tests"""
 
 import abc
+import typing as tp
 
 import numpy as np
 
@@ -14,12 +15,12 @@ class BagBaseCase(ModelBaseCase, abc.ABC):
     #: This test should use the bag model reference data instead of creating its own
     SAVE_NEW_DATA = False
 
-    PARAMS = {
+    PARAMS: tp.ClassVar[dict[str, tp.Any]] = {
         "a_s": 1.2,
         "a_b": 1.1,
         "V_s": 1.3
     }
-    PARAMS_FULL = {
+    PARAMS_FULL: tp.ClassVar[dict[str, tp.Any]] = {
         **PARAMS,
         "css2": 1/3,
         "csb2": 1/3,

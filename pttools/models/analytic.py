@@ -88,9 +88,9 @@ class AnalyticModel(Model, abc.ABC):
         )
         if log_info and self.a_s <= self.a_b:
             logger.warning(
-                f"The model \"%s\" does not satisfy a_s > a_b. "
+                "The model \"%s\" does not satisfy a_s > a_b. "
                 "Please check that the critical temperature is non-negative. "
-                f"Got: a_s=%s, a_b=%s.",
+                "Got: a_s=%s, a_b=%s.",
                 self.name, self.a_s, self.a_b
             )
 

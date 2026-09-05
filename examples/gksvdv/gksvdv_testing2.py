@@ -43,9 +43,9 @@ def main(
     axs_flat = np.ravel(axs)
 
     print("Solving bubbles")
-    for ax, model in zip(axs_flat, models):
+    for ax, model in zip(axs_flat, models, strict=False):
         print("Model:", model.params_str())
-        for v_wall, color in zip(v_walls, colors):
+        for v_wall, color in zip(v_walls, colors, strict=False):
             bubble = Bubble(model=model, v_wall=v_wall, alpha_n=alpha_n, theta_bar=theta_bar)
             print("Bubble:", f"css2={model.css2}, csb2={model.csb2}, v_wall={v_wall}, sol_type={bubble.sol_type}")
             ax.plot(bubble.xi, bubble.v, label=f"$v_w={v_wall}$", c=color)

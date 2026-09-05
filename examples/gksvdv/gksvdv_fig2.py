@@ -42,7 +42,7 @@ def kappas_giese(
             except (ValueError, RuntimeError):
                 alpha_tbns[i] = np.nan
 
-    kappas = run_parallel(
+    return run_parallel(
         func=kappa_gksvdv,
         params=v_wall_alpha_n_grid(v_walls=v_walls, alpha_ns=alpha_ns),
         multiple_params=True,
@@ -54,21 +54,20 @@ def kappas_giese(
             "csb2": model.csb2
         }
     )
-    return kappas
 
 
 def create_figure(
         axs: tp.Iterable[plt.Axes],
-        models: tp.List[ConstCSModel],
+        models: list[ConstCSModel],
         alpha_ns: th.FloatArr1D,
-        colors: tp.List[str],
-        lss: tp.List[str],
+        colors: list[str],
+        lss: list[str],
         v_walls: th.FloatArr1D,
         theta_bar: bool = False,
         giese: bool = False) -> th.FloatArr3D:
     r"""Create a figure of $\kappa(v_\text{wall})$ similar to :giese_2021:`\ `, fig. 2"""
     kappas = np.empty((len(models), alpha_ns.size, v_walls.size))
-    for i_model, (model, ls) in enumerate(zip(models, lss)):
+    for i_model, (model, ls) in enumerate(zip(models, lss, strict=False)):
         if giese:
             kappas[i_model, :, :] = kappas_giese(model=model, v_walls=v_walls, alpha_ns=alpha_ns, theta_bar=theta_bar)
         else:
@@ -76,7 +75,7 @@ def create_figure(
                 model=model, v_walls=v_walls, alpha_ns=alpha_ns, func=get_kappa_giese,
                 bubble_kwargs={"theta_bar": theta_bar, "allow_invalid": False}, allow_bubble_failure=True
             )
-        for i_alpha_n, (alpha_n, color) in enumerate(zip(alpha_ns, colors)):
+        for i_alpha_n, (alpha_n, color) in enumerate(zip(alpha_ns, colors, strict=False)):
             try:
                 i_max = np.nanargmax(kappas[i_model, i_alpha_n, :])
             except ValueError:
@@ -126,19 +125,16 @@ def create_diff_figure(
         ax: plt.Axes,
         kappas_pttools: th.FloatArr3D,
         kappas_giese: th.FloatArr3D,
-        models: tp.List[ConstCSModel],
+        models: list[ConstCSModel],
         v_walls: th.FloatArr1D,
-        colors: tp.List[str],
-        lss: tp.List[str],
+        colors: list[str],
+        lss: list[str],
         theta_bar: bool,
         title: bool = True):
     rel_diffs = np.abs(kappas_pttools - kappas_giese) / kappas_giese
-    if theta_bar:
-        title_str = r"$\alpha_{\bar{\theta}_n}$"
-    else:
-        title_str = r"$\alpha_n$"
+    title_str = r"$\alpha_{\bar{\theta}_n}$" if theta_bar else r"$\alpha_n$"
     print(title_str)
-    for i_model, (model, ls) in enumerate(zip(models, lss)):
+    for i_model, (model, ls) in enumerate(zip(models, lss, strict=False)):
         for i_alpha in range(kappas_pttools.shape[1]):
             ax.plot(
                 v_walls,

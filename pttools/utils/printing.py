@@ -31,7 +31,7 @@ def row_to_str(row: th.FloatArr1D, close: th.BoolArr1D, fmt: str = DEFAULT_FMT) 
     """Convert an array row to string with color"""
     lst = [
         f"{'' if ok else RED}{act:{fmt}}{''if ok else RESET}"
-        for act, ok in zip(row, close)
+        for act, ok in zip(row, close, strict=False)
     ]
     return f"[{', '.join(lst)}]"
 
@@ -45,7 +45,7 @@ def pairs_to_rows(
         f"{'' if ok else RED}"
         f"{act:{fmt}}, {des:{fmt}}, {rel_diff_scalar(act, des):{fmt}}, {act - des:{fmt}}"
         f"{'' if ok else RESET}"
-        for act, des, ok in zip(actual, desired, close)
+        for act, des, ok in zip(actual, desired, close, strict=False)
     ]
 
 
@@ -77,7 +77,7 @@ def print_1d(actual: th.FloatArr1D, desired: th.FloatArr1D, close: th.BoolArr1D)
 
 def print_2d(arr: th.FloatArr2D, close: th.BoolArr2D, fmt: str = DEFAULT_FMT) -> None:
     """Print a 2D array"""
-    rows = "\n ".join([row_to_str(row, ok, fmt) for row, ok in zip(arr, close)])
+    rows = "\n ".join([row_to_str(row, ok, fmt) for row, ok in zip(arr, close, strict=False)])
     print(f"[{rows}]")
 
 

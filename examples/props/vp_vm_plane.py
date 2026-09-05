@@ -38,7 +38,7 @@ def main(dots: bool = False) -> plt.Figure:
     fig: plt.Figure = plt.figure()
     ax: plt.Axes = fig.add_subplot()
 
-    for alpha, ls in zip(alpha_plus_list, linestyle_list):
+    for alpha, ls in zip(alpha_plus_list, linestyle_list, strict=False):
         x1 = np.copy(v_minus)
         y1 = bubble.v_plus(v_minus, alpha, bubble.SolutionType.DETON)
 
@@ -51,7 +51,7 @@ def main(dots: bool = False) -> plt.Figure:
         ax.plot(
             x1, y1,
             linestyle=ls, color='k', linewidth=linewidth,
-            label=r'$\alpha_+ = {}$'.format(alpha)
+            label=rf'$\alpha_+ = {alpha}$'
         )
         ax.plot(
             x1_grey, y1_grey,
@@ -91,7 +91,7 @@ def main(dots: bool = False) -> plt.Figure:
     # for line in ax.lines:
     #     line.set_linewidth(1.5)
     # https://stackoverflow.com/a/14971193/
-    for item in [ax.xaxis.label, ax.yaxis.label] + ax.get_xticklabels() + ax.get_yticklabels():
+    for item in [ax.xaxis.label, ax.yaxis.label, *ax.get_xticklabels(), *ax.get_yticklabels()]:
         item.set_fontsize(font_size)
 
     fig.tight_layout()

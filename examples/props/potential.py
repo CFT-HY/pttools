@@ -39,7 +39,7 @@ def main():
     colors = ["red", "forestgreen", "limegreen", "lime", "blue"]
     labels = ["$T>T_c$", "$T=T_1$", "$T=T_c$", "$T=T_2$", "$T=0$"]
     # b = np.linspace(-1, -2.4, 5)
-    for bi, color, label in zip(b, colors, labels):
+    for bi, color, label in zip(b, colors, labels, strict=False):
         ax.plot(x, potential(x, a, bi, c), color=color, label=label)
     ax.set_ylim(-0.5, 0.5)
     ax.set_ylabel("$V_T$")
@@ -47,7 +47,7 @@ def main():
     # ax.tick_params(left=False, bottom=False)
     ax.get_xaxis().set_ticks([])
     ax.get_yaxis().set_ticks([])
-    ax.text(1.31, -0.48, f"$+v$")
+    ax.text(1.31, -0.48, "$+v$")
     ax.legend()
     fig.tight_layout()
 

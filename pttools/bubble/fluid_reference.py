@@ -153,7 +153,7 @@ class FluidReference:
                             "nan values should not be picked up for the nearest neighbour set-up"
                         )
                     sol_tp = sol_type[i_alpha_n, i_v_wall]
-                    coords[sol_tp].append([v_walls[i_v_wall], alpha_ns[i_alpha_n]])
+                    coords[sol_tp].append([v_wall, alpha_n])
                     inds[sol_tp].append(i_alpha_n * v_walls.size + i_v_wall)
                     i += 1
 

@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 # bubble.setup_plotting()
 
-# MDP = os.path.join(TEST_DATA_PATH, "model_data")
+MDP = os.path.join(TEST_DATA_PATH, "model_data")
 GDP = TEST_FIGURE_PATH
 # os.makedirs(MDP, exist_ok=True)
 # os.makedirs(GDP, exist_ok=True)
@@ -188,9 +188,9 @@ def generate_ps(
 
     logger.debug(
         "vw = %s, alpha = %s, nucleation = %s, "
-        f"<v^2>=%s, Ubarf2 (1 bubble) = %s, "
-        f"Ratio <v^2>/Ubarf2 = %s, "
-        f"gw power (scaled) = %s",
+        "<v^2>=%s, Ubarf2 (1 bubble) = %s, "
+        "Ratio <v^2>/Ubarf2 = %s, "
+        "gw power (scaled) = %s",
         vw, alpha, const.NUC_STRING, V2_pow_v, Ubarf2, V2_pow_v / Ubarf2, gw_power
     )
 
@@ -224,8 +224,8 @@ def all_generate_ps_prace(save_ids: tuple[str, str] = ('', ''), show=True, debug
     debug_data = []
 
     for vw_list, alpha, step_list, path, dir_list in \
-            zip(VW_LIST_ALL, const.ALPHA_LIST_ALL, STEP_LIST_ALL, PATH_LIST_ALL, DIR_LIST_ALL):
-        for vw, step, dir_name in zip(vw_list, step_list, dir_list):
+            zip(VW_LIST_ALL, const.ALPHA_LIST_ALL, STEP_LIST_ALL, PATH_LIST_ALL, DIR_LIST_ALL, strict=False):
+        for vw, step, dir_name in zip(vw_list, step_list, dir_list, strict=False):
             v_xi_file = PATH_HEAD + path + dir_name + FILE_PATTERN.format(step)
             logger.debug("v_xi_file: %s", v_xi_file)
             if debug:

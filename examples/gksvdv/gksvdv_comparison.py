@@ -56,7 +56,7 @@ def main(
             model=model, v_walls=v_walls, alpha_ns=alpha_ns, func=get_kappa,
             bubble_kwargs={"allow_invalid": False, "use_giese_solver": True}, allow_bubble_failure=True
         )
-        for i_alpha_n, (alpha_n, color) in enumerate(zip(alpha_ns, colors)):
+        for i_alpha_n, (_alpha_n, color) in enumerate(zip(alpha_ns, colors, strict=False)):
             kpt = kappas_pttools[i_model, i_alpha_n, :]
             ax1.plot(v_walls, kpt, ls=ls, color=color, alpha=0.5)
             kg = kappas_giese[i_model, i_alpha_n, :]

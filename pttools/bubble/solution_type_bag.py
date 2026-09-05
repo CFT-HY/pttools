@@ -61,18 +61,17 @@ def identify_solution_type_alpha_plus_bag(v_wall: float, alpha_plus: float) -> S
     """
     if v_wall <= CS0:
         sol_type = SolutionType.SUB_DEF
+    elif alpha_plus < alpha_tools.alpha_plus_max_detonation_bag(v_wall):
+        sol_type = SolutionType.DETON
+        if alpha_tools.alpha_plus_min_hybrid(v_wall) < alpha_plus < ALPHA_PLUS_MAX_DEF:
+            with numba.objmode:
+                logger.warning(
+                    "Both hybrid and detonation are possible for v_wall=%s, alpha_plus=%s. "
+                    "Choosing detonation.",
+                    v_wall, alpha_plus
+                )
     else:
-        if alpha_plus < alpha_tools.alpha_plus_max_detonation_bag(v_wall):
-            sol_type = SolutionType.DETON
-            if alpha_tools.alpha_plus_min_hybrid(v_wall) < alpha_plus < ALPHA_PLUS_MAX_DEF:
-                with numba.objmode:
-                    logger.warning(
-                        "Both hybrid and detonation are possible for v_wall=%s, alpha_plus=%s. "
-                        "Choosing detonation.",
-                        v_wall, alpha_plus
-                    )
-        else:
-            sol_type = SolutionType.HYBRID
+        sol_type = SolutionType.HYBRID
 
     if alpha_plus > ALPHA_PLUS_MAX_DEF and sol_type != SolutionType.DETON:
         with numba.objmode:

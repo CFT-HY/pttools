@@ -21,4 +21,3 @@ class TestProfile(abc.ABC, unittest.TestCase):
     def setup_numba(cls):
         """Run the command to be profiled before profiling to ensure
         that it's already fully Numba-jitted when profiled."""
-        pass

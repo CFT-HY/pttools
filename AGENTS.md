@@ -4,6 +4,7 @@
 - Install dependencies: `./install_requirements.sh`
 - Run tests: `pytest`
   - The full test suite can take up to 20 min to run. For faster results, you can run only some tests.
+  - Do not disable the addopts of pyproject.toml with `-o addopts=""`, as this would drop `--dist=loadgroup`.
 - Lint: `ruff check`
 - Type checking: `pyrefly check`
 - Build documentation: `cd docs && make all`

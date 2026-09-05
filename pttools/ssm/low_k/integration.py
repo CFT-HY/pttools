@@ -88,7 +88,8 @@ def power_spectrum_integration_int(
         tau_star: th.FloatOrArr,
         Iv: th.FloatOrArr) -> th.FloatOrArr:
     r"""
-    Calculate the intermediate-frequency approximation (1 << k eta_* << kp eta_*) of the gravitational wave power spectrum.
+    Calculate the intermediate-frequency approximation (1 << k eta_* << kp eta_*)
+    of the gravitational wave power spectrum.
     One dimensional integration over sound wave momentum.
     Note that this approximation does not depend on tau_end, as it assumes several gravitational wave oscillations
     during the acoustic sourcing (eta_end - eta_* >> eta_*)

@@ -87,6 +87,5 @@ def load_tbb() -> int | None:
 
 if __name__ == "__main__":
     print("TBB version:", load_tbb())
-else:
-    if IS_LINUX:
-        load_tbb()
+elif IS_LINUX:
+    load_tbb()

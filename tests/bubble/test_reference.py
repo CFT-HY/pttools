@@ -14,7 +14,7 @@ class ReferenceTest(unittest.TestCase):
     @skip_slow
     @uses_multiprocessing
     def test_generation(self):
-        path = os.path.join(TEST_DATA_PATH, f"fluid_reference_test.hdf5")
+        path = os.path.join(TEST_DATA_PATH, "fluid_reference_test.hdf5")
         if os.path.exists(path):
             os.remove(path)
         fluid_reference.FluidReference(

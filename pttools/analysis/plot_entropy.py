@@ -16,7 +16,7 @@ def plot_entropy(bubbles: tp.Iterable[Bubble], colors: tp.Iterable[str], fig: pl
     # ax1 = fig.add_subplot(1, 2, 1)
     # ax2 = fig.add_subplot(1, 2, 2, sharex=ax1)
 
-    for bubble, color in zip(bubbles, colors):
+    for bubble, color in zip(bubbles, colors, strict=False):
         s = entropy.compute_entropy(bubble)
         ax1.plot(bubble.xi, s, c=color)
         ax1.plot(bubble.xi, bubble.s, c=color, ls=":")

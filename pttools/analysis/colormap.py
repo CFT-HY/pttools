@@ -1,7 +1,6 @@
 """Utilities for color maps"""
 
 import math
-import typing as tp
 
 from matplotlib import cm
 from matplotlib.contour import QuadContourSet
@@ -39,7 +38,7 @@ def cmap_plusminus(
         max_level: float,
         diff_level: float,
         cmap_neg: Colormap | str = DEFAULT_CMAP_NEG,
-        cmap_pos: Colormap | str = DEFAULT_CMAP_POS) -> tuple[th.FloatArr1D, tp.List[float]]:
+        cmap_pos: Colormap | str = DEFAULT_CMAP_POS) -> tuple[th.FloatArr1D, list[float]]:
     """Colormap for Matplotlib heatmap plots with different color schemes for positive and negative values"""
     n_min = math.floor(min_level / diff_level)
     n_max = math.ceil(max_level / diff_level)

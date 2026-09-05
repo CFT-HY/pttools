@@ -169,7 +169,8 @@ def kappa_hybrid_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, cs: th.Fl
     $$
     \kappa(c_s < v_{\text{wall}} < v_{CJ}) \approx \kappa_B
     + (v_{\text{wall}} - c_s) \delta \kappa
-    + \frac{(v_{\text{wall}} - c_s)^3}{(v_{CJ} - c_s)^3} \left(\kappa_C - \kappa_B - (v_{CJ} - c_s) \delta \kappa \right)
+    + \frac{(v_{\text{wall}} - c_s)^3}{(v_{CJ} - c_s)^3}
+    \left(\kappa_C - \kappa_B - (v_{CJ} - c_s) \delta \kappa \right)
     $$
     :espinosa_2010:`\ `, eq. 102
     """

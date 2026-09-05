@@ -44,8 +44,7 @@ def check_thetas(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> None:
 def _check_thetas_numba(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr):
     if isinstance(theta_s, numba.types.Array) or isinstance(theta_b, numba.types.Array):
         return check_thetas
-    else:
-        return _check_thetas_scalar
+    return _check_thetas_scalar
 
 
 def _check_thetas_scalar(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> None:
@@ -170,8 +169,5 @@ def theta_bag(w: th.FloatOrArr, phase: th.FloatOrArr, alpha_n: th.FloatOrArr) ->
     :param alpha_n: strength of the transition $\alpha_n$
     :return: trace anomaly $\theta_\text{bag}$
     """
-    if isinstance(w, np.ndarray):
-        w_n = w[-1]
-    else:
-        w_n = w
+    w_n = w[-1] if isinstance(w, np.ndarray) else w
     return alpha_n * (0.75 * w_n) * (1 - phase)

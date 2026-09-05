@@ -127,6 +127,8 @@ project-includes = [
 project-excludes = [
     "**/_build*",
     "**/auto_examples*",
+    # This file is unmaintained and depends on a thermo module that is not in this repository.
+    "examples/entropy/p_s_scan_dev.py",
     "**/__pycache__/**",
     "**/*venv/**",
     "**/.[!/.]*"
@@ -189,10 +191,22 @@ ignore = [
     "PLR0913",
     # Corresponds to the Pylint message "too-many-positional-arguments".
     # Scientific functions have a lot of parameters, and adding "*" to all of them would be tedious.
-    "PLR0917"
+    "PLR0917",
+    # PTtools uses the notation of the literature for functions, arguments and local variables,
+    # e.g. "H_star_tau_v", "Omgw", "P_tilde_v" and "T_tilde".
+    # This corresponds to the extensive "good-names" list of the previously used Pylint configuration.
+    "N802",
+    "N803",
+    "N806"
 ]
+# The en dash is used in the names of the physical laws, and the low asterisk in the unicode labels.
+allowed-confusables = ["–", "⁎"]
 # The equivalent of the Pylint option "dummy-variables-rgx"
 dummy-variable-rgx = "^(_+$|(_[a-zA-Z0-9_]*[a-zA-Z0-9]+?$)|dummy|ignored_|unused_)"
+
+# The submodules of PTtools are re-exported by the __init__.py files with wildcard imports.
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "F403"]
 
 [tool.ruff.lint.flake8-unused-arguments]
 ignore-variadic-names = true

@@ -9,7 +9,6 @@ Modified from
 import io
 import logging
 # import os
-import typing as tp
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -153,7 +152,7 @@ def add_ssm_fit(f_gw: plt.Figure, y, pow_gw) -> FitParsSSM:
 def make_1dh_compare_table(
         params_list: th.FloatArr2D,
         v2_list: th.FloatArr2D,
-        file_name: tp.Union[str, io.TextIOBase] = 'table_1dh_compare.tex') -> None:
+        file_name: str | io.TextIOBase = 'table_1dh_compare.tex') -> None:
     f = file_name if isinstance(file_name, io.TextIOBase) else open(file_name, "w")
     f.write('\\begin{tabular}{cc | rrr }\n')
 
@@ -193,10 +192,10 @@ def make_3dh_compare_table(
         v2_list,
         Omgw_list,
         p_list,
-        file_name: tp.Union[str, io.TextIOBase] = 'table_3dh_compare.tex') -> None:
+        file_name: str | io.TextIOBase = 'table_3dh_compare.tex') -> None:
     """
     Prints table to file, comparing selected statistics between
-    SSM and "Prace" 3dh hydro simulations (Hindmarsh et al 2017)
+    SSM and "Prace" 3dh hydro simulations (Hindmarsh et al. 2017)
     Mean square fluid velocity.
 
     The results are precomputed, and therefore this function doesn't call pttools.
@@ -265,7 +264,7 @@ def make_3dh_compare_table(
         # f.write(f'{A:.1f} & ')
         # f.write(f'{A_prace[n]:.1f}'.replace('nan',8*' ') + ' & ')
         f.write(tu.tex_sf(A, mult='\\cdot') + ' & ')
-        if A_prace[n] is not np.nan:
+        if not np.isnan(A_prace[n]):
             f.write(tu.tex_sf(A_prace[n], mult='\\cdot') + ' & ')
         else:
             f.write(8*' ' + ' & ')
@@ -286,7 +285,7 @@ def make_nuc_compare_table(
         Omgw_list,
         p_sim_list,
         p_exp_list,
-        file_name: tp.Union[str, io.TextIOBase] = 'table_nuc_compare.tex') -> None:
+        file_name: str | io.TextIOBase = 'table_nuc_compare.tex') -> None:
     """
     Prints table to stdout, displaying selected statistics
     comparing between simulataneous and exponential nucleation.
@@ -361,7 +360,7 @@ def make_nuc_compare_table(
 
 def save_compare_nuc_data(file: str, params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list) -> list:
     data = []
-    for params, v2, Omgw, pc, ps in zip(params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list):
+    for params, v2, Omgw, pc, ps in zip(params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list, strict=False):
         data.append(params + v2 + Omgw + pc + ps)
 
     np.savetxt(file, data)
@@ -525,7 +524,7 @@ def plot_ps_1bubble(
         graph_file_type: str | None = None,
         Np: th.IntArr1D = const.NP_ARR[-1],
         debug: bool = False,
-        lambda_correction: bool = False) -> tp.Union[plt.Figure, tuple[plt.Figure, th.FloatArr2D]]:
+        lambda_correction: bool = False) -> plt.Figure | tuple[plt.Figure, th.FloatArr2D]:
     # Sphinx considers vertical lines as substitution references. Therefore the command \mid has to be used instead.
     r"""
     Plots power spectra predictions of 1 bubble. Shown are
@@ -616,7 +615,7 @@ def plot_ps_compare_nuc(
 
     nuc_string_all = ''
 
-    for nuc_type, nuc_args in zip(nuc_type_list, nuc_args_list):
+    for nuc_type, nuc_args in zip(nuc_type_list, nuc_args_list, strict=False):
         z, pow_v, y, pow_gw = ps_from_ssm(
             vw, alpha, nuc_type, nuc_args, Np, method, lambda_correction=lambda_correction
         )
@@ -882,7 +881,7 @@ def do_all_plot_ps_compare_nuc(
     v2_list = []
 
     # This loop cannot be multi-threaded, as Matplotlib is not thread-safe
-    for vw_list, alpha, in zip(VW_LIST_ALL, const.ALPHA_LIST_ALL):
+    for vw_list, alpha, in zip(VW_LIST_ALL, const.ALPHA_LIST_ALL, strict=False):
         for vw in vw_list:
             v2, Omgw_scaled, p_cwg, p_ssm = plot_ps_compare_nuc(
                 vw, alpha, save_id, graph_file_type, lambda_correction=lambda_correction
@@ -915,7 +914,7 @@ def do_all_plot_ps_1bubble(
     figs = []
     fig_ids = []
     data_lst = []
-    for vw_list, alpha, in zip(vw_list_all, alpha_list_all):
+    for vw_list, alpha, in zip(vw_list_all, alpha_list_all, strict=False):
         for vw in vw_list:
             if debug:
                 fig, data = plot_ps_1bubble(

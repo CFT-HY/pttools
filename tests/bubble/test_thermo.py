@@ -31,7 +31,7 @@ class ThermoTest:
     def setUpClass(cls) -> None:
         cls.bubbles = [
             Bubble(cls.MODEL, v_wall=v_wall, alpha_n=alpha_n)
-            for v_wall, alpha_n in zip(cls.V_WALLS, cls.ALPHA_NS)
+            for v_wall, alpha_n in zip(cls.V_WALLS, cls.ALPHA_NS, strict=False)
         ]
 
     def test_ebar(self):
@@ -43,7 +43,10 @@ class ThermoTest:
     def test_wbar(self):
         """If there is no bubble, then wbar=wn"""
         assert_allclose(
-            [w_bar(w=np.ones_like(bubble.w) * bubble.wn, xi=bubble.xi, v_wall=bubble.v_wall) for bubble in self.bubbles],
+            [
+                w_bar(w=np.ones_like(bubble.w) * bubble.wn, xi=bubble.xi, v_wall=bubble.v_wall)
+                for bubble in self.bubbles
+            ],
             [bubble.wn for bubble in self.bubbles]
         )
 

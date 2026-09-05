@@ -35,14 +35,8 @@ def parse_params(params: bubble.PhysicalParams) -> tuple[float, float, NucType, 
     """
     v_wall = params[0]
     alpha = params[1]
-    if len(params) > 2:
-        nuc_type = params[2]
-    else:
-        nuc_type = DEFAULT_NUC_TYPE
-    if len(params) > 3:
-        nuc_args = params[3]
-    else:
-        nuc_args = const.DEFAULT_NUC_PARM
+    nuc_type = params[2] if len(params) > 2 else DEFAULT_NUC_TYPE
+    nuc_args = params[3] if len(params) > 3 else const.DEFAULT_NUC_PARM
 
     return v_wall, alpha, nuc_type, nuc_args
 

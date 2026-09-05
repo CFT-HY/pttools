@@ -11,7 +11,7 @@ from scipy.optimize import minimize, OptimizeResult
 
 from pttools.bubble import Bubble
 from pttools.models import BagModel, Model
-from pttools.omgw0 import Spectrum, SuppressionMethod
+from pttools.omgw0 import Spectrum
 import pttools.type_hints as th
 
 

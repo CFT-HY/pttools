@@ -26,7 +26,7 @@ def main():
 
     fig, ax_v, ax_w = setup_bubbles_plot_multifig()
 
-    for alpha_n, color in zip(alpha_ns, colors):
+    for alpha_n, _color in zip(alpha_ns, colors, strict=False):
         try:
             bubble = Bubble(model=model, v_wall=v_wall, alpha_n=alpha_n, theta_bar=theta_bar, allow_invalid=False)
             label = rf"$\alpha_{{\bar{{\theta}}_n}} = {alpha_n}$" if theta_bar else rf"$\alpha_n = {alpha_n}$"

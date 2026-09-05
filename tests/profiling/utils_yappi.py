@@ -3,7 +3,6 @@
 import io
 import os
 import threading
-import typing as tp
 
 import yappi
 
@@ -53,7 +52,7 @@ def process_text_thread(stats: yappi.YThreadStats, path: str, print_to_console: 
 
 
 def process_text(
-        stats: tp.Union[yappi.YFuncStats, yappi.YThreadStats],
+        stats: yappi.YFuncStats | yappi.YThreadStats,
         path: str | None = None,
         print_to_console: bool = False,
         columns: dict[int, tuple[str, int]] | None = None) -> str:

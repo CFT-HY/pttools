@@ -14,6 +14,7 @@ The patch is applied in the process that reads ``conf.py``,
 which is sufficient as long as the ``parallel`` option of Sphinx-Gallery is disabled.
 """
 
+import contextlib
 import importlib
 import inspect
 import sys
@@ -36,12 +37,10 @@ def ensure_imported(module: str) -> None:
     so importing them here is safe, and it's needed for the builds
     in which the examples are not executed, e.g. "make html-noplot".
     """
-    if module in sys.modules or module.split(".")[0] not in DOC_MODULES:
+    if module in sys.modules or module.split(".", maxsplit=1)[0] not in DOC_MODULES:
         return
-    try:
+    with contextlib.suppress(ImportError):
         importlib.import_module(module)
-    except ImportError:
-        pass
 
 
 def defining_submodule(package: str, name: str, obj: tp.Any) -> str | None:

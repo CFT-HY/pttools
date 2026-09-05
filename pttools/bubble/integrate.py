@@ -188,7 +188,7 @@ def fluid_integrate_param_numba(
 
     backwards = t[-1] < 0
     t_numba = -t if backwards else t
-    data_numba = np.zeros((data.size + 1))
+    data_numba = np.zeros(data.size + 1)
     data_numba[:-1] = data
     # Numba does not support float(bool)
     data_numba[-1] = int(backwards)

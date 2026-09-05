@@ -76,7 +76,7 @@ def curves_symmetric(
         )
         # Remove the part of the curves below the mu curve
         if csb is not None:
-            unphysical = v_max_behind(xi=xi_b, csb=csb)
+            unphysical = v_max_behind(xi=xi_b, cs=csb)
             v_b[unphysical] = np.nan
 
         data[:, i, :n_xi] = [v_b, w_b, xi_b]

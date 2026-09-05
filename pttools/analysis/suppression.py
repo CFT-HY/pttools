@@ -47,7 +47,9 @@ class SuppressionPlot:
         if alpha_n_max_lines:
             self.line_v_walls = np.linspace(0, 1, 20, endpoint=False)
             self.ax.plot(self.line_v_walls, alpha_n_max_func(self.line_v_walls), label=r"$\alpha_{n,\text{max}}$")
-            self.ax.plot(self.line_v_walls, alpha_n_max_approx(self.line_v_walls), label=r"$\alpha_{n,\text{max,approx}}$")
+            self.ax.plot(
+                self.line_v_walls, alpha_n_max_approx(self.line_v_walls),
+                label=r"$\alpha_{n,\text{max,approx}}$")
         if cs is not None:
             self.ax.axvline(x=cs, label="$c_s$", ls=":", c="k")
         if v_cj:

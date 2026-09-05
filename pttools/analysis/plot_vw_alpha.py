@@ -1,6 +1,5 @@
 r"""A plot with $v_\text{wall}$ on the x-axis and $\alpha_n$ on the y-axis."""
 
-import typing as tp
 
 from matplotlib.colors import Colormap
 from matplotlib.contour import QuadContourSet
@@ -49,8 +48,8 @@ class VwAlphaPlot:
             data: th.FloatArr2D,
             label: str,
             diff_level: float | None = None,
-            cmap_neg: tp.Union[Colormap, str] = colormap.DEFAULT_CMAP_NEG,
-            cmap_pos: tp.Union[Colormap, str] = colormap.DEFAULT_CMAP_POS):
+            cmap_neg: Colormap | str = colormap.DEFAULT_CMAP_NEG,
+            cmap_pos: Colormap | str = colormap.DEFAULT_CMAP_POS):
         """Add a contour plot to the figure"""
         if diff_level is None:
             diff_level = 0.1
@@ -74,7 +73,7 @@ class VwAlphaPlot:
             region=region, color=color, alpha=alpha
         )
 
-    def chapman_jouguet(self, color: str = "black", ls: str = "--", label: str = "$v_{CJ}$") -> tp.List[plt.Line2D]:
+    def chapman_jouguet(self, color: str = "black", ls: str = "--", label: str = "$v_{CJ}$") -> list[plt.Line2D]:
         """Add a Chapman-Jouguet speed curve to the plot"""
         return self.ax.plot(
             v_chapman_jouguet(self.grid.model, self.grid.alpha_ns),

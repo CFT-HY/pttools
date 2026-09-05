@@ -47,8 +47,12 @@ def remove_hybrids(path: str = DEFAULT_PATH, suffix: str = "") -> str:
         f.write("vw" + " " + "alph" + " " + "suppress" + " " + "sim_omgw" + " " + "exp_omgw" + "exp_ubarf" )
         f.write('\n')
 
-        for i in range(0, len(vw_no_hybrid)):
-            line = str(vw_no_hybrid[i]) + " " + str(al_no_hybrid[i]) + " " + str(sup_sim_no_hybrids[i]) + " " + str(sim_omgw_no_hybrids[i]) + " " + str(exp_omgw_no_hybrids[i]) + " " + str(exp_Ubarf_no_hybrids[i])
+        for i in range(len(vw_no_hybrid)):
+            line = (
+                str(vw_no_hybrid[i]) + " " + str(al_no_hybrid[i]) + " " + str(sup_sim_no_hybrids[i]) + " "
+                + str(sim_omgw_no_hybrids[i]) + " " + str(exp_omgw_no_hybrids[i]) + " "
+                + str(exp_Ubarf_no_hybrids[i])
+            )
             f.write(line)
             f.write("\n")
 

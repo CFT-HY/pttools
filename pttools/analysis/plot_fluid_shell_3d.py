@@ -1,7 +1,6 @@
 r"""Plot $(v,w,\xi)$ for fluid shells"""
 
 import logging
-import typing as tp
 
 import numpy as np
 from plotly.basedatatypes import BasePlotlyType
@@ -22,8 +21,8 @@ class BubblePlot3D(PlotlyPlot):
     def __init__(self, model: Model | None = None, colorscale: str = "YlOrRd"):
         super().__init__()
         self.model = model
-        self.bubbles: tp.List[Bubble] = []
-        self.plots: tp.List[BasePlotlyType] = []
+        self.bubbles: list[Bubble] = []
+        self.plots: list[BasePlotlyType] = []
         self.colorscale = colorscale
 
     def add(self, bubble: Bubble, color: str | None = None) -> go.Scatter3d:
@@ -74,7 +73,7 @@ class BubblePlot3D(PlotlyPlot):
         r"""Add the $\mu$ surface to the plot"""
         logger.info("Computing mu surface.")
         if self.model is None:
-            return
+            return None
         xi = np.linspace(0, 1, n_xi)
         w = np.linspace(0, w_mult * self.model.w_crit, n_w)
         cs = np.sqrt(self.model.cs2(w, Phase.BROKEN))

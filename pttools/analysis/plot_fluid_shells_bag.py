@@ -83,7 +83,7 @@ def plot_fluid_shells_bag(
     lst_kappa = []
     lst_dw = []
 
-    for v_wall, alpha_n in zip(v_wall_list, alpha_n_list):
+    for v_wall, alpha_n in zip(v_wall_list, alpha_n_list, strict=False):
         check.check_physical_params(
             (v_wall, alpha_n), df_dtau_ptr=DF_DTAU_PTR_BAG,
             ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=cs2_bag_scalar)
@@ -110,17 +110,17 @@ def plot_fluid_shells_bag(
         # alpha_plus = alpha_n*w[-1]/w[n_wall]
 
         # Plot
-        yscale_v = max(max(v), yscale_v)
-        yscale_enth_max = max(max(w), yscale_enth_max)
+        yscale_v = max(*v, yscale_v)
+        yscale_enth_max = max(*w, yscale_enth_max)
         # yscale_enth_min = min(min(w),yscale_enth_min)
         yscale_enth_min = 2 * w[-1] - yscale_enth_max
         wn_max = max(w[-1], wn_max)
 
         # First velocity v
         ax[0, n].plot(xi, v, 'b')
-        if not sol_type == SolutionType.DETON:
+        if sol_type != SolutionType.DETON:
             ax[0, n].plot(xi_even[n_cs:], v_sh[n_cs:], 'k--', label=r'$v_{\rm sh}(\xi_{\rm sh})$')
-        if not sol_type == SolutionType.SUB_DEF:
+        if sol_type != SolutionType.SUB_DEF:
             v_minus_max = relativity.lorentz(xi_even, const.CS0)
             ax[0, n].plot(xi_even[n_cs:], v_minus_max[n_cs:], 'k-.', label=r'$\mu(\xi,c_{\rm s})$')
 
@@ -138,7 +138,7 @@ def plot_fluid_shells_bag(
         # Then enthalpy w
         # ax[1,n].plot(xi, np.ones_like(xi)*w[-1], '--', color='0.5')
         ax[1, n].plot(xi, w, 'b')
-        if not sol_type == SolutionType.DETON:
+        if sol_type != SolutionType.DETON:
             ax[1, n].plot(xi_even[n_cs:n_sh], w_sh[n_cs:n_sh], 'k--', label=r'$w_{\rm sh}(\xi_{\rm sh})$')
         else:
             wmax_det = (xi_even / const.CS0) * relativity.gamma2(xi_even) / relativity.gamma2(const.CS0)

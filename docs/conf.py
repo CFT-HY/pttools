@@ -5,7 +5,8 @@ For the full list of built-in configuration values, see the documentation:
 https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
-# ruff: noqa: A001
+# The imports have to be after the sys.path manipulation below.
+# ruff: noqa: A001, E402
 
 # -- Path setup --------------------------------------------------------------
 
@@ -47,7 +48,7 @@ os.makedirs(os.path.join(DOCS_DIR, "_static"), exist_ok=True)
 # -- Project information -----------------------------------------------------
 
 project = "PTtools"
-with open(os.path.join(REPO_DIR, "AUTHORS"), "r") as file:
+with open(os.path.join(REPO_DIR, "AUTHORS")) as file:
     _authors = file.read().splitlines()
 author = f"{', '.join(_authors[:-1])} & {_authors[-1]}"
 copyright = f"2015-{date.today().year}, {author}"
@@ -244,9 +245,11 @@ EXTLINKS_STATIC: ExtLinks = {
     "hakkinen_msc": hdl_link("10138/576963", "Häkkinen", 2024),
     "maki_msc": arxiv_link("2511.20436", "Mäki", 2025),
     # Other
-    "lisa_conventions": ("https://gitlab.esa.int/lisa-sgs/sandbox/conventions-document", "LISA DDPC Conventions document"),
+    "lisa_conventions": (
+        "https://gitlab.esa.int/lisa-sgs/sandbox/conventions-document", "LISA DDPC Conventions document"),
     "lisa_sci_req": ("https://www.cosmos.esa.int/web/lisa/documents", "LISA Science Requirements Document"),
-    "rel_hydro_book": doi_link("10.1093/acprof:oso/9780198528906.001.0001", "Relativistic hydrodynamics: Rezzolla, Zanotti", 2013),
+    "rel_hydro_book": doi_link(
+        "10.1093/acprof:oso/9780198528906.001.0001", "Relativistic hydrodynamics: Rezzolla, Zanotti", 2013),
     "schroeder_book": ("https://physics.weber.edu/thermal/", "Thermal physics: Schroeder (2000)")
 }
 extlinks: ExtLinks = {
@@ -350,7 +353,7 @@ sphinx_gallery_conf = {
     # that don't correspond to the documented objects.
     "prefer_full_module": {rf"^{module}\." for module in DOC_MODULES},
     # The None values mean that the objects are documented in this documentation instead of an external one.
-    "reference_url": {module: None for module in DOC_MODULES},
+    "reference_url": dict.fromkeys(DOC_MODULES),
     # "run_stale_examples": True
     "show_api_usage": True,
     "show_memory": show_memory,
