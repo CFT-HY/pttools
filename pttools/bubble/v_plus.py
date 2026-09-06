@@ -1,4 +1,4 @@
-r"""Fluid speed $\tilde{v}_+$ ahead of the wall in the wall frame
+r"""Fluid speed $\tilde{v}_+$ ahead of the wall in the wall frame.
 
 .. plot:: fig/vp_vm_plane.py
 

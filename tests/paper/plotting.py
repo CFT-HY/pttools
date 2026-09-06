@@ -13,8 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import pttools.type_hints as th
-from tests.paper import const
-from tests.paper import utils
+from tests.paper import const, utils
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +76,7 @@ def plot_guide_power_law(
     """
     Plot a guide power law going through loc[0], loc[1] with index power
     Optional annotation at (loc[0]*txt_shift[0], loc[1]*txt_shift[1])
-    Returns the points in two arrays (is this the best thing?)
+    Returns the points in two arrays (is this the best thing?).
     """
     xp = loc[0]
     yp = loc[1]
@@ -101,7 +100,7 @@ def plot_guide_power_law_prace(
         shifts=None):
     """
     Wrapper for plot_guide_power_law, with power laws and line
-    shifts appropriate for velocity and GW spectra of prace runs
+    shifts appropriate for velocity and GW spectra of prace runs.
     """
     if shifts is None:
         if position is utils.Position.HIGH:
@@ -150,7 +149,7 @@ def plot_guide_power_laws_prace(
         inter_flag: bool = False) -> tuple[plt.Figure, plt.Figure]:
     """
     Plot guide power laws (assumes params all same for list)
-    Shifts designed for simulataneous nucleation lines
+    Shifts designed for simulataneous nucleation lines.
     """
     x_high = 10
     x_low = 2
@@ -192,7 +191,7 @@ def plot_guide_power_laws_ssm(
         inter_flag: bool = False) -> plt.Figure:
     """
     Plot guide power laws (assumes params all same for list)
-    Shifts designed for simultaneous nucleation lines
+    Shifts designed for simultaneous nucleation lines.
     """
     x_high = 10
     x_low = 3
@@ -236,7 +235,7 @@ def plot_ps(
         pretty: bool = False) -> plt.Figure:
     """
     Plots a list of power spectra, with axis limits appropriate to prace runs
-    returns a figure handle
+    returns a figure handle.
     """
     if col_list is None:
         col_list = ['b'] * len(z_list)

@@ -1,17 +1,13 @@
-"""Profile the power spectrum calculation of the paper"""
+"""Profile the power spectrum calculation of the paper."""
 
 import logging
 import unittest
 
-import tests.paper.ssm_paper_utils as spu
-from pttools.speedup.numba_wrapper import \
-    NUMBA_PYINSTRUMENT_INCOMPATIBLE_PYTHON_VERSION, \
-    NUMBA_SEGFAULTING_PROFILERS
+from pttools.speedup.numba_wrapper import NUMBA_PYINSTRUMENT_INCOMPATIBLE_PYTHON_VERSION, NUMBA_SEGFAULTING_PROFILERS
 from pttools.utils.system import IS_GITHUB_ACTIONS
+import tests.paper.ssm_paper_utils as spu
+from tests.profiling import utils_cprofile, utils_pyinstrument, utils_yappi
 from tests.profiling.test_profile import TestProfile
-from tests.profiling import utils_cprofile
-from tests.profiling import utils_pyinstrument
-from tests.profiling import utils_yappi
 from tests.utils.mark import skip_slow
 
 logger = logging.getLogger(__name__)
@@ -22,7 +18,8 @@ def pow_specs():
 
 
 class TestProfilePowSpecs(TestProfile):
-    """Profile the power spectrum calculation of the paper"""
+    """Profile the power spectrum calculation of the paper."""
+
     name = "pow_specs"
 
     @classmethod

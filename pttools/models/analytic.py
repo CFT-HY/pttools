@@ -1,4 +1,4 @@
-"""Base class for analytical models"""
+"""Base class for analytical models."""
 
 import abc
 import logging
@@ -8,10 +8,10 @@ import numpy as np
 
 from pttools.bubble.solution_type import SolutionType
 from pttools.models.model import Model
-from pttools.utils.validation import check_value_in_range
-from pttools.utils.misc import is_nan_or_none
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
+from pttools.utils.misc import is_nan_or_none
+from pttools.utils.validation import check_value_in_range
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +35,7 @@ class AnalyticModel(Model, abc.ABC):
     :param name: custom name for the model
     :param auto_potential: set V_s and V_b so that T_c = 1 (bag model only)
     """
+
     DEFAULT_V_S = 1
     DEFAULT_A_G_MULT = 1.1
 
@@ -106,7 +107,7 @@ class AnalyticModel(Model, abc.ABC):
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
-        $$\alpha_n = \frac{4}{3w_n}(V_s - V_b)$$
+        $$\alpha_n = \frac{4}{3w_n}(V_s - V_b)$$.
 
         :param wn: $w_n$, enthalpy of the symmetric phase at the nucleation temperature
         :param error_on_invalid: raise error for invalid values
@@ -136,7 +137,7 @@ class AnalyticModel(Model, abc.ABC):
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
         r"""Transition strength parameter $\alpha_+$, :notes:`\ `, eq. 7.25.
-        $$\alpha_+ = \frac{4}{3w_+}(V_s - V_b)$$
+        $$\alpha_+ = \frac{4}{3w_+}(V_s - V_b)$$.
 
         :param wp: $w_+$, enthalpy ahead of the wall
         :param wm: $w_-$, enthalpy behind the wall (not used)

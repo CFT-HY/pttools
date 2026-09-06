@@ -7,7 +7,7 @@ This is very much work in progress and not yet functional.
 """
 
 import numpy as np
-from scipy.optimize import minimize, OptimizeResult
+from scipy.optimize import OptimizeResult, minimize
 
 from pttools.bubble import Bubble
 from pttools.models import BagModel, Model

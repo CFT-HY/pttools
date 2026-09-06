@@ -1,5 +1,5 @@
 """Compare SSM prediction with data
-Creates and plots velocity and GW power spectra from SSM
+Creates and plots velocity and GW power spectra from SSM.
 
 Modified from
 `sound-shell-model/paper/python/ssm_paper_utils.py
@@ -8,20 +8,18 @@ Modified from
 
 import io
 import logging
-# import os
 
-import numpy as np
 import matplotlib.pyplot as plt
+
+# import os
+import numpy as np
 from scipy.optimize import curve_fit
 
-from pttools import bubble
+from pttools import bubble, ssm
 from pttools.bubble import DEFAULT_ADIABATIC_INDEX
-from pttools import ssm
 from pttools.speedup import njit
 import pttools.type_hints as th
-from tests.paper import const
-from tests.paper import plotting
-from tests.paper import utils
+from tests.paper import const, plotting, utils
 import tests.paper.tex_utils as tu
 from tests.utils.const import TEST_DATA_PATH
 
@@ -153,7 +151,7 @@ def make_1dh_compare_table(
         params_list: th.FloatArr2D,
         v2_list: th.FloatArr2D,
         file_name: str | io.TextIOBase = 'table_1dh_compare.tex') -> None:
-    f = file_name if isinstance(file_name, io.TextIOBase) else open(file_name, "w")
+    f = file_name if isinstance(file_name, io.TextIOBase) else open(file_name, "w")  # noqa: SIM115
     f.write('\\begin{tabular}{cc | rrr }\n')
 
     f.write('\\hline\\hline\n')
@@ -216,7 +214,7 @@ def make_3dh_compare_table(
         8.6, 10.4, 18.3, np.nan, 9.9,
         8.5, np.nan, 16.1, np.nan, 6.9]
 
-    f = file_name if isinstance(file_name, io.TextIOBase) else open(file_name, 'w')
+    f = file_name if isinstance(file_name, io.TextIOBase) else open(file_name, 'w')  # noqa: SIM115
     f.write('\\begin{tabular}{cc | rr | rr | ll | rr}\n')
 
     f.write('\\hline\\hline\n')
@@ -293,7 +291,7 @@ def make_nuc_compare_table(
     The results are precomputed, and therefore this function doesn't call pttools.
     """
     # print('\\begin{tabular}{cc | rr | rr | ll | rr | rr}')
-    f = file_name if isinstance(file_name, io.TextIOBase) else open(file_name, 'w')
+    f = file_name if isinstance(file_name, io.TextIOBase) else open(file_name, 'w')  # noqa: SIM115
     f.write('\\begin{tabular}{cc | rr | ll | rr | rr}\n')
 
     f.write('\\hline\\hline\n')
@@ -399,8 +397,7 @@ def ps_from_ssm(
         Np: th.IntArr1D = const.NP_ARR[-1],
         method: ssm.Method = ssm.Method.E_CONSERVING,
         lambda_correction: bool = False) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
-    """Get velocity and GW power spectra from SSM"""
-
+    """Get velocity and GW power spectra from SSM."""
     nuc_string = nuc_type[0:3] + '_'
     for n in range(len(nuc_args)):
         nuc_string += str(nuc_args[n]) + '_'
@@ -441,7 +438,7 @@ def plot_ps_compare_res(
         method: ssm.Method = ssm.Method.E_CONSERVING):
     """
     Plots power spectra predictions of SSM with different resolutions in Np_list
-    Saves data and graphs if save_id is set
+    Saves data and graphs if save_id is set.
     """
     strength = utils.Strength.WEAK
     if alpha >= 0.05:
@@ -530,7 +527,7 @@ def plot_ps_1bubble(
     Plots power spectra predictions of 1 bubble. Shown are
     $\mid A \mid^2, \mid f'(z) \mid^2/2$ and $\mid l(z) \mid^2/2$
     Saves data if save_id is set
-    Saves graph file if graph_file_type is set
+    Saves graph file if graph_file_type is set.
     """
     strength = utils.Strength.WEAK
     if alpha >= 0.05:
@@ -759,7 +756,6 @@ def plot_and_save(
     Plots the scaled GW power spectrum as a function of $kR_*$.
     Saves power spectra in files pow_v_*, pow_gw_* if suffix is set.
     """
-
     Np = const.NP_ARR[-1]
     col = const.COLOURS[0]
 

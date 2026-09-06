@@ -1,4 +1,4 @@
-"""Logging configuration"""
+"""Logging configuration."""
 
 import faulthandler
 import logging
@@ -10,13 +10,14 @@ LOGGING_LOCK = Lock()
 
 
 class MessageFilter(logging.Filter):
-    """Exclude log records whose messages start with any of the given texts
+    """Exclude log records whose messages start with any of the given texts.
 
     This filter has to be attached to the logger that emits the record,
     since the filters of higher-level loggers are not applied to propagated records.
     This filter could be attached to a logging handler instead,
     but then the records would still be emitted to the other handlers.
     """
+
     def __init__(self, *texts: str):
         super().__init__()
         self.texts = texts
@@ -31,7 +32,7 @@ def setup_logging(
         log_dir: str | None = None,
         enable_faulthandler: bool = True,
         silence_spam: bool = True):
-    """Configure logging to both file and console and optionally silence spam"""
+    """Configure logging to both file and console and optionally silence spam."""
     # Allow running this function only once for each process
     if not LOGGING_LOCK.acquire(blocking=False):
         return

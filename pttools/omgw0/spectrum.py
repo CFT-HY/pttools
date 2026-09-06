@@ -1,3 +1,5 @@
+"""Gravitational wave power spectrum as observed today."""
+
 import functools
 import math
 import typing as tp
@@ -7,12 +9,10 @@ from matplotlib.figure import Figure
 import numpy as np
 from numpy.typing import NDArray
 
-from pttools.bubble import Bubble
-from pttools.omgw0 import const
-from pttools.omgw0.factors import F_gw0
-from pttools.omgw0 import freq
-from pttools.omgw0 import noise
 from pttools import ssm
+from pttools.bubble import Bubble
+from pttools.omgw0 import const, freq, noise
+from pttools.omgw0.factors import F_gw0
 from pttools.ssm.const import DEFAULT_Y
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 import pttools.type_hints as th
@@ -24,7 +24,8 @@ if tp.TYPE_CHECKING:
 
 
 class Spectrum(ssm.SSMSpectrum):
-    r"""A spectrum object that includes the conversion to the GW power spectrum today $\Omega_{\text{gw},0}$"""
+    r"""A spectrum object that includes the conversion to the GW power spectrum today $\Omega_{\text{gw},0}$."""
+
     def __init__(
             self,
             bubble: Bubble,
@@ -118,7 +119,7 @@ class Spectrum(ssm.SSMSpectrum):
     def ge_star(self) -> float:
         r"""Degrees of freedom $g_{e,*}$ for energy density at the time the GWs were produced
         $$g_{e,*} = \frac{1}{3}(4 g_s - g_p)$$
-        :maki_msc:`\ ` eq. 2.108
+        :maki_msc:`\ ` eq. 2.108.
         """
         return (4 * self.gs_star - self.g_star) / 3
 
@@ -153,13 +154,13 @@ class Spectrum(ssm.SSMSpectrum):
     def R_star(self) -> th.FloatOrArr:
         r"""Mean bubble separation $R_*$, in units of $T^{-2}$
         $$R_* = \frac{r_*}{H_*}$$
-        :gowling_2021:`\ ` eq. 2.2
+        :gowling_2021:`\ ` eq. 2.2.
         """
         return self.r_star / self.H_star
 
     @functools.cached_property
     def R_star_m(self) -> th.FloatOrArr:
-        r"""Mean bubble separation $R_*$, in meters, presuming that $T$ is in GeV"""
+        r"""Mean bubble separation $R_*$, in meters, presuming that $T$ is in GeV."""
         return self.R_star * const.GEV_IN_J * const.PLANCK_LENGTH
 
     # =====
@@ -218,7 +219,7 @@ class Spectrum(ssm.SSMSpectrum):
             self,
             g0: float = const.G0,
             gs0: float = const.GS0) -> th.FloatArr1D:
-        r"""Gravitational wave power spectrum today $\Omega_{\text{gw},0}$"""
+        r"""Gravitational wave power spectrum today $\Omega_{\text{gw},0}$."""
         return self.F_gw0(g0=g0, gs0=gs0) * self.pow_gw
 
     def omgw0_peak(
@@ -227,30 +228,30 @@ class Spectrum(ssm.SSMSpectrum):
             gs0: float = const.GS0):
         r"""Peak $\Omega_{\text{gw},0}
         :param g0: Degrees of freedom today for pressure $g_0$
-        :param gs0: Degrees of freedom today for entropy $g_{s,0}$
+        :param gs0: Degrees of freedom today for entropy $g_{s,0}$.
         """
         omgw0 = self.omgw0(g0=g0, gs0=gs0)
         i_max = np.argmax(omgw0)
         return self.f()[i_max], omgw0[i_max]
 
     def omgw0_total(self, omgw0: th.FloatArr1D | None = None) -> float:
-        r"""Total $\Omega_{\text{gw},0} integrated over all frequencies"""
+        r"""Total $\Omega_{\text{gw},0} integrated over all frequencies."""
         if omgw0 is None:
             omgw0 = self.omgw0()
         return ssm.trapezoid_loglog(x=self.f(), y=omgw0)
 
     def signal_to_noise_ratio(self) -> float:
-        """Signal-to-noise ratio for LISA, taking into account all noise sources"""
+        """Signal-to-noise ratio for LISA, taking into account all noise sources."""
         snr, f_min, f_max = noise.signal_to_noise_ratio(f=self.f(), signal=self.omgw0(), noise=self.noise())
         return snr
 
     def signal_to_noise_ratio_instrument(self) -> float:
-        """Signal-to-noise ratio for LISA, taking into account only the instrument noise"""
+        """Signal-to-noise ratio for LISA, taking into account only the instrument noise."""
         snr, f_min, f_max = noise.signal_to_noise_ratio(f=self.f(), signal=self.omgw0(), noise=self.noise_ins())
         return snr
 
     def z_from_f[T: FloatOrArr](self, f: T) -> T:
-        r"""Convert from frequencies $f$ back to wavenumbers $z$
+        r"""Convert from frequencies $f$ back to wavenumbers $z$.
 
         $$z(f) = \frac{f}{{f}_{\ast,0}} {r}_\ast$$
         Inverted from :gowling_2021:`\ ` eq. 2.12
@@ -269,7 +270,7 @@ class Spectrum(ssm.SSMSpectrum):
             ax: Axes | None = None,
             path: str | None = None,
             **kwargs) -> "FigAndAxes":
-        from pttools.analysis.plot_spectra import plot_spectra
+        from pttools.analysis.plot_spectra import plot_spectra  # noqa: PLC0415
         return plot_spectra([self], fig, ax, path, **kwargs)
 
     def plot_multi(
@@ -277,7 +278,7 @@ class Spectrum(ssm.SSMSpectrum):
             fig: Figure | None = None,
             path: str | None = None,
             **kwargs) -> tuple[Figure, th.AxesArr2D]:
-        from pttools.analysis.plot_spectra import plot_spectra_multi
+        from pttools.analysis.plot_spectra import plot_spectra_multi  # noqa: PLC0415
         return plot_spectra_multi([self], fig, path, **kwargs)
 
     def plot_multi_flat(
@@ -287,13 +288,15 @@ class Spectrum(ssm.SSMSpectrum):
             label: str | None = None,
             legend: bool = False,
             **kwargs) -> tuple[Figure, th.AxesArr1D]:
-        from pttools.analysis.plot_spectra import plot_spectra_multi_flat
+        from pttools.analysis.plot_spectra import plot_spectra_multi_flat  # noqa: PLC0415
         return plot_spectra_multi_flat([self], fig=fig, path=path, labels=[label], legend=legend, **kwargs)
 
 
-type SpectrumArr = NDArray[Spectrum]
-type SpectrumArr2D = np.ndarray[tuple[int, int], np.dtype[Spectrum]]
-type SpectrumArr3D = np.ndarray[tuple[int, int, int], np.dtype[Spectrum]]
+# These are object arrays. Numpy typing has no way of expressing the element type of an object array,
+# but declaring the element type here does give the correct types when the arrays are indexed.
+type SpectrumArr = NDArray[Spectrum]  # type: ignore[type-var]
+type SpectrumArr2D = np.ndarray[tuple[int, int], np.dtype[Spectrum]]  # type: ignore[type-var]
+type SpectrumArr3D = np.ndarray[tuple[int, int, int], np.dtype[Spectrum]]  # type: ignore[type-var]
 
 copy_docstrings({
     Spectrum.f: freq.f,

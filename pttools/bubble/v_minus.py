@@ -1,4 +1,4 @@
-r"""Fluid speed $\tilde{v}_-$ behind the wall in the wall frame
+r"""Fluid speed $\tilde{v}_-$ behind the wall in the wall frame.
 
 .. plot:: fig/vp_vm_plane.py
 
@@ -116,7 +116,7 @@ def v_minus(
     \pm
     \sqrt{ \left( (1 + \alpha_+)\tilde{v}_+ + \frac{1 - 3\alpha_+}{3 \tilde{v}_+} \right)^2 - \frac{4}{3} }
     \right]$$
-    :gw_pt_ssm:`\ `, eq. B.7
+    :gw_pt_ssm:`\ `, eq. B.7.
 
     Positive sign is for detonations,
     which corresponds to $\tilde{v}_+ < \frac{1}{\sqrt{3}}$ in the bag model.

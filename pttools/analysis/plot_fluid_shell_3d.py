@@ -1,4 +1,4 @@
-r"""Plot $(v,w,\xi)$ for fluid shells"""
+r"""Plot $(v,w,\xi)$ for fluid shells."""
 
 import logging
 
@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 class BubblePlot3D(PlotlyPlot):
-    r"""Create a 3D plot of bubbles in the $(v,w,\xi)$ space"""
+    r"""Create a 3D plot of bubbles in the $(v,w,\xi)$ space."""
+
     def __init__(self, model: Model | None = None, colorscale: str = "YlOrRd"):
         super().__init__()
         self.model = model
@@ -26,7 +27,7 @@ class BubblePlot3D(PlotlyPlot):
         self.colorscale = colorscale
 
     def add(self, bubble: Bubble, color: str | None = None) -> go.Scatter3d:
-        """Add a bubble to the plot"""
+        """Add a bubble to the plot."""
         if not bubble.solved:
             bubble.solve()
 
@@ -46,7 +47,7 @@ class BubblePlot3D(PlotlyPlot):
         return plot
 
     def create_fig(self) -> go.Figure:
-        """Create the figure"""
+        """Create the figure."""
         self.mu_surface()
         self.shock_surfaces()
         fig = go.Figure(
@@ -70,7 +71,7 @@ class BubblePlot3D(PlotlyPlot):
         return fig
 
     def mu_surface(self, n_xi: int = 20, n_w: int = 20, w_mult: float = 1.5) -> go.Surface:
-        r"""Add the $\mu$ surface to the plot"""
+        r"""Add the $\mu$ surface to the plot."""
         logger.info("Computing mu surface.")
         if self.model is None:
             return None
@@ -95,7 +96,7 @@ class BubblePlot3D(PlotlyPlot):
         return surf
 
     def shock_surfaces(self, n_xi: int = 20, n_w: int = 30, w_mult: float = 1.5, wp_surface: bool = False):
-        """Add the shock surfaces to the plot"""
+        """Add the shock surfaces to the plot."""
         if self.model is None:
             return
         logger.info("Computing shock surface.")

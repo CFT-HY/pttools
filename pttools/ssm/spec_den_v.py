@@ -1,4 +1,4 @@
-"""Functions for computing the spectral density of the velocity field"""
+"""Functions for computing the spectral density of the velocity field."""
 
 import logging
 
@@ -19,7 +19,7 @@ def qT_from_z(
         beta_R: th.FloatOrArr) -> th.FloatOrArr:
     r"""$qT$
     $$qT = \frac{z \tilde{T}}{\beta R_*} = \frac{\tilde{T}q}{\beta}$$
-    where $z = q L_f = q R_*$
+    where $z = q L_f = q R_*$.
     """
     return z * T_tilde / beta_R
 
@@ -36,7 +36,7 @@ def _spec_den_v_core_loop(
         factor: float,
         nuc_type: NucType,
         z_i: float) -> float:
-    """spec_den_v for an individual z"""
+    """spec_den_v for an individual z."""
     # The argument of A(qT)
     qT = qT_from_z(z_i, T_tilde, beta_R)
     # |A(qT)|^2
@@ -59,7 +59,7 @@ def _spec_den_v_core(
         T_tilde: th.FloatArr1D,
         ubarf2: float,
         v_wall: float) -> th.FloatArr1D:
-    """Parallel core of spec_den_v"""
+    """Parallel core of spec_den_v."""
     # $\beta R_*$ = beta, but without dividing by R_* in its equation
     # The choice of beta is somewhat arbitrary.
     # It has been chosen to correspond to the nucleation rate (beta), and is therefore called beta as well.
@@ -95,7 +95,7 @@ def spec_den_v(
         bubble_spacing_enlargement_factor: float = 1.,
         # Settings
         parallel: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D]:
-    r"""Spectral density of the velocity field $\tilde{P}_v$
+    r"""Spectral density of the velocity field $\tilde{P}_v$.
 
     $$\tilde{P}_v(q)
     = \frac{1}{\bar{U}_f^2 R_{\ast}^3} P_v(q)

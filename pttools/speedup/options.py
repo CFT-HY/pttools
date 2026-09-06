@@ -1,4 +1,4 @@
-"""Options for JIT-compilation and other speedups"""
+"""Options for JIT-compilation and other speedups."""
 
 import logging
 import os

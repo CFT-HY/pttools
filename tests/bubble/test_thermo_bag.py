@@ -8,10 +8,16 @@ import unittest
 
 import numpy as np
 
-from pttools.bubble import \
-    CS2_BAG_SCALAR_PTR, DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG, cs2_bag_scalar, thermo_bag
+from pttools.bubble import (
+    CS2_BAG_SCALAR_PTR,
+    DEFAULT_FLUID_INTEGRATE_METHOD,
+    DF_DTAU_PTR_BAG,
+    cs2_bag_scalar,
+    thermo_bag,
+)
 import pttools.type_hints as th
 from tests.utils.test_assertions import assert_allclose
+
 # For debugging Numba issues
 # from pttools.logging import setup_logging
 # setup_logging(silence_spam=False)
@@ -19,6 +25,7 @@ from tests.utils.test_assertions import assert_allclose
 
 class ThermoBagTest:
     """Compare thermodynamic quantities of the bag model to the values in articles."""
+
     ALPHA_NS: th.FloatArr1D
     V_WALLS: th.FloatArr1D
 
@@ -64,7 +71,8 @@ class ThermoBagTest:
 
 
 class ThermoBagTestLectureNotes(ThermoBagTest, unittest.TestCase):
-    r"""Compare thermodynamic quantities to the values in :notes:`\ `"""
+    r"""Compare thermodynamic quantities to the values in :notes:`\ `."""
+
     # Input parameters
     ALPHA_NS = np.array([0.1, 0.1, 0.1])
     V_WALLS = np.array([0.4, 0.7, 0.8])
@@ -91,7 +99,8 @@ class ThermoBagTestLectureNotes(ThermoBagTest, unittest.TestCase):
 
 
 class ThermoBagTestHindmarshHijazi(ThermoBagTest, unittest.TestCase):
-    r"""Compare thermodynamic quantities to the values in :gw_pt_ssm:`\ `"""
+    r"""Compare thermodynamic quantities to the values in :gw_pt_ssm:`\ `."""
+
     # Input parameters
     ALPHA_NS = np.array([0.578, 0.151, 0.091])
     V_WALLS = np.array([0.5, 0.7, 0.77])

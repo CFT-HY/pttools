@@ -1,4 +1,4 @@
-"""Base class for thermodynamics models"""
+"""Base class for thermodynamics models."""
 
 import abc
 import logging
@@ -18,7 +18,8 @@ logger = logging.getLogger(__name__)
 
 
 class ThermoModel(BaseModel, abc.ABC):
-    """The thermodynamics model characterizes the particle physics of interest"""
+    """The thermodynamics model characterizes the particle physics of interest."""
+
     # TODO: Some functions seem to return vertical arrays. Fix this!
 
     #: Container for the log10 temperatures of $g_\text{eff}$ data
@@ -65,7 +66,7 @@ class ThermoModel(BaseModel, abc.ABC):
     # -----
 
     def validate_cs2(self, cs2: th.FloatOrArr, name: str) -> bool:
-        """Validate that $0 < c_s^2 < 1$"""
+        """Validate that $0 < c_s^2 < 1$."""
         err = []
         if np.any(cs2 < 0):
             err.append("cannot be negative")
@@ -139,7 +140,8 @@ class ThermoModel(BaseModel, abc.ABC):
 
         def cs2(temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
             """The validate_temp function cannot be called from jitted functions,
-            and therefore we have to use the validate_temp"""
+            and therefore we have to use the validate_temp.
+            """
             if isinstance(temp, float):
                 return cs2_scalar_temp(temp, phase)
             if isinstance(temp, np.ndarray):
@@ -173,7 +175,7 @@ class ThermoModel(BaseModel, abc.ABC):
         return -self.cs2(temp, phase)
 
     def cs2_full(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        """Full evaluation of $c_s^2$ from the underlying quantities"""
+        """Full evaluation of $c_s^2$ from the underlying quantities."""
         # This hopefully reduces numerical errors
         return (self.dgp_dT(temp, phase)*temp + 4*self.gp(temp, phase)) / \
                (3 * (self.dge_dT(temp, phase)*temp + 4*self.ge(temp, phase)))
@@ -186,20 +188,16 @@ class ThermoModel(BaseModel, abc.ABC):
         return 4*self.dgs_dT(temp, phase) - 3*self.dge_dT(temp, phase)
 
     def dp_dt(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""
-        $\frac{dp}{dT}$
-        """
+        r"""$\frac{dp}{dT}$."""
         return np.pi**2/90 * (self.dgp_dT(temp, phase) * temp**4 + 4*self.gp(temp, phase)*temp**3)
 
     def de_dt(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""
-        $\frac{de}{dT}$
-        """
+        r"""$\frac{de}{dT}$."""
         return np.pi**2/30 * (self.dge_dT(temp, phase) * temp**4 + 4*self.ge(temp, phase)*temp**3)
 
     def gp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(T,\phi)$
-        $$g_{\text{eff},p}(T,\phi) = 4g_s(T,\phi) - 3g_e(T,\phi)$$
+        $$g_{\text{eff},p}(T,\phi) = 4g_s(T,\phi) - 3g_e(T,\phi)$$.
         """
         # + \frac{90 V(\phi)}{\pi^2 T^4}
         self.validate_temp(temp)
@@ -211,20 +209,16 @@ class ThermoModel(BaseModel, abc.ABC):
 
     @abc.abstractmethod
     def dge_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""
-        $\frac{dg_e}{dT}$
-        """
+        r"""$\frac{dg_e}{dT}$."""
 
     @abc.abstractmethod
     def dgs_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""
-        $\frac{dg_s}{dT}$
-        """
+        r"""$\frac{dg_s}{dT}$."""
 
     @abc.abstractmethod
     def ge(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""
-        Effective degrees of freedom for the energy density $g_{\text{eff},e}(T)$
+        Effective degrees of freedom for the energy density $g_{\text{eff},e}(T)$.
 
         :param temp: temperature $T$ (MeV)
         :param phase: phase $\phi$
@@ -234,7 +228,7 @@ class ThermoModel(BaseModel, abc.ABC):
     @abc.abstractmethod
     def gs(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""
-        Effective degrees of freedom for the entropy density, $g_{\text{eff},s}(T)$
+        Effective degrees of freedom for the entropy density, $g_{\text{eff},s}(T)$.
 
         :param temp: temperature $T$ (MeV)
         :param phase: phase $\phi$

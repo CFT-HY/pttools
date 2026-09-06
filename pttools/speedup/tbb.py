@@ -1,4 +1,4 @@
-"""A fix for loading Intel Thread Building Blocks (TBB) for Numba
+"""A fix for loading Intel Thread Building Blocks (TBB) for Numba.
 
 https://github.com/numba/numba/issues/7531
 
@@ -6,9 +6,9 @@ Based on numba.np.ufunc.parallel._check_tbb_version_compatible()
 """
 # https://github.com/numba/numba/issues/7531#issuecomment-1614510255
 
+from ctypes import CDLL, c_int
 import logging
 import os
-from ctypes import CDLL, c_int
 
 from pttools.utils.system import IS_LINUX, IS_OSX, IS_WINDOWS
 
@@ -21,7 +21,7 @@ TBB_MIN_VERSION = 12060
 
 
 def get_tbb_version(path: str | None = None) -> int:
-    """Get TBB library version"""
+    """Get TBB library version."""
     if IS_WINDOWS:
         libtbb_name = 'tbb12.dll'
     elif IS_OSX:
@@ -41,7 +41,7 @@ def get_tbb_version(path: str | None = None) -> int:
 
 
 def load_tbb() -> int | None:
-    """Update environment variables so that the proper TBB is found
+    """Update environment variables so that the proper TBB is found.
 
     This may not work
     https://stackoverflow.com/a/52408140

@@ -1,4 +1,4 @@
-"""Constants for the bubble module"""
+"""Constants for the bubble module."""
 
 from math import sqrt
 import typing as tp

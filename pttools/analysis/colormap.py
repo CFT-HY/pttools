@@ -1,10 +1,10 @@
-"""Utilities for color maps"""
+"""Utilities for color maps."""
 
 import math
 
 from matplotlib import cm
-from matplotlib.contour import QuadContourSet
 from matplotlib.colors import Colormap, ListedColormap
+from matplotlib.contour import QuadContourSet
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -17,7 +17,7 @@ DEFAULT_REGION_COLOR = "red"
 
 
 def get_cmap(cmap: Colormap | str) -> Colormap:
-    """Get a color map from its name
+    """Get a color map from its name.
 
     If given a Colormap object, passes it through.
     """
@@ -39,7 +39,7 @@ def cmap_plusminus(
         diff_level: float,
         cmap_neg: Colormap | str = DEFAULT_CMAP_NEG,
         cmap_pos: Colormap | str = DEFAULT_CMAP_POS) -> tuple[th.FloatArr1D, list[float]]:
-    """Colormap for Matplotlib heatmap plots with different color schemes for positive and negative values"""
+    """Colormap for Matplotlib heatmap plots with different color schemes for positive and negative values."""
     n_min = math.floor(min_level / diff_level)
     n_max = math.ceil(max_level / diff_level)
 
@@ -60,7 +60,7 @@ def color_region(
         y: th.FloatArr1D,
         region: th.FloatArr2D,
         color: str = DEFAULT_REGION_COLOR, alpha: float = 1) -> QuadContourSet:
-    """Set a region on a plot to a fixed color"""
+    """Set a region on a plot to a fixed color."""
     cmp = ListedColormap([color], color, 1)
     # The data type must be supported by np.isinf()
     region2 = region.copy() if region.dtype is np.float64 else region.astype(np.float64)

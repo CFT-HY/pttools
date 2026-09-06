@@ -1,4 +1,4 @@
-"""Phase of the field that undergoes the phase transition"""
+"""Phase of the field that undergoes the phase transition."""
 
 import enum
 
@@ -11,10 +11,12 @@ import pttools.type_hints as th
 
 @enum.unique
 class Phase(float, enum.Enum):
-    """Phase of the field that undergoes the phase transition
+    """Phase of the field that undergoes the phase transition.
 
     In general the phase not binary, but a real number.
-    Therefore, it is implemented as a float rather than bool."""
+    Therefore, it is implemented as a float rather than bool.
+    """
+
     # Do not change these values without also checking the model cs2 functions.
     # These are floats instead of integers to ensure that the Numba functions don't have to be compiled twice.
     SYMMETRIC = 0.
@@ -35,7 +37,7 @@ def get_phase(xi: th.FloatOrArr, v_wall: float) -> th.FloatOrArr:
     r"""
     Returns array indicating phase of system.
     in symmetric phase $(\xi > v_w)$, phase = 0
-    in broken phase $(\xi < v_w)$, phase = 1
+    in broken phase $(\xi < v_w)$, phase = 1.
 
     :return: phase
     """

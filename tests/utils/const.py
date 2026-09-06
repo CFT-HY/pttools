@@ -1,4 +1,4 @@
-"""Constants used by the unit tests"""
+"""Constants used by the unit tests."""
 
 import os
 

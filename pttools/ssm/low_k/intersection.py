@@ -1,4 +1,4 @@
-"""Functions for computing the intersections of low and high frequency approximations"""
+"""Functions for computing the intersections of low and high frequency approximations."""
 
 import numpy as np
 from scipy.special import gamma
@@ -30,7 +30,7 @@ def z_cross(HLf: float, cs: float, nu: float, tau_star: float, tau_end: float) -
 
 
 def z_cross_approx(cs: FloatOrArr, nu: FloatOrArr, eta_ratio: FloatOrArr, r_star: FloatOrArr) -> FloatOrArr:
-    r"""Approximation for $z_\times$
+    r"""Approximation for $z_\times$.
 
     $$z_\times = \frac{\sqrt{5}}{\sqrt{2} c_s^2} \frac{\nu}{1 + \nu}
     \frac{\sqrt{3 - 2 c_s^2 - \frac{3}{c_s}(1 - c_s^2) \text{arctanh}(c_s)}}

@@ -1,4 +1,4 @@
-"""Utilities for configuring the mini-galleries of Sphinx-Gallery
+"""Utilities for configuring the mini-galleries of Sphinx-Gallery.
 
 https://sphinx-gallery.github.io/stable/configuration.html#add-mini-galleries-for-api-documentation
 """
@@ -23,7 +23,7 @@ MINIGALLERY_CLASS: str = "sphx-glr-minigallery-auto"
 
 
 def add_minigalleries(
-        app: Sphinx, what: str, name: str, obj: tp.Any, options: tp.Any, lines: list[str]) -> None:  # noqa: ARG001
+        app: Sphinx, what: str, name: str, obj: tp.Any, options: tp.Any, lines: list[str]) -> None:
     """Add a mini-gallery of the examples that use the object being documented.
 
     If the docstring already contains a minigallery directive,
@@ -56,7 +56,7 @@ def add_minigalleries(
 
 
 def remove_duplicate_minigalleries(
-        app: Sphinx, domain: str, objtype: str, contentnode: nodes.Element) -> None:  # noqa: ARG001
+        app: Sphinx, domain: str, objtype: str, contentnode: nodes.Element) -> None:
     """Remove all but the last of the automatic mini-galleries of an object.
 
     Autodoc processes the class and __init__ docstrings of a class separately when

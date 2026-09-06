@@ -1,4 +1,4 @@
-r"""$\xi, v$ plane plotting"""
+r"""$\xi, v$ plane plotting."""
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,7 +11,7 @@ import pttools.type_hints as th
 
 
 def filter_not[T: tuple, U: dtype](arr: np.ndarray[T, U], mask: np.ndarray[T, th.Bool]) -> np.ndarray[T, U]:
-    """Replace the elements that are False in the mask with np.nan"""
+    """Replace the elements that are False in the mask with np.nan."""
     arr2 = arr.copy()
     arr2[np.logical_not(mask)] = np.nan
     return arr2
@@ -43,7 +43,7 @@ def get_differing_inds(
         i: int,
         rtol: float,
         atol: float = 0) -> th.FloatArr2D:
-    r"""Get the indices where $v$, $w$ or $\xi$ values do not meet the given tolerances"""
+    r"""Get the indices where $v$, $w$ or $\xi$ values do not meet the given tolerances."""
     # differing_b = np.isclose(data[:3, i, :], data_ref[:3, i, :], rtol=rtol, atol=atol)
     # differing_f = np.isclose(data[3:, i, :], data_ref[:3, i, :], rtol=rtol, atol=atol)
     data_v_b = data[0, i, :]
@@ -67,14 +67,15 @@ def set_invalid_v_to_nan(v: th.FloatArr) -> None:
 
 
 def v_ahead_max[T](xi: T) -> T:
-    """Maximum fluid velocity allowed"""
+    """Maximum fluid velocity allowed."""
     return xi
 
 
 def plot_v_excerpt(ax: plt.Axes, v_wall: float, alpha_plus: float, n_xi: int = 500) -> None:
     """Plots parts of solution obtained by integration of fluid equations.
     Supersonic deflagration solution comes in two parts, ahead and behind wall,
-    each with about npts values."""
+    each with about npts values.
+    """
     v, w, xi = bubble.sound_shell_alpha_plus_bag(
         v_wall, alpha_plus, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
         ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=bubble.cs2_bag_scalar, n_xi=n_xi)

@@ -133,8 +133,6 @@ project-excludes = [
     "**/*venv/**",
     "**/.[!/.]*"
 ]
-# The "legacy" preset corresponds most closely to the previously used mypy configuration.
-# preset = "legacy"
 ignore-missing-imports = [
     "h5py.*",
     "kaleido.*",
@@ -197,35 +195,51 @@ extend-exclude = [
 
 [tool.ruff.lint]
 select = [
-    "A",    # flake8-builtins
-    "ARG",  # flake8-unused-arguments
-    "B",    # flake8-bugbear
-    "C4",   # flake8-comprehensions
-    "E",    # pycodestyle errors
-    "F",    # Pyflakes
-    "N",    # pep8-naming
-    "NPY",  # NumPy-specific rules
-    "PIE",  # flake8-pie
-    "PL",   # Pylint
-    "RET",  # flake8-return
-    "RUF",  # Ruff-specific rules
-    "RUF100",  # Unused noqa directives, which have to be selected explicitly
-    "SIM",  # flake8-simplify
-    "UP",   # pyupgrade
-    "W"     # pycodestyle warnings
+    "A",     # flake8-builtins
+    "ARG",   # flake8-unused-arguments
+    "B",     # flake8-bugbear
+    "BLE",   # flake8-blind-except
+    "C4",    # flake8-comprehensions
+    "D",     # pydocstyle
+    "E",     # pycodestyle errors
+    "F",     # Pyflakes
+    "I",     # isort
+    "N",     # pep8-naming
+    "NPY",   # NumPy-specific rules
+    "PERF",  # Perflint
+    "PIE",   # flake8-pie
+    "PL",    # Pylint
+    "PT",    # flake8-pytest-style
+    "RET",   # flake8-return
+    "RUF",   # Ruff-specific rules
+    "SIM",   # flake8-simplify
+    "SLF",   # flake8-self
+    "TID",   # flake8-tidy-imports
+    "UP",    # pyupgrade
+    "W"      # pycodestyle warnings
 ]
 ignore = [
-    # Corresponds to the Pylint message "too-many-arguments", which was disabled as well.
-    "PLR0913",
-    # Corresponds to the Pylint message "too-many-positional-arguments".
-    # Scientific functions have a lot of parameters, and adding "*" to all of them would be tedious.
-    "PLR0917",
-    # PTtools uses the notation of the literature for functions, arguments and local variables,
-    # e.g. "H_star_tau_v", "Omgw", "P_tilde_v" and "T_tilde".
-    # This corresponds to the extensive "good-names" list of the previously used Pylint configuration.
-    "N802",
-    "N803",
-    "N806"
+    "ARG001",   # unused-function-argument
+    # Writing the missing docstrings is a documentation task rather than a linting one.
+    "D101",     # undocumented-public-class
+    "D102",     # undocumented-public-method
+    "D103",     # undocumented-public-function
+    "D105",     # undocumented-magic-method
+    "D106",     # undocumented-public-nested-class
+    "D107",     # undocumented-public-init
+    # Most of the docstrings of PTtools have a multi-line summary or start on the line
+    # after the opening quotes, so this cannot be fixed mechanically.
+    "D205",     # missing-blank-line-after-summary
+    # Many docstrings describe a physical quantity with a noun phrase instead of a verb.
+    "D401",     # non-imperative-mood
+    "PLR0913",  # too-many-arguments
+    "PLR0917",  # too-many-positional-arguments
+    "N802",     # invalid-function-name
+    "N803",     # invalid-argument-name
+    "N806",     # non-lowercase-variable-in-function
+    # The tests are based on unittest.TestCase, and therefore they use its assertion methods.
+    "PT009",    # pytest-unittest-assertion
+    "PT027"     # pytest-unittest-raises-assertion
 ]
 # The en dash is used in the names of the physical laws, and the low asterisk in the unicode labels.
 allowed-confusables = ["–", "⁎"]
@@ -233,7 +247,12 @@ allowed-confusables = ["–", "⁎"]
 dummy-variable-rgx = "^(_+$|(_[a-zA-Z0-9_]*[a-zA-Z0-9]+?$)|dummy|ignored_|unused_)"
 
 [tool.ruff.lint.flake8-unused-arguments]
+# Allow unused variadic names like *args and *kwargs
 ignore-variadic-names = true
+
+[tool.ruff.lint.isort]
+# Sort "import x" and "from x import y" together.
+force-sort-within-sections = true
 
 # These correspond to the "good-names" of the previously used Pylint configuration.
 [tool.ruff.lint.pep8-naming]
@@ -255,7 +274,25 @@ extend-ignore-names = [
 
 # The submodules of PTtools are re-exported by the __init__.py files with wildcard imports.
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["F401", "F403"]
+"__init__.py" = [
+    "F401",  # unused-import
+    "F403"   # undefined-local-with-import-star
+]
+# The Sphinx configuration variables shadow builtins and are not documented individually.
+"docs/conf.py" = [
+    "A001"  # builtin-variable-shadowing
+]
+# The module docstring of a Sphinx-Gallery example has to start with an RST section title,
+# which cannot end with a period and has to be followed directly by its underline.
+"examples/**" = [
+    "D205",  # missing-blank-line-after-summary
+    "D400"   # missing-trailing-period
+]
+
+[tool.ruff.lint.pydocstyle]
+# This should be set to "sphinx" once it's supported.
+# https://github.com/astral-sh/ruff/issues/6606
+convention = "pep257"
 
 # [tool.setuptools.dynamic]
 # version = {attr = "docs.conf.version"}

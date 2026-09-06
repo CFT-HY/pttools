@@ -1,4 +1,4 @@
-"""Validation tools"""
+"""Validation tools."""
 
 import logging
 
@@ -7,8 +7,8 @@ from numba.extending import overload
 import numpy as np
 
 from pttools.bubble import alpha
-from pttools.speedup import njit
 from pttools.bubble.integrate import FluidIntegrateMethod
+from pttools.speedup import njit
 from pttools.speedup.differential import DifferentialPointer
 import pttools.type_hints as th
 
@@ -27,7 +27,7 @@ def check_physical_params(
     r"""
     Check that $v _\text{wall}$ = params[0], $\alpha_n$ = params[1] values are physical, i.e.
     $0 < v _\text{wall} < 1$,
-    $\alpha_n < \alpha_{n,\max(v _\text{wall})}$
+    $\alpha_n < \alpha_{n,\max(v _\text{wall})}$.
     """
     v_wall = params[0]
     alpha_n = params[1]
@@ -66,7 +66,7 @@ def _check_wall_speed_scalar(v_wall: th.FloatOrArr, droplet: bool = False) -> No
 
 
 def check_wall_speed(v_wall: th.FloatOrArr, droplet: bool = False) -> None:
-    r"""Check that $v _\text{wall}$ values are all physical: $(0 < v _\text{wall} < 1)$"""
+    r"""Check that $v _\text{wall}$ values are all physical: $(0 < v _\text{wall} < 1)$."""
     if isinstance(v_wall, float):
         return _check_wall_speed_scalar(v_wall, droplet)
     if isinstance(v_wall, np.ndarray):
@@ -88,7 +88,7 @@ def _check_wall_speed_numba(v_wall: th.FloatOrArr, droplet: bool = False) -> Non
 
 
 def find_most_negative_vals(vals: th.FloatOrArr, *args) -> list[float | None]:
-    """Find the most negative values in the given array"""
+    """Find the most negative values in the given array."""
     if vals is None or (not np.any(vals < 0)):
         return [None]*(len(args)+1)
     if np.isscalar(vals):

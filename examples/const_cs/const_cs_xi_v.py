@@ -12,9 +12,9 @@ from examples.utils import save_and_show_fig
 from pttools.bubble.bubble import Bubble
 from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR, cs2_bag_scalar
 from pttools.bubble.fluid_bag import sound_shell_bag
-from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG, add_df_dtau
 from pttools.bubble.relativity import lorentz
+from pttools.bubble.solution_type import SolutionType
 from pttools.models.const_cs import ConstCSModel
 from tests.paper.plane import xiv_plane
 from tests.paper.plot_plane_paper import plot_plane

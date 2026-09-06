@@ -1,18 +1,18 @@
-"""Analytical models for a simplified $P_v(p)$"""
+"""Analytical models for a simplified $P_v(p)$."""
 
 import numpy as np
 from scipy.integrate import quad
 from scipy.special import erf, erfc, gamma
 
 from pttools.ssm.barotropic import Upsilon
-from pttools.ssm.rho import rho
 from pttools.ssm.low_k.const import IV_ANALYTICAL
 from pttools.ssm.low_k.intersection import z_cross
+from pttools.ssm.rho import rho
 from pttools.type_hints import FloatOrArr
 
 
 def gw_spectral_density_approx_low(z, HLf, cs, tau_end):
-    """Not relevant for the SSM, as it uses analytical approximation"""
+    """Not relevant for the SSM, as it uses analytical approximation."""
     nu = (1 - 3 * cs ** 2) / (1 + 3 * cs ** 2)
     tau_star = (1. + nu) / HLf
     # HL = (1+nu)/tau_star
@@ -24,7 +24,7 @@ def gw_spectral_density_approx_low(z, HLf, cs, tau_end):
 
 
 def gw_spectral_density_approx_int(z, HLf, cs):
-    """GW spectral density approximation for intermediate frequencies"""
+    """GW spectral density approximation for intermediate frequencies."""
     nu = (1 - 3 * cs ** 2) / (1 + 3 * cs ** 2)
     tau_star = (1. + nu) / HLf
     return 4 / 3 / cs ** 4 * (3 - 2 * cs ** 2 - 3 / cs * (1 - cs ** 2) * np.arctanh(cs)) \
@@ -32,7 +32,7 @@ def gw_spectral_density_approx_int(z, HLf, cs):
 
 
 def gw_spectral_density_approx_high(z, HLf, cs, tau_end):
-    """GW spectral density approximation for high frequencies"""
+    """GW spectral density approximation for high frequencies."""
     nu = (1 - 3 * cs ** 2) / (1 + 3 * cs ** 2)
     tau_star = (1. + nu) / HLf
     delta = tau_end - tau_star
@@ -51,7 +51,7 @@ def gw_spectral_density_approx_high(z, HLf, cs, tau_end):
 
 
 def Pgw_approx(z, HLf, cs, tau_star, tau_end):
-    """GW power spectrum combining low, intermediate, and high frequency approximations"""
+    """GW power spectrum combining low, intermediate, and high frequency approximations."""
     P_low = gw_spectral_density_approx_low(z, HLf, cs, tau_end)
     P_int = gw_spectral_density_approx_int(z, HLf, cs)
     P_high = gw_spectral_density_approx_high(z, HLf, cs, tau_end)
@@ -71,7 +71,7 @@ def Pv_analytical(k: FloatOrArr, kp: FloatOrArr, ubarf2: FloatOrArr) -> FloatOrA
     r"""Analytical ansatz for $P_v(k)$
     $$P_v(p) = 3 \pi \frac{\bar{U}_f^2}{k_p^3} \frac{(p/k_p)^2}{1 + (p/k_p)^6}$$
     :giombi_2024_cs:`\ ` eq. 3.1
-    :giombi_2026:`\ ` eq. 3.1
+    :giombi_2026:`\ ` eq. 3.1.
     """
     # The equation numbers in the articles happen to be the same.
     k_rel = k / kp

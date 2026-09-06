@@ -1,5 +1,5 @@
 """
-Experimental data structures based on numba.jitclass
+Experimental data structures based on numba.jitclass.
 
 When implementing these, remove the corresponding code from ssm/spectrum.py
 
@@ -15,8 +15,8 @@ This has been replaced with the object-oriented Bubble interface and will probab
 import typing as tp
 
 import numba
-# import numpy as np
 
+# import numpy as np
 from pttools import speedup
 
 if tp.TYPE_CHECKING:
@@ -27,7 +27,8 @@ if tp.TYPE_CHECKING:
     ("a", numba.float64)
 ])
 class NucArgs:
-    """Nucleation arguments"""
+    """Nucleation arguments."""
+
     def __init__(self, a: float):
         self.a = a
 
@@ -44,7 +45,8 @@ class NucArgs:
     ("nuc_args", NotImplemented if speedup.NUMBA_DISABLE_JIT else numba.optional(NucArgs.class_type.instance_type))
 ])
 class PhysicalParams:
-    """Physical parameters for a bubble"""
+    """Physical parameters for a bubble."""
+
     def __init__(
             self,
             v_wall: float,

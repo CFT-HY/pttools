@@ -1,10 +1,10 @@
-r"""Plot $v(\xi)$ and $w(\xi)$ for fluid shells using the bag model"""
+r"""Plot $v(\xi)$ and $w(\xi)$ for fluid shells using the bag model."""
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.analysis import utils
-from pttools.bubble import check, const, fluid_bag, props, thermo, relativity, SolutionType
+from pttools.bubble import SolutionType, check, const, fluid_bag, props, relativity, thermo
 from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR, cs2_bag_scalar
 from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG
 from pttools.bubble.shock_bag import v_shock_bag, wm_shock_bag
@@ -20,7 +20,8 @@ def plot_fluid_shells_bag(
         Np: int = const.DEFAULT_N_XI,
         debug: bool = False,
         draw: bool | None = None) -> plt.Figure | tuple[plt.Figure, th.FloatArr1D]:
-    r"""
+    r"""Plot the fluid shells of several bag model bubbles.
+
     Calls :func:`pttools.bubble.fluid.fluid_shell` and plots resulting v, w against xi.
     Annotates titles with:
 

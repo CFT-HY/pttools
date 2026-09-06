@@ -1,4 +1,4 @@
-"""PRACE tests"""
+"""PRACE tests."""
 
 import logging
 import os.path
@@ -7,14 +7,15 @@ import unittest
 import numpy as np
 
 from pttools.speedup import NUMBA_INTEGRATE_TOLERANCES
-from tests.paper import ssm_compare as scom
 from tests import utils
+from tests.paper import ssm_compare as scom
 
 logger = logging.getLogger(__name__)
 
 
 class TestPrace(unittest.TestCase):
-    """PRACE tests"""
+    """PRACE tests."""
+
     def test_ps_prace(self):
         fluid_profiles_dir = os.path.join(utils.TEST_DATA_PATH, "fluidprofiles")
         if not os.path.isdir(fluid_profiles_dir):

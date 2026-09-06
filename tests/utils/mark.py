@@ -1,4 +1,4 @@
-"""Mark tests for e.g. skipping or expected failure"""
+"""Mark tests for e.g. skipping or expected failure."""
 
 import unittest
 

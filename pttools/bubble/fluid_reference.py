@@ -1,4 +1,4 @@
-"""Compute reference values for the fluid solver"""
+"""Compute reference values for the fluid solver."""
 
 import functools
 import logging
@@ -10,12 +10,12 @@ import h5py
 import numpy as np
 from scipy.interpolate import NearestNDInterpolator
 
+from pttools.bubble import props
 from pttools.bubble.alpha import alpha_n_max_bag
 from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR, cs2_bag_scalar
 from pttools.bubble.fluid_bag import sound_shell_bag
 from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG
 from pttools.bubble.junction import junction_condition_deviation1
-from pttools.bubble import props
 from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.solution_type_bag import identify_solution_type_bag
 from pttools.logging import setup_logging
@@ -26,7 +26,8 @@ logger = logging.getLogger(__name__)
 
 
 class FluidReference:
-    """A set of reference points for the fluid solver"""
+    """A set of reference points for the fluid solver."""
+
     def __init__(
             self,
             path: str,
@@ -95,7 +96,7 @@ class FluidReference:
             v_wall_min: float, v_wall_max: float,
             alpha_n_min: float, alpha_n_max: float,
             n_v_wall: int, n_alpha_n: int):
-        """Create a fluid reference for the given range"""
+        """Create a fluid reference for the given range."""
         msg = "Generating reference data for the fluid solver. This may take several minutes."
         logger.info(msg)
         # This should also be printed so that first-time users know why the first startup can take a long time.
@@ -182,7 +183,7 @@ class FluidReference:
         logger.info("Fluid reference ready, took: %.2f s", time.perf_counter() - start_time)
 
     def get(self, v_wall: float, alpha_n: float, sol_type: SolutionType) -> np.ndarray:
-        """Get the reference point that is closest to the given parameters"""
+        """Get the reference point that is closest to the given parameters."""
         if sol_type == SolutionType.SUB_DEF:
             ind = int(self.interp_sub_def(v_wall, alpha_n))
         elif sol_type == SolutionType.HYBRID:
@@ -197,7 +198,7 @@ class FluidReference:
 
 
 def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tuple[int, float, float, float, float, float, float]:
-    """Create a reference point"""
+    """Create a reference point."""
     if alpha_n > alpha_n_max:
         return -1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 

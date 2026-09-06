@@ -9,10 +9,10 @@ from matplotlib.figure import Figure
 
 from examples.utils import save_and_show_fig
 from pttools.bubble import Bubble
-from pttools.models import ConstCSModel
 from pttools.bubble.gksvdv.gksvdv21 import kappaNuMuModel
 from pttools.bubble.props import find_phase
 from pttools.bubble.thermo import kappa, kinetic_energy_density, va_trace_anomaly_diff
+from pttools.models import ConstCSModel
 
 
 def main(

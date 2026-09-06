@@ -1,22 +1,23 @@
-"""Testing utilities for the Sound Shell Model calculators"""
+"""Testing utilities for the Sound Shell Model calculators."""
+
+import itertools
 
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.fft
 import sympy as sp
-# import time
 
+# import time
 # from pttools import speedup
 # from pttools.ssm import calculators
 from pttools.ssm import const
 from pttools.ssm.sin_transform import sin_transform as _sin_transform
 import pttools.type_hints as th
-import itertools
 
 
 # @profile
 def gen_piecewise(x: th.FloatArr1D, points: th.FloatArr1D) -> sp.Piecewise:
-    """Generate a piecewise defined function"""
+    """Generate a piecewise defined function."""
     funcs = []
     lims = []
     for p1, p2 in itertools.pairwise(points):
@@ -39,8 +40,7 @@ def sin_transform(
         v_wall: float | None = None,
         v_sh: float | None = None,
         z_st_thresh: float = const.Z_ST_THRESH) -> th.FloatOrArr:
-    """Debugging for sin_transform"""
-
+    """Debugging for sin_transform."""
     # Ensure that xi is monotonically increasing
     if np.any(np.diff(xi) <= 0):
         raise ValueError
@@ -79,7 +79,7 @@ def sin_transform(
 
 
 def sin_transform_debug(z: th.FloatOrArr, xi: th.FloatArr1D, f: th.FloatArr1D, z_st_thresh: float = const.Z_ST_THRESH):
-    """Debugging for sin_transform"""
+    """Debugging for sin_transform."""
     fig: plt.Figure
     fig, axs = plt.subplots(2, 3, figsize=(11.7, 8.3))
     ax1: plt.Axes = axs[0, 0]

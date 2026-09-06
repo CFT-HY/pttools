@@ -1,1 +1,1 @@
-"""Unit tests for the analysis module of PTtools"""
+"""Unit tests for the analysis module of PTtools."""

@@ -1,4 +1,4 @@
-"""Base components for fluid shell solvers"""
+"""Base components for fluid shell solvers."""
 
 import numpy as np
 

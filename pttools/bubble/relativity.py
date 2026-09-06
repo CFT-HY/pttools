@@ -1,4 +1,4 @@
-"""Functions for calculating quantities from Einstein's special theory of relativity"""
+"""Functions for calculating quantities from Einstein's special theory of relativity."""
 
 import numpy as np
 

@@ -1,5 +1,5 @@
 """
-Custom decorators for JIT-compilation with Numba
+Custom decorators for JIT-compilation with Numba.
 
 Warning: complex decorators calling Numba may cause segmentation faults when profiled.
 https://github.com/numba/numba/issues/3625
@@ -20,7 +20,8 @@ logger = logging.getLogger(__name__)
 
 
 class Decorator(tp.Protocol):
-    """A decorator that preserves the signature of the decorated function"""
+    """A decorator that preserves the signature of the decorated function."""
+
     def __call__[T: tp.Callable](self, func: T) -> T: ...
 
 
@@ -52,7 +53,7 @@ def njit(func: tp.Callable | None = None, **kwargs):
 
 
 def _renamed_func(func: tp.Callable, suffix: str) -> tp.Callable:
-    """Create a copy of the given function with the given suffix appended to its name"""
+    """Create a copy of the given function with the given suffix appended to its name."""
     renamed = types.FunctionType(
         func.__code__, func.__globals__, f"{func.__name__}{suffix}", func.__defaults__, func.__closure__
     )
@@ -108,7 +109,7 @@ def njit_module(**kwargs):
 
 
 def vectorize(**kwargs):
-    """Extended version of numba.vectorize with support for NUMBA_DISABLE_JIT"""
+    """Extended version of numba.vectorize with support for NUMBA_DISABLE_JIT."""
     def vectorize_inner(func: tp.Callable):
         if NUMBA_DISABLE_JIT:
             # Using functools.wraps() ensures that docstrings etc. are preserved

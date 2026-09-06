@@ -1,4 +1,4 @@
-"""LaTeX utilities
+"""LaTeX utilities.
 
 Modified from
 `sound-shell-model/paper/python/tex_utils.py

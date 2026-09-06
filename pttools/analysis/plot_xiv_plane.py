@@ -1,19 +1,19 @@
-r"""A plot of the $\xi-v$ plane"""
+r"""A plot of the $\xi-v$ plane."""
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.bubble.phase import Phase
-from pttools.bubble import const
+from pttools.bubble import const, props
 from pttools.bubble.integrate import fluid_integrate_param
-from pttools.bubble import props
+from pttools.bubble.phase import Phase
 from pttools.bubble.shock import v_shock_curve
 from pttools.models.const_cs import ConstCSModel
 from pttools.models.model import Model
 
 
 class XIVPlanePlot:
-    r"""A plot of the $\xi-v$ plane"""
+    r"""A plot of the $\xi-v$ plane."""
+
     def __init__(self, model: Model, fig: plt.Figure | None = None, ax: plt.Axes | None = None):
         self.fig: plt.Figure
         if fig is None:
@@ -44,7 +44,7 @@ class XIVPlanePlot:
             n_xi: int = const.DEFAULT_N_XI,
             t_forwards_end: float = const.DEFAULT_T_END,
             t_backwards_end: float = -const.DEFAULT_T_END):
-        """Add background curves to the plot"""
+        """Add background curves to the plot."""
         if w0 is None:
             w0 = wn
         if w_mu is None:

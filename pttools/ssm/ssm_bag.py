@@ -1,4 +1,4 @@
-"""Sound Shell Model functions"""
+"""Sound Shell Model functions."""
 
 import logging
 
@@ -6,8 +6,7 @@ import numba
 import numpy as np
 from scipy.optimize import fsolve
 
-from pttools import bubble
-from pttools import speedup
+from pttools import bubble, speedup
 from pttools.speedup import njit
 from pttools.ssm import const
 from pttools.ssm.calculators import resample_uniform_xi
@@ -171,7 +170,7 @@ def a2_ssm_func_bag(
         parallel: bool = True):
     r"""
     Returns the value of $|A(z)|^2$.
-    $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$
+    $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$.
 
     :param z: array of scaled wavenumbers $z = kR_*$
     :param cs2_fun_ptr: pointer to the $c_s^2$ function
@@ -300,7 +299,7 @@ def f_ssm_func_bag(
 
 def g_file_bag(z: th.FloatArr1D, t, filename: str, skip: int = 0) -> th.FloatArr1D:
     r"""
-    3D FT of radial fluid acceleration \dot{v}(r) from file
+    3D FT of radial fluid acceleration \dot{v}(r) from file.
 
     :param z: array of scaled wavenumbers $z = kR_*$
     """
@@ -333,7 +332,7 @@ def lam_ssm_func_bag(
         z_st_thresh: float = const.Z_ST_THRESH,
         parallel: bool = True):
     """
-    3D FT of radial energy perturbation from Sound Shell Model fluid profile
+    3D FT of radial energy perturbation from Sound Shell Model fluid profile.
 
     :param z: array of scaled wavenumbers $z = kR_*$
     """

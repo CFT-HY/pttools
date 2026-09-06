@@ -1,4 +1,4 @@
-"""Plot thermodynamic quantities for a model"""
+"""Plot thermodynamic quantities for a model."""
 
 import logging
 import typing as tp
@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 
 
 class ModelPlot:
-    """A plot of the thermodynamic quantities of a model"""
+    """A plot of the thermodynamic quantities of a model."""
+
     def __init__(
             self,
             model: models.Model,
@@ -81,7 +82,7 @@ class ModelPlot:
             y_lim: bool = True,
             y_log: bool = True,
             ticks: bool = True):
-        """Plot the given function"""
+        """Plot the given function."""
         if label_s is None and label is not None:
             label_s = f"${label}_s$"
         if label_b is None and label is not None:

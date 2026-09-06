@@ -1,4 +1,4 @@
-"""Utilities for parallel simulation of bubbles"""
+"""Utilities for parallel simulation of bubbles."""
 
 import logging
 import time
@@ -7,13 +7,15 @@ import typing as tp
 import numpy as np
 from numpy.typing import NDArray
 
-from pttools.bubble.bubble import Bubble, BubbleArr, BubbleArr2D
 from pttools.bubble import fluid_reference
+from pttools.bubble.bubble import Bubble, BubbleArr, BubbleArr2D
 from pttools.bubble.integrate import precompile
 from pttools.omgw0 import Spectrum, SpectrumArr2D
 from pttools.speedup import options
 from pttools.speedup.parallel import run_parallel
 import pttools.type_hints as th
+from pttools.utils.decorators import PostFunc
+
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
@@ -23,18 +25,22 @@ logger = logging.getLogger(__name__)
 def create_bubble(
         params: th.FloatArr1D,
         model: "Model",
-        post_func: tp.Callable | None = None,
+        post_func: PostFunc | None = None,
         post_func_return_multiple: bool = False,
         use_bag_solver: bool = False,
         bubble_kwargs: dict[str, tp.Any] | None = None,
         allow_bubble_failure: bool = False,
         *args, **kwargs) -> Bubble | tuple[Bubble | None, ...] | None:
-    """Create a single bubble and apply post-processing functions to retrieve results from it"""
+    """Create a single bubble and apply post-processing functions to retrieve results from it."""
     v_wall, alpha_n = params
     # This is a common error case and should be handled here to avoid polluting the logs with exceptions.
     if alpha_n < model.alpha_n_min and bubble_kwargs is not None \
             and ("allow_invalid" not in bubble_kwargs or not bubble_kwargs["allow_invalid"]):
         logger.error("Invalid alpha_n=%s. Minimum for the model: %s", alpha_n, model.alpha_n_min)
+        if post_func is None:
+            return None
+        if post_func_return_multiple:
+            return None, *post_func.fail_value
         return None, post_func.fail_value
     try:
         if bubble_kwargs is None:
@@ -68,7 +74,7 @@ def create_spectrum(
         spectrum_kwargs: dict[str, tp.Any] | None = None,
         allow_bubble_failure: bool = False,
         *args, **kwargs) -> Spectrum | tuple[Spectrum, ...]:
-    """Create a single spectrum and apply post-processing functions to retrieve results from it"""
+    """Create a single spectrum and apply post-processing functions to retrieve results from it."""
     bubble = create_bubble(
         params=params,
         model=model,
@@ -100,7 +106,7 @@ def create_bubbles(
         kwargs: dict[str, tp.Any] | None = None,
         bubble_kwargs: dict[str, tp.Any] | None = None,
         bubble_func: tp.Callable = create_bubble) -> BubbleArr2D | tuple[NDArray, ...]:
-    """Create multiple bubbles in parallel"""
+    """Create multiple bubbles in parallel."""
     start_time = time.perf_counter()
     post_func_return_multiple = False
     if func is None:
@@ -162,7 +168,7 @@ def create_spectra(
         kwargs: dict[str, tp.Any] | None = None,
         bubble_kwargs: dict[str, tp.Any] | None = None,
         spectrum_kwargs: dict[str, tp.Any] | None = None) -> SpectrumArr2D | tuple[NDArray, ...]:
-    """Create multiple spectra in parallel"""
+    """Create multiple spectra in parallel."""
     if kwargs is None:
         kwargs2 = {"spectrum_kwargs": spectrum_kwargs}
     else:
@@ -184,12 +190,12 @@ def create_spectra(
 
 
 def solve_bubble(bubble: Bubble) -> None:
-    """Solve a single existing bubble"""
+    """Solve a single existing bubble."""
     bubble.solve()
 
 
 def solve_bubbles(bubbles: BubbleArr, max_workers: int = options.MAX_WORKERS_DEFAULT) -> None:
-    """Solve multiple existing bubbles in parallel"""
+    """Solve multiple existing bubbles in parallel."""
     run_parallel(solve_bubble, params=bubbles, max_workers=max_workers)
 
 

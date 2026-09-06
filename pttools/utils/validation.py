@@ -1,4 +1,4 @@
-"""Utilities for PTtools models"""
+"""Utilities for PTtools models."""
 
 import inspect
 import logging
@@ -84,18 +84,18 @@ def check_value_in_range(
 
 
 def ensure_float(value: tp.Any, name: str, allow_none: bool = False) -> float:
-    """Ensure that the given value is a float, and convert if necessary"""
+    """Ensure that the given value is a float, and convert if necessary."""
     ensure_scalar(value, name, allow_none)
     return ensure_type(value, float, allow_none)
 
 
 def ensure_floats(values: dict[str, tp.Any], allow_none: bool = False) -> list[float]:
-    """Ensure that the given values are floats, and convert if necessary"""
+    """Ensure that the given values are floats, and convert if necessary."""
     return [ensure_float(value, name, allow_none=allow_none) for name, value in values.items()]
 
 
 def ensure_scalar(value: tp.Any, name: str, allow_none: bool = False) -> None:
-    """Ensure that the given value is a scalar
+    """Ensure that the given value is a scalar.
 
     Some functions such as :py:func:`np.vectorize` tend to give 0D arrays, which may cause subtle errors later on.
     """
@@ -104,5 +104,7 @@ def ensure_scalar(value: tp.Any, name: str, allow_none: bool = False) -> None:
 
 
 def ensure_type[T](value: tp.Any, cls: type[T], allow_none: bool = False) -> T:
-    """Ensure that the given value is of the given type, and convert if necessary"""
+    """Ensure that the given value is of the given type, and convert if necessary."""
+    # The unbounded type variable resolves to object, whose constructor takes no arguments.
+    # pyrefly: ignore[bad-argument-count]
     return tp.cast(T, value if (value is None and allow_none) or isinstance(value, cls) else cls(value))

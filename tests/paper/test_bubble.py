@@ -1,4 +1,4 @@
-"""Test the bubble functions in the paper code"""
+"""Test the bubble functions in the paper code."""
 
 import logging
 import os.path
@@ -11,7 +11,7 @@ from pttools.analysis import save_fig
 from pttools.speedup import NUMBA_INTEGRATE
 from pttools.utils import assert_allclose
 from tests.paper import ssm_paper_utils as spu
-from tests.utils.const import TEST_FIGURE_PATH, TEST_DATA_PATH
+from tests.utils.const import TEST_DATA_PATH, TEST_FIGURE_PATH
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,8 @@ FIG_PATH: str = os.path.join(TEST_FIGURE_PATH, "bubble")
 
 
 class TestBubble(unittest.TestCase):
-    """Test the bubble functions in the paper code"""
+    """Test the bubble functions in the paper code."""
+
     @staticmethod
     def test_bubble():
         figs, fig_ids, data = spu.do_all_plot_ps_1bubble(debug=True, lambda_correction=True)

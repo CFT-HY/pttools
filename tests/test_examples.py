@@ -1,4 +1,4 @@
-"""Tests for plotting examples"""
+"""Tests for plotting examples."""
 
 import unittest
 
@@ -7,8 +7,14 @@ from matplotlib.pyplot import close
 from examples.basic import basic, datamodel, parallel, spectra
 from examples.const_cs import const_cs, const_cs_bag_comparison, const_cs_find, const_cs_gw, const_cs_xi_v
 from examples.entropy import entropy_comparison, entropy_grid, entropy_old, entropy_profile
-from examples.gksvdv import gksvdv_bubble, gksvdv_comparison, gksvdv_fig2, \
-    gksvdv_testing, gksvdv_testing2, gksvdv_testing3
+from examples.gksvdv import (
+    gksvdv_bubble,
+    gksvdv_comparison,
+    gksvdv_fig2,
+    gksvdv_testing,
+    gksvdv_testing2,
+    gksvdv_testing3,
+)
 from examples.low_k import low_k
 from examples.props import chapman_jouguet, ke_frac, noise, reference_props, suppression, vp_vm_plane, w_by_w, xi_kappa
 from examples.reverse import reverse, reverse_approx
@@ -65,7 +71,7 @@ class ExampleTest(unittest.TestCase):
 
     @staticmethod
     def test_plot_const_cs_xi_v_w():
-        import examples.const_cs.const_cs_xi_v_w as script
+        import examples.const_cs.const_cs_xi_v_w as script  # noqa: PLC0415
         script.plot.fig()
 
     # Entropy
@@ -131,7 +137,7 @@ class ExampleTest(unittest.TestCase):
 
     @staticmethod
     def test_delta_theta():
-        from examples.props import delta_theta
+        from examples.props import delta_theta  # noqa: PLC0415
         delta_theta.plot.fig()
 
     @staticmethod
@@ -193,7 +199,7 @@ class ExampleTest(unittest.TestCase):
     # Standard Model
     @staticmethod
     def test_standard_model():
-        import examples.standard_model.standard_model as script
+        import examples.standard_model.standard_model as script  # noqa: PLC0415
         close(script.fig)
         close(script.plot.fig)
         close(script.plot2.fig)

@@ -1,4 +1,4 @@
-"""Functions for joining the GW power spectrum regimes together"""
+"""Functions for joining the GW power spectrum regimes together."""
 
 import logging
 

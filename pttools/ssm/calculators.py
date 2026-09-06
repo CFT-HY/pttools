@@ -1,4 +1,4 @@
-"""Numerical utilities for the Sound Shell Model"""
+"""Numerical utilities for the Sound Shell Model."""
 
 import logging
 
@@ -30,7 +30,7 @@ def resample_uniform_xi(
 
 @njit(cache=True)
 def trapezoid_loglog(x: th.FloatArr1D, y: th.FloatArr1D, minus1_atol: float = 1e-12) -> float:
-    """Power-law (log-log) trapezoidal integration
+    """Power-law (log-log) trapezoidal integration.
 
     Based on https://scicomp.stackexchange.com/a/31374
     """

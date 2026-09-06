@@ -1,9 +1,12 @@
-r"""$\alpha_+$ functions"""
+r"""$\alpha_+$ functions."""
 
-from pttools.bubble.alpha.alpha_limits_bag import \
-    alpha_n_min_hybrid_bag, alpha_n_max_deflagration_bag, alpha_plus_min_hybrid
-from pttools.speedup import njit
+from pttools.bubble.alpha.alpha_limits_bag import (
+    alpha_n_max_deflagration_bag,
+    alpha_n_min_hybrid_bag,
+    alpha_plus_min_hybrid,
+)
 from pttools.bubble.integrate import FluidIntegrateMethod
+from pttools.speedup import njit
 from pttools.speedup.differential import DifferentialPointer
 import pttools.type_hints as th
 
@@ -15,8 +18,8 @@ def alpha_plus_initial_guess(
         df_dtau_ptr: DifferentialPointer,
         ode_method: FluidIntegrateMethod,
         cs2_fun: th.CS2Fun) -> th.FloatOrArr:
-    r"""
-    Initial guess for root-finding of $\alpha_+$ from $\alpha_n$.
+    r"""Initial guess for root-finding of $\alpha_+$ from $\alpha_n$.
+
     Linear approx between $\alpha_{n,\min}$ and $\alpha_{n,\max}$.
     Doesn't do obvious checks like Detonation - needs improving?
 

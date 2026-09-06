@@ -1,4 +1,4 @@
-"""Unit tests for droplets"""
+"""Unit tests for droplets."""
 
 import unittest
 
@@ -9,7 +9,7 @@ from pttools.models import BagModel
 class DropletTest(unittest.TestCase):
     @staticmethod
     def test_bhusal():
-        r"""Benchmark point of :bhusal_2026:`\ ` eq. 60
+        r"""Benchmark point of :bhusal_2026:`\ ` eq. 60.
 
         $$\Psi = 1 - \frac{\delta a}{a} = 0.84, \alpha_+ = 0.05
         \Rightarrow \xi_w = {v}_- = 0.42, -\xi_d = {v}_+ = 0.32$$
@@ -18,7 +18,7 @@ class DropletTest(unittest.TestCase):
         bubble = Bubble(model, v_wall=0.42, alpha_n=0.06)
         # The droplet module is not yet in the PTtools repository
         try:
-            from examples.droplet.droplet import Droplet
+            from examples.droplet.droplet import Droplet  # noqa: PLC0415
             Droplet(bubble=bubble, v_wall=-0.32)
         except ImportError:
             pass

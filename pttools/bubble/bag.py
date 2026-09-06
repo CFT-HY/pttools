@@ -1,4 +1,4 @@
-"""Functions for the Bag Model"""
+"""Functions for the Bag Model."""
 
 import logging
 
@@ -50,7 +50,7 @@ def _check_thetas_numba(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr):
 def _check_thetas_scalar(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> None:
     """This is a workaround for a bug in Numba 0.60.0.
     This fix was not needed for Numba 0.59.0.
-    https://github.com/numba/numba/issues/8270
+    https://github.com/numba/numba/issues/8270.
     """
     if theta_b > theta_s:
         _check_thetas_warning(theta_s, theta_b)

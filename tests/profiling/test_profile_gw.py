@@ -1,23 +1,21 @@
-"""Profile GW performance"""
+"""Profile GW performance."""
 
 import logging
 import unittest
 
 import numpy as np
 
-from pttools import ssm
-from pttools import speedup
+from pttools import speedup, ssm
+from tests.profiling import utils_cprofile, utils_pyinstrument, utils_yappi
 from tests.profiling.test_profile import TestProfile
-from tests.profiling import utils_cprofile
-from tests.profiling import utils_pyinstrument
-from tests.profiling import utils_yappi
 from tests.utils.mark import skip_slow
 
 logger = logging.getLogger(__name__)
 
 
 class TestProfileGW(TestProfile):
-    """Profile GW performance"""
+    """Profile GW performance."""
+
     name = "gw"
     z = np.logspace(0, 2, 100)
     params = (0.1, 0.1)

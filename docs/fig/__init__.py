@@ -1,1 +1,1 @@
-"""Figures for the documentation"""
+"""Figures for the documentation."""

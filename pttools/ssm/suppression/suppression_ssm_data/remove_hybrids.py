@@ -1,9 +1,10 @@
-"""Remove the unpublished hybrid data from the suppression data set"""
+"""Remove the unpublished hybrid data from the suppression data set."""
 
 import logging
 import os.path
 
 import numpy as np
+
 from pttools.bubble import CS0, v_chapman_jouguet_bag
 
 logger = logging.getLogger(__name__)
@@ -14,7 +15,7 @@ DEFAULT_PATH = os.path.join(SUPPRESSION_FOLDER, "suppression_2.txt")
 
 def remove_hybrids(path: str = DEFAULT_PATH, suffix: str = "") -> str:
     """
-    Removing hybrids from simulation data
+    Removing hybrids from simulation data.
 
     The order of entries in txt file should be:
     vw alph suppress sim_omgw exp_omgw exp_ubarf

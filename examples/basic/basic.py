@@ -12,8 +12,8 @@ import matplotlib.pyplot as plt
 from examples.utils import FIG_DIR, save_fig
 from pttools.bubble import Bubble
 from pttools.models import BagModel
-from pttools.ssm import NucType
 from pttools.omgw0 import Spectrum
+from pttools.ssm import NucType
 
 
 def main() -> tuple[plt.Figure, plt.Figure]:

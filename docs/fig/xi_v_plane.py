@@ -1,4 +1,4 @@
-r"""$(\xi, v)$ plane figure for the bag model"""
+r"""$(\xi, v)$ plane figure for the bag model."""
 
 import matplotlib.pyplot as plt
 

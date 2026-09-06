@@ -1,6 +1,4 @@
-"""
-Models for various equations of state
-"""
+"""Models for various equations of state."""
 
 from .analytic import *
 from .bag import *

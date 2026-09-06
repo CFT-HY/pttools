@@ -1,4 +1,4 @@
-"""Solver for the fluid velocity profile of a bubble"""
+"""Solver for the fluid velocity profile of a bubble."""
 
 import logging
 import time
@@ -6,21 +6,15 @@ import typing as tp
 
 import numpy as np
 
-from pttools.bubble import alpha
-from pttools.bubble.phase import Phase
-from pttools.bubble import chapman_jouguet
-from pttools.bubble import const
+from pttools.bubble import alpha, chapman_jouguet, const, fluid_bag, fluid_reference, props, relativity
 from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR, cs2_bag_scalar
-from pttools.bubble import fluid_bag
 from pttools.bubble.fluid_base import GenericSolverOutput
 from pttools.bubble.fluid_detonation import sound_shell_detonation
 from pttools.bubble.fluid_gksvdv import sound_shell_gksvdv
 from pttools.bubble.fluid_hybrid import sound_shell_solver_hybrid
 from pttools.bubble.fluid_sub_def import sound_shell_solver_deflagration, sound_shell_solver_deflagration_reverse
-from pttools.bubble import fluid_reference
 from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG
-from pttools.bubble import props
-from pttools.bubble import relativity
+from pttools.bubble.phase import Phase
 from pttools.bubble.solution_type import SolutionType, cannot_be_sub_def, validate_solution_type
 from pttools.bubble.solution_type_bag import identify_solution_type_bag
 from pttools.speedup import NAN_ARR
@@ -54,7 +48,7 @@ def sound_shell_generic(
             log_success: bool = True,
             log_high_alpha_n_failures: bool = False
         ) -> GenericSolverOutput:
-    """Generic fluid shell solver
+    """Generic fluid shell solver.
 
     In most cases you should not have to call this directly. Create a Bubble instead.
     """

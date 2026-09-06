@@ -5,15 +5,17 @@ import typing as tp
 import numpy as np
 from numpy.typing import NDArray
 
-from pttools.bubble.bubble import BubbleArr, NotYetSolvedError
 from pttools.analysis.parallel import create_bubbles
+from pttools.bubble.bubble import BubbleArr, NotYetSolvedError
 import pttools.type_hints as th
+
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
 
 class BubbleGrid:
-    """A grid of bubbles"""
+    """A grid of bubbles."""
+
     def __init__(self, bubbles: BubbleArr):
         self.bubbles = bubbles
 
@@ -58,6 +60,7 @@ class BubbleGrid:
 
 class BubbleGridVWAlpha(BubbleGrid):
     r"""A grid of bubbles with different $v_\text{wall}$ and $\alpha_n$ values."""
+
     def __init__(
             self,
             model: "Model",

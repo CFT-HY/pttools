@@ -1,11 +1,8 @@
-r"""$\alpha_n$ functions for the Bag Model"""
+r"""$\alpha_n$ functions for the Bag Model."""
 
 from pttools import speedup
-from pttools.bubble import const
-from pttools.bubble import fluid_bag
+from pttools.bubble import check, const, fluid_bag, props
 from pttools.bubble.integrate import FluidIntegrateMethod
-from pttools.bubble import check
-from pttools.bubble import props
 from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.solution_type_bag import identify_solution_type_alpha_plus_bag
 from pttools.speedup import njit

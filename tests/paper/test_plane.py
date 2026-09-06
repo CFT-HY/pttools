@@ -14,13 +14,12 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.analysis import save_fig
 from pttools import speedup
-from pttools.utils import assert_allclose
+from pttools.analysis import save_fig
 import pttools.type_hints as th
+from pttools.utils import assert_allclose
 from tests import utils
-from tests.paper import plane
-from tests.paper import plot_plane_paper
+from tests.paper import plane, plot_plane_paper
 from tests.test_performance import PERFORMANCE_DIR
 
 logger = logging.getLogger(__name__)

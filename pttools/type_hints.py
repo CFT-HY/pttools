@@ -1,4 +1,4 @@
-"""Type hints for simplifying and unifying PTtools code"""
+"""Type hints for simplifying and unifying PTtools code."""
 
 import ctypes
 import typing as tp

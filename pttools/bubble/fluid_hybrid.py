@@ -1,4 +1,4 @@
-"""Fluid shell solver for hybrids
+"""Fluid shell solver for hybrids.
 
 This is an extended version of the subsonic deflagration solver,
 as this also adds the part of the fluid shell behind the bubble wall.
@@ -11,13 +11,12 @@ import typing as tp
 import numpy as np
 from scipy.optimize import fsolve
 
+from pttools.bubble import integrate, relativity
+from pttools.bubble.const import DEFAULT_N_XI, DEFAULT_SOLVER_RTOL, DEFAULT_T_END, THIN_SHELL_T_POINTS_MIN
 from pttools.bubble.fluid_base import DeflagrationOutput, SolverOutput
 from pttools.bubble.fluid_sub_def import sound_shell_deflagration_common
-from pttools.bubble import integrate
-from pttools.bubble.const import DEFAULT_N_XI, DEFAULT_SOLVER_RTOL, DEFAULT_T_END, THIN_SHELL_T_POINTS_MIN
 from pttools.bubble.junction import v_plus_hybrid
 from pttools.bubble.phase import Phase
-from pttools.bubble import relativity
 from pttools.bubble.shock import v_shock
 from pttools.bubble.solution_type import SolutionType
 from pttools.speedup.solvers import fsolve_vary
@@ -38,7 +37,7 @@ def sound_shell_hybrid(
         allow_failure: bool = False,
         allow_negative_entropy_flux_change: bool = False,
         warn_if_shock_barely_exists: bool = True) -> DeflagrationOutput:
-    """Get the fluid shell profile of a hybrid"""
+    """Get the fluid shell profile of a hybrid."""
     # Exit velocity is at the sound speed
     vm_tilde = np.sqrt(model.cs2(wm, Phase.BROKEN))
 
@@ -140,7 +139,7 @@ def sound_shell_solver_hybrid(
         rtol: float = DEFAULT_SOLVER_RTOL,
         allow_failure: bool = False,
         log_high_alpha_n_failures: bool = True) -> SolverOutput:
-    """Solve for the fluid shell profile of a hybrid"""
+    """Solve for the fluid shell profile of a hybrid."""
     if v_wall >= v_cj:
         raise RuntimeError(f"Invalid v_wall for a hybrid: v_wall={v_wall}, v_cj={v_cj}")
 

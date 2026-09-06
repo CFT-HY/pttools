@@ -1,4 +1,4 @@
-"""Printing utilities for testing"""
+"""Printing utilities for testing."""
 
 import decimal
 
@@ -23,12 +23,12 @@ except ModuleNotFoundError:
 
 
 def high_prec_float_str(x: float) -> str:
-    """Convert a float to a string with high precision"""
+    """Convert a float to a string with high precision."""
     return f"{x:.{HIGH_PREC}g}"
 
 
 def row_to_str(row: th.FloatArr1D, close: th.BoolArr1D, fmt: str = DEFAULT_FMT) -> str:
-    """Convert an array row to string with color"""
+    """Convert an array row to string with color."""
     lst = [
         f"{'' if ok else RED}{act:{fmt}}{''if ok else RESET}"
         for act, ok in zip(row, close, strict=False)
@@ -40,7 +40,7 @@ def pairs_to_rows(
         actual: th.FloatArr1D,
         desired: th.FloatArr1D,
         close: th.BoolArr1D, fmt: str = DEFAULT_FMT) -> list[str]:
-    """Convert pairs of actual and desired values to string rows with color"""
+    """Convert pairs of actual and desired values to string rows with color."""
     return [
         f"{'' if ok else RED}"
         f"{act:{fmt}}, {des:{fmt}}, {rel_diff_scalar(act, des):{fmt}}, {act - des:{fmt}}"
@@ -50,7 +50,7 @@ def pairs_to_rows(
 
 
 def print_1d_small(actual: th.FloatArr1D, desired: th.FloatArr1D, close: th.BoolArr1D, fmt: str = DEFAULT_FMT) -> None:
-    """Print a small 1D array"""
+    """Print a small 1D array."""
     print("actual:")
     print(row_to_str(actual, close, fmt))
     print("desired:")
@@ -62,13 +62,13 @@ def print_1d_small(actual: th.FloatArr1D, desired: th.FloatArr1D, close: th.Bool
 
 
 def print_1d_large(actual: th.FloatArr1D, desired: th.FloatArr1D, close: th.BoolArr1D, fmt: str = DEFAULT_FMT) -> None:
-    """Print a large 1D array"""
+    """Print a large 1D array."""
     print("actual          desired         rdiff           adiff")
     print("\n".join(pairs_to_rows(actual, desired, close, fmt)))
 
 
 def print_1d(actual: th.FloatArr1D, desired: th.FloatArr1D, close: th.BoolArr1D) -> None:
-    """Print a 1D array"""
+    """Print a 1D array."""
     if actual.size < 10:
         print_1d_small(actual, desired, close)
     else:
@@ -76,18 +76,18 @@ def print_1d(actual: th.FloatArr1D, desired: th.FloatArr1D, close: th.BoolArr1D)
 
 
 def print_2d(arr: th.FloatArr2D, close: th.BoolArr2D, fmt: str = DEFAULT_FMT) -> None:
-    """Print a 2D array"""
+    """Print a 2D array."""
     rows = "\n ".join([row_to_str(row, ok, fmt) for row, ok in zip(arr, close, strict=False)])
     print(f"[{rows}]")
 
 
 def print_full_prec(x: float) -> None:
-    """Print a float with full precision"""
+    """Print a float with full precision."""
     print(decimal.Decimal(x))
 
 
 def print_high_prec(x: th.FloatOrArr) -> None:
-    """Print a value or an array with high precision"""
+    """Print a value or an array with high precision."""
     if isinstance(x, np.ndarray):
         if x.ndim == 1:
             print("[" + ", ".join([high_prec_float_str(elem) for elem in x]) + "]")

@@ -1,4 +1,4 @@
-"""Test bubbles that use the bag model"""
+"""Test bubbles that use the bag model."""
 
 import logging
 import os.path
@@ -7,10 +7,11 @@ import unittest
 
 import matplotlib.pyplot as plt
 import numpy as np
-# import orjson
 
-from pttools.analysis import save_fig
 from pttools import bubble
+
+# import orjson
+from pttools.analysis import save_fig
 from pttools.analysis.plot_fluid_shell_bag import plot_fluid_shell_bag
 from pttools.analysis.plot_fluid_shells_bag import plot_fluid_shells_bag
 from pttools.speedup import NUMBA_INTEGRATE_TOLERANCES
@@ -25,7 +26,8 @@ FIG_PATH: str = os.path.join(TEST_FIGURE_PATH, "fluid_shells")
 
 
 class TestShellsBag(unittest.TestCase):
-    """Test bubbles that use the bag model"""
+    """Test bubbles that use the bag model."""
+
     @staticmethod
     def shell_file_path(name: str) -> str:
         return os.path.join(TEST_DATA_PATH, f"shells_{name}.txt")
@@ -61,7 +63,7 @@ class TestShellsBag(unittest.TestCase):
         assert_allclose(data_numpy, data_ref, rtol=(0.292 if NUMBA_INTEGRATE_TOLERANCES else 1e-7))
 
     def test_fluid_shells(self):
-        """Based on sound-shell-model/paper/python/fig_1_9_shell_plots.py"""
+        """Based on sound-shell-model/paper/python/fig_1_9_shell_plots.py."""
         vw_weak_list = const.VW_WEAK_LIST
         vw_inter_list = spu.VW_INTER_LIST
 

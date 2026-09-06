@@ -1,10 +1,9 @@
-"""Base test case for models"""
+"""Base test case for models."""
 
 import abc
 import os.path
 
 import numpy as np
-
 
 from pttools.models import Model
 from tests.utils.const import TEST_DATA_PATH
@@ -12,7 +11,8 @@ from tests.utils.json import JsonTestCase
 
 
 class ModelBaseCase(JsonTestCase, abc.ABC):
-    """Base test case for models"""
+    """Base test case for models."""
+
     model: Model
 
     EXPECT_MISSING_DATA = True

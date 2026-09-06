@@ -8,7 +8,7 @@ These don't work yet and are therefore not used.
 """
 
 # The names and the structure of the code are kept the same as in the Fortran original.
-# ruff: noqa: ARG001, E741, F842
+# ruff: noqa: B007, E741, F842
 
 # import numba
 import numpy as np

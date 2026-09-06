@@ -1,13 +1,13 @@
-r"""Compare with the results of Correia et al. (2026)
+r"""Compare with the results of Correia et al. (2026).
 
 Compare with the results of :correia_2026:`\ `.
 """
 
 import unittest
-import pytest
 
 import numpy as np
 from numpy.testing import assert_array_less
+import pytest
 
 from pttools.bubble import Bubble
 from pttools.models import BagModel

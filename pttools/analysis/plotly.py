@@ -1,3 +1,5 @@
+"""Workarounds for Plotly issues."""
+
 import logging
 import typing as tp
 
@@ -7,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 def plotly_fix(func: tp.Callable) -> tp.Callable:
-    """Suppress Kaleido plotting failures
+    """Suppress Kaleido plotting failures.
 
     The Kaleido library Plotly uses to create raster graphics such as PNG
     does not work on all headless machines.

@@ -7,9 +7,9 @@ Original version was developed by Daniel Cutting for the figure 14 of :notes:`\ 
 """
 
 
-import matplotlib.pyplot as plt
 import matplotlib.colors
 from matplotlib.image import AxesImage
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import interp1d
 

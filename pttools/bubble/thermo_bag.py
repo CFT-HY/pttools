@@ -1,25 +1,21 @@
-"""Thermodynamic quantities for the Bag Model"""
+"""Thermodynamic quantities for the Bag Model."""
 
 import logging
-
 import typing as tp
 
 import numba
 from numba.extending import overload
 import numpy as np
 
-from pttools.bubble import bag
+from pttools.bubble import bag, check, const, fluid_bag
 from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR, cs2_bag_scalar
-from pttools.bubble.phase import Phase, get_phase
-from pttools.bubble import check
-from pttools.bubble import const
-from pttools.bubble import fluid_bag
 from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG, FluidIntegrateMethod
-from pttools.bubble.thermo import kinetic_energy_density, mean_enthalpy_change, ubarf2
+from pttools.bubble.phase import Phase, get_phase
 from pttools.bubble.solution_type_bag import SolutionType, identify_solution_type_bag
-import pttools.type_hints as th
+from pttools.bubble.thermo import kinetic_energy_density, mean_enthalpy_change, ubarf2
 from pttools.speedup.differential import DifferentialPointer
 from pttools.speedup.jit import njit, njit_parallel_pair
+import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr, FloatOrArr1D
 
 type Integrand = \
@@ -47,7 +43,7 @@ def de_from_w_bag(
     r"""
     Calculates energy density difference ``de = e - e[-1]`` from enthalpy, assuming
     bag equation of state.
-    Can get ``alpha_n = find_alpha_n_from_w_xi(w,xi,v_wall,alpha_p)``
+    Can get ``alpha_n = find_alpha_n_from_w_xi(w,xi,v_wall,alpha_p)``.
 
     :param w: $w$
     :param xi: $\xi$
@@ -140,7 +136,7 @@ def get_kappa_bag[T: FloatOrArr](
             )
 
     kappa_out: T
-    if isinstance(v_wall, np.ndarray):
+    if isinstance(v_wall, np.ndarray):  # noqa: SIM108
         # typing.cast() is not used below, since Numba cannot compile it.
         kappa_out = it.operands[1]  # type: ignore[assignment]
     else:

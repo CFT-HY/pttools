@@ -1,4 +1,4 @@
-"""Bubble nucleation"""
+"""Bubble nucleation."""
 
 import enum
 import logging
@@ -16,8 +16,9 @@ logger = logging.getLogger(__name__)
 
 
 @enum.unique
-class NucType(str, enum.Enum):
-    """Nucleation type"""
+class NucType(enum.StrEnum):
+    """Nucleation type."""
+
     EXPONENTIAL = "exponential"
     SIMULTANEOUS = "simultaneous"
 
@@ -28,7 +29,7 @@ DEFAULT_NUC_TYPE = NucType.EXPONENTIAL
 
 @njit(cache=True)
 def beta(R_star: th.FloatOrArr, v_wall: th.FloatOrArr) -> th.FloatOrArr:
-    r"""Nucleation rate parameter $\beta$, aka. inverse phase transition duration
+    r"""Nucleation rate parameter $\beta$, aka. inverse phase transition duration.
 
     $$\beta = (8\pi)^\frac{1}{3} \frac{{v}_\text{wall}}{R_*}$$
     :gw_pt_ssm:`\ ` eq. 4.16, A.14
@@ -51,7 +52,7 @@ def beta_tilde(
         beta_tilde_limit: float = const.BETA_TILDE_CONVERSION_MIN) -> th.FloatOrArr:
     r"""Nucleation rate parameter $\tilde{\beta}$, aka. "beta over H"
     $$\tilde{\beta} \equiv \frac{\beta}{H_*} = (8 \pi)^\frac{1}{3} \frac{\max ({v}_\text{wall}, c_s)}{{r}_*}$$
-    :gowling_2021:`\ ` eq. 2.1
+    :gowling_2021:`\ ` eq. 2.1.
 
     This does not take into account the nucleation suppression.
     Please see :py:func:`pttools.bubble.nucleation.beta` and
@@ -96,7 +97,7 @@ def bubble_spacing_enlargement(
         beta_tilde: float | None,
         v_wall: float,
         sol_type: SolutionType) -> tuple[float, float, float]:
-    r"""Compute the bubble spacing enlargement quantities $f, h_x, \Lambda(h_x)$"""
+    r"""Compute the bubble spacing enlargement quantities $f, h_x, \Lambda(h_x)$."""
     if beta_tilde is None or sol_type == SolutionType.DETON.value:
         return 0., 0., 1.
     f = nucleation_f(xi=xi, T=T, beta_tilde=beta_tilde, v_wall=v_wall)
@@ -108,7 +109,7 @@ def bubble_spacing_enlargement(
 def bubble_spacing_enlargement_factor[T: FloatOrArr](hx: T) -> T:
     r"""Bubble spacing enlargement factor $\Lambda$
     $$\Lambda(h_x) \equiv \frac{R_{\ast}}{R_{\ast}(0)} = I_h^{-\frac{1}{3}}(h_x)$$
-    :ajmi_2022:`\ ` eq. 77
+    :ajmi_2022:`\ ` eq. 77.
     """
     return Ih_approx(hx)**(-1/3)
 
@@ -117,7 +118,7 @@ def bubble_spacing_enlargement_factor[T: FloatOrArr](hx: T) -> T:
 def hx[T: FloatOrArr](f: T) -> T:
     r"""Fractional volume $h_x$ at which the symmetric phase is reheated enough to prevent further bubble nucleation
     $$h_x = \frac{f}{1 + f} = 1 - \frac{v_{\text{wall}}^3}{v_{\text{eff}}^3}$$
-    :ajmi_2022:`\ ` eq. 56
+    :ajmi_2022:`\ ` eq. 56.
     """
     # typing.cast() is not used below, since Numba cannot compile it.
     return f / (1 + f)  # type: ignore[return-value]
@@ -127,7 +128,7 @@ def hx[T: FloatOrArr](f: T) -> T:
 def Ih_approx[T: FloatOrArr](hx: T) -> T:
     r"""Approximate $I_h(h_x)$
     $$I_h(h_x) = 1 + \frac{h_x \ln h_x}{1 - h_x}$$
-    :ajmi_2022:`\ ` eq. 78
+    :ajmi_2022:`\ ` eq. 78.
     """
     if hx == 0.:
         return 1.  # type: ignore[return-value]
@@ -142,7 +143,7 @@ def lifetime_distribution[T: FloatOrArr](
         nuc_type: NucType = NucType.SIMULTANEOUS,
         a: float = 1.) -> T:
     r"""
-    Bubble lifetime distribution function $\nu$
+    Bubble lifetime distribution function $\nu$.
 
     This is normalized so that
     $$\int \nu(x) dx = 1$$
@@ -174,7 +175,7 @@ def lifetime_distribution[T: FloatOrArr](
 def lifetime_distribution_momentum(nu: FloatArr1D, T_tilde: FloatArr1D, n: int) -> float:
     r"""$\nu_n$, nth momentum of the lifetime distribution $\nu$
     $$\nu_n \equiv \int d\tilde{T} \nu(\tilde{T}) \tilde{T}^n$$
-    :gw_pt_ssm:`\ ` p. 20
+    :gw_pt_ssm:`\ ` p. 20.
 
     For both simultaneous and exponential nucleation, $\nu_3 = 6$.
     """
@@ -198,7 +199,7 @@ def nucleation_f(
     \approx \frac{\partial S}{\partial t}
     = \frac{\partial t}{\partial T} \Delta T
     = \frac{\tilde{\beta} \Delta T(\xi)}{T_n}$$
-    :ajmi_2022:`\ ` eq. 47-50
+    :ajmi_2022:`\ ` eq. 47-50.
 
     :param xi: $\xi$
     :param T: $T$
@@ -247,7 +248,7 @@ def r_star_product(H_star: th.FloatOrArr, R_star: th.FloatOrArr) -> th.FloatOrAr
     r"""
     Hubble-scaled mean bubble spacing $r_*$
     $$r_* = H_* R_*$$
-    :gowling_2021:`\ ` eq. 2.2
+    :gowling_2021:`\ ` eq. 2.2.
     """
     return H_star * R_star
 
@@ -262,7 +263,7 @@ def R_star[T2: FloatOrArr](
         sol_type: SolutionType) -> T2:
     r"""Mean bubble separation $R_*$
     $$R_* = \Lambda(h_x) R_*(0)$$
-    :ajmi_2022:`\ ` eq. 77
+    :ajmi_2022:`\ ` eq. 77.
 
     This commonly used formula is wrong.
     $$R_* = \frac{(8\pi)^\frac{1}{3}}{\beta} \max ({v}_\text{wall}, c_s)$$
@@ -296,7 +297,7 @@ def R_star[T2: FloatOrArr](
 def R_star0(beta: th.FloatOrArr, v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""Mean bubble separation $R_*(0)$ in the absence of nucleation suppression
     $$R_*(0) = n_*^{-\frac{1}{3}} = \frac{(8\pi)^\frac{1}{3}}{\beta} {v}_\text{wall}$$
-    :ajmi_2022:`\ ` eq. 1
+    :ajmi_2022:`\ ` eq. 1.
 
     :param beta: Nucleation rate parameter $\beta$
     :param v_wall: Wall velocity ${v}_w$
@@ -307,7 +308,7 @@ def R_star0(beta: th.FloatOrArr, v_wall: th.FloatOrArr) -> th.FloatOrArr:
 
 @njit(cache=True)
 def v_eff(f: FloatOrArr, v_wall: FloatOrArr) -> FloatOrArr:
-    r"""Effective suppression speed $v_{\text{eff}}$
+    r"""Effective suppression speed $v_{\text{eff}}$.
 
     This is the expansion speed of the spherical shell inside which
     further bubble nucleation is effectively suppressed.

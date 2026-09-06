@@ -1,4 +1,4 @@
-"""Unit tests for the properties of a bubble"""
+"""Unit tests for the properties of a bubble."""
 
 import os.path
 import unittest
@@ -11,7 +11,8 @@ from tests.utils import TEST_JSON_PATH
 
 
 class BubbleTest(unittest.TestCase):
-    """Unit tests for the properties of a bubble"""
+    """Unit tests for the properties of a bubble."""
+
     model: BagModel
     bubble: Bubble
 
@@ -42,7 +43,7 @@ class BubbleTest(unittest.TestCase):
         Bubble(self.model, v_wall=0.01, alpha_n=0.1)
 
     def test_v_wall_low_custom_low_n_xi(self):
-        """Test that the warning message for low v_wall and low n_xi is generated properly"""
+        """Test that the warning message for low v_wall and low n_xi is generated properly."""
         Bubble(self.model, v_wall=0.01, alpha_n=0.1, n_xi=DEFAULT_N_XI // 2)
 
     # -----

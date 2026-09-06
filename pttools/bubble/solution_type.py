@@ -1,4 +1,4 @@
-"""Solution types of relativistic combustion"""
+"""Solution types of relativistic combustion."""
 
 import enum
 import logging
@@ -21,6 +21,7 @@ class SolutionType(enum.StrEnum):
     .. plot:: fig/solution_types.py
     .. minigallery:: ../../examples/props/solution_types.py
     """
+
     # Todo: Should the strong and weak branches of the solutions (vplus, vminus signs) be distinquished here?
 
     #: In a detonation the fluid outside the bubble is at rest and the wall moves at a supersonic speed.
@@ -45,27 +46,29 @@ class SolutionType(enum.StrEnum):
 
 
 def cannot_be_detonation(v_wall: float, v_cj: float) -> float:
-    r"""If $v_w < v_{CJ}$, it cannot be a detonation"""
+    r"""If $v_w < v_{CJ}$, it cannot be a detonation."""
     return v_wall < v_cj
 
 
 def cannot_be_sub_def(model: "Model", v_wall: float, wn: float) -> bool:
     r"""If the wall speed $v_w > c_{sb}(w) \forall w \in [0, w_n]$,
     then the wall is certainly hypersonic in the broken phase and must have fluid movement inside the wall
-    to satisfy the boundary conditions. Therefore, the solution cannot be a subsonic deflagration."""
+    to satisfy the boundary conditions. Therefore, the solution cannot be a subsonic deflagration.
+    """
     cs2_max, w_max = model.cs2_max(wn, Phase.BROKEN)
     return v_wall**2 > cs2_max
 
 
 def is_surely_detonation(v_wall: float, v_cj: float) -> float:
-    r"""If $v_w > v_{CJ}$, it is certainly a detonation"""
+    r"""If $v_w > v_{CJ}$, it is certainly a detonation."""
     return v_wall > v_cj
 
 
 def is_surely_sub_def(model: "Model", v_wall: float, wn: float) -> bool:
     r"""If the wall speed $v_w < c_{sb}(w) \forall w \in [0, w_n]$,
     then the wall is certainly subsonic in the broken phase,
-    and therefore the solution is certainly a subsonic deflagration."""
+    and therefore the solution is certainly a subsonic deflagration.
+    """
     cs2_min, w_min = model.cs2_min(wn, Phase.BROKEN)
     return v_wall**2 < cs2_min
 
@@ -78,7 +81,7 @@ def validate_solution_type(
         wn: float | None = None,
         wn_guess: float | None = None,
         wm_guess: float | None = None) -> SolutionType:
-    """Ensure that the solution type is determined or can be determined automatically"""
+    """Ensure that the solution type is determined or can be determined automatically."""
     if sol_type is None or sol_type is SolutionType.UNKNOWN:
         sol_type = model.solution_type(
             v_wall=v_wall, alpha_n=alpha_n, wn=wn, wn_guess=wn_guess, wm_guess=wm_guess

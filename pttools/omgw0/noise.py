@@ -1,4 +1,4 @@
-"""Utilities for calculating the noise of gravitational wave detectors, especially LISA"""
+"""Utilities for calculating the noise of gravitational wave detectors, especially LISA."""
 
 import numpy as np
 
@@ -22,7 +22,7 @@ def signal_to_noise_ratio(
     h^2 \Omega_{\text{signal}}^2}{
     h^2 \Omega_{\text{noise}}^2}}$$
     :caprini_2020:`\ ` eq. 33
-    :smith_2019:`\ ` eq. 60
+    :smith_2019:`\ ` eq. 60.
 
     The equation :gowling_2023:`\ ` eq. 3.9 has an additional factor of 2,
     which is canceled out by another factor of 2 in eq. 3.8.
@@ -64,7 +64,7 @@ def signal_to_noise_ratio(
 def ft[T: FloatOrArr](L: T = const.LISA_ARM_LENGTH) -> T:  # type: ignore[assignment]
     r"""Transfer frequency
     $$f_t = \frac{c}{2\pi L}$$
-    :gowling_2021:`\ ` p. 12
+    :gowling_2021:`\ ` p. 12.
     """
     # typing.cast() is not used below, since Numba cannot compile it.
     return const.c / (2*np.pi*L)  # type: ignore[return-value]
@@ -80,7 +80,7 @@ def N_acc[T: FloatOrArr](L: T = const.LISA_ARM_LENGTH) -> T:  # type: ignore[ass
     $${N}_\text{acc} = \frac{3 \cdot 10^{-15}}{L} \frac{\text{m}}{\text{s}^2}
     \approx 1.44 \cdot 10^{-48} \frac{1}{\text{s}^4 \text{Hz}}$$
     :gowling_2021:`\ ` eq. 3.3
-    :gowling_2023:`\ ` p. 6
+    :gowling_2023:`\ ` p. 6.
 
     $$4 {N}_\text{acc} \approx 5.76 \cdot 10^{-48} \frac{1}{{\text{s}}^4 \text{Hz}}$$
     :smith_2019:`\ ` eq. 53
@@ -100,7 +100,7 @@ def N_AE(
     8 \left( 1 + \cos \left( \frac{f}{f_t} \right) + \cos^2 \left( \frac{f}{f_t} \right) \right) {P}_\text{acc}
     \right) \lvert W \rvert^2$$
     :gowling_2021:`\ ` eq. 3.4
-    :smith_2019:`\ ` eq. 57
+    :smith_2019:`\ ` eq. 57.
     """
     cos_f_frac = np.cos(f/ft)
     if W_abs2 is None:
@@ -116,7 +116,7 @@ def omega(f: th.FloatOrArr, S: th.FloatOrArr) -> th.FloatOrArr:
     :gowling_2021:`\ ` eq. 3.8,
     :gowling_2023:`\ ` eq. 3.8,
     :smith_2019:`\ ` eq. 59
-    :maggiore_1999:`\ ` eq. 18
+    :maggiore_1999:`\ ` eq. 18.
 
     However, there is a factor of 2 instead of a factor of 4 in
     :caprini_2020:`\ ` eq. 34
@@ -128,7 +128,7 @@ def omega_eb(f: th.FloatOrArr, f_ref_eb: float = 25, omega_ref_eb: float = 8.9e-
     r"""
     Energy density of extragalactic compact binaries
     $$\Omega_\text{eb}(f) = \Omega_\text{ref,eb} \left( \frac{f}{{f}_\text{ref,eb}} \right)^\frac{2}{3}$$
-    :gowling_2021:`\ ` eq. 3.9
+    :gowling_2021:`\ ` eq. 3.9.
     """
     return omega_ref_eb * (f/f_ref_eb)**(2/3)
 
@@ -137,14 +137,14 @@ def omega_gb[T: FloatOrArr](f: T) -> T:
     r"""
     Energy density of unresolved galactic compact binaries
     $$\Omega_\text{gb} = \left( \frac{4 \pi^2}{3 H_0^2} \right) f^3 {S}_\text{gb}(f)$$
-    :gowling_2021:`\ ` eq. 3.11
+    :gowling_2021:`\ ` eq. 3.11.
     """
     return omega(f=f, S=S_gb(f))  # type: ignore[return-value]
 
 
 def omega_ins[T: FloatOrArr](f: T) -> T:
     r"""LISA instrument noise
-    $$\Omega_\text{ins} = \frac{4 \pi^2}{3 H_0^2} f^3 S_A(f)$$
+    $$\Omega_\text{ins} = \frac{4 \pi^2}{3 H_0^2} f^3 S_A(f)$$.
     """
     return omega(f=f, S=S_AE(f))  # type: ignore[return-value]
 
@@ -153,7 +153,7 @@ def omega_noise[T: FloatOrArr](f: T) -> T:
     r"""
     Total energy density of noise
     $$\Omega_\text{noise} = \Omega_\text{ins} + \Omega_\text{eb} + \Omega_\text{gb}$$
-    :gowling_2021:`\ ` eq. 3.13
+    :gowling_2021:`\ ` eq. 3.13.
     """
     return omega_ins(f) + omega_eb(f) + omega_gb(f)  # type: ignore[return-value]
 
@@ -163,7 +163,7 @@ def P_acc(f: th.FloatOrArr, L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.Floa
     LISA single test mass acceleration noise, $P_\text{acc}$
     :gowling_2021:`\ ` eq. 3.3
     :gowling_2023:`\ ` eq. 3.5
-    :smith_2019:`\ ` eq. 52
+    :smith_2019:`\ ` eq. 52.
     """
     return S_I(f, L) / (4 * (2*np.pi*f)**4)
 
@@ -187,7 +187,7 @@ def R_AE(f: th.FloatOrArr, ft: th.FloatOrArr = FT_LISA, W_abs2: th.FloatOrArr | 
     r"""Gravitational wave response function for the A and E channels
     $$\mathcal{R}_A^\text{Fit} = \mathcal{R}_E^\text{Fit} \approx \frac{9}{20} \lvert W \rvert^2
     \left(1 + \left( \frac{3f}{4f_t} \right)^2 \right)^{-1}$$
-    :gowling_2021:`\ ` eq. 3.6
+    :gowling_2021:`\ ` eq. 3.6.
     """
     if W_abs2 is None:
         W_abs2 = np.abs(W(f, ft))**2
@@ -196,7 +196,7 @@ def R_AE(f: th.FloatOrArr, ft: th.FloatOrArr = FT_LISA, W_abs2: th.FloatOrArr | 
 
 def R_LISA(f: th.FloatOrArr, f2: th.FloatOrArr = F2_LISA) -> th.FloatOrArr:
     r"""Auxiliary function from LISA science requirements
-    :lisa_sci_req:`\ ` eq. 3
+    :lisa_sci_req:`\ ` eq. 3.
     """
     return 1 + (f / f2)**2
 
@@ -204,7 +204,7 @@ def R_LISA(f: th.FloatOrArr, f2: th.FloatOrArr = F2_LISA) -> th.FloatOrArr:
 def S(N: th.FloatOrArr, R: th.FloatOrArr) -> th.FloatOrArr:
     r"""Noise power spectral density
     $$S = \frac{N}{\mathcal{R}}$$
-    :gowling_2021:`\ ` eq. 3.1
+    :gowling_2021:`\ ` eq. 3.1.
     """
     return N / R
 
@@ -216,7 +216,7 @@ def S_AE(
         both_channels: bool = True) -> th.FloatOrArr:
     r"""Noise power spectral density for the LISA A and E channels
     $$S_A = S_E = \frac{N_A}{\mathcal{R}_A}$$
-    :gowling_2021:`\ ` eq. 3.7
+    :gowling_2021:`\ ` eq. 3.7.
 
     The factor of $\frac{1}{\sqrt{2}}$ for using both channels comes from :smith_2019:`\ ` eq. 59
     """
@@ -235,7 +235,7 @@ def S_AE_approx(
     $$S_A = S_E = \frac{N_A}{\mathcal{R}_A}
     \approx \frac{40}{3} ({P}_\text{oms} + {4P}_\text{acc}) \left( 1 + \frac{3f}{4f_t} \right)^2$$
     :gowling_2021:`\ ` eq. 3.7
-    :smith_2019:`\ ` eq. 63
+    :smith_2019:`\ ` eq. 63.
 
     The factor of $\frac{1}{\sqrt{2}}$ for using both channels comes from :smith_2019:`\ ` eq. 59
     """
@@ -248,7 +248,7 @@ def S_AE_approx(
 def S_I(f: th.FloatOrArr, L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatOrArr:
     r"""Subsidiary formula $S_I$ for acceleration noise
     :smith_2019:`\ ` eq. 53
-    :lisa_sci_req:`\ ` eq. 3
+    :lisa_sci_req:`\ ` eq. 3.
     """
     return 4 * N_acc(L) * (1 + (const.F1_LISA/f)**2)
 
@@ -261,7 +261,7 @@ def S_gb(
     $$S_c(f) = A f^\frac{-7}{3} \exp \left( -f^\alpha + \beta f \sin(\kappa f) \right)
     \left( 1 + \tanh(\gamma (f_k - f) \right) \text{Hz}^{-1}$$
     :cornish_2017:`\ ` eq. 3
-    :gowling_2021:`\ ` eq. 3.10
+    :gowling_2021:`\ ` eq. 3.10.
     """
     alpha = np.interp(t, GB_TIMES, GB_ALPHAS)
     beta = np.interp(t, GB_TIMES, GB_BETAS)
@@ -274,7 +274,7 @@ def S_gb(
 def W(f: th.FloatOrArr, ft: th.FloatOrArr) -> th.FloatOrArr:
     r"""Round trip modulation
     $$W(f,f_t) = 1 - e^{-2i \frac{f}{f_t}}$$
-    :gowling_2021:`\ ` p. 12
+    :gowling_2021:`\ ` p. 12.
     """
     return 1 - np.exp(-2j * f / ft)
 

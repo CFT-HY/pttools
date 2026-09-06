@@ -1,4 +1,4 @@
-"""Format floats as scientific notation in LaTeX and Unicode"""
+"""Format floats as scientific notation in LaTeX and Unicode."""
 
 from fractions import Fraction
 import math
@@ -11,7 +11,7 @@ UNICODE_SUPERSCRIPT: dict[int, int] = str.maketrans(
 
 
 def trim_zeros(s: str, strip_zeros: bool) -> str:
-    """Trim zeros from the end of a number"""
+    """Trim zeros from the end of a number."""
     if strip_zeros and "." in s:
         s = s.rstrip("0").rstrip(".")
     return s or "0"

@@ -1,4 +1,4 @@
-"""Sigmoid-based model
+"""Sigmoid-based model.
 
 Not yet functional
 """
@@ -6,9 +6,9 @@ Not yet functional
 import numpy as np
 
 from pttools import type_hints as th
+from pttools.models.thermo import ThermoModel
 from pttools.speedup import njit
 from pttools.type_hints import FloatOrArr
-from pttools.models.thermo import ThermoModel
 
 
 @njit(cache=True)
@@ -17,7 +17,7 @@ def sigmoid(
         midpoint: th.FloatOrArr,
         max_val: th.FloatOrArr,
         steepness: th.FloatOrArr) -> th.FloatOrArr:
-    """`Logistic function <https://en.wikipedia.org/wiki/Logistic_function>`_"""
+    """`Logistic function <https://en.wikipedia.org/wiki/Logistic_function>`_."""
     return max_val / (1 + np.exp(-steepness*(x - midpoint)))
 
 
@@ -27,16 +27,17 @@ def sigmoid_derivative(
         midpoint: th.FloatOrArr,
         max_val: th.FloatOrArr,
         steepness: th.FloatOrArr) -> th.FloatOrArr:
-    """Derivative of the logistic function"""
+    """Derivative of the logistic function."""
     exp = np.exp(-steepness*(x - midpoint))
     return steepness * max_val * exp / (1 + exp)**2
 
 
 class SigmoidModel(ThermoModel):
-    """Preliminary idea: ThermoModel based on sigmoid functions
+    """Preliminary idea: ThermoModel based on sigmoid functions.
 
     TODO: work in progress
     """
+
     def __init__(
             self,
             pt_temp_ge: float,

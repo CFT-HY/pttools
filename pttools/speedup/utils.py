@@ -1,15 +1,15 @@
-"""Utilities for the speedups"""
+"""Utilities for the speedups."""
 
 import collections
+from collections.abc import Callable
 import functools
 import threading
 import typing as tp
-from collections.abc import Callable
 
 
 def threadsafe_lru[T: Callable](func: T) -> T:
     """
-    Thread-safe LRU cache
+    Thread-safe LRU cache.
 
     From https://noamkremen.github.io/a-simple-threadsafe-caching-decorator.html
     """
@@ -17,7 +17,7 @@ def threadsafe_lru[T: Callable](func: T) -> T:
     lock_dict: collections.defaultdict[tp.Any, threading.Lock] = collections.defaultdict(threading.Lock)
 
     def _thread_lru(*args, **kwargs):
-        key = functools._make_key(args, kwargs, typed=True)
+        key = functools._make_key(args, kwargs, typed=True)  # noqa: SLF001
         with lock_dict[key]:
             return cached_func(*args, **kwargs)
 

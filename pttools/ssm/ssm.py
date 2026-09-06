@@ -1,13 +1,13 @@
-"""Sound Shell Model functions"""
+"""Sound Shell Model functions."""
 
 import enum
 import logging
 
-from pttools.speedup import njit
 import numpy as np
 
 from pttools import speedup
-from pttools.ssm import const, lifetime_distribution_momentum, NucType
+from pttools.speedup import njit
+from pttools.ssm import NucType, const, lifetime_distribution_momentum
 from pttools.ssm.calculators import resample_uniform_xi
 from pttools.ssm.nucleation import beta_R_star0, lifetime_distribution
 from pttools.ssm.sin_transform import sin_transform
@@ -17,16 +17,18 @@ logger = logging.getLogger(__name__)
 
 
 @enum.unique
-class DE_Method(str, enum.Enum):
-    r"""Method for computing $|A(z)|^2$"""
+class DE_Method(enum.StrEnum):
+    r"""Method for computing $|A(z)|^2$."""
+
     # TODO: Improve this docstring
     ALTERNATE = "alternate"
     STANDARD = "standard"
 
 
 @enum.unique
-class Method(str, enum.Enum):
-    r"""Method for computing $|A(z)|^2$"""
+class Method(enum.StrEnum):
+    r"""Method for computing $|A(z)|^2$."""
+
     # TODO: Improve this docstring
     E_CONSERVING = "e_conserving"
     F_ONLY = "f_only"
@@ -98,7 +100,7 @@ def f(
         parallel: bool = True) -> th.FloatArr:
     r"""$f(z)$
     $$f(z) = \frac{4\pi}{z} \int_0^\infty d\xi v_{\text{ip}}(\xi) \sin(z\xi)$$
-    :gw_pt_ssm:`\ ` eq. 4.5
+    :gw_pt_ssm:`\ ` eq. 4.5.
     """
     return 4. * np.pi / z * sin_transform(
         z=z, xi=xi, f=v, z_st_thresh=z_st_thresh, v_wall=v_wall, v_sh=v_sh, parallel=parallel
@@ -117,7 +119,7 @@ def l(  # noqa: E743
         parallel: bool = True) -> th.FloatArr:
     r"""$l(z)$
     $$l(z) = \frac{4\pi}{z} \int_0^\infty d\xi \lambda_\text{ip}(\xi) \xi \sin(z\xi)$$
-    :gw_pt_ssm:`\ ` eq. 4.8
+    :gw_pt_ssm:`\ ` eq. 4.8.
     """
     xi_re, lam_re = resample_uniform_xi(xi, lam, n_xi)
 
@@ -144,7 +146,7 @@ def lam(
         non_linear_correction: bool = False) -> th.FloatArr:
     r"""Energy fluctuation variable $\lambda(x)$
     $$\lambda(x) = \frac{e(x) - \bar{e}}{\bar{w}}$$
-    :gw_pt_ssm:`\ ` eq. 3.20
+    :gw_pt_ssm:`\ ` eq. 3.20.
 
     :param v: $v$
     :param w: $w$
@@ -195,7 +197,7 @@ def qT_lookup(T_tilde: th.FloatArr1D, z: th.FloatArr1D) -> th.FloatArr1D:
 
 @njit
 def T_tilde(T_tilde_min: float, T_tilde_max: float, n: int):
-    r"""Generate $\tilde{T}$ array"""
+    r"""Generate $\tilde{T}$ array."""
     return speedup.logspace(np.log10(T_tilde_min), np.log10(T_tilde_max), n)
 
 

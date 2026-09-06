@@ -1,17 +1,13 @@
-"""Speed of sound for the Bag Model"""
-
-# The bag model functions have to keep the signature of the generic model functions.
-# ruff: noqa: ARG001
+"""Speed of sound for the Bag Model."""
 
 import numba
 from numba.extending import overload
 import numpy as np
 
+from pttools.bubble import const
+from pttools.bubble.phase import Phase
 from pttools.speedup import njit
 import pttools.type_hints as th
-from pttools.bubble.phase import Phase
-from pttools.bubble import const
-
 
 NUMBA_CACHE_CS2_BAG: bool = True
 """Whether to cache the Numba-compiled $c_s^2$ functions
@@ -26,7 +22,7 @@ def cs2_bag_multi(
         phase: th.FloatOrArr) -> th.FloatOrArr:
     r"""Sound speed squared, $c_s^2=\frac{1}{3}$.
     :notes:`\ `, p. 37,
-    :rel_hydro_book:`\ `, eq. 2.207
+    :rel_hydro_book:`\ `, eq. 2.207.
     """
     return np.ones_like(w) * np.ones_like(phase) / 3.
 

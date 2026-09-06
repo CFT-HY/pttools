@@ -1,4 +1,4 @@
-"""Base class for equation of state models and thermodynamics models"""
+"""Base class for equation of state models and thermodynamics models."""
 
 import abc
 import datetime
@@ -14,10 +14,11 @@ logger = logging.getLogger(__name__)
 
 
 class BaseModel(abc.ABC):
-    """The base for both Model and ThermoModel
+    """The base for both Model and ThermoModel.
 
     All temperatures must be in units of GeV for the frequency conversion in Spectrum to work.
     """
+
     DEFAULT_LABEL_LATEX: str
     DEFAULT_LABEL_UNICODE: str
     DEFAULT_NAME: str
@@ -179,7 +180,7 @@ class BaseModel(abc.ABC):
 
     @abc.abstractmethod
     def cs2(self, *args, **kwargs) -> th.FloatOrArr:
-        """Speed of sound squared $c_s^2$"""
+        """Speed of sound squared $c_s^2$."""
 
     @abc.abstractmethod
     def cs2_neg(self, *args, **kwargs) -> th.FloatOrArr:

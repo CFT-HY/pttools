@@ -1,4 +1,4 @@
-"""Plot Chapman-Jouguet speed"""
+"""Plot Chapman-Jouguet speed."""
 
 from matplotlib.legend import Legend
 import matplotlib.pyplot as plt
@@ -11,7 +11,8 @@ import pttools.type_hints as th
 
 
 class ChapmanJouguetPlot:
-    """Plot Chapman-Jouguet speed"""
+    """Plot Chapman-Jouguet speed."""
+
     def __init__(self, alpha_n: th.FloatArr1D):
         self.alpha_n = alpha_n
 
@@ -23,7 +24,7 @@ class ChapmanJouguetPlot:
         self.fig.tight_layout()
 
     def add(self, model: Model, analytical: bool = True, label: str | None = None, ls: str = "-"):
-        """Add a model to the plot"""
+        """Add a model to the plot."""
         v_cj = np.empty_like(self.alpha_n)
         for i in range(self.alpha_n.size):
             v_cj[i] = v_chapman_jouguet(alpha_n=self.alpha_n[i], model=model, analytical=analytical)
@@ -33,5 +34,5 @@ class ChapmanJouguetPlot:
         self.ax.plot(self.alpha_n, v_cj, label=label, ls=ls)
 
     def process(self) -> Legend | None:
-        """Process the plot"""
+        """Process the plot."""
         return legend(self.ax, fontsize="x-small")

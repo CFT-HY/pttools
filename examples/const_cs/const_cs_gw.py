@@ -18,13 +18,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from examples.utils import FIG_DIR, save_and_show_figs
+from pttools.analysis.parallel import create_spectra
 from pttools.bubble import lorentz
 from pttools.bubble.shock import v_shock_curve
 from pttools.models import ConstCSModel, Model
 from pttools.omgw0 import Spectrum, SpectrumArr3D, omega_ins
-from pttools.analysis.parallel import create_spectra
-from pttools.utils.system import IS_READ_THE_DOCS
 import pttools.type_hints as th
+from pttools.utils.system import IS_READ_THE_DOCS
 
 logger = logging.getLogger(__name__)
 
@@ -228,7 +228,7 @@ def main(low_k: bool = True) -> tuple[th.FigArr1D, th.FigArr2D, str]:
     )
 
     snrs = np.zeros((len(alpha_ns), len(v_walls), len(models)))
-    for i_alpha_n, alpha_n in enumerate(alpha_ns):
+    for i_alpha_n, _alpha_n in enumerate(alpha_ns):
         for i_v_wall, _v_wall in enumerate(v_walls):
             ax_v: Axes = axs[0, i_alpha_n, i_v_wall]
             ax_gw: Axes = axs[1, i_alpha_n, i_v_wall]
@@ -274,7 +274,7 @@ def main(low_k: bool = True) -> tuple[th.FigArr1D, th.FigArr2D, str]:
     f_min = np.min([spectrum.f(z=spectrum.y[0]) for spectrum in spectra.flat])
     f_max = np.max([spectrum.f(z=spectrum.y[-1]) for spectrum in spectra.flat])
     f = np.logspace(np.log10(f_min), np.log10(f_max), num=50)
-    for i_alpha_n, alpha_n in enumerate(alpha_ns):
+    for i_alpha_n, _alpha_n in enumerate(alpha_ns):
         for i_v_wall, _v_wall in enumerate(v_walls):
             om_ins = omega_ins(f)
             ax = axs[2, i_alpha_n, i_v_wall]

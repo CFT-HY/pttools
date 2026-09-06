@@ -8,15 +8,16 @@ Simple plots for the bag model
 import matplotlib.pyplot as plt
 
 from examples.utils import save_and_show_fig
-from pttools.logging import setup_logging
-from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR, cs2_bag_scalar
-from pttools.bubble.fluid_bag import sound_shell_bag
-from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG
-from pttools.bubble.fluid_reference import ref
-from pttools.models.bag import BagModel
+
 # from pttools.models.const_cs import ConstCSModel
 from pttools.bubble import props
 from pttools.bubble.bubble import Bubble
+from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR, cs2_bag_scalar
+from pttools.bubble.fluid_bag import sound_shell_bag
+from pttools.bubble.fluid_reference import ref
+from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG
+from pttools.logging import setup_logging
+from pttools.models.bag import BagModel
 
 setup_logging()
 

@@ -1,4 +1,4 @@
-"""Formulae for a barotropic equation of state"""
+"""Formulae for a barotropic equation of state."""
 
 from pttools.bubble.const import DEFAULT_NU_GDH2024
 from pttools.ssm.const import DEFAULT_A_STAR_A_R_RATIO, DEFAULT_N_SH, DEFAULT_R_STAR
@@ -10,7 +10,7 @@ def dilution_of_e(
         nu: FloatOrArr = DEFAULT_NU_GDH2024) -> FloatOrArr:
     r"""Dilution of the background energy density $\bar{e}$
     $$\left( \frac{a_*}{a_r} \right)^\frac{2 \nu}{1 + \nu} = \left( \frac{a_*}{a} \right)^4 \frac{\bar{e_*}}{\bar{e}}$$
-    :giombi_2024_cs:`\ ` eq. 2.18
+    :giombi_2024_cs:`\ ` eq. 2.18.
 
     The FLRW scale factor $a$ is defined as
     $$a(\eta) \d\eta = dt$$
@@ -43,7 +43,7 @@ def eta_ratio(
 
 def H_eta[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:  # type: ignore[assignment]
     r"""$H \eta$ for a barotropic EoS
-    $$H \eta = \frac{\dot{a}}{a} = 1 + \nu_\text{gdh2024} = \frac{2}{1 + 3 \omega}$$
+    $$H \eta = \frac{\dot{a}}{a} = 1 + \nu_\text{gdh2024} = \frac{2}{1 + 3 \omega}$$.
 
     This comes from the scale factor for barotropic EoS
     $$a(\eta) = a(\eta_*) \left( \frac{\eta}{\eta_*} \right)^\frac{2}{1+3\omega}$$
@@ -58,7 +58,7 @@ def H_eta[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:  # type: ignore[assig
 def l[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:  # noqa: E743  # type: ignore[assignment]
     r"""$\ell(\nu)
     $$\ell(\nu) = 1 + 2\nu$$
-    :giombi_2026:`\ ` p. 25
+    :giombi_2026:`\ ` p. 25.
     """
     return 1 + 2 * nu  # type: ignore[return-value]
 
@@ -74,7 +74,7 @@ def source_lifetime_factor(
     \frac{1}{\ell(\nu)} \left(1 - \left( \frac{\eta_*}{\eta_\text{end}} \right)^{\ell(\nu)} \right)
     = \frac{1}{\ell(\nu)} \left(1 - \left(1 + \frac{\Delta \eta_\text{v}}{\eta_*} \right)^{-\ell(\nu)} \right)$$
     :giombi_2026:`\ ` eq. 3.6,
-    :giombi_2024_cs:`\ ` eq. 3.13
+    :giombi_2024_cs:`\ ` eq. 3.13.
 
     This is an updated version of
     :maki_msc:`\ ` eq. 3.79
@@ -85,6 +85,6 @@ def source_lifetime_factor(
 def Upsilon(r: FloatOrArr, l: FloatOrArr) -> FloatOrArr:  # noqa: E741
     r"""$\Upsilon_\ell$ for arbitrary $\ell$
     $$\Upsilon_\ell (r) = \frac{1}{\ell} \left( 1 - r^\ell \right)$$
-    :giombi_2026:`\ ` eq. 3.6
+    :giombi_2026:`\ ` eq. 3.6.
     """
     return (1 - r**l) / l

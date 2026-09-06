@@ -1,10 +1,9 @@
-"""Base test case for thermodynamic models"""
+"""Base test case for thermodynamic models."""
 
 import abc
 import os.path
 
 import numpy as np
-
 
 from pttools.models import ThermoModel
 import pttools.type_hints as th
@@ -13,7 +12,8 @@ from tests.utils.json import JsonTestCase
 
 
 class ThermoModelBaseCase(JsonTestCase, abc.ABC):
-    """Base test case for thermodynamic models"""
+    """Base test case for thermodynamic models."""
+
     thermo: ThermoModel
     temp_arr: th.FloatArr1D
     phase_arr: th.FloatArr1D

@@ -1,8 +1,8 @@
-"""Configuration for the pytest test suite"""
+"""Configuration for the pytest test suite."""
 
 import logging
-# import typing as tp
 
+# import typing as tp
 import pytest
 
 from pttools.logging import setup_logging
@@ -69,7 +69,7 @@ def xdist_group_name(item: pytest.Item, cls: type) -> str:
 
 
 def pytest_xdist_auto_num_workers() -> int | None:
-    """Number of pytest-xdist workers to use for ``--numprocesses=auto``
+    """Number of pytest-xdist workers to use for ``--numprocesses=auto``.
 
     :return: Number of workers (None = auto)
     """
@@ -108,7 +108,7 @@ def pytest_collection_modifyitems(items: list[pytest.Item]):
         item.add_marker(pytest.mark.xdist_group(xdist_group_name(item, cls)))
 
 
-@pytest.fixture(scope="function", autouse=True)
+@pytest.fixture(autouse=True)
 def log_test_name_at_start(request):
     """
     Before starting a test, log its name.

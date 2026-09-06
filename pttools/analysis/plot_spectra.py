@@ -1,4 +1,4 @@
-"""Utilities for plotting the spectra of multiple bubbles"""
+"""Utilities for plotting the spectra of multiple bubbles."""
 
 import typing as tp
 
@@ -9,8 +9,8 @@ import numpy as np
 
 from pttools.analysis.plot_bubbles import plot_bubbles_v
 from pttools.analysis.utils import FigAndAxes, create_fig_ax
-from pttools.ssm.spectrum import SSMSpectrum
 from pttools.omgw0 import Spectrum, omega_noise
+from pttools.ssm.spectrum import SSMSpectrum
 import pttools.type_hints as th
 from pttools.utils.formatting import as_latex
 
@@ -34,7 +34,7 @@ def plot_spectra_common(
         path: str | None = None,
         legend: bool | None = None,
         set_x: bool = True) -> FigAndAxes:
-    """Common steps for plotting spectra"""
+    """Common steps for plotting spectra."""
     if set_x:
         ax.set_xlabel(Z_LABEL)
         ax.set_xscale("log")
@@ -56,7 +56,7 @@ def plot_spectra_multi(
         fig: Figure | None = None,
         path: str | None = None,
         **kwargs) -> tuple[Figure, th.AxesArr2D]:
-    """Plot multiple types of spectra"""
+    """Plot multiple types of spectra."""
     fig, axs = plot_spectra_multi_common(spectra, fig, **kwargs)
 
     # Arrows between the sub-figures
@@ -86,7 +86,7 @@ def plot_spectra_multi_common(
         labels: list[str | None] | None = None,
         legend: bool | None = None,
         **kwargs):
-    """Common steps for plotting multiple spectra"""
+    """Common steps for plotting multiple spectra."""
     if fig is None:
         fig = plt.figure(figsize=figsize)
     axs = fig.subplots(nrows, ncols)
@@ -110,7 +110,7 @@ def plot_spectra_multi_flat(
         labels: list[str | None] | None = None,
         legend: bool | None = None,
         **kwargs):
-    """Plot multiple spectra in a flat layout"""
+    """Plot multiple spectra in a flat layout."""
     fig, axs = plot_spectra_multi_common(
         spectra, fig,
         figsize=(14, 4),
@@ -147,7 +147,7 @@ def plot_spectra(
         labels: list[str] | None = None,
         legend: bool | None = None,
         **kwargs) -> FigAndAxes:
-    r"""Plot the GW spectra today $\mathcal{P}_{\text{gw},0}(f)$"""
+    r"""Plot the GW spectra today $\mathcal{P}_{\text{gw},0}(f)$."""
     fig, ax = create_fig_ax(fig, ax)
     for i, spectrum in enumerate(spectra):
         snr = spectrum.signal_to_noise_ratio()
@@ -175,7 +175,7 @@ def plot_spectra_gw(
         fig: Figure | None = None,
         path: str | None = None,
         **kwargs) -> FigAndAxes:
-    r"""Plot the GW power spectra $\mathcal{P}_\text{gw}(kR_*)$"""
+    r"""Plot the GW power spectra $\mathcal{P}_\text{gw}(kR_*)$."""
     fig, ax = create_fig_ax(fig, ax)
     for spectrum in spectra:
         ax.plot(spectrum.y, spectrum.pow_gw, label=spectrum.label_latex, **kwargs)
@@ -189,7 +189,7 @@ def plot_spectra_v(
         fig: Figure | None = None,
         path: str | None = None,
         **kwargs) -> FigAndAxes:
-    r"""Plot the velocity power spectra $\tilde{\mathcal{P}}_{\tilde{v}}(kR_*)$"""
+    r"""Plot the velocity power spectra $\tilde{\mathcal{P}}_{\tilde{v}}(kR_*)$."""
     fig, ax = create_fig_ax(fig, ax)
     for spectrum in spectra:
         ax.plot(spectrum.y, spectrum.pow_v_tilde, label=spectrum.label_latex, **kwargs)
@@ -203,7 +203,7 @@ def plot_spectra_spec_den_gw(
         fig: Figure | None = None,
         path: str | None = None,
         **kwargs) -> FigAndAxes:
-    r"""Plot the GW spectral densities $\mathcal{P}_\text{gw}(kR_*)$"""
+    r"""Plot the GW spectral densities $\mathcal{P}_\text{gw}(kR_*)$."""
     fig, ax = create_fig_ax(fig, ax)
     for spectrum in spectra:
         ax.plot(spectrum.y, spectrum.spec_den_gw, label=spectrum.label_latex, **kwargs)
@@ -217,7 +217,7 @@ def plot_spectra_spec_den_v(
         fig: Figure | None = None,
         path: str | None = None,
         **kwargs) -> FigAndAxes:
-    r"""Plot the velocity spectral densities $\tilde{P}_{\tilde{v}}(kR_*)$"""
+    r"""Plot the velocity spectral densities $\tilde{P}_{\tilde{v}}(kR_*)$."""
     fig, ax = create_fig_ax(fig, ax)
     for spectrum in spectra:
         ax.plot(spectrum.y, spectrum.spec_den_v_tilde, label=spectrum.label_latex, **kwargs)

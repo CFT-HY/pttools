@@ -1,4 +1,4 @@
-r"""Compare results with those from the code of :giese_2021:`\ `"""
+r"""Compare results with those from the code of :giese_2021:`\ `."""
 
 import unittest
 
@@ -7,8 +7,7 @@ import pytest
 
 from pttools import models
 from pttools.analysis.parallel import create_bubbles
-from pttools.bubble.bubble import Bubble
-from pttools.bubble.bubble import get_kappa
+from pttools.bubble.bubble import Bubble, get_kappa
 from pttools.speedup import IS_OSX
 import pttools.type_hints as th
 from pttools.utils.assertions import assert_allclose
@@ -21,7 +20,7 @@ def assert_kappa(
         kappa_ref: th.FloatArr1D,
         rtol: float = 1e-7,
         atol: float = 0) -> None:
-    r"""Compare kappa results to those of figure 2 of :giese_2021:`\ `"""
+    r"""Compare kappa results to those of figure 2 of :giese_2021:`\ `."""
     alpha_thetabar_ns = np.array([0.01, 0.1, 0.3])
     v_walls = np.linspace(0.2, 0.9, 8, endpoint=True)
     model = models.ConstCSModel(css2=css2, csb2=csb2, a_s=5, a_b=1, V_s=1)
@@ -46,7 +45,7 @@ def compare(
 
 
 class GieseTest(unittest.TestCase):
-    r"""Compare results with those from the code of :giese_2021:`\ `"""
+    r"""Compare results with those from the code of :giese_2021:`\ `."""
 
     @staticmethod
     def test_bag():

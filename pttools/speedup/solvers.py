@@ -1,4 +1,4 @@
-"""Equation solvers that improve upon the ones available in SciPy"""
+"""Equation solvers that improve upon the ones available in SciPy."""
 
 import logging
 import typing as tp
@@ -19,7 +19,7 @@ def fsolve_vary(
         rel_variations: float | th.FloatArr1D = 0.01,
         log_status: bool = True,
         **kwargs) -> th.FSolveOutput:
-    """SciPy fsolve, but if it fails, it tries to vary the initial guess to find a solution"""
+    """SciPy fsolve, but if it fails, it tries to vary the initial guess to find a solution."""
     if "full_output" in kwargs:
         raise ValueError("Cannot specify full_output, as it has to be True.")
 

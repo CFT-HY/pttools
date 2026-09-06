@@ -1,18 +1,15 @@
-"""Functions for organizing the computation of the GW spectra"""
+"""Functions for organizing the computation of the GW spectra."""
 
 from pttools.bubble.solution_type import SolutionType
 from pttools.speedup import njit
-from pttools.ssm.spec_den_v import spec_den_v as spec_den_v_func
-from pttools.ssm.low_k.integration import \
-    power_spectrum_integration_low, power_spectrum_integration_int, Iv_resampled
+from pttools.ssm.low_k.integration import Iv_resampled, power_spectrum_integration_int, power_spectrum_integration_low
 from pttools.ssm.low_k.join import gw_junction
 from pttools.ssm.nucleation import NucType, bubble_spacing_enlargement
 from pttools.ssm.spec_den_gw import gen_lookup, spec_den_gw
-from pttools.ssm.ssm import \
-    A2_e_conserving, \
-    qT_lookup as qT_lookup_func, \
-    T_tilde as T_tilde_func, \
-    ubarf2_from_a2
+from pttools.ssm.spec_den_v import spec_den_v as spec_den_v_func
+from pttools.ssm.ssm import A2_e_conserving, ubarf2_from_a2
+from pttools.ssm.ssm import T_tilde as T_tilde_func
+from pttools.ssm.ssm import qT_lookup as qT_lookup_func
 from pttools.type_hints import FloatArr1D
 
 # When this function can be Numba-jitted, also create a version that includes signal_to_noise_ratio().
@@ -55,7 +52,7 @@ def compute(
             FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D,
             FloatArr1D, float, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D,
             float, float, float]:
-    """Compute the Sound Shell Model spectra for a fluid profile, including the low-k approximation
+    """Compute the Sound Shell Model spectra for a fluid profile, including the low-k approximation.
 
     This is in one Numba-compiled function so that the GIL is released for the entire computation.
     """
@@ -100,7 +97,7 @@ def compute_low_k(
         tau_end: float,
         tau_star: float) -> tuple[FloatArr1D, FloatArr1D, FloatArr1D]:
     r"""Compute the low-k approximation
-    :giombi_2024_cs:`\ `
+    :giombi_2024_cs:`\ `.
     """
     spec_den_gw_low = power_spectrum_integration_low(
         x_data=y, Pv_data=P_tilde_v,
@@ -154,7 +151,7 @@ def compute_ssm(
             FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D,
             FloatArr1D, FloatArr1D, FloatArr1D, float, FloatArr1D,
             float, float, float]:
-    """Compute the Sound Shell Model spectra for the given fluid profile"""
+    """Compute the Sound Shell Model spectra for the given fluid profile."""
     f, hx, bubble_spacing_enlargement_factor = bubble_spacing_enlargement(
         xi=xi, T=T, beta_tilde=beta_tilde, v_wall=v_wall, sol_type=sol_type
     )

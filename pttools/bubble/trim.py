@@ -1,12 +1,11 @@
-"""Utility functions for trimming fluid solutions"""
+"""Utility functions for trimming fluid solutions."""
 
 import logging
 
 import numba
 
+from pttools.bubble import check, const
 from pttools.bubble.cs2_bag import cs2_bag_scalar
-from pttools.bubble import check
-from pttools.bubble import const
 from pttools.bubble.phase import Phase
 from pttools.bubble.shock_bag import v_shock_bag
 from pttools.bubble.solution_type import SolutionType

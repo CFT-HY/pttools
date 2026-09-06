@@ -1,4 +1,4 @@
-"""Test power spectra predictions of SSM with different nucleation models"""
+"""Test power spectra predictions of SSM with different nucleation models."""
 
 import logging
 import os
@@ -6,7 +6,6 @@ import os.path
 import unittest
 
 # os.environ["NUMBA_DEBUG_CACHE"] = "1"
-
 import numba
 import numpy as np
 
@@ -20,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 class TestPowSpecs(unittest.TestCase):
     """Unit testing for sound shell model power spectra, both velocity and GW."""
+
     @staticmethod
     def test_pow_specs():
         pow_specs()

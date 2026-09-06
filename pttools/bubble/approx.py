@@ -1,17 +1,16 @@
-"""Functions for calculating approximate solutions"""
+"""Functions for calculating approximate solutions."""
 # TODO: remove duplicate wall speed checks
 
 import numpy as np
 
+from pttools.bubble import check, const
 import pttools.type_hints as th
-from pttools.bubble import check
-from pttools.bubble import const
 
 
 def A2_approx(xi0: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Approximate solution for A2.
-    $A2_\text{approx} = \frac{3(2\xi_0 - 1)}{1 - \xi_0^2}$
+    $A2_\text{approx} = \frac{3(2\xi_0 - 1)}{1 - \xi_0^2}$.
 
     :param xi0: $\xi_0$
     :return: A2

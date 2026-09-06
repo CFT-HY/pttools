@@ -1,4 +1,4 @@
-"""Test the generation of the fluid reference"""
+"""Test the generation of the fluid reference."""
 
 import os
 import unittest
@@ -9,7 +9,7 @@ from tests.utils.mark import skip_slow, uses_multiprocessing
 
 
 class ReferenceTest(unittest.TestCase):
-    """Test the generation of the fluid reference"""
+    """Test the generation of the fluid reference."""
 
     @skip_slow
     @uses_multiprocessing

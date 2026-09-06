@@ -1,4 +1,4 @@
-"""Utilities for handling functions for the differential equations"""
+"""Utilities for handling functions for the differential equations."""
 
 import logging
 import threading
@@ -23,13 +23,14 @@ type DifferentialKey = DifferentialPointer | str
 
 
 class DifferentialCache:
-    """Cache for the functions that compute the differentials
+    """Cache for the functions that compute the differentials.
 
     This cache system automatically compiles versions for
     :func:`scipy.integrate.odeint`,
     :func:`scipy.integrate.solve_ivp`
     and NumbaLSODA.
     """
+
     def __init__(self):
         self._lock = threading.Lock()
         self._cache_njit: dict[DifferentialKey, DifferentialCFunc] = {}
@@ -47,7 +48,7 @@ class DifferentialCache:
             # special_key: DifferentialPointer | None = None,
             p_last_is_backwards: bool = True,
             ndim: int = 3) -> DifferentialPointer:
-        """Add a differential function to the cache"""
+        """Add a differential function to the cache."""
         with self._lock:
             if name in self._cache_njit:
                 logger.warning(
@@ -123,27 +124,27 @@ class DifferentialCache:
                 f"Available functions: {cache.keys()}") from error
 
     def get_njit(self, key: DifferentialKey) -> DifferentialCFunc:
-        """Get a Numba-jitted function"""
+        """Get a Numba-jitted function."""
         return self._get_func(key, self._cache_njit)
 
     def get_odeint(self, key: DifferentialKey) -> DifferentialOdeint:
-        """Get a function compatible with SciPy odeint"""
+        """Get a function compatible with SciPy odeint."""
         return self._get_func(key, self._cache_odeint)
 
     def get_pointer(self, name: str) -> DifferentialPointer:
-        """Get a pointer to the function from its name"""
+        """Get a pointer to the function from its name."""
         return self._cache_pointers[name]
 
     def get_solve_ivp(self, key: DifferentialKey) -> DifferentialSolveIVP:
-        """Get a function compatible with SciPy solve_ivp"""
+        """Get a function compatible with SciPy solve_ivp."""
         return self._get_func(key, self._cache_solve_ivp)
 
     def keys(self):
-        """Get the keys in the cache"""
+        """Get the keys in the cache."""
         return self._cache_njit.keys()
 
     @property
     def size(self) -> int:
-        """Get the number of differentials in the cache"""
+        """Get the number of differentials in the cache."""
         with self._lock:
             return len(self._cache_pointers)

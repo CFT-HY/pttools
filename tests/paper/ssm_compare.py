@@ -1,5 +1,5 @@
 """Compare SSM prediction with data
-Creates and plots velocity and GW power spectra from SSM
+Creates and plots velocity and GW power spectra from SSM.
 
 Modified from
 :ssm_repo:`paper_ssm_prace/figures/ssm_compare.py`
@@ -8,14 +8,11 @@ Modified from
 import logging
 import os
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
-from pttools import bubble
-from pttools import ssm
-from tests.paper import const
-from tests.paper import plotting
-from tests.paper import utils
+from pttools import bubble, ssm
+from tests.paper import const, plotting, utils
 from tests.utils.const import TEST_DATA_PATH, TEST_FIGURE_PATH
 
 logger = logging.getLogger(__name__)
@@ -70,7 +67,7 @@ def generate_ps(
         alpha: float,
         method: ssm.Method = ssm.Method.E_CONSERVING,
         v_xi_file=None,
-        save_ids: tuple[str, str] = (None, None),
+        save_ids: tuple[str | None, str | None] = (None, None),
         show: bool = True,
         debug: bool = False):
     """
@@ -80,7 +77,6 @@ def generate_ps(
     Shows plots if show=True
     Returns <V^2> and Omgw divided by (Ht.HR*).
     """
-
     Np = const.NP_ARR[-1]
     col = const.COLOURS[0]
 
@@ -216,7 +212,6 @@ def all_generate_ps_prace(save_ids: tuple[str, str] = ('', ''), show=True, debug
     Save data files and graphs.
     Returns U-bar-f^2 and GW power as tuple of lists.
     """
-
     method = ssm.Method.E_CONSERVING
 
     v2_list = []

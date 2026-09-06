@@ -1,4 +1,4 @@
-"""Unit tests for the speedup module"""
+"""Unit tests for the speedup module."""
 
 import os.path
 import unittest
@@ -7,12 +7,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.interpolate
 
-from pttools.analysis import save_fig
 from pttools import speedup
+from pttools.analysis import save_fig
 from pttools.speedup import njit, spline
 from pttools.speedup.parallel import parallel_debug_message
-from pttools.utils import assert_allclose
 import pttools.type_hints as th
+from pttools.utils import assert_allclose
 from tests.utils import TEST_FIGURE_PATH
 
 
@@ -22,12 +22,13 @@ def jitted_spline(
         tck: tuple[th.FloatArr1D, th.FloatArr1D, int],
         der: int = 0,
         ext: int = 0) -> th.FloatArr1D:
-    """JIT-compiled version of splev, which uses the Numba overload defined in the speedup module"""
+    """JIT-compiled version of splev, which uses the Numba overload defined in the speedup module."""
     return scipy.interpolate.splev(x, tck, der, ext)
 
 
 class TestSpeedup(unittest.TestCase):
-    """Test the functions in the speedup module"""
+    """Test the functions in the speedup module."""
+
     @staticmethod
     def test_gradient():
         arr = np.logspace(1, 5, 10)
@@ -63,7 +64,7 @@ class TestSpeedup(unittest.TestCase):
 
     @staticmethod
     def test_spline_linear():
-        """Test the Numba JIT-compiled version of splev"""
+        """Test the Numba JIT-compiled version of splev."""
         x = np.linspace(0, 2*np.pi, 10)
         x2 = np.linspace(0, 2*np.pi, 20)
         y = np.cos(x)

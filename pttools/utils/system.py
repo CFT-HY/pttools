@@ -1,4 +1,4 @@
-"""System utilities"""
+"""System utilities."""
 
 import multiprocessing
 import os
@@ -58,7 +58,7 @@ except AttributeError:
 
 
 def dmesg(n_lines: int = 100, print_output: bool = False) -> str:
-    """Get the last n lines from dmesg
+    """Get the last n lines from dmesg.
 
     :param n_lines: Number of lines to retrieve from dmesg
     :param print_output: Whether to print the output to the console
@@ -76,7 +76,7 @@ def dmesg(n_lines: int = 100, print_output: bool = False) -> str:
             stderr=subprocess.STDOUT
         )
         output = process.stdout.decode("utf-8")
-    except Exception as err:
+    except Exception as err:  # noqa: BLE001
         return f"Running dmesg failed: {err}"
     if print_output:
         print(f"Last {n_lines} lines from dmesg:")
@@ -117,7 +117,7 @@ def psutil_info() -> str:
 def system_info() -> str:
     try:
         dmesg_msg = rf"Dmesg output:\n{dmesg()}"
-    except Exception as err:
+    except Exception as err:  # noqa: BLE001
         dmesg_msg = str(err)
 
     return f"{platform_info()} {psutil_info()} {dmesg_msg}"

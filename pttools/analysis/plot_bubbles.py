@@ -1,11 +1,12 @@
-"""Utilities for plotting multiple bubbles"""
+"""Utilities for plotting multiple bubbles."""
 
 import typing as tp
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.analysis.utils import FigAndAxes, create_fig_ax, legend as legend_func
+from pttools.analysis.utils import FigAndAxes, create_fig_ax
+from pttools.analysis.utils import legend as legend_func
 from pttools.bubble.bubble import BaseBubble
 
 XI_LABEL = r"$\xi$"
@@ -21,7 +22,7 @@ def setup_bubbles_plot(
         bubbles: tp.Collection[BaseBubble],
         fig: plt.Figure | None = None,
         ax: plt.Axes | None = None) -> FigAndAxes:
-    """Set up a figure for plotting multiple bubbles"""
+    """Set up a figure for plotting multiple bubbles."""
     for bubble in bubbles:
         if not bubble.solved:
             bubble.solve()
@@ -30,7 +31,7 @@ def setup_bubbles_plot(
 
 
 def setup_bubbles_plot_multifig(fig: plt.Figure | None = None) -> tuple[plt.Figure, plt.Axes, plt.Axes]:
-    """Set up the figure and axes for a bubble plot"""
+    """Set up the figure and axes for a bubble plot."""
     if fig is None:
         fig = plt.figure()
     ax_v = fig.add_subplot(211)
@@ -48,7 +49,7 @@ def plot_bubbles_common(
         legend: bool | None = None,
         legend_fontsize: int | None = None,
         full_range: bool = False) -> FigAndAxes:
-    """Common steps for plotting multiple bubbles"""
+    """Common steps for plotting multiple bubbles."""
     ax.set_xlabel(XI_LABEL)
     if full_range:
         ax.set_xlim(-1, 1)
@@ -74,7 +75,7 @@ def plot_bubbles(
         path: str | None = None,
         full_range: bool = False,
         **kwargs) -> plt.Figure:
-    """Plot the velocity and enthalpy profiles of bubbles"""
+    """Plot the velocity and enthalpy profiles of bubbles."""
     fig, ax_v, ax_w = setup_bubbles_plot_multifig(fig)
     plot_bubbles_v(bubbles, fig, ax_v, full_range=full_range, **kwargs)
     plot_bubbles_w(bubbles, fig, ax_w, full_range=full_range, **kwargs)
@@ -99,7 +100,7 @@ def plot_bubbles_v(
         full_range: bool = False,
         legend: bool | None = None,
         **kwargs) -> FigAndAxes:
-    """Plot the velocity profile of multiple bubbles"""
+    """Plot the velocity profile of multiple bubbles."""
     fig, ax = setup_bubbles_plot(bubbles, fig, ax)
     ax.fill_between([-1, 0, 0, 1], [-1, -1, 0, 1], [-1, 0, 1, 1], facecolor="gray", alpha=0.2)
 
@@ -125,7 +126,7 @@ def plot_bubbles_w(
         path: str | None = None,
         full_range: bool = False,
         **kwargs) -> FigAndAxes:
-    """Plot the enthalpy profile of multiple bubbles"""
+    """Plot the enthalpy profile of multiple bubbles."""
     fig, ax = setup_bubbles_plot(bubbles, fig, ax)
     for bubble in bubbles:
         if "label" in kwargs:

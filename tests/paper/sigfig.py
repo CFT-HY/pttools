@@ -84,7 +84,7 @@ def round_sig_error(x: float, ex: float, n: int, paren: bool = False) -> str | t
     """
     Find ex rounded to n sig-figs and make the floating point x
     match the number of decimals.  If [paren], the string is
-    returned as quantity(error) format
+    returned as quantity(error) format.
     """
     stex = round_sig(ex, n)
     if stex.find('.') < 0:
@@ -114,7 +114,7 @@ def format_table(
     [n] is the number of significant figures to keep in the errors.
     [labels] is an optional column of strings that will be in the first column.
     [headers] is an optional list of column headers.
-    If [latex] is true, format the table so that it can be included in a LaTeX table
+    If [latex] is true, format the table so that it can be included in a LaTeX table.
     """
     if len(cols) != len(errors):
         raise ValueError("Error: cols and errors must have same length")

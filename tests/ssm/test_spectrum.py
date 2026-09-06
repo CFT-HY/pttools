@@ -1,4 +1,4 @@
-"""Tests for the SSMSpectrum class"""
+"""Tests for the SSMSpectrum class."""
 
 import os.path
 import unittest
@@ -12,7 +12,8 @@ from tests.utils import TEST_JSON_PATH
 
 
 class SSMSpectrumTest(unittest.TestCase):
-    """Tests for the SSMSpectrum class"""
+    """Tests for the SSMSpectrum class."""
+
     @classmethod
     def setUpClass(cls):
         model = ConstCSModel(css2=1/3-0.01, csb2=1/3-0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)

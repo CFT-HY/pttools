@@ -1,9 +1,10 @@
-"""Utilities for parallel execution of functions using multiple Python processes with concurrent.futures"""
+"""Utilities for parallel execution of functions using multiple Python processes with concurrent.futures."""
 
 import atexit
 from concurrent.futures import Executor, ProcessPoolExecutor, ThreadPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
 from contextlib import contextmanager
+
 # import datetime
 import logging
 from multiprocessing import set_forkserver_preload
@@ -50,27 +51,28 @@ set_forkserver_preload(DEFAULT_FORKSERVER_PRELOAD)
 
 
 class FakeExecutor:
-    """A fake executor for single-threaded execution"""
+    """A fake executor for single-threaded execution."""
 
     @staticmethod
     def submit(func: tp.Callable, *args, **kwargs) -> "FakeFuture":
-        """Submit a function for execution and return a future object"""
+        """Submit a function for execution and return a future object."""
         return FakeFuture(func, *args, **kwargs)
 
 
 class FakeFuture:
-    """A fake future object for single-threaded execution"""
+    """A fake future object for single-threaded execution."""
 
     def __init__(self, func: tp.Callable, *args, **kwargs):
         self._result = func(*args, **kwargs)
 
     def result(self):
-        """Get the result of the function execution"""
+        """Get the result of the function execution."""
         return self._result
 
 
 class LoggingRunner:
-    """A handler for logging the execution status of a function that is run in parallel"""
+    """A handler for logging the execution status of a function that is run in parallel."""
+
     def __init__(
             self,
             func: tp.Callable,
@@ -151,7 +153,7 @@ def get_pool(
         single_thread: bool = False,
         global_pool: bool = False) \
         -> tp.Iterator[FakeExecutor | InterpreterPoolExecutor | ProcessPoolExecutor | ThreadPoolExecutor]:
-    """Get a pool for parallel execution
+    """Get a pool for parallel execution.
 
     Returns a ThreadPoolExecutor if free-threading is supported and the GIL is disabled.
     Otherwise, returns an InterpreterPoolExecutor if supported, or a ProcessPoolExecutor otherwise.
@@ -166,7 +168,7 @@ def get_pool(
     """
     if single_thread:
         yield FakeExecutor()
-    elif SUPPORTS_FREETHREADING and not sys._is_gil_enabled():  # type: ignore[attr-defined]
+    elif SUPPORTS_FREETHREADING and not sys._is_gil_enabled():  # type: ignore[attr-defined]  # noqa: SLF001
         with ThreadPoolExecutor(max_workers=max_workers) as pool:
             yield pool
     elif SUPPORTS_INTERPRETER_POOL:
@@ -240,7 +242,7 @@ def run_parallel(
         kwargs: dict[str, tp.Any] | None = None,
         single_thread: bool = False,
         global_pool: bool = True) -> NDArray | tuple[NDArray, ...] | None:
-    """Run the given function with multiple parameters in parallel
+    """Run the given function with multiple parameters in parallel.
 
     :param func: The function to be executed in parallel
     :param params: Array of the function parameters

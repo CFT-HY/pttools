@@ -1,4 +1,4 @@
-"""Solution types of relativistic combustion for the Bag Model"""
+"""Solution types of relativistic combustion for the Bag Model."""
 
 import logging
 
@@ -6,11 +6,11 @@ import numba
 
 import pttools.bubble.alpha as alpha_tools
 from pttools.bubble.const import ALPHA_PLUS_MAX_DEF, CS0
-from pttools.bubble.solution_type import SolutionType
-import pttools.type_hints as th
-from pttools.speedup import njit
 from pttools.bubble.integrate import FluidIntegrateMethod
+from pttools.bubble.solution_type import SolutionType
+from pttools.speedup import njit
 from pttools.speedup.differential import DifferentialPointer
+import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ def identify_solution_type_bag(
         exit_on_error: bool = False) -> SolutionType:
     """
     Determines wall type from wall speed and global strength parameter.
-    solution_type = [ 'Detonation' | 'Deflagration' | 'Hybrid' ]
+    solution_type = [ 'Detonation' | 'Deflagration' | 'Hybrid' ].
     """
     if alpha_n < alpha_tools.alpha_n_max_detonation_bag(v_wall):
         return SolutionType.DETON

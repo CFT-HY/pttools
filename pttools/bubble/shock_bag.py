@@ -1,4 +1,4 @@
-"""Functions for shocks"""
+"""Functions for shocks."""
 
 import logging
 
@@ -6,9 +6,7 @@ from numba.extending import overload
 import numba.types
 import numpy as np
 
-from pttools.bubble import check
-from pttools.bubble import const
-from pttools.bubble import props
+from pttools.bubble import check, const, props
 from pttools.bubble.solution_type import SolutionType
 from pttools.speedup import njit
 import pttools.type_hints as th

@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from examples.utils import save_and_show_fig
+
 # from plot_entropy_old import load
 # from pttools.analysis.cmap import cmap
 from pttools.analysis.bubble_grid import BubbleGridVWAlpha

@@ -1,4 +1,4 @@
-"""Additional definitions for Numba-jitting functions from other libraries"""
+"""Additional definitions for Numba-jitting functions from other libraries."""
 
 import logging
 
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def do_nothing(x):
-    """Do nothing"""
+    """Do nothing."""
     return x
 
 
@@ -30,7 +30,7 @@ if numba_wrapper.NUMBA_VERSION < (0, 49, 0):
 
 @overload(np.all, jit_options={"nopython": True})
 def np_all(x):
-    """Overload of :external:py:func:`numpy.all` for booleans
+    """Overload of :external:py:func:`numpy.all` for booleans.
 
     This seems not to be used properly in Numba 0.60.0.
     """
@@ -42,13 +42,13 @@ def np_all(x):
 
 
 def np_all_fix(x):
-    """A fix for overloading :external:py:func:`numpy.all`"""
+    """A fix for overloading :external:py:func:`numpy.all`."""
     return np.all(x)
 
 
 @overload(np_all_fix, jit_options={"nopython": True})
 def np_all_fix_scalar(x):
-    """Overload of :external:py:func:`numpy.all` for booleans and scalars"""
+    """Overload of :external:py:func:`numpy.all` for booleans and scalars."""
     if isinstance(x, numba.types.Boolean):
         return do_nothing
     if isinstance(x, numba.types.Number):
@@ -58,7 +58,7 @@ def np_all_fix_scalar(x):
 
 @overload(np.any, jit_options={"nopython": True})
 def np_any(x):
-    """Overload of :external:py:func:`numpy.any` for booleans and scalars"""
+    """Overload of :external:py:func:`numpy.any` for booleans and scalars."""
     if isinstance(x, numba.types.Boolean):
         return do_nothing
     if isinstance(x, numba.types.Number):

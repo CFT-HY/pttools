@@ -13,6 +13,7 @@ from pttools.bubble.junction import solve_junction_internal
 from pttools.logging import setup_logging
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
+
 # from pttools.models.full import FullModel
 # from pttools.models.sm import StandardModel
 from pttools.utils import IS_GITHUB_ACTIONS

@@ -1,4 +1,4 @@
-"""Unit tests for assertions"""
+"""Unit tests for assertions."""
 
 import unittest
 
@@ -8,7 +8,8 @@ from pttools.utils.assertions import assert_allclose
 
 
 class TestAllclose(unittest.TestCase):
-    """Test the assert_allclose function"""
+    """Test the assert_allclose function."""
+
     def test_float(self):
         assert_allclose(1.1, 1.1)
         with self.assertRaises(AssertionError):

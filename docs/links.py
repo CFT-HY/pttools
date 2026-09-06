@@ -1,4 +1,4 @@
-"""Utilities for handling links in the documentation"""
+"""Utilities for handling links in the documentation."""
 
 type ExtLink = tuple[str, str]
 type ExtLinks = dict[str, ExtLink]

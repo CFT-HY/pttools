@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from examples.utils import save_and_show_fig
-from pttools.bubble import get_ke_frac
 from pttools.analysis.bubble_grid import create_bubbles
+from pttools.bubble import get_ke_frac
 from pttools.models.const_cs import ConstCSModel
 
 

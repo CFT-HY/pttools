@@ -1,4 +1,4 @@
-"""Constants for the omgw0 module"""
+"""Constants for the omgw0 module."""
 
 import math
 
@@ -60,7 +60,7 @@ giving a reasonable estimate of $N_{\nu,\text{eff}} \approx 3.044$.
 
 def gs0(g0: FloatOrArr = G0, n_nu: FloatOrArr = N_NU) -> FloatOrArr:
     r"""
-    $g_{s0}$, the degrees of freedom for entropy today
+    $g_{s0}$, the degrees of freedom for entropy today.
 
     $$g_{s0} = g_0 + \frac{7}{8} \cdot 2 N_\nu \cdot \frac{4}{11} \approx 3.91$$
     The factors in this formula come from the sources below.

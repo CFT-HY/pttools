@@ -1,14 +1,19 @@
-"""Compute the kinetic energy suppression factor for a given set of simulation data"""
+"""Compute the kinetic energy suppression factor for a given set of simulation data."""
 
 import logging
 import os.path
 
 import numpy as np
 
-from pttools.bubble import \
-    CS2_BAG_SCALAR_PTR, DEFAULT_ADIABATIC_INDEX, DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG, \
-    cs2_bag_scalar, get_ubarf2_bag
-from pttools.ssm.const import NptType, DEFAULT_N_PT
+from pttools.bubble import (
+    CS2_BAG_SCALAR_PTR,
+    DEFAULT_ADIABATIC_INDEX,
+    DEFAULT_FLUID_INTEGRATE_METHOD,
+    DF_DTAU_PTR_BAG,
+    cs2_bag_scalar,
+    get_ubarf2_bag,
+)
+from pttools.ssm.const import DEFAULT_N_PT, NptType
 from pttools.ssm.spectrum import NucType
 from pttools.ssm.spectrum_bag import power_gw_bag
 import pttools.type_hints as th
@@ -24,14 +29,14 @@ def calc_sup_ssm(
         npt: NptType = DEFAULT_N_PT,
         lambda_correction: bool = False) -> dict[str, th.FloatArr1DOrList]:
     """
-    file must be a txt file with data in columns as follows
+    File must be a txt file with data in columns as follows
     vw alpha suppression_sim sim_omgw exp_omgw exp_ubarf
     where vw = wall speed
     alpha = transition strength
     suppression_sim
     sim_omgw = total (integrated (omgw_ssm /(HnR*)(Hnt)) )
     exp_omgw = same as above but expected quantity
-    exp_ubarf = expected quantity for ubarf
+    exp_ubarf = expected quantity for ubarf.
     """
     if not os.path.isabs(path):
         path = os.path.join(SUPPRESSION_FOLDER, path)

@@ -1,4 +1,4 @@
-"""Junction conditions for the Bag Model
+"""Junction conditions for the Bag Model.
 
 .. plot:: fig/vp_vm_plane.py
 """
@@ -6,8 +6,8 @@
 from pttools.bubble import const
 from pttools.bubble.relativity import lorentz
 from pttools.bubble.solution_type import SolutionType
-from pttools.bubble.v_plus import v_plus
 from pttools.bubble.v_minus import v_minus
+from pttools.bubble.v_plus import v_plus
 from pttools.speedup import njit
 
 

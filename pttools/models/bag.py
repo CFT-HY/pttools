@@ -1,12 +1,11 @@
-"""Bag model"""
+"""Bag model."""
 
 import logging
 import typing as tp
 
 import numpy as np
 
-from pttools.bubble.cs2_bag import cs2_bag_multi, cs2_bag_neg, cs2_bag_temp
-from pttools.bubble.cs2_bag import cs2_bag_scalar
+from pttools.bubble.cs2_bag import cs2_bag_multi, cs2_bag_neg, cs2_bag_scalar, cs2_bag_temp
 from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG
 from pttools.bubble.phase import Phase
 from pttools.bubble.solution_type import SolutionType
@@ -29,6 +28,7 @@ class BagModel(AnalyticModel):
 
     :notes:`\ `, p. 37
     """
+
     DEFAULT_LABEL_LATEX = "Bag model"
     DEFAULT_LABEL_UNICODE = DEFAULT_LABEL_LATEX
     DEFAULT_NAME = "bag"
@@ -202,7 +202,7 @@ class BagModel(AnalyticModel):
         )
 
     def critical_temp(self, **kwargs) -> float:
-        r"""Critical temperature for the bag model
+        r"""Critical temperature for the bag model.
 
         $$T_{cr} = \sqrt[4]{\frac{V_s - V_b}{a_s - a_b}}$$
         Note that :giese_2020:`\ ` p. 6 is using a different convention.
@@ -294,7 +294,7 @@ class BagModel(AnalyticModel):
 
     def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Temperature $T(w,\phi)$. Inverted from
-        $$T(w) = \sqrt[4]{\frac{w}{4a(\phi)}}$$
+        $$T(w) = \sqrt[4]{\frac{w}{4a(\phi)}}$$.
 
         :param w: enthalpy $w$
         :param phase: phase $\phi$
@@ -307,7 +307,7 @@ class BagModel(AnalyticModel):
         return temp_b * phase + temp_s * (1 - phase)
 
     def theta(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        """Trace anomaly $\theta$
+        r"""Trace anomaly $\theta$.
 
         For the bag model the trace anomaly $\theta$ does not depend on the enthalpy.
         """
@@ -316,13 +316,13 @@ class BagModel(AnalyticModel):
     @staticmethod
     def v_shock[T: FloatOrArr](xi: T) -> T:
         r"""Velocity at the shock, :gw_pt_ssm:`\ ` eq. B.17
-        $$v_\text{sh}(\xi) = \frac{3\xi^22 - 1}{2\xi}$$
+        $$v_\text{sh}(\xi) = \frac{3\xi^22 - 1}{2\xi}$$.
         """
         return (3 * xi**2 - 1) / (2 * xi)
 
     def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Enthalpy $w(T)$
-        $$w(T) = 4a(\phi)T^4$$
+        $$w(T) = 4a(\phi)T^4$$.
 
         :param temp: temperature $T$
         :param phase: phase $\phi$
@@ -358,6 +358,6 @@ class BagModel(AnalyticModel):
     @staticmethod
     def w_shock(xi: th.FloatOrArr, w_n: th.FloatOrArr) -> th.FloatOrArr:
         r"""Enthalpy at the shock, :gw_pt_ssm:`\ ` eq. B.18
-        $$w_\text{sh}(\xi) = w_n \frac{9\xi^2 - 1}{3(1-\xi^2)}$$
+        $$w_\text{sh}(\xi) = w_n \frac{9\xi^2 - 1}{3(1-\xi^2)}$$.
         """
         return w_n * (9 * xi**2 - 1) / (2 * (1 - xi**2))

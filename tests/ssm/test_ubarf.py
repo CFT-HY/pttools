@@ -1,3 +1,5 @@
+r"""Tests for the root-mean-square fluid velocity $\bar{U}_f$."""
+
 from math import sqrt
 import unittest
 
@@ -7,7 +9,6 @@ from pttools.bubble import Bubble
 from pttools.models.bag import BagModel
 from pttools.ssm import NucType, SSMSpectrum
 from pttools.utils import assert_allclose
-
 
 #: :gw_pt_ssm:`\ ` table 1
 TABLE1 = np.array([

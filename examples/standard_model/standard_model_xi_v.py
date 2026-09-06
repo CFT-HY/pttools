@@ -8,8 +8,8 @@ Example that the Standard Model can be used with the bubble solver
 import matplotlib.pyplot as plt
 
 from examples.utils import save_and_show_fig
-from pttools.bubble.phase import Phase
 from pttools.bubble.bubble import Bubble
+from pttools.bubble.phase import Phase
 from pttools.logging import setup_logging
 from pttools.models.full import FullModel
 from pttools.models.sm import StandardModel

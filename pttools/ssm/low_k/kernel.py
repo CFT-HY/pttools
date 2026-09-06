@@ -1,4 +1,4 @@
-"""Kernel functions"""
+"""Kernel functions."""
 
 import numpy as np
 from scipy.special import gamma
@@ -10,7 +10,7 @@ from pttools.type_hints import FloatOrArr
 def kernel_int_bracket[T: FloatOrArr](cs: T) -> T:
     r"""The term in brackets in $\tilde{P}_\text{gw}^\text{int}$
     $$3 - 2 c_s^2 - \frac{3}{c_s}(1 - c_s^2) \text{arctanh}(c_s)$$
-    :giombi_2024_cs:`\ ` eq. 3.11
+    :giombi_2024_cs:`\ ` eq. 3.11.
     """
     # typing.cast() is not used below, since Numba cannot compile it.
     return 3 - 2 * cs ** 2 - 3 / cs * (1 - cs ** 2) * np.arctanh(cs)  # type: ignore[return-value]
@@ -23,7 +23,7 @@ def kernel_low(z: FloatOrArr, nu: FloatOrArr, tau_star: FloatOrArr, tau_end: Flo
     \frac{\Gamma^2 \left( \frac{1}{2} + \nu \right)}{4 \pi}
     \Upsilon_{2\nu} \left( \frac{\tau_*}{\tau_\text{end}} \right)$$
     This is a part of
-    :giombi_2026:`\ ` eq. 3.5a
+    :giombi_2026:`\ ` eq. 3.5a.
     """
     # TODO: Ensure that this formula from Lorenzo's code is correct.
     # Should this have 2pi instead of 4pi, and Upsilon^2?

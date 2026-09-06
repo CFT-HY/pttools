@@ -1,4 +1,4 @@
-"""Utilities for Sphinx documentation"""
+"""Utilities for Sphinx documentation."""
 
 import functools
 import json
@@ -44,7 +44,7 @@ def get_backreferences(path: str) -> dict[str, list]:
 
 
 def resolve_object(module: str, attrs: list[str]) -> tp.Any:
-    """Resolve the object that the given module and attribute names point to"""
+    """Resolve the object that the given module and attribute names point to."""
     obj = sys.modules.get(module, MISSING)
     for attr in attrs:
         obj = getattr(obj, attr, MISSING)

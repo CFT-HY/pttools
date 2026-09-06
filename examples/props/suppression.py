@@ -8,7 +8,7 @@ Suppression factor $\Sigma({v}_\text{wall}, \alpha_n)$
 
 from examples.utils import save_and_show_figs
 from pttools.analysis.suppression import SuppressionPlot
-from pttools.ssm.suppression import WITH_HYBRIDS, NO_HYBRIDS, NO_HYBRIDS_EXT
+from pttools.ssm.suppression import NO_HYBRIDS, NO_HYBRIDS_EXT, WITH_HYBRIDS
 
 
 def main() -> tuple[SuppressionPlot, SuppressionPlot, SuppressionPlot, SuppressionPlot]:

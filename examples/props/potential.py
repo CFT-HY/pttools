@@ -7,9 +7,9 @@ Plot the shape of the potential of a first-order phase transition.
 
 import matplotlib.pyplot as plt
 import numpy as np
+
 # import sympy as sp
 # from sympy import abc
-
 from examples.utils import save_and_show_fig
 import pttools.type_hints as th
 

@@ -1,3 +1,5 @@
+r"""Caching of the $c_s^2$ ctypes function pointers."""
+
 import threading
 
 import pttools.type_hints as th
@@ -7,7 +9,7 @@ CS2_CACHE_LOCK = threading.Lock()
 
 
 def cs2_converter(cs2_fun_ptr: th.CS2FunScalarPtr) -> th.CS2CFuncType:
-    r"""Converter for getting a $c_s^2$ ctypes function from a pointer
+    r"""Converter for getting a $c_s^2$ ctypes function from a pointer.
 
     This is a rather ugly hack. There should be a better way to call a function by a pointer!
     """

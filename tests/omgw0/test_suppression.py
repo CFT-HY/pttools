@@ -1,4 +1,4 @@
-"""Tests for the suppression module"""
+"""Tests for the suppression module."""
 
 import os
 import sys
@@ -7,18 +7,19 @@ import unittest
 import numpy as np
 from pandas.io.parsers import read_csv
 
+from pttools.ssm.const import DEFAULT_N_XI_SSM
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION
 from pttools.ssm.suppression.suppression_ssm_data.remove_hybrids import SUPPRESSION_FOLDER, remove_hybrids
 from pttools.ssm.suppression.suppression_ssm_data.suppression_ssm_calculator import calc_sup_ssm
-from pttools.ssm.const import DEFAULT_N_XI_SSM
 from pttools.utils.assertions import assert_allclose
 
 
 class SuppressionTest(unittest.TestCase):
-    """Tests for the suppression module"""
+    """Tests for the suppression module."""
+
     @staticmethod
     def test_remove_hybrids():
-        """Compare the data created by remove_hybrids to the reference"""
+        """Compare the data created by remove_hybrids to the reference."""
         path = remove_hybrids(suffix="test")
         settings = {
             "sep": " ",
@@ -31,7 +32,7 @@ class SuppressionTest(unittest.TestCase):
 
     @staticmethod
     def test_ssm_calculator():
-        """Compare the data created by calc_sup_ssm to the reference"""
+        """Compare the data created by calc_sup_ssm to the reference."""
         filenames = ["suppression_2", "suppression_no_hybrids"]
         tolerances = {
             "vw_sim": None,

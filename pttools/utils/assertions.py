@@ -1,4 +1,4 @@
-"""Utility functions and constants for unit testing"""
+"""Utility functions and constants for unit testing."""
 
 import inspect
 import typing as tp
@@ -22,7 +22,7 @@ def assert_allclose(
         name: str | None = None,
         fmt: str = DEFAULT_FMT,
         dtype: npt.DTypeLike = np.float64) -> None:
-    """Assert that all array elements correspond to the reference within the given tolerances
+    """Assert that all array elements correspond to the reference within the given tolerances.
 
     :param actual: actual data
     :param desired: reference data

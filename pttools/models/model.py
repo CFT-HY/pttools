@@ -1,4 +1,4 @@
-"""Template for equations of state"""
+"""Template for equations of state."""
 
 import abc
 import logging
@@ -9,19 +9,23 @@ import typing as tp
 import numpy as np
 from scipy.optimize import fminbound, fsolve, root_scalar
 
-from pttools.bubble.phase import Phase
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 from pttools.bubble.check import find_most_negative_vals
 from pttools.bubble.const import ALPHA_PLUS_MAX_DEF
 from pttools.bubble.integrate import add_df_dtau, differentials
+from pttools.bubble.phase import Phase
+from pttools.bubble.solution_type import (
+    SolutionType,
+    cannot_be_detonation,
+    cannot_be_sub_def,
+    is_surely_detonation,
+    is_surely_sub_def,
+)
 from pttools.bubble.thermo import nu_gdh2024, omega_barotropic
-from pttools.bubble.solution_type import SolutionType, \
-    cannot_be_detonation, cannot_be_sub_def, \
-    is_surely_detonation, is_surely_sub_def
 from pttools.models.base import BaseModel
 from pttools.speedup.differential import DifferentialPointer
-from pttools.type_hints import FloatOrArr
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 from pttools.utils.docstrings import copy_docstrings
 from pttools.utils.system import FORKING
 from pttools.utils.validation import check_value_in_range
@@ -30,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 class Model(BaseModel, abc.ABC):
-    r"""Template for equations of state
+    r"""Template for equations of state.
 
     :param T_ref: reference temperature.
         Be careful when using a thermodynamics-based model that there are no conflicts in the choices of units.
@@ -40,6 +44,7 @@ class Model(BaseModel, abc.ABC):
     :param name: custom name for the model
     :param gen_cs2: used internally for postponing the generation of the cs2 function
     """
+
     ALPHA_N_MIN_FIND_SAFETY_FACTOR_ALPHA: float = 0.999
     DEFAULT_V_S = 0
     DEFAULT_V_B = 0
@@ -172,7 +177,7 @@ class Model(BaseModel, abc.ABC):
             w_min: float = 0,
             allow_fail: bool = False,
             **kwargs) -> tuple[float, float]:
-        r"""Find the minimum or maximum of $c_s^2(w)$ for $w \in [w_\text{min}, w_\text{max}]$"""
+        r"""Find the minimum or maximum of $c_s^2(w)$ for $w \in [w_\text{min}, w_\text{max}]$."""
         name = "max" if is_max else "min"
         sol = fminbound(cs2_fun, x1=w_min, x2=w_max, args=(phase,), full_output=True, **kwargs)
         w: float = sol[0]
@@ -203,7 +208,7 @@ class Model(BaseModel, abc.ABC):
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
-        $$\alpha_n = \frac{4(\theta(w_n,\phi_s) - \theta(w_n,\phi_b)}{3w_n}$$
+        $$\alpha_n = \frac{4(\theta(w_n,\phi_s) - \theta(w_n,\phi_b)}{3w_n}$$.
 
         :param wn: $w_n$, enthalpy of the symmetric phase at the nucleation temperature
         :param error_on_invalid: raise error for invalid values
@@ -237,7 +242,7 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
-        r"""Conversion from $\alpha_{\bar{\theta}_n}$ of :giese_2021:`\ `, eq. 13 to $\alpha_n$"""
+        r"""Conversion from $\alpha_{\bar{\theta}_n}$ of :giese_2021:`\ `, eq. 13 to $\alpha_n$."""
         wn_solved: th.FloatOrArr
         if wn is None or np.isnan(wn):
             wn_solved = self.wn(
@@ -254,7 +259,7 @@ class Model(BaseModel, abc.ABC):
             self,
             w_min: float | None = None,
             w_max: float | None = None) -> tuple[float, float]:
-        r"""Find $\text{min} \alpha_n(w)$ for $w \in ({w}_\text{min}, {w}_\text{max})$"""
+        r"""Find $\text{min} \alpha_n(w)$ for $w \in ({w}_\text{min}, {w}_\text{max})$."""
         if w_min is None:
             w_min = self.w_min
         if w_max is None:
@@ -276,7 +281,7 @@ class Model(BaseModel, abc.ABC):
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
-        $$\alpha_n = \frac{4(\theta(w_n,\phi_s) - \theta(w_n,\phi_b)}{3w_n}$$
+        $$\alpha_n = \frac{4(\theta(w_n,\phi_s) - \theta(w_n,\phi_b)}{3w_n}$$.
 
         :param Tn: nucleation temperature $T_n$
         :param error_on_invalid: raise error for invalid values
@@ -313,7 +318,7 @@ class Model(BaseModel, abc.ABC):
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
         r"""Transition strength parameter $\alpha_+$
-        $$\alpha_+ = \frac{4\Delta \theta}{3{w}_+} = \frac{4(\theta({w}_+,\phi_s) - \theta({w}_-,\phi_b)}{3{w}_+}$$
+        $$\alpha_+ = \frac{4\Delta \theta}{3{w}_+} = \frac{4(\theta({w}_+,\phi_s) - \theta({w}_-,\phi_b)}{3{w}_+}$$.
 
         :param wp: $w_+$
         :param wm: $w_-$
@@ -359,7 +364,7 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
-        r"""Transition strength parameter, :giese_2021:`\ `, eq. 13
+        r"""Transition strength parameter, :giese_2021:`\ `, eq. 13.
 
         $$\alpha_{\bar{\theta}_+} = \frac{D \bar{\theta}(T_n)}{3 w_n}$$
         """
@@ -381,7 +386,7 @@ class Model(BaseModel, abc.ABC):
             alpha_n: T,
             wn: float | None = None,
             wn_guess: float | None = None) -> T:
-        r"""Conversion from $\alpha_n$ to $\alpha_{\bar{\theta}_n}$ of :giese_2021:`\ `, eq. 13"""
+        r"""Conversion from $\alpha_n$ to $\alpha_{\bar{\theta}_n}$ of :giese_2021:`\ `, eq. 13."""
         wn_solved: th.FloatOrArr
         wn_solved = self.wn(alpha_n, wn_guess=wn_guess) if wn is None or np.isnan(wn) else wn
         tn = self.temp(wn_solved, Phase.SYMMETRIC)
@@ -395,7 +400,7 @@ class Model(BaseModel, abc.ABC):
             sol_type: SolutionType,
             mu_b: th.FloatOrArr,
             Psi_n: th.FloatOrArr | None = None) -> th.FloatOrArr:
-        r"""$\alpha_{n,\text{max}}^\text{def}$, :ai_2023:`\ `, eq. 28, 31"""
+        r"""$\alpha_{n,\text{max}}^\text{def}$, :ai_2023:`\ `, eq. 28, 31."""
         if sol_type == SolutionType.SUB_DEF:
             # The article doesn't define an upper limit for deflagrations.
             return np.inf
@@ -428,7 +433,7 @@ class Model(BaseModel, abc.ABC):
             mu_s: th.FloatOrArr,
             mu_b: th.FloatOrArr,
             Psi_n: th.FloatOrArr | None = None) -> th.FloatOrArr:
-        r"""$\alpha_{n,\text{min}}^\text{def}$, :ai_2023:`\ `, eq. 27, 30"""
+        r"""$\alpha_{n,\text{min}}^\text{def}$, :ai_2023:`\ `, eq. 27, 30."""
         if Psi_n is None or np.isnan(Psi_n):
             Psi_n = self.Psi_n(wn)
         if sol_type == SolutionType.DETON:
@@ -453,7 +458,7 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
-        r"""Transition strength parameter, :giese_2021:`\ `, eq. 9
+        r"""Transition strength parameter, :giese_2021:`\ `, eq. 9.
 
         $$\alpha_{\bar{\theta}+} = \frac{D \bar{\theta}(T_+)}{3 w_+}$$
         """
@@ -467,7 +472,7 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
-        r"""Check that the given $\alpha_+$ values are in the valid range $0 <= \alpha_+ < 1/3
+        r"""Check that the given $\alpha_+$ values are in the valid range $0 <= \alpha_+ < 1/3.
 
         Modifies the given array.
         """
@@ -503,7 +508,7 @@ class Model(BaseModel, abc.ABC):
         self.check_p_temp(temp, allow_fail=allow_fail)
 
     def check_p_temp(self, temp_n: th.FloatOrArr, allow_fail: bool = False) -> None:
-        """For the phase transition to happen $p_s(T_n) < p_b(T_n)$"""
+        """For the phase transition to happen $p_s(T_n) < p_b(T_n)$."""
         p_s = self.p_temp(temp_n, Phase.SYMMETRIC)
         p_b = self.p_temp(temp_n, Phase.BROKEN)
         diff = p_b - p_s
@@ -528,7 +533,7 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
-        r"""Validate $\Delta \theta$"""
+        r"""Validate $\Delta \theta$."""
         theta_given = theta_s is not None and theta_b is not None
         if theta_given:
             prob_diff, prob_wp, prob_wm, prob_theta_s, prob_theta_b = \
@@ -592,7 +597,7 @@ class Model(BaseModel, abc.ABC):
             guess_backup: float = 2,
             t_max_backup: float = 10000,
             allow_fail: bool = False) -> float:
-        r"""Solves for the critical temperature $T_c$, where $p_s(T_c)=p_b(T_c)$
+        r"""Solves for the critical temperature $T_c$, where $p_s(T_c)=p_b(T_c)$.
 
         :param guess: starting guess for $T_\text{crit}$
         :param guess_backup: alternative guess that is used if guess is None
@@ -689,7 +694,7 @@ class Model(BaseModel, abc.ABC):
             w_min: float = 0,
             allow_fail: bool = False,
             **kwargs) -> tuple[float, float]:
-        r"""Minimum of $c_s^2(w)$ for $w \in [{w}_\text{min}, {w}_\text{max}]$"""
+        r"""Minimum of $c_s^2(w)$ for $w \in [{w}_\text{min}, {w}_\text{max}]$."""
         return self._cs2_limit(w_max, phase, True, self.cs2_neg, w_min, allow_fail, **kwargs)
 
     def cs2_min(
@@ -698,7 +703,7 @@ class Model(BaseModel, abc.ABC):
             phase: Phase,
             w_min: float = 0,
             allow_fail: bool = False, **kwargs) -> tuple[float, float]:
-        r"""Maximum of $c_s^2(w)$ for $w \in [{w}_\text{min}, {w}_\text{max}]$"""
+        r"""Maximum of $c_s^2(w)$ for $w \in [{w}_\text{min}, {w}_\text{max}]$."""
         return self._cs2_limit(w_max, phase, False, self.cs2, w_min, allow_fail, **kwargs)
 
     def cs2_neg(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -707,7 +712,8 @@ class Model(BaseModel, abc.ABC):
 
     def cs2_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Speed of sound squared $c_s^2(T,\phi)$.
-        By default, this is implemented as $c_s^2(T(w,\phi),\phi)$."""
+        By default, this is implemented as $c_s^2(T(w,\phi),\phi)$.
+        """
         return self.cs2(self.w(temp, phase), phase)
 
     def delta_theta(
@@ -727,14 +733,14 @@ class Model(BaseModel, abc.ABC):
         )
 
     def delta_theta_bar(self, w: th.FloatOrArr, phase_of_w: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Pseudotrace difference $D\bar{\theta}(w)$, :giese_2021:`\ `, eq. 10
+        r"""Pseudotrace difference $D\bar{\theta}(w)$, :giese_2021:`\ `, eq. 10.
 
         $$D\bar{\theta}(w) = \bar{\theta}(T) - \bar{\theta}(T)$$
         """
         return self.delta_theta_bar_temp(self.temp(w, phase_of_w))
 
     def delta_theta_bar_temp[T: FloatOrArr](self, temp: T) -> T:
-        r"""Pseudotrace difference $D\bar{\theta}(T)$, :giese_2021:`\ `, eq. 10
+        r"""Pseudotrace difference $D\bar{\theta}(T)$, :giese_2021:`\ `, eq. 10.
 
         $$D\bar{\theta}(T) = \bar{\theta}(T) - \bar{\theta}(T)$$
         """
@@ -761,7 +767,7 @@ class Model(BaseModel, abc.ABC):
         if ptr_label in differentials:
             return differentials.get_pointer(ptr_label)
 
-        if self.__df_dtau_ptr is not None:
+        if self.__df_dtau_ptr is not None:  # noqa: SIM102
             # Todo: This does not work. Why?
             # if self.__df_dtau_ptr in differentials:
             #     return self.__df_dtau_ptr
@@ -793,7 +799,7 @@ class Model(BaseModel, abc.ABC):
         return self.e_temp(self.temp(w, phase), phase)
 
     def enthalpy_ratio[T: FloatOrArr](self, temp: T) -> T:
-        r"""Enthalpy ratio $r(T)$
+        r"""Enthalpy ratio $r(T)$.
 
         $$r(T) = \frac{w_s(T)}{w_b(T)}$$
         :param temp: temperature $T$
@@ -801,7 +807,7 @@ class Model(BaseModel, abc.ABC):
         return self.w(temp, Phase.SYMMETRIC) / self.w(temp, Phase.BROKEN)
 
     def inverse_enthalpy_ratio[T: FloatOrArr](self, temp: T) -> T:
-        r"""Inverse enthalpy ratio $\Psi(T)$ :ai_2023:`\ `, eq. 19
+        r"""Inverse enthalpy ratio $\Psi(T)$ :ai_2023:`\ `, eq. 19.
 
         $$\Psi(T) = \frac{w_b(T)}{w_s(T)}$$
         :param temp: temperature $T$
@@ -827,17 +833,17 @@ class Model(BaseModel, abc.ABC):
         }
 
     def ge(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Effective degrees of freedom for energy density, $g_{\text{eff},e}(w,\phi)$"""
+        r"""Effective degrees of freedom for energy density, $g_{\text{eff},e}(w,\phi)$."""
         temp = self.temp(w, phase)
         return self.ge_temp(temp, phase)
 
     def gs(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Effective degrees of freedom for entropy, $g_{\text{eff},s}(w,\phi)$"""
+        r"""Effective degrees of freedom for entropy, $g_{\text{eff},s}(w,\phi)$."""
         temp = self.temp(w, phase)
         return self.ge_temp(temp, phase)
 
     def gp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(w,\phi)$"""
+        r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(w,\phi)$."""
         temp = self.temp(w, phase)
         return self.ge_temp(temp, phase)
 
@@ -845,7 +851,7 @@ class Model(BaseModel, abc.ABC):
     def latent_heat_density(self) -> float:
         r"""Latent heat density $L$
         $$L = w_s(T_c) - w_b(T_c)$$
-        :gw_pt_ssm:`\ ` p. 5
+        :gw_pt_ssm:`\ ` p. 5.
         """
         return self.w(self.T_crit, Phase.SYMMETRIC) - self.w(self.T_crit, Phase.BROKEN)
 
@@ -866,7 +872,7 @@ class Model(BaseModel, abc.ABC):
 
     def Psi_n[T: FloatOrArr](self, wn: T) -> T:
         r"""Inverse enthalpy ratio at nucleation temperature $\psi_n$,
-        :ai_2023:`\ ` p. 9
+        :ai_2023:`\ ` p. 9.
         """
         ret = self.inverse_enthalpy_ratio(self.temp(wn, Phase.SYMMETRIC))
         # The LTE violation merely means that entropy is being generated, which is totally normal.
@@ -883,7 +889,7 @@ class Model(BaseModel, abc.ABC):
         return ret  # noqa: RET504
 
     def s(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Entropy density $s(w,\phi) = \frac{dp}{dT} = \frac{w}{T}$
+        r"""Entropy density $s(w,\phi) = \frac{dp}{dT} = \frac{w}{T}$.
 
         :param w: enthalpy $w$
         :param phase: phase $\phi$
@@ -891,7 +897,7 @@ class Model(BaseModel, abc.ABC):
         return w / self.temp(w, phase)
 
     def s_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Entropy density $s(T,\phi) = \frac{dp}{dT} = \frac{w}{T}$
+        r"""Entropy density $s(T,\phi) = \frac{dp}{dT} = \frac{w}{T}$.
 
         :param temp: temperature $T$
         :param phase: phase $\phi$
@@ -905,7 +911,7 @@ class Model(BaseModel, abc.ABC):
             wn: float | None = None,
             wn_guess: float | None = None,
             wm_guess: float | None = None) -> SolutionType:
-        r"""Find the type of the hydrodynamic solution
+        r"""Find the type of the hydrodynamic solution.
 
         :param v_wall: wall velocity $v_\text{wall}$
         :param alpha_n: transition strength parameter $\alpha_n$
@@ -931,7 +937,7 @@ class Model(BaseModel, abc.ABC):
         return SolutionType.UNKNOWN
 
     def theta(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Trace anomaly $\theta(w,\phi)$, :notes:`\ `, eq. 7.24
+        r"""Trace anomaly $\theta(w,\phi)$, :notes:`\ `, eq. 7.24.
 
         $$\theta = \frac{1}{4}(e - 3p)$$
 
@@ -941,7 +947,7 @@ class Model(BaseModel, abc.ABC):
         return 1/4 * (self.e(w, phase) - 3*self.p(w, phase))
 
     def theta_bar(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Pseudotrace $\bar{\theta}$, :giese_2021:`\ `, eq. 9, :ai_2023:`\ `, eq. 19
+        r"""Pseudotrace $\bar{\theta}$, :giese_2021:`\ `, eq. 9, :ai_2023:`\ `, eq. 19.
 
         $$\bar{\theta} = e - \frac{p}{c_{s,b}^2}$$
 
@@ -951,7 +957,7 @@ class Model(BaseModel, abc.ABC):
         return self.e(w, phase) - self.p(w, phase) / self.cs2_temp(self.temp(w, phase), Phase.BROKEN)
 
     def theta_bar_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Pseudotrace $\bar{\theta}$, :giese_2021:`\ `, eq. 9, :ai_2023:`\ `, eq. 19
+        r"""Pseudotrace $\bar{\theta}$, :giese_2021:`\ `, eq. 9, :ai_2023:`\ `, eq. 19.
 
         $$\bar{\theta} = e - \frac{p}{c_{s,b}^2}$$
 
@@ -961,7 +967,7 @@ class Model(BaseModel, abc.ABC):
         return self.e_temp(temp, phase) - self.p_temp(temp, phase) / self.cs2_temp(temp, Phase.BROKEN)
 
     def theta_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Trace anomaly $\theta(T,\phi)$, :notes:`\ `, eq. 7.24
+        r"""Trace anomaly $\theta(T,\phi)$, :notes:`\ `, eq. 7.24.
 
         $$\theta = \frac{1}{4}(e - 3p)$$
 
@@ -989,14 +995,14 @@ class Model(BaseModel, abc.ABC):
         )
 
     def V[T: FloatOrArr](self, phase: T) -> T:
-        r"""Potential $V(\phi)$
+        r"""Potential $V(\phi)$.
 
         :param phase: phase $\phi$
         """
         return tp.cast(T, phase*self.V_b + (1 - phase)*self.V_s)
 
     def validate_alpha_n(self, alpha_n: float, allow_invalid: bool = False, log_invalid: bool = True) -> None:
-        r"""Validate that $\alpha_{n,\text{min}} < \alpha_n < 1$"""
+        r"""Validate that $\alpha_{n,\text{min}} < \alpha_n < 1$."""
         if alpha_n is None or np.isnan(alpha_n) or alpha_n < 0 or alpha_n < self.alpha_n_min:
             msg = f"Invalid alpha_n={alpha_n}. Minimum for the model: {self.alpha_n_min}"
             if log_invalid:
@@ -1021,7 +1027,7 @@ class Model(BaseModel, abc.ABC):
         :param vm_tilde: $\tilde{v}_-$
         :param wp: $w_+$
         :param wm: $w_-$
-        :return: $\frac{\tilde{v}_+}{\tilde{v}_-}$
+        :return: $\frac{\tilde{v}_+}{\tilde{v}_-}$.
         """
         alpha_tbp = self.alpha_theta_bar_plus(wp)
         cs2b = self.cs2(wm, Phase.BROKEN)
@@ -1130,7 +1136,7 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
-        r"""Enthalpy at nucleation temperature $w_n$ with given $\alpha_n$"""
+        r"""Enthalpy at nucleation temperature $w_n$ with given $\alpha_n$."""
         invalid_w_crit = self.w_crit is None or np.isnan(self.w_crit) or self.w_crit < 0
         if wn_guess is None or np.isnan(wn_guess) or wn_guess < 0:
             if invalid_w_crit:
@@ -1174,7 +1180,7 @@ class Model(BaseModel, abc.ABC):
         $$w \equiv \frac{dH}{dV} = e + p = T \frac{\partial p}{\partial T} = Ts$$
         :param temp: temperature $T$
         :param phase: phase $\phi$
-        :return: enthalpy density $w(T,\phi)$
+        :return: enthalpy density $w(T,\phi)$.
         """
         return self.p_temp(temp, phase) + self.e_temp(temp, phase)
 
@@ -1189,12 +1195,12 @@ class Model(BaseModel, abc.ABC):
             V_b: float | None = None,
             safety_factor_alpha: float | None = None,
             **kwargs) -> tuple[float, float, float, float]:
-        r"""Find the model parameters that allow the given $\alpha_{n,\text{min,target}}$"""
+        r"""Find the model parameters that allow the given $\alpha_{n,\text{min,target}}$."""
         raise NotImplementedError
 
     @abc.abstractmethod
     def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Energy density $e(T,\phi)$
+        r"""Energy density $e(T,\phi)$.
 
         $$e \equiv T \frac{\partial p}{\partial T} - p$$
         :giese_2021:`\ `, eq. 2
@@ -1204,7 +1210,7 @@ class Model(BaseModel, abc.ABC):
         """
 
     def ge_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Effective degrees of freedom for energy density, $g_{\text{eff},e}(T,\phi)$
+        r"""Effective degrees of freedom for energy density, $g_{\text{eff},e}(T,\phi)$.
 
         :param temp: temperature $T$
         :param phase: phase $\phi$
@@ -1212,7 +1218,7 @@ class Model(BaseModel, abc.ABC):
         raise NotImplementedError
 
     def gp_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(T,\phi)$
+        r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(T,\phi)$.
 
         :param temp: temperature $T$
         :param phase: phase $\phi$
@@ -1220,7 +1226,7 @@ class Model(BaseModel, abc.ABC):
         raise NotImplementedError
 
     def gs_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Effective degrees of freedom for entropy, $g_{\text{eff},s}(T,\phi)$
+        r"""Effective degrees of freedom for entropy, $g_{\text{eff},s}(T,\phi)$.
 
         :param temp: temperature $T$
         :param phase: phase $\phi$
@@ -1229,7 +1235,7 @@ class Model(BaseModel, abc.ABC):
 
     @abc.abstractmethod
     def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Pressure $p(T,\phi)$
+        r"""Pressure $p(T,\phi)$.
 
         :param temp: temperature $T$
         :param phase: phase $\phi$
@@ -1237,11 +1243,11 @@ class Model(BaseModel, abc.ABC):
 
     @abc.abstractmethod
     def params_str(self) -> str:
-        """Model parameters as a string"""
+        """Model parameters as a string."""
 
     @abc.abstractmethod
     def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Temperature $T(w,\phi)$
+        r"""Temperature $T(w,\phi)$.
 
         :param w: enthalpy $w$
         :param phase: phase $\phi$

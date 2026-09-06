@@ -1,4 +1,4 @@
-"""Utilities for handling docstrings"""
+"""Utilities for handling docstrings."""
 
 import logging
 import typing as tp
@@ -11,11 +11,12 @@ class HasDocstring(tp.Protocol):
 
 
 class WrappedDecoratorFunction(tp.Protocol):
-    """A decorator that returns the decorated callable unchanged
+    """A decorator that returns the decorated callable unchanged.
 
     This is a callback protocol instead of a type alias,
     so that the signature of the decorated callable is preserved.
     """
+
     def __call__[**P, T](self, target: tp.Callable[P, T]) -> tp.Callable[P, T]: ...
 
 
@@ -44,7 +45,7 @@ def copy_docstring_dec(source: HasDocstring, without_params: bool = False) -> Wr
 
 
 def copy_docstring(target: tp.Any, source: HasDocstring, without_params: bool = False) -> None:
-    """Copy a docstring from source to target"""
+    """Copy a docstring from source to target."""
     if without_params and source.__doc__ is not None:
         target.__doc__ = source.__doc__.split("\n:param", 1)[0]
     else:
@@ -55,7 +56,7 @@ def copy_docstrings(mapping: dict[tp.Any, HasDocstring], without_params: bool = 
     """Copy docstrings from sources to targets
     :param mapping: A dictionary of (target, source) pairs
     :param without_params: Whether to exclude parameter documentation
-    :return: A list of target names that already had docstrings
+    :return: A list of target names that already had docstrings.
     """
     already_had_docstrings = []
     for target, source in mapping.items():
@@ -71,7 +72,7 @@ def copy_docstrings(mapping: dict[tp.Any, HasDocstring], without_params: bool = 
 
 
 def get_name(obj: tp.Any) -> str:
-    """Get the name of an object"""
+    """Get the name of an object."""
     if hasattr(obj, "__name__") and obj.__name__ is not None:
         return obj.__name__
     if hasattr(obj, "attrname") and obj.attrname is not None:

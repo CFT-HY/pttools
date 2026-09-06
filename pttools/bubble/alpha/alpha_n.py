@@ -1,4 +1,4 @@
-r"""$\alpha_n$ functions"""
+r"""$\alpha_n$ functions."""
 
 from pttools.bubble import props
 from pttools.speedup import njit

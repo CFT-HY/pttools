@@ -1,4 +1,4 @@
-"""Functions for ODE integration of fluid profiles in parametric form"""
+"""Functions for ODE integration of fluid profiles in parametric form."""
 
 import logging
 import typing as tp
@@ -8,11 +8,12 @@ from numba.core.ccallback import CFunc
 from numba.core.dispatcher import Dispatcher
 import numpy as np
 import scipy.integrate as spi
+
 # from scipy.integrate._ivp.ivp import _IVPMethod
 from scipy.integrate._ivp.ivp import OdeResult
 
-from pttools.bubble.cs2_bag import cs2_bag, cs2_bag_scalar_cfunc
 from pttools.bubble.const import DEFAULT_N_XI, DEFAULT_T_END
+from pttools.bubble.cs2_bag import cs2_bag, cs2_bag_scalar_cfunc
 from pttools.bubble.phase import Phase
 from pttools.speedup import njit
 from pttools.speedup.differential import DifferentialCache, DifferentialCFunc, DifferentialPointer
@@ -57,6 +58,7 @@ def add_df_dtau(
 
 def gen_df_dtau(cs2_fun: th.CS2Fun) -> DifferentialCFunc:
     r"""Generate a function for the differentials of fluid variables $(v, w, \xi)$ in parametric form.
+
     The parametrized differential equation is as in :gw_pt_ssm:`\ ` eq. B.14-16:
 
     - $\frac{dv}{dt} = 2v c_s^2 (1-v^2) (1 - \xi v)$
@@ -71,7 +73,7 @@ def gen_df_dtau(cs2_fun: th.CS2Fun) -> DifferentialCFunc:
         else numba.cfunc("float64(float64, float64)")(cs2_fun)
 
     def df_dtau(t: float, u: th.FloatArr1D, du: th.FloatArr1D, args: th.FloatArr1D) -> None:
-        r"""Computes the differentials of the variables $(v, w, \xi)$ for a given $c_s^2$ function
+        r"""Computes the differentials of the variables $(v, w, \xi)$ for a given $c_s^2$ function.
 
         :param t: "time"
         :param u: point
@@ -266,7 +268,7 @@ def fluid_integrate_param_solve_ivp(
 
 
 def precompile() -> None:
-    """Run fluid_integrate_param once to precompile it with Numba"""
+    """Run fluid_integrate_param once to precompile it with Numba."""
     fluid_integrate_param(
         v0=0.5, w0=0.5, xi0=0.5, phase=Phase.SYMMETRIC,
         df_dtau_ptr=DF_DTAU_PTR_BAG, method=DEFAULT_FLUID_INTEGRATE_METHOD, n_xi=2)

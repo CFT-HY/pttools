@@ -1,4 +1,4 @@
-"""Utilities for plotting the entropy of bubbles"""
+"""Utilities for plotting the entropy of bubbles."""
 
 import typing as tp
 
@@ -9,7 +9,7 @@ from pttools.bubble.bubble import Bubble
 
 
 def plot_entropy(bubbles: tp.Iterable[Bubble], colors: tp.Iterable[str], fig: plt.Figure | None = None):
-    """Plot the entropy profiles of given bubbles"""
+    """Plot the entropy profiles of given bubbles."""
     if fig is None:
         fig = plt.figure()
     ax1 = fig.add_subplot()

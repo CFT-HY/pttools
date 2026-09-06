@@ -1,4 +1,4 @@
-r"""Compare the thermodynamic quantities of multiple models"""
+r"""Compare the thermodynamic quantities of multiple models."""
 
 import matplotlib.pyplot as plt
 
@@ -8,7 +8,8 @@ import pttools.type_hints as th
 
 
 class ModelsPlot:
-    """A plot of the thermodynamic quantities of multiple models"""
+    """A plot of the thermodynamic quantities of multiple models."""
+
     def __init__(self, temp: th.FloatArr1D):
         self.temp = temp
 
@@ -48,7 +49,7 @@ class ModelsPlot:
         self.fig.tight_layout()
 
     def add(self, model: models.Model, phase: bubble.Phase, ls: str = "-", **kwargs) -> None:
-        """Add a model to the plot"""
+        """Add a model to the plot."""
         label = utils.model_phase_label(model, phase)
         w = model.w(self.temp, phase)
 
@@ -70,7 +71,7 @@ class ModelsPlot:
         )
 
     def process(self) -> None:
-        """Process the plot"""
+        """Process the plot."""
         ax: plt.Axes
         for ax in self.axs.flat:
             utils.legend(ax, fontsize="x-small")

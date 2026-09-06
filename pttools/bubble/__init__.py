@@ -22,23 +22,25 @@ from .fluid_base import *
 from .fluid_detonation import *
 from .fluid_gksvdv import *
 from .fluid_hybrid import *
-from .fluid_sub_def import *
 from .fluid_reference import *
+from .fluid_sub_def import *
+
 # from .gksvdv import *
 from .integrate import *
 from .junction import *
 from .junction_bag import *  # type: ignore[no-redef]
 from .junction_entropy import *
+
 # from .physical_params import *
 from .phase import *
 from .props import *
-from .thermo import *
-from .thermo_bag import *
 from .relativity import *
 from .shock import *
 from .shock_bag import *
 from .solution_type import *
 from .solution_type_bag import *
+from .thermo import *
+from .thermo_bag import *
 from .trim import *
 from .v_minus import *  # type: ignore[no-redef]
 from .v_plus import *

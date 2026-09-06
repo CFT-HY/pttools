@@ -1,4 +1,4 @@
-"""Generic utility functions for PTtools"""
+"""Generic utility functions for PTtools."""
 
 from .assertions import *
 from .decorators import *

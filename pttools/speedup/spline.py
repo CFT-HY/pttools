@@ -1,5 +1,5 @@
 """
-Spline interpolation utilities
+Spline interpolation utilities.
 
 These are implemented manually, as SciPy libraries don't expose the interfaces of the Fortran functions.
 Only their wrappers written in C are exposed, but those expect Python objects and therefore aren't callable
@@ -103,7 +103,7 @@ def splev(x: th.FloatArr1D, tck: tuple[th.FloatArr1D, th.FloatArr1D, int], der: 
 
 @njit(cache=True)
 def splev_linear_core(xp: float, t: th.FloatArr1D, c: th.FloatArr1D, ext: int) -> float:
-    """Numba-jitted core of the linear spline evaluation"""
+    """Numba-jitted core of the linear spline evaluation."""
     if xp < t[0]:
         if ext == 0:
             a = (c[1] - c[0]) / (t[2] - t[1])
@@ -134,7 +134,7 @@ def splev_linear_core(xp: float, t: th.FloatArr1D, c: th.FloatArr1D, ext: int) -
 
 @njit(cache=True)
 def splev_linear_validate(k: int, der: int) -> None:
-    """Validate the type of spline evaluation"""
+    """Validate the type of spline evaluation."""
     if k != 1:
         print("Got k = ", k)
         raise NotImplementedError("Only linear interpolation is implemented at the moment")
@@ -143,7 +143,7 @@ def splev_linear_validate(k: int, der: int) -> None:
 
 
 def splev_linear_arr(x, tck: tuple[th.FloatArr1D, th.FloatArr1D, int], der: int = 0, ext: int = 0):
-    """Linear spline evaluation for arrays"""
+    """Linear spline evaluation for arrays."""
     t, c, k = tck
     splev_linear_validate(k, der)
 
@@ -155,7 +155,7 @@ def splev_linear_arr(x, tck: tuple[th.FloatArr1D, th.FloatArr1D, int], der: int 
 
 
 def splev_linear_scalar(x, tck: tuple[th.FloatArr1D, th.FloatArr1D, int], der: int = 0, ext: int = 0):
-    """Linear spline evaluation for scalars"""
+    """Linear spline evaluation for scalars."""
     t, c, k = tck
     splev_linear_validate(k, der)
     return splev_linear_core(x, t, c, ext)
@@ -202,7 +202,7 @@ def fitpack_spl_(x: th.FloatArr1D, nu: int, t: th.FloatArr1D, c: th.FloatArr1D, 
     # c_k = ct.c_int(k)
     # c_nu = ct.c_int(nu)
 
-    if nu:
+    if nu:  # noqa: SIM108
         # f_splder(
         #     t.ctypes.data, ct.byref(n), c.ctypes.data, ct.byref(c_k), ct.byref(c_nu),
         #     x.ctypes.data, y.ctypes.data, ct.byref(m), ct.byref(c_e), wrk.ctypes.data, ct.byref(ier))

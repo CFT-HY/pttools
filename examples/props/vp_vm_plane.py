@@ -6,8 +6,8 @@ ${v}_+, {v}_-$ plane.
 Adapted from fig. 9 of :gw_pt_ssm:`\ `.
 """
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 from examples.utils import save_and_show_fig
 from pttools import bubble

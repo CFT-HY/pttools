@@ -7,7 +7,7 @@ This is very much work in progress and not yet functional.
 """
 
 import numpy as np
-from scipy.optimize import minimize, OptimizeResult
+from scipy.optimize import OptimizeResult, minimize
 
 from pttools.omgw0.approx import f0_peak_approx, omgw_approx
 import pttools.type_hints as th

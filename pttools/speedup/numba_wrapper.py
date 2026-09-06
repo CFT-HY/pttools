@@ -1,4 +1,4 @@
-"""Wrapper for importing Numba libraries without version dependencies"""
+"""Wrapper for importing Numba libraries without version dependencies."""
 
 # ruff: noqa: F401
 
@@ -9,6 +9,7 @@ import sys
 import typing as tp
 
 import numba
+
 try:
     from numba.core.ccallback import CFunc
     from numba.core.dispatcher import Dispatcher

@@ -1,1 +1,1 @@
-"""Unit tests for the bubble module of PTtools"""
+"""Unit tests for the bubble module of PTtools."""

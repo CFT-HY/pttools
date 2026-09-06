@@ -9,10 +9,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from examples.utils import save_and_show_fig
-from pttools.bubble.fluid_sub_def import sound_shell_deflagration
-from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 from pttools.bubble.fluid_reference import ref
+from pttools.bubble.fluid_sub_def import sound_shell_deflagration
+from pttools.bubble.solution_type import SolutionType
+
 # from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
 

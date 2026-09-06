@@ -1,4 +1,4 @@
-"""A solution of the hydrodynamic equations"""
+"""A solution of the hydrodynamic equations."""
 
 import functools
 import logging
@@ -7,23 +7,23 @@ import typing as tp
 import numpy as np
 from numpy.typing import NDArray
 
+from pttools.bubble import props, thermo
 from pttools.bubble.alpha import alpha_n_max_deflagration_bag
-from pttools.bubble.cs2_bag import cs2_bag_scalar
-from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG
 from pttools.bubble.bubble.base import BaseBubble, NotYetSolvedError
 from pttools.bubble.const import DEFAULT_N_XI, DEFAULT_T_END, JUNCTION_RTOL, THIN_SHELL_T_POINTS_MIN
+from pttools.bubble.cs2_bag import cs2_bag_scalar
 from pttools.bubble.fluid import sound_shell_generic
+from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG
 from pttools.bubble.junction import junction_condition_deviations
 from pttools.bubble.junction_entropy import check_entropy_fluxes
 from pttools.bubble.phase import Phase
-from pttools.bubble import props
 from pttools.bubble.props import find_phase
-from pttools.bubble import thermo
 from pttools.bubble.solution_type import SolutionType, validate_solution_type
 from pttools.utils.docstrings import copy_docstrings
 from pttools.utils.formatting import as_latex, as_unicode
 from pttools.utils.json import export_json
 from pttools.utils.validation import ensure_float
+
 if tp.TYPE_CHECKING:
     from pttools.models.bag import BagModel
     from pttools.models.const_cs import ConstCSModel
@@ -33,7 +33,8 @@ logger = logging.getLogger(__name__)
 
 
 class Bubble(BaseBubble):
-    """A solution of the hydrodynamic equations, aka. a bubble"""
+    """A solution of the hydrodynamic equations, aka. a bubble."""
+
     def __init__(
             self,
             model: "Model",
@@ -79,7 +80,6 @@ class Bubble(BaseBubble):
         :param allow_invalid: Whether to allow invalid solutions
         :param log_invalid: Whether to log invalid solutions
         """
-
         # Validate alpha_n for computing wn
         alpha_n = ensure_float(alpha_n, "alpha_n")
         if not theta_bar:
@@ -221,7 +221,7 @@ class Bubble(BaseBubble):
             )
 
     def export(self, path: str | None = None) -> dict[str, tp.Any]:
-        """Export the bubble data as JSON"""
+        """Export the bubble data as JSON."""
         data = {
             **super().export(),
             # Input parameters
@@ -246,7 +246,7 @@ class Bubble(BaseBubble):
         return data
 
     def info_str(self, prec: str = ".4f") -> str:
-        """Get a string describing the key quantities of the bubble"""
+        """Get a string describing the key quantities of the bubble."""
         return (
             f"{self.label_unicode}: w0/wn={self.w[0] / self.wn:{prec}}, "
             f"Ubarf2={self.ubarf2:{prec}}, K={self.kinetic_energy_fraction:{prec}}, "
@@ -255,13 +255,13 @@ class Bubble(BaseBubble):
         )
 
     def lte_params_str(self, model: "BagModel | ConstCSModel") -> str:
-        """LTE parameters as a string for debug messages"""
+        """LTE parameters as a string for debug messages."""
         return \
             f"wn={self.wn}, sol_type={self.sol_type}, Psi_n={self.Psi_n}, " \
             f"mu_s={model.mu_s}, mu_b={model.mu_b}"
 
     def _set_properties(self) -> None:
-        """Extract properties from the solution"""
+        """Extract properties from the solution."""
         self.solved = True
         self.alpha_plus = self.model.alpha_plus(
             self.wp, self.wm, vp_tilde=self.vp_tilde, sol_type=self.sol_type,
@@ -297,7 +297,7 @@ class Bubble(BaseBubble):
             use_giese_solver: bool = False,
             log_high_alpha_n_failures: bool = True,
             log_negative_entropy: bool = True) -> None:
-        """Simulate the fluid velocity profile of the bubble"""
+        """Simulate the fluid velocity profile of the bubble."""
         super().solve()
 
         use_bag_solver = self.use_bag_solver or use_bag_solver
@@ -369,7 +369,7 @@ class Bubble(BaseBubble):
     # =====
 
     def validate_alpha_plus(self) -> bool:
-        r"""Validate $\alpha_+$"""
+        r"""Validate $\alpha_+$."""
         fail = np.isnan(self.alpha_plus)
         if fail:
             self.alpha_plus = self.model.alpha_plus(
@@ -385,7 +385,7 @@ class Bubble(BaseBubble):
         return fail
 
     def validate_entropy_density(self, log_negative: bool = True) -> bool:
-        """Validate that the total entropy density is not decreasing"""
+        """Validate that the total entropy density is not decreasing."""
         fail = self.va_entropy_density_diff < 0
         if fail:
             msg = "Entropy density change should not be negative! Now entropy is decreasing. " \
@@ -398,7 +398,7 @@ class Bubble(BaseBubble):
         return fail
 
     def validate_entropy_flux(self) -> bool:
-        """Validate entropy fluxes at the bubble wall"""
+        """Validate entropy fluxes at the bubble wall."""
         fail_wall, self.entropy_flux_p, self.entropy_flux_m, self.entropy_flux_diff = check_entropy_fluxes(
             self.model,
             v1_tilde=self.vp_tilde, v2_tilde=self.vm_tilde,
@@ -428,7 +428,7 @@ class Bubble(BaseBubble):
             self,
             rtol: float = JUNCTION_RTOL,
             rtol_sh: float = 50 * JUNCTION_RTOL) -> bool:
-        """Validate that the junction conditions at the bubble wall have been solved correctly"""
+        """Validate that the junction conditions at the bubble wall have been solved correctly."""
         devs_wall = junction_condition_deviations(
             v1=self.vp_tilde, w1=self.wp, p1=self.model.p(self.wp, Phase.SYMMETRIC),
             v2=self.vm_tilde, w2=self.wm, p2=self.model.p(self.wm, Phase.BROKEN)
@@ -476,7 +476,7 @@ class Bubble(BaseBubble):
             error_prec: str,
             high_alpha_n: bool,
             log_high_alpha_n_failures: bool = True) -> bool:
-        r"""Validate that $\kappa + \omega = 1$"""
+        r"""Validate that $\kappa + \omega = 1$."""
         fail = not np.isclose(self.kappa + self.omega, 1, rtol=sum_rtol_warning)
         if fail:
             sum_err = not np.isclose(self.kappa + self.omega, 1, rtol=sum_rtol_error)
@@ -496,7 +496,7 @@ class Bubble(BaseBubble):
         return fail
 
     def validate_lte(self, log_invalid: bool = True) -> tuple[float, float]:
-        r"""Validate whether the parameters are within the limits permitted by the LTE approximation
+        r"""Validate whether the parameters are within the limits permitted by the LTE approximation.
 
         In this context, the local thermal equilibrium (LTE) approximation means no entropy generation.
 
@@ -550,12 +550,12 @@ class Bubble(BaseBubble):
 
     @property
     def en(self) -> float:
-        r"""Nucleation energy density $e_n = e(T_n, \phi_s)$"""
+        r"""Nucleation energy density $e_n = e(T_n, \phi_s)$."""
         return self.model.e(self.wn, Phase.SYMMETRIC)
 
     @property
     def wn(self) -> float:
-        r"""Nucleation enthalpy $w_n = w(T_n, \phi_s)$
+        r"""Nucleation enthalpy $w_n = w(T_n, \phi_s)$.
 
         $$w_n \equiv w_{\text{outside}}$$
         """
@@ -571,7 +571,7 @@ class Bubble(BaseBubble):
 
     @property
     def vp_tilde_sh(self) -> float:
-        r"""Velocity in front of the shock in the shock frame
+        r"""Velocity in front of the shock in the shock frame.
 
         The fluid ahead of the shock is still, and therefore
         $$\tilde{v}_{+,sh} = v_{sh}$$.
@@ -582,7 +582,7 @@ class Bubble(BaseBubble):
     def vp_vm_tilde_ratio_giese(self) -> float:
         # This docstring is copied from the model function
         r"""Giese et al. approximation for $\frac{\tilde{v}_+}{\tilde{v}_-}$,
-        :giese_2021:`\ ` eq. 11
+        :giese_2021:`\ ` eq. 11.
 
         $$\frac{\tilde{v}_+}{\tilde{v}_-} \approx \frac{
         (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3\alpha_{\bar{\theta}_+} }{
@@ -599,13 +599,13 @@ class Bubble(BaseBubble):
     def vp_vm_tilde_ratio_giese_rel_diff(self) -> float:
         r"""
         Relative difference of the ratio of the exact and approximate
-        $\tilde{v}_+, \tilde{v}_-$ ratios from unity
+        $\tilde{v}_+, \tilde{v}_-$ ratios from unity.
         """
         return np.abs(self.vp_vm_tilde_ratio_giese / self.vp_vm_tilde_ratio - 1)
 
     @property
     def v_mu(self) -> float:
-        r"""Maximum fluid velocity behind the bubble wall, $\mu(\xi)$"""
+        r"""Maximum fluid velocity behind the bubble wall, $\mu(\xi)$."""
         # wm is the highest enthalpy inside the bubble
         cs2, _ = self.model.cs2_max(w_max=self.wm, w_min=self.w_center, phase=Phase.BROKEN)
         return props.v_max_behind(self.v_wall, np.sqrt(cs2))
@@ -622,12 +622,12 @@ class Bubble(BaseBubble):
 
     @functools.cached_property
     def g_star(self):
-        """Degrees of freedom $g_*$ for pressure after the bubble nucleation"""
+        """Degrees of freedom $g_*$ for pressure after the bubble nucleation."""
         return self.model.gp(w=self.va_enthalpy_density, phase=Phase.BROKEN)
 
     @functools.cached_property
     def gs_star(self) -> float:
-        """Degrees of freedom $g_{s,*}$ for entropy after the bubble nucleation"""
+        """Degrees of freedom $g_{s,*}$ for entropy after the bubble nucleation."""
         return self.model.gs(w=self.va_enthalpy_density, phase=Phase.BROKEN)
 
     @functools.cached_property
@@ -668,7 +668,7 @@ class Bubble(BaseBubble):
 
     @functools.cached_property
     def T_star(self) -> float:
-        r"""Average temperature $T_*$ after the bubble nucleation"""
+        r"""Average temperature $T_*$ after the bubble nucleation."""
         if not self.solved:
             raise NotYetSolvedError
         return self.model.temp(w=self.va_enthalpy_density, phase=Phase.BROKEN)
@@ -801,8 +801,10 @@ class Bubble(BaseBubble):
         return thermo.va_trace_anomaly_diff(self.model, self.w, self.xi, self.v_wall, self.phase)
 
 
-type BubbleArr = NDArray[Bubble]
-type BubbleArr2D = np.ndarray[tuple[int, int], np.dtype[Bubble]]
+# These are object arrays. Numpy typing has no way of expressing the element type of an object array,
+# but declaring the element type here does give the correct types when the arrays are indexed.
+type BubbleArr = NDArray[Bubble]  # type: ignore[type-var]
+type BubbleArr2D = np.ndarray[tuple[int, int], np.dtype[Bubble]]  # type: ignore[type-var]
 
 copy_docstrings({
     Bubble.e_bar: thermo.e_bar,

@@ -1,3 +1,5 @@
+"""Utilities for extracting plottable quantities from bubbles."""
+
 import typing as tp
 
 import numpy as np
@@ -10,7 +12,7 @@ def cs2_common(
         phase: Phase,
         w: float | None = None,
         cs2_default: float | None = None) -> float | None:
-    """Get $c_s^2$ that is common for the given bubbles
+    """Get $c_s^2$ that is common for the given bubbles.
 
     :param bubbles: bubbles
     :param phase: phase in which to evaluate $c_s^2$

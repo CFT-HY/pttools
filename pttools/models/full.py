@@ -1,23 +1,24 @@
-"""Full thermodynamics-based model"""
+"""Full thermodynamics-based model."""
 
 import logging
 
 import numpy as np
 from scipy.interpolate import splev, splrep
 
-from pttools.speedup import njit
-import pttools.type_hints as th
 from pttools.bubble.phase import Phase
 from pttools.models.model import Model
+
 # if tp.TYPE_CHECKING:
 from pttools.models.thermo import ThermoModel
+from pttools.speedup import njit
 from pttools.speedup.overload import np_all_fix
+import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
 
 class FullModel(Model):
-    r"""Full thermodynamics-based equation of state
+    r"""Full thermodynamics-based equation of state.
 
     Temperature limits should be set in the ThermoModel.
 
@@ -26,6 +27,7 @@ class FullModel(Model):
     :param V_s: the constant term in the expression of $p$ in the symmetric phase
     :param V_b: the constant term in the expression of $p$ in the broken phase
     """
+
     DEFAULT_LABEL = "Full model"
     DEFAULT_NAME = "full"
     # Todo: Configure this automatically from the ThermoModel
@@ -69,7 +71,7 @@ class FullModel(Model):
         self.df_dtau_ptr()
 
     def gen_cs2(self):
-        """This function generates the Numba-jitted cs2 function to be used by the fluid integrator"""
+        """This function generates the Numba-jitted cs2 function to be used by the fluid integrator."""
         # Numba caching is disabled for the functions below, as they are created dynamically.
         cs2_spl_s = splrep(
             np.log10(self.w(self.thermo.GEFF_DATA_TEMP, Phase.SYMMETRIC)),
@@ -93,7 +95,7 @@ class FullModel(Model):
         return cs2
 
     def critical_temp_opt(self, temp: float) -> float:
-        """Optimizer function for critical temperature"""
+        """Optimizer function for critical temperature."""
         return (self.thermo.gp(temp, Phase.SYMMETRIC) - self.thermo.gp(temp, Phase.BROKEN))*temp**4 \
             + self.critical_temp_const
 
@@ -102,7 +104,7 @@ class FullModel(Model):
         $$ e(T,\phi) = \frac{\pi^2}{30} g_e(T,\phi) T^4 $$
         :param temp: temperature $T$
         :param phase: phase $\phi$
-        :return: $e(T,\phi)$
+        :return: $e(T,\phi)$.
         """
         self.validate_temp(temp)
         return np.pi**2 / 30 * self.thermo.ge(temp, phase) * temp**4 + self.V(phase)
@@ -118,7 +120,7 @@ class FullModel(Model):
 
     def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Pressure $p(T,\phi)$
-        $$ p(T,\phi) = \frac{\pi^2}{90} g_p(T,\phi) T^4$$
+        $$ p(T,\phi) = \frac{\pi^2}{90} g_p(T,\phi) T^4$$.
         """
         self.validate_temp(temp)
         return np.pi**2 / 90 * self.thermo.gp(temp, phase) * temp**4 - self.V(phase)
@@ -131,13 +133,13 @@ class FullModel(Model):
         $$ s(T,\phi) = \frac{2\pi^2}{45} g_s(T) T^3$$
         :param temp: temperature $T$
         :param phase: phase $\phi$
-        :return: $s(T,\phi)$
+        :return: $s(T,\phi)$.
         """
         self.validate_temp(temp)
         return 2*np.pi**2 / 45 * self.thermo.gs(temp, phase) * temp**3
 
     def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr):
-        r"""Temperature $T$"""
+        r"""Temperature $T$."""
         if np.all(phase == Phase.SYMMETRIC.value):
             return 10**splev(np.log10(w), self.temp_spline_s)
         if np.all(phase == Phase.BROKEN.value):

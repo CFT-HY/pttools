@@ -1,4 +1,4 @@
-"""ThermoModel-based constant $c_s$ model"""
+"""ThermoModel-based constant $c_s$ model."""
 
 import typing as tp
 
@@ -10,7 +10,8 @@ import pttools.type_hints as th
 
 
 class ConstCSThermoModel(ThermoModel):
-    """ThermoModel-based constant $c_s$ model"""
+    """ThermoModel-based constant $c_s$ model."""
+
     DEFAULT_LABEL_LATEX = "Constant $c_s$ thermo-model"
     DEFAULT_LABEL_UNICODE = "Constant cₛ thermo-model"
     DEFAULT_NAME = "const_cs_thermo"

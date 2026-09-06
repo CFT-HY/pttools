@@ -13,9 +13,10 @@ As of 2024, this file is unmaintained and the thermo module is not in this repos
 # sys.path.append('../pttools/')
 # sys.path.append('../thermo/')
 
-import pttools.bubble as b
-from thermo import eos
 import numpy as np
+from thermo import eos
+
+import pttools.bubble as b
 
 # n_alpha = 100
 # n_vw = 100

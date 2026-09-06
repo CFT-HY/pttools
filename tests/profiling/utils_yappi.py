@@ -1,4 +1,4 @@
-"""Wrapper for the YAPPI profiler"""
+"""Wrapper for the YAPPI profiler."""
 
 import io
 import os
@@ -13,7 +13,8 @@ os.makedirs(PROFILE_DIR, exist_ok=True)
 
 
 class YappiProfiler(utils.Profiler):
-    """Thread-safe handler for the YAPPI profiler"""
+    """Thread-safe handler for the YAPPI profiler."""
+
     _lock = threading.Lock()
 
     @classmethod
@@ -30,7 +31,7 @@ class YappiProfiler(utils.Profiler):
 
 
 def process_text_func(stats: yappi.YFuncStats, path: str, print_to_console: bool = False) -> str:
-    """Convert YAPPI function stats to str"""
+    """Convert YAPPI function stats to str."""
     return process_text(stats, path, print_to_console, columns={
         0: ("ncall", 5),
         1: ("tsub", 8),
@@ -41,7 +42,7 @@ def process_text_func(stats: yappi.YFuncStats, path: str, print_to_console: bool
 
 
 def process_text_thread(stats: yappi.YThreadStats, path: str, print_to_console: bool = False) -> str:
-    """Convert YAPPI thread stats to str"""
+    """Convert YAPPI thread stats to str."""
     return process_text(stats, path, print_to_console, columns={
         0: ("name", 20),
         1: ("id", 5),
@@ -56,7 +57,7 @@ def process_text(
         path: str | None = None,
         print_to_console: bool = False,
         columns: dict[int, tuple[str, int]] | None = None) -> str:
-    """Convert YAPPI stats to str"""
+    """Convert YAPPI stats to str."""
     stream = io.StringIO()
     kwargs = {"out": stream}
     if columns:
@@ -74,7 +75,7 @@ def process_text(
 
 
 def process(name: str, print_to_console: bool = False) -> tuple[yappi.YFuncStats, yappi.YThreadStats]:
-    """Get stats from YAPPI and return them as str"""
+    """Get stats from YAPPI and return them as str."""
     func_stats: yappi.YFuncStats = yappi.get_func_stats()
     thread_stats: yappi.YThreadStats = yappi.get_thread_stats()
 

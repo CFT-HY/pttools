@@ -25,5 +25,4 @@ This can be overridden in two ways.
 
 from pttools.logging import setup_logging
 
-
 setup_logging()

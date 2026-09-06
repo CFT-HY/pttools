@@ -6,8 +6,8 @@ Comparison of BagModel and ConstCSModel
 import numpy as np
 
 from examples.utils import save_and_show_fig
-from pttools.analysis.plot_models import ModelsPlot
 from pttools import models
+from pttools.analysis.plot_models import ModelsPlot
 
 
 def main() -> ModelsPlot:

@@ -1,9 +1,9 @@
-"""Performance tests"""
+"""Performance tests."""
 
 import logging
 import os
-import unittest
 import textwrap
+import unittest
 
 from pttools.analysis import time_and_plot_threads
 from pttools.speedup import DEFAULT_VARYING_NUMBA_THREADS, NUMBA_DISABLE_JIT

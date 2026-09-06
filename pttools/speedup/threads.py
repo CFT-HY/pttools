@@ -1,3 +1,5 @@
+"""Utilities for measuring the scaling of the runtime with the number of Numba threads."""
+
 import logging
 from timeit import timeit
 import typing as tp

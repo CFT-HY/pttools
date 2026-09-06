@@ -10,11 +10,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from examples.utils import save_and_show_fig
-from pttools.logging import setup_logging
-from pttools.bubble.phase import Phase
 from pttools.bubble.bubble import get_kappa_for_v_walls
-from pttools.models.const_cs import ConstCSModel
 from pttools.bubble.fluid_reference import ref
+from pttools.bubble.phase import Phase
+from pttools.logging import setup_logging
+from pttools.models.const_cs import ConstCSModel
 from pttools.speedup.parallel import run_parallel
 
 logger = logging.getLogger(__name__)

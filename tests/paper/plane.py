@@ -1,9 +1,8 @@
-r"""$\xi, v$ plane generation"""
+r"""$\xi, v$ plane generation."""
 
 import numpy as np
 
-from pttools import bubble
-from pttools import speedup
+from pttools import bubble, speedup
 import pttools.type_hints as th
 
 
@@ -19,9 +18,7 @@ def xiv_plane(
         cs2_b=bubble.CS0_2,
         separate_phases: bool = True
     ) -> th.FloatArr3D | tuple[th.FloatArr3D, th.FloatArr3D]:
-    """
-    Modified from :ssm_repo:`paper/python/fig_8r_xi-v_plane.py`
-    """
+    """Modified from :ssm_repo:`paper/python/fig_8r_xi-v_plane.py`."""
     # Todo: Replace this with the methods from pttools.analysis
 
     # Define a suitable number of default lines to plot

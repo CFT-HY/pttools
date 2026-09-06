@@ -1,17 +1,18 @@
-"""Test the experimental jitclass-based parameter storage"""
+"""Test the experimental jitclass-based parameter storage."""
 
 import unittest
 
 import numba
 
-from pttools.bubble.physical_params import NucArgs, PhysicalParams
-from pttools.ssm.nucleation import NucType
 from pttools import speedup
+from pttools.bubble.physical_params import NucArgs, PhysicalParams
 from pttools.speedup import njit
+from pttools.ssm.nucleation import NucType
 
 
 class TestParams(unittest.TestCase):
-    """Test the experimental jitclass-based parameter storage"""
+    """Test the experimental jitclass-based parameter storage."""
+
     def test_nuc_args(self):
         NucArgs(0.1)
 
@@ -36,7 +37,7 @@ class TestParams(unittest.TestCase):
         """Calling jitclass constructor within jitted code without specifying all arguments fails.
         This is a known bug in Numba.
         This test will alert, when the bug is fixed.
-        https://github.com/numba/numba/issues/4820
+        https://github.com/numba/numba/issues/4820.
         """
         with self.assertRaises((numba.LoweringError, TypeError)):
             params_without_nuc_args_numba()

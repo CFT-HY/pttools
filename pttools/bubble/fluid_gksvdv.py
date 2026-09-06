@@ -1,4 +1,4 @@
-r"""Fluid shell solver based on :giese_2021:`\ `"""
+r"""Fluid shell solver based on :giese_2021:`\ `."""
 
 import logging
 import time
@@ -6,11 +6,10 @@ import typing as tp
 
 import numpy as np
 
-from pttools.bubble.phase import Phase
-from pttools.bubble import chapman_jouguet
+from pttools.bubble import chapman_jouguet, relativity
 from pttools.bubble.fluid_base import GenericSolverOutput
 from pttools.bubble.gksvdv.gksvdv21 import kappaNuMuModel
-from pttools.bubble import relativity
+from pttools.bubble.phase import Phase
 from pttools.bubble.solution_type import SolutionType
 from pttools.speedup import NAN_ARR
 
@@ -28,7 +27,7 @@ def sound_shell_gksvdv(
             wn_guess: float | None = None,
             wm_guess: float | None = None,
         ) -> GenericSolverOutput:
-    r"""Fluid shell solver based on :giese_2021:`\ `"""
+    r"""Fluid shell solver based on :giese_2021:`\ `."""
     start_time = time.perf_counter()
 
     if wn is None or np.isnan(wn):

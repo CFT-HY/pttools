@@ -1,17 +1,17 @@
-r"""$\alpha_n$ limits for the Bag Model"""
+r"""$\alpha_n$ limits for the Bag Model."""
 
 import numba
 from numba.extending import overload
 import numpy as np
 
+from pttools.bubble import check, props
 from pttools.bubble.const import ALPHA_PLUS_MAX_DEF, CS0, DEFAULT_N_XI
 from pttools.bubble.fluid_bag import sound_shell_alpha_plus_bag
-from pttools.bubble import check
-from pttools.bubble import props
+from pttools.bubble.integrate import FluidIntegrateMethod
 from pttools.bubble.solution_type import SolutionType
+
 # from pttools.bubble.solution_type_bag import identify_solution_type_alpha_plus_bag
 from pttools.speedup import njit, njit_parallel_pair, vectorize
-from pttools.bubble.integrate import FluidIntegrateMethod
 from pttools.speedup.differential import DifferentialPointer
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr

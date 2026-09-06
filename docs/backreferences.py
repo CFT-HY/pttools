@@ -1,4 +1,4 @@
-"""Fixes for the backreferences of Sphinx-Gallery
+"""Fixes for the backreferences of Sphinx-Gallery.
 
 Sphinx-Gallery records an object by the module from which the example imports it,
 but Sphinx documents the object by the module in which it is defined.
@@ -29,7 +29,7 @@ type CodeObject = dict[str, tp.Any]
 
 
 def ensure_imported(module: str) -> None:
-    """Import a module of this repository, if it has not been imported yet
+    """Import a module of this repository, if it has not been imported yet.
 
     Sphinx-Gallery resolves the objects only from the already imported modules,
     since importing arbitrary third-party modules may have side effects.
@@ -44,7 +44,7 @@ def ensure_imported(module: str) -> None:
 
 
 def defining_submodule(package: str, name: str, obj: tp.Any) -> str | None:
-    """Find the submodule of the given package in which the given value is defined
+    """Find the submodule of the given package in which the given value is defined.
 
     Values such as constants don't have the __module__ attribute,
     so the submodules are searched for an annotated assignment of the same object.
@@ -67,7 +67,7 @@ def defining_submodule(package: str, name: str, obj: tp.Any) -> str | None:
 
 
 def defining_module(cobj: CodeObject) -> str | None:
-    """Find the module in which the object of the given code object is defined
+    """Find the module in which the object of the given code object is defined.
 
     :param cobj: code object of Sphinx-Gallery
     :return: name of the defining module, or None if it's unknown or already recorded
@@ -90,7 +90,7 @@ def defining_module(cobj: CodeObject) -> str | None:
 
 
 def add_defining_modules(code_objects: dict[str, list[CodeObject]]) -> dict[str, list[CodeObject]]:
-    """Add code objects that refer to the modules in which the objects are defined"""
+    """Add code objects that refer to the modules in which the objects are defined."""
     for cobjs in code_objects.values():
         for cobj in list(cobjs):
             module = defining_module(cobj)
@@ -102,17 +102,18 @@ def add_defining_modules(code_objects: dict[str, list[CodeObject]]) -> dict[str,
             cobjs.insert(0, {
                 **cobj,
                 "module": module,
-                "module_short": backreferences._get_short_module_name(module, cobj["name"]) or module,
+                "module_short": backreferences._get_short_module_name(  # noqa: SLF001
+                    module, cobj["name"]) or module,
                 "is_class": inspect.isclass(resolve_object(module, cobj["name"].split(".")))
             })
     return code_objects
 
 
 def identify_names(*args, **kwargs) -> dict[str, list[CodeObject]]:
-    """Wrapper for the identify_names function of Sphinx-Gallery, which adds the defining modules"""
+    """Wrapper for the identify_names function of Sphinx-Gallery, which adds the defining modules."""
     return add_defining_modules(backreferences.identify_names(*args, **kwargs))
 
 
 def patch_sphinx_gallery() -> None:
-    """Patch Sphinx-Gallery to also record the modules in which the objects are defined"""
+    """Patch Sphinx-Gallery to also record the modules in which the objects are defined."""
     gen_rst.identify_names = identify_names

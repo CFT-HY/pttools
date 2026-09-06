@@ -1,4 +1,4 @@
-"""Chapman-Jouguet speed"""
+"""Chapman-Jouguet speed."""
 
 from collections.abc import Iterable
 import logging
@@ -7,14 +7,16 @@ import typing as tp
 import numpy as np
 from scipy.optimize import fsolve
 
+from pttools.bubble.phase import Phase
+
 # from pttools.bubble import const
 from pttools.bubble.relativity import gamma2
-from pttools.bubble.phase import Phase
 from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.v_plus import v_plus
 from pttools.speedup import njit
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr, FloatOrArr1D
+
 if tp.TYPE_CHECKING:
     from pttools.models.const_cs import ConstCSModel
     from pttools.models.model import Model
@@ -159,7 +161,7 @@ def v_chapman_jouguet(
         error_on_invalid: bool = True,
         nan_on_invalid: bool = True,
         log_invalid: bool = True) -> float | tuple[float, float, float] | th.FloatArr1D:
-    """Chapman-Jouguet speed
+    """Chapman-Jouguet speed.
 
     This is the minimum wall speed for detonations.
     """
@@ -233,7 +235,7 @@ def v_chapman_jouguet(
 
 @njit(cache=True)
 def v_chapman_jouguet_bag[T: FloatOrArr](alpha_plus: T) -> T:
-    r"""Chapman-Jouguet speed for the bag model
+    r"""Chapman-Jouguet speed for the bag model.
 
     $\alpha_n$ can be given instead of $\alpha_+$, as
     "The two definitions of the transition strength coincide
@@ -295,7 +297,7 @@ def wm_chapman_jouguet(
         error_on_invalid: bool = True,
         nan_on_invalid: bool = True,
         log_invalid: bool = True) -> float:
-    """Get ${w}_-$ for a transition that has $\tilde{v}_-=c_{{s},-}({w}_-)$
+    r"""Get ${w}_-$ for a transition that has $\tilde{v}_-=c_{{s},-}({w}_-)$
     such as a Chapman-Jouguet detonation or a Chapman-Jouguet deflagration.
     """
     if wm_guess is None:

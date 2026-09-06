@@ -10,8 +10,8 @@ import contextlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.models import ConstCSModel
 from examples.utils import save_and_show_fig
+from pttools.models import ConstCSModel
 
 
 def main() -> plt.Figure:

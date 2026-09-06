@@ -1,4 +1,4 @@
-"""Unit tests for thermodynamic functions"""
+"""Unit tests for thermodynamic functions."""
 
 import unittest
 
@@ -6,15 +6,15 @@ import numpy as np
 
 from pttools.bubble.bubble import Bubble
 from pttools.bubble.thermo import e_bar, ubarf2, w_bar
-from pttools.models.model import Model
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
+from pttools.models.model import Model
 import pttools.type_hints as th
 from tests.utils.test_assertions import assert_allclose
 
 
 class ThermoTest:
-    """Unit tests for thermodynamic functions"""
+    """Unit tests for thermodynamic functions."""
 
     MODEL: Model = BagModel(a_s=1.1, a_b=1, V_s=1)
 
@@ -41,7 +41,7 @@ class ThermoTest:
         )
 
     def test_wbar(self):
-        """If there is no bubble, then wbar=wn"""
+        """If there is no bubble, then wbar=wn."""
         assert_allclose(
             [
                 w_bar(w=np.ones_like(bubble.w) * bubble.wn, xi=bubble.xi, v_wall=bubble.v_wall)
@@ -57,7 +57,7 @@ class ThermoTest:
         assert_allclose([bubble.kappa + bubble.omega for bubble in self.bubbles], 1, rtol=1.8e-2)
 
     def test_kappa_omega_ref(self):
-        """Ensure that there are no typos in the reference data"""
+        """Ensure that there are no typos in the reference data."""
         assert_allclose(self.KAPPA_REF + self.OMEGA_REF, 1, 1.8e-2)
 
     def test_bva_ke_frac(self):
@@ -99,7 +99,7 @@ class ThermoTestHindmarshHijazi(ThermoTest, unittest.TestCase):
 
 
 class ThermoTestBag(ThermoTest, unittest.TestCase):
-    """Test that the results have not changed due to code changes
+    """Test that the results have not changed due to code changes.
 
     Reference data has been generated with PTtools.
     """
@@ -117,10 +117,11 @@ class ThermoTestBag(ThermoTest, unittest.TestCase):
 
 
 class ThermoTestConstCS(ThermoTest, unittest.TestCase):
-    """Test that the results have not changed due to code changes
+    """Test that the results have not changed due to code changes.
 
     Reference data has been generated with PTtools.
     """
+
     MODEL = ConstCSModel(css2=1/3-0.01, csb2=1/3, a_s=1.5, a_b=1, V_s=1)
 
     ALPHA_NS = np.array(np.repeat([0.15, 0.2, 0.3], 3))

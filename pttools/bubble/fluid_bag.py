@@ -1,4 +1,4 @@
-r"""Functions for fluid differential equations with the bag model
+r"""Functions for fluid differential equations with the bag model.
 
 Now in parametric form (Jacky Lindsay and Mike Soughton MPhys project 2017-18).
 RHS is Eq (33) in Espinosa et al. (plus $\frac{dw}{dt}$ not written there)
@@ -10,25 +10,18 @@ import typing as tp
 
 import numpy as np
 
-from pttools.bubble import alpha
-from pttools.bubble import approx
+from pttools import speedup
+from pttools.bubble import alpha, approx, check, const, integrate, props, thermo, trim
 from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR, cs2_bag_scalar
-from pttools.bubble import check
-from pttools.bubble import const
-from pttools.bubble import integrate
 from pttools.bubble.junction import enthalpy_ratio
 from pttools.bubble.junction_bag import fluid_speeds_at_wall_bag
 from pttools.bubble.phase import Phase
-from pttools.bubble import props
-from pttools.bubble import thermo
 from pttools.bubble.shock import shock_zoom_last_element
 from pttools.bubble.shock_bag import v_shock_bag, wm_shock_bag
 from pttools.bubble.solution_type import SolutionType
-from pttools.bubble.solution_type_bag import identify_solution_type_bag, identify_solution_type_alpha_plus_bag
-from pttools.bubble import trim
-from pttools import speedup
-import pttools.type_hints as th
+from pttools.bubble.solution_type_bag import identify_solution_type_alpha_plus_bag, identify_solution_type_bag
 from pttools.speedup import NAN_ARR, njit
+import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
 
@@ -235,7 +228,8 @@ def sound_shell_alpha_plus_bag(
 
 
 class SoundShellDict(tp.TypedDict):
-    r"""Return value of :func:`sound_shell_dict`"""
+    r"""Return value of :func:`sound_shell_dict`."""
+
     #: Fluid velocity profile $v(\xi)$
     v: th.FloatArr1D
     #: Enthalpy profile $w(\xi)$

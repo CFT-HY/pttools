@@ -1,15 +1,13 @@
-"""Functions for shocks"""
+"""Functions for shocks."""
 
 import logging
 import typing as tp
 
 import numpy as np
 
+from pttools.bubble import const, props, relativity
 from pttools.bubble.junction import solve_junction, w2_junction
-from pttools.bubble import const
-from pttools.bubble import props
 from pttools.bubble.phase import Phase
-from pttools.bubble import relativity
 from pttools.bubble.shock_bag import v_shock_bag
 from pttools.bubble.solution_type import SolutionType
 from pttools.speedup import njit
@@ -277,7 +275,7 @@ def solve_shock(
             phase: Phase = Phase.SYMMETRIC,
             allow_failure: bool = False,
             warn_if_barely_exists: bool = True) -> tuple[float, float]:
-    r"""Solve the boundary conditions at a shock
+    r"""Solve the boundary conditions at a shock.
 
     :param model: Hydrodynamics model
     :param v1_tilde: $\tilde{v}_{1,sh}$
@@ -362,7 +360,7 @@ def solve_shock(
 
 @np.vectorize
 def v_shock(model: "Model", wn: float, xi: float, cs_n: float, warn_if_barely_exists: bool = True) -> float:
-    r"""Shock velocity $v_\text{sh}$"""
+    r"""Shock velocity $v_\text{sh}$."""
     if xi <= cs_n or np.isclose(xi, cs_n):
         return 0.
     if np.isclose(xi, 1.):
@@ -391,7 +389,7 @@ def v_shock_curve(
         xi: th.FloatArr1D | None = None,
         n_points: int = 20,
         warn_if_barely_exists: bool = False) -> tuple[th.FloatArr1D, th.FloatArr1D]:
-    r"""Shock velocity curve $(\xi, v_{\text{sh}})$"""
+    r"""Shock velocity curve $(\xi, v_{\text{sh}})$."""
     if xi is None:
         cs_n = np.sqrt(model.cs2(wn, Phase.SYMMETRIC))
         # Create more points near cs_n, as there the accuracy is the most critical

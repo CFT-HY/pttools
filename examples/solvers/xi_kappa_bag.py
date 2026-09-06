@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from examples.utils import save_and_show_fig
-from pttools.bubble.thermo_bag import get_kappa_de_bag
 from pttools.bubble.bubble import Bubble
+from pttools.bubble.thermo_bag import get_kappa_de_bag
 from pttools.models.bag import BagModel
 
 logger = logging.getLogger(__name__)

@@ -1,4 +1,4 @@
-r"""Factors used in calculating $\Omega_{\text{gw},0}$"""
+r"""Factors used in calculating $\Omega_{\text{gw},0}$."""
 
 from pttools.omgw0 import const
 import pttools.type_hints as th
@@ -15,7 +15,7 @@ def F_gw0(
     = \left( \frac{{a}_\ast}{a_0} \right)^4 \left( \frac{{H}_\ast}{H_0} \right)^2
     = \Omega_{\gamma,0} \left( \frac{g_{s0}}{g_{s\ast}} \right)^\frac{4}{3} \frac{{g}_\ast}{g_0}$$
     :hindmarsh_2017:`\ ` eq. 44
-    :gowling_2021:`\ ` eq. 2.11
+    :gowling_2021:`\ ` eq. 2.11.
 
     The first form is the redshifting of a radiation-like energy density.
     The second form follows from the conservation of entropy,

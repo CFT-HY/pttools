@@ -1,1 +1,1 @@
-"""Unit tests for the droplet module of PTtools"""
+"""Unit tests for the droplet module of PTtools."""

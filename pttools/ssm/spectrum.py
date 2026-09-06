@@ -1,25 +1,24 @@
-"""Functions for computing GW power spectra"""
+"""Functions for computing GW power spectra."""
 
 import functools
 import logging
+from math import sqrt
 import typing as tp
 
 import matplotlib.pyplot as plt
-
-from math import sqrt
 import numpy as np
 
 from pttools.bubble import Bubble, Phase
 from pttools.speedup import NAN_ARR
 from pttools.ssm import const
-from pttools.ssm.barotropic import dilution_of_e, eta_ratio, H_eta, source_lifetime_factor
+from pttools.ssm.barotropic import H_eta, dilution_of_e, eta_ratio, source_lifetime_factor
 from pttools.ssm.compute import compute
-from pttools.ssm.nucleation import \
-    DEFAULT_NUC_TYPE, NucType, beta, r_star as r_star_func, v_eff
+from pttools.ssm.low_k.intersection import z_cross_approx
+from pttools.ssm.nucleation import DEFAULT_NUC_TYPE, NucType, beta, v_eff
+from pttools.ssm.nucleation import r_star as r_star_func
 from pttools.ssm.pow_spec import pow_spec
 from pttools.ssm.scaling import H_star_tau_sh, H_star_tau_v, H_star_tau_v_old, J
 from pttools.ssm.spec_den_gw import spec_den_gw_scaling
-from pttools.ssm.low_k.intersection import z_cross_approx
 from pttools.ssm.ssm import ubarf2_from_a2
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 from pttools.type_hints import FloatArr, FloatArr1D
@@ -34,7 +33,8 @@ logger = logging.getLogger(__name__)
 
 
 class SSMSpectrum:
-    """Gravitational wave simulation object"""
+    """Gravitational wave simulation object."""
+
     def __init__(
             self,
             bubble: Bubble,
@@ -258,7 +258,7 @@ class SSMSpectrum:
     @functools.cached_property
     def delta_tau_v(self) -> float:
         r"""$\Delta \tau_v$
-        $$\Delta \tau_v \equiv \frac{\delta \eta_v}{R_*} = \frac{\eta_sh N_sh}{R_*} = \frac{N_sh}{\bar{U}_f}$$
+        $$\Delta \tau_v \equiv \frac{\delta \eta_v}{R_*} = \frac{\eta_sh N_sh}{R_*} = \frac{N_sh}{\bar{U}_f}$$.
         """
         return self.N_sh / self.bubble.ubarf
 
@@ -273,7 +273,7 @@ class SSMSpectrum:
     @functools.cached_property
     def H_star_eta_star(self) -> float:
         r"""$H_* \eta_*$
-        $$H_* \eta_* = 1 + \nu_\text{gdh2024}$$
+        $$H_* \eta_* = 1 + \nu_\text{gdh2024}$$.
         """
         return H_eta(nu=self.bubble.nu_gdh2024)
 
@@ -284,7 +284,7 @@ class SSMSpectrum:
         where $\bar{U}_f \equiv v_{\text{rms}}$
         :gw_pt_ssm:`\ ` p. 6, 13
         :notes:`\ ` p. 48
-        :giombi_2024_cs:`\ ` p. 2
+        :giombi_2024_cs:`\ ` p. 2.
 
         Please note that $\tau_\text{nl}$ and $\tau_\text{v}$ are different quantities.
         If $H \tau_\text{nl} \gg 1$, then $H \tau_\text{v} \rightarrow 1$.
@@ -308,7 +308,7 @@ class SSMSpectrum:
     def k_peak_eta_star(self) -> float:
         r"""Peak wavenumber, scaled by conformal time at GW formation $k_\text{peak} \eta_*$
         $$k_p = \frac{2 \pi}{R_*} \Rightarrow k_p \eta_* = (1 + \nu_\text{gdh2024}) \frac{2\pi}{r_*}$$
-        :giombi_2024_cs:`\ ` p. 2
+        :giombi_2024_cs:`\ ` p. 2.
         """
         return (1 + self.bubble.nu_gdh2024) * 2 * np.pi / self.r_star
 
@@ -318,37 +318,37 @@ class SSMSpectrum:
 
     @functools.cached_property
     def pow_gw(self) -> FloatArr1D:
-        r"""$\mathcal{P}_\text{gw}$"""
+        r"""$\mathcal{P}_\text{gw}$."""
         return self.spec_den_gw_scaling * pow_spec(z=self.y, spec_den=self.spec_den_gw)
 
     @functools.cached_property
     def pow_gw_expanded(self) -> FloatArr1D:
-        r"""$\mathcal{P}_\text{gw,ext}$"""
+        r"""$\mathcal{P}_\text{gw,ext}$."""
         return self.spec_den_gw_scaling * pow_spec(z=self.y, spec_den=self.spec_den_gw_expanded)
 
     @functools.cached_property
     def pow_gw_int(self) -> FloatArr1D:
-        r"""$\mathcal{P}_\text{gw,int}$"""
+        r"""$\mathcal{P}_\text{gw,int}$."""
         return self.spec_den_gw_scaling * pow_spec(z=self.y, spec_den=self.spec_den_gw_int)
 
     @functools.cached_property
     def pow_gw_low(self) -> FloatArr1D:
-        r"""$\mathcal{P}_\text{gw,low}$"""
+        r"""$\mathcal{P}_\text{gw,low}$."""
         return self.spec_den_gw_scaling * pow_spec(z=self.y, spec_den=self.spec_den_gw_low)
 
     @functools.cached_property
     def pow_gw_ssm(self) -> FloatArr1D:
-        r"""$\mathcal{P}_\text{gw,ssm}$"""
+        r"""$\mathcal{P}_\text{gw,ssm}$."""
         return self.spec_den_gw_scaling * pow_spec(z=self.y, spec_den=self.spec_den_gw_ssm)
 
     @functools.cached_property
     def pow_v(self) -> FloatArr1D:
-        r"""$\mathcal{P}_v"""
+        r"""$\mathcal{P}_v."""
         return pow_spec(z=self.y, spec_den=self.spec_den_v)
 
     @functools.cached_property
     def pow_v_tilde(self) -> FloatArr1D:
-        r"""$\mathcal{P}_{\tilde{v}}$"""
+        r"""$\mathcal{P}_{\tilde{v}}$."""
         return 2 * self.pow_v
 
     @functools.cached_property
@@ -376,7 +376,7 @@ class SSMSpectrum:
         r"""Spectral density $\tilde{P}_{\tilde{v}}$ of the velocity field $v$
         This includes
         $$\tilde{P}_{\tilde{v}}(q) = 2 \tilde{P}_v(q)$$
-        :gw_pt_ssm:`\ ` eq. 4.18
+        :gw_pt_ssm:`\ ` eq. 4.18.
         """
         return 2 * self.spec_den_v
 
@@ -393,7 +393,7 @@ class SSMSpectrum:
         r"""
         Time $\tau_\text{end}$ when the anisotropic stress turns off
         $$\tau_\text{end} \equiv \frac{\eta_\text{end}}{R_*}$$
-        :giombi_2024_cs:`\ ` p. 8
+        :giombi_2024_cs:`\ ` p. 8.
         """
         return self.tau_star + self.delta_tau_v
 
@@ -401,7 +401,7 @@ class SSMSpectrum:
     def tau_star(self) -> float:
         r"""Time $\tau_*$ when the anisotropic stress turns on
         $$\tau_* \equiv \frac{\eta_*}{R_*} = \frac{1 + \nu_\text{gdh2024}}{r_*}$$
-        :giombi_2024_cs:`\ ` p. 8
+        :giombi_2024_cs:`\ ` p. 8.
         """
         return (1 + self.bubble.nu_gdh2024) / self.r_star
 
@@ -483,7 +483,7 @@ class SSMSpectrum:
             ax: plt.Axes | None = None,
             path: str | None = None,
             **kwargs) -> "FigAndAxes":
-        r"""Plot GW power spectrum $\mathcal{P}_{\text{gw}}(k)$"""
+        r"""Plot GW power spectrum $\mathcal{P}_{\text{gw}}(k)$."""
         return self.plot_gw(fig, ax, path, **kwargs)
 
     def plot_gw(
@@ -492,8 +492,8 @@ class SSMSpectrum:
             ax: plt.Axes | None = None,
             path: str | None = None,
             **kwargs) -> "FigAndAxes":
-        r"""Plot GW power spectrum $\mathcal{P}_{\text{gw}}(k)$"""
-        from pttools.analysis.plot_spectra import plot_spectra_gw
+        r"""Plot GW power spectrum $\mathcal{P}_{\text{gw}}(k)$."""
+        from pttools.analysis.plot_spectra import plot_spectra_gw  # noqa: PLC0415
         return plot_spectra_gw([self], ax=ax, fig=fig, path=path, **kwargs)
 
     def plot_v(
@@ -502,8 +502,8 @@ class SSMSpectrum:
             ax: plt.Axes | None = None,
             path: str | None = None,
             **kwargs) -> "FigAndAxes":
-        r"""Plot velocity power spectrum $\mathcal{P}_{\tilde{v}}(q)$"""
-        from pttools.analysis.plot_spectra import plot_spectra_v
+        r"""Plot velocity power spectrum $\mathcal{P}_{\tilde{v}}(q)$."""
+        from pttools.analysis.plot_spectra import plot_spectra_v  # noqa: PLC0415
         return plot_spectra_v([self], ax=ax, fig=fig, path=path, **kwargs)
 
     def plot_spec_den_gw(
@@ -512,8 +512,8 @@ class SSMSpectrum:
             ax: plt.Axes | None = None,
             path: str | None = None,
             **kwargs) -> "FigAndAxes":
-        """Plot spectral density of scaled GW power"""
-        from pttools.analysis.plot_spectra import plot_spectra_spec_den_gw
+        """Plot spectral density of scaled GW power."""
+        from pttools.analysis.plot_spectra import plot_spectra_spec_den_gw  # noqa: PLC0415
         return plot_spectra_spec_den_gw([self], ax=ax, fig=fig, path=path, **kwargs)
 
     def plot_spec_den_v(
@@ -522,8 +522,8 @@ class SSMSpectrum:
             ax: plt.Axes | None = None,
             path: str | None = None,
             **kwargs) -> "FigAndAxes":
-        """Plot spectral density of the velocity field $P_v(y)$"""
-        from pttools.analysis.plot_spectra import plot_spectra_spec_den_v
+        """Plot spectral density of the velocity field $P_v(y)$."""
+        from pttools.analysis.plot_spectra import plot_spectra_spec_den_v  # noqa: PLC0415
         return plot_spectra_spec_den_v([self], ax=ax, fig=fig, path=path, **kwargs)
 
 

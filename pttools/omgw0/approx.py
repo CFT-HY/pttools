@@ -1,4 +1,4 @@
-r"""Approximations for $\Omega_{\text{gw},0}$"""
+r"""Approximations for $\Omega_{\text{gw},0}$."""
 
 import math
 
@@ -16,9 +16,7 @@ def omgw_approx(
         temp: th.FloatOrArr = const.DEFAULT_T_STAR,
         g_star: th.FloatOrArr = const.DEFAULT_G_STAR,
         f0_peak: th.FloatOrArr | None = None) -> th.FloatOrArr:
-    r"""
-    :caprini_2016:`\ ` eq. 13
-    """
+    r""":caprini_2016:`\ ` eq. 13."""
     # Todo: this function is missing a factor of h^2
     # return 2.65e-6 * H_star * beta * ((kappa_v * alpha) / (1 + alpha)) * (100 / g_star)**(1/3) * v_w * S_sw(f)
     if f0_peak is None:
@@ -29,9 +27,7 @@ def omgw_approx(
 
 
 def S_sw_approx(f: th.FloatOrArr, f_peak: th.FloatOrArr) -> th.FloatOrArr:
-    r"""
-    :caprini_2016:`\ ` eq. 14
-    """
+    r""":caprini_2016:`\ ` eq. 14."""
     f_relative = f / f_peak
     return f_relative**3 * (7 / (4 + 3 * f_relative**2)) ** (7/2)
 
@@ -41,8 +37,6 @@ def f_peak_approx(v_wall: th.FloatOrArr, beta: th.FloatOrArr) -> th.FloatOrArr:
 
 
 def f0_peak_approx(temp: th.FloatOrArr, r_star: th.FloatOrArr, g_star: th.FloatOrArr) -> th.FloatOrArr:
-    r"""
-    :caprini_2016:`\ ` eq. 15
-    """
+    r""":caprini_2016:`\ ` eq. 15."""
     # return 1.9e-5 * beta * temp / (v_wall * H_star * 100) * (g_star / 100) ** (1/6)
     return 1.9e-5 * (8 * np.pi)**(1/3) / r_star * temp / 100 * (g_star / 100) ** (1/6)

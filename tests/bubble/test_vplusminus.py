@@ -1,4 +1,4 @@
-r"""Test the conversion between wall frame fluid speeds $\tilde{v}_+$ and $\tilde{v}_-$"""
+r"""Test the conversion between wall frame fluid speeds $\tilde{v}_+$ and $\tilde{v}_-$."""
 
 import os.path
 import typing as tp
@@ -15,7 +15,8 @@ from tests.utils.const import TEST_DATA_PATH
 
 
 class TestVPlusMinus(unittest.TestCase):
-    r"""Test the conversion between wall frame fluid speeds $\tilde{v}_+$ and $\tilde{v}_-$"""
+    r"""Test the conversion between wall frame fluid speeds $\tilde{v}_+$ and $\tilde{v}_-$."""
+
     npts: int
     alpha_plus_list: list[float]
 

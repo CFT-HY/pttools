@@ -1,11 +1,11 @@
-r"""Constant sound speed model, aka. $\mu, \nu$ model"""
+r"""Constant sound speed model, aka. $\mu, \nu$ model."""
 
 from fractions import Fraction
 import logging
 import typing as tp
 
 import numpy as np
-from scipy.optimize import minimize, minimize_scalar, OptimizeResult
+from scipy.optimize import OptimizeResult, minimize, minimize_scalar
 
 from pttools.bubble import DF_DTAU_PTR_BAG, cs2_bag_multi
 from pttools.bubble.const import CS0_2
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 def cs2_to_mu[T: FloatOrArr](cs2: T) -> T:
-    r"""Convert speed of sound squared $c_s^2$ to $\mu$
+    r"""Convert speed of sound squared $c_s^2$ to $\mu$.
 
     $$\mu = 1 + \frac{1}{c_s^2}$$
     """
@@ -46,7 +46,8 @@ def cs2_to_float_and_label(
 
 
 class ConstCSModel(AnalyticModel):
-    r"""Constant sound speed model, aka. $\mu, \nu$ model"""
+    r"""Constant sound speed model, aka. $\mu, \nu$ model."""
+
     DEFAULT_LABEL_LATEX = "Constant $c_s$ model"
     DEFAULT_LABEL_UNICODE = "Constant cₛ model"
     DEFAULT_NAME = "const_cs"
@@ -157,7 +158,7 @@ class ConstCSModel(AnalyticModel):
 
     @staticmethod
     def validate_cs2(cs2: float, name: str = "cs2") -> float:
-        """Validate the $c_s^2$ value"""
+        """Validate the $c_s^2$ value."""
         if cs2 < 0 or cs2 > 1:
             return np.nan
         if cs2 > 1/3 and np.isclose(cs2, 1/3):
@@ -176,7 +177,7 @@ class ConstCSModel(AnalyticModel):
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
-        $$\alpha_n = \frac{4}{3} \left( \frac{1}{\nu} - \frac{1}{\mu} + \frac{1}{w_n} (V_s - V_b) \right)$$
+        $$\alpha_n = \frac{4}{3} \left( \frac{1}{\nu} - \frac{1}{\mu} + \frac{1}{w_n} (V_s - V_b) \right)$$.
 
         :param wn: $w_n$, enthalpy of the symmetric phase at the nucleation temperature
         :param error_on_invalid: raise error for invalid values
@@ -435,7 +436,7 @@ class ConstCSModel(AnalyticModel):
             a_b: float, V_b: float,
             css2: float, csb2: float,
             alpha_n_target: float) -> float:
-        """This function is minimized when the given parameters produce alpha_n_target"""
+        """This function is minimized when the given parameters produce alpha_n_target."""
         try:
             model = ConstCSModel(css2=css2, csb2=csb2, a_s=a_s, a_b=a_b, V_s=V_s, V_b=V_b, log_info=False)
         except (ValueError, RuntimeError):
@@ -450,7 +451,7 @@ class ConstCSModel(AnalyticModel):
             a_b: float, V_b: float,
             css2: float, csb2: float,
             alpha_n_target: float) -> float:
-        """This function is minimized when the given parameters produce alpha_n_target"""
+        """This function is minimized when the given parameters produce alpha_n_target."""
         a_s = args[0]
         V_s = args[1]
         return cls.alpha_n_min_find_params_solvable(
@@ -703,7 +704,7 @@ class ConstCSModel(AnalyticModel):
 
     def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Temperature $T(w,\phi)$. Inverted from the equation of $w(T,\phi)$.
-        $$T_\pm = T_0 \left( \frac{w}{\mu a_{\pm} T_0^4} \right)^\frac{1}{\mu_\pm}$$
+        $$T_\pm = T_0 \left( \frac{w}{\mu a_{\pm} T_0^4} \right)^\frac{1}{\mu_\pm}$$.
         """
         # Some solvers may call this function with w < 0 when finding a solution, which causes NumPy to emit warnings.
         invalid = w < 0
@@ -719,7 +720,7 @@ class ConstCSModel(AnalyticModel):
 
     def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Enthalpy density $w(T,\phi)$
-        $$w_\pm = \mu a_{\pm} \left( \frac{T}{T_0} \right)^{\mu_\pm} T_0^4$$
+        $$w_\pm = \mu a_{\pm} \left( \frac{T}{T_0} \right)^{\mu_\pm} T_0^4$$.
         """
         self.validate_temp(temp)
         w_s = self.mu_s * self.a_s * (temp / self.T_ref) ** (self.mu_s - 4) * temp ** 4
@@ -735,7 +736,7 @@ class ConstCSModel(AnalyticModel):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
-        r"""Enthalpy at nucleation temperature"""
+        r"""Enthalpy at nucleation temperature."""
         if theta_bar:
             return super().wn(
                 alpha_n=alpha_n,

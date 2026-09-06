@@ -1,4 +1,4 @@
-"""Unit tests for the bag model functions"""
+"""Unit tests for the bag model functions."""
 
 import unittest
 
@@ -10,7 +10,8 @@ from pttools.utils import assert_allclose
 
 
 class TestBag(unittest.TestCase):
-    """Unit tests for the bag model functions"""
+    """Unit tests for the bag model functions."""
+
     alpha_n: float
     phase: int
     theta_s: float
@@ -21,9 +22,9 @@ class TestBag(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         """
-        phase = order parameter (int?), test separately with values 0 and 1
+        Phase = order parameter (int?), test separately with values 0 and 1
         theta_s = some small positive number, 0.5
-        w = usually 1 or around it, can be above or below 1
+        w = usually 1 or around it, can be above or below 1.
         """
         cls.alpha_n = 0.5
         # For the 1 phase many results would go to zero

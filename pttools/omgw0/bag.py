@@ -1,11 +1,11 @@
-r"""$\Omega_{\text{gw},0}$ for the bag model"""
+r"""$\Omega_{\text{gw},0}$ for the bag model."""
 
 from pttools.bubble.energy_budget import kinetic_energy_fraction_approx
 from pttools.omgw0 import const
 from pttools.omgw0.factors import F_gw0
 from pttools.omgw0.freq import f0
-from pttools.ssm import DEFAULT_N_PT, NptType, NucType, \
-    H_star_tau_sh_approx, H_star_tau_v_old, J as J_func, power_gw_bag
+from pttools.ssm import DEFAULT_N_PT, H_star_tau_sh_approx, H_star_tau_v_old, NptType, NucType, power_gw_bag
+from pttools.ssm import J as J_func
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 import pttools.type_hints as th
 
@@ -24,7 +24,7 @@ def omgw0_bag(
     r"""
     For given set of thermodynamic parameters vw, alpha, rs and T_star calculates the power spectrum using
     the SSM as encoded in the PTtools module (omgwi)
-    :gowling_2021:`\ ` eq. 2.14
+    :gowling_2021:`\ ` eq. 2.14.
     """
     params = (vw, alpha, NucType.EXPONENTIAL, (1,))
     fp0 = f0(r_star, T_star)

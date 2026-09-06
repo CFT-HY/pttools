@@ -1,6 +1,6 @@
 r"""
 This is the example code from
-:giese_2021:`\ `
+:giese_2021:`\ `.
 
 Commented for better readability.
 """
@@ -11,13 +11,14 @@ from scipy.integrate import odeint, simpson
 
 from pttools.bubble.relativity import lorentz as mu
 import pttools.type_hints as th
+
 # from pttools.speedup import NUMBA_ENABLE_CACHE
 
 
 # @njit
 def getwow(v1, v2):
     """Ratio of enthalpies across the bubble wall, "w over w"
-    from the junction conditions
+    from the junction conditions.
 
     :param v1: $v_a$
     :param v2: $v_b$
@@ -30,7 +31,7 @@ def getvm(al: float, vw: float, cs2b: float) -> tuple[float, int]:
     r"""Fluid velocity behind the wall, $\tilde{v}_-$, and the expansion mode
     0 = deflagration
     1 = hybrid
-    2 = detonation
+    2 = detonation.
 
     :return: $\tilde{v}_-$, sol_type (0-2)
     """
@@ -48,7 +49,7 @@ def getvm(al: float, vw: float, cs2b: float) -> tuple[float, int]:
 
 # @njit
 def dfdv(xiw: tuple[float, float] | th.FloatArr1D, v: float, cs2: float) -> tuple[float, float]:
-    """The differential equation that is solved in the shock/rarefaction wave
+    """The differential equation that is solved in the shock/rarefaction wave.
 
     Rarefaction = the opposite of compression
     """
@@ -65,7 +66,7 @@ def getKandWow(vw: float, v0: float, cs2: float) -> tuple[th.FloatArr1D, th.Floa
     """
     Returns two values
     - Enthalpy-weighted kinetic energy in the shock/rarefaction wave
-    - Ratio between the enthalpy density at the start of the shock/rarefaction compared to its end
+    - Ratio between the enthalpy density at the start of the shock/rarefaction compared to its end.
 
     For the shocks the end is in the phase in front of the shock
     For the rarefaction wave, the enthalpy density is normalized to 1 behind the wall
@@ -106,7 +107,7 @@ def getKandWow(vw: float, v0: float, cs2: float) -> tuple[th.FloatArr1D, th.Floa
 
 # @njit
 def alN(al, wow, cs2b, cs2s):
-    r"""$\alpha_{\bar{\theta}n}$ in the nucleation phase (in front of the shock)"""
+    r"""$\alpha_{\bar{\theta}n}$ in the nucleation phase (in front of the shock)."""
     da = (1./cs2b - 1./cs2s)/(1./cs2s + 1.)/3.
     return (al + da)*wow - da
 
@@ -115,7 +116,7 @@ def alN(al, wow, cs2b, cs2s):
 def getalNwow(vp, vm, vw, cs2b, cs2s):
     r"""Get
     - $\alpha_{\bar{\theta}n}$ in the nucleation phase
-    - Ratio of the enthalpies for fixed boundary conditions at the wall
+    - Ratio of the enthalpies for fixed boundary conditions at the wall.
     """
     _, _, _, Ksh, wow = getKandWow(vw, mu(vw, vp), cs2s)
     al = (vp/vm-1.)*(vp*vm/cs2b - 1.)/(1-vp**2)/3.
@@ -155,7 +156,7 @@ def kappaNuMuModel(
             # Get mean v of the limits
             vpm = (iv[1][0] + iv[0][0])/2.
             alm = getalNwow(vpm, vm, vw, cs2b, cs2s)[0]
-            if alm > al:
+            if alm > al:  # noqa: SIM108
                 # Result is above the target. Search in the lower section.
                 iv = [iv[0], [vpm, alm]]
             else:

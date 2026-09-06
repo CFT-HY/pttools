@@ -1,4 +1,4 @@
-"""Standard Model equation of state"""
+"""Standard Model equation of state."""
 
 import logging
 import typing as tp
@@ -14,12 +14,13 @@ logger = logging.getLogger(__name__)
 
 
 class StandardModel(ThermoModel):
-    r"""Standard Model equation of state
+    r"""Standard Model equation of state.
 
     Based on cubic spline interpolation for the effective degrees of freedom of the Standard Model.
     Data range $0 - 10^{5.45}$ MeV from the table S2 of :borsanyi_2016:`\ `.
     Units are in MeV.
     """
+
     # Todo: Should the units be changed to GeV to be compatible with Spectrum?
     DEFAULT_LABEL_LATEX = "Standard Model"
     DEFAULT_LABEL_UNICODE = DEFAULT_LABEL_LATEX

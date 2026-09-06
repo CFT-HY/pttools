@@ -1,4 +1,4 @@
-"""Unit tests for the functions of special relativity"""
+"""Unit tests for the functions of special relativity."""
 
 import unittest
 
@@ -9,7 +9,8 @@ import pttools.type_hints as th
 
 
 class RelativityTest(unittest.TestCase):
-    """Unit tests for the functions of special relativity"""
+    """Unit tests for the functions of special relativity."""
+
     v: th.FloatArr1D
 
     @classmethod

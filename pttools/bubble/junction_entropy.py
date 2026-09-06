@@ -1,9 +1,9 @@
-"""Entropy fluxes at the phase boundary"""
+"""Entropy fluxes at the phase boundary."""
 
 import typing as tp
 
-from pttools.bubble.relativity import gamma
 from pttools.bubble.phase import Phase
+from pttools.bubble.relativity import gamma
 from pttools.speedup import njit
 import pttools.type_hints as th
 
@@ -20,7 +20,7 @@ def check_entropy_fluxes(
         phase1: Phase,
         phase2: float,
         allow_negative_entropy_flux_change: bool = False) -> tuple[bool, float, float, float]:
-    """False = OK, True = fail"""
+    """False = OK, True = fail."""
     entropy_flux1 = entropy_flux(v_tilde=v1_tilde, s=model.s(w1, phase1))
     entropy_flux2 = entropy_flux(v_tilde=v2_tilde, s=model.s(w2, phase2))
     entropy_diff = entropy_flux2 - entropy_flux1
@@ -41,7 +41,7 @@ def entropy_flux(v_tilde: th.FloatOrArr, s: th.FloatOrArr) -> th.FloatOrArr:
     $$S^z = su^z = \gamma(\tilde{v}) \tilde{v} s$$
     :bhusal_2026:`\ ` eq. 41
     :notes:`\ ` p. 23,
-    :maki_msc:`\ ` eq. 2.32
+    :maki_msc:`\ ` eq. 2.32.
 
     :param v_tilde: $\tilde{v}$
     :param s: $s$

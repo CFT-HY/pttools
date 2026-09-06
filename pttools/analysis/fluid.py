@@ -1,9 +1,16 @@
+"""Utilities for computing the fluid profile curves that are drawn on the plots."""
+
 import numpy as np
 
-from pttools.bubble import \
-    DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG, \
-    DifferentialPointer, FluidIntegrateMethod, Phase, \
-    fluid_integrate_param, v_max_behind
+from pttools.bubble import (
+    DEFAULT_FLUID_INTEGRATE_METHOD,
+    DF_DTAU_PTR_BAG,
+    DifferentialPointer,
+    FluidIntegrateMethod,
+    Phase,
+    fluid_integrate_param,
+    v_max_behind,
+)
 from pttools.type_hints import FloatArr1D, FloatArr3D
 
 DEFAULT_CURVES_BROKEN_V = np.linspace(0, 1, 5)

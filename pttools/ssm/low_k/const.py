@@ -1,7 +1,6 @@
-"""Constants for the low-k module"""
+"""Constants for the low-k module."""
 
 import math
-
 
 IV_ANALYTICAL: float = 1 / (32 * math.pi ** 2)
 r"""Source contribution $\mathcal{I}_v$ (analytical approximation)

@@ -1,4 +1,4 @@
-"""Constants for the Sound Shell Model module"""
+"""Constants for the Sound Shell Model module."""
 
 import typing as tp
 

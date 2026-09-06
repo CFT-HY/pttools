@@ -1,4 +1,4 @@
-"""Sound Shell Model spectrum calculations specific to the bag equation of state"""
+"""Sound Shell Model spectrum calculations specific to the bag equation of state."""
 
 import logging
 
@@ -8,10 +8,11 @@ from pttools import bubble
 from pttools.ssm import const
 from pttools.ssm.pow_spec import pow_spec
 from pttools.ssm.spec_den_gw import spec_den_gw
-from pttools.ssm.ssm import DE_Method, Method, T_tilde as T_tilde_func
-from pttools.ssm.ssm_bag import a2_e_conserving_bag_file, a2_ssm_func_bag
-from pttools.ssm.spectrum import DEFAULT_NUC_TYPE, NucType
 from pttools.ssm.spec_den_v import spec_den_v_core, spec_den_v_core_single
+from pttools.ssm.spectrum import DEFAULT_NUC_TYPE, NucType
+from pttools.ssm.ssm import DE_Method, Method
+from pttools.ssm.ssm import T_tilde as T_tilde_func
+from pttools.ssm.ssm_bag import a2_e_conserving_bag_file, a2_ssm_func_bag
 import pttools.type_hints as th
 
 logger = logging.getLogger(__name__)
@@ -52,7 +53,7 @@ def power_gw_bag(
         z_st_thresh: float = const.Z_ST_THRESH,
         lambda_correction: bool = False,
         parallel: bool = True) -> th.FloatArr1D:
-    """
+    r"""
     Scaled GW power spectrum at array of z = kR* values, where R* is mean bubble centre
     separation and k is comoving wavenumber.  To convert to predicted spectrum,
     multiply by $(H_n R_*)(H_n \tau_v)$, where $H_n$ is the Hubble rate at the

@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 class SuppressionMethod(enum.StrEnum):
     """Methods for enabling and disabling suppression and for handling extrapolation."""
+
     #: Return 1 as the suppression factor.
     NONE = "none"
     #: Return NaN outside the convex hull of the suppression points.
@@ -29,7 +30,7 @@ class SuppressionMethod(enum.StrEnum):
 
 
 class Suppression:
-    r"""Suppression factors from a given dataset
+    r"""Suppression factors from a given dataset.
 
     When adding corrections and extensions to the GW spectra,
     please ensure that the suppression factor datasets are still valid.
@@ -40,6 +41,7 @@ class Suppression:
     and therefore the thermal suppression of bubble nucleation of :ajmi_2022:`\ ` and
     :py:func:pttools.ssm.nucleation.r_star: does not affect them.
     """
+
     def __init__(
             self,
             v_walls: th.FloatArr1D,
@@ -86,7 +88,7 @@ class Suppression:
             alpha_n: th.FloatOrArr,
             method: SuppressionMethod = SuppressionMethod.DEFAULT,
             interpolation: th.Interpolation = "linear") -> th.FloatOrArr:
-        """Interpolate the suppression factor for the given points
+        """Interpolate the suppression factor for the given points.
 
         If given arrays, this will return a 2D grid.
         """
@@ -137,13 +139,13 @@ class Suppression:
 
 
 def alpha_n_max_approx[T: FloatOrArr](v_wall: T) -> T:
-    r"""Approximate $\alpha_{n,\text{max}}({v}_\text{wall})$"""
+    r"""Approximate $\alpha_{n,\text{max}}({v}_\text{wall})$."""
     # typing.cast() is not used below, since Numba cannot compile it.
     return 1/3 * (1 + 3 * v_wall ** 2) / (1 - v_wall ** 2)  # type: ignore[return-value]
 
 
 def alpha_n_max[T: FloatOrArr](v_wall: T) -> T:
-    r"""$\alpha_{n,\text{max}}({v}_\text{wall})$"""
+    r"""$\alpha_{n,\text{max}}({v}_\text{wall})$."""
     # vw, al
     # [0.24000, 0.34000]
     # [0.44000, 0.50000]
@@ -162,7 +164,7 @@ def extend(
         suppressions: th.FloatArr1D) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     """
     To improve the extrapolation of the suppression factor when later using grid data, first extend the
-    low vw and low alpha region as follows
+    low vw and low alpha region as follows.
     """
     # alpha values in suppression dataset for vw = 0.24
     ssm_sup_vw_0_24_alphas = np.array([0.05000, 0.07300, 0.11000, 0.16000, 0.23000, 0.34000])

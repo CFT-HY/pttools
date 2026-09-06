@@ -2,16 +2,16 @@
 
 import numpy as np
 
+from pttools.bubble import relativity
 from pttools.bubble.phase import Phase
 from pttools.bubble.solution_type import SolutionType
-from pttools.bubble import relativity
 from pttools.speedup import njit
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
 
 def find_phase(xi: th.FloatArr1D, v_wall: float) -> th.FloatArr1D:
-    r"""Get the phase at each given $\xi$ value"""
+    r"""Get the phase at each given $\xi$ value."""
     # Todo: Replace this with pttools.bubble.phase.get_phase
     i_wall = find_v_index(xi, v_wall)
     # This presumes that Phase.SYMMETRIC = 0
@@ -39,7 +39,7 @@ def v_max_behind(xi: FloatOrArr, cs: FloatOrArr) -> FloatOrArr:
     r"""Maximum fluid velocity behind the wall.
     Given by the condition $\mu(\xi, v) = c_s$.
     This results in:
-    $${v}_\text{max} = \frac{c_s-\xi}{c_s \xi - 1}$$
+    $${v}_\text{max} = \frac{c_s-\xi}{c_s \xi - 1}$$.
 
     This requires that the sound speed is a constant.
 

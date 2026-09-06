@@ -1,4 +1,4 @@
-"""Functions for computing the spectral density of the gravitational waves"""
+"""Functions for computing the spectral density of the gravitational waves."""
 
 import numba
 from numba.extending import overload
@@ -47,7 +47,7 @@ def gen_lookup(
 def limits_from_lookup[T: FloatOrArr](x_lookup: FloatArr1D, cs: T = CS0) -> tuple[T, T]:  # type: ignore[assignment]
     r"""Limits of x from a lookup
     $$y_\pm = 2 x_{\pm} \frac{c_s}{1 \pm c_s}$$
-    The inverse of :py:func:lookup_limits: from :gw_pt_ssm:`\ ` p. 12
+    The inverse of :py:func:lookup_limits: from :gw_pt_ssm:`\ ` p. 12.
     """
     y_min = x_lookup.min() * 2. * cs / (1. - cs)
     y_max = x_lookup.max() * 2. * cs / (1. + cs)
@@ -74,7 +74,7 @@ def spec_den_gw_scaling(
         nu: FloatOrArr = DEFAULT_NU_GDH2024,
         dilution_of_e: FloatOrArr = 1.,
         suppression_factor: FloatOrArr = 1.) -> FloatOrArr:
-    r"""Scaling factor for $\tilde{P}_\text{gw}$
+    r"""Scaling factor for $\tilde{P}_\text{gw}$.
 
     $$3 (\Gamma \bar{U}_f)^2 r_* \mathcal{H} \eta_*
     \left( \frac{a_*}{a_r} \right)^\frac{2\nu}{1 + \nu}
@@ -121,7 +121,7 @@ def _spec_den_gw_core(
     r"""Core computation for :py:func:spec_den_gw_scaled:
     :giombi_2024_cs:`\ ` eq. 3.13
     Old version:
-    :gw_pt_ssm:`\ ` eq. 3.47 and 3.48
+    :gw_pt_ssm:`\ ` eq. 3.47 and 3.48.
 
     Please note that in the older formulas the variable $x$ is called $z$.
     """
@@ -218,7 +218,7 @@ def spec_den_gw(
         nx_P_tilde_gw: int | None = None,
         parallel: bool = True) -> tuple[FloatArr1D, FloatArr1D] | NumbaFunc:
     r"""
-    Spectral density of gravitational wave power, $\tilde{P}_\text{gw}(z)$
+    Spectral density of gravitational wave power, $\tilde{P}_\text{gw}(z)$.
 
     $$\tilde{P}_\text{gw}(z) =
     \frac{1}{4\pi z c_s} \left( \frac{1 - c_s^2}{c_s^2} \right)^2 \Upsilon_\ell

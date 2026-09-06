@@ -1,4 +1,4 @@
-"""Faster or Numba-jitted versions of library functions"""
+"""Faster or Numba-jitted versions of library functions."""
 
 import numpy as np
 
@@ -11,7 +11,6 @@ from pttools.type_hints import FloatArr, FloatArr1D
 @njit(cache=True)
 def gradient[T: FloatArr](f: T) -> T:
     """Numba version of :func:`np.gradient`."""
-
     if f.ndim > 1:
         raise NotImplementedError
 
@@ -31,5 +30,5 @@ def logspace(start: float, stop: float, num: int, base: float = 10.) -> th.Float
 
 @njit(cache=True)
 def resample_log(x: FloatArr1D, nx: int) -> FloatArr1D:
-    """Resample a variable over a logarithmic range"""
+    """Resample a variable over a logarithmic range."""
     return logspace(np.log10(x.min()), np.log10(x.max()), num=nx)

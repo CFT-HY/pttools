@@ -1,19 +1,18 @@
-"""Utilities for computing the entropy of a bubble"""
+"""Utilities for computing the entropy of a bubble."""
 
 import logging
 
 import numpy as np
 
+from pttools.bubble import relativity
 from pttools.bubble.bubble import Bubble
 from pttools.bubble.solution_type import SolutionType
-from pttools.bubble import relativity
 
 logger = logging.getLogger(__name__)
 
 
 def compute_entropy_region(bubble: Bubble, start_ind: int, stop_ind: int, reverse: bool = False):
-    """Compute the entropy profile of a bubble section by integrating its differential equation"""
-
+    """Compute the entropy profile of a bubble section by integrating its differential equation."""
     v = bubble.v[start_ind:stop_ind]
     xi = bubble.xi[start_ind:stop_ind]
     if reverse:
@@ -72,7 +71,7 @@ def compute_entropy_region(bubble: Bubble, start_ind: int, stop_ind: int, revers
 
 
 def compute_entropy(bubble: Bubble):
-    """Compute the entropy profile of a bubble"""
+    """Compute the entropy profile of a bubble."""
     s = bubble.s.copy()
 
     start_ind: int

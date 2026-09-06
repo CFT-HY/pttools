@@ -1,6 +1,6 @@
 r"""
 This is the example code from
-:giese_2020:`\ `
+:giese_2020:`\ `.
 
 Commented for better readability.
 """
@@ -10,7 +10,7 @@ from scipy.integrate import odeint, simpson
 
 
 def kappaNuModel(cs2: float, al: float, vp: float, n: int = 501) -> float:
-    r"""Calculate the efficiency factor $\kappa_{\bar{\theta}}$
+    r"""Calculate the efficiency factor $\kappa_{\bar{\theta}}$.
 
     :param cs2: speed of sound squared
     :param al: strength parameter $\alpha$
@@ -28,7 +28,7 @@ def kappaNuModel(cs2: float, al: float, vp: float, n: int = 501) -> float:
     wm /= -1. + nu - vp/vm
 
     def dfdv(xiw, v, nu):
-        """Integrand"""
+        """Integrand."""
         xi, w = xiw
         dxidv = (((xi-v)/(1.-xi*v))**2*(nu-1.)-1.)
         dxidv *= (1.-v*xi)/2./v/(1.-v**2)

@@ -1,4 +1,4 @@
-"""Analysis utilities for the suppression factor"""
+"""Analysis utilities for the suppression factor."""
 
 import logging
 
@@ -15,10 +15,11 @@ logger = logging.getLogger(__name__)
 
 
 class SuppressionPlot:
-    r"""Plot the suppression data as a 2D contour plot
+    r"""Plot the suppression data as a 2D contour plot.
 
     :gowling_2021:`\ ` fig. 10
     """
+
     def __init__(
             self,
             sup: Suppression,

@@ -10,15 +10,20 @@ import numpy as np
 
 from examples.utils import save_and_show_fig
 from pttools.analysis.utils import A3_PAPER_SIZE
-from pttools.bubble import \
-    CS2_BAG_SCALAR_PTR, DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG, Phase, SolutionType, \
-    cs2_bag_scalar
+from pttools.bubble import (
+    CS2_BAG_SCALAR_PTR,
+    DEFAULT_FLUID_INTEGRATE_METHOD,
+    DF_DTAU_PTR_BAG,
+    Phase,
+    SolutionType,
+    cs2_bag_scalar,
+    fluid_bag,
+    relativity,
+)
 from pttools.bubble.bubble import Bubble
-from pttools.bubble import fluid_bag
 from pttools.bubble.junction import junction_conditions_solvable
-from pttools.bubble import relativity
 from pttools.models import BagModel, Model
-from pttools.ssm import SSMSpectrum, power_gw_bag, spec_den_v_bag, power_v_bag
+from pttools.ssm import SSMSpectrum, power_gw_bag, power_v_bag, spec_den_v_bag
 import pttools.type_hints as th
 from tests.paper.plane import xiv_plane
 from tests.paper.plot_plane_paper import plot_plane

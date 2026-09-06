@@ -1,10 +1,10 @@
-"""Utilities for plotting the entropy and related quantities of bubbles as contour plots"""
+"""Utilities for plotting the entropy and related quantities of bubbles as contour plots."""
 
 import logging
 import typing as tp
 
-from matplotlib.contour import QuadContourSet
 from matplotlib import ticker
+from matplotlib.contour import QuadContourSet
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -14,6 +14,7 @@ from pttools.analysis.plot_vw_alpha import VwAlphaPlot
 from pttools.analysis.utils import create_fig_ax, save_fig
 from pttools.bubble.bubble import Bubble
 import pttools.type_hints as th
+from pttools.utils.decorators import post_func
 
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
@@ -22,7 +23,8 @@ logger = logging.getLogger(__name__)
 
 
 class DurationPlot(VwAlphaPlot):
-    """Plot the time it took to simulate each bubble"""
+    """Plot the time it took to simulate each bubble."""
+
     def __init__(self, grid: BubbleGridVWAlpha, fig: plt.Figure | None = None, ax: plt.Axes | None = None):
         super().__init__(grid, fig, ax)
         img = self.ax.pcolor(grid.v_walls, grid.alpha_ns, np.log10(grid.solving_duration()))
@@ -37,7 +39,8 @@ class DurationPlot(VwAlphaPlot):
 
 
 class EntropyPlot(VwAlphaPlot):
-    """Plot the entropy of bubbles as a contour plot"""
+    """Plot the entropy of bubbles as a contour plot."""
+
     def __init__(
             self,
             grid: BubbleGridVWAlpha,
@@ -59,7 +62,8 @@ class EntropyPlot(VwAlphaPlot):
 
 
 class DeltaEntropyPlot(VwAlphaPlot):
-    """Plot the relative difference of two entropy values as a contour plot"""
+    """Plot the relative difference of two entropy values as a contour plot."""
+
     def __init__(
             self,
             grid: BubbleGridVWAlpha,
@@ -80,7 +84,8 @@ class DeltaEntropyPlot(VwAlphaPlot):
 
 
 class EntropyConservationPlot(VwAlphaPlot):
-    """Plot the entropy generation at the wall"""
+    """Plot the entropy generation at the wall."""
+
     def __init__(
             self,
             grid: BubbleGridVWAlpha,
@@ -102,7 +107,8 @@ class EntropyConservationPlot(VwAlphaPlot):
 
 
 class GieseApproximationPlot(VwAlphaPlot):
-    """Plot the Giese et al. approximation vs. simulated value for $\frac{\tilde{v}_+}{\tilde{v}_-}$"""
+    r"""Plot the Giese et al. approximation vs. simulated value for $\frac{\tilde{v}_+}{\tilde{v}_-}$."""
+
     def __init__(
             self,
             grid: BubbleGridVWAlpha,
@@ -124,7 +130,8 @@ class GieseApproximationPlot(VwAlphaPlot):
 
 
 class KappaOmegaSumPlot(VwAlphaPlot):
-    r"""Plot $\kappa$ + $\omega$ of bubbles as a contour plot"""
+    r"""Plot $\kappa$ + $\omega$ of bubbles as a contour plot."""
+
     def __init__(self, grid: BubbleGridVWAlpha, fig: plt.Figure | None = None, ax: plt.Axes | None = None):
         super().__init__(grid, fig, ax)
 
@@ -147,8 +154,9 @@ _NUM_VALUES = 8
 COMPUTE_FAIL = (np.nan, ) * _NUM_VALUES
 
 
+@post_func(return_type=(np.float64, ) * _NUM_VALUES, fail_value=COMPUTE_FAIL)
 def compute(bubble: Bubble) -> tuple[float, float, float, float, float, float, float, float]:
-    """Compute the entropy quantities of a bubble"""
+    """Compute the entropy quantities of a bubble."""
     try:
         if bubble.solver_failed:
             return COMPUTE_FAIL
@@ -170,10 +178,6 @@ def compute(bubble: Bubble) -> tuple[float, float, float, float, float, float, f
         return COMPUTE_FAIL
 
 
-compute.return_type = (np.float64, ) * _NUM_VALUES
-compute.fail_value = COMPUTE_FAIL
-
-
 def gen_and_plot_entropy(
         models: list["Model"],
         v_walls: th.FloatArr1D,
@@ -184,7 +188,7 @@ def gen_and_plot_entropy(
         use_bag_solver: bool = False,
         path: str | None = None,
         single_plot: bool = False) -> tuple[plt.Figure, th.AxesArr1D | th.AxesArr2D]:
-    """Generate the entropy plots"""
+    """Generate the entropy plots."""
     figsize = None if single_plot else (16*1.5, 9*1.5)
     fig: plt.Figure = plt.figure(figsize=figsize)
     axs = fig.subplots(nrows=len(models), ncols=1 if single_plot else 5)

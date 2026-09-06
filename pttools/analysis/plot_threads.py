@@ -1,3 +1,5 @@
+"""Plotting of the scaling of the runtime with the number of Numba threads."""
+
 import os
 
 import matplotlib.pyplot as plt
@@ -13,7 +15,7 @@ def plot_threads(
         times: th.FloatArr1D,
         n_iterations: int,
         fig: plt.Figure | None = None) -> FigAndAxes:
-    """Plot the execution times for different thread counts"""
+    """Plot the execution times for different thread counts."""
     if fig is None:
         fig = plt.figure()
     ax1, ax2 = fig.subplots(1, 2)
@@ -38,7 +40,7 @@ def time_and_plot_threads(
         setup: str,
         n_iterations: int,
         n_threads: th.IntArr1D = DEFAULT_VARYING_NUMBA_THREADS) -> FigAndAxes:
-    """Plot and save to a file the execution times for different thread counts"""
+    """Plot and save to a file the execution times for different thread counts."""
     path2 = os.path.join(path, filename)
     with open(f"{path2}.txt", "w") as file:
         n_threads, times = time_with_varying_numba_threads(

@@ -1,4 +1,4 @@
-r"""Low-wavenumber tail of the GW spectrum
+r"""Low-wavenumber tail of the GW spectrum.
 
 This module is based on the analytic approximations introduced in
 :giombi_2024_cs:`\ ` and

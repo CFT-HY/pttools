@@ -1,4 +1,4 @@
-"""Tests for the Spectrum class"""
+"""Tests for the Spectrum class."""
 
 import os.path
 import unittest
@@ -12,7 +12,8 @@ from tests.utils import TEST_JSON_PATH
 
 
 class SpectrumTest(unittest.TestCase):
-    """Tests for the Spectrum class"""
+    """Tests for the Spectrum class."""
+
     @classmethod
     def setUpClass(cls):
         model = ConstCSModel(css2=1/3-0.01, csb2=1/3-0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
@@ -35,7 +36,7 @@ class SpectrumTest(unittest.TestCase):
         self.assertLess(peak[1], 1)
 
     def test_R_star(self):
-        """Test that $0 < R_* < 1 \text{mm}$"""
+        r"""Test that $0 < R_* < 1 \text{mm}$."""
         self.assertGreater(self.spectrum.R_star, 0)
         self.assertLess(self.spectrum.R_star, 1e-3)
 

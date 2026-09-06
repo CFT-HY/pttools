@@ -1,4 +1,4 @@
-r"""$\alpha_+$ functions for the Bag Model"""
+r"""$\alpha_+$ functions for the Bag Model."""
 
 import numba
 from numba.extending import overload
@@ -6,10 +6,10 @@ import numpy as np
 from scipy.optimize import fsolve
 
 from pttools import speedup
+from pttools.bubble import const
 from pttools.bubble.alpha.alpha_limits_bag import alpha_n_max_deflagration_bag, alpha_n_max_detonation_bag
 from pttools.bubble.alpha.alpha_n_bag import find_alpha_n_bag
 from pttools.bubble.alpha.alpha_plus import alpha_plus_initial_guess
-from pttools.bubble import const
 from pttools.bubble.cs2 import cs2_converter
 from pttools.bubble.integrate import FluidIntegrateMethod
 from pttools.bubble.solution_type import SolutionType
@@ -182,7 +182,7 @@ def _find_alpha_plus_optimizer_bag(
         cs2_fun: th.CS2Fun,
         df_dtau_ptr: speedup.DifferentialPointer,
         ode_method: FluidIntegrateMethod) -> float:
-    """find_alpha_plus() is looking for the zeroes of this function: $\alpha_n = \alpha_{n,\text{given}}$."""
+    r"""find_alpha_plus() is looking for the zeroes of this function: $\alpha_n = \alpha_{n,\text{given}}$."""
     return find_alpha_n_bag(
         v_wall, alpha.item(),
         df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_fun=cs2_fun, sol_type=sol_type, n_xi=n_xi

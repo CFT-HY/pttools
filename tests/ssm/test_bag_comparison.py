@@ -1,23 +1,22 @@
-"""Tests for comparing the results of the Spectrum class to the old bag model interface"""
+"""Tests for comparing the results of the Spectrum class to the old bag model interface."""
 
 import unittest
 
 import numpy as np
 
-from pttools.bubble import Bubble
+from pttools import ssm
+from pttools.bubble import CS2_BAG_SCALAR_PTR, DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG, Bubble, cs2_bag_scalar
 from pttools.bubble.thermo import ubarf2
-from pttools.bubble import \
-    CS2_BAG_SCALAR_PTR, DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG, cs2_bag_scalar
 from pttools.bubble.thermo_bag import de_from_w_bag
 from pttools.models import BagModel
 from pttools.ssm import SSMSpectrum, pow_spec
-from pttools import ssm
 import pttools.type_hints as th
 from pttools.utils.assertions import assert_allclose
 
 
 class SpectrumTest(unittest.TestCase):
-    """Tests for comparing the results of the Spectrum class to the old bag model interface"""
+    """Tests for comparing the results of the Spectrum class to the old bag model interface."""
+
     V_WALLS: th.FloatArr1D = np.array([0.5, 0.7, 0.77])
     ALPHA_NS: th.FloatArr1D = np.array([0.578, 0.151, 0.091])
     model: BagModel

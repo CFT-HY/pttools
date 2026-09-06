@@ -1,4 +1,4 @@
-"""Junction conditions
+"""Junction conditions.
 
 At the bubble wall (phase boundary), or shock.
 
@@ -13,11 +13,12 @@ import numpy as np
 
 from pttools.bubble import const
 from pttools.bubble.junction_entropy import check_entropy_fluxes
-from pttools.bubble.relativity import gamma2, lorentz
 from pttools.bubble.phase import Phase
+from pttools.bubble.relativity import gamma2, lorentz
 from pttools.speedup import njit
 from pttools.speedup.solvers import fsolve_vary
 import pttools.type_hints as th
+
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
@@ -29,7 +30,7 @@ def enthalpy_ratio(v1: th.FloatOrArr, v2: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Ratio of enthalpies $w$ on both sides of a transition front.
     Uses conservation of momentum in moving frame.
-    $$\frac{w_1}{w_2} = \frac{\gamma^2 (v_1) v_1}{\gamma^2 (v_2) v_2}$$
+    $$\frac{w_1}{w_2} = \frac{\gamma^2 (v_1) v_1}{\gamma^2 (v_2) v_2}$$.
 
     :param v1: $\tilde{v}_1$
     :param v2: $\tilde{v}_2$
@@ -41,7 +42,7 @@ def enthalpy_ratio(v1: th.FloatOrArr, v2: th.FloatOrArr) -> th.FloatOrArr:
 def junction_conditions_deviation(vp: th.FloatOrArr, vm: th.FloatOrArr, ap: th.FloatOrArr) -> th.FloatOrArr:
     r"""Deviation from the combined junction conditions
     $$\Delta = \left( \frac{1}{\tilde{v}_-} + 3\tilde{v}_- \right)
-    \tilde{v}_+ - 3(1 + \alpha_+) \tilde{v}_+^2 - \alpha_+ + 1$$
+    \tilde{v}_+ - 3(1 + \alpha_+) \tilde{v}_+^2 - \alpha_+ + 1$$.
 
     :param vp: $\tilde{v}_+$
     :param vm: $\tilde{v}_-$
@@ -82,7 +83,7 @@ def junction_condition_deviation1(
     r"""Deviation from the first junction condition
     $$w_1 \tilde{\gamma}_1^2 \tilde{v}_1 - w_2 \tilde{\gamma}_2^2 \tilde{v}_2$$
     :notes:`\ `, eq. 7.22
-    :cutting_2022:`\ `, eq. 19
+    :cutting_2022:`\ `, eq. 19.
 
     :param v1: $\tilde{v}_1$
     :param w1: $w_1$
@@ -100,7 +101,7 @@ def junction_condition_deviation2(
     r"""Deviation from the second junction condition
     $$w_1 \tilde{\gamma}_1^2 \tilde{v}_1^2 + {p}_1 - {w}_2 \tilde{\gamma}_2^2 \tilde{v}_2^2 - {p}_2$$
     :notes:`\ `, eq. 7.22
-    :notes:`\ `, eq. 18
+    :notes:`\ `, eq. 18.
 
     :param v1: $\tilde{v}_1$
     :param w1: $w_1$
@@ -145,7 +146,7 @@ def solve_junction(
         rtol: float = const.JUNCTION_RTOL,
         # atol: float = const.JUNCTION_ATOL,
         debug: bool = False) -> tuple[float, float]:
-    r"""Model-independent junction condition solver
+    r"""Model-independent junction condition solver.
 
     Velocities are in the wall frame.
 
@@ -279,7 +280,7 @@ def v_plus_hybrid(
         wp_guess: float,
         allow_failure: bool = False,
         allow_negative_entropy_flux_change: bool = False) -> float:
-    """Find $v_+$ for a hybrid"""
+    """Find $v_+$ for a hybrid."""
     # Exit velocity is at the sound speed
     vm_tilde = np.sqrt(model.cs2(wm, Phase.BROKEN))
 
@@ -298,6 +299,6 @@ def v_plus_hybrid(
 def w2_junction(v1: th.FloatOrArr, w1: th.FloatOrArr, v2: th.FloatOrArr) -> th.FloatOrArr:
     r"""Get $w_-$ from the junction condition 1
     $$w_1 = w_2 \frac{\tilde{\gamma}_2^2 \tilde{v}_2}{\tilde{\gamma}_1^2 \tilde{v}_1}$$
-    :notes:`\ `, eq. 7.22
+    :notes:`\ `, eq. 7.22.
     """
     return w1 * enthalpy_ratio(v1, v2)

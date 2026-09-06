@@ -1,4 +1,4 @@
-"""Test the bubble grid analysis utilities"""
+"""Test the bubble grid analysis utilities."""
 
 import unittest
 
@@ -23,7 +23,7 @@ class BubbleGridTest(unittest.TestCase):
 
     @uses_multiprocessing
     def test_props(self):
-        """Test that the grid properties provide numerical arrays"""
+        """Test that the grid properties provide numerical arrays."""
         arrs = [
             self.grid.kappa(),
             self.grid.numerical_error(),

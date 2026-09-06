@@ -7,8 +7,8 @@ from matplotlib.legend import Legend
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.analysis.bubble_grid import BubbleGridVWAlpha
 from pttools.analysis import colormap
+from pttools.analysis.bubble_grid import BubbleGridVWAlpha
 from pttools.analysis.colormap import DEFAULT_REGION_COLOR
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 import pttools.type_hints as th
@@ -16,6 +16,7 @@ import pttools.type_hints as th
 
 class VwAlphaPlot:
     r"""A plot with $v_\text{wall}$ on the x-axis and $\alpha_n$ on the y-axis."""
+
     def __init__(
             self,
             grid: BubbleGridVWAlpha,
@@ -50,7 +51,7 @@ class VwAlphaPlot:
             diff_level: float | None = None,
             cmap_neg: Colormap | str = colormap.DEFAULT_CMAP_NEG,
             cmap_pos: Colormap | str = colormap.DEFAULT_CMAP_POS):
-        """Add a contour plot to the figure"""
+        """Add a contour plot to the figure."""
         if diff_level is None:
             diff_level = 0.1
         levels, colors = colormap.cmap_plusminus(
@@ -67,19 +68,19 @@ class VwAlphaPlot:
             region: th.FloatArr2D,
             color: str = DEFAULT_REGION_COLOR,
             alpha: float = 1) -> QuadContourSet:
-        """Color a region with a fixed color"""
+        """Color a region with a fixed color."""
         return colormap.color_region(
             ax=self.ax, x=self.grid.v_walls, y=self.grid.alpha_ns,
             region=region, color=color, alpha=alpha
         )
 
     def chapman_jouguet(self, color: str = "black", ls: str = "--", label: str = "$v_{CJ}$") -> list[plt.Line2D]:
-        """Add a Chapman-Jouguet speed curve to the plot"""
+        """Add a Chapman-Jouguet speed curve to the plot."""
         return self.ax.plot(
             v_chapman_jouguet(self.grid.model, self.grid.alpha_ns),
             self.grid.alpha_ns, color=color, ls=ls, label=label
         )
 
     def legend(self, *args, **kwargs) -> Legend:
-        """Add a legend to the plot"""
+        """Add a legend to the plot."""
         return self.ax.legend(*args, **kwargs)

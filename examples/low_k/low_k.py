@@ -5,12 +5,11 @@ Low-k approximation
 Create an illustrative plot on the properties of the low-k approximation.
 """
 
-import numpy as np
 from matplotlib import rc_context
 import matplotlib.pyplot as plt
+import numpy as np
 
 from examples.utils import save_fig
-
 from pttools.bubble import Bubble
 from pttools.models import BagModel
 from pttools.omgw0 import Spectrum

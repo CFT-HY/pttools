@@ -1,1 +1,1 @@
-"""Profiling of PTtools performance"""
+"""Profiling of PTtools performance."""

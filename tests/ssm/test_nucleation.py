@@ -1,3 +1,5 @@
+"""Tests for the nucleation functions."""
+
 import unittest
 
 import numpy as np

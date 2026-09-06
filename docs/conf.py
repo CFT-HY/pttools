@@ -6,7 +6,7 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
 # The imports have to be after the sys.path manipulation below.
-# ruff: noqa: A001, E402
+# ruff: noqa: E402
 
 # -- Path setup --------------------------------------------------------------
 
@@ -22,6 +22,7 @@ import tomllib
 import warnings
 
 from matplotlib.animation import FFMpegWriter
+
 # import plotly.io as pio
 from sphinx.application import Sphinx
 from sphinx_gallery.sorting import ExplicitOrder
@@ -33,11 +34,12 @@ TESTS_DIR: str = os.path.join(REPO_DIR, "tests")
 sys.path.insert(0, REPO_DIR)
 
 from docs.backreferences import patch_sphinx_gallery
-from docs.utils import DOC_MODULES
 from docs.links import ExtLinks, arxiv_link, convert_extlinks, doi_link, hdl_link
 from docs.minigallery import add_minigalleries, remove_duplicate_minigalleries
+from docs.utils import DOC_MODULES
 from pttools.logging import setup_logging
 from pttools.utils.system import IS_GITHUB_ACTIONS, PTTOOLS_DIR
+
 setup_logging()
 logger = logging.getLogger(__name__)
 patch_sphinx_gallery()
@@ -60,7 +62,7 @@ release = version
 # -- General configuration ---------------------------------------------------
 
 def setup(app: Sphinx) -> None:
-    """Set up the customisations of the PTtools documentation"""
+    """Set up the customisations of the PTtools documentation."""
     app.connect("autodoc-process-docstring", add_minigalleries)
     app.connect("object-description-transform", remove_duplicate_minigalleries)
 

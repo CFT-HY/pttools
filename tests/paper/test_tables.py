@@ -1,4 +1,4 @@
-"""Test the generation of data tables for the paper"""
+"""Test the generation of data tables for the paper."""
 
 import io
 import os.path
@@ -15,7 +15,8 @@ from tests.utils.const import TEST_DATA_PATH
 
 
 class TestTables(unittest.TestCase):
-    """Test the generation of data tables for the paper"""
+    """Test the generation of data tables for the paper."""
+
     params: th.FloatArr2D
     v2: th.FloatArr2D
     Omgw: th.FloatArr2D

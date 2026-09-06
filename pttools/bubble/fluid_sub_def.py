@@ -1,4 +1,4 @@
-r"""Fluid shell solver for subsonic deflagrations
+r"""Fluid shell solver for subsonic deflagrations.
 
 This solver uses a shooting method, as
 "As a shooting method is always required if the speed of sound depends on the temperature."
@@ -12,16 +12,14 @@ import typing as tp
 import numpy as np
 from scipy.optimize import fsolve, root_scalar
 
-from pttools.bubble.phase import Phase
+from pttools.bubble import integrate, relativity, v_minus
 from pttools.bubble.const import DEFAULT_N_XI, DEFAULT_SOLVER_RTOL, DEFAULT_T_END, THIN_SHELL_T_POINTS_MIN
 from pttools.bubble.fluid_base import DEFLAGRATION_NAN, DeflagrationOutput, SolverOutput
-from pttools.bubble import integrate
 from pttools.bubble.junction import solve_junction, w2_junction
-from pttools.bubble import relativity
+from pttools.bubble.phase import Phase
 from pttools.bubble.shock import find_shock_index
 from pttools.bubble.shock_bag import v_shock_bag, wm_shock_bag
 from pttools.bubble.solution_type import SolutionType, is_surely_detonation
-from pttools.bubble import v_minus
 from pttools.speedup.solvers import fsolve_vary
 import pttools.type_hints as th
 
@@ -46,7 +44,7 @@ def sound_shell_deflagration(
         allow_failure: bool = False,
         allow_negative_entropy_flux_change: bool = False,
         warn_if_shock_barely_exists: bool = True) -> DeflagrationOutput:
-    """Get the fluid shell profile of a subsonic deflagration"""
+    """Get the fluid shell profile of a subsonic deflagration."""
     if vp_guess is None or np.isnan(vp_guess) or wp_guess is None or np.isnan(wp_guess):
         # Use bag model as the starting guess
 
@@ -125,7 +123,7 @@ def sound_shell_deflagration_common(
         allow_failure: bool = False,
         allow_negative_entropy_flux_change: bool = False,
         warn_if_shock_barely_exists: bool = True) -> DeflagrationOutput:
-    """Common component of subsonic deflagration and supersonic deflagration (hybrid) fluid shell solvers"""
+    """Common component of subsonic deflagration and supersonic deflagration (hybrid) fluid shell solvers."""
     if v_wall < 0 or v_wall > 1 or vm_tilde < 0 or vm_tilde > 1 or wn < 0 or wm < 0 or cs_n < 0 or cs_n > 1 \
             or vp_tilde_guess < 0 or vp_tilde_guess > 1 or wp_guess < 0 \
             or is_surely_detonation(v_wall, v_cj):
@@ -403,7 +401,7 @@ def sound_shell_solver_deflagration(
         rtol: float = DEFAULT_SOLVER_RTOL,
         allow_failure: bool = False,
         log_high_alpha_n_failures: bool = True) -> SolverOutput:
-    """Solve for the fluid shell profile of a subsonic deflagration"""
+    """Solve for the fluid shell profile of a subsonic deflagration."""
     if vp_guess > v_wall:
         vp_guess_new = 0.95 * v_wall
         if log_high_alpha_n_failures or not high_alpha_n:

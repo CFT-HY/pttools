@@ -1,4 +1,4 @@
-"""Sine transform for the Sound Shell Model"""
+"""Sine transform for the Sound Shell Model."""
 
 import numba
 from numba.extending import overload
@@ -60,7 +60,7 @@ def _sin_transform_core(t: th.FloatArr1D, f: th.FloatArr1D, freq: th.FloatArr1D)
     The `sine transform <https://en.wikipedia.org/wiki/Sine_and_cosine_transforms>`_
     for multiple values of $\omega$ without any approximations.
     Computes the following for each angular frequency $\omega$.
-    $$\hat{f}(\omega) = \int_{{t}_\text{min}}^{{t}_\text{max}} f(t) \sin(\omega t) dt$$
+    $$\hat{f}(\omega) = \int_{{t}_\text{min}}^{{t}_\text{max}} f(t) \sin(\omega t) dt$$.
 
     :param t: variable of the real space ($t$ or $x$)
     :param f: function values at the points $t$
@@ -104,7 +104,7 @@ def sin_transform(
         v_sh: float | None = None,
         parallel: bool = True) -> th.FloatOrArr:
     r"""
-    Sine transform $\hat{f}(z)$ of $f(\xi)$
+    Sine transform $\hat{f}(z)$ of $f(\xi)$.
 
     For z > z_st_thresh, use approximation rather than doing the integral.
     Interpolate between  z_st_thresh - dz_blend < z < z_st_thresh.
