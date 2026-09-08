@@ -11,7 +11,7 @@ from numpy.typing import NDArray
 
 from pttools.bubble import Bubble
 from pttools.omgw0 import const, freq
-from pttools.omgw0.const import H2, OMEGA_PHOTON_H2
+from pttools.omgw0.const import H2, LISA_OBS_TIME, OMEGA_PHOTON_H2
 from pttools.omgw0.factors import F_gw0_h2
 from pttools.omgw0.noise import omega_ins_h2, omega_noise_h2, signal_to_noise_ratio
 from pttools.ssm.calculators import trapezoid_loglog
@@ -320,14 +320,17 @@ class Spectrum(SSMSpectrum):
         """
         return self.omgw0_h2_total(omgw0_h2=omgw0_h2) / h2
 
-    def snr(self) -> float:
+    def snr(self, obs_time: float = LISA_OBS_TIME) -> float:
         """Signal-to-noise ratio for LISA, taking into account all noise sources."""
-        snr, f_min, f_max = signal_to_noise_ratio(f=self.f(), signal=self.omgw0_h2())
+        snr, f_min, f_max = signal_to_noise_ratio(f=self.f(), signal=self.omgw0_h2(), obs_time=obs_time)
         return snr
 
-    def snr_ins(self) -> float:
+    def snr_ins(self, obs_time: float = LISA_OBS_TIME) -> float:
         """Signal-to-noise ratio for LISA, taking into account only the instrument noise."""
-        snr, f_min, f_max = signal_to_noise_ratio(f=self.f(), signal=self.omgw0_h2(), noise_eb=False, noise_gb=False)
+        snr, f_min, f_max = signal_to_noise_ratio(
+            f=self.f(), signal=self.omgw0_h2(), obs_time=obs_time,
+            noise_eb=False, noise_gb=False
+        )
         return snr
 
     def z_from_f[T: FloatOrArr](self, f: T) -> T:
