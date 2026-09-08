@@ -19,12 +19,10 @@ import logging
 import os.path
 import sys
 import tomllib
-import warnings
 
 from matplotlib.animation import FFMpegWriter
 
 # import plotly.io as pio
-from sphinx.application import Sphinx
 from sphinx_gallery.sorting import ExplicitOrder
 
 DOCS_DIR: str = os.path.dirname(os.path.abspath(__file__))
@@ -33,16 +31,19 @@ EXAMPLES_DIR: str = os.path.join(REPO_DIR, "examples")
 TESTS_DIR: str = os.path.join(REPO_DIR, "tests")
 sys.path.insert(0, REPO_DIR)
 
-from docs.backreferences import patch_sphinx_gallery
-from docs.links import ExtLinks, arxiv_link, convert_extlinks, doi_link, hdl_link
-from docs.minigallery import add_minigalleries, remove_duplicate_minigalleries
-from docs.utils import DOC_MODULES
+from pttools.docs.intersphinx import INTERSPHINX_MAPPING, IntersphinxMapping
+from pttools.docs.links import EXTLINKS, LINKCHECK_ALLOWED_REDIRECTS, ExtLinks
+from pttools.docs.setup import pre_setup, setup_sphinx
 from pttools.logging import setup_logging
 from pttools.utils.system import IS_GITHUB_ACTIONS, PTTOOLS_DIR
 
 setup_logging()
 logger = logging.getLogger(__name__)
-patch_sphinx_gallery()
+
+#: The packages of this repository, which are documented in this documentation.
+#: Sphinx-Gallery creates hyperlinks from the examples and mini-galleries for the objects of these packages.
+DOC_MODULES: tuple[str, ...] = ("docs", "examples", "pttools", "tests")
+pre_setup(doc_modules=DOC_MODULES)
 
 # Create a directory for static files to avoid a warning when building.
 os.makedirs(os.path.join(DOCS_DIR, "_static"), exist_ok=True)
@@ -61,11 +62,7 @@ release = version
 
 # -- General configuration ---------------------------------------------------
 
-def setup(app: Sphinx) -> None:
-    """Set up the customisations of the PTtools documentation."""
-    app.connect("autodoc-process-docstring", add_minigalleries)
-    app.connect("object-description-transform", remove_duplicate_minigalleries)
-
+setup = setup_sphinx
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -201,96 +198,11 @@ autodoc_typehints = "description"
 
 # Sphinx requires base URLs and caption strings to contain exactly one "%s",
 # and all other "%" need to be escaped as "%%".
-HINDMARSH_ET_AL: str = "Hindmarsh et al."
-EXTLINKS_STATIC: ExtLinks = {
-    # Order of articles: year, name of author
-    # Hindmarsh articles
-    "hindmarsh_2014": arxiv_link("1304.2433", HINDMARSH_ET_AL, 2014),
-    "hindmarsh_2015": arxiv_link("1504.03291", HINDMARSH_ET_AL, 2015),
-    "hindmarsh_2017": arxiv_link("1704.05871", HINDMARSH_ET_AL),
-    "ssm": arxiv_link("1608.04735", HINDMARSH_ET_AL, 2018),
-    "gw_pt_ssm": arxiv_link("1909.10040", HINDMARSH_ET_AL),
-    "notes": arxiv_link("2008.09136", HINDMARSH_ET_AL, 2021),
-    # Other articles
-    "enqvist_1992": doi_link("10.1103/PhysRevD.45.3415", "Enqvist et al.", 1992),
-    "kurki-suonio_1995": arxiv_link("hep-ph/9512202", "Kurki-Suonio & Laine", 1995),
-    "maggiore_1999": arxiv_link("gr-qc/9909001", "Maggiore", 1999),
-    "fixsen_2009": arxiv_link("0911.1955", "Fixsen"),
-    "espinosa_2010": arxiv_link("1004.4187", "Espinosa"),
-    "planck_2015": arxiv_link("1502.01589", "Planck 2015 results"),
-    "borsanyi_2016": arxiv_link("1606.07494", "Borsanyi et al."),
-    "caprini_2016": arxiv_link("1512.06239", "Caprini et al.", 2016),
-    "cornish_2017": arxiv_link("1703.09858", "Cornish & Robson"),
-    "codata_2018": doi_link("10.1103/RevModPhys.93.025010", "CODATA", 2018),
-    "planck_2018": arxiv_link("1807.06209", "Planck 2018 results"),
-    "smith_2019": arxiv_link("1908.00546", "Smith & Caldwell"),
-    "caprini_2020": arxiv_link("1910.13125", "Caprini et al.", 2020),
-    "giese_2020": arxiv_link("2004.06995", "Giese et al."),
-    "giese_2021": arxiv_link("2010.09744", "Giese et al.", 2021),
-    "gowling_2021": arxiv_link("2106.05984", "Gowling & Hindmarsh"),
-    "ajmi_2022": arxiv_link("2205.04097", "Ajmi & Hindmarsh"),
-    "cutting_2022": arxiv_link("2204.03396", "Cutting, Vilhonen & Weir"),
-    "ai_2023": arxiv_link("2303.10171", "Ai et al."),
-    "gowling_2023": arxiv_link("2209.13551", "Gowling et al.", 2023),
-    "lewicki_2023": arxiv_link("2305.04924", "Lewicki et al."),
-    "barni_2024": arxiv_link("2406.01596", "Barni et al."),
-    "croon_2024": arxiv_link("2410.21509", "Croon & Weir"),
-    "giombi_2024_cs": arxiv_link("2409.01426", "Giombi et al."),
-    "giombi_2024_gr": arxiv_link("2307.12080", "Giombi & Hindmarsh", 2024),
-    "barni_2026": arxiv_link("2510.21439", "Barni et al.", 2026),
-    "bhusal_2026": arxiv_link("2603.22397", "Bhusal et al."),
-    "correia_2026": arxiv_link("2505.17824", "Correia et al.", 2026),
-    "escudero_2026": arxiv_link("2511.04747", "Escudero et al.", 2026),
-    "giombi_2026": arxiv_link("2504.08037", "Giombi et al.", 2026),
-    # Theses
-    "gowling_phd": hdl_link("10779/uos.23309135.v1", "Gowling", 2023),
-    "hakkinen_msc": hdl_link("10138/576963", "Häkkinen", 2024),
-    "maki_msc": arxiv_link("2511.20436", "Mäki", 2025),
-    # Other
-    "lisa_conventions": (
-        "https://gitlab.esa.int/lisa-sgs/sandbox/conventions-document", "LISA DDPC Conventions document"),
-    "lisa_sci_req": ("https://www.cosmos.esa.int/web/lisa/documents", "LISA Science Requirements Document"),
-    "rel_hydro_book": doi_link(
-        "10.1093/acprof:oso/9780198528906.001.0001", "Relativistic hydrodynamics: Rezzolla, Zanotti", 2013),
-    "schroeder_book": ("https://physics.weber.edu/thermal/", "Thermal physics: Schroeder (2000)")
-}
-extlinks: ExtLinks = {
-    **convert_extlinks(EXTLINKS_STATIC),
-    # Other
-    "aof_grant": (
-        "https://akareport.aka.fi/ibi_apps/WFServlet?IBIF_ex=x_hakkuvaus2&CLICKED_ON=&UILANG=en&TULOSTE=HTML&HAKNRO1=%s",
-        "Academy of Finland grant %s"
-    ),
-    "issue": ("https://github.com/CFT-HY/pttools/issues/%s", "issue %s"),
-    "ssm_repo": ("https://bitbucket.org/hindmars/sound-shell-model/src/master/%s", "sound-shell-model/%s"),
-    "wikipedia": ("https://en.wikipedia.org/wiki/%s", "Wikipedia: %s")
-}
+
+extlinks: ExtLinks = EXTLINKS
 extlinks_detect_hardcoded_links: bool = True
-intersphinx_mapping: dict[str, tuple[str, str | None]] = {
-    "cobaya": ("https://cobaya.readthedocs.io/en/latest/", None),
-    "h5py": ("https://docs.h5py.org/en/stable/", None),
-    "matplotlib": ("https://matplotlib.org/stable/", None),
-    "numba": ("https://numba.readthedocs.io/en/stable/", None),
-    "numpy": ("https://numpy.org/doc/stable/", None),
-    "pandas": ("https://pandas.pydata.org/docs/", None),
-    "plotly": ("https://plotly.com/python-api-reference/", None),
-    "pyinstrument": ("https://pyinstrument.readthedocs.io/en/latest/", None),
-    "pylint": ("https://pylint.readthedocs.io/en/stable/", None),
-    "pytest": ("https://docs.pytest.org/en/stable/", None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
-    "sympy": ("https://docs.sympy.org/latest/", None),
-    # "yappi": ("https://yappi.readthedocs.io/en/latest/", None),
-}
-linkcheck_allowed_redirects: dict[str, str] = {
-    "https://akareport.aka.fi/*": "https://tiedejatutkimus.fi/*",
-    "https://bitbucket.org/*": "https://id.atlassian.com/*",
-    "https://gitlab.esa.int/*": "https://gitlab.esa.int/users/sign_in",
-    "https://www.helsinki.fi/": "https://www.helsinki.fi/en",
-    "https://hdl.handle.net/*": "(https://helda.helsinki.fi/handle/*|https://sussex.figshare.com/*)",
-    "https://www.ptplot.org": "https://www.ptplot.org/ptplot/",
-    r"https://.*\.stackexchange.com/a/.*": r"https://.*\.stackexchange.com/questions/.*",
-    "https://stackoverflow.com/a/*": "https://stackoverflow.com/questions/*",
-}
+intersphinx_mapping: IntersphinxMapping = INTERSPHINX_MAPPING
+linkcheck_allowed_redirects: dict[str, str] = LINKCHECK_ALLOWED_REDIRECTS
 # The authentication info could be set up to work on the CI build
 # https://docs.github.com/en/actions/reference/authentication-in-a-workflow
 # linkcheck_auth = []
@@ -376,19 +288,5 @@ autosummary_generate = True
 
 if not FFMpegWriter.isAvailable():
     logger.error("FFmpeg is not available. Animations will not be rendered in the documentation.")
-
-
-# Remove matplotlib agg warnings from generated doc when using plt.show
-# From: https://github.com/sphinx-gallery/sphinx-gallery/blob/master/doc/conf.py
-warnings.filterwarnings(
-    "ignore",
-    category=RuntimeWarning,
-    message="Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure."
-)
-warnings.filterwarnings(
-    "ignore",
-    category=RuntimeWarning,
-    message="invalid value encountered in multiply"
-)
 
 # numpydoc_show_class_members = False

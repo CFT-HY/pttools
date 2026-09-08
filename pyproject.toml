@@ -302,7 +302,7 @@ include = [
     "pttools*",
 ]
 exclude = [
-    "docs",
+    "docs",  # This does not exclude `pttools.docs`.
     "examples",
     "htmlcov",
     "logs",

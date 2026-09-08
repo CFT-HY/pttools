@@ -7,9 +7,11 @@ import re
 import typing as tp
 
 from docutils import nodes
-from sphinx.application import Sphinx
 
-from docs.utils import backreference_names
+if tp.TYPE_CHECKING:
+    from sphinx.application import Sphinx
+
+from pttools.docs.utils import backreference_names
 
 #: Object types that get an automatic mini-gallery.
 #: These are the values of the "what" argument of the "autodoc-process-docstring" event.
@@ -23,7 +25,7 @@ MINIGALLERY_CLASS: str = "sphx-glr-minigallery-auto"
 
 
 def add_minigalleries(
-        app: Sphinx, what: str, name: str, obj: tp.Any, options: tp.Any, lines: list[str]) -> None:
+        app: "Sphinx", what: str, name: str, obj: tp.Any, options: tp.Any, lines: list[str]) -> None:
     """Add a mini-gallery of the examples that use the object being documented.
 
     If the docstring already contains a minigallery directive,
@@ -56,7 +58,7 @@ def add_minigalleries(
 
 
 def remove_duplicate_minigalleries(
-        app: Sphinx, domain: str, objtype: str, contentnode: nodes.Element) -> None:
+        app: "Sphinx", domain: str, objtype: str, contentnode: nodes.Element) -> None:
     """Remove all but the last of the automatic mini-galleries of an object.
 
     Autodoc processes the class and __init__ docstrings of a class separately when

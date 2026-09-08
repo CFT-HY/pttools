@@ -11,8 +11,8 @@
   - Building the documentation will run the examples and can therefore take up to 35 min to run.
 
 ## Code style
-- Use Python 3.12 type hints where possible
-- JIT compile heavy computations with Numba
+- Use Python 3.12 type hints where possible.
+- JIT compile heavy computations with Numba.
 
 ## General instructions
 - Before editing code that has physics equations, ensure that there are unit tests that verify the results of that code.
@@ -28,8 +28,9 @@ The article is available here: https://ar5iv.labs.arxiv.org/html/1909.10040
 Links to other relevant articles are in the `extlinks` dict of `./docs/conf.py`. (Remove the trailing `%s`.)
 
 Modules:
-- `analysis`: plotting and data analysis tools.
+- `analysis`: plotting and data analysis tools
 - `bubble`: bubble fluid profile solver
+- `docs`: documentation utilities
 - `models`: equations of state as subclasses of `Model`
 - `omgw0`: conversion from the time of GW formation to observable gravitational wave spectrum today, provides `Spectrum` class
 - `speedup`: utilities for Numba compilation and parallelism

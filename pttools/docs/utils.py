@@ -8,16 +8,45 @@ import sys
 from threading import Lock
 import typing as tp
 
-from sphinx.application import Sphinx
+if tp.TYPE_CHECKING:
+    from sphinx.application import Sphinx
 
 logger = logging.getLogger(__name__)
 
-#: The packages of this repository, which are documented in this documentation.
-#: Sphinx-Gallery creates hyperlinks from the examples and mini-galleries for the objects of these packages.
-DOC_MODULES: tuple[str, ...] = ("docs", "examples", "pttools", "tests")
 #: Sentinel for objects that could not be resolved
 MISSING = object()
 BACKREFERENCES_WARNING_LOCK = Lock()
+
+
+def backreference_names(app: "Sphinx", name: str, obj: tp.Any) -> list[str]:
+    """Find the names by which the given object is referred to in the examples.
+
+    Sphinx-Gallery records an object by the name with which the example refers to it,
+    e.g. "pttools.BagModel" or "pttools.models.BagModel" instead of "pttools.models.bag.BagModel",
+    and the same object can therefore have backreferences under several names.
+    """
+    backrefs = get_backreferences(os.path.join(
+        app.srcdir, app.config.sphinx_gallery_conf["backreferences_dir"], "backreferences_all.json"))
+    if not backrefs:
+        return []
+    parts = name.split(".")
+    # Find the longest prefix of the name that is a module, so that the rest of the parts are attribute names.
+    for i_module in range(len(parts), 0, -1):
+        if ".".join(parts[:i_module]) in sys.modules:
+            break
+    else:
+        return []
+    attrs = parts[i_module:]
+    # A module can be referred to by its full name only.
+    if not attrs:
+        return [name] if name in backrefs else []
+    # The object may also be accessible from the parent packages of its module.
+    return [
+        candidate
+        for i in range(1, i_module + 1)
+        if (candidate := ".".join(parts[:i] + attrs)) in backrefs
+        and is_same_object(resolve_object(".".join(parts[:i]), attrs), obj)
+    ]
 
 
 @functools.cache
@@ -60,34 +89,3 @@ def is_same_object(obj: tp.Any, other: tp.Any) -> bool:
     so the underlying functions have to be compared instead.
     """
     return obj is other or getattr(obj, "__func__", obj) is getattr(other, "__func__", other)
-
-
-def backreference_names(app: Sphinx, name: str, obj: tp.Any) -> list[str]:
-    """Find the names by which the given object is referred to in the examples.
-
-    Sphinx-Gallery records an object by the name with which the example refers to it,
-    e.g. "pttools.BagModel" or "pttools.models.BagModel" instead of "pttools.models.bag.BagModel",
-    and the same object can therefore have backreferences under several names.
-    """
-    backrefs = get_backreferences(os.path.join(
-        app.srcdir, app.config.sphinx_gallery_conf["backreferences_dir"], "backreferences_all.json"))
-    if not backrefs:
-        return []
-    parts = name.split(".")
-    # Find the longest prefix of the name that is a module, so that the rest of the parts are attribute names.
-    for i_module in range(len(parts), 0, -1):
-        if ".".join(parts[:i_module]) in sys.modules:
-            break
-    else:
-        return []
-    attrs = parts[i_module:]
-    # A module can be referred to by its full name only.
-    if not attrs:
-        return [name] if name in backrefs else []
-    # The object may also be accessible from the parent packages of its module.
-    return [
-        candidate
-        for i in range(1, i_module + 1)
-        if (candidate := ".".join(parts[:i] + attrs)) in backrefs
-        and is_same_object(resolve_object(".".join(parts[:i]), attrs), obj)
-    ]

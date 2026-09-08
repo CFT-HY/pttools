@@ -180,7 +180,7 @@ def omega_h2(f: FloatOrArr, S: FloatOrArr) -> FloatOrArr:
 #: `abbott_2019`:`\ ` p. 4
 OMEGA_REF_EB: float = 8.9e-10
 #: $\Omega_\text{ref,eb} h^2$
-#: `abbott_2019`:`\ `, using the value of $H_0 = 67.9 \frac{\text{km}}{\text{s Mpc}$ from the article.
+#: `abbott_2019`:`\ `, using the value of $H_0 = 67.9 \frac{\text{km}}{\text{s Mpc}}$ from the article.
 OMEGA_REF_EB_H2: float = OMEGA_REF_EB * 0.679**2
 
 
