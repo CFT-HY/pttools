@@ -100,7 +100,7 @@ def delta_n[T: FloatOrArr](model: "Model", wn: T) -> T:
 def kappa_a(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr) -> th.FloatOrArr:
     r"""Approximation for $\kappa_a$.
 
-    $$\kappa_A \approx v_{\text{wall}} \frac{6.9 \alpha_n}{1.36 - 0.037 \sqrt{\alpha_n} + \alpha_n}$$
+    $$\kappa_A \approx v_{\text{wall}}^\frac{6}{5} \frac{6.9 \alpha_n}{1.36 - 0.037 \sqrt{\alpha_n} + \alpha_n}$$
     :espinosa_2010:`\ `, eq. 95
     For small wall speeds xi_w << cs
     """

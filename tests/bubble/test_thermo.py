@@ -1,37 +1,25 @@
 """Unit tests for thermodynamic functions."""
 
+from abc import ABC
 import unittest
 
 import numpy as np
 
 from pttools.bubble.bubble import Bubble
 from pttools.bubble.thermo import e_bar, ubarf2, w_bar
-from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
-from pttools.models.model import Model
-import pttools.type_hints as th
+from tests.bubble.ref import RefBag, Reference, RefHindmarshHijazi, RefLectureNotes
 from tests.utils.test_assertions import assert_allclose
 
 
-class ThermoTest:
+class ThermoTest(Reference, ABC):
     """Unit tests for thermodynamic functions."""
-
-    MODEL: Model = BagModel(a_s=1.1, a_b=1, V_s=1)
-
-    ALPHA_NS: th.FloatArr1D
-    V_WALLS: th.FloatArr1D
-
-    KAPPA_REF: th.FloatArr1D
-    OMEGA_REF: th.FloatArr1D
-    BVA_KE_FRAC_REF: th.FloatArr2D
-
-    bubbles: list[Bubble]
 
     @classmethod
     def setUpClass(cls) -> None:
         cls.bubbles = [
             Bubble(cls.MODEL, v_wall=v_wall, alpha_n=alpha_n)
-            for v_wall, alpha_n in zip(cls.V_WALLS, cls.ALPHA_NS, strict=False)
+            for v_wall, alpha_n in zip(cls.V_WALLS, cls.ALPHA_NS, strict=True)
         ]
 
     def test_ebar(self):
@@ -67,53 +55,24 @@ class ThermoTest:
         assert_allclose([bubble.omega for bubble in self.bubbles], self.OMEGA_REF, rtol=1.3e-2)
 
 
-class ThermoTestLectureNotes(ThermoTest, unittest.TestCase):
-    # Input parameters
-    ALPHA_NS = np.array([0.1, 0.1, 0.1])
-    V_WALLS = np.array([0.4, 0.7, 0.8])
-    # Reference values
-    KAPPA_REF = np.array([0.189, 0.452, 0.235])
-    OMEGA_REF = np.array([0.815, 0.559, 0.769])
-    BVA_KE_FRAC_REF = np.array([0.0172, 0.0411, 0.0213])
-    UBARFS_REF = np.array([0.119, 0.184, 0.133])
+class ThermoTestHindmarshHijazi(RefHindmarshHijazi, ThermoTest, unittest.TestCase):
+    pass
 
+
+class ThermoTestLectureNotes(RefLectureNotes, ThermoTest, unittest.TestCase):
     def test_ubarf(self):
         assert_allclose(
             [np.sqrt(ubarf2(
                 v=bubble.v, w=bubble.w, xi=bubble.xi,
                 v_wall=bubble.v_wall, ek_bva=bubble.kinetic_energy_density, w_bar=bubble.wn
             )) for bubble in self.bubbles],
-            self.UBARFS_REF, rtol=6.8e-3
+            self.UBARF_REF, rtol=6.8e-3
         )
-        assert_allclose([np.sqrt(bubble.ubarf2) for bubble in self.bubbles], self.UBARFS_REF, rtol=0.039)
+        assert_allclose([np.sqrt(bubble.ubarf2) for bubble in self.bubbles], self.UBARF_REF, rtol=0.039)
 
 
-class ThermoTestHindmarshHijazi(ThermoTest, unittest.TestCase):
-    # Input parameters
-    ALPHA_NS = np.array([0.578, 0.151, 0.091])
-    V_WALLS = np.array([0.5, 0.7, 0.77])
-    # Reference values
-    KAPPA_REF = np.array([0.610, 0.522, 0.264])
-    OMEGA_REF = np.array([0.395, 0.491, 0.744])
-    BVA_KE_FRAC_REF = np.array([0.223, 0.0684, 0.022])
-
-
-class ThermoTestBag(ThermoTest, unittest.TestCase):
-    """Test that the results have not changed due to code changes.
-
-    Reference data has been generated with PTtools.
-    """
-
-    ALPHA_NS = np.array(np.repeat([0.1, 0.2, 0.3], 3))
-    V_WALLS = np.array(np.tile([0.3, 0.7, 0.8], 3))
-
-    KAPPA_REF = np.array([0.1227, 0.4512, 0.2346, 0.2141, 0.5645, 0.4630, 0.2881, 0.6245, 0.5786])
-    OMEGA_REF = np.array([0.8773, 0.5574, 0.7683, 0.7854, 0.4408, 0.5496, 0.7113, 0.3794, 0.4305])
-    BVA_KE_FRAC_REF = np.array([
-        1.12012152e-02, 4.10228822e-02, 2.13351667e-02,
-        3.58402474e-02, 9.40854610e-02, 7.71674313e-02,
-        6.67623755e-02, 1.44117154e-01, 1.33526554e-01
-    ])
+class ThermoTestBag(RefBag, ThermoTest, unittest.TestCase):
+    """Test that the bag results have not changed due to code changes."""
 
 
 class ThermoTestConstCS(ThermoTest, unittest.TestCase):
