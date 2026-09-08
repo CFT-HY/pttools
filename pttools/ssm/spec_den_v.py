@@ -94,7 +94,7 @@ def spec_den_v(
         v_wall: float,
         bubble_spacing_enlargement_factor: float = 1.,
         # Settings
-        parallel: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D]:
+        parallel: bool = True) -> th.FloatArr1D:
     r"""Spectral density of the velocity field $\tilde{P}_v$.
 
     $$\tilde{P}_v(q)

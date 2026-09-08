@@ -216,7 +216,7 @@ def spec_den_gw(
         source_lifetime_factor: float = 1.,
         # Settings
         nx_P_tilde_gw: int | None = None,
-        parallel: bool = True) -> tuple[FloatArr1D, FloatArr1D] | NumbaFunc:
+        parallel: bool = True) -> tuple[FloatArr1D, FloatArr1D]:
     r"""
     Spectral density of gravitational wave power, $\tilde{P}_\text{gw}(z)$.
 
@@ -273,7 +273,7 @@ def _spec_den_gw_numba(
         source_lifetime_factor: float = 1.,
         # Settings
         nx_P_tilde_gw: int | None = None,
-        parallel: bool = True) -> tuple[FloatArr1D, FloatArr1D] | NumbaFunc:
+        parallel: bool = True) -> tuple[FloatArr1D, FloatArr1D]:
     if isinstance(y, numba.types.Array):
         return _spec_den_gw_y
     if isinstance(y, (numba.types.NoneType, numba.types.Omitted)):

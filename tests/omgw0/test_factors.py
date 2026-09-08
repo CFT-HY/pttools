@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 
 from pttools.omgw0 import const
-from pttools.omgw0.factors import F_gw0
+from pttools.omgw0.factors import F_gw0_h2
 
 #: $a$, the radiation constant in $\frac{\text{J}}{\text{m}^3 \text{K}^4}$
 A_RAD_REF: float = 7.565733e-16
@@ -21,7 +21,13 @@ This assumes $h = 0.678$ of :planck_2015:`\ `.
 F_GW0_REF_ERR: float = 0.05e-5
 
 #: $h$, dimensionless reduced Hubble constant :planck_2015:`\ `
-H_REF = 0.678
+H_REF: float = 0.678
+
+#: $F_{\text{gw},0} h^2$, obtained from :py:data:`F_GW0_REF` with the $h$ assumed by :caprini_2020:`\ `
+F_GW0_H2_REF: float = F_GW0_REF * H_REF**2
+
+#: Uncertainty of :py:data:`F_GW0_H2_REF`
+F_GW0_H2_REF_ERR: float = F_GW0_REF_ERR * H_REF**2
 
 #: $\Omega_{\gamma,0} h^2$, Planck 2018 / PDG value
 OMEGA_PHOTON_H2_REF: float = 2.473e-5
@@ -60,39 +66,27 @@ class FGw0Test(unittest.TestCase):
 
         This is the test that ties the computed constants to the literature.
         """
-        computed = F_gw0(g_star=100., om_gamma0=const.OMEGA_PHOTON_H2 / (H_REF**2))
-        self.assertAlmostEqual(computed, F_GW0_REF, delta=F_GW0_REF_ERR)
+        computed = F_gw0_h2(g_star=100., om_gamma0_h2=const.OMEGA_PHOTON_H2)
+        self.assertAlmostEqual(computed, F_GW0_H2_REF, delta=F_GW0_H2_REF_ERR)
         # The agreement should in fact be better than the uncertainty of the reference value.
-        self.assertAlmostEqual(computed / F_GW0_REF, 1, delta=0.0067)
+        self.assertAlmostEqual(computed / F_GW0_H2_REF, 1, delta=0.0067)
 
     def test_gs_star_default(self):
         r"""Omitting $g_{s\ast}$ should be equivalent to setting $g_{s\ast} = {g}_\ast$."""
         for g_star in (10., 100., 106.75):
             with self.subTest(g_star=g_star):
-                self.assertEqual(F_gw0(g_star=g_star), F_gw0(g_star=g_star, gs_star=g_star))
+                self.assertEqual(F_gw0_h2(g_star=g_star), F_gw0_h2(g_star=g_star, gs_star=g_star))
 
-    def test_g_star_scaling(self):
+    @staticmethod
+    def test_g_star_scaling():
         r"""For $g_{s\ast} = {g}_\ast$ the scaling should be $\left( \frac{100}{{g}_\ast} \right)^\frac{1}{3}$."""
         g_star = np.array([1., 10., 100., 106.75, 1000.])
-        expected = F_gw0(g_star=100.) * (100 / g_star)**(1/3)
-        np.testing.assert_allclose(F_gw0(g_star=g_star), expected, rtol=1e-12)
-
-    def test_h_independence(self):
-        r"""$h^2 F_{\text{gw},0}$ should not depend on the value of $h$.
-
-        $\Omega_{\gamma,0} = \frac{\Omega_{\gamma,0} h^2}{h^2}$,
-        so the $h$ of $\Omega_{\gamma,0}$ cancels out in the observable $h^2 \Omega_{\text{gw},0}$.
-        """
-        values = [
-            h**2 * F_gw0(g_star=100., om_gamma0=const.OMEGA_PHOTON_H2 / h**2)
-            for h in (0.674, 0.678, 0.73)
-        ]
-        for value in values[1:]:
-            self.assertAlmostEqual(value / values[0], 1, places=12)
+        expected = F_gw0_h2(g_star=100.) * (100 / g_star)**(1/3)
+        np.testing.assert_allclose(F_gw0_h2(g_star=g_star), expected, rtol=1e-12)
 
     def test_gs_star_dependence(self):
         r"""$F_{\text{gw},0}$ should scale as $g_{s\ast}^{-\frac{4}{3}}$."""
-        ratio = F_gw0(g_star=100., gs_star=50.) / F_gw0(g_star=100., gs_star=100.)
+        ratio = F_gw0_h2(g_star=100., gs_star=50.) / F_gw0_h2(g_star=100., gs_star=100.)
         self.assertAlmostEqual(ratio, 2**(4/3), places=12)
 
 

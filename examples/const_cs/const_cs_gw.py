@@ -22,7 +22,7 @@ from pttools.analysis.parallel import create_spectra
 from pttools.bubble import lorentz
 from pttools.bubble.shock import v_shock_curve
 from pttools.models import ConstCSModel, Model
-from pttools.omgw0 import Spectrum, SpectrumArr3D, omega_ins
+from pttools.omgw0 import H2, Spectrum, SpectrumArr3D, omega_ins_h2
 import pttools.type_hints as th
 from pttools.utils.system import IS_READ_THE_DOCS
 
@@ -240,7 +240,7 @@ def main(low_k: bool = True) -> tuple[th.FigArr1D, th.FigArr2D, str]:
                 spectrum: Spectrum = spectra[i_model, i_alpha_n, i_v_wall]
                 if spectrum is not None:
                     label = model.label_latex_params
-                    snr = spectrum.signal_to_noise_ratio_instrument()
+                    snr = spectrum.snr_ins()
                     snrs[i_alpha_n, i_v_wall, i_model] = snr
                     label_omgw0 = f"{label[:-1]}, SNR={snr:.1f}$"
                     ls = lss[i_model]
@@ -276,7 +276,7 @@ def main(low_k: bool = True) -> tuple[th.FigArr1D, th.FigArr2D, str]:
     f = np.logspace(np.log10(f_min), np.log10(f_max), num=50)
     for i_alpha_n, _alpha_n in enumerate(alpha_ns):
         for i_v_wall, _v_wall in enumerate(v_walls):
-            om_ins = omega_ins(f)
+            om_ins = omega_ins_h2(f) / H2
             ax = axs[2, i_alpha_n, i_v_wall]
             ax2 = axs2[2, i_alpha_n, i_v_wall]
             ax.plot(f, om_ins, label="LISA instrument noise")

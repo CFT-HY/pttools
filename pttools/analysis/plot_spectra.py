@@ -9,17 +9,22 @@ import numpy as np
 
 from pttools.analysis.plot_bubbles import plot_bubbles_v
 from pttools.analysis.utils import FigAndAxes, create_fig_ax
-from pttools.omgw0 import Spectrum, omega_noise
+from pttools.omgw0 import Spectrum, omega_noise_h2
 from pttools.ssm.spectrum import SSMSpectrum
 import pttools.type_hints as th
 from pttools.utils.formatting import as_latex
 
-F_LABEL = r"$f$ (Hz)"
+F_LABEL = r"$f(\text{Hz})$"
+NOISE_EB_LABEL = r"$\mathcal{P}_\text{EB noise} h^2$"
+NOISE_GB_LABEL = r"$\mathcal{P}_\text{GB noise} h^2$"
+NOISE_INS_LABEL = r"$\mathcal{P}_\text{LISA instrument noise} h^2$"
+NOISE_LABEL = r"$\mathcal{P}_\text{LISA + EB + GB noise} h^2$"
 SPEC_DEN_V_TILDE_LABEL = r"$\tilde{P}_{\tilde{v}}(kR_*)$"
 SPEC_DEN_GW_LABEL = r"$\mathcal{P}_\text{gw}(kR_*)$"
 POW_V_TILDE_LABEL = r"$\tilde{\mathcal{P}}_{\tilde{v}}(kR_*)$"
 POW_GW_LABEL = r"$\mathcal{P}_\text{gw}(kR_*)$"
 POW_GW0_LABEL = r"$\mathcal{P}_{\text{gw},0}(f)$"
+POW_GW0_H2_LABEL = r"$\mathcal{P}_{\text{gw},0}(f) h^2$"
 Z_LABEL = r"$z = kR_*$"
 
 
@@ -150,22 +155,22 @@ def plot_spectra(
     r"""Plot the GW spectra today $\mathcal{P}_{\text{gw},0}(f)$."""
     fig, ax = create_fig_ax(fig, ax)
     for i, spectrum in enumerate(spectra):
-        snr = spectrum.signal_to_noise_ratio()
+        snr = spectrum.snr()
         ax.plot(
             spectrum.f(),
-            spectrum.omgw0(),
+            spectrum.omgw0_h2(),
             label=rf"{spectrum.label_latex.rstrip("$")}, \mathrm{{SNR}}={as_latex(snr)}$"
                 if labels is None or labels[i] is None else labels[i],
             **kwargs
         )
     f_min = np.nanmin([np.nanmin(spectrum.f()) for spectrum in spectra])
     f_max = np.nanmax([np.nanmax(spectrum.f()) for spectrum in spectra])
-    f_noise: th.FloatArr1D = np.logspace(np.log10(f_min), np.log10(f_max), 100)
-    ax.plot(f_noise, omega_noise(f_noise), label=r"LISA + EB + GB noise")
+    f_noise: th.FloatArr1D = np.logspace(np.log10(f_min), np.log10(f_max), 100, dtype=np.float64)
+    ax.plot(f_noise, omega_noise_h2(f_noise), label=NOISE_LABEL)
     ax.set_xlabel(F_LABEL)
     ax.set_xscale("log")
     ax.set_xlim(f_min, f_max)
-    ax.set_ylabel(POW_GW0_LABEL)
+    ax.set_ylabel(POW_GW0_H2_LABEL)
     return plot_spectra_common(spectra, fig, ax, path, legend=legend, set_x=False)
 
 

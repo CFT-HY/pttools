@@ -1,16 +1,21 @@
 r"""Factors used in calculating $\Omega_{\text{gw},0}$."""
 
-from pttools.omgw0 import const
+from pttools.omgw0.const import G0, GS0, OMEGA_PHOTON_H2
 import pttools.type_hints as th
 
 
-def F_gw0(
+def F_gw0_h2(
         g_star: th.FloatOrArr,
-        g0: th.FloatOrArr = const.G0,
-        gs0: th.FloatOrArr = const.GS0,
+        g0: th.FloatOrArr = G0,
+        gs0: th.FloatOrArr = GS0,
         gs_star: th.FloatOrArr | None = None,
-        om_gamma0: th.FloatOrArr = const.OMEGA_PHOTON) -> th.FloatOrArr:
-    r"""Power attenuation following the end of the radiation era
+        om_gamma0_h2: th.FloatOrArr = OMEGA_PHOTON_H2) -> th.FloatOrArr:
+    r"""$F_{\text{gw},0} h^2$, power attenuation following the end of the radiation era.
+
+    $$F_{\text{gw},0} h^2
+    = \left( \frac{{a}_\ast}{a_0} \right)^4 \left( \frac{{H}_\ast}{H_{100}} \right)^2
+    = \Omega_{\gamma,0} h^2 \left( \frac{g_{s0}}{g_{s\ast}} \right)^\frac{4}{3} \frac{{g}_\ast}{g_0}$$
+    This is adapted from
     $$F_{\text{gw},0}
     = \left( \frac{{a}_\ast}{a_0} \right)^4 \left( \frac{{H}_\ast}{H_0} \right)^2
     = \Omega_{\gamma,0} \left( \frac{g_{s0}}{g_{s\ast}} \right)^\frac{4}{3} \frac{{g}_\ast}{g_0}$$
@@ -39,9 +44,9 @@ def F_gw0(
     :param gs0: Degrees of freedom $g_{s,0}$ for entropy today
     :param gs_star: Degrees of freedom $g_{s,\ast}$ for entropy at the time the GWs were produced.
         If not given, the species are assumed to be in equilibrium, so that $g_{s\ast} = {g}_\ast$.
-    :param om_gamma0: $\Omega_{\gamma,0}$, the photon density parameter today
+    :param om_gamma0_h2: $\Omega_{\gamma,0} h^2$, the photon density parameter today, multiplied by $h^2$
     :return: Power attenuation factor $F_{\text{gw},0}$
     """
     if gs_star is None:
         gs_star = g_star
-    return om_gamma0 * (gs0 / gs_star)**(4/3) * g_star / g0
+    return om_gamma0_h2 * (gs0 / gs_star)**(4/3) * g_star / g0

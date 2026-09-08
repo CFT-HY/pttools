@@ -117,7 +117,9 @@ class SSMSpectrum:
         self.a2_lookup: FloatArr1D = NAN_ARR
         #: Bubble spacing enlargement factor $\Lambda$
         self.bubble_spacing_enlargement_factor: float = np.nan
-        #: $c_s^2({T}_\text{gw})$
+        #: $c_s(T_\text{gw})$
+        self.cs: float = np.nan
+        #: $c_s^2(T_\text{gw})$
         self.cs2: float = np.nan
         #: Nucleation $f$
         self.nucleation_f: float = np.nan

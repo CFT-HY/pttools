@@ -2,10 +2,9 @@ r"""$\Omega_{\text{gw},0}$ for the bag model."""
 
 from pttools.bubble.energy_budget import kinetic_energy_fraction_approx
 from pttools.omgw0 import const
-from pttools.omgw0.factors import F_gw0
+from pttools.omgw0.factors import F_gw0_h2
 from pttools.omgw0.freq import f0
-from pttools.ssm import DEFAULT_N_PT, H_star_tau_sh_approx, H_star_tau_v_old, NptType, NucType, power_gw_bag
-from pttools.ssm import J as J_func
+from pttools.ssm import DEFAULT_N_PT, H_star_tau_sh_approx, H_star_tau_v_old, J, NptType, NucType, power_gw_bag
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 import pttools.type_hints as th
 
@@ -17,6 +16,7 @@ def omgw0_bag(
         r_star: float,
         T_star: float = const.DEFAULT_T_STAR,
         g_star: float = const.DEFAULT_G_STAR,
+        h2: float = const.H2,
         npt: NptType = DEFAULT_N_PT,
         sup: Suppression = DEFAULT_SUPPRESSION,
         sup_method: SuppressionMethod = SuppressionMethod.DEFAULT,
@@ -34,23 +34,23 @@ def omgw0_bag(
     omgwi = power_gw_bag(z, params, npt=npt, parallel=parallel)
 
     # entry options for power_gw_scaled
-    #          z: th.FloatArr1D,
+    #        z: th.FloatArr1D,
     #        params: bubble.PHYSICAL_PARAMS_TYPE,
     #        npt=const.NPTDEFAULT,
     #        filename: str = None,
     #        skip: int = 1,
     #        method: ssm.Method = ssm.Method.E_CONSERVING,
     #        de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
-    #        z_st_thresh: float = const.Z_ST_THRESH)
+    #        z_st_thresh: float = const.Z_ST_THRESH
 
-    attenuation = F_gw0(g_star=g_star)
-    J = J_func(r_star=r_star, H_star_tau_v=H_star_tau_v_old(H_star_tau_sh=H_star_tau_sh_approx(r_star=r_star, K=K)))
+    attenuation = F_gw0_h2(g_star=g_star) / h2
+    J_val = J(r_star=r_star, H_star_tau_v=H_star_tau_v_old(H_star_tau_sh=H_star_tau_sh_approx(r_star=r_star, K=K)))
     if sup_method == SuppressionMethod.NONE:
-        return attenuation * J * omgwi
+        return attenuation * J_val * omgwi
     if sup_method == SuppressionMethod.NO_EXT:
         sup_fac = sup.suppression(vw, alpha, method=sup_method)
-        return attenuation * J * omgwi * sup_fac
+        return attenuation * J_val * omgwi * sup_fac
     if sup_method == SuppressionMethod.EXT_CONSTANT:
         sup_fac = sup.suppression(vw, alpha, method=sup_method)
-        return attenuation * J * omgwi * sup_fac
+        return attenuation * J_val * omgwi * sup_fac
     raise ValueError(f"Invalid suppression method: {sup_method}")

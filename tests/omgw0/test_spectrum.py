@@ -24,10 +24,10 @@ class SpectrumTest(unittest.TestCase):
         self.spectrum.export(os.path.join(TEST_JSON_PATH, "spectrum.json"))
 
     def test_noise(self):
-        self.assertGreater(self.spectrum.signal_to_noise_ratio(), 0)
+        self.assertGreater(self.spectrum.snr(), 0)
 
     def test_noise_instrument(self):
-        self.assertGreater(self.spectrum.signal_to_noise_ratio_instrument(), 0)
+        self.assertGreater(self.spectrum.snr_ins(), 0)
 
     def test_peak(self):
         peak = self.spectrum.omgw0_peak()

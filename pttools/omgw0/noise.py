@@ -2,21 +2,61 @@
 
 import numpy as np
 
-from pttools.omgw0 import const
+from pttools.omgw0.const import H0_100_HZ, LISA_ARM_LENGTH, LISA_OBS_TIME, c
 from pttools.speedup import njit
-import pttools.type_hints as th
-from pttools.type_hints import FloatOrArr
+from pttools.type_hints import FloatArr1D, FloatArr2D, FloatOrArr
+
+CACHE_H0_100_HZ: bool = True
+"""
+The functions in this module use Numba caching, but are dependent on the value of :py:data:pttools.omgw0.const.H0_HZ:.
+If you change this value, you must clean Numba cache.
+"""
 
 
 @njit(cache=True)
+def index_f_min(f: FloatArr1D, f_min: float | None = None) -> int:
+    r"""Index of the first frequency bin of the band $[{f}_\text{min}, {f}_\text{max}]$.
+
+    :param f: frequencies (Hz), sorted in ascending order
+    :param f_min: minimum frequency to be considered (Hz), inclusive.
+        If not provided, the band starts from the lowest available frequency.
+    :return: index of the first frequency bin of the band
+    """
+    if f_min is None:
+        return 0
+    return np.argmax(f >= f_min)
+
+
+@njit(cache=True)
+def index_f_max(f: FloatArr1D, f_max: float | None = None) -> int:
+    r"""Index one past the last frequency bin of the band $[{f}_\text{min}, {f}_\text{max}]$,
+    to be used as the exclusive end of a slice.
+
+    :param f: frequencies (Hz), sorted in ascending order
+    :param f_max: maximum frequency to be considered (Hz), inclusive.
+        If not provided, the band ends at the highest available frequency.
+    :return: index one past the last frequency bin of the band
+    """
+    if f_max is None:
+        return f.size
+    # The bin at f_max is included in the band, and therefore the first bin above it is the end of the slice.
+    if f_max >= f[-1]:
+        return f.size
+    return np.argmax(f > f_max)
+
+
+@njit(cache=CACHE_H0_100_HZ, nogil=True)
 def signal_to_noise_ratio(
-        f: th.FloatArr1D,
-        signal: th.FloatArr1D,
-        noise: th.FloatArr1D,
-        f_noise: th.FloatArr1D | None = None,
-        obs_time: float = const.LISA_OBS_TIME,
+        f: FloatArr1D,
+        signal: FloatArr1D,
+        noise: FloatArr1D | None = None,
+        f_noise: FloatArr1D | None = None,
+        obs_time: float = LISA_OBS_TIME,
         f_min: float | None = None,
-        f_max: float | None = None) -> tuple[float, float, float]:
+        f_max: float | None = None,
+        noise_eb: bool = True,
+        noise_gb: bool = True,
+        noise_ins: bool = True) -> tuple[float, float, float]:
     r"""Signal-to-noise ratio
     $$\rho = \sqrt{T_{\text{obs}} \int_{{f}_\text{min}}^{{f}_\text{max}} df \frac{
     h^2 \Omega_{\text{signal}}^2}{
@@ -28,54 +68,61 @@ def signal_to_noise_ratio(
     which is canceled out by another factor of 2 in eq. 3.8.
 
     :param f: frequencies (Hz)
-    :param signal: $\Omega_\text{signal}$
-    :param noise: $\Omega_\text{noise}$
+    :param signal: $\Omega_\text{signal} h^2$
+    :param noise: $\Omega_\text{noise} h^2$
     :param f_noise: frequencies for the noise (assumed to be the same as for the signal, if not provided)
     :param obs_time: observation time (s)
-    :param f_min: minimum frequency to be considered (Hz)
-    :param f_max: maximum frequency to be considered (Hz)
-    :param f_range: whether to output the frequency range $({f}_\text{min}, {f}_\text{max})$
+    :param f_min: minimum frequency to be considered (Hz), inclusive.
+        If not provided, the integration starts from the lowest available frequency.
+    :param f_max: maximum frequency to be considered (Hz), inclusive.
+        If not provided, the integration ends at the highest available frequency.
+    :param noise_eb: whether to generate extragalactic compact binary noise when noise is not provided
+    :param noise_gb: whether to generate galactic compact binary noise when noise is not provided
+    :param noise_ins: whether to generate instrument noise when noise is not provided
     :return: signal-to-noise ratio SNR, aka. $\rho$
     """
     if f_noise is None:
-        if not (f_min is None and f_max is None):
-            i_f_min = 0 if f_min is None else np.argmax(f >= f_min)
-            i_f_max = -1 if f_max is None else np.argmax(f >= f_max)
-            f = f[i_f_min:i_f_max]
-            noise = noise[i_f_min:i_f_max]
-            signal = signal[i_f_min:i_f_max]
+        i_f_min = index_f_min(f, f_min)
+        i_f_max = index_f_max(f, f_max)
+        f2 = f[i_f_min:i_f_max]
+
+        noise2 = omega_noise_h2(f=f2, eb=noise_eb, gb=noise_gb, ins=noise_ins) \
+            if noise is None else noise[i_f_min:i_f_max]
+        signal = signal[i_f_min:i_f_max]
     else:
-        if f_min is None:
-            f_min = max(f[0], f_noise[0])
-        if f_max is None:
-            f_max = min(f[-1], f_noise[-1])
-        i_f_min = np.argmax(f_noise >= f_min)
-        i_f_max = np.argmax(f_noise >= f_max)
-        f_gw = f
+        f_min2 = max(f[0], f_noise[0]) if f_min is None else f_min
+        f_max2 = min(f[-1], f_noise[-1]) if f_max is None else f_max
+        i_f_min = index_f_min(f_noise, f_min2)
+        i_f_max = index_f_max(f_noise, f_max2)
 
-        f = f_noise[i_f_min:i_f_max]
-        noise = noise[i_f_min:i_f_max]
-        signal = 10.**np.interp(np.log10(f), np.log10(f_gw), np.log10(signal))
+        f2 = f_noise[i_f_min:i_f_max]
+        noise2 = omega_noise_h2(f=f2, eb=noise_eb, gb=noise_gb, ins=noise_ins) \
+            if noise is None else noise[i_f_min:i_f_max]
+        signal = 10.**np.interp(np.log10(f2), np.log10(f), np.log10(signal))
 
-    snr = np.sqrt(obs_time * np.trapezoid(signal**2 / noise**2, f))
-    return snr, f_min, f_max
+    snr: float = np.sqrt(obs_time * np.trapezoid(signal**2 / noise2**2, f2))
+    return snr, f2[0], f2[-1]
 
 
-def ft[T: FloatOrArr](L: T = const.LISA_ARM_LENGTH) -> T:  # type: ignore[assignment]
+@njit(cache=True)
+def ft[T: FloatOrArr](L: T = LISA_ARM_LENGTH) -> T:  # type: ignore[assignment]
     r"""Transfer frequency
     $$f_t = \frac{c}{2\pi L}$$
     :gowling_2021:`\ ` p. 12.
     """
     # typing.cast() is not used below, since Numba cannot compile it.
-    return const.c / (2*np.pi*L)  # type: ignore[return-value]
+    return c / (2*np.pi*L)  # type: ignore[return-value]
 
 #: Default LISA transfer frequency $f_t$
 FT_LISA: float = ft()
+#: :lisa_sci_req:`\ ` eq. 3 (Hz)
+F1_LISA: float = 4e-4
 #: $f_2$ from :lisa_sci_req:`\ ` eq. 3
 F2_LISA: float = 4/3 * FT_LISA
 
 
-def N_acc[T: FloatOrArr](L: T = const.LISA_ARM_LENGTH) -> T:  # type: ignore[assignment]
+@njit(cache=True)
+def N_acc[T: FloatOrArr](L: T = LISA_ARM_LENGTH) -> T:  # type: ignore[assignment]
     r"""LISA acceleration noise
     $${N}_\text{acc} = \frac{3 \cdot 10^{-15}}{L} \frac{\text{m}}{\text{s}^2}
     \approx 1.44 \cdot 10^{-48} \frac{1}{\text{s}^4 \text{Hz}}$$
@@ -89,11 +136,12 @@ def N_acc[T: FloatOrArr](L: T = const.LISA_ARM_LENGTH) -> T:  # type: ignore[ass
     return (3e-15 / L)**2  # type: ignore[return-value]
 
 
+@njit(cache=CACHE_H0_100_HZ)
 def N_AE(
-        f: th.FloatOrArr,
-        ft: th.FloatOrArr = FT_LISA,
-        L: th.FloatOrArr = const.LISA_ARM_LENGTH,
-        W_abs2: th.FloatOrArr | None = None) -> th.FloatOrArr:
+        f: FloatOrArr,
+        ft: FloatOrArr = FT_LISA,
+        L: FloatOrArr = LISA_ARM_LENGTH,
+        W_abs2: FloatOrArr | None = None) -> FloatOrArr:
     r"""A and E channels of LISA instrument noise
     $$N_A = N_E = \left(\left(
     4 + 2 \cos \left( \frac{f}{f_t} \right)\right) {P}_\text{oms} +
@@ -108,9 +156,13 @@ def N_AE(
     return ((4 + 2*cos_f_frac)*P_oms(L) + 8*(1 + cos_f_frac + cos_f_frac**2) * P_acc(f, L)) * W_abs2
 
 
-def omega(f: th.FloatOrArr, S: th.FloatOrArr) -> th.FloatOrArr:
+@njit(cache=CACHE_H0_100_HZ)
+def omega_h2(f: FloatOrArr, S: FloatOrArr) -> FloatOrArr:
     r"""Convert an effective noise power spectral density (aka. sensitivity) $S$
-    to a fractional GW energy density power spectrum $\Omega$
+    to a fractional GW energy density power spectrum $\Omega$.
+
+    $$\Omega h^2 = \frac{4 \pi^2}{3 H_{100}^2} f^3 S(f)$$
+    This is adapted from
     $$\Omega = \frac{4 \pi^2}{3 H_0^2} f^3 S(f)$$
     :lisa_conventions:`\ ` eq. 167,
     :gowling_2021:`\ ` eq. 3.8,
@@ -121,54 +173,75 @@ def omega(f: th.FloatOrArr, S: th.FloatOrArr) -> th.FloatOrArr:
     However, there is a factor of 2 instead of a factor of 4 in
     :caprini_2020:`\ ` eq. 34
     """
-    return 4*np.pi**2 / (3*const.H0_HZ**2) * f**3 * S
+    return 4*np.pi**2 / (3 * H0_100_HZ**2) * f**3 * S
 
 
-def omega_eb(f: th.FloatOrArr, f_ref_eb: float = 25, omega_ref_eb: float = 8.9e-10) -> th.FloatOrArr:
+#: $\Omega_\text{ref,eb}
+#: `abbott_2019`:`\ ` p. 4
+OMEGA_REF_EB: float = 8.9e-10
+#: $\Omega_\text{ref,eb} h^2$
+#: `abbott_2019`:`\ `, using the value of $H_0 = 67.9 \frac{\text{km}}{\text{s Mpc}$ from the article.
+OMEGA_REF_EB_H2: float = OMEGA_REF_EB * 0.679**2
+
+
+@njit(cache=True)
+def omega_eb_h2(f: FloatOrArr, f_ref_eb: float = 25, omega_ref_eb_h2: float = OMEGA_REF_EB_H2) -> FloatOrArr:
     r"""
     Energy density of extragalactic compact binaries
     $$\Omega_\text{eb}(f) = \Omega_\text{ref,eb} \left( \frac{f}{{f}_\text{ref,eb}} \right)^\frac{2}{3}$$
     :gowling_2021:`\ ` eq. 3.9.
     """
-    return omega_ref_eb * (f/f_ref_eb)**(2/3)
+    return omega_ref_eb_h2 * (f/f_ref_eb)**(2/3)
 
 
-def omega_gb[T: FloatOrArr](f: T) -> T:
+@njit(cache=CACHE_H0_100_HZ)
+def omega_gb_h2[T: FloatOrArr](f: T) -> T:
     r"""
     Energy density of unresolved galactic compact binaries
-    $$\Omega_\text{gb} = \left( \frac{4 \pi^2}{3 H_0^2} \right) f^3 {S}_\text{gb}(f)$$
+    $$\Omega_\text{gb} = \left( \frac{4 \pi^2}{3 H_{100}^2} \right) f^3 {S}_\text{gb}(f)$$
     :gowling_2021:`\ ` eq. 3.11.
     """
-    return omega(f=f, S=S_gb(f))  # type: ignore[return-value]
+    return omega_h2(f=f, S=S_gb(f))  # type: ignore[return-value]
 
 
-def omega_ins[T: FloatOrArr](f: T) -> T:
+@njit(cache=CACHE_H0_100_HZ)
+def omega_ins_h2[T: FloatOrArr](f: T) -> T:
     r"""LISA instrument noise
-    $$\Omega_\text{ins} = \frac{4 \pi^2}{3 H_0^2} f^3 S_A(f)$$.
+    $$\Omega_\text{ins} = \frac{4 \pi^2}{3 H_{100}^2} f^3 S_A(f)$$.
     """
-    return omega(f=f, S=S_AE(f))  # type: ignore[return-value]
+    return omega_h2(f=f, S=S_AE(f))  # type: ignore[return-value]
 
 
-def omega_noise[T: FloatOrArr](f: T) -> T:
+@njit(cache=CACHE_H0_100_HZ)
+def omega_noise_h2[T: FloatOrArr](f: T, eb: bool = True, gb: bool = True, ins: bool = True) -> T:
     r"""
-    Total energy density of noise
-    $$\Omega_\text{noise} = \Omega_\text{ins} + \Omega_\text{eb} + \Omega_\text{gb}$$
+    Total energy density of LISA noise
+    $$\Omega_\text{noise} h^2 = \left( \Omega_\text{ins} + \Omega_\text{eb} + \Omega_\text{gb} \right) h^2$$
     :gowling_2021:`\ ` eq. 3.13.
     """
-    return omega_ins(f) + omega_eb(f) + omega_gb(f)  # type: ignore[return-value]
+    om = np.zeros_like(f)
+    if ins:
+        om += omega_ins_h2(f)
+    if eb:
+        om += omega_eb_h2(f)
+    if gb:
+        om += omega_gb_h2(f)
+    return om  # type: ignore[return-value]
 
 
-def P_acc(f: th.FloatOrArr, L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatOrArr:
+@njit(cache=True)
+def P_acc(f: FloatOrArr, L: FloatOrArr = LISA_ARM_LENGTH) -> FloatOrArr:
     r"""
     LISA single test mass acceleration noise, $P_\text{acc}$
     :gowling_2021:`\ ` eq. 3.3
     :gowling_2023:`\ ` eq. 3.5
     :smith_2019:`\ ` eq. 52.
     """
-    return S_I(f, L) / (4 * (2*np.pi*f)**4)
+    return S_I(f, L) / (4 * (2 * np.pi * f)**4)
 
 
-def P_oms[T: FloatOrArr](L: T = const.LISA_ARM_LENGTH) -> T:  # type: ignore[assignment]
+@njit(cache=True)
+def P_oms[T: FloatOrArr](L: T = LISA_ARM_LENGTH) -> T:  # type: ignore[assignment]
     r"""
     LISA optical metrology noise $P_\text{oms}$, aka. $S_II$ or $S_s$
     $$P_\text{oms}(f) = \left( \frac{1.5 \cdot 10^{-11} \text{m}}{L} \right)^2 \text{Hz}^{-1}$$
@@ -183,7 +256,8 @@ def P_oms[T: FloatOrArr](L: T = const.LISA_ARM_LENGTH) -> T:  # type: ignore[ass
     return (1.5e-11 / L)**2  # type: ignore[return-value]
 
 
-def R_AE(f: th.FloatOrArr, ft: th.FloatOrArr = FT_LISA, W_abs2: th.FloatOrArr | None = None) -> th.FloatOrArr:
+@njit(cache=True)
+def R_AE(f: FloatOrArr, ft: FloatOrArr = FT_LISA, W_abs2: FloatOrArr | None = None) -> FloatOrArr:
     r"""Gravitational wave response function for the A and E channels
     $$\mathcal{R}_A^\text{Fit} = \mathcal{R}_E^\text{Fit} \approx \frac{9}{20} \lvert W \rvert^2
     \left(1 + \left( \frac{3f}{4f_t} \right)^2 \right)^{-1}$$
@@ -194,14 +268,16 @@ def R_AE(f: th.FloatOrArr, ft: th.FloatOrArr = FT_LISA, W_abs2: th.FloatOrArr | 
     return 9/20 * W_abs2 / (1 + (3*f/(4*ft))**2)
 
 
-def R_LISA(f: th.FloatOrArr, f2: th.FloatOrArr = F2_LISA) -> th.FloatOrArr:
+@njit(cache=True)
+def R_LISA(f: FloatOrArr, f2: FloatOrArr = F2_LISA) -> FloatOrArr:
     r"""Auxiliary function from LISA science requirements
     :lisa_sci_req:`\ ` eq. 3.
     """
     return 1 + (f / f2)**2
 
 
-def S(N: th.FloatOrArr, R: th.FloatOrArr) -> th.FloatOrArr:
+@njit(cache=True)
+def S(N: FloatOrArr, R: FloatOrArr) -> FloatOrArr:
     r"""Noise power spectral density
     $$S = \frac{N}{\mathcal{R}}$$
     :gowling_2021:`\ ` eq. 3.1.
@@ -209,11 +285,12 @@ def S(N: th.FloatOrArr, R: th.FloatOrArr) -> th.FloatOrArr:
     return N / R
 
 
+@njit(cache=True)
 def S_AE(
-        f: th.FloatOrArr,
-        ft: th.FloatOrArr = FT_LISA,
-        L: th.FloatOrArr = const.LISA_ARM_LENGTH,
-        both_channels: bool = True) -> th.FloatOrArr:
+        f: FloatOrArr,
+        ft: FloatOrArr = FT_LISA,
+        L: FloatOrArr = LISA_ARM_LENGTH,
+        both_channels: bool = True) -> FloatOrArr:
     r"""Noise power spectral density for the LISA A and E channels
     $$S_A = S_E = \frac{N_A}{\mathcal{R}_A}$$
     :gowling_2021:`\ ` eq. 3.7.
@@ -227,10 +304,11 @@ def S_AE(
     return ret
 
 
+@njit(cache=True)
 def S_AE_approx(
-        f: th.FloatOrArr,
-        L: th.FloatOrArr = const.LISA_ARM_LENGTH,
-        both_channels: bool = True) -> th.FloatOrArr:
+        f: FloatOrArr,
+        L: FloatOrArr = LISA_ARM_LENGTH,
+        both_channels: bool = True) -> FloatOrArr:
     r"""Approximate noise power spectral density for the LISA A and E channels
     $$S_A = S_E = \frac{N_A}{\mathcal{R}_A}
     \approx \frac{40}{3} ({P}_\text{oms} + {4P}_\text{acc}) \left( 1 + \frac{3f}{4f_t} \right)^2$$
@@ -245,18 +323,20 @@ def S_AE_approx(
     return ret
 
 
-def S_I(f: th.FloatOrArr, L: th.FloatOrArr = const.LISA_ARM_LENGTH) -> th.FloatOrArr:
+@njit(cache=True)
+def S_I(f: FloatOrArr, L: FloatOrArr = LISA_ARM_LENGTH) -> FloatOrArr:
     r"""Subsidiary formula $S_I$ for acceleration noise
     :smith_2019:`\ ` eq. 53
     :lisa_sci_req:`\ ` eq. 3.
     """
-    return 4 * N_acc(L) * (1 + (const.F1_LISA/f)**2)
+    return 4 * N_acc(L) * (1 + (F1_LISA/f)**2)
 
 
+@njit(cache=True)
 def S_gb(
-        f: th.FloatOrArr,
-        t: th.FloatOrArr = 4,  # years
-        A: float = 1.8e-44) -> th.FloatOrArr:
+        f: FloatOrArr,
+        t: FloatOrArr = 4,  # years
+        A: float = 1.8e-44) -> FloatOrArr:
     r"""Noise power spectral density for galactic binaries
     $$S_c(f) = A f^\frac{-7}{3} \exp \left( -f^\alpha + \beta f \sin(\kappa f) \right)
     \left( 1 + \tanh(\gamma (f_k - f) \right) \text{Hz}^{-1}$$
@@ -271,7 +351,8 @@ def S_gb(
     return A * f**(-7/3) * np.exp(-f**alpha + beta * f * np.sin(kappa * f)) * (1 + np.tanh(gamma * (fk - f)))
 
 
-def W(f: th.FloatOrArr, ft: th.FloatOrArr) -> th.FloatOrArr:
+@njit(cache=True)
+def W(f: FloatOrArr, ft: FloatOrArr) -> FloatOrArr:
     r"""Round trip modulation
     $$W(f,f_t) = 1 - e^{-2i \frac{f}{f_t}}$$
     :gowling_2021:`\ ` p. 12.
@@ -280,7 +361,7 @@ def W(f: th.FloatOrArr, ft: th.FloatOrArr) -> th.FloatOrArr:
 
 
 #: Coefficients for the galactic binary noise, :cornish_2017:`\ ` table 1
-GB_DATA: th.FloatArr2D = np.array([
+GB_DATA: FloatArr2D = np.array([
     [0.5, 1, 2, 4],
     [0.133, 0.171, 0.165, 0.138],
     [243, 292, 299, -221],
@@ -288,9 +369,9 @@ GB_DATA: th.FloatArr2D = np.array([
     [917, 1680, 1340, 1680],
     [0.00258, 0.00215, 0.00173, 0.00113]
 ])
-GB_TIMES: th.FloatArr1D = GB_DATA[0, :]
-GB_ALPHAS: th.FloatArr1D = GB_DATA[1, :]
-GB_BETAS: th.FloatArr1D = GB_DATA[2, :]
-GB_KAPPAS: th.FloatArr1D = GB_DATA[3, :]
-GB_GAMMAS: th.FloatArr1D = GB_DATA[4, :]
-GB_FKS: th.FloatArr1D = GB_DATA[5, :]
+GB_TIMES: FloatArr1D = GB_DATA[0, :]
+GB_ALPHAS: FloatArr1D = GB_DATA[1, :]
+GB_BETAS: FloatArr1D = GB_DATA[2, :]
+GB_KAPPAS: FloatArr1D = GB_DATA[3, :]
+GB_GAMMAS: FloatArr1D = GB_DATA[4, :]
+GB_FKS: FloatArr1D = GB_DATA[5, :]

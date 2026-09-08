@@ -4,6 +4,10 @@ import math
 
 from pttools.type_hints import FloatOrArr
 
+#: Astronomical unit au in m
+#: :wikipedia:`Astronomical_unit`
+AU_IN_M: float = 149597870700.
+
 #: Speed of light (m/s)
 #: :codata_2018:`\ ` table XXX
 c: float = 299792458.
@@ -36,9 +40,6 @@ This value is used in:
 It's derived in
 :croon_2024:`\ `, eq. 38
 """
-
-#: :lisa_sci_req:`\ ` eq. 3 (Hz)
-F1_LISA: float = 4e-4
 
 #: Gravitational constant $G$ in SI units $\frac{\text{m}^3}{\text{kg s}^2}$
 G: float = 6.67430e-11
@@ -141,8 +142,9 @@ $\rho c^2 = \frac{\pi^2}{30} g \frac{(k_B T)^4}{(\hbar c)^3}$,
 which for the $g_0 = 2$ photon polarizations reduces to $\rho_{\gamma} c^2 = a T^4$.
 """
 
-#: Parsec to meters
-PC_TO_M: float = 3.0857e16
+#: Parsec (pc) in meters (m)
+#: :wikipedia:`Parsec`
+PC_IN_M: float = 180 * 60 * 60 * AU_IN_M / math.pi
 
 H: float = 0.6766
 r"""
@@ -155,9 +157,9 @@ H2: float = H**2
 #: Hubble constant $H_0$ in $\frac{\text{km}}{\text{s Mpc}}$
 H0_KM_S_MPC: float = 100. * H
 #: Hubble constant, Planck value in Hz (about 2.27e-18 Hz)
-H0_HZ: float = H0_KM_S_MPC * 1e3 / (PC_TO_M * 1e6)
+H0_HZ: float = H0_KM_S_MPC * 1e3 / (PC_IN_M * 1e6)
 
-H0_100_HZ: float = 100. * 1e3 / (PC_TO_M * 1e6)
+H0_100_HZ: float = 100. * 1e3 / (PC_IN_M * 1e6)
 r"""
 ${H}_{100} = 100 \frac{\text{km}}{\text{s Mpc}}$ in Hz,
 the reference value by which $H_0 = h {H}_{100}$ is defined.
