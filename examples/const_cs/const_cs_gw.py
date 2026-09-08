@@ -240,7 +240,7 @@ def main(low_k: bool = True) -> tuple[th.FigArr1D, th.FigArr2D, str]:
                 spectrum: Spectrum = spectra[i_model, i_alpha_n, i_v_wall]
                 if spectrum is not None:
                     label = model.label_latex_params
-                    snr = spectrum.snr_ins()
+                    snr = spectrum.snr_ins()[0]
                     snrs[i_alpha_n, i_v_wall, i_model] = snr
                     label_omgw0 = f"{label[:-1]}, SNR={snr:.1f}$"
                     ls = lss[i_model]

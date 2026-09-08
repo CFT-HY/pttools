@@ -27,7 +27,7 @@ from pttools.ssm.nucleation import DEFAULT_NUC_TYPE, NucType
 from pttools.ssm.spectrum import SSMSpectrum
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 import pttools.type_hints as th
-from pttools.type_hints import FloatOrArr
+from pttools.type_hints import FloatArr1D, FloatOrArr
 from pttools.utils import copy_docstrings, export_json
 
 if tp.TYPE_CHECKING:
@@ -202,8 +202,8 @@ class Spectrum(SSMSpectrum):
             "omgw0_total": self.omgw0_total(),
             "R_star": self.R_star,
             "R_star_m": self.R_star_m,
-            "snr": self.snr(),
-            "snr_ins": self.snr_ins()
+            "snr": self.snr()[0],
+            "snr_ins": self.snr_ins()[0]
         }
         if path is not None:
             export_json(data, path)
@@ -320,18 +320,32 @@ class Spectrum(SSMSpectrum):
         """
         return self.omgw0_h2_total(omgw0_h2=omgw0_h2) / h2
 
-    def snr(self, obs_time: float = LISA_OBS_TIME) -> float:
+    def snr(
+            self,
+            obs_time: float = LISA_OBS_TIME,
+            noise_eb: bool = True,
+            noise_gb: bool = True,
+            noise_ins: bool = True) -> tuple[float, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D]:
         """Signal-to-noise ratio for LISA, taking into account all noise sources."""
-        snr, f_min, f_max = signal_to_noise_ratio(f=self.f(), signal=self.omgw0_h2(), obs_time=obs_time)
-        return snr
-
-    def snr_ins(self, obs_time: float = LISA_OBS_TIME) -> float:
-        """Signal-to-noise ratio for LISA, taking into account only the instrument noise."""
-        snr, f_min, f_max = signal_to_noise_ratio(
-            f=self.f(), signal=self.omgw0_h2(), obs_time=obs_time,
-            noise_eb=False, noise_gb=False
+        f: FloatArr1D = self.f()
+        omgw0_h2 = self.omgw0_h2()
+        snr, f_noise, noise = signal_to_noise_ratio(
+            f=f, signal=omgw0_h2, obs_time=obs_time,
+            noise_eb=noise_eb, noise_gb=noise_gb, noise_ins=noise_ins
         )
-        return snr
+        return snr, f, omgw0_h2, f_noise, noise
+
+    def snr_ins(
+            self,
+            obs_time: float = LISA_OBS_TIME) -> tuple[float, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D]:
+        """Signal-to-noise ratio for LISA, taking into account only the instrument noise."""
+        f: FloatArr1D = self.f()
+        omgw0_h2 = self.omgw0_h2()
+        snr, f_noise, noise = signal_to_noise_ratio(
+            f=f, signal=omgw0_h2, obs_time=obs_time,
+            noise_eb=False, noise_gb=False, noise_ins=True
+        )
+        return snr, f, omgw0_h2, f_noise, noise
 
     def z_from_f[T: FloatOrArr](self, f: T) -> T:
         r"""Convert from frequencies $f$ back to wavenumbers $z$.

@@ -155,7 +155,8 @@ def plot_spectra(
     r"""Plot the GW spectra today $\mathcal{P}_{\text{gw},0}(f)$."""
     fig, ax = create_fig_ax(fig, ax)
     for i, spectrum in enumerate(spectra):
-        snr = spectrum.snr()
+        snr: float
+        snr, _f, _omgw0_h2, _f_noise, _noise = spectrum.snr()
         ax.plot(
             spectrum.f(),
             spectrum.omgw0_h2(),

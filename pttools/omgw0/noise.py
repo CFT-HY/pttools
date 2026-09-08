@@ -56,7 +56,7 @@ def signal_to_noise_ratio(
         f_max: float | None = None,
         noise_eb: bool = True,
         noise_gb: bool = True,
-        noise_ins: bool = True) -> tuple[float, float, float]:
+        noise_ins: bool = True) -> tuple[float, FloatArr1D, FloatArr1D]:
     r"""Signal-to-noise ratio
     $$\rho = \sqrt{T_{\text{obs}} \int_{{f}_\text{min}}^{{f}_\text{max}} df \frac{
     h^2 \Omega_{\text{signal}}^2}{
@@ -101,7 +101,7 @@ def signal_to_noise_ratio(
         signal = 10.**np.interp(np.log10(f2), np.log10(f), np.log10(signal))
 
     snr: float = np.sqrt(obs_time * np.trapezoid(signal**2 / noise2**2, f2))
-    return snr, f2[0], f2[-1]
+    return snr, f2, noise2
 
 
 @njit(cache=True)
