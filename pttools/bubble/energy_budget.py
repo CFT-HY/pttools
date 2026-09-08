@@ -7,6 +7,7 @@ import numpy as np
 import scipy.optimize
 
 from pttools.bubble import Phase
+from pttools.bubble.chapman_jouguet import v_chapman_jouguet_bag
 from pttools.bubble.const import CS0, DEFAULT_ADIABATIC_INDEX
 from pttools.models import Model
 from pttools.speedup import njit
@@ -52,7 +53,7 @@ def alpha_n_from_ubarf(
     #     raise err
 
 
-@njit(nogil=True, cache=True)
+@njit
 def alpha_n_from_ubarf_solvable(
         alpha_n: float,
         ubarf_target: float,
@@ -60,18 +61,6 @@ def alpha_n_from_ubarf_solvable(
         cs: float,
         adiabatic_index: float) -> float:
     return ubarf_approx(v_wall=v_wall, alpha_n=alpha_n, cs=cs, adiabatic_index=adiabatic_index) - ubarf_target
-
-
-@njit(cache=True)
-def chapman_jouguet_approx[T: FloatOrArr](alpha_n: T) -> T:
-    r"""Approximation for the Chapman-Jouguet velocity $v_{CJ}$, aka. $\xi_J$.
-
-    $$v_{CJ} \approx \frac{
-    \sqrt{\frac{2}{3} \alpha_n + \alpha_n^2} + \sqrt{\frac{1}{3}}
-    }{1 + \alpha_n}$$
-    :espinosa_2010:`\ `, eq. 97
-    """
-    return (np.sqrt(2/3 * alpha_n + alpha_n**2) + np.sqrt(1/3)) / (1 + alpha_n)
 
 
 @njit(cache=True)
@@ -140,7 +129,7 @@ def kappa_d[T: FloatOrArr](alpha_n: T) -> T:
     return alpha_n / (0.73 + 0.083 * np.sqrt(alpha_n) + alpha_n)  # type: ignore[return-value]
 
 
-@njit(cache=True)
+@njit
 def kappa_detonation_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, v_cj: float | None = None) -> th.FloatOrArr:
     r"""Approximation of $\kappa$ for detonations
     $$
@@ -152,17 +141,17 @@ def kappa_detonation_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, v_cj:
     $$
     :espinosa_2010:`\ `, eq. 100.
     """
+    if v_cj is None:
+        v_cj = v_chapman_jouguet_bag(alpha_plus=alpha_n)
     kc = kappa_c(alpha_n)
     kd = kappa_d(alpha_n)
-    if v_cj is None:
-        v_cj = chapman_jouguet_approx(alpha_n)
     return (
         ((v_cj - 1)**3 * v_cj**(5/2) * v_wall**(-5/2) * kc * kd) /
         (((v_cj - 1)**3 - (v_wall - 1)**3) * v_cj**(5/2) * kc + (v_wall - 1)**3 * kd)
     )
 
 
-@njit(cache=True, nogil=True)
+@njit
 def kappa_hybrid_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, cs: th.FloatOrArr = CS0) -> th.FloatOrArr:
     r"""Approximation of $\kappa$ for hybrids, aka. supersonic deflagrations.
 
@@ -177,11 +166,11 @@ def kappa_hybrid_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, cs: th.Fl
     kb = kappa_b(alpha_n)
     kc = kappa_c(alpha_n)
     dk = delta_kappa_approx(alpha_n)
-    v_cj = chapman_jouguet_approx(alpha_n)
+    v_cj = v_chapman_jouguet_bag(alpha_plus=alpha_n)
     return kb + (v_wall - cs) * dk + ((v_wall - cs)**3 / (v_cj - cs)**3) * (kc - kb - (v_cj - cs) * dk)
 
 
-@njit(cache=True, nogil=True)
+@njit(cache=True)
 def kappa_sub_def_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, cs: th.FloatOrArr = CS0) -> th.FloatOrArr:
     r"""Approximation of $\kappa$ for subsonic deflagrations.
 
@@ -197,7 +186,7 @@ def kappa_sub_def_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, cs: th.F
     return cs**(11/5) * ka * kb / ((cs**(11/5) - v_wall**(11/5)) * kb + v_wall * cs**(6/5) * ka)
 
 
-@njit(cache=True, nogil=True)
+@njit
 def kappa_v_approx(
         v_wall: float,
         alpha_n: th.FloatOrArr,
@@ -215,7 +204,7 @@ def kappa_v_approx(
     :return: Fluid efficiency $\kappa_v$
     """
     if v_cj is None:
-        v_cj = chapman_jouguet_approx(alpha_n)
+        v_cj = v_chapman_jouguet_bag(alpha_plus=alpha_n)
 
     if v_wall == cs:
         # This is from the original PTtools code.
@@ -232,7 +221,7 @@ def kappa_v_approx(
     return kappa_hybrid_approx(v_wall, alpha_n, cs)
 
 
-@njit(cache=True, nogil=True)
+@njit
 def kinetic_energy_fraction_approx[T: FloatOrArr](
         v_wall: float,
         alpha_n: T,
@@ -245,7 +234,7 @@ def kinetic_energy_fraction_approx[T: FloatOrArr](
     return kappa_v_approx(v_wall=v_wall, alpha_n=alpha_n, cs=cs, v_cj=v_cj) * alpha_n / (1 + alpha_n)
 
 
-@njit(cache=True, nogil=True)
+@njit
 def ubarf_approx(
         v_wall: float,
         alpha_n: th.FloatOrArr,

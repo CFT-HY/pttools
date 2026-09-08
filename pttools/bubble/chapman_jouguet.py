@@ -251,6 +251,7 @@ def v_chapman_jouguet_bag[T: FloatOrArr](alpha_plus: T) -> T:
     These sources have the correct equation:
     :gowling_2021:`\ ` eq. 2.4 and
     :maki_msc:`\ ` eq. 2.95.
+    :espinosa_2010:`\ `, eq. 97 is the same equation, but written slightly differently.
     It should be noted that $v_{CJ} \in [0, 1] \forall \alpha_+ \geq 0$.
 
     The Chapman-Jouguet speed can be different for other models,
