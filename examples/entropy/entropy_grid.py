@@ -16,12 +16,13 @@ from pttools.models.const_cs import ConstCSModel
 
 # from pttools.models.full import FullModel
 # from pttools.models.sm import StandardModel
-from pttools.utils import IS_GITHUB_ACTIONS
+from pttools.utils import testing_or_ci
 from tests.profiling import utils_cprofile
 
 
-def main(n_points = 10 if IS_GITHUB_ACTIONS else 20):
+def main():
     """Plot the relative change in entropy density for a grid of bubbles"""
+    n_points = 10 if testing_or_ci() else 20
     # sm = StandardModel(V_s=5e12, g_mult_s=1 + 1e-9)
     models = [
         # BagModel(a_s=1.1, a_b=1, V_s=1),

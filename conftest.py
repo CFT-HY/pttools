@@ -6,6 +6,7 @@ import logging
 import pytest
 
 from pttools.logging import setup_logging
+from pttools.utils import system
 from pttools.utils.system import AVAILABLE_CPU_CORES
 
 # if tp.TYPE_CHECKING:
@@ -79,6 +80,7 @@ def pytest_xdist_auto_num_workers() -> int | None:
 
 
 def pytest_configure(config: pytest.Config) -> None:
+    system._TESTING = True  # noqa: SLF001
     setup_logging()
 
 

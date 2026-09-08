@@ -876,7 +876,7 @@ def do_all_plot_ps_compare_nuc(
     p_ssm_list = []
     v2_list = []
 
-    # This loop cannot be multi-threaded, as Matplotlib is not thread-safe
+    # This loop cannot be multithreaded, as Matplotlib is not thread-safe.
     for vw_list, alpha, in zip(VW_LIST_ALL, const.ALPHA_LIST_ALL, strict=False):
         for vw in vw_list:
             v2, Omgw_scaled, p_cwg, p_ssm = plot_ps_compare_nuc(

@@ -17,13 +17,12 @@ from pttools.analysis.bubble_grid import BubbleGridVWAlpha
 from pttools.analysis.plot_entropy_grid import compute
 from pttools.logging import setup_logging
 from pttools.models.bag import BagModel
-from pttools.utils import IS_GITHUB_ACTIONS
+from pttools.utils import testing_or_ci
 
 
-def main(
-        relative: bool = True,
-        n_points = 10 if IS_GITHUB_ACTIONS else 20) -> plt.Figure:
+def main(relative: bool = True) -> plt.Figure:
     """Plot the entropies of the old and new solvers"""
+    n_points = 10 if testing_or_ci else 20
     v_walls = np.linspace(0.05, 0.95, n_points, endpoint=True)
     alpha_ns = v_walls
     # entropy_ref, v_walls, alpha_ns = load()

@@ -38,13 +38,13 @@ def time_and_log(
 
 
 def time_with_varying_numba_threads(
-    name: str,
-    stmt: str,
-    setup: str,
-    n_iterations: int,
-    n_threads: th.IntArr1D = DEFAULT_VARYING_NUMBA_THREADS,
-    log: bool = True,
-    file: tp.TextIO | None = None) -> tuple[th.IntArr1D, th.FloatArr1D]:
+        name: str,
+        stmt: str,
+        setup: str,
+        n_iterations: int,
+        n_threads: th.IntArr1D = DEFAULT_VARYING_NUMBA_THREADS,
+        log: bool = True,
+        file: tp.TextIO | None = None) -> tuple[th.IntArr1D, th.FloatArr1D]:
     if NUMBA_DISABLE_JIT:
         return np.array([1]), np.array([time_and_log(name, stmt, setup, n_iterations, 1, log, file)])
 

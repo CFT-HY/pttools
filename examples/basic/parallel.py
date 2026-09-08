@@ -11,13 +11,15 @@ from examples.utils import save_and_show_fig
 from pttools.analysis import BubbleGridVWAlpha, VwAlphaPlot
 from pttools.bubble import get_kappa_omega
 from pttools.models import BagModel
+from pttools.utils import testing
 
 
 def main() -> VwAlphaPlot:
     """Minimal example of parallel bubble solving"""
+    n = 10 if testing() else 20
     # Create the arrays of v_wall and alpha_n points that will be used for the grid
-    v_walls = np.linspace(0.05, 0.95, 20)
-    alpha_ns = np.linspace(0.05, 0.3, 20)
+    v_walls = np.linspace(0.05, 0.95, n)
+    alpha_ns = np.linspace(0.05, 0.3, n)
     # Create the equation of state
     model = BagModel(a_s=1.1, a_b=1, V_s=1)
 

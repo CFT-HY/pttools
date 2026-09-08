@@ -8,28 +8,23 @@ from pttools import ssm
 from pttools.bubble import CS2_BAG_SCALAR_PTR, DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG, Bubble, cs2_bag_scalar
 from pttools.bubble.thermo import ubarf2
 from pttools.bubble.thermo_bag import de_from_w_bag
-from pttools.models import BagModel
 from pttools.ssm import SSMSpectrum, pow_spec
 import pttools.type_hints as th
 from pttools.utils.assertions import assert_allclose
+from tests.bubble.ref import RefHindmarshHijazi
 
 
-class SpectrumTest(unittest.TestCase):
+class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
     """Tests for comparing the results of the Spectrum class to the old bag model interface."""
 
-    V_WALLS: th.FloatArr1D = np.array([0.5, 0.7, 0.77])
-    ALPHA_NS: th.FloatArr1D = np.array([0.578, 0.151, 0.091])
-    model: BagModel
-    bubbles: list[Bubble]
     spectra: list[SSMSpectrum]
     spectra_lambda: list[SSMSpectrum]
     z: th.FloatArr1D
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.model = BagModel(a_s=1.1, a_b=1, V_s=2)
         cls.bubbles = [
-            Bubble(cls.model, v_wall=cls.V_WALLS[i], alpha_n=cls.ALPHA_NS[i])
+            Bubble(cls.MODEL, v_wall=cls.V_WALLS[i], alpha_n=cls.ALPHA_NS[i])
             for i in range(cls.V_WALLS.size)
         ]
         cls.spectra = [SSMSpectrum(bubble) for bubble in cls.bubbles]
@@ -120,7 +115,8 @@ class SpectrumTest(unittest.TestCase):
                 (v_wall, alpha_n),
                 lambda_correction=True
             ) * spectrum.source_lifetime_factor
-            for v_wall, alpha_n, spectrum in zip(self.V_WALLS, self.ALPHA_NS, self.spectra_lambda, strict=False)
+            for v_wall, alpha_n, spectrum \
+            in zip(self.V_WALLS, self.ALPHA_NS, self.spectra_lambda, strict=False)
         ])
         new = np.array([
             pow_spec(z=spectrum.y, spec_den=spectrum.spec_den_gw_ssm) * \

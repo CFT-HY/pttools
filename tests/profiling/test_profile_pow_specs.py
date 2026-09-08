@@ -20,7 +20,7 @@ def pow_specs():
 class TestProfilePowSpecs(TestProfile):
     """Profile the power spectrum calculation of the paper."""
 
-    name = "pow_specs"
+    NAME = "pow_specs"
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -35,7 +35,7 @@ class TestProfilePowSpecs(TestProfile):
     @classmethod
     @skip_slow
     def test_profile_pow_specs_cprofile(cls):
-        with utils_cprofile.CProfiler(cls.name):
+        with utils_cprofile.CProfiler(cls.NAME):
             pow_specs()
 
     @classmethod
@@ -45,7 +45,7 @@ class TestProfilePowSpecs(TestProfile):
         "Pyinstrument may segfault with old Numba versions")
     def test_profile_pow_specs_pyinstrument(cls):
         try:
-            with utils_pyinstrument.PyInstrumentProfiler(cls.name):
+            with utils_pyinstrument.PyInstrumentProfiler(cls.NAME):
                 pow_specs()
         except (AssertionError, UnboundLocalError) as e:
             logger.exception("Pyinstrument crashed", exc_info=e)
@@ -55,7 +55,7 @@ class TestProfilePowSpecs(TestProfile):
     @classmethod
     @skip_slow
     def test_profile_pow_specs_yappi(cls):
-        with utils_yappi.YappiProfiler(cls.name):
+        with utils_yappi.YappiProfiler(cls.NAME):
             pow_specs()
 
 

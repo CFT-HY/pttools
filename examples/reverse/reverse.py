@@ -27,9 +27,11 @@ def solvable(
     f_peak, omega_peak = spectrum.omgw0_peak()  # suppression=SuppressionMethod.EXT_CONSTANT
     f_diff = np.log10(f_peak) - np.log10(f_peak_target)
     omega_diff = np.log10(omega_peak) - np.log10(omega_peak_target)
-    diff = f_diff**2 + omega_diff**2
-    print(f"v_wall={v_wall}, alpha_n={alpha_n}, r_star={r_star}, f_diff={f_diff}, omega_diff={omega_diff}, diff={diff}")
-    return diff
+    # diff = f_diff**2 + omega_diff**2
+    # print(
+    #     f"v_wall={v_wall}, alpha_n={alpha_n}, r_star={r_star}, f_diff={f_diff}, omega_diff={omega_diff}, diff={diff}"
+    # )
+    return f_diff**2 + omega_diff**2
 
 
 def solver(

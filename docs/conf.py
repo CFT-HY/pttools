@@ -318,7 +318,7 @@ if IS_GITHUB_ACTIONS:
         r"https://stfc\.ukri\.org/",
     ]
 
-linkcheck_retries = 3
+linkcheck_retries = 5
 # Timeout had to be increased from 5 to prevent errors with slow ArXiv links
 linkcheck_timeout = 20
 linkcheck_workers = 10

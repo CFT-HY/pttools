@@ -13,6 +13,9 @@ from tests.utils.mark import skip_slow
 
 logger = logging.getLogger(__name__)
 
+#: Change this to e.g. 10 to obtain proper performance data.
+#: This is set to 1 to speed up the unit testing.
+N_ITERATIONS: int = 1
 PERFORMANCE_DIR = os.path.join(TEST_RESULT_PATH, "performance")
 os.makedirs(PERFORMANCE_DIR, exist_ok=True)
 
@@ -49,7 +52,7 @@ class TestPerformance(unittest.TestCase):
         Bubble(model, v_wall=0.3, alpha_n=0.1)
         """)
         command = "Bubble(model, v_wall=0.3, alpha_n=0.1)"
-        cls.time_and_plot("Bubble", "bubble", command, setup, 10)
+        cls.time_and_plot("Bubble", "bubble", command, setup, n_iterations=N_ITERATIONS)
 
     @classmethod
     @skip_slow
@@ -67,7 +70,10 @@ class TestPerformance(unittest.TestCase):
         bubble = Bubble(model, v_wall=0.3, alpha_n=0.1)
         Spectrum(bubble, r_star=0.1)
         """)
-        cls.time_and_plot("Bubble and Spectrum", "bubble_and_spectrum", command, setup, 10)
+        cls.time_and_plot(
+            name="Bubble and Spectrum", filename="bubble_and_spectrum",
+            stmt=command, setup=setup, n_iterations=N_ITERATIONS
+        )
 
     @classmethod
     @skip_slow
@@ -80,7 +86,10 @@ class TestPerformance(unittest.TestCase):
         ssm.power_gw_bag(z, (0.1, 0.1))
         """)
         command = "ssm.power_gw_bag(z, (0.1, 0.1))"
-        cls.time_and_plot("power_gw_bag", "power_gw_bag", command, setup, 10)
+        cls.time_and_plot(
+            name="power_gw_bag", filename="power_gw_bag",
+            stmt=command, setup=setup, n_iterations=N_ITERATIONS
+        )
 
     @classmethod
     @skip_slow
@@ -96,7 +105,10 @@ class TestPerformance(unittest.TestCase):
         sin_transform(z, xi, f)
         """)
         command = "sin_transform(z, xi, f)"
-        cls.time_and_plot("sin_transform", "sin_transform", command, setup, 10)
+        cls.time_and_plot(
+            name="sin_transform", filename="sin_transform",
+            stmt=command, setup=setup, n_iterations=N_ITERATIONS
+        )
 
     @classmethod
     @skip_slow
@@ -111,7 +123,10 @@ class TestPerformance(unittest.TestCase):
         Spectrum(bubble, r_star=0.1)
         """)
         command = "Spectrum(bubble, r_star=0.1)"
-        cls.time_and_plot("Spectrum", "spectrum", command, setup, 10)
+        cls.time_and_plot(
+            name="Spectrum", filename="spectrum",
+            stmt=command, setup=setup, n_iterations=N_ITERATIONS
+        )
 
 
 if __name__ == "__main__":

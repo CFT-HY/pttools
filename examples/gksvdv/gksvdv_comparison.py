@@ -11,27 +11,19 @@ import numpy as np
 from examples.utils import save_and_show_figs
 from pttools.analysis.parallel import create_bubbles
 from pttools.bubble.bubble import get_kappa
-from pttools.models import ConstCSModel
-from pttools.utils.system import IS_GITHUB_ACTIONS
+from pttools.models import GKSVDV_ALPHA_N, gksvdv_models, gksvdv_v_wall
+from pttools.type_hints import FloatArr1D
+from pttools.utils import testing_or_ci
 
 logger = logging.getLogger(__name__)
 
 
 def main(
-        a_s: float = 5,
-        a_b: float = 1,
-        V_s: float = 1,
         colors = ("b", "y", "r", "g", "purple", "grey"),
-        n_v_walls = 20 if IS_GITHUB_ACTIONS else 50) -> tuple[plt.Figure, plt.Figure]:
+        alpha_ns: FloatArr1D = GKSVDV_ALPHA_N) -> tuple[plt.Figure, plt.Figure]:
     """Comparison of Giese et al. and PTtools solvers"""
-    alpha_ns = np.array([0.01, 0.03, 0.1, 0.3, 1, 3])
-    v_walls = np.linspace(0.2, 0.95, n_v_walls)
-    models = [
-        ConstCSModel(css2=1 / 3, csb2=1 / 3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_ns[0]),
-        ConstCSModel(css2=1 / 3, csb2=1 / 4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_ns[0]),
-        ConstCSModel(css2=1 / 4, csb2=1 / 3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_ns[0]),
-        ConstCSModel(css2=1 / 4, csb2=1 / 4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_ns[0])
-    ]
+    models = gksvdv_models()
+    v_walls = gksvdv_v_wall(n=10 if testing_or_ci() else 50)
     logger.info("Minimum alpha_ns: %s", [model.alpha_n_min for model in models])
     for model in models:
         logger.info("Model parameters: %s", model.params_str())
@@ -48,11 +40,11 @@ def main(
     kappas_giese = np.empty((len(models), alpha_ns.size, v_walls.size))
     for i_model, model in enumerate(models):
         ls = "--" if i_model in [2, 3] else "-"
-        bubbles_pttools, kappas_pttools[i_model, :, :] = create_bubbles(
+        _bubbles_pttools, kappas_pttools[i_model, :, :] = create_bubbles(
             model=model, v_walls=v_walls, alpha_ns=alpha_ns, func=get_kappa,
             bubble_kwargs={"allow_invalid": False}, allow_bubble_failure=True
         )
-        bubbles_giese, kappas_giese[i_model, :, :] = create_bubbles(
+        _bubbles_giese, kappas_giese[i_model, :, :] = create_bubbles(
             model=model, v_walls=v_walls, alpha_ns=alpha_ns, func=get_kappa,
             bubble_kwargs={"allow_invalid": False, "use_giese_solver": True}, allow_bubble_failure=True
         )

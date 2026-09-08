@@ -12,6 +12,8 @@ try:
 except ModuleNotFoundError:
     psutil = None
 
+#: Whether currently running tests with pytest. Use :py:func:`pttools.utils.system.testing` to get this value.
+_TESTING: bool = False
 #: The number of available CPU cores
 AVAILABLE_CPU_CORES: int | None
 #: Whether the system provides information on which CPU cores are available for this process
@@ -121,3 +123,13 @@ def system_info() -> str:
         dmesg_msg = str(err)
 
     return f"{platform_info()} {psutil_info()} {dmesg_msg}"
+
+
+def testing() -> bool:
+    """Get whether currently running unit tests."""
+    return _TESTING
+
+
+def testing_or_ci() -> bool:
+    """Get whether currently running unit tests or a CI workflow."""
+    return testing() or IS_GITHUB_ACTIONS

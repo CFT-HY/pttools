@@ -17,27 +17,28 @@ from examples.utils import save_and_show_figs
 from pttools.analysis.parallel import create_bubbles, v_wall_alpha_n_grid
 from pttools.bubble.bubble import get_kappa_giese
 from pttools.bubble.gksvdv.quantities import kappa_gksvdv
-from pttools.models import ConstCSModel
+from pttools.models import GKSVDV_ALPHA_N, ConstCSModel, gksvdv_models, gksvdv_v_wall
 from pttools.speedup import run_parallel
-import pttools.type_hints as th
-from pttools.utils.system import IS_GITHUB_ACTIONS
+from pttools.type_hints import FloatArr1D, FloatArr2D, FloatArr3D
+from pttools.utils.system import testing_or_ci
 
 logger = logging.getLogger(__name__)
 
 
 def kappas_giese(
         model: ConstCSModel,
-        v_walls: th.FloatArr1D,
-        alpha_ns: th.FloatArr1D,
-        theta_bar: bool = False) -> th.FloatArr2D:
+        v_walls: FloatArr1D,
+        alpha_ns: FloatArr1D,
+        theta_bar: bool = False) -> FloatArr2D:
     r"""Compute $\kappa$ for several bubbles with the :giese_2021:`\ ` solver"""
+    # Todo: Why is alpha_tbns not used?
     if theta_bar:
         alpha_tbns = alpha_ns
     else:
         alpha_tbns = np.empty((alpha_ns.size,))
         for i, alpha_n in enumerate(alpha_ns):
             try:
-                wn = model.wn(alpha_n, theta_bar=theta_bar)
+                wn: float = model.wn(alpha_n, theta_bar=theta_bar)
                 alpha_tbns[i] = model.alpha_theta_bar_n_from_alpha_n(alpha_n=alpha_n, wn=wn)
             except (ValueError, RuntimeError):
                 alpha_tbns[i] = np.nan
@@ -59,19 +60,19 @@ def kappas_giese(
 def create_figure(
         axs: tp.Iterable[plt.Axes],
         models: list[ConstCSModel],
-        alpha_ns: th.FloatArr1D,
+        alpha_ns: FloatArr1D,
         colors: list[str],
         lss: list[str],
-        v_walls: th.FloatArr1D,
+        v_walls: FloatArr1D,
         theta_bar: bool = False,
-        giese: bool = False) -> th.FloatArr3D:
+        giese: bool = False) -> FloatArr3D:
     r"""Create a figure of $\kappa(v_\text{wall})$ similar to :giese_2021:`\ `, fig. 2"""
     kappas = np.empty((len(models), alpha_ns.size, v_walls.size))
     for i_model, (model, ls) in enumerate(zip(models, lss, strict=False)):
         if giese:
             kappas[i_model, :, :] = kappas_giese(model=model, v_walls=v_walls, alpha_ns=alpha_ns, theta_bar=theta_bar)
         else:
-            bubbles, kappas[i_model, :, :] = create_bubbles(
+            _bubbles, kappas[i_model, :, :] = create_bubbles(
                 model=model, v_walls=v_walls, alpha_ns=alpha_ns, func=get_kappa_giese,
                 bubble_kwargs={"theta_bar": theta_bar, "allow_invalid": False}, allow_bubble_failure=True
             )
@@ -123,10 +124,10 @@ def create_figure(
 
 def create_diff_figure(
         ax: plt.Axes,
-        kappas_pttools: th.FloatArr3D,
-        kappas_giese: th.FloatArr3D,
+        kappas_pttools: FloatArr3D,
+        kappas_giese: FloatArr3D,
         models: list[ConstCSModel],
-        v_walls: th.FloatArr1D,
+        v_walls: FloatArr1D,
         colors: list[str],
         lss: list[str],
         theta_bar: bool,
@@ -158,22 +159,13 @@ def create_diff_figure(
 
 
 def main(
-        a_s: float = 5,
-        a_b: float = 1,
-        V_s: float = 1,
         colors = ("b", "y", "r", "g", "purple", "grey"),
         lss = ("-", "--", ":", "-."),
-        n_v_walls = 20 if IS_GITHUB_ACTIONS else 50) \
+        alpha_ns: FloatArr1D = GKSVDV_ALPHA_N) \
         -> tuple[plt.Figure, plt.Figure, plt.Figure, plt.Figure]:
     r"""Reproduction of :giese_2021:`\ `, fig. 2"""
-    alpha_ns = np.array([0.01, 0.03, 0.1, 0.3, 1, 3])
-    v_walls = np.linspace(0.2, 0.95, n_v_walls)
-    models = [
-        ConstCSModel(css2=1/3, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_ns[0]),
-        ConstCSModel(css2=1/3, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_ns[0]),
-        ConstCSModel(css2=1/4, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_ns[0]),
-        ConstCSModel(css2=1/4, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_ns[0])
-    ]
+    v_walls = gksvdv_v_wall(n=10 if testing_or_ci() else 50)
+    models = gksvdv_models()
     logger.info("Minimum alpha_ns: %s", [model.alpha_n_min for model in models])
     for model in models:
         logger.info("Model parameters: %s", model.params_str())
@@ -212,8 +204,6 @@ def main(
         models=models, alpha_ns=alpha_ns, colors=colors, lss=lss, v_walls=v_walls,
         theta_bar=False
     )
-    print("v_walls")
-    print(v_walls)
     create_diff_figure(
         ax=axs2[0],
         kappas_pttools=kappas_pttools_atbn, kappas_giese=kappas_giese_atbn,
