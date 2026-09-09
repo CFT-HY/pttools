@@ -14,9 +14,9 @@ def convert_extlinks(extlinks: ExtLinks) -> ExtLinks:
     return {key: (f"{value[0]}%s", f"{value[1]}%s") for key, value in extlinks.items()}
 
 
-def doi_link(doi: str, authors: str, year: int | str) -> ExtLink:
+def doi_link(doi: str, authors: str, year: int | str, notes: str | None = None) -> ExtLink:
     """Generate a link to a DOI."""
-    return f"https://doi.org/{doi}", f"{authors} ({year})"
+    return f"https://doi.org/{doi}", f"{authors} ({year}){"" if notes is None else " {notes}"}"
 
 
 def hdl_link(handle: str, authors: str, year: int | str) -> ExtLink:
@@ -31,6 +31,7 @@ EXTLINKS_STATIC: ExtLinks = {
     "hindmarsh_2014": arxiv_link("1304.2433", HINDMARSH_ET_AL, 2014),
     "hindmarsh_2015": arxiv_link("1504.03291", HINDMARSH_ET_AL, 2015),
     "hindmarsh_2017": arxiv_link("1704.05871", HINDMARSH_ET_AL),
+    "hindmarsh_2017_erratum": doi_link("10.1103/PhysRevD.101.089902", HINDMARSH_ET_AL, 2017, "erratum"),
     "ssm": arxiv_link("1608.04735", HINDMARSH_ET_AL, 2018),
     "gw_pt_ssm": arxiv_link("1909.10040", HINDMARSH_ET_AL),
     "notes": arxiv_link("2008.09136", HINDMARSH_ET_AL, 2021),
@@ -70,8 +71,8 @@ EXTLINKS_STATIC: ExtLinks = {
     "hakkinen_msc": hdl_link("10138/576963", "Häkkinen", 2024),
     "maki_msc": arxiv_link("2511.20436", "Mäki", 2025),
     # Other
-    "lisa_conventions": (
-        "https://gitlab.esa.int/lisa-sgs/sandbox/conventions-document", "LISA DDPC Conventions document"),
+    "lisa_conventions": arxiv_link("2603.22377", "LISA DDPC Conventions document"),
+    # ("https://gitlab.esa.int/lisa-sgs/sandbox/conventions-document", "LISA DDPC Conventions document"),
     "lisa_sci_req": ("https://www.cosmos.esa.int/web/lisa/documents", "LISA Science Requirements Document"),
     "rel_hydro_book": doi_link(
         "10.1093/acprof:oso/9780198528906.001.0001", "Relativistic hydrodynamics: Rezzolla, Zanotti", 2013),
