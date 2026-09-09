@@ -247,18 +247,16 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
-        r"""Conversion from $\alpha_{\bar{\theta}_n}$ of :giese_2021:`\ `, eq. 13 to $\alpha_n$."""
-        wn_solved: th.FloatOrArr
-        if wn is None or np.isnan(wn):
-            wn_solved = self.wn(
-                alpha_theta_bar_n, wn_guess=wn_guess, theta_bar=True,
-                error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid)
-        else:
-            wn_solved = wn
-        tn = self.temp(wn_solved, Phase.SYMMETRIC)
-        diff = (1 - 1 / (3 * self.cs2(wn_solved, Phase.BROKEN))) * \
-            (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN)) / wn_solved
-        return tp.cast(T, alpha_theta_bar_n - diff)
+        r"""$\alpha_n \left( \alpha_{\bar{\theta}_n} \right)$.
+
+        $$\alpha_{\bar{\theta}_n} = \alpha_n + \left(1 - \frac{1}{3 c_{s,b}^2} \right) \frac{Dp}{w_n}$$
+        $\alpha_{\bar{\theta}_n}$ is defined in :giese_2021:`\ `.
+        """
+        wn_solved = self.wn(
+            alpha_theta_bar_n, wn_guess=wn_guess, theta_bar=True,
+            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
+        ) if wn is None or np.isnan(wn) else wn
+        return alpha_theta_bar_n - self.alpha_theta_bar_n_diff(wn_solved)
 
     def alpha_n_min_find(
             self,
@@ -385,20 +383,34 @@ class Model(BaseModel, abc.ABC):
             nan_on_invalid=nan_on_invalid,
             log_invalid=log_invalid
         )
-        return self.delta_theta_bar(wn, Phase.SYMMETRIC) / (3 * wn)
+        return self.D_theta_bar(wn, Phase.SYMMETRIC) / (3 * wn)
+
+    def alpha_theta_bar_n_diff[T: FloatOrArr](self, wn: T) -> T:
+        r"""$\alpha_{\bar{\theta}_n} - \alpha_n$, the difference between the two $\alpha_n$ conventions.
+
+        $$\alpha_{\bar{\theta}_n} - \alpha_n = \left(1 - \frac{1}{3 c_{s,b}^2} \right) \frac{Dp}{w_n}$$
+        $\alpha_{\bar{\theta}_n}$ is defined in :giese_2021:`\ `.
+        """
+        return (1 - 1 / (self.cs2(wn, Phase.BROKEN))) * (self.Dp(self.temp(wn, Phase.SYMMETRIC))) / wn
 
     def alpha_theta_bar_n_from_alpha_n[T: FloatOrArr](
             self,
             alpha_n: T,
             wn: float | None = None,
-            wn_guess: float | None = None) -> T:
-        r"""Conversion from $\alpha_n$ to $\alpha_{\bar{\theta}_n}$ of :giese_2021:`\ `, eq. 13."""
-        wn_solved: th.FloatOrArr
-        wn_solved = self.wn(alpha_n, wn_guess=wn_guess) if wn is None or np.isnan(wn) else wn
-        tn = self.temp(wn_solved, Phase.SYMMETRIC)
-        diff = (1 - 1 / (3 * self.cs2(wn_solved, Phase.BROKEN))) * \
-            (self.p_temp(tn, Phase.SYMMETRIC) - self.p_temp(tn, Phase.BROKEN)) / wn_solved
-        return tp.cast(T, alpha_n + diff)
+            wn_guess: float | None = None,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> T:
+        r"""$\alpha_{\bar{\theta}_n} \left( \alpha_n \right)$.
+
+        $$\alpha_{\bar{\theta}_n} = \alpha_n + \left(1 - \frac{1}{3 c_{s,b}^2} \frac{Dp}{w_n}$$
+        $\alpha_{\bar{\theta}_n}$ is defined in :giese_2021:`\ `.
+        """
+        wn_solved = self.wn(
+            alpha_n, wn_guess=wn_guess,
+            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
+        ) if wn is None or np.isnan(wn) else wn
+        return alpha_n + self.alpha_theta_bar_n_diff(wn_solved)
 
     def alpha_theta_bar_n_max_lte(
             self,
@@ -468,7 +480,7 @@ class Model(BaseModel, abc.ABC):
 
         $$\alpha_{\bar{\theta}+} = \frac{D \bar{\theta}(T_+)}{3 w_+}$$
         """
-        return tp.cast(T, self.delta_theta_bar(wp, Phase.SYMMETRIC) / (3 * wp))
+        return tp.cast(T, self.D_theta_bar(wp, Phase.SYMMETRIC) / (3 * wp))
 
     @staticmethod
     def check_alpha_plus[T: FloatOrArr](
@@ -722,6 +734,50 @@ class Model(BaseModel, abc.ABC):
         """
         return self.cs2(self.w(temp, phase), phase)
 
+    def De[T: FloatOrArr](self, temp: T) -> T:
+        r"""$De(T) = e_s(T) - e_b(T)$.
+
+        :maki_msc:`\ ` eq. 2.54
+        """
+        return self.e_temp(temp, Phase.SYMMETRIC) - self.e_temp(temp, Phase.BROKEN)
+
+    def Dp[T: FloatOrArr](self, temp: T) -> T:
+        r"""$Dp(T) = p_s(T) - p_b(T)$.
+
+        :maki_msc:`\ ` eq. 2.54
+        """
+        return self.p_temp(temp, Phase.SYMMETRIC) - self.p_temp(temp, Phase.BROKEN)
+
+    def Ds[T: FloatOrArr](self, temp: T) -> T:
+        r"""$Dp(T) = s_s(T) - s_b(T)$.
+
+        :maki_msc:`\ ` eq. 2.54
+        """
+        return self.s_temp(temp, Phase.SYMMETRIC) - self.s_temp(temp, Phase.BROKEN)
+
+    def Dw[T: FloatOrArr](self, temp: T) -> T:
+        r"""$Dp(T) = w_s(T) - w_b(T)$.
+
+        :maki_msc:`\ ` eq. 2.54
+        """
+        return self.w(temp, Phase.SYMMETRIC) - self.w(temp, Phase.BROKEN)
+
+    def D_theta_bar(self, w: th.FloatOrArr, phase_of_w: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Pseudotrace difference $D\bar{\theta}(w)$, :giese_2021:`\ `, eq. 10.
+
+        $$D\bar{\theta}(w,\phi) = \bar{\theta}(T(w,\phi)) - \bar{\theta}(T(w,\phi))$$
+        :maki_msc:`\ `eq. 2.54
+        """
+        return self.D_theta_bar_temp(self.temp(w, phase_of_w))
+
+    def D_theta_bar_temp[T: FloatOrArr](self, temp: T) -> T:
+        r"""Pseudotrace difference $D\bar{\theta}(T)$, :giese_2021:`\ `, eq. 10.
+
+        $$D\bar{\theta}(T) = \bar{\theta}(T) - \bar{\theta}(T)$$
+        :maki_msc:`\ `eq. 2.54
+        """
+        return self.theta_bar_temp(temp, Phase.SYMMETRIC) - self.theta_bar_temp(temp, Phase.BROKEN)
+
     def delta_theta(
             self,
             wp: th.FloatOrArr,
@@ -742,20 +798,6 @@ class Model(BaseModel, abc.ABC):
             theta_s=theta_s, theta_b=theta_b,
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
-
-    def delta_theta_bar(self, w: th.FloatOrArr, phase_of_w: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Pseudotrace difference $D\bar{\theta}(w)$, :giese_2021:`\ `, eq. 10.
-
-        $$D\bar{\theta}(w) = \bar{\theta}(T) - \bar{\theta}(T)$$
-        """
-        return self.delta_theta_bar_temp(self.temp(w, phase_of_w))
-
-    def delta_theta_bar_temp[T: FloatOrArr](self, temp: T) -> T:
-        r"""Pseudotrace difference $D\bar{\theta}(T)$, :giese_2021:`\ `, eq. 10.
-
-        $$D\bar{\theta}(T) = \bar{\theta}(T) - \bar{\theta}(T)$$
-        """
-        return self.theta_bar_temp(temp, Phase.SYMMETRIC) - self.theta_bar_temp(temp, Phase.BROKEN)
 
     def delta_theta_temp(
             self,
