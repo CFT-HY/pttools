@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """Utilities for handling links in the documentation."""
 
 type ExtLink = tuple[str, str]
@@ -105,3 +107,13 @@ LINKCHECK_ALLOWED_REDIRECTS: dict[str, str] = {
     r"https://.*\.stackexchange.com/a/.*": r"https://.*\.stackexchange.com/questions/.*",
     "https://stackoverflow.com/a/*": "https://stackoverflow.com/questions/*",
 }
+
+
+def print_links(links: ExtLinks | None = None) -> None:
+    if links is None:
+        links = EXTLINKS_STATIC
+    print("\n".join([f"{key}: {value[1]} {value[0]}" for key, value in links.items()]))
+
+
+if __name__ == "__main__":
+    print_links()
