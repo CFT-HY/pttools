@@ -1,6 +1,7 @@
 """Configuration for the pytest test suite."""
 
 import logging
+import time
 
 # import typing as tp
 import pytest
@@ -82,6 +83,21 @@ def pytest_xdist_auto_num_workers() -> int | None:
 def pytest_configure(config: pytest.Config) -> None:
     system._TESTING = True  # noqa: SLF001
     setup_logging()
+
+
+def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
+    """Log the time at which the test run finished.
+
+    With pytest-xdist this is logged by both the controller and each worker,
+    which have log files of their own.
+    """
+    worker_id: str | None = getattr(session.config, "workerinput", {}).get("workerid")
+    logger.info(
+        "Test run finished at %s%s with exit status %s.",
+        time.strftime("%Y-%m-%d %H:%M:%S %z"),
+        "" if worker_id is None else f" on worker {worker_id}",
+        exitstatus
+    )
 
 
 @pytest.hookimpl(tryfirst=True)
