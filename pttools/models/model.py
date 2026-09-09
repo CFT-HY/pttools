@@ -391,7 +391,7 @@ class Model(BaseModel, abc.ABC):
         $$\alpha_{\bar{\theta}_n} - \alpha_n = \left(1 - \frac{1}{3 c_{s,b}^2} \right) \frac{Dp}{w_n}$$
         $\alpha_{\bar{\theta}_n}$ is defined in :giese_2021:`\ `.
         """
-        return (1 - 1 / (self.cs2(wn, Phase.BROKEN))) * (self.Dp(self.temp(wn, Phase.SYMMETRIC))) / wn
+        return (1 - 1 / (3 * self.cs2(wn, Phase.BROKEN))) * self.Dp(self.temp(wn, Phase.SYMMETRIC)) / wn
 
     def alpha_theta_bar_n_from_alpha_n[T: FloatOrArr](
             self,
@@ -403,7 +403,7 @@ class Model(BaseModel, abc.ABC):
             log_invalid: bool = True) -> T:
         r"""$\alpha_{\bar{\theta}_n} \left( \alpha_n \right)$.
 
-        $$\alpha_{\bar{\theta}_n} = \alpha_n + \left(1 - \frac{1}{3 c_{s,b}^2} \frac{Dp}{w_n}$$
+        $$\alpha_{\bar{\theta}_n} = \alpha_n + \left(1 - \frac{1}{3 c_{s,b}^2} \right) \frac{Dp}{w_n}$$
         $\alpha_{\bar{\theta}_n}$ is defined in :giese_2021:`\ `.
         """
         wn_solved = self.wn(

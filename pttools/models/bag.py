@@ -344,7 +344,7 @@ class BagModel(AnalyticModel):
         This can be derived from the equations for $\theta$ and $\alpha_n$.
         """
         if theta_bar:
-            super().wn(
+            return super().wn(
                 alpha_n, wn_guess=wn_guess, theta_bar=theta_bar,
                 error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
             )
