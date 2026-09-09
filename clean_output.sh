@@ -1,18 +1,22 @@
-#!/bin/sh
+#!/usr/bin/env sh
 set -eu
 
 rm -rf \
   ./**/*.nbc \
   ./**/*.nbi \
-  ./**/.coverage \
-  ./**/.coverage.*.*.* \
-  ./**/.pytest_cache \
-  ./**/.test_durations \
-  ./**/coverage.json \
-  ./**/coverage.xml \
-  ./**/logs \
-  ./**/htmlcov \
-  ./**/output.html \
-  ./**/pyrefly.txt \
-  ./**/ruff.txt \
-  ./**/test-results \
+  ./*.egg-info \
+  ./.coverage \
+  ./.coverage.*.*.* \
+  ./.pytest_cache \
+  ./.test_durations \
+  ./call_graphs \
+  ./coverage.json \
+  ./coverage.xml \
+  ./dist \
+  ./htmlcov \
+  ./logs \
+  ./pyrefly.txt \
+  ./output.html \
+  ./ruff.txt \
+  ./test-results \
+  ./tests/test_data/*.hdf5
