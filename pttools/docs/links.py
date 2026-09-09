@@ -26,6 +26,8 @@ def hdl_link(handle: str, authors: str, year: int | str) -> ExtLink:
     return f"https://hdl.handle.net/{handle}", f"{authors} ({year})"
 
 
+# Todo: add also article titles here. Perhaps use custom objects for storing the links?
+
 HINDMARSH_ET_AL: str = "Hindmarsh et al."
 EXTLINKS_STATIC: ExtLinks = {
     # Order of articles: year, name of author

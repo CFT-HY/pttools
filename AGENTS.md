@@ -19,6 +19,7 @@
   If there are no such unit tests yet, create them. Use the existing output of the code as a reference,
   and also reference values from the literature, if there are any.
 - If you change any of the physics, inform the user explicitly and exactly what has been changed and why.
+- PTtools is used by PTPlot, which may be available at `../PTPlot`.
 
 ## Description of PTtools
 PTtools is a library for computing the gravitational wave spectra of first-order cosmological phase transitions.
