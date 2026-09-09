@@ -81,8 +81,7 @@ EXTLINKS_STATIC: ExtLinks = {
         "10.1093/acprof:oso/9780198528906.001.0001", "Relativistic hydrodynamics: Rezzolla, Zanotti", 2013),
     "schroeder_book": ("https://physics.weber.edu/thermal/", "Thermal physics: Schroeder (2000)")
 }
-EXTLINKS: ExtLinks = {
-    **convert_extlinks(EXTLINKS_STATIC),
+EXTLINKS_DYNAMIC: ExtLinks = {
     # Other
     "aof_grant": (
         "https://akareport.aka.fi/ibi_apps/WFServlet?IBIF_ex=x_hakkuvaus2&CLICKED_ON=&UILANG=en&TULOSTE=HTML&HAKNRO1=%s",
@@ -91,6 +90,10 @@ EXTLINKS: ExtLinks = {
     "issue": ("https://github.com/CFT-HY/pttools/issues/%s", "issue %s"),
     "ssm_repo": ("https://bitbucket.org/hindmars/sound-shell-model/src/master/%s", "sound-shell-model/%s"),
     "wikipedia": ("https://en.wikipedia.org/wiki/%s", "Wikipedia: %s")
+}
+EXTLINKS: ExtLinks = {
+    **convert_extlinks(EXTLINKS_STATIC),
+    **EXTLINKS_DYNAMIC,
 }
 LINKCHECK_ALLOWED_REDIRECTS: dict[str, str] = {
     "https://akareport.aka.fi/*": "https://tiedejatutkimus.fi/*",
