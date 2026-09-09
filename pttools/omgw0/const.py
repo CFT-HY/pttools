@@ -146,11 +146,12 @@ which for the $g_0 = 2$ photon polarizations reduces to $\rho_{\gamma} c^2 = a T
 #: :wikipedia:`Parsec`
 PC_IN_M: float = 180 * 60 * 60 * AU_IN_M / math.pi
 
-H: float = 0.6766
+H: float = 0.6766  # ± 0.42
 r"""
 $h$, dimensionless reduced Hubble constant :planck_2018:`\ `
-Please note that the observable quantity is $h^2 \Omega$,
+Please note that the observable quantity is $\Omega_\text{gw} h^2$,
 and that the $h$ of :py:data:`OMEGA_PHOTON` cancels out when converting to it.
+:wikipedia:`Hubble's_law`
 """
 #: $h^2$, dimensionless reduced Hubble constant squared
 H2: float = H**2
