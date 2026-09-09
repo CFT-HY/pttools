@@ -7,7 +7,7 @@ import pytest
 
 from pttools import models
 from pttools.analysis.parallel import create_bubbles
-from pttools.bubble.bubble import Bubble, get_kappa
+from pttools.bubble.bubble import Bubble, get_kappa_giese
 from pttools.speedup import IS_OSX
 import pttools.type_hints as th
 from pttools.utils.assertions import assert_allclose
@@ -18,16 +18,26 @@ def assert_kappa(
         css2: float,
         csb2: float,
         kappa_ref: th.FloatArr1D,
+        alpha_thetabar_ns: th.FloatArr1D | None = None,
         rtol: float = 1e-7,
         atol: float = 0) -> None:
-    r"""Compare kappa results to those of figure 2 of :giese_2021:`\ `."""
-    alpha_thetabar_ns = np.array([0.01, 0.1, 0.3])
+    r"""Compare kappa results to those of figure 2 of :giese_2021:`\ `.
+
+    The reference values are for $\kappa_{\bar{\theta}_n}$, which is normalised with
+    the pseudotrace difference $D\bar{\theta}$ instead of the trace anomaly difference $\Delta \theta$.
+    Therefore, the comparison has to be done with
+    :py:attr:`pttools.bubble.bubble.bubble.Bubble.kappa_giese` instead of
+    :py:attr:`pttools.bubble.bubble.bubble.Bubble.kappa`.
+    """
+    if alpha_thetabar_ns is None:
+        alpha_thetabar_ns = np.array([0.01, 0.1, 0.3])
     v_walls = np.linspace(0.2, 0.9, 8, endpoint=True)
     model = models.ConstCSModel(css2=css2, csb2=csb2, a_s=5, a_b=1, V_s=1)
-    bubbles, kappas = create_bubbles(
+    _bubbles, kappas = create_bubbles(
         model=model, v_walls=v_walls, alpha_ns=alpha_thetabar_ns,
-        func=get_kappa, bubble_kwargs={"theta_bar": True, "allow_invalid": True}, allow_bubble_failure=True)
-
+        func=get_kappa_giese, bubble_kwargs={"theta_bar": True, "allow_invalid": True},
+        allow_bubble_failure=True
+    )
     assert_allclose(kappas, kappa_ref, rtol=rtol, atol=atol)
 
 
@@ -70,16 +80,14 @@ class GieseTest(unittest.TestCase):
     @pytest.mark.xfail(IS_OSX, reason="Bug on macOS")
     @uses_multiprocessing
     def test_kappa33(self):
-        # The top-right value had to be adjusted from 0.01816217 when adding the -1 to the indexing in find_phase()
         kappa_ref = np.array([
-            [0.00741574, 0.01450964, 0.02653822, 0.05782794, 0.18993211, 0.04904255, 0.0265001, 0.0183009994],
+            [0.00741574, 0.01450964, 0.02653822, 0.05782794, 0.18993211, 0.04904255, 0.0265001, 0.01816217],
             [0.06921508, 0.12306195, 0.18896878, 0.28120044, 0.41124208, 0.44902447, 0.23408969, 0.15686063],
             [0.18355195, 0.28898783, 0.38244706, 0.47270278, 0.56546988, 0.6231619, 0.57442573, 0.36606867]
         ])
         assert_kappa(css2=1/3, csb2=1/3, kappa_ref=kappa_ref, rtol=7.3e-3)
 
     @staticmethod
-    @unittest.expectedFailure
     @uses_multiprocessing
     def test_kappa34():
         kappa_ref = np.array([
@@ -87,21 +95,29 @@ class GieseTest(unittest.TestCase):
             [0.06570444, 0.11244944, 0.16679036, 0.24170456, 0.28645206, 0.18837795, 0.11564567, 0.0850799],
             [0.17210839, 0.25999769, 0.3327127, 0.40143091, 0.44930404, 0.4318333, 0.29546582, 0.21279852]
         ])
-        assert_kappa(css2=1/3, csb2=1/4, kappa_ref=kappa_ref, rtol=0.61)
+        assert_kappa(css2=1/3, csb2=1/4, kappa_ref=kappa_ref, rtol=1e-2)
 
     @staticmethod
-    @unittest.expectedFailure
     @uses_multiprocessing
     def test_kappa43():
+        # For $c_{s,s} < c_{s,b}$ the pseudotrace difference has a lower limit of
+        # $D\bar{\theta} \geq w_n \frac{1 - c_{s,s}^2 / c_{s,b}^2}{1 + c_{s,s}^2}$,
+        # and therefore $\alpha_{\bar{\theta}_n} > \frac{1 - c_{s,s}^2 / c_{s,b}^2}{3(1 + c_{s,s}^2)} = \frac{1}{15}$
+        # for any parameters of the constant sound speed model.
+        # The $\alpha_{\bar{\theta}_n} = 0.01$ curve of the reference does therefore not exist for this model,
+        # and it has been replaced with an attainable value.
+        # The reference values for that value have been computed with the
+        # :giese_2021:`\ ` solver of pttools.bubble.gksvdv, which reproduces the other reference values exactly.
+        alpha_thetabar_ns = np.array([0.08, 0.1, 0.3])
         kappa_ref = np.array([
-            [0.00730452, 0.01543951, 0.0342464, 0.1244067, np.nan, 0.04904255, 0.0265001, 0.01816217],
+            [0.0548171, 0.10398168, 0.17795254, 0.30004012, 0.46124286, 0.45945576, 0.19144184, 0.12934278],
             [0.06740045, 0.12497735, 0.2058207, 0.32704976, 0.47932218, 0.50230337, 0.23408969, 0.15686063],
             [0.17642267, 0.28297756, 0.38474954, 0.48622994, 0.58952004, 0.65276938, 0.59256005, 0.36606867]
         ])
-        assert_kappa(css2=1/4, csb2=1/3, kappa_ref=kappa_ref, rtol=0.29)
+        assert_kappa(
+            css2=1/4, csb2=1/3, kappa_ref=kappa_ref, alpha_thetabar_ns=alpha_thetabar_ns, rtol=2.5e-2)
 
     @staticmethod
-    @unittest.expectedFailure
     @uses_multiprocessing
     def test_kappa44():
         kappa_ref = np.array([
@@ -109,4 +125,4 @@ class GieseTest(unittest.TestCase):
             [0.06410723, 0.11460043, 0.18265583, 0.28383528, 0.34206562, 0.18837795, 0.11564567, 0.0850799],
             [0.16570685, 0.25535541, 0.33629884, 0.41548919, 0.4724849, 0.45536877, 0.29546582, 0.21279852]
         ])
-        assert_kappa(css2=1/4, csb2=1/4, kappa_ref=kappa_ref, rtol=0.62)
+        assert_kappa(css2=1/4, csb2=1/4, kappa_ref=kappa_ref, rtol=1e-2)

@@ -128,9 +128,10 @@ class Bubble(BaseBubble):
         if theta_bar:
             model.validate_alpha_n(self.alpha_n, allow_invalid=allow_invalid, log_invalid=log_invalid)
 
+        # Use self.alpha_n instead of alpha_n, as the latter is alpha_theta_bar_n when theta_bar=True.
         self.sol_type = validate_solution_type(
             model,
-            v_wall=self.v_wall, alpha_n=alpha_n, sol_type=sol_type,
+            v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=sol_type,
             wn=self.wn, wm_guess=wm_guess
         )
 
