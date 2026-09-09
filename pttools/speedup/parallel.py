@@ -82,6 +82,13 @@ class LoggingRunner:
             kwargs: dict[str, tp.Any] | None = None,
             log_progress_element: int | None = None,
             log_progress_percentage: float | None = None):
+        if arr_size < 1:
+            raise ValueError(f"Invalid arr_size={arr_size}")
+        if not (log_progress_element is None or log_progress_element > 0):
+            raise ValueError(f"Invalid log_progress_element={log_progress_element}")
+        if not (log_progress_percentage is None or 0 < log_progress_percentage <= 100):  # noqa: PLR2004
+            raise ValueError(f"Invalid log_progress_percentage={log_progress_percentage}")
+
         self.func = func
         self.arr_size = arr_size
         self.unpack_params = unpack_params
