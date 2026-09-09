@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to the PTtools documentation!
-=====================================
+PTtools documentation
+=====================
 
 PTtools is a Python library for calculating hydrodynamical quantities around expanding bubbles
 of the new phase in an early universe phase transition,
@@ -33,21 +33,22 @@ PTtools is also `available on Docker Hub <https://hub.docker.com/r/cfthy/pttools
 
 
 .. toctree::
-   :caption: Contents:
-   :maxdepth: 2
+  :caption: Contents:
+  :maxdepth: 2
 
-   install
-   usage
-   auto_examples/index
-   gen_modules/pttools/pttools
-   gen_modules/examples/examples
-   gen_modules/tests/tests
-   gen_modules/docs/docs
-   history
-   acknowledgements
-   see_also
-   dev
-   sg_execution_times
+  install
+  usage
+  auto_examples/index
+  gen_modules/pttools/pttools
+  gen_modules/examples/examples
+  gen_modules/tests/tests
+  gen_modules/docs/docs
+  history
+  acknowledgements
+  see_also
+  dev
+  sg_api_usage
+  sg_execution_times
 
 
 Indices and tables

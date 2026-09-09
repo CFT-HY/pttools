@@ -28,7 +28,7 @@ all:
 #	sphinx-apidoc -o ./tests ../tests
 
 clean:
-	rm -rf $(BUILDDIR) ./auto_examples ./gen_modules ./sg_execution_times.rst
+	rm -rf $(BUILDDIR) ./auto_examples ./gen_modules ./sg_api_usage.rst ./sg_execution_times.rst
 
 html-noplot:
 	# https://sphinx-gallery.github.io/stable/configuration.html#building-without-executing-examples

@@ -104,6 +104,7 @@ suppress_warnings = [
     "autosectionlabel.*",
 ]
 
+
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -117,10 +118,12 @@ html_theme = "sphinx_rtd_theme"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+
 # -- LaTeX -------------------------------------------------------------------
 
 # For Unicode support
 latex_engine = "xelatex"
+
 
 # -- Math --------------------------------------------------------------------
 
@@ -131,6 +134,7 @@ mathjax3_config = {
         'displayMath': [["\\[", "\\]"]],
     },
 }
+
 
 # -- Apidoc  -----------------------------------------------------------------
 apidoc_modules = [
@@ -198,7 +202,6 @@ autodoc_typehints = "description"
 
 # Sphinx requires base URLs and caption strings to contain exactly one "%s",
 # and all other "%" need to be escaped as "%%".
-
 extlinks: ExtLinks = EXTLINKS
 extlinks_detect_hardcoded_links: bool = True
 intersphinx_mapping: IntersphinxMapping = INTERSPHINX_MAPPING
