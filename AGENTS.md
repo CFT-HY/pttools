@@ -23,9 +23,9 @@
 ## Description of PTtools
 PTtools is a library for computing the gravitational wave spectra of first-order cosmological phase transitions.
 It is based on the Sound Shell Model, which is introduced in the article
-"Gravitational waves from first order cosmological phase transitions in the Sound Shell Model" by Hindmarsh & Hijazi (2019).
-The article is available here: https://ar5iv.labs.arxiv.org/html/1909.10040
-Links to other relevant articles are in the `extlinks` dict of `./docs/conf.py`. (Remove the trailing `%s`.)
+"Gravitational waves from first order cosmological phase transitions in the Sound Shell Model"
+by Hindmarsh & Hijazi (2019), arXiv:1909.10040.
+Links to other relevant articles are in `pttools.docs.links.EXTLINKS_STATIC`.
 
 Modules:
 - `analysis`: plotting and data analysis tools

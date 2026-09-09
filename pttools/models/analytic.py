@@ -36,8 +36,8 @@ class AnalyticModel(Model, abc.ABC):
     :param auto_potential: set V_s and V_b so that T_c = 1 (bag model only)
     """
 
-    DEFAULT_V_S = 1
-    DEFAULT_A_G_MULT = 1.1
+    DEFAULT_V_S = 1.
+    DEFAULT_A_G_MULT: float = 1.1
 
     def __init__(
             self,
@@ -97,7 +97,11 @@ class AnalyticModel(Model, abc.ABC):
 
     @staticmethod
     def a_from_g[T: FloatOrArr](g: T) -> T:
-        """Get the prefactor $a$ from the relativistic degrees of freedom $g$."""
+        r"""Get the prefactor $a$ from the relativistic degrees of freedom $g$.
+
+        $$a \equiv \frac{\pi^2}{90} g$$
+        :maki_msc:`\ ` eq. 2.110.
+        """
         return tp.cast(T, np.pi**2 / 90 * g)
 
     def alpha_n_bag[T: FloatOrArr](
@@ -106,8 +110,11 @@ class AnalyticModel(Model, abc.ABC):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
-        r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
-        $$\alpha_n = \frac{4}{3w_n}(V_s - V_b)$$.
+        r"""$\alpha_n$, transition strength parameter at nucleation temperature.
+
+        $$\alpha_n = \frac{4}{3w_n}(V_s - V_b)$$
+        :notes:`\ `, eq. 7.40,
+        :maki_msc:`\ ` eq. 2.118.
 
         :param wn: $w_n$, enthalpy of the symmetric phase at the nucleation temperature
         :param error_on_invalid: raise error for invalid values
@@ -137,7 +144,9 @@ class AnalyticModel(Model, abc.ABC):
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
         r"""Transition strength parameter $\alpha_+$, :notes:`\ `, eq. 7.25.
-        $$\alpha_+ = \frac{4}{3w_+}(V_s - V_b)$$.
+
+        $$\alpha_+ = \frac{4}{3w_+}(V_s - V_b)$$
+        :maki_msc:`\ ` eq. 2.117.
 
         :param wp: $w_+$, enthalpy ahead of the wall
         :param wm: $w_-$, enthalpy behind the wall (not used)
@@ -170,6 +179,11 @@ class AnalyticModel(Model, abc.ABC):
 
     @staticmethod
     def g_from_a[T: FloatOrArr](a: T) -> T:
+        r"""Get the relativistic degrees of freedom $g$ from the prefactor $a$.
+
+        $$g = \frac{90}{\pi^2} a$$
+        :maki_msc:`\ ` eq. 2.110.
+        """
         return tp.cast(T, 90 / np.pi**2 * a)
 
     def ge_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:

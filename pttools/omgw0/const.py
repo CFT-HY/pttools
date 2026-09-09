@@ -56,6 +56,11 @@ r"""
 $N_{\nu,\text{eff}}$, the effective number of neutrino species today.
 :escudero_2026:`\ ` table 1 has several values in the range $N_{\nu,\text{eff}} \in [3.0435, 3.0453],
 giving a reasonable estimate of $N_{\nu,\text{eff}} \approx 3.044$.
+
+The older value $N \approx 3.046$ is used in
+:planck_2015:`\ `,
+:cosmo1:`\ ` eq. 4.43,
+:cosmo2:`\ ` table 4.
 """
 
 

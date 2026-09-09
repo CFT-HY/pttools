@@ -91,8 +91,8 @@ class ConstCSModel(AnalyticModel):
             logger.debug("Initialising ConstCSModel with css2=%s, csb2=%s", css2, csb2)
         css2_flt, css2_label = cs2_to_float_and_label(css2)
         csb2_flt, csb2_label = cs2_to_float_and_label(csb2)
-        self.css2 = self.validate_cs2(css2_flt, "css2")
-        self.csb2 = self.validate_cs2(csb2_flt, "csb2")
+        self.css2: float = self.validate_cs2(css2_flt, "css2")
+        self.csb2: float = self.validate_cs2(csb2_flt, "csb2")
 
         if np.isnan(css2) or np.isnan(csb2):
             raise ValueError(
@@ -115,6 +115,9 @@ class ConstCSModel(AnalyticModel):
 
         # This seems to contain invalid assumptions and approximations.
         # self.alpha_n_min_limit_cs = (self.mu - self.nu) / (3*self.mu)
+
+        #: The constant factor in the expression of $w_n$ for the ConstCSModel.
+        #: :maki_msc:`\ ` eq. 2.134
         self.const_cs_wn_const: float = 4 / 3 * (1 / self.mu_b - 1 / self.mu_s)
 
         # -----
@@ -139,7 +142,6 @@ class ConstCSModel(AnalyticModel):
         # # There is no Unicode subscript of b
         # label_unicode = "Const. cₛ, " + self.label_unicode_params \
         #     if not label_unicode else label_unicode
-
         label_latex = self.label_latex_params
         label_unicode = self.label_unicode_params
 
@@ -504,6 +506,12 @@ class ConstCSModel(AnalyticModel):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
+        r"""Transition strength parameter $\alpha_{\bar{\theta}_n$.
+
+        $$\alpha_{\bar{\theta}_n
+        = \frac{1}{3} \left( 1 - \frac{\mu_-}{\mu_+} \right) + \frac{\mu_-}{4} \alpha_{n,\text{bag}$$
+        :maki_msc:`\ ` eq. 2.137
+        """
         return (1 - self.mu_b / self.mu_s)/3 + self.mu_b/4 * self.alpha_n_bag(
             wn=wn,
             error_on_invalid=error_on_invalid,
@@ -542,6 +550,12 @@ class ConstCSModel(AnalyticModel):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
+        r"""Transition strength parameter $\alpha_{\bar{\theta}_+$.
+
+        $$\alpha_{\bar{\theta}_+
+        = \frac{1}{3} \left( 1 - \frac{\mu_-}{\mu_+} \right) + \frac{\mu_-}{4} \alpha_{+,\text{bag}$$
+        :maki_msc:`\ ` eq. 2.137
+        """
         return (1 - self.mu_b / self.mu_s)/3 + self.mu_b/4 * self.alpha_plus_bag(
             wp=wp,
             wm=np.nan,  # Not used
@@ -579,10 +593,48 @@ class ConstCSModel(AnalyticModel):
             **kwargs) -> tuple[float, float]:
         return self._cs2_minmax(phase)
 
+    def cs2_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        # ConstCSModel.cs2() is independent of T and w
+        return self.cs2(temp, phase)
+
+    def delta_theta(
+            self,
+            wp: th.FloatOrArr,
+            wm: th.FloatOrArr,
+            error_on_invalid: bool = True,
+            nan_on_invalid: bool = True,
+            log_invalid: bool = True) -> th.FloatOrArr:
+        ret = (1 / 4 - 1 / self.mu_s) * wp / 3 - (1 / 4 - 1 / self.mu_b) * wm / 3 + self.V_s - self.V_b
+        return self.check_delta_theta(
+            ret, xp=wp, xm=wm, x_name="w",
+            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid
+        )
+
     def df_dtau_ptr(self) -> DifferentialPointer:
         if self.is_bag:
             return DF_DTAU_PTR_BAG
         return super().df_dtau_ptr()
+
+    def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        r"""Energy density $e(T,\phi)$
+        $${e}_{\pm} = {a}_{\pm} (\mu_\pm - 1) T^{\mu_\pm} + {V}_\pm$$
+        :giese_2021:`\ `, eq. 15.
+        In the article there is a typo: the 4 there should be a $\mu$.
+        :maki_msc:`\ ` 2.124.
+        """
+        self.validate_temp(temp)
+        e_s = (self.mu_s - 1) * self.a_s * (temp / self.T_ref) ** (self.mu_s - 4) * temp ** 4 + self.V_s
+        e_b = (self.mu_b - 1) * self.a_b * (temp / self.T_ref) ** (self.mu_b - 4) * temp ** 4 + self.V_b
+        return e_b * phase + e_s * (1 - phase)
+
+    def export(self) -> dict[str, tp.Any]:
+        return {
+            **super().export(),
+            "css2": self.css2,
+            "csb2": self.csb2,
+            "mu_s": self.mu_s,
+            "mu_b": self.mu_b
+        }
 
     def gen_cs2(self):
         # Numba caching is disabled for the functions below, as they are created dynamically.
@@ -613,43 +665,6 @@ class ConstCSModel(AnalyticModel):
             return -(phase*csb2 + (1 - phase)*css2) * np.ones_like(w)
         return cs2_neg
 
-    def cs2_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        # ConstCSModel.cs2() is independent of T and w
-        return self.cs2(temp, phase)
-
-    def delta_theta(
-            self,
-            wp: th.FloatOrArr,
-            wm: th.FloatOrArr,
-            error_on_invalid: bool = True,
-            nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
-        ret = (1 / 4 - 1 / self.mu_s) * wp / 3 - (1 / 4 - 1 / self.mu_b) * wm / 3 + self.V_s - self.V_b
-        return self.check_delta_theta(
-            ret, xp=wp, xm=wm, x_name="w",
-            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid
-        )
-
-    def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Energy density $e(T,\phi)$
-        $${e}_{\pm} = {a}_{\pm} (\mu_\pm - 1) T^{\mu_\pm} + {V}_\pm$$
-        :giese_2021:`\ `, eq. 15.
-        In the article there is a typo: the 4 there should be a $\mu$.
-        """
-        self.validate_temp(temp)
-        e_s = (self.mu_s - 1) * self.a_s * (temp / self.T_ref) ** (self.mu_s - 4) * temp ** 4 + self.V_s
-        e_b = (self.mu_b - 1) * self.a_b * (temp / self.T_ref) ** (self.mu_b - 4) * temp ** 4 + self.V_b
-        return e_b * phase + e_s * (1 - phase)
-
-    def export(self) -> dict[str, tp.Any]:
-        return {
-            **super().export(),
-            "css2": self.css2,
-            "csb2": self.csb2,
-            "mu_s": self.mu_s,
-            "mu_b": self.mu_b
-        }
-
     def inverse_enthalpy_ratio[T: FloatOrArr](self, temp: T) -> T:
         return self.a_b * self.mu_b / (self.a_s * self.mu_s)
 
@@ -661,7 +676,8 @@ class ConstCSModel(AnalyticModel):
     def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Pressure $p(T,\phi)$
         $$p_{\pm} = {a}_{\pm} T^{\mu_\pm} - {V}_{\pm}$$
-        :giese_2021:`\ `, eq. 15.
+        :giese_2021:`\ `, eq. 15,
+        :maki_msc:`\ ` eq. 2.120.
         """
         self.validate_temp(temp)
         p_s = self.a_s * (temp / self.T_ref) ** (self.mu_s - 4) * temp ** 4 - self.V_s
@@ -672,6 +688,7 @@ class ConstCSModel(AnalyticModel):
         r"""Entropy density $s=\frac{dp}{dT}$
         $$s_\pm = \mu {a}_\pm \left( \frac{T}{T_0} \right)^{\mu_\pm-1} T_0^3$$
         Derived from :giese_2021:`\ `, eq. 15.
+        :maki_msc:`\ ` eq. 2.122.
         """
         self.validate_temp(temp)
         s_s = self.mu_s * self.a_s * (temp / self.T_ref) ** (self.mu_s - 4) * temp ** 3
@@ -730,13 +747,12 @@ class ConstCSModel(AnalyticModel):
     def wn[T: FloatOrArr](
             self,
             alpha_n: T,
-            wn_guess: float = 1,
+            wn_guess: float | None = 1.,
             analytical: bool = True,
             theta_bar: bool = False,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
-        r"""Enthalpy at nucleation temperature."""
         if theta_bar:
             return super().wn(
                 alpha_n=alpha_n,
@@ -760,6 +776,7 @@ class ConstCSModel(AnalyticModel):
         #         alpha_n[invalid_alpha_n] = np.nan
 
         if analytical and np.isclose(self.mu_b, 4):
+            # :maki_msc:`\ ` eq. 2.134
             wn = self.bag_wn_const / (alpha_n + (4 / self.mu_s - 1) / 3)
             if np.any(wn < 0):
                 msg = self.wn_error_msg(

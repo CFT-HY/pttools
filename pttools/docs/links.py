@@ -70,6 +70,9 @@ EXTLINKS_STATIC: ExtLinks = {
     "gowling_phd": hdl_link("10779/uos.23309135.v1", "Gowling", 2023),
     "hakkinen_msc": hdl_link("10138/576963", "Häkkinen", 2024),
     "maki_msc": arxiv_link("2511.20436", "Mäki", 2025),
+    # Lecture notes
+    "cosmo1": ("https://www.mv.helsinki.fi/home/hkurkisu/cosmology/Cosm_I.pdf", "Cosmology I lecture notes"),
+    "cosmo2": ("https://www.mv.helsinki.fi/home/hkurkisu/cosmology/Cosm_II.pdf", "Cosmology II lecture notes"),
     # Other
     "lisa_conventions": arxiv_link("2603.22377", "LISA DDPC Conventions document"),
     # ("https://gitlab.esa.int/lisa-sgs/sandbox/conventions-document", "LISA DDPC Conventions document"),

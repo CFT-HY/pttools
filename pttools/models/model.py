@@ -46,8 +46,8 @@ class Model(BaseModel, abc.ABC):
     """
 
     ALPHA_N_MIN_FIND_SAFETY_FACTOR_ALPHA: float = 0.999
-    DEFAULT_V_S = 0
-    DEFAULT_V_B = 0
+    DEFAULT_V_S: float = 0.
+    DEFAULT_V_B: float = 0.
 
     def __init__(
             self,
@@ -112,12 +112,12 @@ class Model(BaseModel, abc.ABC):
         if gen_cs2:
             self.df_dtau_ptr()
 
-        self.w_min_s = self.w(self.T_min, Phase.SYMMETRIC)
-        self.w_min_b = self.w(self.T_min, Phase.BROKEN)
-        self.w_min = max(self.w_min_s, self.w_min_b)
-        self.w_max_s = self.w(self.T_max, Phase.SYMMETRIC)
-        self.w_max_b = self.w(self.T_max, Phase.BROKEN)
-        self.w_max = min(self.w_max_s, self.w_max_b)
+        self.w_min_s: float = self.w(self.T_min, Phase.SYMMETRIC)
+        self.w_min_b: float = self.w(self.T_min, Phase.BROKEN)
+        self.w_min: float = max(self.w_min_s, self.w_min_b)
+        self.w_max_s: float = self.w(self.T_max, Phase.SYMMETRIC)
+        self.w_max_b: float = self.w(self.T_max, Phase.BROKEN)
+        self.w_max: float = min(self.w_max_s, self.w_max_b)
         if self.w_min >= self.w_max:
             logger.warning(
                 "Please provide a wider temperature range for the model. "
@@ -138,6 +138,8 @@ class Model(BaseModel, abc.ABC):
         if T_ref >= self.T_max:
             raise ValueError(f"T_ref should be lower than T_max. Got: T_ref={T_ref}, T_max={self.T_max}")
 
+        self.T_crit: float
+        self.w_crit: float
         if not (T_crit is None or np.isnan(T_crit)):
             if not self.T_min < T_crit < self.T_max:
                 raise ValueError(
@@ -207,13 +209,16 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
-        r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
-        $$\alpha_n = \frac{4(\theta(w_n,\phi_s) - \theta(w_n,\phi_b)}{3w_n}$$.
+        r"""$\alpha_n$, transition strength parameter at nucleation temperature.
+
+        $$\alpha_n = \frac{4(\theta(w_n,\phi_s) - \theta(w_n,\phi_b)}{3w_n}$$
+        :notes:`\ `, eq. 7.40.
 
         :param wn: $w_n$, enthalpy of the symmetric phase at the nucleation temperature
         :param error_on_invalid: raise error for invalid values
         :param nan_on_invalid: return nan for invalid values
         :param log_invalid: log negative values
+        :return: $\alpha_n$
         """
         check_value_in_range(
             x=wn,
@@ -364,9 +369,10 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
-        r"""Transition strength parameter, :giese_2021:`\ `, eq. 13.
+        r"""Transition strength parameter $\alpha_{\bar{\theta}_n$.
 
-        $$\alpha_{\bar{\theta}_+} = \frac{D \bar{\theta}(T_n)}{3 w_n}$$
+        $$\alpha_{\bar{\theta}_n} \equiv \frac{D \bar{\theta}(T_n)}{3 w_n}$$
+        :giese_2021:`\ `, eq. 13.
         """
         check_value_in_range(
             x=wn,
@@ -723,6 +729,11 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
+        r"""Trace anomaly difference $\Delta \theta$.
+
+        $$\Delta \theta = \theta_s(w_s) - \theta_b(w_b)$$
+        :maki_msc:`\ `eq. 2.53
+        """
         theta_s = self.theta(wp, Phase.SYMMETRIC)
         theta_b = self.theta(wm, Phase.BROKEN)
         diff = theta_s - theta_b
@@ -753,6 +764,11 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
+        r"""Trace anomaly difference $\Delta \theta$.
+
+        $$\Delta \theta = \theta_s(T_s) - \theta_b(T_b)$$
+        :maki_msc:`\ `eq. 2.53
+        """
         theta_s = self.theta_temp(Ts, Phase.SYMMETRIC)
         theta_b = self.theta_temp(Tb, Phase.BROKEN)
         diff = theta_s - theta_b
@@ -922,7 +938,7 @@ class Model(BaseModel, abc.ABC):
         """
         if wn is None:
             wn = self.wn(alpha_n, wn_guess)
-        v_cj = v_chapman_jouguet(self, alpha_n, wn=wn, wm_guess=wm_guess)
+        v_cj: float = v_chapman_jouguet(self, alpha_n, wn=wn, wm_guess=wm_guess)
 
         if is_surely_detonation(v_wall, v_cj):
             return SolutionType.DETON
@@ -1131,12 +1147,22 @@ class Model(BaseModel, abc.ABC):
             self,
             alpha_n: T,
             wn_guess: float | None = None,
-            # analytical: bool = False,
+            analytical: bool = False,
             theta_bar: bool = False,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
-        r"""Enthalpy at nucleation temperature $w_n$ with given $\alpha_n$."""
+        r"""$w_n(\alpha_n)$, enthalpy at nucleation temperature.
+
+        :param alpha_n: $\alpha_n$, transition strength
+        :param wn_guess: $w_{n,\text{guess}}$, starting guess for solving $w_n$
+        :param analytical: whether to use analytical shortcuts if available for the model
+        :param theta_bar: whether the given $\alpha_n$ is $\alpha_{\bar{\theta}_n}$
+        :param error_on_invalid: whether to raise an error for invalid values
+        :param nan_on_invalid: whether to return nan for invalid values
+        :param log_invalid: whether to log invalid values
+        :return: $w_n$, enthalpy at nucleation temperature
+        """
         invalid_w_crit = self.w_crit is None or np.isnan(self.w_crit) or self.w_crit < 0
         if wn_guess is None or np.isnan(wn_guess) or wn_guess < 0:
             if invalid_w_crit:
