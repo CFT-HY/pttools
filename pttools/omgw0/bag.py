@@ -1,10 +1,10 @@
 r"""$\Omega_{\text{gw},0}$ for the bag model."""
 
-from pttools.bubble.energy_budget import kinetic_energy_fraction_approx
+from pttools.bubble.energy_budget import kinetic_energy_fraction_approx, ubarf_approx_K
 from pttools.omgw0 import const
 from pttools.omgw0.factors import F_gw0_h2
 from pttools.omgw0.freq import f0
-from pttools.ssm import DEFAULT_N_PT, H_star_tau_sh_approx, H_star_tau_v_old, J, NptType, NucType, power_gw_bag
+from pttools.ssm import DEFAULT_N_PT, H_star_tau_nl_approx, H_star_tau_v_old, J_old, NptType, NucType, power_gw_bag
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 import pttools.type_hints as th
 
@@ -44,13 +44,13 @@ def omgw0_bag(
     #        z_st_thresh: float = const.Z_ST_THRESH
 
     attenuation = F_gw0_h2(g_star=g_star) / h2
-    J_val = J(r_star=r_star, H_star_tau_v=H_star_tau_v_old(H_star_tau_sh=H_star_tau_sh_approx(r_star=r_star, K=K)))
+    J = J_old(r_star=r_star, K=K)
     if sup_method == SuppressionMethod.NONE:
-        return attenuation * J_val * omgwi
+        return attenuation * J * omgwi
     if sup_method == SuppressionMethod.NO_EXT:
         sup_fac = sup.suppression(vw, alpha, method=sup_method)
-        return attenuation * J_val * omgwi * sup_fac
+        return attenuation * J * omgwi * sup_fac
     if sup_method == SuppressionMethod.EXT_CONSTANT:
         sup_fac = sup.suppression(vw, alpha, method=sup_method)
-        return attenuation * J_val * omgwi * sup_fac
+        return attenuation * J * omgwi * sup_fac
     raise ValueError(f"Invalid suppression method: {sup_method}")

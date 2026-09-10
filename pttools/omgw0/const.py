@@ -191,7 +191,7 @@ r"""
 $\Omega_{\gamma,0} h^2$, the photon density parameter today, scaled by $h^2$
 $$\Omega_{\gamma,0} h^2
 = \frac{\rho_{\gamma,0}}{\rho_{c,0}} h^2
-= \frac{8 \pi G a {T}_0^4}{3 {H}_{100}^2 c^2}
+= \frac{8 \pi G a {T}_\text{CMB}^4}{3 {H}_{100}^2 c^2}
 \approx 2.473 \cdot 10^{-5}$$
 obtained from $\rho_{\gamma,0} c^2 = a {T}_0^4$ and $\rho_{c,0} = \frac{3 {H}_0^2}{8 \pi G}$
 with ${H}_0 = h {H}_{100}$.

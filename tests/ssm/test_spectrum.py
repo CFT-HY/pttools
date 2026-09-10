@@ -42,9 +42,6 @@ class SSMSpectrumTest(unittest.TestCase):
     def test_H_star_tau_nl(self):
         self.assertGreater(self.spectrum.H_star_tau_nl, 0)
 
-    def test_H_star_tau_sh(self):
-        self.assertGreater(self.spectrum.H_star_tau_sh, 0)
-
     def test_H_star_tau_v(self):
         self.assertGreater(self.spectrum.H_star_tau_v, 0)
 

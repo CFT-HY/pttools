@@ -17,7 +17,7 @@ from pttools.ssm.low_k.intersection import z_cross_approx
 from pttools.ssm.nucleation import DEFAULT_NUC_TYPE, NucType, beta, v_eff
 from pttools.ssm.nucleation import r_star as r_star_func
 from pttools.ssm.pow_spec import pow_spec
-from pttools.ssm.scaling import H_star_tau_sh, H_star_tau_v, H_star_tau_v_old, J
+from pttools.ssm.scaling import H_star_tau_nl, H_star_tau_v, H_star_tau_v_old, J
 from pttools.ssm.spec_den_gw import spec_den_gw_scaling
 from pttools.ssm.ssm import ubarf2_from_a2
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
@@ -236,7 +236,6 @@ class SSMSpectrum:
             "dilution_of_e": self.dilution_of_e,
             "H_star_eta_star": self.H_star_eta_star,
             "H_star_tau_nl": self.H_star_tau_nl,
-            "H_star_tau_sh": self.H_star_tau_sh,
             "H_star_tau_v": self.H_star_tau_v,
             "H_star_tau_v_old": self.H_star_tau_v_old,
             "k_peak_eta_star": self.k_peak_eta_star,
@@ -281,22 +280,7 @@ class SSMSpectrum:
 
     @functools.cached_property
     def H_star_tau_nl(self) -> float:
-        r"""Hubble-scaled timescale of non-linearities $H \tau_\text{nl}$
-        $$H_* \tau_\text{nl} = \frac{r_*}{\bar{U}_f}$$,
-        where $\bar{U}_f \equiv v_{\text{rms}}$
-        :gw_pt_ssm:`\ ` p. 6, 13
-        :notes:`\ ` p. 48
-        :giombi_2024_cs:`\ ` p. 2.
-
-        Please note that $\tau_\text{nl}$ and $\tau_\text{v}$ are different quantities.
-        If $H \tau_\text{nl} \gg 1$, then $H \tau_\text{v} \rightarrow 1$.
-        :gw_pt_ssm:`\ ` p. 13
-        """
-        return self.r_star / self.bubble.ubarf
-
-    @functools.cached_property
-    def H_star_tau_sh(self) -> float:
-        return H_star_tau_sh(r_star=self.r_star, ubarf=self.bubble.ubarf)
+        return H_star_tau_nl(r_star=self.r_star, ubarf=self.bubble.ubarf)
 
     @functools.cached_property
     def H_star_tau_v(self) -> float:
@@ -304,7 +288,7 @@ class SSMSpectrum:
 
     @functools.cached_property
     def H_star_tau_v_old(self) -> float:
-        return H_star_tau_v_old(H_star_tau_sh=self.H_star_tau_sh)
+        return H_star_tau_v_old(H_star_tau_nl=self.H_star_tau_nl)
 
     @functools.cached_property
     def k_peak_eta_star(self) -> float:
@@ -532,7 +516,7 @@ class SSMSpectrum:
 copy_docstrings({
     SSMSpectrum.beta: beta,
     SSMSpectrum.eta_ratio: eta_ratio,
-    SSMSpectrum.H_star_tau_sh: H_star_tau_sh,
+    SSMSpectrum.H_star_tau_nl: H_star_tau_nl,
     SSMSpectrum.H_star_tau_v: H_star_tau_v,
     SSMSpectrum.J: J,
     SSMSpectrum.source_lifetime_factor: source_lifetime_factor,

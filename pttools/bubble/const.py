@@ -8,10 +8,14 @@ import typing as tp
 # -----
 DEFAULT_ADIABATIC_INDEX: float = 4 / 3
 r"""
-Default adiabatic index $\Gamma$, aka. adiabatic ratio.
-This is the value for an ultrarelativistic plasma, or the bag model with $V = 0$.
+Default mean adiabatic index $\Gamma$, aka. adiabatic ratio.
 
-$$\Gamma = \frac{w}{e} = \frac{4aT^4}{3aT^4 + V} \approx \frac{4}{3}$$
+This is the value for an ultrarelativistic plasma, or the bag model with $V = 0$.
+In the bag model,
+$$\Gamma \equiv \frac{w}{e} = \frac{4aT^4}{3aT^4 + V} \approx \frac{4}{3}$$.
+
+For the corresponding function, please see
+:py:func:`pttools.bubble.thermo.mean_adiabatic_index`.
 """
 
 #: Default number of entries in $\xi$ array

@@ -33,7 +33,7 @@ EXTLINKS_STATIC: ExtLinks = {
     # Order of articles: year, name of author
     # Hindmarsh articles
     "hindmarsh_2014": arxiv_link("1304.2433", HINDMARSH_ET_AL, 2014),
-    "hindmarsh_2015": arxiv_link("1504.03291", HINDMARSH_ET_AL, 2015),
+    "hindmarsh_2015": arxiv_link("1504.03291", HINDMARSH_ET_AL),
     "hindmarsh_2017": arxiv_link("1704.05871", HINDMARSH_ET_AL),
     "hindmarsh_2017_erratum": doi_link("10.1103/PhysRevD.101.089902", HINDMARSH_ET_AL, 2017, "erratum"),
     "ssm": arxiv_link("1608.04735", HINDMARSH_ET_AL, 2018),

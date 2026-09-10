@@ -50,6 +50,23 @@ DEFAULT_N_PT: NptType = (DEFAULT_N_XI_SSM, DEFAULT_N_T, DEFAULT_N_Z_LOOKUP)
 #: Default nucleation parameters
 DEFAULT_NUC_PARM: tuple[int] = (1,)
 
+DEFAULT_OMEGA_TILDE_GW: float = 0.012
+r"""
+Default $\tilde{\Omega}_\text{gw}$.
+
+This is derived in
+:py:func:`pttools.ssm.scaling.omega_tilde_gw`.
+
+The value $\tilde{\Omega}_\text{gw} \approx 0.012$ is from
+:hindmarsh_2017:`\ ` p. 13.
+Please note that there is a typo in the original article: $0.12 \rightarrow 0.012$: :hindmarsh_2017_erratum:`\ `.
+This value is obtained numerically from simulations.
+
+A rougher approximation of $\tilde{\Omega}_\text{gw}$ is given by
+:caprini_2020:`\ ` p. 16
+"""
+
+
 #: Default $r_*$
 DEFAULT_R_STAR: float = 1.
 

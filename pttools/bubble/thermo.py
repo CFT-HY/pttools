@@ -121,7 +121,8 @@ def kinetic_energy_density(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D
 
 
 def kinetic_energy_fraction(ek_bva: float, eb: float) -> float:
-    r"""Bubble volume averaged kinetic energy fraction $K_\text{bva}$
+    r"""Bubble volume averaged kinetic energy fraction $K_\text{bva}$.
+
     $$K_\text{bva} = \frac{{e}_{K,\text{bva}}}{\bar{e}}$$
     :gw_pt_ssm:`\ ` eq. B.31
     :caprini_2020:`\ ` eq. 22
@@ -142,9 +143,11 @@ def kinetic_energy_fraction(ek_bva: float, eb: float) -> float:
 
 # @njit
 def mean_adiabatic_index(wb: th.FloatOrArr, eb: th.FloatOrArr) -> th.FloatOrArr:
-    r"""Mean adiabatic index
+    r"""Mean adiabatic index $\Gamma$.
+
     $$\Gamma = \frac{\bar{w}}{\bar{e}}$$
-    :gw_pt_ssm:`\ ` eq. B.33.
+    :gw_pt_ssm:`\ ` eq. B.33,
+    :hindmars_2017:`\ ` p. 4.
 
     Note that this is not exactly equal to the adiabatic index of an ultrarelativistic fluid,
     as total energy $\bar{e}_0$ is divided between kinetic and thermal energy.
@@ -177,7 +180,9 @@ def mean_enthalpy_change(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, 
 
 
 def nu_gdh2024[T: FloatOrArr](omega: T) -> T:
-    r"""$$\nu_\text{gdh2024} = \frac{1 - 3\omega}{1 + 3\omega}$$,
+    r"""$\nu_\text{gdh2024}$.
+
+    $$\nu_\text{gdh2024} = \frac{1 - 3\omega}{1 + 3\omega}$$,
     where $\omega$ is the barotropic equation of state parameter.
     :giombi_2024_cs:`\ ` eq. 2.11, 2.41.
     """
@@ -191,7 +196,8 @@ def omega(
         xi: th.FloatArr1D,
         v_wall: float,
         delta_e_theta: float | None = None) -> float:
-    r"""Thermal efficiency factor
+    r"""Thermal efficiency factor $\omega$.
+
     $$\omega = \frac{\Delta {e}_Q}{\Delta {e}_\theta}$$
     :gw_pt_ssm:`\ ` eq. B.28.
 
@@ -209,7 +215,8 @@ def omega(
 
 
 def omega_barotropic(p: th.FloatOrArr, e: th.FloatOrArr) -> th.FloatOrArr:
-    r"""Barotropic equation of state parameter $\omega$
+    r"""Barotropic equation of state parameter $\omega$.
+
     $$\omega(T,\phi) = \frac{p(T,\phi)}{e(T,\phi)}$$
     :giombi_2024_cs:`\ ` p. 3
     In some sources this is known as the equation-of-state parameter for short, and denoted as $w$.
@@ -256,7 +263,8 @@ def trace_anomaly_diff(
         xi: th.FloatArr1D,
         v_wall: float,
         phase: th.FloatArr1D | None = None) -> float:
-    r"""Bubble volume averaged trace anomaly
+    r"""Bubble volume averaged trace anomaly $\epsilon$.
+
     $$\epsilon = \frac{3}{4\pi {v}_\text{wall}^3} \Delta {e}_\theta$$.
 
     :param model: Equation of state model

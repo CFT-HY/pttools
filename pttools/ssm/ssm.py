@@ -209,7 +209,8 @@ def ubarf2_from_a2(
         v_wall: float,
         nuc_type: NucType,
         bubble_spacing_enlargement_factor: float = 1.) -> float:
-    r"""Mean square fluid velocity $\bar{U}_f^2 \left( {|A(z)|}^2 \right)$
+    r"""Mean square fluid velocity $\bar{U}_f^2 \left( {|A(z)|}^2 \right)$.
+
     $$\bar{U}_f^2
     = \int \frac{dq}{q} \mathcal{P}_\tilde{v}(a)
     = \frac{2}{(\beta R_*)^3}
