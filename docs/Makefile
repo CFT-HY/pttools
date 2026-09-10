@@ -23,12 +23,22 @@ all:
 	$(MAKE) latexpdf
 	$(MAKE) epub
 
+all-noplot:
+	$(MAKE) clean
+	$(MAKE) linkcheck
+	$(MAKE) html-noplot
+	$(MAKE) latex-noplot
+	$(MAKE) epub-noplot
+
 # apidoc:
 # 	sphinx-apidoc -o ./pttools ../pttools
 #	sphinx-apidoc -o ./tests ../tests
 
 clean:
 	rm -rf $(BUILDDIR) ./auto_examples ./gen_modules ./sg_api_usage.rst ./sg_execution_times.rst
+
+epub-noplot:
+	$(SPHINXBUILD) -D plot_gallery=0 -b epub "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 html-noplot:
 	# https://sphinx-gallery.github.io/stable/configuration.html#building-without-executing-examples
