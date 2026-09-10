@@ -10,7 +10,6 @@ from pttools.bubble import (
     DEFAULT_ADIABATIC_INDEX,
     DEFAULT_FLUID_INTEGRATE_METHOD,
     DF_DTAU_PTR_BAG,
-    cs2_bag_scalar,
     get_ubarf2_bag,
 )
 from pttools.ssm.const import DEFAULT_N_PT, NptType
@@ -62,8 +61,8 @@ def calc_sup_ssm(
         )  # omgw_ssm /(HnR*)(Hnt)
         out_ssm_tot.append(np.trapezoid(out_ssm, np.log(z)))
         Ubarf_2_ssm.append(get_ubarf2_bag(
-            vw, alpha, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
-            ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=cs2_bag_scalar))
+            vw, alpha, df_dtau_ptr=DF_DTAU_PTR_BAG,
+            ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR))
 
         sup_ssm = (Ubarf_2_ssm[i] / expected_Ubarf2)**2 * sim_omgw / out_ssm_tot[i]
         sup_ssm_all.append(sup_ssm)

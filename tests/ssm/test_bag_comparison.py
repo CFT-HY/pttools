@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 
 from pttools import ssm
-from pttools.bubble import CS2_BAG_SCALAR_PTR, DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG, Bubble, cs2_bag_scalar
+from pttools.bubble import CS2_BAG_SCALAR_PTR, DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG, Bubble
 from pttools.bubble.thermo import ubarf2
 from pttools.bubble.thermo_bag import de_from_w_bag
 from pttools.ssm import SSMSpectrum, pow_spec
@@ -41,7 +41,7 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
             de_from_w_bag(
                 w=bubble.w, xi=bubble.xi, v_wall=bubble.v_wall, alpha_n=bubble.alpha_n,
                 df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD,
-                cs2_fun=cs2_bag_scalar)
+                cs2_ptr=CS2_BAG_SCALAR_PTR)
             for bubble in self.bubbles
         ]
         e = [
@@ -56,8 +56,8 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
         a2_old = np.array([
             ssm.a2_e_conserving_bag(
                 self.z, v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i],
-                cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
-                ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=cs2_bag_scalar,
+                df_dtau_ptr=DF_DTAU_PTR_BAG,
+                ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR,
                 v_ip=bubble.v, w_ip=bubble.w, xi=bubble.xi,
                 v_sh=bubble.v_sh
             )[0]

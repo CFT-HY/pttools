@@ -5,7 +5,7 @@ import logging
 import numba
 
 from pttools.bubble import check, const
-from pttools.bubble.cs2_bag import cs2_bag_scalar
+from pttools.bubble.cs2 import cs2_from_ptr
 from pttools.bubble.phase import Phase
 from pttools.bubble.shock_bag import v_shock_bag
 from pttools.bubble.solution_type import SolutionType
@@ -23,8 +23,9 @@ def trim_fluid_wall_to_cs(
         t: th.FloatArr1D,
         v_wall: th.FloatOrArr,
         sol_type: SolutionType,
-        dxi_lim: float = const.DXI_SMALL,
-        cs2_fun: th.CS2Fun = cs2_bag_scalar) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
+        cs2_ptr: th.CS2FunScalarPtr,
+        dxi_lim: float = const.DXI_SMALL) \
+        -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
     Picks out fluid variable arrays $(v, w, \xi, t)$ which are definitely behind
     the wall for detonation and hybrid.
@@ -38,8 +39,11 @@ def trim_fluid_wall_to_cs(
     :param t: $t$
     :param v_wall: $v_\text{wall}$
     :param sol_type: solution type
+    :param cs2_ptr: pointer to the $c_s^2$ function.
+        This cannot have a default value, as the pointers are not the same in every process,
+        and a default value would therefore be baked into the Numba cache key.
+        See the "Numba caching" section of the developer documentation.
     :param dxi_lim: not used
-    :param cs2_fun: function, which gives $c_s^2$
     :return: trimmed $v, w, \xi, t$
     """
     droplet = sol_type == SolutionType.DROPLET.value
@@ -51,12 +55,12 @@ def trim_fluid_wall_to_cs(
     # n_stop = 0
     if droplet:
         for i in range(v.size):
-            if v[i] <= 0 or xi[i] ** 2 > cs2_fun(w[i], Phase.BROKEN.value):
+            if v[i] <= 0 or xi[i] ** 2 > cs2_from_ptr(cs2_ptr, w[i], Phase.BROKEN.value):
                 n_stop_index = i
                 break
     elif sol_type != SolutionType.SUB_DEF.value:
         for i in range(v.size):
-            if v[i] <= 0 or xi[i] ** 2 <= cs2_fun(w[i], Phase.BROKEN.value):
+            if v[i] <= 0 or xi[i] ** 2 <= cs2_from_ptr(cs2_ptr, w[i], Phase.BROKEN.value):
                 n_stop_index = i
                 break
 

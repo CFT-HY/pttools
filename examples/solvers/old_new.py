@@ -16,7 +16,6 @@ from pttools.bubble import (
     DF_DTAU_PTR_BAG,
     Phase,
     SolutionType,
-    cs2_bag_scalar,
     fluid_bag,
     relativity,
 )
@@ -130,8 +129,8 @@ def main():
     for v_wall, alpha_n, sol_type in zip(v_walls, alpha_ns, sol_types, strict=False):
         v, w, xi = fluid_bag.sound_shell_bag(
             v_wall=v_wall, alpha_n=alpha_n,
-            cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
-            ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=cs2_bag_scalar)
+            df_dtau_ptr=DF_DTAU_PTR_BAG,
+            ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR)
         ax1.plot(xi, v, color="blue", label=rf"$v_w={v_wall}, \alpha_n={alpha_n}$")
         validate(bag, v, w, xi, sol_type)
 

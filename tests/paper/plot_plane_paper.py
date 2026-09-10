@@ -78,11 +78,11 @@ def plot_v_excerpt(ax: plt.Axes, v_wall: float, alpha_plus: float, n_xi: int = 5
     """
     v, w, xi = bubble.sound_shell_alpha_plus_bag(
         v_wall, alpha_plus, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
-        ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=bubble.cs2_bag_scalar, n_xi=n_xi)
+        ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=bubble.CS2_BAG_SCALAR_PTR, n_xi=n_xi)
     wall_type = bubble.identify_solution_type_bag(
         v_wall, alpha_plus,
         df_dtau_ptr=bubble.DF_DTAU_PTR_BAG, ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD,
-        cs2_fun=bubble.cs2_bag_scalar)
+        cs2_ptr=bubble.CS2_BAG_SCALAR_PTR)
     if wall_type != bubble.SolutionType.DETON:
         ahead = np.where((xi > v_wall) & (v > 0))
         xi_a = xi[ahead]

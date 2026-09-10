@@ -12,6 +12,7 @@ from scipy.optimize import fminbound, fsolve, root_scalar
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 from pttools.bubble.check import find_most_negative_vals
 from pttools.bubble.const import ALPHA_PLUS_MAX_DEF
+from pttools.bubble.cs2 import CS2_FUNCS, cs2_to_ptr
 from pttools.bubble.integrate import add_df_dtau, differentials
 from pttools.bubble.phase import Phase
 from pttools.bubble.solution_type import (
@@ -97,6 +98,7 @@ class Model(BaseModel, abc.ABC):
         self.T_ref: float = T_ref
         self.V_s: float = V_s
         self.V_b: float = V_b
+        self.__cs2_ptr: th.CS2FunScalarPtr | None = None
         self.__df_dtau_ptr: DifferentialPointer | None = None
         self.__df_dtau_pid: int | None = None
 
@@ -110,6 +112,7 @@ class Model(BaseModel, abc.ABC):
             silence_temp=silence_temp
         )
         if gen_cs2:
+            self.cs2_ptr()
             self.df_dtau_ptr()
 
         self.w_min_s: float = self.w(self.T_min, Phase.SYMMETRIC)
@@ -727,6 +730,29 @@ class Model(BaseModel, abc.ABC):
     def cs2_neg(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         """Negative speed of sound squared, for finding the maximum of cs2."""
         return -self.cs2(w, phase)
+
+    def cs2_ptr(self) -> th.CS2FunScalarPtr:
+        r"""Pointer to the $c_s^2$ function of this model.
+
+        The jitted functions take $c_s^2$ as a pointer instead of as a function object,
+        as a function object would prevent them from being cached by Numba.
+        See :func:`pttools.bubble.cs2.cs2_to_ptr`
+        and the "Numba caching" section of the developer documentation.
+        """
+        # The pointers are valid only in the process in which they were created.
+        # Therefore, the pointer is regenerated, if it's not in the cache of this process.
+        # Forked processes inherit the cache of their parent, and can therefore use the existing pointer.
+        if self.__cs2_ptr is not None and self.__cs2_ptr in CS2_FUNCS:
+            return self.__cs2_ptr
+
+        start_time = time.perf_counter()
+        ptr = cs2_to_ptr(self.cs2)
+        logger.debug(
+            "Created a cs2 pointer for %s in process %d in %.3f s",
+            self.label_unicode, os.getpid(), time.perf_counter() - start_time
+        )
+        self.__cs2_ptr = ptr
+        return ptr
 
     def cs2_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Speed of sound squared $c_s^2(T,\phi)$.

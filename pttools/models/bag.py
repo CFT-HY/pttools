@@ -5,7 +5,7 @@ import typing as tp
 
 import numpy as np
 
-from pttools.bubble.cs2_bag import cs2_bag_multi, cs2_bag_neg, cs2_bag_scalar, cs2_bag_temp
+from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR, cs2_bag_multi, cs2_bag_neg, cs2_bag_temp
 from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG
 from pttools.bubble.phase import Phase
 from pttools.bubble.solution_type import SolutionType
@@ -235,6 +235,9 @@ class BagModel(AnalyticModel):
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
 
+    def cs2_ptr(self) -> th.CS2FunScalarPtr:
+        return CS2_BAG_SCALAR_PTR
+
     def df_dtau_ptr(self) -> DifferentialPointer:
         return DF_DTAU_PTR_BAG
 
@@ -290,7 +293,7 @@ class BagModel(AnalyticModel):
         return identify_solution_type_bag(
             v_wall=v_wall, alpha_n=alpha_n,
             df_dtau_ptr=self.df_dtau_ptr(), ode_method=DEFAULT_FLUID_INTEGRATE_METHOD,
-            cs2_fun=cs2_bag_scalar)
+            cs2_ptr=CS2_BAG_SCALAR_PTR)
 
     def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Temperature $T(w,\phi)$. Inverted from

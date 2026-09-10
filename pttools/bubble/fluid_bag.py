@@ -12,7 +12,8 @@ import numpy as np
 
 from pttools import speedup
 from pttools.bubble import alpha, approx, check, const, integrate, props, thermo, trim
-from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR, cs2_bag_scalar
+from pttools.bubble.cs2 import cs2_from_ptr
+from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR
 from pttools.bubble.junction import enthalpy_ratio
 from pttools.bubble.junction_bag import fluid_speeds_at_wall_bag
 from pttools.bubble.phase import Phase
@@ -32,10 +33,9 @@ logger = logging.getLogger(__name__)
 def sound_shell_bag(
         v_wall: float,
         alpha_n: float,
-        cs2_fun_ptr: th.CS2FunScalarPtr,
         df_dtau_ptr: speedup.DifferentialPointer,
         ode_method: integrate.FluidIntegrateMethod,
-        cs2_fun: th.CS2Fun,
+        cs2_ptr: th.CS2FunScalarPtr,
         n_xi: int = const.DEFAULT_N_XI,
         # Implementing optional extra output did not work due to Numba typing constraints
         # extra_output: bool = False
@@ -49,16 +49,15 @@ def sound_shell_bag(
 
     :param v_wall: $v_\text{wall}$
     :param alpha_n: $\alpha_n$
-    :param cs2_fun_ptr: Pointer to the $c_s^2$ function
     :param df_dtau_ptr: Pointer to the $\frac{df}{d\tau}$ function
     :param ode_method: differential equation solver to be used
-    :param cs2_fun: $c_s^2$ function
+    :param cs2_ptr: pointer to the $c_s^2$ function
     :param n_xi: number of $\xi$ points
     :return: $v, w, \xi$
     """
     # check_physical_params([v_wall,alpha_n])
     sol_type = identify_solution_type_bag(
-        v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_fun=cs2_fun)
+        v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_ptr=cs2_ptr)
     if sol_type == SolutionType.ERROR:
         # with numba.objmode:
         #     logger.error("Could not indentify solution type for v_wall=%s, alpha_n=%s", v_wall, alpha_n)
@@ -67,8 +66,8 @@ def sound_shell_bag(
         return NAN_ARR, NAN_ARR, NAN_ARR
     al_p = alpha.find_alpha_plus_bag(
         v_wall=v_wall, alpha_n_given=alpha_n,
-        cs2_fun_ptr=cs2_fun_ptr, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method,
-        cs2_fun=cs2_fun, n_xi=n_xi
+        df_dtau_ptr=df_dtau_ptr, ode_method=ode_method,
+        cs2_ptr=cs2_ptr, n_xi=n_xi
     )
     if np.isnan(al_p):
         # if extra_output:
@@ -77,7 +76,7 @@ def sound_shell_bag(
     # SolutionType has to be passed by its value when jitting
     return sound_shell_alpha_plus_bag(
         v_wall=v_wall, alpha_plus=al_p, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method,
-        cs2_fun=cs2_fun, sol_type=sol_type.value, n_xi=n_xi
+        cs2_ptr=cs2_ptr, sol_type=sol_type.value, n_xi=n_xi
     )
     # if extra_output:
     #     v, w, xi, vfp_w, vfm_w, vfp_p, vfm_p = ret
@@ -91,7 +90,7 @@ def sound_shell_alpha_plus_bag(
         alpha_plus: float,
         df_dtau_ptr: speedup.DifferentialPointer,
         ode_method: integrate.FluidIntegrateMethod,
-        cs2_fun: th.CS2Fun,
+        cs2_ptr: th.CS2FunScalarPtr,
         sol_type: SolutionType = SolutionType.UNKNOWN,
         n_xi: int = const.DEFAULT_N_XI,
         w_n: float = 1.,
@@ -108,16 +107,12 @@ def sound_shell_alpha_plus_bag(
     :param alpha_plus: $\alpha_+$
     :param df_dtau_ptr: pointer to the differential equation function
     :param ode_method: differential equation solver to be used
-    :param cs2_fun: sound speed squared as a function of enthalpy
+    :param cs2_ptr: pointer to the $c_s^2$ function
     :param sol_type: specify wall type if more than one permitted.
     :param n_xi: increase resolution
     :param w_n: specify enthalpy outside fluid shell
     :return: $v, w, \xi$
     """
-    # These didn't work, and therefore this function gets cs2_fun as a function instead of a pointer
-    # cs2_fun = CS2ScalarCType(cs2_fun_ptr)
-    # cs2_fun = ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double)(cs2_fun)
-
     check.check_wall_speed(v_wall)
 
     if sol_type == SolutionType.UNKNOWN.value:
@@ -147,7 +142,7 @@ def sound_shell_alpha_plus_bag(
     wf = np.ones_like(xif) * wp
 
     # Backwards integration, from cs or 0 to v_wall
-    xib = np.linspace(min(math.sqrt(cs2_fun(w_n, Phase.BROKEN.value)), v_wall) - dxi, 0.0, 2)
+    xib = np.linspace(min(math.sqrt(cs2_from_ptr(cs2_ptr, w_n, Phase.BROKEN.value)), v_wall) - dxi, 0.0, 2)
     vb = np.zeros_like(xib)
     wb = np.ones_like(xib) * wm
 
@@ -192,11 +187,11 @@ def sound_shell_alpha_plus_bag(
             v0=vfm_p, w0=wm, xi0=v_wall,
             phase=Phase.BROKEN.value, df_dtau_ptr=df_dtau_ptr, method=ode_method,
             t_end=-const.DEFAULT_T_END, n_xi=const.DEFAULT_N_XI)
-        v, w, xi, t = trim.trim_fluid_wall_to_cs(v, w, xi, t, v_wall, sol_type)
+        v, w, xi, t = trim.trim_fluid_wall_to_cs(v, w, xi, t, v_wall, sol_type, cs2_ptr=cs2_ptr)
         #    # Now refine so that there are ~N points between wall and point closest to cs
         #    # For walls just faster than sound, will give very (too?) fine a resolution.
         #        t_end_refine = t[-1]
-        #        v,w,xi,t = fluid_integrate_param(vfm_p, wm, v_wall, t_end_refine, n_xi, cs2_fun)
+        #        v,w,xi,t = fluid_integrate_param(vfm_p, wm, v_wall, t_end_refine, n_xi, cs2_ptr)
         #        v, w, xi, t = trim_fluid_wall_to_cs(v, w, xi, t, v_wall, sol_type)
 
         # Now complete to xi = 0
@@ -204,7 +199,7 @@ def sound_shell_alpha_plus_bag(
         wb = np.ones_like(xib) * w[-1]
         wb = np.concatenate((w, wb))
         # Can afford to bring this point all the way to cs2.
-        xib[0] = math.sqrt(cs2_fun(w[-1], Phase.BROKEN.value))
+        xib[0] = math.sqrt(cs2_from_ptr(cs2_ptr, w[-1], Phase.BROKEN.value))
         xib = np.concatenate((xi, xib))
 
     # Now put halves together in right order
@@ -279,18 +274,18 @@ def sound_shell_dict(
     check.check_physical_params(
         (v_wall, alpha_n),
         df_dtau_ptr=integrate.DF_DTAU_PTR_BAG, ode_method=integrate.DEFAULT_FLUID_INTEGRATE_METHOD,
-        cs2_fun=cs2_bag_scalar)
+        cs2_ptr=CS2_BAG_SCALAR_PTR)
     sol_type = identify_solution_type_bag(
         v_wall, alpha_n,
         df_dtau_ptr=integrate.DF_DTAU_PTR_BAG, ode_method=integrate.DEFAULT_FLUID_INTEGRATE_METHOD,
-        cs2_fun=cs2_bag_scalar)
+        cs2_ptr=CS2_BAG_SCALAR_PTR)
     if sol_type is SolutionType.ERROR:
         raise RuntimeError(f"No solution for v_wall = {v_wall}, alpha_n = {alpha_n}")
 
     v, w, xi = sound_shell_bag(
         v_wall, alpha_n,
-        cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=integrate.DF_DTAU_PTR_BAG,
-        ode_method=integrate.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=cs2_bag_scalar, n_xi=n_xi)
+        df_dtau_ptr=integrate.DF_DTAU_PTR_BAG,
+        ode_method=integrate.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR, n_xi=n_xi)
 
     # vmax = max(v)
 

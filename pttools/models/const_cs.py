@@ -7,7 +7,7 @@ import typing as tp
 import numpy as np
 from scipy.optimize import OptimizeResult, minimize, minimize_scalar
 
-from pttools.bubble import DF_DTAU_PTR_BAG, cs2_bag_multi
+from pttools.bubble import CS2_BAG_SCALAR_PTR, DF_DTAU_PTR_BAG, cs2_bag_multi
 from pttools.bubble.const import CS0_2
 from pttools.bubble.phase import Phase
 from pttools.bubble.solution_type import SolutionType
@@ -609,6 +609,12 @@ class ConstCSModel(AnalyticModel):
             ret, xp=wp, xm=wm, x_name="w",
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid
         )
+
+    def cs2_ptr(self) -> th.CS2FunScalarPtr:
+        # Using the BagModel cs2 saves us from having to compile an additional Numba function
+        if self.is_bag:
+            return CS2_BAG_SCALAR_PTR
+        return super().cs2_ptr()
 
     def df_dtau_ptr(self) -> DifferentialPointer:
         if self.is_bag:

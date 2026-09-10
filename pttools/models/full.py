@@ -68,6 +68,7 @@ class FullModel(Model):
         self.w_at_alpha_n_min, self.alpha_n_min = self.alpha_n_min_find()
 
         self.cs2 = self.gen_cs2()  # type: ignore[method-assign]
+        self.cs2_ptr()
         self.df_dtau_ptr()
 
     def gen_cs2(self):

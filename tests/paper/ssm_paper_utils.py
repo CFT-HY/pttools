@@ -169,8 +169,8 @@ def make_1dh_compare_table(
         v2_sim = v2_list[n][0]
         v2_exp = v2_list[n][1]
         Ubarf_1d_ssm = np.sqrt(bubble.get_ubarf2_bag(
-            vw, alpha, cs2_fun_ptr=bubble.CS2_BAG_SCALAR_PTR, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
-            ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=bubble.cs2_bag_scalar))
+            vw, alpha, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
+            ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=bubble.CS2_BAG_SCALAR_PTR))
 
         f.write(tu.tex_sf(100*alpha) + ' & ')
         f.write(f'{vw:.2f} & ')
@@ -541,8 +541,8 @@ def plot_ps_1bubble(
     nx_string = f'nx{Np[1] // 1000}k-'
 
     A2, fp2_2, lam2 = ssm.a2_e_conserving_bag(
-        z, vw, alpha, cs2_fun_ptr=bubble.CS2_BAG_SCALAR_PTR, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
-        ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=bubble.cs2_bag_scalar,
+        z, vw, alpha, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
+        ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=bubble.CS2_BAG_SCALAR_PTR,
         npt=Np[1:], lambda_correction=lambda_correction)
 
     z_list = 3*[z]
@@ -850,8 +850,8 @@ def plot_and_save(
 
     # Now some comparisons between real space <v^2> and Fourier space already calculated
     v_ip, w_ip, xi = bubble.sound_shell_bag(
-        vw, alpha, cs2_fun_ptr=bubble.CS2_BAG_SCALAR_PTR, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
-        ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=bubble.cs2_bag_scalar)
+        vw, alpha, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
+        ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=bubble.CS2_BAG_SCALAR_PTR)
     Ubarf2 = bubble.Ubarf_squared(v_ip, w_ip, xi, vw)
 
     logger.debug(

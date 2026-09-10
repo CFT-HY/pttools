@@ -11,7 +11,7 @@ from pttools.bubble import props, thermo
 from pttools.bubble.alpha import alpha_n_max_deflagration_bag
 from pttools.bubble.bubble.base import BaseBubble, NotYetSolvedError
 from pttools.bubble.const import DEFAULT_N_XI, DEFAULT_T_END, JUNCTION_RTOL, THIN_SHELL_T_POINTS_MIN
-from pttools.bubble.cs2_bag import cs2_bag_scalar
+from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR
 from pttools.bubble.fluid import sound_shell_generic
 from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG
 from pttools.bubble.junction import junction_condition_deviations
@@ -308,7 +308,7 @@ class Bubble(BaseBubble):
 
         alpha_n_max_bag = alpha_n_max_deflagration_bag(
             self.v_wall, df_dtau_ptr=DF_DTAU_PTR_BAG,
-            ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=cs2_bag_scalar)
+            ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR)
         high_alpha_n = alpha_n_max_bag - self.alpha_n < 0.05
 
         try:

@@ -138,7 +138,7 @@ def sound_shell_detonation(
         df_dtau_ptr=model.df_dtau_ptr(),
         method=integrate.DEFAULT_FLUID_INTEGRATE_METHOD
     )
-    v, w, xi, t = trim.trim_fluid_wall_to_cs(v, w, xi, t, v_wall, SolutionType.DETON, cs2_fun=model.cs2)
+    v, w, xi, t = trim.trim_fluid_wall_to_cs(v, w, xi, t, v_wall, SolutionType.DETON, cs2_ptr=model.cs2_ptr())
 
     # The fluid is still ahead of the wall
     vp = 0

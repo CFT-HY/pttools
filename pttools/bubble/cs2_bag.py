@@ -5,6 +5,7 @@ from numba.extending import overload
 import numpy as np
 
 from pttools.bubble import const
+from pttools.bubble.cs2 import cs2_to_ptr
 from pttools.bubble.phase import Phase
 from pttools.speedup import njit
 import pttools.type_hints as th
@@ -82,7 +83,8 @@ def cs2_bag_numba(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
     raise TypeError(f"Unknown type for w: {type(w)}")
 
 
-CS2_BAG_SCALAR_PTR: int = cs2_bag_scalar_cfunc.address
+#: Pointer to the scalar $c_s^2$ function of the Bag Model
+CS2_BAG_SCALAR_PTR: th.CS2FunScalarPtr = cs2_to_ptr(cs2_bag_scalar_cfunc)
 CS2ScalarCType = cs2_bag_scalar_cfunc.ctypes
 cs2_bag_scalar = njit(cache=NUMBA_CACHE_CS2_BAG)(_cs2_bag_scalar)
 cs2_bag_arr = njit(cache=NUMBA_CACHE_CS2_BAG)(_cs2_bag_arr)

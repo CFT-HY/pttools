@@ -9,7 +9,6 @@ from pttools.bubble import (
     CS2_BAG_SCALAR_PTR,
     DEFAULT_FLUID_INTEGRATE_METHOD,
     DF_DTAU_PTR_BAG,
-    cs2_bag_scalar,
     thermo_bag,
 )
 from pttools.type_hints import FloatArr1D
@@ -78,8 +77,8 @@ class ThermoBagTestLectureNotes(RefLectureNotes, ThermoBagTest, unittest.TestCas
         for i in range(self.ALPHA_NS.size):
             ubarfs[i] = np.sqrt(thermo_bag.get_ubarf2_bag(
                 v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i],
-                cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
-                ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=cs2_bag_scalar))
+                df_dtau_ptr=DF_DTAU_PTR_BAG,
+                ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR))
         assert_allclose(ubarfs, self.UBARF_REF, rtol=2.7e-3)
 
     def test_ubarf2_new_bag(self):

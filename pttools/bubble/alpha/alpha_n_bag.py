@@ -15,7 +15,7 @@ def find_alpha_n_bag(
         alpha_p: float,
         df_dtau_ptr: speedup.DifferentialPointer,
         ode_method: FluidIntegrateMethod,
-        cs2_fun: th.CS2Fun,
+        cs2_ptr: th.CS2FunScalarPtr,
         sol_type: SolutionType = SolutionType.UNKNOWN,
         n_xi: int = const.DEFAULT_N_XI) -> float:
     r"""
@@ -28,7 +28,7 @@ def find_alpha_n_bag(
     :param alpha_p: $\alpha_+$, the at-wall strength parameter.
     :param df_dtau_ptr: pointer to the differential equations
     :param ode_method: differential equation solver to be used
-    :param cs2_fun: $c_s^2$ function
+    :param cs2_ptr: pointer to the $c_s^2$ function
     :param sol_type: type of the bubble (detonation, deflagration etc.)
     :param n_xi: number of $\xi$ values to investigate
     :return: $\alpha_n$, global strength parameter
@@ -38,7 +38,7 @@ def find_alpha_n_bag(
         sol_type = identify_solution_type_alpha_plus_bag(v_wall, alpha_p).value
     _, w, xi = fluid_bag.sound_shell_alpha_plus_bag(
         v_wall, alpha_p,
-        df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_fun=cs2_fun, sol_type=sol_type, n_xi=n_xi
+        df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_ptr=cs2_ptr, sol_type=sol_type, n_xi=n_xi
     )
     n_wall = props.find_v_index(xi, v_wall)
     return alpha_p * w[n_wall] / w[-1]

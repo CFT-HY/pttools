@@ -10,7 +10,7 @@ import numpy as np
 
 from examples.utils import save_and_show_fig
 from pttools.bubble.bubble import Bubble
-from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR, cs2_bag_scalar
+from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR
 from pttools.bubble.fluid_bag import sound_shell_bag
 from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG, add_df_dtau
 from pttools.bubble.relativity import lorentz
@@ -38,14 +38,14 @@ def main() -> plt.Figure:
     det2 = Bubble(model2, v_wall=0.85, alpha_n=0.05, sol_type=SolutionType.DETON)
     ax.plot(det2.xi, det2.v, c="b", label=r"$c_{sb}=\frac{1}{\sqrt{3}}$")
     v, w, xi = sound_shell_bag(
-        v_wall=0.85, alpha_n=0.05, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
-        ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=cs2_bag_scalar)
+        v_wall=0.85, alpha_n=0.05, df_dtau_ptr=DF_DTAU_PTR_BAG,
+        ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR)
     ax.plot(xi, v, c="g", label="bag", ls=":")
     def2 = Bubble(model2, v_wall=0.5, alpha_n=0.578, sol_type=SolutionType.SUB_DEF)
     ax.plot(def2.xi, def2.v, c="b")
     v, w, xi = sound_shell_bag(
-        v_wall=0.5, alpha_n=0.578, cs2_fun_ptr=CS2_BAG_SCALAR_PTR, df_dtau_ptr=DF_DTAU_PTR_BAG,
-        ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_fun=cs2_bag_scalar)
+        v_wall=0.5, alpha_n=0.578, df_dtau_ptr=DF_DTAU_PTR_BAG,
+        ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR)
     ax.plot(xi, v, c="g", ls=":")
 
     xi = np.linspace(css, 1, 20)

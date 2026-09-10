@@ -23,7 +23,7 @@ def check_physical_params(
         params: PhysicalParams,
         df_dtau_ptr: DifferentialPointer,
         ode_method: FluidIntegrateMethod,
-        cs2_fun: th.CS2Fun) -> None:
+        cs2_ptr: th.CS2FunScalarPtr) -> None:
     r"""
     Check that $v _\text{wall}$ = params[0], $\alpha_n$ = params[1] values are physical, i.e.
     $0 < v _\text{wall} < 1$,
@@ -34,7 +34,7 @@ def check_physical_params(
     check_wall_speed(v_wall)
 
     alpha_n_max = alpha.alpha_n_max_bag(
-        v_wall, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_fun=cs2_fun)
+        v_wall, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_ptr=cs2_ptr)
     if alpha_n > alpha_n_max:
         with numba.objmode:
             logger.error(
