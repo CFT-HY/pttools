@@ -370,7 +370,7 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
-        r"""Transition strength parameter $\alpha_{\bar{\theta}_n$.
+        r"""Transition strength parameter $\alpha_{\bar{\theta}_n}$.
 
         $$\alpha_{\bar{\theta}_n} \equiv \frac{D \bar{\theta}(T_n)}{3 w_n}$$
         :giese_2021:`\ `, eq. 13.

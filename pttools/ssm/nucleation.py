@@ -1,4 +1,7 @@
-"""Bubble nucleation."""
+r"""Bubble nucleation.
+
+This module contains $\beta$, $r_\ast$ etc.
+"""
 
 import enum
 import logging
@@ -268,9 +271,10 @@ def R_star[T2: FloatOrArr](
     This commonly used formula is wrong.
     $$R_* = \frac{(8\pi)^\frac{1}{3}}{\beta} \max ({v}_\text{wall}, c_s)$$
     These sources use this formula:
-    :hindmarsh_2015:`\ ` p. 4
-    :caprini_2020:`\ ` eq. 6
-    :hakkinen_msc:`\ ` eq. 2.6
+    :hindmarsh_2015:`\ ` p. 4,
+    :caprini_2020:`\ ` eq. 6,
+    :caprini_2024:`\ ` eq. 2.11,
+    :hakkinen_msc:`\ ` eq. 2.6.
 
     For detonations (${v}_\text{wall} > c_s$),
     the typical separation between bubbles is set by the wall velocity $v_\text{wall}$.
@@ -281,9 +285,9 @@ def R_star[T2: FloatOrArr](
     this approximation breaks down,
     and the mean bubble separation $R_*$ must be calculated directly from first principles.
     In such cases one may also want to take into account the expansion of the universe during the phase transition.
-    :caprini_2020:`\ ` p. 6
-    :gowling_2021:`\ ` p. 5
-    :enqvist_1992:`\ ` eq. 4.10
+    :caprini_2020:`\ ` p. 6,
+    :gowling_2021:`\ ` p. 5,
+    :enqvist_1992:`\ ` eq. 4.10.
     """
     if sol_type == SolutionType.DETON.value:
         return R_star0(beta, v_wall)

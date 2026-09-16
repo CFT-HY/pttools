@@ -7,12 +7,23 @@
   - Do not disable the addopts of pyproject.toml with `-o addopts=""`, as this would drop `--dist=loadgroup`.
 - Lint: `ruff check`
 - Type checking: `pyrefly check`
-- Build documentation: `cd docs && make all`
-  - Building the documentation will run the examples and can therefore take up to 35 min to run.
+- Build documentation with examples: `cd docs && make all`
+  - This will run the examples and can therefore take up to 35 min to run.
+- Build documentation without examples: `cd docs && make all-noplot`
 
 ## Code style
 - Use Python 3.12 type hints where possible.
 - JIT compile heavy computations with Numba.
+
+## Docstring conventions
+- Use the Sphinx docstring format.
+- Use `:param:`, `:return:` and `:raises:`, where appropriate.
+  The descriptions of physics variables should begin with the form `$symbol$, name`, where appropriate.
+- For functions that return a physics variable,
+  the first line of the docstring should be of the form `$symbol$, name.`, where appropriate.
+- If a function contains physics equations, add them as LaTeX in its docstring.
+- When using equations from articles, cite the article, including the number of the equation, if possible.
+- Use Sphinx extlinks for references, as configured in `./pttools/docs/links.py`.
 
 ## General instructions
 - Before editing code that has physics equations, ensure that there are unit tests that verify the results of that code.

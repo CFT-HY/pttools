@@ -122,9 +122,17 @@ H_BAR: float = 1.054571817e-34
 #: :codata_2018:`\ ` table XXX
 K_B: float = 1.380649e-23
 
-#: $T_0$, the CMB temperature today (K)
-# :fixsen_2009:`\ ` table 2
 T_CMB: float = 2.72548
+r"""
+$T_0$, the CMB temperature today (K)
+
+$$T_{CMB} \approx 2.72548 \text{K}$$
+:fixsen_2009:`\ ` table 2.
+
+An older reference is provided by
+$$T_{CMB} \approx 2725 \pm 1 \text{mK}$$
+:fixsen_2002:`\ `.
+"""
 
 STEFAN_BOLTZMANN: float = math.pi**2 * K_B**4 / (60 * c**2 * H_BAR**3)
 r"""
@@ -151,9 +159,20 @@ which for the $g_0 = 2$ photon polarizations reduces to $\rho_{\gamma} c^2 = a T
 #: :wikipedia:`Parsec`
 PC_IN_M: float = 180 * 60 * 60 * AU_IN_M / math.pi
 
-H: float = 0.6766  # ± 0.42
+H: float = 0.6766
 r"""
-$h$, dimensionless reduced Hubble constant :planck_2018:`\ `
+$h$, dimensionless reduced Hubble constant.
+
+$$H_0 \approx 67.66 \pm 0.42$$
+TT,TE,EE+lowE+lensing+BAO (68 % limits),
+:planck_2018:`\ ` table 2.
+This is the value that :wikipedia:`Hubble's_law` quotes as the Planck 2018 value.
+
+Some references use the value
+$$H_0 \approx 67.27 \pm 0.60$$
+TT,TE,EE+lowE (68 % limits),
+:planck_2018:`\ ` table 2.
+
 Please note that the observable quantity is $\Omega_\text{gw} h^2$,
 and that the $h$ of :py:data:`OMEGA_PHOTON` cancels out when converting to it.
 :wikipedia:`Hubble's_law`

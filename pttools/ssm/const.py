@@ -61,6 +61,8 @@ The value $\tilde{\Omega}_\text{gw} \approx 0.012$ is from
 :hindmarsh_2017:`\ ` p. 13.
 Please note that there is a typo in the original article: $0.12 \rightarrow 0.012$: :hindmarsh_2017_erratum:`\ `.
 This value is obtained numerically from simulations.
+This value is used in
+:hakkinen_msc:`\ ` p. 28.
 
 A rougher approximation of $\tilde{\Omega}_\text{gw}$ is given by
 :caprini_2020:`\ ` p. 16

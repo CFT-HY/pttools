@@ -1,10 +1,10 @@
 r"""$\Omega_{\text{gw},0}$ for the bag model."""
 
-from pttools.bubble.energy_budget import kinetic_energy_fraction_approx, ubarf_approx_K
+from pttools.bubble.energy_budget import kinetic_energy_fraction_approx
 from pttools.omgw0 import const
 from pttools.omgw0.factors import F_gw0_h2
 from pttools.omgw0.freq import f0
-from pttools.ssm import DEFAULT_N_PT, H_star_tau_nl_approx, H_star_tau_v_old, J_old, NptType, NucType, power_gw_bag
+from pttools.ssm import DEFAULT_N_PT, J_old, NptType, NucType, power_gw_bag
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 import pttools.type_hints as th
 

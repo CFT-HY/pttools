@@ -3,6 +3,8 @@ r"""Energy budget approximations.
 These approximations are based on :espinosa_2010:`\ `.
 """
 
+import typing as tp
+
 import numpy as np
 import scipy.optimize
 
@@ -76,13 +78,15 @@ def delta_kappa_approx[T: FloatOrArr](alpha_n: T) -> T:
 def delta_n[T: FloatOrArr](model: "Model", wn: T) -> T:
     r"""$\delta_n$ for $K$.
 
-    $$\delta_n = \frac{4 \theta_-}{3 w_s}$$
+    $$\delta_n = \frac{4 \theta_-}{3 w_n}$$
     For the bag model with $V_- = 0$, $\delta_n = 0$.
     :notes:`\ `, eq. 7.43
+
+    :param model: equation of state
+    :param wn: $w_n$, enthalpy at nucleation temperature in the symmetric phase
+    :return: $\delta_n$
     """
-    # Todo: Check which enthalpies this expression should use.
-    # typing.cast() is not used below, since Numba cannot compile it.
-    return 4 * model.theta(wn, Phase.BROKEN) / (3 * wn)  # type: ignore[return-value]
+    return tp.cast(T, 4 * model.theta_temp(model.temp(wn, Phase.SYMMETRIC), Phase.BROKEN) / (3 * wn))
 
 
 @njit(cache=True)
@@ -225,13 +229,22 @@ def kappa_v_approx(
 def kinetic_energy_fraction_approx[T: FloatOrArr](
         v_wall: float,
         alpha_n: T,
+        model: Model | None = None,
         cs: float = CS0,
         v_cj: float | None = None) -> T:
     r"""Approximation for the kinetic energy fraction $K$.
 
-    :notes:`\ ` eq. 7.43 with $\delta_n = 0$ as is the case for the bag model
+    $$K \approx \kappa \frac{\alpha_n}{1 + \alpha_n + \delta_n}$$
+    :notes:`\ ` eq. 7.43.
+    A version without $\delta_n$ is used in
+    :hakkinen_msc:`\ ` eq. 2.40.
+
+    Some sources have a pre-factor of 0.6, such as
+    $$K \approx 0.6 \kappa \frac{\alpha_n}{1 + \alpha_n}$$
+    :caprini_2024:`\ ` p. 9.
     """
-    return kappa_v_approx(v_wall=v_wall, alpha_n=alpha_n, cs=cs, v_cj=v_cj) * alpha_n / (1 + alpha_n)
+    dn = 0. if model is None else delta_n(model, wn=model.wn(alpha_n))
+    return kappa_v_approx(v_wall=v_wall, alpha_n=alpha_n, cs=cs, v_cj=v_cj) * alpha_n / (1 + alpha_n + dn)
 
 
 @njit

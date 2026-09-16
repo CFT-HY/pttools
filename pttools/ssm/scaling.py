@@ -48,6 +48,10 @@ def H_star_tau_v(source_lifetime_factor: FloatOrArr, nu: FloatOrArr = DEFAULT_NU
     $$\mathcal{H} \tau_v = \mathcal{H}_* \eta_* \Upsilon_\ell$$
     :ajmi_2022:`\ ` eq. 80
     :gowling_2021:`\ ` eq. 2.7.
+
+    :param source_lifetime_factor: $\Upsilon_\ell$, source lifetime factor
+    :param nu: $\nu_\text{gdh2024}$
+    :return: $H_* \tau_\text{v}$
     """
     return H_eta(nu) * source_lifetime_factor
 
@@ -58,12 +62,27 @@ def H_star_tau_v_old[T: FloatOrArr](H_star_tau_nl: T) -> T:
     $$H_* \tau_v \approx 1 - \frac{1}{\sqrt{1 + 2x}}$$,
     where $x = H_* \tau_\text{nl}$.
     :ajmi_2022:`\ ` eq. 80,
-    :gowling_2021:`\ ` eq. 2.7.
+    :gowling_2021:`\ ` eq. 2.7,
+    :hakkinen_msc:`\ ` eq. 3.30.
     This is an approximation, and the source lifetime factor should be used instead.
 
     :param H_star_tau_nl: $H_* \tau_\text{nl}$
+    :return: $H_* \tau_\text{v}$
     """
     return tp.cast(T, 1 - (1 + 2 * H_star_tau_nl) ** (-0.5))
+
+
+def H_star_tau_v_old2[T: FloatOrArr](H_star_tau_nl: T) -> T:
+    r"""$H_* \tau_\text{v}$, Hubble-scaled effective lifetime of the source, old approximation 2.
+
+    $$H_* \tau_\text{v} = \min(H_* \tau_\text{nl}, 1)$$
+    :hakkinen_msc:`\ ` eq. 3.27.
+    This is an even rougher approximation than :py:func:pttools.ssm.scaling.H_star_tau_v_old:.
+
+    :param H_star_tau_nl: $H_* \tau_\text{nl}$
+    :return: $H_* \tau_\text{v}$
+    """
+    return np.minimum(H_star_tau_nl, 1.)
 
 
 def J(r_star: FloatOrArr, H_star_tau_v: FloatOrArr) -> FloatOrArr:
@@ -85,8 +104,10 @@ def J_full(
     $$J \equiv r_* H_* \tau_\text{v}
     = r_* \mathcal{H}_* \eta_* \Upsilon_\ell
     = r_* (1 + \nu) \Upsilon_\ell
-    = r_* (1 + \nu) \frac{1}{\ell(\nu)} \left(1 - \left( \frac{\eta_*}{\eta_\text{end}} \right)^{\ell(\nu)} \right)
-    = r_* (1 + \nu) \frac{1}{\ell(\nu)} \left(1 - \left(1 + \frac{\Delta \eta_\text{v}}{\eta_*} \right)^{-\ell(\nu)} \right)
+    = r_* (1 + \nu) \frac{1}{\ell(\nu)}
+        \left(1 - \left( \frac{\eta_*}{\eta_\text{end}} \right)^{\ell(\nu)} \right)
+    = r_* (1 + \nu) \frac{1}{\ell(\nu)}
+        \left(1 - \left( 1 + \frac{\Delta \eta_\text{v}}{\eta_*} \right)^{-\ell(\nu)} \right)
     $$
     See
     :py:func:`pttools.ssm.scaling.H_star_tau_v`,
@@ -107,10 +128,11 @@ def J_full(
 def J_old(r_star: FloatOrArr, K: FloatOrArr) -> FloatOrArr:
     r"""Combined lifetime factor $J$, old approximation.
 
-    $$J \equiv r_* H_* \tau_\text{v} \approx r_* \left(1 - \frac{1}{\sqrt{1 + 2x}}$$,
+    $$J \equiv r_* H_* \tau_\text{v} \approx r_* \left(1 - \frac{1}{\sqrt{1 + 2x}} \right)$$,
     where $x = \frac{r_*}{\sqrt{K}}$
     :gowling_2021:`\ ` eq. 2.8,
-    :ajmi_2022:`\ ` eq. 81.
+    :ajmi_2022:`\ ` eq. 81,
+    :hakkinen_msc:`\ ` eq. 3.31.
     """
     return J(
         r_star=r_star,

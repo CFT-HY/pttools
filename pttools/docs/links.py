@@ -43,6 +43,7 @@ EXTLINKS_STATIC: ExtLinks = {
     "enqvist_1992": doi_link("10.1103/PhysRevD.45.3415", "Enqvist et al.", 1992),
     "kurki-suonio_1995": arxiv_link("hep-ph/9512202", "Kurki-Suonio & Laine", 1995),
     "maggiore_1999": arxiv_link("gr-qc/9909001", "Maggiore", 1999),
+    "fixsen_2002": doi_link("10.1086/344402", "Fixsen & Mather", 2002),
     "fixsen_2009": arxiv_link("0911.1955", "Fixsen"),
     "espinosa_2010": arxiv_link("1004.4187", "Espinosa"),
     "planck_2015": arxiv_link("1502.01589", "Planck 2015 results"),
