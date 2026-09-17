@@ -25,7 +25,7 @@ all:
 
 all-noplot:
 	$(MAKE) clean
-	$(MAKE) linkcheck
+	$(MAKE) linkcheck-noplot
 	$(MAKE) html-noplot
 	$(MAKE) latex-noplot
 	$(MAKE) epub-noplot
@@ -46,6 +46,9 @@ html-noplot:
 
 latex-noplot:
 	$(SPHINXBUILD) -D plot_gallery=0 -b latex "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+linkcheck-noplot:
+	@$(SPHINXBUILD) -D plot_gallery=0 -b linkcheck "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
