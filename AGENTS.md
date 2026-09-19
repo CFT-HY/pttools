@@ -12,7 +12,7 @@
 - Build documentation without examples: `cd docs && make all-noplot`
 
 ## Code style
-- Use Python 3.12 type hints where possible.
+- Use Python 3.12+ type hints where possible.
 - JIT compile heavy computations with Numba.
 
 ## Docstring conventions
