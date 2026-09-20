@@ -51,7 +51,12 @@ jobs:
           # so this ensures that a broken NumbaLSODA build fails the workflow instead of being skipped silently.
           run: python -c "import numbalsoda; print(numbalsoda.__file__)"
         - name: Print Numba sysinfo
+          # The TBB library of the tbb package is not on the default library search path,
+          # so Numba reports it as unavailable here. PTtools loads it from the virtual environment instead,
+          # which is verified by the next step.
           run: python -m numba --sysinfo | tee numba-sysinfo.txt
+        - name: Check TBB
+          run: python -c "from pttools.speedup import tbb; import sys; v = tbb.load_tbb(); print('TBB version:', v); sys.exit(v is None or v < tbb.TBB_MIN_VERSION)"
         - name: Generate reference data
           run: python pttools/bubble/fluid_reference.py
           env:

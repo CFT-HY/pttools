@@ -269,8 +269,14 @@ when running a program that uses PTtools, or the error
 ``Fatal Python error: Aborted``
 when running pytest,
 please install either OpenMP or Intel TBB (or both).
-You can verify that the installation works by running the command ``numba --sysinfo``
-and checking the contents of the section ``Threading Layer Information``.
+The ``[performance]`` extra of PTtools installs the
+`tbb <https://pypi.org/project/tbb/>`_
+package from PyPI, which places the TBB library in the ``lib`` directory of the Python environment.
+This directory is not on the default library search path of the operating system,
+so ``numba --sysinfo`` reports TBB as unavailable, but PTtools loads the library from there automatically.
+You can verify that this works by running the command ``python -m pttools.speedup.tbb``.
+For a TBB installed system-wide, you can check the section ``Threading Layer Information``
+of the output of ``numba --sysinfo``.
 If you can't get the threading backends working,
 you can disable the nested parallelism by setting the environment variable
 ``NUMBA_NESTED_PARALLELISM=0`` before importing PTtools.

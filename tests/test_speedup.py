@@ -1,5 +1,7 @@
 """Unit tests for the speedup module."""
 
+import importlib
+import importlib.metadata
 import os.path
 import unittest
 
@@ -9,11 +11,17 @@ import scipy.interpolate
 
 from pttools import speedup
 from pttools.analysis import save_fig
-from pttools.speedup import njit, spline
+from pttools.speedup import njit, spline, tbb
 from pttools.speedup.parallel import parallel_debug_message
 import pttools.type_hints as th
 from pttools.utils import assert_allclose
 from tests.utils import TEST_FIGURE_PATH
+
+try:
+    importlib.metadata.distribution("tbb")
+    TBB_INSTALLED = True
+except importlib.metadata.PackageNotFoundError:
+    TBB_INSTALLED = False
 
 
 @njit
@@ -93,3 +101,20 @@ class TestSpeedup(unittest.TestCase):
                 print("c:", c)
                 print("k:", k)
             raise e
+
+
+@unittest.skipUnless(TBB_INSTALLED, "The tbb package is not installed.")
+class TestTBB(unittest.TestCase):
+    """Test that the TBB library of the tbb package is found for Numba."""
+
+    def test_load_tbb(self):
+        version = tbb.load_tbb()
+        self.assertIsNotNone(version)
+        self.assertGreaterEqual(version, tbb.TBB_MIN_VERSION)
+
+    @staticmethod
+    def test_numba_tbb_layer():
+        # Importing the TBB extension of Numba fails if the loader cannot find the TBB library.
+        importlib.import_module("numba.np.ufunc.tbbpool")
+        # This is the check that Numba runs before using the TBB threading layer.
+        importlib.import_module("numba.np.ufunc.parallel")._check_tbb_version_compatible()  # noqa: SLF001
