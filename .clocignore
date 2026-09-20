@@ -23,4 +23,5 @@ tests/bubble/test-results
 tests/models/htmlcov
 tests/models/test-results
 tests/test_data
+.venv
 venv

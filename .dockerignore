@@ -50,6 +50,7 @@ dist
 envs
 envs-old
 model_data
+.venv
 venv
 
 # Ignored for Docker only

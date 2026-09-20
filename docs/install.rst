@@ -3,9 +3,43 @@ Installation
 
 PTtools is a Python library and can therefore be installed with the same tools and commands as other Python libraries.
 If you're using PTtools for your project,
-:ref:`installation using pip <With pip>` or :ref:`Docker <With Docker>` is recommended.
+:ref:`installation using uv <With uv>`, :ref:`pip <With pip>` or :ref:`Docker <With Docker>` is recommended.
 If you're developing PTtools itself, you should
 :ref:`clone the repository <Local development>`.
+
+
+With uv
+-------
+`uv <https://docs.astral.sh/uv/>`_ is a fast Python package and project manager,
+which also takes care of installing a suitable version of Python
+and of creating a virtual environment for your project.
+Please see the `uv documentation <https://docs.astral.sh/uv/getting-started/installation/>`_
+for the installation instructions of uv itself.
+
+To use PTtools in a uv project, add it as a dependency.
+This creates the virtual environment ``.venv`` if it does not exist yet,
+and records the dependency in ``pyproject.toml`` and ``uv.lock``.
+
+.. code-block:: bash
+
+  uv init  # If your project does not have a pyproject.toml yet
+  uv add "pttools-gw[numbalsoda,performance]"
+
+From the Git repository. For the main branch, you can omit the "--branch BRANCH_NAME".
+
+.. code-block:: bash
+
+  uv add "pttools-gw[numbalsoda,performance]" --git https://github.com/CFT-HY/pttools.git --branch BRANCH_NAME
+
+You can then run your scripts in the virtual environment with ``uv run your_script.py``.
+
+If you don't want to set up a uv project,
+you can also install PTtools into an existing virtual environment with the pip-compatible interface of uv.
+
+.. code-block:: bash
+
+  uv venv  # Creates the virtual environment .venv, if you don't have one yet
+  uv pip install --upgrade "pttools-gw[numbalsoda,performance]"
 
 
 With pip
@@ -34,7 +68,7 @@ Stable version from PyPI:
 
 .. code-block:: bash
 
-  pip3 install --upgrade pttools-gw[numbalsoda,performance]
+  pip3 install --upgrade "pttools-gw[numbalsoda,performance]"
 
 From the Git repository. For the main branch, you can omit the "@BRANCH_NAME".
 
@@ -105,6 +139,11 @@ Local development version
 
 Local development
 -----------------
+The development environment of PTtools is managed with
+`uv <https://docs.astral.sh/uv/>`_.
+It installs the Python version specified in ``.python-version``,
+creates the virtual environment ``.venv``,
+and installs the exact dependency versions pinned in ``uv.lock``.
 You can set up a local development environment with the following commands.
 
 .. code-block:: bash
@@ -112,18 +151,25 @@ You can set up a local development environment with the following commands.
   git clone git@github.com:CFT-HY/pttools.git
   cd pttools
   git switch BRANCH_NAME  # If you want to work on some other branch than main
-  python3 -m venv --upgrade-deps venv
-  source ./venv/bin/activate
-  pip3 install -r requirements.txt -r requirements-dev.txt -r ./docs/requirements.txt
+  uv sync --all-extras
   # Now you can run the unit tests to ensure that the installation was successful.
-  pytest
+  uv run pytest
+
+The ``--all-extras`` flag installs the optional :ref:`NumbaLSODA` and performance dependencies,
+and you can omit it if they are not available on your platform.
+The commands of the virtual environment can be run with ``uv run COMMAND``,
+or you can activate the virtual environment with ``source ./.venv/bin/activate``
+and then run the commands directly as with any other virtual environment.
 
 You can build the documentation locally with the following commands.
 
 .. code-block:: bash
 
   cd docs
-  make html
+  uv run make html
+
+The dependencies are declared in ``pyproject.toml``.
+See :ref:`Updating dependencies` for how to add and upgrade them.
 
 With conda
 ^^^^^^^^^^
@@ -151,12 +197,16 @@ You can install NumbaLSODA manually with
 
 .. code-block:: bash
 
+  uv pip install --upgrade numbalsoda
+  # or
   pip3 install --upgrade numbalsoda
 
 You may also try building NumbaLSODA from the Git repository.
 
 .. code-block:: bash
 
+  uv pip install --upgrade "numbalsoda @ git+https://github.com/Nicholaswogan/numbalsoda.git"
+  # or
   pip3 install --upgrade "numbalsoda @ git+https://github.com/Nicholaswogan/numbalsoda.git"
 
 Due to the low-level design of NumbaLSODA,
@@ -168,7 +218,7 @@ Linux
 ^^^^^
 If you get an error about missing ``cmake`` or ``gfortran``, you have to install them manually.
 On Debian- and Ubuntu-based systems this can be done with the following commands.
-Once the packages are installed, run the pip installation above again.
+Once the packages are installed, run the installation command above again.
 
 .. code-block:: bash
 

@@ -24,27 +24,22 @@ jobs:
             version: "15"
         - name: Checkout
           uses: actions/checkout@v7
-        - name: Setup Python
-          uses: actions/setup-python@v7
+        - name: Setup uv
+          uses: astral-sh/setup-uv@v10
           # macOS minutes cost 10x what Linux does, so testing multiple Python versions would be quite costly.
           with:
             python-version: ${{ env.PYTHON_VERSION }}
-            cache: pip
-            cache-dependency-path: |
-              requirements.txt
-              requirements-dev.txt
+            activate-environment: true
+        - name: Install requirements
+          run: uv sync --locked --all-extras --no-group docs
         - name: Print Python version
           run: python -V
-        - name: Install requirements
-          run: |
-            pip install --upgrade pip wheel
-            pip install -r requirements.txt -r requirements-dev.txt
         - name: Print Numba sysinfo
           # On macOS the Numba script is not executable by default and therefore has to be called as a Python module.
           run: |
             python -m numba --sysinfo | tee numba-sysinfo.txt
         - name: Generate reference data
-          run: python3 pttools/bubble/fluid_reference.py
+          run: python pttools/bubble/fluid_reference.py
           env:
             PYTHONPATH: .
         - name: Run tests

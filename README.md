@@ -16,9 +16,14 @@ and the resulting gravitational wave power spectrum in the Sound Shell Model.
 
 
 ### Installation
-PTtools is [available on PyPI](https://pypi.org/project/pttools-gw/) and can be installed with pip:
+PTtools is [available on PyPI](https://pypi.org/project/pttools-gw/)
+and can be added to a [uv](https://docs.astral.sh/uv/) project with:
 ``` bash
-pip3 install --upgrade pttools-gw[numbalsoda,performance]
+uv add "pttools-gw[numbalsoda,performance]"
+```
+or installed with pip:
+``` bash
+pip3 install --upgrade "pttools-gw[numbalsoda,performance]"
 ```
 The `[numbalsoda]` and `[performance]` dependencies are optional,
 and you can omit them if they are not available on your platform.

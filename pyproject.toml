@@ -58,33 +58,63 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed"
 ]
-# When updating these, also update environment.yml and requirements.txt.
-# Please also ensure that compatible versions are available in LISA ProtoLab.
-dependencies = [
-    "h5py >= 3.16.0",
-    "kaleido >= 1.3.0",
-    "matplotlib >= 3.10.9",
-    "numba >= 0.65.1",
-    "numpy >= 2.4.6",
-    "orjson >= 3.11.9",
-    "plotly >= 6.6.0",
-    "scipy >= 1.17.1",
-]
 # Note: LISA ProtoLab uses Python 3.13, and PTtools should therefore probably stay compliant with it.
 # https://gitlab.esa.int/mika.x.maki/lisa-protolab
 requires-python = ">= 3.12"
 # dynamic = ["version"]
 
+# These are the version ranges that PTtools is compatible with.
+# The exact versions that are used for development and testing are pinned in uv.lock,
+# which is updated with "uv lock --upgrade".
+# When updating these, also update environment.yml.
+# Please also ensure that compatible versions are available in LISA ProtoLab.
+dependencies = [
+    # h5py does not yet support free-threading.
+    # https://github.com/h5py/h5py/issues/2475
+    # https://docs.h5py.org/en/latest/threads.html#free-threading
+    "h5py >= 3.16.0",
+    # For Plotly image export
+    "kaleido >= 1.3.0",
+    # Matplotlib 3.9.1 wheels are broken
+    # https://pypi.org/project/matplotlib/3.9.1/
+    "matplotlib >= 3.10.9",
+    # Numba 0.55 breaks the unit tests
+    # https://github.com/numba/numba/issues/7751
+    # Numba does not yet support free-threading.
+    # https://github.com/numba/numba/issues/9928
+    # If you're using an old version of Numba and get the error:
+    # "create_target_machine() got an unexpected keyword argument 'jitdebug'"
+    # then you may have to downgrade llvmlite to 0.32.1
+    # https://github.com/rapidsai/cuml/issues/2389#issuecomment-642645437
+    "numba >= 0.65.1",
+    "numpy >= 2.4.6",
+    # As of 2026-05, Orjson does not yet support free-threading.
+    "orjson >= 3.11.9",
+    "plotly >= 6.6.0",
+    "scipy >= 1.17.1",
+]
+
 [project.optional-dependencies]
 numbalsoda = ["numbalsoda >= 0.3.4"]
+# Intel SVML for Numba
+# https://pypi.org/project/icc-rt/
+# https://pypi.org/project/intel-cmplr-lib-rt/
+# https://numba.readthedocs.io/en/stable/user/performance-tips.html#intel-svml
+# TBB can be used to speed up Numba threading
+# https://pypi.org/project/tbb/
+# https://numba.pydata.org/numba-doc/latest/user/threading-layer.html#which-threading-layers-are-available
 # These libraries are available for x86-64 only.
 # The architecture has to be matched positively, as its name depends on the platform:
 # Linux and macOS report "x86_64", Windows reports "AMD64",
 # and the ARM architecture is "arm64" on macOS, "aarch64" on Linux and "ARM64" on Windows.
 performance = [
+    # As of 2026-03, this is the latest version with support for macOS.
     "icc-rt >= 2019.0; platform_machine == 'x86_64' and sys_platform == 'darwin'",
+    # This replaces icc-rt for Windows and Linux.
     "intel-cmplr-lib-rt >= 2025.3.3; (platform_machine == 'x86_64' or platform_machine == 'AMD64') and sys_platform != 'darwin'",
+    # As of 2026-03, this is the latest version with support for macOS.
     "intel-openmp >= 2023.2.0; platform_machine == 'x86_64' and sys_platform == 'darwin'",
+    # As of 2026-03, this is the latest version with support for macOS.
     "tbb >= 2021.10.0; platform_machine == 'x86_64' or platform_machine == 'AMD64'",
 ]
 
@@ -92,6 +122,57 @@ performance = [
 documentation = "https://pttools.readthedocs.io"
 issues = "https://github.com/CFT-HY/pttools/issues"
 repository = "https://github.com/CFT-HY/pttools"
+
+# Dependency groups (PEP 735) for development and documentation.
+# These are installed by "uv sync" and are not included in the published package.
+# The exact versions are pinned in uv.lock.
+[dependency-groups]
+dev = [
+    "allure-pytest >= 2.16.0",
+    "colorama >= 0.4.6",
+    # "hypothesis[numpy] >= 6.155.1",
+    "pandas >= 3.0.5",
+    "pandas-stubs >= 3.0.3.260530",
+    # For Numba system info
+    "psutil >= 7.2.2",
+    "pyan3 >= 2.6.2",
+    "pyinstrument >= 5.1.2",
+    "pyrefly >= 1.2.0",
+    # Pylint is no longer used for linting, but its Pyreverse tool is used for generating the UML diagrams.
+    "pylint >= 4.0.6",
+    "pytest >= 9.1.1",
+    "pytest-cov >= 7.1.0",
+    "pytest-html >= 4.2.0",
+    "pytest-split >= 0.11.0",
+    "pytest-xdist[psutil] >= 3.8.0",
+    "ruff >= 0.16.6",
+    "scipy-stubs >= 1.18.0.1",
+    "sympy >= 1.14.0",
+    # For checking the packages built with "uv build"
+    "twine >= 6.2.0",
+    "types-colorama >= 0.4.15.20260508",
+    "types-defusedxml >= 0.7.0.20260504",
+    "types-docutils >= 0.22.3.20260724",
+    "types-psutil >= 7.2.2.20260518",
+    "yappi >= 1.7.6",
+]
+docs = [
+    # Joblib is required for Sphinx-Gallery parallelism
+    "joblib >= 1.5.3",
+    "memory-profiler >= 0.61.0",
+    # "myst-parser",
+    "sphinx >= 9.1.0",
+    "sphinxcontrib-video >= 0.4.2",
+    # "sphinx-autodoc-typehints >= 3.9.7",
+    "sphinx-gallery >= 0.21.0",
+    "sphinx-math-dollar >= 1.3",
+    "sphinx-rtd-theme >= 3.1.0",
+]
+
+[tool.uv]
+# "uv sync" installs the full development environment, including the tools for building the documentation.
+# Use "uv sync --no-group docs" to skip the documentation dependencies.
+default-groups = ["dev", "docs"]
 
 [tool.coverage.run]
 branch = true
@@ -102,6 +183,7 @@ concurrency = [
 ]
 source = ["."]
 omit = [
+    "**/.venv/*",
     "**/envs/*",
     "**/venv/*",
     "docs/conf.py"
@@ -302,6 +384,7 @@ include = [
     "pttools*",
 ]
 exclude = [
+    ".venv",
     "docs",  # This does not exclude `pttools.docs`.
     "examples",
     "htmlcov",

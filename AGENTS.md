@@ -1,15 +1,20 @@
 # AGENTS.md
 
 ## Commands
-- Install dependencies: `./install_requirements.sh`
-- Run tests: `pytest`
+- The project uses [uv](https://docs.astral.sh/uv/) for managing the Python version, the virtual environment and the dependencies.
+- Install dependencies: `uv sync --all-extras`
+  - This creates the virtual environment `.venv` with the Python version of `.python-version` and the exact package versions of `uv.lock`.
+  - Add a dependency with `uv add PACKAGE` (or `uv add --group dev PACKAGE` for development dependencies), which also updates `uv.lock`.
+  - Upgrade the locked dependency versions with `uv lock --upgrade`.
+- Run tests: `uv run pytest`
   - The full test suite can take up to 20 min to run. For faster results, you can run only some tests.
   - Do not disable the addopts of pyproject.toml with `-o addopts=""`, as this would drop `--dist=loadgroup`.
-- Lint: `ruff check`
-- Type checking: `pyrefly check`
-- Build documentation with examples: `cd docs && make all`
+- Lint: `uv run ruff check`
+- Type checking: `uv run pyrefly check`
+- Build documentation with examples: `cd docs && uv run make all`
   - This will run the examples and can therefore take up to 35 min to run.
-- Build documentation without examples: `cd docs && make all-noplot`
+- Build documentation without examples: `cd docs && uv run make all-noplot`
+- Build the package: `uv build`
 
 ## Code style
 - Use Python 3.12+ type hints where possible.

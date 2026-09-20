@@ -27,17 +27,12 @@ jobs:
             version: "15"
         - name: Checkout
           uses: actions/checkout@v7
-        - name: Setup Python
-          uses: actions/setup-python@v7
+        - name: Setup uv
+          uses: astral-sh/setup-uv@v10
           # Windows minutes cost 2x what Linux does, so testing multiple Python versions would be quite costly
           with:
             python-version: ${{ env.PYTHON_VERSION }}
-            cache: pip
-            cache-dependency-path: |
-              requirements.txt
-              requirements-dev.txt
-        - name: Print Python version
-          run: python -V
+            activate-environment: true
         - name: Install requirements
           # NumbaLSODA does not provide wheels for recent Python versions, so it's built from source.
           # Its build backend, scikit-build, probes only MSVC-based CMake generators on Windows.
@@ -51,9 +46,9 @@ jobs:
           env:
             CMAKE_GENERATOR: "Ninja Multi-Config"
             CMAKE_ARGS: "-DCMAKE_SHARED_LINKER_FLAGS=-static"
-          run: |
-            pip install --upgrade pip wheel
-            pip install -r requirements.txt -r requirements-dev.txt
+          run: uv sync --locked --all-extras --no-group docs
+        - name: Print Python version
+          run: python -V
         - name: Print NumbaLSODA location
           # PTtools falls back to other ODE solvers if NumbaLSODA cannot be imported,
           # so this ensures that a broken NumbaLSODA build fails the workflow instead of being skipped silently.
@@ -61,7 +56,7 @@ jobs:
         - name: Print Numba sysinfo
           run: python -m numba --sysinfo | tee numba-sysinfo.txt
         - name: Generate reference data
-          run: python3 pttools/bubble/fluid_reference.py
+          run: python pttools/bubble/fluid_reference.py
           env:
             PYTHONPATH: .
         - name: Run tests

@@ -22,9 +22,11 @@ sphinx:
 # Optionally build your docs in additional formats such as PDF
 formats: all
 
-# Optionally set the version of Python and requirements required to build your docs
+# Install the dependencies with uv according to uv.lock
+# https://docs.readthedocs.io/en/stable/build-customization.html#install-dependencies-with-uv
 python:
   install:
-    - requirements: requirements.txt
-    - requirements: requirements-dev.txt
-    - requirements: docs/requirements.txt
+    - method: uv
+      command: sync
+      groups: all
+      extras: all

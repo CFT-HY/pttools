@@ -35,9 +35,26 @@ When updating the Python version requirements,
 update the version numbers in:
 
 - .github/workflows/\*.yml
+- .python-version
 - .readthedocs.yaml
 - Dockerfile
+- environment.yml
 - pyproject.toml
+
+Then regenerate the lock file with ``uv lock`` and commit the updated ``uv.lock``.
+
+
+Updating dependencies
+---------------------
+The dependencies are declared in ``pyproject.toml``,
+and the exact versions used for development, testing and the documentation builds are pinned in ``uv.lock``.
+
+- Add a dependency with ``uv add PACKAGE``,
+  or ``uv add --group dev PACKAGE`` / ``uv add --group docs PACKAGE`` for the development and documentation tools.
+- Upgrade all dependencies to the newest versions allowed by ``pyproject.toml`` with ``uv lock --upgrade``,
+  or a single package with ``uv lock --upgrade-package PACKAGE``.
+- Run the unit tests after upgrading, and commit the updated ``uv.lock``.
+- When updating the versions in ``pyproject.toml``, also update ``environment.yml``.
 
 
 Numba caching

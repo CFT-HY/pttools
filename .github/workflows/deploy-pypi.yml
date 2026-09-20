@@ -20,26 +20,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-      - name: Setup Python
-        uses: actions/setup-python@v7
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v10
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-          cache-dependency-path: pyproject.toml
       - name: Print Python version
-        run: python -V
-      - name: Install requirements
-        run: |
-          pip install --upgrade pip
-          pip install --upgrade build packaging twine
+        run: uv python find --show-version
       - name: Build
-        run: python -m build
+        run: uv build
       - name: Run Twine checks
-        run: twine check dist/*
+        run: uvx twine check dist/*
       - name: Upload built artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: pip packages
+          name: Python packages
           path: dist
           if-no-files-found: error
       - name: Publish to PyPI

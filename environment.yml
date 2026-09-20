@@ -1,5 +1,9 @@
 # Anaconda environment configuration
 
+# The primary development environment of PTtools is managed with uv according to pyproject.toml and uv.lock.
+# This file is provided for those who prefer conda.
+# When updating the versions here, also update pyproject.toml.
+
 # Create the environment with:
 # conda env create --name pttools --file environment.yml
 # Activate the environment with:

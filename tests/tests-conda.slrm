@@ -76,7 +76,9 @@ echo "Using pip cache at: ${PIP_CACHE_DIR}"
 # When using this script for another project that uses PTtools,
 # please add something like "pip install pttools-gw" here.
 # See the PTtools documentation for more exact instructions.
-pip --cache-dir="${PIP_CACHE_DIR}" install -r "${PROJECT_DIR}/requirements-dev.txt"
+# The development dependencies are defined as a dependency group (PEP 735) in pyproject.toml,
+# which requires pip >= 25.1.
+pip --cache-dir="${PIP_CACHE_DIR}" install --group "${PROJECT_DIR}/pyproject.toml:dev"
 
 # Print Numba system information for debugging installation issues.
 numba --sysinfo

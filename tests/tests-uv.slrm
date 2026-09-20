@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# This script serves as an example on how to build and run a uv virtual environment with PTtools on a Slurm cluster.
+# Please feel free to copy this script to your repository and to edit it to suit your needs.
+
+#SBATCH --job-name=pttools-tests-uv
+# Account configuration is required on CSC clusters
+# #SBATCH --account=YOUR_GROUP_HERE
+#SBATCH --partition=test
+# The time limit has to be sufficient to include first-time package installation,
+# but 10 minutes is the maximum allowed on the Kale test queue.
+#SBATCH --time=00:10:00
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem-per-cpu=1G
+#SBATCH --output=pttools-tests-uv.out
+set -e
+
+echo "Running on $(hostname --fqdn)"
+
+# When using this script in another project,
+# please edit this line so that it points to the root of the repository.
+PROJECT_DIR="$(realpath "..")"
+cd "${PROJECT_DIR}"
+echo "PTtools is located at: ${PROJECT_DIR}"
+
+# Fix over-eager Anaconda package configuration on CSC clusters.
+unset PYTHONPATH
+
+# Override the uv cache and Python installation directories for Kale to avoid hitting the disk quota limits.
+# uv downloads a suitable Python interpreter according to the .python-version file of the project,
+# so the Python module of the cluster does not have to be loaded.
+if [ -n "${WRKDIR}" ]; then
+  export UV_CACHE_DIR="${WRKDIR}/cache/uv"
+  export UV_PYTHON_INSTALL_DIR="${WRKDIR}/uv/python"
+fi
+
+# Install uv to ~/.local/bin if it's not available yet.
+# https://docs.astral.sh/uv/getting-started/installation/
+if ! command -v "uv" &> /dev/null; then
+  echo "uv was not found. Installing."
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  export PATH="${HOME}/.local/bin:${PATH}"
+fi
+
+# These are for debugging problems with the virtual environment
+echo "uv version: $(uv --version)"
+echo "Using uv at: $(which uv)"
+echo "Using uv cache at: $(uv cache dir)"
+
+# Create the virtual environment at "${PROJECT_DIR}/.venv" and install the exact dependency versions of uv.lock.
+# When using this script for another project that uses PTtools,
+# please add something like "uv add pttools-gw" to your project instead.
+# See the PTtools documentation for more exact instructions.
+uv sync --locked --all-extras --no-group docs
+source "${PROJECT_DIR}/.venv/bin/activate"
+echo "Python version: $(python -c "import platform; print(platform.python_version())")"
+echo "Using python at: $(which python)"
+
+# Print Numba system information for debugging installation issues.
+numba --sysinfo
+
+# Use as many CPU cores as available to the job according to the Slurm job configuration
+# instead of the number of physical CPUs.
+NUM_CPUS="$(python -c "import os; print(len(os.sched_getaffinity(0)))")"
+
+# You can replace this with your own workload
+if command -v "srun" &> /dev/null; then
+  srun pytest --numprocesses="${NUM_CPUS}"
+else
+  echo "Warning! Slurm was not found. Running directly."
+  pytest --numprocesses="${NUM_CPUS}"
+fi

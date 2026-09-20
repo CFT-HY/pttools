@@ -10,26 +10,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-      - name: Setup Python
-        uses: actions/setup-python@v7
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v10
         with:
           python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
-          cache: pip
-          cache-dependency-path: pyproject.toml
       - name: Print Python version
-        run: python -V
-      - name: Install requirements
-        run: |
-          pip install --upgrade pip
-          pip install --upgrade build packaging twine
+        run: uv python find --show-version
       - name: Build
-        run: python -m build
+        run: uv build
       - name: Run Twine checks
-        run: twine check dist/*
+        run: uvx twine check dist/*
       - name: Upload built artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: pip packages
+          name: Python packages
           path: dist
           if-no-files-found: error
   cloc:
@@ -51,18 +45,15 @@ jobs:
 #    steps:
 #      - name: Checkout
 #        uses: actions/checkout@v7
-#      - name: Setup Python
-#        uses: actions/setup-python@v7
+#      - name: Setup uv
+#        uses: astral-sh/setup-uv@v10
 #        with:
 #          python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
-#          cache: pip
-#          cache-dependency-path: requirements.txt
+#          activate-environment: true
+#      - name: Install requirements
+#        run: uv sync --locked --all-extras --no-default-groups
 #      - name: Print Python version
 #        run: python -V
-#      - name: Install requirements
-#        run: |
-#          pip install --upgrade pip wheel
-#          pip install -r requirements.txt
 #      - name: Install FOSSA
 #        run: |
 #          curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | sudo bash
@@ -76,24 +67,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-      - name: Setup Python
-        uses: actions/setup-python@v7
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v10
         with:
           python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
-          cache: pip
-          cache-dependency-path: |
-            requirements.txt
-            requirements-dev.txt
-      - name: Print Python version
-        run: python -V
+          activate-environment: true
       - name: Install graphviz
         run: |
           sudo apt-get update
           sudo apt-get install -y graphviz
       - name: Install requirements
-        run: |
-          pip install --upgrade pip wheel
-          pip install -r requirements.txt -r requirements-dev.txt
+        run: uv sync --locked --all-extras --no-group docs
+      - name: Print Python version
+        run: python -V
       - name: Run Pyreverse
         run: |
           mkdir uml
@@ -122,20 +108,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-      - name: Setup Python
-        uses: actions/setup-python@v7
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v10
         with:
           python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
-          cache: pip
-          cache-dependency-path: |
-            requirements.txt
-            requirements-dev.txt
+          activate-environment: true
+      - name: Install requirements
+        # Ruff does not import the project, so only the development tools are needed.
+        run: uv sync --locked --only-group dev
       - name: Print Python version
         run: python -V
-      - name: Install requirements
-        run: |
-          pip install --upgrade pip wheel
-          pip install -r requirements.txt -r requirements-dev.txt
       - name: Run Ruff
         run: ruff check --output-format=full 2>&1 | tee ruff.txt
       - name: Upload results
@@ -151,20 +133,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-      - name: Setup Python
-        uses: actions/setup-python@v7
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v10
         with:
           python-version: ${{ env.PRIMARY_PYTHON_VERSION }}
-          cache: pip
-          cache-dependency-path: |
-            requirements.txt
-            requirements-dev.txt
+          activate-environment: true
+      - name: Install requirements
+        run: uv sync --locked --all-extras --no-group docs
       - name: Print Python version
         run: python -V
-      - name: Install requirements
-        run: |
-          pip install --upgrade pip wheel
-          pip install -r requirements.txt -r requirements-dev.txt
       - name: Run Pyrefly
         run: pyrefly check 2>&1 | tee pyrefly.txt
       - name: Upload results
@@ -183,28 +160,23 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Setup Python
-      uses: actions/setup-python@v7
+    - name: Setup uv
+      uses: astral-sh/setup-uv@v10
       with:
         python-version: ${{ matrix.python-version }}
-        cache: pip
-        cache-dependency-path: |
-          requirements.txt
-          requirements-dev.txt
-    - name: Print Python version
-      run: python -V
+        activate-environment: true
     - name: Install ffmpeg
       run: |
         sudo apt-get update
         sudo apt-get install ffmpeg
     - name: Install requirements
-      run: |
-        pip install --upgrade pip wheel
-        pip install -r requirements.txt -r requirements-dev.txt
+      run: uv sync --locked --all-extras --no-group docs
+    - name: Print Python version
+      run: python -V
     - name: Print Numba sysinfo
       run: numba --sysinfo | tee numba-sysinfo.txt
     - name: Generate reference data
-      run: python3 pttools/bubble/fluid_reference.py
+      run: python pttools/bubble/fluid_reference.py
       env:
         PYTHONPATH: .
     - name: Run tests
@@ -234,24 +206,19 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: Setup Python
-      uses: actions/setup-python@v7
+    - name: Setup uv
+      uses: astral-sh/setup-uv@v10
       with:
         python-version: ${{ matrix.python-version }}
-        cache: pip
-        cache-dependency-path: |
-          requirements.txt
-          requirements-dev.txt
+        activate-environment: true
+    - name: Install requirements
+      run: uv sync --locked --all-extras --no-group docs
     - name: Print Python version
       run: python -V
-    - name: Install requirements
-      run: |
-        pip install --upgrade pip wheel
-        pip install -r requirements.txt -r requirements-dev.txt
     - name: Print Numba sysinfo
       run: numba --sysinfo | tee numba-sysinfo.txt
     - name: Generate reference data
-      run: python3 pttools/bubble/fluid_reference.py
+      run: python pttools/bubble/fluid_reference.py
       env:
         PYTHONPATH: .
     - name: Run tests with coverage
