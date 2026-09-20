@@ -76,3 +76,10 @@ Integers and floats are safe, but the following are not.
 - Pointers should not be read from module-level variables within jitted functions either.
   Their values are not a part of the cache key,
   and therefore the cached machine code would contain an address from a previous process.
+- Cached functions that call ``parallel=True`` functions need the Numba threading layer to be launched
+  before their machine code can be loaded from the cache.
+  Numba tracks this with ``reload_init``, but loses it for callees that were themselves loaded from the cache.
+  PTtools works around this in ``pttools.speedup.numba_fixes``.
+  Without the workaround, a function compiled in a process that loaded a parallel callee from the cache
+  crashes the next process that loads it from the cache: with a segmentation fault on Linux,
+  and with ``Fatal Python error: Aborted`` from LLVM on macOS.
