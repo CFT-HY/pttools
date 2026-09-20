@@ -7,8 +7,6 @@ on:
 #    types: [ completed ]
 permissions:
   contents: read
-env:
-  PYTHON_VERSION: '3.14'
 jobs:
   test:
     runs-on: windows-latest
@@ -31,7 +29,6 @@ jobs:
           uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
           # Windows minutes cost 2x what Linux does, so testing multiple Python versions would be quite costly
           with:
-            python-version: ${{ env.PYTHON_VERSION }}
             activate-environment: true
         - name: Install requirements
           # NumbaLSODA does not provide wheels for recent Python versions, so it's built from source.

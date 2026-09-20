@@ -2,8 +2,6 @@ name: Docs
 on: push
 permissions:
   contents: read
-env:
-  PYTHON_VERSION: '3.14'
 jobs:
   docs:
     runs-on: ubuntu-latest
@@ -14,7 +12,6 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
           activate-environment: true
       - name: Install LaTeX
         run: |
