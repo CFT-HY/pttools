@@ -58,11 +58,14 @@ def signal_to_noise_ratio(
         noise_gb: bool = True,
         noise_ins: bool = True) -> tuple[float, FloatArr1D, FloatArr1D]:
     r"""Signal-to-noise ratio
-    $$\rho = \sqrt{T_{\text{obs}} \int_{{f}_\text{min}}^{{f}_\text{max}} df \frac{
-    h^2 \Omega_{\text{signal}}^2}{
-    h^2 \Omega_{\text{noise}}^2}}$$
+    $$\rho = \sqrt{T_{\text{obs}} \int_{{f}_\text{min}}^{{f}_\text{max}} df \left( \frac{
+    h^2 \Omega_{\text{signal}}}{
+    h^2 \Omega_{\text{noise}}} \right)^2}$$
     :caprini_2020:`\ ` eq. 33
     :smith_2019:`\ ` eq. 60.
+
+    The equation :gowling_2021:`\ ` eq. 3.12 has unusual powers for $h$,
+    but those cancel out, giving the same results.
 
     The equation :gowling_2023:`\ ` eq. 3.9 has an additional factor of 2,
     which is canceled out by another factor of 2 in eq. 3.8.

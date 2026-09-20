@@ -509,7 +509,7 @@ class ConstCSModel(AnalyticModel):
         r"""Transition strength parameter $\alpha_{\bar{\theta}_n}$.
 
         $$\alpha_{\bar{\theta}_n}
-        = \frac{1}{3} \left( 1 - \frac{\mu_-}{\mu_+} \right) + \frac{\mu_-}{4} \alpha_{n,\text{bag}$$
+        = \frac{1}{3} \left( 1 - \frac{\mu_-}{\mu_+} \right) + \frac{\mu_-}{4} \alpha_{n,\text{bag}}$$
         :maki_msc:`\ ` eq. 2.137
         """
         return (1 - self.mu_b / self.mu_s)/3 + self.mu_b/4 * self.alpha_n_bag(
@@ -553,7 +553,7 @@ class ConstCSModel(AnalyticModel):
         r"""Transition strength parameter $\alpha_{\bar{\theta}_+$.
 
         $$\alpha_{\bar{\theta}_+
-        = \frac{1}{3} \left( 1 - \frac{\mu_-}{\mu_+} \right) + \frac{\mu_-}{4} \alpha_{+,\text{bag}$$
+        = \frac{1}{3} \left( 1 - \frac{\mu_-}{\mu_+} \right) + \frac{\mu_-}{4} \alpha_{+,\text{bag}}$$
         :maki_msc:`\ ` eq. 2.137
         """
         return (1 - self.mu_b / self.mu_s)/3 + self.mu_b/4 * self.alpha_plus_bag(
