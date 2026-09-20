@@ -550,9 +550,9 @@ class ConstCSModel(AnalyticModel):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
-        r"""Transition strength parameter $\alpha_{\bar{\theta}_+$.
+        r"""Transition strength parameter $\alpha_{\bar{\theta}_+}$.
 
-        $$\alpha_{\bar{\theta}_+
+        $$\alpha_{\bar{\theta}_+}
         = \frac{1}{3} \left( 1 - \frac{\mu_-}{\mu_+} \right) + \frac{\mu_-}{4} \alpha_{+,\text{bag}}$$
         :maki_msc:`\ ` eq. 2.137
         """
