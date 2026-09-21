@@ -13,6 +13,7 @@ if tp.TYPE_CHECKING:
 
 from pttools.docs.backreferences import patch_sphinx_gallery
 from pttools.docs.minigallery import add_minigalleries, remove_duplicate_minigalleries
+from pttools.docs.paths import default_log_dir
 from pttools.logging import setup_logging
 
 
@@ -66,11 +67,12 @@ def setup_sphinx_logging(log_path: str | None = None, level: int = logging.INFO)
     Sphinx has its own logging setup, which prints only messages of level INFO and above to the console,
     and which is not configured by :py:func:`pttools.logging.setup_logging`.
     This attaches a file handler to the ``sphinx`` logger, so that its messages
-    are saved to ``logs/sphinx_TIMESTAMP.log`` in the repository.
+    are saved to ``logs/sphinx_TIMESTAMP.log`` alongside the ``docs`` directory.
     This should be called from ``docs/conf.py``.
 
     :param log_path: path of the log file. If None, the path is read from the environment variable
-        :py:data:`SPHINX_LOG_ENV_VAR`, and if that is not set, a timestamped path is generated.
+        :py:data:`SPHINX_LOG_ENV_VAR`, and if that is not set, a timestamped path is generated
+        in the directory given by :py:func:`pttools.docs.paths.default_log_dir`.
     :param level: the minimum level of the messages saved to the file.
         With :py:data:`logging.DEBUG`, the file contains also the debug messages, which are not printed to the console.
     :return: path of the log file
@@ -78,8 +80,7 @@ def setup_sphinx_logging(log_path: str | None = None, level: int = logging.INFO)
     if log_path is None:
         log_path = os.environ.get(SPHINX_LOG_ENV_VAR)
     if not log_path:
-        log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "logs")
-        log_path = os.path.join(log_dir, f"sphinx_{time.strftime('%Y-%m-%d_%H-%M-%S')}.log")
+        log_path = os.path.join(default_log_dir(), f"sphinx_{time.strftime('%Y-%m-%d_%H-%M-%S')}.log")
     os.makedirs(os.path.dirname(os.path.abspath(log_path)), exist_ok=True)
 
     sphinx_logger = logging.getLogger("sphinx")
