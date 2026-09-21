@@ -3,7 +3,8 @@
 # You can set these variables from the command line, and also
 # from the environment for the first two.
 # The --jobs auto parameter has been added in the hope that it would enable parallelization.
-SPHINXOPTS    ?= --jobs auto
+# The --fail-on-warning parameter ensures that the warnings are not overlooked when building on CI.
+SPHINXOPTS    ?= --jobs auto --fail-on-warning
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
