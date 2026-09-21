@@ -25,7 +25,7 @@ def f0(
         g_star: th.FloatOrArr = DEFAULT_G_STAR) -> th.FloatOrArr:
     r"""$f_0$, factor required to take into account the redshift of the frequency scale.
 
-    $$f_0 = \frac{f_{\ast,0}}{r_\ast}$$
+    $$f_0 = \frac{f_{\ast,0}}{r_{\ast}}$$
 
     :param r_star: $r_\ast$
     :param T_star: $T_\ast$

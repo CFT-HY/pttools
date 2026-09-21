@@ -117,9 +117,9 @@ class SSMSpectrum:
         self.a2_lookup: FloatArr1D = NAN_ARR
         #: Bubble spacing enlargement factor $\Lambda$
         self.bubble_spacing_enlargement_factor: float = np.nan
-        #: $c_s(T_\text{gw})$
+        #: $c_s(T_{\text{gw}})$
         self.cs: float = np.nan
-        #: $c_s^2(T_\text{gw})$
+        #: $c_s^2(T_{\text{gw}})$
         self.cs2: float = np.nan
         #: Nucleation $f$
         self.nucleation_f: float = np.nan
@@ -399,8 +399,8 @@ class SSMSpectrum:
         return sqrt(self.ubarf2_custom_nucleation(nuc_type=nuc_type))
 
     def ubarf2_custom_nucleation(self, nuc_type: NucType | None = None) -> float:
-        r"""$\bar{U}_f^2$ using $z$ and ${| A |}^2$
-        The arguments $z, {| A |}^2, v_{\text{wall}}$ and the bubble spacing enlargement factor $\Lambda$
+        r"""$\bar{U}_f^2$ using $z$ and ${\lvert A \rvert}^2$
+        The arguments $z, {\lvert A \rvert}^2, v_{\text{wall}}$ and the bubble spacing enlargement factor $\Lambda$
         are not directly dependent on the nucleation type, and therefore it's an adjustable parameter.
         """
         # Todo: Think which z and A2 to use here and in compute_ssm()

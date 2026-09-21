@@ -105,10 +105,9 @@ def J_full(
     = r_* \mathcal{H}_* \eta_* \Upsilon_\ell
     = r_* (1 + \nu) \Upsilon_\ell
     = r_* (1 + \nu) \frac{1}{\ell(\nu)}
-        \left(1 - \left( \frac{\eta_*}{\eta_\text{end}} \right)^{\ell(\nu)} \right)
+    \left(1 - \left( \frac{\eta_*}{\eta_\text{end}} \right)^{\ell(\nu)} \right)
     = r_* (1 + \nu) \frac{1}{\ell(\nu)}
-        \left(1 - \left( 1 + \frac{\Delta \eta_\text{v}}{\eta_*} \right)^{-\ell(\nu)} \right)
-    $$
+    \left(1 - \left( 1 + \frac{\Delta \eta_\text{v}}{\eta_*} \right)^{-\ell(\nu)} \right)$$
     See
     :py:func:`pttools.ssm.scaling.H_star_tau_v`,
     :py:func:`pttools.ssm.barotropic.source_lifetime_factor` and

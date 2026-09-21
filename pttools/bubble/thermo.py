@@ -147,7 +147,7 @@ def mean_adiabatic_index(wb: th.FloatOrArr, eb: th.FloatOrArr) -> th.FloatOrArr:
 
     $$\Gamma = \frac{\bar{w}}{\bar{e}}$$
     :gw_pt_ssm:`\ ` eq. B.33,
-    :hindmars_2017:`\ ` p. 4.
+    :hindmarsh_2017:`\ ` p. 4.
 
     Note that this is not exactly equal to the adiabatic index of an ultrarelativistic fluid,
     as total energy $\bar{e}_0$ is divided between kinetic and thermal energy.

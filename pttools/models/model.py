@@ -792,7 +792,7 @@ class Model(BaseModel, abc.ABC):
         r"""Pseudotrace difference $D\bar{\theta}(w)$, :giese_2021:`\ `, eq. 10.
 
         $$D\bar{\theta}(w,\phi) = \bar{\theta}(T(w,\phi)) - \bar{\theta}(T(w,\phi))$$
-        :maki_msc:`\ `eq. 2.54
+        :maki_msc:`\ ` eq. 2.54
         """
         return self.D_theta_bar_temp(self.temp(w, phase_of_w))
 
@@ -800,7 +800,7 @@ class Model(BaseModel, abc.ABC):
         r"""Pseudotrace difference $D\bar{\theta}(T)$, :giese_2021:`\ `, eq. 10.
 
         $$D\bar{\theta}(T) = \bar{\theta}(T) - \bar{\theta}(T)$$
-        :maki_msc:`\ `eq. 2.54
+        :maki_msc:`\ ` eq. 2.54
         """
         return self.theta_bar_temp(temp, Phase.SYMMETRIC) - self.theta_bar_temp(temp, Phase.BROKEN)
 
@@ -814,7 +814,7 @@ class Model(BaseModel, abc.ABC):
         r"""Trace anomaly difference $\Delta \theta$.
 
         $$\Delta \theta = \theta_s(w_s) - \theta_b(w_b)$$
-        :maki_msc:`\ `eq. 2.53
+        :maki_msc:`\ ` eq. 2.53
         """
         theta_s = self.theta(wp, Phase.SYMMETRIC)
         theta_b = self.theta(wm, Phase.BROKEN)
@@ -835,7 +835,7 @@ class Model(BaseModel, abc.ABC):
         r"""Trace anomaly difference $\Delta \theta$.
 
         $$\Delta \theta = \theta_s(T_s) - \theta_b(T_b)$$
-        :maki_msc:`\ `eq. 2.53
+        :maki_msc:`\ ` eq. 2.53
         """
         theta_s = self.theta_temp(Ts, Phase.SYMMETRIC)
         theta_b = self.theta_temp(Tb, Phase.BROKEN)

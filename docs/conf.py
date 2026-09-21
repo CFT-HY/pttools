@@ -95,7 +95,12 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = [
+    '_build', 'Thumbs.db', '.DS_Store',
+    # Apidoc generates a table of contents file for each package,
+    # but the packages are included in the main toctree directly.
+    'gen_modules/*/modules.rst',
+]
 
 suppress_warnings = [
     # Automatic section labeling produces duplicated labels. This silences the warnings from those.
@@ -218,7 +223,8 @@ linkcheck_ignore: list[str] = [
     # The private Bitbucket repos will also return 404 without authentication
     "https://bitbucket.org/cgowling/pttools_omgw0_addons/*",
     "https://bitbucket.org/hindmars/sound-shell-model/*",
-    # This link redirects to a site that does not allow crawlers
+    # These links redirect to sites that do not allow crawlers
+    "https://doi.org/10.1086/344402",
     "https://doi.org/10.1093/acprof:oso/9780198528906.001.0001",
     # The anchors are valid but not detected by Sphinx.
     "https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/*",

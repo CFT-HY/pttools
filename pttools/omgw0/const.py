@@ -68,7 +68,7 @@ def gs0(g0: FloatOrArr = G0, n_nu: FloatOrArr = N_NU) -> FloatOrArr:
     r"""
     $g_{s0}$, the degrees of freedom for entropy today.
 
-    $$g_{s0} = g_0 + \frac{7}{8} \cdot 2 N_\nu \cdot \frac{4}{11} \approx 3.91$$
+    $$g_{s0} = g_0 + \frac{7}{8} \cdot 2 N_{\nu} \cdot \frac{4}{11} \approx 3.91$$
     The factors in this formula come from the sources below.
 
     For ultrarelativistic particles,
@@ -76,7 +76,7 @@ def gs0(g0: FloatOrArr = G0, n_nu: FloatOrArr = N_NU) -> FloatOrArr:
     :maki_msc:`\ ` eq. 2.103
     For fermions,
     $$\int_0^\infty \frac{x^n}{e^x + 1} dx = (1 - 2^{-n}) \Gamma(n+1) \zeta(n+1)$$.
-    :schroeder_thermal:`\ ` eq. B.36
+    :schroeder_book:`\ ` eq. B.36
     This gives a factor of $1 - 2^{-3} = \frac{7}{8}$ compared to bosons.
 
     In the Standard Model, each neutrino species contributes one helicity state for the neutrino $\nu$
@@ -91,10 +91,10 @@ def gs0(g0: FloatOrArr = G0, n_nu: FloatOrArr = N_NU) -> FloatOrArr:
     For a perfect fluid in local equilibrium, the comoving entropy $sa^3$ is a conserved quantity,
     $$\frac{d}{dt} (sa^3) = 0 \Rightarrow g_s (aT)^3 = \text{const}$$.
     Therefore, the decoupling results in
-    $$\frac{11}{2} (a T_\gamma)^3_\text{before} = 2 (a T_\gamma)^3_\text{after}$$.
+    $$\frac{11}{2} (a T_{\gamma})^3_\text{before} = 2 (a T_{\gamma})^3_\text{after}$$.
     The neutrinos continue carrying entropy corresponding to the degrees of freedom before the annihilation,
     resulting in
-    $$\left( \frac{T_\nu}{T_\gamma} \right)^3 = \frac{4}{11}$$,
+    $$\left( \frac{T_{\nu}}{T_{\gamma}} \right)^3 = \frac{4}{11}$$,
     which gives $g_{s0,\nu}$ an effective multiplier of $\frac{4}{11}$.
     See :wikipedia:`Cosmic_neutrino_background`.
 

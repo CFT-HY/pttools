@@ -63,6 +63,7 @@ EXTLINKS_STATIC: ExtLinks = {
     "gowling_2023": arxiv_link("2209.13551", "Gowling et al.", 2023),
     "lewicki_2023": arxiv_link("2305.04924", "Lewicki et al."),
     "barni_2024": arxiv_link("2406.01596", "Barni et al."),
+    "caprini_2024": arxiv_link("2403.03723", "Caprini et al.", 2024),
     "croon_2024": arxiv_link("2410.21509", "Croon & Weir"),
     "giombi_2024_cs": arxiv_link("2409.01426", "Giombi et al."),
     "giombi_2024_gr": arxiv_link("2307.12080", "Giombi & Hindmarsh", 2024),

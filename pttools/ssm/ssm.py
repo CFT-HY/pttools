@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 @enum.unique
 class DE_Method(enum.StrEnum):
-    r"""Method for computing $|A(z)|^2$."""
+    r"""Method for computing $\lvert A(z) \rvert^2$."""
 
     # TODO: Improve this docstring
     ALTERNATE = "alternate"
@@ -27,7 +27,7 @@ class DE_Method(enum.StrEnum):
 
 @enum.unique
 class Method(enum.StrEnum):
-    r"""Method for computing $|A(z)|^2$."""
+    r"""Method for computing $\lvert A(z) \rvert^2$."""
 
     # TODO: Improve this docstring
     E_CONSERVING = "e_conserving"
@@ -50,8 +50,8 @@ def A2_e_conserving(
         parallel: bool = True,
         lambda_correction: bool = False) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
-    Returns the value of $| A(z) |^2$, where
-    $|\text{Plane wave amplitude}|^2 = T^3 | A(z) |^2$.
+    Returns the value of $\lvert A(z) \rvert^2$, where
+    $\lvert \text{Plane wave amplitude} \rvert^2 = T^3 \lvert A(z) \rvert^2$.
 
     :param v: velocity profile $v$
     :param w: enthalpy profile $w$
@@ -65,7 +65,7 @@ def A2_e_conserving(
     :param n_xi: Number of $\xi$ points for uniform resampling
     :param parallel: Whether to use multiple threads
     :param lambda_correction: whether to enable a non-linear correction for $\lambda$
-    :return: $|A(z)|^2, \frac{1}{2} f'(z)^2, \frac{1}{2}(c_s l(z))^2$ (same size as $z$)
+    :return: $\lvert A(z) \rvert^2, \frac{1}{2} f'(z)^2, \frac{1}{2}(c_s l(z))^2$ (same size as $z$)
     """
     #: $f(z)$
     f_val = f(z=z, xi=xi, v=v, v_wall=v_wall, v_sh=v_sh, z_st_thresh=z_st_thresh, parallel=parallel)
@@ -81,8 +81,8 @@ def A2_e_conserving(
 
 @njit(cache=True)
 def A2_fp_csl(fp: th.FloatArr, cs: float, l: th.FloatArr) -> th.FloatArr:  # noqa: E741
-    r"""$|A(z)|^2$ from $f'(z)$ and $c_s l(z)$
-    $$|A(z)|^2 = = \frac{1}{4} \left[ (f'(z))^2 + (c_s l(z))^2 \right]$$
+    r"""$\lvert A(z) \rvert^2$ from $f'(z)$ and $c_s l(z)$
+    $$\lvert A(z) \rvert^2 = = \frac{1}{4} \left[ (f'(z))^2 + (c_s l(z))^2 \right]$$
     :gw_pt_ssm:`\ ` eq. 4.11
     This contains information about the shape of the fluid shells.
     """
@@ -172,8 +172,8 @@ def lam(
 def qT_lookup(T_tilde: th.FloatArr1D, z: th.FloatArr1D) -> th.FloatArr1D:
     """$z=qT$ lookup
     This is used by
-    :py:func:pttools.ssm.spec_den_v: and
-    :py:func:pttools.ssm.A2_e_conserving:.
+    :py:func:`pttools.ssm.spec_den_v.spec_den_v` and
+    :py:func:`pttools.ssm.ssm.A2_e_conserving`.
     """
     # z limits
     log10_z_min = np.log10(np.min(z))
@@ -209,20 +209,20 @@ def ubarf2_from_a2(
         v_wall: float,
         nuc_type: NucType,
         bubble_spacing_enlargement_factor: float = 1.) -> float:
-    r"""Mean square fluid velocity $\bar{U}_f^2 \left( {|A(z)|}^2 \right)$.
+    r"""Mean square fluid velocity $\bar{U}_f^2 \left( {\lvert A(z) \rvert}^2 \right)$.
 
     $$\bar{U}_f^2
-    = \int \frac{dq}{q} \mathcal{P}_\tilde{v}(a)
+    = \int \frac{dq}{q} \mathcal{P}_{\tilde{v}}(a)
     = \frac{2}{(\beta R_*)^3}
     \int d\tilde{T} \nu(\tilde{T}) \tilde{T}^3
-    \int dz \frac{z^2}{2\pi^2} |A(z)|^2$$
+    \int dz \frac{z^2}{2\pi^2} \lvert A(z) \rvert^2$$
     :gw_pt_ssm:`\ ` eq. 4.33
     This version takes into account the nucleation history, unlike
-    :py:func:pttools.bubble.thermo.ubarf2:.
+    :py:func:`pttools.bubble.thermo.ubarf2`.
 
     The use of $\Lambda_{\text{nuc}}$ needs to be kept consistent with
-    :py:func:pttools.ssm.spec_den_v.spec_den_v:.
-    Please note that eq. 4.34 assumes that $R_{*} = R_{*,0}$,
+    :py:func:`pttools.ssm.spec_den_v.spec_den_v`.
+    Please note that eq. 4.34 assumes that $R_{\ast} = R_{\ast,0}$,
     which is why it's not used here.
     """
     if z.shape != A2.shape:

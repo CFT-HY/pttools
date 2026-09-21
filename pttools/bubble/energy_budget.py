@@ -254,7 +254,7 @@ def ubarf_approx(
         delta_n: th.FloatOrArr = 0.,
         cs: float = CS0,
         adiabatic_index: th.FloatOrArr = DEFAULT_ADIABATIC_INDEX) -> th.FloatOrArr:
-    r"""Approximate RMS fluid velocity $\bar{U}_f(v_\text{wall}, \alpha_n)$.
+    r"""Approximate RMS fluid velocity $\bar{U}_f(v_{\text{wall}}, \alpha_n)$.
 
     $$
     \bar{U}_f = \sqrt{\frac{K}{\Gamma}}
@@ -281,7 +281,7 @@ def ubarf_approx_K[T: FloatOrArr](K: T) -> T:
     r"""Approximate RMS fluid velocity $\bar{U}_f(K)$.
 
     $$\bar{U}_f \approx \approx \sqrt{K}$$
-    :ajmi:`\ ` p. 9.
+    :ajmi_2022:`\ ` p. 9.
     This is used in :py:func:`pttools.omgw0.scaling.H_star_tau_sh_approx`.
     """
     return np.sqrt(K)
