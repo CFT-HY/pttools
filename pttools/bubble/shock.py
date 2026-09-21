@@ -389,11 +389,19 @@ def v_shock_curve(
         xi: th.FloatArr1D | None = None,
         n_points: int = 20,
         warn_if_barely_exists: bool = False) -> tuple[th.FloatArr1D, th.FloatArr1D]:
-    r"""Shock velocity curve $(\xi, v_{\text{sh}})$."""
+    r"""Shock velocity curve $(\xi, v_{\text{sh}})$.
+
+    :param model: Hydrodynamics model
+    :param wn: $w_n$, enthalpy in front of the shock
+    :param xi: $\xi$ values at which the curve is evaluated. If not given, the points are generated automatically.
+    :param n_points: number of points to generate if $\xi$ is not given
+    :param warn_if_barely_exists: Warn if the shock barely exists
+    :return: $(\xi, v_{\text{sh}})$
+    """
+    cs_n = np.sqrt(model.cs2(wn, Phase.SYMMETRIC))
     if xi is None:
-        cs_n = np.sqrt(model.cs2(wn, Phase.SYMMETRIC))
         # Create more points near cs_n, as there the accuracy is the most critical
         xi = cs_n + np.logspace(-4, 0, num=n_points) * (1 - cs_n)
         # Ensure that the shock curve starts from xi=cs_n, v=0
         xi[0] = cs_n
-    return xi, v_shock(model, wn, xi, warn_if_barely_exists)
+    return xi, v_shock(model, wn=wn, xi=xi, cs_n=cs_n, warn_if_barely_exists=warn_if_barely_exists)
