@@ -1,5 +1,8 @@
 """Setup Sphinx."""
 
+import logging
+import os
+import time
 import typing as tp
 import warnings
 
@@ -50,6 +53,48 @@ def setup_example_logging(gallery_conf: dict[str, tp.Any], fname: str | None) ->
     Configuring the logging here ensures that the log messages of all examples have the same format.
     """
     setup_logging()
+
+
+#: Environment variable with which the path of the Sphinx log file can be set,
+#: e.g. by :py:mod:`pttools.docs.lint`.
+SPHINX_LOG_ENV_VAR: str = "PTTOOLS_SPHINX_LOG"
+
+
+def setup_sphinx_logging(log_path: str | None = None, level: int = logging.INFO) -> str:
+    """Save the output of Sphinx to a log file.
+
+    Sphinx has its own logging setup, which prints only messages of level INFO and above to the console,
+    and which is not configured by :py:func:`pttools.logging.setup_logging`.
+    This attaches a file handler to the ``sphinx`` logger, so that its messages
+    are saved to ``logs/sphinx_TIMESTAMP.log`` in the repository.
+    This should be called from ``docs/conf.py``.
+
+    :param log_path: path of the log file. If None, the path is read from the environment variable
+        :py:data:`SPHINX_LOG_ENV_VAR`, and if that is not set, a timestamped path is generated.
+    :param level: the minimum level of the messages saved to the file.
+        With :py:data:`logging.DEBUG`, the file contains also the debug messages, which are not printed to the console.
+    :return: path of the log file
+    """
+    if log_path is None:
+        log_path = os.environ.get(SPHINX_LOG_ENV_VAR)
+    if not log_path:
+        log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "logs")
+        log_path = os.path.join(log_dir, f"sphinx_{time.strftime('%Y-%m-%d_%H-%M-%S')}.log")
+    os.makedirs(os.path.dirname(os.path.abspath(log_path)), exist_ok=True)
+
+    sphinx_logger = logging.getLogger("sphinx")
+    # The handler is added only once, even if conf.py is executed multiple times in the same process,
+    # e.g. by the make mode of sphinx-build.
+    if any(isinstance(handler, logging.FileHandler) and handler.baseFilename == os.path.abspath(log_path)
+           for handler in sphinx_logger.handlers):
+        return log_path
+    handler = logging.FileHandler(log_path, encoding="utf-8")
+    handler.setLevel(level)
+    # The Sphinx log records already contain the level prefix (e.g. "WARNING: ") and the location.
+    handler.setFormatter(logging.Formatter("%(asctime)s %(name)s: %(message)s"))
+    sphinx_logger.addHandler(handler)
+    sphinx_logger.info("Saving the Sphinx output to %s", log_path)
+    return log_path
 
 
 def setup_sphinx(app: "Sphinx") -> None:

@@ -33,12 +33,14 @@ sys.path.insert(0, REPO_DIR)
 
 from pttools.docs.intersphinx import INTERSPHINX_MAPPING, IntersphinxMapping
 from pttools.docs.links import EXTLINKS, LINKCHECK_ALLOWED_REDIRECTS, ExtLinks
-from pttools.docs.setup import pre_setup, setup_sphinx
+from pttools.docs.setup import pre_setup, setup_sphinx, setup_sphinx_logging
 from pttools.logging import setup_logging
 from pttools.utils.system import IS_GITHUB_ACTIONS, PTTOOLS_DIR
 
 setup_logging()
 logger = logging.getLogger(__name__)
+# The Sphinx output is saved to logs/sphinx_TIMESTAMP.log. See also pttools/docs/lint.py.
+setup_sphinx_logging()
 
 #: The packages of this repository, which are documented in this documentation.
 #: Sphinx-Gallery creates hyperlinks from the examples and mini-galleries for the objects of these packages.
