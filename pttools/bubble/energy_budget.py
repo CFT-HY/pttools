@@ -282,6 +282,6 @@ def ubarf_approx_K[T: FloatOrArr](K: T) -> T:
 
     $$\bar{U}_f \approx \approx \sqrt{K}$$
     :ajmi_2022:`\ ` p. 9.
-    This is used in :py:func:`pttools.omgw0.scaling.H_star_tau_sh_approx`.
+    This is used in :py:func:`pttools.ssm.scaling.H_star_eta_sh_approx`.
     """
     return np.sqrt(K)

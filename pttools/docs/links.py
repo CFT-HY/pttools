@@ -54,6 +54,7 @@ EXTLINKS_STATIC: ExtLinks = {
     "planck_2018": arxiv_link("1807.06209", "Planck 2018 results"),
     "smith_2019": arxiv_link("1908.00546", "Smith & Caldwell"),
     "caprini_2020": arxiv_link("1910.13125", "Caprini et al.", 2020),
+    "guo_2020": arxiv_link("2007.08537", "Guo et al.", 2021),
     "giese_2020": arxiv_link("2004.06995", "Giese et al."),
     "giese_2021": arxiv_link("2010.09744", "Giese et al.", 2021),
     "gowling_2021": arxiv_link("2106.05984", "Gowling & Hindmarsh"),
@@ -71,6 +72,7 @@ EXTLINKS_STATIC: ExtLinks = {
     "bhusal_2026": arxiv_link("2603.22397", "Bhusal et al."),
     "correia_2026": arxiv_link("2505.17824", "Correia et al.", 2026),
     "escudero_2026": arxiv_link("2511.04747", "Escudero et al.", 2026),
+    # Todo: Ask Lorenzo Giombi to update the arXiv version, as it's not up to date with the published version.
     "giombi_2026": arxiv_link("2504.08037", "Giombi et al.", 2026),
     # Theses
     "gowling_phd": hdl_link("10779/uos.23309135.v1", "Gowling", 2023),

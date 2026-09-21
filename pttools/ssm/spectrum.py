@@ -17,7 +17,7 @@ from pttools.ssm.low_k.intersection import z_cross_approx
 from pttools.ssm.nucleation import DEFAULT_NUC_TYPE, NucType, beta, v_eff
 from pttools.ssm.nucleation import r_star as r_star_func
 from pttools.ssm.pow_spec import pow_spec
-from pttools.ssm.scaling import H_star_tau_nl, H_star_tau_v, H_star_tau_v_old, J
+from pttools.ssm.scaling import H_star_eta_sh, H_star_eta_v, H_star_eta_v_old, J
 from pttools.ssm.spec_den_gw import spec_den_gw_scaling
 from pttools.ssm.ssm import ubarf2_from_a2
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
@@ -67,7 +67,7 @@ class SSMSpectrum:
         :param beta_tilde: nucleation rate parameter $\tilde{\beta} \equiv \frac{\beta}{H_*}$
         :param r_star: Hubble-scaled mean bubble spacing $r_*$
         :param y: $z = k R_*$ array
-        :param N_sh: $N_\text{sh}$, number of shock formation times
+        :param N_sh: $N_{\text{sh}}$, number of shock formation times
         :param nuc_type: nucleation type
         :param nT: number of points in the t array
         :param n_z_lookup: number of points in the lookup arrays
@@ -113,7 +113,7 @@ class SSMSpectrum:
         # -----
         #: $|A(z)|^2$
         self.a2: FloatArr1D = NAN_ARR
-        #: $|A_\text{lookup}(z)|^2$
+        #: $|A_{\text{lookup}}(z)|^2$
         self.a2_lookup: FloatArr1D = NAN_ARR
         #: Bubble spacing enlargement factor $\Lambda$
         self.bubble_spacing_enlargement_factor: float = np.nan
@@ -147,7 +147,7 @@ class SSMSpectrum:
         self.T_tilde: FloatArr1D = NAN_ARR
         #: $\bar{U}_f^2$
         self.ubarf2: float = np.nan
-        #: $z_\text{lookup}$
+        #: $z_{\text{lookup}}$
         self.z_lookup: FloatArr1D = NAN_ARR
 
         if compute:
@@ -234,10 +234,10 @@ class SSMSpectrum:
             "cs2": self.cs2,
             "delta_tau_v": self.delta_tau_v,
             "dilution_of_e": self.dilution_of_e,
+            "H_star_eta_sh": self.H_star_eta_sh,
             "H_star_eta_star": self.H_star_eta_star,
-            "H_star_tau_nl": self.H_star_tau_nl,
-            "H_star_tau_v": self.H_star_tau_v,
-            "H_star_tau_v_old": self.H_star_tau_v_old,
+            "H_star_eta_v": self.H_star_eta_v,
+            "H_star_eta_v_old": self.H_star_eta_v_old,
             "k_peak_eta_star": self.k_peak_eta_star,
             "J": self.J,
             "label_latex": self.label_latex,
@@ -258,8 +258,14 @@ class SSMSpectrum:
 
     @functools.cached_property
     def delta_tau_v(self) -> float:
-        r"""$\Delta \tau_v$
-        $$\Delta \tau_v \equiv \frac{\delta \eta_v}{R_*} = \frac{\eta_sh N_sh}{R_*} = \frac{N_sh}{\bar{U}_f}$$.
+        r"""$\Delta \tau_\text{v}$, source duration in units of the comoving mean bubble spacing.
+
+        $$\Delta \tau_\text{v} \equiv \frac{\Delta \eta_\text{v}}{R_*}
+        = \frac{N_{\text{sh}} \eta_\text{sh}}{R_*} = \frac{N_{\text{sh}}}{\bar{U}_f},$$
+        where $\tau \equiv \eta / R_*$ is the dimensionless conformal time of
+        :giombi_2026:`\ ` sec. 2.3 and :giombi_2024_cs:`\ ` p. 10,
+        and $\eta_\text{sh} \approx R_* / \bar{U}_f$
+        (see :py:func:`pttools.ssm.scaling.H_star_eta_sh`).
         """
         return self.N_sh / self.bubble.ubarf
 
@@ -272,27 +278,30 @@ class SSMSpectrum:
         return eta_ratio(ubarf=self.bubble.ubarf, r_star=self.r_star, N_sh=self.N_sh, nu=self.bubble.nu_gdh2024)
 
     @functools.cached_property
+    def H_star_eta_sh(self) -> float:
+        return H_star_eta_sh(r_star=self.r_star, ubarf=self.bubble.ubarf)
+
+    @functools.cached_property
     def H_star_eta_star(self) -> float:
-        r"""$H_* \eta_*$
-        $$H_* \eta_* = 1 + \nu_\text{gdh2024}$$.
+        r"""$\mathcal{H}_* \eta_*$, conformal Hubble rate times conformal time at the start of the acoustic phase.
+
+        $$\mathcal{H}_* \eta_* = 1 + \nu_\text{gdh2024}$$
+        See :py:func:`pttools.ssm.barotropic.H_eta`.
         """
         return H_eta(nu=self.bubble.nu_gdh2024)
 
     @functools.cached_property
-    def H_star_tau_nl(self) -> float:
-        return H_star_tau_nl(r_star=self.r_star, ubarf=self.bubble.ubarf)
+    def H_star_eta_v(self) -> float:
+        return H_star_eta_v(source_lifetime_factor=self.source_lifetime_factor, nu=self.bubble.nu_gdh2024)
 
     @functools.cached_property
-    def H_star_tau_v(self) -> float:
-        return H_star_tau_v(source_lifetime_factor=self.source_lifetime_factor, nu=self.bubble.nu_gdh2024)
-
-    @functools.cached_property
-    def H_star_tau_v_old(self) -> float:
-        return H_star_tau_v_old(H_star_tau_nl=self.H_star_tau_nl)
+    def H_star_eta_v_old(self) -> float:
+        return H_star_eta_v_old(H_star_eta_sh=self.H_star_eta_sh)
 
     @functools.cached_property
     def k_peak_eta_star(self) -> float:
-        r"""Peak wavenumber, scaled by conformal time at GW formation $k_\text{peak} \eta_*$
+        r"""$k_{\text{peak}} \eta_*$, peak wavenumber scaled by conformal time at GW formation.
+
         $$k_p = \frac{2 \pi}{R_*} \Rightarrow k_p \eta_* = (1 + \nu_\text{gdh2024}) \frac{2\pi}{r_*}$$
         :giombi_2024_cs:`\ ` p. 2.
         """
@@ -300,7 +309,7 @@ class SSMSpectrum:
 
     @functools.cached_property
     def J(self) -> float:
-        return J(r_star=self.r_star, H_star_tau_v=self.H_star_tau_v)
+        return J(r_star=self.r_star, H_star_eta_v=self.H_star_eta_v)
 
     @functools.cached_property
     def pow_gw(self) -> FloatArr1D:
@@ -359,7 +368,8 @@ class SSMSpectrum:
 
     @functools.cached_property
     def spec_den_v_tilde(self) -> FloatArr1D:
-        r"""Spectral density $\tilde{P}_{\tilde{v}}$ of the velocity field $v$
+        r"""$\tilde{P}_{\tilde{v}}$, spectral density of the velocity field $v$.
+
         This includes
         $$\tilde{P}_{\tilde{v}}(q) = 2 \tilde{P}_v(q)$$
         :gw_pt_ssm:`\ ` eq. 4.18.
@@ -377,16 +387,23 @@ class SSMSpectrum:
     @functools.cached_property
     def tau_end(self) -> float:
         r"""
-        Time $\tau_\text{end}$ when the anisotropic stress turns off
-        $$\tau_\text{end} \equiv \frac{\eta_\text{end}}{R_*}$$
+        Dimensionless conformal time $\tau_\text{end}$ when the anisotropic stress turns off.
+
+        $$\tau_\text{end} \equiv \frac{\eta_\text{end}}{R_*} = \tau_* + \Delta \tau_\text{v}$$
+        :giombi_2026:`\ ` sec. 2.3,
         :giombi_2024_cs:`\ ` p. 8.
+        Not to be confused with the lifetime $\tau_\text{v}$ of the earlier articles,
+        see :py:mod:`pttools.ssm.scaling`.
         """
         return self.tau_star + self.delta_tau_v
 
     @functools.cached_property
     def tau_star(self) -> float:
-        r"""Time $\tau_*$ when the anisotropic stress turns on
-        $$\tau_* \equiv \frac{\eta_*}{R_*} = \frac{1 + \nu_\text{gdh2024}}{r_*}$$
+        r"""Dimensionless conformal time $\tau_*$ when the anisotropic stress turns on.
+
+        $$\tau_* \equiv \frac{\eta_*}{R_*} = \frac{\mathcal{H}_* \eta_*}{\mathcal{H}_* R_*}
+        = \frac{1 + \nu_\text{gdh2024}}{r_*}$$
+        :giombi_2026:`\ ` sec. 2.3,
         :giombi_2024_cs:`\ ` p. 8.
         """
         return (1 + self.bubble.nu_gdh2024) / self.r_star
@@ -399,7 +416,8 @@ class SSMSpectrum:
         return sqrt(self.ubarf2_custom_nucleation(nuc_type=nuc_type))
 
     def ubarf2_custom_nucleation(self, nuc_type: NucType | None = None) -> float:
-        r"""$\bar{U}_f^2$ using $z$ and ${\lvert A \rvert}^2$
+        r"""$\bar{U}_f^2$ using $z$ and ${\lvert A \rvert}^2$.
+
         The arguments $z, {\lvert A \rvert}^2, v_{\text{wall}}$ and the bubble spacing enlargement factor $\Lambda$
         are not directly dependent on the nucleation type, and therefore it's an adjustable parameter.
         """
@@ -516,8 +534,8 @@ class SSMSpectrum:
 copy_docstrings({
     SSMSpectrum.beta: beta,
     SSMSpectrum.eta_ratio: eta_ratio,
-    SSMSpectrum.H_star_tau_nl: H_star_tau_nl,
-    SSMSpectrum.H_star_tau_v: H_star_tau_v,
+    SSMSpectrum.H_star_eta_sh: H_star_eta_sh,
+    SSMSpectrum.H_star_eta_v: H_star_eta_v,
     SSMSpectrum.J: J,
     SSMSpectrum.source_lifetime_factor: source_lifetime_factor,
     SSMSpectrum.spec_den_gw_scaling: spec_den_gw_scaling,

@@ -39,14 +39,14 @@ class SSMSpectrumTest(unittest.TestCase):
     def test_H_star_eta_star(self):
         self.assertGreater(self.spectrum.H_star_eta_star, 0)
 
-    def test_H_star_tau_nl(self):
-        self.assertGreater(self.spectrum.H_star_tau_nl, 0)
+    def test_H_star_eta_sh(self):
+        self.assertGreater(self.spectrum.H_star_eta_sh, 0)
 
-    def test_H_star_tau_v(self):
-        self.assertGreater(self.spectrum.H_star_tau_v, 0)
+    def test_H_star_eta_v(self):
+        self.assertGreater(self.spectrum.H_star_eta_v, 0)
 
-    def test_H_star_tau_v_old(self):
-        self.assertGreater(self.spectrum.H_star_tau_v_old, 0)
+    def test_H_star_eta_v_old(self):
+        self.assertGreater(self.spectrum.H_star_eta_v_old, 0)
 
     def test_hx(self):
         self.assertGreater(self.spectrum.hx, 0)

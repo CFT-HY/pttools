@@ -28,28 +28,59 @@ def eta_ratio(
         r_star: FloatOrArr = DEFAULT_R_STAR,
         N_sh: FloatOrArr = DEFAULT_N_SH,
         nu: FloatOrArr = DEFAULT_NU_GDH2024) -> FloatOrArr:
-    r"""Ratio of conformal times $\frac{\Delta \eta_\text{v}}{\eta_*}$ for a barotropic EoS
+    r"""Source duration in units of the conformal time at the start of the acoustic phase,
+    $\frac{\Delta \eta_\text{v}}{\eta_*}$, for a barotropic EoS.
+
     $$\frac{\Delta \eta_\text{v}}{\eta_*}
     = \frac{N_{\text{sh}} \eta_\text{sh}}{\eta_*}
+    = \frac{N_{\text{sh}} \mathcal{H}_* \eta_\text{sh}}{\mathcal{H}_* \eta_*}
     = \frac{N_{\text{sh}} r_*}{(1 + \nu_\text{gdh2024}) \bar{U}_f},$$
-    where we have used
-    $\eta_\text{sh} \approx \frac{R_*}{\bar{U}_f}$,
-    $r_* \equiv H_* R_*$
+    where $\Delta \eta_\text{v} \equiv \eta_\text{end} - \eta_* = N_{\text{sh}} \eta_\text{sh}$
+    (:giombi_2026:`\ ` eq. 4.1, :giombi_2024_cs:`\ ` eq. 4.1),
+    and we have used
+    $\eta_\text{sh} \approx \frac{R_*}{\bar{U}_f}$ (see :py:func:`pttools.ssm.scaling.H_star_eta_sh`),
+    $r_* \equiv \mathcal{H}_* R_*$
     and
-    $H_* \eta_* = 1 + \nu_\text{gdh2024}$.
+    $\mathcal{H}_* \eta_* = 1 + \nu_\text{gdh2024}$ (see :py:func:`H_eta`).
+    Here $\mathcal{H} \equiv a'/a$ is the conformal Hubble rate, $\eta$ is conformal time
+    and $R_*$ is the comoving mean bubble spacing.
+
+    Please note that the source duration $\Delta \eta_\text{v}$ is not the effective source lifetime
+    $\eta_\text{v} = \eta_* \Upsilon_\ell$ of :py:func:`pttools.ssm.scaling.H_star_eta_v`.
+
+    :param ubarf: $\bar{U}_f$, enthalpy-weighted RMS fluid velocity
+    :param r_star: $r_* \equiv \mathcal{H}_* R_*$, Hubble-scaled mean bubble spacing
+    :param N_sh: $N_{\text{sh}}$, number of shock formation times
+    :param nu: $\nu_\text{gdh2024}$
+    :return: $\frac{\Delta \eta_\text{v}}{\eta_*}$
     """
     return N_sh * r_star / ((1 + nu) * ubarf)
 
 
 def H_eta[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:  # type: ignore[assignment]
-    r"""$H \eta$ for a barotropic EoS
-    $$H \eta = \frac{\dot{a}}{a} = 1 + \nu_\text{gdh2024} = \frac{2}{1 + 3 \omega}$$.
+    r"""$\mathcal{H} \eta$, conformal Hubble rate times conformal time, for a barotropic EoS.
 
-    This comes from the scale factor for barotropic EoS
-    $$a(\eta) = a(\eta_*) \left( \frac{\eta}{\eta_*} \right)^\frac{2}{1+3\omega}$$
-    :giombi_2024_cs:`\ ` p. 5
-    and that
-    $$\frac{2}{1+3\omega} = 1 + \nu_\text{gdh2024}$$
+    $$\mathcal{H} \eta = \frac{a'}{a} \eta = 1 + \nu_\text{gdh2024} = \frac{2}{1 + 3 \omega},$$
+    where $a' \equiv \frac{da}{d\eta}$.
+
+    This comes from the scale factor for a barotropic EoS
+    $$a(\eta) = a(\eta_*) \left( \frac{\eta}{\eta_*} \right)^{1 + \nu_\text{gdh2024}}
+    = a(\eta_*) \left( \frac{\eta}{\eta_*} \right)^\frac{2}{1+3\omega}$$
+    :giombi_2026:`\ ` eq. 2.17,
+    :giombi_2024_cs:`\ ` eq. 2.15,
+    which gives
+    $$\mathcal{H} = \frac{1 + \nu_\text{gdh2024}}{\eta}.$$
+    In a radiation-dominated Universe $\nu_\text{gdh2024} = 0$ and $\mathcal{H} \eta = 1$.
+
+    Please note that this is not $H \eta$ with the physical Hubble rate $H = \frac{\dot{a}}{a} = \frac{\mathcal{H}}{a}$,
+    which would depend on the normalisation of the scale factor.
+    The corresponding physical relation is $H_* \tau = \mathcal{H}_* \eta$ with $\tau = a_* \eta$
+    the physical time at $\eta_*$, so $H_* (a_* \eta_*) = 1 + \nu_\text{gdh2024}$,
+    which is the "physical Hubble time" of :hindmarsh_2015:`\ ` appendix A.
+    See the notation section of :py:mod:`pttools.ssm.scaling`.
+
+    :param nu: $\nu_\text{gdh2024}$
+    :return: $\mathcal{H} \eta$
     """
     # typing.cast() is not used below, since Numba cannot compile it.
     return 1 + nu  # type: ignore[return-value]
@@ -69,12 +100,15 @@ def source_lifetime_factor(
         N_sh: FloatOrArr = DEFAULT_N_SH,
         nu: FloatOrArr = DEFAULT_NU_GDH2024):
     r"""
-    Source lifetime factor $\Upsilon_\ell$
+    Source lifetime factor $\Upsilon_\ell$.
+
     $$\Upsilon_\ell \equiv
     \frac{1}{\ell(\nu)} \left(1 - \left( \frac{\eta_*}{\eta_\text{end}} \right)^{\ell(\nu)} \right)
     = \frac{1}{\ell(\nu)} \left(1 - \left(1 + \frac{\Delta \eta_\text{v}}{\eta_*} \right)^{-\ell(\nu)} \right)$$
-    :giombi_2026:`\ ` eq. 3.6,
+    :giombi_2026:`\ ` eqs. 3.6, 3.9a (there as $\Upsilon(\eta_* / \eta_\text{end}, 1 + 2\nu)$),
     :giombi_2024_cs:`\ ` eq. 3.13.
+    It enters the GW power spectrum as $\mathcal{H}_* \eta_\text{v} = \mathcal{H}_* \eta_* \Upsilon_\ell$,
+    see :py:func:`pttools.ssm.scaling.H_star_eta_v`.
 
     This is an updated version of
     :maki_msc:`\ ` eq. 3.79

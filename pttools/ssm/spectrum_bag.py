@@ -55,9 +55,13 @@ def power_gw_bag(
         parallel: bool = True) -> th.FloatArr1D:
     r"""
     Scaled GW power spectrum at array of z = kR* values, where R* is mean bubble centre
-    separation and k is comoving wavenumber.  To convert to predicted spectrum,
+    separation and k is comoving wavenumber.
+
+    To convert to predicted spectrum,
     multiply by $(H_n R_*)(H_n \tau_v)$, where $H_n$ is the Hubble rate at the
     nucleation time, and $\tau_v$ is the lifetime of the shear stress source.
+    In the conformal notation of :py:mod:`pttools.ssm.scaling` this factor is
+    $(\mathcal{H}_* R_*)(\mathcal{H}_* \eta_\text{v}) = J$.
 
     Physical parameters
 
