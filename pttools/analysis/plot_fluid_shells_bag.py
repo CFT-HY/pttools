@@ -186,11 +186,18 @@ def plot_fluid_shells_bag(
 
     if draw:
         fig.canvas.draw()
+    # Hide the topmost tick label of the enthalpy panel so that it does not overlap with the velocity panel.
+    # The ticks are fixed together with the labels, since the labels can be fixed only for a fixed set of ticks,
+    # and the ticks are limited to the current view, as setting ticks outside it would expand the view.
+    ylim = ax[1, 0].get_ylim()
+    yticks = ax[1, 0].get_yticks()
     ylabels = [tick.get_text() for tick in ax[1, 0].get_yticklabels()]
-    # TODO: Fix the warning "FixedFormatter should only be used together with FixedLocator"
-    # UserWarning: set_ticklabels() should only be used with a fixed number of ticks,
-    # i.e. after set_ticks() or using a FixedLocator.
-    ax[1, 0].set_yticklabels(ylabels[:-1])
+    in_view = [ylim[0] <= ytick <= ylim[1] for ytick in yticks]
+    yticks = [ytick for ytick, keep in zip(yticks, in_view, strict=True) if keep]
+    ylabels = [ylabel for ylabel, keep in zip(ylabels, in_view, strict=True) if keep]
+    if ylabels:
+        ylabels[-1] = ""
+    ax[1, 0].set_yticks(yticks, labels=ylabels)
 
     ax[0, 0].set_ylabel(r'$v(\xi)$')
     if draw:

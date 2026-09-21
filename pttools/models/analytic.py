@@ -121,7 +121,7 @@ class AnalyticModel(Model, abc.ABC):
         :param nan_on_invalid: return nan for invalid values
         :param log_invalid: log negative values
         """
-        check_value_in_range(
+        wn = check_value_in_range(
             wn,
             x_min=self.w_min,
             x_max=self.w_max,
@@ -154,7 +154,7 @@ class AnalyticModel(Model, abc.ABC):
         :param nan_on_invalid: return nan for invalid values
         :param log_invalid: whether to log invalid values
         """
-        check_value_in_range(
+        wp = check_value_in_range(
             wp,
             # w_min=self.w_crit,
             x_min=self.w_min,
@@ -163,6 +163,7 @@ class AnalyticModel(Model, abc.ABC):
             context="alpha_plus",
             error_on_invalid=error_on_invalid,
             nan_on_invalid=nan_on_invalid,
+            log_invalid=log_invalid
         )
         alpha_plus = self.bag_wn_const / wp
         return tp.cast(T, self.check_alpha_plus(

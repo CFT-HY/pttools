@@ -145,7 +145,12 @@ def create_diff_figure(
                 # label=f"Model {i_model}, alpha {i_alpha}",
             )
         print(model.label_unicode)
-        print(np.nanmax(rel_diffs[i_model, :, :], axis=1))
+        # np.nanmax would warn about the rows that consist only of nans, and therefore they are skipped.
+        rel_diffs_model = rel_diffs[i_model, :, :]
+        max_rel_diffs = np.full(rel_diffs_model.shape[0], np.nan)
+        has_values = ~np.all(np.isnan(rel_diffs_model), axis=1)
+        max_rel_diffs[has_values] = np.nanmax(rel_diffs_model[has_values, :], axis=1)
+        print(max_rel_diffs)
     ax.set_xlabel(r"$v_\text{wall}$")
     ax.set_ylabel(
         r"$|\kappa_{\bar{\theta}_n,\text{PTtools}} - \kappa_{\bar{\theta}_n,\text{ref}}|"

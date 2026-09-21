@@ -2,6 +2,8 @@
 
 import unittest
 
+import numpy as np
+
 from pttools import models
 from tests.models.base_bag import BagBaseCase
 from tests.models.base_model import ModelBaseCase
@@ -139,6 +141,14 @@ class TestConstCSThermo(ModelBaseCase, unittest.TestCase):
 
 class TestSM(ModelBaseCase, unittest.TestCase):
     """Tests for the Standard Model-based FullModel."""
+
+    # The Standard Model data starts at T = 1 MeV, and the enthalpy there is about 4.7 MeV^4.
+    # The test values are chosen to be within the validity range of the model.
+    temp_arr = np.linspace(2, 100, ModelBaseCase.TEST_ARR_SIZE)
+    w_arr1 = temp_arr**4
+    w_arr2 = temp_arr**3.9
+    # The transition strength is limited by the minimum temperature of the model.
+    alpha_n = np.linspace(0.1, 0.28, 10)
 
     @classmethod
     def setUpClass(cls, *args, **kwargs) -> None:

@@ -33,6 +33,11 @@ class BaseModel(abc.ABC):
     #: String formatting for thermodynamical quantities
     THERMO_FORMAT: str = "6e"
 
+    #: Relative tolerance for the temperature validation.
+    #: This allows for the floating point rounding errors of the conversions between temperature and enthalpy,
+    #: e.g. when $T(w(T_{\text{min}}))$ is slightly below $T_{\text{min}}$.
+    TEMP_RTOL: float = 1e-12
+
     def __init__(
             self,
             # Basic info
@@ -127,9 +132,11 @@ class BaseModel(abc.ABC):
 
         If invalid values are found, a copy of the array is created where those are set to np.nan.
         """
+        t_min = self.T_min * (1 - self.TEMP_RTOL)
+        t_max = self.T_max * (1 + self.TEMP_RTOL)
         if np.isscalar(temp):
             temp_scalar = tp.cast(float, temp)
-            if temp_scalar < self.T_min:
+            if temp_scalar < t_min:
                 if not self.silence_temp:
                     logger.warning(
                         "The temperature %s is below the minimum temperature %s of the model \"%s\".",
@@ -137,7 +144,7 @@ class BaseModel(abc.ABC):
                     )
                 if self.restrict_to_valid:
                     return tp.cast(T, np.nan)
-            elif temp_scalar > self.T_max:
+            elif temp_scalar > t_max:
                 if not self.silence_temp:
                     logger.warning(
                         "The temperature %s is above the maximum temperature %s of the model \"%s\".",
@@ -148,8 +155,8 @@ class BaseModel(abc.ABC):
         else:
             # np.isscalar() does not narrow the type for the type checker.
             temp_arr = tp.cast(th.FloatArr, temp)
-            below = temp_arr < self.T_min
-            above = temp_arr > self.T_max
+            below = temp_arr < t_min
+            above = temp_arr > t_max
             has_below = np.any(below)
             has_above = np.any(above)
             if self.restrict_to_valid and (has_below or has_above):

@@ -118,8 +118,15 @@ class Model(BaseModel, abc.ABC):
         self.w_min_s: float = self.w(self.T_min, Phase.SYMMETRIC)
         self.w_min_b: float = self.w(self.T_min, Phase.BROKEN)
         self.w_min: float = max(self.w_min_s, self.w_min_b)
-        self.w_max_s: float = self.w(self.T_max, Phase.SYMMETRIC)
-        self.w_max_b: float = self.w(self.T_max, Phase.BROKEN)
+        if np.isfinite(self.T_max):
+            self.w_max_s: float = self.w(self.T_max, Phase.SYMMETRIC)
+            self.w_max_b: float = self.w(self.T_max, Phase.BROKEN)
+        else:
+            # The enthalpy diverges with the temperature,
+            # and evaluating w(T) at an infinite temperature would produce nan
+            # from the multiplication of the infinite enthalpies by the phase.
+            self.w_max_s = np.inf
+            self.w_max_b = np.inf
         self.w_max: float = min(self.w_max_s, self.w_max_b)
         if self.w_min >= self.w_max:
             logger.warning(
@@ -223,7 +230,7 @@ class Model(BaseModel, abc.ABC):
         :param log_invalid: log negative values
         :return: $\alpha_n$
         """
-        check_value_in_range(
+        wn = check_value_in_range(
             x=wn,
             x_min=self.w_min,
             x_max=self.w_max,
@@ -234,6 +241,10 @@ class Model(BaseModel, abc.ABC):
             nan_on_invalid=nan_on_invalid,
             log_invalid=log_invalid
         )
+        # The invalid values have been replaced with nan, and computing with them
+        # would result in warnings about temperatures outside the validity range of the model.
+        if np.isscalar(wn) and np.isnan(wn):
+            return tp.cast(T, np.nan)
         # :param allow_no_transition: allow $w_n$ for which there is no phase transition
         # self.check_p(wn, allow_fail=allow_no_transition)
         diff = self.delta_theta(
@@ -294,7 +305,7 @@ class Model(BaseModel, abc.ABC):
         :param nan_on_invalid: return nan for invalid values
         :param log_invalid: log negative values
         """
-        check_value_in_range(
+        Tn = check_value_in_range(
             x=Tn,
             x_min=self.T_min,
             x_max=self.T_max,
@@ -305,6 +316,8 @@ class Model(BaseModel, abc.ABC):
             nan_on_invalid=nan_on_invalid,
             log_invalid=log_invalid
         )
+        if np.isscalar(Tn) and np.isnan(Tn):
+            return tp.cast(T, np.nan)
         diff = self.delta_theta_temp(
             Ts=Tn, Tb=Tn,
             error_on_invalid=error_on_invalid,
@@ -332,7 +345,7 @@ class Model(BaseModel, abc.ABC):
         :param nan_on_invalid: return nan for invalid values
         :param log_invalid: whether to log invalid values
         """
-        check_value_in_range(
+        wp = check_value_in_range(
             x=wp,
             # wp can be lower than w_crit when wn < w_crit
             # x_min=self.w_crit,
@@ -345,7 +358,7 @@ class Model(BaseModel, abc.ABC):
             nan_on_invalid=nan_on_invalid,
             log_invalid=log_invalid
         )
-        check_value_in_range(
+        wm = check_value_in_range(
             x=wm,
             x_min=self.w_min,
             x_max=self.w_max,
@@ -356,6 +369,8 @@ class Model(BaseModel, abc.ABC):
             nan_on_invalid=nan_on_invalid,
             log_invalid=log_invalid
         )
+        if (np.isscalar(wp) and np.isnan(wp)) or (np.isscalar(wm) and np.isnan(wm)):
+            return np.nan
         alpha_plus = 4 * self.delta_theta(
             wp, wm, error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         ) / (3 * wp)
@@ -375,7 +390,7 @@ class Model(BaseModel, abc.ABC):
         $$\alpha_{\bar{\theta}_n} \equiv \frac{D \bar{\theta}(T_n)}{3 w_n}$$
         :giese_2021:`\ `, eq. 13.
         """
-        check_value_in_range(
+        wn = check_value_in_range(
             x=wn,
             x_min=self.w_min,
             x_max=self.w_max,
@@ -386,6 +401,8 @@ class Model(BaseModel, abc.ABC):
             nan_on_invalid=nan_on_invalid,
             log_invalid=log_invalid
         )
+        if np.isscalar(wn) and np.isnan(wn):
+            return tp.cast(T, np.nan)
         return self.D_theta_bar(wn, Phase.SYMMETRIC) / (3 * wn)
 
     def alpha_theta_bar_n_diff[T: FloatOrArr](self, wn: T) -> T:

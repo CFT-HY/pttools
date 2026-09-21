@@ -117,8 +117,10 @@ class GieseApproximationPlot(VwAlphaPlot):
             ax: plt.Axes | None = None):
         super().__init__(grid, fig, ax)
 
+        # The non-positive values cannot be shown on the logarithmic scale,
+        # and are masked here to avoid a warning from Matplotlib.
         cs: QuadContourSet = self.ax.contourf(
-            grid.v_walls, grid.alpha_ns, diff,
+            grid.v_walls, grid.alpha_ns, np.ma.masked_less_equal(diff, 0),
             locator=ticker.LogLocator(numticks=20)
         )
         cbar = self.fig.colorbar(cs)

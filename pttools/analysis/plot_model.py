@@ -46,14 +46,14 @@ class ModelPlot:
             self.temps = np.logspace(np.log10(self.t_min), np.log10(self.t_max), n_points)
             self.temps_b = np.logspace(np.log10(self.t_min), np.log10(model.T_crit), n_points)
             self.temps_s = np.logspace(np.log10(model.T_crit), np.log10(self.t_max), n_points)
-            self.w = np.logspace(np.log10(model.w_min), np.log10(model.w_max), n_points)
         else:
             self.t_min = max(model.T_min, 0.7 * model.T_crit) if t_min is None else t_min
             self.t_max = min(model.T_max, 1.3 * model.T_crit) if t_max is None else t_max
             self.temps = np.linspace(self.t_min, self.t_max, n_points)
             self.temps_b = np.linspace(self.t_min, model.T_crit, n_points)
             self.temps_s = np.linspace(model.T_crit, self.t_max, n_points)
-            self.w = np.linspace(model.w_min, model.w_max, n_points)
+        #: The enthalpy range is set as $w(T,\phi_s)$
+        self.w: th.FloatArr1D = tp.cast(th.FloatArr1D, self.model.w(self.temps, Phase.SYMMETRIC))
 
         self.plot(self.ax_p, self.model.p_temp, "p", y_log=y_log)
         self.plot(self.ax_s, self.model.s_temp, "s", y_log=y_log)
@@ -65,7 +65,8 @@ class ModelPlot:
         )
 
         # alpha_n = self.model.alpha_n_temp(Tn=self.temps)
-        alpha_n = self.model.alpha_n(wn=self.w)
+        # The values are invalid e.g. for the temperatures where there is no phase transition.
+        alpha_n = self.model.alpha_n(wn=self.w, error_on_invalid=False, nan_on_invalid=True, log_invalid=False)
         self.ax_alpha_n.plot(self.temps, alpha_n)
         self.ax_alpha_n.set_xlabel("$T$")
         self.ax_alpha_n.set_ylabel(r"$\alpha_n$")

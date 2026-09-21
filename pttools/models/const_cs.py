@@ -186,7 +186,7 @@ class ConstCSModel(AnalyticModel):
         :param nan_on_invalid: return nan for invalid values
         :param log_invalid: whether to log invalid values
         """
-        check_value_in_range(
+        wn = check_value_in_range(
             wn,
             x_min=self.w_min,
             x_max=self.w_max,
@@ -473,7 +473,7 @@ class ConstCSModel(AnalyticModel):
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> th.FloatOrArr:
         r"""If $\mu_-=4 \Leftrightarrow c_{sb}=\frac{1}{\sqrt{3}}$, then $w_-$ does not affect the result."""
-        check_value_in_range(
+        wp = check_value_in_range(
             wp,
             # w_min=self.w_crit,
             x_min=self.w_min,
@@ -484,7 +484,7 @@ class ConstCSModel(AnalyticModel):
             nan_on_invalid=nan_on_invalid,
             log_invalid=log_invalid
         )
-        check_value_in_range(
+        wm = check_value_in_range(
             wm,
             x_min=self.w_min,
             x_max=self.w_max,

@@ -94,7 +94,8 @@ def find_most_negative_vals(vals: th.FloatOrArr, *args) -> list[float | None]:
     if np.isscalar(vals):
         return [vals, *args]
 
-    i = np.argmin(vals)
+    # The array may contain nans, which np.argmin would return instead of the most negative value.
+    i = np.nanargmin(vals)
     vals = [vals[i]]
 
     for arg in args:

@@ -11,8 +11,8 @@ import pttools.type_hints as th
 logger = logging.getLogger(__name__)
 
 
-def check_value_in_range(
-    x: th.FloatOrArr,
+def check_value_in_range[T: th.FloatOrArr](
+    x: T,
     x_min: float,
     x_max: float,
     name: str,
@@ -20,8 +20,11 @@ def check_value_in_range(
     x_format: str = ".6e",
     error_on_invalid: bool = True,
     nan_on_invalid: bool = True,
-    log_invalid: bool = True) -> th.FloatOrArr:
-    r"""Check that $x \in ({x}_\text{min}, {x}_\text{max})$ for the given $x$."""
+    log_invalid: bool = True) -> T:
+    r"""Check that $x \in ({x}_\text{min}, {x}_\text{max})$ for the given $x$.
+
+    :return: $x$, where the invalid values have been replaced with nan if ``nan_on_invalid`` is set
+    """
     if x_min > x_max:
         raise ValueError(
             f"Invalid limits for range check: {name}_min={x_min:{x_format}} > {name}_max={x_max:{x_format}}."
@@ -35,7 +38,7 @@ def check_value_in_range(
             logger.error("Got nan for %s in %s", name, inspect.stack()[1][3])
         # Scalar None cannot be tested for negativity.
         if x is None or is_scalar:
-            return np.nan
+            return tp.cast(T, np.nan)
 
     too_smalls = x < x_min
     too_larges = x > x_max
@@ -74,12 +77,14 @@ def check_value_in_range(
 
     if nan_on_invalid and info is not None:
         if is_scalar:
-            return np.nan
-        x = x.copy()
+            return tp.cast(T, np.nan)
+        # np.isscalar() does not narrow the type for the type checker.
+        x_arr = tp.cast(th.FloatArr, x).copy()
         if too_small:
-            x[too_small] = np.nan
+            x_arr[too_smalls] = np.nan
         if too_large:
-            x[too_large] = np.nan
+            x_arr[too_larges] = np.nan
+        return tp.cast(T, x_arr)
     return x
 
 

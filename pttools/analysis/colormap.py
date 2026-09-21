@@ -61,7 +61,7 @@ def color_region(
         region: th.FloatArr2D,
         color: str = DEFAULT_REGION_COLOR, alpha: float = 1) -> QuadContourSet:
     """Set a region on a plot to a fixed color."""
-    cmp = ListedColormap([color], color, 1)
+    cmp = ListedColormap([color], color)
     # The data type must be supported by np.isinf()
     region2 = region.copy() if region.dtype is np.float64 else region.astype(np.float64)
     region2[region2 == 0] = np.nan

@@ -48,7 +48,12 @@ def _v_plus_scalar(
         #         logger.error("v_plus would be negative for a deflagration with ap > 1/3, got ap=%s", ap)
         return np.nan
 
-    return (0.5 / (1 + ap)) * (x + b * np.sqrt(x ** 2 + 4. * ap ** 2 + (8. / 3.) * ap - (4. / 3.)))
+    discriminant = x ** 2 + 4. * ap ** 2 + (8. / 3.) * ap - (4. / 3.)
+    # The discriminant is negative only for negative alpha_plus, for which there is no real solution.
+    # Returning nan explicitly avoids a warning from the square root.
+    if discriminant < 0:
+        return np.nan
+    return (0.5 / (1 + ap)) * (x + b * np.sqrt(discriminant))
     # if vp < 0:
     #     with numba.objmode:
     #         logger.error(
