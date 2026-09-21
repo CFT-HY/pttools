@@ -83,3 +83,13 @@ Integers and floats are safe, but the following are not.
   Without the workaround, a function compiled in a process that loaded a parallel callee from the cache
   crashes the next process that loads it from the cache: with a segmentation fault on Linux,
   and with ``Fatal Python error: Aborted`` from LLVM on macOS.
+
+The $c_s^2$ functions of the models and the differential equations of the fluid profiles based on them
+are created dynamically, and therefore they cannot be cached on disk:
+their cache keys would include the Numba dispatcher objects they capture,
+and those are identified by a random UUID that differs between processes.
+Instead, they are compiled once per process and per model,
+and ``ConstCSModel`` shares them between all models with the same sound speeds
+(see ``pttools.models.const_cs.const_cs_funcs``).
+Each worker process of a process pool therefore compiles them once for each distinct set of sound speeds,
+and models that are pickled to the workers reuse the functions compiled there.

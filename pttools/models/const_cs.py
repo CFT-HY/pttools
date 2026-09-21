@@ -2,6 +2,9 @@ r"""Constant sound speed model, aka. $\mu, \nu$ model."""
 
 from fractions import Fraction
 import logging
+import os
+import threading
+import time
 import typing as tp
 
 import numpy as np
@@ -9,6 +12,8 @@ from scipy.optimize import OptimizeResult, minimize, minimize_scalar
 
 from pttools.bubble import CS2_BAG_SCALAR_PTR, DF_DTAU_PTR_BAG, cs2_bag_multi
 from pttools.bubble.const import CS0_2
+from pttools.bubble.cs2 import cs2_to_ptr
+from pttools.bubble.integrate import add_df_dtau
 from pttools.bubble.phase import Phase
 from pttools.bubble.solution_type import SolutionType
 from pttools.models.analytic import AnalyticModel
@@ -19,6 +24,84 @@ from pttools.type_hints import FloatOrArr
 from pttools.utils.validation import check_value_in_range
 
 logger = logging.getLogger(__name__)
+
+
+class ConstCSFuncs:
+    r"""The compiled $c_s^2$ functions for a pair of sound speeds.
+
+    The functions depend only on the sound speeds, and are therefore shared by all
+    :class:`ConstCSModel` objects with the same sound speeds through :func:`const_cs_funcs`.
+    This avoids compiling the same functions again for each new model object,
+    e.g. when the models are created in a loop by a solver, or for each task in a worker process.
+
+    The pointers are valid only in the process in which they were created, and in the processes forked from it.
+    They are created on demand, as the models are not always used for fluid profile integration.
+    """
+
+    def __init__(self, css2: float, csb2: float):
+        self.css2: float = css2
+        self.csb2: float = csb2
+        self.label: str = f"css2={cs2_to_float_and_label(css2)[1]}, csb2={cs2_to_float_and_label(csb2)[1]}"
+        self.lock = threading.Lock()
+        self._cs2_ptr: th.CS2FunScalarPtr | None = None
+        self._df_dtau_ptr: DifferentialPointer | None = None
+
+        # Numba caching is disabled for the functions below, as they are created dynamically.
+        # These become compile-time constants.
+        @njit(cache=False)
+        def cs2(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+            # Mathematical operations should be faster than conditional logic in compiled functions.
+            return (phase*csb2 + (1 - phase)*css2) * np.ones_like(w)
+
+        @njit(cache=False)
+        def cs2_neg(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+            return -(phase*csb2 + (1 - phase)*css2) * np.ones_like(w)
+
+        self.cs2: th.CS2Fun = cs2
+        self.cs2_neg: th.CS2Fun = cs2_neg
+
+    def cs2_ptr(self) -> th.CS2FunScalarPtr:
+        r"""Pointer to the $c_s^2$ function. See :func:`pttools.bubble.cs2.cs2_to_ptr`."""
+        with self.lock:
+            if self._cs2_ptr is None:
+                start_time = time.perf_counter()
+                self._cs2_ptr = cs2_to_ptr(self.cs2)
+                logger.debug(
+                    "Created a cs2 pointer for %s in process %d in %.3f s",
+                    self.label, os.getpid(), time.perf_counter() - start_time
+                )
+            return self._cs2_ptr
+
+    def df_dtau_ptr(self) -> DifferentialPointer:
+        """Pointer to the differential equation of the fluid profile.
+
+        See :func:`pttools.bubble.integrate.add_df_dtau`.
+        """
+        with self.lock:
+            if self._df_dtau_ptr is None:
+                start_time = time.perf_counter()
+                self._df_dtau_ptr = add_df_dtau(f"const_cs_{self.label}", self.cs2)
+                logger.debug(
+                    "Compiled cs2 for %s in process %d in %.3f s",
+                    self.label, os.getpid(), time.perf_counter() - start_time
+                )
+            return self._df_dtau_ptr
+
+
+#: The compiled functions by the sound speeds. This is separate for each process.
+CONST_CS_FUNCS: dict[tuple[float, float], ConstCSFuncs] = {}
+CONST_CS_FUNCS_LOCK = threading.Lock()
+
+
+def const_cs_funcs(css2: float, csb2: float) -> ConstCSFuncs:
+    r"""Get the compiled $c_s^2$ functions for the given sound speeds, creating them if necessary."""
+    key = (css2, csb2)
+    with CONST_CS_FUNCS_LOCK:
+        funcs = CONST_CS_FUNCS.get(key)
+        if funcs is None:
+            funcs = ConstCSFuncs(css2, csb2)
+            CONST_CS_FUNCS[key] = funcs
+        return funcs
 
 
 def cs2_to_mu[T: FloatOrArr](cs2: T) -> T:
@@ -614,12 +697,16 @@ class ConstCSModel(AnalyticModel):
         # Using the BagModel cs2 saves us from having to compile an additional Numba function
         if self.is_bag:
             return CS2_BAG_SCALAR_PTR
-        return super().cs2_ptr()
+        return self.funcs().cs2_ptr()
 
     def df_dtau_ptr(self) -> DifferentialPointer:
         if self.is_bag:
             return DF_DTAU_PTR_BAG
-        return super().df_dtau_ptr()
+        return self.funcs().df_dtau_ptr()
+
+    def funcs(self) -> ConstCSFuncs:
+        r"""The compiled $c_s^2$ functions, which are shared by the models with the same sound speeds."""
+        return const_cs_funcs(self.css2, self.csb2)
 
     def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
         r"""Energy density $e(T,\phi)$
@@ -642,34 +729,30 @@ class ConstCSModel(AnalyticModel):
             "mu_b": self.mu_b
         }
 
-    def gen_cs2(self):
-        # Numba caching is disabled for the functions below, as they are created dynamically.
-        # These become compile-time constants
-        css2 = self.css2
-        csb2 = self.csb2
-
+    def gen_cs2(self) -> th.CS2Fun:
         # Using the BagModel cs2 saves us from having to compile additional Numba functions
         if self.is_bag:
             return cs2_bag_multi
-
-        @njit(cache=False)
-        def cs2(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-            # Mathematical operations should be faster than conditional logic in compiled functions.
-            return (phase*csb2 + (1 - phase)*css2) * np.ones_like(w)
-        return cs2
+        return self.funcs().cs2
 
     def gen_cs2_neg(self) -> th.CS2Fun:
-        # Numba caching is disabled for the functions below, as they are created dynamically.
-        css2 = self.css2
-        csb2 = self.csb2
-
         if self.is_bag:
             return BagModel.cs2_neg
+        return self.funcs().cs2_neg
 
-        @njit(cache=False)
-        def cs2_neg(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-            return -(phase*csb2 + (1 - phase)*css2) * np.ones_like(w)
-        return cs2_neg
+    def __getstate__(self) -> dict[str, tp.Any]:
+        # The compiled functions are shared by the models with the same sound speeds,
+        # and are therefore restored from the cache of the receiving process instead of being pickled.
+        state = self.__dict__.copy()
+        state.pop("cs2", None)
+        state.pop("cs2_neg", None)
+        return state
+
+    def __setstate__(self, state: dict[str, tp.Any]) -> None:
+        self.__dict__.update(state)
+        # The functions are restored to the instance dictionary in the same way as the rest of the state.
+        self.__dict__["cs2"] = self.gen_cs2()
+        self.__dict__["cs2_neg"] = self.gen_cs2_neg()
 
     def inverse_enthalpy_ratio[T: FloatOrArr](self, temp: T) -> T:
         return self.a_b * self.mu_b / (self.a_s * self.mu_s)
