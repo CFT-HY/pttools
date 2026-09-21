@@ -277,6 +277,9 @@ sphinx_gallery_conf = {
     "prefer_full_module": {rf"^{module}\." for module in DOC_MODULES},
     # The None values mean that the objects are documented in this documentation instead of an external one.
     "reference_url": dict.fromkeys(DOC_MODULES),
+    # Ensure that logging is configured for all examples, so that their log messages have the same format.
+    # The function is given as a string, since the configuration has to be picklable.
+    "reset_modules": ("matplotlib", "seaborn", "pttools.docs.setup.setup_example_logging"),
     # "run_stale_examples": True
     "show_api_usage": True,
     "show_memory": show_memory,

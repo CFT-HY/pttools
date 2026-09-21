@@ -16,6 +16,7 @@ import typing as tp
 import numpy as np
 from numpy.typing import NDArray
 
+import pttools.logging
 from pttools.speedup.options import MAX_WORKERS_DEFAULT
 from pttools.utils import SUPPORTS_FREETHREADING, SUPPORTS_INTERPRETER_POOL
 
@@ -121,11 +122,24 @@ class LoggingRunner:
         return ret
 
 
+def create_process_pool(max_workers: int = MAX_WORKERS_DEFAULT) -> ProcessPoolExecutor:
+    """Create a process pool whose worker processes replicate the logging configuration of this process.
+
+    :param max_workers: Maximum number of worker processes
+    :return: The pool executor
+    """
+    return ProcessPoolExecutor(
+        max_workers=max_workers,
+        initializer=pttools.logging.setup_worker_logging,
+        initargs=(pttools.logging.CONFIG,)
+    )
+
+
 def get_global_process_pool(max_workers: int = MAX_WORKERS_DEFAULT) -> ProcessPoolExecutor:
     global POOL  # noqa: PLW0603
     with POOL_LOCK:
         if POOL is None:
-            POOL = ProcessPoolExecutor(max_workers=max_workers)
+            POOL = create_process_pool(max_workers=max_workers)
             atexit.register(POOL.shutdown)
         return POOL
 
@@ -150,7 +164,7 @@ def get_process_pool(
         yield get_global_process_pool(max_workers=max_workers)
     else:
         # The "with" ensures that the worker processes are shut down when the pool is no longer needed.
-        with ProcessPoolExecutor(max_workers=max_workers) as pool:
+        with create_process_pool(max_workers=max_workers) as pool:
             yield pool
 
 
@@ -186,7 +200,7 @@ def get_pool(
         yield get_global_process_pool(max_workers=max_workers)
     else:
         # The "with" ensures that the worker processes are shut down when the pool is no longer needed.
-        with ProcessPoolExecutor(max_workers=max_workers) as pool:
+        with create_process_pool(max_workers=max_workers) as pool:
             yield pool
 
 

@@ -10,6 +10,7 @@ if tp.TYPE_CHECKING:
 
 from pttools.docs.backreferences import patch_sphinx_gallery
 from pttools.docs.minigallery import add_minigalleries, remove_duplicate_minigalleries
+from pttools.logging import setup_logging
 
 
 def filter_warnings() -> None:
@@ -36,6 +37,19 @@ def pre_setup(doc_modules: tp.Container[str]) -> None:
     """This should be called from `docs/conf.py`."""
     patch_sphinx_gallery(doc_modules=doc_modules)
     filter_warnings()
+
+
+def setup_example_logging(gallery_conf: dict[str, tp.Any], fname: str | None) -> None:
+    """Ensure that logging is configured before running an example.
+
+    This is a resetter for the `reset_modules` option of Sphinx-Gallery.
+    Sphinx-Gallery runs the examples as scripts without importing the `examples` package,
+    which would configure logging.
+    With the `parallel` option, the examples are run in worker processes,
+    which do not inherit the logging configuration of the main process.
+    Configuring the logging here ensures that the log messages of all examples have the same format.
+    """
+    setup_logging()
 
 
 def setup_sphinx(app: "Sphinx") -> None:
