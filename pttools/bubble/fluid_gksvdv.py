@@ -36,7 +36,8 @@ def sound_shell_gksvdv(
         wm_guess = 1.
 
     try:
-        kappa_theta_bar_n, v, wow, xi, mode, vp, vm = kappaNuMuModel(
+        # The velocities returned by the solver are in the wall frame
+        kappa_theta_bar_n, v, wow, xi, mode, vp_tilde, vm_tilde = kappaNuMuModel(
             cs2b=model.cs2(wm_guess, Phase.BROKEN),
             cs2s=model.cs2(wn, Phase.SYMMETRIC),
             al=model.alpha_theta_bar_n_from_alpha_n(alpha_n=alpha_n, wn=wn),
@@ -57,9 +58,9 @@ def sound_shell_gksvdv(
         raise ValueError("Got invalid mode from Giese solver:", mode)
     w = wow * wn
 
-    # Velocities in the wall frame
-    vp_tilde: float = relativity.lorentz(xi=v_wall, v=vp)
-    vm_tilde: float = relativity.lorentz(xi=v_wall, v=vm)
+    # Velocities in the plasma frame
+    vp: float = relativity.lorentz(xi=v_wall, v=vp_tilde)
+    vm: float = relativity.lorentz(xi=v_wall, v=vm_tilde)
 
     # Shock
     v_sh: float = xi[-3]
@@ -68,7 +69,13 @@ def sound_shell_gksvdv(
     wm_sh: float = w[-3]
 
     # Enthalpies
+    # The fluid velocity in the plasma frame is at its maximum at the wall.
+    # In front of the wall, the fluid velocity decreases towards the shock, and behind the wall it decreases
+    # towards the center of the bubble, so the maximum is ahead of the wall if the fluid there is moving.
     i_wall = np.argmax(v)
+    # For detonations the fluid in front of the wall is at rest, and the maximum is just behind the wall.
+    if sol_type == SolutionType.DETON:
+        i_wall += 1
     wp: float = w[i_wall]
     wm: float = w[i_wall - 1]
 

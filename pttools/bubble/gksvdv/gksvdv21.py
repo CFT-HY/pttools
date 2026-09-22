@@ -14,6 +14,11 @@ import pttools.type_hints as th
 
 # from pttools.speedup import NUMBA_ENABLE_CACHE
 
+#: Offset of the points behind and ahead of the fluid shell from its ends.
+#: This ensures that the profile does not have duplicate $\xi$ values, and that the point behind the wall
+#: of a subsonic deflagration is identified to be in the broken phase.
+XI_OFFSET: float = 1e-8
+
 
 # @njit
 def getwow(v1, v2):
@@ -189,13 +194,18 @@ def kappaNuMuModel(
     v_arr = np.concatenate((v_b, v_in, v_out, v_f))
 
     wow_arr = np.concatenate((wow_in, wow_out))
-    wow_b = np.array([wow_arr[0], wow_arr[0]])
+    # The fluid inside the bubble is at rest, and its enthalpy is constant.
+    # For hybrids and detonations it's given by the innermost point of the rarefaction wave.
+    # For subsonic deflagrations there is no rarefaction wave,
+    # and the enthalpy behind the wall is given by the junction conditions.
+    wow_center = wow_arr[0] if mode > 0 else wow_arr[0] * getwow(vp, vm)
+    wow_b = np.array([wow_center, wow_center])
     wow_f = np.array([1, 1])
     wow_arr = np.concatenate((wow_b, wow_arr, wow_f))
 
     xi_arr = np.concatenate((xi_in, xi_out))
-    xi_b = np.array([0, xi_arr[0]])
-    xi_f = np.array([xi_arr[-1], 1])
+    xi_b = np.array([0, xi_arr[0] - XI_OFFSET])
+    xi_f = np.array([xi_arr[-1] + XI_OFFSET, 1])
     xi_arr = np.concatenate((xi_b, xi_arr, xi_f))
 
     if np.any(xi_arr < 0) or np.any(xi_arr > 1):
