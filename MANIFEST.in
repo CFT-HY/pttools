@@ -1,3 +1,0 @@
-include LICENSE
-include README.md
-recursive-include pttools/ssm/suppression/suppression_ssm_data *.txt *.npz

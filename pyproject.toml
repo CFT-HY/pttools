@@ -1,9 +1,10 @@
+# The uv build backend is not the default, so it has to be set explicitly.
+# Without a build-system table, uv would fall back to setuptools.
+# The upper bound follows the uv versioning policy, so that the package keeps building when new versions are released.
+# https://docs.astral.sh/uv/concepts/build-backend/
 [build-system]
-requires = [
-    "setuptools",
-    "wheel"
-]
-build-backend = "setuptools.build_meta"
+requires = ["uv_build >= 0.12.17, < 0.13"]
+build-backend = "uv_build"
 
 [project]
 name = "pttools-gw"
@@ -173,6 +174,12 @@ docs = [
 # "uv sync" installs the full development environment, including the tools for building the documentation.
 # Use "uv sync --no-group docs" to skip the documentation dependencies.
 default-groups = ["dev", "docs"]
+
+# The package name "pttools-gw" differs from the module name, and the module is in the repository root
+# instead of the default "src" directory.
+[tool.uv.build-backend]
+module-name = "pttools"
+module-root = ""
 
 [tool.coverage.run]
 branch = true
@@ -375,21 +382,3 @@ extend-ignore-names = [
 # This should be set to "sphinx" once it's supported.
 # https://github.com/astral-sh/ruff/issues/6606
 convention = "pep257"
-
-# [tool.setuptools.dynamic]
-# version = {attr = "docs.conf.version"}
-
-[tool.setuptools.packages.find]
-include = [
-    "pttools*",
-]
-exclude = [
-    ".venv",
-    "docs",  # This does not exclude `pttools.docs`.
-    "examples",
-    "htmlcov",
-    "logs",
-    "test-results",
-    "tests",
-    "venv"
-]

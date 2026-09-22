@@ -70,7 +70,7 @@ RUN \
     && patchelf --clear-execstack "${VENV_PATH}"/lib/python*/site-packages/numbalsoda/*.so
 
 # Build and install the project.
-# The bind mount has to be writable, as setuptools writes the .egg-info to the source directory.
+# The bind mount is writable, so that the build backend can write to the source directory if needed.
 RUN \
     --mount=type=cache,target=/root/.cache/uv,sharing=locked,id=uv-${TARGETARCH} \
     --mount=type=bind,source=.,target=/src,rw \
