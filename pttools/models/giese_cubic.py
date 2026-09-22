@@ -40,7 +40,7 @@ class GieseCubicModel(AnalyticModel):
         r"""$$p_s = - \mathcal{F}(0,T)$$
         $$p_b = - \mathcal{F}(\phi_\text{min},T)$$.
         """
-        return tp.cast(T, self.a_s/4 * temp**4 - self.V(temp, phase))
+        return tp.cast(T, self.a_s/4 * temp**4 - self.V_temp(temp, phase))
 
     def phase_min(self, temp: th.FloatOrArr):
         return self.phase_min_full(self.d, self.E, temp, self.T_crit)
@@ -56,12 +56,20 @@ class GieseCubicModel(AnalyticModel):
     def temp[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         raise NotImplementedError
 
-    def V(self, temp: th.FloatOrArr, phase: th.FloatOrArr):
-        return self.lam * (
-            phase**4
-            - 2*self.E * phase**3 * temp
-            + phase**2 * (self.E ** 2 * self.T_crit ** 2 + self.d * (temp ** 2 - self.T_crit ** 2))
-        ) + self.lam/4 * (self.d - self.E**2)**2 * self.T_crit**4
+    def V[T: FloatOrArr](self, phase: T) -> T:
+        """The potential of this model depends on the temperature. Please use :meth:`V_temp` instead."""
+        raise NotImplementedError("The potential of this model depends on the temperature. Please use V_temp().")
+
+    def V_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+        r"""Temperature-dependent potential $V(T,\phi)$."""
+        return tp.cast(
+            T,
+            self.lam * (
+                phase**4
+                - 2*self.E * phase**3 * temp
+                + phase**2 * (self.E ** 2 * self.T_crit ** 2 + self.d * (temp ** 2 - self.T_crit ** 2))
+            ) + self.lam/4 * (self.d - self.E**2)**2 * self.T_crit**4
+        )
 
     def w[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         raise NotImplementedError

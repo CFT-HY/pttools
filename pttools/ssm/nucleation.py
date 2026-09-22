@@ -224,7 +224,7 @@ def nucleation_f(
     """
     # The integral is zero outside v_sh.
     inds = v_wall < xi
-    return 1 / v_wall**3 * np.trapezoid((1 - np.exp(-beta_tilde * (T[inds] - T[-1]) / T[-1])), xi[inds]**3)
+    return 1 / v_wall**3 * np.trapezoid((1 - np.exp(-beta_tilde * (T[inds] - T[-1]) / T[-1])), xi[inds]**3)  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
@@ -255,8 +255,11 @@ def r_star[T2: FloatOrArr](
     #         "Please see Caprini et al. (2020) p. 6.",
     #         beta_over_H, beta_over_H_limit, v_wall
     #     )
+    # For the nucleation suppression, i.e. when xi and T are given for a deflagration or a hybrid,
+    # beta_tilde has to be a scalar.
     return R_star(
-        beta=beta_tilde, v_wall=v_wall, xi=xi, T=T, sol_type=sol_type, legacy_cs=legacy_cs, beta_tilde=beta_tilde
+        beta=beta_tilde, v_wall=v_wall, xi=xi, T=T, sol_type=sol_type, legacy_cs=legacy_cs,
+        beta_tilde=beta_tilde  # pyrefly: ignore[bad-argument-type]
     )
 
 
@@ -328,7 +331,7 @@ def R_star[T2: FloatOrArr](
         return rs0
     if sol_type in (SolutionType.SUB_DEF.value, SolutionType.HYBRID.value):
         f = nucleation_f(xi=xi, T=T, beta_tilde=beta_tilde, v_wall=v_wall)
-        return bubble_spacing_enlargement_factor(hx=hx(f)) * rs0
+        return bubble_spacing_enlargement_factor(hx=hx(f)) * rs0  # pyrefly: ignore[bad-return]
     raise ValueError(f"Invalid solution type: {sol_type}")
 
 

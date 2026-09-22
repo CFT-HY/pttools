@@ -51,7 +51,8 @@ def time_with_varying_numba_threads(
     default_threads = numba.get_num_threads()
     times = []
     try:
-        for n in n_threads:
+        for n_np in n_threads:
+            n = int(n_np)
             numba.set_num_threads(n)
             times.append(time_and_log(name, stmt, setup, n_iterations, n, log, file))
     finally:

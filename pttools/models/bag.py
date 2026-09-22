@@ -126,10 +126,14 @@ class BagModel(AnalyticModel):
             a_s_default: float | None = None,
             a_b: float = 1,
             V_s_default: float | None = None,
-            V_b: float = 0,
+            V_b: float | None = None,
             safety_factor_alpha: float | None = None,
             **kwargs) -> tuple[float, float, float, float]:
-        if a_s_default < 0 or a_b < 0 or V_s_default < 0 or V_b < 0:
+        if V_s_default is None:
+            V_s_default = cls.DEFAULT_V_S
+        if V_b is None:
+            V_b = cls.DEFAULT_V_B
+        if (a_s_default is not None and a_s_default < 0) or a_b < 0 or V_s_default < 0 or V_b < 0:
             raise ValueError(
                 f"Invalid parameters: a_s_default={a_s_default}, a_b={a_b}, V_s_default={V_s_default}, V_b={V_b}")
         if safety_factor_alpha is None:
@@ -201,11 +205,19 @@ class BagModel(AnalyticModel):
             log_invalid=log_invalid
         )
 
-    def critical_temp(self, **kwargs) -> float:
+    def critical_temp(
+            self,
+            guess: float | None = None,
+            guess_backup: float = 2,
+            t_max_backup: float = 10000,
+            allow_fail: bool = False) -> float:
         r"""Critical temperature for the bag model.
 
         $$T_{cr} = \sqrt[4]{\frac{V_s - V_b}{a_s - a_b}}$$
         Note that :giese_2020:`\ ` p. 6 is using a different convention.
+
+        The parameters are not used, as the critical temperature is computed analytically.
+        They are present only for compatibility with :meth:`Model.critical_temp`.
         """
         return ((self.V_s - self.V_b) / (self.a_s - self.a_b))**0.25
 
@@ -336,12 +348,12 @@ class BagModel(AnalyticModel):
     def wn[T: FloatOrArr](
             self,
             alpha_n: T,
-            wn_guess: float = 1,
+            wn_guess: float | None = 1,
+            analytical: bool = True,
             theta_bar: bool = False,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True,
-            analytical: bool = True) -> T:
+            log_invalid: bool = True) -> T:
         r"""Enthalpy at nucleation temperature
         $$w_n = \frac{4}{3} \frac{V_s - V_b}{\alpha_n}$$
         This can be derived from the equations for $\theta$ and $\alpha_n$.

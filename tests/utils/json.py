@@ -28,7 +28,7 @@ class JsonTestCase(abc.ABC):
         if isinstance(data, np.ndarray):
             if data.size == 1:
                 data = data.item()
-            if data.ndim == 2 and data.shape[1] == 1:
+            elif data.ndim == 2 and data.shape[1] == 1:
                 data = data.T
         if allow_save:
             self.data[key] = data

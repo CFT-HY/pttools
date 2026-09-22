@@ -1,13 +1,46 @@
 r"""$\xi, v$ plane generation."""
 
+import typing as tp
+
 import numpy as np
 
 from pttools import bubble, speedup
 import pttools.type_hints as th
 
 
+@tp.overload
 def xiv_plane(
-        method: str = "odeint",
+        method: bubble.FluidIntegrateMethod = "odeint",
+        tau_forwards_end: float = 100.0,
+        tau_backwards_end: float = -100.0,
+        n_xi0_b: int = 6,
+        n_xi0_s: int = 9,
+        n_xi: int = 1000,
+        df_dtau_ptr: speedup.DifferentialPointer = bubble.DF_DTAU_PTR_BAG,
+        cs2_s=bubble.CS0_2,
+        cs2_b=bubble.CS0_2,
+        separate_phases: tp.Literal[True] = True
+    ) -> tuple[th.FloatArr3D, th.FloatArr3D]: ...
+
+
+@tp.overload
+def xiv_plane(
+        method: bubble.FluidIntegrateMethod = "odeint",
+        tau_forwards_end: float = 100.0,
+        tau_backwards_end: float = -100.0,
+        n_xi0_b: int = 6,
+        n_xi0_s: int = 9,
+        n_xi: int = 1000,
+        df_dtau_ptr: speedup.DifferentialPointer = bubble.DF_DTAU_PTR_BAG,
+        cs2_s=bubble.CS0_2,
+        cs2_b=bubble.CS0_2,
+        *,
+        separate_phases: tp.Literal[False]
+    ) -> th.FloatArr3D: ...
+
+
+def xiv_plane(
+        method: bubble.FluidIntegrateMethod = "odeint",
         tau_forwards_end: float = 100.0,
         tau_backwards_end: float = -100.0,
         n_xi0_b: int = 6,

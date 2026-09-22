@@ -20,8 +20,10 @@ def _sin_transform_arr(
         v_wall: float | None = None,
         v_sh: float | None = None,
         parallel: bool = True) -> th.FloatArr1D:
+    # The annotation of z has to be the same as in the typing function of the overload,
+    # but this function is called only for arrays.
     lo = np.where(z <= z_st_thresh)
-    z_lo = z[lo]
+    z_lo = z[lo]  # pyrefly: ignore[bad-index]
     # Integrand of the sine transform
     # This computation is O(len(z_lo) * len(xi)) = O(n^2)
     # array_lo = f * np.sin(np.outer(z_lo, xi))
@@ -30,11 +32,11 @@ def _sin_transform_arr(
     integral = sin_transform_core_parallel(t=xi, f=f, freq=z_lo) \
         if parallel else sin_transform_core_single(t=xi, f=f, freq=z_lo)
 
-    if len(lo) < len(z):
-        z_hi = z[np.where(z > z_st_thresh - const.DZ_ST_BLEND)]
+    if len(lo) < len(z):  # pyrefly: ignore[bad-argument-type]
+        z_hi = z[np.where(z > z_st_thresh - const.DZ_ST_BLEND)]  # pyrefly: ignore[bad-index]
         I_hi = sin_transform_approx(z_hi, xi, f, v_wall=v_wall, v_sh=v_sh)
 
-        if len(z_hi) + len(z_lo) > len(z):
+        if len(z_hi) + len(z_lo) > len(z):  # pyrefly: ignore[bad-argument-type]
             # If there are elements in the z blend range, then blend
             hi_blend = np.where(z_hi <= z_st_thresh)
             z_hi_blend = z_hi[hi_blend]

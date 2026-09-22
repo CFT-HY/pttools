@@ -3,6 +3,7 @@
 import io
 import os
 import threading
+import typing as tp
 
 import yappi
 
@@ -59,7 +60,7 @@ def process_text(
         columns: dict[int, tuple[str, int]] | None = None) -> str:
     """Convert YAPPI stats to str."""
     stream = io.StringIO()
-    kwargs = {"out": stream}
+    kwargs: dict[str, tp.Any] = {"out": stream}
     if columns:
         kwargs["columns"] = columns
     stats.print_all(**kwargs)

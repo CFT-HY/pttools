@@ -61,7 +61,9 @@ class DifferentialCache:
                 )
             # Caching is disabled, as the differentials are created dynamically.
             differential_njit = njit(differential, cache=False)
-            if not NUMBA_DISABLE_JIT:
+            if NUMBA_DISABLE_JIT:
+                address = id(differential_njit)
+            else:
                 differential_cfunc = numba.cfunc(lsoda_sig)(differential)
                 if p_last_is_backwards:
                     @numba.cfunc(lsoda_sig)
@@ -80,6 +82,7 @@ class DifferentialCache:
                                 du[i] *= -1.
                 else:
                     differential_numbalsoda = differential_cfunc
+                address = differential_numbalsoda.address
 
             @njit(cache=False)
             def differential_odeint(y: th.FloatArr1D, t: float, p: th.FloatArr1D | None = None) -> th.FloatArr1D:
@@ -93,7 +96,6 @@ class DifferentialCache:
                 differential_njit(t, y, du, p)
                 return du
 
-            address = id(differential_njit) if NUMBA_DISABLE_JIT else differential_numbalsoda.address
             self._cache_pointers[name] = address
 
             self._cache_njit[address] = differential_njit

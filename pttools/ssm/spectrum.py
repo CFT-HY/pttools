@@ -154,6 +154,8 @@ class SSMSpectrum:
             self.compute(parallel=parallel)
 
     def beta[T: (float, FloatArr)](self, H_n: T) -> T:
+        if self.beta_tilde is None:
+            raise ValueError("beta_tilde has not been set for this spectrum.")
         return self.beta_tilde * H_n
 
     def compute(

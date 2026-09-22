@@ -31,7 +31,7 @@ def find_v_index(xi: th.FloatArr, v_target: float) -> int:
     The first array index of $\xi$ where value is just above $v_\text{target}$.
     If no xi > v_target is found, returns 0.
     """
-    return np.argmax(xi >= v_target)
+    return int(np.argmax(xi >= v_target))
 
 
 @njit

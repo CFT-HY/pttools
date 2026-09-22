@@ -53,8 +53,10 @@ def _alpha_n_max_deflagration_bag_scalar(
     if v_wall > 0.9999:
         # Alpha_n_max diverges as v_wall -> 1, and the solver fails to find the correct solution.
         return np.nan
+    # The v_wall annotation has to be identical to that of the overload typing function,
+    # but only scalars and 0-dimensional arrays can end up here.
     _, w, xi = sound_shell_alpha_plus_bag(
-        v_wall=v_wall,
+        v_wall=v_wall,  # pyrefly: ignore[bad-argument-type]
         # Warning: this is not safe. Causes warnings for low v_wall.
         alpha_plus=ALPHA_PLUS_MAX_DEF - 1e-10,
         df_dtau_ptr=df_dtau_ptr,
@@ -73,7 +75,7 @@ _alpha_n_max_deflagration_bag_scalar_numba = njit(_alpha_n_max_deflagration_bag_
 
 
 def _alpha_n_max_deflagration_bag_arr(
-        v_wall: th.FloatOrArr,
+        v_wall: th.FloatArr,
         df_dtau_ptr: DifferentialPointer,
         ode_method: FluidIntegrateMethod,
         cs2_ptr: th.CS2FunScalarPtr,

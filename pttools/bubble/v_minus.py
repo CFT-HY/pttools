@@ -69,7 +69,7 @@ _v_minus_scalar_numba = njit(_v_minus_scalar, nogil=True, cache=True)
 
 
 def _v_minus_arr(
-        vp: th.FloatOrArr,
+        vp: th.FloatArr,
         ap: float,
         sol_type: SolutionType = SolutionType.DETON,
         strong_branch: bool = False,

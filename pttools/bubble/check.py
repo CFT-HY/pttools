@@ -87,18 +87,16 @@ def _check_wall_speed_numba(v_wall: th.FloatOrArr, droplet: bool = False) -> th.
     raise TypeError(f"v_wall must be float, list or array. Got: {type(v_wall)}")
 
 
-def find_most_negative_vals(vals: th.FloatOrArr, *args) -> list[float | None]:
+def find_most_negative_vals(
+        vals: th.FloatOrArr | None, *args: th.FloatOrArr | None) -> list[th.FloatOrArr | None]:
     """Find the most negative values in the given array."""
     if vals is None or (not np.any(vals < 0)):
         return [None]*(len(args)+1)
-    if np.isscalar(vals):
+    if not isinstance(vals, np.ndarray):
         return [vals, *args]
 
     # The array may contain nans, which np.argmin would return instead of the most negative value.
     i = np.nanargmin(vals)
-    vals = [vals[i]]
-
-    for arg in args:
-        vals.append(arg if np.isscalar(arg) else arg[i])
-
-    return vals
+    ret: list[th.FloatOrArr | None] = [vals[i]]
+    ret.extend(arg[i] if isinstance(arg, np.ndarray) else arg for arg in args)
+    return ret

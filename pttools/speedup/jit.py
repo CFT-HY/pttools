@@ -98,6 +98,8 @@ def njit_module(**kwargs):
     # Get the module jit_module is being called from
     frame = inspect.stack()[1]
     module = inspect.getmodule(frame[0])
+    if module is None:
+        raise RuntimeError("Could not determine the module from which njit_module was called.")
     # Replace functions in module with jit-wrapped versions
     for name, obj in module.__dict__.items():
         if inspect.isfunction(obj) and inspect.getmodule(obj) == module:

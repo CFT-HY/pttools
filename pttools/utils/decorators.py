@@ -31,8 +31,8 @@ def conditional_decorator[T: Callable](dec: T, condition: bool, **kwargs) -> T:
     def decorator[T2: Callable](func: T2) -> T2:
         if condition:
             if kwargs:
-                return functools.wraps(func)(dec(**kwargs)(func))
-            return functools.wraps(func)(dec(func))
+                return tp.cast(T2, functools.wraps(func)(dec(**kwargs)(func)))
+            return tp.cast(T2, functools.wraps(func)(dec(func)))
         return func
     return tp.cast(T, decorator)
 

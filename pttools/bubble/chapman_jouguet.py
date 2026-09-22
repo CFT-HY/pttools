@@ -15,7 +15,7 @@ from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.v_plus import v_plus
 from pttools.speedup import njit
 import pttools.type_hints as th
-from pttools.type_hints import FloatOrArr, FloatOrArr1D
+from pttools.type_hints import FloatOrArr
 
 if tp.TYPE_CHECKING:
     from pttools.models.const_cs import ConstCSModel
@@ -150,17 +150,66 @@ logger = logging.getLogger(__name__)
 #     return v_cj
 
 
+@tp.overload
 def v_chapman_jouguet(
         model: "Model",
-        alpha_n: th.FloatOrArr1D,
-        wn: th.FloatOrArr1D | None = None,
+        alpha_n: float,
+        wn: float | None = None,
+        wn_guess: float | None = None,
+        wm_guess: float | None = None,
+        extra_output: tp.Literal[False] = False,
+        analytical: bool = True,
+        error_on_invalid: bool = True,
+        nan_on_invalid: bool = True,
+        log_invalid: bool = True) -> float: ...
+@tp.overload
+def v_chapman_jouguet(
+        model: "Model",
+        alpha_n: float,
+        wn: float | None = None,
+        wn_guess: float | None = None,
+        wm_guess: float | None = None,
+        *,
+        extra_output: tp.Literal[True],
+        analytical: bool = True,
+        error_on_invalid: bool = True,
+        nan_on_invalid: bool = True,
+        log_invalid: bool = True) -> tuple[float, float, float] | float: ...
+@tp.overload
+def v_chapman_jouguet(
+        model: "Model",
+        alpha_n: th.FloatArr,
+        wn: float | None = None,
+        wn_guess: float | None = None,
+        wm_guess: float | None = None,
+        extra_output: tp.Literal[False] = False,
+        analytical: bool = True,
+        error_on_invalid: bool = True,
+        nan_on_invalid: bool = True,
+        log_invalid: bool = True) -> th.FloatArr1D: ...
+@tp.overload
+def v_chapman_jouguet(
+        model: "Model",
+        alpha_n: th.FloatOrArr,
+        wn: float | None = None,
         wn_guess: float | None = None,
         wm_guess: float | None = None,
         extra_output: bool = False,
         analytical: bool = True,
         error_on_invalid: bool = True,
         nan_on_invalid: bool = True,
-        log_invalid: bool = True) -> float | tuple[float, float, float] | th.FloatArr1D:
+        log_invalid: bool = True) -> float | tuple[float, float, float] | th.FloatArr: ...
+def v_chapman_jouguet(
+        model: "Model",
+        alpha_n: th.FloatOrArr,
+        wn: float | None = None,
+        wn_guess: float | None = None,
+        wm_guess: float | None = None,
+        extra_output: bool = False,
+        analytical: bool = True,
+        error_on_invalid: bool = True,
+        nan_on_invalid: bool = True,
+        log_invalid: bool = True) -> float | tuple[float, float, float] | th.FloatArr:
     """Chapman-Jouguet speed.
 
     This is the minimum wall speed for detonations.
@@ -169,7 +218,8 @@ def v_chapman_jouguet(
         return v_chapman_jouguet_bag(alpha_plus=alpha_n)
     if analytical and model.DEFAULT_NAME == "const_cs":
         alpha_theta_bar_plus = model.alpha_theta_bar_n_from_alpha_n(alpha_n=alpha_n, wn=wn, wn_guess=wn_guess)
-        return v_chapman_jouguet_const_cs(model, alpha_theta_bar_plus=alpha_theta_bar_plus)
+        # The model name check above ensures that the model is a ConstCSModel.
+        return v_chapman_jouguet_const_cs(tp.cast("ConstCSModel", model), alpha_theta_bar_plus=alpha_theta_bar_plus)
 
     if isinstance(alpha_n, Iterable):
         return np.array([v_chapman_jouguet(
@@ -277,7 +327,7 @@ def v_chapman_jouguet_const_cs[T: FloatOrArr](model: "ConstCSModel", alpha_theta
     return ret  # pyrefly: ignore[bad-return]
 
 
-def v_chapman_jouguet_const_cs_reference[T: FloatOrArr1D](alpha_n: T, model: "ConstCSModel") -> T:
+def v_chapman_jouguet_const_cs_reference(alpha_n: th.FloatArr1D, model: "ConstCSModel") -> th.FloatArr1D:
     # Todo: Re-enable this when the circular imports have been solved.
     # if not isinstance(model, ConstCSModel):
     #     raise TypeError("This reference only works for ConstCSModel.")
@@ -288,7 +338,7 @@ def v_chapman_jouguet_const_cs_reference[T: FloatOrArr1D](alpha_n: T, model: "Co
     ret = np.zeros_like(ap)
     for i, a in enumerate(ap):
         ret[i] = v_plus(model.csb, a, sol_type=SolutionType.DETON)
-    return ret  # pyrefly: ignore[bad-return]
+    return ret
 
 
 def wm_chapman_jouguet(
@@ -304,13 +354,16 @@ def wm_chapman_jouguet(
     if wm_guess is None:
         # Use logarithmic midpoint between wp and w_crit as the starting guess
         wm_guess = wp if wp > model.w_crit else np.exp((np.log(wp) + np.log(model.w_crit))/2)
-    wm_sol = fsolve(wm_solvable_chapman_jouguet, x0=np.array([wm_guess]), args=(model, wp), full_output=True)
+    # The SciPy stubs require func to return an array, but a scalar is also accepted at runtime.
+    wm_sol = fsolve(  # pyrefly: ignore[no-matching-overload]
+        wm_solvable_chapman_jouguet, x0=np.array([wm_guess]), args=(model, wp), full_output=True)
     wm: float = wm_sol[0][0]
 
     # If the solver fails, try again with another guess
     if wm_sol[2] != 1:
         wm_guess = 0.5 * wp if wp > model.w_crit else 2 * wp
-        wm_sol = fsolve(wm_solvable_chapman_jouguet, x0=np.array([wm_guess]), args=(model, wp), full_output=True)
+        wm_sol = fsolve(  # pyrefly: ignore[no-matching-overload]
+            wm_solvable_chapman_jouguet, x0=np.array([wm_guess]), args=(model, wp), full_output=True)
         wm = wm_sol[0][0]
 
     if wm_sol[2] != 1:

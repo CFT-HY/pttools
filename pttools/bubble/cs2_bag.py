@@ -76,7 +76,7 @@ def cs2_bag[T: FloatOrArr](w: T, phase: th.FloatOrArr) -> T:
 # The Numba caching of the overload implementations is disabled, as their cache files collide
 # with those of the njit-compiled versions of the same functions, which results in segmentation faults.
 @overload(cs2_bag, jit_options={"nopython": True})
-def cs2_bag_numba(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+def cs2_bag_numba(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.NumbaFunc:
     if isinstance(w, numba.types.Float):
         return _cs2_bag_scalar
     if isinstance(w, numba.types.Array):

@@ -43,7 +43,7 @@ def kappas_giese(
             except (ValueError, RuntimeError):
                 alpha_tbns[i] = np.nan
 
-    return run_parallel(
+    kappas = run_parallel(
         func=kappa_gksvdv,
         params=v_wall_alpha_n_grid(v_walls=v_walls, alpha_ns=alpha_ns),
         multiple_params=True,
@@ -55,14 +55,17 @@ def kappas_giese(
             "csb2": model.csb2
         }
     )
+    if not isinstance(kappas, np.ndarray):
+        raise TypeError(f"Expected a single output array from run_parallel, got: {type(kappas)}")
+    return kappas
 
 
 def create_figure(
         axs: tp.Iterable[plt.Axes],
         models: list[ConstCSModel],
         alpha_ns: FloatArr1D,
-        colors: list[str],
-        lss: list[str],
+        colors: tp.Sequence[str],
+        lss: tp.Sequence[str],
         v_walls: FloatArr1D,
         theta_bar: bool = False,
         giese: bool = False) -> FloatArr3D:
@@ -128,8 +131,8 @@ def create_diff_figure(
         kappas_giese: FloatArr3D,
         models: list[ConstCSModel],
         v_walls: FloatArr1D,
-        colors: list[str],
-        lss: list[str],
+        colors: tp.Sequence[str],
+        lss: tp.Sequence[str],
         theta_bar: bool,
         title: bool = True):
     rel_diffs = np.abs(kappas_pttools - kappas_giese) / kappas_giese
@@ -164,8 +167,8 @@ def create_diff_figure(
 
 
 def main(
-        colors = ("b", "y", "r", "g", "purple", "grey"),
-        lss = ("-", "--", ":", "-."),
+        colors: tp.Sequence[str] = ("b", "y", "r", "g", "purple", "grey"),
+        lss: tp.Sequence[str] = ("-", "--", ":", "-."),
         alpha_ns: FloatArr1D = GKSVDV_ALPHA_N) \
         -> tuple[plt.Figure, plt.Figure, plt.Figure, plt.Figure]:
     r"""Reproduction of :giese_2021:`\ `, fig. 2"""

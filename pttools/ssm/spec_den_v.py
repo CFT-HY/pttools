@@ -45,7 +45,7 @@ def _spec_den_v_core_loop(
     integrand = T_tilde ** 6 * lifetime_distribution(T_tilde, nuc_type, a) * A2
     # Integrate over T_tilde
     integral = np.trapezoid(integrand, T_tilde)
-    return factor * integral
+    return factor * integral  # pyrefly: ignore[bad-return]
 
 
 def _spec_den_v_core(

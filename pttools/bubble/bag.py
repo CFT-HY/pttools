@@ -1,6 +1,7 @@
 """Functions for the Bag Model."""
 
 import logging
+import typing as tp
 
 import numba
 from numba.extending import overload
@@ -160,7 +161,14 @@ def w_bag[T: FloatOrArr](
 #     return ret
 
 
-def theta_bag[T: FloatOrArr](w: T, phase: T | float, alpha_n: T | float) -> T:
+# Only the last element of w is used, and therefore the shape of the output is determined by phase and alpha_n.
+@tp.overload
+def theta_bag(w: th.FloatOrArr, phase: float, alpha_n: float) -> float: ...
+@tp.overload
+def theta_bag(w: th.FloatOrArr, phase: th.FloatArr, alpha_n: th.FloatOrArr) -> th.FloatArr: ...
+@tp.overload
+def theta_bag(w: th.FloatOrArr, phase: th.FloatOrArr, alpha_n: th.FloatArr) -> th.FloatArr: ...
+def theta_bag(w: th.FloatOrArr, phase: th.FloatOrArr, alpha_n: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Trace anomaly $\theta = \frac{1}{4} (e - 3p)$ in the Bag model.
     Equation 7.24 in the lecture notes, equation 2.10 in the article.
@@ -171,4 +179,4 @@ def theta_bag[T: FloatOrArr](w: T, phase: T | float, alpha_n: T | float) -> T:
     :return: trace anomaly $\theta_\text{bag}$
     """
     w_n = w[-1] if isinstance(w, np.ndarray) else w
-    return alpha_n * (0.75 * w_n) * (1 - phase)  # pyrefly: ignore[bad-return]
+    return alpha_n * (0.75 * w_n) * (1 - phase)

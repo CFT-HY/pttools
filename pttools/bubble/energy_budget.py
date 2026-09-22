@@ -136,7 +136,8 @@ def kappa_d[T: FloatOrArr](alpha_n: T) -> T:
 
 
 @njit
-def kappa_detonation_approx[T: FloatOrArr](v_wall: T, alpha_n: T | float, v_cj: float | None = None) -> T:
+def kappa_detonation_approx[T: FloatOrArr](
+        v_wall: T, alpha_n: T | float, v_cj: T | float | None = None) -> T:
     r"""Approximation of $\kappa$ for detonations
     $$
     \kappa(v_{\text{wall}} > v_{CJ}) \approx \frac{
@@ -152,7 +153,7 @@ def kappa_detonation_approx[T: FloatOrArr](v_wall: T, alpha_n: T | float, v_cj: 
     kc = kappa_c(alpha_n)
     kd = kappa_d(alpha_n)
     return (
-        ((v_cj - 1)**3 * v_cj**(5/2) * v_wall**(-5/2) * kc * kd) /
+        ((v_cj - 1)**3 * v_cj**(5/2) * v_wall**(-5/2) * kc * kd) /  # pyrefly: ignore[bad-return]
         (((v_cj - 1)**3 - (v_wall - 1)**3) * v_cj**(5/2) * kc + (v_wall - 1)**3 * kd)
     )
 
@@ -197,7 +198,7 @@ def kappa_v_approx[T: FloatOrArr](
         v_wall: float,
         alpha_n: T,
         cs: float = CS0,
-        v_cj: float | None = None) -> T:
+        v_cj: T | float | None = None) -> T:
     r"""Fluid efficiency $\kappa_v$.
 
     The fluid efficiency gives the fraction of vacuum energy that is

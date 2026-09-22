@@ -70,6 +70,9 @@ def main():
     alpha  = ret[0]
     kappa_v = ret[1]
     r_star = ret[2]
+    if alpha is None or kappa_v is None or r_star is None:
+        print(f"The solver did not converge. diff={ret[3]}")
+        return
     f0_peak = f0_peak_approx(temp, r_star=r_star, g_star=g_star)
     omega_peak = omgw_approx(
         f=f0_peak, alpha=alpha, kappa_v=kappa_v, r_star=r_star, temp=temp, g_star=g_star, f0_peak=f0_peak

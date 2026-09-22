@@ -24,9 +24,14 @@ class GieseTwoStepModel(AnalyticModel):
         super().__init__()
 
     def p_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
-        return tp.cast(T, self.a_s/3*temp**4 + self.V(temp, phase))
+        return tp.cast(T, self.a_s/3*temp**4 + self.V_temp(temp, phase))
 
-    def V(self, temp: th.FloatOrArr, phase: th.FloatOrArr):
+    def V[T: FloatOrArr](self, phase: T) -> T:
+        """The potential of this model depends on the temperature. Please use :meth:`V_temp` instead."""
+        raise NotImplementedError("The potential of this model depends on the temperature. Please use V_temp().")
+
+    def V_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+        r"""Temperature-dependent potential $V(T,\phi)$."""
         V_s = (self.b_s - self.d_s * temp**2)**2 - self.b_b**2
         V_b = (self.b_b - self.d_b * temp**2)**2 - self.b_b**2
-        return phase * V_b + (1 - phase) * V_s
+        return tp.cast(T, phase * V_b + (1 - phase) * V_s)

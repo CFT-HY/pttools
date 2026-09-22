@@ -247,7 +247,7 @@ def splder(
             ll = ll+1
             sp = sp + wrk[ll] * h[j]
         y[i] = sp
-    return None
+    return ier
 
 
 # @njit

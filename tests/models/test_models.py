@@ -1,5 +1,6 @@
 """Tests for various models."""
 
+import typing as tp
 import unittest
 
 import numpy as np
@@ -9,10 +10,9 @@ from tests.models.base_bag import BagBaseCase
 from tests.models.base_model import ModelBaseCase
 
 
-class TestBag(BagBaseCase, unittest.TestCase):
+class TestBag(BagBaseCase[models.BagModel], unittest.TestCase):
     """Tests for the bag model."""
 
-    model: models.BagModel
     SAVE_NEW_DATA = True
 
     @classmethod
@@ -25,7 +25,7 @@ class TestBag(BagBaseCase, unittest.TestCase):
         self.assert_json(data, "w_n", allow_save=False)
 
     def test_auto_potential(self):
-        params = {**self.PARAMS, "V_s": None, "V_b": None, "auto_potential": True}
+        params: dict[str, tp.Any] = {**self.PARAMS, "V_s": None, "V_b": None, "auto_potential": True}
         model = models.BagModel(**params)
         self.assertAlmostEqual(model.critical_temp(), 1)
 
@@ -56,10 +56,8 @@ class TestBag(BagBaseCase, unittest.TestCase):
             models.BagModel(a_s=1.5, a_b=1, g_s=120, g_b=100)
 
 
-class TestConstCSLikeBag(BagBaseCase, unittest.TestCase):
+class TestConstCSLikeBag(BagBaseCase[models.ConstCSModel], unittest.TestCase):
     """Tests for the constant sound speed model with css2=csb2=1/3."""
-
-    model: models.ConstCSModel
 
     @classmethod
     def setUpClass(cls, *args, **kwargs) -> None:
@@ -82,20 +80,20 @@ class TestConstCSLikeBag(BagBaseCase, unittest.TestCase):
         self.assert_json(data, "w_n", allow_save=False)
 
 
-class TestConstCSThermoLikeBag(BagBaseCase, unittest.TestCase):
+class TestConstCSThermoLikeBag(BagBaseCase[models.FullModel], unittest.TestCase):
     """Tests for the ThermoModel-based constant sound speed model with css2=csb2=1/3."""
 
-    model: models.FullModel
+    thermo: models.ConstCSThermoModel
 
     @classmethod
     def setUpClass(cls, *args, **kwargs) -> None:
-        model = models.FullModel(
-            thermo=models.ConstCSThermoModel(**cls.PARAMS_FULL), name="bag")
+        cls.thermo = models.ConstCSThermoModel(**cls.PARAMS_FULL)
+        model = models.FullModel(thermo=cls.thermo, name="bag")
         super().setUpClass(model)
 
     def test_constants(self):
-        self.assertAlmostEqual(self.model.thermo.mu_s, 4)
-        self.assertAlmostEqual(self.model.thermo.mu_b, 4)
+        self.assertAlmostEqual(self.thermo.mu_s, 4)
+        self.assertAlmostEqual(self.thermo.mu_b, 4)
         self.assertEqual(self.model.T_ref, 1)
 
     def test_cs2_full(self):
@@ -106,10 +104,9 @@ class TestConstCSThermoLikeBag(BagBaseCase, unittest.TestCase):
     #     pass
 
 
-class TestConstCS(ModelBaseCase, unittest.TestCase):
+class TestConstCS(ModelBaseCase[models.ConstCSModel], unittest.TestCase):
     """Tests for the constant $c_s$ model."""
 
-    model: models.ConstCSModel
     SAVE_NEW_DATA = True
 
     @classmethod
@@ -122,10 +119,9 @@ class TestConstCS(ModelBaseCase, unittest.TestCase):
         self.assert_json(data, "w_n", allow_save=False)
 
 
-class TestConstCSThermo(ModelBaseCase, unittest.TestCase):
+class TestConstCSThermo(ModelBaseCase[models.FullModel], unittest.TestCase):
     """Tests for the ThermoModel-based constant $c_s$ model."""
 
-    model: models.FullModel
     SAVE_NEW_DATA = False
 
     @classmethod
@@ -139,7 +135,7 @@ class TestConstCSThermo(ModelBaseCase, unittest.TestCase):
         self.assert_json(data, "cs2")
 
 
-class TestSM(ModelBaseCase, unittest.TestCase):
+class TestSM(ModelBaseCase[models.FullModel], unittest.TestCase):
     """Tests for the Standard Model-based FullModel."""
 
     # The Standard Model data starts at T = 1 MeV, and the enthalpy there is about 4.7 MeV^4.

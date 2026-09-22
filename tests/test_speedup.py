@@ -3,6 +3,7 @@
 import importlib
 import importlib.metadata
 import os.path
+import typing as tp
 import unittest
 
 import matplotlib.pyplot as plt
@@ -29,7 +30,7 @@ def jitted_spline(
         x: th.FloatArr1D,
         tck: tuple[th.FloatArr1D, th.FloatArr1D, int],
         der: int = 0,
-        ext: int = 0) -> th.FloatArr1D:
+        ext: tp.Literal[0, 1, 2, 3] = 0) -> th.FloatArr1D:
     """JIT-compiled version of splev, which uses the Numba overload defined in the speedup module."""
     return scipy.interpolate.splev(x, tck, der, ext)
 

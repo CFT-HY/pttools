@@ -2,6 +2,7 @@
 
 import os
 import sys
+import typing as tp
 import unittest
 
 import numpy as np
@@ -21,7 +22,7 @@ class SuppressionTest(unittest.TestCase):
     def test_remove_hybrids():
         """Compare the data created by remove_hybrids to the reference."""
         path = remove_hybrids(suffix="test")
-        settings = {
+        settings: dict[str, tp.Any] = {
             "sep": " ",
             "engine": "c"
         }

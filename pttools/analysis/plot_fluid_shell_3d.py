@@ -70,7 +70,7 @@ class BubblePlot3D(PlotlyPlot):
         })
         return fig
 
-    def mu_surface(self, n_xi: int = 20, n_w: int = 20, w_mult: float = 1.5) -> go.Surface:
+    def mu_surface(self, n_xi: int = 20, n_w: int = 20, w_mult: float = 1.5) -> go.Surface | None:
         r"""Add the $\mu$ surface to the plot."""
         logger.info("Computing mu surface.")
         if self.model is None:

@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 @njit(cache=True)
 def resample_uniform_xi(
         xi: th.FloatArr1D,
-        f: th.FloatOrArr,
-        n_xi: int = const.DEFAULT_N_XI_SSM) -> tuple[th.FloatArr1D, th.FloatOrArr]:
+        f: th.FloatArr1D,
+        n_xi: int = const.DEFAULT_N_XI_SSM) -> tuple[th.FloatArr1D, th.FloatArr1D]:
     r"""
     Provide uniform resample of function defined by $(x,y) = (\xi,f)$.
     Returns f interpolated and the uniform grid of n_xi points in range [0,1].
@@ -25,7 +25,7 @@ def resample_uniform_xi(
     :param n_xi: number of interpolated points
     """
     xi_re = np.linspace(0, 1-1/n_xi, n_xi)
-    return xi_re, np.interp(xi_re, xi, f)
+    return xi_re, np.interp(xi_re, xi, f)  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)

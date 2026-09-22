@@ -65,7 +65,7 @@ class VwAlphaPlot:
 
     def color_region(
             self,
-            region: th.FloatArr2D,
+            region: th.BoolArr | th.FloatArr,
             color: str = DEFAULT_REGION_COLOR,
             alpha: float = 1) -> QuadContourSet:
         """Color a region with a fixed color."""

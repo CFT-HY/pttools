@@ -16,6 +16,9 @@ from pttools.speedup.overload import np_all_fix
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
+#: Spline parameters (t, c, k) as returned by :func:`scipy.interpolate.splrep`
+type SplineTCK = tuple[th.FloatArr1D, th.FloatArr1D, int]
+
 
 class DataModel(Model):
     def __init__(
@@ -141,7 +144,7 @@ class DataModel(Model):
     #     return default
 
     @staticmethod
-    def interpolate[T: FloatOrArr](spline_s, spline_b, x: T, phase: th.FloatOrArr) -> T:
+    def interpolate[T: FloatOrArr](spline_s: SplineTCK, spline_b: SplineTCK, x: T, phase: th.FloatOrArr) -> T:
         """Interpolate between the splines of the two phases."""
         return tp.cast(
             T,
@@ -150,7 +153,8 @@ class DataModel(Model):
         )
 
     @classmethod
-    def interpolate_temp[T: FloatOrArr](cls, spline_s, spline_b, temp: T, phase: th.FloatOrArr) -> T:
+    def interpolate_temp[T: FloatOrArr](
+            cls, spline_s: SplineTCK, spline_b: SplineTCK, temp: T, phase: th.FloatOrArr) -> T:
         """Interpolate between the splines of the two phases in the given temperatures."""
         return tp.cast(
             T,
@@ -166,6 +170,8 @@ class DataModel(Model):
         w_max = self.w_max
         data_w_s = self.data_p_s + self.data_e_s
         data_w_b = self.data_p_b + self.data_e_b
+        if self.data_cs2_s is None or self.data_cs2_b is None:
+            raise ValueError("DataModel requires the speed of sound data cs2_s and cs2_b.")
         # spline_cs2_s = splrep(self.data_T_s_log, self.data_cs2_s, k=1)
         # spline_cs2_b = splrep(self.data_T_b_log, self.data_cs2_b, k=1)
         spline_cs2_w_s = splrep(data_w_s, self.data_cs2_s, k=1)

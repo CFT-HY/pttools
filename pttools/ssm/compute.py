@@ -139,7 +139,7 @@ def compute_ssm(
         eps_lookup: float,
         nT: int,
         n_z_lookup: int,
-        nx_P_tilde_gw: int,
+        nx_P_tilde_gw: int | None,
         T_tilde_min: float,
         T_tilde_max: float,
         z_st_thresh: float,

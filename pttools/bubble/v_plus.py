@@ -31,7 +31,7 @@ def max_speed_deflag(alpha_p: float) -> float:
 def _v_plus_scalar(
         vm: th.FloatOrArr,
         ap: float,
-        sol_type: SolutionType,
+        sol_type: SolutionType | str,
         debug: bool = True,
         parallel: bool = True) -> th.FloatOrArr:
     x = vm + 1. / (3 * vm)
@@ -76,7 +76,7 @@ def _v_plus_scalar(
 _v_plus_scalar_numba = njit(_v_plus_scalar, cache=True)
 
 
-def _v_plus_arr(vm: th.FloatOrArr, ap: float, sol_type: SolutionType, debug: bool = True) -> th.FloatArr:
+def _v_plus_arr(vm: th.FloatArr, ap: float, sol_type: SolutionType | str, debug: bool = True) -> th.FloatArr:
     ret = np.empty_like(vm)
     for i in numba.prange(vm.size):
         ret[i] = _v_plus_scalar_numba(vm[i], ap, sol_type, debug)
@@ -98,7 +98,7 @@ _v_plus_arr_parallel, _v_plus_arr_single = njit_parallel_pair(_v_plus_arr, nogil
 def _v_plus_arr_wrapper(
         vm: th.FloatOrArr,
         ap: float,
-        sol_type: SolutionType,
+        sol_type: SolutionType | str,
         debug: bool = True,
         parallel: bool = True) -> th.FloatArr:
     if parallel:
@@ -109,7 +109,7 @@ def _v_plus_arr_wrapper(
 def v_plus[T: FloatOrArr](
         vm: T,
         ap: float,
-        sol_type: SolutionType,
+        sol_type: SolutionType | str,
         debug: bool = True,
         parallel: bool = True) -> T:
     r"""
@@ -146,7 +146,7 @@ def v_plus[T: FloatOrArr](
 def _v_plus_numba(
         vm: th.FloatOrArr,
         ap: float,
-        sol_type: SolutionType,
+        sol_type: SolutionType | str,
         debug: bool = True,
         parallel: bool = True) -> th.NumbaFunc:
     if isinstance(vm, numba.types.Float):

@@ -19,7 +19,7 @@ def solvable(
         params: th.FloatArr1D,
         model: Model,
         f_peak_target: float,
-        omega_peak_target: float) -> tuple[float, float]:
+        omega_peak_target: float) -> float:
     """This function is minimized when the parameters produce the desired peak frequency and amplitude"""
     v_wall, alpha_n, r_star = params
     bubble = Bubble(model, v_wall=v_wall, alpha_n=alpha_n)

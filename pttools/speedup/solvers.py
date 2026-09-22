@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 def fsolve_vary(
         func: tp.Callable,
         x0: th.FloatArr,
-        args: tp.Iterable | tuple | None = None,
+        args: tuple = (),
         abs_variations: float | th.FloatArr1D = 1e-3,
         rel_variations: float | th.FloatArr1D = 0.01,
         log_status: bool = True,
@@ -24,20 +24,21 @@ def fsolve_vary(
         raise ValueError("Cannot specify full_output, as it has to be True.")
 
     # Solve directly
-    sol = fsolve(func, x0=x0, args=args, full_output=True, **kwargs)
+    sol: th.FSolveOutput = fsolve(func, x0=x0, args=args, full_output=True, **kwargs)
     if sol[2] == 1:
         return sol
 
     # Vary the initial guess
-    scalar_rel_var = np.isscalar(rel_variations)
-    scalar_abs_var = np.isscalar(abs_variations)
     for i in range(x0.shape[0]):
+        rel_var = rel_variations[i] if isinstance(rel_variations, np.ndarray) else rel_variations
+        abs_var = abs_variations[i] if isinstance(abs_variations, np.ndarray) else abs_variations
         for sign in (1, -1):
             x0_var = x0.copy()
-            x0_var[i] *= 1 + sign * (rel_variations if scalar_rel_var else rel_variations[i])
-            x0_var[i] += sign * (abs_variations if scalar_abs_var else abs_variations[i])
+            x0_var[i] *= 1 + sign * rel_var
+            x0_var[i] += sign * abs_var
 
-            sol2 = fsolve(func, x0=x0_var, args=args, full_output=True, **kwargs)
+            sol2: th.FSolveOutput = fsolve(
+                func, x0=x0_var, args=args, full_output=True, **kwargs)
             if sol2[2] == 1:
                 if log_status:
                     logger.debug("Solution was found by varying the initial guess from %s to %s", x0, x0_var)

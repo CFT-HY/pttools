@@ -7,6 +7,7 @@ and
 In the :ssm_repo:`sound-shell-model repository <>` these methods are included in both of the aforementioned files.
 """
 
+import collections.abc
 import logging
 
 import matplotlib.pyplot as plt
@@ -70,7 +71,7 @@ def plot_guide_power_law(
         power,
         xloglen=1,
         txt: str = "",
-        txt_shift: tuple[float, float] = (1, 1),
+        txt_shift: collections.abc.Sequence[float] = (1, 1),
         color: str = "k",
         linestyle: str = "-"):
     """
@@ -228,9 +229,9 @@ def plot_ps(
         pow_list,
         ps_type: utils.PSType,
         ax_limits: utils.Strength = utils.Strength.WEAK,
-        leg_list: list[str] | None = None,
-        col_list: list[str] | None = None,
-        ls_list: list[str] | None = None,
+        leg_list: collections.abc.Sequence[str] | None = None,
+        col_list: collections.abc.Sequence[str] | None = None,
+        ls_list: collections.abc.Sequence[str] | None = None,
         fig: plt.Figure | None = None,
         pretty: bool = False) -> plt.Figure:
     """
@@ -269,8 +270,8 @@ def plot_ps(
             ax.set_ylabel(r'$(H_{\rm n}R_*)^{-1}\mathcal{P}^\prime_{\rm ' + ps_type + '}(kR_*)$')
         else:
             ax.set_ylabel(r'$\mathcal{P}_{\rm ' + ps_type + '}(kR_*)$')
-        ax.set_ylim([p_min, p_max])
-        ax.set_xlim([const.Z_MIN, const.Z_MAX])
+        ax.set_ylim(p_min, p_max)
+        ax.set_xlim(const.Z_MIN, const.Z_MAX)
         if leg_list is not None:
             plt.legend(loc='best')
         plt.tight_layout()

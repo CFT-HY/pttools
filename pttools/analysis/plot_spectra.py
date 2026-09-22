@@ -88,7 +88,7 @@ def plot_spectra_multi_common(
         figsize: tuple[float, float] = (7, 5),
         nrows: int = 2,
         ncols: int = 2,
-        labels: list[str | None] | None = None,
+        labels: tp.Sequence[str | None] | None = None,
         legend: bool | None = None,
         **kwargs):
     """Common steps for plotting multiple spectra."""
@@ -112,7 +112,7 @@ def plot_spectra_multi_flat(
         spectra: tp.Collection[Spectrum],
         fig: Figure | None = None,
         path: str | None = None,
-        labels: list[str | None] | None = None,
+        labels: tp.Sequence[str | None] | None = None,
         legend: bool | None = None,
         **kwargs):
     """Plot multiple spectra in a flat layout."""
@@ -149,7 +149,7 @@ def plot_spectra(
         fig: Figure | None = None,
         ax: Axes | None = None,
         path: str | None = None,
-        labels: list[str] | None = None,
+        labels: tp.Sequence[str | None] | None = None,
         legend: bool | None = None,
         **kwargs) -> FigAndAxes:
     r"""Plot the GW spectra today $\mathcal{P}_{\text{gw},0}(f)$."""

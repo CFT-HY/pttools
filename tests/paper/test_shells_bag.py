@@ -33,10 +33,10 @@ class TestShellsBag(unittest.TestCase):
         return os.path.join(TEST_DATA_PATH, f"shells_{name}.txt")
 
     def test_fluid_shell(self):
-        params = bubble.sound_shell_dict(v_wall=0.7, alpha_n=0.052)
+        params_all = bubble.sound_shell_dict(v_wall=0.7, alpha_n=0.052)
         # These are not yet in the reference data
-        for name in ["sol_type", "xi_even", "v_approx", "w_approx"]:
-            params.pop(name)
+        excluded = {"sol_type", "xi_even", "v_approx", "w_approx"}
+        params = {name: value for name, value in params_all.items() if name not in excluded}
         # data = {"arrays": arrs, "scalars": scalars}
         # for name, value in params.items():
         #     print(name, value, type(value))

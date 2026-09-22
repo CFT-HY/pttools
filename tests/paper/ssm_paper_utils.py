@@ -8,6 +8,7 @@ Modified from
 
 import io
 import logging
+import typing as tp
 
 import matplotlib.pyplot as plt
 
@@ -25,7 +26,6 @@ from tests.utils.const import TEST_DATA_PATH
 
 type FitParsCWG = tuple[float, float]
 type FitParsSSM = tuple[float, float, float]
-type ListListFloatArr1D = list[list[th.FloatArr1D]]
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +128,7 @@ def get_ssm_fit_pars(y: th.FloatArr1D, pow_gw: th.FloatArr1D) -> FitParsSSM:
         p0=(pow_gw[frange][0], 3, 20),
         sigma=np.sqrt(pow_gw[frange])
     )
-    return pars
+    return pars[0], pars[1], pars[2]
 
 
 def add_cwg_fit(f_gw: plt.Figure, y: th.FloatArr1D, pow_gw: th.FloatArr1D) -> FitParsCWG:
@@ -514,6 +514,29 @@ def plot_ps_compare_res(
     return fig_v, fig_gw
 
 
+@tp.overload
+def plot_ps_1bubble(
+        vw: float,
+        alpha: float,
+        save_id: str | None = None,
+        graph_file_type: str | None = None,
+        Np: th.IntArr1D = const.NP_ARR[-1],
+        debug: tp.Literal[False] = False,
+        lambda_correction: bool = False) -> plt.Figure: ...
+
+
+@tp.overload
+def plot_ps_1bubble(
+        vw: float,
+        alpha: float,
+        save_id: str | None = None,
+        graph_file_type: str | None = None,
+        Np: th.IntArr1D = const.NP_ARR[-1],
+        *,
+        debug: tp.Literal[True],
+        lambda_correction: bool = False) -> tuple[plt.Figure, th.FloatArr2D]: ...
+
+
 def plot_ps_1bubble(
         vw: float,
         alpha: float,
@@ -601,8 +624,8 @@ def plot_ps_compare_nuc(
     y_list = []
     pow_gw_list = []
     # Lists of scalars
-    v2_list = []
-    Omgw_scaled_list = []
+    v2_list: list[float] = []
+    Omgw_scaled_list: list[float] = []
 
     Np = const.NP_ARR[-1]
 
@@ -631,8 +654,8 @@ def plot_ps_compare_nuc(
             np.savetxt(f"{MD_PATH}pow_gw_{data_file_suffix}", np.stack((y, pow_gw), axis=-1), fmt='%.18e %.18e')
 
         nuc_string_all += nuc_string
-        v2_list.append(np.trapezoid(pow_v/z, z))
-        Omgw_scaled_list.append(np.trapezoid(pow_gw/y, y))
+        v2_list.append(float(np.trapezoid(pow_v/z, z)))
+        Omgw_scaled_list.append(float(np.trapezoid(pow_gw/y, y)))
 
     fig_v = plotting.plot_ps(
         z_list, pow_v_list, utils.PSType.V,
@@ -765,6 +788,7 @@ def plot_and_save(
         strength = utils.Strength.INTER
     else:
         logger.warning("alpha > 0.1, taking strength = inter")
+        strength = utils.Strength.INTER
 
     f1 = plt.figure(figsize=[8, 4])
     ax_v = plt.gca()
@@ -786,23 +810,30 @@ def plot_and_save(
     ax_v.loglog(z, pow_v, color=col)
     V2_pow_v.append(np.trapezoid(pow_v/z, z))
 
-    if v_xi_file is not None:
-        sd_v2 = ssm.spec_den_v_bag(z, params, Np[1:], v_xi_file, method=method)
-        pow_v2 = ssm.pow_spec(z, sd_v2)
-        ax_v.loglog(z, pow_v2, color=col, linestyle='--')
-        V2_pow_v.append(np.trapezoid(pow_v2/z, z))
-
     sd_gw, y = ssm.spec_den_gw(z, sd_v)
     pow_gw = ssm.pow_spec(y, sd_gw)
 
     ax_gw.loglog(y, pow_gw, color=col)
     gw_power.append(np.trapezoid(pow_gw/y, y))
 
+    # Power spectra to be saved.
+    # If v_xi_file is given, the power spectra computed from it are appended to these.
+    pow_v_list = [pow_v]
+    pow_gw_list = [pow_gw]
+
     if v_xi_file is not None:
+        sd_v2 = ssm.spec_den_v_bag(z, params, Np[1:], v_xi_file, method=method)
+        pow_v2 = ssm.pow_spec(z, sd_v2)
+        ax_v.loglog(z, pow_v2, color=col, linestyle='--')
+        V2_pow_v.append(np.trapezoid(pow_v2/z, z))
+
         sd_gw2, y = ssm.spec_den_gw(z, sd_v2)
         pow_gw2 = ssm.pow_spec(y, sd_gw2)
         ax_gw.loglog(y, pow_gw2, color=col, linestyle='--')
         gw_power.append(np.trapezoid(pow_gw2/y, y))
+
+        pow_v_list.append(pow_v2)
+        pow_gw_list.append(pow_gw2)
 
     inter_flag = abs(bubble.CS0 - vw) < 0.05  # Due intermediate power law
     plotting.plot_guide_power_laws_prace(f1, f2, z, pow_v, y, pow_gw, inter_flag=inter_flag)
@@ -812,8 +843,8 @@ def plot_and_save(
     ax_v.grid(True)
     ax_v.set_xlabel(r'$kR_*$')
     ax_v.set_ylabel(r'$\mathcal{P}_{\rm v}(kR_*)$')
-    ax_v.set_ylim([pv_min, pv_max])
-    ax_v.set_xlim([const.Z_MIN, const.Z_MAX])
+    ax_v.set_ylim(pv_min, pv_max)
+    ax_v.set_xlim(const.Z_MIN, const.Z_MAX)
     f1.tight_layout()
 
     # Pretty graph 2
@@ -821,8 +852,8 @@ def plot_and_save(
     ax_gw.grid(True)
     ax_gw.set_xlabel(r'$kR_*$')
     ax_gw.set_ylabel(r'$\Omega_{\rm gw}(kR_*)$')
-    ax_gw.set_ylim([pgw_min, pgw_max])
-    ax_gw.set_xlim([const.Z_MIN, const.Z_MAX])
+    ax_gw.set_ylim(pgw_min, pgw_max)
+    ax_gw.set_xlim(const.Z_MIN, const.Z_MAX)
     f2.tight_layout()
 
     if suffix is not None:
@@ -835,16 +866,9 @@ def plot_and_save(
         data_file_suffix = file_suffix + '.txt'
         graph_file_suffix = file_suffix + '.pdf'
 
-        if v_xi_file is None:
-            np.savetxt(MD_PATH + 'pow_v_' + data_file_suffix,
-                       np.stack((z, pow_v), axis=-1), fmt='%.18e %.18e')
-            np.savetxt(MD_PATH + 'pow_gw_' + data_file_suffix,
-                       np.stack((y, pow_gw), axis=-1), fmt='%.18e %.18e')
-        else:
-            np.savetxt(MD_PATH + 'pow_v_' + data_file_suffix,
-                       np.stack((z, pow_v, pow_v2), axis=-1), fmt='%.18e %.18e %.18e')
-            np.savetxt(MD_PATH + 'pow_gw_' + data_file_suffix,
-                       np.stack((y, pow_gw, pow_gw2), axis=-1), fmt='%.18e %.18e %.18e')
+        fmt = " ".join(["%.18e"] * (len(pow_v_list) + 1))
+        np.savetxt(MD_PATH + 'pow_v_' + data_file_suffix, np.stack((z, *pow_v_list), axis=-1), fmt=fmt)
+        np.savetxt(MD_PATH + 'pow_gw_' + data_file_suffix, np.stack((y, *pow_gw_list), axis=-1), fmt=fmt)
         f1.savefig(MD_PATH + "pow_v_" + graph_file_suffix)
         f2.savefig(MD_PATH + "pow_gw_" + graph_file_suffix)
 
@@ -852,7 +876,8 @@ def plot_and_save(
     v_ip, w_ip, xi = bubble.sound_shell_bag(
         vw, alpha, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
         ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=bubble.CS2_BAG_SCALAR_PTR)
-    Ubarf2 = bubble.Ubarf_squared(v_ip, w_ip, xi, vw)
+    # The legacy approximation w_bar = w_n is used here, as in the original Ubarf_squared function.
+    Ubarf2 = bubble.ubarf2(v_ip, w_ip, xi, vw, w_bar=w_ip[-1])
 
     logger.debug(
         f"vw = {vw}, alpha = {alpha}, nucleation = {const.NUC_STRING}, "
@@ -869,12 +894,12 @@ def do_all_plot_ps_compare_nuc(
         save_id: str | None = None,
         graph_file_type: str | None = None,
         lambda_correction: bool = False) \
-        -> tuple[list[list[float]], ListListFloatArr1D, ListListFloatArr1D, ListListFloatArr1D, ListListFloatArr1D]:
-    Omgw_scaled_list = []
-    param_list = []
-    p_cwg_list = []
-    p_ssm_list = []
-    v2_list = []
+        -> tuple[list[list[float]], list[list[float]], list[list[float]], list[list[float]], list[list[float]]]:
+    Omgw_scaled_list: list[list[float]] = []
+    param_list: list[list[float]] = []
+    p_cwg_list: list[list[float]] = []
+    p_ssm_list: list[list[float]] = []
+    v2_list: list[list[float]] = []
 
     # This loop cannot be multithreaded, as Matplotlib is not thread-safe.
     for vw_list, alpha, in zip(VW_LIST_ALL, const.ALPHA_LIST_ALL, strict=False):
@@ -891,13 +916,30 @@ def do_all_plot_ps_compare_nuc(
     return param_list, v2_list, Omgw_scaled_list, p_cwg_list, p_ssm_list
 
 
+@tp.overload
+def do_all_plot_ps_1bubble(
+        save_id: str | None = None,
+        graph_file_type: str | None = None,
+        debug: tp.Literal[False] = False,
+        lambda_correction: bool = False) -> tuple[list[plt.Figure], list[str]]: ...
+
+
+@tp.overload
+def do_all_plot_ps_1bubble(
+        save_id: str | None = None,
+        graph_file_type: str | None = None,
+        *,
+        debug: tp.Literal[True],
+        lambda_correction: bool = False) -> tuple[list[plt.Figure], list[str], th.FloatArr3D]: ...
+
+
 def do_all_plot_ps_1bubble(
         save_id: str | None = None,
         graph_file_type: str | None = None,
         debug: bool = False,
         lambda_correction: bool = False) -> \
             tuple[list[plt.Figure], list[str]] | \
-            tuple[list[plt.Figure], list[str], th.FloatArr4D]:
+            tuple[list[plt.Figure], list[str], th.FloatArr3D]:
     vw_weak_list = [0.92, 0.56, 0.44]
     vw_inter_list = [0.92, 0.56, 0.44]
 
@@ -907,18 +949,19 @@ def do_all_plot_ps_1bubble(
     vw_list_all = [vw_weak_list, vw_inter_list]
     alpha_list_all = [alpha_weak, alpha_inter]
 
-    figs = []
-    fig_ids = []
-    data_lst = []
+    figs: list[plt.Figure] = []
+    fig_ids: list[str] = []
+    data_lst: list[th.FloatArr2D] = []
     for vw_list, alpha, in zip(vw_list_all, alpha_list_all, strict=False):
         for vw in vw_list:
             if debug:
                 fig, data = plot_ps_1bubble(
                     vw, alpha, save_id, graph_file_type,
-                    debug=debug, lambda_correction=lambda_correction
+                    debug=True, lambda_correction=lambda_correction
                 )
                 data_lst.append(data)
-            fig = plot_ps_1bubble(vw, alpha, save_id, graph_file_type)
+            else:
+                fig = plot_ps_1bubble(vw, alpha, save_id, graph_file_type, lambda_correction=lambda_correction)
             figs.append(fig)
             fig_ids.append(f"vw{vw}_alpha{alpha}")
 

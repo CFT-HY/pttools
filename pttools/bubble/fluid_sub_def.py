@@ -293,7 +293,7 @@ def sound_shell_deflagration_reverse(
         model: "Model", v_wall: float, wn: float, xi_sh: float,
         t_end: float = DEFAULT_T_END,
         n_xi: int = DEFAULT_N_XI,
-        allow_failure: bool = False):
+        allow_failure: bool = False) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, float, float, float]:
     logger.warning("UNTESTED, will probably produce invalid results")
 
     if np.isnan(v_wall) or v_wall < 0 or v_wall > 1 or np.isnan(xi_sh) or xi_sh < 0 or xi_sh > 1:
@@ -302,7 +302,7 @@ def sound_shell_deflagration_reverse(
             v_wall, xi_sh
         )
         nan_arr = np.array([np.nan])
-        return nan_arr, nan_arr, nan_arr, np.nan, np.nan
+        return nan_arr, nan_arr, nan_arr, np.nan, np.nan, np.nan
 
     # Solve boundary conditions at the shock
     vm_sh = v_shock_bag(xi_sh)
@@ -331,7 +331,7 @@ def sound_shell_deflagration_reverse(
     # If the curve goes vertical before xi_wall is reached
     if i_wall == i_min_xi:
         nan_arr = np.array([np.nan])
-        return nan_arr, nan_arr, nan_arr, np.nan, np.nan
+        return nan_arr, nan_arr, nan_arr, np.nan, np.nan, np.nan
     v = v[i_wall:]
     w = w[i_wall:]
     xi = xi[i_wall:]
@@ -364,7 +364,7 @@ def sound_shell_solvable_deflagration_reverse(
         t_end: float = DEFAULT_T_END,
         n_xi: int = DEFAULT_N_XI) -> float:
     xi_sh = params[0]
-    v, w, xi, vm, wm = sound_shell_deflagration_reverse(  # noqa: RUF059
+    v, w, xi, wp, wm, vm = sound_shell_deflagration_reverse(  # noqa: RUF059
         model, v_wall, wn, xi_sh, t_end=t_end, n_xi=n_xi, allow_failure=True)
     return vm
 
@@ -476,7 +476,8 @@ def sound_shell_solver_deflagration_reverse(
         rtol: float = DEFAULT_SOLVER_RTOL) -> SolverOutput:
     # This is arbitrary and should be replaced by a value from the bag model
     xi_sh_guess = 1.1 * np.sqrt(model.cs2_max(wn, Phase.BROKEN))
-    sol = fsolve(
+    # The SciPy stubs require func to return an array, but a scalar is also accepted at runtime.
+    sol = fsolve(  # pyrefly: ignore[no-matching-overload]
         sound_shell_solvable_deflagration_reverse,
         xi_sh_guess,
         args=(model, v_wall, wn, t_end, n_xi),

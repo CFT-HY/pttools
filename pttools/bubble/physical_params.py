@@ -12,15 +12,10 @@ https://github.com/numba/numba/issues/6648
 This has been replaced with the object-oriented Bubble interface and will probably be removed in the future.
 """
 
-import typing as tp
-
 import numba
 
 # import numpy as np
 from pttools import speedup
-
-if tp.TYPE_CHECKING:
-    from pttools.ssm.nucleation import NucType
 
 
 @speedup.jitclass([
@@ -42,7 +37,9 @@ class NucArgs:
     ("v_wall", numba.float64),
     ("alpha", numba.float64),
     ("nuc_type", numba.optional(numba.types.string)),
-    ("nuc_args", NotImplemented if speedup.NUMBA_DISABLE_JIT else numba.optional(NucArgs.class_type.instance_type))
+    # The class_type attribute is added by the jitclass decorator.
+    ("nuc_args", NotImplemented if speedup.NUMBA_DISABLE_JIT else numba.optional(
+        NucArgs.class_type.instance_type))  # pyrefly: ignore[missing-attribute]
 ])
 class PhysicalParams:
     """Physical parameters for a bubble."""
@@ -51,7 +48,8 @@ class PhysicalParams:
             self,
             v_wall: float,
             alpha: float,
-            nuc_type: "NucType | None" = None,
+            # The jitclass field is a string, and therefore NucType has to be given by its value when jitting.
+            nuc_type: str | None = None,
             nuc_args: NucArgs | None = None):
         self.v_wall = v_wall
         self.alpha = alpha

@@ -527,7 +527,8 @@ class Bubble(BaseBubble):
         if self.model.DEFAULT_NAME not in ("bag", "const_cs"):
             return 0., np.inf
 
-        model: BagModel | ConstCSModel = self.model
+        # The model name check above ensures that the model is a BagModel or a ConstCSModel.
+        model = tp.cast("BagModel | ConstCSModel", self.model)
         alpha_theta_bar_n_min_lte: float = model.alpha_theta_bar_n_min_lte(self.wn, self.sol_type, Psi_n=self.Psi_n)
         alpha_theta_bar_n_max_lte: float = model.alpha_theta_bar_n_max_lte(self.wn, self.sol_type, Psi_n=self.Psi_n)
         if log_invalid and (alpha_theta_bar_n_max_lte < alpha_theta_bar_n_min_lte

@@ -165,7 +165,8 @@ def _spec_den_gw_y(
         source_lifetime_factor: float = 1.,
         nx_P_tilde_gw: int | None = None,
         parallel: bool = True) -> tuple[FloatArr1D, FloatArr1D]:
-
+    if y is None:
+        raise TypeError("y must be given.")
     z_lookup_min, z_lookup_max = lookup_limits(y, cs)
     if z_lookup.max() < z_lookup_max or z_lookup.min() > z_lookup_min:
         raise ValueError("Range of z_lookup is not large enough.")
@@ -273,7 +274,7 @@ def _spec_den_gw_numba(
         source_lifetime_factor: float = 1.,
         # Settings
         nx_P_tilde_gw: int | None = None,
-        parallel: bool = True) -> tuple[FloatArr1D, FloatArr1D]:
+        parallel: bool = True) -> NumbaFunc:
     if isinstance(y, numba.types.Array):
         return _spec_den_gw_y
     if isinstance(y, (numba.types.NoneType, numba.types.Omitted)):

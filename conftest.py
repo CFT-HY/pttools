@@ -75,7 +75,7 @@ def pytest_xdist_auto_num_workers() -> int | None:
 
     :return: Number of workers (None = auto)
     """
-    if AVAILABLE_CPU_CORES >= 8:
+    if AVAILABLE_CPU_CORES is not None and AVAILABLE_CPU_CORES >= 8:
         return 8
     return None
 

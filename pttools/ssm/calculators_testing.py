@@ -17,14 +17,19 @@ from pttools.type_hints import FloatOrArr
 
 
 # @profile
-def gen_piecewise(x: th.FloatArr1D, points: th.FloatArr1D) -> sp.Piecewise:
-    """Generate a piecewise defined function."""
-    funcs = []
-    lims = []
+def gen_piecewise(x: sp.Symbol, points: th.FloatArr2D) -> sp.Piecewise:
+    """Generate a piecewise defined function.
+
+    :param x: the symbol of the independent variable
+    :param points: the points $(x, f(x))$ between which the function is linear, as an array of shape (n, 2)
+    """
+    funcs: list[sp.Expr | int] = []
+    lims: list[sp.Basic | bool] = []
     for p1, p2 in itertools.pairwise(points):
         # Linear
         fit = np.polyfit([p1[0], p2[0]], [p1[1], p2[1]], deg=1)
-        lims.append((float(p1[0]) < x) & (x < float(p2[0])))
+        # SymPy has no type hints for the comparison operators.
+        lims.append((float(p1[0]) < x) & (x < float(p2[0])))  # pyrefly: ignore[unsupported-operation]
         funcs.append(fit[0]*x + fit[1])
     lims.append(True)
     funcs.append(0)

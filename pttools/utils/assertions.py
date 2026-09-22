@@ -11,6 +11,14 @@ from pttools.utils.math import rel_diff_arr, rel_diff_scalar
 from pttools.utils.printing import DEFAULT_FMT, print_1d, print_2d
 
 
+def _assert_allclose_header(name: str | None, rtol: float, atol: float, caller: str) -> list[str]:
+    """Create the first lines of the error message of :func:`assert_allclose`."""
+    return [
+        f"assert_allclose failed {f'for {name} ' if name is not None else ''}in {caller}",
+        f"Not equal to tolerance rtol={rtol}, atol={atol}"
+    ]
+
+
 def assert_allclose(
         actual: th.FloatOrArr1D2D | list[float] | list[list[float]] | None,
         desired: th.FloatOrArr1D2D | list[float] | list[list[float]],
@@ -37,15 +45,7 @@ def assert_allclose(
     """
     if actual is None:
         actual = np.nan
-    is_scalar = np.isscalar(actual)
-    # These are defined in only one of the branches below,
-    # but the same condition is used for selecting which of them are read.
-    actual_scalar: float
-    desired_scalar: float
-    actual_arr: th.FloatArr
-    desired_arr: th.FloatArr
-    close_arr: th.BoolArr
-    if is_scalar:
+    if np.isscalar(actual):
         if not np.isscalar(desired):
             raise TypeError(
                 "Cannot compare a scalar to an array reference. "
@@ -54,10 +54,20 @@ def assert_allclose(
         # np.isscalar() does not narrow the type for the type checker.
         actual_scalar = tp.cast(float, actual)
         desired_scalar = tp.cast(float, desired)
-        all_close = bool(np.isclose(actual_scalar, desired_scalar, rtol=rtol, atol=atol, equal_nan=equal_nan))
-    else:
-        actual_arr = actual if isinstance(actual, np.ndarray) else np.array(actual, dtype=dtype)
+        if np.isclose(actual_scalar, desired_scalar, rtol=rtol, atol=atol, equal_nan=equal_nan):
+            return
 
+        lines = [
+            *_assert_allclose_header(name, rtol, atol, caller=inspect.stack()[1].function),
+            f"Absolute difference: {np.abs(actual_scalar - desired_scalar)}",
+            f"Relative difference: {rel_diff_scalar(actual_scalar, desired_scalar)}",
+            f"Actual: {actual_scalar}, desired: {desired_scalar}"
+        ]
+        print("\n".join(lines))
+    else:
+        actual_arr: th.FloatArr = actual if isinstance(actual, np.ndarray) else np.array(actual, dtype=dtype)
+
+        desired_arr: th.FloatArr
         if np.isscalar(desired):
             desired_arr = np.ones_like(actual_arr) * tp.cast(float, desired)
         elif isinstance(desired, np.ndarray):
@@ -77,38 +87,30 @@ def assert_allclose(
             return
 
         close_arr = np.isclose(actual_arr, desired_arr, rtol=rtol, atol=atol, equal_nan=equal_nan)
-        all_close = bool(np.all(close_arr))
+        if np.all(close_arr):
+            return
 
-    if all_close:
-        return
-
-    lines = [
-        f"assert_allclose failed {f'for {name} ' if name is not None else ''}in {inspect.stack()[1].function}",
-        f"Not equal to tolerance rtol={rtol}, atol={atol}"
-    ]
-    if is_scalar:
-        lines += [
-            f"Absolute difference: {np.abs(actual_scalar - desired_scalar)}",
-            f"Relative difference: {rel_diff_scalar(actual_scalar, desired_scalar)}"
-            f"Actual: {actual_scalar}, desired: {desired_scalar}"
-        ]
-    else:
         mismatched = actual_arr.size - np.sum(close_arr)
-        lines += [
+        lines = [
+            *_assert_allclose_header(name, rtol, atol, caller=inspect.stack()[1].function),
             f"Mismatched elements: {mismatched} / {actual_arr.size} "
             f"({mismatched / actual_arr.size * 100:.1f}%)",
             f"Max absolute difference: {np.nanmax(np.abs(actual_arr - desired_arr))}",
             f"Max relative difference: {np.nanmax(rel_diff_arr(actual_arr, desired_arr))}"
         ]
-    print("\n".join(lines))
+        print("\n".join(lines))
 
-    if not is_scalar:
+        # The dimensions are checked at runtime, which does not narrow the shape types for the type checker.
         if actual_arr.ndim == 1:
-            print_1d(actual_arr, desired_arr, close_arr)
+            print_1d(
+                tp.cast(th.FloatArr1D, actual_arr),
+                tp.cast(th.FloatArr1D, desired_arr),
+                tp.cast(th.BoolArr1D, close_arr)
+            )
         elif actual_arr.ndim == 2:  # noqa: PLR2004
             print("Actual:")
-            print_2d(actual_arr, close_arr, fmt)
+            print_2d(tp.cast(th.FloatArr2D, actual_arr), tp.cast(th.BoolArr2D, close_arr), fmt)
             print("Desired:")
-            print_2d(desired_arr, close_arr, fmt)
+            print_2d(tp.cast(th.FloatArr2D, desired_arr), tp.cast(th.BoolArr2D, close_arr), fmt)
 
     raise AssertionError(". ".join(lines) + ".")

@@ -235,4 +235,4 @@ def ubarf2_from_a2(
         if nuc_type in (NucType.EXPONENTIAL, NucType.SIMULTANEOUS) \
         else lifetime_distribution_momentum(nu=lifetime_distribution(T_tilde, nuc_type), T_tilde=T_tilde, n=3)
     beta_R = beta_R_star0(v_wall) / bubble_spacing_enlargement_factor
-    return 2 / (beta_R**3 * 2 * np.pi**2) * nu3 * np.trapezoid(z ** 2 * A2, z)
+    return 2 / (beta_R**3 * 2 * np.pi**2) * nu3 * np.trapezoid(z ** 2 * A2, z)  # pyrefly: ignore[bad-return]

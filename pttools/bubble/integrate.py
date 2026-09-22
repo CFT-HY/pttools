@@ -194,7 +194,9 @@ def fluid_integrate_param_numba(
     data_numba[:-1] = data
     # Numba does not support float(bool)
     data_numba[-1] = int(backwards)
-    usol, success = numbalsoda.lsoda(df_dtau_ptr, u0=y0, t_eval=t_numba, data=data_numba)
+    # NumbaLSODA is None only when it is not available, in which case this function is not used.
+    usol, success = numbalsoda.lsoda(  # pyrefly: ignore[missing-attribute]
+        df_dtau_ptr, u0=y0, t_eval=t_numba, data=data_numba)
     # Error reporting is handled by fluid_integrate_param()
     # if not success:
     #     with numba.objmode:
@@ -264,7 +266,8 @@ def fluid_integrate_param_solve_ivp(
         logger.exception("Integrating fluid shell with solve_ivp failed", exc_info=exc)
         v = w = xi = np.zeros_like(t)
         success = False
-    return v, w, xi, success
+    # The SciPy stubs allow the solution to be complex, but it is real, since y0 and the differentials are real.
+    return v, w, xi, success  # pyrefly: ignore[bad-return]
 
 
 def precompile() -> None:

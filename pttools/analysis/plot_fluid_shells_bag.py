@@ -1,5 +1,7 @@
 r"""Plot $v(\xi)$ and $w(\xi)$ for fluid shells using the bag model."""
 
+import typing as tp
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -12,6 +14,29 @@ from pttools.bubble.solution_type_bag import identify_solution_type_bag
 import pttools.type_hints as th
 
 
+@tp.overload
+def plot_fluid_shells_bag(
+        v_wall_list: th.FloatArr1D,
+        alpha_n_list: th.FloatArr1DOrList,
+        multi: bool = ...,
+        save_string: str | None = ...,
+        Np: int = ...,
+        debug: tp.Literal[False] = ...,
+        draw: bool | None = ...) -> plt.Figure: ...
+
+
+@tp.overload
+def plot_fluid_shells_bag(
+        v_wall_list: th.FloatArr1D,
+        alpha_n_list: th.FloatArr1DOrList,
+        multi: bool = ...,
+        save_string: str | None = ...,
+        Np: int = ...,
+        *,
+        debug: tp.Literal[True],
+        draw: bool | None = ...) -> tuple[plt.Figure, th.FloatArr2D]: ...
+
+
 def plot_fluid_shells_bag(
         v_wall_list: th.FloatArr1D,
         alpha_n_list: th.FloatArr1DOrList,
@@ -19,7 +44,7 @@ def plot_fluid_shells_bag(
         save_string: str | None = None,
         Np: int = const.DEFAULT_N_XI,
         debug: bool = False,
-        draw: bool | None = None) -> plt.Figure | tuple[plt.Figure, th.FloatArr1D]:
+        draw: bool | None = None) -> plt.Figure | tuple[plt.Figure, th.FloatArr2D]:
     r"""Plot the fluid shells of several bag model bubbles.
 
     Calls :func:`pttools.bubble.fluid.fluid_shell` and plots resulting v, w against xi.

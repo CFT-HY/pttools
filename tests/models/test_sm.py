@@ -8,12 +8,11 @@ from pttools import models
 from tests.models.base_thermo import ThermoModelBaseCase
 
 
-class TestStandardModel(ThermoModelBaseCase, unittest.TestCase):
+class TestStandardModel(ThermoModelBaseCase[models.StandardModel], unittest.TestCase):
     """Tests for the Standard Model."""
 
     temp_arr = np.logspace(models.StandardModel.GEFF_DATA[0, 0], models.StandardModel.GEFF_DATA[0, -1], 10)
     phase_arr = np.linspace(0, 1, temp_arr.size)
-    thermo: models.StandardModel
 
     @classmethod
     def setUpClass(cls, *args, **kwargs):

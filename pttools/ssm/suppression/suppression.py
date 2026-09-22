@@ -102,20 +102,21 @@ class Suppression:
         if method not in (SuppressionMethod.NO_EXT, SuppressionMethod.EXT_CONSTANT):
             raise ValueError(f"Got invalid suppression method: {method}")
 
-        mesh: tuple[th.FloatOrArr, th.FloatOrArr] = (v_wall, alpha_n) if is_scalar else np.meshgrid(v_wall, alpha_n)
-        sup = interpolate.griddata(
-            points=self.points,
-            values=self.suppressions,
-            xi=mesh,
-            method=interpolation
-        )
         if is_scalar:
-            if np.isnan(sup):
+            point = (v_wall, alpha_n)
+            # The SciPy stubs do not accept scalar coordinates for xi, but SciPy itself does.
+            sup_scalar = interpolate.griddata(  # pyrefly: ignore[no-matching-overload]
+                points=self.points,
+                values=self.suppressions,
+                xi=point,
+                method=interpolation
+            )
+            if np.isnan(sup_scalar):
                 if method == SuppressionMethod.EXT_CONSTANT:
-                    sup = interpolate.griddata(
+                    sup_scalar = interpolate.griddata(  # pyrefly: ignore[no-matching-overload]
                         points=self.points,
                         values=self.suppressions,
-                        xi=mesh,
+                        xi=point,
                         method="nearest"
                     )
                 else:
@@ -127,8 +128,15 @@ class Suppression:
                         self.v_wall_min, self.v_wall_max,
                         self.alpha_n_min, self.alpha_n_max
                     )
-            return sup.item()
+            return sup_scalar.item()
 
+        mesh = np.meshgrid(v_wall, alpha_n)
+        sup = interpolate.griddata(
+            points=self.points,
+            values=self.suppressions,
+            xi=mesh,
+            method=interpolation
+        )
         if method == SuppressionMethod.EXT_CONSTANT:
             nans = np.isnan(sup)
             if np.any(nans):
@@ -138,7 +146,7 @@ class Suppression:
                     xi=(mesh[0][nans], mesh[1][nans]),
                     method="nearest"
                 )
-        return sup
+        return sup  # pyrefly: ignore[bad-return]
 
 
 def alpha_n_max_approx[T: FloatOrArr](v_wall: T) -> T:

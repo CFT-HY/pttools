@@ -236,7 +236,8 @@ def sound_shell_solver_hybrid(
             #     reason = sol[3]
             #     break
 
-            sol = fsolve(
+            # The SciPy stubs require func to take and return arrays, but scalars are also accepted at runtime.
+            sol = fsolve(  # pyrefly: ignore[no-matching-overload]
                 sound_shell_solvable_hybrid,
                 x0=wm_i,
                 args=(model, v_wall, wn, cs_n, v_cj, vp_tilde_guess, wp_guess, t_end, n_xi, thin_shell_limit),

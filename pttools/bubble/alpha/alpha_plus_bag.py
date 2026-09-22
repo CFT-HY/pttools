@@ -40,7 +40,8 @@ def _find_alpha_plus_bag_scalar(
         v_wall, alpha_n_given, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_ptr=cs2_ptr)
     with numba.objmode(ret="float64"):
         # This returns np.float64
-        ret: float = fsolve(
+        # The SciPy stubs require func to return an array, but a scalar is also accepted at runtime.
+        ret: float = fsolve(  # pyrefly: ignore[no-matching-overload]
             _find_alpha_plus_optimizer_bag,
             ap_initial_guess,
             args=(v_wall, sol_type, n_xi, alpha_n_given, cs2_ptr, df_dtau_ptr, ode_method),
@@ -50,7 +51,7 @@ def _find_alpha_plus_bag_scalar(
 
 
 def _find_alpha_plus_bag_arr(
-        v_wall: th.FloatOrArr,
+        v_wall: th.FloatArr,
         alpha_n_given: float,
         df_dtau_ptr: speedup.DifferentialPointer,
         ode_method: FluidIntegrateMethod,
@@ -86,8 +87,11 @@ def _find_alpha_plus_bag_arr_wrapper(
     #         v_wall=v_wall, alpha_n_given=alpha_n_given, n_xi=n_xi,
     #         df_dtau_ptr=df_dtau_ptr, xtol=xtol
     #     )
+    # The v_wall annotation has to be identical to that of the overload typing function,
+    # but only arrays can end up here.
     return _find_alpha_plus_bag_arr_single(
-        v_wall=v_wall, alpha_n_given=alpha_n_given,
+        v_wall=v_wall,  # pyrefly: ignore[bad-argument-type]
+        alpha_n_given=alpha_n_given,
         df_dtau_ptr=df_dtau_ptr, ode_method=ode_method,
         cs2_ptr=cs2_ptr, n_xi=n_xi, xtol=xtol
     )

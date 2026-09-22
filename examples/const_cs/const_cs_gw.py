@@ -21,7 +21,7 @@ from examples.utils import FIG_DIR, save_and_show_figs
 from pttools.analysis.parallel import create_spectra
 from pttools.bubble import lorentz
 from pttools.bubble.shock import v_shock_curve
-from pttools.models import ConstCSModel, Model
+from pttools.models import ConstCSModel
 from pttools.omgw0 import H2, Spectrum, SpectrumArr3D, omega_ins_h2
 import pttools.type_hints as th
 from pttools.utils.system import IS_READ_THE_DOCS
@@ -73,7 +73,7 @@ def plot_spectrum(
     ax_omgw0.plot(spectrum.f(), spectrum.omgw0(), label=label_omgw0)
 
 
-def snr_table(snrs: th.FloatArr3D, models: list[Model], v_walls: th.FloatArr1D, alpha_ns: th.FloatArr1D) -> str:
+def snr_table(snrs: th.FloatArr3D, models: list[ConstCSModel], v_walls: th.FloatArr1D, alpha_ns: th.FloatArr1D) -> str:
     """Save the signal-to-noise ratios in a LaTeX table"""
     file: io.StringIO
     with io.StringIO() as file:

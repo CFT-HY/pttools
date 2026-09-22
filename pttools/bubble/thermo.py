@@ -177,7 +177,7 @@ def mean_enthalpy_change(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, 
     #    integral = int1 + int2
     check_wall_speed(v_wall)
     integral = np.trapezoid((w - w[-1]), xi ** 3)
-    return integral / v_wall ** 3
+    return integral / v_wall ** 3  # pyrefly: ignore[bad-return]
 
 
 def nu_gdh2024[T: FloatOrArr](omega: T) -> T:
@@ -349,7 +349,8 @@ def va_entropy_density_diff(
     """
     if phase is None:
         phase = props.find_phase(xi, v_wall)
-    return 4*np.pi/3 * np.trapezoid(model.s(w, phase) - model.s(w[-1], Phase.SYMMETRIC), xi**3)
+    s_diff = model.s(w, phase) - model.s(w[-1], Phase.SYMMETRIC)
+    return 4*np.pi/3 * np.trapezoid(s_diff, xi**3)  # pyrefly: ignore[bad-return]
 
 
 @njit
@@ -365,7 +366,7 @@ def va_kinetic_energy_density(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatAr
     :param xi: $\xi$
     :return: Volume-averaged kinetic energy density ${e}_K$
     """
-    return 4*np.pi/3 * np.trapezoid(w * relativity.gamma2(v) * v**2, xi**3)
+    return 4*np.pi/3 * np.trapezoid(w * relativity.gamma2(v) * v**2, xi**3)  # pyrefly: ignore[bad-return]
 
 
 def va_kinetic_energy_fraction(ek_va: float, eb: float) -> float:
@@ -393,7 +394,7 @@ def va_thermal_energy_density_diff(w: th.FloatArr1D, xi: th.FloatArr1D) -> float
     :param xi: $\xi$
     :return: Volume-averaged thermal energy density difference $\Delta e_Q$
     """
-    return 4*np.pi/3 * np.trapezoid(0.75*(w - w[-1]), xi**3)
+    return 4*np.pi/3 * np.trapezoid(0.75*(w - w[-1]), xi**3)  # pyrefly: ignore[bad-return]
 
 
 def va_thermal_energy_fraction(eq_va: float, eb: float):
@@ -428,7 +429,7 @@ def va_trace_anomaly_diff(
         phase = props.find_phase(xi, v_wall)
     theta = model.theta(w, phase)
     theta_n = model.theta(w[-1], Phase.SYMMETRIC)
-    return 4*np.pi/3 * np.trapezoid((theta - theta_n), xi**3)
+    return 4*np.pi/3 * np.trapezoid((theta - theta_n), xi**3)  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)

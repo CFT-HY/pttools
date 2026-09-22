@@ -262,7 +262,7 @@ def run_parallel(
         args: list | tuple = (),
         kwargs: dict[str, tp.Any] | None = None,
         single_thread: bool = False,
-        global_pool: bool = True) -> NDArray | tuple[NDArray, ...] | None:
+        global_pool: bool = True) -> NDArray | tuple[NDArray, ...]:
     """Run the given function with multiple parameters in parallel.
 
     :param func: The function to be executed in parallel
@@ -326,7 +326,8 @@ def run_parallel(
             # -----
             # Submit parallel execution
             # -----
-            with np.nditer(
+            # The NumPy stubs do not allow None in op_axes, but np.nditer() accepts it.
+            with np.nditer(  # pyrefly: ignore[no-matching-overload]
                     [params, None],
                     flags=flags,
                     op_flags=[["readonly"], ["readwrite", "allocate"]],
@@ -362,21 +363,15 @@ def run_parallel(
                         # op_axes=op_axes,
                         order="C") as it:
                     for fut in it:
-                        output_arr[*it.multi_index, :] = fut.item().result()
+                        # With a single operand, the iterator gives arrays instead of tuples.
+                        output_arr[*it.multi_index, :] = fut.item().result()  # pyrefly: ignore[missing-attribute]
                 if log_start_finish:
                     log_parallel_ready(executor=ex, n_workers=n_workers, n_tasks=n_tasks, start_time=start_time)
                 return output_arr
 
             # Single output
-            single_output = False
-            if output_dtypes is None:
-                single_output = True
-                output_arr = None
-            elif len(output_dtypes) == 1:
-                single_output = True
-                output_arr = np.empty_like(futs, dtype=output_dtypes[0])
-
-            if single_output:
+            if output_dtypes is None or len(output_dtypes) == 1:
+                output_arr = None if output_dtypes is None else np.empty_like(futs, dtype=output_dtypes[0])
                 with np.nditer(
                         [futs, output_arr],
                         flags=["refs_ok", "c_index", "multi_index"],
@@ -389,7 +384,8 @@ def run_parallel(
                     return it.operands[1]
 
             # Multiple outputs
-            op_flags2 = [["readonly"], *[["writeonly"]] * len(output_dtypes)]
+            op_flags2: list[list[tp.Literal["readonly", "writeonly"]]] = \
+                [["readonly"], *[["writeonly"]] * len(output_dtypes)]
             output_arrs = tuple(np.empty(futs.shape, dtype=dtype) for dtype in output_dtypes)
             with np.nditer(
                     [futs, *output_arrs],

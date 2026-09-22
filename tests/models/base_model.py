@@ -10,10 +10,10 @@ from tests.utils.const import TEST_DATA_PATH
 from tests.utils.json import JsonTestCase
 
 
-class ModelBaseCase(JsonTestCase, abc.ABC):
+class ModelBaseCase[M: Model](JsonTestCase, abc.ABC):
     """Base test case for models."""
 
-    model: Model
+    model: M
 
     EXPECT_MISSING_DATA = True
     SAVE_NEW_DATA = True
@@ -28,7 +28,7 @@ class ModelBaseCase(JsonTestCase, abc.ABC):
     phase_arr = np.array([(1 + (-1)**i)/2 for i in range(TEST_ARR_SIZE)])
 
     @classmethod
-    def setUpClass(cls, model: Model):
+    def setUpClass(cls, model: M):
         cls.model = model
         cls.REF_DATA_PATH = os.path.join(TEST_DATA_PATH, "models", f"{model.name}.json")
         super().setUpClass()

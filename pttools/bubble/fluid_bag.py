@@ -91,7 +91,7 @@ def sound_shell_alpha_plus_bag(
         df_dtau_ptr: speedup.DifferentialPointer,
         ode_method: integrate.FluidIntegrateMethod,
         cs2_ptr: th.CS2FunScalarPtr,
-        sol_type: SolutionType = SolutionType.UNKNOWN,
+        sol_type: SolutionType | str = SolutionType.UNKNOWN,
         n_xi: int = const.DEFAULT_N_XI,
         w_n: float = 1.,
         # sol_type_fun: tp.Callable | None = None,

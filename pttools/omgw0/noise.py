@@ -24,7 +24,7 @@ def index_f_min(f: FloatArr1D, f_min: float | None = None) -> int:
     """
     if f_min is None:
         return 0
-    return np.argmax(f >= f_min)
+    return int(np.argmax(f >= f_min))
 
 
 @njit(cache=True)
@@ -42,7 +42,7 @@ def index_f_max(f: FloatArr1D, f_max: float | None = None) -> int:
     # The bin at f_max is included in the band, and therefore the first bin above it is the end of the slice.
     if f_max >= f[-1]:
         return f.size
-    return np.argmax(f > f_max)
+    return int(np.argmax(f > f_max))
 
 
 @njit(cache=CACHE_H0_100_HZ, nogil=True)
@@ -101,9 +101,11 @@ def signal_to_noise_ratio(
         f2 = f_noise[i_f_min:i_f_max]
         noise2 = omega_noise_h2(f=f2, eb=noise_eb, gb=noise_gb, ins=noise_ins) \
             if noise is None else noise[i_f_min:i_f_max]
-        signal = 10.**np.interp(np.log10(f2), np.log10(f), np.log10(signal))
+        # The NumPy stubs do not know that the output of np.interp() is an array when the input is an array.
+        signal = 10.**np.interp(np.log10(f2), np.log10(f), np.log10(signal))  # pyrefly: ignore[bad-assignment]
 
-    snr: float = np.sqrt(obs_time * np.trapezoid(signal**2 / noise2**2, f2))
+    # The NumPy stubs do not know that np.trapezoid() returns a scalar for a 1D array.
+    snr: float = np.sqrt(obs_time * np.trapezoid(signal**2 / noise2**2, f2))  # pyrefly: ignore[bad-assignment]
     return snr, f2, noise2
 
 
@@ -155,7 +157,7 @@ def N_AE[T: FloatOrArr](
     """
     cos_f_frac = np.cos(f/ft)
     if W_abs2 is None:
-        W_abs2 = np.abs(W(f, ft))**2
+        W_abs2 = np.abs(W(f, ft))**2  # pyrefly: ignore[bad-assignment]
     return ((4 + 2*cos_f_frac)*P_oms(L) + 8*(1 + cos_f_frac + cos_f_frac**2) * P_acc(f, L)) * W_abs2
 
 

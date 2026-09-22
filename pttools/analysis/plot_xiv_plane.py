@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.bubble import const, props
-from pttools.bubble.integrate import fluid_integrate_param
+from pttools.bubble.integrate import FluidIntegrateMethod, fluid_integrate_param
 from pttools.bubble.phase import Phase
 from pttools.bubble.shock import v_shock_curve
 from pttools.models.const_cs import ConstCSModel
@@ -37,7 +37,7 @@ class XIVPlanePlot:
             wn: float,
             w0: float | None = None,
             w_mu: float | None = None,
-            method: str = "odeint",
+            method: FluidIntegrateMethod = "odeint",
             n_curves_s: int = 6,
             n_curves_b: int = 6,
             n_curves_right: int = 3,

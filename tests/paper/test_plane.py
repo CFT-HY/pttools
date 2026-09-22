@@ -16,6 +16,7 @@ import numpy as np
 
 from pttools import speedup
 from pttools.analysis import save_fig
+from pttools.bubble import FluidIntegrateMethod
 import pttools.type_hints as th
 from pttools.utils import assert_allclose
 from tests import utils
@@ -25,6 +26,17 @@ from tests.test_performance import PERFORMANCE_DIR
 logger = logging.getLogger(__name__)
 
 PLOT: bool = True
+
+
+class PlaneTolerances(tp.TypedDict, total=False):
+    """Tolerances for :func:`tests.paper.plot_plane_paper.plot_plane`."""
+
+    rtol_small_diff: float
+    rtol_mid_diff: float
+    rtol_high_diff: float
+    atol_small_diff: float
+    atol_mid_diff: float
+    atol_high_diff: float
 
 
 class TestPlane(unittest.TestCase):
@@ -65,8 +77,6 @@ class TestPlane(unittest.TestCase):
             video_path = f"{path}.mp4"
             if os.path.exists(video_path):
                 os.remove(video_path)
-            kwargs = {}
-            kwargs["capture_output"] = True
             ret: subprocess.CompletedProcess = subprocess.run(
                 [
                     "ffmpeg",
@@ -78,7 +88,7 @@ class TestPlane(unittest.TestCase):
                     video_path
                 ],
                 check=False,
-                **kwargs
+                capture_output=True
             )
             # print(ret.stdout)
             # print(ret.stderr)
@@ -123,9 +133,9 @@ class TestPlane(unittest.TestCase):
 
     def validate_plane(
             self,
-            method: str = "odeint",
+            i: int,
+            method: FluidIntegrateMethod = "odeint",
             rtol: float = 1e-7,
-            i: int | None = None,
             ax: tuple[int, int] | None = None,
             perf_iters: int = 10):
         if i in self.names:
@@ -146,7 +156,7 @@ class TestPlane(unittest.TestCase):
         print(text)
         logger.info(text)
 
-        abs_tols = {
+        abs_tols: PlaneTolerances = {
             "atol_small_diff": 1e-5,
             "atol_mid_diff": 1e-4,
             "atol_high_diff": 1e-3,
@@ -154,7 +164,7 @@ class TestPlane(unittest.TestCase):
             "rtol_mid_diff": 0,
             "rtol_high_diff": 0
         }
-        rel_tols: dict[str, float] = {}
+        rel_tols: PlaneTolerances = {}
 
         if PLOT and ax:
             for name, axs, tols in zip(

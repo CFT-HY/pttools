@@ -11,12 +11,12 @@ import pttools.type_hints as th
 
 @njit(nogil=True)
 def find_alpha_n_bag(
-        v_wall: th.FloatOrArr,
+        v_wall: float,
         alpha_p: float,
         df_dtau_ptr: speedup.DifferentialPointer,
         ode_method: FluidIntegrateMethod,
         cs2_ptr: th.CS2FunScalarPtr,
-        sol_type: SolutionType = SolutionType.UNKNOWN,
+        sol_type: SolutionType | str = SolutionType.UNKNOWN,
         n_xi: int = const.DEFAULT_N_XI) -> float:
     r"""
     Calculates the transition strength parameter at the nucleation temperature,

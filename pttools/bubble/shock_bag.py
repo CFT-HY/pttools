@@ -55,9 +55,11 @@ _v_shock_bag_scalar_numba = njit(_v_shock_bag_scalar, cache=True)
 
 
 def _v_shock_bag_arr(xi: th.FloatOrArr) -> th.FloatArr:
+    # The xi annotation has to be identical to that of the overload typing function,
+    # but only arrays can end up here.
     ret = np.zeros_like(xi)
-    for i in numba.prange(xi.size):
-        ret[i] = _v_shock_bag_scalar_numba(xi[i])
+    for i in numba.prange(xi.size):  # pyrefly: ignore[missing-attribute]
+        ret[i] = _v_shock_bag_scalar_numba(xi[i])  # pyrefly: ignore[bad-index]
     return ret
 
 
@@ -100,9 +102,11 @@ def _wm_shock_bag_scalar(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bo
 
 
 def _wm_shock_bag_arr(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = True) -> th.FloatArr:
+    # The xi annotation has to be identical to that of the overload typing function,
+    # but only arrays can end up here.
     ret = np.zeros_like(xi)
-    for i in range(xi.size):
-        ret[i] = _wm_shock_bag_scalar(xi[i], w_n, nan_on_negative)
+    for i in range(xi.size):  # pyrefly: ignore[missing-attribute]
+        ret[i] = _wm_shock_bag_scalar(xi[i], w_n, nan_on_negative)  # pyrefly: ignore[bad-index]
     return ret
 
 

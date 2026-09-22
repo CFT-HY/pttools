@@ -108,23 +108,23 @@ class FluidReference:
 
         v_walls = np.linspace(v_wall_min, v_wall_max, n_v_wall, endpoint=True)
         alpha_ns = np.linspace(alpha_n_min, alpha_n_max, n_alpha_n, endpoint=True)
-        alpha_n_max = alpha_n_max_bag(
+        alpha_n_maxs = alpha_n_max_bag(
             v_walls, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD,
             cs2_ptr=CS2_BAG_SCALAR_PTR)
 
         params = np.empty((alpha_ns.size, v_walls.size, 3))
         params[:, :, 0], params[:, :, 1] = np.meshgrid(v_walls, alpha_ns)
-        params[:, :, 2], _ = np.meshgrid(alpha_n_max, alpha_ns)
+        params[:, :, 2], _ = np.meshgrid(alpha_n_maxs, alpha_ns)
 
         # JIT compile the functions beforehand
         compile_start_time = time.perf_counter()
-        compute(v_wall=v_walls[0], alpha_n=0.1, alpha_n_max=alpha_n_max[0])
+        compute(v_wall=v_walls[0], alpha_n=0.1, alpha_n_max=alpha_n_maxs[0])
         logger.debug(
             "Compilation and first run of compute function took %.3f s.",
             time.perf_counter() - compile_start_time
         )
 
-        sol_type, vp, vm, vp_tilde, vm_tilde, wp, wm = run_parallel(
+        ret = run_parallel(
             compute,
             params,
             multiple_params=True,
@@ -132,6 +132,9 @@ class FluidReference:
             output_dtypes=(np.int_, np.float64, np.float64, np.float64, np.float64, np.float64, np.float64),
             log_progress_percentage=10
         )
+        if ret is None:
+            raise RuntimeError("Computing the fluid reference data failed.")
+        sol_type, vp, vm, vp_tilde, vm_tilde, wp, wm = ret
 
         data = np.empty((alpha_ns.size, v_walls.size, 6))
         data[:, :, 0] = vp
@@ -184,12 +187,13 @@ class FluidReference:
 
     def get(self, v_wall: float, alpha_n: float, sol_type: SolutionType) -> np.ndarray:
         """Get the reference point that is closest to the given parameters."""
+        # The SciPy stubs require the interpolator arguments to be arrays, but scalars are also accepted at runtime.
         if sol_type == SolutionType.SUB_DEF:
-            ind = int(self.interp_sub_def(v_wall, alpha_n))
+            ind = int(self.interp_sub_def(v_wall, alpha_n))  # pyrefly: ignore[bad-argument-type]
         elif sol_type == SolutionType.HYBRID:
-            ind = int(self.interp_hybrid(v_wall, alpha_n))
+            ind = int(self.interp_hybrid(v_wall, alpha_n))  # pyrefly: ignore[bad-argument-type]
         elif sol_type == SolutionType.DETON:
-            ind = int(self.interp_detonation(v_wall, alpha_n))
+            ind = int(self.interp_detonation(v_wall, alpha_n))  # pyrefly: ignore[bad-argument-type]
         else:
             raise ValueError(f"Invalid solution type: {sol_type}")
         i_alpha_n = ind // self.v_wall.size

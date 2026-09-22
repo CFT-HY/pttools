@@ -18,16 +18,17 @@ import pttools.type_hints as th
 logger = logging.getLogger(__name__)
 
 
-def convert_params(params: bubble.PhysicalParams) -> bubble.PhysicalParams:
+def convert_params(params: bubble.PhysicalParams | list) -> bubble.PhysicalParams:
     """Convert the physical parameters from a list to a tuple if necessary."""
     if isinstance(params, list):
         logger.warning("Specifying the model parameters as a list is deprecated. Please use a tuple instead.")
-        return tuple(params)
+        # The length and the element types of the list cannot be verified statically.
+        return tuple(params)  # pyrefly: ignore[bad-return]
     return params
 
 
 # @njit
-def parse_params(params: bubble.PhysicalParams) -> tuple[float, float, NucType, bubble.NucArgs]:
+def parse_params(params: bubble.PhysicalParams) -> tuple[float, float, NucType | str, bubble.NucArgs]:
     r"""
     Parse physical parameters from the tuple.
 

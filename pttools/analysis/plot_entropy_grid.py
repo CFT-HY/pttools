@@ -181,7 +181,7 @@ def compute(bubble: Bubble) -> tuple[float, float, float, float, float, float, f
 
 
 def gen_and_plot_entropy(
-        models: list["Model"],
+        models: tp.Sequence["Model"],
         v_walls: th.FloatArr1D,
         alpha_ns: th.FloatArr1D,
         min_level: float,

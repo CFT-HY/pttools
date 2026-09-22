@@ -78,19 +78,19 @@ def compute_entropy(bubble: Bubble):
     stop_ind: int
     reverse: bool = False
     if bubble.sol_type == SolutionType.DETON:
-        start_ind = np.argmax(bubble.v > 0)
+        start_ind = int(np.argmax(bubble.v > 0))
         stop_ind = np.nonzero(bubble.xi < bubble.v_wall)[0][-1]
         reverse = True
     elif bubble.sol_type == SolutionType.SUB_DEF:
-        start_ind = np.argmax(bubble.xi > bubble.v_wall)
+        start_ind = int(np.argmax(bubble.xi > bubble.v_wall))
         stop_ind = np.nonzero(bubble.v > 0)[0][-1]
     elif bubble.sol_type == SolutionType.HYBRID:
         # Behind the wall
-        start_ind = np.argmax(bubble.v > 0)
+        start_ind = int(np.argmax(bubble.v > 0))
         stop_ind = np.nonzero(bubble.xi < bubble.v_wall)[0][-1]
         s[start_ind:stop_ind] = compute_entropy_region(bubble, start_ind, stop_ind, reverse=True)
         # Ahead of the wall
-        start_ind = np.argmax(bubble.xi > bubble.v_wall)
+        start_ind = int(np.argmax(bubble.xi > bubble.v_wall))
         stop_ind = np.nonzero(bubble.xi < bubble.v_sh)[0][-1]
     else:
         raise ValueError("Invalid solution type")

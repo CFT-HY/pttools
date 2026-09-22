@@ -177,7 +177,7 @@ class ConstCSModel(AnalyticModel):
         self.css2: float = self.validate_cs2(css2_flt, "css2")
         self.csb2: float = self.validate_cs2(csb2_flt, "csb2")
 
-        if np.isnan(css2) or np.isnan(csb2):
+        if np.isnan(css2_flt) or np.isnan(csb2_flt):
             raise ValueError(
                 "c_{s,s}^2 and c_{s,b}^2 have to be 0 < c_s <= 1."
                 f"Got: c_{{s,s}}^2={css2}, c_{{s,b}}^2={csb2}."
@@ -194,7 +194,7 @@ class ConstCSModel(AnalyticModel):
         self.csb: float = np.sqrt(csb2_flt)
         self.mu_s: float = cs2_to_mu(css2_flt)
         self.mu_b: float = cs2_to_mu(csb2_flt)
-        self.is_bag: bool = np.isclose(self.mu_s, 4) and np.isclose(self.mu_b, 4)
+        self.is_bag: bool = bool(np.isclose(self.mu_s, 4) and np.isclose(self.mu_b, 4))
 
         # This seems to contain invalid assumptions and approximations.
         # self.alpha_n_min_limit_cs = (self.mu - self.nu) / (3*self.mu)
@@ -438,6 +438,7 @@ class ConstCSModel(AnalyticModel):
         # ---
         # Solve numerically
         # ---
+        model: ConstCSModel | None = None
         try:
             model = ConstCSModel(
                 css2=self.css2, csb2=self.csb2,
@@ -510,7 +511,7 @@ class ConstCSModel(AnalyticModel):
 
         # If the solver returns a useless result
         model2 = ConstCSModel(css2=self.css2, csb2=self.csb2, a_s=a_s, a_b=a_b, V_s=V_s, V_b=V_b)
-        if model2.alpha_n_min > model.alpha_n_min:
+        if model is not None and model2.alpha_n_min > model.alpha_n_min:
             logger.error(
                 "alpha_n_min solver returned greater alpha_n_min than with default values. "
                 "Using defaults a_s=%s, a_b=%s, V_s=%s, V_b=%s for css2=%s, csb2=%s.",
@@ -581,7 +582,7 @@ class ConstCSModel(AnalyticModel):
             nan_on_invalid=nan_on_invalid,
             log_invalid=log_invalid
         )
-        alpha_plus = (1 - 4 / self.mu_s) / 3 - (1 - 4 / self.mu_b) * wm / (3 * wp) + self.bag_wn_const / wp
+        alpha_plus = tp.cast(T, (1 - 4 / self.mu_s) / 3 - (1 - 4 / self.mu_b) * wm / (3 * wp) + self.bag_wn_const / wp)
         return self.check_alpha_plus(
             alpha_plus, vp_tilde=vp_tilde, sol_type=sol_type,
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
@@ -691,7 +692,7 @@ class ConstCSModel(AnalyticModel):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
-        ret = (1 / 4 - 1 / self.mu_s) * wp / 3 - (1 / 4 - 1 / self.mu_b) * wm / 3 + self.V_s - self.V_b
+        ret = tp.cast(T, (1 / 4 - 1 / self.mu_s) * wp / 3 - (1 / 4 - 1 / self.mu_b) * wm / 3 + self.V_s - self.V_b)
         return self.check_delta_theta(
             ret, xp=wp, xm=wm, x_name="w",
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid

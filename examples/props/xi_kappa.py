@@ -58,6 +58,8 @@ def main() -> plt.Figure:
         func=get_kappa_for_v_walls, params=params, multiple_params=True, args=(v_walls, ),
         return_arr_shape=(v_walls.size, ), output_dtypes=(np.float64, )
     )
+    if not isinstance(kappas, np.ndarray):
+        raise TypeError(f"Expected a single output array from run_parallel, got: {type(kappas)}")
     for i_alpha, color in enumerate(colors):
         for i_model, (model, ls) in enumerate(zip(models, lines, strict=False)):
             ax.plot(

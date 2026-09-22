@@ -73,6 +73,8 @@ class BubbleGridVWAlpha(BubbleGrid):
                 kwargs={"use_bag_solver": use_bag_solver, "allow_bubble_failure": True}
         )
         if func is None:
+            if not isinstance(data, np.ndarray):
+                raise TypeError(f"Expected an array of bubbles, got: {type(data)}")
             bubbles = data
         else:
             bubbles = data[0]

@@ -58,7 +58,7 @@ def color_region(
         ax: plt.Axes,
         x: th.FloatArr1D,
         y: th.FloatArr1D,
-        region: th.FloatArr2D,
+        region: th.BoolArr | th.FloatArr,
         color: str = DEFAULT_REGION_COLOR, alpha: float = 1) -> QuadContourSet:
     """Set a region on a plot to a fixed color."""
     cmp = ListedColormap([color], color)

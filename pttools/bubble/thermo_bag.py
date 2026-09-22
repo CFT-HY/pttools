@@ -6,6 +6,7 @@ import typing as tp
 import numba
 from numba.extending import overload
 import numpy as np
+from numpy.typing import NDArray
 
 from pttools.bubble import bag, check, const, fluid_bag
 from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR
@@ -337,6 +338,8 @@ def get_ke_frac_new_bag[T: FloatOrArr](
     :param verbosity: logging verbosity
     :return: kinetic energy fraction
     """
+    # If no solution is found for any of the wall speeds, the results will be nan.
+    w = np.array([np.nan])
     it = np.nditer([v_wall, None])
     for vw, ke in it:
         vw = vw.item()
@@ -375,8 +378,10 @@ def _get_ubarf2_bag_scalar(
         n_xi: int = const.DEFAULT_N_XI,
         verbosity: int = 0,
         parallel: bool = True) -> float:
+    # The v_wall annotation has to be identical to that of the overload typing function,
+    # but only scalars and 0-dimensional arrays can end up here.
     if identify_solution_type_bag(
-            v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method,
+            v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method,  # pyrefly: ignore[bad-argument-type]
             cs2_ptr=cs2_ptr) == SolutionType.ERROR:
         ub2 = np.nan
     else:
@@ -384,7 +389,7 @@ def _get_ubarf2_bag_scalar(
         v, w, xi = fluid_bag.sound_shell_bag(
             v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr,
             ode_method=ode_method, cs2_ptr=cs2_ptr, n_xi=n_xi)
-        ub2 = ubarf2(v, w, xi, v_wall, w_bar=w[-1])
+        ub2 = ubarf2(v, w, xi, v_wall, w_bar=w[-1])  # pyrefly: ignore[bad-argument-type]
 
     if verbosity > 0:
         with numba.objmode:
@@ -567,7 +572,7 @@ def part_integrate(
         v: th.FloatArr1D,
         w: th.FloatArr1D,
         xi: th.FloatArr1D,
-        where_in: th.IntOrArr) -> float:
+        where_in: th.IntOrArr | tuple[NDArray[np.intp], ...]) -> float:
     r"""
     Integrate a function func of arrays $v, w, \xi$ over index selection where_in.
 

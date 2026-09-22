@@ -6,12 +6,16 @@ import typing as tp
 import numpy as np
 
 from pttools.bubble.phase import Phase
+from pttools.models import Model
 from pttools.utils.assertions import assert_allclose
 from tests.models.base_model import ModelBaseCase
 
 
-class BagBaseCase(ModelBaseCase, abc.ABC):
+class BagBaseCase[M: Model](ModelBaseCase[M], abc.ABC):
     """Test that a model corresponds to the bag model."""
+
+    # This class is a mixin for unittest.TestCase, which provides this method.
+    assertAlmostEqual: tp.Callable[..., None]  # noqa: N815
 
     #: This test should use the bag model reference data instead of creating its own
     SAVE_NEW_DATA = False

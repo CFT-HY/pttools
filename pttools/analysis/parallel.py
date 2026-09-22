@@ -67,13 +67,13 @@ def create_bubble(
 def create_spectrum(
         params: th.FloatArr1D,
         model: "Model",
-        post_func: tp.Callable | None = None,
+        post_func: PostFunc | None = None,
         post_func_return_multiple: bool = False,
         use_bag_solver: bool = False,
         bubble_kwargs: dict[str, tp.Any]| None  = None,
         spectrum_kwargs: dict[str, tp.Any] | None = None,
         allow_bubble_failure: bool = False,
-        *args, **kwargs) -> Spectrum | tuple[Spectrum, ...]:
+        *args, **kwargs) -> Spectrum | tuple[Spectrum | None, ...] | None:
     """Create a single spectrum and apply post-processing functions to retrieve results from it."""
     bubble = create_bubble(
         params=params,
@@ -82,6 +82,13 @@ def create_spectrum(
         bubble_kwargs=bubble_kwargs,
         allow_bubble_failure=allow_bubble_failure
     )
+    # Without post_func, create_bubble() returns None if it fails to create the bubble and allow_bubble_failure is set.
+    if not isinstance(bubble, Bubble):
+        if post_func is None:
+            return None
+        if post_func_return_multiple:
+            return None, *post_func.fail_value
+        return None, post_func.fail_value
     if spectrum_kwargs is None:
         spectrum = Spectrum(bubble=bubble, parallel=False)
     else:
@@ -92,6 +99,51 @@ def create_spectrum(
             return spectrum, *post_func(spectrum, *args, **kwargs)
         return spectrum, post_func(spectrum, *args, **kwargs)
     return spectrum
+
+
+@tp.overload
+def create_bubbles(
+        model: "Model",
+        v_walls: th.FloatArr1D,
+        alpha_ns: th.FloatArr1D,
+        func: None = None,
+        log_progress_percentage: float = ...,
+        max_workers: int = ...,
+        single_thread: bool = ...,
+        allow_bubble_failure: bool = ...,
+        kwargs: dict[str, tp.Any] | None = ...,
+        bubble_kwargs: dict[str, tp.Any] | None = ...,
+        bubble_func: tp.Callable = ...) -> BubbleArr2D: ...
+
+
+@tp.overload
+def create_bubbles(
+        model: "Model",
+        v_walls: th.FloatArr1D,
+        alpha_ns: th.FloatArr1D,
+        func: tp.Callable,
+        log_progress_percentage: float = ...,
+        max_workers: int = ...,
+        single_thread: bool = ...,
+        allow_bubble_failure: bool = ...,
+        kwargs: dict[str, tp.Any] | None = ...,
+        bubble_kwargs: dict[str, tp.Any] | None = ...,
+        bubble_func: tp.Callable = ...) -> tuple[NDArray, ...]: ...
+
+
+@tp.overload
+def create_bubbles(
+        model: "Model",
+        v_walls: th.FloatArr1D,
+        alpha_ns: th.FloatArr1D,
+        func: tp.Callable | None = ...,
+        log_progress_percentage: float = ...,
+        max_workers: int = ...,
+        single_thread: bool = ...,
+        allow_bubble_failure: bool = ...,
+        kwargs: dict[str, tp.Any] | None = ...,
+        bubble_kwargs: dict[str, tp.Any] | None = ...,
+        bubble_func: tp.Callable = ...) -> BubbleArr2D | tuple[NDArray, ...]: ...
 
 
 def create_bubbles(
@@ -146,6 +198,8 @@ def create_bubbles(
         log_progress_percentage=log_progress_percentage,
         kwargs=kwargs2
     )
+    if ret is None:
+        raise RuntimeError("The parallel processing returned no output.")
     bubble_count = alpha_ns.size * v_walls.size
     elapsed = time.perf_counter() - start_time
     elapsed_per_bubble = elapsed / bubble_count
@@ -174,7 +228,8 @@ def create_spectra(
     else:
         kwargs2 = kwargs.copy()
         kwargs2["spectrum_kwargs"] = spectrum_kwargs
-    return create_bubbles(
+    # The output array contains spectra instead of bubbles, since the bubble_func is create_spectrum().
+    return create_bubbles(  # pyrefly: ignore[bad-return]
         model=model,
         v_walls=v_walls,
         alpha_ns=alpha_ns,

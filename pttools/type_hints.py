@@ -125,5 +125,5 @@ type CS2CFuncType = tp.Callable[[float, float], float]
 # -----
 # Other
 # -----
-type FSolveOutput = tuple[NDArray, dict, int, str]
+type FSolveOutput = tuple[NDArray, tp.Mapping[str, tp.Any], int, str]
 type Interpolation = tp.Literal["nearest", "linear", "cubic"]

@@ -172,6 +172,8 @@ class Model(BaseModel, abc.ABC):
                 f"w_max={self.w_max:{self.THERMO_FORMAT}}"
             )
 
+        self.w_at_alpha_n_min: float | None
+        self.alpha_n_min: float
         if gen_critical:
             self.w_at_alpha_n_min, self.alpha_n_min = self.alpha_n_min_find()
         else:
@@ -195,7 +197,7 @@ class Model(BaseModel, abc.ABC):
         w: float = sol[0]
         cs2: float = -sol[1] if is_max else sol[1]
         if sol[2]:
-            msg = f"Could not find cs2_{name}. Using cs2_{name}={cs2} at w={w}. Iterations: {sol[3].replace("\n ", "")}"
+            msg = f"Could not find cs2_{name}. Using cs2_{name}={cs2} at w={w}. Function evaluations: {sol[3]}"
             logger.error(msg)
             if not allow_fail:
                 raise RuntimeError(msg)
@@ -672,7 +674,8 @@ class Model(BaseModel, abc.ABC):
             if not allow_fail:
                 raise ValueError(msg)
 
-        sol = fsolve(
+        # critical_temp_opt() is annotated for scalars, but it also works with the 1D arrays given by fsolve().
+        sol = fsolve(  # pyrefly: ignore[no-matching-overload]
             self.critical_temp_opt,
             x0=np.array([guess]),
             full_output=True
@@ -1028,7 +1031,8 @@ class Model(BaseModel, abc.ABC):
         """
         if wn is None:
             wn = self.wn(alpha_n, wn_guess)
-        v_cj: float = v_chapman_jouguet(self, alpha_n, wn=wn, wm_guess=wm_guess)
+        # Without extra_output, v_chapman_jouguet() returns a float.
+        v_cj = tp.cast(float, v_chapman_jouguet(self, alpha_n, wn=wn, wm_guess=wm_guess))
 
         if is_surely_detonation(v_wall, v_cj):
             return SolutionType.DETON
@@ -1188,7 +1192,8 @@ class Model(BaseModel, abc.ABC):
 
         if not (solution_found or self.w_crit is None or np.isnan(self.w_crit)):
             try:
-                wn_sol = root_scalar(
+                # The SciPy stubs do not allow specifying both bracket and x0, but root_scalar() accepts them.
+                wn_sol = root_scalar(  # pyrefly: ignore[no-matching-overload]
                     self._wn_solvable, x0=wn_guess, x1=0.99*self.w_crit,
                     args=(alpha_n, theta_bar), bracket=(self.w_min, self.w_crit)
                 )
@@ -1311,12 +1316,11 @@ class Model(BaseModel, abc.ABC):
     def alpha_n_min_find_params(
             self,
             alpha_n_min_target: float,
-            a_s_default: float | None = None,
-            a_b: float = 1,
+            a_s_default: float,
+            a_b: float,
             V_s_default: float | None = None,
             V_b: float | None = None,
-            safety_factor_alpha: float | None = None,
-            **kwargs) -> tuple[float, float, float, float]:
+            safety_factor_alpha: float | None = None) -> tuple[float, float, float, float]:
         r"""Find the model parameters that allow the given $\alpha_{n,\text{min,target}}$."""
         raise NotImplementedError
 

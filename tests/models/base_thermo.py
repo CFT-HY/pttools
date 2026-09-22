@@ -11,10 +11,10 @@ from tests.utils.const import TEST_DATA_PATH
 from tests.utils.json import JsonTestCase
 
 
-class ThermoModelBaseCase(JsonTestCase, abc.ABC):
+class ThermoModelBaseCase[T: ThermoModel](JsonTestCase, abc.ABC):
     """Base test case for thermodynamic models."""
 
-    thermo: ThermoModel
+    thermo: T
     temp_arr: th.FloatArr1D
     phase_arr: th.FloatArr1D
 
@@ -22,7 +22,7 @@ class ThermoModelBaseCase(JsonTestCase, abc.ABC):
     SAVE_NEW_DATA = True
 
     @classmethod
-    def setUpClass(cls, thermo: ThermoModel):
+    def setUpClass(cls, thermo: T):
         cls.thermo = thermo
         cls.REF_DATA_PATH = os.path.join(TEST_DATA_PATH, "models", "thermo", f"{thermo.name}.json")
         super().setUpClass()

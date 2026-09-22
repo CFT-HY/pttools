@@ -80,7 +80,7 @@ def main(dots: bool = False) -> plt.Figure:
     xmax = 1
     ymin = 0
     ymax = 1
-    ax.axis([xmin, xmax, ymin, ymax])
+    ax.axis((xmin, xmax, ymin, ymax))
     ax.set_xlabel(r'$\tilde{v}_{-}$')
     ax.set_ylabel(r'$\tilde{v}_{+}$')
     ax.text(0.25, 0.1, 'Deflagrations', fontsize=font_size)

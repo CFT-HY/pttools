@@ -70,7 +70,7 @@ def plot_bubbles_common(
 
 
 def plot_bubbles(
-        bubbles: tp.Collection[BaseBubble],
+        bubbles: tp.Sequence[BaseBubble],
         fig: plt.Figure | None = None,
         path: str | None = None,
         full_range: bool = False,

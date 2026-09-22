@@ -15,10 +15,10 @@ class PlotlyPlot(abc.ABC):
     """Base class for plotting with Plotly."""
 
     def __init__(self):
-        self._fig = None
+        self._fig: go.Figure | None = None
 
     @abc.abstractmethod
-    def create_fig(self):
+    def create_fig(self) -> go.Figure:
         """Create the figure."""
 
     def fig(self) -> go.Figure:

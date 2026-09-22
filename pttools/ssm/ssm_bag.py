@@ -123,8 +123,9 @@ def a2_e_conserving_bag_file(
     logger.debug(f"Interpolating v(xi), e(xi) from {wh_xi_lt1[0]} to {npt[0]} points")
 
     xi_lt1 = np.linspace(0., 1., npt[0])
-    v_xi_lt1 = np.interp(xi_lt1, xi_all, v_all)
-    e_xi_lt1 = np.interp(xi_lt1, xi_all, e_all)
+    # The NumPy stubs do not know that the output of np.interp() is an array when the input is an array.
+    v_xi_lt1: th.FloatArr1D = np.interp(xi_lt1, xi_all, v_all)  # pyrefly: ignore[bad-assignment]
+    e_xi_lt1: th.FloatArr1D = np.interp(xi_lt1, xi_all, e_all)  # pyrefly: ignore[bad-assignment]
     #    f = np.zeros_like(z)
     #    for j in range(f.size):
     #        f[j] = (4.*np.pi/z[j]) * sin_transform(z[j], xi_lt1, v_xi_lt1)
@@ -258,7 +259,7 @@ def f_file_bag(
 
 @njit
 def f_ssm_func_bag(
-        z: th.FloatOrArr,
+        z: th.FloatArr1D,
         v_wall: float,
         alpha_n: float,
         df_dtau_ptr: speedup.DifferentialPointer,
