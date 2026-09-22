@@ -231,9 +231,9 @@ def nucleation_f(
 def r_star[T2: FloatOrArr](
         beta_tilde: T2,
         v_wall: float,
-        xi: th.FloatArr1D,
-        T: th.FloatArr1D,
-        sol_type: SolutionType,
+        xi: th.FloatArr1D | None = None,
+        T: th.FloatArr1D | None = None,
+        sol_type: SolutionType = SolutionType.DETON,
         legacy_cs: float | None = None) -> T2:
     r"""Hubble-scaled mean bubble spacing $r_*(\beta)$
     $$r_* = \Lambda(h_x) r_*(0)$$
@@ -256,12 +256,12 @@ def r_star[T2: FloatOrArr](
     #         beta_over_H, beta_over_H_limit, v_wall
     #     )
     return R_star(
-        beta=beta_tilde, v_wall=v_wall, xi=xi, T=T, beta_tilde=beta_tilde, sol_type=sol_type, legacy_cs=legacy_cs
+        beta=beta_tilde, v_wall=v_wall, xi=xi, T=T, sol_type=sol_type, legacy_cs=legacy_cs, beta_tilde=beta_tilde
     )
 
 
 @njit(cache=True)
-def r_star0(beta_over_H: th.FloatOrArr, v_wall: th.FloatOrArr):
+def r_star0(beta_over_H: th.FloatOrArr, v_wall: th.FloatOrArr) -> th.FloatOrArr:
     r"""Hubble-scaled mean bubble separation $r_*(0)$ in the absence of nucleation suppression
     $$r_* = (8\pi)^\frac{1}{3} \frac{{v}_\text{wall}}{\tilde{\beta}}$$
     :ajmi_2022:`\ ` eq. 1
@@ -284,11 +284,11 @@ def r_star_product(H_star: th.FloatOrArr, R_star: th.FloatOrArr) -> th.FloatOrAr
 def R_star[T2: FloatOrArr](
         beta: T2,
         v_wall: float,
-        xi: th.FloatArr1D,
-        T: th.FloatArr1D,
-        beta_tilde: float,
-        sol_type: SolutionType,
-        legacy_cs: float | None = None) -> T2:
+        xi: th.FloatArr1D | None = None,
+        T: th.FloatArr1D | None = None,
+        sol_type: SolutionType = SolutionType.DETON,
+        legacy_cs: float | None = None,
+        beta_tilde: float | None = None) -> T2:
     r"""Mean bubble separation $R_*$
     $$R_* = \Lambda(h_x) R_*(0)$$
     :ajmi_2022:`\ ` eq. 77.
@@ -318,16 +318,17 @@ def R_star[T2: FloatOrArr](
     :param v_wall: $v_\text{wall}$
     :param xi: $\xi$
     :param T: $T$
-    :param beta_tilde: $\tilde{\beta}$
     :param sol_type: solution type
     :param legacy_cs: $c_s$ for legacy $\max(v_\text{wall}, c_s)$
+    :param beta_tilde: $\tilde{\beta}$
     :return: $R_*$
     """
-    if sol_type == SolutionType.DETON.value:
-        return R_star0(beta=beta, v_wall=v_wall, legacy_cs=legacy_cs)
+    rs0 = R_star0(beta=beta, v_wall=v_wall, legacy_cs=legacy_cs)
+    if xi is None or T is None or beta_tilde is None or sol_type == SolutionType.DETON.value:
+        return rs0
     if sol_type in (SolutionType.SUB_DEF.value, SolutionType.HYBRID.value):
         f = nucleation_f(xi=xi, T=T, beta_tilde=beta_tilde, v_wall=v_wall)
-        return bubble_spacing_enlargement_factor(hx=hx(f)) * R_star0(beta=beta, v_wall=v_wall, legacy_cs=legacy_cs)
+        return bubble_spacing_enlargement_factor(hx=hx(f)) * rs0
     raise ValueError(f"Invalid solution type: {sol_type}")
 
 
