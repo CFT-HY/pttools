@@ -12,8 +12,7 @@ class ScalingTest(unittest.TestCase):
 
     def test_H_star_eta_sh(self):
         self.assertAlmostEqual(scaling.H_star_eta_sh(r_star=0.1, ubarf=0.05), 2.)
-        # In the approximation ubarf = sqrt(K) the two functions agree.
-        self.assertAlmostEqual(scaling.H_star_eta_sh_approx(r_star=0.1, K=0.05**2), 2.)
+        self.assertAlmostEqual(scaling.H_star_eta_sh_full(r_star=0.1, K=0.05 ** 2, adiabatic_index=1.), 2.)
 
     def test_H_star_eta_v_limits(self):
         """Short sources: H_* eta_v -> H_* Delta eta_v. Long sources: H_* eta_v -> H_* eta_* / l(nu)."""
@@ -65,7 +64,7 @@ class ScalingTest(unittest.TestCase):
         K = ubarf**2
         self.assertAlmostEqual(
             scaling.J_old(r_star=r_star, K=K),
-            r_star * (1 - 1 / np.sqrt(1 + 2 * r_star / np.sqrt(K)))
+            r_star * (1 - 1 / np.sqrt(1 + 2 * r_star * np.sqrt(4/3 / K)))
         )
 
 

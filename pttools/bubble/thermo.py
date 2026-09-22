@@ -29,6 +29,7 @@ import numpy as np
 
 from pttools.bubble import props, relativity
 from pttools.bubble.check import check_wall_speed
+from pttools.bubble.const import DEFAULT_ADIABATIC_INDEX
 from pttools.bubble.phase import Phase
 from pttools.speedup import njit
 import pttools.type_hints as th
@@ -311,6 +312,20 @@ def ubarf2(
     if w_bar is None:
         w_bar = __w_bar(w=w, xi=xi, v_wall=v_wall)
     return ek_bva / w_bar
+
+
+@njit(cache=True)
+def ubarf2_from_K(K: th.FloatOrArr, adiabatic_index: th.FloatOrArr = DEFAULT_ADIABATIC_INDEX) -> th.FloatOrArr:
+    r"""RMS fluid velocity $\bar{U}_f^2(K)$.
+
+    $$\bar{U}_f^2 \approx \frac{K}{\Gamma}$$
+    This comes directly from
+    $$K = \Gamma \bar{U}_\text{f}^2$$
+    :notes:`\ ` eq. 7.39.
+
+    This is used in :py:func:`pttools.ssm.scaling.H_star_eta_sh_full`.
+    """
+    return K / adiabatic_index
 
 
 def va_enthalpy_density(eq: float) -> float:

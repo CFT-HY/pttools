@@ -280,13 +280,3 @@ def ubarf_approx(
     return np.sqrt(
         kinetic_energy_fraction_approx(v_wall=v_wall, alpha_n=alpha_n, model=model, cs=cs, v_cj=v_cj) / adiabatic_index
     )
-
-
-def ubarf_approx_K[T: FloatOrArr](K: T) -> T:
-    r"""Approximate RMS fluid velocity $\bar{U}_f(K)$.
-
-    $$\bar{U}_f \approx \approx \sqrt{K}$$
-    :ajmi_2022:`\ ` p. 9.
-    This is used in :py:func:`pttools.ssm.scaling.H_star_eta_sh_approx`.
-    """
-    return np.sqrt(K)

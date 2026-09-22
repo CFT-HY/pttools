@@ -31,8 +31,8 @@ import typing as tp
 
 import numpy as np
 
-from pttools.bubble.const import DEFAULT_NU_GDH2024
-from pttools.bubble.energy_budget import ubarf_approx_K
+from pttools.bubble.const import DEFAULT_ADIABATIC_INDEX, DEFAULT_NU_GDH2024
+from pttools.bubble.thermo import ubarf2_from_K
 from pttools.ssm.barotropic import H_eta, source_lifetime_factor
 from pttools.ssm.const import DEFAULT_N_SH
 from pttools.type_hints import FloatArr1D, FloatOrArr
@@ -42,11 +42,13 @@ def H_star_eta_sh(r_star: FloatOrArr, ubarf: FloatOrArr) -> FloatOrArr:
     r"""$\mathcal{H}_* \eta_\text{sh}$, Hubble-scaled shock formation time.
 
     $$\mathcal{H}_* \eta_\text{sh} = \frac{\mathcal{H}_* R_*}{\bar{U}_f} = \frac{r_*}{\bar{U}_f}$$
+    This definition is a choice.
 
     Shocks and other non-linearities appear on the timescale $\eta_\text{sh} \approx R_* / \bar{U}_f$,
     where $R_*$ is the comoving mean bubble spacing and $\bar{U}_f$ the enthalpy-weighted RMS fluid velocity.
     :giombi_2026:`\ ` sec. 1 (as $\eta_\text{sh} = R_*/v_{\text{rms}}$),
     :giombi_2024_cs:`\ ` sec. 1 (as $\tau_\text{nl} = R_*/v_{\text{rms}}$).
+
     In the simplified model of the velocity field of their numerical results,
     Giombi et al. instead define $\eta_\text{sh} \equiv \xi_* / v_{\text{rms}}$
     using the integral scale $\xi_* = R_* / (4 \pi \sqrt{3})$
@@ -75,22 +77,31 @@ def H_star_eta_sh(r_star: FloatOrArr, ubarf: FloatOrArr) -> FloatOrArr:
     return r_star / ubarf
 
 
-def H_star_eta_sh_approx(r_star: FloatOrArr, K: FloatOrArr) -> FloatOrArr:
-    r"""Approximation of the Hubble-scaled shock formation time $\mathcal{H}_* \eta_\text{sh}$.
+def H_star_eta_sh_full(
+        r_star: FloatOrArr,
+        K: FloatOrArr,
+        adiabatic_index: FloatOrArr = DEFAULT_ADIABATIC_INDEX) -> FloatOrArr:
+    r"""$\mathcal{H}_* \eta_\text{sh}$, Hubble-scaled shock formation time.
 
-    $$\mathcal{H}_* \eta_\text{sh} = \frac{r_*}{\bar{U}_f} \approx \frac{r_*}{\sqrt{K}}$$
+    $$\mathcal{H}_* \eta_\text{sh} = \frac{r_*}{\bar{U}_f} = r_* \sqrt{\frac{\Gamma}{K}}$$
     :hindmarsh_2017:`\ ` eq. 22,
     :caprini_2020:`\ ` p. 17.
     See :py:func:`H_star_eta_sh`.
 
     Earlier notation:
-    $$H_* \tau_\text{nl} \approx H_* \tau_\text{sh} \approx \frac{r_*}{\sqrt{K}}$$.
+    $$H_* \tau_\text{nl} \approx H_* \tau_\text{sh}$$.
+
+    Some sources define
+    $$H_* \tau_\text{sh} = \frac{r_*}{\sqrt{K}}$$.
+    :ajmi_2022:`\ ` p. 9.
+    This lacks the factor $\Gamma$ from within the square root.
 
     :param r_star: $r_* \equiv \mathcal{H}_* R_*$, Hubble-scaled mean bubble spacing
     :param K: $K$, kinetic energy fraction
+    :param adiabatic_index: $\Gamma$, mean adiabatic index
     :return: $\mathcal{H}_* \eta_\text{sh}$
     """
-    return r_star / ubarf_approx_K(K)
+    return r_star / np.sqrt(ubarf2_from_K(K, adiabatic_index=adiabatic_index))
 
 
 def H_star_eta_v(source_lifetime_factor: FloatOrArr, nu: FloatOrArr = DEFAULT_NU_GDH2024) -> FloatOrArr:
@@ -228,7 +239,7 @@ def J_full(
     )
 
 
-def J_old(r_star: FloatOrArr, K: FloatOrArr) -> FloatOrArr:
+def J_old(r_star: FloatOrArr, K: FloatOrArr, adiabatic_index: FloatOrArr = DEFAULT_ADIABATIC_INDEX) -> FloatOrArr:
     r"""Combined lifetime factor $J$, old approximation.
 
     $$J \equiv r_* \mathcal{H}_* \eta_\text{v} \approx r_* \left(1 - \frac{1}{\sqrt{1 + 2x}} \right),$$
@@ -245,7 +256,7 @@ def J_old(r_star: FloatOrArr, K: FloatOrArr) -> FloatOrArr:
     return J(
         r_star=r_star,
         H_star_eta_v=H_star_eta_v_old(
-            H_star_eta_sh=H_star_eta_sh_approx(r_star=r_star, K=K)
+            H_star_eta_sh=H_star_eta_sh_full(r_star=r_star, K=K, adiabatic_index=adiabatic_index)
         )
     )
 
