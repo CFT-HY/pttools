@@ -59,7 +59,8 @@ def beta_tilde(
         r_star: th.FloatOrArr,
         v_wall: th.FloatOrArr,
         legacy_cs: th.FloatOrArr | None = None,
-        beta_tilde_limit: float = const.BETA_TILDE_CONVERSION_MIN) -> th.FloatOrArr:
+        beta_tilde_min: float = const.BETA_TILDE_CONVERSION_MIN,
+        log_inaccurate: bool = True) -> th.FloatOrArr:
     r"""Nucleation rate parameter $\tilde{\beta}$, aka. "beta over H"
     $$\tilde{\beta} \equiv \frac{\beta}{H_*} = (8 \pi)^\frac{1}{3} \frac{\max ({v}_\text{wall}, c_s)}{{r}_*}$$
     :gowling_2021:`\ ` eq. 2.1.
@@ -71,18 +72,17 @@ def beta_tilde(
     :param r_star: Hubble-scaled mean bubble spacing $r_*$
     :param v_wall: Wall velocity $v_w$
     :param legacy_cs: $c_s$ for legacy $\max(v_{\text{wall}}, c_s)$
-    :param beta_tilde_limit: Upper limit for $\tilde{\beta}$
+    :param beta_tilde_min: Minimum $\tilde{\beta}$ for which the conversion is considered to be accurate.
     :return: Nucleation rate parameter $\tilde{\beta}$
     """
     b = beta(R_star=r_star, v_wall=v_wall, legacy_cs=legacy_cs)
-    b_min: float = np.min(b)
-    if b_min < beta_tilde_limit:
+    if log_inaccurate and np.min(b) < beta_tilde_min:
         with numba.objmode:
             logger.warning(
                 "Got β/H*=%s < %s for r*=%s, v_wall=%s. "
                 "The conversion to from r* to β/H* may not have been accurate, "
                 "as this seems to be a very slow phase transition. Please see Caprini et al. (2020) p. 6.",
-                b, beta_tilde_limit, r_star, v_wall
+                b, beta_tilde_min, r_star, v_wall
             )
     return b
 
