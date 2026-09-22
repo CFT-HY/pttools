@@ -10,7 +10,7 @@ import scipy.optimize
 
 from pttools.bubble import Phase
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet_bag
-from pttools.bubble.const import CS0, DEFAULT_ADIABATIC_INDEX
+from pttools.bubble.const import CS0, DEFAULT_ADIABATIC_INDEX, DEFAULT_DELTA_N
 from pttools.models import Model
 from pttools.speedup import njit
 import pttools.type_hints as th
@@ -23,6 +23,7 @@ from pttools.type_hints import FloatOrArr
 def alpha_n_from_ubarf(
         v_wall: th.FloatOrArr,
         ubarf: th.FloatOrArr,
+        model: Model | None = None,
         cs: th.FloatOrArr = CS0,
         adiabatic_index: th.FloatOrArr = DEFAULT_ADIABATIC_INDEX,
         alpha_n_min: float = 1e-8,
@@ -37,13 +38,15 @@ def alpha_n_from_ubarf(
 
     :param v_wall: Wall velocity $v_\text{wall}$
     :param ubarf: List of rms fluid velocities $\bar{U}_f$
+    :param model: Equation of state
+    :param cs: Speed of sound $c_s$
     :param adiabatic_index: Adiabatic index $\Gamma$
     :return: Array of phase transition strengths $\alpha$
     """
     # try:
     return scipy.optimize.brentq(
         alpha_n_from_ubarf_solvable,
-        args=(ubarf, v_wall, cs, adiabatic_index),
+        args=(ubarf, v_wall, model, cs, adiabatic_index),
         a=alpha_n_min, b=alpha_n_max, xtol=xtol
     )
     # except ValueError as err:
@@ -55,14 +58,16 @@ def alpha_n_from_ubarf(
     #     raise err
 
 
-@njit
 def alpha_n_from_ubarf_solvable(
         alpha_n: float,
         ubarf_target: float,
         v_wall: float,
-        cs: float,
-        adiabatic_index: float) -> float:
-    return ubarf_approx(v_wall=v_wall, alpha_n=alpha_n, cs=cs, adiabatic_index=adiabatic_index) - ubarf_target
+        model: Model | None = None,
+        cs: float = CS0,
+        adiabatic_index: float = DEFAULT_ADIABATIC_INDEX) -> float:
+    return ubarf_approx(
+        v_wall=v_wall, alpha_n=alpha_n, model=model, cs=cs, adiabatic_index=adiabatic_index
+    ) - ubarf_target
 
 
 @njit(cache=True)
@@ -214,18 +219,17 @@ def kappa_v_approx(
         # This is from the original PTtools code.
         return kappa_b(alpha_n)
     if v_wall < cs:
-        return kappa_sub_def_approx(v_wall, alpha_n, cs)
+        return kappa_sub_def_approx(v_wall=v_wall, alpha_n=alpha_n, cs=cs)
     if v_wall == v_cj:
         return kappa_c(alpha_n)
     # Todo: This approximation was present in the original PTtools code. Why?
     # if v_wall > 0.85:
     #     return kappa_d(alpha_n)
     if v_wall > v_cj:
-        return kappa_detonation_approx(v_wall, alpha_n, v_cj)
-    return kappa_hybrid_approx(v_wall, alpha_n, cs)
+        return kappa_detonation_approx(v_wall=v_wall, alpha_n=alpha_n, v_cj=v_cj)
+    return kappa_hybrid_approx(v_wall=v_wall, alpha_n=alpha_n, cs=cs)
 
 
-@njit
 def kinetic_energy_fraction_approx[T: FloatOrArr](
         v_wall: float,
         alpha_n: T,
@@ -237,22 +241,24 @@ def kinetic_energy_fraction_approx[T: FloatOrArr](
     $$K \approx \kappa \frac{\alpha_n}{1 + \alpha_n + \delta_n}$$
     :notes:`\ ` eq. 7.43.
     A version without $\delta_n$ is used in
+    :caprini_2020:`\ ` eq. 11
+    :notes:`\ ` eq. 8.21.
     :hakkinen_msc:`\ ` eq. 2.40.
 
     Some sources have a pre-factor of 0.6, such as
     $$K \approx 0.6 \kappa \frac{\alpha_n}{1 + \alpha_n}$$
     :caprini_2024:`\ ` p. 9.
     """
-    dn = 0. if model is None else delta_n(model, wn=model.wn(alpha_n))
+    dn = DEFAULT_DELTA_N if model is None else delta_n(model, wn=model.wn(alpha_n))
     return kappa_v_approx(v_wall=v_wall, alpha_n=alpha_n, cs=cs, v_cj=v_cj) * alpha_n / (1 + alpha_n + dn)
 
 
-@njit
 def ubarf_approx(
         v_wall: float,
         alpha_n: th.FloatOrArr,
-        delta_n: th.FloatOrArr = 0.,
+        model: Model | None = None,
         cs: float = CS0,
+        v_cj: float | None = None,
         adiabatic_index: th.FloatOrArr = DEFAULT_ADIABATIC_INDEX) -> th.FloatOrArr:
     r"""Approximate RMS fluid velocity $\bar{U}_f(v_{\text{wall}}, \alpha_n)$.
 
@@ -262,18 +268,17 @@ def ubarf_approx(
     \approx \sqrt{\frac{\kappa \alpha_n}{\Gamma (1 + \alpha_n)}}
     $$
     :notes:`\ `, eq. 7.39, 7.43,
-    :caprini_2020:`\ `, eq. 10
 
     :param v_wall: Wall velocity $v_\text{wall}$
     :param alpha_n: Phase transition strength $\alpha_n$
-    :param delta_n: $\delta_n$
+    :param model: Equation of state
     :param cs: Sound speed $c_s$
+    :param v_cj: Chapman-Jouguet speed $v_\text{CJ}$
     :param adiabatic_index: Adiabatic index $\Gamma$
     :return: Measure of the RMS fluid velocity $\bar{U}_f$
     """
     return np.sqrt(
-        kappa_v_approx(v_wall=v_wall, alpha_n=alpha_n, cs=cs) * alpha_n /
-        (adiabatic_index * (1. + alpha_n + delta_n))
+        kinetic_energy_fraction_approx(v_wall=v_wall, alpha_n=alpha_n, model=model, cs=cs, v_cj=v_cj) / adiabatic_index
     )
 
 

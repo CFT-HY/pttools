@@ -18,6 +18,8 @@ For the corresponding function, please see
 :py:func:`pttools.bubble.thermo.mean_adiabatic_index`.
 """
 
+#: Default $\delta_n = 0$, which corresponds to the bag model with $V_- = 0$.
+DEFAULT_DELTA_N: float = 0.
 #: Default number of entries in $\xi$ array
 DEFAULT_N_XI: int = 5000
 #: $\nu_\text{gdh2024}$ of :giombi_2024_cs:`\ ` eq. 2.11 for the bag model

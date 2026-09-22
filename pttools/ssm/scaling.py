@@ -80,11 +80,11 @@ def H_star_eta_sh_approx(r_star: FloatOrArr, K: FloatOrArr) -> FloatOrArr:
 
     $$\mathcal{H}_* \eta_\text{sh} = \frac{r_*}{\bar{U}_f} \approx \frac{r_*}{\sqrt{K}}$$
     :hindmarsh_2017:`\ ` eq. 22,
-    :caprini_2020:`\ ` p. 17,
-    :ajmi_2022:`\ ` p. 9.
+    :caprini_2020:`\ ` p. 17.
     See :py:func:`H_star_eta_sh`.
 
-    Earlier notation: $H_* \tau_\text{nl} \approx H_* \tau_\text{sh} \approx r_* / \sqrt{K}$.
+    Earlier notation:
+    $$H_* \tau_\text{nl} \approx H_* \tau_\text{sh} \approx \frac{r_*}{\sqrt{K}}$$.
 
     :param r_star: $r_* \equiv \mathcal{H}_* R_*$, Hubble-scaled mean bubble spacing
     :param K: $K$, kinetic energy fraction

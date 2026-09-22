@@ -119,7 +119,10 @@ class EnergyBudgetApproxTest(Reference, ABC):
         r"""The solvable function should be zero at the correct $\alpha_n$."""
         for alpha_n, v_wall in zip(self.ALPHA_NS, self.V_WALLS, strict=True):
             ubarf = ubarf_approx(v_wall, alpha_n)
-            dev = alpha_n_from_ubarf_solvable(alpha_n, float(ubarf), v_wall, CS0, DEFAULT_ADIABATIC_INDEX)
+            dev = alpha_n_from_ubarf_solvable(
+                alpha_n=alpha_n, ubarf_target=float(ubarf),
+                v_wall=v_wall, cs=CS0, adiabatic_index=DEFAULT_ADIABATIC_INDEX
+            )
             assert_allclose(dev, 0, atol=1e-14, name=f"alpha_n={alpha_n}, v_wall={v_wall}")
 
 
@@ -245,7 +248,8 @@ class DeltaNTest(unittest.TestCase):
 
     def test_ubarf_approx_delta_n(self):
         r"""A nonzero $\delta_n$ should decrease $\bar{U}_f$."""
+        model = BagModel(a_s=1.2, a_b=1, V_s=1, V_b=0.2)
         self.assertLess(
-            ubarf_approx(0.7, 0.3, delta_n=0.1),
-            ubarf_approx(0.7, 0.3, delta_n=0.)
+            ubarf_approx(0.7, 0.3, model=model),
+            ubarf_approx(0.7, 0.3)
         )
