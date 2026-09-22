@@ -31,7 +31,7 @@ def rho_delta[T: FloatOrArr](z: T, x: T | float, xp: T | float, xm: T | float, c
 
 
 @njit(cache=True)
-def rho_delta_factor[T: FloatOrArr](cs2: T = CS0_2) -> T:  # type: ignore[assignment]
+def rho_delta_factor[T: FloatOrArr](cs2: T = CS0_2) -> T:
     r"""The $c_s^2$ factor in $\rho(z,x)$
     $$\left( \frac{1 - c_s^2}{c_s^2} \right)^2$$
     :giombi_2024_cs:`\ ` eq. B.21.

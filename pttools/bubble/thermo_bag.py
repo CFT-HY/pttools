@@ -138,7 +138,7 @@ def get_kappa_bag[T: FloatOrArr](
     kappa_out: T
     if isinstance(v_wall, np.ndarray):  # noqa: SIM108
         # typing.cast() is not used below, since Numba cannot compile it.
-        kappa_out = it.operands[1]  # type: ignore[assignment]
+        kappa_out = it.operands[1]  # pyrefly: ignore[bad-assignment]
     else:
         kappa_out = type(v_wall)(it.operands[1])
 
@@ -188,8 +188,8 @@ def get_kappa_de_bag[T: FloatOrArr](
     kappa_out: T
     de_out: T
     if isinstance(v_wall, np.ndarray):
-        kappa_out = it.operands[1]  # type: ignore[assignment]
-        de_out = it.operands[2]  # type: ignore[assignment]
+        kappa_out = it.operands[1]  # pyrefly: ignore[bad-assignment]
+        de_out = it.operands[2]  # pyrefly: ignore[bad-assignment]
     else:
         kappa_out = type(v_wall)(it.operands[1])
         de_out = type(v_wall)(it.operands[2])
@@ -242,8 +242,8 @@ def get_kappa_dq_bag[T: FloatOrArr](
     kappa_out: T
     dq_out: T
     if isinstance(v_wall, np.ndarray):
-        kappa_out = it.operands[1]  # type: ignore[assignment]
-        dq_out = it.operands[2]  # type: ignore[assignment]
+        kappa_out = it.operands[1]  # pyrefly: ignore[bad-assignment]
+        dq_out = it.operands[2]  # pyrefly: ignore[bad-assignment]
     else:
         kappa_out = type(v_wall)(it.operands[1])
         dq_out = type(v_wall)(it.operands[2])
@@ -293,8 +293,8 @@ def get_ke_de_frac_bag[T: FloatOrArr](
     ke_out: T
     de_out: T
     if isinstance(v_wall, np.ndarray):
-        ke_out = it.operands[1]  # type: ignore[assignment]
-        de_out = it.operands[2]  # type: ignore[assignment]
+        ke_out = it.operands[1]  # pyrefly: ignore[bad-assignment]
+        de_out = it.operands[2]  # pyrefly: ignore[bad-assignment]
     else:
         ke_out = type(v_wall)(it.operands[1])
         de_out = type(v_wall)(it.operands[2])

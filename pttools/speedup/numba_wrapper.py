@@ -18,10 +18,10 @@ try:
     #: Whether the Numba version used is from before the major refactoring of the module structure.
     NUMBA_OLD_STRUCTURE = False
 except ImportError:
-    from numba import jitclass  # type: ignore[attr-defined,no-redef]
-    from numba.ccallback import CFunc  # type: ignore[no-redef]
-    from numba.dispatcher import Dispatcher  # type: ignore[no-redef]
-    from numba.targets.registry import CPUDispatcher  # type: ignore[no-redef]
+    from numba import jitclass
+    from numba.ccallback import CFunc
+    from numba.dispatcher import Dispatcher
+    from numba.targets.registry import CPUDispatcher
     NUMBA_OLD_STRUCTURE = True
 import numpy as np
 
@@ -36,10 +36,10 @@ if options.NUMBA_DISABLE_JIT:
     numbalsoda = None
 else:
     try:
-        import numbalsoda  # type: ignore[no-redef]
+        import numbalsoda
     except ImportError:
         try:
-            import NumbaLSODA as numbalsoda  # type: ignore[no-redef]  # noqa: N813
+            import NumbaLSODA as numbalsoda  # noqa: N813
             OLD_NUMBALSODA = True
             logger.warning(
                 "You are using an old version of NumbaLSODA. "
@@ -65,7 +65,7 @@ else:
                 "please install execstack with e.g. \"sudo apt install execstack\" and run this program again."
             ) from e
         subprocess.run(["execstack", "-c", parts[0]], check=False)
-        import numbalsoda  # type: ignore[no-redef]
+        import numbalsoda
 
 if numbalsoda is None:
     if options.NUMBA_INTEGRATE:

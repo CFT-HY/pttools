@@ -62,12 +62,12 @@ import scipy.integrate as spi
 # -----
 # These are object arrays. Numpy typing has no way of expressing the element type of an object array,
 # but declaring the element type here does give the correct types when the arrays are indexed.
-# The type: ignore comments are needed, since Matplotlib objects are not subclasses of np.generic.
-type AxesArr1D = np.ndarray[tuple[int], np.dtype[Axes]]  # type: ignore[type-var]
-type AxesArr2D = np.ndarray[tuple[int, int], np.dtype[Axes]]  # type: ignore[type-var]
-type AxesArr3D = np.ndarray[tuple[int, int, int], np.dtype[Axes]]  # type: ignore[type-var]
-type FigArr1D = np.ndarray[tuple[int], np.dtype[Figure]]  # type: ignore[type-var]
-type FigArr2D = np.ndarray[tuple[int, int], np.dtype[Figure]]  # type: ignore[type-var]
+# The ignore comments are needed, since Matplotlib objects are not subclasses of np.generic.
+type AxesArr1D = np.ndarray[tuple[int], np.dtype[Axes]]  # pyrefly: ignore[bad-specialization]
+type AxesArr2D = np.ndarray[tuple[int, int], np.dtype[Axes]]  # pyrefly: ignore[bad-specialization]
+type AxesArr3D = np.ndarray[tuple[int, int, int], np.dtype[Axes]]  # pyrefly: ignore[bad-specialization]
+type FigArr1D = np.ndarray[tuple[int], np.dtype[Figure]]  # pyrefly: ignore[bad-specialization]
+type FigArr2D = np.ndarray[tuple[int, int], np.dtype[Figure]]  # pyrefly: ignore[bad-specialization]
 #: Numba function
 type NumbaFunc = tp.Callable | CPUDispatcher
 #: ODE solver specifier

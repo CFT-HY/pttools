@@ -21,9 +21,9 @@ from pttools.speedup.options import MAX_WORKERS_DEFAULT
 from pttools.utils import SUPPORTS_FREETHREADING, SUPPORTS_INTERPRETER_POOL
 
 try:
-    from concurrent.futures import InterpreterPoolExecutor  # type: ignore[attr-defined]
+    from concurrent.futures import InterpreterPoolExecutor
 except ImportError:
-    class InterpreterPoolExecutor:  # type: ignore[no-redef]
+    class InterpreterPoolExecutor:
         def __init__(self, *args, **kwargs):
             raise NotImplementedError("InterpreterPoolExecutor is only available in Python 3.14 and later.")
 
@@ -189,7 +189,7 @@ def get_pool(
     """
     if single_thread:
         yield FakeExecutor()
-    elif SUPPORTS_FREETHREADING and not sys._is_gil_enabled():  # type: ignore[attr-defined]  # noqa: SLF001
+    elif SUPPORTS_FREETHREADING and not sys._is_gil_enabled():  # noqa: SLF001
         with ThreadPoolExecutor(max_workers=max_workers) as pool:
             yield pool
     elif SUPPORTS_INTERPRETER_POOL:

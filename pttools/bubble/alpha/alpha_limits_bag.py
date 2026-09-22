@@ -236,7 +236,7 @@ def alpha_plus_max_detonation_bag[T: FloatOrArr](v_wall: T) -> T:
         return 0.  # pyrefly: ignore[bad-return]
     a = (1 - np.sqrt(3) * v_wall) ** 2
     b = 3 * (1 - v_wall ** 2)
-    return a / b  # pyrefly: ignore[bad-return]
+    return a / b
 
 
 @vectorize(nopython=True)
@@ -256,4 +256,4 @@ def alpha_plus_min_hybrid[T: FloatOrArr](v_wall: T) -> T:
         return 0.  # pyrefly: ignore[bad-return]
     a = (1 - np.sqrt(3) * v_wall) ** 2
     c = 9 * v_wall ** 2 - 1
-    return a / c  # pyrefly: ignore[bad-return]
+    return a / c

@@ -26,7 +26,7 @@ def cs2_bag_multi[T: FloatOrArr](
     :notes:`\ `, p. 37,
     :rel_hydro_book:`\ `, eq. 2.207.
     """
-    return np.ones_like(w) * np.ones_like(phase) / 3.  # pyrefly: ignore[bad-return]
+    return np.ones_like(w) * np.ones_like(phase) / 3.
 
 
 @njit(cache=NUMBA_CACHE_CS2_BAG)

@@ -28,7 +28,7 @@ from .fluid_sub_def import *
 # from .gksvdv import *
 from .integrate import *
 from .junction import *
-from .junction_bag import *  # type: ignore[no-redef]
+from .junction_bag import *
 from .junction_entropy import *
 
 # from .physical_params import *
@@ -42,5 +42,5 @@ from .solution_type_bag import *
 from .thermo import *
 from .thermo_bag import *
 from .trim import *
-from .v_minus import *  # type: ignore[no-redef]
+from .v_minus import *
 from .v_plus import *

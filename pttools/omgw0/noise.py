@@ -108,7 +108,7 @@ def signal_to_noise_ratio(
 
 
 @njit(cache=True)
-def ft[T: FloatOrArr](L: T = LISA_ARM_LENGTH) -> T:  # type: ignore[assignment]
+def ft[T: FloatOrArr](L: T = LISA_ARM_LENGTH) -> T:
     r"""Transfer frequency
     $$f_t = \frac{c}{2\pi L}$$
     :gowling_2021:`\ ` p. 12.
@@ -125,7 +125,7 @@ F2_LISA: float = 4/3 * FT_LISA
 
 
 @njit(cache=True)
-def N_acc[T: FloatOrArr](L: T = LISA_ARM_LENGTH) -> T:  # type: ignore[assignment]
+def N_acc[T: FloatOrArr](L: T = LISA_ARM_LENGTH) -> T:
     r"""LISA acceleration noise
     $${N}_\text{acc} = \frac{3 \cdot 10^{-15}}{L} \frac{\text{m}}{\text{s}^2}
     \approx 1.44 \cdot 10^{-48} \frac{1}{\text{s}^4 \text{Hz}}$$
@@ -244,7 +244,7 @@ def P_acc[T: FloatOrArr](f: T, L: T | float = LISA_ARM_LENGTH) -> T:
 
 
 @njit(cache=True)
-def P_oms[T: FloatOrArr](L: T = LISA_ARM_LENGTH) -> T:  # type: ignore[assignment]
+def P_oms[T: FloatOrArr](L: T = LISA_ARM_LENGTH) -> T:
     r"""
     LISA optical metrology noise $P_\text{oms}$, aka. $S_II$ or $S_s$
     $$P_\text{oms}(f) = \left( \frac{1.5 \cdot 10^{-11} \text{m}}{L} \right)^2 \text{Hz}^{-1}$$

@@ -14,7 +14,7 @@ from numba.core.compiler import CompileResult
 
 logger = logging.getLogger(__name__)
 
-_REBUILD_ORIG: tp.Callable[..., CompileResult] = CompileResult._rebuild.__func__  # type: ignore[attr-defined]
+_REBUILD_ORIG: tp.Callable[..., CompileResult] = CompileResult._rebuild.__func__
 
 
 def _rebuild_with_reload_init(cls: type[CompileResult], *args, **kwargs) -> CompileResult:
@@ -46,10 +46,10 @@ def _rebuild_with_reload_init(cls: type[CompileResult], *args, **kwargs) -> Comp
 
 def patch_reload_init() -> None:
     """Apply :func:`_rebuild_with_reload_init` to Numba."""
-    if CompileResult._rebuild.__func__ is _rebuild_with_reload_init:  # type: ignore[attr-defined]
+    if CompileResult._rebuild.__func__ is _rebuild_with_reload_init:
         return
     logger.debug("Patching Numba to keep reload_init on libraries loaded from the cache.")
-    CompileResult._rebuild = classmethod(_rebuild_with_reload_init)  # type: ignore[method-assign]
+    CompileResult._rebuild = classmethod(_rebuild_with_reload_init)
 
 
 patch_reload_init()

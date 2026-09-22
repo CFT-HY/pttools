@@ -355,7 +355,7 @@ class Spectrum(SSMSpectrum):
         :param f: frequencies $f$ today
         :return: wavenumbers $z$
         """
-        return freq.z(f=f, T_star=self.T_star, r_star=self.r_star, g_star=self.g_star)  # pyrefly: ignore[bad-return]
+        return freq.z(f=f, T_star=self.T_star, r_star=self.r_star, g_star=self.g_star)
 
     # -----
     # Plotting
@@ -391,9 +391,9 @@ class Spectrum(SSMSpectrum):
 
 # These are object arrays. Numpy typing has no way of expressing the element type of an object array,
 # but declaring the element type here does give the correct types when the arrays are indexed.
-type SpectrumArr = NDArray[Spectrum]  # type: ignore[type-var]
-type SpectrumArr2D = np.ndarray[tuple[int, int], np.dtype[Spectrum]]  # type: ignore[type-var]
-type SpectrumArr3D = np.ndarray[tuple[int, int, int], np.dtype[Spectrum]]  # type: ignore[type-var]
+type SpectrumArr = NDArray[Spectrum]  # pyrefly: ignore[bad-specialization]
+type SpectrumArr2D = np.ndarray[tuple[int, int], np.dtype[Spectrum]]  # pyrefly: ignore[bad-specialization]
+type SpectrumArr3D = np.ndarray[tuple[int, int, int], np.dtype[Spectrum]]  # pyrefly: ignore[bad-specialization]
 
 copy_docstrings({
     Spectrum.f: freq.f,

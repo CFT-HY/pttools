@@ -57,7 +57,7 @@ def eta_ratio[T: FloatOrArr](
     return N_sh * r_star / ((1 + nu) * ubarf)  # pyrefly: ignore[bad-return]
 
 
-def H_eta[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:  # type: ignore[assignment]
+def H_eta[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:
     r"""$\mathcal{H} \eta$, conformal Hubble rate times conformal time, for a barotropic EoS.
 
     $$\mathcal{H} \eta = \frac{a'}{a} \eta = 1 + \nu_\text{gdh2024} = \frac{2}{1 + 3 \omega},$$
@@ -86,7 +86,7 @@ def H_eta[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:  # type: ignore[assig
     return 1 + nu  # pyrefly: ignore[bad-return]
 
 
-def l[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:  # noqa: E743  # type: ignore[assignment]
+def l[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:  # noqa: E743
     r"""$\ell(\nu)
     $$\ell(\nu) = 1 + 2\nu$$
     :giombi_2026:`\ ` p. 25.

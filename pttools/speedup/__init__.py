@@ -9,7 +9,7 @@ from .jit import *
 from .numba_wrapper import *
 from .options import *
 from .parallel import *
-from .spline import *  # type: ignore[no-redef]
+from .spline import *
 from .tbb import *
 from .threads import *
 from .utils import *

@@ -226,7 +226,7 @@ def J_full[T: FloatOrArr](
     :param nu: $\nu_\text{gdh2024}$
     :return: $J$
     """
-    return J(  # pyrefly: ignore[bad-return]
+    return J(
         r_star=r_star,
         H_star_eta_v=H_star_eta_v(
             source_lifetime_factor=source_lifetime_factor(

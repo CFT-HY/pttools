@@ -69,7 +69,7 @@ class FullModel(Model):
         self.t_crit, self.w_crit = self.criticals(T_crit_guess, allow_invalid)
         self.w_at_alpha_n_min, self.alpha_n_min = self.alpha_n_min_find()
 
-        self.cs2 = self.gen_cs2()  # type: ignore[method-assign]
+        self.cs2 = self.gen_cs2()  # pyrefly: ignore[bad-assignment]
         self.cs2_ptr()
         self.df_dtau_ptr()
 
