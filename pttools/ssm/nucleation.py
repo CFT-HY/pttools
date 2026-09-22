@@ -42,13 +42,13 @@ def beta(R_star: th.FloatOrArr, v_wall: th.FloatOrArr, legacy_cs: th.FloatOrArr 
     but instead presumes that $R_*$ already takes it into account.
     Please see :py:func:`pttools.bubble.nucleation.R_star` for further information.
 
-    Some older sources use $\max (v_\text{wall}, c_s)$, which is wrong.
+    Some older sources use $\max (v_{\text{wall}}, c_s)$, which is wrong.
     $$\beta = \frac{8\pi}{3} \frac{\max (v_w, c_s)}{R_*}$$
     Inverted from :caprini_2020:`\ ` eq. 6
 
     :param R_star: Mean bubble separation $R_*$
     :param v_wall: Wall velocity $v_w$
-    :param legacy_cs: $c_s$ for legacy $\max(v_\text{wall}, c_s)$
+    :param legacy_cs: $c_s$ for legacy $\max(v_{\text{wall}}, c_s)$
     :return: Inverse phase transition duration $\beta$
     """
     return beta_R_star0(v_wall=v_wall, legacy_cs=legacy_cs) / R_star
@@ -70,7 +70,7 @@ def beta_tilde(
 
     :param r_star: Hubble-scaled mean bubble spacing $r_*$
     :param v_wall: Wall velocity $v_w$
-    :param legacy_cs: $c_s$ for legacy $\max(v_\text{wall}, c_s)$
+    :param legacy_cs: $c_s$ for legacy $\max(v_{\text{wall}}, c_s)$
     :param beta_tilde_limit: Upper limit for $\tilde{\beta}$
     :return: Nucleation rate parameter $\tilde{\beta}$
     """
@@ -99,7 +99,7 @@ def beta_R_star0(v_wall: th.FloatOrArr, legacy_cs: th.FloatOrArr | None = None) 
     and therefore does not need to take into account nucleation suppression.
 
     :param v_wall: $w_\text{wall}$
-    :param legacy_cs: $c_s$ for legacy $\max(v_\text{wall}, c_s)$
+    :param legacy_cs: $c_s$ for legacy $\max(v_{\text{wall}}, c_s)$
     :return: $\beta R_{\ast,0}$
     """
     v = v_wall if legacy_cs is None else np.maximum(v_wall, legacy_cs)
@@ -245,7 +245,7 @@ def r_star[T2: FloatOrArr](
     :param xi: $\xi$
     :param T: $T$
     :param sol_type: solution type
-    :param legacy_cs: $c_s$ for legacy $\max(v_\text{wall}, c_s)$
+    :param legacy_cs: $c_s$ for legacy $\max(v_{\text{wall}}, c_s)$
     :return: $R_*$
     """
     # if beta_over_H < beta_over_H_limit:
@@ -319,7 +319,7 @@ def R_star[T2: FloatOrArr](
     :param xi: $\xi$
     :param T: $T$
     :param sol_type: solution type
-    :param legacy_cs: $c_s$ for legacy $\max(v_\text{wall}, c_s)$
+    :param legacy_cs: $c_s$ for legacy $\max(v_{\text{wall}}, c_s)$
     :param beta_tilde: $\tilde{\beta}$
     :return: $R_*$
     """
@@ -340,7 +340,7 @@ def R_star0(beta: th.FloatOrArr, v_wall: th.FloatOrArr, legacy_cs: th.FloatOrArr
 
     :param beta: Nucleation rate parameter $\beta$
     :param v_wall: Wall velocity ${v}_w$
-    :param legacy_cs: $c_s$ for legacy $\max(v_\text{wall}, c_s)$
+    :param legacy_cs: $c_s$ for legacy $\max(v_{\text{wall}}, c_s)$
     :return: Mean bubble separation $R_*$
     """
     return beta_R_star0(v_wall=v_wall, legacy_cs=legacy_cs) / beta

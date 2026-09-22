@@ -71,7 +71,7 @@ def assert_allclose(
                 f"Got: {actual_arr.shape}, {desired_arr.shape}"
             )
 
-        if actual_arr.ndim >= 3:
+        if actual_arr.ndim >= 3:  # noqa: PLR2004
             with np.printoptions(edgeitems=30, linewidth=200):
                 np.testing.assert_allclose(actual_arr, desired_arr, rtol, atol, equal_nan, err_msg, verbose)
             return
@@ -105,7 +105,7 @@ def assert_allclose(
     if not is_scalar:
         if actual_arr.ndim == 1:
             print_1d(actual_arr, desired_arr, close_arr)
-        elif actual_arr.ndim == 2:
+        elif actual_arr.ndim == 2:  # noqa: PLR2004
             print("Actual:")
             print_2d(actual_arr, close_arr, fmt)
             print("Desired:")
