@@ -67,13 +67,13 @@ def lookup_limits(z: FloatArr1D, cs: float = CS0, eps: float = 0.) -> tuple[floa
     return x_minus_min, x_plus_max
 
 
-def spec_den_gw_scaling(
+def spec_den_gw_scaling[T: FloatOrArr](
         ubarf2: float,
-        mean_adiabatic_index: FloatOrArr = DEFAULT_ADIABATIC_INDEX,
-        r_star: FloatOrArr = DEFAULT_R_STAR,
-        nu: FloatOrArr = DEFAULT_NU_GDH2024,
-        dilution_of_e: FloatOrArr = 1.,
-        suppression_factor: FloatOrArr = 1.) -> FloatOrArr:
+        mean_adiabatic_index: T = DEFAULT_ADIABATIC_INDEX,
+        r_star: T | float = DEFAULT_R_STAR,
+        nu: T | float = DEFAULT_NU_GDH2024,
+        dilution_of_e: T | float = 1.,
+        suppression_factor: T | float = 1.) -> T:
     r"""Scaling factor for $\tilde{P}_\text{gw}$.
 
     $$3 (\Gamma \bar{U}_f)^2 r_* \mathcal{H} \eta_*
@@ -108,7 +108,7 @@ def spec_den_gw_scaling(
     :param dilution_of_e: energy dilution factor
     :param suppression_factor: Suppression factor from comparison with lattice simulations
     """
-    return 3. * (mean_adiabatic_index * ubarf2)**2 * r_star * H_eta(nu) * dilution_of_e * suppression_factor
+    return 3. * (mean_adiabatic_index * ubarf2)**2 * r_star * H_eta(nu) * dilution_of_e * suppression_factor  # pyrefly: ignore[bad-return]
 
 
 def _spec_den_gw_core(

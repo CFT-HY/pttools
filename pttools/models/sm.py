@@ -91,29 +91,29 @@ class StandardModel(ThermoModel):
             silence_temp=silence_temp
         )
 
-    def dge_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def dge_dT[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         self.validate_temp(temp)
         return 1/(np.log(10)*temp) * interpolate.splev(np.log10(temp), self.GE_SPLINE, der=1) * self.g_mult(phase) \
             - 120/np.pi**2 * self.V_b/temp**5
 
-    def dgs_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def dgs_dT[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         self.validate_temp(temp)
         return 1/(np.log(10)*temp) * interpolate.splev(np.log10(temp), self.GS_SPLINE, der=1) * self.g_mult(phase)
 
-    def ge(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def ge[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         self.validate_temp(temp)
-        return interpolate.splev(np.log10(temp), self.GE_SPLINE) * self.g_mult(phase) \
-            + 30/np.pi**2 * self.V(phase) / temp**4
+        return tp.cast(T, interpolate.splev(np.log10(temp), self.GE_SPLINE) * self.g_mult(phase)
+                          + 30/np.pi**2 * self.V(phase) / temp**4)
 
-    def gs(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def gs[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         self.validate_temp(temp)
-        return interpolate.splev(np.log10(temp), self.GS_SPLINE) * self.g_mult(phase)
+        return tp.cast(T, interpolate.splev(np.log10(temp), self.GS_SPLINE) * self.g_mult(phase))
 
-    def ge_gs_ratio(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def ge_gs_ratio[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         self.validate_temp(temp)
         if self.g_mult_s == self.g_mult_b == 1 and self.V_s == self.V_b == 0:
-            return interpolate.splev(np.log10(temp), self.GE_GS_RATIO_SPLINE)
-        return self.ge(temp, phase) / self.gs(temp, phase)
+            return tp.cast(T, interpolate.splev(np.log10(temp), self.GE_GS_RATIO_SPLINE))
+        return tp.cast(T, self.ge(temp, phase) / self.gs(temp, phase))
 
     def g_mult[T: FloatOrArr](self, phase: T) -> T:
         return tp.cast(T, self.g_mult_b * phase + self.g_mult_s * (1 - phase))

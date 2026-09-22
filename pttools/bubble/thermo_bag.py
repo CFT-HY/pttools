@@ -317,7 +317,7 @@ def get_ke_frac_bag[T: FloatOrArr](v_wall: T, alpha_n: float, n_xi: int = const.
     ubarf2 = get_ubarf2_bag(
         v_wall, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG,
         ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR, n_xi=n_xi)
-    return ubarf2 / (0.75 * (1 + alpha_n))  # type: ignore[return-value]
+    return ubarf2 / (0.75 * (1 + alpha_n))  # pyrefly: ignore[bad-return]
 
 
 def get_ke_frac_new_bag[T: FloatOrArr](
@@ -457,11 +457,11 @@ def get_ubarf2_bag[T: FloatOrArr1D](
     :return: mean square fluid velocity
     """
     if isinstance(v_wall, float):
-        return _get_ubarf2_bag_scalar(  # type: ignore[return-value]
+        return _get_ubarf2_bag_scalar(  # pyrefly: ignore[bad-return]
             v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr,
             ode_method=ode_method, cs2_ptr=cs2_ptr, n_xi=n_xi, verbosity=verbosity)
     if isinstance(v_wall, np.ndarray):
-        return _get_ubarf2_bag_arr(  # type: ignore[return-value]
+        return _get_ubarf2_bag_arr(  # pyrefly: ignore[bad-return]
             v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr,
             ode_method=ode_method, cs2_ptr=cs2_ptr, n_xi=n_xi, verbosity=verbosity)
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
@@ -488,11 +488,11 @@ def _get_ubarf2_bag_numba(
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
-def get_ubarf2_new_bag(
-        v_wall: th.FloatOrArr,
+def get_ubarf2_new_bag[T: FloatOrArr](
+        v_wall: T,
         alpha_n: float,
         n_xi: int = const.DEFAULT_N_XI,
-        verbosity: int = 0) -> th.FloatOrArr:
+        verbosity: int = 0) -> T:
     r"""
     Get mean square fluid velocity from $v_\text{wall}$ and $\alpha_n$.
 
@@ -527,7 +527,7 @@ def get_ubarf2_new_bag(
     ubarf2_out: th.FloatOrArr
     ubarf2_out = it.operands[1] if isinstance(v_wall, np.ndarray) else type(v_wall)(it.operands[1])
 
-    return ubarf2_out
+    return ubarf2_out  # pyrefly: ignore[bad-return]
 
 
 def mean_energy_change_bag(

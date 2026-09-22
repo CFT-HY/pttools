@@ -14,6 +14,7 @@ from pttools.bubble.integrate import FluidIntegrateMethod
 from pttools.bubble.solution_type import SolutionType
 from pttools.speedup import njit
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 
 def _find_alpha_plus_bag_scalar(
@@ -92,8 +93,8 @@ def _find_alpha_plus_bag_arr_wrapper(
     )
 
 
-def find_alpha_plus_bag(
-        v_wall: th.FloatOrArr,
+def find_alpha_plus_bag[T: FloatOrArr](
+        v_wall: T,
         alpha_n_given: float,
         df_dtau_ptr: speedup.DifferentialPointer,
         ode_method: FluidIntegrateMethod,
@@ -101,7 +102,7 @@ def find_alpha_plus_bag(
         n_xi: int = const.DEFAULT_N_XI,
         xtol: float = const.FIND_ALPHA_PLUS_TOL,
         # parallel: bool = True
-        ) -> th.FloatOrArr:
+        ) -> T:
     r"""
     Calculate the at-wall strength parameter $\alpha_+$ from given $\alpha_n$ and $v_\text{wall}$ in the Bag Model.
 
@@ -120,19 +121,19 @@ def find_alpha_plus_bag(
     :return: $\alpha_+$, the at-wall strength parameter
     """
     if isinstance(v_wall, float):
-        return _find_alpha_plus_bag_scalar(
+        return _find_alpha_plus_bag_scalar(  # pyrefly: ignore[bad-return]
             v_wall, alpha_n_given,
             df_dtau_ptr=df_dtau_ptr, ode_method=ode_method,
             cs2_ptr=cs2_ptr, n_xi=n_xi, xtol=xtol  # , parallel=parallel
         )
     if isinstance(v_wall, np.ndarray):
         if not v_wall.ndim:
-            return _find_alpha_plus_bag_scalar(
+            return _find_alpha_plus_bag_scalar(  # pyrefly: ignore[bad-return]
                 v_wall.item(), alpha_n_given,
                 df_dtau_ptr=df_dtau_ptr, ode_method=ode_method,
                 cs2_ptr=cs2_ptr, n_xi=n_xi, xtol=xtol  # , parallel=parallel
             )
-        return _find_alpha_plus_bag_arr(
+        return _find_alpha_plus_bag_arr(  # pyrefly: ignore[bad-return]
             v_wall, alpha_n_given,
             df_dtau_ptr=df_dtau_ptr, ode_method=ode_method,
             cs2_ptr=cs2_ptr, n_xi=n_xi, xtol=xtol

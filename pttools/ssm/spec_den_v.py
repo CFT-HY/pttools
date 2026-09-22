@@ -8,20 +8,21 @@ import numpy as np
 from pttools.speedup import njit, njit_parallel_pair
 from pttools.ssm.nucleation import NucType, beta_R_star0, lifetime_distribution
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 logger = logging.getLogger(__name__)
 
 
 @njit(cache=True)
-def qT_from_z(
-        z: th.FloatOrArr,
-        T_tilde: th.FloatOrArr,
-        beta_R: th.FloatOrArr) -> th.FloatOrArr:
+def qT_from_z[T: FloatOrArr](
+        z: T,
+        T_tilde: T | float,
+        beta_R: T | float) -> T:
     r"""$qT$
     $$qT = \frac{z \tilde{T}}{\beta R_*} = \frac{\tilde{T}q}{\beta}$$
     where $z = q L_f = q R_*$.
     """
-    return z * T_tilde / beta_R
+    return z * T_tilde / beta_R  # pyrefly: ignore[bad-return]
 
 
 @njit

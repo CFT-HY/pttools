@@ -5,17 +5,17 @@ import math
 import numpy as np
 
 from pttools.omgw0 import const
-import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 
-def omgw_approx(
-        f: th.FloatOrArr,
-        alpha: th.FloatOrArr,
-        kappa_v: th.FloatOrArr,
-        r_star: th.FloatOrArr,
-        temp: th.FloatOrArr = const.DEFAULT_T_STAR,
-        g_star: th.FloatOrArr = const.DEFAULT_G_STAR,
-        f0_peak: th.FloatOrArr | None = None) -> th.FloatOrArr:
+def omgw_approx[T: FloatOrArr](
+        f: T,
+        alpha: T | float,
+        kappa_v: T | float,
+        r_star: T | float,
+        temp: T | float = const.DEFAULT_T_STAR,
+        g_star: T | float = const.DEFAULT_G_STAR,
+        f0_peak: T | float | None = None) -> T:
     r""":caprini_2016:`\ ` eq. 13."""
     # Todo: this function is missing a factor of h^2
     # return 2.65e-6 * H_star * beta * ((kappa_v * alpha) / (1 + alpha)) * (100 / g_star)**(1/3) * v_w * S_sw(f)
@@ -26,17 +26,17 @@ def omgw_approx(
         S_sw_approx(f, f0_peak)
 
 
-def S_sw_approx(f: th.FloatOrArr, f_peak: th.FloatOrArr) -> th.FloatOrArr:
+def S_sw_approx[T: FloatOrArr](f: T, f_peak: T | float) -> T:
     r""":caprini_2016:`\ ` eq. 14."""
     f_relative = f / f_peak
-    return f_relative**3 * (7 / (4 + 3 * f_relative**2)) ** (7/2)
+    return f_relative**3 * (7 / (4 + 3 * f_relative**2)) ** (7/2)  # pyrefly: ignore[bad-return]
 
 
-def f_peak_approx(v_wall: th.FloatOrArr, beta: th.FloatOrArr) -> th.FloatOrArr:
-    return 2 * beta / (math.sqrt(3) * v_wall)
+def f_peak_approx[T: FloatOrArr](v_wall: T, beta: T | float) -> T:
+    return 2 * beta / (math.sqrt(3) * v_wall)  # pyrefly: ignore[bad-return]
 
 
-def f0_peak_approx(temp: th.FloatOrArr, r_star: th.FloatOrArr, g_star: th.FloatOrArr) -> th.FloatOrArr:
+def f0_peak_approx[T: FloatOrArr](temp: T, r_star: T | float, g_star: T | float) -> T:
     r""":caprini_2016:`\ ` eq. 15."""
     # return 1.9e-5 * beta * temp / (v_wall * H_star * 100) * (g_star / 100) ** (1/6)
     return 1.9e-5 * (8 * np.pi)**(1/3) / r_star * temp / 100 * (g_star / 100) ** (1/6)

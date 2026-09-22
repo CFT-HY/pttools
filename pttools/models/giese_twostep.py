@@ -3,8 +3,11 @@
 Does not work yet.
 """
 
+import typing as tp
+
 from pttools.models.analytic import AnalyticModel
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 
 class GieseTwoStepModel(AnalyticModel):
@@ -20,8 +23,8 @@ class GieseTwoStepModel(AnalyticModel):
         self.d_b = d_b
         super().__init__()
 
-    def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        return self.a_s/3*temp**4 + self.V(temp, phase)
+    def p_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+        return tp.cast(T, self.a_s/3*temp**4 + self.V(temp, phase))
 
     def V(self, temp: th.FloatOrArr, phase: th.FloatOrArr):
         V_s = (self.b_s - self.d_s * temp**2)**2 - self.b_b**2

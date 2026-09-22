@@ -13,10 +13,10 @@ def kernel_int_bracket[T: FloatOrArr](cs: T) -> T:
     :giombi_2024_cs:`\ ` eq. 3.11.
     """
     # typing.cast() is not used below, since Numba cannot compile it.
-    return 3 - 2 * cs ** 2 - 3 / cs * (1 - cs ** 2) * np.arctanh(cs)  # type: ignore[return-value]
+    return 3 - 2 * cs ** 2 - 3 / cs * (1 - cs ** 2) * np.arctanh(cs)  # pyrefly: ignore[bad-return]
 
 
-def kernel_low(z: FloatOrArr, nu: FloatOrArr, tau_star: FloatOrArr, tau_end: FloatOrArr) -> FloatOrArr:
+def kernel_low[T: FloatOrArr](z: T, nu: T | float, tau_star: T | float, tau_end: T | float) -> T:
     r"""Low-frequency kernel $\Delta_\text{low}$ for $c_s \neq \frac{1}{\sqrt{3}}$
     $$\Delta_\text{low} =
     \left( \frac{z \tau_*}{2} \right)^{-2\nu}
@@ -27,16 +27,18 @@ def kernel_low(z: FloatOrArr, nu: FloatOrArr, tau_star: FloatOrArr, tau_end: Flo
     """
     # TODO: Ensure that this formula from Lorenzo's code is correct.
     # Should this have 2pi instead of 4pi, and Upsilon^2?
-    return (0.5 * z * tau_star) ** (-2 * nu) * \
-        gamma(0.5 + nu) ** 2 / (4 * np.pi) * \
-        Upsilon(r=tau_star / tau_end, l=2 * nu)
+    return (
+        (0.5 * z * tau_star) ** (-2 * nu)  # pyrefly: ignore[bad-return]
+        * gamma(0.5 + nu) ** 2 / (4 * np.pi)
+        * Upsilon(r=tau_star / tau_end, l=2 * nu)
+    )
 
 
-def kernel_low_bag(tau_star: FloatOrArr, tau_end: FloatOrArr) -> FloatOrArr:
+def kernel_low_bag[T: FloatOrArr](tau_star: T, tau_end: T | float) -> T:
     r"""Low-frequency kernel for bag model (radiation domination)
     $$\Delta_\text{low}^{\eta=0} (x, \tau_*, \tau_\text{end}) \rightarrow_{k \rightarrow 0}
     \frac{1}{4} \ln^2 \left( \frac{\tau_\text{end}}{\tau_*} \right)$$
     :giombi_2024_cs:`\ ` eq. 3.4
     The ci and si terms are negligible and have been dropped.
     """
-    return 0.25 * np.log(tau_end / tau_star)**2
+    return 0.25 * np.log(tau_end / tau_star)**2  # pyrefly: ignore[bad-return]

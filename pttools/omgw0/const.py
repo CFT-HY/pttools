@@ -64,7 +64,7 @@ The older value $N \approx 3.046$ is used in
 """
 
 
-def gs0(g0: FloatOrArr = G0, n_nu: FloatOrArr = N_NU) -> FloatOrArr:
+def gs0[T: FloatOrArr](g0: T = G0, n_nu: T | float = N_NU) -> T:
     r"""
     $g_{s0}$, the degrees of freedom for entropy today.
 
@@ -100,7 +100,7 @@ def gs0(g0: FloatOrArr = G0, n_nu: FloatOrArr = N_NU) -> FloatOrArr:
 
     Together, these factors result $g_{s0} \approx 3.91$ of :caprini_2020:`\ ` p. 12.
     """
-    return g0 + 7 / 8 * 2 * n_nu * (4 / 11)
+    return g0 + 7 / 8 * 2 * n_nu * (4 / 11)  # pyrefly: ignore[bad-return]
 
 
 GS0: float = 3.9298

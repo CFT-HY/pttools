@@ -9,6 +9,7 @@ from pttools.bubble.cs2 import cs2_to_ptr
 from pttools.bubble.phase import Phase
 from pttools.speedup import njit
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 NUMBA_CACHE_CS2_BAG: bool = True
 """Whether to cache the Numba-compiled $c_s^2$ functions
@@ -18,19 +19,19 @@ This is enabled by default, since these functions are not expected to change bet
 
 
 @njit(cache=NUMBA_CACHE_CS2_BAG)
-def cs2_bag_multi(
-        w: th.FloatOrArr,
-        phase: th.FloatOrArr) -> th.FloatOrArr:
+def cs2_bag_multi[T: FloatOrArr](
+        w: T,
+        phase: th.FloatOrArr) -> T:
     r"""Sound speed squared, $c_s^2=\frac{1}{3}$.
     :notes:`\ `, p. 37,
     :rel_hydro_book:`\ `, eq. 2.207.
     """
-    return np.ones_like(w) * np.ones_like(phase) / 3.
+    return np.ones_like(w) * np.ones_like(phase) / 3.  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=NUMBA_CACHE_CS2_BAG)
-def cs2_bag_neg(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-    return - cs2_bag_multi(w, phase)
+def cs2_bag_neg[T: FloatOrArr](w: T, phase: th.FloatOrArr) -> T:
+    return - cs2_bag_multi(w, phase)  # pyrefly: ignore[bad-return]
 
 
 def _cs2_bag_scalar(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -46,15 +47,15 @@ def cs2_bag_scalar_cfunc(w: float, phase: Phase) -> float:
 
 
 @njit(cache=NUMBA_CACHE_CS2_BAG)
-def cs2_bag_temp(temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+def cs2_bag_temp[T: FloatOrArr](temp: T, phase: th.FloatOrArr) -> T:
     return cs2_bag_multi(temp, phase)
 
 
-def _cs2_bag_arr(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+def _cs2_bag_arr(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatArr:
     return np.full_like(w, const.CS0_2)
 
 
-def cs2_bag(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+def cs2_bag[T: FloatOrArr](w: T, phase: th.FloatOrArr) -> T:
     r"""
     Speed of sound squared in Bag model, equal to $\frac{1}{3}$, independent of enthalpy $w$.
 
@@ -66,9 +67,9 @@ def cs2_bag(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
     :return: speed of sound squared $c_s^2$
     """
     if isinstance(w, float):
-        return cs2_bag_scalar(w, phase)
+        return cs2_bag_scalar(w, phase)  # pyrefly: ignore[bad-return]
     if isinstance(w, np.ndarray):
-        return cs2_bag_arr(w, phase)
+        return cs2_bag_arr(w, phase)  # pyrefly: ignore[bad-return]
     raise TypeError(f"Unknown type for w: {type(w)}")
 
 

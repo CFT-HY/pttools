@@ -97,7 +97,7 @@ def kappa(
     return va_kinetic_energy_density(v, w, xi) / np.abs(delta_e_theta)
 
 
-def kappa_approx(alpha_n: th.FloatOrArr) -> th.FloatOrArr:
+def kappa_approx[T: FloatOrArr](alpha_n: T) -> T:
     r"""Approximate kinetic efficiency factor $\kappa$
     $$\kappa \approx \frac{\alpha_n}{0.73 + 0.083\sqrt{\alpha_n} + \alpha_n}$$
     :notes:`\ ` eq. 7.44.
@@ -105,7 +105,7 @@ def kappa_approx(alpha_n: th.FloatOrArr) -> th.FloatOrArr:
     :param alpha_n: Transition strength $\alpha_n$
     :return: Approximate kinetic efficiency factor $\kappa$
     """
-    return alpha_n / (0.73 + 0.083*np.sqrt(alpha_n) + alpha_n)
+    return alpha_n / (0.73 + 0.083*np.sqrt(alpha_n) + alpha_n)  # pyrefly: ignore[bad-return]
 
 
 @njit
@@ -143,7 +143,7 @@ def kinetic_energy_fraction(ek_bva: float, eb: float) -> float:
 
 
 # @njit
-def mean_adiabatic_index(wb: th.FloatOrArr, eb: th.FloatOrArr) -> th.FloatOrArr:
+def mean_adiabatic_index[T: FloatOrArr](wb: T, eb: T | float) -> T:
     r"""Mean adiabatic index $\Gamma$.
 
     $$\Gamma = \frac{\bar{w}}{\bar{e}}$$
@@ -158,7 +158,7 @@ def mean_adiabatic_index(wb: th.FloatOrArr, eb: th.FloatOrArr) -> th.FloatOrArr:
     :param eb: Average energy density $\bar{e}$
     :return: Mean adiabatic index $\Gamma$
     """
-    return wb / eb
+    return wb / eb  # pyrefly: ignore[bad-return]
 
 
 def mean_enthalpy_change(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float) -> float:
@@ -188,7 +188,7 @@ def nu_gdh2024[T: FloatOrArr](omega: T) -> T:
     :giombi_2024_cs:`\ ` eq. 2.11, 2.41.
     """
     # typing.cast() is not used below, since Numba cannot compile it.
-    return (1 - 3 * omega) / (1 + 3 * omega)  # type: ignore[return-value]
+    return (1 - 3 * omega) / (1 + 3 * omega)  # pyrefly: ignore[bad-return]
 
 
 def omega(
@@ -215,14 +215,14 @@ def omega(
     return va_thermal_energy_density_diff(w, xi) / np.abs(delta_e_theta)
 
 
-def omega_barotropic(p: th.FloatOrArr, e: th.FloatOrArr) -> th.FloatOrArr:
+def omega_barotropic[T: FloatOrArr](p: T, e: T | float) -> T:
     r"""Barotropic equation of state parameter $\omega$.
 
     $$\omega(T,\phi) = \frac{p(T,\phi)}{e(T,\phi)}$$
     :giombi_2024_cs:`\ ` p. 3
     In some sources this is known as the equation-of-state parameter for short, and denoted as $w$.
     """
-    return p / e
+    return p / e  # pyrefly: ignore[bad-return]
 
 
 def thermal_energy_density(v_wall: float, eqp: float) -> float:
@@ -248,14 +248,14 @@ def thermal_energy_density_diff(w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: flo
     return 3/(4*np.pi * v_wall**3) * va_thermal_energy_density_diff(w, xi)
 
 
-def thermal_energy_fraction(eq_bva: th.FloatOrArr, eb: th.FloatOrArr) -> th.FloatOrArr:
+def thermal_energy_fraction[T: FloatOrArr](eq_bva: T, eb: T | float) -> T:
     r"""Thermal energy fraction $\frac{{e}_Q'}{\bar{e}}$.
 
     :param eq_bva: Thermal energy density ${e}_Q'$
     :param eb: Average energy density $\bar{e}$
     :return: Thermal energy fraction $\frac{{e}_Q'}{\bar{e}}$
     """
-    return eq_bva / eb
+    return eq_bva / eb  # pyrefly: ignore[bad-return]
 
 
 def trace_anomaly_diff(
@@ -315,7 +315,7 @@ def ubarf2(
 
 
 @njit(cache=True)
-def ubarf2_from_K(K: th.FloatOrArr, adiabatic_index: th.FloatOrArr = DEFAULT_ADIABATIC_INDEX) -> th.FloatOrArr:
+def ubarf2_from_K[T: FloatOrArr](K: T, adiabatic_index: T | float = DEFAULT_ADIABATIC_INDEX) -> T:
     r"""RMS fluid velocity $\bar{U}_f^2(K)$.
 
     $$\bar{U}_f^2 \approx \frac{K}{\Gamma}$$
@@ -325,7 +325,7 @@ def ubarf2_from_K(K: th.FloatOrArr, adiabatic_index: th.FloatOrArr = DEFAULT_ADI
 
     This is used in :py:func:`pttools.ssm.scaling.H_star_eta_sh_full`.
     """
-    return K / adiabatic_index
+    return K / adiabatic_index  # pyrefly: ignore[bad-return]
 
 
 def va_enthalpy_density(eq: float) -> float:

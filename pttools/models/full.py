@@ -1,6 +1,7 @@
 """Full thermodynamics-based model."""
 
 import logging
+import typing as tp
 
 import numpy as np
 from scipy.interpolate import splev, splrep
@@ -13,6 +14,7 @@ from pttools.models.thermo import ThermoModel
 from pttools.speedup import njit
 from pttools.speedup.overload import np_all_fix
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +102,7 @@ class FullModel(Model):
         return (self.thermo.gp(temp, Phase.SYMMETRIC) - self.thermo.gp(temp, Phase.BROKEN))*temp**4 \
             + self.critical_temp_const
 
-    def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def e_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""Energy density $e(T,\phi)$, using :borsanyi_2016:`\ `, eq. S12
         $$ e(T,\phi) = \frac{\pi^2}{30} g_e(T,\phi) T^4 $$
         :param temp: temperature $T$
@@ -108,28 +110,28 @@ class FullModel(Model):
         :return: $e(T,\phi)$.
         """
         self.validate_temp(temp)
-        return np.pi**2 / 30 * self.thermo.ge(temp, phase) * temp**4 + self.V(phase)
+        return tp.cast(T, np.pi**2 / 30 * self.thermo.ge(temp, phase) * temp**4 + self.V(phase))
 
-    def ge_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def ge_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         return self.thermo.ge(temp, phase)
 
-    def gp_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def gp_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         return self.thermo.gp(temp, phase)
 
-    def gs_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def gs_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         return self.thermo.gs(temp, phase)
 
-    def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def p_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""Pressure $p(T,\phi)$
         $$ p(T,\phi) = \frac{\pi^2}{90} g_p(T,\phi) T^4$$.
         """
         self.validate_temp(temp)
-        return np.pi**2 / 90 * self.thermo.gp(temp, phase) * temp**4 - self.V(phase)
+        return tp.cast(T, np.pi**2 / 90 * self.thermo.gp(temp, phase) * temp**4 - self.V(phase))
 
     def params_str(self) -> str:
         return self.label_unicode
 
-    def s_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def s_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""Entropy density $s(T,\phi), using :borsanyi_2016:`\ `, eq. S12$
         $$ s(T,\phi) = \frac{2\pi^2}{45} g_s(T) T^3$$
         :param temp: temperature $T$
@@ -137,18 +139,18 @@ class FullModel(Model):
         :return: $s(T,\phi)$.
         """
         self.validate_temp(temp)
-        return 2*np.pi**2 / 45 * self.thermo.gs(temp, phase) * temp**3
+        return tp.cast(T, 2*np.pi**2 / 45 * self.thermo.gs(temp, phase) * temp**3)
 
-    def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr):
+    def temp[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         r"""Temperature $T$."""
         if np.all(phase == Phase.SYMMETRIC.value):
-            return 10**splev(np.log10(w), self.temp_spline_s)
+            return tp.cast(T, 10**splev(np.log10(w), self.temp_spline_s))
         if np.all(phase == Phase.BROKEN.value):
-            return 10**splev(np.log10(w), self.temp_spline_b)
-        return 10**splev(np.log10(w), self.temp_spline_b) * phase \
-            + 10**splev(np.log10(w), self.temp_spline_s) * (1 - phase)
+            return tp.cast(T, 10**splev(np.log10(w), self.temp_spline_b))
+        return tp.cast(T, 10**splev(np.log10(w), self.temp_spline_b) * phase
+                       + 10**splev(np.log10(w), self.temp_spline_s) * (1 - phase))
 
-    def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def w[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""Enthalpy density $w$
         $$ w = e + p = Ts = T \frac{dp}{dT} = \frac{2\pi^2}{45} g_s T^4 $$
         For the steps please see :notes:`\ ` page 23 and eq. 7.1. and :borsanyi_2016: eq. S12.
@@ -158,4 +160,4 @@ class FullModel(Model):
         :return: enthalpy density $w$
         """
         self.validate_temp(temp)
-        return temp * self.s_temp(temp, phase)
+        return tp.cast(T, temp * self.s_temp(temp, phase))

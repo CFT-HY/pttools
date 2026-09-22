@@ -12,6 +12,7 @@ import numpy as np
 from pttools.bubble.solution_type import SolutionType
 from pttools.speedup import njit, njit_parallel_pair
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 
 def _v_minus_scalar(
@@ -102,13 +103,13 @@ def _v_minus_arr_wrapper(
     return _v_minus_arr_single(vp=vp, ap=ap, sol_type=sol_type, strong_branch=strong_branch, debug=debug)
 
 
-def v_minus(
-        vp: th.FloatOrArr,
+def v_minus[T: FloatOrArr](
+        vp: T,
         ap: float,
         sol_type: SolutionType = SolutionType.DETON,
         strong_branch: bool = False,
         debug: bool = False,
-        parallel: bool = True) -> th.FloatOrArr:
+        parallel: bool = True) -> T:
     r"""
     Fluid speed $\tilde{v}_-$ behind the wall in the wall frame
     $$\tilde{v}_- = \frac{1}{2} \left[
@@ -129,9 +130,9 @@ def v_minus(
     """
     # TODO: add support for having both arguments as arrays
     if isinstance(vp, float):
-        return _v_minus_scalar(vp, ap, sol_type, strong_branch, debug)
+        return _v_minus_scalar(vp, ap, sol_type, strong_branch, debug)  # pyrefly: ignore[bad-return]
     if isinstance(vp, np.ndarray):
-        return _v_minus_arr(vp, ap, sol_type, strong_branch, debug)
+        return _v_minus_arr(vp, ap, sol_type, strong_branch, debug)  # pyrefly: ignore[bad-return]
     raise TypeError(f"Unknown argument types: vp = {type(vp)}, ap = {type(ap)}")
 
 

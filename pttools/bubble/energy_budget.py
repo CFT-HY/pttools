@@ -3,8 +3,6 @@ r"""Energy budget approximations.
 These approximations are based on :espinosa_2010:`\ `.
 """
 
-import typing as tp
-
 import numpy as np
 import scipy.optimize
 
@@ -13,22 +11,21 @@ from pttools.bubble.chapman_jouguet import v_chapman_jouguet_bag
 from pttools.bubble.const import CS0, DEFAULT_ADIABATIC_INDEX, DEFAULT_DELTA_N
 from pttools.models import Model
 from pttools.speedup import njit
-import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
 # The functions in this file don't call code from other files and are therefore safe to cache.
 
 
 @np.vectorize
-def alpha_n_from_ubarf(
-        v_wall: th.FloatOrArr,
-        ubarf: th.FloatOrArr,
+def alpha_n_from_ubarf[T: FloatOrArr](
+        v_wall: T,
+        ubarf: T | float,
         model: Model | None = None,
-        cs: th.FloatOrArr = CS0,
-        adiabatic_index: th.FloatOrArr = DEFAULT_ADIABATIC_INDEX,
+        cs: T | float = CS0,
+        adiabatic_index: T | float = DEFAULT_ADIABATIC_INDEX,
         alpha_n_min: float = 1e-8,
         alpha_n_max: float = 1e12,
-        xtol: float = 1e-6) -> th.FloatOrArr:
+        xtol: float = 1e-6) -> T:
     r"""Phase transition strength $\alpha(\bar{U}_f)$.
 
     The calculation of $\bar{U}_f$ is not easy to invert,
@@ -44,7 +41,7 @@ def alpha_n_from_ubarf(
     :return: Array of phase transition strengths $\alpha$
     """
     # try:
-    return scipy.optimize.brentq(
+    return scipy.optimize.brentq(  # pyrefly: ignore[bad-return]
         alpha_n_from_ubarf_solvable,
         args=(ubarf, v_wall, model, cs, adiabatic_index),
         a=alpha_n_min, b=alpha_n_max, xtol=xtol
@@ -91,18 +88,18 @@ def delta_n[T: FloatOrArr](model: "Model", wn: T) -> T:
     :param wn: $w_n$, enthalpy at nucleation temperature in the symmetric phase
     :return: $\delta_n$
     """
-    return tp.cast(T, 4 * model.theta_temp(model.temp(wn, Phase.SYMMETRIC), Phase.BROKEN) / (3 * wn))
+    return 4 * model.theta_temp(model.temp(wn, Phase.SYMMETRIC), Phase.BROKEN) / (3 * wn)  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
-def kappa_a(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr) -> th.FloatOrArr:
+def kappa_a[T: FloatOrArr](v_wall: T, alpha_n: T | float) -> T:
     r"""Approximation for $\kappa_a$.
 
     $$\kappa_A \approx v_{\text{wall}}^\frac{6}{5} \frac{6.9 \alpha_n}{1.36 - 0.037 \sqrt{\alpha_n} + \alpha_n}$$
     :espinosa_2010:`\ `, eq. 95
     For small wall speeds xi_w << cs
     """
-    return v_wall**(6/5) * 6.9 * alpha_n / (1.36 - 0.037 * np.sqrt(alpha_n) + alpha_n)
+    return v_wall**(6/5) * 6.9 * alpha_n / (1.36 - 0.037 * np.sqrt(alpha_n) + alpha_n)  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
@@ -113,7 +110,7 @@ def kappa_b[T: FloatOrArr](alpha_n: T) -> T:
     :espinosa_2010:`\ `, eq. 96
     For the transition from subsonic to supersonic deflagrations, xi_w = cs
     """
-    return alpha_n**(2/5) / (0.017 + (0.997 + alpha_n)**(2/5))  # type: ignore[return-value]
+    return alpha_n**(2/5) / (0.017 + (0.997 + alpha_n)**(2/5))  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
@@ -124,7 +121,7 @@ def kappa_c[T: FloatOrArr](alpha_n: T) -> T:
     :espinosa_2010:`\ `, eq. 97
     For Jouguet detonations xi_w = xi_j
     """
-    return np.sqrt(alpha_n) / (0.135 + np.sqrt(0.98 + alpha_n))  # type: ignore[return-value]
+    return np.sqrt(alpha_n) / (0.135 + np.sqrt(0.98 + alpha_n))  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
@@ -135,11 +132,11 @@ def kappa_d[T: FloatOrArr](alpha_n: T) -> T:
     :espinosa_2010:`\ `, eq. 98
     $\xi_w$ => 1 v. large wall speed
     """
-    return alpha_n / (0.73 + 0.083 * np.sqrt(alpha_n) + alpha_n)  # type: ignore[return-value]
+    return alpha_n / (0.73 + 0.083 * np.sqrt(alpha_n) + alpha_n)  # pyrefly: ignore[bad-return]
 
 
 @njit
-def kappa_detonation_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, v_cj: float | None = None) -> th.FloatOrArr:
+def kappa_detonation_approx[T: FloatOrArr](v_wall: T, alpha_n: T | float, v_cj: float | None = None) -> T:
     r"""Approximation of $\kappa$ for detonations
     $$
     \kappa(v_{\text{wall}} > v_{CJ}) \approx \frac{
@@ -161,7 +158,7 @@ def kappa_detonation_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, v_cj:
 
 
 @njit
-def kappa_hybrid_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, cs: th.FloatOrArr = CS0) -> th.FloatOrArr:
+def kappa_hybrid_approx[T: FloatOrArr](v_wall: T, alpha_n: T | float, cs: T | float = CS0) -> T:
     r"""Approximation of $\kappa$ for hybrids, aka. supersonic deflagrations.
 
     $$
@@ -176,11 +173,11 @@ def kappa_hybrid_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, cs: th.Fl
     kc = kappa_c(alpha_n)
     dk = delta_kappa_approx(alpha_n)
     v_cj = v_chapman_jouguet_bag(alpha_plus=alpha_n)
-    return kb + (v_wall - cs) * dk + ((v_wall - cs)**3 / (v_cj - cs)**3) * (kc - kb - (v_cj - cs) * dk)
+    return kb + (v_wall - cs) * dk + ((v_wall - cs)**3 / (v_cj - cs)**3) * (kc - kb - (v_cj - cs) * dk)  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
-def kappa_sub_def_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, cs: th.FloatOrArr = CS0) -> th.FloatOrArr:
+def kappa_sub_def_approx[T: FloatOrArr](v_wall: T, alpha_n: T | float, cs: T | float = CS0) -> T:
     r"""Approximation of $\kappa$ for subsonic deflagrations.
 
     $$\kappa(v_{\text{wall}} < c_s) \approx \frac{
@@ -192,15 +189,15 @@ def kappa_sub_def_approx(v_wall: th.FloatOrArr, alpha_n: th.FloatOrArr, cs: th.F
     """
     ka = kappa_a(v_wall, alpha_n)
     kb = kappa_b(alpha_n)
-    return cs**(11/5) * ka * kb / ((cs**(11/5) - v_wall**(11/5)) * kb + v_wall * cs**(6/5) * ka)
+    return cs**(11/5) * ka * kb / ((cs**(11/5) - v_wall**(11/5)) * kb + v_wall * cs**(6/5) * ka)  # pyrefly: ignore[bad-return]
 
 
 @njit
-def kappa_v_approx(
+def kappa_v_approx[T: FloatOrArr](
         v_wall: float,
-        alpha_n: th.FloatOrArr,
+        alpha_n: T,
         cs: float = CS0,
-        v_cj: float | None = None) -> th.FloatOrArr:
+        v_cj: float | None = None) -> T:
     r"""Fluid efficiency $\kappa_v$.
 
     The fluid efficiency gives the fraction of vacuum energy that is
@@ -219,15 +216,15 @@ def kappa_v_approx(
         # This is from the original PTtools code.
         return kappa_b(alpha_n)
     if v_wall < cs:
-        return kappa_sub_def_approx(v_wall=v_wall, alpha_n=alpha_n, cs=cs)
+        return kappa_sub_def_approx(v_wall=v_wall, alpha_n=alpha_n, cs=cs)  # pyrefly: ignore[bad-return]
     if v_wall == v_cj:
         return kappa_c(alpha_n)
     # Todo: This approximation was present in the original PTtools code. Why?
     # if v_wall > 0.85:
     #     return kappa_d(alpha_n)
     if v_wall > v_cj:
-        return kappa_detonation_approx(v_wall=v_wall, alpha_n=alpha_n, v_cj=v_cj)
-    return kappa_hybrid_approx(v_wall=v_wall, alpha_n=alpha_n, cs=cs)
+        return kappa_detonation_approx(v_wall=v_wall, alpha_n=alpha_n, v_cj=v_cj)  # pyrefly: ignore[bad-return]
+    return kappa_hybrid_approx(v_wall=v_wall, alpha_n=alpha_n, cs=cs)  # pyrefly: ignore[bad-return]
 
 
 def kinetic_energy_fraction_approx[T: FloatOrArr](
@@ -250,16 +247,16 @@ def kinetic_energy_fraction_approx[T: FloatOrArr](
     :caprini_2024:`\ ` p. 9.
     """
     dn = DEFAULT_DELTA_N if model is None else delta_n(model, wn=model.wn(alpha_n))
-    return kappa_v_approx(v_wall=v_wall, alpha_n=alpha_n, cs=cs, v_cj=v_cj) * alpha_n / (1 + alpha_n + dn)
+    return kappa_v_approx(v_wall=v_wall, alpha_n=alpha_n, cs=cs, v_cj=v_cj) * alpha_n / (1 + alpha_n + dn)  # pyrefly: ignore[bad-return]
 
 
-def ubarf_approx(
+def ubarf_approx[T: FloatOrArr](
         v_wall: float,
-        alpha_n: th.FloatOrArr,
+        alpha_n: T,
         model: Model | None = None,
         cs: float = CS0,
         v_cj: float | None = None,
-        adiabatic_index: th.FloatOrArr = DEFAULT_ADIABATIC_INDEX) -> th.FloatOrArr:
+        adiabatic_index: T | float = DEFAULT_ADIABATIC_INDEX) -> T:
     r"""Approximate RMS fluid velocity $\bar{U}_f(v_{\text{wall}}, \alpha_n)$.
 
     $$
@@ -277,6 +274,6 @@ def ubarf_approx(
     :param adiabatic_index: Adiabatic index $\Gamma$
     :return: Measure of the RMS fluid velocity $\bar{U}_f$
     """
-    return np.sqrt(
+    return np.sqrt(  # pyrefly: ignore[bad-return]
         kinetic_energy_fraction_approx(v_wall=v_wall, alpha_n=alpha_n, model=model, cs=cs, v_cj=v_cj) / adiabatic_index
     )

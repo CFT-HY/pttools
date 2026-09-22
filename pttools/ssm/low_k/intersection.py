@@ -29,7 +29,7 @@ def z_cross(HLf: float, cs: float, nu: float, tau_star: float, tau_end: float) -
     return (int_term / low_term) ** (1 / (2 - 2 * nu))
 
 
-def z_cross_approx(cs: FloatOrArr, nu: FloatOrArr, eta_ratio: FloatOrArr, r_star: FloatOrArr) -> FloatOrArr:
+def z_cross_approx[T: FloatOrArr](cs: T, nu: T | float, eta_ratio: T | float, r_star: T | float) -> T:
     r"""Approximation for $z_\times$.
 
     $$z_\times = \frac{\sqrt{5}}{\sqrt{2} c_s^2} \frac{\nu}{1 + \nu}

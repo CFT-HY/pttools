@@ -5,9 +5,10 @@ import numpy as np
 
 from pttools.bubble import check, const
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 
-def A2_approx(xi0: th.FloatOrArr) -> th.FloatOrArr:
+def A2_approx[T: FloatOrArr](xi0: T) -> T:
     r"""
     Approximate solution for A2.
     $A2_\text{approx} = \frac{3(2\xi_0 - 1)}{1 - \xi_0^2}$.
@@ -15,10 +16,10 @@ def A2_approx(xi0: th.FloatOrArr) -> th.FloatOrArr:
     :param xi0: $\xi_0$
     :return: A2
     """
-    return 3 * (2 * xi0 - 1) / (1 - xi0 ** 2)
+    return 3 * (2 * xi0 - 1) / (1 - xi0 ** 2)  # pyrefly: ignore[bad-return]
 
 
-def v_approx_high_alpha(xi: th.FloatOrArr, v_wall: th.FloatOrArr, v_xi_wall: th.FloatOrArr) -> th.FloatOrArr:
+def v_approx_high_alpha[T: FloatOrArr](xi: T, v_wall: T | float, v_xi_wall: T | float) -> T:
     r"""
     Approximate solution for fluid velocity $v(\xi)$ near $v(\xi) = \xi$.
 
@@ -30,10 +31,10 @@ def v_approx_high_alpha(xi: th.FloatOrArr, v_wall: th.FloatOrArr, v_xi_wall: th.
     check.check_wall_speed(v_wall)
     xi0 = xi_zero(v_wall, v_xi_wall)
     dv = xi - xi0
-    return xi0 - 2 * dv - A2_approx(xi0) * dv ** 2
+    return xi0 - 2 * dv - A2_approx(xi0) * dv ** 2  # pyrefly: ignore[bad-return]
 
 
-def v_approx_hybrid(xi: th.FloatOrArr, v_wall: th.FloatOrArr, v_xi_wall: th.FloatOrArr) -> th.FloatOrArr:
+def v_approx_hybrid[T: FloatOrArr](xi: T, v_wall: T | float, v_xi_wall: T | float) -> T:
     r"""
     Approximate solution for fluid velocity $v(\xi)$ near $v(\xi) = \xi$.
     Same as :func:`v_approx_high_alpha`.
@@ -67,11 +68,11 @@ def v_approx_low_alpha(xi: th.FloatArr1D, v_wall: float, alpha: float) -> th.Flo
     return v_app
 
 
-def w_approx_high_alpha(
-        xi: th.FloatOrArr,
-        v_wall: th.FloatOrArr,
-        v_xi_wall: th.FloatOrArr,
-        w_xi_wall: th.FloatOrArr) -> th.FloatOrArr:
+def w_approx_high_alpha[T: FloatOrArr](
+        xi: T,
+        v_wall: T | float,
+        v_xi_wall: T | float,
+        w_xi_wall: T | float) -> T:
     r"""
     Approximate solution for enthalpy $w(\xi)$ near $v(\xi) = \xi$.
 
@@ -83,7 +84,7 @@ def w_approx_high_alpha(
     """
     check.check_wall_speed(v_wall)
     xi0 = xi_zero(v_wall, v_xi_wall)
-    return w_xi_wall * np.exp(-12 * (xi - xi0) ** 2 / (1 - xi0 ** 2) ** 2)
+    return w_xi_wall * np.exp(-12 * (xi - xi0) ** 2 / (1 - xi0 ** 2) ** 2)  # pyrefly: ignore[bad-return]
 
 
 def w_approx_low_alpha(xi: th.FloatArr1D, v_wall: float, alpha: float) -> th.FloatArr1D:
@@ -106,7 +107,7 @@ def w_approx_low_alpha(xi: th.FloatArr1D, v_wall: float, alpha: float) -> th.Flo
     return w_app
 
 
-def xi_zero(v_wall: th.FloatOrArr, v_xi_wall: th.FloatOrArr) -> th.FloatOrArr:
+def xi_zero[T: FloatOrArr](v_wall: T, v_xi_wall: T | float) -> T:
     r"""
     Used in approximate solution near $v(\xi) = \xi$: defined as solution to $v(\xi_0) = \xi_0$.
 
@@ -117,4 +118,4 @@ def xi_zero(v_wall: th.FloatOrArr, v_xi_wall: th.FloatOrArr) -> th.FloatOrArr:
     :return: $\xi_0$
     """
     check.check_wall_speed(v_wall)
-    return (v_xi_wall + 2 * v_wall) / 3.
+    return (v_xi_wall + 2 * v_wall) / 3.  # pyrefly: ignore[bad-return]

@@ -5,7 +5,7 @@ import typing as tp
 from pttools.bubble.phase import Phase
 from pttools.bubble.relativity import gamma
 from pttools.speedup import njit
-import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
@@ -36,7 +36,7 @@ def check_entropy_fluxes(
 
 # This uses gamma(), but it's so unlikely to change, that caching this is OK.
 @njit(cache=True)
-def entropy_flux(v_tilde: th.FloatOrArr, s: th.FloatOrArr) -> th.FloatOrArr:
+def entropy_flux[T: FloatOrArr](v_tilde: T, s: T | float) -> T:
     r"""Entropy flux $S$
     $$S^z = su^z = \gamma(\tilde{v}) \tilde{v} s$$
     :bhusal_2026:`\ ` eq. 41
@@ -46,4 +46,4 @@ def entropy_flux(v_tilde: th.FloatOrArr, s: th.FloatOrArr) -> th.FloatOrArr:
     :param v_tilde: $\tilde{v}$
     :param s: $s$
     """
-    return gamma(v_tilde) * v_tilde * s
+    return gamma(v_tilde) * v_tilde * s  # pyrefly: ignore[bad-return]

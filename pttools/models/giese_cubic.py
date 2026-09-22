@@ -3,10 +3,13 @@
 Not yet functional
 """
 
+import typing as tp
+
 import numpy as np
 
 from pttools.models.analytic import AnalyticModel
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 
 class GieseCubicModel(AnalyticModel):
@@ -27,17 +30,17 @@ class GieseCubicModel(AnalyticModel):
         self.E = E
         self.lam = lam
 
-    def cs2(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def cs2[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         raise NotImplementedError
 
-    def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def e_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         raise NotImplementedError
 
-    def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def p_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""$$p_s = - \mathcal{F}(0,T)$$
         $$p_b = - \mathcal{F}(\phi_\text{min},T)$$.
         """
-        return self.a_s/4 * temp**4 - self.V(temp, phase)
+        return tp.cast(T, self.a_s/4 * temp**4 - self.V(temp, phase))
 
     def phase_min(self, temp: th.FloatOrArr):
         return self.phase_min_full(self.d, self.E, temp, self.T_crit)
@@ -47,10 +50,10 @@ class GieseCubicModel(AnalyticModel):
         r"""\phi_\text{min} = \frac{3}{4}ET + \sqrt{T^2 (9E^2/8 - d)/2 - T_{cr}^2(E^2-d)/2}."""
         return 3/4*E*temp + np.sqrt(temp**2 * (9*E**2/8 - d)/2 - temp_crit**2 * (E**2 - d)/2)
 
-    def s_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def s_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         raise NotImplementedError
 
-    def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def temp[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         raise NotImplementedError
 
     def V(self, temp: th.FloatOrArr, phase: th.FloatOrArr):
@@ -60,5 +63,5 @@ class GieseCubicModel(AnalyticModel):
             + phase**2 * (self.E ** 2 * self.T_crit ** 2 + self.d * (temp ** 2 - self.T_crit ** 2))
         ) + self.lam/4 * (self.d - self.E**2)**2 * self.T_crit**4
 
-    def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def w[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         raise NotImplementedError

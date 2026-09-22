@@ -3,7 +3,6 @@
 import numpy as np
 
 from pttools.speedup import njit
-import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
 
@@ -15,7 +14,7 @@ def gamma[T: FloatOrArr](v: T) -> T:
     :param v: [fluid] speed $v$
     :return: Lorentz $\gamma$
     """
-    return np.sqrt(gamma2(v))
+    return np.sqrt(gamma2(v))  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True, error_model="numpy")
@@ -27,11 +26,11 @@ def gamma2[T: FloatOrArr](v: T) -> T:
     :return: $\gamma^2$
     """
     # typing.cast() is not used below, since Numba cannot compile it.
-    return 1. / (1. - v**2)  # type: ignore[return-value]
+    return 1. / (1. - v**2)  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
-def lorentz(xi: th.FloatOrArr, v: th.FloatOrArr) -> th.FloatOrArr:
+def lorentz[T: FloatOrArr](xi: T, v: T | float) -> T:
     r"""
     Lorentz transformation $\mu$ of fluid speed $v$ between moving frame and plasma frame:
     $$\mu = \frac{\xi - v}{1 - v\xi}$$.
@@ -43,4 +42,4 @@ def lorentz(xi: th.FloatOrArr, v: th.FloatOrArr) -> th.FloatOrArr:
     :param xi: $\xi = \frac{r}{t}$
     :param v: fluid speed $v$
     """
-    return (xi - v) / (1. - v*xi)
+    return (xi - v) / (1. - v*xi)  # pyrefly: ignore[bad-return]

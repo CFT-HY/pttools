@@ -103,12 +103,12 @@ class BagModel(AnalyticModel):
                 f"V_s={self.V_s:.{label_prec}f}, V_b={self.V_b:.{label_prec}f}"
 
     @copy_docstring_dec(AnalyticModel.alpha_plus_bag)
-    def alpha_n(
+    def alpha_n[T: FloatOrArr](
             self,
-            wn: th.FloatOrArr,
+            wn: T,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True) -> T:
         return self.alpha_n_bag(
             wn=wn,
             error_on_invalid=error_on_invalid,
@@ -140,15 +140,15 @@ class BagModel(AnalyticModel):
         return a_s, a_b, V_s_default, V_b
 
     @copy_docstring_dec(AnalyticModel.alpha_plus_bag)
-    def alpha_plus(
+    def alpha_plus[T: FloatOrArr](
             self,
-            wp: th.FloatOrArr,
+            wp: T,
             wm: th.FloatOrArr,
             vp_tilde: float | None = None,
             sol_type: SolutionType | None = None,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True) -> T:
         return self.alpha_plus_bag(
             wp=wp, wm=wm, vp_tilde=vp_tilde,
             sol_type=sol_type,
@@ -157,12 +157,12 @@ class BagModel(AnalyticModel):
             log_invalid=log_invalid
         )
 
-    def alpha_theta_bar_n(
+    def alpha_theta_bar_n[T: FloatOrArr](
             self,
-            wn: th.FloatOrArr,
+            wn: T,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True) -> T:
         return self.alpha_n(
             wn=wn,
             error_on_invalid=error_on_invalid,
@@ -170,29 +170,29 @@ class BagModel(AnalyticModel):
             log_invalid=log_invalid
         )
 
-    def alpha_theta_bar_n_max_lte(
+    def alpha_theta_bar_n_max_lte[T: FloatOrArr](
             self,
-            wn: th.FloatOrArr,
+            wn: T,
             sol_type: SolutionType,
             mu_b: th.FloatOrArr = 4.,
-            Psi_n: th.FloatOrArr | None = None) -> th.FloatOrArr:
+            Psi_n: th.FloatOrArr | None = None) -> T:
         return super().alpha_theta_bar_n_max_lte(wn=wn, sol_type=sol_type, mu_b=mu_b, Psi_n=Psi_n)
 
-    def alpha_theta_bar_n_min_lte(
+    def alpha_theta_bar_n_min_lte[T: FloatOrArr](
             self,
-            wn: th.FloatOrArr,
+            wn: T,
             sol_type: SolutionType,
             mu_s: th.FloatOrArr = 4.,
             mu_b: th.FloatOrArr = 4.,
-            Psi_n: th.FloatOrArr | None = None) -> th.FloatOrArr:
+            Psi_n: th.FloatOrArr | None = None) -> T:
         return super().alpha_theta_bar_n_min_lte(wn=wn, sol_type=sol_type, mu_s=mu_s, mu_b=mu_b, Psi_n=Psi_n)
 
-    def alpha_theta_bar_plus(
+    def alpha_theta_bar_plus[T: FloatOrArr](
             self,
-            wp: th.FloatOrArr,
+            wp: T,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True) -> T:
         return self.alpha_plus(
             wp=wp,
             wm=np.nan,  # Not used
@@ -225,10 +225,10 @@ class BagModel(AnalyticModel):
                 w_min: float = 0, allow_fail: bool = False, **kwargs) -> tuple[float, float]:
         return 1/3, np.nan
 
-    def delta_theta(
+    def delta_theta[T: FloatOrArr](
             self,
-            wp: th.FloatOrArr, wm: th.FloatOrArr,
-            error_on_invalid: bool = True, nan_on_invalid: bool = True, log_invalid: bool = True) -> th.FloatOrArr:
+            wp: T, wm: th.FloatOrArr,
+            error_on_invalid: bool = True, nan_on_invalid: bool = True, log_invalid: bool = True) -> T:
         delta_theta = (self.V_s - self.V_b) * np.ones_like(wp) * np.ones_like(wm)
         return self.check_delta_theta(
             delta_theta, xp=wp, xm=wm, x_name="w",
@@ -241,24 +241,24 @@ class BagModel(AnalyticModel):
     def df_dtau_ptr(self) -> DifferentialPointer:
         return DF_DTAU_PTR_BAG
 
-    def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def e_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""Energy density as a function of temperature, :giese_2021:`\ ` eq. 15, :borsanyi_2016:`\ `, eq. S12
         The convention for $a_s$ and $a_b$ is that of :notes:`\ `, eq. 7.33.
         """
         self.validate_temp(temp)
         e_s = 3 * self.a_s * temp**4 + self.V_s
         e_b = 3 * self.a_b * temp**4 + self.V_b
-        return e_b * phase + e_s * (1 - phase)
+        return tp.cast(T, e_b * phase + e_s * (1 - phase))
 
     # def nu_gdh2024(self, w: th.FloatOrArr, phase: th.FloatOrArr = Phase.BROKEN) -> th.FloatOrArr:
     #     """This is not the case when V != 0"""
     #     return np.zeros_like(w) * np.zeros_like(phase)
 
-    # def omega(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    # def omega[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
     #     """This is not the case when V != 0"""
     #     return 1/3 * np.ones_like(w) * np.ones_like(phase)
 
-    def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def p_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""Pressure $p(T,\phi)$, :notes:`\ `, eq. 5.14, 7.1, 7.33, :giese_2021:`\ `, eq. 18
         $$p_s = a_s T^4$$
         $$p_b = a_b T^4$$
@@ -267,12 +267,12 @@ class BagModel(AnalyticModel):
         self.validate_temp(temp)
         p_s = self.a_s * temp**4 - self.V_s
         p_b = self.a_b * temp**4 - self.V_b
-        return p_b * phase + p_s * (1 - phase)
+        return tp.cast(T, p_b * phase + p_s * (1 - phase))
 
     def params_str(self) -> str:
         return f"a_s={self.a_s}, a_b={self.a_b}, V_s={self.V_s}, V_b={self.V_b}"
 
-    def s_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def s_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""Entropy density $s=\frac{dp}{dT}$
         $$s_s = 4 a_s T^3$$
         $$s_b = 4 a_b T^3$$
@@ -281,7 +281,7 @@ class BagModel(AnalyticModel):
         self.validate_temp(temp)
         s_s = 4 * self.a_s * temp**3
         s_b = 4 * self.a_b * temp**3
-        return s_b * phase + s_s * (1 - phase)
+        return tp.cast(T, s_b * phase + s_s * (1 - phase))
 
     def solution_type(
             self,
@@ -295,7 +295,7 @@ class BagModel(AnalyticModel):
             df_dtau_ptr=self.df_dtau_ptr(), ode_method=DEFAULT_FLUID_INTEGRATE_METHOD,
             cs2_ptr=CS2_BAG_SCALAR_PTR)
 
-    def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def temp[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         r"""Temperature $T(w,\phi)$. Inverted from
         $$T(w) = \sqrt[4]{\frac{w}{4a(\phi)}}$$.
 
@@ -307,23 +307,23 @@ class BagModel(AnalyticModel):
         # Defined in the same way as for ConstCSModel
         temp_s = (w / (4 * self.a_s))**0.25
         temp_b = (w / (4 * self.a_b))**0.25
-        return temp_b * phase + temp_s * (1 - phase)
+        return tp.cast(T, temp_b * phase + temp_s * (1 - phase))
 
-    def theta(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def theta[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         r"""Trace anomaly $\theta$.
 
         For the bag model the trace anomaly $\theta$ does not depend on the enthalpy.
         """
-        return (self.V_b * phase + self.V_s * (1 - phase)) * np.ones_like(w)
+        return tp.cast(T, (self.V_b * phase + self.V_s * (1 - phase)) * np.ones_like(w))
 
     @staticmethod
     def v_shock[T: FloatOrArr](xi: T) -> T:
         r"""Velocity at the shock, :gw_pt_ssm:`\ ` eq. B.17
         $$v_\text{sh}(\xi) = \frac{3\xi^22 - 1}{2\xi}$$.
         """
-        return (3 * xi**2 - 1) / (2 * xi)
+        return tp.cast(T, (3 * xi**2 - 1) / (2 * xi))
 
-    def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def w[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""Enthalpy $w(T)$
         $$w(T) = 4a(\phi)T^4$$.
 
@@ -331,7 +331,7 @@ class BagModel(AnalyticModel):
         :param phase: phase $\phi$
         """
         self.validate_temp(temp)
-        return 4 * (self.a_b * phase + self.a_s * (1 - phase)) * temp**4
+        return tp.cast(T, 4 * (self.a_b * phase + self.a_s * (1 - phase)) * temp**4)
 
     def wn[T: FloatOrArr](
             self,
@@ -352,7 +352,7 @@ class BagModel(AnalyticModel):
                 error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
             )
         if analytical:
-            return self.bag_wn_const / alpha_n
+            return tp.cast(T, self.bag_wn_const / alpha_n)
         return super().wn(
             alpha_n, wn_guess,
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid

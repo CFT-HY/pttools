@@ -2,10 +2,10 @@ r"""Frequency conversion functions for $\Omega_{\text{gw},0}$."""
 
 from pttools.omgw0.const import DEFAULT_G_STAR, DEFAULT_T_STAR, F_STAR0_REF
 from pttools.ssm.const import DEFAULT_R_STAR
-import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 
-def f(z: th.FloatOrArr, r_star: th.FloatOrArr, f_star0: th.FloatOrArr) -> th.FloatOrArr:
+def f[T: FloatOrArr](z: T, r_star: T | float, f_star0: T | float) -> T:
     r"""Convert the dimensionless wavenumber $z$ to frequency today by taking into account the redshift.
     $$f = \frac{z}{{r}_\ast} f_{\ast,0}$$,
     :gowling_2021:`\ ` eq. 2.12
@@ -16,13 +16,13 @@ def f(z: th.FloatOrArr, r_star: th.FloatOrArr, f_star0: th.FloatOrArr) -> th.Flo
     :param f_star0: $f_{\ast,0}$
     :return: frequency $f$ today
     """
-    return z / r_star * f_star0
+    return z / r_star * f_star0  # pyrefly: ignore[bad-return]
 
 
-def f0(
-        r_star: th.FloatOrArr,
-        T_star: th.FloatOrArr = DEFAULT_T_STAR,
-        g_star: th.FloatOrArr = DEFAULT_G_STAR) -> th.FloatOrArr:
+def f0[T: FloatOrArr](
+        r_star: T,
+        T_star: T | float = DEFAULT_T_STAR,
+        g_star: T | float = DEFAULT_G_STAR) -> T:
     r"""$f_0$, factor required to take into account the redshift of the frequency scale.
 
     $$f_0 = \frac{f_{\ast,0}}{r_{\ast}}$$
@@ -32,13 +32,13 @@ def f0(
     :param g_star: $g_\ast$
     :return: $f_0$
     """
-    return f_star0(T_star, g_star) / r_star
+    return f_star0(T_star, g_star) / r_star  # pyrefly: ignore[bad-return]
 
 
-def f_star0(
-        T_star: th.FloatOrArr,
-        g_star: th.FloatOrArr = DEFAULT_G_STAR,
-        f_star0_ref: float = F_STAR0_REF) -> th.FloatOrArr:
+def f_star0[T: FloatOrArr](
+        T_star: T,
+        g_star: T | float = DEFAULT_G_STAR,
+        f_star0_ref: float = F_STAR0_REF) -> T:
     r"""
     $f_{\ast,0}$, conversion factor between the frequencies at the time of the GW formation and frequencies today.
 
@@ -56,14 +56,14 @@ def f_star0(
     :param f_star0_ref: The constant $f_{\ast,0,\text{ref}}$ in the front of the formula
     :return: $f_{\ast,0}$
     """
-    return f_star0_ref * (T_star / 100) * (g_star / 100)**(1 / 6)
+    return f_star0_ref * (T_star / 100) * (g_star / 100)**(1 / 6)  # pyrefly: ignore[bad-return]
 
 
-def z(
-        f: th.FloatOrArr,
-        T_star: th.FloatOrArr = DEFAULT_T_STAR,
-        r_star: th.FloatOrArr = DEFAULT_R_STAR,
-        g_star: th.FloatOrArr = DEFAULT_G_STAR) -> th.FloatOrArr:
+def z[T: FloatOrArr](
+        f: T,
+        T_star: T | float = DEFAULT_T_STAR,
+        r_star: T | float = DEFAULT_R_STAR,
+        g_star: T | float = DEFAULT_G_STAR) -> T:
     r"""Convert from frequencies $f$ back to wavenumbers $z$.
 
     $$z(f) = \frac{f}{f_{\ast,0}} {r}_\ast$$
@@ -75,4 +75,4 @@ def z(
     :param r_star: Hubble-scaled mean bubble spacing
     :return: wavenumbers $z$
     """
-    return f / f_star0(T_star=T_star, g_star=g_star) * r_star
+    return f / f_star0(T_star=T_star, g_star=g_star) * r_star  # pyrefly: ignore[bad-return]

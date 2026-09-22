@@ -270,7 +270,7 @@ class Model(BaseModel, abc.ABC):
             alpha_theta_bar_n, wn_guess=wn_guess, theta_bar=True,
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         ) if wn is None or np.isnan(wn) else wn
-        return alpha_theta_bar_n - self.alpha_theta_bar_n_diff(wn_solved)
+        return tp.cast(T, alpha_theta_bar_n - self.alpha_theta_bar_n_diff(wn_solved))
 
     def alpha_n_min_find(
             self,
@@ -327,15 +327,15 @@ class Model(BaseModel, abc.ABC):
         wn = self.w(Tn, Phase.SYMMETRIC)
         return tp.cast(T, 4 * diff / (3 * wn))
 
-    def alpha_plus(
+    def alpha_plus[T: FloatOrArr](
             self,
-            wp: th.FloatOrArr,
+            wp: T,
             wm: th.FloatOrArr,
             vp_tilde: float | None = None,
             sol_type: SolutionType | None = None,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True) -> T:
         r"""Transition strength parameter $\alpha_+$
         $$\alpha_+ = \frac{4\Delta \theta}{3{w}_+} = \frac{4(\theta({w}_+,\phi_s) - \theta({w}_-,\phi_b)}{3{w}_+}$$.
 
@@ -370,14 +370,14 @@ class Model(BaseModel, abc.ABC):
             log_invalid=log_invalid
         )
         if (np.isscalar(wp) and np.isnan(wp)) or (np.isscalar(wm) and np.isnan(wm)):
-            return np.nan
+            return tp.cast(T, np.nan)
         alpha_plus = 4 * self.delta_theta(
             wp, wm, error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         ) / (3 * wp)
-        return self.check_alpha_plus(
+        return tp.cast(T, self.check_alpha_plus(
             alpha_plus, vp_tilde=vp_tilde, sol_type=sol_type,
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
-        )
+        ))
 
     def alpha_theta_bar_n[T: FloatOrArr](
             self,
@@ -403,7 +403,7 @@ class Model(BaseModel, abc.ABC):
         )
         if np.isscalar(wn) and np.isnan(wn):
             return tp.cast(T, np.nan)
-        return self.D_theta_bar(wn, Phase.SYMMETRIC) / (3 * wn)
+        return tp.cast(T, self.D_theta_bar(wn, Phase.SYMMETRIC) / (3 * wn))
 
     def alpha_theta_bar_n_diff[T: FloatOrArr](self, wn: T) -> T:
         r"""$\alpha_{\bar{\theta}_n} - \alpha_n$, the difference between the two $\alpha_n$ conventions.
@@ -411,7 +411,7 @@ class Model(BaseModel, abc.ABC):
         $$\alpha_{\bar{\theta}_n} - \alpha_n = \left(1 - \frac{1}{3 c_{s,b}^2} \right) \frac{Dp}{w_n}$$
         $\alpha_{\bar{\theta}_n}$ is defined in :giese_2021:`\ `.
         """
-        return (1 - 1 / (3 * self.cs2(wn, Phase.BROKEN))) * self.Dp(self.temp(wn, Phase.SYMMETRIC)) / wn
+        return tp.cast(T, (1 - 1 / (3 * self.cs2(wn, Phase.BROKEN))) * self.Dp(self.temp(wn, Phase.SYMMETRIC)) / wn)
 
     def alpha_theta_bar_n_from_alpha_n[T: FloatOrArr](
             self,
@@ -430,18 +430,18 @@ class Model(BaseModel, abc.ABC):
             alpha_n, wn_guess=wn_guess,
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         ) if wn is None or np.isnan(wn) else wn
-        return alpha_n + self.alpha_theta_bar_n_diff(wn_solved)
+        return tp.cast(T, alpha_n + self.alpha_theta_bar_n_diff(wn_solved))
 
-    def alpha_theta_bar_n_max_lte(
+    def alpha_theta_bar_n_max_lte[T: FloatOrArr](
             self,
-            wn: th.FloatOrArr,
+            wn: T,
             sol_type: SolutionType,
             mu_b: th.FloatOrArr,
-            Psi_n: th.FloatOrArr | None = None) -> th.FloatOrArr:
+            Psi_n: th.FloatOrArr | None = None) -> T:
         r"""$\alpha_{n,\text{max}}^\text{def}$, :ai_2023:`\ `, eq. 28, 31."""
         if sol_type == SolutionType.SUB_DEF:
             # The article doesn't define an upper limit for deflagrations.
-            return np.inf
+            return tp.cast(T, np.inf)
 
         # P. 13: "Interestingly, the transition from deflagration to hybrid is continuous with respect to alpha_n.
         # Thus, in most applications, it is not necessary to make any distinction between the two."
@@ -460,17 +460,17 @@ class Model(BaseModel, abc.ABC):
             # Eq. 28
             sqrt_val = (1 - Psi_n) / ((mu_b - 1) * (mu_b - 2))
             if sqrt_val < 0:
-                return np.nan
-            return (1 - Psi_n) / 3 * (1 + mu_b / 3 * np.sqrt(sqrt_val))
+                return tp.cast(T, np.nan)
+            return tp.cast(T, (1 - Psi_n) / 3 * (1 + mu_b / 3 * np.sqrt(sqrt_val)))
         raise ValueError(f"Invalid solution type: {sol_type}")
 
-    def alpha_theta_bar_n_min_lte(
+    def alpha_theta_bar_n_min_lte[T: FloatOrArr](
             self,
-            wn: th.FloatOrArr,
+            wn: T,
             sol_type: SolutionType,
             mu_s: th.FloatOrArr,
             mu_b: th.FloatOrArr,
-            Psi_n: th.FloatOrArr | None = None) -> th.FloatOrArr:
+            Psi_n: th.FloatOrArr | None = None) -> T:
         r"""$\alpha_{n,\text{min}}^\text{def}$, :ai_2023:`\ `, eq. 27, 30."""
         if Psi_n is None or np.isnan(Psi_n):
             Psi_n = self.Psi_n(wn)
@@ -481,13 +481,13 @@ class Model(BaseModel, abc.ABC):
             #         "You have to check yourself that alpha_n is valid."
             #     )
             # Eq. 27
-            return (1 - Psi_n) / (12*Psi_n) * (4 - (1 - Psi_n) * (mu_b - 4))
+            return tp.cast(T, (1 - Psi_n) / (12*Psi_n) * (4 - (1 - Psi_n) * (mu_b - 4)))
         if sol_type == SolutionType.SUB_DEF:
             # Eq. 30
-            return np.maximum((1 - Psi_n) / 3, (mu_s - mu_b) / (3 * mu_s))
+            return tp.cast(T, np.maximum((1 - Psi_n) / 3, (mu_s - mu_b) / (3 * mu_s)))
         if sol_type == SolutionType.HYBRID:
             # Not known / no simple formula. Or the same as for deflagrations?
-            return 0. if np.isscalar(wn) else np.zeros_like(wn)
+            return tp.cast(T, 0. if np.isscalar(wn) else np.zeros_like(wn))
         raise ValueError(f"Invalid solution type: {sol_type}")
 
     def alpha_theta_bar_plus[T: FloatOrArr](
@@ -718,7 +718,7 @@ class Model(BaseModel, abc.ABC):
         """This function should be zero at the critical temperature $T_c$, where $p_s(T_c)=p_b(T_c)."""
         return self.p_temp(temp, Phase.SYMMETRIC) - self.p_temp(temp, Phase.BROKEN)
 
-    def cs2(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def cs2[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         r"""Speed of sound squared $c_s^2(w,\phi)$. This must be a Numba-compiled function.
 
         $$c_s^2 \equiv \left( \frac{\partial p}{\partial e} \right)_s = \frac{dp/dT}{de/dT}$$
@@ -749,9 +749,9 @@ class Model(BaseModel, abc.ABC):
         r"""Maximum of $c_s^2(w)$ for $w \in [{w}_\text{min}, {w}_\text{max}]$."""
         return self._cs2_limit(w_max, phase, False, self.cs2, w_min, allow_fail, **kwargs)
 
-    def cs2_neg(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def cs2_neg[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         """Negative speed of sound squared, for finding the maximum of cs2."""
-        return -self.cs2(w, phase)
+        return tp.cast(T, -self.cs2(w, phase))
 
     def cs2_ptr(self) -> th.CS2FunScalarPtr:
         r"""Pointer to the $c_s^2$ function of this model.
@@ -776,7 +776,7 @@ class Model(BaseModel, abc.ABC):
         self.__cs2_ptr = ptr
         return ptr
 
-    def cs2_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def cs2_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""Speed of sound squared $c_s^2(T,\phi)$.
         By default, this is implemented as $c_s^2(T(w,\phi),\phi)$.
         """
@@ -787,30 +787,30 @@ class Model(BaseModel, abc.ABC):
 
         :maki_msc:`\ ` eq. 2.54
         """
-        return self.e_temp(temp, Phase.SYMMETRIC) - self.e_temp(temp, Phase.BROKEN)
+        return tp.cast(T, self.e_temp(temp, Phase.SYMMETRIC) - self.e_temp(temp, Phase.BROKEN))
 
     def Dp[T: FloatOrArr](self, temp: T) -> T:
         r"""$Dp(T) = p_s(T) - p_b(T)$.
 
         :maki_msc:`\ ` eq. 2.54
         """
-        return self.p_temp(temp, Phase.SYMMETRIC) - self.p_temp(temp, Phase.BROKEN)
+        return tp.cast(T, self.p_temp(temp, Phase.SYMMETRIC) - self.p_temp(temp, Phase.BROKEN))
 
     def Ds[T: FloatOrArr](self, temp: T) -> T:
         r"""$Dp(T) = s_s(T) - s_b(T)$.
 
         :maki_msc:`\ ` eq. 2.54
         """
-        return self.s_temp(temp, Phase.SYMMETRIC) - self.s_temp(temp, Phase.BROKEN)
+        return tp.cast(T, self.s_temp(temp, Phase.SYMMETRIC) - self.s_temp(temp, Phase.BROKEN))
 
     def Dw[T: FloatOrArr](self, temp: T) -> T:
         r"""$Dp(T) = w_s(T) - w_b(T)$.
 
         :maki_msc:`\ ` eq. 2.54
         """
-        return self.w(temp, Phase.SYMMETRIC) - self.w(temp, Phase.BROKEN)
+        return tp.cast(T, self.w(temp, Phase.SYMMETRIC) - self.w(temp, Phase.BROKEN))
 
-    def D_theta_bar(self, w: th.FloatOrArr, phase_of_w: th.FloatOrArr) -> th.FloatOrArr:
+    def D_theta_bar[T: FloatOrArr](self, w: T, phase_of_w: th.FloatOrArr) -> T:
         r"""Pseudotrace difference $D\bar{\theta}(w)$, :giese_2021:`\ `, eq. 10.
 
         $$D\bar{\theta}(w,\phi) = \bar{\theta}(T(w,\phi)) - \bar{\theta}(T(w,\phi))$$
@@ -824,15 +824,15 @@ class Model(BaseModel, abc.ABC):
         $$D\bar{\theta}(T) = \bar{\theta}(T) - \bar{\theta}(T)$$
         :maki_msc:`\ ` eq. 2.54
         """
-        return self.theta_bar_temp(temp, Phase.SYMMETRIC) - self.theta_bar_temp(temp, Phase.BROKEN)
+        return tp.cast(T, self.theta_bar_temp(temp, Phase.SYMMETRIC) - self.theta_bar_temp(temp, Phase.BROKEN))
 
-    def delta_theta(
+    def delta_theta[T: FloatOrArr](
             self,
-            wp: th.FloatOrArr,
+            wp: T,
             wm: th.FloatOrArr,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True) -> T:
         r"""Trace anomaly difference $\Delta \theta$.
 
         $$\Delta \theta = \theta_s(w_s) - \theta_b(w_b)$$
@@ -841,19 +841,19 @@ class Model(BaseModel, abc.ABC):
         theta_s = self.theta(wp, Phase.SYMMETRIC)
         theta_b = self.theta(wm, Phase.BROKEN)
         diff = theta_s - theta_b
-        return self.check_delta_theta(
+        return tp.cast(T, self.check_delta_theta(
             diff, xp=wp, xm=wm, x_name="w",
             theta_s=theta_s, theta_b=theta_b,
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
-        )
+        ))
 
-    def delta_theta_temp(
+    def delta_theta_temp[T: FloatOrArr](
             self,
-            Ts: th.FloatOrArr,
+            Ts: T,
             Tb: th.FloatOrArr,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> th.FloatOrArr:
+            log_invalid: bool = True) -> T:
         r"""Trace anomaly difference $\Delta \theta$.
 
         $$\Delta \theta = \theta_s(T_s) - \theta_b(T_b)$$
@@ -862,11 +862,11 @@ class Model(BaseModel, abc.ABC):
         theta_s = self.theta_temp(Ts, Phase.SYMMETRIC)
         theta_b = self.theta_temp(Tb, Phase.BROKEN)
         diff = theta_s - theta_b
-        return self.check_delta_theta(
+        return tp.cast(T, self.check_delta_theta(
             diff, xp=Ts, xm=Tb, x_name="T",
             theta_s=theta_s, theta_b=theta_b,
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
-        )
+        ))
 
     def df_dtau_ptr(self) -> DifferentialPointer:
         ptr_label = f"{self.name}_{self.id}"
@@ -896,7 +896,7 @@ class Model(BaseModel, abc.ABC):
         self.__df_dtau_pid = os.getpid()
         return ptr
 
-    def e(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def e[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         r"""Energy density $e(w,\phi)$. Calls the temperature-based function.
 
         :param w: enthalpy $w$
@@ -910,7 +910,7 @@ class Model(BaseModel, abc.ABC):
         $$r(T) = \frac{w_s(T)}{w_b(T)}$$
         :param temp: temperature $T$
         """
-        return self.w(temp, Phase.SYMMETRIC) / self.w(temp, Phase.BROKEN)
+        return tp.cast(T, self.w(temp, Phase.SYMMETRIC) / self.w(temp, Phase.BROKEN))
 
     def inverse_enthalpy_ratio[T: FloatOrArr](self, temp: T) -> T:
         r"""Inverse enthalpy ratio $\Psi(T)$ :ai_2023:`\ `, eq. 19.
@@ -918,7 +918,7 @@ class Model(BaseModel, abc.ABC):
         $$\Psi(T) = \frac{w_b(T)}{w_s(T)}$$
         :param temp: temperature $T$
         """
-        return self.w(temp, Phase.BROKEN) / self.w(temp, Phase.SYMMETRIC)
+        return tp.cast(T, self.w(temp, Phase.BROKEN) / self.w(temp, Phase.SYMMETRIC))
 
     def export(self) -> dict[str, tp.Any]:
         return {
@@ -938,17 +938,17 @@ class Model(BaseModel, abc.ABC):
             "w_at_alpha_n_min": self.w_at_alpha_n_min,
         }
 
-    def ge(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def ge[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         r"""Effective degrees of freedom for energy density, $g_{\text{eff},e}(w,\phi)$."""
         temp = self.temp(w, phase)
         return self.ge_temp(temp, phase)
 
-    def gs(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def gs[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         r"""Effective degrees of freedom for entropy, $g_{\text{eff},s}(w,\phi)$."""
         temp = self.temp(w, phase)
         return self.ge_temp(temp, phase)
 
-    def gp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def gp[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(w,\phi)$."""
         temp = self.temp(w, phase)
         return self.ge_temp(temp, phase)
@@ -961,14 +961,14 @@ class Model(BaseModel, abc.ABC):
         """
         return self.w(self.T_crit, Phase.SYMMETRIC) - self.w(self.T_crit, Phase.BROKEN)
 
-    def nu_gdh2024(self, w: th.FloatOrArr, phase: th.FloatOrArr = Phase.BROKEN) -> th.FloatOrArr:
+    def nu_gdh2024[T: FloatOrArr](self, w: T, phase: th.FloatOrArr = Phase.BROKEN) -> T:
         return nu_gdh2024(self.omega(w, phase))
 
-    def omega(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def omega[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         temp = self.temp(w, phase)
         return omega_barotropic(self.p_temp(temp, phase), self.e_temp(temp, phase))
 
-    def p(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def p[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         r"""Pressure $p(w,\phi)$. Calls the temperature-based function.
 
         :param w: enthalpy $w$
@@ -994,21 +994,21 @@ class Model(BaseModel, abc.ABC):
         #     )
         return ret  # noqa: RET504
 
-    def s(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def s[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         r"""Entropy density $s(w,\phi) = \frac{dp}{dT} = \frac{w}{T}$.
 
         :param w: enthalpy $w$
         :param phase: phase $\phi$
         """
-        return w / self.temp(w, phase)
+        return tp.cast(T, w / self.temp(w, phase))
 
-    def s_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def s_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""Entropy density $s(T,\phi) = \frac{dp}{dT} = \frac{w}{T}$.
 
         :param temp: temperature $T$
         :param phase: phase $\phi$
         """
-        return self.w(temp, phase) / temp
+        return tp.cast(T, self.w(temp, phase) / temp)
 
     def solution_type(
             self,
@@ -1042,7 +1042,7 @@ class Model(BaseModel, abc.ABC):
         )
         return SolutionType.UNKNOWN
 
-    def theta(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def theta[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         r"""Trace anomaly $\theta(w,\phi)$, :notes:`\ `, eq. 7.24.
 
         $$\theta = \frac{1}{4}(e - 3p)$$
@@ -1050,9 +1050,9 @@ class Model(BaseModel, abc.ABC):
         :param w: enthalpy $w$
         :param phase: phase $\phi$
         """
-        return 1/4 * (self.e(w, phase) - 3*self.p(w, phase))
+        return tp.cast(T, 1/4 * (self.e(w, phase) - 3*self.p(w, phase)))
 
-    def theta_bar(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def theta_bar[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         r"""Pseudotrace $\bar{\theta}$, :giese_2021:`\ `, eq. 9, :ai_2023:`\ `, eq. 19.
 
         $$\bar{\theta} = e - \frac{p}{c_{s,b}^2}$$
@@ -1060,9 +1060,9 @@ class Model(BaseModel, abc.ABC):
         :param w: enthalpy $w$
         :param phase: phase $\phi$
         """
-        return self.e(w, phase) - self.p(w, phase) / self.cs2_temp(self.temp(w, phase), Phase.BROKEN)
+        return tp.cast(T, self.e(w, phase) - self.p(w, phase) / self.cs2_temp(self.temp(w, phase), Phase.BROKEN))
 
-    def theta_bar_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def theta_bar_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""Pseudotrace $\bar{\theta}$, :giese_2021:`\ `, eq. 9, :ai_2023:`\ `, eq. 19.
 
         $$\bar{\theta} = e - \frac{p}{c_{s,b}^2}$$
@@ -1070,9 +1070,9 @@ class Model(BaseModel, abc.ABC):
         :param temp: temperature $T$
         :param phase: phase $\phi$
         """
-        return self.e_temp(temp, phase) - self.p_temp(temp, phase) / self.cs2_temp(temp, Phase.BROKEN)
+        return tp.cast(T, self.e_temp(temp, phase) - self.p_temp(temp, phase) / self.cs2_temp(temp, Phase.BROKEN))
 
-    def theta_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def theta_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""Trace anomaly $\theta(T,\phi)$, :notes:`\ `, eq. 7.24.
 
         $$\theta = \frac{1}{4}(e - 3p)$$
@@ -1080,7 +1080,7 @@ class Model(BaseModel, abc.ABC):
         :param temp: temperature $T$
         :param phase: phase $\phi$
         """
-        return 1/4 * (self.e_temp(temp, phase) - 3*self.p_temp(temp, phase))
+        return tp.cast(T, 1/4 * (self.e_temp(temp, phase) - 3*self.p_temp(temp, phase)))
 
     def tn[T: FloatOrArr](
             self,
@@ -1119,11 +1119,11 @@ class Model(BaseModel, abc.ABC):
             if log_invalid:
                 logger.warning("Got alpha_n=%s > 1. Please be careful that it's valid.", alpha_n)
 
-    def vp_vm_tilde_ratio_giese(
+    def vp_vm_tilde_ratio_giese[T: FloatOrArr](
             self,
-            vp_tilde: th.FloatOrArr,
+            vp_tilde: T,
             vm_tilde: th.FloatOrArr,
-            wp: float, wm: th.FloatOrArr) -> th.FloatOrArr:
+            wp: float, wm: th.FloatOrArr) -> T:
         r"""Giese approximation for $\frac{\tilde{v}_+}{\tilde{v}_-}$, :giese_2021:`\ ` eq. 11
         $$\frac{\tilde{v}_+}{\tilde{v}_-} \approx \frac{
         (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3\alpha_{\bar{\theta}_+} }{
@@ -1138,7 +1138,7 @@ class Model(BaseModel, abc.ABC):
         alpha_tbp = self.alpha_theta_bar_plus(wp)
         cs2b = self.cs2(wm, Phase.BROKEN)
         a = vp_tilde*vm_tilde / cs2b - 1
-        return (a + 3*alpha_tbp) / (a + 3*vp_tilde*vm_tilde*alpha_tbp)
+        return tp.cast(T, (a + 3*alpha_tbp) / (a + 3*vp_tilde*vm_tilde*alpha_tbp))
 
     def wn_error_msg(
             self,
@@ -1150,7 +1150,10 @@ class Model(BaseModel, abc.ABC):
             info2 = f"Got: alpha_n={alpha_n}, {param_name}={param}."
         else:
             i = np.argmin(param)
-            info2 = f"Most problematic values: alpha_n={alpha_n[i]}, {param_name}={param[i]}"
+            # np.isscalar() does not narrow the type for the type checker.
+            alpha_n_arr = tp.cast(th.FloatArr, alpha_n)
+            param_arr = tp.cast(th.FloatArr, param)
+            info2 = f"Most problematic values: alpha_n={alpha_n_arr[i]}, {param_name}={param_arr[i]}"
         if info is not None:
             info2 += f", {info}"
         return \
@@ -1226,12 +1229,14 @@ class Model(BaseModel, abc.ABC):
 
         return wn
 
-    def _wn_solvable(self, wn: th.FloatOrArr, alpha_n: float, theta_bar: bool) -> th.FloatOrArr:
-        wn_scalar: float = wn if np.isscalar(wn) else tp.cast(th.FloatArr, wn)[0]
+    def _wn_solvable[T: FloatOrArr](self, wn: T, alpha_n: float, theta_bar: bool) -> T:
+        # np.isscalar() does not narrow the type for the type checker.
+        wn_scalar: float = tp.cast(float, wn) if np.isscalar(wn) else tp.cast(th.FloatArr, wn)[0]
         if theta_bar:
-            return self.alpha_theta_bar_n(
-                wn_scalar, error_on_invalid=False, nan_on_invalid=True, log_invalid=False) - alpha_n
-        return self.alpha_n(wn_scalar, error_on_invalid=False, nan_on_invalid=True, log_invalid=False) - alpha_n
+            return tp.cast(T, self.alpha_theta_bar_n(
+                wn_scalar, error_on_invalid=False, nan_on_invalid=True, log_invalid=False) - alpha_n)
+        return tp.cast(
+            T, self.alpha_n(wn_scalar, error_on_invalid=False, nan_on_invalid=True, log_invalid=False) - alpha_n)
 
     def wn[T: FloatOrArr](
             self,
@@ -1269,8 +1274,9 @@ class Model(BaseModel, abc.ABC):
             wn_guess = wn_guess2
 
         if np.isscalar(alpha_n):
+            # np.isscalar() does not narrow the type for the type checker.
             return tp.cast(T, self._wn_scalar(
-                alpha_n,
+                tp.cast(float, alpha_n),
                 wn_guess=wn_guess,
                 theta_bar=theta_bar,
                 error_on_invalid=error_on_invalid,
@@ -1291,14 +1297,14 @@ class Model(BaseModel, abc.ABC):
             )
         return tp.cast(T, ret)
 
-    def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def w[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""Enthalpy density $w(T,\phi)$
         $$w \equiv \frac{dH}{dV} = e + p = T \frac{\partial p}{\partial T} = Ts$$
         :param temp: temperature $T$
         :param phase: phase $\phi$
         :return: enthalpy density $w(T,\phi)$.
         """
-        return self.p_temp(temp, phase) + self.e_temp(temp, phase)
+        return tp.cast(T, self.p_temp(temp, phase) + self.e_temp(temp, phase))
 
     # Abstract methods
 
@@ -1315,7 +1321,7 @@ class Model(BaseModel, abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def e_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""Energy density $e(T,\phi)$.
 
         $$e \equiv T \frac{\partial p}{\partial T} - p$$
@@ -1325,7 +1331,7 @@ class Model(BaseModel, abc.ABC):
         :param phase: phase $\phi$
         """
 
-    def ge_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def ge_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""Effective degrees of freedom for energy density, $g_{\text{eff},e}(T,\phi)$.
 
         :param temp: temperature $T$
@@ -1333,7 +1339,7 @@ class Model(BaseModel, abc.ABC):
         """
         raise NotImplementedError
 
-    def gp_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def gp_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(T,\phi)$.
 
         :param temp: temperature $T$
@@ -1341,7 +1347,7 @@ class Model(BaseModel, abc.ABC):
         """
         raise NotImplementedError
 
-    def gs_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def gs_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""Effective degrees of freedom for entropy, $g_{\text{eff},s}(T,\phi)$.
 
         :param temp: temperature $T$
@@ -1350,7 +1356,7 @@ class Model(BaseModel, abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def p_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""Pressure $p(T,\phi)$.
 
         :param temp: temperature $T$
@@ -1362,7 +1368,7 @@ class Model(BaseModel, abc.ABC):
         """Model parameters as a string."""
 
     @abc.abstractmethod
-    def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def temp[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         r"""Temperature $T(w,\phi)$.
 
         :param w: enthalpy $w$

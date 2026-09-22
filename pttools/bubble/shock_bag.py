@@ -10,6 +10,7 @@ from pttools.bubble import check, const, props
 from pttools.bubble.solution_type import SolutionType
 from pttools.speedup import njit
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +61,7 @@ def _v_shock_bag_arr(xi: th.FloatOrArr) -> th.FloatArr:
     return ret
 
 
-def v_shock_bag(xi: th.FloatOrArr) -> th.FloatOrArr:
+def v_shock_bag[T: FloatOrArr](xi: T) -> T:
     r"""
     Fluid velocity at a shock at $\xi$.
     No shocks exist for $\xi < \frac{1}{\sqrt{3}}$, so this returns zero.
@@ -71,9 +72,9 @@ def v_shock_bag(xi: th.FloatOrArr) -> th.FloatOrArr:
     :return: $v_{sh}$
     """
     if isinstance(xi, float):
-        return _v_shock_bag_scalar(xi)
+        return _v_shock_bag_scalar(xi)  # pyrefly: ignore[bad-return]
     if isinstance(xi, np.ndarray):
-        return _v_shock_bag_arr(xi)
+        return _v_shock_bag_arr(xi)  # pyrefly: ignore[bad-return]
     raise TypeError(f"Unknown type for xi: {type(xi)}")
 
 
@@ -106,7 +107,7 @@ def _wm_shock_bag_arr(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool 
 
 
 # This cannot be vectorized with numba.vectorize due to the keyword argument, but guvectorize might work
-def wm_shock_bag(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = True) -> th.FloatOrArr:
+def wm_shock_bag[T: FloatOrArr](xi: T, w_n: float = 1., nan_on_negative: bool = True) -> T:
     r"""
     Fluid enthalpy behind a shock at $\xi$ in the bag model.
     No shocks exist for $\xi < c_s$, so returns nan.
@@ -119,11 +120,11 @@ def wm_shock_bag(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool = Tru
     :return: $w_{sh}$, enthalpy behind the shock
     """
     if isinstance(xi, float):
-        return _wm_shock_bag_scalar(xi, w_n, nan_on_negative)
+        return _wm_shock_bag_scalar(xi, w_n, nan_on_negative)  # pyrefly: ignore[bad-return]
     if isinstance(xi, np.ndarray):
         if not xi.ndim:
-            return _wm_shock_bag_scalar(xi.item(), w_n, nan_on_negative)
-        return _wm_shock_bag_arr(xi, w_n, nan_on_negative)
+            return _wm_shock_bag_scalar(xi.item(), w_n, nan_on_negative)  # pyrefly: ignore[bad-return]
+        return _wm_shock_bag_arr(xi, w_n, nan_on_negative)  # pyrefly: ignore[bad-return]
     raise TypeError(f"Unknown type for xi: {type(xi)}")
 
 
@@ -154,7 +155,7 @@ def _wp_shock_bag_arr(xi: np.ndarray, wm: float) -> np.ndarray:
 
 
 # This cannot be vectorized with numba.vectorize due to the keyword argument, but guvectorize might work
-def wp_shock_bag(xi: th.FloatOrArr, wm: float) -> th.FloatOrArr:
+def wp_shock_bag[T: FloatOrArr](xi: T, wm: float) -> T:
     r"""
     Fluid enthalpy in front of a shock at $\xi$ in the bag model.
     No shocks exist for $\xi < cs$, so returns nan.
@@ -167,11 +168,11 @@ def wp_shock_bag(xi: th.FloatOrArr, wm: float) -> th.FloatOrArr:
     :return: $w_{+,sh}$, enthalpy in front of the shock
     """
     if isinstance(xi, float):
-        return _wp_shock_bag_scalar(xi, wm)
+        return _wp_shock_bag_scalar(xi, wm)  # pyrefly: ignore[bad-return]
     if isinstance(xi, np.ndarray):
         if not xi.ndim:
-            return _wp_shock_bag_scalar(xi.item(), wm)
-        return _wp_shock_bag_arr(xi, wm)
+            return _wp_shock_bag_scalar(xi.item(), wm)  # pyrefly: ignore[bad-return]
+        return _wp_shock_bag_arr(xi, wm)  # pyrefly: ignore[bad-return]
     raise TypeError(f"Unknown type for xi: {type(xi)}")
 
 

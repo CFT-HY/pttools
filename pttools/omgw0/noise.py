@@ -114,7 +114,7 @@ def ft[T: FloatOrArr](L: T = LISA_ARM_LENGTH) -> T:  # type: ignore[assignment]
     :gowling_2021:`\ ` p. 12.
     """
     # typing.cast() is not used below, since Numba cannot compile it.
-    return c / (2*np.pi*L)  # type: ignore[return-value]
+    return c / (2*np.pi*L)  # pyrefly: ignore[bad-return]
 
 #: Default LISA transfer frequency $f_t$
 FT_LISA: float = ft()
@@ -136,15 +136,15 @@ def N_acc[T: FloatOrArr](L: T = LISA_ARM_LENGTH) -> T:  # type: ignore[assignmen
     :smith_2019:`\ ` eq. 53
     :lisa_sci_req:`\ ` eq. 3
     """
-    return (3e-15 / L)**2  # type: ignore[return-value]
+    return (3e-15 / L)**2  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=CACHE_H0_100_HZ)
-def N_AE(
-        f: FloatOrArr,
-        ft: FloatOrArr = FT_LISA,
-        L: FloatOrArr = LISA_ARM_LENGTH,
-        W_abs2: FloatOrArr | None = None) -> FloatOrArr:
+def N_AE[T: FloatOrArr](
+        f: T,
+        ft: T | float = FT_LISA,
+        L: T | float = LISA_ARM_LENGTH,
+        W_abs2: T | float | None = None) -> T:
     r"""A and E channels of LISA instrument noise
     $$N_A = N_E = \left(\left(
     4 + 2 \cos \left( \frac{f}{f_t} \right)\right) {P}_\text{oms} +
@@ -160,7 +160,7 @@ def N_AE(
 
 
 @njit(cache=CACHE_H0_100_HZ)
-def omega_h2(f: FloatOrArr, S: FloatOrArr) -> FloatOrArr:
+def omega_h2[T: FloatOrArr](f: T, S: T | float) -> T:
     r"""Convert an effective noise power spectral density (aka. sensitivity) $S$
     to a fractional GW energy density power spectrum $\Omega$.
 
@@ -176,7 +176,7 @@ def omega_h2(f: FloatOrArr, S: FloatOrArr) -> FloatOrArr:
     However, there is a factor of 2 instead of a factor of 4 in
     :caprini_2020:`\ ` eq. 34
     """
-    return 4*np.pi**2 / (3 * H0_100_HZ**2) * f**3 * S
+    return 4*np.pi**2 / (3 * H0_100_HZ**2) * f**3 * S  # pyrefly: ignore[bad-return]
 
 
 #: $\Omega_\text{ref,eb}
@@ -188,13 +188,13 @@ OMEGA_REF_EB_H2: float = OMEGA_REF_EB * 0.679**2
 
 
 @njit(cache=True)
-def omega_eb_h2(f: FloatOrArr, f_ref_eb: float = 25, omega_ref_eb_h2: float = OMEGA_REF_EB_H2) -> FloatOrArr:
+def omega_eb_h2[T: FloatOrArr](f: T, f_ref_eb: float = 25, omega_ref_eb_h2: float = OMEGA_REF_EB_H2) -> T:
     r"""
     Energy density of extragalactic compact binaries
     $$\Omega_\text{eb}(f) = \Omega_\text{ref,eb} \left( \frac{f}{{f}_\text{ref,eb}} \right)^\frac{2}{3}$$
     :gowling_2021:`\ ` eq. 3.9.
     """
-    return omega_ref_eb_h2 * (f/f_ref_eb)**(2/3)
+    return omega_ref_eb_h2 * (f/f_ref_eb)**(2/3)  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=CACHE_H0_100_HZ)
@@ -204,7 +204,7 @@ def omega_gb_h2[T: FloatOrArr](f: T) -> T:
     $$\Omega_\text{gb} = \left( \frac{4 \pi^2}{3 H_{100}^2} \right) f^3 {S}_\text{gb}(f)$$
     :gowling_2021:`\ ` eq. 3.11.
     """
-    return omega_h2(f=f, S=S_gb(f))  # type: ignore[return-value]
+    return omega_h2(f=f, S=S_gb(f))
 
 
 @njit(cache=CACHE_H0_100_HZ)
@@ -212,7 +212,7 @@ def omega_ins_h2[T: FloatOrArr](f: T) -> T:
     r"""LISA instrument noise
     $$\Omega_\text{ins} = \frac{4 \pi^2}{3 H_{100}^2} f^3 S_A(f)$$.
     """
-    return omega_h2(f=f, S=S_AE(f))  # type: ignore[return-value]
+    return omega_h2(f=f, S=S_AE(f))
 
 
 @njit(cache=CACHE_H0_100_HZ)
@@ -229,18 +229,18 @@ def omega_noise_h2[T: FloatOrArr](f: T, eb: bool = True, gb: bool = True, ins: b
         om += omega_eb_h2(f)
     if gb:
         om += omega_gb_h2(f)
-    return om  # type: ignore[return-value]
+    return om  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
-def P_acc(f: FloatOrArr, L: FloatOrArr = LISA_ARM_LENGTH) -> FloatOrArr:
+def P_acc[T: FloatOrArr](f: T, L: T | float = LISA_ARM_LENGTH) -> T:
     r"""
     LISA single test mass acceleration noise, $P_\text{acc}$
     :gowling_2021:`\ ` eq. 3.3
     :gowling_2023:`\ ` eq. 3.5
     :smith_2019:`\ ` eq. 52.
     """
-    return S_I(f, L) / (4 * (2 * np.pi * f)**4)
+    return S_I(f, L) / (4 * (2 * np.pi * f)**4)  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
@@ -256,44 +256,44 @@ def P_oms[T: FloatOrArr](L: T = LISA_ARM_LENGTH) -> T:  # type: ignore[assignmen
     the correct $L = 2.5 \cdot 10^9 \text{m}$.
     For this $L$, $P_oms = 3.59 \cdot 10^{-41} Hz^{-1}$.
     """
-    return (1.5e-11 / L)**2  # type: ignore[return-value]
+    return (1.5e-11 / L)**2  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
-def R_AE(f: FloatOrArr, ft: FloatOrArr = FT_LISA, W_abs2: FloatOrArr | None = None) -> FloatOrArr:
+def R_AE[T: FloatOrArr](f: T, ft: T | float = FT_LISA, W_abs2: T | float | None = None) -> T:
     r"""Gravitational wave response function for the A and E channels
     $$\mathcal{R}_A^\text{Fit} = \mathcal{R}_E^\text{Fit} \approx \frac{9}{20} \lvert W \rvert^2
     \left(1 + \left( \frac{3f}{4f_t} \right)^2 \right)^{-1}$$
     :gowling_2021:`\ ` eq. 3.6.
     """
-    if W_abs2 is None:
-        W_abs2 = np.abs(W(f, ft))**2
-    return 9/20 * W_abs2 / (1 + (3*f/(4*ft))**2)
+    # A separate variable is used, as assigning to W_abs2 would not narrow away its None type.
+    w_abs2: FloatOrArr = np.abs(W(f, ft))**2 if W_abs2 is None else W_abs2
+    return 9/20 * w_abs2 / (1 + (3*f/(4*ft))**2)  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
-def R_LISA(f: FloatOrArr, f2: FloatOrArr = F2_LISA) -> FloatOrArr:
+def R_LISA[T: FloatOrArr](f: T, f2: T | float = F2_LISA) -> T:
     r"""Auxiliary function from LISA science requirements
     :lisa_sci_req:`\ ` eq. 3.
     """
-    return 1 + (f / f2)**2
+    return 1 + (f / f2)**2  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
-def S(N: FloatOrArr, R: FloatOrArr) -> FloatOrArr:
+def S[T: FloatOrArr](N: T, R: T | float) -> T:
     r"""Noise power spectral density
     $$S = \frac{N}{\mathcal{R}}$$
     :gowling_2021:`\ ` eq. 3.1.
     """
-    return N / R
+    return N / R  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
-def S_AE(
-        f: FloatOrArr,
-        ft: FloatOrArr = FT_LISA,
-        L: FloatOrArr = LISA_ARM_LENGTH,
-        both_channels: bool = True) -> FloatOrArr:
+def S_AE[T: FloatOrArr](
+        f: T,
+        ft: T | float = FT_LISA,
+        L: T | float = LISA_ARM_LENGTH,
+        both_channels: bool = True) -> T:
     r"""Noise power spectral density for the LISA A and E channels
     $$S_A = S_E = \frac{N_A}{\mathcal{R}_A}$$
     :gowling_2021:`\ ` eq. 3.7.
@@ -304,14 +304,14 @@ def S_AE(
     ret = S(N=N_AE(f=f, ft=ft, L=L, W_abs2=1), R=R_AE(f=f, ft=ft, W_abs2=1))
     if both_channels:
         return 1/np.sqrt(2) * ret
-    return ret
+    return ret  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
-def S_AE_approx(
-        f: FloatOrArr,
-        L: FloatOrArr = LISA_ARM_LENGTH,
-        both_channels: bool = True) -> FloatOrArr:
+def S_AE_approx[T: FloatOrArr](
+        f: T,
+        L: T | float = LISA_ARM_LENGTH,
+        both_channels: bool = True) -> T:
     r"""Approximate noise power spectral density for the LISA A and E channels
     $$S_A = S_E = \frac{N_A}{\mathcal{R}_A}
     \approx \frac{40}{3} ({P}_\text{oms} + {4P}_\text{acc}) \left( 1 + \frac{3f}{4f_t} \right)^2$$
@@ -323,23 +323,23 @@ def S_AE_approx(
     ret = 40/3 * (P_oms(L) + 4*P_acc(f, L)) * (1 + (3*f/(4*ft(L)))**2)
     if both_channels:
         return 1/np.sqrt(2) * ret
-    return ret
+    return ret  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
-def S_I(f: FloatOrArr, L: FloatOrArr = LISA_ARM_LENGTH) -> FloatOrArr:
+def S_I[T: FloatOrArr](f: T, L: T | float = LISA_ARM_LENGTH) -> T:
     r"""Subsidiary formula $S_I$ for acceleration noise
     :smith_2019:`\ ` eq. 53
     :lisa_sci_req:`\ ` eq. 3.
     """
-    return 4 * N_acc(L) * (1 + (F1_LISA/f)**2)
+    return 4 * N_acc(L) * (1 + (F1_LISA/f)**2)  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
-def S_gb(
-        f: FloatOrArr,
-        t: FloatOrArr = 4,  # years
-        A: float = 1.8e-44) -> FloatOrArr:
+def S_gb[T: FloatOrArr](
+        f: T,
+        t: T | float = 4,  # years
+        A: float = 1.8e-44) -> T:
     r"""Noise power spectral density for galactic binaries
     $$S_c(f) = A f^\frac{-7}{3} \exp \left( -f^\alpha + \beta f \sin(\kappa f) \right)
     \left( 1 + \tanh(\gamma (f_k - f) \right) \text{Hz}^{-1}$$
@@ -355,12 +355,12 @@ def S_gb(
 
 
 @njit(cache=True)
-def W(f: FloatOrArr, ft: FloatOrArr) -> FloatOrArr:
+def W[T: FloatOrArr](f: T, ft: T | float) -> T:
     r"""Round trip modulation
     $$W(f,f_t) = 1 - e^{-2i \frac{f}{f_t}}$$
     :gowling_2021:`\ ` p. 12.
     """
-    return 1 - np.exp(-2j * f / ft)
+    return 1 - np.exp(-2j * f / ft)  # pyrefly: ignore[bad-return]
 
 
 #: Coefficients for the galactic binary noise, :cornish_2017:`\ ` table 1

@@ -3,11 +3,11 @@
 import numpy as np
 
 from pttools.speedup import njit
-import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 
 @njit(cache=True)
-def pow_spec(z: th.FloatOrArr, spec_den: th.FloatOrArr) -> th.FloatOrArr:
+def pow_spec[T: FloatOrArr](z: T, spec_den: T | float) -> T:
     r"""
     Power spectrum from spectral density at dimensionless wavenumber z.
     $$\mathcal{P}(z) = \frac{z^3}{2 \pi^2} \tilde{P}(z)$$.
@@ -19,4 +19,4 @@ def pow_spec(z: th.FloatOrArr, spec_den: th.FloatOrArr) -> th.FloatOrArr:
     :param spec_den: spectral density
     :return: power spectrum
     """
-    return z**3 / (2. * np.pi ** 2) * spec_den
+    return z**3 / (2. * np.pi ** 2) * spec_den  # pyrefly: ignore[bad-return]

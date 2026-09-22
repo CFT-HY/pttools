@@ -1,6 +1,7 @@
 """Model defined by data arrays loaded from an HDF5 file."""
 
 import os.path
+import typing as tp
 
 from h5py import File
 import numba
@@ -13,6 +14,7 @@ from pttools.models.model import Model
 from pttools.speedup import njit
 from pttools.speedup.overload import np_all_fix
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 
 class DataModel(Model):
@@ -139,18 +141,22 @@ class DataModel(Model):
     #     return default
 
     @staticmethod
-    def interpolate(spline_s, spline_b, x: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def interpolate[T: FloatOrArr](spline_s, spline_b, x: T, phase: th.FloatOrArr) -> T:
         """Interpolate between the splines of the two phases."""
-        return \
-            splev(x, spline_s) * phase + \
+        return tp.cast(
+            T,
+            splev(x, spline_s) * phase +
             splev(x, spline_b) * (1 - phase)
+        )
 
     @classmethod
-    def interpolate_temp(cls, spline_s, spline_b, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def interpolate_temp[T: FloatOrArr](cls, spline_s, spline_b, temp: T, phase: th.FloatOrArr) -> T:
         """Interpolate between the splines of the two phases in the given temperatures."""
-        return \
-            splev(np.log10(temp), spline_s) * phase + \
+        return tp.cast(
+            T,
+            splev(np.log10(temp), spline_s) * phase +
             splev(np.log10(temp), spline_b) * (1 - phase)
+        )
 
     def gen_cs2(self):
         # Numba caching is disabled for the functions below, as they are created dynamically.
@@ -166,16 +172,18 @@ class DataModel(Model):
         spline_cs2_w_b = splrep(data_w_b, self.data_cs2_b, k=1)
 
         @njit(cache=False)
-        def cs2_compute(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        def cs2_compute[T: FloatOrArr](w: T, phase: th.FloatOrArr) -> T:
             if np_all_fix(phase == Phase.SYMMETRIC.value):
-                return splev(w, spline_cs2_w_s)
+                return splev(w, spline_cs2_w_s)  # pyrefly: ignore[bad-return]
             if np_all_fix(phase == Phase.BROKEN.value):
-                return splev(w, spline_cs2_w_b)
-            return splev(w, spline_cs2_w_s) * phase \
+                return splev(w, spline_cs2_w_b)  # pyrefly: ignore[bad-return]
+            return (
+                splev(w, spline_cs2_w_s) * phase  # pyrefly: ignore[bad-return]
                 + splev(w, spline_cs2_w_b) * (1 - phase)
+            )
 
         @njit(cache=False)
-        def cs2_scalar(w: float, phase: th.FloatOrArr) -> th.FloatOrArr:
+        def cs2_scalar(w: float, phase: th.FloatOrArr) -> float:
             if w < w_min or w > w_max:
                 return np.nan
             return cs2_compute(w, phase)
@@ -191,13 +199,13 @@ class DataModel(Model):
                 temp2[invalid] = np.nan
             return cs2_compute(w, phase)
 
-        def cs2(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        def cs2[T: FloatOrArr](w: T, phase: th.FloatOrArr) -> T:
             if isinstance(w, float):
-                return cs2_scalar(w, phase)
+                return cs2_scalar(w, phase)  # pyrefly: ignore[bad-return]
             if isinstance(w, np.ndarray):
                 if not w.ndim:
-                    return cs2_scalar(w.item(), phase)
-                return cs2_arr(w, phase)
+                    return cs2_scalar(w.item(), phase)  # pyrefly: ignore[bad-return]
+                return cs2_arr(w, phase)  # pyrefly: ignore[bad-return]
             raise TypeError(f"Unknown type for w: {type(w)}")
 
         @overload(cs2, jit_options={"nopython": True})
@@ -213,16 +221,18 @@ class DataModel(Model):
     def params_str(self) -> str:
         return self.name
 
-    def p_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def p_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         return self.interpolate_temp(self.spline_p_s, self.spline_p_b, temp, phase)
 
-    def e_temp(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def e_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         return self.interpolate_temp(self.spline_e_s, self.spline_e_b, temp, phase)
 
-    def temp(self, w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        return \
-            10**splev(w, self.spline_temp_s) * phase + \
+    def temp[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
+        return tp.cast(
+            T,
+            10**splev(w, self.spline_temp_s) * phase +
             10**splev(w, self.spline_temp_b) * (1 - phase)
+        )
 
-    def w(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-        return self.p_temp(temp, phase) + self.e_temp(temp, phase)
+    def w[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+        return tp.cast(T, self.p_temp(temp, phase) + self.e_temp(temp, phase))

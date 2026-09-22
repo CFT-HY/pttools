@@ -209,27 +209,27 @@ class Spectrum(SSMSpectrum):
             export_json(data, path)
         return data
 
-    def f(self, z: th.FloatArr | None = None) -> th.FloatOrArr:
+    def f(self, z: th.FloatArr1D | None = None) -> th.FloatArr1D:
         return freq.f(
             z=self.y if z is None else z,
             r_star=self.r_star,
             f_star0=self.f_star0
         )
 
-    def F_gw0(
+    def F_gw0[T: FloatOrArr](
             self,
-            g0: th.FloatOrArr = const.G0,
+            g0: T = const.G0,
             gs0: th.FloatOrArr = const.GS0,
-            h2: th.FloatOrArr = H2) -> th.FloatOrArr:
+            h2: th.FloatOrArr = H2) -> T:
         r"""$F_{\text{gw},0}$, power attenuation following the end of the radiation era."""
-        return self.F_gw0_h2(g0=g0, gs0=gs0) / h2
+        return self.F_gw0_h2(g0=g0, gs0=gs0) / h2  # pyrefly: ignore[bad-return]
 
-    def F_gw0_h2(
+    def F_gw0_h2[T: FloatOrArr](
             self,
-            g0: th.FloatOrArr = const.G0,
+            g0: T = const.G0,
             gs0: th.FloatOrArr = const.GS0,
-            om_gamma0_h2: th.FloatOrArr = OMEGA_PHOTON_H2) -> th.FloatOrArr:
-        return F_gw0_h2(
+            om_gamma0_h2: th.FloatOrArr = OMEGA_PHOTON_H2) -> T:
+        return F_gw0_h2(  # pyrefly: ignore[bad-return]
             g_star=self.g_star,
             g0=g0,
             gs0=gs0,
@@ -307,18 +307,18 @@ class Spectrum(SSMSpectrum):
         :param h2: $h^2$, dimensionless reduced Hubble constant squared
         """
         f_peak, omgw0_h2_peak = self.omgw0_h2_peak(g0=g0, gs0=gs0)
-        return f_peak, omgw0_h2_peak / h2
+        return f_peak, tp.cast(T, omgw0_h2_peak / h2)
 
-    def omgw0_total(
+    def omgw0_total[T: FloatOrArr](
             self,
             omgw0_h2: th.FloatArr1D | None = None,
-            h2: th.FloatOrArr1D = H2) -> float:
+            h2: T = H2) -> T:
         r"""Total $\Omega_{\text{gw},0}$ integrated over all frequencies.
 
         :param omgw0_h2: $\Omega_{\text{gw},0} h^2$
         :param h2: $h^2$, dimensionless reduced Hubble constant squared
         """
-        return self.omgw0_h2_total(omgw0_h2=omgw0_h2) / h2
+        return tp.cast(T, self.omgw0_h2_total(omgw0_h2=omgw0_h2) / h2)
 
     def snr(
             self,
@@ -355,7 +355,7 @@ class Spectrum(SSMSpectrum):
         :param f: frequencies $f$ today
         :return: wavenumbers $z$
         """
-        return tp.cast(T, freq.z(f=f, T_star=self.T_star, r_star=self.r_star, g_star=self.g_star))
+        return freq.z(f=f, T_star=self.T_star, r_star=self.r_star, g_star=self.g_star)  # pyrefly: ignore[bad-return]
 
     # -----
     # Plotting

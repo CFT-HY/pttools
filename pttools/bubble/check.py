@@ -77,7 +77,7 @@ def check_wall_speed(v_wall: th.FloatOrArr, droplet: bool = False) -> None:
 
 
 @overload(check_wall_speed, jit_options={"nopython": True})
-def _check_wall_speed_numba(v_wall: th.FloatOrArr, droplet: bool = False) -> None:
+def _check_wall_speed_numba(v_wall: th.FloatOrArr, droplet: bool = False) -> th.NumbaFunc:
     if isinstance(v_wall, numba.types.Float):
         return _check_wall_speed_scalar
     if isinstance(v_wall, numba.types.Array):

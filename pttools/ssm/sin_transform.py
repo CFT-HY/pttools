@@ -9,6 +9,7 @@ from pttools.speedup import njit_parallel_pair
 from pttools.ssm import const
 from pttools.ssm.sin_transform_approx import sin_transform_approx
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 
 def _sin_transform_arr(
@@ -95,14 +96,14 @@ def _sin_transform_scalar(
     return integral
 
 
-def sin_transform(
-        z: th.FloatOrArr,
+def sin_transform[T: FloatOrArr](
+        z: T,
         xi: th.FloatArr1D,
         f: th.FloatArr1D,
         z_st_thresh: float = const.Z_ST_THRESH,
         v_wall: float | None = None,
         v_sh: float | None = None,
-        parallel: bool = True) -> th.FloatOrArr:
+        parallel: bool = True) -> T:
     r"""
     Sine transform $\hat{f}(z)$ of $f(\xi)$.
 
@@ -126,9 +127,11 @@ def sin_transform(
     :return: sine transformed values $\hat{f}(z)$ (same size as $z$)
     """
     if isinstance(z, float):
-        return _sin_transform_scalar(z=z, xi=xi, f=f, z_st_thresh=z_st_thresh, v_wall=v_wall, v_sh=v_sh)
+        return _sin_transform_scalar(  # pyrefly: ignore[bad-return]
+            z=z, xi=xi, f=f, z_st_thresh=z_st_thresh, v_wall=v_wall, v_sh=v_sh)
     if isinstance(z, np.ndarray):
-        return _sin_transform_arr(z=z, xi=xi, f=f, z_st_thresh=z_st_thresh, v_wall=v_wall, v_sh=v_sh, parallel=parallel)
+        return _sin_transform_arr(  # pyrefly: ignore[bad-return]
+            z=z, xi=xi, f=f, z_st_thresh=z_st_thresh, v_wall=v_wall, v_sh=v_sh, parallel=parallel)
     raise NotImplementedError
 
 

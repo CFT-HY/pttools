@@ -1,4 +1,47 @@
-"""Type hints for simplifying and unifying PTtools code."""
+"""Type hints for simplifying and unifying PTtools code.
+
+Many PTtools functions accept both floats and Numpy arrays, and return a float if all of their arguments are floats,
+and an array if at least one of their arguments is an array.
+Python has no dedicated syntax for such a dependency between the argument and return types,
+but it can be expressed with a type parameter that is bound to this type:
+
+.. code-block:: python
+
+    @njit
+    def v_shock[T: FloatOrArr](xi: T, cs: T | float = CS0) -> T:
+        return (3 * xi ** 2 - cs ** 2) / (2 * xi)  # pyrefly: ignore[bad-return]
+
+The type checker solves the type parameter as the join of the argument types,
+which gives ``float`` when all of the arguments are floats and :py:data:`FloatArr` when they all are arrays.
+The auxiliary arguments are declared as ``T | float`` instead of ``T``,
+so that passing a float for them does not widen the solution of ``T``.
+This is required for the type parameter to propagate through generic callers such as
+
+.. code-block:: python
+
+    @njit
+    def v_shock_bag[T: FloatOrArr](xi: T) -> T:
+        return v_shock(xi, CS0)
+
+The type checker cannot infer that the arithmetic within the function body preserves ``T``,
+and therefore the return values have to be either cast with ``typing.cast()``
+or marked with a ``# pyrefly: ignore[bad-return]`` comment.
+The comment is preferred, since ``typing.cast()`` is a function call
+that Numba cannot compile and that adds overhead elsewhere.
+Note that a ``# type: ignore[...]`` comment would silence *all* the errors on its line,
+since Pyrefly does not recognise the error codes of Mypy,
+whereas ``# pyrefly: ignore[bad-return]`` silences only the return type error.
+
+There are two exceptions to this pattern:
+
+- Pyrefly is currently unable to verify overrides of methods that have a ``T | float`` argument,
+  so for the methods of the :py:class:`pttools.models.model.Model` classes
+  the auxiliary arguments are declared as :py:data:`FloatOrArr` instead.
+- ``numba.extending.overload()`` requires the typing function and its implementations
+  to have identical parameter annotations,
+  so the scalar and array implementations of an overloaded function keep the :py:data:`FloatOrArr` annotations,
+  and only the public function that dispatches between them is made generic.
+"""
 
 import ctypes
 import typing as tp

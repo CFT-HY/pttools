@@ -31,7 +31,7 @@ DEFAULT_NUC_TYPE = NucType.EXPONENTIAL
 
 
 @njit(cache=True)
-def beta(R_star: th.FloatOrArr, v_wall: th.FloatOrArr, legacy_cs: th.FloatOrArr | None = None) -> th.FloatOrArr:
+def beta[T: FloatOrArr](R_star: T, v_wall: T | float, legacy_cs: T | float | None = None) -> T:
     r"""Nucleation rate parameter $\beta$, aka. inverse phase transition duration.
 
     $$\beta = (8\pi)^\frac{1}{3} \frac{{v}_\text{wall}}{R_*}$$
@@ -51,16 +51,16 @@ def beta(R_star: th.FloatOrArr, v_wall: th.FloatOrArr, legacy_cs: th.FloatOrArr 
     :param legacy_cs: $c_s$ for legacy $\max(v_{\text{wall}}, c_s)$
     :return: Inverse phase transition duration $\beta$
     """
-    return beta_R_star0(v_wall=v_wall, legacy_cs=legacy_cs) / R_star
+    return beta_R_star0(v_wall=v_wall, legacy_cs=legacy_cs) / R_star  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
-def beta_tilde(
-        r_star: th.FloatOrArr,
-        v_wall: th.FloatOrArr,
-        legacy_cs: th.FloatOrArr | None = None,
+def beta_tilde[T: FloatOrArr](
+        r_star: T,
+        v_wall: T | float,
+        legacy_cs: T | float | None = None,
         beta_tilde_min: float = const.BETA_TILDE_CONVERSION_MIN,
-        log_inaccurate: bool = True) -> th.FloatOrArr:
+        log_inaccurate: bool = True) -> T:
     r"""Nucleation rate parameter $\tilde{\beta}$, aka. "beta over H"
     $$\tilde{\beta} \equiv \frac{\beta}{H_*} = (8 \pi)^\frac{1}{3} \frac{\max ({v}_\text{wall}, c_s)}{{r}_*}$$
     :gowling_2021:`\ ` eq. 2.1.
@@ -84,11 +84,11 @@ def beta_tilde(
                 "as this seems to be a very slow phase transition. Please see Caprini et al. (2020) p. 6.",
                 b, beta_tilde_min, r_star, v_wall
             )
-    return b
+    return b  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
-def beta_R_star0(v_wall: th.FloatOrArr, legacy_cs: th.FloatOrArr | None = None) -> th.FloatOrArr:
+def beta_R_star0[T: FloatOrArr](v_wall: T, legacy_cs: T | float | None = None) -> T:
     r"""$\beta R_{\ast,0}$
     $$\beta R_{\ast,0} = (8 \pi)^\frac{1}{3} v_{\text{wall}}$$
     This is a direct consequence of :py:func:beta:.
@@ -127,7 +127,7 @@ def bubble_spacing_enlargement_factor[T: FloatOrArr](hx: T) -> T:
     $$\Lambda(h_x) \equiv \frac{R_{\ast}}{R_{\ast}(0)} = I_h^{-\frac{1}{3}}(h_x)$$
     :ajmi_2022:`\ ` eq. 77.
     """
-    return Ih_approx(hx)**(-1/3)
+    return Ih_approx(hx)**(-1/3)  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
@@ -137,7 +137,7 @@ def hx[T: FloatOrArr](f: T) -> T:
     :ajmi_2022:`\ ` eq. 56.
     """
     # typing.cast() is not used below, since Numba cannot compile it.
-    return f / (1 + f)  # type: ignore[return-value]
+    return f / (1 + f)  # pyrefly: ignore[bad-return]
 
 
 @vectorize(cache=True, nopython=True)
@@ -147,10 +147,10 @@ def Ih_approx[T: FloatOrArr](hx: T) -> T:
     :ajmi_2022:`\ ` eq. 78.
     """
     if hx == 0.:
-        return 1.  # type: ignore[return-value]
+        return 1.  # pyrefly: ignore[bad-return]
     if hx >= 1.:
         raise ValueError(f"Got hx={hx}>=1. See Ajmi & Hindmarsh (2022) p. 9.")
-    return 1. + (hx * np.log(hx)) / (1. - hx)  # type: ignore[return-value]
+    return 1. + (hx * np.log(hx)) / (1. - hx)  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
@@ -181,9 +181,9 @@ def lifetime_distribution[T: FloatOrArr](
     """
     # The exponential and simultaneous functions have been verified to be properly normalized regardless of a.
     if nuc_type == NucType.EXPONENTIAL.value:
-        return a * np.exp(-a * T_tilde)  # type: ignore[return-value]
+        return a * np.exp(-a * T_tilde)  # pyrefly: ignore[bad-return]
     if nuc_type == NucType.SIMULTANEOUS.value:
-        return 0.5 * a * (a * T_tilde)**2 * np.exp(-(a * T_tilde) ** 3 / 6)  # type: ignore[return-value]
+        return 0.5 * a * (a * T_tilde)**2 * np.exp(-(a * T_tilde) ** 3 / 6)  # pyrefly: ignore[bad-return]
     raise ValueError(f"Nucleation type not recognized: \"{nuc_type}\"")
 
 
@@ -195,7 +195,7 @@ def lifetime_distribution_momentum(nu: FloatArr1D, T_tilde: FloatArr1D, n: int) 
 
     For both simultaneous and exponential nucleation, $\nu_3 = 6$.
     """
-    return np.trapezoid(nu * T_tilde**n, T_tilde)  # type: ignore[return-value]
+    return np.trapezoid(nu * T_tilde**n, T_tilde)  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
@@ -261,7 +261,7 @@ def r_star[T2: FloatOrArr](
 
 
 @njit(cache=True)
-def r_star0(beta_over_H: th.FloatOrArr, v_wall: th.FloatOrArr) -> th.FloatOrArr:
+def r_star0[T: FloatOrArr](beta_over_H: T, v_wall: T | float) -> T:
     r"""Hubble-scaled mean bubble separation $r_*(0)$ in the absence of nucleation suppression
     $$r_* = (8\pi)^\frac{1}{3} \frac{{v}_\text{wall}}{\tilde{\beta}}$$
     :ajmi_2022:`\ ` eq. 1
@@ -271,13 +271,13 @@ def r_star0(beta_over_H: th.FloatOrArr, v_wall: th.FloatOrArr) -> th.FloatOrArr:
 
 
 @njit(cache=True)
-def r_star_product(H_star: th.FloatOrArr, R_star: th.FloatOrArr) -> th.FloatOrArr:
+def r_star_product[T: FloatOrArr](H_star: T, R_star: T | float) -> T:
     r"""
     Hubble-scaled mean bubble spacing $r_*$
     $$r_* = H_* R_*$$
     :gowling_2021:`\ ` eq. 2.2.
     """
-    return H_star * R_star
+    return H_star * R_star  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
@@ -333,7 +333,7 @@ def R_star[T2: FloatOrArr](
 
 
 @njit(cache=True)
-def R_star0(beta: th.FloatOrArr, v_wall: th.FloatOrArr, legacy_cs: th.FloatOrArr | None = None) -> th.FloatOrArr:
+def R_star0[T: FloatOrArr](beta: T, v_wall: T | float, legacy_cs: T | float | None = None) -> T:
     r"""Mean bubble separation $R_*(0)$ in the absence of nucleation suppression
     $$R_*(0) = n_*^{-\frac{1}{3}} = \frac{(8\pi)^\frac{1}{3}}{\beta} {v}_\text{wall}$$
     :ajmi_2022:`\ ` eq. 1.
@@ -343,11 +343,11 @@ def R_star0(beta: th.FloatOrArr, v_wall: th.FloatOrArr, legacy_cs: th.FloatOrArr
     :param legacy_cs: $c_s$ for legacy $\max(v_{\text{wall}}, c_s)$
     :return: Mean bubble separation $R_*$
     """
-    return beta_R_star0(v_wall=v_wall, legacy_cs=legacy_cs) / beta
+    return beta_R_star0(v_wall=v_wall, legacy_cs=legacy_cs) / beta  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
-def v_eff(f: FloatOrArr, v_wall: FloatOrArr) -> FloatOrArr:
+def v_eff[T: FloatOrArr](f: T, v_wall: T | float) -> T:
     r"""Effective suppression speed $v_{\text{eff}}$.
 
     This is the expansion speed of the spherical shell inside which
@@ -355,4 +355,4 @@ def v_eff(f: FloatOrArr, v_wall: FloatOrArr) -> FloatOrArr:
     $$v_{\text{eff}} = (1 + f)^{\frac{1}{3}} v_{\text{wall}}$$
     :ajmi_2022:`\ ` eq. 51
     """
-    return (1 + f)**(1/3) * v_wall
+    return (1 + f)**(1/3) * v_wall  # pyrefly: ignore[bad-return]

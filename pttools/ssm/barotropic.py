@@ -5,9 +5,9 @@ from pttools.ssm.const import DEFAULT_A_STAR_A_R_RATIO, DEFAULT_N_SH, DEFAULT_R_
 from pttools.type_hints import FloatOrArr
 
 
-def dilution_of_e(
-        a_star_a_r_ratio: FloatOrArr = DEFAULT_A_STAR_A_R_RATIO,
-        nu: FloatOrArr = DEFAULT_NU_GDH2024) -> FloatOrArr:
+def dilution_of_e[T: FloatOrArr](
+        a_star_a_r_ratio: T = DEFAULT_A_STAR_A_R_RATIO,
+        nu: T | float = DEFAULT_NU_GDH2024) -> T:
     r"""Dilution of the background energy density $\bar{e}$
     $$\left( \frac{a_*}{a_r} \right)^\frac{2 \nu}{1 + \nu} = \left( \frac{a_*}{a} \right)^4 \frac{\bar{e_*}}{\bar{e}}$$
     :giombi_2024_cs:`\ ` eq. 2.18.
@@ -20,14 +20,14 @@ def dilution_of_e(
     :param nu: $\nu_\text{gdh2024}$
     :return: Dilution of the background energy density $\bar{e}$
     """
-    return a_star_a_r_ratio ** (2 * nu / (1 + nu))
+    return a_star_a_r_ratio ** (2 * nu / (1 + nu))  # pyrefly: ignore[bad-return]
 
 
-def eta_ratio(
-        ubarf: FloatOrArr,
-        r_star: FloatOrArr = DEFAULT_R_STAR,
-        N_sh: FloatOrArr = DEFAULT_N_SH,
-        nu: FloatOrArr = DEFAULT_NU_GDH2024) -> FloatOrArr:
+def eta_ratio[T: FloatOrArr](
+        ubarf: T,
+        r_star: T | float = DEFAULT_R_STAR,
+        N_sh: T | float = DEFAULT_N_SH,
+        nu: T | float = DEFAULT_NU_GDH2024) -> T:
     r"""Source duration in units of the conformal time at the start of the acoustic phase,
     $\frac{\Delta \eta_\text{v}}{\eta_*}$, for a barotropic EoS.
 
@@ -54,7 +54,7 @@ def eta_ratio(
     :param nu: $\nu_\text{gdh2024}$
     :return: $\frac{\Delta \eta_\text{v}}{\eta_*}$
     """
-    return N_sh * r_star / ((1 + nu) * ubarf)
+    return N_sh * r_star / ((1 + nu) * ubarf)  # pyrefly: ignore[bad-return]
 
 
 def H_eta[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:  # type: ignore[assignment]
@@ -83,7 +83,7 @@ def H_eta[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:  # type: ignore[assig
     :return: $\mathcal{H} \eta$
     """
     # typing.cast() is not used below, since Numba cannot compile it.
-    return 1 + nu  # type: ignore[return-value]
+    return 1 + nu  # pyrefly: ignore[bad-return]
 
 
 def l[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:  # noqa: E743  # type: ignore[assignment]
@@ -91,14 +91,14 @@ def l[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:  # noqa: E743  # type: ig
     $$\ell(\nu) = 1 + 2\nu$$
     :giombi_2026:`\ ` p. 25.
     """
-    return 1 + 2 * nu  # type: ignore[return-value]
+    return 1 + 2 * nu  # pyrefly: ignore[bad-return]
 
 
-def source_lifetime_factor(
-        ubarf: FloatOrArr,
-        r_star: FloatOrArr = DEFAULT_R_STAR,
-        N_sh: FloatOrArr = DEFAULT_N_SH,
-        nu: FloatOrArr = DEFAULT_NU_GDH2024):
+def source_lifetime_factor[T: FloatOrArr](
+        ubarf: T,
+        r_star: T | float = DEFAULT_R_STAR,
+        N_sh: T | float = DEFAULT_N_SH,
+        nu: T | float = DEFAULT_NU_GDH2024) -> T:
     r"""
     Source lifetime factor $\Upsilon_\ell$.
 
@@ -113,12 +113,12 @@ def source_lifetime_factor(
     This is an updated version of
     :maki_msc:`\ ` eq. 3.79
     """
-    return -Upsilon(r=1 + eta_ratio(ubarf=ubarf, r_star=r_star, N_sh=N_sh, nu=nu), l=-l(nu))
+    return -Upsilon(r=1 + eta_ratio(ubarf=ubarf, r_star=r_star, N_sh=N_sh, nu=nu), l=-l(nu))  # pyrefly: ignore[bad-return]
 
 
-def Upsilon(r: FloatOrArr, l: FloatOrArr) -> FloatOrArr:  # noqa: E741
+def Upsilon[T: FloatOrArr](r: T, l: T | float) -> T:  # noqa: E741
     r"""$\Upsilon_\ell$ for arbitrary $\ell$
     $$\Upsilon_\ell (r) = \frac{1}{\ell} \left( 1 - r^\ell \right)$$
     :giombi_2026:`\ ` eq. 3.6.
     """
-    return (1 - r**l) / l
+    return (1 - r**l) / l  # pyrefly: ignore[bad-return]

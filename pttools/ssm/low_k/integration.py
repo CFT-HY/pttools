@@ -7,6 +7,7 @@ from pttools.speedup.functions import resample_log
 from pttools.ssm.const import CS0
 from pttools.ssm.low_k.kernel import kernel_int_bracket, kernel_low, kernel_low_bag
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 DEFAULT_KERNEL_NX: int = 1000
 
@@ -82,11 +83,11 @@ def power_spectrum_integration_low(
     return factor * simpson(integrand, x=x) * z ** (-2 * nu)
 
 
-def power_spectrum_integration_int(
-        z: th.FloatOrArr,
-        cs: th.FloatOrArr,
-        tau_star: th.FloatOrArr,
-        Iv: th.FloatOrArr) -> th.FloatOrArr:
+def power_spectrum_integration_int[T: FloatOrArr](
+        z: T,
+        cs: T | float,
+        tau_star: T | float,
+        Iv: T | float) -> T:
     r"""
     Calculate the intermediate-frequency approximation (1 << k eta_* << kp eta_*)
     of the gravitational wave power spectrum.
@@ -105,7 +106,7 @@ def power_spectrum_integration_int(
     :param Iv: Source contribution $I_v$ (resampled)
     :return: gravitational wave power spectrum values at the given momentum
     """
-    return 4 / (3 * cs**4) * kernel_int_bracket(cs=cs) * Iv / (tau_star * z**2)
+    return 4 / (3 * cs**4) * kernel_int_bracket(cs=cs) * Iv / (tau_star * z**2)  # pyrefly: ignore[bad-return]
 
 
 def power_spectrum_integration_high(

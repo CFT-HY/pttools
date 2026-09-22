@@ -1,15 +1,15 @@
 r"""Factors used in calculating $\Omega_{\text{gw},0}$."""
 
 from pttools.omgw0.const import G0, GS0, OMEGA_PHOTON_H2
-import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 
-def F_gw0_h2(
-        g_star: th.FloatOrArr,
-        g0: th.FloatOrArr = G0,
-        gs0: th.FloatOrArr = GS0,
-        gs_star: th.FloatOrArr | None = None,
-        om_gamma0_h2: th.FloatOrArr = OMEGA_PHOTON_H2) -> th.FloatOrArr:
+def F_gw0_h2[T: FloatOrArr](
+        g_star: T,
+        g0: T | float = G0,
+        gs0: T | float = GS0,
+        gs_star: T | float | None = None,
+        om_gamma0_h2: T | float = OMEGA_PHOTON_H2) -> T:
     r"""$F_{\text{gw},0} h^2$, power attenuation following the end of the radiation era.
 
     $$F_{\text{gw},0} h^2
@@ -49,4 +49,4 @@ def F_gw0_h2(
     """
     if gs_star is None:
         gs_star = g_star
-    return om_gamma0_h2 * (gs0 / gs_star)**(4/3) * g_star / g0
+    return om_gamma0_h2 * (gs0 / gs_star)**(4/3) * g_star / g0  # pyrefly: ignore[bad-return]

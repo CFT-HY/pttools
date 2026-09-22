@@ -67,7 +67,7 @@ def Pgw_approx(z, HLf, cs, tau_star, tau_end):
     return term_low + term_int + P_high
 
 
-def Pv_analytical(k: FloatOrArr, kp: FloatOrArr, ubarf2: FloatOrArr) -> FloatOrArr:
+def Pv_analytical[T: FloatOrArr](k: T, kp: T | float, ubarf2: T | float) -> T:
     r"""Analytical ansatz for $P_v(k)$
     $$P_v(p) = 3 \pi \frac{\bar{U}_f^2}{k_p^3} \frac{(p/k_p)^2}{1 + (p/k_p)^6}$$
     :giombi_2024_cs:`\ ` eq. 3.1
@@ -75,4 +75,4 @@ def Pv_analytical(k: FloatOrArr, kp: FloatOrArr, ubarf2: FloatOrArr) -> FloatOrA
     """
     # The equation numbers in the articles happen to be the same.
     k_rel = k / kp
-    return 3 * np.pi * ubarf2 / kp**3 * k_rel **2 / (1 + k_rel ** 6)
+    return 3 * np.pi * ubarf2 / kp**3 * k_rel **2 / (1 + k_rel ** 6)  # pyrefly: ignore[bad-return]

@@ -27,8 +27,6 @@ which is what :py:attr:`pttools.ssm.spectrum.SSMSpectrum.tau_star` and
 :py:attr:`pttools.ssm.spectrum.SSMSpectrum.tau_end` denote.
 """
 
-import typing as tp
-
 import numpy as np
 
 from pttools.bubble.const import DEFAULT_ADIABATIC_INDEX, DEFAULT_NU_GDH2024
@@ -38,7 +36,7 @@ from pttools.ssm.const import DEFAULT_N_SH
 from pttools.type_hints import FloatArr1D, FloatOrArr
 
 
-def H_star_eta_sh(r_star: FloatOrArr, ubarf: FloatOrArr) -> FloatOrArr:
+def H_star_eta_sh[T: FloatOrArr](r_star: T, ubarf: T | float) -> T:
     r"""$\mathcal{H}_* \eta_\text{sh}$, Hubble-scaled shock formation time.
 
     $$\mathcal{H}_* \eta_\text{sh} = \frac{\mathcal{H}_* R_*}{\bar{U}_f} = \frac{r_*}{\bar{U}_f}$$
@@ -74,13 +72,13 @@ def H_star_eta_sh(r_star: FloatOrArr, ubarf: FloatOrArr) -> FloatOrArr:
     :param ubarf: $\bar{U}_f$, enthalpy-weighted RMS fluid velocity
     :return: $\mathcal{H}_* \eta_\text{sh}$
     """
-    return r_star / ubarf
+    return r_star / ubarf  # pyrefly: ignore[bad-return]
 
 
-def H_star_eta_sh_full(
-        r_star: FloatOrArr,
-        K: FloatOrArr,
-        adiabatic_index: FloatOrArr = DEFAULT_ADIABATIC_INDEX) -> FloatOrArr:
+def H_star_eta_sh_full[T: FloatOrArr](
+        r_star: T,
+        K: T | float,
+        adiabatic_index: T | float = DEFAULT_ADIABATIC_INDEX) -> T:
     r"""$\mathcal{H}_* \eta_\text{sh}$, Hubble-scaled shock formation time.
 
     $$\mathcal{H}_* \eta_\text{sh} = \frac{r_*}{\bar{U}_f} = r_* \sqrt{\frac{\Gamma}{K}}$$
@@ -101,10 +99,10 @@ def H_star_eta_sh_full(
     :param adiabatic_index: $\Gamma$, mean adiabatic index
     :return: $\mathcal{H}_* \eta_\text{sh}$
     """
-    return r_star / np.sqrt(ubarf2_from_K(K, adiabatic_index=adiabatic_index))
+    return r_star / np.sqrt(ubarf2_from_K(K, adiabatic_index=adiabatic_index))  # pyrefly: ignore[bad-return]
 
 
-def H_star_eta_v(source_lifetime_factor: FloatOrArr, nu: FloatOrArr = DEFAULT_NU_GDH2024) -> FloatOrArr:
+def H_star_eta_v[T: FloatOrArr](source_lifetime_factor: T, nu: T | float = DEFAULT_NU_GDH2024) -> T:
     r"""$\mathcal{H}_* \eta_\text{v}$, Hubble-scaled effective lifetime of the source.
 
     $$\mathcal{H}_* \eta_\text{v} \equiv \mathcal{H}_* \eta_* \Upsilon_\ell = (1 + \nu) \Upsilon_\ell$$
@@ -138,7 +136,7 @@ def H_star_eta_v(source_lifetime_factor: FloatOrArr, nu: FloatOrArr = DEFAULT_NU
     :param nu: $\nu_\text{gdh2024}$
     :return: $\mathcal{H}_* \eta_\text{v}$
     """
-    return H_eta(nu) * source_lifetime_factor
+    return H_eta(nu) * source_lifetime_factor  # pyrefly: ignore[bad-return]
 
 
 def H_star_eta_v_old[T: FloatOrArr](H_star_eta_sh: T) -> T:
@@ -169,7 +167,7 @@ def H_star_eta_v_old[T: FloatOrArr](H_star_eta_sh: T) -> T:
     :param H_star_eta_sh: $\mathcal{H}_* \eta_\text{sh}$, Hubble-scaled shock formation time
     :return: $\mathcal{H}_* \eta_\text{v}$
     """
-    return tp.cast(T, 1 - (1 + 2 * H_star_eta_sh) ** (-0.5))
+    return 1 - (1 + 2 * H_star_eta_sh) ** (-0.5)  # pyrefly: ignore[bad-return]
 
 
 def H_star_eta_v_old2[T: FloatOrArr](H_star_eta_sh: T) -> T:
@@ -184,10 +182,10 @@ def H_star_eta_v_old2[T: FloatOrArr](H_star_eta_sh: T) -> T:
     :param H_star_eta_sh: $\mathcal{H}_* \eta_\text{sh}$, Hubble-scaled shock formation time
     :return: $\mathcal{H}_* \eta_\text{v}$
     """
-    return np.minimum(H_star_eta_sh, 1.)
+    return np.minimum(H_star_eta_sh, 1.)  # pyrefly: ignore[bad-return]
 
 
-def J(r_star: FloatOrArr, H_star_eta_v: FloatOrArr) -> FloatOrArr:
+def J[T: FloatOrArr](r_star: T, H_star_eta_v: T | float) -> T:
     r"""Combined lifetime factor $J$.
 
     $$J \equiv (\mathcal{H}_* R_*)(\mathcal{H}_* \eta_\text{v}) = r_* \mathcal{H}_* \eta_\text{v}$$
@@ -199,14 +197,14 @@ def J(r_star: FloatOrArr, H_star_eta_v: FloatOrArr) -> FloatOrArr:
     :param H_star_eta_v: $\mathcal{H}_* \eta_\text{v}$, Hubble-scaled effective lifetime of the source
     :return: $J$
     """
-    return r_star * H_star_eta_v
+    return r_star * H_star_eta_v  # pyrefly: ignore[bad-return]
 
 
-def J_full(
-        r_star: FloatOrArr,
-        ubarf: FloatOrArr,
-        N_sh: FloatOrArr = DEFAULT_N_SH,
-        nu: FloatOrArr = DEFAULT_NU_GDH2024) -> FloatOrArr:
+def J_full[T: FloatOrArr](
+        r_star: T,
+        ubarf: T | float,
+        N_sh: T | float = DEFAULT_N_SH,
+        nu: T | float = DEFAULT_NU_GDH2024) -> T:
     r"""Combined lifetime factor $J$.
 
     This function calls the sub-functions directly.
@@ -228,7 +226,7 @@ def J_full(
     :param nu: $\nu_\text{gdh2024}$
     :return: $J$
     """
-    return J(
+    return J(  # pyrefly: ignore[bad-return]
         r_star=r_star,
         H_star_eta_v=H_star_eta_v(
             source_lifetime_factor=source_lifetime_factor(
@@ -239,7 +237,7 @@ def J_full(
     )
 
 
-def J_old(r_star: FloatOrArr, K: FloatOrArr, adiabatic_index: FloatOrArr = DEFAULT_ADIABATIC_INDEX) -> FloatOrArr:
+def J_old[T: FloatOrArr](r_star: T, K: T | float, adiabatic_index: T | float = DEFAULT_ADIABATIC_INDEX) -> T:
     r"""Combined lifetime factor $J$, old approximation.
 
     $$J \equiv r_* \mathcal{H}_* \eta_\text{v} \approx r_* \left(1 - \frac{1}{\sqrt{1 + 2x}} \right),$$
@@ -270,4 +268,4 @@ def omega_tilde_gw(x: FloatArr1D, spec_den_gw: FloatArr1D) -> float:
     This parameter is approximately independent of the length scale and RMS velocity of the fluid flow.
     :hindmarsh_2015:`\ `
     """
-    return 1 / (2 * np.pi**2) * np.trapezoid(x**2 * spec_den_gw, x)  # type: ignore[return-value]
+    return 1 / (2 * np.pi**2) * np.trapezoid(x**2 * spec_den_gw, x)  # pyrefly: ignore[bad-return]

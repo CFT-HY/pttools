@@ -18,6 +18,7 @@ from pttools.bubble.relativity import gamma2, lorentz
 from pttools.speedup import njit
 from pttools.speedup.solvers import fsolve_vary
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
@@ -26,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 @njit(cache=True)
-def enthalpy_ratio(v1: th.FloatOrArr, v2: th.FloatOrArr) -> th.FloatOrArr:
+def enthalpy_ratio[T: FloatOrArr](v1: T, v2: T | float) -> T:
     r"""
     Ratio of enthalpies $w$ on both sides of a transition front.
     Uses conservation of momentum in moving frame.
@@ -36,10 +37,10 @@ def enthalpy_ratio(v1: th.FloatOrArr, v2: th.FloatOrArr) -> th.FloatOrArr:
     :param v2: $\tilde{v}_2$
     :return: Ratio of enthalpies $\frac{w_1}{w_2}$
     """
-    return gamma2(v1) * v1 / (gamma2(v2) * v2)
+    return gamma2(v1) * v1 / (gamma2(v2) * v2)  # pyrefly: ignore[bad-return]
 
 
-def junction_conditions_deviation(vp: th.FloatOrArr, vm: th.FloatOrArr, ap: th.FloatOrArr) -> th.FloatOrArr:
+def junction_conditions_deviation[T: FloatOrArr](vp: T, vm: T | float, ap: T | float) -> T:
     r"""Deviation from the combined junction conditions
     $$\Delta = \left( \frac{1}{\tilde{v}_-} + 3\tilde{v}_- \right)
     \tilde{v}_+ - 3(1 + \alpha_+) \tilde{v}_+^2 - \alpha_+ + 1$$.
@@ -57,7 +58,7 @@ def junction_conditions_deviation(vp: th.FloatOrArr, vm: th.FloatOrArr, ap: th.F
             )
         else:
             logger.error("Non-zero deviation from junction conditions")
-    return dev
+    return dev  # pyrefly: ignore[bad-return]
 
 
 def junction_conditions_solvable(
@@ -77,9 +78,9 @@ def junction_conditions_solvable(
 
 
 @njit(cache=True)
-def junction_condition_deviation1(
-        v1: th.FloatOrArr, w1: th.FloatOrArr,
-        v2: th.FloatOrArr, w2: th.FloatOrArr) -> th.FloatOrArr:
+def junction_condition_deviation1[T: FloatOrArr](
+        v1: T, w1: T | float,
+        v2: T | float, w2: T | float) -> T:
     r"""Deviation from the first junction condition
     $$w_1 \tilde{\gamma}_1^2 \tilde{v}_1 - w_2 \tilde{\gamma}_2^2 \tilde{v}_2$$
     :notes:`\ `, eq. 7.22
@@ -90,7 +91,7 @@ def junction_condition_deviation1(
     :param v2: $\tilde{v}_2$
     :param w2: $w_2$
     """
-    return w1 * gamma2(v1) * v1 - w2 * gamma2(v2) * v2
+    return w1 * gamma2(v1) * v1 - w2 * gamma2(v2) * v2  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
@@ -296,9 +297,9 @@ def v_plus_hybrid(
 
 
 @njit(cache=True)
-def w2_junction(v1: th.FloatOrArr, w1: th.FloatOrArr, v2: th.FloatOrArr) -> th.FloatOrArr:
+def w2_junction[T: FloatOrArr](v1: T, w1: T | float, v2: T | float) -> T:
     r"""Get $w_-$ from the junction condition 1
     $$w_1 = w_2 \frac{\tilde{\gamma}_2^2 \tilde{v}_2}{\tilde{\gamma}_1^2 \tilde{v}_1}$$
     :notes:`\ `, eq. 7.22.
     """
-    return w1 * enthalpy_ratio(v1, v2)
+    return w1 * enthalpy_ratio(v1, v2)  # pyrefly: ignore[bad-return]

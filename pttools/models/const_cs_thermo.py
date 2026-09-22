@@ -7,6 +7,7 @@ import numpy as np
 from pttools.models.const_cs import ConstCSModel, cs2_to_mu
 from pttools.models.thermo import ThermoModel
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 
 class ConstCSThermoModel(ThermoModel):
@@ -53,7 +54,7 @@ class ConstCSThermoModel(ThermoModel):
             name=name, label_latex=label_latex, label_unicode=label_unicode
         )
 
-    def dge_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def dge_dT[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         dge_s = 30/np.pi**2 * (
             (self.mu_s - 1) * (self.mu_s - 4) * self.a_s * self.t_ref**(4 - self.mu_s) * temp**(self.mu_s - 5)
             - 4*self.V_s/temp**5
@@ -64,7 +65,7 @@ class ConstCSThermoModel(ThermoModel):
         )
         return dge_b * phase + dge_s * (1 - phase)
 
-    def dgs_dT(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def dgs_dT[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         dgs_s = \
             45/(2*np.pi**2) * self.mu_s * (self.mu_s - 4) * self.a_s * \
             self.t_ref**(4 - self.mu_s) * temp**(self.mu_s - 5)
@@ -83,7 +84,7 @@ class ConstCSThermoModel(ThermoModel):
             "mu_b": self.mu_b
         }
 
-    def ge(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def ge[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         ge_s = 30/np.pi**2 * (
             (self.mu_s - 1) * self.a_s * (temp / self.t_ref) ** (self.mu_s - 4)
             + self.V_s / temp**4
@@ -92,9 +93,9 @@ class ConstCSThermoModel(ThermoModel):
             (self.mu_b - 1) * self.a_b * (temp / self.t_ref) ** (self.mu_b - 4)
             + self.V_b / temp**4
         )
-        return ge_b * phase + ge_s * (1 - phase)
+        return tp.cast(T, ge_b * phase + ge_s * (1 - phase))
 
-    def gs(self, temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+    def gs[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         gs_s = 45/(2*np.pi**2) * self.a_s * self.mu_s * (temp / self.t_ref)**(self.mu_s - 4)
         gs_b = 45/(2*np.pi**2) * self.a_b * self.mu_b * (temp / self.t_ref)**(self.mu_b - 4)
-        return gs_b * phase + gs_s * (1 - phase)
+        return tp.cast(T, gs_b * phase + gs_s * (1 - phase))

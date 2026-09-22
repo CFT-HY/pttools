@@ -17,7 +17,7 @@ from pttools.type_hints import FloatOrArr
 
 
 @njit(cache=True)
-def max_speed_deflag(alpha_p: th.FloatOrArr) -> th.FloatOrArr:
+def max_speed_deflag(alpha_p: float) -> float:
     r"""
     Maximum speed for a deflagration: speed where wall and shock are coincident.
     May be greater than 1, meaning that hybrids exist for all wall speeds above cs.
@@ -106,12 +106,12 @@ def _v_plus_arr_wrapper(
     return _v_plus_arr_single(vm=vm, ap=ap, sol_type=sol_type, debug=debug)
 
 
-def v_plus(
-        vm: th.FloatOrArr,
+def v_plus[T: FloatOrArr](
+        vm: T,
         ap: float,
         sol_type: SolutionType,
         debug: bool = True,
-        parallel: bool = True) -> th.FloatOrArr:
+        parallel: bool = True) -> T:
     r"""
     Fluid speed $\tilde{v}_+$ ahead of the wall in the wall frame
     $$\tilde{v}_+ = \frac{1}{2(1 + \alpha_+)}
@@ -134,9 +134,9 @@ def v_plus(
     """
     # TODO: add support for having both arguments as arrays
     if isinstance(vm, float):
-        return _v_plus_scalar(vm, ap, sol_type, debug)
+        return _v_plus_scalar(vm, ap, sol_type, debug)  # pyrefly: ignore[bad-return]
     if isinstance(vm, np.ndarray):
-        return _v_plus_arr(vm, ap, sol_type, debug)
+        return _v_plus_arr(vm, ap, sol_type, debug)  # pyrefly: ignore[bad-return]
     raise TypeError(f"Unknown argument types: vm = {type(vm)}, ap = {type(ap)}")
 
 

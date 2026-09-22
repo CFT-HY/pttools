@@ -35,7 +35,7 @@ def find_v_index(xi: th.FloatArr, v_target: float) -> int:
 
 
 @njit
-def v_max_behind(xi: FloatOrArr, cs: FloatOrArr) -> FloatOrArr:
+def v_max_behind[T: FloatOrArr](xi: T, cs: T | float) -> T:
     r"""Maximum fluid velocity behind the wall.
     Given by the condition $\mu(\xi, v) = c_s$.
     This results in:

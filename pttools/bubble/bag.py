@@ -8,16 +8,17 @@ import numpy as np
 
 from pttools.speedup import njit
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 logger = logging.getLogger(__name__)
 
 
 @njit(cache=True)
-def adiabatic_index_bag(
-        w: th.FloatOrArr,
-        phase: th.FloatOrArr,
-        theta_s: th.FloatOrArr,
-        theta_b: th.FloatOrArr = 0.) -> th.FloatOrArr:
+def adiabatic_index_bag[T: FloatOrArr](
+        w: T,
+        phase: T | float,
+        theta_s: T | float,
+        theta_b: T | float = 0.) -> T:
     r"""
     Returns array of float, adiabatic index (ratio of enthalpy to energy).
 
@@ -27,7 +28,7 @@ def adiabatic_index_bag(
     :param theta_b: $\theta$ for broken phase, behind bubble (phase = 1)
     :return: adiabatic index
     """
-    return w / e_bag(w, phase, theta_s, theta_b)
+    return w / e_bag(w, phase, theta_s, theta_b)  # pyrefly: ignore[bad-return]
 
 
 def check_thetas(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> None:
@@ -65,11 +66,11 @@ def _check_thetas_warning(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> Non
 
 
 @njit(cache=True)
-def e_bag(
-        w: th.FloatOrArr,
-        phase: th.FloatOrArr,
-        theta_s: th.FloatOrArr,
-        theta_b: th.FloatOrArr = 0.) -> th.FloatOrArr:
+def e_bag[T: FloatOrArr](
+        w: T,
+        phase: T | float,
+        theta_s: T | float,
+        theta_b: T | float = 0.) -> T:
     r"""
     Energy density $e$ as a function of enthalpy $w$, assuming bag model.
     $\theta = \frac{e - 3p}{4}$ ("vacuum energy").
@@ -82,15 +83,15 @@ def e_bag(
     :param theta_b: $\theta$ for broken phase, behind bubble (phase = 1)
     :return: energy density $e$
     """
-    return w - p_bag(w, phase, theta_s, theta_b)
+    return w - p_bag(w, phase, theta_s, theta_b)  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
-def p_bag(
-        w: th.FloatOrArr,
-        phase: th.FloatOrArr,
-        theta_s: th.FloatOrArr,
-        theta_b: th.FloatOrArr = 0.) -> th.FloatOrArr:
+def p_bag[T: FloatOrArr](
+        w: T,
+        phase: T | float,
+        theta_s: T | float,
+        theta_b: T | float = 0.) -> T:
     r"""
     Pressure as a function of enthalpy $w$, assuming bag model.
     $\theta = \frac{e - 3p}{4}$ (trace anomaly or "vacuum energy").
@@ -105,15 +106,15 @@ def p_bag(
     """
     check_thetas(theta_s, theta_b)
     theta = theta_b * phase + theta_s * (1.0 - phase)
-    return 0.25 * w - theta
+    return 0.25 * w - theta  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
-def w_bag(
-        e: th.FloatOrArr,
-        phase: th.FloatOrArr,
-        theta_s: th.FloatOrArr,
-        theta_b: th.FloatOrArr = 0.) -> th.FloatOrArr:
+def w_bag[T: FloatOrArr](
+        e: T,
+        phase: T | float,
+        theta_s: T | float,
+        theta_b: T | float = 0.) -> T:
     r"""
     Enthalpy $w$ as a function of energy density, assuming bag model.
     $\theta = \frac{e - 3p}{4}$ ("vacuum energy").
@@ -129,7 +130,7 @@ def w_bag(
     check_thetas(theta_s, theta_b)
     # Actually, theta is often known only from alpha_n and w, so should think about an fsolve?
     theta = theta_b * phase + theta_s * (1.0 - phase)
-    return 4/3 * (e - theta)
+    return 4/3 * (e - theta)  # pyrefly: ignore[bad-return]
 
 
 # def junction_bag(
@@ -159,7 +160,7 @@ def w_bag(
 #     return ret
 
 
-def theta_bag(w: th.FloatOrArr, phase: th.FloatOrArr, alpha_n: th.FloatOrArr) -> th.FloatOrArr:
+def theta_bag[T: FloatOrArr](w: T, phase: T | float, alpha_n: T | float) -> T:
     r"""
     Trace anomaly $\theta = \frac{1}{4} (e - 3p)$ in the Bag model.
     Equation 7.24 in the lecture notes, equation 2.10 in the article.
@@ -170,4 +171,4 @@ def theta_bag(w: th.FloatOrArr, phase: th.FloatOrArr, alpha_n: th.FloatOrArr) ->
     :return: trace anomaly $\theta_\text{bag}$
     """
     w_n = w[-1] if isinstance(w, np.ndarray) else w
-    return alpha_n * (0.75 * w_n) * (1 - phase)
+    return alpha_n * (0.75 * w_n) * (1 - phase)  # pyrefly: ignore[bad-return]

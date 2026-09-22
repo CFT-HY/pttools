@@ -13,6 +13,7 @@ import sympy as sp
 from pttools.ssm import const
 from pttools.ssm.sin_transform import sin_transform as _sin_transform
 import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 
 
 # @profile
@@ -33,13 +34,13 @@ def gen_piecewise(x: th.FloatArr1D, points: th.FloatArr1D) -> sp.Piecewise:
     return sp.Piecewise(*args)
 
 
-def sin_transform(
-        z: th.FloatOrArr,
+def sin_transform[T: FloatOrArr](
+        z: T,
         xi: th.FloatArr1D,
         f: th.FloatArr1D,
         v_wall: float | None = None,
         v_sh: float | None = None,
-        z_st_thresh: float = const.Z_ST_THRESH) -> th.FloatOrArr:
+        z_st_thresh: float = const.Z_ST_THRESH) -> T:
     """Debugging for sin_transform."""
     # Ensure that xi is monotonically increasing
     if np.any(np.diff(xi) <= 0):
