@@ -90,12 +90,15 @@ class Suppression:
             interpolation: th.Interpolation = "linear") -> T:
         """Interpolate the suppression factor for the given points.
 
-        If given arrays, this will return a 2D grid.
+        If either of the arguments is an array, this will return a 2D grid indexed as ``[alpha_n, v_wall]``.
         """
         is_scalar = np.isscalar(v_wall) and np.isscalar(alpha_n)
 
         if method == SuppressionMethod.NONE:
-            return 1. if is_scalar else np.ones_like((v_wall.size, alpha_n.size))  # pyrefly: ignore[bad-return]
+            if is_scalar:
+                return 1.  # pyrefly: ignore[bad-return]
+            # This has the same shape as the grid that is interpolated below.
+            return np.ones((np.size(alpha_n), np.size(v_wall)))  # pyrefly: ignore[bad-return]
         if method not in (SuppressionMethod.NO_EXT, SuppressionMethod.EXT_CONSTANT):
             raise ValueError(f"Got invalid suppression method: {method}")
 
@@ -150,12 +153,14 @@ def alpha_n_max[T: FloatOrArr](v_wall: T) -> T:
     # [0.24000, 0.34000]
     # [0.44000, 0.50000]
     # [0.56000, 0.67000]
-    if np.isscalar(v_wall) and v_wall < 0.44:
+    if isinstance(v_wall, np.ndarray):
+        ret = M2 * v_wall + C2
+        small_vws = v_wall < V_WALL_KINK
+        ret[small_vws] = M1 * v_wall[small_vws] + C1
+        return ret  # pyrefly: ignore[bad-return]
+    if v_wall < V_WALL_KINK:
         return M1 * v_wall + C1  # pyrefly: ignore[bad-return]
-    ret = M2 * v_wall + C2
-    small_vws = v_wall < 0.44
-    ret[small_vws] = M1 * v_wall[small_vws] + C1
-    return ret  # pyrefly: ignore[bad-return]
+    return M2 * v_wall + C2  # pyrefly: ignore[bad-return]
 
 
 def extend(
@@ -184,6 +189,8 @@ def extend(
 
 
 # Constants for alpha_n_max
+#: ${v}_\text{wall}$ of the data point at which the fit changes from the first line segment to the second
+V_WALL_KINK: float = 0.44
 M1: float = (0.5 - 0.34) / (0.44 - 0.24)  # dal/dvw
 M2: float = (0.67 - 0.5) / (0.56 - 0.44)
 C1: float = 0.34 - M1 * 0.24
