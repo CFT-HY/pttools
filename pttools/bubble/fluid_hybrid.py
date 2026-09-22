@@ -20,11 +20,22 @@ from pttools.bubble.phase import Phase
 from pttools.bubble.shock import v_shock
 from pttools.bubble.solution_type import SolutionType
 from pttools.speedup.solvers import fsolve_vary
+from pttools.utils.printing import array2str
 
 if tp.TYPE_CHECKING:
     from pttools.models import Model
 
 logger = logging.getLogger(__name__)
+
+#: Whether to log the details of the backup hybrid solver, such as the wm values and the corresponding vp values.
+#: This is disabled by default, as it produces a lot of debug messages.
+LOG_BACKUP_SOLVER_DETAILS: bool = False
+
+
+def _debug_backup_solver(msg: str, *args: tp.Any) -> None:
+    """Log a debug message of the backup hybrid solver, if :py:data:`LOG_BACKUP_SOLVER_DETAILS` is enabled."""
+    if LOG_BACKUP_SOLVER_DETAILS:
+        logger.debug(msg, *args)
 
 
 def sound_shell_hybrid(
@@ -186,7 +197,9 @@ def sound_shell_solver_hybrid(
                 vps[i] = vp
 
         valid_wm_inds = np.argwhere(vps != 0)
-        valid_wms = wms[valid_wm_inds][:, 0]
+        valid_wms = wms[valid_wm_inds][:, 0].T
+        valid_wm_inds_str = array2str(valid_wms)
+        valid_wms_str = array2str(valid_wms)
         # if valid_wms.size >= 2:
         #     wm_min = wms[valid_wms[0, 0]]
         #     wm_max = wms[valid_wms[-1, 0]]
@@ -202,13 +215,13 @@ def sound_shell_solver_hybrid(
         #         wm = sol.root
         #         reason = sol.flag
 
-        logger.debug("Valid wms: %s, inds: %s", valid_wms, valid_wm_inds)
+        _debug_backup_solver("Valid wms: %s, inds: %s", valid_wms_str, valid_wm_inds_str)
         for i in range(vps.size):
             if vps[i] == 0:
                 continue
             vp_i = vps[i]
             wm_i = wms[i]
-            logger.debug("wm=%s, vp=%s", wm_i, vp_i)
+            _debug_backup_solver("wm=%s, vp=%s", wm_i, vp_i)
             # sol = fsolve(
             #     sound_shell_solvable_hybrid,
             #     np.array([wm_i]),
@@ -238,7 +251,7 @@ def sound_shell_solver_hybrid(
 
         logger.debug(
             "Backup hybrid solver results: solution_found=%s, valid_wms=%s, vps=%s, v_sh=%s",
-            solution_found, valid_wms, vps, v_sh
+            solution_found, valid_wms_str, array2str(vps), v_sh
         )
 
     v, w, xi, vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = sound_shell_hybrid(

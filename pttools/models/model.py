@@ -518,8 +518,13 @@ class Model(BaseModel, abc.ABC):
             if sol_type in (SolutionType.SUB_DEF, SolutionType.HYBRID):
                 invalid = np.logical_or(alpha_plus < 0, alpha_plus >= ALPHA_PLUS_MAX_DEF)
             elif vp_tilde is not None:
-                # The square root in the vm_tilde equation must be positive
-                sqrt_invalid = ((1 + alpha_plus) * vp_tilde + (1 - 3 * alpha_plus) / (3 * vp_tilde)) ** 2 - 4 / 3 < 0
+                # The square root in the vm_tilde equation must be positive.
+                # If the solver has failed, vp_tilde can be zero or nan, which would produce warnings
+                # for the division, but the sqrt is not flagged as invalid,
+                # since we don't know about the correct value of vp_tilde.
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    sqrt_invalid = \
+                        ((1 + alpha_plus) * vp_tilde + (1 - 3 * alpha_plus) / (3 * vp_tilde)) ** 2 - 4 / 3 < 0
                 invalid = np.logical_or(alpha_plus < 0, sqrt_invalid)
             else:
                 invalid = alpha_plus < 0

@@ -1,6 +1,7 @@
 """Printing utilities for testing."""
 
 import decimal
+import sys
 
 import numpy as np
 
@@ -20,6 +21,11 @@ try:
 except ModuleNotFoundError:
     RED = ""
     RESET = ""
+
+
+def array2str(arr: np.typing.NDArray) -> str:
+    """Format an array on a single line for log messages."""
+    return np.array2string(arr, max_line_width=sys.maxsize)
 
 
 def high_prec_float_str(x: float) -> str:

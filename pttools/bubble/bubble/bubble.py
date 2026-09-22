@@ -264,11 +264,16 @@ class Bubble(BaseBubble):
     def _set_properties(self) -> None:
         """Extract properties from the solution."""
         self.solved = True
+        # If the solver failed, the failure has already been reported by the solver,
+        # and the resulting invalid values would only add noise to the logs.
+        log_invalid = not self.solver_failed
         self.alpha_plus = self.model.alpha_plus(
             self.wp, self.wm, vp_tilde=self.vp_tilde, sol_type=self.sol_type,
-            error_on_invalid=False, nan_on_invalid=True, log_invalid=True
+            error_on_invalid=False, nan_on_invalid=True, log_invalid=log_invalid
         )
-        self.alpha_theta_bar_plus = self.model.alpha_theta_bar_plus(self.wp)
+        self.alpha_theta_bar_plus = self.model.alpha_theta_bar_plus(
+            self.wp, error_on_invalid=False, nan_on_invalid=True, log_invalid=log_invalid
+        )
         self.phase = find_phase(self.xi, self.v_wall)
 
         self.sn = self.model.s(self.wn, Phase.SYMMETRIC)
@@ -347,6 +352,12 @@ class Bubble(BaseBubble):
 
         self._set_properties()
 
+        # If the solver did not produce a fluid profile, there is nothing to validate,
+        # and the validations would only produce warnings about the nan values.
+        if self.solver_failed and np.all(np.isnan(self.v)):
+            self.failed = True
+            return
+
         # Validity checking for the solution
         self.failed = any([
             self.solver_crashed,
@@ -379,7 +390,8 @@ class Bubble(BaseBubble):
             )
             msg = f"Got invalid alpha_plus={self.alpha_plus} with " \
                   f"model={self.model.label_unicode}, v_wall={self.v_wall}, " \
-                  f"alpha_n={self.alpha_n}, sol_type={self.sol_type}."
+                  f"alpha_n={self.alpha_n}, sol_type={self.sol_type}, " \
+                  f"wp={self.wp}, wm={self.wm}, vp_tilde={self.vp_tilde}."
             logger.error(msg)
             self.add_note(msg)
             self.unphysical_alpha_plus = True

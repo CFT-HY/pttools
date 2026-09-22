@@ -11,6 +11,19 @@ import pttools.type_hints as th
 logger = logging.getLogger(__name__)
 
 
+def log_nan(x: th.FloatOrArr | None, name: str, caller: str, context_str: str) -> None:
+    """Log that the given value is None or contains nan values."""
+    if x is None:
+        logger.error("Got None for %s in %s%s.", name, caller, context_str)
+    elif np.isscalar(x):
+        logger.error("Got nan for %s in %s%s.", name, caller, context_str)
+    else:
+        logger.error(
+            "Got nan for %s/%s values of %s in %s%s.",
+            np.sum(np.isnan(x)), np.size(x), name, caller, context_str
+        )
+
+
 def check_value_in_range[T: th.FloatOrArr](
     x: T,
     x_min: float,
@@ -31,11 +44,12 @@ def check_value_in_range[T: th.FloatOrArr](
         )
 
     is_scalar = np.isscalar(x)
+    context_str = "" if context is None else f" for {context}"
 
     # None and nan should be logged, but not raise an exception.
     if x is None or np.any(np.isnan(x)):
         if log_invalid:
-            logger.error("Got nan for %s in %s", name, inspect.stack()[1][3])
+            log_nan(x, name=name, caller=inspect.stack()[1][3], context_str=context_str)
         # Scalar None cannot be tested for negativity.
         if x is None or is_scalar:
             return tp.cast(T, np.nan)
@@ -50,7 +64,6 @@ def check_value_in_range[T: th.FloatOrArr](
         return x
 
     info = None
-    context_str = "" if context is None else f" for {context}"
     if is_scalar:
         if too_small:
             info = f"Got {name}={x:{x_format}} < {name}_min={x_min:{x_format}}{context_str}."
