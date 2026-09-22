@@ -459,7 +459,7 @@ class SSMSpectrum:
             if not bubble.solved:
                 bubble.solve()
             r_star_set = r_star_func(
-                beta_over_H=beta_tilde, v_wall=bubble.v_wall, xi=bubble.xi, T=bubble.T, sol_type=bubble.sol_type
+                beta_tilde=beta_tilde, v_wall=bubble.v_wall, xi=bubble.xi, T=bubble.T, sol_type=bubble.sol_type
             )
 
         if np.isnan(r_star_set) or r_star_set <= 0:

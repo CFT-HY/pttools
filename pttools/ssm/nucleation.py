@@ -31,27 +31,34 @@ DEFAULT_NUC_TYPE = NucType.EXPONENTIAL
 
 
 @njit(cache=True)
-def beta(R_star: th.FloatOrArr, v_wall: th.FloatOrArr) -> th.FloatOrArr:
+def beta(R_star: th.FloatOrArr, v_wall: th.FloatOrArr, legacy_cs: th.FloatOrArr | None = None) -> th.FloatOrArr:
     r"""Nucleation rate parameter $\beta$, aka. inverse phase transition duration.
 
     $$\beta = (8\pi)^\frac{1}{3} \frac{{v}_\text{wall}}{R_*}$$
     :gw_pt_ssm:`\ ` eq. 4.16, A.14
     :notes:`\ ` eq. 7.21
 
-    This does not take into account the nucleation suppression.
+    This does not take into account the nucleation suppression,
+    but instead presumes that $R_*$ already takes it into account.
     Please see :py:func:`pttools.bubble.nucleation.R_star` for further information.
+
+    Some older sources use $\max (v_\text{wall}, c_s)$, which is wrong.
+    $$\beta = \frac{8\pi}{3} \frac{\max (v_w, c_s)}{R_*}$$
+    Inverted from :caprini_2020:`\ ` eq. 6
 
     :param R_star: Mean bubble separation $R_*$
     :param v_wall: Wall velocity $v_w$
+    :param legacy_cs: $c_s$ for legacy $\max(v_\text{wall}, c_s)$
     :return: Inverse phase transition duration $\beta$
     """
-    return (8 * np.pi)**(1/3) * v_wall / R_star
+    return beta_R_star0(v_wall=v_wall, legacy_cs=legacy_cs) / R_star
 
 
 @njit(cache=True)
 def beta_tilde(
         r_star: th.FloatOrArr,
         v_wall: th.FloatOrArr,
+        legacy_cs: th.FloatOrArr | None = None,
         beta_tilde_limit: float = const.BETA_TILDE_CONVERSION_MIN) -> th.FloatOrArr:
     r"""Nucleation rate parameter $\tilde{\beta}$, aka. "beta over H"
     $$\tilde{\beta} \equiv \frac{\beta}{H_*} = (8 \pi)^\frac{1}{3} \frac{\max ({v}_\text{wall}, c_s)}{{r}_*}$$
@@ -63,10 +70,11 @@ def beta_tilde(
 
     :param r_star: Hubble-scaled mean bubble spacing $r_*$
     :param v_wall: Wall velocity $v_w$
+    :param legacy_cs: $c_s$ for legacy $\max(v_\text{wall}, c_s)$
     :param beta_tilde_limit: Upper limit for $\tilde{\beta}$
     :return: Nucleation rate parameter $\tilde{\beta}$
     """
-    b = beta(R_star=r_star, v_wall=v_wall)
+    b = beta(R_star=r_star, v_wall=v_wall, legacy_cs=legacy_cs)
     b_min: float = np.min(b)
     if b_min < beta_tilde_limit:
         with numba.objmode:
@@ -80,7 +88,7 @@ def beta_tilde(
 
 
 @njit(cache=True)
-def beta_R_star0[T: FloatOrArr](v_wall: T) -> T:
+def beta_R_star0(v_wall: th.FloatOrArr, legacy_cs: th.FloatOrArr | None = None) -> th.FloatOrArr:
     r"""$\beta R_{\ast,0}$
     $$\beta R_{\ast,0} = (8 \pi)^\frac{1}{3} v_{\text{wall}}$$
     This is a direct consequence of :py:func:beta:.
@@ -89,8 +97,13 @@ def beta_R_star0[T: FloatOrArr](v_wall: T) -> T:
     This is used in :py:func:spec_den_gw_scaled:,
     where $\beta$ is an arbitrary rate that is taken to be the nucleation rate parameter $\beta$ by convenience,
     and therefore does not need to take into account nucleation suppression.
+
+    :param v_wall: $w_\text{wall}$
+    :param legacy_cs: $c_s$ for legacy $\max(v_\text{wall}, c_s)$
+    :return: $\beta R_{\ast,0}$
     """
-    return (8. * np.pi) ** (1. / 3.) * v_wall
+    v = v_wall if legacy_cs is None else np.maximum(v_wall, legacy_cs)
+    return (8. * np.pi) ** (1. / 3.) * v
 
 
 @njit(cache=True)
@@ -182,7 +195,7 @@ def lifetime_distribution_momentum(nu: FloatArr1D, T_tilde: FloatArr1D, n: int) 
 
     For both simultaneous and exponential nucleation, $\nu_3 = 6$.
     """
-    return np.trapezoid(nu * T_tilde**n, T_tilde)
+    return np.trapezoid(nu * T_tilde**n, T_tilde)  # type: ignore[return-value]
 
 
 @njit(cache=True)
@@ -216,15 +229,24 @@ def nucleation_f(
 
 @njit(cache=True)
 def r_star[T2: FloatOrArr](
-        beta_over_H: T2,
+        beta_tilde: T2,
         v_wall: float,
         xi: th.FloatArr1D,
         T: th.FloatArr1D,
-        sol_type: SolutionType) -> T2:
-    r"""Hubble-scaled mean bubble spacing $r_*(\beta)
+        sol_type: SolutionType,
+        legacy_cs: float | None = None) -> T2:
+    r"""Hubble-scaled mean bubble spacing $r_*(\beta)$
     $$r_* = \Lambda(h_x) r_*(0)$$
     :ajmi_2022:`\ ` eq. 77
     Please see :py:func:`pttools.bubble.nucleation.R_star` for further information.
+
+    :param beta_tilde: $\tilde{\beta}$
+    :param v_wall: $v_\text{wall}$
+    :param xi: $\xi$
+    :param T: $T$
+    :param sol_type: solution type
+    :param legacy_cs: $c_s$ for legacy $\max(v_\text{wall}, c_s)$
+    :return: $R_*$
     """
     # if beta_over_H < beta_over_H_limit:
     #     logger.warning(
@@ -233,7 +255,9 @@ def r_star[T2: FloatOrArr](
     #         "Please see Caprini et al. (2020) p. 6.",
     #         beta_over_H, beta_over_H_limit, v_wall
     #     )
-    return R_star(beta=beta_over_H, v_wall=v_wall, xi=xi, T=T, beta_tilde=beta_over_H, sol_type=sol_type)
+    return R_star(
+        beta=beta_tilde, v_wall=v_wall, xi=xi, T=T, beta_tilde=beta_tilde, sol_type=sol_type, legacy_cs=legacy_cs
+    )
 
 
 @njit(cache=True)
@@ -263,7 +287,8 @@ def R_star[T2: FloatOrArr](
         xi: th.FloatArr1D,
         T: th.FloatArr1D,
         beta_tilde: float,
-        sol_type: SolutionType) -> T2:
+        sol_type: SolutionType,
+        legacy_cs: float | None = None) -> T2:
     r"""Mean bubble separation $R_*$
     $$R_* = \Lambda(h_x) R_*(0)$$
     :ajmi_2022:`\ ` eq. 77.
@@ -288,26 +313,36 @@ def R_star[T2: FloatOrArr](
     :caprini_2020:`\ ` p. 6,
     :gowling_2021:`\ ` p. 5,
     :enqvist_1992:`\ ` eq. 4.10.
+
+    :param beta: $\beta$
+    :param v_wall: $v_\text{wall}$
+    :param xi: $\xi$
+    :param T: $T$
+    :param beta_tilde: $\tilde{\beta}$
+    :param sol_type: solution type
+    :param legacy_cs: $c_s$ for legacy $\max(v_\text{wall}, c_s)$
+    :return: $R_*$
     """
     if sol_type == SolutionType.DETON.value:
-        return R_star0(beta, v_wall)
+        return R_star0(beta=beta, v_wall=v_wall, legacy_cs=legacy_cs)
     if sol_type in (SolutionType.SUB_DEF.value, SolutionType.HYBRID.value):
         f = nucleation_f(xi=xi, T=T, beta_tilde=beta_tilde, v_wall=v_wall)
-        return bubble_spacing_enlargement_factor(hx=hx(f)) * R_star0(beta, v_wall)
+        return bubble_spacing_enlargement_factor(hx=hx(f)) * R_star0(beta=beta, v_wall=v_wall, legacy_cs=legacy_cs)
     raise ValueError(f"Invalid solution type: {sol_type}")
 
 
 @njit(cache=True)
-def R_star0(beta: th.FloatOrArr, v_wall: th.FloatOrArr) -> th.FloatOrArr:
+def R_star0(beta: th.FloatOrArr, v_wall: th.FloatOrArr, legacy_cs: th.FloatOrArr | None = None) -> th.FloatOrArr:
     r"""Mean bubble separation $R_*(0)$ in the absence of nucleation suppression
     $$R_*(0) = n_*^{-\frac{1}{3}} = \frac{(8\pi)^\frac{1}{3}}{\beta} {v}_\text{wall}$$
     :ajmi_2022:`\ ` eq. 1.
 
     :param beta: Nucleation rate parameter $\beta$
     :param v_wall: Wall velocity ${v}_w$
+    :param legacy_cs: $c_s$ for legacy $\max(v_\text{wall}, c_s)$
     :return: Mean bubble separation $R_*$
     """
-    return (8 * np.pi)**(1/3) * v_wall / beta
+    return beta_R_star0(v_wall=v_wall, legacy_cs=legacy_cs) / beta
 
 
 @njit(cache=True)
