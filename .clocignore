@@ -13,7 +13,7 @@ examples/fig
 examples/test-results
 htmlcov
 logs
-pttools/omgw0/suppression/suppression_ssm_data/*.txt
+pttools/ssm/suppression/suppression_ssm_data/*.txt
 pyrefly.txt
 ruff.txt
 test-results

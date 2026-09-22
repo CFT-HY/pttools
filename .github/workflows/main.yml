@@ -23,18 +23,18 @@ jobs:
           path: dist
           if-no-files-found: error
   cloc:
-    # The djdefi/cloc-action does not run on ubuntu-slim.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v7
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Install cloc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cloc
       - name: Count Lines of Code (cloc) for the PTtools library
-        uses: djdefi/cloc-action@6
-        with:
-          options: ${{ github.workspace }}/pttools --by-file-by-lang --vcs=git
+        run: ./cloc.sh --library
       - name: Count Lines of Code (cloc) for the repository
-        uses: djdefi/cloc-action@6
-        with:
-          options: ${{ github.workspace }} --by-file-by-lang --vcs=git
+        run: ./cloc.sh
 #  fossa:
 #    runs-on: ubuntu-latest
 #    timeout-minutes: 5
