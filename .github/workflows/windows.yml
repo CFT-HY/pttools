@@ -44,8 +44,6 @@ jobs:
             CMAKE_GENERATOR: "Ninja Multi-Config"
             CMAKE_ARGS: "-DCMAKE_SHARED_LINKER_FLAGS=-static"
           run: uv sync --locked --all-extras --no-group docs
-        - name: Print Python version
-          run: python -V
         - name: Print NumbaLSODA location
           # PTtools falls back to other ODE solvers if NumbaLSODA cannot be imported,
           # so this ensures that a broken NumbaLSODA build fails the workflow instead of being skipped silently.

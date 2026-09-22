@@ -29,8 +29,6 @@ jobs:
             activate-environment: true
         - name: Install requirements
           run: uv sync --locked --all-extras --no-group docs
-        - name: Print Python version
-          run: python -V
         - name: Print Numba sysinfo
           # On macOS the Numba script is not executable by default and therefore has to be called as a Python module.
           run: |

@@ -19,8 +19,6 @@ jobs:
           sudo apt-get install -y cm-super dvipng ffmpeg fontconfig graphviz latexmk optipng texlive-latex-extra texlive-xetex fonts-freefont-otf xindy
       - name: Install requirements
         run: uv sync --locked --all-extras
-      - name: Print Python version
-        run: python -V
       - name: Check TBB
         run: python -c "from pttools.speedup import tbb; import sys; v = tbb.load_tbb(); print('TBB version:', v); sys.exit(v is None or v < tbb.TBB_MIN_VERSION)"
       - name: Generate reference data

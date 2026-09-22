@@ -47,8 +47,6 @@ jobs:
 #          activate-environment: true
 #      - name: Install requirements
 #        run: uv sync --locked --all-extras --no-default-groups
-#      - name: Print Python version
-#        run: python -V
 #      - name: Install FOSSA
 #        run: |
 #          curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | sudo bash
@@ -72,8 +70,6 @@ jobs:
           sudo apt-get install -y graphviz
       - name: Install requirements
         run: uv sync --locked --all-extras --no-group docs
-      - name: Print Python version
-        run: python -V
       - name: Run Pyreverse
         run: |
           mkdir uml
@@ -109,8 +105,6 @@ jobs:
       - name: Install requirements
         # Ruff does not import the project, so only the development tools are needed.
         run: uv sync --locked --only-group dev
-      - name: Print Python version
-        run: python -V
       - name: Run Ruff
         run: ruff check --output-format=full 2>&1 | tee ruff.txt
       - name: Upload results
@@ -132,8 +126,6 @@ jobs:
           activate-environment: true
       - name: Install requirements
         run: uv sync --locked --all-extras --no-group docs
-      - name: Print Python version
-        run: python -V
       - name: Run Pyrefly
         run: pyrefly check 2>&1 | tee pyrefly.txt
       - name: Upload results
@@ -167,8 +159,6 @@ jobs:
         sudo apt-get install ffmpeg
     - name: Install requirements
       run: uv sync --locked --all-extras --no-group docs
-    - name: Print Python version
-      run: python -V
     - name: Print Numba sysinfo
       # The TBB library of the tbb package is not on the default library search path,
       # so Numba reports it as unavailable here. PTtools loads it from the virtual environment instead,
@@ -218,8 +208,6 @@ jobs:
         activate-environment: true
     - name: Install requirements
       run: uv sync --locked --all-extras --no-group docs
-    - name: Print Python version
-      run: python -V
     - name: Print Numba sysinfo
       # The TBB library of the tbb package is not on the default library search path,
       # so Numba reports it as unavailable here. PTtools loads it from the virtual environment instead,
