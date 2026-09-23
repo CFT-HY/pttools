@@ -475,11 +475,12 @@ def wm_chapman_jouguet(
     r"""${w}_-$, enthalpy behind the wall for a Chapman-Jouguet detonation.
 
     Solves ${w}_-$ for which $\tilde{v}_- = c_{s,-}({w}_-)$ fulfills the junction conditions
-    with the given ${w}_+$ as the root of :func:`wm_solvable_chapman_jouguet`.
+    with the given ${w}_+$ as the root of :func:`wm_solvable_chapman_jouguet_log`.
     As $\tilde{v}_+ > \tilde{v}_-$ for detonations, the first junction condition gives ${w}_- > {w}_+$.
-    The solution is first searched with :func:`scipy.optimize.fsolve` starting from ``wm_guess``.
+    The solution is first searched with :func:`scipy.optimize.fsolve` for $\ln {w}_-$ starting from ``wm_guess``,
+    which ensures that ${w}_- > 0$.
     If this fails, the solution is searched by scanning ${w}_-$ from ${w}_+$ to :data:`WM_WP_RATIO_MAX_CJ` ${w}_+$
-    for a change in the sign of :func:`wm_solvable_chapman_jouguet`,
+    for a change in the sign of :func:`wm_solvable_chapman_jouguet_log`,
     as ``fsolve`` can step to the region where :func:`pttools.bubble.v_plus.v_plus` has no detonation solution.
 
     :param model: the equation of state
@@ -496,8 +497,8 @@ def wm_chapman_jouguet(
         wm_guess = wp if wp > model.w_crit else np.exp((np.log(wp) + np.log(model.w_crit))/2)
     # The SciPy stubs require func to return an array, but a scalar is also accepted at runtime.
     wm_sol = fsolve(  # pyrefly: ignore[no-matching-overload]
-        wm_solvable_chapman_jouguet, x0=np.array([wm_guess]), args=(model, wp), full_output=True)
-    wm: float = wm_sol[0][0]
+        wm_solvable_chapman_jouguet_log, x0=np.array([np.log(wm_guess)]), args=(model, wp), full_output=True)
+    wm: float = float(np.exp(wm_sol[0][0]))
     if wm_sol[2] == 1 and wm > wp:
         return wm
 
@@ -538,7 +539,7 @@ def _wm_chapman_jouguet_bracket(model: "Model", wp: float) -> float | None:
     log_wms = np.linspace(np.log(wp), np.log(wm_max), N_BRACKET_CJ)[1:]
 
     def deviation(log_wm: float) -> float:
-        return wm_solvable_chapman_jouguet(np.array([np.exp(log_wm)]), model, wp)
+        return wm_solvable_chapman_jouguet_log(np.array([log_wm]), model, wp)
 
     # Walk through the grid in pairs of consecutive points (log_wm_prev, log_wm).
     # The deviation is nan where v_plus has no detonation solution for the alpha_+(w_+, w_-) of that w_-.
@@ -565,8 +566,8 @@ def _wm_chapman_jouguet_bracket(model: "Model", wp: float) -> float | None:
     return None
 
 
-def wm_solvable_chapman_jouguet(params: th.FloatArr1D, model: "Model", wp: float) -> float:
-    r"""Deviation from the junction conditions for a Chapman-Jouguet detonation.
+def wm_solvable_chapman_jouguet_log(params: th.FloatArr1D, model: "Model", wp: float) -> float:
+    r"""Deviation from the junction conditions for a Chapman-Jouguet detonation as a function of $\ln {w}_-$.
 
     The fluid speed behind the wall is set to $\tilde{v}_- = c_{s,-}({w}_-)$,
     and $\tilde{v}_+$ is given by :func:`pttools.bubble.v_plus.v_plus` with $\alpha_+({w}_+, {w}_-)$,
@@ -575,13 +576,14 @@ def wm_solvable_chapman_jouguet(params: th.FloatArr1D, model: "Model", wp: float
     $${w}_- \tilde{\gamma}_-^2 \tilde{v}_- = {w}_+ \tilde{\gamma}_+^2 \tilde{v}_+,$$
     :maki_msc:`\ ` eq. 2.39, multiplied by $1 - \tilde{v}_-^2$ to avoid the division
     $$\Delta = {w}_- \tilde{v}_- - {w}_+ \tilde{\gamma}_+^2 \tilde{v}_+ (1 - \tilde{v}_-^2).$$
+    The parameter is $\ln {w}_-$ instead of ${w}_-$ to ensure that ${w}_- > 0$ when solving for the root.
 
-    :param params: ${w}_-$ as a single-element array
+    :param params: $\ln {w}_-$ as a single-element array
     :param model: the equation of state
     :param wp: ${w}_+$, enthalpy in front of the wall
     :return: deviation $\Delta$ from the first junction condition
     """
-    wm_param = params[0]
+    wm_param = np.exp(params[0])
     vm2 = model.cs2(wm_param, Phase.BROKEN)
     vm = np.sqrt(vm2)
     # alpha_plus can be negative for Chapman-Jouguet detonations if c_{s,-}^2 < 1/3,
