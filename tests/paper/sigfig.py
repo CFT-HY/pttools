@@ -88,9 +88,10 @@ def round_sig_error(x: float, ex: float, n: int, paren: bool = False) -> str | t
     """
     stex = round_sig(ex, n)
     if stex.find('.') < 0:
+        # Round x to the same decimal place as the last significant figure of the error.
+        # Counting the digits of x would fail for negative x, |x| < 1 and when x has fewer digits than the error.
         extra_zeros = len(stex) - n
-        sigfigs = len(str(int(x))) - extra_zeros
-        stx = round_sig(x, sigfigs)
+        stx = f"{round(x, -extra_zeros):.0f}"
     else:
         num_after_dec = len(stex.split('.')[1])
         stx = f"{x:.{num_after_dec}f}"
