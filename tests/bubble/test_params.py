@@ -55,17 +55,18 @@ class TestParams(unittest.TestCase):
         self.assertIsNotNone(params.nuc_args)
 
 
-@njit
+# Functions that return jitclass instances cannot be cached.
+@njit(cache=False)
 def params_without_nuc_args_numba():
     return PhysicalParams(0.1, 0.2)
 
 
-@njit
+@njit(cache=False)
 def params_without_nuc_args_numba_nones():
     return PhysicalParams(0.1, 0.2, None, None)
 
 
-@njit
+@njit(cache=False)
 def params_with_nuc_args_numba():
     nuc_args = NucArgs(0.1)
     return PhysicalParams(0.1, 0.2, NucType.SIMULTANEOUS.value, nuc_args)
