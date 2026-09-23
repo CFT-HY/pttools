@@ -18,7 +18,7 @@ class DropletTest(unittest.TestCase):
         bubble = Bubble(model, v_wall=0.42, alpha_n=0.06)
         # The droplet module is not yet in the PTtools repository
         try:
-            from examples.droplet.droplet import Droplet  # noqa: PLC0415
+            from examples.droplet.droplet import Droplet  # noqa: PLC0415  # pyrefly: ignore[missing-import]
             Droplet(bubble=bubble, v_wall=-0.32)
         except ImportError:
             pass
