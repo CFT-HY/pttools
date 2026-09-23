@@ -93,7 +93,7 @@ jobs:
             uml
           if-no-files-found: error
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 5
     steps:
       - name: Checkout
@@ -106,17 +106,20 @@ jobs:
         # Ruff does not import the project, so only the development tools are needed.
         run: uv sync --locked --only-group dev
       - name: Run Ruff
-        run: ruff check --output-format=full 2>&1 | tee ruff.txt
+        run: |
+          set -o pipefail
+          ruff check --output-format=full 2>&1 | tee ruff.txt
       - name: Upload results
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: Lint
           path: |
             ${{ github.workspace }}/ruff.txt
           if-no-files-found: error
-  pyrefly:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+  typecheck:
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -127,8 +130,11 @@ jobs:
       - name: Install requirements
         run: uv sync --locked --all-extras --no-group docs
       - name: Run Pyrefly
-        run: pyrefly check 2>&1 | tee pyrefly.txt
+        run: |
+          set -o pipefail
+          pyrefly check 2>&1 | tee pyrefly.txt
       - name: Upload results
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: Pyrefly
