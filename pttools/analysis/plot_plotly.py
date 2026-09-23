@@ -3,9 +3,9 @@
 import abc
 import logging
 
-from kaleido._kaleido_tab import KaleidoError
 import plotly.graph_objects as go
 
+from pttools.analysis.plotly import plotly_fix
 from pttools.analysis.utils import ENABLE_DRAWING
 
 logger = logging.getLogger(__name__)
@@ -27,18 +27,12 @@ class PlotlyPlot(abc.ABC):
             self._fig = self.create_fig()
         return self._fig
 
+    @plotly_fix
     def save(self, path: str) -> None:
-        """Save the figure as a file.
-
-        Please note that the Kaleido library Plotly uses to create raster graphics such as PNG
-        does not work on all headless machines.
-        """
+        """Save the figure as a file."""
         fig = self.fig()
         fig.write_html(f"{path}.html")
-        try:
-            fig.write_image(f"{path}.png")
-        except KaleidoError as err:
-            logger.exception(err)
+        fig.write_image(f"{path}.png")
 
     def show(self) -> None:
         """Show the figure."""
