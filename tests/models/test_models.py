@@ -6,6 +6,8 @@ import unittest
 import numpy as np
 
 from pttools import models
+from pttools.bubble.phase import Phase
+from pttools.utils import assert_allclose
 from tests.models.base_bag import BagBaseCase
 from tests.models.base_model import ModelBaseCase
 
@@ -117,6 +119,30 @@ class TestConstCS(ModelBaseCase[models.ConstCSModel], unittest.TestCase):
     def test_wn_full(self):
         data = self.model.wn(self.alpha_n, analytical=False)
         self.assert_json(data, "w_n", allow_save=False)
+
+    def test_inverse_enthalpy_ratio(self):
+        r"""$\Psi(T) = w_b(T) / w_s(T)$, :ai_2023:`\ ` eq. 19."""
+        temp = np.linspace(1, 3, 5)
+        data = self.model.inverse_enthalpy_ratio(temp)
+        ref = self.model.w(temp, Phase.BROKEN) / self.model.w(temp, Phase.SYMMETRIC)
+        assert_allclose(data, ref, rtol=1e-12)
+        self.assertAlmostEqual(self.model.inverse_enthalpy_ratio(2.), ref[2])
+
+    def test_Psi_scaling(self):
+        r"""$\Psi_+ = \Psi_n \left( \frac{w_+}{w_n} \right)^{\nu/\mu - 1}$, :ai_2023:`\ ` eq. 21b."""
+        wn = self.model.wn(0.3)
+        wp = np.linspace(1, 2, 5) * wn
+        data = self.model.Psi_n(wp)
+        ref = self.model.Psi_n(wn) * (wp / wn) ** (self.model.mu_b / self.model.mu_s - 1)
+        assert_allclose(data, ref, rtol=1e-12)
+
+    def test_alpha_n_min_V_b(self):
+        """If the given parameters already fulfill the target, they should be used as such."""
+        params = {"css2": 1/4, "csb2": 1/4, "a_s": 5, "a_b": 1, "V_s": 1, "V_b": 0.1, "log_info": False}
+        target = models.ConstCSModel(**params).alpha_n_min + 0.01
+        model = models.ConstCSModel(**params, alpha_n_min=target)
+        self.assertEqual((model.a_s, model.a_b, model.V_s, model.V_b), (5, 1, 1, 0.1))
+        self.assertLessEqual(model.alpha_n_min, target)
 
     def test_invalid_cs2(self):
         for css2, csb2 in ((-0.1, 1/3), (1.1, 1/3), (1/3, -0.1), (1/3, 1.1)):

@@ -764,7 +764,16 @@ class ConstCSModel(AnalyticModel):
 
     @tp.override
     def inverse_enthalpy_ratio[T: FloatOrArr](self, temp: T) -> T:
-        return tp.cast(T, self.a_b * self.mu_b / (self.a_s * self.mu_s))
+        r"""Inverse enthalpy ratio $\Psi(T)$ :ai_2023:`\ `, eq. 19.
+
+        $$\Psi(T) = \frac{w_b(T)}{w_s(T)}
+        = \frac{\mu_b a_b}{\mu_s a_s} \left( \frac{T}{T_0} \right)^{\mu_b - \mu_s}$$
+        using :maki_msc:`\ ` eq. 2.123.
+
+        :param temp: temperature $T$
+        """
+        return tp.cast(
+            T, self.mu_b * self.a_b  / (self.mu_s * self.a_s) * (temp / self.T_ref) ** (self.mu_b - self.mu_s))
 
     def params_str(self) -> str:
         return \
