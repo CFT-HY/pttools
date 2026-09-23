@@ -444,7 +444,7 @@ class ConstCSModel(AnalyticModel):
             model = ConstCSModel(
                 css2=self.css2, csb2=self.csb2,
                 a_s=a_s_default, a_b=a_b,
-                V_s=V_s_default, log_info=False
+                V_s=V_s_default, V_b=V_b, log_info=False
             )
             # If we are already below the target
             if model.alpha_n_min < alpha_n_min_target:
@@ -453,8 +453,8 @@ class ConstCSModel(AnalyticModel):
             logger.debug(
                 "The default values for ConstCSModel result in an invalid model. "
                 "The search for parameters may fail. "
-                "css2=%s, csb2=%s, a_s=%s, a_b=%s, V_s=%s",
-                self.css2, self.csb2, a_s_default, a_b, V_s_default
+                "css2=%s, csb2=%s, a_s=%s, a_b=%s, V_s=%s, V_b=%s",
+                self.css2, self.csb2, a_s_default, a_b, V_s_default, V_b
             )
 
         V_s = V_s_default
@@ -643,7 +643,7 @@ class ConstCSModel(AnalyticModel):
 
         $$\alpha_{\bar{\theta}_+}
         = \frac{1}{3} \left( 1 - \frac{\mu_-}{\mu_+} \right) + \frac{\mu_-}{4} \alpha_{+,\text{bag}}$$
-        :maki_msc:`\ ` eq. 2.137
+        :maki_msc:`\ ` eq. 2.136
         """
         return tp.cast(T, (1 - self.mu_b / self.mu_s)/3 + self.mu_b/4 * self.alpha_plus_bag(
                           wp=wp,
