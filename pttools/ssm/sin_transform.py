@@ -32,7 +32,8 @@ def _sin_transform_arr(
     integral = sin_transform_core_parallel(t=xi, f=f, freq=z_lo) \
         if parallel else sin_transform_core_single(t=xi, f=f, freq=z_lo)
 
-    if len(lo) < len(z):  # pyrefly: ignore[bad-argument-type]
+    # If there are z values above the threshold, use the approximation for them.
+    if z_lo.size < z.size:  # pyrefly: ignore[missing-attribute]
         z_hi = z[np.where(z > z_st_thresh - const.DZ_ST_BLEND)]  # pyrefly: ignore[bad-index]
         I_hi = sin_transform_approx(z_hi, xi, f, v_wall=v_wall, v_sh=v_sh)
 

@@ -119,18 +119,26 @@ Minimum $\tilde{T}$ in bubble lifetime distribution integration
 From :gw_pt_ssm:`\ ` p. 20
 """
 
-#: Default dimensionless wavenumber above which to use approximation for sin_transform, sin_transform_approx.
 Z_ST_THRESH: float = 50.
+"""
+Default dimensionless wavenumber above which to use
+:py:func:`pttools.ssm.sin_transform_approx.sin_transform_approx`
+for
+:py:func:`pttools.ssm.sin_transform.sin_transform`.
+"""
 
 
 # -----
 # Constants
 # -----
 
-#: Default sound speed
+#: Default sound speed $c_s$
 CS0: tp.Final[float] = bubble.CS0
-#: Default sound speed squared
+#: Default sound speed squared $c_s^2$
 CS0_2: tp.Final[float] = bubble.CS0_2
 
-#: Default wavenumber overlap for matching sin_transform_approx
 DZ_ST_BLEND: float = np.pi
+"""
+Default wavenumber overlap for matching
+:py:func:`pttools.ssm.sin_transform_approx.sin_transform_approx`.
+"""
