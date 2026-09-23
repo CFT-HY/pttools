@@ -118,6 +118,11 @@ class TestConstCS(ModelBaseCase[models.ConstCSModel], unittest.TestCase):
         data = self.model.wn(self.alpha_n, analytical=False)
         self.assert_json(data, "w_n", allow_save=False)
 
+    def test_invalid_cs2(self):
+        for css2, csb2 in ((-0.1, 1/3), (1.1, 1/3), (1/3, -0.1), (1/3, 1.1)):
+            with self.subTest(css2=css2, csb2=csb2), self.assertRaisesRegex(ValueError, "have to be"):
+                models.ConstCSModel(a_s=1.2, a_b=1.1, V_s=1.3, css2=css2, csb2=csb2)
+
 
 class TestConstCSThermo(ModelBaseCase[models.FullModel], unittest.TestCase):
     """Tests for the ThermoModel-based constant $c_s$ model."""

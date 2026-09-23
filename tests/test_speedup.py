@@ -13,7 +13,7 @@ import scipy.interpolate
 from pttools import speedup
 from pttools.analysis import save_fig
 from pttools.speedup import njit, spline, tbb
-from pttools.speedup.parallel import parallel_debug_message
+from pttools.speedup.parallel import parallel_debug_message, run_parallel
 import pttools.type_hints as th
 from pttools.utils import assert_allclose
 from tests.utils import TEST_FIGURE_PATH
@@ -50,6 +50,14 @@ class TestSpeedup(unittest.TestCase):
     @staticmethod
     def test_parallel_debug():
         parallel_debug_message("test")
+
+    @staticmethod
+    def test_run_parallel_single_output_dtype():
+        params = np.array([1., 2., 3.])
+        res = run_parallel(np.square, params, output_dtypes=(np.float64,), single_thread=True)
+        assert isinstance(res, np.ndarray)
+        assert res.dtype == np.float64
+        assert_allclose(res, params**2)
 
     @staticmethod
     @unittest.expectedFailure

@@ -375,7 +375,8 @@ def run_parallel(
                 with np.nditer(
                         [futs, output_arr],
                         flags=["refs_ok", "c_index", "multi_index"],
-                        # op_flags=[["readonly"], ["writeonly"]],
+                        # Without explicit op_flags, a given output array would be read-only.
+                        op_flags=[["readonly"], ["writeonly", "allocate"]],
                         order="C") as it:
                     for fut, res in it:
                         res[...] = fut.item().result()

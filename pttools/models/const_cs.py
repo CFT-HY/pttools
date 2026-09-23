@@ -177,7 +177,7 @@ class ConstCSModel(AnalyticModel):
         self.css2: float = self.validate_cs2(css2_flt, "css2")
         self.csb2: float = self.validate_cs2(csb2_flt, "csb2")
 
-        if np.isnan(css2_flt) or np.isnan(csb2_flt):
+        if np.isnan(self.css2) or np.isnan(self.csb2):
             raise ValueError(
                 "c_{s,s}^2 and c_{s,b}^2 have to be 0 < c_s <= 1."
                 f"Got: c_{{s,s}}^2={css2}, c_{{s,b}}^2={csb2}."
