@@ -124,6 +124,12 @@ def v_plus[T: FloatOrArr](
     :notes:`\ `, eq. 7.27.
     The equations in both sources are equivalent by moving a factor of 2.
 
+    This is exact for any equation of state,
+    when $\alpha_+$ is defined with the trace anomaly $\theta = \frac{1}{4}(e - 3p)$ as in
+    :meth:`pttools.models.model.Model.alpha_plus`, :maki_msc:`\ ` eq. 2.51, 2.59, 2.65-2.67.
+    The factors of $\frac{1}{3}$ come from this definition of $\theta$ and not from $c_s^2 = \frac{1}{3}$.
+    However, in general $\alpha_+$ depends on ${w}_-$.
+
     Positive sign is for detonations,
     which corresponds to $\tilde{v}_- > \frac{1}{\sqrt{3}}$ in the bag model.
 
