@@ -10,7 +10,7 @@ from pttools.models.thermo import ThermoModel
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class StandardModel(ThermoModel):
@@ -78,10 +78,10 @@ class StandardModel(ThermoModel):
             g_mult_s, g_mult_b, V_s, V_b
         )
 
-        self.g_mult_s = g_mult_s
-        self.g_mult_b = g_mult_b
-        self.V_s = V_s
-        self.V_b = V_b
+        self.g_mult_s: float = g_mult_s
+        self.g_mult_b: float = g_mult_b
+        self.V_s: float = V_s
+        self.V_b: float = V_b
 
         super().__init__(
             T_min=T_min, T_max=T_max,

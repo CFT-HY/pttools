@@ -1,5 +1,7 @@
 """Sine transform for the Sound Shell Model."""
 
+import typing as tp
+
 import numba
 from numba.extending import overload
 import numba.types
@@ -80,6 +82,8 @@ def _sin_transform_core(t: th.FloatArr1D, f: th.FloatArr1D, freq: th.FloatArr1D)
     return integral
 
 
+sin_transform_core_parallel: tp.Callable[..., th.FloatArr1D]
+sin_transform_core_single: tp.Callable[..., th.FloatArr1D]
 sin_transform_core_parallel, sin_transform_core_single = njit_parallel_pair(_sin_transform_core, nogil=True, cache=True)
 
 

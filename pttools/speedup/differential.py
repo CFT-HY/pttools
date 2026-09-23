@@ -12,7 +12,7 @@ from pttools.speedup.numba_wrapper import CFunc, CPUDispatcher, lsoda_sig
 from pttools.speedup.options import NUMBA_DISABLE_JIT
 import pttools.type_hints as th
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 type DifferentialCFunc = tp.Callable[[float, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D | None], None] | CFunc
 type DifferentialOdeint = tp.Callable[[th.FloatArr1D, float, th.FloatArr1D | None], th.FloatArr1D] | CPUDispatcher
@@ -141,7 +141,7 @@ class DifferentialCache:
         """Get a function compatible with SciPy solve_ivp."""
         return self._get_func(key, self._cache_solve_ivp)
 
-    def keys(self):
+    def keys(self) -> tp.KeysView[DifferentialKey]:
         """Get the keys in the cache."""
         return self._cache_njit.keys()
 

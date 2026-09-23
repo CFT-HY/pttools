@@ -42,7 +42,7 @@ CORREIA_2026_UBARF: FloatArr1D = CORREIA_2026_DATA[6, :]
 class CorreiaTest2026(unittest.TestCase):
     @staticmethod
     @pytest.mark.xfail(reason="The Sound Shell Model may not be applicable in this regime.")
-    def test_ubarf():
+    def test_ubarf() -> None:
         model = BagModel()
         bubbles = [
             Bubble(model, v_wall=v_wall, alpha_n=alpha_n)

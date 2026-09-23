@@ -27,7 +27,7 @@ from tests.utils.const import TEST_DATA_PATH
 type FitParsCWG = tuple[float, float]
 type FitParsSSM = tuple[float, float, float]
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 # bubble.setup_plotting()
 
@@ -95,12 +95,21 @@ VW_LIST_ALL = [const.VW_WEAK_LIST, VW_INTER_LIST]
 
 
 @njit(cache=True)
-def cwg_fitfun(k, p0, p1):
+def cwg_fitfun(k: th.FloatArr, p0: float, p1: float) -> th.FloatArr:
     return p0 * np.power(k/p1, 3.0) * np.power(7.0 / (4.0 + 3.0 * np.power(k / p1, 2.0)), 7.0 / 2.0)
 
 
 @njit(cache=True)
-def double_broken_power_law(z, A, z0, z1, a, b, c, d: float = 4., e: float = 2.):
+def double_broken_power_law(
+        z: th.FloatArr,
+        A: float,
+        z0: float,
+        z1: float,
+        a: float,
+        b: float,
+        c: float,
+        d: float = 4.,
+        e: float = 2.) -> th.FloatArr:
     s = z/z1
     D = z1/z0
     Dpow = D**d
@@ -111,7 +120,7 @@ def double_broken_power_law(z, A, z0, z1, a, b, c, d: float = 4., e: float = 2.)
 
 
 @njit(cache=True)
-def ssm_fitfun(z, A, z0, z1):
+def ssm_fitfun(z: th.FloatArr, A: float, z0: float, z1: float) -> th.FloatArr:
     return double_broken_power_law(z, A, z0, z1, 9, 1, -4)
 
 
@@ -139,7 +148,7 @@ def add_cwg_fit(f_gw: plt.Figure, y: th.FloatArr1D, pow_gw: th.FloatArr1D) -> Fi
     return p
 
 
-def add_ssm_fit(f_gw: plt.Figure, y, pow_gw) -> FitParsSSM:
+def add_ssm_fit(f_gw: plt.Figure, y: th.FloatArr1D, pow_gw: th.FloatArr1D) -> FitParsSSM:
     p = get_ssm_fit_pars(y, pow_gw)
     pow_gw_sim_ssm = ssm_fitfun(y, p[0], p[1], p[2])
     f_gw.axes[0].loglog(y, pow_gw_sim_ssm, 'k--', label='SSM fit')
@@ -186,10 +195,10 @@ def make_1dh_compare_table(
 
 
 def make_3dh_compare_table(
-        params_list,
-        v2_list,
-        Omgw_list,
-        p_list,
+        params_list: th.FloatArr2D,
+        v2_list: th.FloatArr2D,
+        Omgw_list: th.FloatArr2D,
+        p_list: th.FloatArr2D,
         file_name: str | io.TextIOBase = 'table_3dh_compare.tex') -> None:
     """
     Prints table to file, comparing selected statistics between
@@ -278,11 +287,11 @@ def make_3dh_compare_table(
 
 
 def make_nuc_compare_table(
-        params_list,
-        v2_list,
-        Omgw_list,
-        p_sim_list,
-        p_exp_list,
+        params_list: th.FloatArr2D,
+        v2_list: th.FloatArr2D,
+        Omgw_list: th.FloatArr2D,
+        p_sim_list: th.FloatArr2D,
+        p_exp_list: th.FloatArr2D,
         file_name: str | io.TextIOBase = 'table_nuc_compare.tex') -> None:
     """
     Prints table to stdout, displaying selected statistics
@@ -356,8 +365,14 @@ def make_nuc_compare_table(
         f.close()
 
 
-def save_compare_nuc_data(file: str, params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list) -> list:
-    data = []
+def save_compare_nuc_data(
+        file: str,
+        params_list: list[list[float]],
+        v2_list: list[list[float]],
+        Omgw_list: list[list[float]],
+        p_cwg_list: list[list[float]],
+        p_ssm_list: list[list[float]]) -> list[list[float]]:
+    data: list[list[float]] = []
     for params, v2, Omgw, pc, ps in zip(params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list, strict=False):
         data.append(params + v2 + Omgw + pc + ps)
 
@@ -365,13 +380,14 @@ def save_compare_nuc_data(file: str, params_list, v2_list, Omgw_list, p_cwg_list
     return data
 
 
-def load_compare_nuc_data(file: str):
+def load_compare_nuc_data(file: str) \
+        -> tuple[list[list[float]], list[list[float]], list[list[float]], list[list[float]], list[list[float]]]:
     data = np.loadtxt(file)
-    params_list = []
-    v2_list = []
-    Omgw_list = []
-    p_cwg_list = []
-    p_ssm_list = []
+    params_list: list[list[float]] = []
+    v2_list: list[list[float]] = []
+    Omgw_list: list[list[float]] = []
+    p_cwg_list: list[list[float]] = []
+    p_ssm_list: list[list[float]] = []
 
     params = data[:, 0:2]
     v2 = data[:, 2:4]
@@ -434,8 +450,8 @@ def plot_ps_compare_res(
         nuc_type: ssm.NucType = ssm.NucType.SIMULTANEOUS,
         nuc_args: bubble.NucArgs = (1.,),
         save_id: str | None = None,
-        graph_file_type=None,
-        method: ssm.Method = ssm.Method.E_CONSERVING):
+        graph_file_type: str | None = None,
+        method: ssm.Method = ssm.Method.E_CONSERVING) -> tuple[plt.Figure, plt.Figure]:
     """
     Plots power spectra predictions of SSM with different resolutions in Np_list
     Saves data and graphs if save_id is set.
@@ -773,7 +789,7 @@ def plot_and_save(
         alpha: float,
         method: ssm.Method = ssm.Method.E_CONSERVING,
         v_xi_file: str | None = None,
-        suffix: str | None =None):
+        suffix: str | None =None) -> tuple[list[th.FloatOrArr], list[th.FloatOrArr]]:
     """
     Plots the Velocity power spectrum as a function of $kR_*$.
     Plots the scaled GW power spectrum as a function of $kR_*$.
@@ -796,8 +812,8 @@ def plot_and_save(
     f2 = plt.figure(figsize=[8, 4])
     ax_gw = plt.gca()
 
-    V2_pow_v = []
-    gw_power = []
+    V2_pow_v: list[th.FloatOrArr] = []
+    gw_power: list[th.FloatOrArr] = []
 
     z = np.logspace(np.log10(const.Z_MIN), np.log10(const.Z_MAX), Np[0])
 

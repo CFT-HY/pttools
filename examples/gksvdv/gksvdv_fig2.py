@@ -22,7 +22,7 @@ from pttools.speedup import run_parallel
 from pttools.type_hints import FloatArr1D, FloatArr2D, FloatArr3D
 from pttools.utils.system import testing_or_ci
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def kappas_giese(
@@ -134,7 +134,7 @@ def create_diff_figure(
         colors: tp.Sequence[str],
         lss: tp.Sequence[str],
         theta_bar: bool,
-        title: bool = True):
+        title: bool = True) -> None:
     rel_diffs = np.abs(kappas_pttools - kappas_giese) / kappas_giese
     title_str = r"$\alpha_{\bar{\theta}_n}$" if theta_bar else r"$\alpha_n$"
     print(title_str)

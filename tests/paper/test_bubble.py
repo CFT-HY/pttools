@@ -13,7 +13,7 @@ from pttools.utils import assert_allclose
 from tests.paper import ssm_paper_utils as spu
 from tests.utils.const import TEST_DATA_PATH, TEST_FIGURE_PATH
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 FIG_PATH: str = os.path.join(TEST_FIGURE_PATH, "bubble")
 
@@ -22,7 +22,7 @@ class TestBubble(unittest.TestCase):
     """Test the bubble functions in the paper code."""
 
     @staticmethod
-    def test_bubble():
+    def test_bubble() -> None:
         figs, fig_ids, data = spu.do_all_plot_ps_1bubble(debug=True, lambda_correction=True)
         for fig, fig_id in zip(figs, fig_ids, strict=False):
             save_fig(fig, os.path.join(FIG_PATH, f"bubble_{fig_id}"), force_formats=True)

@@ -1,5 +1,7 @@
 """Speed of sound for the Bag Model."""
 
+import typing as tp
+
 import numba
 from numba.extending import overload
 import numpy as np
@@ -87,5 +89,7 @@ def cs2_bag_numba(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.NumbaFunc:
 #: Pointer to the scalar $c_s^2$ function of the Bag Model
 CS2_BAG_SCALAR_PTR: th.CS2FunScalarPtr = cs2_to_ptr(cs2_bag_scalar_cfunc)
 CS2ScalarCType = cs2_bag_scalar_cfunc.ctypes
-cs2_bag_scalar = njit(cache=NUMBA_CACHE_CS2_BAG)(_cs2_bag_scalar)
-cs2_bag_arr = njit(cache=NUMBA_CACHE_CS2_BAG)(_cs2_bag_arr)
+cs2_bag_scalar: tp.Callable[[th.FloatOrArr, th.FloatOrArr], th.FloatOrArr] = \
+    njit(cache=NUMBA_CACHE_CS2_BAG)(_cs2_bag_scalar)
+cs2_bag_arr: tp.Callable[[th.FloatOrArr, th.FloatOrArr], th.FloatArr] = \
+    njit(cache=NUMBA_CACHE_CS2_BAG)(_cs2_bag_arr)

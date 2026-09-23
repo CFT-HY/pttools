@@ -31,7 +31,7 @@ These are used when calling :func:`cs2_from_ptr` outside jitted code.
 For a compiled function this is a ctypes function, and otherwise the function itself.
 """
 
-CS2_FUNCS_LOCK = threading.Lock()
+CS2_FUNCS_LOCK: threading.Lock = threading.Lock()
 
 
 def cs2_to_ptr(cs2_fun: th.CS2Fun) -> th.CS2FunScalarPtr:

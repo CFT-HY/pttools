@@ -15,7 +15,7 @@ from pttools.ssm.ssm import T_tilde as T_tilde_func
 from pttools.ssm.ssm_bag import a2_e_conserving_bag_file, a2_ssm_func_bag
 import pttools.type_hints as th
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def convert_params(params: bubble.PhysicalParams | list) -> bubble.PhysicalParams:
@@ -149,7 +149,7 @@ def spec_den_v_bag(
         skip: int = 1,
         method: Method = Method.E_CONSERVING,
         de_method: DE_Method = DE_Method.STANDARD,
-        z_st_thresh=const.Z_ST_THRESH,
+        z_st_thresh: float = const.Z_ST_THRESH,
         bubble_spacing_enlargement_factor: float = 1.,
         ubarf2: float = 1.,
         lambda_correction: bool = False,

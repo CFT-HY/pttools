@@ -3,13 +3,14 @@
 import io
 import os
 import threading
+import types
 import typing as tp
 
 import yappi
 
 from tests.profiling import utils
 
-PROFILE_DIR = os.path.join(utils.PROFILE_DIR, "yappi")
+PROFILE_DIR: str = os.path.join(utils.PROFILE_DIR, "yappi")
 os.makedirs(PROFILE_DIR, exist_ok=True)
 
 
@@ -19,13 +20,17 @@ class YappiProfiler(utils.Profiler):
     _lock = threading.Lock()
 
     @classmethod
-    def __enter__(cls):
+    def __enter__(cls) -> None:
         if cls._lock.locked() or yappi.is_running():
             raise RuntimeError("Yappi does not support concurrent sessions")
         cls._lock.acquire()
         yappi.start()
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_val: BaseException | None,
+            exc_tb: types.TracebackType | None) -> None:
         self._lock.release()
         yappi.stop()
         process(self.name, self.print_to_console)

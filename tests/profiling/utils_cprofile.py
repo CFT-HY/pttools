@@ -5,30 +5,35 @@ import io
 import os
 import pstats
 import sys
+import types
 import typing as tp
 
 from tests.profiling import utils
 
-PROFILE_DIR = os.path.join(utils.PROFILE_DIR, "cprofile")
+PROFILE_DIR: str = os.path.join(utils.PROFILE_DIR, "cprofile")
 os.makedirs(PROFILE_DIR, exist_ok=True)
 
 
 class CProfiler(utils.Profiler):
     """Wrapper for the cProfile profiler."""
 
-    def __init__(self, name: str, print_to_console: bool = False):
+    def __init__(self, name: str, print_to_console: bool = False) -> None:
         super().__init__(name, print_to_console)
-        self.profiler = cProfile.Profile()
+        self.profiler: cProfile.Profile = cProfile.Profile()
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         self.profiler.enable()
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_val: BaseException | None,
+            exc_tb: types.TracebackType | None) -> None:
         self.profiler.disable()
         process(self.name, self.profiler, self.print_to_console)
 
 
-def process(name: str, profile: cProfile.Profile, print_to_console: bool = False):
+def process(name: str, profile: cProfile.Profile, print_to_console: bool = False) -> None:
     """Process and save cProfile results."""
     path = os.path.join(PROFILE_DIR, f"{name}")
     profile.dump_stats(f"{path}.pstat")
@@ -42,7 +47,7 @@ def save_sorted(
         profile: cProfile.Profile,
         path: str,
         sort: tp.Union["pstats.SortKey", str],
-        print_to_console: bool = False):
+        print_to_console: bool = False) -> None:
     """Save sorted cProfile results to file."""
     # Save to file
     stream = io.StringIO()
@@ -61,7 +66,7 @@ def save_sorted(
     save_filtered(text, f"{path_labeled}_all.txt", "site-packages")
 
 
-def save_filtered(text: str, path: str, filter_text: str):
+def save_filtered(text: str, path: str, filter_text: str) -> None:
     lines = text.splitlines(keepends=True)
     with open(path, "w") as file:
         for line in lines:

@@ -17,7 +17,7 @@ import pttools.type_hints as th
 
 
 # @njit
-def fpbspl(t: th.FloatArr1D, n: int, k: int, x: float, l: int, h: th.FloatArr1D):
+def fpbspl(t: th.FloatArr1D, n: int, k: int, x: float, l: int, h: th.FloatArr1D) -> None:
     """
     Modified from the
     `SciPy version <https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/fpbspl.f#L19>`__.

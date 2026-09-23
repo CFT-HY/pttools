@@ -16,7 +16,7 @@ class DeltaThetaPlot3D(PlotlyPlot):
         super().__init__()
         self.plots: list[BasePlotlyType] = []
 
-    def add(self, model: Model):
+    def add(self, model: Model) -> None:
         wp = np.linspace(0, model.w_crit)
         wm = wp
         wp_grid, wm_grid = np.meshgrid(wp, wm)

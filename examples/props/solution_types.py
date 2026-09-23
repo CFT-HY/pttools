@@ -7,7 +7,7 @@ Original version was developed by Daniel Cutting for the figure 14 of :notes:`\ 
 """
 
 
-import matplotlib.colors
+from matplotlib.colors import ListedColormap, to_rgba
 from matplotlib.image import AxesImage
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,8 +21,8 @@ __author__ = "Daniel Cutting"
 
 _VIRIDIS_BIG = plt.colormaps["autumn_r"]
 _NEW_COLORS = _VIRIDIS_BIG(np.linspace(0, 1, 256))
-_NEW_COLORS[0] = matplotlib.colors.to_rgba("white", alpha=0)
-COLORMAP = matplotlib.colors.ListedColormap(_NEW_COLORS)
+_NEW_COLORS[0] = to_rgba("white", alpha=0)
+COLORMAP: ListedColormap = ListedColormap(_NEW_COLORS)
 
 
 def plot_bubble(ax: plt.Axes, label: str, v_wall: float, alpha: float, n_xi: int) -> AxesImage:

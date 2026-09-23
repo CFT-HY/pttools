@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 from pttools.analysis.plotly import plotly_fix
 from pttools.analysis.utils import ENABLE_DRAWING
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class PlotlyPlot(abc.ABC):

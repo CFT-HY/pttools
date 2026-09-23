@@ -1,6 +1,13 @@
-"""Additional definitions for Numba-jitting functions from other libraries."""
+"""Additional definitions for Numba-jitting functions from other libraries.
+
+Numba requires that the parameters of an overload typing function and of the implementation it returns
+are identical, including their type annotations.
+Therefore, the parameters that receive Numba types in the typing functions
+and values in the implementations are annotated with :data:`typing.Any`.
+"""
 
 import logging
+import typing as tp
 
 import numba
 from numba.extending import overload
@@ -8,10 +15,10 @@ import numpy as np
 
 from pttools.speedup import numba_wrapper
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
-def do_nothing(x):
+def do_nothing(x: tp.Any) -> tp.Any:
     """Do nothing."""
     return x
 
@@ -20,7 +27,7 @@ if numba_wrapper.NUMBA_VERSION < (0, 49, 0):
     logger.warning("Overloading numpy.flipud for old Numba")
 
     @overload(np.flipud, jit_options={"nopython": True})
-    def np_flip_ud(arr: np.ndarray):
+    def np_flip_ud(arr: np.ndarray) -> tp.Callable[[np.ndarray], np.ndarray]:
         def impl(arr: np.ndarray) -> np.ndarray:
             # Copying may be necessary to avoid problems with the memory layout of the array
             # return arr[::-1, ...].copy()
@@ -29,7 +36,7 @@ if numba_wrapper.NUMBA_VERSION < (0, 49, 0):
 
 
 @overload(np.all, jit_options={"nopython": True})
-def np_all(x):
+def np_all(x: tp.Any) -> tp.Callable:
     """Overload of :external:py:func:`numpy.all` for booleans.
 
     This seems not to be used properly in Numba 0.60.0.
@@ -41,13 +48,13 @@ def np_all(x):
     return np.all
 
 
-def np_all_fix(x):
+def np_all_fix(x: tp.Any) -> np.bool:
     """A fix for overloading :external:py:func:`numpy.all`."""
     return np.all(x)
 
 
 @overload(np_all_fix, jit_options={"nopython": True})
-def np_all_fix_scalar(x):
+def np_all_fix_scalar(x: tp.Any) -> tp.Callable:
     """Overload of :external:py:func:`numpy.all` for booleans and scalars."""
     if isinstance(x, numba.types.Boolean):
         return do_nothing
@@ -57,7 +64,7 @@ def np_all_fix_scalar(x):
 
 
 @overload(np.any, jit_options={"nopython": True})
-def np_any(x):
+def np_any(x: tp.Any) -> tp.Callable:
     """Overload of :external:py:func:`numpy.any` for booleans and scalars."""
     if isinstance(x, numba.types.Boolean):
         return do_nothing

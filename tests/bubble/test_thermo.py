@@ -17,18 +17,18 @@ class ThermoTest(Reference, ABC):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.bubbles = [
+        cls.bubbles: list[Bubble] = [
             Bubble(cls.MODEL, v_wall=v_wall, alpha_n=alpha_n)
             for v_wall, alpha_n in zip(cls.V_WALLS, cls.ALPHA_NS, strict=True)
         ]
 
-    def test_ebar(self):
+    def test_ebar(self) -> None:
         assert_allclose(
             [e_bar(model=bubble.model, wn=bubble.wn) for bubble in self.bubbles],
             [bubble.en for bubble in self.bubbles]
         )
 
-    def test_wbar(self):
+    def test_wbar(self) -> None:
         """If there is no bubble, then wbar=wn."""
         assert_allclose(
             [
@@ -38,20 +38,20 @@ class ThermoTest(Reference, ABC):
             [bubble.wn for bubble in self.bubbles]
         )
 
-    def test_kappa(self):
+    def test_kappa(self) -> None:
         assert_allclose([bubble.kappa for bubble in self.bubbles], self.KAPPA_REF, rtol=1.5e-2)
 
-    def test_kappa_omega(self):
+    def test_kappa_omega(self) -> None:
         assert_allclose([bubble.kappa + bubble.omega for bubble in self.bubbles], 1, rtol=1.8e-2)
 
-    def test_kappa_omega_ref(self):
+    def test_kappa_omega_ref(self) -> None:
         """Ensure that there are no typos in the reference data."""
         assert_allclose(self.KAPPA_REF + self.OMEGA_REF, 1, 1.8e-2)
 
-    def test_bva_ke_frac(self):
+    def test_bva_ke_frac(self) -> None:
         assert_allclose([bubble.kinetic_energy_fraction for bubble in self.bubbles], self.BVA_KE_FRAC_REF, rtol=1.5e-2)
 
-    def test_omega(self):
+    def test_omega(self) -> None:
         assert_allclose([bubble.omega for bubble in self.bubbles], self.OMEGA_REF, rtol=1.3e-2)
 
 
@@ -60,7 +60,7 @@ class ThermoTestHindmarshHijazi(RefHindmarshHijazi, ThermoTest, unittest.TestCas
 
 
 class ThermoTestLectureNotes(RefLectureNotes, ThermoTest, unittest.TestCase):
-    def test_ubarf(self):
+    def test_ubarf(self) -> None:
         assert_allclose(
             [np.sqrt(ubarf2(
                 v=bubble.v, w=bubble.w, xi=bubble.xi,

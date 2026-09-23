@@ -35,11 +35,12 @@ from pttools.bubble.energy_budget import (
 )
 from pttools.bubble.phase import Phase
 from pttools.models.bag import BagModel
+import pttools.type_hints as th
 from tests.bubble.ref import RefBag, Reference, RefHindmarshHijazi, RefLectureNotes
 from tests.utils.test_assertions import assert_allclose
 
 #: The $\alpha_n$ values for the tests that don't depend on the reference data
-ALPHA_NS_FIT = np.array([0.01, 0.1, 0.3, 1.0])
+ALPHA_NS_FIT: th.FloatArr = np.array([0.01, 0.1, 0.3, 1.0])
 
 
 class EnergyBudgetApproxTest(Reference, ABC):
@@ -48,7 +49,7 @@ class EnergyBudgetApproxTest(Reference, ABC):
     RTOL_KAPPA: float = 2.8e-2
     RTOL_KE_FRAC: float = 2.8e-2
 
-    def test_solution_types(self):
+    def test_solution_types(self) -> None:
         """Ensure that the reference covers subsonic deflagrations, hybrids and detonations."""
         sol_types = set()
         for alpha_n, v_wall in zip(self.ALPHA_NS, self.V_WALLS, strict=True):
@@ -61,7 +62,7 @@ class EnergyBudgetApproxTest(Reference, ABC):
                 sol_types.add("hybrid")
         assert sol_types == {"sub_def", "hybrid", "detonation"}, f"Missing solution types: {sol_types}"
 
-    def test_kappa_v_approx(self):
+    def test_kappa_v_approx(self) -> None:
         r"""$\kappa_v$ should correspond to the reference values."""
         kappas = np.array([
             kappa_v_approx(v_wall, alpha_n)
@@ -69,7 +70,7 @@ class EnergyBudgetApproxTest(Reference, ABC):
         ])
         assert_allclose(kappas, self.KAPPA_REF, rtol=self.RTOL_KAPPA)
 
-    def test_kinetic_energy_fraction_approx(self):
+    def test_kinetic_energy_fraction_approx(self) -> None:
         """The kinetic energy fraction $K$ should correspond to the reference values."""
         ke_fracs = np.array([
             kinetic_energy_fraction_approx(v_wall, alpha_n)
@@ -77,7 +78,7 @@ class EnergyBudgetApproxTest(Reference, ABC):
         ])
         assert_allclose(ke_fracs, self.BVA_KE_FRAC_REF, rtol=self.RTOL_KE_FRAC)
 
-    def test_kappa_v_approx_branches(self):
+    def test_kappa_v_approx_branches(self) -> None:
         """The branches of the approximation should be selected according to the solution type."""
         for alpha_n, v_wall in zip(self.ALPHA_NS, self.V_WALLS, strict=True):
             v_cj = v_chapman_jouguet_bag(alpha_plus=alpha_n)
@@ -90,7 +91,7 @@ class EnergyBudgetApproxTest(Reference, ABC):
                 branch = kappa_hybrid_approx(v_wall, alpha_n)
             assert_allclose(kappa, branch, name=f"alpha_n={alpha_n}, v_wall={v_wall}")
 
-    def test_continuity(self, eps: float = 1e-8):
+    def test_continuity(self, eps: float = 1e-8) -> None:
         """The approximation should be continuous at the boundaries of the solution types."""
         for alpha_n in np.unique(self.ALPHA_NS):
             for v_boundary in (CS0, v_chapman_jouguet_bag(alpha_plus=alpha_n)):
@@ -99,7 +100,7 @@ class EnergyBudgetApproxTest(Reference, ABC):
                 assert_allclose(kappa_v_approx(v_boundary - eps, alpha_n), at, rtol=1e-4, name=name)
                 assert_allclose(kappa_v_approx(v_boundary + eps, alpha_n), at, rtol=1e-4, name=name)
 
-    def test_ubarf_approx(self):
+    def test_ubarf_approx(self) -> None:
         r"""$\bar{U}_f^2 = \frac{K}{\Gamma}$."""
         for alpha_n, v_wall in zip(self.ALPHA_NS, self.V_WALLS, strict=True):
             ubarf = ubarf_approx(v_wall, alpha_n)
@@ -107,7 +108,7 @@ class EnergyBudgetApproxTest(Reference, ABC):
             assert_allclose(
                 ubarf**2, ke_frac / DEFAULT_ADIABATIC_INDEX, name=f"alpha_n={alpha_n}, v_wall={v_wall}")
 
-    def test_alpha_n_from_ubarf(self):
+    def test_alpha_n_from_ubarf(self) -> None:
         r"""Inverting $\bar{U}_f$ should give back the original $\alpha_n$."""
         for alpha_n, v_wall in zip(self.ALPHA_NS, self.V_WALLS, strict=True):
             ubarf = ubarf_approx(v_wall, alpha_n)
@@ -115,7 +116,7 @@ class EnergyBudgetApproxTest(Reference, ABC):
                 float(alpha_n_from_ubarf(v_wall, ubarf)), alpha_n,
                 rtol=1e-4, name=f"alpha_n={alpha_n}, v_wall={v_wall}")
 
-    def test_alpha_n_from_ubarf_solvable(self):
+    def test_alpha_n_from_ubarf_solvable(self) -> None:
         r"""The solvable function should be zero at the correct $\alpha_n$."""
         for alpha_n, v_wall in zip(self.ALPHA_NS, self.V_WALLS, strict=True):
             ubarf = ubarf_approx(v_wall, alpha_n)
@@ -161,7 +162,7 @@ class EspinosaFitAccuracyTest(unittest.TestCase):
     #: The precision given in the article
     RTOL = 0.15
 
-    def test_kappa_v_approx_accuracy(self):
+    def test_kappa_v_approx_accuracy(self) -> None:
         r"""The fits should be within 15 % of the full bag model solution."""
         for alpha_n in self.ALPHA_NS:
             for v_wall in self.V_WALLS:
@@ -185,13 +186,13 @@ class KappaLimitsTest(unittest.TestCase):
     """
 
     @staticmethod
-    def test_kappa_a():
+    def test_kappa_a() -> None:
         r"""$\kappa_A$ is the limit of subsonic deflagrations at $v_\text{wall} \ll c_s$."""
         v_wall = 1e-3
         assert_allclose(kappa_sub_def_approx(v_wall, ALPHA_NS_FIT), kappa_a(v_wall, ALPHA_NS_FIT), rtol=1e-3)
 
     @staticmethod
-    def test_kappa_b():
+    def test_kappa_b() -> None:
         r"""$\kappa_B$ is the limit of both subsonic deflagrations and hybrids at $v_\text{wall} = c_s$."""
         kb = kappa_b(ALPHA_NS_FIT)
         assert_allclose(kappa_sub_def_approx(CS0, ALPHA_NS_FIT), kb)
@@ -200,7 +201,7 @@ class KappaLimitsTest(unittest.TestCase):
             assert_allclose(kappa_v_approx(CS0, alpha_n), kappa_b(alpha_n), name=f"alpha_n={alpha_n}")
 
     @staticmethod
-    def test_kappa_c():
+    def test_kappa_c() -> None:
         r"""$\kappa_C$ is the limit of both hybrids and detonations at $v_\text{wall} = v_{CJ}$."""
         v_cj = v_chapman_jouguet_bag(ALPHA_NS_FIT)
         kc = kappa_c(ALPHA_NS_FIT)
@@ -212,12 +213,12 @@ class KappaLimitsTest(unittest.TestCase):
                 kappa_c(alpha_n), name=f"alpha_n={alpha_n}")
 
     @staticmethod
-    def test_kappa_d():
+    def test_kappa_d() -> None:
         r"""$\kappa_D$ is the limit of detonations at $v_\text{wall} \rightarrow 1$."""
         assert_allclose(kappa_detonation_approx(1., ALPHA_NS_FIT, None), kappa_d(ALPHA_NS_FIT))
 
     @staticmethod
-    def test_kappa_values():
+    def test_kappa_values() -> None:
         r"""The individual fits $\kappa_{A-D}$ should correspond to the reference values."""
         assert_allclose(kappa_a(0.1, ALPHA_NS_FIT), [0.00318642, 0.03006012, 0.07965203, 0.18741307], rtol=1e-4)
         assert_allclose(kappa_b(ALPHA_NS_FIT), [0.155413, 0.377451, 0.548365, 0.748662], rtol=1e-4)
@@ -225,7 +226,7 @@ class KappaLimitsTest(unittest.TestCase):
         assert_allclose(kappa_d(ALPHA_NS_FIT), [0.013364, 0.116789, 0.278950, 0.551572], rtol=1e-4)
 
     @staticmethod
-    def test_delta_kappa_approx():
+    def test_delta_kappa_approx() -> None:
         r"""$\delta \kappa$ should correspond to the reference values."""
         assert_allclose(delta_kappa_approx(ALPHA_NS_FIT), [2.158106, 1.283456, 0.934894, 0.623832], rtol=1e-4)
 
@@ -235,18 +236,18 @@ class DeltaNTest(unittest.TestCase):
 
     WN = 1.5
 
-    def test_bag(self):
+    def test_bag(self) -> None:
         r"""For the bag model with $V_- = 0$, $\delta_n = 0$."""
         model = BagModel(a_s=1.2, a_b=1, V_s=1, V_b=0)
         assert_allclose(delta_n(model, self.WN), 0)
 
-    def test_bag_v_b(self):
+    def test_bag_v_b(self) -> None:
         r"""$\delta_n = \frac{4 \theta_-}{3 w_n}$."""
         model = BagModel(a_s=1.2, a_b=1, V_s=1, V_b=0.2)
         theta_b = model.theta(self.WN, Phase.BROKEN)
         assert_allclose(delta_n(model, self.WN), 4 * theta_b / (3 * self.WN))
 
-    def test_ubarf_approx_delta_n(self):
+    def test_ubarf_approx_delta_n(self) -> None:
         r"""A nonzero $\delta_n$ should decrease $\bar{U}_f$."""
         model = BagModel(a_s=1.2, a_b=1, V_s=1, V_b=0.2)
         self.assertLess(

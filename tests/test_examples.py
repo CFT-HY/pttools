@@ -27,116 +27,116 @@ from tests.utils.mark import mark_xfail_multiprocessing_jit, skip_slow, uses_mul
 class ExampleTest(unittest.TestCase):
     # Basic
     @staticmethod
-    def test_basic():
+    def test_basic() -> None:
         close_figs(*basic.main())
 
     @staticmethod
-    def test_datamodel():
+    def test_datamodel() -> None:
         close_figs(datamodel.main())
 
     @staticmethod
-    def test_parallel():
+    def test_parallel() -> None:
         close(parallel.main().fig)
 
     @staticmethod
-    def test_spectra():
+    def test_spectra() -> None:
         close(spectra.main())
 
     # ConstCS
     @staticmethod
-    def test_const_cs():
+    def test_const_cs() -> None:
         plot, fig1, fig2 = const_cs.main()
         close_figs(plot.fig, fig1, fig2)
 
     @staticmethod
-    def test_const_cs_bag_comparison():
+    def test_const_cs_bag_comparison() -> None:
         close(const_cs_bag_comparison.main().fig)
 
     @staticmethod
-    def test_const_cs_find():
+    def test_const_cs_find() -> None:
         const_cs_find.main()
 
     @staticmethod
     @mark_xfail_multiprocessing_jit
     @skip_slow
     @uses_multiprocessing
-    def test_const_cs_gw():
+    def test_const_cs_gw() -> None:
         figs1, figs2, _table = const_cs_gw.main()
         close_figs(*figs1)
         close_figs(*figs2.flat)
 
     @staticmethod
-    def test_const_cs_xi_v():
+    def test_const_cs_xi_v() -> None:
         close(const_cs_xi_v.main())
 
     @staticmethod
-    def test_plot_const_cs_xi_v_w():
+    def test_plot_const_cs_xi_v_w() -> None:
         import examples.const_cs.const_cs_xi_v_w as script  # noqa: PLC0415
         script.plot.fig()
 
     # Entropy
     @staticmethod
-    def test_entropy_comparison():
+    def test_entropy_comparison() -> None:
         entropy_comparison.main()
 
     @staticmethod
     @mark_xfail_multiprocessing_jit
     @skip_slow
     @uses_multiprocessing
-    def test_entropy_grid():
+    def test_entropy_grid() -> None:
         close(entropy_grid.main())
 
     @staticmethod
     @unittest.expectedFailure
-    def test_entropy_old():
+    def test_entropy_old() -> None:
         close(entropy_old.main())
 
     @staticmethod
-    def test_entropy_profile():
+    def test_entropy_profile() -> None:
         close(entropy_profile.main())
 
     # GKSVDV
     @staticmethod
-    def test_gksvdv_bubble():
+    def test_gksvdv_bubble() -> None:
         close(gksvdv_bubble.main())
 
     @staticmethod
     @mark_xfail_multiprocessing_jit
     @skip_slow
     @uses_multiprocessing
-    def test_gksvdv_comparison():
+    def test_gksvdv_comparison() -> None:
         close_figs(*gksvdv_comparison.main())
 
     @staticmethod
     @mark_xfail_multiprocessing_jit
     @skip_slow
     @uses_multiprocessing
-    def test_gksvdv_fig2():
+    def test_gksvdv_fig2() -> None:
         close_figs(*gksvdv_fig2.main())
 
     @staticmethod
-    def test_gksvdv_testing():
+    def test_gksvdv_testing() -> None:
         close(gksvdv_testing.main())
 
     @staticmethod
-    def test_gksvdv_testing2():
+    def test_gksvdv_testing2() -> None:
         close(gksvdv_testing2.main())
 
     @staticmethod
-    def test_gksvdv_testing3():
+    def test_gksvdv_testing3() -> None:
         close(gksvdv_testing3.main())
 
     # Low-k
     @staticmethod
-    def test_low_k():
+    def test_low_k() -> None:
         close(low_k.main())
 
     @staticmethod
-    def test_plot_chapman_jouguet():
+    def test_plot_chapman_jouguet() -> None:
         close(chapman_jouguet.main().fig)
 
     @staticmethod
-    def test_delta_theta():
+    def test_delta_theta() -> None:
         from examples.props import delta_theta  # noqa: PLC0415
         delta_theta.plot.fig()
 
@@ -144,68 +144,68 @@ class ExampleTest(unittest.TestCase):
     @mark_xfail_multiprocessing_jit
     @skip_slow
     @uses_multiprocessing
-    def test_ke_frac():
+    def test_ke_frac() -> None:
         close(ke_frac.main())
 
     @staticmethod
-    def test_noise():
+    def test_noise() -> None:
         close(noise.main())
 
     @staticmethod
-    def test_reference_props():
+    def test_reference_props() -> None:
         close(reference_props.main())
 
     @staticmethod
-    def test_suppression():
+    def test_suppression() -> None:
         close_figs(*[plot.fig for plot in suppression.main()])
 
     @staticmethod
-    def test_vm_vp_plane():
+    def test_vm_vp_plane() -> None:
         close(vp_vm_plane.main())
 
     @staticmethod
-    def test_w_by_w():
+    def test_w_by_w() -> None:
         close(w_by_w.main())
 
     @staticmethod
     @mark_xfail_multiprocessing_jit
     @skip_slow
     @uses_multiprocessing
-    def test_xi_kappa():
+    def test_xi_kappa() -> None:
         close(xi_kappa.main())
 
     # Reverse
     @staticmethod
-    def test_reverse():
+    def test_reverse() -> None:
         reverse.main()
 
     @staticmethod
-    def test_reverse_approx():
+    def test_reverse_approx() -> None:
         close(reverse_approx.main())
 
     # Solvers
     @staticmethod
-    def test_bag():
+    def test_bag() -> None:
         close(bag.main())
 
     @staticmethod
-    def test_old_new():
+    def test_old_new() -> None:
         close(old_new.main())
 
     @staticmethod
-    def test_xi_kappa_bag():
+    def test_xi_kappa_bag() -> None:
         close(xi_kappa_bag.main())
 
     # Standard Model
     @staticmethod
-    def test_standard_model():
+    def test_standard_model() -> None:
         import examples.standard_model.standard_model as script  # noqa: PLC0415
         close(script.fig)
         close(script.plot.fig)
         close(script.plot2.fig)
 
     @staticmethod
-    def test_standard_model_xi_v():
+    def test_standard_model_xi_v() -> None:
         close(standard_model_xi_v.main())
 
 

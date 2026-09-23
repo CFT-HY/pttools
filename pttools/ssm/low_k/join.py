@@ -8,7 +8,7 @@ from scipy.special import erf, erfc
 from pttools.ssm.low_k import integration, intersection
 import pttools.type_hints as th
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def gw_junction(
@@ -20,7 +20,7 @@ def gw_junction(
         nu: float,
         tau_star: float,
         tau_end: float,
-        r_star: float):
+        r_star: float) -> th.FloatArr1D:
     r"""
     Create the junction of the gravitational wave power spectrum between different regimes
     starting from the profiles in each regime.

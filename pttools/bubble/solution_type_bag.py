@@ -12,7 +12,7 @@ from pttools.speedup import njit
 from pttools.speedup.differential import DifferentialPointer
 import pttools.type_hints as th
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 @njit

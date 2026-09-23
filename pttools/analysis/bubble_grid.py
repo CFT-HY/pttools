@@ -17,7 +17,7 @@ class BubbleGrid:
     """A grid of bubbles."""
 
     def __init__(self, bubbles: BubbleArr):
-        self.bubbles = bubbles
+        self.bubbles: BubbleArr = bubbles
 
     def get_value(self, name: str, dtype: type | None = None) -> NDArray:
         with np.nditer(
@@ -79,10 +79,10 @@ class BubbleGridVWAlpha(BubbleGrid):
         else:
             bubbles = data[0]
             func_outputs = data[1:]
-            self.data = func_outputs[0] if len(func_outputs) == 1 else func_outputs
+            self.data: NDArray | tuple[NDArray, ...] = func_outputs[0] if len(func_outputs) == 1 else func_outputs
 
-        self.model = model
-        self.v_walls = v_walls
-        self.alpha_ns = alpha_ns
+        self.model: Model = model
+        self.v_walls: th.FloatArr1D = v_walls
+        self.alpha_ns: th.FloatArr1D = alpha_ns
 
         super().__init__(bubbles)

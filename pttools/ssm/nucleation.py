@@ -15,7 +15,7 @@ from pttools.ssm import const
 import pttools.type_hints as th
 from pttools.type_hints import FloatArr1D, FloatOrArr
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 @enum.unique

@@ -4,6 +4,7 @@ import abc
 import logging
 import os
 import os.path
+import typing as tp
 
 import numpy as np
 import orjson
@@ -11,7 +12,7 @@ import orjson
 import pttools.type_hints as th
 from pttools.utils.assertions import assert_allclose
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class JsonTestCase(abc.ABC):
@@ -24,7 +25,8 @@ class JsonTestCase(abc.ABC):
     EXPECT_MISSING_DATA: bool = False
     SAVE_NEW_DATA: bool = False
 
-    def assert_json(self, data: th.FloatOrArr, key: str, rtol: float = 1e-7, atol: float = 0, allow_save: bool = True):
+    def assert_json(
+            self, data: th.FloatOrArr, key: str, rtol: float = 1e-7, atol: float = 0, allow_save: bool = True) -> None:
         if isinstance(data, np.ndarray):
             if data.size == 1:
                 data = data.item()
@@ -41,7 +43,7 @@ class JsonTestCase(abc.ABC):
             raise KeyError(f"Reference data missing in {type(self).__name__}: {key}")
 
     @classmethod
-    def setUpClass(cls, *args, **kwargs):
+    def setUpClass(cls, *args: tp.Any, **kwargs: tp.Any) -> None:
         cls.data = {}
         if os.path.isfile(cls.REF_DATA_PATH):
             with open(cls.REF_DATA_PATH, "rb") as file:
@@ -51,7 +53,7 @@ class JsonTestCase(abc.ABC):
             cls.ref_data = {}
 
     @classmethod
-    def tearDownClass(cls):
+    def tearDownClass(cls) -> None:
         if cls.SAVE_NEW_DATA and cls.data:
             json = orjson.dumps(
                 cls.data,

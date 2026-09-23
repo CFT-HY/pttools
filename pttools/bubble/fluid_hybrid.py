@@ -25,7 +25,7 @@ from pttools.utils.printing import array2str
 if tp.TYPE_CHECKING:
     from pttools.models import Model
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 #: Whether to log the details of the backup hybrid solver, such as the wm values and the corresponding vp values.
 #: This is disabled by default, as it produces a lot of debug messages.

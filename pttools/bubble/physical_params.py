@@ -25,7 +25,7 @@ class NucArgs:
     """Nucleation arguments."""
 
     def __init__(self, a: float):
-        self.a = a
+        self.a: float = a
 
 
 # At present, Numba implements structs with Numpy records
@@ -51,7 +51,7 @@ class PhysicalParams:
             # The jitclass field is a string, and therefore NucType has to be given by its value when jitting.
             nuc_type: str | None = None,
             nuc_args: NucArgs | None = None):
-        self.v_wall = v_wall
-        self.alpha = alpha
-        self.nuc_type = nuc_type
-        self.nuc_args = nuc_args
+        self.v_wall: float = v_wall
+        self.alpha: float = alpha
+        self.nuc_type: str | None = nuc_type
+        self.nuc_args: NucArgs | None = nuc_args

@@ -29,7 +29,7 @@ from pttools.utils.json import export_json
 if tp.TYPE_CHECKING:
     from pttools.analysis.utils import FigAndAxes
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class SSMSpectrum:
@@ -83,29 +83,29 @@ class SSMSpectrum:
         # -----
         # Parameters
         # -----
-        self.bubble = bubble
-        self.beta_tilde = beta_tilde
-        self.a_star_a_r_ratio = a_star_a_r_ratio
-        self.N_sh = N_sh
-        self.nuc_type = nuc_type
+        self.bubble: Bubble = bubble
+        self.beta_tilde: float | None = beta_tilde
+        self.a_star_a_r_ratio: float = a_star_a_r_ratio
+        self.N_sh: float = N_sh
+        self.nuc_type: NucType = nuc_type
         self.r_star: float = self.validate_nucleation(bubble=bubble, r_star=r_star, beta_tilde=beta_tilde)
-        self.y = y
+        self.y: FloatArr1D = y
         # Suppression
-        self.suppression = suppression
-        self.suppression_method = suppression_method
+        self.suppression: Suppression = suppression
+        self.suppression_method: SuppressionMethod = suppression_method
         # Accuracy
-        self.z_st_thresh = z_st_thresh
-        self.nT = nT
-        self.nx_P_tilde_gw = nx_P_tilde_gw
-        self.n_z_lookup = n_z_lookup
-        self.T_tilde_min = T_tilde_min
-        self.T_tilde_max = T_tilde_max
+        self.z_st_thresh: float = z_st_thresh
+        self.nT: int = nT
+        self.nx_P_tilde_gw: int | None = nx_P_tilde_gw
+        self.n_z_lookup: int = n_z_lookup
+        self.T_tilde_min: float = T_tilde_min
+        self.T_tilde_max: float = T_tilde_max
         # Switches
-        self.low_k = low_k
+        self.low_k: bool = low_k
         # Labels
-        self.label_latex = self.bubble.label_latex.rstrip("$") + f", r_*={as_latex(r_star)}$" \
+        self.label_latex: str = self.bubble.label_latex.rstrip("$") + f", r_*={as_latex(r_star)}$" \
             if label_latex is None else label_latex
-        self.label_unicode = self.bubble.label_unicode + f", r⁎={as_unicode(r_star)}" \
+        self.label_unicode: str = self.bubble.label_unicode + f", r⁎={as_unicode(r_star)}" \
             if label_unicode is None else label_unicode
 
         # -----
@@ -163,7 +163,7 @@ class SSMSpectrum:
             eps_lookup: float = 1e-8,
             lifetime_distribution_a: float = 1.,
             lambda_correction: bool = False,
-            parallel: bool = True):
+            parallel: bool = True) -> None:
         if not self.bubble.solved:
             self.bubble.solve()
         self.cs2 = self.bubble.model.cs2(self.bubble.va_enthalpy_density, Phase.BROKEN)
@@ -488,7 +488,7 @@ class SSMSpectrum:
             fig: plt.Figure | None = None,
             ax: plt.Axes | None = None,
             path: str | None = None,
-            **kwargs) -> "FigAndAxes":
+            **kwargs: tp.Any) -> "FigAndAxes":
         r"""Plot GW power spectrum $\mathcal{P}_{\text{gw}}(k)$."""
         return self.plot_gw(fig, ax, path, **kwargs)
 
@@ -497,7 +497,7 @@ class SSMSpectrum:
             fig: plt.Figure | None = None,
             ax: plt.Axes | None = None,
             path: str | None = None,
-            **kwargs) -> "FigAndAxes":
+            **kwargs: tp.Any) -> "FigAndAxes":
         r"""Plot GW power spectrum $\mathcal{P}_{\text{gw}}(k)$."""
         from pttools.analysis.plot_spectra import plot_spectra_gw  # noqa: PLC0415
         return plot_spectra_gw([self], ax=ax, fig=fig, path=path, **kwargs)
@@ -507,7 +507,7 @@ class SSMSpectrum:
             fig: plt.Figure | None = None,
             ax: plt.Axes | None = None,
             path: str | None = None,
-            **kwargs) -> "FigAndAxes":
+            **kwargs: tp.Any) -> "FigAndAxes":
         r"""Plot velocity power spectrum $\mathcal{P}_{\tilde{v}}(q)$."""
         from pttools.analysis.plot_spectra import plot_spectra_v  # noqa: PLC0415
         return plot_spectra_v([self], ax=ax, fig=fig, path=path, **kwargs)
@@ -517,7 +517,7 @@ class SSMSpectrum:
             fig: plt.Figure | None = None,
             ax: plt.Axes | None = None,
             path: str | None = None,
-            **kwargs) -> "FigAndAxes":
+            **kwargs: tp.Any) -> "FigAndAxes":
         """Plot spectral density of scaled GW power."""
         from pttools.analysis.plot_spectra import plot_spectra_spec_den_gw  # noqa: PLC0415
         return plot_spectra_spec_den_gw([self], ax=ax, fig=fig, path=path, **kwargs)
@@ -527,7 +527,7 @@ class SSMSpectrum:
             fig: plt.Figure | None = None,
             ax: plt.Axes | None = None,
             path: str | None = None,
-            **kwargs) -> "FigAndAxes":
+            **kwargs: tp.Any) -> "FigAndAxes":
         """Plot spectral density of the velocity field $P_v(y)$."""
         from pttools.analysis.plot_spectra import plot_spectra_spec_den_v  # noqa: PLC0415
         return plot_spectra_spec_den_v([self], ax=ax, fig=fig, path=path, **kwargs)

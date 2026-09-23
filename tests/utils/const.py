@@ -9,5 +9,6 @@ TEST_RESULT_PATH: str = os.path.join(os.path.dirname(TEST_PATH), "test-results")
 TEST_FIGURE_PATH: str = os.path.join(TEST_RESULT_PATH, "figures")
 TEST_JSON_PATH: str = os.path.join(TEST_RESULT_PATH, "json")
 
+path: str
 for path in [TEST_PATH, TEST_DATA_PATH, TEST_JSON_PATH, TEST_RESULT_PATH, TEST_FIGURE_PATH]:
     os.makedirs(path, exist_ok=True)

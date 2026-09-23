@@ -10,6 +10,8 @@ from Numba without the use of object mode.
 # import glob
 # import os
 
+import typing as tp
+
 import numba
 from numba.extending import overload
 import numpy as np
@@ -67,7 +69,11 @@ _IER_INVALID_INPUT = 10
 
 
 # @overload(scipy.interpolate.splev)
-def splev(x: th.FloatArr1D, tck: tuple[th.FloatArr1D, th.FloatArr1D, int], der: int = 0, ext: int = 0):
+def splev(
+        x: th.FloatArr1D,
+        tck: tuple[th.FloatArr1D, th.FloatArr1D, int],
+        der: int = 0,
+        ext: int = 0) -> th.FloatArr1D:
     """
     Modified from :external:py:func:`scipy.interpolate.splev`.
     See the SciPy documentation for details.
@@ -152,7 +158,13 @@ def splev_linear_validate(k: int, der: int) -> None:
         raise NotImplementedError("Derivatives are not yet implemented")
 
 
-def splev_linear_arr(x, tck: tuple[th.FloatArr1D, th.FloatArr1D, int], der: int = 0, ext: int = 0):
+# The parameters of splev_linear_arr, splev_linear_scalar and splev_linear must have identical annotations,
+# as Numba requires this for the typing function and its implementations. Therefore, x is annotated as tp.Any.
+def splev_linear_arr(
+        x: tp.Any,
+        tck: tuple[th.FloatArr1D, th.FloatArr1D, int],
+        der: int = 0,
+        ext: int = 0) -> th.FloatArr1D:
     """Linear spline evaluation for arrays."""
     t, c, k = tck
     splev_linear_validate(k, der)
@@ -164,7 +176,11 @@ def splev_linear_arr(x, tck: tuple[th.FloatArr1D, th.FloatArr1D, int], der: int 
     return y
 
 
-def splev_linear_scalar(x, tck: tuple[th.FloatArr1D, th.FloatArr1D, int], der: int = 0, ext: int = 0):
+def splev_linear_scalar(
+        x: tp.Any,
+        tck: tuple[th.FloatArr1D, th.FloatArr1D, int],
+        der: int = 0,
+        ext: int = 0) -> float:
     """Linear spline evaluation for scalars."""
     t, c, k = tck
     splev_linear_validate(k, der)
@@ -172,7 +188,11 @@ def splev_linear_scalar(x, tck: tuple[th.FloatArr1D, th.FloatArr1D, int], der: i
 
 
 @overload(scipy.interpolate.splev, jit_options={"nopython": True})
-def splev_linear(x, tck: tuple[th.FloatArr1D, th.FloatArr1D, int], der: int = 0, ext: int = 0):
+def splev_linear(
+        x: tp.Any,
+        tck: tuple[th.FloatArr1D, th.FloatArr1D, int],
+        der: int = 0,
+        ext: int = 0) -> tp.Callable:
     """
     :param x: float or 1D array
     :param tck: Tuple of spline parameters as given by scipy.interpolate.splrep()
@@ -185,7 +205,13 @@ def splev_linear(x, tck: tuple[th.FloatArr1D, th.FloatArr1D, int], der: int = 0,
 
 
 # @njit
-def fitpack_spl_(x: th.FloatArr1D, nu: int, t: th.FloatArr1D, c: th.FloatArr1D, k: int, e: int):
+def fitpack_spl_(
+        x: th.FloatArr1D,
+        nu: int,
+        t: th.FloatArr1D,
+        c: th.FloatArr1D,
+        k: int,
+        e: int) -> tuple[th.FloatArr1D, int]:
     """
     Numba implementation of the
     `SciPy C wrapper for spline interpolation <https://github.com/scipy/scipy/blob/main/scipy/interpolate/src/_fitpackmodule.c>`_.

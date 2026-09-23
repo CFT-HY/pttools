@@ -21,7 +21,7 @@ from pttools.speedup.numba_wrapper import numbalsoda
 from pttools.speedup.options import NUMBA_DISABLE_JIT, NUMBA_INTEGRATE
 import pttools.type_hints as th
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 # _IVPMethod contains also the type objects, but these are not supported by Numba.
 type IVPMethod = tp.Literal["RK23", "RK45", "DOP853", "Radau", "BDF", "LSODA"]

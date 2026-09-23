@@ -8,7 +8,7 @@ from pttools.models import BagModel
 
 class DropletTest(unittest.TestCase):
     @staticmethod
-    def test_bhusal():
+    def test_bhusal() -> None:
         r"""Benchmark point of :bhusal_2026:`\ ` eq. 60.
 
         $$\Psi = 1 - \frac{\delta a}{a} = 0.84, \alpha_+ = 0.05

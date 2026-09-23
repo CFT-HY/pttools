@@ -55,7 +55,7 @@ class TestBag(unittest.TestCase):
     # def test_adiabatic_index(self):
     #     pass
 
-    def test_e(self):
+    def test_e(self) -> None:
         ref_data = np.array([1.175, 1.2125, 1.25, 1.2875, 1.325])
         data = bubble.e_bag(self.w_arr, self.phase, self.theta_s, self.theta_b)
         assert_allclose(data, ref_data)
@@ -72,7 +72,7 @@ class TestBag(unittest.TestCase):
     #     w1 = np.linspace(1.5, 2, 10)
     #     self.junction_bag(model, v1, w1, Phase.BROKEN, Phase.SYMMETRIC, greater_branch=True)
 
-    def test_p(self):
+    def test_p(self) -> None:
         ref_data = np.array([-0.275, -0.2625, -0.25, -0.2375, -0.225])
         data = bubble.p_bag(self.w_arr, self.phase, self.theta_s, self.theta_b)
         assert_allclose(data, ref_data)
@@ -80,15 +80,15 @@ class TestBag(unittest.TestCase):
     # def test_phase_scalar(self):
     #     pass
 
-    def test_theta_bag_scalar(self):
+    def test_theta_bag_scalar(self) -> None:
         self.assertEqual(bubble.theta_bag(self.w, 1, self.alpha_n), 0)
         self.assertAlmostEqual(bubble.theta_bag(self.w, self.phase, self.alpha_n), 0.3375)
 
-    def test_theta_bag_arr(self):
+    def test_theta_bag_arr(self) -> None:
         self.assertEqual(bubble.theta_bag(self.w_arr, 1, self.alpha_n), 0)
         self.assertAlmostEqual(bubble.theta_bag(self.w_arr, self.phase, self.alpha_n), 0.4125)
 
-    def test_w(self):
+    def test_w(self) -> None:
         ref_data = np.array([0.9, 0.95, 1, 1.05, 1.1])
         e = bubble.e_bag(self.w_arr, self.phase, self.theta_s, self.theta_b)
         data = bubble.w_bag(e, self.phase, self.theta_s, self.theta_b)

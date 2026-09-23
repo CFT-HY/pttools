@@ -1,5 +1,6 @@
 """Tests for the Standard Model."""
 
+import typing as tp
 import unittest
 
 import numpy as np
@@ -15,11 +16,11 @@ class TestStandardModel(ThermoModelBaseCase[models.StandardModel], unittest.Test
     phase_arr = np.linspace(0, 1, temp_arr.size)
 
     @classmethod
-    def setUpClass(cls, *args, **kwargs):
+    def setUpClass(cls, *args: tp.Any, **kwargs: tp.Any) -> None:
         thermo = models.StandardModel()
         super().setUpClass(thermo)
 
-    def test_geff_arrays(self):
+    def test_geff_arrays(self) -> None:
         """It's easy to accidentally make these into column vectors,
         which will mess up the dimensionality of the spliners.
         """

@@ -36,17 +36,17 @@ class ConstCSThermoModel(ThermoModel):
         # For validation
         ConstCSModel(css2=css2, csb2=csb2, V_s=V_s, V_b=V_b, a_s=a_s, a_b=a_b, allow_invalid=allow_invalid)
 
-        self.a_s = a_s
-        self.a_b = a_b
-        self.V_s = V_s
-        self.V_b = V_b
-        self.t_ref = t_ref
-        self.css2 = css2
-        self.csb2 = csb2
-        self.css = np.sqrt(css2)
-        self.csb = np.sqrt(csb2)
-        self.mu_s = cs2_to_mu(css2)
-        self.mu_b = cs2_to_mu(csb2)
+        self.a_s: float = a_s
+        self.a_b: float = a_b
+        self.V_s: float = V_s
+        self.V_b: float = V_b
+        self.t_ref: float = t_ref
+        self.css2: float = css2
+        self.csb2: float = csb2
+        self.css: float = np.sqrt(css2)
+        self.csb: float = np.sqrt(csb2)
+        self.mu_s: float = cs2_to_mu(css2)
+        self.mu_b: float = cs2_to_mu(csb2)
         # TODO: Generate reference values for g0 here (corresponding to a_s, a_b)
 
         super().__init__(

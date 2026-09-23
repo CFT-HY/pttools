@@ -14,18 +14,18 @@ from pttools.utils.assertions import assert_allclose
 from tests.paper.ssm_paper_utils import do_all_plot_ps_compare_nuc, save_compare_nuc_data
 from tests.utils import TEST_DATA_PATH
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class TestPowSpecs(unittest.TestCase):
     """Unit testing for sound shell model power spectra, both velocity and GW."""
 
     @staticmethod
-    def test_pow_specs():
+    def test_pow_specs() -> None:
         pow_specs()
 
 
-def pow_specs(filename: str = "data_compare_nuc-test.txt"):
+def pow_specs(filename: str = "data_compare_nuc-test.txt") -> None:
     params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list = do_all_plot_ps_compare_nuc(
         save_id="final3",
         graph_file_type=None,

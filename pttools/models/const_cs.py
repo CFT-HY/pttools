@@ -23,7 +23,7 @@ import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 from pttools.utils.validation import check_value_in_range
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class ConstCSFuncs:
@@ -42,7 +42,7 @@ class ConstCSFuncs:
         self.css2: float = css2
         self.csb2: float = csb2
         self.label: str = f"css2={cs2_to_float_and_label(css2)[1]}, csb2={cs2_to_float_and_label(csb2)[1]}"
-        self.lock = threading.Lock()
+        self.lock: threading.Lock = threading.Lock()
         self._cs2_ptr: th.CS2FunScalarPtr | None = None
         self._df_dtau_ptr: DifferentialPointer | None = None
 
@@ -90,7 +90,7 @@ class ConstCSFuncs:
 
 #: The compiled functions by the sound speeds. This is separate for each process.
 CONST_CS_FUNCS: dict[tuple[float, float], ConstCSFuncs] = {}
-CONST_CS_FUNCS_LOCK = threading.Lock()
+CONST_CS_FUNCS_LOCK: threading.Lock = threading.Lock()
 
 
 def const_cs_funcs(css2: float, csb2: float) -> ConstCSFuncs:
@@ -216,8 +216,8 @@ class ConstCSModel(AnalyticModel):
             a_s, a_b, V_s, V_b = self.alpha_n_min_find_params(
                 alpha_n_min_target=alpha_n_min, a_s_default=a_s, a_b=a_b, V_s_default=V_s, V_b=V_b)
 
-        self.label_latex_params = f"$c_{{s,s}}^2={css2_label}, c_{{s,b}}^2={csb2_label}$"
-        self.label_unicode_params = f"css2={css2_label}, csb2={csb2_label}"
+        self.label_latex_params: str = f"$c_{{s,s}}^2={css2_label}, c_{{s,b}}^2={csb2_label}$"
+        self.label_unicode_params: str = f"css2={css2_label}, csb2={csb2_label}"
 
         # The "Const. c_s text takes unnecessary space on figures
         # label_latex = f"Const. $c_s, " + self.label_latex_params[1:] \
@@ -671,7 +671,7 @@ class ConstCSModel(AnalyticModel):
             phase: Phase,
             w_min: float = 0,
             allow_fail: bool = False,
-            **kwargs) -> tuple[float, float]:
+            **kwargs: tp.Any) -> tuple[float, float]:
         return self._cs2_minmax(phase)
 
     @tp.override
@@ -681,7 +681,7 @@ class ConstCSModel(AnalyticModel):
             phase: Phase,
             w_min: float = 0,
             allow_fail: bool = False,
-            **kwargs) -> tuple[float, float]:
+            **kwargs: tp.Any) -> tuple[float, float]:
         return self._cs2_minmax(phase)
 
     def cs2_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:

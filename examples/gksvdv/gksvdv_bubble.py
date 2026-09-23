@@ -7,15 +7,17 @@ Plot a single bubble using parameters from the code of :giese_2021:`\ `
 
 import logging
 
+from matplotlib.figure import Figure
+
 from examples.utils import save_and_show_fig
 from pttools.analysis import setup_bubbles_plot_multifig
 from pttools.bubble import Bubble
 from pttools.models import GKSVDV_ALPHA_N, ConstCSModel
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
-def main():
+def main() -> Figure:
     model = ConstCSModel(css2=1/4, csb2=1/4, a_s=5, a_b=1, V_s=1)
     theta_bar = False
     colors = ["b", "y", "r", "g", "purple", "grey"]

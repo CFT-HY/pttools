@@ -54,30 +54,30 @@ class DataModel(Model):
         :param T_is_physical: Whether the temperature is in physical units
         :param name: Name of the model.
         """
-        self.data_T_s = T_s
-        self.data_T_b = T_b
-        self.data_p_s = p_s
-        self.data_p_b = p_b
-        self.data_e_s = e_s
-        self.data_e_b = e_b
-        self.data_cs2_s = cs2_s
-        self.data_cs2_b = cs2_b
-        self.data_T_nucl = T_nucl
+        self.data_T_s: th.FloatArr1D = T_s
+        self.data_T_b: th.FloatArr1D = T_b
+        self.data_p_s: th.FloatArr1D = p_s
+        self.data_p_b: th.FloatArr1D = p_b
+        self.data_e_s: th.FloatArr1D = e_s
+        self.data_e_b: th.FloatArr1D = e_b
+        self.data_cs2_s: th.FloatArr1D | None = cs2_s
+        self.data_cs2_b: th.FloatArr1D | None = cs2_b
+        self.data_T_nucl: float | None = T_nucl
 
-        self.data_w_s = self.data_p_s + self.data_e_s
-        self.data_w_b = self.data_p_b + self.data_e_b
+        self.data_w_s: th.FloatArr1D = self.data_p_s + self.data_e_s
+        self.data_w_b: th.FloatArr1D = self.data_p_b + self.data_e_b
         # self.data_s_s = self.data_w_s / self.data_temp
         # self.data_s_b = self.data_w_b / self.data_temp
 
-        self.data_T_s_log = np.log10(self.data_T_s)
-        self.data_T_b_log = np.log10(self.data_T_b)
+        self.data_T_s_log: th.FloatArr1D = np.log10(self.data_T_s)
+        self.data_T_b_log: th.FloatArr1D = np.log10(self.data_T_b)
 
-        self.spline_p_s = splrep(self.data_T_s_log, self.data_p_s, k=1)
-        self.spline_p_b = splrep(self.data_T_b_log, self.data_p_b, k=1)
-        self.spline_e_s = splrep(self.data_T_s_log, self.data_e_s, k=1)
-        self.spline_e_b = splrep(self.data_T_b_log, self.data_e_b, k=1)
-        self.spline_temp_s = splrep(self.data_w_s, self.data_T_s_log, k=1)
-        self.spline_temp_b = splrep(self.data_w_b, self.data_T_b_log, k=1)
+        self.spline_p_s: SplineTCK = splrep(self.data_T_s_log, self.data_p_s, k=1)
+        self.spline_p_b: SplineTCK = splrep(self.data_T_b_log, self.data_p_b, k=1)
+        self.spline_e_s: SplineTCK = splrep(self.data_T_s_log, self.data_e_s, k=1)
+        self.spline_e_b: SplineTCK = splrep(self.data_T_b_log, self.data_e_b, k=1)
+        self.spline_temp_s: SplineTCK = splrep(self.data_w_s, self.data_T_s_log, k=1)
+        self.spline_temp_b: SplineTCK = splrep(self.data_w_b, self.data_T_b_log, k=1)
 
         super().__init__(
             T_min=np.min(self.data_T_b) if T_min is None else T_min,
@@ -92,7 +92,7 @@ class DataModel(Model):
             gen_cs2_neg=False,
             gen_critical=False
         )
-        self.cs2 = self.gen_cs2()
+        self.cs2: th.CS2Fun = self.gen_cs2()
 
     @classmethod
     def from_hdf5(cls, path: str, name: str | None = None, T_is_physical: bool = False) -> "DataModel":
@@ -163,7 +163,7 @@ class DataModel(Model):
             splev(np.log10(temp), spline_b) * (1 - phase)
         )
 
-    def gen_cs2(self):
+    def gen_cs2(self) -> th.CS2Fun:
         # Numba caching is disabled for the functions below, as they are created dynamically.
         # T_min = self.T_min
         # T_max = self.T_max

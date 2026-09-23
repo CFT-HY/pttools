@@ -22,7 +22,7 @@ class BubbleGridTest(unittest.TestCase):
         )
 
     @uses_multiprocessing
-    def test_props(self):
+    def test_props(self) -> None:
         """Test that the grid properties provide numerical arrays."""
         arrs = [
             self.grid.kappa(),

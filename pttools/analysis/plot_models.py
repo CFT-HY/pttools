@@ -1,5 +1,7 @@
 r"""Compare the thermodynamic quantities of multiple models."""
 
+import typing as tp
+
 import matplotlib.pyplot as plt
 
 from pttools import bubble, models
@@ -11,10 +13,10 @@ class ModelsPlot:
     """A plot of the thermodynamic quantities of multiple models."""
 
     def __init__(self, temp: th.FloatArr1D):
-        self.temp = temp
+        self.temp: th.FloatArr1D = temp
 
         self.fig: plt.Figure = plt.figure(figsize=(11.69, 8.27))
-        self.axs = self.fig.subplots(nrows=3, ncols=3)
+        self.axs: th.AxesArr2D = self.fig.subplots(nrows=3, ncols=3)
         self.ax_p: plt.Axes = self.axs[0, 0]
         self.ax_s: plt.Axes = self.axs[0, 1]
         self.ax_w: plt.Axes = self.axs[0, 2]
@@ -48,7 +50,7 @@ class ModelsPlot:
 
         self.fig.tight_layout()
 
-    def add(self, model: models.Model, phase: bubble.Phase, ls: str = "-", **kwargs) -> None:
+    def add(self, model: models.Model, phase: bubble.Phase, ls: str = "-", **kwargs: tp.Any) -> None:
         """Add a model to the plot."""
         label = utils.model_phase_label(model, phase)
         w = model.w(self.temp, phase)

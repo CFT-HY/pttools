@@ -12,9 +12,10 @@ from pttools.bubble.phase import Phase
 from pttools.bubble.relativity import gamma2
 from pttools.models import BagModel, ConstCSModel, gksvdv_models
 from pttools.models.model import Model
+import pttools.type_hints as th
 from pttools.utils import assert_allclose
 
-ALPHA_NS = np.array([0.02, 0.05, 0.1, 0.2, 0.3, 0.5])
+ALPHA_NS: th.FloatArr = np.array([0.02, 0.05, 0.1, 0.2, 0.3, 0.5])
 #: Tolerance for accepting a root of the deviation instead of a pole
 DEVIATION_ROOT_TOL = 1e-10
 #: Solution type of a detonation in the code of Giese et al.
@@ -77,21 +78,21 @@ class ChapmanJouguetTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.bag = BagModel(a_s=1.1, a_b=1, V_s=1)
-        cls.const_cs = ConstCSModel(css2=1/3, csb2=0.3, a_s=1.5, a_b=1, V_s=1, log_info=False)
+        cls.bag: BagModel = BagModel(a_s=1.1, a_b=1, V_s=1)
+        cls.const_cs: ConstCSModel = ConstCSModel(css2=1/3, csb2=0.3, a_s=1.5, a_b=1, V_s=1, log_info=False)
         cls.models: list[Model] = [cls.bag, cls.const_cs, *gksvdv_models()]
 
-    def test_bag_limits(self):
+    def test_bag_limits(self) -> None:
         r"""$v_{CJ} \to c_s$ as $\alpha_+ \to 0$ and $v_{CJ} \to 1$ as $\alpha_+ \to \infty$."""
         self.assertAlmostEqual(v_chapman_jouguet_bag(0.), CS0)
         self.assertAlmostEqual(v_chapman_jouguet_bag(1e8), 1)
 
-    def test_bag_junction(self):
+    def test_bag_junction(self) -> None:
         data = v_chapman_jouguet_bag(ALPHA_NS)
         ref = np.array([v_cj_junction(self.bag, alpha_n) for alpha_n in ALPHA_NS])
         assert_allclose(data, ref, rtol=1e-10)
 
-    def test_analytical_junction(self):
+    def test_analytical_junction(self) -> None:
         """The analytical Chapman-Jouguet speed should fulfill the junction conditions."""
         for model in self.models:
             alpha_ns = ALPHA_NS[model.alpha_n_min < ALPHA_NS]
@@ -100,7 +101,7 @@ class ChapmanJouguetTest(unittest.TestCase):
                 ref = np.array([v_cj_junction(model, alpha_n) for alpha_n in alpha_ns])
                 assert_allclose(data, ref, rtol=1e-10)
 
-    def test_analytical_gksvdv(self):
+    def test_analytical_gksvdv(self) -> None:
         """The analytical Chapman-Jouguet speed should correspond to that of the Giese et al. code."""
         for model in gksvdv_models():
             alpha_ns = ALPHA_NS[model.alpha_n_min < ALPHA_NS]
@@ -110,7 +111,7 @@ class ChapmanJouguetTest(unittest.TestCase):
                 ref = np.array([v_cj_gksvdv(a, model.csb2) for a in alpha_theta_bar_ns])
                 assert_allclose(data, ref, rtol=1e-10)
 
-    def test_numerical(self):
+    def test_numerical(self) -> None:
         """The numerical Chapman-Jouguet speed should correspond to the analytical one."""
         for model in self.models:
             alpha_ns = ALPHA_NS[model.alpha_n_min < ALPHA_NS]
@@ -119,7 +120,7 @@ class ChapmanJouguetTest(unittest.TestCase):
                 ref = v_chapman_jouguet(model, alpha_ns)
                 assert_allclose(data, ref, rtol=1e-10)
 
-    def test_wm(self):
+    def test_wm(self) -> None:
         r"""$\tilde{v}_- = c_{s,-}({w}_-)$ and the first junction condition should hold for ${w}_-$."""
         for model in self.models:
             alpha_ns = ALPHA_NS[model.alpha_n_min < ALPHA_NS]
@@ -131,7 +132,7 @@ class ChapmanJouguetTest(unittest.TestCase):
                     vm = np.sqrt(model.cs2(wm, Phase.BROKEN))
                     assert_allclose(wm * gamma2(vm) * vm, wp * gamma2(vp) * vp, rtol=1e-10)
 
-    def test_extra_output(self):
+    def test_extra_output(self) -> None:
         """The analytical and numerical paths should give the same extra output."""
         for model in self.models:
             alpha_n = 0.2
@@ -141,7 +142,7 @@ class ChapmanJouguetTest(unittest.TestCase):
                 self.assertIsInstance(data, tuple)
                 assert_allclose(np.array(data), np.array(ref), rtol=1e-10)
 
-    def test_const_cs_reference(self):
+    def test_const_cs_reference(self) -> None:
         """Reference values from the analytical Chapman-Jouguet speed."""
         alpha_ns = np.array([0.1, 0.2, 0.3, 0.5])
         data = v_chapman_jouguet(self.const_cs, alpha_ns)

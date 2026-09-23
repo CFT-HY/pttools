@@ -16,7 +16,7 @@ import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 from pttools.utils.docstrings import copy_docstring_dec
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class BagModel(AnalyticModel):
@@ -94,11 +94,11 @@ class BagModel(AnalyticModel):
         # These have to be after super().__init__() for a_s and a_b to be populated.
         label_prec = 3
         if self.label_latex is self.DEFAULT_LABEL_LATEX:
-            self.label_latex = \
+            self.label_latex: str = \
                 f"Bag, $a_s={self.a_s:.{label_prec}f}, a_b={self.a_b:.{label_prec}f}, " \
                 f"V_s={self.V_s:.{label_prec}f}, V_b={self.V_b:.{label_prec}f}$"
         if self.label_unicode is self.DEFAULT_LABEL_UNICODE:
-            self.label_unicode = \
+            self.label_unicode: str = \
                 f"Bag, a_s={self.a_s:.{label_prec}f}, a_b={self.a_b:.{label_prec}f}, " \
                 f"V_s={self.V_s:.{label_prec}f}, V_b={self.V_b:.{label_prec}f}"
 
@@ -129,7 +129,7 @@ class BagModel(AnalyticModel):
             V_s_default: float | None = None,
             V_b: float | None = None,
             safety_factor_alpha: float | None = None,
-            **kwargs) -> tuple[float, float, float, float]:
+            **kwargs: tp.Any) -> tuple[float, float, float, float]:
         if V_s_default is None:
             V_s_default = cls.DEFAULT_V_S
         if V_b is None:
@@ -231,14 +231,14 @@ class BagModel(AnalyticModel):
     def cs2_max(
             self,
             w_max: float, phase: Phase,
-            w_min: float = 0, allow_fail: bool = False, **kwargs) -> tuple[float, float]:
+            w_min: float = 0, allow_fail: bool = False, **kwargs: tp.Any) -> tuple[float, float]:
         return 1/3, np.nan
 
     @tp.override
     def cs2_min(
                 self,
                 w_max: float, phase: Phase,
-                w_min: float = 0, allow_fail: bool = False, **kwargs) -> tuple[float, float]:
+                w_min: float = 0, allow_fail: bool = False, **kwargs: tp.Any) -> tuple[float, float]:
         return 1/3, np.nan
 
     def delta_theta[T: FloatOrArr](

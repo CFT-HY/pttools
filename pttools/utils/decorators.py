@@ -22,7 +22,13 @@ class PostFunc[**P, T](tp.Protocol):
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> T: ...
 
 
-def conditional_decorator[T: Callable](dec: T, condition: bool, **kwargs) -> T:
+class TypePreservingDecorator(tp.Protocol):
+    """A decorator that returns the decorated test function or class with its type unchanged."""
+
+    def __call__[F: tp.Callable[..., tp.Any]](self, func: F, /) -> F: ...
+
+
+def conditional_decorator[T: Callable](dec: T, condition: bool, **kwargs: tp.Any) -> T:
     """Applies the given decorator if the given condition is True.
 
     :param dec: decorator
@@ -37,11 +43,11 @@ def conditional_decorator[T: Callable](dec: T, condition: bool, **kwargs) -> T:
     return tp.cast(T, decorator)
 
 
-def for_all_methods(decorator):
+def for_all_methods[C: type](decorator: Callable[[tp.Any], tp.Any]) -> Callable[[C], C]:
     """Apply a decorator to all methods of a class
     https://stackoverflow.com/a/6307868.
     """
-    def decorate(cls):
+    def decorate(cls: C) -> C:
         for attr in cls.__dict__:  # there's probably a better way to do this
             if callable(getattr(cls, attr)):
                 setattr(cls, attr, decorator(getattr(cls, attr)))

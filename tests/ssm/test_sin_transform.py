@@ -9,8 +9,8 @@ from pttools.ssm.sin_transform import sin_transform
 import pttools.type_hints as th
 from pttools.utils import assert_allclose
 
-XI = np.linspace(0, 1, 5001)
-F = np.ones_like(XI)
+XI: th.FloatArr1D = np.linspace(0, 1, 5001)
+F: th.FloatArr1D = np.ones_like(XI)
 
 
 def sin_transform_exact(z: th.FloatArr1D) -> th.FloatArr1D:
@@ -22,13 +22,13 @@ class TestSinTransform(unittest.TestCase):
     """Tests for the sine transform."""
 
     @staticmethod
-    def test_below_blend():
+    def test_below_blend() -> None:
         """Below the blend range the sine transform is computed exactly."""
         z = np.linspace(0.1, const.Z_ST_THRESH - const.DZ_ST_BLEND - 1, 50)
         assert_allclose(sin_transform(z, XI, F), sin_transform_exact(z), atol=1e-6)
 
     @staticmethod
-    def test_blend_range_without_approximation():
+    def test_blend_range_without_approximation() -> None:
         """If no z is above the threshold, the approximation should not be blended into the results."""
         z = np.linspace(0.1, const.Z_ST_THRESH - 1, 50)
         data = sin_transform(z, XI, F)
@@ -37,7 +37,7 @@ class TestSinTransform(unittest.TestCase):
         assert_allclose(data, scalar, rtol=1e-12, atol=1e-15)
 
     @staticmethod
-    def test_across_threshold():
+    def test_across_threshold() -> None:
         """Reference values for z values across the threshold, including the blend range."""
         z = np.linspace(40, 60, 11)
         ref = np.array([

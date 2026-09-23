@@ -29,7 +29,7 @@ XI_OFFSET: float = 1e-8
 
 
 # @njit
-def getwow(v1, v2):
+def getwow(v1: float, v2: float) -> float:
     """Ratio of enthalpies across the bubble wall, "w over w"
     from the junction conditions.
 
@@ -119,14 +119,14 @@ def getKandWow(vw: float, v0: float, cs2: float) -> tuple[th.FloatArr1D, th.Floa
 
 
 # @njit
-def alN(al, wow, cs2b, cs2s):
+def alN(al: float, wow: float, cs2b: float, cs2s: float) -> float:
     r"""$\alpha_{\bar{\theta}n}$ in the nucleation phase (in front of the shock)."""
     da = (1./cs2b - 1./cs2s)/(1./cs2s + 1.)/3.
     return (al + da)*wow - da
 
 
 # @njit
-def getalNwow(vp, vm, vw, cs2b, cs2s):
+def getalNwow(vp: float, vm: float, vw: float, cs2b: float, cs2s: float) -> tuple[float, float]:
     r"""Get
     - $\alpha_{\bar{\theta}n}$ in the nucleation phase
     - Ratio of the enthalpies for fixed boundary conditions at the wall.

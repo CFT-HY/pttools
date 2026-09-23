@@ -49,16 +49,16 @@ class SigmoidModel(ThermoModel):
             ge_b: float,
             gs_b: float):
         super().__init__()
-        self.pt_temp_ge = pt_temp_ge
-        self.pt_temp_gs = pt_temp_gs
-        self.steepness_ge = steepness_ge
-        self.steepness_gs = steepness_gs
-        self.ge_s = ge_s
-        self.gs_s = gs_s
-        self.ge_b = ge_b
-        self.gs_b = gs_b
-        self.ge_diff = ge_s - ge_b
-        self.gs_diff = gs_s - gs_b
+        self.pt_temp_ge: float = pt_temp_ge
+        self.pt_temp_gs: float = pt_temp_gs
+        self.steepness_ge: float = steepness_ge
+        self.steepness_gs: float = steepness_gs
+        self.ge_s: float = ge_s
+        self.gs_s: float = gs_s
+        self.ge_b: float = ge_b
+        self.gs_b: float = gs_b
+        self.ge_diff: float = ge_s - ge_b
+        self.gs_diff: float = gs_s - gs_b
 
         raise NotImplementedError
 

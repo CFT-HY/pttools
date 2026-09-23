@@ -14,7 +14,7 @@ def cs2(w: float, phase: float) -> float:
     return 1/3 - 0.001 * phase
 
 
-def main():
+def main() -> None:
     df_dtau_ptr = add_df_dtau(name="test", cs2_fun=cs2)
     v, _w, xi, _t = fluid_integrate_param(
         v0=0.2, w0=1., xi0=0.3, phase=Phase.SYMMETRIC,

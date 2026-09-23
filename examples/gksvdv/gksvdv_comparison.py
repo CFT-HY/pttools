@@ -4,6 +4,7 @@ Comparison of Giese et al. and PTtools solvers
 """
 
 import logging
+import typing as tp
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,11 +16,11 @@ from pttools.models import GKSVDV_ALPHA_N, gksvdv_models, gksvdv_v_wall
 from pttools.type_hints import FloatArr1D
 from pttools.utils import testing_or_ci
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def main(
-        colors = ("b", "y", "r", "g", "purple", "grey"),
+        colors: tp.Sequence[str] = ("b", "y", "r", "g", "purple", "grey"),
         alpha_ns: FloatArr1D = GKSVDV_ALPHA_N) -> tuple[plt.Figure, plt.Figure]:
     """Comparison of Giese et al. and PTtools solvers"""
     models = gksvdv_models()

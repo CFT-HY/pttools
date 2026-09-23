@@ -14,7 +14,7 @@ from pttools.ssm.sin_transform import sin_transform
 from pttools.ssm.ssm import DE_Method, Method
 import pttools.type_hints as th
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 @njit
@@ -33,7 +33,7 @@ def a2_e_conserving_bag(
         w_ip: th.FloatArr1D = speedup.NAN_ARR,
         xi: th.FloatArr1D = speedup.NAN_ARR,
         lambda_correction: bool = False,
-        parallel: bool = True):
+        parallel: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
     Returns the value of $|A(z)|^2$, where
     $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$,
@@ -100,7 +100,7 @@ def a2_e_conserving_bag_file(
         skip: int = 1,
         npt: const.NptType = const.DEFAULT_N_PT,
         z_st_thresh: float = const.Z_ST_THRESH,
-        parallel: bool = True):
+        parallel: bool = True) -> th.FloatArr1D:
     r"""
     Returns the value of $|A(z)|^2$, where $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$,
     calculated from file, output by "spherical-hydro-code".
@@ -165,7 +165,7 @@ def a2_ssm_func_bag(
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH,
         lambda_correction: bool = False,
-        parallel: bool = True):
+        parallel: bool = True) -> th.FloatArr1D:
     r"""
     Returns the value of $|A(z)|^2$.
     $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$.
@@ -225,7 +225,7 @@ def a2_ssm_func_bag(
 
 def f_file_bag(
         z_arr: th.FloatArr1D,
-        t,
+        t: float,
         filename: str,
         skip: int = 0,
         npt: const.NptType = const.DEFAULT_N_PT,
@@ -292,7 +292,7 @@ def f_ssm_func_bag(
     return (4.*np.pi/z) * sin_transform(z, xi, v_ip, z_st_thresh, v_wall=v_wall, v_sh=v_sh, parallel=parallel)
 
 
-def g_file_bag(z: th.FloatArr1D, t, filename: str, skip: int = 0) -> th.FloatArr1D:
+def g_file_bag(z: th.FloatArr1D, t: float, filename: str, skip: int = 0) -> th.FloatArr1D:
     r"""
     3D FT of radial fluid acceleration \dot{v}(r) from file.
 
@@ -303,7 +303,11 @@ def g_file_bag(z: th.FloatArr1D, t, filename: str, skip: int = 0) -> th.FloatArr
     return z * df_dz + 2. * f
 
 
-def g_ssm_func_bag(z: th.FloatArr1D, v_wall, alpha, npt: const.NptType = const.DEFAULT_N_PT) -> th.FloatArr1D:
+def g_ssm_func_bag(
+        z: th.FloatArr1D,
+        v_wall: float,
+        alpha: float,
+        npt: const.NptType = const.DEFAULT_N_PT) -> th.FloatArr1D:
     r"""
     3D FT of radial fluid acceleration $\dot{v}$(r) from Sound Shell Model fluid profile.
 
@@ -325,7 +329,7 @@ def lam_ssm_func_bag(
         npt: const.NptType = const.DEFAULT_N_PT,
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH,
-        parallel: bool = True):
+        parallel: bool = True) -> th.FloatArr1D:
     """
     3D FT of radial energy perturbation from Sound Shell Model fluid profile.
 

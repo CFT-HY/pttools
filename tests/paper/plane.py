@@ -17,8 +17,8 @@ def xiv_plane(
         n_xi0_s: int = 9,
         n_xi: int = 1000,
         df_dtau_ptr: speedup.DifferentialPointer = bubble.DF_DTAU_PTR_BAG,
-        cs2_s=bubble.CS0_2,
-        cs2_b=bubble.CS0_2,
+        cs2_s: float = bubble.CS0_2,
+        cs2_b: float = bubble.CS0_2,
         separate_phases: tp.Literal[True] = True
     ) -> tuple[th.FloatArr3D, th.FloatArr3D]: ...
 
@@ -32,8 +32,8 @@ def xiv_plane(
         n_xi0_s: int = 9,
         n_xi: int = 1000,
         df_dtau_ptr: speedup.DifferentialPointer = bubble.DF_DTAU_PTR_BAG,
-        cs2_s=bubble.CS0_2,
-        cs2_b=bubble.CS0_2,
+        cs2_s: float = bubble.CS0_2,
+        cs2_b: float = bubble.CS0_2,
         *,
         separate_phases: tp.Literal[False]
     ) -> th.FloatArr3D: ...
@@ -47,8 +47,8 @@ def xiv_plane(
         n_xi0_s: int = 9,
         n_xi: int = 1000,
         df_dtau_ptr: speedup.DifferentialPointer = bubble.DF_DTAU_PTR_BAG,
-        cs2_s=bubble.CS0_2,
-        cs2_b=bubble.CS0_2,
+        cs2_s: float = bubble.CS0_2,
+        cs2_b: float = bubble.CS0_2,
         separate_phases: bool = True
     ) -> th.FloatArr3D | tuple[th.FloatArr3D, th.FloatArr3D]:
     """Modified from :ssm_repo:`paper/python/fig_8r_xi-v_plane.py`."""

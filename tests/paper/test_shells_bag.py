@@ -20,7 +20,7 @@ from tests.paper import const
 from tests.paper import ssm_paper_utils as spu
 from tests.utils import TEST_DATA_PATH, TEST_FIGURE_PATH
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 FIG_PATH: str = os.path.join(TEST_FIGURE_PATH, "fluid_shells")
 
@@ -32,7 +32,7 @@ class TestShellsBag(unittest.TestCase):
     def shell_file_path(name: str) -> str:
         return os.path.join(TEST_DATA_PATH, f"shells_{name}.txt")
 
-    def test_fluid_shell(self):
+    def test_fluid_shell(self) -> None:
         params_all = bubble.sound_shell_dict(v_wall=0.7, alpha_n=0.052)
         # These are not yet in the reference data
         excluded = {"sol_type", "xi_even", "v_approx", "w_approx"}
@@ -62,7 +62,7 @@ class TestShellsBag(unittest.TestCase):
             logger.warning("test_fluid_shell tolerances have been loosened for NumbaLSODA")
         assert_allclose(data_numpy, data_ref, rtol=(0.292 if NUMBA_INTEGRATE_TOLERANCES else 1e-7))
 
-    def test_fluid_shells(self):
+    def test_fluid_shells(self) -> None:
         """Based on sound-shell-model/paper/python/fig_1_9_shell_plots.py."""
         vw_weak_list = const.VW_WEAK_LIST
         vw_inter_list = spu.VW_INTER_LIST
@@ -117,7 +117,7 @@ class TestShellsBag(unittest.TestCase):
         assert_allclose(data_inter, ref_inter, rtol=rtols[1])
         assert_allclose(data_esp, ref_esp, rtol=rtols[2])
 
-    def test_plot_fluid_shell(self):
+    def test_plot_fluid_shell(self) -> None:
         fig, _params = plot_fluid_shell_bag(v_wall=0.7, alpha_n=0.052)
         save_fig(fig, os.path.join(FIG_PATH, "fluid_shell_single"))
         plt.close(fig)

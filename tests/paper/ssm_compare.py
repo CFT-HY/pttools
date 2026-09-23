@@ -17,11 +17,11 @@ import pttools.type_hints as th
 from tests.paper import const, plotting, utils
 from tests.utils.const import TEST_DATA_PATH, TEST_FIGURE_PATH
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 # bubble.setup_plotting()
 
-MDP = os.path.join(TEST_DATA_PATH, "model_data")
+MDP: str = os.path.join(TEST_DATA_PATH, "model_data")
 GDP = TEST_FIGURE_PATH
 # os.makedirs(MDP, exist_ok=True)
 # os.makedirs(GDP, exist_ok=True)
@@ -55,7 +55,7 @@ DIR_INTER_LIST = [
     "results-intermediate-scaled_etatilde0.62_v0.44_dx2/"
 ]
 
-PATH_HEAD = os.path.join(TEST_DATA_PATH, "fluidprofiles/")
+PATH_HEAD: str = os.path.join(TEST_DATA_PATH, "fluidprofiles/")
 PATH_LIST_ALL = ['weak/', 'intermediate/']
 FILE_PATTERN = 'data-extracted.{:05d}.txt'
 

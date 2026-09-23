@@ -10,13 +10,13 @@ from pttools.speedup import NUMBA_INTEGRATE_TOLERANCES
 from tests import utils
 from tests.paper import ssm_compare as scom
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class TestPrace(unittest.TestCase):
     """PRACE tests."""
 
-    def test_ps_prace(self):
+    def test_ps_prace(self) -> None:
         fluid_profiles_dir = os.path.join(utils.TEST_DATA_PATH, "fluidprofiles")
         if not os.path.isdir(fluid_profiles_dir):
             logger.warning("Fluid profiles not found. Cannot execute PRACE tests.")

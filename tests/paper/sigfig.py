@@ -9,7 +9,7 @@ import re
 
 import pttools.type_hints as th
 
-EPAT = re.compile(r'^([^e]+)e(.+)$')
+EPAT: re.Pattern[str] = re.compile(r'^([^e]+)e(.+)$')
 
 
 def round_sig(x: float, n: int) -> str:
@@ -108,7 +108,7 @@ def format_table(
         n: int,
         labels: list[str] | None = None,
         headers: list[str] | None = None,
-        latex: bool = False):
+        latex: bool = False) -> list[str]:
     """
     Format a table such that the errors have n significant figures.
     [cols] and [errors] should be a list of 1D arrays that correspond to data and errors in columns.

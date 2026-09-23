@@ -32,7 +32,7 @@ class TestTables(unittest.TestCase):
         cls.pfit_sim = data[:, 6:8]
         cls.pfit_exp = data[:, 8:]
 
-    def validate(self, name: str, func: tp.Callable, args):
+    def validate(self, name: str, func: tp.Callable[..., None], args: list[th.FloatArr2D]) -> None:
         path = os.path.join(TEST_DATA_PATH, name)
 
         # Generate new reference data
@@ -47,19 +47,19 @@ class TestTables(unittest.TestCase):
         self.assertEqual(buffer.read(), ref_data)
 
     @conditional_decorator(unittest.expectedFailure, NUMBA_INTEGRATE)
-    def test_1dh_compare_table(self):
+    def test_1dh_compare_table(self) -> None:
         self.validate(
             "table_1dh_compare.tex",
             spu.make_1dh_compare_table,
             [self.params, self.v2])
 
-    def test_3dh_compare_table(self):
+    def test_3dh_compare_table(self) -> None:
         self.validate(
             "table_3dh_compare.tex",
             spu.make_3dh_compare_table,
             [self.params, self.v2, self.Omgw, self.pfit_sim])
 
-    def test_nuc_compare_table(self):
+    def test_nuc_compare_table(self) -> None:
         self.validate(
             "table_nuc_compare.tex",
             spu.make_nuc_compare_table,

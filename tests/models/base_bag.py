@@ -32,7 +32,7 @@ class BagBaseCase[M: Model](ModelBaseCase[M], abc.ABC):
         "name": "bag"
     }
 
-    def test_alphas_same(self):
+    def test_alphas_same(self) -> None:
         r""""The two definitions of the transition strength coincide
         only in the case of detonations within the bag model.".
 
@@ -43,11 +43,11 @@ class BagBaseCase[M: Model](ModelBaseCase[M], abc.ABC):
         alpha_plus = self.model.alpha_plus(wp=wn, wm=20)
         self.assertAlmostEqual(alpha_n, alpha_plus)
 
-    def test_cs2_like_bag(self):
+    def test_cs2_like_bag(self) -> None:
         """Test that cs2 = 1/3."""
         assert_allclose(self.model.cs2(self.w_arr1, self.phase_arr), 1 / 3 * np.ones_like(self.w_arr1), atol=3.4e-4)
 
-    def test_theta_constant(self):
+    def test_theta_constant(self) -> None:
         """The theta of the bag model is a constant."""
         theta_s = self.model.theta(self.w_arr1, Phase.SYMMETRIC)
         theta_b = self.model.theta(self.w_arr1, Phase.BROKEN)

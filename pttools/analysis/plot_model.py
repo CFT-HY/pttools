@@ -11,7 +11,7 @@ from pttools.analysis.utils import A4_PAPER_SIZE
 from pttools.bubble import Phase
 import pttools.type_hints as th
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class ModelPlot:
@@ -26,11 +26,11 @@ class ModelPlot:
             t_log: bool = True,
             y_log: bool = True,
             n_points: int = 20):
-        self.model = model
-        self.t_log = t_log
+        self.model: models.Model = model
+        self.t_log: bool = t_log
 
         self.fig: plt.Figure = plt.figure(figsize=A4_PAPER_SIZE)
-        self.axs = self.fig.subplots(nrows=3, ncols=3)
+        self.axs: th.AxesArr2D = self.fig.subplots(nrows=3, ncols=3)
         self.ax_p: plt.Axes = self.axs[0, 0]
         self.ax_s: plt.Axes = self.axs[0, 1]
         self.ax_w: plt.Axes = self.axs[0, 2]
@@ -39,7 +39,11 @@ class ModelPlot:
         self.ax_alpha_n: plt.Axes = self.axs[1, 2]
         # self.ax_theta = self.axs[2, 0]
 
+        self.t_min: float
+        self.t_max: float
         self.temps: th.FloatArr1D
+        self.temps_b: th.FloatArr1D
+        self.temps_s: th.FloatArr1D
         if t_log:
             self.t_min = max(model.T_min, 10 ** (-t_log_range) * model.T_crit) if t_min is None else t_min
             self.t_max = min(model.T_max, 10 ** t_log_range * model.T_crit) if t_max is None else t_max
@@ -82,7 +86,7 @@ class ModelPlot:
             label_b: str | None = None,
             y_lim: bool = True,
             y_log: bool = True,
-            ticks: bool = True):
+            ticks: bool = True) -> None:
         """Plot the given function."""
         if label_s is None and label is not None:
             label_s = f"${label}_s$"

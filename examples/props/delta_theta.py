@@ -28,7 +28,7 @@ def main() -> DeltaThetaPlot3D:
     return plot
 
 
-plot = main()
+plot: DeltaThetaPlot3D = main()
 plot.save(os.path.join(FIG_DIR, "plot_delta_theta"))
 if __name__ == "__main__" and "__file__" in globals():
     plot.show()

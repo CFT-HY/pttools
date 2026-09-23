@@ -17,7 +17,7 @@ from pttools.ssm.spectrum import NucType
 from pttools.ssm.spectrum_bag import power_gw_bag
 import pttools.type_hints as th
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 SUPPRESSION_FOLDER: str = os.path.dirname(os.path.abspath(__file__))
 

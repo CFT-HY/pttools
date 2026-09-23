@@ -23,7 +23,7 @@ from tests import utils
 from tests.paper import plane, plot_plane_paper
 from tests.test_performance import PERFORMANCE_DIR
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 PLOT: bool = True
 
@@ -66,7 +66,7 @@ class TestPlane(unittest.TestCase):
             cls.ref_data = plane.xiv_plane(method="odeint", separate_phases=False)
 
     @classmethod
-    def process_output(cls, name: str, fig: plt.Figure, axs: th.AxesArr2D, diffs: dict[int, float]):
+    def process_output(cls, name: str, fig: plt.Figure, axs: th.AxesArr2D, diffs: dict[int, float]) -> None:
         cls.plot_perf(axs[0, 3])
         cls.plot_diff(axs[0, 4], name, diffs)
         fig.tight_layout()
@@ -105,7 +105,7 @@ class TestPlane(unittest.TestCase):
             plt.close(cls.grid_fig_rel)
 
     @classmethod
-    def plot_perf(cls, ax: plt.Axes):
+    def plot_perf(cls, ax: plt.Axes) -> None:
         inds = list(cls.names.keys())
         names = [cls.names[i] for i in inds]
         # None is not supported here in old Matplotlib, so 0 is used instead
@@ -120,7 +120,7 @@ class TestPlane(unittest.TestCase):
                 file.write(f"{name}: {time} s\n")
 
     @classmethod
-    def plot_diff(cls, ax: plt.Axes, name: str, diffs: dict[int, float]):
+    def plot_diff(cls, ax: plt.Axes, name: str, diffs: dict[int, float]) -> None:
         diff_dict = {ind: diff for ind, diff in diffs.items() if np.isfinite(diff)}
         inds = list(diff_dict.keys())
         names = [cls.names[i] for i in inds]
@@ -137,7 +137,7 @@ class TestPlane(unittest.TestCase):
             method: FluidIntegrateMethod = "odeint",
             rtol: float = 1e-7,
             ax: tuple[int, int] | None = None,
-            perf_iters: int = 10):
+            perf_iters: int = 10) -> None:
         if i in self.names:
             raise ValueError(f"Duplicate solver index: {i}")
         name = plot_plane_paper.get_solver_name(method)
@@ -192,33 +192,33 @@ class TestPlane(unittest.TestCase):
         # Asserting is the last step to ensure, that the plots are created regardless of the results
         assert_allclose(data_summed, data_ref, rtol=rtol)
 
-    def test_plane_bdf(self):
+    def test_plane_bdf(self) -> None:
         self.validate_plane(method="BDF", rtol=5e-3, i=5, ax=(1, 2))
 
-    def test_plane_dop853(self):
+    def test_plane_dop853(self) -> None:
         self.validate_plane(method="DOP853", rtol=1.57e-2, i=6, ax=(1, 3))
 
-    def test_plane_lsoda(self):
+    def test_plane_lsoda(self) -> None:
         self.validate_plane(method="LSODA", rtol=3.1e-3, i=2, ax=(0, 1))
 
     @unittest.skipIf(speedup.NUMBA_DISABLE_JIT, "NumbaLSODA cannot be used if Numba is disabled")
-    def test_plane_numba_lsoda(self):
+    def test_plane_numba_lsoda(self) -> None:
         try:
             self.validate_plane(method="numba_lsoda", rtol=4.0e-3, i=8, ax=(0, 2))
         except ImportError as e:
             logger.exception("Could not load NumbaLSODA.", exc_info=e)
             self.skipTest("Could not load NumbaLSODA.")
 
-    def test_plane_odeint(self):
+    def test_plane_odeint(self) -> None:
         self.validate_plane(method="odeint", i=1, ax=(0, 0))
 
-    def test_plane_radau(self):
+    def test_plane_radau(self) -> None:
         self.validate_plane(method="Radau", rtol=8.24e-4, i=7, ax=(1, 4))
 
-    def test_plane_rk23(self):
+    def test_plane_rk23(self) -> None:
         self.validate_plane(method="RK23", rtol=2.11e-2, i=3, ax=(1, 0))
 
-    def test_plane_rk45(self):
+    def test_plane_rk45(self) -> None:
         self.validate_plane(method="RK45", rtol=1.95e-3, i=4, ax=(1, 1))
 
 

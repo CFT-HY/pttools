@@ -20,7 +20,7 @@ if tp.TYPE_CHECKING:
     from pttools.analysis.utils import FigAndAxes
     from pttools.models.model import Model
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class BaseBubble(abc.ABC):
@@ -120,24 +120,24 @@ class BaseBubble(abc.ABC):
 
         # Flags
         #: Whether the solution has errors
-        self.failed = False
+        self.failed: bool = False
         #: Whether the solver provided a solution (not necessarily a valid one)
-        self.solved = False
+        self.solved: bool = False
         #: Whether the solving has been attempted
-        self.solving_attempted = False
+        self.solving_attempted: bool = False
         # Specific errors
         #: Whether the junction conditions were not solved correctly
-        self.invalid_junction = False
+        self.invalid_junction: bool = False
         #: Whether there is a negative entropy flux across a junction
-        self.negative_entropy_flux = False
+        self.negative_entropy_flux: bool = False
         #: Whether there is a total negative net enropy change in the system
-        self.negative_net_entropy_change = False
+        self.negative_net_entropy_change: bool = False
         #: Whether there is a numerical error, e.g. $\kappa + \omega \neq 1$
-        self.numerical_error = False
+        self.numerical_error: bool = False
         #: Whether the solver crashed without returning output
-        self.solver_crashed = False
+        self.solver_crashed: bool = False
         #: Whether the solver failed but returned output
-        self.solver_failed = False
+        self.solver_failed: bool = False
 
     def add_note(self, note: str) -> None:
         """Add a note to the solution."""
@@ -197,7 +197,7 @@ class BaseBubble(abc.ABC):
             fig: plt.Figure | None = None,
             path: str | None = None,
             full_range: bool = False,
-            **kwargs) -> plt.Figure:
+            **kwargs: tp.Any) -> plt.Figure:
         """Plot the velocity and enthalpy profiles of the bubble."""
         from pttools.analysis.plot_bubbles import plot_bubbles  # noqa: PLC0415
         return plot_bubbles([self], fig, path, full_range=full_range, **kwargs)
@@ -208,7 +208,7 @@ class BaseBubble(abc.ABC):
             ax: plt.Axes | None = None,
             path: str | None = None,
             full_range: bool = False,
-            **kwargs) -> "FigAndAxes":
+            **kwargs: tp.Any) -> "FigAndAxes":
         """Plot the velocity profile of the bubble."""
         from pttools.analysis.plot_bubbles import plot_bubbles_v  # noqa: PLC0415
         return plot_bubbles_v([self], fig, ax, path, full_range=full_range, **kwargs)
@@ -219,7 +219,7 @@ class BaseBubble(abc.ABC):
             ax: plt.Axes | None = None,
             path: str | None = None,
             full_range: bool = False,
-            **kwargs) -> "FigAndAxes":
+            **kwargs: tp.Any) -> "FigAndAxes":
         """Plot the enthalpy profile of the bubble."""
         from pttools.analysis.plot_bubbles import plot_bubbles_w  # noqa: PLC0415
         return plot_bubbles_w([self], fig, ax, path, full_range=full_range, **kwargs)
@@ -229,28 +229,28 @@ class BaseBubble(abc.ABC):
     # =====
 
     @functools.cached_property
-    def e(self):
+    def e(self) -> th.FloatArr1D:
         r"""Energy density $e(\xi)$."""
         if not self.solved:
             raise NotYetSolvedError
         return self.model.e(self.w, self.phase)
 
     @functools.cached_property
-    def p(self):
+    def p(self) -> th.FloatArr1D:
         r"""Pressure $p(\xi)$."""
         if not self.solved:
             raise NotYetSolvedError
         return self.model.p(self.w, self.phase)
 
     @functools.cached_property
-    def s(self):
+    def s(self) -> th.FloatArr1D:
         r"""Entropy density $s(\xi)$."""
         if not self.solved:
             raise NotYetSolvedError
         return self.model.s(self.w, self.phase)
 
     @functools.cached_property
-    def T(self):
+    def T(self) -> th.FloatArr1D:
         r"""Temperature profile $T(\xi)$."""
         return self.model.temp(w=self.w, phase=self.phase)
 

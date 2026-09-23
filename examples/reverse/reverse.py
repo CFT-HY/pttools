@@ -41,7 +41,7 @@ def solver(
         v_wall_guess: float,
         alpha_n_guess: float,
         r_star_guess: float,
-        alpha_n_max: float = 0.66):
+        alpha_n_max: float = 0.66) -> tuple[float | None, float | None, float | None, float]:
     """Find thermodynamic parameters for a given peak of the gravitational wave spectrum"""
     # The limits for v_wall and alpha_n come from the limits of the suppression data.
     x0 = np.array([v_wall_guess, alpha_n_guess, r_star_guess])
@@ -57,7 +57,7 @@ def solver(
     return *sol.x, err
 
 
-def main():
+def main() -> tuple[float | None, float | None, float | None, float]:
     """Usage example"""
     model = BagModel(alpha_n_min=0.01)
     print("Starting solver")

@@ -23,7 +23,7 @@ from pttools.type_hints import FloatOrArr
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 @njit(cache=True)
@@ -98,7 +98,7 @@ def junction_condition_deviation1[T: FloatOrArr](
 def junction_condition_deviation2(
         v1: th.FloatOrArr, w1: th.FloatOrArr, p1: th.FloatOrArr,
         v2: th.FloatOrArr, w2: th.FloatOrArr, p2: th.FloatOrArr
-    ):
+    ) -> th.FloatOrArr:
     r"""Deviation from the second junction condition
     $$w_1 \tilde{\gamma}_1^2 \tilde{v}_1^2 + {p}_1 - {w}_2 \tilde{\gamma}_2^2 \tilde{v}_2^2 - {p}_2$$
     :notes:`\ `, eq. 7.22

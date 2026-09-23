@@ -7,7 +7,7 @@ and
 In the :ssm_repo:`sound-shell-model repository <>` these methods are included in both of the aforementioned files.
 """
 
-import collections.abc
+from collections.abc import Sequence
 import logging
 
 import matplotlib.pyplot as plt
@@ -16,7 +16,7 @@ import numpy as np
 import pttools.type_hints as th
 from tests.paper import const, utils
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 #: y-axis limits (p_min, p_max) of the power spectrum plots for each transition strength and power spectrum type.
@@ -52,12 +52,12 @@ def get_yaxis_limits(ps_type: utils.PSType, strength: utils.Strength = utils.Str
 def plot_guide_power_law(
         ax: plt.Axes,
         loc: th.FloatArr2D,
-        power,
-        xloglen=1,
+        power: float,
+        xloglen: float = 1,
         txt: str = "",
-        txt_shift: collections.abc.Sequence[float] = (1, 1),
+        txt_shift: Sequence[float] = (1, 1),
         color: str = "k",
-        linestyle: str = "-"):
+        linestyle: str = "-") -> tuple[th.FloatArr1D, th.FloatArr1D]:
     """
     Plot a guide power law going through loc[0], loc[1] with index power
     Optional annotation at (loc[0]*txt_shift[0], loc[1]*txt_shift[1])
@@ -80,9 +80,9 @@ def plot_guide_power_law_prace(
         ax: plt.Axes,
         x: th.FloatArr1D,
         y: th.FloatArr1D,
-        n,
+        n: float,
         position: utils.Position,
-        shifts=None):
+        shifts: Sequence[Sequence[float]] | None = None) -> th.FloatArr1D:
     """
     Wrapper for plot_guide_power_law, with power laws and line
     shifts appropriate for velocity and GW spectra of prace runs.
@@ -209,13 +209,13 @@ def plot_guide_power_laws_ssm(
 
 
 def plot_ps(
-        z_list,
-        pow_list,
+        z_list: Sequence[th.FloatArr1D],
+        pow_list: Sequence[th.FloatArr1D],
         ps_type: utils.PSType,
         ax_limits: utils.Strength = utils.Strength.WEAK,
-        leg_list: collections.abc.Sequence[str] | None = None,
-        col_list: collections.abc.Sequence[str] | None = None,
-        ls_list: collections.abc.Sequence[str] | None = None,
+        leg_list: Sequence[str] | None = None,
+        col_list: Sequence[str] | None = None,
+        ls_list: Sequence[str] | None = None,
         fig: plt.Figure | None = None,
         pretty: bool = False) -> plt.Figure:
     """

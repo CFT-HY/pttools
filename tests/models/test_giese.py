@@ -58,7 +58,7 @@ class GieseTest(unittest.TestCase):
     r"""Compare results with those from the code of :giese_2021:`\ `."""
 
     @staticmethod
-    def test_bag():
+    def test_bag() -> None:
         model = models.BagModel(a_s=1.1, a_b=1, V_s=1)
         alpha_ns = [0.578, 0.151]
         v_walls = [0.5, 0.7]
@@ -68,7 +68,7 @@ class GieseTest(unittest.TestCase):
         compare(model, alpha_ns, v_walls, kappa_ref, rtol=0.039)
 
     @staticmethod
-    def test_const_cs():
+    def test_const_cs() -> None:
         model = models.ConstCSModel(css2=1/3, csb2=(1/np.sqrt(3) - 0.01)**2, a_s=1.5, a_b=1, V_s=1)
         alpha_ns = [0.578, 0.151]
         v_walls = [0.5, 0.7]
@@ -79,7 +79,7 @@ class GieseTest(unittest.TestCase):
 
     @pytest.mark.xfail(IS_OSX, reason="Bug on macOS")
     @uses_multiprocessing
-    def test_kappa33(self):
+    def test_kappa33(self) -> None:
         kappa_ref = np.array([
             [0.00741574, 0.01450964, 0.02653822, 0.05782794, 0.18993211, 0.04904255, 0.0265001, 0.01816217],
             [0.06921508, 0.12306195, 0.18896878, 0.28120044, 0.41124208, 0.44902447, 0.23408969, 0.15686063],
@@ -90,7 +90,7 @@ class GieseTest(unittest.TestCase):
     @staticmethod
     @mark_xfail_multiprocessing_jit
     @uses_multiprocessing
-    def test_kappa34():
+    def test_kappa34() -> None:
         kappa_ref = np.array([
             [0.00709227, 0.01341795, 0.02375007, 0.05032617, 0.04033708, 0.01933255, 0.01273443, 0.00937875],
             [0.06570444, 0.11244944, 0.16679036, 0.24170456, 0.28645206, 0.18837795, 0.11564567, 0.0850799],
@@ -101,7 +101,7 @@ class GieseTest(unittest.TestCase):
     @staticmethod
     @mark_xfail_multiprocessing_jit
     @uses_multiprocessing
-    def test_kappa43():
+    def test_kappa43() -> None:
         # For $c_{s,s} < c_{s,b}$ the pseudotrace difference has a lower limit of
         # $D\bar{\theta} \geq w_n \frac{1 - c_{s,s}^2 / c_{s,b}^2}{1 + c_{s,s}^2}$,
         # and therefore $\alpha_{\bar{\theta}_n} > \frac{1 - c_{s,s}^2 / c_{s,b}^2}{3(1 + c_{s,s}^2)} = \frac{1}{15}$
@@ -122,7 +122,7 @@ class GieseTest(unittest.TestCase):
     @staticmethod
     @mark_xfail_multiprocessing_jit
     @uses_multiprocessing
-    def test_kappa44():
+    def test_kappa44() -> None:
         kappa_ref = np.array([
             [0.00700235, 0.01434407, 0.03086914, 0.11071288, 0.04033708, 0.01933255, 0.01273443, 0.00937875],
             [0.06410723, 0.11460043, 0.18265583, 0.28383528, 0.34206562, 0.18837795, 0.11564567, 0.0850799],

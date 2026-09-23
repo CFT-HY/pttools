@@ -26,7 +26,7 @@ def get_cmap(cmap: Colormap | str) -> Colormap:
     return cmap
 
 
-def cmap_lines(n, cmap: Colormap | str = DEFAULT_CMAP) -> th.FloatArr1D:
+def cmap_lines(n: int, cmap: Colormap | str = DEFAULT_CMAP) -> th.FloatArr1D:
     arr = np.linspace(0, 1, n)
     if isinstance(cmap, str):
         return plt.colormaps[cmap](arr)

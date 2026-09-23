@@ -14,7 +14,7 @@ from examples.utils import save_and_show_fig
 import pttools.type_hints as th
 
 
-def potential(x: th.FloatOrArr, a: float, b: float, c: float):
+def potential(x: th.FloatOrArr, a: float, b: float, c: float) -> th.FloatOrArr:
     return a*x**4 + b*x**3 + c*x**2
 
 
@@ -28,7 +28,7 @@ def b_of_det_zero(a: float, c: float) -> float:
 #     print(sol)
 
 
-def main():
+def main() -> plt.Figure:
     x = np.linspace(0, 2, 50)
 
     fig: plt.Figure = plt.figure(figsize=(3.6, 3.2))

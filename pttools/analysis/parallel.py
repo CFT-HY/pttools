@@ -19,7 +19,7 @@ from pttools.utils.decorators import PostFunc
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def _failure_output(post_func: PostFunc | None, post_func_return_multiple: bool) -> tuple[None, ...] | None:
@@ -53,7 +53,7 @@ def create_bubble(
         use_bag_solver: bool = False,
         bubble_kwargs: dict[str, tp.Any] | None = None,
         allow_bubble_failure: bool = False,
-        *args, **kwargs) -> Bubble | tuple[Bubble | None, ...] | None:
+        *args: tp.Any, **kwargs: tp.Any) -> Bubble | tuple[Bubble | None, ...] | None:
     """Create a single bubble and apply post-processing functions to retrieve results from it."""
     v_wall, alpha_n = params
     # This is a common error case and should be handled here to avoid polluting the logs with exceptions.
@@ -84,7 +84,7 @@ def create_spectrum(
         bubble_kwargs: dict[str, tp.Any]| None  = None,
         spectrum_kwargs: dict[str, tp.Any] | None = None,
         allow_bubble_failure: bool = False,
-        *args, **kwargs) -> Spectrum | tuple[Spectrum | None, ...] | None:
+        *args: tp.Any, **kwargs: tp.Any) -> Spectrum | tuple[Spectrum | None, ...] | None:
     """Create a single spectrum and apply post-processing functions to retrieve results from it."""
     bubble = create_bubble(
         params=params,

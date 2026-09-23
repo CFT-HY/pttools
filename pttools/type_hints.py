@@ -50,6 +50,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 import numba
 from numba.core.registry import CPUDispatcher
+from numba.core.typing.templates import Signature
 import numpy as np
 from numpy.typing import NDArray
 import scipy.integrate as spi
@@ -113,11 +114,11 @@ type VWXi = tuple[FloatArr1D, FloatArr1D, FloatArr1D]
 #: Type of $c_s^2$ function
 type CS2Fun = tp.Callable[[FloatOrArr, FloatOrArr], FloatOrArr] | CPUDispatcher
 #: Numba type of $c_s^2$ function
-CS2FunScalarSig = numba.double(numba.double, numba.double)
+CS2FunScalarSig: Signature = numba.double(numba.double, numba.double)
 #: Pointer to a $c_s^2$ function, i.e. the address of a Numba cfunc
 type CS2FunScalarPtr = int
 #: ctypes type of $c_s^2$ function
-CS2CFunc = ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double)
+CS2CFunc: type[ctypes._CFuncPtr] = ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double)
 #: Python type of a $c_s^2$ ctypes function pointer instance,
 #: as created by calling :py:data:`CS2CFunc`
 type CS2CFuncType = tp.Callable[[float, float], float]

@@ -13,9 +13,9 @@ from pttools.bubble import (
 )
 from pttools.type_hints import FloatArr1D, FloatArr3D
 
-DEFAULT_CURVES_BROKEN_V = np.linspace(0, 1, 5)
-DEFAULT_CURVES_INVERSE_V = np.linspace(-1, 0, 10)
-DEFAULT_CURVES_SYMMETRIC_V = np.linspace(0, 1, 10)
+DEFAULT_CURVES_BROKEN_V: FloatArr1D = np.linspace(0, 1, 5)
+DEFAULT_CURVES_INVERSE_V: FloatArr1D = np.linspace(-1, 0, 10)
+DEFAULT_CURVES_SYMMETRIC_V: FloatArr1D = np.linspace(0, 1, 10)
 
 
 def curves_broken(
@@ -43,7 +43,7 @@ def curves_droplet(
         df_dtau_ptr: DifferentialPointer = DF_DTAU_PTR_BAG,
         method: FluidIntegrateMethod = DEFAULT_FLUID_INTEGRATE_METHOD,
         n_xi: int = 1000,
-        tau_end: float = -100.):
+        tau_end: float = -100.) -> FloatArr3D:
     return curves_inverse(v0=v0, w0=w0, xi0=-1., df_dtau_ptr=df_dtau_ptr, method=method, n_xi=n_xi, tau_end=tau_end)
 
 

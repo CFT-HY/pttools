@@ -100,7 +100,7 @@ def validate2(
     return dev
 
 
-def main():
+def main() -> plt.Figure:
     """Plot a comparison of the old and new solvers"""
     bag = BagModel(a_s=1.1, a_b=1, V_s=2)
 

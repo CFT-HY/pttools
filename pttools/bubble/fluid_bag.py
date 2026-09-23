@@ -24,7 +24,7 @@ from pttools.bubble.solution_type_bag import identify_solution_type_alpha_plus_b
 from pttools.speedup import NAN_ARR, njit
 import pttools.type_hints as th
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 # This cannot be compiled with nogil=True, since find_alpha_plus_bag() uses "with numba.objmode".
 

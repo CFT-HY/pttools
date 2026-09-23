@@ -84,7 +84,11 @@ def sin_transform[T: FloatOrArr](
     # return integral2
 
 
-def sin_transform_debug(z: th.FloatOrArr, xi: th.FloatArr1D, f: th.FloatArr1D, z_st_thresh: float = const.Z_ST_THRESH):  # noqa: PLR0915
+def sin_transform_debug(  # noqa: PLR0915
+        z: th.FloatOrArr,
+        xi: th.FloatArr1D,
+        f: th.FloatArr1D,
+        z_st_thresh: float = const.Z_ST_THRESH) -> None:
     """Debugging for sin_transform."""
     _fig, axs = plt.subplots(2, 3, figsize=(11.7, 8.3))
     ax1: plt.Axes = axs[0, 0]

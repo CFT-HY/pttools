@@ -13,7 +13,7 @@ from pttools.type_hints import FloatOrArr
 from pttools.utils.misc import is_nan_or_none
 from pttools.utils.validation import check_value_in_range
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class AnalyticModel(Model, abc.ABC):
@@ -243,7 +243,8 @@ class AnalyticModel(Model, abc.ABC):
             V_s_default: float,
             V_b: float,
             default_mult: float = DEFAULT_A_G_MULT,
-            safety_factor_alpha = Model.ALPHA_N_MIN_FIND_SAFETY_FACTOR_ALPHA):
+            safety_factor_alpha: float = Model.ALPHA_N_MIN_FIND_SAFETY_FACTOR_ALPHA
+    ) -> tuple[float, float, float, float]:
         a_s, a_b, _, _ = self.get_a_g(a_s, a_b, g_s, g_b, default_mult=default_mult)
         return self.alpha_n_min_find_params(
             alpha_n_min_target=alpha_n_min_target, a_s_default=a_s, a_b=a_b, V_s_default=V_s_default, V_b=V_b,

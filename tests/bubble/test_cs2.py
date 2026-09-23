@@ -22,7 +22,7 @@ from pttools.utils import assert_allclose
 from tests.utils import REPO_DIR
 
 #: Script that solves a bag model bubble and reports the number of keys in each Numba cache index
-CACHE_SCRIPT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "numba_cache.py")
+CACHE_SCRIPT_PATH: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), "numba_cache.py")
 
 
 @njit
@@ -45,28 +45,28 @@ class TestCS2Ptr(unittest.TestCase):
                 assert_allclose(cs2_from_ptr(cs2_ptr, w, phase.value), ref)
                 assert_allclose(cs2_from_ptr_jit(cs2_ptr, w, phase.value), ref)
 
-    def test_bag_ptr(self):
+    def test_bag_ptr(self) -> None:
         r"""The pointer of the Bag Model should give $c_s^2 = \frac{1}{3}$."""
         for phase in (Phase.SYMMETRIC, Phase.BROKEN):
             assert_allclose(cs2_from_ptr(CS2_BAG_SCALAR_PTR, 1., phase.value), CS0_2)
             assert_allclose(cs2_from_ptr_jit(CS2_BAG_SCALAR_PTR, 1., phase.value), CS0_2)
 
-    def test_bag_model(self):
+    def test_bag_model(self) -> None:
         self.check_model(BagModel(a_s=1.1, a_b=1, V_s=1))
 
-    def test_const_cs_model(self):
+    def test_const_cs_model(self) -> None:
         model = ConstCSModel(a_s=1.5, a_b=1, V_s=1, css2=1/3 - 0.01, csb2=1/3 - 0.02)
         self.check_model(model)
         # The pointer should be the same on every call, so that the callers don't have to be recompiled.
         self.assertEqual(model.cs2_ptr(), model.cs2_ptr())
 
-    def test_const_cs_model_bag(self):
+    def test_const_cs_model_bag(self) -> None:
         """A ConstCSModel that is equivalent to the Bag Model should use the pointer of the Bag Model."""
         model = ConstCSModel(a_s=1.5, a_b=1, V_s=1, css2=1/3, csb2=1/3)
         self.assertEqual(model.cs2_ptr(), CS2_BAG_SCALAR_PTR)
         self.check_model(model)
 
-    def test_custom_function(self):
+    def test_custom_function(self) -> None:
         r"""A custom $c_s^2$ function should be callable by its pointer."""
         @njit
         def cs2(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
@@ -88,7 +88,7 @@ class TestNumbaCache(unittest.TestCase):
     """
 
     @unittest.skipIf(NUMBA_DISABLE_JIT, "Nothing is compiled when jitting is disabled.")
-    def test_cache_does_not_grow(self):
+    def test_cache_does_not_grow(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             cache_dir = os.path.join(temp_dir, "numba_cache")
             sizes = [

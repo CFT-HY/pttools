@@ -38,7 +38,7 @@ from pttools.type_hints import FloatOrArr
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def e_bar(model: "Model", wn: float) -> float:
@@ -397,7 +397,7 @@ def va_thermal_energy_density_diff(w: th.FloatArr1D, xi: th.FloatArr1D) -> float
     return 4*np.pi/3 * np.trapezoid(0.75*(w - w[-1]), xi**3)  # pyrefly: ignore[bad-return]
 
 
-def va_thermal_energy_fraction(eq_va: float, eb: float):
+def va_thermal_energy_fraction(eq_va: float, eb: float) -> float:
     r"""Volume-averaged thermal energy fraction
     $$Q_\text{va} = \frac{e_{Q,\text{va}}}{\bar{e}}$$.
 

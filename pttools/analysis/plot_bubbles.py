@@ -77,7 +77,7 @@ def plot_bubbles(
         fig: plt.Figure | None = None,
         path: str | None = None,
         full_range: bool = False,
-        **kwargs) -> plt.Figure:
+        **kwargs: tp.Any) -> plt.Figure:
     """Plot the velocity and enthalpy profiles of bubbles."""
     fig, ax_v, ax_w = setup_bubbles_plot_multifig(fig)
     plot_bubbles_v(bubbles, fig, ax_v, full_range=full_range, **kwargs)
@@ -102,7 +102,7 @@ def plot_bubbles_v(
         v_max: float = 1,
         full_range: bool = False,
         legend: bool | None = None,
-        **kwargs) -> FigAndAxes:
+        **kwargs: tp.Any) -> FigAndAxes:
     """Plot the velocity profile of multiple bubbles."""
     fig, ax = setup_bubbles_plot(bubbles, fig, ax)
     ax.fill_between([-1, 0, 0, 1], [-1, -1, 0, 1], [-1, 0, 1, 1], facecolor="gray", alpha=0.2)
@@ -130,7 +130,7 @@ def plot_bubbles_w(
         ax: plt.Axes | None = None,
         path: str | None = None,
         full_range: bool = False,
-        **kwargs) -> FigAndAxes:
+        **kwargs: tp.Any) -> FigAndAxes:
     """Plot the enthalpy profile of multiple bubbles."""
     fig, ax = setup_bubbles_plot(bubbles, fig, ax)
     for bubble in bubbles:

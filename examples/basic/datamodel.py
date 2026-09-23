@@ -20,7 +20,7 @@ from pttools.models import DataModel
 
 # from pttools.analysis.plot_model import ModelPlot
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def main(data_path: str = "thermodynamics_data.h5") -> Figure | None:

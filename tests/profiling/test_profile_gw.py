@@ -10,7 +10,7 @@ from tests.profiling import utils_cprofile, utils_pyinstrument, utils_yappi
 from tests.profiling.test_profile import TestProfile
 from tests.utils.mark import skip_slow
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 #: Change this to e.g. 100 to obtain proper profiling data for pyinstrument.
 #: This is set to 1 to speed up the unit testing.
@@ -25,12 +25,12 @@ class TestProfileGW(TestProfile):
     params = (0.1, 0.1)
 
     @classmethod
-    def setup_numba(cls):
+    def setup_numba(cls) -> None:
         ssm.power_gw_bag(cls.z, cls.params)
 
     @classmethod
     @skip_slow
-    def test_profile_gw_cprofile(cls):
+    def test_profile_gw_cprofile(cls) -> None:
         with utils_cprofile.CProfiler(cls.NAME):
             ssm.power_gw_bag(cls.z, cls.params)
 
@@ -39,7 +39,7 @@ class TestProfileGW(TestProfile):
     @unittest.skipIf(
         speedup.NUMBA_SEGFAULTING_PROFILERS,
         "Pyinstrument may segfault with old Numba versions")
-    def test_profile_gw_pyinstrument(cls):
+    def test_profile_gw_pyinstrument(cls) -> None:
         """Pyinstrument is a sampling profiler, and therefore repeating gives more accurate results."""
         try:
             with utils_pyinstrument.PyInstrumentProfiler(cls.NAME):
@@ -52,7 +52,7 @@ class TestProfileGW(TestProfile):
 
     @classmethod
     @skip_slow
-    def test_profile_gw_yappi(cls):
+    def test_profile_gw_yappi(cls) -> None:
         with utils_yappi.YappiProfiler(cls.NAME):
             ssm.power_gw_bag(cls.z, cls.params)
 

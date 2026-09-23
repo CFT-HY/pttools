@@ -12,7 +12,7 @@ from pttools.ssm.suppression.suppression_ssm_data.suppression_ssm_calculator imp
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 # TODO: Why is there a difference in the low-alpha low-vw region between hybrids and no hybrids data set?
 
@@ -56,7 +56,7 @@ class Suppression:
         self.suppressions: th.FloatArr1D = suppressions
         self.name: str = name
 
-        self.points = (self.v_walls, self.alpha_ns)
+        self.points: tuple[th.FloatArr1D, th.FloatArr1D] = (self.v_walls, self.alpha_ns)
         self.alpha_n_min: float = self.alpha_ns.min()
         self.alpha_n_max: float = self.alpha_ns.max()
         self.v_wall_min: float = self.v_walls.min()
@@ -204,12 +204,13 @@ M2: float = (0.67 - 0.5) / (0.56 - 0.44)
 C1: float = 0.34 - M1 * 0.24
 C2: float = 0.67000 - M2 * 0.56000
 
-NO_HYBRIDS = Suppression.from_file(
+NO_HYBRIDS: Suppression = Suppression.from_file(
     os.path.join(SUPPRESSION_FOLDER, "suppression_no_hybrids_ssm.npz"), name="No hybrids")
-NO_HYBRIDS_EXT = Suppression(
+NO_HYBRIDS_EXT: Suppression = Suppression(
     *extend(v_walls=NO_HYBRIDS.v_walls, alpha_ns=NO_HYBRIDS.alpha_ns, suppressions=NO_HYBRIDS.suppressions),
     name="No hybrids, extended"
 )
-WITH_HYBRIDS = Suppression.from_file(os.path.join(SUPPRESSION_FOLDER, "suppression_2_ssm.npz"), name="With hybrids")
+WITH_HYBRIDS: Suppression = Suppression.from_file(
+    os.path.join(SUPPRESSION_FOLDER, "suppression_2_ssm.npz"), name="With hybrids")
 DEFAULT_SUPPRESSION: Suppression = NO_HYBRIDS_EXT
 SUPPRESSIONS: list[Suppression] = [NO_HYBRIDS, NO_HYBRIDS_EXT, WITH_HYBRIDS]

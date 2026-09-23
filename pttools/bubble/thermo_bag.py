@@ -29,7 +29,7 @@ type Integrand = \
         float
     ]
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 #: Minimum number of points on each side of the wall for split_integrate() to integrate that side
 SPLIT_INTEGRATE_MIN_POINTS: int = 3

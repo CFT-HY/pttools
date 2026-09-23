@@ -6,17 +6,18 @@ import textwrap
 import unittest
 
 from pttools.analysis import time_and_plot_threads
+from pttools.analysis.utils import FigAndAxes
 from pttools.speedup import DEFAULT_VARYING_NUMBA_THREADS, NUMBA_DISABLE_JIT
 import pttools.type_hints as th
 from tests.utils.const import TEST_RESULT_PATH
 from tests.utils.mark import skip_slow
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 #: Change this to e.g. 10 to obtain proper performance data.
 #: This is set to 1 to speed up the unit testing.
 N_ITERATIONS: int = 1
-PERFORMANCE_DIR = os.path.join(TEST_RESULT_PATH, "performance")
+PERFORMANCE_DIR: str = os.path.join(TEST_RESULT_PATH, "performance")
 os.makedirs(PERFORMANCE_DIR, exist_ok=True)
 
 if NUMBA_DISABLE_JIT:
@@ -34,7 +35,7 @@ class TestPerformance(unittest.TestCase):
     @staticmethod
     def time_and_plot(
             name: str, filename: str, stmt: str, setup: str,
-            n_iterations: int, n_threads: th.IntArr1D = DEFAULT_VARYING_NUMBA_THREADS):
+            n_iterations: int, n_threads: th.IntArr1D = DEFAULT_VARYING_NUMBA_THREADS) -> FigAndAxes:
         return time_and_plot_threads(
             name=name, filename=filename, path=PERFORMANCE_DIR,
             stmt=stmt, setup=setup,
@@ -43,7 +44,7 @@ class TestPerformance(unittest.TestCase):
 
     @classmethod
     @skip_slow
-    def test_performance_bubble(cls):
+    def test_performance_bubble(cls) -> None:
         setup = textwrap.dedent("""
         from pttools.bubble import Bubble
         from pttools.models import BagModel
@@ -56,7 +57,7 @@ class TestPerformance(unittest.TestCase):
 
     @classmethod
     @skip_slow
-    def test_performance_bubble_and_spectrum(cls):
+    def test_performance_bubble_and_spectrum(cls) -> None:
         setup = textwrap.dedent("""
         from pttools.bubble import Bubble
         from pttools.models import BagModel
@@ -77,7 +78,7 @@ class TestPerformance(unittest.TestCase):
 
     @classmethod
     @skip_slow
-    def test_performance_gw(cls):
+    def test_performance_gw(cls) -> None:
         setup = textwrap.dedent("""
         import numpy as np
         from pttools import ssm
@@ -93,7 +94,7 @@ class TestPerformance(unittest.TestCase):
 
     @classmethod
     @skip_slow
-    def test_performance_sin_transform(cls):
+    def test_performance_sin_transform(cls) -> None:
         setup = textwrap.dedent("""
         import numpy as np
         from pttools.ssm.sin_transform import sin_transform
@@ -112,7 +113,7 @@ class TestPerformance(unittest.TestCase):
 
     @classmethod
     @skip_slow
-    def test_performance_spectrum(cls):
+    def test_performance_spectrum(cls) -> None:
         setup = textwrap.dedent("""
         from pttools.bubble import Bubble
         from pttools.models import BagModel

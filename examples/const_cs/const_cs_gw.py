@@ -26,7 +26,7 @@ from pttools.omgw0 import H2, Spectrum, SpectrumArr3D, omega_ins_h2
 import pttools.type_hints as th
 from pttools.utils.system import IS_READ_THE_DOCS
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def create_models(a_s: float, a_b: float, V_s: float, alpha_n_min: float) -> list[ConstCSModel]:

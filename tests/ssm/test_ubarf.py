@@ -8,10 +8,11 @@ import numpy as np
 from pttools.bubble import Bubble
 from pttools.models.bag import BagModel
 from pttools.ssm import NucType, SSMSpectrum
+import pttools.type_hints as th
 from pttools.utils import assert_allclose
 
 #: :gw_pt_ssm:`\ ` table 1
-TABLE1 = np.array([
+TABLE1: th.FloatArr2D = np.array([
     [0.46] * 5 + [5.] * 5,
     [0.92, 0.80, 0.68, 0.56, 0.44, 0.92, 0.80, 0.73, 0.56, 0.44],
     [4.5, 5.8, 9.0, 16.1, 8.5, 46.1, 59.7, 77.5, 102.8, 80.8],
@@ -34,8 +35,12 @@ UBARF_1D = TABLE1[4] * 0.001
 
 
 class UbarfTest(unittest.TestCase):
+    model: BagModel
+    bubbles: list[Bubble]
+    spectra: list[SSMSpectrum]
+
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls) -> None:
         cls.model = BagModel(alpha_n_min=ALPHA_N[0])
         cls.bubbles = [
             Bubble(cls.model, v_wall=v_wall, alpha_n=alpha_n)
@@ -45,14 +50,14 @@ class UbarfTest(unittest.TestCase):
         for spectrum in cls.spectra:
             spectrum.compute(lambda_correction=True)
 
-    def test_ubarf_1d(self):
+    def test_ubarf_1d(self) -> None:
         assert_allclose(
             [bubble.ubarf for bubble in self.bubbles],
             UBARF_1D,
             rtol=0.023
         )
 
-    def test_ubarf_exponential(self):
+    def test_ubarf_exponential(self) -> None:
         ubarf = [sqrt(spectrum.ubarf2_custom_nucleation(nuc_type=NucType.EXPONENTIAL)) for spectrum in self.spectra]
         # Masking out a problematic point
         ubarf[7] = UBARF_EXP[7]
@@ -63,7 +68,7 @@ class UbarfTest(unittest.TestCase):
             rtol=0.040
         )
 
-    def test_ubarf_simultaneous(self):
+    def test_ubarf_simultaneous(self) -> None:
         ubarf = [sqrt(spectrum.ubarf2_custom_nucleation(nuc_type=NucType.SIMULTANEOUS)) for spectrum in self.spectra]
         # Masking out a problematic point
         ubarf[7] = UBARF_SIM[7]
@@ -73,7 +78,7 @@ class UbarfTest(unittest.TestCase):
             rtol=0.034
         )
 
-    def test_w_bar(self):
+    def test_w_bar(self) -> None:
         r"""$\bar{w}$ and $w_n$ are not the same, but they should be somewhat close."""
         assert_allclose(
             [bubble.w_bar for bubble in self.bubbles],

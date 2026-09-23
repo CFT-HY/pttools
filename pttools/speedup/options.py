@@ -6,7 +6,7 @@ import typing as tp
 
 from pttools.utils import system
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 # On Windows, the maximum number of worker processes is limited to 61.
 # https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor
@@ -28,7 +28,7 @@ else:
 
 # The choice of the Numba threading layer cannot be printed here, since it's not selected until needed.
 if not system.FORKING or not system.CPU_AFFINITY:
-    msg = system.platform_info()
+    msg: str = system.platform_info()
     if not system.CPU_AFFINITY:
         msg += (
             " This platform does not provide info on which CPU cores are available for this process. "

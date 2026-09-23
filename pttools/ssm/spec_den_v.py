@@ -1,6 +1,7 @@
 """Functions for computing the spectral density of the velocity field."""
 
 import logging
+import typing as tp
 
 import numba
 import numpy as np
@@ -10,7 +11,7 @@ from pttools.ssm.nucleation import NucType, beta_R_star0, lifetime_distribution
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 @njit(cache=True)
@@ -78,6 +79,8 @@ def _spec_den_v_core(
         )
     return sd_v
 
+spec_den_v_core: tp.Callable[..., th.FloatArr1D]
+spec_den_v_core_single: tp.Callable[..., th.FloatArr1D]
 spec_den_v_core, spec_den_v_core_single = njit_parallel_pair(_spec_den_v_core, nogil=True)
 
 

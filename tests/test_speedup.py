@@ -18,6 +18,7 @@ import pttools.type_hints as th
 from pttools.utils import assert_allclose
 from tests.utils import TEST_FIGURE_PATH
 
+TBB_INSTALLED: bool
 try:
     importlib.metadata.distribution("tbb")
     TBB_INSTALLED = True
@@ -39,20 +40,20 @@ class TestSpeedup(unittest.TestCase):
     """Test the functions in the speedup module."""
 
     @staticmethod
-    def test_gradient():
+    def test_gradient() -> None:
         arr = np.logspace(1, 5, 10)
         assert_allclose(speedup.gradient(arr), np.gradient(arr))
 
     @staticmethod
-    def test_logspace():
+    def test_logspace() -> None:
         assert_allclose(speedup.logspace(1, 5, 10), np.logspace(1, 5, 10))
 
     @staticmethod
-    def test_parallel_debug():
+    def test_parallel_debug() -> None:
         parallel_debug_message("test")
 
     @staticmethod
-    def test_run_parallel_single_output_dtype():
+    def test_run_parallel_single_output_dtype() -> None:
         params = np.array([1., 2., 3.])
         res = run_parallel(np.square, params, output_dtypes=(np.float64,), single_thread=True)
         assert isinstance(res, np.ndarray)
@@ -61,7 +62,7 @@ class TestSpeedup(unittest.TestCase):
 
     @staticmethod
     @unittest.expectedFailure
-    def test_spline():
+    def test_spline() -> None:
         x = np.linspace(0, 2*np.pi, 20)
         x2 = np.linspace(0, 2*np.pi, 40)
         y = np.sin(x)
@@ -80,7 +81,7 @@ class TestSpeedup(unittest.TestCase):
         assert_allclose(data, ref)
 
     @staticmethod
-    def test_spline_linear():
+    def test_spline_linear() -> None:
         """Test the Numba JIT-compiled version of splev."""
         x = np.linspace(0, 2*np.pi, 10)
         x2 = np.linspace(0, 2*np.pi, 20)
@@ -116,13 +117,13 @@ class TestSpeedup(unittest.TestCase):
 class TestTBB(unittest.TestCase):
     """Test that the TBB library of the tbb package is found for Numba."""
 
-    def test_load_tbb(self):
+    def test_load_tbb(self) -> None:
         version = tbb.load_tbb()
         self.assertIsNotNone(version)
         self.assertGreaterEqual(version, tbb.TBB_MIN_VERSION)
 
     @staticmethod
-    def test_numba_tbb_layer():
+    def test_numba_tbb_layer() -> None:
         # Importing the TBB extension of Numba fails if the loader cannot find the TBB library.
         importlib.import_module("numba.np.ufunc.tbbpool")
         # This is the check that Numba runs before using the TBB threading layer.

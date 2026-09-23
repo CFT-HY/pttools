@@ -5,6 +5,8 @@ Giese et al. testing 2
 Compare :giese_2021:`\ ` fluid profiles with PTtools
 """
 
+import typing as tp
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -19,9 +21,9 @@ def main(
         a_s: float = 5,
         a_b: float = 1,
         V_s: float = 1,
-        alpha_n = 0.3,
-        theta_bar = False,
-        colors = ("r", "g", "b", "orange")
+        alpha_n: float = 0.3,
+        theta_bar: bool = False,
+        colors: tp.Sequence[str] = ("r", "g", "b", "orange")
     ) -> plt.Figure:
     # v_walls = np.array([0.5, 0.6, 0.65])
     v_walls = np.array([0.8122449, 0.82755102, 0.84285714, 0.85816327])

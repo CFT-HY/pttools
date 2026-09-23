@@ -23,7 +23,7 @@ from pttools.speedup.parallel import run_parallel
 import pttools.type_hints as th
 from pttools.utils.system import FORKING
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class FluidReference:
@@ -37,8 +37,8 @@ class FluidReference:
             alpha_n_min: float = 0.01,
             alpha_n_max: float = 0.99,
             n_v_wall: int = 100,
-            n_alpha_n: int = 100):
-        self.path = path
+            n_alpha_n: int = 100) -> None:
+        self.path: str = path
 
         if not os.path.exists(path):
             self.create(v_wall_min, v_wall_max, alpha_n_min, alpha_n_max, n_v_wall, n_alpha_n)
@@ -64,9 +64,9 @@ class FluidReference:
             self.create(v_wall_min, v_wall_max, alpha_n_min, alpha_n_max, n_v_wall, n_alpha_n)
             file = h5py.File(path, "r")
 
-        self.v_wall = file["v_wall"][...]
-        self.alpha_n = file["alpha_n"][...]
-        self.data = np.empty((self.alpha_n.size, self.v_wall.size, 6))
+        self.v_wall: th.FloatArr1D = file["v_wall"][...]
+        self.alpha_n: th.FloatArr1D = file["alpha_n"][...]
+        self.data: th.FloatArr3D = np.empty((self.alpha_n.size, self.v_wall.size, 6))
         self.data[:, :, 0] = file["vp"]
         self.data[:, :, 1] = file["vm"]
         self.data[:, :, 2] = file["vp_tilde"]
@@ -74,20 +74,23 @@ class FluidReference:
         self.data[:, :, 4] = file["wp"]
         self.data[:, :, 5] = file["wm"]
 
-        self.interp_sub_def = NearestNDInterpolator(x=file["coords_sub_def"][...], y=file["inds_sub_def"][...])
-        self.interp_hybrid = NearestNDInterpolator(x=file["coords_hybrid"][...], y=file["inds_hybrid"][...])
-        self.interp_detonation = NearestNDInterpolator(x=file["coords_detonation"][...], y=file["inds_detonation"][...])
+        self.interp_sub_def: NearestNDInterpolator = NearestNDInterpolator(
+            x=file["coords_sub_def"][...], y=file["inds_sub_def"][...])
+        self.interp_hybrid: NearestNDInterpolator = NearestNDInterpolator(
+            x=file["coords_hybrid"][...], y=file["inds_hybrid"][...])
+        self.interp_detonation: NearestNDInterpolator = NearestNDInterpolator(
+            x=file["coords_detonation"][...], y=file["inds_detonation"][...])
         file.close()
 
         if np.any(self.data < 0):
             raise ValueError
 
-        self.vp = self.data[:, :, 0]
-        self.vm = self.data[:, :, 1]
-        self.vp_tilde = self.data[:, :, 2]
-        self.vm_tilde = self.data[:, :, 3]
-        self.wp = self.data[:, :, 4]
-        self.wm = self.data[:, :, 5]
+        self.vp: th.FloatArr2D = self.data[:, :, 0]
+        self.vm: th.FloatArr2D = self.data[:, :, 1]
+        self.vp_tilde: th.FloatArr2D = self.data[:, :, 2]
+        self.vm_tilde: th.FloatArr2D = self.data[:, :, 3]
+        self.wp: th.FloatArr2D = self.data[:, :, 4]
+        self.wm: th.FloatArr2D = self.data[:, :, 5]
 
         # There is no need to add the PID number here, as that is done automatically by the logging system.
         logger.info("Loaded fluid reference with n_alpha_n=%s, n_v_wall=%s", self.data.shape[0], self.data.shape[1])
@@ -96,7 +99,7 @@ class FluidReference:
             self,
             v_wall_min: float, v_wall_max: float,
             alpha_n_min: float, alpha_n_max: float,
-            n_v_wall: int, n_alpha_n: int):
+            n_v_wall: int, n_alpha_n: int) -> None:
         """Create a fluid reference for the given range."""
         msg = "Generating reference data for the fluid solver. This may take several minutes."
         logger.info(msg)
@@ -253,7 +256,7 @@ def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tuple[int, flo
 # This cache is shared between processes when using the "fork" method and calling it before forking.
 # On systems using the "spawn" method, the cache is per-process.
 @functools.cache
-def ref():
+def ref() -> FluidReference:
     if FORKING and multiprocessing.parent_process() is not None:
         logger.warning(
             "The reference data was attempted to be loaded in a subprocess. "

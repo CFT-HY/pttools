@@ -51,16 +51,16 @@ class FluidGKSVDVTest(unittest.TestCase):
         self.assertLessEqual(giese_bubble.vp, v_wall)
         self.assertLessEqual(giese_bubble.vm, v_wall)
 
-    def test_sub_def(self):
+    def test_sub_def(self) -> None:
         self.compare(v_wall=0.4, alpha_n=0.1, sol_type=SolutionType.SUB_DEF)
 
-    def test_hybrid(self):
+    def test_hybrid(self) -> None:
         self.compare(v_wall=0.6, alpha_n=0.1, sol_type=SolutionType.HYBRID)
 
-    def test_deton(self):
+    def test_deton(self) -> None:
         self.compare(v_wall=0.85, alpha_n=0.1, sol_type=SolutionType.DETON)
 
-    def test_deton_junction(self):
+    def test_deton_junction(self) -> None:
         """For a detonation, the fluid in front of the wall is at rest and has the nucleation enthalpy."""
         bubble = Bubble(self.model, v_wall=0.85, alpha_n=0.1, use_giese_solver=True)
         self.assertEqual(bubble.sol_type, SolutionType.DETON)
@@ -69,7 +69,7 @@ class FluidGKSVDVTest(unittest.TestCase):
         self.assertAlmostEqual(bubble.wp, bubble.wn)
         self.assertGreater(bubble.wm, bubble.wn)
 
-    def test_failure(self):
+    def test_failure(self) -> None:
         """A solver failure should be reported by the solver only, without further warnings from the validations."""
         model = gksvdv_models()[0]
         with warnings.catch_warnings():

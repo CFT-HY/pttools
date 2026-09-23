@@ -12,7 +12,7 @@ import typing as tp
 
 from numba.core.compiler import CompileResult
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 _REBUILD_ORIG: tp.Callable[..., CompileResult] = CompileResult._rebuild.__func__
 

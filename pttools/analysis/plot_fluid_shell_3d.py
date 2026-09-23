@@ -13,7 +13,7 @@ from pttools.bubble.relativity import lorentz
 from pttools.bubble.shock import solve_shock
 from pttools.models.model import Model
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class BubblePlot3D(PlotlyPlot):
@@ -21,10 +21,10 @@ class BubblePlot3D(PlotlyPlot):
 
     def __init__(self, model: Model | None = None, colorscale: str = "YlOrRd"):
         super().__init__()
-        self.model = model
+        self.model: Model | None = model
         self.bubbles: list[Bubble] = []
         self.plots: list[BasePlotlyType] = []
-        self.colorscale = colorscale
+        self.colorscale: str = colorscale
 
     def add(self, bubble: Bubble, color: str | None = None) -> go.Scatter3d:
         """Add a bubble to the plot."""
@@ -95,7 +95,7 @@ class BubblePlot3D(PlotlyPlot):
         logger.info("Mu surface ready.")
         return surf
 
-    def shock_surfaces(self, n_xi: int = 20, n_w: int = 30, w_mult: float = 1.5, wp_surface: bool = False):
+    def shock_surfaces(self, n_xi: int = 20, n_w: int = 30, w_mult: float = 1.5, wp_surface: bool = False) -> None:
         """Add the shock surfaces to the plot."""
         if self.model is None:
             return

@@ -9,7 +9,7 @@ from pttools.bubble.phase import Phase
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 @enum.unique

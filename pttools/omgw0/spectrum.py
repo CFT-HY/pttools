@@ -151,7 +151,7 @@ class Spectrum(SSMSpectrum):
         )
 
     @functools.cached_property
-    def H_star(self):
+    def H_star(self) -> float:
         r"""Hubble rate $H_*$ at GW formation, in units of $T^2$.
 
         $$H = \sqrt{8 \pi \frac{e_*}{3}} \frac{1}{m_{\text{pl}}}$$
@@ -366,7 +366,7 @@ class Spectrum(SSMSpectrum):
             fig: Figure | None = None,
             ax: Axes | None = None,
             path: str | None = None,
-            **kwargs) -> "FigAndAxes":
+            **kwargs: tp.Any) -> "FigAndAxes":
         from pttools.analysis.plot_spectra import plot_spectra  # noqa: PLC0415
         return plot_spectra([self], fig, ax, path, **kwargs)
 
@@ -374,7 +374,7 @@ class Spectrum(SSMSpectrum):
             self,
             fig: Figure | None = None,
             path: str | None = None,
-            **kwargs) -> tuple[Figure, th.AxesArr2D]:
+            **kwargs: tp.Any) -> tuple[Figure, th.AxesArr2D]:
         from pttools.analysis.plot_spectra import plot_spectra_multi  # noqa: PLC0415
         return plot_spectra_multi([self], fig, path, **kwargs)
 
@@ -384,7 +384,7 @@ class Spectrum(SSMSpectrum):
             path: str | None = None,
             label: str | None = None,
             legend: bool = False,
-            **kwargs) -> tuple[Figure, th.AxesArr1D]:
+            **kwargs: tp.Any) -> tuple[Figure, th.AxesArr1D]:
         from pttools.analysis.plot_spectra import plot_spectra_multi_flat  # noqa: PLC0415
         return plot_spectra_multi_flat([self], fig=fig, path=path, labels=[label], legend=legend, **kwargs)
 

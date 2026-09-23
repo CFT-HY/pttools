@@ -60,7 +60,7 @@ def plot_spectra_multi(
         spectra: tp.Collection[Spectrum],
         fig: Figure | None = None,
         path: str | None = None,
-        **kwargs) -> tuple[Figure, th.AxesArr2D]:
+        **kwargs: tp.Any) -> tuple[Figure, th.AxesArr2D]:
     """Plot multiple types of spectra."""
     fig, axs = plot_spectra_multi_common(spectra, fig, **kwargs)
 
@@ -90,7 +90,7 @@ def plot_spectra_multi_common(
         ncols: int = 2,
         labels: tp.Sequence[str | None] | None = None,
         legend: bool | None = None,
-        **kwargs):
+        **kwargs: tp.Any) -> tuple[Figure, np.ndarray]:
     """Common steps for plotting multiple spectra."""
     if fig is None:
         fig = plt.figure(figsize=figsize)
@@ -114,7 +114,7 @@ def plot_spectra_multi_flat(
         path: str | None = None,
         labels: tp.Sequence[str | None] | None = None,
         legend: bool | None = None,
-        **kwargs):
+        **kwargs: tp.Any) -> tuple[Figure, th.AxesArr1D]:
     """Plot multiple spectra in a flat layout."""
     fig, axs = plot_spectra_multi_common(
         spectra, fig,
@@ -151,7 +151,7 @@ def plot_spectra(
         path: str | None = None,
         labels: tp.Sequence[str | None] | None = None,
         legend: bool | None = None,
-        **kwargs) -> FigAndAxes:
+        **kwargs: tp.Any) -> FigAndAxes:
     r"""Plot the GW spectra today $\mathcal{P}_{\text{gw},0}(f)$."""
     fig, ax = create_fig_ax(fig, ax)
     for i, spectrum in enumerate(spectra):
@@ -180,7 +180,7 @@ def plot_spectra_gw(
         ax: Axes | None = None,
         fig: Figure | None = None,
         path: str | None = None,
-        **kwargs) -> FigAndAxes:
+        **kwargs: tp.Any) -> FigAndAxes:
     r"""Plot the GW power spectra $\mathcal{P}_\text{gw}(kR_*)$."""
     fig, ax = create_fig_ax(fig, ax)
     for spectrum in spectra:
@@ -194,7 +194,7 @@ def plot_spectra_v(
         ax: Axes | None = None,
         fig: Figure | None = None,
         path: str | None = None,
-        **kwargs) -> FigAndAxes:
+        **kwargs: tp.Any) -> FigAndAxes:
     r"""Plot the velocity power spectra $\tilde{\mathcal{P}}_{\tilde{v}}(kR_*)$."""
     fig, ax = create_fig_ax(fig, ax)
     for spectrum in spectra:
@@ -208,7 +208,7 @@ def plot_spectra_spec_den_gw(
         ax: Axes | None = None,
         fig: Figure | None = None,
         path: str | None = None,
-        **kwargs) -> FigAndAxes:
+        **kwargs: tp.Any) -> FigAndAxes:
     r"""Plot the GW spectral densities $\mathcal{P}_\text{gw}(kR_*)$."""
     fig, ax = create_fig_ax(fig, ax)
     for spectrum in spectra:
@@ -222,7 +222,7 @@ def plot_spectra_spec_den_v(
         ax: Axes | None = None,
         fig: Figure | None = None,
         path: str | None = None,
-        **kwargs) -> FigAndAxes:
+        **kwargs: tp.Any) -> FigAndAxes:
     r"""Plot the velocity spectral densities $\tilde{P}_{\tilde{v}}(kR_*)$."""
     fig, ax = create_fig_ax(fig, ax)
     for spectrum in spectra:

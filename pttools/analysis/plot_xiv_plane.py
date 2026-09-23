@@ -23,7 +23,7 @@ class XIVPlanePlot:
         else:
             self.fig = fig
         self.ax: plt.Axes = self.fig.add_subplot() if ax is None else ax
-        self.model = model
+        self.model: Model = model
 
         self.ax.plot([0, 1], [0, 1], c="k", ls=":", label=r"$v=\xi$")
         self.ax.grid()
@@ -43,7 +43,7 @@ class XIVPlanePlot:
             n_curves_right: int = 3,
             n_xi: int = const.DEFAULT_N_XI,
             t_forwards_end: float = const.DEFAULT_T_END,
-            t_backwards_end: float = -const.DEFAULT_T_END):
+            t_backwards_end: float = -const.DEFAULT_T_END) -> None:
         """Add background curves to the plot."""
         if w0 is None:
             w0 = wn

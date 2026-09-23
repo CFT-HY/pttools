@@ -10,10 +10,10 @@ from tests.profiling import utils_cprofile, utils_pyinstrument, utils_yappi
 from tests.profiling.test_profile import TestProfile
 from tests.utils.mark import skip_slow
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
-def pow_specs():
+def pow_specs() -> None:
     spu.do_all_plot_ps_compare_nuc('final3', None)
 
 
@@ -29,12 +29,12 @@ class TestProfilePowSpecs(TestProfile):
         super().setUpClass()
 
     @classmethod
-    def setup_numba(cls):
+    def setup_numba(cls) -> None:
         pow_specs()
 
     @classmethod
     @skip_slow
-    def test_profile_pow_specs_cprofile(cls):
+    def test_profile_pow_specs_cprofile(cls) -> None:
         with utils_cprofile.CProfiler(cls.NAME):
             pow_specs()
 
@@ -43,7 +43,7 @@ class TestProfilePowSpecs(TestProfile):
     @unittest.skipIf(
         NUMBA_SEGFAULTING_PROFILERS,
         "Pyinstrument may segfault with old Numba versions")
-    def test_profile_pow_specs_pyinstrument(cls):
+    def test_profile_pow_specs_pyinstrument(cls) -> None:
         try:
             with utils_pyinstrument.PyInstrumentProfiler(cls.NAME):
                 pow_specs()
@@ -54,7 +54,7 @@ class TestProfilePowSpecs(TestProfile):
 
     @classmethod
     @skip_slow
-    def test_profile_pow_specs_yappi(cls):
+    def test_profile_pow_specs_yappi(cls) -> None:
         with utils_yappi.YappiProfiler(cls.NAME):
             pow_specs()
 

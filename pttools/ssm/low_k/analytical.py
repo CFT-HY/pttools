@@ -11,7 +11,7 @@ from pttools.ssm.rho import rho
 from pttools.type_hints import FloatOrArr
 
 
-def gw_spectral_density_approx_low(z, HLf, cs, tau_end):
+def gw_spectral_density_approx_low[T: FloatOrArr](z: T, HLf: float, cs: float, tau_end: float) -> T | float:
     """Not relevant for the SSM, as it uses analytical approximation."""
     nu = (1 - 3 * cs ** 2) / (1 + 3 * cs ** 2)
     tau_star = (1. + nu) / HLf
@@ -23,7 +23,7 @@ def gw_spectral_density_approx_low(z, HLf, cs, tau_end):
         0.5 + nu) ** 2 / 2 / np.pi * Upsilon(r=tau_star / tau_end, l=2 * nu) ** 2 * 16 / 15 * IV_ANALYTICAL
 
 
-def gw_spectral_density_approx_int(z, HLf, cs):
+def gw_spectral_density_approx_int[T: FloatOrArr](z: T, HLf: float, cs: float) -> T:
     """GW spectral density approximation for intermediate frequencies."""
     nu = (1 - 3 * cs ** 2) / (1 + 3 * cs ** 2)
     tau_star = (1. + nu) / HLf
@@ -31,7 +31,7 @@ def gw_spectral_density_approx_int(z, HLf, cs):
         * IV_ANALYTICAL / tau_star / z ** 2
 
 
-def gw_spectral_density_approx_high(z, HLf, cs, tau_end):
+def gw_spectral_density_approx_high(z: float, HLf: float, cs: float, tau_end: float) -> float:
     """GW spectral density approximation for high frequencies."""
     nu = (1 - 3 * cs ** 2) / (1 + 3 * cs ** 2)
     tau_star = (1. + nu) / HLf
@@ -50,7 +50,7 @@ def gw_spectral_density_approx_high(z, HLf, cs, tau_end):
     return quad(integrand, xm, xp, args=(z, delta, tau_star, cs))[0]
 
 
-def Pgw_approx(z, HLf, cs, tau_star, tau_end):
+def Pgw_approx(z: float, HLf: float, cs: float, tau_star: float, tau_end: float) -> float:
     """GW power spectrum combining low, intermediate, and high frequency approximations."""
     P_low = gw_spectral_density_approx_low(z, HLf, cs, tau_end)
     P_int = gw_spectral_density_approx_int(z, HLf, cs)

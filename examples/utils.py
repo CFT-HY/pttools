@@ -20,7 +20,7 @@ def save_and_show_fig(
         fig_dir: str | None = FIG_DIR,
         formats: tp.Iterable[str] = FIG_FORMATS,
         makedirs: bool = True,
-        **kwargs) -> None:
+        **kwargs: tp.Any) -> None:
     plot_utils.save_and_show_fig(fig=fig, path=path, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
 
 
@@ -29,7 +29,7 @@ def save_and_show_figs(
         fig_dir: str | None = FIG_DIR,
         formats: tp.Iterable[str] = FIG_FORMATS,
         makedirs: bool = True,
-        **kwargs) -> None:
+        **kwargs: tp.Any) -> None:
     plot_utils.save_and_show_figs(figs=figs, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
 
 
@@ -39,7 +39,7 @@ def save_fig(
         fig_dir: str | None = FIG_DIR,
         formats: tp.Iterable[str] = FIG_FORMATS,
         makedirs: bool = True,
-        **kwargs) -> None:
+        **kwargs: tp.Any) -> None:
     plot_utils.save_fig(fig=fig, path=path, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
 
 
@@ -48,7 +48,7 @@ def save_figs(
         fig_dir: str | None = FIG_DIR,
         formats: tp.Iterable[str] = FIG_FORMATS,
         makedirs: bool = True,
-        **kwargs) -> None:
+        **kwargs: tp.Any) -> None:
     plot_utils.save_figs(figs=figs, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
 
 

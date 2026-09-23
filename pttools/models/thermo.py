@@ -16,7 +16,7 @@ from pttools.speedup.overload import np_all_fix
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class ThermoModel(BaseModel, abc.ABC):

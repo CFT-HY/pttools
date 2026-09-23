@@ -19,6 +19,7 @@ import logging
 import os.path
 import sys
 import tomllib
+import typing as tp
 
 from matplotlib.animation import FFMpegWriter
 
@@ -38,7 +39,7 @@ from pttools.logging import setup_logging
 from pttools.utils.system import IS_GITHUB_ACTIONS, PTTOOLS_DIR
 
 setup_logging()
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 # The Sphinx output is saved to logs/sphinx_TIMESTAMP.log. See also pttools/docs/lint.py.
 setup_sphinx_logging()
 
@@ -53,6 +54,7 @@ os.makedirs(os.path.join(DOCS_DIR, "_static"), exist_ok=True)
 # -- Project information -----------------------------------------------------
 
 project = "PTtools"
+file: tp.IO[tp.Any]
 with open(os.path.join(REPO_DIR, "AUTHORS")) as file:
     _authors = file.read().splitlines()
 author = f"{', '.join(_authors[:-1])} & {_authors[-1]}"

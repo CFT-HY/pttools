@@ -48,7 +48,7 @@ def create_fig_ax(
     return fig, ax
 
 
-def legend(ax: Axes, **kwargs) -> Legend | None:
+def legend(ax: Axes, **kwargs: tp.Any) -> Legend | None:
     """Add a legend to the axes if there are any legend labels."""
     return None if ax.get_legend_handles_labels() == ([], []) else ax.legend(**kwargs)
 
@@ -70,7 +70,7 @@ def save_and_show_fig(
         fig_dir: str | None = None,
         formats: tp.Iterable[str] = FIG_FORMATS,
         makedirs: bool = True,
-        **kwargs) -> None:
+        **kwargs: tp.Any) -> None:
     """Save and show a figure."""
     save_fig(fig=fig, path=path, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
     if ENABLE_DRAWING:
@@ -82,7 +82,7 @@ def save_and_show_figs(
         fig_dir: str | None = None,
         formats: tp.Iterable[str] = FIG_FORMATS,
         makedirs: bool = True,
-        **kwargs) -> None:
+        **kwargs: tp.Any) -> None:
     """Save and show figures."""
     save_figs(figs=figs, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
     if ENABLE_DRAWING:
@@ -97,7 +97,7 @@ def save_fig(
         force_formats: bool = False,
         makedirs: bool = True,
         close: bool = False,
-        **kwargs) -> None:
+        **kwargs: tp.Any) -> None:
     """Save a figure."""
     is_abs = os.path.isabs(path)
     if makedirs and (is_abs or fig_dir is None):
@@ -124,7 +124,7 @@ def save_figs(
         formats: tp.Iterable[str] = FIG_FORMATS,
         makedirs: bool = True,
         close: bool = False,
-        **kwargs) -> None:
+        **kwargs: tp.Any) -> None:
     """Save figures."""
     for path, fig in figs.items():
         save_fig(fig=fig, path=path, fig_dir=fig_dir, formats=formats, makedirs=makedirs, close=close, **kwargs)

@@ -26,9 +26,9 @@ class GieseCubicModel(AnalyticModel):
         if d <= E**2:
             raise ValueError("Symmetry breaking at low temperatures requires d > E²")
 
-        self.d = d
-        self.E = E
-        self.lam = lam
+        self.d: float = d
+        self.E: float = E
+        self.lam: float = lam
 
     def cs2[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         raise NotImplementedError
@@ -42,11 +42,12 @@ class GieseCubicModel(AnalyticModel):
         """
         return tp.cast(T, self.a_s/4 * temp**4 - self.V_temp(temp, phase))
 
-    def phase_min(self, temp: th.FloatOrArr):
+    def phase_min(self, temp: th.FloatOrArr) -> th.FloatOrArr:
         return self.phase_min_full(self.d, self.E, temp, self.T_crit)
 
     @staticmethod
-    def phase_min_full(d: th.FloatOrArr, E: th.FloatOrArr, temp: th.FloatOrArr, temp_crit: th.FloatOrArr):
+    def phase_min_full(
+            d: th.FloatOrArr, E: th.FloatOrArr, temp: th.FloatOrArr, temp_crit: th.FloatOrArr) -> th.FloatOrArr:
         r"""\phi_\text{min} = \frac{3}{4}ET + \sqrt{T^2 (9E^2/8 - d)/2 - T_{cr}^2(E^2-d)/2}."""
         return 3/4*E*temp + np.sqrt(temp**2 * (9*E**2/8 - d)/2 - temp_crit**2 * (E**2 - d)/2)
 

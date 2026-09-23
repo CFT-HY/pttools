@@ -13,7 +13,7 @@ from pttools.utils.system import AVAILABLE_CPU_CORES
 # if tp.TYPE_CHECKING:
 #     from _pytest.fixtures import SubRequest
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 #: Name of the class attribute with which a test class can manually configure
 #: whether all of its tests should be run on the same pytest-xdist worker.
@@ -104,7 +104,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
 
 
 @pytest.hookimpl(tryfirst=True)
-def pytest_collection_modifyitems(items: list[pytest.Item]):
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
     """Group the tests that have to be run on the same pytest-xdist worker.
 
     With ``--dist=loadgroup`` the tests that share an ``xdist_group`` marker are run on the same worker,
@@ -130,7 +130,7 @@ def pytest_collection_modifyitems(items: list[pytest.Item]):
 
 
 @pytest.fixture(autouse=True)
-def log_test_name_at_start(request):
+def log_test_name_at_start(request: pytest.FixtureRequest) -> None:
     """
     Before starting a test, log its name.
     This makes it easier to retrieve the logs for a specific test.

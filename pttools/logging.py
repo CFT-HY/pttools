@@ -7,7 +7,7 @@ import os
 from threading import Lock
 import time
 
-LOGGING_LOCK = Lock()
+LOGGING_LOCK: Lock = Lock()
 
 #: Format of the log messages
 LOG_FORMAT: str = \
@@ -43,7 +43,7 @@ class MessageFilter(logging.Filter):
 
     def __init__(self, *texts: str):
         super().__init__()
-        self.texts = texts
+        self.texts: tuple[str, ...] = texts
 
     def filter(self, record: logging.LogRecord) -> bool:
         msg = record.getMessage()

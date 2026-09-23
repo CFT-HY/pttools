@@ -22,36 +22,36 @@ class ThermoModelBaseCase[T: ThermoModel](JsonTestCase, abc.ABC):
     SAVE_NEW_DATA = True
 
     @classmethod
-    def setUpClass(cls, thermo: T):
+    def setUpClass(cls, thermo: T) -> None:
         cls.thermo = thermo
         cls.REF_DATA_PATH = os.path.join(TEST_DATA_PATH, "models", "thermo", f"{thermo.name}.json")
         super().setUpClass()
 
-    def test_class_is_valid(self):
+    def test_class_is_valid(self) -> None:
         sizes = np.array([self.temp_arr.size, self.phase_arr.size])
         if np.any(sizes != self.temp_arr.size):
             raise ValueError(f"Test arrays must have the same size. Got: {sizes}")
 
-    def test_dge_dT(self):
+    def test_dge_dT(self) -> None:
         data = self.thermo.dge_dT(self.temp_arr, self.phase_arr)
         self.assert_json(data, "dge_dT")
 
-    def test_dgs_dT(self):
+    def test_dgs_dT(self) -> None:
         data = self.thermo.dgs_dT(self.temp_arr, self.phase_arr)
         self.assert_json(data, "dgs_dT")
 
-    def test_ge(self):
+    def test_ge(self) -> None:
         data = self.thermo.ge(self.temp_arr, self.phase_arr)
         self.assert_json(data, "ge")
 
-    def test_gs(self):
+    def test_gs(self) -> None:
         data = self.thermo.gs(self.temp_arr, self.phase_arr)
         self.assert_json(data, "gs")
 
-    def test_dp_dt(self):
+    def test_dp_dt(self) -> None:
         data = self.thermo.dp_dt(self.temp_arr, self.phase_arr)
         self.assert_json(data, "dp_dt")
 
-    def test_de_dt(self):
+    def test_de_dt(self) -> None:
         data = self.thermo.de_dt(self.temp_arr, self.phase_arr)
         self.assert_json(data, "de_dt")

@@ -13,27 +13,27 @@ from pttools.ssm.nucleation import NucType
 class TestParams(unittest.TestCase):
     """Test the experimental jitclass-based parameter storage."""
 
-    def test_nuc_args(self):
+    def test_nuc_args(self) -> None:
         NucArgs(0.1)
 
-    def test_params_without_nuc(self):
+    def test_params_without_nuc(self) -> None:
         params = PhysicalParams(0.1, 0.2)
         self.assertIsNone(params.nuc_type)
         self.assertIsNone(params.nuc_args)
 
-    def test_params_with_nuc(self):
+    def test_params_with_nuc(self) -> None:
         params = PhysicalParams(0.1, 0.2, NucType.SIMULTANEOUS)
         self.assertIsNotNone(params.nuc_type)
         self.assertIsNone(params.nuc_args)
 
-    def test_params_with_nuc_args(self):
+    def test_params_with_nuc_args(self) -> None:
         nuc_args = NucArgs(0.1)
         params = PhysicalParams(0.1, 0.2, NucType.SIMULTANEOUS, nuc_args)
         self.assertIsNotNone(params.nuc_type)
         self.assertIsNotNone(params.nuc_args)
 
     @unittest.skipIf(speedup.NUMBA_DISABLE_JIT, "Numba errors cannot be tested when JIT compilation is disabled.")
-    def test_params_without_nuc_args_numba(self):
+    def test_params_without_nuc_args_numba(self) -> None:
         """Calling jitclass constructor within jitted code without specifying all arguments fails.
         This is a known bug in Numba.
         This test will alert, when the bug is fixed.
@@ -44,12 +44,12 @@ class TestParams(unittest.TestCase):
         # self.assertIsNone(params.nuc_type)
         # self.assertIsNone(params.nuc_args)
 
-    def test_params_without_nuc_args_numba_nones(self):
+    def test_params_without_nuc_args_numba_nones(self) -> None:
         params = params_without_nuc_args_numba_nones()
         self.assertIsNone(params.nuc_type)
         self.assertIsNone(params.nuc_args)
 
-    def test_params_with_nuc_args_numba(self):
+    def test_params_with_nuc_args_numba(self) -> None:
         params = params_with_nuc_args_numba()
         self.assertIsNotNone(params.nuc_type)
         self.assertIsNotNone(params.nuc_args)
@@ -57,17 +57,17 @@ class TestParams(unittest.TestCase):
 
 # Functions that return jitclass instances cannot be cached.
 @njit(cache=False)
-def params_without_nuc_args_numba():
+def params_without_nuc_args_numba() -> PhysicalParams:
     return PhysicalParams(0.1, 0.2)
 
 
 @njit(cache=False)
-def params_without_nuc_args_numba_nones():
+def params_without_nuc_args_numba_nones() -> PhysicalParams:
     return PhysicalParams(0.1, 0.2, None, None)
 
 
 @njit(cache=False)
-def params_with_nuc_args_numba():
+def params_with_nuc_args_numba() -> PhysicalParams:
     nuc_args = NucArgs(0.1)
     return PhysicalParams(0.1, 0.2, NucType.SIMULTANEOUS.value, nuc_args)
 

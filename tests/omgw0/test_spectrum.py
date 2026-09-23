@@ -14,36 +14,38 @@ from tests.utils import TEST_JSON_PATH
 class SpectrumTest(unittest.TestCase):
     """Tests for the Spectrum class."""
 
+    spectrum: Spectrum
+
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls) -> None:
         model = ConstCSModel(css2=1/3-0.01, csb2=1/3-0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
         bubble = Bubble(model, v_wall=0.5, alpha_n=0.2)
         cls.spectrum = Spectrum(bubble, r_star=0.1)
 
-    def test_export(self):
+    def test_export(self) -> None:
         self.spectrum.export(os.path.join(TEST_JSON_PATH, "spectrum.json"))
 
-    def test_noise(self):
+    def test_noise(self) -> None:
         self.assertGreater(self.spectrum.snr()[0], 0)
 
-    def test_noise_instrument(self):
+    def test_noise_instrument(self) -> None:
         self.assertGreater(self.spectrum.snr_ins()[0], 0)
 
-    def test_peak(self):
+    def test_peak(self) -> None:
         peak = self.spectrum.omgw0_peak()
         self.assertGreater(peak[0], 0)
         self.assertGreater(peak[1], 0)
         self.assertLess(peak[1], 1)
 
-    def test_R_star(self):
+    def test_R_star(self) -> None:
         r"""Test that $0 < R_* < 1 \text{mm}$."""
         self.assertGreater(self.spectrum.R_star, 0)
         self.assertLess(self.spectrum.R_star, 1e-3)
 
-    def test_spectrum(self):
+    def test_spectrum(self) -> None:
         self.assertEqual(np.isnan(self.spectrum.omgw0()).sum(), 0)
 
-    def test_total(self):
+    def test_total(self) -> None:
         val = self.spectrum.omgw0_total()
         ref = np.trapezoid(y=self.spectrum.omgw0(), x=self.spectrum.f())
         self.assertAlmostEqual(val, ref)

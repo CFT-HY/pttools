@@ -5,6 +5,7 @@ Entropy grid
 Plot the relative change in entropy density for a grid of bubbles
 """
 
+from matplotlib.figure import Figure
 import numpy as np
 
 from examples.utils import save_and_show_fig
@@ -20,7 +21,7 @@ from pttools.utils import testing_or_ci
 from tests.profiling import utils_cprofile
 
 
-def main():
+def main() -> Figure:
     """Plot the relative change in entropy density for a grid of bubbles"""
     n_points = 10 if testing_or_ci() else 20
     # sm = StandardModel(V_s=5e12, g_mult_s=1 + 1e-9)

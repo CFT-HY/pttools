@@ -16,7 +16,7 @@ try:
     from numba.core.registry import CPUDispatcher
     from numba.experimental import jitclass
     #: Whether the Numba version used is from before the major refactoring of the module structure.
-    NUMBA_OLD_STRUCTURE = False
+    NUMBA_OLD_STRUCTURE: bool = False
 except ImportError:
     from numba import jitclass
     from numba.ccallback import CFunc
@@ -28,9 +28,9 @@ import numpy as np
 from pttools.speedup import options
 import pttools.type_hints as th
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
-OLD_NUMBALSODA = False
+OLD_NUMBALSODA: bool = False
 if options.NUMBA_DISABLE_JIT:
     # As of 0.3.3 NumbaLSODA can't be imported when Numba is disabled
     numbalsoda = None
@@ -67,6 +67,7 @@ else:
         subprocess.run(["execstack", "-c", _lib_path], check=False)
         import numbalsoda
 
+lsoda_sig: numba.core.typing.Signature
 if numbalsoda is None:
     if options.NUMBA_INTEGRATE:
         raise ImportError("Numba-jitted integration has been enabled, but NumbaLSODA is not available.")
@@ -80,7 +81,7 @@ else:
 
 #: Numba version number
 #: (The value shown in the PTtools documentation is the version the documentation has been built with.)
-NUMBA_VERSION = tuple(int(val) for val in numba.__version__.split("."))
+NUMBA_VERSION: tuple[int, ...] = tuple(int(val) for val in numba.__version__.split("."))
 #: Whether the Numba version used is prone to segfaulting when profiled.
 #: https://github.com/numba/numba/issues/3229
 #: https://github.com/numba/numba/issues/3625

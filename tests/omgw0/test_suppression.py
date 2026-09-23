@@ -19,7 +19,7 @@ class SuppressionTest(unittest.TestCase):
     """Tests for the suppression module."""
 
     @staticmethod
-    def test_remove_hybrids():
+    def test_remove_hybrids() -> None:
         """Compare the data created by remove_hybrids to the reference."""
         path = remove_hybrids(suffix="test")
         settings: dict[str, tp.Any] = {
@@ -32,7 +32,7 @@ class SuppressionTest(unittest.TestCase):
         assert_allclose(data.values, ref.values)
 
     @staticmethod
-    def test_ssm_calculator():
+    def test_ssm_calculator() -> None:
         """Compare the data created by calc_sup_ssm to the reference."""
         filenames = ["suppression_2", "suppression_no_hybrids"]
         tolerances = {
@@ -63,7 +63,7 @@ class SuppressionTest(unittest.TestCase):
                         assert_allclose(data[key], ref[key], name=key, rtol=rtol)
 
     @staticmethod
-    def test_suppression():
+    def test_suppression() -> None:
         v_walls = np.linspace(0.1, 0.9, 5)
         alpha_ns = np.linspace(0.01, 0.1, 5)
         DEFAULT_SUPPRESSION.suppression(v_wall=v_walls[0], alpha_n=alpha_ns[0])

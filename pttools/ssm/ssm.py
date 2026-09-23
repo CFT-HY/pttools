@@ -13,7 +13,7 @@ from pttools.ssm.nucleation import beta_R_star0, lifetime_distribution
 from pttools.ssm.sin_transform import sin_transform
 import pttools.type_hints as th
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 @enum.unique
@@ -196,7 +196,7 @@ def qT_lookup(T_tilde: th.FloatArr1D, z: th.FloatArr1D) -> th.FloatArr1D:
 
 
 @njit
-def T_tilde(T_tilde_min: float, T_tilde_max: float, n: int):
+def T_tilde(T_tilde_min: float, T_tilde_max: float, n: int) -> th.FloatArr1D:
     r"""Generate $\tilde{T}$ array."""
     return speedup.logspace(np.log10(T_tilde_min), np.log10(T_tilde_max), n)
 

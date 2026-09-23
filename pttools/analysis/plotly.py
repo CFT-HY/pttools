@@ -5,7 +5,7 @@ import typing as tp
 
 from kaleido._kaleido_tab import KaleidoError
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def plotly_fix(func: tp.Callable) -> tp.Callable:

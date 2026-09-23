@@ -12,7 +12,7 @@ from pttools.speedup.options import NUMBA_DISABLE_JIT
 from tests.utils import REPO_DIR
 
 #: Script that compiles a cached function, which calls a cached parallel function
-SCRIPT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "numba_reload_init.py")
+SCRIPT_PATH: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), "numba_reload_init.py")
 
 
 @unittest.skipIf(NUMBA_DISABLE_JIT, "Nothing is compiled when jitting is disabled.")
@@ -22,7 +22,7 @@ class TestReloadInit(unittest.TestCase):
     See :mod:`pttools.speedup.numba_fixes` for the details.
     """
 
-    def test_reload_init(self):
+    def test_reload_init(self) -> None:
         with tempfile.TemporaryDirectory() as cache_dir:
             # Cache the parallel function.
             self.run_script(cache_dir, "callee")

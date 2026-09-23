@@ -11,6 +11,7 @@ from multiprocessing import set_forkserver_preload
 import sys
 from threading import Lock
 import time
+import types
 import typing as tp
 
 import numpy as np
@@ -24,16 +25,20 @@ try:
     from concurrent.futures import InterpreterPoolExecutor
 except ImportError:
     class InterpreterPoolExecutor:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: tp.Any, **kwargs: tp.Any) -> None:
             raise NotImplementedError("InterpreterPoolExecutor is only available in Python 3.14 and later.")
 
-        def __enter__(self):
+        def __enter__(self) -> tp.Self:
             raise NotImplementedError("InterpreterPoolExecutor is only available in Python 3.14 and later.")
 
-        def __exit__(self, exc_type, exc_value, traceback):
+        def __exit__(
+                self,
+                exc_type: type[BaseException] | None,
+                exc_value: BaseException | None,
+                traceback: types.TracebackType | None) -> None:
             raise NotImplementedError("InterpreterPoolExecutor is only available in Python 3.14 and later.")
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 POOL: ProcessPoolExecutor | None = None
 POOL_LOCK: Lock = Lock()
@@ -55,7 +60,7 @@ class FakeExecutor:
     """A fake executor for single-threaded execution."""
 
     @staticmethod
-    def submit(func: tp.Callable, *args, **kwargs) -> "FakeFuture":
+    def submit(func: tp.Callable, *args: tp.Any, **kwargs: tp.Any) -> "FakeFuture":
         """Submit a function for execution and return a future object."""
         return FakeFuture(func, *args, **kwargs)
 
@@ -63,10 +68,10 @@ class FakeExecutor:
 class FakeFuture:
     """A fake future object for single-threaded execution."""
 
-    def __init__(self, func: tp.Callable, *args, **kwargs):
+    def __init__(self, func: tp.Callable, *args: tp.Any, **kwargs: tp.Any) -> None:
         self._result = func(*args, **kwargs)
 
-    def result(self):
+    def result(self) -> tp.Any:
         """Get the result of the function execution."""
         return self._result
 
@@ -90,15 +95,15 @@ class LoggingRunner:
         if not (log_progress_percentage is None or 0 < log_progress_percentage <= 100):  # noqa: PLR2004
             raise ValueError(f"Invalid log_progress_percentage={log_progress_percentage}")
 
-        self.func = func
-        self.arr_size = arr_size
-        self.unpack_params = unpack_params
-        self.args = args
-        self.kwargs = {} if kwargs is None else kwargs
-        self.log_progress_element = log_progress_element
-        self.log_progress_percentage = log_progress_percentage
+        self.func: tp.Callable = func
+        self.arr_size: int = arr_size
+        self.unpack_params: bool = unpack_params
+        self.args: tuple | list = args
+        self.kwargs: dict[str, tp.Any] = {} if kwargs is None else kwargs
+        self.log_progress_element: int | None = log_progress_element
+        self.log_progress_percentage: float | None = log_progress_percentage
 
-    def run(self, param, index: int | None = None, multi_index: tp.Iterable | None = None):
+    def run(self, param: tp.Any, index: int | None = None, multi_index: tp.Iterable | None = None) -> tp.Any:
         if self.unpack_params:
             ret = self.func(*param, *self.args, **self.kwargs)
         else:

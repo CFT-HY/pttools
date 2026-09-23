@@ -54,7 +54,7 @@ def solver(
     return *sol.x, err
 
 
-def main():
+def main() -> None:
     """Usage example"""
     print("Starting solver")
     temp = 100  # GeV

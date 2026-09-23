@@ -31,7 +31,7 @@ from pttools.utils.docstrings import copy_docstrings
 from pttools.utils.system import FORKING
 from pttools.utils.validation import check_value_in_range
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Model(BaseModel, abc.ABC):
@@ -75,7 +75,7 @@ class Model(BaseModel, abc.ABC):
         self._validate_potential(
             V_s=V_s, V_b=V_b, name=name, implicit_V=implicit_V, allow_invalid=allow_invalid, log_info=log_info)
 
-        self.temperature_is_physical = self.TEMPERATURE_IS_PHYSICAL \
+        self.temperature_is_physical: bool | None = self.TEMPERATURE_IS_PHYSICAL \
             if temperature_is_physical is None else temperature_is_physical
         if self.temperature_is_physical is None:
             raise ValueError(
@@ -204,7 +204,7 @@ class Model(BaseModel, abc.ABC):
             cs2_fun: th.CS2Fun,
             w_min: float = 0,
             allow_fail: bool = False,
-            **kwargs) -> tuple[float, float]:
+            **kwargs: tp.Any) -> tuple[float, float]:
         r"""Find the minimum or maximum of $c_s^2(w)$ for $w \in [w_\text{min}, w_\text{max}]$."""
         name = "max" if is_max else "min"
         sol = fminbound(cs2_fun, x1=w_min, x2=w_max, args=(phase,), full_output=True, **kwargs)
@@ -747,7 +747,7 @@ class Model(BaseModel, abc.ABC):
             phase: Phase,
             w_min: float = 0,
             allow_fail: bool = False,
-            **kwargs) -> tuple[float, float]:
+            **kwargs: tp.Any) -> tuple[float, float]:
         r"""Minimum of $c_s^2(w)$ for $w \in [{w}_\text{min}, {w}_\text{max}]$."""
         return self._cs2_limit(w_max, phase, True, self.cs2_neg, w_min, allow_fail, **kwargs)
 
@@ -756,7 +756,7 @@ class Model(BaseModel, abc.ABC):
             w_max: float,
             phase: Phase,
             w_min: float = 0,
-            allow_fail: bool = False, **kwargs) -> tuple[float, float]:
+            allow_fail: bool = False, **kwargs: tp.Any) -> tuple[float, float]:
         r"""Maximum of $c_s^2(w)$ for $w \in [{w}_\text{min}, {w}_\text{max}]$."""
         return self._cs2_limit(w_max, phase, False, self.cs2, w_min, allow_fail, **kwargs)
 

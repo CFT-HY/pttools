@@ -19,13 +19,14 @@ import sys
 
 from pttools.utils.system import IS_LINUX, IS_OSX, IS_WINDOWS
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 # From numba.np.ufunc.parallel
 
 # As required by Numba in numba.np.ufunc.parallel._check_tbb_version_compatible()
 TBB_MIN_VERSION = 12060
 
+TBB_LIBRARY_NAME: str | None
 if IS_WINDOWS:
     TBB_LIBRARY_NAME = "tbb12.dll"
 elif IS_OSX:

@@ -14,16 +14,16 @@ class ChapmanJouguetPlot:
     """Plot Chapman-Jouguet speed."""
 
     def __init__(self, alpha_n: th.FloatArr1D):
-        self.alpha_n = alpha_n
+        self.alpha_n: th.FloatArr1D = alpha_n
 
         self.fig: plt.Figure = plt.figure()
-        self.ax = self.fig.add_subplot()
+        self.ax: plt.Axes = self.fig.add_subplot()
 
         self.ax.set_xlabel(r"$\alpha_n$")
         self.ax.set_ylabel("$v_{CJ}$")
         self.fig.tight_layout()
 
-    def add(self, model: Model, analytical: bool = True, label: str | None = None, ls: str = "-"):
+    def add(self, model: Model, analytical: bool = True, label: str | None = None, ls: str = "-") -> None:
         """Add a model to the plot."""
         v_cj = np.empty_like(self.alpha_n)
         for i in range(self.alpha_n.size):

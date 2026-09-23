@@ -16,7 +16,7 @@ import pttools.type_hints as th
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def find_shock_index(  # noqa: PLR0911, PLR0912, PLR0915

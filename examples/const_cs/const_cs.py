@@ -7,6 +7,8 @@ Plot various quantities for the constant sound speed model
 
 from math import sqrt
 
+from matplotlib.figure import Figure
+
 from examples.utils import save_and_show_figs
 from pttools.analysis.plot_model import ModelPlot
 from pttools.bubble import Bubble
@@ -15,7 +17,7 @@ from pttools.omgw0 import Spectrum
 from pttools.ssm import NucType
 
 
-def main():
+def main() -> tuple[ModelPlot, Figure, Figure]:
     """Plot various quantities for the constant sound speed model"""
     csb = 1 / sqrt(3) - 0.01
     const_cs = ConstCSModel(a_s=1.5, a_b=1, css2=1/3, csb2=csb**2, V_s=1)

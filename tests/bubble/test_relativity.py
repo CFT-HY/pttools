@@ -17,14 +17,14 @@ class RelativityTest(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.v = np.linspace(0.1, 0.9, 10)
 
-    def test_gamma(self):
+    def test_gamma(self) -> None:
         gamma = relativity.gamma(self.v)
         self.assertTrue(np.all(gamma > 0))
 
-    def test_gamma2(self):
+    def test_gamma2(self) -> None:
         gamma2 = relativity.gamma2(self.v)
         self.assertTrue(np.all(gamma2 > 0))
 
-    def test_lorentz(self):
+    def test_lorentz(self) -> None:
         mu = relativity.lorentz(0.5, self.v)
         self.assertTrue(np.all(np.isfinite(mu)))

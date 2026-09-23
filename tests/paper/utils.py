@@ -7,7 +7,7 @@ import numpy as np
 
 import pttools.type_hints as th
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 @enum.unique

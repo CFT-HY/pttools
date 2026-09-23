@@ -14,7 +14,7 @@ from pttools.bubble.bubble import Bubble
 from pttools.bubble.thermo_bag import get_kappa_de_bag
 from pttools.models.bag import BagModel
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def main() -> plt.Figure:

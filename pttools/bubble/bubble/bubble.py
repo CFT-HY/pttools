@@ -29,7 +29,7 @@ if tp.TYPE_CHECKING:
     from pttools.models.const_cs import ConstCSModel
     from pttools.models.model import Model
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 # If alpha_n is closer than this to the bag model alpha_n_max for deflagrations, alpha_n is considered high
 _HIGH_ALPHA_N_MARGIN: float = 0.05
@@ -103,8 +103,8 @@ class Bubble(BaseBubble):
         # -----
         if use_bag_solver and use_giese_solver:
             raise ValueError("Both bag and Giese et al. solvers cannot be used at the same time.")
-        self.use_bag_solver = use_bag_solver
-        self.use_giese_solver = use_giese_solver
+        self.use_bag_solver: bool = use_bag_solver
+        self.use_giese_solver: bool = use_giese_solver
 
         if not 0 < self.v_wall <= 1:
             raise ValueError(f"Invalid v_wall={self.v_wall}. Should have 0 < v_wall <= 1.")
@@ -135,7 +135,7 @@ class Bubble(BaseBubble):
             model.validate_alpha_n(self.alpha_n, allow_invalid=allow_invalid, log_invalid=log_invalid)
 
         # Use self.alpha_n instead of alpha_n, as the latter is alpha_theta_bar_n when theta_bar=True.
-        self.sol_type = validate_solution_type(
+        self.sol_type: SolutionType = validate_solution_type(
             model,
             v_wall=self.v_wall, alpha_n=self.alpha_n, sol_type=sol_type,
             wn=self.wn, wm_guess=wm_guess
@@ -169,11 +169,11 @@ class Bubble(BaseBubble):
         if label_latex is None:
             model_latex = f"{self.model.label_latex}, " if label_with_model else ""
             label_latex = rf"{model_latex}$v_w={as_latex(v_wall)}, \alpha_n={as_latex(alpha_n)}$"
-        self.label_latex = label_latex
+        self.label_latex: str = label_latex
         if label_unicode is None:
             model_unicode = f"{self.model.label_unicode}, " if label_with_model else ""
             label_unicode = f"{model_unicode}v_w={as_unicode(v_wall)}, αₙ={as_unicode(alpha_n)}"
-        self.label_unicode = label_unicode
+        self.label_unicode: str = label_unicode
 
         # -----
         # Output values
@@ -216,7 +216,7 @@ class Bubble(BaseBubble):
 
         # Flags
         #: Unphysical $\alpha_+$
-        self.unphysical_alpha_plus = False
+        self.unphysical_alpha_plus: bool = False
 
         if solve:
             self.solve()
@@ -641,7 +641,7 @@ class Bubble(BaseBubble):
         return thermo.e_bar(self.model, self.wn)
 
     @functools.cached_property
-    def g_star(self):
+    def g_star(self) -> float:
         """Degrees of freedom $g_*$ for pressure after the bubble nucleation."""
         return self.model.gp(w=self.va_enthalpy_density, phase=Phase.BROKEN)
 

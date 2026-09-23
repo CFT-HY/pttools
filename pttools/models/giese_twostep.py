@@ -17,10 +17,10 @@ class GieseTwoStepModel(AnalyticModel):
     """
 
     def __init__(self, b_s: float, b_b: float, d_s: float, d_b: float):
-        self.b_s = b_s
-        self.b_b = b_b
-        self.d_s = d_s
-        self.d_b = d_b
+        self.b_s: float = b_s
+        self.b_b: float = b_b
+        self.d_s: float = d_s
+        self.d_b: float = d_b
         super().__init__()
 
     def p_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:

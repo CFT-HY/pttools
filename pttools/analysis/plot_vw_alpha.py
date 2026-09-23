@@ -1,5 +1,6 @@
 r"""A plot with $v_\text{wall}$ on the x-axis and $\alpha_n$ on the y-axis."""
 
+import typing as tp
 
 from matplotlib.colors import Colormap
 from matplotlib.contour import QuadContourSet
@@ -24,12 +25,12 @@ class VwAlphaPlot:
             ax: plt.Axes | None = None,
             title: str | None = None,
             alpha_label: str = r"$\alpha_n$"):
-        self.grid = grid
+        self.grid: BubbleGridVWAlpha = grid
 
         if fig is None:
             if ax is not None:
                 raise ValueError("Cannot provide ax without fig")
-            self.fig = plt.figure()
+            self.fig: plt.Figure = plt.figure()
         else:
             self.fig = fig
 
@@ -50,7 +51,7 @@ class VwAlphaPlot:
             label: str,
             diff_level: float | None = None,
             cmap_neg: Colormap | str = colormap.DEFAULT_CMAP_NEG,
-            cmap_pos: Colormap | str = colormap.DEFAULT_CMAP_POS):
+            cmap_pos: Colormap | str = colormap.DEFAULT_CMAP_POS) -> None:
         """Add a contour plot to the figure."""
         if diff_level is None:
             diff_level = 0.1
@@ -81,6 +82,6 @@ class VwAlphaPlot:
             self.grid.alpha_ns, color=color, ls=ls, label=label
         )
 
-    def legend(self, *args, **kwargs) -> Legend:
+    def legend(self, *args: tp.Any, **kwargs: tp.Any) -> Legend:
         """Add a legend to the plot."""
         return self.ax.legend(*args, **kwargs)

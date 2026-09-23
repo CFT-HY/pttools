@@ -8,7 +8,7 @@ from scipy.optimize import fsolve
 
 import pttools.type_hints as th
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def fsolve_vary(
@@ -18,7 +18,7 @@ def fsolve_vary(
         abs_variations: float | th.FloatArr1D = 1e-3,
         rel_variations: float | th.FloatArr1D = 0.01,
         log_status: bool = True,
-        **kwargs) -> th.FSolveOutput:
+        **kwargs: tp.Any) -> th.FSolveOutput:
     """SciPy fsolve, but if it fails, it tries to vary the initial guess to find a solution."""
     if "full_output" in kwargs:
         raise ValueError("Cannot specify full_output, as it has to be True.")

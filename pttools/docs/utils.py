@@ -11,11 +11,11 @@ import typing as tp
 if tp.TYPE_CHECKING:
     from sphinx.application import Sphinx
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 #: Sentinel for objects that could not be resolved
-MISSING = object()
-BACKREFERENCES_WARNING_LOCK = Lock()
+MISSING: object = object()
+BACKREFERENCES_WARNING_LOCK: Lock = Lock()
 
 
 def backreference_names(app: "Sphinx", name: str, obj: tp.Any) -> list[str]:

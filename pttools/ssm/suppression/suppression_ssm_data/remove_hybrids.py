@@ -7,10 +7,10 @@ import numpy as np
 
 from pttools.bubble import CS0, v_chapman_jouguet_bag
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
-SUPPRESSION_FOLDER = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_PATH = os.path.join(SUPPRESSION_FOLDER, "suppression_2.txt")
+SUPPRESSION_FOLDER: str = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_PATH: str = os.path.join(SUPPRESSION_FOLDER, "suppression_2.txt")
 
 
 def remove_hybrids(path: str = DEFAULT_PATH, suffix: str = "") -> str:

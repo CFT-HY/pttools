@@ -37,11 +37,11 @@ class TestShock(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.bag = BagModel(a_s=1.1, a_b=1, V_s=1)
-        cls.const_cs_bag_like = ConstCSModel(css2=1/3, csb2=1/4, a_s=5, a_b=1, V_s=1, alpha_n_min=0.1)
-        cls.const_cs = ConstCSModel(css2=1/4, csb2=1/4, a_s=5, a_b=1, V_s=1, alpha_n_min=0.1)
+        cls.bag: BagModel = BagModel(a_s=1.1, a_b=1, V_s=1)
+        cls.const_cs_bag_like: ConstCSModel = ConstCSModel(css2=1/3, csb2=1/4, a_s=5, a_b=1, V_s=1, alpha_n_min=0.1)
+        cls.const_cs: ConstCSModel = ConstCSModel(css2=1/4, csb2=1/4, a_s=5, a_b=1, V_s=1, alpha_n_min=0.1)
 
-    def test_v_shock_bag(self):
+    def test_v_shock_bag(self) -> None:
         r"""The general shock solver should reproduce the bag model shock curve, :gw_pt_ssm:`\ ` eq. B.17."""
         wn = self.bag.wn(0.1)
         xi, v_sh = v_shock_curve(self.bag, wn=wn)
@@ -50,7 +50,7 @@ class TestShock(unittest.TestCase):
         assert_allclose(v_sh[1:], v_shock_bag(xi[1:]), rtol=1e-7)
         self.assertEqual(v_sh[0], 0)
 
-    def test_v_shock_const_cs_bag_like(self):
+    def test_v_shock_const_cs_bag_like(self) -> None:
         r"""A ConstCSModel with $c_{s,s}^2 = 1/3$ should have the same shock curve as the bag model."""
         wn = self.const_cs_bag_like.wn(0.1)
         xi = np.linspace(self.const_cs_bag_like.css, 0.99, 20)
@@ -60,7 +60,7 @@ class TestShock(unittest.TestCase):
         assert_allclose(v_sh[1:], v_shock_bag(xi[1:]), rtol=1e-7)
         self.assertEqual(v_sh[0], 0)
 
-    def test_v_shock_const_cs(self):
+    def test_v_shock_const_cs(self) -> None:
         r"""Shock curve of a ConstCSModel with $c_{s,s}^2 \neq 1/3$."""
         wn = self.const_cs.wn(0.1)
         xi, v_sh = v_shock_curve(self.const_cs, wn=wn)
@@ -73,7 +73,7 @@ class TestShock(unittest.TestCase):
         self.assertEqual(v_sh[-1], 1)
         self.assertTrue(np.all(np.diff(v_sh) > 0))
 
-    def test_solve_shock_junction_conditions(self):
+    def test_solve_shock_junction_conditions(self) -> None:
         r"""The solution of the shock solver should satisfy the junction conditions."""
         for model in (self.bag, self.const_cs):
             with self.subTest(model=model.name):
@@ -96,7 +96,7 @@ class TestShock(unittest.TestCase):
                             lorentz(xi, v2_tilde)
                         )
 
-    def test_solve_shock_bag_enthalpy(self):
+    def test_solve_shock_bag_enthalpy(self) -> None:
         r"""The general shock solver should reproduce the bag model enthalpy behind the shock.
 
         :gw_pt_ssm:`\ ` eq. B.18.
@@ -108,7 +108,7 @@ class TestShock(unittest.TestCase):
                 assert_allclose(w2, wm_shock_bag(xi, w_n=wn), rtol=1e-7)
                 assert_allclose(lorentz(xi, v2_tilde), v_shock_bag(xi), rtol=1e-7)
 
-    def test_v_shock_below_cs(self):
+    def test_v_shock_below_cs(self) -> None:
         r"""No shock exists for $\xi \leq c_{s,n}$."""
         wn = self.const_cs.wn(0.1)
         cs_n = float(np.sqrt(self.const_cs.cs2(wn, Phase.SYMMETRIC)))

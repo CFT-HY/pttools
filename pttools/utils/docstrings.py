@@ -3,7 +3,7 @@
 import logging
 import typing as tp
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class HasDocstring(tp.Protocol):

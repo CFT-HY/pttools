@@ -21,7 +21,7 @@ class TestProfile(abc.ABC, unittest.TestCase):
 
     @classmethod
     @abc.abstractmethod
-    def setup_numba(cls):
+    def setup_numba(cls) -> None:
         """Run the command to be profiled before profiling to ensure
         that it's already fully Numba-jitted when profiled.
         """

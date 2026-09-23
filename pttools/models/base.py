@@ -11,7 +11,7 @@ import numpy as np
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class BaseModel(abc.ABC):
@@ -192,9 +192,9 @@ class BaseModel(abc.ABC):
     # Abstract methods
 
     @abc.abstractmethod
-    def cs2(self, *args, **kwargs) -> th.FloatOrArr:
+    def cs2(self, *args: tp.Any, **kwargs: tp.Any) -> th.FloatOrArr:
         """Speed of sound squared $c_s^2$."""
 
     @abc.abstractmethod
-    def cs2_neg(self, *args, **kwargs) -> th.FloatOrArr:
+    def cs2_neg(self, *args: tp.Any, **kwargs: tp.Any) -> th.FloatOrArr:
         """Speed of sound squared with a minus sign, $-c_s^2$. This is needed for finding the maximum of $c_s^2$."""

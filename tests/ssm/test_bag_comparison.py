@@ -17,6 +17,7 @@ from tests.bubble.ref import RefHindmarshHijazi
 class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
     """Tests for comparing the results of the Spectrum class to the old bag model interface."""
 
+    bubbles: list[Bubble]
     spectra: list[SSMSpectrum]
     spectra_lambda: list[SSMSpectrum]
     z: th.FloatArr1D
@@ -35,7 +36,7 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
             cls.spectra_lambda.append(spectrum)
         cls.z = cls.spectra[0].y
 
-    def test_de(self):
+    def test_de(self) -> None:
         # The arrays have different sizes and cannot therefore be combined to a 2D array
         de_bag = [
             de_from_w_bag(
@@ -52,7 +53,7 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
         for de_i, de_bag_i in zip(de, de_bag, strict=False):
             assert_allclose(de_i, de_bag_i)
 
-    def test_a2(self):
+    def test_a2(self) -> None:
         a2_old = np.array([
             ssm.a2_e_conserving_bag(
                 self.z, v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i],
@@ -73,7 +74,7 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
         assert_allclose(a2_new, a2_old)
         # assert_allclose(a2_new2, a2_old)
 
-    def test_spec_den_v(self):
+    def test_spec_den_v(self) -> None:
         """This test has lambda_correction=True,
         as disabling it would require a somewhat looser tolerance for some of the points.
         """
@@ -104,7 +105,7 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
             rtol=0.329
         )
 
-    def test_gw(self):
+    def test_gw(self) -> None:
         """This test has lambda_correction=True,
         as disabling it would require a somewhat looser tolerance for some of the points.
         This may be either due to numerical differences, or lambda_correction might hide some other difference.

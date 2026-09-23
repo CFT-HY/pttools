@@ -34,7 +34,7 @@ if tp.TYPE_CHECKING:
     from pttools.models.const_cs import ConstCSModel
     from pttools.models.model import Model
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 # def gen_wn_solvable(model: "Model", alpha_n: float):

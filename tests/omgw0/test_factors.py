@@ -36,24 +36,24 @@ OMEGA_PHOTON_H2_REF: float = 2.473e-5
 class ConstTest(unittest.TestCase):
     r"""Tests for the constants from which $F_{\text{gw},0}$ is computed."""
 
-    def test_a_rad(self):
+    def test_a_rad(self) -> None:
         """The radiation constant should match the CODATA value."""
         self.assertAlmostEqual(const.A_RADIATION / A_RAD_REF, 1, places=6)
 
-    def test_gs0(self):
+    def test_gs0(self) -> None:
         r"""The computed $g_{s0}$ should match the $3.91$ of :caprini_2020:`\ ` p. 12."""
         self.assertAlmostEqual(const.gs0(g0=2, n_nu=3), 3.91, places=2)
         self.assertAlmostEqual(const.GS0, 3.91, delta=0.0199)
 
-    def test_omega_photon_h2(self):
+    def test_omega_photon_h2(self) -> None:
         r"""$\Omega_{\gamma,0} h^2$ should match the literature value."""
         self.assertAlmostEqual(const.OMEGA_PHOTON_H2 / OMEGA_PHOTON_H2_REF, 1, places=4)
 
-    def test_omega_photon_h_scaling(self):
+    def test_omega_photon_h_scaling(self) -> None:
         r"""$\Omega_{\gamma,0}$ should be $\Omega_{\gamma,0} h^2$ divided by $h^2$."""
         self.assertAlmostEqual(const.OMEGA_PHOTON * const.H2 / const.OMEGA_PHOTON_H2, 1, places=12)
 
-    def test_h0_hz(self):
+    def test_h0_hz(self) -> None:
         r"""$H_0$ should be $h {H}_{100}$."""
         self.assertAlmostEqual(const.H0_HZ / (const.H * const.H0_100_HZ), 1, places=12)
 
@@ -61,7 +61,7 @@ class ConstTest(unittest.TestCase):
 class FGw0Test(unittest.TestCase):
     r"""Tests for $F_{\text{gw},0}$."""
 
-    def test_reference_value(self):
+    def test_reference_value(self) -> None:
         r"""The computed $F_{\text{gw},0}$ should be consistent with the value of :caprini_2020:`\ ` eq. 20.
 
         This is the test that ties the computed constants to the literature.
@@ -71,20 +71,20 @@ class FGw0Test(unittest.TestCase):
         # The agreement should in fact be better than the uncertainty of the reference value.
         self.assertAlmostEqual(computed / F_GW0_H2_REF, 1, delta=0.0067)
 
-    def test_gs_star_default(self):
+    def test_gs_star_default(self) -> None:
         r"""Omitting $g_{s\ast}$ should be equivalent to setting $g_{s\ast} = {g}_\ast$."""
         for g_star in (10., 100., 106.75):
             with self.subTest(g_star=g_star):
                 self.assertEqual(F_gw0_h2(g_star=g_star), F_gw0_h2(g_star=g_star, gs_star=g_star))
 
     @staticmethod
-    def test_g_star_scaling():
+    def test_g_star_scaling() -> None:
         r"""For $g_{s\ast} = {g}_\ast$ the scaling should be $\left( \frac{100}{{g}_\ast} \right)^\frac{1}{3}$."""
         g_star = np.array([1., 10., 100., 106.75, 1000.])
         expected = F_gw0_h2(g_star=100.) * (100 / g_star)**(1/3)
         np.testing.assert_allclose(F_gw0_h2(g_star=g_star), expected, rtol=1e-12)
 
-    def test_gs_star_dependence(self):
+    def test_gs_star_dependence(self) -> None:
         r"""$F_{\text{gw},0}$ should scale as $g_{s\ast}^{-\frac{4}{3}}$."""
         ratio = F_gw0_h2(g_star=100., gs_star=50.) / F_gw0_h2(g_star=100., gs_star=100.)
         self.assertAlmostEqual(ratio, 2**(4/3), places=12)

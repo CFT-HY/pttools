@@ -16,7 +16,7 @@ from pttools.bubble.solution_type import SolutionType, cannot_be_detonation
 if tp.TYPE_CHECKING:
     from pttools.models import Model
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def sound_shell_detonation(

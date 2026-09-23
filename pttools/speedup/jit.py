@@ -16,7 +16,7 @@ import numpy as np
 
 from pttools.speedup.options import NUMBA_DISABLE_JIT, NUMBA_OPTS
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Decorator(tp.Protocol):
@@ -26,14 +26,14 @@ class Decorator(tp.Protocol):
 
 
 @tp.overload
-def njit[T: tp.Callable](func: T, **kwargs) -> T: ...
+def njit[T: tp.Callable](func: T, **kwargs: tp.Any) -> T: ...
 
 
 @tp.overload
-def njit(func: None = None, **kwargs) -> Decorator: ...
+def njit(func: None = None, **kwargs: tp.Any) -> Decorator: ...
 
 
-def njit(func: tp.Callable | None = None, **kwargs):
+def njit(func: tp.Callable | None = None, **kwargs: tp.Any) -> tp.Callable:
     """Wrapper for numba.njit, which applies the default options of :data:`NUMBA_OPTS`.
 
     Options given as keyword arguments override the defaults.
@@ -65,7 +65,7 @@ def _renamed_func(func: tp.Callable, suffix: str) -> tp.Callable:
     return renamed
 
 
-def njit_parallel_pair(func: tp.Callable, **kwargs) -> tuple[tp.Callable, tp.Callable]:
+def njit_parallel_pair(func: tp.Callable, **kwargs: tp.Any) -> tuple[tp.Callable, tp.Callable]:
     """Compile both a parallel and a serial version of the given function.
 
     The parallel version runs its ``numba.prange`` loops with multiple threads,
@@ -90,7 +90,7 @@ def njit_parallel_pair(func: tp.Callable, **kwargs) -> tuple[tp.Callable, tp.Cal
     )
 
 
-def njit_module(**kwargs):
+def njit_module(**kwargs: tp.Any) -> None:
     """Adapted from numba.jit_module.
 
     May cause segmentation faults with profilers.
@@ -110,7 +110,7 @@ def njit_module(**kwargs):
             module.__dict__[name] = njit(obj, **kwargs)
 
 
-def vectorize(**kwargs):
+def vectorize(**kwargs: tp.Any) -> Decorator:
     """Extended version of numba.vectorize with support for NUMBA_DISABLE_JIT."""
     def vectorize_inner(func: tp.Callable):
         if NUMBA_DISABLE_JIT:
@@ -135,4 +135,5 @@ def vectorize(**kwargs):
                 ])
             return wrapper
         return functools.wraps(func)(numba.vectorize(**kwargs)(func))
-    return vectorize_inner
+    # The signature of the vectorized function is the same as that of the decorated function.
+    return tp.cast(Decorator, vectorize_inner)

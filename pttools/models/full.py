@@ -16,7 +16,10 @@ from pttools.speedup.overload import np_all_fix
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
-logger = logging.getLogger(__name__)
+if tp.TYPE_CHECKING:
+    from pttools.models.data import SplineTCK
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class FullModel(Model):
@@ -49,7 +52,7 @@ class FullModel(Model):
             label_latex = f"Full ({thermo.label_latex})"
         if not label_unicode:
             label_unicode = f"Full ({thermo.label_unicode})"
-        self.thermo = thermo
+        self.thermo: ThermoModel = thermo
 
         super().__init__(
             V_s=V_s, V_b=V_b,
@@ -60,20 +63,21 @@ class FullModel(Model):
             silence_temp=self.thermo.silence_temp
         )
 
-        self.temp_spline_s = splrep(
+        self.temp_spline_s: SplineTCK = splrep(
             np.log10(self.w(self.thermo.GEFF_DATA_TEMP, Phase.SYMMETRIC)), self.thermo.GEFF_DATA_LOG_TEMP
         )
-        self.temp_spline_b = splrep(
+        self.temp_spline_b: SplineTCK = splrep(
             np.log10(self.w(self.thermo.GEFF_DATA_TEMP, Phase.BROKEN)), self.thermo.GEFF_DATA_LOG_TEMP
         )
+        self.t_crit: float
         self.t_crit, self.w_crit = self.criticals(T_crit_guess, allow_invalid)
         self.w_at_alpha_n_min, self.alpha_n_min = self.alpha_n_min_find()
 
-        self.cs2 = self.gen_cs2()  # pyrefly: ignore[bad-assignment]
+        self.cs2: th.CS2Fun = self.gen_cs2()
         self.cs2_ptr()
         self.df_dtau_ptr()
 
-    def gen_cs2(self):
+    def gen_cs2(self) -> th.CS2Fun:
         """This function generates the Numba-jitted cs2 function to be used by the fluid integrator."""
         # Numba caching is disabled for the functions below, as they are created dynamically.
         cs2_spl_s = splrep(

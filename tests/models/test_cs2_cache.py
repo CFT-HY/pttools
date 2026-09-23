@@ -32,7 +32,7 @@ class TestConstCSFuncs(unittest.TestCase):
     def create_model(csb2: float) -> models.ConstCSModel:
         return models.ConstCSModel(css2=TestConstCSFuncs.CSS2, csb2=csb2, a_s=2, a_b=1, V_s=0.1, log_info=False)
 
-    def test_shared(self):
+    def test_shared(self) -> None:
         """Models with the same sound speeds share the compiled functions and the pointers."""
         model1 = self.create_model(self.CSB2)
         model2 = self.create_model(self.CSB2)
@@ -42,7 +42,7 @@ class TestConstCSFuncs(unittest.TestCase):
         self.assertEqual(model1.cs2_ptr(), model2.cs2_ptr())
         self.assertEqual(model1.df_dtau_ptr(), model2.df_dtau_ptr())
 
-    def test_not_shared(self):
+    def test_not_shared(self) -> None:
         """Models with different sound speeds have their own compiled functions."""
         model1 = self.create_model(self.CSB2)
         model2 = self.create_model(0.3)
@@ -50,7 +50,7 @@ class TestConstCSFuncs(unittest.TestCase):
         self.assertNotEqual(model1.cs2_ptr(), model2.cs2_ptr())
         self.assertNotEqual(model1.df_dtau_ptr(), model2.df_dtau_ptr())
 
-    def test_pickle(self):
+    def test_pickle(self) -> None:
         """Unpickling a model restores the shared functions instead of creating new ones."""
         model1 = self.create_model(self.CSB2)
         model2 = pickle.loads(pickle.dumps(model1))
@@ -72,13 +72,13 @@ class TestDfDtauIdentity(unittest.TestCase):
 
     CSB2_VALUES = (0.25, 0.26, 0.27, 0.28, 0.29, 0.3)
 
-    def test_const_cs(self):
+    def test_const_cs(self) -> None:
         for csb2 in self.CSB2_VALUES:
             model = models.ConstCSModel(css2=1/3, csb2=csb2, a_s=2, a_b=1, V_s=0.1, log_info=False)
             self.assertAlmostEqual(df_dtau_cs2(model.df_dtau_ptr(), Phase.BROKEN), csb2)
             self.assertAlmostEqual(df_dtau_cs2(model.df_dtau_ptr(), Phase.SYMMETRIC), 1/3)
 
-    def test_full(self):
+    def test_full(self) -> None:
         """The general models are identified by a unique id instead of the sound speeds."""
         for css2 in (0.4**2, 0.3):
             thermo = models.ConstCSThermoModel(css2=css2, csb2=1/3, a_s=1.2, a_b=1.1, V_s=1.3)

@@ -21,7 +21,7 @@ from pttools.bubble.alpha import alpha_n_max_bag, alpha_n_max_detonation_bag
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet_bag
 import pttools.type_hints as th
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def load(n_alpha: int = 10, n_vw: int = 10, g_bro: int = 120, g_sym: int = 123) \

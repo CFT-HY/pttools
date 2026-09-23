@@ -17,10 +17,10 @@ from pttools.logging import setup_logging
 from pttools.models.const_cs import ConstCSModel
 from pttools.speedup.parallel import run_parallel
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
-def alpha_theta_bar_n_to_alpha_n(model: ConstCSModel, alpha_thetabarn: float, wn: float):
+def alpha_theta_bar_n_to_alpha_n(model: ConstCSModel, alpha_thetabarn: float, wn: float) -> float:
     r"""Convert $\alpha_{\bar{\theta}_n}$ to $\alpha_n$
 
     Not used at the moment
