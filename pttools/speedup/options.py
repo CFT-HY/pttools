@@ -8,6 +8,10 @@ from pttools.utils import system
 
 logger = logging.getLogger(__name__)
 
+# On Windows, the maximum number of worker processes is limited to 61.
+# https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor
+MAX_WORKERS_WINDOWS: int = 61
+
 #: Default maximum number of parallel worker processes
 MAX_WORKERS_DEFAULT: int
 if system.AVAILABLE_CPU_CORES is None:
@@ -16,10 +20,8 @@ if system.AVAILABLE_CPU_CORES is None:
         "This platform does not provide info on the number of available CPU cores. Using 1 core. %s",
         system.platform_info()
     )
-elif system.IS_WINDOWS and system.AVAILABLE_CPU_CORES > 61:
-    # On Windows, the maximum number of worker processes is limited to 61.
-    # https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor
-    MAX_WORKERS_DEFAULT = 61
+elif system.IS_WINDOWS and system.AVAILABLE_CPU_CORES > MAX_WORKERS_WINDOWS:
+    MAX_WORKERS_DEFAULT = MAX_WORKERS_WINDOWS
 else:
     MAX_WORKERS_DEFAULT = system.AVAILABLE_CPU_CORES
 

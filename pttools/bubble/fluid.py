@@ -25,7 +25,7 @@ if tp.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def sound_shell_generic(
+def sound_shell_generic(  # noqa: PLR0912, PLR0915
             model: "Model",
             v_wall: float,
             alpha_n: float,

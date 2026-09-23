@@ -19,7 +19,9 @@ def envelope(
         v_sh: float | None = None) -> th.FloatArr1D:
     r"""
     Helper function for :func:`sin_transform_approx`.
+
     Assumes that:
+
     - $\max(v)$ is achieved at a discontinuity (bubble wall)
     - $f(\xi)$ finishes at a discontinuity (shock)
     - at least the first element of $f$ is zero
@@ -32,7 +34,7 @@ def envelope(
     f_p: value just after wall
     f2: (at shock, or after wall)
 
-    :param: xi: $\xi$
+    :param xi: $\xi$
     :param f: function values $f$ at the points $\xi$
     :param v_wall: wall speed
     :param v_sh: shock speed

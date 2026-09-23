@@ -285,7 +285,7 @@ def sound_shell_solver_hybrid(
             logger.error(msg)
 
     vm = relativity.lorentz(v_wall, np.sqrt(model.cs2(wm, Phase.BROKEN)))
-    v_tail, w_tail, xi_tail, t_tail = integrate.fluid_integrate_param(
+    v_tail, w_tail, xi_tail, _t_tail = integrate.fluid_integrate_param(
         vm, wm, v_wall,
         phase=Phase.BROKEN,
         t_end=-t_end,

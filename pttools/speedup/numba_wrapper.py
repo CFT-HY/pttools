@@ -56,15 +56,15 @@ else:
     except OSError as e:
         # NumbaLSODA requires an executable stack, which is not enabled by default on Linux 6.14.
         # https://github.com/Nicholaswogan/numbalsoda/issues/34
-        parts = str(e).split(": ", 1)
-        if len(parts) != 2 or parts[1] != "cannot enable executable stack as shared object requires: Invalid argument":
+        _lib_path, _sep, _err_msg = str(e).partition(": ")
+        if not _sep or _err_msg != "cannot enable executable stack as shared object requires: Invalid argument":
             raise e
         if shutil.which("execstack") is None:
             raise OSError(
-                "NumbaLSODA requires an executable stack to run. To enable it,"
+                "NumbaLSODA requires an executable stack to run. To enable it, "
                 "please install execstack with e.g. \"sudo apt install execstack\" and run this program again."
             ) from e
-        subprocess.run(["execstack", "-c", parts[0]], check=False)
+        subprocess.run(["execstack", "-c", _lib_path], check=False)
         import numbalsoda
 
 if numbalsoda is None:

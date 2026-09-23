@@ -29,6 +29,26 @@ from pttools.utils.system import IS_READ_THE_DOCS
 logger = logging.getLogger(__name__)
 
 
+def create_models(a_s: float, a_b: float, V_s: float, alpha_n_min: float) -> list[ConstCSModel]:
+    """Create the ConstCSModels for all the sound speed combinations"""
+    models = [
+        ConstCSModel(
+            css2=css2, csb2=csb2, a_s=a_s, a_b=a_b, V_s=V_s,
+            alpha_n_min=alpha_n_min, allow_invalid=False
+        )
+        for css2, csb2 in ((1/3, 1/3), (1/3, 1/4), (1/4, 1/3), (1/4, 1/4))
+    ]
+    alpha_n_mins = np.array([model.alpha_n_min for model in models])
+    if np.any(alpha_n_mins > alpha_n_min):
+        msg = (
+            f"A model has alpha_n_min > {alpha_n_min}. "
+            f"Please adjust the models. Currently alpha_n_mins={alpha_n_mins}"
+        )
+        logger.error(msg)
+        raise ValueError(msg)
+    return models
+
+
 def gw_lines(axs: tp.Iterable[Axes]) -> None:
     """Add the guideline power laws to the GW spectrum plot"""
     pow_low = 9
@@ -59,6 +79,36 @@ def mu_curves(axs: tp.Iterable[Axes], csb2s: tp.Iterable[float], ls: str = ":", 
                 ax.plot(xi_mu, v_mu, ls=ls, c=c, label=r"$\mu(\xi, c_{s,b})$")
 
 
+def noise_curves(axs: tp.Iterable[Axes], f_min: float, f_max: float) -> None:
+    r"""Add the LISA instrument noise curve to the $\Omega_{gw,0}$ plot"""
+    f = np.logspace(np.log10(f_min), np.log10(f_max), num=50)
+    om_ins = omega_ins_h2(f) / H2
+    for ax in axs:
+        ax.plot(f, om_ins, label="LISA instrument noise")
+
+
+def plot_shock_surfaces(
+        axs_v: tp.Iterable[th.AxesArr2D],
+        models: list[ConstCSModel],
+        alpha_ns: th.FloatArr1D,
+        ls: str = "--") -> None:
+    """Add the shock surfaces to the fluid velocity profile plots
+
+    :param axs_v: arrays of fluid velocity profile axes indexed by (alpha_n, v_wall)
+    """
+    for i_model, model in enumerate(models):
+        xi_arr = np.linspace(model.css, 0.99, 20)
+        for i_alpha_n, alpha_n in enumerate(alpha_ns):
+            wn = model.wn(alpha_n)
+            _, vm_arr = v_shock_curve(model, wn=wn, xi=xi_arr)
+            for axs_v_i in axs_v:
+                for ax in axs_v_i[i_alpha_n]:
+                    if i_model:
+                        ax.plot(xi_arr, vm_arr, color="k", ls=ls)
+                    else:
+                        ax.plot(xi_arr, vm_arr, color="k", ls=ls, label=r"$v_{sh}(\xi, c_{s,s})$")
+
+
 def plot_spectrum(
         spectrum: Spectrum,
         ax_v: Axes,
@@ -81,22 +131,18 @@ def snr_table(snrs: th.FloatArr3D, models: list[ConstCSModel], v_walls: th.Float
             "\\begin{table}\n",
             "\\centering\n",
             "\\caption{Signal-to-noise ratios of the gravitational wave power spectra of fig \\ref{fig:omgw0}}\n",
-            "\\begin{tabular}{l|l|l|l}\n",
-            "Model & \\multicolumn{3}{l}{$\\v_\\text{wall}$} \\\\\n"
-            "& " + " & ".join([f"{v_wall:.2f}" for v_wall in v_walls]) + "\n",
-            "\\hline \\\\\n"
+            f"\\begin{{tabular}}{{l|{'|'.join('l' * v_walls.size)}}}\n",
+            f"Model & \\multicolumn{{{v_walls.size}}}{{l}}{{$v_\\text{{wall}}$}} \\\\\n",
+            "& " + " & ".join([f"{v_wall:.2f}" for v_wall in v_walls]) + " \\\\\n",
+            "\\hline\n"
         ])
         for i_alpha_n, _alpha_n in enumerate(alpha_ns):
             for i_model, model in enumerate(models):
                 file.write(
                     model.label_latex_params + " & " + \
-                    " & ".join([f"{snr:.1f}" for snr in snrs[i_alpha_n, :, i_model]]))
-                if i_model < len(models) - 1:
-                    file.write(" \\\\\n")
+                    " & ".join([f"{snr:.1f}" for snr in snrs[i_alpha_n, :, i_model]]) + " \\\\\n")
             if i_alpha_n < len(alpha_ns) - 1:
-                file.write(" \\hline \\\\\n")
-            else:
-                file.write(" \\\\\n")
+                file.write("\\hline\n")
         file.writelines([
             "\\end{tabular}\n",
             "\\label{table:const_cs_gw_snr}\n",
@@ -162,36 +208,10 @@ def main(low_k: bool = True) -> tuple[th.FigArr1D, th.FigArr2D, str]:
     alpha_ns: th.FloatArr1D = np.array([0.1, 0.2])
     alpha_n_min = np.min(alpha_ns)
 
-    allow_invalid = False
-    models = [
-        ConstCSModel(
-            css2=1/3, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s,
-            alpha_n_min=alpha_n_min, allow_invalid=allow_invalid
-        ),
-        ConstCSModel(
-            css2=1/3, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s,
-            alpha_n_min=alpha_n_min, allow_invalid=allow_invalid
-        ),
-        ConstCSModel(
-            css2=1/4, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s,
-            alpha_n_min=alpha_n_min, allow_invalid=allow_invalid
-        ),
-        ConstCSModel(
-            css2=1/4, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s,
-            alpha_n_min=alpha_n_min, allow_invalid=allow_invalid
-        )
-    ]
+    models = create_models(a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_n_min)
     lss = ["solid", "dashed", "dotted", "dashdot"]
     # css2s = {model.css2 for model in models}
     csb2s = {model.csb2 for model in models}
-    alpha_n_mins = np.array([model.alpha_n_min for model in models])
-    if np.any(alpha_n_mins > alpha_n_min):
-        msg = (
-            f"A model has alpha_n_min > {alpha_n_min}. "
-            f"Please adjust the models. Currently alpha_n_mins={alpha_n_mins}"
-        )
-        logger.error(msg)
-        raise ValueError(msg)
 
     spectra: SpectrumArr3D = np.zeros(
         (len(models), alpha_ns.size, v_walls.size),
@@ -249,60 +269,29 @@ def main(low_k: bool = True) -> tuple[th.FigArr1D, th.FigArr2D, str]:
 
     table = snr_table(snrs, models, v_walls, alpha_ns)
 
-    # Shock surfaces
-    ls = "--"
-    for i_model, model in enumerate(models):
-        xi_arr = np.linspace(model.css, 0.99, 20)
-        for i_alpha_n, alpha_n in enumerate(alpha_ns):
-            wn = model.wn(alpha_n)
-            _, vm_arr = v_shock_curve(model, wn=wn, xi=xi_arr)
-            for i_v_wall, _v_wall in enumerate(v_walls):
-                ax: Axes = axs[0, i_alpha_n, i_v_wall]
-                ax2: Axes = axs2[0, i_alpha_n, i_v_wall]
-                if i_model:
-                    ax.plot(xi_arr, vm_arr, color="k", ls=ls)
-                    ax2.plot(xi_arr, vm_arr, color="k", ls=ls)
-                else:
-                    ax.plot(xi_arr, vm_arr, color="k", ls=ls, label=r"$v_{sh}(\xi, c_{s,s})$")
-                    ax2.plot(xi_arr, vm_arr, color="k", ls=ls, label=r"$v_{sh}(\xi, c_{s,s})$")
-
+    plot_shock_surfaces((axs[0], axs2[0]), models, alpha_ns)
     mu_curves(np.concatenate((axs[0].flat, axs2[0].flat)), csb2s)
 
-    # Noise curves
     y_min = np.min([spectrum.y[0] for spectrum in spectra.flat])
-    y_max = np.min([spectrum.y[-1] for spectrum in spectra.flat])
+    y_max = np.max([spectrum.y[-1] for spectrum in spectra.flat])
     f_min = np.min([spectrum.f(z=spectrum.y[0]) for spectrum in spectra.flat])
     f_max = np.max([spectrum.f(z=spectrum.y[-1]) for spectrum in spectra.flat])
-    f = np.logspace(np.log10(f_min), np.log10(f_max), num=50)
-    for i_alpha_n, _alpha_n in enumerate(alpha_ns):
-        for i_v_wall, _v_wall in enumerate(v_walls):
-            om_ins = omega_ins_h2(f) / H2
-            ax = axs[2, i_alpha_n, i_v_wall]
-            ax2 = axs2[2, i_alpha_n, i_v_wall]
-            ax.plot(f, om_ins, label="LISA instrument noise")
-            ax2.plot(f, om_ins, label="LISA instrument noise")
+    noise_curves(np.concatenate((axs[2].flat, axs2[2].flat)), f_min=f_min, f_max=f_max)
 
     gw_lines(np.concatenate((axs[1].flat, axs2[1].flat)))
 
     # This must be after all the curves so that they are included in the legends.
-    for i_alpha_n in range(alpha_ns.size):
-        for i_v_wall in range(v_walls.size):
-            setup_axes(
-                spectrum=spectra[0, i_alpha_n, i_v_wall],
-                ax_v=axs[0, i_alpha_n, i_v_wall],
-                ax_gw=axs[1, i_alpha_n, i_v_wall],
-                ax_omgw0=axs[2, i_alpha_n, i_v_wall],
-                y_min=y_min, y_max=y_max,
-                f_min=f_min, f_max=f_max
-            )
-            setup_axes(
-                spectrum=spectra[0, i_alpha_n, i_v_wall],
-                ax_v=axs2[0, i_alpha_n, i_v_wall],
-                ax_gw=axs2[1, i_alpha_n, i_v_wall],
-                ax_omgw0=axs2[2, i_alpha_n, i_v_wall],
-                y_min=y_min, y_max=y_max,
-                f_min=f_min, f_max=f_max
-            )
+    for axs_i in (axs, axs2):
+        for i_alpha_n in range(alpha_ns.size):
+            for i_v_wall in range(v_walls.size):
+                setup_axes(
+                    spectrum=spectra[0, i_alpha_n, i_v_wall],
+                    ax_v=axs_i[0, i_alpha_n, i_v_wall],
+                    ax_gw=axs_i[1, i_alpha_n, i_v_wall],
+                    ax_omgw0=axs_i[2, i_alpha_n, i_v_wall],
+                    y_min=y_min, y_max=y_max,
+                    f_min=f_min, f_max=f_max
+                )
 
     for fig in figs:
         fig.tight_layout()

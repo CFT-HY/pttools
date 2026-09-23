@@ -31,7 +31,7 @@ def main() -> tuple[plt.Figure, plt.Figure]:
 
     # Compute the gravitational wave spectrum for the bubble.
     spectrum = Spectrum(bubble, nuc_type=NucType.EXPONENTIAL, r_star=0.1)
-    spectrum_fig, axs = spectrum.plot_multi()
+    spectrum_fig, _axs = spectrum.plot_multi()
     save_fig(spectrum_fig, "bag_spectrum")
     bubble.export(os.path.join(FIG_DIR, "bag_spectrum.json"))
 

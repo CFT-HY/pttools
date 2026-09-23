@@ -31,11 +31,17 @@ if tp.TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# If alpha_n is closer than this to the bag model alpha_n_max for deflagrations, alpha_n is considered high
+_HIGH_ALPHA_N_MARGIN: float = 0.05
+#: Detonations with Psi_n below this may not exist according to the LTE approximation, Ai et al. (2023) p. 16
+PSI_N_MIN_DETON_LTE: float = 0.75
+
 
 class Bubble(BaseBubble):
     """A solution of the hydrodynamic equations, aka. a bubble."""
 
-    def __init__(
+    # Most of the statements are attribute declarations with their documentation.
+    def __init__(  # noqa: PLR0912, PLR0915
             self,
             model: "Model",
             v_wall: float,
@@ -105,16 +111,16 @@ class Bubble(BaseBubble):
         if self.v_wall < low_v_wall_threshold:
             if self.n_xi == DEFAULT_N_XI:
                 logger.info(
-                    "Got n_xi=%s for v_wall=%s < 0.1. This may lead to an inaccurate solution. "
+                    "Got n_xi=%s for v_wall=%s < %s. This may lead to an inaccurate solution. "
                     "Since n_xi = DEFAULT_N_XI, multiplying n_xi by %s for an automatic fix.",
-                    n_xi, v_wall, n_xi_fix_factor
+                    n_xi, v_wall, low_v_wall_threshold, n_xi_fix_factor
                 )
                 self.n_xi *= n_xi_fix_factor
             elif self.n_xi < DEFAULT_N_XI:
                 logger.warning(
-                    "Got n_xi=%s for v_wall=%s < 0.1. This may lead to an inaccurate solution. "
+                    "Got n_xi=%s for v_wall=%s < %s. This may lead to an inaccurate solution. "
                     "Please increase n_xi.",
-                    n_xi, v_wall
+                    n_xi, v_wall, low_v_wall_threshold
                 )
 
         # -----
@@ -314,7 +320,7 @@ class Bubble(BaseBubble):
         alpha_n_max_bag = alpha_n_max_deflagration_bag(
             self.v_wall, df_dtau_ptr=DF_DTAU_PTR_BAG,
             ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR)
-        high_alpha_n = alpha_n_max_bag - self.alpha_n < 0.05
+        high_alpha_n = alpha_n_max_bag - self.alpha_n < _HIGH_ALPHA_N_MARGIN
 
         try:
             # Todo: make the solver errors more specific
@@ -517,7 +523,7 @@ class Bubble(BaseBubble):
         it will also exist when the out-of-equilibrium effects are considered."
         :ai_2023:`\ ` p. 16
         """
-        if log_invalid and self.sol_type == SolutionType.DETON and self.Psi_n < 0.75:
+        if log_invalid and self.sol_type == SolutionType.DETON and self.Psi_n < PSI_N_MIN_DETON_LTE:
             logger.info(
                 "This detonation may not exist, as LTE predicts a large alpha_n_hyb_max for Psi_n=%s < 0.75. "
                 "Please see Ai et al. (2023), p. 16.",

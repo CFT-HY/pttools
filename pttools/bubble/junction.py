@@ -286,7 +286,7 @@ def v_plus_hybrid(
     vm_tilde = np.sqrt(model.cs2(wm, Phase.BROKEN))
 
     # Solve the boundary conditions at the wall
-    vp_tilde, wp = solve_junction(
+    vp_tilde, _wp = solve_junction(
         model, vm_tilde, wm,
         Phase.BROKEN, Phase.SYMMETRIC,
         v2_tilde_guess=vp_tilde_guess, w2_guess=wp_guess,

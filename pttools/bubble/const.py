@@ -68,3 +68,6 @@ CS0_2: tp.Final[float] = 1 / 3
 DXI_SMALL: float = 1. / DEFAULT_N_XI
 #: Cache size for the junction solver
 JUNCTION_CACHE_SIZE: int = 1024
+
+# $\mu = 1 + \frac{1}{c_s^2}$ of the bag model
+MU_BAG: float = 4.

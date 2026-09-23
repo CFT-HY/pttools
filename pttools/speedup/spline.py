@@ -19,6 +19,16 @@ from pttools.speedup import fitpack
 from pttools.speedup.jit import njit
 import pttools.type_hints as th
 
+# Extrapolation modes, i.e. the values of the ext argument, as in scipy.interpolate.splev()
+_EXT_EXTRAPOLATE = 0
+_EXT_ZERO = 1
+_EXT_RAISE = 2
+_EXT_CONST = 3
+
+# Error codes of fitpack.splev() and fitpack.splder()
+_IER_X_NOT_IN_DOMAIN = 1
+_IER_INVALID_INPUT = 10
+
 # interpolate_dir = os.path.dirname(os.path.abspath(scipy.interpolate.fitpack.__file__))
 # fitpack_files = glob.glob(os.path.join(interpolate_dir, "_fitpack.*.so"))
 # if len(fitpack_files) < 1:
@@ -82,7 +92,7 @@ def splev(x: th.FloatArr1D, tck: tuple[th.FloatArr1D, th.FloatArr1D, int], der: 
     # else:
     if not 0 <= der <= k:
         raise ValueError(f"0<=der={der:d}<=k={k:d} must hold")
-    if ext not in (0, 1, 2, 3):
+    if ext not in (_EXT_EXTRAPOLATE, _EXT_ZERO, _EXT_RAISE, _EXT_CONST):
         raise ValueError(f"ext = {ext} not in (0, 1, 2, 3) ")
 
     # x = asarray(x)
@@ -91,9 +101,9 @@ def splev(x: th.FloatArr1D, tck: tuple[th.FloatArr1D, th.FloatArr1D, int], der: 
 
     y, ier = fitpack_spl_(x, der, t, c, k, ext)
 
-    if ier == 10:
+    if ier == _IER_INVALID_INPUT:
         raise ValueError("Invalid input data")
-    if ier == 1:
+    if ier == _IER_X_NOT_IN_DOMAIN:
         raise ValueError("Found x value not in the domain")
     if ier:
         raise TypeError("An error occurred")
@@ -102,17 +112,17 @@ def splev(x: th.FloatArr1D, tck: tuple[th.FloatArr1D, th.FloatArr1D, int], der: 
 
 
 @njit(cache=True)
-def splev_linear_core(xp: float, t: th.FloatArr1D, c: th.FloatArr1D, ext: int) -> float:
+def splev_linear_core(xp: float, t: th.FloatArr1D, c: th.FloatArr1D, ext: int) -> float:  # noqa: PLR0911
     """Numba-jitted core of the linear spline evaluation."""
     if xp < t[0]:
-        if ext == 0:
+        if ext == _EXT_EXTRAPOLATE:
             a = (c[1] - c[0]) / (t[2] - t[1])
             return c[0] + a * (xp - t[0])
-        if ext == 1:
+        if ext == _EXT_ZERO:
             return 0
-        if ext == 2:
+        if ext == _EXT_RAISE:
             raise ValueError("Extrapolating is disabled")
-        if ext == 3:
+        if ext == _EXT_CONST:
             return c[0]
         raise ValueError("Invalid ext")
     for j in range(t.size - 2):
@@ -120,14 +130,14 @@ def splev_linear_core(xp: float, t: th.FloatArr1D, c: th.FloatArr1D, ext: int) -
             a = (c[j + 1] - c[j]) / (t[j + 2] - t[j + 1])
             return c[j] + a * (xp - t[j + 1])
     # If the upper boundary is exceeded
-    if ext == 0:
+    if ext == _EXT_EXTRAPOLATE:
         a = (c[-3] - c[-4]) / (t[-2] - t[-3])
         return c[-3] + a * (xp - t[-2])
-    if ext == 1:
+    if ext == _EXT_ZERO:
         return 0
-    if ext == 2:
+    if ext == _EXT_RAISE:
         raise ValueError("Extrapolating is disabled")
-    if ext == 3:
+    if ext == _EXT_CONST:
         return c[-3]
     raise ValueError("Invalid ext")
 

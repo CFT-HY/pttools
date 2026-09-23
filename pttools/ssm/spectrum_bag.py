@@ -37,8 +37,8 @@ def parse_params(params: bubble.PhysicalParams) -> tuple[float, float, NucType |
     """
     v_wall = params[0]
     alpha = params[1]
-    nuc_type = params[2] if len(params) > 2 else DEFAULT_NUC_TYPE
-    nuc_args = params[3] if len(params) > 3 else const.DEFAULT_NUC_PARM
+    nuc_type = params[2] if len(params) > 2 else DEFAULT_NUC_TYPE  # noqa: PLR2004
+    nuc_args = params[3] if len(params) > 3 else const.DEFAULT_NUC_PARM  # noqa: PLR2004
 
     return v_wall, alpha, nuc_type, nuc_args
 
@@ -105,7 +105,7 @@ def power_gw_bag(
         x, params, npt, filename, skip, method, de_method, z_st_thresh,
         lambda_correction=lambda_correction, parallel=parallel
     )
-    sd_gw, y = spec_den_gw(x, sd_v, z, parallel=parallel)
+    sd_gw, _y = spec_den_gw(x, sd_v, z, parallel=parallel)
     return pow_spec(z, sd_gw)
 
 

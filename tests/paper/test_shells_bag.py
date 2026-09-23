@@ -118,7 +118,7 @@ class TestShellsBag(unittest.TestCase):
         assert_allclose(data_esp, ref_esp, rtol=rtols[2])
 
     def test_plot_fluid_shell(self):
-        fig, params = plot_fluid_shell_bag(v_wall=0.7, alpha_n=0.052)
+        fig, _params = plot_fluid_shell_bag(v_wall=0.7, alpha_n=0.052)
         save_fig(fig, os.path.join(FIG_PATH, "fluid_shell_single"))
         plt.close(fig)
 

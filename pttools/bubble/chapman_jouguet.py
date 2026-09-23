@@ -7,9 +7,8 @@ import typing as tp
 import numpy as np
 from scipy.optimize import fsolve
 
+from pttools.bubble.const import MU_BAG
 from pttools.bubble.phase import Phase
-
-# from pttools.bubble import const
 from pttools.bubble.relativity import gamma2
 from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.v_plus import v_plus
@@ -150,6 +149,29 @@ logger = logging.getLogger(__name__)
 #     return v_cj
 
 
+def _handle_failure(msg: str, error_on_invalid: bool, log_invalid: bool) -> None:
+    """Log and/or raise an error for a failed step of :func:`v_chapman_jouguet`."""
+    if log_invalid:
+        logger.error(msg)
+    if error_on_invalid:
+        raise RuntimeError(msg)
+
+
+def v_chapman_jouguet_analytical[T: FloatOrArr](
+        model: "Model",
+        alpha_n: T,
+        wn: float | None,
+        wn_guess: float | None) -> T:
+    """Analytical Chapman-Jouguet speed for the bag and constant sound speed models."""
+    if model.DEFAULT_NAME == "bag":
+        return v_chapman_jouguet_bag(alpha_plus=alpha_n)
+    if model.DEFAULT_NAME == "const_cs":
+        alpha_theta_bar_plus = model.alpha_theta_bar_n_from_alpha_n(alpha_n=alpha_n, wn=wn, wn_guess=wn_guess)
+        # The model name check above ensures that the model is a ConstCSModel.
+        return v_chapman_jouguet_const_cs(tp.cast("ConstCSModel", model), alpha_theta_bar_plus=alpha_theta_bar_plus)
+    raise ValueError(f"No analytical Chapman-Jouguet speed is available for the model: {model.DEFAULT_NAME}")
+
+
 @tp.overload
 def v_chapman_jouguet(
         model: "Model",
@@ -214,12 +236,8 @@ def v_chapman_jouguet(
 
     This is the minimum wall speed for detonations.
     """
-    if analytical and model.DEFAULT_NAME == "bag":
-        return v_chapman_jouguet_bag(alpha_plus=alpha_n)
-    if analytical and model.DEFAULT_NAME == "const_cs":
-        alpha_theta_bar_plus = model.alpha_theta_bar_n_from_alpha_n(alpha_n=alpha_n, wn=wn, wn_guess=wn_guess)
-        # The model name check above ensures that the model is a ConstCSModel.
-        return v_chapman_jouguet_const_cs(tp.cast("ConstCSModel", model), alpha_theta_bar_plus=alpha_theta_bar_plus)
+    if analytical and model.DEFAULT_NAME in ("bag", "const_cs"):
+        return v_chapman_jouguet_analytical(model, alpha_n, wn=wn, wn_guess=wn_guess)
 
     if isinstance(alpha_n, Iterable):
         return np.array([v_chapman_jouguet(
@@ -242,11 +260,10 @@ def v_chapman_jouguet(
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
     if wn is None or np.isnan(wn):
-        msg = f"Failed to find wn for alpha_n={alpha_n}"
-        if log_invalid:
-            logger.error(msg)
-        if error_on_invalid:
-            raise RuntimeError(msg)
+        _handle_failure(
+            f"Failed to find wn for alpha_n={alpha_n}",
+            error_on_invalid=error_on_invalid, log_invalid=log_invalid
+        )
         return np.nan
 
     # Get wm
@@ -257,11 +274,10 @@ def v_chapman_jouguet(
         error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
     )
     if wm is None or np.isnan(wm):
-        msg = f"Failed to find wm for alpha_n={alpha_n}, wn={wn}"
-        if log_invalid:
-            logger.error(msg)
-        if error_on_invalid:
-            raise RuntimeError(msg)
+        _handle_failure(
+            f"Failed to find wm for alpha_n={alpha_n}, wn={wn}",
+            error_on_invalid=error_on_invalid, log_invalid=log_invalid
+        )
         return np.nan
 
     # Compute vp with wp, wm & vm
@@ -272,11 +288,10 @@ def v_chapman_jouguet(
         error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=False
     )
     if np.isnan(ap_cj):
-        msg = f"Failed to find alpha_plus for wn={wn}, wm={wm}. Got: {ap_cj}"
-        if log_invalid:
-            logger.error(msg)
-        if error_on_invalid:
-            raise RuntimeError(msg)
+        _handle_failure(
+            f"Failed to find alpha_plus for wn={wn}, wm={wm}. Got: {ap_cj}",
+            error_on_invalid=error_on_invalid, log_invalid=log_invalid
+        )
     v_cj = v_plus(vm_cj, ap_cj, sol_type=SolutionType.DETON)
     if extra_output:
         return v_cj, vm_cj, ap_cj
@@ -331,8 +346,8 @@ def v_chapman_jouguet_const_cs_reference(alpha_n: th.FloatArr1D, model: "ConstCS
     # Todo: Re-enable this when the circular imports have been solved.
     # if not isinstance(model, ConstCSModel):
     #     raise TypeError("This reference only works for ConstCSModel.")
-    if model.mu_b != 4:
-        raise ValueError("This reference only works for nu=4.")
+    if model.mu_b != MU_BAG:
+        raise ValueError(f"This reference only works for mu_b={MU_BAG}.")
     wn = model.wn(alpha_n)
     ap = model.alpha_plus(wp=wn, wm=1)
     ret = np.zeros_like(ap)

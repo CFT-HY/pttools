@@ -22,7 +22,7 @@ class GieseCubicModel(AnalyticModel):
     Does not work yet. Requires support for V(temp, phase) to work.
     """
 
-    def __init__(self, d: float, E: float, lam: float, t_crit: float):
+    def __init__(self, d: float, E: float, lam: float, t_crit: float):  # noqa: ARG002 (work in progress)
         if d <= E**2:
             raise ValueError("Symmetry breaking at low temperatures requires d > E²")
 

@@ -37,7 +37,7 @@ def plot_fluid_shells_bag(
         draw: bool | None = ...) -> tuple[plt.Figure, th.FloatArr2D]: ...
 
 
-def plot_fluid_shells_bag(
+def plot_fluid_shells_bag(  # noqa: PLR0912, PLR0915
         v_wall_list: th.FloatArr1D,
         alpha_n_list: th.FloatArr1DOrList,
         multi: bool = False,

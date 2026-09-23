@@ -61,7 +61,7 @@ class ExampleTest(unittest.TestCase):
     @skip_slow
     @uses_multiprocessing
     def test_const_cs_gw():
-        figs1, figs2, table = const_cs_gw.main()
+        figs1, figs2, _table = const_cs_gw.main()
         close_figs(*figs1)
         close_figs(*figs2.flat)
 

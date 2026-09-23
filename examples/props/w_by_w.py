@@ -24,7 +24,7 @@ def main(
     model = ConstCSModel(css2=1/3 - 0.01, csb2=1/3 - 0.011, g_s=123, g_b=120, V_s=0.9)
     # model = BagModel(g_s=123, g_b=120, V_s=0.9)
 
-    vp_bag, vm_bag, vp_tilde_bag, vm_tilde_bag, wp_bag, wm_bag = ref().get(v_wall, alpha_n, SolutionType.SUB_DEF)
+    vp_bag, _vm_bag, _vp_tilde_bag, _vm_tilde_bag, wp_bag, wm_bag = ref().get(v_wall, alpha_n, SolutionType.SUB_DEF)
     wn = model.wn(alpha_n)
     wm_bag *= wn
     wp_bag *= wn
@@ -33,7 +33,7 @@ def main(
     wn_est = np.empty_like(w_center)
     for i, w_center_i in enumerate(w_center):
         v_cj = v_chapman_jouguet(model, alpha_n=alpha_n, wn=wn)
-        v, w, xi, vp, vm, vp_tilde, vm_tilde, xi_sh, vm_sh, vm_tilde_sh, wp, wn_estimate, wm_sh = \
+        _v, _w, _xi, _vp, _vm, _vp_tilde, _vm_tilde, _xi_sh, _vm_sh, _vm_tilde_sh, _wp, wn_estimate, _wm_sh = \
             sound_shell_deflagration(
                 model, v_wall=v_wall, wn=wn, w_center=w_center_i, cs_n=model.css2, v_cj=v_cj,
                 vp_guess=vp_bag, wp_guess=wp_bag

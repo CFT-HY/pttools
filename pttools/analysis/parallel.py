@@ -22,6 +22,29 @@ if tp.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def _failure_output(post_func: PostFunc | None, post_func_return_multiple: bool) -> tuple[None, ...] | None:
+    """Output of :func:`create_bubble` and :func:`create_spectrum` when the object could not be created."""
+    if post_func is None:
+        return None
+    if post_func_return_multiple:
+        return None, *post_func.fail_value
+    return None, post_func.fail_value
+
+
+def _post_process[T: (Bubble, Spectrum)](
+        obj: T,
+        post_func: PostFunc | None,
+        post_func_return_multiple: bool,
+        args: tuple[tp.Any, ...],
+        kwargs: dict[str, tp.Any]) -> T | tuple[T, ...]:
+    """Apply the post-processing function to the output of :func:`create_bubble` or :func:`create_spectrum`."""
+    if post_func is None:
+        return obj
+    if post_func_return_multiple:
+        return obj, *post_func(obj, *args, **kwargs)
+    return obj, post_func(obj, *args, **kwargs)
+
+
 def create_bubble(
         params: th.FloatArr1D,
         model: "Model",
@@ -37,11 +60,7 @@ def create_bubble(
     if alpha_n < model.alpha_n_min and bubble_kwargs is not None \
             and ("allow_invalid" not in bubble_kwargs or not bubble_kwargs["allow_invalid"]):
         logger.error("Invalid alpha_n=%s. Minimum for the model: %s", alpha_n, model.alpha_n_min)
-        if post_func is None:
-            return None
-        if post_func_return_multiple:
-            return None, *post_func.fail_value
-        return None, post_func.fail_value
+        return _failure_output(post_func, post_func_return_multiple)
     try:
         if bubble_kwargs is None:
             bubble = Bubble(model, v_wall, alpha_n, solve=False)
@@ -50,18 +69,10 @@ def create_bubble(
     except Exception as e:
         if allow_bubble_failure:
             logger.exception("Failed to create a bubble:", exc_info=e)
-            if post_func is None:
-                return None
-            if post_func_return_multiple:
-                return None, *post_func.fail_value
-            return None, post_func.fail_value
+            return _failure_output(post_func, post_func_return_multiple)
         raise e
     bubble.solve(use_bag_solver=use_bag_solver)
-    if post_func is not None:
-        if post_func_return_multiple:
-            return bubble, *post_func(bubble, *args, **kwargs)
-        return bubble, post_func(bubble, *args, **kwargs)
-    return bubble
+    return _post_process(bubble, post_func, post_func_return_multiple, args, kwargs)
 
 
 def create_spectrum(
@@ -84,21 +95,13 @@ def create_spectrum(
     )
     # Without post_func, create_bubble() returns None if it fails to create the bubble and allow_bubble_failure is set.
     if not isinstance(bubble, Bubble):
-        if post_func is None:
-            return None
-        if post_func_return_multiple:
-            return None, *post_func.fail_value
-        return None, post_func.fail_value
+        return _failure_output(post_func, post_func_return_multiple)
     if spectrum_kwargs is None:
         spectrum = Spectrum(bubble=bubble, parallel=False)
     else:
         spectrum = Spectrum(bubble=bubble, parallel=False, **spectrum_kwargs)
 
-    if post_func is not None:
-        if post_func_return_multiple:
-            return spectrum, *post_func(spectrum, *args, **kwargs)
-        return spectrum, post_func(spectrum, *args, **kwargs)
-    return spectrum
+    return _post_process(spectrum, post_func, post_func_return_multiple, args, kwargs)
 
 
 @tp.overload

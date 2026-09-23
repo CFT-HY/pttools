@@ -55,7 +55,7 @@ def cannot_be_sub_def(model: "Model", v_wall: float, wn: float) -> bool:
     then the wall is certainly hypersonic in the broken phase and must have fluid movement inside the wall
     to satisfy the boundary conditions. Therefore, the solution cannot be a subsonic deflagration.
     """
-    cs2_max, w_max = model.cs2_max(wn, Phase.BROKEN)
+    cs2_max, _w_max = model.cs2_max(wn, Phase.BROKEN)
     return v_wall**2 > cs2_max
 
 
@@ -69,7 +69,7 @@ def is_surely_sub_def(model: "Model", v_wall: float, wn: float) -> bool:
     then the wall is certainly subsonic in the broken phase,
     and therefore the solution is certainly a subsonic deflagration.
     """
-    cs2_min, w_min = model.cs2_min(wn, Phase.BROKEN)
+    cs2_min, _w_min = model.cs2_min(wn, Phase.BROKEN)
     return v_wall**2 < cs2_min
 
 

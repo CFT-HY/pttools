@@ -24,6 +24,37 @@ def log_nan(x: th.FloatOrArr | None, name: str, caller: str, context_str: str) -
         )
 
 
+def out_of_range_info(
+        x: th.FloatOrArr,
+        x_min: float,
+        x_max: float,
+        name: str,
+        context_str: str,
+        x_format: str,
+        is_scalar: bool,
+        too_smalls: bool | np.bool_ | th.BoolArr,
+        too_larges: bool | np.bool_ | th.BoolArr) -> str:
+    """Create the error message of :func:`check_value_in_range` for values outside the range."""
+    if is_scalar:
+        if np.any(too_smalls):
+            return f"Got {name}={x:{x_format}} < {name}_min={x_min:{x_format}}{context_str}."
+        return f"Got {name}={x:{x_format}} > {name}_max={x_max:{x_format}}{context_str}."
+    too_small = np.any(too_smalls)
+    too_large = np.any(too_larges)
+    if too_small and too_large:
+        return \
+                f"Got {np.sum(too_smalls)} point(s) with {name} < {name}_min={x_min:{x_format}} " \
+                f"and {np.sum(too_larges)} point(s) with {name} > {name}_max{context_str}. " \
+                f"Most problematic values: {name}={np.min(x):{x_format}}, {name}={np.max(x):{x_format}}"
+    if too_small:
+        return \
+                f"Got {np.sum(too_smalls)} point(s) with {name} < {name}_min={x_min:{x_format}}{context_str}. " \
+                f"Most problematic value: {name}={np.min(x):{x_format}}."
+    return \
+            f"Got {np.sum(too_larges)} point(s) with {name} > {name}_max={x_max:{x_format}}{context_str}. " \
+            f"Most problematic value: {name}={np.max(x):{x_format}}."
+
+
 def check_value_in_range[T: th.FloatOrArr](
     x: T,
     x_min: float,
@@ -63,32 +94,17 @@ def check_value_in_range[T: th.FloatOrArr](
     if not (too_small or too_large):
         return x
 
-    info = None
-    if is_scalar:
-        if too_small:
-            info = f"Got {name}={x:{x_format}} < {name}_min={x_min:{x_format}}{context_str}."
-        elif too_large:
-            info = f"Got {name}={x:{x_format}} > w_max={x_max:{x_format}}{context_str}."
-    elif too_small and too_large:
-        info = \
-                f"Got {np.sum(too_smalls)} point(s) with {name} < {name}_min={x_min:{x_format}} " \
-                f"and {np.sum(too_larges)} point(s) with {name} > {name}_max{context_str}. " \
-                f"Most problematic values: {name}={np.min(x):{x_format}}, {name}={np.max(x):{x_format}}"
-    elif too_small:
-        info = \
-                f"Got {np.sum(too_smalls)} point(s) with {name} < {name}_min={x_min:{x_format}}{context_str}. " \
-                f"Most problematic value: {name}={np.min(x):{x_format}}."
-    elif too_large:
-        info = \
-                f"Got {np.sum(too_larges)} point(s) with {name} > {name}_max={x_max:{x_format}}{context_str}. " \
-                f"Most problematic value: {name}={np.max(x):{x_format}}."
+    info = out_of_range_info(
+        x, x_min, x_max, name, context_str, x_format,
+        is_scalar=is_scalar, too_smalls=too_smalls, too_larges=too_larges
+    )
 
     if log_invalid:
         logger.error(info)
     if error_on_invalid:
         raise ValueError(info)
 
-    if nan_on_invalid and info is not None:
+    if nan_on_invalid:
         if is_scalar:
             return tp.cast(T, np.nan)
         # np.isscalar() does not narrow the type for the type checker.

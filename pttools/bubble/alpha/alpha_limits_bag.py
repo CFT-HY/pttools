@@ -16,6 +16,9 @@ from pttools.speedup.differential import DifferentialPointer
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
+# Alpha_n_max diverges as v_wall -> 1, and the solver fails to find the correct solution above this.
+_V_WALL_MAX_ALPHA_N_MAX_DEFLAGRATION: float = 0.9999
+
 
 @njit(nogil=True)
 def alpha_n_max_bag[T: FloatOrArr](
@@ -50,8 +53,7 @@ def _alpha_n_max_deflagration_bag_scalar(
         n_xi: int = DEFAULT_N_XI,
         parallel: bool = True) -> th.FloatOrArr:
     check.check_wall_speed(v_wall)
-    if v_wall > 0.9999:
-        # Alpha_n_max diverges as v_wall -> 1, and the solver fails to find the correct solution.
+    if v_wall > _V_WALL_MAX_ALPHA_N_MAX_DEFLAGRATION:
         return np.nan
     # The v_wall annotation has to be identical to that of the overload typing function,
     # but only scalars and 0-dimensional arrays can end up here.

@@ -8,7 +8,7 @@ import numpy as np
 
 from pttools.bubble import chapman_jouguet, relativity
 from pttools.bubble.fluid_base import GenericSolverOutput
-from pttools.bubble.gksvdv.gksvdv21 import kappaNuMuModel
+from pttools.bubble.gksvdv.gksvdv21 import GKSVDV_SOLUTION_TYPES, kappaNuMuModel
 from pttools.bubble.phase import Phase
 from pttools.bubble.solution_type import SolutionType
 from pttools.speedup import NAN_ARR
@@ -37,7 +37,7 @@ def sound_shell_gksvdv(
 
     try:
         # The velocities returned by the solver are in the wall frame
-        kappa_theta_bar_n, v, wow, xi, mode, vp_tilde, vm_tilde = kappaNuMuModel(
+        _kappa_theta_bar_n, v, wow, xi, mode, vp_tilde, vm_tilde = kappaNuMuModel(
             cs2b=model.cs2(wm_guess, Phase.BROKEN),
             cs2s=model.cs2(wn, Phase.SYMMETRIC),
             al=model.alpha_theta_bar_n_from_alpha_n(alpha_n=alpha_n, wn=wn),
@@ -48,14 +48,10 @@ def sound_shell_gksvdv(
             np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, \
             True, time.perf_counter() - start_time
 
-    if mode == 0:
-        sol_type = SolutionType.SUB_DEF
-    elif mode == 1:
-        sol_type = SolutionType.HYBRID
-    elif mode == 2:
-        sol_type = SolutionType.DETON
-    else:
-        raise ValueError("Got invalid mode from Giese solver:", mode)
+    try:
+        sol_type = GKSVDV_SOLUTION_TYPES[mode]
+    except KeyError as e:
+        raise ValueError("Got invalid mode from Giese solver:", mode) from e
     w = wow * wn
 
     # Velocities in the plasma frame

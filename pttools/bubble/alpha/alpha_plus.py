@@ -11,6 +11,9 @@ from pttools.speedup.differential import DifferentialPointer
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
+# Below this, alpha_n itself is used as the initial guess for alpha_+
+_ALPHA_N_SMALL: float = 0.05
+
 
 @njit
 def alpha_plus_initial_guess[T: FloatOrArr](
@@ -31,7 +34,7 @@ def alpha_plus_initial_guess[T: FloatOrArr](
     :param cs2_ptr: pointer to the $c_s^2$ function
     :return: initial guess for $\alpha_+$
     """
-    if alpha_n_given < 0.05:
+    if alpha_n_given < _ALPHA_N_SMALL:
         return alpha_n_given  # pyrefly: ignore[bad-return]
 
     alpha_plus_min = alpha_plus_min_hybrid(v_wall)

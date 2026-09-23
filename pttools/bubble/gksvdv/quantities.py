@@ -14,7 +14,7 @@ def kappa_gksvdv(params: th.FloatArr1D, css2: float, csb2: float) -> float:
     r"""Compute $\kappa$ with the :giese_2021:`\ ` solver."""
     v_wall, alpha_tbn_giese = params
     try:
-        kappa, v_arr, wow_arr, xi_arr, mode, vp, vm = kappaNuMuModel(
+        kappa, _v_arr, _wow_arr, _xi_arr, _mode, _vp, _vm = kappaNuMuModel(
             # cs2s=model.cs2(model.w_crit, Phase.SYMMETRIC),
             # cs2b=model.cs2(model.w_crit, Phase.BROKEN),
             cs2s=css2,

@@ -9,6 +9,9 @@ import scipy.integrate as spi
 from pttools import bubble
 import pttools.type_hints as th
 
+#: Unphysical deflagration velocities below this are not plotted.
+V_GREY_MIN: float = 1e-4
+
 
 def filter_not[T: tuple, U: dtype](arr: np.ndarray[T, U], mask: np.ndarray[T, th.Bool]) -> np.ndarray[T, U]:
     """Replace the elements that are False in the mask with np.nan."""
@@ -76,7 +79,7 @@ def plot_v_excerpt(ax: plt.Axes, v_wall: float, alpha_plus: float, n_xi: int = 5
     Supersonic deflagration solution comes in two parts, ahead and behind wall,
     each with about npts values.
     """
-    v, w, xi = bubble.sound_shell_alpha_plus_bag(
+    v, _w, xi = bubble.sound_shell_alpha_plus_bag(
         v_wall, alpha_plus, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
         ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=bubble.CS2_BAG_SCALAR_PTR, n_xi=n_xi)
     wall_type = bubble.identify_solution_type_bag(
@@ -195,7 +198,7 @@ def plot_plane(
         deflag_xi_b_grey = deflag_xi_b[unphysical]
         deflag_v_b[unphysical] = np.nan
         # Unphysical doesn't quite work for last points, so ...
-        deflag_v_b_grey[deflag_v_b_grey < 1e-4] = np.nan
+        deflag_v_b_grey[deflag_v_b_grey < V_GREY_MIN] = np.nan
 
         if method == "numba_lsoda":
             set_invalid_v_to_nan(deflag_v_b)

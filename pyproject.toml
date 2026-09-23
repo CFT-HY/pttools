@@ -371,6 +371,26 @@ extend-ignore-names = [
 "docs/conf.py" = [
     "A001"  # builtin-variable-shadowing
 ]
+# This code is copied from external sources, and its structure is kept close to the original.
+"pttools/bubble/gksvdv/*.py" = [
+    "PLR0911",  # too-many-return-statements
+    "PLR0912",  # too-many-branches
+    "PLR0915",  # too-many-statements
+    "PLR2004",  # magic-value-comparison
+]
+"pttools/speedup/fitpack.py" = [
+    "PLR0911",  # too-many-return-statements
+    "PLR0912",  # too-many-branches
+    "PLR0915",  # too-many-statements
+    "PLR2004",  # magic-value-comparison
+    "PLW2901",  # redefined-loop-name
+]
+"tests/paper/{sigfig,ssm_compare,ssm_paper_utils}.py" = [
+    "PLR0911",  # too-many-return-statements
+    "PLR0912",  # too-many-branches
+    "PLR0915",  # too-many-statements
+    "PLR2004",  # magic-value-comparison
+]
 # The module docstring of a Sphinx-Gallery example has to start with an RST section title,
 # which cannot end with a period and has to be followed directly by its underline.
 "examples/**" = [

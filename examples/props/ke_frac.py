@@ -24,7 +24,7 @@ def main() -> plt.Figure:
     # alpha_ns = np.array([model.alpha_n_min, 0.2, 0.25])
     alpha_ns = np.array([model.alpha_n_min + 0.01])
 
-    bubbles, ke_fracs = create_bubbles(
+    _bubbles, ke_fracs = create_bubbles(
         model, v_walls=v_walls, alpha_ns=alpha_ns, func=get_ke_frac,
         # allow_bubble_failure=True,
         # bubble_kwargs={"allow_invalid": True}

@@ -313,7 +313,7 @@ def sound_shell_deflagration_reverse(
         "Integrating deflagration with v_wall=%s, wn=%s from vm_sh=%s, wm_sh=%s, xi_sh=%s",
         v_wall, wn, vm_sh, wm_sh, xi_sh
     )
-    v, w, xi, t = integrate.fluid_integrate_param(
+    v, w, xi, _t = integrate.fluid_integrate_param(
         v0=vm_sh, w0=wm_sh, xi0=xi_sh,
         phase=Phase.SYMMETRIC,
         t_end=t_end,
@@ -493,6 +493,6 @@ def sound_shell_solver_deflagration_reverse(
             "Using xi_sh=%s. Reason: %s Elapsed: %s s.",
             model.name, v_wall, alpha_n, xi_sh, sol[3].replace("\n ", ""), time.perf_counter() - start_time
         )
-    v, w, xi, wp, wm, vm = sound_shell_deflagration_reverse(model, v_wall, wn, xi_sh, t_end=t_end, n_xi=n_xi)
+    v, w, xi, wp, wm, _vm = sound_shell_deflagration_reverse(model, v_wall, wn, xi_sh, t_end=t_end, n_xi=n_xi)
 
     return v, w, xi, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, wp, wm, np.nan, solution_found

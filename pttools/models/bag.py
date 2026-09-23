@@ -116,6 +116,7 @@ class BagModel(AnalyticModel):
             log_invalid=log_invalid
         )
 
+    @tp.override
     def alpha_n_min_find(self, w_min: float | None = None, w_max: float | None = None) -> tuple[float, float]:
         return self.w_crit, self.alpha_n(self.w_crit)
 
@@ -205,6 +206,7 @@ class BagModel(AnalyticModel):
             log_invalid=log_invalid
         )
 
+    @tp.override
     def critical_temp(
             self,
             guess: float | None = None,
@@ -225,12 +227,14 @@ class BagModel(AnalyticModel):
     cs2_neg = staticmethod(cs2_bag_neg)
     cs2_temp = staticmethod(cs2_bag_temp)
 
+    @tp.override
     def cs2_max(
             self,
             w_max: float, phase: Phase,
             w_min: float = 0, allow_fail: bool = False, **kwargs) -> tuple[float, float]:
         return 1/3, np.nan
 
+    @tp.override
     def cs2_min(
                 self,
                 w_max: float, phase: Phase,
@@ -295,6 +299,7 @@ class BagModel(AnalyticModel):
         s_b = 4 * self.a_b * temp**3
         return tp.cast(T, s_b * phase + s_s * (1 - phase))
 
+    @tp.override
     def solution_type(
             self,
             v_wall: float,

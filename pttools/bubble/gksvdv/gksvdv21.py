@@ -10,9 +10,17 @@ import numpy as np
 from scipy.integrate import odeint, simpson
 
 from pttools.bubble.relativity import lorentz as mu
+from pttools.bubble.solution_type import SolutionType
 import pttools.type_hints as th
 
 # from pttools.speedup import NUMBA_ENABLE_CACHE
+
+#: Solution types corresponding to the modes of the Giese et al. (2021) solver
+GKSVDV_SOLUTION_TYPES: dict[int, SolutionType] = {
+    0: SolutionType.SUB_DEF,
+    1: SolutionType.HYBRID,
+    2: SolutionType.DETON,
+}
 
 #: Offset of the points behind and ahead of the fluid shell from its ends.
 #: This ensures that the profile does not have duplicate $\xi$ values, and that the point behind the wall
@@ -123,7 +131,7 @@ def getalNwow(vp, vm, vw, cs2b, cs2s):
     - $\alpha_{\bar{\theta}n}$ in the nucleation phase
     - Ratio of the enthalpies for fixed boundary conditions at the wall.
     """
-    _, _, _, Ksh, wow = getKandWow(vw, mu(vw, vp), cs2s)
+    _, _, _, _Ksh, wow = getKandWow(vw, mu(vw, vp), cs2s)
     al = (vp/vm-1.)*(vp*vm/cs2b - 1.)/(1-vp**2)/3.
     return alN(al, wow, cs2b, cs2s), wow
 
@@ -179,7 +187,7 @@ def kappaNuMuModel(
 
     # If the model is a detonation or a hybrid
     if mode > 0:
-        v_in, wow_in, xi_in, Krf, wow3 = getKandWow(vw=vw, v0=mu(vw, vm), cs2=cs2b)
+        v_in, wow_in, xi_in, Krf, _wow3 = getKandWow(vw=vw, v0=mu(vw, vm), cs2=cs2b)
         v_in = np.flip(v_in)
         wow_mult = wow * getwow(vp, vm)
         wow_in = np.flip(wow_in) * wow_mult

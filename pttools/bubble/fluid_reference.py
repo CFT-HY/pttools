@@ -20,6 +20,7 @@ from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.solution_type_bag import identify_solution_type_bag
 from pttools.logging import setup_logging
 from pttools.speedup.parallel import run_parallel
+import pttools.type_hints as th
 from pttools.utils.system import FORKING
 
 logger = logging.getLogger(__name__)
@@ -144,22 +145,7 @@ class FluidReference:
         data[:, :, 4] = wp
         data[:, :, 5] = wm
 
-        # Nearest neighbor interpolator set-up
-        valids = np.logical_not(np.any(np.isnan(data), axis=2))
-        coords: list[list[float]] = [[], [], []]
-        inds: list[list[int]] = [[], [], []]
-        i = 0
-        for i_alpha_n, alpha_n in enumerate(alpha_ns):
-            for i_v_wall, v_wall in enumerate(v_walls):
-                if valids[i_alpha_n, i_v_wall]:
-                    if np.any(np.isnan(data[i_alpha_n, i_v_wall, :])):
-                        raise RuntimeError(
-                            "nan values should not be picked up for the nearest neighbour set-up"
-                        )
-                    sol_tp = sol_type[i_alpha_n, i_v_wall]
-                    coords[sol_tp].append([v_wall, alpha_n])
-                    inds[sol_tp].append(i_alpha_n * v_walls.size + i_v_wall)
-                    i += 1
+        coords, inds = _nearest_neighbour_setup(data, sol_type, v_walls, alpha_ns)
 
         try:
             with h5py.File(self.path, "w") as file:
@@ -201,6 +187,28 @@ class FluidReference:
         return self.data[i_alpha_n, i_v_wall]
 
 
+def _nearest_neighbour_setup(
+        data: np.ndarray,
+        sol_type: np.ndarray,
+        v_walls: th.FloatArr1D,
+        alpha_ns: th.FloatArr1D) -> tuple[list[list[list[float]]], list[list[int]]]:
+    """Get the coordinates and the flattened indices of the valid reference points for each solution type."""
+    valids = np.logical_not(np.any(np.isnan(data), axis=2))
+    coords: list[list[list[float]]] = [[], [], []]
+    inds: list[list[int]] = [[], [], []]
+    for i_alpha_n, alpha_n in enumerate(alpha_ns):
+        for i_v_wall, v_wall in enumerate(v_walls):
+            if valids[i_alpha_n, i_v_wall]:
+                if np.any(np.isnan(data[i_alpha_n, i_v_wall, :])):
+                    raise RuntimeError(
+                        "nan values should not be picked up for the nearest neighbour set-up"
+                    )
+                sol_tp = sol_type[i_alpha_n, i_v_wall]
+                coords[sol_tp].append([v_wall, alpha_n])
+                inds[sol_tp].append(i_alpha_n * v_walls.size + i_v_wall)
+    return coords, inds
+
+
 def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tuple[int, float, float, float, float, float, float]:
     """Create a reference point."""
     if alpha_n > alpha_n_max:
@@ -217,7 +225,7 @@ def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tuple[int, flo
         logger.error("Got nan values from the integration at v_wall=%s, alpha_n=%s", v_wall, alpha_n)
         return -1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 
-    vp, vm, vp_tilde, vm_tilde, wp, wm, wn, wm_sh = props.v_and_w_from_solution(v, w, xi, v_wall, sol_type)
+    vp, vm, vp_tilde, vm_tilde, wp, wm, wn, _wm_sh = props.v_and_w_from_solution(v, w, xi, v_wall, sol_type)
 
     if not np.isclose(wn, 1):
         raise ValueError(f"The old solver should always have wn=1, got wn={wn}")

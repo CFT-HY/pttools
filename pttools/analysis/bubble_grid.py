@@ -78,7 +78,8 @@ class BubbleGridVWAlpha(BubbleGrid):
             bubbles = data
         else:
             bubbles = data[0]
-            self.data = data[1] if len(data) == 2 else data[1:]
+            func_outputs = data[1:]
+            self.data = func_outputs[0] if len(func_outputs) == 1 else func_outputs
 
         self.model = model
         self.v_walls = v_walls

@@ -19,6 +19,9 @@ logger = logging.getLogger(__name__)
 #: whether all of its tests should be run on the same pytest-xdist worker.
 RUN_ON_SAME_WORKER_ATTR: str = "RUN_ON_SAME_WORKER"
 
+#: Maximum number of pytest-xdist workers for ``--numprocesses=auto``.
+MAX_XDIST_WORKERS: int = 8
+
 #: Name of the pytest-xdist marker that groups tests to the same worker.
 #: This is used by ``--dist=loadgroup``.
 XDIST_GROUP_MARKER: str = "xdist_group"
@@ -75,8 +78,8 @@ def pytest_xdist_auto_num_workers() -> int | None:
 
     :return: Number of workers (None = auto)
     """
-    if AVAILABLE_CPU_CORES is not None and AVAILABLE_CPU_CORES >= 8:
-        return 8
+    if AVAILABLE_CPU_CORES is not None and AVAILABLE_CPU_CORES >= MAX_XDIST_WORKERS:
+        return MAX_XDIST_WORKERS
     return None
 
 

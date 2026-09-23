@@ -28,7 +28,7 @@ def main() -> Figure:
         y=np.logspace(-0.5, 3, 1000),
         label_latex=rf"$T_*={as_latex(DEFAULT_T_STAR)} \ \mathrm{{GeV}}$"
     )
-    fig, axs = spectrum.plot_multi_flat(legend=True)
+    fig, _axs = spectrum.plot_multi_flat(legend=True)
     return fig
 
 

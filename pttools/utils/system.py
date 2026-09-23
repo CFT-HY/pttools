@@ -34,6 +34,8 @@ IS_READ_THE_DOCS: bool = "READTHEDOCS_VIRTUALENV_PATH" in os.environ
 PTTOOLS_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 #: The method used by `multiprocessing` to start parallel processes
 PROCESS_START_METHOD: str = multiprocessing.get_start_method()
+#: RAM use percentage above which a warning is included in :py:func:`psutil_info`
+RAM_USE_HIGH_PERCENT: float = 80
 #: Whether this Python installation supports free threading
 SUPPORTS_FREETHREADING: bool = bool(sysconfig.get_config_var("Py_GIL_DISABLED"))
 #: Whether this Python installation supports :py:class:`multiprocessing.InterpreterPoolExecutor`
@@ -109,10 +111,10 @@ def psutil_info() -> str:
     msg_ram_high = (
         " RAM use is high. "
         "Please reduce the number of worker processes or close applications running in the background."
-    ) if ram.percent > 80 else ""
+    ) if ram.percent > RAM_USE_HIGH_PERCENT else ""
     return (
         f"{msg_cpu} RAM use: {ram.used * 1e-9:.2f} / {ram.total * 1e-9:.2f} GB = {ram.percent} %, "
-        f"available {ram.available} GB.{msg_ram_high}"
+        f"available {ram.available * 1e-9:.2f} GB.{msg_ram_high}"
     )
 
 

@@ -9,7 +9,9 @@ import pttools.type_hints as th
 from pttools.utils.math import rel_diff_arr, rel_diff_scalar
 
 DEFAULT_FMT = ".8e"
-HIGH_PREC = 10
+HIGH_PREC: int = 10
+# 1D arrays of at least this size are printed as columns instead of rows
+PRINT_1D_LARGE_MIN_SIZE: int = 10
 
 RED: str
 RESET: str
@@ -75,7 +77,7 @@ def print_1d_large(actual: th.FloatArr1D, desired: th.FloatArr1D, close: th.Bool
 
 def print_1d(actual: th.FloatArr1D, desired: th.FloatArr1D, close: th.BoolArr1D) -> None:
     """Print a 1D array."""
-    if actual.size < 10:
+    if actual.size < PRINT_1D_LARGE_MIN_SIZE:
         print_1d_small(actual, desired, close)
     else:
         print_1d_large(actual, desired, close)
@@ -95,10 +97,11 @@ def print_full_prec(x: float) -> None:
 def print_high_prec(x: th.FloatOrArr) -> None:
     """Print a value or an array with high precision."""
     if isinstance(x, np.ndarray):
-        if x.ndim == 1:
-            print("[" + ", ".join([high_prec_float_str(elem) for elem in x]) + "]")
-        if x.ndim == 2:
-            print("[" + "\n".join([", ".join([str(high_prec_float_str(elem) for elem in line)]) for line in x]) + "]")
+        match x.ndim:
+            case 1:
+                print("[" + ", ".join([high_prec_float_str(elem) for elem in x]) + "]")
+            case 2:
+                print("[" + "\n".join([", ".join([high_prec_float_str(elem) for elem in line]) for line in x]) + "]")
         # These other ways tend to result in extra spaces between the elements
         # with np.printoptions(precision=10, edgeitems=30, linewidth=1000):
         #     print(x)

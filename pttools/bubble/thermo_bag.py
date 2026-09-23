@@ -31,6 +31,9 @@ type Integrand = \
 
 logger = logging.getLogger(__name__)
 
+#: Minimum number of points on each side of the wall for split_integrate() to integrate that side
+SPLIT_INTEGRATE_MIN_POINTS: int = 3
+
 
 @njit
 def de_from_w_bag(
@@ -114,9 +117,9 @@ def get_kappa_bag[T: FloatOrArr](
     """
     # NB was called get_kappa_arr
     it = np.nditer([v_wall, None])
-    for vw, kappa in it:
+    for vw_0d, kappa in it:
         # This is necessary for Numba
-        vw = vw.item()
+        vw = vw_0d.item()
         sol_type = identify_solution_type_bag(
             vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD,
             cs2_ptr=CS2_BAG_SCALAR_PTR)
@@ -163,8 +166,8 @@ def get_kappa_de_bag[T: FloatOrArr](
     :return: $\kappa, de$
     """
     it = np.nditer([v_wall, None, None])
-    for vw, kappa, de in it:
-        vw = vw.item()
+    for vw_0d, kappa, de in it:
+        vw = vw_0d.item()
         sol_type = identify_solution_type_bag(
             vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD,
             cs2_ptr=CS2_BAG_SCALAR_PTR)
@@ -217,8 +220,8 @@ def get_kappa_dq_bag[T: FloatOrArr](
     :return: $\kappa$, dq
     """
     it = np.nditer([v_wall, None, None])
-    for vw, kappa, dq in it:
-        vw = vw.item()
+    for vw_0d, kappa, dq in it:
+        vw = vw_0d.item()
         sol_type = identify_solution_type_bag(
             vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD,
             cs2_ptr=CS2_BAG_SCALAR_PTR)
@@ -268,8 +271,8 @@ def get_ke_de_frac_bag[T: FloatOrArr](
     :return: kinetic energy fraction, fractional change in energy
     """
     it = np.nditer([v_wall, None, None])
-    for vw, ke, de in it:
-        vw = vw.item()
+    for vw_0d, ke, de in it:
+        vw = vw_0d.item()
         sol_type = identify_solution_type_bag(
             vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD,
             cs2_ptr=CS2_BAG_SCALAR_PTR)
@@ -341,8 +344,8 @@ def get_ke_frac_new_bag[T: FloatOrArr](
     # If no solution is found for any of the wall speeds, the results will be nan.
     w = np.array([np.nan])
     it = np.nditer([v_wall, None])
-    for vw, ke in it:
-        vw = vw.item()
+    for vw_0d, ke in it:
+        vw = vw_0d.item()
         sol_type = identify_solution_type_bag(
             vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD,
             cs2_ptr=CS2_BAG_SCALAR_PTR)
@@ -511,8 +514,8 @@ def get_ubarf2_new_bag[T: FloatOrArr](
     Gamma = bag.adiabatic_index_bag(w_mean, Phase.BROKEN, bag.theta_bag(w_mean, Phase.BROKEN, alpha_n))
 
     it = np.nditer([v_wall, None])
-    for vw, Ubarf2 in it:
-        vw = vw.item()
+    for vw_0d, Ubarf2 in it:
+        vw = vw_0d.item()
         sol_type = identify_solution_type_bag(
             vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG, ode_method=DEFAULT_FLUID_INTEGRATE_METHOD,
             cs2_ptr=CS2_BAG_SCALAR_PTR)
@@ -608,10 +611,6 @@ def split_integrate(
     check.check_wall_speed(v_wall)
     inside = np.where(xi < v_wall)
     outside = np.where(xi > v_wall)
-    int1 = 0.
-    int2 = 0.
-    if v[inside].size >= 3:
-        int1 = part_integrate(func, v, w, xi, inside)
-    if v[outside].size >= 3:
-        int2 = part_integrate(func, v, w, xi, outside)
+    int1 = part_integrate(func, v, w, xi, inside) if v[inside].size >= SPLIT_INTEGRATE_MIN_POINTS else 0.
+    int2 = part_integrate(func, v, w, xi, outside) if v[outside].size >= SPLIT_INTEGRATE_MIN_POINTS else 0.
     return int1, int2

@@ -164,6 +164,7 @@ class ThermoModel(BaseModel, abc.ABC):
 
         return cs2
 
+    @tp.override
     def cs2[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""
         Sound speed squared, $c_s^2$, interpolated from precomputed values.

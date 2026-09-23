@@ -31,7 +31,7 @@ def sound_shell_detonation(
     # Todo: use analytical ConstCSModel equations for both phases
 
     # Use bag model as the starting point. This may fail for points near the v_cj curve.
-    vp_tilde_bag, vm_tilde_bag, vp_bag, vm_bag = fluid_speeds_at_wall_bag(
+    vp_tilde_bag, vm_tilde_bag, _vp_bag, _vm_bag = fluid_speeds_at_wall_bag(
         v_wall, alpha_plus=alpha_n, sol_type=SolutionType.DETON)
     wm_bag = w2_junction(v1=vp_tilde_bag, w1=wn, v2=vm_tilde_bag)
 

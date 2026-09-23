@@ -26,7 +26,7 @@ def main():
     bubble_fig = bubble.plot()
 
     spectrum = Spectrum(bubble, r_star=0.1, nuc_type=NucType.EXPONENTIAL)
-    spectrum_fig, axs = spectrum.plot_multi()
+    spectrum_fig, _axs = spectrum.plot_multi()
 
     return model_plot, bubble_fig, spectrum_fig
 

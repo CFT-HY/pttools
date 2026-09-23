@@ -7,8 +7,6 @@ Plot a single bubble using parameters from the code of :giese_2021:`\ `
 
 import logging
 
-import numpy as np
-
 from examples.utils import save_and_show_fig
 from pttools.analysis import setup_bubbles_plot_multifig
 from pttools.bubble import Bubble

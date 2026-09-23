@@ -37,13 +37,13 @@ def main() -> plt.Figure:
     model2 = ConstCSModel(a_s=1.1, a_b=1, css2=1/3, csb2=1/3, V_s=1, V_b=0)
     det2 = Bubble(model2, v_wall=0.85, alpha_n=0.05, sol_type=SolutionType.DETON)
     ax.plot(det2.xi, det2.v, c="b", label=r"$c_{sb}=\frac{1}{\sqrt{3}}$")
-    v, w, xi = sound_shell_bag(
+    v, _w, xi = sound_shell_bag(
         v_wall=0.85, alpha_n=0.05, df_dtau_ptr=DF_DTAU_PTR_BAG,
         ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR)
     ax.plot(xi, v, c="g", label="bag", ls=":")
     def2 = Bubble(model2, v_wall=0.5, alpha_n=0.578, sol_type=SolutionType.SUB_DEF)
     ax.plot(def2.xi, def2.v, c="b")
-    v, w, xi = sound_shell_bag(
+    v, _w, xi = sound_shell_bag(
         v_wall=0.5, alpha_n=0.578, df_dtau_ptr=DF_DTAU_PTR_BAG,
         ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR)
     ax.plot(xi, v, c="g", ls=":")

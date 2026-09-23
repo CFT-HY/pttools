@@ -7,7 +7,7 @@ from pttools.analysis import utils
 from pttools.bubble import SolutionType, const, fluid_bag, relativity
 
 
-def plot_fluid_shell_bag(
+def plot_fluid_shell_bag(  # noqa: PLR0915
         v_wall: float,
         alpha_n: float,
         save_string: str | None = None,

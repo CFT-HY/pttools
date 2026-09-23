@@ -93,7 +93,7 @@ def round_sig_error(x: float, ex: float, n: int, paren: bool = False) -> str | t
         stx = round_sig(x, sigfigs)
     else:
         num_after_dec = len(stex.split('.')[1])
-        stx = ("%%.%df" % num_after_dec) % x
+        stx = f"{x:.{num_after_dec}f}"
     if paren:
         if stex.find('.') >= 0:
             stex = stex[stex.find('.') + 1:]
@@ -129,12 +129,12 @@ def format_table(
             elif len(headers) == n_cols + 1:
                 pass
             else:
-                raise ValueError("length of headers should be %d" % (n_cols + 1))
+                raise ValueError(f"length of headers should be {n_cols + 1:d}")
         elif len(headers) != n_cols:
-            raise ValueError("length of headers should be %d" % n_cols)
+            raise ValueError(f"length of headers should be {n_cols:d}")
 
     if labels is not None and len(labels) != n_rows:
-        raise ValueError("length of labels should be %d" % n_rows)
+        raise ValueError(f"length of labels should be {n_rows:d}")
 
     str_cols: list[list[str]] = []
     for col, error in zip(cols, errors, strict=False):
@@ -148,11 +148,11 @@ def format_table(
     lengths = [max([len(item) for item in strcol]) for strcol in str_cols]
     fmt = ""
     if labels is not None:
-        fmt += "%%%ds " % (max(map(len, labels)))
+        fmt += f"%{max(map(len, labels)):d}s "
         if latex:
             fmt += "& "
     for length in lengths:
-        fmt += "%%%ds " % length
+        fmt += f"%{length:d}s "
         if latex:
             fmt += "& "
     if latex:
@@ -192,8 +192,8 @@ def round_sig_error2(x: float, ex1: float, ex2: float, n: int) -> tuple[str, str
         max_stex = round_sig(max(ex1, ex2), sigfigs)
     else:
         num_after_dec = len(min_stex.split('.')[1])
-        stx = ("%%.%df" % num_after_dec) % x
-        max_stex = ("%%.%df" % num_after_dec) % (max(ex1, ex2))
+        stx = f"{x:.{num_after_dec}f}"
+        max_stex = f"{max(ex1, ex2):.{num_after_dec}f}"
     if ex1 < ex2:
         return stx, min_stex, max_stex
     return stx, max_stex, min_stex

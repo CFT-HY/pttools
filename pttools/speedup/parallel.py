@@ -38,10 +38,10 @@ logger = logging.getLogger(__name__)
 POOL: ProcessPoolExecutor | None = None
 POOL_LOCK: Lock = Lock()
 
-# On Linux, forkserver is the default start method since Python 3.14.
-# On Windows and macOS, the default start method is spawn, which is slow.
-# This config preloads the target libraries in the forkserver process before forking it,
-# to speed up the start of new processes.
+#: On Linux, forkserver is the default start method since Python 3.14.
+#: On Windows and macOS, the default start method is spawn, which is slow.
+#: This config preloads the target libraries in the forkserver process before forking it,
+#: to speed up the start of new processes.
 DEFAULT_FORKSERVER_PRELOAD: list[str] = [
     "numba", "numpy", "scipy",
     "pttools.analysis", "pttools.bubble", "pttools.models",
@@ -224,15 +224,17 @@ def parallel_debug_message(
     if start_time is not None:
         msg += f"Executor runtime: {end_time - start_time:.2f} s. "
 
+    params = []
     if max_workers is not None:
-        msg += f", max_workers={max_workers}"
+        params.append(f"max_workers={max_workers}")
     if single_thread is not None:
-        msg += f", single_thread={single_thread}"
-
+        params.append(f"single_thread={single_thread}")
     if kwargs:
-        msg += ", ".join([f"{name}={value}" for name, value in kwargs.items()])
+        params += [f"{name}={value}" for name, value in kwargs.items()]
+    if params:
+        msg += f"Parameters: {', '.join(params)}"
 
-    return msg
+    return msg.rstrip()
 
 
 def log_parallel_ready(
@@ -246,6 +248,68 @@ def log_parallel_ready(
         "Parallel processing ready. Executor: %s, workers: %s, tasks: %s, time: %.3f s, thread time / task: %.3f s",
         executor, n_workers, n_tasks, elapsed, cpu_time_per_task
     )
+
+
+def _collect_arr_output(
+        futs: NDArray,
+        output_dtypes: tuple[type, ...] | list[type] | None,
+        return_arr_shape: tuple[int, ...]) -> NDArray:
+    """Collect the results of :func:`run_parallel` when the function returns an array."""
+    if output_dtypes is None or not len(output_dtypes):
+        raise ValueError("Please give the output dtype.")
+    if len(output_dtypes) > 1:
+        raise ValueError("Array output is currently supported for only one array.")
+    output_arr = np.empty((*futs.shape, *return_arr_shape), dtype=output_dtypes[0])
+    # axes = list(range(futs.ndim)) # + list((-1, ) * len(return_arr_shape))
+    # op_axes = [axes, axes]
+    with np.nditer(
+            futs,
+            flags=["refs_ok", "c_index", "multi_index"],
+            # op_flags=[["readonly"], ["writeonly"]],
+            # op_axes=op_axes,
+            order="C") as it:
+        for fut in it:
+            # With a single operand, the iterator gives arrays instead of tuples.
+            output_arr[*it.multi_index, :] = fut.item().result()  # pyrefly: ignore[missing-attribute]
+    return output_arr
+
+
+def _collect_single_output(futs: NDArray, output_dtypes: tuple[type, ...] | list[type] | None) -> NDArray:
+    """Collect the results of :func:`run_parallel` when the function returns a single value."""
+    output_arr = None if output_dtypes is None else np.empty_like(futs, dtype=output_dtypes[0])
+    with np.nditer(
+            [futs, output_arr],
+            flags=["refs_ok", "c_index", "multi_index"],
+            # Without explicit op_flags, a given output array would be read-only.
+            op_flags=[["readonly"], ["writeonly", "allocate"]],
+            order="C") as it:
+        for fut, res in it:
+            res[...] = fut.item().result()
+        return it.operands[1]
+
+
+def _collect_multiple_outputs(futs: NDArray, output_dtypes: tuple[type, ...] | list[type]) -> tuple[NDArray, ...]:
+    """Collect the results of :func:`run_parallel` when the function returns multiple values."""
+    op_flags2: list[list[tp.Literal["readonly", "writeonly"]]] = \
+        [["readonly"], *[["writeonly"]] * len(output_dtypes)]
+    output_arrs = tuple(
+        np.empty(futs.shape, dtype=dtype)
+        for dtype in output_dtypes
+    )
+    with np.nditer(
+            [futs, *output_arrs],
+            flags=["refs_ok", "c_index", "multi_index"],
+            op_flags=op_flags2,
+            order="C") as it:
+        for elems in it:
+            res = elems[0].item().result()
+            try:
+                for arr, val in zip(elems[1:], res, strict=False):
+                    arr[...] = val
+            except ValueError as e:
+                logger.exception("Could not store result to output array. Got: %s", res, exc_info=e)
+                raise e
+    return output_arrs
 
 
 def run_parallel(
@@ -347,63 +411,15 @@ def run_parallel(
             # if output_dtypes is None:
             #     return None
 
-            # Array output
             if return_arr_shape is not None:
-                if output_dtypes is None or not len(output_dtypes):
-                    raise ValueError("Please give the output dtype.")
-                if len(output_dtypes) > 1:
-                    raise ValueError("Array output is currently supported for only one array.")
-                output_arr = np.empty((*futs.shape, *return_arr_shape), dtype=output_dtypes[0])
-                # axes = list(range(futs.ndim)) # + list((-1, ) * len(return_arr_shape))
-                # op_axes = [axes, axes]
-                with np.nditer(
-                        futs,
-                        flags=["refs_ok", "c_index", "multi_index"],
-                        # op_flags=[["readonly"], ["writeonly"]],
-                        # op_axes=op_axes,
-                        order="C") as it:
-                    for fut in it:
-                        # With a single operand, the iterator gives arrays instead of tuples.
-                        output_arr[*it.multi_index, :] = fut.item().result()  # pyrefly: ignore[missing-attribute]
-                if log_start_finish:
-                    log_parallel_ready(executor=ex, n_workers=n_workers, n_tasks=n_tasks, start_time=start_time)
-                return output_arr
-
-            # Single output
-            if output_dtypes is None or len(output_dtypes) == 1:
-                output_arr = None if output_dtypes is None else np.empty_like(futs, dtype=output_dtypes[0])
-                with np.nditer(
-                        [futs, output_arr],
-                        flags=["refs_ok", "c_index", "multi_index"],
-                        # Without explicit op_flags, a given output array would be read-only.
-                        op_flags=[["readonly"], ["writeonly", "allocate"]],
-                        order="C") as it:
-                    for fut, res in it:
-                        res[...] = fut.item().result()
-                    if log_start_finish:
-                        log_parallel_ready(executor=ex, n_workers=n_workers, n_tasks=n_tasks, start_time=start_time)
-                    return it.operands[1]
-
-            # Multiple outputs
-            op_flags2: list[list[tp.Literal["readonly", "writeonly"]]] = \
-                [["readonly"], *[["writeonly"]] * len(output_dtypes)]
-            output_arrs = tuple(np.empty(futs.shape, dtype=dtype) for dtype in output_dtypes)
-            with np.nditer(
-                    [futs, *output_arrs],
-                    flags=["refs_ok", "c_index", "multi_index"],
-                    op_flags=op_flags2,
-                    order="C") as it:
-                for elems in it:
-                    res = elems[0].item().result()
-                    try:
-                        for arr, val in zip(elems[1:], res, strict=False):
-                            arr[...] = val
-                    except ValueError as e:
-                        logger.exception("Could not store result to output array. Got: %s", res, exc_info=e)
-                        raise e
+                ret = _collect_arr_output(futs, output_dtypes, return_arr_shape)
+            elif output_dtypes is None or len(output_dtypes) == 1:
+                ret = _collect_single_output(futs, output_dtypes)
+            else:
+                ret = _collect_multiple_outputs(futs, output_dtypes)
             if log_start_finish:
                 log_parallel_ready(executor=ex, n_workers=n_workers, n_tasks=n_tasks, start_time=start_time)
-            return output_arrs
+            return ret
     except BrokenProcessPool as err:
         msg = parallel_debug_message(
             info="Parallel execution failed due to a system error. ",

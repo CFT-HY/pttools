@@ -19,6 +19,22 @@ def _assert_allclose_header(name: str | None, rtol: float, atol: float, caller: 
     ]
 
 
+def _print_arr_mismatch(actual: th.FloatArr, desired: th.FloatArr, close: th.BoolArr, fmt: str) -> None:
+    """Print the actual and desired values of a failed :func:`assert_allclose` for 1D and 2D arrays."""
+    # The dimensions are checked at runtime, which does not narrow the shape types for the type checker.
+    if actual.ndim == 1:
+        print_1d(
+            tp.cast(th.FloatArr1D, actual),
+            tp.cast(th.FloatArr1D, desired),
+            tp.cast(th.BoolArr1D, close)
+        )
+    elif actual.ndim == 2:  # noqa: PLR2004
+        print("Actual:")
+        print_2d(tp.cast(th.FloatArr2D, actual), tp.cast(th.BoolArr2D, close), fmt)
+        print("Desired:")
+        print_2d(tp.cast(th.FloatArr2D, desired), tp.cast(th.BoolArr2D, close), fmt)
+
+
 def assert_allclose(
         actual: th.FloatOrArr1D2D | list[float] | list[list[float]] | None,
         desired: th.FloatOrArr1D2D | list[float] | list[list[float]],
@@ -99,18 +115,6 @@ def assert_allclose(
             f"Max relative difference: {np.nanmax(rel_diff_arr(actual_arr, desired_arr))}"
         ]
         print("\n".join(lines))
-
-        # The dimensions are checked at runtime, which does not narrow the shape types for the type checker.
-        if actual_arr.ndim == 1:
-            print_1d(
-                tp.cast(th.FloatArr1D, actual_arr),
-                tp.cast(th.FloatArr1D, desired_arr),
-                tp.cast(th.BoolArr1D, close_arr)
-            )
-        elif actual_arr.ndim == 2:  # noqa: PLR2004
-            print("Actual:")
-            print_2d(tp.cast(th.FloatArr2D, actual_arr), tp.cast(th.BoolArr2D, close_arr), fmt)
-            print("Desired:")
-            print_2d(tp.cast(th.FloatArr2D, desired_arr), tp.cast(th.BoolArr2D, close_arr), fmt)
+        _print_arr_mismatch(actual_arr, desired_arr, close_arr, fmt)
 
     raise AssertionError(". ".join(lines) + ".")

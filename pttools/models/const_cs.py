@@ -327,6 +327,7 @@ class ConstCSModel(AnalyticModel):
     #         f"({'fail' if alpha_n < self.alpha_n_min_limit_a else 'OK'})"
     #     return msg
 
+    @tp.override
     def alpha_n_min_find(
             self,
             w_min: float | None = None,
@@ -337,7 +338,7 @@ class ConstCSModel(AnalyticModel):
         # return xopt, fval
         return self.w_crit, analytical
 
-    def alpha_n_min_find_params(
+    def alpha_n_min_find_params(  # noqa: PLR0911, PLR0912
             self,
             alpha_n_min_target: float,
             a_s_default: float,
@@ -663,6 +664,7 @@ class ConstCSModel(AnalyticModel):
             return self.css2, np.nan
         raise ValueError("Invalid phase: {phase}")
 
+    @tp.override
     def cs2_max(
             self,
             w_max: float,
@@ -672,6 +674,7 @@ class ConstCSModel(AnalyticModel):
             **kwargs) -> tuple[float, float]:
         return self._cs2_minmax(phase)
 
+    @tp.override
     def cs2_min(
             self,
             w_max: float,
@@ -695,7 +698,7 @@ class ConstCSModel(AnalyticModel):
         ret = tp.cast(T, (1 / 4 - 1 / self.mu_s) * wp / 3 - (1 / 4 - 1 / self.mu_b) * wm / 3 + self.V_s - self.V_b)
         return self.check_delta_theta(
             ret, xp=wp, xm=wm, x_name="w",
-            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid
+            error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
 
     def cs2_ptr(self) -> th.CS2FunScalarPtr:
@@ -759,6 +762,7 @@ class ConstCSModel(AnalyticModel):
         self.__dict__["cs2"] = self.gen_cs2()
         self.__dict__["cs2_neg"] = self.gen_cs2_neg()
 
+    @tp.override
     def inverse_enthalpy_ratio[T: FloatOrArr](self, temp: T) -> T:
         return tp.cast(T, self.a_b * self.mu_b / (self.a_s * self.mu_s))
 
@@ -789,6 +793,7 @@ class ConstCSModel(AnalyticModel):
         s_b = self.mu_b * self.a_b * (temp / self.T_ref) ** (self.mu_b - 4) * temp ** 3
         return tp.cast(T, s_b * phase + s_s * (1 - phase))
 
+    @tp.override
     def solution_type(
             self,
             v_wall: float,

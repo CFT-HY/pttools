@@ -56,7 +56,7 @@ def main(
             else:
                 alpha_theta_bar_n = alpha_n
 
-            kappa, v, w, xi, mode, vp, vm = kappaNuMuModel(
+            _kappa, v, _w, xi, _mode, _vp, _vm = kappaNuMuModel(
                 cs2s=model.cs2(model.w_crit, Phase.SYMMETRIC),
                 cs2b=model.cs2(model.w_crit, Phase.BROKEN),
                 al=alpha_theta_bar_n,

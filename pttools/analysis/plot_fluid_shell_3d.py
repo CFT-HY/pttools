@@ -101,7 +101,7 @@ class BubblePlot3D(PlotlyPlot):
             return
         logger.info("Computing shock surface.")
         w_max = w_mult * self.model.w_crit
-        cs2_min, cs2_min_w = self.model.cs2_min(w_max, Phase.SYMMETRIC)
+        cs2_min, _cs2_min_w = self.model.cs2_min(w_max, Phase.SYMMETRIC)
         xi_arr = np.linspace(np.sqrt(cs2_min), 0.99, n_xi)
         wp_arr = np.linspace(0.01, w_mult*w_max, n_w)
         wp_grid, xi_grid = np.meshgrid(wp_arr, xi_arr)

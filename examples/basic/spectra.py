@@ -34,7 +34,7 @@ def main() -> Figure:
     # Convert the bubbles to GW spectra
     spectra = [Spectrum(bubble, r_star=0.1) for bubble in bubbles]
 
-    fig, axs = plot_spectra_multi(spectra)
+    fig, _axs = plot_spectra_multi(spectra)
     return fig
 
 

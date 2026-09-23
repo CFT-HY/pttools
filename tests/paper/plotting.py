@@ -19,50 +19,34 @@ from tests.paper import const, utils
 logger = logging.getLogger(__name__)
 
 
+#: y-axis limits (p_min, p_max) of the power spectrum plots for each transition strength and power spectrum type.
+#: The limits for :attr:`tests.paper.utils.PSType.UNKNOWN` are used for all other types.
+YAXIS_LIMITS: dict[utils.Strength, dict[utils.PSType, tuple[float, float]]] = {
+    utils.Strength.WEAK: {
+        utils.PSType.V: (1e-8, 1e-3),
+        utils.PSType.GW: (1e-16, 1e-8),
+        utils.PSType.UNKNOWN: (1e-8, 1e-3),
+    },
+    utils.Strength.INTER: {
+        utils.PSType.V: (1e-7, 1e-2),
+        utils.PSType.GW: (1e-12, 1e-4),
+        utils.PSType.UNKNOWN: (1e-7, 1e-2),
+    },
+    utils.Strength.STRONG: {
+        utils.PSType.V: (1e-5, 1),
+        utils.PSType.GW: (1e-8, 1),
+        utils.PSType.UNKNOWN: (1e-5, 1e-1),
+    },
+}
+
+
 def get_yaxis_limits(ps_type: utils.PSType, strength: utils.Strength = utils.Strength.WEAK) -> tuple[float, float]:
-    if strength is utils.Strength.WEAK:
-        if ps_type is utils.PSType.V:
-            p_min = 1e-8
-            p_max = 1e-3
-        elif ps_type is utils.PSType.GW:
-            p_min = 1e-16
-            p_max = 1e-8
-        else:
-            p_min = 1e-8
-            p_max = 1e-3
-    elif strength is utils.Strength.INTER:
-        if ps_type is utils.PSType.V:
-            p_min = 1e-7
-            p_max = 1e-2
-        elif ps_type is utils.PSType.GW:
-            p_min = 1e-12
-            p_max = 1e-4
-        else:
-            p_min = 1e-7
-            p_max = 1e-2
-    elif strength is utils.Strength.STRONG:
-        if ps_type is utils.PSType.V:
-            p_min = 1e-5
-            p_max = 1
-        elif ps_type is utils.PSType.GW:
-            p_min = 1e-8
-            p_max = 1
-        else:
-            p_min = 1e-5
-            p_max = 1e-1
+    if strength in YAXIS_LIMITS:
+        limits = YAXIS_LIMITS[strength]
     else:
         logger.warning("strength = [ *weak | inter | strong]")
-        if ps_type is utils.PSType.V:
-            p_min = 1e-8
-            p_max = 1e-3
-        elif ps_type is utils.PSType.GW:
-            p_min = 1e-16
-            p_max = 1e-8
-        else:
-            p_min = 1e-8
-            p_max = 1e-3
-
-    return p_min, p_max
+        limits = YAXIS_LIMITS[utils.Strength.WEAK]
+    return limits.get(ps_type, limits[utils.PSType.UNKNOWN])
 
 
 def plot_guide_power_law(

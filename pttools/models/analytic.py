@@ -137,7 +137,7 @@ class AnalyticModel(Model, abc.ABC):
     def alpha_plus_bag[T: FloatOrArr](
             self,
             wp: T,
-            wm: th.FloatOrArr,
+            wm: th.FloatOrArr,  # noqa: ARG002 (for signature compatibility with alpha_plus())
             vp_tilde: float | None = None,
             sol_type: SolutionType | None = None,
             error_on_invalid: bool = True,

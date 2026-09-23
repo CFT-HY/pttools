@@ -19,7 +19,7 @@ if tp.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def find_shock_index(
+def find_shock_index(  # noqa: PLR0911, PLR0912, PLR0915
         model: "Model",
         v: th.FloatArr1D,
         w: th.FloatArr1D,
@@ -264,7 +264,7 @@ def shock_zoom_last_element(
     return v, w, xi
 
 
-def solve_shock(
+def solve_shock(  # noqa: PLR0911
             model: "Model",
             v1_tilde: float,
             w1: float,

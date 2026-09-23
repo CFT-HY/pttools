@@ -47,7 +47,9 @@ class Model(BaseModel, abc.ABC):
     """
 
     ALPHA_N_MIN_FIND_SAFETY_FACTOR_ALPHA: float = 0.999
+    #: Default $V_s$
     DEFAULT_V_S: float = 0.
+    #: Default $V_b$
     DEFAULT_V_B: float = 0.
 
     def __init__(
@@ -70,22 +72,8 @@ class Model(BaseModel, abc.ABC):
             silence_temp: bool = False,
             allow_invalid: bool = False,
             log_info: bool = True):
-        # Validate the potential
-        if log_info and implicit_V:
-            if V_s != 0 or V_b != 0:
-                logger.warning(
-                    "Potentials have been specified for the implicit model: %s. "
-                    "This is for debugging purposes only. Be careful that the definitions of g and V are consistent.",
-                    self.DEFAULT_NAME if name is None else name
-                )
-        elif V_s < V_b:
-            msg = f"The bubble will not expand, when V_s < V_b. Got: V_s={V_s}, V_b={V_b}."
-            logger.error(msg)
-            if not allow_invalid:
-                raise ValueError(msg)
-            # This should not be a problem as long as a critical temperature exists.
-            # if V_s == V_b:
-            #     logger.warning("The bubble will not expand, when V_s <= V_b. Got: V_b = V_s = %s.", V_s)
+        self._validate_potential(
+            V_s=V_s, V_b=V_b, name=name, implicit_V=implicit_V, allow_invalid=allow_invalid, log_info=log_info)
 
         self.temperature_is_physical = self.TEMPERATURE_IS_PHYSICAL \
             if temperature_is_physical is None else temperature_is_physical
@@ -115,32 +103,7 @@ class Model(BaseModel, abc.ABC):
             self.cs2_ptr()
             self.df_dtau_ptr()
 
-        self.w_min_s: float = self.w(self.T_min, Phase.SYMMETRIC)
-        self.w_min_b: float = self.w(self.T_min, Phase.BROKEN)
-        self.w_min: float = max(self.w_min_s, self.w_min_b)
-        if np.isfinite(self.T_max):
-            self.w_max_s: float = self.w(self.T_max, Phase.SYMMETRIC)
-            self.w_max_b: float = self.w(self.T_max, Phase.BROKEN)
-        else:
-            # The enthalpy diverges with the temperature,
-            # and evaluating w(T) at an infinite temperature would produce nan
-            # from the multiplication of the infinite enthalpies by the phase.
-            self.w_max_s = np.inf
-            self.w_max_b = np.inf
-        self.w_max: float = min(self.w_max_s, self.w_max_b)
-        if self.w_min >= self.w_max:
-            logger.warning(
-                "Please provide a wider temperature range for the model. "
-                "The current temperature range of T_min=%s, T_max=%s may cause problems in initializing the model.",
-                self.T_min, self.T_max
-            )
-            self.w_min = min(self.w_min_s, self.w_min_b)
-            self.w_max = max(self.w_max_s, self.w_max_b)
-        # else:
-        #     # Update the temperature range so that for all temperatures
-        #     # there exists both a symmetric and a broken phase
-        #     self.T_min = max(self.temp(self.w_min, Phase.SYMMETRIC), self.temp(self.w_min, Phase.BROKEN))
-        #     self.T_max = min(self.temp(self.w_max, Phase.SYMMETRIC), self.temp(self.w_max, Phase.BROKEN))
+        self._init_w_limits()
 
         # A model could have t_ref = 1 GeV and be valid only for e.g. > 10 GeV
         # if t_ref < self.t_min:
@@ -180,7 +143,58 @@ class Model(BaseModel, abc.ABC):
             self.w_at_alpha_n_min = None
             self.alpha_n_min = 0
 
-    # Concrete methods
+    def _init_w_limits(self) -> None:
+        r"""Set the enthalpy limits $w_\text{min}$ and $w_\text{max}$ based on the temperature limits."""
+        self.w_min_s: float = self.w(self.T_min, Phase.SYMMETRIC)
+        self.w_min_b: float = self.w(self.T_min, Phase.BROKEN)
+        self.w_min: float = max(self.w_min_s, self.w_min_b)
+        if np.isfinite(self.T_max):
+            self.w_max_s: float = self.w(self.T_max, Phase.SYMMETRIC)
+            self.w_max_b: float = self.w(self.T_max, Phase.BROKEN)
+        else:
+            # The enthalpy diverges with the temperature,
+            # and evaluating w(T) at an infinite temperature would produce nan
+            # from the multiplication of the infinite enthalpies by the phase.
+            self.w_max_s = np.inf
+            self.w_max_b = np.inf
+        self.w_max: float = min(self.w_max_s, self.w_max_b)
+        if self.w_min >= self.w_max:
+            logger.warning(
+                "Please provide a wider temperature range for the model. "
+                "The current temperature range of T_min=%s, T_max=%s may cause problems in initializing the model.",
+                self.T_min, self.T_max
+            )
+            self.w_min = min(self.w_min_s, self.w_min_b)
+            self.w_max = max(self.w_max_s, self.w_max_b)
+        # else:
+        #     # Update the temperature range so that for all temperatures
+        #     # there exists both a symmetric and a broken phase
+        #     self.T_min = max(self.temp(self.w_min, Phase.SYMMETRIC), self.temp(self.w_min, Phase.BROKEN))
+        #     self.T_max = min(self.temp(self.w_max, Phase.SYMMETRIC), self.temp(self.w_max, Phase.BROKEN))
+
+    def _validate_potential(
+            self,
+            V_s: float,
+            V_b: float,
+            name: str | None,
+            implicit_V: bool,
+            allow_invalid: bool,
+            log_info: bool) -> None:
+        if log_info and implicit_V:
+            if V_s != 0 or V_b != 0:
+                logger.warning(
+                    "Potentials have been specified for the implicit model: %s. "
+                    "This is for debugging purposes only. Be careful that the definitions of g and V are consistent.",
+                    self.DEFAULT_NAME if name is None else name
+                )
+        elif V_s < V_b:
+            msg = f"The bubble will not expand, when V_s < V_b. Got: V_s={V_s}, V_b={V_b}."
+            logger.error(msg)
+            if not allow_invalid:
+                raise ValueError(msg)
+            # This should not be a problem as long as a critical temperature exists.
+            # if V_s == V_b:
+            #     logger.warning("The bubble will not expand, when V_s <= V_b. Got: V_b = V_s = %s.", V_s)
 
     @staticmethod
     def _cs2_limit(
@@ -495,9 +509,10 @@ class Model(BaseModel, abc.ABC):
     def alpha_theta_bar_plus[T: FloatOrArr](
             self,
             wp: T,
-            error_on_invalid: bool = True,
-            nan_on_invalid: bool = True,
-            log_invalid: bool = True) -> T:
+            # The validation parameters are for API consistency with the other alpha functions.
+            error_on_invalid: bool = True,  # noqa: ARG002
+            nan_on_invalid: bool = True,  # noqa: ARG002
+            log_invalid: bool = True) -> T:  # noqa: ARG002
         r"""Transition strength parameter, :giese_2021:`\ `, eq. 9.
 
         $$\alpha_{\bar{\theta}+} = \frac{D \bar{\theta}(T_+)}{3 w_+}$$
@@ -636,6 +651,12 @@ class Model(BaseModel, abc.ABC):
             )
         return t_crit, wn_min
 
+    @staticmethod
+    def _critical_temp_error(msg: str, allow_fail: bool, error_type: type[Exception]) -> None:
+        logger.error(msg)
+        if not allow_fail:
+            raise error_type(msg)
+
     def critical_temp(
             self,
             guess: float | None = None,
@@ -658,9 +679,7 @@ class Model(BaseModel, abc.ABC):
             msg = \
                 "All models should have p_s(T=T_min) < p_b(T=T_min) for T_crit to exist. " \
                 f"Got: T_min={self.T_min}, p_s={p_s_min}, p_b={p_b_min}."
-            logger.error(msg)
-            if not allow_fail:
-                raise ValueError(msg)
+            self._critical_temp_error(msg, allow_fail, ValueError)
 
         t_max = self.T_max if np.isfinite(self.T_max) else t_max_backup
         t_arr = np.logspace(np.log10(self.T_min), np.log10(t_max), 10)
@@ -670,9 +689,7 @@ class Model(BaseModel, abc.ABC):
             msg = \
                 "All models should have p_s(T>T_crit) > p_b(T>T_crit) for T_crit to exist. " \
                 f"Got: T_max={t_max}, p_s={p_s_arr[-1]}, p_b={p_b_arr[-1]}."
-            logger.error(msg)
-            if not allow_fail:
-                raise ValueError(msg)
+            self._critical_temp_error(msg, allow_fail, ValueError)
 
         # critical_temp_opt() is annotated for scalars, but it also works with the 1D arrays given by fsolve().
         sol = fsolve(  # pyrefly: ignore[no-matching-overload]
@@ -685,35 +702,25 @@ class Model(BaseModel, abc.ABC):
             msg = \
                 f"Could not find Tc with guess={guess}. " \
                 f"Using Tc={t_crit}. Reason: {sol[3].replace("\n ", "")}"
-            logger.error(msg)
-            if not allow_fail:
-                raise RuntimeError(msg)
+            self._critical_temp_error(msg, allow_fail, RuntimeError)
 
         # Validate temperature
         if t_crit <= self.T_min:
             msg = f"T_crit should be higher than T_min. Got: T_crit={t_crit}, T_min={self.T_min}"
-            logger.error(msg)
-            if not allow_fail:
-                raise ValueError(msg)
+            self._critical_temp_error(msg, allow_fail, ValueError)
         if t_crit >= self.T_max:
-            msg = f"T_max should be lower than T_max. Got: T_crit={t_crit}, T_max={self.T_max}"
-            logger.error(msg)
-            if not allow_fail:
-                raise ValueError(msg)
+            msg = f"T_crit should be lower than T_max. Got: T_crit={t_crit}, T_max={self.T_max}"
+            self._critical_temp_error(msg, allow_fail, ValueError)
 
         # Validate pressure
         p_crit_s = self.p_temp(t_crit, Phase.SYMMETRIC)
         p_crit_b = self.p_temp(t_crit, Phase.BROKEN)
         if not np.isclose(p_crit_s, p_crit_b):
             msg = f"Pressures do not match at T_crit. Got: p_s={p_crit_s}, p_b={p_crit_b}"
-            logger.error(msg)
-            if not allow_fail:
-                raise ValueError(msg)
+            self._critical_temp_error(msg, allow_fail, ValueError)
         if p_crit_s < 0 or p_crit_b < 0:
             msg = f"Pressure cannot be negative at T_crit. Got: p_s={p_crit_s}, p_b={p_crit_b}"
-            logger.error(msg)
-            if not allow_fail:
-                raise ValueError(msg)
+            self._critical_temp_error(msg, allow_fail, ValueError)
 
         return t_crit
 
@@ -721,6 +728,7 @@ class Model(BaseModel, abc.ABC):
         """This function should be zero at the critical temperature $T_c$, where $p_s(T_c)=p_b(T_c)."""
         return self.p_temp(temp, Phase.SYMMETRIC) - self.p_temp(temp, Phase.BROKEN)
 
+    @tp.override
     def cs2[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         r"""Speed of sound squared $c_s^2(w,\phi)$. This must be a Numba-compiled function.
 
@@ -1163,7 +1171,7 @@ class Model(BaseModel, abc.ABC):
         return \
             f"Got too small alpha_n for the model \"{self.label_unicode}\". {info2}"
 
-    def _wn_scalar(
+    def _wn_scalar(  # noqa: PLR0912
             self,
             alpha_n: float,
             wn_guess: float,
@@ -1247,7 +1255,7 @@ class Model(BaseModel, abc.ABC):
             self,
             alpha_n: T,
             wn_guess: float | None = None,
-            analytical: bool = False,
+            analytical: bool = False,  # noqa: ARG002 (used by the overrides in subclasses)
             theta_bar: bool = False,
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,

@@ -62,6 +62,7 @@ class DataModel(Model):
         self.data_e_b = e_b
         self.data_cs2_s = cs2_s
         self.data_cs2_b = cs2_b
+        self.data_T_nucl = T_nucl
 
         self.data_w_s = self.data_p_s + self.data_e_s
         self.data_w_b = self.data_p_b + self.data_e_b
