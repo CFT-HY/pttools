@@ -11,7 +11,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
       - name: Setup uv
+        id: setup-uv
         uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+      - name: Print uv version
+        run: |
+          echo "uv ${UV_VERSION}"
+        env:
+          UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
       - name: Build
         run: uv build
       - name: Run Twine checks
@@ -42,9 +48,17 @@ jobs:
 #      - name: Checkout
 #        uses: actions/checkout@v7
 #      - name: Setup uv
+#        id: setup-uv
 #        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
 #        with:
 #          activate-environment: true
+#      - name: Print uv and Python versions
+#        run: |
+#          echo "uv ${UV_VERSION}"
+#          echo "Python ${PYTHON_VERSION}"
+#        env:
+#          UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
+#          PYTHON_VERSION: ${{ steps.setup-uv.outputs.python-version }}
 #      - name: Install requirements
 #        run: uv sync --locked --all-extras --no-default-groups
 #      - name: Install FOSSA
@@ -61,9 +75,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
       - name: Setup uv
+        id: setup-uv
         uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
           activate-environment: true
+      - name: Print uv and Python versions
+        run: |
+          echo "uv ${UV_VERSION}"
+          echo "Python ${PYTHON_VERSION}"
+        env:
+          UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
+          PYTHON_VERSION: ${{ steps.setup-uv.outputs.python-version }}
       - name: Install graphviz
         run: |
           sudo apt-get update
@@ -98,25 +120,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-      - name: Setup uv
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
-        with:
-          activate-environment: true
-      - name: Install requirements
-        # Ruff does not import the project, so only the development tools are needed.
-        run: uv sync --locked --only-group dev
       - name: Run Ruff
-        run: |
-          set -o pipefail
-          ruff check --output-format=full 2>&1 | tee ruff.txt
-      - name: Upload results
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: Lint
-          path: |
-            ${{ github.workspace }}/ruff.txt
-          if-no-files-found: error
+        uses: astral-sh/ruff-action@v4.1.0
   typecheck:
     runs-on: ubuntu-slim
     timeout-minutes: 5
@@ -124,23 +129,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
       - name: Setup uv
+        id: setup-uv
         uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
           activate-environment: true
+      - name: Print uv and Python versions
+        run: |
+          echo "uv ${UV_VERSION}"
+          echo "Python ${PYTHON_VERSION}"
+        env:
+          UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
+          PYTHON_VERSION: ${{ steps.setup-uv.outputs.python-version }}
       - name: Install requirements
-        run: uv sync --locked --all-extras --no-group docs
+        run: uv sync --locked
       - name: Run Pyrefly
         run: |
           set -o pipefail
-          pyrefly check 2>&1 | tee pyrefly.txt
-      - name: Upload results
+          pyrefly check --output-format=full-text-with-github
+      - name: Run Pyrefly coverage
         if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: Pyrefly
-          path: |
-            ${{ github.workspace }}/pyrefly.txt
-          if-no-files-found: error
+        run: |
+          pyrefly coverage report > coverage.json
+          pyrefly coverage check --output-format=full-text-with-github
   test-numba:
     runs-on: ubuntu-latest
     timeout-minutes: 40
@@ -154,11 +164,18 @@ jobs:
       id: primary-python
       run: echo "version=$(cat .python-version)" >> "${GITHUB_OUTPUT}"
     - name: Setup uv
+      id: setup-uv
       uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
       with:
         # This overrides the version of the .python-version file.
         python-version: ${{ matrix.python-version }}
         activate-environment: true
+    - name: Print uv and Python versions
+      run: |
+        echo "uv ${UV_VERSION}"
+        python -V
+      env:
+        UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
     - name: Install ffmpeg
       run: |
         sudo apt-get update
@@ -207,11 +224,18 @@ jobs:
       id: primary-python
       run: echo "version=$(cat .python-version)" >> "${GITHUB_OUTPUT}"
     - name: Setup uv
+      id: setup-uv
       uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
       with:
         # This overrides the version of the .python-version file.
         python-version: ${{ matrix.python-version }}
         activate-environment: true
+    - name: Print uv and Python versions
+      run: |
+        echo "uv ${UV_VERSION}"
+        python -V
+      env:
+        UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
     - name: Install requirements
       run: uv sync --locked --all-extras --no-group docs
     - name: Print Numba sysinfo

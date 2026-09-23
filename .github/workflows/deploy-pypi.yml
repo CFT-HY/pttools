@@ -7,6 +7,7 @@ permissions:
   contents: read
 jobs:
   deploy-pypi:
+    # The pypa/gh-action-pypi-publish action is Docker-based, and therefore cannot be run on ubuntu-slim.
     runs-on: ubuntu-latest
     timeout-minutes: 5
     # https://github.com/marketplace/actions/pypi-publish
@@ -19,7 +20,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
       - name: Setup uv
+        id: setup-uv
         uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+      - name: Print uv version
+        run: |
+          echo "uv ${UV_VERSION}"
+        env:
+          UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
       - name: Build
         run: uv build
       - name: Run Twine checks

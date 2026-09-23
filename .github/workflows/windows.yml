@@ -26,10 +26,18 @@ jobs:
         - name: Checkout
           uses: actions/checkout@v7
         - name: Setup uv
+          id: setup-uv
           uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
           # Windows minutes cost 2x what Linux does, so testing multiple Python versions would be quite costly
           with:
             activate-environment: true
+        - name: Print uv and Python versions
+          run: |
+            echo "uv $env:UV_VERSION"
+            echo "Python $env:PYTHON_VERSION"
+          env:
+            UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
+            PYTHON_VERSION: ${{ steps.setup-uv.outputs.python-version }}
         - name: Install requirements
           # NumbaLSODA does not provide wheels for recent Python versions, so it's built from source.
           # Its build backend, scikit-build, probes only MSVC-based CMake generators on Windows.
