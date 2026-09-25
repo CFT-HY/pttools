@@ -4,6 +4,7 @@ import dataclasses
 import faulthandler
 import logging
 import os
+from pathlib import Path
 from threading import Lock
 import time
 
@@ -22,7 +23,7 @@ class LoggingConfig:
     for replicating the logging configuration of the main process.
     """
 
-    log_file_path: str
+    log_file_path: Path
     level: int = logging.DEBUG
     format: str = LOG_FORMAT
     silence_spam: bool = True
@@ -80,7 +81,7 @@ def _apply_config(config: LoggingConfig) -> None:
 
 def setup_logging(
         name: str = "pttools",
-        log_dir: str | None = None,
+        log_dir: str | os.PathLike[str] | None = None,
         enable_faulthandler: bool = True,
         silence_spam: bool = True) -> None:
     """Configure logging to both file and console and optionally silence spam."""
@@ -91,11 +92,10 @@ def setup_logging(
     if enable_faulthandler and not faulthandler.is_enabled():
         faulthandler.enable()
 
-    if log_dir is None:
-        log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs")
-    os.makedirs(log_dir, exist_ok=True)
-    log_file_path = os.path.join(log_dir, f"{name}_{time.strftime('%Y-%m-%d_%H-%M-%S')}_{os.getpid()}.log")
-    if os.path.exists(log_file_path):
+    log_dir = Path(__file__).resolve().parent.parent / "logs" if log_dir is None else Path(log_dir)
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_file_path = log_dir / f"{name}_{time.strftime('%Y-%m-%d_%H-%M-%S')}_{os.getpid()}.log"
+    if log_file_path.exists():
         raise FileExistsError(f"The log file already exists, even though it should be per-process: {log_file_path}")
     _apply_config(LoggingConfig(log_file_path=log_file_path, silence_spam=silence_spam))
 

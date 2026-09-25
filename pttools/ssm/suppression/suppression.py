@@ -63,7 +63,7 @@ class Suppression:
         self.v_wall_max: float = self.v_walls.max()
 
     @classmethod
-    def from_file(cls, path: str, name: str) -> "Suppression":
+    def from_file(cls, path: str | os.PathLike[str], name: str) -> "Suppression":
         with np.load(path) as data:
             return Suppression(
                 v_walls=data["vw_sim"],
@@ -205,12 +205,12 @@ C1: float = 0.34 - M1 * 0.24
 C2: float = 0.67000 - M2 * 0.56000
 
 NO_HYBRIDS: Suppression = Suppression.from_file(
-    os.path.join(SUPPRESSION_FOLDER, "suppression_no_hybrids_ssm.npz"), name="No hybrids")
+    SUPPRESSION_FOLDER / "suppression_no_hybrids_ssm.npz", name="No hybrids")
 NO_HYBRIDS_EXT: Suppression = Suppression(
     *extend(v_walls=NO_HYBRIDS.v_walls, alpha_ns=NO_HYBRIDS.alpha_ns, suppressions=NO_HYBRIDS.suppressions),
     name="No hybrids, extended"
 )
 WITH_HYBRIDS: Suppression = Suppression.from_file(
-    os.path.join(SUPPRESSION_FOLDER, "suppression_2_ssm.npz"), name="With hybrids")
+    SUPPRESSION_FOLDER / "suppression_2_ssm.npz", name="With hybrids")
 DEFAULT_SUPPRESSION: Suppression = NO_HYBRIDS_EXT
 SUPPRESSIONS: list[Suppression] = [NO_HYBRIDS, NO_HYBRIDS_EXT, WITH_HYBRIDS]

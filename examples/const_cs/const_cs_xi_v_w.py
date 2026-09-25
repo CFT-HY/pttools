@@ -5,8 +5,6 @@ ConstCSModel 3D
 Plot $\xi, v, w$ in 3D for the constant sound speed model
 """
 
-import os.path
-
 import numpy as np
 
 from examples.utils import FIG_DIR
@@ -57,7 +55,7 @@ def main() -> BubblePlot3D:
 
 
 plot: BubblePlot3D = main()
-plot.save(os.path.join(FIG_DIR, "plot_const_cs_xi_v_w"))
+plot.save(FIG_DIR / "plot_const_cs_xi_v_w")
 if __name__ == "__main__" and "__file__" in globals():
     plot.show()
 plot.fig()

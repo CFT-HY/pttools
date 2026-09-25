@@ -1,7 +1,8 @@
 r"""Unit tests for calling the $c_s^2$ functions by their pointers."""
 
 import json
-import os.path
+import os
+from pathlib import Path
 import subprocess
 import sys
 import tempfile
@@ -22,7 +23,7 @@ from pttools.utils import assert_allclose
 from tests.utils import REPO_DIR
 
 #: Script that solves a bag model bubble and reports the number of keys in each Numba cache index
-CACHE_SCRIPT_PATH: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), "numba_cache.py")
+CACHE_SCRIPT_PATH: Path = Path(__file__).resolve().parent / "numba_cache.py"
 
 
 @njit
@@ -90,9 +91,9 @@ class TestNumbaCache(unittest.TestCase):
     @unittest.skipIf(NUMBA_DISABLE_JIT, "Nothing is compiled when jitting is disabled.")
     def test_cache_does_not_grow(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
-            cache_dir = os.path.join(temp_dir, "numba_cache")
+            cache_dir = Path(temp_dir) / "numba_cache"
             sizes = [
-                self.run_solver(cache_dir, os.path.join(temp_dir, f"cache_index_sizes{i}.json"))
+                self.run_solver(cache_dir, Path(temp_dir) / f"cache_index_sizes{i}.json")
                 for i in range(2)
             ]
         self.assertTrue(sizes[0], "No Numba cache files were created.")
@@ -105,24 +106,24 @@ class TestNumbaCache(unittest.TestCase):
         )
 
     @staticmethod
-    def run_solver(cache_dir: str, output_path: str) -> dict[str, int]:
+    def run_solver(cache_dir: Path, output_path: Path) -> dict[str, int]:
         """Solve a bag model bubble in a subprocess and get the number of keys in each Numba cache index."""
         env = {
             **os.environ,
-            "NUMBA_CACHE_DIR": cache_dir,
+            "NUMBA_CACHE_DIR": str(cache_dir),
             "NUMBA_ENABLE_CACHE": "1",
-            "PYTHONPATH": REPO_DIR,
+            "PYTHONPATH": str(REPO_DIR),
         }
         proc = subprocess.run(
             [sys.executable, CACHE_SCRIPT_PATH, output_path],
             capture_output=True, check=False, cwd=REPO_DIR, env=env, text=True
         )
-        if proc.returncode or not os.path.isfile(output_path):
+        if proc.returncode or not output_path.is_file():
             raise RuntimeError(
                 f"Running \"{CACHE_SCRIPT_PATH}\" failed with the return code {proc.returncode}.\n"
                 f"stdout:\n{proc.stdout}\nstderr:\n{proc.stderr}"
             )
-        with open(output_path) as file:
+        with output_path.open() as file:
             return json.load(file)
 
 

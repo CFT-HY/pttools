@@ -1,14 +1,14 @@
 """Wrapper for the pyinstrument profiler."""
 
-import os
+from pathlib import Path
 import types
 
 import pyinstrument
 
 from tests.profiling import utils
 
-PROFILE_DIR: str = os.path.join(utils.PROFILE_DIR, "pyinstrument")
-os.makedirs(PROFILE_DIR, exist_ok=True)
+PROFILE_DIR: Path = utils.PROFILE_DIR / "pyinstrument"
+PROFILE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class PyInstrumentProfiler(utils.Profiler):
@@ -31,12 +31,9 @@ class PyInstrumentProfiler(utils.Profiler):
 
 
 def process(profiler: pyinstrument.Profiler, name: str, print_to_console: bool = False) -> None:
-    path = os.path.join(PROFILE_DIR, f"{name}")
+    path = PROFILE_DIR / name
     if print_to_console:
         print(profiler.output_text(unicode=True, color=True))
 
-    with open(f"{path}.txt", "w", encoding="utf-8") as file:
-        file.write(profiler.output_text(unicode=True, color=False))
-
-    with open(f"{path}.html", "w", encoding="utf-8") as file:
-        file.write(profiler.output_html())
+    path.with_name(f"{path.name}.txt").write_text(profiler.output_text(unicode=True, color=False), encoding="utf-8")
+    path.with_name(f"{path.name}.html").write_text(profiler.output_html(), encoding="utf-8")

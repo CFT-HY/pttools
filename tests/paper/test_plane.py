@@ -4,7 +4,6 @@ Excerpts of these plots are in :gw_pt_ssm:`\ ` fig. 10 and :notes:`\ ` fig. 15.
 """
 
 import logging
-import os.path
 import shutil
 import subprocess
 import timeit
@@ -41,7 +40,7 @@ class PlaneTolerances(tp.TypedDict, total=False):
 
 class TestPlane(unittest.TestCase):
     FIGSIZE = np.array([16, 9])*1.7
-    FIG_PATH = os.path.join(utils.TEST_FIGURE_PATH, "integrators")
+    FIG_PATH = utils.TEST_FIGURE_PATH / "integrators"
     grid_shape: tuple[int, int] = (2, 5)
     grid_fig_abs: plt.Figure
     grid_fig_rel: plt.Figure
@@ -70,13 +69,12 @@ class TestPlane(unittest.TestCase):
         cls.plot_perf(axs[0, 3])
         cls.plot_diff(axs[0, 4], name, diffs)
         fig.tight_layout()
-        path = os.path.join(cls.FIG_PATH, f"integrators_{name}")
+        path = cls.FIG_PATH / f"integrators_{name}"
         save_fig(fig, path)
         plt.close(fig)
         if shutil.which("ffmpeg"):
-            video_path = f"{path}.mp4"
-            if os.path.exists(video_path):
-                os.remove(video_path)
+            video_path = path.with_name(f"{path.name}.mp4")
+            video_path.unlink(missing_ok=True)
             ret: subprocess.CompletedProcess = subprocess.run(
                 [
                     "ffmpeg",
@@ -115,7 +113,7 @@ class TestPlane(unittest.TestCase):
         ax.set_xlabel("Solver")
         ax.set_ylabel("Time (s)")
         ax.set_yscale("log")
-        with open(os.path.join(PERFORMANCE_DIR, "plane.txt"), "w") as file:
+        with (PERFORMANCE_DIR / "plane.txt").open("w") as file:
             for name, time in zip(names, iter_times, strict=False):
                 file.write(f"{name}: {time} s\n")
 
@@ -176,13 +174,12 @@ class TestPlane(unittest.TestCase):
                 plot_plane_paper.plot_plane(
                     ax=axs[ax[0], ax[1]], data_s=data, method=method, deflag_ref=self.ref_data, **tols)
                 plot_plane_paper.plot_plane(ax=ax2, data_s=data, method=method, deflag_ref=self.ref_data, **tols)
-                fig_name = os.path.join(
-                    self.FIG_PATH, f"integrators_{name}_{i}_{plot_plane_paper.get_solver_name(method)}")
+                fig_name = self.FIG_PATH / f"integrators_{name}_{i}_{plot_plane_paper.get_solver_name(method)}"
                 save_fig(fig, fig_name)
                 plt.close(fig)
 
         data_summed = np.nansum(data, axis=2)
-        file_path = os.path.join(utils.TEST_DATA_PATH, "xi-v_plane.txt")
+        file_path = utils.TEST_DATA_PATH / "xi-v_plane.txt"
 
         # Generate new reference data
         # if method == spi.odeint:

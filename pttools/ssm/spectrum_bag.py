@@ -1,6 +1,7 @@
 """Sound Shell Model spectrum calculations specific to the bag equation of state."""
 
 import logging
+import os
 
 import numpy as np
 
@@ -47,7 +48,7 @@ def power_gw_bag(
         z: th.FloatArr1D,
         params: bubble.PhysicalParams,
         npt: const.NptType = const.DEFAULT_N_PT,
-        filename: str | None = None,
+        filename: str | os.PathLike[str] | None = None,
         skip: int = 1,
         method: Method = Method.E_CONSERVING,
         de_method: DE_Method = DE_Method.STANDARD,
@@ -113,7 +114,7 @@ def power_v_bag(
         z: th.FloatArr1D,
         params: bubble.PhysicalParams,
         npt: const.NptType = const.DEFAULT_N_PT,
-        filename: str | None = None,
+        filename: str | os.PathLike[str] | None = None,
         skip: int = 1,
         method: Method = Method.E_CONSERVING,
         de_method: DE_Method = DE_Method.STANDARD,
@@ -145,7 +146,7 @@ def spec_den_v_bag(
         z: th.FloatArr1D,
         params: bubble.PhysicalParams,
         npt: const.NptType = const.DEFAULT_N_PT,
-        filename: str | None = None,
+        filename: str | os.PathLike[str] | None = None,
         skip: int = 1,
         method: Method = Method.E_CONSERVING,
         de_method: DE_Method = DE_Method.STANDARD,

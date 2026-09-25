@@ -1,7 +1,7 @@
 """Test bubbles that use the bag model."""
 
 import logging
-import os.path
+from pathlib import Path
 import sys
 import unittest
 
@@ -22,15 +22,15 @@ from tests.utils import TEST_DATA_PATH, TEST_FIGURE_PATH
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-FIG_PATH: str = os.path.join(TEST_FIGURE_PATH, "fluid_shells")
+FIG_PATH: Path = TEST_FIGURE_PATH / "fluid_shells"
 
 
 class TestShellsBag(unittest.TestCase):
     """Test bubbles that use the bag model."""
 
     @staticmethod
-    def shell_file_path(name: str) -> str:
-        return os.path.join(TEST_DATA_PATH, f"shells_{name}.txt")
+    def shell_file_path(name: str) -> Path:
+        return TEST_DATA_PATH / f"shells_{name}.txt"
 
     def test_fluid_shell(self) -> None:
         params_all = bubble.sound_shell_dict(v_wall=0.7, alpha_n=0.052)
@@ -46,8 +46,8 @@ class TestShellsBag(unittest.TestCase):
             dtype=np.float64)
         # [np.nansum(arr) for arr in arrs.values()] + list(scalars.values()))
 
-        # path_json = os.path.join(TEST_DATA_PATH, "shell.json")
-        path_txt = os.path.join(TEST_DATA_PATH, "shell.txt")
+        # path_json = TEST_DATA_PATH / "shell.json"
+        path_txt = TEST_DATA_PATH / "shell.txt"
 
         # Generate new reference data
         # Using old reference data for now. It was generated with the following code.
@@ -90,7 +90,7 @@ class TestShellsBag(unittest.TestCase):
         fig_esp, data_esp = plot_fluid_shells_bag(vw_list_esp, alpha_n_list_esp, multi=True, debug=True)
 
         for fig, name in zip([fig_weak, fig_inter, fig_esp], ["weak", "inter", "esp"], strict=False):
-            save_fig(fig, os.path.join(FIG_PATH, name))
+            save_fig(fig, FIG_PATH / name)
             plt.close(fig)
 
         # Generate new reference data
@@ -119,7 +119,7 @@ class TestShellsBag(unittest.TestCase):
 
     def test_plot_fluid_shell(self) -> None:
         fig, _params = plot_fluid_shell_bag(v_wall=0.7, alpha_n=0.052)
-        save_fig(fig, os.path.join(FIG_PATH, "fluid_shell_single"))
+        save_fig(fig, FIG_PATH / "fluid_shell_single")
         plt.close(fig)
 
 

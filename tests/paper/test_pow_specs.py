@@ -1,8 +1,6 @@
 """Test power spectra predictions of SSM with different nucleation models."""
 
 import logging
-import os
-import os.path
 import unittest
 
 # os.environ["NUMBA_DEBUG_CACHE"] = "1"
@@ -32,13 +30,13 @@ def pow_specs(filename: str = "data_compare_nuc-test.txt") -> None:
         lambda_correction=True
     )
     save_compare_nuc_data(
-        os.path.join(TEST_DATA_PATH, filename),
+        TEST_DATA_PATH / filename,
         params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list
     )
 
-    data_article = np.loadtxt(os.path.join(TEST_DATA_PATH, "data_compare_nuc-final3.txt"))
-    data_reference = np.loadtxt(os.path.join(TEST_DATA_PATH, "data_compare_nuc-test_reference.txt"))
-    data_test = np.loadtxt(os.path.join(TEST_DATA_PATH, filename))
+    data_article = np.loadtxt(TEST_DATA_PATH / "data_compare_nuc-final3.txt")
+    data_reference = np.loadtxt(TEST_DATA_PATH / "data_compare_nuc-test_reference.txt")
+    data_test = np.loadtxt(TEST_DATA_PATH / filename)
 
     # The sign of p_cwg does not matter
     data_article[:, 9] = np.abs(data_article[:, 9])

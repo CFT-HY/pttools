@@ -299,6 +299,7 @@ select = [
     "PIE",   # flake8-pie
     "PL",    # Pylint
     "PT",    # flake8-pytest-style
+    "PTH",   # flake8-use-pathlib
     "RET",   # flake8-return
     "RUF",   # Ruff-specific rules
     "SIM",   # flake8-simplify

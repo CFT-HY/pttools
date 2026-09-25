@@ -1,7 +1,8 @@
 """Compute the kinetic energy suppression factor for a given set of simulation data."""
 
 import logging
-import os.path
+import os
+from pathlib import Path
 
 import numpy as np
 
@@ -19,11 +20,11 @@ import pttools.type_hints as th
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-SUPPRESSION_FOLDER: str = os.path.dirname(os.path.abspath(__file__))
+SUPPRESSION_FOLDER: Path = Path(__file__).resolve().parent
 
 
 def calc_sup_ssm(
-        path: str,
+        path: str | os.PathLike[str],
         save: bool = True,
         npt: NptType = DEFAULT_N_PT,
         lambda_correction: bool = False) -> dict[str, th.FloatArr1DOrList]:
@@ -37,8 +38,8 @@ def calc_sup_ssm(
     exp_omgw = same as above but expected quantity
     exp_ubarf = expected quantity for ubarf.
     """
-    if not os.path.isabs(path):
-        path = os.path.join(SUPPRESSION_FOLDER, path)
+    # If the path is absolute, the joining operator returns it as is.
+    path = SUPPRESSION_FOLDER / path
     sim_data = np.loadtxt(path, skiprows=1)
 
     out_ssm_tot = []
@@ -76,8 +77,7 @@ def calc_sup_ssm(
     }
 
     if save:
-        x = path.split(".txt")
-        np.savez(f"{x[0]}_ssm", **ssm_sup_data)
+        np.savez(path.with_name(f"{path.stem}_ssm.npz"), **ssm_sup_data)
 
     return ssm_sup_data
 

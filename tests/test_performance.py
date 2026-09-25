@@ -1,7 +1,7 @@
 """Performance tests."""
 
 import logging
-import os
+from pathlib import Path
 import textwrap
 import unittest
 
@@ -17,8 +17,8 @@ logger: logging.Logger = logging.getLogger(__name__)
 #: Change this to e.g. 10 to obtain proper performance data.
 #: This is set to 1 to speed up the unit testing.
 N_ITERATIONS: int = 1
-PERFORMANCE_DIR: str = os.path.join(TEST_RESULT_PATH, "performance")
-os.makedirs(PERFORMANCE_DIR, exist_ok=True)
+PERFORMANCE_DIR: Path = TEST_RESULT_PATH / "performance"
+PERFORMANCE_DIR.mkdir(parents=True, exist_ok=True)
 
 if NUMBA_DISABLE_JIT:
     __TEXT = "Numba JIT is disabled. Performance tests will be single-threaded."

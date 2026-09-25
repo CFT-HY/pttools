@@ -2,6 +2,7 @@
 
 import logging
 import os
+from pathlib import Path
 import time
 import typing as tp
 import warnings
@@ -61,7 +62,7 @@ def setup_example_logging(gallery_conf: dict[str, tp.Any], fname: str | None) ->
 SPHINX_LOG_ENV_VAR: str = "PTTOOLS_SPHINX_LOG"
 
 
-def setup_sphinx_logging(log_path: str | None = None, level: int = logging.INFO) -> str:
+def setup_sphinx_logging(log_path: str | os.PathLike[str] | None = None, level: int = logging.INFO) -> Path:
     """Save the output of Sphinx to a log file.
 
     Sphinx has its own logging setup, which prints only messages of level INFO and above to the console,
@@ -79,23 +80,23 @@ def setup_sphinx_logging(log_path: str | None = None, level: int = logging.INFO)
     """
     if log_path is None:
         log_path = os.environ.get(SPHINX_LOG_ENV_VAR)
-    if not log_path:
-        log_path = os.path.join(default_log_dir(), f"sphinx_{time.strftime('%Y-%m-%d_%H-%M-%S')}.log")
-    os.makedirs(os.path.dirname(os.path.abspath(log_path)), exist_ok=True)
+    path = Path(log_path).resolve() if log_path \
+        else default_log_dir() / f"sphinx_{time.strftime('%Y-%m-%d_%H-%M-%S')}.log"
+    path.parent.mkdir(parents=True, exist_ok=True)
 
     sphinx_logger = logging.getLogger("sphinx")
     # The handler is added only once, even if conf.py is executed multiple times in the same process,
     # e.g. by the make mode of sphinx-build.
-    if any(isinstance(handler, logging.FileHandler) and handler.baseFilename == os.path.abspath(log_path)
+    if any(isinstance(handler, logging.FileHandler) and Path(handler.baseFilename).resolve() == path
            for handler in sphinx_logger.handlers):
-        return log_path
-    handler = logging.FileHandler(log_path, encoding="utf-8")
+        return path
+    handler = logging.FileHandler(path, encoding="utf-8")
     handler.setLevel(level)
     # The Sphinx log records already contain the level prefix (e.g. "WARNING: ") and the location.
     handler.setFormatter(logging.Formatter("%(asctime)s %(name)s: %(message)s"))
     sphinx_logger.addHandler(handler)
-    sphinx_logger.info("Saving the Sphinx output to %s", log_path)
-    return log_path
+    sphinx_logger.info("Saving the Sphinx output to %s", path)
+    return path
 
 
 def setup_sphinx(app: "Sphinx") -> None:

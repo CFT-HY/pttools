@@ -1,7 +1,6 @@
 """PRACE tests."""
 
 import logging
-import os.path
 import unittest
 
 import numpy as np
@@ -17,12 +16,12 @@ class TestPrace(unittest.TestCase):
     """PRACE tests."""
 
     def test_ps_prace(self) -> None:
-        fluid_profiles_dir = os.path.join(utils.TEST_DATA_PATH, "fluidprofiles")
-        if not os.path.isdir(fluid_profiles_dir):
+        fluid_profiles_dir = utils.TEST_DATA_PATH / "fluidprofiles"
+        if not fluid_profiles_dir.is_dir():
             logger.warning("Fluid profiles not found. Cannot execute PRACE tests.")
             return
         v2_list, Omgw_scaled_list, data = scom.all_generate_ps_prace(save_ids=("test", "test"), show=False, debug=True)
-        ref_path = os.path.join(utils.TEST_DATA_PATH, "ps_prace.txt")
+        ref_path = utils.TEST_DATA_PATH / "ps_prace.txt"
 
         test_data = np.concatenate([np.array([v2_list, Omgw_scaled_list]), data])
 

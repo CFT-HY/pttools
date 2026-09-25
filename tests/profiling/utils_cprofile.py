@@ -3,13 +3,14 @@
 import cProfile
 import io
 import os
+from pathlib import Path
 import pstats
 import types
 
 from tests.profiling import utils
 
-PROFILE_DIR: str = os.path.join(utils.PROFILE_DIR, "cprofile")
-os.makedirs(PROFILE_DIR, exist_ok=True)
+PROFILE_DIR: Path = utils.PROFILE_DIR / "cprofile"
+PROFILE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class CProfiler(utils.Profiler):
@@ -33,7 +34,7 @@ class CProfiler(utils.Profiler):
 
 def process(name: str, profile: cProfile.Profile, print_to_console: bool = False) -> None:
     """Process and save cProfile results."""
-    path = os.path.join(PROFILE_DIR, f"{name}")
+    path = PROFILE_DIR / name
     profile.dump_stats(f"{path}.pstat")
 
     save_sorted(profile, path, "time", print_to_console)
@@ -43,7 +44,7 @@ def process(name: str, profile: cProfile.Profile, print_to_console: bool = False
 
 def save_sorted(
         profile: cProfile.Profile,
-        path: str,
+        path: str | os.PathLike[str],
         sort: pstats.SortKey | str,
         print_to_console: bool = False) -> None:
     """Save sorted cProfile results to file."""
@@ -57,15 +58,14 @@ def save_sorted(
 
     sort_name = sort.value if isinstance(sort, pstats.SortKey) else sort
     path_labeled = f"{path}_{sort_name}"
-    with open(f"{path_labeled}.txt", "w") as file:
-        file.write(text)
-    save_filtered(text, f"{path_labeled}_numba.txt", os.path.join("site-packages", "numba"))
+    Path(f"{path_labeled}.txt").write_text(text)
+    save_filtered(text, f"{path_labeled}_numba.txt", str(Path("site-packages", "numba")))
     save_filtered(text, f"{path_labeled}_all.txt", "site-packages")
 
 
-def save_filtered(text: str, path: str, filter_text: str) -> None:
+def save_filtered(text: str, path: str | os.PathLike[str], filter_text: str) -> None:
     lines = text.splitlines(keepends=True)
-    with open(path, "w") as file:
+    with Path(path).open("w") as file:
         for line in lines:
             if filter_text not in line:
                 file.write(line)

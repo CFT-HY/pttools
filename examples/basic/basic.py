@@ -5,8 +5,6 @@ Basic usage
 Plot a single bubble
 """
 
-import os.path
-
 import matplotlib.pyplot as plt
 
 from examples.utils import FIG_DIR, save_fig
@@ -27,13 +25,13 @@ def main() -> tuple[plt.Figure, plt.Figure]:
     bubble = Bubble(model, v_wall=0.5, alpha_n=0.2)
     bubble_fig = bubble.plot()
     save_fig(bubble_fig, "bag_bubble")
-    bubble.export(os.path.join(FIG_DIR, "bag_bubble.json"))
+    bubble.export(FIG_DIR / "bag_bubble.json")
 
     # Compute the gravitational wave spectrum for the bubble.
     spectrum = Spectrum(bubble, nuc_type=NucType.EXPONENTIAL, r_star=0.1)
     spectrum_fig, _axs = spectrum.plot_multi()
     save_fig(spectrum_fig, "bag_spectrum")
-    bubble.export(os.path.join(FIG_DIR, "bag_spectrum.json"))
+    bubble.export(FIG_DIR / "bag_spectrum.json")
 
     return bubble_fig, spectrum_fig
 

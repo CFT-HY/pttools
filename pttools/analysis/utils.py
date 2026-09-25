@@ -1,7 +1,7 @@
 """Utilities for plotting and analysing data."""
 
 import os
-import os.path
+from pathlib import Path
 import typing as tp
 
 from matplotlib import rcParams
@@ -66,8 +66,8 @@ def model_phase_label(model: BaseModel, phase: Phase) -> str:
 
 def save_and_show_fig(
         fig: Figure,
-        path: str,
-        fig_dir: str | None = None,
+        path: str | os.PathLike[str],
+        fig_dir: str | os.PathLike[str] | None = None,
         formats: tp.Iterable[str] = FIG_FORMATS,
         makedirs: bool = True,
         **kwargs: tp.Any) -> None:
@@ -79,7 +79,7 @@ def save_and_show_fig(
 
 def save_and_show_figs(
         figs: dict[str, Figure],
-        fig_dir: str | None = None,
+        fig_dir: str | os.PathLike[str] | None = None,
         formats: tp.Iterable[str] = FIG_FORMATS,
         makedirs: bool = True,
         **kwargs: tp.Any) -> None:
@@ -91,36 +91,37 @@ def save_and_show_figs(
 
 def save_fig(
         fig: Figure,
-        path: str,
-        fig_dir: str | None = None,
+        path: str | os.PathLike[str],
+        fig_dir: str | os.PathLike[str] | None = None,
         formats: tp.Iterable[str] = FIG_FORMATS,
         force_formats: bool = False,
         makedirs: bool = True,
         close: bool = False,
         **kwargs: tp.Any) -> None:
     """Save a figure."""
-    is_abs = os.path.isabs(path)
+    path = Path(path)
+    is_abs = path.is_absolute()
     if makedirs and (is_abs or fig_dir is None):
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+        path.parent.mkdir(parents=True, exist_ok=True)
 
-    if not force_formats and "." in os.path.basename(path):
-        fig.savefig(path if fig_dir is None else os.path.join(fig_dir, path), **kwargs)
+    if not force_formats and "." in path.name:
+        fig.savefig(path if fig_dir is None else Path(fig_dir) / path, **kwargs)
     elif fig_dir is None or is_abs:
         for ext in formats:
-            fig.savefig(f"{path}.{ext}", **kwargs)
+            fig.savefig(path.with_name(f"{path.name}.{ext}"), **kwargs)
     else:
         for ext in formats:
-            format_dir = os.path.join(fig_dir, ext)
-            if makedirs and not os.path.exists(format_dir):
-                os.makedirs(format_dir, exist_ok=True)
-            fig.savefig(f"{os.path.join(format_dir, path)}.{ext}", **kwargs)
+            format_dir = Path(fig_dir) / ext
+            if makedirs:
+                format_dir.mkdir(parents=True, exist_ok=True)
+            fig.savefig(format_dir / path.with_name(f"{path.name}.{ext}"), **kwargs)
     if close:
         plt.close(fig)
 
 
 def save_figs(
         figs: dict[str, Figure],
-        fig_dir: str | None = None,
+        fig_dir: str | os.PathLike[str] | None = None,
         formats: tp.Iterable[str] = FIG_FORMATS,
         makedirs: bool = True,
         close: bool = False,

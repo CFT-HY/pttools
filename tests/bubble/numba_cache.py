@@ -10,9 +10,9 @@ with ``NUMBA_CACHE_DIR`` and ``NUMBA_ENABLE_CACHE`` set in the environment,
 and with the repository directory in ``PYTHONPATH``.
 """
 
-import glob
 import json
-import os.path
+import os
+from pathlib import Path
 import pickle
 import sys
 
@@ -20,7 +20,7 @@ from pttools.bubble.bubble import Bubble
 from pttools.models import BagModel
 
 
-def cache_index_sizes(cache_dir: str) -> dict[str, int]:
+def cache_index_sizes(cache_dir: str | os.PathLike[str]) -> dict[str, int]:
     """Get the number of keys in each Numba cache index in the given directory.
 
     The format of an index file is:
@@ -31,15 +31,15 @@ def cache_index_sizes(cache_dir: str) -> dict[str, int]:
     :return: number of keys by the name of the index file
     """
     sizes: dict[str, int] = {}
-    for path in glob.glob(os.path.join(cache_dir, "**", "*.nbi"), recursive=True):
-        with open(path, "rb") as file:
+    for path in Path(cache_dir).rglob("*.nbi"):
+        with path.open("rb") as file:
             pickle.load(file)
             _, overloads = pickle.loads(file.read())
-        sizes[os.path.basename(path)] = len(overloads)
+        sizes[path.name] = len(overloads)
     return sizes
 
 
-def main(output_path: str) -> None:
+def main(output_path: str | os.PathLike[str]) -> None:
     """Solve a bubble and save the sizes of the Numba cache indexes to the given file.
 
     The results are saved to a file instead of being printed,
@@ -51,7 +51,7 @@ def main(output_path: str) -> None:
     :param output_path: path to the JSON file to be created
     """
     Bubble(BagModel(a_s=1.1, a_b=1, V_s=1), v_wall=0.5, alpha_n=0.2).solve()
-    with open(output_path, "w") as file:
+    with Path(output_path).open("w") as file:
         json.dump(cache_index_sizes(os.environ["NUMBA_CACHE_DIR"]), file)
 
 

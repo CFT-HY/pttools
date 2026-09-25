@@ -1,5 +1,6 @@
 """Utilities for plotting multiple bubbles."""
 
+import os
 import typing as tp
 
 import matplotlib.pyplot as plt
@@ -48,7 +49,7 @@ def plot_bubbles_common(
         bubbles: tp.Collection[BaseBubble],
         fig: plt.Figure,
         ax: plt.Axes,
-        path: str | None = None,
+        path: str | os.PathLike[str] | None = None,
         legend: bool | None = None,
         legend_fontsize: int | None = None,
         full_range: bool = False) -> FigAndAxes:
@@ -75,7 +76,7 @@ def plot_bubbles_common(
 def plot_bubbles(
         bubbles: tp.Sequence[BaseBubble],
         fig: plt.Figure | None = None,
-        path: str | None = None,
+        path: str | os.PathLike[str] | None = None,
         full_range: bool = False,
         **kwargs: tp.Any) -> plt.Figure:
     """Plot the velocity and enthalpy profiles of bubbles."""
@@ -98,7 +99,7 @@ def plot_bubbles_v(
         bubbles: tp.Collection[BaseBubble],
         fig: plt.Figure | None = None,
         ax: plt.Axes | None = None,
-        path: str | None = None,
+        path: str | os.PathLike[str] | None = None,
         v_max: float = 1,
         full_range: bool = False,
         legend: bool | None = None,
@@ -128,7 +129,7 @@ def plot_bubbles_w(
         bubbles: tp.Collection[BaseBubble],
         fig: plt.Figure | None = None,
         ax: plt.Axes | None = None,
-        path: str | None = None,
+        path: str | os.PathLike[str] | None = None,
         full_range: bool = False,
         **kwargs: tp.Any) -> FigAndAxes:
     """Plot the enthalpy profile of multiple bubbles."""

@@ -15,6 +15,7 @@ Based on numba.np.ufunc.parallel._check_tbb_version_compatible()
 from ctypes import CDLL, c_int
 import logging
 import os
+from pathlib import Path
 import sys
 
 from pttools.utils.system import IS_LINUX, IS_OSX, IS_WINDOWS
@@ -46,7 +47,7 @@ def _tbb_library_name() -> str:
     return TBB_LIBRARY_NAME
 
 
-def tbb_library_dirs() -> list[str]:
+def tbb_library_dirs() -> list[Path]:
     """Directories of the Python environment where the ``tbb`` package from PyPI installs its libraries.
 
     These are the ``lib`` directories (``Library/bin`` on Windows) of the current virtual environment
@@ -57,28 +58,26 @@ def tbb_library_dirs() -> list[str]:
     if venv:
         prefixes.append(venv)
 
-    dirs: list[str] = []
+    dirs: list[Path] = []
     for prefix in prefixes:
-        if IS_WINDOWS:
-            candidates = [os.path.join(prefix, "Library", "bin"), os.path.join(prefix, "bin")]
-        else:
-            candidates = [os.path.join(prefix, "lib")]
+        prefix_path = Path(prefix)
+        candidates = [prefix_path / "Library" / "bin", prefix_path / "bin"] if IS_WINDOWS else [prefix_path / "lib"]
         for candidate in candidates:
-            if candidate not in dirs and os.path.isdir(candidate):
+            if candidate not in dirs and candidate.is_dir():
                 dirs.append(candidate)
     return dirs
 
 
-def _load_library(path: str | None = None) -> CDLL:
+def _load_library(path: str | os.PathLike[str] | None = None) -> CDLL:
     """Load the TBB library from the given directory, or from the default search path if no directory is given."""
     name = _tbb_library_name()
-    if path is not None:
-        # sys.platform is checked instead of IS_WINDOWS, as type checkers use it to know that the function exists.
-        if sys.platform == "win32":
-            # Allow the loader to find the dependencies of the library, and the library itself when Numba loads it.
-            os.add_dll_directory(path)
-        name = os.path.join(path, name)
-    return CDLL(name)
+    if path is None:
+        return CDLL(name)
+    # sys.platform is checked instead of IS_WINDOWS, as type checkers use it to know that the function exists.
+    if sys.platform == "win32":
+        # Allow the loader to find the dependencies of the library, and the library itself when Numba loads it.
+        os.add_dll_directory(path)
+    return CDLL(Path(path) / name)
 
 
 def _library_version(libtbb: CDLL) -> int:
@@ -88,7 +87,7 @@ def _library_version(libtbb: CDLL) -> int:
     return version_func()
 
 
-def get_tbb_version(path: str | None = None) -> int:
+def get_tbb_version(path: str | os.PathLike[str] | None = None) -> int:
     """Get TBB library version.
 
     :param path: directory of the TBB library. If not given, the default search path of the operating system is used.
@@ -126,7 +125,7 @@ def load_tbb() -> int | None:
         )
 
     for lib_dir in tbb_library_dirs():
-        if not os.path.isfile(os.path.join(lib_dir, TBB_LIBRARY_NAME)):
+        if not (lib_dir / TBB_LIBRARY_NAME).is_file():
             continue
         try:
             libtbb = _load_library(lib_dir)

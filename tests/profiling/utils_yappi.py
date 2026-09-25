@@ -2,6 +2,7 @@
 
 import io
 import os
+from pathlib import Path
 import threading
 import types
 import typing as tp
@@ -10,8 +11,8 @@ import yappi
 
 from tests.profiling import utils
 
-PROFILE_DIR: str = os.path.join(utils.PROFILE_DIR, "yappi")
-os.makedirs(PROFILE_DIR, exist_ok=True)
+PROFILE_DIR: Path = utils.PROFILE_DIR / "yappi"
+PROFILE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class YappiProfiler(utils.Profiler):
@@ -36,7 +37,7 @@ class YappiProfiler(utils.Profiler):
         process(self.name, self.print_to_console)
 
 
-def process_text_func(stats: yappi.YFuncStats, path: str, print_to_console: bool = False) -> str:
+def process_text_func(stats: yappi.YFuncStats, path: str | os.PathLike[str], print_to_console: bool = False) -> str:
     """Convert YAPPI function stats to str."""
     return process_text(stats, path, print_to_console, columns={
         0: ("ncall", 5),
@@ -47,7 +48,7 @@ def process_text_func(stats: yappi.YFuncStats, path: str, print_to_console: bool
     })
 
 
-def process_text_thread(stats: yappi.YThreadStats, path: str, print_to_console: bool = False) -> str:
+def process_text_thread(stats: yappi.YThreadStats, path: str | os.PathLike[str], print_to_console: bool = False) -> str:
     """Convert YAPPI thread stats to str."""
     return process_text(stats, path, print_to_console, columns={
         0: ("name", 20),
@@ -60,7 +61,7 @@ def process_text_thread(stats: yappi.YThreadStats, path: str, print_to_console: 
 
 def process_text(
         stats: yappi.YFuncStats | yappi.YThreadStats,
-        path: str | None = None,
+        path: str | os.PathLike[str] | None = None,
         print_to_console: bool = False,
         columns: dict[int, tuple[str, int]] | None = None) -> str:
     """Convert YAPPI stats to str."""
@@ -74,8 +75,7 @@ def process_text(
     if print_to_console:
         print(text)
     if path:
-        with open(path, "w") as file:
-            file.write(text)
+        Path(path).write_text(text)
 
     return text
 
@@ -87,7 +87,7 @@ def process(name: str, print_to_console: bool = False) -> tuple[yappi.YFuncStats
 
     if print_to_console:
         func_stats.print_all()
-    path = os.path.join(PROFILE_DIR, f"{name}")
+    path = PROFILE_DIR / name
     path_func = f"{path}_functions"
     for fmt, extension in [("YSTAT", "ystat"), ("CALLGRIND", "callgrind"), ("PSTAT", "pstat")]:
         func_stats.save(f"{path_func}.{extension}", type=fmt)

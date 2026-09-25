@@ -4,6 +4,7 @@ import abc
 import datetime
 import functools
 import logging
+import os
 import typing as tp
 
 import matplotlib.pyplot as plt
@@ -143,7 +144,7 @@ class BaseBubble(abc.ABC):
         """Add a note to the solution."""
         self.notes.append(note)
 
-    def export(self, path: str | None = None) -> dict[str, tp.Any]:
+    def export(self, path: str | os.PathLike[str] | None = None) -> dict[str, tp.Any]:
         """Export the bubble data."""
         data = {
             "datetime": datetime.datetime.now(),
@@ -195,7 +196,7 @@ class BaseBubble(abc.ABC):
     def plot(
             self,
             fig: plt.Figure | None = None,
-            path: str | None = None,
+            path: str | os.PathLike[str] | None = None,
             full_range: bool = False,
             **kwargs: tp.Any) -> plt.Figure:
         """Plot the velocity and enthalpy profiles of the bubble."""
@@ -206,7 +207,7 @@ class BaseBubble(abc.ABC):
             self,
             fig: plt.Figure | None = None,
             ax: plt.Axes | None = None,
-            path: str | None = None,
+            path: str | os.PathLike[str] | None = None,
             full_range: bool = False,
             **kwargs: tp.Any) -> "FigAndAxes":
         """Plot the velocity profile of the bubble."""
@@ -217,7 +218,7 @@ class BaseBubble(abc.ABC):
             self,
             fig: plt.Figure | None = None,
             ax: plt.Axes | None = None,
-            path: str | None = None,
+            path: str | os.PathLike[str] | None = None,
             full_range: bool = False,
             **kwargs: tp.Any) -> "FigAndAxes":
         """Plot the enthalpy profile of the bubble."""

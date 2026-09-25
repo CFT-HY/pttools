@@ -3,6 +3,7 @@
 import functools
 import logging
 from math import sqrt
+import os
 import typing as tp
 
 import matplotlib.pyplot as plt
@@ -206,7 +207,7 @@ class SSMSpectrum:
         )
         self.spec_den_gw = self.spec_den_gw_expanded if self.low_k else self.spec_den_gw_ssm
 
-    def export(self, path: str | None = None) -> dict[str, tp.Any]:
+    def export(self, path: str | os.PathLike[str] | None = None) -> dict[str, tp.Any]:
         data = {
             "bubble": self.bubble.export(),
             # Input parameters
@@ -487,7 +488,7 @@ class SSMSpectrum:
             self,
             fig: plt.Figure | None = None,
             ax: plt.Axes | None = None,
-            path: str | None = None,
+            path: str | os.PathLike[str] | None = None,
             **kwargs: tp.Any) -> "FigAndAxes":
         r"""Plot GW power spectrum $\mathcal{P}_{\text{gw}}(k)$."""
         return self.plot_gw(fig, ax, path, **kwargs)
@@ -496,7 +497,7 @@ class SSMSpectrum:
             self,
             fig: plt.Figure | None = None,
             ax: plt.Axes | None = None,
-            path: str | None = None,
+            path: str | os.PathLike[str] | None = None,
             **kwargs: tp.Any) -> "FigAndAxes":
         r"""Plot GW power spectrum $\mathcal{P}_{\text{gw}}(k)$."""
         from pttools.analysis.plot_spectra import plot_spectra_gw  # noqa: PLC0415
@@ -506,7 +507,7 @@ class SSMSpectrum:
             self,
             fig: plt.Figure | None = None,
             ax: plt.Axes | None = None,
-            path: str | None = None,
+            path: str | os.PathLike[str] | None = None,
             **kwargs: tp.Any) -> "FigAndAxes":
         r"""Plot velocity power spectrum $\mathcal{P}_{\tilde{v}}(q)$."""
         from pttools.analysis.plot_spectra import plot_spectra_v  # noqa: PLC0415
@@ -516,7 +517,7 @@ class SSMSpectrum:
             self,
             fig: plt.Figure | None = None,
             ax: plt.Axes | None = None,
-            path: str | None = None,
+            path: str | os.PathLike[str] | None = None,
             **kwargs: tp.Any) -> "FigAndAxes":
         """Plot spectral density of scaled GW power."""
         from pttools.analysis.plot_spectra import plot_spectra_spec_den_gw  # noqa: PLC0415
@@ -526,7 +527,7 @@ class SSMSpectrum:
             self,
             fig: plt.Figure | None = None,
             ax: plt.Axes | None = None,
-            path: str | None = None,
+            path: str | os.PathLike[str] | None = None,
             **kwargs: tp.Any) -> "FigAndAxes":
         """Plot spectral density of the velocity field $P_v(y)$."""
         from pttools.analysis.plot_spectra import plot_spectra_spec_den_v  # noqa: PLC0415

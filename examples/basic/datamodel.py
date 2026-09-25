@@ -10,7 +10,7 @@ Todo: This example is preliminary, and the solvers don't yet work properly for t
 """
 
 import logging
-import os.path
+from pathlib import Path
 
 from matplotlib.figure import Figure
 
@@ -26,7 +26,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 def main(data_path: str = "thermodynamics_data.h5") -> Figure | None:
     """Plot a bubble using a DataModel from an HDF5 data file"""
     # __file__ is not supported for example files by sphinx-gallery
-    if not os.path.isfile(data_path):
+    if not Path(data_path).is_file():
         print(
             f"The data file was not found at \"{data_path}\". "
             "Please generate it and place in the current directory."

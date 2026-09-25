@@ -1,6 +1,6 @@
 """Documentation tests."""
 
-import os
+from pathlib import Path
 import tempfile
 import unittest
 from unittest import mock
@@ -21,38 +21,37 @@ class DocsPathsTest(unittest.TestCase):
 
     def setUp(self) -> None:
         self.tmp_dir: tempfile.TemporaryDirectory[str] = tempfile.TemporaryDirectory()
-        self.root: str = os.path.realpath(self.tmp_dir.name)
+        self.root: Path = Path(self.tmp_dir.name).resolve()
 
     def tearDown(self) -> None:
         self.tmp_dir.cleanup()
 
-    def make_docs_dir(self, *parts: str) -> str:
-        path = os.path.join(self.root, *parts)
-        os.makedirs(path, exist_ok=True)
+    def make_docs_dir(self, *parts: str) -> Path:
+        path = self.root.joinpath(*parts)
+        path.mkdir(parents=True, exist_ok=True)
         for name in paths.DOCS_DIR_FILES:
-            with open(os.path.join(path, name), "w") as file:
-                file.write("")
+            (path / name).write_text("")
         return path
 
     def test_is_docs_dir(self) -> None:
         self.assertFalse(paths.is_docs_dir(self.root))
         docs = self.make_docs_dir("docs")
         self.assertTrue(paths.is_docs_dir(docs))
-        os.remove(os.path.join(docs, "Makefile"))
+        (docs / "Makefile").unlink()
         self.assertFalse(paths.is_docs_dir(docs))
 
     def test_find_docs_dir_env(self) -> None:
         """The docs directory alongside the virtual environment is preferred."""
         docs = self.make_docs_dir("project", "docs")
-        env = os.path.join(self.root, "project", "venv")
-        os.makedirs(env)
+        env = self.root / "project" / "venv"
+        env.mkdir()
         with mock.patch.object(paths, "env_dir", return_value=env):
             self.assertEqual(paths.find_docs_dir(cwd=self.root), docs)
 
     def test_find_docs_dir_cwd_subdir(self) -> None:
         docs = self.make_docs_dir("project", "docs")
         with mock.patch.object(paths, "env_dir", return_value=None):
-            self.assertEqual(paths.find_docs_dir(cwd=os.path.join(self.root, "project")), docs)
+            self.assertEqual(paths.find_docs_dir(cwd=self.root / "project"), docs)
 
     def test_find_docs_dir_cwd(self) -> None:
         docs = self.make_docs_dir("project", "docs")
@@ -63,7 +62,7 @@ class DocsPathsTest(unittest.TestCase):
         """When run from the PTtools repository, its docs are found even if not in a virtual environment."""
         with mock.patch.object(paths, "env_dir", return_value=None):
             found = paths.find_docs_dir(cwd=self.root)
-        pttools_docs = os.path.join(os.path.dirname(paths.PTTOOLS_DIR), paths.DOCS_DIR_NAME)
+        pttools_docs = paths.PTTOOLS_DIR.parent / paths.DOCS_DIR_NAME
         if paths.is_docs_dir(pttools_docs):
             self.assertEqual(found, pttools_docs)
         else:
@@ -71,14 +70,14 @@ class DocsPathsTest(unittest.TestCase):
 
     def test_find_docs_dir_not_found(self) -> None:
         with mock.patch.object(paths, "env_dir", return_value=None), \
-                mock.patch.object(paths, "PTTOOLS_DIR", os.path.join(self.root, "site-packages", "pttools")):
+                mock.patch.object(paths, "PTTOOLS_DIR", self.root / "site-packages" / "pttools"):
             self.assertIsNone(paths.find_docs_dir(cwd=self.root))
 
     def test_default_log_dir(self) -> None:
         docs = self.make_docs_dir("project", "docs")
-        self.assertEqual(paths.default_log_dir(docs), os.path.join(self.root, "project", "logs"))
+        self.assertEqual(paths.default_log_dir(docs), self.root / "project" / "logs")
         with mock.patch.object(paths, "find_docs_dir", return_value=None):
-            self.assertEqual(paths.default_log_dir(), os.path.join(os.getcwd(), "logs"))
+            self.assertEqual(paths.default_log_dir(), Path.cwd() / "logs")
 
 
 if __name__ == "__main__":

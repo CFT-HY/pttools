@@ -1,6 +1,7 @@
 """Utilities for plotting the entropy and related quantities of bubbles as contour plots."""
 
 import logging
+import os
 import typing as tp
 
 from matplotlib import ticker
@@ -188,7 +189,7 @@ def gen_and_plot_entropy(
         max_level: float,
         diff_level: float,
         use_bag_solver: bool = False,
-        path: str | None = None,
+        path: str | os.PathLike[str] | None = None,
         single_plot: bool = False) -> tuple[plt.Figure, th.AxesArr1D | th.AxesArr2D]:
     """Generate the entropy plots."""
     figsize = None if single_plot else (16*1.5, 9*1.5)

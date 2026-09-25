@@ -1,5 +1,6 @@
 """Utilities for plotting the spectra of multiple bubbles."""
 
+import os
 import typing as tp
 
 from matplotlib.axes import Axes
@@ -36,7 +37,7 @@ def plot_spectra_common(
         spectra: tp.Collection[SSMSpectrum],
         fig: Figure,
         ax: Axes,
-        path: str | None = None,
+        path: str | os.PathLike[str] | None = None,
         legend: bool | None = None,
         set_x: bool = True) -> FigAndAxes:
     """Common steps for plotting spectra."""
@@ -59,7 +60,7 @@ def plot_spectra_common(
 def plot_spectra_multi(
         spectra: tp.Collection[Spectrum],
         fig: Figure | None = None,
-        path: str | None = None,
+        path: str | os.PathLike[str] | None = None,
         **kwargs: tp.Any) -> tuple[Figure, th.AxesArr2D]:
     """Plot multiple types of spectra."""
     fig, axs = plot_spectra_multi_common(spectra, fig, **kwargs)
@@ -111,7 +112,7 @@ def plot_spectra_multi_common(
 def plot_spectra_multi_flat(
         spectra: tp.Collection[Spectrum],
         fig: Figure | None = None,
-        path: str | None = None,
+        path: str | os.PathLike[str] | None = None,
         labels: tp.Sequence[str | None] | None = None,
         legend: bool | None = None,
         **kwargs: tp.Any) -> tuple[Figure, th.AxesArr1D]:
@@ -148,7 +149,7 @@ def plot_spectra(
         spectra: tp.Collection[Spectrum],
         fig: Figure | None = None,
         ax: Axes | None = None,
-        path: str | None = None,
+        path: str | os.PathLike[str] | None = None,
         labels: tp.Sequence[str | None] | None = None,
         legend: bool | None = None,
         **kwargs: tp.Any) -> FigAndAxes:
@@ -179,7 +180,7 @@ def plot_spectra_gw(
         spectra: tp.Collection[SSMSpectrum],
         ax: Axes | None = None,
         fig: Figure | None = None,
-        path: str | None = None,
+        path: str | os.PathLike[str] | None = None,
         **kwargs: tp.Any) -> FigAndAxes:
     r"""Plot the GW power spectra $\mathcal{P}_\text{gw}(kR_*)$."""
     fig, ax = create_fig_ax(fig, ax)
@@ -193,7 +194,7 @@ def plot_spectra_v(
         spectra: tp.Collection[SSMSpectrum],
         ax: Axes | None = None,
         fig: Figure | None = None,
-        path: str | None = None,
+        path: str | os.PathLike[str] | None = None,
         **kwargs: tp.Any) -> FigAndAxes:
     r"""Plot the velocity power spectra $\tilde{\mathcal{P}}_{\tilde{v}}(kR_*)$."""
     fig, ax = create_fig_ax(fig, ax)
@@ -207,7 +208,7 @@ def plot_spectra_spec_den_gw(
         spectra: tp.Collection[SSMSpectrum],
         ax: Axes | None = None,
         fig: Figure | None = None,
-        path: str | None = None,
+        path: str | os.PathLike[str] | None = None,
         **kwargs: tp.Any) -> FigAndAxes:
     r"""Plot the GW spectral densities $\mathcal{P}_\text{gw}(kR_*)$."""
     fig, ax = create_fig_ax(fig, ax)
@@ -221,7 +222,7 @@ def plot_spectra_spec_den_v(
         spectra: tp.Collection[SSMSpectrum],
         ax: Axes | None = None,
         fig: Figure | None = None,
-        path: str | None = None,
+        path: str | os.PathLike[str] | None = None,
         **kwargs: tp.Any) -> FigAndAxes:
     r"""Plot the velocity spectral densities $\tilde{P}_{\tilde{v}}(kR_*)$."""
     fig, ax = create_fig_ax(fig, ax)

@@ -1,6 +1,6 @@
 r"""Test the conversion between wall frame fluid speeds $\tilde{v}_+$ and $\tilde{v}_-$."""
 
-import os.path
+import os
 import typing as tp
 import unittest
 
@@ -28,7 +28,7 @@ class TestVPlusMinus(unittest.TestCase):
     def v_conversion(
             self,
             func: tp.Callable[[th.FloatArr1D, float, SolutionType], th.FloatArr1D],
-            ref_path: str,
+            ref_path: str | os.PathLike[str],
             v_first: th.FloatArr1D) -> None:
         data = [v_first]
         for _i_alpha, alpha in enumerate(self.alpha_plus_list):
@@ -47,14 +47,14 @@ class TestVPlusMinus(unittest.TestCase):
         This generates the same data as plotted by sound-shell-model/paper/python/fig_8l_vplusminus.py.
         """
         v_first = np.linspace(1 / self.npts, 1, self.npts)
-        self.v_conversion(v_plus, os.path.join(TEST_DATA_PATH, "v_plus_minus.txt"), v_first)
+        self.v_conversion(v_plus, TEST_DATA_PATH / "v_plus_minus.txt", v_first)
 
     def test_v_minus_plus(self) -> None:
         """Compute v_minus from v_plus."""
         # Todo: Test in some other way to avoid "RuntimeWarning: invalid value encountered in sqrt"
         # Perhaps the invalid values could be converted to nan beforehand?
         v_first = np.linspace(1/self.npts+0.1, 0.9, self.npts)
-        self.v_conversion(v_minus, os.path.join(TEST_DATA_PATH, "v_minus_plus.txt"), v_first)
+        self.v_conversion(v_minus, TEST_DATA_PATH / "v_minus_plus.txt", v_first)
 
 
 if __name__ == "__main__":

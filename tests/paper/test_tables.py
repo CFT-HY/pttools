@@ -1,7 +1,6 @@
 """Test the generation of data tables for the paper."""
 
 import io
-import os.path
 import typing as tp
 import unittest
 
@@ -25,7 +24,7 @@ class TestTables(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        data = np.loadtxt(os.path.join(TEST_DATA_PATH, "data_compare_nuc-final3.txt"))
+        data = np.loadtxt(TEST_DATA_PATH / "data_compare_nuc-final3.txt")
         cls.params = data[:, 0:2]
         cls.v2 = data[:, 2:4]
         cls.Omgw = data[:, 4:6]
@@ -33,15 +32,14 @@ class TestTables(unittest.TestCase):
         cls.pfit_exp = data[:, 8:]
 
     def validate(self, name: str, func: tp.Callable[..., None], args: list[th.FloatArr2D]) -> None:
-        path = os.path.join(TEST_DATA_PATH, name)
+        path = TEST_DATA_PATH / name
 
         # Generate new reference data
         # func(*args, file_name=path)
 
         buffer = io.StringIO()
         func(*args, file_name=buffer)
-        with open(path) as file:
-            ref_data = file.read()
+        ref_data = path.read_text()
 
         buffer.seek(0)
         self.assertEqual(buffer.read(), ref_data)

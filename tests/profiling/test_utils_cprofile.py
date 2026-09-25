@@ -1,7 +1,7 @@
 """Unit tests for the cProfile utilities."""
 
 import cProfile
-import os.path
+from pathlib import Path
 import pstats
 import tempfile
 import unittest
@@ -18,10 +18,10 @@ class TestSaveSorted(unittest.TestCase):
         sum(range(10))
         profile.disable()
         with tempfile.TemporaryDirectory() as tmp_dir:
-            path = os.path.join(tmp_dir, "profile")
+            path = Path(tmp_dir) / "profile"
             for sort in ("cumulative", pstats.SortKey.TIME):
                 with self.subTest(sort=sort):
                     save_sorted(profile, path, sort)
             for name in ("cumulative", "time"):
                 for suffix in ("", "_numba", "_all"):
-                    self.assertTrue(os.path.isfile(f"{path}_{name}{suffix}.txt"))
+                    self.assertTrue((path.parent / f"{path.name}_{name}{suffix}.txt").is_file())

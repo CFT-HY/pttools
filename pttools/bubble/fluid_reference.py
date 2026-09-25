@@ -3,7 +3,8 @@
 import functools
 import logging
 import multiprocessing
-import os.path
+import os
+from pathlib import Path
 import time
 
 import h5py
@@ -31,22 +32,22 @@ class FluidReference:
 
     def __init__(
             self,
-            path: str,
+            path: str | os.PathLike[str],
             v_wall_min: float = 0.05,
             v_wall_max: float = 0.95,
             alpha_n_min: float = 0.01,
             alpha_n_max: float = 0.99,
             n_v_wall: int = 100,
             n_alpha_n: int = 100) -> None:
-        self.path: str = path
+        self.path: Path = Path(path)
 
-        if not os.path.exists(path):
+        if not self.path.exists():
             self.create(v_wall_min, v_wall_max, alpha_n_min, alpha_n_max, n_v_wall, n_alpha_n)
             # Ensure that the file is closed before attempting to open it again.
             # time.sleep(1)
 
         try:
-            file = h5py.File(path, "r")
+            file = h5py.File(self.path, "r")
         except BlockingIOError as err:
             raise BlockingIOError(
                 "Could not open the fluid reference file at \"%s\". "
@@ -60,9 +61,9 @@ class FluidReference:
                 "Could not open the fluid reference file at \"%s\". Generating a new one.",
                 path, exc_info=err
             )
-            os.remove(self.path)
+            self.path.unlink()
             self.create(v_wall_min, v_wall_max, alpha_n_min, alpha_n_max, n_v_wall, n_alpha_n)
-            file = h5py.File(path, "r")
+            file = h5py.File(self.path, "r")
 
         self.v_wall: th.FloatArr1D = file["v_wall"][...]
         self.alpha_n: th.FloatArr1D = file["alpha_n"][...]
@@ -107,8 +108,7 @@ class FluidReference:
         print(msg)
 
         start_time = time.perf_counter()
-        if os.path.exists(self.path):
-            os.remove(self.path)
+        self.path.unlink(missing_ok=True)
 
         v_walls = np.linspace(v_wall_min, v_wall_max, n_v_wall, endpoint=True)
         alpha_ns = np.linspace(alpha_n_min, alpha_n_max, n_alpha_n, endpoint=True)
@@ -170,7 +170,7 @@ class FluidReference:
                 file.create_dataset("inds_detonation", data=np.array(inds[2], dtype=np.int_))
         except Exception as exc:
             # Remove broken file
-            os.remove(self.path)
+            self.path.unlink()
             raise exc
         logger.info("Fluid reference ready, took: %.2f s", time.perf_counter() - start_time)
 
@@ -264,7 +264,7 @@ def ref() -> FluidReference:
             "to ensure that each process doesn't have to load it separately. "
             "Call this function once before creating subprocesses."
         )
-    return FluidReference(path=os.path.join(os.path.dirname(__file__), "fluid_reference.hdf5"))
+    return FluidReference(path=Path(__file__).parent / "fluid_reference.hdf5")
 
 
 if __name__ == "__main__":

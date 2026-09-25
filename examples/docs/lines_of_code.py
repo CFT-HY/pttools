@@ -7,12 +7,12 @@ Count the lines of code of the PTtools repository and the PTtools library with
 Only the files tracked by Git are counted, and the files matching the patterns of ``.clocignore`` are excluded.
 """
 
-import os.path
+from pathlib import Path
 
 from pttools.docs.cloc import cloc
 from pttools.utils.system import PTTOOLS_DIR
 
-REPO_DIR: str = os.path.dirname(PTTOOLS_DIR)
+REPO_DIR: Path = PTTOOLS_DIR.parent
 
 
 def main() -> None:

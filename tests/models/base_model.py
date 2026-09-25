@@ -1,7 +1,7 @@
 """Base test case for models."""
 
 import abc
-import os.path
+from pathlib import Path
 import unittest
 
 import numpy as np
@@ -21,7 +21,7 @@ class ModelBaseCase[M: Model](JsonTestCase, abc.ABC):
     EXPECT_MISSING_DATA = True
     SAVE_NEW_DATA = True
 
-    REF_DATA_PATH: str
+    REF_DATA_PATH: Path
     TEST_ARR_SIZE: int = 10
 
     alpha_n = np.linspace(0.15, 0.5, 10)
@@ -33,7 +33,7 @@ class ModelBaseCase[M: Model](JsonTestCase, abc.ABC):
     @classmethod
     def setUpClass(cls, model: M) -> None:
         cls.model = model
-        cls.REF_DATA_PATH = os.path.join(TEST_DATA_PATH, "models", f"{model.name}.json")
+        cls.REF_DATA_PATH = TEST_DATA_PATH / "models" / f"{model.name}.json"
         super().setUpClass()
 
     def test_class_is_valid(self) -> None:

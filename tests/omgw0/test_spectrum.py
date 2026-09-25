@@ -1,6 +1,5 @@
 """Tests for the Spectrum class."""
 
-import os.path
 import unittest
 
 import numpy as np
@@ -23,7 +22,7 @@ class SpectrumTest(unittest.TestCase):
         cls.spectrum = Spectrum(bubble, r_star=0.1)
 
     def test_export(self) -> None:
-        self.spectrum.export(os.path.join(TEST_JSON_PATH, "spectrum.json"))
+        self.spectrum.export(TEST_JSON_PATH / "spectrum.json")
 
     def test_noise(self) -> None:
         self.assertGreater(self.spectrum.snr()[0], 0)

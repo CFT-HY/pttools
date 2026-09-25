@@ -27,6 +27,7 @@ without installing PTtools with ``python3 path/to/pttools/docs/cloc.py``.
 
 import argparse
 import os
+from pathlib import Path
 import subprocess
 import sys
 import typing as tp
@@ -37,7 +38,7 @@ CLOCIGNORE: str = ".clocignore"
 DEFAULT_CLOC_ARGS: tuple[str, ...] = ("--by-file-by-lang",)
 
 
-def git_ls_files(path: str, *args: str) -> list[str]:
+def git_ls_files(path: str | os.PathLike[str], *args: str) -> list[str]:
     """List the files tracked by Git in the given directory.
 
     :param path: the directory
@@ -52,34 +53,33 @@ def git_ls_files(path: str, *args: str) -> list[str]:
     return [file for file in output.split("\0") if file]
 
 
-def git_toplevel(path: str) -> str:
+def git_toplevel(path: str | os.PathLike[str]) -> Path:
     """The root directory of the Git repository that contains the given directory."""
-    return subprocess.run(
+    return Path(subprocess.run(
         ["git", "rev-parse", "--show-toplevel"],
         cwd=path, check=True, stdout=subprocess.PIPE, text=True
-    ).stdout.strip()
+    ).stdout.strip())
 
 
-def find_clocignore(path: str) -> list[str]:
+def find_clocignore(path: str | os.PathLike[str]) -> list[Path]:
     """Find the ``.clocignore`` files in the given directory and its parent directories within the Git repository.
 
     :param path: the directory
     :return: paths of the ``.clocignore`` files, starting from the given directory
     """
-    path = os.path.abspath(path)
-    toplevel = os.path.realpath(git_toplevel(path))
-    found: list[str] = []
-    while True:
-        candidate = os.path.join(path, CLOCIGNORE)
-        if os.path.isfile(candidate):
+    path = Path(path).resolve()
+    toplevel = git_toplevel(path).resolve()
+    found: list[Path] = []
+    for directory in (path, *path.parents):
+        candidate = directory / CLOCIGNORE
+        if candidate.is_file():
             found.append(candidate)
-        parent = os.path.dirname(path)
-        if os.path.realpath(path) == toplevel or parent == path:
-            return found
-        path = parent
+        if directory == toplevel:
+            break
+    return found
 
 
-def counted_files(path: str) -> list[str]:
+def counted_files(path: str | os.PathLike[str]) -> list[str]:
     """The files that are tracked by Git and are not excluded by the ``.clocignore`` files.
 
     The files that have been deleted from the working tree but not from the Git index are skipped,
@@ -92,11 +92,11 @@ def counted_files(path: str) -> list[str]:
     ignored = set(git_ls_files(path, "--ignored", f"--exclude-per-directory={CLOCIGNORE}"))
     return [
         file for file in git_ls_files(path)
-        if file not in ignored and os.path.isfile(os.path.join(path, file))
+        if file not in ignored and (Path(path) / file).is_file()
     ]
 
 
-def cloc(path: str | None = None, cloc_args: tp.Sequence[str] = DEFAULT_CLOC_ARGS) -> str:
+def cloc(path: str | os.PathLike[str] | None = None, cloc_args: tp.Sequence[str] = DEFAULT_CLOC_ARGS) -> str:
     """Count the lines of code with cloc.
 
     :param path: the directory, defaults to the current working directory
@@ -105,13 +105,13 @@ def cloc(path: str | None = None, cloc_args: tp.Sequence[str] = DEFAULT_CLOC_ARG
     :raises FileNotFoundError: if the directory does not exist or cloc or Git is not installed
     :raises subprocess.CalledProcessError: if cloc or Git fails
     """
-    path = os.path.abspath(os.getcwd() if path is None else path)
-    if not os.path.isdir(path):
-        raise FileNotFoundError(f"{path} is not a directory.")
-    files = counted_files(path)
+    directory = Path.cwd() if path is None else Path(path).resolve()
+    if not directory.is_dir():
+        raise FileNotFoundError(f"{directory} is not a directory.")
+    files = counted_files(directory)
     return subprocess.run(
         ["cloc", "--list-file=-", *cloc_args],
-        cwd=path, check=True, input="".join(f"{file}\n" for file in files), stdout=subprocess.PIPE, text=True
+        cwd=directory, check=True, input="".join(f"{file}\n" for file in files), stdout=subprocess.PIPE, text=True
     ).stdout
 
 
@@ -132,11 +132,11 @@ def main(argv: tp.Sequence[str] | None = None) -> int:
         help="the directory to be counted (default: the current working directory)")
     args = parser.parse_args(argv)
 
-    path = os.path.abspath(os.getcwd() if args.path is None else args.path)
+    path = Path.cwd() if args.path is None else Path(args.path).resolve()
     try:
         clocignores = find_clocignore(path)
         if clocignores:
-            print(f"Counting {path} excluding the patterns of: {', '.join(clocignores)}")
+            print(f"Counting {path} excluding the patterns of: {', '.join(str(file) for file in clocignores)}")
         else:
             print(f"Counting {path}. No {CLOCIGNORE} files were found.")
         print(cloc(path, cloc_args), end="")

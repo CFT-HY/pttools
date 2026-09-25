@@ -1,6 +1,5 @@
 """Unit tests for the properties of a bubble."""
 
-import os.path
 import unittest
 
 import numpy as np
@@ -22,7 +21,7 @@ class BubbleTest(unittest.TestCase):
         cls.bubble = Bubble(cls.model, v_wall=0.5, alpha_n=0.1)
 
     def test_export(self) -> None:
-        self.bubble.export(os.path.join(TEST_JSON_PATH, "bubble.json"))
+        self.bubble.export(TEST_JSON_PATH / "bubble.json")
 
     def test_vp_vm_tilde_ratio_giese(self) -> None:
         self.assertGreater(self.bubble.vp_vm_tilde_ratio_giese, 0)

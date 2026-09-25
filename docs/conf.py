@@ -12,11 +12,11 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
+# documentation root, use Path.resolve to make it absolute, like shown here.
 
 from datetime import date
 import logging
-import os.path
+from pathlib import Path
 import sys
 import tomllib
 import typing as tp
@@ -26,11 +26,11 @@ from matplotlib.animation import FFMpegWriter
 # import plotly.io as pio
 from sphinx_gallery.sorting import ExplicitOrder
 
-DOCS_DIR: str = os.path.dirname(os.path.abspath(__file__))
-REPO_DIR: str = os.path.dirname(DOCS_DIR)
-EXAMPLES_DIR: str = os.path.join(REPO_DIR, "examples")
-TESTS_DIR: str = os.path.join(REPO_DIR, "tests")
-sys.path.insert(0, REPO_DIR)
+DOCS_DIR: Path = Path(__file__).resolve().parent
+REPO_DIR: Path = DOCS_DIR.parent
+EXAMPLES_DIR: Path = REPO_DIR / "examples"
+TESTS_DIR: Path = REPO_DIR / "tests"
+sys.path.insert(0, str(REPO_DIR))
 
 from pttools.docs.intersphinx import INTERSPHINX_MAPPING, IntersphinxMapping
 from pttools.docs.links import EXTLINKS, LINKCHECK_ALLOWED_REDIRECTS, ExtLinks
@@ -49,17 +49,17 @@ DOC_MODULES: tuple[str, ...] = ("docs", "examples", "pttools", "tests")
 pre_setup(doc_modules=DOC_MODULES)
 
 # Create a directory for static files to avoid a warning when building.
-os.makedirs(os.path.join(DOCS_DIR, "_static"), exist_ok=True)
+(DOCS_DIR / "_static").mkdir(parents=True, exist_ok=True)
 
 # -- Project information -----------------------------------------------------
 
 project = "PTtools"
 file: tp.IO[tp.Any]
-with open(os.path.join(REPO_DIR, "AUTHORS")) as file:
+with (REPO_DIR / "AUTHORS").open() as file:
     _authors = file.read().splitlines()
 author = f"{', '.join(_authors[:-1])} & {_authors[-1]}"
 copyright = f"2015-{date.today().year}, {author}"
-with open (os.path.join(REPO_DIR, "pyproject.toml"), "rb") as file:
+with (REPO_DIR / "pyproject.toml").open("rb") as file:
     version = tomllib.load(file)["project"]["version"]
 release = version
 
@@ -148,26 +148,26 @@ mathjax3_config = {
 # -- Apidoc  -----------------------------------------------------------------
 apidoc_modules = [
     {
-        "path": PTTOOLS_DIR,
+        "path": str(PTTOOLS_DIR),
         "destination": "gen_modules/pttools"
     },
     {
         # Only the utilities are documented, as the examples themselves are in the gallery,
         # and importing them for autodoc would run them a second time.
-        "path": EXAMPLES_DIR,
+        "path": str(EXAMPLES_DIR),
         "destination": "gen_modules/examples",
-        "exclude_patterns": [os.path.join(EXAMPLES_DIR, "*", "*")]
+        "exclude_patterns": [str(EXAMPLES_DIR / "*" / "*")]
     },
     {
-        "path": TESTS_DIR,
+        "path": str(TESTS_DIR),
         "destination": "gen_modules/tests"
     },
     {
         # This file is excluded, since importing it for autodoc would run it a second time.
         # The figure scripts are excluded, as they are already included with the plot directive.
-        "path": DOCS_DIR,
+        "path": str(DOCS_DIR),
         "destination": "gen_modules/docs",
-        "exclude_patterns": [os.path.join(DOCS_DIR, "conf.py"), os.path.join(DOCS_DIR, "fig")]
+        "exclude_patterns": [str(DOCS_DIR / "conf.py"), str(DOCS_DIR / "fig")]
     }
 ]
 # apidoc_max_depth = 6
@@ -258,7 +258,7 @@ sphinx_gallery_conf = {
     "backreferences_dir": "gen_modules/backreferences",
     "compress_images": ("images", "thumbnails"),
     "doc_module": DOC_MODULES,
-    "examples_dirs": EXAMPLES_DIR,
+    "examples_dirs": str(EXAMPLES_DIR),
     "filename_pattern": ".*",
     "gallery_dirs": "auto_examples",
     "ignore_pattern": r"(__init__\.py|utils\.py|p_s_scan_dev\.py|droplet|standard_model|entropy|reverse)",

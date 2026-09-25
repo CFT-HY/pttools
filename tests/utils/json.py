@@ -2,8 +2,7 @@
 
 import abc
 import logging
-import os
-import os.path
+from pathlib import Path
 import typing as tp
 
 import numpy as np
@@ -18,7 +17,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 class JsonTestCase(abc.ABC):
     """Base class for tests that compare to JSON data."""
 
-    REF_DATA_PATH: str
+    REF_DATA_PATH: Path
     data: dict[str, th.FloatOrArr]
     ref_data: dict[str, th.FloatOrArr]
 
@@ -45,9 +44,8 @@ class JsonTestCase(abc.ABC):
     @classmethod
     def setUpClass(cls, *args: tp.Any, **kwargs: tp.Any) -> None:
         cls.data = {}
-        if os.path.isfile(cls.REF_DATA_PATH):
-            with open(cls.REF_DATA_PATH, "rb") as file:
-                cls.ref_data = orjson.loads(file.read())
+        if cls.REF_DATA_PATH.is_file():
+            cls.ref_data = orjson.loads(cls.REF_DATA_PATH.read_bytes())
         else:
             logger.warning("Reference data file for not found. Starting with a blank file.")
             cls.ref_data = {}
@@ -59,6 +57,5 @@ class JsonTestCase(abc.ABC):
                 cls.data,
                 option=orjson.OPT_SERIALIZE_NUMPY | orjson.OPT_APPEND_NEWLINE | orjson.OPT_INDENT_2
             )
-            os.makedirs(os.path.dirname(cls.REF_DATA_PATH), exist_ok=True)
-            with open(cls.REF_DATA_PATH, "wb") as file:
-                file.write(json)
+            cls.REF_DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
+            cls.REF_DATA_PATH.write_bytes(json)

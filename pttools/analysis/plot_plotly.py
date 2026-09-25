@@ -2,6 +2,7 @@
 
 import abc
 import logging
+import os
 
 import plotly.graph_objects as go
 
@@ -28,7 +29,7 @@ class PlotlyPlot(abc.ABC):
         return self._fig
 
     @plotly_fix
-    def save(self, path: str) -> None:
+    def save(self, path: str | os.PathLike[str]) -> None:
         """Save the figure as a file."""
         fig = self.fig()
         fig.write_html(f"{path}.html")

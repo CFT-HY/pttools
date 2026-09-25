@@ -8,11 +8,11 @@ Modified from
 
 import io
 import logging
+import os
+from pathlib import Path
 import typing as tp
 
 import matplotlib.pyplot as plt
-
-# import os
 import numpy as np
 from scipy.optimize import curve_fit
 
@@ -32,7 +32,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 # bubble.setup_plotting()
 
 # Model data path
-MD_PATH = TEST_DATA_PATH + "/"
+MD_PATH: Path = TEST_DATA_PATH
 
 # All run parameters
 
@@ -159,8 +159,8 @@ def add_ssm_fit(f_gw: plt.Figure, y: th.FloatArr1D, pow_gw: th.FloatArr1D) -> Fi
 def make_1dh_compare_table(
         params_list: th.FloatArr2D,
         v2_list: th.FloatArr2D,
-        file_name: str | io.TextIOBase = 'table_1dh_compare.tex') -> None:
-    f = file_name if isinstance(file_name, io.TextIOBase) else open(file_name, "w")  # noqa: SIM115
+        file_name: str | os.PathLike[str] | io.TextIOBase = 'table_1dh_compare.tex') -> None:
+    f = file_name if isinstance(file_name, io.TextIOBase) else Path(file_name).open("w")  # noqa: SIM115
     f.write('\\begin{tabular}{cc | rrr }\n')
 
     f.write('\\hline\\hline\n')
@@ -199,7 +199,7 @@ def make_3dh_compare_table(
         v2_list: th.FloatArr2D,
         Omgw_list: th.FloatArr2D,
         p_list: th.FloatArr2D,
-        file_name: str | io.TextIOBase = 'table_3dh_compare.tex') -> None:
+        file_name: str | os.PathLike[str] | io.TextIOBase = 'table_3dh_compare.tex') -> None:
     """
     Prints table to file, comparing selected statistics between
     SSM and "Prace" 3dh hydro simulations (Hindmarsh et al. 2017)
@@ -223,7 +223,7 @@ def make_3dh_compare_table(
         8.6, 10.4, 18.3, np.nan, 9.9,
         8.5, np.nan, 16.1, np.nan, 6.9]
 
-    f = file_name if isinstance(file_name, io.TextIOBase) else open(file_name, 'w')  # noqa: SIM115
+    f = file_name if isinstance(file_name, io.TextIOBase) else Path(file_name).open('w')  # noqa: SIM115
     f.write('\\begin{tabular}{cc | rr | rr | ll | rr}\n')
 
     f.write('\\hline\\hline\n')
@@ -292,7 +292,7 @@ def make_nuc_compare_table(
         Omgw_list: th.FloatArr2D,
         p_sim_list: th.FloatArr2D,
         p_exp_list: th.FloatArr2D,
-        file_name: str | io.TextIOBase = 'table_nuc_compare.tex') -> None:
+        file_name: str | os.PathLike[str] | io.TextIOBase = 'table_nuc_compare.tex') -> None:
     """
     Prints table to stdout, displaying selected statistics
     comparing between simulataneous and exponential nucleation.
@@ -300,7 +300,7 @@ def make_nuc_compare_table(
     The results are precomputed, and therefore this function doesn't call pttools.
     """
     # print('\\begin{tabular}{cc | rr | rr | ll | rr | rr}')
-    f = file_name if isinstance(file_name, io.TextIOBase) else open(file_name, 'w')  # noqa: SIM115
+    f = file_name if isinstance(file_name, io.TextIOBase) else Path(file_name).open('w')  # noqa: SIM115
     f.write('\\begin{tabular}{cc | rr | ll | rr | rr}\n')
 
     f.write('\\hline\\hline\n')
@@ -366,7 +366,7 @@ def make_nuc_compare_table(
 
 
 def save_compare_nuc_data(
-        file: str,
+        file: str | os.PathLike[str],
         params_list: list[list[float]],
         v2_list: list[list[float]],
         Omgw_list: list[list[float]],
@@ -489,8 +489,8 @@ def plot_ps_compare_res(
 
             data_file_suffix = f"vw{vw}alpha{alpha}_" + nuc_string \
                 + nz_string + nx_string + nT_string + save_id + '.txt'
-            np.savetxt(MD_PATH + 'pow_v_' + data_file_suffix, np.stack((z, pow_v), axis=-1), fmt='%.18e %.18e')
-            np.savetxt(MD_PATH + 'pow_gw_' + data_file_suffix, np.stack((y, pow_gw), axis=-1), fmt='%.18e %.18e')
+            np.savetxt(MD_PATH / f"pow_v_{data_file_suffix}", np.stack((z, pow_v), axis=-1), fmt='%.18e %.18e')
+            np.savetxt(MD_PATH / f"pow_gw_{data_file_suffix}", np.stack((y, pow_gw), axis=-1), fmt='%.18e %.18e')
 
         else:
             save_id = ''
@@ -603,7 +603,7 @@ def plot_ps_1bubble(
     if graph_file_type is not None:
         graph_file_suffix = f"vw{vw:.2f}alpha{alpha}_"  \
             + nz_string + nx_string + save_id + '.' + graph_file_type
-        fig.savefig(MD_PATH + "one_bub_" + graph_file_suffix)
+        fig.savefig(MD_PATH / f"one_bub_{graph_file_suffix}")
 
     # plt.show()
 
@@ -666,8 +666,8 @@ def plot_ps_compare_nuc(
 
         if save_id is not None:
             data_file_suffix = f"vw{vw:.2f}alpha{alpha}_{nuc_string}{nz_string}{nx_string}{nT_string}{save_id}.txt"
-            np.savetxt(f"{MD_PATH}pow_v_{data_file_suffix}", np.stack((z, pow_v), axis=-1), fmt='%.18e %.18e')
-            np.savetxt(f"{MD_PATH}pow_gw_{data_file_suffix}", np.stack((y, pow_gw), axis=-1), fmt='%.18e %.18e')
+            np.savetxt(MD_PATH / f"pow_v_{data_file_suffix}", np.stack((z, pow_v), axis=-1), fmt='%.18e %.18e')
+            np.savetxt(MD_PATH / f"pow_gw_{data_file_suffix}", np.stack((y, pow_gw), axis=-1), fmt='%.18e %.18e')
 
         nuc_string_all += nuc_string
         v2_list.append(float(np.trapezoid(pow_v/z, z)))
@@ -694,8 +694,8 @@ def plot_ps_compare_nuc(
     if graph_file_type is not None:
         graph_file_suffix = f"vw{vw:.2f}alpha{alpha}_" + nuc_string_all \
             + nz_string + nx_string + nT_string + ("" if save_id is None else save_id) + '.' + graph_file_type
-        fig_v.savefig(MD_PATH + "pow_v_" + graph_file_suffix)
-        fig_gw.savefig(MD_PATH + "pow_gw_" + graph_file_suffix)
+        fig_v.savefig(MD_PATH / f"pow_v_{graph_file_suffix}")
+        fig_gw.savefig(MD_PATH / f"pow_gw_{graph_file_suffix}")
     plt.close(fig_v)
     plt.close(fig_gw)
 
@@ -883,10 +883,10 @@ def plot_and_save(
         graph_file_suffix = file_suffix + '.pdf'
 
         fmt = " ".join(["%.18e"] * (len(pow_v_list) + 1))
-        np.savetxt(MD_PATH + 'pow_v_' + data_file_suffix, np.stack((z, *pow_v_list), axis=-1), fmt=fmt)
-        np.savetxt(MD_PATH + 'pow_gw_' + data_file_suffix, np.stack((y, *pow_gw_list), axis=-1), fmt=fmt)
-        f1.savefig(MD_PATH + "pow_v_" + graph_file_suffix)
-        f2.savefig(MD_PATH + "pow_gw_" + graph_file_suffix)
+        np.savetxt(MD_PATH / f"pow_v_{data_file_suffix}", np.stack((z, *pow_v_list), axis=-1), fmt=fmt)
+        np.savetxt(MD_PATH / f"pow_gw_{data_file_suffix}", np.stack((y, *pow_gw_list), axis=-1), fmt=fmt)
+        f1.savefig(MD_PATH / f"pow_v_{graph_file_suffix}")
+        f2.savefig(MD_PATH / f"pow_gw_{graph_file_suffix}")
 
     # Now some comparisons between real space <v^2> and Fourier space already calculated
     v_ip, w_ip, xi = bubble.sound_shell_bag(

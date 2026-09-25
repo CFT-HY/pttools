@@ -1,6 +1,8 @@
 """Sound Shell Model functions."""
 
 import logging
+import os
+from pathlib import Path
 
 import numba
 import numpy as np
@@ -95,7 +97,7 @@ def a2_e_conserving_bag(
 
 def a2_e_conserving_bag_file(
         z: th.FloatArr1D,
-        filename: str,
+        filename: str | os.PathLike[str],
         alpha: float,
         skip: int = 1,
         npt: const.NptType = const.DEFAULT_N_PT,
@@ -112,7 +114,7 @@ def a2_e_conserving_bag_file(
     """
     logger.debug(f"loading v(xi), e(xi) from {filename}")
     try:
-        with open(filename) as f:
+        with Path(filename).open() as f:
             t = float(f.readline())
         r, v_all, e_all = np.loadtxt(filename, usecols=(0, 1, 4), unpack=True, skiprows=skip)
     except OSError as error:
@@ -226,7 +228,7 @@ def a2_ssm_func_bag(
 def f_file_bag(
         z_arr: th.FloatArr1D,
         t: float,
-        filename: str,
+        filename: str | os.PathLike[str],
         skip: int = 0,
         npt: const.NptType = const.DEFAULT_N_PT,
         z_st_thresh: float = const.Z_ST_THRESH,
@@ -292,7 +294,7 @@ def f_ssm_func_bag(
     return (4.*np.pi/z) * sin_transform(z, xi, v_ip, z_st_thresh, v_wall=v_wall, v_sh=v_sh, parallel=parallel)
 
 
-def g_file_bag(z: th.FloatArr1D, t: float, filename: str, skip: int = 0) -> th.FloatArr1D:
+def g_file_bag(z: th.FloatArr1D, t: float, filename: str | os.PathLike[str], skip: int = 0) -> th.FloatArr1D:
     r"""
     3D FT of radial fluid acceleration \dot{v}(r) from file.
 

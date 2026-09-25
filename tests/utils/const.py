@@ -1,14 +1,14 @@
 """Constants used by the unit tests."""
 
-import os
+from pathlib import Path
 
-TEST_PATH: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-REPO_DIR: str = os.path.dirname(TEST_PATH)
-TEST_DATA_PATH: str = os.path.join(TEST_PATH, "test_data")
-TEST_RESULT_PATH: str = os.path.join(os.path.dirname(TEST_PATH), "test-results")
-TEST_FIGURE_PATH: str = os.path.join(TEST_RESULT_PATH, "figures")
-TEST_JSON_PATH: str = os.path.join(TEST_RESULT_PATH, "json")
+TEST_PATH: Path = Path(__file__).resolve().parent.parent
+REPO_DIR: Path = TEST_PATH.parent
+TEST_DATA_PATH: Path = TEST_PATH / "test_data"
+TEST_RESULT_PATH: Path = REPO_DIR / "test-results"
+TEST_FIGURE_PATH: Path = TEST_RESULT_PATH / "figures"
+TEST_JSON_PATH: Path = TEST_RESULT_PATH / "json"
 
-path: str
+path: Path
 for path in [TEST_PATH, TEST_DATA_PATH, TEST_JSON_PATH, TEST_RESULT_PATH, TEST_FIGURE_PATH]:
-    os.makedirs(path, exist_ok=True)
+    path.mkdir(parents=True, exist_ok=True)

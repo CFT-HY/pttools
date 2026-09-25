@@ -1,7 +1,6 @@
 """Base test case for thermodynamic models."""
 
 import abc
-import os.path
 
 import numpy as np
 
@@ -24,7 +23,7 @@ class ThermoModelBaseCase[T: ThermoModel](JsonTestCase, abc.ABC):
     @classmethod
     def setUpClass(cls, thermo: T) -> None:
         cls.thermo = thermo
-        cls.REF_DATA_PATH = os.path.join(TEST_DATA_PATH, "models", "thermo", f"{thermo.name}.json")
+        cls.REF_DATA_PATH = TEST_DATA_PATH / "models" / "thermo" / f"{thermo.name}.json"
         super().setUpClass()
 
     def test_class_is_valid(self) -> None:

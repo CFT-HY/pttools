@@ -1,13 +1,13 @@
 """Utilities for profiling."""
 
 import abc
-import os
+from pathlib import Path
 import types
 
 from tests.utils import TEST_RESULT_PATH
 
-PROFILE_DIR: str = os.path.join(TEST_RESULT_PATH, "profiles")
-os.makedirs(PROFILE_DIR, exist_ok=True)
+PROFILE_DIR: Path = TEST_RESULT_PATH / "profiles"
+PROFILE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class Profiler(abc.ABC):

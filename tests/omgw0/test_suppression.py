@@ -1,6 +1,5 @@
 """Tests for the suppression module."""
 
-import os
 import sys
 import typing as tp
 import unittest
@@ -27,8 +26,8 @@ class SuppressionTest(unittest.TestCase):
             "engine": "c"
         }
         data = read_csv(path, **settings)
-        os.remove(path)
-        ref = read_csv(os.path.join(SUPPRESSION_FOLDER, "suppression_no_hybrids.txt"), **settings)
+        path.unlink()
+        ref = read_csv(SUPPRESSION_FOLDER / "suppression_no_hybrids.txt", **settings)
         assert_allclose(data.values, ref.values)
 
     @staticmethod
@@ -55,7 +54,7 @@ class SuppressionTest(unittest.TestCase):
                 npt=(DEFAULT_N_XI_SSM, 200, 320),
                 lambda_correction=True
             )
-            with np.load(os.path.join(SUPPRESSION_FOLDER, f"{filename}_ssm.npz")) as ref:
+            with np.load(SUPPRESSION_FOLDER / f"{filename}_ssm.npz") as ref:
                 for key, rtol in tolerances.items():
                     if rtol is None:
                         assert_allclose(data[key], ref[key], name=key)

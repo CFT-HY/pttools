@@ -1,7 +1,8 @@
 """Remove the unpublished hybrid data from the suppression data set."""
 
 import logging
-import os.path
+import os
+from pathlib import Path
 
 import numpy as np
 
@@ -9,11 +10,11 @@ from pttools.bubble import CS0, v_chapman_jouguet_bag
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-SUPPRESSION_FOLDER: str = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_PATH: str = os.path.join(SUPPRESSION_FOLDER, "suppression_2.txt")
+SUPPRESSION_FOLDER: Path = Path(__file__).resolve().parent
+DEFAULT_PATH: Path = SUPPRESSION_FOLDER / "suppression_2.txt"
 
 
-def remove_hybrids(path: str = DEFAULT_PATH, suffix: str = "") -> str:
+def remove_hybrids(path: str | os.PathLike[str] = DEFAULT_PATH, suffix: str = "") -> Path:
     """
     Removing hybrids from simulation data.
 
@@ -43,8 +44,8 @@ def remove_hybrids(path: str = DEFAULT_PATH, suffix: str = "") -> str:
             exp_omgw_no_hybrids.append(sim_data[i, 4])
             exp_Ubarf_no_hybrids.append(sim_data[i, 5])
 
-    out_path = os.path.join(SUPPRESSION_FOLDER, f"suppression_no_hybrids{f'_{suffix}' if suffix else ''}.txt")
-    with open(out_path, "w") as f:
+    out_path = SUPPRESSION_FOLDER / f"suppression_no_hybrids{f'_{suffix}' if suffix else ''}.txt"
+    with out_path.open("w") as f:
         f.write("vw" + " " + "alph" + " " + "suppress" + " " + "sim_omgw" + " " + "exp_omgw" + "exp_ubarf" )
         f.write('\n')
 

@@ -1,6 +1,5 @@
 """Tests for the SSMSpectrum class."""
 
-import os.path
 import unittest
 
 import numpy as np
@@ -36,7 +35,7 @@ class SSMSpectrumTest(unittest.TestCase):
         self.assertGreater(self.spectrum.eta_ratio, 1)
 
     def test_export(self) -> None:
-        self.spectrum.export(os.path.join(TEST_JSON_PATH, "ssm-spectrum.json"))
+        self.spectrum.export(TEST_JSON_PATH / "ssm-spectrum.json")
 
     def test_H_star_eta_star(self) -> None:
         self.assertGreater(self.spectrum.H_star_eta_star, 0)

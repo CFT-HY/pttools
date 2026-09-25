@@ -7,6 +7,7 @@ Modified from
 
 import logging
 import os
+from pathlib import Path
 import typing as tp
 
 import matplotlib.pyplot as plt
@@ -21,10 +22,10 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 # bubble.setup_plotting()
 
-MDP: str = os.path.join(TEST_DATA_PATH, "model_data")
+MDP: Path = TEST_DATA_PATH / "model_data"
 GDP = TEST_FIGURE_PATH
-# os.makedirs(MDP, exist_ok=True)
-# os.makedirs(GDP, exist_ok=True)
+# MDP.mkdir(parents=True, exist_ok=True)
+# GDP.mkdir(parents=True, exist_ok=True)
 
 # All run parameters
 
@@ -55,7 +56,7 @@ DIR_INTER_LIST = [
     "results-intermediate-scaled_etatilde0.62_v0.44_dx2/"
 ]
 
-PATH_HEAD: str = os.path.join(TEST_DATA_PATH, "fluidprofiles/")
+PATH_HEAD: Path = TEST_DATA_PATH / "fluidprofiles"
 PATH_LIST_ALL = ['weak/', 'intermediate/']
 FILE_PATTERN = 'data-extracted.{:05d}.txt'
 
@@ -69,7 +70,7 @@ def generate_ps(
         vw: float,
         alpha: float,
         method: ssm.Method = ssm.Method.E_CONSERVING,
-        v_xi_file: str | None = None,
+        v_xi_file: str | os.PathLike[str] | None = None,
         save_ids: tuple[str | None, str | None] = (None, None),
         show: bool = True,
         debug: tp.Literal[False] = False) -> tuple[float, float]: ...
@@ -80,7 +81,7 @@ def generate_ps(
         vw: float,
         alpha: float,
         method: ssm.Method = ssm.Method.E_CONSERVING,
-        v_xi_file: str | None = None,
+        v_xi_file: str | os.PathLike[str] | None = None,
         save_ids: tuple[str | None, str | None] = (None, None),
         show: bool = True,
         *,
@@ -91,7 +92,7 @@ def generate_ps(
         vw: float,
         alpha: float,
         method: ssm.Method = ssm.Method.E_CONSERVING,
-        v_xi_file: str | None = None,
+        v_xi_file: str | os.PathLike[str] | None = None,
         save_ids: tuple[str | None, str | None] = (None, None),
         show: bool = True,
         debug: bool = False) -> tuple[float, float] | tuple[float, float, list[float]]:
@@ -188,8 +189,8 @@ def generate_ps(
         # Save graphs if requested
         if save_ids[1] is not None:
             graph_file_suffix = file_suffix + save_ids[1] + '.pdf'
-            f1.savefig(os.path.join(GDP, "pow_v_" + graph_file_suffix))
-            f2.savefig(os.path.join(GDP, "pow_gw_" + graph_file_suffix))
+            f1.savefig(GDP / f"pow_v_{graph_file_suffix}")
+            f2.savefig(GDP / f"pow_gw_{graph_file_suffix}")
 
         if show:
             plt.show()
@@ -200,8 +201,8 @@ def generate_ps(
     if save_ids[0] is not None:
         data_file_suffix = file_suffix + save_ids[0] + '.txt'
         fmt = " ".join(["%.18e"] * (len(pow_v_list) + 1))
-        np.savetxt(os.path.join(MDP, 'pow_v_' + data_file_suffix), np.stack((z, *pow_v_list), axis=-1), fmt=fmt)
-        np.savetxt(os.path.join(MDP, 'pow_gw_' + data_file_suffix), np.stack((y, *pow_gw_list), axis=-1), fmt=fmt)
+        np.savetxt(MDP / f"pow_v_{data_file_suffix}", np.stack((z, *pow_v_list), axis=-1), fmt=fmt)
+        np.savetxt(MDP / f"pow_gw_{data_file_suffix}", np.stack((y, *pow_gw_list), axis=-1), fmt=fmt)
 
     # Now some diagnostic comparisons between real space <v^2> and Fourier space already calculated
     v_ip, w_ip, xi = bubble.sound_shell_bag(
@@ -260,7 +261,7 @@ def all_generate_ps_prace(
     for vw_list, alpha, step_list, path, dir_list in \
             zip(VW_LIST_ALL, const.ALPHA_LIST_ALL, STEP_LIST_ALL, PATH_LIST_ALL, DIR_LIST_ALL, strict=False):
         for vw, step, dir_name in zip(vw_list, step_list, dir_list, strict=False):
-            v_xi_file = PATH_HEAD + path + dir_name + FILE_PATTERN.format(step)
+            v_xi_file = PATH_HEAD / path / dir_name / FILE_PATTERN.format(step)
             logger.debug("v_xi_file: %s", v_xi_file)
             if debug:
                 v2, Omgw, data = generate_ps(vw, alpha, method, v_xi_file, save_ids, show, debug=True)

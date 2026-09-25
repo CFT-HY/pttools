@@ -9,7 +9,6 @@ These figures and this table are used in Mika's M.Sc. thesis.
 
 import io
 import logging
-import os.path
 import time
 import typing as tp
 
@@ -306,8 +305,7 @@ def main(low_k: bool = True) -> tuple[th.FigArr1D, th.FigArr2D, str]:
 
 if __name__ == "__main__":
     _figs, _figs2, _table2 = main()
-    with open(os.path.join(FIG_DIR, "const_cs_gw_snr.tex"), "w") as table_file:
-        table_file.write(_table2)
+    (FIG_DIR / "const_cs_gw_snr.tex").write_text(_table2)
     save_and_show_figs({
         "const_cs_gw_v": _figs[0],
         "const_cs_gw": _figs[1],

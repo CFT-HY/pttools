@@ -2,7 +2,6 @@
 
 import importlib
 import importlib.metadata
-import os.path
 import typing as tp
 import unittest
 
@@ -75,7 +74,7 @@ class TestSpeedup(unittest.TestCase):
         ax.plot(x2, data, label="data")
         ax.plot(x2, ref, label="ref", ls=":")
         ax.legend()
-        save_fig(fig, os.path.join(TEST_FIGURE_PATH, "spline_fitpack"))
+        save_fig(fig, TEST_FIGURE_PATH / "spline_fitpack")
         plt.close(fig)
 
         assert_allclose(data, ref)
@@ -95,7 +94,7 @@ class TestSpeedup(unittest.TestCase):
         ax.plot(x2, data, label="data")
         ax.plot(x2, ref, label="ref", ls=":")
         ax.legend()
-        save_fig(fig, os.path.join(TEST_FIGURE_PATH, "spline_linear"))
+        save_fig(fig, TEST_FIGURE_PATH / "spline_linear")
         plt.close(fig)
 
         try:

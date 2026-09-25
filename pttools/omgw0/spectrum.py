@@ -2,6 +2,7 @@
 
 import functools
 import math
+import os
 import typing as tp
 
 from matplotlib.axes import Axes
@@ -180,7 +181,7 @@ class Spectrum(SSMSpectrum):
     # Methods
     # =====
 
-    def export(self, path: str | None = None) -> dict[str, tp.Any]:
+    def export(self, path: str | os.PathLike[str] | None = None) -> dict[str, tp.Any]:
         omgw0_peak = self.omgw0_peak()
         f = self.f()
         data = {
@@ -365,7 +366,7 @@ class Spectrum(SSMSpectrum):
             self,
             fig: Figure | None = None,
             ax: Axes | None = None,
-            path: str | None = None,
+            path: str | os.PathLike[str] | None = None,
             **kwargs: tp.Any) -> "FigAndAxes":
         from pttools.analysis.plot_spectra import plot_spectra  # noqa: PLC0415
         return plot_spectra([self], fig, ax, path, **kwargs)
@@ -373,7 +374,7 @@ class Spectrum(SSMSpectrum):
     def plot_multi(
             self,
             fig: Figure | None = None,
-            path: str | None = None,
+            path: str | os.PathLike[str] | None = None,
             **kwargs: tp.Any) -> tuple[Figure, th.AxesArr2D]:
         from pttools.analysis.plot_spectra import plot_spectra_multi  # noqa: PLC0415
         return plot_spectra_multi([self], fig, path, **kwargs)
@@ -381,7 +382,7 @@ class Spectrum(SSMSpectrum):
     def plot_multi_flat(
             self,
             fig: Figure | None = None,
-            path: str | None = None,
+            path: str | os.PathLike[str] | None = None,
             label: str | None = None,
             legend: bool = False,
             **kwargs: tp.Any) -> tuple[Figure, th.AxesArr1D]:

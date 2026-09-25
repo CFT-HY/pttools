@@ -1,6 +1,5 @@
 """Test the generation of the fluid reference."""
 
-import os
 import unittest
 
 from pttools.bubble import fluid_reference
@@ -14,9 +13,8 @@ class ReferenceTest(unittest.TestCase):
     @skip_slow
     @uses_multiprocessing
     def test_generation(self) -> None:
-        path = os.path.join(TEST_DATA_PATH, "fluid_reference_test.hdf5")
-        if os.path.exists(path):
-            os.remove(path)
+        path = TEST_DATA_PATH / "fluid_reference_test.hdf5"
+        path.unlink(missing_ok=True)
         fluid_reference.FluidReference(
             path=path,
             n_v_wall=5,

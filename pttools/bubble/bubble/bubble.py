@@ -2,6 +2,7 @@
 
 import functools
 import logging
+import os
 import typing as tp
 
 import numpy as np
@@ -227,7 +228,7 @@ class Bubble(BaseBubble):
                 self.model.label_unicode, v_wall, alpha_n, self.Tn, self.wn
             )
 
-    def export(self, path: str | None = None) -> dict[str, tp.Any]:
+    def export(self, path: str | os.PathLike[str] | None = None) -> dict[str, tp.Any]:
         """Export the bubble data as JSON."""
         data = {
             **super().export(),

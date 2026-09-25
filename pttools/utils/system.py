@@ -2,6 +2,7 @@
 
 import multiprocessing
 import os
+from pathlib import Path
 import platform
 import subprocess
 import sys
@@ -31,7 +32,7 @@ IS_WINDOWS: bool = sys.platform.startswith('win32')
 #: Whether running on the Read the Docs builder
 IS_READ_THE_DOCS: bool = "READTHEDOCS_VIRTUALENV_PATH" in os.environ
 #: PTtools installation directory
-PTTOOLS_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PTTOOLS_DIR: Path = Path(__file__).resolve().parent.parent
 #: The method used by `multiprocessing` to start parallel processes
 PROCESS_START_METHOD: str = multiprocessing.get_start_method()
 #: RAM use percentage above which a warning is included in :py:func:`psutil_info`
@@ -47,7 +48,7 @@ UNAME: platform.uname_result = platform.uname()
 #: Whether parallel processes are started by forking
 FORKING: bool = PROCESS_START_METHOD == "fork"
 #: Whether PTtools is installed as a pip package
-IS_PIP_PACKAGE: bool = os.path.basename(os.path.dirname(PTTOOLS_DIR)) == "site-packages"
+IS_PIP_PACKAGE: bool = PTTOOLS_DIR.parent.name == "site-packages"
 
 # This is the same implementation as in Numba.
 # https://numba.readthedocs.io/en/stable/user/threading-layer.html

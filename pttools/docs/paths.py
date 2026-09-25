@@ -7,6 +7,7 @@ and are instead found relative to the virtual environment or the current working
 """
 
 import os
+from pathlib import Path
 import sys
 
 from pttools.utils.system import PTTOOLS_DIR
@@ -19,12 +20,12 @@ DOCS_DIR_NAME: str = "docs"
 LOG_DIR_NAME: str = "logs"
 
 
-def is_docs_dir(path: str) -> bool:
+def is_docs_dir(path: str | os.PathLike[str]) -> bool:
     """Check whether the given directory is a Sphinx documentation directory that can be built with ``make``."""
-    return all(os.path.isfile(os.path.join(path, name)) for name in DOCS_DIR_FILES)
+    return all((Path(path) / name).is_file() for name in DOCS_DIR_FILES)
 
 
-def env_dir() -> str | None:
+def env_dir() -> Path | None:
     """Path of the Python virtual environment in which Python is running.
 
     This detects the environments created by ``venv``, ``virtualenv`` and ``uv``,
@@ -34,11 +35,11 @@ def env_dir() -> str | None:
     :return: path of the environment, or None if not running in a virtual environment
     """
     if sys.prefix != sys.base_prefix:
-        return os.path.abspath(sys.prefix)
+        return Path(sys.prefix).absolute()
     return None
 
 
-def find_docs_dir(cwd: str | None = None) -> str | None:
+def find_docs_dir(cwd: str | os.PathLike[str] | None = None) -> Path | None:
     """Find the documentation directory of the project.
 
     The following locations are checked in order, and the first one that is a documentation directory
@@ -55,22 +56,20 @@ def find_docs_dir(cwd: str | None = None) -> str | None:
     :param cwd: the directory to use as the current working directory, or None for the actual one
     :return: path of the documentation directory, or None if not found
     """
-    if cwd is None:
-        cwd = os.getcwd()
-    cwd = os.path.abspath(cwd)
-    candidates: list[str] = []
+    cwd_path = Path.cwd() if cwd is None else Path(cwd).absolute()
+    candidates: list[Path] = []
     if (env := env_dir()) is not None:
-        candidates.append(os.path.join(os.path.dirname(env), DOCS_DIR_NAME))
-    candidates.append(os.path.join(cwd, DOCS_DIR_NAME))
-    candidates.append(cwd)
-    candidates.append(os.path.join(os.path.dirname(PTTOOLS_DIR), DOCS_DIR_NAME))
+        candidates.append(env.parent / DOCS_DIR_NAME)
+    candidates.append(cwd_path / DOCS_DIR_NAME)
+    candidates.append(cwd_path)
+    candidates.append(PTTOOLS_DIR.parent / DOCS_DIR_NAME)
     for candidate in candidates:
         if is_docs_dir(candidate):
             return candidate
     return None
 
 
-def default_log_dir(docs_dir: str | None = None) -> str:
+def default_log_dir(docs_dir: str | os.PathLike[str] | None = None) -> Path:
     """Default directory for the log files, which is ``logs`` alongside the documentation directory.
 
     :param docs_dir: the documentation directory, or None to find it with :py:func:`find_docs_dir`.
@@ -80,5 +79,5 @@ def default_log_dir(docs_dir: str | None = None) -> str:
     if docs_dir is None:
         docs_dir = find_docs_dir()
     if docs_dir is None:
-        return os.path.join(os.getcwd(), LOG_DIR_NAME)
-    return os.path.join(os.path.dirname(os.path.abspath(docs_dir)), LOG_DIR_NAME)
+        return Path.cwd() / LOG_DIR_NAME
+    return Path(docs_dir).resolve().parent / LOG_DIR_NAME

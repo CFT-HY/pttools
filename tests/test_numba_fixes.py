@@ -1,7 +1,7 @@
 """Unit tests for the workarounds for Numba bugs."""
 
-import glob
-import os.path
+import os
+from pathlib import Path
 import pickle
 import subprocess
 import sys
@@ -12,7 +12,7 @@ from pttools.speedup.options import NUMBA_DISABLE_JIT
 from tests.utils import REPO_DIR
 
 #: Script that compiles a cached function, which calls a cached parallel function
-SCRIPT_PATH: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), "numba_reload_init.py")
+SCRIPT_PATH: Path = Path(__file__).resolve().parent / "numba_reload_init.py"
 
 
 @unittest.skipIf(NUMBA_DISABLE_JIT, "Nothing is compiled when jitting is disabled.")
@@ -42,7 +42,7 @@ class TestReloadInit(unittest.TestCase):
         env = {
             **os.environ,
             "NUMBA_CACHE_DIR": cache_dir,
-            "PYTHONPATH": REPO_DIR,
+            "PYTHONPATH": str(REPO_DIR),
         }
         proc = subprocess.run(
             [sys.executable, SCRIPT_PATH, mode],
@@ -61,10 +61,10 @@ class TestReloadInit(unittest.TestCase):
         The data file of a cached function is a pickle of the tuple returned by
         ``numba.core.compiler.CompileResult._reduce()``, and reload_init is its eighth element.
         """
-        paths = glob.glob(os.path.join(cache_dir, "**", f"*.{func_name}-*.nbc"), recursive=True)
+        paths = list(Path(cache_dir).rglob(f"*.{func_name}-*.nbc"))
         if len(paths) != 1:
             raise FileNotFoundError(f"Expected exactly one cache data file for {func_name}, found: {paths}")
-        with open(paths[0], "rb") as file:
+        with paths[0].open("rb") as file:
             payload = pickle.load(file)
         return payload[7]
 

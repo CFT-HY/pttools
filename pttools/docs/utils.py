@@ -3,7 +3,7 @@
 import functools
 import json
 import logging
-import os.path
+from pathlib import Path
 import sys
 from threading import Lock
 import typing as tp
@@ -25,8 +25,8 @@ def backreference_names(app: "Sphinx", name: str, obj: tp.Any) -> list[str]:
     e.g. "pttools.BagModel" or "pttools.models.BagModel" instead of "pttools.models.bag.BagModel",
     and the same object can therefore have backreferences under several names.
     """
-    backrefs = get_backreferences(os.path.join(
-        app.srcdir, app.config.sphinx_gallery_conf["backreferences_dir"], "backreferences_all.json"))
+    backrefs = get_backreferences(
+        Path(app.srcdir, app.config.sphinx_gallery_conf["backreferences_dir"], "backreferences_all.json"))
     if not backrefs:
         return []
     parts = name.split(".")
@@ -50,7 +50,7 @@ def backreference_names(app: "Sphinx", name: str, obj: tp.Any) -> list[str]:
 
 
 @functools.cache
-def get_backreferences(path: str) -> dict[str, list]:
+def get_backreferences(path: Path) -> dict[str, list]:
     """Load the Sphinx-Gallery backreferences, which tell which examples use each object.
 
     Sphinx-Gallery writes these when it generates the galleries,
@@ -58,7 +58,7 @@ def get_backreferences(path: str) -> dict[str, list]:
     They are loaded only once and then cached.
     """
     try:
-        with open(path, encoding="utf-8") as json_file:
+        with path.open(encoding="utf-8") as json_file:
             backrefs = json.load(json_file)
     except (OSError, json.JSONDecodeError):
         backrefs = {}
