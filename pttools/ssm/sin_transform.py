@@ -24,7 +24,7 @@ def _sin_transform_arr(
         parallel: bool = True) -> th.FloatArr1D:
     # The annotation of z has to be the same as in the typing function of the overload,
     # but this function is called only for arrays.
-    lo = np.where(z <= z_st_thresh)
+    lo = np.where(z <= z_st_thresh)  # pyrefly: ignore[no-matching-overload]
     z_lo = z[lo]  # pyrefly: ignore[bad-index]
     # Integrand of the sine transform
     # This computation is O(len(z_lo) * len(xi)) = O(n^2)

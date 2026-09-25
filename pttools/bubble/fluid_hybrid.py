@@ -54,7 +54,7 @@ def sound_shell_hybrid(
 
     # Simple starting guesses
     if vp_tilde_guess is None or np.isnan(vp_tilde_guess):
-        vp_tilde_guess = 0.75 * vm_tilde
+        vp_tilde_guess = tp.cast(float, 0.75 * vm_tilde)
     if wp_guess is None or np.isnan(wp_guess):
         wp_guess = 2*wm
 
@@ -84,8 +84,8 @@ def sound_shell_hybrid(
     if np.isnan(vp_tilde_guess) or vp_guess < v_sh_estimate or vp_guess < vm or np.isnan(wp_guess) \
             or wp_guess < wn or wp_guess < wm:
         vp_guess = 1.05 * v_sh_estimate
-        vp_tilde_guess = relativity.lorentz(xi=v_wall, v=vp_guess)
-        wp_guess = wn + 1.3 * np.abs(wm - wn)
+        vp_tilde_guess = tp.cast(float, relativity.lorentz(xi=v_wall, v=vp_guess))
+        wp_guess = tp.cast(float, wn + 1.3 * np.abs(wm - wn))
         logger.warning(
             "vp_tilde_guess or wp_guess was not provided for the hybrid solver or was invalid. "
             "Using automatic starting guesses. vp_guess=%s, vp_tilde_guess=%s, wp_guess=%s",

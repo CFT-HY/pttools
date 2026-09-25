@@ -162,7 +162,7 @@ def _find_alpha_plus_bag_numba(
     if isinstance(v_wall, numba.types.Float):
         return _find_alpha_plus_bag_scalar
     if isinstance(v_wall, numba.types.Array):
-        if not v_wall.ndim:
+        if not v_wall.ndim:  # pyrefly: ignore[missing-attribute]
             return _find_alpha_plus_bag_scalar
         return _find_alpha_plus_bag_arr_wrapper
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")

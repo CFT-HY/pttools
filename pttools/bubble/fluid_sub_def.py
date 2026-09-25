@@ -60,8 +60,8 @@ def sound_shell_deflagration(
         Vm = 0
         alpha_minus = 4 * (Vm - Vp) / (3 * w_center)
         vp_tilde_guess = v_minus(vp=v_wall, ap=alpha_minus, sol_type=SolutionType.SUB_DEF)
-        vp_guess = -relativity.lorentz(vp_tilde_guess, v_wall)
-        wp_guess = w2_junction(v_wall, w_center, vp_tilde_guess)
+        vp_guess = tp.cast(float, -relativity.lorentz(vp_tilde_guess, v_wall))
+        wp_guess = tp.cast(float, w2_junction(v_wall, w_center, vp_tilde_guess))
     else:
         # if vp_guess > v_wall:
         #     logger.warning("Using invalid vp_guess=%s", vp_guess)

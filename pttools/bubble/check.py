@@ -81,7 +81,7 @@ def _check_wall_speed_numba(v_wall: th.FloatOrArr, droplet: bool = False) -> th.
     if isinstance(v_wall, numba.types.Float):
         return _check_wall_speed_scalar
     if isinstance(v_wall, numba.types.Array):
-        if v_wall.ndim == 0:
+        if v_wall.ndim == 0:  # pyrefly: ignore[missing-attribute]
             return _check_wall_speed_scalar
         return _check_wall_speed_arr
     raise TypeError(f"v_wall must be float, list or array. Got: {type(v_wall)}")

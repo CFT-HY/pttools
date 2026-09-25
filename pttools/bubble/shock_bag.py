@@ -137,7 +137,7 @@ def _wm_shock_bag_numba(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: boo
     if isinstance(xi, numba.types.Float):
         return _wm_shock_bag_scalar
     if isinstance(xi, numba.types.Array):
-        if not xi.ndim:
+        if not xi.ndim:  # pyrefly: ignore[missing-attribute]
             return _wm_shock_bag_scalar
         return _wm_shock_bag_arr
     raise TypeError(f"Unknown type for xi: {type(xi)}")
@@ -185,7 +185,7 @@ def _wp_shock_bag_numba(xi: th.FloatOrArr, wm: float) -> th.NumbaFunc:
     if isinstance(xi, numba.types.Float):
         return _wp_shock_bag_scalar
     if isinstance(xi, numba.types.Array):
-        if not xi.ndim:
+        if not xi.ndim:  # pyrefly: ignore[missing-attribute]
             return _wp_shock_bag_scalar
         return _wp_shock_bag_arr
     raise TypeError(f"Unknown type for xi: {type(xi)}")

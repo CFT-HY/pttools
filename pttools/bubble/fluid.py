@@ -59,9 +59,9 @@ def sound_shell_generic(  # noqa: PLR0912, PLR0915
 
     start_time = time.perf_counter()
     if alpha_n_max_bag is None:
-        alpha_n_max_bag = alpha.alpha_n_max_deflagration_bag(
+        alpha_n_max_bag = tp.cast(float, alpha.alpha_n_max_deflagration_bag(
             v_wall, df_dtau_ptr=DF_DTAU_PTR_BAG,
-            ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR)
+            ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR))
     if high_alpha_n is None:
         high_alpha_n = alpha_n > alpha_n_max_bag
 
@@ -122,8 +122,8 @@ def sound_shell_generic(  # noqa: PLR0912, PLR0915
 
     if vp_guess is None or np.isnan(vp_guess):
         using_ref = True
-        vp_guess = vp_ref
-        vp_tilde_guess = vp_tilde_ref
+        vp_guess = tp.cast(float, vp_ref)
+        vp_tilde_guess = tp.cast(float, vp_tilde_ref)
     else:
         vp_tilde_guess = relativity.lorentz(v_wall, vp_guess)
 
@@ -131,7 +131,7 @@ def sound_shell_generic(  # noqa: PLR0912, PLR0915
     if wp_guess is None or np.isnan(wp_guess):
         using_ref = True
         # Deflagrations have their own method for guessing wp, so this can be nan.
-        wp_guess = wp_ref * wn
+        wp_guess = tp.cast(float, wp_ref * wn)
     if wm_guess is None or np.isnan(wp_guess):
         using_ref = True
         if np.isnan(wm_ref):
@@ -142,7 +142,7 @@ def sound_shell_generic(  # noqa: PLR0912, PLR0915
             # This is arbitrary, but seems to work OK.
             wm_guess = 0.3 * wn
         else:
-            wm_guess = wm_ref * wn
+            wm_guess = tp.cast(float, wm_ref * wn)
     # if wn_guess is None:
     #     wn_guess = min(wp_guess, wm_guess)
 

@@ -51,7 +51,7 @@ def limits_from_lookup[T: FloatOrArr](x_lookup: FloatArr1D, cs: T = CS0) -> tupl
     """
     y_min = x_lookup.min() * 2. * cs / (1. - cs)
     y_max = x_lookup.max() * 2. * cs / (1. + cs)
-    return y_min, y_max
+    return y_min, y_max  # pyrefly: ignore[bad-return]
 
 
 @njit

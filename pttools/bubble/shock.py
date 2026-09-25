@@ -305,7 +305,7 @@ def solve_shock(  # noqa: PLR0911
     if csp is None:
         # When solving forwards, this is only an approximation, but a valid one for tiny shocks.
         csp2 = model.cs2(w1, phase)
-        csp = np.sqrt(csp2)
+        csp = tp.cast(float, np.sqrt(csp2))
     else:
         csp2 = csp**2
 
@@ -319,7 +319,7 @@ def solve_shock(  # noqa: PLR0911
         # Bag model guess
         # v2_tilde_guess = 1 / (3 * v1_tilde)
         # General guess
-        v2_tilde_guess = csp2 * v1_tilde
+        v2_tilde_guess = tp.cast(float, csp2 * v1_tilde)
     if np.isclose(v2_tilde_guess, 0) or np.isclose(v2_tilde_guess, 1):
         logger.error("Got invalid estimate for v2=%s", v2_tilde_guess)
         return np.nan, np.nan
@@ -401,7 +401,7 @@ def v_shock_curve(
     cs_n = np.sqrt(model.cs2(wn, Phase.SYMMETRIC))
     if xi is None:
         # Create more points near cs_n, as there the accuracy is the most critical
-        xi = cs_n + np.logspace(-4, 0, num=n_points) * (1 - cs_n)
+        xi = tp.cast(th.FloatArr1D, cs_n + np.logspace(-4, 0, num=n_points) * (1 - cs_n))
         # Ensure that the shock curve starts from xi=cs_n, v=0
         xi[0] = cs_n
     return xi, v_shock(model, wn=wn, xi=xi, cs_n=cs_n, warn_if_barely_exists=warn_if_barely_exists)

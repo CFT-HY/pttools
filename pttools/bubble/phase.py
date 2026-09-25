@@ -29,7 +29,7 @@ def _get_phase_scalar(xi: th.FloatOrArr, v_wall: float) -> th.FloatOrArr:
 
 def _get_phase_arr(xi: th.FloatOrArr, v_wall: float) -> th.FloatOrArr:
     phase = np.zeros_like(xi)
-    phase[np.where(xi < v_wall)] = Phase.BROKEN.value
+    phase[np.where(xi < v_wall)] = Phase.BROKEN.value  # pyrefly: ignore[no-matching-overload]
     return phase
 
 
@@ -53,7 +53,7 @@ def _get_phase_numba(xi: th.FloatOrArr, v_wall: float) -> th.NumbaFunc:
     if isinstance(xi, numba.types.Float):
         return _get_phase_scalar
     if isinstance(xi, numba.types.Array):
-        if not xi.ndim:
+        if not xi.ndim:  # pyrefly: ignore[missing-attribute]
             return _get_phase_scalar
         return _get_phase_arr
     raise TypeError(f"Unknown type for {type(xi)}")

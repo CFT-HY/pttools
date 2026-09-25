@@ -162,9 +162,9 @@ def lam(
     if w_bar is None:
         w_bar = w[-1]
     # A similar step is done in de_from_w_bag()
-    lm = (e - e_bar) / w_bar
+    lm = (e - e_bar) / w_bar  # pyrefly: ignore[unsupported-operation]
     if non_linear_correction:
-        lm += w * v * v / w_bar
+        lm += w * v * v / w_bar  # pyrefly: ignore[unsupported-operation]
     return lm
 
 

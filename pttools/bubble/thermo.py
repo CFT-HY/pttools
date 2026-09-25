@@ -348,7 +348,7 @@ def va_entropy_density_diff(
     $${s}_\text{avg} = \int d\xi \xi^2 (s(w,\phi) - s({w}_n, \phi_s)$$.
     """
     if phase is None:
-        phase = props.find_phase(xi, v_wall)
+        phase = tp.cast(th.FloatArr1D, props.find_phase(xi, v_wall))
     s_diff = model.s(w, phase) - model.s(w[-1], Phase.SYMMETRIC)
     return 4*np.pi/3 * np.trapezoid(s_diff, xi**3)  # pyrefly: ignore[bad-return]
 
@@ -426,7 +426,7 @@ def va_trace_anomaly_diff(
     :return: Volume-averaged trace anomaly difference $\Delta {e}_\theta$
     """
     if phase is None:
-        phase = props.find_phase(xi, v_wall)
+        phase = tp.cast(th.FloatArr1D, props.find_phase(xi, v_wall))
     theta = model.theta(w, phase)
     theta_n = model.theta(w[-1], Phase.SYMMETRIC)
     return 4*np.pi/3 * np.trapezoid((theta - theta_n), xi**3)  # pyrefly: ignore[bad-return]
