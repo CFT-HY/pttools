@@ -207,7 +207,7 @@ class ConstCSModel(AnalyticModel):
         # Other parameters
         # -----
 
-        self.T_ref = T_ref
+        self.T_ref: float = T_ref
         if T_crit_guess is None:
             T_crit_guess = T_ref
 
