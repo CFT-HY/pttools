@@ -23,6 +23,7 @@ The repository is `CFT-HY/pttools` (verify with `git remote get-url origin`).
 2. Find the CI workflow runs of that commit.
    - If the GitHub plugin (`mcp__github__*` tools) provides a tool for listing GitHub Actions workflow runs
      (e.g. `actions_list` or `list_workflow_runs`), use it. Load it with ToolSearch if it is deferred.
+     (As of 2026-09, the plugin does not have the Actions toolset enabled, so the fallback is usually needed.)
    - Otherwise, fall back to the GitHub CLI:
      `gh run list --workflow CI --commit <sha> --json databaseId,status,conclusion,url,createdAt`
    - If neither works, fall back to the REST API:
@@ -59,9 +60,14 @@ If a constraint prevents an upgrade that seems important, mention it to the user
 
 Run these checks one at a time, in this order:
 
-1. `./lint.sh` (about 2 min)
-2. `uv run pytest` (up to 20 min, run in the background)
-3. `make -C docs all` (up to 35 min, run in the background, as it runs the examples)
+1. `./lint.sh` (~2 min)
+2. `uv run pytest` (~20 min, run in the background)
+3. `uv run make -C docs all` (up to 35 min, run in the background, as it runs the examples).
+
+Redirect the output of the long checks to a log file in the scratchpad directory
+and inspect its tail afterwards, as the output is very long.
+Save the exit code of the check itself (e.g. `cmd > log 2>&1; code=$?; tail log; exit $code`),
+as piping to `tail` would hide a failure.
 
 For each check:
 - If it passes, move on to the next check.
@@ -73,6 +79,14 @@ For each check:
   - Follow the instructions of `AGENTS.md`, e.g. that physics code must be covered by unit tests before editing it,
     and that any changes to the physics must be reported to the user explicitly.
   - Do not disable, skip or weaken tests or lint rules to make the checks pass, unless the user agrees.
+  - If a new version of `pyrefly` reports new errors, compare with the old version
+    (`uv run --with pyrefly==<old> pyrefly check --output-format min-text`)
+    to tell apart the errors caused by the type checker from those caused by the upgraded stubs of other packages.
+    Follow the conventions in the docstring of `pttools/type_hints.py`:
+    prefer targeted `# pyrefly: ignore[<code>]` comments over `typing.cast()` in `@njit` functions,
+    as Numba cannot compile `typing.cast()`.
+  - If a type checker reveals a real bug, do not fix it silently if the fix changes the behavior of the code.
+    Report it to the user instead.
   - If you cannot fix a failure, **stop** and report the failure and what you tried to the user.
 
 If you made any changes to the files other than `uv.lock` during this step,
