@@ -4,9 +4,7 @@ import cProfile
 import io
 import os
 import pstats
-import sys
 import types
-import typing as tp
 
 from tests.profiling import utils
 
@@ -46,7 +44,7 @@ def process(name: str, profile: cProfile.Profile, print_to_console: bool = False
 def save_sorted(
         profile: cProfile.Profile,
         path: str,
-        sort: tp.Union["pstats.SortKey", str],
+        sort: pstats.SortKey | str,
         print_to_console: bool = False) -> None:
     """Save sorted cProfile results to file."""
     # Save to file
@@ -57,8 +55,7 @@ def save_sorted(
     if print_to_console:
         print(text)
 
-    # pstats.SortKey was introduced in Python 3.7
-    sort_name = sort.value if (sys.version_info >= (3, 7) and sort is pstats.SortKey) else sort
+    sort_name = sort.value if isinstance(sort, pstats.SortKey) else sort
     path_labeled = f"{path}_{sort_name}"
     with open(f"{path_labeled}.txt", "w") as file:
         file.write(text)
