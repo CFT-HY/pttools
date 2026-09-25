@@ -12,6 +12,7 @@ build:
     # Keep this in sync with .python-version, as otherwise uv would download another Python version for the build.
     python: "3.14"
   apt_packages:
+    - cloc
     - gfortran
     - libtbb12
     - optipng

@@ -28,19 +28,6 @@ jobs:
           name: Python packages
           path: dist
           if-no-files-found: error
-  cloc:
-    runs-on: ubuntu-slim
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Install cloc
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cloc
-      - name: Count Lines of Code (cloc) for the PTtools library
-        run: ./cloc.sh --library
-      - name: Count Lines of Code (cloc) for the repository
-        run: ./cloc.sh
 #  fossa:
 #    runs-on: ubuntu-latest
 #    timeout-minutes: 5

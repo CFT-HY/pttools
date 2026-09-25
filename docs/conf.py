@@ -298,6 +298,7 @@ sphinx_gallery_conf = {
         "../examples/gksvdv",
         # "../examples/reverse",
         # "*"
+        "../examples/docs",
     ])
 }
 autosummary_generate = True
