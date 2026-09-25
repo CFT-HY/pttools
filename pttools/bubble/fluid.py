@@ -132,7 +132,7 @@ def sound_shell_generic(  # noqa: PLR0912, PLR0915
         using_ref = True
         # Deflagrations have their own method for guessing wp, so this can be nan.
         wp_guess = tp.cast(float, wp_ref * wn)
-    if wm_guess is None or np.isnan(wp_guess):
+    if wm_guess is None or np.isnan(wm_guess):
         using_ref = True
         if np.isnan(wm_ref):
             logger.warning(
