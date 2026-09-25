@@ -662,7 +662,7 @@ class ConstCSModel(AnalyticModel):
             return self.csb2, np.nan
         if phase == Phase.SYMMETRIC:
             return self.css2, np.nan
-        raise ValueError("Invalid phase: {phase}")
+        raise ValueError(f"Invalid phase: {phase}")
 
     @tp.override
     def cs2_max(

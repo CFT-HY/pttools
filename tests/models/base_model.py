@@ -2,10 +2,13 @@
 
 import abc
 import os.path
+import unittest
 
 import numpy as np
 
+from pttools.bubble.phase import Phase
 from pttools.models import Model
+from pttools.utils.assertions import assert_allclose
 from tests.utils.const import TEST_DATA_PATH
 from tests.utils.json import JsonTestCase
 
@@ -49,6 +52,14 @@ class ModelBaseCase[M: Model](JsonTestCase, abc.ABC):
     def test_critical_temp(self) -> None:
         data = self.model.critical_temp(guess=1)
         self.assert_json(data, "critical_temp")
+
+    def test_criticals(self) -> None:
+        """The critical temperature and enthalpy should be consistent with each other."""
+        if np.isnan(self.model.T_crit):
+            raise unittest.SkipTest("The critical temperature has not been generated for this model.")
+        assert self.model.T_min < self.model.T_crit < self.model.T_max
+        assert_allclose(self.model.critical_temp(guess=self.model.T_crit), self.model.T_crit, rtol=1e-10)
+        assert_allclose(self.model.w(self.model.T_crit, Phase.SYMMETRIC), self.model.w_crit, rtol=1e-10)
 
     def test_cs2(self) -> None:
         data = self.model.cs2(self.w_arr1, self.phase_arr)

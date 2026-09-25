@@ -632,24 +632,24 @@ class Model(BaseModel, abc.ABC):
             t_crit_guess: float | None,
             allow_fail: bool = False,
             log_info: bool = True) -> tuple[float, float]:
-        t_crit = self.critical_temp(guess=t_crit_guess, allow_fail=allow_fail)
-        # self.t_crit has to be set already here for alpha_n error messages to work.
-        self.T_crit = t_crit
-        wn_min = self.w(t_crit, Phase.SYMMETRIC)
+        T_crit = self.critical_temp(guess=t_crit_guess, allow_fail=allow_fail)
+        # self.T_crit has to be set already here for alpha_n error messages to work.
+        self.T_crit = T_crit
+        wn_min = self.w(T_crit, Phase.SYMMETRIC)
         alpha_n_at_wn_min = self.alpha_n(wn_min)
 
         if log_info:
             logger.info(
                 "Initialised model with name=%s, T_crit=%s, alpha_n_at_wn_min=%s. "
                 "At T_crit: w_s=%s, w_b=%s, e_s=%s, e_b=%s, p_s=%s, p_b=%s",
-                self.name, t_crit, alpha_n_at_wn_min,
-                wn_min, self.w(t_crit, Phase.BROKEN),
-                self.e_temp(t_crit, Phase.SYMMETRIC),
-                self.e_temp(t_crit, Phase.BROKEN),
-                self.p_temp(t_crit, Phase.SYMMETRIC),
-                self.p_temp(t_crit, Phase.BROKEN)
+                self.name, T_crit, alpha_n_at_wn_min,
+                wn_min, self.w(T_crit, Phase.BROKEN),
+                self.e_temp(T_crit, Phase.SYMMETRIC),
+                self.e_temp(T_crit, Phase.BROKEN),
+                self.p_temp(T_crit, Phase.SYMMETRIC),
+                self.p_temp(T_crit, Phase.BROKEN)
             )
-        return t_crit, wn_min
+        return T_crit, wn_min
 
     @staticmethod
     def _critical_temp_error(msg: str, allow_fail: bool, error_type: type[Exception]) -> None:
