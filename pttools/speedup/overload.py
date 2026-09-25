@@ -23,6 +23,11 @@ def do_nothing(x: tp.Any) -> tp.Any:
     return x
 
 
+def is_nonzero(x: tp.Any) -> bool:
+    """Truth value of a scalar number, as given by :external:py:func:`numpy.all` and :external:py:func:`numpy.any`."""
+    return x != 0
+
+
 if numba_wrapper.NUMBA_VERSION < (0, 49, 0):
     logger.warning("Overloading numpy.flipud for old Numba")
 
@@ -36,16 +41,17 @@ if numba_wrapper.NUMBA_VERSION < (0, 49, 0):
 
 
 @overload(np.all, jit_options={"nopython": True})
-def np_all(x: tp.Any) -> tp.Callable:
-    """Overload of :external:py:func:`numpy.all` for booleans.
+def np_all(x: tp.Any) -> tp.Callable | None:
+    """Overload of :external:py:func:`numpy.all` for booleans and scalars.
 
     This seems not to be used properly in Numba 0.60.0.
+    For other types, Numba's own implementation is used.
     """
     if isinstance(x, numba.types.Boolean):
         return do_nothing
     if isinstance(x, numba.types.Number):
-        return bool
-    return np.all
+        return is_nonzero
+    return None
 
 
 def np_all_fix(x: tp.Any) -> np.bool:
@@ -59,18 +65,21 @@ def np_all_fix_scalar(x: tp.Any) -> tp.Callable:
     if isinstance(x, numba.types.Boolean):
         return do_nothing
     if isinstance(x, numba.types.Number):
-        return bool
+        return is_nonzero
     return np_all_fix
 
 
 @overload(np.any, jit_options={"nopython": True})
-def np_any(x: tp.Any) -> tp.Callable:
-    """Overload of :external:py:func:`numpy.any` for booleans and scalars."""
+def np_any(x: tp.Any) -> tp.Callable | None:
+    """Overload of :external:py:func:`numpy.any` for booleans and scalars.
+
+    For other types, Numba's own implementation is used.
+    """
     if isinstance(x, numba.types.Boolean):
         return do_nothing
     if isinstance(x, numba.types.Number):
-        return bool
-    return np.all
+        return is_nonzero
+    return None
 
 
 # @overload(np.asanyarray, jit_options={"nopython": True})
