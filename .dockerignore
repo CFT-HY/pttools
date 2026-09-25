@@ -18,8 +18,15 @@ packages.png
 packages.svg
 
 # Output files
+.test_durations
 _build
+auto_examples
+docs/sg_api_usage.rst
+docs/sg_execution_times.rst
+examples/fig
+gen_modules
 logs
+mprofile_*.dat
 test-results
 tests/test_data/fluidprofiles
 tests/test_data/graphs
@@ -28,8 +35,12 @@ pyrefly.txt
 ruff.txt
 test-output.txt
 *.dot
+*.eps
+*.h5
+*.hdf5
 *.html
 *.lprof
+*.npz
 *.pdf
 *.png
 *.svg
@@ -40,17 +51,21 @@ test-output.txt
 *.pyc
 *.zip
 **/__pycache__
-.idea
 .DS_Store
+.env
+.idea
+.mcp.json
 .pytest_cache
 .pyrefly_cache
 .ruff_cache
 .spyproject
+.venv
+.vscode/*
+dev
 dist
 envs
 envs-old
 model_data
-.venv
 venv
 
 # Ignored for Docker only

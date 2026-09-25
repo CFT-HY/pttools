@@ -51,12 +51,15 @@ test-output.txt
 *.pyc
 *.zip
 **/__pycache__
-.idea
 .DS_Store
+.env
+.idea
+.mcp.json
 .pytest_cache
 .pyrefly_cache
 .ruff_cache
 .spyproject
+.venv
 .vscode/*
 dev
 dist
@@ -75,6 +78,5 @@ pttools/droplet
 pttools/hydrograv
 pttools/wallgo
 model_data
-.venv
 venv
 !.vscode/settings.json
