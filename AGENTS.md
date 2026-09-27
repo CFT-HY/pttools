@@ -16,11 +16,11 @@
     All checks are run even if some of them fail. The exit code is 0 if all checks pass,
     the exit code of the failed check if exactly one check fails, and 100 if multiple checks fail.
   - Fast lint: `./lint.sh --fast` skips the significantly slower `python -m pttools.docs.lint`.
-  - After changes that create or modify docstrings or files in `./docs/`, run the full lint `./lint.sh` (~2 min).
+  - After changes that create or modify docstrings, or files in `./docs/`, run the full lint `./lint.sh` (~2 min).
     After other changes, run the fast lint `./lint.sh --fast`.
-- Build documentation with examples: `cd docs && uv run make all`
+- Build documentation with examples: `uv run make -C docs all`
   - This will run the examples and can therefore take up to 35 min.
-- Build documentation without examples: `cd docs && uv run make all-noplot`
+- Build documentation without examples: `uv run make -C docs all-noplot`
 - Build the package: `uv build`
 
 ## Code style
