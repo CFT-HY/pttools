@@ -207,8 +207,7 @@ def ubarf2_from_a2(
         z: th.FloatArr1D,
         A2: th.FloatArr1D,
         v_wall: float,
-        nuc_type: NucType,
-        bubble_spacing_enlargement_factor: float = 1.) -> float:
+        nuc_type: NucType) -> float:
     r"""Mean square fluid velocity $\bar{U}_f^2 \left( {\lvert A(z) \rvert}^2 \right)$.
 
     $$\bar{U}_f^2
@@ -220,10 +219,14 @@ def ubarf2_from_a2(
     This version takes into account the nucleation history, unlike
     :py:func:`pttools.bubble.thermo.ubarf2`.
 
-    The use of $\Lambda_{\text{nuc}}$ needs to be kept consistent with
-    :py:func:`pttools.ssm.spec_den_v.spec_den_v`.
-    Please note that eq. 4.34 assumes that $R_{\ast} = R_{\ast,0}$,
-    which is why it's not used here.
+    Here $\beta \equiv (8\pi)^\frac{1}{3} \frac{{v}_\text{wall}}{R_{\ast}}$ is the rate that makes the
+    lifetime distribution $\nu$ dimensionless (:gw_pt_ssm:`\ ` p. 17), and $R_{\ast}$ is the actual mean bubble spacing.
+    Therefore $\beta R_{\ast} = (8\pi)^\frac{1}{3} {v}_\text{wall}$ also with the thermal suppression
+    of bubble nucleation of :ajmi_2022:`\ `,
+    where $R_{\ast} = \Lambda R_{\ast,0}$ and $\beta = \beta_\text{nuc} / \Lambda$.
+    As the bubbles fill space, $n_b \langle \frac{4\pi}{3} {v}_\text{wall}^3 T^3 \rangle = 1$,
+    which gives $\nu_3 = 6$ for any nucleation history, including the suppressed one.
+    Therefore $\bar{U}_f^2$ does not depend on the bubble spacing enlargement factor $\Lambda$.
     """
     if z.shape != A2.shape:
         raise TypeError(
@@ -234,5 +237,5 @@ def ubarf2_from_a2(
     nu3 = 6. \
         if nuc_type in (NucType.EXPONENTIAL, NucType.SIMULTANEOUS) \
         else lifetime_distribution_momentum(nu=lifetime_distribution(T_tilde, nuc_type), T_tilde=T_tilde, n=3)
-    beta_R = beta_R_star0(v_wall) / bubble_spacing_enlargement_factor
+    beta_R = beta_R_star0(v_wall)
     return 2 / (beta_R**3 * 2 * np.pi**2) * nu3 * np.trapezoid(z ** 2 * A2, z)  # pyrefly: ignore[bad-return]

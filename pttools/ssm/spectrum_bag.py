@@ -151,7 +151,6 @@ def spec_den_v_bag(
         method: Method = Method.E_CONSERVING,
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH,
-        bubble_spacing_enlargement_factor: float = 1.,
         ubarf2: float = 1.,
         lambda_correction: bool = False,
         parallel: bool = True) -> th.FloatArr1D:
@@ -222,7 +221,6 @@ def spec_den_v_bag(
             qT_lookup=qT_lookup,
             z=z,
             a=nuc_args[0],
-            bubble_spacing_enlargement_factor=bubble_spacing_enlargement_factor,
             T_tilde=T_tilde,
             nuc_type=nuc_type,
             ubarf2=ubarf2,
@@ -233,7 +231,6 @@ def spec_den_v_bag(
         qT_lookup=qT_lookup,
         z=z,
         a=nuc_args[0],
-        bubble_spacing_enlargement_factor=bubble_spacing_enlargement_factor,
         T_tilde=T_tilde,
         nuc_type=nuc_type,
         ubarf2=ubarf2,

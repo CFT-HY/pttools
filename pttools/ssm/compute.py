@@ -167,10 +167,9 @@ def compute_ssm(
         parallel=parallel, lambda_correction=lambda_correction
     )[0]
     # Todo: Think which z and A2 to use here and in Spectrum.ubarf2_custom_nucleation()
-    ubarf2 = ubarf2_from_a2(
-        T_tilde=T_tilde, z=qT_lookup, A2=A2, v_wall=v_wall, nuc_type=nuc_type,
-        bubble_spacing_enlargement_factor=bubble_spacing_enlargement_factor
-    )
+    # The bubble spacing enlargement factor does not enter here, as beta R_* = (8 pi)^(1/3) v_wall
+    # also with the nucleation suppression. See ubarf2_from_a2.
+    ubarf2 = ubarf2_from_a2(T_tilde=T_tilde, z=qT_lookup, A2=A2, v_wall=v_wall, nuc_type=nuc_type)
 
     # -----
     # spec_den_v generation
@@ -178,7 +177,7 @@ def compute_ssm(
     spec_den_v = spec_den_v_func(
         z=y, A2_lookup=A2, qT_lookup=qT_lookup, T_tilde=T_tilde,
         a=lifetime_distribution_a, nuc_type=nuc_type, ubarf2=ubarf2,
-        v_wall=v_wall, bubble_spacing_enlargement_factor=bubble_spacing_enlargement_factor,
+        v_wall=v_wall,
         parallel=parallel
     )
 
@@ -195,7 +194,7 @@ def compute_ssm(
     spec_den_v_lookup = spec_den_v_func(
         z=z_gw_lookup, A2_lookup=A2_gw_lookup, qT_lookup=qT_gw_lookup, T_tilde=T_tilde,
         a=lifetime_distribution_a, nuc_type=nuc_type, ubarf2=ubarf2,
-        v_wall=v_wall, bubble_spacing_enlargement_factor=bubble_spacing_enlargement_factor,
+        v_wall=v_wall,
         parallel=parallel,
     )
     spec_den_gw_ssm, y = spec_den_gw(

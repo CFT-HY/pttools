@@ -56,19 +56,18 @@ def _spec_den_v_core(
         z: th.FloatArr1D,
         # Scalars
         a: float,
-        bubble_spacing_enlargement_factor: float,
         nuc_type: NucType,
         T_tilde: th.FloatArr1D,
         ubarf2: float,
         v_wall: float) -> th.FloatArr1D:
     """Parallel core of spec_den_v."""
-    # $\beta R_*$ = beta, but without dividing by R_* in its equation
-    # The choice of beta is somewhat arbitrary.
-    # It has been chosen to correspond to the nucleation rate (beta), and is therefore called beta as well.
-    # However, please note that R_* must correspond to the value used elsewhere.
-    # Todo: The power of the bubble spacing enlargement factor needs to be looked into.
-    # The power of 3 coming from the internal beta_R may be scaled away, leaving only a power of 3.
-    beta_R = beta_R_star0(v_wall) / bubble_spacing_enlargement_factor
+    # $\beta R_*$, where the choice of beta is somewhat arbitrary.
+    # It is defined as beta = (8 pi)^(1/3) v_wall / R_*, where R_* is the actual mean bubble spacing,
+    # including the thermal suppression of bubble nucleation.
+    # Without the suppression, this is the nucleation rate parameter beta.
+    # With the suppression, R_* = Lambda R_*0 and therefore beta = beta_nuc / Lambda,
+    # so that beta R_* has the same value in both cases.
+    beta_R = beta_R_star0(v_wall)
     factor = 1. / (ubarf2 * beta_R ** 6)
 
     sd_v = np.empty_like(z)
@@ -96,7 +95,6 @@ def spec_den_v(
         nuc_type: NucType,
         ubarf2: float,
         v_wall: float,
-        bubble_spacing_enlargement_factor: float = 1.,
         # Settings
         parallel: bool = True) -> th.FloatArr1D:
     r"""Spectral density of the velocity field $\tilde{P}_v$.
@@ -104,12 +102,15 @@ def spec_den_v(
     $$\tilde{P}_v(q)
     = \frac{1}{\bar{U}_f^2 R_{\ast}^3} P_v(q)
     = \frac{1}{\bar{U}_f^2 (\beta R_{\ast})^6} \int d\tilde{T} \nu(\tilde{T}) \tilde{T}^6
-    \left| A \left( \frac{\tilde{T}q}{\beta} \right) \right|^2
-    = \frac{\Lambda_\text{nucl}^6}{\bar{U}_f^2 (\beta R_{\ast,0})^6} \int d\tilde{T} \nu(\tilde{T}) \tilde{T}^6
     \left| A \left( \frac{\tilde{T}q}{\beta} \right) \right|^2$$
+    with $\beta R_{\ast} = (8\pi)^\frac{1}{3} {v}_\text{wall}$ and $z = q R_{\ast}$.
 
-    The bubble spacing enlargement factor $\Lambda_\text{nucl}$ also affects
-    :py:func:pttools.ssm.ssm.ubarf2_from_a2:.
+    With the thermal suppression of bubble nucleation of :ajmi_2022:`\ `,
+    $R_{\ast}$ is the enlarged mean bubble spacing $R_{\ast} = \Lambda R_{\ast,0}$,
+    and $\beta = (8\pi)^\frac{1}{3} {v}_\text{wall} / R_{\ast}$ is the rate that makes
+    the lifetime distribution $\nu$ dimensionless, not the nucleation rate parameter.
+    Then $\bar{U}_f^2$ and $\tilde{P}_v(z)$ do not depend on the bubble spacing enlargement factor $\Lambda$.
+    It enters the GW power spectrum only via $R_{\ast}$ in $r_{\ast}$, in $z = kR_{\ast}$ and in the source lifetime.
 
     Please note that
     $$P_v(q) = L_f^3 \bar{U}_f^2 \tilde{P}_v(qL_f)$$
@@ -122,7 +123,7 @@ def spec_den_v(
     \left| A \left( \frac{\tilde{T}q}{\beta} \right) \right|^2$$
     :gw_pt_ssm:`\ ` eq. 4.17
 
-    $$\Lambda_\text{nucl} \equiv \frac{R_{\ast}}{R_{\ast,0}}$$
+    $$\Lambda \equiv \frac{R_{\ast}}{R_{\ast}(0)}$$
     :ajmi_2022:`\ ` eq. 77
 
     :param z: wavenumber range $z$
@@ -148,7 +149,6 @@ def spec_den_v(
             qT_lookup=qT_lookup,
             z=z,
             a=a,
-            bubble_spacing_enlargement_factor=bubble_spacing_enlargement_factor,
             nuc_type=nuc_type,
             T_tilde=T_tilde,
             ubarf2=ubarf2,
@@ -160,7 +160,6 @@ def spec_den_v(
             qT_lookup=qT_lookup,
             z=z,
             a=a,
-            bubble_spacing_enlargement_factor=bubble_spacing_enlargement_factor,
             nuc_type=nuc_type,
             T_tilde=T_tilde,
             ubarf2=ubarf2,
