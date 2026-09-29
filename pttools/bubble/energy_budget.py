@@ -233,22 +233,30 @@ def kinetic_energy_fraction_approx[T: FloatOrArr](
         alpha_n: T,
         model: Model | None = None,
         cs: float = CS0,
-        v_cj: float | None = None) -> T:
+        v_cj: float | None = None,
+        factor: float = 1.) -> T:
     r"""Approximation for the kinetic energy fraction $K$.
 
-    $$K \approx \kappa \frac{\alpha_n}{1 + \alpha_n + \delta_n}$$
+    $$K \approx x \kappa \frac{\alpha_n}{1 + \alpha_n + \delta_n}$$
     :notes:`\ ` eq. 7.43.
     A version without $\delta_n$ is used in
     :caprini_2020:`\ ` eq. 11
     :notes:`\ ` eq. 8.21.
     :hakkinen_msc:`\ ` eq. 2.40.
 
-    Some sources have a pre-factor of 0.6, such as
-    $$K \approx 0.6 \kappa \frac{\alpha_n}{1 + \alpha_n}$$
-    :caprini_2024:`\ ` p. 9.
+    :param v_wall: $v_\text{wall}$, wall velocity
+    :param alpha_n: $\alpha_n$, transition strength
+    :param model: Equation of state
+    :param cs: $c_s$, sound speed
+    :param v_cj: $v_\text{CJ}$, Chapman-Jouguet speed
+    :param factor: $x$, additional multiplication factor.
+        Used by the double broken power law (DBPL) of :caprini_2024:`\ ` p. 9, where it's set as $x = 0.6$ to account
+        "for the efficiency in producing kinetic energy
+        in the bulk fluid motion with respect to the single bubble case".
+    :return: $K$, kinetic energy fraction
     """
     dn = DEFAULT_DELTA_N if model is None else delta_n(model, wn=model.wn(alpha_n))
-    return kappa_v_approx(v_wall=v_wall, alpha_n=alpha_n, cs=cs, v_cj=v_cj) * alpha_n / (1 + alpha_n + dn)  # pyrefly: ignore[bad-return]
+    return factor * kappa_v_approx(v_wall=v_wall, alpha_n=alpha_n, cs=cs, v_cj=v_cj) * alpha_n / (1 + alpha_n + dn)  # pyrefly: ignore[bad-return]
 
 
 def ubarf_approx[T: FloatOrArr](
