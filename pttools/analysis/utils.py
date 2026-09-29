@@ -98,23 +98,35 @@ def save_fig(
         makedirs: bool = True,
         close: bool = False,
         **kwargs: tp.Any) -> None:
-    """Save a figure."""
-    path = Path(path)
-    is_abs = path.is_absolute()
-    if makedirs and (is_abs or fig_dir is None):
-        path.parent.mkdir(parents=True, exist_ok=True)
+    """Save a figure.
 
+    If the name of the path has an extension, the figure is saved once in that path.
+    Otherwise, it is saved in each of the formats,
+    as ``FIG_DIR/FORMAT/PATH.FORMAT`` if the path is relative and ``fig_dir`` is given,
+    or as ``PATH.FORMAT`` if not.
+    The subdirectories of a relative path are kept within the directory of each format.
+
+    :param fig: figure to save
+    :param path: path of the figure, with or without an extension
+    :param fig_dir: directory for relative paths
+    :param formats: file formats in which to save the figure, if the path has no extension
+    :param force_formats: save in each of the formats, even if the name of the path has a dot
+    :param makedirs: create the missing parent directories of the figure files
+    :param close: close the figure after saving it
+    :param kwargs: arguments for :meth:`matplotlib.figure.Figure.savefig`
+    """
+    path = Path(path)
     if not force_formats and "." in path.name:
-        fig.savefig(path if fig_dir is None else Path(fig_dir) / path, **kwargs)
-    elif fig_dir is None or is_abs:
-        for ext in formats:
-            fig.savefig(path.with_name(f"{path.name}.{ext}"), **kwargs)
+        paths = [path if fig_dir is None else Path(fig_dir) / path]
+    elif fig_dir is None or path.is_absolute():
+        paths = [path.with_name(f"{path.name}.{ext}") for ext in formats]
     else:
-        for ext in formats:
-            format_dir = Path(fig_dir) / ext
-            if makedirs:
-                format_dir.mkdir(parents=True, exist_ok=True)
-            fig.savefig(format_dir / path.with_name(f"{path.name}.{ext}"), **kwargs)
+        paths = [Path(fig_dir) / ext / path.with_name(f"{path.name}.{ext}") for ext in formats]
+
+    for fig_path in paths:
+        if makedirs:
+            fig_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(fig_path, **kwargs)
     if close:
         plt.close(fig)
 
