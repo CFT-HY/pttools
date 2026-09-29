@@ -16,6 +16,9 @@
     All checks are run even if some of them fail. The exit code is 0 if all checks pass,
     the exit code of the failed check if exactly one check fails, and 100 if multiple checks fail.
   - Fast lint: `./lint.sh --fast` skips the significantly slower `python -m pttools.docs.lint`.
+  - Git pre-commit hooks run the checks of the fast lint in parallel on the staged changes, and block the commit if any of them fails.
+    The hooks are managed with [prek](https://github.com/j178/prek), configured in `.pre-commit-config.yaml`,
+    and installed with `uv run prek install`. When changing the checks of `./lint.sh --fast`, update the hooks accordingly.
   - After changes that create or modify docstrings, or files in `./docs/`, run the full lint `./lint.sh` (~2 min).
     After other changes, run the fast lint `./lint.sh --fast`.
 - Build documentation with examples: `uv run make -C docs all`

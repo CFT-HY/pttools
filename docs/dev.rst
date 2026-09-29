@@ -1,6 +1,15 @@
 For developers
 ==============
 
+Setting up the development environment
+--------------------------------------
+Install the dependencies with ``uv sync --all-extras``,
+and enable the Git hooks with ``uv run prek install``.
+The hooks are managed with `prek <https://github.com/j178/prek>`_ and configured in ``.pre-commit-config.yaml``.
+The pre-commit hooks run the same checks as the fast lint ``./lint.sh --fast``
+(``pyrefly check``, ``pyrefly coverage check`` and ``ruff check``) in parallel on the staged changes,
+and block the commit if any of them fails.
+
 Developing a new feature
 ------------------------
 Create a new feature branch in the repo.

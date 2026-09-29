@@ -1,0 +1,30 @@
+# Git hooks, managed with prek (https://github.com/j178/prek), which is compatible with pre-commit.
+# Install the hooks with "uv run prek install".
+#
+# The hooks run the same checks as "./lint.sh --fast". Keep them in sync.
+# Hooks with the same priority run in parallel.
+# Pyrefly only reads files, so the two Pyrefly hooks can safely run in parallel with each other.
+repos:
+  - repo: local
+    hooks:
+      - id: pyrefly-check
+        name: pyrefly check
+        entry: uv run pyrefly check
+        language: system
+        pass_filenames: false
+        always_run: true
+        priority: 0
+      - id: pyrefly-coverage-check
+        name: pyrefly coverage check
+        entry: uv run pyrefly coverage check
+        language: system
+        pass_filenames: false
+        always_run: true
+        priority: 0
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check
+        language: system
+        pass_filenames: false
+        always_run: true
+        priority: 0

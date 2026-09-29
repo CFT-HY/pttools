@@ -52,6 +52,7 @@ run() {
   echo
 }
 
+# The pre-commit hooks in .pre-commit-config.yaml run the same checks as --fast. Keep them in sync.
 run uv run pyrefly check
 run uv run pyrefly coverage check
 run uv run ruff check
