@@ -10,7 +10,7 @@ without doing any of the later steps.
 
 ## 1. Check for uncommitted changes
 
-Run `git status --porcelain`.
+Run `git status --porcelain -- . ':!.claude'`.
 If it prints anything (modified, staged or untracked files), **stop**
 and list the uncommitted changes to the user.
 
