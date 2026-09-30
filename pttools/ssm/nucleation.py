@@ -222,8 +222,10 @@ def nucleation_f(
     :param beta_tilde: $\tilde{\beta}$
     :param v_wall: $v_{\text{wall}}$
     """
-    # The integral is zero outside v_sh.
-    inds = v_wall < xi
+    # The integral is zero outside v_sh. It starts at the wall: the point at xi = v_wall on the outside of the wall
+    # carries T_+ and must be included. For hybrids there is also a point at xi = v_wall on the inside,
+    # which only adds an interval of zero width.
+    inds = v_wall <= xi
     return 1 / v_wall**3 * np.trapezoid((1 - np.exp(-beta_tilde * (T[inds] - T[-1]) / T[-1])), xi[inds]**3)  # pyrefly: ignore[bad-return]
 
 

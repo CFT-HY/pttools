@@ -16,7 +16,7 @@ import numpy as np
 from pttools.bubble import Bubble
 from pttools.models.bag import BagModel
 from pttools.ssm import SSMSpectrum
-from pttools.ssm.nucleation import r_star0
+from pttools.ssm.nucleation import nucleation_f, r_star0
 from pttools.utils import assert_allclose
 
 
@@ -52,3 +52,43 @@ class NucleationSuppressionTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class NucleationFTest(unittest.TestCase):
+    r"""Tests for :func:`pttools.ssm.nucleation.nucleation_f`, :ajmi_2022:`\ ` eq. 50."""
+
+    @staticmethod
+    def top_hat(v_wall: float, v_sh: float, dT: float, hybrid: bool) -> tuple[np.ndarray, np.ndarray]:
+        r"""A coarse profile with constant $\Delta T / T_n$ between the wall and the shock.
+
+        The point at $\xi = v_\text{wall}$ on the outside of the wall carries $T_+$, as in the PTtools solutions.
+        Hybrids also have a point at $\xi = v_\text{wall}$ on the inside, with a different temperature.
+        """
+        T_n = 1.
+        xi = [0., 0.5 * v_wall]
+        T = [0.9, 0.9]
+        if hybrid:
+            xi.append(v_wall)
+            T.append(0.8)
+        xi += [v_wall, 0.5 * (v_wall + v_sh), v_sh, v_sh * (1. + 1e-9), 1.]
+        T += [T_n * (1. + dT)] * 3 + [T_n, T_n]
+        return np.array(xi), np.array(T)
+
+    def test_top_hat(self) -> None:
+        r"""$f = ((v_\text{sh}/v_\text{wall})^3 - 1)(1 - e^{-\tilde\beta\Delta T/T_n})$ for a constant $\Delta T$."""
+        v_wall, v_sh, dT, beta_tilde = 0.4, 0.55, 0.01, 100.
+        expected = ((v_sh / v_wall) ** 3 - 1.) * (1. - np.exp(-beta_tilde * dT))
+        for hybrid in (False, True):
+            xi, T = self.top_hat(v_wall, v_sh, dT, hybrid)
+            assert_allclose(nucleation_f(xi=xi, T=T, beta_tilde=beta_tilde, v_wall=v_wall), expected, rtol=1e-6)
+
+    def test_bag_profile_small_vw(self) -> None:
+        r"""Small-$v_\text{wall}$ limit :ajmi_2022:`\ ` eq. 71 (eq. 72 with $+c_s^2$ in the bracket)."""
+        v_wall, alpha_n, beta_tilde = 0.05, 0.005, 10.
+        bubble = Bubble(BagModel(alpha_n_min=0.001), v_wall=v_wall, alpha_n=alpha_n)
+        bubble.solve()
+        cs = 1 / np.sqrt(3)
+        expected = 3 * alpha_n * beta_tilde * (1 + cs**2) / (4 * cs**2 * (1 - 3 * v_wall**2) ** 2) \
+            * (cs**2 + v_wall**2 * (2 * v_wall - 3 * cs) / cs)
+        assert_allclose(nucleation_f(xi=bubble.xi, T=bubble.T, beta_tilde=beta_tilde, v_wall=v_wall), expected,
+                        rtol=0.005)
