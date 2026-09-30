@@ -234,7 +234,7 @@ def kinetic_energy_fraction_approx[T: FloatOrArr](
         model: Model | None = None,
         cs: float = CS0,
         v_cj: float | None = None,
-        factor: float = 1.) -> T:
+        efficiency: float = 1.) -> T:
     r"""Approximation for the kinetic energy fraction $K$.
 
     $$K \approx x \kappa \frac{\alpha_n}{1 + \alpha_n + \delta_n}$$
@@ -249,14 +249,14 @@ def kinetic_energy_fraction_approx[T: FloatOrArr](
     :param model: Equation of state
     :param cs: $c_s$, sound speed
     :param v_cj: $v_\text{CJ}$, Chapman-Jouguet speed
-    :param factor: $x$, additional multiplication factor.
-        Used by the double broken power law (DBPL) of :caprini_2024:`\ ` p. 9, where it's set as $x = 0.6$ to account
+    :param efficiency: Used by the double broken power law (DBPL) of :caprini_2024:`\ ` p. 9,
+        where it's set as $0.6$ to account
         "for the efficiency in producing kinetic energy
         in the bulk fluid motion with respect to the single bubble case".
     :return: $K$, kinetic energy fraction
     """
     dn = DEFAULT_DELTA_N if model is None else delta_n(model, wn=model.wn(alpha_n))
-    return factor * kappa_v_approx(v_wall=v_wall, alpha_n=alpha_n, cs=cs, v_cj=v_cj) * alpha_n / (1 + alpha_n + dn)  # pyrefly: ignore[bad-return]
+    return efficiency * kappa_v_approx(v_wall=v_wall, alpha_n=alpha_n, cs=cs, v_cj=v_cj) * alpha_n / (1 + alpha_n + dn)  # pyrefly: ignore[bad-return]
 
 
 def ubarf_approx[T: FloatOrArr](
