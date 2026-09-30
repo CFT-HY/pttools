@@ -138,8 +138,8 @@ class ConstCSModel(AnalyticModel):
 
     def __init__(
             self,
-            css2: float | Fraction = CS0_2,
-            csb2: float | Fraction = CS0_2,
+            css2: float | Fraction | None = CS0_2,
+            csb2: float | Fraction | None = CS0_2,
             V_s: float = AnalyticModel.DEFAULT_V_S,
             V_b: float = AnalyticModel.DEFAULT_V_B,
             a_s: float | None = None,
@@ -170,6 +170,10 @@ class ConstCSModel(AnalyticModel):
         # -----
         # Speeds of sound
         # -----
+        if css2 is None:
+            css2 = CS0_2
+        if csb2 is None:
+            csb2 = CS0_2
         if log_info:
             logger.debug("Initialising ConstCSModel with css2=%s, csb2=%s", css2, csb2)
         css2_flt, css2_label = cs2_to_float_and_label(css2)
