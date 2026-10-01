@@ -22,7 +22,7 @@ inputs:
   upload-results:
     description: >-
       Upload the test results as an artifact.
-      The name of the artifact contains the operating system and whether Numba was enabled,
+      The name of the artifact contains the operating system, the CPU architecture and whether Numba was enabled,
       and therefore has to be unique within the workflow run.
     required: false
     default: "true"
@@ -41,7 +41,9 @@ runs:
       if: inputs.upload-results == 'true'
       uses: actions/upload-artifact@v7
       with:
-        name: Test results ${{ inputs.numba-disable-jit == 'true' && 'without' || 'with' }} Numba on ${{ runner.os }}
+        name: >-
+          Test results ${{ inputs.numba-disable-jit == 'true' && 'without' || 'with' }} Numba
+          on ${{ runner.os }} ${{ runner.arch }}
         path: |
           .test_durations
           coverage.xml

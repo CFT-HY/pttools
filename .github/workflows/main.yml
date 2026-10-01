@@ -10,7 +10,7 @@ permissions:
 # Other repositories, such as PTPlot, use them from the dev branch, e.g. CFT-HY/pttools/.github/workflows/lint.yml@dev.
 #
 # Job dependencies:
-# lint -> build, docs, graph, test-numba, test-python
+# lint -> build, docs, graph, test-arm, test-numba, test-python
 # test-numba -> test-windows, test-macos
 jobs:
   build:
@@ -48,6 +48,28 @@ jobs:
       uv-sync-args: --all-extras --no-group docs
   lint:
     uses: ./.github/workflows/lint.yml
+  test-arm:
+    needs: lint
+    # This is the same as test-numba, but on ARM, and only for the primary Python version of .python-version.
+    # The tbb package is not available for ARM, so the TBB check of setup-env only prints a note.
+    runs-on: ubuntu-26.04-arm
+    # The id-token permission is needed for uploading the coverage to Codecov with OpenID Connect (OIDC).
+    # The job-level permissions replace those of the workflow, so contents: read has to be repeated.
+    permissions:
+      contents: read
+      id-token: write
+    timeout-minutes: 40
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+    - name: Setup uv and Python environment
+      uses: ./.github/actions/setup-env
+      with:
+        apt-packages: ffmpeg
+        uv-sync-args: --all-extras --no-group docs
+        generate-reference-data: true
+    - name: Run tests
+      uses: ./.github/actions/test
   test-macos:
     needs: test-numba
     # A called workflow cannot have more permissions than its caller,
