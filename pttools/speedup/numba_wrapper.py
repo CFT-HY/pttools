@@ -54,17 +54,26 @@ else:
                 "To use NumbaLSODA, please see the PTtools documentation on how to install it manually."
             )
     except OSError as e:
-        # NumbaLSODA requires an executable stack, which is not enabled by default on Linux 6.14.
+        # NumbaLSODA requires an executable stack, which is not enabled by default on Linux 6.14,
+        # and which glibc >= 2.41 refuses to enable when loading a shared library.
+        # The flag can be cleared with execstack, which is available on e.g. Ubuntu 24.04,
+        # or with patchelf >= 0.18, which is available on e.g. Ubuntu 24.04 and 26.04.
         # https://github.com/Nicholaswogan/numbalsoda/issues/34
         _lib_path, _sep, _err_msg = str(e).partition(": ")
         if not _sep or _err_msg != "cannot enable executable stack as shared object requires: Invalid argument":
             raise e
-        if shutil.which("execstack") is None:
+        if shutil.which("patchelf") is not None:
+            _cmd = ["patchelf", "--clear-execstack", _lib_path]
+        elif shutil.which("execstack") is not None:
+            _cmd = ["execstack", "-c", _lib_path]
+        else:
             raise OSError(
                 "NumbaLSODA requires an executable stack to run. To enable it, "
-                "please install execstack with e.g. \"sudo apt install execstack\" and run this program again."
+                "please install patchelf or execstack with e.g. \"sudo apt install patchelf\" "
+                "and run this program again."
             ) from e
-        subprocess.run(["execstack", "-c", _lib_path], check=False)
+        logger.warning("Clearing the executable stack flag of NumbaLSODA with: %s", " ".join(_cmd))
+        subprocess.run(_cmd, check=False)
         import numbalsoda
 
 lsoda_sig: numba.core.typing.Signature

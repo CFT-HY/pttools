@@ -11,6 +11,14 @@ inputs:
       This is supported only on Linux.
     required: false
     default: ""
+  install-patchelf:
+    description: >-
+      Install patchelf on Ubuntu >= 26.04, which PTtools uses for clearing the executable stack flag of NumbaLSODA,
+      as glibc >= 2.41 refuses to load shared libraries that require an executable stack,
+      and execstack is not available on Ubuntu >= 26.04.
+      This has no effect on older Ubuntu versions or on other operating systems.
+    required: false
+    default: "true"
   check-tbb:
     description: >-
       Check that a TBB library compatible with Numba can be loaded with "python -m pttools.speedup.tbb",
@@ -45,15 +53,29 @@ runs:
   using: composite
   steps:
     - name: Install apt packages
-      if: inputs.apt-packages != ''
+      if: inputs.apt-packages != '' || (runner.os == 'Linux' && inputs.install-patchelf == 'true')
       shell: bash
+      # The Ubuntu version is read from /etc/os-release, which has e.g. ID=ubuntu and VERSION_ID="26.04".
+      # The versions are compared with dpkg, which is available on all Ubuntu versions.
       run: |
+        if [ "${INSTALL_PATCHELF}" = "true" ] && [ -f /etc/os-release ]; then
+          OS_ID="$(. /etc/os-release && echo "${ID}")"
+          OS_VERSION_ID="$(. /etc/os-release && echo "${VERSION_ID}")"
+        fi
+        if [ "${OS_ID:-}" = "ubuntu" ] && dpkg --compare-versions "${OS_VERSION_ID}" ge "26.04"; then
+          APT_PACKAGES="${APT_PACKAGES} patchelf"
+        fi
+        if [ -z "${APT_PACKAGES// /}" ]; then
+          echo "No apt packages to install."
+          exit 0
+        fi
         sudo apt-get update
         # APT_PACKAGES is intentionally unquoted to split it into separate arguments.
         # shellcheck disable=SC2086
         sudo apt-get install -y ${APT_PACKAGES}
       env:
         APT_PACKAGES: ${{ inputs.apt-packages }}
+        INSTALL_PATCHELF: ${{ inputs.install-patchelf }}
     - name: Setup uv
       id: setup-uv
       uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
