@@ -31,7 +31,7 @@
   Most jobs start only after the `lint` job has passed, and the Windows and macOS tests after `test-numba`.
   The `docs` job lints the documentation with `python -m pttools.docs.lint` before building the full documentation.
 - The following are also used by other repositories, such as PTPlot, from the `dev` branch:
-  - the reusable workflows `build.yml`, `deploy-shf.yml`, `docs.yml`, `lint.yml` and `typecheck.yml`,
+  - the reusable workflows `build.yml`, `deploy-shf.yml`, `docs.yml`, `graph.yml`, `lint.yml` and `typecheck.yml`,
   - the composite actions `.github/actions/setup-env` and `.github/actions/deploy-docker`.
 
   Keep their inputs backwards compatible.

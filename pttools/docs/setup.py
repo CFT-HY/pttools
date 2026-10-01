@@ -14,7 +14,7 @@ if tp.TYPE_CHECKING:
 
 from pttools.docs.backreferences import patch_sphinx_gallery
 from pttools.docs.minigallery import add_minigalleries, remove_duplicate_minigalleries
-from pttools.docs.paths import default_log_dir
+from pttools.docs.paths import SPHINX_LOG_ENV_VAR, default_log_dir
 from pttools.logging import setup_logging
 
 
@@ -55,11 +55,6 @@ def setup_example_logging(gallery_conf: dict[str, tp.Any], fname: str | None) ->
     Configuring the logging here ensures that the log messages of all examples have the same format.
     """
     setup_logging()
-
-
-#: Environment variable with which the path of the Sphinx log file can be set,
-#: e.g. by :py:mod:`pttools.docs.lint`.
-SPHINX_LOG_ENV_VAR: str = "PTTOOLS_SPHINX_LOG"
 
 
 def setup_sphinx_logging(log_path: str | os.PathLike[str] | None = None, level: int = logging.INFO) -> Path:

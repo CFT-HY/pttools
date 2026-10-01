@@ -1,0 +1,58 @@
+name: Run tests
+description: >-
+  Run the unit tests with pytest and upload the results.
+  The environment has to be set up with the setup-env action first.
+  The test options, such as coverage, are configured in the pytest section of pyproject.toml.
+inputs:
+  codecov:
+    description: >-
+      Upload the coverage report also to Codecov, if the results are uploaded.
+      Codecov merges the reports of the different jobs, e.g. those of the different operating systems
+      and of the runs with and without Numba.
+      This authenticates with OpenID Connect (OIDC) instead of a Codecov token,
+      so the job has to have the permission "id-token: write".
+    required: false
+    default: "true"
+  numba-disable-jit:
+    description: >-
+      Disable the JIT compilation of Numba with NUMBA_DISABLE_JIT=1.
+      This is needed for the coverage of the Numba-compiled functions to be reported.
+    required: false
+    default: "false"
+  upload-results:
+    description: >-
+      Upload the test results as an artifact.
+      The name of the artifact contains the operating system and whether Numba was enabled,
+      and therefore has to be unique within the workflow run.
+    required: false
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - name: Run tests
+      shell: bash
+      # "shell: bash" runs the script with "set -o pipefail", so a failure of pytest is not hidden by tee.
+      # Without pytest-pythonpath the PYTHONPATH may have to be set manually
+      # PYTHONPATH="${PYTHONPATH}${PYTHONPATH:+:}./tests" pytest | tee test-output.txt
+      run: pytest --store-durations | tee test-output.txt
+      env:
+        NUMBA_DISABLE_JIT: ${{ inputs.numba-disable-jit == 'true' && '1' || '0' }}
+    - name: Upload results
+      if: inputs.upload-results == 'true'
+      uses: actions/upload-artifact@v7
+      with:
+        name: Test results ${{ inputs.numba-disable-jit == 'true' && 'without' || 'with' }} Numba on ${{ runner.os }}
+        path: |
+          .test_durations
+          coverage.xml
+          coverage.json
+          htmlcov
+          numba-sysinfo.txt
+          test-output.txt
+          test-results
+        if-no-files-found: error
+    - name: Upload results to Codecov
+      if: inputs.codecov == 'true' && inputs.upload-results == 'true'
+      uses: codecov/codecov-action@v7
+      with:
+        use_oidc: true

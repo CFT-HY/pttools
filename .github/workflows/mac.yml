@@ -9,7 +9,16 @@ permissions:
 jobs:
   test:
     runs-on: macos-latest
+    # The id-token permission is needed for uploading the coverage to Codecov with OpenID Connect (OIDC).
+    # The job-level permissions replace those of the workflow, so contents: read has to be repeated.
+    permissions:
+      contents: read
+      id-token: write
     timeout-minutes: 30
+    # TBB is not available for the ARM-based macOS runners, so the nested parallelism is disabled,
+    # as explained in docs/install.rst. This is set for the whole job, so that it applies to the steps of the actions.
+    env:
+      NUMBA_NESTED_PARALLELISM: 0
     steps:
         # Fortran compiler is required for building numbalsoda if a wheel is not available
         - name: Install Fortran compiler
@@ -25,29 +34,6 @@ jobs:
           # macOS minutes cost 10x what Linux does, so testing multiple Python versions would be quite costly.
           with:
             uv-sync-args: --all-extras --no-group docs
-        - name: Print Numba sysinfo
-          # On macOS the Numba script is not executable by default and therefore has to be called as a Python module.
-          run: |
-            python -m numba --sysinfo | tee numba-sysinfo.txt
-        - name: Generate reference data
-          run: python pttools/bubble/fluid_reference.py
-          env:
-            PYTHONPATH: .
+            generate-reference-data: true
         - name: Run tests
-          run: |
-            set -o pipefail
-            NUMBA_NESTED_PARALLELISM=0 pytest | tee test-output.txt
-            coverage json
-        - name: Upload results
-          uses: actions/upload-artifact@v7
-          with:
-            # The artifact names have to be unique within the workflow run of the CI workflow.
-            name: Test results with Numba on macOS
-            path: |
-              coverage.xml
-              coverage.json
-              htmlcov
-              numba-sysinfo.txt
-              test-output.txt
-              test-results
-            if-no-files-found: error
+          uses: ./.github/actions/test

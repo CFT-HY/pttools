@@ -29,6 +29,9 @@ IS_LINUX: bool = sys.platform.startswith('linux')
 IS_OSX: bool = sys.platform.startswith('darwin')
 #: Whether running on Windows
 IS_WINDOWS: bool = sys.platform.startswith('win32')
+#: Whether the CPU architecture is x86-64.
+#: Python reports it as "x86_64" on Linux and macOS, and as "AMD64" on Windows.
+IS_X86_64: bool = platform.machine() in ("x86_64", "AMD64")
 #: Whether running on the Read the Docs builder
 IS_READ_THE_DOCS: bool = "READTHEDOCS_VIRTUALENV_PATH" in os.environ
 #: PTtools installation directory

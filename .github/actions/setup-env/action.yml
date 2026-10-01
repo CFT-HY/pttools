@@ -5,6 +5,27 @@ description: >-
   Install uv and Python, create and activate a virtual environment, and install the locked dependencies with uv sync.
   The repository has to be checked out first.
 inputs:
+  apt-packages:
+    description: >-
+      Additional apt packages to install, separated by spaces, e.g. "ffmpeg".
+      This is supported only on Linux.
+    required: false
+    default: ""
+  check-tbb:
+    description: >-
+      Check that a TBB library compatible with Numba can be loaded with "python -m pttools.speedup.tbb",
+      and fail if not. On CPU architectures other than x86-64, for which the tbb package is not available,
+      the check only prints a note.
+    required: false
+    default: "true"
+  generate-reference-data:
+    description: Generate the reference data of PTtools, which is used by its unit tests and examples.
+    required: false
+    default: "false"
+  print-numba-sysinfo:
+    description: Print the output of "numba --sysinfo" and save it to numba-sysinfo.txt.
+    required: false
+    default: "true"
   python-version:
     description: The Python version. By default, uv reads it from the .python-version file.
     required: false
@@ -23,6 +44,16 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Install apt packages
+      if: inputs.apt-packages != ''
+      shell: bash
+      run: |
+        sudo apt-get update
+        # APT_PACKAGES is intentionally unquoted to split it into separate arguments.
+        # shellcheck disable=SC2086
+        sudo apt-get install -y ${APT_PACKAGES}
+      env:
+        APT_PACKAGES: ${{ inputs.apt-packages }}
     - name: Setup uv
       id: setup-uv
       uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
@@ -51,3 +82,19 @@ runs:
       run: uv sync --locked ${SYNC_ARGS}
       env:
         SYNC_ARGS: ${{ inputs.uv-sync-args }}
+    - name: Print Numba sysinfo
+      if: inputs.print-numba-sysinfo == 'true'
+      shell: bash
+      # Numba is called as a Python module, since on macOS its script is not executable by default.
+      # The TBB library of the tbb package is not on the default library search path,
+      # so Numba reports it as unavailable here. PTtools loads it from the virtual environment instead,
+      # which is verified by the TBB check.
+      run: python -m numba --sysinfo | tee numba-sysinfo.txt
+    - name: Check TBB
+      if: inputs.check-tbb == 'true'
+      shell: bash
+      run: python -m pttools.speedup.tbb
+    - name: Generate PTtools reference data
+      if: inputs.generate-reference-data == 'true'
+      shell: bash
+      run: python -m pttools.bubble.fluid_reference

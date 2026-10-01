@@ -87,9 +87,9 @@ jobs:
         # The TBB library of the tbb package is not on the default library search path,
         # so Numba reports it as unavailable here. PTtools loads it from the virtual environment instead,
         # which is verified by the next step.
-        run: numba --sysinfo | tee numba-sysinfo.txt
+        run: python -m numba --sysinfo | tee numba-sysinfo.txt
       - name: Check TBB
-        run: python -c "from pttools.speedup import tbb; import sys; v = tbb.load_tbb(); print('TBB version:', v); sys.exit(v is None or v < tbb.TBB_MIN_VERSION)"
+        run: python -m pttools.speedup.tbb
       # The database steps are run only for Django projects, such as PTPlot.
       - name: Create migrations
         if: hashFiles('manage.py') != ''
@@ -101,7 +101,7 @@ jobs:
         if: hashFiles('manage.py') != ''
         run: python manage.py populate
       - name: Generate PTtools reference data
-        run: python -c "from pttools.bubble.fluid_reference import ref; ref()"
+        run: python -m pttools.bubble.fluid_reference
       # These print the output of make while it runs, followed by a summary of the Sphinx and LaTeX errors.
       - name: Lint documentation
         if: inputs.lint != ''

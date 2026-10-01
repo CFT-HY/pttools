@@ -39,8 +39,7 @@ import sys
 import time
 import typing as tp
 
-from pttools.docs.paths import default_log_dir, find_docs_dir, is_docs_dir
-from pttools.docs.setup import SPHINX_LOG_ENV_VAR
+from pttools.docs.paths import SPHINX_LOG_ENV_VAR, default_log_dir, find_docs_dir, is_docs_dir
 
 #: Path of the LaTeX build directory of the ``latexpdf`` target, relative to the ``docs`` directory
 LATEX_BUILD_SUBDIR: Path = Path("_build", "latex")

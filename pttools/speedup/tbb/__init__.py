@@ -9,6 +9,10 @@ The loader then finds the already-loaded library by its name when Numba imports 
 https://github.com/numba/numba/issues/7531
 
 Based on numba.np.ufunc.parallel._check_tbb_version_compatible()
+
+To check that a TBB library compatible with Numba can be loaded, run ``python -m pttools.speedup.tbb``.
+This is in a separate ``__main__`` module, since this module is imported by :py:mod:`pttools.speedup`,
+and running it directly with ``python -m`` would execute it a second time.
 """
 # https://github.com/numba/numba/issues/7531#issuecomment-1614510255
 
@@ -153,10 +157,7 @@ def load_tbb() -> int | None:
     return system_version
 
 
-if __name__ == "__main__":
-    tbb_version = load_tbb()
-    print("TBB version:", tbb_version)
-    if tbb_version is None or tbb_version < TBB_MIN_VERSION:
-        sys.exit(1)
-else:
-    load_tbb()
+#: TBB runtime interface version of the TBB library that was loaded when this module was imported,
+#: or None if no TBB library was found.
+#: The library is loaded on import, so that it's loaded before Numba initialises its threading layer.
+TBB_VERSION: int | None = load_tbb()

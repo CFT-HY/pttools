@@ -16,11 +16,11 @@ inputs:
   dockerhub-image:
     description: The Docker Hub image name, e.g. "cfthy/pttools"
     required: true
-  dockerhub-organization:
-    description: The Docker Hub organization, which is used as the username for the login
-    required: true
   dockerhub-oidc-connection-id:
     description: The ID of the OIDC connection of the Docker Hub organization
+    required: true
+  dockerhub-organization:
+    description: The Docker Hub organization, which is used as the username for the login
     required: true
 outputs:
   digest:

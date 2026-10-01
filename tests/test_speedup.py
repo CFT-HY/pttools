@@ -1,9 +1,15 @@
 """Unit tests for the speedup module."""
 
+import contextlib
 import importlib
 import importlib.metadata
+import io
+import os
+import subprocess
+import sys
 import typing as tp
 import unittest
+from unittest import mock
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -127,3 +133,64 @@ class TestTBB(unittest.TestCase):
         importlib.import_module("numba.np.ufunc.tbbpool")
         # This is the check that Numba runs before using the TBB threading layer.
         importlib.import_module("numba.np.ufunc.parallel")._check_tbb_version_compatible()  # noqa: SLF001
+
+    def test_tbb_version(self) -> None:
+        """The TBB library is loaded on import."""
+        self.assertIsNotNone(tbb.TBB_VERSION)
+        self.assertGreaterEqual(tbb.TBB_VERSION, tbb.TBB_MIN_VERSION)
+
+    def test_main_module(self) -> None:
+        """The TBB check can be run with "python -m pttools.speedup.tbb" without warnings."""
+        # PTtools initialises colorama on import, which writes a reset escape code to stdout at exit
+        # if stdout is a terminal. Colorama treats stdout as a terminal whenever PYCHARM_HOSTED is set,
+        # even if it's a pipe, so the variable is removed to get the same output in PyCharm as elsewhere.
+        env = {key: value for key, value in os.environ.items() if key != "PYCHARM_HOSTED"}
+        result = subprocess.run(
+            [sys.executable, "-m", "pttools.speedup.tbb"], check=False, capture_output=True, text=True, env=env
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertRegex(result.stdout, r"^TBB version: \d+$")
+        self.assertNotIn("Warning", result.stderr)
+
+
+class TestTBBMain(unittest.TestCase):
+    """Test the exit code of the TBB check, which is run with "python -m pttools.speedup.tbb"."""
+
+    NOTE: tp.ClassVar[str] = "TBB is not available for the current CPU architecture"
+
+    @staticmethod
+    def run_main(version: int | None, is_x86_64: bool = True) -> tuple[int, str]:
+        tbb_main = importlib.import_module("pttools.speedup.tbb.__main__")
+        stdout = io.StringIO()
+        with mock.patch.object(tbb_main, "TBB_VERSION", version), \
+                mock.patch.object(tbb_main, "IS_X86_64", is_x86_64), \
+                contextlib.redirect_stdout(stdout):
+            returncode = tbb_main.main()
+        return returncode, stdout.getvalue()
+
+    def test_main_compatible(self) -> None:
+        self.assertEqual(self.run_main(tbb.TBB_MIN_VERSION), (0, f"TBB version: {tbb.TBB_MIN_VERSION}\n"))
+
+    def test_main_too_old(self) -> None:
+        self.assertEqual(self.run_main(tbb.TBB_MIN_VERSION - 1), (1, f"TBB version: {tbb.TBB_MIN_VERSION - 1}\n"))
+
+    def test_main_not_found(self) -> None:
+        self.assertEqual(self.run_main(None), (1, "TBB version: None\n"))
+
+    def test_main_not_found_other_architecture(self) -> None:
+        """TBB is not required on CPU architectures for which the tbb package is not available."""
+        returncode, output = self.run_main(None, is_x86_64=False)
+        self.assertEqual(returncode, 0)
+        self.assertTrue(output.startswith("TBB version: None\n"), output)
+        self.assertIn(self.NOTE, output)
+
+    def test_main_too_old_other_architecture(self) -> None:
+        returncode, output = self.run_main(tbb.TBB_MIN_VERSION - 1, is_x86_64=False)
+        self.assertEqual(returncode, 0)
+        self.assertIn(self.NOTE, output)
+
+    def test_main_compatible_other_architecture(self) -> None:
+        """If a compatible TBB library is found, e.g. from the operating system, the note is not printed."""
+        self.assertEqual(
+            self.run_main(tbb.TBB_MIN_VERSION, is_x86_64=False), (0, f"TBB version: {tbb.TBB_MIN_VERSION}\n")
+        )

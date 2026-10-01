@@ -18,6 +18,9 @@ DOCS_DIR_FILES: tuple[str, ...] = ("conf.py", "Makefile")
 DOCS_DIR_NAME: str = "docs"
 #: Name of the log directory, which is alongside the documentation directory
 LOG_DIR_NAME: str = "logs"
+#: Environment variable with which the path of the Sphinx log file can be set,
+#: e.g. by :py:mod:`pttools.docs.lint`.
+SPHINX_LOG_ENV_VAR: str = "PTTOOLS_SPHINX_LOG"
 
 
 def is_docs_dir(path: str | os.PathLike[str]) -> bool:

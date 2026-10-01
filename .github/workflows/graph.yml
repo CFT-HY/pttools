@@ -1,0 +1,80 @@
+# Reusable workflow for generating the UML diagrams with Pyreverse,
+# which is called by the CI workflow (main.yml)
+# and by other repositories, such as PTPlot (CFT-HY/pttools/.github/workflows/graph.yml@dev).
+# It can also be run manually.
+# The setup steps are not taken from the setup-env action of this repository,
+# since a local action reference (./.github/actions/setup-env) would point to the repository of the caller.
+# Pyreverse is a part of Pylint, which therefore has to be in the dependencies of the caller.
+name: Graph
+on:
+  workflow_call:
+    inputs: &inputs
+      target:
+        description: The package or module to be analysed with Pyreverse, e.g. "pttools"
+        type: string
+        required: true
+      uv-sync-args:
+        description: Additional arguments for "uv sync --locked", e.g. "--all-extras --no-group docs"
+        type: string
+        required: false
+        default: ""
+  # The inputs are defined also for the manual runs,
+  # since otherwise the inputs would be empty instead of having the default values.
+  workflow_dispatch:
+    inputs: *inputs
+permissions:
+  contents: read
+jobs:
+  graph:
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Install graphviz
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz
+      - name: Setup uv
+        id: setup-uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          activate-environment: true
+      - name: Print uv and Python versions
+        run: |
+          echo "uv ${UV_VERSION}"
+          echo "Python ${PYTHON_VERSION}"
+        env:
+          UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
+          PYTHON_VERSION: ${{ steps.setup-uv.outputs.python-version }}
+      - name: Install requirements
+        run: |
+          # SYNC_ARGS is intentionally unquoted to split it into separate arguments.
+          # shellcheck disable=SC2086
+          uv sync --locked ${SYNC_ARGS}
+        env:
+          SYNC_ARGS: ${{ inputs.uv-sync-args }}
+      - name: Run Pyreverse
+        run: |
+          mkdir -p uml
+          pyreverse "${TARGET}" -o png -d ./uml
+          pyreverse "${TARGET}" -o svg -d ./uml
+        env:
+          TARGET: ${{ inputs.target }}
+#      - name: Run Pyan
+#        continue-on-error: true
+#        run: |
+#          ./gen_call_graphs.sh "all" "./**/*.py"
+#          ./gen_call_graphs.sh "bubble" "./pttools/bubble/**.py"
+#          ./gen_call_graphs.sh "pttools" "./pttools/**.py"
+#          ./gen_call_graphs.sh "pttools_tests" "./pttools/**.py" "./pttools/**/*.py" "./tests/**.py"
+#          ./gen_call_graphs.sh "ssm" "./pttools/ssm/**.py"
+#          ./gen_call_graphs.sh "tests" "./tests/**/*.py"
+      - name: Upload results
+        uses: actions/upload-artifact@v7
+        with:
+          name: Graph
+          path: |
+            call_graphs
+            uml
+          if-no-files-found: error
