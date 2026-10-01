@@ -45,7 +45,6 @@ jobs:
     uses: ./.github/workflows/graph.yml
     with:
       target: pttools
-      uv-sync-args: --all-extras --no-group docs
   lint:
     uses: ./.github/workflows/lint.yml
   test-arm:
