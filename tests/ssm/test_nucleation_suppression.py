@@ -14,10 +14,74 @@ import unittest
 import numpy as np
 
 from pttools.bubble import Bubble
+from pttools.bubble.const import CS0
 from pttools.models.bag import BagModel
 from pttools.ssm import SSMSpectrum
 from pttools.ssm.nucleation import nucleation_f, r_star0
 from pttools.utils import assert_allclose
+
+
+class NucleationFTest(unittest.TestCase):
+    r"""Tests for :func:`pttools.ssm.nucleation.nucleation_f`, :ajmi_2022:`\ ` eq. 50."""
+
+    @staticmethod
+    def top_hat(v_wall: float, v_sh: float, dT: float, hybrid: bool) -> tuple[np.ndarray, np.ndarray]:
+        r"""A coarse profile with constant $\Delta T / T_n$ between the wall and the shock.
+
+        The point at $\xi = v_{\text{wall}}$ on the outside of the wall carries $T_+$, as in the PTtools solutions.
+        Hybrids also have a point at $\xi = v_{\text{wall}}$ on the inside, with a different temperature.
+        """
+        T_n = 1.
+        xi = [0., 0.5 * v_wall]
+        T = [0.9, 0.9]
+        if hybrid:
+            xi.append(v_wall)
+            T.append(0.8)
+        xi += [v_wall, 0.5 * (v_wall + v_sh), v_sh, v_sh * (1. + 1e-9), 1.]
+        T += [T_n * (1. + dT)] * 3 + [T_n, T_n]
+        return np.array(xi), np.array(T)
+
+    def test_top_hat(self) -> None:
+        r"""Constant $\Delta T$ between the wall and the shock.
+
+        With $\Delta T(\xi) = \Delta T$ for $v_{\text{wall}} \le \xi < v_{\text{sh}}$ and zero outside,
+        :ajmi_2022:`\ ` eq. 50 gives
+        $$f = \frac{3}{v_{\text{wall}}^3} \int_{v_{\text{wall}}}^{v_{\text{sh}}} \xi^2
+        \left( 1 - e^{-\tilde{\beta} \Delta T / T_n} \right) d\xi
+        = \left( \frac{v_{\text{sh}}^3}{v_{\text{wall}}^3} - 1 \right)
+        \left( 1 - e^{-\tilde{\beta} \Delta T / T_n} \right).$$
+        The grid is coarse, so this fails if the interval next to the wall is left out of the integral.
+        For hybrids, the extra point on the inside of the wall must not contribute.
+        """
+        v_wall, v_sh, dT, beta_tilde = 0.4, 0.55, 0.01, 100.
+        expected = ((v_sh / v_wall) ** 3 - 1.) * (1. - np.exp(-beta_tilde * dT))
+        for hybrid in (False, True):
+            xi, T = self.top_hat(v_wall, v_sh, dT, hybrid)
+            assert_allclose(nucleation_f(xi=xi, T=T, beta_tilde=beta_tilde, v_wall=v_wall), expected, rtol=1e-6)
+
+    def test_bag_profile_small_vw(self) -> None:
+        r"""Small-$v_{\text{wall}}$ limit, :ajmi_2022:`\ ` eqs. 71-72.
+
+        For $v_{\text{wall}} \ll c_s$ and $\tilde{\beta} \Delta T / T_n \ll 1$, the linearised temperature profile of
+        :ajmi_2022:`\ ` eq. 39,
+        $$\frac{\Delta T}{T_n} \simeq \frac{3 \alpha_n}{2} (1 + c_s^2)
+        \frac{v_{\text{wall}}^3}{c_s^2 (1 - 3 v_{\text{wall}}^2)^2}
+        \left( \frac{1}{\xi} - \frac{1}{c_s} \right),$$
+        with the shock at $\xi \approx c_s$ and $1 - e^{-\Delta S} \approx \Delta S$ in eq. 50, gives
+        $$f = \frac{9 \alpha_n \tilde{\beta} (1 + c_s^2)}{2 c_s^2 (1 - 3 v_{\text{wall}}^2)^2}
+        \int_{v_{\text{wall}}}^{c_s} \left( \xi - \frac{\xi^2}{c_s} \right) d\xi
+        = \frac{3 \alpha_n \tilde{\beta} (1 + c_s^2)}{4 c_s^2 (1 - 3 v_{\text{wall}}^2)^2}
+        \left( c_s^2 + \frac{v_{\text{wall}}^2 (2 v_{\text{wall}} - 3 c_s)}{c_s} \right).$$
+        In the article, eq. 72 has $-c_s^2$ instead of $+c_s^2$ in the brackets, which is a typo, since
+        $$\int_{v_{\text{wall}}}^{c_s} \left( \xi - \frac{\xi^2}{c_s} \right) d\xi
+        = \frac{c_s^2}{6} - \frac{v_{\text{wall}}^2}{2} + \frac{v_{\text{wall}}^3}{3 c_s}.$$
+        """
+        v_wall, alpha_n, beta_tilde = 0.05, 0.005, 10.
+        bubble = Bubble(BagModel(alpha_n_min=0.001), v_wall=v_wall, alpha_n=alpha_n)
+        expected = 3 * alpha_n * beta_tilde * (1 + CS0**2) / (4 * CS0**2 * (1 - 3 * v_wall**2) ** 2) \
+            * (CS0**2 + v_wall**2 * (2 * v_wall - 3 * CS0) / CS0)
+        assert_allclose(nucleation_f(xi=bubble.xi, T=bubble.T, beta_tilde=beta_tilde, v_wall=v_wall), expected,
+                        rtol=0.005)
 
 
 class NucleationSuppressionTest(unittest.TestCase):
@@ -52,43 +116,3 @@ class NucleationSuppressionTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
-class NucleationFTest(unittest.TestCase):
-    r"""Tests for :func:`pttools.ssm.nucleation.nucleation_f`, :ajmi_2022:`\ ` eq. 50."""
-
-    @staticmethod
-    def top_hat(v_wall: float, v_sh: float, dT: float, hybrid: bool) -> tuple[np.ndarray, np.ndarray]:
-        r"""A coarse profile with constant $\Delta T / T_n$ between the wall and the shock.
-
-        The point at $\xi = v_\text{wall}$ on the outside of the wall carries $T_+$, as in the PTtools solutions.
-        Hybrids also have a point at $\xi = v_\text{wall}$ on the inside, with a different temperature.
-        """
-        T_n = 1.
-        xi = [0., 0.5 * v_wall]
-        T = [0.9, 0.9]
-        if hybrid:
-            xi.append(v_wall)
-            T.append(0.8)
-        xi += [v_wall, 0.5 * (v_wall + v_sh), v_sh, v_sh * (1. + 1e-9), 1.]
-        T += [T_n * (1. + dT)] * 3 + [T_n, T_n]
-        return np.array(xi), np.array(T)
-
-    def test_top_hat(self) -> None:
-        r"""$f = ((v_\text{sh}/v_\text{wall})^3 - 1)(1 - e^{-\tilde\beta\Delta T/T_n})$ for a constant $\Delta T$."""
-        v_wall, v_sh, dT, beta_tilde = 0.4, 0.55, 0.01, 100.
-        expected = ((v_sh / v_wall) ** 3 - 1.) * (1. - np.exp(-beta_tilde * dT))
-        for hybrid in (False, True):
-            xi, T = self.top_hat(v_wall, v_sh, dT, hybrid)
-            assert_allclose(nucleation_f(xi=xi, T=T, beta_tilde=beta_tilde, v_wall=v_wall), expected, rtol=1e-6)
-
-    def test_bag_profile_small_vw(self) -> None:
-        r"""Small-$v_\text{wall}$ limit :ajmi_2022:`\ ` eq. 71 (eq. 72 with $+c_s^2$ in the bracket)."""
-        v_wall, alpha_n, beta_tilde = 0.05, 0.005, 10.
-        bubble = Bubble(BagModel(alpha_n_min=0.001), v_wall=v_wall, alpha_n=alpha_n)
-        bubble.solve()
-        cs = 1 / np.sqrt(3)
-        expected = 3 * alpha_n * beta_tilde * (1 + cs**2) / (4 * cs**2 * (1 - 3 * v_wall**2) ** 2) \
-            * (cs**2 + v_wall**2 * (2 * v_wall - 3 * cs) / cs)
-        assert_allclose(nucleation_f(xi=bubble.xi, T=bubble.T, beta_tilde=beta_tilde, v_wall=v_wall), expected,
-                        rtol=0.005)
