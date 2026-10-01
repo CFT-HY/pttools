@@ -1,17 +1,29 @@
+# Reusable workflow, which is called by the CI workflow (main.yml) after the Linux tests with Numba have passed.
+# It can also be run manually.
 name: Test on Windows
 on:
-  push:
+  workflow_call:
   workflow_dispatch:
-#  workflow_run:
-#    workflows: [ CI ]
-#    types: [ completed ]
 permissions:
   contents: read
 jobs:
   test:
     runs-on: windows-latest
-    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
     timeout-minutes: 45
+    # NumbaLSODA does not provide wheels for recent Python versions, so it's built from source.
+    # Its build backend, scikit-build, probes only MSVC-based CMake generators on Windows.
+    # Those are rejected here, since $CC and $CXX point to the MinGW toolchain,
+    # and the Visual Studio generator does not support Fortran at all,
+    # which results in "No CMAKE_Fortran_COMPILER could be found".
+    # Selecting a generator that scikit-build does not have built-in defaults for
+    # skips the probing entirely and lets CMake use the MinGW toolchain from $FC, $CC and $CXX.
+    # The MinGW runtime has to be linked statically, since NumbaLSODA loads its shared libraries
+    # with ctypes, which does not search the PATH for their dependencies on Python 3.8 and newer.
+    # These are set for the whole job, as the installation of the requirements is done in the setup-env action.
+    # CMake is not run in the later steps.
+    env:
+      CMAKE_GENERATOR: "Ninja Multi-Config"
+      CMAKE_ARGS: "-DCMAKE_SHARED_LINKER_FLAGS=-static"
     steps:
         # Fortran compiler is required for building numbalsoda if a wheel is not available
         - name: Install Fortran compiler
@@ -25,33 +37,11 @@ jobs:
             version: "15"
         - name: Checkout
           uses: actions/checkout@v7
-        - name: Setup uv
-          id: setup-uv
-          uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        - name: Setup uv and Python environment
+          uses: ./.github/actions/setup-env
           # Windows minutes cost 2x what Linux does, so testing multiple Python versions would be quite costly
           with:
-            activate-environment: true
-        - name: Print uv and Python versions
-          run: |
-            echo "uv $env:UV_VERSION"
-            echo "Python $env:PYTHON_VERSION"
-          env:
-            UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
-            PYTHON_VERSION: ${{ steps.setup-uv.outputs.python-version }}
-        - name: Install requirements
-          # NumbaLSODA does not provide wheels for recent Python versions, so it's built from source.
-          # Its build backend, scikit-build, probes only MSVC-based CMake generators on Windows.
-          # Those are rejected here, since $CC and $CXX point to the MinGW toolchain,
-          # and the Visual Studio generator does not support Fortran at all,
-          # which results in "No CMAKE_Fortran_COMPILER could be found".
-          # Selecting a generator that scikit-build does not have built-in defaults for
-          # skips the probing entirely and lets CMake use the MinGW toolchain from $FC, $CC and $CXX.
-          # The MinGW runtime has to be linked statically, since NumbaLSODA loads its shared libraries
-          # with ctypes, which does not search the PATH for their dependencies on Python 3.8 and newer.
-          env:
-            CMAKE_GENERATOR: "Ninja Multi-Config"
-            CMAKE_ARGS: "-DCMAKE_SHARED_LINKER_FLAGS=-static"
-          run: uv sync --locked --all-extras --no-group docs
+            uv-sync-args: --all-extras --no-group docs
         - name: Print NumbaLSODA location
           # PTtools falls back to other ODE solvers if NumbaLSODA cannot be imported,
           # so this ensures that a broken NumbaLSODA build fails the workflow instead of being skipped silently.
@@ -76,7 +66,8 @@ jobs:
         - name: Upload results
           uses: actions/upload-artifact@v7
           with:
-            name: Test results with Numba
+            # The artifact names have to be unique within the workflow run of the CI workflow.
+            name: Test results with Numba on Windows
             path: |
               coverage.xml
               coverage.json

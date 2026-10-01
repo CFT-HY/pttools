@@ -17,6 +17,7 @@ REPO_DIR: Path = PTTOOLS_DIR.parent
 
 
 def main() -> None:
+    """Print the lines of code of the PTtools repository and the PTtools library."""
     print("Lines of code in the PTtools repository")
     print(cloc_compact(REPO_DIR))
     print("Lines of code in the PTtools library")

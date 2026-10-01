@@ -6,8 +6,13 @@ on:
 permissions:
   contents: read
 jobs:
+  build:
+    uses: ./.github/workflows/build.yml
   deploy-pypi:
+    needs: build
     # The pypa/gh-action-pypi-publish action is Docker-based, and therefore cannot be run on ubuntu-slim.
+    # Trusted publishing does not support reusable workflows or composite actions,
+    # so this job has to be in the top-level workflow of each repository.
     runs-on: ubuntu-latest
     timeout-minutes: 5
     # https://github.com/marketplace/actions/pypi-publish
@@ -17,26 +22,11 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Setup uv
-        id: setup-uv
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
-      - name: Print uv version
-        run: |
-          echo "uv ${UV_VERSION}"
-        env:
-          UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
-      - name: Build
-        run: uv build
-      - name: Run Twine checks
-        run: uvx twine check dist/*
-      - name: Upload built artifacts
-        uses: actions/upload-artifact@v7
+      - name: Download built artifacts
+        uses: actions/download-artifact@v8
         with:
           name: Python packages
           path: dist
-          if-no-files-found: error
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         # An API token is not needed with trusted publishing (OpenID Connect)

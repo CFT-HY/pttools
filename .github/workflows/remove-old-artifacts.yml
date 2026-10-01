@@ -1,5 +1,7 @@
 name: Remove old artifacts
-on: push
+on:
+  push:
+  workflow_dispatch:
 permissions:
   actions: write
 jobs:

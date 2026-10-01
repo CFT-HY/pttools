@@ -26,6 +26,20 @@
 - Build documentation without examples: `uv run make -C docs all-noplot`
 - Build the package: `uv build`
 
+## CI
+- The CI workflow `.github/workflows/main.yml` runs all the CI jobs on every push.
+  Most jobs start only after the `lint` job has passed, and the Windows and macOS tests after `test-numba`.
+  The `docs` job lints the documentation with `python -m pttools.docs.lint` before building the full documentation.
+- The following are also used by other repositories, such as PTPlot, from the `dev` branch:
+  - the reusable workflows `build.yml`, `deploy-shf.yml`, `docs.yml`, `lint.yml` and `typecheck.yml`,
+  - the composite actions `.github/actions/setup-env` and `.github/actions/deploy-docker`.
+
+  Keep their inputs backwards compatible.
+  The reusable workflows must not use local actions (`./.github/actions/...`),
+  as those would be resolved in the repository of the caller.
+  Jobs that authenticate with OpenID Connect (PyPI trusted publishing, Docker Hub, attestations)
+  must not be in reusable workflows, since the token would then identify the reusable workflow instead of the caller.
+
 ## Code style
 - Use Python 3.12+ type hints where possible.
 - JIT compile heavy computations with Numba.

@@ -1,0 +1,53 @@
+# This action is also used by other repositories, such as PTPlot (CFT-HY/pttools/.github/actions/setup-env@dev).
+# Keep its inputs backwards compatible.
+name: Setup uv and Python environment
+description: >-
+  Install uv and Python, create and activate a virtual environment, and install the locked dependencies with uv sync.
+  The repository has to be checked out first.
+inputs:
+  python-version:
+    description: The Python version. By default, uv reads it from the .python-version file.
+    required: false
+    default: ""
+  uv-sync-args:
+    description: Additional arguments for "uv sync --locked", e.g. "--all-extras --no-group docs".
+    required: false
+    default: ""
+outputs:
+  uv-version:
+    description: The installed uv version
+    value: ${{ steps.setup-uv.outputs.uv-version }}
+  python-version:
+    description: The full version of the Python of the virtual environment, e.g. "3.14.0"
+    value: ${{ steps.versions.outputs.python-version }}
+runs:
+  using: composite
+  steps:
+    - name: Setup uv
+      id: setup-uv
+      uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+      with:
+        # This overrides the version of the .python-version file, if given.
+        python-version: ${{ inputs.python-version }}
+        activate-environment: true
+    - name: Print uv and Python versions
+      id: versions
+      shell: bash
+      # The python-version output of setup-uv is not used, since it's equal to the python-version input if given,
+      # e.g. "3.13", instead of the full version of the installed Python.
+      # The output of "python -V" is of the form "Python 3.14.0".
+      # The carriage return is removed, since it's included on Windows.
+      run: |
+        PYTHON_VERSION="$(python -V | tr -d '\r')"
+        PYTHON_VERSION="${PYTHON_VERSION#Python }"
+        echo "uv ${UV_VERSION}"
+        echo "Python ${PYTHON_VERSION}"
+        echo "python-version=${PYTHON_VERSION}" >> "${GITHUB_OUTPUT}"
+      env:
+        UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
+    - name: Install requirements
+      shell: bash
+      # SYNC_ARGS is intentionally unquoted to split it into separate arguments.
+      run: uv sync --locked ${SYNC_ARGS}
+      env:
+        SYNC_ARGS: ${{ inputs.uv-sync-args }}

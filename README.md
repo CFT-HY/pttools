@@ -4,8 +4,6 @@
 [![GitHub](https://img.shields.io/badge/GitHub-CFT--HY/pttools-blue)](https://github.com/CFT-HY/pttools)
 [![ReadTheDocs](https://readthedocs.org/projects/pttools/badge/)](https://pttools.readthedocs.io/)
 [![CI](https://github.com/CFT-HY/pttools/actions/workflows/main.yml/badge.svg)](https://github.com/CFT-HY/pttools/actions/workflows/main.yml)
-[![Windows](https://github.com/CFT-HY/pttools/actions/workflows/windows.yml/badge.svg)](https://github.com/CFT-HY/pttools/actions/workflows/windows.yml)
-[![macOS](https://github.com/CFT-HY/pttools/actions/workflows/mac.yml/badge.svg)](https://github.com/CFT-HY/pttools/actions/workflows/mac.yml)
 [![codecov](https://codecov.io/gh/CFT-HY/pttools/graph/badge.svg?token=ALFVWC1LZR)](https://codecov.io/gh/CFT-HY/pttools)
 
 PTtools is a Python library for calculating hydrodynamical quantities

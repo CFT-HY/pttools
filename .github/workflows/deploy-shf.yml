@@ -1,7 +1,11 @@
+# This workflow is also called as a reusable workflow by other repositories,
+# such as PTPlot (CFT-HY/pttools/.github/workflows/deploy-shf.yml@dev).
+# The saved repository is that of the caller.
 name: Publish to Software Heritage Foundation
 on:
   release:
     types: [published]
+  workflow_call:
   workflow_dispatch:
 permissions:
   contents: read

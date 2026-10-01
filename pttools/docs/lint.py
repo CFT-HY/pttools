@@ -13,7 +13,10 @@ followed by the console output of the build, which includes the output of the La
 Only the Sphinx errors and warnings and the LaTeX errors are printed.
 The exit code is that of ``make``.
 
-Usage: ``uv run python -m pttools.docs.lint [--target latexpdf-noplot] [--docs-dir docs] [--log-dir logs]``
+Usage: ``uv run python -m pttools.docs.lint [--target latexpdf-noplot] [--docs-dir docs] [--log-dir logs] [--verbose]``
+
+With ``--verbose``, the console output of make is also printed while it runs.
+This is used by the documentation builds on CI, which can take a long time.
 
 This can be used also in other projects that use the documentation utilities of PTtools, such as PTPlot,
 by running ``python -m pttools.docs.lint`` in their virtual environment.
@@ -132,9 +135,13 @@ def latex_log_messages(log_path: str | os.PathLike[str]) -> tuple[list[str], lis
     return latex_errors(lines), warnings
 
 
-def run_make(target: str, log_path: Path, docs_dir: Path) -> tuple[int, list[str]]:
+def run_make(target: str, log_path: Path, docs_dir: Path, verbose: bool = False) -> tuple[int, list[str]]:
     """Run ``make target`` in the docs directory, streaming its output to the log file.
 
+    :param target: the make target
+    :param log_path: the log file, to which the console output of make is appended
+    :param docs_dir: the documentation directory
+    :param verbose: also print the console output of make while it runs
     :return: the return code of make and the lines of its console output
     """
     shutil.rmtree(docs_dir / LATEX_BUILD_SUBDIR, ignore_errors=True)
@@ -153,7 +160,12 @@ def run_make(target: str, log_path: Path, docs_dir: Path) -> tuple[int, list[str
             text=True,
             errors="replace") as process:
         assert process.stdout is not None
-        output = process.stdout.read()
+        chunks: list[str] = []
+        for chunk in process.stdout:
+            if verbose:
+                print(chunk, end="", flush=True)
+            chunks.append(chunk)
+        output = "".join(chunks)
         returncode = process.wait()
     lines = split_lines(output)
     # The Sphinx process has closed the log file by now, so the console output can be appended.
@@ -217,6 +229,8 @@ def main(argv: tp.Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--log-dir", default=None,
         help="directory for the log file (default: \"logs\" alongside the documentation directory)")
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="also print the console output of make while it runs")
     args = parser.parse_args(argv)
 
     try:
@@ -230,7 +244,7 @@ def main(argv: tp.Sequence[str] | None = None) -> int:
     log_path = log_dir / (f"sphinx_{time.strftime('%Y-%m-%d_%H-%M-%S')}.log")
     print(f"Running \"make {args.target}\" in {docs_dir}. Log: {log_path}")
     start = time.perf_counter()
-    returncode, lines = run_make(args.target, log_path, docs_dir)
+    returncode, lines = run_make(args.target, log_path, docs_dir, verbose=args.verbose)
     elapsed = time.perf_counter() - start
 
     sphinx_lines = sphinx_messages(lines)

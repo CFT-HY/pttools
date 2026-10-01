@@ -17,6 +17,8 @@ and list the uncommitted changes to the user.
 ## 2. Check that the latest commit has passed CI
 
 The CI workflow is `.github/workflows/main.yml` with the name `CI`, and it runs on every push.
+It includes all the checks: the lint, the type checks, the build, the tests on Linux, Windows and macOS,
+and the documentation. The jobs from the reusable workflows are named e.g. `test-windows / test`.
 The repository is `CFT-HY/pttools` (verify with `git remote get-url origin`).
 
 1. Get the latest commit with `git rev-parse HEAD` and the current branch with `git branch --show-current`.

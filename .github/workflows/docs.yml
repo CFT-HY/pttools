@@ -1,14 +1,69 @@
+# Reusable workflow for linting and building the documentation with the given make targets,
+# which is called by the CI workflow (main.yml),
+# and by other repositories, such as PTPlot (CFT-HY/pttools/.github/workflows/docs.yml@dev).
+# It can also be run manually.
+# The setup steps are not taken from the setup-env action of this repository,
+# since a local action reference (./.github/actions/setup-env) would point to the repository of the caller.
 name: Docs
-on: push
+on:
+  workflow_call:
+    inputs: &inputs
+      apt-packages:
+        description: >-
+          Additional apt packages to install, separated by spaces,
+          in addition to those required by all the repositories that use this workflow
+        type: string
+        required: false
+        default: ""
+      lint:
+        description: >-
+          The make target in the docs directory that is run first to lint the documentation.
+          The default "latexpdf-noplot" builds the PDF without running the examples,
+          and therefore finds the Sphinx and LaTeX errors faster than the full build.
+          An empty string skips the linting.
+        type: string
+        required: false
+        default: latexpdf-noplot
+      target:
+        description: >-
+          The make target in the docs directory that is run after the linting has passed.
+          The default "all" builds the full documentation. An empty string skips the build.
+        type: string
+        required: false
+        default: all
+      timeout-minutes:
+        description: The timeout of the job
+        type: number
+        required: false
+        default: 45
+      uv-sync-args:
+        description: Additional arguments for "uv sync --locked", e.g. "--all-extras"
+        type: string
+        required: false
+        default: ""
+  # The inputs are defined also for the manual runs,
+  # since otherwise the inputs would be empty instead of having the default values.
+  workflow_dispatch:
+    inputs: *inputs
 permissions:
   contents: read
 jobs:
   docs:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: ${{ inputs.timeout-minutes }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+      - name: Install LaTeX and the other build tools
+        # These are the packages required by all the repositories that use this workflow,
+        # followed by the additional packages of the caller.
+        run: |
+          sudo apt-get update
+          # APT_PACKAGES is intentionally unquoted to split it into separate arguments.
+          # shellcheck disable=SC2086
+          sudo apt-get install -y cloc cm-super dvipng ffmpeg fontconfig graphviz latexmk optipng texlive-latex-extra texlive-xetex fonts-freefont-otf xindy ${APT_PACKAGES}
+        env:
+          APT_PACKAGES: ${{ inputs.apt-packages }}
       - name: Setup uv
         id: setup-uv
         uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
@@ -21,24 +76,51 @@ jobs:
         env:
           UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
           PYTHON_VERSION: ${{ steps.setup-uv.outputs.python-version }}
-      - name: Install LaTeX
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cloc cm-super dvipng ffmpeg fontconfig graphviz latexmk optipng texlive-latex-extra texlive-xetex fonts-freefont-otf xindy
       - name: Install requirements
-        run: uv sync --locked --all-extras
+        run: |
+          # SYNC_ARGS is intentionally unquoted to split it into separate arguments.
+          # shellcheck disable=SC2086
+          uv sync --locked ${SYNC_ARGS}
+        env:
+          SYNC_ARGS: ${{ inputs.uv-sync-args }}
+      - name: Print Numba sysinfo
+        # The TBB library of the tbb package is not on the default library search path,
+        # so Numba reports it as unavailable here. PTtools loads it from the virtual environment instead,
+        # which is verified by the next step.
+        run: numba --sysinfo | tee numba-sysinfo.txt
       - name: Check TBB
         run: python -c "from pttools.speedup import tbb; import sys; v = tbb.load_tbb(); print('TBB version:', v); sys.exit(v is None or v < tbb.TBB_MIN_VERSION)"
-      - name: Generate reference data
-        run: python pttools/bubble/fluid_reference.py
+      # The database steps are run only for Django projects, such as PTPlot.
+      - name: Create migrations
+        if: hashFiles('manage.py') != ''
+        run: python manage.py makemigrations
+      - name: Migrate database
+        if: hashFiles('manage.py') != ''
+        run: python manage.py migrate
+      - name: Populate database
+        if: hashFiles('manage.py') != ''
+        run: python manage.py populate
+      - name: Generate PTtools reference data
+        run: python -c "from pttools.bubble.fluid_reference import ref; ref()"
+      # These print the output of make while it runs, followed by a summary of the Sphinx and LaTeX errors.
+      - name: Lint documentation
+        if: inputs.lint != ''
+        run: python -m pttools.docs.lint --verbose --target "${LINT}"
         env:
-          PYTHONPATH: .
-      - name: Generate documentation
-        run: make -C docs all
+          LINT: ${{ inputs.lint }}
+      - name: Build documentation
+        if: inputs.target != ''
+        run: python -m pttools.docs.lint --verbose --target "${TARGET}"
+        env:
+          TARGET: ${{ inputs.target }}
       - name: Upload results
+        if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: Documentation
+          # The artifact names have to be unique within the workflow run of the caller.
+          name: Documentation (make ${{ inputs.target }})
           path: |
             docs/_build
-          if-no-files-found: error
+            logs
+            numba-sysinfo.txt
+          if-no-files-found: warn

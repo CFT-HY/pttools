@@ -1,0 +1,33 @@
+# Reusable workflow, which is called by the CI workflow (main.yml)
+# and by other repositories, such as PTPlot (CFT-HY/pttools/.github/workflows/build.yml@dev).
+# It can also be run manually.
+name: Build
+on:
+  workflow_call:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-slim
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup uv
+        id: setup-uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+      - name: Print uv version
+        run: |
+          echo "uv ${UV_VERSION}"
+        env:
+          UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
+      - name: Build
+        run: uv build
+      - name: Run Twine checks
+        run: uvx twine check dist/*
+      - name: Upload built artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: Python packages
+          path: dist
+          if-no-files-found: error

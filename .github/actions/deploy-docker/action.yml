@@ -1,0 +1,74 @@
+# This action is also used by other repositories, such as PTPlot (CFT-HY/pttools/.github/actions/deploy-docker@dev).
+# Keep its inputs backwards compatible.
+#
+# These steps are in a composite action instead of a reusable workflow,
+# since a composite action runs within the job of the caller, and therefore does not change the OpenID Connect (OIDC)
+# token of the job. In a reusable workflow of another repository, the token would identify the reusable workflow
+# instead of the workflow of the caller, which would affect the Docker Hub OIDC connection
+# and the signer identity of the artifact attestation.
+name: Build and push Docker images
+description: >-
+  Build the Docker image of the repository for multiple platforms,
+  push it to Docker Hub and the GitHub Container registry, and generate an artifact attestation for it.
+  The job has to have the permissions artifact-metadata, attestations, id-token and packages: write,
+  and contents: read.
+inputs:
+  dockerhub-image:
+    description: The Docker Hub image name, e.g. "cfthy/pttools"
+    required: true
+  dockerhub-organization:
+    description: The Docker Hub organization, which is used as the username for the login
+    required: true
+  dockerhub-oidc-connection-id:
+    description: The ID of the OIDC connection of the Docker Hub organization
+    required: true
+outputs:
+  digest:
+    description: The digest of the image
+    value: ${{ steps.build.outputs.digest }}
+runs:
+  using: composite
+  steps:
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v4
+      env:
+        DOCKERHUB_OIDC_CONNECTIONID: ${{ inputs.dockerhub-oidc-connection-id }}
+      with:
+        username: ${{ inputs.dockerhub-organization }}
+    - name: Log in to GitHub Container registry
+      uses: docker/login-action@v4
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ github.token }}
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v4
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v4
+    - name: Extract metadata (tags, labels) for Docker
+      id: meta
+      uses: docker/metadata-action@v6
+      with:
+        images: |
+          ${{ inputs.dockerhub-image }}
+          ghcr.io/${{ github.repository }}
+    - name: Build and push Docker images
+      id: build
+      uses: docker/build-push-action@v7
+      with:
+        cache-from: type=gha
+        cache-to: type=gha
+        labels: ${{ steps.meta.outputs.labels }}
+        platforms: linux/amd64,linux/arm64
+        provenance: mode=max
+        pull: true
+        push: true
+        sbom: true
+        tags: ${{ steps.meta.outputs.tags }}
+    - name: Generate artifact attestation
+      uses: actions/attest@v4
+      with:
+        subject-name: ghcr.io/${{ github.repository }}
+        subject-digest: ${{ steps.build.outputs.digest }}
+        push-to-registry: true
+        # sbom-path: "sbom.json"

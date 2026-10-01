@@ -1,0 +1,50 @@
+# Reusable workflow, which is called by the CI workflow (main.yml)
+# and by other repositories, such as PTPlot (CFT-HY/pttools/.github/workflows/typecheck.yml@dev).
+# It can also be run manually.
+# The setup steps are not taken from the setup-env action of this repository,
+# since a local action reference (./.github/actions/setup-env) would point to the repository of the caller.
+name: Typecheck
+on:
+  workflow_call:
+    inputs: &inputs
+      runs-on:
+        description: The runner, e.g. ubuntu-latest if the dependencies have to be compiled
+        type: string
+        required: false
+        default: ubuntu-slim
+  # The inputs are defined also for the manual runs,
+  # since otherwise the inputs would be empty instead of having the default values.
+  workflow_dispatch:
+    inputs: *inputs
+permissions:
+  contents: read
+jobs:
+  typecheck:
+    runs-on: ${{ inputs.runs-on }}
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup uv
+        id: setup-uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          activate-environment: true
+      - name: Print uv and Python versions
+        run: |
+          echo "uv ${UV_VERSION}"
+          echo "Python ${PYTHON_VERSION}"
+        env:
+          UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
+          PYTHON_VERSION: ${{ steps.setup-uv.outputs.python-version }}
+      - name: Install requirements
+        run: uv sync --locked
+      - name: Run Pyrefly
+        run: |
+          set -o pipefail
+          pyrefly check --output-format=full-text-with-github
+      - name: Run Pyrefly coverage
+        if: always()
+        run: |
+          pyrefly coverage report > coverage.json
+          pyrefly coverage check --output-format=full-text-with-github

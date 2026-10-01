@@ -4,50 +4,28 @@ permissions:
   contents: read
 # The primary Python version is specified in the .python-version file, which uv reads automatically.
 # The test jobs also test the other supported Python versions, and upload the results only for the primary one.
+#
+# The reusable workflows and the setup-env action are referenced with local paths,
+# so that the CI always uses their versions of the current commit.
+# Other repositories, such as PTPlot, use them from the dev branch, e.g. CFT-HY/pttools/.github/workflows/lint.yml@dev.
+#
+# Job dependencies:
+# lint -> build, docs, graph, test-numba, test-python
+# test-numba -> test-windows, test-macos
 jobs:
   build:
-    runs-on: ubuntu-slim
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Setup uv
-        id: setup-uv
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
-      - name: Print uv version
-        run: |
-          echo "uv ${UV_VERSION}"
-        env:
-          UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
-      - name: Build
-        run: uv build
-      - name: Run Twine checks
-        run: uvx twine check dist/*
-      - name: Upload built artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: Python packages
-          path: dist
-          if-no-files-found: error
+    needs: lint
+    uses: ./.github/workflows/build.yml
 #  fossa:
 #    runs-on: ubuntu-latest
 #    timeout-minutes: 5
 #    steps:
 #      - name: Checkout
 #        uses: actions/checkout@v7
-#      - name: Setup uv
-#        id: setup-uv
-#        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+#      - name: Setup uv and Python environment
+#        uses: ./.github/actions/setup-env
 #        with:
-#          activate-environment: true
-#      - name: Print uv and Python versions
-#        run: |
-#          echo "uv ${UV_VERSION}"
-#          echo "Python ${PYTHON_VERSION}"
-#        env:
-#          UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
-#          PYTHON_VERSION: ${{ steps.setup-uv.outputs.python-version }}
-#      - name: Install requirements
-#        run: uv sync --locked --all-extras --no-default-groups
+#          uv-sync-args: --all-extras --no-default-groups
 #      - name: Install FOSSA
 #        run: |
 #          curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | sudo bash
@@ -55,30 +33,28 @@ jobs:
 #        run: fossa analyze
 #        env:
 #          FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
+  docs:
+    # This lints the documentation without running the examples, and then builds the full documentation.
+    needs: lint
+    uses: ./.github/workflows/docs.yml
+    with:
+      uv-sync-args: --all-extras
+      timeout-minutes: 60
   graph:
+    needs: lint
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-      - name: Setup uv
-        id: setup-uv
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
-        with:
-          activate-environment: true
-      - name: Print uv and Python versions
-        run: |
-          echo "uv ${UV_VERSION}"
-          echo "Python ${PYTHON_VERSION}"
-        env:
-          UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
-          PYTHON_VERSION: ${{ steps.setup-uv.outputs.python-version }}
       - name: Install graphviz
         run: |
           sudo apt-get update
           sudo apt-get install -y graphviz
-      - name: Install requirements
-        run: uv sync --locked --all-extras --no-group docs
+      - name: Setup uv and Python environment
+        uses: ./.github/actions/setup-env
+        with:
+          uv-sync-args: --all-extras --no-group docs
       - name: Run Pyreverse
         run: |
           mkdir uml
@@ -102,43 +78,12 @@ jobs:
             uml
           if-no-files-found: error
   lint:
-    runs-on: ubuntu-slim
-    timeout-minutes: 5
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Run Ruff
-        uses: astral-sh/ruff-action@v4.1.0
-  typecheck:
-    runs-on: ubuntu-slim
-    timeout-minutes: 5
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Setup uv
-        id: setup-uv
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
-        with:
-          activate-environment: true
-      - name: Print uv and Python versions
-        run: |
-          echo "uv ${UV_VERSION}"
-          echo "Python ${PYTHON_VERSION}"
-        env:
-          UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
-          PYTHON_VERSION: ${{ steps.setup-uv.outputs.python-version }}
-      - name: Install requirements
-        run: uv sync --locked
-      - name: Run Pyrefly
-        run: |
-          set -o pipefail
-          pyrefly check --output-format=full-text-with-github
-      - name: Run Pyrefly coverage
-        if: always()
-        run: |
-          pyrefly coverage report > coverage.json
-          pyrefly coverage check --output-format=full-text-with-github
+    uses: ./.github/workflows/lint.yml
+  test-macos:
+    needs: test-numba
+    uses: ./.github/workflows/mac.yml
   test-numba:
+    needs: lint
     runs-on: ubuntu-latest
     timeout-minutes: 40
     strategy:
@@ -150,25 +95,15 @@ jobs:
     - name: Read the primary Python version
       id: primary-python
       run: echo "version=$(cat .python-version)" >> "${GITHUB_OUTPUT}"
-    - name: Setup uv
-      id: setup-uv
-      uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
-      with:
-        # This overrides the version of the .python-version file.
-        python-version: ${{ matrix.python-version }}
-        activate-environment: true
-    - name: Print uv and Python versions
-      run: |
-        echo "uv ${UV_VERSION}"
-        python -V
-      env:
-        UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
     - name: Install ffmpeg
       run: |
         sudo apt-get update
         sudo apt-get install ffmpeg
-    - name: Install requirements
-      run: uv sync --locked --all-extras --no-group docs
+    - name: Setup uv and Python environment
+      uses: ./.github/actions/setup-env
+      with:
+        python-version: ${{ matrix.python-version }}
+        uv-sync-args: --all-extras --no-group docs
     - name: Print Numba sysinfo
       # The TBB library of the tbb package is not on the default library search path,
       # so Numba reports it as unavailable here. PTtools loads it from the virtual environment instead,
@@ -199,6 +134,7 @@ jobs:
           test-results
         if-no-files-found: error
   test-python:
+    needs: lint
     runs-on: ubuntu-latest
     timeout-minutes: 40
     strategy:
@@ -210,21 +146,11 @@ jobs:
     - name: Read the primary Python version
       id: primary-python
       run: echo "version=$(cat .python-version)" >> "${GITHUB_OUTPUT}"
-    - name: Setup uv
-      id: setup-uv
-      uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+    - name: Setup uv and Python environment
+      uses: ./.github/actions/setup-env
       with:
-        # This overrides the version of the .python-version file.
         python-version: ${{ matrix.python-version }}
-        activate-environment: true
-    - name: Print uv and Python versions
-      run: |
-        echo "uv ${UV_VERSION}"
-        python -V
-      env:
-        UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
-    - name: Install requirements
-      run: uv sync --locked --all-extras --no-group docs
+        uv-sync-args: --all-extras --no-group docs
     - name: Print Numba sysinfo
       # The TBB library of the tbb package is not on the default library search path,
       # so Numba reports it as unavailable here. PTtools loads it from the virtual environment instead,
@@ -262,3 +188,8 @@ jobs:
       if: ${{ matrix.python-version == steps.primary-python.outputs.version }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+  test-windows:
+    needs: test-numba
+    uses: ./.github/workflows/windows.yml
+  typecheck:
+    uses: ./.github/workflows/typecheck.yml

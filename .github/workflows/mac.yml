@@ -1,16 +1,14 @@
+# Reusable workflow, which is called by the CI workflow (main.yml) after the Linux tests with Numba have passed.
+# It can also be run manually.
 name: Test on macOS
 on:
-  push:
+  workflow_call:
   workflow_dispatch:
-#  workflow_run:
-#    workflows: [ CI ]
-#    types: [ completed ]
 permissions:
   contents: read
 jobs:
   test:
     runs-on: macos-latest
-    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
     timeout-minutes: 30
     steps:
         # Fortran compiler is required for building numbalsoda if a wheel is not available
@@ -22,21 +20,11 @@ jobs:
             version: "15"
         - name: Checkout
           uses: actions/checkout@v7
-        - name: Setup uv
-          id: setup-uv
-          uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        - name: Setup uv and Python environment
+          uses: ./.github/actions/setup-env
           # macOS minutes cost 10x what Linux does, so testing multiple Python versions would be quite costly.
           with:
-            activate-environment: true
-        - name: Print uv and Python versions
-          run: |
-            echo "uv ${UV_VERSION}"
-            echo "Python ${PYTHON_VERSION}"
-          env:
-            UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
-            PYTHON_VERSION: ${{ steps.setup-uv.outputs.python-version }}
-        - name: Install requirements
-          run: uv sync --locked --all-extras --no-group docs
+            uv-sync-args: --all-extras --no-group docs
         - name: Print Numba sysinfo
           # On macOS the Numba script is not executable by default and therefore has to be called as a Python module.
           run: |
@@ -53,7 +41,8 @@ jobs:
         - name: Upload results
           uses: actions/upload-artifact@v7
           with:
-            name: Test results with Numba
+            # The artifact names have to be unique within the workflow run of the CI workflow.
+            name: Test results with Numba on macOS
             path: |
               coverage.xml
               coverage.json

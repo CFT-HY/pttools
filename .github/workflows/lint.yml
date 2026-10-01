@@ -1,0 +1,18 @@
+# Reusable workflow, which is called by the CI workflow (main.yml)
+# and by other repositories, such as PTPlot (CFT-HY/pttools/.github/workflows/lint.yml@dev).
+# It can also be run manually.
+name: Lint
+on:
+  workflow_call:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  lint:
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Run Ruff
+        uses: astral-sh/ruff-action@v4.1.0
