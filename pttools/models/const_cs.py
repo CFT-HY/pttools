@@ -18,9 +18,11 @@ from pttools.bubble.phase import Phase
 from pttools.bubble.solution_type import SolutionType
 from pttools.models.analytic import AnalyticModel
 from pttools.models.bag import BagModel
+from pttools.models.export import CONST_CS_MODEL_FIELDS
 from pttools.speedup import DifferentialPointer, njit
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
+from pttools.utils.fields import Fields
 from pttools.utils.validation import check_value_in_range
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -134,6 +136,7 @@ class ConstCSModel(AnalyticModel):
     DEFAULT_LABEL_LATEX = "Constant $c_s$ model"
     DEFAULT_LABEL_UNICODE = "Constant cₛ model"
     DEFAULT_NAME = "const_cs"
+    FIELDS: tp.ClassVar[Fields] = CONST_CS_MODEL_FIELDS
     TEMPERATURE_IS_PHYSICAL = False
 
     def __init__(
@@ -731,15 +734,6 @@ class ConstCSModel(AnalyticModel):
         e_s = (self.mu_s - 1) * self.a_s * (temp / self.T_ref) ** (self.mu_s - 4) * temp ** 4 + self.V_s
         e_b = (self.mu_b - 1) * self.a_b * (temp / self.T_ref) ** (self.mu_b - 4) * temp ** 4 + self.V_b
         return tp.cast(T, e_b * phase + e_s * (1 - phase))
-
-    def export(self) -> dict[str, tp.Any]:
-        return {
-            **super().export(),
-            "css2": self.css2,
-            "csb2": self.csb2,
-            "mu_s": self.mu_s,
-            "mu_b": self.mu_b
-        }
 
     def gen_cs2(self) -> th.CS2Fun:
         # Using the BagModel cs2 saves us from having to compile additional Numba functions

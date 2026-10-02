@@ -7,9 +7,11 @@ import typing as tp
 import numpy as np
 
 from pttools.bubble.solution_type import SolutionType
+from pttools.models.export import ANALYTIC_MODEL_FIELDS
 from pttools.models.model import Model
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
+from pttools.utils.fields import Fields
 from pttools.utils.misc import is_nan_or_none
 from pttools.utils.validation import check_value_in_range
 
@@ -38,6 +40,7 @@ class AnalyticModel(Model, abc.ABC):
 
     DEFAULT_V_S = 1.
     DEFAULT_A_G_MULT: float = 1.1
+    FIELDS: tp.ClassVar[Fields] = ANALYTIC_MODEL_FIELDS
 
     def __init__(
             self,
@@ -170,13 +173,6 @@ class AnalyticModel(Model, abc.ABC):
             alpha_plus, vp_tilde=vp_tilde, sol_type=sol_type,
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         ))
-
-    def export(self) -> dict[str, tp.Any]:
-        return {
-            **super().export(),
-            "a_s": self.a_s,
-            "a_b": self.a_b
-        }
 
     @staticmethod
     def g_from_a[T: FloatOrArr](a: T) -> T:

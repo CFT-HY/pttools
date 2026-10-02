@@ -5,6 +5,7 @@ import logging
 from math import sqrt
 import os
 import typing as tp
+import uuid
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,6 +15,7 @@ from pttools.speedup import NAN_ARR
 from pttools.ssm import const
 from pttools.ssm.barotropic import H_eta, dilution_of_e, eta_ratio, source_lifetime_factor
 from pttools.ssm.compute import compute
+from pttools.ssm.export import SSM_SPECTRUM_FIELDS
 from pttools.ssm.low_k.intersection import z_cross_approx
 from pttools.ssm.nucleation import DEFAULT_NUC_TYPE, NucType, beta, v_eff
 from pttools.ssm.nucleation import r_star as r_star_func
@@ -24,6 +26,7 @@ from pttools.ssm.ssm import ubarf2_from_a2
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 from pttools.type_hints import FloatArr, FloatArr1D
 from pttools.utils.docstrings import copy_docstrings
+from pttools.utils.fields import Extractable, Fields, FieldSpec, Preset
 from pttools.utils.formatting import as_latex, as_unicode
 from pttools.utils.json import export_json
 
@@ -33,8 +36,11 @@ if tp.TYPE_CHECKING:
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class SSMSpectrum:
+class SSMSpectrum(Extractable):
     """Gravitational wave simulation object."""
+
+    #: The exportable fields of the spectrum
+    FIELDS: tp.ClassVar[Fields] = SSM_SPECTRUM_FIELDS
 
     def __init__(
             self,
@@ -80,6 +86,10 @@ class SSMSpectrum:
         """
         if np.isnan(y).any():
             raise ValueError("y must not contain nan values.")
+
+        #: Unique identifier of the spectrum, which is used for deduplication when exporting.
+        #: This is preserved when the spectrum is pickled, e.g. when sent to another process.
+        self.id: str = uuid.uuid4().hex
 
         # -----
         # Parameters
@@ -207,49 +217,23 @@ class SSMSpectrum:
         )
         self.spec_den_gw = self.spec_den_gw_expanded if self.low_k else self.spec_den_gw_ssm
 
-    def export(self, path: str | os.PathLike[str] | None = None) -> dict[str, tp.Any]:
+    def export(
+            self,
+            path: str | os.PathLike[str] | None = None,
+            fields: FieldSpec = Preset.FULL,
+            bubble_fields: FieldSpec = Preset.FULL,
+            model_fields: FieldSpec = Preset.FULL) -> dict[str, tp.Any]:
+        """Export the spectrum data to a dictionary, and optionally save it as a JSON file.
+
+        :param path: path of the JSON file
+        :param fields: the fields of the spectrum to export, see :py:data:`pttools.utils.fields.FieldSpec`
+        :param bubble_fields: the fields of the bubble to export
+        :param model_fields: the fields of the model to export
+        :return: the exported data, where the bubble data is under the key ``"bubble"``
+        """
         data = {
-            "bubble": self.bubble.export(),
-            # Input parameters
-            "beta_tilde": self.beta_tilde,
-            "r_star": self.r_star,
-            "a_star_a_r_ratio": self.a_star_a_r_ratio,
-            "low_k": self.low_k,
-            "N_sh": self.N_sh,
-            "nuc_type": self.nuc_type,
-            "nT": self.nT,
-            "nx_P_tilde_gw": self.nx_P_tilde_gw,
-            "n_z_lookup": self.n_z_lookup,
-            "z_st_thresh": self.z_st_thresh,
-            # Computed arrays
-            "a2": self.a2,
-            "a2_lookup": self.a2_lookup,
-            "spec_den_gw_ssm": self.spec_den_gw_ssm,
-            "spec_den_gw_expanded": self.spec_den_gw_expanded,
-            "spec_den_gw_int": self.spec_den_gw_int,
-            "spec_den_gw_low": self.spec_den_gw_low,
-            "spec_den_v": self.spec_den_v,
-            "spec_den_v_lookup": self.spec_den_v_lookup,
-            "T_tilde": self.T_tilde,
-            "y": self.y,
-            "z_lookup": self.z_lookup,
-            # Computed values
-            "cs2": self.cs2,
-            "delta_tau_v": self.delta_tau_v,
-            "dilution_of_e": self.dilution_of_e,
-            "H_star_eta_sh": self.H_star_eta_sh,
-            "H_star_eta_star": self.H_star_eta_star,
-            "H_star_eta_v": self.H_star_eta_v,
-            "H_star_eta_v_old": self.H_star_eta_v_old,
-            "k_peak_eta_star": self.k_peak_eta_star,
-            "J": self.J,
-            "label_latex": self.label_latex,
-            "label_unicode": self.label_unicode,
-            "source_lifetime_factor": self.source_lifetime_factor,
-            "suppression_factor": self.suppression_factor,
-            "tau_end": self.tau_end,
-            "tau_star": self.tau_star,
-            "ubarf2": self.ubarf2
+            "bubble": self.bubble.export(fields=bubble_fields, model_fields=model_fields),
+            **self.extract(fields)
         }
         if path is not None:
             export_json(data, path)

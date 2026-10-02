@@ -3,6 +3,7 @@
 from .assertions import *
 from .decorators import *
 from .docstrings import *
+from .fields import *
 from .formatting import *
 from .json import *
 from .math import *

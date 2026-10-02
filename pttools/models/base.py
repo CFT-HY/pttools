@@ -1,20 +1,23 @@
 """Base class for equation of state models and thermodynamics models."""
 
 import abc
-import datetime
 import logging
+import os
 import typing as tp
 import uuid
 
 import numpy as np
 
+from pttools.models.export import BASE_MODEL_FIELDS
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
+from pttools.utils.fields import Extractable, Fields, FieldSpec, Preset
+from pttools.utils.json import export_json
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class BaseModel(abc.ABC):
+class BaseModel(Extractable, abc.ABC):
     """The base for both Model and ThermoModel.
 
     All temperatures must be in units of GeV for the frequency conversion in Spectrum to work.
@@ -26,6 +29,8 @@ class BaseModel(abc.ABC):
     # Zero temperature would break many of the equations
     DEFAULT_T_MIN: float = 1e-3
     DEFAULT_T_MAX: float = np.inf
+    #: The exportable fields of the model. User-created model classes should extend this.
+    FIELDS: tp.ClassVar[Fields] = BASE_MODEL_FIELDS
 
     #: Whether the temperature is in proper physics units.
     #: This is None for models that determine it at run time.
@@ -95,22 +100,20 @@ class BaseModel(abc.ABC):
 
     # Concrete methods
 
-    def export(self) -> dict[str, tp.Any]:
-        """Export the model parameters to a dictionary. User-created model classes should extend this."""
-        return {
-            # Basic info
-            "name": self.name,
-            "label_latex": self.label_latex,
-            "label_unicode": self.label_unicode,
-            "datetime": datetime.datetime.now(),
-            # Numerical values
-            "T_min": self.T_min,
-            "T_max": self.T_max,
-            # Booleans
-            "restrict_to_valid": self.restrict_to_valid,
-            "silence_temp": self.silence_temp,
-            "temperature_is_physical": self.temperature_is_physical
-        }
+    def export(
+            self,
+            path: str | os.PathLike[str] | None = None,
+            fields: FieldSpec = Preset.FULL) -> dict[str, tp.Any]:
+        """Export the model parameters to a dictionary, and optionally save them as a JSON file.
+
+        :param path: path of the JSON file
+        :param fields: the fields to export, see :py:data:`pttools.utils.fields.FieldSpec`
+        :return: the exported data
+        """
+        data = self.extract(fields)
+        if path is not None:
+            export_json(data, path)
+        return data
 
     def gen_cs2(self) -> th.CS2Fun:
         r"""This function generates a Numba-jitted $c_s^2$ function for the model."""

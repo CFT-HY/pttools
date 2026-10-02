@@ -24,10 +24,12 @@ from pttools.bubble.solution_type import (
 )
 from pttools.bubble.thermo import nu_gdh2024, omega_barotropic
 from pttools.models.base import BaseModel
+from pttools.models.export import MODEL_FIELDS
 from pttools.speedup.differential import DifferentialPointer
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 from pttools.utils.docstrings import copy_docstrings
+from pttools.utils.fields import Fields
 from pttools.utils.system import FORKING
 from pttools.utils.validation import check_value_in_range
 
@@ -51,6 +53,7 @@ class Model(BaseModel, abc.ABC):
     DEFAULT_V_S: float = 0.
     #: Default $V_b$
     DEFAULT_V_B: float = 0.
+    FIELDS: tp.ClassVar[Fields] = MODEL_FIELDS
 
     def __init__(
             self,
@@ -930,24 +933,6 @@ class Model(BaseModel, abc.ABC):
         :param temp: temperature $T$
         """
         return tp.cast(T, self.w(temp, Phase.BROKEN) / self.w(temp, Phase.SYMMETRIC))
-
-    def export(self) -> dict[str, tp.Any]:
-        return {
-            **super().export(),
-            "T_ref": self.T_ref,
-            "T_crit": self.T_crit,
-            "V_s": self.V_s,
-            "V_b": self.V_b,
-            "w_crit": self.w_crit,
-            "w_min": self.w_min,
-            "w_max": self.w_max,
-            "w_min_s": self.w_min_s,
-            "w_min_b": self.w_min_b,
-            "w_max_s": self.w_max_s,
-            "w_max_b": self.w_max_b,
-            "alpha_n_min": self.alpha_n_min,
-            "w_at_alpha_n_min": self.w_at_alpha_n_min,
-        }
 
     def ge[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         r"""Effective degrees of freedom for energy density, $g_{\text{eff},e}(w,\phi)$."""

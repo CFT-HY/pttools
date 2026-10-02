@@ -13,6 +13,7 @@ from numpy.typing import NDArray
 from pttools.bubble import Bubble
 from pttools.omgw0 import const, freq
 from pttools.omgw0.const import H2, LISA_OBS_TIME, OMEGA_PHOTON_H2
+from pttools.omgw0.export import SPECTRUM_FIELDS
 from pttools.omgw0.factors import F_gw0_h2
 from pttools.omgw0.noise import omega_ins_h2, omega_noise_h2, signal_to_noise_ratio
 from pttools.ssm.calculators import trapezoid_loglog
@@ -29,7 +30,8 @@ from pttools.ssm.spectrum import SSMSpectrum
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 import pttools.type_hints as th
 from pttools.type_hints import FloatArr1D, FloatOrArr
-from pttools.utils import copy_docstrings, export_json
+from pttools.utils import copy_docstrings
+from pttools.utils.fields import Fields
 
 if tp.TYPE_CHECKING:
     from pttools.analysis.utils import FigAndAxes
@@ -37,6 +39,8 @@ if tp.TYPE_CHECKING:
 
 class Spectrum(SSMSpectrum):
     r"""A spectrum object that includes the conversion to the GW power spectrum today $\Omega_{\text{gw},0}$."""
+
+    FIELDS: tp.ClassVar[Fields] = SPECTRUM_FIELDS
 
     def __init__(
             self,
@@ -180,35 +184,6 @@ class Spectrum(SSMSpectrum):
     # =====
     # Methods
     # =====
-
-    def export(self, path: str | os.PathLike[str] | None = None) -> dict[str, tp.Any]:
-        omgw0_peak = self.omgw0_peak()
-        f = self.f()
-        data = {
-            **super().export(),
-            # Input parameters
-            "g_star": self.g_star,
-            "gs_star": self.gs_star,
-            "T_star": self.T_star,
-            # Computed values
-            "F_gw0": self.F_gw0(),
-            "ge_star": self.ge_star,
-            "e_star": self.e_star,
-            "f_max": f.max(),
-            "f_min": f.min(),
-            "f_star0": self.f_star0,
-            "H_star": self.H_star,
-            "omgw0_peak_f": omgw0_peak[0],
-            "omgw0_peak": omgw0_peak[1],
-            "omgw0_total": self.omgw0_total(),
-            "R_star": self.R_star,
-            "R_star_m": self.R_star_m,
-            "snr": self.snr()[0],
-            "snr_ins": self.snr_ins()[0]
-        }
-        if path is not None:
-            export_json(data, path)
-        return data
 
     def f(self, z: th.FloatArr1D | None = None) -> th.FloatArr1D:
         return freq.f(

@@ -5,9 +5,11 @@ import typing as tp
 import numpy as np
 
 from pttools.models.const_cs import ConstCSModel, cs2_to_mu
+from pttools.models.export import CONST_CS_THERMO_MODEL_FIELDS
 from pttools.models.thermo import ThermoModel
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
+from pttools.utils.fields import Fields
 
 
 class ConstCSThermoModel(ThermoModel):
@@ -16,6 +18,7 @@ class ConstCSThermoModel(ThermoModel):
     DEFAULT_LABEL_LATEX = "Constant $c_s$ thermo-model"
     DEFAULT_LABEL_UNICODE = "Constant cₛ thermo-model"
     DEFAULT_NAME = "const_cs_thermo"
+    FIELDS: tp.ClassVar[Fields] = CONST_CS_THERMO_MODEL_FIELDS
     TEMPERATURE_IS_PHYSICAL = False
 
     GEFF_DATA_LOG_TEMP = np.linspace(-1, 3, 1000)
@@ -73,16 +76,6 @@ class ConstCSThermoModel(ThermoModel):
             45/(2*np.pi**2) * self.mu_b * (self.mu_b - 4) * self.a_b * \
             self.t_ref**(4 - self.mu_b) * temp**(self.mu_b - 5)
         return dgs_b * phase + dgs_s * (1 - phase)
-
-    def export(self) -> dict[str, tp.Any]:
-        return {
-            **super().export(),
-            "t_ref": self.t_ref,
-            "css2": self.css2,
-            "csb2": self.csb2,
-            "mu_s": self.mu_s,
-            "mu_b": self.mu_b
-        }
 
     def ge[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         ge_s = 30/np.pi**2 * (

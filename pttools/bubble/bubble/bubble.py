@@ -2,7 +2,6 @@
 
 import functools
 import logging
-import os
 import typing as tp
 
 import numpy as np
@@ -13,6 +12,7 @@ from pttools.bubble.alpha import alpha_n_max_deflagration_bag
 from pttools.bubble.bubble.base import BaseBubble, NotYetSolvedError
 from pttools.bubble.const import DEFAULT_N_XI, DEFAULT_T_END, JUNCTION_RTOL, THIN_SHELL_T_POINTS_MIN
 from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR
+from pttools.bubble.export import BUBBLE_FIELDS
 from pttools.bubble.fluid import sound_shell_generic
 from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG
 from pttools.bubble.junction import junction_condition_deviations
@@ -21,8 +21,8 @@ from pttools.bubble.phase import Phase
 from pttools.bubble.props import find_phase
 from pttools.bubble.solution_type import SolutionType, validate_solution_type
 from pttools.utils.docstrings import copy_docstrings
+from pttools.utils.fields import Fields
 from pttools.utils.formatting import as_latex, as_unicode
-from pttools.utils.json import export_json
 from pttools.utils.validation import ensure_float
 
 if tp.TYPE_CHECKING:
@@ -40,6 +40,8 @@ PSI_N_MIN_DETON_LTE: float = 0.75
 
 class Bubble(BaseBubble):
     """A solution of the hydrodynamic equations, aka. a bubble."""
+
+    FIELDS: tp.ClassVar[Fields] = BUBBLE_FIELDS
 
     # Most of the statements are attribute declarations with their documentation.
     def __init__(  # noqa: PLR0912, PLR0915
@@ -227,31 +229,6 @@ class Bubble(BaseBubble):
                 "model=%s, v_w=%s, alpha_n=%s, T_nuc=%s, w_nuc=%s",
                 self.model.label_unicode, v_wall, alpha_n, self.Tn, self.wn
             )
-
-    def export(self, path: str | os.PathLike[str] | None = None) -> dict[str, tp.Any]:
-        """Export the bubble data as JSON."""
-        data = {
-            **super().export(),
-            # Input parameters
-            "alpha_n": self.alpha_n,
-            "sol_type": self.sol_type,
-            "thin_shell_limit": self.thin_shell_t_points_min,
-            # Solution parameters
-            "alpha_plus": self.alpha_plus,
-            "sm_sh": self.sm_sh,
-            "sn": self.sn,
-            "Tn": self.Tn,
-            "v_cj": self.v_cj,
-            "v_sh": self.v_sh,
-            "vm_sh": self.vm_sh,
-            "vm_tilde_sh": self.vm_tilde_sh,
-            "wn": self.wn,
-            # Computed values
-            "mean_adiabatic_index": self.mean_adiabatic_index,
-        }
-        if path is not None:
-            export_json(data, path)
-        return data
 
     def info_str(self, prec: str = ".4f") -> str:
         """Get a string describing the key quantities of the bubble."""

@@ -1,19 +1,21 @@
 """A solution of the hydrodynamic equations."""
 
 import abc
-import datetime
 import functools
 import logging
 import os
 import typing as tp
+import uuid
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.bubble import const
+from pttools.bubble.export import BASE_BUBBLE_FIELDS
 from pttools.bubble.thermo import va_kinetic_energy_density
 from pttools.speedup import NAN_ARR
 import pttools.type_hints as th
+from pttools.utils.fields import Extractable, Fields, FieldSpec, Preset
 from pttools.utils.json import export_json
 from pttools.utils.validation import ensure_floats
 
@@ -24,8 +26,11 @@ if tp.TYPE_CHECKING:
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class BaseBubble(abc.ABC):
+class BaseBubble(Extractable, abc.ABC):
     """A common base class for bubbles and droplets."""
+
+    #: The exportable fields of the bubble
+    FIELDS: tp.ClassVar[Fields] = BASE_BUBBLE_FIELDS
 
     def __init__(
             self,
@@ -42,6 +47,10 @@ class BaseBubble(abc.ABC):
             {"v_wall": v_wall, "w_center": w_center, "w_outside": w_outside, "wm_guess": wm_guess},
             allow_none=True
         )
+
+        #: Unique identifier of the bubble, which is used for deduplication when exporting.
+        #: This is preserved when the bubble is pickled, e.g. when sent to another process.
+        self.id: str = uuid.uuid4().hex
 
         # -----
         # Set parameters
@@ -144,35 +153,22 @@ class BaseBubble(abc.ABC):
         """Add a note to the solution."""
         self.notes.append(note)
 
-    def export(self, path: str | os.PathLike[str] | None = None) -> dict[str, tp.Any]:
-        """Export the bubble data."""
+    def export(
+            self,
+            path: str | os.PathLike[str] | None = None,
+            fields: FieldSpec = Preset.FULL,
+            model_fields: FieldSpec = Preset.FULL) -> dict[str, tp.Any]:
+        """Export the bubble data to a dictionary, and optionally save it as a JSON file.
+
+        :param path: path of the JSON file
+        :param fields: the fields of the bubble to export, see :py:data:`pttools.utils.fields.FieldSpec`
+        :param model_fields: the fields of the model to export
+        :return: the exported data, where the model data is under the key ``"model"``
+        """
         data = {
-            "datetime": datetime.datetime.now(),
-            "solving_duration": self.solving_duration,
-            "notes": self.notes,
-            # Input parameters
-            "model": self.model.export(),
-            "v_wall": self.v_wall,
-            "t_end": self.t_end,
-            "n_xi": self.n_xi,
-            # Solution
-            "v": self.v,
-            "w": self.w,
-            "xi": self.xi,
-            "T": self.T,
-            # Solution parameters
-            "sp": self.sp,
-            "sm": self.sm,
-            "Tp": self.Tp,
-            "Tm": self.Tm,
-            "T_center": self.T_center,
-            "vp": self.vp,
-            "vm": self.vm,
-            "vp_tilde": self.vp_tilde,
-            "vm_tilde": self.vm_tilde,
-            "wp": self.wp,
-            "wm": self.wm,
-            "w_center": self.w_center
+            # extract() is used instead of export(), since user-created model classes may override export().
+            "model": self.model.extract(model_fields),
+            **self.extract(fields)
         }
         if path is not None:
             export_json(data, path)

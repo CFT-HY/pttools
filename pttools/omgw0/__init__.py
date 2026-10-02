@@ -9,6 +9,7 @@ An earlier implementation by Chloe Hopling is available in
 from .approx import *
 from .bag import *
 from .const import *
+from .export import *
 from .factors import *
 from .freq import *
 from .noise import *

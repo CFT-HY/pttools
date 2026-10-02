@@ -1,0 +1,179 @@
+"""Records of the data extracted from models, bubbles and spectra, and the extractor that creates them.
+
+The extraction can be done in worker processes,
+and the resulting records then sent to the main process for writing.
+This is faster than sending the objects themselves,
+since the records contain only the selected fields instead of all the arrays of the objects.
+"""
+
+import dataclasses
+import enum
+import typing as tp
+
+from pttools.bubble.bubble import Bubble
+from pttools.models.base import BaseModel
+from pttools.ssm.spectrum import SSMSpectrum
+from pttools.utils.fields import Extractable, Field, FieldSpec, Preset, extract
+
+__all__ = [
+    "Extractor",
+    "Record",
+    "Table",
+    "class_name",
+    "find_class",
+    "table_base_class",
+    "table_of",
+]
+
+
+class Table(enum.StrEnum):
+    """The tables of an exported file."""
+
+    MODELS = "models"
+    BUBBLES = "bubbles"
+    SPECTRA = "spectra"
+
+
+def class_name(cls: type) -> str:
+    """Fully qualified name of a class, e.g. ``pttools.models.bag.BagModel``."""
+    return f"{cls.__module__}.{cls.__qualname__}"
+
+
+def find_class[T](base: type[T], name: str) -> type[T]:
+    """Find a class by its fully qualified name among the given base class and its subclasses.
+
+    Only the classes that have already been imported can be found.
+    This is safer than importing a module by name, since the names may come from an untrusted file.
+
+    :param base: the base class
+    :param name: fully qualified name of the class, see :py:func:`class_name`
+    :return: the class
+    :raises ValueError: if the class is not found
+    """
+    stack: list[type] = [base]
+    seen: set[type] = set()
+    while stack:
+        cls = stack.pop()
+        if cls in seen:
+            continue
+        seen.add(cls)
+        if class_name(cls) == name:
+            return tp.cast(type[T], cls)
+        stack.extend(cls.__subclasses__())
+    raise ValueError(
+        f"Could not find the class \"{name}\" among the subclasses of {class_name(base)}. "
+        "If it's a custom class, please import it before loading the data."
+    )
+
+
+def table_base_class(table: Table) -> type[Extractable]:
+    """The base class of the objects of the given table."""
+    return {
+        Table.MODELS: BaseModel,
+        Table.BUBBLES: Bubble,
+        Table.SPECTRA: SSMSpectrum,
+    }[table]
+
+
+def table_of(obj: object) -> Table:
+    """The table to which the given object belongs."""
+    if isinstance(obj, SSMSpectrum):
+        return Table.SPECTRA
+    if isinstance(obj, Bubble):
+        return Table.BUBBLES
+    if isinstance(obj, BaseModel):
+        return Table.MODELS
+    raise TypeError(f"Cannot export objects of type {type(obj)}. Supported: models, bubbles and spectra.")
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class Record:
+    """The extracted data of a model, bubble or spectrum.
+
+    :param table: the table of the object
+    :param id: unique identifier of the object, which is used for deduplication
+    :param cls: fully qualified name of the class of the object
+    :param data: the values of the extracted fields
+    :param parent: the record of the model of a bubble, or of the bubble of a spectrum
+    """
+
+    table: Table
+    id: str
+    cls: str
+    data: dict[str, tp.Any]
+    parent: "Record | None" = None
+
+
+def _as_tuple(spec: FieldSpec) -> tuple[Preset | str | Field, ...]:
+    if isinstance(spec, (str, Field)):
+        return (spec,)
+    return tuple(spec)
+
+
+class Extractor:
+    """Extracts the selected fields of models, bubbles and spectra to :py:class:`Record` objects.
+
+    The extractor can be pickled and sent to worker processes,
+    as long as the custom fields of the specifications, if any, can be pickled.
+
+    :param model_fields: the fields of the models, see :py:data:`pttools.utils.fields.FieldSpec`
+    :param bubble_fields: the fields of the bubbles
+    :param spectrum_fields: the fields of the spectra
+    :param importable: whether to include the fields of the :py:attr:`~pttools.utils.fields.Preset.INIT` preset,
+        which are needed for recreating the objects with :py:class:`pttools.export.importer.Importer`
+    """
+
+    def __init__(
+            self,
+            model_fields: FieldSpec = Preset.MINIMAL,
+            bubble_fields: FieldSpec = Preset.MINIMAL,
+            spectrum_fields: FieldSpec = Preset.MINIMAL,
+            importable: bool = True) -> None:
+        self.specs: dict[Table, tuple[Preset | str | Field, ...]] = {
+            Table.MODELS: _as_tuple(model_fields),
+            Table.BUBBLES: _as_tuple(bubble_fields),
+            Table.SPECTRA: _as_tuple(spectrum_fields),
+        }
+        self.importable: bool = importable
+        self._cache: dict[type, tuple[Field, ...]] = {}
+
+    def __getstate__(self) -> dict[str, tp.Any]:
+        state = self.__dict__.copy()
+        state["_cache"] = {}
+        return state
+
+    def fields(self, cls: type[Extractable], table: Table | None = None) -> tuple[Field, ...]:
+        """The selected fields for the given class.
+
+        :param cls: the class of the objects
+        :param table: the table of the objects. If None, it's determined from the class.
+        :return: the selected fields
+        """
+        if cls in self._cache:
+            return self._cache[cls]
+        if table is None:
+            table = next(tbl for tbl in Table if issubclass(cls, table_base_class(tbl)))
+        spec = self.specs[table] + ((Preset.INIT,) if self.importable else ())
+        fields = cls.FIELDS.select(spec)
+        self._cache[cls] = fields
+        return fields
+
+    def extract(self, obj: BaseModel | Bubble | SSMSpectrum) -> Record:
+        """Extract the selected fields of an object and of its parents.
+
+        :param obj: a model, a bubble or a spectrum
+        :return: the record of the object, which contains the records of its bubble and model as parents
+        """
+        table = table_of(obj)
+        parent: Record | None = None
+        if isinstance(obj, SSMSpectrum):
+            parent = self.extract(obj.bubble)
+        elif isinstance(obj, Bubble):
+            parent = self.extract(obj.model)
+        return Record(
+            table=table,
+            id=obj.id,
+            cls=class_name(type(obj)),
+            data=extract(obj, self.fields(type(obj), table)),
+            parent=parent
+        )
