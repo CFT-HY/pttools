@@ -19,6 +19,14 @@ inputs:
   dockerhub-oidc-connection-id:
     description: The ID of the OIDC connection of the Docker Hub organization
     required: true
+  dockerhub-oidc-expire-in-minutes:
+    description: >-
+      The lifetime of the Docker Hub OIDC token in minutes, between 5 and 360.
+      It has to cover the time from the login to the end of the push, including the build.
+      An action cannot read the timeout-minutes of its job, so pass that here explicitly,
+      e.g. with a YAML anchor, as in the deploy-docker job of the main.yml workflow of PTtools.
+    required: false
+    default: "60"
   dockerhub-organization:
     description: The Docker Hub organization, which is used as the username for the login
     required: true
@@ -29,10 +37,25 @@ outputs:
 runs:
   using: composite
   steps:
+    # Expressions do not support arithmetic, so the conversion to seconds is done in the shell.
+    - name: Convert the Docker Hub OIDC token lifetime to seconds
+      id: oidc-expire-in
+      shell: bash
+      env:
+        EXPIRE_IN_MINUTES: ${{ inputs.dockerhub-oidc-expire-in-minutes }}
+      run: echo "seconds=$((EXPIRE_IN_MINUTES * 60))" >> "${GITHUB_OUTPUT}"
+    # After the login, Docker uses the token for all the images of Docker Hub,
+    # including the public images of other organizations, e.g. those of QEMU, BuildKit and the base images.
+    # Therefore the ruleset of the OIDC connection has to grant read access to public repositories,
+    # or otherwise those pulls fail with "unauthorized: access token has insufficient scopes".
+    # The token is used until the end of the push, so its lifetime has to be longer than the build.
+    # With the default lifetime of 5 minutes, the push fails with
+    # "401 Unauthorized: incorrect username or password".
     - name: Log in to Docker Hub
       uses: docker/login-action@v4
       env:
         DOCKERHUB_OIDC_CONNECTIONID: ${{ inputs.dockerhub-oidc-connection-id }}
+        DOCKERHUB_OIDC_EXPIREIN: ${{ steps.oidc-expire-in.outputs.seconds }}
       with:
         username: ${{ inputs.dockerhub-organization }}
     - name: Log in to GitHub Container registry
