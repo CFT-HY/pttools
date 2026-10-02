@@ -6,7 +6,7 @@
 # Ubuntu 26.04 includes Python 3.14.
 # The image should not be based on Alpine, as it uses a different version of the C standard library,
 # and therefore the usual Python wheels don't work on Alpine.
-ARG CUDA_IMAGE="nvidia/cuda:13.3.1-base-ubuntu26.04"
+ARG CUDA_IMAGE="nvidia/cuda:13.4.2-base-ubuntu26.04"
 
 # The uv image is used for copying the uv binary to the other stages.
 # https://docs.astral.sh/uv/guides/integration/docker/

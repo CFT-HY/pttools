@@ -1,6 +1,6 @@
 ---
 name: update-deps
-description: Update the locked dependencies of PTtools with uv, after verifying that the working tree is clean and the latest commit has passed CI, and then fix any issues found by the linters, the unit tests and the documentation build. Use when the user asks to update, upgrade or bump the dependencies or uv.lock.
+description: Update the locked dependencies of PTtools with uv and the CUDA base image of the Dockerfile, after verifying that the working tree is clean and the latest commit has passed CI, and then fix any issues found by the linters, the unit tests, the documentation build and the Docker build. Use when the user asks to update, upgrade or bump the dependencies, uv.lock or the Docker base image.
 ---
 
 # Update the dependencies
@@ -46,25 +46,71 @@ The repository is `CFT-HY/pttools` (verify with `git remote get-url origin`).
 To wait for a run, use `gh run watch <id> --exit-status` in the background (`run_in_background: true`),
 as the CI can take several minutes. Do not poll with short sleeps.
 
-## 3. Update the dependencies
+## 3. Update the Python dependencies
 
 1. Run `uv lock --upgrade` to upgrade the locked versions in `uv.lock` to the latest versions
    allowed by `pyproject.toml`.
 2. Run `uv sync --all-extras` to install them into `.venv`.
 3. Show the user a summary of the version changes, e.g. from `git diff uv.lock`
    (`uv lock --upgrade` also prints them).
-   If nothing changed, tell the user that the dependencies are already up to date and **stop**.
 
 Do not loosen or remove version constraints in `pyproject.toml` to get newer versions.
 If a constraint prevents an upgrade that seems important, mention it to the user instead.
 
-## 4. Run the checks and fix the issues
+## 4. Update the base image of the Docker image
+
+The base image is set in `./Dockerfile` by `ARG CUDA_IMAGE="nvidia/cuda:<CUDA version>-base-ubuntu<Ubuntu version>"`,
+e.g. `nvidia/cuda:13.4.2-base-ubuntu26.04`. Both version numbers can change, but `-base-ubuntu` stays the same.
+
+1. Run `uv run python -m pttools.utils.cuda_image`.
+   It reads the current tag from the Dockerfile, fetches the tags from Docker Hub, and prints
+   the latest CUDA version for each Ubuntu LTS release that has images for both `linux/amd64` and `linux/arm64`
+   (the platforms of `.github/actions/deploy-docker/action.yml`), and then the current and the latest tag,
+   and which version numbers would change. Add `--all` to list every tag instead of only the latest ones.
+   If the script fails, e.g. due to a change in the Docker Hub API, fix it, or fall back to
+   `curl -s "https://hub.docker.com/v2/repositories/nvidia/cuda/tags?page_size=100&name=-base-ubuntu&ordering=last_updated" | jq -r '.results[].name'`.
+2. If the script prints "The base image is up to date", continue to step 5.
+3. If the CUDA major version would change (e.g. 13 -> 14), ask the user before updating (use AskUserQuestion),
+   since a new CUDA major version requires a newer NVIDIA driver on the host and may drop support for older GPUs.
+   If the user declines, use the latest tag with the current CUDA major version
+   and the current Ubuntu version instead (see the `--all` listing).
+4. If the Ubuntu version would change, check the new release before updating
+   (set `IMAGE` to the new image, e.g. `nvidia/cuda:13.4.2-base-ubuntu28.04`):
+   ```bash
+   docker run --rm "$IMAGE" bash -c "apt-get update -qq && apt-cache policy python3 build-essential cmake gfortran patchelf python3-dev libgfortran5 libgomp1"
+   ```
+   - The image uses the system Python of Ubuntu (`UV_PYTHON_DOWNLOADS=never`), so its version (`Candidate:` of `python3`)
+     must match `.python-version` and satisfy `requires-python` of `pyproject.toml`.
+     Otherwise `uv sync` in the Docker build cannot find a suitable interpreter.
+     If it does not match, keep the current Ubuntu version and use the latest CUDA version for it,
+     and tell the user that a newer Ubuntu release is available, but requires a different Python version.
+   - All the apt packages that are installed in the Dockerfile must have a candidate (`Candidate:` is not `(none)`).
+     If e.g. `libgfortran5` has been renamed, update the package name in the Dockerfile.
+   - Update the comment `# Ubuntu XX.YY includes Python 3.Z.` above `ARG CUDA_IMAGE` accordingly.
+   - The CI job `test-arm` in `.github/workflows/main.yml` runs on a specific Ubuntu version (e.g. `ubuntu-26.04-arm`).
+     Do not change it, but mention it to the user.
+5. Replace the tag in the `ARG CUDA_IMAGE` line with the chosen tag,
+   and re-run the script to verify that it reports the new tag as the current one.
+
+If neither `uv.lock` nor `Dockerfile` changed in steps 3 and 4,
+tell the user that the dependencies and the base image are already up to date and **stop**.
+
+## 5. Run the checks and fix the issues
 
 Run these checks one at a time, in this order:
 
 1. `./lint.sh` (~2 min)
 2. `uv run pytest` (~20 min, run in the background)
 3. `uv run make -C docs all` (up to 35 min, run in the background, as it runs the examples).
+4. The Docker build (~5 min, run in the background), as both `uv.lock` and the base image affect it:
+   ```bash
+   docker build --check . && docker build -t pttools:update-deps . && docker run --rm pttools:update-deps python -c "import numbalsoda; from pttools.bubble import Bubble; from pttools.models import BagModel; from pttools.omgw0 import Spectrum; from pttools.ssm import NucType; bubble = Bubble(BagModel(alpha_n_min=0.01), v_wall=0.5, alpha_n=0.2); print(bubble.kappa, Spectrum(bubble, nuc_type=NucType.EXPONENTIAL, r_star=0.1).omgw0()[0])"
+   ```
+   The smoke test should print the same numbers as the same command with `uv run python -c "..."` outside Docker.
+   This builds the image only for the platform of the local machine.
+   The CI also builds it for the other platforms, but only after the tests have passed.
+   If Docker is not available, skip this check and tell the user.
+   Afterwards, remove the test image with `docker image rm pttools:update-deps`.
 
 Redirect the output of the long checks to a log file in the scratchpad directory
 and inspect its tail afterwards, as the output is very long.
@@ -91,15 +137,16 @@ For each check:
     Report it to the user instead.
   - If you cannot fix a failure, **stop** and report the failure and what you tried to the user.
 
-If you made any changes to the files other than `uv.lock` during this step,
-re-run all three checks at the end with the final version of the code, and ensure that all of them pass.
+If you made any changes to the files other than `uv.lock` and `Dockerfile` during this step,
+re-run all the checks at the end with the final version of the code, and ensure that all of them pass.
 If a check fails, fix it and repeat the full set of checks.
 
-## 5. Report
+## 6. Report
 
 Summarize to the user:
 - the upgraded packages and their old and new versions,
+- the old and new base image of the Dockerfile, or why it was not updated to the latest tag,
 - the issues found by each check and how they were fixed,
-- the final results of all three checks.
+- the final results of all the checks.
 
 Do not commit or push the changes unless the user asks you to.
