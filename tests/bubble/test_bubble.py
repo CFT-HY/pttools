@@ -6,6 +6,7 @@ import numpy as np
 
 from pttools.bubble import DEFAULT_N_XI, Bubble
 from pttools.models.bag import BagModel
+from pttools.models.const_cs import ConstCSModel
 from tests.utils import TEST_JSON_PATH
 
 
@@ -19,6 +20,18 @@ class BubbleTest(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.model = BagModel(a_s=1.1, a_b=1, V_s=1)
         cls.bubble = Bubble(cls.model, v_wall=0.5, alpha_n=0.1)
+
+    def test_cs2_Tn_bag(self) -> None:
+        r"""In the bag model $c_s^2 = 1/3$ in both phases."""
+        self.assertAlmostEqual(self.bubble.css2_Tn, 1/3, places=15)
+        self.assertAlmostEqual(self.bubble.csb2_Tn, 1/3, places=15)
+
+    def test_cs2_Tn_const_cs(self) -> None:
+        r"""In the constant sound speed model $c_s^2$ is constant in each phase."""
+        model = ConstCSModel(css2=1/3 - 0.01, csb2=1/3 - 0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
+        bubble = Bubble(model, v_wall=0.5, alpha_n=0.2)
+        self.assertAlmostEqual(bubble.css2_Tn, 1/3 - 0.01, places=12)
+        self.assertAlmostEqual(bubble.csb2_Tn, 1/3 - 0.011, places=12)
 
     def test_export(self) -> None:
         self.bubble.export(TEST_JSON_PATH / "bubble.json")

@@ -3,8 +3,7 @@ r"""Exporter for writing models, bubbles and spectra to an HDF5 file.
 File layout
 -----------
 The file has a group for each :py:class:`~pttools.export.records.Table`.
-Each group has a dataset for each field, so that the values of a field can be read at once,
-e.g. for training machine learning models.
+Each group has a dataset for each field, so that the values of a field can be read at once.
 
 .. code-block:: text
 
@@ -109,6 +108,7 @@ def parent_column(table: Table) -> str | None:
 
 
 def _pttools_version() -> str:
+    """Version of the installed PTtools package, or "unknown" if it's not installed as a package."""
     try:
         return importlib.metadata.version("pttools-gw")
     except importlib.metadata.PackageNotFoundError:
@@ -116,6 +116,14 @@ def _pttools_version() -> str:
 
 
 def _json_default(value: tp.Any) -> tp.Any:
+    """Convert the values that the json module cannot serialize, such as Numpy arrays and dates.
+
+    This is used as the ``default`` argument of :py:func:`json.dumps`.
+
+    :param value: the value to convert
+    :return: a value that can be serialized
+    :raises TypeError: if the value cannot be converted
+    """
     if isinstance(value, np.generic):
         return value.item()
     if isinstance(value, np.ndarray):
@@ -128,6 +136,14 @@ def _json_default(value: tp.Any) -> tp.Any:
 
 
 def _encode_str(value: tp.Any) -> str:
+    """Convert a value to a string for storing it in a string field.
+
+    None is converted to an empty string, enums to their values, dates to ISO 8601,
+    and lists and tuples to one item per line.
+
+    :param value: the value to convert
+    :return: the string
+    """
     if value is None:
         return ""
     if isinstance(value, enum.Enum):
@@ -140,6 +156,14 @@ def _encode_str(value: tp.Any) -> str:
 
 
 def _encode_scalar(field: Field, value: tp.Any) -> tp.Any:
+    """Convert the value of a scalar field to the Python type corresponding to the type of the field.
+
+    For float fields, None is converted to NaN.
+
+    :param field: the field
+    :param value: the value to convert
+    :return: the converted value
+    """
     match field.type:
         case FieldType.FLOAT:
             return np.nan if value is None else float(value)
@@ -153,6 +177,7 @@ def _encode_scalar(field: Field, value: tp.Any) -> tp.Any:
 
 
 def _numpy_dtype(field_type: FieldType) -> tp.Any:
+    """The Numpy dtype used for storing the values of the given field type in HDF5."""
     return {
         FieldType.BOOL: np.bool_,
         FieldType.INT: np.int64,
@@ -169,7 +194,16 @@ _MODEL_COLUMNS: tuple[Field, ...] = (
 
 
 def _set_attrs(dset: h5py.Dataset, kind: str, field_type: str, axis: str, description: str) -> None:
-    # The values are converted to plain strings, since h5py does not support StrEnum attributes.
+    """Set the metadata attributes of a dataset.
+
+    The values are converted to plain strings, since h5py does not support StrEnum attributes.
+
+    :param dset: the dataset
+    :param kind: the kind of the dataset, i.e. the shape of the field or "offsets"
+    :param field_type: the type of the field
+    :param axis: the axis of an array field
+    :param description: the description of the field
+    """
     dset.attrs["kind"] = str(kind)
     dset.attrs["type"] = str(field_type)
     dset.attrs["axis"] = str(axis)
@@ -178,13 +212,26 @@ def _set_attrs(dset: h5py.Dataset, kind: str, field_type: str, axis: str, descri
 
 @dataclasses.dataclass(slots=True)
 class _Row:
+    """A buffered row of a table.
+
+    :param id: unique identifier of the object
+    :param parent: row index of the parent object, or -1 if there is none
+    :param data: the encoded values of the fields
+    """
+
     id: str
     parent: int
     data: dict[str, tp.Any]
 
 
 class _TableWriter:
-    """Writer for a single table, i.e. an HDF5 group."""
+    """Writer for a single table, i.e. an HDF5 group.
+
+    :param group: the HDF5 group of the table
+    :param table: the table
+    :param compression: HDF5 compression filter, e.g. "gzip", "lzf" or None
+    :param compression_opts: compression level for gzip
+    """
 
     def __init__(self, group: h5py.Group, table: Table, compression: str | None, compression_opts: int | None) -> None:
         self.group: h5py.Group = group
@@ -324,6 +371,20 @@ class _TableWriter:
             field_type: str = "",
             axis: str = "",
             description: str = "") -> h5py.Dataset:
+        """Create an empty resizable dataset with chunking, compression and checksums.
+
+        The chunk size is chosen so that each chunk has approximately :py:data:`CHUNK_BYTES` bytes.
+        The compression and the checksums are not applied to variable-length strings.
+
+        :param name: name of the dataset
+        :param dtype: data type of the dataset
+        :param row_shape: shape of a single row, e.g. ``(n_y,)`` for an array field
+        :param kind: the kind of the dataset, see :py:func:`_set_attrs`
+        :param field_type: the type of the field
+        :param axis: the axis of an array field
+        :param description: the description of the field
+        :return: the dataset
+        """
         # Variable-length strings are stored as objects
         is_str = np.dtype(dtype).kind == "O"
         row_bytes = (16 if is_str else np.dtype(dtype).itemsize) * int(np.prod(row_shape))
@@ -348,6 +409,12 @@ class _TableWriter:
         return dset
 
     def _append_rows(self, name: str, values: np.ndarray, **create_kwargs: tp.Any) -> None:
+        """Append rows to a dataset, and create the dataset if it does not exist yet.
+
+        :param name: name of the dataset
+        :param values: the rows to append, with the rows along the first axis
+        :param create_kwargs: arguments for :py:meth:`_create_dataset`
+        """
         dset = self.group[name] if name in self.group else \
             self._create_dataset(name, values.dtype if values.dtype.kind != "O" else h5py.string_dtype(),
                                  values.shape[1:], **create_kwargs)
@@ -396,6 +463,13 @@ class _TableWriter:
         self.buffer = []
 
     def _append_offsets(self, axis: str, lengths: np.ndarray) -> None:
+        """Append the end offsets of new rows to the offsets dataset of a ragged axis.
+
+        The offsets dataset is created with the initial offset 0 if it does not exist yet.
+
+        :param axis: the ragged axis
+        :param lengths: the lengths of the arrays of the new rows
+        """
         name = offsets_name(axis)
         if name not in self.group:
             dset = self._create_dataset(
@@ -409,6 +483,7 @@ class _TableWriter:
         self.ragged_sizes[axis] = int(offsets[-1])
 
     def parent_table(self) -> str:
+        """The table of the parents of the rows of this table."""
         return Table.MODELS if self.table == Table.BUBBLES else Table.BUBBLES
 
     def commit(self) -> None:
@@ -431,14 +506,26 @@ class Exporter:
 
     .. code-block:: python
 
-        def compute(params):
-            bubble = Bubble(model, v_wall=params[0], alpha_n=params[1])
-            return extractor.extract(Spectrum(bubble, r_star=params[2]))
+        from concurrent.futures import ProcessPoolExecutor
+        import functools
 
-        with Exporter("spectra.h5") as exporter:
-            extractor = exporter.extractor
-            with ProcessPoolExecutor() as executor:
-                exporter.add_many(executor.map(compute, params))
+        from pttools.bubble import Bubble
+        from pttools.export import Exporter, Extractor, Record
+        from pttools.models import BagModel, Model
+        from pttools.omgw0 import Spectrum
+
+        def compute(params: tuple[float, float, float], model: Model, extractor: Extractor) -> Record:
+            v_wall, alpha_n, r_star = params
+            bubble = Bubble(model, v_wall=v_wall, alpha_n=alpha_n)
+            return extractor.extract(Spectrum(bubble, r_star=r_star))
+
+        if __name__ == "__main__":
+            model = BagModel(alpha_n_min=0.01)
+            params = [(v_wall, 0.1, r_star) for v_wall in (0.3, 0.5, 0.7) for r_star in (0.1, 0.2)]
+            with Exporter("spectra.h5") as exporter, ProcessPoolExecutor() as executor:
+                # The extractor and the model are pickled and sent to the worker processes.
+                worker = functools.partial(compute, model=model, extractor=exporter.extractor)
+                exporter.add_many(executor.map(worker, params))
 
     :param path: path of the HDF5 file
     :param mode: "x" to create a new file and fail if it exists,
@@ -510,6 +597,10 @@ class Exporter:
             raise
 
     def _init_file(self) -> None:
+        """Write the format attributes to a new file, or validate those of an existing file.
+
+        :raises ExportFormatError: if the file is not a PTtools export file or has an incompatible format version
+        """
         attrs = self._file.attrs
         if "format" not in attrs:
             if len(self._file):
@@ -534,9 +625,11 @@ class Exporter:
     # -----
 
     def __enter__(self) -> tp.Self:
+        """Enter the context manager."""
         return self
 
     def __exit__(self, *args: object) -> None:
+        """Close the exporter when exiting the context manager."""
         self.close()
 
     # -----
@@ -594,6 +687,13 @@ class Exporter:
         return [self.add(obj) for obj in objs]
 
     def _add_object(self, obj: BaseModel | Bubble | SSMSpectrum) -> int:
+        """Add an object and its parents, unless they have already been added.
+
+        The fields are extracted only for the objects that have not been added yet.
+
+        :param obj: the object to add
+        :return: the row index of the object in its table
+        """
         table = table_of(obj)
         writer = self._tables[table]
         if obj.id in writer.index:
@@ -607,6 +707,12 @@ class Exporter:
         return self._append(writer, obj.id, class_name(type(obj)), extract(obj, fields), parent, fields)
 
     def _add_record(self, record: Record) -> int:
+        """Add a record and its parent records, unless they have already been added.
+
+        :param record: the record to add
+        :return: the row index of the object in its table
+        :raises ValueError: if the record has no parent when it should, or if its fields do not match
+        """
         writer = self._tables[record.table]
         if record.id in writer.index:
             return writer.index[record.id]
@@ -635,6 +741,18 @@ class Exporter:
             data: dict[str, tp.Any],
             parent: int,
             fields: tuple[Field, ...]) -> int:
+        """Append the extracted data of an object to the buffer of its table.
+
+        The fields of the models are converted to a JSON string.
+
+        :param writer: the writer of the table
+        :param id_: unique identifier of the object
+        :param cls: fully qualified name of the class of the object
+        :param data: the values of the fields
+        :param parent: row index of the parent object, or -1 if there is none
+        :param fields: the fields
+        :return: the row index of the object in its table
+        """
         if writer.table == Table.MODELS:
             # Different model classes have different fields, and therefore they are stored as JSON.
             data = {"class": cls, "params": json.dumps(data, default=_json_default)}

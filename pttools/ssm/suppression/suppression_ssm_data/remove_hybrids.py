@@ -7,10 +7,10 @@ from pathlib import Path
 import numpy as np
 
 from pttools.bubble import CS0, v_chapman_jouguet_bag
+from pttools.ssm.suppression.suppression_ssm_data import SUPPRESSION_FOLDER
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-SUPPRESSION_FOLDER: Path = Path(__file__).resolve().parent
 DEFAULT_PATH: Path = SUPPRESSION_FOLDER / "suppression_2.txt"
 
 

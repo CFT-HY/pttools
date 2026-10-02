@@ -1,6 +1,6 @@
 """Importer for reading the files written by :py:class:`pttools.export.exporter.Exporter`.
 
-The importer can read the exported fields as Numpy arrays, e.g. for training machine learning models,
+The importer can read the exported fields as Numpy arrays,
 and recreate the :py:class:`~pttools.models.model.Model`, :py:class:`~pttools.bubble.bubble.Bubble`
 and :py:class:`~pttools.ssm.spectrum.SSMSpectrum` objects,
 if the file contains the fields of the :py:attr:`~pttools.utils.fields.Preset.INIT` preset.
@@ -36,7 +36,11 @@ type Rows = int | slice | Sequence[int] | np.ndarray | None
 
 
 def _to_python(value: tp.Any) -> tp.Any:
-    """Convert Numpy scalars and bytes to Python objects."""
+    """Convert Numpy scalars and bytes to Python objects.
+
+    :param value: the value read from HDF5
+    :return: the value as a Python object, e.g. float, int, bool or str
+    """
     if isinstance(value, np.generic):
         value = value.item()
     if isinstance(value, bytes):
@@ -75,7 +79,7 @@ class Importer:
     .. code-block:: python
 
         with Importer("spectra.h5", verify=True) as importer:
-            # Arrays for machine learning
+            # Reading the fields as arrays
             params = importer.read_scalars(Table.SPECTRA)
             omgw0_h2 = importer.read(Table.SPECTRA, "omgw0_h2")
             y = importer.read(Table.SPECTRA, "y")
@@ -116,9 +120,11 @@ class Importer:
     # -----
 
     def __enter__(self) -> tp.Self:
+        """Enter the context manager."""
         return self
 
     def __exit__(self, *args: object) -> None:
+        """Close the file when exiting the context manager."""
         self.close()
 
     def close(self) -> None:
@@ -135,6 +141,7 @@ class Importer:
         return {key: _to_python(value) for key, value in self._file.attrs.items()}
 
     def _group(self, table: Table | str) -> h5py.Group:
+        """The HDF5 group of the given table."""
         return self._file[Table(table).value]
 
     def n_rows(self, table: Table | str) -> int:
@@ -175,6 +182,13 @@ class Importer:
     # -----
 
     def _indices(self, rows: Rows, n: int) -> np.ndarray:
+        """Convert a row selection to an array of non-negative row indices.
+
+        :param rows: the rows, see :py:data:`Rows`
+        :param n: number of rows in the table
+        :return: the row indices
+        :raises IndexError: if a row index is out of range
+        """
         if rows is None:
             return np.arange(n)
         if isinstance(rows, slice):
@@ -187,7 +201,18 @@ class Importer:
 
     @staticmethod
     def _read_dataset(dset: h5py.Dataset, rows: Rows, n: int) -> np.ndarray:
-        """Read the given rows of a dataset efficiently."""
+        """Read the given rows of a dataset efficiently.
+
+        Only the committed rows are read, as the dataset may contain uncommitted rows after an interrupted write.
+        Sequences of row indices are read in increasing order, as required by HDF5,
+        and then reordered to the requested order.
+
+        :param dset: the dataset
+        :param rows: the rows, see :py:data:`Rows`
+        :param n: number of committed rows in the table
+        :return: the values of a single row, or an array of the values of the rows
+        :raises IndexError: if a row index is out of range
+        """
         if isinstance(rows, (int, np.integer)):
             index = int(rows) + n if rows < 0 else int(rows)
             if not 0 <= index < n:
@@ -248,6 +273,14 @@ class Importer:
 
     def _read_ragged(
             self, dset: h5py.Dataset, offsets: h5py.Dataset, rows: Rows, n: int) -> np.ndarray | list[np.ndarray]:
+        """Read the given rows of a ragged field.
+
+        :param dset: the dataset of the concatenated arrays
+        :param offsets: the offsets dataset of the axis of the field
+        :param rows: the rows, see :py:data:`Rows`
+        :param n: number of committed rows in the table
+        :return: the array of a single row, or a list of the arrays of the rows
+        """
         if isinstance(rows, (int, np.integer)):
             index = self._indices(rows, n)[0]
             return dset[offsets[index]:offsets[index + 1]]
@@ -295,7 +328,13 @@ class Importer:
     # -----
 
     def _row_values(self, table: Table, cls: type[Extractable], index: int) -> dict[str, tp.Any]:
-        """Read the stored fields that are needed for recreating an object."""
+        """Read the stored fields that are needed for recreating an object.
+
+        :param table: the table of the object
+        :param cls: the class of the object
+        :param index: row index of the object
+        :return: the values of those :py:attr:`~pttools.utils.fields.Preset.INIT` fields that are in the file
+        """
         available = set(self.fields(table))
         return {
             field.name: self.read(table, field.name, index)

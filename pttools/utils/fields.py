@@ -16,6 +16,12 @@ import operator
 import typing as tp
 
 __all__ = [
+    "PRESETS_ALL",
+    "PRESETS_FULL",
+    "PRESETS_FULL_INIT",
+    "PRESETS_INIT",
+    "PRESETS_MINIMAL",
+    "PRESETS_MINIMAL_FULL",
     "Extractable",
     "Field",
     "FieldShape",
@@ -32,12 +38,27 @@ __all__ = [
 class Preset(enum.StrEnum):
     """Predefined sets of fields."""
 
-    #: The most relevant parameters and arrays, e.g. for training machine learning models.
+    #: The most relevant parameters and arrays
     MINIMAL = "minimal"
-    #: The fields of the JSON export.
+    #: The fields of the JSON export
     FULL = "full"
-    #: The constructor parameters that are needed for recreating the object.
+    #: The constructor parameters that are needed for recreating the object
     INIT = "init"
+
+
+# Combinations of presets for the field definitions
+#: Only :py:attr:`Preset.MINIMAL`
+PRESETS_MINIMAL: frozenset[Preset] = frozenset({Preset.MINIMAL})
+#: Only :py:attr:`Preset.FULL`
+PRESETS_FULL: frozenset[Preset] = frozenset({Preset.FULL})
+#: Only :py:attr:`Preset.INIT`
+PRESETS_INIT: frozenset[Preset] = frozenset({Preset.INIT})
+#: :py:attr:`Preset.MINIMAL` and :py:attr:`Preset.FULL`
+PRESETS_MINIMAL_FULL: frozenset[Preset] = frozenset({Preset.MINIMAL, Preset.FULL})
+#: :py:attr:`Preset.FULL` and :py:attr:`Preset.INIT`
+PRESETS_FULL_INIT: frozenset[Preset] = frozenset({Preset.FULL, Preset.INIT})
+#: All the presets
+PRESETS_ALL: frozenset[Preset] = frozenset(Preset)
 
 
 class FieldType(enum.StrEnum):
@@ -67,11 +88,22 @@ class FieldShape(enum.StrEnum):
 class Field:
     r"""An exportable quantity of an object.
 
+    The value of the field is obtained as follows:
+
+    1. If ``getter`` is a function, it's called with the object as its argument.
+       Otherwise, the attribute given by ``getter`` or ``name`` is fetched from the object,
+       and if ``call`` is True, the attribute is called without arguments.
+    2. If ``index`` is given, the value is taken from the returned tuple at that index.
+
     :param name: name of the field
     :param getter: function that returns the value of the field for a given object,
         or the dotted name of the attribute, e.g. ``"bubble.v_wall"``.
         If None, the attribute with the name of the field is used.
         Note that only names and module-level functions can be pickled.
+    :param call: whether the attribute is a method that should be called without arguments,
+        e.g. ``Spectrum.omgw0_h2()``
+    :param index: index of the value, if the attribute or the getter returns a tuple,
+        e.g. ``0`` for ``Spectrum.snr()[0]``
     :param type: data type of the field
     :param shape: shape of the field
     :param presets: the presets that include this field
@@ -83,6 +115,8 @@ class Field:
 
     name: str
     getter: Callable[[tp.Any], tp.Any] | str | None = None
+    call: bool = False
+    index: int | None = None
     type: FieldType = FieldType.FLOAT
     shape: FieldShape = FieldShape.SCALAR
     presets: Set[Preset] = frozenset()
@@ -91,20 +125,33 @@ class Field:
     decode: Callable[[tp.Any], tp.Any] | None = None
 
     def __post_init__(self) -> None:
+        """Convert the presets to a frozenset and validate the field.
+
+        :raises ValueError: if the field definition is invalid
+        """
         # Iterables such as sets and tuples are accepted for convenience.
         object.__setattr__(self, "presets", frozenset(self.presets))
         if self.shape == FieldShape.RAGGED and not self.axis:
             raise ValueError(f"The ragged field \"{self.name}\" must have an axis.")
         if self.shape != FieldShape.SCALAR and self.type not in (FieldType.FLOAT, FieldType.INT):
             raise ValueError(f"The array field \"{self.name}\" must be numerical. Got: {self.type}")
+        if self.call and callable(self.getter):
+            raise ValueError(
+                f"The field \"{self.name}\" has a function as its getter, which is always called. "
+                "Therefore, call=True is valid only for attributes."
+            )
 
     def get(self, obj: tp.Any) -> tp.Any:
         """Get the value of the field for the given object."""
-        if self.getter is None:
-            return getattr(obj, self.name)
-        if isinstance(self.getter, str):
-            return operator.attrgetter(self.getter)(obj)
-        return self.getter(obj)
+        if callable(self.getter):
+            value = self.getter(obj)
+        else:
+            value = operator.attrgetter(self.name if self.getter is None else self.getter)(obj)
+            if self.call:
+                value = value()
+        if self.index is not None:
+            return value[self.index]
+        return value
 
 
 #: Specification of fields: a preset, a field name, a custom field, or an iterable of these.
@@ -129,15 +176,19 @@ class Fields(Mapping[str, Field]):
                 self._fields[item.name] = item
 
     def __getitem__(self, key: str) -> Field:
+        """Get a field by its name."""
         return self._fields[key]
 
     def __iter__(self) -> Iterator[str]:
+        """Iterate over the names of the fields."""
         return iter(self._fields)
 
     def __len__(self) -> int:
+        """Number of fields."""
         return len(self._fields)
 
     def __repr__(self) -> str:
+        """String representation with the names of the fields."""
         return f"Fields({', '.join(self._fields)})"
 
     def preset(self, preset: Preset) -> tuple[Field, ...]:

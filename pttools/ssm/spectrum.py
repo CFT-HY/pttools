@@ -243,6 +243,20 @@ class SSMSpectrum(Extractable):
     # Properties
     # -----
 
+    @property
+    def csb2_Tn(self) -> float:
+        r"""$c_{s,b}^2(T_n)$, speed of sound squared in the broken phase at the nucleation temperature,
+        see :py:attr:`pttools.bubble.bubble.Bubble.csb2_Tn`.
+        """
+        return self.bubble.csb2_Tn
+
+    @property
+    def css2_Tn(self) -> float:
+        r"""$c_{s,s}^2(T_n)$, speed of sound squared in the symmetric phase at the nucleation temperature,
+        see :py:attr:`pttools.bubble.bubble.Bubble.css2_Tn`.
+        """
+        return self.bubble.css2_Tn
+
     @functools.cached_property
     def delta_tau_v(self) -> float:
         r"""$\Delta \tau_\text{v}$, source duration in units of the comoving mean bubble spacing.

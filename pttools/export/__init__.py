@@ -1,4 +1,4 @@
-"""Exporting and importing models, bubbles and spectra as HDF5 files, e.g. for training machine learning models.
+"""Exporting and importing models, bubbles and spectra as HDF5 files.
 
 The exportable fields of each class are defined in
 :py:mod:`pttools.models.export`, :py:mod:`pttools.bubble.export`,

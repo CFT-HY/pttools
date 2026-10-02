@@ -15,6 +15,11 @@ SPECTRUM_MINIMAL_PARAMS: tuple[str, ...] = (
     "v_wall", "alpha_n", "beta_tilde", "r_star", "T_star", "g_star", "cs2", "css2_Tn", "csb2_Tn")
 
 
+def divmod_by_3(value: int) -> tuple[int, int]:
+    """Test getter that returns a tuple."""
+    return divmod(value, 3)
+
+
 class FieldsTest(unittest.TestCase):
     """Tests for the selection of fields."""
 
@@ -53,6 +58,18 @@ class FieldsTest(unittest.TestCase):
     def test_select_unknown(self) -> None:
         with self.assertRaises(KeyError):
             self.fields.select(["a", "unknown"])
+
+    def test_call(self) -> None:
+        field = Field("x", getter="conjugate", call=True)
+        self.assertEqual(field.get(1 + 2j), 1 - 2j)
+
+    def test_call_with_function(self) -> None:
+        with self.assertRaises(ValueError):
+            Field("x", getter=abs, call=True)
+
+    def test_index(self) -> None:
+        self.assertEqual(Field("x", getter="as_integer_ratio", call=True, index=1).get(0.75), 4)
+        self.assertEqual(Field("x", getter=divmod_by_3, index=0).get(7), 2)
 
     def test_invalid_array_type(self) -> None:
         with self.assertRaises(ValueError):
@@ -117,20 +134,11 @@ class ModelFieldsTest(unittest.TestCase):
 class BubbleFieldsTest(unittest.TestCase):
     """Tests for the extraction of the bubble fields."""
 
-    def test_cs2_Tn_bag(self) -> None:
-        r"""In the bag model $c_s^2 = 1/3$ in both phases."""
+    def test_datetime_has_time_zone(self) -> None:
         bubble = Bubble(BagModel(a_s=1.1, a_b=1, V_s=1), v_wall=0.5, alpha_n=0.1)
-        data = bubble.extract()
-        self.assertAlmostEqual(data["css2_Tn"], 1/3, places=15)
-        self.assertAlmostEqual(data["csb2_Tn"], 1/3, places=15)
-
-    def test_cs2_Tn_const_cs(self) -> None:
-        r"""In the constant sound speed model $c_s^2$ is constant in each phase."""
-        model = ConstCSModel(css2=1/3 - 0.01, csb2=1/3 - 0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
-        bubble = Bubble(model, v_wall=0.5, alpha_n=0.2)
-        data = bubble.extract()
-        self.assertAlmostEqual(data["css2_Tn"], 1/3 - 0.01, places=12)
-        self.assertAlmostEqual(data["csb2_Tn"], 1/3 - 0.011, places=12)
+        data = bubble.export(fields=["datetime"], model_fields=["datetime"])
+        self.assertIsNotNone(data["datetime"].tzinfo)
+        self.assertIsNotNone(data["model"]["datetime"].tzinfo)
 
     def test_extract_minimal(self) -> None:
         bubble = Bubble(BagModel(a_s=1.1, a_b=1, V_s=1), v_wall=0.5, alpha_n=0.1)

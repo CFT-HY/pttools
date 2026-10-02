@@ -105,6 +105,7 @@ class Record:
 
 
 def _as_tuple(spec: FieldSpec) -> tuple[Preset | str | Field, ...]:
+    """Convert a field specification to a tuple of its items, so that it can be extended and stored."""
     if isinstance(spec, (str, Field)):
         return (spec,)
     return tuple(spec)
@@ -138,6 +139,7 @@ class Extractor:
         self._cache: dict[type, tuple[Field, ...]] = {}
 
     def __getstate__(self) -> dict[str, tp.Any]:
+        """Get the state for pickling without the cache, which may contain fields that cannot be pickled."""
         state = self.__dict__.copy()
         state["_cache"] = {}
         return state

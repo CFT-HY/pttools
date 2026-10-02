@@ -27,6 +27,12 @@ class SSMSpectrumTest(unittest.TestCase):
     def test_bubble_spacing_enlargement_factor(self) -> None:
         self.assertGreater(self.spectrum.bubble_spacing_enlargement_factor, 1.)
 
+    def test_cs2_Tn(self) -> None:
+        r"""In the constant sound speed model $c_s^2$ is constant in each phase."""
+        self.assertAlmostEqual(self.spectrum.css2_Tn, 1/3 - 0.01, places=12)
+        self.assertAlmostEqual(self.spectrum.csb2_Tn, 1/3 - 0.011, places=12)
+        self.assertEqual(self.spectrum.css2_Tn, self.spectrum.bubble.css2_Tn)
+
     def test_dilution_of_e(self) -> None:
         self.assertGreater(self.spectrum.dilution_of_e, 0)
         self.assertLessEqual(self.spectrum.dilution_of_e, 1)

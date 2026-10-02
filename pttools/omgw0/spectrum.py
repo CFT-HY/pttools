@@ -149,6 +149,24 @@ class Spectrum(SSMSpectrum):
         return np.pi**2 / 30 * self.ge_star * self.T_star ** 4
 
     @functools.cached_property
+    def _f_y(self) -> th.FloatArr1D:
+        r"""Frequencies today $f(y)$ corresponding to the $y$ array of the spectrum.
+
+        This is cached, so that :py:meth:`f`, :py:attr:`f_min` and :py:attr:`f_max` compute the frequencies only once.
+        """
+        return freq.f(z=self.y, r_star=self.r_star, f_star0=self.f_star0)
+
+    @functools.cached_property
+    def f_max(self) -> float:
+        r"""$f_\text{max}$, maximum frequency today corresponding to the $y$ array of the spectrum."""
+        return float(self._f_y.max())
+
+    @functools.cached_property
+    def f_min(self) -> float:
+        r"""$f_\text{min}$, minimum frequency today corresponding to the $y$ array of the spectrum."""
+        return float(self._f_y.min())
+
+    @functools.cached_property
     def f_star0(self) -> float:
         return freq.f_star0(
             T_star=self.T_star,
@@ -186,11 +204,11 @@ class Spectrum(SSMSpectrum):
     # =====
 
     def f(self, z: th.FloatArr1D | None = None) -> th.FloatArr1D:
-        return freq.f(
-            z=self.y if z is None else z,
-            r_star=self.r_star,
-            f_star0=self.f_star0
-        )
+        # The docstring is copied from freq.f.
+        # The frequencies of the y array are cached, and the frequencies of a custom z are not.
+        if z is None:
+            return self._f_y
+        return freq.f(z=z, r_star=self.r_star, f_star0=self.f_star0)
 
     def F_gw0[T: FloatOrArr](
             self,

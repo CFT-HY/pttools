@@ -547,6 +547,22 @@ class Bubble(BaseBubble):
     # =====
 
     @property
+    def csb2_Tn(self) -> float:
+        r"""$c_{s,b}^2(T_n)$, speed of sound squared in the broken phase at the nucleation temperature.
+
+        $$c_{s,b}^2(T_n) = c_s^2(T_n, \phi_b)$$
+        """
+        return float(self.model.cs2_temp(self.Tn, Phase.BROKEN))
+
+    @property
+    def css2_Tn(self) -> float:
+        r"""$c_{s,s}^2(T_n)$, speed of sound squared in the symmetric phase at the nucleation temperature.
+
+        $$c_{s,s}^2(T_n) = c_s^2(T_n, \phi_s)$$
+        """
+        return float(self.model.cs2_temp(self.Tn, Phase.SYMMETRIC))
+
+    @property
     def en(self) -> float:
         r"""Nucleation energy density $e_n = e(T_n, \phi_s)$."""
         return self.model.e(self.wn, Phase.SYMMETRIC)

@@ -2,7 +2,6 @@
 
 import logging
 import os
-from pathlib import Path
 
 import numpy as np
 
@@ -16,12 +15,10 @@ from pttools.bubble import (
 from pttools.ssm.const import DEFAULT_N_PT, NptType
 from pttools.ssm.spectrum import NucType
 from pttools.ssm.spectrum_bag import power_gw_bag
+from pttools.ssm.suppression.suppression_ssm_data import SUPPRESSION_FOLDER
 import pttools.type_hints as th
 
 logger: logging.Logger = logging.getLogger(__name__)
-
-SUPPRESSION_FOLDER: Path = Path(__file__).resolve().parent
-
 
 def calc_sup_ssm(
         path: str | os.PathLike[str],

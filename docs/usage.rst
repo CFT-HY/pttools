@@ -57,8 +57,7 @@ These include:
 Exporting data
 --------------
 The models, bubbles and spectra can be exported as JSON with their ``export()`` methods,
-and in large numbers as HDF5 files with :class:`pttools.export.exporter.Exporter`,
-e.g. for training machine learning models.
+and in large numbers as HDF5 files with :class:`pttools.export.exporter.Exporter`.
 A single HDF5 file can contain hundreds of thousands of spectra,
 and the bubbles and models that are shared by several spectra are stored only once.
 Each field is stored as a separate dataset, so that it can be read at once as a NumPy array.

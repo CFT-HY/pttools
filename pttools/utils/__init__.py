@@ -10,3 +10,4 @@ from .math import *
 from .misc import *
 from .printing import *
 from .system import *
+from .time import *
