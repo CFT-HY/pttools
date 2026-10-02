@@ -28,11 +28,14 @@
 
 ## CI
 - The CI workflow `.github/workflows/main.yml` runs all the CI jobs on every push.
-  Most jobs start only after the `lint` job has passed, and the Windows and macOS tests after `test-numba`.
+  Most jobs start only after the `lint`, `typecheck` and `build` jobs have passed,
+  and the Windows and macOS tests after `test-numba`.
   The `docs` job lints the documentation with `python -m pttools.docs.lint` before building the full documentation.
+  The Docker image is published for every commit that passes the Linux tests,
+  and the PyPI package and the Software Heritage archive only for version tags, after all the other jobs have passed.
 - The following are also used by other repositories, such as PTPlot, from the `dev` branch:
   - the reusable workflows `build.yml`, `deploy-shf.yml`, `docs.yml`, `graph.yml`, `lint.yml` and `typecheck.yml`,
-  - the composite actions `.github/actions/setup-env` and `.github/actions/deploy-docker`.
+  - the composite actions `.github/actions/deploy-docker`, `.github/actions/setup-env` and `.github/actions/test`.
 
   Keep their inputs backwards compatible.
   The reusable workflows must not use local actions (`./.github/actions/...`),

@@ -33,7 +33,7 @@ tests/test_data/graphs
 pow_*.txt
 pyrefly.txt
 ruff.txt
-test-output.txt
+pytest.txt
 *.dot
 *.eps
 *.h5

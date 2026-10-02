@@ -1,3 +1,5 @@
+# This action is also used by other repositories, such as PTPlot (CFT-HY/pttools/.github/actions/test@dev).
+# Keep its inputs backwards compatible.
 name: Run tests
 description: >-
   Run the unit tests with pytest and upload the results.
@@ -11,6 +13,7 @@ inputs:
       and of the runs with and without Numba.
       This authenticates with OpenID Connect (OIDC) instead of a Codecov token,
       so the job has to have the permission "id-token: write".
+      For pull requests from forks, the upload is done without authentication.
     required: false
     default: "true"
   numba-disable-jit:
@@ -32,13 +35,15 @@ runs:
     - name: Run tests
       shell: bash
       # "shell: bash" runs the script with "set -o pipefail", so a failure of pytest is not hidden by tee.
+      # Both stdout and stderr are saved to pytest.txt.
       # Without pytest-pythonpath the PYTHONPATH may have to be set manually
-      # PYTHONPATH="${PYTHONPATH}${PYTHONPATH:+:}./tests" pytest | tee test-output.txt
-      run: pytest --store-durations | tee test-output.txt
+      # PYTHONPATH="${PYTHONPATH}${PYTHONPATH:+:}./tests" pytest 2>&1 | tee pytest.txt
+      run: pytest --store-durations 2>&1 | tee pytest.txt
       env:
         NUMBA_DISABLE_JIT: ${{ inputs.numba-disable-jit == 'true' && '1' || '0' }}
     - name: Upload results
-      if: inputs.upload-results == 'true'
+      # The results are uploaded also if the tests fail, but not if the workflow is cancelled.
+      if: ${{ !cancelled() && inputs.upload-results == 'true' }}
       uses: actions/upload-artifact@v7
       with:
         name: >-
@@ -50,11 +55,13 @@ runs:
           coverage.json
           htmlcov
           numba-sysinfo.txt
-          test-output.txt
+          pytest.txt
           test-results
         if-no-files-found: error
     - name: Upload results to Codecov
       if: inputs.codecov == 'true' && inputs.upload-results == 'true'
       uses: codecov/codecov-action@v7
       with:
-        use_oidc: true
+        # Pull requests from forks get only a read-only token, which cannot be used for OIDC.
+        # For them, Codecov accepts uploads without a token, as the repository is public.
+        use_oidc: ${{ !github.event.pull_request.head.repo.fork }}

@@ -1,10 +1,9 @@
-# This workflow is also called as a reusable workflow by other repositories,
-# such as PTPlot (CFT-HY/pttools/.github/workflows/deploy-shf.yml@dev).
+# Reusable workflow, which is called by the CI workflow (main.yml) for tags, e.g. when a release is created,
+# and by other repositories, such as PTPlot (CFT-HY/pttools/.github/workflows/deploy-shf.yml@dev).
+# It can also be run manually.
 # The saved repository is that of the caller.
 name: Publish to Software Heritage Foundation
 on:
-  release:
-    types: [published]
   workflow_call:
   workflow_dispatch:
 permissions:

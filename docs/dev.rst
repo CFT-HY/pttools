@@ -36,6 +36,10 @@ Creating a new release
     - Documentation logs
     - Ruff logs
     - Pyrefly logs
+- Create a release on GitHub with a new version tag of the form ``vX.Y.Z``.
+  The push of the tag runs the CI workflow, which publishes the package to PyPI,
+  the Docker image to Docker Hub and the GitHub Container registry,
+  and the repository to the Software Heritage archive, once all the other CI jobs have passed.
 
 
 Updating Python version requirements
