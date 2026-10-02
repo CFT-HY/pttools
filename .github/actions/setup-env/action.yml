@@ -8,17 +8,11 @@ inputs:
   apt-packages:
     description: >-
       Additional apt packages to install, separated by spaces, e.g. "ffmpeg".
+      These can also be URLs of .deb packages, which are downloaded and then installed
+      with the same apt-get command as the other packages, so that their dependencies are installed as well.
       This is supported only on Linux.
     required: false
     default: ""
-  install-patchelf:
-    description: >-
-      Install patchelf on Ubuntu >= 26.04, which PTtools uses for clearing the executable stack flag of NumbaLSODA,
-      as glibc >= 2.41 refuses to load shared libraries that require an executable stack,
-      and execstack is not available on Ubuntu >= 26.04.
-      This has no effect on older Ubuntu versions or on other operating systems.
-    required: false
-    default: "true"
   check-tbb:
     description: >-
       Check that a TBB library compatible with Numba can be loaded with "python -m pttools.speedup.tbb",
@@ -30,6 +24,14 @@ inputs:
     description: Generate the reference data of PTtools, which is used by its unit tests and examples.
     required: false
     default: "false"
+  install-patchelf:
+    description: >-
+      Install patchelf on Ubuntu >= 26.04, which PTtools uses for clearing the executable stack flag of NumbaLSODA,
+      as glibc >= 2.41 refuses to load shared libraries that require an executable stack,
+      and execstack is not available on Ubuntu >= 26.04.
+      This has no effect on older Ubuntu versions or on other operating systems.
+    required: false
+    default: "true"
   print-numba-sysinfo:
     description: Print the output of "numba --sysinfo" and save it to numba-sysinfo.txt.
     required: false
@@ -57,6 +59,9 @@ runs:
       shell: bash
       # The Ubuntu version is read from /etc/os-release, which has e.g. ID=ubuntu and VERSION_ID="26.04".
       # The versions are compared with dpkg, which is available on all Ubuntu versions.
+      # The packages given as URLs are downloaded to the temporary directory of the runner,
+      # using the last part of the URL as the file name.
+      # apt-get installs a local .deb file if it's given as a path, i.e. if it contains a slash.
       run: |
         if [ "${INSTALL_PATCHELF}" = "true" ] && [ -f /etc/os-release ]; then
           OS_ID="$(. /etc/os-release && echo "${ID}")"
@@ -69,10 +74,21 @@ runs:
           echo "No apt packages to install."
           exit 0
         fi
-        sudo apt-get update
-        # APT_PACKAGES is intentionally unquoted to split it into separate arguments.
+        packages=()
+        # APT_PACKAGES is intentionally unquoted to split it into separate words.
         # shellcheck disable=SC2086
-        sudo apt-get install -y ${APT_PACKAGES}
+        for package in ${APT_PACKAGES}; do
+          if [[ "${package}" == https://* ]]; then
+            file="${RUNNER_TEMP}/${package##*/}"
+            echo "Downloading ${package} to ${file}"
+            curl --fail --location --silent --show-error --output "${file}" "${package}"
+            packages+=("${file}")
+          else
+            packages+=("${package}")
+          fi
+        done
+        sudo apt-get update
+        sudo apt-get install -y "${packages[@]}"
       env:
         APT_PACKAGES: ${{ inputs.apt-packages }}
         INSTALL_PATCHELF: ${{ inputs.install-patchelf }}

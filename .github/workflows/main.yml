@@ -64,7 +64,8 @@ jobs:
     - name: Setup uv and Python environment
       uses: ./.github/actions/setup-env
       with:
-        apt-packages: ffmpeg
+        # Kaleido needs Chrome for exporting Plotly figures, and Chrome is not included in the ARM runner image.
+        apt-packages: ffmpeg https://dl.google.com/linux/direct/google-chrome-stable_current_arm64.deb
         uv-sync-args: --all-extras --no-group docs
         generate-reference-data: true
     - name: Run tests
