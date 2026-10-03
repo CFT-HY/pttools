@@ -56,6 +56,11 @@
 - If a function contains physics equations, add them as LaTeX in its docstring.
 - When using equations from articles, cite the article, including the number of the equation, if possible.
 - Use Sphinx extlinks for references, as configured in `./pttools/docs/links.py`.
+- The attributes that are exportable fields (see `pttools.utils.fields`) are documented
+  by the `description` of the field in the `export.py` module of the package, instead of a `#:` comment.
+  `pttools.docs.fields` gives these descriptions to Sphinx autodoc as if they were `#:` comments.
+  As the descriptions are parsed as reStructuredText before `$...$` is converted to math,
+  write e.g. `$c_s^2(T_{\text{gw}})$` instead of `$c_s^2(T_\text{gw})$`, since `T_` after `(` would be parsed as a link.
 - After changing equations in docstrings, run `uv run python -m pttools.docs.lint`.
   It builds the documentation without running the examples (`make latexpdf-noplot`), prints the Sphinx errors and warnings
   and the LaTeX errors, and saves the Sphinx output to `./logs/sphinx_TIMESTAMP.log`. Its exit code is that of `make`.

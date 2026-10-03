@@ -114,15 +114,12 @@ class Spectrum(SSMSpectrum):
             self.bubble.solve()
 
         bubble_temp_physical = bubble.model.temperature_is_physical
-        #: Temperature $T_*$ at the time of GW production
         self.T_star: float = T_star if T_star is not None \
             else bubble.T_star if bubble_temp_physical \
             else const.DEFAULT_T_STAR
-        #: Degrees of freedom $g_*$ for pressure at the time the GWs were produced
         self.g_star: float = g_star if g_star is not None \
             else bubble.g_star if bubble_temp_physical \
             else const.DEFAULT_G_STAR
-        #: Degrees of freedom $g_{s,*}$ for entropy at the time the GWs were produced
         self.gs_star: float = gs_star if gs_star is not None \
             else bubble.gs_star if bubble_temp_physical \
             else const.DEFAULT_G_STAR

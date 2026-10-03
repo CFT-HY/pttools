@@ -181,7 +181,6 @@ class Bubble(BaseBubble):
         # -----
         # Output values
         # -----
-        #: $\alpha_+$
         self.alpha_plus: float = np.nan
         #: $\alpha_{\bar{\theta}_+}$
         self.alpha_theta_bar_plus: float = np.nan
@@ -200,19 +199,13 @@ class Bubble(BaseBubble):
         $$\tilde{\gamma}_{-,sh} \tilde{v}_{-,sh} s_{-,sh} - \tilde{\gamma}_{+,sh} \tilde{v}_{+,sh} s_{+,sh}$$
         """
 
-        #: $s_n$
         self.sn: float = np.nan
-        #: $s_{-,\text{sh}}$
         self.sm_sh: float = np.nan
         #: $T_{-,\text{sh}}$
         self.Tm_sh: float = np.nan
-        #: $v_{\text{sh}}$
         self.v_sh: float = np.nan
-        #: $\tilde{v}_{-,\text{sh}}$
         self.vm_sh: float = np.nan
-        #: $\tilde{v}_{-,\text{sh}}$
         self.vm_tilde_sh: float = np.nan
-        #: $v_{CJ}$
         self.v_cj: float = np.nan
         #: $w_{-,\text{sh}}$
         self.wm_sh: float = np.nan

@@ -57,7 +57,7 @@ SPECTRUM_FIELDS: Fields = Fields(
     Field("f_min", presets=PRESETS_FULL, description=r"$f_\text{min}$, minimum frequency today"),
     Field(
         "f_star0", presets=PRESETS_FULL,
-        description="$f_{*,0}$, frequency today corresponding to the Hubble rate"),
+        description=r"$f_{\ast,0}$, frequency today corresponding to the Hubble rate"),
     Field("H_star", presets=PRESETS_FULL, description="$H_*$, Hubble rate at GW production"),
     Field(
         "omgw0_peak_f", getter="omgw0_peak", call=True, index=0, presets=PRESETS_FULL,

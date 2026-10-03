@@ -103,7 +103,7 @@ SSM_SPECTRUM_FIELDS: Fields = Fields(
     # Input parameters
     Field(
         "beta_tilde", presets=PRESETS_ALL, decode=decode_optional,
-        description=r"$\tilde{\beta} = \beta / H_*$, nucleation rate parameter (NaN if $r_*$ was given instead)"),
+        description=r"$\tilde{\beta} = \beta / H_*$, nucleation rate parameter, if it was given instead of $r_*$"),
     Field("r_star", presets=PRESETS_ALL, description="$r_*$, Hubble-scaled mean bubble spacing"),
     Field(
         "a_star_a_r_ratio", presets=PRESETS_FULL_INIT,
@@ -116,7 +116,7 @@ SSM_SPECTRUM_FIELDS: Fields = Fields(
     Field("nT", type=FieldType.INT, presets=PRESETS_FULL_INIT, description="number of points in the $t$ array"),
     Field(
         "nx_P_tilde_gw", presets=PRESETS_FULL_INIT, decode=decode_optional_int,
-        description=r"number of points in the $\tilde{P}_\text{gw}$ integration (NaN for the default)"),
+        description=r"number of points in the $\tilde{P}_\text{gw}$ integration, if not the default"),
     Field(
         "n_z_lookup", type=FieldType.INT, presets=PRESETS_FULL_INIT,
         description="number of points in the lookup arrays"),
@@ -140,7 +140,7 @@ SSM_SPECTRUM_FIELDS: Fields = Fields(
     _array("spec_den_gw_int", r"$\tilde{P}_\text{gw,int}$", PRESETS_FULL),
     _array("spec_den_gw_low", r"$\tilde{P}_\text{gw,low}$", PRESETS_FULL, getter=_spec_den_gw_low),
     _array("spec_den_v", r"$\tilde{P}_v(z)$", PRESETS_FULL),
-    _ragged("spec_den_v_lookup", r"$\tilde{P}_v(z_\text{lookup})$", axis="z_lookup"),
+    _ragged("spec_den_v_lookup", r"$\tilde{P}_v({z}_\text{lookup})$", axis="z_lookup"),
     _ragged("T_tilde", r"$\tilde{T}$", axis="T_tilde"),
     Field(
         "y", shape=FieldShape.GRID, axis=Y_AXIS, presets=PRESETS_ALL,
@@ -150,7 +150,7 @@ SSM_SPECTRUM_FIELDS: Fields = Fields(
     _array("pow_v", r"$\mathcal{P}_v(y)$, velocity power spectrum"),
     _array("spec_den_gw", r"$\tilde{P}_\text{gw}(y)$, spectral density of the GW power"),
     # Computed values
-    Field("cs2", presets=PRESETS_MINIMAL_FULL, description=r"$c_s^2(T_\text{gw})$, speed of sound squared"),
+    Field("cs2", presets=PRESETS_MINIMAL_FULL, description=r"$c_s^2(T_{\text{gw}})$, speed of sound squared"),
     Field(
         "css2_Tn", presets=PRESETS_MINIMAL,
         description="$c_{s,s}^2(T_n)$, speed of sound squared in the symmetric phase at the nucleation temperature"),

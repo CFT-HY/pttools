@@ -57,29 +57,20 @@ class BaseBubble(Extractable, abc.ABC):
         # -----
         #: Equation of state
         self.model: Model = model
-        #: Wall speed $v_\text{wall}$
         self.v_wall: float = v_wall
-        #: Fluid shell integration cut-off $t_\text{end}$
         self.t_end: float = t_end
-        #: Number of $\xi$ points, $n_\xi$
         self.n_xi: int = n_xi
-        #: $w_\text{center}$
         self.w_center: float = np.nan if w_center is None else w_center
         #: $w_\text{outside}$ (far away)
         self.w_outside: float = np.nan if w_outside is None else w_outside
-        #: $w_{-,\text{guess}}$
         self.wm_guess: float | None = wm_guess
 
         # -----
         # Output arrays
         # -----
-        #: Fluid velocity profile $v(\xi)$
         self.v: th.FloatArr1D = NAN_ARR
-        #: Enthalpy profile $w(\xi)$
         self.w: th.FloatArr1D = NAN_ARR
-        #: Self-similar droplet radius coordinates $\xi$
         self.xi: th.FloatArr1D = NAN_ARR
-        #: Phase profile $\phi(\xi)$
         self.phase: th.FloatArr1D = NAN_ARR
 
         # -----
@@ -105,31 +96,19 @@ class BaseBubble(Extractable, abc.ABC):
         $$\tilde{\gamma}_- \tilde{v}_- {s}_- - \tilde{\gamma}_+ \tilde{v}_+ {s}_+ $$
         """
 
-        #: $s_+$
         self.sp: float = np.nan
-        #: $s_-$
         self.sm: float = np.nan
-        #: $T_+$
         self.Tp: float = np.nan
-        #: $T_-$
         self.Tm: float = np.nan
-        #: $T_\text{center}$
         self.T_center: float = np.nan
-        #: $v_+$
         self.vp: float = np.nan
-        #: $\tilde{v}_+$
         self.vp_tilde: float = np.nan
-        #: $v_-$
         self.vm: float = np.nan
-        #: $\tilde{v}_-$
         self.vm_tilde: float = np.nan
-        #: $w_+$
         self.wp: float = np.nan
-        #: $w_-$
         self.wm: float = np.nan
 
         # Flags
-        #: Whether the solution has errors
         self.failed: bool = False
         #: Whether the solver provided a solution (not necessarily a valid one)
         self.solved: bool = False

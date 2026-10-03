@@ -13,6 +13,7 @@ if tp.TYPE_CHECKING:
     from sphinx.application import Sphinx
 
 from pttools.docs.backreferences import patch_sphinx_gallery
+from pttools.docs.fields import add_field_docs, note_field_dependencies
 from pttools.docs.minigallery import add_minigalleries, remove_duplicate_minigalleries
 from pttools.docs.paths import SPHINX_LOG_ENV_VAR, default_log_dir
 from pttools.logging import setup_logging
@@ -100,6 +101,9 @@ def setup_sphinx(app: "Sphinx") -> None:
     To use this function, set `setup = setup_sphinx` in your `docs/conf.py`.
     """
     app.connect("autodoc-process-docstring", add_minigalleries)
+    # The descriptions of the exportable fields are used as the documentation of the corresponding attributes.
+    app.connect("builder-inited", add_field_docs)
+    app.connect("autodoc-process-docstring", note_field_dependencies)
     app.connect("object-description-transform", remove_duplicate_minigalleries)
 
     # Sphinx-Gallery registers the visitors of its image nodes only for the HTML and LaTeX builders,
