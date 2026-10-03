@@ -1,40 +1,50 @@
 #!/usr/bin/env -S python3 -P
 
-"""Print the current and the latest versions of the CUDA base image of the ``Dockerfile`` of PTtools.
+"""Print the current and the latest versions of the CUDA base image of a ``Dockerfile``.
 
 The image tags are of the form ``nvidia/cuda:<CUDA version>-base-ubuntu<Ubuntu version>``,
 e.g. ``nvidia/cuda:13.4.2-base-ubuntu26.04``, and both of the version numbers can change.
-The tags are fetched from Docker Hub.
+The current tag is read from the ``Dockerfile``, e.g. from ``ARG CUDA_IMAGE="nvidia/cuda:..."``
+or ``FROM nvidia/cuda:...``, and the available tags are fetched from Docker Hub.
 Only the tags for Ubuntu LTS releases that are available for all the platforms of the Docker build are considered.
-This requires the Git repository of PTtools, as the ``Dockerfile`` is not included in the package.
 
-Usage: ``uv run python -m pttools.utils.cuda_image [--all]`` or ``./pttools/utils/cuda_image.py [--all]``
+Usage: ``uv run python -m pttools.utils.cuda_image [--all] [--dockerfile Dockerfile]``
+or ``./pttools/utils/cuda_image.py [--all] [--dockerfile Dockerfile]``
 
 With ``--all``, all the matching tags are listed instead of only the latest CUDA version for each Ubuntu version.
+
+This can be used also in other projects in which PTtools is installed with uv, such as PTPlot,
+by running ``uv run python -m pttools.utils.cuda_image`` in the project directory.
+The ``Dockerfile`` is found with :py:func:`find_dockerfile` similarly to the documentation directory
+in :py:mod:`pttools.docs.lint`: it is looked for alongside the virtual environment (e.g. ``venv`` or ``.venv``)
+in which Python is running, then in the current working directory,
+and finally in the Git repository of PTtools, if PTtools is run from a source checkout.
 """
 
 import argparse
 import json
+import os
 import pathlib
 import re
 import sys
 import urllib.request
 
-# This file is run also as a script, and therefore it cannot use relative imports such as PTTOOLS_DIR.
+# This file is run also as a script with the system Python, in which PTtools may not be installed,
+# and therefore it does not import anything from PTtools, such as PTTOOLS_DIR or pttools.docs.paths.
 # The -P in the shebang prevents adding the directory of this file to sys.path,
 # as otherwise e.g. pttools/utils/json.py would shadow the json module of the standard library.
-#: The root directory of the Git repository of PTtools
+#: The root directory of the Git repository of PTtools, if PTtools is run from a source checkout
 REPO_DIR: pathlib.Path = pathlib.Path(__file__).resolve().parents[2]
-#: The Dockerfile of PTtools
-DOCKERFILE: pathlib.Path = REPO_DIR / "Dockerfile"
+#: Name of the Dockerfile
+DOCKERFILE_NAME: str = "Dockerfile"
 #: The name of the base image on Docker Hub
 IMAGE: str = "nvidia/cuda"
 #: The part of the tag between the CUDA version and the Ubuntu version
 TAG_SUFFIX: str = "-base-ubuntu"
 #: Regular expression for the tags with the groups for the CUDA and Ubuntu version numbers
 TAG_RE: re.Pattern[str] = re.compile(r"^(\d+)\.(\d+)\.(\d+)-base-ubuntu(\d+)\.(\d+)$")
-#: Regular expression for the line of the Dockerfile that defines the base image
-ARG_RE: re.Pattern[str] = re.compile(r'^ARG CUDA_IMAGE="nvidia/cuda:([^"]+)"$', re.MULTILINE)
+#: Regular expression for the references to the image in the Dockerfile, with the tag as the group
+IMAGE_REF_RE: re.Pattern[str] = re.compile(r"\bnvidia/cuda:([\w.-]+)")
 #: The platforms (OS, architecture) for which the Docker image is built.
 #: These should be the same as the platforms in ``.github/actions/deploy-docker/action.yml``.
 PLATFORMS: set[tuple[str, str]] = {("linux", "amd64"), ("linux", "arm64")}
@@ -68,13 +78,22 @@ def is_lts(ubuntu: Version) -> bool:
     return ubuntu[1] == LTS_MONTH and ubuntu[0] % 2 == 0
 
 
-def fmt(version: Version) -> str:
-    """Format a version as a string.
+def fmt_cuda(version: Version) -> str:
+    """Format a CUDA version as a string.
 
-    :param version: version number, e.g. (13, 4, 2)
+    :param version: CUDA version, e.g. (13, 4, 2)
     :return: the version as a string, e.g. ``13.4.2``
     """
     return ".".join(str(num) for num in version)
+
+
+def fmt_ubuntu(version: Version) -> str:
+    """Format an Ubuntu version as a string.
+
+    :param version: Ubuntu version, e.g. (26, 4)
+    :return: the version as a string, e.g. ``26.04``
+    """
+    return f"{version[0]}.{version[1]:02d}"
 
 
 def ubuntu_first(key: Key) -> Key:
@@ -86,19 +105,69 @@ def ubuntu_first(key: Key) -> Key:
     return key[1], key[0]
 
 
-def read_current() -> tuple[str, Key]:
+def env_dir() -> pathlib.Path | None:
+    """Path of the Python virtual environment in which Python is running.
+
+    This is the same as :py:func:`pttools.docs.paths.env_dir`, which cannot be imported here.
+
+    :return: path of the environment, or None if not running in a virtual environment
+    """
+    if sys.prefix != sys.base_prefix:
+        return pathlib.Path(sys.prefix).absolute()
+    return None
+
+
+def find_dockerfile(cwd: str | os.PathLike[str] | None = None) -> pathlib.Path | None:
+    """Find the ``Dockerfile`` of the project.
+
+    The following locations are checked in order, and the first existing file is returned:
+
+    1. The ``Dockerfile`` alongside the virtual environment (e.g. ``venv`` or ``.venv``)
+       in which Python is running (see :py:func:`env_dir`).
+       This is the case when PTtools is installed as a package in the environment of another project,
+       such as PTPlot, and when PTtools itself is run with ``uv run``.
+    2. The ``Dockerfile`` in the current working directory.
+    3. The ``Dockerfile`` of the PTtools repository, if PTtools is run from a source checkout.
+
+    :param cwd: the directory to use as the current working directory, or None for the actual one
+    :return: path of the ``Dockerfile``, or None if not found
+    """
+    cwd_path = pathlib.Path.cwd() if cwd is None else pathlib.Path(cwd).absolute()
+    candidates: list[pathlib.Path] = []
+    if (env := env_dir()) is not None:
+        candidates.append(env.parent / DOCKERFILE_NAME)
+    candidates.append(cwd_path / DOCKERFILE_NAME)
+    candidates.append(REPO_DIR / DOCKERFILE_NAME)
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate.resolve()
+    return None
+
+
+def read_current(dockerfile: str | os.PathLike[str]) -> tuple[str, Key]:
     """Read the current image tag from the ``Dockerfile``.
 
+    The comment lines are ignored. All the references to the image must have the same tag.
+
+    :param dockerfile: path of the ``Dockerfile``
     :return: the tag and its (CUDA version, Ubuntu version)
-    :raises ValueError: if the tag is not found or is not of the expected form
+    :raises ValueError: if the tag is not found, there are several different tags,
+        or the tag is not of the expected form
     """
-    match = ARG_RE.search(DOCKERFILE.read_text())
-    if match is None:
-        raise ValueError(f'ARG CUDA_IMAGE="{IMAGE}:..." not found in {DOCKERFILE}')
-    tag = match.group(1)
+    lines = pathlib.Path(dockerfile).read_text().splitlines()
+    tags = sorted({
+        match.group(1)
+        for line in lines if not line.lstrip().startswith("#")
+        for match in IMAGE_REF_RE.finditer(line)
+    })
+    if not tags:
+        raise ValueError(f"No references to {IMAGE}:<tag> found in {dockerfile}")
+    if len(tags) > 1:
+        raise ValueError(f"Several different tags of {IMAGE} found in {dockerfile}: {', '.join(tags)}")
+    tag = tags[0]
     parsed = parse_tag(tag)
     if parsed is None:
-        raise ValueError(f"Unexpected tag format in the Dockerfile: {tag}")
+        raise ValueError(f"Unexpected tag format in {dockerfile}: {tag}")
     return tag, parsed
 
 
@@ -160,15 +229,32 @@ def main() -> int:
     """
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--all", action="store_true", help="list all the matching tags, not only the latest ones")
+    parser.add_argument(
+        "--dockerfile", type=pathlib.Path,
+        help="path of the Dockerfile (default: found alongside the virtual environment or in the current directory)"
+    )
     args = parser.parse_args()
 
-    current_tag, current = read_current()
+    dockerfile: pathlib.Path | None = args.dockerfile if args.dockerfile is not None else find_dockerfile()
+    if dockerfile is None:
+        print(
+            "The Dockerfile was not found alongside the virtual environment "
+            f"or in the current working directory {pathlib.Path.cwd()}. Specify it with --dockerfile.",
+            file=sys.stderr
+        )
+        return 1
+    try:
+        current_tag, current = read_current(dockerfile)
+    except (OSError, ValueError) as err:
+        print(err, file=sys.stderr)
+        return 1
+    print(f"Dockerfile: {dockerfile}")
     candidates, skipped = find_candidates(min_ubuntu=current[1])
     if not candidates:
         print("No matching tags found on Docker Hub", file=sys.stderr)
         return 1
 
-    platforms_str = ", ".join(f"{os}/{arch}" for os, arch in sorted(PLATFORMS))
+    platforms_str = ", ".join(f"{os_name}/{arch}" for os_name, arch in sorted(PLATFORMS))
     print(f"Tags of {IMAGE} for Ubuntu LTS and {platforms_str}:")
     rows = sorted(candidates, reverse=True) if args.all else latest_per_ubuntu(candidates)
     for key in rows:
@@ -190,9 +276,9 @@ def main() -> int:
         return 0
     changes = []
     if latest[0] != current[0]:
-        changes.append(f"CUDA {fmt(current[0])} -> {fmt(latest[0])}")
+        changes.append(f"CUDA {fmt_cuda(current[0])} -> {fmt_cuda(latest[0])}")
     if latest[1] != current[1]:
-        changes.append(f"Ubuntu {fmt(current[1])} -> {fmt(latest[1])}")
+        changes.append(f"Ubuntu {fmt_ubuntu(current[1])} -> {fmt_ubuntu(latest[1])}")
     print(f"Update available: {', '.join(changes)}")
     if latest[0] < current[0]:
         print("Warning: the latest Ubuntu version has an older CUDA version than the current image.")
