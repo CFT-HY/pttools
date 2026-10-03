@@ -156,7 +156,7 @@ class Extractor:
         if table is None:
             table = next(tbl for tbl in Table if issubclass(cls, table_base_class(tbl)))
         spec = self.specs[table] + ((Preset.INIT,) if self.importable else ())
-        fields = cls.FIELDS.select(spec)
+        fields = cls.FIELDS.select(spec, cls=cls)
         self._cache[cls] = fields
         return fields
 

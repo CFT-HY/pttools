@@ -59,6 +59,8 @@
 - The attributes that are exportable fields (see `pttools.utils.fields`) are documented
   by the `description` of the field in the `export.py` module of the package, instead of a `#:` comment.
   `pttools.docs.fields` gives these descriptions to Sphinx autodoc as if they were `#:` comments.
+  The fields of properties and methods have no `description`,
+  as it's taken from the first line of their docstring, which should therefore be of the form `$symbol$, name.`
   As the descriptions are parsed as reStructuredText before `$...$` is converted to math,
   write e.g. `$c_s^2(T_{\text{gw}})$` instead of `$c_s^2(T_\text{gw})$`, since `T_` after `(` would be parsed as a link.
 - After changing equations in docstrings, run `uv run python -m pttools.docs.lint`.

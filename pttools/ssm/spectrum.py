@@ -233,15 +233,17 @@ class SSMSpectrum(Extractable):
 
     @property
     def csb2_Tn(self) -> float:
-        r"""$c_{s,b}^2(T_n)$, speed of sound squared in the broken phase at the nucleation temperature,
-        see :py:attr:`pttools.bubble.bubble.Bubble.csb2_Tn`.
+        r"""$c_{s,b}^2(T_n)$, speed of sound squared in the broken phase at the nucleation temperature.
+
+        See :py:attr:`pttools.bubble.bubble.Bubble.csb2_Tn`.
         """
         return self.bubble.csb2_Tn
 
     @property
     def css2_Tn(self) -> float:
-        r"""$c_{s,s}^2(T_n)$, speed of sound squared in the symmetric phase at the nucleation temperature,
-        see :py:attr:`pttools.bubble.bubble.Bubble.css2_Tn`.
+        r"""$c_{s,s}^2(T_n)$, speed of sound squared in the symmetric phase at the nucleation temperature.
+
+        See :py:attr:`pttools.bubble.bubble.Bubble.css2_Tn`.
         """
         return self.bubble.css2_Tn
 
@@ -302,7 +304,7 @@ class SSMSpectrum(Extractable):
 
     @functools.cached_property
     def pow_gw(self) -> FloatArr1D:
-        r"""$\mathcal{P}_\text{gw}$."""
+        r"""$\mathcal{P}_\text{gw}$, GW power spectrum at the time of production."""
         return self.spec_den_gw_scaling * pow_spec(z=self.y, spec_den=self.spec_den_gw)
 
     @functools.cached_property
@@ -327,7 +329,7 @@ class SSMSpectrum(Extractable):
 
     @functools.cached_property
     def pow_v(self) -> FloatArr1D:
-        r"""$\mathcal{P}_v."""
+        r"""$\mathcal{P}_v$, velocity power spectrum."""
         return pow_spec(z=self.y, spec_den=self.spec_den_v)
 
     @functools.cached_property
@@ -523,9 +525,11 @@ class SSMSpectrum(Extractable):
 
 copy_docstrings({
     SSMSpectrum.beta: beta,
+    SSMSpectrum.dilution_of_e: dilution_of_e,
     SSMSpectrum.eta_ratio: eta_ratio,
     SSMSpectrum.H_star_eta_sh: H_star_eta_sh,
     SSMSpectrum.H_star_eta_v: H_star_eta_v,
+    SSMSpectrum.H_star_eta_v_old: H_star_eta_v_old,
     SSMSpectrum.J: J,
     SSMSpectrum.source_lifetime_factor: source_lifetime_factor,
     SSMSpectrum.spec_den_gw_scaling: spec_den_gw_scaling,

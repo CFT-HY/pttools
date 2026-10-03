@@ -34,11 +34,12 @@ PROFILE_AXIS: str = "xi"
 
 
 
-def _profile(name: str, description: str, presets: Set[Preset] = frozenset()) -> Field:
+def _profile(name: str, description: str = "", presets: Set[Preset] = frozenset()) -> Field:
     """Create a field for a fluid profile, which is a ragged array along the axis :py:data:`PROFILE_AXIS`.
 
     :param name: name of the field
-    :param description: description of the field
+    :param description: description of the field.
+        If empty, the first line of the docstring of the corresponding property is used.
     :param presets: the presets that include the field
     :return: the field
     """
@@ -61,10 +62,11 @@ BASE_BUBBLE_FIELDS: Fields = Fields(
     _profile("v", r"$v(\xi)$, fluid velocity profile", PRESETS_MINIMAL_FULL),
     _profile("w", r"$w(\xi)$, enthalpy profile", PRESETS_MINIMAL_FULL),
     _profile("xi", r"$\xi$, self-similar radius coordinates", PRESETS_MINIMAL_FULL),
-    _profile("T", r"$T(\xi)$, temperature profile", PRESETS_FULL),
-    _profile("e", r"$e(\xi)$, energy density profile"),
-    _profile("p", r"$p(\xi)$, pressure profile"),
-    _profile("s", r"$s(\xi)$, entropy density profile"),
+    # The descriptions of the properties are taken from their docstrings.
+    _profile("T", presets=PRESETS_FULL),
+    _profile("e"),
+    _profile("p"),
+    _profile("s"),
     _profile("phase", r"$\phi(\xi)$, phase profile"),
     # Solution parameters
     Field("sp", presets=PRESETS_FULL, description="$s_+$, entropy density in front of the wall"),
@@ -118,21 +120,18 @@ BUBBLE_FIELDS: Fields = Fields(
     Field(
         "vm_tilde_sh", presets=PRESETS_FULL,
         description=r"$\tilde{v}_{-,\text{sh}}$, fluid velocity behind the shock in the shock frame"),
-    Field("wn", presets=PRESETS_FULL, description="$w_n$, enthalpy at the nucleation temperature"),
+    # The descriptions of the properties are taken from their docstrings.
+    Field("wn", presets=PRESETS_FULL),
     # Computed values
-    Field("mean_adiabatic_index", presets=PRESETS_FULL, description=r"$\Gamma$, mean adiabatic index"),
-    Field(
-        "css2_Tn", presets=PRESETS_MINIMAL,
-        description="$c_{s,s}^2(T_n)$, speed of sound squared in the symmetric phase at the nucleation temperature"),
-    Field(
-        "csb2_Tn", presets=PRESETS_MINIMAL,
-        description="$c_{s,b}^2(T_n)$, speed of sound squared in the broken phase at the nucleation temperature"),
+    Field("mean_adiabatic_index", presets=PRESETS_FULL),
+    Field("css2_Tn", presets=PRESETS_MINIMAL),
+    Field("csb2_Tn", presets=PRESETS_MINIMAL),
     Field(
         "alpha_theta_bar_n",
         description=r"$\alpha_{\bar{\theta}_n}$, transition strength based on the trace anomaly"),
-    Field("kappa", description=r"$\kappa$, kinetic energy fraction"),
-    Field("omega", description=r"$\omega$, thermal energy fraction"),
-    Field("kinetic_energy_fraction", description="$K$, kinetic energy fraction"),
-    Field("ubarf2", description=r"$\bar{U}_f^2$, enthalpy-weighted mean square fluid velocity"),
+    Field("kappa"),
+    Field("omega"),
+    Field("kinetic_energy_fraction"),
+    Field("ubarf2"),
     Field("Psi_n", description=r"$\Psi_n$, inverse enthalpy ratio at the nucleation temperature"),
 )

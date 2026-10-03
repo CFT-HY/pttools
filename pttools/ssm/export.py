@@ -58,14 +58,15 @@ def decode_suppression(name: str) -> Suppression:
 
 def _array(
         name: str,
-        description: str,
+        description: str = "",
         presets: Set[Preset] = frozenset(),
         axis: str = Y_AXIS,
         getter: tp.Callable[[tp.Any], tp.Any] | None = None) -> Field:
     """Create a field for an array, whose length is the same for all the spectra of a file.
 
     :param name: name of the field
-    :param description: description of the field
+    :param description: description of the field.
+        If empty, the first line of the docstring of the corresponding property is used.
     :param presets: the presets that include the field
     :param axis: name of the axis of the array
     :param getter: function that returns the array for a given spectrum
@@ -146,30 +147,29 @@ SSM_SPECTRUM_FIELDS: Fields = Fields(
         "y", shape=FieldShape.GRID, axis=Y_AXIS, presets=PRESETS_ALL,
         description="$y = kR_*$, wavenumber scaled by the mean bubble spacing"),
     _ragged("z_lookup", r"$z_\text{lookup}$", axis="z_lookup"),
-    _array("pow_gw", r"$\mathcal{P}_\text{gw}(y)$, GW power spectrum", PRESETS_MINIMAL),
-    _array("pow_v", r"$\mathcal{P}_v(y)$, velocity power spectrum"),
+    # The descriptions of the properties are taken from their docstrings.
+    _array("pow_gw", presets=PRESETS_MINIMAL),
+    _array("pow_v"),
     _array("spec_den_gw", r"$\tilde{P}_\text{gw}(y)$, spectral density of the GW power"),
     # Computed values
     Field("cs2", presets=PRESETS_MINIMAL_FULL, description=r"$c_s^2(T_{\text{gw}})$, speed of sound squared"),
-    Field(
-        "css2_Tn", presets=PRESETS_MINIMAL,
-        description="$c_{s,s}^2(T_n)$, speed of sound squared in the symmetric phase at the nucleation temperature"),
-    Field(
-        "csb2_Tn", presets=PRESETS_MINIMAL,
-        description="$c_{s,b}^2(T_n)$, speed of sound squared in the broken phase at the nucleation temperature"),
-    Field("delta_tau_v", presets=PRESETS_FULL, description=r"$\Delta \tau_\text{v}$, source duration"),
-    Field("dilution_of_e", presets=PRESETS_FULL, description="dilution of the energy density"),
-    Field("H_star_eta_sh", presets=PRESETS_FULL, description=r"$H_* \eta_\text{sh}$"),
-    Field("H_star_eta_star", presets=PRESETS_FULL, description=r"$\mathcal{H}_* \eta_*$"),
-    Field("H_star_eta_v", presets=PRESETS_FULL, description=r"$H_* \eta_\text{v}$"),
-    Field("H_star_eta_v_old", presets=PRESETS_FULL, description=r"$H_* \eta_\text{v}$ with the old definition"),
-    Field("k_peak_eta_star", presets=PRESETS_FULL, description=r"$k_\text{peak} \eta_*$"),
-    Field("J", presets=PRESETS_FULL, description="$J$, source lifetime factor"),
+    # The descriptions of the properties are taken from their docstrings.
+    Field("css2_Tn", presets=PRESETS_MINIMAL),
+    Field("csb2_Tn", presets=PRESETS_MINIMAL),
+    Field("delta_tau_v", presets=PRESETS_FULL),
+    Field("dilution_of_e", presets=PRESETS_FULL),
+    Field("H_star_eta_sh", presets=PRESETS_FULL),
+    Field("H_star_eta_star", presets=PRESETS_FULL),
+    Field("H_star_eta_v", presets=PRESETS_FULL),
+    Field("H_star_eta_v_old", presets=PRESETS_FULL),
+    Field("k_peak_eta_star", presets=PRESETS_FULL),
+    Field("J", presets=PRESETS_FULL),
     Field("label_latex", type=FieldType.STR, presets=PRESETS_FULL, description="LaTeX label"),
     Field("label_unicode", type=FieldType.STR, presets=PRESETS_FULL, description="Unicode label"),
-    Field("source_lifetime_factor", presets=PRESETS_FULL, description="source lifetime factor"),
+    Field("source_lifetime_factor", presets=PRESETS_FULL),
+    # The docstring of suppression_factor is copied from a method, and therefore it does not suit as a description.
     Field("suppression_factor", presets=PRESETS_FULL, description="suppression factor"),
-    Field("tau_end", presets=PRESETS_FULL, description=r"$\tau_\text{end}$, dimensionless end time of the source"),
-    Field("tau_star", presets=PRESETS_FULL, description=r"$\tau_*$, dimensionless start time of the source"),
+    Field("tau_end", presets=PRESETS_FULL),
+    Field("tau_star", presets=PRESETS_FULL),
     Field("ubarf2", presets=PRESETS_FULL, description=r"$\bar{U}_f^2$, mean square fluid velocity"),
 )

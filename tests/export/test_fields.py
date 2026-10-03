@@ -1,5 +1,7 @@
 """Tests for the field definitions and the extraction of the fields."""
 
+import functools
+import importlib
 import unittest
 
 import numpy as np
@@ -8,7 +10,7 @@ from pttools.bubble import BUBBLE_FIELDS, Bubble
 from pttools.models import BagModel, ConstCSModel
 from pttools.omgw0 import SPECTRUM_FIELDS
 from pttools.ssm import SSM_SPECTRUM_FIELDS
-from pttools.utils.fields import Field, Fields, FieldShape, FieldType, Preset
+from pttools.utils.fields import Extractable, Field, Fields, FieldShape, FieldType, Preset, describe, docstring_summary
 
 #: The minimal parameters of the spectra
 SPECTRUM_MINIMAL_PARAMS: tuple[str, ...] = (
@@ -18,6 +20,94 @@ SPECTRUM_MINIMAL_PARAMS: tuple[str, ...] = (
 def divmod_by_3(value: int) -> tuple[int, int]:
     """Test getter that returns a tuple."""
     return divmod(value, 3)
+
+
+class Documented:
+    """Test class with documented properties and methods."""
+
+    #: A plain attribute
+    attr: float = 1.
+
+    @property
+    def prop(self) -> float:
+        r"""$p$, a property.
+
+        More details.
+        """
+        return 1.
+
+    @functools.cached_property
+    def cached(self) -> float:
+        """$c$, a cached property."""
+        return 1.
+
+    def method(self) -> float:
+        """$m$, a method."""
+        return 1.
+
+    def pair(self) -> tuple[float, float]:
+        """A method that returns a tuple."""
+        return 1., 2.
+
+    @staticmethod
+    def static() -> float:
+        """$s$, a static method."""
+        return 1.
+
+    def undocumented(self) -> float:
+        return 1.
+
+
+class DescribeTest(unittest.TestCase):
+    """Tests for taking the descriptions of the fields from the docstrings."""
+
+    def test_docstring_summary(self) -> None:
+        self.assertEqual(docstring_summary(Documented, "prop"), "$p$, a property")
+        self.assertEqual(docstring_summary(Documented, "cached"), "$c$, a cached property")
+        self.assertEqual(docstring_summary(Documented, "method"), "$m$, a method")
+        self.assertEqual(docstring_summary(Documented, "static"), "$s$, a static method")
+
+    def test_docstring_summary_none(self) -> None:
+        self.assertEqual(docstring_summary(Documented, "attr"), "")
+        self.assertEqual(docstring_summary(Documented, "undocumented"), "")
+        self.assertEqual(docstring_summary(Documented, "missing"), "")
+
+    def test_describe(self) -> None:
+        self.assertEqual(describe(Field("prop"), Documented).description, "$p$, a property")
+        self.assertEqual(describe(Field("x", getter="method", call=True), Documented).description, "$m$, a method")
+
+    def test_describe_keeps_explicit(self) -> None:
+        field = Field("prop", description="explicit")
+        self.assertIs(describe(field, Documented), field)
+
+    def test_describe_not_applicable(self) -> None:
+        for field in (
+                Field("attr"),
+                Field("pair", call=True, index=0),
+                Field("x", getter="prop.real"),
+                Field("x", getter=abs)):
+            with self.subTest(field=field.name):
+                self.assertIs(describe(field, Documented), field)
+
+    def test_select_with_class(self) -> None:
+        fields = Fields(Field("prop"), Field("attr", description="attribute"))
+        self.assertEqual(fields.select(["prop"])[0].description, "")
+        self.assertEqual(
+            [field.description for field in fields.select(["prop", "attr"], cls=Documented)],
+            ["$p$, a property", "attribute"]
+        )
+
+    def test_all_fields_described(self) -> None:
+        """Every field of the PTtools classes should have a description, either explicit or from a docstring."""
+        for module in ("pttools.bubble", "pttools.models", "pttools.omgw0", "pttools.ssm"):
+            importlib.import_module(module)
+        stack: list[type] = [Extractable]
+        while stack:
+            cls = stack.pop()
+            stack.extend(cls.__subclasses__())
+            for field in cls.FIELDS.select(list(cls.FIELDS), cls=cls):
+                with self.subTest(field=f"{cls.__name__}.{field.name}"):
+                    self.assertTrue(field.description)
 
 
 class FieldsTest(unittest.TestCase):

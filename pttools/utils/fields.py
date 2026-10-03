@@ -11,6 +11,8 @@ which can consist of :py:class:`Preset` values, field names and custom :py:class
 from collections.abc import Callable, Iterable, Iterator, Mapping, Set
 import dataclasses
 import enum
+import functools
+import inspect
 import math
 import operator
 import typing as tp
@@ -31,6 +33,8 @@ __all__ = [
     "Preset",
     "decode_optional",
     "decode_optional_int",
+    "describe",
+    "docstring_summary",
     "extract",
 ]
 
@@ -107,7 +111,9 @@ class Field:
     :param type: data type of the field
     :param shape: shape of the field
     :param presets: the presets that include this field
-    :param description: description of the field, e.g. ``"$v_\text{wall}$, wall speed"``
+    :param description: description of the field, e.g. ``"$v_\text{wall}$, wall speed"``.
+        If empty, the first line of the docstring of the property or method of the field is used,
+        see :py:func:`describe`.
     :param axis: name of the axis of an array field, e.g. ``"y"``
     :param decode: function that converts the stored value back to the constructor argument,
         e.g. NaN to None
@@ -195,7 +201,7 @@ class Fields(Mapping[str, Field]):
         """Get the fields of the given preset."""
         return tuple(field for field in self._fields.values() if preset in field.presets)
 
-    def select(self, spec: FieldSpec) -> tuple[Field, ...]:
+    def select(self, spec: FieldSpec, cls: type | None = None) -> tuple[Field, ...]:
         """Select fields according to the given specification.
 
         The fields are returned in the order of the specification,
@@ -203,6 +209,8 @@ class Fields(Mapping[str, Field]):
         Duplicates are removed.
 
         :param spec: a preset, a field name, a custom field, or an iterable of these
+        :param cls: the class of the objects. If given, the missing descriptions of the fields are taken
+            from the docstrings of the properties and methods of the class, see :py:func:`describe`.
         :return: the selected fields
         :raises KeyError: if a field name is not found
         """
@@ -221,7 +229,49 @@ class Fields(Mapping[str, Field]):
                     f"Unknown field: \"{item}\". "
                     f"Available presets: {', '.join(Preset)}. Available fields: {', '.join(self._fields)}"
                 )
-        return tuple(selected.values())
+        if cls is None:
+            return tuple(selected.values())
+        return tuple(describe(field, cls) for field in selected.values())
+
+
+def docstring_summary(cls: type, name: str) -> str:
+    """The first line of the docstring of a property or a method of a class, without the trailing period.
+
+    :param cls: the class
+    :param name: name of the property or method
+    :return: the first line, or an empty string if the attribute is not a property or a method,
+        or if it has no docstring
+    """
+    attr = inspect.getattr_static(cls, name, None)
+    if isinstance(attr, (staticmethod, classmethod)):
+        attr = attr.__func__
+    if not (isinstance(attr, (property, functools.cached_property)) or inspect.isroutine(attr)):
+        return ""
+    doc = inspect.getdoc(attr)
+    if not doc:
+        return ""
+    return doc.splitlines()[0].strip().removesuffix(".")
+
+
+def describe(field: Field, cls: type) -> Field:
+    """Get the field with its description.
+
+    If the field has no description, and its value is read from a property or a method of the class,
+    the first line of the docstring of the property or method is used as the description.
+    This way the descriptions of such fields don't have to be written twice.
+    The first lines of the docstrings should therefore be of the form ``$symbol$, name.``
+
+    :param field: the field
+    :param cls: the class of the objects
+    :return: the field with the description, or the original field if no description was found
+    """
+    if field.description or callable(field.getter) or field.index is not None:
+        return field
+    name = field.name if field.getter is None else field.getter
+    if "." in name:
+        return field
+    description = docstring_summary(cls, name)
+    return dataclasses.replace(field, description=description) if description else field
 
 
 def extract(obj: tp.Any, fields: Iterable[Field]) -> dict[str, tp.Any]:

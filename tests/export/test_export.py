@@ -97,6 +97,15 @@ class ExportTest(unittest.TestCase):
         with self.assertRaises(ChecksumError):
             Importer(path, verify=True)
 
+    def test_descriptions(self) -> None:
+        with Importer(self.path) as importer:
+            self.assertEqual(
+                importer.field_info(Table.SPECTRA, "omgw0_h2")["description"],
+                r"Gravitational wave power spectrum today $\Omega_{\text{gw},0} h^2$"
+            )
+            self.assertEqual(
+                importer.field_info(Table.SPECTRA, "r_star")["description"], "$r_*$, Hubble-scaled mean bubble spacing")
+
     def test_counts(self) -> None:
         with Importer(self.path) as importer:
             self.assertEqual(importer.n_models, 2)
@@ -245,6 +254,13 @@ class ExportTest(unittest.TestCase):
             np.testing.assert_array_equal(importer.read(Table.BUBBLES, "T", 1), self.bubbles[1].T)
             self.assertIn("w_crit", importer.model_params(0))
             self.assertEqual(importer.read(Table.SPECTRA, "label_unicode", 0), self.spectra[0].label_unicode)
+            # Descriptions from the docstrings
+            self.assertEqual(
+                importer.field_info(Table.SPECTRA, "R_star")["description"],
+                "Mean bubble separation $R_*$, in units of $T^{-2}$"
+            )
+            self.assertEqual(
+                importer.field_info(Table.BUBBLES, "T")["description"], r"Temperature profile $T(\xi)$")
 
     def test_grid_mismatch(self) -> None:
         path = new_path("grid_mismatch")
