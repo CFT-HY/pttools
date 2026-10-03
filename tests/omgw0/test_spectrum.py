@@ -48,6 +48,36 @@ class SpectrumTest(unittest.TestCase):
         self.assertEqual(f_min, f.min())
         self.assertEqual(f_max, f.max())
 
+    def test_f_given(self) -> None:
+        """The frequencies given as an argument should be returned as is, and correspond to the y array."""
+        f = np.logspace(-6, -1, 100)
+        params = ((0.1, None, None, None), (None, 100, None, None), (0.2, None, 1000, 50))
+        for r_star, beta_tilde, T_star, g_star in params:
+            with self.subTest(r_star=r_star, beta_tilde=beta_tilde, T_star=T_star, g_star=g_star):
+                spectrum = Spectrum(
+                    self.spectrum.bubble, r_star=r_star, beta_tilde=beta_tilde, f=f,
+                    T_star=T_star, g_star=g_star, compute=False)
+                self.assertIs(spectrum.f(), f)
+                self.assertEqual(spectrum.f_min, f.min())
+                self.assertEqual(spectrum.f_max, f.max())
+                np.testing.assert_allclose(
+                    freq.f(z=spectrum.y, r_star=spectrum.r_star, f_star0=spectrum.f_star0), f, rtol=1e-14)
+                np.testing.assert_allclose(spectrum.y, spectrum.z_from_f(f), rtol=1e-14)
+
+    def test_f_given_spectrum(self) -> None:
+        """A spectrum given the frequencies of another spectrum should be the same as the other spectrum."""
+        f = self.spectrum.f()
+        spectrum = Spectrum(self.spectrum.bubble, r_star=0.1, f=f)
+        self.assertIs(spectrum.f(), f)
+        np.testing.assert_allclose(spectrum.y, self.spectrum.y, rtol=1e-14)
+        np.testing.assert_allclose(spectrum.omgw0(), self.spectrum.omgw0(), rtol=1e-10)
+
+    def test_f_given_invalid(self) -> None:
+        with self.assertRaises(ValueError):
+            Spectrum(self.spectrum.bubble, r_star=0.1, y=np.array([1., 10.]), f=np.array([1e-3, 1e-2]), compute=False)
+        with self.assertRaises(ValueError):
+            Spectrum(self.spectrum.bubble, r_star=0.1, f=np.array([1e-3, np.nan]), compute=False)
+
     def test_noise(self) -> None:
         self.assertGreater(self.spectrum.snr()[0], 0)
 

@@ -48,7 +48,8 @@ class Spectrum(SSMSpectrum):
             # Input parameters
             beta_tilde: float | None = None,
             r_star: float | None = None,
-            y: th.FloatArr1D = DEFAULT_Y,
+            y: th.FloatArr1D | None = None,
+            f: th.FloatArr1D | None = None,
             a_star_a_r_ratio: float = DEFAULT_A_STAR_A_R_RATIO,
             N_sh: float = DEFAULT_N_SH,
             nuc_type: NucType = DEFAULT_NUC_TYPE,
@@ -75,7 +76,10 @@ class Spectrum(SSMSpectrum):
         :param bubble: the Bubble object
         :param beta_tilde: nucleation rate parameter $\tilde{\beta} \equiv \frac{\beta}{H_*}$
         :param r_star: Hubble-scaled mean bubble spacing $r_*$
-        :param y: $z = k R_*$ array
+        :param y: $z = k R_*$ array.
+            If neither $y$ nor $f$ is given, the default of :py:mod:`pttools.ssm.const` is used.
+        :param f: $f$, frequencies today, which are converted to the $y$ array with :py:meth:`z_from_f`.
+            Cannot be given together with $y$.
         :param N_sh: $N_\text{sh}$, number of shock formation times
         :param nuc_type: nucleation type
         :param T_star: $T_*$, temperature at the time of GW production
@@ -89,11 +93,18 @@ class Spectrum(SSMSpectrum):
         :param low_k: whether to use the :giombi_2024_cs: approximation for low $k$
         :param parallel: whether to use multiple CPU cores
         """
+        if f is not None:
+            if y is not None:
+                raise ValueError("Either y or f can be provided, but not both.")
+            if np.isnan(f).any():
+                raise ValueError("f must not contain nan values.")
+        # The spectrum is computed only after the y array has been obtained,
+        # since converting f to y requires T_star, g_star and r_star.
         super().__init__(
             bubble=bubble,
             beta_tilde=beta_tilde,
             r_star=r_star,
-            y=y,
+            y=DEFAULT_Y if y is None else y,  # When f is set, this is a placeholder that will be replaced below.
             z_st_thresh=z_st_thresh,
             nuc_type=nuc_type,
             suppression=suppression,
@@ -103,8 +114,7 @@ class Spectrum(SSMSpectrum):
             nT=nT,
             nx_P_tilde_gw=nx_P_tilde_gw,
             n_z_lookup=n_z_lookup,
-            compute=compute,
-            parallel=parallel,
+            compute=False,
             low_k=low_k,
             label_latex=label_latex,
             label_unicode=label_unicode
@@ -123,6 +133,14 @@ class Spectrum(SSMSpectrum):
         self.gs_star: float = gs_star if gs_star is not None \
             else bubble.gs_star if bubble_temp_physical \
             else const.DEFAULT_G_STAR
+
+        # The frequencies given as an argument are returned by f() as is, instead of converting them back from y.
+        self._f_given: th.FloatArr1D | None = f
+        if f is not None:
+            self.y: th.FloatArr1D = self.z_from_f(f)
+
+        if compute:
+            self.compute(parallel=parallel)
 
     # =====
     # Properties
@@ -150,7 +168,10 @@ class Spectrum(SSMSpectrum):
         r"""Frequencies today $f(y)$ corresponding to the $y$ array of the spectrum.
 
         This is cached, so that :py:meth:`f`, :py:attr:`f_min` and :py:attr:`f_max` compute the frequencies only once.
+        If the frequencies were given as an argument, they are returned as is.
         """
+        if self._f_given is not None:
+            return self._f_given
         return freq.f(z=self.y, r_star=self.r_star, f_star0=self.f_star0)
 
     @functools.cached_property
