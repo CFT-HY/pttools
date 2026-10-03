@@ -21,8 +21,9 @@ import numpy as np
 from pttools.bubble.bubble import Bubble
 from pttools.export.checksum import verify_checksum
 from pttools.export.exporter import FORMAT_NAME, FORMAT_VERSION, ExportFormatError, offsets_name, parent_column
-from pttools.export.records import Table, find_class
+from pttools.export.records import Table, find_class, table_fields
 from pttools.models.model import Model
+from pttools.omgw0.spectrum import Spectrum
 from pttools.ssm.spectrum import SSMSpectrum
 from pttools.utils.fields import Extractable, FieldShape, Preset
 
@@ -48,15 +49,20 @@ def _to_python(value: tp.Any) -> tp.Any:
     return value
 
 
-def _init_kwargs(cls: type[Extractable], values: Mapping[str, tp.Any], what: str) -> dict[str, tp.Any]:
+def _init_kwargs(
+        cls: type[Extractable],
+        table: Table,
+        values: Mapping[str, tp.Any],
+        what: str) -> dict[str, tp.Any]:
     """Get the constructor arguments for recreating an object from the stored fields.
 
     :param cls: the class of the object
+    :param table: the table of the object, which determines the fields, see :py:func:`table_fields`
     :param values: the stored values of the fields
     :param what: description of the object for the error messages
     :return: the constructor arguments
     """
-    init_fields = cls.FIELDS.preset(Preset.INIT)
+    init_fields = table_fields(cls, table).preset(Preset.INIT)
     missing = [field.name for field in init_fields if field.name not in values]
     if missing:
         raise ValueError(
@@ -80,9 +86,9 @@ class Importer:
 
         with Importer("spectra.h5", verify=True) as importer:
             # Reading the fields as arrays
-            params = importer.read_scalars(Table.SPECTRA)
-            omgw0_h2 = importer.read(Table.SPECTRA, "omgw0_h2")
-            y = importer.read(Table.SPECTRA, "y")
+            params = importer.read_scalars(Table.SPECTRA_Y)
+            omgw0_h2 = importer.read(Table.SPECTRA_Y, "omgw0_h2")
+            y = importer.read(Table.SPECTRA_Y, "y")
             # Recreating the objects
             spectra = importer.load_spectra([0, 1])
 
@@ -141,11 +147,23 @@ class Importer:
         return {key: _to_python(value) for key, value in self._file.attrs.items()}
 
     def _group(self, table: Table | str) -> h5py.Group:
-        """The HDF5 group of the given table."""
-        return self._file[Table(table).value]
+        """The HDF5 group of the given table.
+
+        :raises KeyError: if the file does not have the table, e.g. if it was created before the table was added
+        """
+        name = Table(table).value
+        if name not in self._file:
+            raise KeyError(f"The file has no table \"{name}\".")
+        return self._file[name]
+
+    def _has_table(self, table: Table | str) -> bool:
+        """Whether the file has the given table."""
+        return Table(table).value in self._file
 
     def n_rows(self, table: Table | str) -> int:
         """Number of rows in the given table."""
+        if not self._has_table(table):
+            return 0
         return int(self._group(table).attrs.get("n_rows", 0))
 
     @property
@@ -159,17 +177,26 @@ class Importer:
         return self.n_rows(Table.BUBBLES)
 
     @property
-    def n_spectra(self) -> int:
-        """Number of spectra."""
-        return self.n_rows(Table.SPECTRA)
+    def n_spectra_y(self) -> int:
+        """Number of spectra that share $y$."""
+        return self.n_rows(Table.SPECTRA_Y)
+
+    @property
+    def n_spectra_f(self) -> int:
+        """Number of spectra that share $f$."""
+        return self.n_rows(Table.SPECTRA_F)
 
     def class_name(self, table: Table | str) -> str | None:
         """Fully qualified name of the class of the bubbles or spectra."""
+        if not self._has_table(table):
+            return None
         cls = self._group(table).attrs.get("class")
         return None if cls is None else str(cls)
 
     def fields(self, table: Table | str) -> tuple[str, ...]:
         """Names of the fields of the given table."""
+        if not self._has_table(table):
+            return ()
         group = self._group(table)
         return tuple(str(name) for name in group.attrs["fields"]) if "fields" in group.attrs else ()
 
@@ -338,7 +365,7 @@ class Importer:
         available = set(self.fields(table))
         return {
             field.name: self.read(table, field.name, index)
-            for field in cls.FIELDS.preset(Preset.INIT) if field.name in available
+            for field in table_fields(cls, table).preset(Preset.INIT) if field.name in available
         }
 
     def load_model(self, index: int) -> Model:
@@ -351,7 +378,7 @@ class Importer:
         if index in self._models:
             return self._models[index]
         cls = find_class(Model, self.read(Table.MODELS, "class", index))
-        model = cls(**_init_kwargs(cls, self.model_params(index), f"model {index} ({cls.__name__})"))
+        model = cls(**_init_kwargs(cls, Table.MODELS, self.model_params(index), f"model {index} ({cls.__name__})"))
         self._models[index] = model
         return model
 
@@ -371,28 +398,41 @@ class Importer:
                 raise ValueError("The file contains no bubbles.")
             cls = find_class(Bubble, cls_name)
             model = self.load_model(int(self.read(Table.BUBBLES, "model", index)))
-            init = _init_kwargs(cls, self._row_values(Table.BUBBLES, cls, index), f"bubble {index}")
+            init = _init_kwargs(cls, Table.BUBBLES, self._row_values(Table.BUBBLES, cls, index), f"bubble {index}")
             bubble = cls(model, **init, solve=False, **kwargs)
             self._bubbles[index] = bubble
         if solve and not bubble.solved:
             bubble.solve()
         return bubble
 
-    def load_spectrum(self, index: int, compute: bool = True, **kwargs: tp.Any) -> SSMSpectrum:
+    def load_spectrum(
+            self,
+            index: int,
+            compute: bool = True,
+            table: Table | str = Table.SPECTRA_Y,
+            **kwargs: tp.Any) -> SSMSpectrum:
         """Recreate a spectrum.
 
         :param index: row index of the spectrum
         :param compute: whether to compute the spectrum
+        :param table: :py:attr:`Table.SPECTRA_Y <pttools.export.records.Table.SPECTRA_Y>`
+            for the spectra that share $y$,
+            or :py:attr:`Table.SPECTRA_F <pttools.export.records.Table.SPECTRA_F>` for the spectra that share $f$
         :param kwargs: additional arguments for the constructor of the spectrum, e.g. ``parallel``
         :return: the spectrum
         """
-        index = int(self._indices(index, self.n_spectra)[0])
-        cls_name = self.class_name(Table.SPECTRA)
+        table = Table(table)
+        if table not in (Table.SPECTRA_Y, Table.SPECTRA_F):
+            raise ValueError(f"The table must be a table of spectra. Got: {table}")
+        index = int(self._indices(index, self.n_rows(table))[0])
+        cls_name = self.class_name(table)
         if cls_name is None:
-            raise ValueError("The file contains no spectra.")
-        cls = find_class(SSMSpectrum, cls_name)
-        bubble = self.load_bubble(int(self.read(Table.SPECTRA, "bubble", index)), solve=False)
-        init = _init_kwargs(cls, self._row_values(Table.SPECTRA, cls, index), f"spectrum {index}")
+            raise ValueError(f"The file contains no spectra in the table \"{table}\".")
+        # Only the spectra of the type Spectrum can be given the frequencies.
+        base: type[SSMSpectrum] = Spectrum if table == Table.SPECTRA_F else SSMSpectrum
+        cls = find_class(base, cls_name)
+        bubble = self.load_bubble(int(self.read(table, "bubble", index)), solve=False)
+        init = _init_kwargs(cls, table, self._row_values(table, cls, index), f"spectrum {index} of {table}")
         # r_star is computed from beta_tilde, and giving both would be an error.
         if init.get("beta_tilde") is not None:
             init["r_star"] = None
@@ -406,6 +446,14 @@ class Importer:
         """Recreate multiple models, see :py:meth:`load_model`."""
         return [self.load_model(int(i)) for i in self._indices(rows, self.n_models)]
 
-    def load_spectra(self, rows: Rows = None, compute: bool = True, **kwargs: tp.Any) -> list[SSMSpectrum]:
+    def load_spectra(
+            self,
+            rows: Rows = None,
+            compute: bool = True,
+            table: Table | str = Table.SPECTRA_Y,
+            **kwargs: tp.Any) -> list[SSMSpectrum]:
         """Recreate multiple spectra, see :py:meth:`load_spectrum`."""
-        return [self.load_spectrum(int(i), compute=compute, **kwargs) for i in self._indices(rows, self.n_spectra)]
+        return [
+            self.load_spectrum(int(i), compute=compute, table=table, **kwargs)
+            for i in self._indices(rows, self.n_rows(table))
+        ]

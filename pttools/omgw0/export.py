@@ -3,9 +3,15 @@ r"""Exportable fields of the gravitational wave spectra today.
 These extend the fields of :py:mod:`pttools.ssm.export`.
 In the :py:attr:`~pttools.utils.fields.Preset.MINIMAL` preset,
 $\mathcal{P}_\text{gw}$ is replaced with $\Omega_{\text{gw},0} h^2$.
+
+The spectra can be given either the $y$ array or the frequencies $f$.
+For the former, the fields are :py:data:`SPECTRUM_FIELDS`, where $y$ is shared by the spectra of a file.
+For the latter, the fields are :py:data:`SPECTRUM_F_FIELDS`, where $f$ is shared instead,
+and $y$ is an array of each spectrum, as it depends on the parameters of the spectrum.
 """
 
 from collections.abc import Set
+import dataclasses
 
 from pttools.ssm.export import SSM_SPECTRUM_FIELDS, Y_AXIS
 from pttools.utils.fields import (
@@ -20,8 +26,13 @@ from pttools.utils.fields import (
 )
 
 __all__ = [
+    "F_AXIS",
     "SPECTRUM_FIELDS",
+    "SPECTRUM_F_FIELDS",
 ]
+
+#: Name of the axis of the spectra that have been given the frequencies $f$
+F_AXIS: str = "f"
 
 
 def _array(name: str, description: str = "", presets: Set[Preset] = frozenset(), call: bool = False) -> Field:
@@ -79,3 +90,31 @@ SPECTRUM_FIELDS: Fields = Fields(
     # The docstring of f() describes the conversion, and therefore it does not suit as a description.
     _array("f", "$f(y)$, frequency today", call=True),
 )
+
+
+def _on_f_grid(fields: Fields) -> Fields:
+    """Convert the fields of the spectra that share $y$ to the fields of the spectra that share $f$.
+
+    The arrays along the $y$ axis are moved to the $f$ axis,
+    $f$ becomes the grid, which is also needed for recreating the spectra,
+    and $y$ becomes an array of each spectrum, which is included only in the
+    :py:attr:`~pttools.utils.fields.Preset.FULL` preset, as it can be computed from $f$.
+
+    :param fields: the fields of the spectra that share $y$
+    :return: the fields of the spectra that share $f$
+    """
+    converted = [
+        dataclasses.replace(field, axis=F_AXIS) if field.shape == FieldShape.ARRAY and field.axis == Y_AXIS else field
+        for field in fields.values()
+    ]
+    return Fields(
+        *converted,
+        Field("y", shape=FieldShape.ARRAY, axis=F_AXIS, presets=PRESETS_FULL, description=fields["y"].description),
+        Field(
+            "f", call=True, shape=FieldShape.GRID, axis=F_AXIS, presets=PRESETS_ALL,
+            description="$f$, frequencies today"),
+    )
+
+
+#: Fields of :py:class:`pttools.omgw0.spectrum.Spectrum` for the spectra that have been given the frequencies $f$
+SPECTRUM_F_FIELDS: Fields = _on_f_grid(SPECTRUM_FIELDS)

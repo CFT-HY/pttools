@@ -61,6 +61,9 @@ and in large numbers as HDF5 files with :class:`pttools.export.exporter.Exporter
 A single HDF5 file can contain hundreds of thousands of spectra,
 and the bubbles and models that are shared by several spectra are stored only once.
 Each field is stored as a separate dataset, so that it can be read at once as a NumPy array.
+The spectra that share the same $y$ array are stored in the table ``Table.SPECTRA_Y``,
+and the spectra that have been given the same frequencies $f$ instead of $y$ in the table ``Table.SPECTRA_F``.
+A file can contain both.
 
 .. code-block:: python
 
@@ -70,8 +73,8 @@ Each field is stored as a separate dataset, so that it can be read at once as a 
       exporter.add_many(spectra)
 
   with Importer("spectra.h5", verify=True) as importer:
-      params = importer.read_scalars(Table.SPECTRA)
-      omgw0_h2 = importer.read(Table.SPECTRA, "omgw0_h2")
+      params = importer.read_scalars(Table.SPECTRA_Y)
+      omgw0_h2 = importer.read(Table.SPECTRA_Y, "omgw0_h2")
       profiles_v = importer.read(Table.BUBBLES, "v")
       spectrum = importer.load_spectrum(0)
 

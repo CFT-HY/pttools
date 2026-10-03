@@ -13,7 +13,7 @@ from numpy.typing import NDArray
 from pttools.bubble import Bubble
 from pttools.omgw0 import const, freq
 from pttools.omgw0.const import H2, LISA_OBS_TIME, OMEGA_PHOTON_H2
-from pttools.omgw0.export import SPECTRUM_FIELDS
+from pttools.omgw0.export import SPECTRUM_F_FIELDS, SPECTRUM_FIELDS
 from pttools.omgw0.factors import F_gw0_h2
 from pttools.omgw0.noise import omega_ins_h2, omega_noise_h2, signal_to_noise_ratio
 from pttools.ssm.calculators import trapezoid_loglog
@@ -41,6 +41,9 @@ class Spectrum(SSMSpectrum):
     r"""A spectrum object that includes the conversion to the GW power spectrum today $\Omega_{\text{gw},0}$."""
 
     FIELDS: tp.ClassVar[Fields] = SPECTRUM_FIELDS
+    #: The exportable fields of the spectra that have been given the frequencies $f$ instead of $y$.
+    #: For these, $f$ is shared by the spectra of a file instead of $y$.
+    F_FIELDS: tp.ClassVar[Fields] = SPECTRUM_F_FIELDS
 
     def __init__(
             self,
@@ -162,6 +165,11 @@ class Spectrum(SSMSpectrum):
         This presumes that $V(T_*, \phi_b) = 0$.
         """
         return np.pi**2 / 30 * self.ge_star * self.T_star ** 4
+
+    @property
+    def f_given(self) -> bool:
+        """Whether the frequencies $f$ were given as an argument instead of the $y$ array."""
+        return self._f_given is not None
 
     @functools.cached_property
     def _f_y(self) -> th.FloatArr1D:

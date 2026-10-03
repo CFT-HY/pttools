@@ -7,25 +7,35 @@ Each group has a dataset for each field, so that the values of a field can be re
 
 .. code-block:: text
 
-    /                         attrs: format, format_version, pttools_version, created
-    /models/id                (N_models,)        unique identifiers
-    /models/class             (N_models,)        fully qualified class names
-    /models/params            (N_models,)        the fields of each model as a JSON string
-    /bubbles/id               (N_bubbles,)
-    /bubbles/model            (N_bubbles,)       row index in /models
-    /bubbles/v_wall           (N_bubbles,)       a scalar field
-    /bubbles/v                (sum of lengths,)  a ragged field: the profiles of all bubbles concatenated
-    /bubbles/xi_offsets       (N_bubbles + 1,)   the profile of bubble i is v[xi_offsets[i]:xi_offsets[i+1]]
-    /spectra/id               (N_spectra,)
-    /spectra/bubble           (N_spectra,)       row index in /bubbles
-    /spectra/r_star           (N_spectra,)       a scalar field
-    /spectra/omgw0_h2         (N_spectra, n_y)   an array field
-    /spectra/y                (n_y,)             a grid field, which is the same for all spectra
+    /                           attrs: format, format_version, pttools_version, created
+    /models/id                  (N_models,)            unique identifiers
+    /models/class               (N_models,)            fully qualified class names
+    /models/params              (N_models,)            the fields of each model as a JSON string
+    /bubbles/id                 (N_bubbles,)
+    /bubbles/model              (N_bubbles,)           row index in /models
+    /bubbles/v_wall             (N_bubbles,)           a scalar field
+    /bubbles/v                  (sum of lengths,)      a ragged field: the profiles of all bubbles concatenated
+    /bubbles/xi_offsets         (N_bubbles + 1,)       the profile of bubble i is v[xi_offsets[i]:xi_offsets[i+1]]
+    /spectra_y/id               (N_spectra_y,)         spectra that have been given the y array
+    /spectra_y/bubble           (N_spectra_y,)         row index in /bubbles
+    /spectra_y/r_star           (N_spectra_y,)         a scalar field
+    /spectra_y/omgw0_h2         (N_spectra_y, n_y)     an array field
+    /spectra_y/y                (n_y,)                 the grid of these spectra
+    /spectra_f/id               (N_spectra_f,)         spectra that have been given the frequencies f instead of y
+    /spectra_f/bubble           (N_spectra_f,)         row index in /bubbles
+    /spectra_f/omgw0_h2         (N_spectra_f, n_f)     an array field
+    /spectra_f/f                (n_f,)                 the grid of these spectra
+
+The spectra that have been given the frequencies $f$ (see :py:attr:`pttools.omgw0.spectrum.Spectrum.f_given`)
+are stored in a separate group, where $f$ is the grid instead of $y$.
+Therefore, a file can contain both a set of spectra with the same $y$ and a set of spectra with the same $f$,
+and the arrays of these sets can have different lengths.
+The bubbles and models are shared by both sets.
 
 The model parameters are stored as JSON, since different model classes have different parameters.
 The groups have the attributes ``n_rows`` (the number of committed rows) and ``fields`` (the names of the fields).
-The bubbles and spectra groups also have the attribute ``class``,
-as all the bubbles and all the spectra of a file must be of the same class.
+The groups of the bubbles and spectra also have the attribute ``class``,
+as all the bubbles of a file, and all the spectra of each group, must be of the same class.
 The datasets have the attributes ``kind``, ``type``, ``axis`` and ``description``.
 
 The rows are buffered in memory and written in batches.
@@ -89,7 +99,8 @@ _OFFSETS_KIND: str = "offsets"
 
 _PARENT_COLUMNS: dict[Table, str] = {
     Table.BUBBLES: "model",
-    Table.SPECTRA: "bubble",
+    Table.SPECTRA_Y: "bubble",
+    Table.SPECTRA_F: "bubble",
 }
 
 
@@ -652,9 +663,18 @@ class Exporter:
         return self._tables[Table.BUBBLES].n_total
 
     @property
-    def n_spectra(self) -> int:
-        """Number of spectra, including the buffered ones."""
-        return self._tables[Table.SPECTRA].n_total
+    def n_spectra_y(self) -> int:
+        """Number of spectra that share $y$, including the buffered ones."""
+        return self._tables[Table.SPECTRA_Y].n_total
+
+    @property
+    def n_spectra_f(self) -> int:
+        """Number of spectra that share $f$, including the buffered ones."""
+        return self._tables[Table.SPECTRA_F].n_total
+
+    def n_rows(self, table: Table | str) -> int:
+        """Number of rows in the given table, including the buffered ones."""
+        return self._tables[Table(table)].n_total
 
     # -----
     # Adding data
@@ -795,7 +815,7 @@ class Exporter:
         if self._failed:
             return
         logger.info(
-            "Exported %d spectra, %d bubbles and %d models to %s",
-            self.n_spectra, self.n_bubbles, self.n_models, self.path)
+            "Exported %d spectra with the same y, %d spectra with the same f, %d bubbles and %d models to %s",
+            self.n_spectra_y, self.n_spectra_f, self.n_bubbles, self.n_models, self.path)
         if self.checksum:
             write_checksum(self.path)

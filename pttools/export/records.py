@@ -12,8 +12,9 @@ import typing as tp
 
 from pttools.bubble.bubble import Bubble
 from pttools.models.base import BaseModel
+from pttools.omgw0.spectrum import Spectrum
 from pttools.ssm.spectrum import SSMSpectrum
-from pttools.utils.fields import Extractable, Field, FieldSpec, Preset, extract
+from pttools.utils.fields import Extractable, Field, Fields, FieldSpec, Preset, extract
 
 __all__ = [
     "Extractor",
@@ -22,6 +23,7 @@ __all__ = [
     "class_name",
     "find_class",
     "table_base_class",
+    "table_fields",
     "table_of",
 ]
 
@@ -31,7 +33,11 @@ class Table(enum.StrEnum):
 
     MODELS = "models"
     BUBBLES = "bubbles"
-    SPECTRA = "spectra"
+    #: Spectra that share the $y$ array
+    SPECTRA_Y = "spectra_y"
+    #: Spectra that have been given the frequencies $f$, and therefore share $f$ instead of $y$,
+    #: see :py:attr:`pttools.omgw0.spectrum.Spectrum.f_given`
+    SPECTRA_F = "spectra_f"
 
 
 def class_name(cls: type) -> str:
@@ -71,14 +77,32 @@ def table_base_class(table: Table) -> type[Extractable]:
     return {
         Table.MODELS: BaseModel,
         Table.BUBBLES: Bubble,
-        Table.SPECTRA: SSMSpectrum,
+        Table.SPECTRA_Y: SSMSpectrum,
+        Table.SPECTRA_F: Spectrum,
     }[table]
+
+
+def table_fields(cls: type[Extractable], table: Table) -> Fields:
+    """The fields of the objects of the given class in the given table.
+
+    :param cls: the class of the objects
+    :param table: the table
+    :return: :py:attr:`pttools.omgw0.spectrum.Spectrum.F_FIELDS` for :py:attr:`Table.SPECTRA_F`,
+        and the :py:attr:`~pttools.utils.fields.Extractable.FIELDS` of the class otherwise
+    """
+    if table == Table.SPECTRA_F:
+        if not issubclass(cls, Spectrum):
+            raise TypeError(f"Only spectra of the type {class_name(Spectrum)} can be in the table {table}.")
+        return cls.F_FIELDS
+    return cls.FIELDS
 
 
 def table_of(obj: object) -> Table:
     """The table to which the given object belongs."""
+    if isinstance(obj, Spectrum) and obj.f_given:
+        return Table.SPECTRA_F
     if isinstance(obj, SSMSpectrum):
-        return Table.SPECTRA
+        return Table.SPECTRA_Y
     if isinstance(obj, Bubble):
         return Table.BUBBLES
     if isinstance(obj, BaseModel):
@@ -133,10 +157,12 @@ class Extractor:
         self.specs: dict[Table, tuple[Preset | str | Field, ...]] = {
             Table.MODELS: _as_tuple(model_fields),
             Table.BUBBLES: _as_tuple(bubble_fields),
-            Table.SPECTRA: _as_tuple(spectrum_fields),
+            Table.SPECTRA_Y: _as_tuple(spectrum_fields),
+            # The spectra that share f have the same field specification, but different field definitions.
+            Table.SPECTRA_F: _as_tuple(spectrum_fields),
         }
         self.importable: bool = importable
-        self._cache: dict[type, tuple[Field, ...]] = {}
+        self._cache: dict[tuple[type, Table], tuple[Field, ...]] = {}
 
     def __getstate__(self) -> dict[str, tp.Any]:
         """Get the state for pickling without the cache, which may contain fields that cannot be pickled."""
@@ -151,13 +177,14 @@ class Extractor:
         :param table: the table of the objects. If None, it's determined from the class.
         :return: the selected fields
         """
-        if cls in self._cache:
-            return self._cache[cls]
         if table is None:
             table = next(tbl for tbl in Table if issubclass(cls, table_base_class(tbl)))
+        key = (cls, table)
+        if key in self._cache:
+            return self._cache[key]
         spec = self.specs[table] + ((Preset.INIT,) if self.importable else ())
-        fields = cls.FIELDS.select(spec, cls=cls)
-        self._cache[cls] = fields
+        fields = table_fields(cls, table).select(spec, cls=cls)
+        self._cache[key] = fields
         return fields
 
     def extract(self, obj: BaseModel | Bubble | SSMSpectrum) -> Record:

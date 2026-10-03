@@ -13,8 +13,8 @@ and the field selection utilities in :py:mod:`pttools.utils.fields`.
         exporter.add_many(spectra)
 
     with Importer("spectra.h5", verify=True) as importer:
-        params = importer.read_scalars(Table.SPECTRA)
-        omgw0_h2 = importer.read(Table.SPECTRA, "omgw0_h2")
+        params = importer.read_scalars(Table.SPECTRA_Y)
+        omgw0_h2 = importer.read(Table.SPECTRA_Y, "omgw0_h2")
 """
 
 from pttools.utils.fields import Field, Fields, FieldShape, FieldSpec, FieldType, Preset
