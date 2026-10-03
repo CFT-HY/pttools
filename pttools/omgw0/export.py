@@ -5,7 +5,8 @@ In the :py:attr:`~pttools.utils.fields.Preset.MINIMAL` preset,
 $\mathcal{P}_\text{gw}$ is replaced with $\Omega_{\text{gw},0} h^2$.
 
 The spectra can be given either the $y$ array or the frequencies $f$.
-For the former, the fields are :py:data:`SPECTRUM_FIELDS`, where $y$ is shared by the spectra of a file.
+For the former, the fields are :py:data:`SPECTRUM_Y_FIELDS`, where $y$ is shared by the spectra of a file.
+These are the same as the general fields :py:data:`SPECTRUM_FIELDS`, which are also used e.g. for the JSON export.
 For the latter, the fields are :py:data:`SPECTRUM_F_FIELDS`, where $f$ is shared instead,
 and $y$ is an array of each spectrum, as it depends on the parameters of the spectrum.
 """
@@ -29,6 +30,7 @@ __all__ = [
     "F_AXIS",
     "SPECTRUM_FIELDS",
     "SPECTRUM_F_FIELDS",
+    "SPECTRUM_Y_FIELDS",
 ]
 
 #: Name of the axis of the spectra that have been given the frequencies $f$
@@ -116,5 +118,9 @@ def _on_f_grid(fields: Fields) -> Fields:
     )
 
 
+#: Fields of :py:class:`pttools.omgw0.spectrum.Spectrum` for the spectra that have been given the $y$ array.
+#: This is an alias of :py:data:`SPECTRUM_FIELDS` for consistency with :py:data:`SPECTRUM_F_FIELDS`.
+SPECTRUM_Y_FIELDS: Fields = SPECTRUM_FIELDS
+
 #: Fields of :py:class:`pttools.omgw0.spectrum.Spectrum` for the spectra that have been given the frequencies $f$
-SPECTRUM_F_FIELDS: Fields = _on_f_grid(SPECTRUM_FIELDS)
+SPECTRUM_F_FIELDS: Fields = _on_f_grid(SPECTRUM_Y_FIELDS)

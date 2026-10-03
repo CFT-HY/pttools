@@ -8,7 +8,7 @@ import numpy as np
 
 from pttools.bubble import BUBBLE_FIELDS, Bubble
 from pttools.models import BagModel, ConstCSModel
-from pttools.omgw0 import SPECTRUM_F_FIELDS, SPECTRUM_FIELDS
+from pttools.omgw0 import SPECTRUM_F_FIELDS, SPECTRUM_FIELDS, SPECTRUM_Y_FIELDS, Spectrum
 from pttools.ssm import SSM_SPECTRUM_FIELDS
 from pttools.utils.fields import Extractable, Field, Fields, FieldShape, FieldType, Preset, describe, docstring_summary
 
@@ -188,8 +188,13 @@ class FieldDefinitionsTest(unittest.TestCase):
         self.assertEqual(SPECTRUM_F_FIELDS["y"].presets, {Preset.FULL})
         self.assertEqual(SPECTRUM_F_FIELDS["omgw0_h2"].axis, "f")
         # The original fields are not affected.
-        self.assertEqual(SPECTRUM_FIELDS["y"].shape, FieldShape.GRID)
-        self.assertEqual(SPECTRUM_FIELDS["omgw0_h2"].axis, "y")
+        self.assertEqual(SPECTRUM_Y_FIELDS["y"].shape, FieldShape.GRID)
+        self.assertEqual(SPECTRUM_Y_FIELDS["omgw0_h2"].axis, "y")
+
+    def test_spectrum_y_fields_alias(self) -> None:
+        self.assertIs(SPECTRUM_Y_FIELDS, SPECTRUM_FIELDS)
+        self.assertIs(Spectrum.Y_FIELDS, Spectrum.FIELDS)
+        self.assertIs(Spectrum.F_FIELDS, SPECTRUM_F_FIELDS)
 
     def test_ssm_spectrum_minimal(self) -> None:
         names = [field.name for field in SSM_SPECTRUM_FIELDS.preset(Preset.MINIMAL)]
