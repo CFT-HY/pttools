@@ -566,6 +566,15 @@ class Exporter:
             compression_opts: int | None = 4,
             buffer_size: int = 256,
             checksum: bool = True) -> None:
+        """Open the HDF5 file and initialize its tables.
+
+        Any existing checksum file is removed, as it would become invalid when the file is modified.
+
+        :raises ValueError: if the mode or the buffer size is invalid
+        :raises FileExistsError: if the mode is "x" and the file already exists
+        :raises pttools.export.exporter.ExportFormatError: if the file to be appended to is not a PTtools export file
+            or has an incompatible format version
+        """
         h5py_modes = {"x": "w-", "w": "w", "a": "a"}
         if mode not in h5py_modes:
             raise ValueError(f"Invalid mode: {mode}. Should be one of {list(h5py_modes)}.")

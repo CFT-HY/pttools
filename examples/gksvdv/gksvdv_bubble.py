@@ -18,6 +18,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 def main() -> Figure:
+    r"""Plot the fluid profiles for a single wall speed and the $\alpha_n$ values of :giese_2021:`\ `"""
     model = ConstCSModel(css2=1/4, csb2=1/4, a_s=5, a_b=1, V_s=1)
     theta_bar = False
     colors = ["b", "y", "r", "g", "purple", "grey"]

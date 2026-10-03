@@ -8,7 +8,8 @@ from pttools.type_hints import FloatOrArr
 def dilution_of_e[T: FloatOrArr](
         a_star_a_r_ratio: T = DEFAULT_A_STAR_A_R_RATIO,
         nu: T | float = DEFAULT_NU_GDH2024) -> T:
-    r"""Dilution of the background energy density $\bar{e}$
+    r"""Dilution of the background energy density $\bar{e}$.
+
     $$\left( \frac{a_*}{a_r} \right)^\frac{2 \nu}{1 + \nu} = \left( \frac{a_*}{a} \right)^4 \frac{\bar{e_*}}{\bar{e}}$$
     :giombi_2024_cs:`\ ` eq. 2.18.
 
@@ -28,8 +29,10 @@ def eta_ratio[T: FloatOrArr](
         r_star: T | float = DEFAULT_R_STAR,
         N_sh: T | float = DEFAULT_N_SH,
         nu: T | float = DEFAULT_NU_GDH2024) -> T:
-    r"""Source duration in units of the conformal time at the start of the acoustic phase,
-    $\frac{\Delta \eta_\text{v}}{\eta_*}$, for a barotropic EoS.
+    r"""$\frac{\Delta \eta_\text{v}}{\eta_*}$, source duration in units of the conformal time $\eta_*$.
+
+    Here $\eta_*$ is the conformal time at the start of the acoustic phase.
+    This is for a barotropic EoS.
 
     $$\frac{\Delta \eta_\text{v}}{\eta_*}
     = \frac{N_{\text{sh}} \eta_\text{sh}}{\eta_*}
@@ -87,7 +90,8 @@ def H_eta[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:
 
 
 def l[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:  # noqa: E743
-    r"""$\ell(\nu)
+    r"""$\ell(\nu)$, the exponent $\ell$ of the source lifetime factor $\Upsilon_\ell$.
+
     $$\ell(\nu) = 1 + 2\nu$$
     :giombi_2026:`\ ` p. 25.
     """
@@ -117,7 +121,8 @@ def source_lifetime_factor[T: FloatOrArr](
 
 
 def Upsilon[T: FloatOrArr](r: T, l: T | float) -> T:  # noqa: E741
-    r"""$\Upsilon_\ell$ for arbitrary $\ell$
+    r"""$\Upsilon_\ell$ for arbitrary $\ell$.
+
     $$\Upsilon_\ell (r) = \frac{1}{\ell} \left( 1 - r^\ell \right)$$
     :giombi_2026:`\ ` eq. 3.6.
     """

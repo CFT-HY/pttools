@@ -1,5 +1,6 @@
 """Tests for comparing the results of the Spectrum class to the old bag model interface."""
 
+import typing as tp
 import unittest
 
 import numpy as np
@@ -23,6 +24,7 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
     z: th.FloatArr1D
 
     @classmethod
+    @tp.override
     def setUpClass(cls) -> None:
         cls.bubbles = [
             Bubble(cls.MODEL, v_wall=cls.V_WALLS[i], alpha_n=cls.ALPHA_NS[i])
@@ -37,6 +39,7 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
         cls.z = cls.spectra[0].y
 
     def test_de(self) -> None:
+        """Test that the energy density perturbation agrees with the old bag model interface."""
         # The arrays have different sizes and cannot therefore be combined to a 2D array
         de_bag = [
             de_from_w_bag(
@@ -54,6 +57,7 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
             assert_allclose(de_i, de_bag_i)
 
     def test_a2(self) -> None:
+        """Test that the energy-conserving $|A|^2$ agrees with the old bag model interface."""
         a2_old = np.array([
             ssm.a2_e_conserving_bag(
                 self.z, v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i],
@@ -75,7 +79,9 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
         # assert_allclose(a2_new2, a2_old)
 
     def test_spec_den_v(self) -> None:
-        """This test has lambda_correction=True,
+        """Test that the velocity spectral density agrees with the old bag model interface.
+
+        This test has lambda_correction=True,
         as disabling it would require a somewhat looser tolerance for some of the points.
         """
         old = np.array([
@@ -106,7 +112,9 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
         )
 
     def test_gw(self) -> None:
-        """This test has lambda_correction=True,
+        """Test that the GW power spectrum agrees with the old bag model interface.
+
+        This test has lambda_correction=True,
         as disabling it would require a somewhat looser tolerance for some of the points.
         This may be either due to numerical differences, or lambda_correction might hide some other difference.
         """

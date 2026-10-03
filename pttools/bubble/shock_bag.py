@@ -19,6 +19,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 def find_shock_index_bag(v_f: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float, sol_type: SolutionType) -> int:
     r"""
     Array index of shock from first point where fluid velocity $v_f$ goes below $v_\text{shock}$.
+
     For detonation, returns wall position.
 
     :param v_f: fluid velocity $v_f$
@@ -66,6 +67,7 @@ def _v_shock_bag_arr(xi: th.FloatOrArr) -> th.FloatArr:
 def v_shock_bag[T: FloatOrArr](xi: T) -> T:
     r"""
     Fluid velocity at a shock at $\xi$.
+
     No shocks exist for $\xi < \frac{1}{\sqrt{3}}$, so this returns zero.
     $$ v_{sh}(\xi) = \frac{3 \xi^2 - 1}{2\xi} $$
     :gw_pt_ssm:`\ `, eq. B.17.
@@ -114,6 +116,7 @@ def _wm_shock_bag_arr(xi: th.FloatOrArr, w_n: float = 1., nan_on_negative: bool 
 def wm_shock_bag[T: FloatOrArr](xi: T, w_n: float = 1., nan_on_negative: bool = True) -> T:
     r"""
     Fluid enthalpy behind a shock at $\xi$ in the bag model.
+
     No shocks exist for $\xi < c_s$, so returns nan.
     Equation B.18 of :gw_pt_ssm:`\ `.
 
@@ -162,6 +165,7 @@ def _wp_shock_bag_arr(xi: np.ndarray, wm: float) -> np.ndarray:
 def wp_shock_bag[T: FloatOrArr](xi: T, wm: float) -> T:
     r"""
     Fluid enthalpy in front of a shock at $\xi$ in the bag model.
+
     No shocks exist for $\xi < cs$, so returns nan.
     Derived from :gw_pt_ssm:`\ ` eq. B.18.
 

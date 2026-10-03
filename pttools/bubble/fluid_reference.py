@@ -39,6 +39,16 @@ class FluidReference:
             alpha_n_max: float = 0.99,
             n_v_wall: int = 100,
             n_alpha_n: int = 100) -> None:
+        r"""Load the reference data from the given file, or generate it first if the file does not exist.
+
+        :param path: path of the HDF5 file of the reference data
+        :param v_wall_min: minimum $v_\text{wall}$, if the data has to be generated
+        :param v_wall_max: maximum $v_\text{wall}$, if the data has to be generated
+        :param alpha_n_min: minimum $\alpha_n$, if the data has to be generated
+        :param alpha_n_max: maximum $\alpha_n$, if the data has to be generated
+        :param n_v_wall: number of $v_\text{wall}$ values, if the data has to be generated
+        :param n_alpha_n: number of $\alpha_n$ values, if the data has to be generated
+        """
         self.path: Path = Path(path)
 
         if not self.path.exists():
@@ -257,6 +267,10 @@ def compute(v_wall: float, alpha_n: float, alpha_n_max: float) -> tuple[int, flo
 # On systems using the "spawn" method, the cache is per-process.
 @functools.cache
 def ref() -> FluidReference:
+    """Get the reference data for the fluid solver.
+
+    The data is loaded on the first call and cached for subsequent calls.
+    """
     if FORKING and multiprocessing.parent_process() is not None:
         logger.warning(
             "The reference data was attempted to be loaded in a subprocess. "

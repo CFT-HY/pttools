@@ -17,11 +17,14 @@ class TestStandardModel(ThermoModelBaseCase[models.StandardModel], unittest.Test
 
     @classmethod
     def setUpClass(cls, *args: tp.Any, **kwargs: tp.Any) -> None:
+        """Create the Standard Model and load its reference data."""
         thermo = models.StandardModel()
         super().setUpClass(thermo)
 
     def test_geff_arrays(self) -> None:
-        """It's easy to accidentally make these into column vectors,
+        """Test that the effective degrees of freedom data arrays have the correct dimensions.
+
+        It's easy to accidentally make these into column vectors,
         which will mess up the dimensionality of the spliners.
         """
         self.assertEqual(self.thermo.GEFF_DATA.ndim, 2)

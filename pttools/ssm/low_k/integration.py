@@ -13,7 +13,8 @@ DEFAULT_KERNEL_NX: int = 1000
 
 
 def Iv(x: th.FloatArr1D, P_tilde_v: th.FloatArr1D) -> float:
-    r"""Source contribution $\mathcal{I}_v$
+    r"""$\mathcal{I}_v$, source contribution.
+
     $$\mathcal{I}_v \equiv \frac{1}{2\pi^2} \int_0^\infty dx x^2 \tilde{P}_v^2(x)$$
     :giombi_2024_cs:`\ ` eq. 3.7
     :giombi_2026:`\ ` eq. 3.4.
@@ -28,7 +29,8 @@ def Iv_resampled(x: th.FloatArr1D, P_tilde_v: th.FloatArr1D, nx: int = DEFAULT_K
 
 
 def Jv(x: th.FloatArr1D, P_tilde_v: th.FloatArr1D) -> float:
-    r"""$\mathcal{J}_v$
+    r"""$\mathcal{J}_v$, source integral of $\tilde{P}_v^2$ without the $x^2$ factor of $\mathcal{I}_v$.
+
     $$\mathcal{J}_v \equiv \frac{1}{2\pi^2} \int_0^\infty dx \tilde{P}_v^2(x)$$
     :giombi_2026:`\ ` eq. 3.4.
     """
@@ -51,6 +53,7 @@ def power_spectrum_integration_low(
         tau_end: float) -> th.FloatArr1D:
     r"""
     Calculate the low-frequency approximation (kR_* << 1) of the gravitational wave power spectrum.
+
     One-dimensional integration over sound wave momentum.
 
     $$\tilde{P}_\text{gw}^\text{low} = \frac{16 \tau_*}{15 \pi^2}
@@ -89,8 +92,9 @@ def power_spectrum_integration_int[T: FloatOrArr](
         tau_star: T | float,
         Iv: T | float) -> T:
     r"""
-    Calculate the intermediate-frequency approximation (1 << k eta_* << kp eta_*)
-    of the gravitational wave power spectrum.
+    Calculate the intermediate-frequency approximation of the gravitational wave power spectrum.
+
+    This approximation is valid for 1 << k eta_* << kp eta_*.
     One dimensional integration over sound wave momentum.
     Note that this approximation does not depend on tau_end, as it assumes several gravitational wave oscillations
     during the acoustic sourcing (eta_end - eta_* >> eta_*).

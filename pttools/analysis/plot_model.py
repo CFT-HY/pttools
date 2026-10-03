@@ -26,6 +26,17 @@ class ModelPlot:
             t_log: bool = True,
             y_log: bool = True,
             n_points: int = 20):
+        r"""Create the plots of $p, s, w, e, c_s^2$ and $\alpha_n$ as functions of the temperature $T$.
+
+        :param model: equation of state model
+        :param t_min: minimum temperature. If None, it's chosen based on the model and $T_\text{crit}$.
+        :param t_max: maximum temperature. If None, it's chosen based on the model and $T_\text{crit}$.
+        :param t_log_range: number of decades below and above $T_\text{crit}$ to plot
+            if t_min or t_max is not given and t_log is True
+        :param t_log: whether to use a logarithmic temperature axis
+        :param y_log: whether to use logarithmic y-axes (except for $c_s^2$ and $\alpha_n$)
+        :param n_points: number of temperature points in each phase
+        """
         self.model: models.Model = model
         self.t_log: bool = t_log
 

@@ -1,6 +1,8 @@
 r"""
-Functions for computing $\alpha_n$, the strength parameter at nucleation temperature,
-and $\alpha_+$, the strength parameter just in front of the wall.
+Functions for computing the transition strength parameters $\alpha_n$ and $\alpha_+$.
+
+$\alpha_n$ is the strength parameter at nucleation temperature,
+and $\alpha_+$ is the strength parameter just in front of the wall.
 """
 
 from .alpha_limits_bag import *

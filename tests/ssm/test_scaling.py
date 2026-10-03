@@ -11,6 +11,7 @@ class ScalingTest(unittest.TestCase):
     """Tests for pttools.ssm.scaling."""
 
     def test_H_star_eta_sh(self) -> None:
+        """Test the Hubble-scaled shock formation time computed from ubarf and from K."""
         self.assertAlmostEqual(scaling.H_star_eta_sh(r_star=0.1, ubarf=0.05), 2.)
         self.assertAlmostEqual(scaling.H_star_eta_sh_full(r_star=0.1, K=0.05 ** 2, adiabatic_index=1.), 2.)
 
@@ -38,7 +39,9 @@ class ScalingTest(unittest.TestCase):
         self.assertAlmostEqual(scaling.H_star_eta_v(upsilon, nu=0.), 1 - 1 / (1 + x))
 
     def test_H_star_eta_v_old_is_cosmic_time_version(self) -> None:
-        """The old formula 1 - 1/sqrt(1 + 2x) is Upsilon_1 = 1 - eta_*/eta_end
+        """Test that the old formula 1 - 1/sqrt(1 + 2x) is the cosmic time version of Upsilon_1.
+
+        The old formula is Upsilon_1 = 1 - eta_*/eta_end
         with the source duration x measured in cosmic time in a radiation-dominated Universe,
         where eta/eta_* = sqrt(t/t_*) and H_* t_* = 1/2.
         """
@@ -52,10 +55,12 @@ class ScalingTest(unittest.TestCase):
         self.assertAlmostEqual(scaling.H_star_eta_v_old(1e8), 1., places=3)
 
     def test_H_star_eta_v_old2(self) -> None:
+        """Test that the old approximation 2 of the source lifetime is min(H_* eta_sh, 1)."""
         self.assertEqual(scaling.H_star_eta_v_old2(0.5), 0.5)
         self.assertEqual(scaling.H_star_eta_v_old2(3.), 1.)
 
     def test_J(self) -> None:
+        """Test the combined lifetime factor J and its old approximation against reference expressions."""
         r_star, ubarf, nu = 0.1, 0.2, 0.05
         upsilon = barotropic.source_lifetime_factor(ubarf=ubarf, r_star=r_star, nu=nu)
         J_ref = r_star * (1 + nu) * upsilon

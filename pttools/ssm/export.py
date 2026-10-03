@@ -76,8 +76,9 @@ def _array(
 
 
 def _ragged(name: str, description: str, axis: str) -> Field:
-    """Create a field for an array of the :py:attr:`~pttools.utils.fields.Preset.FULL` preset,
-    whose length can vary by spectrum.
+    """Create a field for a variable-length array of the :py:attr:`~pttools.utils.fields.Preset.FULL` preset.
+
+    The length of the array can vary by spectrum.
 
     :param name: name of the field
     :param description: description of the field

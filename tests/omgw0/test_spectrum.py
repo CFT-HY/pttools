@@ -1,5 +1,6 @@
 """Tests for the Spectrum class."""
 
+import typing as tp
 import unittest
 from unittest import mock
 
@@ -17,15 +18,18 @@ class SpectrumTest(unittest.TestCase):
     spectrum: Spectrum
 
     @classmethod
+    @tp.override
     def setUpClass(cls) -> None:
         model = ConstCSModel(css2=1/3-0.01, csb2=1/3-0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
         bubble = Bubble(model, v_wall=0.5, alpha_n=0.2)
         cls.spectrum = Spectrum(bubble, r_star=0.1)
 
     def test_export(self) -> None:
+        """Test that the spectrum can be exported as JSON."""
         self.spectrum.export(TEST_JSON_PATH / "spectrum.json")
 
     def test_f_min_max(self) -> None:
+        """Test that the minimum and maximum frequencies correspond to the frequency array."""
         f = self.spectrum.f()
         self.assertEqual(self.spectrum.f_min, f.min())
         self.assertEqual(self.spectrum.f_max, f.max())
@@ -73,18 +77,22 @@ class SpectrumTest(unittest.TestCase):
         np.testing.assert_allclose(spectrum.omgw0(), self.spectrum.omgw0(), rtol=1e-10)
 
     def test_f_given_invalid(self) -> None:
+        """Test that giving both y and f, or giving non-finite frequencies, raises an error."""
         with self.assertRaises(ValueError):
             Spectrum(self.spectrum.bubble, r_star=0.1, y=np.array([1., 10.]), f=np.array([1e-3, 1e-2]), compute=False)
         with self.assertRaises(ValueError):
             Spectrum(self.spectrum.bubble, r_star=0.1, f=np.array([1e-3, np.nan]), compute=False)
 
     def test_noise(self) -> None:
+        """Test that the signal-to-noise ratio is positive."""
         self.assertGreater(self.spectrum.snr()[0], 0)
 
     def test_noise_instrument(self) -> None:
+        """Test that the signal-to-noise ratio for the instrument noise is positive."""
         self.assertGreater(self.spectrum.snr_ins()[0], 0)
 
     def test_peak(self) -> None:
+        """Test that the peak frequency is positive and the peak amplitude is between 0 and 1."""
         peak = self.spectrum.omgw0_peak()
         self.assertGreater(peak[0], 0)
         self.assertGreater(peak[1], 0)
@@ -96,9 +104,11 @@ class SpectrumTest(unittest.TestCase):
         self.assertLess(self.spectrum.R_star, 1e-3)
 
     def test_spectrum(self) -> None:
+        """Test that the spectrum has no nan values."""
         self.assertEqual(np.isnan(self.spectrum.omgw0()).sum(), 0)
 
     def test_total(self) -> None:
+        """Test that the total power is the integral of the spectrum over the frequency."""
         val = self.spectrum.omgw0_total()
         ref = np.trapezoid(y=self.spectrum.omgw0(), x=self.spectrum.f())
         self.assertAlmostEqual(val, ref)

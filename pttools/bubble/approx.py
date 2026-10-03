@@ -11,6 +11,7 @@ from pttools.type_hints import FloatOrArr
 def A2_approx[T: FloatOrArr](xi0: T) -> T:
     r"""
     Approximate solution for A2.
+
     $A2_\text{approx} = \frac{3(2\xi_0 - 1)}{1 - \xi_0^2}$.
 
     :param xi0: $\xi_0$
@@ -37,6 +38,7 @@ def v_approx_high_alpha[T: FloatOrArr](xi: T, v_wall: T | float, v_xi_wall: T | 
 def v_approx_hybrid[T: FloatOrArr](xi: T, v_wall: T | float, v_xi_wall: T | float) -> T:
     r"""
     Approximate solution for fluid velocity $v(\xi)$ near $v(\xi) = \xi$.
+
     Same as :func:`v_approx_high_alpha`.
 
     :param xi: $\xi$
@@ -90,6 +92,7 @@ def w_approx_high_alpha[T: FloatOrArr](
 def w_approx_low_alpha(xi: th.FloatArr1D, v_wall: float, alpha: float) -> th.FloatArr1D:
     r"""
     Approximate solution for enthalpy $w(\xi)$ at low $\alpha_+ = \alpha_n$.
+
     (Not complete for $\xi < \min(v _\text{wall}, cs_0)$).
 
     :param xi: $\xi$

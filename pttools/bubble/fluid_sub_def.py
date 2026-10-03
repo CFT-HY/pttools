@@ -294,6 +294,19 @@ def sound_shell_deflagration_reverse(
         t_end: float = DEFAULT_T_END,
         n_xi: int = DEFAULT_N_XI,
         allow_failure: bool = False) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, float, float, float]:
+    r"""Get the fluid shell profile of a subsonic deflagration by integrating from the shock to the wall.
+
+    This is untested, and will probably produce invalid results.
+
+    :param model: Equation of state
+    :param v_wall: $v_\text{wall}$, wall speed
+    :param wn: $w_n$, enthalpy at the nucleation temperature
+    :param xi_sh: $\xi_{sh}$, position of the shock
+    :param t_end: The maximum value for the fluid shell ODE integration parameter
+    :param n_xi: Number of points in the fluid velocity profile
+    :param allow_failure: Whether to allow failures of the junction condition solver
+    :return: $v, w, \xi, w_{+}, w_{-}, v_{-}$
+    """
     logger.warning("UNTESTED, will probably produce invalid results")
 
     if np.isnan(v_wall) or v_wall < 0 or v_wall > 1 or np.isnan(xi_sh) or xi_sh < 0 or xi_sh > 1:
@@ -363,6 +376,13 @@ def sound_shell_solvable_deflagration_reverse(
         wn: float,
         t_end: float = DEFAULT_T_END,
         n_xi: int = DEFAULT_N_XI) -> float:
+    r"""Get $v_-$ for the shock position $\xi_{sh}$ = params[0] using :func:`sound_shell_deflagration_reverse`.
+
+    This is the objective function for solving $\xi_{sh}$ of a subsonic deflagration,
+    as the fluid behind the wall of a subsonic deflagration is at rest.
+
+    :return: $v_-$
+    """
     xi_sh = params[0]
     v, w, xi, wp, wm, vm = sound_shell_deflagration_reverse(  # noqa: RUF059
         model, v_wall, wn, xi_sh, t_end=t_end, n_xi=n_xi, allow_failure=True)
@@ -377,6 +397,24 @@ def sound_shell_solvable_deflagration(
         t_end: float = DEFAULT_T_END,
         n_xi: int = DEFAULT_N_XI,
         thin_shell_limit: int = THIN_SHELL_T_POINTS_MIN) -> float:
+    r"""Difference of the estimated and given $w_n$ for a subsonic deflagration with the given $w_\text{center}$.
+
+    This is the objective function for solving $w_\text{center} = w_{-}$ of a subsonic deflagration.
+    See :func:`sound_shell_deflagration`.
+
+    :param w_center: $w_\text{center}$, enthalpy at the center of the bubble
+    :param model: Equation of state
+    :param v_wall: $v_\text{wall}$, wall speed
+    :param wn: $w_n$, enthalpy at the nucleation temperature
+    :param cs_n: $c_{s,n}$, sound speed at the nucleation temperature
+    :param v_cj: $v_\text{CJ}$, Chapman-Jouguet speed
+    :param vp_guess: $v_{+,\text{guess}}$, initial guess for $v_+$
+    :param wp_guess: $w_{+,\text{guess}}$, initial guess for $w_+$
+    :param t_end: The maximum value for the fluid shell ODE integration parameter
+    :param n_xi: Number of points in the fluid velocity profile
+    :param thin_shell_limit: Limit of points for a shell to be so thin that it should be re-computed with more points
+    :return: $w_{n,\text{estimate}} - w_n$, or nan if $w_\text{center}$ is invalid
+    """
     if isinstance(w_center, np.ndarray):
         w_center = w_center[0]
     if np.isnan(w_center) or w_center < 0:
@@ -474,6 +512,10 @@ def sound_shell_solver_deflagration_reverse(
         t_end: float = DEFAULT_T_END,
         n_xi: int = DEFAULT_N_XI,
         rtol: float = DEFAULT_SOLVER_RTOL) -> SolverOutput:
+    """Solve for the fluid shell profile of a subsonic deflagration by integrating from the shock to the wall.
+
+    This uses :func:`sound_shell_deflagration_reverse`, which is untested.
+    """
     # This is arbitrary and should be replaced by a value from the bag model
     xi_sh_guess = 1.1 * np.sqrt(model.cs2_max(wn, Phase.BROKEN))
     # The SciPy stubs require func to return an array, but a scalar is also accepted at runtime.

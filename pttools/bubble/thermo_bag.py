@@ -45,8 +45,8 @@ def de_from_w_bag(
         ode_method: FluidIntegrateMethod,
         cs2_ptr: th.CS2FunScalarPtr) -> th.FloatArr1D:
     r"""
-    Calculates energy density difference ``de = e - e[-1]`` from enthalpy, assuming
-    bag equation of state.
+    Calculates energy density difference ``de = e - e[-1]`` from enthalpy, assuming bag equation of state.
+
     Can get ``alpha_n = find_alpha_n_from_w_xi(w,xi,v_wall,alpha_p)``.
 
     :param w: $w$
@@ -76,8 +76,9 @@ def de_from_w_new_bag(
         ode_method: FluidIntegrateMethod,
         cs2_ptr: th.CS2FunScalarPtr) -> th.FloatArr1D:
     r"""
-    For exploring new methods of calculating energy density difference
-    from velocity and enthalpy, assuming bag equation of state.
+    Calculates energy density difference from velocity and enthalpy, assuming bag equation of state.
+
+    This is for exploring new methods of calculating the energy density difference.
 
     :param v: $v$
     :param w: $w$
@@ -155,8 +156,9 @@ def get_kappa_de_bag[T: FloatOrArr](
         n_xi: int = const.DEFAULT_N_XI,
         verbosity: int = 0) -> tuple[T, T]:
     r"""
-    Calculates efficiency factor $\kappa$ and fractional change in energy
-    from $v_\text{wall}$ and $\alpha_n$. $v_\text{wall}$ can be an array.
+    Calculates efficiency factor $\kappa$ and fractional change in energy from $v_\text{wall}$ and $\alpha_n$.
+
+    $v_\text{wall}$ can be an array.
     Sum should be 0 (bag model).
 
     :param v_wall: $v_\text{wall}$
@@ -207,8 +209,8 @@ def get_kappa_dq_bag[T: FloatOrArr](
         n_xi: int = const.DEFAULT_N_XI,
         verbosity: int = 0) -> tuple[T, T]:
     r"""
-    Calculates efficiency factor $\kappa$ and fractional change in thermal energy
-    from $v_\text{wall}$ and $\alpha_n$.
+    Calculates efficiency factor $\kappa$ and fractional change in thermal energy from $v_\text{wall}$ and $\alpha_n$.
+
     $v_\text{wall}$ can be an array.
     Sum should be 1.
     Thermal energy is defined as $q = \frac{3}{4} \text{enthalpy}$.
@@ -261,8 +263,9 @@ def get_ke_de_frac_bag[T: FloatOrArr](
         n_xi: int = const.DEFAULT_N_XI,
         verbosity: int = 0) -> tuple[T, T]:
     r"""
-    Kinetic energy fraction and fractional change in energy
-    from wall velocity array. Sum should be 0. Assumes bag model.
+    Kinetic energy fraction and fractional change in energy from wall velocity array.
+
+    Sum should be 0. Assumes bag model.
 
     :param v_wall: $v_\text{wall}$
     :param alpha_n: $\alpha_n$
@@ -309,6 +312,7 @@ def get_ke_de_frac_bag[T: FloatOrArr](
 def get_ke_frac_bag[T: FloatOrArr](v_wall: T, alpha_n: float, n_xi: int = const.DEFAULT_N_XI) -> T:
     r"""
     Determine kinetic energy fraction (of total energy).
+
     Bag equation of state only so far, as it takes
     $e_n = \frac{3}{4} w_n (1 + \alpha_n)$.
     This assumes zero trace anomaly in broken phase.
@@ -331,6 +335,7 @@ def get_ke_frac_new_bag[T: FloatOrArr](
         verbosity: int = 0) -> T:
     r"""
     Determine kinetic energy fraction (of total energy).
+
     Bag equation of state only so far, as it takes
     $e_n = \frac{3}{4} w_n (1 + \alpha_n)$.
     This assumes zero trace anomaly in broken phase.
@@ -599,8 +604,9 @@ def split_integrate(
         xi: th.FloatArr1D,
         v_wall: float) -> tuple[float, float]:
     r"""
-    Split an integration of a function func of arrays $v, w, \xi$
-    according to whether $\xi$ is inside or outside the wall (expecting discontinuity there).
+    Split an integration of a function func of arrays $v, w, \xi$ at the wall.
+
+    The integration is split according to whether $\xi$ is inside or outside the wall (expecting discontinuity there).
 
     :param func: function to be integrated
     :param v: $v$

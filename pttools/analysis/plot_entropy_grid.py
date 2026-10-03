@@ -27,6 +27,12 @@ class DurationPlot(VwAlphaPlot):
     """Plot the time it took to simulate each bubble."""
 
     def __init__(self, grid: BubbleGridVWAlpha, fig: plt.Figure | None = None, ax: plt.Axes | None = None):
+        """Plot the solving durations of the bubbles on a logarithmic color scale.
+
+        :param grid: grid of solved bubbles
+        :param fig: figure to plot in. If None, a new figure is created.
+        :param ax: axes to plot in. If None, new axes are created in the figure. Requires fig.
+        """
         super().__init__(grid, fig, ax)
         img = self.ax.pcolor(grid.v_walls, grid.alpha_ns, np.log10(grid.solving_duration()))
         cbar = self.ax.figure.colorbar(img, ax=ax)
@@ -51,6 +57,19 @@ class EntropyPlot(VwAlphaPlot):
             diff_level: float,
             fig: plt.Figure | None = None,
             ax: plt.Axes | None = None):
+        r"""Plot the entropy data, and mark the regions with numerical errors or failures.
+
+        The regions with numerical errors are shown in red, the regions with an unphysical $\alpha_+$ in green,
+        and the regions where the solver failed in black.
+
+        :param grid: grid of solved bubbles
+        :param entropy: $\Delta s / s_n$, relative entropy change of each bubble
+        :param min_level: minimum contour level
+        :param max_level: maximum contour level
+        :param diff_level: difference between contour levels
+        :param fig: figure to plot in. If None, a new figure is created.
+        :param ax: axes to plot in. If None, new axes are created in the figure. Requires fig.
+        """
         super().__init__(grid, fig, ax, title=rf"$\Delta s / s_n$ for {grid.model.label_latex}")
         plot_entropy_data(
             entropy, grid.v_walls, grid.alpha_ns, min_level, max_level, diff_level,
@@ -74,6 +93,16 @@ class DeltaEntropyPlot(VwAlphaPlot):
             title: str,
             fig: plt.Figure | None = None,
             ax: plt.Axes | None = None):
+        r"""Plot the relative difference $(w_1 - w_2) / w_{\text{ref}}$.
+
+        :param grid: grid of solved bubbles
+        :param w1: first value
+        :param w2: second value
+        :param w_ref: reference value, by which the difference is divided
+        :param title: label of the color bar
+        :param fig: figure to plot in. If None, a new figure is created.
+        :param ax: axes to plot in. If None, new axes are created in the figure. Requires fig.
+        """
         super().__init__(grid, fig, ax)
         rel_change = (w1 - w2) / w_ref
         cs: QuadContourSet = self.ax.contourf(
@@ -93,6 +122,14 @@ class EntropyConservationPlot(VwAlphaPlot):
             diff: th.FloatArr2D,
             fig: plt.Figure | None = None,
             ax: plt.Axes | None = None):
+        r"""Plot the entropy generation, and mark the regions where the solver failed in black.
+
+        :param grid: grid of solved bubbles
+        :param diff: $\tilde{\gamma}_- \tilde{v}_- s_{-} - \tilde{\gamma}_+ \tilde{v}_+ s_+$,
+            entropy flux difference at the wall for each bubble
+        :param fig: figure to plot in. If None, a new figure is created.
+        :param ax: axes to plot in. If None, new axes are created in the figure. Requires fig.
+        """
         super().__init__(grid, fig, ax)
         cs: QuadContourSet = self.ax.contourf(
             grid.v_walls, grid.alpha_ns, diff,
@@ -116,6 +153,14 @@ class GieseApproximationPlot(VwAlphaPlot):
             diff: th.FloatArr2D,
             fig: plt.Figure | None = None,
             ax: plt.Axes | None = None):
+        r"""Plot the relative difference on a logarithmic scale. The non-positive values are not shown.
+
+        :param grid: grid of solved bubbles
+        :param diff: relative difference of the Giese et al. approximation and the simulated value
+            of $\frac{\tilde{v}_+}{\tilde{v}_-}$ for each bubble
+        :param fig: figure to plot in. If None, a new figure is created.
+        :param ax: axes to plot in. If None, new axes are created in the figure. Requires fig.
+        """
         super().__init__(grid, fig, ax)
 
         # The non-positive values cannot be shown on the logarithmic scale,
@@ -136,6 +181,13 @@ class KappaOmegaSumPlot(VwAlphaPlot):
     r"""Plot $\kappa$ + $\omega$ of bubbles as a contour plot."""
 
     def __init__(self, grid: BubbleGridVWAlpha, fig: plt.Figure | None = None, ax: plt.Axes | None = None):
+        r"""Plot $|\kappa + \omega - 1|$ on a logarithmic scale.
+
+        :param grid: grid of solved bubbles
+        :param fig: figure to plot in. If None, a new figure is created.
+        :param ax: axes to plot in. If None, new axes are created in the figure. Requires fig.
+        :raises ValueError: if all the values are NaN
+        """
         super().__init__(grid, fig, ax)
 
         kappa_omega_sum = np.abs(grid.kappa() + grid.omega() - 1)

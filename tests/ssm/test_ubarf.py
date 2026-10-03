@@ -1,6 +1,7 @@
 r"""Tests for the root-mean-square fluid velocity $\bar{U}_f$."""
 
 from math import sqrt
+import typing as tp
 import unittest
 
 import numpy as np
@@ -35,11 +36,14 @@ UBARF_1D = TABLE1[4] * 0.001
 
 
 class UbarfTest(unittest.TestCase):
+    r"""Test $\bar{U}_f$ against :gw_pt_ssm:`\ ` table 1."""
+
     model: BagModel
     bubbles: list[Bubble]
     spectra: list[SSMSpectrum]
 
     @classmethod
+    @tp.override
     def setUpClass(cls) -> None:
         cls.model = BagModel(alpha_n_min=ALPHA_N[0])
         cls.bubbles = [
@@ -51,6 +55,7 @@ class UbarfTest(unittest.TestCase):
             spectrum.compute(lambda_correction=True)
 
     def test_ubarf_1d(self) -> None:
+        r"""Test $\bar{U}_f$ of the bubbles against the 1D values of :gw_pt_ssm:`\ ` table 1."""
         assert_allclose(
             [bubble.ubarf for bubble in self.bubbles],
             UBARF_1D,
@@ -58,6 +63,7 @@ class UbarfTest(unittest.TestCase):
         )
 
     def test_ubarf_exponential(self) -> None:
+        r"""Test $\bar{U}_f$ for exponential nucleation against :gw_pt_ssm:`\ ` table 1."""
         ubarf = [sqrt(spectrum.ubarf2_custom_nucleation(nuc_type=NucType.EXPONENTIAL)) for spectrum in self.spectra]
         # Masking out a problematic point
         ubarf[7] = UBARF_EXP[7]
@@ -69,6 +75,7 @@ class UbarfTest(unittest.TestCase):
         )
 
     def test_ubarf_simultaneous(self) -> None:
+        r"""Test $\bar{U}_f$ for simultaneous nucleation against :gw_pt_ssm:`\ ` table 1."""
         ubarf = [sqrt(spectrum.ubarf2_custom_nucleation(nuc_type=NucType.SIMULTANEOUS)) for spectrum in self.spectra]
         # Masking out a problematic point
         ubarf[7] = UBARF_SIM[7]

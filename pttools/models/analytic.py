@@ -19,23 +19,15 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class AnalyticModel(Model, abc.ABC):
-    r"""A generic analytical model, where the temperature dependence of $g_\text{eff}$ is implemented directly in the
-    equation of state.
+    r"""A generic analytical model.
+
+    The temperature dependence of $g_\text{eff}$ is implemented directly in the equation of state.
 
     You should specify either the relativistic degrees of freedom $g_\text{eff}(\phi=s)$ and $g_\text{eff}(\phi=b)$,
     or the prefactors $a_s$ and $a_b$.
     The convention for the latter is as in :notes:`\ ` eq. 7.33. for the bag model, where
     $$p_s = a_sT^4 - V_s,$$
     $$p_b = a_bT^4 - V_b.$$
-
-    :param V_s: $V_s = \epsilon_s$, the potential term of $p$ in the symmetric phase
-    :param V_b: $V_b = \epsilon_b$, the potential term of $p$ in the broken phase
-    :param a_s: prefactor of $p$ in the symmetric phase
-    :param a_b: prefactor of $p$ in the broken phase
-    :param g_s: $g_\text{eff}(\phi=s)$, degrees of freedom for $p$ in the symmetric phase at T=T0
-    :param g_b: $g_\text{eff}(\phi=b)$, degrees of freedom for $p$ in the broken phase at T=T0
-    :param name: custom name for the model
-    :param auto_potential: set V_s and V_b so that T_c = 1 (bag model only)
     """
 
     DEFAULT_V_S = 1.
@@ -62,6 +54,30 @@ class AnalyticModel(Model, abc.ABC):
             allow_invalid: bool = False,
             auto_potential: bool = False,
             log_info: bool = True):
+        r"""Initialize the analytical model.
+
+        :param V_s: $V_s = \epsilon_s$, the potential term of $p$ in the symmetric phase
+        :param V_b: $V_b = \epsilon_b$, the potential term of $p$ in the broken phase. Defaults to ``DEFAULT_V_B``.
+        :param a_s: $a_s$, prefactor of $p$ in the symmetric phase
+        :param a_b: $a_b$, prefactor of $p$ in the broken phase
+        :param g_s: $g_\text{eff}(\phi=s)$, degrees of freedom for $p$ in the symmetric phase at T=T0
+        :param g_b: $g_\text{eff}(\phi=b)$, degrees of freedom for $p$ in the broken phase at T=T0
+        :param T_min: $T_\text{min}$, minimum temperature at which the model is valid
+        :param T_max: $T_\text{max}$, maximum temperature at which the model is valid
+        :param T_crit_guess: starting guess for solving the critical temperature
+        :param name: custom name for the model
+        :param label_latex: custom LaTeX label for the model
+        :param label_unicode: custom Unicode label for the model
+        :param gen_critical: whether to solve the critical temperature $T_\text{crit}$
+            and the minimum transition strength $\alpha_{n,\text{min}}$
+        :param gen_cs2: used internally for postponing the generation of the cs2 function
+        :param gen_cs2_neg: used internally for postponing the generation of the cs2_neg function
+        :param allow_invalid: whether to allow $V_s < V_b$ and failures in solving the critical temperature
+        :param auto_potential: set $V_s = a_s - a_b$ and $V_b = 0$ so that $T_c = 1$ (bag model only)
+        :param log_info: whether to log information and warnings about the model parameters
+        :raises ValueError: if both $a$ and $g$ are given,
+            or if manual potentials are given when auto_potential is enabled
+        """
         if V_b is None:
             V_b = self.DEFAULT_V_B
         if log_info and V_b != 0:
@@ -183,6 +199,7 @@ class AnalyticModel(Model, abc.ABC):
         """
         return tp.cast(T, 90 / np.pi**2 * a)
 
+    @tp.override
     def ge_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         return tp.cast(T, 30/np.pi**2 * self.e_temp(temp, phase) / temp**4)
 
@@ -194,6 +211,21 @@ class AnalyticModel(Model, abc.ABC):
             g_s: float | None,
             g_b: float | None,
             default_mult: float = DEFAULT_A_G_MULT) -> tuple[float, float, float, float]:
+        r"""Get the prefactors $a_s$, $a_b$ and the degrees of freedom $g_s$, $g_b$ from those that are given.
+
+        Either $a$ or $g$ values can be given, but not both.
+        If only one of $g_s$ and $g_b$ is given, the other is obtained with $g_s = m g_b$,
+        where $m$ is default_mult.
+        If no $g$ values are given, the missing $a$ values default to $a_b = 1$ and $a_s = m a_b$.
+
+        :param a_s: $a_s$, prefactor of $p$ in the symmetric phase
+        :param a_b: $a_b$, prefactor of $p$ in the broken phase
+        :param g_s: $g_s$, degrees of freedom for $p$ in the symmetric phase
+        :param g_b: $g_b$, degrees of freedom for $p$ in the broken phase
+        :param default_mult: $m$, ratio of the symmetric and broken phase values used for the missing values
+        :return: $a_s, a_b, g_s, g_b$
+        :raises ValueError: if both $a$ and $g$ values are given
+        """
         a_s_none = is_nan_or_none(a_s)
         a_b_none = is_nan_or_none(a_b)
         g_s_none = is_nan_or_none(g_s)
@@ -241,14 +273,32 @@ class AnalyticModel(Model, abc.ABC):
             default_mult: float = DEFAULT_A_G_MULT,
             safety_factor_alpha: float = Model.ALPHA_N_MIN_FIND_SAFETY_FACTOR_ALPHA
     ) -> tuple[float, float, float, float]:
+        r"""Find the model parameters that allow the given $\alpha_{n,\text{min,target}}$.
+
+        This is a wrapper for :meth:`alpha_n_min_find_params`,
+        which allows giving the defaults for the prefactors as either $a$ or $g$ values, as in :meth:`get_a_g`.
+
+        :param a_s: $a_s$, default prefactor of $p$ in the symmetric phase
+        :param a_b: $a_b$, prefactor of $p$ in the broken phase
+        :param g_s: $g_s$, default degrees of freedom for $p$ in the symmetric phase
+        :param g_b: $g_b$, degrees of freedom for $p$ in the broken phase
+        :param alpha_n_min_target: $\alpha_{n,\text{min,target}}$, target minimum transition strength
+        :param V_s_default: default $V_s$
+        :param V_b: $V_b$
+        :param default_mult: ratio of the symmetric and broken phase values used for the missing $a$ or $g$ values
+        :param safety_factor_alpha: safety factor for $\alpha_{n,\text{min}}$
+        :return: $a_s, a_b, V_s, V_b$
+        """
         a_s, a_b, _, _ = self.get_a_g(a_s, a_b, g_s, g_b, default_mult=default_mult)
         return self.alpha_n_min_find_params(
             alpha_n_min_target=alpha_n_min_target, a_s_default=a_s, a_b=a_b, V_s_default=V_s_default, V_b=V_b,
             safety_factor_alpha=safety_factor_alpha
         )
 
+    @tp.override
     def gs_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         return tp.cast(T, 45/(2*np.pi**2) * self.s_temp(temp, phase) / temp**4)
 
+    @tp.override
     def gp_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         return tp.cast(T, 90/np.pi**2 * self.p_temp(temp, phase) / temp**4)

@@ -40,9 +40,12 @@ CORREIA_2026_UBARF: FloatArr1D = CORREIA_2026_DATA[6, :]
 
 
 class CorreiaTest2026(unittest.TestCase):
+    """Comparison of the Sound Shell Model with the simulation results of Correia et al. (2026)."""
+
     @staticmethod
     @pytest.mark.xfail(reason="The Sound Shell Model may not be applicable in this regime.")
     def test_ubarf() -> None:
+        """Test that the SSM RMS fluid velocity is below the simulated maximum compressional velocity."""
         model = BagModel()
         bubbles = [
             Bubble(model, v_wall=v_wall, alpha_n=alpha_n)

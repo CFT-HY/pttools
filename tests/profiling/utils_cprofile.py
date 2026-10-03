@@ -17,10 +17,16 @@ class CProfiler(utils.Profiler):
     """Wrapper for the cProfile profiler."""
 
     def __init__(self, name: str, print_to_console: bool = False) -> None:
+        """Initialize the cProfile profiler.
+
+        :param name: name of the profile, used for the output file names
+        :param print_to_console: whether to also print the results to the console
+        """
         super().__init__(name, print_to_console)
         self.profiler: cProfile.Profile = cProfile.Profile()
 
     def __enter__(self) -> None:
+        """Start the cProfile profiler."""
         self.profiler.enable()
 
     def __exit__(
@@ -28,6 +34,7 @@ class CProfiler(utils.Profiler):
             exc_type: type[BaseException] | None,
             exc_val: BaseException | None,
             exc_tb: types.TracebackType | None) -> None:
+        """Stop the cProfile profiler and save its results."""
         self.profiler.disable()
         process(self.name, self.profiler, self.print_to_console)
 
@@ -64,6 +71,7 @@ def save_sorted(
 
 
 def save_filtered(text: str, path: str | os.PathLike[str], filter_text: str) -> None:
+    """Save the lines of the text that do not contain the filter text to a file."""
     lines = text.splitlines(keepends=True)
     with Path(path).open("w") as file:
         for line in lines:

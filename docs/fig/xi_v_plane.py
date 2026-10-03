@@ -8,6 +8,7 @@ from tests.paper.plot_plane_paper import plot_plane
 
 
 def main() -> plt.Figure:
+    r"""Plot the $(\xi, v)$ plane of the bag model."""
     data = xiv_plane(separate_phases=False)
     fig: plt.Figure = plt.figure()
     ax: plt.Axes = fig.add_subplot()

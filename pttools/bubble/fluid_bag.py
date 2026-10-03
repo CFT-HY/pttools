@@ -99,6 +99,7 @@ def sound_shell_alpha_plus_bag(
         ) -> th.VWXi:
     r"""
     Finds the fluid shell profile (v, w, xi) from a given $v_\text{wall}, \alpha_+$ (at-wall strength parameter).
+
     When $v=0$ (behind and ahead of shell), this uses only two points.
 
     Assumes the bag model, but can also create rough approximations for other models.
@@ -269,6 +270,17 @@ def sound_shell_dict(
         n_xi: int = const.DEFAULT_N_XI,
         low_v_approx: bool = False,
         high_v_approx: bool = False) -> SoundShellDict:
+    r"""Solve the fluid shell profile in the Bag Model, and compute quantities derived from it.
+
+    :param v_wall: $v_\text{wall}$, wall speed
+    :param alpha_n: $\alpha_n$, transition strength
+    :param n_xi: number of $\xi$ points
+    :param low_v_approx: whether to compute the low $\alpha_+$ approximations of $v(\xi)$ and $w(\xi)$
+    :param high_v_approx: whether to compute the high $\alpha_+$ approximations of $v(\xi)$ and $w(\xi)$
+    :return: the fluid shell profile and the derived quantities
+    :raises ValueError: if both approximations are enabled
+    :raises RuntimeError: if no solution is found for the given parameters
+    """
     if low_v_approx and high_v_approx:
         raise ValueError("Both low and high v approximations can't be enabled at the same time.")
     check.check_physical_params(

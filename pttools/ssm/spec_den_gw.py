@@ -18,7 +18,8 @@ def gen_lookup(
         cs: float = CS0,
         n_x_lookup: int = DEFAULT_N_Z_LOOKUP,
         eps: float = 0.) -> FloatArr1D:
-    """
+    """Generate a logarithmically spaced lookup array of $x$ between the limits $x_-$ and $x_+$.
+
     :param y: Input array
     :param cs: Speed of sound $c_s$
     :param n_x_lookup: Number of points for the generated lookup table
@@ -45,7 +46,8 @@ def gen_lookup(
 
 @njit(cache=True)
 def limits_from_lookup[T: FloatOrArr](x_lookup: FloatArr1D, cs: T = CS0) -> tuple[T, T]:
-    r"""Limits of x from a lookup
+    r"""Limits of $y$ from the limits of a lookup array of $x$.
+
     $$y_\pm = 2 x_{\pm} \frac{c_s}{1 \pm c_s}$$
     The inverse of :py:func:lookup_limits: from :gw_pt_ssm:`\ ` p. 12.
     """
@@ -56,7 +58,8 @@ def limits_from_lookup[T: FloatOrArr](x_lookup: FloatArr1D, cs: T = CS0) -> tupl
 
 @njit
 def lookup_limits(z: FloatArr1D, cs: float = CS0, eps: float = 0.) -> tuple[float, float]:
-    r"""
+    r"""$x_-$ and $x_+$, limits of the lookup array of $x$ for the given $z$ array.
+
     $$x_\pm = z \frac{1 \pm c_s}{2c_s}$$
     :giombi_2024_cs: \ ` p. 13
     :giombi_2026: \ ` p. 25
@@ -118,7 +121,8 @@ def _spec_den_gw_core(
         cs: float = CS0,
         source_lifetime_factor: float = 1.,
         nx_P_tilde_gw: int | None = None) -> tuple[FloatArr1D, FloatArr1D]:
-    r"""Core computation for :py:func:spec_den_gw_scaled:
+    r"""Core computation for :py:func:spec_den_gw_scaled:.
+
     :giombi_2024_cs:`\ ` eq. 3.13
     Old version:
     :gw_pt_ssm:`\ ` eq. 3.47 and 3.48.

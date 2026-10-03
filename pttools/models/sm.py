@@ -73,6 +73,21 @@ class StandardModel(ThermoModel):
             label_unicode: str | None = None,
             gen_cs2: bool = True,
             silence_temp: bool = False):
+        r"""Initialize the Standard Model equation of state.
+
+        :param g_mult_s: multiplier for the degrees of freedom in the symmetric phase
+        :param g_mult_b: multiplier for the degrees of freedom in the broken phase
+        :param V_s: $V_s$, potential in the symmetric phase
+        :param V_b: $V_b$, potential in the broken phase
+        :param name: custom name for the model
+        :param T_min: $T_\text{min}$, minimum temperature at which the model is valid
+        :param T_max: $T_\text{max}$, maximum temperature at which the model is valid
+        :param restrict_to_valid: whether temperatures outside the validity range are converted to NaN
+        :param label_latex: custom LaTeX label for the model
+        :param label_unicode: custom Unicode label for the model
+        :param gen_cs2: whether to generate the $c_s^2$ function
+        :param silence_temp: whether to suppress the logging of temperatures outside the validity range
+        """
         logger.debug(
             "Creating Standard Model with g_mult_s=%s, g_mult_b=%s, V_s=%s, V_b=%s",
             g_mult_s, g_mult_b, V_s, V_b
@@ -91,24 +106,29 @@ class StandardModel(ThermoModel):
             silence_temp=silence_temp
         )
 
+    @tp.override
     def dge_dT[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         self.validate_temp(temp)
         return 1/(np.log(10)*temp) * interpolate.splev(np.log10(temp), self.GE_SPLINE, der=1) * self.g_mult(phase) \
             - 120/np.pi**2 * self.V_b/temp**5
 
+    @tp.override
     def dgs_dT[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         self.validate_temp(temp)
         return 1/(np.log(10)*temp) * interpolate.splev(np.log10(temp), self.GS_SPLINE, der=1) * self.g_mult(phase)
 
+    @tp.override
     def ge[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         self.validate_temp(temp)
         return tp.cast(T, interpolate.splev(np.log10(temp), self.GE_SPLINE) * self.g_mult(phase)
                           + 30/np.pi**2 * self.V(phase) / temp**4)
 
+    @tp.override
     def gs[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         self.validate_temp(temp)
         return tp.cast(T, interpolate.splev(np.log10(temp), self.GS_SPLINE) * self.g_mult(phase))
 
+    @tp.override
     def ge_gs_ratio[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         self.validate_temp(temp)
         if self.g_mult_s == self.g_mult_b == 1 and self.V_s == self.V_b == 0:
@@ -116,9 +136,17 @@ class StandardModel(ThermoModel):
         return tp.cast(T, self.ge(temp, phase) / self.gs(temp, phase))
 
     def g_mult[T: FloatOrArr](self, phase: T) -> T:
+        r"""Multiplier for the degrees of freedom in the phase $\phi$.
+
+        :param phase: phase $\phi$
+        """
         return tp.cast(T, self.g_mult_b * phase + self.g_mult_s * (1 - phase))
 
     def V[T: FloatOrArr](self, phase: T) -> T:
+        r"""Potential $V(\phi)$.
+
+        :param phase: phase $\phi$
+        """
         return tp.cast(T, self.V_b * phase + self.V_s * (1 - phase))
 
 

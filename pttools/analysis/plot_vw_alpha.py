@@ -25,6 +25,15 @@ class VwAlphaPlot:
             ax: plt.Axes | None = None,
             title: str | None = None,
             alpha_label: str = r"$\alpha_n$"):
+        r"""Create the axes for the plot. Add data to it with the other methods.
+
+        :param grid: grid of bubbles, whose $v_\text{wall}$ and $\alpha_n$ values define the axis limits
+        :param fig: figure to plot in. If None, a new figure is created.
+        :param ax: axes to plot in. If None, new axes are created in the figure. Requires fig.
+        :param title: title of the plot
+        :param alpha_label: label of the y-axis
+        :raises ValueError: if ax is given without fig
+        """
         self.grid: BubbleGridVWAlpha = grid
 
         if fig is None:

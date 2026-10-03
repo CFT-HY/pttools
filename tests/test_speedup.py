@@ -46,19 +46,23 @@ class TestSpeedup(unittest.TestCase):
 
     @staticmethod
     def test_gradient() -> None:
+        """Test that the gradient gives the same results as np.gradient."""
         arr = np.logspace(1, 5, 10)
         assert_allclose(speedup.gradient(arr), np.gradient(arr))
 
     @staticmethod
     def test_logspace() -> None:
+        """Test that the logspace gives the same results as np.logspace."""
         assert_allclose(speedup.logspace(1, 5, 10), np.logspace(1, 5, 10))
 
     @staticmethod
     def test_parallel_debug() -> None:
+        """Test that the parallel debug message can be printed."""
         parallel_debug_message("test")
 
     @staticmethod
     def test_run_parallel_single_output_dtype() -> None:
+        """Test that run_parallel with a single output dtype returns a single array of that dtype."""
         params = np.array([1., 2., 3.])
         res = run_parallel(np.square, params, output_dtypes=(np.float64,), single_thread=True)
         assert isinstance(res, np.ndarray)
@@ -68,6 +72,7 @@ class TestSpeedup(unittest.TestCase):
     @staticmethod
     @unittest.expectedFailure
     def test_spline() -> None:
+        """Test that the spline evaluation of the speedup module gives the same results as SciPy splev."""
         x = np.linspace(0, 2*np.pi, 20)
         x2 = np.linspace(0, 2*np.pi, 40)
         y = np.sin(x)
@@ -123,12 +128,14 @@ class TestTBB(unittest.TestCase):
     """Test that the TBB library of the tbb package is found for Numba."""
 
     def test_load_tbb(self) -> None:
+        """Test that the TBB library is loaded and is recent enough."""
         version = tbb.load_tbb()
         self.assertIsNotNone(version)
         self.assertGreaterEqual(version, tbb.TBB_MIN_VERSION)
 
     @staticmethod
     def test_numba_tbb_layer() -> None:
+        """Test that the Numba TBB threading layer can be imported and passes the TBB version check."""
         # Importing the TBB extension of Numba fails if the loader cannot find the TBB library.
         importlib.import_module("numba.np.ufunc.tbbpool")
         # This is the check that Numba runs before using the TBB threading layer.
@@ -160,6 +167,7 @@ class TestTBBMain(unittest.TestCase):
 
     @staticmethod
     def run_main(version: int | None, is_x86_64: bool = True) -> tuple[int, str]:
+        """Run the TBB check with the given TBB version and architecture, and return the exit code and the output."""
         tbb_main = importlib.import_module("pttools.speedup.tbb.__main__")
         stdout = io.StringIO()
         with mock.patch.object(tbb_main, "TBB_VERSION", version), \
@@ -169,12 +177,15 @@ class TestTBBMain(unittest.TestCase):
         return returncode, stdout.getvalue()
 
     def test_main_compatible(self) -> None:
+        """A compatible TBB version gives the exit code 0."""
         self.assertEqual(self.run_main(tbb.TBB_MIN_VERSION), (0, f"TBB version: {tbb.TBB_MIN_VERSION}\n"))
 
     def test_main_too_old(self) -> None:
+        """A too old TBB version gives the exit code 1."""
         self.assertEqual(self.run_main(tbb.TBB_MIN_VERSION - 1), (1, f"TBB version: {tbb.TBB_MIN_VERSION - 1}\n"))
 
     def test_main_not_found(self) -> None:
+        """A missing TBB library gives the exit code 1."""
         self.assertEqual(self.run_main(None), (1, "TBB version: None\n"))
 
     def test_main_not_found_other_architecture(self) -> None:
@@ -185,6 +196,7 @@ class TestTBBMain(unittest.TestCase):
         self.assertIn(self.NOTE, output)
 
     def test_main_too_old_other_architecture(self) -> None:
+        """A too old TBB version is not an error on other CPU architectures, but the note is printed."""
         returncode, output = self.run_main(tbb.TBB_MIN_VERSION - 1, is_x86_64=False)
         self.assertEqual(returncode, 0)
         self.assertIn(self.NOTE, output)

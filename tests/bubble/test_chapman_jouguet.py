@@ -1,5 +1,6 @@
 r"""Tests for the Chapman-Jouguet speed $v_{CJ}$."""
 
+import typing as tp
 import unittest
 
 import numpy as np
@@ -77,6 +78,7 @@ class ChapmanJouguetTest(unittest.TestCase):
     """Tests for the Chapman-Jouguet speed."""
 
     @classmethod
+    @tp.override
     def setUpClass(cls) -> None:
         cls.bag: BagModel = BagModel(a_s=1.1, a_b=1, V_s=1)
         cls.const_cs: ConstCSModel = ConstCSModel(css2=1/3, csb2=0.3, a_s=1.5, a_b=1, V_s=1, log_info=False)
@@ -88,6 +90,7 @@ class ChapmanJouguetTest(unittest.TestCase):
         self.assertAlmostEqual(v_chapman_jouguet_bag(1e8), 1)
 
     def test_bag_junction(self) -> None:
+        """The Chapman-Jouguet speed of the bag model should fulfill the junction conditions."""
         data = v_chapman_jouguet_bag(ALPHA_NS)
         ref = np.array([v_cj_junction(self.bag, alpha_n) for alpha_n in ALPHA_NS])
         assert_allclose(data, ref, rtol=1e-10)

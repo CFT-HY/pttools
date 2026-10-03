@@ -13,6 +13,7 @@ class ThermoModelsPlot:
     r"""A plot of the properties of multiple thermodynamic models."""
 
     def __init__(self, temp: th.FloatArr1D):
+        """:param temp: $T$, temperatures, used as the x-axis"""
         self.temp: th.FloatArr1D = temp
 
         self.fig: plt.Figure = plt.figure()

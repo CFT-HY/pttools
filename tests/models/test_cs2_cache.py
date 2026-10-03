@@ -30,6 +30,7 @@ class TestConstCSFuncs(unittest.TestCase):
 
     @staticmethod
     def create_model(csb2: float) -> models.ConstCSModel:
+        """Create a ConstCSModel with the given sound speed squared in the broken phase."""
         return models.ConstCSModel(css2=TestConstCSFuncs.CSS2, csb2=csb2, a_s=2, a_b=1, V_s=0.1, log_info=False)
 
     def test_shared(self) -> None:
@@ -73,6 +74,7 @@ class TestDfDtauIdentity(unittest.TestCase):
     CSB2_VALUES = (0.25, 0.26, 0.27, 0.28, 0.29, 0.3)
 
     def test_const_cs(self) -> None:
+        r"""The differential equations of ConstCSModels should use the $c_s^2$ of the model."""
         for csb2 in self.CSB2_VALUES:
             model = models.ConstCSModel(css2=1/3, csb2=csb2, a_s=2, a_b=1, V_s=0.1, log_info=False)
             self.assertAlmostEqual(df_dtau_cs2(model.df_dtau_ptr(), Phase.BROKEN), csb2)

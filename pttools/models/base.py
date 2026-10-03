@@ -59,6 +59,21 @@ class BaseModel(Extractable, abc.ABC):
             gen_cs2_neg: bool = True,
             temperature_is_physical: bool | None = None,
             silence_temp: bool = False):
+        r"""Initialize the model and validate its parameters.
+
+        :param name: name of the model, which should not contain spaces. Defaults to ``DEFAULT_NAME``.
+        :param label_latex: LaTeX label of the model. Defaults to ``DEFAULT_LABEL_LATEX``.
+        :param label_unicode: Unicode label of the model. Defaults to ``DEFAULT_LABEL_UNICODE``.
+        :param T_min: $T_\text{min}$, minimum temperature at which the model is valid. Defaults to ``DEFAULT_T_MIN``.
+        :param T_max: $T_\text{max}$, maximum temperature at which the model is valid. Defaults to ``DEFAULT_T_MAX``.
+        :param restrict_to_valid: whether temperatures outside the validity range are converted to NaN
+        :param gen_cs2: whether to generate the $c_s^2$ function, used internally for postponing its generation
+        :param gen_cs2_neg: whether to generate the $-c_s^2$ function
+        :param temperature_is_physical: whether the temperature is in physical units.
+            Defaults to ``TEMPERATURE_IS_PHYSICAL``.
+        :param silence_temp: whether to suppress the logging of temperatures outside the validity range
+        :raises ValueError: if the name, labels or temperature limits are invalid
+        """
         #: Unique identifier of the model, which is used for distinguishing the compiled functions of the models.
         #: Python's id() is not used, since its values are reused after the objects have been garbage collected,
         #: which would result in a model using the compiled functions of a previous model.
@@ -120,8 +135,9 @@ class BaseModel(Extractable, abc.ABC):
         raise NotImplementedError("This class does not have gen_cs2 defined")
 
     def gen_cs2_neg(self) -> th.CS2Fun:
-        r"""This function generates a negative version of
-        the Numba-jitted $c_s^2$ function to be used for maximization.
+        r"""This function generates a negative version of the Numba-jitted $c_s^2$ function.
+
+        The negative version is used for finding the maximum of $c_s^2$ with a minimization algorithm.
         """
         raise NotImplementedError("This class does not have gen_cs2_neg defined")
 

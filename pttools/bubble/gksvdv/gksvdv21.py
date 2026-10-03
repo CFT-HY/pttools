@@ -1,6 +1,5 @@
 r"""
-This is the example code from
-:giese_2021:`\ `.
+This is the example code from :giese_2021:`\ `.
 
 Commented for better readability.
 """
@@ -30,8 +29,7 @@ XI_OFFSET: float = 1e-8
 
 # @njit
 def getwow(v1: float, v2: float) -> float:
-    """Ratio of enthalpies across the bubble wall, "w over w"
-    from the junction conditions.
+    """Ratio of enthalpies across the bubble wall, "w over w", from the junction conditions.
 
     :param v1: $v_a$
     :param v2: $v_b$
@@ -41,7 +39,9 @@ def getwow(v1: float, v2: float) -> float:
 
 # @njit
 def getvm(al: float, vw: float, cs2b: float) -> tuple[float, int]:
-    r"""Fluid velocity behind the wall, $\tilde{v}_-$, and the expansion mode
+    r"""Fluid velocity behind the wall, $\tilde{v}_-$, and the expansion mode.
+
+    The expansion modes are
     0 = deflagration
     1 = hybrid
     2 = detonation.
@@ -76,8 +76,10 @@ def dfdv(xiw: tuple[float, float] | th.FloatArr1D, v: float, cs2: float) -> tupl
 # This uses odeint and simpson, and therefore compiling would not benefit much.
 # @njit
 def getKandWow(vw: float, v0: float, cs2: float) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, float, float]:
-    """
-    Returns two values
+    """Integrate the shock/rarefaction wave, and get its kinetic energy and enthalpy ratio.
+
+    In addition to the integrated arrays of the fluid velocity, the enthalpy ratio and xi,
+    returns two values
     - Enthalpy-weighted kinetic energy in the shock/rarefaction wave
     - Ratio between the enthalpy density at the start of the shock/rarefaction compared to its end.
 
@@ -127,7 +129,9 @@ def alN(al: float, wow: float, cs2b: float, cs2s: float) -> float:
 
 # @njit
 def getalNwow(vp: float, vm: float, vw: float, cs2b: float, cs2s: float) -> tuple[float, float]:
-    r"""Get
+    r"""Get $\alpha_{\bar{\theta}n}$ and the enthalpy ratio for fixed boundary conditions at the wall.
+
+    The returned values are
     - $\alpha_{\bar{\theta}n}$ in the nucleation phase
     - Ratio of the enthalpies for fixed boundary conditions at the wall.
     """
@@ -144,6 +148,7 @@ def kappaNuMuModel(
         al: float,
         vw: float) -> tuple[float, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, int, float, float]:
     r"""Calculate the efficiency factor $\kappa$.
+
     This uses the other functions.
 
     :param cs2b: $c_{s,b}^2$

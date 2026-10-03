@@ -1,4 +1,5 @@
-"""Compare SSM prediction with data
+"""Compare SSM prediction with data.
+
 Creates and plots velocity and GW power spectra from SSM.
 
 Modified from
@@ -96,6 +97,7 @@ VW_LIST_ALL = [const.VW_WEAK_LIST, VW_INTER_LIST]
 
 @njit(cache=True)
 def cwg_fitfun(k: th.FloatArr, p0: float, p1: float) -> th.FloatArr:
+    r"""CWG fit function $p_0 (k/p_1)^3 (7 / (4 + 3 (k/p_1)^2))^{7/2}$ with peak power $p_0$ at $k = p_1$."""
     return p0 * np.power(k/p1, 3.0) * np.power(7.0 / (4.0 + 3.0 * np.power(k / p1, 2.0)), 7.0 / 2.0)
 
 
@@ -110,6 +112,10 @@ def double_broken_power_law(
         c: float,
         d: float = 4.,
         e: float = 2.) -> th.FloatArr:
+    """Double broken power law with peak power A and breaks at z0 and z1.
+
+    The power law indices are a, b and c at low, intermediate and high z, and d and e set the sharpness of the breaks.
+    """
     s = z/z1
     D = z1/z0
     Dpow = D**d
@@ -121,16 +127,19 @@ def double_broken_power_law(
 
 @njit(cache=True)
 def ssm_fitfun(z: th.FloatArr, A: float, z0: float, z1: float) -> th.FloatArr:
+    """SSM fit function: a double broken power law with the indices 9, 1 and -4."""
     return double_broken_power_law(z, A, z0, z1, 9, 1, -4)
 
 
 def get_cwg_fit_pars(y: th.FloatArr1D, pow_gw: th.FloatArr1D) -> FitParsCWG:
+    """Fit the CWG fit function to the GW power spectrum at y > 10 and return the fit parameters (p0, p1)."""
     frange = np.where(y > 10)
     pars, _ = curve_fit(cwg_fitfun, y[frange], pow_gw[frange], p0=(pow_gw[frange][0], 10))
     return pars[0], pars[1]
 
 
 def get_ssm_fit_pars(y: th.FloatArr1D, pow_gw: th.FloatArr1D) -> FitParsSSM:
+    """Fit the SSM fit function to the GW power spectrum and return the fit parameters (A, z0, z1)."""
     frange = np.where(y > 1e-8)
     pars, _ = curve_fit(
         ssm_fitfun, y[frange], pow_gw[frange],
@@ -141,6 +150,7 @@ def get_ssm_fit_pars(y: th.FloatArr1D, pow_gw: th.FloatArr1D) -> FitParsSSM:
 
 
 def add_cwg_fit(f_gw: plt.Figure, y: th.FloatArr1D, pow_gw: th.FloatArr1D) -> FitParsCWG:
+    """Fit the CWG fit function to the GW power spectrum, plot it to the figure and return the fit parameters."""
     p = get_cwg_fit_pars(y, pow_gw)
     pow_gw_sim_cwg = cwg_fitfun(y, p[0], p[1])
     f_gw.axes[0].loglog(y, pow_gw_sim_cwg, 'k-.', label='CWG fit')
@@ -149,6 +159,7 @@ def add_cwg_fit(f_gw: plt.Figure, y: th.FloatArr1D, pow_gw: th.FloatArr1D) -> Fi
 
 
 def add_ssm_fit(f_gw: plt.Figure, y: th.FloatArr1D, pow_gw: th.FloatArr1D) -> FitParsSSM:
+    """Fit the SSM fit function to the GW power spectrum, plot it to the figure and return the fit parameters."""
     p = get_ssm_fit_pars(y, pow_gw)
     pow_gw_sim_ssm = ssm_fitfun(y, p[0], p[1], p[2])
     f_gw.axes[0].loglog(y, pow_gw_sim_ssm, 'k--', label='SSM fit')
@@ -160,6 +171,7 @@ def make_1dh_compare_table(
         params_list: th.FloatArr2D,
         v2_list: th.FloatArr2D,
         file_name: str | os.PathLike[str] | io.TextIOBase = 'table_1dh_compare.tex') -> None:
+    r"""Write a LaTeX table comparing $\bar{U}_f$ with simultaneous and exponential nucleation to a single 1D bubble."""
     f = file_name if isinstance(file_name, io.TextIOBase) else Path(file_name).open("w")  # noqa: SIM115
     f.write('\\begin{tabular}{cc | rrr }\n')
 
@@ -201,8 +213,9 @@ def make_3dh_compare_table(
         p_list: th.FloatArr2D,
         file_name: str | os.PathLike[str] | io.TextIOBase = 'table_3dh_compare.tex') -> None:
     """
-    Prints table to file, comparing selected statistics between
-    SSM and "Prace" 3dh hydro simulations (Hindmarsh et al. 2017)
+    Prints table to file, comparing selected statistics between SSM and "Prace" 3dh hydro simulations.
+
+    The simulations are from Hindmarsh et al. 2017.
     Mean square fluid velocity.
 
     The results are precomputed, and therefore this function doesn't call pttools.
@@ -294,8 +307,7 @@ def make_nuc_compare_table(
         p_exp_list: th.FloatArr2D,
         file_name: str | os.PathLike[str] | io.TextIOBase = 'table_nuc_compare.tex') -> None:
     """
-    Prints table to stdout, displaying selected statistics
-    comparing between simulataneous and exponential nucleation.
+    Prints table to file, displaying selected statistics comparing simultaneous and exponential nucleation.
 
     The results are precomputed, and therefore this function doesn't call pttools.
     """
@@ -372,6 +384,7 @@ def save_compare_nuc_data(
         Omgw_list: list[list[float]],
         p_cwg_list: list[list[float]],
         p_ssm_list: list[list[float]]) -> list[list[float]]:
+    """Save the nucleation comparison data to a text file and return it as rows."""
     data: list[list[float]] = []
     for params, v2, Omgw, pc, ps in zip(params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list, strict=False):
         data.append(params + v2 + Omgw + pc + ps)
@@ -382,6 +395,7 @@ def save_compare_nuc_data(
 
 def load_compare_nuc_data(file: str) \
         -> tuple[list[list[float]], list[list[float]], list[list[float]], list[list[float]], list[list[float]]]:
+    """Load the nucleation comparison data saved by :func:`save_compare_nuc_data`."""
     data = np.loadtxt(file)
     params_list: list[list[float]] = []
     v2_list: list[list[float]] = []
@@ -453,7 +467,8 @@ def plot_ps_compare_res(
         graph_file_type: str | None = None,
         method: ssm.Method = ssm.Method.E_CONSERVING) -> tuple[plt.Figure, plt.Figure]:
     """
-    Plots power spectra predictions of SSM with different resolutions in Np_list
+    Plots power spectra predictions of SSM with different resolutions in Np_list.
+
     Saves data and graphs if save_id is set.
     """
     strength = utils.Strength.WEAK
@@ -563,7 +578,9 @@ def plot_ps_1bubble(
         lambda_correction: bool = False) -> plt.Figure | tuple[plt.Figure, th.FloatArr2D]:
     # Sphinx considers vertical lines as substitution references. Therefore the command \mid has to be used instead.
     r"""
-    Plots power spectra predictions of 1 bubble. Shown are
+    Plots power spectra predictions of 1 bubble.
+
+    Shown are
     $\mid A \mid^2, \mid f'(z) \mid^2/2$ and $\mid l(z) \mid^2/2$
     Saves data if save_id is set
     Saves graph file if graph_file_type is set.
@@ -621,7 +638,8 @@ def plot_ps_compare_nuc(
         lambda_correction: bool = False) -> \
             tuple[list[float], list[float], list[float], list[float]]:
     """
-    Plots power spectra predictions of SSM with different nucleation models
+    Plots power spectra predictions of SSM with different nucleation models.
+
     Saves data if save_id is set.
     Saves graph file if graph_file_type is set.
     """
@@ -792,6 +810,7 @@ def plot_and_save(
         suffix: str | None =None) -> tuple[list[th.FloatOrArr], list[th.FloatOrArr]]:
     """
     Plots the Velocity power spectrum as a function of $kR_*$.
+
     Plots the scaled GW power spectrum as a function of $kR_*$.
     Saves power spectra in files pow_v_*, pow_gw_* if suffix is set.
     """
@@ -911,6 +930,7 @@ def do_all_plot_ps_compare_nuc(
         graph_file_type: str | None = None,
         lambda_correction: bool = False) \
         -> tuple[list[list[float]], list[list[float]], list[list[float]], list[list[float]], list[list[float]]]:
+    """Plot the power spectra with different nucleation types for all the parameters and return the statistics."""
     Omgw_scaled_list: list[list[float]] = []
     param_list: list[list[float]] = []
     p_cwg_list: list[list[float]] = []
@@ -956,6 +976,7 @@ def do_all_plot_ps_1bubble(
         lambda_correction: bool = False) -> \
             tuple[list[plt.Figure], list[str]] | \
             tuple[list[plt.Figure], list[str], th.FloatArr3D]:
+    """Plot the single-bubble power spectra for weak and intermediate transitions with several wall speeds."""
     vw_weak_list = [0.92, 0.56, 0.44]
     vw_inter_list = [0.92, 0.56, 0.44]
 

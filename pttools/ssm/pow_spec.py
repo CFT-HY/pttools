@@ -10,6 +10,7 @@ from pttools.type_hints import FloatOrArr
 def pow_spec[T: FloatOrArr](z: T, spec_den: T | float) -> T:
     r"""
     Power spectrum from spectral density at dimensionless wavenumber z.
+
     $$\mathcal{P}(z) = \frac{z^3}{2 \pi^2} \tilde{P}(z)$$.
 
     :gw_pt_ssm:`\ ` eq. 4.18, but without the factor of 2.

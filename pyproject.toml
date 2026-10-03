@@ -312,16 +312,6 @@ select = [
 ]
 ignore = [
     "ARG001",   # unused-function-argument
-    # Writing the missing docstrings is a documentation task rather than a linting one.
-    "D101",     # undocumented-public-class
-    "D102",     # undocumented-public-method
-    "D103",     # undocumented-public-function
-    "D105",     # undocumented-magic-method
-    "D106",     # undocumented-public-nested-class
-    "D107",     # undocumented-public-init
-    # Most of the docstrings of PTtools have a multi-line summary or start on the line
-    # after the opening quotes, so this cannot be fixed mechanically.
-    "D205",     # missing-blank-line-after-summary
     # Many docstrings describe a physical quantity with a noun phrase instead of a verb.
     "D401",     # non-imperative-mood
     "PLR0913",  # too-many-arguments
@@ -405,3 +395,5 @@ extend-ignore-names = [
 # This should be set to "sphinx" once it's supported.
 # https://github.com/astral-sh/ruff/issues/6606
 convention = "pep257"
+# The docstrings of the methods decorated with these are copied from other functions at import time.
+ignore-decorators = ["pttools.utils.docstrings.copy_docstring_dec"]

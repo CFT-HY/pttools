@@ -21,6 +21,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 class BagModel(AnalyticModel):
     r"""Bag equation of state.
+
     This is one of the simplest equations of state for a relativistic plasma.
     Each integration corresponds to a line on the figure below (fig. 9 of :gw_pt_ssm:`\ `).
 
@@ -55,6 +56,26 @@ class BagModel(AnalyticModel):
             allow_invalid: bool = False,
             auto_potential: bool = False,
             log_info: bool = True):
+        r"""Initialize the bag model.
+
+        :param V_s: $V_s = \epsilon_s$, the potential term of $p$ in the symmetric phase
+        :param V_b: $V_b = \epsilon_b$, the potential term of $p$ in the broken phase, which is usually zero
+        :param a_s: $a_s$, prefactor of $p$ in the symmetric phase
+        :param a_b: $a_b$, prefactor of $p$ in the broken phase
+        :param g_s: $g_\text{eff}(\phi=s)$, degrees of freedom for $p$ in the symmetric phase
+        :param g_b: $g_\text{eff}(\phi=b)$, degrees of freedom for $p$ in the broken phase
+        :param T_min: $T_\text{min}$, minimum temperature at which the model is valid
+        :param T_max: $T_\text{max}$, maximum temperature at which the model is valid
+        :param alpha_n_min: $\alpha_{n,\text{min}}$, if given, $a_s$ is adjusted so that the model allows this
+            minimum transition strength, using :meth:`alpha_n_min_find_params`
+        :param name: custom name for the model
+        :param label_latex: custom LaTeX label for the model
+        :param label_unicode: custom Unicode label for the model
+        :param allow_invalid: whether to allow $V_s \leq V_b$ and failures in solving the critical temperature
+        :param auto_potential: set $V_s = a_s - a_b$ and $V_b = 0$ so that $T_c = 1$
+        :param log_info: whether to log information and warnings about the model parameters
+        :raises ValueError: if $a_s \leq a_b$, or if $V_s \leq V_b$ and allow_invalid is False
+        """
         if log_info:
             logger.debug(
                 "Initialising BagModel with V_s=%s, V_b=%s, a_s=%s, a_b=%s, "
@@ -102,7 +123,7 @@ class BagModel(AnalyticModel):
                 f"Bag, a_s={self.a_s:.{label_prec}f}, a_b={self.a_b:.{label_prec}f}, " \
                 f"V_s={self.V_s:.{label_prec}f}, V_b={self.V_b:.{label_prec}f}"
 
-    @copy_docstring_dec(AnalyticModel.alpha_plus_bag)
+    @copy_docstring_dec(AnalyticModel.alpha_n_bag)
     def alpha_n[T: FloatOrArr](
             self,
             wn: T,
@@ -121,6 +142,7 @@ class BagModel(AnalyticModel):
         return self.w_crit, self.alpha_n(self.w_crit)
 
     @classmethod
+    @tp.override
     def alpha_n_min_find_params(
             cls,
             alpha_n_min_target: float,
@@ -162,6 +184,7 @@ class BagModel(AnalyticModel):
             log_invalid=log_invalid
         )
 
+    @tp.override
     def alpha_theta_bar_n[T: FloatOrArr](
             self,
             wn: T,
@@ -175,6 +198,7 @@ class BagModel(AnalyticModel):
             log_invalid=log_invalid
         )
 
+    @tp.override
     def alpha_theta_bar_n_max_lte[T: FloatOrArr](
             self,
             wn: T,
@@ -183,6 +207,7 @@ class BagModel(AnalyticModel):
             Psi_n: th.FloatOrArr | None = None) -> T:
         return super().alpha_theta_bar_n_max_lte(wn=wn, sol_type=sol_type, mu_b=mu_b, Psi_n=Psi_n)
 
+    @tp.override
     def alpha_theta_bar_n_min_lte[T: FloatOrArr](
             self,
             wn: T,
@@ -192,6 +217,7 @@ class BagModel(AnalyticModel):
             Psi_n: th.FloatOrArr | None = None) -> T:
         return super().alpha_theta_bar_n_min_lte(wn=wn, sol_type=sol_type, mu_s=mu_s, mu_b=mu_b, Psi_n=Psi_n)
 
+    @tp.override
     def alpha_theta_bar_plus[T: FloatOrArr](
             self,
             wp: T,
@@ -241,6 +267,7 @@ class BagModel(AnalyticModel):
                 w_min: float = 0, allow_fail: bool = False, **kwargs: tp.Any) -> tuple[float, float]:
         return 1/3, np.nan
 
+    @tp.override
     def delta_theta[T: FloatOrArr](
             self,
             wp: T, wm: th.FloatOrArr,
@@ -251,14 +278,23 @@ class BagModel(AnalyticModel):
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
 
+    @tp.override
     def cs2_ptr(self) -> th.CS2FunScalarPtr:
         return CS2_BAG_SCALAR_PTR
 
+    @tp.override
     def df_dtau_ptr(self) -> DifferentialPointer:
+        r"""Pointer to the fluid differential equations $\frac{df}{d\tau}$ of the bag model.
+
+        For the bag model, the differentials are the same for all model instances, and are therefore precompiled.
+        """
         return DF_DTAU_PTR_BAG
 
     def e_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
-        r"""Energy density as a function of temperature, :giese_2021:`\ ` eq. 15, :borsanyi_2016:`\ `, eq. S12
+        r"""Energy density as a function of temperature, :giese_2021:`\ ` eq. 15, :borsanyi_2016:`\ `, eq. S12.
+
+        $$e_s = 3 a_s T^4 + V_s$$
+        $$e_b = 3 a_b T^4 + V_b$$
         The convention for $a_s$ and $a_b$ is that of :notes:`\ `, eq. 7.33.
         """
         self.validate_temp(temp)
@@ -275,9 +311,10 @@ class BagModel(AnalyticModel):
     #     return 1/3 * np.ones_like(w) * np.ones_like(phase)
 
     def p_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
-        r"""Pressure $p(T,\phi)$, :notes:`\ `, eq. 5.14, 7.1, 7.33, :giese_2021:`\ `, eq. 18
-        $$p_s = a_s T^4$$
-        $$p_b = a_b T^4$$
+        r"""Pressure $p(T,\phi)$, :notes:`\ `, eq. 5.14, 7.1, 7.33, :giese_2021:`\ `, eq. 18.
+
+        $$p_s = a_s T^4 - V_s$$
+        $$p_b = a_b T^4 - V_b$$
         The convention for $a_s$ and $a_b$ is that of :notes:`\ ` eq. 7.33.
         """
         self.validate_temp(temp)
@@ -285,11 +322,13 @@ class BagModel(AnalyticModel):
         p_b = self.a_b * temp**4 - self.V_b
         return tp.cast(T, p_b * phase + p_s * (1 - phase))
 
+    @tp.override
     def params_str(self) -> str:
         return f"a_s={self.a_s}, a_b={self.a_b}, V_s={self.V_s}, V_b={self.V_b}"
 
     def s_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
-        r"""Entropy density $s=\frac{dp}{dT}$
+        r"""Entropy density $s=\frac{dp}{dT}$.
+
         $$s_s = 4 a_s T^3$$
         $$s_b = 4 a_b T^3$$
         Derived from :notes:`\ ` eq. 7.33.
@@ -313,7 +352,9 @@ class BagModel(AnalyticModel):
             cs2_ptr=CS2_BAG_SCALAR_PTR)
 
     def temp[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
-        r"""Temperature $T(w,\phi)$. Inverted from
+        r"""Temperature $T(w,\phi)$.
+
+        Inverted from
         $$T(w) = \sqrt[4]{\frac{w}{4a(\phi)}}$$.
 
         :param w: enthalpy $w$
@@ -335,13 +376,15 @@ class BagModel(AnalyticModel):
 
     @staticmethod
     def v_shock[T: FloatOrArr](xi: T) -> T:
-        r"""Velocity at the shock, :gw_pt_ssm:`\ ` eq. B.17
-        $$v_\text{sh}(\xi) = \frac{3\xi^22 - 1}{2\xi}$$.
+        r"""Velocity at the shock, :gw_pt_ssm:`\ ` eq. B.17.
+
+        $$v_\text{sh}(\xi) = \frac{3\xi^2 - 1}{2\xi}$$.
         """
         return tp.cast(T, (3 * xi**2 - 1) / (2 * xi))
 
     def w[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
-        r"""Enthalpy $w(T)$
+        r"""Enthalpy $w(T)$.
+
         $$w(T) = 4a(\phi)T^4$$.
 
         :param temp: temperature $T$
@@ -359,7 +402,8 @@ class BagModel(AnalyticModel):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
-        r"""Enthalpy at nucleation temperature
+        r"""Enthalpy at nucleation temperature.
+
         $$w_n = \frac{4}{3} \frac{V_s - V_b}{\alpha_n}$$
         This can be derived from the equations for $\theta$ and $\alpha_n$.
         """
@@ -377,7 +421,8 @@ class BagModel(AnalyticModel):
 
     @staticmethod
     def w_shock(xi: th.FloatOrArr, w_n: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Enthalpy at the shock, :gw_pt_ssm:`\ ` eq. B.18
+        r"""Enthalpy at the shock, :gw_pt_ssm:`\ ` eq. B.18.
+
         $$w_\text{sh}(\xi) = w_n \frac{9\xi^2 - 1}{3(1-\xi^2)}$$.
         """
         return w_n * (9 * xi**2 - 1) / (2 * (1 - xi**2))

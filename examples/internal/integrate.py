@@ -11,10 +11,12 @@ from pttools.bubble import DEFAULT_FLUID_INTEGRATE_METHOD, DEFAULT_T_END, Phase,
 
 
 def cs2(w: float, phase: float) -> float:
+    r"""$c_s^2$, a custom sound speed squared that depends slightly on the phase"""
     return 1/3 - 0.001 * phase
 
 
 def main() -> None:
+    """Integrate a fluid shell profile with a custom equation of state and plot it"""
     df_dtau_ptr = add_df_dtau(name="test", cs2_fun=cs2)
     v, _w, xi, _t = fluid_integrate_param(
         v0=0.2, w0=1., xi0=0.3, phase=Phase.SYMMETRIC,

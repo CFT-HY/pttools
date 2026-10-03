@@ -7,7 +7,8 @@ from pttools.type_hints import FloatOrArr
 
 @njit(cache=True)
 def rho[T: FloatOrArr](z: T, x: T | float, y: T | float) -> T:
-    r"""Geometric function $\rho(z,x,y)$
+    r"""$\rho(z,x,y)$, geometric function.
+
     $$\rho(z,x,y) = \frac{
     \left( y^2 - (x-z)^2 \right)^2
     \left( (x + z)^2 - y^2 \right)^2
@@ -22,7 +23,8 @@ def rho[T: FloatOrArr](z: T, x: T | float, y: T | float) -> T:
 
 @njit(cache=True)
 def rho_delta[T: FloatOrArr](z: T, x: T | float, xp: T | float, xm: T | float, cs2: T | float = CS0_2) -> T:
-    r"""$\rho(z,x)$
+    r"""$\rho(z,x)$, geometric function with $y$ integrated out.
+
     $$\rho(z,x) = z^2 \left( \frac{1 - c_s^2}{c_s^2} \right)^2 \frac{(x - x_+)^2(x - x_{-})^2}{x(x_+ + x_{-} - x)}$$
     :giombi_2024_cs:`\ ` eq. B.21
     This is obtained by integrating $y$ (aka. $\tilde{x}$) out using a delta function in the kernel.
@@ -32,7 +34,8 @@ def rho_delta[T: FloatOrArr](z: T, x: T | float, xp: T | float, xm: T | float, c
 
 @njit(cache=True)
 def rho_delta_factor[T: FloatOrArr](cs2: T = CS0_2) -> T:
-    r"""The $c_s^2$ factor in $\rho(z,x)$
+    r"""The $c_s^2$ factor in $\rho(z,x)$.
+
     $$\left( \frac{1 - c_s^2}{c_s^2} \right)^2$$
     :giombi_2024_cs:`\ ` eq. B.21.
     """
@@ -42,7 +45,8 @@ def rho_delta_factor[T: FloatOrArr](cs2: T = CS0_2) -> T:
 
 @njit(cache=True)
 def rho_delta_frac[T: FloatOrArr](x: T, xp: T | float, xm: T | float) -> T:
-    r"""The $(x,x_+, x_{-})$ fraction in $\rho(z,x)$
+    r"""The $(x,x_+, x_{-})$ fraction in $\rho(z,x)$.
+
     $$\frac{(x - x_+)^2(x - x_{-})^2}{x(x_+ + x_{-} - x)}$$
     :giombi_2024_cs:`\ ` eq. B.21.
     """
@@ -51,7 +55,8 @@ def rho_delta_frac[T: FloatOrArr](x: T, xp: T | float, xm: T | float) -> T:
 
 @njit(cache=True)
 def rho_pm[T: FloatOrArr](z: T, x: T | float, cs: T | float = CS0) -> T:
-    r"""Geometric function $\rho(z,x,y)$
+    r"""$\rho(z,x,y)$, geometric function with $y$ determined by $x$ and $x_\pm$.
+
     Here $y \equiv x_+ + x_{-} - x$
     :giombi_2026:`\ ` p. 25.
     """
@@ -60,7 +65,8 @@ def rho_pm[T: FloatOrArr](z: T, x: T | float, cs: T | float = CS0) -> T:
 
 @njit(cache=True)
 def x_minus[T: FloatOrArr](z: T, cs: T | float = CS0) -> T:
-    r"""$x_-$
+    r"""$x_-$, lower limit of the integration over $x$.
+
     $$x_- = \frac{1 - c_s}{2 c_s} z$$
     :giombi_2024_cs: \ ` p. 13
     :giombi_2026: \ ` p. 25
@@ -71,7 +77,8 @@ def x_minus[T: FloatOrArr](z: T, cs: T | float = CS0) -> T:
 
 @njit(cache=True)
 def x_plus[T: FloatOrArr](z: T, cs: T | float = CS0) -> T:
-    r"""$x_+$
+    r"""$x_+$, upper limit of the integration over $x$.
+
     $$x_+ = \frac{1 + c_s}{2 c_s} z$$
     :giombi_2024_cs: \ ` p. 13
     :giombi_2026: \ ` p. 25

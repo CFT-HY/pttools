@@ -25,6 +25,10 @@ class NucArgs:
     """Nucleation arguments."""
 
     def __init__(self, a: float):
+        r"""Set the nucleation arguments.
+
+        :param a: multiplier for the bubble lifetime distribution $\nu$
+        """
         self.a: float = a
 
 
@@ -51,6 +55,13 @@ class PhysicalParams:
             # The jitclass field is a string, and therefore NucType has to be given by its value when jitting.
             nuc_type: str | None = None,
             nuc_args: NucArgs | None = None):
+        r"""Set the physical parameters.
+
+        :param v_wall: $v_\text{wall}$, wall speed
+        :param alpha: $\alpha$, transition strength
+        :param nuc_type: nucleation type, given by the value of :class:`pttools.ssm.NucType`
+        :param nuc_args: nucleation arguments
+        """
         self.v_wall: float = v_wall
         self.alpha: float = alpha
         self.nuc_type: str | None = nuc_type

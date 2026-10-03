@@ -26,6 +26,17 @@ def time_and_log(
         n_threads: int,
         log: bool = True,
         file: tp.TextIO | None = None) -> float:
+    """Measure the runtime of a statement with :func:`timeit.timeit` and log the result.
+
+    :param name: name of the measurement for the log message
+    :param stmt: the statement to be timed
+    :param setup: the setup statement, which is run once before the timing
+    :param n_iterations: number of times to run the statement
+    :param n_threads: number of threads for the log message. This does not set the number of threads.
+    :param log: whether to log the result
+    :param file: file to which the log message is also written
+    :return: total runtime in seconds
+    """
     result = timeit(stmt=stmt, setup=setup, number=n_iterations)
     # layer = numba.threading_layer()
     if log:
@@ -45,6 +56,20 @@ def time_with_varying_numba_threads(
         n_threads: th.IntArr1D = DEFAULT_VARYING_NUMBA_THREADS,
         log: bool = True,
         file: tp.TextIO | None = None) -> tuple[th.IntArr1D, th.FloatArr1D]:
+    """Measure the runtime of a statement with different numbers of Numba threads.
+
+    If Numba JIT compilation is disabled, the runtime is measured only once, with one thread.
+    The original number of Numba threads is restored afterwards.
+
+    :param name: name of the measurement for the log messages
+    :param stmt: the statement to be timed
+    :param setup: the setup statement, which is run once before each timing
+    :param n_iterations: number of times to run the statement for each number of threads
+    :param n_threads: numbers of threads to be tested
+    :param log: whether to log the results
+    :param file: file to which the log messages are also written
+    :return: the numbers of threads and the corresponding total runtimes in seconds
+    """
     if NUMBA_DISABLE_JIT:
         return np.array([1]), np.array([time_and_log(name, stmt, setup, n_iterations, 1, log, file)])
 

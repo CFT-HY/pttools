@@ -93,6 +93,7 @@ def dmesg(n_lines: int = 100, print_output: bool = False) -> str:
 
 
 def platform_info() -> str:
+    """Get information about the operating system, the CPU, the Python version and the process start methods."""
     return (
         f"OS: {UNAME.system} ({UNAME.release}), CPU: {UNAME.processor} ({UNAME.machine}), "
         f"Python: {platform.python_version()}, "
@@ -101,6 +102,7 @@ def platform_info() -> str:
 
 
 def psutil_info() -> str:
+    """Get information about the CPU and RAM use with psutil, including a warning if the RAM use is high."""
     if psutil is None:
         return "Please install psutil for more info."
     cpu = psutil.getloadavg()
@@ -123,6 +125,7 @@ def psutil_info() -> str:
 
 
 def system_info() -> str:
+    """Get system information for debugging, including the output of dmesg if it's available."""
     try:
         dmesg_msg = rf"Dmesg output:\n{dmesg()}"
     except Exception as err:  # noqa: BLE001

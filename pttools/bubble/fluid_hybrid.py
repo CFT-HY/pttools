@@ -119,6 +119,23 @@ def sound_shell_solvable_hybrid(
         t_end: float = DEFAULT_T_END,
         n_xi: int = DEFAULT_N_XI,
         thin_shell_limit: int = THIN_SHELL_T_POINTS_MIN) -> float:
+    r"""Difference of the estimated and given $w_n$ for a hybrid with the given $w_-$.
+
+    This is the objective function for solving $w_-$ of a hybrid. See :func:`sound_shell_hybrid`.
+
+    :param wm: $w_-$, enthalpy behind the wall
+    :param model: Equation of state
+    :param v_wall: $v_\text{wall}$, wall speed
+    :param wn: $w_n$, enthalpy at the nucleation temperature
+    :param cs_n: $c_{s,n}$, sound speed at the nucleation temperature
+    :param v_cj: $v_\text{CJ}$, Chapman-Jouguet speed
+    :param vp_tilde_guess: $\tilde{v}_{+,\text{guess}}$, initial guess for $\tilde{v}_+$
+    :param wp_guess: $w_{+,\text{guess}}$, initial guess for $w_+$
+    :param t_end: The maximum value for the fluid shell ODE integration parameter
+    :param n_xi: Number of points in the fluid velocity profile
+    :param thin_shell_limit: Limit of points for a shell to be so thin that it should be re-computed with more points
+    :return: $w_{n,\text{estimate}} - w_n$, or nan if $w_-$ is invalid
+    """
     if isinstance(wm, np.ndarray):
         wm = wm[0]
     if np.isnan(wm) or wm < 0:

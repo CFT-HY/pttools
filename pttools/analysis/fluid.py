@@ -25,6 +25,16 @@ def curves_broken(
         method: FluidIntegrateMethod = DEFAULT_FLUID_INTEGRATE_METHOD,
         n_xi: int = 1000,
         tau_end: float = -100.) -> FloatArr3D:
+    r"""Fluid profile curves in the broken phase, integrated backwards from $\xi_0 = 1$.
+
+    :param v0: $v_0$, starting fluid velocities of the curves
+    :param w0: $w_0$, starting enthalpy density
+    :param df_dtau_ptr: pointer to the differential equation function
+    :param method: differential equation solver to be used
+    :param n_xi: number of $\xi$ points per curve
+    :param tau_end: $\tau_\text{end}$, end value of the integration parameter
+    :return: array of $v, w, \xi$ with the shape (3, v0.size, n_xi)
+    """
     data = np.zeros((3, v0.size, n_xi))
 
     for i, v0_i in enumerate(v0):
@@ -44,6 +54,18 @@ def curves_droplet(
         method: FluidIntegrateMethod = DEFAULT_FLUID_INTEGRATE_METHOD,
         n_xi: int = 1000,
         tau_end: float = -100.) -> FloatArr3D:
+    r"""Fluid profile curves for droplets, i.e. inverse phase transitions.
+
+    This calls :func:`curves_inverse` with $\xi_0 = -1$.
+
+    :param v0: $v_0$, starting fluid velocities of the curves
+    :param w0: $w_0$, starting enthalpy density
+    :param df_dtau_ptr: pointer to the differential equation function
+    :param method: differential equation solver to be used
+    :param n_xi: number of $\xi$ points per curve
+    :param tau_end: $\tau_\text{end}$, end value of the integration parameter
+    :return: array of $v, w, \xi$ with the shape (3, v0.size, n_xi)
+    """
     return curves_inverse(v0=v0, w0=w0, xi0=-1., df_dtau_ptr=df_dtau_ptr, method=method, n_xi=n_xi, tau_end=tau_end)
 
 
@@ -55,6 +77,20 @@ def curves_inverse(
         method: FluidIntegrateMethod = DEFAULT_FLUID_INTEGRATE_METHOD,
         n_xi: int = 1000,
         tau_end: float = -100.) -> FloatArr3D:
+    r"""Fluid profile curves for inverse phase transitions.
+
+    The cut for the phases and the starting point $\xi_0$ are not yet implemented,
+    and therefore this currently returns the same curves as :func:`curves_broken`.
+
+    :param v0: $v_0$, starting fluid velocities of the curves
+    :param w0: $w_0$, starting enthalpy density
+    :param xi0: $\xi_0$, starting point (not yet used)
+    :param df_dtau_ptr: pointer to the differential equation function
+    :param method: differential equation solver to be used
+    :param n_xi: number of $\xi$ points per curve
+    :param tau_end: $\tau_\text{end}$, end value of the integration parameter
+    :return: array of $v, w, \xi$ with the shape (3, v0.size, n_xi)
+    """
     # Todo: implement a cut for the phases
     return curves_broken(v0=v0, w0=w0, df_dtau_ptr=df_dtau_ptr, method=method, n_xi=n_xi, tau_end=tau_end)
 
@@ -68,6 +104,21 @@ def curves_symmetric(
         n_xi: int = 1000,
         tau_end_backwards: float = -100.,
         tau_end_forwards: float = 100.) -> FloatArr3D:
+    r"""Fluid profile curves in the symmetric phase, starting from the $v = \xi$ line.
+
+    The curves are integrated both backwards (below the $v = \xi$ line) and forwards (above it).
+
+    :param v0: $v_0 = \xi_0$, starting fluid velocities of the curves
+    :param csb: $c_{s,b}$, sound speed in the broken phase.
+        If given, the part of the backwards curves below the $\mu(\xi, v) = c_{s,b}$ curve is removed.
+    :param w0: $w_0$, starting enthalpy density
+    :param df_dtau_ptr: pointer to the differential equation function
+    :param method: differential equation solver to be used
+    :param n_xi: number of $\xi$ points per curve and direction
+    :param tau_end_backwards: $\tau_\text{end}$ for the backwards integration
+    :param tau_end_forwards: $\tau_\text{end}$ for the forwards integration
+    :return: array of $v, w, \xi$ with the shape (3, v0.size, 2*n_xi)
+    """
     data = np.empty((3, v0.size, 2 * n_xi))
 
     for i, v0_i in enumerate(v0):

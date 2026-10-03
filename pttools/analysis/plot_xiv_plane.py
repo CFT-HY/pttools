@@ -15,6 +15,13 @@ class XIVPlanePlot:
     r"""A plot of the $\xi-v$ plane."""
 
     def __init__(self, model: Model, fig: plt.Figure | None = None, ax: plt.Axes | None = None):
+        r"""Create the plot with the $v = \xi$ line. Add curves to it with :meth:`curves`.
+
+        :param model: equation of state model
+        :param fig: figure to plot in. If None, a new figure is created.
+        :param ax: axes to plot in. If None, new axes are created in the figure. Requires fig.
+        :raises ValueError: if ax is given without fig
+        """
         self.fig: plt.Figure
         if fig is None:
             if ax is not None:

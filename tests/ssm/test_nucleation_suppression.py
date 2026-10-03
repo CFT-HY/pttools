@@ -9,6 +9,7 @@ Therefore, a spectrum computed from $\tilde{\beta}$ must be the same as one comp
 from the resulting $r_{\ast} = \Lambda r_{\ast,0}$.
 """
 
+import typing as tp
 import unittest
 
 import numpy as np
@@ -85,11 +86,14 @@ class NucleationFTest(unittest.TestCase):
 
 
 class NucleationSuppressionTest(unittest.TestCase):
+    r"""Test that spectra computed from $\tilde{\beta}$ and from the resulting $r_*$ are the same."""
+
     bubble: Bubble
     spectrum_beta: SSMSpectrum
     spectrum_r_star: SSMSpectrum
 
     @classmethod
+    @tp.override
     def setUpClass(cls) -> None:
         model = BagModel(alpha_n_min=0.01)
         cls.bubble = Bubble(model, v_wall=0.44, alpha_n=0.1)
@@ -98,19 +102,23 @@ class NucleationSuppressionTest(unittest.TestCase):
         cls.spectrum_r_star = SSMSpectrum(cls.bubble, r_star=cls.spectrum_beta.r_star, y=y, low_k=False)
 
     def test_lambda(self) -> None:
+        r"""Test that $\Lambda > 1$ in $r_* = \Lambda r_{\ast,0}$ from $\tilde{\beta}$, and $\Lambda = 1$ from $r_*$."""
         lam = self.spectrum_beta.bubble_spacing_enlargement_factor
         self.assertGreater(lam, 1.)
         assert_allclose(self.spectrum_beta.r_star, lam * r_star0(100, self.bubble.v_wall))
         self.assertEqual(self.spectrum_r_star.bubble_spacing_enlargement_factor, 1.)
 
     def test_ubarf2(self) -> None:
+        r"""Test that $\bar{U}_f^2$ does not depend on $\Lambda$."""
         assert_allclose(self.spectrum_beta.ubarf2, self.spectrum_r_star.ubarf2)
         assert_allclose(self.spectrum_beta.ubarf_custom_nucleation(), self.spectrum_r_star.ubarf)
 
     def test_spec_den_v(self) -> None:
+        r"""Test that the velocity spectral density does not depend on $\Lambda$."""
         assert_allclose(self.spectrum_beta.spec_den_v, self.spectrum_r_star.spec_den_v)
 
     def test_pow_gw(self) -> None:
+        r"""Test that the GW power spectrum does not depend on $\Lambda$."""
         assert_allclose(self.spectrum_beta.pow_gw, self.spectrum_r_star.pow_gw)
 
 

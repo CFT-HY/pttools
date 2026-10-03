@@ -13,6 +13,7 @@ class ReferenceTest(unittest.TestCase):
     @skip_slow
     @uses_multiprocessing
     def test_generation(self) -> None:
+        """Test that a small fluid reference file can be generated."""
         path = TEST_DATA_PATH / "fluid_reference_test.hdf5"
         path.unlink(missing_ok=True)
         fluid_reference.FluidReference(

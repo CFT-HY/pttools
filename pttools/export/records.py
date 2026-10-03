@@ -158,6 +158,7 @@ class Extractor:
             bubble_fields: FieldSpec = Preset.MINIMAL,
             spectrum_fields: FieldSpec = Preset.MINIMAL,
             importable: bool = True) -> None:
+        """Store the field specifications. The fields are resolved and cached when they're first needed."""
         self.specs: dict[Table, tuple[Preset | str | Field, ...]] = {
             Table.MODELS: _as_tuple(model_fields),
             Table.BUBBLES: _as_tuple(bubble_fields),

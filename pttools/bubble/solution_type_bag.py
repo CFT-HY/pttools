@@ -25,6 +25,7 @@ def identify_solution_type_bag(
         exit_on_error: bool = False) -> SolutionType:
     """
     Determines wall type from wall speed and global strength parameter.
+
     solution_type = [ 'Detonation' | 'Deflagration' | 'Hybrid' ].
     """
     if alpha_n < alpha_tools.alpha_n_max_detonation_bag(v_wall):

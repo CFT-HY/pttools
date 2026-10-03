@@ -30,6 +30,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 def enthalpy_ratio[T: FloatOrArr](v1: T, v2: T | float) -> T:
     r"""
     Ratio of enthalpies $w$ on both sides of a transition front.
+
     Uses conservation of momentum in moving frame.
     $$\frac{w_1}{w_2} = \frac{\gamma^2 (v_1) v_1}{\gamma^2 (v_2) v_2}$$.
 
@@ -41,7 +42,8 @@ def enthalpy_ratio[T: FloatOrArr](v1: T, v2: T | float) -> T:
 
 
 def junction_conditions_deviation[T: FloatOrArr](vp: T, vm: T | float, ap: T | float) -> T:
-    r"""Deviation from the combined junction conditions
+    r"""Deviation from the combined junction conditions.
+
     $$\Delta = \left( \frac{1}{\tilde{v}_-} + 3\tilde{v}_- \right)
     \tilde{v}_+ - 3(1 + \alpha_+) \tilde{v}_+^2 - \alpha_+ + 1$$.
 
@@ -81,7 +83,8 @@ def junction_conditions_solvable(
 def junction_condition_deviation1[T: FloatOrArr](
         v1: T, w1: T | float,
         v2: T | float, w2: T | float) -> T:
-    r"""Deviation from the first junction condition
+    r"""Deviation from the first junction condition.
+
     $$w_1 \tilde{\gamma}_1^2 \tilde{v}_1 - w_2 \tilde{\gamma}_2^2 \tilde{v}_2$$
     :notes:`\ `, eq. 7.22
     :cutting_2022:`\ `, eq. 19.
@@ -99,7 +102,8 @@ def junction_condition_deviation2(
         v1: th.FloatOrArr, w1: th.FloatOrArr, p1: th.FloatOrArr,
         v2: th.FloatOrArr, w2: th.FloatOrArr, p2: th.FloatOrArr
     ) -> th.FloatOrArr:
-    r"""Deviation from the second junction condition
+    r"""Deviation from the second junction condition.
+
     $$w_1 \tilde{\gamma}_1^2 \tilde{v}_1^2 + {p}_1 - {w}_2 \tilde{\gamma}_2^2 \tilde{v}_2^2 - {p}_2$$
     :notes:`\ `, eq. 7.22
     :notes:`\ `, eq. 18.
@@ -118,6 +122,18 @@ def junction_condition_deviation2(
 def junction_condition_deviations(
         v1: th.FloatOrArr, w1: th.FloatOrArr, p1: th.FloatOrArr,
         v2: th.FloatOrArr, w2: th.FloatOrArr, p2: th.FloatOrArr) -> th.FloatArr1D:
+    r"""Deviations from both junction conditions.
+
+    See :func:`junction_condition_deviation1` and :func:`junction_condition_deviation2`.
+
+    :param v1: $\tilde{v}_1$
+    :param w1: $w_1$
+    :param p1: $p_1$
+    :param v2: $\tilde{v}_2$
+    :param w2: $w_2$
+    :param p2: $p_2$
+    :return: array of the deviations from the first and the second junction condition
+    """
     # This would avoid invalid values in the inner functions, but it may make the solver not to find the solution.
     # if v2 < 0 or w2 < 0:
     #     return np.array([np.nan, np.nan])
@@ -263,6 +279,20 @@ def solve_junction_internal(
         v2_tilde_guess: float,
         w2_guess: float,
         log_status: bool = False) -> th.FSolveOutput:
+    r"""Solve the junction conditions for $\tilde{v}_2, w_2$ with :func:`pttools.speedup.solvers.fsolve_vary`.
+
+    The results are cached. Use :func:`solve_junction` instead, as it also validates the results.
+
+    :param model: Equation of state
+    :param v1_tilde: $\tilde{v}_1$
+    :param w1: $w_1$
+    :param phase1: $\phi_1$
+    :param phase2: $\phi_2$
+    :param v2_tilde_guess: $\tilde{v}_{2,\text{guess}}$
+    :param w2_guess: $w_{2,\text{guess}}$
+    :param log_status: Whether to log the status of the solver
+    :return: the output of the solver
+    """
     # Using fsolve_vary helps in finding the solutions, but it can also make the overall solver a lot slower.
     return fsolve_vary(
         junction_conditions_solvable,
@@ -298,7 +328,8 @@ def v_plus_hybrid(
 
 @njit(cache=True)
 def w2_junction[T: FloatOrArr](v1: T, w1: T | float, v2: T | float) -> T:
-    r"""Get $w_-$ from the junction condition 1
+    r"""Get $w_-$ from the junction condition 1.
+
     $$w_1 = w_2 \frac{\tilde{\gamma}_2^2 \tilde{v}_2}{\tilde{\gamma}_1^2 \tilde{v}_1}$$
     :notes:`\ `, eq. 7.22.
     """

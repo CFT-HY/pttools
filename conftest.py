@@ -84,6 +84,7 @@ def pytest_xdist_auto_num_workers() -> int | None:
 
 
 def pytest_configure(config: pytest.Config) -> None:
+    """Mark that unit tests are running and set up logging."""
     system._TESTING = True  # noqa: SLF001
     setup_logging()
 
@@ -133,6 +134,7 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
 def log_test_name_at_start(request: pytest.FixtureRequest) -> None:
     """
     Before starting a test, log its name.
+
     This makes it easier to retrieve the logs for a specific test.
     """
     logger.info("=" * 20 + request.node.nodeid + "=" * 20)

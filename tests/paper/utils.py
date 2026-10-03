@@ -12,6 +12,8 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 @enum.unique
 class PSType(enum.StrEnum):
+    """Power spectrum type: gravitational wave or velocity."""
+
     GW = "gw"
     V = "v"
     UNKNOWN = ""
@@ -19,6 +21,8 @@ class PSType(enum.StrEnum):
 
 @enum.unique
 class Position(enum.StrEnum):
+    """Position of a wall speed within the range of wall speeds compared."""
+
     HIGH = "high"
     LOW = "low"
     MED = "med"
@@ -26,6 +30,8 @@ class Position(enum.StrEnum):
 
 @enum.unique
 class Strength(enum.StrEnum):
+    """Phase transition strength category."""
+
     INTER = "inter"
     STRONG = "strong"
     WEAK = "weak"

@@ -16,12 +16,14 @@ class TestProfile(abc.ABC, unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
+        """JIT-compile the profiled code with :meth:`setup_numba`, unless Numba JIT is disabled."""
         if not speedup.NUMBA_DISABLE_JIT:
             cls.setup_numba()
 
     @classmethod
     @abc.abstractmethod
     def setup_numba(cls) -> None:
-        """Run the command to be profiled before profiling to ensure
-        that it's already fully Numba-jitted when profiled.
+        """Run the command to be profiled before profiling.
+
+        This ensures that it's already fully Numba-jitted when profiled.
         """

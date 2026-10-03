@@ -63,8 +63,9 @@ def _sin_transform_arr(
 
 def _sin_transform_core(t: th.FloatArr1D, f: th.FloatArr1D, freq: th.FloatArr1D) -> th.FloatArr1D:
     r"""
-    The :wikipedia:`sine transform <Sine_and_cosine_transforms>`
-    for multiple values of $\omega$ without any approximations.
+    Compute the :wikipedia:`sine transform <Sine_and_cosine_transforms>` for multiple values of $\omega$.
+
+    This is computed without any approximations.
     Computes the following for each angular frequency $\omega$.
     $$\hat{f}(\omega) = \int_{{t}_\text{min}}^{{t}_\text{max}} f(t) \sin(\omega t) dt$$.
 

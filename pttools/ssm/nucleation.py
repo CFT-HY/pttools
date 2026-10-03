@@ -61,7 +61,8 @@ def beta_tilde[T: FloatOrArr](
         legacy_cs: T | float | None = None,
         beta_tilde_min: float = const.BETA_TILDE_CONVERSION_MIN,
         log_inaccurate: bool = True) -> T:
-    r"""Nucleation rate parameter $\tilde{\beta}$, aka. "beta over H"
+    r"""$\tilde{\beta}$, nucleation rate parameter, aka. "beta over H".
+
     $$\tilde{\beta} \equiv \frac{\beta}{H_*} = (8 \pi)^\frac{1}{3} \frac{\max ({v}_\text{wall}, c_s)}{{r}_*}$$
     :gowling_2021:`\ ` eq. 2.1.
 
@@ -89,7 +90,8 @@ def beta_tilde[T: FloatOrArr](
 
 @njit(cache=True)
 def beta_R_star0[T: FloatOrArr](v_wall: T, legacy_cs: T | float | None = None) -> T:
-    r"""$\beta R_{\ast,0}$
+    r"""$\beta R_{\ast,0}$, nucleation rate parameter times mean bubble separation without nucleation suppression.
+
     $$\beta R_{\ast,0} = (8 \pi)^\frac{1}{3} v_{\text{wall}}$$
     This is a direct consequence of :py:func:beta:.
     This does not take into account the nucleation suppression.
@@ -123,7 +125,8 @@ def bubble_spacing_enlargement(
 
 @njit(cache=True)
 def bubble_spacing_enlargement_factor[T: FloatOrArr](hx: T) -> T:
-    r"""Bubble spacing enlargement factor $\Lambda$
+    r"""$\Lambda$, bubble spacing enlargement factor.
+
     $$\Lambda(h_x) \equiv \frac{R_{\ast}}{R_{\ast}(0)} = I_h^{-\frac{1}{3}}(h_x)$$
     :ajmi_2022:`\ ` eq. 77.
     """
@@ -132,7 +135,8 @@ def bubble_spacing_enlargement_factor[T: FloatOrArr](hx: T) -> T:
 
 @njit(cache=True)
 def hx[T: FloatOrArr](f: T) -> T:
-    r"""Fractional volume $h_x$ at which the symmetric phase is reheated enough to prevent further bubble nucleation
+    r"""Fractional volume $h_x$ at which the symmetric phase is reheated enough to prevent further bubble nucleation.
+
     $$h_x = \frac{f}{1 + f} = 1 - \frac{v_{\text{wall}}^3}{v_{\text{eff}}^3}$$
     :ajmi_2022:`\ ` eq. 56.
     """
@@ -142,7 +146,8 @@ def hx[T: FloatOrArr](f: T) -> T:
 
 @vectorize(cache=True, nopython=True)
 def Ih_approx[T: FloatOrArr](hx: T) -> T:
-    r"""Approximate $I_h(h_x)$
+    r"""Approximate $I_h(h_x)$.
+
     $$I_h(h_x) = 1 + \frac{h_x \ln h_x}{1 - h_x}$$
     :ajmi_2022:`\ ` eq. 78.
     """
@@ -189,7 +194,8 @@ def lifetime_distribution[T: FloatOrArr](
 
 @njit(cache=True)
 def lifetime_distribution_momentum(nu: FloatArr1D, T_tilde: FloatArr1D, n: int) -> float:
-    r"""$\nu_n$, nth momentum of the lifetime distribution $\nu$
+    r"""$\nu_n$, nth momentum of the lifetime distribution $\nu$.
+
     $$\nu_n \equiv \int d\tilde{T} \nu(\tilde{T}) \tilde{T}^n$$
     :gw_pt_ssm:`\ ` p. 20.
 
@@ -204,7 +210,8 @@ def nucleation_f(
         T: th.FloatArr1D,
         beta_tilde: float,
         v_wall: float) -> float:
-    r"""Relative increase $f$ in the effective volume of the bubble
+    r"""$f$, relative increase in the effective volume of the bubble.
+
     $$f = \frac{3}{v_{\text{wall}}^3} \int_{v_{\text{wall}}}^{v_{\text{sh}}} \xi^2
     \left( 1 - e^{-\Delta S} \right) d\xi
     = \frac{1}{v_{\text{wall}}^3} \int_{v_{\text{wall}}}^{v_{\text{sh}}}
@@ -237,7 +244,8 @@ def r_star[T2: FloatOrArr](
         T: th.FloatArr1D | None = None,
         sol_type: SolutionType = SolutionType.DETON,
         legacy_cs: float | None = None) -> T2:
-    r"""Hubble-scaled mean bubble spacing $r_*(\beta)$
+    r"""$r_*(\beta)$, Hubble-scaled mean bubble spacing.
+
     $$r_* = \Lambda(h_x) r_*(0)$$
     :ajmi_2022:`\ ` eq. 77
     Please see :py:func:`pttools.bubble.nucleation.R_star` for further information.
@@ -267,7 +275,8 @@ def r_star[T2: FloatOrArr](
 
 @njit(cache=True)
 def r_star0[T: FloatOrArr](beta_over_H: T, v_wall: T | float) -> T:
-    r"""Hubble-scaled mean bubble separation $r_*(0)$ in the absence of nucleation suppression
+    r"""$r_*(0)$, Hubble-scaled mean bubble separation in the absence of nucleation suppression.
+
     $$r_* = (8\pi)^\frac{1}{3} \frac{{v}_\text{wall}}{\tilde{\beta}}$$
     :ajmi_2022:`\ ` eq. 1
     Please see :py:func:`pttools.bubble.nucleation.R_star0` for further information.
@@ -278,7 +287,8 @@ def r_star0[T: FloatOrArr](beta_over_H: T, v_wall: T | float) -> T:
 @njit(cache=True)
 def r_star_product[T: FloatOrArr](H_star: T, R_star: T | float) -> T:
     r"""
-    Hubble-scaled mean bubble spacing $r_*$
+    $r_*$, Hubble-scaled mean bubble spacing.
+
     $$r_* = H_* R_*$$
     :gowling_2021:`\ ` eq. 2.2.
     """
@@ -294,7 +304,8 @@ def R_star[T2: FloatOrArr](
         sol_type: SolutionType = SolutionType.DETON,
         legacy_cs: float | None = None,
         beta_tilde: float | None = None) -> T2:
-    r"""Mean bubble separation $R_*$
+    r"""$R_*$, mean bubble separation.
+
     $$R_* = \Lambda(h_x) R_*(0)$$
     :ajmi_2022:`\ ` eq. 77.
 
@@ -339,7 +350,8 @@ def R_star[T2: FloatOrArr](
 
 @njit(cache=True)
 def R_star0[T: FloatOrArr](beta: T, v_wall: T | float, legacy_cs: T | float | None = None) -> T:
-    r"""Mean bubble separation $R_*(0)$ in the absence of nucleation suppression
+    r"""$R_*(0)$, mean bubble separation in the absence of nucleation suppression.
+
     $$R_*(0) = n_*^{-\frac{1}{3}} = \frac{(8\pi)^\frac{1}{3}}{\beta} {v}_\text{wall}$$
     :ajmi_2022:`\ ` eq. 1.
 

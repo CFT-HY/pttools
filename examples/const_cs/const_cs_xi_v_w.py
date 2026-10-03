@@ -17,6 +17,7 @@ from pttools.models.const_cs import ConstCSModel
 
 
 def main() -> BubblePlot3D:
+    r"""Plot bag and constant sound speed model bubbles in 3D, and compare the bag bubbles with reference values"""
     bag = BagModel(a_s=1.1, a_b=1, V_s=1)
     # css = 1/np.sqrt(3) - 0.05
     # csb = 1/np.sqrt(3) - 0.1

@@ -1,6 +1,7 @@
 """Profile GW performance."""
 
 import logging
+import typing as tp
 import unittest
 
 import numpy as np
@@ -25,12 +26,14 @@ class TestProfileGW(TestProfile):
     params = (0.1, 0.1)
 
     @classmethod
+    @tp.override
     def setup_numba(cls) -> None:
         ssm.power_gw_bag(cls.z, cls.params)
 
     @classmethod
     @skip_slow
     def test_profile_gw_cprofile(cls) -> None:
+        """Profile the GW power spectrum computation with cProfile."""
         with utils_cprofile.CProfiler(cls.NAME):
             ssm.power_gw_bag(cls.z, cls.params)
 
@@ -53,6 +56,7 @@ class TestProfileGW(TestProfile):
     @classmethod
     @skip_slow
     def test_profile_gw_yappi(cls) -> None:
+        """Profile the GW power spectrum computation with YAPPI."""
         with utils_yappi.YappiProfiler(cls.NAME):
             ssm.power_gw_bag(cls.z, cls.params)
 

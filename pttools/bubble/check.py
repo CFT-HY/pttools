@@ -25,7 +25,9 @@ def check_physical_params(
         ode_method: FluidIntegrateMethod,
         cs2_ptr: th.CS2FunScalarPtr) -> None:
     r"""
-    Check that $v _\text{wall}$ = params[0], $\alpha_n$ = params[1] values are physical, i.e.
+    Check that the values $v _\text{wall}$ = params[0] and $\alpha_n$ = params[1] are physical.
+
+    The values are physical if
     $0 < v _\text{wall} < 1$,
     $\alpha_n < \alpha_{n,\max(v _\text{wall})}$.
     """

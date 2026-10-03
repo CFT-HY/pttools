@@ -36,6 +36,24 @@ class ConstCSThermoModel(ThermoModel):
             label_latex: str | None = None,
             label_unicode: str | None = None,
             allow_invalid: bool = False):
+        r"""Initialize the constant sound speed thermodynamics model.
+
+        The parameters are validated by creating a corresponding :class:`pttools.models.const_cs.ConstCSModel`.
+
+        :param a_s: $a_s$, prefactor of $p$ in the symmetric phase
+        :param a_b: $a_b$, prefactor of $p$ in the broken phase
+        :param css2: $c_{s,s}^2$, speed of sound squared in the symmetric phase
+        :param csb2: $c_{s,b}^2$, speed of sound squared in the broken phase
+        :param V_s: $V_s$, the potential term of $p$ in the symmetric phase
+        :param V_b: $V_b$, the potential term of $p$ in the broken phase
+        :param T_min: $T_\text{min}$, minimum temperature at which the model is valid
+        :param T_max: $T_\text{max}$, maximum temperature at which the model is valid
+        :param t_ref: $T_\text{ref}$, reference temperature
+        :param name: custom name for the model
+        :param label_latex: custom LaTeX label for the model
+        :param label_unicode: custom Unicode label for the model
+        :param allow_invalid: whether to allow invalid parameters in the validation
+        """
         # For validation
         ConstCSModel(css2=css2, csb2=csb2, V_s=V_s, V_b=V_b, a_s=a_s, a_b=a_b, allow_invalid=allow_invalid)
 
@@ -57,6 +75,7 @@ class ConstCSThermoModel(ThermoModel):
             name=name, label_latex=label_latex, label_unicode=label_unicode
         )
 
+    @tp.override
     def dge_dT[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         dge_s = 30/np.pi**2 * (
             (self.mu_s - 1) * (self.mu_s - 4) * self.a_s * self.t_ref**(4 - self.mu_s) * temp**(self.mu_s - 5)
@@ -68,6 +87,7 @@ class ConstCSThermoModel(ThermoModel):
         )
         return dge_b * phase + dge_s * (1 - phase)
 
+    @tp.override
     def dgs_dT[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         dgs_s = \
             45/(2*np.pi**2) * self.mu_s * (self.mu_s - 4) * self.a_s * \
@@ -77,6 +97,7 @@ class ConstCSThermoModel(ThermoModel):
             self.t_ref**(4 - self.mu_b) * temp**(self.mu_b - 5)
         return dgs_b * phase + dgs_s * (1 - phase)
 
+    @tp.override
     def ge[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         ge_s = 30/np.pi**2 * (
             (self.mu_s - 1) * self.a_s * (temp / self.t_ref) ** (self.mu_s - 4)
@@ -88,6 +109,7 @@ class ConstCSThermoModel(ThermoModel):
         )
         return tp.cast(T, ge_b * phase + ge_s * (1 - phase))
 
+    @tp.override
     def gs[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         gs_s = 45/(2*np.pi**2) * self.a_s * self.mu_s * (temp / self.t_ref)**(self.mu_s - 4)
         gs_b = 45/(2*np.pi**2) * self.a_b * self.mu_b * (temp / self.t_ref)**(self.mu_b - 4)

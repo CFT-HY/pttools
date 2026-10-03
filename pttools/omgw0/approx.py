@@ -33,6 +33,15 @@ def S_sw_approx[T: FloatOrArr](f: T, f_peak: T | float) -> T:
 
 
 def f_peak_approx[T: FloatOrArr](v_wall: T, beta: T | float) -> T:
+    r"""$f_\text{peak}$, approximate peak frequency of the sound wave GW spectrum at the time of GW production.
+
+    $$f_\text{peak} = \frac{2 \beta}{\sqrt{3} v_{\text{wall}}}$$
+    This corresponds to the peak frequency before redshifting in :caprini_2016:`\ ` eq. 15.
+
+    :param v_wall: $v_\text{wall}$, wall speed
+    :param beta: $\beta$, inverse duration of the phase transition
+    :return: $f_\text{peak}$, peak frequency
+    """
     return 2 * beta / (math.sqrt(3) * v_wall)  # pyrefly: ignore[bad-return]
 
 

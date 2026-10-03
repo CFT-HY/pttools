@@ -28,7 +28,7 @@ from pttools.models.export import MODEL_FIELDS
 from pttools.speedup.differential import DifferentialPointer
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
-from pttools.utils.docstrings import copy_docstrings
+from pttools.utils.docstrings import copy_docstring_dec
 from pttools.utils.fields import Fields
 from pttools.utils.system import FORKING
 from pttools.utils.validation import check_value_in_range
@@ -37,16 +37,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Model(BaseModel, abc.ABC):
-    r"""Template for equations of state.
-
-    :param T_ref: reference temperature.
-        Be careful when using a thermodynamics-based model that there are no conflicts in the choices of units.
-    :param T_min: minimum temperature at which the model is valid
-    :param V_s: the constant term in the expression of $p$ in the symmetric phase
-    :param V_b: the constant term in the expression of $p$ in the broken phase
-    :param name: custom name for the model
-    :param gen_cs2: used internally for postponing the generation of the cs2 function
-    """
+    r"""Template for equations of state."""
 
     ALPHA_N_MIN_FIND_SAFETY_FACTOR_ALPHA: float = 0.999
     #: Default $V_s$
@@ -75,6 +66,30 @@ class Model(BaseModel, abc.ABC):
             silence_temp: bool = False,
             allow_invalid: bool = False,
             log_info: bool = True):
+        r"""Initialize the model, and find its critical temperature and minimum $\alpha_n$ if requested.
+
+        :param V_s: $V_s$, the constant term in the expression of $p$ in the symmetric phase
+        :param V_b: $V_b$, the constant term in the expression of $p$ in the broken phase
+        :param T_ref: $T_\text{ref}$, reference temperature.
+            Be careful when using a thermodynamics-based model that there are no conflicts in the choices of units.
+        :param T_min: $T_\text{min}$, minimum temperature at which the model is valid
+        :param T_max: $T_\text{max}$, maximum temperature at which the model is valid
+        :param T_crit: $T_\text{crit}$, critical temperature. If not given, it is solved if gen_critical is True.
+        :param T_crit_guess: starting guess for solving the critical temperature
+        :param name: custom name for the model
+        :param label_latex: custom LaTeX label for the model
+        :param label_unicode: custom Unicode label for the model
+        :param gen_critical: whether to solve the critical temperature $T_\text{crit}$
+            and the minimum transition strength $\alpha_{n,\text{min}}$
+        :param gen_cs2: used internally for postponing the generation of the cs2 function
+        :param gen_cs2_neg: used internally for postponing the generation of the cs2_neg function
+        :param implicit_V: whether the potentials are included implicitly in the other parameters of the model,
+            in which case $V_s$ and $V_b$ should be zero
+        :param temperature_is_physical: whether the temperature is in physical units
+        :param silence_temp: whether to suppress the logging of temperatures outside the validity range
+        :param allow_invalid: whether to allow $V_s < V_b$ and failures in solving the critical temperature
+        :param log_info: whether to log information about the model and its potentials
+        """
         self._validate_potential(
             V_s=V_s, V_b=V_b, name=name, implicit_V=implicit_V, allow_invalid=allow_invalid, log_info=log_info)
 
@@ -317,6 +332,7 @@ class Model(BaseModel, abc.ABC):
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
+
         $$\alpha_n = \frac{4(\theta(w_n,\phi_s) - \theta(w_n,\phi_b)}{3w_n}$$.
 
         :param Tn: nucleation temperature $T_n$
@@ -355,7 +371,8 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
-        r"""Transition strength parameter $\alpha_+$
+        r"""Transition strength parameter $\alpha_+$.
+
         $$\alpha_+ = \frac{4\Delta \theta}{3{w}_+} = \frac{4(\theta({w}_+,\phi_s) - \theta({w}_-,\phi_b)}{3{w}_+}$$.
 
         :param wp: $w_+$
@@ -567,6 +584,12 @@ class Model(BaseModel, abc.ABC):
         return alpha_plus
 
     def check_p(self, wn: th.FloatOrArr, allow_fail: bool = False) -> None:
+        r"""For the phase transition to happen $p_s(T_n) < p_b(T_n)$. Check this for the given $w_n$.
+
+        :param wn: $w_n$, enthalpy of the symmetric phase at the nucleation temperature
+        :param allow_fail: do not raise an exception if the check fails
+        :raises ValueError: if the check fails and allow_fail is False
+        """
         temp = self.temp(wn, Phase.SYMMETRIC)
         self.check_p_temp(temp, allow_fail=allow_fail)
 
@@ -635,6 +658,15 @@ class Model(BaseModel, abc.ABC):
             t_crit_guess: float | None,
             allow_fail: bool = False,
             log_info: bool = True) -> tuple[float, float]:
+        r"""Solve the critical temperature $T_\text{crit}$ and the corresponding enthalpy $w_\text{crit}$.
+
+        Also sets ``self.T_crit``.
+
+        :param t_crit_guess: starting guess for $T_\text{crit}$
+        :param allow_fail: do not raise exceptions on errors
+        :param log_info: whether to log the thermodynamic quantities at $T_\text{crit}$
+        :return: $T_\text{crit}$ and $w_\text{crit} = w_s(T_{\text{crit}})$
+        """
         T_crit = self.critical_temp(guess=t_crit_guess, allow_fail=allow_fail)
         # self.T_crit has to be set already here for alpha_n error messages to work.
         self.T_crit = T_crit
@@ -751,7 +783,7 @@ class Model(BaseModel, abc.ABC):
             w_min: float = 0,
             allow_fail: bool = False,
             **kwargs: tp.Any) -> tuple[float, float]:
-        r"""Minimum of $c_s^2(w)$ for $w \in [{w}_\text{min}, {w}_\text{max}]$."""
+        r"""Maximum of $c_s^2(w)$ for $w \in [{w}_\text{min}, {w}_\text{max}]$."""
         return self._cs2_limit(w_max, phase, True, self.cs2_neg, w_min, allow_fail, **kwargs)
 
     def cs2_min(
@@ -760,7 +792,7 @@ class Model(BaseModel, abc.ABC):
             phase: Phase,
             w_min: float = 0,
             allow_fail: bool = False, **kwargs: tp.Any) -> tuple[float, float]:
-        r"""Maximum of $c_s^2(w)$ for $w \in [{w}_\text{min}, {w}_\text{max}]$."""
+        r"""Minimum of $c_s^2(w)$ for $w \in [{w}_\text{min}, {w}_\text{max}]$."""
         return self._cs2_limit(w_max, phase, False, self.cs2, w_min, allow_fail, **kwargs)
 
     def cs2_neg[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
@@ -792,7 +824,8 @@ class Model(BaseModel, abc.ABC):
 
     def cs2_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""Speed of sound squared $c_s^2(T,\phi)$.
-        By default, this is implemented as $c_s^2(T(w,\phi),\phi)$.
+
+        By default, this is implemented as $c_s^2(w(T,\phi),\phi)$.
         """
         return self.cs2(self.w(temp, phase), phase)
 
@@ -883,6 +916,11 @@ class Model(BaseModel, abc.ABC):
         ))
 
     def df_dtau_ptr(self) -> DifferentialPointer:
+        r"""Pointer to the compiled fluid differential equations $\frac{df}{d\tau}$ of this model.
+
+        The differentials depend on the $c_s^2$ function of the model, and are therefore compiled for each model.
+        The pointer is cached in :data:`pttools.bubble.integrate.differentials`.
+        """
         ptr_label = f"{self.name}_{self.id}"
         if ptr_label in differentials:
             return differentials.get_pointer(ptr_label)
@@ -951,15 +989,18 @@ class Model(BaseModel, abc.ABC):
 
     @property
     def latent_heat_density(self) -> float:
-        r"""Latent heat density $L$
+        r"""Latent heat density $L$.
+
         $$L = w_s(T_c) - w_b(T_c)$$
         :gw_pt_ssm:`\ ` p. 5.
         """
         return self.w(self.T_crit, Phase.SYMMETRIC) - self.w(self.T_crit, Phase.BROKEN)
 
+    @copy_docstring_dec(nu_gdh2024, without_params=True)
     def nu_gdh2024[T: FloatOrArr](self, w: T, phase: th.FloatOrArr = Phase.BROKEN) -> T:
         return nu_gdh2024(self.omega(w, phase))
 
+    @copy_docstring_dec(omega_barotropic, without_params=True)
     def omega[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         temp = self.temp(w, phase)
         return omega_barotropic(self.p_temp(temp, phase), self.e_temp(temp, phase))
@@ -973,9 +1014,7 @@ class Model(BaseModel, abc.ABC):
         return self.p_temp(self.temp(w, phase), phase)
 
     def Psi_n[T: FloatOrArr](self, wn: T) -> T:
-        r"""Inverse enthalpy ratio at nucleation temperature $\psi_n$,
-        :ai_2023:`\ ` p. 9.
-        """
+        r"""Inverse enthalpy ratio at nucleation temperature $\psi_n$, :ai_2023:`\ ` p. 9."""
         ret = self.inverse_enthalpy_ratio(self.temp(wn, Phase.SYMMETRIC))
         # The LTE violation merely means that entropy is being generated, which is totally normal.
         # min_ret = np.min(ret)
@@ -1087,6 +1126,16 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid: bool = True,
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
+        r"""$T_n(\alpha_n)$, nucleation temperature.
+
+        :param alpha_n: $\alpha_n$, transition strength
+        :param wn_guess: $w_{n,\text{guess}}$, starting guess for solving $w_n$
+        :param theta_bar: whether the given $\alpha_n$ is $\alpha_{\bar{\theta}_n}$
+        :param error_on_invalid: whether to raise an error for invalid values
+        :param nan_on_invalid: whether to return nan for invalid values
+        :param log_invalid: whether to log invalid values
+        :return: $T_n$, nucleation temperature
+        """
         return self.temp(
             self.wn(
                 alpha_n, wn_guess=wn_guess, theta_bar=theta_bar,
@@ -1121,7 +1170,8 @@ class Model(BaseModel, abc.ABC):
             vp_tilde: T,
             vm_tilde: th.FloatOrArr,
             wp: float, wm: th.FloatOrArr) -> T:
-        r"""Giese approximation for $\frac{\tilde{v}_+}{\tilde{v}_-}$, :giese_2021:`\ ` eq. 11
+        r"""Giese approximation for $\frac{\tilde{v}_+}{\tilde{v}_-}$, :giese_2021:`\ ` eq. 11.
+
         $$\frac{\tilde{v}_+}{\tilde{v}_-} \approx \frac{
         (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3\alpha_{\bar{\theta}_+} }{
         (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3 \tilde{v}_+ \tilde{v}_- \alpha_{\bar{\theta}_+}
@@ -1143,6 +1193,15 @@ class Model(BaseModel, abc.ABC):
             param: th.FloatOrArr,
             param_name: str,
             info: str | None = None) -> str:
+        r"""Generate an error message for a too small $\alpha_n$, for which $w_n$ cannot be found.
+
+        :param alpha_n: $\alpha_n$, transition strength
+        :param param: values of the parameter whose negative values indicate the problem.
+            For arrays, the values at the minimum of param are reported.
+        :param param_name: name of the parameter that indicates the problem
+        :param info: additional information to be appended to the message
+        :return: the error message
+        """
         if np.isscalar(alpha_n):
             info2 = f"Got: alpha_n={alpha_n}, {param_name}={param}."
         else:
@@ -1296,7 +1355,8 @@ class Model(BaseModel, abc.ABC):
         return tp.cast(T, ret)
 
     def w[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
-        r"""Enthalpy density $w(T,\phi)$
+        r"""Enthalpy density $w(T,\phi)$.
+
         $$w \equiv \frac{dH}{dV} = e + p = T \frac{\partial p}{\partial T} = Ts$$
         :param temp: temperature $T$
         :param phase: phase $\phi$
@@ -1371,9 +1431,3 @@ class Model(BaseModel, abc.ABC):
         :param w: enthalpy $w$
         :param phase: phase $\phi$
         """
-
-
-copy_docstrings({
-    Model.nu_gdh2024: nu_gdh2024,
-    Model.omega: omega_barotropic
-}, without_params=True)

@@ -57,6 +57,7 @@ class ExportTest(unittest.TestCase):
     path: Path
 
     @classmethod
+    @tp.override
     def setUpClass(cls) -> None:
         cls.bag = BagModel(a_s=1.1, a_b=1, V_s=1)
         cls.const_cs = ConstCSModel(css2=1/3 - 0.01, csb2=1/3 - 0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
@@ -84,6 +85,7 @@ class ExportTest(unittest.TestCase):
             exporter.add(pickle.loads(pickle.dumps(exporter.extractor.extract(cls.f_spectra[1]))))
 
     def test_arrays(self) -> None:
+        """Test that the spectra and the shared y are exported as arrays and can be read by index."""
         with Importer(self.path) as importer:
             omgw0_h2 = importer.read(Table.SPECTRA_Y, "omgw0_h2")
             self.assertEqual(omgw0_h2.shape, (3, 100))
@@ -93,6 +95,7 @@ class ExportTest(unittest.TestCase):
             np.testing.assert_array_equal(importer.read(Table.SPECTRA_Y, "y"), Y_SPECTRUM_KWARGS["y"])
 
     def test_checksum(self) -> None:
+        """Test that the checksum of the exported file is valid."""
         self.assertTrue(verify_checksum(self.path))
 
     # -----
@@ -100,6 +103,7 @@ class ExportTest(unittest.TestCase):
     # -----
 
     def test_f_arrays(self) -> None:
+        """Test that the spectra with given frequencies are stored in their own table with a shared f."""
         with Importer(self.path) as importer:
             self.assertEqual(importer.n_spectra_f, 2)
             self.assertEqual(importer.n_bubbles, 2)
@@ -120,6 +124,7 @@ class ExportTest(unittest.TestCase):
             self.assertNotIn("f", importer.fields(Table.SPECTRA_Y))
 
     def test_f_full(self) -> None:
+        """Test that y is exported per spectrum for the spectra with given frequencies when all fields are exported."""
         path = new_path("f_full")
         with Exporter(path, spectrum_fields=Preset.FULL) as exporter:
             exporter.add_many(self.f_spectra)
@@ -132,6 +137,7 @@ class ExportTest(unittest.TestCase):
             np.testing.assert_array_equal(importer.read(Table.SPECTRA_F, "f"), F_SPECTRUM_KWARGS["f"])
 
     def test_f_grid_mismatch(self) -> None:
+        """Test that adding a spectrum with a different f grid raises an error."""
         path = new_path("f_grid_mismatch")
         spectrum = Spectrum(self.bubbles[0], r_star=0.1, f=np.logspace(-5, -1, 50), compute=False)
         with Exporter(path) as exporter:
@@ -140,6 +146,7 @@ class ExportTest(unittest.TestCase):
                 exporter.add(spectrum)
 
     def test_f_load(self) -> None:
+        """Test that the spectra with given frequencies can be loaded back with the same results."""
         with Importer(self.path, verify=True) as importer:
             spectra = importer.load_spectra(table=Table.SPECTRA_F)
             bubble = importer.load_bubble(0)
@@ -154,6 +161,7 @@ class ExportTest(unittest.TestCase):
             np.testing.assert_allclose(loaded.omgw0_h2(), orig.omgw0_h2(), rtol=1e-12)
 
     def test_f_record(self) -> None:
+        """Test that the extracted records are assigned to the correct spectrum tables."""
         record = Extractor().extract(self.f_spectra[0])
         self.assertEqual(record.table, Table.SPECTRA_F)
         self.assertNotIn("y", record.data)
@@ -175,6 +183,7 @@ class ExportTest(unittest.TestCase):
             self.assertEqual(importer.n_spectra_f, 1)
 
     def test_checksum_corrupted(self) -> None:
+        """Test that a corrupted file fails the checksum verification."""
         path = new_path("corrupted")
         shutil.copyfile(self.path, path)
         shutil.copyfile(checksum_path(self.path), checksum_path(path))
@@ -188,6 +197,7 @@ class ExportTest(unittest.TestCase):
             Importer(path, verify=True)
 
     def test_descriptions(self) -> None:
+        """Test that the field descriptions are stored in the file."""
         with Importer(self.path) as importer:
             self.assertEqual(
                 importer.field_info(Table.SPECTRA_Y, "omgw0_h2")["description"],
@@ -199,6 +209,7 @@ class ExportTest(unittest.TestCase):
             )
 
     def test_counts(self) -> None:
+        """Test that the models and bubbles are deduplicated and the parent indices are correct."""
         with Importer(self.path) as importer:
             self.assertEqual(importer.n_models, 2)
             self.assertEqual(importer.n_bubbles, 2)
@@ -208,6 +219,7 @@ class ExportTest(unittest.TestCase):
             self.assertEqual(list(importer.read(Table.SPECTRA_Y, "id")), [spectrum.id for spectrum in self.y_spectra])
 
     def test_load(self) -> None:
+        """Test that the spectra can be loaded back with the same models, bubbles and results."""
         with Importer(self.path, verify=True) as importer:
             spectra = importer.load_spectra()
         self.assertIs(spectra[0].bubble, spectra[1].bubble)
@@ -225,6 +237,7 @@ class ExportTest(unittest.TestCase):
             np.testing.assert_allclose(loaded.omgw0_h2(), orig.omgw0_h2(), rtol=1e-12)
 
     def test_model_params(self) -> None:
+        """Test that the model parameters and the model class are stored."""
         with Importer(self.path) as importer:
             params = importer.model_params(1)
             self.assertEqual(importer.read(Table.MODELS, "class", 1), "pttools.models.const_cs.ConstCSModel")
@@ -233,6 +246,7 @@ class ExportTest(unittest.TestCase):
         self.assertEqual(params["T_max"], np.inf)
 
     def test_profiles(self) -> None:
+        """Test that the variable-length bubble profiles can be read back."""
         with Importer(self.path) as importer:
             for i, bubble in enumerate(self.bubbles):
                 np.testing.assert_array_equal(importer.read(Table.BUBBLES, "v", i), bubble.v)
@@ -243,6 +257,7 @@ class ExportTest(unittest.TestCase):
             np.testing.assert_array_equal(xi, bubble.xi)
 
     def test_scalars(self) -> None:
+        """Test that the scalar fields of the spectra can be read as arrays."""
         with Importer(self.path) as importer:
             scalars = importer.read_scalars(Table.SPECTRA_Y)
             sol_types = importer.read(Table.BUBBLES, "sol_type")
@@ -260,6 +275,7 @@ class ExportTest(unittest.TestCase):
     # -----
 
     def test_append(self) -> None:
+        """Test that new spectra can be appended to an existing file without duplicating the old ones."""
         path = new_path("append")
         shutil.copyfile(self.path, path)
         with Exporter(path, mode="a") as exporter:
@@ -276,6 +292,7 @@ class ExportTest(unittest.TestCase):
             np.testing.assert_array_equal(importer.read(Table.SPECTRA_Y, "omgw0_h2", 3), new_spectrum.omgw0_h2())
 
     def test_append_different_fields(self) -> None:
+        """Test that appending with fields different from those of the file raises an error."""
         path = new_path("append_different_fields")
         shutil.copyfile(self.path, path)
         with Exporter(path, mode="a", spectrum_fields=[Preset.MINIMAL, "f"]) as exporter, \
@@ -324,6 +341,7 @@ class ExportTest(unittest.TestCase):
             np.testing.assert_array_equal(importer.read(Table.SPECTRA_Y, "r_star"), [s.r_star for s in self.y_spectra])
 
     def test_exists(self) -> None:
+        """Test that creating an exporter for an existing file raises an error."""
         with self.assertRaises(FileExistsError):
             Exporter(self.path)
 
@@ -332,6 +350,7 @@ class ExportTest(unittest.TestCase):
     # -----
 
     def test_full(self) -> None:
+        """Test that all fields can be exported, including the descriptions from the docstrings."""
         path = new_path("full")
         with Exporter(path, model_fields=Preset.FULL, bubble_fields=Preset.FULL, spectrum_fields=Preset.FULL) as exp:
             exp.add_many(self.y_spectra)
@@ -355,6 +374,7 @@ class ExportTest(unittest.TestCase):
                 importer.field_info(Table.BUBBLES, "T")["description"], r"Temperature profile $T(\xi)$")
 
     def test_grid_mismatch(self) -> None:
+        """Test that adding a spectrum with a different y grid raises an error."""
         path = new_path("grid_mismatch")
         spectrum = Spectrum(self.bubbles[0], r_star=0.1, y=np.logspace(-1, 3, 50), nT=1000, n_z_lookup=1000)
         with Exporter(path) as exporter:
@@ -363,6 +383,7 @@ class ExportTest(unittest.TestCase):
                 exporter.add(spectrum)
 
     def test_not_importable(self) -> None:
+        """Test that a file exported as not importable has only the minimal fields and cannot be loaded."""
         path = new_path("not_importable")
         with Exporter(path, importable=False) as exporter:
             exporter.add(self.y_spectra[0])
@@ -372,12 +393,14 @@ class ExportTest(unittest.TestCase):
                 importer.load_spectrum(0)
 
     def test_record_mismatch(self) -> None:
+        """Test that adding a record with fields different from those of the exporter raises an error."""
         path = new_path("record_mismatch")
         record = Extractor(spectrum_fields=Preset.FULL).extract(self.y_spectra[0])
         with Exporter(path) as exporter, self.assertRaises(ValueError):
             exporter.add(record)
 
     def test_ssm_spectrum(self) -> None:
+        """Test that SSM spectra and standalone bubbles can be exported and loaded."""
         path = new_path("ssm_spectrum")
         spectrum = SSMSpectrum(self.bubbles[0], r_star=0.1, **Y_SPECTRUM_KWARGS)
         with Exporter(path) as exporter:

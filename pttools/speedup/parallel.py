@@ -25,10 +25,17 @@ try:
     from concurrent.futures import InterpreterPoolExecutor
 except ImportError:
     class InterpreterPoolExecutor:
+        """Placeholder for :class:`concurrent.futures.InterpreterPoolExecutor` on Python versions older than 3.14.
+
+        All its methods raise :class:`NotImplementedError`.
+        """
+
         def __init__(self, *args: tp.Any, **kwargs: tp.Any) -> None:
+            """Raise :class:`NotImplementedError`, as the executor is not available."""
             raise NotImplementedError("InterpreterPoolExecutor is only available in Python 3.14 and later.")
 
         def __enter__(self) -> tp.Self:
+            """Raise :class:`NotImplementedError`, as the executor is not available."""
             raise NotImplementedError("InterpreterPoolExecutor is only available in Python 3.14 and later.")
 
         def __exit__(
@@ -36,6 +43,7 @@ except ImportError:
                 exc_type: type[BaseException] | None,
                 exc_value: BaseException | None,
                 traceback: types.TracebackType | None) -> None:
+            """Raise :class:`NotImplementedError`, as the executor is not available."""
             raise NotImplementedError("InterpreterPoolExecutor is only available in Python 3.14 and later.")
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -69,6 +77,12 @@ class FakeFuture:
     """A fake future object for single-threaded execution."""
 
     def __init__(self, func: tp.Callable, *args: tp.Any, **kwargs: tp.Any) -> None:
+        """Run the function immediately and store its result.
+
+        :param func: the function to be run
+        :param args: arguments for the function
+        :param kwargs: kwargs for the function
+        """
         self._result = func(*args, **kwargs)
 
     def result(self) -> tp.Any:
@@ -88,6 +102,17 @@ class LoggingRunner:
             kwargs: dict[str, tp.Any] | None = None,
             log_progress_element: int | None = None,
             log_progress_percentage: float | None = None):
+        """Configure the runner, which calls the function with the common arguments and logs the progress.
+
+        :param func: the function to be run
+        :param arr_size: total number of elements to be processed, used for computing the progress
+        :param unpack_params: whether the parameters should be unpacked before giving them to the function
+        :param args: common arguments for the function
+        :param kwargs: common kwargs for the function
+        :param log_progress_element: log progress every n element
+        :param log_progress_percentage: log progress every x %
+        :raises ValueError: if any of the size or progress logging parameters is invalid
+        """
         if arr_size < 1:
             raise ValueError(f"Invalid arr_size={arr_size}")
         if not (log_progress_element is None or log_progress_element > 0):
@@ -104,6 +129,13 @@ class LoggingRunner:
         self.log_progress_percentage: float | None = log_progress_percentage
 
     def run(self, param: tp.Any, index: int | None = None, multi_index: tp.Iterable | None = None) -> tp.Any:
+        """Run the function with the given parameter and the common arguments, and log the progress.
+
+        :param param: the parameter or, if unpack_params is set, the parameters for the function
+        :param index: index of the element, used for logging the progress. If None, the progress is not logged.
+        :param multi_index: multidimensional index of the element, used in the log messages
+        :return: the return value of the function
+        """
         if self.unpack_params:
             ret = self.func(*param, *self.args, **self.kwargs)
         else:
@@ -141,6 +173,13 @@ def create_process_pool(max_workers: int = MAX_WORKERS_DEFAULT) -> ProcessPoolEx
 
 
 def get_global_process_pool(max_workers: int = MAX_WORKERS_DEFAULT) -> ProcessPoolExecutor:
+    """Get the global process pool, and create it if it does not exist yet.
+
+    The pool is shut down when the Python interpreter exits.
+
+    :param max_workers: maximum number of worker processes. This is used only when the pool is created.
+    :return: the pool executor
+    """
     global POOL  # noqa: PLW0603
     with POOL_LOCK:
         if POOL is None:
@@ -216,6 +255,17 @@ def parallel_debug_message(
         single_thread: bool | None = None,
         start_time: float | None = None,
         kwargs: dict[str, tp.Any] | None = None) -> str:
+    """Create a debug message about a parallel execution, e.g. for an exception.
+
+    :param info: text to begin the message with
+    :param err: the exception, whose arguments are included in the message
+    :param max_workers: maximum number of workers
+    :param single_thread: whether parallelism was disabled
+    :param start_time: start time of the execution as given by :func:`time.perf_counter`,
+        for including the runtime in the message
+    :param kwargs: other parameters to include in the message
+    :return: the message
+    """
     end_time = time.perf_counter()
     if info is None:
         msg = ""
@@ -247,6 +297,13 @@ def log_parallel_ready(
         n_workers: int,
         n_tasks: int,
         start_time: float) -> None:
+    """Log the completion of a parallel execution with its runtime statistics.
+
+    :param executor: the executor that was used
+    :param n_workers: number of workers
+    :param n_tasks: number of tasks
+    :param start_time: start time of the execution as given by :func:`time.perf_counter`
+    """
     elapsed = time.perf_counter() - start_time
     cpu_time_per_task = elapsed * n_workers / n_tasks
     logger.info(

@@ -30,7 +30,7 @@ from pttools.ssm.spectrum import SSMSpectrum
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 import pttools.type_hints as th
 from pttools.type_hints import FloatArr1D, FloatOrArr
-from pttools.utils import copy_docstrings
+from pttools.utils.docstrings import copy_docstring_dec
 from pttools.utils.fields import Fields
 
 if tp.TYPE_CHECKING:
@@ -80,7 +80,8 @@ class Spectrum(SSMSpectrum):
             # Labels
             label_latex: str | None = None,
             label_unicode: str | None = None):
-        r"""
+        r"""Create the spectrum, and compute it unless ``compute=False``.
+
         :param bubble: the Bubble object
         :param beta_tilde: nucleation rate parameter $\tilde{\beta} \equiv \frac{\beta}{H_*}$
         :param r_star: Hubble-scaled mean bubble spacing $r_*$
@@ -156,7 +157,8 @@ class Spectrum(SSMSpectrum):
 
     @functools.cached_property
     def ge_star(self) -> float:
-        r"""Degrees of freedom $g_{e,*}$ for energy density at the time the GWs were produced
+        r"""$g_{e,*}$, degrees of freedom for energy density at the time the GWs were produced.
+
         $$g_{e,*} = \frac{1}{3}(4 g_s - g_p)$$
         :maki_msc:`\ ` eq. 2.108.
         """
@@ -164,7 +166,8 @@ class Spectrum(SSMSpectrum):
 
     @functools.cached_property
     def e_star(self) -> float:
-        r"""Energy density $e_*$ at GW formation
+        r"""$e_*$, energy density at GW formation.
+
         $$e_* = \frac{\pi^2}{30} g_e(T_*) T_*^4$$
         :maki_msc:`\ ` eq. 2.105
         This presumes that $V(T_*, \phi_b) = 0$.
@@ -198,6 +201,7 @@ class Spectrum(SSMSpectrum):
         return float(self._f_y.min())
 
     @functools.cached_property
+    @copy_docstring_dec(freq.f_star0, without_params=True)
     def f_star0(self) -> float:
         return freq.f_star0(
             T_star=self.T_star,
@@ -234,8 +238,8 @@ class Spectrum(SSMSpectrum):
     # Methods
     # =====
 
+    @copy_docstring_dec(freq.f, without_params=True)
     def f(self, z: th.FloatArr1D | None = None) -> th.FloatArr1D:
-        # The docstring is copied from freq.f.
         # The frequencies of the y array are cached, and the frequencies of a custom z are not.
         if z is None:
             return self._f_y
@@ -249,6 +253,7 @@ class Spectrum(SSMSpectrum):
         r"""$F_{\text{gw},0}$, power attenuation following the end of the radiation era."""
         return self.F_gw0_h2(g0=g0, gs0=gs0) / h2  # pyrefly: ignore[bad-return]
 
+    @copy_docstring_dec(F_gw0_h2, without_params=True)
     def F_gw0_h2[T: FloatOrArr](
             self,
             g0: T = const.G0,
@@ -266,6 +271,7 @@ class Spectrum(SSMSpectrum):
         r"""Total LISA noise $\Omega_\text{noise}$."""
         return self.noise_h2(eb=eb, gb=gb, ins=ins) / h2
 
+    @copy_docstring_dec(omega_noise_h2, without_params=True)
     def noise_h2(self, eb: bool = True, gb: bool = True, ins: bool = True) -> th.FloatArr1D:
         return omega_noise_h2(f=self.f(), eb=eb, gb=gb, ins=ins)
 
@@ -273,6 +279,7 @@ class Spectrum(SSMSpectrum):
         r"""LISA instrument noise $\Omega_\text{ins}$."""
         return self.noise_ins_h2() / h2
 
+    @copy_docstring_dec(omega_ins_h2, without_params=True)
     def noise_ins_h2(self) -> th.FloatArr1D:
         return omega_ins_h2(f=self.f())
 
@@ -419,6 +426,14 @@ class Spectrum(SSMSpectrum):
             ax: Axes | None = None,
             path: str | os.PathLike[str] | None = None,
             **kwargs: tp.Any) -> "FigAndAxes":
+        r"""Plot the GW power spectrum today $\Omega_{\text{gw},0} h^2(f)$ together with the LISA noise.
+
+        :param fig: the figure to plot on
+        :param ax: the axes to plot on
+        :param path: if given, save the figure to this path
+        :param kwargs: additional arguments for :py:func:`pttools.analysis.plot_spectra.plot_spectra`
+        :return: the figure and the axes
+        """
         from pttools.analysis.plot_spectra import plot_spectra  # noqa: PLC0415
         return plot_spectra([self], fig, ax, path, **kwargs)
 
@@ -427,6 +442,15 @@ class Spectrum(SSMSpectrum):
             fig: Figure | None = None,
             path: str | os.PathLike[str] | None = None,
             **kwargs: tp.Any) -> tuple[Figure, th.AxesArr2D]:
+        """Plot the fluid velocity profile, the velocity and GW power spectra, and the GW power spectrum today.
+
+        The plots are in a 2x2 grid.
+
+        :param fig: the figure to plot on
+        :param path: if given, save the figure to this path
+        :param kwargs: additional arguments for :py:func:`pttools.analysis.plot_spectra.plot_spectra_multi`
+        :return: the figure and the 2D array of axes
+        """
         from pttools.analysis.plot_spectra import plot_spectra_multi  # noqa: PLC0415
         return plot_spectra_multi([self], fig, path, **kwargs)
 
@@ -437,6 +461,17 @@ class Spectrum(SSMSpectrum):
             label: str | None = None,
             legend: bool = False,
             **kwargs: tp.Any) -> tuple[Figure, th.AxesArr1D]:
+        """Plot the fluid velocity profile, the velocity and GW power spectra, and the GW power spectrum today.
+
+        The plots are in a single row.
+
+        :param fig: the figure to plot on
+        :param path: if given, save the figure to this path
+        :param label: label of the spectrum
+        :param legend: whether to show the legend
+        :param kwargs: additional arguments for :py:func:`pttools.analysis.plot_spectra.plot_spectra_multi_flat`
+        :return: the figure and the 1D array of axes
+        """
         from pttools.analysis.plot_spectra import plot_spectra_multi_flat  # noqa: PLC0415
         return plot_spectra_multi_flat([self], fig=fig, path=path, labels=[label], legend=legend, **kwargs)
 
@@ -446,11 +481,3 @@ class Spectrum(SSMSpectrum):
 type SpectrumArr = NDArray[Spectrum]  # pyrefly: ignore[bad-specialization]
 type SpectrumArr2D = np.ndarray[tuple[int, int], np.dtype[Spectrum]]  # pyrefly: ignore[bad-specialization]
 type SpectrumArr3D = np.ndarray[tuple[int, int, int], np.dtype[Spectrum]]  # pyrefly: ignore[bad-specialization]
-
-copy_docstrings({
-    Spectrum.f: freq.f,
-    Spectrum.F_gw0_h2: F_gw0_h2,
-    Spectrum.f_star0: freq.f_star0,
-    Spectrum.noise_h2: omega_noise_h2,
-    Spectrum.noise_ins_h2: omega_ins_h2,
-}, without_params=True)

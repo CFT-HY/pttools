@@ -219,6 +219,12 @@ def cloc_compact(path: str | os.PathLike[str] | None = None) -> str:
 
 
 def main(argv: tp.Sequence[str] | None = None) -> int:
+    """Command-line interface for counting the lines of code.
+
+    :param argv: command-line arguments, defaults to ``sys.argv[1:]``.
+        The arguments after ``--`` are passed to cloc.
+    :return: exit code
+    """
     if argv is None:
         argv = sys.argv[1:]
     # The options after "--" are passed to cloc.

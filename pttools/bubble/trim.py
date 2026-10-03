@@ -27,8 +27,8 @@ def trim_fluid_wall_to_cs(
         dxi_lim: float = const.DXI_SMALL) \
         -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
-    Picks out fluid variable arrays $(v, w, \xi, t)$ which are definitely behind
-    the wall for detonation and hybrid.
+    Picks out fluid variable arrays $(v, w, \xi, t)$ which are definitely behind the wall for detonation and hybrid.
+
     Also removes negative fluid speeds and $\xi \leq c_s$, which might be left by
     an inaccurate integration.
     If the wall is within about 1e-16 of cs, rounding errors are flagged.

@@ -33,6 +33,7 @@ if numba_wrapper.NUMBA_VERSION < (0, 49, 0):
 
     @overload(np.flipud, jit_options={"nopython": True})
     def np_flip_ud(arr: np.ndarray) -> tp.Callable[[np.ndarray], np.ndarray]:
+        """Overload of :external:py:func:`numpy.flipud` for Numba versions older than 0.49.0."""
         def impl(arr: np.ndarray) -> np.ndarray:
             # Copying may be necessary to avoid problems with the memory layout of the array
             # return arr[::-1, ...].copy()

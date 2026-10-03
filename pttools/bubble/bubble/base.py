@@ -15,6 +15,7 @@ from pttools.bubble.export import BASE_BUBBLE_FIELDS
 from pttools.bubble.thermo import va_kinetic_energy_density
 from pttools.speedup import NAN_ARR
 import pttools.type_hints as th
+from pttools.utils.docstrings import copy_docstring_dec
 from pttools.utils.fields import Extractable, Fields, FieldSpec, Preset
 from pttools.utils.json import export_json
 from pttools.utils.validation import ensure_floats
@@ -43,6 +44,18 @@ class BaseBubble(Extractable, abc.ABC):
             n_xi: int = const.DEFAULT_N_XI,
             label_latex: str = "UNSET",
             label_unicode: str = "UNSET"):
+        r"""Set the parameters of the bubble.
+
+        :param model: The equation of state object
+        :param v_wall: Wall velocity $v_\text{wall}$
+        :param w_center: Enthalpy at the center of the bubble $w_\text{center}$, if known
+        :param w_outside: Enthalpy far away from the bubble $w_\text{outside}$, if known
+        :param wm_guess: Initial guess for the enthalpy behind the wall $w_-$
+        :param t_end: The maximum value for the fluid shell ODE integration parameter
+        :param n_xi: Number of points in the fluid velocity profile
+        :param label_latex: LaTeX label for plots
+        :param label_unicode: Unicode label for plots
+        """
         v_wall, w_center, w_outside, wm_guess = ensure_floats(
             {"v_wall": v_wall, "w_center": w_center, "w_outside": w_outside, "wm_guess": wm_guess},
             allow_none=True
@@ -155,6 +168,13 @@ class BaseBubble(Extractable, abc.ABC):
 
     @abc.abstractmethod
     def solve(self) -> None:
+        """Solve the fluid velocity profile of the bubble.
+
+        Subclasses should call this with ``super().solve()`` before solving.
+        This base implementation marks the solving as attempted,
+        and warns and adds a note if the bubble has already been solved,
+        as the cached quantities will not be updated.
+        """
         if self.solving_attempted:
             msg = (
                 "Re-solving a bubble! "
@@ -231,6 +251,7 @@ class BaseBubble(Extractable, abc.ABC):
         return self.model.temp(w=self.w, phase=self.phase)
 
     @functools.cached_property
+    @copy_docstring_dec(va_kinetic_energy_density, without_params=True)
     def va_kinetic_energy_density(self) -> float:
         if not self.solved:
             raise NotYetSolvedError

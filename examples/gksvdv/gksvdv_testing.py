@@ -15,6 +15,7 @@ from pttools.models import ConstCSModel
 
 
 def main() -> plt.Figure:
+    r"""Plot $\alpha_n$ as a function of $\alpha_{\bar{\theta}_n}$ for a constant sound speed model"""
     model = ConstCSModel(css2=1/3, csb2=1/4, a_s=5, a_b=1, V_s=1)
     # alpha_theta_bar_ns
     atbs = np.linspace(0.01, 3, 30)

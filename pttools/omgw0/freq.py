@@ -7,6 +7,7 @@ from pttools.type_hints import FloatOrArr
 
 def f[T: FloatOrArr](z: T, r_star: T | float, f_star0: T | float) -> T:
     r"""Convert the dimensionless wavenumber $z$ to frequency today by taking into account the redshift.
+
     $$f = \frac{z}{{r}_\ast} f_{\ast,0}$$,
     :gowling_2021:`\ ` eq. 2.12
     :gowling_2023:`\ ` eq. 2.8.

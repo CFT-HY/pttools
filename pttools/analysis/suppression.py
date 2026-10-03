@@ -38,6 +38,21 @@ class SuppressionPlot:
             figsize: tuple[float, float] = (4, 3),
             # levels: th.FloatArr1D = np.array([0.01, 0.03, 0.05, 0.1, 0.25, 0.5, 1, 1.5, 2, 2.5])
         ):
+        r"""Create the contour plot of the suppression factor $\Sigma$.
+
+        :param sup: suppression data
+        :param fig: figure to plot in. If None, a new figure is created.
+        :param ax: axes to plot in. If None, new axes are created.
+        :param v_wall_min: minimum $v_\text{wall}$ of the x-axis
+        :param v_wall_max: maximum $v_\text{wall}$ of the x-axis
+        :param alpha_n_min: minimum $\alpha_n$ of the y-axis
+        :param alpha_n_max: maximum $\alpha_n$ of the y-axis
+        :param cs: $c_s$, speed of sound, plotted as a vertical line. If None, the line is not plotted.
+        :param title: title of the plot. If None, the name of the suppression data is used.
+        :param alpha_n_max_lines: whether to plot the exact and approximate $\alpha_{n,\text{max}}$ curves
+        :param v_cj: whether to plot the Chapman-Jouguet speed $v_\text{CJ}$ of the bag model
+        :param figsize: size of the figure if a new figure is created
+        """
         fig_was_none = fig is None
         self.fig: plt.Figure
         self.ax: plt.Axes

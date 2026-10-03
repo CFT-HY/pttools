@@ -15,8 +15,11 @@ from pttools.utils.system import PTTOOLS_DIR
 
 
 class DocsTest(unittest.TestCase):
+    """Tests for the Sphinx configuration."""
+
     @unittest.skipIf(IS_GITHUB_ACTIONS, "Docs dependencies are not installed for CI test job")
     def test_docs_conf(self) -> None:
+        """Test that the Sphinx configuration can be imported and has the correct project name."""
         from docs import conf  # noqa: PLC0415
         self.assertEqual(conf.project, "PTtools")
 
@@ -24,14 +27,17 @@ class DocsTest(unittest.TestCase):
 class DocsPathsTest(unittest.TestCase):
     """Tests for finding the documentation directory of the project being documented."""
 
+    @tp.override
     def setUp(self) -> None:
         self.tmp_dir: tempfile.TemporaryDirectory[str] = tempfile.TemporaryDirectory()
         self.root: Path = Path(self.tmp_dir.name).resolve()
 
+    @tp.override
     def tearDown(self) -> None:
         self.tmp_dir.cleanup()
 
     def make_docs_dir(self, *parts: str) -> Path:
+        """Create a directory with the files of a documentation directory under the temporary directory."""
         path = self.root.joinpath(*parts)
         path.mkdir(parents=True, exist_ok=True)
         for name in paths.DOCS_DIR_FILES:
@@ -39,6 +45,7 @@ class DocsPathsTest(unittest.TestCase):
         return path
 
     def test_is_docs_dir(self) -> None:
+        """Test that a directory is recognised as a docs directory only if it has all the required files."""
         self.assertFalse(paths.is_docs_dir(self.root))
         docs = self.make_docs_dir("docs")
         self.assertTrue(paths.is_docs_dir(docs))
@@ -54,11 +61,13 @@ class DocsPathsTest(unittest.TestCase):
             self.assertEqual(paths.find_docs_dir(cwd=self.root), docs)
 
     def test_find_docs_dir_cwd_subdir(self) -> None:
+        """The docs subdirectory of the working directory is found."""
         docs = self.make_docs_dir("project", "docs")
         with mock.patch.object(paths, "env_dir", return_value=None):
             self.assertEqual(paths.find_docs_dir(cwd=self.root / "project"), docs)
 
     def test_find_docs_dir_cwd(self) -> None:
+        """The working directory is found if it is itself a docs directory."""
         docs = self.make_docs_dir("project", "docs")
         with mock.patch.object(paths, "env_dir", return_value=None):
             self.assertEqual(paths.find_docs_dir(cwd=docs), docs)
@@ -74,11 +83,13 @@ class DocsPathsTest(unittest.TestCase):
             self.assertIsNone(found)
 
     def test_find_docs_dir_not_found(self) -> None:
+        """None is returned if no docs directory is found."""
         with mock.patch.object(paths, "env_dir", return_value=None), \
                 mock.patch.object(paths, "PTTOOLS_DIR", self.root / "site-packages" / "pttools"):
             self.assertIsNone(paths.find_docs_dir(cwd=self.root))
 
     def test_default_log_dir(self) -> None:
+        """The log directory is next to the docs directory, or in the working directory if there are no docs."""
         docs = self.make_docs_dir("project", "docs")
         self.assertEqual(paths.default_log_dir(docs), self.root / "project" / "logs")
         with mock.patch.object(paths, "find_docs_dir", return_value=None):
@@ -109,6 +120,7 @@ class ClocTest(unittest.TestCase):
     }
 
     def test_format_compact(self) -> None:
+        """Test that the cloc JSON output is formatted compactly, grouped by directory."""
         self.assertEqual(
             cloc.format_compact(self.DATA),
             "github.com/AlDanial/cloc v 1.98  T=0.50 s (6.0 files/s, 2468.0 lines/s)\n"
@@ -153,16 +165,19 @@ class ClocTest(unittest.TestCase):
 class DocsLintRunMakeTest(unittest.TestCase):
     """Tests for running make with the documentation lint, using a stub Makefile."""
 
+    @tp.override
     def setUp(self) -> None:
         self.tmp_dir: tempfile.TemporaryDirectory[str] = tempfile.TemporaryDirectory()
         self.docs_dir: Path = Path(self.tmp_dir.name).resolve()
         (self.docs_dir / "Makefile").write_text("hello:\n\t@echo line1\n\t@echo line2\n")
         self.log_path: Path = self.docs_dir / "test.log"
 
+    @tp.override
     def tearDown(self) -> None:
         self.tmp_dir.cleanup()
 
     def run_make(self, verbose: bool) -> tuple[int, list[str], str]:
+        """Run the stub make target and return the return code, the output lines and the printed output."""
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
             returncode, lines = lint.run_make("hello", self.log_path, self.docs_dir, verbose=verbose)
@@ -187,6 +202,7 @@ class DocsLintRunMakeTest(unittest.TestCase):
         self.assertEqual(printed, "line1\nline2\n")
 
     def test_run_make_failure(self) -> None:
+        """A failing make target gives a non-zero return code."""
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
             returncode, _ = lint.run_make("nonexistent", self.log_path, self.docs_dir)

@@ -117,6 +117,7 @@ def fluid_integrate_param(
         -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
     Integrates parametric fluid equations in df_dtau from an initial condition.
+
     Positive t_end integrates along curves from $(v,w) = (0,c_{s,0})$ to $(1,1)$.
     Negative t_end integrates towards $(0,c_s{s,0})$.
 

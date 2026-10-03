@@ -36,6 +36,7 @@ def _get_phase_arr(xi: th.FloatOrArr, v_wall: float) -> th.FloatOrArr:
 def get_phase(xi: th.FloatOrArr, v_wall: float) -> th.FloatOrArr:
     r"""
     Returns array indicating phase of system.
+
     in symmetric phase $(\xi > v_w)$, phase = 0
     in broken phase $(\xi < v_w)$, phase = 1.
 

@@ -112,6 +112,11 @@ def add_defining_modules(
 
 
 def gen_identify_names(doc_modules: tp.Container[str]) -> tp.Callable[..., dict[str, list[CodeObject]]]:
+    """Create a replacement for the identify_names function of Sphinx-Gallery that adds the defining modules.
+
+    :param doc_modules: modules documented by Sphinx-Gallery
+    :return: the wrapped identify_names function
+    """
     def identify_names(*args: tp.Any, **kwargs: tp.Any) -> dict[str, list[CodeObject]]:
         """Wrapper for the identify_names function of Sphinx-Gallery, which adds the defining modules."""
         return add_defining_modules(

@@ -21,6 +21,7 @@ def filter_not[T: tuple, U: dtype](arr: np.ndarray[T, U], mask: np.ndarray[T, th
 
 
 def get_label(rtol: float, atol: float) -> str:
+    """Get a plot label describing the error tolerance."""
     if not atol:
         return f"relative error > {rtol * 100:.2f} %"
     if not rtol:
@@ -29,6 +30,7 @@ def get_label(rtol: float, atol: float) -> str:
 
 
 def get_solver_name(method: th.ODESolver) -> str:
+    """Get a short name of the ODE solver."""
     if method == "numba_lsoda":
         return "numba"
     if method is spi.odeint:
@@ -65,6 +67,7 @@ def get_differing_inds(
 
 
 def set_invalid_v_to_nan(v: th.FloatArr) -> None:
+    """Set the fluid velocities outside $[0, 1]$ to np.nan in place."""
     v[v < 0] = np.nan
     v[v > 1] = np.nan
 
@@ -76,6 +79,7 @@ def v_ahead_max[T](xi: T) -> T:
 
 def plot_v_excerpt(ax: plt.Axes, v_wall: float, alpha_plus: float, n_xi: int = 500) -> None:
     """Plots parts of solution obtained by integration of fluid equations.
+
     Supersonic deflagration solution comes in two parts, ahead and behind wall,
     each with about npts values.
     """
@@ -103,6 +107,7 @@ def plot_v_excerpt(ax: plt.Axes, v_wall: float, alpha_plus: float, n_xi: int = 5
 
 
 def plot_conditions(ax: plt.Axes, cs2_s: float, cs2_b: float) -> None:
+    r"""Plot the lines $v = \xi$, $v = v_{\rm sh}(\xi)$ and $v = \mu(\xi, c_s)$ of the wall conditions."""
     # Create a line v(xi) = xi to start solving on with forwards and backwards solutions
     # This is the maximum fluid speed ahead of wall for deflagrations
     xi_min = 0.0 + 1 / bubble.DEFAULT_N_XI
@@ -169,7 +174,9 @@ def plot_plane(
         cs2_b: float = bubble.const.CS0_2,
         selected_solutions: bool = True
     ) -> None:
-    """
+    r"""
+    Plot the $\xi, v$ plane of the fluid equation solutions.
+
     Modified from
     `sound-shell-model/paper/python/fig_8r_xi-v_plane.py
     <https://bitbucket.org/hindmars/sound-shell-model/src/master/paper/python/fig_8r_xi-v_plane.py>`_.

@@ -1,5 +1,7 @@
 """
-Functions from the
+Functions from FITPACK, ported to Python.
+
+They are modified from the
 `SciPy version <https://github.com/scipy/scipy/tree/v1.8.0/scipy/interpolate/fitpack>`__
 of
 `FITPACK <https://netlib.org/dierckx/>`_.
@@ -19,6 +21,8 @@ import pttools.type_hints as th
 # @njit
 def fpbspl(t: th.FloatArr1D, n: int, k: int, x: float, l: int, h: th.FloatArr1D) -> None:
     """
+    Evaluate the (k+1) non-zero B-splines of degree k at t(l) <= x < t(l+1).
+
     Modified from the
     `SciPy version <https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/fpbspl.f#L19>`__.
 
@@ -79,6 +83,8 @@ def splder(
         e: int,
         wrk: th.FloatArr1D) -> int:
     """
+    Evaluate the derivative of order nu of a spline in its B-spline representation at the points x.
+
     Modified from the
     `SciPy version <https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/splder.f#L67>`__.
 
@@ -255,6 +261,8 @@ def splev(
         t: th.FloatArr1D, n: int, c: th.FloatArr1D, k: int,
         x: th.FloatArr1D, y: th.FloatArr1D, m: int, e: int) -> int:
     """
+    Evaluate a spline in its B-spline representation at the points x.
+
     Modified from the
     `SciPy version <https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/splev.f>`__.
 

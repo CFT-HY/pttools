@@ -22,6 +22,8 @@ class TestBag(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         """
+        Set up the parameters of the bag model functions.
+
         Phase = order parameter (int?), test separately with values 0 and 1
         theta_s = some small positive number, 0.5
         w = usually 1 or around it, can be above or below 1.
@@ -56,6 +58,7 @@ class TestBag(unittest.TestCase):
     #     pass
 
     def test_e(self) -> None:
+        """Test the bag model energy density against reference values."""
         ref_data = np.array([1.175, 1.2125, 1.25, 1.2875, 1.325])
         data = bubble.e_bag(self.w_arr, self.phase, self.theta_s, self.theta_b)
         assert_allclose(data, ref_data)
@@ -73,6 +76,7 @@ class TestBag(unittest.TestCase):
     #     self.junction_bag(model, v1, w1, Phase.BROKEN, Phase.SYMMETRIC, greater_branch=True)
 
     def test_p(self) -> None:
+        """Test the bag model pressure against reference values."""
         ref_data = np.array([-0.275, -0.2625, -0.25, -0.2375, -0.225])
         data = bubble.p_bag(self.w_arr, self.phase, self.theta_s, self.theta_b)
         assert_allclose(data, ref_data)
@@ -81,14 +85,17 @@ class TestBag(unittest.TestCase):
     #     pass
 
     def test_theta_bag_scalar(self) -> None:
+        r"""Test the bag model trace anomaly $\theta$ for a scalar enthalpy in both phases."""
         self.assertEqual(bubble.theta_bag(self.w, 1, self.alpha_n), 0)
         self.assertAlmostEqual(bubble.theta_bag(self.w, self.phase, self.alpha_n), 0.3375)
 
     def test_theta_bag_arr(self) -> None:
+        r"""Test the bag model trace anomaly $\theta$ for an enthalpy array in both phases."""
         self.assertEqual(bubble.theta_bag(self.w_arr, 1, self.alpha_n), 0)
         self.assertAlmostEqual(bubble.theta_bag(self.w_arr, self.phase, self.alpha_n), 0.4125)
 
     def test_w(self) -> None:
+        """Test that the enthalpy computed from the energy density gives back the original enthalpy."""
         ref_data = np.array([0.9, 0.95, 1, 1.05, 1.1])
         e = bubble.e_bag(self.w_arr, self.phase, self.theta_s, self.theta_b)
         data = bubble.w_bag(e, self.phase, self.theta_s, self.theta_b)

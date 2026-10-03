@@ -1,5 +1,6 @@
 """Test the bubble grid analysis utilities."""
 
+import typing as tp
 import unittest
 
 import numpy as np
@@ -10,9 +11,12 @@ from tests.utils.mark import uses_multiprocessing
 
 
 class BubbleGridTest(unittest.TestCase):
+    """Test the bubble grid of wall speeds and transition strengths."""
+
     grid: BubbleGridVWAlpha
 
     @classmethod
+    @tp.override
     def setUpClass(cls) -> None:
         arr = np.linspace(0.1, 0.9, 3)
         cls.grid = BubbleGridVWAlpha(

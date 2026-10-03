@@ -17,12 +17,24 @@ class GieseTwoStepModel(AnalyticModel):
     """
 
     def __init__(self, b_s: float, b_b: float, d_s: float, d_b: float):
+        r"""Initialize the model.
+
+        The temperature-dependent potentials are
+        $$V_s(T) = (b_s - d_s T^2)^2 - b_b^2,$$
+        $$V_b(T) = (b_b - d_b T^2)^2 - b_b^2.$$
+
+        :param b_s: $b_s$, constant term of the potential in the symmetric phase
+        :param b_b: $b_b$, constant term of the potential in the broken phase
+        :param d_s: $d_s$, coefficient of the $T^2$ term of the potential in the symmetric phase
+        :param d_b: $d_b$, coefficient of the $T^2$ term of the potential in the broken phase
+        """
         self.b_s: float = b_s
         self.b_b: float = b_b
         self.d_s: float = d_s
         self.d_b: float = d_b
         super().__init__()
 
+    @tp.override
     def p_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         return tp.cast(T, self.a_s/3*temp**4 + self.V_temp(temp, phase))
 

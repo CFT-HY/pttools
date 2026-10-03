@@ -22,6 +22,8 @@ def omgw0_bag(
         sup_method: SuppressionMethod = SuppressionMethod.DEFAULT,
         parallel: bool = True) -> th.FloatArr1D:
     r"""
+    Calculate the power spectrum using the SSM for the given thermodynamic parameters.
+
     For given set of thermodynamic parameters vw, alpha, rs and T_star calculates the power spectrum using
     the SSM as encoded in the PTtools module (omgwi)
     :gowling_2021:`\ ` eq. 2.14.

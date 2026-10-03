@@ -29,8 +29,9 @@ def index_f_min(f: FloatArr1D, f_min: float | None = None) -> int:
 
 @njit(cache=True)
 def index_f_max(f: FloatArr1D, f_max: float | None = None) -> int:
-    r"""Index one past the last frequency bin of the band $[{f}_\text{min}, {f}_\text{max}]$,
-    to be used as the exclusive end of a slice.
+    r"""Index one past the last frequency bin of the band $[{f}_\text{min}, {f}_\text{max}]$.
+
+    This is to be used as the exclusive end of a slice.
 
     :param f: frequencies (Hz), sorted in ascending order
     :param f_max: maximum frequency to be considered (Hz), inclusive.
@@ -57,7 +58,8 @@ def signal_to_noise_ratio(
         noise_eb: bool = True,
         noise_gb: bool = True,
         noise_ins: bool = True) -> tuple[float, FloatArr1D, FloatArr1D]:
-    r"""Signal-to-noise ratio
+    r"""$\rho$, signal-to-noise ratio.
+
     $$\rho = \sqrt{T_{\text{obs}} \int_{{f}_\text{min}}^{{f}_\text{max}} df \left( \frac{
     h^2 \Omega_{\text{signal}}}{
     h^2 \Omega_{\text{noise}}} \right)^2}$$
@@ -121,7 +123,8 @@ def signal_to_noise_ratio(
 
 @njit(cache=True)
 def ft[T: FloatOrArr](L: T = LISA_ARM_LENGTH) -> T:
-    r"""Transfer frequency
+    r"""$f_t$, transfer frequency.
+
     $$f_t = \frac{c}{2\pi L}$$
     :gowling_2021:`\ ` p. 12.
     """
@@ -138,7 +141,8 @@ F2_LISA: float = 4/3 * FT_LISA
 
 @njit(cache=True)
 def N_acc[T: FloatOrArr](L: T = LISA_ARM_LENGTH) -> T:
-    r"""LISA acceleration noise
+    r"""${N}_\text{acc}$, LISA acceleration noise.
+
     $${N}_\text{acc} = \frac{3 \cdot 10^{-15}}{L} \frac{\text{m}}{\text{s}^2}
     \approx 1.44 \cdot 10^{-48} \frac{1}{\text{s}^4 \text{Hz}}$$
     :gowling_2021:`\ ` eq. 3.3
@@ -157,7 +161,8 @@ def N_AE[T: FloatOrArr](
         ft: T | float = FT_LISA,
         L: T | float = LISA_ARM_LENGTH,
         W_abs2: T | float | None = None) -> T:
-    r"""A and E channels of LISA instrument noise
+    r"""$N_A = N_E$, A and E channels of LISA instrument noise.
+
     $$N_A = N_E = \left(\left(
     4 + 2 \cos \left( \frac{f}{f_t} \right)\right) {P}_\text{oms} +
     8 \left( 1 + \cos \left( \frac{f}{f_t} \right) + \cos^2 \left( \frac{f}{f_t} \right) \right) {P}_\text{acc}
@@ -173,7 +178,9 @@ def N_AE[T: FloatOrArr](
 
 @njit(cache=CACHE_H0_100_HZ)
 def omega_h2[T: FloatOrArr](f: T, S: T | float) -> T:
-    r"""Convert an effective noise power spectral density (aka. sensitivity) $S$
+    r"""$\Omega h^2$, fractional GW energy density power spectrum.
+
+    Converts an effective noise power spectral density (aka. sensitivity) $S$
     to a fractional GW energy density power spectrum $\Omega$.
 
     $$\Omega h^2 = \frac{4 \pi^2}{3 H_{100}^2} f^3 S(f)$$
@@ -202,7 +209,8 @@ OMEGA_REF_EB_H2: float = OMEGA_REF_EB * 0.679**2
 @njit(cache=True)
 def omega_eb_h2[T: FloatOrArr](f: T, f_ref_eb: float = 25, omega_ref_eb_h2: float = OMEGA_REF_EB_H2) -> T:
     r"""
-    Energy density of extragalactic compact binaries
+    $\Omega_\text{eb} h^2$, energy density of extragalactic compact binaries.
+
     $$\Omega_\text{eb}(f) = \Omega_\text{ref,eb} \left( \frac{f}{{f}_\text{ref,eb}} \right)^\frac{2}{3}$$
     :gowling_2021:`\ ` eq. 3.9.
     """
@@ -212,7 +220,8 @@ def omega_eb_h2[T: FloatOrArr](f: T, f_ref_eb: float = 25, omega_ref_eb_h2: floa
 @njit(cache=CACHE_H0_100_HZ)
 def omega_gb_h2[T: FloatOrArr](f: T) -> T:
     r"""
-    Energy density of unresolved galactic compact binaries
+    $\Omega_\text{gb} h^2$, energy density of unresolved galactic compact binaries.
+
     $$\Omega_\text{gb} = \left( \frac{4 \pi^2}{3 H_{100}^2} \right) f^3 {S}_\text{gb}(f)$$
     :gowling_2021:`\ ` eq. 3.11.
     """
@@ -221,7 +230,8 @@ def omega_gb_h2[T: FloatOrArr](f: T) -> T:
 
 @njit(cache=CACHE_H0_100_HZ)
 def omega_ins_h2[T: FloatOrArr](f: T) -> T:
-    r"""LISA instrument noise
+    r"""$\Omega_\text{ins} h^2$, LISA instrument noise.
+
     $$\Omega_\text{ins} = \frac{4 \pi^2}{3 H_{100}^2} f^3 S_A(f)$$.
     """
     return omega_h2(f=f, S=S_AE(f))
@@ -230,7 +240,8 @@ def omega_ins_h2[T: FloatOrArr](f: T) -> T:
 @njit(cache=CACHE_H0_100_HZ)
 def omega_noise_h2[T: FloatOrArr](f: T, eb: bool = True, gb: bool = True, ins: bool = True) -> T:
     r"""
-    Total energy density of LISA noise
+    $\Omega_\text{noise} h^2$, total energy density of LISA noise.
+
     $$\Omega_\text{noise} h^2 = \left( \Omega_\text{ins} + \Omega_\text{eb} + \Omega_\text{gb} \right) h^2$$
     :gowling_2021:`\ ` eq. 3.13.
     """
@@ -247,7 +258,8 @@ def omega_noise_h2[T: FloatOrArr](f: T, eb: bool = True, gb: bool = True, ins: b
 @njit(cache=True)
 def P_acc[T: FloatOrArr](f: T, L: T | float = LISA_ARM_LENGTH) -> T:
     r"""
-    LISA single test mass acceleration noise, $P_\text{acc}$
+    $P_\text{acc}$, LISA single test mass acceleration noise.
+
     :gowling_2021:`\ ` eq. 3.3
     :gowling_2023:`\ ` eq. 3.5
     :smith_2019:`\ ` eq. 52.
@@ -258,7 +270,8 @@ def P_acc[T: FloatOrArr](f: T, L: T | float = LISA_ARM_LENGTH) -> T:
 @njit(cache=True)
 def P_oms[T: FloatOrArr](L: T = LISA_ARM_LENGTH) -> T:
     r"""
-    LISA optical metrology noise $P_\text{oms}$, aka. $S_II$ or $S_s$
+    $P_\text{oms}$, LISA optical metrology noise, aka. $S_II$ or $S_s$.
+
     $$P_\text{oms}(f) = \left( \frac{1.5 \cdot 10^{-11} \text{m}}{L} \right)^2 \text{Hz}^{-1}$$
     :gowling_2021:`\ ` eq. 3.2
     :lisa_sci_req:`\ ` eq. 3
@@ -273,7 +286,8 @@ def P_oms[T: FloatOrArr](L: T = LISA_ARM_LENGTH) -> T:
 
 @njit(cache=True)
 def R_AE[T: FloatOrArr](f: T, ft: T | float = FT_LISA, W_abs2: T | float | None = None) -> T:
-    r"""Gravitational wave response function for the A and E channels
+    r"""$\mathcal{R}_A = \mathcal{R}_E$, gravitational wave response function for the A and E channels.
+
     $$\mathcal{R}_A^\text{Fit} = \mathcal{R}_E^\text{Fit} \approx \frac{9}{20} \lvert W \rvert^2
     \left(1 + \left( \frac{3f}{4f_t} \right)^2 \right)^{-1}$$
     :gowling_2021:`\ ` eq. 3.6.
@@ -285,7 +299,8 @@ def R_AE[T: FloatOrArr](f: T, ft: T | float = FT_LISA, W_abs2: T | float | None 
 
 @njit(cache=True)
 def R_LISA[T: FloatOrArr](f: T, f2: T | float = F2_LISA) -> T:
-    r"""Auxiliary function from LISA science requirements
+    r"""Auxiliary function from LISA science requirements.
+
     :lisa_sci_req:`\ ` eq. 3.
     """
     return 1 + (f / f2)**2  # pyrefly: ignore[bad-return]
@@ -293,7 +308,8 @@ def R_LISA[T: FloatOrArr](f: T, f2: T | float = F2_LISA) -> T:
 
 @njit(cache=True)
 def S[T: FloatOrArr](N: T, R: T | float) -> T:
-    r"""Noise power spectral density
+    r"""$S$, noise power spectral density.
+
     $$S = \frac{N}{\mathcal{R}}$$
     :gowling_2021:`\ ` eq. 3.1.
     """
@@ -306,7 +322,8 @@ def S_AE[T: FloatOrArr](
         ft: T | float = FT_LISA,
         L: T | float = LISA_ARM_LENGTH,
         both_channels: bool = True) -> T:
-    r"""Noise power spectral density for the LISA A and E channels
+    r"""$S_A = S_E$, noise power spectral density for the LISA A and E channels.
+
     $$S_A = S_E = \frac{N_A}{\mathcal{R}_A}$$
     :gowling_2021:`\ ` eq. 3.7.
 
@@ -324,7 +341,8 @@ def S_AE_approx[T: FloatOrArr](
         f: T,
         L: T | float = LISA_ARM_LENGTH,
         both_channels: bool = True) -> T:
-    r"""Approximate noise power spectral density for the LISA A and E channels
+    r"""$S_A = S_E$, approximate noise power spectral density for the LISA A and E channels.
+
     $$S_A = S_E = \frac{N_A}{\mathcal{R}_A}
     \approx \frac{40}{3} ({P}_\text{oms} + {4P}_\text{acc}) \left( 1 + \frac{3f}{4f_t} \right)^2$$
     :gowling_2021:`\ ` eq. 3.7
@@ -340,7 +358,8 @@ def S_AE_approx[T: FloatOrArr](
 
 @njit(cache=True)
 def S_I[T: FloatOrArr](f: T, L: T | float = LISA_ARM_LENGTH) -> T:
-    r"""Subsidiary formula $S_I$ for acceleration noise
+    r"""$S_I$, subsidiary formula for acceleration noise.
+
     :smith_2019:`\ ` eq. 53
     :lisa_sci_req:`\ ` eq. 3.
     """
@@ -352,7 +371,8 @@ def S_gb[T: FloatOrArr](
         f: T,
         t: T | float = 4,  # years
         A: float = 1.8e-44) -> T:
-    r"""Noise power spectral density for galactic binaries
+    r"""$S_c$, noise power spectral density for galactic binaries.
+
     $$S_c(f) = A f^\frac{-7}{3} \exp \left( -f^\alpha + \beta f \sin(\kappa f) \right)
     \left( 1 + \tanh(\gamma (f_k - f) \right) \text{Hz}^{-1}$$
     :cornish_2017:`\ ` eq. 3
@@ -368,7 +388,8 @@ def S_gb[T: FloatOrArr](
 
 @njit(cache=True)
 def W[T: FloatOrArr](f: T, ft: T | float) -> T:
-    r"""Round trip modulation
+    r"""$W$, round trip modulation.
+
     $$W(f,f_t) = 1 - e^{-2i \frac{f}{f_t}}$$
     :gowling_2021:`\ ` p. 12.
     """

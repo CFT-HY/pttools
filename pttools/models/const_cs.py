@@ -41,6 +41,11 @@ class ConstCSFuncs:
     """
 
     def __init__(self, css2: float, csb2: float):
+        r"""Create the $c_s^2$ functions for the given sound speeds.
+
+        :param css2: $c_{s,s}^2$, speed of sound squared in the symmetric phase
+        :param csb2: $c_{s,b}^2$, speed of sound squared in the broken phase
+        """
         self.css2: float = css2
         self.csb2: float = csb2
         self.label: str = f"css2={cs2_to_float_and_label(css2)[1]}, csb2={cs2_to_float_and_label(csb2)[1]}"
@@ -160,15 +165,28 @@ class ConstCSModel(AnalyticModel):
             allow_invalid: bool = False,
             log_info: bool = True):
         # Ensure that these descriptions correspond to those in the base class
-        r"""
-        :param a_s: prefactor of $p$ in the symmetric phase. The convention is as in :notes:`\ ` eq. 7.33.
-        :param a_b: prefactor of $p$ in the broken phase. The convention is as in :notes:`\ ` eq. 7.33.
-        :param css2: $c_{s,s}^2$, speed of sound squared in the symmetric phase
-        :param csb2: $c_{s,b}^2$, speed of sound squared in the broken phase
+        r"""Initialize the constant sound speed model.
+
+        :param css2: $c_{s,s}^2$, speed of sound squared in the symmetric phase. Defaults to $1/3$.
+        :param csb2: $c_{s,b}^2$, speed of sound squared in the broken phase. Defaults to $1/3$.
         :param V_s: $V_s \equiv \epsilon_s$, the potential term of $p$ in the symmetric phase
         :param V_b: $V_b \equiv \epsilon_b$, the potential term of $p$ in the broken phase
+        :param a_s: prefactor of $p$ in the symmetric phase. The convention is as in :notes:`\ ` eq. 7.33.
+        :param a_b: prefactor of $p$ in the broken phase. The convention is as in :notes:`\ ` eq. 7.33.
+        :param g_s: $g_\text{eff}(\phi=s)$, degrees of freedom for $p$ in the symmetric phase
+        :param g_b: $g_\text{eff}(\phi=b)$, degrees of freedom for $p$ in the broken phase
+        :param alpha_n_min: $\alpha_{n,\text{min}}$, if given, $a_s$ and $V_s$ are adjusted so that the model allows
+            this minimum transition strength, using :meth:`alpha_n_min_find_params`
+        :param T_min: $T_\text{min}$, minimum temperature at which the model is valid
+        :param T_max: $T_\text{max}$, maximum temperature at which the model is valid
         :param T_ref: reference temperature, usually 1 * unit of choice, e,g. 1 GeV
+        :param T_crit_guess: starting guess for solving the critical temperature. Defaults to T_ref.
         :param name: custom name for the model
+        :param label_latex: not used, as the LaTeX label is generated from the sound speeds
+        :param label_unicode: not used, as the Unicode label is generated from the sound speeds
+        :param allow_invalid: whether to allow $V_s < V_b$ and failures in solving the critical temperature
+        :param log_info: whether to log information and warnings about the model parameters
+        :raises ValueError: if the sound speeds are not in the range $0 \leq c_s^2 \leq 1$
         """
         # -----
         # Speeds of sound
@@ -269,6 +287,7 @@ class ConstCSModel(AnalyticModel):
             nan_on_invalid: bool = True,
             log_invalid: bool = True) -> T:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
+
         $$\alpha_n = \frac{4}{3} \left( \frac{1}{\nu} - \frac{1}{\mu} + \frac{1}{w_n} (V_s - V_b) \right)$$.
 
         :param wn: $w_n$, enthalpy of the symmetric phase at the nucleation temperature
@@ -360,6 +379,31 @@ class ConstCSModel(AnalyticModel):
             nan_on_invalid: bool = True,
             log_invalid: bool = True,
             cancel_on_invalid: bool = True) -> tuple[float, float, float, float]:
+        r"""Find the model parameters that allow the given $\alpha_{n,\text{min,target}}$.
+
+        If the default parameters already give $\alpha_{n,\text{min}} < \alpha_{n,\text{min,target}}$,
+        they are returned as such.
+        Otherwise, $a_s$ is solved numerically with $V_s = V_{s,\text{default}}$,
+        then with $V_s = V_{s,\text{default}}/100$, and finally $a_s$ and $V_s$ are solved together.
+        For the bag model case $\mu_s = \mu_b = 4$, :meth:`BagModel.alpha_n_min_find_params` is used.
+
+        :param alpha_n_min_target: $\alpha_{n,\text{min,target}}$, target minimum transition strength
+        :param a_s_default: default $a_s$, prefactor of $p$ in the symmetric phase
+        :param a_b: $a_b$, prefactor of $p$ in the broken phase
+        :param V_s_default: default $V_s$, potential in the symmetric phase
+        :param V_b: $V_b$, potential in the broken phase
+        :param safety_factor_alpha: the target $\alpha_{n,\text{min}}$ of the solvers is multiplied by this
+        :param safety_factor_a: lower bound for the ratio $a_s/a_b$ in the solvers
+        :param safety_factor_V: lower bound for $V_s - V_b$ in the solver that solves both $a_s$ and $V_s$
+        :param a_max: upper bound for $a_s$ in the solvers
+        :param error_on_invalid: whether to raise an error if the solvers fail
+        :param nan_on_invalid: whether to return nan for $a_s$ and $V_s$ if the solvers fail
+        :param log_invalid: whether to log the failure of the solvers
+        :param cancel_on_invalid: whether to return the default parameters if the solvers fail
+        :return: $a_s, a_b, V_s, V_b$
+        :raises ValueError: if the safety factors are invalid
+        :raises RuntimeError: if the solvers fail, error_on_invalid is True and cancel_on_invalid is False
+        """
         if safety_factor_a < 1 or safety_factor_V < 0:
             raise ValueError(f"Got invalid safety factors: a={safety_factor_a}, V={safety_factor_V}")
         if V_s_default is None:
@@ -615,6 +659,7 @@ class ConstCSModel(AnalyticModel):
                           log_invalid=log_invalid
                           ))
 
+    @tp.override
     def alpha_theta_bar_n_max_lte[T: FloatOrArr](
             self,
             wn: T,
@@ -625,6 +670,7 @@ class ConstCSModel(AnalyticModel):
             wn=wn, sol_type=sol_type, mu_b=self.mu_b if mu_b is None else mu_b, Psi_n=Psi_n
         )
 
+    @tp.override
     def alpha_theta_bar_n_min_lte[T: FloatOrArr](
             self,
             wn: T,
@@ -660,6 +706,7 @@ class ConstCSModel(AnalyticModel):
                           log_invalid=log_invalid
                           ))
 
+    @tp.override
     def critical_temp_opt[T: FloatOrArr](self, temp: T) -> T:
         const = (self.V_b - self.V_s) * self.T_ref ** 4
         return tp.cast(T, self.a_s * (temp / self.T_ref)**self.mu_s - self.a_b * (temp / self.T_ref)**self.mu_b + const)
@@ -691,10 +738,12 @@ class ConstCSModel(AnalyticModel):
             **kwargs: tp.Any) -> tuple[float, float]:
         return self._cs2_minmax(phase)
 
+    @tp.override
     def cs2_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         # ConstCSModel.cs2() is independent of T and w
         return self.cs2(temp, phase)
 
+    @tp.override
     def delta_theta[T: FloatOrArr](
             self,
             wp: T,
@@ -708,13 +757,20 @@ class ConstCSModel(AnalyticModel):
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         )
 
+    @tp.override
     def cs2_ptr(self) -> th.CS2FunScalarPtr:
         # Using the BagModel cs2 saves us from having to compile an additional Numba function
         if self.is_bag:
             return CS2_BAG_SCALAR_PTR
         return self.funcs().cs2_ptr()
 
+    @tp.override
     def df_dtau_ptr(self) -> DifferentialPointer:
+        r"""Pointer to the compiled fluid differential equations $\frac{df}{d\tau}$ of this model.
+
+        The differentials are shared by the models with the same sound speeds, see :meth:`funcs`.
+        For the bag model case, the precompiled differentials of the bag model are used.
+        """
         if self.is_bag:
             return DF_DTAU_PTR_BAG
         return self.funcs().df_dtau_ptr()
@@ -724,7 +780,8 @@ class ConstCSModel(AnalyticModel):
         return const_cs_funcs(self.css2, self.csb2)
 
     def e_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
-        r"""Energy density $e(T,\phi)$
+        r"""Energy density $e(T,\phi)$.
+
         $${e}_{\pm} = {a}_{\pm} (\mu_\pm - 1) T^{\mu_\pm} + {V}_\pm$$
         :giese_2021:`\ `, eq. 15.
         In the article there is a typo: the 4 there should be a $\mu$.
@@ -735,18 +792,21 @@ class ConstCSModel(AnalyticModel):
         e_b = (self.mu_b - 1) * self.a_b * (temp / self.T_ref) ** (self.mu_b - 4) * temp ** 4 + self.V_b
         return tp.cast(T, e_b * phase + e_s * (1 - phase))
 
+    @tp.override
     def gen_cs2(self) -> th.CS2Fun:
         # Using the BagModel cs2 saves us from having to compile additional Numba functions
         if self.is_bag:
             return cs2_bag_multi
         return self.funcs().cs2
 
+    @tp.override
     def gen_cs2_neg(self) -> th.CS2Fun:
         if self.is_bag:
             return BagModel.cs2_neg
         return self.funcs().cs2_neg
 
     def __getstate__(self) -> dict[str, tp.Any]:
+        """Get the state of the model for pickling, excluding the compiled $c_s^2$ functions."""
         # The compiled functions are shared by the models with the same sound speeds,
         # and are therefore restored from the cache of the receiving process instead of being pickled.
         state = self.__dict__.copy()
@@ -755,6 +815,7 @@ class ConstCSModel(AnalyticModel):
         return state
 
     def __setstate__(self, state: dict[str, tp.Any]) -> None:
+        """Restore the state of the model from pickling, and restore the compiled $c_s^2$ functions from the cache."""
         self.__dict__.update(state)
         # The functions are restored to the instance dictionary in the same way as the rest of the state.
         self.__dict__["cs2"] = self.gen_cs2()
@@ -773,13 +834,15 @@ class ConstCSModel(AnalyticModel):
         return tp.cast(
             T, self.mu_b * self.a_b  / (self.mu_s * self.a_s) * (temp / self.T_ref) ** (self.mu_b - self.mu_s))
 
+    @tp.override
     def params_str(self) -> str:
         return \
             f"css2={self.css2:.3f}, csb2={self.csb2:.3f}, alpha_n_min={self.alpha_n_min:.3f} " \
             f"(a_s={self.a_s:.3f}, a_b={self.a_b:.3f}, V_s={self.V_s:.3f}, V_b={self.V_b:.3f})"
 
     def p_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
-        r"""Pressure $p(T,\phi)$
+        r"""Pressure $p(T,\phi)$.
+
         $$p_{\pm} = {a}_{\pm} T^{\mu_\pm} - {V}_{\pm}$$
         :giese_2021:`\ `, eq. 15,
         :maki_msc:`\ ` eq. 2.120.
@@ -790,7 +853,8 @@ class ConstCSModel(AnalyticModel):
         return tp.cast(T, p_b * phase + p_s * (1 - phase))
 
     def s_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
-        r"""Entropy density $s=\frac{dp}{dT}$
+        r"""Entropy density $s=\frac{dp}{dT}$.
+
         $$s_\pm = \mu {a}_\pm \left( \frac{T}{T_0} \right)^{\mu_\pm-1} T_0^3$$
         Derived from :giese_2021:`\ `, eq. 15.
         :maki_msc:`\ ` eq. 2.122.
@@ -827,6 +891,7 @@ class ConstCSModel(AnalyticModel):
 
     def temp[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         r"""Temperature $T(w,\phi)$. Inverted from the equation of $w(T,\phi)$.
+
         $$T_\pm = T_0 \left( \frac{w}{\mu a_{\pm} T_0^4} \right)^\frac{1}{\mu_\pm}$$.
         """
         # Some solvers may call this function with w < 0 when finding a solution, which causes NumPy to emit warnings.
@@ -843,7 +908,8 @@ class ConstCSModel(AnalyticModel):
         return tp.cast(T, temp_b * phase + temp_s * (1 - phase))
 
     def w[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
-        r"""Enthalpy density $w(T,\phi)$
+        r"""Enthalpy density $w(T,\phi)$.
+
         $$w_\pm = \mu a_{\pm} \left( \frac{T}{T_0} \right)^{\mu_\pm} T_0^4$$.
         """
         self.validate_temp(temp)
@@ -851,6 +917,7 @@ class ConstCSModel(AnalyticModel):
         w_b = self.mu_b * self.a_b * (temp / self.T_ref) ** (self.mu_b - 4) * temp ** 4
         return tp.cast(T, w_b * phase + w_s * (1 - phase))
 
+    @tp.override
     def wn[T: FloatOrArr](
             self,
             alpha_n: T,

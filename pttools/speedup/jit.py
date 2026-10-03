@@ -22,7 +22,8 @@ logger: logging.Logger = logging.getLogger(__name__)
 class Decorator(tp.Protocol):
     """A decorator that preserves the signature of the decorated function."""
 
-    def __call__[T: tp.Callable](self, func: T) -> T: ...
+    def __call__[T: tp.Callable](self, func: T) -> T:
+        """Decorate the function, returning a callable with the same signature."""
 
 
 @tp.overload

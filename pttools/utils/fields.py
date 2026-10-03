@@ -174,6 +174,7 @@ class Fields(Mapping[str, Field]):
     """
 
     def __init__(self, *fields: "Field | Fields") -> None:
+        """Create the collection from the given fields and the fields of the given collections."""
         self._fields: dict[str, Field] = {}
         for item in fields:
             if isinstance(item, Fields):

@@ -27,6 +27,7 @@ type FigAndAxes = tuple[Figure, Axes]
 
 
 def close_figs(*figs: Figure | None) -> None:
+    """Close the given Matplotlib figures, skipping the ones that are None."""
     for fig in figs:
         if fig is not None:
             plt.close(fig)

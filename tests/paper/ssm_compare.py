@@ -1,4 +1,5 @@
-"""Compare SSM prediction with data
+"""Compare SSM prediction with data.
+
 Creates and plots velocity and GW power spectra from SSM.
 
 Modified from
@@ -98,6 +99,7 @@ def generate_ps(
         debug: bool = False) -> tuple[float, float] | tuple[float, float, list[float]]:
     """
     Generates, plots velocity and GW power as functions of $kR_*$.
+
     Saves power spectra in files pow_v_*, pow_gw_*...<string>.txt if save_id[0]=string.
     Saves plots in files pow_v_*, pow_gw_*...<string>.pdf if save_id[1]=string.
     Shows plots if show=True
@@ -249,6 +251,7 @@ def all_generate_ps_prace(
         -> tuple[list[float], list[float]] | tuple[list[float], list[float], list[list[float]]]:
     """
     Generate power spectra with Prace17 SSM parameters.
+
     Save data files and graphs.
     Returns U-bar-f^2 and GW power as tuple of lists.
     """

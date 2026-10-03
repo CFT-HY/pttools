@@ -15,10 +15,12 @@ import pttools.type_hints as th
 
 
 def potential(x: th.FloatOrArr, a: float, b: float, c: float) -> th.FloatOrArr:
+    r"""Temperature-dependent potential $V_T = a|\phi|^4 + b|\phi|^3 + c|\phi|^2$"""
     return a*x**4 + b*x**3 + c*x**2
 
 
 def b_of_det_zero(a: float, c: float) -> float:
+    r"""Value of $b$ at which the two minima of the potential are degenerate, $b = \sqrt{32ac/9}$"""
     return np.sqrt(32/9 * a * c)
 
 
@@ -29,6 +31,7 @@ def b_of_det_zero(a: float, c: float) -> float:
 
 
 def main() -> plt.Figure:
+    """Plot the potential at various temperatures"""
     x = np.linspace(0, 2, 50)
 
     fig: plt.Figure = plt.figure(figsize=(3.6, 3.2))

@@ -26,6 +26,8 @@ def calc_sup_ssm(
         npt: NptType = DEFAULT_N_PT,
         lambda_correction: bool = False) -> dict[str, th.FloatArr1DOrList]:
     """
+    Compute the kinetic energy suppression factors of the SSM by comparing to the simulation data in a file.
+
     File must be a txt file with data in columns as follows
     vw alpha suppression_sim sim_omgw exp_omgw exp_ubarf
     where vw = wall speed

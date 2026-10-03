@@ -15,6 +15,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 @enum.unique
 class SolutionType(enum.StrEnum):
     r"""There are three different types of relativistic combustion.
+
     For further details, please see chapter 7.2 and figure 14
     of :notes:`\ `.
 
@@ -51,7 +52,9 @@ def cannot_be_detonation(v_wall: float, v_cj: float) -> float:
 
 
 def cannot_be_sub_def(model: "Model", v_wall: float, wn: float) -> bool:
-    r"""If the wall speed $v_w > c_{sb}(w) \forall w \in [0, w_n]$,
+    r"""Check whether the solution certainly cannot be a subsonic deflagration.
+
+    If the wall speed $v_w > c_{sb}(w) \forall w \in [0, w_n]$,
     then the wall is certainly hypersonic in the broken phase and must have fluid movement inside the wall
     to satisfy the boundary conditions. Therefore, the solution cannot be a subsonic deflagration.
     """
@@ -65,7 +68,9 @@ def is_surely_detonation(v_wall: float, v_cj: float) -> float:
 
 
 def is_surely_sub_def(model: "Model", v_wall: float, wn: float) -> bool:
-    r"""If the wall speed $v_w < c_{sb}(w) \forall w \in [0, w_n]$,
+    r"""Check whether the solution is certainly a subsonic deflagration.
+
+    If the wall speed $v_w < c_{sb}(w) \forall w \in [0, w_n]$,
     then the wall is certainly subsonic in the broken phase,
     and therefore the solution is certainly a subsonic deflagration.
     """

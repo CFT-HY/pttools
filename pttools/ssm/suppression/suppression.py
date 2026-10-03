@@ -48,6 +48,14 @@ class Suppression:
             alpha_ns: th.FloatArr1D,
             suppressions: th.FloatArr1D,
             name: str):
+        r"""Create a suppression dataset from the given data points.
+
+        :param v_walls: ${v}_\text{wall}$, wall speeds of the data points
+        :param alpha_ns: $\alpha_n$, transition strengths of the data points
+        :param suppressions: suppression factors of the data points
+        :param name: name of the dataset
+        :raises ValueError: if the arrays are not of the same size
+        """
         if not v_walls.size == alpha_ns.size == suppressions.size:
             raise ValueError(
                 f"Input arrays must have the same size. Got: {v_walls.size}, {alpha_ns.size}, {suppressions.size}")
@@ -64,6 +72,15 @@ class Suppression:
 
     @classmethod
     def from_file(cls, path: str | os.PathLike[str], name: str) -> "Suppression":
+        """Load a suppression dataset from a ``.npz`` file.
+
+        The file should contain the arrays ``vw_sim``, ``alpha_sim`` and ``sup_ssm``,
+        as created by ``pttools.ssm.suppression.suppression_ssm_data.suppression_ssm_calculator.calc_sup_ssm``.
+
+        :param path: path of the ``.npz`` file
+        :param name: name of the dataset
+        :return: the suppression dataset
+        """
         with np.load(path) as data:
             return Suppression(
                 v_walls=data["vw_sim"],
@@ -74,11 +91,16 @@ class Suppression:
 
     @property
     def limits_str(self) -> str:
+        """The ranges of the wall speeds and transition strengths of the dataset as a human-readable string."""
         return \
             f"{self.v_wall_min:.3f} < v_wall < {self.v_wall_max:.3f}, " \
             f"{self.alpha_n_min:.3f} < alpha_n < {self.alpha_n_max:.3f}"
 
     def peak(self) -> tuple[float, float, float]:
+        r"""Find the data point with the largest suppression factor.
+
+        :return: ${v}_\text{wall}$, $\alpha_n$ and the suppression factor of the data point
+        """
         ind = self.suppressions.argmax()
         return self.v_walls[ind], self.alpha_ns[ind], self.suppressions[ind]
 
@@ -176,6 +198,8 @@ def extend(
         alpha_ns: th.FloatArr1D,
         suppressions: th.FloatArr1D) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     """
+    Extend the suppression dataset to the low vw and low alpha region.
+
     To improve the extrapolation of the suppression factor when later using grid data, first extend the
     low vw and low alpha region as follows.
     """

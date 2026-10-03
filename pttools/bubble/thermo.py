@@ -61,7 +61,8 @@ def entropy_density_diff(
         xi: th.FloatArr1D,
         v_wall: float,
         phase: th.FloatArr1D | None = None) -> float:
-    r"""Bubble volume averaged entropy density
+    r"""Bubble volume averaged entropy density.
+
     $$\frac{3}{4\pi {v}_\text{wall}^3} {s}_\text{avg}$$.
 
     :param model: Model
@@ -80,7 +81,8 @@ def kappa(
         xi: th.FloatArr1D,
         v_wall: float,
         delta_e_theta: float | None = None) -> float:
-    r"""Kinetic efficiency factor
+    r"""$\kappa$, kinetic efficiency factor.
+
     $$\kappa = \frac{{e}_K}{\lvert\Delta {e}_\theta\rvert}$$.
 
     :param model: Equation of state model
@@ -98,7 +100,8 @@ def kappa(
 
 
 def kappa_approx[T: FloatOrArr](alpha_n: T) -> T:
-    r"""Approximate kinetic efficiency factor $\kappa$
+    r"""$\kappa$, approximate kinetic efficiency factor.
+
     $$\kappa \approx \frac{\alpha_n}{0.73 + 0.083\sqrt{\alpha_n} + \alpha_n}$$
     :notes:`\ ` eq. 7.44.
 
@@ -110,7 +113,8 @@ def kappa_approx[T: FloatOrArr](alpha_n: T) -> T:
 
 @njit
 def kinetic_energy_density(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float) -> float:
-    r"""Bubble volume averaged kinetic energy density
+    r"""Bubble volume averaged kinetic energy density.
+
     $$\frac{3}{4\pi {v}_w^3} {e}_K$$.
 
     :param v: Fluid velocity $v$
@@ -226,7 +230,8 @@ def omega_barotropic[T: FloatOrArr](p: T, e: T | float) -> T:
 
 
 def thermal_energy_density(v_wall: float, eqp: float) -> float:
-    r"""Bubble volume averaged thermal energy density after the phase transition
+    r"""Bubble volume averaged thermal energy density after the phase transition.
+
     $$\frac{3}{4\pi {v}_w^3} {e}_Q'$$.
 
     :param v_wall: Wall velocity ${v}_\text{wall}$
@@ -237,7 +242,8 @@ def thermal_energy_density(v_wall: float, eqp: float) -> float:
 
 
 def thermal_energy_density_diff(w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float) -> float:
-    r"""Bubble volume averaged thermal energy density difference
+    r"""Bubble volume averaged thermal energy density difference.
+
     $$\frac{3}{4\pi {v}_\text{wall}^3} \Delta e_Q$$.
 
     :param w: Enthalpy density $w$
@@ -286,7 +292,8 @@ def ubarf2(
         v_wall: float,
         ek_bva: float | None = None,
         w_bar: float | None = None) -> float:
-    r"""Enthalpy-weighted mean square fluid 4-velocity around the bubble
+    r"""$\bar{U}_f^2$, enthalpy-weighted mean square fluid 4-velocity around the bubble.
+
     $$\bar{U}_f^2 = \frac{3}{4\pi \bar{w} {v}_\text{wall}^3} {e}_K$$
     :gw_pt_ssm:`\ ` eq. B.30
     In some sources such as :giombi_2024_cs:`\ `, this is denoted as $v_\text{rms}^2$.
@@ -329,7 +336,8 @@ def ubarf2_from_K[T: FloatOrArr](K: T, adiabatic_index: T | float = DEFAULT_ADIA
 
 
 def va_enthalpy_density(eq: float) -> float:
-    r"""Volume-averaged enthalpy density
+    r"""$w_\text{va}$, volume-averaged enthalpy density.
+
     $$w_\text{va} = \frac{4}{3} e_Q$$.
 
     :param eq: Thermal energy density $e_Q$
@@ -344,7 +352,8 @@ def va_entropy_density_diff(
         v_wall: float,
         phase: th.FloatArr1D | None = None) -> float:
     r"""
-    Volume-averaged entropy density
+    ${s}_\text{avg}$, volume-averaged entropy density.
+
     $${s}_\text{avg} = \int d\xi \xi^2 (s(w,\phi) - s({w}_n, \phi_s)$$.
     """
     if phase is None:
@@ -356,7 +365,8 @@ def va_entropy_density_diff(
 @njit
 def va_kinetic_energy_density(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D) -> float:
     r"""
-    Volume-averaged kinetic energy density
+    ${e}_K$, volume-averaged kinetic energy density.
+
     $${e}_K = 4 \pi \int_0^{{\xi}_\text{max}} d\xi \xi^2 w \gamma^2 v^2$$
     Each point is multiplied by $v$, and therefore having ${\xi}_{max}$ too far does not affect the results.
     :gw_pt_ssm:`\ ` eq. B.22.
@@ -370,14 +380,16 @@ def va_kinetic_energy_density(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatAr
 
 
 def va_kinetic_energy_fraction(ek_va: float, eb: float) -> float:
-    r"""Volume-averaged kinetic energy fraction
+    r"""$K_\text{va}$, volume-averaged kinetic energy fraction.
+
     $$K_\text{va} = \frac{e_{K,\text{va}}}{\bar{e}}$$.
     """
     return ek_va / eb
 
 
 def va_thermal_energy_density(v_shock: float, wn: float, ek: float, delta_e_theta: float) -> float:
-    r"""Volume-averaged thermal energy density after the phase transition
+    r"""${e}_Q'$, volume-averaged thermal energy density after the phase transition.
+
     $${e}_Q' = {e}_Q + {e}_\theta - {e}_K' - {e}_\theta'
     = 4\pi \int_0^{{\xi}_\text{max}} d\xi \xi^2 \frac{3}{4} {w}_n - {e}_K' - \Delta {e}_\theta$$.
     """
@@ -386,7 +398,8 @@ def va_thermal_energy_density(v_shock: float, wn: float, ek: float, delta_e_thet
 
 # @njit
 def va_thermal_energy_density_diff(w: th.FloatArr1D, xi: th.FloatArr1D) -> float:
-    r"""Volume-averaged thermal energy density difference
+    r"""$\Delta {e}_Q$, volume-averaged thermal energy density difference.
+
     $$\Delta {e}_Q = 4 \pi \int_0^{\xi_\text{max}} d\xi \xi^2 \frac{3}{4} (w - {w}_n)$$
     :gw_pt_ssm:`\ ` eq. B.25.
 
@@ -398,7 +411,8 @@ def va_thermal_energy_density_diff(w: th.FloatArr1D, xi: th.FloatArr1D) -> float
 
 
 def va_thermal_energy_fraction(eq_va: float, eb: float) -> float:
-    r"""Volume-averaged thermal energy fraction
+    r"""$Q_\text{va}$, volume-averaged thermal energy fraction.
+
     $$Q_\text{va} = \frac{e_{Q,\text{va}}}{\bar{e}}$$.
 
     :param eq_va: Volume-averaged thermal energy density $e_{Q,\text{va}}$
@@ -414,7 +428,8 @@ def va_trace_anomaly_diff(
         xi: th.FloatArr1D,
         v_wall: float,
         phase: th.FloatArr1D | None = None) -> float:
-    r"""Volume-averaged trace anomaly difference
+    r"""$\Delta {e}_\theta$, volume-averaged trace anomaly difference.
+
     $$\Delta {e}_\theta = 4 \pi \int_0^{{\xi}_\text{max}} d\xi \xi^2 (\theta - {\theta}_n)$$
     :gw_pt_ssm:`\ ` eq. B.25.
 

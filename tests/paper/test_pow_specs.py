@@ -20,10 +20,12 @@ class TestPowSpecs(unittest.TestCase):
 
     @staticmethod
     def test_pow_specs() -> None:
+        """Test that the power spectra with different nucleation types match the reference and article data."""
         pow_specs()
 
 
 def pow_specs(filename: str = "data_compare_nuc-test.txt") -> None:
+    """Compute the power spectra with different nucleation types and compare them to the reference and article data."""
     params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list = do_all_plot_ps_compare_nuc(
         save_id="final3",
         graph_file_type=None,

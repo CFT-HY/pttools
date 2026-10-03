@@ -4,6 +4,7 @@ import importlib
 import importlib.util
 import io
 from pathlib import Path
+import typing as tp
 import unittest
 from unittest import mock
 
@@ -41,11 +42,13 @@ class AttributeNameTest(unittest.TestCase):
     """Tests for finding the attribute of a field."""
 
     def test_attribute(self) -> None:
+        """Test that the attribute name is the field name, or the getter if it is an attribute name."""
         self.assertEqual(attribute_name(Field("v_wall")), "v_wall")
         self.assertEqual(attribute_name(Field("thin_shell_limit", getter="thin_shell_t_points_min")),
                          "thin_shell_t_points_min")
 
     def test_not_attribute(self) -> None:
+        """Test that fields with a dotted or callable getter, or with call or index, have no attribute."""
         self.assertIsNone(attribute_name(Field("v_wall", getter="bubble.v_wall")))
         self.assertIsNone(attribute_name(Field("omgw0_h2", call=True)))
         self.assertIsNone(attribute_name(Field("snr", call=True, index=0)))
@@ -56,9 +59,11 @@ class FormatDescriptionTest(unittest.TestCase):
     """Tests for formatting the field descriptions as attribute documentation."""
 
     def test_capitalize(self) -> None:
+        """Test that the first letter of the description is capitalized."""
         self.assertEqual(format_description("name of the model"), "Name of the model")
 
     def test_unchanged(self) -> None:
+        """Test that descriptions starting with math or an uppercase letter are not changed."""
         self.assertEqual(format_description(r"$v_\text{wall}$, wall speed"), r"$v_\text{wall}$, wall speed")
         self.assertEqual(format_description("LaTeX label"), "LaTeX label")
 
@@ -70,10 +75,12 @@ class FieldAttributeDocsTest(unittest.TestCase):
     docs: dict[tuple[str, str, str], str]
 
     @classmethod
+    @tp.override
     def setUpClass(cls) -> None:
         cls.docs = field_attribute_docs()
 
     def test_attribute(self) -> None:
+        """Test that an attribute is documented with the description of its field."""
         self.assertEqual(
             self.docs["pttools.bubble.bubble.base", "BaseBubble", "v_wall"], r"$v_\text{wall}$, wall speed")
 
@@ -93,9 +100,11 @@ class FieldAttributeDocsTest(unittest.TestCase):
             self.assertNotIn(name, names)
 
     def test_no_attributes_of_other_objects(self) -> None:
+        """Fields that get attributes of other objects should not be documented as attributes of the class."""
         self.assertNotIn(("pttools.ssm.spectrum", "SSMSpectrum", "v_wall"), self.docs)
 
     def test_add_field_docs(self) -> None:
+        """Test that the field docs are added to the Sphinx module analyzer, keeping the existing comments."""
         from sphinx.pycode import ModuleAnalyzer  # noqa: PLC0415
         add_field_docs()
         analyzer = ModuleAnalyzer.for_module("pttools.bubble.bubble.base")
@@ -110,6 +119,7 @@ class FieldDependenciesTest(unittest.TestCase):
     """Tests for the dependencies of the documents on the field definitions."""
 
     def test_extractable_class(self) -> None:
+        """Test that the docs of an extractable class depend on the field definition modules."""
         app = mock.MagicMock()
         note_field_dependencies(app, "class", "Bubble", Bubble, None, [])
         paths = {Path(call.args[0]).name for call in app.env.note_dependency.call_args_list}
@@ -117,6 +127,7 @@ class FieldDependenciesTest(unittest.TestCase):
         self.assertEqual(paths, {"export.py"})
 
     def test_other_objects(self) -> None:
+        """Test that the docs of other classes and of attributes do not get field dependencies."""
         app = mock.MagicMock()
         note_field_dependencies(app, "class", "Path", Path, None, [])
         note_field_dependencies(app, "attribute", "Bubble.v_wall", None, None, [])
@@ -128,6 +139,7 @@ class DescriptionSyntaxTest(unittest.TestCase):
     """The field descriptions should be valid reStructuredText, as they are used in the documentation."""
 
     def test_descriptions(self) -> None:
+        """Test that the descriptions of all the fields are parsed by docutils without warnings."""
         import docutils.core  # noqa: PLC0415
         for description, where in all_descriptions().items():
             with self.subTest(field=where):

@@ -17,6 +17,7 @@ from pttools.utils import as_latex
 
 
 def main() -> Figure:
+    """Plot the intermediate steps of the Sound Shell Model for a single bubble"""
     model = ConstCSModel(css2=1/4, csb2=1/4, alpha_n_min=0.1)
 
     # Create and simulate the fluid profile of a bubble.

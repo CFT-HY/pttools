@@ -1,9 +1,4 @@
-"""
-Constants common to both
-:mod:`tests.paper.ssm_compare`
-and
-:mod:`tests.paper.ssm_paper_utils`.
-"""
+"""Constants common to both :mod:`tests.paper.ssm_compare` and :mod:`tests.paper.ssm_paper_utils`."""
 
 import numpy as np
 

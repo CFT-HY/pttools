@@ -75,6 +75,8 @@ def splev(
         der: int = 0,
         ext: int = 0) -> th.FloatArr1D:
     """
+    Evaluate a B-spline or its derivatives.
+
     Modified from :external:py:func:`scipy.interpolate.splev`.
     See the SciPy documentation for details.
 
@@ -194,6 +196,8 @@ def splev_linear(
         der: int = 0,
         ext: int = 0) -> tp.Callable:
     """
+    Numba overload of :external:py:func:`scipy.interpolate.splev` for linear splines.
+
     :param x: float or 1D array
     :param tck: Tuple of spline parameters as given by scipy.interpolate.splrep()
     :param der: order of derivative to be computed
@@ -213,7 +217,9 @@ def fitpack_spl_(
         k: int,
         e: int) -> tuple[th.FloatArr1D, int]:
     """
-    Numba implementation of the
+    Numba implementation of the SciPy C wrapper for spline interpolation.
+
+    The original is the
     `SciPy C wrapper for spline interpolation <https://github.com/scipy/scipy/blob/main/scipy/interpolate/src/_fitpackmodule.c>`_.
 
     :param x: points to interpolate at

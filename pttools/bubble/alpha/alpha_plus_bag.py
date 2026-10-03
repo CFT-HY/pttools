@@ -156,7 +156,9 @@ def _find_alpha_plus_bag_numba(
         xtol: float = const.FIND_ALPHA_PLUS_TOL,
         # parallel: bool = True
         ) -> th.NumbaFunc:
-    """This cannot be compiled with nogil=True,
+    """Numba overload of :func:`find_alpha_plus_bag`.
+
+    This cannot be compiled with nogil=True,
     since this uses :func:`scipy.optimize.fsolve`, which requires "with numba.objmode".
     """
     if isinstance(v_wall, numba.types.Float):

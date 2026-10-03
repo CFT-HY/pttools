@@ -26,6 +26,7 @@ class JsonTestCase(abc.ABC):
 
     def assert_json(
             self, data: th.FloatOrArr, key: str, rtol: float = 1e-7, atol: float = 0, allow_save: bool = True) -> None:
+        """Assert that the data is close to the reference data with the given key, and store it for saving."""
         if isinstance(data, np.ndarray):
             if data.size == 1:
                 data = data.item()
@@ -43,6 +44,7 @@ class JsonTestCase(abc.ABC):
 
     @classmethod
     def setUpClass(cls, *args: tp.Any, **kwargs: tp.Any) -> None:
+        """Load the reference data from the JSON file, or start with empty reference data if the file is missing."""
         cls.data = {}
         if cls.REF_DATA_PATH.is_file():
             cls.ref_data = orjson.loads(cls.REF_DATA_PATH.read_bytes())
@@ -52,6 +54,7 @@ class JsonTestCase(abc.ABC):
 
     @classmethod
     def tearDownClass(cls) -> None:
+        """Save the new data to the reference data file if saving is enabled."""
         if cls.SAVE_NEW_DATA and cls.data:
             json = orjson.dumps(
                 cls.data,

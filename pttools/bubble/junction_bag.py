@@ -17,8 +17,9 @@ def fluid_speeds_at_wall_bag(
         alpha_plus: float,
         sol_type: SolutionType | str) -> tuple[float, float, float, float]:
     r"""
-    Solves fluid speed boundary conditions at the wall to obtain
-    the fluid speeds both in the universe (plasma frame): $v_+$ and $v_+$
+    Solves the fluid speed boundary conditions at the wall in the Bag Model.
+
+    This gives the fluid speeds both in the universe (plasma frame): $v_+$ and $v_-$
     and in the wall frame: $\tilde{v}_+, \tilde{v}_-$.
 
     Bag model only.

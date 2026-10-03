@@ -22,6 +22,10 @@ class YappiProfiler(utils.Profiler):
 
     @classmethod
     def __enter__(cls) -> None:
+        """Start the YAPPI profiler.
+
+        :raises RuntimeError: if another YAPPI session is already running
+        """
         if cls._lock.locked() or yappi.is_running():
             raise RuntimeError("Yappi does not support concurrent sessions")
         cls._lock.acquire()
@@ -32,6 +36,7 @@ class YappiProfiler(utils.Profiler):
             exc_type: type[BaseException] | None,
             exc_val: BaseException | None,
             exc_tb: types.TracebackType | None) -> None:
+        """Stop the YAPPI profiler and save its results."""
         self._lock.release()
         yappi.stop()
         process(self.name, self.print_to_console)

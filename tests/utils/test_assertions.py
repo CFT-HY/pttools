@@ -11,6 +11,7 @@ class TestAllclose(unittest.TestCase):
     """Test the assert_allclose function."""
 
     def test_float(self) -> None:
+        """Test that equal floats pass and different floats fail."""
         assert_allclose(1.1, 1.1)
         with self.assertRaises(AssertionError):
             assert_allclose(1.1, 1.2)
@@ -29,6 +30,7 @@ class TestAllclose(unittest.TestCase):
     #         assert_allclose(actual, desired)
 
     def test_ndarray_1d(self) -> None:
+        """Test that equal 1D arrays pass and different 1D arrays fail."""
         actual = np.array([1, 1.1, 1.2])
         desired = np.array([1, 1.1, 1.3])
         assert_allclose(actual, actual)
@@ -36,6 +38,7 @@ class TestAllclose(unittest.TestCase):
             assert_allclose(actual, desired)
 
     def test_ndarray_2d(self) -> None:
+        """Test that equal 2D arrays pass and different 2D arrays fail."""
         actual = np.array([[1, 2], [3, 4]])
         desired = np.array([[1, 2], [3, 5]])
         assert_allclose(actual, actual)

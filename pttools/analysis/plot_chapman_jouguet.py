@@ -14,6 +14,7 @@ class ChapmanJouguetPlot:
     """Plot Chapman-Jouguet speed."""
 
     def __init__(self, alpha_n: th.FloatArr1D):
+        r""":param alpha_n: $\alpha_n$, transition strengths at the nucleation temperature, used as the x-axis"""
         self.alpha_n: th.FloatArr1D = alpha_n
 
         self.fig: plt.Figure = plt.figure()

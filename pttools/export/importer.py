@@ -102,6 +102,11 @@ class Importer:
     """
 
     def __init__(self, path: str | os.PathLike[str], verify: bool = False) -> None:
+        """Open the HDF5 file and validate its format.
+
+        :raises pttools.export.exporter.ExportFormatError: if the file is not a PTtools export file
+            or has a newer format version than this version of PTtools supports
+        """
         self.path: Path = Path(path)
         if verify:
             verify_checksum(self.path, raise_error=True)

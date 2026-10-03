@@ -50,7 +50,9 @@ def _check_thetas_numba(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr):
 
 
 def _check_thetas_scalar(theta_s: th.FloatOrArr, theta_b: th.FloatOrArr) -> None:
-    """This is a workaround for a bug in Numba 0.60.0.
+    r"""Warn if $\theta_b > \theta_s$ for scalar inputs.
+
+    This is a workaround for a bug in Numba 0.60.0.
     This fix was not needed for Numba 0.59.0.
     https://github.com/numba/numba/issues/8270.
     """
@@ -74,6 +76,7 @@ def e_bag[T: FloatOrArr](
         theta_b: T | float = 0.) -> T:
     r"""
     Energy density $e$ as a function of enthalpy $w$, assuming bag model.
+
     $\theta = \frac{e - 3p}{4}$ ("vacuum energy").
     Enthalpy and phase can be arrays of the same shape.
     See also the equation 4.10.
@@ -95,6 +98,7 @@ def p_bag[T: FloatOrArr](
         theta_b: T | float = 0.) -> T:
     r"""
     Pressure as a function of enthalpy $w$, assuming bag model.
+
     $\theta = \frac{e - 3p}{4}$ (trace anomaly or "vacuum energy").
     Enthalpy, theta and phase can be arrays of the same shape.
     See also the equation 4.40.
@@ -118,6 +122,7 @@ def w_bag[T: FloatOrArr](
         theta_b: T | float = 0.) -> T:
     r"""
     Enthalpy $w$ as a function of energy density, assuming bag model.
+
     $\theta = \frac{e - 3p}{4}$ ("vacuum energy").
     Enthalpy and phase can be arrays of the same shape.
     Mentioned on page 23.
@@ -171,6 +176,7 @@ def theta_bag(w: th.FloatOrArr, phase: th.FloatOrArr, alpha_n: th.FloatArr) -> t
 def theta_bag(w: th.FloatOrArr, phase: th.FloatOrArr, alpha_n: th.FloatOrArr) -> th.FloatOrArr:
     r"""
     Trace anomaly $\theta = \frac{1}{4} (e - 3p)$ in the Bag model.
+
     Equation 7.24 in the lecture notes, equation 2.10 in the article.
 
     :param w: enthalpy $w$

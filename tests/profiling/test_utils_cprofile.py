@@ -13,6 +13,7 @@ class TestSaveSorted(unittest.TestCase):
     """Tests for save_sorted."""
 
     def test_file_names(self) -> None:
+        """Test that save_sorted creates the full, Numba-filtered and site-packages-filtered files for each sort key."""
         profile = cProfile.Profile()
         profile.enable()
         sum(range(10))

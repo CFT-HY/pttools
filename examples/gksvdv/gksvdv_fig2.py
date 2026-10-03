@@ -135,6 +135,7 @@ def create_diff_figure(
         lss: tp.Sequence[str],
         theta_bar: bool,
         title: bool = True) -> None:
+    r"""Plot the relative difference of the $\kappa_{\bar{\theta}_n}$ values of PTtools and :giese_2021:`\ `"""
     rel_diffs = np.abs(kappas_pttools - kappas_giese) / kappas_giese
     title_str = r"$\alpha_{\bar{\theta}_n}$" if theta_bar else r"$\alpha_n$"
     print(title_str)

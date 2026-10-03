@@ -29,6 +29,7 @@ def find_phase(xi: th.FloatArr1D, v_wall: float) -> th.FloatArr1D:
 def find_v_index(xi: th.FloatArr, v_target: float) -> int:
     r"""
     The first array index of $\xi$ where value is just above $v_\text{target}$.
+
     If no xi > v_target is found, returns 0.
     """
     return int(np.argmax(xi >= v_target))
@@ -37,6 +38,7 @@ def find_v_index(xi: th.FloatArr, v_target: float) -> int:
 @njit
 def v_max_behind[T: FloatOrArr](xi: T, cs: T | float) -> T:
     r"""Maximum fluid velocity behind the wall.
+
     Given by the condition $\mu(\xi, v) = c_s$.
     This results in:
     $${v}_\text{max} = \frac{c_s-\xi}{c_s \xi - 1}$$.
@@ -57,6 +59,18 @@ def v_and_w_from_solution(
         v_wall: float,
         sol_type: SolutionType) \
         -> tuple[float, float, float, float, float, float, float, float]:
+    r"""Get the fluid velocities and enthalpies at the wall and at the shock from a solved fluid profile.
+
+    The wall is located at the maximum of $v$ and $w$.
+
+    :param v: $v$, fluid velocity
+    :param w: $w$, enthalpy
+    :param xi: $\xi$
+    :param v_wall: $v_\text{wall}$, wall speed
+    :param sol_type: solution type
+    :return: $v_{+}, v_{-}, \tilde{v}_+, \tilde{v}_-, w_{+}, w_{-}, w_n, w_{-,sh}$
+    :raises ValueError: if the profile is inconsistent with the given $v_\text{wall}$ and solution type
+    """
     i_wall = np.argmax(v)
     i_wall_w = np.argmax(w)
     if i_wall != i_wall_w:

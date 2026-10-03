@@ -19,13 +19,15 @@ class PostFunc[**P, T](tp.Protocol):
     #: or a tuple of values if the function returns multiple values
     fail_value: tp.Any
 
-    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> T: ...
+    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> T:
+        """Call the function."""
 
 
 class TypePreservingDecorator(tp.Protocol):
     """A decorator that returns the decorated test function or class with its type unchanged."""
 
-    def __call__[F: tp.Callable[..., tp.Any]](self, func: F, /) -> F: ...
+    def __call__[F: tp.Callable[..., tp.Any]](self, func: F, /) -> F:
+        """Decorate the test function or class, returning it with its type unchanged."""
 
 
 def conditional_decorator[T: Callable](dec: T, condition: bool, **kwargs: tp.Any) -> T:
@@ -44,8 +46,9 @@ def conditional_decorator[T: Callable](dec: T, condition: bool, **kwargs: tp.Any
 
 
 def for_all_methods[C: type](decorator: Callable[[tp.Any], tp.Any]) -> Callable[[C], C]:
-    """Apply a decorator to all methods of a class
-    https://stackoverflow.com/a/6307868.
+    """Apply a decorator to all methods of a class.
+
+    From: https://stackoverflow.com/a/6307868
     """
     def decorate(cls: C) -> C:
         for attr in cls.__dict__:  # there's probably a better way to do this

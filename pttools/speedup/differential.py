@@ -32,6 +32,7 @@ class DifferentialCache:
     """
 
     def __init__(self):
+        """Create an empty cache."""
         self._lock = threading.Lock()
         self._cache_njit: dict[DifferentialKey, DifferentialCFunc] = {}
         self._cache_odeint: dict[DifferentialKey, DifferentialOdeint] = {}
@@ -39,6 +40,7 @@ class DifferentialCache:
         self._cache_solve_ivp: dict[DifferentialKey, DifferentialSolveIVP] = {}
 
     def __contains__(self, item: DifferentialKey) -> bool:
+        """Check whether a differential with the given name or pointer is in the cache."""
         return item in self._cache_njit
 
     def add(

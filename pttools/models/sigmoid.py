@@ -3,6 +3,8 @@
 Not yet functional
 """
 
+import typing as tp
+
 import numpy as np
 
 from pttools import type_hints as th
@@ -48,6 +50,20 @@ class SigmoidModel(ThermoModel):
             gs_s: float,
             ge_b: float,
             gs_b: float):
+        """Initialize the model. This is work in progress, and raises NotImplementedError.
+
+        The degrees of freedom are modelled as sigmoid functions of the temperature.
+
+        :param pt_temp_ge: temperature of the phase transition, i.e. the midpoint of the sigmoid, for $g_e$
+        :param pt_temp_gs: temperature of the phase transition, i.e. the midpoint of the sigmoid, for $g_s$
+        :param steepness_ge: steepness of the sigmoid for $g_e$
+        :param steepness_gs: steepness of the sigmoid for $g_s$
+        :param ge_s: $g_{e,s}$, degrees of freedom for energy density in the symmetric phase
+        :param gs_s: $g_{s,s}$, degrees of freedom for entropy in the symmetric phase
+        :param ge_b: $g_{e,b}$, degrees of freedom for energy density in the broken phase
+        :param gs_b: $g_{s,b}$, degrees of freedom for entropy in the broken phase
+        :raises NotImplementedError: always, as the model is not yet functional
+        """
         super().__init__()
         self.pt_temp_ge: float = pt_temp_ge
         self.pt_temp_gs: float = pt_temp_gs
@@ -62,14 +78,18 @@ class SigmoidModel(ThermoModel):
 
         raise NotImplementedError
 
+    @tp.override
     def dge_dT[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         raise NotImplementedError
 
+    @tp.override
     def dgs_dT[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         raise NotImplementedError
 
+    @tp.override
     def ge[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         raise NotImplementedError
 
+    @tp.override
     def gs[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         raise NotImplementedError

@@ -26,6 +26,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 def load(n_alpha: int = 10, n_vw: int = 10, g_bro: int = 120, g_sym: int = 123) \
         -> tuple[th.FloatArr2D, th.FloatArr1D, th.FloatArr1D]:
+    """Load the entropy change data from an npz file created by p_s_scan_dev.py"""
     file_name = f"s_change_gbro{g_bro:3.0f}_g_sym{g_sym:3.0f}_nalpha_{n_alpha}_nvw_{n_vw}.npz"
     data = np.load(file_name)
 
@@ -37,6 +38,7 @@ def load(n_alpha: int = 10, n_vw: int = 10, g_bro: int = 120, g_sym: int = 123) 
 
 
 def main(n_alpha: int = 10, n_vw: int = 10, g_bro: int = 120, g_sym: int = 123) -> plt.Figure:
+    """Plot the entropy change data with the Chapman-Jouguet speed and the maximum alpha_n curves"""
     # g_bro = eos.G_BRO_DEFAULT*0.5
     # g_sym = eos.G_SYM_DEFAULT
 

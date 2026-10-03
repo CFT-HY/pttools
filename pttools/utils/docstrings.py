@@ -7,6 +7,8 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class HasDocstring(tp.Protocol):
+    """An object that has a docstring, i.e. a ``__doc__`` attribute."""
+
     __doc__: str | None
 
 
@@ -17,7 +19,8 @@ class WrappedDecoratorFunction(tp.Protocol):
     so that the signature of the decorated callable is preserved.
     """
 
-    def __call__[**P, T](self, target: tp.Callable[P, T]) -> tp.Callable[P, T]: ...
+    def __call__[**P, T](self, target: tp.Callable[P, T]) -> tp.Callable[P, T]:
+        """Decorate the target, returning it unchanged."""
 
 
 def copy_docstring_dec(source: HasDocstring, without_params: bool = False) -> WrappedDecoratorFunction:
@@ -53,7 +56,8 @@ def copy_docstring(target: tp.Any, source: HasDocstring, without_params: bool = 
 
 
 def copy_docstrings(mapping: dict[tp.Any, HasDocstring], without_params: bool = False) -> list[str]:
-    """Copy docstrings from sources to targets
+    """Copy docstrings from sources to targets.
+
     :param mapping: A dictionary of (target, source) pairs
     :param without_params: Whether to exclude parameter documentation
     :return: A list of target names that already had docstrings.

@@ -17,7 +17,7 @@ from pttools.ssm.barotropic import H_eta, dilution_of_e, eta_ratio, source_lifet
 from pttools.ssm.compute import compute
 from pttools.ssm.export import SSM_SPECTRUM_FIELDS
 from pttools.ssm.low_k.intersection import z_cross_approx
-from pttools.ssm.nucleation import DEFAULT_NUC_TYPE, NucType, beta, v_eff
+from pttools.ssm.nucleation import DEFAULT_NUC_TYPE, NucType, v_eff
 from pttools.ssm.nucleation import r_star as r_star_func
 from pttools.ssm.pow_spec import pow_spec
 from pttools.ssm.scaling import H_star_eta_sh, H_star_eta_v, H_star_eta_v_old, J
@@ -25,7 +25,7 @@ from pttools.ssm.spec_den_gw import spec_den_gw_scaling
 from pttools.ssm.ssm import ubarf2_from_a2
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 from pttools.type_hints import FloatArr, FloatArr1D
-from pttools.utils.docstrings import copy_docstrings
+from pttools.utils.docstrings import copy_docstring_dec
 from pttools.utils.fields import Extractable, Fields, FieldSpec, Preset
 from pttools.utils.formatting import as_latex, as_unicode
 from pttools.utils.json import export_json
@@ -69,7 +69,8 @@ class SSMSpectrum(Extractable):
             # Labels
             label_latex: str | None = None,
             label_unicode: str | None = None):
-        r"""
+        r"""Create the spectrum, and compute it unless ``compute=False``.
+
         :param bubble: the Bubble object
         :param beta_tilde: nucleation rate parameter $\tilde{\beta} \equiv \frac{\beta}{H_*}$
         :param r_star: Hubble-scaled mean bubble spacing $r_*$
@@ -153,6 +154,14 @@ class SSMSpectrum(Extractable):
             self.compute(parallel=parallel)
 
     def beta[T: (float, FloatArr)](self, H_n: T) -> T:
+        r"""$\beta$, nucleation rate parameter, aka. inverse phase transition duration.
+
+        $$\beta = \tilde{\beta} H_n$$
+
+        :param H_n: $H_n$, Hubble parameter at nucleation
+        :return: $\beta$
+        :raises ValueError: if $\tilde{\beta}$ has not been given for this spectrum
+        """
         if self.beta_tilde is None:
             raise ValueError("beta_tilde has not been set for this spectrum.")
         return self.beta_tilde * H_n
@@ -163,6 +172,17 @@ class SSMSpectrum(Extractable):
             lifetime_distribution_a: float = 1.,
             lambda_correction: bool = False,
             parallel: bool = True) -> None:
+        r"""Compute the velocity and GW spectra and the related quantities, and store them as attributes.
+
+        The bubble is solved first, if it has not been solved yet.
+
+        :param eps_lookup: small offset used when generating the lookup table of $z$ values for the GW spectrum
+        :param lifetime_distribution_a: $a$, parameter of the bubble lifetime distribution,
+            see :py:func:`pttools.ssm.nucleation.lifetime_distribution`
+        :param lambda_correction: whether to enable a non-linear correction for $\lambda$,
+            see :py:func:`pttools.ssm.ssm.A2_e_conserving`
+        :param parallel: whether to use multiple CPU cores
+        """
         if not self.bubble.solved:
             self.bubble.solve()
         self.cs2 = self.bubble.model.cs2(self.bubble.va_enthalpy_density, Phase.BROKEN)
@@ -261,14 +281,17 @@ class SSMSpectrum(Extractable):
         return self.N_sh / self.bubble.ubarf
 
     @functools.cached_property
+    @copy_docstring_dec(dilution_of_e, without_params=True)
     def dilution_of_e(self) -> float:
         return dilution_of_e(a_star_a_r_ratio=self.a_star_a_r_ratio, nu=self.bubble.nu_gdh2024)
 
     @functools.cached_property
+    @copy_docstring_dec(eta_ratio, without_params=True)
     def eta_ratio(self) -> float:
         return eta_ratio(ubarf=self.bubble.ubarf, r_star=self.r_star, N_sh=self.N_sh, nu=self.bubble.nu_gdh2024)
 
     @functools.cached_property
+    @copy_docstring_dec(H_star_eta_sh, without_params=True)
     def H_star_eta_sh(self) -> float:
         return H_star_eta_sh(r_star=self.r_star, ubarf=self.bubble.ubarf)
 
@@ -282,10 +305,12 @@ class SSMSpectrum(Extractable):
         return H_eta(nu=self.bubble.nu_gdh2024)
 
     @functools.cached_property
+    @copy_docstring_dec(H_star_eta_v, without_params=True)
     def H_star_eta_v(self) -> float:
         return H_star_eta_v(source_lifetime_factor=self.source_lifetime_factor, nu=self.bubble.nu_gdh2024)
 
     @functools.cached_property
+    @copy_docstring_dec(H_star_eta_v_old, without_params=True)
     def H_star_eta_v_old(self) -> float:
         return H_star_eta_v_old(H_star_eta_sh=self.H_star_eta_sh)
 
@@ -299,6 +324,7 @@ class SSMSpectrum(Extractable):
         return (1 + self.bubble.nu_gdh2024) * 2 * np.pi / self.r_star
 
     @functools.cached_property
+    @copy_docstring_dec(J, without_params=True)
     def J(self) -> float:
         return J(r_star=self.r_star, H_star_eta_v=self.H_star_eta_v)
 
@@ -338,6 +364,7 @@ class SSMSpectrum(Extractable):
         return 2 * self.pow_v
 
     @functools.cached_property
+    @copy_docstring_dec(source_lifetime_factor, without_params=True)
     def source_lifetime_factor(self) -> float:
         return source_lifetime_factor(
             ubarf=self.bubble.ubarf,
@@ -347,6 +374,7 @@ class SSMSpectrum(Extractable):
         )
 
     @functools.cached_property
+    @copy_docstring_dec(spec_den_gw_scaling, without_params=True)
     def spec_den_gw_scaling(self) -> float:
         return spec_den_gw_scaling(
             ubarf2=self.ubarf2,
@@ -368,6 +396,7 @@ class SSMSpectrum(Extractable):
         return 2 * self.spec_den_v
 
     @functools.cached_property
+    @copy_docstring_dec(Suppression.suppression, without_params=True)
     def suppression_factor(self) -> float:
         return self.suppression.suppression(
             v_wall=self.bubble.v_wall,
@@ -401,9 +430,23 @@ class SSMSpectrum(Extractable):
 
     @property
     def ubarf(self) -> float:
+        r"""$\bar{U}_f$, RMS fluid velocity taking into account the nucleation history.
+
+        $$\bar{U}_f = \sqrt{\bar{U}_f^2},$$
+        where $\bar{U}_f^2$ is computed by :py:meth:`compute` from $z$ and ${\lvert A \rvert}^2$
+        with :py:func:`pttools.ssm.ssm.ubarf2_from_a2`.
+        See :py:attr:`pttools.bubble.bubble.Bubble.ubarf` for the value computed directly from the fluid profile.
+        """
         return sqrt(self.ubarf2)
 
     def ubarf_custom_nucleation(self, nuc_type: NucType | None = None) -> float:
+        r"""$\bar{U}_f$ using $z$ and ${\lvert A \rvert}^2$ for the given nucleation type.
+
+        See :py:meth:`ubarf2_custom_nucleation`.
+
+        :param nuc_type: nucleation type, defaults to the nucleation type of the spectrum
+        :return: $\bar{U}_f$, enthalpy-weighted RMS fluid velocity
+        """
         return sqrt(self.ubarf2_custom_nucleation(nuc_type=nuc_type))
 
     def ubarf2_custom_nucleation(self, nuc_type: NucType | None = None) -> float:
@@ -421,6 +464,7 @@ class SSMSpectrum(Extractable):
         )
 
     @functools.cached_property
+    @copy_docstring_dec(v_eff, without_params=True)
     def v_eff(self) -> float:
         return v_eff(self.nucleation_f, self.bubble.v_wall)
 
@@ -429,6 +473,19 @@ class SSMSpectrum(Extractable):
             bubble: Bubble,
             r_star: float | None,
             beta_tilde: float | None = None) -> float:
+        r"""Validate the nucleation parameters and determine $r_*$.
+
+        Only one of $r_*$ and $\tilde{\beta}$ can be given.
+        If neither is given, the default $r_*$ of :py:mod:`pttools.ssm.const` is used.
+        If $\tilde{\beta}$ is given, $r_*$ is computed from it with :py:func:`pttools.ssm.nucleation.r_star`.
+        Warnings are logged for $\tilde{\beta}$ values that are experimentally excluded and for $r_* \geq 1$.
+
+        :param bubble: the bubble, which is solved if $\tilde{\beta}$ is given and it has not been solved yet
+        :param r_star: $r_*$, Hubble-scaled mean bubble spacing
+        :param beta_tilde: $\tilde{\beta} \equiv \frac{\beta}{H_*}$, nucleation rate parameter
+        :return: $r_*$, Hubble-scaled mean bubble spacing
+        :raises ValueError: if both $r_*$ and $\tilde{\beta}$ are given, or if either of them is not positive
+        """
         r_star_set: float
         if beta_tilde is None:
             r_star_set = const.DEFAULT_R_STAR if r_star is None else r_star
@@ -466,6 +523,7 @@ class SSMSpectrum(Extractable):
         return r_star_set
 
     @functools.cached_property
+    @copy_docstring_dec(z_cross_approx, without_params=True)
     def z_cross_approx(self) -> float:
         return z_cross_approx(cs=self.cs, eta_ratio=self.eta_ratio, nu=self.bubble.nu_gdh2024, r_star=self.r_star)
 
@@ -522,18 +580,3 @@ class SSMSpectrum(Extractable):
         from pttools.analysis.plot_spectra import plot_spectra_spec_den_v  # noqa: PLC0415
         return plot_spectra_spec_den_v([self], ax=ax, fig=fig, path=path, **kwargs)
 
-
-copy_docstrings({
-    SSMSpectrum.beta: beta,
-    SSMSpectrum.dilution_of_e: dilution_of_e,
-    SSMSpectrum.eta_ratio: eta_ratio,
-    SSMSpectrum.H_star_eta_sh: H_star_eta_sh,
-    SSMSpectrum.H_star_eta_v: H_star_eta_v,
-    SSMSpectrum.H_star_eta_v_old: H_star_eta_v_old,
-    SSMSpectrum.J: J,
-    SSMSpectrum.source_lifetime_factor: source_lifetime_factor,
-    SSMSpectrum.spec_den_gw_scaling: spec_den_gw_scaling,
-    SSMSpectrum.suppression_factor: Suppression.suppression,
-    SSMSpectrum.v_eff: v_eff,
-    SSMSpectrum.z_cross_approx: z_cross_approx
-}, without_params=True)

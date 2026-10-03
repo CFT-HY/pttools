@@ -29,6 +29,7 @@ def alpha_n_max_bag[T: FloatOrArr](
         n_xi: int = DEFAULT_N_XI) -> T:
     r"""
     Calculates the maximum relative trace anomaly outside the bubble, $\alpha_{n,\max,\text{bag}}({v}_\text{wall})$.
+
     Bag model only.
 
     This limit is for subsonic deflagrations and supersonic deflagrations (hybrids),
@@ -114,8 +115,9 @@ def alpha_n_max_deflagration_bag[T: FloatOrArr](
         n_xi: int = DEFAULT_N_XI,
         parallel: bool = True) -> T:
     r"""
-    Calculates the maximum phase transition strength $\alpha_{n,\max}$,
-    in the Bag Model for given $v_\text{wall}$, for deflagration.
+    Calculates the maximum phase transition strength $\alpha_{n,\max}$ for a deflagration in the Bag Model.
+
+    The maximum is calculated for the given $v_\text{wall}$.
     Works also for hybrids, as they are supersonic deflagrations.
 
     Internally, uses :func:`sound_shell_alpha_plus_bag` and the fact that
@@ -162,6 +164,7 @@ def _alpha_n_max_deflagration_bag_numba(
 def alpha_n_max_detonation_bag[T: FloatOrArr](v_wall: T) -> T:
     r"""
     Maximum allowed value of $\alpha_n$ for a detonation with wall speed $v_\text{wall}$ in the Bag Model.
+
     Same as :func:`alpha_plus_max_detonation`, since for a detonation $\alpha_n = \alpha_+$,
     as there is no fluid movement outside the wall.
 
@@ -203,6 +206,7 @@ def alpha_n_max_detonation_bag[T: FloatOrArr](v_wall: T) -> T:
 def alpha_n_min_deflagration_bag[T: FloatOrArr](v_wall: T) -> T:
     r"""
     Minimum $\alpha_n$ for a deflagration in the Bag Model. Equal to maximum $\alpha_n$ for a detonation.
+
     Same as :py:func:`alpha_n_min_hybrid_bag`, as a hybrid is a supersonic deflagration.
 
     :param v_wall: $v_\text{wall}$
@@ -215,6 +219,7 @@ def alpha_n_min_deflagration_bag[T: FloatOrArr](v_wall: T) -> T:
 def alpha_n_min_hybrid_bag[T: FloatOrArr](v_wall: T) -> T:
     r"""
     Minimum $\alpha_n$ for a hybrid in the Bag Model. Equal to maximum $\alpha_n$ for a detonation.
+
     Same as :py:func:`alpha_n_min_deflagration_bag`, as a hybrid is a supersonic deflagration.
 
     :param v_wall: $v_\text{wall}$
@@ -247,6 +252,7 @@ def alpha_plus_max_detonation_bag[T: FloatOrArr](v_wall: T) -> T:
 def alpha_plus_min_hybrid[T: FloatOrArr](v_wall: T) -> T:
     r"""
     Minimum allowed value of $\alpha_+$ for a hybrid with wall speed $v_\text{wall}$ in the Bag Model.
+
     Condition from coincidence of wall and shock.
 
     $$\alpha_{+,\min,\text{hybrid}} = \frac{ (1 - \sqrt{3} v_\text{wall})^2 }{ 9 v_\text{wall}^2 - 1 }$$

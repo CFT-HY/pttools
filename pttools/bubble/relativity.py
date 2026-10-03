@@ -32,7 +32,8 @@ def gamma2[T: FloatOrArr](v: T) -> T:
 @njit(cache=True)
 def lorentz[T: FloatOrArr](xi: T, v: T | float) -> T:
     r"""
-    Lorentz transformation $\mu$ of fluid speed $v$ between moving frame and plasma frame:
+    Lorentz transformation $\mu$ of fluid speed $v$ between moving frame and plasma frame.
+
     $$\mu = \frac{\xi - v}{1 - v\xi}$$.
     :notes:`\ ` eq. 7.32
     This function is its own inverse:

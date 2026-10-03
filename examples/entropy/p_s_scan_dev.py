@@ -34,6 +34,7 @@ g_bro = 120
 
 
 def get_entropy_diff(v_wall, alpha, g_bro=eos.G_BRO_DEFAULT, n_xi=b.DEFAULT_N_XI):
+    """Compute the relative change in the total entropy for a bag model bubble"""
     bg = eos.bag_model(alpha, g_bro=g_bro)
 
     v,w,xi = b.sound_shell_bag(
@@ -54,6 +55,7 @@ def get_entropy_diff(v_wall, alpha, g_bro=eos.G_BRO_DEFAULT, n_xi=b.DEFAULT_N_XI
 
 
 def get_entropy_diff_arr(vw_list, alpha_list, g_bro=eos.G_BRO_DEFAULT):
+    """Compute the relative entropy changes for a grid of wall speeds and transition strengths"""
     n_vw = len(vw_list)
     n_alpha = len(alpha_list)
 
@@ -71,6 +73,7 @@ def get_entropy_diff_arr(vw_list, alpha_list, g_bro=eos.G_BRO_DEFAULT):
 
 
 def get_pressure_diff(v_wall, alpha, g_bro=eos.G_BRO_DEFAULT, n_xi=b.DEFAULT_N_XI):
+    """Compute the pressure difference across the wall relative to the enthalpy at the nucleation temperature"""
     bg = eos.bag_model(alpha, g_bro=g_bro)
 
     v,w,xi = b.sound_shell_bag(
@@ -91,6 +94,7 @@ def get_pressure_diff(v_wall, alpha, g_bro=eos.G_BRO_DEFAULT, n_xi=b.DEFAULT_N_X
 
 
 def get_pressure_diff_arr(vw_list, alpha_list, g_bro=eos.G_BRO_DEFAULT):
+    """Compute the relative pressure differences for a grid of wall speeds and transition strengths"""
     n_vw = len(vw_list)
     n_alpha = len(alpha_list)
 
@@ -108,6 +112,7 @@ def get_pressure_diff_arr(vw_list, alpha_list, g_bro=eos.G_BRO_DEFAULT):
 
 
 def get_s_p_diffs_arr(vw_list, alpha_list, g_bro=eos.G_BRO_DEFAULT):
+    """Compute both the relative pressure differences and entropy changes for a grid of parameters"""
     n_vw = len(vw_list)
     n_alpha = len(alpha_list)
 

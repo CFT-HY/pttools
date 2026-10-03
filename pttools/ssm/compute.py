@@ -96,9 +96,7 @@ def compute_low_k(
         r_star: float,
         tau_end: float,
         tau_star: float) -> tuple[FloatArr1D, FloatArr1D, FloatArr1D]:
-    r"""Compute the low-k approximation
-    :giombi_2024_cs:`\ `.
-    """
+    r"""Compute the low-k approximation of :giombi_2024_cs:`\ `."""
     spec_den_gw_low = power_spectrum_integration_low(
         x_data=y, Pv_data=P_tilde_v,
         z=y, cs=cs, nu=nu_gdh2024,

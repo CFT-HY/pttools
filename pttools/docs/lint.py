@@ -120,9 +120,9 @@ def tool_errors(lines: tp.Iterable[str]) -> list[str]:
 
 
 def latex_log_messages(log_path: str | os.PathLike[str]) -> tuple[list[str], list[str]]:
-    """Extract the TeX errors and warnings from the log file of the final LaTeX pass,
-    e.g. ``_build/latex/pttools.log``.
+    """Extract the TeX errors and warnings from the log file of the final LaTeX pass.
 
+    :param log_path: the LaTeX log file, e.g. ``_build/latex/pttools.log``
     :return: error lines, warning lines
     """
     log_path = Path(log_path)
@@ -219,6 +219,11 @@ def all_latex_log_messages(latex_build_dir: str | os.PathLike[str]) -> tuple[lis
 
 
 def main(argv: tp.Sequence[str] | None = None) -> int:
+    """Command-line interface for building the documentation and reporting its errors and warnings.
+
+    :param argv: command-line arguments, defaults to ``sys.argv[1:]``
+    :return: exit code of make, or 2 if the documentation directory is not found
+    """
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--target", default="latexpdf-noplot", help="the make target to run (default: %(default)s)")
     parser.add_argument(

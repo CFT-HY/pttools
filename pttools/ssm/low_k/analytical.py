@@ -68,7 +68,8 @@ def Pgw_approx(z: float, HLf: float, cs: float, tau_star: float, tau_end: float)
 
 
 def Pv_analytical[T: FloatOrArr](k: T, kp: T | float, ubarf2: T | float) -> T:
-    r"""Analytical ansatz for $P_v(k)$
+    r"""Analytical ansatz for $P_v(k)$.
+
     $$P_v(p) = 3 \pi \frac{\bar{U}_f^2}{k_p^3} \frac{(p/k_p)^2}{1 + (p/k_p)^6}$$
     :giombi_2024_cs:`\ ` eq. 3.1
     :giombi_2026:`\ ` eq. 3.1.

@@ -21,6 +21,7 @@ class TestVPlusMinus(unittest.TestCase):
     alpha_plus_list: list[float]
 
     @classmethod
+    @tp.override
     def setUpClass(cls) -> None:
         cls.npts = 500
         cls.alpha_plus_list = [0.0, 0.01, 0.1, 0.3]
@@ -30,6 +31,7 @@ class TestVPlusMinus(unittest.TestCase):
             func: tp.Callable[[th.FloatArr1D, float, SolutionType], th.FloatArr1D],
             ref_path: str | os.PathLike[str],
             v_first: th.FloatArr1D) -> None:
+        """Convert the given speeds with the given function for each alpha_plus and compare to the reference data."""
         data = [v_first]
         for _i_alpha, alpha in enumerate(self.alpha_plus_list):
             data.append(func(v_first, alpha, SolutionType.DETON))
@@ -44,6 +46,7 @@ class TestVPlusMinus(unittest.TestCase):
 
     def test_v_plus_minus(self) -> None:
         """Compute v_plus from v_minus.
+
         This generates the same data as plotted by sound-shell-model/paper/python/fig_8l_vplusminus.py.
         """
         v_first = np.linspace(1 / self.npts, 1, self.npts)

@@ -11,6 +11,10 @@ from tests.paper import sigfig as sf
 
 
 def tex_sf(x: float, n: int = 2, sci_notn_threshold: int = 2, mult: str = "\\times") -> str:
+    """Format x to n significant figures as LaTeX math, in scientific notation for large or small exponents.
+
+    Scientific notation is used if the absolute value of the exponent exceeds sci_notn_threshold.
+    """
     expon = np.ceil(np.log10(abs(x))) - 1
     if np.abs(expon) > sci_notn_threshold:
         manti = x * 10**(-expon)
@@ -22,6 +26,7 @@ def tex_sf(x: float, n: int = 2, sci_notn_threshold: int = 2, mult: str = "\\tim
 
 
 def tex_sf_signed(x: float, n: int, sci_notn_threshold: int = 2, mult: str = "\\times") -> str:
+    """Format x to n significant figures with an explicit sign as LaTeX math, like :func:`tex_sf`."""
     expon = np.ceil(np.log10(abs(x))) - 1
     if np.abs(expon) > sci_notn_threshold:
         manti = x*10**(-expon)

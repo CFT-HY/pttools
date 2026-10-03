@@ -1,5 +1,6 @@
 """Unit tests for the shock solver."""
 
+import typing as tp
 import unittest
 
 import numpy as np
@@ -36,6 +37,7 @@ class TestShock(unittest.TestCase):
     ])
 
     @classmethod
+    @tp.override
     def setUpClass(cls) -> None:
         cls.bag: BagModel = BagModel(a_s=1.1, a_b=1, V_s=1)
         cls.const_cs_bag_like: ConstCSModel = ConstCSModel(css2=1/3, csb2=1/4, a_s=5, a_b=1, V_s=1, alpha_n_min=0.1)

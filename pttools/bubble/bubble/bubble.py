@@ -20,7 +20,7 @@ from pttools.bubble.junction_entropy import check_entropy_fluxes
 from pttools.bubble.phase import Phase
 from pttools.bubble.props import find_phase
 from pttools.bubble.solution_type import SolutionType, validate_solution_type
-from pttools.utils.docstrings import copy_docstrings
+from pttools.utils.docstrings import copy_docstring_dec
 from pttools.utils.fields import Fields
 from pttools.utils.formatting import as_latex, as_unicode
 from pttools.utils.validation import ensure_float
@@ -67,7 +67,8 @@ class Bubble(BaseBubble):
             log_success: bool = False,
             allow_invalid: bool = False,
             log_invalid: bool = True):
-        r"""
+        r"""Create a bubble, and optionally solve its fluid velocity profile.
+
         :param model: The equation of state object
         :param v_wall: Wall velocity $v_\text{wall}$
         :param alpha_n: Transition strength $\alpha_n$
@@ -527,6 +528,12 @@ class Bubble(BaseBubble):
         return alpha_theta_bar_n_min_lte, alpha_theta_bar_n_max_lte
 
     def validate_thermal_energy_density(self) -> bool:
+        """Check that the thermal energy density does not decrease, i.e. that the bubble is not a heat engine.
+
+        If it decreases, a warning is logged and a note is added to the bubble.
+
+        :return: whether the validation failed, i.e. the thermal energy density change is negative
+        """
         fail = self.va_thermal_energy_density_diff < 0
         if fail:
             msg = "Thermal energy density change is negative. The bubble is therefore working as a heat engine. " \
@@ -588,8 +595,7 @@ class Bubble(BaseBubble):
     @property
     def vp_vm_tilde_ratio_giese(self) -> float:
         # This docstring is copied from the model function
-        r"""Giese et al. approximation for $\frac{\tilde{v}_+}{\tilde{v}_-}$,
-        :giese_2021:`\ ` eq. 11.
+        r"""Giese et al. approximation for $\frac{\tilde{v}_+}{\tilde{v}_-}$, :giese_2021:`\ ` eq. 11.
 
         $$\frac{\tilde{v}_+}{\tilde{v}_-} \approx \frac{
         (\tilde{v}_+ \tilde{v}_- / c_{s,b}^2 - 1) + 3\alpha_{\bar{\theta}_+} }{
@@ -604,8 +610,9 @@ class Bubble(BaseBubble):
 
     @property
     def vp_vm_tilde_ratio_giese_rel_diff(self) -> float:
-        r"""
-        Relative difference of the ratio of the exact and approximate
+        r"""Relative difference of the approximate and exact $\tilde{v}_+ / \tilde{v}_-$ ratios.
+
+        This is the difference of the ratio of the approximate and exact
         $\tilde{v}_+, \tilde{v}_-$ ratios from unity.
         """
         return np.abs(self.vp_vm_tilde_ratio_giese / self.vp_vm_tilde_ratio - 1)
@@ -622,6 +629,7 @@ class Bubble(BaseBubble):
     # -----
 
     @functools.cached_property
+    @copy_docstring_dec(thermo.e_bar, without_params=True)
     def e_bar(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
@@ -638,6 +646,7 @@ class Bubble(BaseBubble):
         return self.model.gs(w=self.va_enthalpy_density, phase=Phase.BROKEN)
 
     @functools.cached_property
+    @copy_docstring_dec(thermo.kappa, without_params=True)
     def kappa(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
@@ -645,11 +654,17 @@ class Bubble(BaseBubble):
 
     @functools.cached_property
     def kappa_giese(self) -> float:
+        r"""$\kappa_\text{Giese}$, kinetic efficiency factor using the definition of Giese et al.
+
+        $$\kappa_\text{Giese} = \frac{4 K}{3 \alpha_{\bar{\theta}_n} w_n},$$
+        where $K$ is the bubble volume averaged kinetic energy density, :giese_2020:`\ `.
+        """
         if not self.solved:
             raise NotYetSolvedError
         return 4 * self.kinetic_energy_density / (3 * self.alpha_theta_bar_n * self.wn)
 
     @functools.cached_property
+    @copy_docstring_dec(thermo.mean_adiabatic_index, without_params=True)
     def mean_adiabatic_index(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
@@ -657,11 +672,16 @@ class Bubble(BaseBubble):
 
     @functools.cached_property
     def nu_gdh2024(self) -> float:
+        r"""$\nu_\text{gdh2024}$ at the volume-averaged enthalpy density in the broken phase.
+
+        See :func:`pttools.bubble.thermo.nu_gdh2024`.
+        """
         if not self.solved:
             raise NotYetSolvedError
         return self.model.nu_gdh2024(self.va_enthalpy_density)
 
     @functools.cached_property
+    @copy_docstring_dec(thermo.omega, without_params=True)
     def omega(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
@@ -669,6 +689,10 @@ class Bubble(BaseBubble):
 
     @functools.cached_property
     def omega_barotropic(self) -> float:
+        r"""$\omega$, barotropic equation of state parameter at the volume-averaged enthalpy density.
+
+        This is evaluated in the broken phase. See :func:`pttools.bubble.thermo.omega_barotropic`.
+        """
         if not self.solved:
             raise NotYetSolvedError
         return self.model.omega(self.va_enthalpy_density, Phase.BROKEN)
@@ -682,12 +706,14 @@ class Bubble(BaseBubble):
 
     @functools.cached_property
     def ubarf(self) -> float:
-        r"""Enthalpy-weighted RMS fluid velocity $\bar{U}_\text{f}$
+        r"""Enthalpy-weighted RMS fluid velocity $\bar{U}_\text{f}$.
+
         In some sources such as :giombi_2024_cs:`\ `, this is denoted as $v_\text{rms}$.
         """
         return np.sqrt(self.ubarf2)
 
     @functools.cached_property
+    @copy_docstring_dec(thermo.ubarf2, without_params=True)
     def ubarf2(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
@@ -699,6 +725,7 @@ class Bubble(BaseBubble):
         )
 
     @functools.cached_property
+    @copy_docstring_dec(thermo.w_bar, without_params=True)
     def w_bar(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
@@ -708,6 +735,7 @@ class Bubble(BaseBubble):
     # bva = bubble volume averaged
     # -----
     @functools.cached_property
+    @copy_docstring_dec(thermo.entropy_density_diff, without_params=True)
     def entropy_density_diff(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
@@ -715,41 +743,51 @@ class Bubble(BaseBubble):
 
     @functools.cached_property
     def entropy_density_diff_relative(self) -> float:
+        r"""Bubble volume averaged entropy density difference relative to the entropy density $s_n$ outside the bubble.
+
+        See :attr:`entropy_density_diff`.
+        """
         if not self.solved:
             raise NotYetSolvedError
         return self.entropy_density_diff / self.model.s(self.wn, Phase.SYMMETRIC)
 
     @functools.cached_property
+    @copy_docstring_dec(thermo.kinetic_energy_density, without_params=True)
     def kinetic_energy_density(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.kinetic_energy_density(self.v, self.w, self.xi, self.v_wall)
 
     @functools.cached_property
+    @copy_docstring_dec(thermo.kinetic_energy_fraction, without_params=True)
     def kinetic_energy_fraction(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.kinetic_energy_fraction(ek_bva=self.kinetic_energy_density, eb=self.e_bar)
 
     @functools.cached_property
+    @copy_docstring_dec(thermo.thermal_energy_density, without_params=True)
     def thermal_energy_density(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.thermal_energy_density(v_wall=self.v_wall, eqp=self.va_thermal_energy_density)
 
     @functools.cached_property
+    @copy_docstring_dec(thermo.thermal_energy_density_diff, without_params=True)
     def thermal_energy_density_diff(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.thermal_energy_density_diff(self.w, self.xi, self.v_wall)
 
     @functools.cached_property
+    @copy_docstring_dec(thermo.thermal_energy_fraction, without_params=True)
     def thermal_energy_fraction(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.thermal_energy_fraction(eq_bva=self.thermal_energy_density, eb=self.e_bar)
 
     @functools.cached_property
+    @copy_docstring_dec(thermo.trace_anomaly_diff, without_params=True)
     def trace_anomaly(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
@@ -759,12 +797,14 @@ class Bubble(BaseBubble):
     # va = volume averaged
     # -----
     @functools.cached_property
+    @copy_docstring_dec(thermo.va_enthalpy_density, without_params=True)
     def va_enthalpy_density(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.va_enthalpy_density(eq=self.thermal_energy_density)
 
     @functools.cached_property
+    @copy_docstring_dec(thermo.va_entropy_density_diff, without_params=True)
     def va_entropy_density_diff(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
@@ -772,17 +812,23 @@ class Bubble(BaseBubble):
 
     @functools.cached_property
     def va_entropy_density_diff_relative(self) -> float:
+        r"""Volume-averaged entropy density difference relative to the entropy density $s_n$ outside the bubble.
+
+        See :attr:`va_entropy_density_diff`.
+        """
         if not self.solved:
             raise NotYetSolvedError
         return self.va_entropy_density_diff / self.model.s(self.wn, Phase.SYMMETRIC)
 
     @functools.cached_property
+    @copy_docstring_dec(thermo.va_kinetic_energy_fraction, without_params=True)
     def va_kinetic_energy_fraction(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.va_kinetic_energy_fraction(ek_va=self.va_kinetic_energy_density, eb=self.e_bar)
 
     @functools.cached_property
+    @copy_docstring_dec(thermo.va_thermal_energy_density, without_params=True)
     def va_thermal_energy_density(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
@@ -790,18 +836,21 @@ class Bubble(BaseBubble):
             v_shock=self.v_sh, wn=self.wn, ek=self.va_kinetic_energy_density, delta_e_theta=self.va_trace_anomaly_diff)
 
     @functools.cached_property
+    @copy_docstring_dec(thermo.va_thermal_energy_density_diff, without_params=True)
     def va_thermal_energy_density_diff(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.va_thermal_energy_density_diff(self.w, self.xi)
 
     @functools.cached_property
+    @copy_docstring_dec(thermo.va_thermal_energy_fraction, without_params=True)
     def va_thermal_energy_fraction(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
         return thermo.va_thermal_energy_fraction(eq_va=self.va_thermal_energy_density, eb=self.e_bar)
 
     @functools.cached_property
+    @copy_docstring_dec(thermo.va_trace_anomaly_diff, without_params=True)
     def va_trace_anomaly_diff(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
@@ -812,26 +861,3 @@ class Bubble(BaseBubble):
 # but declaring the element type here does give the correct types when the arrays are indexed.
 type BubbleArr = NDArray[Bubble]  # pyrefly: ignore[bad-specialization]
 type BubbleArr2D = np.ndarray[tuple[int, int], np.dtype[Bubble]]  # pyrefly: ignore[bad-specialization]
-
-copy_docstrings({
-    Bubble.e_bar: thermo.e_bar,
-    Bubble.entropy_density_diff: thermo.entropy_density_diff,
-    Bubble.kappa: thermo.kappa,
-    Bubble.kinetic_energy_density: thermo.kinetic_energy_density,
-    Bubble.kinetic_energy_fraction: thermo.kinetic_energy_fraction,
-    Bubble.mean_adiabatic_index: thermo.mean_adiabatic_index,
-    Bubble.omega: thermo.omega,
-    Bubble.thermal_energy_density: thermo.thermal_energy_density,
-    Bubble.thermal_energy_density_diff: thermo.thermal_energy_density_diff,
-    Bubble.thermal_energy_fraction: thermo.thermal_energy_fraction,
-    Bubble.ubarf2: thermo.ubarf2,
-    Bubble.va_enthalpy_density: thermo.va_enthalpy_density,
-    Bubble.va_entropy_density_diff: thermo.va_entropy_density_diff,
-    Bubble.va_kinetic_energy_density: thermo.va_kinetic_energy_density,
-    Bubble.va_kinetic_energy_fraction: thermo.va_kinetic_energy_fraction,
-    Bubble.va_thermal_energy_density: thermo.va_thermal_energy_density,
-    Bubble.va_thermal_energy_density_diff: thermo.va_thermal_energy_density_diff,
-    Bubble.va_thermal_energy_fraction: thermo.va_thermal_energy_fraction,
-    Bubble.va_trace_anomaly_diff: thermo.va_trace_anomaly_diff,
-    Bubble.w_bar: thermo.w_bar
-}, without_params=True)

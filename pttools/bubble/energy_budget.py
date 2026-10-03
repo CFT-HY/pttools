@@ -62,6 +62,19 @@ def alpha_n_from_ubarf_solvable(
         model: Model | None = None,
         cs: float = CS0,
         adiabatic_index: float = DEFAULT_ADIABATIC_INDEX) -> float:
+    r"""Difference of the approximate $\bar{U}_f(v_{\text{wall}}, \alpha_n)$ from the target value.
+
+    This is the objective function for solving $\alpha_n$ from a given $\bar{U}_f$.
+    See :func:`ubarf_approx`.
+
+    :param alpha_n: $\alpha_n$, transition strength
+    :param ubarf_target: $\bar{U}_{f,\text{target}}$, target RMS fluid velocity
+    :param v_wall: $v_\text{wall}$, wall velocity
+    :param model: Equation of state
+    :param cs: $c_s$, sound speed
+    :param adiabatic_index: $\Gamma$, adiabatic index
+    :return: $\bar{U}_f - \bar{U}_{f,\text{target}}$
+    """
     return ubarf_approx(
         v_wall=v_wall, alpha_n=alpha_n, model=model, cs=cs, adiabatic_index=adiabatic_index
     ) - ubarf_target
@@ -138,7 +151,8 @@ def kappa_d[T: FloatOrArr](alpha_n: T) -> T:
 @njit
 def kappa_detonation_approx[T: FloatOrArr](
         v_wall: T, alpha_n: T | float, v_cj: T | float | None = None) -> T:
-    r"""Approximation of $\kappa$ for detonations
+    r"""Approximation of $\kappa$ for detonations.
+
     $$
     \kappa(v_{\text{wall}} > v_{CJ}) \approx \frac{
     (v_{CJ} - 1)^3 * v_{CJ}^{5/2} * v_{\text{wall}}^{-5/2} * \kappa_C * \kappa_D

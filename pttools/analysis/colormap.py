@@ -27,6 +27,12 @@ def get_cmap(cmap: Colormap | str) -> Colormap:
 
 
 def cmap_lines(n: int, cmap: Colormap | str = DEFAULT_CMAP) -> th.FloatArr1D:
+    """Get evenly spaced colors from a color map for plotting multiple lines.
+
+    :param n: number of colors
+    :param cmap: color map or its name
+    :return: array of RGBA colors with the shape (n, 4)
+    """
     arr = np.linspace(0, 1, n)
     if isinstance(cmap, str):
         return plt.colormaps[cmap](arr)

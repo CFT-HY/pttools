@@ -26,6 +26,7 @@ COLORMAP: ListedColormap = ListedColormap(_NEW_COLORS)
 
 
 def plot_bubble(ax: plt.Axes, label: str, v_wall: float, alpha: float, n_xi: int) -> AxesImage:
+    """Plot the fluid velocity of a bubble as a 2D color map with arrows for the direction of the wall"""
     v_f, _enthalp, xi = bubble.sound_shell_bag(
         v_wall=v_wall, alpha_n=alpha,
         df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
@@ -100,6 +101,7 @@ def main(
         figsize: tuple[int, int] = (27, 9),
         path: str | None = None,
         show: bool = False) -> plt.Figure:
+    """Plot the three solution types: subsonic deflagration, supersonic deflagration and detonation"""
     with plt.rc_context({
                 "text.usetex": True,
                 "font.family": "serif",

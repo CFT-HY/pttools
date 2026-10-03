@@ -33,9 +33,10 @@ class BagBaseCase[M: Model](ModelBaseCase[M], abc.ABC):
     }
 
     def test_alphas_same(self) -> None:
-        r""""The two definitions of the transition strength coincide
-        only in the case of detonations within the bag model.".
+        r"""Test that $\alpha_n$ and $\alpha_+$ coincide for a detonation in the bag model.
 
+        "The two definitions of the transition strength coincide
+        only in the case of detonations within the bag model."
         See :notes:` \` p. 40
         """
         wn = 70

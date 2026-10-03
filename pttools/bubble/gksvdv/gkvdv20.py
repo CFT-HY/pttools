@@ -1,6 +1,5 @@
 r"""
-This is the example code from
-:giese_2020:`\ `.
+This is the example code from :giese_2020:`\ `.
 
 Commented for better readability.
 """

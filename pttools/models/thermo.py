@@ -41,7 +41,21 @@ class ThermoModel(BaseModel, abc.ABC):
             gen_cs2: bool = True,
             gen_cs2_neg: bool = False,
             silence_temp: bool = False):
+        r"""Initialize the thermodynamics model.
 
+        :param name: custom name for the model
+        :param T_min: $T_\text{min}$, minimum temperature at which the model is valid.
+            Must be within the range of the $g_\text{eff}$ data, and defaults to its minimum.
+        :param T_max: $T_\text{max}$, maximum temperature at which the model is valid.
+            Must be within the range of the $g_\text{eff}$ data, and defaults to its maximum.
+        :param restrict_to_valid: whether temperatures outside the validity range are converted to NaN
+        :param label_latex: custom LaTeX label for the model
+        :param label_unicode: custom Unicode label for the model
+        :param gen_cs2: whether to generate the $c_s^2$ function
+        :param gen_cs2_neg: whether to generate the $-c_s^2$ function
+        :param silence_temp: whether to suppress the logging of temperatures outside the validity range
+        :raises ValueError: if the temperature limits are outside the range of the $g_\text{eff}$ data
+        """
         temp_data_min = np.min(self.GEFF_DATA_TEMP)
         temp_data_max = np.max(self.GEFF_DATA_TEMP)
         if T_min is None:
@@ -83,6 +97,7 @@ class ThermoModel(BaseModel, abc.ABC):
             return False
         return True
 
+    @tp.override
     def gen_cs2(self) -> th.CS2Fun:
         # Numba caching is disabled for the functions below, as they are created dynamically.
         cs2_s = self.cs2_full(self.GEFF_DATA_TEMP, Phase.SYMMETRIC)
@@ -143,7 +158,9 @@ class ThermoModel(BaseModel, abc.ABC):
             return cs2_compute(temp, phase)
 
         def cs2[T: FloatOrArr](temp: T, phase: th.FloatOrArr) -> T:
-            """The validate_temp function cannot be called from jitted functions,
+            r"""$c_s^2(T,\phi)$, which calls the jitted scalar or array implementation depending on the type of $T$.
+
+            The validate_temp function cannot be called from jitted functions,
             and therefore we have to use the validate_temp.
             """
             if isinstance(temp, float):
@@ -168,14 +185,16 @@ class ThermoModel(BaseModel, abc.ABC):
     def cs2[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""
         Sound speed squared, $c_s^2$, interpolated from precomputed values.
+
         Takes in $T$ instead of $w$, unlike the equation of state model.
 
         :param temp: temperature $T$ (MeV)
-        :param phase: phase $phi$
+        :param phase: phase $\phi$
         :return: $c_s^2$
         """
         raise RuntimeError("The cs2(T, phase) function has not yet been loaded")
 
+    @tp.override
     def cs2_neg[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         return tp.cast(T, -self.cs2(temp, phase))
 
@@ -187,9 +206,21 @@ class ThermoModel(BaseModel, abc.ABC):
         # return self.dp_dt(temp, phase) / self.de_dt(temp, phase)
 
     def ge_gs_ratio[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+        r"""$\frac{g_e}{g_s}$, ratio of the effective degrees of freedom for energy density and entropy.
+
+        :param temp: temperature $T$
+        :param phase: phase $\phi$
+        """
         return tp.cast(T, self.ge(temp, phase) / self.gs(temp, phase))
 
     def dgp_dT[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+        r"""$\frac{dg_p}{dT}$.
+
+        $$\frac{dg_p}{dT} = 4 \frac{dg_s}{dT} - 3 \frac{dg_e}{dT}$$
+
+        :param temp: temperature $T$
+        :param phase: phase $\phi$
+        """
         return tp.cast(T, 4*self.dgs_dT(temp, phase) - 3*self.dge_dT(temp, phase))
 
     def dp_dt[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
@@ -201,7 +232,8 @@ class ThermoModel(BaseModel, abc.ABC):
         return tp.cast(T, np.pi**2/30 * (self.dge_dT(temp, phase) * temp**4 + 4*self.ge(temp, phase)*temp**3))
 
     def gp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
-        r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(T,\phi)$
+        r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(T,\phi)$.
+
         $$g_{\text{eff},p}(T,\phi) = 4g_s(T,\phi) - 3g_e(T,\phi)$$.
         """
         # + \frac{90 V(\phi)}{\pi^2 T^4}

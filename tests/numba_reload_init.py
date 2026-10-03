@@ -32,6 +32,7 @@ def caller(x: np.ndarray) -> float:
 
 
 def main(mode: str) -> None:
+    """Run the parallel function directly (``callee``) or via the cached caller (``caller``) and check the result."""
     x = np.ones(1000)
     if mode == "callee":
         result = parallel_sum(x)

@@ -95,6 +95,7 @@ def sin_transform_approx(
         v_sh: float | None = None) -> th.FloatArr1D:
     r"""
     Approximate sin transform of $f(\xi)$.
+
     For values $f_a$ and $f_b$, we have
     $$
     \int_{\xi_a}^{\xi_b} d\xi f(\xi) \sin(z \xi) \to

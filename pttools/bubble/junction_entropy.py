@@ -37,7 +37,8 @@ def check_entropy_fluxes(
 # This uses gamma(), but it's so unlikely to change, that caching this is OK.
 @njit(cache=True)
 def entropy_flux[T: FloatOrArr](v_tilde: T, s: T | float) -> T:
-    r"""Entropy flux $S$
+    r"""Entropy flux $S$.
+
     $$S^z = su^z = \gamma(\tilde{v}) \tilde{v} s$$
     :bhusal_2026:`\ ` eq. 41
     :notes:`\ ` p. 23,

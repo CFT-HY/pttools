@@ -1,4 +1,5 @@
 r"""Plot the absolute and relative errors of different integrators for the $\xi, v$ plane.
+
 See :gw_pt_ssm:`\ ` fig. 9
 Excerpts of these plots are in :gw_pt_ssm:`\ ` fig. 10 and :notes:`\ ` fig. 15.
 """
@@ -39,6 +40,8 @@ class PlaneTolerances(tp.TypedDict, total=False):
 
 
 class TestPlane(unittest.TestCase):
+    r"""Test the accuracy and performance of the ODE integrators for the $\xi, v$ plane."""
+
     FIGSIZE = np.array([16, 9])*1.7
     FIG_PATH = utils.TEST_FIGURE_PATH / "integrators"
     grid_shape: tuple[int, int] = (2, 5)
@@ -56,6 +59,7 @@ class TestPlane(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
+        """Create the comparison figures and compute the odeint reference data, if plotting is enabled."""
         if PLOT:
             cls.grid_fig_abs, cls.axs_abs = plt.subplots(*cls.grid_shape, figsize=cls.FIGSIZE)
             cls.grid_fig_rel, cls.axs_rel = plt.subplots(*cls.grid_shape, figsize=cls.FIGSIZE)
@@ -66,6 +70,7 @@ class TestPlane(unittest.TestCase):
 
     @classmethod
     def process_output(cls, name: str, fig: plt.Figure, axs: th.AxesArr2D, diffs: dict[int, float]) -> None:
+        """Add the performance and error plots to the comparison figure, save it, and animate it with ffmpeg."""
         cls.plot_perf(axs[0, 3])
         cls.plot_diff(axs[0, 4], name, diffs)
         fig.tight_layout()
@@ -96,6 +101,7 @@ class TestPlane(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
+        """Finalize and save the comparison figures, if plotting is enabled."""
         if PLOT:
             cls.process_output("absolute", cls.grid_fig_abs, cls.axs_abs, cls.mean_abs_diffs)
             cls.process_output("relative", cls.grid_fig_rel, cls.axs_rel, cls.mean_rel_diffs)
@@ -104,6 +110,7 @@ class TestPlane(unittest.TestCase):
 
     @classmethod
     def plot_perf(cls, ax: plt.Axes) -> None:
+        """Plot the execution times of the solvers, and save them to a file."""
         inds = list(cls.names.keys())
         names = [cls.names[i] for i in inds]
         # None is not supported here in old Matplotlib, so 0 is used instead
@@ -119,6 +126,7 @@ class TestPlane(unittest.TestCase):
 
     @classmethod
     def plot_diff(cls, ax: plt.Axes, name: str, diffs: dict[int, float]) -> None:
+        """Plot the mean errors of the solvers compared to odeint."""
         diff_dict = {ind: diff for ind, diff in diffs.items() if np.isfinite(diff)}
         inds = list(diff_dict.keys())
         names = [cls.names[i] for i in inds]
@@ -136,6 +144,7 @@ class TestPlane(unittest.TestCase):
             rtol: float = 1e-7,
             ax: tuple[int, int] | None = None,
             perf_iters: int = 10) -> None:
+        """Compute the plane with the given method, measure its performance, plot it and compare it to the reference."""
         if i in self.names:
             raise ValueError(f"Duplicate solver index: {i}")
         name = plot_plane_paper.get_solver_name(method)
@@ -190,16 +199,20 @@ class TestPlane(unittest.TestCase):
         assert_allclose(data_summed, data_ref, rtol=rtol)
 
     def test_plane_bdf(self) -> None:
+        """Test the BDF integrator."""
         self.validate_plane(method="BDF", rtol=5e-3, i=5, ax=(1, 2))
 
     def test_plane_dop853(self) -> None:
+        """Test the DOP853 integrator."""
         self.validate_plane(method="DOP853", rtol=1.57e-2, i=6, ax=(1, 3))
 
     def test_plane_lsoda(self) -> None:
+        """Test the LSODA integrator."""
         self.validate_plane(method="LSODA", rtol=3.1e-3, i=2, ax=(0, 1))
 
     @unittest.skipIf(speedup.NUMBA_DISABLE_JIT, "NumbaLSODA cannot be used if Numba is disabled")
     def test_plane_numba_lsoda(self) -> None:
+        """Test the NumbaLSODA integrator."""
         try:
             self.validate_plane(method="numba_lsoda", rtol=4.0e-3, i=8, ax=(0, 2))
         except ImportError as e:
@@ -207,15 +220,19 @@ class TestPlane(unittest.TestCase):
             self.skipTest("Could not load NumbaLSODA.")
 
     def test_plane_odeint(self) -> None:
+        """Test the odeint integrator."""
         self.validate_plane(method="odeint", i=1, ax=(0, 0))
 
     def test_plane_radau(self) -> None:
+        """Test the Radau integrator."""
         self.validate_plane(method="Radau", rtol=8.24e-4, i=7, ax=(1, 4))
 
     def test_plane_rk23(self) -> None:
+        """Test the RK23 integrator."""
         self.validate_plane(method="RK23", rtol=2.11e-2, i=3, ax=(1, 0))
 
     def test_plane_rk45(self) -> None:
+        """Test the RK45 integrator."""
         self.validate_plane(method="RK45", rtol=1.95e-3, i=4, ax=(1, 1))
 
 

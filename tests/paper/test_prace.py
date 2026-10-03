@@ -16,6 +16,7 @@ class TestPrace(unittest.TestCase):
     """PRACE tests."""
 
     def test_ps_prace(self) -> None:
+        """Test that the power spectra with the PRACE simulation parameters match the reference data."""
         fluid_profiles_dir = utils.TEST_DATA_PATH / "fluidprofiles"
         if not fluid_profiles_dir.is_dir():
             logger.warning("Fluid profiles not found. Cannot execute PRACE tests.")

@@ -111,7 +111,8 @@ def v_minus[T: FloatOrArr](
         debug: bool = False,
         parallel: bool = True) -> T:
     r"""
-    Fluid speed $\tilde{v}_-$ behind the wall in the wall frame
+    $\tilde{v}_-$, fluid speed behind the wall in the wall frame.
+
     $$\tilde{v}_- = \frac{1}{2} \left[
     \left( (1 + \alpha_+)\tilde{v}_+ + \frac{1 - 3\alpha_+}{3 \tilde{v}_+} \right)
     \pm

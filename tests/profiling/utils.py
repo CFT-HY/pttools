@@ -14,6 +14,11 @@ class Profiler(abc.ABC):
     """Base class for profilers."""
 
     def __init__(self, name: str, print_to_console: bool = False) -> None:
+        """Initialize the profiler.
+
+        :param name: name of the profile, used for the output file names
+        :param print_to_console: whether to also print the results to the console
+        """
         self.name: str = name
         self.print_to_console: bool = print_to_console
 

@@ -9,7 +9,8 @@ from pttools.type_hints import FloatOrArr
 @njit
 def find_alpha_n_from_w_xi[T: FloatOrArr](w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float, alpha_p: T) -> T:
     r"""
-    Calculates the transition strength parameter with
+    Calculates the transition strength parameter $\alpha_n$.
+
     $$\alpha_n = \frac{w_+}{w_n} \alpha_p$$.
 
     Model-independent.

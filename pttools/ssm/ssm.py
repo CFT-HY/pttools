@@ -50,8 +50,9 @@ def A2_e_conserving(
         parallel: bool = True,
         lambda_correction: bool = False) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
-    Returns the value of $\lvert A(z) \rvert^2$, where
-    $\lvert \text{Plane wave amplitude} \rvert^2 = T^3 \lvert A(z) \rvert^2$.
+    Returns the value of $\lvert A(z) \rvert^2$.
+
+    Here $\lvert \text{Plane wave amplitude} \rvert^2 = T^3 \lvert A(z) \rvert^2$.
 
     :param v: velocity profile $v$
     :param w: enthalpy profile $w$
@@ -81,7 +82,8 @@ def A2_e_conserving(
 
 @njit(cache=True)
 def A2_fp_csl(fp: th.FloatArr, cs: float, l: th.FloatArr) -> th.FloatArr:  # noqa: E741
-    r"""$\lvert A(z) \rvert^2$ from $f'(z)$ and $c_s l(z)$
+    r"""$\lvert A(z) \rvert^2$ from $f'(z)$ and $c_s l(z)$.
+
     $$\lvert A(z) \rvert^2 = = \frac{1}{4} \left[ (f'(z))^2 + (c_s l(z))^2 \right]$$
     :gw_pt_ssm:`\ ` eq. 4.11
     This contains information about the shape of the fluid shells.
@@ -98,7 +100,8 @@ def f(
         v_sh: float,
         z_st_thresh: float = const.Z_ST_THRESH,
         parallel: bool = True) -> th.FloatArr:
-    r"""$f(z)$
+    r"""$f(z)$, sine transform of the velocity profile.
+
     $$f(z) = \frac{4\pi}{z} \int_0^\infty d\xi v_{\text{ip}}(\xi) \sin(z\xi)$$
     :gw_pt_ssm:`\ ` eq. 4.5.
     """
@@ -117,7 +120,8 @@ def l(  # noqa: E743
         z_st_thresh: float = const.Z_ST_THRESH,
         n_xi: int = const.DEFAULT_N_XI_SSM,
         parallel: bool = True) -> th.FloatArr:
-    r"""$l(z)$
+    r"""$l(z)$, sine transform of the energy fluctuation profile $\lambda$.
+
     $$l(z) = \frac{4\pi}{z} \int_0^\infty d\xi \lambda_\text{ip}(\xi) \xi \sin(z\xi)$$
     :gw_pt_ssm:`\ ` eq. 4.8.
     """
@@ -144,7 +148,8 @@ def lam(
         e_bar: float | None = None,
         w_bar: float | None = None,
         non_linear_correction: bool = False) -> th.FloatArr:
-    r"""Energy fluctuation variable $\lambda(x)$
+    r"""$\lambda(x)$, energy fluctuation variable.
+
     $$\lambda(x) = \frac{e(x) - \bar{e}}{\bar{w}}$$
     :gw_pt_ssm:`\ ` eq. 3.20.
 
@@ -170,7 +175,8 @@ def lam(
 
 @njit(cache=True)
 def qT_lookup(T_tilde: th.FloatArr1D, z: th.FloatArr1D) -> th.FloatArr1D:
-    """$z=qT$ lookup
+    """$z=qT$ lookup array.
+
     This is used by
     :py:func:`pttools.ssm.spec_den_v.spec_den_v` and
     :py:func:`pttools.ssm.ssm.A2_e_conserving`.

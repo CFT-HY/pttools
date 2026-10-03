@@ -16,6 +16,7 @@ from pttools.models.sm import StandardModel
 
 
 def main() -> plt.Figure:
+    r"""Solve a bubble with the Standard Model and plot its fluid velocity profile $v(\xi)$"""
     sm = StandardModel(V_s=5e12, g_mult_s=1 + 1e-9, silence_temp=True)
     model = FullModel(sm, T_crit_guess=100e3)
     wn = model.wn(alpha_n=0.1)

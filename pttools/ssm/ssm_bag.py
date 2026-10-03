@@ -37,9 +37,9 @@ def a2_e_conserving_bag(
         lambda_correction: bool = False,
         parallel: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
-    Returns the value of $|A(z)|^2$, where
-    $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$,
-    calculated from self-similar hydro solution obtained with "bubble.fluid_shell".
+    Returns the value of $|A(z)|^2$, calculated from self-similar hydro solution obtained with "bubble.fluid_shell".
+
+    Here $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$.
 
     :param z: array of scaled wavenumbers $z = kR_*$.
     :param df_dtau_ptr: pointer to the differential equation function
@@ -104,8 +104,9 @@ def a2_e_conserving_bag_file(
         z_st_thresh: float = const.Z_ST_THRESH,
         parallel: bool = True) -> th.FloatArr1D:
     r"""
-    Returns the value of $|A(z)|^2$, where $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$,
-    calculated from file, output by "spherical-hydro-code".
+    Returns the value of $|A(z)|^2$, calculated from file, output by "spherical-hydro-code".
+
+    Here $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$.
     Uses method respecting energy conservation, although only accurate to
     linear order, meaning that there is an apparent $z^0$ piece at very low $z$.
 
@@ -170,6 +171,7 @@ def a2_ssm_func_bag(
         parallel: bool = True) -> th.FloatArr1D:
     r"""
     Returns the value of $|A(z)|^2$.
+
     $|\text{Plane wave amplitude}|^2 = T^3 | A(z)|^2$.
 
     :param z: array of scaled wavenumbers $z = kR_*$

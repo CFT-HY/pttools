@@ -17,12 +17,14 @@ class ThermoTest(Reference, ABC):
 
     @classmethod
     def setUpClass(cls) -> None:
+        """Create the bubbles for the reference parameters."""
         cls.bubbles: list[Bubble] = [
             Bubble(cls.MODEL, v_wall=v_wall, alpha_n=alpha_n)
             for v_wall, alpha_n in zip(cls.V_WALLS, cls.ALPHA_NS, strict=True)
         ]
 
     def test_ebar(self) -> None:
+        """Test that the average energy density without a bubble is that of the nucleation phase."""
         assert_allclose(
             [e_bar(model=bubble.model, wn=bubble.wn) for bubble in self.bubbles],
             [bubble.en for bubble in self.bubbles]
@@ -39,9 +41,11 @@ class ThermoTest(Reference, ABC):
         )
 
     def test_kappa(self) -> None:
+        """Test the kinetic energy efficiency factor against the reference values."""
         assert_allclose([bubble.kappa for bubble in self.bubbles], self.KAPPA_REF, rtol=1.5e-2)
 
     def test_kappa_omega(self) -> None:
+        """Test that the kinetic and thermal energy efficiency factors sum to approximately one."""
         assert_allclose([bubble.kappa + bubble.omega for bubble in self.bubbles], 1, rtol=1.8e-2)
 
     def test_kappa_omega_ref(self) -> None:
@@ -49,18 +53,23 @@ class ThermoTest(Reference, ABC):
         assert_allclose(self.KAPPA_REF + self.OMEGA_REF, 1, 1.8e-2)
 
     def test_bva_ke_frac(self) -> None:
+        """Test the bubble volume averaged kinetic energy fraction against the reference values."""
         assert_allclose([bubble.kinetic_energy_fraction for bubble in self.bubbles], self.BVA_KE_FRAC_REF, rtol=1.5e-2)
 
     def test_omega(self) -> None:
+        """Test the thermal energy efficiency factor against the reference values."""
         assert_allclose([bubble.omega for bubble in self.bubbles], self.OMEGA_REF, rtol=1.3e-2)
 
 
 class ThermoTestHindmarshHijazi(RefHindmarshHijazi, ThermoTest, unittest.TestCase):
-    pass
+    r"""Compare thermodynamic quantities to the values in :gw_pt_ssm:`\ `."""
 
 
 class ThermoTestLectureNotes(RefLectureNotes, ThermoTest, unittest.TestCase):
+    r"""Compare thermodynamic quantities to the values in :notes:`\ `."""
+
     def test_ubarf(self) -> None:
+        """Test the enthalpy-weighted RMS fluid velocity against the reference values."""
         assert_allclose(
             [np.sqrt(ubarf2(
                 v=bubble.v, w=bubble.w, xi=bubble.xi,

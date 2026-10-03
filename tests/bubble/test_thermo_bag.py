@@ -23,24 +23,28 @@ class ThermoBagTest(Reference, ABC):
     RTOL_KE_FRAC: float = 6.9e-3
 
     def test_kappa(self) -> None:
+        """Test the kinetic energy efficiency factor of the bag model against the reference values."""
         kappas = np.zeros_like(self.KAPPA_REF)
         for i in range(self.ALPHA_NS.size):
             kappas[i] = thermo_bag.get_kappa_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i])
         assert_allclose(kappas, self.KAPPA_REF, rtol=self.RTOL_KAPPA)
 
     def test_kappa_de(self) -> None:
+        """Test the kappa of the bag model computed with the energy change against the reference values."""
         kappas = np.zeros_like(self.KAPPA_REF)
         for i in range(self.ALPHA_NS.size):
             kappas[i], _ = thermo_bag.get_kappa_de_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i])
         assert_allclose(kappas, self.KAPPA_REF, rtol=self.RTOL_KAPPA)
 
     def test_kappa_dq(self) -> None:
+        """Test the kappa of the bag model computed with the thermal energy change against the reference values."""
         kappas = np.zeros_like(self.KAPPA_REF)
         for i in range(self.ALPHA_NS.size):
             kappas[i], _ = thermo_bag.get_kappa_dq_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i])
         assert_allclose(kappas, self.KAPPA_REF, rtol=self.RTOL_KAPPA)
 
     def test_ke_de_frac_bag(self) -> None:
+        """Test the kinetic energy fraction computed together with the energy change against the reference values."""
         ke_fracs = np.zeros_like(self.KAPPA_REF)
         de_fracs = np.zeros_like(self.KAPPA_REF)
         for i in range(self.ALPHA_NS.size):
@@ -48,12 +52,14 @@ class ThermoBagTest(Reference, ABC):
         assert_allclose(ke_fracs, self.BVA_KE_FRAC_REF, rtol=self.RTOL_KE_FRAC)
 
     def test_ke_frac_bag(self) -> None:
+        """Test the kinetic energy fraction of the bag model against the reference values."""
         ke_fracs = np.zeros_like(self.KAPPA_REF)
         for i in range(self.ALPHA_NS.size):
             ke_fracs[i] = thermo_bag.get_ke_frac_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i])
         assert_allclose(ke_fracs, self.BVA_KE_FRAC_REF, rtol=self.RTOL_KE_FRAC)
 
     def test_ke_frac_new_bag(self) -> None:
+        """Test the kinetic energy fraction of the new bag model function against the reference values."""
         ke_fracs = np.zeros_like(self.KAPPA_REF)
         for i in range(self.ALPHA_NS.size):
             ke_fracs[i] = thermo_bag.get_ke_frac_new_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i])
@@ -72,7 +78,10 @@ class ThermoBagTestHindmarshHijazi(RefHindmarshHijazi, ThermoBagTest, unittest.T
 
 
 class ThermoBagTestLectureNotes(RefLectureNotes, ThermoBagTest, unittest.TestCase):
+    r"""Compare bag model thermodynamic functions to the values in :notes:`\ `."""
+
     def test_ubarf2(self) -> None:
+        """Test the enthalpy-weighted RMS fluid velocity of the bag model against the reference values."""
         ubarfs: FloatArr1D = np.zeros_like(self.UBARF_REF)
         for i in range(self.ALPHA_NS.size):
             ubarfs[i] = np.sqrt(thermo_bag.get_ubarf2_bag(
@@ -82,6 +91,7 @@ class ThermoBagTestLectureNotes(RefLectureNotes, ThermoBagTest, unittest.TestCas
         assert_allclose(ubarfs, self.UBARF_REF, rtol=2.7e-3)
 
     def test_ubarf2_new_bag(self) -> None:
+        """Test the RMS fluid velocity of the new bag model function against the reference values."""
         ubarfs: FloatArr1D = np.zeros_like(self.UBARF_REF)
         for i in range(self.ALPHA_NS.size):
             ubarfs[i] = np.sqrt(thermo_bag.get_ubarf2_new_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i]))

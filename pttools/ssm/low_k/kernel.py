@@ -8,7 +8,8 @@ from pttools.type_hints import FloatOrArr
 
 
 def kernel_int_bracket[T: FloatOrArr](cs: T) -> T:
-    r"""The term in brackets in $\tilde{P}_\text{gw}^\text{int}$
+    r"""The term in brackets in $\tilde{P}_\text{gw}^\text{int}$.
+
     $$3 - 2 c_s^2 - \frac{3}{c_s}(1 - c_s^2) \text{arctanh}(c_s)$$
     :giombi_2024_cs:`\ ` eq. 3.11.
     """
@@ -17,7 +18,8 @@ def kernel_int_bracket[T: FloatOrArr](cs: T) -> T:
 
 
 def kernel_low[T: FloatOrArr](z: T, nu: T | float, tau_star: T | float, tau_end: T | float) -> T:
-    r"""Low-frequency kernel $\Delta_\text{low}$ for $c_s \neq \frac{1}{\sqrt{3}}$
+    r"""$\Delta_\text{low}$, low-frequency kernel for $c_s \neq \frac{1}{\sqrt{3}}$.
+
     $$\Delta_\text{low} =
     \left( \frac{z \tau_*}{2} \right)^{-2\nu}
     \frac{\Gamma^2 \left( \frac{1}{2} + \nu \right)}{4 \pi}
@@ -35,7 +37,8 @@ def kernel_low[T: FloatOrArr](z: T, nu: T | float, tau_star: T | float, tau_end:
 
 
 def kernel_low_bag[T: FloatOrArr](tau_star: T, tau_end: T | float) -> T:
-    r"""Low-frequency kernel for bag model (radiation domination)
+    r"""$\Delta_\text{low}^{\eta=0}$, low-frequency kernel for bag model (radiation domination).
+
     $$\Delta_\text{low}^{\eta=0} (x, \tau_*, \tau_\text{end}) \rightarrow_{k \rightarrow 0}
     \frac{1}{4} \ln^2 \left( \frac{\tau_\text{end}}{\tau_*} \right)$$
     :giombi_2024_cs:`\ ` eq. 3.4

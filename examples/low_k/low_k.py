@@ -16,6 +16,7 @@ from pttools.omgw0 import Spectrum
 
 
 def main(path: str | None = None) -> plt.Figure:
+    """Plot the low-, intermediate- and high-frequency approximations of the GW power spectrum"""
     # Choose study parameters
     npt = 2000  # number of points in the spectrum
 

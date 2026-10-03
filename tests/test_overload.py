@@ -31,6 +31,7 @@ class TestOverload(unittest.TestCase):
     ]
 
     def check(self, func: tp.Callable[[tp.Any], bool | np.bool], ref: tp.Callable[[tp.Any], tp.Any]) -> None:
+        """Check that the jitted function gives the same results as the reference function for all the inputs."""
         # A new dispatcher is created for each test to avoid sharing compiled signatures between the tests.
         jitted = numba.njit(func)
         for x in self.INPUTS:
@@ -38,15 +39,19 @@ class TestOverload(unittest.TestCase):
                 self.assertEqual(bool(jitted(x)), bool(ref(x)))
 
     def test_all(self) -> None:
+        """Test that the jitted np.all gives the same results as NumPy."""
         self.check(_jit_all, np.all)
 
     def test_any(self) -> None:
+        """Test that the jitted np.any gives the same results as NumPy."""
         self.check(_jit_any, np.any)
 
     def test_all_fix(self) -> None:
+        """Test that the jitted np_all_fix gives the same results as np.all."""
         self.check(_jit_all_fix, np.all)
 
     def test_all_fix_python(self) -> None:
+        """Test that np_all_fix without jitting gives the same results as np.all."""
         for x in self.INPUTS:
             with self.subTest(x=x):
                 self.assertEqual(bool(np_all_fix(x)), bool(np.all(x)))

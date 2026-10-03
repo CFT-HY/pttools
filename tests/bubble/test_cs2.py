@@ -53,9 +53,11 @@ class TestCS2Ptr(unittest.TestCase):
             assert_allclose(cs2_from_ptr_jit(CS2_BAG_SCALAR_PTR, 1., phase.value), CS0_2)
 
     def test_bag_model(self) -> None:
+        r"""Test that the pointer of the bag model gives the same $c_s^2$ as the function of the model."""
         self.check_model(BagModel(a_s=1.1, a_b=1, V_s=1))
 
     def test_const_cs_model(self) -> None:
+        r"""Test the $c_s^2$ pointer of the ConstCSModel and that it is the same on every call."""
         model = ConstCSModel(a_s=1.5, a_b=1, V_s=1, css2=1/3 - 0.01, csb2=1/3 - 0.02)
         self.check_model(model)
         # The pointer should be the same on every call, so that the callers don't have to be recompiled.
@@ -90,6 +92,7 @@ class TestNumbaCache(unittest.TestCase):
 
     @unittest.skipIf(NUMBA_DISABLE_JIT, "Nothing is compiled when jitting is disabled.")
     def test_cache_does_not_grow(self) -> None:
+        """Test that the Numba cache indexes do not grow when the solver is run again."""
         with tempfile.TemporaryDirectory() as temp_dir:
             cache_dir = Path(temp_dir) / "numba_cache"
             sizes = [

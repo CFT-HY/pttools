@@ -25,6 +25,7 @@ def main(
         theta_bar: bool = False,
         colors: tp.Sequence[str] = ("r", "g", "b", "orange")
     ) -> plt.Figure:
+    r"""Compare the fluid velocity profiles of PTtools and :giese_2021:`\ ` for several models and wall speeds"""
     # v_walls = np.array([0.5, 0.6, 0.65])
     v_walls = np.array([0.8122449, 0.82755102, 0.84285714, 0.85816327])
     models = [

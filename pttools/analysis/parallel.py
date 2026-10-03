@@ -258,6 +258,13 @@ def solve_bubbles(bubbles: BubbleArr, max_workers: int = options.MAX_WORKERS_DEF
 
 
 def v_wall_alpha_n_grid(v_walls: th.FloatArr1D, alpha_ns: th.FloatArr1D) -> th.FloatArr3D:
+    r"""Create a grid of all combinations of $v_\text{wall}$ and $\alpha_n$.
+
+    :param v_walls: $v_\text{wall}$, wall speeds
+    :param alpha_ns: $\alpha_n$, transition strengths at the nucleation temperature
+    :return: array with the shape (alpha_ns.size, v_walls.size, 2),
+        where the last axis contains the pair $(v_{\text{wall}}, \alpha_n)$
+    """
     params = np.empty((alpha_ns.size, v_walls.size, 2))
     for i_alpha_n, alpha_n in enumerate(alpha_ns):
         for i_v_wall, v_wall in enumerate(v_walls):

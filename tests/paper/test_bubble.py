@@ -23,6 +23,7 @@ class TestBubble(unittest.TestCase):
 
     @staticmethod
     def test_bubble() -> None:
+        """Test that the single-bubble power spectra of the paper match the reference data."""
         figs, fig_ids, data = spu.do_all_plot_ps_1bubble(debug=True, lambda_correction=True)
         for fig, fig_id in zip(figs, fig_ids, strict=False):
             save_fig(fig, FIG_PATH / f"bubble_{fig_id}", force_formats=True)

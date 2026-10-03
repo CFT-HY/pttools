@@ -21,6 +21,7 @@ from pttools.models.const_cs import ConstCSModel
 def main(
         v_wall: float = 0.40454545454545454,
         alpha_n: float = 0.2534507678410117) -> plt.Figure:
+    r"""Plot the estimated $w_n$ of the deflagration solver as a function of the central enthalpy $w_{center}$"""
     model = ConstCSModel(css2=1/3 - 0.01, csb2=1/3 - 0.011, g_s=123, g_b=120, V_s=0.9)
     # model = BagModel(g_s=123, g_b=120, V_s=0.9)
 

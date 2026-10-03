@@ -56,8 +56,9 @@ def power_gw_bag(
         lambda_correction: bool = False,
         parallel: bool = True) -> th.FloatArr1D:
     r"""
-    Scaled GW power spectrum at array of z = kR* values, where R* is mean bubble centre
-    separation and k is comoving wavenumber.
+    Scaled GW power spectrum at array of z = kR* values.
+
+    Here R* is mean bubble centre separation and k is comoving wavenumber.
 
     To convert to predicted spectrum,
     multiply by $(H_n R_*)(H_n \tau_v)$, where $H_n$ is the Hubble rate at the

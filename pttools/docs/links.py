@@ -116,6 +116,10 @@ LINKCHECK_ALLOWED_REDIRECTS: dict[str, str] = {
 
 
 def print_links(links: ExtLinks | None = None) -> None:
+    """Print the Sphinx extlinks, one per line, in the format ``key: caption URL``.
+
+    :param links: the extlinks, defaults to :data:`EXTLINKS_STATIC`
+    """
     if links is None:
         links = EXTLINKS_STATIC
     print("\n".join([f"{key}: {value[1]} {value[0]}" for key, value in links.items()]))

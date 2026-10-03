@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 from threading import Lock
 import time
+import typing as tp
 
 LOGGING_LOCK: Lock = Lock()
 
@@ -43,9 +44,11 @@ class MessageFilter(logging.Filter):
     """
 
     def __init__(self, *texts: str):
+        """:param texts: the beginnings of the messages to be excluded"""
         super().__init__()
         self.texts: tuple[str, ...] = texts
 
+    @tp.override
     def filter(self, record: logging.LogRecord) -> bool:
         msg = record.getMessage()
         return not any(msg.startswith(text) for text in self.texts)

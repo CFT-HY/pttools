@@ -22,8 +22,9 @@ def gw_junction(
         tau_end: float,
         r_star: float) -> th.FloatArr1D:
     r"""
-    Create the junction of the gravitational wave power spectrum between different regimes
-    starting from the profiles in each regime.
+    Create the junction of the gravitational wave power spectrum between different regimes.
+
+    The junction is created starting from the profiles in each regime.
 
     $\tilde{P}_\text{gw}(kR_*) =
     \tilde{P}_\text{gw}^\text{low} (kR_*) \frac{1}{2} \erfc \left( 2 \pi \eta_* (k - k_{\times}) \right) +
@@ -76,7 +77,9 @@ def pow_gw_approximation(
         r_star: float,
         eps: float = 1e-8) -> th.FloatArr1D:
     r"""
-    Spectral density of gravitational waves computed with the sound shell model plus analytic approximation
+    Spectral density of gravitational waves from the SSM with low- and intermediate-frequency approximations.
+
+    This is computed with the sound shell model plus analytic approximation
     in the low-frequency and intermediate-frequency regimes.
     Multiply by z**3/2/np.pi**2 * HR* Ht  to get the final power spectrum.
 

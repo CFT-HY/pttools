@@ -16,6 +16,7 @@ class PlotlyPlot(abc.ABC):
     """Base class for plotting with Plotly."""
 
     def __init__(self):
+        """Initialize the plot. The figure is created when it's first needed."""
         self._fig: go.Figure | None = None
 
     @abc.abstractmethod

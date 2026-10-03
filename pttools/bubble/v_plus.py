@@ -20,6 +20,7 @@ from pttools.type_hints import FloatOrArr
 def max_speed_deflag(alpha_p: float) -> float:
     r"""
     Maximum speed for a deflagration: speed where wall and shock are coincident.
+
     May be greater than 1, meaning that hybrids exist for all wall speeds above cs.
     $\alpha_+ < \frac{1}{3}$, but $\alpha_n$ unbounded above.
 
@@ -113,7 +114,8 @@ def v_plus[T: FloatOrArr](
         debug: bool = True,
         parallel: bool = True) -> T:
     r"""
-    Fluid speed $\tilde{v}_+$ ahead of the wall in the wall frame
+    $\tilde{v}_+$, fluid speed ahead of the wall in the wall frame.
+
     $$\tilde{v}_+ = \frac{1}{2(1 + \alpha_+)}
     \left[
     \left( \frac{1}{3 \tilde{v}_-} + \tilde{v}_- \right)
@@ -174,6 +176,13 @@ def v_plus_limit[T: FloatOrArr](ap: T, sol_type: SolutionType) -> T:
 
 
 def v_plus_off_limits(vp: float, ap: float, sol_type: SolutionType) -> bool:
+    r"""Check whether $\tilde{v}_+$ is beyond the limit given by :func:`v_plus_limit`.
+
+    :param vp: $\tilde{v}_+$
+    :param ap: $\alpha_+$
+    :param sol_type: solution type
+    :return: whether $\tilde{v}_+$ is below the limit for a detonation or above it for other solution types
+    """
     if sol_type == SolutionType.DETON.value:
         return vp < v_plus_limit(ap, sol_type)
     return vp > v_plus_limit(ap, sol_type)

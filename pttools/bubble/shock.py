@@ -33,6 +33,30 @@ def find_shock_index(  # noqa: PLR0911, PLR0912, PLR0915
         zero_on_failure: bool = True,
         log_failure: bool = True,
         warn_if_barely_exists: bool = True) -> int | np.signedinteger:
+    r"""Find the array index of the shock in a fluid profile integrated from the wall.
+
+    For detonations, this returns the index of the wall.
+    For the bag model, this returns the first point where $v$ goes below $v_\text{sh}(\xi)$.
+    For other models, this uses a binary search for the point where the integrated curve
+    crosses the shock curve $v_\text{sh}(\xi)$.
+
+    :param model: Equation of state
+    :param v: $v$, fluid velocity
+    :param w: $w$, enthalpy
+    :param xi: $\xi$
+    :param v_wall: $v_\text{wall}$, wall speed
+    :param wn: $w_n$, enthalpy at the nucleation temperature
+    :param cs_n: $c_{s,n}$, sound speed at the nucleation temperature
+    :param sol_type: solution type
+    :param v_shock_atol: absolute tolerance for accepting the point where the curve turns backwards as the shock
+    :param error_on_failure: whether to raise an error on failure
+    :param zero_on_failure: whether to return 0 on failure, if no error is raised
+    :param log_failure: whether to log failures
+    :param warn_if_barely_exists: whether to warn if the shock barely exists
+    :return: index of the shock
+    :raises RuntimeError: if the shock is not found and ``error_on_failure`` is set,
+        or if the shock is not found for the bag model
+    """
     if sol_type is SolutionType.DETON:
         return props.find_v_index(xi, v_wall)
     # Todo: replace this with isinstance()
@@ -238,8 +262,7 @@ def shock_zoom_last_element(
         w: th.FloatArr1D,
         xi: th.FloatArr1D) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
-    Replaces last element of $(v,w,\xi)$ arrays by better estimate of
-    shock position and values of $v, w$ there.
+    Replaces last element of $(v,w,\xi)$ arrays by better estimate of shock position and values of $v, w$ there.
 
     :param v: $v$
     :param w: $w$

@@ -19,7 +19,8 @@ def qT_from_z[T: FloatOrArr](
         z: T,
         T_tilde: T | float,
         beta_R: T | float) -> T:
-    r"""$qT$
+    r"""$qT$, the argument of $A(qT)$.
+
     $$qT = \frac{z \tilde{T}}{\beta R_*} = \frac{\tilde{T}q}{\beta}$$
     where $z = q L_f = q R_*$.
     """

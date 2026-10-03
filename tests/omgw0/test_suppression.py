@@ -63,6 +63,7 @@ class SuppressionTest(unittest.TestCase):
 
     @staticmethod
     def test_suppression() -> None:
+        """Test that the default suppression can be computed for scalar and array inputs."""
         v_walls = np.linspace(0.1, 0.9, 5)
         alpha_ns = np.linspace(0.01, 0.1, 5)
         DEFAULT_SUPPRESSION.suppression(v_wall=v_walls[0], alpha_n=alpha_ns[0])

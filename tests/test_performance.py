@@ -27,6 +27,8 @@ if NUMBA_DISABLE_JIT:
 
 
 class TestPerformance(unittest.TestCase):
+    """Tests that measure the performance of PTtools as a function of the number of Numba threads."""
+
     #: These tests measure the scaling of the performance with the number of threads,
     #: and should therefore not be run concurrently with each other.
     #: See the "pytest_collection_modifyitems" hook in conftest.py for details.
@@ -36,6 +38,7 @@ class TestPerformance(unittest.TestCase):
     def time_and_plot(
             name: str, filename: str, stmt: str, setup: str,
             n_iterations: int, n_threads: th.IntArr1D = DEFAULT_VARYING_NUMBA_THREADS) -> FigAndAxes:
+        """Time the statement with varying numbers of Numba threads and plot the results."""
         return time_and_plot_threads(
             name=name, filename=filename, path=PERFORMANCE_DIR,
             stmt=stmt, setup=setup,
@@ -45,6 +48,7 @@ class TestPerformance(unittest.TestCase):
     @classmethod
     @skip_slow
     def test_performance_bubble(cls) -> None:
+        """Measure the performance of solving a bubble."""
         setup = textwrap.dedent("""
         from pttools.bubble import Bubble
         from pttools.models import BagModel
@@ -58,6 +62,7 @@ class TestPerformance(unittest.TestCase):
     @classmethod
     @skip_slow
     def test_performance_bubble_and_spectrum(cls) -> None:
+        """Measure the performance of solving a bubble and computing its spectrum."""
         setup = textwrap.dedent("""
         from pttools.bubble import Bubble
         from pttools.models import BagModel
@@ -79,6 +84,7 @@ class TestPerformance(unittest.TestCase):
     @classmethod
     @skip_slow
     def test_performance_gw(cls) -> None:
+        """Measure the performance of computing the GW power spectrum of the bag model."""
         setup = textwrap.dedent("""
         import numpy as np
         from pttools import ssm
@@ -95,6 +101,7 @@ class TestPerformance(unittest.TestCase):
     @classmethod
     @skip_slow
     def test_performance_sin_transform(cls) -> None:
+        """Measure the performance of the sine transform."""
         setup = textwrap.dedent("""
         import numpy as np
         from pttools.ssm.sin_transform import sin_transform
@@ -114,6 +121,7 @@ class TestPerformance(unittest.TestCase):
     @classmethod
     @skip_slow
     def test_performance_spectrum(cls) -> None:
+        """Measure the performance of computing the spectrum of an already solved bubble."""
         setup = textwrap.dedent("""
         from pttools.bubble import Bubble
         from pttools.models import BagModel

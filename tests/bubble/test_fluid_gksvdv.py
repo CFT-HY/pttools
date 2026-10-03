@@ -1,6 +1,7 @@
 r"""Tests for the fluid shell solver based on :giese_2021:`\ `."""
 
 import logging
+import typing as tp
 import unittest
 import warnings
 
@@ -27,10 +28,12 @@ class FluidGKSVDVTest(unittest.TestCase):
     model: ConstCSModel
 
     @classmethod
+    @tp.override
     def setUpClass(cls) -> None:
         cls.model = gksvdv_models()[1]
 
     def compare(self, v_wall: float, alpha_n: float, sol_type: SolutionType, rtol: float = 1e-3) -> None:
+        """Check that both solvers give the expected solution type and agree on the junction quantities and kappa."""
         pttools_bubble = Bubble(self.model, v_wall=v_wall, alpha_n=alpha_n)
         giese_bubble = Bubble(self.model, v_wall=v_wall, alpha_n=alpha_n, use_giese_solver=True)
         self.assertEqual(pttools_bubble.sol_type, sol_type)
@@ -52,12 +55,15 @@ class FluidGKSVDVTest(unittest.TestCase):
         self.assertLessEqual(giese_bubble.vm, v_wall)
 
     def test_sub_def(self) -> None:
+        """Compare the solvers for a subsonic deflagration."""
         self.compare(v_wall=0.4, alpha_n=0.1, sol_type=SolutionType.SUB_DEF)
 
     def test_hybrid(self) -> None:
+        """Compare the solvers for a hybrid."""
         self.compare(v_wall=0.6, alpha_n=0.1, sol_type=SolutionType.HYBRID)
 
     def test_deton(self) -> None:
+        """Compare the solvers for a detonation."""
         self.compare(v_wall=0.85, alpha_n=0.1, sol_type=SolutionType.DETON)
 
     def test_deton_junction(self) -> None:

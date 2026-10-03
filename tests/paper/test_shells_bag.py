@@ -30,9 +30,11 @@ class TestShellsBag(unittest.TestCase):
 
     @staticmethod
     def shell_file_path(name: str) -> Path:
+        """Path to the reference data file of the fluid shells with the given name."""
         return TEST_DATA_PATH / f"shells_{name}.txt"
 
     def test_fluid_shell(self) -> None:
+        """Test that the sound shell parameters of a single bag model bubble match the reference data."""
         params_all = bubble.sound_shell_dict(v_wall=0.7, alpha_n=0.052)
         # These are not yet in the reference data
         excluded = {"sol_type", "xi_even", "v_approx", "w_approx"}
@@ -118,6 +120,7 @@ class TestShellsBag(unittest.TestCase):
         assert_allclose(data_esp, ref_esp, rtol=rtols[2])
 
     def test_plot_fluid_shell(self) -> None:
+        """Test that plotting a single bag model fluid shell works."""
         fig, _params = plot_fluid_shell_bag(v_wall=0.7, alpha_n=0.052)
         save_fig(fig, FIG_PATH / "fluid_shell_single")
         plt.close(fig)

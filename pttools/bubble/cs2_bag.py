@@ -25,6 +25,7 @@ def cs2_bag_multi[T: FloatOrArr](
         w: T,
         phase: th.FloatOrArr) -> T:
     r"""Sound speed squared, $c_s^2=\frac{1}{3}$.
+
     :notes:`\ `, p. 37,
     :rel_hydro_book:`\ `, eq. 2.207.
     """
@@ -33,11 +34,19 @@ def cs2_bag_multi[T: FloatOrArr](
 
 @njit(cache=NUMBA_CACHE_CS2_BAG)
 def cs2_bag_neg[T: FloatOrArr](w: T, phase: th.FloatOrArr) -> T:
+    r"""Negative of the sound speed squared, $-c_s^2 = -\frac{1}{3}$, in the Bag Model.
+
+    :param w: enthalpy $w$
+    :param phase: phase $\phi$
+    :return: $-c_s^2$
+    """
     return - cs2_bag_multi(w, phase)  # pyrefly: ignore[bad-return]
 
 
 def _cs2_bag_scalar(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
-    """The scalar versions of the bag functions have to be compiled to cfuncs if jitting is disabled,
+    r"""Sound speed squared $c_s^2 = \frac{1}{3}$ in the Bag Model for scalar inputs.
+
+    The scalar versions of the bag functions have to be compiled to cfuncs if jitting is disabled,
     as otherwise the cfunc version of the differential cannot be created.
     """
     return const.CS0_2
@@ -45,11 +54,23 @@ def _cs2_bag_scalar(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
 
 @numba.cfunc(th.CS2FunScalarSig, cache=NUMBA_CACHE_CS2_BAG)
 def cs2_bag_scalar_cfunc(w: float, phase: Phase) -> float:
+    r"""Sound speed squared $c_s^2 = \frac{1}{3}$ in the Bag Model as a Numba cfunc for scalar inputs.
+
+    :param w: enthalpy $w$
+    :param phase: phase $\phi$
+    :return: $c_s^2$
+    """
     return const.CS0_2
 
 
 @njit(cache=NUMBA_CACHE_CS2_BAG)
 def cs2_bag_temp[T: FloatOrArr](temp: T, phase: th.FloatOrArr) -> T:
+    r"""Sound speed squared as a function of temperature, $c_s^2(T) = \frac{1}{3}$, in the Bag Model.
+
+    :param temp: temperature $T$
+    :param phase: phase $\phi$
+    :return: $c_s^2$
+    """
     return cs2_bag_multi(temp, phase)
 
 
@@ -79,6 +100,7 @@ def cs2_bag[T: FloatOrArr](w: T, phase: th.FloatOrArr) -> T:
 # with those of the njit-compiled versions of the same functions, which results in segmentation faults.
 @overload(cs2_bag, jit_options={"nopython": True})
 def cs2_bag_numba(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.NumbaFunc:
+    """Numba overload of :func:`cs2_bag`, which selects the implementation based on the type of ``w``."""
     if isinstance(w, numba.types.Float):
         return _cs2_bag_scalar
     if isinstance(w, numba.types.Array):

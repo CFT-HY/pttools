@@ -19,8 +19,9 @@ def find_alpha_n_bag(
         sol_type: SolutionType | str = SolutionType.UNKNOWN,
         n_xi: int = const.DEFAULT_N_XI) -> float:
     r"""
-    Calculates the transition strength parameter at the nucleation temperature,
-    $\alpha_n$, from $\alpha_+$, for given $v_\text{wall}$ in the Bag Model.
+    Calculates the transition strength parameter at the nucleation temperature, $\alpha_n$, in the Bag Model.
+
+    $\alpha_n$ is calculated from $\alpha_+$ for the given $v_\text{wall}$.
 
     $$\alpha_n = \frac{4 \Delta \theta (T_n)}{3 w(T_n)} = \frac{4}{3} \frac{ \theta_s(T_n) - \theta_b(T_n) }{w(T_n)}$$
 

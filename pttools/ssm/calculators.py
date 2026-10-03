@@ -18,6 +18,7 @@ def resample_uniform_xi(
         n_xi: int = const.DEFAULT_N_XI_SSM) -> tuple[th.FloatArr1D, th.FloatArr1D]:
     r"""
     Provide uniform resample of function defined by $(x,y) = (\xi,f)$.
+
     Returns f interpolated and the uniform grid of n_xi points in range [0,1].
 
     :param xi: $\xi$

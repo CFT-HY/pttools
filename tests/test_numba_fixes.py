@@ -23,6 +23,7 @@ class TestReloadInit(unittest.TestCase):
     """
 
     def test_reload_init(self) -> None:
+        """Test that the cached caller has the reload_init of the parallel function and can be loaded from the cache."""
         with tempfile.TemporaryDirectory() as cache_dir:
             # Cache the parallel function.
             self.run_script(cache_dir, "callee")
@@ -39,6 +40,7 @@ class TestReloadInit(unittest.TestCase):
 
     @staticmethod
     def run_script(cache_dir: str, mode: str) -> None:
+        """Run the test script in a new process with the given Numba cache directory and mode."""
         env = {
             **os.environ,
             "NUMBA_CACHE_DIR": cache_dir,

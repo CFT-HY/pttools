@@ -20,6 +20,12 @@ class BubblePlot3D(PlotlyPlot):
     r"""Create a 3D plot of bubbles in the $(v,w,\xi)$ space."""
 
     def __init__(self, model: Model | None = None, colorscale: str = "YlOrRd"):
+        r"""Create an empty plot. Add bubbles to it with :meth:`add`.
+
+        :param model: equation of state model used for the $\mu$ and shock surfaces.
+            If None, these surfaces are not plotted.
+        :param colorscale: Plotly color scale for the surfaces
+        """
         super().__init__()
         self.model: Model | None = model
         self.bubbles: list[Bubble] = []

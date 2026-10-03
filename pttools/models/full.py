@@ -26,11 +26,6 @@ class FullModel(Model):
     r"""Full thermodynamics-based equation of state.
 
     Temperature limits should be set in the ThermoModel.
-
-    :param thermo: model of the underlying thermodynamics.
-               Some models don't take this, but use their own approximations instead.
-    :param V_s: the constant term in the expression of $p$ in the symmetric phase
-    :param V_b: the constant term in the expression of $p$ in the broken phase
     """
 
     DEFAULT_LABEL = "Full model"
@@ -47,6 +42,18 @@ class FullModel(Model):
             name: str | None = None,
             label_latex: str | None = None,
             label_unicode: str | None = None):
+        r"""Initialize the model and find its critical temperature and minimum $\alpha_n$.
+
+        :param thermo: model of the underlying thermodynamics.
+            Some models don't take this, but use their own approximations instead.
+        :param V_s: $V_s$, the constant term in the expression of $p$ in the symmetric phase
+        :param V_b: $V_b$, the constant term in the expression of $p$ in the broken phase
+        :param T_crit_guess: starting guess for solving the critical temperature
+        :param allow_invalid: do not raise exceptions on errors in solving the critical temperature
+        :param name: custom name for the model
+        :param label_latex: custom LaTeX label for the model. Defaults to one based on that of the ThermoModel.
+        :param label_unicode: custom Unicode label for the model. Defaults to one based on that of the ThermoModel.
+        """
         logger.debug("Initialising FullModel.")
         if not label_latex:
             label_latex = f"Full ({thermo.label_latex})"
@@ -110,7 +117,8 @@ class FullModel(Model):
             + self.critical_temp_const
 
     def e_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
-        r"""Energy density $e(T,\phi)$, using :borsanyi_2016:`\ `, eq. S12
+        r"""Energy density $e(T,\phi)$, using :borsanyi_2016:`\ `, eq. S12.
+
         $$ e(T,\phi) = \frac{\pi^2}{30} g_e(T,\phi) T^4 $$
         :param temp: temperature $T$
         :param phase: phase $\phi$
@@ -119,27 +127,33 @@ class FullModel(Model):
         self.validate_temp(temp)
         return tp.cast(T, np.pi**2 / 30 * self.thermo.ge(temp, phase) * temp**4 + self.V(phase))
 
+    @tp.override
     def ge_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         return self.thermo.ge(temp, phase)
 
+    @tp.override
     def gp_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         return self.thermo.gp(temp, phase)
 
+    @tp.override
     def gs_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         return self.thermo.gs(temp, phase)
 
     def p_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
-        r"""Pressure $p(T,\phi)$
+        r"""Pressure $p(T,\phi)$.
+
         $$ p(T,\phi) = \frac{\pi^2}{90} g_p(T,\phi) T^4$$.
         """
         self.validate_temp(temp)
         return tp.cast(T, np.pi**2 / 90 * self.thermo.gp(temp, phase) * temp**4 - self.V(phase))
 
+    @tp.override
     def params_str(self) -> str:
         return self.label_unicode
 
     def s_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
-        r"""Entropy density $s(T,\phi), using :borsanyi_2016:`\ `, eq. S12$
+        r"""Entropy density $s(T,\phi)$, using :borsanyi_2016:`\ `, eq. S12.
+
         $$ s(T,\phi) = \frac{2\pi^2}{45} g_s(T) T^3$$
         :param temp: temperature $T$
         :param phase: phase $\phi$
@@ -158,7 +172,8 @@ class FullModel(Model):
                        + 10**splev(np.log10(w), self.temp_spline_s) * (1 - phase))
 
     def w[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
-        r"""Enthalpy density $w$
+        r"""Enthalpy density $w$.
+
         $$ w = e + p = Ts = T \frac{dp}{dT} = \frac{2\pi^2}{45} g_s T^4 $$
         For the steps please see :notes:`\ ` page 23 and eq. 7.1. and :borsanyi_2016: eq. S12.
 

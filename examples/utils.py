@@ -8,13 +8,14 @@ from matplotlib.figure import Figure
 
 import pttools.analysis.utils as plot_utils
 from pttools.analysis.utils import FIG_FORMATS
-from pttools.utils.docstrings import copy_docstrings
+from pttools.utils.docstrings import copy_docstring_dec
 
 #: Figures directory for the examples
 FIG_DIR: Path = Path(__file__).resolve().parent / "fig"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 
+@copy_docstring_dec(plot_utils.save_and_show_fig)
 def save_and_show_fig(
         fig: Figure,
         path: str | os.PathLike[str],
@@ -25,6 +26,7 @@ def save_and_show_fig(
     plot_utils.save_and_show_fig(fig=fig, path=path, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
 
 
+@copy_docstring_dec(plot_utils.save_and_show_figs)
 def save_and_show_figs(
         figs: dict[str, Figure],
         fig_dir: str | os.PathLike[str] | None = FIG_DIR,
@@ -34,6 +36,7 @@ def save_and_show_figs(
     plot_utils.save_and_show_figs(figs=figs, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
 
 
+@copy_docstring_dec(plot_utils.save_fig)
 def save_fig(
         fig: Figure,
         path: str | os.PathLike[str],
@@ -44,6 +47,7 @@ def save_fig(
     plot_utils.save_fig(fig=fig, path=path, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
 
 
+@copy_docstring_dec(plot_utils.save_figs)
 def save_figs(
         figs: dict[str, Figure],
         fig_dir: str | os.PathLike[str] | None = FIG_DIR,
@@ -52,10 +56,3 @@ def save_figs(
         **kwargs: tp.Any) -> None:
     plot_utils.save_figs(figs=figs, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
 
-
-copy_docstrings({
-    save_and_show_fig: plot_utils.save_and_show_fig,
-    save_and_show_figs: plot_utils.save_and_show_figs,
-    save_fig: plot_utils.save_fig,
-    save_figs: plot_utils.save_figs,
-})
