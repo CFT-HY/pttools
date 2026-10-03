@@ -279,13 +279,15 @@ class Spectrum(SSMSpectrum):
     def omgw0_h2(
             self,
             g0: float = const.G0,
-            gs0: float = const.GS0) -> th.FloatArr1D:
+            gs0: float = const.GS0,
+            om_gamma0_h2: float = const.OMEGA_PHOTON_H2) -> th.FloatArr1D:
         r"""Gravitational wave power spectrum today $\Omega_{\text{gw},0} h^2$.
 
         :param g0: $g_0$, degrees of freedom today for pressure
         :param gs0: $g_{s,0}$, degrees of freedom today for entropy
+        :param om_gamma0_h2: $\Omega_{\gamma,0} h^2$, the photon density parameter today, multiplied by $h^2$
         """
-        return self.F_gw0_h2(g0=g0, gs0=gs0) * self.pow_gw
+        return self.F_gw0_h2(g0=g0, gs0=gs0, om_gamma0_h2=om_gamma0_h2) * self.pow_gw
 
     def omgw0_h2_peak(
             self,
@@ -334,25 +336,50 @@ class Spectrum(SSMSpectrum):
 
     def snr(
             self,
+            # Arrays
+            noise: FloatArr1D | None = None,
+            f_noise: FloatArr1D | None = None,
+            # Scalars
+            g0: float = const.G0,
+            gs0: float = const.GS0,
             obs_time: float = LISA_OBS_TIME,
+            om_gamma0_h2: float = const.OMEGA_PHOTON_H2,
+            # Switches
             noise_eb: bool = True,
             noise_gb: bool = True,
-            noise_ins: bool = True) -> tuple[float, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D]:
-        """Signal-to-noise ratio for LISA, taking into account all noise sources."""
+            noise_ins: bool = True,
+        ) -> tuple[float, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D]:
+        r"""Signal-to-noise ratio for LISA, taking into account all noise sources.
+
+        :param noise: $\Omega_\text{noise} h^2$
+        :param f_noise: frequencies for the noise (assumed to be the same as for the signal, if not provided)
+        :param g0: $g_0$, degrees of freedom today for pressure
+        :param gs0: $g_{s,0}$, degrees of freedom today for entropy
+        :param obs_time: observation time (s)
+        :param om_gamma0_h2: $\Omega_{\gamma,0} h^2$, the photon density parameter today, multiplied by $h^2$
+        :param noise_eb: whether to generate extragalactic compact binary noise when noise is not provided
+        :param noise_gb: whether to generate galactic compact binary noise when noise is not provided
+        :param noise_ins: whether to generate instrument noise when noise is not provided
+        """
         f: FloatArr1D = self.f()
-        omgw0_h2 = self.omgw0_h2()
+        omgw0_h2 = self.omgw0_h2(g0=g0, gs0=gs0, om_gamma0_h2=om_gamma0_h2)
         snr, f_noise, noise = signal_to_noise_ratio(
             f=f, signal=omgw0_h2, obs_time=obs_time,
+            noise=noise, f_noise=f_noise,
             noise_eb=noise_eb, noise_gb=noise_gb, noise_ins=noise_ins
         )
         return snr, f, omgw0_h2, f_noise, noise
 
     def snr_ins(
             self,
-            obs_time: float = LISA_OBS_TIME) -> tuple[float, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D]:
+            g0: float = const.G0,
+            gs0: float = const.GS0,
+            obs_time: float = LISA_OBS_TIME,
+            om_gamma0_h2: float = const.OMEGA_PHOTON_H2
+        ) -> tuple[float, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D]:
         """Signal-to-noise ratio for LISA, taking into account only the instrument noise."""
         f: FloatArr1D = self.f()
-        omgw0_h2 = self.omgw0_h2()
+        omgw0_h2 = self.omgw0_h2(g0=g0, gs0=gs0, om_gamma0_h2=om_gamma0_h2)
         snr, f_noise, noise = signal_to_noise_ratio(
             f=f, signal=omgw0_h2, obs_time=obs_time,
             noise_eb=False, noise_gb=False, noise_ins=True

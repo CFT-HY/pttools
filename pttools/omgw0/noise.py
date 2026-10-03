@@ -84,7 +84,10 @@ def signal_to_noise_ratio(
     :param noise_ins: whether to generate instrument noise when noise is not provided
     :return: signal-to-noise ratio SNR, aka. $\rho$
     """
-    if f_noise is None:
+    if f.shape != signal.shape:
+        raise ValueError(f"f and signal must have the same shape. Got: f.shape={f.shape}, signal.shape={signal.shape}")
+
+    if f_noise is None or np.array_equal(f, f_noise):
         i_f_min = index_f_min(f, f_min)
         i_f_max = index_f_max(f, f_max)
         f2 = f[i_f_min:i_f_max]
@@ -99,8 +102,15 @@ def signal_to_noise_ratio(
         i_f_max = index_f_max(f_noise, f_max2)
 
         f2 = f_noise[i_f_min:i_f_max]
-        noise2 = omega_noise_h2(f=f2, eb=noise_eb, gb=noise_gb, ins=noise_ins) \
-            if noise is None else noise[i_f_min:i_f_max]
+        if noise is None:
+            noise2 = omega_noise_h2(f=f2, eb=noise_eb, gb=noise_gb, ins=noise_ins)
+        elif f_noise.shape != noise.shape:
+            raise ValueError(
+                "f_noise and noise must have the same shape. "
+                f"Got: f_noise.shape={f_noise.shape}, noise.shape={noise.shape}"
+            )
+        else:
+            noise2 = noise[i_f_min:i_f_max]
         # The NumPy stubs do not know that the output of np.interp() is an array when the input is an array.
         signal = 10.**np.interp(np.log10(f2), np.log10(f), np.log10(signal))  # pyrefly: ignore[bad-assignment]
 
