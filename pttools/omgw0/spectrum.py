@@ -13,7 +13,7 @@ from numpy.typing import NDArray
 from pttools.bubble import Bubble
 from pttools.omgw0 import const, freq
 from pttools.omgw0.const import H2, LISA_OBS_TIME, OMEGA_PHOTON_H2
-from pttools.omgw0.export import SPECTRUM_F_FIELDS, SPECTRUM_FIELDS, SPECTRUM_Y_FIELDS
+from pttools.omgw0.export import SPECTRUM_FIELDS, SPECTRUM_FIELDS_F, SPECTRUM_FIELDS_Y
 from pttools.omgw0.factors import F_gw0_h2
 from pttools.omgw0.noise import omega_ins_h2, omega_noise_h2, signal_to_noise_ratio
 from pttools.ssm.calculators import trapezoid_loglog
@@ -43,12 +43,12 @@ class Spectrum(SSMSpectrum):
     FIELDS: tp.ClassVar[Fields] = SPECTRUM_FIELDS
     #: The exportable fields of the spectra that have been given the $y$ array.
     #: For these, $y$ is shared by the spectra of a file.
-    #: This is an alias of :py:attr:`FIELDS` for consistency with :py:attr:`F_FIELDS`.
-    #: Subclasses that change :py:attr:`FIELDS` should also change this and :py:attr:`F_FIELDS`.
-    Y_FIELDS: tp.ClassVar[Fields] = SPECTRUM_Y_FIELDS
+    #: This is an alias of :py:attr:`FIELDS` for consistency with :py:attr:`FIELDS_F`.
+    #: Subclasses that change :py:attr:`FIELDS` should also change this and :py:attr:`FIELDS_F`.
+    FIELDS_Y: tp.ClassVar[Fields] = SPECTRUM_FIELDS_Y
     #: The exportable fields of the spectra that have been given the frequencies $f$ instead of $y$.
     #: For these, $f$ is shared by the spectra of a file instead of $y$.
-    F_FIELDS: tp.ClassVar[Fields] = SPECTRUM_F_FIELDS
+    FIELDS_F: tp.ClassVar[Fields] = SPECTRUM_FIELDS_F
 
     def __init__(
             self,

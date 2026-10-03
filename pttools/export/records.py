@@ -87,17 +87,17 @@ def table_fields(cls: type[Extractable], table: Table) -> Fields:
 
     :param cls: the class of the objects
     :param table: the table
-    :return: :py:attr:`pttools.omgw0.spectrum.Spectrum.F_FIELDS` for :py:attr:`Table.SPECTRA_F`,
-        :py:attr:`pttools.omgw0.spectrum.Spectrum.Y_FIELDS` for :py:attr:`Table.SPECTRA_Y`,
+    :return: :py:attr:`pttools.omgw0.spectrum.Spectrum.FIELDS_F` for :py:attr:`Table.SPECTRA_F`,
+        :py:attr:`pttools.omgw0.spectrum.Spectrum.FIELDS_Y` for :py:attr:`Table.SPECTRA_Y`,
         and the :py:attr:`~pttools.utils.fields.Extractable.FIELDS` of the class otherwise,
         e.g. for :py:class:`pttools.ssm.spectrum.SSMSpectrum`, which supports only the $y$ array
     """
     if table == Table.SPECTRA_F:
         if not issubclass(cls, Spectrum):
             raise TypeError(f"Only spectra of the type {class_name(Spectrum)} can be in the table {table}.")
-        return cls.F_FIELDS
+        return cls.FIELDS_F
     if table == Table.SPECTRA_Y and issubclass(cls, Spectrum):
-        return cls.Y_FIELDS
+        return cls.FIELDS_Y
     return cls.FIELDS
 
 

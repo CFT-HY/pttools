@@ -8,7 +8,7 @@ import numpy as np
 
 from pttools.bubble import BUBBLE_FIELDS, Bubble
 from pttools.models import BagModel, ConstCSModel
-from pttools.omgw0 import SPECTRUM_F_FIELDS, SPECTRUM_FIELDS, SPECTRUM_Y_FIELDS, Spectrum
+from pttools.omgw0 import SPECTRUM_FIELDS, SPECTRUM_FIELDS_F, SPECTRUM_FIELDS_Y, Spectrum
 from pttools.ssm import SSM_SPECTRUM_FIELDS
 from pttools.utils.fields import Extractable, Field, Fields, FieldShape, FieldType, Preset, describe, docstring_summary
 
@@ -177,24 +177,24 @@ class FieldDefinitionsTest(unittest.TestCase):
         names = [field.name for field in SPECTRUM_FIELDS.preset(Preset.MINIMAL)]
         self.assertEqual(set(names), {*SPECTRUM_MINIMAL_PARAMS, "y", "omgw0_h2"})
 
-    def test_spectrum_f_fields(self) -> None:
-        names = [field.name for field in SPECTRUM_F_FIELDS.preset(Preset.MINIMAL)]
+    def test_spectrum_fields_f(self) -> None:
+        names = [field.name for field in SPECTRUM_FIELDS_F.preset(Preset.MINIMAL)]
         self.assertEqual(set(names), {*SPECTRUM_MINIMAL_PARAMS, "f", "omgw0_h2"})
-        init_names = [field.name for field in SPECTRUM_F_FIELDS.preset(Preset.INIT)]
+        init_names = [field.name for field in SPECTRUM_FIELDS_F.preset(Preset.INIT)]
         self.assertIn("f", init_names)
         self.assertNotIn("y", init_names)
-        self.assertEqual(SPECTRUM_F_FIELDS["f"].shape, FieldShape.GRID)
-        self.assertEqual(SPECTRUM_F_FIELDS["y"].shape, FieldShape.ARRAY)
-        self.assertEqual(SPECTRUM_F_FIELDS["y"].presets, {Preset.FULL})
-        self.assertEqual(SPECTRUM_F_FIELDS["omgw0_h2"].axis, "f")
+        self.assertEqual(SPECTRUM_FIELDS_F["f"].shape, FieldShape.GRID)
+        self.assertEqual(SPECTRUM_FIELDS_F["y"].shape, FieldShape.ARRAY)
+        self.assertEqual(SPECTRUM_FIELDS_F["y"].presets, {Preset.FULL})
+        self.assertEqual(SPECTRUM_FIELDS_F["omgw0_h2"].axis, "f")
         # The original fields are not affected.
-        self.assertEqual(SPECTRUM_Y_FIELDS["y"].shape, FieldShape.GRID)
-        self.assertEqual(SPECTRUM_Y_FIELDS["omgw0_h2"].axis, "y")
+        self.assertEqual(SPECTRUM_FIELDS_Y["y"].shape, FieldShape.GRID)
+        self.assertEqual(SPECTRUM_FIELDS_Y["omgw0_h2"].axis, "y")
 
-    def test_spectrum_y_fields_alias(self) -> None:
-        self.assertIs(SPECTRUM_Y_FIELDS, SPECTRUM_FIELDS)
-        self.assertIs(Spectrum.Y_FIELDS, Spectrum.FIELDS)
-        self.assertIs(Spectrum.F_FIELDS, SPECTRUM_F_FIELDS)
+    def test_spectrum_fields_y_alias(self) -> None:
+        self.assertIs(SPECTRUM_FIELDS_Y, SPECTRUM_FIELDS)
+        self.assertIs(Spectrum.FIELDS_Y, Spectrum.FIELDS)
+        self.assertIs(Spectrum.FIELDS_F, SPECTRUM_FIELDS_F)
 
     def test_ssm_spectrum_minimal(self) -> None:
         names = [field.name for field in SSM_SPECTRUM_FIELDS.preset(Preset.MINIMAL)]
