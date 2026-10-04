@@ -106,44 +106,42 @@ def delta_n[T: FloatOrArr](model: "Model", wn: T) -> T:
 
 @njit(cache=True)
 def kappa_a[T: FloatOrArr](v_wall: T, alpha_n: T | float) -> T:
-    r"""Approximation for $\kappa_a$.
+    r"""$\kappa_a$, approximation of $\kappa$ for small velocities $(v_{\text{wall}} \ll c_s)$.
 
     $$\kappa_A \approx v_{\text{wall}}^\frac{6}{5} \frac{6.9 \alpha_n}{1.36 - 0.037 \sqrt{\alpha_n} + \alpha_n}$$
     :espinosa_2010:`\ `, eq. 95
-    For small wall speeds xi_w << cs
     """
     return v_wall**(6/5) * 6.9 * alpha_n / (1.36 - 0.037 * np.sqrt(alpha_n) + alpha_n)  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
 def kappa_b[T: FloatOrArr](alpha_n: T) -> T:
-    r"""Approximation for $\kappa_b$.
+    r"""$\kappa_b$, approximation of $\kappa$ for $(v_{\text{wall}} = c_s)$.
+
+    This corresponds to the transition from subsonic to supersonic deflagrations.
 
     $$\kappa_B \approx \frac{\alpha_n^\frac{2}{5}}{0.017 + (0.997 + \alpha_n)^\frac{2}{5}}$$
-    :espinosa_2010:`\ `, eq. 96
-    For the transition from subsonic to supersonic deflagrations, xi_w = cs
+    :espinosa_2010:`\ `, eq. 96.
     """
     return alpha_n**(2/5) / (0.017 + (0.997 + alpha_n)**(2/5))  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
 def kappa_c[T: FloatOrArr](alpha_n: T) -> T:
-    r"""Approximation for $\kappa_c$.
+    r"""$\kappa_c$, approximation of $\kappa$ for Chapman-Jouguet detonations $(v_{\text{wall}} = v_{CJ})$.
 
     $$\kappa_C \approx \frac{\sqrt{\alpha_n}}{0.135 + \sqrt{0.98 + \alpha_n}}$$
-    :espinosa_2010:`\ `, eq. 97
-    For Jouguet detonations xi_w = xi_j
+    :espinosa_2010:`\ `, eq. 97.
     """
     return np.sqrt(alpha_n) / (0.135 + np.sqrt(0.98 + alpha_n))  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
 def kappa_d[T: FloatOrArr](alpha_n: T) -> T:
-    r"""Approximation for $\kappa_d$.
+    r"""$\kappa_d$, approximation of $\kappa$ for very large wall velocities $(v_{\text{wall}} \rightarrow 1)$.
 
     $$\kappa_D \approx \frac{\alpha_n}{0.73 + 0.083 \sqrt{\alpha_n} + \alpha_n}$$
-    :espinosa_2010:`\ `, eq. 98
-    $\xi_w$ => 1 v. large wall speed
+    :espinosa_2010:`\ `, eq. 98.
     """
     return alpha_n / (0.73 + 0.083 * np.sqrt(alpha_n) + alpha_n)  # pyrefly: ignore[bad-return]
 
@@ -155,12 +153,13 @@ def kappa_detonation_approx[T: FloatOrArr](
 
     $$
     \kappa(v_{\text{wall}} > v_{CJ}) \approx \frac{
-    (v_{CJ} - 1)^3 * v_{CJ}^{5/2} * v_{\text{wall}}^{-5/2} * \kappa_C * \kappa_D
+    (v_{CJ} - 1)^3 v_{CJ}^{5/2} v_{\text{wall}}^{-5/2} \kappa_C \kappa_D
     }{
-    ((v_{CJ} - 1)^3 - (v_{\text{wall}} - 1)^3)) * v_{CJ}^{5/2} + \kappa_C + (v_{\text{wall}} - 1)^3 * \kappa_D
+    \left[ (v_{CJ} - 1)^3 - (v_{\text{wall}} - 1)^3 \right] v_{CJ}^{5/2} \kappa_C + (v_{\text{wall}} - 1)^3 \kappa_D
     }
     $$
     :espinosa_2010:`\ `, eq. 100.
+    This reduces to $\kappa_C$ at $v_{\text{wall}} = v_{CJ}$ and to $\kappa_D$ at $v_{\text{wall}} = 1$.
     """
     if v_cj is None:
         v_cj = v_chapman_jouguet_bag(alpha_plus=alpha_n)

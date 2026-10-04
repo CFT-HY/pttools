@@ -657,7 +657,8 @@ class Bubble(BaseBubble):
         r"""$\kappa_\text{Giese}$, kinetic efficiency factor using the definition of Giese et al.
 
         $$\kappa_\text{Giese} = \frac{4 K}{3 \alpha_{\bar{\theta}_n} w_n},$$
-        where $K$ is the bubble volume averaged kinetic energy density, :giese_2020:`\ `.
+        where $K$ is the bubble volume averaged kinetic energy density,
+        :giese_2020:`\ ` eq. 12.
         """
         if not self.solved:
             raise NotYetSolvedError
