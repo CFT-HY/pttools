@@ -21,7 +21,7 @@ import numpy as np
 from pttools.bubble.bubble import Bubble
 from pttools.export.checksum import verify_checksum
 from pttools.export.exporter import FORMAT_NAME, FORMAT_VERSION, ExportFormatError, offsets_name, parent_column
-from pttools.export.records import Table, find_class, table_fields
+from pttools.export.records import Table, TableName, find_class, table_fields
 from pttools.models.model import Model
 from pttools.omgw0.spectrum import Spectrum
 from pttools.ssm.spectrum import SSMSpectrum
@@ -151,21 +151,26 @@ class Importer:
         """Attributes of the file, e.g. the PTtools version used for creating it."""
         return {key: _to_python(value) for key, value in self._file.attrs.items()}
 
-    def _group(self, table: Table | str) -> h5py.Group:
+    def _group(self, table: TableName) -> h5py.Group:
         """The HDF5 group of the given table.
 
         :raises KeyError: if the file does not have the table, e.g. if it was created before the table was added
         """
-        name = Table(table).value
+        name = str(table)
         if name not in self._file:
-            raise KeyError(f"The file has no table \"{name}\".")
+            raise KeyError(f"The file has no table \"{name}\". Available: {', '.join(self.tables)}")
         return self._file[name]
 
-    def _has_table(self, table: Table | str) -> bool:
+    def _has_table(self, table: TableName) -> bool:
         """Whether the file has the given table."""
-        return Table(table).value in self._file
+        return str(table) in self._file
 
-    def n_rows(self, table: Table | str) -> int:
+    @property
+    def tables(self) -> tuple[str, ...]:
+        """Names of the tables in the file, including the tables of other classes than the built-in ones."""
+        return tuple(str(name) for name in self._file)
+
+    def n_rows(self, table: TableName) -> int:
         """Number of rows in the given table."""
         if not self._has_table(table):
             return 0
@@ -191,21 +196,21 @@ class Importer:
         """Number of spectra that share $f$."""
         return self.n_rows(Table.SPECTRA_F)
 
-    def class_name(self, table: Table | str) -> str | None:
+    def class_name(self, table: TableName) -> str | None:
         """Fully qualified name of the class of the bubbles or spectra."""
         if not self._has_table(table):
             return None
         cls = self._group(table).attrs.get("class")
         return None if cls is None else str(cls)
 
-    def fields(self, table: Table | str) -> tuple[str, ...]:
+    def fields(self, table: TableName) -> tuple[str, ...]:
         """Names of the fields of the given table."""
         if not self._has_table(table):
             return ()
         group = self._group(table)
         return tuple(str(name) for name in group.attrs["fields"]) if "fields" in group.attrs else ()
 
-    def field_info(self, table: Table | str, name: str) -> dict[str, str]:
+    def field_info(self, table: TableName, name: str) -> dict[str, str]:
         """Metadata of a field, i.e. its kind, type, axis and description."""
         return {key: str(_to_python(value)) for key, value in self._group(table)[name].attrs.items()}
 
@@ -267,7 +272,7 @@ class Importer:
         unique, inverse = np.unique(indices, return_inverse=True)
         return dset[unique][inverse]
 
-    def read(self, table: Table | str, name: str, rows: Rows = None) -> tp.Any:
+    def read(self, table: TableName, name: str, rows: Rows = None) -> tp.Any:
         """Read a field or a structural column of a table.
 
         - Scalar fields are returned as 1D arrays (or as a single value for a single row).
@@ -327,7 +332,7 @@ class Importer:
 
     def read_scalars(
             self,
-            table: Table | str,
+            table: TableName,
             names: Iterable[str] | None = None,
             rows: Rows = None) -> dict[str, np.ndarray]:
         """Read the scalar fields of a table.
@@ -348,11 +353,11 @@ class Importer:
         """The stored fields of a model."""
         return json.loads(self.read(Table.MODELS, "params", index))
 
-    def parent_indices(self, table: Table | str, rows: Rows = None) -> np.ndarray:
+    def parent_indices(self, table: TableName, rows: Rows = None) -> np.ndarray:
         """Row indices of the models of bubbles or of the bubbles of spectra."""
-        column = parent_column(Table(table))
+        column = parent_column(table)
         if column is None:
-            raise ValueError("Models have no parents.")
+            raise ValueError(f"The rows of the table \"{table}\" have no parents.")
         return self.read(table, column, rows)
 
     # -----
@@ -414,7 +419,7 @@ class Importer:
             self,
             index: int,
             compute: bool = True,
-            table: Table | str = Table.SPECTRA_Y,
+            table: TableName = Table.SPECTRA_Y,
             **kwargs: tp.Any) -> SSMSpectrum:
         """Recreate a spectrum.
 
@@ -455,7 +460,7 @@ class Importer:
             self,
             rows: Rows = None,
             compute: bool = True,
-            table: Table | str = Table.SPECTRA_Y,
+            table: TableName = Table.SPECTRA_Y,
             **kwargs: tp.Any) -> list[SSMSpectrum]:
         """Recreate multiple spectra, see :py:meth:`load_spectrum`."""
         return [

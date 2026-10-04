@@ -32,6 +32,17 @@ Therefore, a file can contain both a set of spectra with the same $y$ and a set 
 and the arrays of these sets can have different lengths.
 The bubbles and models are shared by both sets.
 
+The objects of other :py:class:`~pttools.utils.fields.Extractable` classes,
+such as the spectra of other libraries that use the same file format,
+are stored in groups named by their :py:attr:`~pttools.utils.fields.Extractable.TABLE`.
+These groups have the same layout as the groups of the spectra, but without the parent column.
+
+.. code-block:: text
+
+    /TABLE/id                   (N_TABLE,)
+    /TABLE/omgw0_h2             (N_TABLE, n_f)         an array field
+    /TABLE/f                    (n_f,)                 a grid field
+
 The model parameters are stored as JSON, since different model classes have different parameters.
 The groups have the attributes ``n_rows`` (the number of committed rows) and ``fields`` (the names of the fields).
 The groups of the bubbles and spectra also have the attribute ``class``,
@@ -66,10 +77,21 @@ import numpy as np
 
 from pttools.bubble.bubble import Bubble
 from pttools.export.checksum import checksum_path, write_checksum
-from pttools.export.records import Extractor, Record, Table, class_name, find_class, table_base_class, table_of
-from pttools.models.base import BaseModel
+from pttools.export.records import (
+    Extractor,
+    Record,
+    Table,
+    TableName,
+    class_name,
+    find_class,
+    is_builtin_table,
+    object_id,
+    table_base_class,
+    table_of,
+    validate_table_name,
+)
 from pttools.ssm.spectrum import SSMSpectrum
-from pttools.utils.fields import Field, FieldShape, FieldSpec, FieldType, Preset, extract
+from pttools.utils.fields import Extractable, Field, FieldShape, FieldSpec, FieldType, Preset, extract
 
 __all__ = [
     "FORMAT_NAME",
@@ -113,9 +135,12 @@ def offsets_name(axis: str) -> str:
     return f"{axis}_offsets"
 
 
-def parent_column(table: Table) -> str | None:
-    """Name of the dataset that contains the row indices of the parents, if any."""
-    return _PARENT_COLUMNS.get(table)
+def parent_column(table: TableName) -> str | None:
+    """Name of the dataset that contains the row indices of the parents, if any.
+
+    The tables of other classes than the built-in ones have no parents.
+    """
+    return _PARENT_COLUMNS.get(Table(table)) if is_builtin_table(table) else None
 
 
 def _pttools_version() -> str:
@@ -244,9 +269,14 @@ class _TableWriter:
     :param compression_opts: compression level for gzip
     """
 
-    def __init__(self, group: h5py.Group, table: Table, compression: str | None, compression_opts: int | None) -> None:
+    def __init__(
+            self,
+            group: h5py.Group,
+            table: TableName,
+            compression: str | None,
+            compression_opts: int | None) -> None:
         self.group: h5py.Group = group
-        self.table: Table = table
+        self.table: TableName = table
         self.parent_column: str | None = parent_column(table)
         self.compression: str | None = compression
         self.compression_opts: int | None = compression_opts
@@ -548,6 +578,10 @@ class Exporter:
     :param spectrum_fields: the fields of the spectra
     :param importable: whether to include the fields of the :py:attr:`~pttools.utils.fields.Preset.INIT` preset,
         which are needed for recreating the objects with :py:class:`pttools.export.importer.Importer`
+    :param other_fields: the fields of the tables of other classes by the name of the table,
+        see :py:attr:`pttools.utils.fields.Extractable.TABLE`.
+        The tables that are not given here have the fields of the :py:attr:`~pttools.utils.fields.Preset.MINIMAL`
+        preset.
     :param compression: HDF5 compression filter, e.g. "gzip", "lzf" or None
     :param compression_opts: compression level for gzip
     :param buffer_size: number of rows of a table to buffer in memory before writing
@@ -565,7 +599,8 @@ class Exporter:
             compression: str | None = "gzip",
             compression_opts: int | None = 4,
             buffer_size: int = 256,
-            checksum: bool = True) -> None:
+            checksum: bool = True,
+            other_fields: tp.Mapping[str, FieldSpec] | None = None) -> None:
         """Open the HDF5 file and initialize its tables.
 
         Any existing checksum file is removed, as it would become invalid when the file is modified.
@@ -587,9 +622,12 @@ class Exporter:
             model_fields=model_fields,
             bubble_fields=bubble_fields,
             spectrum_fields=spectrum_fields,
-            importable=importable
+            importable=importable,
+            other_fields=other_fields
         )
         self.buffer_size: int = buffer_size
+        self.compression: str | None = compression
+        self.compression_opts: int | None = compression_opts
         self.checksum: bool = checksum
 
         if mode == "x" and self.path.exists():
@@ -604,13 +642,12 @@ class Exporter:
         self._classes: dict[str, type] = {}
         try:
             self._init_file()
-            self._tables: dict[Table, _TableWriter] = {
-                table: _TableWriter(
-                    self._file.require_group(table.value), table,
-                    compression=compression, compression_opts=compression_opts
-                )
-                for table in Table
-            }
+            # The built-in tables come first, so that the parents are written before their children.
+            self._tables: dict[TableName, _TableWriter] = {table: self._create_writer(table) for table in Table}
+            # The tables of other classes are created when they're needed, except those that are already in the file.
+            for name in self._file:
+                if not is_builtin_table(name):
+                    self._tables[validate_table_name(name)] = self._create_writer(name)
         except Exception:
             self._file.close()
             self._closed = True
@@ -639,6 +676,29 @@ class Exporter:
                 f"Cannot append to a file of format version {attrs['format_version']}. "
                 f"This version of PTtools writes version {FORMAT_VERSION}."
             )
+
+    def _create_writer(self, table: TableName) -> _TableWriter:
+        """Create the writer of a table, and the HDF5 group of the table if it does not exist yet."""
+        return _TableWriter(
+            self._file.require_group(str(table)), table,
+            compression=self.compression, compression_opts=self.compression_opts
+        )
+
+    def _row_index(self, table: TableName, id_: str) -> int | None:
+        """Row index of an object that has already been added, or None if it has not been added.
+
+        This does not create the table, so that no empty tables are left in the file
+        if adding the object fails before its data is buffered.
+        """
+        writer = self._tables.get(table)
+        return None if writer is None else writer.index.get(id_)
+
+    def _writer(self, table: TableName) -> _TableWriter:
+        """The writer of the given table, which is created if it does not exist yet."""
+        writer = self._tables.get(table)
+        if writer is None:
+            writer = self._tables[table] = self._create_writer(validate_table_name(str(table)))
+        return writer
 
     # -----
     # Context manager
@@ -681,21 +741,33 @@ class Exporter:
         """Number of spectra that share $f$, including the buffered ones."""
         return self._tables[Table.SPECTRA_F].n_total
 
-    def n_rows(self, table: Table | str) -> int:
-        """Number of rows in the given table, including the buffered ones."""
-        return self._tables[Table(table)].n_total
+    @property
+    def tables(self) -> tuple[str, ...]:
+        """Names of the tables, including the built-in tables and the tables of other classes."""
+        return tuple(str(table) for table in self._tables)
+
+    def n_rows(self, table: TableName) -> int:
+        """Number of rows in the given table, including the buffered ones.
+
+        :param table: the table
+        :return: the number of rows, or 0 if the table does not exist
+        """
+        writer = self._tables.get(table)
+        return 0 if writer is None else writer.n_total
 
     # -----
     # Adding data
     # -----
 
-    def add(self, obj: BaseModel | Bubble | SSMSpectrum | Record) -> int:
-        """Add a model, a bubble, a spectrum or a record to the file.
+    def add(self, obj: Extractable | Record) -> int:
+        """Add a model, a bubble, a spectrum, an object of another class that has a table, or a record to the file.
 
         The bubble and the model of a spectrum, and the model of a bubble, are added automatically.
         Objects that have already been added are skipped.
 
-        :param obj: the object to add
+        :param obj: the object to add.
+            Objects of other classes than the models, bubbles and spectra of PTtools must have a table,
+            see :py:attr:`pttools.utils.fields.Extractable.TABLE`.
         :return: the row index of the object in its table
         """
         if self._closed:
@@ -707,7 +779,7 @@ class Exporter:
             self.flush()
         return index
 
-    def add_many(self, objs: Iterable[BaseModel | Bubble | SSMSpectrum | Record]) -> list[int]:
+    def add_many(self, objs: Iterable[Extractable | Record]) -> list[int]:
         """Add multiple objects or records to the file, see :py:meth:`add`.
 
         :param objs: the objects to add
@@ -715,7 +787,7 @@ class Exporter:
         """
         return [self.add(obj) for obj in objs]
 
-    def _add_object(self, obj: BaseModel | Bubble | SSMSpectrum) -> int:
+    def _add_object(self, obj: Extractable) -> int:
         """Add an object and its parents, unless they have already been added.
 
         The fields are extracted only for the objects that have not been added yet.
@@ -724,43 +796,53 @@ class Exporter:
         :return: the row index of the object in its table
         """
         table = table_of(obj)
-        writer = self._tables[table]
-        if obj.id in writer.index:
-            return writer.index[obj.id]
+        obj_id = object_id(obj)
+        index = self._row_index(table, obj_id)
+        if index is not None:
+            return index
         parent = -1
         if isinstance(obj, SSMSpectrum):
             parent = self._add_object(obj.bubble)
         elif isinstance(obj, Bubble):
             parent = self._add_object(obj.model)
         fields = self.extractor.fields(type(obj), table)
-        return self._append(writer, obj.id, class_name(type(obj)), extract(obj, fields), parent, fields)
+        data = extract(obj, fields)
+        return self._append(self._writer(table), obj_id, class_name(type(obj)), data, parent, fields)
 
     def _add_record(self, record: Record) -> int:
         """Add a record and its parent records, unless they have already been added.
 
         :param record: the record to add
         :return: the row index of the object in its table
-        :raises ValueError: if the record has no parent when it should, or if its fields do not match
+        :raises ValueError: if the record has no parent when it should, or has one when it should not,
+            if its class does not belong to its table, or if its fields do not match
         """
-        writer = self._tables[record.table]
-        if record.id in writer.index:
-            return writer.index[record.id]
+        index = self._row_index(record.table, object_id(record))
+        if index is not None:
+            return index
         parent = -1
-        if record.table != Table.MODELS:
+        if parent_column(record.table) is not None:
             if record.parent is None:
                 raise ValueError(f"The record of {record.cls} must have a parent record.")
             parent = self._add_record(record.parent)
+        elif record.parent is not None:
+            raise ValueError(f"The record of {record.cls} in the table \"{record.table}\" cannot have a parent record.")
         cls = self._classes.get(record.cls)
         if cls is None:
             cls = find_class(table_base_class(record.table), record.cls)
             self._classes[record.cls] = cls
+        if not is_builtin_table(record.table) and record.table != cls.TABLE:
+            raise ValueError(
+                f"The record of {record.cls} is for the table \"{record.table}\", "
+                f"but the table of the class is \"{cls.TABLE}\"."
+            )
         fields = self.extractor.fields(cls, record.table)
         if set(record.data) != {field.name for field in fields}:
             raise ValueError(
                 f"The fields of the record of {record.cls} do not match those of the exporter. "
                 "Please create the records with Exporter.extractor."
             )
-        return self._append(writer, record.id, record.cls, record.data, parent, fields)
+        return self._append(self._writer(record.table), record.id, record.cls, record.data, parent, fields)
 
     def _append(
             self,
@@ -798,10 +880,11 @@ class Exporter:
             return
         try:
             # The parents are written before the children, so that the children never refer to missing rows.
-            for table in Table:
-                self._tables[table].write()
-            for table in Table:
-                self._tables[table].commit()
+            # The built-in tables are the first in the dictionary, and are therefore written in the order of Table.
+            for writer in self._tables.values():
+                writer.write()
+            for writer in self._tables.values():
+                writer.commit()
             self._file.flush()
         except Exception:
             # Retrying could misalign the datasets.
@@ -826,5 +909,8 @@ class Exporter:
         logger.info(
             "Exported %d spectra with the same y, %d spectra with the same f, %d bubbles and %d models to %s",
             self.n_spectra_y, self.n_spectra_f, self.n_bubbles, self.n_models, self.path)
+        for table, writer in self._tables.items():
+            if not is_builtin_table(table):
+                logger.info("Exported %d rows of the table \"%s\" to %s", writer.n_total, table, self.path)
         if self.checksum:
             write_checksum(self.path)

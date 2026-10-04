@@ -286,6 +286,14 @@ class Extractable:
     #: The fields that can be extracted from the objects of this class.
     #: Subclasses can extend this with :py:class:`Fields`.
     FIELDS: tp.ClassVar[Fields] = Fields()
+    #: Name of the table of the objects of this class in the files written by
+    #: :py:class:`pttools.export.exporter.Exporter`.
+    #: This is needed only for the classes outside PTtools, e.g. the spectra of other libraries,
+    #: as the tables of the models, bubbles and spectra of PTtools are built in,
+    #: see :py:class:`pttools.export.records.Table`.
+    #: The objects of such classes must also have the attribute ``id``,
+    #: which is a unique identifier of at most 32 ASCII characters, e.g. ``uuid.uuid4().hex``.
+    TABLE: tp.ClassVar[str | None] = None
 
     def extract(self, fields: FieldSpec = Preset.MINIMAL) -> dict[str, tp.Any]:
         """Extract the given fields as a dictionary.

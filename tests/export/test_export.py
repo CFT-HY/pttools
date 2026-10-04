@@ -6,6 +6,7 @@ import shutil
 import typing as tp
 import unittest
 from unittest import mock
+import uuid
 
 import h5py
 import numpy as np
@@ -15,11 +16,18 @@ from pttools.export import (
     ChecksumError,
     Exporter,
     ExportFormatError,
+    Extractable,
     Extractor,
+    Field,
+    Fields,
+    FieldShape,
+    FieldType,
     Importer,
     Preset,
+    Record,
     Table,
     checksum_path,
+    validate_table_name,
     verify_checksum,
 )
 from pttools.models import BagModel, ConstCSModel
@@ -36,6 +44,46 @@ Y_SPECTRUM_KWARGS: dict[str, tp.Any] = {"y": np.logspace(-1, 3, 100), "nT": 1000
 #: Low-accuracy settings for the spectra that are given the frequencies.
 #: The length of f differs from that of y to test that the two sets of spectra can coexist in a file.
 F_SPECTRUM_KWARGS: dict[str, tp.Any] = {"f": np.logspace(-5, -1, 80), "nT": 1000, "n_z_lookup": 1000}
+
+
+#: Table of :py:class:`OtherSpectrum`
+OTHER_TABLE: str = "other_spectra"
+
+
+class OtherSpectrum(Extractable):
+    """A spectrum of another library, which is exported to a table of its own."""
+
+    TABLE = OTHER_TABLE
+    FIELDS = Fields(
+        Field("amplitude", presets={Preset.MINIMAL, Preset.INIT}, description="amplitude of the spectrum"),
+        Field("label", type=FieldType.STR, presets={Preset.MINIMAL}, description="label of the spectrum"),
+        Field("f", shape=FieldShape.GRID, axis="f", presets={Preset.MINIMAL, Preset.INIT}, description="frequencies"),
+        Field(
+            "omgw0_h2", call=True, shape=FieldShape.ARRAY, axis="f", presets={Preset.MINIMAL},
+            description=r"$\Omega_{\text{gw},0} h^2$"),
+        Field("peak", call=True, presets={Preset.FULL}, description="peak of the spectrum"),
+    )
+
+    def __init__(self, amplitude: float, f: np.ndarray, label: str = "") -> None:
+        """Create the spectrum."""
+        self.id: str = uuid.uuid4().hex
+        self.amplitude: float = amplitude
+        self.f: np.ndarray = f
+        self.label: str = label
+
+    def omgw0_h2(self) -> np.ndarray:
+        r"""$\Omega_{\text{gw},0} h^2$ of a broken power law."""
+        return self.amplitude * self.f**3 / (1 + self.f**4)
+
+    def peak(self) -> float:
+        """Peak of the spectrum."""
+        return float(np.max(self.omgw0_h2()))
+
+
+class InvalidTableSpectrum(OtherSpectrum):
+    """A spectrum whose table name is reserved for a built-in table."""
+
+    TABLE = "models"
 
 
 def new_path(name: str) -> Path:
@@ -416,6 +464,110 @@ class ExportTest(unittest.TestCase):
         self.assertIs(type(loaded), SSMSpectrum)
         np.testing.assert_allclose(loaded.pow_gw, spectrum.pow_gw, rtol=1e-12)
         np.testing.assert_array_equal(bubble.v, self.bubbles[1].v)
+
+
+class OtherTableTest(unittest.TestCase):
+    """Tests for exporting the objects of other classes to tables of their own."""
+
+    f: np.ndarray
+    spectra: list[OtherSpectrum]
+    bubble: Bubble
+
+    @classmethod
+    @tp.override
+    def setUpClass(cls) -> None:
+        cls.f = np.logspace(-3, 1, 50)
+        cls.spectra = [OtherSpectrum(amplitude, cls.f, label=f"A={amplitude}") for amplitude in (1., 2., 3.)]
+        cls.bubble = Bubble(BagModel(a_s=1.1, a_b=1, V_s=1), v_wall=0.5, alpha_n=0.1)
+
+    def test_export(self) -> None:
+        """Test that the objects of other classes are stored in their own table alongside the built-in tables."""
+        path = new_path("other")
+        with Exporter(path) as exporter:
+            exporter.add_many(self.spectra[:2])
+            exporter.add(self.bubble)
+            # Records that have been sent between processes should not be duplicated.
+            exporter.add(pickle.loads(pickle.dumps(exporter.extractor.extract(self.spectra[1]))))
+            exporter.add(pickle.loads(pickle.dumps(exporter.extractor.extract(self.spectra[2]))))
+            self.assertEqual(exporter.n_rows(OTHER_TABLE), 3)
+            self.assertIn(OTHER_TABLE, exporter.tables)
+        self.assertTrue(verify_checksum(path))
+        with Importer(path) as importer:
+            self.assertIn(OTHER_TABLE, importer.tables)
+            self.assertEqual(importer.n_rows(OTHER_TABLE), 3)
+            self.assertEqual(importer.n_bubbles, 1)
+            self.assertEqual(importer.class_name(OTHER_TABLE), f"{__name__}.OtherSpectrum")
+            self.assertEqual(set(importer.fields(OTHER_TABLE)), {"amplitude", "label", "f", "omgw0_h2"})
+            np.testing.assert_array_equal(importer.read(OTHER_TABLE, "f"), self.f)
+            np.testing.assert_array_equal(importer.read(OTHER_TABLE, "amplitude"), [1, 2, 3])
+            np.testing.assert_array_equal(importer.read(OTHER_TABLE, "label"), ["A=1.0", "A=2.0", "A=3.0"])
+            omgw0_h2 = importer.read(OTHER_TABLE, "omgw0_h2")
+            for i, spectrum in enumerate(self.spectra):
+                np.testing.assert_array_equal(omgw0_h2[i], spectrum.omgw0_h2())
+            self.assertEqual(importer.field_info(OTHER_TABLE, "omgw0_h2")["axis"], "f")
+            with self.assertRaises(ValueError):
+                importer.parent_indices(OTHER_TABLE)
+
+    def test_append(self) -> None:
+        """Test that the rows can be appended to a table of another class in an existing file."""
+        path = new_path("other_append")
+        with Exporter(path) as exporter:
+            exporter.add(self.spectra[0])
+        with Exporter(path, mode="a") as exporter:
+            self.assertEqual(exporter.n_rows(OTHER_TABLE), 1)
+            exporter.add_many(self.spectra)
+        with Importer(path, verify=True) as importer:
+            self.assertEqual(importer.n_rows(OTHER_TABLE), 3)
+            np.testing.assert_array_equal(importer.read(OTHER_TABLE, "amplitude"), [1, 2, 3])
+
+    def test_other_fields(self) -> None:
+        """Test that the fields of the tables of other classes can be selected."""
+        path = new_path("other_fields")
+        with Exporter(path, other_fields={OTHER_TABLE: (Preset.MINIMAL, "peak")}) as exporter:
+            exporter.add_many(self.spectra)
+        with Importer(path) as importer:
+            np.testing.assert_array_equal(
+                importer.read(OTHER_TABLE, "peak"), [spectrum.peak() for spectrum in self.spectra])
+
+    def test_grid_mismatch(self) -> None:
+        """Test that the grid of a table of another class must be the same for all the objects."""
+        path = new_path("other_grid_mismatch")
+        with Exporter(path) as exporter:
+            exporter.add(self.spectra[0])
+            with self.assertRaises(ValueError):
+                exporter.add(OtherSpectrum(1., np.logspace(-3, 1, 40)))
+
+    def test_invalid(self) -> None:
+        """Test that invalid tables and objects are rejected."""
+        path = new_path("other_invalid")
+        record = Extractor().extract(self.spectra[0])
+        with Exporter(path) as exporter:
+            with self.assertRaises(ValueError):
+                exporter.add(InvalidTableSpectrum(1., self.f))
+            with self.assertRaises(TypeError):
+                exporter.add(Extractable())
+            # The tables of other classes have no parents.
+            with self.assertRaises(ValueError):
+                exporter.add(Record(
+                    table=record.table, id=record.id, cls=record.cls, data=record.data,
+                    parent=Extractor().extract(self.bubble)))
+            # The record of a class must be for the table of the class.
+            with self.assertRaises(ValueError):
+                exporter.add(Record(table="wrong_table", id=record.id, cls=record.cls, data=record.data))
+            # The identifiers are stored as ASCII strings of at most 32 characters.
+            for id_ in ("x" * 33, "ä", ""):
+                spectrum = OtherSpectrum(1., self.f)
+                spectrum.id = id_
+                with self.subTest(id=id_), self.assertRaises(ValueError):
+                    exporter.add(spectrum)
+            # The rejected objects should not have left empty tables in the file.
+            self.assertNotIn(OTHER_TABLE, exporter.tables)
+            self.assertNotIn("wrong_table", exporter.tables)
+        for name in ("", "a/b", ".", Table.SPECTRA_Y.value):
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                validate_table_name(name)
+        with self.assertRaises(ValueError):
+            Extractor(other_fields={Table.MODELS.value: Preset.FULL})
 
 
 if __name__ == "__main__":

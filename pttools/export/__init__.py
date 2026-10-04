@@ -4,6 +4,8 @@ The exportable fields of each class are defined in
 :py:mod:`pttools.models.export`, :py:mod:`pttools.bubble.export`,
 :py:mod:`pttools.ssm.export` and :py:mod:`pttools.omgw0.export`,
 and the field selection utilities in :py:mod:`pttools.utils.fields`.
+The objects of other :py:class:`~pttools.utils.fields.Extractable` classes, e.g. the spectra of other libraries,
+can be exported to tables of their own by setting their :py:attr:`~pttools.utils.fields.Extractable.TABLE`.
 
 .. code-block:: python
 
@@ -17,7 +19,7 @@ and the field selection utilities in :py:mod:`pttools.utils.fields`.
         omgw0_h2 = importer.read(Table.SPECTRA_Y, "omgw0_h2")
 """
 
-from pttools.utils.fields import Field, Fields, FieldShape, FieldSpec, FieldType, Preset
+from pttools.utils.fields import Extractable, Field, Fields, FieldShape, FieldSpec, FieldType, Preset
 
 from .checksum import *
 from .exporter import *
