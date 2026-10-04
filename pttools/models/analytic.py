@@ -297,7 +297,7 @@ class AnalyticModel(Model, abc.ABC):
 
     @tp.override
     def gs_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
-        return tp.cast(T, 45/(2*np.pi**2) * self.s_temp(temp, phase) / temp**4)
+        return tp.cast(T, 45/(2*np.pi**2) * self.s_temp(temp, phase) / temp**3)
 
     @tp.override
     def gp_temp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
