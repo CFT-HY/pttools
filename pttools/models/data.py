@@ -174,8 +174,8 @@ class DataModel(Model):
         """Interpolate between the splines of the two phases."""
         return tp.cast(
             T,
-            splev(x, spline_s) * phase +
-            splev(x, spline_b) * (1 - phase)
+            splev(x, spline_b) * phase +
+            splev(x, spline_s) * (1 - phase)
         )
 
     @classmethod
@@ -184,8 +184,8 @@ class DataModel(Model):
         """Interpolate between the splines of the two phases in the given temperatures."""
         return tp.cast(
             T,
-            splev(np.log10(temp), spline_s) * phase +
-            splev(np.log10(temp), spline_b) * (1 - phase)
+            splev(np.log10(temp), spline_b) * phase +
+            splev(np.log10(temp), spline_s) * (1 - phase)
         )
 
     @tp.override
@@ -211,8 +211,8 @@ class DataModel(Model):
             if np_all_fix(phase == Phase.BROKEN.value):
                 return splev(w, spline_cs2_w_b)  # pyrefly: ignore[bad-return]
             return (
-                splev(w, spline_cs2_w_s) * phase  # pyrefly: ignore[bad-return]
-                + splev(w, spline_cs2_w_b) * (1 - phase)
+                splev(w, spline_cs2_w_b) * phase  # pyrefly: ignore[bad-return]
+                + splev(w, spline_cs2_w_s) * (1 - phase)
             )
 
         @njit(cache=False)
@@ -267,8 +267,8 @@ class DataModel(Model):
     def temp[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         return tp.cast(
             T,
-            10**splev(w, self.spline_temp_s) * phase +
-            10**splev(w, self.spline_temp_b) * (1 - phase)
+            10**splev(w, self.spline_temp_b) * phase +
+            10**splev(w, self.spline_temp_s) * (1 - phase)
         )
 
     @tp.override

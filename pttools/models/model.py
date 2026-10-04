@@ -984,12 +984,12 @@ class Model(BaseModel, abc.ABC):
     def gs[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         r"""Effective degrees of freedom for entropy, $g_{\text{eff},s}(w,\phi)$."""
         temp = self.temp(w, phase)
-        return self.ge_temp(temp, phase)
+        return self.gs_temp(temp, phase)
 
     def gp[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:
         r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(w,\phi)$."""
         temp = self.temp(w, phase)
-        return self.ge_temp(temp, phase)
+        return self.gp_temp(temp, phase)
 
     @property
     def latent_heat_density(self) -> float:
