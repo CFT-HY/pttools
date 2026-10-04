@@ -111,7 +111,7 @@ class StandardModel(ThermoModel):
     def dge_dT[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         self.validate_temp(temp)
         return 1/(np.log(10)*temp) * interpolate.splev(np.log10(temp), self.GE_SPLINE, der=1) * self.g_mult(phase) \
-            - 120/np.pi**2 * self.V_b/temp**5
+            - 120/np.pi**2 * self.V(phase)/temp**5
 
     @tp.override
     def dgs_dT[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
