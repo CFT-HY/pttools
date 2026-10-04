@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     # The lifetime of the Docker Hub OIDC token is set to the timeout of the job with the YAML anchor,
     # as the action cannot read the timeout of the job.
-    timeout-minutes: &deploy-docker-timeout 60
+    timeout-minutes: &deploy-docker-timeout 30
     permissions:
       artifact-metadata: write
       attestations: write
@@ -151,7 +151,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    timeout-minutes: 40
+    timeout-minutes: 30
     steps:
     - name: Checkout
       uses: actions/checkout@v7
@@ -180,7 +180,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    timeout-minutes: 40
+    timeout-minutes: 30
     strategy:
       matrix:
         python-version: ['3.12', '3.13', '3.14']  # '3.14t'
@@ -209,7 +209,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    timeout-minutes: 40
+    timeout-minutes: 30
     strategy:
       matrix:
         python-version: ['3.12', '3.13', '3.14']  # '3.14t'

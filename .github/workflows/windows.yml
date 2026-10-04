@@ -14,7 +14,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    timeout-minutes: 45
+    timeout-minutes: 30
     # NumbaLSODA does not provide wheels for recent Python versions, so it's built from source.
     # Its build backend, scikit-build, probes only MSVC-based CMake generators on Windows.
     # Those are rejected here, since $CC and $CXX point to the MinGW toolchain,

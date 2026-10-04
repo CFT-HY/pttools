@@ -35,7 +35,7 @@ on:
         description: The timeout of the job
         type: number
         required: false
-        default: 45
+        default: 30
       uv-sync-args:
         description: Additional arguments for "uv sync --locked", e.g. "--all-extras"
         type: string
