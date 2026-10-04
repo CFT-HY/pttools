@@ -8,6 +8,7 @@ import numpy as np
 from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR, cs2_bag_multi, cs2_bag_neg, cs2_bag_temp
 from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG
 from pttools.bubble.phase import Phase
+from pttools.bubble.shock_bag import v_shock_bag, wm_shock_bag
 from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.solution_type_bag import identify_solution_type_bag
 from pttools.models.analytic import AnalyticModel
@@ -375,12 +376,9 @@ class BagModel(AnalyticModel):
         return tp.cast(T, (self.V_b * phase + self.V_s * (1 - phase)) * np.ones_like(w))
 
     @staticmethod
+    @copy_docstring_dec(v_shock_bag)
     def v_shock[T: FloatOrArr](xi: T) -> T:
-        r"""Velocity at the shock, :gw_pt_ssm:`\ ` eq. B.17.
-
-        $$v_\text{sh}(\xi) = \frac{3\xi^2 - 1}{2\xi}$$.
-        """
-        return tp.cast(T, (3 * xi**2 - 1) / (2 * xi))
+        return v_shock_bag(xi)
 
     def w[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
         r"""Enthalpy $w(T)$.
@@ -420,9 +418,6 @@ class BagModel(AnalyticModel):
         )
 
     @staticmethod
-    def w_shock(xi: th.FloatOrArr, w_n: th.FloatOrArr) -> th.FloatOrArr:
-        r"""Enthalpy at the shock, :gw_pt_ssm:`\ ` eq. B.18.
-
-        $$w_\text{sh}(\xi) = w_n \frac{9\xi^2 - 1}{3(1-\xi^2)}$$.
-        """
-        return w_n * (9 * xi**2 - 1) / (2 * (1 - xi**2))
+    @copy_docstring_dec(wm_shock_bag)
+    def wm_shock(xi: th.FloatOrArr, w_n: float, nan_on_negative: bool = True) -> th.FloatOrArr:
+        return wm_shock_bag(xi=xi, w_n=w_n, nan_on_negative=nan_on_negative)
