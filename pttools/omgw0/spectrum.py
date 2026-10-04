@@ -208,7 +208,8 @@ class Spectrum(SSMSpectrum):
     def f_star0(self) -> float:
         return freq.f_star0(
             T_star=self.T_star,
-            g_star=self.g_star
+            ge_star=self.ge_star,
+            gs_star=self.gs_star
         )
 
     @functools.cached_property
@@ -250,21 +251,21 @@ class Spectrum(SSMSpectrum):
 
     def F_gw0[T: FloatOrArr](
             self,
-            g0: T = const.G0,
+            ge0_photon: T = const.GE0_PHOTON,
             gs0: th.FloatOrArr = const.GS0,
             h2: th.FloatOrArr = H2) -> T:
         r"""$F_{\text{gw},0}$, power attenuation following the end of the radiation era."""
-        return self.F_gw0_h2(g0=g0, gs0=gs0) / h2  # pyrefly: ignore[bad-return]
+        return self.F_gw0_h2(ge0_photon=ge0_photon, gs0=gs0) / h2  # pyrefly: ignore[bad-return]
 
     @copy_docstring_dec(F_gw0_h2, without_params=True)
     def F_gw0_h2[T: FloatOrArr](
             self,
-            g0: T = const.G0,
+            ge0_photon: T = const.GE0_PHOTON,
             gs0: th.FloatOrArr = const.GS0,
             om_gamma0_h2: th.FloatOrArr = OMEGA_PHOTON_H2) -> T:
         return F_gw0_h2(  # pyrefly: ignore[bad-return]
-            g_star=self.g_star,
-            g0=g0,
+            ge_star=self.ge_star,
+            ge0_photon=ge0_photon,
             gs0=gs0,
             gs_star=self.gs_star,
             om_gamma0_h2=om_gamma0_h2
@@ -288,40 +289,42 @@ class Spectrum(SSMSpectrum):
 
     def omgw0(
             self,
-            g0: float = const.G0,
+            ge0_photon: float = const.GE0_PHOTON,
             gs0: float = const.GS0,
             h2: th.FloatOrArr1D = H2) -> th.FloatArr1D:
         r"""Gravitational wave power spectrum today $\Omega_{\text{gw},0}$.
 
-        :param g0: $g_0$, degrees of freedom today for pressure
+        :param ge0_photon: $g_{e\gamma 0}$, degrees of freedom for energy density of photons today
         :param gs0: $g_{s,0}$, degrees of freedom today for entropy
         :param h2: $h^2$, dimensionless reduced Hubble constant squared
         """
-        return self.omgw0_h2(g0=g0, gs0=gs0) / h2
+        return self.omgw0_h2(ge0_photon=ge0_photon, gs0=gs0) / h2
 
     def omgw0_h2(
             self,
-            g0: float = const.G0,
+            ge0_photon: float = const.GE0_PHOTON,
             gs0: float = const.GS0,
             om_gamma0_h2: float = const.OMEGA_PHOTON_H2) -> th.FloatArr1D:
         r"""Gravitational wave power spectrum today $\Omega_{\text{gw},0} h^2$.
 
-        :param g0: $g_0$, degrees of freedom today for pressure
-        :param gs0: $g_{s,0}$, degrees of freedom today for entropy
+        :param ge0_photon: $g_{e\gamma 0}$, degrees of freedom for energy density of photons today
+        :param gs0: $g_{s,0}$, degrees of freedom for entropy today
         :param om_gamma0_h2: $\Omega_{\gamma,0} h^2$, the photon density parameter today, multiplied by $h^2$
         """
-        return self.F_gw0_h2(g0=g0, gs0=gs0, om_gamma0_h2=om_gamma0_h2) * self.pow_gw
+        return self.F_gw0_h2(ge0_photon=ge0_photon, gs0=gs0, om_gamma0_h2=om_gamma0_h2) * self.pow_gw
 
     def omgw0_h2_peak(
             self,
-            g0: float = const.G0,
-            gs0: float = const.GS0) -> tuple[float, float]:
+            ge0_photon: float = const.GE0_PHOTON,
+            gs0: float = const.GS0,
+            om_gamma0_h2: float = const.OMEGA_PHOTON_H2) -> tuple[float, float]:
         r"""Peak $\Omega_{\text{gw},0} h^2$.
 
-        :param g0: $g_0$, degrees of freedom today for pressure
+        :param ge0_photon: $g_{e\gamma 0}$, degrees of freedom for energy density of photons today
         :param gs0: $g_{s,0}$, degrees of freedom today for entropy
+        :param om_gamma0_h2: $\Omega_{\gamma,0} h^2$, the photon density parameter today, multiplied by $h^2$
         """
-        omgw0_h2 = self.omgw0_h2(g0=g0, gs0=gs0)
+        omgw0_h2 = self.omgw0_h2(ge0_photon=ge0_photon, gs0=gs0, om_gamma0_h2=om_gamma0_h2)
         i_max = np.argmax(omgw0_h2)
         return self.f()[i_max], omgw0_h2[i_max]
 
@@ -330,20 +333,26 @@ class Spectrum(SSMSpectrum):
 
         :param omgw0_h2: $\Omega_{\text{gw},0} h^2$
         """
-        return trapezoid_loglog(x=self.f(), y=self.omgw0_h2() if omgw0_h2 is None else omgw0_h2)
+        return trapezoid_loglog(
+            x=self.f(),
+            # This doesn't take arguments, as the entire omgw0_h2 can be overridden with an argument.
+            y=self.omgw0_h2() if omgw0_h2 is None else omgw0_h2
+        )
 
     def omgw0_peak[T: FloatOrArr](
             self,
-            g0: float = const.G0,
+            ge0_photon: float = const.GE0_PHOTON,
             gs0: float = const.GS0,
-            h2: T = H2) -> tuple[float, T]:
+            h2: T = H2,
+            om_gamma0_h2: float = const.OMEGA_PHOTON_H2) -> tuple[float, T]:
         r"""Peak $\Omega_{\text{gw},0}$.
 
-        :param g0: $g_0$, degrees of freedom today for pressure
+        :param ge0_photon: $g_{e\gamma 0}$, degrees of freedom for energy density of photons today
         :param gs0: $g_{s,0}$, degrees of freedom today for entropy
         :param h2: $h^2$, dimensionless reduced Hubble constant squared
+        :param om_gamma0_h2: $\Omega_{\gamma,0} h^2$, the photon density parameter today, multiplied by $h^2$
         """
-        f_peak, omgw0_h2_peak = self.omgw0_h2_peak(g0=g0, gs0=gs0)
+        f_peak, omgw0_h2_peak = self.omgw0_h2_peak(ge0_photon=ge0_photon, gs0=gs0, om_gamma0_h2=om_gamma0_h2)
         return f_peak, tp.cast(T, omgw0_h2_peak / h2)
 
     def omgw0_total[T: FloatOrArr](
@@ -363,7 +372,7 @@ class Spectrum(SSMSpectrum):
             noise: FloatArr1D | None = None,
             f_noise: FloatArr1D | None = None,
             # Scalars
-            g0: float = const.G0,
+            ge0_photon: float = const.GE0_PHOTON,
             gs0: float = const.GS0,
             obs_time: float = LISA_OBS_TIME,
             om_gamma0_h2: float = const.OMEGA_PHOTON_H2,
@@ -376,7 +385,7 @@ class Spectrum(SSMSpectrum):
 
         :param noise: $\Omega_\text{noise} h^2$
         :param f_noise: frequencies for the noise (assumed to be the same as for the signal, if not provided)
-        :param g0: $g_0$, degrees of freedom today for pressure
+        :param ge0_photon: $g_{e\gamma 0}$, degrees of freedom for energy density of photons today
         :param gs0: $g_{s,0}$, degrees of freedom today for entropy
         :param obs_time: observation time (s)
         :param om_gamma0_h2: $\Omega_{\gamma,0} h^2$, the photon density parameter today, multiplied by $h^2$
@@ -385,7 +394,7 @@ class Spectrum(SSMSpectrum):
         :param noise_ins: whether to generate instrument noise when noise is not provided
         """
         f: FloatArr1D = self.f()
-        omgw0_h2 = self.omgw0_h2(g0=g0, gs0=gs0, om_gamma0_h2=om_gamma0_h2)
+        omgw0_h2 = self.omgw0_h2(ge0_photon=ge0_photon, gs0=gs0, om_gamma0_h2=om_gamma0_h2)
         snr, f_noise, noise = signal_to_noise_ratio(
             f=f, signal=omgw0_h2, obs_time=obs_time,
             noise=noise, f_noise=f_noise,
@@ -395,14 +404,14 @@ class Spectrum(SSMSpectrum):
 
     def snr_ins(
             self,
-            g0: float = const.G0,
+            ge0_photon: float = const.GE0_PHOTON,
             gs0: float = const.GS0,
             obs_time: float = LISA_OBS_TIME,
             om_gamma0_h2: float = const.OMEGA_PHOTON_H2
         ) -> tuple[float, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D]:
         """Signal-to-noise ratio for LISA, taking into account only the instrument noise."""
         f: FloatArr1D = self.f()
-        omgw0_h2 = self.omgw0_h2(g0=g0, gs0=gs0, om_gamma0_h2=om_gamma0_h2)
+        omgw0_h2 = self.omgw0_h2(ge0_photon=ge0_photon, gs0=gs0, om_gamma0_h2=om_gamma0_h2)
         snr, f_noise, noise = signal_to_noise_ratio(
             f=f, signal=omgw0_h2, obs_time=obs_time,
             noise_eb=False, noise_gb=False, noise_ins=True
@@ -417,7 +426,7 @@ class Spectrum(SSMSpectrum):
         :param f: frequencies $f$ today
         :return: wavenumbers $z$
         """
-        return freq.z(f=f, T_star=self.T_star, r_star=self.r_star, g_star=self.g_star)
+        return freq.z(f=f, T_star=self.T_star, r_star=self.r_star, ge_star=self.ge_star, gs_star=self.gs_star)
 
     # -----
     # Plotting

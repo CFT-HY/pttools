@@ -2,8 +2,6 @@
 
 import math
 
-from pttools.type_hints import FloatOrArr
-
 #: Astronomical unit au in m
 #: :wikipedia:`Astronomical_unit`
 AU_IN_M: float = 149597870700.
@@ -25,31 +23,26 @@ DEFAULT_G_STAR: float = 100.
 #: Default $T_*$ in GeV
 DEFAULT_T_STAR: float = 100.
 
-# Todo: Is this 2.6e-6 or 2.7e-6?
-F_STAR0_REF: float = 2.6e-6
-r"""
-$f_{\ast,0,\text{ref}}$,
-the factor used for converting from frequencies at the time of the GW formation to frequencies today.
-
-This value is valid as long as the universe is radiation dominated at the time of GW production.
-This value is used in:
-:caprini_2020:`\ ` eq. 31
-:gowling_2021:`\ `, eq. 2.13
-:gowling_2023:`\ `, eq. 2.9
-
-It's derived in
-:croon_2024:`\ `, eq. 38
-"""
-
 #: Gravitational constant $G$ in SI units $\frac{\text{m}^3}{\text{kg s}^2}$
 G: float = 6.67430e-11
 
-#: Gravitational constant $G$ in GeV
-# G_GEV: float = 1.22e19**(-2)
+#: $g_{e\gamma 0}$, the degrees of freedom for energy density of photons today.
+#: This is used in :caprini_2020:`\ ` p. 12
+GE0_PHOTON: float = 2.
 
-#: $g_0$, the degrees of freedom for pressure today, aka. the two photon polarizations.
-#: :caprini_2020:`\ ` p. 12
-G0: float = 2.
+GP0_PHOTON: float = GE0_PHOTON
+r"""
+$g_{p\gamma 0}$, the degrees of freedom for pressure of photons today.
+Since photons are massless and therefore ultrarelativistic,
+$p = \frac{e}{3}$ and consequently $g_{p\gamma 0} = g_{e\gamma 0}$.
+"""
+
+GS0_PHOTON: float = GE0_PHOTON
+r"""
+$g_{s\gamma 0}, the degrees of freedom for entropy density of photons today.
+Since photons are massless and therefore ultrarelativistic,
+$p = \frac{e}{3}$ and consequently $g_{s\gamma 0} = g_{e\gamma 0}$.
+"""
 
 N_NU: float = 3.044
 r"""
@@ -62,46 +55,6 @@ The older value $N \approx 3.046$ is used in
 :cosmo1:`\ ` eq. 4.43,
 :cosmo2:`\ ` table 4.
 """
-
-
-def gs0[T: FloatOrArr](g0: T = G0, n_nu: T | float = N_NU) -> T:
-    r"""
-    $g_{s0}$, the degrees of freedom for entropy today.
-
-    $$g_{s0} = g_0 + \frac{7}{8} \cdot 2 N_{\nu} \cdot \frac{4}{11} \approx 3.91$$
-    The factors in this formula come from the sources below.
-
-    For ultrarelativistic particles,
-    $$p = \frac{g}{6\pi^2} \int_0^\infty \frac{p^3 dp}{e^{\frac{p}{T}} \pm 1}$$.
-    :maki_msc:`\ ` eq. 2.103
-    For fermions,
-    $$\int_0^\infty \frac{x^n}{e^x + 1} dx = (1 - 2^{-n}) \Gamma(n+1) \zeta(n+1)$$.
-    :schroeder_book:`\ ` eq. B.36
-    This gives a factor of $1 - 2^{-3} = \frac{7}{8}$ compared to bosons.
-
-    In the Standard Model, each neutrino species contributes one helicity state for the neutrino $\nu$
-    and one for the antineutrino $\bar{\nu}$.
-    This gives a factor of 2.
-
-    When neutrinos decouple at a few MeV, photons are still interacting with electrons and positrons.
-    For this interacting sector with 2 photon polarizations and 2 fermions with 2 spins,
-    $$g_s = 2 + \frac{7}{8} \cdot 4 = \frac{11}{2}$$.
-    When electrons and positrons annihilate, the photons are left with $g_s = 2$.
-
-    For a perfect fluid in local equilibrium, the comoving entropy $sa^3$ is a conserved quantity,
-    $$\frac{d}{dt} (sa^3) = 0 \Rightarrow g_s (aT)^3 = \text{const}$$.
-    Therefore, the decoupling results in
-    $$\frac{11}{2} (a T_{\gamma})^3_\text{before} = 2 (a T_{\gamma})^3_\text{after}$$.
-    The neutrinos continue carrying entropy corresponding to the degrees of freedom before the annihilation,
-    resulting in
-    $$\left( \frac{T_{\nu}}{T_{\gamma}} \right)^3 = \frac{4}{11}$$,
-    which gives $g_{s0,\nu}$ an effective multiplier of $\frac{4}{11}$.
-    See :wikipedia:`Cosmic_neutrino_background`.
-
-    Together, these factors result $g_{s0} \approx 3.91$ of :caprini_2020:`\ ` p. 12.
-    """
-    return g0 + 7 / 8 * 2 * n_nu * (4 / 11)  # pyrefly: ignore[bad-return]
-
 
 GS0: float = 3.9298
 r"""
@@ -117,6 +70,9 @@ and it's the one used for the temperature scaling from the conservation of comov
 #: Reduced Planck constant $\hbar$ in SI units $\text{J} \cdot \text{s}$
 #: :codata_2018:`\ ` table XXX
 H_BAR: float = 1.054571817e-34
+
+#: $\hbar c$, reduced Planck constant $\hbar$ times the speed of light $c$ in SI units $\text{J} \cdot \text{m}$
+H_BAR_C: float = H_BAR * c
 
 #: Boltzmann constant $k_B$ in SI units $\frac{\text{J}}{\text{K}}$
 #: :codata_2018:`\ ` table XXX

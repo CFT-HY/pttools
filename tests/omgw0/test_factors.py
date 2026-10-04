@@ -5,6 +5,7 @@ import unittest
 import numpy as np
 
 from pttools.omgw0 import const
+from pttools.omgw0.dof import gs0
 from pttools.omgw0.factors import F_gw0_h2
 
 #: $a$, the radiation constant in $\frac{\text{J}}{\text{m}^3 \text{K}^4}$
@@ -42,7 +43,7 @@ class ConstTest(unittest.TestCase):
 
     def test_gs0(self) -> None:
         r"""The computed $g_{s0}$ should match the $3.91$ of :caprini_2020:`\ ` p. 12."""
-        self.assertAlmostEqual(const.gs0(g0=2, n_nu=3), 3.91, places=2)
+        self.assertAlmostEqual(gs0(gs0_photon=2, n_nu=3), 3.91, places=2)
         self.assertAlmostEqual(const.GS0, 3.91, delta=0.0199)
 
     def test_omega_photon_h2(self) -> None:
@@ -66,7 +67,7 @@ class FGw0Test(unittest.TestCase):
 
         This is the test that ties the computed constants to the literature.
         """
-        computed = F_gw0_h2(g_star=100., om_gamma0_h2=const.OMEGA_PHOTON_H2)
+        computed = F_gw0_h2(ge_star=100., om_gamma0_h2=const.OMEGA_PHOTON_H2)
         self.assertAlmostEqual(computed, F_GW0_H2_REF, delta=F_GW0_H2_REF_ERR)
         # The agreement should in fact be better than the uncertainty of the reference value.
         self.assertAlmostEqual(computed / F_GW0_H2_REF, 1, delta=0.0067)
@@ -75,18 +76,18 @@ class FGw0Test(unittest.TestCase):
         r"""Omitting $g_{s\ast}$ should be equivalent to setting $g_{s\ast} = {g}_\ast$."""
         for g_star in (10., 100., 106.75):
             with self.subTest(g_star=g_star):
-                self.assertEqual(F_gw0_h2(g_star=g_star), F_gw0_h2(g_star=g_star, gs_star=g_star))
+                self.assertEqual(F_gw0_h2(ge_star=g_star), F_gw0_h2(ge_star=g_star, gs_star=g_star))
 
     @staticmethod
     def test_g_star_scaling() -> None:
         r"""For $g_{s\ast} = {g}_\ast$ the scaling should be $\left( \frac{100}{{g}_\ast} \right)^\frac{1}{3}$."""
         g_star = np.array([1., 10., 100., 106.75, 1000.])
-        expected = F_gw0_h2(g_star=100.) * (100 / g_star)**(1/3)
-        np.testing.assert_allclose(F_gw0_h2(g_star=g_star), expected, rtol=1e-12)
+        expected = F_gw0_h2(ge_star=100.) * (100 / g_star)**(1/3)
+        np.testing.assert_allclose(F_gw0_h2(ge_star=g_star), expected, rtol=1e-12)
 
     def test_gs_star_dependence(self) -> None:
         r"""$F_{\text{gw},0}$ should scale as $g_{s\ast}^{-\frac{4}{3}}$."""
-        ratio = F_gw0_h2(g_star=100., gs_star=50.) / F_gw0_h2(g_star=100., gs_star=100.)
+        ratio = F_gw0_h2(ge_star=100., gs_star=50.) / F_gw0_h2(ge_star=100., gs_star=100.)
         self.assertAlmostEqual(ratio, 2**(4/3), places=12)
 
 

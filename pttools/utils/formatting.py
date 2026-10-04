@@ -68,7 +68,7 @@ def as_latex(
     mant, exp = decompose_float(x, precision, fixed_range, strip_zeros)
 
     if mant is None:
-        body = r"\mathrm{NaN}" if math.isnan(v) else (r"\infty" if v > 0 else r"-\infty")
+        body = r"\mathrm{NaN}" if math.isnan(x) else (r"\infty" if x > 0 else r"-\infty")
     elif exp is None:
         body = mant
     elif omit_unit_mantissa and mant in ("1", "-1"):

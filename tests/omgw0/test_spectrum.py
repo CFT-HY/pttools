@@ -7,8 +7,10 @@ from unittest import mock
 import numpy as np
 
 from pttools.bubble import Bubble
-from pttools.models import ConstCSModel
+from pttools.bubble.phase import Phase
+from pttools.models import ConstCSModel, FullModel, StandardModel
 from pttools.omgw0 import Spectrum, freq
+from pttools.omgw0.factors import F_gw0_h2
 from tests.utils import TEST_JSON_PATH
 
 
@@ -83,6 +85,37 @@ class SpectrumTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             Spectrum(self.spectrum.bubble, r_star=0.1, f=np.array([1e-3, np.nan]), compute=False)
 
+    def test_degrees_of_freedom(self) -> None:
+        r"""Test that $g_{e,*}$ and $g_{s,*}$ are used for the redshift of the frequencies and the power.
+
+        The given $g_*$ is that of pressure, and $g_{e,*} = \frac{1}{3}(4 g_{s,*} - g_*)$.
+        """
+        T_star = 200.
+        g_star = 90.
+        gs_star = 100.
+        ge_star = (4 * gs_star - g_star) / 3
+        spectrum = Spectrum(
+            self.spectrum.bubble, r_star=0.1, T_star=T_star, g_star=g_star, gs_star=gs_star, compute=False)
+        self.assertAlmostEqual(spectrum.ge_star, ge_star, places=12)
+        np.testing.assert_allclose(
+            spectrum.f_star0, freq.f_star0(T_star=T_star, ge_star=ge_star, gs_star=gs_star), rtol=1e-14)
+        np.testing.assert_allclose(spectrum.F_gw0_h2(), F_gw0_h2(ge_star=ge_star, gs_star=gs_star), rtol=1e-14)
+        z = np.array([1., 10.])
+        np.testing.assert_allclose(
+            spectrum.z_from_f(spectrum.f(z)),
+            freq.z(f=spectrum.f(z), T_star=T_star, r_star=spectrum.r_star, ge_star=ge_star, gs_star=gs_star),
+            rtol=1e-14
+        )
+        np.testing.assert_allclose(spectrum.z_from_f(spectrum.f(z)), z, rtol=1e-14)
+
+    def test_degrees_of_freedom_g_star_only(self) -> None:
+        r"""Test that $g_{s,*} = g_{e,*} = g_*$ when only $g_*$ is given."""
+        spectrum = Spectrum(self.spectrum.bubble, r_star=0.1, T_star=200., g_star=106.75, compute=False)
+        self.assertEqual(spectrum.gs_star, 106.75)
+        self.assertAlmostEqual(spectrum.ge_star, 106.75, places=12)
+        np.testing.assert_allclose(spectrum.f_star0, freq.f_star0(T_star=200., ge_star=106.75), rtol=1e-14)
+        np.testing.assert_allclose(spectrum.F_gw0_h2(), F_gw0_h2(ge_star=106.75), rtol=1e-14)
+
     def test_noise(self) -> None:
         """Test that the signal-to-noise ratio is positive."""
         self.assertGreater(self.spectrum.snr()[0], 0)
@@ -112,6 +145,44 @@ class SpectrumTest(unittest.TestCase):
         val = self.spectrum.omgw0_total()
         ref = np.trapezoid(y=self.spectrum.omgw0(), x=self.spectrum.f())
         self.assertAlmostEqual(val, ref)
+
+
+class StandardModelSpectrumTest(unittest.TestCase):
+    r"""Tests for a spectrum of the Standard Model, whose temperature is in physical units of MeV.
+
+    The temperature and the degrees of freedom at the time of GW production should be taken from the bubble,
+    and the temperature should be converted to GeV.
+    """
+
+    bubble: Bubble
+    spectrum: Spectrum
+
+    @classmethod
+    @tp.override
+    def setUpClass(cls) -> None:
+        sm = StandardModel(V_s=5e12, g_mult_s=1 + 1e-9, silence_temp=True)
+        model = FullModel(sm, T_crit_guess=100e3)
+        cls.bubble = Bubble(model, v_wall=0.3, alpha_n=0.05)
+        cls.spectrum = Spectrum(cls.bubble, r_star=0.1, compute=False)
+
+    def test_model(self) -> None:
+        """Test that the full model takes the temperature properties of the Standard Model."""
+        self.assertTrue(self.bubble.model.temperature_is_physical)
+        self.assertEqual(self.bubble.model.temperature_unit_gev, 1e-3)
+
+    def test_T_star(self) -> None:
+        r"""Test that $T_*$ is taken from the bubble and converted from MeV to GeV."""
+        self.assertAlmostEqual(self.spectrum.T_star, self.bubble.T_star * 1e-3, places=12)
+
+    def test_g_star(self) -> None:
+        r"""Test that $g_*$, $g_{s,*}$ and $g_{e,*}$ are those of the model after the bubble nucleation."""
+        model = self.bubble.model
+        w = self.bubble.va_enthalpy_density
+        self.assertEqual(self.spectrum.g_star, self.bubble.g_star)
+        self.assertEqual(self.spectrum.gs_star, self.bubble.gs_star)
+        self.assertAlmostEqual(self.spectrum.g_star, model.gp(w, Phase.BROKEN), places=10)
+        self.assertAlmostEqual(self.spectrum.gs_star, model.gs(w, Phase.BROKEN), places=10)
+        self.assertAlmostEqual(self.spectrum.ge_star, model.ge(w, Phase.BROKEN), places=8)
 
 
 if __name__ == "__main__":

@@ -15,7 +15,10 @@ def omgw0_bag(
         alpha: float,
         r_star: float,
         T_star: float = const.DEFAULT_T_STAR,
-        g_star: float = const.DEFAULT_G_STAR,
+        ge_star: float = const.DEFAULT_G_STAR,
+        ge0_photon: float = const.GE0_PHOTON,
+        gs0: float = const.GS0,
+        gs_star: float = const.DEFAULT_G_STAR,
         h2: float = const.H2,
         npt: NptType = DEFAULT_N_PT,
         sup: Suppression = DEFAULT_SUPPRESSION,
@@ -29,7 +32,7 @@ def omgw0_bag(
     :gowling_2021:`\ ` eq. 2.14.
     """
     params = (vw, alpha, NucType.EXPONENTIAL, (1,))
-    fp0 = f0(r_star, T_star)
+    fp0 = f0(r_star=r_star, T_star=T_star, ge_star=ge_star, gs_star=gs_star)
     z = freqs / fp0
 
     K = kinetic_energy_fraction_approx(vw, alpha)
@@ -45,7 +48,7 @@ def omgw0_bag(
     #        de_method: ssm.DE_Method = ssm.DE_Method.STANDARD,
     #        z_st_thresh: float = const.Z_ST_THRESH
 
-    attenuation = F_gw0_h2(g_star=g_star) / h2
+    attenuation = F_gw0_h2(ge_star=ge_star, gs_star=gs_star, ge0_photon=ge0_photon, gs0=gs0) / h2
     J = J_old(r_star=r_star, K=K)
     if sup_method == SuppressionMethod.NONE:
         return attenuation * J * omgwi
