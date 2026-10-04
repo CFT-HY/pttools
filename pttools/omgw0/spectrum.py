@@ -91,9 +91,11 @@ class Spectrum(SSMSpectrum):
             Cannot be given together with $y$.
         :param N_sh: $N_\text{sh}$, number of shock formation times
         :param nuc_type: nucleation type
-        :param T_star: $T_*$, temperature at the time of GW production
-        :param g_star: $g_*$, degrees of freedom override at the time of GW production
-        :param gs_star: $g_{s,*}$ degrees of freedom override for entropy at the time of GW production
+        :param T_star: $T_*$, temperature at the time of GW production in GeV.
+            If not given, it's taken from the bubble if the temperature of the model is in physical units.
+        :param g_star: $g_*$, degrees of freedom override for pressure at the time of GW production
+        :param gs_star: $g_{s,*}$ degrees of freedom override for entropy at the time of GW production.
+            If only $g_*$ is given, $g_{s,*} = g_*$ is assumed.
         :param nT: number of points in the t array
         :param n_z_lookup: number of points in the lookup arrays
         :param z_st_thresh: for $z$ values above z_sh_tresh,
@@ -134,12 +136,13 @@ class Spectrum(SSMSpectrum):
 
         bubble_temp_physical = bubble.model.temperature_is_physical
         self.T_star: float = T_star if T_star is not None \
-            else bubble.T_star if bubble_temp_physical \
+            else bubble.T_star * bubble.model.temperature_unit_gev if bubble_temp_physical \
             else const.DEFAULT_T_STAR
         self.g_star: float = g_star if g_star is not None \
             else bubble.g_star if bubble_temp_physical \
             else const.DEFAULT_G_STAR
         self.gs_star: float = gs_star if gs_star is not None \
+            else g_star if g_star is not None \
             else bubble.gs_star if bubble_temp_physical \
             else const.DEFAULT_G_STAR
 

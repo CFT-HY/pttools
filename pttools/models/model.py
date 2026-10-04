@@ -63,6 +63,7 @@ class Model(BaseModel, abc.ABC):
             gen_cs2_neg: bool = True,
             implicit_V: bool = False,
             temperature_is_physical: bool | None = None,
+            temperature_unit_gev: float | None = None,
             silence_temp: bool = False,
             allow_invalid: bool = False,
             log_info: bool = True):
@@ -86,6 +87,7 @@ class Model(BaseModel, abc.ABC):
         :param implicit_V: whether the potentials are included implicitly in the other parameters of the model,
             in which case $V_s$ and $V_b$ should be zero
         :param temperature_is_physical: whether the temperature is in physical units
+        :param temperature_unit_gev: the unit of the temperature in GeV, if the temperature is in physical units
         :param silence_temp: whether to suppress the logging of temperatures outside the validity range
         :param allow_invalid: whether to allow $V_s < V_b$ and failures in solving the critical temperature
         :param log_info: whether to log information about the model and its potentials
@@ -93,9 +95,9 @@ class Model(BaseModel, abc.ABC):
         self._validate_potential(
             V_s=V_s, V_b=V_b, name=name, implicit_V=implicit_V, allow_invalid=allow_invalid, log_info=log_info)
 
-        self.temperature_is_physical: bool | None = self.TEMPERATURE_IS_PHYSICAL \
-            if temperature_is_physical is None else temperature_is_physical
-        if self.temperature_is_physical is None:
+        if temperature_is_physical is None:
+            temperature_is_physical = self.TEMPERATURE_IS_PHYSICAL
+        if temperature_is_physical is None:
             raise ValueError(
                 "It has not been specified whether the temperature scale for the model is physical. "
                 "Please specify it in the model definition."
@@ -115,6 +117,8 @@ class Model(BaseModel, abc.ABC):
             T_min=T_min, T_max=T_max,
             name=name, label_latex=label_latex, label_unicode=label_unicode,
             gen_cs2=gen_cs2, gen_cs2_neg=gen_cs2_neg,
+            temperature_is_physical=temperature_is_physical,
+            temperature_unit_gev=temperature_unit_gev,
             silence_temp=silence_temp
         )
         if gen_cs2:

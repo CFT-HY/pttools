@@ -62,7 +62,7 @@ SPECTRUM_FIELDS: Fields = Fields(
     Field(
         "gs_star", presets=PRESETS_FULL_INIT,
         description="$g_{s,*}$, degrees of freedom for entropy at GW production"),
-    Field("T_star", presets=PRESETS_ALL, description="$T_*$, temperature at GW production"),
+    Field("T_star", presets=PRESETS_ALL, description="$T_*$, temperature at GW production in GeV"),
     # Computed values
     Field("F_gw0", call=True, presets=PRESETS_FULL),
     Field("ge_star", presets=PRESETS_FULL),

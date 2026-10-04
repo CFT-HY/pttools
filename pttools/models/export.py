@@ -40,6 +40,9 @@ BASE_MODEL_FIELDS: Fields = Fields(
     Field(
         "temperature_is_physical", type=FieldType.BOOL, presets=PRESETS_FULL_INIT,
         description="whether the temperature is in physical units"),
+    Field(
+        "temperature_unit_gev", presets=PRESETS_FULL_INIT,
+        description="unit of the temperature in GeV, if the temperature is in physical units"),
 )
 
 #: Fields of :py:class:`pttools.models.model.Model`

@@ -245,7 +245,7 @@ class ModelFieldsTest(unittest.TestCase):
             list(model.export()),
             [
                 "name", "label_latex", "label_unicode", "datetime", "T_min", "T_max",
-                "restrict_to_valid", "silence_temp", "temperature_is_physical",
+                "restrict_to_valid", "silence_temp", "temperature_is_physical", "temperature_unit_gev",
                 "T_ref", "T_crit", "V_s", "V_b", "w_crit", "w_min", "w_max", "w_min_s", "w_min_b",
                 "w_max_s", "w_max_b", "alpha_n_min", "w_at_alpha_n_min", "a_s", "a_b"
             ]
@@ -260,6 +260,7 @@ class ModelFieldsTest(unittest.TestCase):
         init.pop("restrict_to_valid")
         init.pop("silence_temp")
         init.pop("temperature_is_physical")
+        init.pop("temperature_unit_gev")
         model2 = ConstCSModel(**init)
         self.assertEqual(model2.export(fields=Preset.INIT), model.export(fields=Preset.INIT))
         self.assertEqual(model2.alpha_n_min, model.alpha_n_min)

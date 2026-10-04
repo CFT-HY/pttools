@@ -30,7 +30,7 @@ class FullModel(Model):
 
     DEFAULT_LABEL = "Full model"
     DEFAULT_NAME = "full"
-    # Todo: Configure this automatically from the ThermoModel
+    # This is taken from the ThermoModel at run time.
     TEMPERATURE_IS_PHYSICAL = None
 
     def __init__(
@@ -66,7 +66,8 @@ class FullModel(Model):
             T_min=thermo.t_min, T_max=thermo.t_max,
             name=name, label_latex=label_latex, label_unicode=label_unicode,
             gen_critical=False, gen_cs2=False, gen_cs2_neg=False, implicit_V=True,
-            temperature_is_physical=thermo.TEMPERATURE_IS_PHYSICAL,
+            temperature_is_physical=thermo.temperature_is_physical,
+            temperature_unit_gev=thermo.temperature_unit_gev,
             silence_temp=self.thermo.silence_temp
         )
 

@@ -34,7 +34,10 @@ class BaseModel(Extractable, abc.ABC):
 
     #: Whether the temperature is in proper physics units.
     #: This is None for models that determine it at run time.
-    TEMPERATURE_IS_PHYSICAL: bool | None
+    TEMPERATURE_IS_PHYSICAL: bool | None = None
+
+    #: The unit of the temperature in GeV, if the temperature is in physical units, e.g. $10^{-3}$ for MeV.
+    TEMPERATURE_UNIT_GEV: float = 1.
 
     #: String formatting for thermodynamical quantities
     THERMO_FORMAT: str = "6e"
@@ -58,6 +61,7 @@ class BaseModel(Extractable, abc.ABC):
             gen_cs2: bool = True,
             gen_cs2_neg: bool = True,
             temperature_is_physical: bool | None = None,
+            temperature_unit_gev: float | None = None,
             silence_temp: bool = False):
         r"""Initialize the model and validate its parameters.
 
@@ -71,6 +75,8 @@ class BaseModel(Extractable, abc.ABC):
         :param gen_cs2_neg: whether to generate the $-c_s^2$ function
         :param temperature_is_physical: whether the temperature is in physical units.
             Defaults to ``TEMPERATURE_IS_PHYSICAL``.
+        :param temperature_unit_gev: the unit of the temperature in GeV, if the temperature is in physical units.
+            Defaults to ``TEMPERATURE_UNIT_GEV``.
         :param silence_temp: whether to suppress the logging of temperatures outside the validity range
         :raises ValueError: if the name, labels or temperature limits are invalid
         """
@@ -87,6 +93,8 @@ class BaseModel(Extractable, abc.ABC):
         self.restrict_to_valid: bool = restrict_to_valid
         self.temperature_is_physical: bool | None = self.TEMPERATURE_IS_PHYSICAL \
             if temperature_is_physical is None else temperature_is_physical
+        self.temperature_unit_gev: float = self.TEMPERATURE_UNIT_GEV \
+            if temperature_unit_gev is None else temperature_unit_gev
 
         if self.name is None:
             raise ValueError("The model must have a name.")
