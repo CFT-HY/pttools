@@ -15,7 +15,8 @@ from pttools.type_hints import FloatArr1D, FloatArr3D
 
 DEFAULT_CURVES_BROKEN_V: FloatArr1D = np.linspace(0, 1, 5)
 DEFAULT_CURVES_INVERSE_V: FloatArr1D = np.linspace(-1, 0, 10)
-DEFAULT_CURVES_SYMMETRIC_V: FloatArr1D = np.linspace(0, 1, 10)
+# The end points are excluded, as the integration cannot start from $v = \xi = 0$.
+DEFAULT_CURVES_SYMMETRIC_V: FloatArr1D = np.linspace(0, 1, 12)[1:-1]
 
 
 def curves_broken(
@@ -134,8 +135,7 @@ def curves_symmetric(
         )
         # Remove the part of the curves below the mu curve
         if csb is not None:
-            unphysical = v_max_behind(xi=xi_b, cs=csb)
-            v_b[unphysical] = np.nan
+            v_b[v_b < v_max_behind(xi=xi_b, cs=csb)] = np.nan
 
         data[:, i, :n_xi] = [v_b, w_b, xi_b]
         data[:, i, n_xi:] = [v_f, w_f, xi_f]
