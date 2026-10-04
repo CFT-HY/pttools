@@ -151,11 +151,9 @@ class ThermoModel(BaseModel, abc.ABC):
             # This check somehow fixes a compilation bug in Numba 0.60.0
             if np.isscalar(temp):
                 raise TypeError
-            invalid = np.logical_or(temp < t_min, temp > t_max)
-            if np.any(invalid):
-                temp2 = temp.copy()
-                temp2[invalid] = np.nan
-            return cs2_compute(temp, phase)
+            ret = cs2_compute(temp, phase)
+            ret[np.logical_or(temp < t_min, temp > t_max)] = np.nan
+            return ret
 
         def cs2[T: FloatOrArr](temp: T, phase: th.FloatOrArr) -> T:
             r"""$c_s^2(T,\phi)$, which calls the jitted scalar or array implementation depending on the type of $T$.

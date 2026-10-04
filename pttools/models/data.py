@@ -226,11 +226,9 @@ class DataModel(Model):
             # This check somehow fixes a compilation bug in Numba 0.60.0
             if np.isscalar(w):
                 raise TypeError
-            invalid = np.logical_or(w < w_min, w > w_max)
-            if np.any(invalid):
-                temp2 = w.copy()
-                temp2[invalid] = np.nan
-            return cs2_compute(w, phase)
+            ret = cs2_compute(w, phase)
+            ret[np.logical_or(w < w_min, w > w_max)] = np.nan
+            return ret
 
         def cs2[T: FloatOrArr](w: T, phase: th.FloatOrArr) -> T:
             if isinstance(w, float):
