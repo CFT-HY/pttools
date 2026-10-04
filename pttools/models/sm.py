@@ -19,6 +19,8 @@ class StandardModel(ThermoModel):
     Based on cubic spline interpolation for the effective degrees of freedom of the Standard Model.
     Data range $0 - 10^{5.45}$ MeV from the table S2 of :borsanyi_2016:`\ `.
     Units are in MeV.
+
+    Another relevant source is :husdal_2016:`\ `.
     """
 
     # Todo: Should the units be changed to GeV to be compatible with Spectrum?

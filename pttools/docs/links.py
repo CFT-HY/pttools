@@ -49,6 +49,7 @@ EXTLINKS_STATIC: ExtLinks = {
     "planck_2015": arxiv_link("1502.01589", "Planck 2015 results"),
     "borsanyi_2016": arxiv_link("1606.07494", "Borsanyi et al."),
     "caprini_2016": arxiv_link("1512.06239", "Caprini et al.", 2016),
+    "husdal_2016": arxiv_link("1609.04979", "Husdal"),
     "cornish_2017": arxiv_link("1703.09858", "Cornish & Robson"),
     "codata_2018": doi_link("10.1103/RevModPhys.93.025010", "CODATA", 2018),
     "planck_2018": arxiv_link("1807.06209", "Planck 2018 results"),
@@ -96,6 +97,7 @@ EXTLINKS_DYNAMIC: ExtLinks = {
         "Academy of Finland grant %s"
     ),
     "issue": ("https://github.com/CFT-HY/pttools/issues/%s", "issue %s"),
+    "physics_stack": ("https://physics.stackexchange.com/a/%s", "Physics Stack Exchange: %s"),
     "ssm_repo": ("https://bitbucket.org/hindmars/sound-shell-model/src/master/%s", "sound-shell-model/%s"),
     "wikipedia": ("https://en.wikipedia.org/wiki/%s", "Wikipedia: %s")
 }
