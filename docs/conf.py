@@ -232,7 +232,7 @@ linkcheck_ignore: list[str] = [
     "https://doi.org/10.1093/acprof:oso/9780198528906.001.0001",
     # The anchors are valid but not detected by Sphinx.
     "https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/*",
-    r"https://scicomp\.stackexchange\.com/*",
+    r"https://*\.stackexchange\.com/*",
     r"https://stackoverflow\.com/*",
 ]
 if IS_GITHUB_ACTIONS:
