@@ -61,6 +61,7 @@ class Spectrum(SSMSpectrum):
             a_star_a_r_ratio: float = DEFAULT_A_STAR_A_R_RATIO,
             N_sh: float = DEFAULT_N_SH,
             nuc_type: NucType = DEFAULT_NUC_TYPE,
+            omega_barotropic: float | None = None,
             # Suppression
             suppression: Suppression = DEFAULT_SUPPRESSION,
             suppression_method: SuppressionMethod = SuppressionMethod.DEFAULT,
@@ -91,6 +92,8 @@ class Spectrum(SSMSpectrum):
             Cannot be given together with $y$.
         :param N_sh: $N_\text{sh}$, number of shock formation times
         :param nuc_type: nucleation type
+        :param omega_barotropic: $\omega$, barotropic equation of state parameter.
+            If not given, it's computed from Bubble.
         :param T_star: $T_*$, temperature at the time of GW production in GeV.
             If not given, it's taken from the bubble if the temperature of the model is in physical units.
         :param g_star: $g_*$, degrees of freedom override for pressure at the time of GW production
@@ -118,6 +121,7 @@ class Spectrum(SSMSpectrum):
             y=DEFAULT_Y if y is None else y,  # When f is set, this is a placeholder that will be replaced below.
             z_st_thresh=z_st_thresh,
             nuc_type=nuc_type,
+            omega_barotropic=omega_barotropic,
             suppression=suppression,
             suppression_method=suppression_method,
             a_star_a_r_ratio=a_star_a_r_ratio,

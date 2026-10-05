@@ -10,7 +10,8 @@ import uuid
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.bubble import Bubble, Phase
+from pttools.bubble import Bubble, Phase, nu_gdh2024
+from pttools.bubble import omega_barotropic as omega_barotropic_func
 from pttools.speedup import NAN_ARR
 from pttools.ssm import const
 from pttools.ssm.barotropic import H_eta, dilution_of_e, eta_ratio, source_lifetime_factor
@@ -52,6 +53,7 @@ class SSMSpectrum(Extractable):
             a_star_a_r_ratio: float = const.DEFAULT_A_STAR_A_R_RATIO,
             N_sh: float = const.DEFAULT_N_SH,
             nuc_type: NucType = DEFAULT_NUC_TYPE,
+            omega_barotropic: float | None = None,
             # Suppression
             suppression: Suppression = DEFAULT_SUPPRESSION,
             suppression_method: SuppressionMethod = SuppressionMethod.DEFAULT,
@@ -77,6 +79,8 @@ class SSMSpectrum(Extractable):
         :param y: $z = k R_*$ array
         :param N_sh: $N_{\text{sh}}$, number of shock formation times
         :param nuc_type: nucleation type
+        :param omega_barotropic: $\omega$, barotropic equation of state parameter.
+            If not given, it's computed from Bubble.
         :param nT: number of points in the t array
         :param n_z_lookup: number of points in the lookup arrays
         :param z_st_thresh: for $z$ values above z_sh_tresh,
@@ -95,6 +99,8 @@ class SSMSpectrum(Extractable):
         # -----
         # Parameters
         # -----
+        self._nu_gdh2024 = None if omega_barotropic is None else nu_gdh2024(omega_barotropic)
+        self._omega_barotropic = omega_barotropic
         self.bubble: Bubble = bubble
         self.beta_tilde: float | None = beta_tilde
         self.a_star_a_r_ratio: float = a_star_a_r_ratio
@@ -202,7 +208,7 @@ class SSMSpectrum(Extractable):
                 beta_tilde=self.beta_tilde,
                 cs=self.cs,
                 lifetime_distribution_a=lifetime_distribution_a,
-                nu_gdh2024=self.bubble.nu_gdh2024,
+                nu_gdh2024=self.nu_gdh2024,
                 r_star=self.r_star,
                 source_lifetime_factor=self.source_lifetime_factor,
                 tau_end=self.tau_end,
@@ -283,12 +289,12 @@ class SSMSpectrum(Extractable):
     @functools.cached_property
     @copy_docstring_dec(dilution_of_e, without_params=True)
     def dilution_of_e(self) -> float:
-        return dilution_of_e(a_star_a_r_ratio=self.a_star_a_r_ratio, nu=self.bubble.nu_gdh2024)
+        return dilution_of_e(a_star_a_r_ratio=self.a_star_a_r_ratio, nu=self.nu_gdh2024)
 
     @functools.cached_property
     @copy_docstring_dec(eta_ratio, without_params=True)
     def eta_ratio(self) -> float:
-        return eta_ratio(ubarf=self.bubble.ubarf, r_star=self.r_star, N_sh=self.N_sh, nu=self.bubble.nu_gdh2024)
+        return eta_ratio(ubarf=self.bubble.ubarf, r_star=self.r_star, N_sh=self.N_sh, nu=self.nu_gdh2024)
 
     @functools.cached_property
     @copy_docstring_dec(H_star_eta_sh, without_params=True)
@@ -302,12 +308,12 @@ class SSMSpectrum(Extractable):
         $$\mathcal{H}_* \eta_* = 1 + \nu_\text{gdh2024}$$
         See :py:func:`pttools.ssm.barotropic.H_eta`.
         """
-        return H_eta(nu=self.bubble.nu_gdh2024)
+        return H_eta(nu=self.nu_gdh2024)
 
     @functools.cached_property
     @copy_docstring_dec(H_star_eta_v, without_params=True)
     def H_star_eta_v(self) -> float:
-        return H_star_eta_v(source_lifetime_factor=self.source_lifetime_factor, nu=self.bubble.nu_gdh2024)
+        return H_star_eta_v(source_lifetime_factor=self.source_lifetime_factor, nu=self.nu_gdh2024)
 
     @functools.cached_property
     @copy_docstring_dec(H_star_eta_v_old, without_params=True)
@@ -321,12 +327,26 @@ class SSMSpectrum(Extractable):
         $$k_p = \frac{2 \pi}{R_*} \Rightarrow k_p \eta_* = (1 + \nu_\text{gdh2024}) \frac{2\pi}{r_*}$$
         :giombi_2024_cs:`\ ` p. 2.
         """
-        return (1 + self.bubble.nu_gdh2024) * 2 * np.pi / self.r_star
+        return (1 + self.nu_gdh2024) * 2 * np.pi / self.r_star
 
     @functools.cached_property
     @copy_docstring_dec(J, without_params=True)
     def J(self) -> float:
         return J(r_star=self.r_star, H_star_eta_v=self.H_star_eta_v)
+
+    @functools.cached_property
+    @copy_docstring_dec(nu_gdh2024, without_params=True)
+    def nu_gdh2024(self) -> float:
+        if self._nu_gdh2024 is not None:
+            return self._nu_gdh2024
+        return self.bubble.nu_gdh2024
+
+    @functools.cached_property
+    @copy_docstring_dec(omega_barotropic_func, without_params=True)
+    def omega_barotropic(self) -> float:
+        if self._omega_barotropic is not None:
+            return self._omega_barotropic
+        return self.bubble.omega_barotropic
 
     @functools.cached_property
     def pow_gw(self) -> FloatArr1D:
@@ -370,7 +390,7 @@ class SSMSpectrum(Extractable):
             ubarf=self.bubble.ubarf,
             r_star=self.r_star,
             N_sh=self.N_sh,
-            nu=self.bubble.nu_gdh2024
+            nu=self.nu_gdh2024
         )
 
     @functools.cached_property
@@ -380,7 +400,7 @@ class SSMSpectrum(Extractable):
             ubarf2=self.ubarf2,
             mean_adiabatic_index=self.bubble.mean_adiabatic_index,
             r_star=self.r_star,
-            nu=self.bubble.nu_gdh2024,
+            nu=self.nu_gdh2024,
             dilution_of_e=self.dilution_of_e,
             suppression_factor=self.suppression_factor
         )
@@ -426,7 +446,7 @@ class SSMSpectrum(Extractable):
         :giombi_2026:`\ ` sec. 2.3,
         :giombi_2024_cs:`\ ` p. 8.
         """
-        return (1 + self.bubble.nu_gdh2024) / self.r_star
+        return (1 + self.nu_gdh2024) / self.r_star
 
     @property
     def ubarf(self) -> float:
@@ -525,7 +545,7 @@ class SSMSpectrum(Extractable):
     @functools.cached_property
     @copy_docstring_dec(z_cross_approx, without_params=True)
     def z_cross_approx(self) -> float:
-        return z_cross_approx(cs=self.cs, eta_ratio=self.eta_ratio, nu=self.bubble.nu_gdh2024, r_star=self.r_star)
+        return z_cross_approx(cs=self.cs, eta_ratio=self.eta_ratio, nu=self.nu_gdh2024, r_star=self.r_star)
 
     # -----
     # Plotting
