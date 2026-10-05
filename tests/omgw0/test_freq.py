@@ -4,6 +4,7 @@ import math
 import unittest
 
 import numpy as np
+import pytest
 from scipy import constants
 
 from pttools.omgw0 import const, freq
@@ -57,9 +58,9 @@ class FStar0Test(unittest.TestCase):
 
     def test_literature_value(self) -> None:
         r"""Test that $f_{\ast,0}$ at $T_\ast = 100 \text{ GeV}$ and $g_\ast = 100$ is the value of the articles."""
-        self.assertAlmostEqual(freq.f_star0(T_star=100., ge_star=100.), F_STAR0_REF, delta=F_STAR0_REF_ERR)
+        assert freq.f_star0(T_star=100., ge_star=100.) == pytest.approx(F_STAR0_REF, abs=F_STAR0_REF_ERR)
         # The older value of g_s0 gives a value that is equally close to that of the articles.
-        self.assertAlmostEqual(freq.f_star0(T_star=100., ge_star=100., gs0=3.91), F_STAR0_REF, delta=F_STAR0_REF_ERR)
+        assert freq.f_star0(T_star=100., ge_star=100., gs0=3.91) == pytest.approx(F_STAR0_REF, abs=F_STAR0_REF_ERR)
 
     def test_exact(self) -> None:
         r"""Test $f_{\ast,0}$ against a computation using the physical constants of SciPy.

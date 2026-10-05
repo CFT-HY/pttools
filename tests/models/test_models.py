@@ -4,6 +4,7 @@ import typing as tp
 import unittest
 
 import numpy as np
+import pytest
 
 from pttools import models
 from pttools.bubble.phase import Phase
@@ -32,7 +33,7 @@ class TestBag(BagBaseCase[models.BagModel], unittest.TestCase):
         """Test that the automatically generated potential gives the critical temperature of one."""
         params: dict[str, tp.Any] = {**self.PARAMS, "V_s": None, "V_b": None, "auto_potential": True}
         model = models.BagModel(**params)
-        self.assertAlmostEqual(model.critical_temp(), 1)
+        assert model.critical_temp() == pytest.approx(1, abs=5e-8)
 
     # Model initialisation tests
 
@@ -54,17 +55,17 @@ class TestBag(BagBaseCase[models.BagModel], unittest.TestCase):
 
     def test_a_g(self) -> None:
         """Test that giving both a_s and g_b raises an error."""
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError, match="Specify either a or g values, not both"):
             models.BagModel(a_s=1.5, g_b=1)
 
     def test_g_a(self) -> None:
         """Test that giving both g_s and a_b raises an error."""
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError, match="Specify either a or g values, not both"):
             models.BagModel(g_s=100, a_b=1)
 
     def test_a_g_all(self) -> None:
         """Test that giving both the a and g parameters for both phases raises an error."""
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError, match="Specify either a or g values, not both"):
             models.BagModel(a_s=1.5, a_b=1, g_s=120, g_b=100)
 
 
@@ -80,9 +81,9 @@ class TestConstCSLikeBag(BagBaseCase[models.ConstCSModel], unittest.TestCase):
 
     def test_constants(self) -> None:
         """Test the constants of the bag-like ConstCSModel."""
-        self.assertAlmostEqual(self.model.mu_s, 4)
-        self.assertAlmostEqual(self.model.mu_b, 4)
-        self.assertEqual(self.model.T_ref, 1)
+        assert self.model.mu_s == pytest.approx(4, abs=5e-8)
+        assert self.model.mu_b == pytest.approx(4, abs=5e-8)
+        assert self.model.T_ref == 1
 
     # @unittest.expectedFailure
     def test_critical_temp(self) -> None:
@@ -109,9 +110,9 @@ class TestConstCSThermoLikeBag(BagBaseCase[models.FullModel], unittest.TestCase)
 
     def test_constants(self) -> None:
         """Test the constants of the bag-like ConstCSThermoModel."""
-        self.assertAlmostEqual(self.thermo.mu_s, 4)
-        self.assertAlmostEqual(self.thermo.mu_b, 4)
-        self.assertEqual(self.model.T_ref, 1)
+        assert self.thermo.mu_s == pytest.approx(4, abs=5e-8)
+        assert self.thermo.mu_b == pytest.approx(4, abs=5e-8)
+        assert self.model.T_ref == 1
 
     def test_cs2_full(self) -> None:
         r"""Test the full $c_s^2$ of the ThermoModel against the reference data."""
@@ -144,7 +145,7 @@ class TestConstCS(ModelBaseCase[models.ConstCSModel], unittest.TestCase):
         data = self.model.inverse_enthalpy_ratio(temp)
         ref = self.model.w(temp, Phase.BROKEN) / self.model.w(temp, Phase.SYMMETRIC)
         assert_allclose(data, ref, rtol=1e-12)
-        self.assertAlmostEqual(self.model.inverse_enthalpy_ratio(2.), ref[2])
+        assert self.model.inverse_enthalpy_ratio(2.) == pytest.approx(ref[2], abs=5e-8)
 
     def test_Psi_scaling(self) -> None:
         r"""$\Psi_+ = \Psi_n \left( \frac{w_+}{w_n} \right)^{\nu/\mu - 1}$, :ai_2023:`\ ` eq. 21b."""
@@ -159,13 +160,13 @@ class TestConstCS(ModelBaseCase[models.ConstCSModel], unittest.TestCase):
         params = {"css2": 1/4, "csb2": 1/4, "a_s": 5, "a_b": 1, "V_s": 1, "V_b": 0.1, "log_info": False}
         target = models.ConstCSModel(**params).alpha_n_min + 0.01
         model = models.ConstCSModel(**params, alpha_n_min=target)
-        self.assertEqual((model.a_s, model.a_b, model.V_s, model.V_b), (5, 1, 1, 0.1))
-        self.assertLessEqual(model.alpha_n_min, target)
+        assert (model.a_s, model.a_b, model.V_s, model.V_b) == (5, 1, 1, 0.1)
+        assert model.alpha_n_min <= target
 
     def test_invalid_cs2(self) -> None:
         """Test that invalid sound speeds raise an error."""
         for css2, csb2 in ((-0.1, 1/3), (1.1, 1/3), (1/3, -0.1), (1/3, 1.1)):
-            with self.subTest(css2=css2, csb2=csb2), self.assertRaisesRegex(ValueError, "have to be"):
+            with self.subTest(css2=css2, csb2=csb2), pytest.raises(ValueError, match="have to be"):
                 models.ConstCSModel(a_s=1.2, a_b=1.1, V_s=1.3, css2=css2, csb2=csb2)
 
 

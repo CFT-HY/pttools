@@ -15,6 +15,10 @@ from pttools.utils.system import AVAILABLE_CPU_CORES
 
 logger: logging.Logger = logging.getLogger(__name__)
 
+# Pytest rewrites the assertions only in the test modules and conftest.py by default.
+# The base classes of the tests are in other modules, so that they are not collected as tests themselves.
+pytest.register_assert_rewrite("tests.models.base_bag", "tests.models.base_model")
+
 #: Name of the class attribute with which a test class can manually configure
 #: whether all of its tests should be run on the same pytest-xdist worker.
 RUN_ON_SAME_WORKER_ATTR: str = "RUN_ON_SAME_WORKER"

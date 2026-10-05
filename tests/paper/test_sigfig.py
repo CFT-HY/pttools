@@ -10,9 +10,9 @@ class SigFigTest(unittest.TestCase):
 
     def test_round_sig(self) -> None:
         """Test rounding positive, large and negative small values to significant figures."""
-        self.assertEqual(round_sig(1.23456, 3), "1.23")
-        self.assertEqual(round_sig(123456, 2), "120000")
-        self.assertEqual(round_sig(-0.001234, 2), "-0.0012")
+        assert round_sig(1.23456, 3) == "1.23"
+        assert round_sig(123456, 2) == "120000"
+        assert round_sig(-0.001234, 2) == "-0.0012"
 
     def test_round_sig_error(self) -> None:
         """Test that the value is rounded to the same decimal place as the error rounded to n significant figures."""
@@ -26,23 +26,23 @@ class SigFigTest(unittest.TestCase):
         )
         for args, ref in cases:
             with self.subTest(args=args):
-                self.assertEqual(round_sig_error(*args), ref)
+                assert round_sig_error(*args) == ref
 
     def test_round_sig_error_paren(self) -> None:
         """Test the value(error) output format."""
-        self.assertEqual(round_sig_error(123.4, 20, 1, paren=True), "120(20)")
-        self.assertEqual(round_sig_error(1.23456, 0.0123, 2, paren=True), "1.235(012)")
+        assert round_sig_error(123.4, 20, 1, paren=True) == "120(20)"
+        assert round_sig_error(1.23456, 0.0123, 2, paren=True) == "1.235(012)"
 
     def test_round_sig_error_large_error(self) -> None:
         """The error has more integer digits than the value."""
-        self.assertEqual(round_sig_error(5.0, 12345, 2), ("0", "12000"))
-        self.assertEqual(round_sig_error(1500., 12345, 2), ("2000", "12000"))
+        assert round_sig_error(5.0, 12345, 2) == ("0", "12000")
+        assert round_sig_error(1500., 12345, 2) == ("2000", "12000")
 
     def test_round_sig_error_negative(self) -> None:
         """Test rounding a negative value with an error."""
-        self.assertEqual(round_sig_error(-123.4, 20, 1), ("-120", "20"))
+        assert round_sig_error(-123.4, 20, 1) == ("-120", "20")
 
     def test_round_sig_error_small_value(self) -> None:
         """Test rounding values whose magnitude is smaller than the error."""
-        self.assertEqual(round_sig_error(0.4, 3, 1), ("0", "3"))
-        self.assertEqual(round_sig_error(-0.6, 3, 1), ("-1", "3"))
+        assert round_sig_error(0.4, 3, 1) == ("0", "3")
+        assert round_sig_error(-0.6, 3, 1) == ("-1", "3")

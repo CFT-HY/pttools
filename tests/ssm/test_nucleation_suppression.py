@@ -104,9 +104,9 @@ class NucleationSuppressionTest(unittest.TestCase):
     def test_lambda(self) -> None:
         r"""Test that $\Lambda > 1$ in $r_* = \Lambda r_{\ast,0}$ from $\tilde{\beta}$, and $\Lambda = 1$ from $r_*$."""
         lam = self.spectrum_beta.bubble_spacing_enlargement_factor
-        self.assertGreater(lam, 1.)
+        assert lam > 1.
         assert_allclose(self.spectrum_beta.r_star, lam * r_star0(100, self.bubble.v_wall))
-        self.assertEqual(self.spectrum_r_star.bubble_spacing_enlargement_factor, 1.)
+        assert self.spectrum_r_star.bubble_spacing_enlargement_factor == 1.
 
     def test_ubarf2(self) -> None:
         r"""Test that $\bar{U}_f^2$ does not depend on $\Lambda$."""

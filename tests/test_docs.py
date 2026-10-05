@@ -21,7 +21,7 @@ class DocsTest(unittest.TestCase):
     def test_docs_conf(self) -> None:
         """Test that the Sphinx configuration can be imported and has the correct project name."""
         from docs import conf  # noqa: PLC0415
-        self.assertEqual(conf.project, "PTtools")
+        assert conf.project == "PTtools"
 
 
 class DocsPathsTest(unittest.TestCase):
@@ -46,11 +46,11 @@ class DocsPathsTest(unittest.TestCase):
 
     def test_is_docs_dir(self) -> None:
         """Test that a directory is recognised as a docs directory only if it has all the required files."""
-        self.assertFalse(paths.is_docs_dir(self.root))
+        assert not paths.is_docs_dir(self.root)
         docs = self.make_docs_dir("docs")
-        self.assertTrue(paths.is_docs_dir(docs))
+        assert paths.is_docs_dir(docs)
         (docs / "Makefile").unlink()
-        self.assertFalse(paths.is_docs_dir(docs))
+        assert not paths.is_docs_dir(docs)
 
     def test_find_docs_dir_env(self) -> None:
         """The docs directory alongside the virtual environment is preferred."""
@@ -58,19 +58,19 @@ class DocsPathsTest(unittest.TestCase):
         env = self.root / "project" / "venv"
         env.mkdir()
         with mock.patch.object(paths, "env_dir", return_value=env):
-            self.assertEqual(paths.find_docs_dir(cwd=self.root), docs)
+            assert paths.find_docs_dir(cwd=self.root) == docs
 
     def test_find_docs_dir_cwd_subdir(self) -> None:
         """The docs subdirectory of the working directory is found."""
         docs = self.make_docs_dir("project", "docs")
         with mock.patch.object(paths, "env_dir", return_value=None):
-            self.assertEqual(paths.find_docs_dir(cwd=self.root / "project"), docs)
+            assert paths.find_docs_dir(cwd=self.root / "project") == docs
 
     def test_find_docs_dir_cwd(self) -> None:
         """The working directory is found if it is itself a docs directory."""
         docs = self.make_docs_dir("project", "docs")
         with mock.patch.object(paths, "env_dir", return_value=None):
-            self.assertEqual(paths.find_docs_dir(cwd=docs), docs)
+            assert paths.find_docs_dir(cwd=docs) == docs
 
     def test_find_docs_dir_pttools_repo(self) -> None:
         """When run from the PTtools repository, its docs are found even if not in a virtual environment."""
@@ -78,22 +78,22 @@ class DocsPathsTest(unittest.TestCase):
             found = paths.find_docs_dir(cwd=self.root)
         pttools_docs = paths.PTTOOLS_DIR.parent / paths.DOCS_DIR_NAME
         if paths.is_docs_dir(pttools_docs):
-            self.assertEqual(found, pttools_docs)
+            assert found == pttools_docs
         else:
-            self.assertIsNone(found)
+            assert found is None
 
     def test_find_docs_dir_not_found(self) -> None:
         """None is returned if no docs directory is found."""
         with mock.patch.object(paths, "env_dir", return_value=None), \
                 mock.patch.object(paths, "PTTOOLS_DIR", self.root / "site-packages" / "pttools"):
-            self.assertIsNone(paths.find_docs_dir(cwd=self.root))
+            assert paths.find_docs_dir(cwd=self.root) is None
 
     def test_default_log_dir(self) -> None:
         """The log directory is next to the docs directory, or in the working directory if there are no docs."""
         docs = self.make_docs_dir("project", "docs")
-        self.assertEqual(paths.default_log_dir(docs), self.root / "project" / "logs")
+        assert paths.default_log_dir(docs) == self.root / "project" / "logs"
         with mock.patch.object(paths, "find_docs_dir", return_value=None):
-            self.assertEqual(paths.default_log_dir(), Path.cwd() / "logs")
+            assert paths.default_log_dir() == Path.cwd() / "logs"
 
 
 class ClocTest(unittest.TestCase):
@@ -121,8 +121,7 @@ class ClocTest(unittest.TestCase):
 
     def test_format_compact(self) -> None:
         """Test that the cloc JSON output is formatted compactly, grouped by directory."""
-        self.assertEqual(
-            cloc.format_compact(self.DATA),
+        assert cloc.format_compact(self.DATA) == (
             "github.com/AlDanial/cloc v 1.98  T=0.50 s (6.0 files/s, 2468.0 lines/s)\n"
             "-----------------------------------------------------------------------\n"
             "File                                               blank  comment  code\n"
@@ -157,8 +156,8 @@ class ClocTest(unittest.TestCase):
             return sorted(tuple(line.split()[-3:]) for line in lines if line and line[-1].isdigit())
 
         # The header line with the timing is excluded, as it differs between the runs.
-        self.assertEqual(counts(full[1:]), counts(compact[1:]))
-        self.assertLess(max(len(line) for line in compact[1:]), max(len(line) for line in full[1:]))
+        assert counts(full[1:]) == counts(compact[1:])
+        assert max(len(line) for line in compact[1:]) < max(len(line) for line in full[1:])
 
 
 @unittest.skipIf(shutil.which("make") is None, "make is not installed")
@@ -186,27 +185,27 @@ class DocsLintRunMakeTest(unittest.TestCase):
     def test_run_make(self) -> None:
         """The console output of make is returned and appended to the log file, but not printed."""
         returncode, lines, printed = self.run_make(verbose=False)
-        self.assertEqual(returncode, 0)
-        self.assertIn("line1", lines)
-        self.assertIn("line2", lines)
-        self.assertEqual(printed, "")
+        assert returncode == 0
+        assert "line1" in lines
+        assert "line2" in lines
+        assert printed == ""
         log = self.log_path.read_text()
-        self.assertIn('Console output of "make hello"', log)
-        self.assertIn("line1\nline2", log)
+        assert 'Console output of "make hello"' in log
+        assert "line1\nline2" in log
 
     def test_run_make_verbose(self) -> None:
         """With verbose, the console output of make is also printed."""
         returncode, lines, printed = self.run_make(verbose=True)
-        self.assertEqual(returncode, 0)
-        self.assertIn("line1", lines)
-        self.assertEqual(printed, "line1\nline2\n")
+        assert returncode == 0
+        assert "line1" in lines
+        assert printed == "line1\nline2\n"
 
     def test_run_make_failure(self) -> None:
         """A failing make target gives a non-zero return code."""
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
             returncode, _ = lint.run_make("nonexistent", self.log_path, self.docs_dir)
-        self.assertNotEqual(returncode, 0)
+        assert returncode != 0
 
 
 if __name__ == "__main__":

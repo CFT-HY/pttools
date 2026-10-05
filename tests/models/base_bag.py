@@ -4,6 +4,7 @@ import abc
 import typing as tp
 
 import numpy as np
+import pytest
 
 from pttools.bubble.phase import Phase
 from pttools.models import Model
@@ -13,9 +14,6 @@ from tests.models.base_model import ModelBaseCase
 
 class BagBaseCase[M: Model](ModelBaseCase[M], abc.ABC):
     """Test that a model corresponds to the bag model."""
-
-    # This class is a mixin for unittest.TestCase, which provides this method.
-    assertAlmostEqual: tp.Callable[..., None]  # noqa: N815
 
     #: This test should use the bag model reference data instead of creating its own
     SAVE_NEW_DATA = False
@@ -42,7 +40,7 @@ class BagBaseCase[M: Model](ModelBaseCase[M], abc.ABC):
         wn = 70
         alpha_n = self.model.alpha_n(wn=wn)
         alpha_plus = self.model.alpha_plus(wp=wn, wm=20)
-        self.assertAlmostEqual(alpha_n, alpha_plus)
+        assert alpha_n == pytest.approx(alpha_plus, abs=5e-8)
 
     def test_cs2_like_bag(self) -> None:
         """Test that cs2 = 1/3."""

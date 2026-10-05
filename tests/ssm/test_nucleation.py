@@ -4,6 +4,7 @@ import typing as tp
 import unittest
 
 import numpy as np
+import pytest
 
 from pttools.speedup import logspace
 from pttools.ssm.const import DEFAULT_N_T, T_TILDE_MAX, T_TILDE_MIN
@@ -24,12 +25,12 @@ class NucleationTest(unittest.TestCase):
     def test_exponential(self) -> None:
         """Test the third moment of the bubble lifetime distribution for exponential nucleation."""
         nu = lifetime_distribution(self.T_tilde, NucType.EXPONENTIAL)
-        self.assertAlmostEqual(lifetime_distribution_momentum(nu, self.T_tilde, 3), 6, delta=2e-5)
+        assert lifetime_distribution_momentum(nu, self.T_tilde, 3) == pytest.approx(6, abs=2e-5)
 
     def test_simultaneous(self) -> None:
         """Test the third moment of the bubble lifetime distribution for simultaneous nucleation."""
         nu = lifetime_distribution(self.T_tilde, NucType.SIMULTANEOUS)
-        self.assertAlmostEqual(lifetime_distribution_momentum(nu, self.T_tilde, 3), 6, delta=6e-7)
+        assert lifetime_distribution_momentum(nu, self.T_tilde, 3) == pytest.approx(6, abs=6e-7)
 
 
 if __name__ == "__main__":

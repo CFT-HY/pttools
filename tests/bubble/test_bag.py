@@ -3,6 +3,7 @@
 import unittest
 
 import numpy as np
+import pytest
 
 from pttools import bubble
 import pttools.type_hints as th
@@ -86,13 +87,13 @@ class TestBag(unittest.TestCase):
 
     def test_theta_bag_scalar(self) -> None:
         r"""Test the bag model trace anomaly $\theta$ for a scalar enthalpy in both phases."""
-        self.assertEqual(bubble.theta_bag(self.w, 1, self.alpha_n), 0)
-        self.assertAlmostEqual(bubble.theta_bag(self.w, self.phase, self.alpha_n), 0.3375)
+        assert bubble.theta_bag(self.w, 1, self.alpha_n) == 0
+        assert bubble.theta_bag(self.w, self.phase, self.alpha_n) == pytest.approx(0.3375, abs=5e-8)
 
     def test_theta_bag_arr(self) -> None:
         r"""Test the bag model trace anomaly $\theta$ for an enthalpy array in both phases."""
-        self.assertEqual(bubble.theta_bag(self.w_arr, 1, self.alpha_n), 0)
-        self.assertAlmostEqual(bubble.theta_bag(self.w_arr, self.phase, self.alpha_n), 0.4125)
+        assert bubble.theta_bag(self.w_arr, 1, self.alpha_n) == 0
+        assert bubble.theta_bag(self.w_arr, self.phase, self.alpha_n) == pytest.approx(0.4125, abs=5e-8)
 
     def test_w(self) -> None:
         """Test that the enthalpy computed from the energy density gives back the original enthalpy."""

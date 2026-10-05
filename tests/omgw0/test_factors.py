@@ -3,6 +3,7 @@ r"""Tests for the $\Omega_{\text{gw},0}$ factors and the constants they are comp
 import unittest
 
 import numpy as np
+import pytest
 
 from pttools.omgw0 import const
 from pttools.omgw0.dof import gs0
@@ -39,24 +40,24 @@ class ConstTest(unittest.TestCase):
 
     def test_a_rad(self) -> None:
         """The radiation constant should match the CODATA value."""
-        self.assertAlmostEqual(const.A_RADIATION / A_RAD_REF, 1, places=6)
+        assert const.A_RADIATION / A_RAD_REF == pytest.approx(1, abs=5e-7)  # noqa: SIM300
 
     def test_gs0(self) -> None:
         r"""The computed $g_{s0}$ should match the $3.91$ of :caprini_2020:`\ ` p. 12."""
-        self.assertAlmostEqual(gs0(gs0_photon=2, n_nu=3), 3.91, places=2)
-        self.assertAlmostEqual(const.GS0, 3.91, delta=0.0199)
+        assert gs0(gs0_photon=2, n_nu=3) == pytest.approx(3.91, abs=5e-3)
+        assert const.GS0 == pytest.approx(3.91, abs=0.0199)  # noqa: SIM300
 
     def test_omega_photon_h2(self) -> None:
         r"""$\Omega_{\gamma,0} h^2$ should match the literature value."""
-        self.assertAlmostEqual(const.OMEGA_PHOTON_H2 / OMEGA_PHOTON_H2_REF, 1, places=4)
+        assert const.OMEGA_PHOTON_H2 / OMEGA_PHOTON_H2_REF == pytest.approx(1, abs=5e-5)  # noqa: SIM300
 
     def test_omega_photon_h_scaling(self) -> None:
         r"""$\Omega_{\gamma,0}$ should be $\Omega_{\gamma,0} h^2$ divided by $h^2$."""
-        self.assertAlmostEqual(const.OMEGA_PHOTON * const.H2 / const.OMEGA_PHOTON_H2, 1, places=12)
+        assert const.OMEGA_PHOTON * const.H2 / const.OMEGA_PHOTON_H2 == pytest.approx(1, abs=5e-13)  # noqa: SIM300
 
     def test_h0_hz(self) -> None:
         r"""$H_0$ should be $h {H}_{100}$."""
-        self.assertAlmostEqual(const.H0_HZ / (const.H * const.H0_100_HZ), 1, places=12)
+        assert const.H0_HZ / (const.H * const.H0_100_HZ) == pytest.approx(1, abs=5e-13)  # noqa: SIM300
 
 
 class FGw0Test(unittest.TestCase):
@@ -68,15 +69,15 @@ class FGw0Test(unittest.TestCase):
         This is the test that ties the computed constants to the literature.
         """
         computed = F_gw0_h2(ge_star=100., om_gamma0_h2=const.OMEGA_PHOTON_H2)
-        self.assertAlmostEqual(computed, F_GW0_H2_REF, delta=F_GW0_H2_REF_ERR)
+        assert computed == pytest.approx(F_GW0_H2_REF, abs=F_GW0_H2_REF_ERR)
         # The agreement should in fact be better than the uncertainty of the reference value.
-        self.assertAlmostEqual(computed / F_GW0_H2_REF, 1, delta=0.0067)
+        assert computed / F_GW0_H2_REF == pytest.approx(1, abs=0.0067)
 
     def test_gs_star_default(self) -> None:
         r"""Omitting $g_{s\ast}$ should be equivalent to setting $g_{s\ast} = {g}_\ast$."""
         for g_star in (10., 100., 106.75):
             with self.subTest(g_star=g_star):
-                self.assertEqual(F_gw0_h2(ge_star=g_star), F_gw0_h2(ge_star=g_star, gs_star=g_star))
+                assert F_gw0_h2(ge_star=g_star) == F_gw0_h2(ge_star=g_star, gs_star=g_star)
 
     @staticmethod
     def test_g_star_scaling() -> None:
@@ -88,7 +89,7 @@ class FGw0Test(unittest.TestCase):
     def test_gs_star_dependence(self) -> None:
         r"""$F_{\text{gw},0}$ should scale as $g_{s\ast}^{-\frac{4}{3}}$."""
         ratio = F_gw0_h2(ge_star=100., gs_star=50.) / F_gw0_h2(ge_star=100., gs_star=100.)
-        self.assertAlmostEqual(ratio, 2**(4/3), places=12)
+        assert ratio == pytest.approx(2**(4/3), abs=5e-13)
 
 
 if __name__ == "__main__":

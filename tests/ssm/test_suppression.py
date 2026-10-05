@@ -3,6 +3,7 @@ r"""Tests for the kinetic energy suppression factors of the Sound Shell Model.""
 import unittest
 
 import numpy as np
+import pytest
 
 from pttools.ssm.suppression import suppression as sup
 import pttools.type_hints as th
@@ -33,19 +34,19 @@ class AlphaNMaxTest(unittest.TestCase):
         alpha_ns = sup.alpha_n_max(v_walls)
         for v_wall, alpha_n in zip(v_walls, alpha_ns, strict=True):
             with self.subTest(v_wall=v_wall):
-                self.assertAlmostEqual(sup.alpha_n_max(float(v_wall)), alpha_n)
+                assert sup.alpha_n_max(float(v_wall)) == pytest.approx(alpha_n, abs=5e-8)
 
     def test_continuous_at_kink(self) -> None:
         """The two line segments meet at the point that they have in common."""
         alpha_n_kink = self.DATA_POINTS[1][1]
-        self.assertAlmostEqual(sup.alpha_n_max(self.V_WALL_KINK), alpha_n_kink)
-        self.assertAlmostEqual(sup.alpha_n_max(self.V_WALL_KINK - 1e-9), alpha_n_kink)
-        self.assertAlmostEqual(sup.alpha_n_max(self.V_WALL_KINK + 1e-9), alpha_n_kink)
+        assert sup.alpha_n_max(self.V_WALL_KINK) == pytest.approx(alpha_n_kink, abs=5e-8)
+        assert sup.alpha_n_max(self.V_WALL_KINK - 1e-9) == pytest.approx(alpha_n_kink, abs=5e-8)
+        assert sup.alpha_n_max(self.V_WALL_KINK + 1e-9) == pytest.approx(alpha_n_kink, abs=5e-8)
 
     def test_increasing(self) -> None:
         r"""$\alpha_{n,\max}$ increases with ${v}_\text{wall}$."""
         alpha_ns = sup.alpha_n_max(np.linspace(0.2, 0.9, 50))
-        self.assertTrue(np.all(np.diff(alpha_ns) > 0))
+        assert np.all(np.diff(alpha_ns) > 0)
 
     def test_approx_scalar_matches_array(self) -> None:
         """The approximation gives the same result for a scalar and for an array argument."""
@@ -53,7 +54,7 @@ class AlphaNMaxTest(unittest.TestCase):
         alpha_ns = sup.alpha_n_max_approx(v_walls)
         for v_wall, alpha_n in zip(v_walls, alpha_ns, strict=True):
             with self.subTest(v_wall=v_wall):
-                self.assertAlmostEqual(sup.alpha_n_max_approx(float(v_wall)), alpha_n)
+                assert sup.alpha_n_max_approx(float(v_wall)) == pytest.approx(alpha_n, abs=5e-8)
 
     def test_approx_limits(self) -> None:
         r"""$\alpha_{n,\max,\text{approx}} = \frac{1}{3}$ for ${v}_\text{wall}=0$ and 1 for ${v}_\text{wall}=c_s$.
@@ -61,8 +62,8 @@ class AlphaNMaxTest(unittest.TestCase):
         $$\alpha_{n,\max,\text{approx}}
         = \frac{1}{3} \frac{1 + 3 {v}_\text{wall}^2}{1 - {v}_\text{wall}^2}$$
         """
-        self.assertAlmostEqual(sup.alpha_n_max_approx(0.), 1/3)
-        self.assertAlmostEqual(sup.alpha_n_max_approx(1/np.sqrt(3)), 1.)
+        assert sup.alpha_n_max_approx(0.) == pytest.approx(1/3, abs=5e-8)
+        assert sup.alpha_n_max_approx(1/np.sqrt(3)) == pytest.approx(1., abs=5e-8)
 
 
 class SuppressionTest(unittest.TestCase):
@@ -94,32 +95,32 @@ class SuppressionTest(unittest.TestCase):
         r"""The grid is indexed as ``[alpha_n, v_wall]``, and its values are those of the scalar calls."""
         grid = self.SUPPRESSION.suppression(
             v_wall=self.V_WALLS, alpha_n=self.ALPHA_NS, method=sup.SuppressionMethod.EXT_CONSTANT)
-        self.assertEqual(grid.shape, (self.ALPHA_NS.size, self.V_WALLS.size))
+        assert grid.shape == (self.ALPHA_NS.size, self.V_WALLS.size)
         for i, alpha_n in enumerate(self.ALPHA_NS):
             for j, v_wall in enumerate(self.V_WALLS):
                 with self.subTest(v_wall=v_wall, alpha_n=alpha_n):
                     scalar = self.SUPPRESSION.suppression(
                         v_wall=float(v_wall), alpha_n=float(alpha_n),
                         method=sup.SuppressionMethod.EXT_CONSTANT)
-                    self.assertAlmostEqual(scalar, grid[i, j])
+                    assert scalar == pytest.approx(grid[i, j], abs=5e-8)
 
     def test_no_ext_outside_hull(self) -> None:
         """Without extrapolation the suppression factor is NaN outside the convex hull of the points."""
         with self.assertLogs(sup.logger, level="WARNING"):
             value = self.SUPPRESSION.suppression(
                 v_wall=self.OUTSIDE_V_WALL, alpha_n=self.OUTSIDE_ALPHA_N, method=sup.SuppressionMethod.NO_EXT)
-        self.assertTrue(np.isnan(value))
+        assert np.isnan(value)
 
     def test_ext_constant_outside_hull(self) -> None:
         """With constant extrapolation the nearest suppression value is returned outside the convex hull."""
         value = self.SUPPRESSION.suppression(
             v_wall=self.OUTSIDE_V_WALL, alpha_n=self.OUTSIDE_ALPHA_N, method=sup.SuppressionMethod.EXT_CONSTANT)
-        self.assertAlmostEqual(value, self.OUTSIDE_REF)
+        assert value == pytest.approx(self.OUTSIDE_REF, abs=5e-8)
 
     def test_none_scalar(self) -> None:
         """Disabling the suppression gives a suppression factor of 1 for scalar arguments."""
         value = self.SUPPRESSION.suppression(v_wall=0.5, alpha_n=0.1, method=sup.SuppressionMethod.NONE)
-        self.assertEqual(value, 1.)
+        assert value == 1.
 
     def test_none_grid(self) -> None:
         """Disabling the suppression gives a grid of ones with the same shape as the interpolated grid."""
@@ -134,12 +135,12 @@ class SuppressionTest(unittest.TestCase):
                     v_wall=v_wall, alpha_n=alpha_n, method=sup.SuppressionMethod.EXT_CONSTANT)
                 ones = self.SUPPRESSION.suppression(
                     v_wall=v_wall, alpha_n=alpha_n, method=sup.SuppressionMethod.NONE)
-                self.assertEqual(np.shape(ones), np.shape(interpolated))
+                assert np.shape(ones) == np.shape(interpolated)
                 assert_allclose(ones, np.ones_like(interpolated))
 
     def test_invalid_method(self) -> None:
         """An invalid suppression method raises an error."""
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError, match="Got invalid suppression method"):
             # An invalid value is passed on purpose, and therefore the type error is ignored.
             # pyrefly: ignore[bad-argument-type]
             self.SUPPRESSION.suppression(v_wall=0.5, alpha_n=0.1, method="invalid")
@@ -147,14 +148,14 @@ class SuppressionTest(unittest.TestCase):
     def test_peak(self) -> None:
         """The peak is the point with the highest suppression factor."""
         v_wall, alpha_n, suppression = self.SUPPRESSION.peak()
-        self.assertEqual(suppression, self.SUPPRESSION.suppressions.max())
+        assert suppression == self.SUPPRESSION.suppressions.max()
         index = np.argmax(self.SUPPRESSION.suppressions)
-        self.assertEqual(v_wall, self.SUPPRESSION.v_walls[index])
-        self.assertEqual(alpha_n, self.SUPPRESSION.alpha_ns[index])
+        assert v_wall == self.SUPPRESSION.v_walls[index]
+        assert alpha_n == self.SUPPRESSION.alpha_ns[index]
 
     def test_invalid_data(self) -> None:
         """The input arrays must have the same size."""
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError, match="Input arrays must have the same size"):
             sup.Suppression(
                 v_walls=np.array([0.5, 0.6]),
                 alpha_ns=np.array([0.1]),

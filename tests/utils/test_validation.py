@@ -4,6 +4,7 @@ import logging
 import unittest
 
 import numpy as np
+import pytest
 
 from pttools.utils.validation import check_value_in_range
 
@@ -13,25 +14,25 @@ class CheckValueInRangeTest(unittest.TestCase):
 
     def test_valid(self) -> None:
         """Test that valid scalars and arrays are returned unchanged."""
-        self.assertEqual(check_value_in_range(1., 0., 2., name="x"), 1.)
+        assert check_value_in_range(1., 0., 2., name="x") == 1.
         arr = np.array([0.5, 1., 1.5])
         np.testing.assert_array_equal(check_value_in_range(arr, 0., 2., name="x"), arr)
 
     def test_invalid_limits(self) -> None:
         """Test that a minimum larger than the maximum raises an error."""
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError, match="Invalid limits for range check"):
             check_value_in_range(1., 2., 0., name="x")
 
     def test_too_small(self) -> None:
         """Test that a too small value raises an error, or is logged and replaced with nan."""
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError, match="< x_min"):
             check_value_in_range(-1., 0., 2., name="x")
         with self.assertLogs("pttools.utils.validation", level=logging.ERROR) as logs:
             ret = check_value_in_range(-1., 0., 2., name="x", context="a test", error_on_invalid=False)
-        self.assertTrue(np.isnan(ret))
-        self.assertEqual(len(logs.records), 1)
-        self.assertIn("x_min", logs.output[0])
-        self.assertIn("for a test", logs.output[0])
+        assert np.isnan(ret)
+        assert len(logs.records) == 1
+        assert "x_min" in logs.output[0]
+        assert "for a test" in logs.output[0]
 
     def test_too_large_arr(self) -> None:
         """Test that too large array values are replaced with nan without modifying the input."""
@@ -46,9 +47,9 @@ class CheckValueInRangeTest(unittest.TestCase):
         """Test that a nan scalar is logged with the name of the caller and the context."""
         with self.assertLogs("pttools.utils.validation", level=logging.ERROR) as logs:
             ret = check_value_in_range(np.nan, 0., 2., name="x", context="a test")
-        self.assertTrue(np.isnan(ret))
-        self.assertEqual(len(logs.records), 1)
-        self.assertEqual(logs.records[0].getMessage(), "Got nan for x in test_nan_scalar for a test.")
+        assert np.isnan(ret)
+        assert len(logs.records) == 1
+        assert logs.records[0].getMessage() == "Got nan for x in test_nan_scalar for a test."
 
     def test_nan_arr(self) -> None:
         """Test that nan values in an array are logged separately from the out-of-range values."""
@@ -56,8 +57,8 @@ class CheckValueInRangeTest(unittest.TestCase):
         with self.assertLogs("pttools.utils.validation", level=logging.ERROR) as logs:
             ret = check_value_in_range(arr, 0., 2., name="x", error_on_invalid=False)
         # The nan values are logged, and the too large values are logged separately.
-        self.assertEqual(len(logs.records), 2)
-        self.assertEqual(logs.records[0].getMessage(), "Got nan for 1/3 values of x in test_nan_arr.")
+        assert len(logs.records) == 2
+        assert logs.records[0].getMessage() == "Got nan for 1/3 values of x in test_nan_arr."
         np.testing.assert_array_equal(ret, [0.5, np.nan, np.nan])
 
     def test_none(self) -> None:
@@ -67,13 +68,13 @@ class CheckValueInRangeTest(unittest.TestCase):
             # pyrefly: ignore[bad-specialization]
             ret = check_value_in_range(None, 0., 2., name="x")
         # pyrefly: ignore[no-matching-overload]
-        self.assertTrue(np.isnan(ret))
-        self.assertEqual(logs.records[0].getMessage(), "Got None for x in test_none.")
+        assert np.isnan(ret)
+        assert logs.records[0].getMessage() == "Got None for x in test_none."
 
     def test_no_logging(self) -> None:
         """Test that nothing is logged when logging is disabled."""
         with self.assertNoLogs("pttools.utils.validation", level=logging.ERROR):
             ret = check_value_in_range(np.nan, 0., 2., name="x", log_invalid=False)
             ret2 = check_value_in_range(-1., 0., 2., name="x", error_on_invalid=False, log_invalid=False)
-        self.assertTrue(np.isnan(ret))
-        self.assertTrue(np.isnan(ret2))
+        assert np.isnan(ret)
+        assert np.isnan(ret2)

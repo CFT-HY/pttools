@@ -43,16 +43,15 @@ class AttributeNameTest(unittest.TestCase):
 
     def test_attribute(self) -> None:
         """Test that the attribute name is the field name, or the getter if it is an attribute name."""
-        self.assertEqual(attribute_name(Field("v_wall")), "v_wall")
-        self.assertEqual(attribute_name(Field("thin_shell_limit", getter="thin_shell_t_points_min")),
-                         "thin_shell_t_points_min")
+        assert attribute_name(Field("v_wall")) == "v_wall"
+        assert attribute_name(Field("thin_shell_limit", getter="thin_shell_t_points_min")) == "thin_shell_t_points_min"
 
     def test_not_attribute(self) -> None:
         """Test that fields with a dotted or callable getter, or with call or index, have no attribute."""
-        self.assertIsNone(attribute_name(Field("v_wall", getter="bubble.v_wall")))
-        self.assertIsNone(attribute_name(Field("omgw0_h2", call=True)))
-        self.assertIsNone(attribute_name(Field("snr", call=True, index=0)))
-        self.assertIsNone(attribute_name(Field("x", getter=abs)))
+        assert attribute_name(Field("v_wall", getter="bubble.v_wall")) is None
+        assert attribute_name(Field("omgw0_h2", call=True)) is None
+        assert attribute_name(Field("snr", call=True, index=0)) is None
+        assert attribute_name(Field("x", getter=abs)) is None
 
 
 class FormatDescriptionTest(unittest.TestCase):
@@ -60,12 +59,12 @@ class FormatDescriptionTest(unittest.TestCase):
 
     def test_capitalize(self) -> None:
         """Test that the first letter of the description is capitalized."""
-        self.assertEqual(format_description("name of the model"), "Name of the model")
+        assert format_description("name of the model") == "Name of the model"
 
     def test_unchanged(self) -> None:
         """Test that descriptions starting with math or an uppercase letter are not changed."""
-        self.assertEqual(format_description(r"$v_\text{wall}$, wall speed"), r"$v_\text{wall}$, wall speed")
-        self.assertEqual(format_description("LaTeX label"), "LaTeX label")
+        assert format_description(r"$v_\text{wall}$, wall speed") == r"$v_\text{wall}$, wall speed"
+        assert format_description("LaTeX label") == "LaTeX label"
 
 
 @unittest.skipUnless(HAS_SPHINX, "Sphinx is not installed")
@@ -81,38 +80,37 @@ class FieldAttributeDocsTest(unittest.TestCase):
 
     def test_attribute(self) -> None:
         """Test that an attribute is documented with the description of its field."""
-        self.assertEqual(
-            self.docs["pttools.bubble.bubble.base", "BaseBubble", "v_wall"], r"$v_\text{wall}$, wall speed")
+        assert self.docs["pttools.bubble.bubble.base", "BaseBubble", "v_wall"] == r"$v_\text{wall}$, wall speed"
 
     def test_most_basic_class(self) -> None:
         """An attribute should be documented in the class that introduces it, not in the subclasses."""
-        self.assertIn(("pttools.models.base", "BaseModel", "label_latex"), self.docs)
-        self.assertNotIn(("pttools.models.bag", "BagModel", "label_latex"), self.docs)
+        assert ("pttools.models.base", "BaseModel", "label_latex") in self.docs
+        assert ("pttools.models.bag", "BagModel", "label_latex") not in self.docs
 
     def test_fallback_to_field_class(self) -> None:
         """Attributes that the source code analysis does not find should be documented in the class of the field."""
-        self.assertIn(("pttools.models.model", "Model", "w_min"), self.docs)
+        assert ("pttools.models.model", "Model", "w_min") in self.docs
 
     def test_no_properties(self) -> None:
         """Properties and methods have docstrings of their own."""
         names = {attr for _, _, attr in self.docs}
         for name in ("css2_Tn", "kappa", "pow_gw", "omgw0_h2", "f_max"):
-            self.assertNotIn(name, names)
+            assert name not in names
 
     def test_no_attributes_of_other_objects(self) -> None:
         """Fields that get attributes of other objects should not be documented as attributes of the class."""
-        self.assertNotIn(("pttools.ssm.spectrum", "SSMSpectrum", "v_wall"), self.docs)
+        assert ("pttools.ssm.spectrum", "SSMSpectrum", "v_wall") not in self.docs
 
     def test_add_field_docs(self) -> None:
         """Test that the field docs are added to the Sphinx module analyzer, keeping the existing comments."""
         from sphinx.pycode import ModuleAnalyzer  # noqa: PLC0415
         add_field_docs()
         analyzer = ModuleAnalyzer.for_module("pttools.bubble.bubble.base")
-        self.assertEqual(analyzer.attr_docs["BaseBubble", "v_wall"], [r"$v_\text{wall}$, wall speed", ""])
+        assert analyzer.attr_docs["BaseBubble", "v_wall"] == [r"$v_\text{wall}$, wall speed", ""]
         # Existing comments are kept
-        self.assertTrue(analyzer.attr_docs["BaseBubble", "solved"][0].startswith("Whether the solver provided"))
+        assert analyzer.attr_docs["BaseBubble", "solved"][0].startswith("Whether the solver provided")
         # Adding the docs again should not change anything.
-        self.assertEqual(add_field_docs(), 0)
+        assert add_field_docs() == 0
 
 
 class FieldDependenciesTest(unittest.TestCase):
@@ -123,8 +121,8 @@ class FieldDependenciesTest(unittest.TestCase):
         app = mock.MagicMock()
         note_field_dependencies(app, "class", "Bubble", Bubble, None, [])
         paths = {Path(call.args[0]).name for call in app.env.note_dependency.call_args_list}
-        self.assertEqual(app.env.note_dependency.call_count, len(FIELD_DEFINITION_MODULES))
-        self.assertEqual(paths, {"export.py"})
+        assert app.env.note_dependency.call_count == len(FIELD_DEFINITION_MODULES)
+        assert paths == {"export.py"}
 
     def test_other_objects(self) -> None:
         """Test that the docs of other classes and of attributes do not get field dependencies."""
@@ -146,7 +144,7 @@ class DescriptionSyntaxTest(unittest.TestCase):
                 warnings = io.StringIO()
                 docutils.core.publish_doctree(
                     format_description(description), settings_overrides={"warning_stream": warnings})
-                self.assertEqual(warnings.getvalue(), "")
+                assert warnings.getvalue() == ""
 
 
 if __name__ == "__main__":

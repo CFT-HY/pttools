@@ -4,6 +4,7 @@ import pickle
 import unittest
 
 import numpy as np
+import pytest
 
 from pttools import models
 from pttools.bubble.integrate import differentials
@@ -37,29 +38,29 @@ class TestConstCSFuncs(unittest.TestCase):
         """Models with the same sound speeds share the compiled functions and the pointers."""
         model1 = self.create_model(self.CSB2)
         model2 = self.create_model(self.CSB2)
-        self.assertIsNot(model1, model2)
-        self.assertIs(model1.cs2, model2.cs2)
-        self.assertIs(model1.cs2_neg, model2.cs2_neg)
-        self.assertEqual(model1.cs2_ptr(), model2.cs2_ptr())
-        self.assertEqual(model1.df_dtau_ptr(), model2.df_dtau_ptr())
+        assert model1 is not model2
+        assert model1.cs2 is model2.cs2
+        assert model1.cs2_neg is model2.cs2_neg
+        assert model1.cs2_ptr() == model2.cs2_ptr()
+        assert model1.df_dtau_ptr() == model2.df_dtau_ptr()
 
     def test_not_shared(self) -> None:
         """Models with different sound speeds have their own compiled functions."""
         model1 = self.create_model(self.CSB2)
         model2 = self.create_model(0.3)
-        self.assertIsNot(model1.cs2, model2.cs2)
-        self.assertNotEqual(model1.cs2_ptr(), model2.cs2_ptr())
-        self.assertNotEqual(model1.df_dtau_ptr(), model2.df_dtau_ptr())
+        assert model1.cs2 is not model2.cs2
+        assert model1.cs2_ptr() != model2.cs2_ptr()
+        assert model1.df_dtau_ptr() != model2.df_dtau_ptr()
 
     def test_pickle(self) -> None:
         """Unpickling a model restores the shared functions instead of creating new ones."""
         model1 = self.create_model(self.CSB2)
         model2 = pickle.loads(pickle.dumps(model1))
-        self.assertIs(model1.cs2, model2.cs2)
-        self.assertIs(model1.cs2_neg, model2.cs2_neg)
-        self.assertEqual(model1.cs2_ptr(), model2.cs2_ptr())
-        self.assertEqual(model1.df_dtau_ptr(), model2.df_dtau_ptr())
-        self.assertEqual(model1.id, model2.id)
+        assert model1.cs2 is model2.cs2
+        assert model1.cs2_neg is model2.cs2_neg
+        assert model1.cs2_ptr() == model2.cs2_ptr()
+        assert model1.df_dtau_ptr() == model2.df_dtau_ptr()
+        assert model1.id == model2.id
 
 
 class TestDfDtauIdentity(unittest.TestCase):
@@ -77,8 +78,8 @@ class TestDfDtauIdentity(unittest.TestCase):
         r"""The differential equations of ConstCSModels should use the $c_s^2$ of the model."""
         for csb2 in self.CSB2_VALUES:
             model = models.ConstCSModel(css2=1/3, csb2=csb2, a_s=2, a_b=1, V_s=0.1, log_info=False)
-            self.assertAlmostEqual(df_dtau_cs2(model.df_dtau_ptr(), Phase.BROKEN), csb2)
-            self.assertAlmostEqual(df_dtau_cs2(model.df_dtau_ptr(), Phase.SYMMETRIC), 1/3)
+            assert df_dtau_cs2(model.df_dtau_ptr(), Phase.BROKEN) == pytest.approx(csb2, abs=5e-8)
+            assert df_dtau_cs2(model.df_dtau_ptr(), Phase.SYMMETRIC) == pytest.approx(1/3, abs=5e-8)
 
     def test_full(self) -> None:
         """The general models are identified by a unique id instead of the sound speeds."""
@@ -86,7 +87,7 @@ class TestDfDtauIdentity(unittest.TestCase):
             thermo = models.ConstCSThermoModel(css2=css2, csb2=1/3, a_s=1.2, a_b=1.1, V_s=1.3)
             model = models.FullModel(thermo=thermo)
             # The cs2 of the FullModel is based on a spline, and therefore the precision is limited.
-            self.assertAlmostEqual(df_dtau_cs2(model.df_dtau_ptr(), Phase.SYMMETRIC), css2, places=3)
+            assert df_dtau_cs2(model.df_dtau_ptr(), Phase.SYMMETRIC) == pytest.approx(css2, abs=5e-4)
 
 
 if __name__ == "__main__":

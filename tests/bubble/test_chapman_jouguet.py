@@ -4,6 +4,7 @@ import typing as tp
 import unittest
 
 import numpy as np
+import pytest
 from scipy.optimize import brentq
 
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet, v_chapman_jouguet_bag, wm_chapman_jouguet
@@ -86,8 +87,8 @@ class ChapmanJouguetTest(unittest.TestCase):
 
     def test_bag_limits(self) -> None:
         r"""$v_{CJ} \to c_s$ as $\alpha_+ \to 0$ and $v_{CJ} \to 1$ as $\alpha_+ \to \infty$."""
-        self.assertAlmostEqual(v_chapman_jouguet_bag(0.), CS0)
-        self.assertAlmostEqual(v_chapman_jouguet_bag(1e8), 1)
+        assert v_chapman_jouguet_bag(0.) == pytest.approx(CS0, abs=5e-8)
+        assert v_chapman_jouguet_bag(1e8) == pytest.approx(1, abs=5e-8)
 
     def test_bag_junction(self) -> None:
         """The Chapman-Jouguet speed of the bag model should fulfill the junction conditions."""
@@ -142,7 +143,7 @@ class ChapmanJouguetTest(unittest.TestCase):
             with self.subTest(model=model.label_unicode):
                 data = v_chapman_jouguet(model, alpha_n, extra_output=True)
                 ref = v_chapman_jouguet(model, alpha_n, extra_output=True, analytical=False)
-                self.assertIsInstance(data, tuple)
+                assert isinstance(data, tuple)
                 assert_allclose(np.array(data), np.array(ref), rtol=1e-10)
 
     def test_const_cs_reference(self) -> None:

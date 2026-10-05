@@ -86,7 +86,7 @@ class DataModelTest(unittest.TestCase):
             with self.subTest(phase=phase):
                 np.testing.assert_allclose(self.model.w(temp, phase), self.ref.w(temp, phase), rtol=rtol)
         ratio = self.ref.w(temp, Phase.SYMMETRIC) / self.ref.w(temp, Phase.BROKEN)
-        self.assertGreater(np.mean(np.abs(ratio - 1) > rtol), 0.8)
+        assert np.mean(np.abs(ratio - 1) > rtol) > 0.8
 
     def test_cs2(self) -> None:
         r"""Test that $c_s^2$ corresponds to the data of each phase, also for an array of phases."""
@@ -106,16 +106,16 @@ class DataModelTest(unittest.TestCase):
         for phase in (Phase.SYMMETRIC, Phase.BROKEN):
             with self.subTest(phase=phase):
                 cs2 = self.model.cs2(w, phase)
-                self.assertTrue(np.isnan(cs2[0]))
-                self.assertFalse(np.isnan(cs2[1]))
-                self.assertTrue(np.isnan(cs2[2]))
+                assert np.isnan(cs2[0])
+                assert not np.isnan(cs2[1])
+                assert np.isnan(cs2[2])
                 for i, w_i in enumerate(w):
                     np.testing.assert_equal(self.model.cs2(float(w_i), phase), cs2[i])
 
     def test_temperature_is_physical(self) -> None:
         """Test that the temperature properties of the model are those given to the constructor."""
-        self.assertFalse(self.model.temperature_is_physical)
-        self.assertEqual(self.model.temperature_unit_gev, 1)
+        assert not self.model.temperature_is_physical
+        assert self.model.temperature_unit_gev == 1
         model = models.DataModel(
             T_s=self.temp, T_b=self.temp,
             p_s=self.data[Phase.SYMMETRIC]["p"], p_b=self.data[Phase.BROKEN]["p"],
@@ -124,5 +124,5 @@ class DataModelTest(unittest.TestCase):
             T_crit=self.ref.T_crit, T_is_physical=True, T_unit_gev=1e-3,
             name="data_const_cs_physical"
         )
-        self.assertTrue(model.temperature_is_physical)
-        self.assertEqual(model.temperature_unit_gev, 1e-3)
+        assert model.temperature_is_physical
+        assert model.temperature_unit_gev == 1e-3

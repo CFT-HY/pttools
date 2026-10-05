@@ -5,6 +5,7 @@ import importlib
 import importlib.metadata
 import io
 import os
+import re
 import subprocess
 import sys
 import typing as tp
@@ -130,8 +131,8 @@ class TestTBB(unittest.TestCase):
     def test_load_tbb(self) -> None:
         """Test that the TBB library is loaded and is recent enough."""
         version = tbb.load_tbb()
-        self.assertIsNotNone(version)
-        self.assertGreaterEqual(version, tbb.TBB_MIN_VERSION)
+        assert version is not None
+        assert version >= tbb.TBB_MIN_VERSION
 
     @staticmethod
     def test_numba_tbb_layer() -> None:
@@ -143,8 +144,8 @@ class TestTBB(unittest.TestCase):
 
     def test_tbb_version(self) -> None:
         """The TBB library is loaded on import."""
-        self.assertIsNotNone(tbb.TBB_VERSION)
-        self.assertGreaterEqual(tbb.TBB_VERSION, tbb.TBB_MIN_VERSION)
+        assert tbb.TBB_VERSION is not None
+        assert tbb.TBB_VERSION >= tbb.TBB_MIN_VERSION
 
     def test_main_module(self) -> None:
         """The TBB check can be run with "python -m pttools.speedup.tbb" without warnings."""
@@ -155,9 +156,9 @@ class TestTBB(unittest.TestCase):
         result = subprocess.run(
             [sys.executable, "-m", "pttools.speedup.tbb"], check=False, capture_output=True, text=True, env=env
         )
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertRegex(result.stdout, r"^TBB version: \d+$")
-        self.assertNotIn("Warning", result.stderr)
+        assert result.returncode == 0, result.stderr
+        assert re.search(r"^TBB version: \d+$", result.stdout)
+        assert "Warning" not in result.stderr
 
 
 class TestTBBMain(unittest.TestCase):
@@ -178,31 +179,29 @@ class TestTBBMain(unittest.TestCase):
 
     def test_main_compatible(self) -> None:
         """A compatible TBB version gives the exit code 0."""
-        self.assertEqual(self.run_main(tbb.TBB_MIN_VERSION), (0, f"TBB version: {tbb.TBB_MIN_VERSION}\n"))
+        assert self.run_main(tbb.TBB_MIN_VERSION) == (0, f"TBB version: {tbb.TBB_MIN_VERSION}\n")
 
     def test_main_too_old(self) -> None:
         """A too old TBB version gives the exit code 1."""
-        self.assertEqual(self.run_main(tbb.TBB_MIN_VERSION - 1), (1, f"TBB version: {tbb.TBB_MIN_VERSION - 1}\n"))
+        assert self.run_main(tbb.TBB_MIN_VERSION - 1) == (1, f"TBB version: {tbb.TBB_MIN_VERSION - 1}\n")
 
     def test_main_not_found(self) -> None:
         """A missing TBB library gives the exit code 1."""
-        self.assertEqual(self.run_main(None), (1, "TBB version: None\n"))
+        assert self.run_main(None) == (1, "TBB version: None\n")
 
     def test_main_not_found_other_architecture(self) -> None:
         """TBB is not required on CPU architectures for which the tbb package is not available."""
         returncode, output = self.run_main(None, is_x86_64=False)
-        self.assertEqual(returncode, 0)
-        self.assertTrue(output.startswith("TBB version: None\n"), output)
-        self.assertIn(self.NOTE, output)
+        assert returncode == 0
+        assert output.startswith("TBB version: None\n"), output
+        assert self.NOTE in output
 
     def test_main_too_old_other_architecture(self) -> None:
         """A too old TBB version is not an error on other CPU architectures, but the note is printed."""
         returncode, output = self.run_main(tbb.TBB_MIN_VERSION - 1, is_x86_64=False)
-        self.assertEqual(returncode, 0)
-        self.assertIn(self.NOTE, output)
+        assert returncode == 0
+        assert self.NOTE in output
 
     def test_main_compatible_other_architecture(self) -> None:
         """If a compatible TBB library is found, e.g. from the operating system, the note is not printed."""
-        self.assertEqual(
-            self.run_main(tbb.TBB_MIN_VERSION, is_x86_64=False), (0, f"TBB version: {tbb.TBB_MIN_VERSION}\n")
-        )
+        assert self.run_main(tbb.TBB_MIN_VERSION, is_x86_64=False) == (0, f"TBB version: {tbb.TBB_MIN_VERSION}\n")

@@ -106,8 +106,8 @@ class FullModelDegreesOfFreedomTest(unittest.TestCase):
         ge = self.model.ge(w, Phase.BROKEN)
         gp = self.model.gp(w, Phase.BROKEN)
         gs = self.model.gs(w, Phase.BROKEN)
-        self.assertGreater(np.abs(ge - gs).item(), 1e-2)
-        self.assertGreater(np.abs(ge - gp).item(), 1e-2)
+        assert np.abs(ge - gs).item() > 1e-2
+        assert np.abs(ge - gp).item() > 1e-2
 
 
 class StandardModelPotentialTest(unittest.TestCase):

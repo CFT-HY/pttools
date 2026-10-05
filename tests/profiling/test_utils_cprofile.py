@@ -25,4 +25,4 @@ class TestSaveSorted(unittest.TestCase):
                     save_sorted(profile, path, sort)
             for name in ("cumulative", "time"):
                 for suffix in ("", "_numba", "_all"):
-                    self.assertTrue((path.parent / f"{path.name}_{name}{suffix}.txt").is_file())
+                    assert (path.parent / f"{path.name}_{name}{suffix}.txt").is_file()

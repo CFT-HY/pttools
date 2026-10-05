@@ -27,12 +27,12 @@ class TestStandardModel(ThermoModelBaseCase[models.StandardModel], unittest.Test
         It's easy to accidentally make these into column vectors,
         which will mess up the dimensionality of the spliners.
         """
-        self.assertEqual(self.thermo.GEFF_DATA.ndim, 2)
-        self.assertEqual(self.thermo.GEFF_DATA_GE.ndim, 1)
-        self.assertEqual(self.thermo.GEFF_DATA_GS.ndim, 1)
-        self.assertEqual(self.thermo.GEFF_DATA_GE_GS_RATIO.ndim, 1)
-        self.assertEqual(self.thermo.GEFF_DATA_LOG_TEMP.ndim, 1)
-        self.assertEqual(self.thermo.GEFF_DATA_TEMP.ndim, 1)
+        assert self.thermo.GEFF_DATA.ndim == 2
+        assert self.thermo.GEFF_DATA_GE.ndim == 1
+        assert self.thermo.GEFF_DATA_GS.ndim == 1
+        assert self.thermo.GEFF_DATA_GE_GS_RATIO.ndim == 1
+        assert self.thermo.GEFF_DATA_LOG_TEMP.ndim == 1
+        assert self.thermo.GEFF_DATA_TEMP.ndim == 1
 
     # def test_phase_invariance(self):
     #     raise NotImplementedError

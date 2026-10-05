@@ -61,12 +61,12 @@ class TestCS2Ptr(unittest.TestCase):
         model = ConstCSModel(a_s=1.5, a_b=1, V_s=1, css2=1/3 - 0.01, csb2=1/3 - 0.02)
         self.check_model(model)
         # The pointer should be the same on every call, so that the callers don't have to be recompiled.
-        self.assertEqual(model.cs2_ptr(), model.cs2_ptr())
+        assert model.cs2_ptr() == model.cs2_ptr()
 
     def test_const_cs_model_bag(self) -> None:
         """A ConstCSModel that is equivalent to the Bag Model should use the pointer of the Bag Model."""
         model = ConstCSModel(a_s=1.5, a_b=1, V_s=1, css2=1/3, csb2=1/3)
-        self.assertEqual(model.cs2_ptr(), CS2_BAG_SCALAR_PTR)
+        assert model.cs2_ptr() == CS2_BAG_SCALAR_PTR
         self.check_model(model)
 
     def test_custom_function(self) -> None:
@@ -99,9 +99,8 @@ class TestNumbaCache(unittest.TestCase):
                 self.run_solver(cache_dir, Path(temp_dir) / f"cache_index_sizes{i}.json")
                 for i in range(2)
             ]
-        self.assertTrue(sizes[0], "No Numba cache files were created.")
-        self.assertEqual(
-            sizes[1], sizes[0],
+        assert sizes[0], "No Numba cache files were created."
+        assert sizes[1] == sizes[0], (
             "The Numba cache indexes grew on the second run. "
             "Are the cached functions given arguments that are not the same on every run, "
             "such as jitted functions? "

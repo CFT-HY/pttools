@@ -3,6 +3,7 @@
 import unittest
 
 import numpy as np
+import pytest
 
 from pttools.utils.math import finite_edge
 
@@ -18,10 +19,10 @@ class FiniteEdgeTest(unittest.TestCase):
     def test_increasing(self) -> None:
         """Test that the edge is found when searching in the increasing direction."""
         edge = finite_edge(self.sqrt_1_minus_x, 0., 2.)
-        self.assertTrue(np.isfinite(self.sqrt_1_minus_x(edge)))
-        self.assertAlmostEqual(edge, 1., places=12)
+        assert np.isfinite(self.sqrt_1_minus_x(edge))
+        assert edge == pytest.approx(1., abs=5e-13)
 
     def test_decreasing(self) -> None:
         """Test that the edge is found when searching in the decreasing direction."""
         edge = finite_edge(lambda x: self.sqrt_1_minus_x(-x), 0., -2.)
-        self.assertAlmostEqual(edge, -1., places=12)
+        assert edge == pytest.approx(-1., abs=5e-13)

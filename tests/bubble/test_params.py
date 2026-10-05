@@ -3,6 +3,7 @@
 import unittest
 
 import numba
+import pytest
 
 from pttools import speedup
 from pttools.bubble.physical_params import NucArgs, PhysicalParams
@@ -20,21 +21,21 @@ class TestParams(unittest.TestCase):
     def test_params_without_nuc(self) -> None:
         """Test that PhysicalParams without nucleation parameters have None as the nucleation type and arguments."""
         params = PhysicalParams(0.1, 0.2)
-        self.assertIsNone(params.nuc_type)
-        self.assertIsNone(params.nuc_args)
+        assert params.nuc_type is None
+        assert params.nuc_args is None
 
     def test_params_with_nuc(self) -> None:
         """Test that PhysicalParams with only the nucleation type have None as the nucleation arguments."""
         params = PhysicalParams(0.1, 0.2, NucType.SIMULTANEOUS)
-        self.assertIsNotNone(params.nuc_type)
-        self.assertIsNone(params.nuc_args)
+        assert params.nuc_type is not None
+        assert params.nuc_args is None
 
     def test_params_with_nuc_args(self) -> None:
         """Test that PhysicalParams can be created with both the nucleation type and arguments."""
         nuc_args = NucArgs(0.1)
         params = PhysicalParams(0.1, 0.2, NucType.SIMULTANEOUS, nuc_args)
-        self.assertIsNotNone(params.nuc_type)
-        self.assertIsNotNone(params.nuc_args)
+        assert params.nuc_type is not None
+        assert params.nuc_args is not None
 
     @unittest.skipIf(speedup.NUMBA_DISABLE_JIT, "Numba errors cannot be tested when JIT compilation is disabled.")
     def test_params_without_nuc_args_numba(self) -> None:
@@ -44,22 +45,22 @@ class TestParams(unittest.TestCase):
         This test will alert, when the bug is fixed.
         https://github.com/numba/numba/issues/4820.
         """
-        with self.assertRaises((numba.LoweringError, TypeError)):
+        with pytest.raises((numba.LoweringError, TypeError)):
             params_without_nuc_args_numba()
-        # self.assertIsNone(params.nuc_type)
-        # self.assertIsNone(params.nuc_args)
+        # assert params.nuc_type is None
+        # assert params.nuc_args is None
 
     def test_params_without_nuc_args_numba_nones(self) -> None:
         """Test creating PhysicalParams in jitted code with explicit None values for the nucleation parameters."""
         params = params_without_nuc_args_numba_nones()
-        self.assertIsNone(params.nuc_type)
-        self.assertIsNone(params.nuc_args)
+        assert params.nuc_type is None
+        assert params.nuc_args is None
 
     def test_params_with_nuc_args_numba(self) -> None:
         """Test creating PhysicalParams with nucleation arguments in jitted code."""
         params = params_with_nuc_args_numba()
-        self.assertIsNotNone(params.nuc_type)
-        self.assertIsNotNone(params.nuc_args)
+        assert params.nuc_type is not None
+        assert params.nuc_args is not None
 
 
 # Functions that return jitclass instances cannot be cached.

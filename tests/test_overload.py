@@ -36,7 +36,7 @@ class TestOverload(unittest.TestCase):
         jitted = numba.njit(func)
         for x in self.INPUTS:
             with self.subTest(x=x):
-                self.assertEqual(bool(jitted(x)), bool(ref(x)))
+                assert bool(jitted(x)) == bool(ref(x))
 
     def test_all(self) -> None:
         """Test that the jitted np.all gives the same results as NumPy."""
@@ -54,4 +54,4 @@ class TestOverload(unittest.TestCase):
         """Test that np_all_fix without jitting gives the same results as np.all."""
         for x in self.INPUTS:
             with self.subTest(x=x):
-                self.assertEqual(bool(np_all_fix(x)), bool(np.all(x)))
+                assert bool(np_all_fix(x)) == bool(np.all(x))

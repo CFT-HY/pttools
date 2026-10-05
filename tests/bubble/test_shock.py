@@ -4,6 +4,7 @@ import typing as tp
 import unittest
 
 import numpy as np
+import pytest
 
 from pttools.bubble.junction import junction_condition_deviation1, junction_condition_deviation2
 from pttools.bubble.phase import Phase
@@ -47,33 +48,33 @@ class TestShock(unittest.TestCase):
         r"""The general shock solver should reproduce the bag model shock curve, :gw_pt_ssm:`\ ` eq. B.17."""
         wn = self.bag.wn(0.1)
         xi, v_sh = v_shock_curve(self.bag, wn=wn)
-        self.assertTrue(np.all(np.isfinite(v_sh)))
+        assert np.all(np.isfinite(v_sh))
         # The first point is at xi=cs_n, where v_shock_bag returns nan due to floating point inaccuracy.
         assert_allclose(v_sh[1:], v_shock_bag(xi[1:]), rtol=1e-7)
-        self.assertEqual(v_sh[0], 0)
+        assert v_sh[0] == 0
 
     def test_v_shock_const_cs_bag_like(self) -> None:
         r"""A ConstCSModel with $c_{s,s}^2 = 1/3$ should have the same shock curve as the bag model."""
         wn = self.const_cs_bag_like.wn(0.1)
         xi = np.linspace(self.const_cs_bag_like.css, 0.99, 20)
         xi_ret, v_sh = v_shock_curve(self.const_cs_bag_like, wn=wn, xi=xi)
-        self.assertIs(xi_ret, xi)
-        self.assertTrue(np.all(np.isfinite(v_sh)))
+        assert xi_ret is xi
+        assert np.all(np.isfinite(v_sh))
         assert_allclose(v_sh[1:], v_shock_bag(xi[1:]), rtol=1e-7)
-        self.assertEqual(v_sh[0], 0)
+        assert v_sh[0] == 0
 
     def test_v_shock_const_cs(self) -> None:
         r"""Shock curve of a ConstCSModel with $c_{s,s}^2 \neq 1/3$."""
         wn = self.const_cs.wn(0.1)
         xi, v_sh = v_shock_curve(self.const_cs, wn=wn)
-        self.assertTrue(np.all(np.isfinite(v_sh)))
+        assert np.all(np.isfinite(v_sh))
         assert_allclose(xi, self.XI_REF)
         assert_allclose(v_sh, self.V_SH_REF, rtol=1e-6)
         # The shock curve should start from v=0 at xi=cs_n and increase monotonically to v=1 at xi=1.
-        self.assertEqual(xi[0], self.const_cs.css)
-        self.assertEqual(v_sh[0], 0)
-        self.assertEqual(v_sh[-1], 1)
-        self.assertTrue(np.all(np.diff(v_sh) > 0))
+        assert xi[0] == self.const_cs.css
+        assert v_sh[0] == 0
+        assert v_sh[-1] == 1
+        assert np.all(np.diff(v_sh) > 0)
 
     def test_solve_shock_junction_conditions(self) -> None:
         r"""The solution of the shock solver should satisfy the junction conditions."""
@@ -84,14 +85,14 @@ class TestShock(unittest.TestCase):
                 for xi in np.linspace(cs_n + 0.05, 0.95, 5):
                     with self.subTest(xi=xi):
                         v2_tilde, w2 = solve_shock(model, v1_tilde=xi, w1=wn, backwards=True, csp=cs_n)
-                        self.assertTrue(np.isfinite(v2_tilde))
-                        self.assertTrue(np.isfinite(w2))
+                        assert np.isfinite(v2_tilde)
+                        assert np.isfinite(w2)
                         p1 = model.p(wn, Phase.SYMMETRIC)
                         p2 = model.p(w2, Phase.SYMMETRIC)
                         dev1 = junction_condition_deviation1(v1=xi, w1=wn, v2=v2_tilde, w2=w2)
                         dev2 = junction_condition_deviation2(v1=xi, w1=wn, p1=p1, v2=v2_tilde, w2=w2, p2=p2)
-                        self.assertAlmostEqual(dev1 / wn, 0, places=7)
-                        self.assertAlmostEqual(dev2 / wn, 0, places=7)
+                        assert dev1 / wn == pytest.approx(0, abs=5e-8)
+                        assert dev2 / wn == pytest.approx(0, abs=5e-8)
                         # The shock velocity in the plasma frame is given by the Lorentz transformation
                         assert_allclose(
                             v_shock(model, wn=wn, xi=xi, cs_n=cs_n),
@@ -114,5 +115,5 @@ class TestShock(unittest.TestCase):
         r"""No shock exists for $\xi \leq c_{s,n}$."""
         wn = self.const_cs.wn(0.1)
         cs_n = float(np.sqrt(self.const_cs.cs2(wn, Phase.SYMMETRIC)))
-        self.assertEqual(v_shock(self.const_cs, wn=wn, xi=cs_n, cs_n=cs_n), 0)
-        self.assertEqual(v_shock(self.const_cs, wn=wn, xi=0.9 * cs_n, cs_n=cs_n), 0)
+        assert v_shock(self.const_cs, wn=wn, xi=cs_n, cs_n=cs_n) == 0
+        assert v_shock(self.const_cs, wn=wn, xi=0.9 * cs_n, cs_n=cs_n) == 0

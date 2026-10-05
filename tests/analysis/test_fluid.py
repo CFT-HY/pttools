@@ -26,8 +26,8 @@ class CurvesSymmetricTest(unittest.TestCase):
 
     def test_shape(self) -> None:
         """Test that the curves have the documented shape and that the default curves can be integrated."""
-        self.assertEqual(self.data.shape, (3, fluid.DEFAULT_CURVES_SYMMETRIC_V.size, 2*self.N_XI))
-        self.assertFalse(np.any(np.isnan(self.data)))
+        assert self.data.shape == (3, fluid.DEFAULT_CURVES_SYMMETRIC_V.size, 2 * self.N_XI)
+        assert not np.any(np.isnan(self.data))
 
     def test_start_on_v_xi_line(self) -> None:
         r"""Test that both the backwards and forwards curves start from the $v = \xi$ line."""
@@ -42,11 +42,11 @@ class CurvesSymmetricTest(unittest.TestCase):
         xi_b = self.data[2, :, :self.N_XI]
         below = v_b < v_max_behind(xi_b, CS0)
         # Ensure that the test is meaningful
-        self.assertTrue(np.any(below))
-        self.assertTrue(np.any(~below))
+        assert np.any(below)
+        assert np.any(~below)
 
         v_b_cut = self.data_cut[0, :, :self.N_XI]
-        self.assertTrue(np.all(np.isnan(v_b_cut[below])))
+        assert np.all(np.isnan(v_b_cut[below]))
         np.testing.assert_array_equal(v_b_cut[~below], v_b[~below])
 
     def test_csb_keeps_other_data(self) -> None:

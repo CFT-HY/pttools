@@ -102,8 +102,8 @@ class ModelBaseCase[M: Model](JsonTestCase, abc.ABC):
     def test_export(self) -> None:
         """Test that the model can be exported."""
         self.model.export()
-        # self.assertIn("name", data)
-        # self.assertin("label", data)
+        # assert "name" in data
+        # assert "label" in data
 
     def test_p_temp(self) -> None:
         """Test the pressure as a function of the temperature against the reference data."""

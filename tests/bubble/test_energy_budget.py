@@ -250,7 +250,4 @@ class DeltaNTest(unittest.TestCase):
     def test_ubarf_approx_delta_n(self) -> None:
         r"""A nonzero $\delta_n$ should decrease $\bar{U}_f$."""
         model = BagModel(a_s=1.2, a_b=1, V_s=1, V_b=0.2)
-        self.assertLess(
-            ubarf_approx(0.7, 0.3, model=model),
-            ubarf_approx(0.7, 0.3)
-        )
+        assert ubarf_approx(0.7, 0.3, model=model) < ubarf_approx(0.7, 0.3)

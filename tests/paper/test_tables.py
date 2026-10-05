@@ -44,7 +44,7 @@ class TestTables(unittest.TestCase):
         ref_data = path.read_text()
 
         buffer.seek(0)
-        self.assertEqual(buffer.read(), ref_data)
+        assert buffer.read() == ref_data
 
     @conditional_decorator(unittest.expectedFailure, NUMBA_INTEGRATE)
     def test_1dh_compare_table(self) -> None:

@@ -6,6 +6,7 @@ import unittest
 import warnings
 
 import numpy as np
+import pytest
 
 from pttools.bubble.bubble import Bubble
 from pttools.bubble.solution_type import SolutionType
@@ -36,10 +37,10 @@ class FluidGKSVDVTest(unittest.TestCase):
         """Check that both solvers give the expected solution type and agree on the junction quantities and kappa."""
         pttools_bubble = Bubble(self.model, v_wall=v_wall, alpha_n=alpha_n)
         giese_bubble = Bubble(self.model, v_wall=v_wall, alpha_n=alpha_n, use_giese_solver=True)
-        self.assertEqual(pttools_bubble.sol_type, sol_type)
-        self.assertEqual(giese_bubble.sol_type, sol_type)
-        self.assertFalse(giese_bubble.solver_failed)
-        self.assertFalse(giese_bubble.invalid_junction)
+        assert pttools_bubble.sol_type == sol_type
+        assert giese_bubble.sol_type == sol_type
+        assert not giese_bubble.solver_failed
+        assert not giese_bubble.invalid_junction
         # The shock is located with different resolutions, so the tiny velocities there are compared with atol.
         for name in JUNCTION_QUANTITIES:
             with self.subTest(name=name):
@@ -51,8 +52,8 @@ class FluidGKSVDVTest(unittest.TestCase):
             with self.subTest(name=name):
                 np.testing.assert_allclose(getattr(giese_bubble, name), getattr(pttools_bubble, name), rtol=1e-2)
         # The velocities in the plasma frame should be at most the wall velocity.
-        self.assertLessEqual(giese_bubble.vp, v_wall)
-        self.assertLessEqual(giese_bubble.vm, v_wall)
+        assert giese_bubble.vp <= v_wall
+        assert giese_bubble.vm <= v_wall
 
     def test_sub_def(self) -> None:
         """Compare the solvers for a subsonic deflagration."""
@@ -69,11 +70,11 @@ class FluidGKSVDVTest(unittest.TestCase):
     def test_deton_junction(self) -> None:
         """For a detonation, the fluid in front of the wall is at rest and has the nucleation enthalpy."""
         bubble = Bubble(self.model, v_wall=0.85, alpha_n=0.1, use_giese_solver=True)
-        self.assertEqual(bubble.sol_type, SolutionType.DETON)
-        self.assertEqual(bubble.vp, 0)
-        self.assertAlmostEqual(bubble.vp_tilde, bubble.v_wall)
-        self.assertAlmostEqual(bubble.wp, bubble.wn)
-        self.assertGreater(bubble.wm, bubble.wn)
+        assert bubble.sol_type == SolutionType.DETON
+        assert bubble.vp == 0
+        assert bubble.vp_tilde == pytest.approx(bubble.v_wall, abs=5e-8)
+        assert bubble.wp == pytest.approx(bubble.wn, abs=5e-8)
+        assert bubble.wm > bubble.wn
 
     def test_failure(self) -> None:
         """A solver failure should be reported by the solver only, without further warnings from the validations."""
@@ -82,8 +83,8 @@ class FluidGKSVDVTest(unittest.TestCase):
             warnings.simplefilter("error", RuntimeWarning)
             with self.assertNoLogs("pttools.utils.validation", level=logging.ERROR):
                 bubble = Bubble(model, v_wall=0.2, alpha_n=1.0, allow_invalid=False, use_giese_solver=True)
-        self.assertTrue(bubble.solver_failed)
-        self.assertTrue(bubble.failed)
-        self.assertEqual(bubble.sol_type, SolutionType.ERROR)
-        self.assertTrue(np.isnan(bubble.alpha_plus))
-        self.assertTrue(np.all(np.isnan(bubble.v)))
+        assert bubble.solver_failed
+        assert bubble.failed
+        assert bubble.sol_type == SolutionType.ERROR
+        assert np.isnan(bubble.alpha_plus)
+        assert np.all(np.isnan(bubble.v))

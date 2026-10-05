@@ -30,8 +30,7 @@ class TestReloadInit(unittest.TestCase):
             # Load the parallel function from the cache, and compile and cache the caller against it.
             self.run_script(cache_dir, "caller")
             reload_init = self.reload_init(cache_dir, "caller")
-            self.assertTrue(
-                reload_init,
+            assert reload_init, (
                 "The cached caller does not have the reload_init of the cached parallel function. "
                 "Loading it in a new process would crash, as the Numba threading layer would not be launched."
             )

@@ -318,10 +318,7 @@ ignore = [
     "PLR0917",  # too-many-positional-arguments
     "N802",     # invalid-function-name
     "N803",     # invalid-argument-name
-    "N806",     # non-lowercase-variable-in-function
-    # The tests are based on unittest.TestCase, and therefore they use its assertion methods.
-    "PT009",    # pytest-unittest-assertion
-    "PT027"     # pytest-unittest-raises-assertion
+    "N806"      # non-lowercase-variable-in-function
 ]
 # The en dash is used in the names of the physical laws, and the low asterisk in the unicode labels.
 allowed-confusables = ["–", "⁎"]
@@ -383,6 +380,10 @@ extend-ignore-names = [
     "PLR0912",  # too-many-branches
     "PLR0915",  # too-many-statements
     "PLR2004",  # magic-value-comparison
+]
+# The tests compare the results to reference values, which are clearer inline than as named constants.
+"tests/**" = [
+    "PLR2004"  # magic-value-comparison
 ]
 # The module docstring of a Sphinx-Gallery example has to start with an RST section title,
 # which cannot end with a period and has to be followed directly by its underline.
