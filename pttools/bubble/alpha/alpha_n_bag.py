@@ -25,6 +25,9 @@ def find_alpha_n_bag(
 
     $$\alpha_n = \frac{4 \Delta \theta (T_n)}{3 w(T_n)} = \frac{4}{3} \frac{ \theta_s(T_n) - \theta_b(T_n) }{w(T_n)}$$
 
+    In the Bag Model $\Delta \theta$ is a constant, and therefore $\alpha_n = \frac{w_+}{w_n} \alpha_+$.
+    In detonations the fluid ahead of the wall is at rest, and therefore $w_+ = w_n$ and $\alpha_n = \alpha_+$.
+
     :param v_wall: $v_\text{wall}$, wall speed
     :param alpha_p: $\alpha_+$, the at-wall strength parameter.
     :param df_dtau_ptr: pointer to the differential equations
@@ -37,9 +40,12 @@ def find_alpha_n_bag(
     check.check_wall_speed(v_wall)
     if sol_type == SolutionType.UNKNOWN.value:
         sol_type = identify_solution_type_alpha_plus_bag(v_wall, alpha_p).value
+    if sol_type == SolutionType.DETON.value:
+        return alpha_p
     _, w, xi = fluid_bag.sound_shell_alpha_plus_bag(
         v_wall, alpha_p,
         df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_ptr=cs2_ptr, sol_type=sol_type, n_xi=n_xi
     )
+    # In deflagrations and hybrids the point at xi = v_wall is the first point of the shell, where w = w_+.
     n_wall = props.find_v_index(xi, v_wall)
     return alpha_p * w[n_wall] / w[-1]

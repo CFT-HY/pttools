@@ -65,7 +65,11 @@ class TestShellsBag(unittest.TestCase):
         assert_allclose(data_numpy, data_ref, rtol=(0.292 if NUMBA_INTEGRATE_TOLERANCES else 1e-7))
 
     def test_fluid_shells(self) -> None:
-        """Based on sound-shell-model/paper/python/fig_1_9_shell_plots.py."""
+        r"""Based on sound-shell-model/paper/python/fig_1_9_shell_plots.py.
+
+        The ``esp`` reference points are from :espinosa_2010:`\ ` fig. 4,
+        which are the same points as in :gw_pt_ssm:`\ ` fig. 10.
+        """
         vw_weak_list = const.VW_WEAK_LIST
         vw_inter_list = spu.VW_INTER_LIST
 
@@ -78,7 +82,6 @@ class TestShellsBag(unittest.TestCase):
         fig_weak, data_weak = plot_fluid_shells_bag(vw_weak_list, alpha_weak_list, debug=True)
         fig_inter, data_inter = plot_fluid_shells_bag(vw_inter_list, alpha_inter_list, debug=True)
 
-        # Espinosa et al. 2010 comparisons
         vw_list_esp = np.array([0.5, 0.7, 0.77])
         alpha_plus_list_esp = [0.263, 0.052, 0.091]
         alpha_n_list_esp = [
