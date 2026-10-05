@@ -13,6 +13,7 @@ from pttools.bubble.shock import solve_shock, v_shock, v_shock_curve
 from pttools.bubble.shock_bag import v_shock_bag, wm_shock_bag
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
+from pttools.type_hints import FloatArr1D
 from pttools.utils.assertions import assert_allclose
 
 
@@ -20,14 +21,14 @@ class TestShock(unittest.TestCase):
     """Unit tests for the shock solver."""
 
     #: Reference values for the shock curve of the ConstCSModel with $c_{s,s}^2 = 1/4$, generated with PTtools
-    XI_REF = np.array([
+    XI_REF: tp.ClassVar[FloatArr1D] = np.array([
         0.5, 0.5000811888, 0.5001318325, 0.5002140666,
         0.5003475964, 0.5005644189, 0.5009164904, 0.5014881757,
         0.5024164651, 0.5039237999, 0.5063713749, 0.5103456904,
         0.5167990914, 0.5272779739, 0.5442933395, 0.5719224944,
         0.6167860735, 0.6896345095, 0.8079241055, 1.
     ])
-    V_SH_REF = np.array([
+    V_SH_REF: tp.ClassVar[FloatArr1D] = np.array([
         0.0000000000e+00, 2.1648599499e-04, 3.5150712101e-04,
         5.7072218116e-04, 9.2660176229e-04, 1.5042686302e-03,
         2.4417385004e-03, 3.9625803408e-03, 6.4284104024e-03,
@@ -37,12 +38,16 @@ class TestShock(unittest.TestCase):
         6.6465213344e-01, 1.0000000000e+00
     ])
 
+    bag: tp.ClassVar[BagModel]
+    const_cs_bag_like: tp.ClassVar[ConstCSModel]
+    const_cs: tp.ClassVar[ConstCSModel]
+
     @classmethod
     @tp.override
     def setUpClass(cls) -> None:
-        cls.bag: BagModel = BagModel(a_s=1.1, a_b=1, V_s=1)
-        cls.const_cs_bag_like: ConstCSModel = ConstCSModel(css2=1/3, csb2=1/4, a_s=5, a_b=1, V_s=1, alpha_n_min=0.1)
-        cls.const_cs: ConstCSModel = ConstCSModel(css2=1/4, csb2=1/4, a_s=5, a_b=1, V_s=1, alpha_n_min=0.1)
+        cls.bag = BagModel(a_s=1.1, a_b=1, V_s=1)
+        cls.const_cs_bag_like = ConstCSModel(css2=1/3, csb2=1/4, a_s=5, a_b=1, V_s=1, alpha_n_min=0.1)
+        cls.const_cs = ConstCSModel(css2=1/4, csb2=1/4, a_s=5, a_b=1, V_s=1, alpha_n_min=0.1)
 
     def test_v_shock_bag(self) -> None:
         r"""The general shock solver should reproduce the bag model shock curve, :gw_pt_ssm:`\ ` eq. B.17."""

@@ -15,8 +15,8 @@ from tests.utils import TEST_JSON_PATH
 class BubbleTest(unittest.TestCase):
     """Unit tests for the properties of a bubble."""
 
-    model: BagModel
-    bubble: Bubble
+    model: tp.ClassVar[BagModel]
+    bubble: tp.ClassVar[Bubble]
 
     @classmethod
     @tp.override

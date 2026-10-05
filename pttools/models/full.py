@@ -8,8 +8,6 @@ from scipy.interpolate import splev, splrep
 
 from pttools.bubble.phase import Phase
 from pttools.models.model import Model
-
-# if tp.TYPE_CHECKING:
 from pttools.models.thermo import ThermoModel
 from pttools.speedup import njit
 from pttools.speedup.overload import np_all_fix
@@ -28,7 +26,7 @@ class FullModel(Model):
     Temperature limits should be set in the ThermoModel.
     """
 
-    DEFAULT_LABEL = "Full model"
+    DEFAULT_LABEL: tp.ClassVar[str] = "Full model"
     DEFAULT_NAME = "full"
     # This is taken from the ThermoModel at run time.
     TEMPERATURE_IS_PHYSICAL = None

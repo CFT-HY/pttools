@@ -15,7 +15,7 @@ from tests.utils import TEST_JSON_PATH
 class SSMSpectrumTest(unittest.TestCase):
     """Tests for the SSMSpectrum class."""
 
-    spectrum: SSMSpectrum
+    spectrum: tp.ClassVar[SSMSpectrum]
 
     @classmethod
     @tp.override

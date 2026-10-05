@@ -39,11 +39,11 @@ logger: logging.Logger = logging.getLogger(__name__)
 class Model(BaseModel, abc.ABC):
     r"""Template for equations of state."""
 
-    ALPHA_N_MIN_FIND_SAFETY_FACTOR_ALPHA: float = 0.999
+    ALPHA_N_MIN_FIND_SAFETY_FACTOR_ALPHA: tp.ClassVar[float] = 0.999
     #: Default $V_s$
-    DEFAULT_V_S: float = 0.
+    DEFAULT_V_S: tp.ClassVar[float] = 0.
     #: Default $V_b$
-    DEFAULT_V_B: float = 0.
+    DEFAULT_V_B: tp.ClassVar[float] = 0.
     FIELDS: tp.ClassVar[Fields] = MODEL_FIELDS
 
     def __init__(

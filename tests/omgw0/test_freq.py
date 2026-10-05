@@ -1,6 +1,7 @@
 r"""Tests for the frequency conversion functions of $\Omega_{\text{gw},0}$."""
 
 import math
+import typing as tp
 import unittest
 
 import numpy as np
@@ -48,7 +49,7 @@ RTOL_CONSTANTS: float = 1e-8
 class FStar0Test(unittest.TestCase):
     r"""Tests for $f_{\ast,0}$."""
 
-    PARAMS: tuple[tuple[float, float, float], ...] = (
+    PARAMS: tp.ClassVar[tuple[tuple[float, float, float], ...]] = (
         (100., 100., 100.),
         (0.15, 50., 46.5),
         (200., 106.75, 106.75),

@@ -99,7 +99,7 @@ class TestConstCSLikeBag(BagBaseCase[models.ConstCSModel], unittest.TestCase):
 class TestConstCSThermoLikeBag(BagBaseCase[models.FullModel], unittest.TestCase):
     """Tests for the ThermoModel-based constant sound speed model with css2=csb2=1/3."""
 
-    thermo: models.ConstCSThermoModel
+    thermo: tp.ClassVar[models.ConstCSThermoModel]
 
     @classmethod
     def setUpClass(cls, *args: tp.Any, **kwargs: tp.Any) -> None:

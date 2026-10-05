@@ -1,6 +1,7 @@
 """Compare thermodynamic quantities of the bag model to the values in references."""
 
 from abc import ABC
+import typing as tp
 import unittest
 
 import numpy as np
@@ -19,8 +20,8 @@ from tests.utils.test_assertions import assert_allclose
 class ThermoBagTest(Reference, ABC):
     """Compare thermodynamic results of the bag model specific functions to the values in a reference."""
 
-    RTOL_KAPPA: float = 6.7e-3
-    RTOL_KE_FRAC: float = 6.9e-3
+    RTOL_KAPPA: tp.ClassVar[float] = 6.7e-3
+    RTOL_KE_FRAC: tp.ClassVar[float] = 6.9e-3
 
     def test_kappa(self) -> None:
         """Test the kinetic energy efficiency factor of the bag model against the reference values."""

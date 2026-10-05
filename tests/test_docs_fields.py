@@ -71,7 +71,7 @@ class FormatDescriptionTest(unittest.TestCase):
 class FieldAttributeDocsTest(unittest.TestCase):
     """Tests for the attribute documentation from the field descriptions."""
 
-    docs: dict[tuple[str, str, str], str]
+    docs: tp.ClassVar[dict[tuple[str, str, str], str]]
 
     @classmethod
     @tp.override

@@ -26,7 +26,7 @@ class FluidGKSVDVTest(unittest.TestCase):
     and the efficiency factors computed from the profiles should agree.
     """
 
-    model: ConstCSModel
+    model: tp.ClassVar[ConstCSModel]
 
     @classmethod
     @tp.override

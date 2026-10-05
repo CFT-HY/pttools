@@ -6,13 +6,13 @@ import unittest
 import numpy as np
 
 from pttools.bubble import relativity
-import pttools.type_hints as th
+from pttools.type_hints import FloatArr1D
 
 
 class RelativityTest(unittest.TestCase):
     """Unit tests for the functions of special relativity."""
 
-    v: th.FloatArr1D
+    v: tp.ClassVar[FloatArr1D]
 
     @classmethod
     @tp.override

@@ -23,29 +23,29 @@ class BaseModel(Extractable, abc.ABC):
     All temperatures must be in units of GeV for the frequency conversion in Spectrum to work.
     """
 
-    DEFAULT_LABEL_LATEX: str
-    DEFAULT_LABEL_UNICODE: str
-    DEFAULT_NAME: str
+    DEFAULT_LABEL_LATEX: tp.ClassVar[str]
+    DEFAULT_LABEL_UNICODE: tp.ClassVar[str]
+    DEFAULT_NAME: tp.ClassVar[str]
     # Zero temperature would break many of the equations
-    DEFAULT_T_MIN: float = 1e-3
-    DEFAULT_T_MAX: float = np.inf
+    DEFAULT_T_MIN: tp.ClassVar[float] = 1e-3
+    DEFAULT_T_MAX: tp.ClassVar[float] = np.inf
     #: The exportable fields of the model. User-created model classes should extend this.
     FIELDS: tp.ClassVar[Fields] = BASE_MODEL_FIELDS
 
     #: Whether the temperature is in proper physics units.
     #: This is None for models that determine it at run time.
-    TEMPERATURE_IS_PHYSICAL: bool | None = None
+    TEMPERATURE_IS_PHYSICAL: tp.ClassVar[bool | None] = None
 
     #: The unit of the temperature in GeV, if the temperature is in physical units, e.g. $10^{-3}$ for MeV.
-    TEMPERATURE_UNIT_GEV: float = 1.
+    TEMPERATURE_UNIT_GEV: tp.ClassVar[float] = 1.
 
     #: String formatting for thermodynamical quantities
-    THERMO_FORMAT: str = "6e"
+    THERMO_FORMAT: tp.ClassVar[str] = "6e"
 
     #: Relative tolerance for the temperature validation.
     #: This allows for the floating point rounding errors of the conversions between temperature and enthalpy,
     #: e.g. when $T(w(T_{\text{min}}))$ is slightly below $T_{\text{min}}$.
-    TEMP_RTOL: float = 1e-12
+    TEMP_RTOL: tp.ClassVar[float] = 1e-12
 
     def __init__(
             self,

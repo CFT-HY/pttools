@@ -8,15 +8,15 @@ import numpy as np
 from pttools.analysis import fluid
 from pttools.bubble import v_max_behind
 from pttools.bubble.const import CS0
-import pttools.type_hints as th
+from pttools.type_hints import FloatArr3D
 
 
 class CurvesSymmetricTest(unittest.TestCase):
     """Tests for the fluid profile curves in the symmetric phase."""
 
-    N_XI: int = 50
-    data: th.FloatArr3D
-    data_cut: th.FloatArr3D
+    N_XI: tp.ClassVar[int] = 50
+    data: tp.ClassVar[FloatArr3D]
+    data_cut: tp.ClassVar[FloatArr3D]
 
     @classmethod
     @tp.override

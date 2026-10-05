@@ -17,8 +17,8 @@ from tests.utils.const import TEST_DATA_PATH
 class TestVPlusMinus(unittest.TestCase):
     r"""Test the conversion between wall frame fluid speeds $\tilde{v}_+$ and $\tilde{v}_-$."""
 
-    npts: int
-    alpha_plus_list: list[float]
+    npts: tp.ClassVar[int]
+    alpha_plus_list: tp.ClassVar[list[float]]
 
     @classmethod
     @tp.override

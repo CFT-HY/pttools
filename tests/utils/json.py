@@ -8,7 +8,7 @@ import typing as tp
 import numpy as np
 import orjson
 
-import pttools.type_hints as th
+from pttools.type_hints import FloatOrArr
 from pttools.utils.assertions import assert_allclose
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -17,15 +17,15 @@ logger: logging.Logger = logging.getLogger(__name__)
 class JsonTestCase(abc.ABC):
     """Base class for tests that compare to JSON data."""
 
-    REF_DATA_PATH: Path
-    data: dict[str, th.FloatOrArr]
-    ref_data: dict[str, th.FloatOrArr]
+    REF_DATA_PATH: tp.ClassVar[Path]
+    data: tp.ClassVar[dict[str, FloatOrArr]]
+    ref_data: tp.ClassVar[dict[str, FloatOrArr]]
 
-    EXPECT_MISSING_DATA: bool = False
-    SAVE_NEW_DATA: bool = False
+    EXPECT_MISSING_DATA: tp.ClassVar[bool] = False
+    SAVE_NEW_DATA: tp.ClassVar[bool] = False
 
     def assert_json(
-            self, data: th.FloatOrArr, key: str, rtol: float = 1e-7, atol: float = 0, allow_save: bool = True) -> None:
+            self, data: FloatOrArr, key: str, rtol: float = 1e-7, atol: float = 0, allow_save: bool = True) -> None:
         """Assert that the data is close to the reference data with the given key, and store it for saving."""
         if isinstance(data, np.ndarray):
             if data.size == 1:

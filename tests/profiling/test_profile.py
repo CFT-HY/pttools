@@ -4,6 +4,7 @@ When implementing new tests, the functions should be called at least once to JIT
 """
 
 import abc
+import typing as tp
 import unittest
 
 from pttools import speedup
@@ -12,7 +13,7 @@ from pttools import speedup
 class TestProfile(abc.ABC, unittest.TestCase):
     """Base class for performance profiling tests."""
 
-    NAME: str
+    NAME: tp.ClassVar[str]
 
     @classmethod
     def setUpClass(cls) -> None:

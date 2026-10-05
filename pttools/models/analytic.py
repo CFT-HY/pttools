@@ -31,7 +31,7 @@ class AnalyticModel(Model, abc.ABC):
     """
 
     DEFAULT_V_S = 1.
-    DEFAULT_A_G_MULT: float = 1.1
+    DEFAULT_A_G_MULT: tp.ClassVar[float] = 1.1
     FIELDS: tp.ClassVar[Fields] = ANALYTIC_MODEL_FIELDS
 
     def __init__(

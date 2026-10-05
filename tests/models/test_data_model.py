@@ -7,7 +7,7 @@ import numpy as np
 
 from pttools import models
 from pttools.bubble.phase import Phase
-import pttools.type_hints as th
+from pttools.type_hints import FloatArr1D
 
 
 class DataModelTest(unittest.TestCase):
@@ -17,13 +17,13 @@ class DataModelTest(unittest.TestCase):
     The splines are linear, so the data points should be reproduced exactly.
     """
 
-    CSS2: float = 1/3 - 0.01
-    CSB2: float = 1/3 - 0.05
+    CSS2: tp.ClassVar[float] = 1/3 - 0.01
+    CSB2: tp.ClassVar[float] = 1/3 - 0.05
 
-    ref: models.ConstCSModel
-    model: models.DataModel
-    temp: th.FloatArr1D
-    data: dict[Phase, dict[str, th.FloatArr1D]]
+    ref: tp.ClassVar[models.ConstCSModel]
+    model: tp.ClassVar[models.DataModel]
+    temp: tp.ClassVar[FloatArr1D]
+    data: tp.ClassVar[dict[Phase, dict[str, FloatArr1D]]]
 
     @classmethod
     @tp.override

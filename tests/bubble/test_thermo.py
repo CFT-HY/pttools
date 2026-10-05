@@ -1,6 +1,7 @@
 """Unit tests for thermodynamic functions."""
 
 from abc import ABC
+import typing as tp
 import unittest
 
 import numpy as np
@@ -15,10 +16,12 @@ from tests.utils.test_assertions import assert_allclose
 class ThermoTest(Reference, ABC):
     """Unit tests for thermodynamic functions."""
 
+    bubbles: tp.ClassVar[list[Bubble]]
+
     @classmethod
     def setUpClass(cls) -> None:
         """Create the bubbles for the reference parameters."""
-        cls.bubbles: list[Bubble] = [
+        cls.bubbles = [
             Bubble(cls.MODEL, v_wall=v_wall, alpha_n=alpha_n)
             for v_wall, alpha_n in zip(cls.V_WALLS, cls.ALPHA_NS, strict=True)
         ]

@@ -18,7 +18,7 @@ from tests.utils import TEST_JSON_PATH
 class SpectrumTest(unittest.TestCase):
     """Tests for the Spectrum class."""
 
-    spectrum: Spectrum
+    spectrum: tp.ClassVar[Spectrum]
 
     @classmethod
     @tp.override
@@ -155,8 +155,8 @@ class StandardModelSpectrumTest(unittest.TestCase):
     and the temperature should be converted to GeV.
     """
 
-    bubble: Bubble
-    spectrum: Spectrum
+    bubble: tp.ClassVar[Bubble]
+    spectrum: tp.ClassVar[Spectrum]
 
     @classmethod
     @tp.override

@@ -13,7 +13,7 @@ from tests.utils.mark import uses_multiprocessing
 class BubbleGridTest(unittest.TestCase):
     """Test the bubble grid of wall speeds and transition strengths."""
 
-    grid: BubbleGridVWAlpha
+    grid: tp.ClassVar[BubbleGridVWAlpha]
 
     @classmethod
     @tp.override

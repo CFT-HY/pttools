@@ -1,6 +1,7 @@
 """Reference values from literature."""
 
 from abc import ABC
+import typing as tp
 
 import numpy as np
 
@@ -13,18 +14,18 @@ from pttools.type_hints import FloatArr1D
 class Reference(ABC):
     """Reference values from literature."""
 
-    bubbles: list[Bubble]
-    MODEL: Model = BagModel(a_s=1.1, a_b=1, V_s=1)
+    bubbles: tp.ClassVar[list[Bubble]]
+    MODEL: tp.ClassVar[Model] = BagModel(a_s=1.1, a_b=1, V_s=1)
     # Input parameters
-    ALPHA_NS: FloatArr1D
-    V_WALLS: FloatArr1D
+    ALPHA_NS: tp.ClassVar[FloatArr1D]
+    V_WALLS: tp.ClassVar[FloatArr1D]
     # Reference values
-    ALPHA_PLUS_REF: FloatArr1D
-    KAPPA_REF: FloatArr1D
-    BVA_KE_FRAC_REF: FloatArr1D
-    OMEGA_REF: FloatArr1D
+    ALPHA_PLUS_REF: tp.ClassVar[FloatArr1D]
+    KAPPA_REF: tp.ClassVar[FloatArr1D]
+    BVA_KE_FRAC_REF: tp.ClassVar[FloatArr1D]
+    OMEGA_REF: tp.ClassVar[FloatArr1D]
     # UBARF_REF: FloatArr1D
-    V_SH_REF: FloatArr1D
+    V_SH_REF: tp.ClassVar[FloatArr1D]
 
 
 class RefBag(Reference):
@@ -52,7 +53,7 @@ class RefLectureNotes(Reference):
     BVA_KE_FRAC_REF = np.array([0.0172, 0.0411, 0.0213])
     KAPPA_REF = np.array([0.189, 0.452, 0.235])
     OMEGA_REF = np.array([0.815, 0.559, 0.769])
-    UBARF_REF = np.array([0.119, 0.184, 0.133])
+    UBARF_REF: tp.ClassVar[FloatArr1D] = np.array([0.119, 0.184, 0.133])
     V_SH_REF = np.array([0.579, 0.715, 0.800])
 
 

@@ -10,7 +10,7 @@ from pttools.bubble import CS2_BAG_SCALAR_PTR, DEFAULT_FLUID_INTEGRATE_METHOD, D
 from pttools.bubble.thermo import ubarf2
 from pttools.bubble.thermo_bag import de_from_w_bag
 from pttools.ssm import SSMSpectrum, pow_spec
-import pttools.type_hints as th
+from pttools.type_hints import FloatArr1D
 from pttools.utils.assertions import assert_allclose
 from tests.bubble.ref import RefHindmarshHijazi
 
@@ -18,10 +18,10 @@ from tests.bubble.ref import RefHindmarshHijazi
 class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
     """Tests for comparing the results of the Spectrum class to the old bag model interface."""
 
-    bubbles: list[Bubble]
-    spectra: list[SSMSpectrum]
-    spectra_lambda: list[SSMSpectrum]
-    z: th.FloatArr1D
+    bubbles: tp.ClassVar[list[Bubble]]
+    spectra: tp.ClassVar[list[SSMSpectrum]]
+    spectra_lambda: tp.ClassVar[list[SSMSpectrum]]
+    z: tp.ClassVar[FloatArr1D]
 
     @classmethod
     @tp.override

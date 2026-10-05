@@ -38,9 +38,9 @@ UBARF_1D = TABLE1[4] * 0.001
 class UbarfTest(unittest.TestCase):
     r"""Test $\bar{U}_f$ against :gw_pt_ssm:`\ ` table 1."""
 
-    model: BagModel
-    bubbles: list[Bubble]
-    spectra: list[SSMSpectrum]
+    model: tp.ClassVar[BagModel]
+    bubbles: tp.ClassVar[list[Bubble]]
+    spectra: tp.ClassVar[list[SSMSpectrum]]
 
     @classmethod
     @tp.override

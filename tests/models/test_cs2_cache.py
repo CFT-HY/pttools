@@ -1,6 +1,7 @@
 """Tests for the caching of the compiled $c_s^2$ functions of the models."""
 
 import pickle
+import typing as tp
 import unittest
 
 import numpy as np
@@ -26,8 +27,8 @@ def df_dtau_cs2(df_dtau_ptr: DifferentialPointer, phase: Phase) -> float:
 class TestConstCSFuncs(unittest.TestCase):
     """Tests for sharing the compiled functions between ConstCSModels with the same sound speeds."""
 
-    CSS2 = 1/3
-    CSB2 = 0.25
+    CSS2: tp.ClassVar[float] = 1/3
+    CSB2: tp.ClassVar[float] = 0.25
 
     @staticmethod
     def create_model(csb2: float) -> models.ConstCSModel:
@@ -72,7 +73,7 @@ class TestDfDtauIdentity(unittest.TestCase):
     could end up using the differential equation of the previous model.
     """
 
-    CSB2_VALUES = (0.25, 0.26, 0.27, 0.28, 0.29, 0.3)
+    CSB2_VALUES: tp.ClassVar[tuple[float, ...]] = (0.25, 0.26, 0.27, 0.28, 0.29, 0.3)
 
     def test_const_cs(self) -> None:
         r"""The differential equations of ConstCSModels should use the $c_s^2$ of the model."""

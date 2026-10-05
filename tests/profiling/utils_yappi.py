@@ -18,7 +18,7 @@ PROFILE_DIR.mkdir(parents=True, exist_ok=True)
 class YappiProfiler(utils.Profiler):
     """Thread-safe handler for the YAPPI profiler."""
 
-    _lock = threading.Lock()
+    _lock: tp.ClassVar[threading.Lock] = threading.Lock()
 
     @classmethod
     def __enter__(cls) -> None:

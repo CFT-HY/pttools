@@ -5,6 +5,7 @@ Excerpts of these plots are in :gw_pt_ssm:`\ ` fig. 10 and :notes:`\ ` fig. 15.
 """
 
 import logging
+from pathlib import Path
 import shutil
 import subprocess
 import timeit
@@ -42,14 +43,14 @@ class PlaneTolerances(tp.TypedDict, total=False):
 class TestPlane(unittest.TestCase):
     r"""Test the accuracy and performance of the ODE integrators for the $\xi, v$ plane."""
 
-    FIGSIZE = np.array([16, 9])*1.7
-    FIG_PATH = utils.TEST_FIGURE_PATH / "integrators"
-    grid_shape: tuple[int, int] = (2, 5)
-    grid_fig_abs: plt.Figure
-    grid_fig_rel: plt.Figure
-    axs_abs: th.AxesArr2D
-    axs_rel: th.AxesArr2D
-    ref_data: th.FloatArr3D
+    FIGSIZE: tp.ClassVar[np.ndarray] = np.array([16, 9])*1.7
+    FIG_PATH: tp.ClassVar[Path] = utils.TEST_FIGURE_PATH / "integrators"
+    grid_shape: tp.ClassVar[tuple[int, int]] = (2, 5)
+    grid_fig_abs: tp.ClassVar[plt.Figure]
+    grid_fig_rel: tp.ClassVar[plt.Figure]
+    axs_abs: tp.ClassVar[th.AxesArr2D]
+    axs_rel: tp.ClassVar[th.AxesArr2D]
+    ref_data: tp.ClassVar[th.FloatArr3D]
 
     # Dicts for solvers
     mean_rel_diffs: tp.ClassVar[dict[int, float]] = {}

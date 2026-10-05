@@ -78,12 +78,16 @@ def v_cj_gksvdv(alpha_theta_bar_n: float, csb2: float) -> float:
 class ChapmanJouguetTest(unittest.TestCase):
     """Tests for the Chapman-Jouguet speed."""
 
+    bag: tp.ClassVar[BagModel]
+    const_cs: tp.ClassVar[ConstCSModel]
+    models: tp.ClassVar[list[Model]]
+
     @classmethod
     @tp.override
     def setUpClass(cls) -> None:
-        cls.bag: BagModel = BagModel(a_s=1.1, a_b=1, V_s=1)
-        cls.const_cs: ConstCSModel = ConstCSModel(css2=1/3, csb2=0.3, a_s=1.5, a_b=1, V_s=1, log_info=False)
-        cls.models: list[Model] = [cls.bag, cls.const_cs, *gksvdv_models()]
+        cls.bag = BagModel(a_s=1.1, a_b=1, V_s=1)
+        cls.const_cs = ConstCSModel(css2=1/3, csb2=0.3, a_s=1.5, a_b=1, V_s=1, log_info=False)
+        cls.models = [cls.bag, cls.const_cs, *gksvdv_models()]
 
     def test_bag_limits(self) -> None:
         r"""$v_{CJ} \to c_s$ as $\alpha_+ \to 0$ and $v_{CJ} \to 1$ as $\alpha_+ \to \infty$."""

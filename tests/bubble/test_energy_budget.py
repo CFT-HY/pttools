@@ -10,6 +10,7 @@ which is tested by :py:class:`EspinosaFitAccuracyTest`.
 """
 
 from abc import ABC
+import typing as tp
 import unittest
 
 import numpy as np
@@ -35,19 +36,19 @@ from pttools.bubble.energy_budget import (
 )
 from pttools.bubble.phase import Phase
 from pttools.models.bag import BagModel
-import pttools.type_hints as th
+from pttools.type_hints import FloatArr1D
 from tests.bubble.ref import RefBag, Reference, RefHindmarshHijazi, RefLectureNotes
 from tests.utils.test_assertions import assert_allclose
 
 #: The $\alpha_n$ values for the tests that don't depend on the reference data
-ALPHA_NS_FIT: th.FloatArr = np.array([0.01, 0.1, 0.3, 1.0])
+ALPHA_NS_FIT: FloatArr1D = np.array([0.01, 0.1, 0.3, 1.0])
 
 
 class EnergyBudgetApproxTest(Reference, ABC):
     r"""Compare the approximations of :espinosa_2010:`\ ` to the values in a reference."""
 
-    RTOL_KAPPA: float = 2.8e-2
-    RTOL_KE_FRAC: float = 2.8e-2
+    RTOL_KAPPA: tp.ClassVar[float] = 2.8e-2
+    RTOL_KE_FRAC: tp.ClassVar[float] = 2.8e-2
 
     def test_solution_types(self) -> None:
         """Ensure that the reference covers subsonic deflagrations, hybrids and detonations."""
@@ -157,10 +158,10 @@ class EspinosaFitAccuracyTest(unittest.TestCase):
 
     # The lower end of the range of the article, $\alpha_N = 10^{-3}$, is not included,
     # since there the deviation grows to 16 % just above $v_{CJ}$, where $\kappa$ rises steeply.
-    ALPHA_NS = (0.01, 0.03, 0.1, 0.3, 1., 3., 10.)
-    V_WALLS = np.arange(0.2, 1., 0.05)
+    ALPHA_NS: tp.ClassVar[tuple[float, ...]] = (0.01, 0.03, 0.1, 0.3, 1., 3., 10.)
+    V_WALLS: tp.ClassVar[FloatArr1D] = np.arange(0.2, 1., 0.05)
     #: The precision given in the article
-    RTOL = 0.15
+    RTOL: tp.ClassVar[float] = 0.15
 
     def test_kappa_v_approx_accuracy(self) -> None:
         r"""The fits should be within 15 % of the full bag model solution."""
@@ -234,7 +235,7 @@ class KappaLimitsTest(unittest.TestCase):
 class DeltaNTest(unittest.TestCase):
     r"""$\delta_n$ for $K$."""
 
-    WN = 1.5
+    WN: tp.ClassVar[float] = 1.5
 
     def test_bag(self) -> None:
         r"""For the bag model with $V_- = 0$, $\delta_n = 0$."""

@@ -13,8 +13,7 @@ from pttools.bubble.phase import Phase
 from pttools.models.base import BaseModel
 from pttools.speedup import njit
 from pttools.speedup.overload import np_all_fix
-import pttools.type_hints as th
-from pttools.type_hints import FloatOrArr
+from pttools.type_hints import CS2Fun, FloatArr1D, FloatOrArr, NumbaFunc
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -25,9 +24,9 @@ class ThermoModel(BaseModel, abc.ABC):
     # TODO: Some functions seem to return vertical arrays. Fix this!
 
     #: Container for the log10 temperatures of $g_\text{eff}$ data
-    GEFF_DATA_LOG_TEMP: th.FloatArr1D
+    GEFF_DATA_LOG_TEMP: tp.ClassVar[FloatArr1D]
     #: Container for the temperatures of $g_\text{eff}$ data
-    GEFF_DATA_TEMP: th.FloatArr1D
+    GEFF_DATA_TEMP: tp.ClassVar[FloatArr1D]
     TEMPERATURE_IS_PHYSICAL = True
 
     def __init__(
@@ -81,7 +80,7 @@ class ThermoModel(BaseModel, abc.ABC):
     # Concrete methods
     # -----
 
-    def validate_cs2(self, cs2: th.FloatOrArr, name: str) -> bool:
+    def validate_cs2(self, cs2: FloatOrArr, name: str) -> bool:
         """Validate that $0 < c_s^2 < 1$."""
         err = []
         if np.any(cs2 < 0):
@@ -98,7 +97,7 @@ class ThermoModel(BaseModel, abc.ABC):
         return True
 
     @tp.override
-    def gen_cs2(self) -> th.CS2Fun:
+    def gen_cs2(self) -> CS2Fun:
         # Numba caching is disabled for the functions below, as they are created dynamically.
         cs2_s = self.cs2_full(self.GEFF_DATA_TEMP, Phase.SYMMETRIC)
         cs2_b = self.cs2_full(self.GEFF_DATA_TEMP, Phase.BROKEN)
@@ -122,7 +121,7 @@ class ThermoModel(BaseModel, abc.ABC):
         t_max = self.t_max
 
         @njit(cache=False)
-        def cs2_compute[T: FloatOrArr](temp: T, phase: th.FloatOrArr) -> T:
+        def cs2_compute[T: FloatOrArr](temp: T, phase: FloatOrArr) -> T:
             if np_all_fix(phase == Phase.SYMMETRIC.value):
                 return scipy.interpolate.splev(np.log10(temp), cs2_spl_s)  # pyrefly: ignore[bad-return]
             if np_all_fix(phase == Phase.BROKEN.value):
@@ -141,13 +140,13 @@ class ThermoModel(BaseModel, abc.ABC):
             # return ret
 
         @njit(cache=False)
-        def cs2_scalar_temp(temp: float, phase: th.FloatOrArr) -> float:
+        def cs2_scalar_temp(temp: float, phase: FloatOrArr) -> float:
             if temp < t_min or temp > t_max:
                 return np.nan
             return cs2_compute(temp, phase)
 
         @njit(cache=False)
-        def cs2_arr_temp(temp: th.FloatArr1D, phase: th.FloatOrArr) -> th.FloatArr1D:
+        def cs2_arr_temp(temp: FloatArr1D, phase: FloatOrArr) -> FloatArr1D:
             # This check somehow fixes a compilation bug in Numba 0.60.0
             if np.isscalar(temp):
                 raise TypeError
@@ -155,7 +154,7 @@ class ThermoModel(BaseModel, abc.ABC):
             ret[np.logical_or(temp < t_min, temp > t_max)] = np.nan
             return ret
 
-        def cs2[T: FloatOrArr](temp: T, phase: th.FloatOrArr) -> T:
+        def cs2[T: FloatOrArr](temp: T, phase: FloatOrArr) -> T:
             r"""$c_s^2(T,\phi)$, which calls the jitted scalar or array implementation depending on the type of $T$.
 
             The validate_temp function cannot be called from jitted functions,
@@ -170,7 +169,7 @@ class ThermoModel(BaseModel, abc.ABC):
             raise TypeError(f"Unknown type for temp: {type(temp)}")
 
         @overload(cs2, jit_options={"nopython": True})
-        def cs2_numba(temp: th.FloatOrArr, phase: th.FloatOrArr) -> th.NumbaFunc:
+        def cs2_numba(temp: FloatOrArr, phase: FloatOrArr) -> NumbaFunc:
             if isinstance(temp, numba.types.Float):
                 return cs2_scalar_temp
             if isinstance(temp, numba.types.Array):
@@ -180,7 +179,7 @@ class ThermoModel(BaseModel, abc.ABC):
         return cs2
 
     @tp.override
-    def cs2[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+    def cs2[T: FloatOrArr](self, temp: T, phase: FloatOrArr) -> T:
         r"""
         Sound speed squared, $c_s^2$, interpolated from precomputed values.
 
@@ -193,17 +192,17 @@ class ThermoModel(BaseModel, abc.ABC):
         raise RuntimeError("The cs2(T, phase) function has not yet been loaded")
 
     @tp.override
-    def cs2_neg[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+    def cs2_neg[T: FloatOrArr](self, temp: T, phase: FloatOrArr) -> T:
         return tp.cast(T, -self.cs2(temp, phase))
 
-    def cs2_full[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+    def cs2_full[T: FloatOrArr](self, temp: T, phase: FloatOrArr) -> T:
         """Full evaluation of $c_s^2$ from the underlying quantities."""
         # This hopefully reduces numerical errors
         return tp.cast(T, (self.dgp_dT(temp, phase)*temp + 4*self.gp(temp, phase)) /
                           (3 * (self.dge_dT(temp, phase)*temp + 4*self.ge(temp, phase))))
         # return self.dp_dt(temp, phase) / self.de_dt(temp, phase)
 
-    def ge_gs_ratio[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+    def ge_gs_ratio[T: FloatOrArr](self, temp: T, phase: FloatOrArr) -> T:
         r"""$\frac{g_e}{g_s}$, ratio of the effective degrees of freedom for energy density and entropy.
 
         :param temp: temperature $T$
@@ -211,7 +210,7 @@ class ThermoModel(BaseModel, abc.ABC):
         """
         return tp.cast(T, self.ge(temp, phase) / self.gs(temp, phase))
 
-    def dgp_dT[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+    def dgp_dT[T: FloatOrArr](self, temp: T, phase: FloatOrArr) -> T:
         r"""$\frac{dg_p}{dT}$.
 
         $$\frac{dg_p}{dT} = 4 \frac{dg_s}{dT} - 3 \frac{dg_e}{dT}$$
@@ -221,15 +220,15 @@ class ThermoModel(BaseModel, abc.ABC):
         """
         return tp.cast(T, 4*self.dgs_dT(temp, phase) - 3*self.dge_dT(temp, phase))
 
-    def dp_dt[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+    def dp_dt[T: FloatOrArr](self, temp: T, phase: FloatOrArr) -> T:
         r"""$\frac{dp}{dT}$."""
         return tp.cast(T, np.pi**2/90 * (self.dgp_dT(temp, phase) * temp**4 + 4*self.gp(temp, phase)*temp**3))
 
-    def de_dt[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+    def de_dt[T: FloatOrArr](self, temp: T, phase: FloatOrArr) -> T:
         r"""$\frac{de}{dT}$."""
         return tp.cast(T, np.pi**2/30 * (self.dge_dT(temp, phase) * temp**4 + 4*self.ge(temp, phase)*temp**3))
 
-    def gp[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+    def gp[T: FloatOrArr](self, temp: T, phase: FloatOrArr) -> T:
         r"""Effective degrees of freedom for pressure, $g_{\text{eff},p}(T,\phi)$.
 
         $$g_{\text{eff},p}(T,\phi) = 4g_s(T,\phi) - 3g_e(T,\phi)$$.
@@ -243,15 +242,15 @@ class ThermoModel(BaseModel, abc.ABC):
     # -----
 
     @abc.abstractmethod
-    def dge_dT[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+    def dge_dT[T: FloatOrArr](self, temp: T, phase: FloatOrArr) -> T:
         r"""$\frac{dg_e}{dT}$."""
 
     @abc.abstractmethod
-    def dgs_dT[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+    def dgs_dT[T: FloatOrArr](self, temp: T, phase: FloatOrArr) -> T:
         r"""$\frac{dg_s}{dT}$."""
 
     @abc.abstractmethod
-    def ge[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+    def ge[T: FloatOrArr](self, temp: T, phase: FloatOrArr) -> T:
         r"""
         Effective degrees of freedom for the energy density $g_{\text{eff},e}(T)$.
 
@@ -261,7 +260,7 @@ class ThermoModel(BaseModel, abc.ABC):
         """
 
     @abc.abstractmethod
-    def gs[T: FloatOrArr](self, temp: T, phase: th.FloatOrArr) -> T:
+    def gs[T: FloatOrArr](self, temp: T, phase: FloatOrArr) -> T:
         r"""
         Effective degrees of freedom for the entropy density, $g_{\text{eff},s}(T)$.
 

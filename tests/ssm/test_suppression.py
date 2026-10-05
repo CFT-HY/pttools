@@ -1,5 +1,6 @@
 r"""Tests for the kinetic energy suppression factors of the Sound Shell Model."""
 
+import typing as tp
 import unittest
 
 import numpy as np
@@ -15,9 +16,9 @@ class AlphaNMaxTest(unittest.TestCase):
 
     #: The $({v}_\text{wall}, \alpha_n)$ points of the suppression dataset,
     #: from which the piecewise linear fit of :py:func:`pttools.ssm.suppression.alpha_n_max` is constructed.
-    DATA_POINTS: tuple[tuple[float, float], ...] = ((0.24, 0.34), (0.44, 0.50), (0.56, 0.67))
+    DATA_POINTS: tp.ClassVar[tuple[tuple[float, float], ...]] = ((0.24, 0.34), (0.44, 0.50), (0.56, 0.67))
     #: ${v}_\text{wall}$ at which the fit changes from the first line segment to the second
-    V_WALL_KINK: float = 0.44
+    V_WALL_KINK: tp.ClassVar[float] = 0.44
 
     def test_data_points(self) -> None:
         """The fit goes through the data points from which it was constructed."""
@@ -71,19 +72,19 @@ class SuppressionTest(unittest.TestCase):
 
     #: The dataset is given explicitly instead of using DEFAULT_SUPPRESSION,
     #: so that the reference values stay valid even if the default is changed.
-    SUPPRESSION: sup.Suppression = sup.NO_HYBRIDS_EXT
-    V_WALLS: th.FloatArr1D = np.array([0.4, 0.5, 0.6])
-    ALPHA_NS: th.FloatArr1D = np.array([0.05, 0.1])
+    SUPPRESSION: tp.ClassVar[sup.Suppression] = sup.NO_HYBRIDS_EXT
+    V_WALLS: tp.ClassVar[th.FloatArr1D] = np.array([0.4, 0.5, 0.6])
+    ALPHA_NS: tp.ClassVar[th.FloatArr1D] = np.array([0.05, 0.1])
     #: Reference values, computed with PTtools 0.10.0
-    GRID_REF: th.FloatArr2D = np.array([
+    GRID_REF: tp.ClassVar[th.FloatArr2D] = np.array([
         [0.2175166, 0.60930056, 0.87699788],
         [0.16514226, 0.45835392, 0.6073551]
     ])
     #: A point outside the convex hull of the suppression points
-    OUTSIDE_V_WALL: float = 0.95
-    OUTSIDE_ALPHA_N: float = 0.9
+    OUTSIDE_V_WALL: tp.ClassVar[float] = 0.95
+    OUTSIDE_ALPHA_N: tp.ClassVar[float] = 0.9
     #: Reference value for the nearest-neighbour extrapolation, computed with PTtools 0.10.0
-    OUTSIDE_REF: float = 0.378071924042103
+    OUTSIDE_REF: tp.ClassVar[float] = 0.378071924042103
 
     def test_grid(self) -> None:
         """Interpolating on a grid of points gives the reference values."""

@@ -7,6 +7,7 @@ import unittest
 import numpy as np
 
 from pttools import speedup, ssm
+from pttools.type_hints import FloatArr1D
 from tests.profiling import utils_cprofile, utils_pyinstrument, utils_yappi
 from tests.profiling.test_profile import TestProfile
 from tests.utils.mark import skip_slow
@@ -22,8 +23,8 @@ class TestProfileGW(TestProfile):
     """Profile GW performance."""
 
     NAME = "gw"
-    z = np.logspace(0, 2, 100)
-    params = (0.1, 0.1)
+    z: tp.ClassVar[FloatArr1D] = np.logspace(0, 2, 100)
+    params: tp.ClassVar[tuple[float, float]] = (0.1, 0.1)
 
     @classmethod
     @tp.override

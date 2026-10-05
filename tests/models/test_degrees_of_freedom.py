@@ -14,6 +14,7 @@ import numpy as np
 
 from pttools import models
 from pttools.bubble.phase import Phase
+from pttools.type_hints import FloatArr1D
 
 PHASES: tuple[Phase, Phase] = (Phase.SYMMETRIC, Phase.BROKEN)
 
@@ -21,10 +22,10 @@ PHASES: tuple[Phase, Phase] = (Phase.SYMMETRIC, Phase.BROKEN)
 class AnalyticDegreesOfFreedomTest(unittest.TestCase):
     """Tests for the degrees of freedom of the analytic models."""
 
-    temp: np.ndarray = np.linspace(0.5, 2, 7)
+    temp: tp.ClassVar[FloatArr1D] = np.linspace(0.5, 2, 7)
 
-    bag_v: models.BagModel
-    const_cs: models.ConstCSModel
+    bag_v: tp.ClassVar[models.BagModel]
+    const_cs: tp.ClassVar[models.ConstCSModel]
 
     @classmethod
     @tp.override
@@ -81,7 +82,7 @@ class AnalyticDegreesOfFreedomTest(unittest.TestCase):
 class FullModelDegreesOfFreedomTest(unittest.TestCase):
     """Tests for the degrees of freedom of the full model."""
 
-    model: models.FullModel
+    model: tp.ClassVar[models.FullModel]
 
     @classmethod
     @tp.override
@@ -113,7 +114,7 @@ class FullModelDegreesOfFreedomTest(unittest.TestCase):
 class StandardModelPotentialTest(unittest.TestCase):
     """Tests for the Standard Model with a potential."""
 
-    thermo: models.StandardModel
+    thermo: tp.ClassVar[models.StandardModel]
 
     @classmethod
     @tp.override

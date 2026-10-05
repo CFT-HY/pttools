@@ -120,7 +120,7 @@ class DescribeTest(unittest.TestCase):
 class FieldsTest(unittest.TestCase):
     """Tests for the selection of fields."""
 
-    fields: Fields
+    fields: tp.ClassVar[Fields]
 
     @classmethod
     @tp.override

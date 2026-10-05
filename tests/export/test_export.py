@@ -34,6 +34,7 @@ from pttools.export import (
 from pttools.models import BagModel, ConstCSModel
 from pttools.omgw0 import Spectrum
 from pttools.ssm import SSMSpectrum
+from pttools.type_hints import FloatArr1D
 from tests.export.test_fields import SPECTRUM_MINIMAL_PARAMS
 from tests.utils import TEST_RESULT_PATH
 
@@ -98,12 +99,12 @@ def new_path(name: str) -> Path:
 class ExportTest(unittest.TestCase):
     """Tests for exporting and importing spectra."""
 
-    bag: BagModel
-    const_cs: ConstCSModel
-    bubbles: list[Bubble]
-    y_spectra: list[Spectrum]
-    f_spectra: list[Spectrum]
-    path: Path
+    bag: tp.ClassVar[BagModel]
+    const_cs: tp.ClassVar[ConstCSModel]
+    bubbles: tp.ClassVar[list[Bubble]]
+    y_spectra: tp.ClassVar[list[Spectrum]]
+    f_spectra: tp.ClassVar[list[Spectrum]]
+    path: tp.ClassVar[Path]
 
     @classmethod
     @tp.override
@@ -462,9 +463,9 @@ class ExportTest(unittest.TestCase):
 class OtherTableTest(unittest.TestCase):
     """Tests for exporting the objects of other classes to tables of their own."""
 
-    f: np.ndarray
-    spectra: list[OtherSpectrum]
-    bubble: Bubble
+    f: tp.ClassVar[FloatArr1D]
+    spectra: tp.ClassVar[list[OtherSpectrum]]
+    bubble: tp.ClassVar[Bubble]
 
     @classmethod
     @tp.override

@@ -2,12 +2,14 @@
 
 import abc
 from pathlib import Path
+import typing as tp
 import unittest
 
 import numpy as np
 
 from pttools.bubble.phase import Phase
 from pttools.models import Model
+from pttools.type_hints import FloatArr1D
 from pttools.utils.assertions import assert_allclose
 from tests.utils.const import TEST_DATA_PATH
 from tests.utils.json import JsonTestCase
@@ -21,14 +23,14 @@ class ModelBaseCase[M: Model](JsonTestCase, abc.ABC):
     EXPECT_MISSING_DATA = True
     SAVE_NEW_DATA = True
 
-    REF_DATA_PATH: Path
-    TEST_ARR_SIZE: int = 10
+    REF_DATA_PATH: tp.ClassVar[Path]
+    TEST_ARR_SIZE: tp.ClassVar[int] = 10
 
-    alpha_n = np.linspace(0.15, 0.5, 10)
-    temp_arr = np.linspace(1, 100, TEST_ARR_SIZE)
-    w_arr1 = temp_arr**4
-    w_arr2 = temp_arr**3.9
-    phase_arr = np.array([(1 + (-1)**i)/2 for i in range(TEST_ARR_SIZE)])
+    alpha_n: tp.ClassVar[FloatArr1D] = np.linspace(0.15, 0.5, 10)
+    temp_arr: tp.ClassVar[FloatArr1D] = np.linspace(1, 100, TEST_ARR_SIZE)
+    w_arr1: tp.ClassVar[FloatArr1D] = temp_arr**4
+    w_arr2: tp.ClassVar[FloatArr1D] = temp_arr**3.9
+    phase_arr: tp.ClassVar[FloatArr1D] = np.array([(1 + (-1)**i)/2 for i in range(TEST_ARR_SIZE)])
 
     @classmethod
     def setUpClass(cls, model: M) -> None:

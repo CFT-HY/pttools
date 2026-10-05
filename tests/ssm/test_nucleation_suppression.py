@@ -88,9 +88,9 @@ class NucleationFTest(unittest.TestCase):
 class NucleationSuppressionTest(unittest.TestCase):
     r"""Test that spectra computed from $\tilde{\beta}$ and from the resulting $r_*$ are the same."""
 
-    bubble: Bubble
-    spectrum_beta: SSMSpectrum
-    spectrum_r_star: SSMSpectrum
+    bubble: tp.ClassVar[Bubble]
+    spectrum_beta: tp.ClassVar[SSMSpectrum]
+    spectrum_r_star: tp.ClassVar[SSMSpectrum]
 
     @classmethod
     @tp.override

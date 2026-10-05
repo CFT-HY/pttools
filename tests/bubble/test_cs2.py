@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import typing as tp
 import unittest
 
 import numpy as np
@@ -18,7 +19,7 @@ from pttools.models import BagModel, ConstCSModel
 from pttools.models.model import Model
 from pttools.speedup import njit
 from pttools.speedup.options import NUMBA_DISABLE_JIT
-import pttools.type_hints as th
+from pttools.type_hints import CS2FunScalarPtr, FloatArr1D, FloatOrArr
 from pttools.utils import assert_allclose
 from tests.utils import REPO_DIR
 
@@ -27,7 +28,7 @@ CACHE_SCRIPT_PATH: Path = Path(__file__).resolve().parent / "numba_cache.py"
 
 
 @njit
-def cs2_from_ptr_jit(cs2_ptr: th.CS2FunScalarPtr, w: float, phase: float) -> float:
+def cs2_from_ptr_jit(cs2_ptr: CS2FunScalarPtr, w: float, phase: float) -> float:
     r"""Compute $c_s^2$ by a pointer in a jitted function."""
     return cs2_from_ptr(cs2_ptr, w, phase)
 
@@ -35,7 +36,7 @@ def cs2_from_ptr_jit(cs2_ptr: th.CS2FunScalarPtr, w: float, phase: float) -> flo
 class TestCS2Ptr(unittest.TestCase):
     r"""Test that the $c_s^2$ functions can be called by their pointers."""
 
-    W = np.array([0.5, 1., 2., 10.])
+    W: tp.ClassVar[FloatArr1D] = np.array([0.5, 1., 2., 10.])
 
     def check_model(self, model: Model) -> None:
         r"""Check that the pointer of the model gives the same $c_s^2$ as the function of the model."""
@@ -72,7 +73,7 @@ class TestCS2Ptr(unittest.TestCase):
     def test_custom_function(self) -> None:
         r"""A custom $c_s^2$ function should be callable by its pointer."""
         @njit
-        def cs2(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
+        def cs2(w: FloatOrArr, phase: FloatOrArr) -> FloatOrArr:
             return (0.2 * phase + 0.3 * (1 - phase)) * np.ones_like(w)
 
         cs2_ptr = cs2_to_ptr(cs2)

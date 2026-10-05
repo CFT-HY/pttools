@@ -1,24 +1,25 @@
 """Unit tests for the bag model functions."""
 
+import typing as tp
 import unittest
 
 import numpy as np
 import pytest
 
 from pttools import bubble
-import pttools.type_hints as th
+from pttools.type_hints import FloatArr1D
 from pttools.utils import assert_allclose
 
 
 class TestBag(unittest.TestCase):
     """Unit tests for the bag model functions."""
 
-    alpha_n: float
-    phase: int
-    theta_s: float
-    theta_b: float
-    w: float
-    w_arr: th.FloatArr1D
+    alpha_n: tp.ClassVar[float]
+    phase: tp.ClassVar[int]
+    theta_s: tp.ClassVar[float]
+    theta_b: tp.ClassVar[float]
+    w: tp.ClassVar[float]
+    w_arr: tp.ClassVar[FloatArr1D]
 
     @classmethod
     def setUpClass(cls) -> None:
