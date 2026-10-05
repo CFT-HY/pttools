@@ -19,7 +19,17 @@ can be exported to tables of their own by setting their :py:attr:`~pttools.utils
         omgw0_h2 = importer.read(Table.SPECTRA_Y, "omgw0_h2")
 """
 
-from pttools.utils.fields import Extractable, Field, Fields, FieldShape, FieldSpec, FieldType, Preset
+from pttools.utils.fields import (
+    VLEN_STR_OVERHEAD,
+    Extractable,
+    Field,
+    Fields,
+    FieldShape,
+    FieldSpec,
+    FieldType,
+    Preset,
+    field_size,
+)
 
 from .checksum import *
 from .exporter import *

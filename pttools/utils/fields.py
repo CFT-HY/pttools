@@ -10,12 +10,15 @@ which can consist of :py:class:`Preset` values, field names and custom :py:class
 
 from collections.abc import Callable, Iterable, Iterator, Mapping, Set
 import dataclasses
+import datetime
 import enum
 import functools
 import inspect
 import math
 import operator
 import typing as tp
+
+import numpy as np
 
 __all__ = [
     "PRESETS_ALL",
@@ -24,6 +27,7 @@ __all__ = [
     "PRESETS_INIT",
     "PRESETS_MINIMAL",
     "PRESETS_MINIMAL_FULL",
+    "VLEN_STR_OVERHEAD",
     "Extractable",
     "Field",
     "FieldShape",
@@ -35,7 +39,9 @@ __all__ = [
     "decode_optional_int",
     "describe",
     "docstring_summary",
+    "encode_str",
     "extract",
+    "field_size",
 ]
 
 
@@ -280,6 +286,54 @@ def extract(obj: tp.Any, fields: Iterable[Field]) -> dict[str, tp.Any]:
     return {field.name: field.get(obj) for field in fields}
 
 
+def encode_str(value: tp.Any) -> str:
+    """Convert a value to a string for storing it in a string field.
+
+    None is converted to an empty string, enums to their values, dates to ISO 8601,
+    and lists and tuples to one item per line.
+
+    :param value: the value to convert
+    :return: the string
+    """
+    if value is None:
+        return ""
+    if isinstance(value, enum.Enum):
+        return str(value.value)
+    if isinstance(value, (datetime.datetime, datetime.date)):
+        return value.isoformat()
+    if isinstance(value, (list, tuple)):
+        return "\n".join(str(item) for item in value)
+    return str(value)
+
+
+#: Approximate storage overhead of a variable-length string in an HDF5 file in bytes
+VLEN_STR_OVERHEAD: int = 16
+
+
+def field_size(field: Field, value: tp.Any) -> int:
+    """Approximate uncompressed size of the value of a field in an exported file in bytes.
+
+    Booleans take 1 byte, other numbers 8 bytes,
+    and strings their UTF-8 encoded length plus :py:data:`VLEN_STR_OVERHEAD`.
+    Arrays take 8 bytes per element, as they are numerical.
+    The overhead of the file format, e.g. the identifiers of the objects and the offsets of the ragged arrays,
+    is not included, see :py:func:`pttools.export.exporter.estimate_size`.
+    The compression of the file may reduce the size significantly.
+
+    :param field: the field
+    :param value: the value of the field
+    :return: the size in bytes
+    """
+    if field.shape != FieldShape.SCALAR:
+        return 8 * int(np.size(value))
+    match field.type:
+        case FieldType.BOOL:
+            return 1
+        case FieldType.STR:
+            return VLEN_STR_OVERHEAD + len(encode_str(value).encode("utf-8"))
+    return 8
+
+
 class Extractable:
     """Base class for the objects whose fields can be extracted."""
 
@@ -302,6 +356,18 @@ class Extractable:
         :return: the values of the fields
         """
         return extract(self, self.FIELDS.select(fields))
+
+    def estimate_size(self, fields: FieldSpec = Preset.MINIMAL) -> int:
+        """Estimate the uncompressed size of the given fields of this object in an exported file.
+
+        The grid fields, which are stored only once per file, are included.
+        For an estimate of the size of a file with many objects,
+        see :py:func:`pttools.export.exporter.estimate_size`.
+
+        :param fields: the fields, see :py:data:`FieldSpec`
+        :return: the size in bytes, see :py:func:`field_size`
+        """
+        return sum(field_size(field, field.get(self)) for field in self.FIELDS.select(fields))
 
 
 def decode_optional(value: tp.Any) -> tp.Any:

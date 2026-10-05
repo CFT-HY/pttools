@@ -223,6 +223,19 @@ class FieldDefinitionsTest(unittest.TestCase):
         names = [field.name for field in SSM_SPECTRUM_FIELDS.preset(Preset.MINIMAL)]
         assert set(names) == {"v_wall", "alpha_n", "beta_tilde", "r_star", "cs2", "css2_Tn", "csb2_Tn", "y", "pow_gw"}
 
+    def test_bubble_flags(self) -> None:
+        """Test that the error flags of the bubbles are in the minimal and full presets."""
+        flags = {
+            "failed", "solver_crashed", "solver_failed", "invalid_junction", "unphysical_alpha_plus",
+            "negative_entropy_flux", "negative_net_entropy_change", "numerical_error",
+        }
+        for preset in (Preset.MINIMAL, Preset.FULL):
+            names = {field.name for field in BUBBLE_FIELDS.preset(preset)}
+            assert flags <= names
+        for name in flags:
+            assert BUBBLE_FIELDS[name].type == FieldType.BOOL
+            assert Preset.INIT not in BUBBLE_FIELDS[name].presets
+
     def test_bubble_profiles(self) -> None:
         """Test that the bubble profiles are minimal ragged fields."""
         for name in ("v", "w", "xi"):
@@ -275,6 +288,8 @@ class BubbleFieldsTest(unittest.TestCase):
         data = bubble.extract()
         assert data["v_wall"] == 0.5
         assert data["alpha_n"] == 0.1
+        assert data["failed"] is False
+        assert data["solver_failed"] is False
         np.testing.assert_array_equal(data["xi"], bubble.xi)
 
     def test_export_json_nested_model(self) -> None:

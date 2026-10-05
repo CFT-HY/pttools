@@ -212,7 +212,6 @@ class Bubble(BaseBubble):
         self.wm_sh: float = np.nan
 
         # Flags
-        #: Unphysical $\alpha_+$
         self.unphysical_alpha_plus: bool = False
 
         if solve:

@@ -3,9 +3,10 @@
 import unittest
 
 from matplotlib.pyplot import close
+import numpy as np
 
 from examples.basic import basic, datamodel, parallel, spectra
-from examples.const_cs import const_cs, const_cs_bag_comparison, const_cs_find, const_cs_gw, const_cs_xi_v
+from examples.const_cs import const_cs, const_cs_bag_comparison, const_cs_find, const_cs_gw, const_cs_xi_v, dataset
 from examples.entropy import entropy_comparison, entropy_grid, entropy_old, entropy_profile
 from examples.gksvdv import (
     gksvdv_bubble,
@@ -16,11 +17,23 @@ from examples.gksvdv import (
     gksvdv_testing3,
 )
 from examples.low_k import low_k
-from examples.props import chapman_jouguet, ke_frac, noise, reference_props, suppression, vp_vm_plane, w_by_w, xi_kappa
+from examples.props import (
+    chapman_jouguet,
+    ke_frac,
+    n_points,
+    noise,
+    reference_props,
+    suppression,
+    vp_vm_plane,
+    w_by_w,
+    xi_kappa,
+)
 from examples.reverse import reverse, reverse_approx
 from examples.solvers import bag, old_new, xi_kappa_bag
 from examples.standard_model import standard_model_xi_v
 from pttools.analysis import close_figs
+from pttools.export import Importer, Table
+from tests.utils.const import TEST_RESULT_PATH
 from tests.utils.mark import mark_xfail_multiprocessing_jit, skip_slow, uses_multiprocessing
 
 
@@ -74,6 +87,30 @@ class ExampleTest(unittest.TestCase):
         figs1, figs2, _table = const_cs_gw.main()
         close_figs(*figs1)
         close_figs(*figs2.flat)
+
+    @staticmethod
+    @mark_xfail_multiprocessing_jit
+    @skip_slow
+    @uses_multiprocessing
+    def test_const_cs_dataset() -> None:
+        """Test that the example ``examples.const_cs.dataset`` creates a dataset with the smallest grid."""
+        path = TEST_RESULT_PATH / "const_cs_dataset.h5"
+        dataset.main(n_points=dataset.MIN_POINTS, path=path, overwrite=True, max_workers=4, progress_interval=0)
+        grid = dataset.Grid.create(dataset.MIN_POINTS)
+        with Importer(path, verify=True) as importer:
+            assert importer.n_models == grid.n_models
+            assert importer.n_bubbles == grid.n_bubbles
+            assert 0 < importer.n_spectra_f <= grid.n_spectra
+            failed = importer.read(Table.BUBBLES, "failed")
+        assert failed.dtype == np.bool_
+
+    @staticmethod
+    def test_const_cs_dataset_dry_run() -> None:
+        """Test that the size of the dataset can be estimated without computing it."""
+        path = TEST_RESULT_PATH / "const_cs_dataset_dry_run.h5"
+        path.unlink(missing_ok=True)
+        dataset.main(n_points=dataset.SIZES["large"], path=path, dry_run=True)
+        assert not path.exists()
 
     @staticmethod
     def test_const_cs_xi_v() -> None:
@@ -172,6 +209,14 @@ class ExampleTest(unittest.TestCase):
     def test_ke_frac() -> None:
         """Test that the example ``examples.props.ke_frac`` runs without errors."""
         close(ke_frac.main())
+
+    @staticmethod
+    @mark_xfail_multiprocessing_jit
+    @skip_slow
+    @uses_multiprocessing
+    def test_n_points() -> None:
+        """Test that the example ``examples.props.n_points`` runs without errors."""
+        close_figs(*n_points.main(cases=n_points.CASES[:2]))
 
     @staticmethod
     def test_noise() -> None:

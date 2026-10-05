@@ -46,6 +46,19 @@ def _profile(name: str, description: str = "", presets: Set[Preset] = frozenset(
     return Field(name, shape=FieldShape.RAGGED, axis=PROFILE_AXIS, presets=presets, description=description)
 
 
+def _flag(name: str, description: str) -> Field:
+    """Create a field for an error flag of the solution.
+
+    The flags are included in the :py:attr:`~pttools.utils.fields.Preset.MINIMAL`
+    and :py:attr:`~pttools.utils.fields.Preset.FULL` presets.
+
+    :param name: name of the field
+    :param description: description of the field
+    :return: the field
+    """
+    return Field(name, type=FieldType.BOOL, presets=PRESETS_MINIMAL_FULL, description=description)
+
+
 #: Fields of :py:class:`pttools.bubble.bubble.BaseBubble`
 BASE_BUBBLE_FIELDS: Fields = Fields(
     Field("datetime", getter=now, type=FieldType.STR, presets=PRESETS_FULL, description="time of the export"),
@@ -86,7 +99,14 @@ BASE_BUBBLE_FIELDS: Fields = Fields(
     Field("wm", presets=PRESETS_FULL, description="$w_-$, enthalpy behind the wall"),
     Field("w_center", presets=PRESETS_FULL, description=r"$w_\text{center}$, enthalpy at the center of the bubble"),
     # Flags
-    Field("failed", type=FieldType.BOOL, presets=PRESETS_MINIMAL, description="whether the solution has errors"),
+    # These are in the minimal preset, so that the failed solutions can always be filtered out.
+    _flag("failed", "whether the solution has errors"),
+    _flag("solver_crashed", "whether the solver crashed without returning output"),
+    _flag("solver_failed", "whether the solver failed but returned output"),
+    _flag("invalid_junction", "whether the junction conditions were not solved correctly"),
+    _flag("negative_entropy_flux", "whether there is a negative entropy flux across a junction"),
+    _flag("negative_net_entropy_change", "whether there is a negative net entropy change in the system"),
+    _flag("numerical_error", r"whether there is a numerical error, e.g. $\kappa + \omega \neq 1$"),
 )
 
 #: Fields of :py:class:`pttools.bubble.bubble.Bubble`
@@ -134,4 +154,6 @@ BUBBLE_FIELDS: Fields = Fields(
     Field("kinetic_energy_fraction"),
     Field("ubarf2"),
     Field("Psi_n", description=r"$\Psi_n$, inverse enthalpy ratio at the nucleation temperature"),
+    # Flags
+    _flag("unphysical_alpha_plus", r"whether $\alpha_+$ is unphysical"),
 )

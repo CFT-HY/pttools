@@ -14,6 +14,7 @@ import pytest
 
 from pttools.bubble import Bubble
 from pttools.export import (
+    VLEN_STR_OVERHEAD,
     ChecksumError,
     Exporter,
     ExportFormatError,
@@ -28,6 +29,7 @@ from pttools.export import (
     Record,
     Table,
     checksum_path,
+    field_size,
     validate_table_name,
     verify_checksum,
 )
@@ -458,6 +460,56 @@ class ExportTest(unittest.TestCase):
         assert type(loaded) is SSMSpectrum
         np.testing.assert_allclose(loaded.pow_gw, spectrum.pow_gw, rtol=1e-12)
         np.testing.assert_array_equal(bubble.v, self.bubbles[1].v)
+
+
+def logical_size(path: Path) -> int:
+    """The uncompressed size of the data in a file, with the same string overhead as in the size estimate."""
+    size = 0
+    with h5py.File(path, "r") as file:
+        for group in file.values():
+            for dset in group.values():
+                if h5py.check_string_dtype(dset.dtype) is not None and dset.dtype.kind == "O":
+                    size += sum(VLEN_STR_OVERHEAD + len(value) for value in dset[()])
+                else:
+                    size += dset.nbytes
+    return size
+
+
+class SizeEstimateTest(unittest.TestCase):
+    """Tests for estimating the size of an exported file."""
+
+    def test_field_size(self) -> None:
+        """Test the sizes of the values of the fields of each type and shape."""
+        assert field_size(Field("x"), 1.) == 8
+        assert field_size(Field("x", type=FieldType.INT), 1) == 8
+        assert field_size(Field("x", type=FieldType.BOOL), True) == 1
+        assert field_size(Field("x", type=FieldType.STR), "abc") == VLEN_STR_OVERHEAD + 3
+        assert field_size(Field("x", type=FieldType.STR), None) == VLEN_STR_OVERHEAD
+        assert field_size(Field("x", shape=FieldShape.ARRAY, axis="y"), np.zeros(10)) == 80
+        assert field_size(Field("x", shape=FieldShape.RAGGED, axis="y"), np.zeros(5)) == 40
+
+    def test_extractable(self) -> None:
+        """Test the size estimate of an object, including its grid."""
+        f = np.logspace(-3, 0, 20)
+        spectrum = OtherSpectrum(amplitude=1., f=f, label="abc")
+        assert spectrum.estimate_size() == 8 + VLEN_STR_OVERHEAD + 3 + 2 * 8 * f.size
+
+    def test_file(self) -> None:
+        """The estimate should match the uncompressed size of the data in the file."""
+        model = BagModel(a_s=1.1, a_b=1, V_s=1)
+        bubble = Bubble(model, v_wall=0.5, alpha_n=0.1)
+        spectra = [Spectrum(bubble, r_star=r_star, **F_SPECTRUM_KWARGS) for r_star in (0.1, 0.2, 0.3)]
+        path = new_path("size_estimate")
+        with Exporter(path, compression=None) as exporter:
+            estimate = exporter.estimate_size(spectra[0])
+            exporter.add_many(spectra)
+        assert set(estimate.row_bytes) == {Table.MODELS, Table.BUBBLES, Table.SPECTRA_F}
+        assert estimate.grid_bytes[Table.SPECTRA_F] == 8 * F_SPECTRUM_KWARGS["f"].size
+        total = estimate.total({Table.MODELS: 1, Table.BUBBLES: 1, Table.SPECTRA_F: len(spectra)})
+        # The offsets datasets have an extra element at the beginning, and the model JSON contains the export time.
+        assert total == pytest.approx(logical_size(path), rel=1e-3)
+        assert estimate.total({Table.MODELS: 0, Table.BUBBLES: 0, Table.SPECTRA_F: 1}) == \
+            estimate.row_bytes[Table.SPECTRA_F] + estimate.grid_bytes[Table.SPECTRA_F]
 
 
 class OtherTableTest(unittest.TestCase):

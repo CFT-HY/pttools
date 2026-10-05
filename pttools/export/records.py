@@ -31,6 +31,7 @@ __all__ = [
     "find_class",
     "is_builtin_table",
     "object_id",
+    "parent_object",
     "table_base_class",
     "table_fields",
     "table_of",
@@ -190,6 +191,19 @@ def table_of(obj: object) -> TableName:
     )
 
 
+def parent_object(obj: object) -> Extractable | None:
+    """The parent of an object in an exported file.
+
+    :param obj: a model, a bubble, a spectrum, or an object of another class that has a table
+    :return: the bubble of a spectrum, the model of a bubble, or None for other objects
+    """
+    if isinstance(obj, SSMSpectrum):
+        return obj.bubble
+    if isinstance(obj, Bubble):
+        return obj.model
+    return None
+
+
 @dataclasses.dataclass(frozen=True, slots=True)
 class Record:
     """The extracted data of a model, bubble or spectrum.
@@ -295,11 +309,8 @@ class Extractor:
         :return: the record of the object, which contains the records of its bubble and model as parents
         """
         table = table_of(obj)
-        parent: Record | None = None
-        if isinstance(obj, SSMSpectrum):
-            parent = self.extract(obj.bubble)
-        elif isinstance(obj, Bubble):
-            parent = self.extract(obj.model)
+        parent_obj = parent_object(obj)
+        parent = None if parent_obj is None else self.extract(parent_obj)
         return Record(
             table=table,
             id=object_id(obj),

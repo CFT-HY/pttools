@@ -261,7 +261,7 @@ sphinx_gallery_conf = {
     "examples_dirs": str(EXAMPLES_DIR),
     "filename_pattern": ".*",
     "gallery_dirs": "auto_examples",
-    "ignore_pattern": r"(__init__\.py|utils\.py|p_s_scan_dev\.py|droplet|standard_model|entropy|reverse)",
+    "ignore_pattern": r"(__init__\.py|utils\.py|p_s_scan_dev\.py|droplet|standard_model|entropy|reverse|dataset\.py)",
     # "image_scrapers": ("matplotlib", "plotly.io._sg_scraper.plotly_sg_scraper"),
     "image_srcset": ["2x"],
     # "line_numbers": True,

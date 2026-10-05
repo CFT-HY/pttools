@@ -128,17 +128,12 @@ class BaseBubble(Extractable, abc.ABC):
         #: Whether the solving has been attempted
         self.solving_attempted: bool = False
         # Specific errors
-        #: Whether the junction conditions were not solved correctly
+        # These are documented by the descriptions of their fields in pttools.bubble.export.
         self.invalid_junction: bool = False
-        #: Whether there is a negative entropy flux across a junction
         self.negative_entropy_flux: bool = False
-        #: Whether there is a total negative net enropy change in the system
         self.negative_net_entropy_change: bool = False
-        #: Whether there is a numerical error, e.g. $\kappa + \omega \neq 1$
         self.numerical_error: bool = False
-        #: Whether the solver crashed without returning output
         self.solver_crashed: bool = False
-        #: Whether the solver failed but returned output
         self.solver_failed: bool = False
 
     def add_note(self, note: str) -> None:

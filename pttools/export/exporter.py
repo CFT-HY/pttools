@@ -61,7 +61,7 @@ In addition, a SHA-256 checksum of the entire file is written to ``FILE.sha256``
 It can be verified with :py:func:`pttools.export.checksum.verify_checksum` or ``sha256sum --check FILE.sha256``.
 """
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 import dataclasses
 import datetime
 import enum
@@ -75,7 +75,6 @@ import typing as tp
 import h5py
 import numpy as np
 
-from pttools.bubble.bubble import Bubble
 from pttools.export.checksum import checksum_path, write_checksum
 from pttools.export.records import (
     Extractor,
@@ -86,18 +85,30 @@ from pttools.export.records import (
     find_class,
     is_builtin_table,
     object_id,
+    parent_object,
     table_base_class,
     table_of,
     validate_table_name,
 )
-from pttools.ssm.spectrum import SSMSpectrum
-from pttools.utils.fields import Extractable, Field, FieldShape, FieldSpec, FieldType, Preset, extract
+from pttools.utils.fields import (
+    Extractable,
+    Field,
+    FieldShape,
+    FieldSpec,
+    FieldType,
+    Preset,
+    encode_str,
+    extract,
+    field_size,
+)
 
 __all__ = [
     "FORMAT_NAME",
     "FORMAT_VERSION",
     "ExportFormatError",
     "Exporter",
+    "SizeEstimate",
+    "estimate_size",
     "offsets_name",
     "parent_column",
 ]
@@ -115,6 +126,9 @@ CHUNK_BYTES: int = 128 * 1024
 
 #: Names of the datasets that are not fields
 _RESERVED_NAMES: frozenset[str] = frozenset({"id", "class", "params", "model", "bubble"})
+
+#: Size of the identifiers of the objects in the file in bytes
+_ID_BYTES: int = 32
 
 #: Value of the ``kind`` attribute of the offsets datasets of the ragged fields
 _OFFSETS_KIND: str = "offsets"
@@ -171,26 +185,6 @@ def _json_default(value: tp.Any) -> tp.Any:
     raise TypeError(f"Cannot convert {type(value)} to JSON.")
 
 
-def _encode_str(value: tp.Any) -> str:
-    """Convert a value to a string for storing it in a string field.
-
-    None is converted to an empty string, enums to their values, dates to ISO 8601,
-    and lists and tuples to one item per line.
-
-    :param value: the value to convert
-    :return: the string
-    """
-    if value is None:
-        return ""
-    if isinstance(value, enum.Enum):
-        return str(value.value)
-    if isinstance(value, (datetime.datetime, datetime.date)):
-        return value.isoformat()
-    if isinstance(value, (list, tuple)):
-        return "\n".join(str(item) for item in value)
-    return str(value)
-
-
 def _encode_scalar(field: Field, value: tp.Any) -> tp.Any:
     """Convert the value of a scalar field to the Python type corresponding to the type of the field.
 
@@ -208,7 +202,7 @@ def _encode_scalar(field: Field, value: tp.Any) -> tp.Any:
         case FieldType.BOOL:
             return bool(value)
         case FieldType.STR:
-            return _encode_str(value)
+            return encode_str(value)
     raise ValueError(f"Unknown field type: {field.type}")
 
 
@@ -244,6 +238,77 @@ def _set_attrs(dset: h5py.Dataset, kind: str, field_type: str, axis: str, descri
     dset.attrs["type"] = str(field_type)
     dset.attrs["axis"] = str(axis)
     dset.attrs["description"] = str(description)
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class SizeEstimate:
+    """Estimated uncompressed size of the data of an object and its parents in an exported file.
+
+    :param row_bytes: size of a row of each table in bytes, i.e. the size of a single object
+    :param grid_bytes: size of the grid fields of each table in bytes, which are stored only once per file
+    """
+
+    row_bytes: dict[str, int]
+    grid_bytes: dict[str, int]
+
+    def total(self, n_rows: Mapping[str, int]) -> int:
+        """Estimate the size of a file with the given numbers of rows.
+
+        This presumes that the objects of each table are similar to the object of the estimate,
+        e.g. that the fluid profiles of all the bubbles have approximately the same number of points.
+
+        :param n_rows: the number of rows of each table, e.g. ``{Table.SPECTRA_F: 1000, Table.BUBBLES: 10}``
+        :return: the size in bytes
+        :raises KeyError: if the estimate does not include a table that has rows
+        """
+        return sum(
+            self.row_bytes[str(table)] * n + self.grid_bytes[str(table)]
+            for table, n in n_rows.items() if n > 0
+        )
+
+
+def estimate_size(obj: Extractable, extractor: Extractor | None = None) -> SizeEstimate:
+    """Estimate the uncompressed size of the data of an object and its parents in an exported file.
+
+    The size of the fields is estimated with :py:func:`pttools.utils.fields.field_size`,
+    and the identifiers, the row indices of the parents and the offsets of the ragged arrays are included.
+    The metadata and the chunking of the HDF5 file are not included,
+    and the compression may reduce the size significantly.
+    Therefore, the actual size of the file may differ from the estimate.
+
+    :param obj: a model, a bubble, a spectrum, or an object of another class that has a table
+    :param extractor: the extractor that defines the exported fields. If None, the default fields are used.
+    :return: the estimated sizes for the table of the object and for the tables of its parents
+    """
+    extractor = Extractor() if extractor is None else extractor
+    row_bytes: dict[str, int] = {}
+    grid_bytes: dict[str, int] = {}
+    current: Extractable | None = obj
+    while current is not None:
+        table = table_of(current)
+        fields = extractor.fields(type(current), table)
+        data = extract(current, fields)
+        row = _ID_BYTES
+        grid = 0
+        if table == Table.MODELS:
+            # The fields of the models are stored as JSON, see Exporter._append().
+            params = json.dumps(data, default=_json_default)
+            values = (class_name(type(current)), params)
+            row += sum(field_size(column, value) for column, value in zip(_MODEL_COLUMNS, values, strict=True))
+        else:
+            for field in fields:
+                if field.shape == FieldShape.GRID:
+                    grid += field_size(field, data[field.name])
+                else:
+                    row += field_size(field, data[field.name])
+            # The offsets of each ragged axis
+            row += 8 * len({field.axis for field in fields if field.shape == FieldShape.RAGGED})
+        if parent_column(table) is not None:
+            row += 8
+        row_bytes[str(table)] = row
+        grid_bytes[str(table)] = grid
+        current = parent_object(current)
+    return SizeEstimate(row_bytes=row_bytes, grid_bytes=grid_bytes)
 
 
 @dataclasses.dataclass(slots=True)
@@ -471,7 +536,7 @@ class _TableWriter:
             raise RuntimeError("The fields have not been set.")
         rows = self.buffer
         self._append_rows(
-            "id", np.array([row.id for row in rows], dtype="S32"),
+            "id", np.array([row.id for row in rows], dtype=f"S{_ID_BYTES}"),
             field_type="id", description="unique identifier")
         if self.parent_column is not None:
             self._append_rows(
@@ -755,6 +820,13 @@ class Exporter:
         writer = self._tables.get(table)
         return 0 if writer is None else writer.n_total
 
+    def estimate_size(self, obj: Extractable) -> SizeEstimate:
+        """Estimate the uncompressed size of the data of an object and its parents with the fields of this exporter.
+
+        See :py:func:`estimate_size`.
+        """
+        return estimate_size(obj, self.extractor)
+
     # -----
     # Adding data
     # -----
@@ -800,11 +872,8 @@ class Exporter:
         index = self._row_index(table, obj_id)
         if index is not None:
             return index
-        parent = -1
-        if isinstance(obj, SSMSpectrum):
-            parent = self._add_object(obj.bubble)
-        elif isinstance(obj, Bubble):
-            parent = self._add_object(obj.model)
+        parent_obj = parent_object(obj)
+        parent = -1 if parent_obj is None else self._add_object(parent_obj)
         fields = self.extractor.fields(type(obj), table)
         data = extract(obj, fields)
         return self._append(self._writer(table), obj_id, class_name(type(obj)), data, parent, fields)
