@@ -66,6 +66,8 @@
 - After changing equations in docstrings, run `uv run python -m pttools.docs.lint`.
   It builds the documentation without running the examples (`make latexpdf-noplot`), prints the Sphinx errors and warnings
   and the LaTeX errors, and saves the Sphinx output to `./logs/sphinx_TIMESTAMP.log`. Its exit code is that of `make`.
+  It builds in a new temporary directory `./docs/lint/lint_TIMESTAMP_RANDOM`, whose path it prints,
+  so multiple lints can be run simultaneously. These directories are not removed automatically.
   Fix all reported errors, as the documentation is built with `--fail-on-warning`.
 
 ## General instructions

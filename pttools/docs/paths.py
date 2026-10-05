@@ -16,6 +16,9 @@ from pttools.utils.system import PTTOOLS_DIR
 DOCS_DIR_FILES: tuple[str, ...] = ("conf.py", "Makefile")
 #: Name of the documentation directory
 DOCS_DIR_NAME: str = "docs"
+#: Name of the directory for the builds of :py:mod:`pttools.docs.lint` and the source lock
+#: of :py:mod:`pttools.docs.lock`, which is in the documentation directory
+LINT_DIR_NAME: str = "lint"
 #: Name of the log directory, which is alongside the documentation directory
 LOG_DIR_NAME: str = "logs"
 #: Environment variable with which the path of the Sphinx log file can be set,

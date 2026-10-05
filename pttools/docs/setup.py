@@ -11,11 +11,13 @@ from sphinx_gallery.directives import depart_imgsg_html, imgsgnode, visit_imgsg_
 
 if tp.TYPE_CHECKING:
     from sphinx.application import Sphinx
+    from sphinx.config import Config
 
 from pttools.docs.backreferences import patch_sphinx_gallery
 from pttools.docs.fields import add_field_docs, note_field_dependencies
+from pttools.docs.lock import setup_source_lock
 from pttools.docs.minigallery import add_minigalleries, remove_duplicate_minigalleries
-from pttools.docs.paths import SPHINX_LOG_ENV_VAR, default_log_dir
+from pttools.docs.paths import LINT_DIR_NAME, SPHINX_LOG_ENV_VAR, default_log_dir
 from pttools.logging import setup_logging
 
 
@@ -95,11 +97,20 @@ def setup_sphinx_logging(log_path: str | os.PathLike[str] | None = None, level: 
     return path
 
 
+def exclude_lint_dir(app: "Sphinx", config: "Config") -> None:
+    """Exclude the build directories of :py:mod:`pttools.docs.lint` from the documentation sources."""
+    if LINT_DIR_NAME not in config.exclude_patterns:
+        config.exclude_patterns.append(LINT_DIR_NAME)
+
+
 def setup_sphinx(app: "Sphinx") -> None:
     """Set up the customisations of the PTtools documentation.
 
     To use this function, set `setup = setup_sphinx` in your `docs/conf.py`.
     """
+    # Simultaneous builds wait for each other while generating files in the source directory.
+    setup_source_lock(app)
+    app.connect("config-inited", exclude_lint_dir)
     app.connect("autodoc-process-docstring", add_minigalleries)
     # The descriptions of the exportable fields are used as the documentation of the corresponding attributes.
     app.connect("builder-inited", add_field_docs)

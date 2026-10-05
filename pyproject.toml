@@ -218,6 +218,7 @@ project-includes = [
 project-excludes = [
     "**/_build*",
     "**/auto_examples*",
+    "docs/lint",
     # This file is unmaintained and depends on a thermo module that is not in this repository.
     "examples/entropy/p_s_scan_dev.py",
     "**/__pycache__/**",
@@ -279,6 +280,7 @@ extend-exclude = [
     "docs/_build",
     "docs/auto_examples",
     "docs/gen_modules",
+    "docs/lint",
     "htmlcov",
     "logs",
     "test-results"
