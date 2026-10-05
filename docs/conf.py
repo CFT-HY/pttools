@@ -17,6 +17,7 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 from datetime import date
 import logging
 from pathlib import Path
+import re
 import sys
 import tomllib
 import typing as tp
@@ -146,17 +147,41 @@ mathjax3_config = {
 
 
 # -- Apidoc  -----------------------------------------------------------------
+#: Line that marks the main part of an example, which is not run when the example is imported
+MAIN_GUARD: re.Pattern[str] = re.compile(r"^if __name__ == [\"']__main__[\"']", re.MULTILINE)
+#: The examples that have a main guard but are not documented as modules,
+#: since they do their computations outside the main guard
+UNDOCUMENTED_EXAMPLES: frozenset[Path] = frozenset({
+    # This consists of notebook-style sections, which are run at the module level.
+    EXAMPLES_DIR / "standard_model" / "standard_model.py",
+})
+#: The examples that are documented also as modules, so that their objects can be referred to.
+#: Only the examples that have a main guard are included, since autodoc imports the modules,
+#: and the code outside the main guard is therefore run.
+DOCUMENTED_EXAMPLES: tuple[Path, ...] = tuple(
+    path for path in sorted(EXAMPLES_DIR.glob("*/*.py"))
+    if path.name != "__init__.py" and path not in UNDOCUMENTED_EXAMPLES
+    and MAIN_GUARD.search(path.read_text(encoding="utf-8"))
+)
+#: The files of the example directories that are excluded from the module documentation,
+#: i.e. everything except the documented examples and the __init__.py files of the packages,
+#: which contain only docstrings
+EXCLUDED_EXAMPLES: list[str] = [
+    str(path) for path in sorted(EXAMPLES_DIR.glob("*/*"))
+    if path not in DOCUMENTED_EXAMPLES and path.name != "__init__.py"
+]
+
 apidoc_modules = [
     {
         "path": str(PTTOOLS_DIR),
         "destination": "gen_modules/pttools"
     },
     {
-        # Only the utilities are documented, as the examples themselves are in the gallery,
-        # and importing them for autodoc would run them a second time.
+        # Only the utilities and DOCUMENTED_EXAMPLES are documented,
+        # since importing the examples without a main guard for autodoc would run them a second time.
         "path": str(EXAMPLES_DIR),
         "destination": "gen_modules/examples",
-        "exclude_patterns": [str(EXAMPLES_DIR / "*" / "*")]
+        "exclude_patterns": EXCLUDED_EXAMPLES
     },
     {
         "path": str(TESTS_DIR),
@@ -261,7 +286,7 @@ sphinx_gallery_conf = {
     "examples_dirs": str(EXAMPLES_DIR),
     "filename_pattern": ".*",
     "gallery_dirs": "auto_examples",
-    "ignore_pattern": r"(__init__\.py|utils\.py|p_s_scan_dev\.py|droplet|standard_model|entropy|reverse|dataset\.py)",
+    "ignore_pattern": r"(__init__\.py|utils\.py|p_s_scan_dev\.py|droplet|standard_model|entropy|reverse)",
     # "image_scrapers": ("matplotlib", "plotly.io._sg_scraper.plotly_sg_scraper"),
     "image_srcset": ["2x"],
     # "line_numbers": True,

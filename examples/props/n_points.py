@@ -13,18 +13,24 @@ The accuracy settings are
   (by default the same as ``n_z_lookup``),
 - ``nT``, the number of points of the bubble lifetime distribution integration.
 
-Each setting is varied separately, while the others are kept at the base values ``BASE``.
+Each setting is varied separately,
+while the others are kept at the base values :py:data:`~examples.props.n_points.BASE`.
 The resulting spectra $\Omega_{\text{gw},0} h^2(f)$ are compared with a reference spectrum,
 which differs from the others only by having the reference value of the varied setting.
 The relative error is shown both near the peak, i.e. where $\Omega_{\text{gw},0} \geq 10^{-3} \Omega_\text{peak}$,
 and over the entire frequency range, whose tails can be many orders of magnitude below the peak.
 The computation time of a spectrum is measured on a single CPU core, which corresponds to the computation of a dataset
-with one worker process per core, as in ``examples/const_cs/dataset.py``.
+with one worker process per core, as in :ref:`sphx_glr_auto_examples_const_cs_dataset.py`.
 Too small values of $n_\xi$ also cause the bubbles to be marked as failed,
 as the numerical integrals of the energy budget no longer fulfill $\kappa + \omega = 1$
 within the tolerance of the validation.
 
-Finally, the spectra computed with the accuracy settings ``ACCURACY`` of ``examples/const_cs/dataset.py``
+The computation takes several minutes of CPU time,
+and is therefore skipped when this example is run by Sphinx-Gallery for building the documentation.
+Run it from the root directory of the repository with ``python -m examples.props.n_points``.
+
+Finally, the spectra computed with the accuracy settings :py:data:`~examples.const_cs.dataset.ACCURACY`
+of :ref:`sphx_glr_auto_examples_const_cs_dataset.py`
 are compared with spectra computed with the reference values of all the settings.
 
 The results show that ``nx_P_tilde_gw`` and ``nT`` can be reduced far below their defaults
@@ -52,6 +58,7 @@ from examples.const_cs.dataset import ACCURACY, MODEL_KWARGS, Accuracy, F, warm_
 from examples.utils import save_and_show_figs
 from pttools.analysis.utils import A4_PAPER_SIZE
 from pttools.bubble import Bubble
+from pttools.docs.examples import is_sphinx_gallery
 from pttools.models import ConstCSModel
 from pttools.omgw0 import Spectrum
 from pttools.speedup.parallel import FakeFuture, get_process_pool
@@ -289,7 +296,8 @@ def main(cases: tuple[Case, ...] = CASES) -> tuple[Figure, Figure, Figure]:
     return fig_errors, fig_bubbles, fig_spectra
 
 
-if __name__ == "__main__":
+# The computation is skipped in the documentation, as it would take too long.
+if __name__ == "__main__" and not is_sphinx_gallery():
     _fig_errors, _fig_bubbles, _fig_spectra = main()
     save_and_show_figs({
         "n_points_errors": _fig_errors,

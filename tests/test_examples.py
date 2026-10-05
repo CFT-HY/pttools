@@ -6,7 +6,15 @@ from matplotlib.pyplot import close
 import numpy as np
 
 from examples.basic import basic, datamodel, parallel, spectra
-from examples.const_cs import const_cs, const_cs_bag_comparison, const_cs_find, const_cs_gw, const_cs_xi_v, dataset
+from examples.const_cs import (
+    const_cs,
+    const_cs_bag_comparison,
+    const_cs_find,
+    const_cs_gw,
+    const_cs_xi_v,
+    const_cs_xi_v_w,
+    dataset,
+)
 from examples.entropy import entropy_comparison, entropy_grid, entropy_old, entropy_profile
 from examples.gksvdv import (
     gksvdv_bubble,
@@ -19,6 +27,7 @@ from examples.gksvdv import (
 from examples.low_k import low_k
 from examples.props import (
     chapman_jouguet,
+    delta_theta,
     ke_frac,
     n_points,
     noise,
@@ -120,8 +129,7 @@ class ExampleTest(unittest.TestCase):
     @staticmethod
     def test_plot_const_cs_xi_v_w() -> None:
         """Test that the example ``examples.const_cs.const_cs_xi_v_w`` runs without errors."""
-        import examples.const_cs.const_cs_xi_v_w as script  # noqa: PLC0415
-        script.plot.fig()
+        const_cs_xi_v_w.main().fig()
 
     # Entropy
     @staticmethod
@@ -199,8 +207,7 @@ class ExampleTest(unittest.TestCase):
     @staticmethod
     def test_delta_theta() -> None:
         """Test that the example ``examples.props.delta_theta`` runs without errors."""
-        from examples.props import delta_theta  # noqa: PLC0415
-        delta_theta.plot.fig()
+        delta_theta.main().fig()
 
     @staticmethod
     @mark_xfail_multiprocessing_jit

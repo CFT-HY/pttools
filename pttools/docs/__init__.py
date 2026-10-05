@@ -8,6 +8,7 @@
 # from .cloc import *
 # from .lint import *
 
+from .examples import *
 from .links import *
 from .minigallery import *
 from .paths import *

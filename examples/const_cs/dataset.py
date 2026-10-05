@@ -5,7 +5,7 @@ Dataset of spectra
 Compute a dataset of gravitational wave spectra for the constant sound speed model,
 and export it to an HDF5 file with :py:class:`pttools.export.exporter.Exporter`.
 
-The parameters are varied on a grid, which is created by :py:meth:`Grid.create`:
+The parameters are varied on a grid, which is created by :py:meth:`~examples.const_cs.dataset.Grid.create`:
 
 - $c_{s,s}^2$ and $c_{s,b}^2$, the sound speeds squared of the phases from $1/4$ to $1/3$,
 - $\alpha_n$, the transition strength from 0.1 to 1 on a logarithmic axis,
@@ -18,12 +18,12 @@ The parameters are varied on a grid, which is created by :py:meth:`Grid.create`:
 The lower limit of $\alpha_n$ is 0.1 instead of 0.05,
 since some of the models of the grid don't allow $\alpha_n$ below about 0.09,
 and the grid would then have holes.
-The models are created with the same initial parameters :py:data:`MODEL_KWARGS`,
+The models are created with the same initial parameters :py:data:`~examples.const_cs.dataset.MODEL_KWARGS`,
 from which $a_s$ and $V_s$ are adjusted to allow $\alpha_n$ down to 0.05 where possible.
 This keeps the smallest $\alpha_n$ of the grid away from the limit of the model,
 where the bubbles would be marked as failed due to negative entropy fluxes.
 
-The spectra are computed for the fixed frequencies :py:data:`F`.
+The spectra are computed for the fixed frequencies :py:data:`~examples.const_cs.dataset.F`.
 The model is shared by the bubbles of the same sound speeds,
 and the bubble by the spectra of the same $\alpha_n$ and $v_\text{wall}$.
 Therefore, each bubble and its spectra are computed in the same task of a worker process,
@@ -37,10 +37,12 @@ These are kept in the file with their error flags, such as ``failed`` and ``solv
 so that they can be filtered out by the user of the dataset.
 The spectra are computed for all the bubbles that have a fluid profile, including the failed ones.
 
-The accuracy settings :py:data:`ACCURACY` have been chosen with :py:mod:`examples.props.n_points`.
+The accuracy settings :py:data:`~examples.const_cs.dataset.ACCURACY` have been chosen with
+:ref:`sphx_glr_auto_examples_props_n_points.py`.
 
 The computation of the large dataset takes several days even with dozens of CPU cores,
-and therefore this example is not run when building the documentation.
+and therefore the computation is skipped when this example is run by Sphinx-Gallery
+for building the documentation.
 Run it from the root directory of the repository with e.g.
 
 .. code-block:: bash
@@ -67,7 +69,9 @@ import typing as tp
 
 import numpy as np
 
+from examples.utils import DATA_DIR
 from pttools.bubble import Bubble
+from pttools.docs.examples import is_sphinx_gallery
 from pttools.export import Exporter, Extractor, FieldShape, Record, Table
 from pttools.export.exporter import SizeEstimate, estimate_size
 from pttools.models import ConstCSModel
@@ -94,8 +98,6 @@ MODEL_KWARGS: dict[str, tp.Any] = {"a_s": 1.5, "a_b": 1, "V_s": 1, "alpha_n_min"
 #: Number of points per parameter range for the sizes of the dataset
 SIZES: dict[str, int] = {"small": 3, "large": 10}
 
-#: Default path of the file
-DEFAULT_DIR: Path = Path(__file__).resolve().parents[2] / "data"
 
 #: Minimum number of points per parameter range
 MIN_POINTS: int = 2
@@ -202,7 +204,7 @@ class Grid:
         return itertools.product(self.css2s.tolist(), self.csb2s.tolist())
 
     def bubble_params(self) -> Iterator[tuple[float, float]]:
-        r"""The parameters $(\alpha_n, v_\text{wall})$ of the bubbles of each model."""
+        r"""The parameters $(\alpha_n, v_{\text{wall}})$ of the bubbles of each model."""
         return itertools.product(self.alpha_ns.tolist(), self.v_walls.tolist())
 
     def spectrum_params(self) -> list[SpectrumParams]:
@@ -423,7 +425,7 @@ def main(
     :param accuracy: accuracy settings
     :return: path of the file
     """
-    path = DEFAULT_DIR / f"const_cs_dataset_{n_points}.h5" if path is None else Path(path)
+    path = DATA_DIR / f"const_cs_dataset_{n_points}.h5" if path is None else Path(path)
     grid = Grid.create(n_points)
     extractor = Extractor()
     estimate, spectrum_time = estimate_dataset(grid, accuracy, extractor)
@@ -490,7 +492,8 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-if __name__ == "__main__":
+# The computation is skipped in the documentation, as it would take too long.
+if __name__ == "__main__" and not is_sphinx_gallery():
     _args = parse_args()
     main(
         n_points=SIZES[_args.size] if _args.n_points is None else _args.n_points,

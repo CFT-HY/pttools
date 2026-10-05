@@ -55,8 +55,14 @@ def main() -> BubblePlot3D:
     return plot
 
 
-plot: BubblePlot3D = main()
-plot.save(FIG_DIR / "plot_const_cs_xi_v_w")
-if __name__ == "__main__" and "__file__" in globals():
-    plot.show()
-plot.fig()
+if __name__ == "__main__":
+    plot: BubblePlot3D = main()
+    plot.save(FIG_DIR / "plot_const_cs_xi_v_w")
+    # Sphinx-Gallery runs the examples without __file__, and the figure is then shown by the expression below.
+    if "__file__" in globals():
+        plot.show()
+
+# Sphinx-Gallery shows the figure that is the value of the last expression of the example.
+# The expression has to be at the top level, and is therefore conditional
+# instead of being within the block above, where plot is defined.
+plot.fig() if __name__ == "__main__" else None  # pyrefly: ignore[unbound-name]

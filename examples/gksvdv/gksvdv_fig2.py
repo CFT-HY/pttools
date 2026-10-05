@@ -69,7 +69,7 @@ def create_figure(
         v_walls: FloatArr1D,
         theta_bar: bool = False,
         giese: bool = False) -> FloatArr3D:
-    r"""Create a figure of $\kappa(v_\text{wall})$ similar to :giese_2021:`\ `, fig. 2"""
+    r"""Create a figure of $\kappa(v_{\text{wall}})$ similar to :giese_2021:`\ `, fig. 2"""
     kappas = np.empty((len(models), alpha_ns.size, v_walls.size))
     for i_model, (model, ls) in enumerate(zip(models, lss, strict=False)):
         if giese:

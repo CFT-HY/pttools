@@ -1,6 +1,6 @@
 """
 Integration
-=========
+===========
 
 How to integrate a fluid shell profile manually
 """

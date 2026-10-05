@@ -14,6 +14,9 @@ from pttools.utils.docstrings import copy_docstring_dec
 FIG_DIR: Path = Path(__file__).resolve().parent / "fig"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
+#: Data directory for the files created by the examples, e.g. datasets
+DATA_DIR: Path = Path(__file__).resolve().parent.parent / "data"
+
 
 @copy_docstring_dec(plot_utils.save_and_show_fig)
 def save_and_show_fig(
