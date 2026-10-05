@@ -28,7 +28,7 @@ def a_ratio[T: FloatOrArr](
         gs0: T = GS0) -> T:
     r"""$\frac{a_{\ast}}{a_0}$.
 
-    $$\frac{a_*}{a_0} = \frac{T_0}{T_*} \left( \frac{g_{s0}}{g_{s\ast}} \right^\frac{1}{3}$$
+    $$\frac{a_*}{a_0} = \frac{T_0}{T_*} \left( \frac{g_{s0}}{g_{s\ast}} \right)^\frac{1}{3}$$
 
     :param T_star: $T_*$, temperature at the time of GW formation in GeV
     :param T0: $T_0$, temperature today (for e.g. photons, corresponding to $g_{s0}$)
@@ -123,6 +123,6 @@ def H_SI[T: FloatOrArr](e: T) -> T:
     $$H = \sqrt{\frac{8 \pi G e}{3 c^2}}$$
 
     :param e: $e$, energy density in SI units $\frac{\text{J}}{\text{m}^3}$
-    :return: $H$, Hubble rate in SI units of $\frac{1}{\text{s}$
+    :return: $H$, Hubble rate in SI units of $\frac{1}{\text{s}}$
     """
     return tp.cast(T, H_FACTOR_SI * np.sqrt(e))

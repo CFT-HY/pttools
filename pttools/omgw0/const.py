@@ -67,7 +67,7 @@ and it's the one used for the temperature scaling from the conservation of comov
 G_EFF_SM: float = 106.75
 r"""Degrees of freedom $g$ in the Standard Model at high temperatures.
 
-$$g_{SM}(T \gtapprox 200 \text{GeV}) = 28 + \frac{7}{8} \cdot 90 = 106.75$$,
+$$g_{SM}(T \gtrsim 200 \text{GeV}) = 28 + \frac{7}{8} \cdot 90 = 106.75$$,
 :physics_stack:`170682`,
 :notes:`\ ` p. 10.
 """
