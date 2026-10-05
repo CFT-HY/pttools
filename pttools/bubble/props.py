@@ -10,18 +10,41 @@ import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
 
-def find_phase(xi: th.FloatArr1D, v_wall: float) -> th.FloatArr1D:
-    r"""Get the phase at each given $\xi$ value."""
-    # Todo: Replace this with pttools.bubble.phase.get_phase
-    i_wall = find_v_index(xi, v_wall)
+def find_phase(xi: th.FloatArr1D, v_wall: float, sol_type: SolutionType | None = None) -> th.FloatArr1D:
+    r"""Get the phase at each given $\xi$ value.
+
+    The points with $\xi < {v}_\text{wall}$ are in the broken phase,
+    and the points with $\xi > {v}_\text{wall}$ are in the symmetric phase.
+    For the points with $\xi = {v}_\text{wall}$, the phase is determined by the structure of the profile.
+    If there are several points at $\xi = {v}_\text{wall}$, as in hybrids,
+    the last of them is in the symmetric phase and the others in the broken phase.
+    If there is a single point at $\xi = {v}_\text{wall}$, it is the end of the rarefaction wave in detonations
+    and therefore in the broken phase,
+    and the start of the shell in subsonic deflagrations and therefore in the symmetric phase.
+    As these cannot be distinguished based on $\xi$ alone,
+    the single point is considered to be in the symmetric phase unless ``sol_type`` is a detonation.
+
+    :param xi: $\xi$ values of the profile in increasing order
+    :param v_wall: ${v}_\text{wall}$, wall speed
+    :param sol_type: type of the solution
+    :return: phase
+    """
     # This presumes that Phase.SYMMETRIC = 0
     phase = np.zeros_like(xi)
-    if i_wall == 0:
+    if not np.any(xi >= v_wall):
+        phase[:] = Phase.BROKEN
         return phase
-    phase[:i_wall-1] = Phase.BROKEN
-    # Fix for detonations
-    if np.isclose(xi[i_wall], v_wall):
-        phase[i_wall-1] = Phase.BROKEN
+    i_wall = find_v_index(xi, v_wall)
+    phase[:i_wall] = Phase.BROKEN
+    # The points at the wall are set to exactly v_wall by the solvers,
+    # so the tolerance has to be tight to not include the neighbouring points.
+    n_at_wall = 0
+    while i_wall + n_at_wall < xi.size and np.isclose(xi[i_wall + n_at_wall], v_wall, rtol=1e-12, atol=0):
+        n_at_wall += 1
+    if n_at_wall > 1:
+        phase[i_wall:i_wall + n_at_wall - 1] = Phase.BROKEN
+    elif n_at_wall == 1 and sol_type == SolutionType.DETON:
+        phase[i_wall] = Phase.BROKEN
     return phase
 
 
@@ -66,7 +89,7 @@ def v_and_w_from_solution(
     :param v: $v$, fluid velocity
     :param w: $w$, enthalpy
     :param xi: $\xi$
-    :param v_wall: $v_\text{wall}$, wall speed
+    :param v_wall: ${v}_\text{wall}$, wall speed
     :param sol_type: solution type
     :return: $v_{+}, v_{-}, \tilde{v}_+, \tilde{v}_-, w_{+}, w_{-}, w_n, w_{-,sh}$
     :raises ValueError: if the profile is inconsistent with the given $v_\text{wall}$ and solution type

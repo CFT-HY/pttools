@@ -7,6 +7,7 @@ import numpy as np
 
 from pttools import ssm
 from pttools.bubble import CS2_BAG_SCALAR_PTR, DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG, Bubble
+from pttools.bubble.phase import get_phase
 from pttools.bubble.thermo import ubarf2
 from pttools.bubble.thermo_bag import de_from_w_bag
 from pttools.ssm import SSMSpectrum, pow_spec
@@ -53,8 +54,13 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
             for bubble in self.bubbles
         ]
         de = [ei - ei[-1] for ei in e]
-        for de_i, de_bag_i in zip(de, de_bag, strict=False):
-            assert_allclose(de_i, de_bag_i)
+        for bubble, de_i, de_bag_i in zip(self.bubbles, de, de_bag, strict=False):
+            # The old interface considers the point at xi = v_wall to be in the symmetric phase,
+            # although in hybrids and detonations it's the last point of the broken phase.
+            same_phase = bubble.phase == get_phase(bubble.xi, bubble.v_wall)
+            assert np.all(bubble.xi[~same_phase] == bubble.v_wall)
+            assert np.count_nonzero(~same_phase) <= 1
+            assert_allclose(de_i[same_phase], de_bag_i[same_phase])
 
     def test_a2(self) -> None:
         """Test that the energy-conserving $|A|^2$ agrees with the old bag model interface."""
@@ -68,9 +74,13 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
             )[0]
             for i, bubble in enumerate(self.bubbles)
         ])
+        # The old interface considers the point at xi = v_wall to be in the symmetric phase,
+        # although in hybrids and detonations it's the last point of the broken phase.
+        # The same phases are therefore used here to compare the implementations.
         a2_new = np.array([
             ssm.A2_e_conserving(
-                v=bubble.v, w=bubble.w, xi=bubble.xi, e=bubble.e, z=self.z,
+                v=bubble.v, w=bubble.w, xi=bubble.xi,
+                e=bubble.model.e(bubble.w, get_phase(bubble.xi, bubble.v_wall)), z=self.z,
                 v_wall=bubble.v_wall, v_sh=bubble.v_sh, cs=ssm.CS0)[0]
             for bubble in self.bubbles
         ])

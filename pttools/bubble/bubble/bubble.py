@@ -252,7 +252,7 @@ class Bubble(BaseBubble):
         self.alpha_theta_bar_plus = self.model.alpha_theta_bar_plus(
             self.wp, error_on_invalid=False, nan_on_invalid=True, log_invalid=log_invalid
         )
-        self.phase = find_phase(self.xi, self.v_wall)
+        self.phase = find_phase(self.xi, self.v_wall, self.sol_type)
 
         self.sn = self.model.s(self.wn, Phase.SYMMETRIC)
         self.sm = self.model.s(self.wm, Phase.BROKEN)

@@ -32,7 +32,7 @@ def main(
 
     kappa_tbn_giese, v, wow, xi, _mode, _vp, _vm = kappaNuMuModel(cs2b=csb2, cs2s=css2, al=alpha_tbn, vw=v_wall)
 
-    phase_pttools = find_phase(bubble.xi, bubble.v_wall)
+    phase_pttools = find_phase(bubble.xi, bubble.v_wall, bubble.sol_type)
     phase_giese = find_phase(xi, v_wall)
 
     w = wow * bubble.wn

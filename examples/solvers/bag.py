@@ -50,7 +50,7 @@ def main(
     fig: plt.Figure = plt.figure()
     ax1, ax2, ax3, ax4 = fig.subplots(4, 1, sharex=True)
 
-    phase = props.find_phase(bubble.xi, bubble.v_wall)
+    phase = props.find_phase(bubble.xi, bubble.v_wall, bubble.sol_type)
     theta = model.theta(bubble.w, phase)
 
     ax1.plot(bubble.xi, bubble.v, label="new")
