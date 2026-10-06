@@ -15,19 +15,22 @@ Handlers that raise an exception abort the build, and the lock is then released 
 when the process exits.
 """
 
+import logging
 import os
 from pathlib import Path
 import time
 import typing as tp
-
-from sphinx.util import logging
 
 from pttools.docs.paths import LINT_DIR_NAME
 
 if tp.TYPE_CHECKING:
     from sphinx.application import Sphinx
 
-logger: logging.SphinxLoggerAdapter = logging.getLogger(__name__)
+#: The logger is in the namespace of the ``sphinx`` logger, so that its messages are handled by the handlers of Sphinx,
+#: e.g. printed to the console and saved to the log file of :py:func:`pttools.docs.setup.setup_sphinx_logging`.
+#: The standard library logger is used instead of :py:func:`sphinx.util.logging.getLogger`,
+#: so that this module can be imported without Sphinx.
+logger: logging.Logger = logging.getLogger(f"sphinx.{__name__}")
 
 #: Name of the lock file, which is in the ``lint`` directory of the documentation directory
 LOCK_FILE_NAME: str = "source.lock"
