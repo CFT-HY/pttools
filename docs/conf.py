@@ -245,26 +245,25 @@ linkcheck_allowed_redirects: dict[str, str] = LINKCHECK_ALLOWED_REDIRECTS
 # linkcheck_auth = []
 linkcheck_ignore: list[str] = [
     # These websites don't allow crawlers
-    # r"https://academic.oup.com/book/*",
-    "https://link.aps.org/*",
-    "https://www.aka.fi/*",
-    "https://www.intel.com/*",
+    # r"https://academic\.oup\.com/book/",
+    r"https://link\.aps\.org/",
+    r"https://www\.aka\.fi/",
+    r"https://www\.intel\.com/",
     # The private Bitbucket repos will also return 404 without authentication
-    "https://bitbucket.org/cgowling/pttools_omgw0_addons/*",
-    "https://bitbucket.org/hindmars/sound-shell-model/*",
+    r"https://bitbucket\.org/cgowling/pttools_omgw0_addons/",
+    r"https://bitbucket\.org/hindmars/sound-shell-model/",
     # These links redirect to sites that do not allow crawlers
-    "https://doi.org/10.1086/344402",
-    "https://doi.org/10.1093/acprof:oso/9780198528906.001.0001",
+    r"https://doi\.org/10\.1086/344402",
+    r"https://doi\.org/10\.1093/acprof:oso/9780198528906\.001\.0001",
     # The anchors are valid but not detected by Sphinx.
-    "https://github.com/scipy/scipy/blob/v1.8.0/scipy/interpolate/fitpack/*",
-    r"https://*\.stackexchange\.com/*",
-    r"https://stackoverflow\.com/*",
+    r"https://github\.com/scipy/scipy/blob/v1\.8\.0/scipy/interpolate/fitpack/",
+    r"https://[^/]+\.stackexchange\.com/",
+    r"https://stackoverflow\.com/",
 ]
 if IS_GITHUB_ACTIONS:
     linkcheck_ignore += [
-        r"https://akareport\.aka\.fi/ibi_apps/WFServlet*",
-        r"https://www\.intel\.com/*",
-        r"https://gtr\.ukri\.org/*",
+        r"https://akareport\.aka\.fi/ibi_apps/WFServlet",
+        r"https://gtr\.ukri\.org/",
         r"https://stfc\.ukri\.org/",
     ]
 
