@@ -3,6 +3,10 @@
 # These have to be first so that the overloads and the fixes are applied to all other parts of this module.
 # The name "overload" may be overwritten later.
 from . import numba_fixes, overload
+
+# isort: split
+# Register the Numba overloads of scipy.integrate.
+from . import integrate
 from .differential import *
 from .functions import *
 from .jit import *

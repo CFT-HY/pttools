@@ -12,11 +12,10 @@ from pttools.ssm.ssm import T_tilde as T_tilde_func
 from pttools.ssm.ssm import qT_lookup as qT_lookup_func
 from pttools.type_hints import FloatArr1D
 
-# When this function can be Numba-jitted, also create a version that includes signal_to_noise_ratio().
-# This will be useful for PTPlot.
+# Todo: Create a version of compute() that includes signal_to_noise_ratio(), which will be useful for PTPlot.
 
 
-# @njit(nogil=True)
+@njit(nogil=True)
 def compute(
         # Arrays (in alphabetical order)
         e: FloatArr1D,
@@ -84,7 +83,7 @@ def compute(
         f, hx, bubble_spacing_enlargement_factor
 
 
-# @njit(nogil=True)
+@njit(nogil=True)
 def compute_low_k(
         # Arrays (in alphabetical order)
         spec_den_gw_ssm: FloatArr1D,

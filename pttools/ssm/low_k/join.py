@@ -3,6 +3,7 @@
 import logging
 import math
 
+import numba
 import numpy as np
 
 from pttools.speedup import logspace, njit, vectorize
@@ -86,6 +87,7 @@ def join_regimes[T: FloatOrArr](
     )
 
 
+@njit
 def gw_junction(
         z: th.FloatArr1D,
         Pgw_low: th.FloatArr1D,
@@ -113,7 +115,7 @@ def gw_junction(
     Here $k_\star$ is the first $k$ where $\tilde{P}_\text{gw}^\text{high} > \tilde{P}_\text{gw}^\text{int}$,
     or :py:func:`pttools.ssm.low_k.intersection.z_star_approx` if there is no such $k$,
     and $k_\times$ is given by :py:func:`pttools.ssm.low_k.intersection.z_cross_junction`.
-    This cannot be jitted, as it logs a warning.
+    The warning is logged in object mode, as logging is not supported in Numba-jitted code.
 
     :param z: gravitational wave momentum values (kR_*)
     :param Pgw_low: array of gravitational wave power spectrum values in the low-frequency regime
@@ -134,7 +136,8 @@ def gw_junction(
         z_star = z[index[0]]
     else:
         z_star = intersection.z_star_approx(cs=cs)
-        logger.warning("Using fallback z_star=%s for low-k junction.", z_star)
+        with numba.objmode:
+            logger.warning("Using fallback z_star=%s for low-k junction.", z_star)
     z_cross = intersection.z_cross_junction(
         cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end, cs_friction=cs_friction)
     return join_regimes(
@@ -143,6 +146,7 @@ def gw_junction(
     )
 
 
+@njit
 def pow_gw_approximation(
         z: th.FloatArr1D,
         spec_den_v: th.FloatArr1D,
@@ -166,7 +170,6 @@ def pow_gw_approximation(
     and $\tilde{P}_v$ is sampled at $n_z$ logarithmically spaced points $x \in [x_{-}(z_{\text{min}}) - \epsilon,
     x_{+}(z_{\text{max}}) + \epsilon]$, where $n_z$ is the size of $z$.
     The origin of the factor $\frac{4}{3}$ is not documented.
-    This cannot be jitted, as :py:func:`gw_junction` logs a warning.
 
     :param z: gravitational wave momentum values (kR_*)
     :param spec_den_v: spectral density of the velocity field at the momenta $x$ described above

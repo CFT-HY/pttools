@@ -115,25 +115,23 @@ def vectorize(**kwargs: tp.Any) -> Decorator:
     """Extended version of numba.vectorize with support for NUMBA_DISABLE_JIT."""
     def vectorize_inner(func: tp.Callable):
         if NUMBA_DISABLE_JIT:
+            vectorized = np.vectorize(func)
+
             # Using functools.wraps() ensures that docstrings etc. are preserved
             @functools.wraps(func)
             def wrapper(*func_args, **func_kwargs):
-                # If called with scalars
-                if not \
-                        next((isinstance(arg, np.ndarray) for arg in func_args), False) or \
-                        next((isinstance(arg, np.ndarray) for arg in func_kwargs.values()), False):
-                    return func(*func_args, **func_kwargs)
-                # If called with 0D arrays
-                if not np.all([arg.ndim for arg in func_args] + [arg.ndim for arg in func_kwargs.values()]):
+                values = (*func_args, *func_kwargs.values())
+                # If called with scalars or 0D arrays, return a scalar like the Numba ufunc
+                if all(not isinstance(arg, np.ndarray) or arg.ndim == 0 for arg in values):
                     return func(
-                        *[arg.item() for arg in func_args],
-                        **{name: value.item() for name, value in func_kwargs.items()}
+                        *[arg.item() if isinstance(arg, np.ndarray) else arg for arg in func_args],
+                        **{
+                            name: value.item() if isinstance(value, np.ndarray) else value
+                            for name, value in func_kwargs.items()
+                        }
                     )
-                # If called with arrays
-                return np.array([
-                    func(*i_args, **{name: value[i] for name, value in func_kwargs.items()})
-                    for i, i_args in enumerate(zip(*func_args, strict=False))
-                ])
+                # If called with arrays, broadcast the arguments like the Numba ufunc
+                return vectorized(*func_args, **func_kwargs)
             return wrapper
         return functools.wraps(func)(numba.vectorize(**kwargs)(func))
     # The signature of the vectorized function is the same as that of the decorated function.

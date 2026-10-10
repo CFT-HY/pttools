@@ -1,8 +1,9 @@
 """Power spectrum integration functions."""
 
 import numpy as np
+from scipy.integrate import simpson
 
-from pttools.speedup import njit, resample_log, simpson
+from pttools.speedup import njit, resample_log
 from pttools.ssm.const import CS0
 from pttools.ssm.low_k.kernel import kernel_int_bracket, kernel_low
 from pttools.ssm.spec_den_gw import spec_den_gw
@@ -24,7 +25,7 @@ def Iv(x: th.FloatArr1D, P_tilde_v: th.FloatArr1D) -> float:
     :param P_tilde_v: $\tilde{P}_v(x)$
     :return: $\mathcal{I}_v$
     """
-    return simpson(x ** 2 * P_tilde_v ** 2, x) / (2 * np.pi**2)
+    return simpson(x ** 2 * P_tilde_v ** 2, x=x) / (2 * np.pi**2)
 
 
 @njit
@@ -55,7 +56,7 @@ def Jv(x: th.FloatArr1D, P_tilde_v: th.FloatArr1D) -> float:
     :param P_tilde_v: $\tilde{P}_v(x)$
     :return: $\mathcal{J}_v$
     """
-    return simpson(P_tilde_v ** 2, x) / (2 * np.pi**2)
+    return simpson(P_tilde_v ** 2, x=x) / (2 * np.pi**2)
 
 
 @njit

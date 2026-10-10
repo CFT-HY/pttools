@@ -5,7 +5,6 @@ import unittest
 
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy.integrate
 import scipy.interpolate
 
 from pttools import speedup
@@ -54,19 +53,6 @@ class TestSpeedup(unittest.TestCase):
         assert isinstance(res, np.ndarray)
         assert res.dtype == np.float64
         assert_allclose(res, params**2)
-
-    @staticmethod
-    def test_simpson() -> None:
-        """Test that the Simpson's rule gives the same results as scipy.integrate.simpson.
-
-        Both odd and even numbers of irregularly spaced points are tested,
-        as the even case has a separate correction for the last interval.
-        """
-        rng = np.random.default_rng(1)
-        for n in (2, 3, 4, 5, 6, 101, 1000):
-            x = np.sort(rng.uniform(0, 3, n))
-            y = np.sin(x) + x**2
-            assert_allclose(speedup.simpson(y, x), scipy.integrate.simpson(y, x=x), rtol=1e-14)
 
     @staticmethod
     @unittest.expectedFailure
