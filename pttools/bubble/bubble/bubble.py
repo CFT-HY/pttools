@@ -717,12 +717,14 @@ class Bubble(BaseBubble):
     def ubarf2(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.ubarf2(
+        ubarf2 = thermo.ubarf2(
             self.v, self.w, self.xi,
             v_wall=self.v_wall,
             ek_bva=self.kinetic_energy_density,
             w_bar=self.w_bar
         )
+        thermo.warn_if_ubarf_relativistic(ubarf2, source=self.label_unicode)
+        return ubarf2
 
     @functools.cached_property
     @copy_docstring_dec(thermo.w_bar, without_params=True)

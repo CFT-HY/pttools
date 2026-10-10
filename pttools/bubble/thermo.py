@@ -321,6 +321,30 @@ def ubarf2(
     return ek_bva / w_bar
 
 
+def warn_if_ubarf_relativistic(ubarf2_value: float, source: str = "") -> bool:
+    r"""Log a warning if the RMS fluid 4-velocity $\bar{U}_f = \sqrt{\bar{U}_f^2}$ is above 1.
+
+    $\bar{U}_f$ is the enthalpy-weighted RMS of the spatial fluid 4-velocity $\gamma v$
+    (:py:func:`ubarf2`), so $\bar{U}_f > 1$ is not forbidden by causality,
+    but it means that the fluid flow is relativistic,
+    where the linear Sound Shell Model and the GW spectra computed from it are not reliable.
+    It can also indicate a failed fluid solution, e.g. for strong transitions near the Chapman-Jouguet speed.
+
+    :param ubarf2_value: $\bar{U}_f^2$, enthalpy-weighted mean square fluid 4-velocity
+    :param source: description of the object for the warning message, e.g. the bubble label
+    :return: whether $\bar{U}_f > 1$
+    """
+    if ubarf2_value > 1:
+        logger.warning(
+            "Got Ubarf=%s > 1%s: the fluid flow is relativistic, "
+            "so the linear Sound Shell Model is not reliable. "
+            "Please check also the fluid solution.",
+            np.sqrt(ubarf2_value), f" for {source}" if source else ""
+        )
+        return True
+    return False
+
+
 @njit(cache=True)
 def ubarf2_from_K[T: FloatOrArr](K: T, adiabatic_index: T | float = DEFAULT_ADIABATIC_INDEX) -> T:
     r"""RMS fluid velocity $\bar{U}_f^2(K)$.
