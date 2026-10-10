@@ -23,16 +23,20 @@ def kernel_low[T: FloatOrArr](z: T, nu: T | float, tau_star: T | float, tau_end:
     $$\Delta_\text{low} =
     \left( \frac{z \tau_*}{2} \right)^{-2\nu}
     \frac{\Gamma^2 \left( \frac{1}{2} + \nu \right)}{4 \pi}
-    \Upsilon_{2\nu} \left( \frac{\tau_*}{\tau_\text{end}} \right)$$
-    This is a part of
-    :giombi_2026:`\ ` eq. 3.5a.
+    \Upsilon_{2\nu}^2 \left( \frac{\tau_*}{\tau_\text{end}} \right)$$
+    This is the non-oscillating part of the leading-order sound wave kernel $\Delta_\text{sw}^\text{lo}$ for
+    super-horizon modes $k \eta_* = z \tau_* \ll 1$ in the limit $z \rightarrow 0$
+    (:giombi_2026:`\ ` eq. 2.41a and C.6a),
+    and a part of :giombi_2026:`\ ` eq. 3.5a.
+    The factor $\Upsilon_{2\nu}$ comes from the time integral
+    $\int_{\tau_*}^{\tau_\text{end}} \frac{d\tau}{\tau_*} \left( \frac{\tau_*}{\tau} \right)^{1 + 2\nu}$,
+    and it is squared, as the kernel is a double integral over $\tau_1$ and $\tau_2$.
+    For $\nu = 0$ this reduces to :py:func:`kernel_low_bag`.
     """
-    # TODO: Ensure that this formula from Lorenzo's code is correct.
-    # Should this have 2pi instead of 4pi, and Upsilon^2?
     return (
         (0.5 * z * tau_star) ** (-2 * nu)  # pyrefly: ignore[bad-return]
         * gamma(0.5 + nu) ** 2 / (4 * np.pi)
-        * Upsilon(r=tau_star / tau_end, l=2 * nu)
+        * Upsilon(r=tau_star / tau_end, l=2 * nu) ** 2
     )
 
 

@@ -96,9 +96,15 @@ def compute_low_k(
         r_star: float,
         tau_end: float,
         tau_star: float) -> tuple[FloatArr1D, FloatArr1D, FloatArr1D]:
-    r"""Compute the low-k approximation of :giombi_2024_cs:`\ `."""
+    r"""Compute the low-k approximation of :giombi_2024_cs:`\ `.
+
+    The source integrals are computed over the lookup table of $\tilde{P}_v$,
+    which covers a wider range of momenta than $y$,
+    so that $\tilde{P}_\text{gw}^\text{low}$ and $\tilde{P}_\text{gw}^\text{int}$ use the same $\mathcal{I}_v$
+    and therefore cross at :py:func:`pttools.ssm.low_k.intersection.z_cross_junction`.
+    """
     spec_den_gw_low = power_spectrum_integration_low(
-        x_data=y, Pv_data=P_tilde_v,
+        x_data=z_lookup, Pv_data=P_tilde_v_lookup,
         z=y, cs=cs, nu=nu_gdh2024,
         tau_star=tau_star, tau_end=tau_end
     )

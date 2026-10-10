@@ -14,7 +14,7 @@ def rho[T: FloatOrArr](z: T, x: T | float, y: T | float) -> T:
     \left( (x + z)^2 - y^2 \right)^2
     }{16 x y z^2}$$
     :giombi_2024_cs:`\ ` eq. 2.37
-    :giombi_2026:`\ ` eq. 2.42
+    :giombi_2026:`\ ` eq. 2.37 (arXiv v2)
     This is included in
     :gw_pt_ssm:`\ ` eq. 3.47.
     """

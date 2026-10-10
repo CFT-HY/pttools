@@ -7,9 +7,10 @@ This assumes a barotropic equation of state (EoS) with $p(e) = \omega e$,
 where $\omega$ is a constant EoS parameter.
 
 For $\mathcal{P}_\text{gw}$:
-low frequencies $k^3$,
-intermediate frequencies $k^1$
-before peak $k^9$
+low frequencies $k^{3 - 2\nu}$, which is $k^3$ for radiation ($\nu = 0$)
+(:giombi_2026:`\ ` eq. 3.7),
+intermediate frequencies $k^1$,
+before peak $k^9$,
 high frequencies $k^{-3}$.
 """
 

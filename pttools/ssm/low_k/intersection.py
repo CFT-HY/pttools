@@ -5,7 +5,7 @@ from scipy.special import gamma
 
 from pttools.ssm.barotropic import Upsilon
 from pttools.ssm.const import CS0
-from pttools.ssm.low_k.analytical import IV_ANALYTICAL
+from pttools.ssm.low_k.const import IV_ANALYTICAL
 from pttools.ssm.low_k.integration import power_spectrum_integration_int
 from pttools.ssm.low_k.kernel import kernel_int_bracket, kernel_low, kernel_low_bag
 from pttools.type_hints import FloatOrArr

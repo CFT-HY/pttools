@@ -7,18 +7,18 @@ from scipy.special import erf, erfc, gamma
 from pttools.ssm.barotropic import Upsilon
 from pttools.ssm.low_k.const import IV_ANALYTICAL
 from pttools.ssm.low_k.intersection import z_cross
-from pttools.ssm.rho import rho
+from pttools.ssm.rho import rho_pm
 from pttools.type_hints import FloatOrArr
 
 
-def gw_spectral_density_approx_low[T: FloatOrArr](z: T, HLf: float, cs: float, tau_end: float) -> T | float:
+def gw_spectral_density_approx_low[T: FloatOrArr](z: T, HLf: float, cs: float, tau_end: float) -> T:
     """Not relevant for the SSM, as it uses analytical approximation."""
     nu = (1 - 3 * cs ** 2) / (1 + 3 * cs ** 2)
     tau_star = (1. + nu) / HLf
     # HL = (1+nu)/tau_star
     # z = k*Lf
     if cs >= np.sqrt(1 / 3) - 1e-6:
-        return (np.log(tau_star / tau_end)) ** 2 * 8 / 15 * IV_ANALYTICAL * tau_star
+        return (np.log(tau_star / tau_end)) ** 2 * 8 / 15 * IV_ANALYTICAL * tau_star * np.ones_like(z)
     return HLf ** (-1 + 2 * nu) * (0.5 * (1 + nu)) ** (-2 * nu) * z ** (-2 * nu) * (1 + nu) * gamma(
         0.5 + nu) ** 2 / 2 / np.pi * Upsilon(r=tau_star / tau_end, l=2 * nu) ** 2 * 16 / 15 * IV_ANALYTICAL
 
@@ -41,7 +41,7 @@ def gw_spectral_density_approx_high(z: float, HLf: float, cs: float, tau_end: fl
 
     def integrand(x, z, delta, tau_star, cs):
         return (4 * np.pi * cs * z ** 3) ** (-1) * (
-            rho(z, x, cs) *
+            rho_pm(z=z, x=x, cs=cs) *
             3 * np.pi / (2 * np.pi) ** 3 * (x / (2 * np.pi)) ** 2 / (1 + (x / (2 * np.pi)) ** 6) *
             3 * np.pi / (2 * np.pi) ** 3 * ((z / cs - x) / (2 * np.pi)) ** 2 /
             (1 + ((z / cs - x) / (2 * np.pi)) ** 6) *
@@ -57,7 +57,8 @@ def Pgw_approx(z: float, HLf: float, cs: float, tau_star: float, tau_end: float)
     P_high = gw_spectral_density_approx_high(z, HLf, cs, tau_end)
 
     nu = (1 - 3 * cs ** 2) / (1 + 3 * cs ** 2)
-    z_star = 4 * cs * np.pi * (1 + nu) / HLf
+    # k_star = 2 c_s k_p with k_p R_* = 2 pi
+    z_star = 4 * np.pi * cs
     z_cr = z_cross(HLf, cs, nu, tau_star, tau_end)
 
     term_low = 0.5 * erfc(2 * np.pi * tau_star * (z - z_cr)) * P_low

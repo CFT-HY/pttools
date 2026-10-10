@@ -55,7 +55,8 @@ def gw_junction(
     if index.size:
         z_star = z[index[0]]
     else:
-        z_star = 4 * cs * np.pi * (1 + nu) / r_star
+        # k_star = 2 c_s k_p with k_p R_* = 2 pi (:giombi_2024_cs: eq. 3.15)
+        z_star = 4 * np.pi * cs
         logger.warning("Using fallback z_star=%s for low-k junction.", z_star)
     z_cross = intersection.z_cross_junction(cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end)
 
@@ -102,6 +103,7 @@ def pow_gw_approximation(
     Pgw_high = 4/3 * integration.power_spectrum_integration_high(x, spec_den_v, z, cs)
     Pgw_low = 4/3 * integration.power_spectrum_integration_low(
         x, spec_den_v, z, cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end)
-    Pgw_int = 4/3 * integration.power_spectrum_integration_int(x, spec_den_v, z, cs=cs, tau_star=tau_star)
+    Pgw_int = 4/3 * integration.power_spectrum_integration_int(
+        z, cs=cs, tau_star=tau_star, Iv=integration.Iv_resampled(x=x, P_tilde_v=spec_den_v))
     return gw_junction(
         z, Pgw_low, Pgw_int, Pgw_high, cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end, r_star=r_star)

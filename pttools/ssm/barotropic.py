@@ -1,5 +1,8 @@
 """Formulae for a barotropic equation of state."""
 
+import numpy as np
+from scipy.special import exprel
+
 from pttools.bubble.const import DEFAULT_NU_GDH2024
 from pttools.ssm.const import DEFAULT_A_STAR_A_R_RATIO, DEFAULT_N_SH, DEFAULT_R_STAR
 from pttools.type_hints import FloatOrArr
@@ -69,7 +72,7 @@ def H_eta[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:
     This comes from the scale factor for a barotropic EoS
     $$a(\eta) = a(\eta_*) \left( \frac{\eta}{\eta_*} \right)^{1 + \nu_\text{gdh2024}}
     = a(\eta_*) \left( \frac{\eta}{\eta_*} \right)^\frac{2}{1+3\omega}$$
-    :giombi_2026:`\ ` eq. 2.17,
+    :giombi_2026:`\ ` eq. 2.14 (arXiv v2), eq. 2.17 (journal),
     :giombi_2024_cs:`\ ` eq. 2.15,
     which gives
     $$\mathcal{H} = \frac{1 + \nu_\text{gdh2024}}{\eta}.$$
@@ -85,7 +88,6 @@ def H_eta[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:
     :param nu: $\nu_\text{gdh2024}$
     :return: $\mathcal{H} \eta$
     """
-    # typing.cast() is not used below, since Numba cannot compile it.
     return 1 + nu  # pyrefly: ignore[bad-return]
 
 
@@ -125,5 +127,8 @@ def Upsilon[T: FloatOrArr](r: T, l: T | float) -> T:  # noqa: E741
 
     $$\Upsilon_\ell (r) = \frac{1}{\ell} \left( 1 - r^\ell \right)$$
     :giombi_2026:`\ ` eq. 3.6.
+    This is computed as $\Upsilon_\ell (r) = -\ln(r) \frac{e^{\ell \ln r} - 1}{\ell \ln r}$,
+    which is accurate also for small $|\ell|$ and gives the limit $\Upsilon_0 (r) = -\ln r$.
     """
-    return (1 - r**l) / l  # pyrefly: ignore[bad-return]
+    log_r = np.log(r)
+    return -log_r * exprel(l * log_r)  # pyrefly: ignore[bad-return]

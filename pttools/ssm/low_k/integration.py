@@ -70,20 +70,17 @@ def power_spectrum_integration_low(
     :param tau_end: $\tau_{end} = \frac{\eta_{end}}{L_f}$
     :return: gravitational wave power spectrum values at the given momentum
     """
-    factor = 16 * tau_star / (15 * np.pi**2)  # Prefactor of eq. 3.5
-    # Momentum values for integration (trapezoidal rule or simpson rule)
-    x = np.logspace(np.log10(x_data.min()), np.log10(x_data.max()), 1000)
+    # As the kernel does not depend on x, the integral is
+    # $\int_0^\infty dx x^2 \tilde{P}_v^2(x) = 2 \pi^2 \mathcal{I}_v$.
+    # The integral is over x_data, so it should cover the support of Pv_data.
+    factor = 32 * tau_star / 15 * Iv_resampled(x=x_data, P_tilde_v=Pv_data)
 
     if cs >= CS0 - 1e-10:
-        delta = kernel_low_bag(tau_star=tau_star, tau_end=tau_end)
-        integrand = x**2 * np.interp(x, x_data, Pv_data)**2 * delta
-        return factor * simpson(integrand, x=x)
+        return factor * kernel_low_bag(tau_star=tau_star, tau_end=tau_end) * np.ones_like(z)
 
     # z is multiplied to the final result instead of being included in the kernel,
     # so that only one integration is needed.
-    delta = kernel_low(z=1., nu=nu, tau_star=tau_star, tau_end=tau_end)
-    integrand = x ** 2 * np.interp(x, x_data, Pv_data) ** 2 * delta
-    return factor * simpson(integrand, x=x) * z ** (-2 * nu)
+    return factor * kernel_low(z=1., nu=nu, tau_star=tau_star, tau_end=tau_end) * z ** (-2 * nu)
 
 
 def power_spectrum_integration_int[T: FloatOrArr](
@@ -127,7 +124,7 @@ def power_spectrum_integration_high(
     :return: gravitational wave power spectrum values at the given momentum
     """
     # Todo: Replace this function with the use of the base PTtools machinery.
-    Pgw = np.zeros_like(z)
+    Pgw = np.zeros_like(z, dtype=np.float64)
     for i in range(len(Pgw)):
         factor = 1 / (4 * np.pi * z[i] * cs) * (1 - cs ** 2) ** 2 / cs ** 4
         xm = 0.5 * z[i] * (1 - cs) / cs
