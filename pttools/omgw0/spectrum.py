@@ -77,6 +77,7 @@ class Spectrum(SSMSpectrum):
             # Switches
             compute: bool = True,
             low_k: bool = True,
+            low_k_cs_friction: bool = False,
             parallel: bool = True,
             # Labels
             label_latex: str | None = None,
@@ -105,6 +106,11 @@ class Spectrum(SSMSpectrum):
             use approximation rather than doing the sine transform integral.
         :param compute: whether to compute the spectrum immediately
         :param low_k: whether to use the :giombi_2024_cs: approximation for low $k$
+        :param low_k_cs_friction: whether to compute the acoustic friction of the low-$k$ approximation
+            from $c_s$ instead of $\nu$, see :py:func:`pttools.ssm.low_k.kernel.kernel_low`.
+            This generalises the articles to $c_s^2 \neq \omega$, and is disabled by default.
+            It should be considered an estimate, see the caveat in
+            :py:func:`pttools.ssm.low_k.kernel.acoustic_friction_exponent`.
         :param parallel: whether to use multiple CPU cores
         """
         if f is not None:
@@ -131,6 +137,7 @@ class Spectrum(SSMSpectrum):
             n_z_lookup=n_z_lookup,
             compute=False,
             low_k=low_k,
+            low_k_cs_friction=low_k_cs_friction,
             label_latex=label_latex,
             label_unicode=label_unicode
         )

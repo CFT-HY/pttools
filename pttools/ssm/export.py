@@ -113,6 +113,9 @@ SSM_SPECTRUM_FIELDS: Fields = Fields(
     Field(
         "low_k", type=FieldType.BOOL, presets=PRESETS_FULL_INIT,
         description="whether the low $k$ approximation of Giombi et al. (2024) is used"),
+    Field(
+        "low_k_cs_friction", type=FieldType.BOOL, presets=PRESETS_FULL_INIT,
+        description="whether the acoustic friction of the low $k$ approximation is computed from $c_s$"),
     Field("N_sh", presets=PRESETS_FULL_INIT, description=r"$N_\text{sh}$, number of shock formation times"),
     Field("nuc_type", type=FieldType.STR, presets=PRESETS_FULL_INIT, decode=NucType, description="nucleation type"),
     Field("nT", type=FieldType.INT, presets=PRESETS_FULL_INIT, description="number of points in the $t$ array"),

@@ -8,9 +8,9 @@ from scipy.special import gamma
 
 from pttools.ssm.barotropic import Upsilon
 from pttools.ssm.const import CS0
-from pttools.ssm.low_k import kernel_int_bracket, kernel_low, kernel_low_bag
+from pttools.ssm.low_k import acoustic_friction_exponent, kernel_int_bracket, kernel_low, kernel_low_bag
 from pttools.utils import assert_allclose
-from tests.ssm.low_k.common import NUS, kernel_low_numerical
+from tests.ssm.low_k.common import NUS, cs_from_nu, kernel_low_numerical
 
 TAU_STAR: float = 10.
 TAU_END: float = 30.
@@ -135,6 +135,65 @@ class KernelLowTest(unittest.TestCase):
         for l in (-1.5, 0.5, 1., 3.):  # noqa: E741
             assert_allclose(Upsilon(r=r, l=l), (1 - r**l) / l, rtol=1e-14)
 
+
+class AcousticFrictionTest(unittest.TestCase):
+    r"""Tests for the acoustic friction computed from $c_s$, which allows $c_s^2 \neq \omega$."""
+
+    def test_exponent(self) -> None:
+        r"""Test that $d = \nu$ for $c_s^2 = \omega$, and $d = 0$ for $c_s^2 = \frac{1}{3}$."""
+        for nu in (0., *NUS):
+            with self.subTest(nu=nu):
+                assert_allclose(acoustic_friction_exponent(nu=nu, cs=cs_from_nu(nu)), nu, atol=1e-15)
+                assert_allclose(acoustic_friction_exponent(nu=nu, cs=CS0), 0., atol=1e-15)
+
+    def test_consistent(self) -> None:
+        r"""Test that computing the friction from $c_s^2 = \omega$ gives the default kernel."""
+        z = np.logspace(-4, -1, 5)
+        for nu in NUS:
+            with self.subTest(nu=nu):
+                assert_allclose(
+                    kernel_low(z=z, nu=nu, tau_star=TAU_STAR, tau_end=TAU_END, cs=cs_from_nu(nu)),
+                    kernel_low(z=z, nu=nu, tau_star=TAU_STAR, tau_end=TAU_END),
+                    rtol=1e-13
+                )
+
+    def test_green_function(self) -> None:
+        r"""Compare the kernel with $c_s^2 \neq \omega$ with a numerical integration over the Green's function.
+
+        The Green's function has the order $\nu$ of the background,
+        and the weight of the time integral the friction exponent $d$ of
+        :py:func:`pttools.ssm.low_k.kernel.acoustic_friction_exponent`.
+        This checks the time integration of the generalised kernel, but not the generalisation itself.
+        """
+        z = 1e-4
+        for nu, cs2 in ((0.25, 1/3), (0.25, 0.25), (0.1, 0.2), (0., 0.25)):
+            with self.subTest(nu=nu, cs2=cs2):
+                cs = np.sqrt(cs2)
+                assert_allclose(
+                    kernel_low(z=z, nu=nu, tau_star=TAU_STAR, tau_end=TAU_END, cs=cs),
+                    kernel_low_numerical(
+                        z=z, nu=nu, tau_star=TAU_STAR, tau_end=TAU_END,
+                        friction=acoustic_friction_exponent(nu=nu, cs=cs)),
+                    rtol=1e-3
+                )
+
+    def test_no_friction(self) -> None:
+        r"""Test that without friction ($c_s^2 = \frac{1}{3}$) the time dependence is that of the bag model.
+
+        $$\Delta_\text{low} = \left( \frac{z \tau_*}{2} \right)^{-2\nu}
+        \frac{\Gamma^2 \left( \frac{1}{2} + \nu \right)}{4 \pi}
+        \ln^2 \left( \frac{\tau_\text{end}}{\tau_*} \right)$$
+        Cf. the no-friction kernel of :giombi_2024_cs:`\ ` eq. 4.7.
+        """
+        z = np.logspace(-4, -1, 5)
+        for nu in NUS:
+            with self.subTest(nu=nu):
+                assert_allclose(
+                    kernel_low(z=z, nu=nu, tau_star=TAU_STAR, tau_end=TAU_END, cs=CS0),
+                    (z * TAU_STAR / 2)**(-2 * nu) * gamma(0.5 + nu)**2 / np.pi
+                    * kernel_low_bag(tau_star=TAU_STAR, tau_end=TAU_END),
+                    rtol=1e-13
+                )
 
 class KernelIntTest(unittest.TestCase):
     r"""Tests for the intermediate-frequency kernel."""

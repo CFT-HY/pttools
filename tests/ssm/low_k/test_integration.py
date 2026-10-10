@@ -135,10 +135,11 @@ class IntegrationLowTest(unittest.TestCase):
             x_data=X, Pv_data=P_TILDE_V, z=z, cs=CS0, nu=0., tau_star=tau_star, tau_end=tau_end)
         assert p_gw.shape == z.shape
         assert_allclose(p_gw, 8 / 15 * tau_star * IV_ANALYTICAL * np.log(1 + ETA_RATIO)**2, rtol=1e-5)
-        # The nu > 0 branch gives the same result at nu = 0.
+        # With c_s^2 = 1/3, the acoustic friction computed from c_s is the same.
         assert_allclose(
             power_spectrum_integration_low(
-                x_data=X, Pv_data=P_TILDE_V, z=z, cs=CS0 - 1e-6, nu=0., tau_star=tau_star, tau_end=tau_end),
+                x_data=X, Pv_data=P_TILDE_V, z=z, cs=CS0, nu=0., tau_star=tau_star, tau_end=tau_end,
+                cs_friction=True),
             p_gw, rtol=1e-12
         )
 

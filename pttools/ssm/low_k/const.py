@@ -14,3 +14,9 @@ r"""$\mathcal{J}_v$ (analytical approximation)
 $$\mathcal{J}_v = \frac{\mathcal{I}_v}{2\pi^2} = \frac{1}{128 \pi^4}$$
 :giombi_2026:`\ ` p. 22
 """
+
+KP_ANALYTICAL: float = 2 * math.pi
+r"""$k_p R_* = 2\pi$, peak wavenumber of the analytical $\tilde{P}_v$ of :py:func:`pttools.ssm.low_k.Pv_analytical`.
+
+:giombi_2026:`\ ` below eq. 3.1
+"""

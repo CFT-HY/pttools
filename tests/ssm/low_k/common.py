@@ -60,7 +60,13 @@ def green_derivative(eta: float, eta1: float, k: float, nu: float) -> float:
     )
 
 
-def kernel_low_numerical(z: float, nu: float, tau_star: float, tau_end: float, n_phase: int = 16) -> float:
+def kernel_low_numerical(
+        z: float,
+        nu: float,
+        tau_star: float,
+        tau_end: float,
+        friction: float | None = None,
+        n_phase: int = 16) -> float:
     r"""Non-oscillating part of the low-frequency kernel computed from the Green's function.
 
     $$\Delta = \iint_{\tau_*}^{\tau_\text{end}} \frac{d\tau_1 d\tau_2}{\tau_*^2}
@@ -74,13 +80,27 @@ def kernel_low_numerical(z: float, nu: float, tau_star: float, tau_end: float, n
     The average $\langle \cdot \rangle$ is over one period of the gravitational wave
     at a late time $\tau \gg \tau_\text{end}$, as in :giombi_2024_cs:`\ ` eq. 2.39.
     The $n$ evenly spaced samples of the phase average the oscillations exactly.
+
+    The exponent $1 + \nu$ of the weight consists of $1 - \nu$ from the background (:giombi_2024_cs:`\ ` eq. 2.16)
+    and $2\nu$ from the acoustic friction $\tilde{v} \propto (\eta_* / \eta)^\nu$ (eq. 2.28).
+    If the friction exponent $d$ is given, the weight is $(\tau_*^2 / \tau_1 \tau_2)^{1 - \nu + 2d}$ instead,
+    whereas the Green's function still has the order $\nu$ of the background.
+
+    :param z: $z = kR_*$
+    :param nu: $\nu$ of the background
+    :param tau_star: $\tau_*$
+    :param tau_end: $\tau_\text{end}$
+    :param friction: $d$, the acoustic friction exponent. If not given, $d = \nu$.
+    :param n_phase: number of samples of the phase of the GW
+    :return: the kernel
     """
+    exponent = 1 + nu if friction is None else 1 - nu + 2 * friction
     tau0 = 1e4 / z
     period = 2 * np.pi / z
     squares = []
     for tau in tau0 + period * np.arange(n_phase) / n_phase:
         integral = quad(
-            lambda t, tau=tau: (tau_star / t)**(1 + nu) / tau_star * green_derivative(tau, t, z, nu),
+            lambda t, tau=tau: (tau_star / t)**exponent / tau_star * green_derivative(tau, t, z, nu),
             tau_star, tau_end, epsabs=0, epsrel=1e-11, limit=200
         )[0]
         squares.append(integral**2)

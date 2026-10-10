@@ -184,6 +184,7 @@ def mean_enthalpy_change(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, 
     return integral / v_wall ** 3  # pyrefly: ignore[bad-return]
 
 
+@njit(cache=True)
 def nu_gdh2024[T: FloatOrArr](omega: T) -> T:
     r"""$\nu_\text{gdh2024}$.
 

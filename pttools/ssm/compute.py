@@ -48,6 +48,7 @@ def compute(
         nuc_type: NucType,
         sol_type: SolutionType,
         lambda_correction: bool = False,
+        low_k_cs_friction: bool = False,
         parallel: bool = True) -> tuple[
             FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D,
             FloatArr1D, float, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D,
@@ -73,7 +74,8 @@ def compute(
         P_tilde_v_lookup=spec_den_v_lookup,
         y=y, z_lookup=z_lookup,
         cs=cs, nu_gdh2024=nu_gdh2024, r_star=r_star,
-        tau_end=tau_end, tau_star=tau_star
+        tau_end=tau_end, tau_star=tau_star,
+        cs_friction=low_k_cs_friction
     )
     return \
         spec_den_v, spec_den_v_lookup, spec_den_gw_ssm, \
@@ -95,18 +97,23 @@ def compute_low_k(
         nu_gdh2024: float,
         r_star: float,
         tau_end: float,
-        tau_star: float) -> tuple[FloatArr1D, FloatArr1D, FloatArr1D]:
+        tau_star: float,
+        # Other
+        cs_friction: bool = False) -> tuple[FloatArr1D, FloatArr1D, FloatArr1D]:
     r"""Compute the low-k approximation of :giombi_2024_cs:`\ `.
 
     The source integrals are computed over the lookup table of $\tilde{P}_v$,
     which covers a wider range of momenta than $y$,
     so that $\tilde{P}_\text{gw}^\text{low}$ and $\tilde{P}_\text{gw}^\text{int}$ use the same $\mathcal{I}_v$
     and therefore cross at :py:func:`pttools.ssm.low_k.intersection.z_cross_junction`.
+
+    :param cs_friction: whether to compute the acoustic friction from $c_s$ instead of $\nu$,
+        see :py:func:`pttools.ssm.low_k.kernel.kernel_low`. Disabled by default.
     """
     spec_den_gw_low = power_spectrum_integration_low(
         x_data=z_lookup, Pv_data=P_tilde_v_lookup,
         z=y, cs=cs, nu=nu_gdh2024,
-        tau_star=tau_star, tau_end=tau_end
+        tau_star=tau_star, tau_end=tau_end, cs_friction=cs_friction
     )
     spec_den_gw_int = power_spectrum_integration_int(
         z=y, cs=cs, tau_star=tau_star, Iv=Iv_resampled(x=z_lookup, P_tilde_v=P_tilde_v_lookup)
@@ -118,7 +125,7 @@ def compute_low_k(
         Pgw_high=spec_den_gw_ssm,
         cs=cs, nu=nu_gdh2024,
         tau_star=tau_star, tau_end=tau_end,
-        r_star=r_star
+        r_star=r_star, cs_friction=cs_friction
     )
     return spec_den_gw_low, spec_den_gw_int, spec_den_gw_expanded
 

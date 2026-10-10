@@ -89,3 +89,48 @@ class LowKSpectrumTest(unittest.TestCase):
                 assert_allclose(spectrum.spec_den_gw_expanded[:10], spectrum.spec_den_gw_low[:10], rtol=1e-12)
                 assert_allclose(spectrum.spec_den_gw_expanded[-10:], spectrum.spec_den_gw_ssm[-10:], rtol=1e-12)
                 assert np.all(spectrum.spec_den_gw_expanded > 0)
+
+
+class CsFrictionSpectrumTest(unittest.TestCase):
+    r"""Test the switch for computing the acoustic friction from $c_s$ in :py:class:`pttools.ssm.SSMSpectrum`."""
+
+    bubble: tp.ClassVar[Bubble]
+
+    @classmethod
+    @tp.override
+    def setUpClass(cls) -> None:
+        cls.bubble = Bubble(BagModel(alpha_n_min=0.05), v_wall=0.5, alpha_n=0.05)
+
+    def test_omega_differs(self) -> None:
+        r"""Test the switch for $c_s^2 = \frac{1}{3}$ but $\omega = \frac{1}{4}$, i.e. $\nu = \frac{1}{7}$.
+
+        By default the friction exponent is $d = \nu$ (:giombi_2026:`\ ` eq. 3.5a).
+        With the switch, there is no acoustic friction, and $\Upsilon_{2\nu}$ is replaced with
+        $\Upsilon_0 = \ln \left( \frac{\tau_\text{end}}{\tau_*} \right)$.
+        """
+        spectra = [
+            SSMSpectrum(self.bubble, y=Y, r_star=R_STAR, omega_barotropic=0.25, low_k_cs_friction=switch)
+            for switch in (False, True)
+        ]
+        nu = 1/7
+        for spectrum, switch in zip(spectra, (False, True), strict=True):
+            assert spectrum.low_k_cs_friction is switch
+            assert_allclose(spectrum.nu_gdh2024, nu, rtol=1e-14)
+            assert_allclose(spectrum.cs2, 1/3, rtol=1e-12)
+        iv = Iv_resampled(x=spectra[0].z_lookup, P_tilde_v=spectra[0].spec_den_v_lookup)
+        default = p_tilde_gw_low(z=Y, nu=nu, r_star=R_STAR, eta_ratio=spectra[0].eta_ratio, iv=iv)
+        assert_allclose(spectra[0].spec_den_gw_low, default, rtol=1e-12)
+        upsilon_2nu = (1 - (1 + spectra[0].eta_ratio)**(-2 * nu)) / (2 * nu)
+        assert_allclose(
+            spectra[1].spec_den_gw_low,
+            default * (np.log(1 + spectra[1].eta_ratio) / upsilon_2nu)**2,
+            rtol=1e-12
+        )
+
+    def test_omega_equal(self) -> None:
+        r"""Test that the switch makes no difference for $c_s^2 = \omega$."""
+        spectra = [
+            SSMSpectrum(self.bubble, y=Y, r_star=R_STAR, low_k_cs_friction=switch) for switch in (False, True)
+        ]
+        assert_allclose(spectra[1].spec_den_gw_low, spectra[0].spec_den_gw_low, rtol=1e-12)
+        assert_allclose(spectra[1].spec_den_gw_expanded, spectra[0].spec_den_gw_expanded, rtol=1e-12)

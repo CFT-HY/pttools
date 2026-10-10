@@ -143,7 +143,7 @@ def _spec_den_gw_core(
     x_minus_factor = x_minus(z=1., cs=cs)
     p_gw_factor = rho_delta_factor(cs2=cs**2) / (4 * np.pi * cs)
 
-    p_gw = np.zeros_like(y)
+    p_gw = np.zeros_like(y, dtype=np.float64)
     for i in numba.prange(y.size):
         # As defined on page 12 between eq. 3.44 and 3.45
         xp = y[i] * x_plus_factor

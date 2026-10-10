@@ -1,9 +1,9 @@
 """Formulae for a barotropic equation of state."""
 
 import numpy as np
-from scipy.special import exprel
 
 from pttools.bubble.const import DEFAULT_NU_GDH2024
+from pttools.speedup import njit
 from pttools.ssm.const import DEFAULT_A_STAR_A_R_RATIO, DEFAULT_N_SH, DEFAULT_R_STAR
 from pttools.type_hints import FloatOrArr
 
@@ -63,6 +63,7 @@ def eta_ratio[T: FloatOrArr](
     return N_sh * r_star / ((1 + nu) * ubarf)  # pyrefly: ignore[bad-return]
 
 
+@njit(cache=True)
 def H_eta[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:
     r"""$\mathcal{H} \eta$, conformal Hubble rate times conformal time, for a barotropic EoS.
 
@@ -119,16 +120,45 @@ def source_lifetime_factor[T: FloatOrArr](
     This is an updated version of
     :maki_msc:`\ ` eq. 3.79
     """
-    return -Upsilon(r=1 + eta_ratio(ubarf=ubarf, r_star=r_star, N_sh=N_sh, nu=nu), l=-l(nu))  # pyrefly: ignore[bad-return]
+    # nu must be a scalar, as Upsilon requires a scalar l.
+    return -Upsilon(  # pyrefly: ignore[bad-return]
+        r=1 + eta_ratio(ubarf=ubarf, r_star=r_star, N_sh=N_sh, nu=nu),
+        l=-l(nu)  # pyrefly: ignore[bad-argument-type]
+    )
 
 
-def Upsilon[T: FloatOrArr](r: T, l: T | float) -> T:  # noqa: E741
+@njit(cache=True)
+def Upsilon[T: FloatOrArr](r: T, l: float) -> T:  # noqa: E741
     r"""$\Upsilon_\ell$ for arbitrary $\ell$.
 
     $$\Upsilon_\ell (r) = \frac{1}{\ell} \left( 1 - r^\ell \right)$$
-    :giombi_2026:`\ ` eq. 3.6.
-    This is computed as $\Upsilon_\ell (r) = -\ln(r) \frac{e^{\ell \ln r} - 1}{\ell \ln r}$,
-    which is accurate also for small $|\ell|$ and gives the limit $\Upsilon_0 (r) = -\ln r$.
+    :giombi_2026:`\ ` eq. 3.6 (arXiv v2 and journal).
+    This is computed as $\Upsilon_\ell (r) = -\frac{1}{\ell} \left( e^{\ell \ln r} - 1 \right)$
+    with ``numpy.expm1``, which is accurate also for small $|\ell|$,
+    and with the limit $\Upsilon_0 (r) = -\ln r$ for $\ell = 0$.
+
+    :param r: $r$, e.g. $\frac{\eta_*}{\eta_\text{end}}$
+    :param l: $\ell$, a scalar
+    :return: $\Upsilon_\ell (r)$
     """
     log_r = np.log(r)
-    return -log_r * exprel(l * log_r)  # pyrefly: ignore[bad-return]
+    if l == 0:
+        return -log_r  # pyrefly: ignore[bad-return]
+    return -np.expm1(l * log_r) / l  # pyrefly: ignore[bad-return]
+
+
+@njit(cache=True)
+def tau_star[T: FloatOrArr](r_star: T, nu: T | float = DEFAULT_NU_GDH2024) -> T:
+    r"""$\tau_*$, dimensionless conformal time when the anisotropic stress turns on.
+
+    $$\tau_* \equiv \frac{\eta_*}{R_*} = \frac{\mathcal{H}_* \eta_*}{\mathcal{H}_* R_*}
+    = \frac{1 + \nu_\text{gdh2024}}{r_*}$$
+    :giombi_2026:`\ ` sec. 2.5 (arXiv v2 and journal),
+    :giombi_2024_cs:`\ ` p. 10,
+    where $\mathcal{H}_* \eta_*$ is given by :py:func:`H_eta`.
+
+    :param r_star: $r_* \equiv \mathcal{H}_* R_*$, Hubble-scaled mean bubble spacing
+    :param nu: $\nu_\text{gdh2024}$
+    :return: $\tau_*$
+    """
+    return H_eta(nu) / r_star  # pyrefly: ignore[bad-return]

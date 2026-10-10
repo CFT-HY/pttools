@@ -15,7 +15,7 @@ from pttools.bubble import omega_barotropic as omega_barotropic_func
 from pttools.bubble.thermo import warn_if_ubarf_relativistic
 from pttools.speedup import NAN_ARR
 from pttools.ssm import const
-from pttools.ssm.barotropic import H_eta, dilution_of_e, eta_ratio, source_lifetime_factor
+from pttools.ssm.barotropic import H_eta, dilution_of_e, eta_ratio, source_lifetime_factor, tau_star
 from pttools.ssm.compute import compute
 from pttools.ssm.export import SSM_SPECTRUM_FIELDS
 from pttools.ssm.low_k.intersection import z_cross_approx
@@ -68,6 +68,7 @@ class SSMSpectrum(Extractable):
             # Switches
             compute: bool = True,
             low_k: bool = True,
+            low_k_cs_friction: bool = False,
             parallel: bool = True,
             # Labels
             label_latex: str | None = None,
@@ -88,6 +89,11 @@ class SSMSpectrum(Extractable):
             use approximation rather than doing the sine transform integral.
         :param compute: whether to compute the spectrum immediately
         :param low_k: whether to use the :giombi_2024_cs: approximation for low $k$
+        :param low_k_cs_friction: whether to compute the acoustic friction of the low-$k$ approximation
+            from $c_s$ instead of $\nu$, see :py:func:`pttools.ssm.low_k.kernel.kernel_low`.
+            This generalises the articles to $c_s^2 \neq \omega$, and is disabled by default.
+            It should be considered an estimate, see the caveat in
+            :py:func:`pttools.ssm.low_k.kernel.acoustic_friction_exponent`.
         :param parallel: whether to use multiple CPU cores
         """
         if np.isnan(y).any():
@@ -121,6 +127,7 @@ class SSMSpectrum(Extractable):
         self.T_tilde_max: float = T_tilde_max
         # Switches
         self.low_k: bool = low_k
+        self.low_k_cs_friction: bool = low_k_cs_friction
         # Labels
         self.label_latex: str = self.bubble.label_latex.rstrip("$") + f", r_*={as_latex(r_star)}$" \
             if label_latex is None else label_latex
@@ -228,6 +235,7 @@ class SSMSpectrum(Extractable):
                 nuc_type=self.nuc_type,
                 sol_type=self.bubble.sol_type,
                 lambda_correction=lambda_correction,
+                low_k_cs_friction=self.low_k_cs_friction,
                 parallel=parallel
         )
         warn_if_ubarf_relativistic(self.ubarf2, source=self.label_unicode)
@@ -448,7 +456,7 @@ class SSMSpectrum(Extractable):
         :giombi_2026:`\ ` sec. 2.3,
         :giombi_2024_cs:`\ ` p. 8.
         """
-        return (1 + self.nu_gdh2024) / self.r_star
+        return tau_star(r_star=self.r_star, nu=self.nu_gdh2024)
 
     @property
     def ubarf(self) -> float:
@@ -601,4 +609,3 @@ class SSMSpectrum(Extractable):
         """Plot spectral density of the velocity field $P_v(y)$."""
         from pttools.analysis.plot_spectra import plot_spectra_spec_den_v  # noqa: PLC0415
         return plot_spectra_spec_den_v([self], ax=ax, fig=fig, path=path, **kwargs)
-
