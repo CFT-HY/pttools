@@ -185,7 +185,6 @@ module-root = ""
 
 [tool.coverage.run]
 branch = true
-# command_line = "manage.py test --noinput --parallel"
 concurrency = [
     "thread",
     "multiprocessing"
@@ -316,11 +315,11 @@ ignore = [
     "ARG001",   # unused-function-argument
     # Many docstrings describe a physical quantity with a noun phrase instead of a verb.
     "D401",     # non-imperative-mood
-    "PLR0913",  # too-many-arguments
-    "PLR0917",  # too-many-positional-arguments
     "N802",     # invalid-function-name
     "N803",     # invalid-argument-name
-    "N806"      # non-lowercase-variable-in-function
+    "N806",     # non-lowercase-variable-in-function
+    "PLR0913",  # too-many-arguments
+    "PLR0917"   # too-many-positional-arguments
 ]
 # The en dash is used in the names of the physical laws, and the low asterisk in the unicode labels.
 allowed-confusables = ["–", "⁎"]
@@ -353,8 +352,8 @@ extend-ignore-names = [
     "wm", "wn", "wp", "W", "W_abs2", "x", "x2", "xi", "y", "y0", "z", "z0", "z1",
 ]
 
-# The submodules of PTtools are re-exported by the __init__.py files with wildcard imports.
 [tool.ruff.lint.per-file-ignores]
+# The submodules of PTtools are re-exported by the __init__.py files with wildcard imports.
 "__init__.py" = [
     "F401",  # unused-import
     "F403"   # undefined-local-with-import-star
