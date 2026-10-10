@@ -1,13 +1,14 @@
 """Unit tests for thermodynamic functions."""
 
 from abc import ABC
+import logging
 import typing as tp
 import unittest
 
 import numpy as np
 
 from pttools.bubble.bubble import Bubble
-from pttools.bubble.thermo import e_bar, ubarf2, w_bar
+from pttools.bubble.thermo import e_bar, ubarf2, w_bar, warn_if_ubarf_relativistic
 from pttools.models.const_cs import ConstCSModel
 from tests.bubble.ref import RefBag, Reference, RefHindmarshHijazi, RefLectureNotes
 from tests.utils.test_assertions import assert_allclose
@@ -113,3 +114,21 @@ class ThermoTestConstCS(ThermoTest, unittest.TestCase):
         3.57922063e-02, 9.49107619e-02, 7.75841920e-02,
         6.65943334e-02, 1.44939257e-01, 1.34176160e-01
     ])
+
+
+class UbarfWarningTest(unittest.TestCase):
+    """Unit tests for :py:func:`pttools.bubble.thermo.warn_if_ubarf_relativistic`."""
+
+    def test_warns_above_one(self) -> None:
+        r"""A warning is logged for $\bar{U}_f > 1$, with the source in the message."""
+        with self.assertLogs("pttools.bubble.thermo", level=logging.WARNING) as logs:
+            assert warn_if_ubarf_relativistic(1.21, source="test bubble")
+        assert len(logs.records) == 1
+        assert "1.1" in logs.output[0]
+        assert "test bubble" in logs.output[0]
+
+    def test_silent_below_one(self) -> None:
+        r"""No warning is logged for $\bar{U}_f \le 1$."""
+        with self.assertNoLogs("pttools.bubble.thermo", level=logging.WARNING):
+            assert not warn_if_ubarf_relativistic(0.25)
+            assert not warn_if_ubarf_relativistic(1.)

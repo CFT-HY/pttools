@@ -12,6 +12,7 @@ import numpy as np
 
 from pttools.bubble import Bubble, Phase, nu_gdh2024
 from pttools.bubble import omega_barotropic as omega_barotropic_func
+from pttools.bubble.thermo import warn_if_ubarf_relativistic
 from pttools.speedup import NAN_ARR
 from pttools.ssm import const
 from pttools.ssm.barotropic import H_eta, dilution_of_e, eta_ratio, source_lifetime_factor
@@ -229,6 +230,7 @@ class SSMSpectrum(Extractable):
                 lambda_correction=lambda_correction,
                 parallel=parallel
         )
+        warn_if_ubarf_relativistic(self.ubarf2, source=self.label_unicode)
         self.spec_den_gw = self.spec_den_gw_expanded if self.low_k else self.spec_den_gw_ssm
 
     def export(
