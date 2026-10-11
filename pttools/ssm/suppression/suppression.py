@@ -89,6 +89,47 @@ class Suppression:
                 name=name
             )
 
+    @classmethod
+    def from_txt(cls, path: str | os.PathLike[str], name: str) -> "Suppression":
+        """Load a suppression dataset from a text file with a header row of column names.
+
+        The file should contain the columns ``vw_sim``, ``alpha_sim`` and ``sup_ssm``, as created by
+        :py:func:`pttools.ssm.suppression.suppression_ssm_data.suppression_hydro_calculator.calc_sup_hydro`.
+
+        :param path: path of the text file
+        :param name: name of the dataset
+        :return: the suppression dataset
+        """
+        data = np.genfromtxt(path, names=True, ndmin=1)
+        return Suppression(
+            v_walls=np.asarray(data["vw_sim"], dtype=np.float64),
+            alpha_ns=np.asarray(data["alpha_sim"], dtype=np.float64),
+            suppressions=np.asarray(data["sup_ssm"], dtype=np.float64),
+            name=name
+        )
+
+    def merge(self, other: "Suppression", name: str, atol: float = 1e-6) -> "Suppression":
+        r"""Create a new dataset that combines the data points of this dataset and another one.
+
+        The data points of the other dataset replace the data points of this dataset
+        that have the same ${v}_\text{wall}$ and $\alpha_n$ within the tolerance ``atol``.
+
+        :param other: the dataset whose data points are added, and which take precedence
+        :param name: name of the new dataset
+        :param atol: absolute tolerance for considering two data points to be the same
+        :return: the combined dataset
+        """
+        keep = np.ones(self.v_walls.size, dtype=np.bool_)
+        for v_wall, alpha_n in zip(other.v_walls, other.alpha_ns, strict=True):
+            keep &= ~(np.isclose(self.v_walls, v_wall, rtol=0, atol=atol)
+                      & np.isclose(self.alpha_ns, alpha_n, rtol=0, atol=atol))
+        return Suppression(
+            v_walls=np.concatenate((self.v_walls[keep], other.v_walls)),
+            alpha_ns=np.concatenate((self.alpha_ns[keep], other.alpha_ns)),
+            suppressions=np.concatenate((self.suppressions[keep], other.suppressions)),
+            name=name
+        )
+
     @property
     def limits_str(self) -> str:
         """The ranges of the wall speeds and transition strengths of the dataset as a human-readable string."""
@@ -236,5 +277,22 @@ NO_HYBRIDS_EXT: Suppression = Suppression(
 )
 WITH_HYBRIDS: Suppression = Suppression.from_file(
     SUPPRESSION_FOLDER / "suppression_2_ssm.npz", name="With hybrids")
+#: Suppression factors fitted to the $4096^3$ simulations of :correia_2026:`\ `
+#: (${v}_\text{wall} = 0.92, \alpha_n = 0.67$ and ${v}_\text{wall} = 0.44, \alpha_n = 0.5$),
+#: computed with
+#: :py:mod:`pttools.ssm.suppression.suppression_ssm_data.suppression_hydro_calculator`.
+#: This has only two data points, and therefore it cannot be interpolated on its own.
+#: Please use the combined datasets below instead.
+CORREIA_2025: Suppression = Suppression.from_txt(
+    SUPPRESSION_FOLDER / "suppression_correia_2025.txt", name="Correia et al. 2025")
+#: :py:data:`NO_HYBRIDS_EXT`, where the data points at the parameters of :py:data:`CORREIA_2025`
+#: are replaced with those of the higher-resolution simulations
+NO_HYBRIDS_EXT_CORREIA_2025: Suppression = NO_HYBRIDS_EXT.merge(
+    CORREIA_2025, name="No hybrids, extended, with Correia et al. 2025")
+#: :py:data:`WITH_HYBRIDS`, where the data points at the parameters of :py:data:`CORREIA_2025`
+#: are replaced with those of the higher-resolution simulations
+WITH_HYBRIDS_CORREIA_2025: Suppression = WITH_HYBRIDS.merge(
+    CORREIA_2025, name="With hybrids, with Correia et al. 2025")
 DEFAULT_SUPPRESSION: Suppression = NO_HYBRIDS_EXT
-SUPPRESSIONS: list[Suppression] = [NO_HYBRIDS, NO_HYBRIDS_EXT, WITH_HYBRIDS]
+SUPPRESSIONS: list[Suppression] = [
+    NO_HYBRIDS, NO_HYBRIDS_EXT, WITH_HYBRIDS, NO_HYBRIDS_EXT_CORREIA_2025, WITH_HYBRIDS_CORREIA_2025]

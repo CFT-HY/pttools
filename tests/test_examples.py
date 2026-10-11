@@ -24,6 +24,7 @@ from examples.gksvdv import (
     gksvdv_testing2,
     gksvdv_testing3,
 )
+from examples.hydro import hydro_quantities, hydro_spectra, hydro_suppression
 from examples.low_k import low_k
 from examples.props import (
     chapman_jouguet,
@@ -192,6 +193,28 @@ class ExampleTest(unittest.TestCase):
     def test_gksvdv_testing3() -> None:
         """Test that the example ``examples.gksvdv.gksvdv_testing3`` runs without errors."""
         close(gksvdv_testing3.main())
+
+    # Hydro
+    @staticmethod
+    def test_hydro_quantities() -> None:
+        """Test that the example ``examples.hydro.hydro_quantities`` runs without errors.
+
+        Without the simulation data the example is skipped.
+        """
+        close_figs(*hydro_quantities.main().values())
+
+    @staticmethod
+    def test_hydro_spectra() -> None:
+        """Test that the example ``examples.hydro.hydro_spectra`` runs without errors.
+
+        Without the simulation data the example is skipped.
+        """
+        close_figs(*hydro_spectra.main().values())
+
+    @staticmethod
+    def test_hydro_suppression() -> None:
+        """Test that the example ``examples.hydro.hydro_suppression`` runs without errors."""
+        close_figs(*(plot.fig for plot in hydro_suppression.main()))
 
     # Low-k
     @staticmethod

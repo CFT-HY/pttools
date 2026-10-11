@@ -24,6 +24,7 @@ from pttools.ssm.nucleation import r_star as r_star_func
 from pttools.ssm.pow_spec import pow_spec
 from pttools.ssm.scaling import H_star_eta_sh, H_star_eta_v, H_star_eta_v_old, J
 from pttools.ssm.spec_den_gw import spec_den_gw_scaling
+from pttools.ssm.spectrum_base import SpectrumBase
 from pttools.ssm.ssm import ubarf2_from_a2
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 from pttools.type_hints import FloatArr, FloatArr1D
@@ -38,8 +39,12 @@ if tp.TYPE_CHECKING:
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class SSMSpectrum(Extractable):
-    """Gravitational wave simulation object."""
+class SSMSpectrum(Extractable, SpectrumBase):
+    """Gravitational wave simulation object.
+
+    The flat-space quantities of :py:class:`pttools.ssm.spectrum_base.SpectrumBase`
+    allow comparing the spectrum with external data, e.g. :py:class:`pttools.imports.hydro.spectrum.HydroSpectrum`.
+    """
 
     #: The exportable fields of the spectrum
     FIELDS: tp.ClassVar[Fields] = SSM_SPECTRUM_FIELDS
@@ -378,9 +383,39 @@ class SSMSpectrum(Extractable):
         return self.spec_den_gw_scaling * pow_spec(z=self.y, spec_den=self.spec_den_gw_low)
 
     @functools.cached_property
+    def pow_gw_rate(self) -> FloatArr1D:
+        r"""$\frac{1}{H_n R_*} \frac{d\mathcal{P}_\text{gw}}{d(H_n t)}$, flat-space GW power growth rate.
+
+        $$\frac{1}{H_n R_*} \frac{d\mathcal{P}_\text{gw}}{d(H_n t)}
+        = 3 \left( \Gamma \bar{U}_f^2 \right)^2 \Sigma \frac{z^3}{2\pi^2} \frac{\tilde{P}_\text{gw}(z)}{\Upsilon}$$
+        :gw_pt_ssm:`\ ` eq. 3.44, 3.45.
+        This is :py:attr:`pow_gw_ssm` without the factors of the expansion of the universe and the source lifetime,
+        i.e. the GW power that a stationary source produces per Hubble time in flat space.
+        It can therefore be compared directly with flat-space simulations, such as those of :correia_2026:`\ `.
+        The low-$k$ approximation is not included, as it describes the effects of the finite source lifetime.
+        The suppression factor $\Sigma$ is included unless the suppression method is
+        :py:attr:`pttools.ssm.suppression.suppression.SuppressionMethod.NONE`.
+        """
+        return 3 * (self.bubble.mean_adiabatic_index * self.ubarf2)**2 * self.suppression_factor \
+            * pow_spec(z=self.y, spec_den=self.spec_den_gw_ssm) / self.source_lifetime_factor
+
+    @functools.cached_property
     def pow_gw_ssm(self) -> FloatArr1D:
         r"""$\mathcal{P}_\text{gw,ssm}$."""
         return self.spec_den_gw_scaling * pow_spec(z=self.y, spec_den=self.spec_den_gw_ssm)
+
+    @functools.cached_property
+    def pow_U_par(self) -> FloatArr1D:
+        r"""$\mathcal{P}_{U_{\parallel}}(z)$, power spectrum of the enthalpy-weighted fluid velocity.
+
+        $$\mathcal{P}_{U_{\parallel}}(z) = \bar{U}_f^2 \mathcal{P}_{\tilde{v}}(z),$$
+        normalised so that $\int \frac{dz}{z} \mathcal{P}_{U_{\parallel}} = \bar{U}_f^2$ when the range of $z$
+        covers the whole spectrum.
+        In the Sound Shell Model the flow consists of sound waves only, and is therefore purely compressional.
+        This can be compared with the spectrum of the compressional component of
+        $U^i = \sqrt{w/\bar{w}} \gamma v^i$ of :correia_2026:`\ ` eq. 20.
+        """
+        return self.ubarf2 * self.pow_v_tilde
 
     @functools.cached_property
     def pow_v(self) -> FloatArr1D:

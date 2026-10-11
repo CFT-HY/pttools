@@ -1,0 +1,72 @@
+r"""
+Simulated and SSM quantities
+============================
+
+Compare the quantities that can be computed both from the simulations of :correia_2026:`\ ` and from PTtools:
+the RMS fluid velocities, the integral scale, the kinetic energy fraction, the mean adiabatic index
+and the growth rate of the GW energy density.
+
+The simulated flows decay, whereas the Sound Shell Model assumes a stationary flow.
+Therefore, the SSM values are shown as constants, and the suppression factor that matches the SSM
+GW power growth rate with the simulation depends on the time at which it is fitted.
+"""
+
+import logging
+
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
+
+from examples.hydro.hydro_spectra import comparisons
+from examples.utils import save_and_show_figs
+from pttools.analysis.hydro import HydroComparison, scalar_comparison
+from pttools.analysis.plot_hydro import (
+    plot_gw_rate_time_comparison,
+    plot_integral_scale_comparison,
+    plot_kinetic_energy_comparison,
+    plot_ubar_comparison,
+)
+from pttools.imports.hydro import CORREIA_2025_RUNS
+
+logger: logging.Logger = logging.getLogger(__name__)
+
+
+def comparison_table(comparison: HydroComparison) -> str:
+    """Format the scalar comparison of a run as a Markdown table."""
+    rows = [
+        f"| {name} | {sim:.4g} | {ssm:.4g} | {sim / ssm:.3g} |"
+        for name, (sim, ssm) in scalar_comparison(comparison).items()
+    ]
+    return "\n".join([
+        f"{comparison.run.label_unicode}, t = {comparison.spectrum.t:.0f} / T_c",
+        "| Quantity | Simulation | PTtools | Ratio |",
+        "|---|---|---|---|",
+        *rows
+    ])
+
+
+def plot_quantities(comparison: HydroComparison) -> Figure:
+    """Plot the time series of a run and the corresponding SSM values."""
+    fig, axs = plt.subplots(2, 2, figsize=(10, 7))
+    plot_ubar_comparison(comparison, fig=fig, ax=axs[0, 0])
+    plot_integral_scale_comparison(comparison, fig=fig, ax=axs[0, 1])
+    plot_kinetic_energy_comparison(comparison, fig=fig, ax=axs[1, 0])
+    axs[1, 1].axis("off")
+    fig.suptitle(comparison.run.label_latex)
+    fig.tight_layout()
+    return fig
+
+
+def main() -> dict[str, Figure]:
+    """Plot the quantities of the runs of Correia et al. and the corresponding SSM values."""
+    figs = {}
+    for name, comparison in comparisons().items():
+        print(comparison_table(comparison))
+        figs[f"hydro_quantities_{name}"] = plot_quantities(comparison)
+        meta = CORREIA_2025_RUNS[name]
+        delta_steps = meta.step - meta.step_prev
+        figs[f"hydro_gw_rate_time_{name}"] = plot_gw_rate_time_comparison(comparison, delta_steps, y_min=2)[0]
+    return figs
+
+
+if __name__ == "__main__":
+    save_and_show_figs(main())

@@ -4,6 +4,7 @@ from .bubble_grid import *
 from .colormap import *
 from .entropy import *
 from .g_cs2 import *
+from .hydro import *
 from .parallel import *
 from .plot_bubbles import *
 from .plot_chapman_jouguet import *
@@ -13,6 +14,7 @@ from .plot_entropy_grid import *
 from .plot_fluid_shell_3d import *
 from .plot_fluid_shell_bag import *
 from .plot_fluid_shells_bag import *
+from .plot_hydro import *
 from .plot_model import *
 from .plot_models import *
 from .plot_plotly import *
