@@ -38,7 +38,7 @@ class SSMSpectrumFlatTest(unittest.TestCase):
         in :py:mod:`pttools.ssm.suppression.suppression_ssm_data.suppression_ssm_calculator`,
         where $\Gamma = 4/3$ instead of the value of the fluid profile.
         The comparison is limited to $z \leq 100$. Above ``z_st_thresh``, the approximate sine transform of the
-        legacy path takes the value of $\xi \lambda$ at the wall from the point $\xi = v_\text{wall}$,
+        legacy path takes the value of $\xi \lambda$ at the wall from the point $\xi = {v}_\text{wall}$,
         where :py:func:`pttools.bubble.thermo_bag.de_from_w_bag` assigns the symmetric phase to the broken-phase
         enthalpy, so that $\lambda$ is too large by $\frac{3}{4} \alpha_n$ at that point.
         """
