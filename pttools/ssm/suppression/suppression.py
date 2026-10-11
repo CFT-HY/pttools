@@ -3,6 +3,7 @@
 import enum
 import logging
 import os
+from pathlib import Path
 
 import numpy as np
 from scipy import interpolate
@@ -72,41 +73,25 @@ class Suppression:
 
     @classmethod
     def from_file(cls, path: str | os.PathLike[str], name: str) -> "Suppression":
-        """Load a suppression dataset from a ``.npz`` file.
+        """Load a suppression dataset from a text file or a ``.npz`` file.
 
-        The file should contain the arrays ``vw_sim``, ``alpha_sim`` and ``sup_ssm``,
-        as created by ``pttools.ssm.suppression.suppression_ssm_data.suppression_ssm_calculator.calc_sup_ssm``.
-
-        :param path: path of the ``.npz`` file
-        :param name: name of the dataset
-        :return: the suppression dataset
-        """
-        with np.load(path) as data:
-            return Suppression(
-                v_walls=data["vw_sim"],
-                alpha_ns=data["alpha_sim"],
-                suppressions=data["sup_ssm"],
-                name=name
-            )
-
-    @classmethod
-    def from_txt(cls, path: str | os.PathLike[str], name: str) -> "Suppression":
-        """Load a suppression dataset from a text file with a header row of column names.
-
-        The file should contain the columns ``vw_sim``, ``alpha_sim`` and ``sup_ssm``, as created by
+        The file should contain the columns or arrays ``vw_sim``, ``alpha_sim`` and ``sup_ssm``.
+        A text file should have a header row of column names, as the files created by
+        :py:func:`pttools.ssm.suppression.suppression_ssm_data.suppression_ssm_calculator.calc_sup_ssm` and
         :py:func:`pttools.ssm.suppression.suppression_ssm_data.suppression_hydro_calculator.calc_sup_hydro`.
 
-        :param path: path of the text file
+        :param path: path of the file
         :param name: name of the dataset
         :return: the suppression dataset
         """
-        data = np.genfromtxt(path, names=True, ndmin=1)
-        return Suppression(
-            v_walls=np.asarray(data["vw_sim"], dtype=np.float64),
-            alpha_ns=np.asarray(data["alpha_sim"], dtype=np.float64),
-            suppressions=np.asarray(data["sup_ssm"], dtype=np.float64),
-            name=name
-        )
+        keys = ("vw_sim", "alpha_sim", "sup_ssm")
+        if Path(path).suffix == ".npz":
+            with np.load(path) as data:
+                v_walls, alpha_ns, suppressions = (np.asarray(data[key], dtype=np.float64) for key in keys)
+        else:
+            data = np.genfromtxt(path, names=True, ndmin=1)
+            v_walls, alpha_ns, suppressions = (np.asarray(data[key], dtype=np.float64) for key in keys)
+        return Suppression(v_walls=v_walls, alpha_ns=alpha_ns, suppressions=suppressions, name=name)
 
     def merge(self, other: "Suppression", name: str, atol: float = 1e-6) -> "Suppression":
         r"""Create a new dataset that combines the data points of this dataset and another one.
@@ -270,20 +255,20 @@ C1: float = 0.34 - M1 * 0.24
 C2: float = 0.67000 - M2 * 0.56000
 
 NO_HYBRIDS: Suppression = Suppression.from_file(
-    SUPPRESSION_FOLDER / "suppression_no_hybrids_ssm.npz", name="No hybrids")
+    SUPPRESSION_FOLDER / "suppression_no_hybrids_ssm.txt", name="No hybrids")
 NO_HYBRIDS_EXT: Suppression = Suppression(
     *extend(v_walls=NO_HYBRIDS.v_walls, alpha_ns=NO_HYBRIDS.alpha_ns, suppressions=NO_HYBRIDS.suppressions),
     name="No hybrids, extended"
 )
 WITH_HYBRIDS: Suppression = Suppression.from_file(
-    SUPPRESSION_FOLDER / "suppression_2_ssm.npz", name="With hybrids")
+    SUPPRESSION_FOLDER / "suppression_2_ssm.txt", name="With hybrids")
 #: Suppression factors fitted to the $4096^3$ simulations of :correia_2025:`\ `
 #: (${v}_\text{wall} = 0.92, \alpha_n = 0.67$ and ${v}_\text{wall} = 0.44, \alpha_n = 0.5$),
 #: computed with
 #: :py:mod:`pttools.ssm.suppression.suppression_ssm_data.suppression_hydro_calculator`.
 #: This has only two data points, and therefore it cannot be interpolated on its own.
 #: Please use the combined datasets below instead.
-CORREIA_2025: Suppression = Suppression.from_txt(
+CORREIA_2025: Suppression = Suppression.from_file(
     SUPPRESSION_FOLDER / "suppression_correia_2025.txt", name="Correia et al. 2025")
 #: :py:data:`NO_HYBRIDS_EXT`, where the data points at the parameters of :py:data:`CORREIA_2025`
 #: are replaced with those of the higher-resolution simulations

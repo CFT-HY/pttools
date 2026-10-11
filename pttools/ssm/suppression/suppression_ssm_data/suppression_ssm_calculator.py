@@ -2,6 +2,7 @@
 
 import logging
 import os
+from pathlib import Path
 
 import numpy as np
 
@@ -12,13 +13,39 @@ from pttools.bubble import (
     DF_DTAU_PTR_BAG,
     get_ubarf2_bag,
 )
-from pttools.ssm.const import DEFAULT_N_PT, NptType
+from pttools.ssm.const import DEFAULT_N_PT, DEFAULT_N_XI_SSM, NptType
 from pttools.ssm.spectrum import NucType
 from pttools.ssm.spectrum_bag import power_gw_bag
 from pttools.ssm.suppression.suppression_ssm_data import SUPPRESSION_FOLDER
 import pttools.type_hints as th
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+#: Accuracy settings with which the shipped datasets ``suppression_2_ssm.txt`` and
+#: ``suppression_no_hybrids_ssm.txt`` are computed
+DATASET_NPT: NptType = (DEFAULT_N_XI_SSM, 200, 320)
+#: Whether the shipped datasets are computed with the non-linear correction of $\lambda$
+DATASET_LAMBDA_CORRECTION: bool = True
+#: Columns of the output files
+OUTPUT_COLUMNS: tuple[str, ...] = ("vw_sim", "alpha_sim", "sup_ssm", "Ubarf_2_ssm", "ssm_tot")
+
+
+def save_columns(path: str | os.PathLike[str], data: dict[str, th.FloatArr1DOrList]) -> None:
+    """Save the columns :py:data:`OUTPUT_COLUMNS` of the data as a text file with a header row.
+
+    A text file is used instead of a binary format so that the changes in the values
+    are visible in the version history.
+    The values are written with :py:func:`repr`, which gives the shortest representation
+    that preserves the float64 value exactly.
+
+    :param path: path of the output file
+    :param data: the data, which must contain the keys of :py:data:`OUTPUT_COLUMNS`
+    """
+    columns = [np.asarray(data[key], dtype=np.float64) for key in OUTPUT_COLUMNS]
+    lines = [" ".join(OUTPUT_COLUMNS)]
+    lines += [" ".join(repr(float(value)) for value in row) for row in zip(*columns, strict=True)]
+    Path(path).write_text("\n".join(lines) + "\n", encoding="utf-8")
+
 
 def calc_sup_ssm(
         path: str | os.PathLike[str],
@@ -76,11 +103,11 @@ def calc_sup_ssm(
     }
 
     if save:
-        np.savez(path.with_name(f"{path.stem}_ssm.npz"), **ssm_sup_data)
+        save_columns(path.with_name(f"{path.stem}_ssm.txt"), ssm_sup_data)
 
     return ssm_sup_data
 
 
 if __name__ == "__main__":
-    calc_sup_ssm("suppression_2.txt")
-    calc_sup_ssm("suppression_no_hybrids.txt")
+    calc_sup_ssm("suppression_2.txt", npt=DATASET_NPT, lambda_correction=DATASET_LAMBDA_CORRECTION)
+    calc_sup_ssm("suppression_no_hybrids.txt", npt=DATASET_NPT, lambda_correction=DATASET_LAMBDA_CORRECTION)

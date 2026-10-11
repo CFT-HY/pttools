@@ -7,10 +7,13 @@ import unittest
 import numpy as np
 from pandas.io.parsers import read_csv
 
-from pttools.ssm.const import DEFAULT_N_XI_SSM
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION
 from pttools.ssm.suppression.suppression_ssm_data.remove_hybrids import SUPPRESSION_FOLDER, remove_hybrids
-from pttools.ssm.suppression.suppression_ssm_data.suppression_ssm_calculator import calc_sup_ssm
+from pttools.ssm.suppression.suppression_ssm_data.suppression_ssm_calculator import (
+    DATASET_LAMBDA_CORRECTION,
+    DATASET_NPT,
+    calc_sup_ssm,
+)
 from pttools.utils.assertions import assert_allclose
 
 
@@ -51,15 +54,15 @@ class SuppressionTest(unittest.TestCase):
             data = calc_sup_ssm(
                 f"{filename}.txt",
                 save=False,
-                npt=(DEFAULT_N_XI_SSM, 200, 320),
-                lambda_correction=True
+                npt=DATASET_NPT,
+                lambda_correction=DATASET_LAMBDA_CORRECTION
             )
-            with np.load(SUPPRESSION_FOLDER / f"{filename}_ssm.npz") as ref:
-                for key, rtol in tolerances.items():
-                    if rtol is None:
-                        assert_allclose(data[key], ref[key], name=key)
-                    else:
-                        assert_allclose(data[key], ref[key], name=key, rtol=rtol)
+            ref = np.genfromtxt(SUPPRESSION_FOLDER / f"{filename}_ssm.txt", names=True)
+            for key, rtol in tolerances.items():
+                if rtol is None:
+                    assert_allclose(data[key], ref[key], name=key)
+                else:
+                    assert_allclose(data[key], ref[key], name=key, rtol=rtol)
 
     @staticmethod
     def test_suppression() -> None:
