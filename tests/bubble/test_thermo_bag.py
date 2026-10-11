@@ -5,13 +5,17 @@ import typing as tp
 import unittest
 
 import numpy as np
+import pytest
 
 from pttools.bubble import (
     CS2_BAG_SCALAR_PTR,
     DEFAULT_FLUID_INTEGRATE_METHOD,
     DF_DTAU_PTR_BAG,
+    fluid_bag,
     thermo_bag,
 )
+from pttools.bubble.solution_type import SolutionType
+from pttools.bubble.v_minus import v_minus
 from pttools.type_hints import FloatArr1D
 from tests.bubble.ref import RefBag, Reference, RefHindmarshHijazi, RefLectureNotes
 from tests.utils.test_assertions import assert_allclose
@@ -97,3 +101,62 @@ class ThermoBagTestLectureNotes(RefLectureNotes, ThermoBagTest, unittest.TestCas
         for i in range(self.ALPHA_NS.size):
             ubarfs[i] = np.sqrt(thermo_bag.get_ubarf2_new_bag(v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i]))
         assert_allclose(ubarfs, self.UBARF_REF, rtol=5.0e-2)
+
+
+#: Legacy profiles of :py:func:`pttools.bubble.fluid_bag.sound_shell_bag` for each solution type:
+#: ${v}_\text{wall}$, $\alpha_n$ and the solution type
+DE_WALL_CASES: tuple[tuple[float, float, SolutionType], ...] = (
+    (0.44, 0.1, SolutionType.SUB_DEF),
+    (0.44, 0.5, SolutionType.SUB_DEF),
+    (0.7, 0.1, SolutionType.HYBRID),
+    (0.6, 0.05, SolutionType.HYBRID),
+    (0.92, 0.1, SolutionType.DETON),
+    (0.92, 0.67, SolutionType.DETON),
+)
+
+
+def lambda_profile(v_wall: float, alpha_n: float) -> tuple[FloatArr1D, FloatArr1D, FloatArr1D]:
+    r"""$\xi$, $w$ and $\lambda = \Delta e / w_n$ of a legacy bag profile."""
+    kwargs = {
+        "df_dtau_ptr": DF_DTAU_PTR_BAG, "ode_method": DEFAULT_FLUID_INTEGRATE_METHOD, "cs2_ptr": CS2_BAG_SCALAR_PTR}
+    _, w, xi = fluid_bag.sound_shell_bag(v_wall, alpha_n, n_xi=2000, **kwargs)
+    return xi, w, thermo_bag.de_from_w_bag(w, xi, v_wall, alpha_n, **kwargs) / w[-1]
+
+
+@pytest.mark.parametrize(("v_wall", "alpha_n", "sol_type"), DE_WALL_CASES)
+def test_de_from_w_wall_continuous(v_wall: float, alpha_n: float, sol_type: SolutionType) -> None:
+    r"""The point at $\xi = {v}_\text{wall}$ is continuous with its own side of the wall.
+
+    In detonations the point at the wall is the end of the rarefaction wave and therefore in the broken phase,
+    and in deflagrations and hybrids it's the start of the shell and therefore in the symmetric phase.
+    Previously the point was always considered to be in the symmetric phase,
+    which made $\lambda$ too large by $\frac{3}{4} \alpha_n$ at the wall of detonations.
+    """
+    xi, _, lam = lambda_profile(v_wall, alpha_n)
+    i_wall = np.flatnonzero(xi == v_wall)
+    assert i_wall.size == 1
+    i = i_wall[0]
+    i_side = i - 1 if sol_type == SolutionType.DETON else i + 1
+    i_other = i + 1 if sol_type == SolutionType.DETON else i - 1
+    jump_side = abs(lam[i] - lam[i_side])
+    jump_other = abs(lam[i] - lam[i_other])
+    assert jump_side < 0.02 * abs(lam[i])
+    assert jump_side < 0.1 * jump_other
+
+
+@pytest.mark.parametrize("alpha_n", [0.1, 0.67])
+def test_de_from_w_detonation_junction(alpha_n: float) -> None:
+    r"""$\lambda$ behind the wall of a detonation agrees with the junction conditions of the bag model.
+
+    The fluid ahead of a detonation is at rest at $w_{n}$,
+    so $\tilde{v}_{+} = {v}_\text{wall}$ and $\alpha_{+} = \alpha_n$.
+    $$\frac{w_{-}}{w_{n}} = \frac{\gamma_{+}^2 \tilde{v}_{+}}{\gamma_{-}^2 \tilde{v}_{-}}, \quad
+    \lambda_{-} = \frac{3}{4} \frac{w_{-}}{w_{n}} - \frac{3}{4} (1 + \alpha_n)$$
+    """
+    v_wall = 0.92
+    xi, w, lam = lambda_profile(v_wall, alpha_n)
+    i_wall = np.flatnonzero(xi == v_wall)[0]
+    vm = v_minus(vp=v_wall, ap=alpha_n, sol_type=SolutionType.DETON)
+    w_ratio = (v_wall / (1 - v_wall**2)) / (vm / (1 - vm**2))
+    assert w[i_wall] / w[-1] == pytest.approx(w_ratio, rel=1e-6)
+    assert lam[i_wall] == pytest.approx(0.75 * w_ratio - 0.75 * (1 + alpha_n), rel=1e-6)

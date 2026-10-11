@@ -29,22 +29,35 @@ def find_phase(xi: th.FloatArr1D, v_wall: float, sol_type: SolutionType | None =
     :param sol_type: type of the solution
     :return: phase
     """
+    return find_phase_core(xi, v_wall, detonation=sol_type == SolutionType.DETON)
+
+
+@njit(cache=True)
+def find_phase_core(xi: th.FloatArr1D, v_wall: float, detonation: bool) -> th.FloatArr1D:
+    r"""Numba-compatible core of :py:func:`find_phase`.
+
+    :param xi: $\xi$ values of the profile in increasing order
+    :param v_wall: ${v}_\text{wall}$, wall speed
+    :param detonation: whether the profile is a detonation,
+        in which case a single point at $\xi = {v}_\text{wall}$ is in the broken phase
+    :return: phase
+    """
     # This presumes that Phase.SYMMETRIC = 0
     phase = np.zeros_like(xi)
     if not np.any(xi >= v_wall):
-        phase[:] = Phase.BROKEN
+        phase[:] = Phase.BROKEN.value
         return phase
     i_wall = find_v_index(xi, v_wall)
-    phase[:i_wall] = Phase.BROKEN
+    phase[:i_wall] = Phase.BROKEN.value
     # The points at the wall are set to exactly v_wall by the solvers,
     # so the tolerance has to be tight to not include the neighbouring points.
     n_at_wall = 0
-    while i_wall + n_at_wall < xi.size and np.isclose(xi[i_wall + n_at_wall], v_wall, rtol=1e-12, atol=0):
+    while i_wall + n_at_wall < xi.size and abs(xi[i_wall + n_at_wall] - v_wall) <= 1e-12 * abs(v_wall):
         n_at_wall += 1
     if n_at_wall > 1:
-        phase[i_wall:i_wall + n_at_wall - 1] = Phase.BROKEN
-    elif n_at_wall == 1 and sol_type == SolutionType.DETON:
-        phase[i_wall] = Phase.BROKEN
+        phase[i_wall:i_wall + n_at_wall - 1] = Phase.BROKEN.value
+    elif n_at_wall == 1 and detonation:
+        phase[i_wall] = Phase.BROKEN.value
     return phase
 
 

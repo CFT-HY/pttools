@@ -11,7 +11,8 @@ from numpy.typing import NDArray
 from pttools.bubble import bag, check, const, fluid_bag
 from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR
 from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG, FluidIntegrateMethod
-from pttools.bubble.phase import Phase, get_phase
+from pttools.bubble.phase import Phase
+from pttools.bubble.props import find_phase_core
 from pttools.bubble.solution_type_bag import SolutionType, identify_solution_type_bag
 from pttools.bubble.thermo import kinetic_energy_density, mean_enthalpy_change, ubarf2
 from pttools.speedup.differential import DifferentialPointer
@@ -47,6 +48,10 @@ def de_from_w_bag(
     r"""
     Calculates energy density difference ``de = e - e[-1]`` from enthalpy, assuming bag equation of state.
 
+    The phase of the point at $\xi = {v}_\text{wall}$ is determined with
+    :py:func:`pttools.bubble.props.find_phase`,
+    as it can belong to either phase depending on the solution type and on how the profile was constructed.
+
     Can get ``alpha_n = find_alpha_n_from_w_xi(w,xi,v_wall,alpha_p)``.
 
     :param w: $w$
@@ -60,7 +65,10 @@ def de_from_w_bag(
     """
     check.check_physical_params(
         (v_wall, alpha_n), df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_ptr=cs2_ptr)
-    e_from_w = bag.e_bag(w=w, phase=get_phase(xi, v_wall), theta_s=0.75 * w[-1] * alpha_n)
+    sol_type = identify_solution_type_bag(
+        v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_ptr=cs2_ptr)
+    phase = find_phase_core(xi, v_wall, detonation=sol_type == SolutionType.DETON)
+    e_from_w = bag.e_bag(w=w, phase=phase, theta_s=0.75 * w[-1] * alpha_n)
 
     return e_from_w - e_from_w[-1]
 
@@ -92,7 +100,10 @@ def de_from_w_new_bag(
     """
     check.check_physical_params(
         (v_wall, alpha_n), df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_ptr=cs2_ptr)
-    e_from_w = bag.e_bag(w=w, phase=get_phase(xi, v_wall), theta_s=0.75 * w[-1] * alpha_n)
+    sol_type = identify_solution_type_bag(
+        v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_ptr=cs2_ptr)
+    phase = find_phase_core(xi, v_wall, detonation=sol_type == SolutionType.DETON)
+    e_from_w = bag.e_bag(w=w, phase=phase, theta_s=0.75 * w[-1] * alpha_n)
 
     de = e_from_w - e_from_w[-1]
 

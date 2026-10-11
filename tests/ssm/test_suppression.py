@@ -75,16 +75,19 @@ class SuppressionTest(unittest.TestCase):
     SUPPRESSION: tp.ClassVar[sup.Suppression] = sup.NO_HYBRIDS_EXT
     V_WALLS: tp.ClassVar[th.FloatArr1D] = np.array([0.4, 0.5, 0.6])
     ALPHA_NS: tp.ClassVar[th.FloatArr1D] = np.array([0.05, 0.1])
-    #: Reference values, computed with PTtools 0.10.0
+    #: Reference values, computed with PTtools 0.10.0.
+    #: The values at ${v}_\text{wall} = 0.6$ were updated when fixing the phase of the wall point of detonations
+    #: in :py:func:`pttools.bubble.thermo_bag.de_from_w_bag`, which changed the detonation points of the dataset.
     GRID_REF: tp.ClassVar[th.FloatArr2D] = np.array([
-        [0.2175166, 0.60930056, 0.87699788],
-        [0.16514226, 0.45835392, 0.6073551]
+        [0.2175166, 0.60930056, 0.87732841],
+        [0.16514226, 0.45835392, 0.60770882]
     ])
     #: A point outside the convex hull of the suppression points
     OUTSIDE_V_WALL: tp.ClassVar[float] = 0.95
     OUTSIDE_ALPHA_N: tp.ClassVar[float] = 0.9
-    #: Reference value for the nearest-neighbour extrapolation, computed with PTtools 0.10.0
-    OUTSIDE_REF: tp.ClassVar[float] = 0.378071924042103
+    #: Reference value for the nearest-neighbour extrapolation, i.e. the data point
+    #: ${v}_\text{wall} = 0.92, \alpha_n = 0.67$, updated after the fix of the wall point of detonations
+    OUTSIDE_REF: tp.ClassVar[float] = 0.38539503992974217
 
     def test_grid(self) -> None:
         """Interpolating on a grid of points gives the reference values."""

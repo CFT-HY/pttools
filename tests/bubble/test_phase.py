@@ -5,7 +5,7 @@ import pytest
 
 from pttools.bubble import Bubble
 from pttools.bubble.phase import Phase
-from pttools.bubble.props import find_phase
+from pttools.bubble.props import find_phase, find_phase_core
 from pttools.bubble.solution_type import SolutionType
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
@@ -66,3 +66,16 @@ def test_find_phase_no_wall_point() -> None:
     np.testing.assert_array_equal(find_phase(xi, 0.6), [1, 1, 0, 0])
     np.testing.assert_array_equal(find_phase(xi, 2), [1, 1, 1, 1])
     np.testing.assert_array_equal(find_phase(xi, -1), [0, 0, 0, 0])
+
+
+@pytest.mark.parametrize("xi", [
+    np.array([0, 0.5, 0.6, 0.6, 0.7, 1]),
+    np.array([0, 0.5, 0.6, 0.7, 1]),
+    np.array([0, 0.5, 0.7, 1]),
+])
+def test_find_phase_core(xi: np.ndarray) -> None:
+    """Test that the Numba-compatible core gives the same phases as :py:func:`find_phase`."""
+    for sol_type in (SolutionType.SUB_DEF, SolutionType.HYBRID, SolutionType.DETON):
+        np.testing.assert_array_equal(
+            find_phase_core(xi.astype(np.float64), 0.6, detonation=sol_type == SolutionType.DETON),
+            find_phase(xi, 0.6, sol_type))
