@@ -217,7 +217,6 @@ class SSMSpectrum(Extractable):
                 cs=self.cs,
                 lifetime_distribution_a=lifetime_distribution_a,
                 nu_gdh2024=self.nu_gdh2024,
-                r_star=self.r_star,
                 source_lifetime_factor=self.source_lifetime_factor,
                 tau_end=self.tau_end,
                 tau_star=self.tau_star,

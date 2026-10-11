@@ -97,7 +97,6 @@ def gw_junction(
         nu: float,
         tau_star: float,
         tau_end: float,
-        r_star: float,
         cs_friction: bool = False) -> th.FloatArr1D:
     r"""
     Create the junction of the gravitational wave power spectrum between different regimes.
@@ -125,7 +124,6 @@ def gw_junction(
     :param nu: $\nu_\text{gdh2024}$
     :param tau_star: $\tau_* = \frac{\eta_*}{L_f}$
     :param tau_end: $\tau_{end} = \frac{\eta_{end}}{L_f}$
-    :param r_star: $H L_f = r_*$
     :param cs_friction: whether to compute the acoustic friction from $c_s$ instead of $\nu$,
         see :py:func:`pttools.ssm.low_k.kernel.kernel_low`. Disabled by default.
     :return: gravitational wave power spectrum values at the given momentum
@@ -154,7 +152,6 @@ def pow_gw_approximation(
         nu: float,
         tau_star: float,
         tau_end: float,
-        r_star: float,
         eps: float = 1e-8,
         cs_friction: bool = False) -> th.FloatArr1D:
     r"""
@@ -177,7 +174,6 @@ def pow_gw_approximation(
     :param nu: $\nu_\text{gdh2024}$
     :param tau_star: $\tau_* = \frac{\eta_*}{L_f}$
     :param tau_end: $\tau_{end} = \frac{\eta_{end}}{L_f}$
-    :param r_star: $H L_f = r_*$
     :param eps: $\epsilon$, a small correction the integration x-range
     :param cs_friction: whether to compute the acoustic friction from $c_s$ instead of $\nu$,
         see :py:func:`pttools.ssm.low_k.kernel.kernel_low`. Disabled by default.
@@ -195,5 +191,5 @@ def pow_gw_approximation(
     Pgw_int = 4/3 * integration.power_spectrum_integration_int(
         z, cs=cs, tau_star=tau_star, Iv=integration.Iv_resampled(x=x, P_tilde_v=spec_den_v))
     return gw_junction(
-        z, Pgw_low, Pgw_int, Pgw_high, cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end, r_star=r_star,
+        z, Pgw_low, Pgw_int, Pgw_high, cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end,
         cs_friction=cs_friction)

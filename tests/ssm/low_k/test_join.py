@@ -53,7 +53,7 @@ class GWJunctionTest(unittest.TestCase):
                 p_low, p_int, p_high = regimes(z, nu)
                 p_gw = gw_junction(
                     z=z, Pgw_low=p_low, Pgw_int=p_int, Pgw_high=p_high,
-                    cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end, r_star=R_STAR)
+                    cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end)
                 assert_allclose(p_gw, [p_low[0], p_int[1], p_high[2]], rtol=1e-6)
 
     def test_continuity(self) -> None:
@@ -68,7 +68,7 @@ class GWJunctionTest(unittest.TestCase):
                 p_low, p_int, p_high = regimes(z, nu)
                 p_gw = gw_junction(
                     z=z, Pgw_low=p_low, Pgw_int=p_int, Pgw_high=p_high,
-                    cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end, r_star=R_STAR)
+                    cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end)
                 assert_allclose(p_gw, p_low, rtol=1e-5)
 
     def test_z_star(self) -> None:
@@ -84,7 +84,7 @@ class GWJunctionTest(unittest.TestCase):
         assert 0.25 < z_star / (2 * cs * KP) < 1
         p_gw = gw_junction(
             z=z, Pgw_low=p_low, Pgw_int=p_int, Pgw_high=p_high,
-            cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end, r_star=R_STAR)
+            cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end)
         i = np.searchsorted(z, 2 * z_star)
         assert_allclose(p_gw[i], p_high[i], rtol=1e-12)
 
@@ -102,7 +102,7 @@ class GWJunctionTest(unittest.TestCase):
         with self.assertLogs("pttools.ssm.low_k.join", level="WARNING"):
             p_gw = gw_junction(
                 z=z, Pgw_low=p_low, Pgw_int=p_int, Pgw_high=p_high,
-                cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end, r_star=R_STAR)
+                cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end)
         assert_allclose(p_gw, [p_int[0], 0.], atol=1e-12 * p_int[0])
 
 
@@ -120,7 +120,7 @@ class PowGWApproximationTest(unittest.TestCase):
             np.log10(z.min() * (1 - cs) / (2 * cs) - eps), np.log10(z.max() * (1 + cs) / (2 * cs) + eps), z.size)
         spec_den_v = Pv_analytical(x, kp=KP, ubarf2=1.)
         p_gw = pow_gw_approximation(
-            z=z, spec_den_v=spec_den_v, cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end, r_star=R_STAR, eps=eps)
+            z=z, spec_den_v=spec_den_v, cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end, eps=eps)
         assert np.all(np.isfinite(p_gw))
         assert np.all(p_gw > 0)
         p_low = power_spectrum_integration_low(
@@ -132,6 +132,6 @@ class PowGWApproximationTest(unittest.TestCase):
             p_gw,
             4 / 3 * gw_junction(
                 z=z, Pgw_low=p_low, Pgw_int=p_int, Pgw_high=p_high,
-                cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end, r_star=R_STAR),
+                cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end),
             rtol=1e-12
         )
