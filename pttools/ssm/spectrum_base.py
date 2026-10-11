@@ -26,7 +26,7 @@ class SpectrumBase:
     and the properties :py:attr:`pow_U_par` and :py:attr:`pow_gw_rate`.
     The derived quantities are then computed from these
     by integrating over $\ln z$ with the trapezoidal rule.
-    The power spectra are normalised as in :correia_2026:`\ ` eq. 15, so that
+    The power spectra are normalised as in :correia_2025:`\ ` eq. 15, so that
     $$\int \frac{dz}{z} \mathcal{P}_X(z) = \langle X^2 \rangle.$$
     """
 
@@ -47,7 +47,7 @@ class SpectrumBase:
 
         The enthalpy-weighted fluid 4-velocity is
         $$U^i = \sqrt{\frac{w}{\bar{w}}} \gamma v^i$$
-        :correia_2026:`\ ` eq. 20.
+        :correia_2025:`\ ` eq. 20.
         The spectrum is normalised so that $\int \frac{dz}{z} \mathcal{P}_{U_{\parallel}} = \bar{U}_\parallel^2$.
         """
         raise NotImplementedError
@@ -58,7 +58,7 @@ class SpectrumBase:
 
         This is the rate at which the GW power spectrum grows in flat space
         per Hubble time and per Hubble-scaled mean bubble spacing $H_n R_*$,
-        as in :correia_2026:`\ ` fig. 5 and :gw_pt_ssm:`\ ` eq. 3.45.
+        as in :correia_2025:`\ ` fig. 5 and :gw_pt_ssm:`\ ` eq. 3.45.
         """
         raise NotImplementedError
 
@@ -84,7 +84,7 @@ class SpectrumBase:
         r"""$\xi(U_{\parallel}) / R_*$, integral scale of the compressional velocity in units of $R_*$.
 
         $$\frac{\xi}{R_*} = \frac{1}{\bar{U}_\parallel^2} \int \frac{dz}{z} \frac{1}{z} \mathcal{P}_{U_{\parallel}}(z)$$
-        :correia_2026:`\ ` eq. 39.
+        :correia_2025:`\ ` eq. 39.
         """
         pow_U = self.pow_U_par
         return self._integrate_ln_y(pow_U / self.y) / self._integrate_ln_y(pow_U)

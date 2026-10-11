@@ -69,9 +69,9 @@ EXTLINKS_STATIC: ExtLinks = {
     "croon_2024": arxiv_link("2410.21509", "Croon & Weir"),
     "giombi_2024_cs": arxiv_link("2409.01426", "Giombi et al."),
     "giombi_2024_gr": arxiv_link("2307.12080", "Giombi & Hindmarsh", 2024),
+    "correia_2025": arxiv_link("2505.17824", "Correia et al."),
     "barni_2026": arxiv_link("2510.21439", "Barni et al.", 2026),
     "bhusal_2026": arxiv_link("2603.22397", "Bhusal et al."),
-    "correia_2026": arxiv_link("2505.17824", "Correia et al.", 2026),
     "escudero_2026": arxiv_link("2511.04747", "Escudero et al.", 2026),
     # Todo: Ask Lorenzo Giombi to update the arXiv version, as it's not up to date with the published version.
     "giombi_2026": arxiv_link("2504.08037", "Giombi et al.", 2026),

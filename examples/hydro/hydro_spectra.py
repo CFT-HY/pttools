@@ -2,13 +2,13 @@ r"""
 Simulated and SSM spectra
 =========================
 
-Compare the velocity and GW power spectra of the $4096^3$ simulations of :correia_2026:`\ `
+Compare the velocity and GW power spectra of the $4096^3$ simulations of :correia_2025:`\ `
 with the Sound Shell Model.
 
 The SSM spectra are computed with simultaneous nucleation as in the simulations.
 The SSM GW power growth rate is scaled by the suppression factor that is fitted to the simulation,
 excluding the lattice artifact at high $k$.
-This corresponds to :correia_2026:`\ ` fig. 5 (bottom),
+This corresponds to :correia_2025:`\ ` fig. 5 (bottom),
 of which the original versions are ``vel-ps-gw_detonation.pdf`` and ``vel-ps-gw_deflagration.pdf``.
 """
 

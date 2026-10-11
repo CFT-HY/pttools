@@ -1,8 +1,8 @@
 r"""Compute the suppression factors of the Sound Shell Model for the simulations of Correia et al.
 
-The suppression factors are fitted to the GW power growth rates of the $4096^3$ simulations of :correia_2026:`\ `
+The suppression factors are fitted to the GW power growth rates of the $4096^3$ simulations of :correia_2025:`\ `
 with :py:func:`pttools.analysis.hydro.compare_hydro_run`, excluding the lattice artifact at high $k$.
-The time steps of the growth rates are those of :correia_2026:`\ ` fig. 5.
+The time steps of the growth rates are those of :correia_2025:`\ ` fig. 5.
 The SSM spectra are computed with simultaneous nucleation as in the simulations, without suppression,
 and with the default accuracy settings of :py:class:`pttools.ssm.spectrum.SSMSpectrum`,
 so that the suppression factors apply to the spectra computed with the default settings.
@@ -36,7 +36,7 @@ Y_MIN: float = 2.
 
 
 def calc_sup_hydro(save: bool = True, path: Path = SUPPRESSION_FOLDER) -> dict[str, np.ndarray]:
-    r"""Compute the suppression factors for the simulations of :correia_2026:`\ `.
+    r"""Compute the suppression factors for the simulations of :correia_2025:`\ `.
 
     :param save: whether to save the results as ``suppression_correia_2025.txt``,
         which is loaded by :py:data:`pttools.ssm.suppression.suppression.CORREIA_2025`

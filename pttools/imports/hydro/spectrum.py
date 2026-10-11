@@ -16,7 +16,7 @@ class HydroSpectrum(SpectrumBase):
     The spectra are functions of $z = kR_*$ and normalised as in :py:class:`pttools.ssm.spectrum_base.SpectrumBase`,
     so that they can be compared directly with :py:class:`pttools.ssm.spectrum.SSMSpectrum`.
     The GW power growth rate is computed from the difference of the GW power spectra at
-    ``step`` and ``step_prev``, as in :correia_2026:`\ ` fig. 5.
+    ``step`` and ``step_prev``, as in :correia_2025:`\ ` fig. 5.
     """
 
     def __init__(self, run: HydroRun, step: int, step_prev: int | None = None):
@@ -87,7 +87,7 @@ class HydroSpectrum(SpectrumBase):
     def pow_gw(self) -> th.FloatArr1D:
         r"""$\mathcal{P}_\text{gw}(z)$, GW power spectrum as a fraction of $\bar{\epsilon}_0$.
 
-        :correia_2026:`\ ` eq. 25.
+        :correia_2025:`\ ` eq. 25.
         """
         return self._pow(Quantity.GW_TT)
 

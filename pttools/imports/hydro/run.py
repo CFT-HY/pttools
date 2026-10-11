@@ -3,10 +3,10 @@ r"""A single run of a hydrodynamic lattice simulation.
 The run directory contains the power spectrum files described in :py:mod:`pttools.imports.hydro.quantities`,
 and optionally the input file of the simulation (``input-test-largerun``)
 and the log of the global quantities (``*.out``, a CSV file with one row per output step).
-The quantities are in lattice units, where $T_c = 1$ and $G = 1$, see :correia_2026:`\ ` table I.
+The quantities are in lattice units, where $T_c = 1$ and $G = 1$, see :correia_2025:`\ ` table I.
 The simulations are in flat space, and the Hubble rate $H_n$ only enters through the Friedmann equation
 $$H_n^2 = \frac{8 \pi G}{3} \bar{\epsilon}_0,$$
-where $\bar{\epsilon}_0$ is the initial mean energy density, :correia_2026:`\ ` eq. 8.
+where $\bar{\epsilon}_0$ is the initial mean energy density, :correia_2025:`\ ` eq. 8.
 """
 
 import csv
@@ -228,7 +228,7 @@ class HydroRun:
         r"""$\bar{\epsilon}_0$, initial mean energy density.
 
         This is the energy density of the symmetric phase at $T_n$, including the vacuum energy.
-        It's the normalisation of $\Omega_\text{gw}$ and $\mathcal{P}_\text{gw}$, see :correia_2026:`\ ` eq. 25.
+        It's the normalisation of $\Omega_\text{gw}$ and $\mathcal{P}_\text{gw}$, see :correia_2025:`\ ` eq. 25.
         """
         if self._epsilon_0 is not None:
             return self._epsilon_0
@@ -236,7 +236,7 @@ class HydroRun:
 
     @property
     def H_n(self) -> float:
-        r"""$H_n = \sqrt{\frac{8\pi G}{3} \bar{\epsilon}_0}$, Hubble rate at nucleation, :correia_2026:`\ ` eq. 8."""
+        r"""$H_n = \sqrt{\frac{8\pi G}{3} \bar{\epsilon}_0}$, Hubble rate at nucleation, :correia_2025:`\ ` eq. 8."""
         return np.sqrt(8 * np.pi * G_LATTICE * self.epsilon_0 / 3)
 
     @property
@@ -254,7 +254,7 @@ class HydroRun:
         return self._interp_global(step, self.enthalpy_global)
 
     def mean_adiabatic_index(self, step: Steps) -> th.FloatOrArr:
-        r"""$\Gamma = \bar{w} / \bar{\epsilon}_0$, mean adiabatic index, :correia_2026:`\ ` eq. 41.
+        r"""$\Gamma = \bar{w} / \bar{\epsilon}_0$, mean adiabatic index, :correia_2025:`\ ` eq. 41.
 
         This is not exactly the adiabatic index, as $\bar{\epsilon}_0$ includes the vacuum energy.
         """
@@ -304,7 +304,7 @@ class HydroRun:
         $$v_w = \frac{3}{2} \frac{dV_b / dt}{A},$$
         where $V_b$ is the volume of the broken phase and $A$ is the number of the lattice links
         that cross the phase boundary, times $\delta x^2$.
-        This is the estimate of ``plot_e.py`` of the Zenodo scripts of :correia_2026:`\ `.
+        This is the estimate of ``plot_e.py`` of the Zenodo scripts of :correia_2025:`\ `.
         The endpoints are computed with one-sided differences.
         """
         volume = self.globals["N broken"] * self.dx**3
@@ -355,8 +355,8 @@ class HydroRun:
     def pow_normalised(self, quantity: Quantity, step: int) -> tuple[th.FloatArr1D, th.FloatArr1D]:
         r"""Power spectrum normalised to a dimensionless quantity, where applicable.
 
-        - $X$ is divided by $\bar{w}$ to give the spectrum of $U^i$ of :correia_2026:`\ ` eq. 20.
-        - $\mathcal{P}_\text{gw}$ is divided by $\bar{\epsilon}_0$, :correia_2026:`\ ` eq. 25.
+        - $X$ is divided by $\bar{w}$ to give the spectrum of $U^i$ of :correia_2025:`\ ` eq. 20.
+        - $\mathcal{P}_\text{gw}$ is divided by $\bar{\epsilon}_0$, :correia_2025:`\ ` eq. 25.
         - The other quantities are returned as they are.
 
         :param quantity: the quantity
@@ -379,7 +379,7 @@ class HydroRun:
         return np.sqrt(mean_square(*self.pow_normalised(quantity, step)))
 
     def integral_scale(self, quantity: Quantity, step: int) -> float:
-        r"""$\xi$, integral scale of the given quantity, :correia_2026:`\ ` eq. 39."""
+        r"""$\xi$, integral scale of the given quantity, :correia_2025:`\ ` eq. 39."""
         k, p, _ = self.power_spectrum(quantity, step)
         return integral_scale(k, p)
 
@@ -391,7 +391,7 @@ class HydroRun:
         r"""Growth rate of the GW power spectrum from the difference of two time steps.
 
         $$\frac{1}{H_n R_*} \frac{\Delta \mathcal{P}_\text{gw}}{H_n \Delta t}$$
-        :correia_2026:`\ ` fig. 5.
+        :correia_2025:`\ ` fig. 5.
 
         :param step: the later time step
         :param step_prev: the earlier time step
@@ -461,7 +461,7 @@ class HydroRun:
 
     @functools.cached_property
     def ubar_par_max(self) -> tuple[int, float]:
-        r"""The time step and the value of the maximum of $\bar{U}_\parallel$, :correia_2026:`\ ` table IV."""
+        r"""The time step and the value of the maximum of $\bar{U}_\parallel$, :correia_2025:`\ ` table IV."""
         steps = self.steps(Quantity.X_DIV)
         _, ubar = self.rms_series(Quantity.X_DIV, steps)
         i_max = int(np.argmax(ubar))
@@ -469,12 +469,12 @@ class HydroRun:
 
     @property
     def t_sh(self) -> float:
-        r"""$t_\text{sh} = R_* / \bar{U}_{\parallel,*}$, shock formation time, :correia_2026:`\ ` eq. 28."""
+        r"""$t_\text{sh} = R_* / \bar{U}_{\parallel,*}$, shock formation time, :correia_2025:`\ ` eq. 28."""
         return self.R_star / self.ubar_par_max[1]
 
     def kinetic_energy_fraction_par(self, step: int) -> float:
         r"""$K_\parallel = \Gamma \bar{U}_\parallel^2$, compressional kinetic energy fraction.
 
-        :correia_2026:`\ ` eq. 41.
+        :correia_2025:`\ ` eq. 41.
         """
         return float(self.mean_adiabatic_index(step) * self.rms(Quantity.X_DIV, step)**2)

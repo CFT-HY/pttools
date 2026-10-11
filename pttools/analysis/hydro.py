@@ -54,7 +54,7 @@ def ssm_spectrum_for_run(
 
     :param run: the simulation run
     :param model: the equation of state, defaults to the bag model as in the simulations
-    :param nuc_type: nucleation type. The simulations of :correia_2026:`\ ` nucleate all bubbles simultaneously.
+    :param nuc_type: nucleation type. The simulations of :correia_2025:`\ ` nucleate all bubbles simultaneously.
     :param y: $z = kR_*$ points of the spectrum
     :param kwargs: additional arguments for :py:class:`pttools.ssm.spectrum.SSMSpectrum`
     :return: the spectrum
@@ -168,7 +168,7 @@ def scalar_comparison(comparison: HydroComparison) -> dict[str, tuple[float, flo
 
     The simulation values are evaluated at the time step of the comparison, except for
     $\bar{U}_{\parallel,*}$, $K_{\parallel,*}$ and $t_\text{sh}$,
-    which are evaluated at the maximum of $\bar{U}_\parallel$, as in :correia_2026:`\ ` table IV.
+    which are evaluated at the maximum of $\bar{U}_\parallel$, as in :correia_2025:`\ ` table IV.
     For PTtools, $\bar{U}_\parallel$ and $\xi$ are computed from the spectrum,
     and $\Gamma$ and $K$ from the single-bubble fluid profile.
 

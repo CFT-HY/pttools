@@ -391,7 +391,7 @@ class SSMSpectrum(Extractable, SpectrumBase):
         :gw_pt_ssm:`\ ` eq. 3.44, 3.45.
         This is :py:attr:`pow_gw_ssm` without the factors of the expansion of the universe and the source lifetime,
         i.e. the GW power that a stationary source produces per Hubble time in flat space.
-        It can therefore be compared directly with flat-space simulations, such as those of :correia_2026:`\ `.
+        It can therefore be compared directly with flat-space simulations, such as those of :correia_2025:`\ `.
         The low-$k$ approximation is not included, as it describes the effects of the finite source lifetime.
         The suppression factor $\Sigma$ is included unless the suppression method is
         :py:attr:`pttools.ssm.suppression.suppression.SuppressionMethod.NONE`.
@@ -413,7 +413,7 @@ class SSMSpectrum(Extractable, SpectrumBase):
         covers the whole spectrum.
         In the Sound Shell Model the flow consists of sound waves only, and is therefore purely compressional.
         This can be compared with the spectrum of the compressional component of
-        $U^i = \sqrt{w/\bar{w}} \gamma v^i$ of :correia_2026:`\ ` eq. 20.
+        $U^i = \sqrt{w/\bar{w}} \gamma v^i$ of :correia_2025:`\ ` eq. 20.
         """
         return self.ubarf2 * self.pow_v_tilde
 

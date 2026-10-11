@@ -137,10 +137,10 @@ class SyntheticRunTest(unittest.TestCase):
 
 @pytest.mark.skipif(data_dir() is None, reason="The data of Correia et al. is not available.")
 class CorreiaDataTest(unittest.TestCase):
-    r"""Tests with the data of :correia_2026:`\ `, which are skipped if the data is not available."""
+    r"""Tests with the data of :correia_2025:`\ `, which are skipped if the data is not available."""
 
     def test_table_iv(self) -> None:
-        r"""The maximum of $\bar{U}_\parallel$ and the shock time agree with :correia_2026:`\ ` table IV."""
+        r"""The maximum of $\bar{U}_\parallel$ and the shock time agree with :correia_2025:`\ ` table IV."""
         for name, ubar_max, t_sh in (("detonation", 0.35, 2920), ("deflagration", 0.21, 4958)):
             with self.subTest(name=name):
                 run = load_correia_2025_run(name)

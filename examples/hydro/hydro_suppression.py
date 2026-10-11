@@ -2,7 +2,7 @@ r"""
 Suppression factor from simulations
 ===================================
 
-The suppression factors fitted to the simulations of :correia_2026:`\ `,
+The suppression factors fitted to the simulations of :correia_2025:`\ `,
 and the suppression datasets that combine them with the data of :gowling_2021:`\ `.
 
 The suppression factors are computed by

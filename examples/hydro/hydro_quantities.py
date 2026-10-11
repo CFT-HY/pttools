@@ -2,7 +2,7 @@ r"""
 Simulated and SSM quantities
 ============================
 
-Compare the quantities that can be computed both from the simulations of :correia_2026:`\ ` and from PTtools:
+Compare the quantities that can be computed both from the simulations of :correia_2025:`\ ` and from PTtools:
 the RMS fluid velocities, the integral scale, the kinetic energy fraction, the mean adiabatic index
 and the growth rate of the GW energy density.
 

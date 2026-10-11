@@ -1,4 +1,4 @@
-r"""The $4096^3$ simulations of :correia_2026:`\ `.
+r"""The $4096^3$ simulations of :correia_2025:`\ `.
 
 The data is available in the Zenodo release of the article (https://doi.org/10.5281/zenodo.16760912)
 and in the source repository of the article (``UETC_paper_Hydro``).
@@ -28,7 +28,7 @@ DEFAULT_DATA_DIR: Path = Path(__file__).resolve().parents[3].parent / "UETC_pape
 
 @dataclass(frozen=True)
 class CorreiaRun:
-    r"""Metadata of a simulation run of :correia_2026:`\ `."""
+    r"""Metadata of a simulation run of :correia_2025:`\ `."""
 
     #: Name of the run
     name: str
@@ -38,9 +38,9 @@ class CorreiaRun:
     v_wall: float
     #: $\alpha_n$, transition strength
     alpha_n: float
-    #: The time step of the GW power growth rate of :correia_2026:`\ ` fig. 5
+    #: The time step of the GW power growth rate of :correia_2025:`\ ` fig. 5
     step: int
-    #: The earlier time step of the GW power growth rate of :correia_2026:`\ ` fig. 5
+    #: The earlier time step of the GW power growth rate of :correia_2025:`\ ` fig. 5
     step_prev: int
 
     @property
@@ -54,7 +54,7 @@ class CorreiaRun:
         return f"{self.name.capitalize()}, vw={self.v_wall}, αₙ={self.alpha_n}"
 
 
-#: The runs of :correia_2026:`\ `.
+#: The runs of :correia_2025:`\ `.
 #: The time steps are those of ``plot_ps.py`` of the Zenodo scripts, which produced fig. 5.
 #: The deflagration was run twice to different final times, and the longer run is used here.
 CORREIA_2025_RUNS: dict[str, CorreiaRun] = {
@@ -68,7 +68,7 @@ CORREIA_2025_RUNS: dict[str, CorreiaRun] = {
 
 
 def data_dir() -> Path | None:
-    r"""Find the directory of the data of :correia_2026:`\ `.
+    r"""Find the directory of the data of :correia_2025:`\ `.
 
     :return: the root directory of the ``UETC_paper_Hydro`` repository, or None if it's not found
     """
@@ -82,7 +82,7 @@ def data_dir() -> Path | None:
 
 
 def load_correia_2025_run(name: str, path: str | os.PathLike[str] | None = None) -> HydroRun:
-    r"""Load a simulation run of :correia_2026:`\ `.
+    r"""Load a simulation run of :correia_2025:`\ `.
 
     The input file of the deflagration is only in the directory of the longer run,
     and therefore it's searched for in the sibling directories as well.

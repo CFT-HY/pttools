@@ -1,6 +1,6 @@
 r"""Plots that compare the Sound Shell Model with hydrodynamic lattice simulations.
 
-The style follows the figures of :correia_2026:`\ `, e.g. fig. 5.
+The style follows the figures of :correia_2025:`\ `, e.g. fig. 5.
 """
 
 import typing as tp
@@ -15,7 +15,7 @@ from pttools.analysis.hydro import HydroComparison, gw_rate_series, suppression_
 from pttools.analysis.utils import FigAndAxes, create_fig_ax
 from pttools.imports.hydro import Quantity
 
-#: Colours of the simulation data, as in :correia_2026:`\ `
+#: Colours of the simulation data, as in :correia_2025:`\ `
 COLOR_GW: str = "#d55e00"
 COLOR_PAR: str = "#0072b2"
 COLOR_PERP: str = "#cc79a7"
@@ -47,7 +47,7 @@ def plot_gw_rate_comparison(
         ylim: tuple[float, float] | None = None) -> FigAndAxes:
     r"""Plot the GW power growth rate of a simulation and of the Sound Shell Model scaled by the suppression factor.
 
-    This corresponds to the "Soundshell" curves of :correia_2026:`\ ` fig. 5 (bottom),
+    This corresponds to the "Soundshell" curves of :correia_2025:`\ ` fig. 5 (bottom),
     with the suppression factor fitted to the simulation instead of taken from a suppression dataset.
 
     :param comparison: the comparison of the simulation and the SSM
@@ -97,11 +97,11 @@ def plot_velocity_comparison(
     r"""Plot the velocity power spectra of a simulation and of the Sound Shell Model.
 
     The simulation spectra are those of the compressional and vortical components of the enthalpy-weighted
-    4-velocity $U^i$ (:correia_2026:`\ ` eq. 20, fig. 3) and optionally of the 3-velocity $v^i$.
+    4-velocity $U^i$ (:correia_2025:`\ ` eq. 20, fig. 3) and optionally of the 3-velocity $v^i$.
     The SSM spectrum is $\bar{U}_f^2 \mathcal{P}_{\tilde{v}}$, see
     :py:attr:`pttools.ssm.spectrum.SSMSpectrum.pow_U_par`.
     The vortical spectra are divided by two to give the power per transverse polarisation, as in
-    :correia_2026:`\ ` fig. 3.
+    :correia_2025:`\ ` fig. 3.
 
     :param comparison: the comparison of the simulation and the SSM
     :param fig: figure to plot in
@@ -162,7 +162,7 @@ def plot_ubar_comparison(
         ax: Axes | None = None) -> FigAndAxes:
     r"""Plot the RMS velocities of a simulation as functions of time, and the corresponding SSM values.
 
-    The simulation curves are those of :correia_2026:`\ ` fig. 2 (top left).
+    The simulation curves are those of :correia_2025:`\ ` fig. 2 (top left).
     The SSM values are constants:
     the RMS velocity of the spectrum $\bar{U}_\parallel$ (with the nucleation history)
     and the single-bubble value $\bar{U}_f$ of :py:attr:`pttools.bubble.bubble.Bubble.ubarf`.
@@ -200,7 +200,7 @@ def plot_integral_scale_comparison(
         ax: Axes | None = None) -> FigAndAxes:
     r"""Plot the integral scales of a simulation as functions of time, and the corresponding SSM value.
 
-    The simulation curves are those of :correia_2026:`\ ` fig. 2 (bottom left).
+    The simulation curves are those of :correia_2025:`\ ` fig. 2 (bottom left).
 
     :param comparison: the comparison of the simulation and the SSM
     :param fig: figure to plot in
@@ -232,7 +232,7 @@ def plot_kinetic_energy_comparison(
         ax: Axes | None = None) -> FigAndAxes:
     r"""Plot the kinetic energy fractions and the mean adiabatic index of a simulation, and the SSM values.
 
-    The simulation curves are $K_\parallel = \Gamma \bar{U}_\parallel^2$ (:correia_2026:`\ ` eq. 41),
+    The simulation curves are $K_\parallel = \Gamma \bar{U}_\parallel^2$ (:correia_2025:`\ ` eq. 41),
     the kinetic energy fraction $K$ of the global quantities and $\Gamma = \bar{w} / \bar{\epsilon}_0$.
     The SSM values are $\Gamma \bar{U}_\parallel^2$ of the spectrum
     and $K$ and $\Gamma$ of the single-bubble fluid profile.

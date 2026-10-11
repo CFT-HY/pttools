@@ -277,7 +277,7 @@ NO_HYBRIDS_EXT: Suppression = Suppression(
 )
 WITH_HYBRIDS: Suppression = Suppression.from_file(
     SUPPRESSION_FOLDER / "suppression_2_ssm.npz", name="With hybrids")
-#: Suppression factors fitted to the $4096^3$ simulations of :correia_2026:`\ `
+#: Suppression factors fitted to the $4096^3$ simulations of :correia_2025:`\ `
 #: (${v}_\text{wall} = 0.92, \alpha_n = 0.67$ and ${v}_\text{wall} = 0.44, \alpha_n = 0.5$),
 #: computed with
 #: :py:mod:`pttools.ssm.suppression.suppression_ssm_data.suppression_hydro_calculator`.

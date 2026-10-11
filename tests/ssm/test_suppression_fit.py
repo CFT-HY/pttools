@@ -130,7 +130,7 @@ class MergeTest(unittest.TestCase):
                 assert merged.suppression(0.6, 0.1) == pytest.approx(base.suppression(0.6, 0.1), rel=1e-12)
 
     def test_correia_values(self) -> None:
-        r"""Reference values of the suppression factors fitted to the simulations of :correia_2026:`\ `.
+        r"""Reference values of the suppression factors fitted to the simulations of :correia_2025:`\ `.
 
         These were computed on 2026-10-11 with the default settings of
         :py:mod:`pttools.ssm.suppression.suppression_ssm_data.suppression_hydro_calculator`.
