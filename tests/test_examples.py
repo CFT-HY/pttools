@@ -261,7 +261,7 @@ class ExampleTest(unittest.TestCase):
     @staticmethod
     def test_suppression() -> None:
         """Test that the example ``examples.props.suppression`` runs without errors."""
-        close_figs(*[plot.fig for plot in suppression.main()])
+        close_figs(*[plot.fig for (name, plot) in suppression.main().items()])
 
     @staticmethod
     def test_vm_vp_plane() -> None:

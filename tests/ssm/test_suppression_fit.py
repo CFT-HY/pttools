@@ -115,6 +115,7 @@ class MergeTest(unittest.TestCase):
         other = Suppression(np.array([0.2, 0.5]), np.array([0.1, 0.5]), np.array([20., 50.]), name="b")
         merged = base.merge(other, name="c")
         assert merged.name == "c"
+        assert merged.label == "c"
         assert merged.v_walls.size == 4
         assert sorted(merged.suppressions.tolist()) == [1., 3., 20., 50.]
 

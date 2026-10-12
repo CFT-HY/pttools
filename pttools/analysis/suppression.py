@@ -32,11 +32,13 @@ class SuppressionPlot:
             alpha_n_min: float = 0,
             alpha_n_max: float = 1,
             cs: float | None = CS0,
+            cmap: str = "plasma",
+            levels: th.FloatArr1D | None = None,
             title: str | None = None,
             alpha_n_max_lines: bool = True,
+            points: bool = True,
             v_cj: bool = True,
-            figsize: tuple[float, float] = (4, 3),
-            # levels: th.FloatArr1D = np.array([0.01, 0.03, 0.05, 0.1, 0.25, 0.5, 1, 1.5, 2, 2.5])
+            figsize: tuple[float, float] = (5, 4),
         ):
         r"""Create the contour plot of the suppression factor $\Sigma$.
 
@@ -48,8 +50,11 @@ class SuppressionPlot:
         :param alpha_n_min: minimum $\alpha_n$ of the y-axis
         :param alpha_n_max: maximum $\alpha_n$ of the y-axis
         :param cs: $c_s$, speed of sound, plotted as a vertical line. If None, the line is not plotted.
-        :param title: title of the plot. If None, the name of the suppression data is used.
+        :param cmap: colormap for the contour plot
+        :param levels: contour levels. If None, they are chosen automatically.
+        :param title: title of the plot. If None, the label of the suppression data is used.
         :param alpha_n_max_lines: whether to plot the exact and approximate $\alpha_{n,\text{max}}$ curves
+        :param points: whether to plot the points of the dataset
         :param v_cj: whether to plot the Chapman-Jouguet speed $v_\text{CJ}$ of the bag model
         :param figsize: size of the figure if a new figure is created
         """
@@ -60,7 +65,10 @@ class SuppressionPlot:
         self.sup: Suppression = sup
         self.tri: Triangulation = Triangulation(self.sup.v_walls, self.sup.alpha_ns)
 
-        tricontourf = self.ax.tricontourf(self.tri, self.sup.suppressions, cmap="plasma")  #, levels=levels)
+        # The type hints of Matplotlib do not accept levels=None, even though it's the default value.
+        tricontourf = self.ax.tricontourf(  # pyrefly: ignore[no-matching-overload]
+            self.tri, self.sup.suppressions, cmap=cmap, levels=levels
+        )
         self.cbar: Colorbar = self.ax.figure.colorbar(tricontourf, ax=self.ax)
         self.cbar.ax.set_ylabel(r"$\Sigma$")
 
@@ -69,20 +77,22 @@ class SuppressionPlot:
             self.ax.plot(self.line_v_walls, alpha_n_max_func(self.line_v_walls), label=r"$\alpha_{n,\text{max}}$")
             self.ax.plot(
                 self.line_v_walls, alpha_n_max_approx(self.line_v_walls),
-                label=r"$\alpha_{n,\text{max,approx}}$")
+                label=r"$\alpha_{n,\text{max,bag}}$")
         if cs is not None:
             self.ax.axvline(x=cs, label="$c_s$", ls=":", c="k")
         if v_cj:
             alpha_ns = np.linspace(alpha_n_min, alpha_n_max, 20)
             self.ax.plot(v_chapman_jouguet_bag(alpha_ns), alpha_ns, label=r"$v_\text{CJ}$", ls="--")
+        if points:
+            self.ax.scatter(self.sup.v_walls, self.sup.alpha_ns, label="dataset", s=10)
 
         self.ax.set_xlabel(r"$v_{\text{wall}}$")
         self.ax.set_ylabel(r"$\alpha_n$")
         self.ax.set_xlim(v_wall_min, v_wall_max)
         self.ax.set_ylim(alpha_n_min, alpha_n_max)
-        self.ax.set_title(self.sup.name if title is None else title)
+        self.ax.set_title(self.sup.label if title is None else title)
         self.ax.legend()
         if fig_was_none:
             self.fig.tight_layout()
 
-        logger.info("Peak of suppression: v_wall=%s, alpha_n=%s, suppression=%s", *self.sup.peak())
+        # logger.info("Peak of suppression: v_wall=%s, alpha_n=%s, suppression=%s", *self.sup.peak())
