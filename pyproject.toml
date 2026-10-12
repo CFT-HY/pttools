@@ -147,6 +147,7 @@ dev = [
     "pytest-cov >= 7.1.0",
     "pytest-html >= 4.2.0",
     "pytest-split >= 0.11.0",
+    "pytest-timeout >= 2.4.0",
     "pytest-xdist[psutil] >= 3.8.0",
     "ruff >= 0.16.6",
     "scipy-stubs >= 1.18.0.1",
@@ -263,13 +264,16 @@ addopts = [
     "--html=test-results/html/test-report.html",
     "--numprocesses=auto"
 ]
+# log_cli = true
+# log_cli_level = "INFO"
 norecursedirs = "test_data"
 # python_paths = "tests"
 testpaths = [
     "tests"
 ]
-# log_cli = true
-# log_cli_level = "INFO"
+# Default timeout per test in seconds (pytest-timeout).
+# Individual tests can override this with the "timeout" marker.
+timeout = 300
 
 [tool.ruff]
 line-length = 120
