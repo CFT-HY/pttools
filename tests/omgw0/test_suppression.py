@@ -9,11 +9,7 @@ from pandas.io.parsers import read_csv
 
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION
 from pttools.ssm.suppression.suppression_ssm_data.remove_hybrids import SUPPRESSION_FOLDER, remove_hybrids
-from pttools.ssm.suppression.suppression_ssm_data.suppression_ssm_calculator import (
-    DATASET_LAMBDA_CORRECTION,
-    DATASET_NPT,
-    calc_sup_ssm,
-)
+from pttools.ssm.suppression.suppression_ssm_data.suppression_ssm_calculator import calc_sup_ssm
 from pttools.utils.assertions import assert_allclose
 
 
@@ -51,12 +47,7 @@ class SuppressionTest(unittest.TestCase):
             tolerances["sup_ssm"] = 5.68e-7
             tolerances["ssm_tot"] = 5.63e-7
         for filename in filenames:
-            data = calc_sup_ssm(
-                f"{filename}.txt",
-                save=False,
-                npt=DATASET_NPT,
-                lambda_correction=DATASET_LAMBDA_CORRECTION
-            )
+            data = calc_sup_ssm(f"{filename}.txt", save=False)
             ref = np.genfromtxt(SUPPRESSION_FOLDER / f"{filename}_ssm.txt", names=True)
             for key, rtol in tolerances.items():
                 if rtol is None:

@@ -222,27 +222,32 @@ def alpha_n_max[T: FloatOrArr](v_wall: T) -> T:
 def extend(
         v_walls: th.FloatArr1D,
         alpha_ns: th.FloatArr1D,
-        suppressions: th.FloatArr1D) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
+        suppressions: th.FloatArr1D,
+        v_wall_ext: float = 0.24,
+        alpha_n_ext: float = 0.005) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
+    r"""Extend the suppression dataset to the low ${v}_\text{wall}$ and low $\alpha_n$ region.
+
+    To improve the extrapolation of the suppression factor when later using grid data,
+    a point at $({v}_\text{wall}, \alpha_n) = $ (``v_wall_ext``, ``alpha_n_ext``) is added.
+    Its suppression factor is extrapolated linearly in $\alpha_n$
+    from the data points of the dataset at ${v}_\text{wall} =$ ``v_wall_ext``.
+
+    :param v_walls: ${v}_\text{wall}$, wall speeds of the data points
+    :param alpha_ns: $\alpha_n$, transition strengths of the data points
+    :param suppressions: suppression factors of the data points
+    :param v_wall_ext: ${v}_\text{wall}$ of the added point, which must be one of the wall speeds of the dataset
+    :param alpha_n_ext: $\alpha_n$ of the added point
+    :return: the extended arrays of the wall speeds, transition strengths and suppression factors
+    :raises ValueError: if the dataset has fewer than two points at ``v_wall_ext``
     """
-    Extend the suppression dataset to the low vw and low alpha region.
-
-    To improve the extrapolation of the suppression factor when later using grid data, first extend the
-    low vw and low alpha region as follows.
-    """
-    # alpha values in suppression dataset for vw = 0.24
-    ssm_sup_vw_0_24_alphas = np.array([0.05000, 0.07300, 0.11000, 0.16000, 0.23000, 0.34000])
-    # Suppression values for vw = 0.24
-    ssm_sup_vw_0_24 = np.array([0.01675, 0.01218, 0.00696, 0.00251, 0.00054, 0.00007])
-
-    spl = InterpolatedUnivariateSpline(ssm_sup_vw_0_24_alphas, ssm_sup_vw_0_24, k=1, ext=0)
-
-    ssm_sup_vw_0_24_alphas_ext = np.array([0.00500, 0.05000, 0.07300, 0.11000, 0.16000, 0.23000, 0.34000])
-    ssm_sup_vw_0_24_ext = spl(ssm_sup_vw_0_24_alphas_ext)
-
-    # create the extrapolated dataset
-    v_walls_ext = np.concatenate(([0.24], v_walls))
-    alpha_ns_ext = np.concatenate(([ssm_sup_vw_0_24_alphas_ext[0]], alpha_ns))
-    suppressions_ext = np.concatenate(([ssm_sup_vw_0_24_ext[0]], suppressions))
+    at_v_wall = np.isclose(v_walls, v_wall_ext, rtol=0, atol=1e-9)
+    if np.count_nonzero(at_v_wall) < 2:  # noqa: PLR2004
+        raise ValueError(f"The dataset must have at least two points at v_wall={v_wall_ext} for the extension.")
+    order = np.argsort(alpha_ns[at_v_wall])
+    spl = InterpolatedUnivariateSpline(alpha_ns[at_v_wall][order], suppressions[at_v_wall][order], k=1, ext=0)
+    v_walls_ext = np.concatenate(([v_wall_ext], v_walls))
+    alpha_ns_ext = np.concatenate(([alpha_n_ext], alpha_ns))
+    suppressions_ext = np.concatenate(([float(spl(alpha_n_ext))], suppressions))
     return v_walls_ext, alpha_ns_ext, suppressions_ext
 
 

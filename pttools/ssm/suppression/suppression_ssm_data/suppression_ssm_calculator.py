@@ -3,29 +3,25 @@
 import logging
 import os
 from pathlib import Path
+import typing as tp
 
 import numpy as np
 
-from pttools.bubble import (
-    CS2_BAG_SCALAR_PTR,
-    DEFAULT_ADIABATIC_INDEX,
-    DEFAULT_FLUID_INTEGRATE_METHOD,
-    DF_DTAU_PTR_BAG,
-    get_ubarf2_bag,
-)
-from pttools.ssm.const import DEFAULT_N_PT, DEFAULT_N_XI_SSM, NptType
-from pttools.ssm.spectrum import NucType
-from pttools.ssm.spectrum_bag import power_gw_bag
+from pttools.bubble import Bubble
+from pttools.models import BagModel
+from pttools.ssm.nucleation import NucType
+from pttools.ssm.spectrum import SSMSpectrum
+from pttools.ssm.suppression.suppression import SuppressionMethod
 from pttools.ssm.suppression.suppression_ssm_data import SUPPRESSION_FOLDER
 import pttools.type_hints as th
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-#: Accuracy settings with which the shipped datasets ``suppression_2_ssm.txt`` and
-#: ``suppression_no_hybrids_ssm.txt`` are computed
-DATASET_NPT: NptType = (DEFAULT_N_XI_SSM, 200, 320)
-#: Whether the shipped datasets are computed with the non-linear correction of $\lambda$
-DATASET_LAMBDA_CORRECTION: bool = True
+#: $z = kR_*$ points over which the GW power growth rate is integrated
+DEFAULT_Z: th.FloatArr1D = np.logspace(0, 3, 100)
+#: $r_*$ for the spectra. :py:attr:`pttools.ssm.spectrum.SSMSpectrum.pow_gw_rate` does not depend on it,
+#: but a value below 1 avoids the warning of :py:meth:`pttools.ssm.spectrum.SSMSpectrum.validate_nucleation`.
+R_STAR: float = 0.1
 #: Columns of the output files
 OUTPUT_COLUMNS: tuple[str, ...] = ("vw_sim", "alpha_sim", "sup_ssm", "Ubarf_2_ssm", "ssm_tot")
 
@@ -50,49 +46,59 @@ def save_columns(path: str | os.PathLike[str], data: dict[str, th.FloatArr1DOrLi
 def calc_sup_ssm(
         path: str | os.PathLike[str],
         save: bool = True,
-        npt: NptType = DEFAULT_N_PT,
-        lambda_correction: bool = False) -> dict[str, th.FloatArr1DOrList]:
-    """
-    Compute the kinetic energy suppression factors of the SSM by comparing to the simulation data in a file.
+        nuc_type: NucType = NucType.EXPONENTIAL,
+        lambda_correction: bool = False,
+        z: th.FloatArr1D = DEFAULT_Z,
+        **kwargs: tp.Any) -> dict[str, th.FloatArr1DOrList]:
+    r"""Compute the kinetic energy suppression factors of the SSM by comparing to the simulation data in a file.
 
-    File must be a txt file with data in columns as follows
-    vw alpha suppression_sim sim_omgw exp_omgw exp_ubarf
-    where vw = wall speed
-    alpha = transition strength
-    suppression_sim
-    sim_omgw = total (integrated (omgw_ssm /(HnR*)(Hnt)) )
-    exp_omgw = same as above but expected quantity
-    exp_ubarf = expected quantity for ubarf.
+    The file must be a text file with a header row and the columns
+    ``vw alpha suppression_sim sim_omgw exp_omgw exp_ubarf``, where
+    ``sim_omgw`` is the integrated GW power growth rate of the simulation
+    $\Omega_\text{gw,sim} / [(H_n R_*)(H_n t)]$,
+    ``exp_omgw`` is the same quantity as expected from the SSM of the simulation article,
+    and ``exp_ubarf`` is the expected RMS fluid velocity $\bar{U}_\text{exp}$.
+
+    The suppression factor is
+    $$\Sigma = \left( \frac{\bar{U}_f^2}{\bar{U}_\text{exp}^2} \right)^2
+    \frac{\Omega_\text{gw,sim}}{\Omega_\text{gw,SSM}}, \quad
+    \Omega_\text{gw,SSM} = \int d\ln z \, \frac{1}{H_n R_*} \frac{d\mathcal{P}_\text{gw}}{d(H_n t)},$$
+    where the integrand is :py:attr:`pttools.ssm.spectrum.SSMSpectrum.pow_gw_rate` computed without suppression,
+    i.e. with the mean adiabatic index $\Gamma$ of the bubble,
+    and $\bar{U}_f^2$ is :py:attr:`pttools.bubble.bubble.Bubble.ubarf2`.
+    The suppression factor therefore matches the spectra that :py:class:`pttools.ssm.spectrum.SSMSpectrum`
+    computes with the same settings to the simulations.
+
+    :param path: path of the simulation data file, relative to the folder of the suppression data
+    :param save: whether to save the results as ``<name>_ssm.txt`` next to the simulation data file
+    :param nuc_type: nucleation type of the SSM spectra
+    :param lambda_correction: whether to enable the non-linear correction of $\lambda$,
+        see :py:meth:`pttools.ssm.spectrum.SSMSpectrum.compute`
+    :param z: $z = kR_*$ points over which the GW power growth rate is integrated
+    :param kwargs: additional arguments for :py:class:`pttools.ssm.spectrum.SSMSpectrum`
+    :return: the results, where ``vw_sim``, ``alpha_sim`` and ``sup_ssm`` form the suppression dataset
     """
     # If the path is absolute, the joining operator returns it as is.
     path = SUPPRESSION_FOLDER / path
     sim_data = np.loadtxt(path, skiprows=1)
+    model = BagModel(alpha_n_min=min(0.001, float(sim_data[:, 1].min()) / 2))
+    ln_z = np.log(z)
 
     out_ssm_tot = []
     Ubarf_2_ssm = []
     sup_ssm_all = []
+    for vw, alpha, _, sim_omgw, _, exp_ubarf in sim_data:
+        bubble = Bubble(model, v_wall=vw, alpha_n=alpha)
+        spectrum = SSMSpectrum(
+            bubble, y=z, r_star=R_STAR, nuc_type=nuc_type,
+            suppression_method=SuppressionMethod.NONE, compute=False, **kwargs)
+        spectrum.compute(lambda_correction=lambda_correction)
+        ssm_tot = float(np.trapezoid(spectrum.pow_gw_rate, ln_z))
+        ubarf2 = bubble.ubarf2
 
-    z = np.logspace(0, 3, 100)
-
-    for i, vw in enumerate(sim_data[:, 0]):
-        alpha = sim_data[i, 1]
-        sim_omgw = sim_data[i, 3]  # omgw_sim_tot /(HnR*)(Hnt)
-        expected_Ubarf2 = sim_data[i, 5] ** 2  # Ubarf_exp^2
-
-        # TODO: Check how to add these in new PTtools / are they still needed: z_st_thresh=np.inf, npt=[7000,200,1000]
-        out_ssm = 3 * DEFAULT_ADIABATIC_INDEX ** 2 * power_gw_bag(
-            z=z,
-            params=(vw, alpha, NucType.EXPONENTIAL,(1,)),
-            npt=npt,
-            lambda_correction=lambda_correction
-        )  # omgw_ssm /(HnR*)(Hnt)
-        out_ssm_tot.append(np.trapezoid(out_ssm, np.log(z)))
-        Ubarf_2_ssm.append(get_ubarf2_bag(
-            vw, alpha, df_dtau_ptr=DF_DTAU_PTR_BAG,
-            ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR))
-
-        sup_ssm = (Ubarf_2_ssm[i] / expected_Ubarf2)**2 * sim_omgw / out_ssm_tot[i]
-        sup_ssm_all.append(sup_ssm)
+        out_ssm_tot.append(ssm_tot)
+        Ubarf_2_ssm.append(ubarf2)
+        sup_ssm_all.append((ubarf2 / exp_ubarf**2)**2 * sim_omgw / ssm_tot)
 
     ssm_sup_data = {
         "vw_sim": sim_data[:, 0],
@@ -109,5 +115,5 @@ def calc_sup_ssm(
 
 
 if __name__ == "__main__":
-    calc_sup_ssm("suppression_2.txt", npt=DATASET_NPT, lambda_correction=DATASET_LAMBDA_CORRECTION)
-    calc_sup_ssm("suppression_no_hybrids.txt", npt=DATASET_NPT, lambda_correction=DATASET_LAMBDA_CORRECTION)
+    calc_sup_ssm("suppression_2.txt")
+    calc_sup_ssm("suppression_no_hybrids.txt")
