@@ -105,7 +105,7 @@ class SpectrumTest(unittest.TestCase):
         z = np.array([1., 10.])
         np.testing.assert_allclose(
             spectrum.z_from_f(spectrum.f(z)),
-            freq.z(f=spectrum.f(z), T_star=T_star, r_star=spectrum.r_star, ge_star=ge_star, gs_star=gs_star),
+            freq.z_full(f=spectrum.f(z), T_star=T_star, r_star=spectrum.r_star, ge_star=ge_star, gs_star=gs_star),
             rtol=1e-14
         )
         np.testing.assert_allclose(spectrum.z_from_f(spectrum.f(z)), z, rtol=1e-14)

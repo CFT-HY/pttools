@@ -4,6 +4,9 @@
     "commit": ""
   },
   "permissions": {
+    "additionalDirectories": [
+      "../PTPlot"
+    ],
     "ask": [
       "Bash(git commit *)",
       "Bash(git push *)",

@@ -599,15 +599,9 @@ class Spectrum(SSMSpectrum):
             noise_eb=False, noise_gb=False, noise_ins=True
         )
 
+    @copy_docstring_dec(freq.z, without_params=True)
     def z_from_f[T: FloatOrArr](self, f: T) -> T:
-        r"""Convert from frequencies $f$ back to wavenumbers $z$.
-
-        $$z(f) = \frac{f}{{f}_{\ast,0}} {r}_\ast$$
-        Inverted from :gowling_2021:`\ ` eq. 2.12
-        :param f: frequencies $f$ today
-        :return: wavenumbers $z$
-        """
-        return freq.z(f=f, T_star=self.T_star, r_star=self.r_star, ge_star=self.ge_star, gs_star=self.gs_star)
+        return freq.z(f=f, r_star=self.r_star, f_star0=self.f_star0)
 
     # -----
     # Plotting

@@ -99,4 +99,63 @@ class FStar0Test(unittest.TestCase):
         f = freq.f(z, r_star=r_star, f_star0=freq.f_star0(T_star, ge_star, gs_star))
         np.testing.assert_allclose(f, z * freq.f0(r_star, T_star, ge_star, gs_star), rtol=1e-14)
         np.testing.assert_allclose(
-            freq.z(f, T_star=T_star, r_star=r_star, ge_star=ge_star, gs_star=gs_star), z, rtol=1e-14)
+            freq.z_full(f, T_star=T_star, r_star=r_star, ge_star=ge_star, gs_star=gs_star), z, rtol=1e-14)
+        np.testing.assert_allclose(
+            freq.z(f, r_star=r_star, f_star0=freq.f_star0(T_star, ge_star, gs_star)), z, rtol=1e-14)
+
+
+class ZRangeTest(unittest.TestCase):
+    r"""Tests for the range of $z$ that covers a frequency range for multiple parameter combinations."""
+
+    F_MIN: tp.ClassVar[float] = 1e-5
+    F_MAX: tp.ClassVar[float] = 1e-1
+
+    def test_scalar(self) -> None:
+        """For a single combination, the range should be the conversion of the frequency limits."""
+        params = {"T_star": 200., "r_star": 0.1, "ge_star": 106.75, "gs_star": 100.}
+        z_min, z_max = freq.z_range(self.F_MIN, self.F_MAX, **params)
+        assert z_min == freq.z_full(self.F_MIN, **params)
+        assert z_max == freq.z_full(self.F_MAX, **params)
+
+    def test_gs_star_default(self) -> None:
+        r"""If $g_{s\ast}$ is not given, $g_{s\ast} = g_{e\ast}$ should be assumed."""
+        assert freq.z_range(self.F_MIN, self.F_MAX, ge_star=80.) \
+            == freq.z_range(self.F_MIN, self.F_MAX, ge_star=80., gs_star=80.)
+
+    def test_arrays(self) -> None:
+        """The range should cover the frequency range for all combinations, and be the tightest such range."""
+        T_star = np.array([0.15, 100., 1000., 50.])
+        r_star = np.array([0.01, 0.3, 0.1, 0.5])
+        gs_star = np.array([10., 100., 106.75, 90.])
+        ge_star = 100.
+        z_min, z_max = freq.z_range(
+            self.F_MIN, self.F_MAX, T_star=T_star, r_star=r_star, ge_star=ge_star, gs_star=gs_star)
+        f_mins = []
+        f_maxs = []
+        for T_star_i, r_star_i, gs_star_i in zip(T_star, r_star, gs_star, strict=True):
+            f_star0 = freq.f_star0(T_star_i, ge_star, gs_star_i)
+            f_mins.append(freq.f(z_min, r_star=r_star_i, f_star0=f_star0))
+            f_maxs.append(freq.f(z_max, r_star=r_star_i, f_star0=f_star0))
+        # The tolerance accounts for the rounding of the conversion back to frequencies.
+        assert max(f_mins) <= self.F_MIN * (1 + 1e-14)
+        assert min(f_maxs) >= self.F_MAX * (1 - 1e-14)
+        assert max(f_mins) == pytest.approx(self.F_MIN, rel=1e-14)
+        assert min(f_maxs) == pytest.approx(self.F_MAX, rel=1e-14)
+
+    def test_arrays_and_scalars(self) -> None:
+        """An array of length one should give the same range as the corresponding scalar."""
+        assert freq.z_range(self.F_MIN, self.F_MAX, T_star=np.array([200.]), r_star=0.2) \
+            == freq.z_range(self.F_MIN, self.F_MAX, T_star=200., r_star=0.2)
+
+    def test_invalid(self) -> None:
+        """Invalid frequency ranges and arrays of different lengths or dimensions should raise an error."""
+        with pytest.raises(ValueError, match="f_min <= f_max"):
+            freq.z_range(self.F_MAX, self.F_MIN)
+        with pytest.raises(ValueError, match="f_min <= f_max"):
+            freq.z_range(0., self.F_MAX)
+        with pytest.raises(ValueError, match="equal length"):
+            freq.z_range(self.F_MIN, self.F_MAX, T_star=np.array([100., 200.]), r_star=np.array([0.1, 0.2, 0.3]))
+        with pytest.raises(ValueError, match="1D array"):
+            freq.z_range(self.F_MIN, self.F_MAX, T_star=np.array([[100., 200.]]))
+        with pytest.raises(ValueError, match="finite and positive"):
+            freq.z_range(self.F_MIN, self.F_MAX, T_star=np.array([100., np.nan]))

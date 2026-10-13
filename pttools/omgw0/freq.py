@@ -7,7 +7,7 @@ import numpy as np
 from pttools.omgw0.const import DEFAULT_G_STAR, DEFAULT_T_STAR, GS0, T_CMB
 from pttools.omgw0.factors import H_SI, a_ratio, e_SI
 from pttools.ssm.const import DEFAULT_R_STAR
-from pttools.type_hints import FloatOrArr
+from pttools.type_hints import FloatOrArr, FloatOrArr1D
 
 
 def f[T: FloatOrArr](z: T, r_star: T | float, f_star0: T | float) -> T:
@@ -100,16 +100,33 @@ def f_star0[T: FloatOrArr](
     )
 
 
-def z[T: FloatOrArr](
+def z[T: FloatOrArr](f: T, r_star: T | float, f_star0: T | float) -> T:
+    r"""Convert from frequencies $f$ today back to wavenumbers $z$.
+
+    $$z(f) = \frac{f}{f_{\ast,0}} {r}_\ast$$
+    Inverted from :gowling_2021:`\ ` eq. 2.12.
+    This is the inverse of :py:func:`f`.
+    See :py:func:`z_full` for computing $f_{\ast,0}$ from the parameters at the time of GW production.
+
+    :param f: frequencies $f$ today
+    :param r_star: $r_\ast$, Hubble-scaled mean bubble spacing
+    :param f_star0: $f_{\ast,0}$, see :py:func:`f_star0`
+    :return: wavenumbers $z$
+    """
+    return f / f_star0 * r_star  # pyrefly: ignore[bad-return]
+
+
+def z_full[T: FloatOrArr](
         f: T,
         T_star: T | float = DEFAULT_T_STAR,
         r_star: T | float = DEFAULT_R_STAR,
         ge_star: T | float = DEFAULT_G_STAR,
         gs_star: T | float | None = None) -> T:
-    r"""Convert from frequencies $f$ back to wavenumbers $z$.
+    r"""Convert from frequencies $f$ back to wavenumbers $z$, computing $f_{\ast,0}$ with :py:func:`f_star0`.
 
     $$z(f) = \frac{f}{f_{\ast,0}} {r}_\ast$$
-    Inverted from :gowling_2021:`\ ` eq. 2.12
+    Inverted from :gowling_2021:`\ ` eq. 2.12.
+    If $f_{\ast,0}$ is already known, use :py:func:`z` instead.
 
     :param f: frequencies $f$ today
     :param T_star: $T_\ast$, temperature at the time of GW production in GeV
@@ -119,4 +136,47 @@ def z[T: FloatOrArr](
         If not given, $g_{s\ast} = g_{e\ast}$ is assumed.
     :return: wavenumbers $z$
     """
-    return f / f_star0(T_star=T_star, ge_star=ge_star, gs_star=gs_star) * r_star  # pyrefly: ignore[bad-return]
+    return z(f=f, r_star=r_star, f_star0=f_star0(T_star=T_star, ge_star=ge_star, gs_star=gs_star))
+
+
+def z_range(
+        f_min: float,
+        f_max: float,
+        T_star: FloatOrArr1D = DEFAULT_T_STAR,
+        r_star: FloatOrArr1D = DEFAULT_R_STAR,
+        ge_star: FloatOrArr1D = DEFAULT_G_STAR,
+        gs_star: FloatOrArr1D | None = None) -> tuple[float, float]:
+    r"""Range of wavenumbers $z$ that covers the frequencies from ${f}_\text{min}$ to ${f}_\text{max}$ today.
+
+    The range covers the frequencies for all the given combinations of
+    $T_\ast$, ${r}_\ast$, $g_{e\ast}$ and $g_{s\ast}$.
+    Each of them can be either a float, which is shared by all the combinations,
+    or a 1D array, where the elements of the arrays at the same index form a combination.
+    The arrays must therefore be of equal length.
+    As $z(f) = \frac{f}{f_{\ast,0}} {r}_\ast$ is proportional to $f$ (see :py:func:`z`), the range is
+    $${z}_\text{min} = \min_i {z}_i({f}_\text{min}), \quad {z}_\text{max} = \max_i {z}_i({f}_\text{max}),$$
+    where $i$ goes over the combinations.
+
+    This can be used to create a common $z$ array for spectra with different parameters,
+    e.g. for :py:meth:`pttools.omgw0.spectrum.Spectrum.with_params`.
+
+    :param f_min: ${f}_\text{min}$, minimum frequency today (Hz)
+    :param f_max: ${f}_\text{max}$, maximum frequency today (Hz)
+    :param T_star: $T_\ast$, temperature at the time of GW production in GeV
+    :param r_star: ${r}_\ast$, Hubble-scaled mean bubble spacing
+    :param ge_star: $g_{e\ast}$, degrees of freedom for energy density at the time of GW production
+    :param gs_star: $g_{s\ast}$, degrees of freedom for entropy at the time of GW production.
+        If not given, $g_{s\ast} = g_{e\ast}$ is assumed.
+    :return: ${z}_\text{min}$ and ${z}_\text{max}$
+    :raises ValueError: if not $0 < {f}_\text{min} \leq {f}_\text{max}$,
+        if the arrays are not 1D or not of equal length, or if the range is not finite and positive
+    """
+    if not 0 < f_min <= f_max:
+        raise ValueError(f"0 < f_min <= f_max is required. Got f_min={f_min}, f_max={f_max}.")
+
+    f_star0_val = f_star0(T_star=T_star, ge_star=ge_star, gs_star=gs_star)
+    z_min = np.min(z(f=f_min, r_star=r_star, f_star0=f_star0_val))
+    z_max = np.max(z(f=f_max, r_star=r_star, f_star0=f_star0_val))
+    if not (np.isfinite(z_min) and np.isfinite(z_max) and z_min > 0):
+        raise ValueError(f"The z range must be finite and positive. Got z_min={z_min}, z_max={z_max}.")
+    return z_min, z_max
