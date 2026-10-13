@@ -62,7 +62,7 @@ These modifications were Mika's summer project in 2021.
     - Sine transform: Nx for N CPU cores (trivially parallelisable, minus some overhead)
     - ODE integration: 20x faster than :meth:`scipy.integrate.odeint` with pure Python
 - Add unit testing.
-    - Set up `CI/CD pipeline on GitHub Actions <https://github.com/CFT-HY/pttools/actions>`_.
+    - Set up :pttools_repo:`CI/CD pipeline on GitHub Actions <actions>`.
     - Set up automatic testing with Python versions from 3.6 to 3.9
       and with multiple versions of Numba and other libraries.
     - Set up automatic testing with all major operating systems (GNU/Linux, Windows, macOS).

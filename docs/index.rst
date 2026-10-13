@@ -13,6 +13,7 @@ and the resulting gravitational wave power spectrum in the Sound Shell Model.
 .. plot:: fig/solution_types.py
 .. plot:: fig/ssm_process.py
 
+
 Getting started
 ---------------
 

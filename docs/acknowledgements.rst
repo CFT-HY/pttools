@@ -1,6 +1,15 @@
 Acknowledgements
 ================
 
+Citing PTtools
+--------------
+
+If you're using PTtools in your research, please cite with the citation from the *Cite this repository*
+button on the :pttools_repo:`repository page <>`.
+
+
+Contributors
+------------
 Main contributors (in order of contribution):
 
 - `Mark Hindmarsh <https://orcid.org/0000-0002-9307-437X>`_

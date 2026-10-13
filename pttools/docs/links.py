@@ -91,6 +91,9 @@ EXTLINKS_STATIC: ExtLinks = {
     "schroeder_book": ("https://physics.weber.edu/thermal/", "Thermal physics: Schroeder (2000)")
 }
 EXTLINKS_DYNAMIC: ExtLinks = {
+    # Repositories
+    "pttools_repo": ("https://github.com/CFT-HY/pttools/%s", "pttools/: %s"),
+    "ssm_repo": ("https://bitbucket.org/hindmars/sound-shell-model/src/master/%s", "sound-shell-model/%s"),
     # Other
     "aof_grant": (
         "https://akareport.aka.fi/ibi_apps/WFServlet?IBIF_ex=x_hakkuvaus2&CLICKED_ON=&UILANG=en&TULOSTE=HTML&HAKNRO1=%s",
@@ -98,7 +101,6 @@ EXTLINKS_DYNAMIC: ExtLinks = {
     ),
     "issue": ("https://github.com/CFT-HY/pttools/issues/%s", "issue %s"),
     "physics_stack": ("https://physics.stackexchange.com/a/%s", "Physics Stack Exchange: %s"),
-    "ssm_repo": ("https://bitbucket.org/hindmars/sound-shell-model/src/master/%s", "sound-shell-model/%s"),
     "wikipedia": ("https://en.wikipedia.org/wiki/%s", "Wikipedia: %s")
 }
 EXTLINKS: ExtLinks = {
