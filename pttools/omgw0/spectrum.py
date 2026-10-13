@@ -12,6 +12,7 @@ from numpy.typing import NDArray
 
 from pttools.bubble import Bubble
 from pttools.omgw0 import const, freq
+from pttools.omgw0.compute import OmGw0Input, OmGw0Results, SNRSettings, compute, compute_gw
 from pttools.omgw0.const import H2, LISA_OBS_TIME, OMEGA_PHOTON_H2
 from pttools.omgw0.export import SPECTRUM_FIELDS, SPECTRUM_FIELDS_F, SPECTRUM_FIELDS_Y
 from pttools.omgw0.factors import F_gw0_h2
@@ -19,10 +20,14 @@ from pttools.omgw0.noise import omega_ins_h2, omega_noise_h2, signal_to_noise_ra
 from pttools.ssm.calculators import trapezoid_loglog
 from pttools.ssm.const import (
     DEFAULT_A_STAR_A_R_RATIO,
+    DEFAULT_EPS_LOOKUP,
+    DEFAULT_LIFETIME_DISTRIBUTION_A,
     DEFAULT_N_SH,
     DEFAULT_N_T,
     DEFAULT_N_Z_LOOKUP,
     DEFAULT_Y,
+    T_TILDE_MAX,
+    T_TILDE_MIN,
     Z_ST_THRESH,
 )
 from pttools.ssm.nucleation import DEFAULT_NUC_TYPE, NucType
@@ -73,9 +78,12 @@ class Spectrum(SSMSpectrum):
             nT: int = DEFAULT_N_T,
             nx_P_tilde_gw: int | None = None,
             n_z_lookup: int = DEFAULT_N_Z_LOOKUP,
+            T_tilde_min: float = T_TILDE_MIN,
+            T_tilde_max: float = T_TILDE_MAX,
             z_st_thresh: float = Z_ST_THRESH,
             # Switches
             compute: bool = True,
+            compute_snr: bool = False,
             low_k: bool = True,
             low_k_cs_friction: bool = False,
             parallel: bool = True,
@@ -105,6 +113,9 @@ class Spectrum(SSMSpectrum):
         :param z_st_thresh: for $z$ values above z_sh_tresh,
             use approximation rather than doing the sine transform integral.
         :param compute: whether to compute the spectrum immediately
+        :param compute_snr: whether to compute the signal-to-noise ratio for LISA together with the spectrum
+            in the same Numba-compiled function, so that :py:meth:`snr` returns the precomputed result
+            when called with the default arguments. See :py:meth:`compute` for custom settings.
         :param low_k: whether to use the :giombi_2024_cs: approximation for low $k$
         :param low_k_cs_friction: whether to compute the acoustic friction of the low-$k$ approximation
             from $c_s$ instead of $\nu$, see :py:func:`pttools.ssm.low_k.kernel.kernel_low`.
@@ -135,6 +146,8 @@ class Spectrum(SSMSpectrum):
             nT=nT,
             nx_P_tilde_gw=nx_P_tilde_gw,
             n_z_lookup=n_z_lookup,
+            T_tilde_min=T_tilde_min,
+            T_tilde_max=T_tilde_max,
             compute=False,
             low_k=low_k,
             low_k_cs_friction=low_k_cs_friction,
@@ -161,6 +174,13 @@ class Spectrum(SSMSpectrum):
         self._f_given: th.FloatArr1D | None = f
         if f is not None:
             self.y: th.FloatArr1D = self.z_from_f(f)
+
+        #: Whether the signal-to-noise ratio is computed together with the spectrum
+        self.compute_snr: bool = compute_snr
+        #: Settings of the signal-to-noise ratio that is computed together with the spectrum
+        self.snr_settings: SNRSettings = SNRSettings()
+        # The signal-to-noise ratio computed together with the spectrum
+        self._omgw0_res: OmGw0Results | None = None
 
         if compute:
             self.compute(parallel=parallel)
@@ -252,6 +272,147 @@ class Spectrum(SSMSpectrum):
     # =====
     # Methods
     # =====
+
+    @tp.override
+    def compute(
+            self,
+            eps_lookup: float = DEFAULT_EPS_LOOKUP,
+            lifetime_distribution_a: float = DEFAULT_LIFETIME_DISTRIBUTION_A,
+            lambda_correction: bool = False,
+            parallel: bool = True,
+            compute_snr: bool | None = None,
+            snr_settings: SNRSettings | None = None) -> None:
+        r"""Compute the spectra and optionally the signal-to-noise ratio, and store them as attributes.
+
+        The spectra and the signal-to-noise ratio are computed in one Numba-compiled function
+        :py:func:`pttools.omgw0.compute.compute`, so that the GIL is not acquired in between.
+
+        :param eps_lookup: small offset used when generating the lookup table of $z$ values for the GW spectrum
+        :param lifetime_distribution_a: $a$, parameter of the bubble lifetime distribution,
+            see :py:func:`pttools.ssm.nucleation.lifetime_distribution`
+        :param lambda_correction: whether to enable a non-linear correction for $\lambda$,
+            see :py:func:`pttools.ssm.ssm.A2_e_conserving`
+        :param parallel: whether to use multiple CPU cores
+        :param compute_snr: whether to compute the signal-to-noise ratio.
+            If not given, the value given to the constructor is used.
+        :param snr_settings: settings for the signal-to-noise ratio.
+            :py:meth:`snr` returns the precomputed result when called with the same settings.
+            If not given, the previous settings are used, which are the defaults unless changed.
+        """
+        if compute_snr is not None:
+            self.compute_snr = compute_snr
+        if snr_settings is not None:
+            self.snr_settings = snr_settings
+        self._prepare_compute(
+            eps_lookup=eps_lookup, lifetime_distribution_a=lifetime_distribution_a, lambda_correction=lambda_correction)
+        base_res, gw_res, omgw0_res = compute(
+            ssm_inp=self._ssm_input(), omgw0_inp=self._omgw0_input(), parallel=parallel)
+        self._store_base(base_res)
+        self._store_gw(gw_res)
+        self._store_omgw0(omgw0_res)
+
+    @tp.override
+    def _compute_gw(self) -> None:
+        if self.base_res is None:
+            raise RuntimeError("The quantities that do not depend on r_star have not been computed.")
+        gw_res, omgw0_res = compute_gw(
+            ssm_inp=self._ssm_input(), omgw0_inp=self._omgw0_input(), base_res=self.base_res)
+        self._store_gw(gw_res)
+        self._store_omgw0(omgw0_res)
+
+    def _omgw0_input(self) -> OmGw0Input:
+        """Input parameters for :py:mod:`pttools.omgw0.compute`."""
+        return OmGw0Input(
+            f=self.f(),
+            F_gw0_h2=self.F_gw0_h2(
+                ge0_photon=self.snr_settings.ge0_photon,
+                gs0=self.snr_settings.gs0,
+                om_gamma0_h2=self.snr_settings.om_gamma0_h2
+            ),
+            mean_adiabatic_index=self.bubble.mean_adiabatic_index,
+            r_star=self.r_star,
+            nu_gdh2024=self.nu_gdh2024,
+            dilution_of_e=self.dilution_of_e,
+            suppression_factor=self.suppression_factor,
+            low_k=self.low_k,
+            compute_snr=self.compute_snr,
+            snr=self.snr_settings
+        )
+
+    def _store_omgw0(self, omgw0_res: OmGw0Results) -> None:
+        """Store the results of :py:func:`pttools.omgw0.compute.compute_omgw0`."""
+        self.pow_gw = omgw0_res.pow_gw
+        self._omgw0_res = omgw0_res if self.compute_snr else None
+
+    @tp.override
+    def with_params(  # pyrefly: ignore[bad-override]
+            self,
+            r_star: float | None = None,
+            beta_tilde: float | None = None,
+            a_star_a_r_ratio: float | None = None,
+            N_sh: float | None = None,
+            omega_barotropic: float | None = None,
+            suppression: Suppression | None = None,
+            suppression_method: SuppressionMethod | None = None,
+            label_latex: str | None = None,
+            label_unicode: str | None = None,
+            T_star: float | None = None,
+            g_star: float | None = None,
+            gs_star: float | None = None,
+            compute_snr: bool | None = None) -> tp.Self:
+        r"""Create a new spectrum with different parameters, reusing the computations of this spectrum.
+
+        See :py:meth:`pttools.ssm.spectrum.SSMSpectrum.with_params`.
+        The new spectrum has the same $z$ array as this spectrum.
+        Therefore, if the frequencies $f$ were given to this spectrum,
+        the frequencies of the new spectrum differ from them when $r_*$, $T_*$, $g_*$ or $g_{s,*}$ is changed.
+        The signal-to-noise ratio is computed with the same settings as for this spectrum.
+
+        :param r_star: $r_*$, Hubble-scaled mean bubble spacing
+        :param beta_tilde: $\tilde{\beta} \equiv \frac{\beta}{H_*}$, nucleation rate parameter
+        :param a_star_a_r_ratio: $\frac{a_*}{a_r}$
+        :param N_sh: $N_\text{sh}$, number of shock formation times
+        :param omega_barotropic: $\omega$, barotropic equation of state parameter
+        :param suppression: suppression data
+        :param suppression_method: suppression method
+        :param label_latex: label of the new spectrum in LaTeX format
+        :param label_unicode: label of the new spectrum in Unicode format
+        :param T_star: $T_*$, temperature at the time of GW production in GeV
+        :param g_star: $g_*$, degrees of freedom for pressure at the time of GW production.
+            If $g_*$ is given without $g_{s,*}$, $g_{s,*} = g_*$ is assumed, as in the constructor.
+        :param gs_star: $g_{s,*}$, degrees of freedom for entropy at the time of GW production
+        :param compute_snr: whether to compute the signal-to-noise ratio.
+            If not given, the value of this spectrum is used.
+        :return: the new spectrum
+        :raises RuntimeError: if this spectrum has not been computed
+        """
+        if g_star is not None and gs_star is None:
+            gs_star = g_star
+        return self._with_params(
+            {
+                "r_star": r_star, "beta_tilde": beta_tilde,
+                "a_star_a_r_ratio": a_star_a_r_ratio, "N_sh": N_sh, "omega_barotropic": omega_barotropic,
+                "suppression": suppression, "suppression_method": suppression_method,
+                "label_latex": label_latex, "label_unicode": label_unicode,
+                "T_star": T_star, "g_star": g_star, "gs_star": gs_star, "compute_snr": compute_snr
+            }
+        )
+
+    @tp.override
+    def _init_kwargs(self) -> dict[str, tp.Any]:
+        return {
+            **super()._init_kwargs(),
+            "T_star": self.T_star,
+            "g_star": self.g_star,
+            "gs_star": self.gs_star,
+            "compute_snr": self.compute_snr,
+        }
+
+    @tp.override
+    def _reuse(self, other: SSMSpectrum) -> None:
+        if isinstance(other, Spectrum):
+            self.snr_settings = other.snr_settings
+        super()._reuse(other)
 
     @copy_docstring_dec(freq.f, without_params=True)
     def f(self, z: th.FloatArr1D | None = None) -> th.FloatArr1D:
@@ -403,8 +564,20 @@ class Spectrum(SSMSpectrum):
         :param noise_eb: whether to generate extragalactic compact binary noise when noise is not provided
         :param noise_gb: whether to generate galactic compact binary noise when noise is not provided
         :param noise_ins: whether to generate instrument noise when noise is not provided
+        :return: the signal-to-noise ratio, the frequencies of the signal, $\Omega_{\text{gw},0} h^2$,
+            the frequencies of the noise and $\Omega_\text{noise} h^2$.
+            If the signal-to-noise ratio was computed together with the spectrum with the same settings
+            (see :py:meth:`compute`), the precomputed result is returned.
         """
         f: FloatArr1D = self.f()
+        settings = SNRSettings(
+            noise=noise, f_noise=f_noise, obs_time=obs_time,
+            ge0_photon=ge0_photon, gs0=gs0, om_gamma0_h2=om_gamma0_h2,
+            noise_eb=noise_eb, noise_gb=noise_gb, noise_ins=noise_ins
+        )
+        res = self._omgw0_res
+        if res is not None and settings.matches(self.snr_settings):
+            return res.snr, f, res.omgw0_h2, res.f_noise, res.noise
         omgw0_h2 = self.omgw0_h2(ge0_photon=ge0_photon, gs0=gs0, om_gamma0_h2=om_gamma0_h2)
         snr, f_noise, noise = signal_to_noise_ratio(
             f=f, signal=omgw0_h2, obs_time=obs_time,
@@ -421,13 +594,10 @@ class Spectrum(SSMSpectrum):
             om_gamma0_h2: float = const.OMEGA_PHOTON_H2
         ) -> tuple[float, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D]:
         """Signal-to-noise ratio for LISA, taking into account only the instrument noise."""
-        f: FloatArr1D = self.f()
-        omgw0_h2 = self.omgw0_h2(ge0_photon=ge0_photon, gs0=gs0, om_gamma0_h2=om_gamma0_h2)
-        snr, f_noise, noise = signal_to_noise_ratio(
-            f=f, signal=omgw0_h2, obs_time=obs_time,
+        return self.snr(
+            ge0_photon=ge0_photon, gs0=gs0, obs_time=obs_time, om_gamma0_h2=om_gamma0_h2,
             noise_eb=False, noise_gb=False, noise_ins=True
         )
-        return snr, f, omgw0_h2, f_noise, noise
 
     def z_from_f[T: FloatOrArr](self, f: T) -> T:
         r"""Convert from frequencies $f$ back to wavenumbers $z$.

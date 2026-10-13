@@ -11,6 +11,7 @@ from pttools.bubble import Bubble
 from pttools.bubble.phase import Phase
 from pttools.models import ConstCSModel, FullModel, StandardModel
 from pttools.omgw0 import Spectrum, freq
+from pttools.omgw0.compute import SNRSettings
 from pttools.omgw0.factors import F_gw0_h2
 from tests.utils import TEST_JSON_PATH
 
@@ -146,6 +147,82 @@ class SpectrumTest(unittest.TestCase):
         val = self.spectrum.omgw0_total()
         ref = np.trapezoid(y=self.spectrum.omgw0(), x=self.spectrum.f())
         assert val == pytest.approx(ref, abs=5e-8)
+
+
+class SpectrumComputeTest(unittest.TestCase):
+    """Tests for reusing the computed spectra and for computing the signal-to-noise ratio together with them."""
+
+    bubble: tp.ClassVar[Bubble]
+    spectrum: tp.ClassVar[Spectrum]
+    #: Low-resolution settings for faster tests
+    KWARGS: tp.ClassVar[dict[str, tp.Any]] = {"nT": 2000, "n_z_lookup": 2000}
+
+    @classmethod
+    @tp.override
+    def setUpClass(cls) -> None:
+        model = ConstCSModel(css2=1/3-0.01, csb2=1/3-0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
+        cls.bubble = Bubble(model, v_wall=0.5, alpha_n=0.2)
+        cls.spectrum = Spectrum(
+            cls.bubble, r_star=0.1, f=np.logspace(-5, -1, 300), T_star=200, g_star=100, compute_snr=True, **cls.KWARGS)
+
+    def test_snr_precomputed(self) -> None:
+        """The precomputed signal-to-noise ratio should be the same as one computed afterwards."""
+        with mock.patch("pttools.omgw0.spectrum.signal_to_noise_ratio") as snr_mock:
+            snr = self.spectrum.snr()
+            snr_mock.assert_not_called()
+        assert snr[0] > 0
+        assert self.spectrum.snr_settings.matches(SNRSettings())
+        spectrum = Spectrum(
+            self.bubble, r_star=0.1, f=self.spectrum.f(), T_star=200, g_star=100, compute_snr=False, **self.KWARGS)
+        ref = spectrum.snr()
+        for val, ref_val in zip(snr, ref, strict=True):
+            np.testing.assert_allclose(val, ref_val, rtol=1e-14)
+        np.testing.assert_allclose(self.spectrum.omgw0_h2(), spectrum.omgw0_h2(), rtol=1e-14)
+
+    def test_snr_custom_settings(self) -> None:
+        """The precomputed result should be used only when the settings match."""
+        spectrum = self.spectrum.with_params(r_star=0.2)
+        spectrum.compute(compute_snr=True, snr_settings=SNRSettings(noise_eb=False, noise_gb=False))
+        with mock.patch("pttools.omgw0.spectrum.signal_to_noise_ratio") as snr_mock:
+            snr_ins = spectrum.snr_ins()[0]
+            snr_mock.assert_not_called()
+        snr = spectrum.snr()[0]
+        assert snr < snr_ins
+        spectrum.compute(compute_snr=False)
+        assert spectrum.snr_ins()[0] == pytest.approx(snr_ins, rel=1e-14)
+        assert spectrum.snr()[0] == pytest.approx(snr, rel=1e-14)
+
+    def test_with_params(self) -> None:
+        r"""Changing $r_*$, $T_*$ and $g_*$ should give the same result as a new spectrum with the same $z$."""
+        with mock.patch("pttools.omgw0.spectrum.compute") as compute_mock:
+            spectrum = self.spectrum.with_params(r_star=0.2, T_star=1000, g_star=50)
+            compute_mock.assert_not_called()
+        assert spectrum.base_res is self.spectrum.base_res
+        assert spectrum.compute_snr
+        assert (spectrum.r_star, spectrum.T_star, spectrum.g_star, spectrum.gs_star) == (0.2, 1000, 50, 50)
+        # The z array is kept, and therefore the frequencies change.
+        np.testing.assert_array_equal(spectrum.y, self.spectrum.y)
+        assert not spectrum.f_given
+        ref = Spectrum(
+            self.bubble, r_star=0.2, y=self.spectrum.y, T_star=1000, g_star=50, compute_snr=True, **self.KWARGS)
+        np.testing.assert_allclose(spectrum.f(), ref.f(), rtol=1e-14)
+        np.testing.assert_allclose(spectrum.omgw0_h2(), ref.omgw0_h2(), rtol=1e-14)
+        assert spectrum.snr()[0] == pytest.approx(ref.snr()[0], rel=1e-14)
+        # The original spectrum should not be modified
+        assert (self.spectrum.r_star, self.spectrum.T_star, self.spectrum.g_star) == (0.1, 200, 100)
+
+    def test_with_params_noise(self) -> None:
+        """The signal-to-noise ratio of the new spectrum should use the custom noise of the original spectrum."""
+        f_noise = np.logspace(-4, -2, 50)
+        settings = SNRSettings(noise=np.full(f_noise.size, 1e-12), f_noise=f_noise)
+        spectrum = self.spectrum.with_params(r_star=0.3)
+        spectrum.compute(snr_settings=settings)
+        spectrum2 = spectrum.with_params(r_star=0.2)
+        assert spectrum2.snr_settings is settings
+        snr2 = spectrum2.snr(noise=settings.noise, f_noise=f_noise)
+        np.testing.assert_array_equal(snr2[3], f_noise)
+        spectrum2.compute(compute_snr=False)
+        assert spectrum2.snr(noise=settings.noise, f_noise=f_noise)[0] == pytest.approx(snr2[0], rel=1e-14)
 
 
 class StandardModelSpectrumTest(unittest.TestCase):

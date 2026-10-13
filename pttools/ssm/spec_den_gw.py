@@ -70,6 +70,7 @@ def lookup_limits(z: FloatArr1D, cs: float = CS0, eps: float = 0.) -> tuple[floa
     return x_minus_min, x_plus_max
 
 
+@njit
 def spec_den_gw_scaling[T: FloatOrArr](
         ubarf2: float,
         mean_adiabatic_index: T = DEFAULT_ADIABATIC_INDEX,

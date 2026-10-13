@@ -27,6 +27,13 @@ Note that $N_\text{sh}$ is not necessarily an integer.
 :giombi_2024_cs:`\ ` eq. 4.1
 """
 
+#: Default small offset used when generating the lookup table of $z$ values for the GW spectrum
+DEFAULT_EPS_LOOKUP: float = 1e-8
+
+#: Default parameter $a$ of the bubble lifetime distribution,
+#: see :py:func:`pttools.ssm.nucleation.lifetime_distribution`
+DEFAULT_LIFETIME_DISTRIBUTION_A: float = 1.
+
 DEFAULT_N_T: int = 10000
 r"""Default number $N_\text{T}$ of T (and $\tilde{T}$) values for bubble lifetime distribution integration
 See :gw_pt_ssm:`\ ` p. 20

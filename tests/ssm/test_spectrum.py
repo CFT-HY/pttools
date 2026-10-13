@@ -2,13 +2,14 @@
 
 import typing as tp
 import unittest
+from unittest import mock
 
 import numpy as np
 import pytest
 
 from pttools.bubble import Bubble
 from pttools.models import ConstCSModel
-from pttools.ssm import DEFAULT_NUC_TYPE, SSMSpectrum
+from pttools.ssm import DEFAULT_NUC_TYPE, SSMSpectrum, spec_den_gw
 from tests.utils import TEST_JSON_PATH
 
 
@@ -147,6 +148,81 @@ class SSMSpectrumTest(unittest.TestCase):
     def test_z_cross_approx(self) -> None:
         """Test that the approximate crossover point of the low and intermediate frequency forms is positive."""
         assert self.spectrum.z_cross_approx > 0
+
+
+class SSMSpectrumWithParamsTest(unittest.TestCase):
+    """Tests for creating new spectra by reusing the velocity spectra of an existing spectrum."""
+
+    bubble: tp.ClassVar[Bubble]
+    spectrum: tp.ClassVar[SSMSpectrum]
+    #: Low-resolution settings for faster tests
+    KWARGS: tp.ClassVar[dict[str, tp.Any]] = {"y": np.logspace(-1, 3, 300), "nT": 2000, "n_z_lookup": 2000}
+
+    @classmethod
+    @tp.override
+    def setUpClass(cls) -> None:
+        model = ConstCSModel(css2=1/3-0.01, csb2=1/3-0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
+        cls.bubble = Bubble(model, v_wall=0.5, alpha_n=0.2)
+        cls.spectrum = SSMSpectrum(cls.bubble, beta_tilde=10, **cls.KWARGS)
+
+    def assert_same(self, spectrum: SSMSpectrum, ref: SSMSpectrum) -> None:
+        """Assert that a spectrum created with with_params() is the same as a fully computed one."""
+        assert spectrum.r_star == ref.r_star
+        assert spectrum.beta_tilde == ref.beta_tilde
+        assert spectrum.label_unicode == ref.label_unicode
+        for name in ("nucleation_f", "hx", "bubble_spacing_enlargement_factor", "ubarf2", "cs"):
+            assert getattr(spectrum, name) == getattr(ref, name), name
+        for name in (
+                "spec_den_v", "spec_den_v_lookup", "a2", "a2_lookup", "z_lookup",
+                "spec_den_gw", "spec_den_gw_ssm", "spec_den_gw_low", "spec_den_gw_int", "spec_den_gw_expanded",
+                "pow_gw", "pow_gw_rate"):
+            np.testing.assert_allclose(getattr(spectrum, name), getattr(ref, name), rtol=1e-14, err_msg=name)
+
+    def test_r_star(self) -> None:
+        r"""A new $r_*$ should give the same result as a new spectrum, without recomputing the velocity spectra."""
+        with mock.patch("pttools.ssm.spectrum.compute") as compute_mock:
+            spectrum = self.spectrum.with_params(r_star=0.3)
+            compute_mock.assert_not_called()
+        # The velocity spectra are shared
+        assert spectrum.base_res is self.spectrum.base_res
+        assert spectrum.beta_tilde is None
+        assert spectrum.nucleation_f == 0
+        assert spectrum.bubble_spacing_enlargement_factor == 1
+        self.assert_same(spectrum, SSMSpectrum(self.bubble, r_star=0.3, **self.KWARGS))
+        # The original spectrum should not be modified
+        assert self.spectrum.beta_tilde == 10
+
+    def test_beta_tilde(self) -> None:
+        r"""A new $\tilde{\beta}$ should also give a new $r_*$ and bubble spacing enlargement factor."""
+        spectrum = self.spectrum.with_params(beta_tilde=20)
+        assert spectrum.r_star < self.spectrum.r_star
+        self.assert_same(spectrum, SSMSpectrum(self.bubble, beta_tilde=20, **self.KWARGS))
+
+    def test_other_params(self) -> None:
+        """The other parameters that do not affect the velocity spectra can also be changed."""
+        spectrum = self.spectrum.with_params(N_sh=3, a_star_a_r_ratio=0.5, omega_barotropic=0.3)
+        assert spectrum.beta_tilde == 10
+        self.assert_same(
+            spectrum,
+            SSMSpectrum(self.bubble, beta_tilde=10, N_sh=3, a_star_a_r_ratio=0.5, omega_barotropic=0.3, **self.KWARGS)
+        )
+
+    def test_source_lifetime_factor_scaling(self) -> None:
+        r"""The source lifetime factor $\Upsilon_\ell$ should be a mere scaling factor of $\tilde{P}_\text{gw,ssm}$."""
+        spectrum = self.spectrum
+        np.testing.assert_array_equal(
+            spectrum.spec_den_gw_ssm, spectrum.source_lifetime_factor * spectrum.spec_den_gw_ssm_unscaled)
+        ref, _ = spec_den_gw(
+            z_lookup=spectrum.z_lookup, P_tilde_v_lookup=spectrum.spec_den_v_lookup, y=spectrum.y,
+            cs=spectrum.cs, source_lifetime_factor=spectrum.source_lifetime_factor
+        )
+        np.testing.assert_allclose(spectrum.spec_den_gw_ssm, ref, rtol=1e-14)
+
+    def test_not_computed(self) -> None:
+        """A spectrum that has not been computed cannot be reused."""
+        spectrum = SSMSpectrum(self.bubble, r_star=0.1, compute=False)
+        with pytest.raises(RuntimeError, match="has to be computed"):
+            spectrum.with_params(r_star=0.2)
 
 
 if __name__ == "__main__":

@@ -16,7 +16,7 @@ from pttools.bubble.thermo import warn_if_ubarf_relativistic
 from pttools.speedup import NAN_ARR
 from pttools.ssm import const
 from pttools.ssm.barotropic import H_eta, dilution_of_e, eta_ratio, source_lifetime_factor, tau_star
-from pttools.ssm.compute import compute
+from pttools.ssm.compute import SSMBaseResults, SSMGWResults, SSMInput, compute, compute_gw
 from pttools.ssm.export import SSM_SPECTRUM_FIELDS
 from pttools.ssm.low_k.intersection import z_cross_approx
 from pttools.ssm.nucleation import DEFAULT_NUC_TYPE, NucType, v_eff
@@ -49,7 +49,7 @@ class SSMSpectrum(Extractable, SpectrumBase):
     #: The exportable fields of the spectrum
     FIELDS: tp.ClassVar[Fields] = SSM_SPECTRUM_FIELDS
 
-    def __init__(
+    def __init__(  # noqa: PLR0915
             self,
             bubble: Bubble,
             # Input parameters
@@ -168,6 +168,20 @@ class SSMSpectrum(Extractable, SpectrumBase):
         self.T_tilde: FloatArr1D = NAN_ARR
         self.ubarf2: float = np.nan
         self.z_lookup: FloatArr1D = NAN_ARR
+        #: $\tilde{P}_\text{gw,ssm} / \Upsilon_\ell$, GW spectral density without the source lifetime factor
+        self.spec_den_gw_ssm_unscaled: FloatArr1D = NAN_ARR
+        #: $\mathcal{I}_v$, source contribution of the low-$k$ approximation
+        self.Iv: float = np.nan
+        # Arguments of compute()
+        #: Small offset used when generating the lookup table of $z$ values for the GW spectrum
+        self.eps_lookup: float = const.DEFAULT_EPS_LOOKUP
+        #: $a$, parameter of the bubble lifetime distribution
+        self.lifetime_distribution_a: float = const.DEFAULT_LIFETIME_DISTRIBUTION_A
+        #: Whether the non-linear correction for $\lambda$ is enabled
+        self.lambda_correction: bool = False
+        #: Results of :py:func:`pttools.ssm.compute.compute_base`, which do not depend on $r_*$,
+        #: and are therefore reused by :py:meth:`with_params`
+        self.base_res: SSMBaseResults | None = None
 
         if compute:
             self.compute(parallel=parallel)
@@ -187,8 +201,8 @@ class SSMSpectrum(Extractable, SpectrumBase):
 
     def compute(
             self,
-            eps_lookup: float = 1e-8,
-            lifetime_distribution_a: float = 1.,
+            eps_lookup: float = const.DEFAULT_EPS_LOOKUP,
+            lifetime_distribution_a: float = const.DEFAULT_LIFETIME_DISTRIBUTION_A,
             lambda_correction: bool = False,
             parallel: bool = True) -> None:
         r"""Compute the velocity and GW spectra and the related quantities, and store them as attributes.
@@ -202,48 +216,89 @@ class SSMSpectrum(Extractable, SpectrumBase):
             see :py:func:`pttools.ssm.ssm.A2_e_conserving`
         :param parallel: whether to use multiple CPU cores
         """
+        self._prepare_compute(
+            eps_lookup=eps_lookup, lifetime_distribution_a=lifetime_distribution_a, lambda_correction=lambda_correction)
+        base_res, gw_res = compute(inp=self._ssm_input(), parallel=parallel)
+        self._store_base(base_res)
+        self._store_gw(gw_res)
+
+    def _compute_gw(self) -> None:
+        """Compute only the quantities that depend on $r_*$, reusing the results of the r_*-independent stage."""
+        if self.base_res is None:
+            raise RuntimeError("The quantities that do not depend on r_star have not been computed.")
+        self._store_gw(compute_gw(inp=self._ssm_input(), base_res=self.base_res))
+
+    def _prepare_compute(self, eps_lookup: float, lifetime_distribution_a: float, lambda_correction: bool) -> None:
+        """Store the arguments of :py:meth:`compute`, and compute the input values that require the bubble."""
         if not self.bubble.solved:
             self.bubble.solve()
+        self.eps_lookup = eps_lookup
+        self.lifetime_distribution_a = lifetime_distribution_a
+        self.lambda_correction = lambda_correction
         self.cs2 = self.bubble.model.cs2(self.bubble.va_enthalpy_density, Phase.BROKEN)
         self.cs = sqrt(self.cs2)
-        self.spec_den_v, self.spec_den_v_lookup, self.spec_den_gw_ssm, \
-            self.a2, self.a2_lookup, self.qT_lookup, self.qT_gw_lookup, self.T_tilde, self.ubarf2, self.z_lookup, \
-            self.spec_den_gw_low, self.spec_den_gw_int, self.spec_den_gw_expanded, \
-            self.nucleation_f, self.hx, self.bubble_spacing_enlargement_factor = compute(
-                # Arrays
-                e=self.bubble.e,
-                T=self.bubble.T,
-                v=self.bubble.v,
-                w=self.bubble.w,
-                xi=self.bubble.xi,
-                y=self.y,
-                # Scalars
-                beta_tilde=self.beta_tilde,
-                cs=self.cs,
-                lifetime_distribution_a=lifetime_distribution_a,
-                nu_gdh2024=self.nu_gdh2024,
-                source_lifetime_factor=self.source_lifetime_factor,
-                tau_end=self.tau_end,
-                tau_star=self.tau_star,
-                v_wall=self.bubble.v_wall,
-                v_sh=self.bubble.v_sh,
-                # Accuracy
-                eps_lookup=eps_lookup,
-                nT=self.nT,
-                nx_P_tilde_gw=self.nx_P_tilde_gw,
-                n_z_lookup=self.n_z_lookup,
-                T_tilde_min=self.T_tilde_min,
-                T_tilde_max=self.T_tilde_max,
-                z_st_thresh=self.z_st_thresh,
-                # Other
-                nuc_type=self.nuc_type,
-                sol_type=self.bubble.sol_type,
-                lambda_correction=lambda_correction,
-                low_k_cs_friction=self.low_k_cs_friction,
-                parallel=parallel
+
+    def _ssm_input(self) -> SSMInput:
+        """Input parameters for :py:mod:`pttools.ssm.compute`."""
+        return SSMInput(
+            # Arrays
+            e=self.bubble.e,
+            T_profile=self.bubble.T,
+            v=self.bubble.v,
+            w=self.bubble.w,
+            xi=self.bubble.xi,
+            y=self.y,
+            # Scalars
+            beta_tilde=self.beta_tilde,
+            cs=self.cs,
+            lifetime_distribution_a=self.lifetime_distribution_a,
+            nu_gdh2024=self.nu_gdh2024,
+            source_lifetime_factor=self.source_lifetime_factor,
+            tau_end=self.tau_end,
+            tau_star=self.tau_star,
+            v_sh=self.bubble.v_sh,
+            v_wall=self.bubble.v_wall,
+            # Accuracy
+            eps_lookup=self.eps_lookup,
+            nT=self.nT,
+            n_z_lookup=self.n_z_lookup,
+            nx_P_tilde_gw=self.nx_P_tilde_gw,
+            T_tilde_min=self.T_tilde_min,
+            T_tilde_max=self.T_tilde_max,
+            z_st_thresh=self.z_st_thresh,
+            # Other
+            nuc_type=self.nuc_type,
+            sol_type=self.bubble.sol_type,
+            lambda_correction=self.lambda_correction,
+            low_k_cs_friction=self.low_k_cs_friction
         )
-        warn_if_ubarf_relativistic(self.ubarf2, source=self.label_unicode)
+
+    def _store_gw(self, gw_res: SSMGWResults) -> None:
+        """Store the results of :py:func:`pttools.ssm.compute.compute_gw` as attributes."""
+        self.spec_den_gw_ssm = gw_res.spec_den_gw_ssm
+        self.spec_den_gw_low = gw_res.spec_den_gw_low
+        self.spec_den_gw_int = gw_res.spec_den_gw_int
+        self.spec_den_gw_expanded = gw_res.spec_den_gw_expanded
+        self.nucleation_f = gw_res.nucleation_f
+        self.hx = gw_res.hx
+        self.bubble_spacing_enlargement_factor = gw_res.bubble_spacing_enlargement_factor
         self.spec_den_gw = self.spec_den_gw_expanded if self.low_k else self.spec_den_gw_ssm
+
+    def _store_base(self, base_res: SSMBaseResults) -> None:
+        """Store the results of :py:func:`pttools.ssm.compute.compute_base` as attributes."""
+        self.base_res = base_res
+        self.a2 = base_res.A2
+        self.a2_lookup = base_res.A2_lookup
+        self.qT_lookup = base_res.qT_lookup
+        self.qT_gw_lookup = base_res.qT_gw_lookup
+        self.spec_den_v = base_res.spec_den_v
+        self.spec_den_v_lookup = base_res.spec_den_v_lookup
+        self.T_tilde = base_res.T_tilde
+        self.ubarf2 = base_res.ubarf2
+        self.z_lookup = base_res.z_lookup
+        self.spec_den_gw_ssm_unscaled = base_res.spec_den_gw_ssm_unscaled
+        self.Iv = base_res.Iv
+        warn_if_ubarf_relativistic(self.ubarf2, source=self.label_unicode)
 
     def export(
             self,
@@ -266,6 +321,104 @@ class SSMSpectrum(Extractable, SpectrumBase):
         if path is not None:
             export_json(data, path)
         return data
+
+    def with_params(
+            self,
+            r_star: float | None = None,
+            beta_tilde: float | None = None,
+            a_star_a_r_ratio: float | None = None,
+            N_sh: float | None = None,
+            omega_barotropic: float | None = None,
+            suppression: Suppression | None = None,
+            suppression_method: SuppressionMethod | None = None,
+            label_latex: str | None = None,
+            label_unicode: str | None = None) -> tp.Self:
+        r"""Create a new spectrum with different parameters, reusing the computations of this spectrum.
+
+        The velocity spectra, ${\lvert A \rvert}^2$, $\bar{U}_f^2$,
+        the GW spectral density without the source lifetime factor $\tilde{P}_\text{gw,ssm} / \Upsilon_\ell$
+        and the source integral $\mathcal{I}_v$ do not depend on the parameters given here,
+        and therefore the computationally heavy :py:func:`pttools.ssm.compute.compute_base` is not run again.
+        Only the computationally light :py:func:`pttools.ssm.compute.compute_gw` is run,
+        which applies the source lifetime factor and computes the low-$k$ approximation.
+        The result is the same as when creating a new spectrum with the same arguments as this one,
+        except for the changed parameters.
+
+        The parameters that are not given are taken from this spectrum.
+        If either $r_*$ or $\tilde{\beta}$ is given, the other one is not taken from this spectrum.
+        The default labels are generated for the new spectrum unless labels are given,
+        as they contain $r_*$.
+
+        :param r_star: $r_*$, Hubble-scaled mean bubble spacing
+        :param beta_tilde: $\tilde{\beta} \equiv \frac{\beta}{H_*}$, nucleation rate parameter
+        :param a_star_a_r_ratio: $\frac{a_*}{a_r}$
+        :param N_sh: $N_\text{sh}$, number of shock formation times
+        :param omega_barotropic: $\omega$, barotropic equation of state parameter
+        :param suppression: suppression data
+        :param suppression_method: suppression method
+        :param label_latex: label of the new spectrum in LaTeX format
+        :param label_unicode: label of the new spectrum in Unicode format
+        :return: the new spectrum
+        :raises RuntimeError: if this spectrum has not been computed
+        """
+        return self._with_params(
+            {
+                "r_star": r_star, "beta_tilde": beta_tilde,
+                "a_star_a_r_ratio": a_star_a_r_ratio, "N_sh": N_sh, "omega_barotropic": omega_barotropic,
+                "suppression": suppression, "suppression_method": suppression_method,
+                "label_latex": label_latex, "label_unicode": label_unicode
+            }
+        )
+
+    def _init_kwargs(self) -> dict[str, tp.Any]:
+        """Arguments of the constructor for creating a copy of this spectrum.
+
+        The labels are not included, as the default labels depend on $r_*$.
+        """
+        return {
+            "bubble": self.bubble,
+            "beta_tilde": self.beta_tilde,
+            "r_star": self.r_star if self.beta_tilde is None else None,
+            "y": self.y,
+            "a_star_a_r_ratio": self.a_star_a_r_ratio,
+            "N_sh": self.N_sh,
+            "nuc_type": self.nuc_type,
+            "omega_barotropic": self._omega_barotropic,
+            "suppression": self.suppression,
+            "suppression_method": self.suppression_method,
+            "nT": self.nT,
+            "nx_P_tilde_gw": self.nx_P_tilde_gw,
+            "n_z_lookup": self.n_z_lookup,
+            "T_tilde_min": self.T_tilde_min,
+            "T_tilde_max": self.T_tilde_max,
+            "z_st_thresh": self.z_st_thresh,
+            "low_k": self.low_k,
+            "low_k_cs_friction": self.low_k_cs_friction,
+        }
+
+    def _with_params(self, params: dict[str, tp.Any]) -> tp.Self:
+        """Implementation of :py:meth:`with_params`, where the parameters that are ``None`` are not changed."""
+        if self.base_res is None:
+            raise RuntimeError("The spectrum has to be computed before it can be reused for a new spectrum.")
+        kwargs = self._init_kwargs()
+        if params.get("r_star") is not None or params.get("beta_tilde") is not None:
+            kwargs["r_star"] = kwargs["beta_tilde"] = None
+        kwargs.update({key: value for key, value in params.items() if value is not None})
+        spectrum = type(self)(**kwargs, compute=False)
+        spectrum._reuse(self)  # noqa: SLF001
+        return spectrum
+
+    def _reuse(self, other: "SSMSpectrum") -> None:
+        """Compute this spectrum by reusing the r_*-independent results of another spectrum."""
+        if not self.bubble.solved:
+            self.bubble.solve()
+        self.eps_lookup = other.eps_lookup
+        self.lifetime_distribution_a = other.lifetime_distribution_a
+        self.lambda_correction = other.lambda_correction
+        self.cs = other.cs
+        self.cs2 = other.cs2
+        self._store_base(tp.cast(SSMBaseResults, other.base_res))
+        self._compute_gw()
 
     # -----
     # Properties
@@ -397,7 +550,7 @@ class SSMSpectrum(Extractable, SpectrumBase):
         :py:attr:`pttools.ssm.suppression.suppression.SuppressionMethod.NONE`.
         """
         return 3 * (self.bubble.mean_adiabatic_index * self.ubarf2)**2 * self.suppression_factor \
-            * pow_spec(z=self.y, spec_den=self.spec_den_gw_ssm) / self.source_lifetime_factor
+            * pow_spec(z=self.y, spec_den=self.spec_den_gw_ssm_unscaled)
 
     @functools.cached_property
     def pow_gw_ssm(self) -> FloatArr1D:
