@@ -11,7 +11,7 @@ from pttools.bubble.bubble import Bubble, get_kappa_giese
 from pttools.speedup import IS_OSX
 import pttools.type_hints as th
 from pttools.utils.assertions import assert_allclose
-from tests.utils.mark import mark_xfail_multiprocessing_jit, uses_multiprocessing
+from tests.utils.mark import mark_xfail_pickle_without_jit, uses_parallel
 
 
 def assert_kappa(
@@ -81,7 +81,7 @@ class GieseTest(unittest.TestCase):
         compare(model, alpha_ns, v_walls, kappa_ref, rtol=0.085)
 
     @pytest.mark.xfail(IS_OSX, reason="Bug on macOS")
-    @uses_multiprocessing
+    @uses_parallel
     def test_kappa33(self) -> None:
         r"""Compare kappa to :giese_2021:`\ ` for $c_{s,s}^2 = 1/3$, $c_{s,b}^2 = 1/3$."""
         kappa_ref = np.array([
@@ -92,8 +92,8 @@ class GieseTest(unittest.TestCase):
         assert_kappa(css2=1/3, csb2=1/3, kappa_ref=kappa_ref, rtol=7.3e-3)
 
     @staticmethod
-    @mark_xfail_multiprocessing_jit
-    @uses_multiprocessing
+    @mark_xfail_pickle_without_jit
+    @uses_parallel
     def test_kappa34() -> None:
         r"""Compare kappa to :giese_2021:`\ ` for $c_{s,s}^2 = 1/3$, $c_{s,b}^2 = 1/4$."""
         kappa_ref = np.array([
@@ -104,8 +104,8 @@ class GieseTest(unittest.TestCase):
         assert_kappa(css2=1/3, csb2=1/4, kappa_ref=kappa_ref, rtol=1e-2)
 
     @staticmethod
-    @mark_xfail_multiprocessing_jit
-    @uses_multiprocessing
+    @mark_xfail_pickle_without_jit
+    @uses_parallel
     def test_kappa43() -> None:
         r"""Compare kappa to :giese_2021:`\ ` for $c_{s,s}^2 = 1/4$, $c_{s,b}^2 = 1/3$."""
         # For $c_{s,s} < c_{s,b}$ the pseudotrace difference has a lower limit of
@@ -126,8 +126,8 @@ class GieseTest(unittest.TestCase):
             css2=1/4, csb2=1/3, kappa_ref=kappa_ref, alpha_thetabar_ns=alpha_thetabar_ns, rtol=2.5e-2)
 
     @staticmethod
-    @mark_xfail_multiprocessing_jit
-    @uses_multiprocessing
+    @mark_xfail_pickle_without_jit
+    @uses_parallel
     def test_kappa44() -> None:
         r"""Compare kappa to :giese_2021:`\ ` for $c_{s,s}^2 = 1/4$, $c_{s,b}^2 = 1/4$."""
         kappa_ref = np.array([

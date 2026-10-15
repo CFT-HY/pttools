@@ -15,10 +15,6 @@ jobs:
       contents: read
       id-token: write
     timeout-minutes: 30
-    # TBB is not available for the ARM-based macOS runners, so the nested parallelism is disabled,
-    # as explained in docs/install.rst. This is set for the whole job, so that it applies to the steps of the actions.
-    env:
-      NUMBA_NESTED_PARALLELISM: 0
     steps:
         # Fortran compiler is required for building numbalsoda if a wheel is not available
         - name: Install Fortran compiler
@@ -29,11 +25,29 @@ jobs:
             version: "15"
         - name: Checkout
           uses: actions/checkout@v7
+        # There is no OpenMP runtime on PyPI for ARM-based macOS, so it's installed with Homebrew.
+        # The OpenMP threading layer of the Numba wheels loads @rpath/libomp.dylib without setting an rpath,
+        # and the libomp of Homebrew is keg-only, i.e. not on the default library search path.
+        # It's therefore linked to /usr/local/lib, which is on the default fallback search path of the dynamic loader.
+        # DYLD_LIBRARY_PATH is not used, as macOS removes it from the environment of protected system binaries,
+        # such as /bin/bash and /usr/bin/env, and therefore also from their child processes.
+        - name: Install OpenMP
+          run: |
+            brew install libomp
+            sudo mkdir -p /usr/local/lib
+            sudo ln -sf "$(brew --prefix libomp)/lib/libomp.dylib" /usr/local/lib/libomp.dylib
         - name: Setup uv and Python environment
           uses: ./.github/actions/setup-env
           # macOS minutes cost 10x what Linux does, so testing multiple Python versions would be quite costly.
           with:
             uv-sync-args: --all-extras --no-group docs
             generate-reference-data: true
+        # By default, Numba would silently fall back to the workqueue threading layer if OpenMP could not be loaded.
+        # The threading layer is therefore set explicitly, so that this step fails instead.
+        - name: Check the Numba OpenMP threading layer
+          env:
+            NUMBA_THREADING_LAYER: omp
+          run: |
+            uv run python -c "from pttools.speedup.threading import check_numba_threading_layer as c; print(c('omp'))"
         - name: Run tests
           uses: ./.github/actions/test

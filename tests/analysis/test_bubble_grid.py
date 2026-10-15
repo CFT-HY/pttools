@@ -7,7 +7,7 @@ import numpy as np
 
 from pttools.analysis.bubble_grid import BubbleGridVWAlpha
 from pttools.models.bag import BagModel
-from tests.utils.mark import uses_multiprocessing
+from tests.utils.mark import uses_parallel
 
 
 class BubbleGridTest(unittest.TestCase):
@@ -25,7 +25,7 @@ class BubbleGridTest(unittest.TestCase):
             alpha_ns=arr
         )
 
-    @uses_multiprocessing
+    @uses_parallel
     def test_props(self) -> None:
         """Test that the grid properties provide numerical arrays."""
         arrs = [

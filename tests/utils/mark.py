@@ -4,19 +4,22 @@ import unittest
 
 import pytest
 
-from pttools.speedup.options import NUMBA_DISABLE_JIT
+from pttools.speedup.options import NUMBA_DISABLE_JIT, USE_THREADS
 from pttools.utils.decorators import TypePreservingDecorator
 from pttools.utils.system import IS_GITHUB_ACTIONS, IS_OSX, IS_WINDOWS
 
-#: Mark tests that will fail with NUMBA_DISABLE_JIT
-mark_xfail_multiprocessing_jit: pytest.MarkDecorator = pytest.mark.xfail(
-    NUMBA_DISABLE_JIT,
-    reason="Multiprocessing without Numba is not supported for non-bag models."
+#: Mark tests that will fail with NUMBA_DISABLE_JIT when threads are not used.
+#: The models then have to be pickled to be passed to the worker processes or interpreters.
+mark_xfail_pickle_without_jit: pytest.MarkDecorator = pytest.mark.xfail(
+    NUMBA_DISABLE_JIT and not USE_THREADS,
+    reason="Non-bag models cannot be pickled without Numba."
 )
-#: Mark slow tests to be skipped on GitHub Actions Windows and macOS runners
+#: Mark slow tests to be skipped on GitHub Actions Windows and macOS runners, and when Numba JIT is disabled,
+#: as the tests would then be much slower
 skip_slow: TypePreservingDecorator = unittest.skipIf(
-    IS_GITHUB_ACTIONS and (IS_OSX or IS_WINDOWS),
-    reason="This test is slow and would consume a lot of runner time."
+    (IS_GITHUB_ACTIONS and (IS_OSX or IS_WINDOWS)) or NUMBA_DISABLE_JIT,
+    reason="This test is slow and would consume a lot of runner time, especially when Numba JIT is disabled."
 )
-#: Mark tests that use multiprocessing, so that they will be launched from the same runner.
-uses_multiprocessing: pytest.MarkDecorator = pytest.mark.xdist_group(name="multiprocessing")
+#: Mark tests that use parallel executors (threads, processes or interpreters),
+#: so that they will be launched from the same runner.
+uses_parallel: pytest.MarkDecorator = pytest.mark.xdist_group(name="parallel")

@@ -606,19 +606,21 @@ class Exporter:
     The objects are identified by their ``id`` attributes, which are preserved when the objects are pickled.
     Therefore, the deduplication works also for objects that have been sent between processes.
 
-    For parallel computation, the fields can be extracted in the worker processes with :py:attr:`extractor`,
-    and the resulting records added to the exporter in the main process.
-    This avoids sending the large arrays of the objects between the processes.
+    For parallel computation, the fields can be extracted in the workers with :py:attr:`extractor`,
+    and the resulting records added to the exporter in the main thread.
+    When the workers are processes, this avoids sending the large arrays of the objects between the processes.
+    :py:func:`pttools.speedup.parallel.get_pool` gives threads or processes
+    depending on :py:data:`pttools.speedup.options.USE_THREADS`.
 
     .. code-block:: python
 
-        from concurrent.futures import ProcessPoolExecutor
         import functools
 
         from pttools.bubble import Bubble
         from pttools.export import Exporter, Extractor, Record
         from pttools.models import BagModel, Model
         from pttools.omgw0 import Spectrum
+        from pttools.speedup.parallel import get_pool
 
         def compute(params: tuple[float, float, float], model: Model, extractor: Extractor) -> Record:
             v_wall, alpha_n, r_star = params
@@ -628,8 +630,8 @@ class Exporter:
         if __name__ == "__main__":
             model = BagModel(alpha_n_min=0.01)
             params = [(v_wall, 0.1, r_star) for v_wall in (0.3, 0.5, 0.7) for r_star in (0.1, 0.2)]
-            with Exporter("spectra.h5") as exporter, ProcessPoolExecutor() as executor:
-                # The extractor and the model are pickled and sent to the worker processes.
+            with Exporter("spectra.h5") as exporter, get_pool() as executor:
+                # With processes, the extractor and the model are pickled and sent to the worker processes.
                 worker = functools.partial(compute, model=model, extractor=exporter.extractor)
                 exporter.add_many(executor.map(worker, params))
 

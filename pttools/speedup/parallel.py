@@ -1,4 +1,4 @@
-"""Utilities for parallel execution of functions using multiple Python processes with concurrent.futures."""
+"""Utilities for parallel execution of functions using multiple Python processes or threads with concurrent.futures."""
 
 import atexit
 from concurrent.futures import Executor, ProcessPoolExecutor, ThreadPoolExecutor
@@ -8,7 +8,6 @@ from contextlib import contextmanager
 # import datetime
 import logging
 from multiprocessing import set_forkserver_preload
-import sys
 from threading import Lock
 import time
 import types
@@ -18,13 +17,13 @@ import numpy as np
 from numpy.typing import NDArray
 
 import pttools.logging
-from pttools.speedup.options import MAX_WORKERS_DEFAULT
-from pttools.utils import SUPPORTS_FREETHREADING, SUPPORTS_INTERPRETER_POOL
+from pttools.speedup.options import MAX_WORKERS_DEFAULT, USE_INTERPRETERS, USE_THREADS
+from pttools.utils.system import SUPPORTS_INTERPRETER_POOL
 
-try:
+if SUPPORTS_INTERPRETER_POOL:
     from concurrent.futures import InterpreterPoolExecutor
-except ImportError:
-    class InterpreterPoolExecutor:
+else:
+    class InterpreterPoolExecutor(Executor):
         """Placeholder for :class:`concurrent.futures.InterpreterPoolExecutor` on Python versions older than 3.14.
 
         All its methods raise :class:`NotImplementedError`.
@@ -41,8 +40,8 @@ except ImportError:
         def __exit__(
                 self,
                 exc_type: type[BaseException] | None,
-                exc_value: BaseException | None,
-                traceback: types.TracebackType | None) -> None:
+                exc_val: BaseException | None,
+                exc_tb: types.TracebackType | None) -> None:
             """Raise :class:`NotImplementedError`, as the executor is not available."""
             raise NotImplementedError("InterpreterPoolExecutor is only available in Python 3.14 and later.")
 
@@ -189,54 +188,44 @@ def get_global_process_pool(max_workers: int = MAX_WORKERS_DEFAULT) -> ProcessPo
 
 
 @contextmanager
-def get_process_pool(
-        max_workers: int = MAX_WORKERS_DEFAULT,
-        single_thread: bool = False,
-        global_pool: bool = False) -> tp.Iterator[FakeExecutor | ProcessPoolExecutor]:
-    """Get a process pool for parallel execution.
-
-    :param max_workers: Maximum number of worker processes
-    :param single_thread: Whether to disable parallelism for debugging and profiling
-    :param global_pool: Whether to use a global process pool for parallel execution.
-        This avoids the overhead of creating a new process pool for each parallel execution.
-    :return: The pool executor
-    """
-    if single_thread:
-        yield FakeExecutor()
-    elif global_pool:
-        # The global pool is shut down at exit, not here, so that it can be reused.
-        yield get_global_process_pool(max_workers=max_workers)
-    else:
-        # The "with" ensures that the worker processes are shut down when the pool is no longer needed.
-        with create_process_pool(max_workers=max_workers) as pool:
-            yield pool
-
-
-@contextmanager
 def get_pool(
         max_workers: int = MAX_WORKERS_DEFAULT,
         single_thread: bool = False,
-        global_pool: bool = False) \
+        global_pool: bool = False,
+        use_threads: bool = USE_THREADS,
+        use_interpreters: bool = USE_INTERPRETERS) \
         -> tp.Iterator[FakeExecutor | InterpreterPoolExecutor | ProcessPoolExecutor | ThreadPoolExecutor]:
     """Get a pool for parallel execution.
 
-    Returns a ThreadPoolExecutor if free-threading is supported and the GIL is disabled.
-    Otherwise, returns an InterpreterPoolExecutor if supported, or a ProcessPoolExecutor otherwise.
+    The pool is chosen in the following order of priority:
 
-    This is not yet used by the rest of PTtools, since free-threading and InterpreterPoolExecutor are experimental.
+    - ``single_thread``: a :class:`FakeExecutor`, which runs the functions immediately in the calling thread
+    - ``use_threads``: a :class:`concurrent.futures.ThreadPoolExecutor`
+    - ``use_interpreters``: a :class:`concurrent.futures.InterpreterPoolExecutor`,
+      which is experimental and available only in Python 3.14 and later.
+      NumPy cannot currently be imported in subinterpreters, see :data:`pttools.speedup.options.USE_INTERPRETERS`.
+    - otherwise: a :class:`concurrent.futures.ProcessPoolExecutor`, either the global one or a new one
 
-    :param max_workers: Maximum number of worker processes or threads
+    :param max_workers: Maximum number of worker processes, threads or interpreters
     :param single_thread: Whether to disable parallelism for debugging and profiling
     :param global_pool: Whether to use a global process pool for parallel execution.
         This avoids the overhead of creating a new process pool for each parallel execution.
+        This is used only when processes are used.
+    :param use_threads: Whether to use threads. The default is :data:`pttools.speedup.options.USE_THREADS`.
+    :param use_interpreters: Whether to use subinterpreters when threads are not used.
+        The default is :data:`pttools.speedup.options.USE_INTERPRETERS`.
     :return: The pool executor
+    :raises NotImplementedError: if ``use_interpreters`` is chosen on Python versions older than 3.14
     """
     if single_thread:
         yield FakeExecutor()
-    elif SUPPORTS_FREETHREADING and not sys._is_gil_enabled():  # noqa: SLF001
+    elif use_threads:
+        # Thread pools are cheap to create, and therefore a new pool is created for each execution.
         with ThreadPoolExecutor(max_workers=max_workers) as pool:
             yield pool
-    elif SUPPORTS_INTERPRETER_POOL:
+    elif use_interpreters:
+        if not SUPPORTS_INTERPRETER_POOL:
+            raise NotImplementedError("InterpreterPoolExecutor is only available in Python 3.14 and later.")
         with InterpreterPoolExecutor(max_workers=max_workers) as pool:
             yield pool
     elif global_pool:
@@ -388,12 +377,25 @@ def run_parallel(
         args: list | tuple = (),
         kwargs: dict[str, tp.Any] | None = None,
         single_thread: bool = False,
-        global_pool: bool = True) -> NDArray | tuple[NDArray, ...]:
+        global_pool: bool = True,
+        use_threads: bool = USE_THREADS,
+        use_interpreters: bool = USE_INTERPRETERS) -> NDArray | tuple[NDArray, ...]:
     """Run the given function with multiple parameters in parallel.
+
+    By default (see :data:`pttools.speedup.options.USE_THREADS`),
+    the function is run in a :class:`concurrent.futures.ThreadPoolExecutor`.
+    With ``use_threads=False``, it is run in a pool of worker processes instead.
+    Threads avoid the overhead of starting processes and of pickling the parameters and the results,
+    and share the global state, such as caches, with the calling thread.
+    However, they run in parallel only when the function releases the GIL,
+    e.g. a Numba-compiled function with ``nogil=True``, or when the GIL is disabled in free-threaded Python.
+    If the function calls Numba-compiled functions with ``parallel=True``,
+    the Numba threading layer must be thread-safe (``tbb`` or ``omp``),
+    as the default ``workqueue`` layer does not support concurrent calls from multiple threads.
 
     :param func: The function to be executed in parallel
     :param params: Array of the function parameters
-    :param max_workers: Maximum number of worker processes
+    :param max_workers: Maximum number of worker processes or threads
     :param multiple_params:
         Whether the last dimension of the parameter array contains multiple parameters for each function call
     :param unpack_params: Whether the multiple parameters should be unpacked before giving them to the function
@@ -409,6 +411,11 @@ def run_parallel(
         This removes the overhead of recreating the process pool,
         but updates in the global state (such as caches)
         after the pool is first created will not be updated to the subprocesses.
+        This is ignored when threads or subinterpreters are used.
+    :param use_threads: Whether to use threads instead of processes.
+        The default is :data:`pttools.speedup.options.USE_THREADS`.
+    :param use_interpreters: Whether to use subinterpreters instead of processes when threads are not used.
+        The default is :data:`pttools.speedup.options.USE_INTERPRETERS`.
     :return: Numpy arrays for each output value
     """
     if kwargs is None:
@@ -442,7 +449,9 @@ def run_parallel(
     start_time = time.perf_counter()
     # start_datetime = datetime.datetime.now().astimezone().isoformat()
     try:
-        with get_process_pool(max_workers=max_workers, single_thread=single_thread, global_pool=global_pool) as ex:
+        with get_pool(
+                max_workers=max_workers, single_thread=single_thread,
+                global_pool=global_pool, use_threads=use_threads, use_interpreters=use_interpreters) as ex:
             if log_start_finish:
                 logger.info(
                     "Starting parallel processing. Executor: %s, workers: %s, tasks: %s",

@@ -61,7 +61,7 @@ from pttools.bubble import Bubble
 from pttools.docs.examples import is_sphinx_gallery
 from pttools.models import ConstCSModel
 from pttools.omgw0 import Spectrum
-from pttools.speedup.parallel import FakeFuture, get_process_pool
+from pttools.speedup.parallel import FakeFuture, get_pool
 import pttools.type_hints as th
 from pttools.utils.system import IS_READ_THE_DOCS
 
@@ -258,7 +258,7 @@ def main(cases: tuple[Case, ...] = CASES) -> tuple[Figure, Figure, Figure]:
         for case in cases
     }
     # The futures are created first, so that all the computations run in parallel.
-    with get_process_pool(single_thread=IS_READ_THE_DOCS) as pool:
+    with get_pool(single_thread=IS_READ_THE_DOCS) as pool:
         futs: dict[tuple[int, str, int], FakeFuture | Future[Result]] = {}
         ref_futs: dict[tuple[int, str], FakeFuture | Future[Result]] = {}
         for i_case, case in enumerate(cases):

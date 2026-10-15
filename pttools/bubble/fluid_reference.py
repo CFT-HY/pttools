@@ -2,7 +2,7 @@
 
 import functools
 import logging
-import multiprocessing
+from multiprocessing import parent_process
 import os
 from pathlib import Path
 import time
@@ -271,7 +271,7 @@ def ref() -> FluidReference:
 
     The data is loaded on the first call and cached for subsequent calls.
     """
-    if FORKING and multiprocessing.parent_process() is not None:
+    if FORKING and parent_process() is not None:
         logger.warning(
             "The reference data was attempted to be loaded in a subprocess. "
             "The reference data should be loaded in the main process before creating subprocesses "

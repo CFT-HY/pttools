@@ -1,19 +1,25 @@
 """Unit tests for the speedup module."""
 
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+import threading
 import typing as tp
 import unittest
+from unittest import mock
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pytest
 import scipy.interpolate
 
 from pttools import speedup
 from pttools.analysis import save_fig
-from pttools.speedup import njit, spline
-from pttools.speedup.parallel import parallel_debug_message, run_parallel
+from pttools.speedup import njit, parallel, spline
+from pttools.speedup.parallel import FakeExecutor, get_pool, parallel_debug_message, run_parallel
 import pttools.type_hints as th
 from pttools.utils import assert_allclose
+from pttools.utils.system import SUPPORTS_INTERPRETER_POOL
 from tests.utils import TEST_FIGURE_PATH
+from tests.utils.mark import uses_parallel
 
 
 @njit
@@ -44,6 +50,73 @@ class TestSpeedup(unittest.TestCase):
     def test_parallel_debug() -> None:
         """Test that the parallel debug message can be printed."""
         parallel_debug_message("test")
+
+    @staticmethod
+    @uses_parallel
+    def test_get_pool_priority() -> None:
+        """Test the order of priority of single_thread, use_threads, use_interpreters and processes in get_pool."""
+        with get_pool(single_thread=True, use_threads=True, use_interpreters=True) as pool:
+            assert isinstance(pool, FakeExecutor)
+        with get_pool(use_threads=True, use_interpreters=True) as pool:
+            assert isinstance(pool, ThreadPoolExecutor)
+        with get_pool(use_threads=False, max_workers=1) as pool:
+            assert isinstance(pool, ProcessPoolExecutor)
+
+    @staticmethod
+    @unittest.skipUnless(SUPPORTS_INTERPRETER_POOL, "InterpreterPoolExecutor requires Python 3.14 or later.")
+    @uses_parallel
+    def test_get_pool_interpreters() -> None:
+        """Test that use_interpreters gives an InterpreterPoolExecutor that runs functions."""
+        from concurrent.futures import InterpreterPoolExecutor  # noqa: PLC0415
+        with get_pool(use_threads=False, use_interpreters=True, max_workers=2) as pool:
+            assert isinstance(pool, InterpreterPoolExecutor)
+            assert pool.submit(pow, 2, 10).result() == 1024
+
+    @staticmethod
+    def test_get_pool_interpreters_unsupported() -> None:
+        """Test that use_interpreters raises an error if InterpreterPoolExecutor is not available."""
+        with mock.patch.object(parallel, "SUPPORTS_INTERPRETER_POOL", False), \
+                pytest.raises(NotImplementedError, match=r"Python 3\.14"), \
+                get_pool(use_threads=False, use_interpreters=True):
+            pass
+
+    @staticmethod
+    @uses_parallel
+    def test_run_parallel_threads() -> None:
+        """Test that run_parallel with threads runs the function in worker threads and gives the same results."""
+        params = np.arange(12, dtype=np.float64).reshape(3, 4)
+        res = run_parallel(np.square, params, output_dtypes=(np.float64,), use_threads=True, max_workers=4)
+        assert isinstance(res, np.ndarray)
+        assert res.shape == params.shape
+        assert_allclose(res, params**2)
+
+        names = run_parallel(
+            lambda _param: threading.current_thread().name, params,
+            output_dtypes=(object,), use_threads=True, max_workers=4)
+        assert isinstance(names, np.ndarray)
+        assert all(name.startswith("ThreadPoolExecutor") for name in names.flat)
+
+    @staticmethod
+    @uses_parallel
+    def test_run_parallel_threads_multiple() -> None:
+        """Test run_parallel with threads for multiple parameters and multiple outputs."""
+        params = np.array([[1., 2.], [3., 4.], [5., 6.]])
+        sums, prods = run_parallel(
+            lambda a, b: (a + b, a * b), params,
+            multiple_params=True, unpack_params=True,
+            output_dtypes=(np.float64, np.float64), use_threads=True)
+        assert_allclose(sums, params.sum(axis=1))
+        assert_allclose(prods, params.prod(axis=1))
+
+    @staticmethod
+    def test_run_parallel_threads_single_thread() -> None:
+        """Test that single_thread takes precedence over use_threads."""
+        params = np.array([1., 2.])
+        names = run_parallel(
+            lambda _param: threading.current_thread().name, params,
+            output_dtypes=(object,), use_threads=True, single_thread=True)
+        assert isinstance(names, np.ndarray)
+        assert all(name == threading.current_thread().name for name in names.flat)
 
     @staticmethod
     def test_run_parallel_single_output_dtype() -> None:

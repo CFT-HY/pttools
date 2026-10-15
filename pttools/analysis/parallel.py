@@ -84,8 +84,29 @@ def create_spectrum(
         bubble_kwargs: dict[str, tp.Any]| None  = None,
         spectrum_kwargs: dict[str, tp.Any] | None = None,
         allow_bubble_failure: bool = False,
+        parallel: bool = False,
         *args: tp.Any, **kwargs: tp.Any) -> Spectrum | tuple[Spectrum | None, ...] | None:
-    """Create a single spectrum and apply post-processing functions to retrieve results from it."""
+    r"""Create a single spectrum and apply post-processing functions to retrieve results from it.
+
+    :param params: $v_\text{wall}$ and $\alpha_n$
+    :param model: the equation of state model
+    :param post_func: function that is applied to the spectrum to retrieve results from it
+    :param post_func_return_multiple: whether the post-processing function returns multiple values
+    :param use_bag_solver: whether to use the bag model solver for the bubble
+    :param bubble_kwargs: arguments for :class:`pttools.bubble.bubble.Bubble`
+    :param spectrum_kwargs: arguments for :class:`pttools.omgw0.spectrum.Spectrum`, excluding ``parallel``
+    :param allow_bubble_failure: whether to return the failure output instead of raising an exception
+        if the bubble cannot be created
+    :param parallel: whether to use the Numba parallelism in computing the spectrum.
+        When the spectrum is created in a thread, this requires that
+        :data:`pttools.speedup.options.CONCURRENT_PARALLELISM` is true.
+    :param args: arguments for the post-processing function
+    :param kwargs: kwargs for the post-processing function
+    :return: the spectrum and the outputs of the post-processing function
+    :raises ValueError: if ``parallel`` is given in ``spectrum_kwargs``
+    """
+    if spectrum_kwargs is not None and "parallel" in spectrum_kwargs:
+        raise ValueError("Give parallel as an argument of create_spectrum() instead of in spectrum_kwargs.")
     bubble = create_bubble(
         params=params,
         model=model,
@@ -97,9 +118,9 @@ def create_spectrum(
     if not isinstance(bubble, Bubble):
         return _failure_output(post_func, post_func_return_multiple)
     if spectrum_kwargs is None:
-        spectrum = Spectrum(bubble=bubble, parallel=False)
+        spectrum = Spectrum(bubble=bubble, parallel=parallel)
     else:
-        spectrum = Spectrum(bubble=bubble, parallel=False, **spectrum_kwargs)
+        spectrum = Spectrum(bubble=bubble, parallel=parallel, **spectrum_kwargs)
 
     return _post_process(spectrum, post_func, post_func_return_multiple, args, kwargs)
 
@@ -116,7 +137,8 @@ def create_bubbles(
         allow_bubble_failure: bool = ...,
         kwargs: dict[str, tp.Any] | None = ...,
         bubble_kwargs: dict[str, tp.Any] | None = ...,
-        bubble_func: tp.Callable = ...) -> BubbleArr2D: ...
+        bubble_func: tp.Callable = ...,
+        use_threads: bool = ...) -> BubbleArr2D: ...
 
 
 @tp.overload
@@ -131,7 +153,8 @@ def create_bubbles(
         allow_bubble_failure: bool = ...,
         kwargs: dict[str, tp.Any] | None = ...,
         bubble_kwargs: dict[str, tp.Any] | None = ...,
-        bubble_func: tp.Callable = ...) -> tuple[NDArray, ...]: ...
+        bubble_func: tp.Callable = ...,
+        use_threads: bool = ...) -> tuple[NDArray, ...]: ...
 
 
 @tp.overload
@@ -146,7 +169,8 @@ def create_bubbles(
         allow_bubble_failure: bool = ...,
         kwargs: dict[str, tp.Any] | None = ...,
         bubble_kwargs: dict[str, tp.Any] | None = ...,
-        bubble_func: tp.Callable = ...) -> BubbleArr2D | tuple[NDArray, ...]: ...
+        bubble_func: tp.Callable = ...,
+        use_threads: bool = ...) -> BubbleArr2D | tuple[NDArray, ...]: ...
 
 
 def create_bubbles(
@@ -160,8 +184,12 @@ def create_bubbles(
         allow_bubble_failure: bool = False,
         kwargs: dict[str, tp.Any] | None = None,
         bubble_kwargs: dict[str, tp.Any] | None = None,
-        bubble_func: tp.Callable = create_bubble) -> BubbleArr2D | tuple[NDArray, ...]:
-    """Create multiple bubbles in parallel."""
+        bubble_func: tp.Callable = create_bubble,
+        use_threads: bool = options.USE_THREADS) -> BubbleArr2D | tuple[NDArray, ...]:
+    """Create multiple bubbles in parallel.
+
+    :param use_threads: whether to use threads instead of processes, see :func:`pttools.speedup.parallel.run_parallel`
+    """
     start_time = time.perf_counter()
     post_func_return_multiple = False
     if func is None:
@@ -199,7 +227,8 @@ def create_bubbles(
         max_workers=max_workers,
         single_thread=single_thread,
         log_progress_percentage=log_progress_percentage,
-        kwargs=kwargs2
+        kwargs=kwargs2,
+        use_threads=use_threads
     )
     if ret is None:
         raise RuntimeError("The parallel processing returned no output.")
@@ -224,13 +253,21 @@ def create_spectra(
         allow_bubble_failure: bool = False,
         kwargs: dict[str, tp.Any] | None = None,
         bubble_kwargs: dict[str, tp.Any] | None = None,
-        spectrum_kwargs: dict[str, tp.Any] | None = None) -> SpectrumArr2D | tuple[NDArray, ...]:
-    """Create multiple spectra in parallel."""
-    if kwargs is None:
-        kwargs2 = {"spectrum_kwargs": spectrum_kwargs}
-    else:
-        kwargs2 = kwargs.copy()
-        kwargs2["spectrum_kwargs"] = spectrum_kwargs
+        spectrum_kwargs: dict[str, tp.Any] | None = None,
+        use_threads: bool = options.USE_THREADS) -> SpectrumArr2D | tuple[NDArray, ...]:
+    """Create multiple spectra in parallel.
+
+    :param use_threads: whether to use threads instead of processes, see :func:`pttools.speedup.parallel.run_parallel`.
+        If the Numba threading layer supports concurrent parallelism
+        (see :data:`pttools.speedup.options.CONCURRENT_PARALLELISM`),
+        the Numba parallelism of the spectra is then enabled, as the threads would otherwise
+        be limited by the parts of the computation that hold the GIL.
+        With processes, the Numba parallelism of the spectra is disabled,
+        as the processes already use all the CPU cores.
+    """
+    kwargs2: dict[str, tp.Any] = {} if kwargs is None else kwargs.copy()
+    kwargs2["spectrum_kwargs"] = spectrum_kwargs
+    kwargs2["parallel"] = use_threads and options.CONCURRENT_PARALLELISM
     # The output array contains spectra instead of bubbles, since the bubble_func is create_spectrum().
     return create_bubbles(  # pyrefly: ignore[bad-return]
         model=model,
@@ -243,7 +280,8 @@ def create_spectra(
         allow_bubble_failure=allow_bubble_failure,
         kwargs=kwargs2,
         bubble_kwargs=bubble_kwargs,
-        bubble_func=create_spectrum
+        bubble_func=create_spectrum,
+        use_threads=use_threads
     )
 
 

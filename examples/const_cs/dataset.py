@@ -26,8 +26,9 @@ where the bubbles would be marked as failed due to negative entropy fluxes.
 The spectra are computed for the fixed frequencies :py:data:`~examples.const_cs.dataset.F`.
 The model is shared by the bubbles of the same sound speeds,
 and the bubble by the spectra of the same $\alpha_n$ and $v_\text{wall}$.
-Therefore, each bubble and its spectra are computed in the same task of a worker process,
-and the models are pickled to the worker processes, which preserves their identifiers.
+Therefore, each bubble and its spectra are computed in the same task of a worker.
+When the workers are processes instead of threads (see :py:data:`pttools.speedup.options.USE_THREADS`),
+the models are pickled to the worker processes, which preserves their identifiers.
 Each model and bubble is therefore written to the file only once.
 
 The bubbles of some parameters cannot be solved correctly,
@@ -77,7 +78,7 @@ from pttools.export.exporter import SizeEstimate, estimate_size
 from pttools.models import ConstCSModel
 from pttools.omgw0 import Spectrum
 from pttools.speedup.options import MAX_WORKERS_DEFAULT
-from pttools.speedup.parallel import create_process_pool
+from pttools.speedup.parallel import FakeExecutor, get_pool
 from pttools.ssm.nucleation import NucType
 import pttools.type_hints as th
 
@@ -240,7 +241,7 @@ def create_bubble(model: ConstCSModel, alpha_n: float, v_wall: float, accuracy: 
 
 
 def create_spectrum(bubble: Bubble, params: SpectrumParams, accuracy: Accuracy) -> Spectrum:
-    """Create and compute a spectrum on a single CPU core, as the parallelism is provided by the worker processes."""
+    """Create and compute a spectrum on a single CPU core, as the parallelism is provided by the workers."""
     return Spectrum(
         bubble,
         beta_tilde=params.beta_tilde,
@@ -420,7 +421,7 @@ def main(
     :param path: path of the file. Defaults to ``data/const_cs_dataset_N.h5`` in the root of the repository.
     :param overwrite: whether to overwrite an existing file
     :param dry_run: only print the size estimate without computing the dataset
-    :param max_workers: number of worker processes
+    :param max_workers: number of workers
     :param progress_interval: interval of the progress messages in seconds
     :param accuracy: accuracy settings
     :return: path of the file
@@ -434,7 +435,7 @@ def main(
         "The dataset will have %d models, %d bubbles and %d spectra (%d per bubble) with %d frequencies each. "
         "Estimated uncompressed size: %s (models: %s, bubbles: %s, spectra: %s). "
         "The compression may reduce the size of the file. "
-        "Rough estimate of the computation time with %d worker processes: %s (%.2f s per spectrum)",
+        "Rough estimate of the computation time with %d workers: %s (%.2f s per spectrum)",
         grid.n_models, grid.n_bubbles, grid.n_spectra, grid.n_spectra_per_bubble, F.size,
         format_size(estimate.total(n_rows)),
         *(format_size(estimate.total({table: n_rows[table]})) for table in n_rows),
@@ -447,11 +448,14 @@ def main(
     models = [ConstCSModel(css2=css2, csb2=csb2, **MODEL_KWARGS) for css2, csb2 in grid.model_params()]
     spectrum_params = grid.spectrum_params()
     progress = Progress(n_spectra=grid.n_spectra, n_bubbles=grid.n_bubbles, interval=progress_interval)
-    logger.info("Computing the dataset to %s with %d worker processes", path, max_workers)
+    logger.info("Computing the dataset to %s with %d workers", path, max_workers)
     with Exporter(path, mode="w" if overwrite else "x") as exporter, \
-            create_process_pool(max_workers=max_workers) as pool:
-        # The tasks are ordered by model, so that each worker process needs the compiled functions of
-        # only a few models at a time.
+            get_pool(max_workers=max_workers) as pool:
+        # concurrent.futures.wait() below requires real futures, which the single-thread executor does not give.
+        if isinstance(pool, FakeExecutor):
+            raise TypeError("The dataset has to be computed with a thread, interpreter or process pool.")
+        # The tasks are ordered by model, so that with processes, each worker process needs the compiled functions
+        # of only a few models at a time.
         pending: set[cf.Future[TaskResult]] = {
             pool.submit(compute_task, model, alpha_n, v_wall, spectrum_params, accuracy, extractor)
             for model in models
@@ -485,7 +489,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--path", type=Path, help="path of the HDF5 file")
     parser.add_argument("--overwrite", action="store_true", help="overwrite an existing file")
     parser.add_argument("--dry-run", action="store_true", help="only print the estimated size of the dataset")
-    parser.add_argument("--workers", type=int, default=MAX_WORKERS_DEFAULT, help="number of worker processes")
+    parser.add_argument("--workers", type=int, default=MAX_WORKERS_DEFAULT, help="number of workers")
     parser.add_argument(
         "--progress-interval", type=float, default=DEFAULT_PROGRESS_INTERVAL,
         help="interval of the progress messages in seconds")

@@ -277,6 +277,22 @@ so ``numba --sysinfo`` reports TBB as unavailable, but PTtools loads the library
 You can verify that this works by running the command ``python -m pttools.speedup.tbb``.
 For a TBB installed system-wide, you can check the section ``Threading Layer Information``
 of the output of ``numba --sysinfo``.
+The ``tbb`` and ``intel-openmp`` packages are available on PyPI only for x86-64,
+and there is no OpenMP runtime on PyPI for ARM-based macOS.
+There, you can install OpenMP with Homebrew, and make it available for Numba with
+
+.. code-block:: bash
+
+  brew install libomp
+  sudo mkdir -p /usr/local/lib
+  sudo ln -s "$(brew --prefix libomp)/lib/libomp.dylib" /usr/local/lib/
+
+On ARM-based Linux, Numba uses the GNU OpenMP library, which is usually installed together with GCC,
+or can be installed with the package ``libgomp1`` (Debian, Ubuntu) or ``libgomp`` (Fedora, RHEL).
+When PTtools is imported, it warns if the Numba threading layer does not support concurrent parallelism,
+i.e. running Numba functions with ``parallel=True`` from multiple threads simultaneously,
+which is used by :func:`pttools.analysis.parallel.create_spectra` with ``use_threads=True``
+(see :data:`pttools.speedup.options.CONCURRENT_PARALLELISM`).
 If you can't get the threading backends working,
 you can disable the nested parallelism by setting the environment variable
 ``NUMBA_NESTED_PARALLELISM=0`` before importing PTtools.

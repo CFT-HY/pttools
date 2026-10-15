@@ -1,5 +1,6 @@
 """System utilities."""
 
+import concurrent.futures
 import multiprocessing
 import os
 from pathlib import Path
@@ -42,8 +43,9 @@ PROCESS_START_METHOD: str = multiprocessing.get_start_method()
 RAM_USE_HIGH_PERCENT: float = 80
 #: Whether this Python installation supports free threading
 SUPPORTS_FREETHREADING: bool = bool(sysconfig.get_config_var("Py_GIL_DISABLED"))
-#: Whether this Python installation supports :py:class:`multiprocessing.InterpreterPoolExecutor`
-SUPPORTS_INTERPRETER_POOL: bool = hasattr(multiprocessing, "InterpreterPoolExecutor")
+#: Whether this Python installation supports :py:class:`concurrent.futures.InterpreterPoolExecutor`,
+#: which is available in Python 3.14 and later
+SUPPORTS_INTERPRETER_POOL: bool = hasattr(concurrent.futures, "InterpreterPoolExecutor")
 #: Uname information of the current platform
 UNAME: platform.uname_result = platform.uname()
 

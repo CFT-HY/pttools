@@ -44,7 +44,7 @@ from examples.standard_model import standard_model_xi_v
 from pttools.analysis import close_figs
 from pttools.export import Importer, Table
 from tests.utils.const import TEST_RESULT_PATH
-from tests.utils.mark import mark_xfail_multiprocessing_jit, skip_slow, uses_multiprocessing
+from tests.utils.mark import mark_xfail_pickle_without_jit, skip_slow, uses_parallel
 
 
 class ExampleTest(unittest.TestCase):
@@ -89,9 +89,9 @@ class ExampleTest(unittest.TestCase):
         const_cs_find.main()
 
     @staticmethod
-    @mark_xfail_multiprocessing_jit
+    @mark_xfail_pickle_without_jit
     @skip_slow
-    @uses_multiprocessing
+    @uses_parallel
     def test_const_cs_gw() -> None:
         """Test that the example ``examples.const_cs.const_cs_gw`` runs without errors."""
         figs1, figs2, _table = const_cs_gw.main()
@@ -99,9 +99,9 @@ class ExampleTest(unittest.TestCase):
         close_figs(*figs2.flat)
 
     @staticmethod
-    @mark_xfail_multiprocessing_jit
+    @mark_xfail_pickle_without_jit
     @skip_slow
-    @uses_multiprocessing
+    @uses_parallel
     def test_const_cs_dataset() -> None:
         """Test that the example ``examples.const_cs.dataset`` creates a dataset with the smallest grid."""
         path = TEST_RESULT_PATH / "const_cs_dataset.h5"
@@ -139,9 +139,9 @@ class ExampleTest(unittest.TestCase):
         entropy_comparison.main()
 
     @staticmethod
-    @mark_xfail_multiprocessing_jit
+    @mark_xfail_pickle_without_jit
     @skip_slow
-    @uses_multiprocessing
+    @uses_parallel
     def test_entropy_grid() -> None:
         """Test that the example ``examples.entropy.entropy_grid`` runs without errors."""
         close(entropy_grid.main())
@@ -164,17 +164,17 @@ class ExampleTest(unittest.TestCase):
         close(gksvdv_bubble.main())
 
     @staticmethod
-    @mark_xfail_multiprocessing_jit
+    @mark_xfail_pickle_without_jit
     @skip_slow
-    @uses_multiprocessing
+    @uses_parallel
     def test_gksvdv_comparison() -> None:
         """Test that the example ``examples.gksvdv.gksvdv_comparison`` runs without errors."""
         close_figs(*gksvdv_comparison.main())
 
     @staticmethod
-    @mark_xfail_multiprocessing_jit
+    @mark_xfail_pickle_without_jit
     @skip_slow
-    @uses_multiprocessing
+    @uses_parallel
     def test_gksvdv_fig2() -> None:
         """Test that the example ``examples.gksvdv.gksvdv_fig2`` runs without errors."""
         close_figs(*gksvdv_fig2.main())
@@ -233,17 +233,17 @@ class ExampleTest(unittest.TestCase):
         delta_theta.main().fig()
 
     @staticmethod
-    @mark_xfail_multiprocessing_jit
+    @mark_xfail_pickle_without_jit
     @skip_slow
-    @uses_multiprocessing
+    @uses_parallel
     def test_ke_frac() -> None:
         """Test that the example ``examples.props.ke_frac`` runs without errors."""
         close(ke_frac.main())
 
     @staticmethod
-    @mark_xfail_multiprocessing_jit
+    @mark_xfail_pickle_without_jit
     @skip_slow
-    @uses_multiprocessing
+    @uses_parallel
     def test_n_points() -> None:
         """Test that the example ``examples.props.n_points`` runs without errors."""
         close_figs(*n_points.main(cases=n_points.CASES[:2]))
@@ -274,9 +274,9 @@ class ExampleTest(unittest.TestCase):
         close(w_by_w.main())
 
     @staticmethod
-    @mark_xfail_multiprocessing_jit
+    @mark_xfail_pickle_without_jit
     @skip_slow
-    @uses_multiprocessing
+    @uses_parallel
     def test_xi_kappa() -> None:
         """Test that the example ``examples.props.xi_kappa`` runs without errors."""
         close(xi_kappa.main())

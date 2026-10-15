@@ -4,14 +4,14 @@ import unittest
 
 from pttools.bubble import fluid_reference
 from tests.utils.const import TEST_DATA_PATH
-from tests.utils.mark import skip_slow, uses_multiprocessing
+from tests.utils.mark import skip_slow, uses_parallel
 
 
 class ReferenceTest(unittest.TestCase):
     """Test the generation of the fluid reference."""
 
     @skip_slow
-    @uses_multiprocessing
+    @uses_parallel
     def test_generation(self) -> None:
         """Test that a small fluid reference file can be generated."""
         path = TEST_DATA_PATH / "fluid_reference_test.hdf5"
