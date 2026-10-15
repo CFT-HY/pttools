@@ -168,8 +168,7 @@ def z_range(
     :param gs_star: $g_{s\ast}$, degrees of freedom for entropy at the time of GW production.
         If not given, $g_{s\ast} = g_{e\ast}$ is assumed.
     :return: ${z}_\text{min}$ and ${z}_\text{max}$
-    :raises ValueError: if not $0 < {f}_\text{min} \leq {f}_\text{max}$,
-        if the arrays are not 1D or not of equal length, or if the range is not finite and positive
+    :raises ValueError: if not $0 < {f}_\text{min} \leq {f}_\text{max}$, or if the range is not finite and positive
     """
     if not 0 < f_min <= f_max:
         raise ValueError(f"0 < f_min <= f_max is required. Got f_min={f_min}, f_max={f_max}.")

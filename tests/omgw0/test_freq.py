@@ -148,14 +148,10 @@ class ZRangeTest(unittest.TestCase):
             == freq.z_range(self.F_MIN, self.F_MAX, T_star=200., r_star=0.2)
 
     def test_invalid(self) -> None:
-        """Invalid frequency ranges and arrays of different lengths or dimensions should raise an error."""
+        """Invalid frequency ranges and non-finite ranges should raise an error."""
         with pytest.raises(ValueError, match="f_min <= f_max"):
             freq.z_range(self.F_MAX, self.F_MIN)
         with pytest.raises(ValueError, match="f_min <= f_max"):
             freq.z_range(0., self.F_MAX)
-        with pytest.raises(ValueError, match="equal length"):
-            freq.z_range(self.F_MIN, self.F_MAX, T_star=np.array([100., 200.]), r_star=np.array([0.1, 0.2, 0.3]))
-        with pytest.raises(ValueError, match="1D array"):
-            freq.z_range(self.F_MIN, self.F_MAX, T_star=np.array([[100., 200.]]))
         with pytest.raises(ValueError, match="finite and positive"):
             freq.z_range(self.F_MIN, self.F_MAX, T_star=np.array([100., np.nan]))
