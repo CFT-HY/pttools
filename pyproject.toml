@@ -70,7 +70,7 @@ requires-python = ">= 3.12"
 # When updating these, also update environment.yml.
 # Please also ensure that compatible versions are available in LISA ProtoLab.
 dependencies = [
-    # h5py does not yet support free-threading.
+    # h5py free-threading wheels are not published on PyPI, as they are largely untested.
     # https://github.com/h5py/h5py/issues/2475
     # https://docs.h5py.org/en/latest/threads.html#free-threading
     "h5py >= 3.16.0",
