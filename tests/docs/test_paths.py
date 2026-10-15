@@ -57,20 +57,26 @@ class DocsPathsTest(unittest.TestCase):
         with mock.patch.object(paths, "env_dir", return_value=None):
             assert paths.find_docs_dir(cwd=docs) == docs
 
-    def test_find_docs_dir_pttools_repo(self) -> None:
-        """When run from the PTtools repository, its docs are found even if not in a virtual environment."""
+    def test_find_docs_dir_project_repo(self) -> None:
+        """The docs of the project repository are found even if not in a virtual environment."""
         with mock.patch.object(paths, "env_dir", return_value=None):
             found = paths.find_docs_dir(cwd=self.root)
-        pttools_docs = paths.PTTOOLS_DIR.parent / paths.DOCS_DIR_NAME
-        if paths.is_docs_dir(pttools_docs):
-            assert found == pttools_docs
+        if paths.PROJECT_DIR is not None and paths.is_docs_dir(paths.PROJECT_DIR / paths.DOCS_DIR_NAME):
+            assert found == paths.PROJECT_DIR / paths.DOCS_DIR_NAME
         else:
             assert found is None
+
+    def test_find_docs_dir_package(self) -> None:
+        """When PTtools is installed as a package, the docs of the project repository of the environment are found."""
+        docs = self.make_docs_dir("project", "docs")
+        with mock.patch.object(paths, "env_dir", return_value=None), \
+                mock.patch.object(paths, "PROJECT_DIR", self.root / "project"):
+            assert paths.find_docs_dir(cwd=self.root) == docs
 
     def test_find_docs_dir_not_found(self) -> None:
         """None is returned if no docs directory is found."""
         with mock.patch.object(paths, "env_dir", return_value=None), \
-                mock.patch.object(paths, "PTTOOLS_DIR", self.root / "site-packages" / "pttools"):
+                mock.patch.object(paths, "PROJECT_DIR", None):
             assert paths.find_docs_dir(cwd=self.root) is None
 
     def test_default_log_dir(self) -> None:

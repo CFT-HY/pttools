@@ -8,7 +8,8 @@ so the run directories of the source repository should be used when available.
 
 The location of the data is given by the environment variable ``PTTOOLS_HYDRO_DATA_DIR``,
 which should point to the root of the ``UETC_paper_Hydro`` repository.
-If it's not set, ``UETC_paper_Hydro`` in the same directory as the PTtools repository is used.
+If it's not set, ``UETC_paper_Hydro`` in the same directory as the project repository is used,
+see :py:data:`DEFAULT_DATA_DIR`.
 """
 
 from dataclasses import dataclass
@@ -17,13 +18,17 @@ import os
 from pathlib import Path
 
 from pttools.imports.hydro.run import HydroRun
+from pttools.utils.system import PROJECT_DIR
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 #: Environment variable for the location of the data
 DATA_DIR_ENV: str = "PTTOOLS_HYDRO_DATA_DIR"
-#: Default location of the data, next to the PTtools repository
-DEFAULT_DATA_DIR: Path = Path(__file__).resolve().parents[3].parent / "UETC_paper_Hydro"
+#: Default location of the data, ``UETC_paper_Hydro`` in the same directory as the project repository.
+#: If PTtools is installed as a package (see :py:data:`pttools.utils.system.IS_PACKAGE`),
+#: the project repository is the one at whose root the virtual environment of PTtools is.
+#: Otherwise, it's the PTtools repository. See :py:data:`pttools.utils.system.PROJECT_DIR`.
+DEFAULT_DATA_DIR: Path | None = None if PROJECT_DIR is None else PROJECT_DIR.parent / "UETC_paper_Hydro"
 
 
 @dataclass(frozen=True)
@@ -78,7 +83,7 @@ def data_dir() -> Path | None:
             return Path(path)
         logger.warning("The directory given by %s does not exist: %s", DATA_DIR_ENV, path)
         return None
-    return DEFAULT_DATA_DIR if DEFAULT_DATA_DIR.is_dir() else None
+    return DEFAULT_DATA_DIR if DEFAULT_DATA_DIR is not None and DEFAULT_DATA_DIR.is_dir() else None
 
 
 def load_correia_2025_run(name: str, path: str | os.PathLike[str] | None = None) -> HydroRun:

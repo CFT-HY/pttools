@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 import sys
 
-from pttools.utils.system import PTTOOLS_DIR
+from pttools.utils.system import PROJECT_DIR
 
 #: Files that a Sphinx documentation directory should contain
 DOCS_DIR_FILES: tuple[str, ...] = ("conf.py", "Makefile")
@@ -57,7 +57,10 @@ def find_docs_dir(cwd: str | os.PathLike[str] | None = None) -> Path | None:
        such as PTPlot, and when PTtools itself is run with ``uv run``.
     2. The ``docs`` subdirectory of the current working directory.
     3. The current working directory itself.
-    4. The ``docs`` directory of the PTtools repository, if PTtools is run from a source checkout.
+    4. The ``docs`` directory of the project repository given by :py:data:`pttools.utils.system.PROJECT_DIR`.
+       If PTtools is installed as a package (see :py:data:`pttools.utils.system.IS_PACKAGE`),
+       this is the repository at whose root the virtual environment of PTtools is.
+       Otherwise, this is the PTtools repository.
 
     :param cwd: the directory to use as the current working directory, or None for the actual one
     :return: path of the documentation directory, or None if not found
@@ -68,7 +71,8 @@ def find_docs_dir(cwd: str | os.PathLike[str] | None = None) -> Path | None:
         candidates.append(env.parent / DOCS_DIR_NAME)
     candidates.append(cwd_path / DOCS_DIR_NAME)
     candidates.append(cwd_path)
-    candidates.append(PTTOOLS_DIR.parent / DOCS_DIR_NAME)
+    if PROJECT_DIR is not None:
+        candidates.append(PROJECT_DIR / DOCS_DIR_NAME)
     for candidate in candidates:
         if is_docs_dir(candidate):
             return candidate

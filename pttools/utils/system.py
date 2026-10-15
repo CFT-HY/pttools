@@ -52,8 +52,34 @@ UNAME: platform.uname_result = platform.uname()
 # Constants determined by other constants
 #: Whether parallel processes are started by forking
 FORKING: bool = PROCESS_START_METHOD == "fork"
-#: Whether PTtools is installed as a pip package
-IS_PIP_PACKAGE: bool = PTTOOLS_DIR.parent.name == "site-packages"
+#: Whether PTtools is installed as a Python package
+IS_PACKAGE: bool = PTTOOLS_DIR.parent.name == "site-packages"
+
+
+def project_dir(pttools_dir: Path = PTTOOLS_DIR, is_package: bool = IS_PACKAGE) -> Path | None:
+    """Root directory of the project repository.
+
+    If PTtools is installed as a package, it's assumed to be installed in a virtual environment (e.g. ``.venv``)
+    at the root of the repository of the project that uses it, such as PTPlot.
+    The virtual environment is recognised by its ``pyvenv.cfg`` file,
+    which is created by ``venv``, ``virtualenv`` and ``uv``.
+    Otherwise, PTtools is run from its source repository, which is returned.
+
+    :param pttools_dir: the installation directory of PTtools, see :py:data:`PTTOOLS_DIR`
+    :param is_package: whether PTtools is installed as a package, see :py:data:`IS_PACKAGE`
+    :return: the root directory of the project repository,
+        or None if PTtools is installed as a package, but not in a virtual environment
+    """
+    if not is_package:
+        return pttools_dir.parent
+    for parent in pttools_dir.parents:
+        if (parent / "pyvenv.cfg").is_file():
+            return parent.parent
+    return None
+
+
+#: Root directory of the project repository, see :py:func:`project_dir`
+PROJECT_DIR: Path | None = project_dir()
 
 # This is the same implementation as in Numba.
 # https://numba.readthedocs.io/en/stable/user/threading-layer.html
