@@ -7,6 +7,7 @@ import unittest
 import numpy as np
 from pandas.io.parsers import read_csv
 
+from pttools.speedup.options import NUMBA_DISABLE_JIT
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION
 from pttools.ssm.suppression.suppression_ssm_data.remove_hybrids import SUPPRESSION_FOLDER, remove_hybrids
 from pttools.ssm.suppression.suppression_ssm_data.suppression_ssm_calculator import calc_sup_ssm
@@ -46,8 +47,16 @@ class SuppressionTest(unittest.TestCase):
         elif sys.platform == "win32":
             tolerances["sup_ssm"] = 5.68e-7
             tolerances["ssm_tot"] = 5.63e-7
+        spectrum_kwargs: dict[str, tp.Any] = {}
+        if NUMBA_DISABLE_JIT:
+            # Without Numba, the default accuracy would take several minutes.
+            # The point of running the test without Numba is to check that the code runs,
+            # so lower accuracy is used, which changes the results by up to 3.4e-4.
+            spectrum_kwargs = {"nT": 500, "n_z_lookup": 5000}
+            tolerances["sup_ssm"] = 3.5e-4
+            tolerances["ssm_tot"] = 3.5e-4
         for filename in filenames:
-            data = calc_sup_ssm(f"{filename}.txt", save=False)
+            data = calc_sup_ssm(f"{filename}.txt", save=False, **spectrum_kwargs)
             ref = np.genfromtxt(SUPPRESSION_FOLDER / f"{filename}_ssm.txt", names=True)
             for key, rtol in tolerances.items():
                 if rtol is None:

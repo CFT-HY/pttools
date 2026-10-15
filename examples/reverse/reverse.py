@@ -14,6 +14,15 @@ from pttools.models import BagModel, Model
 from pttools.omgw0 import Spectrum
 import pttools.type_hints as th
 
+# Accuracy settings of the spectra.
+# These are lower than the defaults, as the spectrum is computed for each step of the optimizer.
+# Compared to the defaults, they make the computation about 10 times faster without Numba,
+# and give the same peak frequency and a peak amplitude that differs by less than 0.1 %.
+#: Number of points in the $\tilde{T}$ array of the spectra
+N_T: int = 1000
+#: Number of points in the lookup arrays of the spectra
+N_Z_LOOKUP: int = 2000
+
 
 def solvable(
         params: th.FloatArr1D,
@@ -23,7 +32,7 @@ def solvable(
     """This function is minimized when the parameters produce the desired peak frequency and amplitude"""
     v_wall, alpha_n, r_star = params
     bubble = Bubble(model, v_wall=v_wall, alpha_n=alpha_n)
-    spectrum = Spectrum(bubble, r_star=r_star)
+    spectrum = Spectrum(bubble, r_star=r_star, nT=N_T, n_z_lookup=N_Z_LOOKUP)
     f_peak, omega_peak = spectrum.omgw0_peak()  # suppression=SuppressionMethod.EXT_CONSTANT
     f_diff = np.log10(f_peak) - np.log10(f_peak_target)
     omega_diff = np.log10(omega_peak) - np.log10(omega_peak_target)
