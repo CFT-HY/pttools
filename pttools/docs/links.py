@@ -110,6 +110,8 @@ EXTLINKS: ExtLinks = {
 LINKCHECK_ALLOWED_REDIRECTS: dict[str, str] = {
     "https://akareport.aka.fi/*": "https://tiedejatutkimus.fi/*",
     "https://bitbucket.org/*": "https://id.atlassian.com/*",
+    # DOIs redirect to the websites of the publishers, which can be any URL.
+    r"https://doi\.org/.*": r".*",
     "https://gitlab.esa.int/*": "https://gitlab.esa.int/users/sign_in",
     "https://www.helsinki.fi/": "https://www.helsinki.fi/en",
     "https://hdl.handle.net/*": "(https://helda.helsinki.fi/handle/*|https://sussex.figshare.com/*)",
