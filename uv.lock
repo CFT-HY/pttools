@@ -1666,6 +1666,7 @@ dependencies = [
     { name = "numba" },
     { name = "numpy" },
     { name = "orjson" },
+    { name = "pandas" },
     { name = "plotly" },
     { name = "scipy" },
 ]
@@ -1685,7 +1686,6 @@ performance = [
 dev = [
     { name = "allure-pytest" },
     { name = "colorama" },
-    { name = "pandas" },
     { name = "pandas-stubs" },
     { name = "prek" },
     { name = "psutil" },
@@ -1731,6 +1731,7 @@ requires-dist = [
     { name = "numbalsoda", marker = "extra == 'numbalsoda'", specifier = ">=0.3.4" },
     { name = "numpy", specifier = ">=2.4.6" },
     { name = "orjson", specifier = ">=3.11.9" },
+    { name = "pandas", specifier = ">=3.0.5" },
     { name = "plotly", specifier = ">=6.6.0" },
     { name = "scipy", specifier = ">=1.17.1" },
     { name = "tbb", marker = "(platform_machine == 'AMD64' and extra == 'performance') or (platform_machine == 'x86_64' and extra == 'performance')", specifier = ">=2021.10.0" },
@@ -1741,7 +1742,6 @@ provides-extras = ["numbalsoda", "performance"]
 dev = [
     { name = "allure-pytest", specifier = ">=2.16.0" },
     { name = "colorama", specifier = ">=0.4.6" },
-    { name = "pandas", specifier = ">=3.0.5" },
     { name = "pandas-stubs", specifier = ">=3.0.3.260530" },
     { name = "prek", specifier = ">=0.5.4" },
     { name = "psutil", specifier = ">=7.2.2" },

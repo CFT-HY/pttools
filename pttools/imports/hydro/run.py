@@ -11,7 +11,6 @@ As the expansion of the universe during the phase transition is neglected,
 the Hubble rate at the time of GW production is $H_* = H_n$.
 """
 
-import csv
 import functools
 import logging
 import os
@@ -19,6 +18,7 @@ from pathlib import Path
 import typing as tp
 
 import numpy as np
+import pandas as pd
 
 from pttools.imports.hydro.quantities import Quantity, integral_scale, mean_square, read_power_spectrum
 from pttools.omgw0.factors import H
@@ -60,15 +60,19 @@ def parse_input_file(path: str | os.PathLike[str]) -> dict[str, str]:
 def read_globals(path: str | os.PathLike[str]) -> dict[str, th.FloatArr1D]:
     """Read the CSV log of the global quantities.
 
+    The file is read with the C engine of :py:func:`pandas.read_csv`.
+    If the run was interrupted, the last row may be incomplete, in which case it's ignored with a warning.
+
     :param path: path of the ``.out`` file
     :return: the columns of the file as arrays, with the column names as keys
     """
-    with Path(path).open(encoding="utf-8", newline="") as file:
-        reader = csv.reader(file)
-        header = [name.strip() for name in next(reader)]
-        rows = [[float(value) for value in row] for row in reader if row]
-    data = np.array(rows, dtype=np.float64)
-    return {name: data[:, i] for i, name in enumerate(header)}
+    data = pd.read_csv(path, engine="c", dtype=np.float64, skipinitialspace=True)
+    data.columns = [str(name).strip() for name in data.columns]
+    # The missing values of an incomplete row are read as nan.
+    if len(data) > 0 and data.iloc[-1].isna().any():
+        logger.warning("Ignoring the incomplete last row of %s, as the run was probably interrupted.", path)
+        data = data.iloc[:-1]
+    return {name: data[name].to_numpy(dtype=np.float64) for name in data.columns}
 
 
 class HydroRun:

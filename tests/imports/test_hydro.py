@@ -17,6 +17,7 @@ from pttools.imports.hydro import (
     load_correia_2025_run,
     mean_square,
     parse_input_file,
+    read_globals,
 )
 from pttools.omgw0 import const, freq
 from pttools.omgw0.base import Omgw0Base
@@ -167,6 +168,18 @@ class SyntheticRunTest(unittest.TestCase):
         # Defaults
         spectrum = self.hydro_run.spectrum(1000, g_star=80.)
         assert (spectrum.T_star, spectrum.g_star, spectrum.gs_star) == (const.DEFAULT_T_STAR, 80., 80.)
+
+    def test_read_globals_incomplete_last_row(self) -> None:
+        """The incomplete last row of an interrupted run should be ignored."""
+        path = self.hydro_run.path / "run_1.out"
+        lines = path.read_text(encoding="utf-8").splitlines()
+        truncated = Path(self.tmpdir.name) / "truncated.out"
+        truncated.write_text("\n".join([*lines, lines[-1].rsplit(",", 3)[0] + ","]) + "\n", encoding="utf-8")
+        ref = read_globals(path)
+        data = read_globals(truncated)
+        assert data.keys() == ref.keys()
+        for key, values in ref.items():
+            np.testing.assert_array_equal(data[key], values)
 
     def test_gw_rate_requires_step_prev(self) -> None:
         """The growth rate cannot be computed without the earlier time step."""
