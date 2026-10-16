@@ -44,7 +44,7 @@ class SSMSpectrum(Extractable, SpectrumBase):
     """Gravitational wave simulation object.
 
     The flat-space quantities of :py:class:`pttools.ssm.spectrum_base.SpectrumBase`
-    allow comparing the spectrum with external data, e.g. :py:class:`pttools.imports.hydro.spectrum.HydroSpectrum`.
+    allow comparing the spectrum with external data, e.g. :py:class:`pttools.lattice.spectrum.LatticeSpectrum`.
     """
 
     #: The exportable fields of the spectrum

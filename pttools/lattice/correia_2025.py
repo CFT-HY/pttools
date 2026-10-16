@@ -6,7 +6,7 @@ The Zenodo release does not contain the logs of the global quantities (``*.out``
 which are needed for the normalisation of the spectra,
 so the run directories of the source repository should be used when available.
 
-The location of the data is given by the environment variable ``PTTOOLS_HYDRO_DATA_DIR``,
+The location of the data is given by the environment variable ``PTTOOLS_LATTICE_DATA_DIR``,
 which should point to the root of the ``UETC_paper_Hydro`` repository.
 If it's not set, ``UETC_paper_Hydro`` in the same directory as the project repository is used,
 see :py:data:`DEFAULT_DATA_DIR`.
@@ -17,13 +17,13 @@ import logging
 import os
 from pathlib import Path
 
-from pttools.imports.hydro.run import HydroRun
+from pttools.lattice.run import LatticeRun
 from pttools.utils.system import PROJECT_DIR
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 #: Environment variable for the location of the data
-DATA_DIR_ENV: str = "PTTOOLS_HYDRO_DATA_DIR"
+DATA_DIR_ENV: str = "PTTOOLS_LATTICE_DATA_DIR"
 #: Default location of the data, ``UETC_paper_Hydro`` in the same directory as the project repository.
 #: If PTtools is installed as a package (see :py:data:`pttools.utils.system.IS_PACKAGE`),
 #: the project repository is the one at whose root the virtual environment of PTtools is.
@@ -86,7 +86,7 @@ def data_dir() -> Path | None:
     return DEFAULT_DATA_DIR if DEFAULT_DATA_DIR is not None and DEFAULT_DATA_DIR.is_dir() else None
 
 
-def load_correia_2025_run(name: str, path: str | os.PathLike[str] | None = None) -> HydroRun:
+def load_correia_2025_run(name: str, path: str | os.PathLike[str] | None = None) -> LatticeRun:
     r"""Load a simulation run of :correia_2025:`\ `.
 
     The input file of the deflagration is only in the directory of the longer run,
@@ -108,7 +108,7 @@ def load_correia_2025_run(name: str, path: str | os.PathLike[str] | None = None)
         candidates = sorted(run_dir.parent.glob("*/input-test-largerun"))
         if candidates:
             input_path = candidates[0]
-    return HydroRun(
+    return LatticeRun(
         run_dir,
         v_wall=meta.v_wall,
         alpha_n=meta.alpha_n,

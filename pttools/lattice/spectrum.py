@@ -5,15 +5,15 @@ import typing as tp
 
 import numpy as np
 
-from pttools.imports.hydro.quantities import Quantity
-from pttools.imports.hydro.run import HydroRun
+from pttools.lattice.quantities import Quantity
+from pttools.lattice.run import LatticeRun
 from pttools.omgw0 import const
 from pttools.omgw0.base import Omgw0Base
 import pttools.type_hints as th
 from pttools.utils.decorators import cached_property
 
 
-class HydroSpectrum(Omgw0Base):
+class LatticeSpectrum(Omgw0Base):
     r"""Power spectra of a hydrodynamic lattice simulation at a given time step.
 
     The spectra are functions of $z = kR_*$ and normalised as in :py:class:`pttools.ssm.spectrum_base.SpectrumBase`,
@@ -23,7 +23,7 @@ class HydroSpectrum(Omgw0Base):
     The expansion of the universe is neglected in the simulations, and therefore $H_* = H_n$.
 
     The simulation is in flat space, and its Hubble-scaled mean bubble spacing ${r}_{*,\text{lat}}$
-    (:py:attr:`HydroRun.r_star`) follows from the energy density and the gravitational constant in lattice units.
+    (:py:attr:`LatticeRun.r_star`) follows from the energy density and the gravitational constant in lattice units.
     For comparisons with the Sound Shell Model, e.g. with :py:class:`pttools.omgw0.spectrum.Spectrum`,
     the spectrum can be scaled to another Hubble-scaled mean bubble spacing ${r}_*$.
     The GW power spectrum is proportional to $(H_* R_*)^2$, as the source lasts for a time proportional to $R_*$,
@@ -37,7 +37,7 @@ class HydroSpectrum(Omgw0Base):
 
     def __init__(
             self,
-            run: HydroRun,
+            run: LatticeRun,
             step: int,
             step_prev: int | None = None,
             r_star: float | None = None,
@@ -50,7 +50,7 @@ class HydroSpectrum(Omgw0Base):
         :param step: the time step
         :param step_prev: the earlier time step for computing the GW power growth rate
         :param r_star: $r_*$, Hubble-scaled mean bubble spacing to which the spectrum is scaled.
-            Defaults to that of the simulation (:py:attr:`HydroRun.r_star`),
+            Defaults to that of the simulation (:py:attr:`LatticeRun.r_star`),
             or nan if it's not available, as it requires the initial energy density.
         :param T_star: $T_*$, temperature at the time of GW production in GeV,
             for the conversion to the GW power spectrum today
@@ -61,7 +61,7 @@ class HydroSpectrum(Omgw0Base):
         """
         if r_star is not None and not r_star > 0:
             raise ValueError(f"r_star must be positive. Got r_star={r_star}.")
-        self.run: HydroRun = run
+        self.run: LatticeRun = run
         self.step: int = step
         self.step_prev: int | None = step_prev
         k, _, counts = run.power_spectrum(Quantity.X_DIV, step)
@@ -159,6 +159,6 @@ class HydroSpectrum(Omgw0Base):
     def mean_adiabatic_index(self) -> float:
         r"""$\Gamma = \bar{w} / \bar{\epsilon}_0$, mean adiabatic index.
 
-        See :py:meth:`pttools.imports.hydro.run.HydroRun.mean_adiabatic_index`.
+        See :py:meth:`pttools.lattice.run.LatticeRun.mean_adiabatic_index`.
         """
         return float(self.run.mean_adiabatic_index(self.step))

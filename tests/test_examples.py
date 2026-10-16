@@ -24,7 +24,7 @@ from examples.gksvdv import (
     gksvdv_testing2,
     gksvdv_testing3,
 )
-from examples.hydro import hydro_quantities, hydro_spectra, hydro_suppression
+from examples.lattice import lattice_quantities, lattice_spectra, lattice_suppression
 from examples.low_k import low_k
 from examples.props import (
     chapman_jouguet,
@@ -194,27 +194,27 @@ class ExampleTest(unittest.TestCase):
         """Test that the example ``examples.gksvdv.gksvdv_testing3`` runs without errors."""
         close(gksvdv_testing3.main())
 
-    # Hydro
+    # Lattice
     @staticmethod
-    def test_hydro_quantities() -> None:
-        """Test that the example ``examples.hydro.hydro_quantities`` runs without errors.
+    def test_lattice_quantities() -> None:
+        """Test that the example ``examples.lattice.lattice_quantities`` runs without errors.
 
         Without the simulation data the example is skipped.
         """
-        close_figs(*hydro_quantities.main().values())
+        close_figs(*lattice_quantities.main().values())
 
     @staticmethod
-    def test_hydro_spectra() -> None:
-        """Test that the example ``examples.hydro.hydro_spectra`` runs without errors.
+    def test_lattice_spectra() -> None:
+        """Test that the example ``examples.lattice.lattice_spectra`` runs without errors.
 
         Without the simulation data the example is skipped.
         """
-        close_figs(*hydro_spectra.main().values())
+        close_figs(*lattice_spectra.main().values())
 
     @staticmethod
-    def test_hydro_suppression() -> None:
-        """Test that the example ``examples.hydro.hydro_suppression`` runs without errors."""
-        close_figs(*(plot.fig for plot in hydro_suppression.main()))
+    def test_lattice_suppression() -> None:
+        """Test that the example ``examples.lattice.lattice_suppression`` runs without errors."""
+        close_figs(*(plot.fig for plot in lattice_suppression.main()))
 
     # Low-k
     @staticmethod

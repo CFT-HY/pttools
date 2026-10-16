@@ -11,9 +11,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 
-from pttools.analysis.hydro import HydroComparison, gw_rate_series, suppression_series
+from pttools.analysis.lattice import LatticeComparison, gw_rate_series, suppression_series
 from pttools.analysis.utils import FigAndAxes, create_fig_ax
-from pttools.imports.hydro import Quantity
+from pttools.lattice import Quantity
 
 #: Colours of the simulation data, as in :correia_2025:`\ `
 COLOR_GW: str = "#d55e00"
@@ -38,7 +38,7 @@ def _finish(ax: Axes, xlim: tuple[float, float] | None, ylim: tuple[float, float
 
 
 def plot_gw_rate_comparison(
-        comparison: HydroComparison,
+        comparison: LatticeComparison,
         fig: Figure | None = None,
         ax: Axes | None = None,
         show_unsuppressed: bool = True,
@@ -88,7 +88,7 @@ def plot_gw_rate_comparison(
 
 
 def plot_velocity_comparison(
-        comparison: HydroComparison,
+        comparison: LatticeComparison,
         fig: Figure | None = None,
         ax: Axes | None = None,
         show_v: bool = True,
@@ -130,7 +130,7 @@ def plot_velocity_comparison(
     return fig, ax
 
 
-def plot_spectra_comparison(comparison: HydroComparison, figsize: tuple[float, float] = (10, 4)) -> Figure:
+def plot_spectra_comparison(comparison: LatticeComparison, figsize: tuple[float, float] = (10, 4)) -> Figure:
     """Plot the velocity spectra and the GW power growth rate side by side.
 
     :param comparison: the comparison of the simulation and the SSM
@@ -157,7 +157,7 @@ def _t_sh_axis(ax: Axes, t_sh: float) -> None:
 
 
 def plot_ubar_comparison(
-        comparison: HydroComparison,
+        comparison: LatticeComparison,
         fig: Figure | None = None,
         ax: Axes | None = None) -> FigAndAxes:
     r"""Plot the RMS velocities of a simulation as functions of time, and the corresponding SSM values.
@@ -195,7 +195,7 @@ def plot_ubar_comparison(
 
 
 def plot_integral_scale_comparison(
-        comparison: HydroComparison,
+        comparison: LatticeComparison,
         fig: Figure | None = None,
         ax: Axes | None = None) -> FigAndAxes:
     r"""Plot the integral scales of a simulation as functions of time, and the corresponding SSM value.
@@ -227,7 +227,7 @@ def plot_integral_scale_comparison(
 
 
 def plot_kinetic_energy_comparison(
-        comparison: HydroComparison,
+        comparison: LatticeComparison,
         fig: Figure | None = None,
         ax: Axes | None = None) -> FigAndAxes:
     r"""Plot the kinetic energy fractions and the mean adiabatic index of a simulation, and the SSM values.
@@ -268,7 +268,7 @@ def plot_kinetic_energy_comparison(
 
 
 def plot_gw_rate_time_comparison(
-        comparison: HydroComparison,
+        comparison: LatticeComparison,
         delta_steps: int,
         fig: Figure | None = None,
         axs: tp.Sequence[Axes] | None = None,
@@ -282,7 +282,7 @@ def plot_gw_rate_time_comparison(
     :param delta_steps: the difference of the time steps of the finite differences
     :param fig: figure to plot in
     :param axs: two axes to plot in
-    :param kwargs: additional arguments for :py:func:`pttools.analysis.hydro.suppression_series`
+    :param kwargs: additional arguments for :py:func:`pttools.analysis.lattice.suppression_series`
     :return: the figure and the axes
     """
     if axs is None:

@@ -211,7 +211,7 @@ def fit_suppression_gw(
     The model spectrum should be computed without suppression,
     i.e. with :py:attr:`pttools.ssm.suppression.suppression.SuppressionMethod.NONE`.
 
-    :param reference: reference spectrum, e.g. :py:class:`pttools.imports.hydro.spectrum.HydroSpectrum`
+    :param reference: reference spectrum, e.g. :py:class:`pttools.lattice.spectrum.LatticeSpectrum`
     :param model: model spectrum, e.g. :py:class:`pttools.ssm.spectrum.SSMSpectrum`
     :param kwargs: arguments for :py:func:`fit_suppression`
     :return: the fit result

@@ -1,6 +1,6 @@
 r"""A single run of a hydrodynamic lattice simulation.
 
-The run directory contains the power spectrum files described in :py:mod:`pttools.imports.hydro.quantities`,
+The run directory contains the power spectrum files described in :py:mod:`pttools.lattice.quantities`,
 and optionally the input file of the simulation (``input-test-largerun``)
 and the log of the global quantities (``*.out``, a CSV file with one row per output step).
 The quantities are in lattice units, where $T_c = 1$ and $G = 1$, see :correia_2025:`\ ` table I.
@@ -20,12 +20,12 @@ import typing as tp
 import numpy as np
 import pandas as pd
 
-from pttools.imports.hydro.quantities import Quantity, integral_scale, mean_square, read_power_spectrum
+from pttools.lattice.quantities import Quantity, integral_scale, mean_square, read_power_spectrum
 from pttools.omgw0.factors import H
 import pttools.type_hints as th
 
 if tp.TYPE_CHECKING:
-    from pttools.imports.hydro.spectrum import HydroSpectrum
+    from pttools.lattice.spectrum import LatticeSpectrum
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ def read_globals(path: str | os.PathLike[str]) -> dict[str, th.FloatArr1D]:
     return {name: data[name].to_numpy(dtype=np.float64) for name in data.columns}
 
 
-class HydroRun:
+class LatticeRun:
     r"""A run of a hydrodynamic lattice simulation.
 
     The parameters of the run are read from the input file if it's available.
@@ -167,7 +167,7 @@ class HydroRun:
 
     def __repr__(self) -> str:
         """Representation of the run with its name, parameters and path."""
-        return f"HydroRun(name={self.name}, v_wall={self.v_wall}, alpha_n={self.alpha_n}, path={self.path})"
+        return f"LatticeRun(name={self.name}, v_wall={self.v_wall}, alpha_n={self.alpha_n}, path={self.path})"
 
     # -----
     # Lattice parameters
@@ -416,19 +416,19 @@ class HydroRun:
         delta_t = self.time(step) - self.time(step_prev)
         return k, (p - p_prev) / (self.H_star * delta_t) / self.r_star
 
-    def spectrum(self, step: int, step_prev: int | None = None, **kwargs: tp.Any) -> "HydroSpectrum":
+    def spectrum(self, step: int, step_prev: int | None = None, **kwargs: tp.Any) -> "LatticeSpectrum":
         """Create a spectrum object for the given time step.
 
-        See :py:class:`pttools.imports.hydro.spectrum.HydroSpectrum`.
+        See :py:class:`pttools.lattice.spectrum.LatticeSpectrum`.
 
         :param step: the time step
         :param step_prev: the earlier time step for computing the GW power growth rate
-        :param kwargs: additional arguments for :py:class:`pttools.imports.hydro.spectrum.HydroSpectrum`,
+        :param kwargs: additional arguments for :py:class:`pttools.lattice.spectrum.LatticeSpectrum`,
             e.g. ``r_star``, ``T_star``, ``g_star`` and ``gs_star``
         :return: the spectrum
         """
-        from pttools.imports.hydro.spectrum import HydroSpectrum  # noqa: PLC0415
-        return HydroSpectrum(self, step=step, step_prev=step_prev, **kwargs)
+        from pttools.lattice.spectrum import LatticeSpectrum  # noqa: PLC0415
+        return LatticeSpectrum(self, step=step, step_prev=step_prev, **kwargs)
 
     # -----
     # Time series

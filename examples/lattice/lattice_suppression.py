@@ -6,7 +6,7 @@ The suppression factors fitted to the simulations of :correia_2025:`\ `,
 and the suppression datasets that combine them with the data of :gowling_2021:`\ `.
 
 The suppression factors are computed by
-:py:mod:`pttools.ssm.suppression.suppression_ssm_data.suppression_hydro_calculator`,
+:py:mod:`pttools.ssm.suppression.suppression_ssm_data.suppression_lattice_calculator`,
 and the combined datasets are
 :py:data:`pttools.ssm.suppression.suppression.NO_HYBRIDS_EXT_CORREIA_2025` and
 :py:data:`pttools.ssm.suppression.suppression.WITH_HYBRIDS_CORREIA_2025`.
@@ -53,6 +53,6 @@ def main() -> tuple[SuppressionPlot, SuppressionPlot]:
 if __name__ == "__main__":
     _plot_old, _plot_new = main()
     save_and_show_figs({
-        "hydro_suppression_no_hybrids_ext": _plot_old.fig,
-        "hydro_suppression_no_hybrids_ext_correia_2025": _plot_new.fig,
+        "lattice_suppression_no_hybrids_ext": _plot_old.fig,
+        "lattice_suppression_no_hybrids_ext_correia_2025": _plot_new.fig,
     })

@@ -82,7 +82,7 @@ class Suppression:
         The file should contain the columns or arrays ``vw_sim``, ``alpha_sim`` and ``sup_ssm``.
         A text file should have a header row of column names, as the files created by
         :py:func:`pttools.ssm.suppression.suppression_ssm_data.suppression_ssm_calculator.calc_sup_ssm` and
-        :py:func:`pttools.ssm.suppression.suppression_ssm_data.suppression_hydro_calculator.calc_sup_hydro`.
+        :py:func:`pttools.ssm.suppression.suppression_ssm_data.suppression_lattice_calculator.calc_sup_lattice`.
 
         :param path: path of the file
         :param name: name of the dataset, used in file names
@@ -275,7 +275,7 @@ WITH_HYBRIDS: Suppression = Suppression.from_file(
 #: Suppression factors fitted to the $4096^3$ simulations of :correia_2025:`\ `
 #: (${v}_\text{wall} = 0.92, \alpha_n = 0.67$ and ${v}_\text{wall} = 0.44, \alpha_n = 0.5$),
 #: computed with
-#: :py:mod:`pttools.ssm.suppression.suppression_ssm_data.suppression_hydro_calculator`.
+#: :py:mod:`pttools.ssm.suppression.suppression_ssm_data.suppression_lattice_calculator`.
 #: This has only two data points, and therefore it cannot be interpolated on its own.
 #: Please use the combined datasets below instead.
 CORREIA_2025: Suppression = Suppression.from_file(

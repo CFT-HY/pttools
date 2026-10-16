@@ -2,7 +2,7 @@ r"""Common interface of the power spectra from PTtools and from external sources
 
 The quantities of this interface can be computed both by the Sound Shell Model
 (:py:class:`pttools.ssm.spectrum.SSMSpectrum`) and from the output of hydrodynamic lattice simulations
-(:py:class:`pttools.imports.hydro.spectrum.HydroSpectrum`).
+(:py:class:`pttools.lattice.spectrum.LatticeSpectrum`).
 They are defined in flat space, without the expansion of the universe,
 so that the spectra can be compared directly with each other.
 """
@@ -71,7 +71,7 @@ class SpectrumBase(abc.ABC):
 
         - :py:class:`pttools.ssm.spectrum.SSMSpectrum`: the spectrum after the source has turned off,
           including the effects of the expansion of the universe and of the finite lifetime of the source.
-        - :py:class:`pttools.imports.hydro.spectrum.HydroSpectrum`: the spectrum at the time step of the spectrum
+        - :py:class:`pttools.lattice.spectrum.LatticeSpectrum`: the spectrum at the time step of the spectrum
           in flat space, as a fraction of the initial mean energy density $\bar{\epsilon}_0$,
           :correia_2025:`\ ` eq. 25.
         """

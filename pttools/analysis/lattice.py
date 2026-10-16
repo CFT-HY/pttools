@@ -1,6 +1,6 @@
 r"""Comparison of the Sound Shell Model with hydrodynamic lattice simulations.
 
-The simulation data is imported with :py:mod:`pttools.imports.hydro`,
+The simulation data is imported with :py:mod:`pttools.lattice`,
 and the suppression factor is fitted with :py:mod:`pttools.ssm.suppression.fit`.
 """
 
@@ -11,7 +11,7 @@ import typing as tp
 import numpy as np
 
 from pttools.bubble import Bubble
-from pttools.imports.hydro import HydroRun, HydroSpectrum, Quantity
+from pttools.lattice import LatticeRun, LatticeSpectrum, Quantity
 from pttools.models import BagModel, Model
 from pttools.ssm.nucleation import NucType
 from pttools.ssm.spectrum import SSMSpectrum
@@ -22,17 +22,17 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 #: Default $z = kR_*$ points of the Sound Shell Model spectra for comparisons with simulations.
 #: The range is wide enough to cover the simulation data and to converge the integrals over $z$.
-DEFAULT_Y_HYDRO: th.FloatArr1D = np.logspace(-1, 4, 1000)
+DEFAULT_Y_LATTICE: th.FloatArr1D = np.logspace(-1, 4, 1000)
 
 
 @dataclass(frozen=True)
-class HydroComparison:
+class LatticeComparison:
     """Comparison of a simulation spectrum with the corresponding Sound Shell Model spectrum."""
 
     #: The simulation run
-    run: HydroRun
+    run: LatticeRun
     #: The simulation spectrum
-    spectrum: HydroSpectrum
+    spectrum: LatticeSpectrum
     #: The Sound Shell Model spectrum, computed without suppression
     ssm: SSMSpectrum
     #: The fitted suppression factor of the GW power growth rate
@@ -45,10 +45,10 @@ class HydroComparison:
 
 
 def ssm_spectrum_for_run(
-        run: HydroRun,
+        run: LatticeRun,
         model: Model | None = None,
         nuc_type: NucType = NucType.SIMULTANEOUS,
-        y: th.FloatArr1D = DEFAULT_Y_HYDRO,
+        y: th.FloatArr1D = DEFAULT_Y_LATTICE,
         **kwargs: tp.Any) -> SSMSpectrum:
     r"""Compute the Sound Shell Model spectrum for the parameters of a simulation run, without suppression.
 
@@ -69,8 +69,8 @@ def ssm_spectrum_for_run(
     )
 
 
-def compare_hydro_run(
-        run: HydroRun,
+def compare_lattice_run(
+        run: LatticeRun,
         step: int,
         step_prev: int,
         ssm: SSMSpectrum | None = None,
@@ -79,7 +79,7 @@ def compare_hydro_run(
         y_min: float | None = None,
         y_max: float | None = None,
         r_star: float | None = None,
-        **kwargs: tp.Any) -> HydroComparison:
+        **kwargs: tp.Any) -> LatticeComparison:
     r"""Compare a simulation run with the Sound Shell Model and fit the suppression factor.
 
     The suppression factor is fitted to the GW power growth rate between the two time steps,
@@ -108,11 +108,11 @@ def compare_hydro_run(
         logger.warning("The SSM spectrum includes a suppression factor, which will affect the fit.")
     spectrum = run.spectrum(step, step_prev, r_star=r_star)
     fit = fit_suppression_gw(spectrum, ssm, method=method, y_min=y_min, y_max=y_max, **kwargs)
-    return HydroComparison(run=run, spectrum=spectrum, ssm=ssm, fit=fit)
+    return LatticeComparison(run=run, spectrum=spectrum, ssm=ssm, fit=fit)
 
 
 def suppression_series(
-        run: HydroRun,
+        run: LatticeRun,
         ssm: SSMSpectrum,
         delta_steps: int,
         steps: tp.Iterable[int] | None = None,
@@ -146,7 +146,7 @@ def suppression_series(
 
 
 def gw_rate_series(
-        run: HydroRun,
+        run: LatticeRun,
         delta_steps: int,
         steps: tp.Iterable[int] | None = None) -> tuple[th.FloatArr1D, th.FloatArr1D]:
     r"""Growth rate of the GW energy density fraction as a function of time.
@@ -170,7 +170,7 @@ def gw_rate_series(
     return 0.5 * (t0 + t1), (omega1 - omega0) / (run.H_star * (t1 - t0)) / run.r_star
 
 
-def scalar_comparison(comparison: HydroComparison) -> dict[str, tuple[float, float]]:
+def scalar_comparison(comparison: LatticeComparison) -> dict[str, tuple[float, float]]:
     r"""Compare the scalar quantities that can be computed both from the simulation and from PTtools.
 
     The simulation values are evaluated at the time step of the comparison, except for

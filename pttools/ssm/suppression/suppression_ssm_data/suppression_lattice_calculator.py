@@ -1,7 +1,7 @@
 r"""Compute the suppression factors of the Sound Shell Model for the simulations of Correia et al.
 
 The suppression factors are fitted to the GW power growth rates of the $4096^3$ simulations of :correia_2025:`\ `
-with :py:func:`pttools.analysis.hydro.compare_hydro_run`, excluding the lattice artifact at high $k$.
+with :py:func:`pttools.analysis.lattice.compare_lattice_run`, excluding the lattice artifact at high $k$.
 The time steps of the growth rates are those of :correia_2025:`\ ` fig. 5.
 The SSM spectra are computed with simultaneous nucleation as in the simulations, without suppression,
 and with the default accuracy settings of :py:class:`pttools.ssm.spectrum.SSMSpectrum`,
@@ -12,8 +12,8 @@ but the dataset (``sup_ssm``) uses simultaneous nucleation and the integral fit.
 The suppression datasets of :gowling_2021:`\ ` are instead computed with exponential nucleation,
 see :py:mod:`pttools.ssm.suppression.suppression_ssm_data.suppression_ssm_calculator`.
 
-This requires the data of the simulations, see :py:mod:`pttools.imports.hydro.correia_2025`.
-Run with ``python -m pttools.ssm.suppression.suppression_ssm_data.suppression_hydro_calculator``.
+This requires the data of the simulations, see :py:mod:`pttools.lattice.correia_2025`.
+Run with ``python -m pttools.ssm.suppression.suppression_ssm_data.suppression_lattice_calculator``.
 """
 
 import logging
@@ -21,8 +21,8 @@ from pathlib import Path
 
 import numpy as np
 
-from pttools.analysis.hydro import compare_hydro_run, ssm_spectrum_for_run
-from pttools.imports.hydro import CORREIA_2025_RUNS, load_correia_2025_run
+from pttools.analysis.lattice import compare_lattice_run, ssm_spectrum_for_run
+from pttools.lattice import CORREIA_2025_RUNS, load_correia_2025_run
 from pttools.ssm.nucleation import NucType
 from pttools.ssm.suppression.fit import SuppressionFitMethod
 from pttools.ssm.suppression.suppression_ssm_data import SUPPRESSION_FOLDER
@@ -35,7 +35,7 @@ OUTPUT_NAME: str = "suppression_correia_2025"
 Y_MIN: float = 2.
 
 
-def calc_sup_hydro(save: bool = True, path: Path = SUPPRESSION_FOLDER) -> dict[str, np.ndarray]:
+def calc_sup_lattice(save: bool = True, path: Path = SUPPRESSION_FOLDER) -> dict[str, np.ndarray]:
     r"""Compute the suppression factors for the simulations of :correia_2025:`\ `.
 
     :param save: whether to save the results as ``suppression_correia_2025.txt``,
@@ -52,13 +52,13 @@ def calc_sup_hydro(save: bool = True, path: Path = SUPPRESSION_FOLDER) -> dict[s
     for name, meta in CORREIA_2025_RUNS.items():
         run = load_correia_2025_run(name)
         ssm = ssm_spectrum_for_run(run, nuc_type=NucType.SIMULTANEOUS)
-        comparison = compare_hydro_run(
+        comparison = compare_lattice_run(
             run, step=meta.step, step_prev=meta.step_prev, ssm=ssm,
             method=SuppressionFitMethod.INTEGRAL, y_min=Y_MIN)
-        log_lsq = compare_hydro_run(
+        log_lsq = compare_lattice_run(
             run, step=meta.step, step_prev=meta.step_prev, ssm=ssm,
             method=SuppressionFitMethod.LOG_LSQ, y_min=Y_MIN)
-        exponential = compare_hydro_run(
+        exponential = compare_lattice_run(
             run, step=meta.step, step_prev=meta.step_prev, nuc_type=NucType.EXPONENTIAL,
             method=SuppressionFitMethod.INTEGRAL, y_min=Y_MIN)
         fit = comparison.fit
@@ -89,4 +89,4 @@ def calc_sup_hydro(save: bool = True, path: Path = SUPPRESSION_FOLDER) -> dict[s
 if __name__ == "__main__":
     from pttools.logging import setup_logging
     setup_logging()
-    calc_sup_hydro()
+    calc_sup_lattice()

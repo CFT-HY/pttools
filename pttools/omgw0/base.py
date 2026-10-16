@@ -1,7 +1,7 @@
 r"""Common base class of the spectra that can be converted to the GW power spectrum today $\Omega_{\text{gw},0}$.
 
 The base class is shared by the spectra of the Sound Shell Model (:py:class:`pttools.omgw0.spectrum.Spectrum`)
-and of hydrodynamic lattice simulations (:py:class:`pttools.imports.hydro.spectrum.HydroSpectrum`),
+and of hydrodynamic lattice simulations (:py:class:`pttools.lattice.spectrum.LatticeSpectrum`),
 so that they can be compared with each other and with the sensitivity of LISA.
 """
 
@@ -61,7 +61,7 @@ class Omgw0Base(SpectrumBase):
         with $K = 0$, see :py:func:`pttools.omgw0.factors.H`.
         The units depend on the spectrum:
         :py:class:`pttools.omgw0.spectrum.Spectrum` uses the units of $T^2$, where $G = 1 / m_{\text{pl}}^2 = 1$,
-        and :py:class:`pttools.imports.hydro.spectrum.HydroSpectrum` uses the lattice units of the simulation.
+        and :py:class:`pttools.lattice.spectrum.LatticeSpectrum` uses the lattice units of the simulation.
         """
 
     @property
