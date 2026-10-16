@@ -102,9 +102,10 @@ class SyntheticRunTest(unittest.TestCase):
         assert self.lattice_run.steps(Quantity.X_DIV).tolist() == [0, 500, 1000]
 
     def test_empty_bins_removed(self) -> None:
-        """The bins without modes are removed."""
+        """The bins without modes and the first bin, which contains only the zero mode, are removed."""
         k, _, counts = self.lattice_run.power_spectrum(Quantity.X_DIV, 500)
-        assert k.size == self.L - 5
+        assert k.size == self.L - 6
+        assert k[0] == pytest.approx(1.5 * 2 * np.pi / self.L)
         assert np.all(counts > 0)
 
     def test_rms(self) -> None:
@@ -198,7 +199,8 @@ class CorreiaDataTest(unittest.TestCase):
                 run = load_correia_2025_run(name)
                 assert run.R_star == pytest.approx(1024)
                 assert run.ubar_par_max[1] == pytest.approx(ubar_max, abs=0.005)
-                assert run.t_sh == pytest.approx(t_sh, rel=0.02)
+                # The zero mode has to be excluded for this agreement, see LatticeRun.power_spectrum().
+                assert run.t_sh == pytest.approx(t_sh, abs=2)
 
     def test_artifact(self) -> None:
         r"""The GW power growth rate of fig. 5 has its peak at $kR_* \approx 4$-$7$ and a separate high-$k$ peak."""

@@ -351,7 +351,12 @@ class LatticeRun:
             step: int) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
         r"""Read the raw power spectrum of the given quantity at the given time step.
 
-        The bins that contain no modes are removed.
+        The bins that contain no modes are removed, and so is the first bin.
+        The first bin $k \in [0, 2\pi / L)$ contains only the zero mode $k = 0$,
+        but the files give it at the centre of the bin.
+        The zero mode is not a wave, and e.g. for the energy density it's the mean,
+        so including it would distort the integrals over $k$, such as $\Omega_\text{gw}$ and $\xi$.
+        The scripts of :correia_2025:`\ ` also exclude it.
 
         :param quantity: the quantity
         :param step: the time step
@@ -361,6 +366,7 @@ class LatticeRun:
         if key not in self._spectrum_cache:
             k, p, counts = read_power_spectrum(self.spectrum_path(*key))
             valid = counts > 0
+            valid[0] = False
             self._spectrum_cache[key] = k[valid], p[valid], counts[valid]
         return self._spectrum_cache[key]
 
