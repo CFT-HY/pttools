@@ -15,6 +15,7 @@ import logging
 
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from examples.hydro.hydro_spectra import comparisons
 from examples.utils import save_and_show_figs
@@ -30,18 +31,16 @@ from pttools.imports.hydro import CORREIA_2025_RUNS
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def comparison_table(comparison: HydroComparison) -> str:
-    """Format the scalar comparison of a run as a Markdown table."""
-    rows = [
-        f"| {name} | {sim:.4g} | {ssm:.4g} | {sim / ssm:.3g} |"
-        for name, (sim, ssm) in scalar_comparison(comparison).items()
-    ]
-    return "\n".join([
-        f"{comparison.run.label_unicode}, t = {comparison.spectrum.t:.0f} / T_c",
-        "| Quantity | Simulation | PTtools | Ratio |",
-        "|---|---|---|---|",
-        *rows
-    ])
+def comparison_table(comparison: HydroComparison) -> pd.DataFrame:
+    """The scalar comparison of a run, see :py:func:`pttools.analysis.hydro.scalar_comparison`.
+
+    :param comparison: the comparison
+    :return: the table, which can be formatted e.g. as Markdown with :py:meth:`pandas.DataFrame.to_markdown`
+    """
+    table = pd.DataFrame.from_dict(scalar_comparison(comparison), orient="index", columns=["Simulation", "PTtools"])
+    table.index.name = "Quantity"
+    table["Ratio"] = table["Simulation"] / table["PTtools"]
+    return table
 
 
 def plot_quantities(comparison: HydroComparison) -> Figure:
@@ -60,7 +59,9 @@ def main() -> dict[str, Figure]:
     """Plot the quantities of the runs of Correia et al. and the corresponding SSM values."""
     figs = {}
     for name, comparison in comparisons().items():
-        print(comparison_table(comparison))
+        print(f"{comparison.run.label_unicode}, t = {comparison.spectrum.t:.0f} / T_c")
+        # The format is given for each column, including the index.
+        print(comparison_table(comparison).to_markdown(floatfmt=("", ".4g", ".4g", ".3g")))
         figs[f"hydro_quantities_{name}"] = plot_quantities(comparison)
         meta = CORREIA_2025_RUNS[name]
         delta_steps = meta.step - meta.step_prev

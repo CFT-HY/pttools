@@ -50,6 +50,8 @@ dependencies:
   - python-kaleido == 1.3.0
   # https://anaconda.org/channels/conda-forge/packages/scipy/overview
   - scipy == 1.17.1
+  # https://anaconda.org/channels/conda-forge/packages/tabulate/overview
+  - tabulate == 0.10.0
   # -----
   # Optional dependencies
   # -----

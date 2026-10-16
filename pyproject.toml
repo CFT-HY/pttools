@@ -95,6 +95,8 @@ dependencies = [
     "pandas >= 3.0.5",
     "plotly >= 6.6.0",
     "scipy >= 1.17.1",
+    # For formatting pandas DataFrames as Markdown tables
+    "tabulate >= 0.10.0",
 ]
 
 [project.optional-dependencies]

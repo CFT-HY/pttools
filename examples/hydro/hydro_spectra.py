@@ -6,6 +6,9 @@ Compare the velocity and GW power spectra of the $4096^3$ simulations of :correi
 with the Sound Shell Model.
 
 The SSM spectra are computed with simultaneous nucleation as in the simulations.
+Both spectra are given the Hubble-scaled mean bubble spacing $r_* = 0.1$.
+The velocity spectra and the GW power growth rates do not depend on it,
+but the GW power spectra and their conversion to $\Omega_{\text{gw},0}$ do.
 The SSM GW power growth rate is scaled by the suppression factor that is fitted to the simulation,
 excluding the lattice artifact at high $k$.
 This corresponds to :correia_2025:`\ ` fig. 5 (bottom),
@@ -23,6 +26,9 @@ from pttools.imports.hydro import CORREIA_2025_RUNS, data_dir, load_correia_2025
 
 logger: logging.Logger = logging.getLogger(__name__)
 
+#: $r_*$, Hubble-scaled mean bubble spacing of the spectra
+R_STAR: float = 0.1
+
 
 def comparisons() -> dict[str, HydroComparison]:
     """Compare the runs of Correia et al. with the SSM, or return an empty dict if the data is not available."""
@@ -30,7 +36,8 @@ def comparisons() -> dict[str, HydroComparison]:
         logger.warning("The data of Correia et al. was not found. Skipping the example.")
         return {}
     return {
-        name: compare_hydro_run(load_correia_2025_run(name), step=meta.step, step_prev=meta.step_prev, y_min=2)
+        name: compare_hydro_run(
+            load_correia_2025_run(name), step=meta.step, step_prev=meta.step_prev, y_min=2, r_star=R_STAR)
         for name, meta in CORREIA_2025_RUNS.items()
     }
 

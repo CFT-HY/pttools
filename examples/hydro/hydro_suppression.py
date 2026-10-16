@@ -13,28 +13,32 @@ and the combined datasets are
 This example does not require the simulation data.
 """
 
+import pandas as pd
+
 from examples.utils import save_and_show_figs
 from pttools.analysis.suppression import SuppressionPlot
 from pttools.ssm.suppression import CORREIA_2025, NO_HYBRIDS_EXT, NO_HYBRIDS_EXT_CORREIA_2025
 
 
-def comparison_table() -> str:
-    """Format the old and new suppression factors at the parameters of the simulations as a Markdown table."""
-    rows = [
-        f"| {v_wall} | {alpha_n} | {NO_HYBRIDS_EXT.suppression(float(v_wall), float(alpha_n)):.4g} | {sup:.4g} |"
-        for v_wall, alpha_n, sup in zip(CORREIA_2025.v_walls, CORREIA_2025.alpha_ns, CORREIA_2025.suppressions,
-                                        strict=True)
-    ]
-    return "\n".join([
-        "| v_wall | alpha_n | No hybrids, extended | Correia et al. 2025 |",
-        "|---|---|---|---|",
-        *rows
-    ])
+def comparison_table() -> pd.DataFrame:
+    """The old and new suppression factors at the parameters of the simulations.
+
+    :return: the table, which can be formatted e.g. as Markdown with :py:meth:`pandas.DataFrame.to_markdown`
+    """
+    return pd.DataFrame({
+        "v_wall": CORREIA_2025.v_walls,
+        "alpha_n": CORREIA_2025.alpha_ns,
+        "No hybrids, extended": [
+            NO_HYBRIDS_EXT.suppression(float(v_wall), float(alpha_n))
+            for v_wall, alpha_n in zip(CORREIA_2025.v_walls, CORREIA_2025.alpha_ns, strict=True)
+        ],
+        "Correia et al. 2025": CORREIA_2025.suppressions,
+    })
 
 
 def main() -> tuple[SuppressionPlot, SuppressionPlot]:
     r"""Plot the suppression factor $\Sigma({v}_\text{wall}, \alpha_n)$ with and without the new data points."""
-    print(comparison_table())
+    print(comparison_table().to_markdown(index=False, floatfmt=".4g"))
     plots = \
         SuppressionPlot(NO_HYBRIDS_EXT, title="No hybrids, extended"), \
         SuppressionPlot(NO_HYBRIDS_EXT_CORREIA_2025, title="With Correia et al. 2025")
