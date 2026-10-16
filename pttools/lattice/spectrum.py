@@ -162,3 +162,17 @@ class LatticeSpectrum(Omgw0Base):
         See :py:meth:`pttools.lattice.run.LatticeRun.mean_adiabatic_index`.
         """
         return float(self.run.mean_adiabatic_index(self.step))
+
+    def omega_gw_asymptote_ratio(self, **kwargs: tp.Any) -> float:
+        r"""$\Omega_\text{gw}^\infty / \Omega_\text{gw}(t)$, ratio of the asymptotic and current GW energy density.
+
+        $\Omega_\text{gw}^\infty$ is extrapolated by :py:meth:`pttools.lattice.run.LatticeRun.omega_gw_asymptote`,
+        and $\Omega_\text{gw}(t)$ is that of the run at the time step of this spectrum.
+        The ratio does not depend on :py:attr:`r_star`, as both are scaled by the same factor.
+        It gives how much the GW power would still grow if the simulation were continued,
+        and can therefore be used to correct the GW power spectrum of a finite simulation.
+
+        :param kwargs: arguments for :py:meth:`pttools.lattice.run.LatticeRun.omega_gw_asymptote`
+        :return: the ratio
+        """
+        return self.run.omega_gw_asymptote(**kwargs).value / self.run.omega_gw(self.step)

@@ -24,7 +24,7 @@ from examples.gksvdv import (
     gksvdv_testing2,
     gksvdv_testing3,
 )
-from examples.lattice import lattice_quantities, lattice_spectra, lattice_suppression
+from examples.lattice import lattice_gw_asymptote, lattice_quantities, lattice_spectra, lattice_suppression
 from examples.low_k import low_k
 from examples.props import (
     chapman_jouguet,
@@ -210,6 +210,11 @@ class ExampleTest(unittest.TestCase):
         Without the simulation data the example is skipped.
         """
         close_figs(*lattice_spectra.main().values())
+
+    @staticmethod
+    def test_lattice_gw_asymptote() -> None:
+        """Test that the example ``examples.lattice.lattice_gw_asymptote`` runs without errors."""
+        close_figs(*lattice_gw_asymptote.main().values())
 
     @staticmethod
     def test_lattice_suppression() -> None:

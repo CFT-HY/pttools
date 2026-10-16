@@ -202,6 +202,25 @@ class CorreiaDataTest(unittest.TestCase):
                 # The zero mode has to be excluded for this agreement, see LatticeRun.power_spectrum().
                 assert run.t_sh == pytest.approx(t_sh, abs=2)
 
+    def test_table_v(self) -> None:
+        r"""The indices of the extrapolation of the GW power agree with :correia_2025:`\ ` tables IV and V.
+
+        The fits use the last time steps of the scripts of the article,
+        see :py:data:`examples.lattice.lattice_gw_asymptote.FIT_SETTINGS`.
+        """
+        cases = (
+            ("detonation", 24800, (1.48, 0.23, 2.40, 0.61)),
+            ("deflagration", 39600, (0.86, 0.01, 0.74, 0.79)),
+        )
+        for name, step_end, (zeta, lambda_, prediction, d_tot) in cases:
+            with self.subTest(name=name):
+                run = load_correia_2025_run(name)
+                assert run.kinetic_energy_decay_index(step_end).index == pytest.approx(zeta, abs=0.01)
+                # The uncertainty of the detonation is 0.02 in the article.
+                assert run.integral_scale_growth_index(step_end).index == pytest.approx(lambda_, abs=0.02)
+                assert run.gw_growth_index_prediction(step_end)[0] == pytest.approx(prediction, abs=0.015)
+                assert run.omega_gw_asymptote(step_end=step_end).index == pytest.approx(d_tot, abs=0.01)
+
     def test_artifact(self) -> None:
         r"""The GW power growth rate of fig. 5 has its peak at $kR_* \approx 4$-$7$ and a separate high-$k$ peak."""
         from pttools.ssm.suppression import lattice_artifact_start  # noqa: PLC0415

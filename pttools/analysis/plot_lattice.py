@@ -6,14 +6,16 @@ The style follows the figures of :correia_2025:`\ `, e.g. fig. 5.
 import typing as tp
 
 from matplotlib.axes import Axes
+from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 
-from pttools.analysis.lattice import LatticeComparison, gw_rate_series, suppression_series
+from pttools.analysis.lattice import LatticeComparison, gw_asymptote_scale, gw_rate_series, suppression_series
 from pttools.analysis.utils import FigAndAxes, create_fig_ax
-from pttools.lattice import Quantity
+from pttools.lattice import AsymptoteFit, LatticeRun, PowGwAsymptoteFit, Quantity
+import pttools.type_hints as th
 
 #: Colours of the simulation data, as in :correia_2025:`\ `
 COLOR_GW: str = "#d55e00"
@@ -25,6 +27,9 @@ COLOR_SSM: str = "black"
 
 Z_LABEL: str = r"$kR_*$"
 GW_RATE_LABEL: str = r"$(H_n R_*)^{-1} (H_n \Delta t)^{-1} \Delta \mathcal{P}_\text{gw}(k)$"
+#: Scale of the GW power in the plots of its extrapolation, see :py:func:`pttools.analysis.lattice.gw_asymptote_scale`
+GW_ASYMPTOTE_SCALE_LABEL: str = r"(\Gamma \bar{U}_\parallel^2)_*^{-2} (H_n R_*)^{-1} (H_n {t}_\text{sh})^{-1}"
+T_LABEL: str = r"$t \, [T_c^{-1}]$"
 
 
 def _finish(ax: Axes, xlim: tuple[float, float] | None, ylim: tuple[float, float] | None) -> None:
@@ -314,3 +319,184 @@ def plot_gw_rate_time_comparison(
     axs[0].set_title(run.label_latex, fontsize=9)
     fig.tight_layout()
     return fig, axs
+
+
+# -----
+# Extrapolation of the GW power to late times, :correia_2025:`\ ` fig. 6
+# -----
+
+def _mode_colors(n: int) -> npt.NDArray[np.float64]:
+    r"""Colours of the wavenumbers from light to dark, as in :correia_2025:`\ ` fig. 6."""
+    cmap = LinearSegmentedColormap.from_list("gw_modes", ["white", COLOR_GW])
+    return cmap(np.linspace(0.33, 1, n))
+
+
+def _extrapolation_times(t_start: float, t_end: float) -> npt.NDArray[np.float64]:
+    """Times at which the fits are plotted, extending to twice the end of the simulation."""
+    return np.linspace(t_start, 2 * t_end, 500)
+
+
+def plot_pow_gw_time_fits(
+        fit: PowGwAsymptoteFit,
+        scale: float = 1.,
+        every: int = 5,
+        ylim: tuple[float, float] | None = (1e-6, 5e-2),
+        fig: Figure | None = None,
+        ax: Axes | None = None) -> FigAndAxes:
+    r"""Plot $\mathcal{P}_\text{gw}(k, t)$ of selected wavenumbers and their fits as functions of time.
+
+    :correia_2025:`\ ` fig. 6, top row.
+
+    :param fit: the fits of each wavenumber, see :py:meth:`pttools.lattice.run.LatticeRun.pow_gw_asymptote`
+    :param scale: the GW power is divided by this, see :py:func:`pttools.analysis.lattice.gw_asymptote_scale`
+    :param every: plot every n:th wavenumber
+    :param ylim: limits of the y-axis, by default those of the article
+    :param fig: figure to plot in
+    :param ax: axes to plot in
+    :return: the figure and the axes
+    """
+    fig, ax = create_fig_ax(fig, ax)
+    colors = _mode_colors(fit.y.size)
+    for i in range(0, fit.y.size, every):
+        color = colors[-i - 1]
+        ax.plot(fit.t, fit.pow_gw[:, i] / scale, color=color, lw=1)
+        mode_fit = fit.fits[i]
+        if mode_fit is not None:
+            t = _extrapolation_times(mode_fit.t_start, mode_fit.t_end)
+            ax.plot(t, mode_fit(t) / scale, color=color, ls="--", lw=1.5)
+    ax.set_yscale("log")
+    if ylim is not None:
+        ax.set_ylim(*ylim)
+    ax.set_xlabel(T_LABEL)
+    ax.set_ylabel(rf"${GW_ASYMPTOTE_SCALE_LABEL} \mathcal{{P}}_\text{{gw}}(k)$")
+    ax.set_title(rf"${fit.y[0]:.1f} \leq kR_* \leq {fit.y[-1]:.1f}$", fontsize=9)
+    ax.grid(visible=True)
+    return fig, ax
+
+
+def plot_gw_growth_index(
+        fit: PowGwAsymptoteFit,
+        prediction: tuple[float, float] | None = None,
+        fig: Figure | None = None,
+        ax: Axes | None = None) -> FigAndAxes:
+    r"""Plot the fitted indices $d(k)$ of the approach of $\mathcal{P}_\text{gw}(k, t)$ to its asymptote.
+
+    :correia_2025:`\ ` fig. 6, second row.
+
+    :param fit: the fits of each wavenumber, see :py:meth:`pttools.lattice.run.LatticeRun.pow_gw_asymptote`
+    :param prediction: the predicted index $2\zeta + 2\lambda - 1$ and its uncertainty,
+        see :py:meth:`pttools.lattice.run.LatticeRun.gw_growth_index_prediction`
+    :param fig: figure to plot in
+    :param ax: axes to plot in
+    :return: the figure and the axes
+    """
+    fig, ax = create_fig_ax(fig, ax)
+    ax.errorbar(fit.y, fit.index, yerr=fit.index_err, color="orange", ls="none", marker="o", ms=4)
+    if prediction is not None:
+        value, err = prediction
+        ax.axhline(value, color="black", ls="--", label=r"$2 \zeta + 2 \lambda - 1$")
+        ax.axhspan(value - err, value + err, color="silver", alpha=0.5, lw=0)
+        ax.legend(fontsize=7)
+    ax.set_xlim(fit.y[0] - 1, fit.y[-1] + 1)
+    ax.set_ylim(-0.1, 4)
+    ax.set_xlabel(Z_LABEL)
+    ax.set_ylabel(r"$d(k)$")
+    ax.grid(visible=True)
+    return fig, ax
+
+
+def plot_pow_gw_asymptote(
+        fit: PowGwAsymptoteFit,
+        scale: float = 1.,
+        fig: Figure | None = None,
+        ax: Axes | None = None) -> FigAndAxes:
+    r"""Plot the extrapolated $\mathcal{P}_\text{gw}^\infty(k)$ and the GW power spectrum at the end of the simulation.
+
+    :correia_2025:`\ ` fig. 6, third row.
+
+    :param fit: the fits of each wavenumber, see :py:meth:`pttools.lattice.run.LatticeRun.pow_gw_asymptote`
+    :param scale: the GW power is divided by this, see :py:func:`pttools.analysis.lattice.gw_asymptote_scale`
+    :param fig: figure to plot in
+    :param ax: axes to plot in
+    :return: the figure and the axes
+    """
+    fig, ax = create_fig_ax(fig, ax)
+    pow_inf = fit.pow_gw_inf / scale
+    err = fit.pow_gw_inf_err / scale
+    ax.fill_between(fit.y, pow_inf - err, pow_inf + err, color="silver", lw=0)
+    ax.plot(fit.y, fit.pow_gw[-1] / scale, color=COLOR_GW, label=r"${t}_\text{end}$")
+    ax.plot(fit.y, pow_inf, color="black", ls="--", label=r"$\mathcal{P}_\text{gw}^\infty(k)$")
+    _finish(ax, xlim=(fit.y[0], fit.y[-1]), ylim=None)
+    ax.set_xlabel(Z_LABEL)
+    ax.set_ylabel(rf"${GW_ASYMPTOTE_SCALE_LABEL} \mathcal{{P}}_\text{{gw}}(k)$")
+    ax.legend(fontsize=7)
+    return fig, ax
+
+
+def plot_omega_gw_asymptote(
+        run: LatticeRun,
+        omega_fit: AsymptoteFit,
+        pow_fit: PowGwAsymptoteFit | None = None,
+        scale: float = 1.,
+        fig: Figure | None = None,
+        ax: Axes | None = None) -> FigAndAxes:
+    r"""Plot $\Omega_\text{gw}(t)$, its fit and the extrapolated $\Omega_\text{gw}^\infty$.
+
+    :correia_2025:`\ ` fig. 6, bottom row.
+    If the fits of each wavenumber are given, the partial GW power $\Omega_\text{par}(t)$ of the fitted wavenumbers
+    and its extrapolation from the fits are also plotted.
+
+    :param run: the simulation run
+    :param omega_fit: the fit of $\Omega_\text{gw}(t)$, see :py:meth:`pttools.lattice.run.LatticeRun.omega_gw_asymptote`
+    :param pow_fit: the fits of each wavenumber, see :py:meth:`pttools.lattice.run.LatticeRun.pow_gw_asymptote`
+    :param scale: the GW power is divided by this, see :py:func:`pttools.analysis.lattice.gw_asymptote_scale`
+    :param fig: figure to plot in
+    :param ax: axes to plot in
+    :return: the figure and the axes
+    """
+    fig, ax = create_fig_ax(fig, ax)
+    t, omega = run.omega_gw_series()
+    t = t[t <= omega_fit.t_end]
+    omega = omega[:t.size]
+    ax.plot(t, omega / scale, color="black", label=r"$\Omega_\text{tot}$")
+    t_extrap = _extrapolation_times(omega_fit.t_start, omega_fit.t_end)
+    ax.plot(t_extrap, omega_fit(t_extrap) / scale, color="black", ls=":")
+    if pow_fit is not None:
+        ax.plot(pow_fit.t, pow_fit.omega_gw_partial() / scale, color=COLOR_GW, label=r"$\Omega_\text{par}$")
+        t_par = _extrapolation_times(max(fit.t_start for fit in pow_fit.fits if fit is not None), pow_fit.t[-1])
+        ax.plot(t_par, pow_fit.omega_gw_partial(t_par) / scale, color=COLOR_GW, ls=":")
+    value, err = omega_fit.value / scale, omega_fit.value_err / scale
+    ax.axhline(value, color="black", ls="--", label=r"$\Omega_\text{tot}^\infty$")
+    ax.axhspan(value - err, value + err, color="silver", alpha=0.5, lw=0)
+    ax.set_xlim(t[0], t_extrap[-1])
+    ax.set_ylim(bottom=0)
+    ax.set_xlabel(T_LABEL)
+    ax.set_ylabel(rf"${GW_ASYMPTOTE_SCALE_LABEL} \Omega_\text{{gw}}$")
+    ax.legend(fontsize=7, loc="lower right")
+    ax.grid(visible=True)
+    return fig, ax
+
+
+def plot_gw_asymptote(
+        run: LatticeRun,
+        axs: tp.Sequence[Axes] | th.AxesArr1D,
+        start_fraction: float = 0.8,
+        step_end: int | None = None,
+        y_min: float = 8.,
+        y_max: float = 81.) -> None:
+    r"""Plot the extrapolation of the GW power of a run to late times, :correia_2025:`\ ` fig. 6.
+
+    :param run: the simulation run
+    :param axs: the four axes to plot in, from top to bottom in the figure of the article
+    :param start_fraction: see :py:meth:`pttools.lattice.run.LatticeRun.pow_gw_asymptote`
+    :param step_end: last time step of the fits, defaults to the last available step
+    :param y_min: smallest $z = kR_*$ to fit
+    :param y_max: largest $z = kR_*$ to fit
+    """
+    scale = gw_asymptote_scale(run)
+    pow_fit = run.pow_gw_asymptote(y_min=y_min, y_max=y_max, start_fraction=start_fraction, step_end=step_end)
+    plot_pow_gw_time_fits(pow_fit, scale, ax=axs[0])
+    plot_gw_growth_index(pow_fit, run.gw_growth_index_prediction(step_end), ax=axs[1])
+    plot_pow_gw_asymptote(pow_fit, scale, ax=axs[2])
+    plot_omega_gw_asymptote(run, run.omega_gw_asymptote(step_end=step_end), pow_fit, scale, ax=axs[3])
+    axs[0].set_title(f"{run.label_latex}\n{axs[0].get_title()}", fontsize=9)

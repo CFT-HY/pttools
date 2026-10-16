@@ -20,6 +20,17 @@ import typing as tp
 import numpy as np
 import pandas as pd
 
+from pttools.lattice.asymptote import (
+    DEFAULT_RUNNING_MEAN_WINDOW,
+    AsymptoteFit,
+    PowerLawFit,
+    PowGwAsymptoteFit,
+    fit_asymptote,
+    fit_pow_gw_modes,
+    fit_power_law,
+    gw_growth_index_prediction,
+    running_mean,
+)
 from pttools.lattice.quantities import Quantity, integral_scale, mean_square, read_power_spectrum
 from pttools.omgw0.factors import H
 import pttools.type_hints as th
@@ -156,6 +167,7 @@ class LatticeRun:
         self._epsilon_0: float | None = epsilon_0
         self._steps_cache: dict[Quantity, th.IntArr1D] = {}
         self._spectrum_cache: dict[tuple[Quantity, int], tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]] = {}
+        self._fit_cache: dict[tuple[tp.Any, ...], tp.Any] = {}
 
     def _param[T: (int, float)](self, value: T | None, key: str, type_: type[T]) -> T:
         if value is not None:
@@ -489,7 +501,7 @@ class LatticeRun:
 
     @property
     def t_sh(self) -> float:
-        r"""$t_\text{sh} = R_* / \bar{U}_{\parallel,*}$, shock formation time, :correia_2025:`\ ` eq. 28."""
+        r"""${t}_\text{sh} = R_* / \bar{U}_{\parallel,*}$, shock formation time, :correia_2025:`\ ` eq. 28."""
         return self.R_star / self.ubar_par_max[1]
 
     def kinetic_energy_fraction_par(self, step: int) -> float:
@@ -498,3 +510,132 @@ class LatticeRun:
         :correia_2025:`\ ` eq. 41.
         """
         return float(self.mean_adiabatic_index(step) * self.rms(Quantity.X_DIV, step)**2)
+
+    # -----
+    # Extrapolation to late times
+    # -----
+
+    @property
+    def t_max(self) -> float:
+        r"""${t}_\text{max}$, time of the maximum of $\bar{U}_\parallel$, see :py:attr:`ubar_par_max`."""
+        return float(self.time(self.ubar_par_max[0]))
+
+    def _fit_steps(self, quantity: Quantity, step_end: int | None, after_max: bool = False) -> th.IntArr1D:
+        r"""The time steps of the fits, optionally only those after the maximum of $\bar{U}_\parallel$."""
+        steps = self.steps(quantity)
+        if step_end is not None:
+            steps = steps[steps <= step_end]
+        if after_max:
+            steps = steps[steps >= self.ubar_par_max[0]]
+        return steps
+
+    def kinetic_energy_decay_index(self, step_end: int | None = None) -> PowerLawFit:
+        r"""$\zeta$, decay index of the kinetic energy, where $K^2 \propto t^{-2\zeta}$ at late times.
+
+        Fitted to $\bar{U}_\parallel(t)$ after its maximum, see :py:mod:`pttools.lattice.asymptote`.
+
+        :param step_end: last time step of the fit, defaults to the last available step
+        :return: the fit
+        """
+        key = ("zeta", step_end)
+        if key not in self._fit_cache:
+            t, ubar = self.rms_series(Quantity.X_DIV, self._fit_steps(Quantity.X_DIV, step_end, after_max=True))
+            self._fit_cache[key] = fit_power_law(t, ubar, factor=-0.5)
+        return self._fit_cache[key]
+
+    def integral_scale_growth_index(self, step_end: int | None = None) -> PowerLawFit:
+        r"""$\lambda$, growth index of the integral scale, where $\xi \propto t^\lambda$ at late times.
+
+        Fitted to $\xi({U}_\parallel)$ after the maximum of $\bar{U}_\parallel$,
+        see :py:mod:`pttools.lattice.asymptote`.
+
+        :param step_end: last time step of the fit, defaults to the last available step
+        :return: the fit
+        """
+        key = ("lambda", step_end)
+        if key not in self._fit_cache:
+            t, xi = self.integral_scale_series(
+                Quantity.X_DIV, self._fit_steps(Quantity.X_DIV, step_end, after_max=True))
+            self._fit_cache[key] = fit_power_law(t, xi, factor=1.)
+        return self._fit_cache[key]
+
+    def gw_growth_index_prediction(self, step_end: int | None = None) -> tuple[float, float]:
+        r"""$2\zeta + 2\lambda - 1$, predicted index of the approach of the GW power to its asymptote.
+
+        See :py:func:`pttools.lattice.asymptote.gw_growth_index_prediction`.
+
+        :param step_end: last time step of the fits, defaults to the last available step
+        :return: the prediction and its uncertainty
+        """
+        return gw_growth_index_prediction(
+            self.kinetic_energy_decay_index(step_end), self.integral_scale_growth_index(step_end))
+
+    def omega_gw_asymptote(
+            self,
+            t_start: float | None = None,
+            step_end: int | None = None,
+            window: int = DEFAULT_RUNNING_MEAN_WINDOW) -> AsymptoteFit:
+        r"""$\Omega_\text{gw}^\infty$, asymptotic GW energy density fraction.
+
+        $\Omega_\text{gw}(t)$ is extrapolated to late times with a fit to
+        $$\Omega_\text{gw}(t) = \Omega_\text{gw}^\infty
+        \left[ 1 - \left( \frac{t}{{t}_\text{decay}} \right)^{-{d}_\text{tot}} \right],$$
+        :correia_2025:`\ ` eq. 47.
+        As in the article, the fit is done in the range $t \in [3 {t}_\text{max}, {t}_\text{end}]$
+        to the running mean of $\Omega_\text{gw}(t)$.
+        The asymptotic value is :py:attr:`pttools.lattice.asymptote.AsymptoteFit.value` of the returned fit.
+
+        :param t_start: start of the fit, defaults to $3 {t}_\text{max}$.
+            The fit starts at the time of the output that is nearest to it.
+        :param step_end: last time step of the fit, defaults to the last available step.
+            The fit is sensitive to the last points, as the running mean is mirrored at the end of the time series.
+        :param window: number of points in the window of the running mean
+        :return: the fit
+        """
+        key = ("omega_gw", t_start, step_end, window)
+        if key not in self._fit_cache:
+            t, omega = self.omega_gw_series(self._fit_steps(Quantity.GW_TT, step_end))
+            omega = running_mean(omega, window)
+            # The fit starts at the time nearest to t_start, as the times of the simulation output
+            # are not exact multiples of the time step, e.g. 4319.5 instead of 3 * 1439.9.
+            start = int(np.argmin(np.abs(t - (3 * self.t_max if t_start is None else t_start))))
+            self._fit_cache[key] = fit_asymptote(t[start:], omega[start:], t_decay_guess=self.t_max)
+        return self._fit_cache[key]
+
+    def pow_gw_asymptote(
+            self,
+            y_min: float = 8.,
+            y_max: float = 81.,
+            start_fraction: float = 0.8,
+            step_end: int | None = None) -> PowGwAsymptoteFit:
+        r"""$\mathcal{P}_\text{gw}^\infty(k)$, asymptotic GW power spectrum.
+
+        $\mathcal{P}_\text{gw}(k, t)$ of each wavenumber in the given range is extrapolated to late times
+        with a fit to
+        $$\mathcal{P}_\text{gw}(k, t) = \mathcal{P}_\text{gw}^\infty(k)
+        \left[ 1 - \left( \frac{t}{{t}_\text{decay}(k)} \right)^{-d(k)} \right],$$
+        :correia_2025:`\ ` eq. 46, see :py:func:`pttools.lattice.asymptote.fit_pow_gw_modes`.
+
+        :param y_min: smallest $z = kR_*$ to fit
+        :param y_max: largest $z = kR_*$ to fit
+        :param start_fraction: fraction of the final value of each wavenumber at which its fit starts.
+            The article states 0.85, whereas its scripts use 0.8 for the detonation and 0.6 for the deflagration.
+        :param step_end: last time step of the fits, defaults to the last available step
+        :return: the fits
+        """
+        key = ("pow_gw", y_min, y_max, start_fraction, step_end)
+        if key not in self._fit_cache:
+            steps = self._fit_steps(Quantity.GW_TT, step_end)
+            k, _ = self.pow_normalised(Quantity.GW_TT, int(steps[-1]))
+            y = k * self.R_star
+            modes = (y >= y_min) & (y <= y_max)
+            pow_gw = np.empty((steps.size, int(np.count_nonzero(modes))))
+            for i, step in enumerate(steps):
+                k_step, p = self.pow_normalised(Quantity.GW_TT, int(step))
+                if not np.array_equal(k_step, k):
+                    raise ValueError(f"The wavenumbers of step {step} differ from those of the last step.")
+                pow_gw[i] = p[modes]
+            self._fit_cache[key] = fit_pow_gw_modes(
+                t=np.asarray(self.time(steps)), k=k[modes], y=y[modes], pow_gw=pow_gw,
+                start_fraction=start_fraction, t_decay_guess=self.t_max)
+        return self._fit_cache[key]

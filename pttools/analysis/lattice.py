@@ -174,7 +174,7 @@ def scalar_comparison(comparison: LatticeComparison) -> dict[str, tuple[float, f
     r"""Compare the scalar quantities that can be computed both from the simulation and from PTtools.
 
     The simulation values are evaluated at the time step of the comparison, except for
-    $\bar{U}_{\parallel,*}$, $K_{\parallel,*}$ and $t_\text{sh}$,
+    $\bar{U}_{\parallel,*}$, $K_{\parallel,*}$ and ${t}_\text{sh}$,
     which are evaluated at the maximum of $\bar{U}_\parallel$, as in :correia_2025:`\ ` table IV.
     For PTtools, $\bar{U}_\parallel$ and $\xi$ are computed from the spectrum,
     and $\Gamma$ and $K$ from the single-bubble fluid profile.
@@ -199,3 +199,27 @@ def scalar_comparison(comparison: LatticeComparison) -> dict[str, tuple[float, f
         "t_sh / R_*": (run.t_sh / run.R_star, 1 / ubar_ssm),
         "dOmega_gw/d(Ht) / (HR_*)": (spectrum.omega_gw_rate, ssm.omega_gw_rate),
     }
+
+
+def gw_asymptote_scale(run: LatticeRun) -> float:
+    r"""Scale of the GW power in the plots of its extrapolation, :correia_2025:`\ ` fig. 6.
+
+    $$(\Gamma \bar{U}_\parallel^2)_*^2 (H_n R_*) (H_n {t}_\text{sh}),$$
+    where $(\Gamma \bar{U}_\parallel^2)_*$ is :py:meth:`pttools.lattice.run.LatticeRun.kinetic_energy_fraction_par`
+    at the maximum of $\bar{U}_\parallel$.
+    This is the scale of the axes of the figure and of its scripts.
+    The text of the article gives the scale as $(\Gamma \bar{U}_\parallel^2)_*^2 (H_n R_*)^2$.
+
+    The values of the axes of the figure differ from those of this scale due to two issues of the scripts:
+    $\Gamma$ is taken from a row of the log of the global quantities whose index is that of the maximum
+    in the list of the time steps, i.e. at $t T_c = 200$ and 180 instead of ${t}_\text{max} T_c = 800$ and 1440,
+    which gives $\Gamma = 0.79$ and 0.89 instead of 0.99 and 1.03, and therefore larger values of
+    $\Omega_\text{gw}$ by factors of 1.58 and 1.36.
+    Furthermore, $\mathcal{P}_\text{gw}(k)$ is not divided by $\bar{\epsilon}_0$ (0.167 and 0.204),
+    unlike $\Omega_\text{gw}$.
+    These do not affect the fitted indices, the shapes of the curves or the ratios of the values.
+
+    :param run: the simulation run
+    :return: the scale
+    """
+    return run.kinetic_energy_fraction_par(run.ubar_par_max[0])**2 * run.r_star * run.H_star * run.t_sh
