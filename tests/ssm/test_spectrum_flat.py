@@ -9,7 +9,7 @@ import pytest
 from pttools.bubble import Bubble
 from pttools.models import BagModel
 from pttools.ssm import NucType, SSMSpectrum, power_gw_bag
-from pttools.ssm.suppression import SuppressionMethod
+from pttools.ssm.suppression import NO_HYBRIDS_EXT, SuppressionMethod
 
 
 class SSMSpectrumFlatTest(unittest.TestCase):
@@ -49,8 +49,11 @@ class SSMSpectrumFlatTest(unittest.TestCase):
 
     def test_pow_gw_rate_suppression(self) -> None:
         """The growth rate includes the suppression factor."""
+        # The dataset is given explicitly, as the suppression factor of the default dataset WITH_HYBRIDS_EXT
+        # is above 1 at these parameters, as some of its data points near the hybrids are.
         suppressed = SSMSpectrum(
-            self.bubble, y=self.y, nuc_type=NucType.SIMULTANEOUS, suppression_method=SuppressionMethod.DEFAULT)
+            self.bubble, y=self.y, nuc_type=NucType.SIMULTANEOUS,
+            suppression=NO_HYBRIDS_EXT, suppression_method=SuppressionMethod.DEFAULT)
         unsuppressed = SSMSpectrum(
             self.bubble, y=self.y, nuc_type=NucType.SIMULTANEOUS, suppression_method=SuppressionMethod.NONE)
         assert suppressed.suppression_factor < 1

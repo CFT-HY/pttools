@@ -167,5 +167,29 @@ class SuppressionTest(unittest.TestCase):
             )
 
 
+
+class ExtendedDatasetTest(unittest.TestCase):
+    """Tests for the datasets extended to the low v_wall and low alpha_n region."""
+
+    @staticmethod
+    def test_with_hybrids_ext() -> None:
+        """WITH_HYBRIDS_EXT should be WITH_HYBRIDS with the extrapolated point of NO_HYBRIDS_EXT."""
+        ext, base = sup.WITH_HYBRIDS_EXT, sup.WITH_HYBRIDS
+        assert ext.v_walls.size == base.v_walls.size + 1
+        np.testing.assert_array_equal(ext.v_walls[1:], base.v_walls)
+        np.testing.assert_array_equal(ext.alpha_ns[1:], base.alpha_ns)
+        np.testing.assert_array_equal(ext.suppressions[1:], base.suppressions)
+        # Both datasets have the same data points at v_wall = 0.24, and therefore the same extrapolated point.
+        assert (ext.v_walls[0], ext.alpha_ns[0]) == (0.24, 0.005)
+        assert ext.suppressions[0] == sup.NO_HYBRIDS_EXT.suppressions[0]
+        assert 0 < ext.suppressions[0] < 1
+
+    @staticmethod
+    def test_default() -> None:
+        """The default suppression dataset should be WITH_HYBRIDS_EXT."""
+        assert sup.DEFAULT_SUPPRESSION is sup.WITH_HYBRIDS_EXT
+        assert sup.WITH_HYBRIDS_EXT in sup.SUPPRESSIONS
+
+
 if __name__ == "__main__":
     unittest.main()

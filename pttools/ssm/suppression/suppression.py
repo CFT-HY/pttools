@@ -272,6 +272,11 @@ NO_HYBRIDS_EXT: Suppression = Suppression(
 )
 WITH_HYBRIDS: Suppression = Suppression.from_file(
     SUPPRESSION_FOLDER / "suppression_2_ssm.txt", name="with_hybrids", label="With hybrids")
+#: :py:data:`WITH_HYBRIDS` extended to the low ${v}_\text{wall}$ and low $\alpha_n$ region with :py:func:`extend`
+WITH_HYBRIDS_EXT: Suppression = Suppression(
+    *extend(v_walls=WITH_HYBRIDS.v_walls, alpha_ns=WITH_HYBRIDS.alpha_ns, suppressions=WITH_HYBRIDS.suppressions),
+    name="with_hybrids_extended", label="With hybrids, extended"
+)
 #: Suppression factors fitted to the $4096^3$ simulations of :correia_2025:`\ `
 #: (${v}_\text{wall} = 0.92, \alpha_n = 0.67$ and ${v}_\text{wall} = 0.44, \alpha_n = 0.5$),
 #: computed with
@@ -288,6 +293,7 @@ NO_HYBRIDS_EXT_CORREIA_2025: Suppression = NO_HYBRIDS_EXT.merge(
 #: are replaced with those of the higher-resolution simulations
 WITH_HYBRIDS_CORREIA_2025: Suppression = WITH_HYBRIDS.merge(
     CORREIA_2025, name="with_hybrids_correia_2025", label="With hybrids and Correia et al. (2025)")
-DEFAULT_SUPPRESSION: Suppression = NO_HYBRIDS_EXT
+#: The default suppression dataset of the spectra
+DEFAULT_SUPPRESSION: Suppression = WITH_HYBRIDS_EXT
 SUPPRESSIONS: list[Suppression] = [
-    NO_HYBRIDS, NO_HYBRIDS_EXT, WITH_HYBRIDS, NO_HYBRIDS_EXT_CORREIA_2025, WITH_HYBRIDS_CORREIA_2025]
+    NO_HYBRIDS, NO_HYBRIDS_EXT, WITH_HYBRIDS, WITH_HYBRIDS_EXT, NO_HYBRIDS_EXT_CORREIA_2025, WITH_HYBRIDS_CORREIA_2025]
