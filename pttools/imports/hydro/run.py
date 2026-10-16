@@ -7,6 +7,8 @@ The quantities are in lattice units, where $T_c = 1$ and $G = 1$, see :correia_2
 The simulations are in flat space, and the Hubble rate $H_n$ only enters through the Friedmann equation
 $$H_n^2 = \frac{8 \pi G}{3} \bar{\epsilon}_0,$$
 where $\bar{\epsilon}_0$ is the initial mean energy density, :correia_2025:`\ ` eq. 8.
+As the expansion of the universe during the phase transition is neglected,
+the Hubble rate at the time of GW production is $H_* = H_n$.
 """
 
 import csv
@@ -19,6 +21,7 @@ import typing as tp
 import numpy as np
 
 from pttools.imports.hydro.quantities import Quantity, integral_scale, mean_square, read_power_spectrum
+from pttools.omgw0.factors import H
 import pttools.type_hints as th
 
 if tp.TYPE_CHECKING:
@@ -235,14 +238,19 @@ class HydroRun:
         return float(self._global_sum("rest E")[0] / self.volume)
 
     @property
-    def H_n(self) -> float:
-        r"""$H_n = \sqrt{\frac{8\pi G}{3} \bar{\epsilon}_0}$, Hubble rate at nucleation, :correia_2025:`\ ` eq. 8."""
-        return np.sqrt(8 * np.pi * G_LATTICE * self.epsilon_0 / 3)
+    def H_star(self) -> float:
+        r"""$H_* = H_n = \sqrt{\frac{8\pi G}{3} \bar{\epsilon}_0}$, Hubble rate, :correia_2025:`\ ` eq. 8.
+
+        As the expansion of the universe during the phase transition is neglected,
+        the Hubble rate at the time of GW production equals that at nucleation $H_n$.
+        This is computed with :py:func:`pttools.omgw0.factors.H` with $G$ = :py:data:`G_LATTICE`.
+        """
+        return float(H(self.epsilon_0, G=G_LATTICE))
 
     @property
     def r_star(self) -> float:
-        r"""$r_* = H_n R_*$, Hubble-scaled mean bubble spacing."""
-        return self.H_n * self.R_star
+        r"""$r_* = H_* R_*$, Hubble-scaled mean bubble spacing."""
+        return self.H_star * self.R_star
 
     @property
     def enthalpy_global(self) -> th.FloatArr1D:
@@ -402,19 +410,21 @@ class HydroRun:
         if not np.array_equal(k, k_prev):
             raise ValueError("The wavenumbers of the two time steps differ.")
         delta_t = self.time(step) - self.time(step_prev)
-        return k, (p - p_prev) / (self.H_n * delta_t) / self.r_star
+        return k, (p - p_prev) / (self.H_star * delta_t) / self.r_star
 
-    def spectrum(self, step: int, step_prev: int | None = None) -> "HydroSpectrum":
+    def spectrum(self, step: int, step_prev: int | None = None, **kwargs: tp.Any) -> "HydroSpectrum":
         """Create a spectrum object for the given time step.
 
         See :py:class:`pttools.imports.hydro.spectrum.HydroSpectrum`.
 
         :param step: the time step
         :param step_prev: the earlier time step for computing the GW power growth rate
+        :param kwargs: additional arguments for :py:class:`pttools.imports.hydro.spectrum.HydroSpectrum`,
+            e.g. ``r_star``, ``T_star``, ``g_star`` and ``gs_star``
         :return: the spectrum
         """
         from pttools.imports.hydro.spectrum import HydroSpectrum  # noqa: PLC0415
-        return HydroSpectrum(self, step=step, step_prev=step_prev)
+        return HydroSpectrum(self, step=step, step_prev=step_prev, **kwargs)
 
     # -----
     # Time series

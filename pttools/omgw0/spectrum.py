@@ -1,23 +1,20 @@
 """Gravitational wave power spectrum as observed today."""
 
 import functools
-import math
 import os
 import typing as tp
 
-from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 import numpy as np
 from numpy.typing import NDArray
 
 from pttools.bubble import Bubble
-from pttools.omgw0 import const, freq
+from pttools.omgw0 import const
+from pttools.omgw0.base import Omgw0Base
 from pttools.omgw0.compute import OmGw0Input, OmGw0Results, SNRSettings, compute, compute_gw
-from pttools.omgw0.const import H2, LISA_OBS_TIME, OMEGA_PHOTON_H2
+from pttools.omgw0.const import LISA_OBS_TIME
 from pttools.omgw0.export import SPECTRUM_FIELDS, SPECTRUM_FIELDS_F, SPECTRUM_FIELDS_Y
-from pttools.omgw0.factors import F_gw0_h2
-from pttools.omgw0.noise import omega_ins_h2, omega_noise_h2, signal_to_noise_ratio
-from pttools.ssm.calculators import trapezoid_loglog
+from pttools.omgw0.factors import H
 from pttools.ssm.const import (
     DEFAULT_A_STAR_A_R_RATIO,
     DEFAULT_EPS_LOOKUP,
@@ -34,15 +31,12 @@ from pttools.ssm.nucleation import DEFAULT_NUC_TYPE, NucType
 from pttools.ssm.spectrum import SSMSpectrum
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 import pttools.type_hints as th
-from pttools.type_hints import FloatArr1D, FloatOrArr
-from pttools.utils.docstrings import copy_docstring_dec
+from pttools.type_hints import FloatArr1D
+from pttools.utils.decorators import cached_property
 from pttools.utils.fields import Fields
 
-if tp.TYPE_CHECKING:
-    from pttools.analysis.utils import FigAndAxes
 
-
-class Spectrum(SSMSpectrum):
+class Spectrum(Omgw0Base, SSMSpectrum):
     r"""A spectrum object that includes the conversion to the GW power spectrum today $\Omega_{\text{gw},0}$."""
 
     FIELDS: tp.ClassVar[Fields] = SPECTRUM_FIELDS
@@ -190,15 +184,6 @@ class Spectrum(SSMSpectrum):
     # =====
 
     @functools.cached_property
-    def ge_star(self) -> float:
-        r"""$g_{e,*}$, degrees of freedom for energy density at the time the GWs were produced.
-
-        $$g_{e,*} = \frac{1}{3}(4 g_s - g_p)$$
-        :maki_msc:`\ ` eq. 2.108.
-        """
-        return (4 * self.gs_star - self.g_star) / 3
-
-    @functools.cached_property
     def e_star(self) -> float:
         r"""$e_*$, energy density at GW formation.
 
@@ -213,55 +198,22 @@ class Spectrum(SSMSpectrum):
         """Whether the frequencies $f$ were given as an argument instead of the $y$ array."""
         return self._f_given is not None
 
-    @functools.cached_property
+    @cached_property
+    @tp.override
     def _f_y(self) -> th.FloatArr1D:
-        r"""Frequencies today $f(y)$ corresponding to the $y$ array of the spectrum.
-
-        This is cached, so that :py:meth:`f`, :py:attr:`f_min` and :py:attr:`f_max` compute the frequencies only once.
-        If the frequencies were given as an argument, they are returned as is.
-        """
+        # The frequencies given as an argument are returned as is, instead of converting them back from y.
         if self._f_given is not None:
             return self._f_given
-        return freq.f(z=self.y, r_star=self.r_star, f_star0=self.f_star0)
+        return self.f(self.y)
 
-    @functools.cached_property
-    def f_max(self) -> float:
-        r"""$f_\text{max}$, maximum frequency today corresponding to the $y$ array of the spectrum."""
-        return float(self._f_y.max())
-
-    @functools.cached_property
-    def f_min(self) -> float:
-        r"""$f_\text{min}$, minimum frequency today corresponding to the $y$ array of the spectrum."""
-        return float(self._f_y.min())
-
-    @functools.cached_property
-    @copy_docstring_dec(freq.f_star0, without_params=True)
-    def f_star0(self) -> float:
-        return freq.f_star0(
-            T_star=self.T_star,
-            ge_star=self.ge_star,
-            gs_star=self.gs_star
-        )
-
-    @functools.cached_property
+    @cached_property
+    @tp.override
     def H_star(self) -> float:
-        r"""Hubble rate $H_*$ at GW formation, in units of $T^2$.
+        return float(H(self.e_star))
 
-        $$H = \sqrt{8 \pi \frac{e_*}{3}} \frac{1}{m_{\text{pl}}}$$
-        This is a direct consequence of the Friedmann equation
-        $$H^2 + \frac{K}{a^2} = \frac{8 \pi G}{3} e$$
-        with $K = 0$ and $m_{\text{pl}} = \frac{1}{G}$.
-        Note that here $m_pl = 1$ in natural units.
-        """
-        return math.sqrt(8 * math.pi * self.e_star / 3)
-
-    @functools.cached_property
-    def R_star(self) -> th.FloatOrArr:
-        r"""Mean bubble separation $R_*$, in units of $T^{-2}$.
-
-        $$R_* = \frac{r_*}{H_*}$$
-        :gowling_2021:`\ ` eq. 2.2
-        """
+    @cached_property
+    @tp.override
+    def R_star(self) -> float:
         return self.r_star / self.H_star
 
     @functools.cached_property
@@ -414,130 +366,7 @@ class Spectrum(SSMSpectrum):
             self.snr_settings = other.snr_settings
         super()._reuse(other)
 
-    @copy_docstring_dec(freq.f, without_params=True)
-    def f(self, z: th.FloatArr1D | None = None) -> th.FloatArr1D:
-        # The frequencies of the y array are cached, and the frequencies of a custom z are not.
-        if z is None:
-            return self._f_y
-        return freq.f(z=z, r_star=self.r_star, f_star0=self.f_star0)
-
-    def F_gw0[T: FloatOrArr](
-            self,
-            ge0_photon: T = const.GE0_PHOTON,
-            gs0: th.FloatOrArr = const.GS0,
-            h2: th.FloatOrArr = H2) -> T:
-        r"""$F_{\text{gw},0}$, power attenuation following the end of the radiation era."""
-        return self.F_gw0_h2(ge0_photon=ge0_photon, gs0=gs0) / h2  # pyrefly: ignore[bad-return]
-
-    @copy_docstring_dec(F_gw0_h2, without_params=True)
-    def F_gw0_h2[T: FloatOrArr](
-            self,
-            ge0_photon: T = const.GE0_PHOTON,
-            gs0: th.FloatOrArr = const.GS0,
-            om_gamma0_h2: th.FloatOrArr = OMEGA_PHOTON_H2) -> T:
-        return F_gw0_h2(  # pyrefly: ignore[bad-return]
-            ge_star=self.ge_star,
-            ge0_photon=ge0_photon,
-            gs0=gs0,
-            gs_star=self.gs_star,
-            om_gamma0_h2=om_gamma0_h2
-        )
-
-    def noise(self, eb: bool = True, gb: bool = True, ins: bool = True, h2: th.FloatOrArr1D = H2) -> th.FloatArr1D:
-        r"""Total LISA noise $\Omega_\text{noise}$."""
-        return self.noise_h2(eb=eb, gb=gb, ins=ins) / h2
-
-    @copy_docstring_dec(omega_noise_h2, without_params=True)
-    def noise_h2(self, eb: bool = True, gb: bool = True, ins: bool = True) -> th.FloatArr1D:
-        return omega_noise_h2(f=self.f(), eb=eb, gb=gb, ins=ins)
-
-    def noise_ins(self, h2: th.FloatOrArr1D) -> th.FloatArr1D:
-        r"""LISA instrument noise $\Omega_\text{ins}$."""
-        return self.noise_ins_h2() / h2
-
-    @copy_docstring_dec(omega_ins_h2, without_params=True)
-    def noise_ins_h2(self) -> th.FloatArr1D:
-        return omega_ins_h2(f=self.f())
-
-    def omgw0(
-            self,
-            ge0_photon: float = const.GE0_PHOTON,
-            gs0: float = const.GS0,
-            h2: th.FloatOrArr1D = H2) -> th.FloatArr1D:
-        r"""Gravitational wave power spectrum today $\Omega_{\text{gw},0}$.
-
-        :param ge0_photon: $g_{e\gamma 0}$, degrees of freedom for energy density of photons today
-        :param gs0: $g_{s,0}$, degrees of freedom today for entropy
-        :param h2: $h^2$, dimensionless reduced Hubble constant squared
-        """
-        return self.omgw0_h2(ge0_photon=ge0_photon, gs0=gs0) / h2
-
-    def omgw0_h2(
-            self,
-            ge0_photon: float = const.GE0_PHOTON,
-            gs0: float = const.GS0,
-            om_gamma0_h2: float = const.OMEGA_PHOTON_H2) -> th.FloatArr1D:
-        r"""Gravitational wave power spectrum today $\Omega_{\text{gw},0} h^2$.
-
-        :param ge0_photon: $g_{e\gamma 0}$, degrees of freedom for energy density of photons today
-        :param gs0: $g_{s,0}$, degrees of freedom for entropy today
-        :param om_gamma0_h2: $\Omega_{\gamma,0} h^2$, the photon density parameter today, multiplied by $h^2$
-        """
-        return self.F_gw0_h2(ge0_photon=ge0_photon, gs0=gs0, om_gamma0_h2=om_gamma0_h2) * self.pow_gw
-
-    def omgw0_h2_peak(
-            self,
-            ge0_photon: float = const.GE0_PHOTON,
-            gs0: float = const.GS0,
-            om_gamma0_h2: float = const.OMEGA_PHOTON_H2) -> tuple[float, float]:
-        r"""Peak $\Omega_{\text{gw},0} h^2$.
-
-        :param ge0_photon: $g_{e\gamma 0}$, degrees of freedom for energy density of photons today
-        :param gs0: $g_{s,0}$, degrees of freedom today for entropy
-        :param om_gamma0_h2: $\Omega_{\gamma,0} h^2$, the photon density parameter today, multiplied by $h^2$
-        """
-        omgw0_h2 = self.omgw0_h2(ge0_photon=ge0_photon, gs0=gs0, om_gamma0_h2=om_gamma0_h2)
-        i_max = np.argmax(omgw0_h2)
-        return self.f()[i_max], omgw0_h2[i_max]
-
-    def omgw0_h2_total(self, omgw0_h2: th.FloatArr1D | None = None) -> float:
-        r"""Total $\Omega_{\text{gw},0} h^2$ integrated over all frequencies.
-
-        :param omgw0_h2: $\Omega_{\text{gw},0} h^2$
-        """
-        return trapezoid_loglog(
-            x=self.f(),
-            # This doesn't take arguments, as the entire omgw0_h2 can be overridden with an argument.
-            y=self.omgw0_h2() if omgw0_h2 is None else omgw0_h2
-        )
-
-    def omgw0_peak[T: FloatOrArr](
-            self,
-            ge0_photon: float = const.GE0_PHOTON,
-            gs0: float = const.GS0,
-            h2: T = H2,
-            om_gamma0_h2: float = const.OMEGA_PHOTON_H2) -> tuple[float, T]:
-        r"""Peak $\Omega_{\text{gw},0}$.
-
-        :param ge0_photon: $g_{e\gamma 0}$, degrees of freedom for energy density of photons today
-        :param gs0: $g_{s,0}$, degrees of freedom today for entropy
-        :param h2: $h^2$, dimensionless reduced Hubble constant squared
-        :param om_gamma0_h2: $\Omega_{\gamma,0} h^2$, the photon density parameter today, multiplied by $h^2$
-        """
-        f_peak, omgw0_h2_peak = self.omgw0_h2_peak(ge0_photon=ge0_photon, gs0=gs0, om_gamma0_h2=om_gamma0_h2)
-        return f_peak, tp.cast(T, omgw0_h2_peak / h2)
-
-    def omgw0_total[T: FloatOrArr](
-            self,
-            omgw0_h2: th.FloatArr1D | None = None,
-            h2: T = H2) -> T:
-        r"""Total $\Omega_{\text{gw},0}$ integrated over all frequencies.
-
-        :param omgw0_h2: $\Omega_{\text{gw},0} h^2$
-        :param h2: $h^2$, dimensionless reduced Hubble constant squared
-        """
-        return tp.cast(T, self.omgw0_h2_total(omgw0_h2=omgw0_h2) / h2)
-
+    @tp.override
     def snr(
             self,
             # Arrays
@@ -553,23 +382,11 @@ class Spectrum(SSMSpectrum):
             noise_gb: bool = True,
             noise_ins: bool = True,
         ) -> tuple[float, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D]:
-        r"""Signal-to-noise ratio for LISA, taking into account all noise sources.
+        """Signal-to-noise ratio for LISA, see :py:meth:`pttools.omgw0.base.Omgw0Base.snr`.
 
-        :param noise: $\Omega_\text{noise} h^2$
-        :param f_noise: frequencies for the noise (assumed to be the same as for the signal, if not provided)
-        :param ge0_photon: $g_{e\gamma 0}$, degrees of freedom for energy density of photons today
-        :param gs0: $g_{s,0}$, degrees of freedom today for entropy
-        :param obs_time: observation time (s)
-        :param om_gamma0_h2: $\Omega_{\gamma,0} h^2$, the photon density parameter today, multiplied by $h^2$
-        :param noise_eb: whether to generate extragalactic compact binary noise when noise is not provided
-        :param noise_gb: whether to generate galactic compact binary noise when noise is not provided
-        :param noise_ins: whether to generate instrument noise when noise is not provided
-        :return: the signal-to-noise ratio, the frequencies of the signal, $\Omega_{\text{gw},0} h^2$,
-            the frequencies of the noise and $\Omega_\text{noise} h^2$.
-            If the signal-to-noise ratio was computed together with the spectrum with the same settings
-            (see :py:meth:`compute`), the precomputed result is returned.
+        If the signal-to-noise ratio was computed together with the spectrum with the same settings
+        (see :py:meth:`compute`), the precomputed result is returned.
         """
-        f: FloatArr1D = self.f()
         settings = SNRSettings(
             noise=noise, f_noise=f_noise, obs_time=obs_time,
             ge0_photon=ge0_photon, gs0=gs0, om_gamma0_h2=om_gamma0_h2,
@@ -577,52 +394,15 @@ class Spectrum(SSMSpectrum):
         )
         res = self._omgw0_res
         if res is not None and settings.matches(self.snr_settings):
-            return res.snr, f, res.omgw0_h2, res.f_noise, res.noise
-        omgw0_h2 = self.omgw0_h2(ge0_photon=ge0_photon, gs0=gs0, om_gamma0_h2=om_gamma0_h2)
-        snr, f_noise, noise = signal_to_noise_ratio(
-            f=f, signal=omgw0_h2, obs_time=obs_time,
-            noise=noise, f_noise=f_noise,
-            noise_eb=noise_eb, noise_gb=noise_gb, noise_ins=noise_ins
+            return res.snr, self.f(), res.omgw0_h2, res.f_noise, res.noise
+        return super().snr(
+            noise=noise, f_noise=f_noise, ge0_photon=ge0_photon, gs0=gs0, obs_time=obs_time,
+            om_gamma0_h2=om_gamma0_h2, noise_eb=noise_eb, noise_gb=noise_gb, noise_ins=noise_ins
         )
-        return snr, f, omgw0_h2, f_noise, noise
-
-    def snr_ins(
-            self,
-            ge0_photon: float = const.GE0_PHOTON,
-            gs0: float = const.GS0,
-            obs_time: float = LISA_OBS_TIME,
-            om_gamma0_h2: float = const.OMEGA_PHOTON_H2
-        ) -> tuple[float, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D]:
-        """Signal-to-noise ratio for LISA, taking into account only the instrument noise."""
-        return self.snr(
-            ge0_photon=ge0_photon, gs0=gs0, obs_time=obs_time, om_gamma0_h2=om_gamma0_h2,
-            noise_eb=False, noise_gb=False, noise_ins=True
-        )
-
-    @copy_docstring_dec(freq.z, without_params=True)
-    def z_from_f[T: FloatOrArr](self, f: T) -> T:
-        return freq.z(f=f, r_star=self.r_star, f_star0=self.f_star0)
 
     # -----
     # Plotting
     # -----
-
-    def plot(
-            self,
-            fig: Figure | None = None,
-            ax: Axes | None = None,
-            path: str | os.PathLike[str] | None = None,
-            **kwargs: tp.Any) -> "FigAndAxes":
-        r"""Plot the GW power spectrum today $\Omega_{\text{gw},0} h^2(f)$ together with the LISA noise.
-
-        :param fig: the figure to plot on
-        :param ax: the axes to plot on
-        :param path: if given, save the figure to this path
-        :param kwargs: additional arguments for :py:func:`pttools.analysis.plot_spectra.plot_spectra`
-        :return: the figure and the axes
-        """
-        from pttools.analysis.plot_spectra import plot_spectra  # noqa: PLC0415
-        return plot_spectra([self], fig, ax, path, **kwargs)
 
     def plot_multi(
             self,

@@ -7,7 +7,7 @@ import pytest
 
 from pttools.omgw0 import const
 from pttools.omgw0.dof import gs0
-from pttools.omgw0.factors import F_gw0_h2
+from pttools.omgw0.factors import F_gw0_h2, H
 
 #: $a$, the radiation constant in $\frac{\text{J}}{\text{m}^3 \text{K}^4}$
 A_RAD_REF: float = 7.565733e-16
@@ -33,6 +33,18 @@ F_GW0_H2_REF_ERR: float = F_GW0_REF_ERR * H_REF**2
 
 #: $\Omega_{\gamma,0} h^2$, Planck 2018 / PDG value
 OMEGA_PHOTON_H2_REF: float = 2.473e-5
+
+
+class HubbleTest(unittest.TestCase):
+    """Tests for the Hubble rate."""
+
+    @staticmethod
+    def test_H() -> None:
+        r"""Test that $H = \sqrt{\frac{8 \pi G e}{3}}$, where $G = 1$ by default."""
+        e = np.array([1e-3, 0.5, 2.])
+        np.testing.assert_allclose(H(e), np.sqrt(8 * np.pi * e / 3), rtol=1e-15)
+        np.testing.assert_allclose(H(e, G=2.5), np.sqrt(8 * np.pi * 2.5 * e / 3), rtol=1e-15)
+        assert H(0.5, G=4.) == pytest.approx(2 * H(0.5), rel=1e-15)
 
 
 class ConstTest(unittest.TestCase):

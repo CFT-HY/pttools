@@ -413,8 +413,8 @@ class ExportTest(unittest.TestCase):
             assert "w_crit" in importer.model_params(0)
             assert importer.read(Table.SPECTRA_Y, "label_unicode", 0) == self.y_spectra[0].label_unicode
             # Descriptions from the docstrings
-            assert importer.field_info(Table.SPECTRA_Y, "R_star")["description"] == \
-                "Mean bubble separation $R_*$, in units of $T^{-2}$"
+            # The docstring of R_star is inherited from Omgw0Base.
+            assert importer.field_info(Table.SPECTRA_Y, "R_star")["description"] == "$R_*$, mean bubble separation"
             assert importer.field_info(Table.BUBBLES, "T")["description"] == r"Temperature profile $T(\xi)$"
 
     def test_grid_mismatch(self) -> None:

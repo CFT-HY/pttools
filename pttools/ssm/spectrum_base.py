@@ -7,6 +7,7 @@ They are defined in flat space, without the expansion of the universe,
 so that the spectra can be compared directly with each other.
 """
 
+import abc
 import os
 import typing as tp
 
@@ -19,11 +20,11 @@ if tp.TYPE_CHECKING:
     from pttools.analysis.utils import FigAndAxes
 
 
-class SpectrumBase:
+class SpectrumBase(abc.ABC):
     r"""Base class for the power spectra that can be compared with each other.
 
-    The subclasses have to provide the attributes ``y``, ``label_latex`` and ``label_unicode``
-    and the properties :py:attr:`pow_U_par` and :py:attr:`pow_gw_rate`.
+    The subclasses have to provide the attributes ``y``, ``r_star``, ``label_latex`` and ``label_unicode``
+    and the properties :py:attr:`pow_U_par`, :py:attr:`pow_gw` and :py:attr:`pow_gw_rate`.
     The derived quantities are then computed from these
     by integrating over $\ln z$ with the trapezoidal rule.
     The power spectra are normalised as in :correia_2025:`\ ` eq. 15, so that
@@ -32,6 +33,10 @@ class SpectrumBase:
 
     #: $z = kR_*$, wavenumbers scaled by the mean bubble spacing
     y: FloatArr1D
+    # This is an attribute instead of an abstract property,
+    # as pttools.ssm.spectrum.SSMSpectrum stores it as an instance attribute.
+    #: $r_* = H_* R_*$, Hubble-scaled mean bubble spacing
+    r_star: float
     #: Label of the spectrum in LaTeX format
     label_latex: str
     #: Label of the spectrum in Unicode format
@@ -42,6 +47,7 @@ class SpectrumBase:
     # -----
 
     @property
+    @abc.abstractmethod
     def pow_U_par(self) -> FloatArr1D:
         r"""$\mathcal{P}_{U_{\parallel}}(z)$, power spectrum of the enthalpy-weighted compressional fluid velocity.
 
@@ -50,9 +56,28 @@ class SpectrumBase:
         :correia_2025:`\ ` eq. 20.
         The spectrum is normalised so that $\int \frac{dz}{z} \mathcal{P}_{U_{\parallel}} = \bar{U}_\parallel^2$.
         """
-        raise NotImplementedError
 
     @property
+    @abc.abstractmethod
+    def pow_gw(self) -> FloatArr1D:
+        r"""$\mathcal{P}_\text{gw}(z)$, GW power spectrum.
+
+        This is the GW energy density per logarithmic wavenumber
+        as a fraction of the background energy density, normalised so that
+        $$\int \frac{dz}{z} \mathcal{P}_\text{gw}(z) = \Omega_\text{gw}.$$
+        The time at which the spectrum is evaluated depends on the spectrum.
+        Unlike the other quantities of this interface, it therefore depends on the history of the source,
+        and the spectra of different sources cannot in general be compared directly.
+
+        - :py:class:`pttools.ssm.spectrum.SSMSpectrum`: the spectrum after the source has turned off,
+          including the effects of the expansion of the universe and of the finite lifetime of the source.
+        - :py:class:`pttools.imports.hydro.spectrum.HydroSpectrum`: the spectrum at the time step of the spectrum
+          in flat space, as a fraction of the initial mean energy density $\bar{\epsilon}_0$,
+          :correia_2025:`\ ` eq. 25.
+        """
+
+    @property
+    @abc.abstractmethod
     def pow_gw_rate(self) -> FloatArr1D:
         r"""$\frac{1}{H_n R_*} \frac{d\mathcal{P}_\text{gw}}{d(H_n t)}$, growth rate of the GW power spectrum.
 
@@ -60,7 +85,6 @@ class SpectrumBase:
         per Hubble time and per Hubble-scaled mean bubble spacing $H_n R_*$,
         as in :correia_2025:`\ ` fig. 5 and :gw_pt_ssm:`\ ` eq. 3.45.
         """
-        raise NotImplementedError
 
     # -----
     # Derived quantities
@@ -102,6 +126,32 @@ class SpectrumBase:
     # Plotting
     # -----
 
+    def plot(
+            self,
+            fig: plt.Figure | None = None,
+            ax: plt.Axes | None = None,
+            path: str | os.PathLike[str] | None = None,
+            **kwargs: tp.Any) -> "FigAndAxes":
+        r"""Plot the GW power spectrum $\mathcal{P}_\text{gw}(kR_*)$, see :py:meth:`plot_gw`."""
+        return self.plot_gw(fig, ax, path, **kwargs)
+
+    def plot_gw(
+            self,
+            fig: plt.Figure | None = None,
+            ax: plt.Axes | None = None,
+            path: str | os.PathLike[str] | None = None,
+            **kwargs: tp.Any) -> "FigAndAxes":
+        r"""Plot the GW power spectrum $\mathcal{P}_\text{gw}(kR_*)$.
+
+        :param fig: figure to plot in
+        :param ax: axes to plot in
+        :param path: path to save the figure to
+        :param kwargs: arguments for :py:func:`pttools.analysis.plot_spectra.plot_spectra_gw`
+        :return: the figure and the axes
+        """
+        from pttools.analysis.plot_spectra import plot_spectra_gw  # noqa: PLC0415
+        return plot_spectra_gw([self], ax=ax, fig=fig, path=path, **kwargs)
+
     def plot_pow_U_par(
             self,
             fig: plt.Figure | None = None,
@@ -115,10 +165,11 @@ class SpectrumBase:
         :param ax: axes to plot in
         :param path: path to save the figure to
         :param scale: factor by which the spectrum is multiplied
-        :param kwargs: arguments for :py:meth:`matplotlib.axes.Axes.plot`
+        :param kwargs: arguments for :py:meth:`matplotlib.axes.Axes.plot`, e.g. ``label``
         :return: the figure and the axes
         """
-        return self._plot(self.pow_U_par, r"$\mathcal{P}_{U_{\parallel}}(kR_*)$", fig, ax, path, scale, **kwargs)
+        from pttools.analysis.plot_spectra import plot_spectra_pow_U_par  # noqa: PLC0415
+        return plot_spectra_pow_U_par([self], ax=ax, fig=fig, path=path, scale=scale, **kwargs)
 
     def plot_pow_gw_rate(
             self,
@@ -133,29 +184,8 @@ class SpectrumBase:
         :param ax: axes to plot in
         :param path: path to save the figure to
         :param scale: factor by which the spectrum is multiplied, e.g. a suppression factor
-        :param kwargs: arguments for :py:meth:`matplotlib.axes.Axes.plot`
+        :param kwargs: arguments for :py:meth:`matplotlib.axes.Axes.plot`, e.g. ``label``
         :return: the figure and the axes
         """
-        return self._plot(
-            self.pow_gw_rate, r"$(H_n R_*)^{-1} \, d\mathcal{P}_\text{gw} / d(H_n t)$", fig, ax, path, scale, **kwargs)
-
-    def _plot(
-            self,
-            data: FloatArr1D,
-            ylabel: str,
-            fig: plt.Figure | None,
-            ax: plt.Axes | None,
-            path: str | os.PathLike[str] | None,
-            scale: float,
-            **kwargs: tp.Any) -> "FigAndAxes":
-        from pttools.analysis.utils import create_fig_ax  # noqa: PLC0415
-        fig, ax = create_fig_ax(fig, ax)
-        kwargs.setdefault("label", self.label_latex)
-        ax.plot(self.y, scale * data, **kwargs)
-        ax.set_xlabel(r"$z = kR_*$")
-        ax.set_ylabel(ylabel)
-        ax.set_xscale("log")
-        ax.set_yscale("log")
-        if path is not None:
-            fig.savefig(path)
-        return fig, ax
+        from pttools.analysis.plot_spectra import plot_spectra_pow_gw_rate  # noqa: PLC0415
+        return plot_spectra_pow_gw_rate([self], ax=ax, fig=fig, path=path, scale=scale, **kwargs)

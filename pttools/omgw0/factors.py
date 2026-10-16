@@ -106,15 +106,18 @@ H_FACTOR: float = math.sqrt(8 * math.pi / 3)
 H_FACTOR_SI: float = H_FACTOR * math.sqrt(G) / c
 
 
-def H[T: FloatOrArr](e: T) -> T:
+def H[T: FloatOrArr](e: T, G: float = 1.) -> T:
     r"""Hubble rate without unit conversion.
 
-    $$H = \sqrt{\frac{8 \pi e}{3}}$$
+    $$H = \sqrt{\frac{8 \pi G e}{3}}$$
+    This follows from the Friedmann equation $H^2 + \frac{K}{a^2} = \frac{8 \pi G}{3} e$ with $K = 0$.
 
     :param e: $e$, energy density
+    :param G: $G$, gravitational constant.
+        The default of 1 corresponds to the natural units where $G = 1 / m_{\text{pl}}^2 = 1$.
     :return: Hubble rate
     """
-    return tp.cast(T, H_FACTOR * np.sqrt(e))
+    return tp.cast(T, H_FACTOR * np.sqrt(G * e))
 
 
 def H_SI[T: FloatOrArr](e: T) -> T:

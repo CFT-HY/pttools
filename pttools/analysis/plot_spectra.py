@@ -10,8 +10,9 @@ import numpy as np
 
 from pttools.analysis.plot_bubbles import plot_bubbles_v
 from pttools.analysis.utils import FigAndAxes, create_fig_ax
-from pttools.omgw0 import Spectrum, omega_noise_h2
+from pttools.omgw0 import Omgw0Base, Spectrum, omega_noise_h2
 from pttools.ssm.spectrum import SSMSpectrum
+from pttools.ssm.spectrum_base import SpectrumBase
 import pttools.type_hints as th
 from pttools.utils.formatting import as_latex
 
@@ -24,6 +25,8 @@ SPEC_DEN_V_TILDE_LABEL = r"$\tilde{P}_{\tilde{v}}(kR_*)$"
 SPEC_DEN_GW_LABEL = r"$\mathcal{P}_\text{gw}(kR_*)$"
 POW_V_TILDE_LABEL = r"$\tilde{\mathcal{P}}_{\tilde{v}}(kR_*)$"
 POW_GW_LABEL = r"$\mathcal{P}_\text{gw}(kR_*)$"
+POW_GW_RATE_LABEL = r"$(H_n R_*)^{-1} \, d\mathcal{P}_\text{gw} / d(H_n t)$"
+POW_U_PAR_LABEL = r"$\mathcal{P}_{U_{\parallel}}(kR_*)$"
 POW_GW0_LABEL = r"$\mathcal{P}_{\text{gw},0}(f)$"
 POW_GW0_H2_LABEL = r"$\mathcal{P}_{\text{gw},0}(f) h^2$"
 Z_LABEL = r"$z = kR_*$"
@@ -34,7 +37,7 @@ Z_LABEL = r"$z = kR_*$"
 # -----
 
 def plot_spectra_common(
-        spectra: tp.Collection[SSMSpectrum],
+        spectra: tp.Collection[SpectrumBase],
         fig: Figure,
         ax: Axes,
         path: str | os.PathLike[str] | None = None,
@@ -146,7 +149,7 @@ def plot_spectra_multi_flat(
 # -----
 
 def plot_spectra(
-        spectra: tp.Collection[Spectrum],
+        spectra: tp.Collection[Omgw0Base],
         fig: Figure | None = None,
         ax: Axes | None = None,
         path: str | os.PathLike[str] | None = None,
@@ -177,7 +180,7 @@ def plot_spectra(
 
 
 def plot_spectra_gw(
-        spectra: tp.Collection[SSMSpectrum],
+        spectra: tp.Collection[SpectrumBase],
         ax: Axes | None = None,
         fig: Figure | None = None,
         path: str | os.PathLike[str] | None = None,
@@ -187,7 +190,63 @@ def plot_spectra_gw(
     for spectrum in spectra:
         ax.plot(spectrum.y, spectrum.pow_gw, label=spectrum.label_latex, **kwargs)
     ax.set_ylabel(POW_GW_LABEL)
-    return plot_spectra_common(spectra, fig, ax, path, **kwargs)
+    return plot_spectra_common(spectra, fig, ax, path)
+
+
+def plot_spectra_pow_gw_rate(
+        spectra: tp.Collection[SpectrumBase],
+        ax: Axes | None = None,
+        fig: Figure | None = None,
+        path: str | os.PathLike[str] | None = None,
+        scale: float = 1.,
+        **kwargs: tp.Any) -> FigAndAxes:
+    r"""Plot the growth rates of the GW power spectra.
+
+    See :py:attr:`pttools.ssm.spectrum_base.SpectrumBase.pow_gw_rate`.
+
+    :param spectra: the spectra
+    :param ax: axes to plot in
+    :param fig: figure to plot in
+    :param path: path to save the figure to
+    :param scale: factor by which the spectra are multiplied, e.g. a suppression factor
+    :param kwargs: arguments for :py:meth:`matplotlib.axes.Axes.plot`, e.g. ``label``
+    :return: the figure and the axes
+    """
+    fig, ax = create_fig_ax(fig, ax)
+    label: str | None = kwargs.pop("label", None)
+    for spectrum in spectra:
+        ax.plot(
+            spectrum.y, scale * spectrum.pow_gw_rate,
+            label=spectrum.label_latex if label is None else label, **kwargs)
+    ax.set_ylabel(POW_GW_RATE_LABEL)
+    return plot_spectra_common(spectra, fig, ax, path)
+
+
+def plot_spectra_pow_U_par(
+        spectra: tp.Collection[SpectrumBase],
+        ax: Axes | None = None,
+        fig: Figure | None = None,
+        path: str | os.PathLike[str] | None = None,
+        scale: float = 1.,
+        **kwargs: tp.Any) -> FigAndAxes:
+    r"""Plot the compressional velocity power spectra $\mathcal{P}_{U_{\parallel}}(kR_*)$.
+
+    :param spectra: the spectra
+    :param ax: axes to plot in
+    :param fig: figure to plot in
+    :param path: path to save the figure to
+    :param scale: factor by which the spectra are multiplied
+    :param kwargs: arguments for :py:meth:`matplotlib.axes.Axes.plot`, e.g. ``label``
+    :return: the figure and the axes
+    """
+    fig, ax = create_fig_ax(fig, ax)
+    label: str | None = kwargs.pop("label", None)
+    for spectrum in spectra:
+        ax.plot(
+            spectrum.y, scale * spectrum.pow_U_par,
+            label=spectrum.label_latex if label is None else label, **kwargs)
+    ax.set_ylabel(POW_U_PAR_LABEL)
+    return plot_spectra_common(spectra, fig, ax, path)
 
 
 def plot_spectra_v(

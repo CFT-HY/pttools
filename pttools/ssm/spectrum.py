@@ -28,6 +28,7 @@ from pttools.ssm.spectrum_base import SpectrumBase
 from pttools.ssm.ssm import ubarf2_from_a2
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 from pttools.type_hints import FloatArr, FloatArr1D
+from pttools.utils.decorators import cached_property
 from pttools.utils.docstrings import copy_docstring_dec
 from pttools.utils.fields import Extractable, Fields, FieldSpec, Preset
 from pttools.utils.formatting import as_latex, as_unicode
@@ -515,9 +516,9 @@ class SSMSpectrum(Extractable, SpectrumBase):
             return self._omega_barotropic
         return self.bubble.omega_barotropic
 
-    @functools.cached_property
+    @cached_property
+    @tp.override
     def pow_gw(self) -> FloatArr1D:
-        r"""$\mathcal{P}_\text{gw}$, GW power spectrum at the time of production."""
         return self.spec_den_gw_scaling * pow_spec(z=self.y, spec_den=self.spec_den_gw)
 
     @functools.cached_property
@@ -747,25 +748,6 @@ class SSMSpectrum(Extractable, SpectrumBase):
     # -----
     # Plotting
     # -----
-
-    def plot(
-            self,
-            fig: plt.Figure | None = None,
-            ax: plt.Axes | None = None,
-            path: str | os.PathLike[str] | None = None,
-            **kwargs: tp.Any) -> "FigAndAxes":
-        r"""Plot GW power spectrum $\mathcal{P}_{\text{gw}}(k)$."""
-        return self.plot_gw(fig, ax, path, **kwargs)
-
-    def plot_gw(
-            self,
-            fig: plt.Figure | None = None,
-            ax: plt.Axes | None = None,
-            path: str | os.PathLike[str] | None = None,
-            **kwargs: tp.Any) -> "FigAndAxes":
-        r"""Plot GW power spectrum $\mathcal{P}_{\text{gw}}(k)$."""
-        from pttools.analysis.plot_spectra import plot_spectra_gw  # noqa: PLC0415
-        return plot_spectra_gw([self], ax=ax, fig=fig, path=path, **kwargs)
 
     def plot_v(
             self,

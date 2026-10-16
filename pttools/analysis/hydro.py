@@ -78,6 +78,7 @@ def compare_hydro_run(
         method: SuppressionFitMethod = SuppressionFitMethod.DEFAULT,
         y_min: float | None = None,
         y_max: float | None = None,
+        r_star: float | None = None,
         **kwargs: tp.Any) -> HydroComparison:
     r"""Compare a simulation run with the Sound Shell Model and fit the suppression factor.
 
@@ -92,14 +93,20 @@ def compare_hydro_run(
     :param method: fitting method
     :param y_min: smallest $z$ to include in the fit
     :param y_max: largest $z$ to include in the fit
+    :param r_star: $r_*$, Hubble-scaled mean bubble spacing of both spectra.
+        The compared velocity spectra and GW power growth rates do not depend on it,
+        but the GW power spectra and their conversion to $\Omega_{\text{gw},0}$ do.
+        If not given, the simulation spectrum has the $r_*$ of the simulation in lattice units,
+        and the SSM spectrum the default of :py:class:`pttools.ssm.spectrum.SSMSpectrum`.
     :param kwargs: additional arguments for :py:func:`pttools.ssm.suppression.fit.fit_suppression`
     :return: the comparison
     """
     if ssm is None:
-        ssm = ssm_spectrum_for_run(run, nuc_type=nuc_type)
+        ssm = ssm_spectrum_for_run(run, nuc_type=nuc_type) if r_star is None \
+            else ssm_spectrum_for_run(run, nuc_type=nuc_type, r_star=r_star)
     if ssm.suppression_method != SuppressionMethod.NONE:
         logger.warning("The SSM spectrum includes a suppression factor, which will affect the fit.")
-    spectrum = run.spectrum(step, step_prev)
+    spectrum = run.spectrum(step, step_prev, r_star=r_star)
     fit = fit_suppression_gw(spectrum, ssm, method=method, y_min=y_min, y_max=y_max, **kwargs)
     return HydroComparison(run=run, spectrum=spectrum, ssm=ssm, fit=fit)
 
@@ -160,7 +167,7 @@ def gw_rate_series(
     t0 = np.asarray(run.time(steps_arr - delta_steps))
     omega1 = np.array([run.omega_gw(int(step)) for step in steps_arr])
     omega0 = np.array([run.omega_gw(int(step) - delta_steps) for step in steps_arr])
-    return 0.5 * (t0 + t1), (omega1 - omega0) / (run.H_n * (t1 - t0)) / run.r_star
+    return 0.5 * (t0 + t1), (omega1 - omega0) / (run.H_star * (t1 - t0)) / run.r_star
 
 
 def scalar_comparison(comparison: HydroComparison) -> dict[str, tuple[float, float]]:

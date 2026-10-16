@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 import functools
+import inspect
 import typing as tp
 
 
@@ -21,6 +22,33 @@ class PostFunc[**P, T](tp.Protocol):
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> T:
         """Call the function."""
+
+
+if tp.TYPE_CHECKING:
+    # Type checkers such as Pyrefly recognise functools.cached_property as a descriptor by its name,
+    # but not its subclasses. The subclass below differs from it only by the docstring inheritance.
+    cached_property = functools.cached_property
+else:
+    class cached_property[T](functools.cached_property[T]):  # noqa: N801
+        """A :py:class:`functools.cached_property` that inherits the docstring of the attribute it overrides.
+
+        If the decorated function has no docstring, the docstring of the property or method of the same name
+        in the base classes of the owner class is used, e.g. that of an abstract property of a mixin.
+        This way the docstring has to be written only once, and it's available for :py:func:`inspect.getdoc`
+        and Sphinx autodoc, which do not inherit the docstrings of :py:class:`functools.cached_property`.
+        """
+
+        def __set_name__(self, owner: type, name: str) -> None:
+            """Set the name of the attribute, and inherit the docstring from the base classes if it's missing."""
+            super().__set_name__(owner, name)
+            if self.__doc__:
+                return
+            for base in owner.__mro__[1:]:
+                attr = base.__dict__.get(name)
+                is_documentable = isinstance(attr, (property, functools.cached_property)) or inspect.isroutine(attr)
+                if is_documentable and attr.__doc__:
+                    self.__doc__ = attr.__doc__
+                    return
 
 
 class TypePreservingDecorator(tp.Protocol):

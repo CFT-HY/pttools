@@ -18,6 +18,8 @@ from pttools.imports.hydro import (
     mean_square,
     parse_input_file,
 )
+from pttools.omgw0 import const, freq
+from pttools.omgw0.base import Omgw0Base
 
 #: Columns of the ``.out`` file that are used by the importer
 OUT_COLUMNS: tuple[str, ...] = (
@@ -85,7 +87,8 @@ class SyntheticRunTest(unittest.TestCase):
     def test_globals(self) -> None:
         r"""$\bar{\epsilon}_0$, $H_n$, $\bar{w}$ and $\Gamma$ are computed from the ``.out`` file."""
         assert self.hydro_run.epsilon_0 == pytest.approx(self.epsilon_0)
-        assert self.hydro_run.H_n == pytest.approx(np.sqrt(8 * np.pi * self.epsilon_0 / 3))
+        assert self.hydro_run.H_star == pytest.approx(np.sqrt(8 * np.pi * self.epsilon_0 / 3))
+        assert self.hydro_run.r_star == pytest.approx(self.hydro_run.H_star * self.hydro_run.R_star)
         assert self.hydro_run.enthalpy(500) == pytest.approx(self.enthalpy)
         assert self.hydro_run.mean_adiabatic_index(500) == pytest.approx(self.enthalpy / self.epsilon_0)
         assert self.hydro_run.time(500) == pytest.approx(100)
@@ -124,10 +127,46 @@ class SyntheticRunTest(unittest.TestCase):
         k, p, _ = self.hydro_run.power_spectrum(Quantity.GW_TT, 1000)
         delta_t = 500 * self.dt
         run = self.hydro_run
-        expected = 0.5 * p / self.epsilon_0 / (run.H_n * delta_t) / (run.H_n * run.R_star)
+        expected = 0.5 * p / self.epsilon_0 / (run.H_star * delta_t) / (run.H_star * run.R_star)
         np.testing.assert_allclose(spectrum.pow_gw_rate, expected)
         np.testing.assert_allclose(spectrum.y, k * self.hydro_run.R_star)
         assert self.hydro_run.omega_gw(1000) == pytest.approx(mean_square(k, p) / self.epsilon_0)
+
+    def test_spectrum_omgw0_base(self) -> None:
+        """By default, the Hubble rate and the bubble spacing of the spectrum should be those of the run."""
+        spectrum = self.hydro_run.spectrum(500)
+        assert isinstance(spectrum, Omgw0Base)
+        assert spectrum.r_star == self.hydro_run.r_star
+        assert spectrum.R_star == self.hydro_run.R_star
+        assert spectrum.H_star == pytest.approx(self.hydro_run.H_star, rel=1e-15)
+        np.testing.assert_array_equal(spectrum.pow_gw, self.hydro_run.pow_normalised(Quantity.GW_TT, 500)[1])
+
+    def test_spectrum_r_star(self) -> None:
+        r"""The GW power spectrum should be scaled with $r_*^2$, and the other spectra should not change."""
+        r_star = 0.1
+        ref = self.hydro_run.spectrum(1000, 500)
+        spectrum = self.hydro_run.spectrum(1000, 500, r_star=r_star)
+        assert spectrum.r_star == r_star
+        assert spectrum.R_star == ref.R_star
+        assert spectrum.H_star * spectrum.R_star == pytest.approx(r_star, rel=1e-15)
+        np.testing.assert_allclose(spectrum.pow_gw, (r_star / self.hydro_run.r_star)**2 * ref.pow_gw, rtol=1e-15)
+        np.testing.assert_array_equal(spectrum.y, ref.y)
+        np.testing.assert_array_equal(spectrum.pow_U_par, ref.pow_U_par)
+        np.testing.assert_array_equal(spectrum.pow_gw_rate, ref.pow_gw_rate)
+        with pytest.raises(ValueError, match="r_star must be positive"):
+            self.hydro_run.spectrum(500, r_star=-1.)
+
+    def test_spectrum_omgw0(self) -> None:
+        r"""The conversion to $\Omega_{\text{gw},0}$ should use the given $r_*$, $T_*$, $g_*$ and $g_{s,*}$."""
+        spectrum = self.hydro_run.spectrum(1000, r_star=0.1, T_star=200., g_star=90., gs_star=100.)
+        assert (spectrum.T_star, spectrum.g_star, spectrum.gs_star) == (200., 90., 100.)
+        assert spectrum.f_star0 == freq.f_star0(T_star=200., ge_star=spectrum.ge_star, gs_star=100.)
+        np.testing.assert_allclose(spectrum.f(), freq.f(z=spectrum.y, r_star=0.1, f_star0=spectrum.f_star0))
+        np.testing.assert_allclose(spectrum.omgw0_h2(), spectrum.F_gw0_h2() * spectrum.pow_gw)
+        assert spectrum.snr()[0] > 0
+        # Defaults
+        spectrum = self.hydro_run.spectrum(1000, g_star=80.)
+        assert (spectrum.T_star, spectrum.g_star, spectrum.gs_star) == (const.DEFAULT_T_STAR, 80., 80.)
 
     def test_gw_rate_requires_step_prev(self) -> None:
         """The growth rate cannot be computed without the earlier time step."""

@@ -43,7 +43,7 @@ class SpectrumTest(unittest.TestCase):
         """The frequencies of the y array should be computed only once, and a custom z should not affect them."""
         spectrum = Spectrum(self.spectrum.bubble, r_star=0.1, compute=False)
         z = np.array([1., 10.])
-        with mock.patch("pttools.omgw0.spectrum.freq.f", wraps=freq.f) as f_mock:
+        with mock.patch("pttools.omgw0.base.freq.f", wraps=freq.f) as f_mock:
             f = spectrum.f()
             f_z = spectrum.f(z)
             f_min = spectrum.f_min
@@ -133,6 +133,12 @@ class SpectrumTest(unittest.TestCase):
         assert peak[1] > 0
         assert peak[1] < 1
 
+    def test_H_star(self) -> None:
+        r"""Test that $H_* = \sqrt{\frac{8\pi}{3} e_*}$ with $G = 1$, and that $R_* = r_* / H_*$."""
+        e_star = np.pi**2 / 30 * self.spectrum.ge_star * self.spectrum.T_star**4
+        assert self.spectrum.H_star == pytest.approx(np.sqrt(8 * np.pi * e_star / 3), rel=1e-14)
+        assert self.spectrum.R_star == pytest.approx(self.spectrum.r_star / self.spectrum.H_star, rel=1e-14)
+
     def test_R_star(self) -> None:
         r"""Test that $0 < R_* < 1 \text{mm}$."""
         assert self.spectrum.R_star > 0
@@ -167,7 +173,7 @@ class SpectrumComputeTest(unittest.TestCase):
 
     def test_snr_precomputed(self) -> None:
         """The precomputed signal-to-noise ratio should be the same as one computed afterwards."""
-        with mock.patch("pttools.omgw0.spectrum.signal_to_noise_ratio") as snr_mock:
+        with mock.patch("pttools.omgw0.base.signal_to_noise_ratio") as snr_mock:
             snr = self.spectrum.snr()
             snr_mock.assert_not_called()
         assert snr[0] > 0
@@ -183,7 +189,7 @@ class SpectrumComputeTest(unittest.TestCase):
         """The precomputed result should be used only when the settings match."""
         spectrum = self.spectrum.with_params(r_star=0.2)
         spectrum.compute(compute_snr=True, snr_settings=SNRSettings(noise_eb=False, noise_gb=False))
-        with mock.patch("pttools.omgw0.spectrum.signal_to_noise_ratio") as snr_mock:
+        with mock.patch("pttools.omgw0.base.signal_to_noise_ratio") as snr_mock:
             snr_ins = spectrum.snr_ins()[0]
             snr_mock.assert_not_called()
         snr = spectrum.snr()[0]
