@@ -68,7 +68,7 @@ from pttools.utils.system import IS_READ_THE_DOCS
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class Case:
     """Parameters of a test case, i.e. a model and a bubble."""
 
@@ -115,7 +115,7 @@ VALUES: dict[str, tuple[int, ...]] = {
 PEAK_REGION: float = 1e-3
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class Result:
     """Result of a single computation."""
 

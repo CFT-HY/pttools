@@ -25,7 +25,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 DEFAULT_Y_LATTICE: th.FloatArr1D = np.logspace(-1, 4, 1000)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class LatticeComparison:
     """Comparison of a simulation spectrum with the corresponding Sound Shell Model spectrum."""
 

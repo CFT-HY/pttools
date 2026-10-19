@@ -107,7 +107,7 @@ MIN_POINTS: int = 2
 DEFAULT_PROGRESS_INTERVAL: float = 300
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class Accuracy:
     r"""Accuracy settings of the bubbles and spectra.
 
@@ -138,7 +138,7 @@ WARM_UP_ACCURACY: Accuracy = Accuracy(n_xi=500, n_z_lookup=200, nx_P_tilde_gw=50
 _WARMED_UP: set[tuple[float, float]] = set()
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class SpectrumParams:
     """Parameters of a spectrum in addition to those of its bubble."""
 
@@ -148,7 +148,7 @@ class SpectrumParams:
     g_star: float
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class Grid:
     """The parameter grid of the dataset."""
 
@@ -221,7 +221,7 @@ class Grid:
         return {Table.MODELS: self.n_models, Table.BUBBLES: self.n_bubbles, Table.SPECTRA_F: self.n_spectra}
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class TaskResult:
     """Result of the computation of a bubble and its spectra.
 

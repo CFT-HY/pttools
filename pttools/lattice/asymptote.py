@@ -61,7 +61,7 @@ def _asymptotic_growth_jac(t: th.FloatArr1D, index: float, t_decay: float, value
     ))
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class AsymptoteFit:
     r"""Fit of :func:`asymptotic_growth` to a time series.
 
@@ -137,7 +137,7 @@ def running_mean(values: th.FloatArr1D, window: int = DEFAULT_RUNNING_MEAN_WINDO
     return savgol_filter(values, window_length=window, polyorder=0, mode="mirror")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PowerLawFit:
     r"""Fit of the power law $(1 + (t - t_0) / {t}_\text{scale})^{p}$ to a normalised time series.
 
@@ -191,7 +191,7 @@ def fit_start_index(values: th.FloatArr1D, fraction: float) -> int:
     return int(below[-1]) + 1 if below.size else 0
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PowGwAsymptoteFit:
     r"""Fits of :func:`asymptotic_growth` to the time series of $\mathcal{P}_\text{gw}(k, t)$ of each wavenumber."""
 

@@ -16,7 +16,7 @@ LOG_FORMAT: str = \
     '%(asctime)s %(levelname)-8s %(module)-20s %(funcName)-32s %(lineno)-4d %(process)-3d %(message)s'
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class LoggingConfig:
     """The logging configuration created by :py:func:`setup_logging`.
 

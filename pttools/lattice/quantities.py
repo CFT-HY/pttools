@@ -16,6 +16,7 @@ import numpy as np
 import pttools.type_hints as th
 
 
+@enum.unique
 class Quantity(enum.StrEnum):
     r"""The quantities whose power spectra are written by the simulation code.
 

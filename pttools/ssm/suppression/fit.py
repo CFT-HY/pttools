@@ -35,7 +35,7 @@ class SuppressionFitMethod(enum.StrEnum):
     LOG_LSQ = "log_lsq"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SuppressionFit:
     """Result of a suppression factor fit."""
 
