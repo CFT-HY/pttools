@@ -17,7 +17,7 @@ from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from examples.lattice.lattice_spectra import comparisons
+from examples.lattice.lattice_growth import comparisons
 from examples.utils import save_and_show_figs
 from pttools.analysis.lattice import LatticeComparison, scalar_comparison
 from pttools.analysis.plot_lattice import (

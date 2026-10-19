@@ -1,8 +1,8 @@
 r"""
-Simulated and SSM spectra
-=========================
+Simulated and SSM growth rates
+==============================
 
-Compare the velocity and GW power spectra of the $4096^3$ simulations of :correia_2025:`\ `
+Compare the velocity spectra and the GW power growth rates of the $4096^3$ simulations of :correia_2025:`\ `
 with the Sound Shell Model.
 
 The SSM spectra are computed with simultaneous nucleation as in the simulations.
@@ -43,11 +43,11 @@ def comparisons() -> dict[str, LatticeComparison]:
 
 
 def main() -> dict[str, Figure]:
-    """Plot the simulated and SSM spectra of the runs of Correia et al."""
+    """Plot the simulated and SSM velocity spectra and GW power growth rates of the runs of Correia et al."""
     figs = {}
     for name, comparison in comparisons().items():
         logger.info("%s: suppression factor %s", name, comparison.fit)
-        figs[f"lattice_spectra_{name}"] = plot_spectra_comparison(comparison)
+        figs[f"lattice_growth_{name}"] = plot_spectra_comparison(comparison)
     return figs
 
 
