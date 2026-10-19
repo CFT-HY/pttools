@@ -55,21 +55,10 @@ def fit_table(lattice_runs: dict[str, LatticeRun]) -> pd.DataFrame:
     """
     rows = {}
     for name, run in lattice_runs.items():
-        step_end = int(FIT_SETTINGS[name]["step_end"])
-        zeta = run.kinetic_energy_decay_index(step_end)
-        lambda_ = run.integral_scale_growth_index(step_end)
-        prediction, prediction_err = run.gw_growth_index_prediction(step_end)
-        omega_fit = run.omega_gw_asymptote(step_end=step_end)
-        meta = CHRW25_RUNS[name]
-        spectrum = run.spectrum(meta.fig_step)
+        summary = run.gw_asymptote_summary(CHRW25_RUNS[name].fig_step, step_end=int(FIT_SETTINGS[name]["step_end"]))
         rows[run.label_unicode] = {
-            "zeta": f"{zeta.index:.2f} ± {zeta.index_err:.2f}",
-            "lambda": f"{lambda_.index:.2f} ± {lambda_.index_err:.2f}",
-            "2 zeta + 2 lambda - 1": f"{prediction:.2f} ± {prediction_err:.2f}",
-            "d_tot": f"{omega_fit.index:.2f} ± {omega_fit.index_err:.2f}",
-            "Omega_inf (scaled)": f"{omega_fit.value / run.gw_asymptote_scale:.4f}",
-            "t [1/T_c]": f"{spectrum.t:.0f}",
-            "Omega_inf / Omega(t)": f"{spectrum.omega_gw_asymptote_ratio(step_end=step_end):.3f}",
+            key: f"{value:.2f} ± {summary[f'{key}_err']:.2f}" if f"{key}_err" in summary else f"{value:.4g}"
+            for key, value in summary.items() if not key.endswith("_err")
         }
     return pd.DataFrame.from_dict(rows, orient="index")
 

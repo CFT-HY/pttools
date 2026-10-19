@@ -15,12 +15,10 @@ import logging
 
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
-import pandas as pd
 
-from examples.lattice.lattice_growth import comparisons
+from examples.lattice.lattice_growth import R_STAR, Y_MIN
 from examples.utils import save_and_show_figs
-from pttools.analysis.lattice import LatticeComparison
-from pttools.lattice import CHRW25_RUNS
+from pttools.lattice import LatticeComparison, compare_chrw25_runs
 from pttools.plot.lattice import (
     plot_gw_rate_time_comparison,
     plot_integral_scale_comparison,
@@ -29,18 +27,6 @@ from pttools.plot.lattice import (
 )
 
 logger: logging.Logger = logging.getLogger(__name__)
-
-
-def comparison_table(comparison: LatticeComparison) -> pd.DataFrame:
-    """The scalar comparison of a run, see :py:meth:`pttools.analysis.lattice.LatticeComparison.scalar_comparison`.
-
-    :param comparison: the comparison
-    :return: the table, which can be formatted e.g. as Markdown with :py:meth:`pandas.DataFrame.to_markdown`
-    """
-    table = pd.DataFrame.from_dict(comparison.scalar_comparison(), orient="index", columns=["Simulation", "PTtools"])
-    table.index.name = "Quantity"
-    table["Ratio"] = table["Simulation"] / table["PTtools"]
-    return table
 
 
 def plot_quantities(comparison: LatticeComparison) -> Figure:
@@ -58,14 +44,12 @@ def plot_quantities(comparison: LatticeComparison) -> Figure:
 def main() -> dict[str, Figure]:
     """Plot the quantities of the runs of Correia et al. and the corresponding SSM values."""
     figs = {}
-    for name, comparison in comparisons().items():
+    for name, comparison in compare_chrw25_runs(y_min=Y_MIN, r_star=R_STAR, missing_ok=True).items():
         print(f"{comparison.run.label_unicode}, t = {comparison.spectrum.t:.0f} / T_c")
         # The format is given for each column, including the index.
-        print(comparison_table(comparison).to_markdown(floatfmt=("", ".4g", ".4g", ".3g")))
+        print(comparison.scalars().to_markdown(floatfmt=("", ".4g", ".4g", ".3g")))
         figs[f"lattice_quantities_{name}"] = plot_quantities(comparison)
-        meta = CHRW25_RUNS[name]
-        delta_steps = meta.fig_step - meta.fig_step_prev
-        figs[f"lattice_gw_rate_time_{name}"] = plot_gw_rate_time_comparison(comparison, delta_steps, y_min=2)[0]
+        figs[f"lattice_gw_rate_time_{name}"] = plot_gw_rate_time_comparison(comparison, y_min=Y_MIN)[0]
     return figs
 
 

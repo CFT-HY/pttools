@@ -28,48 +28,28 @@ import logging
 
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 
-from examples.lattice.lattice_growth import R_STAR, comparisons
+from examples.lattice.lattice_growth import R_STAR, Y_MIN
 from examples.lattice.lattice_gw_asymptote import FIT_SETTINGS
 from examples.utils import save_and_show_figs
-from pttools.analysis.lattice import LatticeComparison
+from pttools.lattice import compare_chrw25_runs
 from pttools.plot.lattice import plot_pow_gw_asymptote_comparison
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def omega_table(lattice_comparisons: dict[str, LatticeComparison]) -> pd.DataFrame:
-    r"""The total GW power of the simulations and of the SSM.
-
-    The values are integrated over the $z = kR_*$ points of each spectrum.
-
-    :param lattice_comparisons: the comparisons of the runs
-    :return: the table
-    """
-    rows = {}
-    for name, comparison in lattice_comparisons.items():
-        spectrum = comparison.spectrum
-        ssm = comparison.ssm
-        step_end = int(FIT_SETTINGS[name]["step_end"])
-        ln_y = np.log(spectrum.y)
-        rows[comparison.run.label_unicode] = {
-            "Omega_gw(t)": np.trapezoid(spectrum.pow_gw, ln_y),
-            "Omega_gw_inf": np.trapezoid(spectrum.pow_gw_scaled_to_asymptote(step_end=step_end), ln_y),
-            "Omega_gw SSM, suppressed": comparison.fit.factor * np.trapezoid(ssm.pow_gw, np.log(ssm.y)),
-            "Omega_gw SSM, unsuppressed": np.trapezoid(ssm.pow_gw, np.log(ssm.y)),
-        }
-    return pd.DataFrame.from_dict(rows, orient="index")
-
-
 def main() -> dict[str, Figure]:
     """Plot the asymptotically scaled simulated GW power spectra and the SSM spectra of the runs of Correia et al."""
-    lattice_comparisons = comparisons()
+    lattice_comparisons = compare_chrw25_runs(y_min=Y_MIN, r_star=R_STAR, missing_ok=True)
     if not lattice_comparisons:
         return {}
     print(f"r_* = {R_STAR}")
-    print(omega_table(lattice_comparisons).to_markdown(floatfmt=".3e"))
+    omega = pd.DataFrame.from_dict({
+        comparison.run.label_unicode: comparison.omega(step_end=int(FIT_SETTINGS[name]["step_end"]))
+        for name, comparison in lattice_comparisons.items()
+    }, orient="index")
+    print(omega.to_markdown(floatfmt=".3e"))
     fig, axs = plt.subplots(1, len(lattice_comparisons), figsize=(5 * len(lattice_comparisons), 4), squeeze=False)
     for ax, (name, comparison) in zip(axs[0], lattice_comparisons.items(), strict=True):
         settings = FIT_SETTINGS[name]

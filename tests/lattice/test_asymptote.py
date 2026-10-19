@@ -8,7 +8,7 @@ import unittest
 import numpy as np
 import pytest
 
-from pttools.lattice import INPUT_FILE_NAME, LatticeRun, Quantity
+from pttools.lattice import INPUT_FILE_NAME, LatticeComparison, LatticeRun, Quantity
 from pttools.lattice.asymptote import (
     DEFAULT_RUNNING_MEAN_WINDOW,
     fit_pow_gw_modes,
@@ -132,6 +132,20 @@ class SyntheticAsymptoteRunTest(unittest.TestCase):
         assert run.gw_asymptote_scale == pytest.approx(
             kinetic**2 * (run.H_star * run.R_star) * (run.H_star * run.t_sh), rel=1e-14)
 
+    def test_gw_asymptote_summary(self) -> None:
+        """The summary has the values of the fits and of the spectrum at the given time step."""
+        run = self.lattice_run
+        summary = run.gw_asymptote_summary(10000, step_end=20000)
+        omega_fit = run.omega_gw_asymptote(step_end=20000)
+        assert summary["zeta"] == run.kinetic_energy_decay_index(20000).index
+        assert summary["lambda_err"] == run.integral_scale_growth_index(20000).index_err
+        assert summary["2 zeta + 2 lambda - 1"] == run.gw_growth_index_prediction(20000)[0]
+        assert (summary["d_tot"], summary["d_tot_err"]) == (omega_fit.index, omega_fit.index_err)
+        assert summary["Omega_inf (scaled)"] == pytest.approx(omega_fit.value / run.gw_asymptote_scale, rel=1e-14)
+        assert summary["t [1/T_c]"] == pytest.approx(10000 * self.dt)
+        assert summary["Omega_inf / Omega(t)"] == pytest.approx(
+            omega_fit.value / run.omega_gw(10000), rel=1e-12)
+
     def test_kinetic_energy_decay_index(self) -> None:
         r"""$\zeta$ is recovered, and $\lambda = 0$, as the shape of the spectrum does not change."""
         assert self.lattice_run.kinetic_energy_decay_index().index == pytest.approx(self.zeta, rel=1e-4)
@@ -181,6 +195,21 @@ class SyntheticAsymptoteRunTest(unittest.TestCase):
             self.lattice_run.omega_gw_asymptote().value / self.lattice_run.omega_gw(10000), rel=1e-12)
         assert ratio > 1
         assert self.lattice_run.spectrum(10000).omega_gw_asymptote_ratio() == pytest.approx(ratio, rel=1e-12)
+
+    def test_comparison_omega(self) -> None:
+        r"""$\Omega_\text{gw}$ of the comparison are the integrals of the spectra, scaled to the asymptote as given."""
+        run = self.lattice_run
+        ssm = run.ssm_spectrum(y=np.logspace(-1, 3, 200), r_star=0.1)
+        comparison = LatticeComparison(run.spectrum(10000, 9750, r_star=0.1), ssm=ssm)
+        omega = comparison.omega(step_end=20000)
+        spectrum = comparison.spectrum
+        omega_t = np.trapezoid(spectrum.pow_gw, np.log(spectrum.y))
+        assert omega["Omega_gw(t)"] == pytest.approx(omega_t, rel=1e-12)
+        assert omega["Omega_gw_inf"] == pytest.approx(
+            spectrum.omega_gw_asymptote_ratio(step_end=20000) * omega_t, rel=1e-12)
+        assert omega["Omega_gw SSM, unsuppressed"] == pytest.approx(np.trapezoid(ssm.pow_gw, np.log(ssm.y)), rel=1e-12)
+        assert omega["Omega_gw SSM, suppressed"] == pytest.approx(
+            comparison.suppression * omega["Omega_gw SSM, unsuppressed"], rel=1e-12)
 
     def test_spectrum_scaled_to_asymptote(self) -> None:
         r"""The GW power spectrum scaled to the asymptote is $\mathcal{P}_\text{gw}$ times the ratio."""

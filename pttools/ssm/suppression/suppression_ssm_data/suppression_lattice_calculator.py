@@ -1,7 +1,7 @@
 r"""Compute the suppression factors of the Sound Shell Model for the simulations of Correia et al.
 
 The suppression factors are fitted to the GW power growth rates of the $4096^3$ simulations of :correia_2025:`\ `
-with :py:class:`pttools.analysis.lattice.LatticeComparison`, excluding the lattice artifact at high $k$.
+with :py:class:`pttools.lattice.comparison.LatticeComparison`, excluding the lattice artifact at high $k$.
 The time steps of the growth rates are those of :correia_2025:`\ ` fig. 5.
 The SSM spectra are computed with simultaneous nucleation as in the simulations, without suppression,
 and with the default accuracy settings of :py:class:`pttools.ssm.spectrum.SSMSpectrum`,
@@ -21,8 +21,8 @@ from pathlib import Path
 
 import numpy as np
 
-from pttools.analysis.lattice import LatticeComparison
 from pttools.lattice import CHRW25_RUNS, load_chrw25_run
+from pttools.lattice.comparison import LatticeComparison
 from pttools.ssm.nucleation import NucType
 from pttools.ssm.suppression.fit import SuppressionFitMethod
 from pttools.ssm.suppression.suppression_ssm_data import SUPPRESSION_FOLDER
@@ -52,14 +52,15 @@ def calc_sup_lattice(save: bool = True, path: Path = SUPPRESSION_FOLDER) -> dict
     for name, meta in CHRW25_RUNS.items():
         run = load_chrw25_run(name)
         ssm = run.ssm_spectrum(nuc_type=NucType.SIMULTANEOUS)
+        spectrum = run.spectrum(meta.fig_step, meta.fig_step_prev)
         comparison = LatticeComparison(
-            run, step=meta.fig_step, step_prev=meta.fig_step_prev, ssm=ssm,
+            spectrum, ssm=ssm,
             method=SuppressionFitMethod.INTEGRAL, y_min=Y_MIN)
         log_lsq = LatticeComparison(
-            run, step=meta.fig_step, step_prev=meta.fig_step_prev, ssm=ssm,
+            spectrum, ssm=ssm,
             method=SuppressionFitMethod.LOG_LSQ, y_min=Y_MIN)
         exponential = LatticeComparison(
-            run, step=meta.fig_step, step_prev=meta.fig_step_prev, nuc_type=NucType.EXPONENTIAL,
+            spectrum, ssm=run.ssm_spectrum(nuc_type=NucType.EXPONENTIAL),
             method=SuppressionFitMethod.INTEGRAL, y_min=Y_MIN)
         fit = comparison.fit
         values = {

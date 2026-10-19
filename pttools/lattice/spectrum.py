@@ -6,11 +6,13 @@ import typing as tp
 import numpy as np
 
 from pttools.lattice.quantities import Quantity
-from pttools.lattice.run import LatticeRun
 from pttools.omgw0 import const
 from pttools.omgw0.base import Omgw0Base
 import pttools.type_hints as th
 from pttools.utils.decorators import cached_property
+
+if tp.TYPE_CHECKING:
+    from pttools.lattice.run import LatticeRun
 
 
 class LatticeSpectrum(Omgw0Base):
@@ -23,7 +25,8 @@ class LatticeSpectrum(Omgw0Base):
     The expansion of the universe is neglected in the simulations, and therefore $H_* = H_n$.
 
     The simulation is in flat space, and its Hubble-scaled mean bubble spacing ${r}_{*,\text{lat}}$
-    (:py:attr:`LatticeRun.r_star`) follows from the energy density and the gravitational constant in lattice units.
+    (:py:attr:`pttools.lattice.run.LatticeRun.r_star`) follows from the energy density
+    and the gravitational constant in lattice units.
     For comparisons with the Sound Shell Model, e.g. with :py:class:`pttools.omgw0.spectrum.Spectrum`,
     the spectrum can be scaled to another Hubble-scaled mean bubble spacing ${r}_*$.
     The GW power spectrum is proportional to $(H_* R_*)^2$, as the source lasts for a time proportional to $R_*$,
@@ -37,7 +40,7 @@ class LatticeSpectrum(Omgw0Base):
 
     def __init__(
             self,
-            run: LatticeRun,
+            run: "LatticeRun",
             step: int,
             step_prev: int | None = None,
             r_star: float | None = None,
@@ -50,7 +53,7 @@ class LatticeSpectrum(Omgw0Base):
         :param step: the time step
         :param step_prev: the earlier time step for computing the GW power growth rate
         :param r_star: $r_*$, Hubble-scaled mean bubble spacing to which the spectrum is scaled.
-            Defaults to that of the simulation (:py:attr:`LatticeRun.r_star`),
+            Defaults to that of the simulation (:py:attr:`pttools.lattice.run.LatticeRun.r_star`),
             or nan if it's not available, as it requires the initial energy density.
         :param T_star: $T_*$, temperature at the time of GW production in GeV,
             for the conversion to the GW power spectrum today
@@ -98,6 +101,16 @@ class LatticeSpectrum(Omgw0Base):
     @tp.override
     def R_star(self) -> float:
         return self.run.R_star
+
+    @property
+    def delta_steps(self) -> int:
+        """The difference of the time steps of the GW power growth rate.
+
+        :raises ValueError: if ``step_prev`` has not been given
+        """
+        if self.step_prev is None:
+            raise ValueError("step_prev has not been given.")
+        return self.step - self.step_prev
 
     @property
     def t(self) -> float:

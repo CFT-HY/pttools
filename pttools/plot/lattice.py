@@ -12,8 +12,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 
-from pttools.analysis.lattice import LatticeComparison, suppression_series
-from pttools.lattice import LatticeRun, PowGwAsymptoteFit, Quantity
+from pttools.analysis.lattice import suppression_series
+from pttools.lattice import LatticeComparison, LatticeRun, PowGwAsymptoteFit, Quantity
 from pttools.math.asymptote import AsymptoteFit
 from pttools.plot.utils import FigAndAxes, create_fig_ax
 import pttools.type_hints as th
@@ -276,7 +276,7 @@ def plot_kinetic_energy_comparison(
 
 def plot_gw_rate_time_comparison(
         comparison: LatticeComparison,
-        delta_steps: int,
+        delta_steps: int | None = None,
         fig: Figure | None = None,
         axs: tp.Sequence[Axes] | None = None,
         **kwargs: tp.Any) -> tuple[Figure, tp.Sequence[Axes]]:
@@ -286,7 +286,9 @@ def plot_gw_rate_time_comparison(
     depend on the time at which they are measured.
 
     :param comparison: the comparison of the simulation and the SSM
-    :param delta_steps: the difference of the time steps of the finite differences
+    :param delta_steps: the difference of the time steps of the finite differences,
+        defaults to that of the spectrum of the comparison, see
+        :py:attr:`pttools.lattice.spectrum.LatticeSpectrum.delta_steps`
     :param fig: figure to plot in
     :param axs: two axes to plot in
     :param kwargs: additional arguments for :py:func:`pttools.analysis.lattice.suppression_series`
@@ -298,6 +300,8 @@ def plot_gw_rate_time_comparison(
         fig = tp.cast(Figure, axs[0].get_figure())
     run = comparison.run
     ssm = comparison.ssm
+    if delta_steps is None:
+        delta_steps = comparison.spectrum.delta_steps
 
     t, rate = run.omega_gw_rate_series(delta_steps)
     axs[0].plot(t, rate, color=COLOR_GW, label="Simulation")

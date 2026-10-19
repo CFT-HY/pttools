@@ -154,4 +154,3 @@ def gw_growth_index_prediction(zeta: PowerLawFit, lambda_: PowerLawFit) -> tuple
     :return: the prediction and its uncertainty
     """
     return 2 * zeta.index + 2 * lambda_.index - 1, 2 * zeta.index_err + 2 * lambda_.index_err
-

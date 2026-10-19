@@ -11,8 +11,10 @@ import pytest
 from pttools.lattice import (
     CHRW25_RUNS,
     INPUT_FILE_NAME,
+    LatticeComparison,
     LatticeRun,
     Quantity,
+    compare_chrw25_runs,
     data_dir,
     integral_scale,
     load_chrw25_run,
@@ -204,10 +206,30 @@ class SyntheticRunTest(unittest.TestCase):
         for key, values in ref.items():
             np.testing.assert_array_equal(data[key], values)
 
+    def test_comparison_scalars(self) -> None:
+        """The table of the scalar comparison has the values of the simulation and of PTtools, and their ratio."""
+        ssm = self.lattice_run.ssm_spectrum(y=np.logspace(-1, 3, 200), r_star=0.1)
+        comparison = LatticeComparison(self.lattice_run.spectrum(1000, 500, r_star=0.1), ssm=ssm)
+        scalars = comparison.scalars()
+        assert list(scalars.columns) == ["Simulation", "PTtools", "Ratio"]
+        assert scalars.index.name == "Quantity"
+        np.testing.assert_allclose(scalars["Ratio"], scalars["Simulation"] / scalars["PTtools"])
+        assert scalars.loc["Gamma", "Simulation"] == pytest.approx(self.lattice_run.mean_adiabatic_index(1000))
+        assert scalars.loc["Gamma", "PTtools"] == pytest.approx(ssm.bubble.mean_adiabatic_index)
+
     def test_gw_rate_requires_step_prev(self) -> None:
         """The growth rate cannot be computed without the earlier time step."""
         with pytest.raises(ValueError, match="step_prev"):
             _ = self.lattice_run.spectrum(1000).pow_gw_rate
+
+    def test_delta_steps(self) -> None:
+        """The difference of the time steps requires the earlier time step, as does the comparison."""
+        assert self.lattice_run.spectrum(1000, 500).delta_steps == 500
+        spectrum = self.lattice_run.spectrum(1000)
+        with pytest.raises(ValueError, match="step_prev"):
+            _ = spectrum.delta_steps
+        with pytest.raises(ValueError, match="step_prev"):
+            LatticeComparison(spectrum)
 
 
 class LoadRunsTest(unittest.TestCase):
@@ -221,6 +243,9 @@ class LoadRunsTest(unittest.TestCase):
             assert not load_chrw25_runs(path, missing_ok=True)
             with pytest.raises(FileNotFoundError):
                 load_chrw25_runs(path)
+            assert not compare_chrw25_runs(path=path, missing_ok=True)
+            with pytest.raises(FileNotFoundError):
+                compare_chrw25_runs(path=path)
 
 
 @pytest.mark.skipif(data_dir() is None, reason="The data of Correia et al. is not available.")

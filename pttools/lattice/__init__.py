@@ -15,11 +15,14 @@ and the suppression factor of the Sound Shell Model can be fitted to it with
   global quantities and time series
 - :py:mod:`pttools.lattice.spectrum`: :py:class:`LatticeSpectrum`, the spectra of a run at a given time
 - :py:mod:`pttools.lattice.chrw25`: the runs of :correia_2025:`\ `
+- :py:mod:`pttools.lattice.comparison`: :py:class:`LatticeComparison`,
+  the comparison of a run with the Sound Shell Model
 - :py:mod:`pttools.lattice.asymptote`: the extrapolation of the GW power to late times
 """
 
 from .asymptote import *
 from .chrw25 import *
+from .comparison import *
 from .params import *
 from .quantities import *
 from .readers import *

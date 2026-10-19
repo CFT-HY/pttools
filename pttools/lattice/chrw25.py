@@ -15,7 +15,9 @@ see :py:data:`DEFAULT_DATA_DIR`.
 import logging
 import os
 from pathlib import Path
+import typing as tp
 
+from pttools.lattice.comparison import LatticeComparison
 from pttools.lattice.params import LatticeRunParams
 from pttools.lattice.readers import INPUT_FILE_NAME
 from pttools.lattice.run import LatticeRun
@@ -41,6 +43,35 @@ DATA_DIR_ENV: str = "PTTOOLS_LATTICE_DATA_DIR"
 #: the project repository is the one at whose root the virtual environment of PTtools is.
 #: Otherwise, it's the PTtools repository. See :py:data:`pttools.utils.system.PROJECT_DIR`.
 DEFAULT_DATA_DIR: Path | None = None if PROJECT_DIR is None else PROJECT_DIR.parent / "UETC_paper_Hydro"
+
+
+def compare_chrw25_runs(
+        y_min: float | None = None,
+        r_star: float | None = None,
+        path: str | os.PathLike[str] | None = None,
+        missing_ok: bool = False,
+        **kwargs: tp.Any) -> dict[str, LatticeComparison]:
+    r"""Compare the simulation runs of :correia_2025:`\ ` with the Sound Shell Model.
+
+    The runs are compared at the time steps of :correia_2025:`\ ` fig. 5,
+    see :py:attr:`pttools.lattice.params.LatticeRunParams.fig_step`.
+
+    :param y_min: smallest $z = kR_*$ to include in the fit of the suppression factor
+    :param r_star: $r_*$, Hubble-scaled mean bubble spacing of the spectra,
+        see :py:class:`pttools.lattice.comparison.LatticeComparison`
+    :param path: root directory of the data, defaults to :py:func:`data_dir`
+    :param missing_ok: whether to return an empty dict with a warning instead of raising an error
+        if the data is not found, see :py:func:`load_chrw25_runs`
+    :param kwargs: additional arguments for :py:class:`pttools.lattice.comparison.LatticeComparison`
+    :return: the comparisons with the keys of :py:data:`CHRW25_RUNS`
+    :raises FileNotFoundError: if the data is not found and ``missing_ok`` is False
+    """
+    return {
+        name: LatticeComparison(
+            run.spectrum(CHRW25_RUNS[name].fig_step, CHRW25_RUNS[name].fig_step_prev, r_star=r_star),
+            y_min=y_min, **kwargs)
+        for name, run in load_chrw25_runs(path, missing_ok=missing_ok).items()
+    }
 
 
 def data_dir() -> Path | None:

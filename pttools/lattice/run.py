@@ -28,6 +28,7 @@ from pttools.lattice.asymptote import (
 )
 from pttools.lattice.quantities import Quantity, integral_scale, mean_square
 from pttools.lattice.readers import INPUT_FILE_NAME, parse_input_file, read_globals, read_power_spectrum
+from pttools.lattice.spectrum import LatticeSpectrum
 from pttools.math.asymptote import AsymptoteFit, fit_asymptote
 from pttools.math.numerics import running_mean
 from pttools.math.power_law import PowerLawFit, fit_power_law
@@ -37,9 +38,6 @@ from pttools.ssm.nucleation import NucType
 from pttools.ssm.spectrum import SSMSpectrum
 from pttools.ssm.suppression import SuppressionMethod
 import pttools.type_hints as th
-
-if tp.TYPE_CHECKING:
-    from pttools.lattice.spectrum import LatticeSpectrum
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -402,7 +400,7 @@ class LatticeRun:
         delta_t = self.time(step) - self.time(step_prev)
         return k, (p - p_prev) / (self.H_star * delta_t) / self.r_star
 
-    def spectrum(self, step: int, step_prev: int | None = None, **kwargs: tp.Any) -> "LatticeSpectrum":
+    def spectrum(self, step: int, step_prev: int | None = None, **kwargs: tp.Any) -> LatticeSpectrum:
         """Create a spectrum object for the given time step.
 
         See :py:class:`pttools.lattice.spectrum.LatticeSpectrum`.
@@ -413,7 +411,6 @@ class LatticeRun:
             e.g. ``r_star``, ``T_star``, ``g_star`` and ``gs_star``
         :return: the spectrum
         """
-        from pttools.lattice.spectrum import LatticeSpectrum  # noqa: PLC0415
         return LatticeSpectrum(self, step=step, step_prev=step_prev, **kwargs)
 
     # -----
@@ -531,6 +528,39 @@ class LatticeRun:
         These do not affect the fitted indices, the shapes of the curves or the ratios of the values.
         """
         return self.kinetic_energy_fraction_par(self.ubar_par_max[0])**2 * self.r_star * self.H_star * self.t_sh
+
+    def gw_asymptote_summary(self, step: int, step_end: int | None = None) -> dict[str, float]:
+        r"""The fitted indices and the asymptotic GW power, cf. :correia_2025:`\ ` tables IV and V.
+
+        The values are those of :py:meth:`kinetic_energy_decay_index` ($\zeta$),
+        :py:meth:`integral_scale_growth_index` ($\lambda$), :py:meth:`gw_growth_index_prediction`
+        and :py:meth:`omega_gw_asymptote` (${d}_\text{tot}$ and $\Omega_\text{gw}^\infty$),
+        where $\Omega_\text{gw}^\infty$ is scaled by :py:attr:`gw_asymptote_scale`.
+        The ratio $\Omega_\text{gw}^\infty / \Omega_\text{gw}(t)$ is evaluated at the given time step,
+        see :py:meth:`pttools.lattice.spectrum.LatticeSpectrum.omega_gw_asymptote_ratio`.
+
+        :param step: the time step of the ratio $\Omega_\text{gw}^\infty / \Omega_\text{gw}(t)$
+        :param step_end: last time step of the fits, defaults to the last available step
+        :return: the values, and the uncertainties of the fitted values with the suffix ``_err``
+        """
+        zeta = self.kinetic_energy_decay_index(step_end)
+        lambda_ = self.integral_scale_growth_index(step_end)
+        prediction, prediction_err = self.gw_growth_index_prediction(step_end)
+        omega_fit = self.omega_gw_asymptote(step_end=step_end)
+        spectrum = self.spectrum(step)
+        return {
+            "zeta": zeta.index,
+            "zeta_err": zeta.index_err,
+            "lambda": lambda_.index,
+            "lambda_err": lambda_.index_err,
+            "2 zeta + 2 lambda - 1": prediction,
+            "2 zeta + 2 lambda - 1_err": prediction_err,
+            "d_tot": omega_fit.index,
+            "d_tot_err": omega_fit.index_err,
+            "Omega_inf (scaled)": omega_fit.value / self.gw_asymptote_scale,
+            "t [1/T_c]": spectrum.t,
+            "Omega_inf / Omega(t)": spectrum.omega_gw_asymptote_ratio(step_end=step_end),
+        }
 
     def _fit_steps(self, quantity: Quantity, step_end: int | None, after_max: bool = False) -> th.IntArr1D:
         r"""The time steps of the fits, optionally only those after the maximum of $\bar{U}_\parallel$."""
