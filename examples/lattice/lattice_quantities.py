@@ -64,7 +64,7 @@ def main() -> dict[str, Figure]:
         print(comparison_table(comparison).to_markdown(floatfmt=("", ".4g", ".4g", ".3g")))
         figs[f"lattice_quantities_{name}"] = plot_quantities(comparison)
         meta = CORREIA_2025_RUNS[name]
-        delta_steps = meta.step - meta.step_prev
+        delta_steps = meta.fig_step - meta.fig_step_prev
         figs[f"lattice_gw_rate_time_{name}"] = plot_gw_rate_time_comparison(comparison, delta_steps, y_min=2)[0]
     return figs
 

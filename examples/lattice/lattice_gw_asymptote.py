@@ -70,7 +70,7 @@ def fit_table(lattice_runs: dict[str, LatticeRun]) -> pd.DataFrame:
         prediction, prediction_err = run.gw_growth_index_prediction(step_end)
         omega_fit = run.omega_gw_asymptote(step_end=step_end)
         meta = CORREIA_2025_RUNS[name]
-        spectrum = run.spectrum(meta.step)
+        spectrum = run.spectrum(meta.fig_step)
         rows[run.label_unicode] = {
             "zeta": f"{zeta.index:.2f} ± {zeta.index_err:.2f}",
             "lambda": f"{lambda_.index:.2f} ± {lambda_.index_err:.2f}",

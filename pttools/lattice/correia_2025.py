@@ -12,11 +12,11 @@ If it's not set, ``UETC_paper_Hydro`` in the same directory as the project repos
 see :py:data:`DEFAULT_DATA_DIR`.
 """
 
-from dataclasses import dataclass
 import logging
 import os
 from pathlib import Path
 
+from pttools.lattice.params import LatticeRunParams
 from pttools.lattice.run import LatticeRun
 from pttools.utils.system import PROJECT_DIR
 
@@ -31,44 +31,16 @@ DATA_DIR_ENV: str = "PTTOOLS_LATTICE_DATA_DIR"
 DEFAULT_DATA_DIR: Path | None = None if PROJECT_DIR is None else PROJECT_DIR.parent / "UETC_paper_Hydro"
 
 
-@dataclass(frozen=True)
-class CorreiaRun:
-    r"""Metadata of a simulation run of :correia_2025:`\ `."""
-
-    #: Name of the run
-    name: str
-    #: Directory of the run relative to the data directory
-    subdir: str
-    #: ${v}_\text{wall}$, nominal wall speed
-    v_wall: float
-    #: $\alpha_n$, transition strength
-    alpha_n: float
-    #: The time step of the GW power growth rate of :correia_2025:`\ ` fig. 5
-    step: int
-    #: The earlier time step of the GW power growth rate of :correia_2025:`\ ` fig. 5
-    step_prev: int
-
-    @property
-    def label_latex(self) -> str:
-        """Label of the run in LaTeX format."""
-        return rf"{self.name.capitalize()}, $v_w={self.v_wall}, \alpha_n={self.alpha_n}$"
-
-    @property
-    def label_unicode(self) -> str:
-        """Label of the run in Unicode format."""
-        return f"{self.name.capitalize()}, vw={self.v_wall}, αₙ={self.alpha_n}"
-
-
 #: The runs of :correia_2025:`\ `.
 #: The time steps are those of ``plot_ps.py`` of the Zenodo scripts, which produced fig. 5.
 #: The deflagration was run twice to different final times, and the longer run is used here.
-CORREIA_2025_RUNS: dict[str, CorreiaRun] = {
-    "detonation": CorreiaRun(
+CORREIA_2025_RUNS: dict[str, LatticeRunParams] = {
+    "detonation": LatticeRunParams(
         name="detonation", subdir="detonation_alpha067_vw092",
-        v_wall=0.92, alpha_n=0.67, step=18000, step_prev=12000),
-    "deflagration": CorreiaRun(
+        v_wall=0.92, alpha_n=0.67, fig_step=18000, fig_step_prev=12000),
+    "deflagration": LatticeRunParams(
         name="deflagration", subdir="deflagration_alpha050_vw044/ps-all-tfinal40k",
-        v_wall=0.44, alpha_n=0.5, step=22000, step_prev=18000),
+        v_wall=0.44, alpha_n=0.5, fig_step=22000, fig_step_prev=18000),
 }
 
 

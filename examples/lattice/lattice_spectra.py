@@ -37,7 +37,7 @@ def comparisons() -> dict[str, LatticeComparison]:
         return {}
     return {
         name: compare_lattice_run(
-            load_correia_2025_run(name), step=meta.step, step_prev=meta.step_prev, y_min=2, r_star=R_STAR)
+            load_correia_2025_run(name), step=meta.fig_step, step_prev=meta.fig_step_prev, y_min=2, r_star=R_STAR)
         for name, meta in CORREIA_2025_RUNS.items()
     }
 

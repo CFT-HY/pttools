@@ -53,19 +53,19 @@ def calc_sup_lattice(save: bool = True, path: Path = SUPPRESSION_FOLDER) -> dict
         run = load_correia_2025_run(name)
         ssm = ssm_spectrum_for_run(run, nuc_type=NucType.SIMULTANEOUS)
         comparison = compare_lattice_run(
-            run, step=meta.step, step_prev=meta.step_prev, ssm=ssm,
+            run, step=meta.fig_step, step_prev=meta.fig_step_prev, ssm=ssm,
             method=SuppressionFitMethod.INTEGRAL, y_min=Y_MIN)
         log_lsq = compare_lattice_run(
-            run, step=meta.step, step_prev=meta.step_prev, ssm=ssm,
+            run, step=meta.fig_step, step_prev=meta.fig_step_prev, ssm=ssm,
             method=SuppressionFitMethod.LOG_LSQ, y_min=Y_MIN)
         exponential = compare_lattice_run(
-            run, step=meta.step, step_prev=meta.step_prev, nuc_type=NucType.EXPONENTIAL,
+            run, step=meta.fig_step, step_prev=meta.fig_step_prev, nuc_type=NucType.EXPONENTIAL,
             method=SuppressionFitMethod.INTEGRAL, y_min=Y_MIN)
         fit = comparison.fit
         values = {
             "vw_sim": run.v_wall, "alpha_sim": run.alpha_n, "sup_ssm": fit.factor,
             "sup_ssm_log_lsq": log_lsq.fit.factor, "sup_ssm_exponential": exponential.fit.factor,
-            "step": meta.step, "step_prev": meta.step_prev,
+            "step": meta.fig_step, "step_prev": meta.fig_step_prev,
             "y_min": fit.y_min, "y_max": fit.y_max, "y_artifact": fit.y_artifact,
             "ubar_par_sim": comparison.spectrum.ubar_par, "ubar_par_ssm": ssm.ubar_par,
             "omega_gw_rate_sim": comparison.spectrum.omega_gw_rate, "omega_gw_rate_ssm": ssm.omega_gw_rate,
