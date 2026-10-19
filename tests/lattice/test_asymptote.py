@@ -8,7 +8,7 @@ import unittest
 import numpy as np
 import pytest
 
-from pttools.lattice import LatticeRun, Quantity
+from pttools.lattice import INPUT_FILE_NAME, LatticeRun, Quantity
 from pttools.lattice.asymptote import (
     DEFAULT_RUNNING_MEAN_WINDOW,
     fit_pow_gw_modes,
@@ -83,7 +83,7 @@ class SyntheticAsymptoteRunTest(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.tmpdir = tempfile.TemporaryDirectory()
         path = Path(cls.tmpdir.name)
-        (path / "input-test-largerun").write_text(
+        (path / INPUT_FILE_NAME).write_text(
             f"Lx {cls.L}\nLy {cls.L}\nLz {cls.L}\ndx 1.0\ndt {cls.dt}\nbubbles 8\nTconst 0.25\n", encoding="utf-8")
         volume = cls.L**3
         steps = np.arange(0, 25001, 250)

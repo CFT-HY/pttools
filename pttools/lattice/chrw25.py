@@ -17,6 +17,7 @@ import os
 from pathlib import Path
 
 from pttools.lattice.params import LatticeRunParams
+from pttools.lattice.readers import INPUT_FILE_NAME
 from pttools.lattice.run import LatticeRun
 from pttools.utils.system import PROJECT_DIR
 
@@ -73,9 +74,9 @@ def load_chrw25_run(name: str, path: str | os.PathLike[str] | None = None) -> La
             f"The data of Correia et al. was not found. Please set the environment variable {DATA_DIR_ENV}.")
     meta = CHRW25_RUNS[name]
     run_dir = root / meta.subdir
-    input_path = run_dir / "input-test-largerun"
+    input_path = run_dir / INPUT_FILE_NAME
     if not input_path.is_file():
-        candidates = sorted(run_dir.parent.glob("*/input-test-largerun"))
+        candidates = sorted(run_dir.parent.glob(f"*/{INPUT_FILE_NAME}"))
         if candidates:
             input_path = candidates[0]
     return LatticeRun(

@@ -1,8 +1,8 @@
 r"""A single run of a hydrodynamic lattice simulation.
 
-The run directory contains the power spectrum files described in :py:mod:`pttools.lattice.quantities`,
-and optionally the input file of the simulation (``input-test-largerun``)
-and the log of the global quantities (``*.out``, a CSV file with one row per output step).
+The run directory contains the power spectrum files,
+and optionally the input file of the simulation and the log of the global quantities (``*.out``),
+see :py:mod:`pttools.lattice.readers`.
 The quantities are in lattice units, where $T_c = 1$ and $G = 1$, see :correia_2025:`\ ` table I.
 The simulations are in flat space, and the Hubble rate $H_n$ only enters through the Friedmann equation
 $$H_n^2 = \frac{8 \pi G}{3} \bar{\epsilon}_0,$$
@@ -18,7 +18,6 @@ from pathlib import Path
 import typing as tp
 
 import numpy as np
-import pandas as pd
 
 from pttools.lattice.asymptote import (
     DEFAULT_RUNNING_MEAN_WINDOW,
@@ -26,7 +25,8 @@ from pttools.lattice.asymptote import (
     fit_pow_gw_modes,
     gw_growth_index_prediction,
 )
-from pttools.lattice.quantities import Quantity, integral_scale, mean_square, read_power_spectrum
+from pttools.lattice.quantities import Quantity, integral_scale, mean_square
+from pttools.lattice.readers import INPUT_FILE_NAME, parse_input_file, read_globals, read_power_spectrum
 from pttools.omgw0.factors import H
 import pttools.type_hints as th
 from pttools.utils.asymptote import AsymptoteFit, fit_asymptote
@@ -41,47 +41,8 @@ logger: logging.Logger = logging.getLogger(__name__)
 #: Time step or an array of time steps
 type Steps = float | th.FloatArr1D | th.IntArr1D
 
-#: Default name of the input file of the simulation
-INPUT_FILE_NAME: str = "input-test-largerun"
 #: Gravitational constant in the lattice units of the simulations
 G_LATTICE: float = 1.
-
-
-def parse_input_file(path: str | os.PathLike[str]) -> dict[str, str]:
-    """Parse the input file of the simulation.
-
-    The file has one ``key value`` pair per line, and comments start with ``#``.
-
-    :param path: path of the input file
-    :return: the parameters as strings
-    """
-    params = {}
-    with Path(path).open(encoding="utf-8") as file:
-        for line in file:
-            content = line.split("#", 1)[0].strip()
-            if not content:
-                continue
-            parts = content.split(maxsplit=1)
-            params[parts[0]] = parts[1] if len(parts) > 1 else ""
-    return params
-
-
-def read_globals(path: str | os.PathLike[str]) -> dict[str, th.FloatArr1D]:
-    """Read the CSV log of the global quantities.
-
-    The file is read with the C engine of :py:func:`pandas.read_csv`.
-    If the run was interrupted, the last row may be incomplete, in which case it's ignored with a warning.
-
-    :param path: path of the ``.out`` file
-    :return: the columns of the file as arrays, with the column names as keys
-    """
-    data = pd.read_csv(path, engine="c", dtype=np.float64, skipinitialspace=True)
-    data.columns = [str(name).strip() for name in data.columns]
-    # The missing values of an incomplete row are read as nan.
-    if len(data) > 0 and data.iloc[-1].isna().any():
-        logger.warning("Ignoring the incomplete last row of %s, as the run was probably interrupted.", path)
-        data = data.iloc[:-1]
-    return {name: data[name].to_numpy(dtype=np.float64) for name in data.columns}
 
 
 class LatticeRun:
@@ -119,7 +80,8 @@ class LatticeRun:
         :param name: name of the run, defaults to the name of the directory
         :param label_latex: label of the run in LaTeX format
         :param label_unicode: label of the run in Unicode format
-        :param input_path: path of the input file, defaults to ``input-test-largerun`` in the run directory
+        :param input_path: path of the input file,
+            defaults to :py:data:`pttools.lattice.readers.INPUT_FILE_NAME` in the run directory
         :param out_path: path of the log of the global quantities,
             defaults to the last ``*.out`` file in the run directory
         :param n_bubbles: $N_b$, number of bubbles, overrides the input file

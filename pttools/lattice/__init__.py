@@ -8,7 +8,9 @@ and the suppression factor of the Sound Shell Model can be fitted to it with
 :py:mod:`pttools.ssm.suppression.fit`.
 
 - :py:mod:`pttools.lattice.params`: :py:class:`LatticeRunParams`, the parameters of a run
-- :py:mod:`pttools.lattice.quantities`: the quantities and the format of the power spectrum files
+- :py:mod:`pttools.lattice.quantities`: the quantities and the integrals over their power spectra
+- :py:mod:`pttools.lattice.readers`: the readers of the input file, the log of the global quantities
+  and the power spectrum files
 - :py:mod:`pttools.lattice.run`: :py:class:`LatticeRun`, a simulation run, its parameters,
   global quantities and time series
 - :py:mod:`pttools.lattice.spectrum`: :py:class:`LatticeSpectrum`, the spectra of a run at a given time
@@ -20,5 +22,6 @@ from .asymptote import *
 from .chrw25 import *
 from .params import *
 from .quantities import *
+from .readers import *
 from .run import *
 from .spectrum import *

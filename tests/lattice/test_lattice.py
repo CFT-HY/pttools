@@ -10,6 +10,7 @@ import pytest
 
 from pttools.lattice import (
     CHRW25_RUNS,
+    INPUT_FILE_NAME,
     LatticeRun,
     Quantity,
     data_dir,
@@ -46,7 +47,7 @@ class SyntheticRunTest(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.tmpdir = tempfile.TemporaryDirectory()
         path = Path(cls.tmpdir.name)
-        (path / "input-test-largerun").write_text(
+        (path / INPUT_FILE_NAME).write_text(
             f"# Comment\nLx {cls.L}\nLy {cls.L}\nLz {cls.L}\ndx 1.0\ndt {cls.dt} # time step\n"
             f"bubbles {cls.n_bubbles}\nTconst 0.25\n\n",
             encoding="utf-8")
@@ -79,7 +80,7 @@ class SyntheticRunTest(unittest.TestCase):
 
     def test_params(self) -> None:
         """The parameters are read from the input file."""
-        params = parse_input_file(self.lattice_run.path / "input-test-largerun")
+        params = parse_input_file(self.lattice_run.path / INPUT_FILE_NAME)
         assert params["dt"] == "0.2"
         assert self.lattice_run.L == self.L
         assert self.lattice_run.n_bubbles == self.n_bubbles
