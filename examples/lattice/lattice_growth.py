@@ -22,7 +22,7 @@ from matplotlib.figure import Figure
 from examples.utils import save_and_show_figs
 from pttools.analysis.lattice import LatticeComparison, compare_lattice_run
 from pttools.analysis.plot_lattice import plot_spectra_comparison
-from pttools.lattice import CHRW25_RUNS, data_dir, load_chrw25_run
+from pttools.lattice import CHRW25_RUNS, load_chrw25_runs
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -32,13 +32,10 @@ R_STAR: float = 0.1
 
 def comparisons() -> dict[str, LatticeComparison]:
     """Compare the runs of Correia et al. with the SSM, or return an empty dict if the data is not available."""
-    if data_dir() is None:
-        logger.warning("The data of Correia et al. was not found. Skipping the example.")
-        return {}
     return {
         name: compare_lattice_run(
-            load_chrw25_run(name), step=meta.fig_step, step_prev=meta.fig_step_prev, y_min=2, r_star=R_STAR)
-        for name, meta in CHRW25_RUNS.items()
+            run, step=CHRW25_RUNS[name].fig_step, step_prev=CHRW25_RUNS[name].fig_step_prev, y_min=2, r_star=R_STAR)
+        for name, run in load_chrw25_runs(missing_ok=True).items()
     }
 
 

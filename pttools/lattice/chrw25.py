@@ -89,3 +89,20 @@ def load_chrw25_run(name: str, path: str | os.PathLike[str] | None = None) -> La
         label_unicode=meta.label_unicode,
         input_path=input_path
     )
+
+
+def load_chrw25_runs(path: str | os.PathLike[str] | None = None, missing_ok: bool = False) -> dict[str, LatticeRun]:
+    r"""Load all the simulation runs of :correia_2025:`\ `.
+
+    :param path: root directory of the data, defaults to :py:func:`data_dir`
+    :param missing_ok: whether to return an empty dict with a warning instead of raising an error
+        if the data is not found, e.g. for skipping examples
+    :return: the runs with the keys of :py:data:`CHRW25_RUNS`
+    :raises FileNotFoundError: if the data is not found and ``missing_ok`` is False
+    """
+    root = data_dir() if path is None else Path(path)
+    if missing_ok and (root is None or not root.is_dir()):
+        logger.warning(
+            "The data of Correia et al. was not found. Please set the environment variable %s.", DATA_DIR_ENV)
+        return {}
+    return {name: load_chrw25_run(name, root) for name in CHRW25_RUNS}

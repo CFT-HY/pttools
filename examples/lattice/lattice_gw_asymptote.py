@@ -32,7 +32,7 @@ import pandas as pd
 from examples.utils import save_and_show_figs
 from pttools.analysis.lattice import gw_asymptote_scale
 from pttools.analysis.plot_lattice import plot_gw_asymptote
-from pttools.lattice import CHRW25_RUNS, LatticeRun, data_dir, load_chrw25_run
+from pttools.lattice import CHRW25_RUNS, LatticeRun, load_chrw25_runs
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -43,14 +43,6 @@ FIT_SETTINGS: dict[str, dict[str, float | int]] = {
     "detonation": {"start_fraction": 0.8, "step_end": 24800},
     "deflagration": {"start_fraction": 0.6, "step_end": 39600},
 }
-
-
-def runs() -> dict[str, LatticeRun]:
-    """Load the runs of Correia et al., or return an empty dict if the data is not available."""
-    if data_dir() is None:
-        logger.warning("The data of Correia et al. was not found. Skipping the example.")
-        return {}
-    return {name: load_chrw25_run(name) for name in CHRW25_RUNS}
 
 
 def fit_table(lattice_runs: dict[str, LatticeRun]) -> pd.DataFrame:
@@ -85,7 +77,7 @@ def fit_table(lattice_runs: dict[str, LatticeRun]) -> pd.DataFrame:
 
 def main() -> dict[str, Figure]:
     """Plot the extrapolation of the GW power of the runs of Correia et al."""
-    lattice_runs = runs()
+    lattice_runs = load_chrw25_runs(missing_ok=True)
     if not lattice_runs:
         return {}
     print(fit_table(lattice_runs).to_markdown())

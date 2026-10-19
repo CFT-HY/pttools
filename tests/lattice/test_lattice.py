@@ -15,6 +15,7 @@ from pttools.lattice import (
     data_dir,
     integral_scale,
     load_chrw25_run,
+    load_chrw25_runs,
     mean_square,
     parse_input_file,
     read_globals,
@@ -190,9 +191,29 @@ class SyntheticRunTest(unittest.TestCase):
             _ = self.lattice_run.spectrum(1000).pow_gw_rate
 
 
+class LoadRunsTest(unittest.TestCase):
+    r"""Tests for loading the runs of :correia_2025:`\ ` when the data is not available."""
+
+    @staticmethod
+    def test_missing_data() -> None:
+        """Missing data raises an error, or returns an empty dict if allowed."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "missing"
+            assert not load_chrw25_runs(path, missing_ok=True)
+            with pytest.raises(FileNotFoundError):
+                load_chrw25_runs(path)
+
+
 @pytest.mark.skipif(data_dir() is None, reason="The data of Correia et al. is not available.")
 class CorreiaDataTest(unittest.TestCase):
     r"""Tests with the data of :correia_2025:`\ `, which are skipped if the data is not available."""
+
+    def test_load_runs(self) -> None:
+        """All the runs are loaded with the parameters of :py:data:`pttools.lattice.chrw25.CHRW25_RUNS`."""
+        runs = load_chrw25_runs()
+        assert list(runs) == list(CHRW25_RUNS)
+        for name, run in runs.items():
+            assert (run.name, run.v_wall, run.alpha_n) == (name, CHRW25_RUNS[name].v_wall, CHRW25_RUNS[name].alpha_n)
 
     def test_table_iv(self) -> None:
         r"""The maximum of $\bar{U}_\parallel$ and the shock time agree with :correia_2025:`\ ` table IV."""
