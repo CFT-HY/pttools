@@ -10,57 +10,18 @@ import pytest
 
 from pttools.lattice import LatticeRun, Quantity
 from pttools.lattice.asymptote import (
-    PowerLawFit,
-    asymptotic_growth,
-    fit_asymptote,
+    DEFAULT_RUNNING_MEAN_WINDOW,
     fit_pow_gw_modes,
-    fit_power_law,
-    fit_start_index,
     gw_growth_index_prediction,
-    running_mean,
 )
+from pttools.utils.asymptote import asymptotic_growth, fit_asymptote
+from pttools.utils.math import running_mean
+from pttools.utils.power_law import PowerLawFit
 from tests.lattice.test_lattice import OUT_COLUMNS
 
 
 class AsymptoteFunctionTest(unittest.TestCase):
-    """Tests for the fitting functions with exact synthetic data."""
-
-    @staticmethod
-    def test_fit_asymptote() -> None:
-        """The parameters of exact data are recovered, independently of the magnitude of the values."""
-        t = np.linspace(500, 5000, 100)
-        for value_inf in (1e-6, 2.5, 1e4):
-            fit = fit_asymptote(t, asymptotic_growth(t, value_inf=value_inf, t_decay=300, index=0.7), t_decay_guess=200)
-            assert fit.value == pytest.approx(value_inf, rel=1e-8)
-            assert fit.t_decay == pytest.approx(300, rel=1e-8)
-            assert fit.index == pytest.approx(0.7, rel=1e-8)
-            assert (fit.t_start, fit.t_end) == (500, 5000)
-            np.testing.assert_allclose(fit(t), asymptotic_growth(t, value_inf=value_inf, t_decay=300, index=0.7))
-
-    @staticmethod
-    def test_fit_power_law() -> None:
-        r"""The index of exact data is recovered for both $\zeta$ and $\lambda$."""
-        t = np.linspace(100, 3000, 60)
-        for factor, index in ((-0.5, 1.3), (1., 0.25)):
-            values = 0.3 * (1 + (t - t[0]) / 150)**(factor * index)
-            fit = fit_power_law(t, values, factor=factor)
-            assert fit.index == pytest.approx(index, rel=1e-6)
-            assert fit.t_scale == pytest.approx(150, rel=1e-6)
-            np.testing.assert_allclose(0.3 * fit(t), values, rtol=1e-6)
-
-    @staticmethod
-    def test_fit_start_index() -> None:
-        """The fit starts after the last value below the fraction of the last value."""
-        values = np.array([0., 0.5, 0.9, 0.7, 0.85, 0.95, 1.])
-        assert fit_start_index(values, 0.8) == 4
-        assert fit_start_index(values, 0.) == 0
-
-    @staticmethod
-    def test_running_mean() -> None:
-        """The running mean of a constant is the constant, and that of a line is the line except at the ends."""
-        np.testing.assert_allclose(running_mean(np.full(30, 2.)), 2.)
-        line = np.arange(50.)
-        np.testing.assert_allclose(running_mean(line, window=5)[2:-2], line[2:-2])
+    """Tests for the GW-specific fitting functions with exact synthetic data."""
 
     @staticmethod
     def test_fit_pow_gw_modes() -> None:
@@ -185,7 +146,8 @@ class SyntheticAsymptoteRunTest(unittest.TestCase):
         fit = self.lattice_run.omega_gw_asymptote()
         t, omega = self.lattice_run.omega_gw_series()
         start = int(np.argmin(np.abs(t - 3 * self.t_max)))
-        ref = fit_asymptote(t[start:], running_mean(omega)[start:], t_decay_guess=self.t_max)
+        omega = running_mean(omega, DEFAULT_RUNNING_MEAN_WINDOW)
+        ref = fit_asymptote(t[start:], omega[start:], t_decay_guess=self.t_max)
         assert (fit.value, fit.index, fit.t_decay) == pytest.approx((ref.value, ref.index, ref.t_decay), rel=1e-12)
         assert self.lattice_run.omega_gw_asymptote() is fit
 

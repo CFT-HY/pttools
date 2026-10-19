@@ -14,8 +14,9 @@ import numpy.typing as npt
 
 from pttools.analysis.lattice import LatticeComparison, gw_asymptote_scale, gw_rate_series, suppression_series
 from pttools.analysis.utils import FigAndAxes, create_fig_ax
-from pttools.lattice import AsymptoteFit, LatticeRun, PowGwAsymptoteFit, Quantity
+from pttools.lattice import LatticeRun, PowGwAsymptoteFit, Quantity
 import pttools.type_hints as th
+from pttools.utils.asymptote import AsymptoteFit
 
 #: Colours of the simulation data, as in :correia_2025:`\ `
 COLOR_GW: str = "#d55e00"

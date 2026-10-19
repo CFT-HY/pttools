@@ -93,12 +93,12 @@ def mean_square(k: th.FloatArr1D, p: th.FloatArr1D) -> float:
 def integral_scale(k: th.FloatArr1D, p: th.FloatArr1D) -> float:
     r"""$\xi$, integral scale of a field computed from its power spectrum.
 
-    $$\xi = \frac{1}{\langle Y^2 \rangle} \int \frac{dk}{k^2} \mathcal{P}_Y(k)$$
+    $$\xi_Y = \frac{1}{\langle Y^2 \rangle} \int \frac{dk}{k^2} \mathcal{P}_Y(k)$$
     :correia_2025:`\ ` eq. 39.
 
     :param k: $k$, wavenumbers
     :param p: $\mathcal{P}_Y(k)$, power spectrum
-    :return: $\xi$, in the same length units as $1/k$
+    :return: $\xi_Y$, in the same length units as $1/k$
     """
     valid = k > 0
     return float(np.trapezoid(p[valid] / k[valid]**2, k[valid])) / mean_square(k, p)

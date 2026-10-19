@@ -22,18 +22,16 @@ import pandas as pd
 
 from pttools.lattice.asymptote import (
     DEFAULT_RUNNING_MEAN_WINDOW,
-    AsymptoteFit,
-    PowerLawFit,
     PowGwAsymptoteFit,
-    fit_asymptote,
     fit_pow_gw_modes,
-    fit_power_law,
     gw_growth_index_prediction,
-    running_mean,
 )
 from pttools.lattice.quantities import Quantity, integral_scale, mean_square, read_power_spectrum
 from pttools.omgw0.factors import H
 import pttools.type_hints as th
+from pttools.utils.asymptote import AsymptoteFit, fit_asymptote
+from pttools.utils.math import running_mean
+from pttools.utils.power_law import PowerLawFit, fit_power_law
 
 if tp.TYPE_CHECKING:
     from pttools.lattice.spectrum import LatticeSpectrum
@@ -583,7 +581,7 @@ class LatticeRun:
         :correia_2025:`\ ` eq. 47.
         As in the article, the fit is done in the range $t \in [3 {t}_\text{max}, {t}_\text{end}]$
         to the running mean of $\Omega_\text{gw}(t)$.
-        The asymptotic value is :py:attr:`pttools.lattice.asymptote.AsymptoteFit.value` of the returned fit.
+        The asymptotic value is :py:attr:`pttools.utils.asymptote.AsymptoteFit.value` of the returned fit.
 
         :param t_start: start of the fit, defaults to $3 {t}_\text{max}$.
             The fit starts at the time of the output that is nearest to it.

@@ -5,6 +5,7 @@ import typing as tp
 
 import numpy as np
 from numpy.typing import NDArray
+from scipy.signal import savgol_filter
 
 import pttools.type_hints as th
 
@@ -59,3 +60,13 @@ def rel_diff_scalar(x: float, y: float) -> float:
     if y == 0:
         return np.nan
     return abs(x - y) / y
+
+
+def running_mean(values: th.FloatArr1D, window: int) -> th.FloatArr1D:
+    r"""Running mean with mirrored boundaries.
+
+    :param values: the values
+    :param window: number of points in the window, which must be odd
+    :return: the running mean
+    """
+    return savgol_filter(values, window_length=window, polyorder=0, mode="mirror")

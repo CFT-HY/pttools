@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 import pytest
 
-from pttools.utils.math import finite_edge
+from pttools.utils.math import finite_edge, running_mean
 
 
 class FiniteEdgeTest(unittest.TestCase):
@@ -26,3 +26,14 @@ class FiniteEdgeTest(unittest.TestCase):
         """Test that the edge is found when searching in the decreasing direction."""
         edge = finite_edge(lambda x: self.sqrt_1_minus_x(-x), 0., -2.)
         assert edge == pytest.approx(-1., abs=5e-13)
+
+
+class RunningMeanTest(unittest.TestCase):
+    """Test the running mean."""
+
+    @staticmethod
+    def test_running_mean() -> None:
+        """The running mean of a constant is the constant, and that of a line is the line except at the ends."""
+        np.testing.assert_allclose(running_mean(np.full(30, 2.), window=23), 2.)
+        line = np.arange(50.)
+        np.testing.assert_allclose(running_mean(line, window=5)[2:-2], line[2:-2])
