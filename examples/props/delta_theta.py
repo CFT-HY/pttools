@@ -8,9 +8,9 @@ Plot $\Delta \theta$ surfaces as a function of $w_+$ and $w_-$.
 import numpy as np
 
 from examples.utils import FIG_DIR
-from pttools.analysis.plot_delta_theta import DeltaThetaPlot3D
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
+from pttools.plot.delta_theta import DeltaThetaPlot3D
 
 
 def main() -> DeltaThetaPlot3D:

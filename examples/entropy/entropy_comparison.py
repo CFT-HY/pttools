@@ -14,9 +14,9 @@ from examples.utils import save_and_show_fig
 # from plot_entropy_old import load
 # from pttools.analysis.cmap import cmap
 from pttools.analysis.bubble_grid import BubbleGridVWAlpha
-from pttools.analysis.plot_entropy_grid import compute
 from pttools.logging import setup_logging
 from pttools.models.bag import BagModel
+from pttools.plot.entropy_grid import compute
 from pttools.utils import testing_or_ci
 
 

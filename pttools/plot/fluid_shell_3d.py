@@ -6,12 +6,12 @@ import numpy as np
 from plotly.basedatatypes import BasePlotlyType
 import plotly.graph_objects as go
 
-from pttools.analysis.plot_plotly import PlotlyPlot
 from pttools.bubble.bubble import Bubble
 from pttools.bubble.phase import Phase
 from pttools.bubble.relativity import lorentz
 from pttools.bubble.shock import solve_shock
 from pttools.models.model import Model
+from pttools.plot.plotly import PlotlyPlot
 
 logger: logging.Logger = logging.getLogger(__name__)
 

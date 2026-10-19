@@ -10,10 +10,10 @@ from math import sqrt
 from matplotlib.figure import Figure
 
 from examples.utils import save_and_show_figs
-from pttools.analysis.plot_model import ModelPlot
 from pttools.bubble import Bubble
 from pttools.models import ConstCSModel
 from pttools.omgw0 import Spectrum
+from pttools.plot.model import ModelPlot
 from pttools.ssm import NucType
 
 

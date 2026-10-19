@@ -21,8 +21,8 @@ from pttools.utils.json import export_json
 from pttools.utils.validation import ensure_floats
 
 if tp.TYPE_CHECKING:
-    from pttools.analysis.utils import FigAndAxes
     from pttools.models.model import Model
+    from pttools.plot.utils import FigAndAxes
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -190,7 +190,7 @@ class BaseBubble(Extractable, abc.ABC):
             full_range: bool = False,
             **kwargs: tp.Any) -> plt.Figure:
         """Plot the velocity and enthalpy profiles of the bubble."""
-        from pttools.analysis.plot_bubbles import plot_bubbles  # noqa: PLC0415
+        from pttools.plot.bubbles import plot_bubbles  # noqa: PLC0415
         return plot_bubbles([self], fig, path, full_range=full_range, **kwargs)
 
     def plot_v(
@@ -201,7 +201,7 @@ class BaseBubble(Extractable, abc.ABC):
             full_range: bool = False,
             **kwargs: tp.Any) -> "FigAndAxes":
         """Plot the velocity profile of the bubble."""
-        from pttools.analysis.plot_bubbles import plot_bubbles_v  # noqa: PLC0415
+        from pttools.plot.bubbles import plot_bubbles_v  # noqa: PLC0415
         return plot_bubbles_v([self], fig, ax, path, full_range=full_range, **kwargs)
 
     def plot_w(
@@ -212,7 +212,7 @@ class BaseBubble(Extractable, abc.ABC):
             full_range: bool = False,
             **kwargs: tp.Any) -> "FigAndAxes":
         """Plot the enthalpy profile of the bubble."""
-        from pttools.analysis.plot_bubbles import plot_bubbles_w  # noqa: PLC0415
+        from pttools.plot.bubbles import plot_bubbles_w  # noqa: PLC0415
         return plot_bubbles_w([self], fig, ax, path, full_range=full_range, **kwargs)
 
     # =====

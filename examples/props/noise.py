@@ -9,7 +9,8 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 from examples.utils import save_and_show_fig
-from pttools.analysis.plot_spectra import (
+from pttools.omgw0 import noise
+from pttools.plot.spectra import (
     F_LABEL,
     NOISE_EB_LABEL,
     NOISE_GB_LABEL,
@@ -17,8 +18,7 @@ from pttools.analysis.plot_spectra import (
     NOISE_LABEL,
     POW_GW0_H2_LABEL,
 )
-from pttools.analysis.utils import A4_PAPER_SIZE, legend
-from pttools.omgw0 import noise
+from pttools.plot.utils import A4_PAPER_SIZE, legend
 
 
 def main() -> plt.Figure:

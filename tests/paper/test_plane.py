@@ -16,9 +16,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools import speedup
-from pttools.analysis import save_fig
 from pttools.bubble import FluidIntegrateMethod
 from pttools.math import assert_allclose
+from pttools.plot import save_fig
 import pttools.type_hints as th
 from tests import utils
 from tests.paper import plane, plot_plane_paper

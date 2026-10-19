@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 from matplotlib.tri import Triangulation
 import numpy as np
 
-from pttools.analysis.utils import create_fig_ax
 from pttools.bubble import CS0, v_chapman_jouguet_bag
+from pttools.plot.utils import create_fig_ax
 from pttools.ssm.suppression import Suppression, alpha_n_max_approx
 from pttools.ssm.suppression import alpha_n_max as alpha_n_max_func
 import pttools.type_hints as th

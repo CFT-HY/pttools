@@ -8,12 +8,12 @@ Plot $\xi, v, w$ in 3D for the constant sound speed model
 import numpy as np
 
 from examples.utils import FIG_DIR
-from pttools.analysis.plot_fluid_shell_3d import BubblePlot3D
 from pttools.bubble import thermo_bag
 from pttools.bubble.bubble import Bubble
 from pttools.bubble.solution_type import SolutionType
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
+from pttools.plot.fluid_shell_3d import BubblePlot3D
 
 
 def main() -> BubblePlot3D:

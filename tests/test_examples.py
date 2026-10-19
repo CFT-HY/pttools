@@ -47,8 +47,8 @@ from examples.props import (
 from examples.reverse import reverse, reverse_approx
 from examples.solvers import bag, old_new, xi_kappa_bag
 from examples.standard_model import standard_model_xi_v
-from pttools.analysis import close_figs
 from pttools.export import Importer, Table
+from pttools.plot import close_figs
 from tests.utils.const import TEST_RESULT_PATH
 from tests.utils.mark import mark_xfail_pickle_without_jit, skip_slow, uses_parallel
 

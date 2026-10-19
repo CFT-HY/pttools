@@ -6,8 +6,8 @@ import textwrap
 import typing as tp
 import unittest
 
-from pttools.analysis import time_and_plot_threads
-from pttools.analysis.utils import FigAndAxes
+from pttools.plot import time_and_plot_threads
+from pttools.plot.utils import FigAndAxes
 from pttools.speedup import DEFAULT_VARYING_NUMBA_THREADS, NUMBA_DISABLE_JIT
 import pttools.type_hints as th
 from tests.utils.const import TEST_RESULT_PATH

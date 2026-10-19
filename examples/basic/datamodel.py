@@ -18,7 +18,7 @@ from examples.utils import save_and_show_fig
 from pttools.bubble import Bubble
 from pttools.models import DataModel
 
-# from pttools.analysis.plot_model import ModelPlot
+# from pttools.plot.model import ModelPlot
 
 logger: logging.Logger = logging.getLogger(__name__)
 

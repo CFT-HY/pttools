@@ -405,10 +405,10 @@ class Spectrum(Omgw0Base, SSMSpectrum):
 
         :param fig: the figure to plot on
         :param path: if given, save the figure to this path
-        :param kwargs: additional arguments for :py:func:`pttools.analysis.plot_spectra.plot_spectra_multi`
+        :param kwargs: additional arguments for :py:func:`pttools.plot.spectra.plot_spectra_multi`
         :return: the figure and the 2D array of axes
         """
-        from pttools.analysis.plot_spectra import plot_spectra_multi  # noqa: PLC0415
+        from pttools.plot.spectra import plot_spectra_multi  # noqa: PLC0415
         return plot_spectra_multi([self], fig, path, **kwargs)
 
     def plot_multi_flat(
@@ -426,10 +426,10 @@ class Spectrum(Omgw0Base, SSMSpectrum):
         :param path: if given, save the figure to this path
         :param label: label of the spectrum
         :param legend: whether to show the legend
-        :param kwargs: additional arguments for :py:func:`pttools.analysis.plot_spectra.plot_spectra_multi_flat`
+        :param kwargs: additional arguments for :py:func:`pttools.plot.spectra.plot_spectra_multi_flat`
         :return: the figure and the 1D array of axes
         """
-        from pttools.analysis.plot_spectra import plot_spectra_multi_flat  # noqa: PLC0415
+        from pttools.plot.spectra import plot_spectra_multi_flat  # noqa: PLC0415
         return plot_spectra_multi_flat([self], fig=fig, path=path, labels=[label], legend=legend, **kwargs)
 
 

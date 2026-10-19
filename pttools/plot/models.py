@@ -5,7 +5,7 @@ import typing as tp
 import matplotlib.pyplot as plt
 
 from pttools import bubble, models
-from pttools.analysis import utils
+from pttools.plot import utils
 import pttools.type_hints as th
 
 

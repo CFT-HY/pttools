@@ -8,9 +8,10 @@ Minimal example of parallel bubble solving
 import numpy as np
 
 from examples.utils import save_and_show_fig
-from pttools.analysis import BubbleGridVWAlpha, VwAlphaPlot
+from pttools.analysis import BubbleGridVWAlpha
 from pttools.bubble import get_kappa_omega
 from pttools.models import BagModel
+from pttools.plot import VwAlphaPlot
 from pttools.utils import testing
 
 

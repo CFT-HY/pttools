@@ -9,12 +9,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools import bubble
+from pttools.math import assert_allclose
 
 # import orjson
-from pttools.analysis import save_fig
-from pttools.analysis.plot_fluid_shell_bag import plot_fluid_shell_bag
-from pttools.analysis.plot_fluid_shells_bag import plot_fluid_shells_bag
-from pttools.math import assert_allclose
+from pttools.plot import save_fig
+from pttools.plot.fluid_shell_bag import plot_fluid_shell_bag
+from pttools.plot.fluid_shells_bag import plot_fluid_shells_bag
 from pttools.speedup import NUMBA_INTEGRATE_TOLERANCES
 from tests.paper import const
 from tests.paper import ssm_paper_utils as spu

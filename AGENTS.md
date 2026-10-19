@@ -89,7 +89,7 @@ by Hindmarsh & Hijazi (2019), arXiv:1909.10040.
 Links to other relevant articles are in `pttools.docs.links.EXTLINKS_STATIC`.
 
 Sub-packages:
-- `analysis`: plotting and data analysis tools
+- `analysis`: data analysis tools
 - `bubble`: bubble fluid profile solver
 - `docs`: documentation utilities
 - `export`: exporting and importing models, bubbles and spectra as HDF5 files
@@ -97,6 +97,7 @@ Sub-packages:
 - `math`: generic mathematical and numerical utilities, e.g. integration, fits and assertions
 - `models`: equations of state as subclasses of `Model`
 - `omgw0`: conversion from the time of GW formation to observable gravitational wave spectrum today, provides `Spectrum` class
+- `plot`: plotting
 - `speedup`: utilities for Numba compilation and parallelism
 - `ssm`: Sound Shell Model, provides the `SSMSpectrum` class
 - `utils`: generic utilities
@@ -107,4 +108,4 @@ and plots the resulting fluid velocity profile from `Bubble` and the gravitation
 For an example of this primary use case, see `examples/basic/basic.py`.
 
 To avoid circular dependencies, each sub-package in `pttools` should depend only on the sub-packages before it in this order:
-`utils`, `speedup`, `math`, `bubble`, `models`, `ssm`, `omgw0`, `lattice`, `analysis`, `export`, `docs`.
+`utils`, `speedup`, `math`, `bubble`, `models`, `ssm`, `omgw0`, `lattice`, `export`, `analysis`, `plot`, `docs`.

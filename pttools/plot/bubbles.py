@@ -6,9 +6,9 @@ import typing as tp
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.analysis.utils import FigAndAxes, create_fig_ax
-from pttools.analysis.utils import legend as legend_func
 from pttools.bubble.bubble import BaseBubble
+from pttools.plot.utils import FigAndAxes, create_fig_ax
+from pttools.plot.utils import legend as legend_func
 
 XI_LABEL = r"$\xi$"
 V_LABEL = "$v$"

@@ -20,13 +20,13 @@ import pandas as pd
 from examples.lattice.lattice_growth import comparisons
 from examples.utils import save_and_show_figs
 from pttools.analysis.lattice import LatticeComparison
-from pttools.analysis.plot_lattice import (
+from pttools.lattice import CHRW25_RUNS
+from pttools.plot.lattice import (
     plot_gw_rate_time_comparison,
     plot_integral_scale_comparison,
     plot_kinetic_energy_comparison,
     plot_ubar_comparison,
 )
-from pttools.lattice import CHRW25_RUNS
 
 logger: logging.Logger = logging.getLogger(__name__)
 

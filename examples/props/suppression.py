@@ -10,7 +10,7 @@ import numpy as np
 from pandas import DataFrame
 
 from examples.utils import save_and_show_figs
-from pttools.analysis.suppression import SuppressionPlot
+from pttools.plot.suppression import SuppressionPlot
 from pttools.ssm.suppression import SUPPRESSIONS
 
 

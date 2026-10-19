@@ -9,12 +9,12 @@ from matplotlib.figure import Figure
 import numpy as np
 
 from examples.utils import save_and_show_figs
-from pttools.analysis.g_cs2 import plot_g_cs2
-from pttools.analysis.plot_model import ModelPlot
-from pttools.analysis.plot_thermomodels import ThermoModelsPlot
 from pttools.bubble.phase import Phase
 from pttools.models.full import FullModel
 from pttools.models.sm import StandardModel
+from pttools.plot.g_cs2 import plot_g_cs2
+from pttools.plot.model import ModelPlot
+from pttools.plot.thermomodels import ThermoModelsPlot
 import pttools.type_hints as th
 
 # %%

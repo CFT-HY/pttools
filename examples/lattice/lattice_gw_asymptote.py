@@ -30,8 +30,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from examples.utils import save_and_show_figs
-from pttools.analysis.plot_lattice import plot_gw_asymptote
 from pttools.lattice import CHRW25_RUNS, LatticeRun, load_chrw25_runs
+from pttools.plot.lattice import plot_gw_asymptote
 
 logger: logging.Logger = logging.getLogger(__name__)
 

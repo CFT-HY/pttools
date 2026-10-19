@@ -25,7 +25,7 @@ from pttools.type_hints import FloatArr1D, FloatOrArr
 from pttools.utils.docstrings import copy_docstring_dec
 
 if tp.TYPE_CHECKING:
-    from pttools.analysis.utils import FigAndAxes
+    from pttools.plot.utils import FigAndAxes
 
 
 class Omgw0Base(SpectrumBase):
@@ -319,8 +319,8 @@ class Omgw0Base(SpectrumBase):
         :param fig: the figure to plot on
         :param ax: the axes to plot on
         :param path: if given, save the figure to this path
-        :param kwargs: additional arguments for :py:func:`pttools.analysis.plot_spectra.plot_spectra`
+        :param kwargs: additional arguments for :py:func:`pttools.plot.spectra.plot_spectra`
         :return: the figure and the axes
         """
-        from pttools.analysis.plot_spectra import plot_spectra  # noqa: PLC0415
+        from pttools.plot.spectra import plot_spectra  # noqa: PLC0415
         return plot_spectra([self], fig, ax, path, **kwargs)

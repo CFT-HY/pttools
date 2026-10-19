@@ -8,10 +8,10 @@ from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.analysis.plot_bubbles import plot_bubbles_v
-from pttools.analysis.utils import FigAndAxes, create_fig_ax
 from pttools.math.formatting import as_latex
 from pttools.omgw0 import Omgw0Base, Spectrum, omega_noise_h2
+from pttools.plot.bubbles import plot_bubbles_v
+from pttools.plot.utils import FigAndAxes, create_fig_ax
 from pttools.ssm.spectrum import SSMSpectrum
 from pttools.ssm.spectrum_base import SpectrumBase
 import pttools.type_hints as th

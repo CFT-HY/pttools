@@ -8,9 +8,9 @@ Plot the entropy profiles of a few bubbles
 from matplotlib.figure import Figure
 
 from examples.utils import save_and_show_fig
-from pttools.analysis.plot_entropy import plot_entropy
 from pttools.bubble.bubble import Bubble
 from pttools.models.bag import BagModel
+from pttools.plot.entropy import plot_entropy
 
 
 def main() -> Figure:

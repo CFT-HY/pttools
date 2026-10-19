@@ -10,9 +10,9 @@ import logging
 from matplotlib.figure import Figure
 
 from examples.utils import save_and_show_fig
-from pttools.analysis import setup_bubbles_plot_multifig
 from pttools.bubble import Bubble
 from pttools.models import GKSVDV_ALPHA_N, ConstCSModel
+from pttools.plot import setup_bubbles_plot_multifig
 
 logger: logging.Logger = logging.getLogger(__name__)
 

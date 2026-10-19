@@ -4,9 +4,9 @@ from matplotlib.legend import Legend
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.analysis.utils import legend
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 from pttools.models.model import Model
+from pttools.plot.utils import legend
 import pttools.type_hints as th
 
 

@@ -15,10 +15,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from examples.utils import save_and_show_fig
-from pttools.analysis.plot_entropy_grid import plot_entropy_data
 from pttools.bubble import CS2_BAG_SCALAR_PTR, DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG
 from pttools.bubble.alpha import alpha_n_max_bag, alpha_n_max_detonation_bag
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet_bag
+from pttools.plot.entropy_grid import plot_entropy_data
 import pttools.type_hints as th
 
 logger: logging.Logger = logging.getLogger(__name__)

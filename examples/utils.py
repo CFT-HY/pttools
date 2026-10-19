@@ -6,8 +6,8 @@ import typing as tp
 
 from matplotlib.figure import Figure
 
-import pttools.analysis.utils as plot_utils
-from pttools.analysis.utils import FIG_FORMATS
+import pttools.plot.utils as plot_utils
+from pttools.plot.utils import FIG_FORMATS
 from pttools.utils.docstrings import copy_docstring_dec
 
 #: Figures directory for the examples

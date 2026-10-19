@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools import models
-from pttools.analysis.utils import A4_PAPER_SIZE
 from pttools.bubble import Phase
+from pttools.plot.utils import A4_PAPER_SIZE
 import pttools.type_hints as th
 
 logger: logging.Logger = logging.getLogger(__name__)

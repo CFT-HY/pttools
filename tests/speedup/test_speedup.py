@@ -12,8 +12,8 @@ import pytest
 import scipy.interpolate
 
 from pttools import speedup
-from pttools.analysis import save_fig
 from pttools.math import assert_allclose
+from pttools.plot import save_fig
 from pttools.speedup import njit, parallel, spline
 from pttools.speedup.parallel import FakeExecutor, get_pool, parallel_debug_message, run_parallel
 import pttools.type_hints as th

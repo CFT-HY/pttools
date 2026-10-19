@@ -5,12 +5,12 @@ import typing as tp
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.analysis import utils
 from pttools.bubble import SolutionType, check, const, fluid_bag, props, relativity, thermo
 from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR
 from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG
 from pttools.bubble.shock_bag import v_shock_bag, wm_shock_bag
 from pttools.bubble.solution_type_bag import identify_solution_type_bag
+from pttools.plot import utils
 import pttools.type_hints as th
 
 

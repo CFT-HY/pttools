@@ -5,7 +5,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-from pttools.analysis.utils import FigAndAxes, save_fig
+from pttools.plot.utils import FigAndAxes, save_fig
 from pttools.speedup.threads import DEFAULT_VARYING_NUMBA_THREADS, time_with_varying_numba_threads
 import pttools.type_hints as th
 

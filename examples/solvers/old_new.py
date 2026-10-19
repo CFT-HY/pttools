@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from examples.utils import save_and_show_fig
-from pttools.analysis.utils import A3_PAPER_SIZE
 from pttools.bubble import (
     CS2_BAG_SCALAR_PTR,
     DEFAULT_FLUID_INTEGRATE_METHOD,
@@ -22,6 +21,7 @@ from pttools.bubble import (
 from pttools.bubble.bubble import Bubble
 from pttools.bubble.junction import junction_conditions_solvable
 from pttools.models import BagModel, Model
+from pttools.plot.utils import A3_PAPER_SIZE
 from pttools.ssm import SSMSpectrum, power_gw_bag, power_v_bag, spec_den_v_bag
 import pttools.type_hints as th
 from tests.paper.plane import xiv_plane

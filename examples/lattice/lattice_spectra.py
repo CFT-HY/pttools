@@ -35,7 +35,7 @@ from examples.lattice.lattice_growth import R_STAR, comparisons
 from examples.lattice.lattice_gw_asymptote import FIT_SETTINGS
 from examples.utils import save_and_show_figs
 from pttools.analysis.lattice import LatticeComparison
-from pttools.analysis.plot_lattice import plot_pow_gw_asymptote_comparison
+from pttools.plot.lattice import plot_pow_gw_asymptote_comparison
 
 logger: logging.Logger = logging.getLogger(__name__)
 

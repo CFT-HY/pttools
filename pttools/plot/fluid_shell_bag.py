@@ -3,8 +3,8 @@ r"""Plot $v(\xi)$ and $w(\xi)$ for a fluid shell using the bag model."""
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.analysis import utils
 from pttools.bubble import SolutionType, const, fluid_bag, relativity
+from pttools.plot import utils
 
 
 def plot_fluid_shell_bag(  # noqa: PLR0915

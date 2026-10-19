@@ -13,9 +13,9 @@ import numpy as np
 import numpy.typing as npt
 
 from pttools.analysis.lattice import LatticeComparison, suppression_series
-from pttools.analysis.utils import FigAndAxes, create_fig_ax
 from pttools.lattice import LatticeRun, PowGwAsymptoteFit, Quantity
 from pttools.math.asymptote import AsymptoteFit
+from pttools.plot.utils import FigAndAxes, create_fig_ax
 import pttools.type_hints as th
 
 #: Colours of the simulation data, as in :correia_2025:`\ `

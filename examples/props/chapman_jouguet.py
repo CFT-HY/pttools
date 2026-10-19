@@ -9,7 +9,7 @@ import numpy as np
 
 from examples.utils import save_and_show_fig
 from pttools import models
-from pttools.analysis.plot_chapman_jouguet import ChapmanJouguetPlot
+from pttools.plot.chapman_jouguet import ChapmanJouguetPlot
 
 
 def main() -> ChapmanJouguetPlot:

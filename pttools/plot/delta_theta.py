@@ -6,8 +6,8 @@ import numpy as np
 from plotly.basedatatypes import BasePlotlyType
 import plotly.graph_objects as go
 
-from pttools.analysis.plot_plotly import PlotlyPlot
 from pttools.models.model import Model
+from pttools.plot.plotly import PlotlyPlot
 
 
 class DeltaThetaPlot3D(PlotlyPlot):

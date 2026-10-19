@@ -8,10 +8,10 @@ from matplotlib.legend import Legend
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.analysis import colormap
 from pttools.analysis.bubble_grid import BubbleGridVWAlpha
-from pttools.analysis.colormap import DEFAULT_REGION_COLOR
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
+from pttools.plot import colormap
+from pttools.plot.colormap import DEFAULT_REGION_COLOR
 import pttools.type_hints as th
 
 

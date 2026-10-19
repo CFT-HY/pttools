@@ -21,8 +21,8 @@ from matplotlib.figure import Figure
 
 from examples.utils import save_and_show_figs
 from pttools.analysis.lattice import LatticeComparison
-from pttools.analysis.plot_lattice import plot_spectra_comparison
 from pttools.lattice import CHRW25_RUNS, load_chrw25_runs
+from pttools.plot.lattice import plot_spectra_comparison
 
 logger: logging.Logger = logging.getLogger(__name__)
 

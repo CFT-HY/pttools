@@ -10,10 +10,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.analysis.bubble_grid import BubbleGridVWAlpha
-from pttools.analysis.colormap import cmap_plusminus
-from pttools.analysis.plot_vw_alpha import VwAlphaPlot
-from pttools.analysis.utils import create_fig_ax, save_fig
 from pttools.bubble.bubble import Bubble
+from pttools.plot.colormap import cmap_plusminus
+from pttools.plot.utils import create_fig_ax, save_fig
+from pttools.plot.vw_alpha import VwAlphaPlot
 import pttools.type_hints as th
 from pttools.utils.decorators import post_func
 

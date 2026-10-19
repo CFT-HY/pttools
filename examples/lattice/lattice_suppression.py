@@ -16,7 +16,7 @@ This example does not require the simulation data.
 import pandas as pd
 
 from examples.utils import save_and_show_figs
-from pttools.analysis.suppression import SuppressionPlot
+from pttools.plot.suppression import SuppressionPlot
 from pttools.ssm.suppression import CHRW25, NO_HYBRIDS_EXT, NO_HYBRIDS_EXT_CHRW25
 
 

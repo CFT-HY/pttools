@@ -9,11 +9,11 @@ from matplotlib.figure import Figure
 import numpy as np
 
 from examples.utils import save_and_show_fig
-from pttools.analysis import gen_and_plot_entropy
 from pttools.bubble.junction import solve_junction_internal
 from pttools.logging import setup_logging
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
+from pttools.plot import gen_and_plot_entropy
 
 # from pttools.models.full import FullModel
 # from pttools.models.sm import StandardModel

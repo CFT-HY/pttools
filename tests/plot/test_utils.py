@@ -5,7 +5,7 @@ from pathlib import Path
 from matplotlib.figure import Figure
 import pytest
 
-from pttools.analysis.utils import save_fig
+from pttools.plot.utils import save_fig
 
 FORMATS: tuple[str, ...] = ("pdf", "svg")
 

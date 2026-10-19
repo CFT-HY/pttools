@@ -17,7 +17,7 @@ import numpy as np
 from pttools.type_hints import FloatArr1D
 
 if tp.TYPE_CHECKING:
-    from pttools.analysis.utils import FigAndAxes
+    from pttools.plot.utils import FigAndAxes
 
 
 class SpectrumBase(abc.ABC):
@@ -146,10 +146,10 @@ class SpectrumBase(abc.ABC):
         :param fig: figure to plot in
         :param ax: axes to plot in
         :param path: path to save the figure to
-        :param kwargs: arguments for :py:func:`pttools.analysis.plot_spectra.plot_spectra_gw`
+        :param kwargs: arguments for :py:func:`pttools.plot.spectra.plot_spectra_gw`
         :return: the figure and the axes
         """
-        from pttools.analysis.plot_spectra import plot_spectra_gw  # noqa: PLC0415
+        from pttools.plot.spectra import plot_spectra_gw  # noqa: PLC0415
         return plot_spectra_gw([self], ax=ax, fig=fig, path=path, **kwargs)
 
     def plot_pow_U_par(
@@ -168,7 +168,7 @@ class SpectrumBase(abc.ABC):
         :param kwargs: arguments for :py:meth:`matplotlib.axes.Axes.plot`, e.g. ``label``
         :return: the figure and the axes
         """
-        from pttools.analysis.plot_spectra import plot_spectra_pow_U_par  # noqa: PLC0415
+        from pttools.plot.spectra import plot_spectra_pow_U_par  # noqa: PLC0415
         return plot_spectra_pow_U_par([self], ax=ax, fig=fig, path=path, scale=scale, **kwargs)
 
     def plot_pow_gw_rate(
@@ -187,5 +187,5 @@ class SpectrumBase(abc.ABC):
         :param kwargs: arguments for :py:meth:`matplotlib.axes.Axes.plot`, e.g. ``label``
         :return: the figure and the axes
         """
-        from pttools.analysis.plot_spectra import plot_spectra_pow_gw_rate  # noqa: PLC0415
+        from pttools.plot.spectra import plot_spectra_pow_gw_rate  # noqa: PLC0415
         return plot_spectra_pow_gw_rate([self], ax=ax, fig=fig, path=path, scale=scale, **kwargs)

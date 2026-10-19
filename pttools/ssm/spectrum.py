@@ -35,7 +35,7 @@ from pttools.utils.fields import Extractable, Fields, FieldSpec, Preset
 from pttools.utils.json import export_json
 
 if tp.TYPE_CHECKING:
-    from pttools.analysis.utils import FigAndAxes
+    from pttools.plot.utils import FigAndAxes
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -756,7 +756,7 @@ class SSMSpectrum(Extractable, SpectrumBase):
             path: str | os.PathLike[str] | None = None,
             **kwargs: tp.Any) -> "FigAndAxes":
         r"""Plot velocity power spectrum $\mathcal{P}_{\tilde{v}}(q)$."""
-        from pttools.analysis.plot_spectra import plot_spectra_v  # noqa: PLC0415
+        from pttools.plot.spectra import plot_spectra_v  # noqa: PLC0415
         return plot_spectra_v([self], ax=ax, fig=fig, path=path, **kwargs)
 
     def plot_spec_den_gw(
@@ -766,7 +766,7 @@ class SSMSpectrum(Extractable, SpectrumBase):
             path: str | os.PathLike[str] | None = None,
             **kwargs: tp.Any) -> "FigAndAxes":
         """Plot spectral density of scaled GW power."""
-        from pttools.analysis.plot_spectra import plot_spectra_spec_den_gw  # noqa: PLC0415
+        from pttools.plot.spectra import plot_spectra_spec_den_gw  # noqa: PLC0415
         return plot_spectra_spec_den_gw([self], ax=ax, fig=fig, path=path, **kwargs)
 
     def plot_spec_den_v(
@@ -776,5 +776,5 @@ class SSMSpectrum(Extractable, SpectrumBase):
             path: str | os.PathLike[str] | None = None,
             **kwargs: tp.Any) -> "FigAndAxes":
         """Plot spectral density of the velocity field $P_v(y)$."""
-        from pttools.analysis.plot_spectra import plot_spectra_spec_den_v  # noqa: PLC0415
+        from pttools.plot.spectra import plot_spectra_spec_den_v  # noqa: PLC0415
         return plot_spectra_spec_den_v([self], ax=ax, fig=fig, path=path, **kwargs)

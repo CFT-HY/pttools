@@ -1,15 +1,31 @@
-"""Base class for plotting with Plotly."""
+"""Plotting with Plotly, and workarounds for Plotly issues."""
 
 import abc
 import logging
 import os
+import typing as tp
 
+from kaleido._kaleido_tab import KaleidoError
 import plotly.graph_objects as go
 
-from pttools.analysis.plotly import plotly_fix
-from pttools.analysis.utils import ENABLE_DRAWING
+from pttools.plot.utils import ENABLE_DRAWING
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+# This is defined before the classes, as they use it as a decorator.
+def plotly_fix(func: tp.Callable) -> tp.Callable:
+    """Suppress Kaleido plotting failures.
+
+    The Kaleido library Plotly uses to create raster graphics such as PNG
+    does not work on all headless machines, and its headless browser may time out on slow machines.
+    """
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except (KaleidoError, TimeoutError) as err:
+            logger.exception(err)
+    return wrapper
 
 
 class PlotlyPlot(abc.ABC):

@@ -11,10 +11,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from examples.utils import save_and_show_fig
-from pttools.analysis.utils import A4_PAPER_SIZE
 from pttools.bubble import Bubble, Phase, lorentz, v_chapman_jouguet_const_cs
 from pttools.bubble.gksvdv import kappaNuMuModel
 from pttools.models import ConstCSModel
+from pttools.plot.utils import A4_PAPER_SIZE
 
 
 def main(
