@@ -176,3 +176,19 @@ class LatticeSpectrum(Omgw0Base):
         :return: the ratio
         """
         return self.run.omega_gw_asymptote(**kwargs).value / self.run.omega_gw(self.step)
+
+    def pow_gw_scaled_to_asymptote(self, **kwargs: tp.Any) -> th.FloatArr1D:
+        r"""$\mathcal{P}_\text{gw}^\infty(z)$, GW power spectrum scaled to the asymptote.
+
+        This estimates the GW power spectrum at late times by scaling :py:attr:`pow_gw`
+        with :py:meth:`omega_gw_asymptote_ratio`:
+        $$\mathcal{P}_\text{gw}^\infty(z) \approx \frac{\Omega_\text{gw}^\infty}{\Omega_\text{gw}(t)}
+        \mathcal{P}_\text{gw}(z, t).$$
+        All the wavenumbers are scaled by the same factor, i.e. the shape of the spectrum is assumed not to change.
+        For the extrapolation of each wavenumber separately,
+        see :py:meth:`pttools.lattice.run.LatticeRun.pow_gw_asymptote`.
+
+        :param kwargs: arguments for :py:meth:`pttools.lattice.run.LatticeRun.omega_gw_asymptote`
+        :return: the scaled GW power spectrum
+        """
+        return self.omega_gw_asymptote_ratio(**kwargs) * self.pow_gw

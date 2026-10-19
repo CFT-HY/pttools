@@ -500,3 +500,60 @@ def plot_gw_asymptote(
     plot_pow_gw_asymptote(pow_fit, scale, ax=axs[2])
     plot_omega_gw_asymptote(run, run.omega_gw_asymptote(step_end=step_end), pow_fit, scale, ax=axs[3])
     axs[0].set_title(f"{run.label_latex}\n{axs[0].get_title()}", fontsize=9)
+
+
+def plot_pow_gw_asymptote_comparison(
+        comparison: LatticeComparison,
+        pow_fit: PowGwAsymptoteFit | None = None,
+        step_end: int | None = None,
+        fig: Figure | None = None,
+        ax: Axes | None = None,
+        xlim: tuple[float, float] | None = (1, 1e4),
+        ylim: tuple[float, float] | None = None) -> FigAndAxes:
+    r"""Plot the GW power spectrum of a simulation scaled to its asymptote, and that of the Sound Shell Model.
+
+    The simulation spectrum at the time of the comparison is scaled to the asymptote with
+    :py:meth:`pttools.lattice.spectrum.LatticeSpectrum.pow_gw_scaled_to_asymptote`.
+    If the fits of each wavenumber are given, their asymptotes $\mathcal{P}_\text{gw}^\infty(k)$ are also plotted,
+    scaled to the $r_*$ of the spectrum.
+    The SSM spectrum is plotted both with the suppression factor that is fitted to the GW power growth rate
+    of the simulation and without suppression.
+
+    :param comparison: the comparison of the simulation and the SSM
+    :param pow_fit: the fits of each wavenumber, see :py:meth:`pttools.lattice.run.LatticeRun.pow_gw_asymptote`
+    :param step_end: last time step of the fit of $\Omega_\text{gw}(t)$, defaults to the last available step
+    :param fig: figure to plot in
+    :param ax: axes to plot in
+    :param xlim: limits of the x-axis
+    :param ylim: limits of the y-axis, chosen automatically from the peak if None
+    :return: the figure and the axes
+    """
+    fig, ax = create_fig_ax(fig, ax)
+    spectrum = comparison.spectrum
+    ssm = comparison.ssm
+    sup = comparison.fit.factor
+    ratio = spectrum.omega_gw_asymptote_ratio(step_end=step_end)
+    pow_scaled = ratio * spectrum.pow_gw
+
+    ax.plot(spectrum.y, spectrum.pow_gw, color=COLOR_GW, lw=0.8, alpha=0.5, label=f"Simulation, $t={spectrum.t:.0f}$")
+    ax.plot(
+        spectrum.y, pow_scaled, color=COLOR_GW,
+        label=rf"Simulation $\times \Omega_\text{{gw}}^\infty / \Omega_\text{{gw}}(t) = {ratio:.3g}$")
+    if pow_fit is not None:
+        r_scale = (spectrum.r_star / comparison.run.r_star)**2
+        pow_inf = r_scale * pow_fit.pow_gw_inf
+        err = r_scale * pow_fit.pow_gw_inf_err
+        ax.fill_between(pow_fit.y, pow_inf - err, pow_inf + err, color="silver", lw=0)
+        ax.plot(pow_fit.y, pow_inf, color="black", ls="--", label=r"$\mathcal{P}_\text{gw}^\infty(k)$, fits")
+    ax.plot(ssm.y, sup * ssm.pow_gw, color=COLOR_SSM, ls=":", label=rf"SSM $\times {sup:.3g}$")
+    ax.plot(ssm.y, ssm.pow_gw, color="grey", ls=":", lw=0.8, label="SSM, unsuppressed")
+
+    if ylim is None:
+        peak = max(np.nanmax(pow_scaled), np.nanmax(ssm.pow_gw))
+        ylim = (peak * 1e-6, peak * 3)
+    ax.set_xlabel(Z_LABEL)
+    ax.set_ylabel(r"$\mathcal{P}_\text{gw}(k)$")
+    ax.set_title(f"{comparison.run.label_latex}, $r_*={spectrum.r_star:.3g}$", fontsize=9)
+    _finish(ax, xlim, ylim)
+    ax.legend(fontsize=7, loc="lower left")
+    return fig, ax
