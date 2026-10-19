@@ -125,6 +125,13 @@ class SyntheticAsymptoteRunTest(unittest.TestCase):
         r"""The time of the maximum of $\bar{U}_\parallel$ is that of the synthetic data."""
         assert self.lattice_run.t_max == pytest.approx(self.t_max)
 
+    def test_gw_asymptote_scale(self) -> None:
+        r"""The scale is $(\Gamma \bar{U}_\parallel^2)_*^2 (H_n R_*) (H_n {t}_\text{sh})$."""
+        run = self.lattice_run
+        kinetic = run.kinetic_energy_fraction_par(run.ubar_par_max[0])
+        assert run.gw_asymptote_scale == pytest.approx(
+            kinetic**2 * (run.H_star * run.R_star) * (run.H_star * run.t_sh), rel=1e-14)
+
     def test_kinetic_energy_decay_index(self) -> None:
         r"""$\zeta$ is recovered, and $\lambda = 0$, as the shape of the spectrum does not change."""
         assert self.lattice_run.kinetic_energy_decay_index().index == pytest.approx(self.zeta, rel=1e-4)

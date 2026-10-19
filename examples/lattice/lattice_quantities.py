@@ -19,7 +19,7 @@ import pandas as pd
 
 from examples.lattice.lattice_growth import comparisons
 from examples.utils import save_and_show_figs
-from pttools.analysis.lattice import LatticeComparison, scalar_comparison
+from pttools.analysis.lattice import LatticeComparison
 from pttools.analysis.plot_lattice import (
     plot_gw_rate_time_comparison,
     plot_integral_scale_comparison,
@@ -32,12 +32,12 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 def comparison_table(comparison: LatticeComparison) -> pd.DataFrame:
-    """The scalar comparison of a run, see :py:func:`pttools.analysis.lattice.scalar_comparison`.
+    """The scalar comparison of a run, see :py:meth:`pttools.analysis.lattice.LatticeComparison.scalar_comparison`.
 
     :param comparison: the comparison
     :return: the table, which can be formatted e.g. as Markdown with :py:meth:`pandas.DataFrame.to_markdown`
     """
-    table = pd.DataFrame.from_dict(scalar_comparison(comparison), orient="index", columns=["Simulation", "PTtools"])
+    table = pd.DataFrame.from_dict(comparison.scalar_comparison(), orient="index", columns=["Simulation", "PTtools"])
     table.index.name = "Quantity"
     table["Ratio"] = table["Simulation"] / table["PTtools"]
     return table

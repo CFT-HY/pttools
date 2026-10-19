@@ -19,6 +19,7 @@ import typing as tp
 
 import numpy as np
 
+from pttools.bubble import Bubble
 from pttools.lattice.asymptote import (
     DEFAULT_RUNNING_MEAN_WINDOW,
     PowGwAsymptoteFit,
@@ -27,7 +28,11 @@ from pttools.lattice.asymptote import (
 )
 from pttools.lattice.quantities import Quantity, integral_scale, mean_square
 from pttools.lattice.readers import INPUT_FILE_NAME, parse_input_file, read_globals, read_power_spectrum
+from pttools.models import BagModel, Model
 from pttools.omgw0.factors import H
+from pttools.ssm.nucleation import NucType
+from pttools.ssm.spectrum import SSMSpectrum
+from pttools.ssm.suppression import SuppressionMethod
 import pttools.type_hints as th
 from pttools.utils.asymptote import AsymptoteFit, fit_asymptote
 from pttools.utils.math import running_mean
@@ -41,6 +46,9 @@ logger: logging.Logger = logging.getLogger(__name__)
 #: Time step or an array of time steps
 type Steps = float | th.FloatArr1D | th.IntArr1D
 
+#: Default $z = kR_*$ points of the Sound Shell Model spectra for comparisons with simulations.
+#: The range is wide enough to cover the simulation data and to converge the integrals over $z$.
+DEFAULT_Y_LATTICE: th.FloatArr1D = np.logspace(-1, 4, 1000)
 #: Gravitational constant in the lattice units of the simulations
 G_LATTICE: float = 1.
 
@@ -451,6 +459,29 @@ class LatticeRun:
         steps_arr = self._series_steps(Quantity.GW_TT, steps)
         return np.asarray(self.time(steps_arr)), np.array([self.omega_gw(int(step)) for step in steps_arr])
 
+    def omega_gw_rate_series(
+            self,
+            delta_steps: int,
+            steps: tp.Iterable[int] | None = None) -> tuple[th.FloatArr1D, th.FloatArr1D]:
+        r"""$\frac{1}{H_n R_*} \frac{\Delta \Omega_\text{gw}}{H_n \Delta t}$, GW energy density growth rate.
+
+        The growth rate of the GW energy density fraction is computed as a finite difference as a function of time.
+
+        :param delta_steps: the difference of the time steps of the finite difference
+        :param steps: the later time steps, defaults to all the available steps for which
+            the earlier step is also available
+        :return: the midpoint times of the time step pairs and the growth rates
+        """
+        available = set(self.steps(Quantity.GW_TT).tolist())
+        if steps is None:
+            steps = [step for step in sorted(available) if step - delta_steps in available and step - delta_steps >= 0]
+        steps_arr = np.asarray(list(steps), dtype=np.int_)
+        t1 = np.asarray(self.time(steps_arr))
+        t0 = np.asarray(self.time(steps_arr - delta_steps))
+        omega1 = np.array([self.omega_gw(int(step)) for step in steps_arr])
+        omega0 = np.array([self.omega_gw(int(step) - delta_steps) for step in steps_arr])
+        return 0.5 * (t0 + t1), (omega1 - omega0) / (self.H_star * (t1 - t0)) / self.r_star
+
     @functools.cached_property
     def ubar_par_max(self) -> tuple[int, float]:
         r"""The time step and the value of the maximum of $\bar{U}_\parallel$, :correia_2025:`\ ` table IV."""
@@ -479,6 +510,27 @@ class LatticeRun:
     def t_max(self) -> float:
         r"""${t}_\text{max}$, time of the maximum of $\bar{U}_\parallel$, see :py:attr:`ubar_par_max`."""
         return float(self.time(self.ubar_par_max[0]))
+
+    @property
+    def gw_asymptote_scale(self) -> float:
+        r"""Scale of the GW power in the plots of its extrapolation, :correia_2025:`\ ` fig. 6.
+
+        $$(\Gamma \bar{U}_\parallel^2)_*^2 (H_n R_*) (H_n {t}_\text{sh}),$$
+        where $(\Gamma \bar{U}_\parallel^2)_*$ is :py:meth:`kinetic_energy_fraction_par`
+        at the maximum of $\bar{U}_\parallel$.
+        This is the scale of the axes of the figure and of its scripts.
+        The text of the article gives the scale as $(\Gamma \bar{U}_\parallel^2)_*^2 (H_n R_*)^2$.
+
+        The values of the axes of the figure differ from those of this scale due to two issues of the scripts:
+        $\Gamma$ is taken from a row of the log of the global quantities whose index is that of the maximum
+        in the list of the time steps, i.e. at $t T_c = 200$ and 180 instead of ${t}_\text{max} T_c = 800$ and 1440,
+        which gives $\Gamma = 0.79$ and 0.89 instead of 0.99 and 1.03, and therefore larger values of
+        $\Omega_\text{gw}$ by factors of 1.58 and 1.36.
+        Furthermore, $\mathcal{P}_\text{gw}(k)$ is not divided by $\bar{\epsilon}_0$ (0.167 and 0.204),
+        unlike $\Omega_\text{gw}$.
+        These do not affect the fitted indices, the shapes of the curves or the ratios of the values.
+        """
+        return self.kinetic_energy_fraction_par(self.ubar_par_max[0])**2 * self.r_star * self.H_star * self.t_sh
 
     def _fit_steps(self, quantity: Quantity, step_end: int | None, after_max: bool = False) -> th.IntArr1D:
         r"""The time steps of the fits, optionally only those after the maximum of $\bar{U}_\parallel$."""
@@ -599,3 +651,30 @@ class LatticeRun:
                 t=np.asarray(self.time(steps)), k=k[modes], y=y[modes], pow_gw=pow_gw,
                 start_fraction=start_fraction, t_decay_guess=self.t_max)
         return self._fit_cache[key]
+
+    # -----
+    # Comparison with the Sound Shell Model
+    # -----
+
+    def ssm_spectrum(
+            self,
+            model: Model | None = None,
+            nuc_type: NucType = NucType.SIMULTANEOUS,
+            y: th.FloatArr1D = DEFAULT_Y_LATTICE,
+            **kwargs: tp.Any) -> SSMSpectrum:
+        r"""Compute the Sound Shell Model spectrum for the parameters of the run, without suppression.
+
+        :param model: the equation of state, defaults to the bag model as in the simulations
+        :param nuc_type: nucleation type. The simulations of :correia_2025:`\ ` nucleate all bubbles simultaneously.
+        :param y: $z = kR_*$ points of the spectrum
+        :param kwargs: additional arguments for :py:class:`pttools.ssm.spectrum.SSMSpectrum`
+        :return: the spectrum
+        """
+        if model is None:
+            model = BagModel(alpha_n_min=min(0.001, self.alpha_n / 2))
+        bubble = Bubble(model, v_wall=self.v_wall, alpha_n=self.alpha_n)
+        return SSMSpectrum(
+            bubble, y=y, nuc_type=nuc_type, suppression_method=SuppressionMethod.NONE,
+            label_latex=f"SSM, {nuc_type}", label_unicode=f"SSM, {nuc_type}",
+            **kwargs
+        )

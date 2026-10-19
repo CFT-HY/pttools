@@ -20,7 +20,7 @@ The rows of the figure are, from top to bottom:
 The fits use the same settings as the scripts of the article, which produce the values of its tables IV and V,
 see :py:meth:`pttools.lattice.run.LatticeRun.omega_gw_asymptote`.
 The values of the GW power differ from those of the axes of the figure of the article,
-as its scripts have issues with the scale, see :py:func:`pttools.analysis.lattice.gw_asymptote_scale`.
+as its scripts have issues with the scale, see :py:attr:`pttools.lattice.run.LatticeRun.gw_asymptote_scale`.
 """
 
 import logging
@@ -30,7 +30,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from examples.utils import save_and_show_figs
-from pttools.analysis.lattice import gw_asymptote_scale
 from pttools.analysis.plot_lattice import plot_gw_asymptote
 from pttools.lattice import CHRW25_RUNS, LatticeRun, load_chrw25_runs
 
@@ -68,7 +67,7 @@ def fit_table(lattice_runs: dict[str, LatticeRun]) -> pd.DataFrame:
             "lambda": f"{lambda_.index:.2f} ± {lambda_.index_err:.2f}",
             "2 zeta + 2 lambda - 1": f"{prediction:.2f} ± {prediction_err:.2f}",
             "d_tot": f"{omega_fit.index:.2f} ± {omega_fit.index_err:.2f}",
-            "Omega_inf (scaled)": f"{omega_fit.value / gw_asymptote_scale(run):.4f}",
+            "Omega_inf (scaled)": f"{omega_fit.value / run.gw_asymptote_scale:.4f}",
             "t [1/T_c]": f"{spectrum.t:.0f}",
             "Omega_inf / Omega(t)": f"{spectrum.omega_gw_asymptote_ratio(step_end=step_end):.3f}",
         }

@@ -1,7 +1,7 @@
 r"""Compute the suppression factors of the Sound Shell Model for the simulations of Correia et al.
 
 The suppression factors are fitted to the GW power growth rates of the $4096^3$ simulations of :correia_2025:`\ `
-with :py:func:`pttools.analysis.lattice.compare_lattice_run`, excluding the lattice artifact at high $k$.
+with :py:class:`pttools.analysis.lattice.LatticeComparison`, excluding the lattice artifact at high $k$.
 The time steps of the growth rates are those of :correia_2025:`\ ` fig. 5.
 The SSM spectra are computed with simultaneous nucleation as in the simulations, without suppression,
 and with the default accuracy settings of :py:class:`pttools.ssm.spectrum.SSMSpectrum`,
@@ -21,7 +21,7 @@ from pathlib import Path
 
 import numpy as np
 
-from pttools.analysis.lattice import compare_lattice_run, ssm_spectrum_for_run
+from pttools.analysis.lattice import LatticeComparison
 from pttools.lattice import CHRW25_RUNS, load_chrw25_run
 from pttools.ssm.nucleation import NucType
 from pttools.ssm.suppression.fit import SuppressionFitMethod
@@ -51,14 +51,14 @@ def calc_sup_lattice(save: bool = True, path: Path = SUPPRESSION_FOLDER) -> dict
     }
     for name, meta in CHRW25_RUNS.items():
         run = load_chrw25_run(name)
-        ssm = ssm_spectrum_for_run(run, nuc_type=NucType.SIMULTANEOUS)
-        comparison = compare_lattice_run(
+        ssm = run.ssm_spectrum(nuc_type=NucType.SIMULTANEOUS)
+        comparison = LatticeComparison(
             run, step=meta.fig_step, step_prev=meta.fig_step_prev, ssm=ssm,
             method=SuppressionFitMethod.INTEGRAL, y_min=Y_MIN)
-        log_lsq = compare_lattice_run(
+        log_lsq = LatticeComparison(
             run, step=meta.fig_step, step_prev=meta.fig_step_prev, ssm=ssm,
             method=SuppressionFitMethod.LOG_LSQ, y_min=Y_MIN)
-        exponential = compare_lattice_run(
+        exponential = LatticeComparison(
             run, step=meta.fig_step, step_prev=meta.fig_step_prev, nuc_type=NucType.EXPONENTIAL,
             method=SuppressionFitMethod.INTEGRAL, y_min=Y_MIN)
         fit = comparison.fit

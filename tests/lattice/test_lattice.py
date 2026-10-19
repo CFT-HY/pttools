@@ -23,6 +23,8 @@ from pttools.lattice import (
 )
 from pttools.omgw0 import const, freq
 from pttools.omgw0.base import Omgw0Base
+from pttools.ssm.nucleation import NucType
+from pttools.ssm.suppression import SuppressionMethod
 
 #: Columns of the ``.out`` file that are used by the importer
 OUT_COLUMNS: tuple[str, ...] = (
@@ -135,6 +137,22 @@ class SyntheticRunTest(unittest.TestCase):
         np.testing.assert_allclose(spectrum.pow_gw_rate, expected)
         np.testing.assert_allclose(spectrum.y, k * self.lattice_run.R_star)
         assert self.lattice_run.omega_gw(1000) == pytest.approx(mean_square(k, p) / self.epsilon_0)
+
+    def test_omega_gw_rate_series(self) -> None:
+        r"""The growth rate of $\Omega_\text{gw}$ is the finite difference, which is constant for the linear growth."""
+        t, rate = self.lattice_run.omega_gw_rate_series(500)
+        run = self.lattice_run
+        np.testing.assert_allclose(t, [50., 150.])
+        expected = (run.omega_gw(1000) - run.omega_gw(500)) / (run.H_star * 500 * self.dt) / run.r_star
+        np.testing.assert_allclose(rate, expected, rtol=1e-12)
+
+    def test_ssm_spectrum(self) -> None:
+        """The SSM spectrum has the parameters of the run, simultaneous nucleation and no suppression."""
+        ssm = self.lattice_run.ssm_spectrum(compute=False, r_star=0.1)
+        assert (ssm.bubble.v_wall, ssm.bubble.alpha_n) == (0.5, 0.1)
+        assert ssm.nuc_type == NucType.SIMULTANEOUS
+        assert ssm.suppression_method == SuppressionMethod.NONE
+        assert ssm.r_star == 0.1
 
     def test_spectrum_omgw0_base(self) -> None:
         """By default, the Hubble rate and the bubble spacing of the spectrum should be those of the run."""

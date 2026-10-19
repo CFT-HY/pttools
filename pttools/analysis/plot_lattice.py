@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 
-from pttools.analysis.lattice import LatticeComparison, gw_asymptote_scale, gw_rate_series, suppression_series
+from pttools.analysis.lattice import LatticeComparison, suppression_series
 from pttools.analysis.utils import FigAndAxes, create_fig_ax
 from pttools.lattice import LatticeRun, PowGwAsymptoteFit, Quantity
 import pttools.type_hints as th
@@ -28,7 +28,8 @@ COLOR_SSM: str = "black"
 
 Z_LABEL: str = r"$kR_*$"
 GW_RATE_LABEL: str = r"$(H_n R_*)^{-1} (H_n \Delta t)^{-1} \Delta \mathcal{P}_\text{gw}(k)$"
-#: Scale of the GW power in the plots of its extrapolation, see :py:func:`pttools.analysis.lattice.gw_asymptote_scale`
+#: Scale of the GW power in the plots of its extrapolation,
+#: see :py:attr:`pttools.lattice.run.LatticeRun.gw_asymptote_scale`
 GW_ASYMPTOTE_SCALE_LABEL: str = r"(\Gamma \bar{U}_\parallel^2)_*^{-2} (H_n R_*)^{-1} (H_n {t}_\text{sh})^{-1}"
 T_LABEL: str = r"$t \, [T_c^{-1}]$"
 
@@ -298,7 +299,7 @@ def plot_gw_rate_time_comparison(
     run = comparison.run
     ssm = comparison.ssm
 
-    t, rate = gw_rate_series(run, delta_steps)
+    t, rate = run.omega_gw_rate_series(delta_steps)
     axs[0].plot(t, rate, color=COLOR_GW, label="Simulation")
     axs[0].axhline(ssm.omega_gw_rate, color="grey", ls=":", label="SSM, unsuppressed")
     axs[0].axhline(comparison.suppression * ssm.omega_gw_rate, color=COLOR_SSM, ls=":",
@@ -349,7 +350,7 @@ def plot_pow_gw_time_fits(
     :correia_2025:`\ ` fig. 6, top row.
 
     :param fit: the fits of each wavenumber, see :py:meth:`pttools.lattice.run.LatticeRun.pow_gw_asymptote`
-    :param scale: the GW power is divided by this, see :py:func:`pttools.analysis.lattice.gw_asymptote_scale`
+    :param scale: the GW power is divided by this, see :py:attr:`pttools.lattice.run.LatticeRun.gw_asymptote_scale`
     :param every: plot every n:th wavenumber
     :param ylim: limits of the y-axis, by default those of the article
     :param fig: figure to plot in
@@ -416,7 +417,7 @@ def plot_pow_gw_asymptote(
     :correia_2025:`\ ` fig. 6, third row.
 
     :param fit: the fits of each wavenumber, see :py:meth:`pttools.lattice.run.LatticeRun.pow_gw_asymptote`
-    :param scale: the GW power is divided by this, see :py:func:`pttools.analysis.lattice.gw_asymptote_scale`
+    :param scale: the GW power is divided by this, see :py:attr:`pttools.lattice.run.LatticeRun.gw_asymptote_scale`
     :param fig: figure to plot in
     :param ax: axes to plot in
     :return: the figure and the axes
@@ -450,7 +451,7 @@ def plot_omega_gw_asymptote(
     :param run: the simulation run
     :param omega_fit: the fit of $\Omega_\text{gw}(t)$, see :py:meth:`pttools.lattice.run.LatticeRun.omega_gw_asymptote`
     :param pow_fit: the fits of each wavenumber, see :py:meth:`pttools.lattice.run.LatticeRun.pow_gw_asymptote`
-    :param scale: the GW power is divided by this, see :py:func:`pttools.analysis.lattice.gw_asymptote_scale`
+    :param scale: the GW power is divided by this, see :py:attr:`pttools.lattice.run.LatticeRun.gw_asymptote_scale`
     :param fig: figure to plot in
     :param ax: axes to plot in
     :return: the figure and the axes
@@ -494,7 +495,7 @@ def plot_gw_asymptote(
     :param y_min: smallest $z = kR_*$ to fit
     :param y_max: largest $z = kR_*$ to fit
     """
-    scale = gw_asymptote_scale(run)
+    scale = run.gw_asymptote_scale
     pow_fit = run.pow_gw_asymptote(y_min=y_min, y_max=y_max, start_fraction=start_fraction, step_end=step_end)
     plot_pow_gw_time_fits(pow_fit, scale, ax=axs[0])
     plot_gw_growth_index(pow_fit, run.gw_growth_index_prediction(step_end), ax=axs[1])
