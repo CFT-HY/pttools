@@ -35,10 +35,10 @@ from pttools.bubble.energy_budget import (
     ubarf_approx,
 )
 from pttools.bubble.phase import Phase
+from pttools.math.assertions import assert_allclose
 from pttools.models.bag import BagModel
 from pttools.type_hints import FloatArr1D
 from tests.bubble.ref import RefBag, Reference, RefHindmarshHijazi, RefLectureNotes
-from tests.utils.test_assertions import assert_allclose
 
 #: The $\alpha_n$ values for the tests that don't depend on the reference data
 ALPHA_NS_FIT: FloatArr1D = np.array([0.01, 0.1, 0.3, 1.0])

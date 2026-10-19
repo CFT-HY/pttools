@@ -7,11 +7,11 @@ import unittest
 import numpy as np
 from pandas.io.parsers import read_csv
 
+from pttools.math.assertions import assert_allclose
 from pttools.speedup.options import NUMBA_DISABLE_JIT
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION
 from pttools.ssm.suppression.suppression_ssm_data.remove_hybrids import SUPPRESSION_FOLDER, remove_hybrids
 from pttools.ssm.suppression.suppression_ssm_data.suppression_ssm_calculator import calc_sup_ssm
-from pttools.utils.assertions import assert_allclose
 
 
 class SuppressionTest(unittest.TestCase):

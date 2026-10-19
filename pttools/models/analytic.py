@@ -7,12 +7,12 @@ import typing as tp
 import numpy as np
 
 from pttools.bubble.solution_type import SolutionType
+from pttools.math.numerics import is_nan_or_none
 from pttools.models.export import ANALYTIC_MODEL_FIELDS
 from pttools.models.model import Model
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 from pttools.utils.fields import Fields
-from pttools.utils.misc import is_nan_or_none
 from pttools.utils.validation import check_value_in_range
 
 logger: logging.Logger = logging.getLogger(__name__)

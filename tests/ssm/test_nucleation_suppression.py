@@ -16,10 +16,10 @@ import numpy as np
 
 from pttools.bubble import Bubble
 from pttools.bubble.const import CS0
+from pttools.math import assert_allclose
 from pttools.models.bag import BagModel
 from pttools.ssm import SSMSpectrum
 from pttools.ssm.nucleation import nucleation_f, r_star0
-from pttools.utils import assert_allclose
 
 
 class NucleationFTest(unittest.TestCase):

@@ -9,9 +9,9 @@ from pttools import ssm
 from pttools.bubble import CS2_BAG_SCALAR_PTR, DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG, Bubble
 from pttools.bubble.thermo import ubarf2
 from pttools.bubble.thermo_bag import de_from_w_bag
+from pttools.math.assertions import assert_allclose
 from pttools.ssm import SSMSpectrum, pow_spec
 from pttools.type_hints import FloatArr1D
-from pttools.utils.assertions import assert_allclose
 from tests.bubble.ref import RefHindmarshHijazi
 
 

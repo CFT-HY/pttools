@@ -14,11 +14,11 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 import numpy as np
 
+from pttools.math.integration import trapezoid_loglog
 from pttools.omgw0 import const, freq
 from pttools.omgw0.const import H2, LISA_OBS_TIME, OMEGA_PHOTON_H2
 from pttools.omgw0.factors import F_gw0_h2
 from pttools.omgw0.noise import omega_ins_h2, omega_noise_h2, signal_to_noise_ratio
-from pttools.ssm.calculators import trapezoid_loglog
 from pttools.ssm.spectrum_base import SpectrumBase
 import pttools.type_hints as th
 from pttools.type_hints import FloatArr1D, FloatOrArr

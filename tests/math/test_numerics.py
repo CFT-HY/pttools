@@ -5,7 +5,9 @@ import unittest
 import numpy as np
 import pytest
 
-from pttools.utils.math import finite_edge, running_mean
+from pttools import math as pt_math
+from pttools.math.numerics import finite_edge, running_mean
+from pttools.speedup.threads import powers_of_2
 
 
 class FiniteEdgeTest(unittest.TestCase):
@@ -26,6 +28,22 @@ class FiniteEdgeTest(unittest.TestCase):
         """Test that the edge is found when searching in the decreasing direction."""
         edge = finite_edge(lambda x: self.sqrt_1_minus_x(-x), 0., -2.)
         assert edge == pytest.approx(-1., abs=5e-13)
+
+
+class PowersOf2Test(unittest.TestCase):
+    """Test the powers of 2."""
+
+    @staticmethod
+    def test_powers_of_2() -> None:
+        """The powers of 2 up to the given value, and the value itself if it's not a power of 2 and requested."""
+        np.testing.assert_array_equal(powers_of_2(8), [1, 2, 4, 8])
+        np.testing.assert_array_equal(powers_of_2(12, include_max=True), [1, 2, 4, 8, 12])
+        np.testing.assert_array_equal(powers_of_2(12), [1, 2, 4, 8])
+
+    @staticmethod
+    def test_reexport() -> None:
+        """The function can also be imported from :py:mod:`pttools.math`."""
+        assert pt_math.powers_of_2 is powers_of_2
 
 
 class RunningMeanTest(unittest.TestCase):

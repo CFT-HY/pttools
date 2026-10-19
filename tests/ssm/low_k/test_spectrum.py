@@ -6,10 +6,10 @@ import unittest
 import numpy as np
 
 from pttools.bubble import Bubble
+from pttools.math import assert_allclose
 from pttools.models import BagModel, ConstCSModel
 from pttools.ssm import SSMSpectrum
 from pttools.ssm.low_k import Iv_resampled, z_cross_junction
-from pttools.utils import assert_allclose
 from tests.ssm.low_k.common import nu_from_cs, p_tilde_gw_low
 
 Y: np.ndarray = np.logspace(-3, 2, 200)

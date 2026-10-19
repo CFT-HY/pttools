@@ -6,9 +6,9 @@ import typing as tp
 import numpy as np
 import numpy.typing as npt
 
+from pttools.math.numerics import rel_diff_arr, rel_diff_scalar
+from pttools.math.printing import DEFAULT_FMT, print_1d, print_2d
 import pttools.type_hints as th
-from pttools.utils.math import rel_diff_arr, rel_diff_scalar
-from pttools.utils.printing import DEFAULT_FMT, print_1d, print_2d
 
 
 def _assert_allclose_header(name: str | None, rtol: float, atol: float, caller: str) -> list[str]:

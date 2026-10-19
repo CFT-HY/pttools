@@ -7,8 +7,8 @@ import numpy as np
 import pytest
 
 from pttools.bubble.phase import Phase
+from pttools.math.assertions import assert_allclose
 from pttools.models import Model
-from pttools.utils.assertions import assert_allclose
 from tests.models.base_model import ModelBaseCase
 
 

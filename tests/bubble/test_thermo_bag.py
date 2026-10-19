@@ -16,9 +16,9 @@ from pttools.bubble import (
 )
 from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.v_minus import v_minus
+from pttools.math.assertions import assert_allclose
 from pttools.type_hints import FloatArr1D
 from tests.bubble.ref import RefBag, Reference, RefHindmarshHijazi, RefLectureNotes
-from tests.utils.test_assertions import assert_allclose
 
 
 class ThermoBagTest(Reference, ABC):

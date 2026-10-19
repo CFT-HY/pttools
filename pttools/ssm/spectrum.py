@@ -13,6 +13,7 @@ import numpy as np
 from pttools.bubble import Bubble, Phase, nu_gdh2024
 from pttools.bubble import omega_barotropic as omega_barotropic_func
 from pttools.bubble.thermo import warn_if_ubarf_relativistic
+from pttools.math.formatting import as_latex, as_unicode
 from pttools.speedup import NAN_ARR
 from pttools.ssm import const
 from pttools.ssm.barotropic import H_eta, dilution_of_e, eta_ratio, source_lifetime_factor, tau_star
@@ -31,7 +32,6 @@ from pttools.type_hints import FloatArr, FloatArr1D
 from pttools.utils.decorators import cached_property
 from pttools.utils.docstrings import copy_docstring_dec
 from pttools.utils.fields import Extractable, Fields, FieldSpec, Preset
-from pttools.utils.formatting import as_latex, as_unicode
 from pttools.utils.json import export_json
 
 if tp.TYPE_CHECKING:

@@ -25,10 +25,10 @@ from pttools.bubble.phase import Phase
 from pttools.bubble.relativity import gamma2
 from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.v_plus import v_plus
+from pttools.math.numerics import finite_edge
 from pttools.speedup import njit
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
-from pttools.utils.math import finite_edge
 
 if tp.TYPE_CHECKING:
     from pttools.models.const_cs import ConstCSModel

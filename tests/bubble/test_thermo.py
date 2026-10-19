@@ -9,9 +9,9 @@ import numpy as np
 
 from pttools.bubble.bubble import Bubble
 from pttools.bubble.thermo import e_bar, ubarf2, w_bar, warn_if_ubarf_relativistic
+from pttools.math.assertions import assert_allclose
 from pttools.models.const_cs import ConstCSModel
 from tests.bubble.ref import RefBag, Reference, RefHindmarshHijazi, RefLectureNotes
-from tests.utils.test_assertions import assert_allclose
 
 
 class ThermoTest(Reference, ABC):

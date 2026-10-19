@@ -6,10 +6,10 @@ import numpy as np
 from scipy.integrate import quad
 from scipy.special import gamma
 
+from pttools.math import assert_allclose
 from pttools.ssm.barotropic import Upsilon
 from pttools.ssm.const import CS0
 from pttools.ssm.low_k import acoustic_friction_exponent, kernel_int_bracket, kernel_low, kernel_low_bag
-from pttools.utils import assert_allclose
 from tests.ssm.low_k.common import NUS, cs_from_nu, kernel_low_numerical
 
 TAU_STAR: float = 10.

@@ -5,8 +5,8 @@ import sys
 
 import numpy as np
 
+from pttools.math.numerics import rel_diff_arr, rel_diff_scalar
 import pttools.type_hints as th
-from pttools.utils.math import rel_diff_arr, rel_diff_scalar
 
 DEFAULT_FMT = ".8e"
 HIGH_PREC: int = 10

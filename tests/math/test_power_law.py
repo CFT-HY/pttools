@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 import pytest
 
-from pttools.utils.power_law import fit_power_law
+from pttools.math.power_law import fit_power_law
 
 
 class PowerLawTest(unittest.TestCase):

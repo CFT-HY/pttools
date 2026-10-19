@@ -10,10 +10,10 @@ import numpy as np
 
 from examples.utils import save_and_show_fig
 from pttools.bubble import Bubble
+from pttools.math import as_latex
 from pttools.models import ConstCSModel
 from pttools.omgw0 import DEFAULT_T_STAR, Spectrum
 from pttools.ssm import NucType
-from pttools.utils import as_latex
 
 
 def main() -> Figure:

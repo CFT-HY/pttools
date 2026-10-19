@@ -5,6 +5,7 @@ import unittest
 import numpy as np
 from scipy.integrate import quad
 
+from pttools.math import assert_allclose
 from pttools.ssm.const import CS0
 from pttools.ssm.low_k import (
     IV_ANALYTICAL,
@@ -20,7 +21,6 @@ from pttools.ssm.low_k import (
     power_spectrum_integration_low,
 )
 from pttools.ssm.spec_den_gw import spec_den_gw
-from pttools.utils import assert_allclose
 from tests.ssm.low_k.common import KP, NUS, P_TILDE_V, X, cs_from_nu, p_tilde_gw_low
 
 R_STAR: float = 0.1

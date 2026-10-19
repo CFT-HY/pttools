@@ -4,10 +4,10 @@ import unittest
 
 import numpy as np
 
+from pttools.math import assert_allclose
 from pttools.ssm import const
 from pttools.ssm.sin_transform import sin_transform
 import pttools.type_hints as th
-from pttools.utils import assert_allclose
 
 XI: th.FloatArr1D = np.linspace(0, 1, 5001)
 F: th.FloatArr1D = np.ones_like(XI)

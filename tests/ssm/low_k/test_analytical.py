@@ -4,6 +4,7 @@ import unittest
 
 import numpy as np
 
+from pttools.math import assert_allclose
 from pttools.ssm.const import CS0
 from pttools.ssm.low_k import (
     IV_ANALYTICAL,
@@ -16,7 +17,6 @@ from pttools.ssm.low_k import (
     power_spectrum_integration_low,
     z_cross,
 )
-from pttools.utils import assert_allclose
 from tests.ssm.low_k.common import NUS, P_TILDE_V, X, cs_from_nu
 
 #: $H L_f = r_*$

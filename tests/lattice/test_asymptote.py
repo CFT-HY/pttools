@@ -14,9 +14,9 @@ from pttools.lattice.asymptote import (
     fit_pow_gw_modes,
     gw_growth_index_prediction,
 )
-from pttools.utils.asymptote import asymptotic_growth, fit_asymptote
-from pttools.utils.math import running_mean
-from pttools.utils.power_law import PowerLawFit
+from pttools.math.asymptote import asymptotic_growth, fit_asymptote
+from pttools.math.numerics import running_mean
+from pttools.math.power_law import PowerLawFit
 from tests.lattice.test_lattice import OUT_COLUMNS
 
 

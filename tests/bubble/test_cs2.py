@@ -15,12 +15,12 @@ from pttools.bubble.const import CS0_2
 from pttools.bubble.cs2 import cs2_from_ptr, cs2_to_ptr
 from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR
 from pttools.bubble.phase import Phase
+from pttools.math import assert_allclose
 from pttools.models import BagModel, ConstCSModel
 from pttools.models.model import Model
 from pttools.speedup import njit
 from pttools.speedup.options import NUMBA_DISABLE_JIT
 from pttools.type_hints import CS2FunScalarPtr, FloatArr1D, FloatOrArr
-from pttools.utils import assert_allclose
 from tests.utils import REPO_DIR
 
 #: Script that solves a bag model bubble and reports the number of keys in each Numba cache index

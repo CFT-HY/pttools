@@ -14,8 +14,8 @@ from pttools import bubble
 from pttools.analysis import save_fig
 from pttools.analysis.plot_fluid_shell_bag import plot_fluid_shell_bag
 from pttools.analysis.plot_fluid_shells_bag import plot_fluid_shells_bag
+from pttools.math import assert_allclose
 from pttools.speedup import NUMBA_INTEGRATE_TOLERANCES
-from pttools.utils import assert_allclose
 from tests.paper import const
 from tests.paper import ssm_paper_utils as spu
 from tests.utils import TEST_DATA_PATH, TEST_FIGURE_PATH

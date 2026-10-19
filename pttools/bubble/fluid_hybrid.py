@@ -19,8 +19,8 @@ from pttools.bubble.junction import v_plus_hybrid
 from pttools.bubble.phase import Phase
 from pttools.bubble.shock import v_shock
 from pttools.bubble.solution_type import SolutionType
+from pttools.math.printing import array2str
 from pttools.speedup.solvers import fsolve_vary
-from pttools.utils.printing import array2str
 
 if tp.TYPE_CHECKING:
     from pttools.models import Model

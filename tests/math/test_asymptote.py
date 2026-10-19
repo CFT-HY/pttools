@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 import pytest
 
-from pttools.utils.asymptote import asymptotic_growth, fit_asymptote, fit_start_index
+from pttools.math.asymptote import asymptotic_growth, fit_asymptote, fit_start_index
 
 
 class AsymptoteTest(unittest.TestCase):

@@ -7,10 +7,10 @@ import numpy as np
 import pytest
 import scipy.integrate
 
+from pttools.math import assert_allclose
 from pttools.speedup import njit
 from pttools.speedup.integrate import simpson_h
 import pttools.type_hints as th
-from pttools.utils import assert_allclose
 
 #: Numbers of points, which include the special cases of 1 and 2 points, and both odd and even numbers
 N_POINTS: tuple[int, ...] = (1, 2, 3, 4, 5, 6, 7, 101, 1000)

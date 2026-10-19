@@ -7,10 +7,10 @@ import unittest
 import numpy as np
 
 from pttools.bubble import Bubble
+from pttools.math import assert_allclose
 from pttools.models.bag import BagModel
 from pttools.ssm import NucType, SSMSpectrum
 import pttools.type_hints as th
-from pttools.utils import assert_allclose
 
 #: :gw_pt_ssm:`\ ` table 1
 TABLE1: th.FloatArr2D = np.array([

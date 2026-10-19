@@ -11,10 +11,10 @@ from pttools.bubble.phase import Phase
 from pttools.bubble.relativity import lorentz
 from pttools.bubble.shock import solve_shock, v_shock, v_shock_curve
 from pttools.bubble.shock_bag import v_shock_bag, wm_shock_bag
+from pttools.math.assertions import assert_allclose
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
 from pttools.type_hints import FloatArr1D
-from pttools.utils.assertions import assert_allclose
 
 
 class TestShock(unittest.TestCase):

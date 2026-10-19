@@ -8,8 +8,8 @@ import typing as tp
 import numpy as np
 import orjson
 
+from pttools.math.assertions import assert_allclose
 from pttools.type_hints import FloatOrArr
-from pttools.utils.assertions import assert_allclose
 
 logger: logging.Logger = logging.getLogger(__name__)
 

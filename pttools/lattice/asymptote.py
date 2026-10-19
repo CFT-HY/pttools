@@ -13,7 +13,7 @@ so that $K^2 \propto t^{-2\zeta}$ and $\xi \propto t^\lambda$ at late times,
 which predict the index of the approach of the GW power to its asymptote to be $d = 2\zeta + 2\lambda - 1$,
 :correia_2025:`\ ` sec. VI.
 These follow the scripts of the Zenodo release of the article.
-The generic fitting functions are in :py:mod:`pttools.utils.asymptote` and :py:mod:`pttools.utils.power_law`.
+The generic fitting functions are in :py:mod:`pttools.math.asymptote` and :py:mod:`pttools.math.power_law`.
 """
 
 from dataclasses import dataclass
@@ -21,9 +21,9 @@ import logging
 
 import numpy as np
 
+from pttools.math.asymptote import AsymptoteFit, fit_asymptote, fit_start_index
+from pttools.math.power_law import PowerLawFit
 import pttools.type_hints as th
-from pttools.utils.asymptote import AsymptoteFit, fit_asymptote, fit_start_index
-from pttools.utils.power_law import PowerLawFit
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ DEFAULT_RUNNING_MEAN_WINDOW: int = 23
 class PowGwAsymptoteFit:
     r"""Fits of the approach to an asymptote to the time series of $\mathcal{P}_\text{gw}(k, t)$ of each wavenumber.
 
-    The fitted function is :py:func:`pttools.utils.asymptote.asymptotic_growth`.
+    The fitted function is :py:func:`pttools.math.asymptote.asymptotic_growth`.
     """
 
     #: $z = kR_*$ of the fitted wavenumbers
@@ -103,7 +103,7 @@ def fit_pow_gw_modes(
         fallback_fraction: float = 0.7) -> PowGwAsymptoteFit:
     r"""Fit the approach to an asymptote to the time series of $\mathcal{P}_\text{gw}(k, t)$ of each wavenumber.
 
-    The fitted function is :py:func:`pttools.utils.asymptote.asymptotic_growth`.
+    The fitted function is :py:func:`pttools.math.asymptote.asymptotic_growth`.
 
     The fit of each wavenumber is done over the interval at the end of the time series
     where its GW power exceeds ``start_fraction`` of its final value.

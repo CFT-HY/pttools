@@ -7,8 +7,8 @@ import unittest
 import numba
 import numpy as np
 
+from pttools.math.assertions import assert_allclose
 from pttools.speedup import NUMBA_DISABLE_JIT, NUMBA_INTEGRATE_TOLERANCES
-from pttools.utils.assertions import assert_allclose
 from tests.paper.ssm_paper_utils import do_all_plot_ps_compare_nuc, save_compare_nuc_data
 from tests.utils import TEST_DATA_PATH
 

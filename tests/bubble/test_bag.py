@@ -7,8 +7,8 @@ import numpy as np
 import pytest
 
 from pttools import bubble
+from pttools.math import assert_allclose
 from pttools.type_hints import FloatArr1D
-from pttools.utils import assert_allclose
 
 
 class TestBag(unittest.TestCase):

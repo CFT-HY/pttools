@@ -6,9 +6,9 @@ import unittest
 import numpy as np
 import pytest
 
+from pttools.math.assertions import assert_allclose
 from pttools.ssm.suppression import suppression as sup
 import pttools.type_hints as th
-from pttools.utils.assertions import assert_allclose
 
 
 class AlphaNMaxTest(unittest.TestCase):

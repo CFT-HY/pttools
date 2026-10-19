@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.analysis import save_fig
+from pttools.math import assert_allclose
 from pttools.speedup import NUMBA_INTEGRATE
-from pttools.utils import assert_allclose
 from tests.paper import ssm_paper_utils as spu
 from tests.utils.const import TEST_DATA_PATH, TEST_FIGURE_PATH
 

@@ -12,10 +12,10 @@ from pttools.bubble.const import CS0
 from pttools.bubble.gksvdv.gksvdv21 import getvm
 from pttools.bubble.phase import Phase
 from pttools.bubble.relativity import gamma2
+from pttools.math import assert_allclose
 from pttools.models import BagModel, ConstCSModel, gksvdv_models
 from pttools.models.model import Model
 import pttools.type_hints as th
-from pttools.utils import assert_allclose
 
 ALPHA_NS: th.FloatArr = np.array([0.02, 0.05, 0.1, 0.2, 0.3, 0.5])
 #: Tolerance for accepting a root of the deviation instead of a pole

@@ -8,9 +8,9 @@ import unittest
 import numpy as np
 
 from pttools.bubble.phase import Phase
+from pttools.math.assertions import assert_allclose
 from pttools.models import Model
 from pttools.type_hints import FloatArr1D
-from pttools.utils.assertions import assert_allclose
 from tests.utils.const import TEST_DATA_PATH
 from tests.utils.json import JsonTestCase
 

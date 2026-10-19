@@ -20,9 +20,9 @@ from pttools.bubble.junction_entropy import check_entropy_fluxes
 from pttools.bubble.phase import Phase
 from pttools.bubble.props import find_phase
 from pttools.bubble.solution_type import SolutionType, validate_solution_type
+from pttools.math.formatting import as_latex, as_unicode
 from pttools.utils.docstrings import copy_docstring_dec
 from pttools.utils.fields import Fields
-from pttools.utils.formatting import as_latex, as_unicode
 from pttools.utils.validation import ensure_float
 
 if tp.TYPE_CHECKING:

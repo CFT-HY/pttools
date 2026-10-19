@@ -8,7 +8,7 @@ import pytest
 
 from pttools import models
 from pttools.bubble.phase import Phase
-from pttools.utils import assert_allclose
+from pttools.math import assert_allclose
 from tests.models.base_bag import BagBaseCase
 from tests.models.base_model import ModelBaseCase
 

@@ -8,9 +8,9 @@ import pytest
 from pttools import models
 from pttools.analysis.parallel import create_bubbles
 from pttools.bubble.bubble import Bubble, get_kappa_giese
+from pttools.math.assertions import assert_allclose
 from pttools.speedup import IS_OSX
 import pttools.type_hints as th
-from pttools.utils.assertions import assert_allclose
 from tests.utils.mark import mark_xfail_pickle_without_jit, uses_parallel
 
 

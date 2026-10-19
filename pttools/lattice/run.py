@@ -28,15 +28,15 @@ from pttools.lattice.asymptote import (
 )
 from pttools.lattice.quantities import Quantity, integral_scale, mean_square
 from pttools.lattice.readers import INPUT_FILE_NAME, parse_input_file, read_globals, read_power_spectrum
+from pttools.math.asymptote import AsymptoteFit, fit_asymptote
+from pttools.math.numerics import running_mean
+from pttools.math.power_law import PowerLawFit, fit_power_law
 from pttools.models import BagModel, Model
 from pttools.omgw0.factors import H
 from pttools.ssm.nucleation import NucType
 from pttools.ssm.spectrum import SSMSpectrum
 from pttools.ssm.suppression import SuppressionMethod
 import pttools.type_hints as th
-from pttools.utils.asymptote import AsymptoteFit, fit_asymptote
-from pttools.utils.math import running_mean
-from pttools.utils.power_law import PowerLawFit, fit_power_law
 
 if tp.TYPE_CHECKING:
     from pttools.lattice.spectrum import LatticeSpectrum
@@ -595,7 +595,7 @@ class LatticeRun:
         :correia_2025:`\ ` eq. 47.
         As in the article, the fit is done in the range $t \in [3 {t}_\text{max}, {t}_\text{end}]$
         to the running mean of $\Omega_\text{gw}(t)$.
-        The asymptotic value is :py:attr:`pttools.utils.asymptote.AsymptoteFit.value` of the returned fit.
+        The asymptotic value is :py:attr:`pttools.math.asymptote.AsymptoteFit.value` of the returned fit.
 
         :param t_start: start of the fit, defaults to $3 {t}_\text{max}$.
             The fit starts at the time of the output that is nearest to it.

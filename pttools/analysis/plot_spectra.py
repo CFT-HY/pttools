@@ -10,11 +10,11 @@ import numpy as np
 
 from pttools.analysis.plot_bubbles import plot_bubbles_v
 from pttools.analysis.utils import FigAndAxes, create_fig_ax
+from pttools.math.formatting import as_latex
 from pttools.omgw0 import Omgw0Base, Spectrum, omega_noise_h2
 from pttools.ssm.spectrum import SSMSpectrum
 from pttools.ssm.spectrum_base import SpectrumBase
 import pttools.type_hints as th
-from pttools.utils.formatting import as_latex
 
 F_LABEL = r"$f(\text{Hz})$"
 NOISE_EB_LABEL = r"$\mathcal{P}_\text{EB noise} h^2$"

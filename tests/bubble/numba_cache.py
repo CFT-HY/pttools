@@ -44,7 +44,7 @@ def main(output_path: str | os.PathLike[str]) -> None:
 
     The results are saved to a file instead of being printed,
     since other libraries write to the standard output as well.
-    For example, Colorama, which is initialised by :mod:`pttools.utils.printing`,
+    For example, Colorama, which is initialised by :mod:`pttools.math.printing`,
     writes an ANSI reset sequence to the standard output when the process exits,
     if the standard output looks like a terminal.
 
