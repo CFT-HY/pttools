@@ -183,16 +183,6 @@ class Spectrum(Omgw0Base, SSMSpectrum):
     # Properties
     # =====
 
-    @functools.cached_property
-    def e_star(self) -> float:
-        r"""$e_*$, energy density at GW formation.
-
-        $$e_* = \frac{\pi^2}{30} g_e(T_*) T_*^4$$
-        :maki_msc:`\ ` eq. 2.105
-        This presumes that $V(T_*, \phi_b) = 0$.
-        """
-        return np.pi**2 / 30 * self.ge_star * self.T_star ** 4
-
     @property
     def f_given(self) -> bool:
         """Whether the frequencies $f$ were given as an argument instead of the $y$ array."""

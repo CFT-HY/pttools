@@ -163,6 +163,8 @@ class SyntheticRunTest(unittest.TestCase):
         spectrum = self.lattice_run.spectrum(1000, r_star=0.1, T_star=200., g_star=90., gs_star=100.)
         assert (spectrum.T_star, spectrum.g_star, spectrum.gs_star) == (200., 90., 100.)
         assert spectrum.f_star0 == freq.f_star0(T_star=200., ge_star=spectrum.ge_star, gs_star=100.)
+        # The energy density at GW formation is in physical units, unlike H_star, which is in lattice units.
+        assert spectrum.e_star == pytest.approx(np.pi**2 / 30 * spectrum.ge_star * 200.**4, rel=1e-14)
         np.testing.assert_allclose(spectrum.f(), freq.f(z=spectrum.y, r_star=0.1, f_star0=spectrum.f_star0))
         np.testing.assert_allclose(spectrum.omgw0_h2(), spectrum.F_gw0_h2() * spectrum.pow_gw)
         assert spectrum.snr()[0] > 0

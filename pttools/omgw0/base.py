@@ -75,6 +75,17 @@ class Omgw0Base(SpectrumBase):
         """
 
     @functools.cached_property
+    def e_star(self) -> float:
+        r"""$e_*$, energy density at GW formation.
+
+        $$e_* = \frac{\pi^2}{30} g_e(T_*) T_*^4$$
+        :maki_msc:`\ ` eq. 2.105
+        This presumes that $V(T_*, \phi_b) = 0$.
+        The units are those of $T_*^4$, i.e. $\text{GeV}^4$, also for the spectra whose $H_*$ is in other units.
+        """
+        return np.pi**2 / 30 * self.ge_star * self.T_star ** 4
+
+    @functools.cached_property
     def ge_star(self) -> float:
         r"""$g_{e,*}$, degrees of freedom for energy density at the time the GWs were produced.
 
