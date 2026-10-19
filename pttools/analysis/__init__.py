@@ -4,6 +4,8 @@ For plotting, see :py:mod:`pttools.plot`.
 """
 
 from .bubble_grid import *
+from .bubbles import *
 from .entropy import *
+from .fluid import *
 from .lattice import *
 from .parallel import *
