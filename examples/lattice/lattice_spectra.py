@@ -45,11 +45,13 @@ def main() -> dict[str, Figure]:
     if not lattice_comparisons:
         return {}
     print(f"r_* = {R_STAR}")
+
     omega = pd.DataFrame.from_dict({
         comparison.run.label_unicode: comparison.omega(step_end=int(FIT_SETTINGS[name]["step_end"]))
         for name, comparison in lattice_comparisons.items()
     }, orient="index")
     print(omega.to_markdown(floatfmt=".3e"))
+
     fig, axs = plt.subplots(1, len(lattice_comparisons), figsize=(5 * len(lattice_comparisons), 4), squeeze=False)
     for ax, (name, comparison) in zip(axs[0], lattice_comparisons.items(), strict=True):
         settings = FIT_SETTINGS[name]

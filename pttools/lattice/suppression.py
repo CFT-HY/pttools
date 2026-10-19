@@ -13,7 +13,7 @@ The suppression datasets of :gowling_2021:`\ ` are instead computed with exponen
 see :py:mod:`pttools.ssm.suppression.suppression_ssm_data.suppression_ssm_calculator`.
 
 This requires the data of the simulations, see :py:mod:`pttools.lattice.chrw25`.
-Run with ``python -m pttools.ssm.suppression.suppression_ssm_data.suppression_lattice_calculator``.
+Run with ``python -m pttools.lattice.suppression``.
 """
 
 import logging
@@ -21,7 +21,7 @@ from pathlib import Path
 
 import numpy as np
 
-from pttools.lattice import CHRW25_RUNS, load_chrw25_run
+from pttools.lattice.chrw25 import CHRW25_RUNS, load_chrw25_run
 from pttools.lattice.comparison import LatticeComparison
 from pttools.ssm.nucleation import NucType
 from pttools.ssm.suppression.fit import SuppressionFitMethod

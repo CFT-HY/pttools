@@ -134,7 +134,7 @@ class MergeTest(unittest.TestCase):
         r"""Reference values of the suppression factors fitted to the simulations of :correia_2025:`\ `.
 
         These were computed on 2026-10-11 with the default settings of
-        :py:mod:`pttools.ssm.suppression.suppression_ssm_data.suppression_lattice_calculator`.
+        :py:mod:`pttools.lattice.suppression`.
         Recompute the dataset if the SSM spectra change.
         """
         assert CHRW25.v_walls.tolist() == [0.92, 0.44]

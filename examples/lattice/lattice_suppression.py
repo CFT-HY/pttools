@@ -6,7 +6,7 @@ The suppression factors fitted to the simulations of :correia_2025:`\ `,
 and the suppression datasets that combine them with the data of :gowling_2021:`\ `.
 
 The suppression factors are computed by
-:py:mod:`pttools.ssm.suppression.suppression_ssm_data.suppression_lattice_calculator`,
+:py:mod:`pttools.lattice.suppression`,
 and the combined datasets are
 :py:data:`pttools.ssm.suppression.suppression.NO_HYBRIDS_EXT_CHRW25` and
 :py:data:`pttools.ssm.suppression.suppression.WITH_HYBRIDS_CHRW25`.

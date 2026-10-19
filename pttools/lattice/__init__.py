@@ -18,6 +18,8 @@ and the suppression factor of the Sound Shell Model can be fitted to it with
 - :py:mod:`pttools.lattice.comparison`: :py:class:`LatticeComparison`,
   the comparison of a run with the Sound Shell Model
 - :py:mod:`pttools.lattice.asymptote`: the extrapolation of the GW power to late times
+- :py:mod:`pttools.lattice.suppression`: the computation of the suppression factors of the Sound Shell Model
+  for the runs of :correia_2025:`\ `, which is not imported by this package
 """
 
 from .asymptote import *
