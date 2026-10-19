@@ -22,15 +22,6 @@ from pttools.utils.system import PROJECT_DIR
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-#: Environment variable for the location of the data
-DATA_DIR_ENV: str = "PTTOOLS_LATTICE_DATA_DIR"
-#: Default location of the data, ``UETC_paper_Hydro`` in the same directory as the project repository.
-#: If PTtools is installed as a package (see :py:data:`pttools.utils.system.IS_PACKAGE`),
-#: the project repository is the one at whose root the virtual environment of PTtools is.
-#: Otherwise, it's the PTtools repository. See :py:data:`pttools.utils.system.PROJECT_DIR`.
-DEFAULT_DATA_DIR: Path | None = None if PROJECT_DIR is None else PROJECT_DIR.parent / "UETC_paper_Hydro"
-
-
 #: The runs of :correia_2025:`\ `.
 #: The time steps are those of ``plot_ps.py`` of the Zenodo scripts, which produced fig. 5.
 #: The deflagration was run twice to different final times, and the longer run is used here.
@@ -42,6 +33,13 @@ CHRW25_RUNS: dict[str, LatticeRunParams] = {
         name="deflagration", subdir="deflagration_alpha050_vw044/ps-all-tfinal40k",
         v_wall=0.44, alpha_n=0.5, fig_step=22000, fig_step_prev=18000),
 }
+#: Environment variable for the location of the data
+DATA_DIR_ENV: str = "PTTOOLS_LATTICE_DATA_DIR"
+#: Default location of the data, ``UETC_paper_Hydro`` in the same directory as the project repository.
+#: If PTtools is installed as a package (see :py:data:`pttools.utils.system.IS_PACKAGE`),
+#: the project repository is the one at whose root the virtual environment of PTtools is.
+#: Otherwise, it's the PTtools repository. See :py:data:`pttools.utils.system.PROJECT_DIR`.
+DEFAULT_DATA_DIR: Path | None = None if PROJECT_DIR is None else PROJECT_DIR.parent / "UETC_paper_Hydro"
 
 
 def data_dir() -> Path | None:

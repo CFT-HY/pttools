@@ -46,6 +46,10 @@
 ## Code style
 - Use Python 3.12+ type hints where possible.
 - JIT compile heavy computations with Numba.
+- Prefer to organize modules alphabetically (ignoring the leading underscores)
+  with constants first, then classes, and then functions.
+  However, the exceptions are that `logger` should be right after the imports, and that `main` should be the last function in a module.
+  You may deviate from these if required for e.g. type hints.
 
 ## Docstring conventions
 - Use the Sphinx docstring format.
