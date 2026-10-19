@@ -7,12 +7,12 @@ import numpy as np
 import pytest
 
 from pttools.ssm.suppression import (
-    CORREIA_2025,
+    CHRW25,
     NO_HYBRIDS_EXT,
-    NO_HYBRIDS_EXT_CORREIA_2025,
+    NO_HYBRIDS_EXT_CHRW25,
     SUPPRESSIONS,
     WITH_HYBRIDS,
-    WITH_HYBRIDS_CORREIA_2025,
+    WITH_HYBRIDS_CHRW25,
     Suppression,
     SuppressionFitMethod,
     fit_suppression,
@@ -121,12 +121,12 @@ class MergeTest(unittest.TestCase):
 
     def test_correia_datasets(self) -> None:
         """The combined datasets contain the new values at the simulated points, and the old values elsewhere."""
-        for base, merged in ((NO_HYBRIDS_EXT, NO_HYBRIDS_EXT_CORREIA_2025), (WITH_HYBRIDS, WITH_HYBRIDS_CORREIA_2025)):
+        for base, merged in ((NO_HYBRIDS_EXT, NO_HYBRIDS_EXT_CHRW25), (WITH_HYBRIDS, WITH_HYBRIDS_CHRW25)):
             with self.subTest(dataset=merged.name):
                 assert merged in SUPPRESSIONS
                 assert merged.v_walls.size == base.v_walls.size
                 for v_wall, alpha_n, sup in zip(
-                        CORREIA_2025.v_walls, CORREIA_2025.alpha_ns, CORREIA_2025.suppressions, strict=True):
+                        CHRW25.v_walls, CHRW25.alpha_ns, CHRW25.suppressions, strict=True):
                     assert merged.suppression(float(v_wall), float(alpha_n)) == pytest.approx(sup, rel=1e-12)
                 assert merged.suppression(0.6, 0.1) == pytest.approx(base.suppression(0.6, 0.1), rel=1e-12)
 
@@ -137,9 +137,9 @@ class MergeTest(unittest.TestCase):
         :py:mod:`pttools.ssm.suppression.suppression_ssm_data.suppression_lattice_calculator`.
         Recompute the dataset if the SSM spectra change.
         """
-        assert CORREIA_2025.v_walls.tolist() == [0.92, 0.44]
-        assert CORREIA_2025.alpha_ns.tolist() == [0.67, 0.5]
-        np.testing.assert_allclose(CORREIA_2025.suppressions, [0.33573, 0.012208], rtol=1e-4)
+        assert CHRW25.v_walls.tolist() == [0.92, 0.44]
+        assert CHRW25.alpha_ns.tolist() == [0.67, 0.5]
+        np.testing.assert_allclose(CHRW25.suppressions, [0.33573, 0.012208], rtol=1e-4)
 
 
 if __name__ == "__main__":

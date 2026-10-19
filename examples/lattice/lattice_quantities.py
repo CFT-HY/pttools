@@ -26,7 +26,7 @@ from pttools.analysis.plot_lattice import (
     plot_kinetic_energy_comparison,
     plot_ubar_comparison,
 )
-from pttools.lattice import CORREIA_2025_RUNS
+from pttools.lattice import CHRW25_RUNS
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ def main() -> dict[str, Figure]:
         # The format is given for each column, including the index.
         print(comparison_table(comparison).to_markdown(floatfmt=("", ".4g", ".4g", ".3g")))
         figs[f"lattice_quantities_{name}"] = plot_quantities(comparison)
-        meta = CORREIA_2025_RUNS[name]
+        meta = CHRW25_RUNS[name]
         delta_steps = meta.fig_step - meta.fig_step_prev
         figs[f"lattice_gw_rate_time_{name}"] = plot_gw_rate_time_comparison(comparison, delta_steps, y_min=2)[0]
     return figs

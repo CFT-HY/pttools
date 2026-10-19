@@ -283,17 +283,17 @@ WITH_HYBRIDS_EXT: Suppression = Suppression(
 #: :py:mod:`pttools.ssm.suppression.suppression_ssm_data.suppression_lattice_calculator`.
 #: This has only two data points, and therefore it cannot be interpolated on its own.
 #: Please use the combined datasets below instead.
-CORREIA_2025: Suppression = Suppression.from_file(
-    SUPPRESSION_FOLDER / "suppression_correia_2025.txt", name="correia_2025", label="Correia et al. (2025)")
-#: :py:data:`NO_HYBRIDS_EXT`, where the data points at the parameters of :py:data:`CORREIA_2025`
+CHRW25: Suppression = Suppression.from_file(
+    SUPPRESSION_FOLDER / "suppression_chrw25.txt", name="chrw25", label="Correia et al. (2025)")
+#: :py:data:`NO_HYBRIDS_EXT`, where the data points at the parameters of :py:data:`CHRW25`
 #: are replaced with those of the higher-resolution simulations
-NO_HYBRIDS_EXT_CORREIA_2025: Suppression = NO_HYBRIDS_EXT.merge(
-    CORREIA_2025, name="no_hybrids_extended_correia_2025", label="No hybrids, extended, with Correia et al. (2025)")
-#: :py:data:`WITH_HYBRIDS`, where the data points at the parameters of :py:data:`CORREIA_2025`
+NO_HYBRIDS_EXT_CHRW25: Suppression = NO_HYBRIDS_EXT.merge(
+    CHRW25, name="no_hybrids_extended_chrw25", label="No hybrids, extended, with Correia et al. (2025)")
+#: :py:data:`WITH_HYBRIDS`, where the data points at the parameters of :py:data:`CHRW25`
 #: are replaced with those of the higher-resolution simulations
-WITH_HYBRIDS_CORREIA_2025: Suppression = WITH_HYBRIDS.merge(
-    CORREIA_2025, name="with_hybrids_correia_2025", label="With hybrids and Correia et al. (2025)")
+WITH_HYBRIDS_CHRW25: Suppression = WITH_HYBRIDS.merge(
+    CHRW25, name="with_hybrids_chrw25", label="With hybrids and Correia et al. (2025)")
 #: The default suppression dataset of the spectra
 DEFAULT_SUPPRESSION: Suppression = WITH_HYBRIDS_EXT
 SUPPRESSIONS: list[Suppression] = [
-    NO_HYBRIDS, NO_HYBRIDS_EXT, WITH_HYBRIDS, WITH_HYBRIDS_EXT, NO_HYBRIDS_EXT_CORREIA_2025, WITH_HYBRIDS_CORREIA_2025]
+    NO_HYBRIDS, NO_HYBRIDS_EXT, WITH_HYBRIDS, WITH_HYBRIDS_EXT, NO_HYBRIDS_EXT_CHRW25, WITH_HYBRIDS_CHRW25]

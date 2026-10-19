@@ -34,7 +34,7 @@ DEFAULT_DATA_DIR: Path | None = None if PROJECT_DIR is None else PROJECT_DIR.par
 #: The runs of :correia_2025:`\ `.
 #: The time steps are those of ``plot_ps.py`` of the Zenodo scripts, which produced fig. 5.
 #: The deflagration was run twice to different final times, and the longer run is used here.
-CORREIA_2025_RUNS: dict[str, LatticeRunParams] = {
+CHRW25_RUNS: dict[str, LatticeRunParams] = {
     "detonation": LatticeRunParams(
         name="detonation", subdir="detonation_alpha067_vw092",
         v_wall=0.92, alpha_n=0.67, fig_step=18000, fig_step_prev=12000),
@@ -58,13 +58,13 @@ def data_dir() -> Path | None:
     return DEFAULT_DATA_DIR if DEFAULT_DATA_DIR is not None and DEFAULT_DATA_DIR.is_dir() else None
 
 
-def load_correia_2025_run(name: str, path: str | os.PathLike[str] | None = None) -> LatticeRun:
+def load_chrw25_run(name: str, path: str | os.PathLike[str] | None = None) -> LatticeRun:
     r"""Load a simulation run of :correia_2025:`\ `.
 
     The input file of the deflagration is only in the directory of the longer run,
     and therefore it's searched for in the sibling directories as well.
 
-    :param name: name of the run, a key of :py:data:`CORREIA_2025_RUNS`
+    :param name: name of the run, a key of :py:data:`CHRW25_RUNS`
     :param path: root directory of the data, defaults to :py:func:`data_dir`
     :return: the run
     :raises FileNotFoundError: if the data is not found
@@ -73,7 +73,7 @@ def load_correia_2025_run(name: str, path: str | os.PathLike[str] | None = None)
     if root is None:
         raise FileNotFoundError(
             f"The data of Correia et al. was not found. Please set the environment variable {DATA_DIR_ENV}.")
-    meta = CORREIA_2025_RUNS[name]
+    meta = CHRW25_RUNS[name]
     run_dir = root / meta.subdir
     input_path = run_dir / "input-test-largerun"
     if not input_path.is_file():

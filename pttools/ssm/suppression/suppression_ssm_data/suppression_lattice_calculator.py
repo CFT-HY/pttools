@@ -12,7 +12,7 @@ but the dataset (``sup_ssm``) uses simultaneous nucleation and the integral fit.
 The suppression datasets of :gowling_2021:`\ ` are instead computed with exponential nucleation,
 see :py:mod:`pttools.ssm.suppression.suppression_ssm_data.suppression_ssm_calculator`.
 
-This requires the data of the simulations, see :py:mod:`pttools.lattice.correia_2025`.
+This requires the data of the simulations, see :py:mod:`pttools.lattice.chrw25`.
 Run with ``python -m pttools.ssm.suppression.suppression_ssm_data.suppression_lattice_calculator``.
 """
 
@@ -22,7 +22,7 @@ from pathlib import Path
 import numpy as np
 
 from pttools.analysis.lattice import compare_lattice_run, ssm_spectrum_for_run
-from pttools.lattice import CORREIA_2025_RUNS, load_correia_2025_run
+from pttools.lattice import CHRW25_RUNS, load_chrw25_run
 from pttools.ssm.nucleation import NucType
 from pttools.ssm.suppression.fit import SuppressionFitMethod
 from pttools.ssm.suppression.suppression_ssm_data import SUPPRESSION_FOLDER
@@ -30,7 +30,7 @@ from pttools.ssm.suppression.suppression_ssm_data import SUPPRESSION_FOLDER
 logger: logging.Logger = logging.getLogger(__name__)
 
 #: Name of the output files
-OUTPUT_NAME: str = "suppression_correia_2025"
+OUTPUT_NAME: str = "suppression_chrw25"
 #: Smallest $z = kR_*$ included in the fits. This excludes the lowest bin, which contains only one mode.
 Y_MIN: float = 2.
 
@@ -38,8 +38,8 @@ Y_MIN: float = 2.
 def calc_sup_lattice(save: bool = True, path: Path = SUPPRESSION_FOLDER) -> dict[str, np.ndarray]:
     r"""Compute the suppression factors for the simulations of :correia_2025:`\ `.
 
-    :param save: whether to save the results as ``suppression_correia_2025.txt``,
-        which is loaded by :py:data:`pttools.ssm.suppression.suppression.CORREIA_2025`
+    :param save: whether to save the results as ``suppression_chrw25.txt``,
+        which is loaded by :py:data:`pttools.ssm.suppression.suppression.CHRW25`
     :param path: directory of the output files
     :return: the results, where ``vw_sim``, ``alpha_sim`` and ``sup_ssm`` form the suppression dataset
     """
@@ -49,8 +49,8 @@ def calc_sup_lattice(save: bool = True, path: Path = SUPPRESSION_FOLDER) -> dict
         "step": [], "step_prev": [], "y_min": [], "y_max": [], "y_artifact": [],
         "ubar_par_sim": [], "ubar_par_ssm": [], "omega_gw_rate_sim": [], "omega_gw_rate_ssm": [],
     }
-    for name, meta in CORREIA_2025_RUNS.items():
-        run = load_correia_2025_run(name)
+    for name, meta in CHRW25_RUNS.items():
+        run = load_chrw25_run(name)
         ssm = ssm_spectrum_for_run(run, nuc_type=NucType.SIMULTANEOUS)
         comparison = compare_lattice_run(
             run, step=meta.fig_step, step_prev=meta.fig_step_prev, ssm=ssm,

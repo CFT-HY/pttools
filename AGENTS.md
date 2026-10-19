@@ -89,7 +89,7 @@ Modules:
 - `bubble`: bubble fluid profile solver
 - `docs`: documentation utilities
 - `export`: exporting and importing models, bubbles and spectra as HDF5 files
-- `lattice`: importing the data of hydrodynamic lattice simulations, e.g. those of Correia et al. (2025) (`lattice.correia_2025`)
+- `lattice`: importing the data of hydrodynamic lattice simulations, e.g. those of Correia et al. (2025) (`lattice.chrw25`)
 - `models`: equations of state as subclasses of `Model`
 - `omgw0`: conversion from the time of GW formation to observable gravitational wave spectrum today, provides `Spectrum` class
 - `speedup`: utilities for Numba compilation and parallelism

@@ -15,7 +15,7 @@ from pttools.omgw0 import Spectrum
 from pttools.type_hints import FloatArr1D, FloatArr2D
 
 #: :correia_2025:`\ ` tables I-V & VII-IX
-CORREIA_2025_DATA: FloatArr2D = np.array([
+CHRW25_DATA: FloatArr2D = np.array([
     [0.67, 0.50],    # alpha_n
     [0.92, 0.44],    # v_wall
     [0.23, 0.25],    # T_n / T_c
@@ -34,12 +34,12 @@ CORREIA_2025_DATA: FloatArr2D = np.array([
     [2.40, 0.74],    # 2\zeta + 2\lambda - 1
     [0.017, 0.017]   # Fitted asymptotic density fraction, scaled
 ])
-CORREIA_2025_ALPHA_N: FloatArr1D = CORREIA_2025_DATA[0, :]
-CORREIA_2025_V_WALL: FloatArr1D = CORREIA_2025_DATA[1, :]
-CORREIA_2025_UBARF: FloatArr1D = CORREIA_2025_DATA[6, :]
+CHRW25_ALPHA_N: FloatArr1D = CHRW25_DATA[0, :]
+CHRW25_V_WALL: FloatArr1D = CHRW25_DATA[1, :]
+CHRW25_UBARF: FloatArr1D = CHRW25_DATA[6, :]
 
 
-class CorreiaTest2025(unittest.TestCase):
+class CHRW25Test(unittest.TestCase):
     """Comparison of the Sound Shell Model with the simulation results of Correia et al. (2025)."""
 
     @staticmethod
@@ -49,11 +49,11 @@ class CorreiaTest2025(unittest.TestCase):
         model = BagModel()
         bubbles = [
             Bubble(model, v_wall=v_wall, alpha_n=alpha_n)
-            for v_wall, alpha_n in zip(CORREIA_2025_V_WALL, CORREIA_2025_ALPHA_N, strict=False)
+            for v_wall, alpha_n in zip(CHRW25_V_WALL, CHRW25_ALPHA_N, strict=False)
         ]
         spectra = [Spectrum(bubble) for bubble in bubbles]
         ubarf = [spectrum.ubarf for spectrum in spectra]
-        assert_array_less(ubarf, CORREIA_2025_UBARF)
+        assert_array_less(ubarf, CHRW25_UBARF)
 
 
 if __name__ == "__main__":

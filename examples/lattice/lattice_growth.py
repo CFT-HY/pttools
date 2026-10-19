@@ -22,7 +22,7 @@ from matplotlib.figure import Figure
 from examples.utils import save_and_show_figs
 from pttools.analysis.lattice import LatticeComparison, compare_lattice_run
 from pttools.analysis.plot_lattice import plot_spectra_comparison
-from pttools.lattice import CORREIA_2025_RUNS, data_dir, load_correia_2025_run
+from pttools.lattice import CHRW25_RUNS, data_dir, load_chrw25_run
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -37,8 +37,8 @@ def comparisons() -> dict[str, LatticeComparison]:
         return {}
     return {
         name: compare_lattice_run(
-            load_correia_2025_run(name), step=meta.fig_step, step_prev=meta.fig_step_prev, y_min=2, r_star=R_STAR)
-        for name, meta in CORREIA_2025_RUNS.items()
+            load_chrw25_run(name), step=meta.fig_step, step_prev=meta.fig_step_prev, y_min=2, r_star=R_STAR)
+        for name, meta in CHRW25_RUNS.items()
     }
 
 

@@ -32,7 +32,7 @@ import pandas as pd
 from examples.utils import save_and_show_figs
 from pttools.analysis.lattice import gw_asymptote_scale
 from pttools.analysis.plot_lattice import plot_gw_asymptote
-from pttools.lattice import CORREIA_2025_RUNS, LatticeRun, data_dir, load_correia_2025_run
+from pttools.lattice import CHRW25_RUNS, LatticeRun, data_dir, load_chrw25_run
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -50,14 +50,14 @@ def runs() -> dict[str, LatticeRun]:
     if data_dir() is None:
         logger.warning("The data of Correia et al. was not found. Skipping the example.")
         return {}
-    return {name: load_correia_2025_run(name) for name in CORREIA_2025_RUNS}
+    return {name: load_chrw25_run(name) for name in CHRW25_RUNS}
 
 
 def fit_table(lattice_runs: dict[str, LatticeRun]) -> pd.DataFrame:
     r"""The fitted indices and the asymptotic GW power of the runs, cf. :correia_2025:`\ ` tables IV and V.
 
     The ratio $\Omega_\text{gw}^\infty / \Omega_\text{gw}(t)$ is evaluated at the time step of the comparison
-    with the Sound Shell Model, see :py:data:`pttools.lattice.correia_2025.CORREIA_2025_RUNS`.
+    with the Sound Shell Model, see :py:data:`pttools.lattice.chrw25.CHRW25_RUNS`.
 
     :param lattice_runs: the runs
     :return: the table
@@ -69,7 +69,7 @@ def fit_table(lattice_runs: dict[str, LatticeRun]) -> pd.DataFrame:
         lambda_ = run.integral_scale_growth_index(step_end)
         prediction, prediction_err = run.gw_growth_index_prediction(step_end)
         omega_fit = run.omega_gw_asymptote(step_end=step_end)
-        meta = CORREIA_2025_RUNS[name]
+        meta = CHRW25_RUNS[name]
         spectrum = run.spectrum(meta.fig_step)
         rows[run.label_unicode] = {
             "zeta": f"{zeta.index:.2f} ± {zeta.index_err:.2f}",

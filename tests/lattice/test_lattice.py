@@ -9,12 +9,12 @@ import numpy as np
 import pytest
 
 from pttools.lattice import (
-    CORREIA_2025_RUNS,
+    CHRW25_RUNS,
     LatticeRun,
     Quantity,
     data_dir,
     integral_scale,
-    load_correia_2025_run,
+    load_chrw25_run,
     mean_square,
     parse_input_file,
     read_globals,
@@ -198,7 +198,7 @@ class CorreiaDataTest(unittest.TestCase):
         r"""The maximum of $\bar{U}_\parallel$ and the shock time agree with :correia_2025:`\ ` table IV."""
         for name, ubar_max, t_sh in (("detonation", 0.35, 2920), ("deflagration", 0.21, 4958)):
             with self.subTest(name=name):
-                run = load_correia_2025_run(name)
+                run = load_chrw25_run(name)
                 assert run.R_star == pytest.approx(1024)
                 assert run.ubar_par_max[1] == pytest.approx(ubar_max, abs=0.005)
                 # The zero mode has to be excluded for this agreement, see LatticeRun.power_spectrum().
@@ -216,7 +216,7 @@ class CorreiaDataTest(unittest.TestCase):
         )
         for name, step_end, (zeta, lambda_, prediction, d_tot) in cases:
             with self.subTest(name=name):
-                run = load_correia_2025_run(name)
+                run = load_chrw25_run(name)
                 assert run.kinetic_energy_decay_index(step_end).index == pytest.approx(zeta, abs=0.01)
                 # The uncertainty of the detonation is 0.02 in the article.
                 assert run.integral_scale_growth_index(step_end).index == pytest.approx(lambda_, abs=0.02)
@@ -226,9 +226,9 @@ class CorreiaDataTest(unittest.TestCase):
     def test_artifact(self) -> None:
         r"""The GW power growth rate of fig. 5 has its peak at $kR_* \approx 4$-$7$ and a separate high-$k$ peak."""
         from pttools.ssm.suppression import lattice_artifact_start  # noqa: PLC0415
-        for name, meta in CORREIA_2025_RUNS.items():
+        for name, meta in CHRW25_RUNS.items():
             with self.subTest(name=name):
-                spectrum = load_correia_2025_run(name).spectrum(meta.fig_step, meta.fig_step_prev)
+                spectrum = load_chrw25_run(name).spectrum(meta.fig_step, meta.fig_step_prev)
                 rate = spectrum.pow_gw_rate
                 assert 3 < spectrum.y[np.argmax(rate)] < 8
                 i_artifact = lattice_artifact_start(spectrum.y, rate)
