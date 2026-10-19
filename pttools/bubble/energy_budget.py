@@ -3,15 +3,19 @@ r"""Energy budget approximations.
 These approximations are based on :espinosa_2010:`\ `.
 """
 
+import typing as tp
+
 import numpy as np
 import scipy.optimize
 
 from pttools.bubble import Phase
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet_bag
 from pttools.bubble.const import CS0, DEFAULT_ADIABATIC_INDEX, DEFAULT_DELTA_N
-from pttools.models import Model
 from pttools.speedup import njit
 from pttools.type_hints import FloatOrArr
+
+if tp.TYPE_CHECKING:
+    from pttools.models import Model
 
 # The functions in this file don't call code from other files and are therefore safe to cache.
 
@@ -20,7 +24,7 @@ from pttools.type_hints import FloatOrArr
 def alpha_n_from_ubarf[T: FloatOrArr](
         v_wall: T,
         ubarf: T | float,
-        model: Model | None = None,
+        model: "Model | None" = None,
         cs: T | float = CS0,
         adiabatic_index: T | float = DEFAULT_ADIABATIC_INDEX,
         alpha_n_min: float = 1e-8,
@@ -59,7 +63,7 @@ def alpha_n_from_ubarf_solvable(
         alpha_n: float,
         ubarf_target: float,
         v_wall: float,
-        model: Model | None = None,
+        model: "Model | None" = None,
         cs: float = CS0,
         adiabatic_index: float = DEFAULT_ADIABATIC_INDEX) -> float:
     r"""Difference of the approximate $\bar{U}_f(v_{\text{wall}}, \alpha_n)$ from the target value.
@@ -244,7 +248,7 @@ def kappa_v_approx[T: FloatOrArr](
 def kinetic_energy_fraction_approx[T: FloatOrArr](
         v_wall: float,
         alpha_n: T,
-        model: Model | None = None,
+        model: "Model | None" = None,
         cs: float = CS0,
         v_cj: float | None = None,
         efficiency: float = 1.) -> T:
@@ -275,7 +279,7 @@ def kinetic_energy_fraction_approx[T: FloatOrArr](
 def ubarf_approx[T: FloatOrArr](
         v_wall: float,
         alpha_n: T,
-        model: Model | None = None,
+        model: "Model | None" = None,
         cs: float = CS0,
         v_cj: float | None = None,
         adiabatic_index: T | float = DEFAULT_ADIABATIC_INDEX) -> T:

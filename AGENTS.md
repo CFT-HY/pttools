@@ -84,7 +84,7 @@ It is based on the Sound Shell Model, which is introduced in the article
 by Hindmarsh & Hijazi (2019), arXiv:1909.10040.
 Links to other relevant articles are in `pttools.docs.links.EXTLINKS_STATIC`.
 
-Modules:
+Sub-packages:
 - `analysis`: plotting and data analysis tools
 - `bubble`: bubble fluid profile solver
 - `docs`: documentation utilities
@@ -100,3 +100,6 @@ Examples are available in `examples`.
 The primary use case is that the user provides the input parameters by creating instances of the `Model`, `Bubble` and `Spectrum` classes,
 and plots the resulting fluid velocity profile from `Bubble` and the gravitational wave power spectrum from `Spectrum`.
 For an example of this primary use case, see `examples/basic/basic.py`.
+
+To avoid circular dependencies, each sub-package in `pttools` should depend only on the sub-packages before it in this order:
+`utils`, `speedup`, `bubble`, `models`, `ssm`, `omgw0`, `lattice`, `analysis`, `export`, `docs`.
