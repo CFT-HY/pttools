@@ -514,7 +514,8 @@ def plot_gw_asymptote(
         start_fraction: float = 0.8,
         step_end: int | None = None,
         y_min: float = 8.,
-        y_max: float = 81.) -> None:
+        y_max: float = 81.,
+        title: str | None = None) -> None:
     r"""Plot the extrapolation of the GW power of a run to late times, :correia_2025:`\ ` fig. 6.
 
     :param run: the simulation run
@@ -523,6 +524,7 @@ def plot_gw_asymptote(
     :param step_end: last time step of the fits, defaults to the last available step
     :param y_min: smallest $z = kR_*$ to fit
     :param y_max: largest $z = kR_*$ to fit
+    :param title: title of the top axes, defaults to the label of the run
     """
     scale = run.gw_asymptote_scale
     pow_fit = run.pow_gw_asymptote(y_min=y_min, y_max=y_max, start_fraction=start_fraction, step_end=step_end)
@@ -530,7 +532,7 @@ def plot_gw_asymptote(
     plot_gw_growth_index(pow_fit, run.gw_growth_index_prediction(step_end), ax=axs[1])
     plot_pow_gw_asymptote(pow_fit, scale, ax=axs[2])
     plot_omega_gw_asymptote(run, run.omega_gw_asymptote(step_end=step_end), pow_fit, scale, ax=axs[3])
-    axs[0].set_title(f"{run.label_latex}\n{axs[0].get_title()}", fontsize=9)
+    axs[0].set_title(f"{run.label_latex if title is None else title}\n{axs[0].get_title()}", fontsize=9)
 
 
 def plot_pow_gw_asymptote_comparison(

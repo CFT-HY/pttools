@@ -210,10 +210,12 @@ class LatticeRun:
 
     def _interp_global(self, step: Steps, values: th.FloatArr1D) -> th.FloatOrArr:
         steps = self.global_steps
-        if np.any(np.asarray(step) > steps[-1]) or np.any(np.asarray(step) < steps[0]):
+        step_arr = np.atleast_1d(step)
+        outside = step_arr[(step_arr > steps[-1]) | (step_arr < steps[0])]
+        if outside.size:
             logger.debug(
-                "Step %s is outside the range of the .out file of the run %s. Using the nearest value.",
-                step, self.name)
+                "The time steps %s are outside the range of the .out file of the run %s. Using the nearest values.",
+                outside.tolist(), self.name)
         return np.interp(step, steps, values)
 
     @functools.cached_property
