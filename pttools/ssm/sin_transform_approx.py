@@ -11,7 +11,7 @@ import pttools.type_hints as th
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def envelope(
         xi: th.FloatArr1D,
         f: th.FloatArr1D,
@@ -86,7 +86,7 @@ def envelope(
     ])
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def sin_transform_approx(
         z: th.FloatOrArr,
         xi: th.FloatArr1D,

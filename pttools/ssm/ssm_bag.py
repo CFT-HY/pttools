@@ -19,7 +19,7 @@ import pttools.type_hints as th
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-@njit
+@njit(nogil=True)
 def a2_e_conserving_bag(
         z: th.FloatArr1D,
         v_wall: float,
@@ -155,7 +155,7 @@ def a2_e_conserving_bag_file(
     return 0.25 * (v_ft ** 2 + (const.CS0 * lam_ft) ** 2)
 
 
-@njit
+@njit(nogil=True)
 def a2_ssm_func_bag(
         z: th.FloatArr1D,
         v_wall: float,
@@ -261,7 +261,7 @@ def f_file_bag(
 
 
 
-@njit
+@njit(nogil=True)
 def f_ssm_func_bag(
         z: th.FloatArr1D,
         v_wall: float,

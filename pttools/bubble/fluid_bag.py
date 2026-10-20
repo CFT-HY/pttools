@@ -30,10 +30,11 @@ if th.TYPE_CHECKING_OR_DOCS:
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-# This cannot be compiled with nogil=True, since find_alpha_plus_bag() uses "with numba.objmode".
+# These can be compiled with nogil=True even though find_alpha_plus_bag() uses "with numba.objmode",
+# since Numba acquires the GIL for the objmode block.
 
 
-@njit
+@njit(nogil=True)
 def sound_shell_bag(
         v_wall: float,
         alpha_n: float,
@@ -88,7 +89,7 @@ def sound_shell_bag(
     # return ret
 
 
-@njit
+@njit(nogil=True)
 def sound_shell_alpha_plus_bag(
         v_wall: float,
         alpha_plus: float,

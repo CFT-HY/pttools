@@ -8,7 +8,7 @@ import pttools.type_hints as th
 from pttools.type_hints import FloatArr, FloatArr1D
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def gradient[T: FloatArr](f: T) -> T:
     """Numba version of :func:`np.gradient`."""
     if f.ndim > 1:

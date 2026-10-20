@@ -228,7 +228,7 @@ def omega_gb_h2[T: FloatOrArr](f: T) -> T:
     return omega_h2(f=f, S=S_gb(f))
 
 
-@njit(cache=CACHE_H0_100_HZ)
+@njit(cache=CACHE_H0_100_HZ, nogil=True)
 def omega_ins_h2[T: FloatOrArr](f: T) -> T:
     r"""$\Omega_\text{ins} h^2$, LISA instrument noise.
 
@@ -237,7 +237,7 @@ def omega_ins_h2[T: FloatOrArr](f: T) -> T:
     return omega_h2(f=f, S=S_AE(f))
 
 
-@njit(cache=CACHE_H0_100_HZ)
+@njit(cache=CACHE_H0_100_HZ, nogil=True)
 def omega_noise_h2[T: FloatOrArr](f: T, eb: bool = True, gb: bool = True, ins: bool = True) -> T:
     r"""
     $\Omega_\text{noise} h^2$, total energy density of LISA noise.
@@ -366,7 +366,7 @@ def S_I[T: FloatOrArr](f: T, L: T | float = LISA_ARM_LENGTH) -> T:
     return 4 * N_acc(L) * (1 + (F1_LISA/f)**2)  # pyrefly: ignore[bad-return]
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def S_gb[T: FloatOrArr](
         f: T,
         t: T | float = 4,  # years

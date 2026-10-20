@@ -15,7 +15,7 @@ from pttools.ssm.rho import rho_pm, x_minus, x_plus
 from pttools.type_hints import FloatOrArr
 
 
-@njit
+@njit(nogil=True)
 def gw_spectral_density_approx_low[T: FloatOrArr](z: T, HLf: float, cs: float, tau_end: float) -> T:
     r"""$\tilde{P}_\text{gw}^\text{low}$ for the analytical $\tilde{P}_v$.
 
@@ -42,7 +42,7 @@ def gw_spectral_density_approx_low[T: FloatOrArr](z: T, HLf: float, cs: float, t
         z=z, cs=cs, nu=nu, tau_star=tau_star_func(r_star=HLf, nu=nu), tau_end=tau_end, Iv=IV_ANALYTICAL)
 
 
-@njit
+@njit(nogil=True)
 def gw_spectral_density_approx_int[T: FloatOrArr](z: T, HLf: float, cs: float) -> T:
     r"""GW spectral density approximation for intermediate frequencies.
 
@@ -62,7 +62,7 @@ def gw_spectral_density_approx_int[T: FloatOrArr](z: T, HLf: float, cs: float) -
     return power_spectrum_integration_int(z=z, cs=cs, tau_star=tau_star, Iv=IV_ANALYTICAL)
 
 
-@njit
+@njit(nogil=True)
 def gw_spectral_density_approx_high_integrand(x: float, z: float, cs: float, upsilon: float) -> float:
     r"""Integrand of :py:func:`gw_spectral_density_approx_high`.
 

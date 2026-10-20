@@ -47,7 +47,7 @@ def switch_on[T: FloatOrArr](z: T, z0: float, tau_star: float) -> T:
     return 0.5 * (1 + math.erf(2 * np.pi * tau_star * (z - z0)))  # pyrefly: ignore[bad-return, bad-argument-type]
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def join_regimes[T: FloatOrArr](
         z: T,
         Pgw_low: T,
@@ -87,7 +87,7 @@ def join_regimes[T: FloatOrArr](
     )
 
 
-@njit
+@njit(nogil=True)
 def gw_junction(
         z: th.FloatArr1D,
         Pgw_low: th.FloatArr1D,

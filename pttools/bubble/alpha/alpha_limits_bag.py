@@ -78,7 +78,7 @@ def _alpha_n_max_deflagration_bag_scalar(
     # Need n_wall+1, as w is an integral of v, and lags by 1 step
     return w[i_wall + 1] * ALPHA_PLUS_MAX_DEF
 
-_alpha_n_max_deflagration_bag_scalar_numba = njit(_alpha_n_max_deflagration_bag_scalar)
+_alpha_n_max_deflagration_bag_scalar_numba = njit(_alpha_n_max_deflagration_bag_scalar, nogil=True)
 
 
 def _alpha_n_max_deflagration_bag_arr(

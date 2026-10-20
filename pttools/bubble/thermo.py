@@ -113,7 +113,7 @@ def kappa_approx[T: FloatOrArr](alpha_n: T) -> T:
     return alpha_n / (0.73 + 0.083*np.sqrt(alpha_n) + alpha_n)  # pyrefly: ignore[bad-return]
 
 
-@njit
+@njit(nogil=True)
 def kinetic_energy_density(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float) -> float:
     r"""Bubble volume averaged kinetic energy density.
 
@@ -287,7 +287,7 @@ def trace_anomaly_diff(
     return 3/(4*np.pi * v_wall**3) * va_trace_anomaly_diff(model, w, xi, v_wall, phase)
 
 
-@njit
+@njit(nogil=True)
 def ubarf2(
         v: th.FloatArr1D,
         w: th.FloatArr1D,
@@ -389,7 +389,7 @@ def va_entropy_density_diff(
     return 4*np.pi/3 * np.trapezoid(s_diff, xi**3)  # pyrefly: ignore[bad-return]
 
 
-@njit
+@njit(nogil=True)
 def va_kinetic_energy_density(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D) -> float:
     r"""
     ${e}_K$, volume-averaged kinetic energy density.
@@ -423,7 +423,7 @@ def va_thermal_energy_density(v_shock: float, wn: float, ek: float, delta_e_thet
     return np.pi * wn * v_shock**3 - ek - delta_e_theta
 
 
-# @njit
+@njit(nogil=True)
 def va_thermal_energy_density_diff(w: th.FloatArr1D, xi: th.FloatArr1D) -> float:
     r"""$\Delta {e}_Q$, volume-averaged thermal energy density difference.
 
@@ -474,7 +474,7 @@ def va_trace_anomaly_diff(
     return 4*np.pi/3 * np.trapezoid((theta - theta_n), xi**3)  # pyrefly: ignore[bad-return]
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def w_bar(w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float) -> float:
     r"""Average enthalpy density $\bar{w}$.
 

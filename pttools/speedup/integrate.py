@@ -16,7 +16,7 @@ from pttools.speedup.jit import njit
 import pttools.type_hints as th
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def simpson_h(y: th.FloatArr1D, h: th.FloatArr1D) -> float:
     r"""Composite Simpson's rule for a 1D array with the given intervals.
 
@@ -88,7 +88,7 @@ def simpson_dx(y: tp.Any, x: tp.Any = None, dx: tp.Any = 1.0, axis: tp.Any = -1)
     return simpson_h(y, np.full(max(y.size - 1, 0), float(dx)))
 
 
-@overload(scipy.integrate.simpson, jit_options={"nopython": True})
+@overload(scipy.integrate.simpson, jit_options={"nopython": True, "nogil": True})
 def simpson(y: tp.Any, x: tp.Any = None, dx: tp.Any = 1.0, axis: tp.Any = -1) -> tp.Callable:
     r"""Numba overload of :external:py:func:`scipy.integrate.simpson` for 1D arrays.
 

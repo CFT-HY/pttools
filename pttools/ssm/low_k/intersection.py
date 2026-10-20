@@ -11,7 +11,7 @@ from pttools.ssm.low_k.kernel import kernel_int_bracket, kernel_low
 from pttools.type_hints import FloatOrArr
 
 
-@njit
+@njit(nogil=True)
 def z_cross(HLf: float, cs: float, nu: float, tau_star: float, tau_end: float) -> float:
     r"""
     Calculate the cross-over point z_cross where the low and intermediate frequency approximations are equal.
@@ -44,7 +44,7 @@ def z_cross(HLf: float, cs: float, nu: float, tau_star: float, tau_end: float) -
     return (int_term / low_term) ** (1 / (2 - 2 * nu))
 
 
-@njit
+@njit(nogil=True)
 def z_cross_approx[T: FloatOrArr](cs: T, nu: float, eta_ratio: T | float, r_star: T | float) -> T:
     r"""Approximation for $z_\times$.
 
@@ -71,7 +71,7 @@ def z_cross_approx[T: FloatOrArr](cs: T, nu: float, eta_ratio: T | float, r_star
         np.sqrt(kernel_int_bracket(cs=cs)) / (-Upsilon(r=1 + eta_ratio, l=-nu)) * r_star
 
 
-@njit
+@njit(nogil=True)
 def z_cross_junction(cs: float, nu: float, tau_star: float, tau_end: float, cs_friction: bool = False) -> float:
     r"""
     Calculate the cross-over point z_cross where the low and intermediate frequency approximations are equal.

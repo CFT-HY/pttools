@@ -11,7 +11,7 @@ import pttools.type_hints as th
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def resample_uniform_xi(
         xi: th.FloatArr1D,
         f: th.FloatArr1D,

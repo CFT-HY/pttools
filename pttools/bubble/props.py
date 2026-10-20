@@ -32,7 +32,7 @@ def find_phase(xi: th.FloatArr1D, v_wall: float, sol_type: SolutionType | None =
     return find_phase_core(xi, v_wall, detonation=sol_type == SolutionType.DETON)
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def find_phase_core(xi: th.FloatArr1D, v_wall: float, detonation: bool) -> th.FloatArr1D:
     r"""Numba-compatible core of :py:func:`find_phase`.
 
@@ -88,6 +88,7 @@ def v_max_behind[T: FloatOrArr](xi: T, cs: T | float) -> T:
     return relativity.lorentz(xi=xi, v=cs)
 
 
+@njit(nogil=True)
 def v_and_w_from_solution(
         v: th.FloatArr1D,
         w: th.FloatArr1D,

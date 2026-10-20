@@ -31,6 +31,7 @@ import numpy as np
 
 from pttools.bubble.const import DEFAULT_ADIABATIC_INDEX, DEFAULT_NU_GDH2024
 from pttools.bubble.thermo import ubarf2_from_K
+from pttools.speedup.jit import njit
 from pttools.ssm.barotropic import H_eta, source_lifetime_factor
 from pttools.ssm.const import DEFAULT_N_SH
 from pttools.type_hints import FloatArr1D, FloatOrArr
@@ -259,6 +260,7 @@ def J_old[T: FloatOrArr](r_star: T, K: T | float, adiabatic_index: T | float = D
     )
 
 
+@njit(cache=True, nogil=True)
 def omega_tilde_gw(x: FloatArr1D, spec_den_gw: FloatArr1D) -> float:
     r"""GW production efficiency parameter $\Omega_\text{gw}$.
 

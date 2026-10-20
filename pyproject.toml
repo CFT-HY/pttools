@@ -267,6 +267,11 @@ addopts = [
     "--html=test-results/html/test-report.html",
     "--numprocesses=auto"
 ]
+# pytest resets the warning filters that are added when the tests are imported,
+# so the filter of pttools.speedup.numba_fixes.ignore_objmode_nogil_warning() has to be given here as well.
+filterwarnings = [
+    "ignore:.*Code running in object mode won't allow parallel execution despite nogil=True:numba.core.errors.NumbaWarning"
+]
 # log_cli = true
 # log_cli_level = "INFO"
 norecursedirs = "test_data"

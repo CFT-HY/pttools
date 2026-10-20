@@ -212,7 +212,7 @@ def kappa_sub_def_approx[T: FloatOrArr](v_wall: T, alpha_n: T | float, cs: T | f
     return cs**(11/5) * ka * kb / ((cs**(11/5) - v_wall**(11/5)) * kb + v_wall * cs**(6/5) * ka)  # pyrefly: ignore[bad-return]
 
 
-@njit
+@njit(nogil=True)
 def kappa_v_approx[T: FloatOrArr](
         v_wall: float,
         alpha_n: T,

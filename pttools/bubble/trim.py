@@ -15,7 +15,7 @@ import pttools.type_hints as th
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-@njit
+@njit(nogil=True)
 def trim_fluid_wall_to_cs(
         v: th.FloatArr1D,
         w: th.FloatArr1D,

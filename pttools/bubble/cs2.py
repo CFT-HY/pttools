@@ -136,6 +136,6 @@ def _cs2_from_ptr_impl(cs2_ptr: th.CS2FunScalarPtr, w: float, phase: float) -> f
     return _cs2_from_ptr_intrinsic(cs2_ptr, w, phase)
 
 
-@overload(cs2_from_ptr, jit_options={"nopython": True})
+@overload(cs2_from_ptr, jit_options={"nopython": True, "nogil": True})
 def _cs2_from_ptr_numba(cs2_ptr: th.CS2FunScalarPtr, w: float, phase: float) -> th.NumbaFunc:
     return _cs2_from_ptr_impl

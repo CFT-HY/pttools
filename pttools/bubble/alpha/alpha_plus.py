@@ -19,7 +19,7 @@ if th.TYPE_CHECKING_OR_DOCS:
 _ALPHA_N_SMALL: float = 0.05
 
 
-@njit
+@njit(nogil=True)
 def alpha_plus_initial_guess[T: FloatOrArr](
         v_wall: T,
         alpha_n_given: float,

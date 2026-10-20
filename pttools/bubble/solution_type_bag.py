@@ -19,7 +19,7 @@ if th.TYPE_CHECKING_OR_DOCS:
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-@njit
+@njit(nogil=True)
 def identify_solution_type_bag(
         v_wall: float,
         alpha_n: float,
@@ -55,7 +55,7 @@ def identify_solution_type_bag(
     return SolutionType.ERROR
 
 
-@njit
+@njit(nogil=True)
 def identify_solution_type_alpha_plus_bag(v_wall: float, alpha_plus: float) -> SolutionType:
     r"""
     Determines wall type from wall speed $v_\text{wall}$ and at-wall strength parameter $\alpha_+$.

@@ -119,7 +119,7 @@ def splev(
     return y.reshape(shape)
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def splev_linear_core(xp: float, t: th.FloatArr1D, c: th.FloatArr1D, ext: int) -> float:  # noqa: PLR0911
     """Numba-jitted core of the linear spline evaluation."""
     if xp < t[0]:
@@ -189,7 +189,7 @@ def splev_linear_scalar(
     return splev_linear_core(x, t, c, ext)
 
 
-@overload(scipy.interpolate.splev, jit_options={"nopython": True})
+@overload(scipy.interpolate.splev, jit_options={"nopython": True, "nogil": True})
 def splev_linear(
         x: tp.Any,
         tck: tuple[th.FloatArr1D, th.FloatArr1D, int],

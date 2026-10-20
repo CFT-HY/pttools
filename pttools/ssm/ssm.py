@@ -207,7 +207,7 @@ def T_tilde(T_tilde_min: float, T_tilde_max: float, n: int) -> th.FloatArr1D:
     return speedup.logspace(np.log10(T_tilde_min), np.log10(T_tilde_max), n)
 
 
-@njit
+@njit(nogil=True)
 def ubarf2_from_a2(
         T_tilde: th.FloatArr1D,
         z: th.FloatArr1D,

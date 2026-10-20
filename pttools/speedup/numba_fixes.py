@@ -1,4 +1,4 @@
-"""Workarounds for bugs in Numba.
+"""Workarounds for bugs and unnecessary warnings of Numba.
 
 These are applied when :mod:`pttools.speedup` is imported,
 which happens before any PTtools function is compiled.
@@ -9,8 +9,10 @@ which happens before any PTtools function is compiled.
 
 import logging
 import typing as tp
+import warnings
 
 from numba.core.compiler import CompileResult
+from numba.core.errors import NumbaWarning
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -44,6 +46,23 @@ def _rebuild_with_reload_init(cls: type[CompileResult], *args, **kwargs) -> Comp
     return cres
 
 
+def ignore_objmode_nogil_warning() -> None:
+    """Ignore the warning of Numba about object mode code in functions that are compiled with ``nogil=True``.
+
+    Numba warns "Code running in object mode won't allow parallel execution despite nogil=True"
+    when it compiles a function with ``nogil=True`` that contains a ``with numba.objmode`` block,
+    or that calls such a function.
+    In PTtools, these blocks only log warnings and errors in rare cases,
+    and Numba acquires the GIL for running them, so the warning is not a problem.
+    The pattern starts with ``.*``, since Numba wraps the message in terminal formatting codes.
+    """
+    warnings.filterwarnings(
+        "ignore",
+        message=".*Code running in object mode won't allow parallel execution despite nogil=True",
+        category=NumbaWarning,
+    )
+
+
 def patch_reload_init() -> None:
     """Apply :func:`_rebuild_with_reload_init` to Numba."""
     if CompileResult._rebuild.__func__ is _rebuild_with_reload_init:
@@ -53,3 +72,4 @@ def patch_reload_init() -> None:
 
 
 patch_reload_init()
+ignore_objmode_nogil_warning()

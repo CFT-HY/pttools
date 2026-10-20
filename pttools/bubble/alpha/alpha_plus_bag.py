@@ -73,7 +73,7 @@ def _find_alpha_plus_bag_arr(
 
 
 # _find_alpha_plus_bag_arr_parallel = njit(parallel=True, nogil=True)(_find_alpha_plus_bag_arr)
-_find_alpha_plus_bag_arr_single = njit(_find_alpha_plus_bag_arr)  # nogil=True
+_find_alpha_plus_bag_arr_single = njit(_find_alpha_plus_bag_arr, nogil=True)
 
 
 def _find_alpha_plus_bag_arr_wrapper(
@@ -149,7 +149,7 @@ def find_alpha_plus_bag[T: FloatOrArr](
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
-@overload(find_alpha_plus_bag, jit_options={"nopython": True})
+@overload(find_alpha_plus_bag, jit_options={"nopython": True, "nogil": True})
 def _find_alpha_plus_bag_numba(
         v_wall: th.FloatOrArr,
         alpha_n_given: float,
@@ -174,7 +174,7 @@ def _find_alpha_plus_bag_numba(
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
-@njit
+@njit(nogil=True)
 def _find_alpha_plus_optimizer_bag(
         alpha: th.FloatArr1D,
         v_wall: float,

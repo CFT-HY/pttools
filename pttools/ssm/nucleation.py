@@ -108,7 +108,7 @@ def beta_R_star0[T: FloatOrArr](v_wall: T, legacy_cs: T | float | None = None) -
     return (8. * np.pi) ** (1. / 3.) * v
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def bubble_spacing_enlargement(
         xi: FloatArr1D,
         T: FloatArr1D,
@@ -192,7 +192,7 @@ def lifetime_distribution[T: FloatOrArr](
     raise ValueError(f"Nucleation type not recognized: \"{nuc_type}\"")
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def lifetime_distribution_momentum(nu: FloatArr1D, T_tilde: FloatArr1D, n: int) -> float:
     r"""$\nu_n$, nth momentum of the lifetime distribution $\nu$.
 
@@ -204,7 +204,7 @@ def lifetime_distribution_momentum(nu: FloatArr1D, T_tilde: FloatArr1D, n: int) 
     return np.trapezoid(nu * T_tilde**n, T_tilde)  # pyrefly: ignore[bad-return]
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def nucleation_f(
         xi: th.FloatArr1D,
         T: th.FloatArr1D,
@@ -295,7 +295,7 @@ def r_star_product[T: FloatOrArr](H_star: T, R_star: T | float) -> T:
     return H_star * R_star  # pyrefly: ignore[bad-return]
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def R_star[T2: FloatOrArr](
         beta: T2,
         v_wall: float,

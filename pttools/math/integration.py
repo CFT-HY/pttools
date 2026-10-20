@@ -6,7 +6,7 @@ from pttools.speedup import njit
 import pttools.type_hints as th
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def trapezoid_loglog(x: th.FloatArr1D, y: th.FloatArr1D, minus1_atol: float = 1e-12) -> float:
     """Power-law (log-log) trapezoidal integration.
 

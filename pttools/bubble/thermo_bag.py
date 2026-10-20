@@ -41,7 +41,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 SPLIT_INTEGRATE_MIN_POINTS: int = 3
 
 
-@njit
+@njit(nogil=True)
 def de_from_w_bag(
         w: th.FloatArr1D,
         xi: th.FloatArr1D,
@@ -78,7 +78,7 @@ def de_from_w_bag(
     return e_from_w - e_from_w[-1]
 
 
-@njit
+@njit(nogil=True)
 def de_from_w_new_bag(
         v: th.FloatArr1D,
         w: th.FloatArr1D,
