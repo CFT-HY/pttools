@@ -274,6 +274,26 @@ def plot_kinetic_energy_comparison(
     return fig, ax
 
 
+def plot_quantities_comparison(comparison: LatticeComparison, figsize: tuple[float, float] = (10, 7)) -> Figure:
+    """Plot the time series of the quantities of a simulation and the corresponding SSM values.
+
+    The panels are :py:func:`plot_ubar_comparison`, :py:func:`plot_integral_scale_comparison`
+    and :py:func:`plot_kinetic_energy_comparison`.
+
+    :param comparison: the comparison of the simulation and the SSM
+    :param figsize: size of the figure
+    :return: the figure
+    """
+    fig, axs = plt.subplots(2, 2, figsize=figsize)
+    plot_ubar_comparison(comparison, fig=fig, ax=axs[0, 0])
+    plot_integral_scale_comparison(comparison, fig=fig, ax=axs[0, 1])
+    plot_kinetic_energy_comparison(comparison, fig=fig, ax=axs[1, 0])
+    axs[1, 1].axis("off")
+    fig.suptitle(comparison.run.label_latex)
+    fig.tight_layout()
+    return fig
+
+
 def plot_gw_rate_time_comparison(
         comparison: LatticeComparison,
         delta_steps: int | None = None,

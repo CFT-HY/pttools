@@ -14,31 +14,13 @@ GW power growth rate with the simulation depends on the time at which it is fitt
 import logging
 
 from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
 
 from examples.lattice.lattice_growth import R_STAR, Y_MIN
 from examples.utils import save_and_show_figs
-from pttools.lattice import LatticeComparison, compare_chrw25_runs
-from pttools.plot.lattice import (
-    plot_gw_rate_time_comparison,
-    plot_integral_scale_comparison,
-    plot_kinetic_energy_comparison,
-    plot_ubar_comparison,
-)
+from pttools.lattice import compare_chrw25_runs
+from pttools.plot.lattice import plot_gw_rate_time_comparison, plot_quantities_comparison
 
 logger: logging.Logger = logging.getLogger(__name__)
-
-
-def plot_quantities(comparison: LatticeComparison) -> Figure:
-    """Plot the time series of a run and the corresponding SSM values."""
-    fig, axs = plt.subplots(2, 2, figsize=(10, 7))
-    plot_ubar_comparison(comparison, fig=fig, ax=axs[0, 0])
-    plot_integral_scale_comparison(comparison, fig=fig, ax=axs[0, 1])
-    plot_kinetic_energy_comparison(comparison, fig=fig, ax=axs[1, 0])
-    axs[1, 1].axis("off")
-    fig.suptitle(comparison.run.label_latex)
-    fig.tight_layout()
-    return fig
 
 
 def main() -> dict[str, Figure]:
@@ -48,7 +30,7 @@ def main() -> dict[str, Figure]:
         print(f"{comparison.run.label_unicode}, t = {comparison.spectrum.t:.0f} / T_c")
         # The format is given for each column, including the index.
         print(comparison.scalars().to_markdown(floatfmt=("", ".4g", ".4g", ".3g")))
-        figs[f"lattice_quantities_{name}"] = plot_quantities(comparison)
+        figs[f"lattice_quantities_{name}"] = plot_quantities_comparison(comparison)
         figs[f"lattice_gw_rate_time_{name}"] = plot_gw_rate_time_comparison(comparison, y_min=Y_MIN)[0]
     return figs
 
