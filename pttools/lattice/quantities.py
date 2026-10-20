@@ -7,6 +7,7 @@ For the format of the files, see :py:mod:`pttools.lattice.readers`.
 """
 
 import enum
+import typing as tp
 
 import numpy as np
 
@@ -49,29 +50,41 @@ class Quantity(enum.StrEnum):
         return f"{self.value}-ps-step"
 
 
-def mean_square(k: th.FloatArr1D, p: th.FloatArr1D) -> float:
-    r"""$\langle Y^2 \rangle$, mean square of a field computed from its power spectrum.
-
-    $$\langle Y^2 \rangle = \int \frac{dk}{k} \mathcal{P}_Y(k)$$
-    :correia_2025:`\ ` eq. 15.
-
-    :param k: $k$, wavenumbers
-    :param p: $\mathcal{P}_Y(k)$, power spectrum
-    :return: $\langle Y^2 \rangle$
-    """
-    valid = k > 0
-    return float(np.trapezoid(p[valid] / k[valid], k[valid]))
-
-
-def integral_scale(k: th.FloatArr1D, p: th.FloatArr1D) -> float:
+@tp.overload
+def integral_scale(k: th.FloatArr1D, p: th.FloatArr1D) -> float: ...
+@tp.overload
+def integral_scale(k: th.FloatArr1D, p: th.FloatArr2D) -> th.FloatArr1D: ...
+def integral_scale(k: th.FloatArr1D, p: th.FloatArr1D | th.FloatArr2D) -> float | th.FloatArr1D:
     r"""$\xi$, integral scale of a field computed from its power spectrum.
 
     $$\xi_Y = \frac{1}{\langle Y^2 \rangle} \int \frac{dk}{k^2} \mathcal{P}_Y(k)$$
     :correia_2025:`\ ` eq. 39.
 
     :param k: $k$, wavenumbers
-    :param p: $\mathcal{P}_Y(k)$, power spectrum
-    :return: $\xi_Y$, in the same length units as $1/k$
+    :param p: $\mathcal{P}_Y(k)$, power spectrum, or power spectra with the shape (time steps, wavenumbers)
+    :return: $\xi_Y$, in the same length units as $1/k$, for each power spectrum.
+        It's nan for a power spectrum that is zero, e.g. at the start of the simulation.
     """
     valid = k > 0
-    return float(np.trapezoid(p[valid] / k[valid]**2, k[valid])) / mean_square(k, p)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        ret = np.trapezoid(p[..., valid] / k[valid]**2, k[valid], axis=-1) / mean_square(k, p)
+    return float(ret) if np.ndim(ret) == 0 else ret
+
+
+@tp.overload
+def mean_square(k: th.FloatArr1D, p: th.FloatArr1D) -> float: ...
+@tp.overload
+def mean_square(k: th.FloatArr1D, p: th.FloatArr2D) -> th.FloatArr1D: ...
+def mean_square(k: th.FloatArr1D, p: th.FloatArr1D | th.FloatArr2D) -> float | th.FloatArr1D:
+    r"""$\langle Y^2 \rangle$, mean square of a field computed from its power spectrum.
+
+    $$\langle Y^2 \rangle = \int \frac{dk}{k} \mathcal{P}_Y(k)$$
+    :correia_2025:`\ ` eq. 15.
+
+    :param k: $k$, wavenumbers
+    :param p: $\mathcal{P}_Y(k)$, power spectrum, or power spectra with the shape (time steps, wavenumbers)
+    :return: $\langle Y^2 \rangle$ for each power spectrum
+    """
+    valid = k > 0
+    ret = np.trapezoid(p[..., valid] / k[valid], k[valid], axis=-1)
+    return float(ret) if np.ndim(ret) == 0 else ret

@@ -3,6 +3,10 @@ r"""A single run of a hydrodynamic lattice simulation.
 The run directory contains the power spectrum files,
 and optionally the input file of the simulation and the log of the global quantities (``*.out``),
 see :py:mod:`pttools.lattice.readers`.
+When the run is first loaded, they are converted to an HDF5 file in the run directory,
+which is read afterwards, see :py:mod:`pttools.lattice.convert`.
+The power spectra of each quantity are stored as a 2D array with the shape (time steps, bins),
+and therefore the methods that take time steps accept both a single time step and an array of them.
 The quantities are in lattice units, where $T_c = 1$ and $G = 1$, see :correia_2025:`\ ` table I.
 The simulations are in flat space, and the Hubble rate $H_n$ only enters through the Friedmann equation
 $$H_n^2 = \frac{8 \pi G}{3} \bar{\epsilon}_0,$$
@@ -18,6 +22,7 @@ from pathlib import Path
 import typing as tp
 
 import numpy as np
+import numpy.typing as npt
 
 from pttools.bubble import Bubble
 from pttools.lattice.asymptote import (
@@ -26,8 +31,8 @@ from pttools.lattice.asymptote import (
     fit_pow_gw_modes,
     gw_growth_index_prediction,
 )
+from pttools.lattice.convert import RunData, load_run
 from pttools.lattice.quantities import Quantity, integral_scale, mean_square
-from pttools.lattice.readers import INPUT_FILE_NAME, parse_input_file, read_globals, read_power_spectrum
 from pttools.lattice.spectrum import LatticeSpectrum
 from pttools.math.asymptote import AsymptoteFit, fit_asymptote
 from pttools.math.numerics import running_mean
@@ -61,6 +66,9 @@ class LatticeRun:
     The quantities that depend on the energy density, such as the normalisation of the GW power spectrum,
     require either the ``.out`` file or the argument ``epsilon_0``.
     The quantities that depend on the mean enthalpy, such as $\bar{U}$, require the ``.out`` file.
+
+    The data of the run is read from the HDF5 file in the run directory,
+    which is created from the original files when the run is first loaded, see :py:mod:`pttools.lattice.convert`.
     """
 
     def __init__(
@@ -77,7 +85,8 @@ class LatticeRun:
             L: float | None = None,
             dx: float | None = None,
             dt: float | None = None,
-            epsilon_0: float | None = None):
+            epsilon_0: float | None = None,
+            reconvert: bool = False):
         r"""Load the metadata of a simulation run.
 
         :param path: directory of the run
@@ -86,16 +95,19 @@ class LatticeRun:
         :param name: name of the run, defaults to the name of the directory
         :param label_latex: label of the run in LaTeX format
         :param label_unicode: label of the run in Unicode format
-        :param input_path: path of the input file,
+        :param input_path: path of the input file for the conversion to HDF5,
             defaults to :py:data:`pttools.lattice.readers.INPUT_FILE_NAME` in the run directory
-        :param out_path: path of the log of the global quantities,
+        :param out_path: path of the log of the global quantities for the conversion to HDF5,
             defaults to the last ``*.out`` file in the run directory
         :param n_bubbles: $N_b$, number of bubbles, overrides the input file
         :param L: $L$, side length of the lattice in lattice spacings, overrides the input file
         :param dx: $\delta x$, lattice spacing, overrides the input file
         :param dt: $\delta t$, time step, overrides the input file
         :param epsilon_0: $\bar{\epsilon}_0$, initial mean energy density, overrides the ``.out`` file
-        :raises FileNotFoundError: if the run directory does not exist
+        :param reconvert: whether to convert the original files to HDF5 again, e.g. after they have changed,
+            see :py:func:`pttools.lattice.convert.load_run`
+        :raises FileNotFoundError: if the run directory does not exist,
+            or if it has neither the HDF5 file nor the power spectrum files
         :raises ValueError: if a required parameter is neither given nor in the input file
         """
         self.path: Path = Path(path)
@@ -109,18 +121,15 @@ class LatticeRun:
         self.label_unicode: str = f"{self.name}, vw={v_wall}, αₙ={alpha_n}" \
             if label_unicode is None else label_unicode
 
-        input_path = self.path / INPUT_FILE_NAME if input_path is None else Path(input_path)
+        #: The data of the run as read from its HDF5 file
+        self.data: RunData = load_run(self.path, input_path=input_path, out_path=out_path, reconvert=reconvert)
         #: Parameters of the input file of the simulation, or an empty dict if it's not available
-        self.params: dict[str, str] = parse_input_file(input_path) if input_path.is_file() else {}
+        self.params: dict[str, str] = self.data.params
         if not self.params:
-            logger.debug("No input file found for the run %s at %s.", self.name, input_path)
-
-        if out_path is None:
-            out_files = sorted(self.path.glob("*.out"))
-            #: Path of the log of the global quantities, or None if it's not available
-            self.out_path: Path | None = out_files[-1] if out_files else None
-        else:
-            self.out_path = Path(out_path)
+            logger.debug("No input file found for the run %s.", self.name)
+        # The bins that contain no modes are removed, and so is the first bin, see power_spectrum().
+        self._valid_bins: th.BoolArr1D = self.data.counts > 0
+        self._valid_bins[0] = False
 
         #: $L$, side length of the lattice in lattice spacings
         self.L: float = self._param(L, "Lx", float)
@@ -131,8 +140,7 @@ class LatticeRun:
         #: $N_b$, number of bubbles
         self.n_bubbles: int = self._param(n_bubbles, "bubbles", int)
         self._epsilon_0: float | None = epsilon_0
-        self._steps_cache: dict[Quantity, th.IntArr1D] = {}
-        self._spectrum_cache: dict[tuple[Quantity, int], tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]] = {}
+        self._power_cache: dict[Quantity, th.FloatArr2D] = {}
         self._fit_cache: dict[tuple[tp.Any, ...], tp.Any] = {}
 
     def _param[T: (int, float)](self, value: T | None, key: str, type_: type[T]) -> T:
@@ -173,7 +181,7 @@ class LatticeRun:
     @property
     def has_globals(self) -> bool:
         """Whether the log of the global quantities is available."""
-        return self.out_path is not None and self.out_path.is_file()
+        return bool(self.data.globals)
 
     @functools.cached_property
     def globals(self) -> dict[str, th.FloatArr1D]:
@@ -184,7 +192,7 @@ class LatticeRun:
         if not self.has_globals:
             raise FileNotFoundError(
                 f"The log of the global quantities (*.out) is not available for the run {self.name}.")
-        return read_globals(self.out_path)  # pyrefly: ignore[bad-argument-type]
+        return self.data.globals
 
     def _global_sum(self, name: str) -> th.FloatArr1D:
         """Sum of the symmetric and broken phase contributions of a global quantity."""
@@ -306,28 +314,66 @@ class LatticeRun:
     # Power spectra
     # -----
 
+    @property
+    def counts(self) -> th.FloatArr1D:
+        """The numbers of the lattice modes in the bins of the power spectra, see :py:meth:`power_spectrum`."""
+        return self.data.counts[self._valid_bins]
+
+    @property
+    def k(self) -> th.FloatArr1D:
+        """$k$, wavenumbers of the bins of the power spectra in lattice units, see :py:meth:`power_spectrum`."""
+        return self.data.k[self._valid_bins]
+
     def steps(self, quantity: Quantity = Quantity.GW_TT) -> th.IntArr1D:
         """The time steps at which the power spectrum of the given quantity is available.
 
         :param quantity: the quantity
-        :return: the time steps in increasing order
+        :return: the time steps in increasing order, or an empty array if the quantity is not available
         """
-        quantity = Quantity(quantity)
-        if quantity not in self._steps_cache:
-            prefix = quantity.file_prefix
-            steps = sorted(int(path.stem.removeprefix(prefix)) for path in self.path.glob(f"{prefix}*.txt"))
-            self._steps_cache[quantity] = np.array(steps, dtype=np.int_)
-        return self._steps_cache[quantity]
+        return self.data.steps.get(Quantity(quantity), np.array([], dtype=np.int_))
 
-    def spectrum_path(self, quantity: Quantity, step: int) -> Path:
-        """Path of the power spectrum file of the given quantity and time step."""
-        return self.path / f"{Quantity(quantity).file_prefix}{step}.txt"
+    def _steps_or_all(self, quantity: Quantity, steps: npt.ArrayLike | None) -> th.IntArr1D:
+        """The given time steps as an array, or all the time steps of the quantity if not given."""
+        return self.steps(quantity) if steps is None else np.asarray(steps, dtype=np.int_)
+
+    def _step_indices(self, quantity: Quantity, steps: npt.ArrayLike) -> int | th.IntArr1D:
+        """Indices of the given time steps in the power spectra of the quantity.
+
+        :raises ValueError: if the power spectrum is not available at some of the time steps
+        """
+        available = self.steps(quantity)
+        steps_arr = np.asarray(steps, dtype=np.int_)
+        indices = np.searchsorted(available, steps_arr)
+        found = (indices < available.size) & (available[np.minimum(indices, available.size - 1)] == steps_arr) \
+            if available.size else np.zeros(steps_arr.shape, dtype=np.bool_)
+        if not np.all(found):
+            raise ValueError(
+                f"The power spectrum of {Quantity(quantity).value} of the run {self.name} is not available "
+                f"at the time steps {np.atleast_1d(steps_arr)[~np.atleast_1d(found)].tolist()}.")
+        return int(indices) if indices.ndim == 0 else indices
+
+    def _power(self, quantity: Quantity) -> th.FloatArr2D:
+        """The power spectra of the valid bins of the quantity at all its time steps, read once and cached."""
+        quantity = Quantity(quantity)
+        if quantity not in self._power_cache:
+            self._power_cache[quantity] = self.data.power(quantity)[:, self._valid_bins]
+        return self._power_cache[quantity]
+
+    @tp.overload
+    def power_spectrum(
+            self, quantity: Quantity, steps: int) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]: ...
+
+    @tp.overload
+    def power_spectrum(
+            self,
+            quantity: Quantity,
+            steps: npt.ArrayLike | None = None) -> tuple[th.FloatArr1D, th.FloatArr2D, th.FloatArr1D]: ...
 
     def power_spectrum(
             self,
             quantity: Quantity,
-            step: int) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
-        r"""Read the raw power spectrum of the given quantity at the given time step.
+            steps: npt.ArrayLike | None = None) -> tuple[th.FloatArr1D, th.FloatArr, th.FloatArr1D]:
+        r"""The raw power spectra of the given quantity at the given time steps.
 
         The bins that contain no modes are removed, and so is the first bin.
         The first bin $k \in [0, 2\pi / L)$ contains only the zero mode $k = 0$,
@@ -337,51 +383,90 @@ class LatticeRun:
         The scripts of :correia_2025:`\ ` also exclude it.
 
         :param quantity: the quantity
-        :param step: the time step
-        :return: $k$, $\mathcal{P}(k)$ in lattice units, and the number of modes in each bin
+        :param steps: a time step, an array of time steps, or None for all the time steps of the quantity
+        :return: $k$, $\mathcal{P}(k)$ in lattice units, and the number of modes in each bin.
+            For an array of time steps, $\mathcal{P}(k)$ has the shape (time steps, bins).
+        :raises ValueError: if the power spectrum is not available at some of the time steps
         """
-        key = (Quantity(quantity), int(step))
-        if key not in self._spectrum_cache:
-            k, p, counts = read_power_spectrum(self.spectrum_path(*key))
-            valid = counts > 0
-            valid[0] = False
-            self._spectrum_cache[key] = k[valid], p[valid], counts[valid]
-        return self._spectrum_cache[key]
+        power = self._power(quantity)
+        if steps is not None:
+            power = power[self._step_indices(quantity, steps)]
+        return self.k, power, self.counts
 
-    def pow_normalised(self, quantity: Quantity, step: int) -> tuple[th.FloatArr1D, th.FloatArr1D]:
-        r"""Power spectrum normalised to a dimensionless quantity, where applicable.
+    @tp.overload
+    def pow_normalised(self, quantity: Quantity, steps: int) -> tuple[th.FloatArr1D, th.FloatArr1D]: ...
+
+    @tp.overload
+    def pow_normalised(
+            self, quantity: Quantity, steps: npt.ArrayLike | None = None) -> tuple[th.FloatArr1D, th.FloatArr2D]: ...
+
+    def pow_normalised(
+            self, quantity: Quantity, steps: npt.ArrayLike | None = None) -> tuple[th.FloatArr1D, th.FloatArr]:
+        r"""Power spectra normalised to a dimensionless quantity, where applicable.
 
         - $X$ is divided by $\bar{w}$ to give the spectrum of $U^i$ of :correia_2025:`\ ` eq. 20.
         - $\mathcal{P}_\text{gw}$ is divided by $\bar{\epsilon}_0$, :correia_2025:`\ ` eq. 25.
         - The other quantities are returned as they are.
 
         :param quantity: the quantity
-        :param step: the time step
-        :return: $k$ and the normalised power spectrum
+        :param steps: a time step, an array of time steps, or None for all the time steps of the quantity
+        :return: $k$ and the normalised power spectra, see :py:meth:`power_spectrum`
         """
         quantity = Quantity(quantity)
-        k, p, _ = self.power_spectrum(quantity, step)
+        k, p, _ = self.power_spectrum(quantity, steps)
         if quantity in (Quantity.X_DIV, Quantity.X_ROT, Quantity.X_TOT):
-            return k, p / self.enthalpy(step)
+            enthalpy = np.asarray(self.enthalpy(self._steps_or_all(quantity, steps)))
+            return k, p / enthalpy[..., np.newaxis]
         if quantity == Quantity.GW_TT:
             return k, p / self.epsilon_0
         return k, p
 
-    def rms(self, quantity: Quantity, step: int) -> float:
+    @tp.overload
+    def rms(self, quantity: Quantity, steps: int) -> float: ...
+
+    @tp.overload
+    def rms(self, quantity: Quantity, steps: npt.ArrayLike | None = None) -> th.FloatArr1D: ...
+
+    def rms(self, quantity: Quantity, steps: npt.ArrayLike | None = None) -> float | th.FloatArr1D:
         r"""RMS value of the normalised field, e.g. $\bar{U}_\parallel$ for :py:attr:`Quantity.X_DIV`.
 
         $$\bar{Y} = \sqrt{\int \frac{dk}{k} \mathcal{P}_Y(k)}$$
-        """
-        return np.sqrt(mean_square(*self.pow_normalised(quantity, step)))
 
-    def integral_scale(self, quantity: Quantity, step: int) -> float:
-        r"""$\xi$, integral scale of the given quantity, :correia_2025:`\ ` eq. 39."""
-        k, p, _ = self.power_spectrum(quantity, step)
+        :param quantity: the quantity
+        :param steps: a time step, an array of time steps, or None for all the time steps of the quantity
+        :return: the RMS value at each time step
+        """
+        return np.sqrt(mean_square(*self.pow_normalised(quantity, steps)))
+
+    @tp.overload
+    def integral_scale(self, quantity: Quantity, steps: int) -> float: ...
+
+    @tp.overload
+    def integral_scale(self, quantity: Quantity, steps: npt.ArrayLike | None = None) -> th.FloatArr1D: ...
+
+    def integral_scale(self, quantity: Quantity, steps: npt.ArrayLike | None = None) -> float | th.FloatArr1D:
+        r"""$\xi$, integral scale of the given quantity, :correia_2025:`\ ` eq. 39.
+
+        :param quantity: the quantity
+        :param steps: a time step, an array of time steps, or None for all the time steps of the quantity
+        :return: $\xi$ at each time step, or nan where the power spectrum is zero
+        """
+        k, p, _ = self.power_spectrum(quantity, steps)
         return integral_scale(k, p)
 
-    def omega_gw(self, step: int) -> float:
-        r"""$\Omega_\text{gw} = \int \frac{dk}{k} \mathcal{P}_\text{gw}(k)$, GW energy density fraction."""
-        return mean_square(*self.pow_normalised(Quantity.GW_TT, step))
+    @tp.overload
+    def omega_gw(self, steps: int) -> float: ...
+
+    @tp.overload
+    def omega_gw(self, steps: npt.ArrayLike | None = None) -> th.FloatArr1D: ...
+
+    def omega_gw(self, steps: npt.ArrayLike | None = None) -> float | th.FloatArr1D:
+        r"""$\Omega_\text{gw} = \int \frac{dk}{k} \mathcal{P}_\text{gw}(k)$, GW energy density fraction.
+
+        :param steps: a time step, an array of time steps, or None for all the time steps of the GW power spectrum
+        :return: $\Omega_\text{gw}$ at each time step
+        """
+        return mean_square(*self.pow_normalised(Quantity.GW_TT, steps))
 
     def pow_gw_rate(self, step: int, step_prev: int) -> tuple[th.FloatArr1D, th.FloatArr1D]:
         r"""Growth rate of the GW power spectrum from the difference of two time steps.
@@ -393,12 +478,9 @@ class LatticeRun:
         :param step_prev: the earlier time step
         :return: $k$ and the growth rate
         """
-        k, p = self.pow_normalised(Quantity.GW_TT, step)
-        k_prev, p_prev = self.pow_normalised(Quantity.GW_TT, step_prev)
-        if not np.array_equal(k, k_prev):
-            raise ValueError("The wavenumbers of the two time steps differ.")
+        k, p = self.pow_normalised(Quantity.GW_TT, [step_prev, step])
         delta_t = self.time(step) - self.time(step_prev)
-        return k, (p - p_prev) / (self.H_star * delta_t) / self.r_star
+        return k, (p[1] - p[0]) / (self.H_star * delta_t) / self.r_star
 
     def spectrum(self, step: int, step_prev: int | None = None, **kwargs: tp.Any) -> LatticeSpectrum:
         """Create a spectrum object for the given time step.
@@ -417,49 +499,45 @@ class LatticeRun:
     # Time series
     # -----
 
-    def _series_steps(self, quantity: Quantity, steps: tp.Iterable[int] | None) -> th.IntArr1D:
-        return self.steps(quantity) if steps is None else np.asarray(steps, dtype=np.int_)
-
     def rms_series(
             self,
             quantity: Quantity = Quantity.X_DIV,
-            steps: tp.Iterable[int] | None = None) -> tuple[th.FloatArr1D, th.FloatArr1D]:
+            steps: npt.ArrayLike | None = None) -> tuple[th.FloatArr1D, th.FloatArr1D]:
         """RMS value of the given quantity as a function of time, see :py:meth:`rms`.
 
         :param quantity: the quantity
         :param steps: the time steps, defaults to all the available steps
         :return: the times and the RMS values
         """
-        steps_arr = self._series_steps(quantity, steps)
-        return np.asarray(self.time(steps_arr)), np.array([self.rms(quantity, int(step)) for step in steps_arr])
+        steps_arr = self._steps_or_all(quantity, steps)
+        return np.asarray(self.time(steps_arr)), np.asarray(self.rms(quantity, steps_arr))
 
     def integral_scale_series(
             self,
             quantity: Quantity = Quantity.X_DIV,
-            steps: tp.Iterable[int] | None = None) -> tuple[th.FloatArr1D, th.FloatArr1D]:
+            steps: npt.ArrayLike | None = None) -> tuple[th.FloatArr1D, th.FloatArr1D]:
         """Integral scale of the given quantity as a function of time, see :py:meth:`integral_scale`.
 
         :param quantity: the quantity
         :param steps: the time steps, defaults to all the available steps
         :return: the times and the integral scales
         """
-        steps_arr = self._series_steps(quantity, steps)
-        return np.asarray(self.time(steps_arr)), \
-            np.array([self.integral_scale(quantity, int(step)) for step in steps_arr])
+        steps_arr = self._steps_or_all(quantity, steps)
+        return np.asarray(self.time(steps_arr)), np.asarray(self.integral_scale(quantity, steps_arr))
 
-    def omega_gw_series(self, steps: tp.Iterable[int] | None = None) -> tuple[th.FloatArr1D, th.FloatArr1D]:
+    def omega_gw_series(self, steps: npt.ArrayLike | None = None) -> tuple[th.FloatArr1D, th.FloatArr1D]:
         r"""$\Omega_\text{gw}(t)$, GW energy density fraction as a function of time.
 
         :param steps: the time steps, defaults to all the available steps
         :return: the times and $\Omega_\text{gw}$
         """
-        steps_arr = self._series_steps(Quantity.GW_TT, steps)
-        return np.asarray(self.time(steps_arr)), np.array([self.omega_gw(int(step)) for step in steps_arr])
+        steps_arr = self._steps_or_all(Quantity.GW_TT, steps)
+        return np.asarray(self.time(steps_arr)), np.asarray(self.omega_gw(steps_arr))
 
     def omega_gw_rate_series(
             self,
             delta_steps: int,
-            steps: tp.Iterable[int] | None = None) -> tuple[th.FloatArr1D, th.FloatArr1D]:
+            steps: npt.ArrayLike | None = None) -> tuple[th.FloatArr1D, th.FloatArr1D]:
         r"""$\frac{1}{H_n R_*} \frac{\Delta \Omega_\text{gw}}{H_n \Delta t}$, GW energy density growth rate.
 
         The growth rate of the GW energy density fraction is computed as a finite difference as a function of time.
@@ -469,21 +547,22 @@ class LatticeRun:
             the earlier step is also available
         :return: the midpoint times of the time step pairs and the growth rates
         """
-        available = set(self.steps(Quantity.GW_TT).tolist())
         if steps is None:
-            steps = [step for step in sorted(available) if step - delta_steps in available and step - delta_steps >= 0]
-        steps_arr = np.asarray(list(steps), dtype=np.int_)
+            available = self.steps(Quantity.GW_TT)
+            steps_arr = available[np.isin(available - delta_steps, available)]
+        else:
+            steps_arr = np.asarray(steps, dtype=np.int_)
         t1 = np.asarray(self.time(steps_arr))
         t0 = np.asarray(self.time(steps_arr - delta_steps))
-        omega1 = np.array([self.omega_gw(int(step)) for step in steps_arr])
-        omega0 = np.array([self.omega_gw(int(step) - delta_steps) for step in steps_arr])
+        omega1 = np.asarray(self.omega_gw(steps_arr))
+        omega0 = np.asarray(self.omega_gw(steps_arr - delta_steps))
         return 0.5 * (t0 + t1), (omega1 - omega0) / (self.H_star * (t1 - t0)) / self.r_star
 
     @functools.cached_property
     def ubar_par_max(self) -> tuple[int, float]:
         r"""The time step and the value of the maximum of $\bar{U}_\parallel$, :correia_2025:`\ ` table IV."""
         steps = self.steps(Quantity.X_DIV)
-        _, ubar = self.rms_series(Quantity.X_DIV, steps)
+        ubar = np.asarray(self.rms(Quantity.X_DIV))
         i_max = int(np.argmax(ubar))
         return int(steps[i_max]), float(ubar[i_max])
 
@@ -668,17 +747,11 @@ class LatticeRun:
         key = ("pow_gw", y_min, y_max, start_fraction, step_end)
         if key not in self._fit_cache:
             steps = self._fit_steps(Quantity.GW_TT, step_end)
-            k, _ = self.pow_normalised(Quantity.GW_TT, int(steps[-1]))
+            k, pow_gw = self.pow_normalised(Quantity.GW_TT, steps)
             y = k * self.R_star
             modes = (y >= y_min) & (y <= y_max)
-            pow_gw = np.empty((steps.size, int(np.count_nonzero(modes))))
-            for i, step in enumerate(steps):
-                k_step, p = self.pow_normalised(Quantity.GW_TT, int(step))
-                if not np.array_equal(k_step, k):
-                    raise ValueError(f"The wavenumbers of step {step} differ from those of the last step.")
-                pow_gw[i] = p[modes]
             self._fit_cache[key] = fit_pow_gw_modes(
-                t=np.asarray(self.time(steps)), k=k[modes], y=y[modes], pow_gw=pow_gw,
+                t=np.asarray(self.time(steps)), k=k[modes], y=y[modes], pow_gw=pow_gw[:, modes],
                 start_fraction=start_fraction, t_decay_guess=self.t_max)
         return self._fit_cache[key]
 
