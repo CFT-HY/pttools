@@ -7,7 +7,6 @@ import os
 import typing as tp
 import uuid
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.bubble import Bubble, Phase, nu_gdh2024
@@ -35,6 +34,9 @@ from pttools.utils.fields import Extractable, Fields, FieldSpec, Preset
 from pttools.utils.json import export_json
 
 if tp.TYPE_CHECKING:
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
+
     from pttools.plot.utils import FigAndAxes
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -751,8 +753,8 @@ class SSMSpectrum(Extractable, SpectrumBase):
 
     def plot_v(
             self,
-            fig: plt.Figure | None = None,
-            ax: plt.Axes | None = None,
+            fig: "Figure | None" = None,
+            ax: "Axes | None" = None,
             path: str | os.PathLike[str] | None = None,
             **kwargs: tp.Any) -> "FigAndAxes":
         r"""Plot velocity power spectrum $\mathcal{P}_{\tilde{v}}(q)$."""
@@ -761,8 +763,8 @@ class SSMSpectrum(Extractable, SpectrumBase):
 
     def plot_spec_den_gw(
             self,
-            fig: plt.Figure | None = None,
-            ax: plt.Axes | None = None,
+            fig: "Figure | None" = None,
+            ax: "Axes | None" = None,
             path: str | os.PathLike[str] | None = None,
             **kwargs: tp.Any) -> "FigAndAxes":
         """Plot spectral density of scaled GW power."""
@@ -771,8 +773,8 @@ class SSMSpectrum(Extractable, SpectrumBase):
 
     def plot_spec_den_v(
             self,
-            fig: plt.Figure | None = None,
-            ax: plt.Axes | None = None,
+            fig: "Figure | None" = None,
+            ax: "Axes | None" = None,
             path: str | os.PathLike[str] | None = None,
             **kwargs: tp.Any) -> "FigAndAxes":
         """Plot spectral density of the velocity field $P_v(y)$."""

@@ -1,6 +1,7 @@
 r"""$\xi, v$ plane plotting."""
 
-import matplotlib.pyplot as plt
+import typing as tp
+
 import numpy as np
 from numpy import dtype
 from numpy.typing import NDArray
@@ -8,6 +9,9 @@ import scipy.integrate as spi
 
 from pttools import bubble
 import pttools.type_hints as th
+
+if tp.TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 #: Unphysical deflagration velocities below this are not plotted.
 V_GREY_MIN: float = 1e-4
@@ -77,7 +81,7 @@ def v_ahead_max[T](xi: T) -> T:
     return xi
 
 
-def plot_v_excerpt(ax: plt.Axes, v_wall: float, alpha_plus: float, n_xi: int = 500) -> None:
+def plot_v_excerpt(ax: "Axes", v_wall: float, alpha_plus: float, n_xi: int = 500) -> None:
     """Plots parts of solution obtained by integration of fluid equations.
 
     Supersonic deflagration solution comes in two parts, ahead and behind wall,
@@ -106,7 +110,7 @@ def plot_v_excerpt(ax: plt.Axes, v_wall: float, alpha_plus: float, n_xi: int = 5
         ax.plot([xi_b[-1]], [v_b[-1]], "bo")
 
 
-def plot_conditions(ax: plt.Axes, cs2_s: float, cs2_b: float) -> None:
+def plot_conditions(ax: "Axes", cs2_s: float, cs2_b: float) -> None:
     r"""Plot the lines $v = \xi$, $v = v_{\rm sh}(\xi)$ and $v = \mu(\xi, c_s)$ of the wall conditions."""
     # Create a line v(xi) = xi to start solving on with forwards and backwards solutions
     # This is the maximum fluid speed ahead of wall for deflagrations
@@ -131,7 +135,7 @@ def plot_conditions(ax: plt.Axes, cs2_s: float, cs2_b: float) -> None:
 
 
 # def plot_differing(
-#         ax: plt.Axes,
+#         ax: "Axes",
 #         data: np.ndarray,
 #         ref: np.ndarray,
 #         rtol_diffs: np.ndarray,
@@ -158,7 +162,7 @@ def plot_conditions(ax: plt.Axes, cs2_s: float, cs2_b: float) -> None:
 
 
 def plot_plane(
-        ax: plt.Axes,
+        ax: "Axes",
         data_s: th.FloatArr3D,
         data_b: th.FloatArr3D | None = None,
         method: th.ODESolver | None = None,

@@ -11,12 +11,14 @@ import abc
 import os
 import typing as tp
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.type_hints import FloatArr1D
 
 if tp.TYPE_CHECKING:
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
+
     from pttools.plot.utils import FigAndAxes
 
 
@@ -128,8 +130,8 @@ class SpectrumBase(abc.ABC):
 
     def plot(
             self,
-            fig: plt.Figure | None = None,
-            ax: plt.Axes | None = None,
+            fig: "Figure | None" = None,
+            ax: "Axes | None" = None,
             path: str | os.PathLike[str] | None = None,
             **kwargs: tp.Any) -> "FigAndAxes":
         r"""Plot the GW power spectrum $\mathcal{P}_\text{gw}(kR_*)$, see :py:meth:`plot_gw`."""
@@ -137,8 +139,8 @@ class SpectrumBase(abc.ABC):
 
     def plot_gw(
             self,
-            fig: plt.Figure | None = None,
-            ax: plt.Axes | None = None,
+            fig: "Figure | None" = None,
+            ax: "Axes | None" = None,
             path: str | os.PathLike[str] | None = None,
             **kwargs: tp.Any) -> "FigAndAxes":
         r"""Plot the GW power spectrum $\mathcal{P}_\text{gw}(kR_*)$.
@@ -154,8 +156,8 @@ class SpectrumBase(abc.ABC):
 
     def plot_pow_U_par(
             self,
-            fig: plt.Figure | None = None,
-            ax: plt.Axes | None = None,
+            fig: "Figure | None" = None,
+            ax: "Axes | None" = None,
             path: str | os.PathLike[str] | None = None,
             scale: float = 1.,
             **kwargs: tp.Any) -> "FigAndAxes":
@@ -173,8 +175,8 @@ class SpectrumBase(abc.ABC):
 
     def plot_pow_gw_rate(
             self,
-            fig: plt.Figure | None = None,
-            ax: plt.Axes | None = None,
+            fig: "Figure | None" = None,
+            ax: "Axes | None" = None,
             path: str | os.PathLike[str] | None = None,
             scale: float = 1.,
             **kwargs: tp.Any) -> "FigAndAxes":

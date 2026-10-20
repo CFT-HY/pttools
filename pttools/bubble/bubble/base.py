@@ -7,7 +7,6 @@ import os
 import typing as tp
 import uuid
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.bubble import const
@@ -21,6 +20,9 @@ from pttools.utils.json import export_json
 from pttools.utils.validation import ensure_floats
 
 if tp.TYPE_CHECKING:
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
+
     from pttools.models.model import Model
     from pttools.plot.utils import FigAndAxes
 
@@ -185,18 +187,18 @@ class BaseBubble(Extractable, abc.ABC):
 
     def plot(
             self,
-            fig: plt.Figure | None = None,
+            fig: "Figure | None" = None,
             path: str | os.PathLike[str] | None = None,
             full_range: bool = False,
-            **kwargs: tp.Any) -> plt.Figure:
+            **kwargs: tp.Any) -> "Figure":
         """Plot the velocity and enthalpy profiles of the bubble."""
         from pttools.plot.bubbles import plot_bubbles  # noqa: PLC0415
         return plot_bubbles([self], fig, path, full_range=full_range, **kwargs)
 
     def plot_v(
             self,
-            fig: plt.Figure | None = None,
-            ax: plt.Axes | None = None,
+            fig: "Figure | None" = None,
+            ax: "Axes | None" = None,
             path: str | os.PathLike[str] | None = None,
             full_range: bool = False,
             **kwargs: tp.Any) -> "FigAndAxes":
@@ -206,8 +208,8 @@ class BaseBubble(Extractable, abc.ABC):
 
     def plot_w(
             self,
-            fig: plt.Figure | None = None,
-            ax: plt.Axes | None = None,
+            fig: "Figure | None" = None,
+            ax: "Axes | None" = None,
             path: str | os.PathLike[str] | None = None,
             full_range: bool = False,
             **kwargs: tp.Any) -> "FigAndAxes":

@@ -1,9 +1,9 @@
 """Analysis utilities for the suppression factor."""
 
 import logging
+import typing as tp
 
 from matplotlib.colorbar import Colorbar
-import matplotlib.pyplot as plt
 from matplotlib.tri import Triangulation
 import numpy as np
 
@@ -12,6 +12,10 @@ from pttools.plot.utils import create_fig_ax
 from pttools.ssm.suppression import Suppression, alpha_n_max_approx
 from pttools.ssm.suppression import alpha_n_max as alpha_n_max_func
 import pttools.type_hints as th
+
+if tp.TYPE_CHECKING:
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -25,8 +29,8 @@ class SuppressionPlot:
     def __init__(
             self,
             sup: Suppression,
-            fig: plt.Figure | None = None,
-            ax: plt.Axes | None = None,
+            fig: "Figure | None" = None,
+            ax: "Axes | None" = None,
             v_wall_min: float = 0,
             v_wall_max: float = 1,
             alpha_n_min: float = 0,
@@ -59,8 +63,8 @@ class SuppressionPlot:
         :param figsize: size of the figure if a new figure is created
         """
         fig_was_none = fig is None
-        self.fig: plt.Figure
-        self.ax: plt.Axes
+        self.fig: Figure
+        self.ax: Axes
         self.fig, self.ax = create_fig_ax(fig, ax, figsize=figsize)
         self.sup: Suppression = sup
         self.tri: Triangulation = Triangulation(self.sup.v_walls, self.sup.alpha_ns)
