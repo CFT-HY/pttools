@@ -121,8 +121,20 @@ CONCURRENT_PARALLELISM: tp.Final[bool] = NUMBA_DISABLE_JIT or NUMBA_THREADING_LA
 
 This requires a threading layer that supports it, i.e. TBB or OpenMP (see :data:`CONCURRENT_THREADING_LAYERS`).
 When Numba JIT compilation is disabled, there are no Numba threads, and this is therefore always true.
-This is used by :func:`pttools.analysis.parallel.create_spectra` to enable the Numba parallelism of the spectra
-when they are computed in threads.
+This is required by :func:`pttools.analysis.parallel.create_spectra` to enable the Numba parallelism of the spectra
+when they are computed in threads, together with :data:`SHARED_THREAD_POOL`.
+"""
+SHARED_THREAD_POOL: tp.Final[bool] = NUMBA_THREADING_LAYER == "tbb"
+"""Whether Numba-compiled functions with ``parallel=True`` that are run from multiple threads share a thread pool.
+
+With TBB, the parallel regions started from all threads are run by the same worker threads,
+and therefore the number of threads stays close to the number of CPU cores.
+With OpenMP, each thread that starts a parallel region gets a team of worker threads of its own,
+and therefore running parallel regions from multiple threads simultaneously can oversubscribe the CPU cores.
+The ``workqueue`` layer does not support running parallel regions from multiple threads simultaneously at all.
+When Numba JIT compilation is disabled, there are no Numba threads, and this is false.
+This is required by :func:`pttools.analysis.parallel.create_spectra` to enable the Numba parallelism of the spectra
+when they are computed in threads, together with :data:`CONCURRENT_PARALLELISM`.
 """
 
 if not CONCURRENT_PARALLELISM:

@@ -99,7 +99,9 @@ def create_spectrum(
         if the bubble cannot be created
     :param parallel: whether to use the Numba parallelism in computing the spectrum.
         When the spectrum is created in a thread, this requires that
-        :data:`pttools.speedup.options.CONCURRENT_PARALLELISM` is true.
+        :data:`pttools.speedup.options.CONCURRENT_PARALLELISM` is true,
+        and to avoid oversubscribing the CPU cores, :func:`create_spectra` also requires that
+        :data:`pttools.speedup.options.SHARED_THREAD_POOL` is true.
     :param args: arguments for the post-processing function
     :param kwargs: kwargs for the post-processing function
     :return: the spectrum and the outputs of the post-processing function
@@ -259,15 +261,18 @@ def create_spectra(
 
     :param use_threads: whether to use threads instead of processes, see :func:`pttools.speedup.parallel.run_parallel`.
         If the Numba threading layer supports concurrent parallelism
-        (see :data:`pttools.speedup.options.CONCURRENT_PARALLELISM`),
+        (see :data:`pttools.speedup.options.CONCURRENT_PARALLELISM`)
+        and the threads share its thread pool (see :data:`pttools.speedup.options.SHARED_THREAD_POOL`),
         the Numba parallelism of the spectra is then enabled, as the threads would otherwise
         be limited by the parts of the computation that hold the GIL.
+        Without a shared thread pool, e.g. with OpenMP, each thread would have a thread pool of its own,
+        which would oversubscribe the CPU cores.
         With processes, the Numba parallelism of the spectra is disabled,
         as the processes already use all the CPU cores.
     """
     kwargs2: dict[str, tp.Any] = {} if kwargs is None else kwargs.copy()
     kwargs2["spectrum_kwargs"] = spectrum_kwargs
-    kwargs2["parallel"] = use_threads and options.CONCURRENT_PARALLELISM
+    kwargs2["parallel"] = use_threads and options.CONCURRENT_PARALLELISM and options.SHARED_THREAD_POOL
     # The output array contains spectra instead of bubbles, since the bubble_func is create_spectrum().
     return create_bubbles(  # pyrefly: ignore[bad-return]
         model=model,

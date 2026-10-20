@@ -293,6 +293,8 @@ When PTtools is imported, it warns if the Numba threading layer does not support
 i.e. running Numba functions with ``parallel=True`` from multiple threads simultaneously,
 which is used by :func:`pttools.analysis.parallel.create_spectra` with ``use_threads=True``
 (see :data:`pttools.speedup.options.CONCURRENT_PARALLELISM`).
+As the threads share the thread pool of Numba only with TBB (see :data:`pttools.speedup.options.SHARED_THREAD_POOL`),
+:func:`pttools.analysis.parallel.create_spectra` uses the Numba parallelism in the threads only with TBB.
 If you can't get the threading backends working,
 you can disable the nested parallelism by setting the environment variable
 ``NUMBA_NESTED_PARALLELISM=0`` before importing PTtools.

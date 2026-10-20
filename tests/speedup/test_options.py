@@ -77,6 +77,7 @@ class TestThreadingLayer(unittest.TestCase):
         assert speedup_threading.predict_numba_threading_layer() == numba.threading_layer()
         assert numba.threading_layer() == options.NUMBA_THREADING_LAYER
         assert (numba.threading_layer() in options.CONCURRENT_THREADING_LAYERS) == options.CONCURRENT_PARALLELISM
+        assert (numba.threading_layer() == "tbb") == options.SHARED_THREAD_POOL
 
     @unittest.skipIf(options.NUMBA_DISABLE_JIT, "The threading layer is not used when Numba JIT is disabled.")
     def test_check_threading_layer(self) -> None:

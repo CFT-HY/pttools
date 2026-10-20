@@ -57,11 +57,17 @@ class TestCreateSpectra(unittest.TestCase):
             np.testing.assert_allclose(spectrum.omgw0(), ref_spectrum.omgw0(), rtol=1e-12)
 
     def test_create_spectra_parallel_flag(self) -> None:
-        """The Numba parallelism of the spectra should be enabled only with threads and concurrent parallelism."""
-        cases = ((False, True, False), (True, False, False), (True, True, True))
-        for use_threads, concurrent, expected in cases:
-            with self.subTest(use_threads=use_threads, concurrent=concurrent), \
+        """The Numba parallelism of the spectra should require threads, concurrency and a shared thread pool."""
+        cases = (
+            (False, True, True, False),
+            (True, False, True, False),
+            (True, True, False, False),
+            (True, True, True, True),
+        )
+        for use_threads, concurrent, shared, expected in cases:
+            with self.subTest(use_threads=use_threads, concurrent=concurrent, shared=shared), \
                     mock.patch.object(parallel.options, "CONCURRENT_PARALLELISM", concurrent), \
+                    mock.patch.object(parallel.options, "SHARED_THREAD_POOL", shared), \
                     mock.patch.object(parallel, "create_bubbles") as create_bubbles:
                 parallel.create_spectra(self.model, np.array([0.5]), np.array([0.1]), use_threads=use_threads)
                 kwargs = create_bubbles.call_args.kwargs
