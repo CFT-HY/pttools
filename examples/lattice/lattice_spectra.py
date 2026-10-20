@@ -24,9 +24,10 @@ whereas the SSM spectrum is that of a stationary source that lasts for $N_\text{
 in an expanding universe.
 """
 
+from __future__ import annotations
+
 import logging
 
-from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -35,6 +36,10 @@ from examples.lattice.lattice_gw_asymptote import FIT_SETTINGS
 from examples.utils import save_and_show_figs
 from pttools.lattice import compare_chrw25_runs
 from pttools.plot.lattice import plot_pow_gw_asymptote_comparison
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.figure import Figure
 
 logger: logging.Logger = logging.getLogger(__name__)
 

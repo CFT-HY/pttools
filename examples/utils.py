@@ -1,14 +1,18 @@
 """Utilities for PTtools examples"""
 
+from __future__ import annotations
+
 import os
 from pathlib import Path
 import typing as tp
 
-from matplotlib.figure import Figure
-
 import pttools.plot.utils as plot_utils
 from pttools.plot.utils import FIG_FORMATS
+import pttools.type_hints as th
 from pttools.utils.docstrings import copy_docstring_dec
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.figure import Figure
 
 #: Figures directory for the examples
 FIG_DIR: Path = Path(__file__).resolve().parent / "fig"

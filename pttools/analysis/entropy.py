@@ -1,13 +1,17 @@
 """Utilities for computing the entropy of a bubble."""
 
+from __future__ import annotations
+
 import logging
 
 import numpy as np
 
 from pttools.bubble import relativity
-from pttools.bubble.bubble import Bubble
 from pttools.bubble.solution_type import SolutionType
 import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.bubble.bubble import Bubble
 
 logger: logging.Logger = logging.getLogger(__name__)
 

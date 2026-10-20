@@ -3,9 +3,10 @@ r"""Plots that compare the Sound Shell Model with hydrodynamic lattice simulatio
 The style follows the figures of :correia_2025:`\ `, e.g. fig. 5.
 """
 
+from __future__ import annotations
+
 import typing as tp
 
-from matplotlib.axes import Axes
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
@@ -14,9 +15,13 @@ import numpy.typing as npt
 
 from pttools.analysis.lattice import suppression_series
 from pttools.lattice import LatticeComparison, LatticeRun, PowGwAsymptoteFit, Quantity
-from pttools.math.asymptote import AsymptoteFit
 from pttools.plot.utils import FigAndAxes, create_fig_ax
 import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.axes import Axes
+
+    from pttools.math.asymptote import AsymptoteFit
 
 #: Colours of the simulation data, as in :correia_2025:`\ `
 COLOR_GW: str = "#d55e00"

@@ -1,5 +1,7 @@
 """Functions for ODE integration of fluid profiles in parametric form."""
 
+from __future__ import annotations
+
 import logging
 import typing as tp
 
@@ -10,8 +12,6 @@ import numpy as np
 import scipy.integrate as spi
 
 # from scipy.integrate._ivp.ivp import _IVPMethod
-from scipy.integrate._ivp.ivp import OdeResult
-
 from pttools.bubble.const import DEFAULT_N_XI, DEFAULT_T_END
 from pttools.bubble.cs2_bag import cs2_bag, cs2_bag_scalar_cfunc
 from pttools.bubble.phase import Phase
@@ -20,6 +20,9 @@ from pttools.speedup.differential import DifferentialCache, DifferentialCFunc, D
 from pttools.speedup.numba_wrapper import numbalsoda
 from pttools.speedup.options import NUMBA_DISABLE_JIT, NUMBA_INTEGRATE
 import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from scipy.integrate._ivp.ivp import OdeResult
 
 logger: logging.Logger = logging.getLogger(__name__)
 

@@ -1,14 +1,19 @@
 """Utilities for plotting multiple bubbles."""
 
+from __future__ import annotations
+
 import os
 import typing as tp
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.bubble.bubble import BaseBubble
 from pttools.plot.utils import FigAndAxes, create_fig_ax
 from pttools.plot.utils import legend as legend_func
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.bubble.bubble import BaseBubble
 
 XI_LABEL = r"$\xi$"
 V_LABEL = "$v$"

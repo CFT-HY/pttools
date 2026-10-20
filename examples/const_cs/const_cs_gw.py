@@ -7,12 +7,13 @@ Plot GW spectra for various ConstCSModels
 These figures and this table are used in Mika's M.Sc. thesis.
 """
 
+from __future__ import annotations
+
 import io
 import logging
 import time
 import typing as tp
 
-from matplotlib.axes import Axes
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -24,6 +25,9 @@ from pttools.models import ConstCSModel
 from pttools.omgw0 import H2, Spectrum, SpectrumArr3D, omega_ins_h2
 import pttools.type_hints as th
 from pttools.utils.system import IS_READ_THE_DOCS
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.axes import Axes
 
 logger: logging.Logger = logging.getLogger(__name__)
 

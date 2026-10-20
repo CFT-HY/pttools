@@ -1,5 +1,7 @@
 """Utilities for plotting and analysing data."""
 
+from __future__ import annotations
+
 import os
 from pathlib import Path
 import typing as tp
@@ -7,12 +9,16 @@ import typing as tp
 from matplotlib import rcParams
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
-from matplotlib.legend import Legend
 import matplotlib.pyplot as plt
 
 from pttools.bubble.phase import Phase
-from pttools.models.base import BaseModel
+import pttools.type_hints as th
 from pttools.utils.system import IS_GITHUB_ACTIONS
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.legend import Legend
+
+    from pttools.models.base import BaseModel
 
 #: A4 paper size in inches
 A4_PAPER_SIZE: tuple[float, float] = (11.7, 8.3)

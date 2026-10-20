@@ -5,7 +5,7 @@ Giese et al. testing 3
 Testing to find the properties of a single bubble with PTtools and :giese_2021:`\ ` solvers
 """
 
-from matplotlib.figure import Figure
+from __future__ import annotations
 
 from examples.utils import save_and_show_fig
 from pttools.bubble import Bubble
@@ -13,6 +13,10 @@ from pttools.bubble.gksvdv.gksvdv21 import kappaNuMuModel
 from pttools.bubble.props import find_phase
 from pttools.bubble.thermo import kappa, kinetic_energy_density, va_trace_anomaly_diff
 from pttools.models import ConstCSModel
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.figure import Figure
 
 
 def main(

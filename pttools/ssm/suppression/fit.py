@@ -10,6 +10,8 @@ It is a lattice artifact, and therefore it is detected by :py:func:`lattice_arti
 and excluded from the fit by default.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 import enum
 import logging
@@ -17,8 +19,10 @@ import typing as tp
 
 import numpy as np
 
-from pttools.ssm.spectrum_base import SpectrumBase
 import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.ssm.spectrum_base import SpectrumBase
 
 logger: logging.Logger = logging.getLogger(__name__)
 

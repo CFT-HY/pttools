@@ -1,5 +1,7 @@
 """Unit tests for the phase of the points of a bubble profile."""
 
+from __future__ import annotations
+
 import numpy as np
 import pytest
 
@@ -9,7 +11,10 @@ from pttools.bubble.props import find_phase, find_phase_core
 from pttools.bubble.solution_type import SolutionType
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
-from pttools.models.model import Model
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.models.model import Model
 
 BAG: BagModel = BagModel(a_s=1.1, a_b=1, V_s=1)
 CONST_CS: ConstCSModel = ConstCSModel(css2=1/3 - 0.01, csb2=1/3 - 0.011, a_s=1.5, a_b=1, V_s=1)

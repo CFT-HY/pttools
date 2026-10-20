@@ -21,6 +21,8 @@ $$\int f dV
 = \frac{4\pi}{3} \int_{R_{\text{min}}^3}^{R_{\text{max}}^3} dr^3 f$$
 """
 
+from __future__ import annotations
+
 import logging
 import typing as tp
 
@@ -41,7 +43,7 @@ if tp.TYPE_CHECKING:
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def e_bar(model: "Model", wn: float) -> float:
+def e_bar(model: Model, wn: float) -> float:
     r"""Total average energy density $\bar{e}$.
 
     This function assumes that the phase transition is rapid enough that the expansion of the universe can be neglected,
@@ -56,7 +58,7 @@ def e_bar(model: "Model", wn: float) -> float:
 
 
 def entropy_density_diff(
-        model: "Model",
+        model: Model,
         w: th.FloatArr1D,
         xi: th.FloatArr1D,
         v_wall: float,
@@ -75,7 +77,7 @@ def entropy_density_diff(
 
 
 def kappa(
-        model: "Model",
+        model: Model,
         v: th.FloatArr1D,
         w: th.FloatArr1D,
         xi: th.FloatArr1D,
@@ -197,7 +199,7 @@ def nu_gdh2024[T: FloatOrArr](omega: T) -> T:
 
 
 def omega(
-        model: "Model",
+        model: Model,
         w: th.FloatArr1D,
         xi: th.FloatArr1D,
         v_wall: float,
@@ -266,7 +268,7 @@ def thermal_energy_fraction[T: FloatOrArr](eq_bva: T, eb: T | float) -> T:
 
 
 def trace_anomaly_diff(
-        model: "Model",
+        model: Model,
         w: th.FloatArr1D,
         xi: th.FloatArr1D,
         v_wall: float,
@@ -371,7 +373,7 @@ def va_enthalpy_density(eq: float) -> float:
 
 
 def va_entropy_density_diff(
-        model: "Model",
+        model: Model,
         w: th.FloatArr1D,
         xi: th.FloatArr1D,
         v_wall: float,
@@ -448,7 +450,7 @@ def va_thermal_energy_fraction(eq_va: float, eb: float) -> float:
 
 
 def va_trace_anomaly_diff(
-        model: "Model",
+        model: Model,
         w: th.FloatArr1D,
         xi: th.FloatArr1D,
         v_wall: float,

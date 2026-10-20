@@ -7,19 +7,23 @@ They are defined in flat space, without the expansion of the universe,
 so that the spectra can be compared directly with each other.
 """
 
+from __future__ import annotations
+
 import abc
 import os
 import typing as tp
 
 import numpy as np
 
+import pttools.type_hints as th
 from pttools.type_hints import FloatArr1D
 
 if tp.TYPE_CHECKING:
+    from pttools.plot.utils import FigAndAxes
+
+if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
-
-    from pttools.plot.utils import FigAndAxes
 
 
 class SpectrumBase(abc.ABC):
@@ -130,19 +134,19 @@ class SpectrumBase(abc.ABC):
 
     def plot(
             self,
-            fig: "Figure | None" = None,
-            ax: "Axes | None" = None,
+            fig: Figure | None = None,
+            ax: Axes | None = None,
             path: str | os.PathLike[str] | None = None,
-            **kwargs: tp.Any) -> "FigAndAxes":
+            **kwargs: tp.Any) -> FigAndAxes:
         r"""Plot the GW power spectrum $\mathcal{P}_\text{gw}(kR_*)$, see :py:meth:`plot_gw`."""
         return self.plot_gw(fig, ax, path, **kwargs)
 
     def plot_gw(
             self,
-            fig: "Figure | None" = None,
-            ax: "Axes | None" = None,
+            fig: Figure | None = None,
+            ax: Axes | None = None,
             path: str | os.PathLike[str] | None = None,
-            **kwargs: tp.Any) -> "FigAndAxes":
+            **kwargs: tp.Any) -> FigAndAxes:
         r"""Plot the GW power spectrum $\mathcal{P}_\text{gw}(kR_*)$.
 
         :param fig: figure to plot in
@@ -156,11 +160,11 @@ class SpectrumBase(abc.ABC):
 
     def plot_pow_U_par(
             self,
-            fig: "Figure | None" = None,
-            ax: "Axes | None" = None,
+            fig: Figure | None = None,
+            ax: Axes | None = None,
             path: str | os.PathLike[str] | None = None,
             scale: float = 1.,
-            **kwargs: tp.Any) -> "FigAndAxes":
+            **kwargs: tp.Any) -> FigAndAxes:
         r"""Plot the compressional velocity power spectrum $\mathcal{P}_{U_{\parallel}}(z)$.
 
         :param fig: figure to plot in
@@ -175,11 +179,11 @@ class SpectrumBase(abc.ABC):
 
     def plot_pow_gw_rate(
             self,
-            fig: "Figure | None" = None,
-            ax: "Axes | None" = None,
+            fig: Figure | None = None,
+            ax: Axes | None = None,
             path: str | os.PathLike[str] | None = None,
             scale: float = 1.,
-            **kwargs: tp.Any) -> "FigAndAxes":
+            **kwargs: tp.Any) -> FigAndAxes:
         r"""Plot the growth rate of the GW power spectrum.
 
         :param fig: figure to plot in

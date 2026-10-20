@@ -6,6 +6,8 @@ The parameter $y = kR_*$ is a :py:attr:`~pttools.utils.fields.FieldShape.GRID` f
 which is stored only once per file.
 """
 
+from __future__ import annotations
+
 from collections.abc import Set
 import typing as tp
 
@@ -88,7 +90,7 @@ def _ragged(name: str, description: str, axis: str) -> Field:
     return Field(name, shape=FieldShape.RAGGED, axis=axis, presets=PRESETS_FULL, description=description)
 
 
-def _spec_den_gw_low(spectrum: "SSMSpectrum") -> np.ndarray:
+def _spec_den_gw_low(spectrum: SSMSpectrum) -> np.ndarray:
     r"""$\tilde{P}_\text{gw,low}(y)$ as an array.
 
     In the bag model the low-$k$ spectral density is independent of $z$, and is therefore computed as a scalar.

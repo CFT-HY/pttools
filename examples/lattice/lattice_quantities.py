@@ -11,14 +11,18 @@ Therefore, the SSM values are shown as constants, and the suppression factor tha
 GW power growth rate with the simulation depends on the time at which it is fitted.
 """
 
-import logging
+from __future__ import annotations
 
-from matplotlib.figure import Figure
+import logging
 
 from examples.lattice.lattice_growth import R_STAR, Y_MIN
 from examples.utils import save_and_show_figs
 from pttools.lattice import compare_chrw25_runs
 from pttools.plot.lattice import plot_gw_rate_time_comparison, plot_quantities_comparison
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.figure import Figure
 
 logger: logging.Logger = logging.getLogger(__name__)
 

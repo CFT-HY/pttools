@@ -1,5 +1,7 @@
 """Utilities for Sphinx documentation."""
 
+from __future__ import annotations
+
 import functools
 import json
 import logging
@@ -8,7 +10,9 @@ import sys
 from threading import Lock
 import typing as tp
 
-if tp.TYPE_CHECKING:
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
     from sphinx.application import Sphinx
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -18,7 +22,7 @@ MISSING: object = object()
 BACKREFERENCES_WARNING_LOCK: Lock = Lock()
 
 
-def backreference_names(app: "Sphinx", name: str, obj: tp.Any) -> list[str]:
+def backreference_names(app: Sphinx, name: str, obj: tp.Any) -> list[str]:
     """Find the names by which the given object is referred to in the examples.
 
     Sphinx-Gallery records an object by the name with which the example refers to it,

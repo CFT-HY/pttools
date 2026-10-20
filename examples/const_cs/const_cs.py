@@ -5,9 +5,9 @@ ConstCSModel
 Plot various quantities for the constant sound speed model
 """
 
-from math import sqrt
+from __future__ import annotations
 
-from matplotlib.figure import Figure
+from math import sqrt
 
 from examples.utils import save_and_show_figs
 from pttools.bubble import Bubble
@@ -15,6 +15,10 @@ from pttools.models import ConstCSModel
 from pttools.omgw0 import Spectrum
 from pttools.plot.model import ModelPlot
 from pttools.ssm import NucType
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.figure import Figure
 
 
 def main() -> tuple[ModelPlot, Figure, Figure]:

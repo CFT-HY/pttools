@@ -1,20 +1,24 @@
 r"""$\alpha_+$ functions for the Bag Model."""
 
+from __future__ import annotations
+
 import numba
 from numba.extending import overload
 import numpy as np
 from scipy.optimize import fsolve
 
-from pttools import speedup
 from pttools.bubble import const
 from pttools.bubble.alpha.alpha_limits_bag import alpha_n_max_deflagration_bag, alpha_n_max_detonation_bag
 from pttools.bubble.alpha.alpha_n_bag import find_alpha_n_bag
 from pttools.bubble.alpha.alpha_plus import alpha_plus_initial_guess
-from pttools.bubble.integrate import FluidIntegrateMethod
 from pttools.bubble.solution_type import SolutionType
 from pttools.speedup import njit
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools import speedup
+    from pttools.bubble.integrate import FluidIntegrateMethod
 
 
 def _find_alpha_plus_bag_scalar(

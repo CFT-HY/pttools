@@ -1,5 +1,7 @@
 """Utilities for parallel execution of functions using multiple Python processes or threads with concurrent.futures."""
 
+from __future__ import annotations
+
 import atexit
 from concurrent.futures import Executor, ProcessPoolExecutor, ThreadPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
@@ -14,11 +16,14 @@ import types
 import typing as tp
 
 import numpy as np
-from numpy.typing import NDArray
 
 import pttools.logging
 from pttools.speedup.options import MAX_WORKERS_DEFAULT, USE_INTERPRETERS, USE_THREADS
+import pttools.type_hints as th
 from pttools.utils.system import SUPPORTS_INTERPRETER_POOL
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from numpy.typing import NDArray
 
 if SUPPORTS_INTERPRETER_POOL:
     from concurrent.futures import InterpreterPoolExecutor
@@ -67,7 +72,7 @@ class FakeExecutor:
     """A fake executor for single-threaded execution."""
 
     @staticmethod
-    def submit(func: tp.Callable, *args: tp.Any, **kwargs: tp.Any) -> "FakeFuture":
+    def submit(func: tp.Callable, *args: tp.Any, **kwargs: tp.Any) -> FakeFuture:
         """Submit a function for execution and return a future object."""
         return FakeFuture(func, *args, **kwargs)
 

@@ -1,16 +1,16 @@
 """Utilities for plotting the entropy and related quantities of bubbles as contour plots."""
 
+from __future__ import annotations
+
 import logging
 import os
 import typing as tp
 
 from matplotlib import ticker
-from matplotlib.contour import QuadContourSet
 import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.analysis.bubble_grid import BubbleGridVWAlpha
-from pttools.bubble.bubble import Bubble
 from pttools.plot.colormap import cmap_plusminus
 from pttools.plot.utils import create_fig_ax, save_fig
 from pttools.plot.vw_alpha import VwAlphaPlot
@@ -19,6 +19,11 @@ from pttools.utils.decorators import post_func
 
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.contour import QuadContourSet
+
+    from pttools.bubble.bubble import Bubble
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -234,7 +239,7 @@ def compute(bubble: Bubble) -> tuple[float, float, float, float, float, float, f
 
 
 def gen_and_plot_entropy(
-        models: tp.Sequence["Model"],
+        models: tp.Sequence[Model],
         v_walls: th.FloatArr1D,
         alpha_ns: th.FloatArr1D,
         min_level: float,

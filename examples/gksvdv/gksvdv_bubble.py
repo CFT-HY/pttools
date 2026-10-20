@@ -5,14 +5,18 @@ Giese et al. bubble
 Plot a single bubble using parameters from the code of :giese_2021:`\ `
 """
 
-import logging
+from __future__ import annotations
 
-from matplotlib.figure import Figure
+import logging
 
 from examples.utils import save_and_show_fig
 from pttools.bubble import Bubble
 from pttools.models import GKSVDV_ALPHA_N, ConstCSModel
 from pttools.plot import setup_bubbles_plot_multifig
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.figure import Figure
 
 logger: logging.Logger = logging.getLogger(__name__)
 

@@ -44,13 +44,14 @@ The number of points in the fluid profile does not always grow with $n_\xi$,
 and therefore the error can also jump up when $n_\xi$ is increased.
 """
 
+from __future__ import annotations
+
 from concurrent.futures import Future
 import dataclasses
 import logging
 import time
 import typing as tp
 
-from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -64,6 +65,9 @@ from pttools.plot.utils import A4_PAPER_SIZE
 from pttools.speedup.parallel import FakeFuture, get_pool
 import pttools.type_hints as th
 from pttools.utils.system import IS_READ_THE_DOCS
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.figure import Figure
 
 logger: logging.Logger = logging.getLogger(__name__)
 

@@ -1,11 +1,16 @@
 """Utilities for plotting the entropy of bubbles."""
 
+from __future__ import annotations
+
 import typing as tp
 
 import matplotlib.pyplot as plt
 
 from pttools.analysis import entropy
-from pttools.bubble.bubble import Bubble
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.bubble.bubble import Bubble
 
 
 def plot_entropy(bubbles: tp.Iterable[Bubble], colors: tp.Iterable[str], fig: plt.Figure | None = None) -> plt.Figure:

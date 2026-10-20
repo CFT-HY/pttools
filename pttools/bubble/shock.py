@@ -1,5 +1,7 @@
 """Functions for shocks."""
 
+from __future__ import annotations
+
 import logging
 import typing as tp
 
@@ -20,7 +22,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 def find_shock_index(  # noqa: PLR0911, PLR0912, PLR0915
-        model: "Model",
+        model: Model,
         v: th.FloatArr1D,
         w: th.FloatArr1D,
         xi: th.FloatArr1D,
@@ -288,7 +290,7 @@ def shock_zoom_last_element(
 
 
 def solve_shock(  # noqa: PLR0911
-            model: "Model",
+            model: Model,
             v1_tilde: float,
             w1: float,
             backwards: bool,
@@ -382,7 +384,7 @@ def solve_shock(  # noqa: PLR0911
 
 
 @np.vectorize
-def v_shock(model: "Model", wn: float, xi: float, cs_n: float, warn_if_barely_exists: bool = True) -> float:
+def v_shock(model: Model, wn: float, xi: float, cs_n: float, warn_if_barely_exists: bool = True) -> float:
     r"""Shock velocity $v_\text{sh}$."""
     if xi <= cs_n or np.isclose(xi, cs_n):
         return 0.
@@ -407,7 +409,7 @@ def v_shock(model: "Model", wn: float, xi: float, cs_n: float, warn_if_barely_ex
 
 
 def v_shock_curve(
-        model: "Model",
+        model: Model,
         wn: float,
         xi: th.FloatArr1D | None = None,
         n_points: int = 20,

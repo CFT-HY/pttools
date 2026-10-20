@@ -1,14 +1,19 @@
 """Reference values from literature."""
 
+from __future__ import annotations
+
 from abc import ABC
 import typing as tp
 
 import numpy as np
 
-from pttools.bubble.bubble import Bubble
 from pttools.models.bag import BagModel
-from pttools.models.model import Model
+import pttools.type_hints as th
 from pttools.type_hints import FloatArr1D
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.bubble.bubble import Bubble
+    from pttools.models.model import Model
 
 
 class Reference(ABC):

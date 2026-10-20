@@ -1,5 +1,7 @@
 r"""Unit tests for calling the $c_s^2$ functions by their pointers."""
 
+from __future__ import annotations
+
 import json
 import os
 from pathlib import Path
@@ -17,11 +19,14 @@ from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR
 from pttools.bubble.phase import Phase
 from pttools.math import assert_allclose
 from pttools.models import BagModel, ConstCSModel
-from pttools.models.model import Model
 from pttools.speedup import njit
 from pttools.speedup.options import NUMBA_DISABLE_JIT
+import pttools.type_hints as th
 from pttools.type_hints import CS2FunScalarPtr, FloatArr1D, FloatOrArr
 from tests.utils import REPO_DIR
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.models.model import Model
 
 #: Script that solves a bag model bubble and reports the number of keys in each Numba cache index
 CACHE_SCRIPT_PATH: Path = Path(__file__).resolve().parent / "numba_cache.py"

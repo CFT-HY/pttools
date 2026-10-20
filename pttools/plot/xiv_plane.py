@@ -1,5 +1,7 @@
 r"""A plot of the $\xi-v$ plane."""
 
+from __future__ import annotations
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -8,7 +10,10 @@ from pttools.bubble.integrate import FluidIntegrateMethod, fluid_integrate_param
 from pttools.bubble.phase import Phase
 from pttools.bubble.shock import v_shock_curve
 from pttools.models.const_cs import ConstCSModel
-from pttools.models.model import Model
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.models.model import Model
 
 
 class XIVPlanePlot:

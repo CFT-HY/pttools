@@ -1,13 +1,18 @@
 """Plot Chapman-Jouguet speed."""
 
-from matplotlib.legend import Legend
+from __future__ import annotations
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
-from pttools.models.model import Model
 from pttools.plot.utils import legend
 import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.legend import Legend
+
+    from pttools.models.model import Model
 
 
 class ChapmanJouguetPlot:

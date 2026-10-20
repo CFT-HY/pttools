@@ -16,9 +16,10 @@ see :py:meth:`pttools.ssm.spectrum.SSMSpectrum.with_params`.
 The inputs and the results are passed as named tuples, which are supported by Numba.
 """
 
+from __future__ import annotations
+
 import typing as tp
 
-from pttools.bubble.solution_type import SolutionType
 from pttools.speedup import njit
 from pttools.ssm.low_k.integration import Iv_resampled, power_spectrum_integration_int, spec_den_gw_low
 from pttools.ssm.low_k.join import gw_junction
@@ -28,7 +29,11 @@ from pttools.ssm.spec_den_v import spec_den_v as spec_den_v_func
 from pttools.ssm.ssm import A2_e_conserving, ubarf2_from_a2
 from pttools.ssm.ssm import T_tilde as T_tilde_func
 from pttools.ssm.ssm import qT_lookup as qT_lookup_func
+import pttools.type_hints as th
 from pttools.type_hints import FloatArr1D
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.bubble.solution_type import SolutionType
 
 
 class SSMInput(tp.NamedTuple):

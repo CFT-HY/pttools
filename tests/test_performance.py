@@ -1,5 +1,7 @@
 """Performance tests."""
 
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 import textwrap
@@ -7,11 +9,13 @@ import typing as tp
 import unittest
 
 from pttools.plot import time_and_plot_threads
-from pttools.plot.utils import FigAndAxes
 from pttools.speedup import DEFAULT_VARYING_NUMBA_THREADS, NUMBA_DISABLE_JIT
 import pttools.type_hints as th
 from tests.utils.const import TEST_RESULT_PATH
 from tests.utils.mark import skip_slow
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.plot.utils import FigAndAxes
 
 logger: logging.Logger = logging.getLogger(__name__)
 

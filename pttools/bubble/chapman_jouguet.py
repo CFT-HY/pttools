@@ -11,6 +11,8 @@ and therefore in general $v_{CJ}$ has to be solved numerically.
 For the bag model and the constant sound speed model, $v_{CJ}$ has an analytical form.
 """
 
+from __future__ import annotations
+
 from collections.abc import Iterable
 import itertools
 import logging
@@ -172,7 +174,7 @@ def _handle_failure(msg: str, error_on_invalid: bool, log_invalid: bool) -> None
 
 
 def v_chapman_jouguet_analytical[T: FloatOrArr](
-        model: "Model",
+        model: Model,
         alpha_n: T,
         wn: float | None = None,
         wn_guess: float | None = None) -> T:
@@ -199,7 +201,7 @@ def v_chapman_jouguet_analytical[T: FloatOrArr](
 
 
 def _extra_output_analytical[T: FloatOrArr](
-        model: "Model",
+        model: Model,
         alpha_n: T,
         v_cj: T,
         wn: float | None,
@@ -221,7 +223,7 @@ def _extra_output_analytical[T: FloatOrArr](
 
 @tp.overload
 def v_chapman_jouguet(
-        model: "Model",
+        model: Model,
         alpha_n: float,
         wn: float | None = None,
         wn_guess: float | None = None,
@@ -233,7 +235,7 @@ def v_chapman_jouguet(
         log_invalid: bool = True) -> float: ...
 @tp.overload
 def v_chapman_jouguet(
-        model: "Model",
+        model: Model,
         alpha_n: float,
         wn: float | None = None,
         wn_guess: float | None = None,
@@ -246,7 +248,7 @@ def v_chapman_jouguet(
         log_invalid: bool = True) -> tuple[float, float, float]: ...
 @tp.overload
 def v_chapman_jouguet(
-        model: "Model",
+        model: Model,
         alpha_n: th.FloatArr,
         wn: float | None = None,
         wn_guess: float | None = None,
@@ -258,7 +260,7 @@ def v_chapman_jouguet(
         log_invalid: bool = True) -> th.FloatArr1D: ...
 @tp.overload
 def v_chapman_jouguet(
-        model: "Model",
+        model: Model,
         alpha_n: th.FloatArr,
         wn: float | None = None,
         wn_guess: float | None = None,
@@ -270,7 +272,7 @@ def v_chapman_jouguet(
         nan_on_invalid: bool = True,
         log_invalid: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]: ...
 def v_chapman_jouguet(
-        model: "Model",
+        model: Model,
         alpha_n: th.FloatOrArr,
         wn: float | None = None,
         wn_guess: float | None = None,
@@ -333,7 +335,7 @@ def v_chapman_jouguet(
 
 
 def _v_chapman_jouguet_numerical(
-        model: "Model",
+        model: Model,
         alpha_n: float,
         wn: float | None,
         wn_guess: float | None,
@@ -413,7 +415,7 @@ def v_chapman_jouguet_bag[T: FloatOrArr](alpha_plus: T) -> T:
     return 1/np.sqrt(3) * (1 + np.sqrt(2*alpha_plus + 3*alpha_plus**2)) / (1 + alpha_plus)
 
 
-def v_chapman_jouguet_const_cs[T: FloatOrArr](model: "ConstCSModel", alpha_theta_bar_plus: T) -> T:
+def v_chapman_jouguet_const_cs[T: FloatOrArr](model: ConstCSModel, alpha_theta_bar_plus: T) -> T:
     r"""$v_{CJ}$, Chapman-Jouguet speed for the constant sound speed model.
 
     $$v_{CJ} = \frac{
@@ -444,7 +446,7 @@ def v_chapman_jouguet_const_cs[T: FloatOrArr](model: "ConstCSModel", alpha_theta
     return ret  # pyrefly: ignore[bad-return]
 
 
-def v_chapman_jouguet_const_cs_reference(alpha_n: th.FloatArr1D, model: "ConstCSModel") -> th.FloatArr1D:
+def v_chapman_jouguet_const_cs_reference(alpha_n: th.FloatArr1D, model: ConstCSModel) -> th.FloatArr1D:
     r"""$v_{CJ}$, Chapman-Jouguet speed for the constant sound speed model with $\mu_- = 4$.
 
     When $\mu_- = 4$, $\alpha_+$ is independent of ${w}_-$,
@@ -466,7 +468,7 @@ def v_chapman_jouguet_const_cs_reference(alpha_n: th.FloatArr1D, model: "ConstCS
 
 
 def wm_chapman_jouguet(
-        model: "Model",
+        model: Model,
         wp: float,
         wm_guess: float | None = None,
         error_on_invalid: bool = True,
@@ -526,7 +528,7 @@ WM_WP_RATIO_MAX_CJ: float = 1e3
 N_BRACKET_CJ: int = 300
 
 
-def _wm_chapman_jouguet_bracket(model: "Model", wp: float) -> float | None:
+def _wm_chapman_jouguet_bracket(model: Model, wp: float) -> float | None:
     r"""Find ${w}_-$ for a Chapman-Jouguet detonation by scanning for a sign change of the deviation.
 
     :return: the smallest root with ${w}_- > {w}_+$, or None if no root was found
@@ -566,7 +568,7 @@ def _wm_chapman_jouguet_bracket(model: "Model", wp: float) -> float | None:
     return None
 
 
-def wm_solvable_chapman_jouguet_log(params: th.FloatArr1D, model: "Model", wp: float) -> float:
+def wm_solvable_chapman_jouguet_log(params: th.FloatArr1D, model: Model, wp: float) -> float:
     r"""Deviation from the junction conditions for a Chapman-Jouguet detonation as a function of $\ln {w}_-$.
 
     The fluid speed behind the wall is set to $\tilde{v}_- = c_{s,-}({w}_-)$,

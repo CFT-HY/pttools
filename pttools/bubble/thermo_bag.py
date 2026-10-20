@@ -1,12 +1,13 @@
 """Thermodynamic quantities for the Bag Model."""
 
+from __future__ import annotations
+
 import logging
 import typing as tp
 
 import numba
 from numba.extending import overload
 import numpy as np
-from numpy.typing import NDArray
 
 from pttools.bubble import bag, check, const, fluid_bag
 from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR
@@ -15,10 +16,14 @@ from pttools.bubble.phase import Phase
 from pttools.bubble.props import find_phase_core
 from pttools.bubble.solution_type_bag import SolutionType, identify_solution_type_bag
 from pttools.bubble.thermo import kinetic_energy_density, mean_enthalpy_change, ubarf2
-from pttools.speedup.differential import DifferentialPointer
 from pttools.speedup.jit import njit, njit_parallel_pair
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr, FloatOrArr1D
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from numpy.typing import NDArray
+
+    from pttools.speedup.differential import DifferentialPointer
 
 type Integrand = \
     tp.Callable[

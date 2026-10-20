@@ -3,17 +3,22 @@ r"""Comparison of hydrodynamic lattice simulations with the Sound Shell Model.
 The suppression factor is fitted with :py:mod:`pttools.ssm.suppression.fit`.
 """
 
+from __future__ import annotations
+
 import logging
 import typing as tp
 
 import numpy as np
 import pandas as pd
 
-from pttools.lattice.run import LatticeRun
-from pttools.lattice.spectrum import LatticeSpectrum
 from pttools.ssm.nucleation import NucType
-from pttools.ssm.spectrum import SSMSpectrum
 from pttools.ssm.suppression import SuppressionFit, SuppressionFitMethod, SuppressionMethod, fit_suppression_gw
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.lattice.run import LatticeRun
+    from pttools.lattice.spectrum import LatticeSpectrum
+    from pttools.ssm.spectrum import SSMSpectrum
 
 logger: logging.Logger = logging.getLogger(__name__)
 

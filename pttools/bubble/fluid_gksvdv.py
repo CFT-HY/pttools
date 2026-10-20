@@ -1,5 +1,7 @@
 r"""Fluid shell solver based on :giese_2021:`\ `."""
 
+from __future__ import annotations
+
 import logging
 import time
 import typing as tp
@@ -7,20 +9,23 @@ import typing as tp
 import numpy as np
 
 from pttools.bubble import chapman_jouguet, relativity
-from pttools.bubble.fluid_base import GenericSolverOutput
 from pttools.bubble.gksvdv.gksvdv21 import GKSVDV_SOLUTION_TYPES, kappaNuMuModel
 from pttools.bubble.phase import Phase
 from pttools.bubble.solution_type import SolutionType
 from pttools.speedup import NAN_ARR
+import pttools.type_hints as th
 
 if tp.TYPE_CHECKING:
     from pttools.models import Model
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.bubble.fluid_base import GenericSolverOutput
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
 def sound_shell_gksvdv(
-            model: "Model",
+            model: Model,
             v_wall: float,
             alpha_n: float,
             wn: float | None = None,

@@ -1,13 +1,19 @@
 r"""Plot $\Delta \theta ({w}_+, {w}_-)$."""
 
+from __future__ import annotations
+
 import typing as tp
 
 import numpy as np
-from plotly.basedatatypes import BasePlotlyType
 import plotly.graph_objects as go
 
-from pttools.models.model import Model
 from pttools.plot.plotly import PlotlyPlot
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from plotly.basedatatypes import BasePlotlyType
+
+    from pttools.models.model import Model
 
 
 class DeltaThetaPlot3D(PlotlyPlot):

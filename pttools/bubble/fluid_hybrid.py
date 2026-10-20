@@ -4,6 +4,8 @@ This is an extended version of the subsonic deflagration solver,
 as this also adds the part of the fluid shell behind the bubble wall.
 """
 
+from __future__ import annotations
+
 import logging
 import time
 import typing as tp
@@ -13,7 +15,6 @@ from scipy.optimize import fsolve
 
 from pttools.bubble import integrate, relativity
 from pttools.bubble.const import DEFAULT_N_XI, DEFAULT_SOLVER_RTOL, DEFAULT_T_END, THIN_SHELL_T_POINTS_MIN
-from pttools.bubble.fluid_base import DeflagrationOutput, SolverOutput
 from pttools.bubble.fluid_sub_def import sound_shell_deflagration_common
 from pttools.bubble.junction import v_plus_hybrid
 from pttools.bubble.phase import Phase
@@ -21,9 +22,13 @@ from pttools.bubble.shock import v_shock
 from pttools.bubble.solution_type import SolutionType
 from pttools.math.printing import array2str
 from pttools.speedup.solvers import fsolve_vary
+import pttools.type_hints as th
 
 if tp.TYPE_CHECKING:
     from pttools.models import Model
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.bubble.fluid_base import DeflagrationOutput, SolverOutput
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -39,7 +44,7 @@ def _debug_backup_solver(msg: str, *args: tp.Any) -> None:
 
 
 def sound_shell_hybrid(
-        model: "Model", v_wall: float, wn: float, wm: float, cs_n: float, v_cj: float,
+        model: Model, v_wall: float, wn: float, wm: float, cs_n: float, v_cj: float,
         vp_tilde_guess: float | None = None,
         wp_guess: float | None = None,
         t_end: float = DEFAULT_T_END,
@@ -113,7 +118,7 @@ def sound_shell_hybrid(
 
 def sound_shell_solvable_hybrid(
         # params: th.FloatArr1D,
-        wm: float, model: "Model", v_wall: float, wn: float, cs_n: float, v_cj: float,
+        wm: float, model: Model, v_wall: float, wn: float, cs_n: float, v_cj: float,
         vp_tilde_guess: float | None = None,
         wp_guess: float | None = None,
         t_end: float = DEFAULT_T_END,
@@ -157,7 +162,7 @@ def sound_shell_solvable_hybrid(
 
 
 def sound_shell_solver_hybrid(
-        model: "Model",
+        model: Model,
         start_time: float,
         v_wall: float, alpha_n: float, wn: float, cs_n: float, v_cj: float, high_alpha_n: bool,
         vp_tilde_guess: float, wp_guess: float, wm_guess: float, wn_rtol: float,

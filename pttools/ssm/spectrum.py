@@ -1,5 +1,7 @@
 """Functions for computing GW power spectra."""
 
+from __future__ import annotations
+
 import functools
 import logging
 from math import sqrt
@@ -27,6 +29,7 @@ from pttools.ssm.spec_den_gw import spec_den_gw_scaling
 from pttools.ssm.spectrum_base import SpectrumBase
 from pttools.ssm.ssm import ubarf2_from_a2
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
+import pttools.type_hints as th
 from pttools.type_hints import FloatArr, FloatArr1D
 from pttools.utils.decorators import cached_property
 from pttools.utils.docstrings import copy_docstring_dec
@@ -34,10 +37,11 @@ from pttools.utils.fields import Extractable, Fields, FieldSpec, Preset
 from pttools.utils.json import export_json
 
 if tp.TYPE_CHECKING:
+    from pttools.plot.utils import FigAndAxes
+
+if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
-
-    from pttools.plot.utils import FigAndAxes
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -411,7 +415,7 @@ class SSMSpectrum(Extractable, SpectrumBase):
         spectrum._reuse(self)  # noqa: SLF001
         return spectrum
 
-    def _reuse(self, other: "SSMSpectrum") -> None:
+    def _reuse(self, other: SSMSpectrum) -> None:
         """Compute this spectrum by reusing the r_*-independent results of another spectrum."""
         if not self.bubble.solved:
             self.bubble.solve()
@@ -753,30 +757,30 @@ class SSMSpectrum(Extractable, SpectrumBase):
 
     def plot_v(
             self,
-            fig: "Figure | None" = None,
-            ax: "Axes | None" = None,
+            fig: Figure | None = None,
+            ax: Axes | None = None,
             path: str | os.PathLike[str] | None = None,
-            **kwargs: tp.Any) -> "FigAndAxes":
+            **kwargs: tp.Any) -> FigAndAxes:
         r"""Plot velocity power spectrum $\mathcal{P}_{\tilde{v}}(q)$."""
         from pttools.plot.spectra import plot_spectra_v  # noqa: PLC0415
         return plot_spectra_v([self], ax=ax, fig=fig, path=path, **kwargs)
 
     def plot_spec_den_gw(
             self,
-            fig: "Figure | None" = None,
-            ax: "Axes | None" = None,
+            fig: Figure | None = None,
+            ax: Axes | None = None,
             path: str | os.PathLike[str] | None = None,
-            **kwargs: tp.Any) -> "FigAndAxes":
+            **kwargs: tp.Any) -> FigAndAxes:
         """Plot spectral density of scaled GW power."""
         from pttools.plot.spectra import plot_spectra_spec_den_gw  # noqa: PLC0415
         return plot_spectra_spec_den_gw([self], ax=ax, fig=fig, path=path, **kwargs)
 
     def plot_spec_den_v(
             self,
-            fig: "Figure | None" = None,
-            ax: "Axes | None" = None,
+            fig: Figure | None = None,
+            ax: Axes | None = None,
             path: str | os.PathLike[str] | None = None,
-            **kwargs: tp.Any) -> "FigAndAxes":
+            **kwargs: tp.Any) -> FigAndAxes:
         """Plot spectral density of the velocity field $P_v(y)$."""
         from pttools.plot.spectra import plot_spectra_spec_den_v  # noqa: PLC0415
         return plot_spectra_spec_den_v([self], ax=ax, fig=fig, path=path, **kwargs)

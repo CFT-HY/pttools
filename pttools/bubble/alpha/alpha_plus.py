@@ -1,15 +1,19 @@
 r"""$\alpha_+$ functions."""
 
+from __future__ import annotations
+
 from pttools.bubble.alpha.alpha_limits_bag import (
     alpha_n_max_deflagration_bag,
     alpha_n_min_hybrid_bag,
     alpha_plus_min_hybrid,
 )
-from pttools.bubble.integrate import FluidIntegrateMethod
 from pttools.speedup import njit
-from pttools.speedup.differential import DifferentialPointer
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.bubble.integrate import FluidIntegrateMethod
+    from pttools.speedup.differential import DifferentialPointer
 
 # Below this, alpha_n itself is used as the initial guess for alpha_+
 _ALPHA_N_SMALL: float = 0.05

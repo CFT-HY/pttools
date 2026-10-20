@@ -5,6 +5,8 @@ This solver uses a shooting method, as
 :gw_pt_ssm:`\ ` p. 35
 """
 
+from __future__ import annotations
+
 import logging
 import time
 import typing as tp
@@ -30,7 +32,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 def sound_shell_deflagration(
-        model: "Model",
+        model: Model,
         v_wall: float,
         wn: float,
         w_center: float,
@@ -110,7 +112,7 @@ def sound_shell_deflagration(
 
 
 def sound_shell_deflagration_common(
-        model: "Model",
+        model: Model,
         v_wall: float,
         vm_tilde: float,
         wn: float, wm: float,
@@ -290,7 +292,7 @@ def sound_shell_deflagration_common(
 
 
 def sound_shell_deflagration_reverse(
-        model: "Model", v_wall: float, wn: float, xi_sh: float,
+        model: Model, v_wall: float, wn: float, xi_sh: float,
         t_end: float = DEFAULT_T_END,
         n_xi: int = DEFAULT_N_XI,
         allow_failure: bool = False) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, float, float, float]:
@@ -371,7 +373,7 @@ def sound_shell_deflagration_reverse(
 
 def sound_shell_solvable_deflagration_reverse(
         params: th.FloatArr1D,
-        model: "Model",
+        model: Model,
         v_wall: float,
         wn: float,
         t_end: float = DEFAULT_T_END,
@@ -392,7 +394,7 @@ def sound_shell_solvable_deflagration_reverse(
 def sound_shell_solvable_deflagration(
         # params: th.FloatArr1D,
         w_center: float,
-        model: "Model", v_wall: float, wn: float, cs_n: float, v_cj: float,
+        model: Model, v_wall: float, wn: float, cs_n: float, v_cj: float,
         vp_guess: float, wp_guess: float,
         t_end: float = DEFAULT_T_END,
         n_xi: int = DEFAULT_N_XI,
@@ -430,7 +432,7 @@ def sound_shell_solvable_deflagration(
 
 
 def sound_shell_solver_deflagration(
-        model: "Model",
+        model: Model,
         start_time: float,
         v_wall: float, alpha_n: float, wn: float, cs_n: float, v_cj: float, high_alpha_n: bool,
         wm_guess: float, vp_guess: float, wp_guess: float, wn_rtol: float, t_end: float,
@@ -506,7 +508,7 @@ def sound_shell_solver_deflagration(
 
 
 def sound_shell_solver_deflagration_reverse(
-        model: "Model",
+        model: Model,
         start_time: float,
         v_wall: float, alpha_n: float, wn: float,
         t_end: float = DEFAULT_T_END,

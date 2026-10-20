@@ -1,5 +1,7 @@
 """Full thermodynamics-based model."""
 
+from __future__ import annotations
+
 import logging
 import typing as tp
 
@@ -8,7 +10,6 @@ from scipy.interpolate import splev, splrep
 
 from pttools.bubble.phase import Phase
 from pttools.models.model import Model
-from pttools.models.thermo import ThermoModel
 from pttools.speedup import njit
 from pttools.speedup.overload import np_all_fix
 import pttools.type_hints as th
@@ -16,6 +17,9 @@ from pttools.type_hints import FloatOrArr
 
 if tp.TYPE_CHECKING:
     from pttools.models.data import SplineTCK
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.models.thermo import ThermoModel
 
 logger: logging.Logger = logging.getLogger(__name__)
 

@@ -1,12 +1,16 @@
 r"""$\alpha_n$ functions for the Bag Model."""
 
-from pttools import speedup
+from __future__ import annotations
+
 from pttools.bubble import check, const, fluid_bag, props
-from pttools.bubble.integrate import FluidIntegrateMethod
 from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.solution_type_bag import identify_solution_type_alpha_plus_bag
 from pttools.speedup import njit
 import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools import speedup
+    from pttools.bubble.integrate import FluidIntegrateMethod
 
 
 @njit(nogil=True)

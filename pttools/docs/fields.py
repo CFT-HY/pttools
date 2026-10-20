@@ -21,15 +21,17 @@ Usage in ``docs/conf.py``:
         app.connect("autodoc-process-docstring", note_field_dependencies)
 """
 
+from __future__ import annotations
+
 import functools
 import importlib
 import inspect
 import logging
-import typing as tp
 
+import pttools.type_hints as th
 from pttools.utils.fields import Extractable, Field
 
-if tp.TYPE_CHECKING:
+if th.TYPE_CHECKING_OR_DOCS:
     from sphinx.application import Sphinx
 
 __all__ = [
@@ -158,7 +160,7 @@ def field_attribute_docs() -> dict[AttributeKey, str]:
     return docs
 
 
-def add_field_docs(app: "Sphinx | None" = None) -> int:
+def add_field_docs(app: Sphinx | None = None) -> int:
     """Give the field descriptions to Sphinx autodoc as if they were ``#:`` comments of the attributes.
 
     Autodoc reads the ``#:`` comments from the cached source code analyzers of the modules,
@@ -191,7 +193,7 @@ def add_field_docs(app: "Sphinx | None" = None) -> int:
 
 
 def note_field_dependencies(
-        app: "Sphinx",
+        app: Sphinx,
         what: str,
         name: str,
         obj: object,

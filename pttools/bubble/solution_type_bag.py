@@ -1,16 +1,20 @@
 """Solution types of relativistic combustion for the Bag Model."""
 
+from __future__ import annotations
+
 import logging
 
 import numba
 
 import pttools.bubble.alpha as alpha_tools
 from pttools.bubble.const import ALPHA_PLUS_MAX_DEF, CS0
-from pttools.bubble.integrate import FluidIntegrateMethod
 from pttools.bubble.solution_type import SolutionType
 from pttools.speedup import njit
-from pttools.speedup.differential import DifferentialPointer
 import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.bubble.integrate import FluidIntegrateMethod
+    from pttools.speedup.differential import DifferentialPointer
 
 logger: logging.Logger = logging.getLogger(__name__)
 

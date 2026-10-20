@@ -9,8 +9,9 @@ Created on Fri Jul  2 18:20:37 2021
 Requires input data as an npz file.
 """
 
+from __future__ import annotations
+
 import logging
-import typing as tp
 
 import numpy as np
 
@@ -21,7 +22,7 @@ from pttools.bubble.chapman_jouguet import v_chapman_jouguet_bag
 from pttools.plot.entropy_grid import plot_entropy_data
 import pttools.type_hints as th
 
-if tp.TYPE_CHECKING:
+if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.figure import Figure
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -40,7 +41,7 @@ def load(n_alpha: int = 10, n_vw: int = 10, g_bro: int = 120, g_sym: int = 123) 
     return ds_arr, vw_arr, alpha_arr
 
 
-def main(n_alpha: int = 10, n_vw: int = 10, g_bro: int = 120, g_sym: int = 123) -> "Figure":
+def main(n_alpha: int = 10, n_vw: int = 10, g_bro: int = 120, g_sym: int = 123) -> Figure:
     """Plot the entropy change data with the Chapman-Jouguet speed and the maximum alpha_n curves"""
     # g_bro = eos.G_BRO_DEFAULT*0.5
     # g_sym = eos.G_SYM_DEFAULT

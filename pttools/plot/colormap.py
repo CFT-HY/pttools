@@ -1,14 +1,18 @@
 """Utilities for color maps."""
 
+from __future__ import annotations
+
 import math
 
 from matplotlib import cm
 from matplotlib.colors import Colormap, ListedColormap
-from matplotlib.contour import QuadContourSet
 import matplotlib.pyplot as plt
 import numpy as np
 
 import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.contour import QuadContourSet
 
 DEFAULT_CMAP: Colormap = cm.viridis
 DEFAULT_CMAP_NEG: Colormap = cm.Blues

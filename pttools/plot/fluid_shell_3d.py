@@ -1,17 +1,23 @@
 r"""Plot $(v,w,\xi)$ for fluid shells."""
 
+from __future__ import annotations
+
 import logging
 
 import numpy as np
-from plotly.basedatatypes import BasePlotlyType
 import plotly.graph_objects as go
 
-from pttools.bubble.bubble import Bubble
 from pttools.bubble.phase import Phase
 from pttools.bubble.relativity import lorentz
 from pttools.bubble.shock import solve_shock
-from pttools.models.model import Model
 from pttools.plot.plotly import PlotlyPlot
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from plotly.basedatatypes import BasePlotlyType
+
+    from pttools.bubble.bubble import Bubble
+    from pttools.models.model import Model
 
 logger: logging.Logger = logging.getLogger(__name__)
 

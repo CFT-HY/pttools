@@ -9,14 +9,18 @@ https://github.com/Wall-Go/WallGo/blob/main/Models/SingletStandardModel_Z2/examp
 Todo: This example is preliminary, and the solvers don't yet work properly for the model in the WallGo example file.
 """
 
+from __future__ import annotations
+
 import logging
 from pathlib import Path
-
-from matplotlib.figure import Figure
 
 from examples.utils import save_and_show_fig
 from pttools.bubble import Bubble
 from pttools.models import DataModel
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.figure import Figure
 
 # from pttools.plot.model import ModelPlot
 

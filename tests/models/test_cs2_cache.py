@@ -1,5 +1,7 @@
 """Tests for the caching of the compiled $c_s^2$ functions of the models."""
 
+from __future__ import annotations
+
 import pickle
 import typing as tp
 import unittest
@@ -10,7 +12,10 @@ import pytest
 from pttools import models
 from pttools.bubble.integrate import differentials
 from pttools.bubble.phase import Phase
-from pttools.speedup import DifferentialPointer
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.speedup import DifferentialPointer
 
 
 def df_dtau_cs2(df_dtau_ptr: DifferentialPointer, phase: Phase) -> float:

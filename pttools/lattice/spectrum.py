@@ -1,5 +1,7 @@
 r"""Power spectra of a hydrodynamic lattice simulation at a given time."""
 
+from __future__ import annotations
+
 import functools
 import typing as tp
 
@@ -40,7 +42,7 @@ class LatticeSpectrum(Omgw0Base):
 
     def __init__(
             self,
-            run: "LatticeRun",
+            run: LatticeRun,
             step: int,
             step_prev: int | None = None,
             r_star: float | None = None,

@@ -1,5 +1,7 @@
 """Bag model."""
 
+from __future__ import annotations
+
 import logging
 import typing as tp
 
@@ -7,15 +9,17 @@ import numpy as np
 
 from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR, cs2_bag_multi, cs2_bag_neg, cs2_bag_temp
 from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG
-from pttools.bubble.phase import Phase
 from pttools.bubble.shock_bag import v_shock_bag, wm_shock_bag
-from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.solution_type_bag import identify_solution_type_bag
 from pttools.models.analytic import AnalyticModel
-from pttools.speedup.differential import DifferentialPointer
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 from pttools.utils.docstrings import copy_docstring_dec
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.bubble.phase import Phase
+    from pttools.bubble.solution_type import SolutionType
+    from pttools.speedup.differential import DifferentialPointer
 
 logger: logging.Logger = logging.getLogger(__name__)
 

@@ -5,6 +5,8 @@ At the bubble wall (phase boundary), or shock.
 .. plot:: fig/vp_vm_plane.py
 """
 
+from __future__ import annotations
+
 import functools
 import logging
 import typing as tp
@@ -65,7 +67,7 @@ def junction_conditions_deviation[T: FloatOrArr](vp: T, vm: T | float, ap: T | f
 
 def junction_conditions_solvable(
         params: th.FloatArr1D,
-        model: "Model",
+        model: Model,
         v1: float,
         w1: float,
         phase1: float,
@@ -147,7 +149,7 @@ def junction_condition_deviations(
 
 
 def solve_junction(
-        model: "Model",
+        model: Model,
         v1_tilde: float,
         w1: float,
         phase1: Phase,
@@ -271,7 +273,7 @@ def solve_junction(
 
 @functools.lru_cache(maxsize=const.JUNCTION_CACHE_SIZE)
 def solve_junction_internal(
-        model: "Model",
+        model: Model,
         v1_tilde: float,
         w1: float,
         phase1: Phase,
@@ -304,7 +306,7 @@ def solve_junction_internal(
 
 
 def v_plus_hybrid(
-        model: "Model",
+        model: Model,
         v_wall: float,
         wm: float,
         vp_tilde_guess: float,

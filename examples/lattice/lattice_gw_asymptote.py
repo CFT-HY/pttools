@@ -23,15 +23,20 @@ The values of the GW power differ from those of the axes of the figure of the ar
 as its scripts have issues with the scale, see :py:attr:`pttools.lattice.run.LatticeRun.gw_asymptote_scale`.
 """
 
+from __future__ import annotations
+
 import logging
 
-from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import pandas as pd
 
 from examples.utils import save_and_show_figs
 from pttools.lattice import CHRW25_RUNS, LatticeRun, load_chrw25_runs
 from pttools.plot.lattice import plot_gw_asymptote
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.figure import Figure
 
 logger: logging.Logger = logging.getLogger(__name__)
 

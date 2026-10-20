@@ -5,7 +5,8 @@ Sound Shell Model process
 Plot the intermediate steps of the Sound Shell Model.
 """
 
-from matplotlib.figure import Figure
+from __future__ import annotations
+
 import numpy as np
 
 from examples.utils import save_and_show_fig
@@ -14,6 +15,10 @@ from pttools.math import as_latex
 from pttools.models import ConstCSModel
 from pttools.omgw0 import DEFAULT_T_STAR, Spectrum
 from pttools.ssm import NucType
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.figure import Figure
 
 
 def main() -> Figure:

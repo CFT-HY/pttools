@@ -5,13 +5,17 @@ Plot multiple spectra
 Plot the velocity and GW spectra of multiple bubbles
 """
 
-from matplotlib.figure import Figure
+from __future__ import annotations
 
 from examples.utils import save_and_show_fig
 from pttools.bubble import Bubble
 from pttools.models import BagModel, ConstCSModel
 from pttools.omgw0 import Spectrum
 from pttools.plot import plot_spectra_multi
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.figure import Figure
 
 
 def main() -> Figure:

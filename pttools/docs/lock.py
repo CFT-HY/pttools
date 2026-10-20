@@ -15,6 +15,8 @@ Handlers that raise an exception abort the build, and the lock is then released 
 when the process exits.
 """
 
+from __future__ import annotations
+
 import logging
 import os
 from pathlib import Path
@@ -22,8 +24,9 @@ import time
 import typing as tp
 
 from pttools.docs.paths import LINT_DIR_NAME
+import pttools.type_hints as th
 
-if tp.TYPE_CHECKING:
+if th.TYPE_CHECKING_OR_DOCS:
     from sphinx.application import Sphinx
 
 #: The logger is in the namespace of the ``sphinx`` logger, so that its messages are handled by the handlers of Sphinx,
@@ -124,7 +127,7 @@ def source_lock_path(docs_dir: str | os.PathLike[str]) -> Path:
     return Path(docs_dir) / LINT_DIR_NAME / LOCK_FILE_NAME
 
 
-def setup_source_lock(app: "Sphinx") -> SourceLock:
+def setup_source_lock(app: Sphinx) -> SourceLock:
     """Hold a file lock during the Sphinx events that generate files in the documentation source directory.
 
     :param app: the Sphinx application

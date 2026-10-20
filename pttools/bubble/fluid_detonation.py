@@ -1,5 +1,7 @@
 """Fluid shell solver for detonations."""
 
+from __future__ import annotations
+
 import logging
 import typing as tp
 
@@ -7,20 +9,23 @@ import numpy as np
 
 from pttools.bubble import integrate, relativity, trim
 from pttools.bubble.const import DEFAULT_N_XI, DEFAULT_T_END
-from pttools.bubble.fluid_base import SolverOutput
 from pttools.bubble.junction import solve_junction, w2_junction
 from pttools.bubble.junction_bag import fluid_speeds_at_wall_bag
 from pttools.bubble.phase import Phase
 from pttools.bubble.solution_type import SolutionType, cannot_be_detonation
+import pttools.type_hints as th
 
 if tp.TYPE_CHECKING:
     from pttools.models import Model
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.bubble.fluid_base import SolverOutput
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
 def sound_shell_detonation(
-        model: "Model", v_wall: float, alpha_n: float, wn: float, v_cj: float,
+        model: Model, v_wall: float, alpha_n: float, wn: float, v_cj: float,
         vm_tilde_guess: float, wm_guess: float,
         t_end: float = DEFAULT_T_END,
         n_xi: int = DEFAULT_N_XI) -> SolverOutput:

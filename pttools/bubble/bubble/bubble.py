@@ -1,5 +1,7 @@
 """A solution of the hydrodynamic equations."""
 
+from __future__ import annotations
+
 import functools
 import logging
 import typing as tp
@@ -21,14 +23,17 @@ from pttools.bubble.phase import Phase
 from pttools.bubble.props import find_phase
 from pttools.bubble.solution_type import SolutionType, validate_solution_type
 from pttools.math.formatting import as_latex, as_unicode
+import pttools.type_hints as th
 from pttools.utils.docstrings import copy_docstring_dec
-from pttools.utils.fields import Fields
 from pttools.utils.validation import ensure_float
 
 if tp.TYPE_CHECKING:
     from pttools.models.bag import BagModel
     from pttools.models.const_cs import ConstCSModel
     from pttools.models.model import Model
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.utils.fields import Fields
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -46,7 +51,7 @@ class Bubble(BaseBubble):
     # Most of the statements are attribute declarations with their documentation.
     def __init__(  # noqa: PLR0912, PLR0915
             self,
-            model: "Model",
+            model: Model,
             v_wall: float,
             alpha_n: float,
             solve: bool = True,
@@ -232,7 +237,7 @@ class Bubble(BaseBubble):
             f"V-avg. trace anomaly={self.va_trace_anomaly_diff:{prec}}"
         )
 
-    def lte_params_str(self, model: "BagModel | ConstCSModel") -> str:
+    def lte_params_str(self, model: BagModel | ConstCSModel) -> str:
         """LTE parameters as a string for debug messages."""
         return \
             f"wn={self.wn}, sol_type={self.sol_type}, Psi_n={self.Psi_n}, " \

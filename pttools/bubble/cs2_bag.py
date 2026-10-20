@@ -1,5 +1,7 @@
 """Speed of sound for the Bag Model."""
 
+from __future__ import annotations
+
 import typing as tp
 
 import numba
@@ -8,10 +10,12 @@ import numpy as np
 
 from pttools.bubble import const
 from pttools.bubble.cs2 import cs2_to_ptr
-from pttools.bubble.phase import Phase
 from pttools.speedup import njit
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.bubble.phase import Phase
 
 NUMBA_CACHE_CS2_BAG: bool = True
 """Whether to cache the Numba-compiled $c_s^2$ functions

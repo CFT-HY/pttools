@@ -1,10 +1,15 @@
 """Utilities for extracting plottable quantities from bubbles."""
 
+from __future__ import annotations
+
 import typing as tp
 
 import numpy as np
 
-from pttools.bubble import BaseBubble, Phase
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.bubble import BaseBubble, Phase
 
 
 def cs2_common(

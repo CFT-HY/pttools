@@ -5,12 +5,16 @@ Entropy profiles
 Plot the entropy profiles of a few bubbles
 """
 
-from matplotlib.figure import Figure
+from __future__ import annotations
 
 from examples.utils import save_and_show_fig
 from pttools.bubble.bubble import Bubble
 from pttools.models.bag import BagModel
 from pttools.plot.entropy import plot_entropy
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.figure import Figure
 
 
 def main() -> Figure:

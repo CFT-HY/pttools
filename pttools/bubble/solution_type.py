@@ -1,5 +1,7 @@
 """Solution types of relativistic combustion."""
 
+from __future__ import annotations
+
 import enum
 import logging
 import typing as tp
@@ -51,7 +53,7 @@ def cannot_be_detonation(v_wall: float, v_cj: float) -> float:
     return v_wall < v_cj
 
 
-def cannot_be_sub_def(model: "Model", v_wall: float, wn: float) -> bool:
+def cannot_be_sub_def(model: Model, v_wall: float, wn: float) -> bool:
     r"""Check whether the solution certainly cannot be a subsonic deflagration.
 
     If the wall speed $v_w > c_{sb}(w) \forall w \in [0, w_n]$,
@@ -67,7 +69,7 @@ def is_surely_detonation(v_wall: float, v_cj: float) -> float:
     return v_wall > v_cj
 
 
-def is_surely_sub_def(model: "Model", v_wall: float, wn: float) -> bool:
+def is_surely_sub_def(model: Model, v_wall: float, wn: float) -> bool:
     r"""Check whether the solution is certainly a subsonic deflagration.
 
     If the wall speed $v_w < c_{sb}(w) \forall w \in [0, w_n]$,
@@ -79,7 +81,7 @@ def is_surely_sub_def(model: "Model", v_wall: float, wn: float) -> bool:
 
 
 def validate_solution_type(
-        model: "Model",
+        model: Model,
         v_wall: float,
         alpha_n: float,
         sol_type: SolutionType | None,

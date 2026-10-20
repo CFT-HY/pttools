@@ -1,10 +1,10 @@
 """Utilities for plotting the spectra of multiple bubbles."""
 
+from __future__ import annotations
+
 import os
 import typing as tp
 
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -12,9 +12,14 @@ from pttools.math.formatting import as_latex
 from pttools.omgw0 import Omgw0Base, Spectrum, omega_noise_h2
 from pttools.plot.bubbles import plot_bubbles_v
 from pttools.plot.utils import FigAndAxes, create_fig_ax
-from pttools.ssm.spectrum import SSMSpectrum
-from pttools.ssm.spectrum_base import SpectrumBase
 import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
+
+    from pttools.ssm.spectrum import SSMSpectrum
+    from pttools.ssm.spectrum_base import SpectrumBase
 
 F_LABEL = r"$f(\text{Hz})$"
 NOISE_EB_LABEL = r"$\mathcal{P}_\text{EB noise} h^2$"

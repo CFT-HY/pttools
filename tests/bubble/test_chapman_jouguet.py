@@ -1,5 +1,7 @@
 r"""Tests for the Chapman-Jouguet speed $v_{CJ}$."""
 
+from __future__ import annotations
+
 import typing as tp
 import unittest
 
@@ -14,8 +16,10 @@ from pttools.bubble.phase import Phase
 from pttools.bubble.relativity import gamma2
 from pttools.math import assert_allclose
 from pttools.models import BagModel, ConstCSModel, gksvdv_models
-from pttools.models.model import Model
 import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.models.model import Model
 
 ALPHA_NS: th.FloatArr = np.array([0.02, 0.05, 0.1, 0.2, 0.3, 0.5])
 #: Tolerance for accepting a root of the deviation instead of a pole

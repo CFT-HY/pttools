@@ -1,11 +1,12 @@
 """Utilities for parallel simulation of bubbles."""
 
+from __future__ import annotations
+
 import logging
 import time
 import typing as tp
 
 import numpy as np
-from numpy.typing import NDArray
 
 from pttools.bubble import fluid_reference
 from pttools.bubble.bubble import Bubble, BubbleArr, BubbleArr2D
@@ -14,10 +15,14 @@ from pttools.omgw0 import Spectrum, SpectrumArr2D
 from pttools.speedup import options
 from pttools.speedup.parallel import run_parallel
 import pttools.type_hints as th
-from pttools.utils.decorators import PostFunc
 
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from numpy.typing import NDArray
+
+    from pttools.utils.decorators import PostFunc
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -47,7 +52,7 @@ def _post_process[T: (Bubble, Spectrum)](
 
 def create_bubble(
         params: th.FloatArr1D,
-        model: "Model",
+        model: Model,
         post_func: PostFunc | None = None,
         post_func_return_multiple: bool = False,
         use_bag_solver: bool = False,
@@ -77,7 +82,7 @@ def create_bubble(
 
 def create_spectrum(
         params: th.FloatArr1D,
-        model: "Model",
+        model: Model,
         post_func: PostFunc | None = None,
         post_func_return_multiple: bool = False,
         use_bag_solver: bool = False,
@@ -129,7 +134,7 @@ def create_spectrum(
 
 @tp.overload
 def create_bubbles(
-        model: "Model",
+        model: Model,
         v_walls: th.FloatArr1D,
         alpha_ns: th.FloatArr1D,
         func: None = None,
@@ -145,7 +150,7 @@ def create_bubbles(
 
 @tp.overload
 def create_bubbles(
-        model: "Model",
+        model: Model,
         v_walls: th.FloatArr1D,
         alpha_ns: th.FloatArr1D,
         func: tp.Callable,
@@ -161,7 +166,7 @@ def create_bubbles(
 
 @tp.overload
 def create_bubbles(
-        model: "Model",
+        model: Model,
         v_walls: th.FloatArr1D,
         alpha_ns: th.FloatArr1D,
         func: tp.Callable | None = ...,
@@ -176,7 +181,7 @@ def create_bubbles(
 
 
 def create_bubbles(
-        model: "Model",
+        model: Model,
         v_walls: th.FloatArr1D,
         alpha_ns: th.FloatArr1D,
         func: tp.Callable | None = None,
@@ -245,7 +250,7 @@ def create_bubbles(
 
 
 def create_spectra(
-        model: "Model",
+        model: Model,
         v_walls: th.FloatArr1D,
         alpha_ns: th.FloatArr1D,
         func: tp.Callable | None = None,

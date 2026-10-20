@@ -1,18 +1,23 @@
 """Entropy fluxes at the phase boundary."""
 
+from __future__ import annotations
+
 import typing as tp
 
-from pttools.bubble.phase import Phase
 from pttools.bubble.relativity import gamma
 from pttools.speedup import njit
+import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.bubble.phase import Phase
+
 
 def check_entropy_fluxes(
-        model: "Model",
+        model: Model,
         v1_tilde: float,
         v2_tilde: float,
         w1: float,

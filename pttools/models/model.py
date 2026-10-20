@@ -1,5 +1,7 @@
 """Template for equations of state."""
 
+from __future__ import annotations
+
 import abc
 import logging
 import os
@@ -25,13 +27,15 @@ from pttools.bubble.solution_type import (
 from pttools.bubble.thermo import nu_gdh2024, omega_barotropic
 from pttools.models.base import BaseModel
 from pttools.models.export import MODEL_FIELDS
-from pttools.speedup.differential import DifferentialPointer
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 from pttools.utils.docstrings import copy_docstring_dec
-from pttools.utils.fields import Fields
 from pttools.utils.system import FORKING
 from pttools.utils.validation import check_value_in_range
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.speedup.differential import DifferentialPointer
+    from pttools.utils.fields import Fields
 
 logger: logging.Logger = logging.getLogger(__name__)
 

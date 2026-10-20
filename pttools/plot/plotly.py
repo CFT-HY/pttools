@@ -1,14 +1,19 @@
 """Plotting with Plotly, and workarounds for Plotly issues."""
 
+from __future__ import annotations
+
 import abc
 import logging
 import os
 import typing as tp
 
 from kaleido._kaleido_tab import KaleidoError
-import plotly.graph_objects as go
 
 from pttools.plot.utils import ENABLE_DRAWING
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    import plotly.graph_objects as go
 
 logger: logging.Logger = logging.getLogger(__name__)
 

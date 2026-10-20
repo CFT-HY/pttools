@@ -1,5 +1,7 @@
 """Setup Sphinx."""
 
+from __future__ import annotations
+
 import logging
 import os
 from pathlib import Path
@@ -9,7 +11,9 @@ import warnings
 
 from sphinx_gallery.directives import depart_imgsg_html, imgsgnode, visit_imgsg_html
 
-if tp.TYPE_CHECKING:
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
     from sphinx.application import Sphinx
     from sphinx.config import Config
 
@@ -97,13 +101,13 @@ def setup_sphinx_logging(log_path: str | os.PathLike[str] | None = None, level: 
     return path
 
 
-def exclude_lint_dir(app: "Sphinx", config: "Config") -> None:
+def exclude_lint_dir(app: Sphinx, config: Config) -> None:
     """Exclude the build directories of :py:mod:`pttools.docs.lint` from the documentation sources."""
     if LINT_DIR_NAME not in config.exclude_patterns:
         config.exclude_patterns.append(LINT_DIR_NAME)
 
 
-def setup_sphinx(app: "Sphinx") -> None:
+def setup_sphinx(app: Sphinx) -> None:
     """Set up the customisations of the PTtools documentation.
 
     To use this function, set `setup = setup_sphinx` in your `docs/conf.py`.

@@ -5,13 +5,13 @@ and of hydrodynamic lattice simulations (:py:class:`pttools.lattice.spectrum.Lat
 so that they can be compared with each other and with the sensitivity of LISA.
 """
 
+from __future__ import annotations
+
 import abc
 import functools
 import os
 import typing as tp
 
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
 import numpy as np
 
 from pttools.math.integration import trapezoid_loglog
@@ -26,6 +26,10 @@ from pttools.utils.docstrings import copy_docstring_dec
 
 if tp.TYPE_CHECKING:
     from pttools.plot.utils import FigAndAxes
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
 
 
 class Omgw0Base(SpectrumBase):
@@ -313,7 +317,7 @@ class Omgw0Base(SpectrumBase):
             fig: Figure | None = None,
             ax: Axes | None = None,
             path: str | os.PathLike[str] | None = None,
-            **kwargs: tp.Any) -> "FigAndAxes":
+            **kwargs: tp.Any) -> FigAndAxes:
         r"""Plot the GW power spectrum today $\Omega_{\text{gw},0} h^2(f)$ together with the LISA noise.
 
         :param fig: the figure to plot on

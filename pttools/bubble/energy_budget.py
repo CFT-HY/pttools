@@ -3,6 +3,8 @@ r"""Energy budget approximations.
 These approximations are based on :espinosa_2010:`\ `.
 """
 
+from __future__ import annotations
+
 import typing as tp
 
 import numpy as np
@@ -24,7 +26,7 @@ if tp.TYPE_CHECKING:
 def alpha_n_from_ubarf[T: FloatOrArr](
         v_wall: T,
         ubarf: T | float,
-        model: "Model | None" = None,
+        model: Model | None = None,
         cs: T | float = CS0,
         adiabatic_index: T | float = DEFAULT_ADIABATIC_INDEX,
         alpha_n_min: float = 1e-8,
@@ -63,7 +65,7 @@ def alpha_n_from_ubarf_solvable(
         alpha_n: float,
         ubarf_target: float,
         v_wall: float,
-        model: "Model | None" = None,
+        model: Model | None = None,
         cs: float = CS0,
         adiabatic_index: float = DEFAULT_ADIABATIC_INDEX) -> float:
     r"""Difference of the approximate $\bar{U}_f(v_{\text{wall}}, \alpha_n)$ from the target value.
@@ -94,7 +96,7 @@ def delta_kappa_approx[T: FloatOrArr](alpha_n: T) -> T:
     return -0.9 * np.log(np.sqrt(alpha_n) / (1 + np.sqrt(alpha_n)))
 
 
-def delta_n[T: FloatOrArr](model: "Model", wn: T) -> T:
+def delta_n[T: FloatOrArr](model: Model, wn: T) -> T:
     r"""$\delta_n$ for $K$.
 
     $$\delta_n = \frac{4 \theta_-}{3 w_n}$$
@@ -248,7 +250,7 @@ def kappa_v_approx[T: FloatOrArr](
 def kinetic_energy_fraction_approx[T: FloatOrArr](
         v_wall: float,
         alpha_n: T,
-        model: "Model | None" = None,
+        model: Model | None = None,
         cs: float = CS0,
         v_cj: float | None = None,
         efficiency: float = 1.) -> T:
@@ -279,7 +281,7 @@ def kinetic_energy_fraction_approx[T: FloatOrArr](
 def ubarf_approx[T: FloatOrArr](
         v_wall: float,
         alpha_n: T,
-        model: "Model | None" = None,
+        model: Model | None = None,
         cs: float = CS0,
         v_cj: float | None = None,
         adiabatic_index: T | float = DEFAULT_ADIABATIC_INDEX) -> T:

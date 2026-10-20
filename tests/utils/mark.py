@@ -1,12 +1,17 @@
 """Mark tests for e.g. skipping or expected failure."""
 
+from __future__ import annotations
+
 import unittest
 
 import pytest
 
 from pttools.speedup.options import NUMBA_DISABLE_JIT, USE_THREADS
-from pttools.utils.decorators import TypePreservingDecorator
+import pttools.type_hints as th
 from pttools.utils.system import IS_GITHUB_ACTIONS, IS_OSX, IS_WINDOWS
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.utils.decorators import TypePreservingDecorator
 
 #: Mark tests that will fail with NUMBA_DISABLE_JIT when threads are not used.
 #: The models then have to be pickled to be passed to the worker processes or interpreters.

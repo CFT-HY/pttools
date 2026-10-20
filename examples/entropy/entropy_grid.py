@@ -5,7 +5,8 @@ Entropy grid
 Plot the relative change in entropy density for a grid of bubbles
 """
 
-from matplotlib.figure import Figure
+from __future__ import annotations
+
 import numpy as np
 
 from examples.utils import save_and_show_fig
@@ -14,11 +15,15 @@ from pttools.logging import setup_logging
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
 from pttools.plot import gen_and_plot_entropy
+import pttools.type_hints as th
 
 # from pttools.models.full import FullModel
 # from pttools.models.sm import StandardModel
 from pttools.utils import testing_or_ci
 from tests.profiling import utils_cprofile
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.figure import Figure
 
 
 def main() -> Figure:

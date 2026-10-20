@@ -1,18 +1,23 @@
 r"""A plot with $v_\text{wall}$ on the x-axis and $\alpha_n$ on the y-axis."""
 
+from __future__ import annotations
+
 import typing as tp
 
-from matplotlib.colors import Colormap
-from matplotlib.contour import QuadContourSet
-from matplotlib.legend import Legend
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pttools.analysis.bubble_grid import BubbleGridVWAlpha
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 from pttools.plot import colormap
 from pttools.plot.colormap import DEFAULT_REGION_COLOR
 import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.colors import Colormap
+    from matplotlib.contour import QuadContourSet
+    from matplotlib.legend import Legend
+
+    from pttools.analysis.bubble_grid import BubbleGridVWAlpha
 
 
 class VwAlphaPlot:

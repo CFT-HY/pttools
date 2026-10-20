@@ -1,14 +1,14 @@
 """Gravitational wave power spectrum as observed today."""
 
+from __future__ import annotations
+
 import functools
 import os
 import typing as tp
 
-from matplotlib.figure import Figure
 import numpy as np
 from numpy.typing import NDArray
 
-from pttools.bubble import Bubble
 from pttools.omgw0 import const
 from pttools.omgw0.base import Omgw0Base
 from pttools.omgw0.compute import OmGw0Input, OmGw0Results, SNRSettings, compute, compute_gw
@@ -33,7 +33,12 @@ from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, Suppressio
 import pttools.type_hints as th
 from pttools.type_hints import FloatArr1D
 from pttools.utils.decorators import cached_property
-from pttools.utils.fields import Fields
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.figure import Figure
+
+    from pttools.bubble import Bubble
+    from pttools.utils.fields import Fields
 
 
 class Spectrum(Omgw0Base, SSMSpectrum):

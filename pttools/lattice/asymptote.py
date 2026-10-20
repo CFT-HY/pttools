@@ -16,14 +16,18 @@ These follow the scripts of the Zenodo release of the article.
 The generic fitting functions are in :py:mod:`pttools.math.asymptote` and :py:mod:`pttools.math.power_law`.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 import logging
 
 import numpy as np
 
 from pttools.math.asymptote import AsymptoteFit, fit_asymptote, fit_start_index
-from pttools.math.power_law import PowerLawFit
 import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.math.power_law import PowerLawFit
 
 logger: logging.Logger = logging.getLogger(__name__)
 

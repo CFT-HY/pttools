@@ -1,5 +1,7 @@
 """A solution of the hydrodynamic equations."""
 
+from __future__ import annotations
+
 import abc
 import functools
 import logging
@@ -20,11 +22,12 @@ from pttools.utils.json import export_json
 from pttools.utils.validation import ensure_floats
 
 if tp.TYPE_CHECKING:
-    from matplotlib.axes import Axes
-    from matplotlib.figure import Figure
-
     from pttools.models.model import Model
     from pttools.plot.utils import FigAndAxes
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -37,7 +40,7 @@ class BaseBubble(Extractable, abc.ABC):
 
     def __init__(
             self,
-            model: "Model",
+            model: Model,
             v_wall: float,
             w_center: float | None = None,
             w_outside: float | None = None,
@@ -187,32 +190,32 @@ class BaseBubble(Extractable, abc.ABC):
 
     def plot(
             self,
-            fig: "Figure | None" = None,
+            fig: Figure | None = None,
             path: str | os.PathLike[str] | None = None,
             full_range: bool = False,
-            **kwargs: tp.Any) -> "Figure":
+            **kwargs: tp.Any) -> Figure:
         """Plot the velocity and enthalpy profiles of the bubble."""
         from pttools.plot.bubbles import plot_bubbles  # noqa: PLC0415
         return plot_bubbles([self], fig, path, full_range=full_range, **kwargs)
 
     def plot_v(
             self,
-            fig: "Figure | None" = None,
-            ax: "Axes | None" = None,
+            fig: Figure | None = None,
+            ax: Axes | None = None,
             path: str | os.PathLike[str] | None = None,
             full_range: bool = False,
-            **kwargs: tp.Any) -> "FigAndAxes":
+            **kwargs: tp.Any) -> FigAndAxes:
         """Plot the velocity profile of the bubble."""
         from pttools.plot.bubbles import plot_bubbles_v  # noqa: PLC0415
         return plot_bubbles_v([self], fig, ax, path, full_range=full_range, **kwargs)
 
     def plot_w(
             self,
-            fig: "Figure | None" = None,
-            ax: "Axes | None" = None,
+            fig: Figure | None = None,
+            ax: Axes | None = None,
             path: str | os.PathLike[str] | None = None,
             full_range: bool = False,
-            **kwargs: tp.Any) -> "FigAndAxes":
+            **kwargs: tp.Any) -> FigAndAxes:
         """Plot the enthalpy profile of the bubble."""
         from pttools.plot.bubbles import plot_bubbles_w  # noqa: PLC0415
         return plot_bubbles_w([self], fig, ax, path, full_range=full_range, **kwargs)

@@ -4,6 +4,8 @@ See :gw_pt_ssm:`\ ` fig. 9
 Excerpts of these plots are in :gw_pt_ssm:`\ ` fig. 10 and :notes:`\ ` fig. 15.
 """
 
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 import shutil
@@ -16,13 +18,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools import speedup
-from pttools.bubble import FluidIntegrateMethod
 from pttools.math import assert_allclose
 from pttools.plot import save_fig
 import pttools.type_hints as th
 from tests import utils
 from tests.paper import plane, plot_plane_paper
 from tests.test_performance import PERFORMANCE_DIR
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.bubble import FluidIntegrateMethod
 
 logger: logging.Logger = logging.getLogger(__name__)
 

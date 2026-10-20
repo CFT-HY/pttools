@@ -5,7 +5,8 @@ Standard Model
 Figures for the Standard Model
 """
 
-from matplotlib.figure import Figure
+from __future__ import annotations
+
 import numpy as np
 
 from examples.utils import save_and_show_figs
@@ -16,6 +17,9 @@ from pttools.plot.g_cs2 import plot_g_cs2
 from pttools.plot.model import ModelPlot
 from pttools.plot.thermomodels import ThermoModelsPlot
 import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.figure import Figure
 
 # %%
 # g_eff

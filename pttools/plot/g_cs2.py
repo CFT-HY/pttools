@@ -1,10 +1,15 @@
 r"""Plot $g_\text{eff}$ and $c_s^2$."""
 
+from __future__ import annotations
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.bubble.phase import Phase
-from pttools.models.thermo import ThermoModel
+import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.models.thermo import ThermoModel
 
 
 def plot_g_cs2(

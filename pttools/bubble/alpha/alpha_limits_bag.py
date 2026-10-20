@@ -1,5 +1,7 @@
 r"""$\alpha_n$ limits for the Bag Model."""
 
+from __future__ import annotations
+
 import numba
 from numba.extending import overload
 import numpy as np
@@ -7,14 +9,16 @@ import numpy as np
 from pttools.bubble import check, props
 from pttools.bubble.const import ALPHA_PLUS_MAX_DEF, CS0, DEFAULT_N_XI
 from pttools.bubble.fluid_bag import sound_shell_alpha_plus_bag
-from pttools.bubble.integrate import FluidIntegrateMethod
 from pttools.bubble.solution_type import SolutionType
 
 # from pttools.bubble.solution_type_bag import identify_solution_type_alpha_plus_bag
 from pttools.speedup import njit, njit_parallel_pair, vectorize
-from pttools.speedup.differential import DifferentialPointer
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.bubble.integrate import FluidIntegrateMethod
+    from pttools.speedup.differential import DifferentialPointer
 
 # Alpha_n_max diverges as v_wall -> 1, and the solver fails to find the correct solution above this.
 _V_WALL_MAX_ALPHA_N_MAX_DEFLAGRATION: float = 0.9999

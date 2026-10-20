@@ -1,5 +1,7 @@
 r"""Constant sound speed model, aka. $\mu, \nu$ model."""
 
+from __future__ import annotations
+
 from fractions import Fraction
 import logging
 import os
@@ -22,8 +24,10 @@ from pttools.models.export import CONST_CS_MODEL_FIELDS
 from pttools.speedup import DifferentialPointer, njit
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
-from pttools.utils.fields import Fields
 from pttools.utils.validation import check_value_in_range
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.utils.fields import Fields
 
 logger: logging.Logger = logging.getLogger(__name__)
 

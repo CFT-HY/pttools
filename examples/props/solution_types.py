@@ -6,16 +6,20 @@ Script for generating a figure of the three different types of relativistic comb
 Original version was developed by Daniel Cutting for the figure 14 of :notes:`\ `.
 """
 
+from __future__ import annotations
 
 from matplotlib.colors import ListedColormap, to_rgba
-from matplotlib.image import AxesImage
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import interp1d
 
 from examples.utils import save_fig
 from pttools import bubble
+import pttools.type_hints as th
 from pttools.utils import IS_GITHUB_ACTIONS
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from matplotlib.image import AxesImage
 
 __author__ = "Daniel Cutting"
 

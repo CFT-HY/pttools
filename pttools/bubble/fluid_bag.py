@@ -4,13 +4,14 @@ Now in parametric form (Jacky Lindsay and Mike Soughton MPhys project 2017-18).
 RHS is Eq (33) in Espinosa et al. (plus $\frac{dw}{dt}$ not written there)
 """
 
+from __future__ import annotations
+
 import logging
 import math
 import typing as tp
 
 import numpy as np
 
-from pttools import speedup
 from pttools.bubble import alpha, approx, check, const, integrate, props, thermo, trim
 from pttools.bubble.cs2 import cs2_from_ptr
 from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR
@@ -23,6 +24,9 @@ from pttools.bubble.solution_type import SolutionType
 from pttools.bubble.solution_type_bag import identify_solution_type_alpha_plus_bag, identify_solution_type_bag
 from pttools.speedup import NAN_ARR, njit
 import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools import speedup
 
 logger: logging.Logger = logging.getLogger(__name__)
 

@@ -56,7 +56,8 @@ import numba
 #: to avoid their import time otherwise.
 #: The imports that would cause circular imports have to be done ``if tp.TYPE_CHECKING`` instead.
 #: As the annotations of functions and module-level variables are evaluated
-#: when the module is imported before Python 3.14, the names that are imported only for them have to be quoted.
+#: when the module is imported before Python 3.14, the modules that import names only for them
+#: use ``from __future__ import annotations``, so that the annotations do not have to be quoted.
 TYPE_CHECKING_OR_DOCS: bool = tp.TYPE_CHECKING or "sphinx" in sys.modules
 
 # These are used only in the type aliases, which are evaluated lazily,

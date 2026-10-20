@@ -1,9 +1,10 @@
 """Holders for a grid of Bubbles of various parameter combinations."""
 
+from __future__ import annotations
+
 import typing as tp
 
 import numpy as np
-from numpy.typing import NDArray
 
 from pttools.analysis.parallel import create_bubbles
 from pttools.bubble.bubble import BubbleArr, NotYetSolvedError
@@ -11,6 +12,9 @@ import pttools.type_hints as th
 
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from numpy.typing import NDArray
 
 
 class BubbleGrid:
@@ -79,7 +83,7 @@ class BubbleGridVWAlpha(BubbleGrid):
 
     def __init__(
             self,
-            model: "Model",
+            model: Model,
             v_walls: th.FloatArr1D,
             alpha_ns: th.FloatArr1D,
             func: tp.Callable | None = None,

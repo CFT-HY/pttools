@@ -4,14 +4,18 @@ For the comparison of a simulation with the Sound Shell Model,
 see :py:class:`pttools.lattice.comparison.LatticeComparison`.
 """
 
+from __future__ import annotations
+
 import typing as tp
 
 import numpy as np
 
 from pttools.lattice import LatticeRun, Quantity
-from pttools.ssm.spectrum import SSMSpectrum
 from pttools.ssm.suppression import fit_suppression_gw
 import pttools.type_hints as th
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.ssm.spectrum import SSMSpectrum
 
 
 def suppression_series(

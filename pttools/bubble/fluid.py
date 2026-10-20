@@ -1,5 +1,7 @@
 """Solver for the fluid velocity profile of a bubble."""
 
+from __future__ import annotations
+
 import logging
 import time
 import typing as tp
@@ -8,7 +10,6 @@ import numpy as np
 
 from pttools.bubble import alpha, chapman_jouguet, const, fluid_bag, fluid_reference, props, relativity
 from pttools.bubble.cs2_bag import CS2_BAG_SCALAR_PTR
-from pttools.bubble.fluid_base import GenericSolverOutput
 from pttools.bubble.fluid_detonation import sound_shell_detonation
 from pttools.bubble.fluid_gksvdv import sound_shell_gksvdv
 from pttools.bubble.fluid_hybrid import sound_shell_solver_hybrid
@@ -18,15 +19,19 @@ from pttools.bubble.phase import Phase
 from pttools.bubble.solution_type import SolutionType, cannot_be_sub_def, validate_solution_type
 from pttools.bubble.solution_type_bag import identify_solution_type_bag
 from pttools.speedup import NAN_ARR
+import pttools.type_hints as th
 
 if tp.TYPE_CHECKING:
     from pttools.models import Model
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.bubble.fluid_base import GenericSolverOutput
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
 def sound_shell_generic(  # noqa: PLR0912, PLR0915
-            model: "Model",
+            model: Model,
             v_wall: float,
             alpha_n: float,
             sol_type: SolutionType | None = None,

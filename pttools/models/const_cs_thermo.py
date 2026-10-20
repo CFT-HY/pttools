@@ -1,5 +1,7 @@
 """ThermoModel-based constant $c_s$ model."""
 
+from __future__ import annotations
+
 import typing as tp
 
 import numpy as np
@@ -9,7 +11,9 @@ from pttools.models.export import CONST_CS_THERMO_MODEL_FIELDS
 from pttools.models.thermo import ThermoModel
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
-from pttools.utils.fields import Fields
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.utils.fields import Fields
 
 
 class ConstCSThermoModel(ThermoModel):
