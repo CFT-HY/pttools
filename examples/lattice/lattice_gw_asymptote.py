@@ -19,8 +19,9 @@ The rows of the figure are, from top to bottom:
 
 The fits use the same settings as the scripts of the article, which produce the values of its tables IV and V,
 see :py:meth:`pttools.lattice.run.LatticeRun.omega_gw_asymptote`.
-However, the scripts of the article end the fits at the time steps 24800 and 39600, see :py:data:`FIT_SETTINGS`,
-whereas the data with the global quantities extends to the time steps 24800 and 40000, see :py:func:`step_ends`.
+However, the scripts of the article end the fits at the time steps 24800 and 39600,
+see :py:data:`pttools.lattice.chrw25.CHRW25_RUNS`, whereas the data with the global quantities
+extends to the time steps 24800 and 40000, see :py:meth:`pttools.lattice.run.LatticeRun.last_step`.
 The fits are therefore done both up to the last time steps of the article and up to those of the data.
 As they are the same for the detonation, the figure has three columns:
 the detonation, and the deflagration with the last time steps of the article and of the data.
@@ -47,19 +48,6 @@ if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.figure import Figure
 
 logger: logging.Logger = logging.getLogger(__name__)
-
-#: Settings of the fits of each run as in the scripts of the article:
-#: the fraction of the final value at which the fits of each wavenumber start,
-#: and the last time step of the fits.
-#: The last time steps are not a physical choice: the script ``plot_U.py`` of the article selects the time steps
-#: with ``range(0, 25000, 200)`` and ``range(0, 40000, 400)``, which exclude their end points.
-#: For the detonation, this agrees with the end of the data, as its log of the global quantities ends at the time step
-#: 24950, although its power spectra extend to 25400. For the deflagration, the data extends to 40000.
-FIT_SETTINGS: dict[str, dict[str, float | int]] = {
-    "detonation": {"start_fraction": 0.8, "step_end": 24800},
-    "deflagration": {"start_fraction": 0.6, "step_end": 39600},
-}
-
 
 def fit_cases(lattice_runs: dict[str, LatticeRun]) -> list[tuple[str, LatticeRun, int, str]]:
     """The fits to show: each run with each of its distinct last time steps, see :py:func:`step_ends`.
@@ -102,18 +90,15 @@ def fit_table(lattice_runs: dict[str, LatticeRun]) -> pd.DataFrame:
 def step_ends(name: str, run: LatticeRun) -> dict[str, int]:
     """The last time steps of the fits: those of the scripts of the article and those of the data.
 
-    The last time step of the data is the last time step of the power spectra
-    that is within the log of the global quantities, which gives the times and the enthalpies of the time steps.
+    See :py:attr:`pttools.lattice.params.LatticeRunParams.fit_step_end`
+    and :py:meth:`pttools.lattice.run.LatticeRun.last_step`.
 
-    :param name: name of the run, a key of :py:data:`FIT_SETTINGS`
+    :param name: name of the run, a key of :py:data:`pttools.lattice.chrw25.CHRW25_RUNS`
     :param run: the run
     :return: the last time steps by their description
     """
-    steps = run.steps()
-    return {
-        "article": int(FIT_SETTINGS[name]["step_end"]),
-        "data": int(steps[steps <= run.global_steps[-1]][-1]),
-    }
+    step_end = CHRW25_RUNS[name].fit_step_end
+    return {"article": run.last_step() if step_end is None else step_end, "data": run.last_step()}
 
 
 def main() -> dict[str, Figure]:
@@ -126,7 +111,7 @@ def main() -> dict[str, Figure]:
     fig, axs = plt.subplots(4, len(cases), figsize=(5 * len(cases), 14), squeeze=False)
     for i, (name, run, step_end, description) in enumerate(cases):
         plot_gw_asymptote(
-            run, axs[:, i], start_fraction=float(FIT_SETTINGS[name]["start_fraction"]), step_end=step_end,
+            run, axs[:, i], start_fraction=CHRW25_RUNS[name].fit_start_fraction, step_end=step_end,
             title=f"{run.label_latex}\nlast time step {step_end} ({description})")
     fig.tight_layout()
     return {"lattice_gw_asymptote": fig}

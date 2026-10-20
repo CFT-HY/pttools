@@ -138,6 +138,16 @@ class ConvertTest(unittest.TestCase):
         np.testing.assert_array_equal(run.steps(Quantity.X_DIV), STEPS[:2])
         assert run.steps(Quantity.PHI).size == 0
         assert not run.has_globals
+        assert run.last_step() == STEPS[-1]
+
+    def test_last_step(self) -> None:
+        """The last time step is the last one within the log of the global quantities."""
+        write_run(self.path)
+        # Rewrite the log of the global quantities to end before the last time step of the power spectra.
+        write_run(self.path, steps=STEPS[:3], quantities=())
+        run = LatticeRun(self.path, v_wall=0.5, alpha_n=0.1)
+        assert run.steps().tolist() == list(STEPS)
+        assert run.last_step() == STEPS[2]
 
 
 class StepArrayTest(unittest.TestCase):

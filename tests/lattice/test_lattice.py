@@ -273,11 +273,11 @@ class CorreiaDataTest(unittest.TestCase):
         r"""The indices of the extrapolation of the GW power agree with :correia_2025:`\ ` tables IV and V.
 
         The fits use the last time steps of the scripts of the article,
-        see :py:data:`examples.lattice.lattice_gw_asymptote.FIT_SETTINGS`.
+        see :py:attr:`pttools.lattice.params.LatticeRunParams.fit_step_end`.
         """
         cases = (
-            ("detonation", 24800, (1.48, 0.23, 2.40, 0.61)),
-            ("deflagration", 39600, (0.86, 0.01, 0.74, 0.79)),
+            ("detonation", CHRW25_RUNS["detonation"].fit_step_end, (1.48, 0.23, 2.40, 0.61)),
+            ("deflagration", CHRW25_RUNS["deflagration"].fit_step_end, (0.86, 0.01, 0.74, 0.79)),
         )
         for name, step_end, (zeta, lambda_, prediction, d_tot) in cases:
             with self.subTest(name=name):

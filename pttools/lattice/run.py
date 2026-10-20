@@ -326,6 +326,20 @@ class LatticeRun:
         """$k$, wavenumbers of the bins of the power spectra in lattice units, see :py:meth:`power_spectrum`."""
         return self.data.k[self._valid_bins]
 
+    def last_step(self, quantity: Quantity = Quantity.GW_TT) -> int:
+        """The last time step of the power spectra of the quantity that is within the log of the global quantities.
+
+        The times and the mean enthalpies of the later time steps would have to be extrapolated,
+        see :py:meth:`time` and :py:meth:`enthalpy`.
+
+        :param quantity: the quantity
+        :return: the last such time step, or the last time step of the quantity if the log is not available
+        """
+        steps = self.steps(quantity)
+        if self.has_globals:
+            steps = steps[steps <= self.global_steps[-1]]
+        return int(steps[-1])
+
     def steps(self, quantity: Quantity = Quantity.GW_TT) -> th.IntArr1D:
         """The time steps at which the power spectrum of the given quantity is available.
 

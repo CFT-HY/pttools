@@ -28,13 +28,23 @@ logger: logging.Logger = logging.getLogger(__name__)
 #: The runs of :correia_2025:`\ `.
 #: The time steps are those of ``plot_ps.py`` of the Zenodo scripts, which produced fig. 5.
 #: The deflagration was run twice to different final times, and the longer run is used here.
+#: The settings of the fits of the extrapolation of the GW power are those of ``plot_U.py`` of the Zenodo scripts,
+#: which produced fig. 6 and the indices of tables IV and V.
+#: Its last time steps are not a physical choice: it selects the time steps
+#: with ``range(0, 25000, 200)`` and ``range(0, 40000, 400)``, which exclude their end points.
+#: For the detonation, this agrees with the end of the data,
+#: as its log of the global quantities ends at the time step 24950, although its power spectra extend to 25400.
+#: For the deflagration, the data extends to the time step 40000.
+#: See :py:meth:`pttools.lattice.run.LatticeRun.last_step` for the last time steps of the data.
 CHRW25_RUNS: dict[str, LatticeRunParams] = {
     "detonation": LatticeRunParams(
         name="detonation", subdir="detonation_alpha067_vw092",
-        v_wall=0.92, alpha_n=0.67, fig_step=18000, fig_step_prev=12000),
+        v_wall=0.92, alpha_n=0.67, fig_step=18000, fig_step_prev=12000,
+        fit_start_fraction=0.8, fit_step_end=24800),
     "deflagration": LatticeRunParams(
         name="deflagration", subdir="deflagration_alpha050_vw044/ps-all-tfinal40k",
-        v_wall=0.44, alpha_n=0.5, fig_step=22000, fig_step_prev=18000),
+        v_wall=0.44, alpha_n=0.5, fig_step=22000, fig_step_prev=18000,
+        fit_start_fraction=0.6, fit_step_end=39600),
 }
 #: Environment variable for the location of the data
 DATA_DIR_ENV: str = "PTTOOLS_LATTICE_DATA_DIR"

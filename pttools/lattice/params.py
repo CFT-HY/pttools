@@ -27,6 +27,12 @@ class LatticeRunParams:
     #: The earlier time step of the GW power growth rate of the figures of the article,
     #: e.g. :correia_2025:`\ ` fig. 5
     fig_step_prev: int
+    #: The fraction of the final value of each wavenumber at which the fits of the extrapolation of the GW power
+    #: start in the article, see :py:meth:`pttools.lattice.run.LatticeRun.pow_gw_asymptote`
+    fit_start_fraction: float = 0.8
+    #: The last time step of the fits of the extrapolation of the GW power in the article,
+    #: or None if they use all the time steps, see :py:meth:`pttools.lattice.run.LatticeRun.omega_gw_asymptote`
+    fit_step_end: int | None = None
 
     @property
     def label_latex(self) -> str:
