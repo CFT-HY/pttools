@@ -15,6 +15,7 @@ from pttools.bubble import Bubble, Phase, nu_gdh2024
 from pttools.bubble import omega_barotropic as omega_barotropic_func
 from pttools.bubble.thermo import warn_if_ubarf_relativistic
 from pttools.math.formatting import as_latex, as_unicode
+from pttools.math.interpolation import interpolate_log_log
 from pttools.speedup import NAN_ARR
 from pttools.ssm import const
 from pttools.ssm.barotropic import H_eta, dilution_of_e, eta_ratio, source_lifetime_factor, tau_star
@@ -235,6 +236,19 @@ class SSMSpectrum(Extractable, SpectrumBase):
             raise RuntimeError("The quantities that do not depend on r_star have not been computed.")
         self._store_gw(compute_gw(inp=self._ssm_input(), base_res=self.base_res))
 
+    def covers(self, y: FloatArr1D, rtol: float = 1e-9) -> bool:
+        r"""Whether the $z$ values are within the range of the $y$ array of this spectrum.
+
+        This tells whether :py:meth:`with_params` can interpolate this spectrum to the $z$ values.
+
+        :param y: $z = kR_*$ values
+        :param rtol: relative tolerance for the endpoints of the range
+        :return: True if all the values are within the range
+        """
+        if y.size == 0:
+            return False
+        return bool(y.min() >= self.y.min() * (1 - rtol) and y.max() <= self.y.max() * (1 + rtol))
+
     def _prepare_compute(self, eps_lookup: float, lifetime_distribution_a: float, lambda_correction: bool) -> None:
         """Store the arguments of :py:meth:`compute`, and compute the input values that require the bubble."""
         if not self.bubble.solved:
@@ -339,7 +353,8 @@ class SSMSpectrum(Extractable, SpectrumBase):
             suppression: Suppression | None = None,
             suppression_method: SuppressionMethod | None = None,
             label_latex: str | None = None,
-            label_unicode: str | None = None) -> tp.Self:
+            label_unicode: str | None = None,
+            y: FloatArr1D | None = None) -> tp.Self:
         r"""Create a new spectrum with different parameters, reusing the computations of this spectrum.
 
         The velocity spectra, ${\lvert A \rvert}^2$, $\bar{U}_f^2$,
@@ -356,6 +371,26 @@ class SSMSpectrum(Extractable, SpectrumBase):
         The default labels are generated for the new spectrum unless labels are given,
         as they contain $r_*$.
 
+        If a new $y$ array is given, it must be within the range of the $y$ array of this spectrum,
+        see :py:meth:`covers`.
+        Then the velocity spectrum $\tilde{P}_v$ and the GW spectral density without the source lifetime factor
+        $\tilde{P}_\text{gw,ssm} / \Upsilon_\ell$ are interpolated to it linearly in log-log scale
+        with :py:func:`pttools.math.interpolation.interpolate_log_log`,
+        and the rest of the spectrum is computed for it by :py:func:`pttools.ssm.compute.compute_gw`,
+        including the low-$k$ approximation.
+        As the power spectra are $\mathcal{P} \propto z^3 \tilde{P}$,
+        this is the same as interpolating the power spectra in log-log scale.
+        The lookup arrays, ${\lvert A \rvert}^2$, $\bar{U}_f^2$ and $\mathcal{I}_v$ do not depend on the $y$ array,
+        and are therefore the same as those of this spectrum.
+        The result therefore differs from a spectrum computed for the new $y$ array by the interpolation error,
+        and by the dependence of the computation on the range of the $y$ array,
+        as the lookup arrays span the range of the $y$ array.
+        As for any $y$ array, the junction of the low-$k$ approximation and $\tilde{P}_\text{gw,ssm}$
+        depends on the points of the $y$ array, see :py:func:`pttools.ssm.low_k.join.gw_junction`.
+        Therefore, the result differs from this spectrum near the junction even at the points of this spectrum.
+        This is useful for computing the spectra with different parameters for the same frequencies,
+        as their $y$ arrays then differ, see :py:meth:`pttools.omgw0.spectrum.Spectrum.with_params`.
+
         :param r_star: $r_*$, Hubble-scaled mean bubble spacing
         :param beta_tilde: $\tilde{\beta} \equiv \frac{\beta}{H_*}$, nucleation rate parameter
         :param a_star_a_r_ratio: $\frac{a_*}{a_r}$
@@ -365,15 +400,17 @@ class SSMSpectrum(Extractable, SpectrumBase):
         :param suppression_method: suppression method
         :param label_latex: label of the new spectrum in LaTeX format
         :param label_unicode: label of the new spectrum in Unicode format
+        :param y: $z = kR_*$ array of the new spectrum. If not given, the $y$ array of this spectrum is used.
         :return: the new spectrum
         :raises RuntimeError: if this spectrum has not been computed
+        :raises ValueError: if the new $y$ array is not within the range of the $y$ array of this spectrum
         """
         return self._with_params(
             {
                 "r_star": r_star, "beta_tilde": beta_tilde,
                 "a_star_a_r_ratio": a_star_a_r_ratio, "N_sh": N_sh, "omega_barotropic": omega_barotropic,
                 "suppression": suppression, "suppression_method": suppression_method,
-                "label_latex": label_latex, "label_unicode": label_unicode
+                "label_latex": label_latex, "label_unicode": label_unicode, "y": y
             }
         )
 
@@ -410,13 +447,25 @@ class SSMSpectrum(Extractable, SpectrumBase):
         kwargs = self._init_kwargs()
         if params.get("r_star") is not None or params.get("beta_tilde") is not None:
             kwargs["r_star"] = kwargs["beta_tilde"] = None
+        # The frequencies of pttools.omgw0.spectrum.Spectrum replace the y array.
+        if params.get("f") is not None:
+            kwargs["y"] = None
         kwargs.update({key: value for key, value in params.items() if value is not None})
         spectrum = type(self)(**kwargs, compute=False)
+        if not self.covers(spectrum.y):
+            raise ValueError(
+                f"The new spectrum has y = {spectrum.y.min():.3e} - {spectrum.y.max():.3e}, "
+                f"which is not within the range y = {self.y.min():.3e} - {self.y.max():.3e} of this spectrum."
+            )
         spectrum._reuse(self)  # noqa: SLF001
         return spectrum
 
     def _reuse(self, other: SSMSpectrum) -> None:
-        """Compute this spectrum by reusing the r_*-independent results of another spectrum."""
+        """Compute this spectrum by reusing the r_*-independent results of another spectrum.
+
+        If the $y$ arrays differ, the results along $y$ are interpolated to the $y$ array of this spectrum,
+        see :py:meth:`with_params`.
+        """
         if not self.bubble.solved:
             self.bubble.solve()
         self.eps_lookup = other.eps_lookup
@@ -424,7 +473,13 @@ class SSMSpectrum(Extractable, SpectrumBase):
         self.lambda_correction = other.lambda_correction
         self.cs = other.cs
         self.cs2 = other.cs2
-        self._store_base(tp.cast(SSMBaseResults, other.base_res))
+        base_res = tp.cast(SSMBaseResults, other.base_res)
+        if not np.array_equal(self.y, other.y):
+            base_res = base_res._replace(
+                spec_den_v=interpolate_log_log(self.y, other.y, base_res.spec_den_v),
+                spec_den_gw_ssm_unscaled=interpolate_log_log(self.y, other.y, base_res.spec_den_gw_ssm_unscaled)
+            )
+        self._store_base(base_res)
         self._compute_gw()
 
     # -----

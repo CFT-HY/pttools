@@ -218,6 +218,55 @@ class SSMSpectrumWithParamsTest(unittest.TestCase):
         )
         np.testing.assert_allclose(spectrum.spec_den_gw_ssm, ref, rtol=1e-14)
 
+    def test_covers(self) -> None:
+        """The range of the y array should be checked with a relative tolerance for the endpoints."""
+        y = self.spectrum.y
+        assert self.spectrum.covers(y)
+        assert self.spectrum.covers(y[10:-10])
+        assert self.spectrum.covers(np.array([y[0] * (1 - 1e-12), y[-1] * (1 + 1e-12)]))
+        assert not self.spectrum.covers(np.array([y[0] * 0.99]))
+        assert not self.spectrum.covers(np.array([y[-1] * 1.01]))
+        assert not self.spectrum.covers(np.array([]))
+
+    def test_y_nodes(self) -> None:
+        """A new y array at the points of this spectrum should give the same spectra, except near the junction.
+
+        The interpolated arrays are exact at the points,
+        whereas the junction of the low-k approximation depends on the points of the y array.
+        """
+        indices = slice(10, -10, 3)
+        y = self.spectrum.y[indices]
+        with mock.patch("pttools.ssm.spectrum.compute") as compute_mock:
+            spectrum = self.spectrum.with_params(r_star=0.3, y=y)
+            compute_mock.assert_not_called()
+        ref = self.spectrum.with_params(r_star=0.3)
+        np.testing.assert_array_equal(spectrum.y, y)
+        assert spectrum.a2 is self.spectrum.a2
+        for name in ("spec_den_v", "spec_den_gw_ssm", "spec_den_gw_low", "spec_den_gw_int"):
+            np.testing.assert_allclose(getattr(spectrum, name), getattr(ref, name)[indices], rtol=1e-14, err_msg=name)
+
+    def test_y_interpolated(self) -> None:
+        r"""A new y array should give the same spectrum as a new spectrum computed for it, within the accuracy.
+
+        The spectra differ by the interpolation error and by the dependence of the lookup arrays on the range of y,
+        and they are therefore compared only near the peak of $\mathcal{P}_\text{gw}$.
+        """
+        y = np.logspace(-0.5, 2.5, 200)
+        spectrum = self.spectrum.with_params(beta_tilde=20, y=y)
+        kwargs: dict[str, tp.Any] = {**self.KWARGS, "y": y}
+        ref = SSMSpectrum(self.bubble, beta_tilde=20, **kwargs)
+        assert spectrum.r_star == ref.r_star
+        np.testing.assert_array_equal(spectrum.y, y)
+        significant = ref.pow_gw > 1e-2 * ref.pow_gw.max()
+        np.testing.assert_allclose(spectrum.pow_gw[significant], ref.pow_gw[significant], rtol=1e-2)
+        # The original spectrum should not be modified
+        np.testing.assert_array_equal(self.spectrum.y, self.KWARGS["y"])
+
+    def test_y_out_of_range(self) -> None:
+        """A new y array outside the range of the spectrum cannot be interpolated."""
+        with pytest.raises(ValueError, match="not within the range"):
+            self.spectrum.with_params(y=np.logspace(-2, 2, 10))
+
     def test_not_computed(self) -> None:
         """A spectrum that has not been computed cannot be reused."""
         spectrum = SSMSpectrum(self.bubble, r_star=0.1, compute=False)

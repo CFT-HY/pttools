@@ -217,6 +217,41 @@ class SpectrumComputeTest(unittest.TestCase):
         # The original spectrum should not be modified
         assert (self.spectrum.r_star, self.spectrum.T_star, self.spectrum.g_star) == (0.1, 200, 100)
 
+    def test_with_params_f(self) -> None:
+        """Giving the frequencies should interpolate the spectrum to them with the parameters of the new spectrum.
+
+        The spectra are compared only near the peak, see :py:meth:`tests.ssm.test_spectrum.SSMSpectrumWithParamsTest`.
+        """
+        f = np.logspace(-4.5, -2, 150)
+        with mock.patch("pttools.omgw0.spectrum.compute") as compute_mock:
+            spectrum = self.spectrum.with_params(r_star=0.2, g_star=50, f=f)
+            compute_mock.assert_not_called()
+        assert spectrum.f_given
+        np.testing.assert_array_equal(spectrum.f(), f)
+        np.testing.assert_allclose(spectrum.y, spectrum.z_from_f(f), rtol=1e-14)
+        assert spectrum.a2 is self.spectrum.a2
+        ref = Spectrum(self.bubble, r_star=0.2, f=f, T_star=200, g_star=50, compute_snr=True, **self.KWARGS)
+        np.testing.assert_allclose(spectrum.y, ref.y, rtol=1e-14)
+        omgw0_h2 = spectrum.omgw0_h2()
+        omgw0_h2_ref = ref.omgw0_h2()
+        significant = omgw0_h2_ref > 1e-2 * omgw0_h2_ref.max()
+        np.testing.assert_allclose(omgw0_h2[significant], omgw0_h2_ref[significant], rtol=1e-2)
+        assert spectrum.snr()[0] == pytest.approx(ref.snr()[0], rel=2e-3)
+
+    def test_with_params_y(self) -> None:
+        """Giving the y array should interpolate the spectrum to it, and y and f cannot be given together."""
+        y = self.spectrum.y[10:-10]
+        spectrum = self.spectrum.with_params(r_star=0.2, y=y)
+        assert not spectrum.f_given
+        np.testing.assert_array_equal(spectrum.y, y)
+        with pytest.raises(ValueError, match="not both"):
+            self.spectrum.with_params(y=y, f=self.spectrum.f())
+
+    def test_with_params_f_out_of_range(self) -> None:
+        """Frequencies that do not correspond to the range of y cannot be interpolated."""
+        with pytest.raises(ValueError, match="not within the range"):
+            self.spectrum.with_params(r_star=0.2, f=self.spectrum.f())
+
     def test_with_params_noise(self) -> None:
         """The signal-to-noise ratio of the new spectrum should use the custom noise of the original spectrum."""
         f_noise = np.logspace(-4, -2, 50)

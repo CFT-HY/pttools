@@ -306,13 +306,18 @@ class Spectrum(Omgw0Base, SSMSpectrum):
             T_star: float | None = None,
             g_star: float | None = None,
             gs_star: float | None = None,
-            compute_snr: bool | None = None) -> tp.Self:
+            compute_snr: bool | None = None,
+            y: FloatArr1D | None = None,
+            f: FloatArr1D | None = None) -> tp.Self:
         r"""Create a new spectrum with different parameters, reusing the computations of this spectrum.
 
         See :py:meth:`pttools.ssm.spectrum.SSMSpectrum.with_params`.
-        The new spectrum has the same $z$ array as this spectrum.
+        Unless $y$ or $f$ is given, the new spectrum has the same $z$ array as this spectrum.
         Therefore, if the frequencies $f$ were given to this spectrum,
         the frequencies of the new spectrum differ from them when $r_*$, $T_*$, $g_*$ or $g_{s,*}$ is changed.
+        To keep the frequencies, give them as ``f``.
+        They are then converted to the $y$ array of the new spectrum with the parameters of the new spectrum,
+        as in the constructor, and the spectrum is interpolated to it.
         The signal-to-noise ratio is computed with the same settings as for this spectrum.
 
         :param r_star: $r_*$, Hubble-scaled mean bubble spacing
@@ -330,9 +335,17 @@ class Spectrum(Omgw0Base, SSMSpectrum):
         :param gs_star: $g_{s,*}$, degrees of freedom for entropy at the time of GW production
         :param compute_snr: whether to compute the signal-to-noise ratio.
             If not given, the value of this spectrum is used.
+        :param y: $z = kR_*$ array of the new spectrum, to which this spectrum is interpolated.
+            Cannot be given together with $f$.
+        :param f: $f$, frequencies today of the new spectrum, to which this spectrum is interpolated.
+            Cannot be given together with $y$.
         :return: the new spectrum
         :raises RuntimeError: if this spectrum has not been computed
+        :raises ValueError: if both $y$ and $f$ are given,
+            or if the $y$ array of the new spectrum is not within the range of the $y$ array of this spectrum
         """
+        if y is not None and f is not None:
+            raise ValueError("Either y or f can be provided, but not both.")
         if g_star is not None and gs_star is None:
             gs_star = g_star
         return self._with_params(
@@ -341,7 +354,8 @@ class Spectrum(Omgw0Base, SSMSpectrum):
                 "a_star_a_r_ratio": a_star_a_r_ratio, "N_sh": N_sh, "omega_barotropic": omega_barotropic,
                 "suppression": suppression, "suppression_method": suppression_method,
                 "label_latex": label_latex, "label_unicode": label_unicode,
-                "T_star": T_star, "g_star": g_star, "gs_star": gs_star, "compute_snr": compute_snr
+                "T_star": T_star, "g_star": g_star, "gs_star": gs_star, "compute_snr": compute_snr,
+                "y": y, "f": f
             }
         )
 
