@@ -43,11 +43,8 @@ There are two exceptions to this pattern:
   and only the public function that dispatches between them is made generic.
 """
 
-import ctypes
 import sys
 import typing as tp
-
-import numba
 
 #: Whether the type hints are being evaluated, i.e. when type checking or building the documentation with Sphinx.
 #: Sphinx evaluates the type hints, including the values of the type aliases, to document them.
@@ -61,12 +58,11 @@ import numba
 TYPE_CHECKING_OR_DOCS: bool = tp.TYPE_CHECKING or "sphinx" in sys.modules
 
 # These are used only in the type aliases, which are evaluated lazily,
-# and therefore importing the type hints does not import Matplotlib and SciPy.
+# and therefore importing the type hints does not import Matplotlib, Numba, NumPy and SciPy.
 if TYPE_CHECKING_OR_DOCS:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from numba.core.registry import CPUDispatcher
-    from numba.core.typing.templates import Signature
     import numpy as np
     from numpy.typing import NDArray
     from scipy.integrate import OdeSolver
@@ -129,14 +125,10 @@ type VWXi = tuple[FloatArr1D, FloatArr1D, FloatArr1D]
 # -----
 #: Type of $c_s^2$ function
 type CS2Fun = tp.Callable[[FloatOrArr, FloatOrArr], FloatOrArr] | CPUDispatcher
-#: Numba type of $c_s^2$ function
-CS2FunScalarSig: "Signature" = numba.double(numba.double, numba.double)
 #: Pointer to a $c_s^2$ function, i.e. the address of a Numba cfunc
 type CS2FunScalarPtr = int
-#: ctypes type of $c_s^2$ function
-CS2CFunc: type[ctypes._CFuncPtr] = ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double)
 #: Python type of a $c_s^2$ ctypes function pointer instance,
-#: as created by calling :py:data:`CS2CFunc`
+#: as created by calling :py:data:`pttools.bubble.cs2.CS2CFunc`
 type CS2CFuncType = tp.Callable[[float, float], float]
 
 # -----

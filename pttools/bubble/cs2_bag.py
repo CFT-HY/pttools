@@ -9,7 +9,7 @@ from numba.extending import overload
 import numpy as np
 
 from pttools.bubble import const
-from pttools.bubble.cs2 import cs2_to_ptr
+from pttools.bubble.cs2 import CS2FunScalarSig, cs2_to_ptr
 from pttools.speedup import njit
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
@@ -56,7 +56,7 @@ def _cs2_bag_scalar(w: th.FloatOrArr, phase: th.FloatOrArr) -> th.FloatOrArr:
     return const.CS0_2
 
 
-@numba.cfunc(th.CS2FunScalarSig, cache=NUMBA_CACHE_CS2_BAG)
+@numba.cfunc(CS2FunScalarSig, cache=NUMBA_CACHE_CS2_BAG)
 def cs2_bag_scalar_cfunc(w: float, phase: Phase) -> float:
     r"""Sound speed squared $c_s^2 = \frac{1}{3}$ in the Bag Model as a Numba cfunc for scalar inputs.
 

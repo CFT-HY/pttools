@@ -8,16 +8,22 @@ which would prevent the Numba on-disk cache from ever hitting.
 See the "Numba caching" section of the developer documentation for the details.
 """
 
+import ctypes
 import threading
 
 from llvmlite import ir
 import numba
+from numba.core.typing.templates import Signature
 from numba.extending import intrinsic, overload
 
 from pttools.speedup.numba_wrapper import CFunc, Dispatcher
 from pttools.speedup.options import NUMBA_DISABLE_JIT
 import pttools.type_hints as th
 
+#: ctypes type of $c_s^2$ function
+CS2CFunc: type[ctypes._CFuncPtr] = ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double)
+#: Numba type of $c_s^2$ function
+CS2FunScalarSig: Signature = numba.double(numba.double, numba.double)
 CS2_CFUNCS: dict[th.CS2FunScalarPtr, CFunc] = {}
 r"""Compiled $c_s^2$ functions by their pointers.
 
@@ -62,13 +68,13 @@ def cs2_to_ptr(cs2_fun: th.CS2Fun) -> th.CS2FunScalarPtr:
         cs2_jit = cs2_fun
 
         # Caching is disabled, as these functions are created dynamically.
-        @numba.cfunc(th.CS2FunScalarSig, cache=False)
+        @numba.cfunc(CS2FunScalarSig, cache=False)
         def cs2_cfunc(w: float, phase: float) -> float:
             return cs2_jit(w, phase)
 
         cfunc = cs2_cfunc
     else:
-        cfunc = numba.cfunc(th.CS2FunScalarSig, cache=False)(cs2_fun)
+        cfunc = numba.cfunc(CS2FunScalarSig, cache=False)(cs2_fun)
 
     ptr = cfunc.address
     with CS2_FUNCS_LOCK:
@@ -115,7 +121,7 @@ def cs2_from_ptr(cs2_ptr: th.CS2FunScalarPtr, w: float, phase: float) -> float:
     if cs2_fun is None:
         # The pointer was not created by cs2_to_ptr, and is therefore presumed to be the address of a cfunc.
         # https://numba.pydata.org/numba-doc/0.15.1/interface_c.html
-        cs2_fun = th.CS2CFunc(cs2_ptr)
+        cs2_fun = CS2CFunc(cs2_ptr)
         with CS2_FUNCS_LOCK:
             CS2_FUNCS[cs2_ptr] = cs2_fun
     return float(cs2_fun(w, phase))
