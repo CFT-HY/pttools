@@ -8,7 +8,7 @@ import numpy as np
 from pttools import speedup
 from pttools.speedup import njit
 from pttools.ssm import NucType, const, lifetime_distribution_momentum
-from pttools.ssm.calculators import resample_uniform_xi
+from pttools.ssm.calculators import resample_merged_uniform_xi
 from pttools.ssm.nucleation import beta_R_star0, lifetime_distribution
 from pttools.ssm.sin_transform import sin_transform
 import pttools.type_hints as th
@@ -125,7 +125,7 @@ def l(  # noqa: E743
     $$l(z) = \frac{4\pi}{z} \int_0^\infty d\xi \lambda_\text{ip}(\xi) \xi \sin(z\xi)$$
     :gw_pt_ssm:`\ ` eq. 4.8.
     """
-    xi_re, lam_re = resample_uniform_xi(xi, lam, n_xi)
+    xi_re, lam_re = resample_merged_uniform_xi(xi, lam, n_xi)
 
     # Some old implementation
     # lam_re = np.interp(xi_re,xi,lam_orig)

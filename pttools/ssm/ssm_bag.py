@@ -11,7 +11,7 @@ from scipy.optimize import fsolve
 from pttools import bubble, speedup
 from pttools.speedup import njit
 from pttools.ssm import const
-from pttools.ssm.calculators import resample_uniform_xi
+from pttools.ssm.calculators import resample_merged_uniform_xi, resample_uniform_xi
 from pttools.ssm.sin_transform import sin_transform
 from pttools.ssm.ssm import DE_Method, Method
 import pttools.type_hints as th
@@ -80,7 +80,7 @@ def a2_e_conserving_bag(
     if lambda_correction:
         lam_orig += w_ip * v_ip * v_ip / w_ip[-1]
 
-    xi_re, lam_re = resample_uniform_xi(xi, lam_orig, nxi)
+    xi_re, lam_re = resample_merged_uniform_xi(xi, lam_orig, nxi)
 
     #    lam_re = np.interp(xi_re,xi,lam_orig)
     #    lam_ft = np.zeros_like(z)
@@ -358,7 +358,7 @@ def lam_ssm_func_bag(
             df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
             ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD,
             cs2_ptr=bubble.CS2_BAG_SCALAR_PTR) / w_ip[-1]
-    xi_re, lam_re = resample_uniform_xi(xi, lam_orig, nxi)
+    xi_re, lam_re = resample_merged_uniform_xi(xi, lam_orig, nxi)
 
     # lam_ft = np.zeros_like(z)
     # for j in range(lam_ft.size):
