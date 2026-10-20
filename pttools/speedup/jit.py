@@ -61,7 +61,13 @@ def _renamed_func(func: tp.Callable, suffix: str) -> tp.Callable:
     renamed.__qualname__ = f"{func.__qualname__}{suffix}"
     renamed.__module__ = func.__module__
     renamed.__doc__ = func.__doc__
-    renamed.__annotations__ = func.__annotations__
+    # From Python 3.14 on, the annotations are evaluated lazily by __annotate__ only when they are accessed,
+    # e.g. by Sphinx, and accessing __annotations__ here would evaluate them, which fails for names that are
+    # imported only for type checking. Before Python 3.14, they have already been evaluated in the definition.
+    if hasattr(func, "__annotate__"):
+        renamed.__annotate__ = func.__annotate__
+    else:
+        renamed.__annotations__ = func.__annotations__
     renamed.__kwdefaults__ = func.__kwdefaults__
     return renamed
 

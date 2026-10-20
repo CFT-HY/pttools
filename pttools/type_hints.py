@@ -44,16 +44,31 @@ There are two exceptions to this pattern:
 """
 
 import ctypes
+import sys
 import typing as tp
 
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
 import numba
-from numba.core.registry import CPUDispatcher
-from numba.core.typing.templates import Signature
-import numpy as np
-from numpy.typing import NDArray
-import scipy.integrate as spi
+
+#: Whether the type hints are being evaluated, i.e. when type checking or building the documentation with Sphinx.
+#: Sphinx evaluates the type hints, including the values of the type aliases, to document them.
+#: Sphinx is imported before the modules that it documents, and therefore it's in ``sys.modules`` when they are.
+#: The imports that are needed only for the type hints can be done ``if TYPE_CHECKING_OR_DOCS``
+#: to avoid their import time otherwise.
+#: The imports that would cause circular imports have to be done ``if tp.TYPE_CHECKING`` instead.
+#: As the annotations of functions and module-level variables are evaluated
+#: when the module is imported before Python 3.14, the names that are imported only for them have to be quoted.
+TYPE_CHECKING_OR_DOCS: bool = tp.TYPE_CHECKING or "sphinx" in sys.modules
+
+# These are used only in the type aliases, which are evaluated lazily,
+# and therefore importing the type hints does not import Matplotlib and SciPy.
+if TYPE_CHECKING_OR_DOCS:
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
+    from numba.core.registry import CPUDispatcher
+    from numba.core.typing.templates import Signature
+    import numpy as np
+    from numpy.typing import NDArray
+    from scipy.integrate import OdeSolver
 
 # This adds quite a bit of startup time when only the type hints are needed, and not the rest of PTtools.
 # from pttools.speedup.numba_wrapper import CPUDispatcher
@@ -72,7 +87,7 @@ type FigArr2D = np.ndarray[tuple[int, int], np.dtype[Figure]]  # pyrefly: ignore
 #: Numba function
 type NumbaFunc = tp.Callable | CPUDispatcher
 #: ODE solver specifier
-type ODESolver = spi.OdeSolver | type[spi.OdeSolver] | tp.Callable | str
+type ODESolver = OdeSolver | type[OdeSolver] | tp.Callable | str
 
 # -----
 # Numerical types
@@ -114,7 +129,7 @@ type VWXi = tuple[FloatArr1D, FloatArr1D, FloatArr1D]
 #: Type of $c_s^2$ function
 type CS2Fun = tp.Callable[[FloatOrArr, FloatOrArr], FloatOrArr] | CPUDispatcher
 #: Numba type of $c_s^2$ function
-CS2FunScalarSig: Signature = numba.double(numba.double, numba.double)
+CS2FunScalarSig: "Signature" = numba.double(numba.double, numba.double)
 #: Pointer to a $c_s^2$ function, i.e. the address of a Numba cfunc
 type CS2FunScalarPtr = int
 #: ctypes type of $c_s^2$ function
