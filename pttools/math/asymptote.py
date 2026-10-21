@@ -11,6 +11,7 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.optimize import curve_fit
 
+from pttools.speedup import njit
 import pttools.type_hints as th
 
 
@@ -43,6 +44,7 @@ class AsymptoteFit:
         return asymptotic_growth(t, value_inf=self.value, t_decay=self.t_decay, index=self.index)
 
 
+@njit(cache=True, nogil=True)
 def asymptotic_growth[T: th.FloatOrArr](t: T, value_inf: float, t_decay: float, index: float) -> T:
     r"""Power law approach to an asymptote.
 
@@ -58,11 +60,13 @@ def asymptotic_growth[T: th.FloatOrArr](t: T, value_inf: float, t_decay: float, 
     return value_inf * (1 - (t / t_decay)**(-index))  # pyrefly: ignore[bad-return]
 
 
+@njit(cache=True, nogil=True)
 def _asymptotic_growth_fit(t: th.FloatArr1D, index: float, t_decay: float, value_inf: float) -> th.FloatArr1D:
     """:func:`asymptotic_growth` with the parameters in the order of the fit."""
     return asymptotic_growth(t, value_inf=value_inf, t_decay=t_decay, index=index)
 
 
+@njit(cache=True, nogil=True)
 def _asymptotic_growth_jac(t: th.FloatArr1D, index: float, t_decay: float, value_inf: float) -> th.FloatArr2D:
     """Jacobian of :func:`_asymptotic_growth_fit` with respect to its parameters."""
     power = (t / t_decay)**(-index)
@@ -91,9 +95,12 @@ def fit_asymptote(
         If given, the fit is done with the trust region reflective algorithm instead of Levenberg-Marquardt.
     :return: the fit
     :raises RuntimeError: if the fit does not converge
+    :raises ValueError: if the time series has fewer points than there are parameters
     """
     scale = float(values[-1])
     p0 = (index_guess, float(t[0]) if t_decay_guess is None else t_decay_guess, 1.)
+    if t.size < len(p0):
+        raise ValueError(f"The fit requires at least {len(p0)} points, but the time series has {t.size}.")
     # The trial parameters of the iterations may be outside the domain of the function, e.g. a negative t_decay,
     # for which the power is undefined. The fit handles the resulting nan values.
     with np.errstate(invalid="ignore", divide="ignore", over="ignore"):

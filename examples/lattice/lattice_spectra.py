@@ -12,9 +12,20 @@ i.e. by the ratio of the extrapolated asymptotic total GW power $\Omega_\text{gw
 and the total GW power $\Omega_\text{gw}(t)$ at the time of the spectrum.
 This assumes that the shape of the spectrum no longer changes.
 For comparison, the asymptotes $\mathcal{P}_\text{gw}^\infty(k)$ of the fits of each wavenumber
-of :py:mod:`examples.lattice.lattice_gw_asymptote` are also shown.
+of :py:mod:`examples.lattice.lattice_gw_asymptote` are also shown,
+here over the ranges of :py:data:`examples.lattice.lattice_spectra.Y_MIN_FIT`
+and :py:data:`examples.lattice.lattice_spectra.Y_MAX_FIT`.
+Below $kR_* = 4$, the fit of the detonation does not converge,
+whereas those of the deflagration start from the smallest wavenumber of the data.
 The fits use all the time steps of the data with the global quantities,
 see :py:meth:`pttools.lattice.run.LatticeRun.last_step`.
+At higher wavenumbers, the GW power is still growing at an accelerating rate at the end of the simulations,
+and therefore its approach to an asymptote is not yet determined by them.
+For the detonation, this is the case above $kR_* \approx 10^3$,
+which includes the bump of the lattice artifacts.
+For the deflagration, the fits fail to converge without bounds above $kR_* \approx 380$,
+and their uncertainties exceed 50% already above $kR_* \approx 360$.
+The fits of the deflagration are also noisy above $kR_* \approx 30$.
 
 Both spectra are given the Hubble-scaled mean bubble spacing $r_* = 0.1$.
 The SSM spectra are computed with simultaneous nucleation as in the simulations,
@@ -44,6 +55,12 @@ if th.TYPE_CHECKING_OR_DOCS:
 
 logger: logging.Logger = logging.getLogger(__name__)
 
+#: Smallest $z = kR_*$ of the fits of each wavenumber of each run
+Y_MIN_FIT: dict[str, float] = {"detonation": 4., "deflagration": 0.}
+#: Largest $z = kR_*$ of the fits of each wavenumber of each run,
+#: above which the GW power is not yet approaching an asymptote at the end of the simulation
+Y_MAX_FIT: dict[str, float] = {"detonation": 1e3, "deflagration": 360.}
+
 
 def main() -> dict[str, Figure]:
     """Plot the asymptotically scaled simulated GW power spectra and the SSM spectra of the runs of Correia et al."""
@@ -62,6 +79,7 @@ def main() -> dict[str, Figure]:
     fig, axs = plt.subplots(1, len(lattice_comparisons), figsize=(5 * len(lattice_comparisons), 4), squeeze=False)
     for ax, (name, comparison) in zip(axs[0], lattice_comparisons.items(), strict=True):
         pow_fit = comparison.run.pow_gw_asymptote(
+            y_min=Y_MIN_FIT[name], y_max=Y_MAX_FIT[name],
             start_fraction=CHRW25_RUNS[name].fit_start_fraction, step_end=step_end[name])
         plot_pow_gw_asymptote_comparison(comparison, pow_fit=pow_fit, step_end=step_end[name], fig=fig, ax=ax)
     fig.tight_layout()

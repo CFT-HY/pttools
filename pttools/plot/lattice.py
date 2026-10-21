@@ -444,6 +444,8 @@ def plot_pow_gw_asymptote(
     r"""Plot the extrapolated $\mathcal{P}_\text{gw}^\infty(k)$ and the GW power spectrum at the end of the simulation.
 
     :correia_2025:`\ ` fig. 6, third row.
+    The lower limit of the uncertainty band is
+    :py:attr:`pttools.lattice.asymptote.PowGwAsymptoteFit.pow_gw_inf_lower`.
 
     :param fit: the fits of each wavenumber, see :py:meth:`pttools.lattice.run.LatticeRun.pow_gw_asymptote`
     :param scale: the GW power is divided by this, see :py:attr:`pttools.lattice.run.LatticeRun.gw_asymptote_scale`
@@ -453,8 +455,7 @@ def plot_pow_gw_asymptote(
     """
     fig, ax = create_fig_ax(fig, ax)
     pow_inf = fit.pow_gw_inf / scale
-    err = fit.pow_gw_inf_err / scale
-    ax.fill_between(fit.y, pow_inf - err, pow_inf + err, color="silver", lw=0)
+    ax.fill_between(fit.y, fit.pow_gw_inf_lower / scale, pow_inf + fit.pow_gw_inf_err / scale, color="silver", lw=0)
     ax.plot(fit.y, fit.pow_gw[-1] / scale, color=COLOR_GW, label=r"${t}_\text{end}$")
     ax.plot(fit.y, pow_inf, color="black", ls="--", label=r"$\mathcal{P}_\text{gw}^\infty(k)$")
     _finish(ax, xlim=(fit.y[0], fit.y[-1]), ylim=None)
@@ -548,7 +549,8 @@ def plot_pow_gw_asymptote_comparison(
     The simulation spectrum at the time of the comparison is scaled to the asymptote with
     :py:meth:`pttools.lattice.spectrum.LatticeSpectrum.pow_gw_scaled_to_asymptote`.
     If the fits of each wavenumber are given, their asymptotes $\mathcal{P}_\text{gw}^\infty(k)$ are also plotted,
-    scaled to the $r_*$ of the spectrum.
+    scaled to the $r_*$ of the spectrum, with the lower limit of their uncertainty band given by
+    :py:attr:`pttools.lattice.asymptote.PowGwAsymptoteFit.pow_gw_inf_lower`.
     The SSM spectrum is plotted both with the suppression factor that is fitted to the GW power growth rate
     of the simulation and without suppression.
 
@@ -575,8 +577,9 @@ def plot_pow_gw_asymptote_comparison(
     if pow_fit is not None:
         r_scale = (spectrum.r_star / comparison.run.r_star)**2
         pow_inf = r_scale * pow_fit.pow_gw_inf
-        err = r_scale * pow_fit.pow_gw_inf_err
-        ax.fill_between(pow_fit.y, pow_inf - err, pow_inf + err, color="silver", lw=0)
+        ax.fill_between(
+            pow_fit.y, r_scale * pow_fit.pow_gw_inf_lower, pow_inf + r_scale * pow_fit.pow_gw_inf_err,
+            color="silver", lw=0)
         ax.plot(pow_fit.y, pow_inf, color="black", ls="--", label=r"$\mathcal{P}_\text{gw}^\infty(k)$, fits")
     ax.plot(ssm.y, sup * ssm.pow_gw, color=COLOR_SSM, ls=":", label=rf"SSM $\times {sup:.3g}$")
     ax.plot(ssm.y, ssm.pow_gw, color="grey", ls=":", lw=0.8, label="SSM, unsuppressed")

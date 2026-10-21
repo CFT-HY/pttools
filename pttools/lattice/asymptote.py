@@ -68,6 +68,21 @@ class PowGwAsymptoteFit:
         return self._param("value_err")
 
     @property
+    def pow_gw_inf_lower(self) -> th.FloatArr1D:
+        r"""Lower limit of the uncertainty of $\mathcal{P}_\text{gw}^\infty(k)$.
+
+        This is $\mathcal{P}_\text{gw}^\infty(k) - \sigma$, where $\sigma$ is :py:attr:`pow_gw_inf_err`,
+        but at least the value of the fitted function at the end of the fit, ${t}_\text{end}$.
+        For $d(k) > 0$ and ${t}_\text{end} > {t}_\text{decay}(k)$,
+        the fitted function grows monotonically towards its asymptote,
+        and therefore the asymptote cannot be below this value.
+        If the uncertainty is large, i.e. $\sigma > \mathcal{P}_\text{gw}^\infty(k)$,
+        this gives a positive lower limit instead of a negative one.
+        """
+        end = np.array([np.nan if fit is None else fit(fit.t_end) for fit in self.fits])
+        return np.maximum(self.pow_gw_inf - self.pow_gw_inf_err, end)
+
+    @property
     def index(self) -> th.FloatArr1D:
         r"""$d(k)$, power law indices of the approach to the asymptote."""
         return self._param("index")
@@ -112,8 +127,9 @@ def fit_pow_gw_modes(
     The fit of each wavenumber is done over the interval at the end of the time series
     where its GW power exceeds ``start_fraction`` of its final value.
     The fitted parameters of each wavenumber are used as the initial guess for the next one.
-    If a fit does not converge, it's retried over the interval where the power exceeds ``fallback_fraction``
-    of its final value, with bounds on the parameters as in the scripts of :correia_2025:`\ `.
+    If a fit does not converge or its interval is too short,
+    it's retried over the interval where the power exceeds ``fallback_fraction`` of its final value,
+    with bounds on the parameters as in the scripts of :correia_2025:`\ `.
 
     :param t: $t$, times of the time series
     :param k: $k$, wavenumbers
@@ -131,7 +147,7 @@ def fit_pow_gw_modes(
         start = fit_start_index(series, start_fraction)
         try:
             fit = fit_asymptote(t[start:], series[start:], index_guess=index_guess, t_decay_guess=t_decay_guess)
-        except RuntimeError:
+        except (RuntimeError, ValueError):
             logger.debug("The asymptote fit failed at kR_*=%s. Retrying with bounds.", y[i])
             start = fit_start_index(series, fallback_fraction)
             try:

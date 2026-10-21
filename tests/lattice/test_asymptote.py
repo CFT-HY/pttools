@@ -11,10 +11,11 @@ import pytest
 from pttools.lattice import INPUT_FILE_NAME, LatticeComparison, LatticeRun, Quantity
 from pttools.lattice.asymptote import (
     DEFAULT_RUNNING_MEAN_WINDOW,
+    PowGwAsymptoteFit,
     fit_pow_gw_modes,
     gw_growth_index_prediction,
 )
-from pttools.math.asymptote import asymptotic_growth, fit_asymptote
+from pttools.math.asymptote import AsymptoteFit, asymptotic_growth, fit_asymptote
 from pttools.math.numerics import running_mean
 from pttools.math.power_law import PowerLawFit
 from tests.lattice.test_lattice import OUT_COLUMNS
@@ -42,6 +43,20 @@ class AsymptoteFunctionTest(unittest.TestCase):
         np.testing.assert_allclose(fit.omega_gw_partial(), np.trapezoid(pow_gw, np.log(k), axis=1))
         t_late = np.array([1e12])
         assert fit.omega_gw_partial(t_late)[0] == pytest.approx(np.trapezoid(value_inf, np.log(k)), rel=1e-3)
+
+    @staticmethod
+    def test_pow_gw_inf_lower() -> None:
+        r"""The lower limit of the uncertainty of $\mathcal{P}_\text{gw}^\infty$ is bounded by the fit at its end."""
+        def mode_fit(value_err: float, index: float) -> AsymptoteFit:
+            return AsymptoteFit(
+                value=1., value_err=value_err, t_decay=1000., t_decay_err=0., index=index, index_err=0.,
+                t_start=1000., t_end=2000.)
+        # The fitted value at the end is 1 - 2^(-1) = 0.5.
+        fits = (mode_fit(0.1, 1.), mode_fit(3., 1.), None)
+        k = np.array([0.01, 0.02, 0.03])
+        fit = PowGwAsymptoteFit(y=10 * k, k=k, t=np.array([2000.]), pow_gw=np.zeros((1, 3)), fits=fits)
+        # A small uncertainty is used as it is, whereas a large one is limited by the fitted value at the end.
+        np.testing.assert_allclose(fit.pow_gw_inf_lower, [0.9, 0.5, np.nan])
 
     @staticmethod
     def test_gw_growth_index_prediction() -> None:

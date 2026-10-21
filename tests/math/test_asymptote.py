@@ -24,6 +24,13 @@ class AsymptoteTest(unittest.TestCase):
             np.testing.assert_allclose(fit(t), asymptotic_growth(t, value_inf=value_inf, t_decay=300, index=0.7))
 
     @staticmethod
+    def test_fit_asymptote_too_few_points() -> None:
+        """A time series with fewer points than there are parameters cannot be fitted."""
+        t = np.array([500., 1000.])
+        with pytest.raises(ValueError, match="at least 3 points"):
+            fit_asymptote(t, asymptotic_growth(t, value_inf=1., t_decay=300, index=0.7))
+
+    @staticmethod
     def test_fit_start_index() -> None:
         """The fit starts after the last value below the fraction of the last value."""
         values = np.array([0., 0.5, 0.9, 0.7, 0.85, 0.95, 1.])
