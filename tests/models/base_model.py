@@ -6,7 +6,10 @@ import typing as tp
 import unittest
 
 import numpy as np
+import pytest
 
+from pttools.bubble import Bubble
+from pttools.bubble.energy_budget import ubarf_approx
 from pttools.bubble.phase import Phase
 from pttools.math.assertions import assert_allclose
 from pttools.models import Model
@@ -52,6 +55,58 @@ class ModelBaseCase[M: Model](JsonTestCase, abc.ABC):
         r"""Test the transition strength $\alpha_n$ against the reference data."""
         data = self.model.alpha_n(self.w_arr1, error_on_invalid=False, log_invalid=False)
         self.assert_json(data, "alpha_n")
+
+    def test_alpha_n_from_ubarf(self) -> None:
+        r"""$\alpha_n(\bar{U}_f)$ should invert $\bar{U}_f(\alpha_n)$ within the valid range of the model."""
+        if np.isnan(self.model.w_crit):
+            raise unittest.SkipTest("The critical temperature has not been generated for this model.")
+        model = self.model
+        v_wall = 0.5
+        alpha_ns = np.geomspace(max(1.1 * model.alpha_n_min, 0.05), min(0.9 * model.alpha_n_max, 1), 4)
+        ubarf = np.array([ubarf_approx(v_wall=v_wall, alpha_n=alpha_n, model=model) for alpha_n in alpha_ns])
+        assert_allclose(model.alpha_n_from_ubarf(v_wall=v_wall, ubarf=ubarf), alpha_ns, rtol=1e-4)
+        with pytest.raises(ValueError, match="different signs"):
+            model.alpha_n_from_ubarf(
+                v_wall=v_wall, ubarf=0.5 * ubarf_approx(v_wall=v_wall, alpha_n=model.alpha_n_min, model=model))
+
+    def test_alpha_n_max(self) -> None:
+        r"""$\alpha_{n,\text{max}}$ should be the maximum of $\alpha_n(w)$.
+
+        The maximum is over $w \in [w_{\text{min}}, w_{\text{crit}}]$.
+        """
+        if np.isnan(self.model.w_crit):
+            raise unittest.SkipTest("The critical temperature has not been generated for this model.")
+        model = self.model
+        assert model.w_at_alpha_n_max is not None
+        assert model.alpha_n_min < model.alpha_n_max
+        assert model.w_min <= model.w_at_alpha_n_max <= model.w_crit
+        assert_allclose(model.alpha_n(model.w_at_alpha_n_max), model.alpha_n_max, rtol=1e-12)
+        w = np.geomspace(model.w_min, model.w_crit, 1000)
+        assert np.nanmax(model.alpha_n(w, error_on_invalid=False, log_invalid=False)) <= model.alpha_n_max
+
+    def test_validate_alpha_n(self) -> None:
+        r"""$\alpha_n$ outside $[\alpha_{n,\text{min}}, \alpha_{n,\text{max}}]$ should be invalid also for bubbles."""
+        if np.isnan(self.model.w_crit):
+            raise unittest.SkipTest("The critical temperature has not been generated for this model.")
+        model = self.model
+        model.validate_alpha_n(model.alpha_n_max, log_invalid=False)
+        for alpha_n in (0.5 * model.alpha_n_min, 2 * model.alpha_n_max):
+            if alpha_n == 0:
+                continue
+            with pytest.raises(ValueError, match="Invalid alpha_n"):
+                model.validate_alpha_n(alpha_n, log_invalid=False)
+            with pytest.raises(ValueError, match="Invalid alpha_n"):
+                Bubble(model, v_wall=0.5, alpha_n=alpha_n, solve=False, log_invalid=False)
+
+    def test_wn_alpha_n_max(self) -> None:
+        r"""$w_n$ should be found for $\alpha_n$ up to $\alpha_{n,\text{max}}$."""
+        if np.isnan(self.model.w_crit):
+            raise unittest.SkipTest("The critical temperature has not been generated for this model.")
+        model = self.model
+        for alpha_n in (0.5 * model.alpha_n_max, 0.999 * model.alpha_n_max):
+            wn = model.wn(alpha_n)
+            assert model.w_min <= wn <= model.w_crit
+            assert_allclose(model.alpha_n(wn), alpha_n, rtol=1e-6)
 
     def test_alpha_plus(self) -> None:
         r"""Test the transition strength $\alpha_+$ against the reference data."""

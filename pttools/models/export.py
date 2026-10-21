@@ -63,6 +63,10 @@ MODEL_FIELDS: Fields = Fields(
     Field(
         "w_at_alpha_n_min", presets=PRESETS_FULL,
         description=r"$w(\alpha_{n,\text{min}})$, enthalpy at the minimum transition strength"),
+    Field("alpha_n_max", presets=PRESETS_FULL, description=r"$\alpha_{n,\text{max}}$, maximum transition strength"),
+    Field(
+        "w_at_alpha_n_max", presets=PRESETS_FULL,
+        description=r"$w(\alpha_{n,\text{max}})$, enthalpy at the maximum transition strength"),
 )
 
 #: Fields of :py:class:`pttools.models.analytic.AnalyticModel`

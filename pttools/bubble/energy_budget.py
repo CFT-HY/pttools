@@ -21,6 +21,11 @@ if tp.TYPE_CHECKING:
 
 # The functions in this file don't call code from other files and are therefore safe to cache.
 
+#: Default lower limit of the search of :py:func:`alpha_n_from_ubarf`
+ALPHA_N_FROM_UBARF_MIN: float = 1e-8
+#: Default upper limit of the search of :py:func:`alpha_n_from_ubarf`
+ALPHA_N_FROM_UBARF_MAX: float = 1e12
+
 
 @np.vectorize
 def alpha_n_from_ubarf[T: FloatOrArr](
@@ -29,8 +34,8 @@ def alpha_n_from_ubarf[T: FloatOrArr](
         model: Model | None = None,
         cs: T | float = CS0,
         adiabatic_index: T | float = DEFAULT_ADIABATIC_INDEX,
-        alpha_n_min: float = 1e-8,
-        alpha_n_max: float = 1e12,
+        alpha_n_min: float = ALPHA_N_FROM_UBARF_MIN,
+        alpha_n_max: float = ALPHA_N_FROM_UBARF_MAX,
         xtol: float = 1e-6) -> T:
     r"""Phase transition strength $\alpha(\bar{U}_f)$.
 
@@ -44,7 +49,13 @@ def alpha_n_from_ubarf[T: FloatOrArr](
     :param model: Equation of state
     :param cs: Speed of sound $c_s$
     :param adiabatic_index: Adiabatic index $\Gamma$
+    :param alpha_n_min: Lower limit of the search.
+        For a model, see :py:meth:`pttools.models.model.Model.alpha_n_from_ubarf`,
+        which uses the valid range of $\alpha_n$ of the model.
+    :param alpha_n_max: Upper limit of the search
+    :param xtol: Absolute tolerance of $\alpha_n$
     :return: Array of phase transition strengths $\alpha$
+    :raises ValueError: If $\bar{U}_f$ is outside the range corresponding to the limits of the search
     """
     # try:
     return scipy.optimize.brentq(  # pyrefly: ignore[bad-return]

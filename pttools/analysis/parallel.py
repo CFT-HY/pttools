@@ -62,9 +62,12 @@ def create_bubble(
     """Create a single bubble and apply post-processing functions to retrieve results from it."""
     v_wall, alpha_n = params
     # This is a common error case and should be handled here to avoid polluting the logs with exceptions.
-    if alpha_n < model.alpha_n_min and bubble_kwargs is not None \
+    if not model.alpha_n_min <= alpha_n <= model.alpha_n_max and bubble_kwargs is not None \
             and ("allow_invalid" not in bubble_kwargs or not bubble_kwargs["allow_invalid"]):
-        logger.error("Invalid alpha_n=%s. Minimum for the model: %s", alpha_n, model.alpha_n_min)
+        logger.error(
+            "Invalid alpha_n=%s. Valid range for the model: %s <= alpha_n <= %s",
+            alpha_n, model.alpha_n_min, model.alpha_n_max
+        )
         return _failure_output(post_func, post_func_return_multiple)
     try:
         if bubble_kwargs is None:

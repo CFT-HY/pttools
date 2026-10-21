@@ -57,6 +57,12 @@ class DataModelTest(unittest.TestCase):
                 np.testing.assert_allclose(self.model.e_temp(self.temp, phase), data["e"], rtol=1e-12)
                 np.testing.assert_allclose(self.model.w(self.temp, phase), data["p"] + data["e"], rtol=1e-12)
 
+    def test_alpha_n_limits_without_gen_critical(self) -> None:
+        r"""Without solving the critical temperature, the limits of $\alpha_n$ should not be set."""
+        assert self.model.alpha_n_min == 0
+        assert self.model.alpha_n_max == np.inf
+        assert self.model.w_at_alpha_n_max is None
+
     def test_temp(self) -> None:
         """Test that the temperature as a function of the enthalpy corresponds to the data of each phase."""
         for phase, data in self.data.items():

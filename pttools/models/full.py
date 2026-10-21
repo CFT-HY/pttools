@@ -85,6 +85,9 @@ class FullModel(Model):
         self.w_at_alpha_n_min: float | None
         self.alpha_n_min: float
         self.w_at_alpha_n_min, self.alpha_n_min = self.alpha_n_min_find()
+        self.w_at_alpha_n_max: float | None
+        self.alpha_n_max: float
+        self.w_at_alpha_n_max, self.alpha_n_max = self.alpha_n_max_find()
 
         self.cs2: th.CS2Fun = self.gen_cs2()
         self.cs2_ptr()

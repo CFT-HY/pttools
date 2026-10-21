@@ -143,6 +143,21 @@ class BagModel(AnalyticModel):
         )
 
     @tp.override
+    def alpha_n_max_find(self, w_min: float | None = None, w_max: float | None = None) -> tuple[float, float]:
+        r"""$\alpha_{n,\text{max}}$ of the bag model.
+
+        $$\alpha_n = \frac{4 (V_s - V_b)}{3 w_n}$$
+        decreases with $w_n$, since $\theta = V$ in both phases of the bag model.
+        Therefore, the maximum is at $w_{\text{min}}$.
+        The parameters and the return value are those of :py:meth:`Model.alpha_n_max_find`.
+        """
+        if w_min is None:
+            w_min = self.w_min
+        if w_min <= 0:
+            return w_min, np.inf
+        return w_min, self.alpha_n(w_min)
+
+    @tp.override
     def alpha_n_min_find(self, w_min: float | None = None, w_max: float | None = None) -> tuple[float, float]:
         return self.w_crit, self.alpha_n(self.w_crit)
 

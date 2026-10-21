@@ -254,7 +254,8 @@ class ModelFieldsTest(unittest.TestCase):
             "name", "label_latex", "label_unicode", "datetime", "T_min", "T_max",
             "restrict_to_valid", "silence_temp", "temperature_is_physical", "temperature_unit_gev",
             "T_ref", "T_crit", "V_s", "V_b", "w_crit", "w_min", "w_max", "w_min_s", "w_min_b",
-            "w_max_s", "w_max_b", "alpha_n_min", "w_at_alpha_n_min", "a_s", "a_b"
+            "w_max_s", "w_max_b", "alpha_n_min", "w_at_alpha_n_min",
+            "alpha_n_max", "w_at_alpha_n_max", "a_s", "a_b"
         ]
 
     def test_const_cs_init(self) -> None:

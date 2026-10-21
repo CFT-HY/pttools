@@ -41,6 +41,17 @@ class TestBag(BagBaseCase[models.BagModel], unittest.TestCase):
         """Test that the bag model can be created with alpha_n_min."""
         models.BagModel(alpha_n_min=0.01)
 
+    def test_alpha_n_max_analytical(self) -> None:
+        r"""$\alpha_{n,\text{max}} = \frac{4 (V_s - V_b)}{3 w_{\text{min}}}$ for the bag model.
+
+        $\theta = V$ in both phases of the bag model, and therefore $\alpha_n = \frac{4 (V_s - V_b)}{3 w_n}$,
+        whose maximum is at the minimum enthalpy $w_{\text{min}} = 4 \max(a_s, a_b) T_{\text{min}}^4$.
+        """
+        model = models.BagModel(a_s=1.1, a_b=1, V_s=1)
+        w_min = 4 * 1.1 * model.T_min**4
+        assert model.w_at_alpha_n_max == pytest.approx(w_min, rel=1e-12, abs=0)
+        assert model.alpha_n_max == pytest.approx(4 * (1 - 0) / (3 * w_min), rel=1e-12, abs=0)
+
     def test_g(self) -> None:
         """Test that the bag model can be created with the degrees of freedom of both phases."""
         models.BagModel(g_s=120, g_b=100)
@@ -138,6 +149,19 @@ class TestConstCS(ModelBaseCase[models.ConstCSModel], unittest.TestCase):
         r"""Test the numerically solved $w_n$ against the reference data."""
         data = self.model.wn(self.alpha_n, analytical=False)
         self.assert_json(data, "w_n", allow_save=False)
+
+    def test_wn_small(self) -> None:
+        r"""$w_n$ should be found numerically also when it is far below 1, i.e. for large $\alpha_n$.
+
+        For $c_{s,b}^2 \neq 1/3$, there is no analytical formula for $w_n$.
+        The bracketing root finder used to reject the roots below $10^{-8}$.
+        """
+        model = models.ConstCSModel(css2=1/4, csb2=0.3)
+        for alpha_n in (1e9, 1e11, 0.5 * model.alpha_n_max):
+            with self.subTest(alpha_n=alpha_n):
+                wn = model.wn(alpha_n)
+                assert wn < 1e-8
+                assert_allclose(model.alpha_n(wn), alpha_n, rtol=1e-10)
 
     def test_inverse_enthalpy_ratio(self) -> None:
         r"""$\Psi(T) = w_b(T) / w_s(T)$, :ai_2023:`\ ` eq. 19."""

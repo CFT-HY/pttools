@@ -13,8 +13,9 @@ from scipy.optimize import fminbound, fsolve, root_scalar
 
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
 from pttools.bubble.check import find_most_negative_vals
-from pttools.bubble.const import ALPHA_PLUS_MAX_DEF
+from pttools.bubble.const import ALPHA_PLUS_MAX_DEF, CS0, DEFAULT_ADIABATIC_INDEX
 from pttools.bubble.cs2 import CS2_FUNCS, cs2_to_ptr
+from pttools.bubble.energy_budget import ALPHA_N_FROM_UBARF_MAX, ALPHA_N_FROM_UBARF_MIN, alpha_n_from_ubarf
 from pttools.bubble.integrate import add_df_dtau, differentials
 from pttools.bubble.phase import Phase
 from pttools.bubble.solution_type import (
@@ -38,6 +39,9 @@ if th.TYPE_CHECKING_OR_DOCS:
     from pttools.utils.fields import Fields
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+#: Maximum absolute tolerance of the bracketing $w_n$ solver, which is the default of :py:func:`scipy.optimize.brentq`
+WN_XTOL: float = 2e-12
 
 
 class Model(BaseModel, abc.ABC):
@@ -163,11 +167,16 @@ class Model(BaseModel, abc.ABC):
 
         self.w_at_alpha_n_min: float | None
         self.alpha_n_min: float
+        self.w_at_alpha_n_max: float | None
+        self.alpha_n_max: float
         if gen_critical:
             self.w_at_alpha_n_min, self.alpha_n_min = self.alpha_n_min_find()
+            self.w_at_alpha_n_max, self.alpha_n_max = self.alpha_n_max_find()
         else:
             self.w_at_alpha_n_min = None
             self.alpha_n_min = 0
+            self.w_at_alpha_n_max = None
+            self.alpha_n_max = np.inf
 
     def _init_w_limits(self) -> None:
         r"""Set the enthalpy limits $w_\text{min}$ and $w_\text{max}$ based on the temperature limits."""
@@ -313,6 +322,83 @@ class Model(BaseModel, abc.ABC):
             error_on_invalid=error_on_invalid, nan_on_invalid=nan_on_invalid, log_invalid=log_invalid
         ) if wn is None or np.isnan(wn) else wn
         return tp.cast(T, alpha_theta_bar_n - self.alpha_theta_bar_n_diff(wn_solved))
+
+    def alpha_n_from_ubarf[T: FloatOrArr](
+            self,
+            v_wall: T,
+            ubarf: T | float,
+            cs: T | float = CS0,
+            adiabatic_index: T | float = DEFAULT_ADIABATIC_INDEX,
+            xtol: float = 1e-6) -> T:
+        r"""$\alpha_n(\bar{U}_f)$, transition strength within the valid range of the model.
+
+        Solves $\alpha_n$ with :py:func:`pttools.bubble.energy_budget.alpha_n_from_ubarf`,
+        searching it in $[\alpha_{n,\text{min}}, \alpha_{n,\text{max}}]$ of the model,
+        outside which $w_n$ cannot be found.
+        If the model has no limits, i.e. if its critical temperature has not been solved,
+        the default limits of that function are used.
+
+        :param v_wall: $v_\text{wall}$, wall velocity
+        :param ubarf: $\bar{U}_f$, RMS fluid velocity
+        :param cs: $c_s$, sound speed
+        :param adiabatic_index: $\Gamma$, adiabatic index
+        :param xtol: Absolute tolerance of $\alpha_n$
+        :return: $\alpha_n$
+        :raises ValueError: If $\bar{U}_f$ is outside the range corresponding to the valid $\alpha_n$
+        """
+        return alpha_n_from_ubarf(
+            v_wall=v_wall,
+            ubarf=ubarf,
+            model=self,
+            cs=cs,
+            adiabatic_index=adiabatic_index,
+            alpha_n_min=self.alpha_n_min if self.alpha_n_min > 0 else ALPHA_N_FROM_UBARF_MIN,
+            alpha_n_max=self.alpha_n_max if np.isfinite(self.alpha_n_max) else ALPHA_N_FROM_UBARF_MAX,
+            xtol=xtol
+        )
+
+    def alpha_n_max_find(
+            self,
+            w_min: float | None = None,
+            w_max: float | None = None) -> tuple[float, float]:
+        r"""Find $\text{max} \alpha_n(w)$ for $w \in [w_{\text{min}}, w_{\text{crit}}]$.
+
+        This is the maximum transition strength for which $w_n$ can be found,
+        since $w_n$ has to be within the validity range of the model,
+        and below $w_{\text{crit}}$ for the phase transition to occur.
+        As $\alpha_n \propto 1/w_n$ for small $w_n$, the maximum is typically at $w_{\text{min}}$.
+        It is searched for in $\log w$, since $\alpha_n$ changes by orders of magnitude over the range,
+        and the end points are checked separately, since the search does not evaluate them.
+
+        :param w_min: $w_{\text{min}}$, lower limit of the search, defaults to that of the model
+        :param w_max: $w_{\text{max}}$, upper limit of the search, defaults to $w_{\text{crit}}$
+        :return: $w(\alpha_{n,\text{max}})$ and $\alpha_{n,\text{max}}$.
+            If $w_{\text{min}} \leq 0$, $\alpha_{n,\text{max}} = \infty$.
+        :raises RuntimeError: If the search fails
+        """
+        if w_min is None:
+            w_min = self.w_min
+        if w_max is None:
+            w_max = self.w_crit
+        if w_min <= 0:
+            return w_min, np.inf
+
+        def neg_alpha_n(log10_w: float) -> float:
+            return -self.alpha_n(10**log10_w, error_on_invalid=False, log_invalid=False)
+
+        xopt, fval, ierr, numfunc = fminbound(
+            neg_alpha_n, x1=np.log10(w_min), x2=np.log10(w_max), full_output=True)
+        if ierr:
+            raise RuntimeError(f"Finding alpha_n_max failed: xopt={xopt}, fval={fval}, ierr={ierr}, numfunc={numfunc}.")
+        w_opt: float = 10**xopt
+        alpha_n_opt: float = -fval
+        for w in (w_min, w_max):
+            alpha_n_w = self.alpha_n(w, error_on_invalid=False, log_invalid=False)
+            if alpha_n_w > alpha_n_opt:
+                w_opt = w
+                alpha_n_opt = alpha_n_w
+        logger.debug("alpha_n_max=%s found at w=%s in range w_min=%s, w_max=%s", alpha_n_opt, w_opt, w_min, w_max)
+        return w_opt, alpha_n_opt
 
     def alpha_n_min_find(
             self,
@@ -1162,9 +1248,21 @@ class Model(BaseModel, abc.ABC):
         return tp.cast(T, phase*self.V_b + (1 - phase)*self.V_s)
 
     def validate_alpha_n(self, alpha_n: float, allow_invalid: bool = False, log_invalid: bool = True) -> None:
-        r"""Validate that $\alpha_{n,\text{min}} < \alpha_n < 1$."""
-        if alpha_n is None or np.isnan(alpha_n) or alpha_n < 0 or alpha_n < self.alpha_n_min:
-            msg = f"Invalid alpha_n={alpha_n}. Minimum for the model: {self.alpha_n_min}"
+        r"""Validate that $\alpha_{n,\text{min}} \leq \alpha_n \leq \alpha_{n,\text{max}}$.
+
+        A warning is logged for $\alpha_n > 1$, since the validity of the results is then questionable.
+
+        :param alpha_n: $\alpha_n$, transition strength
+        :param allow_invalid: Do not raise an error for an invalid $\alpha_n$
+        :param log_invalid: Log an invalid $\alpha_n$
+        :raises ValueError: If $\alpha_n$ is invalid and ``allow_invalid`` is False
+        """
+        if alpha_n is None or np.isnan(alpha_n) or alpha_n < 0 \
+                or alpha_n < self.alpha_n_min or alpha_n > self.alpha_n_max:
+            msg = (
+                f"Invalid alpha_n={alpha_n}. "
+                f"Valid range for the model: {self.alpha_n_min} <= alpha_n <= {self.alpha_n_max}"
+            )
             if log_invalid:
                 logger.error(msg)
             if not allow_invalid:
@@ -1253,13 +1351,17 @@ class Model(BaseModel, abc.ABC):
         if not (solution_found or self.w_crit is None or np.isnan(self.w_crit)):
             try:
                 # The SciPy stubs do not allow specifying both bracket and x0, but root_scalar() accepts them.
+                # The absolute tolerance is scaled down with w_min, as w_n can be many orders of magnitude below 1
+                # for large alpha_n, and the default absolute tolerance of 2e-12 would then be too large.
                 wn_sol = root_scalar(  # pyrefly: ignore[no-matching-overload]
                     self._wn_solvable, x0=wn_guess, x1=0.99*self.w_crit,
-                    args=(alpha_n, theta_bar), bracket=(self.w_min, self.w_crit)
+                    args=(alpha_n, theta_bar), bracket=(self.w_min, self.w_crit),
+                    xtol=min(WN_XTOL, 1e-9 * self.w_min) if self.w_min > 0 else WN_XTOL
                 )
                 wn = wn_sol.root
                 solution_found = wn_sol.converged
-                if np.isclose(wn, 0):
+                # np.isclose(wn, 0) would reject the valid roots below its absolute tolerance of 1e-8.
+                if not wn > 0:
                     solution_found = False
                 if solution_found:
                     reason = wn_sol.flag
