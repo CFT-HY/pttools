@@ -30,8 +30,8 @@ class AnalyticDegreesOfFreedomTest(unittest.TestCase):
     @classmethod
     @tp.override
     def setUpClass(cls) -> None:
-        cls.bag_v = models.BagModel(g_s=123, g_b=100, V_s=0.5, V_b=0.1)
-        cls.const_cs = models.ConstCSModel(css2=1/3 - 0.02, csb2=1/3 - 0.03, a_s=1.5, a_b=1, V_s=1, V_b=0)
+        cls.bag_v = models.BagModel.cached(g_s=123, g_b=100, V_s=0.5, V_b=0.1)
+        cls.const_cs = models.ConstCSModel.cached(css2=1/3 - 0.02, csb2=1/3 - 0.03, a_s=1.5, a_b=1, V_s=1, V_b=0)
 
     def g_bag(self, model: models.BagModel, phase: Phase) -> float:
         """Degrees of freedom of the bag model in the given phase."""
@@ -87,7 +87,8 @@ class FullModelDegreesOfFreedomTest(unittest.TestCase):
     @classmethod
     @tp.override
     def setUpClass(cls) -> None:
-        cls.model = models.FullModel(thermo=models.StandardModel(V_s=5e12, g_mult_s=1 + 1e-9, silence_temp=True))
+        cls.model = models.FullModel.cached(
+            thermo=models.StandardModel.cached(V_s=5e12, g_mult_s=1 + 1e-9, silence_temp=True))
 
     def test_g_of_w(self) -> None:
         r"""Test that $g_e(w)$, $g_p(w)$ and $g_s(w)$ correspond to those of the thermodynamics model."""
@@ -119,12 +120,12 @@ class StandardModelPotentialTest(unittest.TestCase):
     @classmethod
     @tp.override
     def setUpClass(cls) -> None:
-        cls.thermo = models.StandardModel(V_s=2e8, V_b=5e7, gen_cs2=False)
+        cls.thermo = models.StandardModel.cached(V_s=2e8, V_b=5e7, gen_cs2=False)
 
     def test_ge_potential(self) -> None:
         r"""Test that $g_e$ includes the potential of the phase, $\frac{30 V(\phi)}{\pi^2 T^4}$."""
         temp = np.logspace(1.5, 3, 7)
-        thermo_no_v = models.StandardModel(gen_cs2=False)
+        thermo_no_v = models.StandardModel.cached(gen_cs2=False)
         for phase in PHASES:
             with self.subTest(phase=phase):
                 V = self.thermo.V(phase)

@@ -25,7 +25,7 @@ if th.TYPE_CHECKING_OR_DOCS:
 # g_eff
 # -----
 # The T_min parameter is for silencing log spam
-thermo: StandardModel = StandardModel(silence_temp=True)
+thermo: StandardModel = StandardModel.cached(silence_temp=True)
 fig: Figure = plot_g_cs2(thermo)
 
 # %%
@@ -44,8 +44,8 @@ plot.process()
 # FullModel based on StandardModel
 # --------------------------------
 # thermo2 = StandardModel(V_s=5e12, g_mult_s=1 + 1e-9)
-thermo2: StandardModel = StandardModel(V_s=5e15, g_mult_s=1 + 1e-5, silence_temp=True)
-model2: FullModel = FullModel(thermo2)
+thermo2: StandardModel = StandardModel.cached(V_s=5e15, g_mult_s=1 + 1e-5, silence_temp=True)
+model2: FullModel = FullModel.cached(thermo2)
 plot2: ModelPlot = ModelPlot(model2)
 print(model2.T_crit, model2.T_max, model2.alpha_n_min, model2.w_crit)
 

@@ -46,12 +46,12 @@ class CHRW25Test(unittest.TestCase):
     @pytest.mark.xfail(reason="The Sound Shell Model may not be applicable in this regime.")
     def test_ubarf() -> None:
         """Test that the SSM RMS fluid velocity is below the simulated maximum compressional velocity."""
-        model = BagModel()
+        model = BagModel.cached()
         bubbles = [
-            Bubble(model, v_wall=v_wall, alpha_n=alpha_n)
+            Bubble.cached(model, v_wall=v_wall, alpha_n=alpha_n)
             for v_wall, alpha_n in zip(CHRW25_V_WALL, CHRW25_ALPHA_N, strict=False)
         ]
-        spectra = [Spectrum(bubble) for bubble in bubbles]
+        spectra = [Spectrum.cached(bubble) for bubble in bubbles]
         ubarf = [spectrum.ubarf for spectrum in spectra]
         assert_array_less(ubarf, CHRW25_UBARF)
 

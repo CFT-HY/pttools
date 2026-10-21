@@ -31,7 +31,7 @@ class TestBag(BagBaseCase[models.BagModel], unittest.TestCase):
     @classmethod
     def setUpClass(cls, *args: tp.Any, **kwargs: tp.Any) -> None:
         """Create the bag model and load its reference data."""
-        model = models.BagModel(**cls.PARAMS)
+        model = models.BagModel.cached(**cls.PARAMS)
         super().setUpClass(model)
 
     def test_wn_full(self) -> None:
@@ -42,7 +42,7 @@ class TestBag(BagBaseCase[models.BagModel], unittest.TestCase):
     def test_auto_potential(self) -> None:
         """Test that the automatically generated potential gives the critical temperature of one."""
         params: dict[str, tp.Any] = {**self.PARAMS, "V_s": None, "V_b": None, "auto_potential": True}
-        model = models.BagModel(**params)
+        model = models.BagModel.cached(**params)
         assert model.critical_temp() == pytest.approx(1, abs=5e-8)
 
     # Model initialisation tests
@@ -97,7 +97,7 @@ class TestConstCSLikeBag(BagBaseCase[models.ConstCSModel], unittest.TestCase):
     def setUpClass(cls, *args: tp.Any, **kwargs: tp.Any) -> None:
         """Create the bag-like ConstCSModel, which uses the bag model reference data."""
         # Use bag model reference data
-        model = models.ConstCSModel(**cls.PARAMS_FULL)
+        model = models.ConstCSModel.cached(**cls.PARAMS_FULL)
         super().setUpClass(model)
 
     def test_constants(self) -> None:
@@ -125,8 +125,8 @@ class TestConstCSThermoLikeBag(BagBaseCase[models.FullModel], unittest.TestCase)
     @classmethod
     def setUpClass(cls, *args: tp.Any, **kwargs: tp.Any) -> None:
         """Create the bag-like FullModel based on ConstCSThermoModel, which uses the bag model reference data."""
-        cls.thermo = models.ConstCSThermoModel(**cls.PARAMS_FULL)
-        model = models.FullModel(thermo=cls.thermo, name="bag")
+        cls.thermo = models.ConstCSThermoModel.cached(**cls.PARAMS_FULL)
+        model = models.FullModel.cached(thermo=cls.thermo, name="bag")
         super().setUpClass(model)
 
     def test_constants(self) -> None:
@@ -152,7 +152,7 @@ class TestConstCS(ModelBaseCase[models.ConstCSModel], unittest.TestCase):
     @classmethod
     def setUpClass(cls, *args: tp.Any, **kwargs: tp.Any) -> None:
         """Create the constant sound speed model and load its reference data."""
-        model = models.ConstCSModel(a_s=1.2, a_b=1.1, V_s=1.3, css2=0.4**2, csb2=1/3)
+        model = models.ConstCSModel.cached(a_s=1.2, a_b=1.1, V_s=1.3, css2=0.4**2, csb2=1/3)
         super().setUpClass(model)
 
     def test_wn_full(self) -> None:
@@ -221,7 +221,7 @@ class TestConstCS(ModelBaseCase[models.ConstCSModel], unittest.TestCase):
         For $c_{s,b}^2 \neq 1/3$, there is no analytical formula for $w_n$.
         The bracketing root finder used to reject the roots below $10^{-8}$.
         """
-        model = models.ConstCSModel(css2=1/4, csb2=0.3)
+        model = models.ConstCSModel.cached(css2=1/4, csb2=0.3)
         for alpha_n in (1e9, 1e11, 0.5 * model.alpha_n_max):
             with self.subTest(alpha_n=alpha_n):
                 wn = model.wn(alpha_n)
@@ -247,8 +247,8 @@ class TestConstCS(ModelBaseCase[models.ConstCSModel], unittest.TestCase):
     def test_alpha_n_min_V_b(self) -> None:
         """If the given parameters already fulfill the target, they should be used as such."""
         params = {"css2": 1/4, "csb2": 1/4, "a_s": 5, "a_b": 1, "V_s": 1, "V_b": 0.1, "log_info": False}
-        target = models.ConstCSModel(**params).alpha_n_min + 0.01
-        model = models.ConstCSModel(**params, alpha_n_min=target)
+        target = models.ConstCSModel.cached(**params).alpha_n_min + 0.01
+        model = models.ConstCSModel.cached(**params, alpha_n_min=target)
         assert (model.a_s, model.a_b, model.V_s, model.V_b) == (5, 1, 1, 0.1)
         assert model.alpha_n_min <= target
 
@@ -267,8 +267,8 @@ class TestConstCSThermo(ModelBaseCase[models.FullModel], unittest.TestCase):
     @classmethod
     def setUpClass(cls, *args: tp.Any, **kwargs: tp.Any) -> None:
         """Create the ThermoModel-based constant sound speed model and load its reference data."""
-        thermo = models.ConstCSThermoModel(a_s=1.2, a_b=1.1, V_s=1.3, css2=0.4**2, csb2=1/3)
-        model = models.FullModel(thermo=thermo, name="const_cs")
+        thermo = models.ConstCSThermoModel.cached(a_s=1.2, a_b=1.1, V_s=1.3, css2=0.4**2, csb2=1/3)
+        model = models.FullModel.cached(thermo=thermo, name="const_cs")
         super().setUpClass(model)
 
     def test_cs2_full(self) -> None:
@@ -291,8 +291,8 @@ class TestSM(ModelBaseCase[models.FullModel], unittest.TestCase):
     @classmethod
     def setUpClass(cls, *args: tp.Any, **kwargs: tp.Any) -> None:
         """Create the Standard Model-based FullModel and load its reference data."""
-        sm = models.StandardModel(V_s=1.3, g_mult_s=1.3)
-        model = models.FullModel(thermo=sm)
+        sm = models.StandardModel.cached(V_s=1.3, g_mult_s=1.3)
+        model = models.FullModel.cached(thermo=sm)
         super().setUpClass(model)
 
     # @unittest.expectedFailure

@@ -239,16 +239,16 @@ class DeltaNTest(unittest.TestCase):
 
     def test_bag(self) -> None:
         r"""For the bag model with $V_- = 0$, $\delta_n = 0$."""
-        model = BagModel(a_s=1.2, a_b=1, V_s=1, V_b=0)
+        model = BagModel.cached(a_s=1.2, a_b=1, V_s=1, V_b=0)
         assert_allclose(delta_n(model, self.WN), 0)
 
     def test_bag_v_b(self) -> None:
         r"""$\delta_n = \frac{4 \theta_-}{3 w_n}$."""
-        model = BagModel(a_s=1.2, a_b=1, V_s=1, V_b=0.2)
+        model = BagModel.cached(a_s=1.2, a_b=1, V_s=1, V_b=0.2)
         theta_b = model.theta(self.WN, Phase.BROKEN)
         assert_allclose(delta_n(model, self.WN), 4 * theta_b / (3 * self.WN))
 
     def test_ubarf_approx_delta_n(self) -> None:
         r"""A nonzero $\delta_n$ should decrease $\bar{U}_f$."""
-        model = BagModel(a_s=1.2, a_b=1, V_s=1, V_b=0.2)
+        model = BagModel.cached(a_s=1.2, a_b=1, V_s=1, V_b=0.2)
         assert ubarf_approx(0.7, 0.3, model=model) < ubarf_approx(0.7, 0.3)

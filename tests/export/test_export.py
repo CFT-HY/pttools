@@ -111,21 +111,21 @@ class ExportTest(unittest.TestCase):
     @classmethod
     @tp.override
     def setUpClass(cls) -> None:
-        cls.bag = BagModel(a_s=1.1, a_b=1, V_s=1)
-        cls.const_cs = ConstCSModel(css2=1/3 - 0.01, csb2=1/3 - 0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
+        cls.bag = BagModel.cached(a_s=1.1, a_b=1, V_s=1)
+        cls.const_cs = ConstCSModel.cached(css2=1/3 - 0.01, csb2=1/3 - 0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
         cls.bubbles = [
-            Bubble(cls.bag, v_wall=0.5, alpha_n=0.1),
-            Bubble(cls.const_cs, v_wall=0.7, alpha_n=0.1),
+            Bubble.cached(cls.bag, v_wall=0.5, alpha_n=0.1),
+            Bubble.cached(cls.const_cs, v_wall=0.7, alpha_n=0.1),
         ]
         cls.y_spectra = [
-            Spectrum(cls.bubbles[0], r_star=0.1, **Y_SPECTRUM_KWARGS),
-            Spectrum(cls.bubbles[0], r_star=0.2, **Y_SPECTRUM_KWARGS),
-            Spectrum(cls.bubbles[1], beta_tilde=100, **Y_SPECTRUM_KWARGS),
+            Spectrum.cached(cls.bubbles[0], r_star=0.1, **Y_SPECTRUM_KWARGS),
+            Spectrum.cached(cls.bubbles[0], r_star=0.2, **Y_SPECTRUM_KWARGS),
+            Spectrum.cached(cls.bubbles[1], beta_tilde=100, **Y_SPECTRUM_KWARGS),
         ]
         # These share the bubbles with the spectra above, but have the frequencies as their grid.
         cls.f_spectra = [
-            Spectrum(cls.bubbles[0], r_star=0.1, **F_SPECTRUM_KWARGS),
-            Spectrum(cls.bubbles[1], beta_tilde=100, T_star=1000, **F_SPECTRUM_KWARGS),
+            Spectrum.cached(cls.bubbles[0], r_star=0.1, **F_SPECTRUM_KWARGS),
+            Spectrum.cached(cls.bubbles[1], beta_tilde=100, T_star=1000, **F_SPECTRUM_KWARGS),
         ]
         cls.path = new_path("spectra")
         with Exporter(cls.path) as exporter:
@@ -329,7 +329,7 @@ class ExportTest(unittest.TestCase):
             assert exporter.n_spectra_y == 3
             assert not checksum_path(path).exists()
             assert exporter.add(self.y_spectra[1]) == 1
-            new_spectrum = Spectrum(self.bubbles[1], r_star=0.3, **Y_SPECTRUM_KWARGS)
+            new_spectrum = Spectrum.cached(self.bubbles[1], r_star=0.3, **Y_SPECTRUM_KWARGS)
             assert exporter.add(new_spectrum) == 3
             assert exporter.n_bubbles == 2
         assert verify_checksum(path)
@@ -344,7 +344,7 @@ class ExportTest(unittest.TestCase):
         shutil.copyfile(self.path, path)
         with Exporter(path, mode="a", spectrum_fields=[Preset.MINIMAL, "f"]) as exporter, \
                 pytest.raises(ExportFormatError):
-            exporter.add(Spectrum(self.bubbles[1], r_star=0.3, **Y_SPECTRUM_KWARGS))
+            exporter.add(Spectrum.cached(self.bubbles[1], r_star=0.3, **Y_SPECTRUM_KWARGS))
 
     def test_crash_recovery(self) -> None:
         """Rows that were written but not committed should be discarded."""
@@ -361,8 +361,9 @@ class ExportTest(unittest.TestCase):
             assert importer.read(Table.SPECTRA_Y, "r_star").size == 3
         with Exporter(path, mode="a") as exporter:
             assert exporter.n_spectra_y == 3
-            exporter.add(Spectrum(self.bubbles[1], r_star=0.3, **Y_SPECTRUM_KWARGS))
-            exporter.add(Spectrum(Bubble(self.bag, v_wall=0.6, alpha_n=0.05), r_star=0.1, **Y_SPECTRUM_KWARGS))
+            exporter.add(Spectrum.cached(self.bubbles[1], r_star=0.3, **Y_SPECTRUM_KWARGS))
+            exporter.add(
+                Spectrum.cached(Bubble.cached(self.bag, v_wall=0.6, alpha_n=0.05), r_star=0.1, **Y_SPECTRUM_KWARGS))
         with h5py.File(path, "r") as file:
             assert file["spectra_y"]["r_star"].shape == (5,)
             assert file["bubbles"]["v"].shape == (file["bubbles"]["xi_offsets"][-1],)
@@ -375,7 +376,7 @@ class ExportTest(unittest.TestCase):
         path = new_path("write_failure")
         shutil.copyfile(self.path, path)
         exporter = Exporter(path, mode="a")
-        exporter.add(Spectrum(self.bubbles[1], r_star=0.3, **Y_SPECTRUM_KWARGS))
+        exporter.add(Spectrum.cached(self.bubbles[1], r_star=0.3, **Y_SPECTRUM_KWARGS))
         with mock.patch("pttools.export.exporter._TableWriter.write", side_effect=OSError("Disk full")), \
                 pytest.raises(OSError, match="Disk full"):
             exporter.flush()
@@ -420,7 +421,7 @@ class ExportTest(unittest.TestCase):
     def test_grid_mismatch(self) -> None:
         """Test that adding a spectrum with a different y grid raises an error."""
         path = new_path("grid_mismatch")
-        spectrum = Spectrum(self.bubbles[0], r_star=0.1, y=np.logspace(-1, 3, 50), nT=1000, n_z_lookup=1000)
+        spectrum = Spectrum.cached(self.bubbles[0], r_star=0.1, y=np.logspace(-1, 3, 50), nT=1000, n_z_lookup=1000)
         with Exporter(path) as exporter:
             exporter.add(self.y_spectra[0])
             with pytest.raises(ValueError, match='The grid "y" must be the same'):
@@ -446,7 +447,7 @@ class ExportTest(unittest.TestCase):
     def test_ssm_spectrum(self) -> None:
         """Test that SSM spectra and standalone bubbles can be exported and loaded."""
         path = new_path("ssm_spectrum")
-        spectrum = SSMSpectrum(self.bubbles[0], r_star=0.1, **Y_SPECTRUM_KWARGS)
+        spectrum = SSMSpectrum.cached(self.bubbles[0], r_star=0.1, **Y_SPECTRUM_KWARGS)
         with Exporter(path) as exporter:
             exporter.add(spectrum)
             exporter.add(self.bubbles[1])
@@ -496,9 +497,9 @@ class SizeEstimateTest(unittest.TestCase):
 
     def test_file(self) -> None:
         """The estimate should match the uncompressed size of the data in the file."""
-        model = BagModel(a_s=1.1, a_b=1, V_s=1)
-        bubble = Bubble(model, v_wall=0.5, alpha_n=0.1)
-        spectra = [Spectrum(bubble, r_star=r_star, **F_SPECTRUM_KWARGS) for r_star in (0.1, 0.2, 0.3)]
+        model = BagModel.cached(a_s=1.1, a_b=1, V_s=1)
+        bubble = Bubble.cached(model, v_wall=0.5, alpha_n=0.1)
+        spectra = [Spectrum.cached(bubble, r_star=r_star, **F_SPECTRUM_KWARGS) for r_star in (0.1, 0.2, 0.3)]
         path = new_path("size_estimate")
         with Exporter(path, compression=None) as exporter:
             estimate = exporter.estimate_size(spectra[0])
@@ -524,7 +525,7 @@ class OtherTableTest(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.f = np.logspace(-3, 1, 50)
         cls.spectra = [OtherSpectrum(amplitude, cls.f, label=f"A={amplitude}") for amplitude in (1., 2., 3.)]
-        cls.bubble = Bubble(BagModel(a_s=1.1, a_b=1, V_s=1), v_wall=0.5, alpha_n=0.1)
+        cls.bubble = Bubble.cached(BagModel.cached(a_s=1.1, a_b=1, V_s=1), v_wall=0.5, alpha_n=0.1)
 
     def test_export(self) -> None:
         """Test that the objects of other classes are stored in their own table alongside the built-in tables."""

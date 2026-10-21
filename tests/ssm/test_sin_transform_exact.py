@@ -65,21 +65,21 @@ class SinTransformExactTest(unittest.TestCase):
     @staticmethod
     def test_sharpen_padding() -> None:
         """The padding points of a fluid shell are moved onto the jumps."""
-        model = BagModel(alpha_n_min=0.01)
+        model = BagModel.cached(alpha_n_min=0.01)
         for v_wall, alpha_n in ((0.5, 0.1), (0.7, 0.1), (0.9, 0.05)):
-            bubble = Bubble(model, v_wall=v_wall, alpha_n=alpha_n)
+            bubble = Bubble.cached(model, v_wall=v_wall, alpha_n=alpha_n)
             xi = sharpen_padding(bubble.xi, bubble.v)
             # The jump to still fluid ahead of the shell
             assert xi[-2] == bubble.xi[-3]
             np.testing.assert_array_equal(np.delete(xi, [1, -2]), np.delete(bubble.xi, [1, -2]))
         # The wall of a subsonic deflagration
-        bubble = Bubble(model, v_wall=0.5, alpha_n=0.1)
+        bubble = Bubble.cached(model, v_wall=0.5, alpha_n=0.1)
         assert sharpen_padding(bubble.xi, bubble.v)[1] == bubble.xi[2]
 
     @staticmethod
     def test_fp() -> None:
         r"""The analytical $f'(z)$ agrees with finite differences on a dense $z$ array."""
-        bubble = Bubble(BagModel(alpha_n_min=0.01), v_wall=0.7, alpha_n=0.1)
+        bubble = Bubble.cached(BagModel.cached(alpha_n_min=0.01), v_wall=0.7, alpha_n=0.1)
         lm = lam(v=bubble.v, w=bubble.w, e=bubble.e)
         z = np.logspace(np.log10(60), np.log10(200), 20001)
         f_val, fp_val, _ = f_fp_l(

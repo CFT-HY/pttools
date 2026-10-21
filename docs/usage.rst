@@ -35,6 +35,27 @@ Alternatively you can set the environment variable in your Python code before im
   os.environ["NUMBA_DISABLE_JIT"] = "1"
   import numba
 
+Caching objects
+---------------
+Creating models, bubbles and spectra can be slow, since it involves solving equations and compiling functions.
+If your code creates the same objects multiple times, e.g. in different functions,
+you can create them with the ``cached()`` class method instead of the constructor.
+It takes the same arguments as the constructor,
+and returns an existing object if one has already been created with the same arguments.
+
+.. code-block:: python
+
+  from pttools.bubble import Bubble
+  from pttools.models import BagModel
+  from pttools.omgw0 import Spectrum
+
+  model = BagModel.cached(a_s=1.1, a_b=1, V_s=1)
+  bubble = Bubble.cached(model, v_wall=0.5, alpha_n=0.1)
+  spectrum = Spectrum.cached(bubble, r_star=0.1)
+
+As the cached objects are shared, they should not be modified.
+For details, see :mod:`pttools.utils.cache`.
+
 Numba errors
 ------------
 If you get a Numba error when using PTtools, please do the following.

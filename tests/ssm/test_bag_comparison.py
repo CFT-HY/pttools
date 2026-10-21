@@ -27,10 +27,10 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
     @tp.override
     def setUpClass(cls) -> None:
         cls.bubbles = [
-            Bubble(cls.MODEL, v_wall=cls.V_WALLS[i], alpha_n=cls.ALPHA_NS[i])
+            Bubble.cached(cls.MODEL, v_wall=cls.V_WALLS[i], alpha_n=cls.ALPHA_NS[i])
             for i in range(cls.V_WALLS.size)
         ]
-        cls.spectra = [SSMSpectrum(bubble) for bubble in cls.bubbles]
+        cls.spectra = [SSMSpectrum.cached(bubble) for bubble in cls.bubbles]
         cls.spectra_lambda = []
         for bubble in cls.bubbles:
             spectrum = SSMSpectrum(bubble, compute=False)

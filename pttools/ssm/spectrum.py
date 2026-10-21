@@ -32,6 +32,7 @@ from pttools.ssm.ssm import ubarf2_from_a2
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 import pttools.type_hints as th
 from pttools.type_hints import FloatArr, FloatArr1D
+from pttools.utils.cache import Cacheable
 from pttools.utils.decorators import cached_property
 from pttools.utils.docstrings import copy_docstring_dec
 from pttools.utils.fields import Extractable, Fields, FieldSpec, Preset
@@ -47,11 +48,12 @@ if th.TYPE_CHECKING_OR_DOCS:
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class SSMSpectrum(Extractable, SpectrumBase):
+class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
     """Gravitational wave simulation object.
 
     The flat-space quantities of :py:class:`pttools.ssm.spectrum_base.SpectrumBase`
     allow comparing the spectrum with external data, e.g. :py:class:`pttools.lattice.spectrum.LatticeSpectrum`.
+    The spectra can be cached with :py:meth:`pttools.utils.cache.Cacheable.cached`.
     """
 
     #: The exportable fields of the spectrum

@@ -24,14 +24,15 @@ if th.TYPE_CHECKING_OR_DOCS:
 def main() -> tuple[ModelPlot, Figure, Figure]:
     """Plot various quantities for the constant sound speed model"""
     csb = 1 / sqrt(3) - 0.01
-    const_cs = ConstCSModel(a_s=1.5, a_b=1, css2=1/3, csb2=csb**2, V_s=1)
+    # The cached objects are shared with the other examples.
+    const_cs = ConstCSModel.cached(a_s=1.5, a_b=1, css2=1/3, csb2=csb**2, V_s=1)
 
     model_plot = ModelPlot(const_cs, t_log=False, y_log=False)
 
-    bubble = Bubble(const_cs, v_wall=0.5, alpha_n=0.2)
+    bubble = Bubble.cached(const_cs, v_wall=0.5, alpha_n=0.2)
     bubble_fig = bubble.plot()
 
-    spectrum = Spectrum(bubble, r_star=0.1, nuc_type=NucType.EXPONENTIAL)
+    spectrum = Spectrum.cached(bubble, r_star=0.1, nuc_type=NucType.EXPONENTIAL)
     spectrum_fig, _axs = spectrum.plot_multi()
 
     return model_plot, bubble_fig, spectrum_fig

@@ -37,7 +37,7 @@ class ThinShellTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:  # noqa: D102
-        model = BagModel(alpha_n_min=0.0001)
+        model = BagModel.cached(alpha_n_min=0.0001)
         cls.bubbles = {}
         cls.transforms = {}
         for alpha_n in ALPHA_NS:

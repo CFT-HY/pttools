@@ -21,8 +21,8 @@ class BubbleTest(unittest.TestCase):
     @classmethod
     @tp.override
     def setUpClass(cls) -> None:
-        cls.model = BagModel(a_s=1.1, a_b=1, V_s=1)
-        cls.bubble = Bubble(cls.model, v_wall=0.5, alpha_n=0.1)
+        cls.model = BagModel.cached(a_s=1.1, a_b=1, V_s=1)
+        cls.bubble = Bubble.cached(cls.model, v_wall=0.5, alpha_n=0.1)
 
     def test_cs2_Tn_bag(self) -> None:
         r"""In the bag model $c_s^2 = 1/3$ in both phases."""
@@ -31,8 +31,8 @@ class BubbleTest(unittest.TestCase):
 
     def test_cs2_Tn_const_cs(self) -> None:
         r"""In the constant sound speed model $c_s^2$ is constant in each phase."""
-        model = ConstCSModel(css2=1/3 - 0.01, csb2=1/3 - 0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
-        bubble = Bubble(model, v_wall=0.5, alpha_n=0.2)
+        model = ConstCSModel.cached(css2=1/3 - 0.01, csb2=1/3 - 0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
+        bubble = Bubble.cached(model, v_wall=0.5, alpha_n=0.2)
         assert bubble.css2_Tn == pytest.approx(1/3 - 0.01, abs=5e-13)
         assert bubble.csb2_Tn == pytest.approx(1/3 - 0.011, abs=5e-13)
 

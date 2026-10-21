@@ -17,12 +17,12 @@ from pttools.models.sm import StandardModel
 
 def main() -> plt.Figure:
     r"""Solve a bubble with the Standard Model and plot its fluid velocity profile $v(\xi)$"""
-    sm = StandardModel(V_s=5e12, g_mult_s=1 + 1e-9, silence_temp=True)
-    model = FullModel(sm, T_crit_guess=100e3)
+    sm = StandardModel.cached(V_s=5e12, g_mult_s=1 + 1e-9, silence_temp=True)
+    model = FullModel.cached(sm, T_crit_guess=100e3)
     wn = model.wn(alpha_n=0.1)
     tn = model.temp(wn, Phase.SYMMETRIC)
     print(wn, tn)
-    bubble = Bubble(model, v_wall=0.3, alpha_n=0.05)
+    bubble = Bubble.cached(model, v_wall=0.3, alpha_n=0.05)
 
 
     fig: plt.Figure = plt.figure()

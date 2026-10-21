@@ -32,7 +32,7 @@ def assert_kappa(
     if alpha_thetabar_ns is None:
         alpha_thetabar_ns = np.array([0.01, 0.1, 0.3])
     v_walls = np.linspace(0.2, 0.9, 8, endpoint=True)
-    model = models.ConstCSModel(css2=css2, csb2=csb2, a_s=5, a_b=1, V_s=1)
+    model = models.ConstCSModel.cached(css2=css2, csb2=csb2, a_s=5, a_b=1, V_s=1)
     _bubbles, kappas = create_bubbles(
         model=model, v_walls=v_walls, alpha_ns=alpha_thetabar_ns,
         func=get_kappa_giese, bubble_kwargs={"theta_bar": True, "allow_invalid": True},
@@ -50,7 +50,7 @@ def compare(
     """Compare the kappa values of the given model to the reference values."""
     data = np.zeros_like(v_walls)
     for i, (alpha_n, v_wall) in enumerate(zip(alpha_ns, v_walls, strict=False)):
-        bubble = Bubble(model=model, v_wall=v_wall, alpha_n=alpha_n)
+        bubble = Bubble.cached(model=model, v_wall=v_wall, alpha_n=alpha_n)
         data[i] = bubble.kappa
     assert_allclose(data, ref, rtol=rtol)
 
@@ -61,7 +61,7 @@ class GieseTest(unittest.TestCase):
     @staticmethod
     def test_bag() -> None:
         """Compare the kappa of the bag model to the results of the Giese et al. code."""
-        model = models.BagModel(a_s=1.1, a_b=1, V_s=1)
+        model = models.BagModel.cached(a_s=1.1, a_b=1, V_s=1)
         alpha_ns = [0.578, 0.151]
         v_walls = [0.5, 0.7]
         kappa_ref = [0.6080227349254361, 0.5013547591468864]
@@ -72,7 +72,7 @@ class GieseTest(unittest.TestCase):
     @staticmethod
     def test_const_cs() -> None:
         """Compare the kappa of the constant sound speed model to the results of the Giese et al. code."""
-        model = models.ConstCSModel(css2=1/3, csb2=(1/np.sqrt(3) - 0.01)**2, a_s=1.5, a_b=1, V_s=1)
+        model = models.ConstCSModel.cached(css2=1/3, csb2=(1/np.sqrt(3) - 0.01)**2, a_s=1.5, a_b=1, V_s=1)
         alpha_ns = [0.578, 0.151]
         v_walls = [0.5, 0.7]
         kappa_ref = [0.5962033181328875, 0.46887359879796786]

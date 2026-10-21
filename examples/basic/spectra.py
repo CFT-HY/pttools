@@ -20,10 +20,13 @@ if th.TYPE_CHECKING_OR_DOCS:
 
 def main() -> Figure:
     """Plot the velocity and GW spectra of multiple bubbles"""
-    # Create the equations of state
-    model1 = BagModel(alpha_n_min=0.1)
+    # Create the equations of state.
+    # Model.cached(), Bubble.cached() and Spectrum.cached() take the same arguments as the constructors,
+    # but return an existing object if one has already been created with equal arguments in this process.
+    # The cached objects are shared with the other examples, and should therefore not be modified.
+    model1 = BagModel.cached(alpha_n_min=0.1)
     # Instead of giving alpha_n_min you can give a_s, a_b and V_s to specify a model.
-    model2 = ConstCSModel(
+    model2 = ConstCSModel.cached(
         css2=1/4,  # speed of sound in the symmetric phase
         csb2=1/3,  # speed of sound in the broken phase
         a_s=1.5,   # degrees of freedom coefficient for the equation of state in the symmetric phase
@@ -32,11 +35,11 @@ def main() -> Figure:
     )
     # Create the bubbles
     bubbles = [
-        Bubble(model1, v_wall=0.5, alpha_n=0.2),
-        Bubble(model2, v_wall=0.5, alpha_n=0.2)
+        Bubble.cached(model1, v_wall=0.5, alpha_n=0.2),
+        Bubble.cached(model2, v_wall=0.5, alpha_n=0.2)
     ]
     # Convert the bubbles to GW spectra
-    spectra = [Spectrum(bubble, r_star=0.1) for bubble in bubbles]
+    spectra = [Spectrum.cached(bubble, r_star=0.1) for bubble in bubbles]
 
     fig, _axs = plot_spectra_multi(spectra)
     return fig

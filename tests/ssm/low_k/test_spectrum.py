@@ -24,11 +24,11 @@ class LowKSpectrumTest(unittest.TestCase):
     @classmethod
     @tp.override
     def setUpClass(cls) -> None:
-        bag = BagModel(alpha_n_min=0.05)
-        const_cs = ConstCSModel(css2=1/3, csb2=1/4, a_s=5, a_b=1, V_s=1, alpha_n_min=0.1)
+        bag = BagModel.cached(alpha_n_min=0.05)
+        const_cs = ConstCSModel.cached(css2=1/3, csb2=1/4, a_s=5, a_b=1, V_s=1, alpha_n_min=0.1)
         cls.spectra = [
-            SSMSpectrum(Bubble(bag, v_wall=0.5, alpha_n=0.05), y=Y, r_star=R_STAR),
-            SSMSpectrum(Bubble(const_cs, v_wall=0.9, alpha_n=0.2), y=Y, r_star=R_STAR),
+            SSMSpectrum.cached(Bubble.cached(bag, v_wall=0.5, alpha_n=0.05), y=Y, r_star=R_STAR),
+            SSMSpectrum.cached(Bubble.cached(const_cs, v_wall=0.9, alpha_n=0.2), y=Y, r_star=R_STAR),
         ]
 
     def test_nu(self) -> None:
@@ -99,7 +99,7 @@ class CsFrictionSpectrumTest(unittest.TestCase):
     @classmethod
     @tp.override
     def setUpClass(cls) -> None:
-        cls.bubble = Bubble(BagModel(alpha_n_min=0.05), v_wall=0.5, alpha_n=0.05)
+        cls.bubble = Bubble.cached(BagModel.cached(alpha_n_min=0.05), v_wall=0.5, alpha_n=0.05)
 
     def test_omega_differs(self) -> None:
         r"""Test the switch for $c_s^2 = \frac{1}{3}$ but $\omega = \frac{1}{4}$, i.e. $\nu = \frac{1}{7}$.
@@ -109,7 +109,7 @@ class CsFrictionSpectrumTest(unittest.TestCase):
         $\Upsilon_0 = \ln \left( \frac{\tau_\text{end}}{\tau_*} \right)$.
         """
         spectra = [
-            SSMSpectrum(self.bubble, y=Y, r_star=R_STAR, omega_barotropic=0.25, low_k_cs_friction=switch)
+            SSMSpectrum.cached(self.bubble, y=Y, r_star=R_STAR, omega_barotropic=0.25, low_k_cs_friction=switch)
             for switch in (False, True)
         ]
         nu = 1/7
@@ -130,7 +130,7 @@ class CsFrictionSpectrumTest(unittest.TestCase):
     def test_omega_equal(self) -> None:
         r"""Test that the switch makes no difference for $c_s^2 = \omega$."""
         spectra = [
-            SSMSpectrum(self.bubble, y=Y, r_star=R_STAR, low_k_cs_friction=switch) for switch in (False, True)
+            SSMSpectrum.cached(self.bubble, y=Y, r_star=R_STAR, low_k_cs_friction=switch) for switch in (False, True)
         ]
         assert_allclose(spectra[1].spec_den_gw_low, spectra[0].spec_den_gw_low, rtol=1e-12)
         assert_allclose(spectra[1].spec_den_gw_expanded, spectra[0].spec_den_gw_expanded, rtol=1e-12)

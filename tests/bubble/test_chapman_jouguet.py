@@ -89,8 +89,8 @@ class ChapmanJouguetTest(unittest.TestCase):
     @classmethod
     @tp.override
     def setUpClass(cls) -> None:
-        cls.bag = BagModel(a_s=1.1, a_b=1, V_s=1)
-        cls.const_cs = ConstCSModel(css2=1/3, csb2=0.3, a_s=1.5, a_b=1, V_s=1, log_info=False)
+        cls.bag = BagModel.cached(a_s=1.1, a_b=1, V_s=1)
+        cls.const_cs = ConstCSModel.cached(css2=1/3, csb2=0.3, a_s=1.5, a_b=1, V_s=1, log_info=False)
         cls.models = [cls.bag, cls.const_cs, *gksvdv_models()]
 
     def test_bag_limits(self) -> None:

@@ -60,18 +60,18 @@ class TestCS2Ptr(unittest.TestCase):
 
     def test_bag_model(self) -> None:
         r"""Test that the pointer of the bag model gives the same $c_s^2$ as the function of the model."""
-        self.check_model(BagModel(a_s=1.1, a_b=1, V_s=1))
+        self.check_model(BagModel.cached(a_s=1.1, a_b=1, V_s=1))
 
     def test_const_cs_model(self) -> None:
         r"""Test the $c_s^2$ pointer of the ConstCSModel and that it is the same on every call."""
-        model = ConstCSModel(a_s=1.5, a_b=1, V_s=1, css2=1/3 - 0.01, csb2=1/3 - 0.02)
+        model = ConstCSModel.cached(a_s=1.5, a_b=1, V_s=1, css2=1/3 - 0.01, csb2=1/3 - 0.02)
         self.check_model(model)
         # The pointer should be the same on every call, so that the callers don't have to be recompiled.
         assert model.cs2_ptr() == model.cs2_ptr()
 
     def test_const_cs_model_bag(self) -> None:
         """A ConstCSModel that is equivalent to the Bag Model should use the pointer of the Bag Model."""
-        model = ConstCSModel(a_s=1.5, a_b=1, V_s=1, css2=1/3, csb2=1/3)
+        model = ConstCSModel.cached(a_s=1.5, a_b=1, V_s=1, css2=1/3, csb2=1/3)
         assert model.cs2_ptr() == CS2_BAG_SCALAR_PTR
         self.check_model(model)
 

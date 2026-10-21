@@ -44,8 +44,8 @@ def test_find_alpha_n_bag(v_wall: float, alpha_plus: float, alpha_n: float, sol_
 @pytest.mark.parametrize(("v_wall", "alpha_plus", "alpha_n", "sol_type"), CASES)
 def test_find_alpha_n_bag_bubble(v_wall: float, alpha_plus: float, alpha_n: float, sol_type: SolutionType) -> None:
     r"""Test that the general solver gives the same $\alpha_+$ for the $\alpha_n$ of the bag model solver."""
-    model = BagModel(a_s=1.1, a_b=1, V_s=1, alpha_n_min=0.01)
-    bubble = Bubble(model, v_wall=v_wall, alpha_n=alpha_n_bag(v_wall, alpha_plus), sol_type=sol_type)
+    model = BagModel.cached(a_s=1.1, a_b=1, V_s=1, alpha_n_min=0.01)
+    bubble = Bubble.cached(model, v_wall=v_wall, alpha_n=alpha_n_bag(v_wall, alpha_plus), sol_type=sol_type)
     assert bubble.alpha_plus == pytest.approx(alpha_plus, rel=1e-3)
 
 

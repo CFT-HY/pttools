@@ -68,7 +68,7 @@ def solver(
 
 def main() -> tuple[float | None, float | None, float | None, float]:
     """Usage example"""
-    model = BagModel(alpha_n_min=0.01)
+    model = BagModel.cached(alpha_n_min=0.01)
     print("Starting solver")
     ret = solver(
         model, f_peak_target=6e-3, omega_peak_target=3e-11,

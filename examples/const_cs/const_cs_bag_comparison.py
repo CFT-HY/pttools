@@ -12,10 +12,12 @@ from pttools.plot.models import ModelsPlot
 
 def main() -> ModelsPlot:
     """Comparison of BagModel and ConstCSModel"""
-    model_bag = models.BagModel(a_s=1.1, a_b=1, V_s=1)
+    model_bag = models.BagModel.cached(a_s=1.1, a_b=1, V_s=1)
     # model_const_cs_like_bag = models.ConstCSModel(a_s=1.1, a_b=1, css2=1/3, csb2=1/3, V_s=1)
-    model_thermo_bag = models.FullModel(thermo=models.ConstCSThermoModel(a_s=1.1, a_b=1, V_s=1, css2=1/3, csb2=1/3))
-    model_sm = models.FullModel(thermo=models.StandardModel(), allow_invalid=True)
+    model_thermo_bag = models.FullModel.cached(
+        thermo=models.ConstCSThermoModel.cached(a_s=1.1, a_b=1, V_s=1, css2=1/3, csb2=1/3)
+    )
+    model_sm = models.FullModel.cached(thermo=models.StandardModel.cached(), allow_invalid=True)
 
     plot = ModelsPlot(temp=np.logspace(1, 2.5, 100))
     plot.add(model_bag, phase=models.Phase.SYMMETRIC)

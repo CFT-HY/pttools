@@ -24,9 +24,9 @@ class SpectrumTest(unittest.TestCase):
     @classmethod
     @tp.override
     def setUpClass(cls) -> None:
-        model = ConstCSModel(css2=1/3-0.01, csb2=1/3-0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
-        bubble = Bubble(model, v_wall=0.5, alpha_n=0.2)
-        cls.spectrum = Spectrum(bubble, r_star=0.1)
+        model = ConstCSModel.cached(css2=1/3-0.01, csb2=1/3-0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
+        bubble = Bubble.cached(model, v_wall=0.5, alpha_n=0.2)
+        cls.spectrum = Spectrum.cached(bubble, r_star=0.1)
 
     def test_export(self) -> None:
         """Test that the spectrum can be exported as JSON."""
@@ -166,9 +166,9 @@ class SpectrumComputeTest(unittest.TestCase):
     @classmethod
     @tp.override
     def setUpClass(cls) -> None:
-        model = ConstCSModel(css2=1/3-0.01, csb2=1/3-0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
-        cls.bubble = Bubble(model, v_wall=0.5, alpha_n=0.2)
-        cls.spectrum = Spectrum(
+        model = ConstCSModel.cached(css2=1/3-0.01, csb2=1/3-0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
+        cls.bubble = Bubble.cached(model, v_wall=0.5, alpha_n=0.2)
+        cls.spectrum = Spectrum.cached(
             cls.bubble, r_star=0.1, f=np.logspace(-5, -1, 300), T_star=200, g_star=100, compute_snr=True, **cls.KWARGS)
 
     def test_snr_precomputed(self) -> None:
@@ -178,7 +178,7 @@ class SpectrumComputeTest(unittest.TestCase):
             snr_mock.assert_not_called()
         assert snr[0] > 0
         assert self.spectrum.snr_settings.matches(SNRSettings())
-        spectrum = Spectrum(
+        spectrum = Spectrum.cached(
             self.bubble, r_star=0.1, f=self.spectrum.f(), T_star=200, g_star=100, compute_snr=False, **self.KWARGS)
         ref = spectrum.snr()
         for val, ref_val in zip(snr, ref, strict=True):
@@ -209,7 +209,7 @@ class SpectrumComputeTest(unittest.TestCase):
         # The z array is kept, and therefore the frequencies change.
         np.testing.assert_array_equal(spectrum.y, self.spectrum.y)
         assert not spectrum.f_given
-        ref = Spectrum(
+        ref = Spectrum.cached(
             self.bubble, r_star=0.2, y=self.spectrum.y, T_star=1000, g_star=50, compute_snr=True, **self.KWARGS)
         np.testing.assert_allclose(spectrum.f(), ref.f(), rtol=1e-14)
         np.testing.assert_allclose(spectrum.omgw0_h2(), ref.omgw0_h2(), rtol=1e-14)
@@ -230,7 +230,7 @@ class SpectrumComputeTest(unittest.TestCase):
         np.testing.assert_array_equal(spectrum.f(), f)
         np.testing.assert_allclose(spectrum.y, spectrum.z_from_f(f), rtol=1e-14)
         assert spectrum.a2 is self.spectrum.a2
-        ref = Spectrum(self.bubble, r_star=0.2, f=f, T_star=200, g_star=50, compute_snr=True, **self.KWARGS)
+        ref = Spectrum.cached(self.bubble, r_star=0.2, f=f, T_star=200, g_star=50, compute_snr=True, **self.KWARGS)
         np.testing.assert_allclose(spectrum.y, ref.y, rtol=1e-14)
         omgw0_h2 = spectrum.omgw0_h2()
         omgw0_h2_ref = ref.omgw0_h2()
@@ -279,9 +279,9 @@ class StandardModelSpectrumTest(unittest.TestCase):
     @classmethod
     @tp.override
     def setUpClass(cls) -> None:
-        sm = StandardModel(V_s=5e12, g_mult_s=1 + 1e-9, silence_temp=True)
-        model = FullModel(sm, T_crit_guess=100e3)
-        cls.bubble = Bubble(model, v_wall=0.3, alpha_n=0.05)
+        sm = StandardModel.cached(V_s=5e12, g_mult_s=1 + 1e-9, silence_temp=True)
+        model = FullModel.cached(sm, T_crit_guess=100e3)
+        cls.bubble = Bubble.cached(model, v_wall=0.3, alpha_n=0.05)
         cls.spectrum = Spectrum(cls.bubble, r_star=0.1, compute=False)
 
     def test_model(self) -> None:

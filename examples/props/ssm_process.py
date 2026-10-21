@@ -23,13 +23,13 @@ if th.TYPE_CHECKING_OR_DOCS:
 
 def main() -> Figure:
     """Plot the intermediate steps of the Sound Shell Model for a single bubble"""
-    model = ConstCSModel(css2=1/4, csb2=1/4, alpha_n_min=0.1)
+    model = ConstCSModel.cached(css2=1/4, csb2=1/4, alpha_n_min=0.1)
 
     # Create and simulate the fluid profile of a bubble.
-    bubble = Bubble(model, v_wall=0.6, alpha_n=0.1, label_with_model=False)
+    bubble = Bubble.cached(model, v_wall=0.6, alpha_n=0.1, label_with_model=False)
 
     # Compute the gravitational wave spectrum for the bubble.
-    spectrum = Spectrum(
+    spectrum = Spectrum.cached(
         bubble, nuc_type=NucType.EXPONENTIAL, r_star=0.1, low_k=False,
         y=np.logspace(-0.5, 3, 1000),
         label_latex=rf"$T_*={as_latex(DEFAULT_T_STAR)} \ \mathrm{{GeV}}$"

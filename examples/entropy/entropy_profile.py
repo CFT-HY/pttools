@@ -19,11 +19,11 @@ if th.TYPE_CHECKING_OR_DOCS:
 
 def main() -> Figure:
     """Plot the entropy profiles of a few bubbles"""
-    model = BagModel(a_s=1.1, a_b=1, V_s=1)
+    model = BagModel.cached(a_s=1.1, a_b=1, V_s=1)
     bubbles = [
-        Bubble(model, v_wall=0.9, alpha_n=0.1),
-        Bubble(model, v_wall=0.7, alpha_n=0.1),
-        Bubble(model, v_wall=0.3, alpha_n=0.1)
+        Bubble.cached(model, v_wall=0.9, alpha_n=0.1),
+        Bubble.cached(model, v_wall=0.7, alpha_n=0.1),
+        Bubble.cached(model, v_wall=0.3, alpha_n=0.1)
     ]
     return plot_entropy(bubbles, colors=["r", "g", "b"])
 

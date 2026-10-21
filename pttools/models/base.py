@@ -11,16 +11,18 @@ import numpy as np
 from pttools.models.export import BASE_MODEL_FIELDS
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
+from pttools.utils.cache import Cacheable
 from pttools.utils.fields import Extractable, Fields, FieldSpec, Preset
 from pttools.utils.json import export_json
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class BaseModel(Extractable, abc.ABC):
+class BaseModel(Cacheable, Extractable, abc.ABC):
     """The base for both Model and ThermoModel.
 
     All temperatures must be in units of GeV for the frequency conversion in Spectrum to work.
+    The models can be cached with :py:meth:`pttools.utils.cache.Cacheable.cached`.
     """
 
     DEFAULT_LABEL_LATEX: tp.ClassVar[str]

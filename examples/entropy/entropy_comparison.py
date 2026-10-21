@@ -28,7 +28,7 @@ def main(relative: bool = True) -> plt.Figure:
     # entropy_ref, v_walls, alpha_ns = load()
 
     # These should be the same as for the old data
-    model = BagModel(g_s=123, g_b=120, V_s=0.9)
+    model = BagModel.cached(g_s=123, g_b=120, V_s=0.9)
 
     fig: plt.Figure = plt.figure()
     ax: plt.Axes = fig.add_subplot()

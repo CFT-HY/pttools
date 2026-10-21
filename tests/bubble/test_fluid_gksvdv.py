@@ -35,8 +35,8 @@ class FluidGKSVDVTest(unittest.TestCase):
 
     def compare(self, v_wall: float, alpha_n: float, sol_type: SolutionType, rtol: float = 1e-3) -> None:
         """Check that both solvers give the expected solution type and agree on the junction quantities and kappa."""
-        pttools_bubble = Bubble(self.model, v_wall=v_wall, alpha_n=alpha_n)
-        giese_bubble = Bubble(self.model, v_wall=v_wall, alpha_n=alpha_n, use_giese_solver=True)
+        pttools_bubble = Bubble.cached(self.model, v_wall=v_wall, alpha_n=alpha_n)
+        giese_bubble = Bubble.cached(self.model, v_wall=v_wall, alpha_n=alpha_n, use_giese_solver=True)
         assert pttools_bubble.sol_type == sol_type
         assert giese_bubble.sol_type == sol_type
         assert not giese_bubble.solver_failed
@@ -69,7 +69,7 @@ class FluidGKSVDVTest(unittest.TestCase):
 
     def test_deton_junction(self) -> None:
         """For a detonation, the fluid in front of the wall is at rest and has the nucleation enthalpy."""
-        bubble = Bubble(self.model, v_wall=0.85, alpha_n=0.1, use_giese_solver=True)
+        bubble = Bubble.cached(self.model, v_wall=0.85, alpha_n=0.1, use_giese_solver=True)
         assert bubble.sol_type == SolutionType.DETON
         assert bubble.vp == 0
         assert bubble.vp_tilde == pytest.approx(bubble.v_wall, abs=5e-8)

@@ -21,9 +21,9 @@ class SSMSpectrumTest(unittest.TestCase):
     @classmethod
     @tp.override
     def setUpClass(cls) -> None:
-        model = ConstCSModel(css2=1/3-0.01, csb2=1/3-0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
-        bubble = Bubble(model, v_wall=0.5, alpha_n=0.2)
-        cls.spectrum = SSMSpectrum(bubble, beta_tilde=1.23)
+        model = ConstCSModel.cached(css2=1/3-0.01, csb2=1/3-0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
+        bubble = Bubble.cached(model, v_wall=0.5, alpha_n=0.2)
+        cls.spectrum = SSMSpectrum.cached(bubble, beta_tilde=1.23)
 
     def test_beta(self) -> None:
         """Test that the nucleation rate parameter beta is finite for a given Hubble rate."""
@@ -161,9 +161,9 @@ class SSMSpectrumWithParamsTest(unittest.TestCase):
     @classmethod
     @tp.override
     def setUpClass(cls) -> None:
-        model = ConstCSModel(css2=1/3-0.01, csb2=1/3-0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
-        cls.bubble = Bubble(model, v_wall=0.5, alpha_n=0.2)
-        cls.spectrum = SSMSpectrum(cls.bubble, beta_tilde=10, **cls.KWARGS)
+        model = ConstCSModel.cached(css2=1/3-0.01, csb2=1/3-0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
+        cls.bubble = Bubble.cached(model, v_wall=0.5, alpha_n=0.2)
+        cls.spectrum = SSMSpectrum.cached(cls.bubble, beta_tilde=10, **cls.KWARGS)
 
     def assert_same(self, spectrum: SSMSpectrum, ref: SSMSpectrum) -> None:
         """Assert that a spectrum created with with_params() is the same as a fully computed one."""
@@ -188,7 +188,7 @@ class SSMSpectrumWithParamsTest(unittest.TestCase):
         assert spectrum.beta_tilde is None
         assert spectrum.nucleation_f == 0
         assert spectrum.bubble_spacing_enlargement_factor == 1
-        self.assert_same(spectrum, SSMSpectrum(self.bubble, r_star=0.3, **self.KWARGS))
+        self.assert_same(spectrum, SSMSpectrum.cached(self.bubble, r_star=0.3, **self.KWARGS))
         # The original spectrum should not be modified
         assert self.spectrum.beta_tilde == 10
 
@@ -196,7 +196,7 @@ class SSMSpectrumWithParamsTest(unittest.TestCase):
         r"""A new $\tilde{\beta}$ should also give a new $r_*$ and bubble spacing enlargement factor."""
         spectrum = self.spectrum.with_params(beta_tilde=20)
         assert spectrum.r_star < self.spectrum.r_star
-        self.assert_same(spectrum, SSMSpectrum(self.bubble, beta_tilde=20, **self.KWARGS))
+        self.assert_same(spectrum, SSMSpectrum.cached(self.bubble, beta_tilde=20, **self.KWARGS))
 
     def test_other_params(self) -> None:
         """The other parameters that do not affect the velocity spectra can also be changed."""
@@ -204,7 +204,8 @@ class SSMSpectrumWithParamsTest(unittest.TestCase):
         assert spectrum.beta_tilde == 10
         self.assert_same(
             spectrum,
-            SSMSpectrum(self.bubble, beta_tilde=10, N_sh=3, a_star_a_r_ratio=0.5, omega_barotropic=0.3, **self.KWARGS)
+            SSMSpectrum.cached(
+                self.bubble, beta_tilde=10, N_sh=3, a_star_a_r_ratio=0.5, omega_barotropic=0.3, **self.KWARGS)
         )
 
     def test_source_lifetime_factor_scaling(self) -> None:
@@ -254,7 +255,7 @@ class SSMSpectrumWithParamsTest(unittest.TestCase):
         y = np.logspace(-0.5, 2.5, 200)
         spectrum = self.spectrum.with_params(beta_tilde=20, y=y)
         kwargs: dict[str, tp.Any] = {**self.KWARGS, "y": y}
-        ref = SSMSpectrum(self.bubble, beta_tilde=20, **kwargs)
+        ref = SSMSpectrum.cached(self.bubble, beta_tilde=20, **kwargs)
         assert spectrum.r_star == ref.r_star
         np.testing.assert_array_equal(spectrum.y, y)
         significant = ref.pow_gw > 1e-2 * ref.pow_gw.max()

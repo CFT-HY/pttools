@@ -28,10 +28,10 @@ def main(
         # v_wall: float = 0.86,
         alpha_n: float = 0.01) -> Figure:
     r"""Compare the properties of a single bubble computed with PTtools and the :giese_2021:`\ ` solver"""
-    model = ConstCSModel(a_s=5, a_b=1, css2=css2, csb2=csb2, V_s=1, alpha_n_min=0.01)
+    model = ConstCSModel.cached(a_s=5, a_b=1, css2=css2, csb2=csb2, V_s=1, alpha_n_min=0.01)
     alpha_tbn = model.alpha_theta_bar_n_from_alpha_n(alpha_n)
 
-    bubble = Bubble(model, v_wall=v_wall, alpha_n=alpha_n)
+    bubble = Bubble.cached(model, v_wall=v_wall, alpha_n=alpha_n)
     bubble_fig = bubble.plot()
 
     kappa_tbn_giese, v, wow, xi, _mode, _vp, _vm = kappaNuMuModel(cs2b=csb2, cs2s=css2, al=alpha_tbn, vw=v_wall)

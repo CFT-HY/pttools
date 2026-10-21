@@ -102,15 +102,15 @@ def validate2(
 
 def main() -> plt.Figure:
     """Plot a comparison of the old and new solvers"""
-    bag = BagModel(a_s=1.1, a_b=1, V_s=2)
+    bag = BagModel.cached(a_s=1.1, a_b=1, V_s=2)
 
     v_walls = [0.5, 0.7, 0.77]
     alpha_ns = [0.578, 0.151, 0.091]
     sol_types = [SolutionType.SUB_DEF, SolutionType.HYBRID, SolutionType.DETON]
 
     spectra = [
-        SSMSpectrum(
-            Bubble(bag, v_wall=v_walls[i], alpha_n=alpha_ns[i], sol_type=sol_types[i])
+        SSMSpectrum.cached(
+            Bubble.cached(bag, v_wall=v_walls[i], alpha_n=alpha_ns[i], sol_type=sol_types[i])
         )
         for i in range(len(v_walls))
     ]

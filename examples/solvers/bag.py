@@ -27,7 +27,7 @@ def main(
         alpha_n: float = 0.05
     ) -> plt.Figure:
     """Compare the old and new solvers for a bag model bubble"""
-    model = BagModel(g_s=123, g_b=120, V_s=0.9)
+    model = BagModel.cached(g_s=123, g_b=120, V_s=0.9)
     # model = BagModel(a_s=13.488, a_b=13.159, V_s=0.900, V_b=0.000)
     # model = ConstCSModel(css2=0.323, csb2=0.322, g_s=123, g_b=120, V_s=0.9)
 
@@ -38,7 +38,7 @@ def main(
     # print(v, w, xi)
 
     print("Solving with new solver")
-    bubble = Bubble(model, v_wall=v_wall, alpha_n=alpha_n)
+    bubble = Bubble.cached(model, v_wall=v_wall, alpha_n=alpha_n)
     print(bubble.sol_type)
     ref_data = ref().get(v_wall, alpha_n, bubble.sol_type)
     print(

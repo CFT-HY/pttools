@@ -78,7 +78,7 @@ class NucleationFTest(unittest.TestCase):
         = \frac{c_s^2}{6} - \frac{v_{\text{wall}}^2}{2} + \frac{v_{\text{wall}}^3}{3 c_s}.$$
         """
         v_wall, alpha_n, beta_tilde = 0.05, 0.005, 10.
-        bubble = Bubble(BagModel(alpha_n_min=0.001), v_wall=v_wall, alpha_n=alpha_n)
+        bubble = Bubble.cached(BagModel.cached(alpha_n_min=0.001), v_wall=v_wall, alpha_n=alpha_n)
         expected = 3 * alpha_n * beta_tilde * (1 + CS0**2) / (4 * CS0**2 * (1 - 3 * v_wall**2) ** 2) \
             * (CS0**2 + v_wall**2 * (2 * v_wall - 3 * CS0) / CS0)
         assert_allclose(nucleation_f(xi=bubble.xi, T=bubble.T, beta_tilde=beta_tilde, v_wall=v_wall), expected,
@@ -95,11 +95,11 @@ class NucleationSuppressionTest(unittest.TestCase):
     @classmethod
     @tp.override
     def setUpClass(cls) -> None:
-        model = BagModel(alpha_n_min=0.01)
-        cls.bubble = Bubble(model, v_wall=0.44, alpha_n=0.1)
+        model = BagModel.cached(alpha_n_min=0.01)
+        cls.bubble = Bubble.cached(model, v_wall=0.44, alpha_n=0.1)
         y = np.logspace(-1, 3, 300)
-        cls.spectrum_beta = SSMSpectrum(cls.bubble, beta_tilde=100, y=y, low_k=False)
-        cls.spectrum_r_star = SSMSpectrum(cls.bubble, r_star=cls.spectrum_beta.r_star, y=y, low_k=False)
+        cls.spectrum_beta = SSMSpectrum.cached(cls.bubble, beta_tilde=100, y=y, low_k=False)
+        cls.spectrum_r_star = SSMSpectrum.cached(cls.bubble, r_star=cls.spectrum_beta.r_star, y=y, low_k=False)
 
     def test_lambda(self) -> None:
         r"""Test that $\Lambda > 1$ in $r_* = \Lambda r_{\ast,0}$ from $\tilde{\beta}$, and $\Lambda = 1$ from $r_*$."""

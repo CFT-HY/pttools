@@ -20,7 +20,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 def main() -> plt.Figure:
     r"""Compare $\kappa(\xi)$ for old and new solvers"""
     t_start = time.perf_counter()
-    model = BagModel(a_s=1.1, a_b=1, V_s=1)
+    model = BagModel.cached(a_s=1.1, a_b=1, V_s=1)
     v_walls = np.linspace(0.2, 0.95, 10)
     alpha_ns = np.array([0.1])
 

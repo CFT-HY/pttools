@@ -23,7 +23,7 @@ class ThermoTest(Reference, ABC):
     def setUpClass(cls) -> None:
         """Create the bubbles for the reference parameters."""
         cls.bubbles = [
-            Bubble(cls.MODEL, v_wall=v_wall, alpha_n=alpha_n)
+            Bubble.cached(cls.MODEL, v_wall=v_wall, alpha_n=alpha_n)
             for v_wall, alpha_n in zip(cls.V_WALLS, cls.ALPHA_NS, strict=True)
         ]
 
@@ -94,7 +94,7 @@ class ThermoTestConstCS(ThermoTest, unittest.TestCase):
     Reference data has been generated with PTtools.
     """
 
-    MODEL = ConstCSModel(css2=1/3-0.01, csb2=1/3, a_s=1.5, a_b=1, V_s=1)
+    MODEL = ConstCSModel.cached(css2=1/3-0.01, csb2=1/3, a_s=1.5, a_b=1, V_s=1)
 
     ALPHA_NS = np.array(np.repeat([0.15, 0.2, 0.3], 3))
     V_WALLS = np.array(np.tile([0.3, 0.7, 0.8], 3))

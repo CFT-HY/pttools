@@ -45,9 +45,9 @@ class TestShock(unittest.TestCase):
     @classmethod
     @tp.override
     def setUpClass(cls) -> None:
-        cls.bag = BagModel(a_s=1.1, a_b=1, V_s=1)
-        cls.const_cs_bag_like = ConstCSModel(css2=1/3, csb2=1/4, a_s=5, a_b=1, V_s=1, alpha_n_min=0.1)
-        cls.const_cs = ConstCSModel(css2=1/4, csb2=1/4, a_s=5, a_b=1, V_s=1, alpha_n_min=0.1)
+        cls.bag = BagModel.cached(a_s=1.1, a_b=1, V_s=1)
+        cls.const_cs_bag_like = ConstCSModel.cached(css2=1/3, csb2=1/4, a_s=5, a_b=1, V_s=1, alpha_n_min=0.1)
+        cls.const_cs = ConstCSModel.cached(css2=1/4, csb2=1/4, a_s=5, a_b=1, V_s=1, alpha_n_min=0.1)
 
     def test_v_shock_bag(self) -> None:
         r"""The general shock solver should reproduce the bag model shock curve, :gw_pt_ssm:`\ ` eq. B.17."""

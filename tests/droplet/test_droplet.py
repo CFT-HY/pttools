@@ -16,7 +16,7 @@ class DropletTest(unittest.TestCase):
         $$\Psi = 1 - \frac{\delta a}{a} = 0.84, \alpha_+ = 0.05
         \Rightarrow \xi_w = {v}_- = 0.42, -\xi_d = {v}_+ = 0.32$$
         """
-        model = BagModel(a_s=1./0.84, a_b=1.)
+        model = BagModel.cached(a_s=1./0.84, a_b=1.)
         bubble = Bubble(model, v_wall=0.42, alpha_n=0.06)
         # The droplet module is not yet in the PTtools repository
         try:

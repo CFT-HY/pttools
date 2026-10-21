@@ -22,7 +22,7 @@ def main() -> VwAlphaPlot:
     v_walls = np.linspace(0.05, 0.95, n)
     alpha_ns = np.linspace(0.05, 0.3, n)
     # Create the equation of state
-    model = BagModel(a_s=1.1, a_b=1, V_s=1)
+    model = BagModel.cached(a_s=1.1, a_b=1, V_s=1)
 
     # Parallel computation
     grid = BubbleGridVWAlpha(model, v_walls, alpha_ns, get_kappa_omega)

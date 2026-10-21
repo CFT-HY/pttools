@@ -27,7 +27,7 @@ class TestCreateSpectra(unittest.TestCase):
     @classmethod
     @tp.override
     def setUpClass(cls) -> None:
-        cls.model = ConstCSModel(css2=1/3-0.01, csb2=1/3-0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
+        cls.model = ConstCSModel.cached(css2=1/3-0.01, csb2=1/3-0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
 
     def test_create_spectrum_parallel_in_kwargs(self) -> None:
         """Giving parallel in spectrum_kwargs should raise an error, as it's an argument of create_spectrum()."""

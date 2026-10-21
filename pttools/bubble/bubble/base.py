@@ -16,6 +16,7 @@ from pttools.bubble.export import BASE_BUBBLE_FIELDS
 from pttools.bubble.thermo import va_kinetic_energy_density
 from pttools.speedup import NAN_ARR
 import pttools.type_hints as th
+from pttools.utils.cache import Cacheable
 from pttools.utils.docstrings import copy_docstring_dec
 from pttools.utils.fields import Extractable, Fields, FieldSpec, Preset
 from pttools.utils.json import export_json
@@ -32,8 +33,11 @@ if th.TYPE_CHECKING_OR_DOCS:
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class BaseBubble(Extractable, abc.ABC):
-    """A common base class for bubbles and droplets."""
+class BaseBubble(Cacheable, Extractable, abc.ABC):
+    """A common base class for bubbles and droplets.
+
+    The bubbles can be cached with :py:meth:`pttools.utils.cache.Cacheable.cached`.
+    """
 
     #: The exportable fields of the bubble
     FIELDS: tp.ClassVar[Fields] = BASE_BUBBLE_FIELDS

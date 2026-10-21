@@ -42,10 +42,10 @@ def main() -> plt.Figure:
     allow_invalid = True
     logger.debug("Loading models for plot_xi_kappa.")
     models = [
-        ConstCSModel(a_s=a_s, a_b=a_b, css2=1/3, csb2=1/3, V_s=V_s, allow_invalid=allow_invalid),
-        ConstCSModel(a_s=a_s, a_b=a_b, css2=1/3, csb2=1/4, V_s=V_s, allow_invalid=allow_invalid),
-        ConstCSModel(a_s=a_s, a_b=a_b, css2=1/4, csb2=1/3, V_s=V_s, allow_invalid=allow_invalid),
-        ConstCSModel(a_s=a_s, a_b=a_b, css2=1/4, csb2=1/4, V_s=V_s, allow_invalid=allow_invalid)
+        ConstCSModel.cached(a_s=a_s, a_b=a_b, css2=1/3, csb2=1/3, V_s=V_s, allow_invalid=allow_invalid),
+        ConstCSModel.cached(a_s=a_s, a_b=a_b, css2=1/3, csb2=1/4, V_s=V_s, allow_invalid=allow_invalid),
+        ConstCSModel.cached(a_s=a_s, a_b=a_b, css2=1/4, csb2=1/3, V_s=V_s, allow_invalid=allow_invalid),
+        ConstCSModel.cached(a_s=a_s, a_b=a_b, css2=1/4, csb2=1/4, V_s=V_s, allow_invalid=allow_invalid)
     ]
     logger.debug("Models loaded for plot_xi_kappa.")
     fig: plt.Figure = plt.figure()

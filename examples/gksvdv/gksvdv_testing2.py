@@ -30,10 +30,10 @@ def main(
     v_walls = np.array([0.8122449, 0.82755102, 0.84285714, 0.85816327])
     models = [
         # BagModel(a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_theta_bar_n)
-        ConstCSModel(css2=1/3, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_n),
-        ConstCSModel(css2=1/3, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_n),
+        ConstCSModel.cached(css2=1/3, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_n),
+        ConstCSModel.cached(css2=1/3, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_n),
         # ConstCSModel(css2=1/4, csb2=1/3, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_n),
-        ConstCSModel(css2=1/4, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_n)
+        ConstCSModel.cached(css2=1/4, csb2=1/4, a_s=a_s, a_b=a_b, V_s=V_s, alpha_n_min=alpha_n)
     ]
     print("Models")
     for model in models:
@@ -49,7 +49,7 @@ def main(
     for ax, model in zip(axs_flat, models, strict=False):
         print("Model:", model.params_str())
         for v_wall, color in zip(v_walls, colors, strict=False):
-            bubble = Bubble(model=model, v_wall=v_wall, alpha_n=alpha_n, theta_bar=theta_bar)
+            bubble = Bubble.cached(model=model, v_wall=v_wall, alpha_n=alpha_n, theta_bar=theta_bar)
             print("Bubble:", f"css2={model.css2}, csb2={model.csb2}, v_wall={v_wall}, sol_type={bubble.sol_type}")
             ax.plot(bubble.xi, bubble.v, label=f"$v_w={v_wall}$", c=color)
 

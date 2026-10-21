@@ -15,10 +15,10 @@ from pttools.plot.delta_theta import DeltaThetaPlot3D
 
 def main() -> DeltaThetaPlot3D:
     r"""Plot $\Delta \theta$ surfaces as a function of $w_+$ and $w_-$."""
-    bag = BagModel(a_s=1.1, a_b=1, V_s=1)
+    bag = BagModel.cached(a_s=1.1, a_b=1, V_s=1)
     css = 1/np.sqrt(3) - 0.01
     csb = 1/np.sqrt(3) - 0.02
-    const_cs = ConstCSModel(a_s=1.5, a_b=1, css2=css**2, csb2=csb**2, V_s=1)
+    const_cs = ConstCSModel.cached(a_s=1.5, a_b=1, css2=css**2, csb2=csb**2, V_s=1)
 
     plot = DeltaThetaPlot3D()
     plot.add(bag)

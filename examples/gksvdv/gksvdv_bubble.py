@@ -23,7 +23,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 def main() -> Figure:
     r"""Plot the fluid profiles for a single wall speed and the $\alpha_n$ values of :giese_2021:`\ `"""
-    model = ConstCSModel(css2=1/4, csb2=1/4, a_s=5, a_b=1, V_s=1)
+    model = ConstCSModel.cached(css2=1/4, csb2=1/4, a_s=5, a_b=1, V_s=1)
     theta_bar = False
     colors = ["b", "y", "r", "g", "purple", "grey"]
     v_wall = 0.7
@@ -32,7 +32,9 @@ def main() -> Figure:
 
     for alpha_n, _color in zip(GKSVDV_ALPHA_N, colors, strict=False):
         try:
-            bubble = Bubble(model=model, v_wall=v_wall, alpha_n=alpha_n, theta_bar=theta_bar, allow_invalid=False)
+            bubble = Bubble.cached(
+                model=model, v_wall=v_wall, alpha_n=alpha_n, theta_bar=theta_bar, allow_invalid=False
+            )
             label = rf"$\alpha_{{\bar{{\theta}}_n}} = {alpha_n}$" if theta_bar else rf"$\alpha_n = {alpha_n}$"
             bubble.plot_v(fig=fig, ax=ax_v, alpha=0.5, label=label)
             bubble.plot_w(fig=fig, ax=ax_w, alpha=0.5, label=label)

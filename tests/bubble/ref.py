@@ -20,7 +20,7 @@ class Reference(ABC):
     """Reference values from literature."""
 
     bubbles: tp.ClassVar[list[Bubble]]
-    MODEL: tp.ClassVar[Model] = BagModel(a_s=1.1, a_b=1, V_s=1)
+    MODEL: tp.ClassVar[Model] = BagModel.cached(a_s=1.1, a_b=1, V_s=1)
     # Input parameters
     ALPHA_NS: tp.ClassVar[FloatArr1D]
     V_WALLS: tp.ClassVar[FloatArr1D]

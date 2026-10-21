@@ -38,10 +38,10 @@ def window_mean(arr: th.FloatArr1D, z: th.FloatArr1D, width: float) -> th.FloatA
 
 def main() -> Figure:
     r"""Plot $\lvert A(z) \rvert^2$ with and without the exact sine transforms for large $z$."""
-    model = BagModel(alpha_n_min=0.001)
+    model = BagModel.cached(alpha_n_min=0.001)
     fig, axs = plt.subplots(2, len(PARAMS), figsize=(4 * len(PARAMS), 7), sharex=True, sharey="row")
     for i, (v_wall, alpha_n) in enumerate(PARAMS):
-        bubble = Bubble(model, v_wall=v_wall, alpha_n=alpha_n)
+        bubble = Bubble.cached(model, v_wall=v_wall, alpha_n=alpha_n)
         kwargs = {
             "v": bubble.v, "w": bubble.w, "xi": bubble.xi, "e": bubble.e, "z": Z,
             "v_wall": bubble.v_wall, "v_sh": bubble.v_sh, "cs": const.CS0

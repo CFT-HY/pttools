@@ -45,9 +45,9 @@ class UbarfTest(unittest.TestCase):
     @classmethod
     @tp.override
     def setUpClass(cls) -> None:
-        cls.model = BagModel(alpha_n_min=ALPHA_N[0])
+        cls.model = BagModel.cached(alpha_n_min=ALPHA_N[0])
         cls.bubbles = [
-            Bubble(cls.model, v_wall=v_wall, alpha_n=alpha_n)
+            Bubble.cached(cls.model, v_wall=v_wall, alpha_n=alpha_n)
             for v_wall, alpha_n in zip(V_WALL, ALPHA_N, strict=False)
         ]
         cls.spectra = [SSMSpectrum(bubble, compute=False) for bubble in cls.bubbles]

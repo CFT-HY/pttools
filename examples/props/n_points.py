@@ -258,7 +258,7 @@ def main(cases: tuple[Case, ...] = CASES) -> tuple[Figure, Figure, Figure]:
     """Compute the spectra with the various accuracy settings and plot the errors."""
     start_time = time.perf_counter()
     models = {
-        (case.css2, case.csb2): ConstCSModel(css2=case.css2, csb2=case.csb2, **MODEL_KWARGS)
+        (case.css2, case.csb2): ConstCSModel.cached(css2=case.css2, csb2=case.csb2, **MODEL_KWARGS)
         for case in cases
     }
     # The futures are created first, so that all the computations run in parallel.

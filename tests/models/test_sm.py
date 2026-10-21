@@ -18,7 +18,7 @@ class TestStandardModel(ThermoModelBaseCase[models.StandardModel], unittest.Test
     @classmethod
     def setUpClass(cls, *args: tp.Any, **kwargs: tp.Any) -> None:
         """Create the Standard Model and load its reference data."""
-        thermo = models.StandardModel()
+        thermo = models.StandardModel.cached()
         super().setUpClass(thermo)
 
     def test_geff_arrays(self) -> None:

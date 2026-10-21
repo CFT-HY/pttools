@@ -18,18 +18,18 @@ from pttools.plot.fluid_shell_3d import BubblePlot3D
 
 def main() -> BubblePlot3D:
     r"""Plot bag and constant sound speed model bubbles in 3D, and compare the bag bubbles with reference values"""
-    bag = BagModel(a_s=1.1, a_b=1, V_s=1)
+    bag = BagModel.cached(a_s=1.1, a_b=1, V_s=1)
     # css = 1/np.sqrt(3) - 0.05
     # csb = 1/np.sqrt(3) - 0.1
     # print(f"css={css}, csb={csb}")
     csb = 1/np.sqrt(3) - 0.01
-    const_cs = ConstCSModel(a_s=1.5, a_b=1, css2=1/3, csb2=csb**2, V_s=1)
+    const_cs = ConstCSModel.cached(a_s=1.5, a_b=1, css2=1/3, csb2=csb**2, V_s=1)
     plot = BubblePlot3D(model=const_cs)
 
     # v_wall and alpha_n values are from Hindmarsh and Hijazi, 2019.
-    bag_def = Bubble(bag, v_wall=0.5, alpha_n=0.578, sol_type=SolutionType.SUB_DEF)
-    bag_hybrid = Bubble(bag, v_wall=0.7, alpha_n=0.151, sol_type=SolutionType.HYBRID)
-    bag_det = Bubble(bag, v_wall=0.77, alpha_n=0.091, sol_type=SolutionType.DETON)
+    bag_def = Bubble.cached(bag, v_wall=0.5, alpha_n=0.578, sol_type=SolutionType.SUB_DEF)
+    bag_hybrid = Bubble.cached(bag, v_wall=0.7, alpha_n=0.151, sol_type=SolutionType.HYBRID)
+    bag_det = Bubble.cached(bag, v_wall=0.77, alpha_n=0.091, sol_type=SolutionType.DETON)
 
     for bubble in [bag_def, bag_hybrid, bag_det]:
         plot.add(bubble, color="blue")
@@ -44,10 +44,10 @@ def main() -> BubblePlot3D:
             f"relative error={(bubble.kinetic_energy_fraction - ke_frac) / ke_frac}"
         )
 
-    const_cs_def = Bubble(const_cs, v_wall=0.5, alpha_n=0.578, sol_type=SolutionType.SUB_DEF)
-    const_cs_hybrid = Bubble(const_cs, v_wall=0.7, alpha_n=0.151, sol_type=SolutionType.HYBRID)
+    const_cs_def = Bubble.cached(const_cs, v_wall=0.5, alpha_n=0.578, sol_type=SolutionType.SUB_DEF)
+    const_cs_hybrid = Bubble.cached(const_cs, v_wall=0.7, alpha_n=0.151, sol_type=SolutionType.HYBRID)
     # These values had to be modified for a solution to exist
-    const_cs_det = Bubble(const_cs, v_wall=0.8, alpha_n=0.11, sol_type=SolutionType.DETON)
+    const_cs_det = Bubble.cached(const_cs, v_wall=0.8, alpha_n=0.11, sol_type=SolutionType.DETON)
 
     for bubble in [const_cs_def, const_cs_hybrid, const_cs_det]:
         plot.add(bubble, color="red")

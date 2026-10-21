@@ -28,7 +28,7 @@ class DataModelTest(unittest.TestCase):
     @classmethod
     @tp.override
     def setUpClass(cls) -> None:
-        cls.ref = models.ConstCSModel(css2=cls.CSS2, csb2=cls.CSB2, a_s=1.5, a_b=1, V_s=1, V_b=0)
+        cls.ref = models.ConstCSModel.cached(css2=cls.CSS2, csb2=cls.CSB2, a_s=1.5, a_b=1, V_s=1, V_b=0)
         cls.temp = np.logspace(-1, 1, 41)
         cls.data = {
             phase: {
@@ -40,7 +40,7 @@ class DataModelTest(unittest.TestCase):
         }
         sym = cls.data[Phase.SYMMETRIC]
         brk = cls.data[Phase.BROKEN]
-        cls.model = models.DataModel(
+        cls.model = models.DataModel.cached(
             T_s=cls.temp, T_b=cls.temp,
             p_s=sym["p"], p_b=brk["p"],
             e_s=sym["e"], e_b=brk["e"],

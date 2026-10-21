@@ -24,9 +24,9 @@ class SSMSpectrumFlatTest(unittest.TestCase):
     @classmethod
     @tp.override
     def setUpClass(cls) -> None:
-        cls.bubble = Bubble(BagModel(alpha_n_min=0.01), v_wall=cls.v_wall, alpha_n=cls.alpha_n)
+        cls.bubble = Bubble.cached(BagModel.cached(alpha_n_min=0.01), v_wall=cls.v_wall, alpha_n=cls.alpha_n)
         cls.spectra = {
-            nuc_type: SSMSpectrum(
+            nuc_type: SSMSpectrum.cached(
                 cls.bubble, y=np.logspace(-2, 4, 1200), nuc_type=nuc_type, suppression_method=SuppressionMethod.NONE)
             for nuc_type in (NucType.EXPONENTIAL, NucType.SIMULTANEOUS)
         }
@@ -53,10 +53,10 @@ class SSMSpectrumFlatTest(unittest.TestCase):
         """The growth rate includes the suppression factor."""
         # The dataset is given explicitly, as the suppression factor of the default dataset WITH_HYBRIDS_EXT
         # is above 1 at these parameters, as some of its data points near the hybrids are.
-        suppressed = SSMSpectrum(
+        suppressed = SSMSpectrum.cached(
             self.bubble, y=self.y, nuc_type=NucType.SIMULTANEOUS,
             suppression=NO_HYBRIDS_EXT, suppression_method=SuppressionMethod.DEFAULT)
-        unsuppressed = SSMSpectrum(
+        unsuppressed = SSMSpectrum.cached(
             self.bubble, y=self.y, nuc_type=NucType.SIMULTANEOUS, suppression_method=SuppressionMethod.NONE)
         assert suppressed.suppression_factor < 1
         np.testing.assert_allclose(

@@ -35,7 +35,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 def create_models(a_s: float, a_b: float, V_s: float, alpha_n_min: float) -> list[ConstCSModel]:
     """Create the ConstCSModels for all the sound speed combinations"""
     models = [
-        ConstCSModel(
+        ConstCSModel.cached(
             css2=css2, csb2=csb2, a_s=a_s, a_b=a_b, V_s=V_s,
             alpha_n_min=alpha_n_min, allow_invalid=False
         )

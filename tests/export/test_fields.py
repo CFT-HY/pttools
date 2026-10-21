@@ -249,7 +249,7 @@ class ModelFieldsTest(unittest.TestCase):
 
     def test_bag_export_keys(self) -> None:
         """The JSON export should contain the same keys as before the field definitions."""
-        model = BagModel(a_s=1.1, a_b=1, V_s=1)
+        model = BagModel.cached(a_s=1.1, a_b=1, V_s=1)
         assert list(model.export()) == [
             "name", "label_latex", "label_unicode", "datetime", "T_min", "T_max",
             "restrict_to_valid", "silence_temp", "temperature_is_physical", "temperature_unit_gev",
@@ -260,7 +260,7 @@ class ModelFieldsTest(unittest.TestCase):
 
     def test_const_cs_init(self) -> None:
         """Recreating a model from the INIT fields should give the same model."""
-        model = ConstCSModel(css2=1/3, csb2=1/4, a_s=1.5, a_b=1, V_s=1, alpha_n_min=0.01)
+        model = ConstCSModel.cached(css2=1/3, csb2=1/4, a_s=1.5, a_b=1, V_s=1, alpha_n_min=0.01)
         init = model.extract(Preset.INIT)
         assert init["css2"] == 1 / 3
         assert init["csb2"] == 1 / 4
@@ -278,14 +278,14 @@ class BubbleFieldsTest(unittest.TestCase):
 
     def test_datetime_has_time_zone(self) -> None:
         """Test that the exported datetimes of the bubble and the model have a time zone."""
-        bubble = Bubble(BagModel(a_s=1.1, a_b=1, V_s=1), v_wall=0.5, alpha_n=0.1)
+        bubble = Bubble.cached(BagModel.cached(a_s=1.1, a_b=1, V_s=1), v_wall=0.5, alpha_n=0.1)
         data = bubble.export(fields=["datetime"], model_fields=["datetime"])
         assert data["datetime"].tzinfo is not None
         assert data["model"]["datetime"].tzinfo is not None
 
     def test_extract_minimal(self) -> None:
         """Test that the minimal fields of a bubble can be extracted."""
-        bubble = Bubble(BagModel(a_s=1.1, a_b=1, V_s=1), v_wall=0.5, alpha_n=0.1)
+        bubble = Bubble.cached(BagModel.cached(a_s=1.1, a_b=1, V_s=1), v_wall=0.5, alpha_n=0.1)
         data = bubble.extract()
         assert data["v_wall"] == 0.5
         assert data["alpha_n"] == 0.1
@@ -295,7 +295,7 @@ class BubbleFieldsTest(unittest.TestCase):
 
     def test_export_json_nested_model(self) -> None:
         """Test that the JSON export of a bubble contains the model as a nested dictionary."""
-        bubble = Bubble(BagModel(a_s=1.1, a_b=1, V_s=1), v_wall=0.5, alpha_n=0.1)
+        bubble = Bubble.cached(BagModel.cached(a_s=1.1, a_b=1, V_s=1), v_wall=0.5, alpha_n=0.1)
         data = bubble.export(fields=Preset.MINIMAL, model_fields="name")
         assert data["model"] == {"name": "bag"}
         assert "v" in data

@@ -20,7 +20,7 @@ class BubbleGridTest(unittest.TestCase):
     def setUpClass(cls) -> None:
         arr = np.linspace(0.1, 0.9, 3)
         cls.grid = BubbleGridVWAlpha(
-            model=BagModel(a_s=1.1, a_b=1, V_s=1),
+            model=BagModel.cached(a_s=1.1, a_b=1, V_s=1),
             v_walls=arr,
             alpha_ns=arr
         )

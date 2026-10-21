@@ -53,8 +53,8 @@ def main(path: str | None = None) -> plt.Figure:
     # Mark y = Lorenzo z
     # Mark z = Lorenzo x
 
-    model = BagModel(alpha_n_min=alpha)
-    bubble = Bubble(model, v_wall=vw, alpha_n=alpha)
+    model = BagModel.cached(alpha_n_min=alpha)
+    bubble = Bubble.cached(model, v_wall=vw, alpha_n=alpha)
     # ubarf2 = bubble.ubarf2
 
     Ht = HR/bubble.ubarf
@@ -76,7 +76,7 @@ def main(path: str | None = None) -> plt.Figure:
 
     # spectrum_x = Spectrum(bubble, y=x, r_star=HR)
     # spectrum_inf = Spectrum(bubble, y=x_inf, r_star=HR)
-    spectrum_z = Spectrum(bubble, y=z, r_star=HR)
+    spectrum_z = Spectrum.cached(bubble, y=z, r_star=HR)
 
     # sd_v = spec_den_v(x, params, npt, filename, skip, method, de_method, z_st_thresh)
     # sd_gw, y = spec_den_gw_scaled(x, sd_v, z)
