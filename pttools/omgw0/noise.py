@@ -116,6 +116,9 @@ def signal_to_noise_ratio(
         # The NumPy stubs do not know that the output of np.interp() is an array when the input is an array.
         signal = 10.**np.interp(np.log10(f2), np.log10(f), np.log10(signal))  # pyrefly: ignore[bad-assignment]
 
+    # np.trapezoid() of Numba supports only contiguous arrays, but f2 is a slice of the given array,
+    # which can be strided. This does not copy the array if it's already contiguous.
+    f2 = np.ascontiguousarray(f2)
     # The NumPy stubs do not know that np.trapezoid() returns a scalar for a 1D array.
     snr: float = np.sqrt(obs_time * np.trapezoid(signal**2 / noise2**2, f2))  # pyrefly: ignore[bad-assignment]
     return snr, f2, noise2
