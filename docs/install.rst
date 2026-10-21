@@ -290,13 +290,27 @@ For a TBB installed system-wide, you can check the section ``Threading Layer Inf
 of the output of ``numba --sysinfo``.
 The ``intel-openmp`` package is available on PyPI only for x86-64,
 and there is no OpenMP runtime on PyPI for ARM-based macOS.
-There, you can install OpenMP with Homebrew, and make it available for Numba with
+There, you can install OpenMP with Homebrew.
+However, the OpenMP threading layer of the Numba wheels loads ``@rpath/libomp.dylib`` without setting an rpath,
+and the libomp of Homebrew is not on the default library search path.
+A symlink in ``/usr/local/lib`` does not help, as the dynamic loader of macOS searches it by default
+only for binaries built for macOS versions before 2022.
+You can make libomp available for Numba by adding its directory as an rpath to the threading layer of Numba
+in your Python environment:
 
 .. code-block:: bash
 
   brew install libomp
-  sudo mkdir -p /usr/local/lib
-  sudo ln -s "$(brew --prefix libomp)/lib/libomp.dylib" /usr/local/lib/
+  OMPPOOL="$(python -c "import importlib.util; print(importlib.util.find_spec('numba.np.ufunc.omppool').origin)")"
+  install_name_tool -add_rpath "$(brew --prefix libomp)/lib" "${OMPPOOL}"
+  codesign --force --sign - "${OMPPOOL}"
+
+The modified library has to be signed again, as otherwise macOS would refuse to load it.
+This has to be repeated whenever Numba is reinstalled or upgraded.
+Alternatively, you can set the environment variable
+``DYLD_FALLBACK_LIBRARY_PATH="$(brew --prefix libomp)/lib"``, e.g. in your shell profile.
+However, macOS removes it from the environment of protected system binaries, such as ``/usr/bin/env``,
+and therefore also from their child processes, e.g. from scripts that start with ``#!/usr/bin/env python``.
 
 On ARM-based Linux, Numba uses the GNU OpenMP library, which is usually installed together with GCC,
 or can be installed with the package ``libgomp1`` (Debian, Ubuntu) or ``libgomp`` (Fedora, RHEL).

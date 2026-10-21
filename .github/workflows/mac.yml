@@ -26,22 +26,28 @@ jobs:
         - name: Checkout
           uses: actions/checkout@v7
         # There is no OpenMP runtime on PyPI for ARM-based macOS, so it's installed with Homebrew.
-        # The OpenMP threading layer of the Numba wheels loads @rpath/libomp.dylib without setting an rpath,
-        # and the libomp of Homebrew is keg-only, i.e. not on the default library search path.
-        # It's therefore linked to /usr/local/lib, which is on the default fallback search path of the dynamic loader.
-        # DYLD_LIBRARY_PATH is not used, as macOS removes it from the environment of protected system binaries,
-        # such as /bin/bash and /usr/bin/env, and therefore also from their child processes.
         - name: Install OpenMP
-          run: |
-            brew install libomp
-            sudo mkdir -p /usr/local/lib
-            sudo ln -sf "$(brew --prefix libomp)/lib/libomp.dylib" /usr/local/lib/libomp.dylib
+          run: brew install libomp
         - name: Setup uv and Python environment
           uses: ./.github/actions/setup-env
           # macOS minutes cost 10x what Linux does, so testing multiple Python versions would be quite costly.
           with:
             uv-sync-args: --all-extras --no-group docs
             generate-reference-data: true
+        # The OpenMP threading layer of the Numba wheels loads @rpath/libomp.dylib without setting an rpath,
+        # and the libomp of Homebrew is keg-only, i.e. not on the default library search path.
+        # A symlink in /usr/local/lib would not help, as dyld searches the default fallback paths
+        # only for binaries built for macOS versions before 2022, which the Numba wheels are not.
+        # DYLD_FALLBACK_LIBRARY_PATH is not used, as macOS removes the DYLD_* variables from the environment
+        # of protected system binaries, such as /bin/bash, and therefore also from their child processes.
+        # Therefore, an rpath to libomp is added to the threading layer instead,
+        # which invalidates its code signature, so it's signed again ad hoc.
+        # The Numba sysinfo of the previous step is printed before this, so it still reports OpenMP as unavailable.
+        - name: Add the rpath of OpenMP to Numba
+          run: |
+            OMPPOOL="$(python -c "import importlib.util; print(importlib.util.find_spec('numba.np.ufunc.omppool').origin)")"
+            install_name_tool -add_rpath "$(brew --prefix libomp)/lib" "${OMPPOOL}"
+            codesign --force --sign - "${OMPPOOL}"
         # By default, Numba would silently fall back to the workqueue threading layer if OpenMP could not be loaded.
         # The threading layer is therefore set explicitly, so that this step fails instead.
         - name: Check the Numba OpenMP threading layer
