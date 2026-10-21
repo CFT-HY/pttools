@@ -292,12 +292,22 @@ class ConstCSModel(AnalyticModel):
             log_invalid: bool = True) -> T:
         r"""Transition strength parameter at nucleation temperature, $\alpha_n$, :notes:`\ `, eq. 7.40.
 
-        $$\alpha_n = \frac{4}{3} \left( \frac{1}{\nu} - \frac{1}{\mu} + \frac{1}{w_n} (V_s - V_b) \right)$$.
+        For the constant sound speed model, this is
+        $$\alpha_n = \frac{1}{3} \left( 1 - \frac{4}{\mu_s} \right)
+        - \frac{1}{3} \left( 1 - \frac{4}{\mu_b} \right) \frac{w(T_n, \phi_b)}{w_n} + \alpha_{n,\text{bag}}$$
+        :maki_msc:`\ ` eq. 2.132, or equivalently
+        $$\alpha_n = \frac{4}{3} \left( \frac{1}{\mu_b} - \frac{1}{\mu_s} \right)
+        + \frac{1}{3} \left( 1 - \frac{4}{\mu_b} \right)
+        \left( 1 - \frac{\mu_b a_b}{\mu_s a_s} \left( \frac{T_n}{T_0} \right)^{\mu_b - \mu_s} \right)
+        + \alpha_{n,\text{bag}}$$
+        :maki_msc:`\ ` eq. 2.133,
+        where $\alpha_{n,\text{bag}} = \frac{4 (V_s - V_b)}{3 w_n}$ :maki_msc:`\ ` eq. 2.118.
 
         :param wn: $w_n$, enthalpy of the symmetric phase at the nucleation temperature
         :param error_on_invalid: raise error for invalid values
         :param nan_on_invalid: return nan for invalid values
         :param log_invalid: whether to log invalid values
+        :return: $\alpha_n$
         """
         wn = check_value_in_range(
             wn,
