@@ -4,10 +4,14 @@ requires-python = ">=3.12"
 resolution-markers = [
     "python_full_version >= '3.14' and sys_platform == 'win32'",
     "python_full_version >= '3.14' and sys_platform == 'emscripten'",
-    "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "(python_full_version >= '3.14' and platform_machine == 'AMD64' and sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'win32') or (python_full_version >= '3.14' and platform_machine == 'x86_64' and sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'win32')",
+    "python_full_version >= '3.14' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
+    "(python_full_version >= '3.14' and platform_machine != 'AMD64' and platform_machine != 'x86_64' and sys_platform != 'emscripten' and sys_platform != 'win32') or (python_full_version >= '3.14' and platform_machine != 'x86_64' and sys_platform == 'darwin')",
     "python_full_version < '3.14' and sys_platform == 'win32'",
     "python_full_version < '3.14' and sys_platform == 'emscripten'",
-    "python_full_version < '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "(python_full_version < '3.14' and platform_machine == 'AMD64' and sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'win32') or (python_full_version < '3.14' and platform_machine == 'x86_64' and sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'win32')",
+    "python_full_version < '3.14' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
+    "(python_full_version < '3.14' and platform_machine != 'AMD64' and platform_machine != 'x86_64' and sys_platform != 'emscripten' and sys_platform != 'win32') or (python_full_version < '3.14' and platform_machine != 'x86_64' and sys_platform == 'darwin')",
 ]
 
 [[package]]
@@ -1680,7 +1684,9 @@ performance = [
     { name = "icc-rt", marker = "platform_machine == 'x86_64' and sys_platform == 'darwin'" },
     { name = "intel-cmplr-lib-rt", marker = "(platform_machine == 'AMD64' and sys_platform != 'darwin') or (platform_machine == 'x86_64' and sys_platform != 'darwin')" },
     { name = "intel-openmp", marker = "platform_machine == 'x86_64' and sys_platform == 'darwin'" },
-    { name = "tbb", marker = "platform_machine == 'AMD64' or platform_machine == 'x86_64'" },
+    { name = "tbb", version = "2021.10.0", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine == 'x86_64' and sys_platform == 'darwin'" },
+    { name = "tbb", version = "2023.2.0", source = { registry = "https://pypi.org/simple" }, marker = "(platform_machine == 'AMD64' and sys_platform != 'darwin') or (platform_machine == 'x86_64' and sys_platform != 'darwin')" },
+    { name = "tbb4u", marker = "platform_machine == 'ARM64' or platform_machine == 'aarch64' or platform_machine == 'arm64'" },
 ]
 
 [package.dev-dependencies]
@@ -1736,7 +1742,9 @@ requires-dist = [
     { name = "plotly", specifier = ">=6.6.0" },
     { name = "scipy", specifier = ">=1.17.1" },
     { name = "tabulate", specifier = ">=0.10.0" },
-    { name = "tbb", marker = "(platform_machine == 'AMD64' and extra == 'performance') or (platform_machine == 'x86_64' and extra == 'performance')", specifier = ">=2021.10.0" },
+    { name = "tbb", marker = "platform_machine == 'x86_64' and sys_platform == 'darwin' and extra == 'performance'", specifier = ">=2021.10.0,<2021.11" },
+    { name = "tbb", marker = "(platform_machine == 'AMD64' and sys_platform != 'darwin' and extra == 'performance') or (platform_machine == 'x86_64' and sys_platform != 'darwin' and extra == 'performance')", specifier = ">=2023.2.0" },
+    { name = "tbb4u", marker = "(platform_machine == 'ARM64' and extra == 'performance') or (platform_machine == 'aarch64' and extra == 'performance') or (platform_machine == 'arm64' and extra == 'performance')", specifier = ">=2023.1.0" },
 ]
 provides-extras = ["numbalsoda", "performance"]
 
@@ -2448,14 +2456,46 @@ wheels = [
 
 [[package]]
 name = "tbb"
-version = "2023.1.0"
+version = "2021.10.0"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.14' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
+    "python_full_version < '3.14' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3c/45/23849b7d10766d4a4df7b2fa1825c92e349bf73ba53458ff98765823fbe4/tbb-2021.10.0-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:5049f3be64664897f33ac1474a1bb1cfa45274cd8f4541e91fee4eda5c4165b5", size = 640877, upload-time = "2023-07-14T14:15:45.839Z" },
+]
+
+[[package]]
+name = "tbb"
+version = "2023.2.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.14' and sys_platform == 'win32'",
+    "python_full_version >= '3.14' and sys_platform == 'emscripten'",
+    "(python_full_version >= '3.14' and platform_machine == 'AMD64' and sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'win32') or (python_full_version >= '3.14' and platform_machine == 'x86_64' and sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'win32')",
+    "python_full_version < '3.14' and sys_platform == 'win32'",
+    "python_full_version < '3.14' and sys_platform == 'emscripten'",
+    "(python_full_version < '3.14' and platform_machine == 'AMD64' and sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'win32') or (python_full_version < '3.14' and platform_machine == 'x86_64' and sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'win32')",
+]
 dependencies = [
     { name = "tcmlib" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/25/0c/0266c71e3fa50a71db5ce8a1d0807863df3215c5f7b5fe7c98b257561138/tbb-2023.1.0-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:64ad35241c736a595498f5343abec8eaaa203e9fe0dbdbf4b86d37c5a3ab1d9c", size = 6840282, upload-time = "2026-07-01T15:10:33.348Z" },
-    { url = "https://files.pythonhosted.org/packages/ac/ff/168d3498762069b0cd2dff20ab34d53fa48a0a35ffd1965cf456c603f292/tbb-2023.1.0-py3-none-win_amd64.whl", hash = "sha256:27df1315202defc67a73800c667ba4fbd03cf8924f73949373d4a34d1443fca2", size = 428501, upload-time = "2026-07-01T15:12:55.771Z" },
+    { url = "https://files.pythonhosted.org/packages/59/fd/8ca476c7b2513b1e64e08d3f5404c8ed19b34d0213000b5e23b3a91676c2/tbb-2023.2.0-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:7d80615b6e970f11671fa05b6eaa9483ac864fbfe525ac280271a78b37870b7c", size = 6864088, upload-time = "2026-10-16T12:38:06.333Z" },
+    { url = "https://files.pythonhosted.org/packages/d0/41/2aeac799ab57e81898c8cc24f503fe301e12f19758bb1fe34d522764d3bb/tbb-2023.2.0-py3-none-win_amd64.whl", hash = "sha256:b39121cbdaff350fc61a448766cbb26807c523491d66e364838c9feeb3c6a0eb", size = 430857, upload-time = "2026-10-16T12:34:41.635Z" },
+]
+
+[[package]]
+name = "tbb4u"
+version = "2023.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/6c/7d/48d63424bf3be30196eb80a73a23cc640775f8de52779319084fd376d0d7/tbb4u-2023.1.0.tar.gz", hash = "sha256:70d424b098e042be4977e7de02e7b97930e48040b0b1f03d00a3ae60ed8fdc55", size = 5108, upload-time = "2026-08-26T11:52:35.565Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/da/c1/f31d48d3a9f85b678abfe2167157dfe0ba1ba0da4be5043e6c5ac567b563/tbb4u-2023.1.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:72088d84dc314f76aae16d8e266f5d99d9c1ae00c776f017ffad8ed3fe0b0f59", size = 334921, upload-time = "2026-08-27T07:15:03.413Z" },
+    { url = "https://files.pythonhosted.org/packages/29/68/76726bae36dda4f3c26aa15f9f06f75e5af3dd8a4657d1adceb758f2ee57/tbb4u-2023.1.0-py3-none-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:666a5ad71f0ed014875083b8593384c0bf6f96b76a799225a33661457e193480", size = 397487, upload-time = "2026-08-27T07:15:04.605Z" },
+    { url = "https://files.pythonhosted.org/packages/fe/1e/2d74c67f6e856e30aa4b210235cfe117cf1116353324d93d6898ea8ea53a/tbb4u-2023.1.0-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:c3bdbc6e8b667d77a93866f2dca653385cf86144d8173311f779e82d11ed6960", size = 1359810, upload-time = "2026-08-27T07:15:07.322Z" },
+    { url = "https://files.pythonhosted.org/packages/46/f0/db42eb6ca0f19e69adf228ac83f8694a01f1694bbeb217a93111b56297d5/tbb4u-2023.1.0-py3-none-win_arm64.whl", hash = "sha256:4638b48950358b63d994594865e0217c610816d4cc4339e65ecd5550bfe4991c", size = 155161, upload-time = "2026-08-27T07:15:11.115Z" },
 ]
 
 [[package]]

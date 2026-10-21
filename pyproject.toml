@@ -107,11 +107,14 @@ numbalsoda = ["numbalsoda >= 0.3.4"]
 # https://numba.readthedocs.io/en/stable/user/performance-tips.html#intel-svml
 # TBB can be used to speed up Numba threading
 # https://pypi.org/project/tbb/
+# https://pypi.org/project/tbb4u/
 # https://numba.pydata.org/numba-doc/latest/user/threading-layer.html#which-threading-layers-are-available
-# These libraries are available for x86-64 only.
+# These libraries are available for x86-64 only, except for tbb4u, which is used on ARM.
 # The architecture has to be matched positively, as its name depends on the platform:
 # Linux and macOS report "x86_64", Windows reports "AMD64",
 # and the ARM architecture is "arm64" on macOS, "aarch64" on Linux and "ARM64" on Windows.
+# As of 2026-04, Numba does not yet support TBB on osx-arm64.
+# https://github.com/numba/numba/issues/10492
 performance = [
     # As of 2026-03, this is the latest version with support for macOS.
     "icc-rt >= 2019.0; platform_machine == 'x86_64' and sys_platform == 'darwin'",
@@ -119,8 +122,15 @@ performance = [
     "intel-cmplr-lib-rt >= 2025.3.3; (platform_machine == 'x86_64' or platform_machine == 'AMD64') and sys_platform != 'darwin'",
     # As of 2026-03, this is the latest version with support for macOS.
     "intel-openmp >= 2023.2.0; platform_machine == 'x86_64' and sys_platform == 'darwin'",
+    "tbb >= 2023.2.0; (platform_machine == 'x86_64' or platform_machine == 'AMD64') and sys_platform != 'darwin'",
     # As of 2026-03, this is the latest version with support for macOS.
-    "tbb >= 2021.10.0; platform_machine == 'x86_64' or platform_machine == 'AMD64'",
+    # The later versions have no macOS wheels or source distributions,
+    # but uv would still lock them for macOS without this upper limit, which would make the installation fail.
+    "tbb >= 2021.10.0, < 2021.11; platform_machine == 'x86_64' and sys_platform == 'darwin'",
+    # TBB does not have official wheels for ARM.
+    # https://github.com/uxlfoundation/oneTBB/issues/1972
+    # tbb4u provides unofficial wheels for ARM.
+    "tbb4u >= 2023.1.0; platform_machine == 'arm64' or platform_machine == 'aarch64' or platform_machine == 'ARM64'",
 ]
 
 [project.urls]
