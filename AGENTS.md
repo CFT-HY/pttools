@@ -19,7 +19,6 @@
   - Git pre-commit hooks run the checks of the fast lint in parallel on the staged changes, and block the commit if any of them fails.
     They also run the built-in hooks of prek, which fix trailing whitespace, missing newlines at the end of files and mixed line endings,
     check the syntax of JSON, TOML and YAML files, and check for large files and for the consistency of shebangs and executable bits.
-    The fixers do not touch `tests/test_data`, as the tests compare some of it exactly to the generated output.
     The hooks are managed with [prek](https://github.com/j178/prek), configured in `prek.toml`,
     and installed with `uv run prek install`. When changing the checks of `./lint.sh --fast`, update the hooks accordingly.
   - After changes that create or modify any reST or math markup in docstrings or `.rst` files, or files in `./docs/`, run the full lint `./lint.sh` (~2 min).

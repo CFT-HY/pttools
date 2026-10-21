@@ -4,7 +4,6 @@
 # The local hooks run the same checks as "./lint.sh --fast". Keep them in sync.
 # Hooks with the same priority run in parallel, and lower priorities run first.
 # The fixers modify files, so they run one at a time before the other hooks.
-# They exclude the test data, as the tests compare some of it exactly to the generated output.
 # The other hooks only read files, so they can safely run in parallel with each other.
 #:schema https://www.schemastore.org/prek.json
 
@@ -13,17 +12,14 @@ repo = "builtin"
 
 [[repos.hooks]]
 id = "trailing-whitespace"
-exclude = "^tests/test_data/"
 priority = 0
 
 [[repos.hooks]]
 id = "end-of-file-fixer"
-exclude = "^tests/test_data/"
 priority = 1
 
 [[repos.hooks]]
 id = "mixed-line-ending"
-exclude = "^tests/test_data/"
 priority = 2
 
 [[repos.hooks]]

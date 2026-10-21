@@ -180,7 +180,7 @@ def make_1dh_compare_table(
     f.write('$v_{\\rm w}$' + ' & ')
     f.write('$\\bar{U}_{f,3}^{\\rm sim}$' + ' & ')
     f.write('$\\bar{U}_{f,3}^{\\rm exp}$' + ' & ')
-    f.write('$\\bar{U}_{f,3}^{\\rm 1d}$' + ' \\\\ \n')
+    f.write('$\\bar{U}_{f,3}^{\\rm 1d}$' + ' \\\\\n')
     # f.write()
     f.write('\\hline\n')
 
@@ -197,7 +197,7 @@ def make_1dh_compare_table(
         f.write(f'{vw:.2f} & ')
         f.write(f'{np.sqrt(v2_sim)*1000:4.1f} & ')
         f.write(f'{np.sqrt(v2_exp)*1000:4.1f} & ')
-        f.write(f'{1000*Ubarf_1d_ssm:4.1f}'.replace('nan', '   ') + ' \\\\ \n')
+        f.write(f'{1000*Ubarf_1d_ssm:4.1f}'.replace('nan', '   ') + ' \\\\\n')
         # f.write()
 
     f.write('\\hline\\hline\n')
@@ -250,9 +250,9 @@ def make_3dh_compare_table(
     f.write('\\hspace{1em} $A^{\\rm sim}$' + ' & ')
     f.write('\\hspace{1em} $A^{\\rm 3dh}$' + ' & ')
     f.write('$x_{\\rm p}^{\\rm sim}$' + ' & ')
-    f.write('$x_{\\rm p}^{\\rm 3dh}$' + ' \\\\ \n')
+    f.write('$x_{\\rm p}^{\\rm 3dh}$' + ' \\\\\n')
     # f.write()
-    f.write('\\hline \n')
+    f.write('\\hline\n')
 
     # for n, params, v2, Omgw, p in enumerate(zip(params_list, v2_list, Omgw_list, p_list)):
     for n, params in enumerate(params_list):
@@ -289,11 +289,11 @@ def make_3dh_compare_table(
         else:
             f.write(8*' ' + ' & ')
         f.write(f'{z_peak:4.1f} & ')
-        f.write(f'{z_peak_prace[n]:4.1f}'.replace('nan', '   ') + ' \\\\ \n')
+        f.write(f'{z_peak_prace[n]:4.1f}'.replace('nan', '   ') + ' \\\\\n')
         # f.write()
 
-    f.write('\\hline\\hline \n')
-    f.write('\\end{tabular} \n')
+    f.write('\\hline\\hline\n')
+    f.write('\\end{tabular}\n')
 
     if not isinstance(file_name, io.TextIOBase):
         f.close()
@@ -327,7 +327,7 @@ def make_nuc_compare_table(
     f.write('$x_{\\rm p}^{\\rm sim}$' + ' & ')
     f.write('$x_{\\rm p}^{\\rm exp}$' + ' & ')
     f.write('$x_{\\rm b}^{\\rm exp}$' + ' & ')
-    f.write('$x_{\\rm p}^{\\rm exp}\\De_\\text{w}$' + ' \\\\ \n')
+    f.write('$x_{\\rm p}^{\\rm exp}\\De_\\text{w}$' + ' \\\\\n')
     # f.write()
     f.write('\\hline\n')
 
@@ -368,11 +368,11 @@ def make_nuc_compare_table(
         f.write(f'{z_peak_sim:4.1f} & ')
         f.write(f'{z_peak_exp:4.1f} & ')
         f.write(f'{z_break_exp:3.1f} & ')
-        f.write(f'{z_peak_exp * abs(vw - bubble.CS0) / vw :3.1f} \\\\ \n')
+        f.write(f'{z_peak_exp * abs(vw - bubble.CS0) / vw :3.1f} \\\\\n')
         # f.write()
 
     f.write('\\hline\\hline\n')
-    f.write('\\end{tabular} \n')
+    f.write('\\end{tabular}\n')
     if not isinstance(file_name, io.TextIOBase):
         f.close()
 
