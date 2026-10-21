@@ -65,27 +65,23 @@ class UbarfTest(unittest.TestCase):
     def test_ubarf_exponential(self) -> None:
         r"""Test $\bar{U}_f$ for exponential nucleation against :gw_pt_ssm:`\ ` table 1."""
         ubarf = [sqrt(spectrum.ubarf2_custom_nucleation(nuc_type=NucType.EXPONENTIAL)) for spectrum in self.spectra]
-        # The hybrid with alpha_n=0.05, v_wall=0.73 deviates more than the other points.
-        # Before the thin shell of hybrids was preserved in the sine transform of lambda, it deviated by 75 %.
-        assert_allclose(ubarf[7], UBARF_EXP[7], rtol=0.10)
-        ubarf[7] = UBARF_EXP[7]
-        # Todo: Investigate this difference. Does the choice of z and A2 affect the results?
+        # The hybrid with alpha_n=0.05, v_wall=0.73 deviated by 75 % before the thin shell of hybrids was preserved
+        # in the sine transform of lambda, and by 9.5 % before the exact sine transforms were used for large z.
+        # The values of the article have only two significant digits.
         assert_allclose(
             ubarf,
             UBARF_EXP,
-            rtol=0.042
+            rtol=0.02
         )
 
     def test_ubarf_simultaneous(self) -> None:
         r"""Test $\bar{U}_f$ for simultaneous nucleation against :gw_pt_ssm:`\ ` table 1."""
         ubarf = [sqrt(spectrum.ubarf2_custom_nucleation(nuc_type=NucType.SIMULTANEOUS)) for spectrum in self.spectra]
         # See test_ubarf_exponential
-        assert_allclose(ubarf[7], UBARF_SIM[7], rtol=0.10)
-        ubarf[7] = UBARF_SIM[7]
         assert_allclose(
             ubarf,
             UBARF_SIM,
-            rtol=0.037
+            rtol=0.02
         )
 
     def test_w_bar(self) -> None:

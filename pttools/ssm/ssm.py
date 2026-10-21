@@ -11,6 +11,11 @@ from pttools.ssm import NucType, const, lifetime_distribution_momentum
 from pttools.ssm.calculators import resample_merged_uniform_xi
 from pttools.ssm.nucleation import beta_R_star0, lifetime_distribution
 from pttools.ssm.sin_transform import sin_transform
+from pttools.ssm.sin_transform_exact import (
+    sharpen_padding,
+    sound_shell_transforms_pl_parallel,
+    sound_shell_transforms_pl_single,
+)
 import pttools.type_hints as th
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -48,7 +53,8 @@ def A2_e_conserving(
         z_st_thresh: float = const.Z_ST_THRESH,
         n_xi: int = const.DEFAULT_N_XI_SSM,
         parallel: bool = True,
-        lambda_correction: bool = False) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
+        lambda_correction: bool = False,
+        exact_large_z: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
     Returns the value of $\lvert A(z) \rvert^2$.
 
@@ -66,17 +72,16 @@ def A2_e_conserving(
     :param n_xi: Number of $\xi$ points for uniform resampling
     :param parallel: Whether to use multiple threads
     :param lambda_correction: whether to enable a non-linear correction for $\lambda$
+    :param exact_large_z: for $z >$ z_st_thresh, use the exact transforms of the piecewise-linear profiles
+        (:py:func:`pttools.ssm.sin_transform_exact.sound_shell_transforms_pl_parallel`)
+        and the analytical $f'(z)$ instead of the approximate sine transform and finite differences
     :return: $\lvert A(z) \rvert^2, \frac{1}{2} f'(z)^2, \frac{1}{2}(c_s l(z))^2$ (same size as $z$)
     """
-    #: $f(z)$
-    f_val = f(z=z, xi=xi, v=v, v_wall=v_wall, v_sh=v_sh, z_st_thresh=z_st_thresh, parallel=parallel)
-    #: $f'(z)$
-    fp_val = speedup.gradient(f_val) / speedup.gradient(z)
     #: $\lambda(z)$
     lm = lam(v=v, w=w, e=e, non_linear_correction=lambda_correction)
-    #: $l(z)$
-    l_val = l(z=z, xi=xi, lam=lm, v_wall=v_wall, v_sh=v_sh, z_st_thresh=z_st_thresh, n_xi=n_xi, parallel=parallel)
-
+    _f_val, fp_val, l_val = f_fp_l(
+        z=z, xi=xi, v=v, lam=lm, v_wall=v_wall, v_sh=v_sh, z_st_thresh=z_st_thresh, n_xi=n_xi,
+        parallel=parallel, exact_large_z=exact_large_z)
     return A2_fp_csl(fp=fp_val, cs=cs, l=l_val), 0.5 * fp_val ** 2, 0.5 * (cs * l_val) ** 2
 
 
@@ -97,7 +102,7 @@ def f(
         xi: th.FloatArr,
         v: th.FloatArr,
         v_wall: float,
-        v_sh: float,
+        v_sh: float | None,
         z_st_thresh: float = const.Z_ST_THRESH,
         parallel: bool = True) -> th.FloatArr:
     r"""$f(z)$, sine transform of the velocity profile.
@@ -111,12 +116,87 @@ def f(
 
 
 @njit(nogil=True)
+def f_fp_l(
+        z: th.FloatArr1D,
+        xi: th.FloatArr1D,
+        v: th.FloatArr1D,
+        lam: th.FloatArr1D,
+        v_wall: float,
+        v_sh: float | None,
+        z_st_thresh: float = const.Z_ST_THRESH,
+        n_xi: int = const.DEFAULT_N_XI_SSM,
+        parallel: bool = True,
+        exact_large_z: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
+    r"""$f(z)$, $f'(z)$ and $l(z)$, the sine transforms of the velocity and energy fluctuation profiles.
+
+    For $z \leq$ z_st_thresh, $f(z)$ and $l(z)$ are computed with :py:func:`f` and :py:func:`l`,
+    i.e. with the trapezoidal rule, and $f'(z)$ with finite differences.
+    For larger $z$, if exact_large_z is True, they are computed with the exact transforms of the
+    piecewise-linear profiles,
+    :py:func:`pttools.ssm.sin_transform_exact.sound_shell_transforms_pl_parallel`,
+    after making the jumps to still fluid sharp with :py:func:`pttools.ssm.sin_transform_exact.sharpen_padding`,
+    and $f'(z)$ is computed analytically as
+    $$f'(z) = -\frac{f(z)}{z} + \frac{4\pi}{z} \int d\xi\, v(\xi) \xi \cos(z\xi),$$
+    since the spacing of the $z$ arrays can exceed the period of the oscillations of $f(z)$ at large $z$.
+    Otherwise, the approximate sine transform of :py:func:`pttools.ssm.sin_transform_approx.sin_transform_approx`
+    and finite differences are used for all $z$.
+
+    :param z: $z = kR_*$, in ascending order
+    :param xi: $\xi$ of the profiles
+    :param v: velocity profile $v$
+    :param lam: energy fluctuation profile $\lambda$
+    :param v_wall: wall speed $v_\text{wall}$
+    :param v_sh: shock speed $v_\text{sh}$
+    :param z_st_thresh: threshold of $z$ for the trapezoidal rule
+    :param n_xi: number of $\xi$ points for the resampling of $\lambda$ for the trapezoidal rule
+    :param parallel: whether to use multiple threads
+    :param exact_large_z: whether to use the exact transforms for large $z$
+    :return: $f(z)$, $f'(z)$ and $l(z)$
+    """
+    if not exact_large_z:
+        f_val = f(z=z, xi=xi, v=v, v_wall=v_wall, v_sh=v_sh, z_st_thresh=z_st_thresh, parallel=parallel)
+        fp_val = speedup.gradient(f_val) / speedup.gradient(z)
+        l_val = l(
+            z=z, xi=xi, lam=lam, v_wall=v_wall, v_sh=v_sh, z_st_thresh=z_st_thresh, n_xi=n_xi, parallel=parallel)
+        return f_val, fp_val, l_val
+
+    lo = z <= z_st_thresh
+    hi = ~lo
+    z_lo = z[lo]
+    z_hi = z[hi]
+    f_val = np.empty_like(z)
+    fp_val = np.empty_like(z)
+    l_val = np.empty_like(z)
+    if z_lo.size:
+        # Below the threshold the trapezoidal rule is accurate, and the approximation is not used.
+        f_val[lo] = f(z=z_lo, xi=xi, v=v, v_wall=v_wall, v_sh=v_sh, z_st_thresh=z_st_thresh, parallel=parallel)
+        l_val[lo] = l(
+            z=z_lo, xi=xi, lam=lam, v_wall=v_wall, v_sh=v_sh, z_st_thresh=z_st_thresh, n_xi=n_xi,
+            parallel=parallel)
+    if z_hi.size:
+        xi_sharp = sharpen_padding(xi, v)
+        if parallel:
+            s_v, c_v, s_l = sound_shell_transforms_pl_parallel(z_hi, xi_sharp, v, lam)
+        else:
+            s_v, c_v, s_l = sound_shell_transforms_pl_single(z_hi, xi_sharp, v, lam)
+        f_hi = 4. * np.pi / z_hi * s_v
+        f_val[hi] = f_hi
+        fp_val[hi] = -f_hi / z_hi + 4. * np.pi / z_hi * c_v
+        l_val[hi] = 4. * np.pi / z_hi * s_l
+    if z_lo.size:
+        # At small z, the analytical f'(z) would suffer from cancellation, so finite differences are used.
+        fp_all = speedup.gradient(f_val) / speedup.gradient(z)
+        fp_val[lo] = fp_all[lo]
+    return f_val, fp_val, l_val
+
+
+@njit(nogil=True)
 def l(  # noqa: E743
         z: th.FloatArr,
         xi: th.FloatArr,
         lam: th.FloatArr,
         v_wall: float,
-        v_sh: float,
+        v_sh: float | None,
         z_st_thresh: float = const.Z_ST_THRESH,
         n_xi: int = const.DEFAULT_N_XI_SSM,
         parallel: bool = True) -> th.FloatArr:

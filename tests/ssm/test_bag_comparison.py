@@ -145,7 +145,10 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
             new, old,
             # This tolerance had to be loosened when upgrading the implementations of A2, Gamma, ubarf2 and w_bar.
             # rtol=0.519
-            rtol=0.551
+            # rtol=0.551
+            # The exact sine transforms for large z change the normalisation of the new interface by ubarf2 from A2,
+            # which the old interface does not have.
+            rtol=0.6
         )
 
 

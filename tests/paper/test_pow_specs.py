@@ -77,7 +77,9 @@ def pow_specs(filename: str = "data_compare_nuc-test.txt") -> None:
 
     # PTtools has been changed since the article has been written,
     # and therefore there are slight differences in the results.
-    assert_allclose(data_test, data_article, rtol=0.14, atol=0)
+    # Before the exact sine transforms of the piecewise-linear profiles were used for large z,
+    # the results deviated from the article by up to 10.5 %, and the tolerance was 0.14.
+    assert_allclose(data_test, data_article, rtol=0.005, atol=0)
 
 
 if __name__ == "__main__":

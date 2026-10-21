@@ -13,7 +13,7 @@ from pttools.speedup import njit
 from pttools.ssm import const
 from pttools.ssm.calculators import resample_merged_uniform_xi, resample_uniform_xi
 from pttools.ssm.sin_transform import sin_transform
-from pttools.ssm.ssm import DE_Method, Method
+from pttools.ssm.ssm import DE_Method, Method, f_fp_l
 import pttools.type_hints as th
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -35,7 +35,8 @@ def a2_e_conserving_bag(
         w_ip: th.FloatArr1D = speedup.NAN_ARR,
         xi: th.FloatArr1D = speedup.NAN_ARR,
         lambda_correction: bool = False,
-        parallel: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
+        parallel: bool = True,
+        exact_large_z: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
     Returns the value of $|A(z)|^2$, calculated from self-similar hydro solution obtained with "bubble.fluid_shell".
 
@@ -49,6 +50,7 @@ def a2_e_conserving_bag(
       linear order, meaning that there is an apparent $z^0$ piece at very low $z$,
       and may exaggerate the GWs at low vw. ATM no other de_methods, but argument
       allows trials.
+    :param exact_large_z: whether to use the exact transforms for large $z$, see :py:func:`pttools.ssm.ssm.f_fp_l`
     :return: $|A(z)|^2$, fp2_2, lam2
     """
     nxi = npt[0]
@@ -59,14 +61,7 @@ def a2_e_conserving_bag(
             v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr,
             ode_method=ode_method, cs2_ptr=cs2_ptr, n_xi=nxi)
 
-    #    f = np.zeros_like(z)
-    #    for j in range(f.size):
-    #        f[j] = (4.*np.pi/z[j]) * sin_transform(z[j], xi, v_ip, z_st_thresh)
-    f = (4. * np.pi / z) * sin_transform(z, xi, v_ip, z_st_thresh, v_wall=v_wall, v_sh=v_sh, parallel=parallel)
-
-    v_ft = speedup.gradient(f) / speedup.gradient(z)
-
-    # Now get and resample lam = de/w
+    # Now get lam = de/w
     if de_method == DE_Method.ALTERNATE.value:
         lam_orig = bubble.de_from_w_new_bag(
             v_ip, w_ip, xi, v_wall, alpha_n,
@@ -80,16 +75,10 @@ def a2_e_conserving_bag(
     if lambda_correction:
         lam_orig += w_ip * v_ip * v_ip / w_ip[-1]
 
-    xi_re, lam_re = resample_merged_uniform_xi(xi, lam_orig, nxi)
-
-    #    lam_re = np.interp(xi_re,xi,lam_orig)
-    #    lam_ft = np.zeros_like(z)
-    #    for j in range(lam_ft.size):
-    #        lam_ft[j] = (4.*np.pi/z[j]) * sin_transform(z[j], xi_re, xi_re*lam_re,
-    #              z_st_thresh=max(z)) # Need to fix problem with ST of lam for detonations
-    lam_ft = (4. * np.pi / z) * sin_transform(
-        z, xi_re, xi_re * lam_re, z_st_thresh, v_wall=v_wall, v_sh=v_sh, parallel=parallel
-    )
+    # f(z), f'(z) and l(z), see pttools.ssm.ssm.f_fp_l
+    _f, v_ft, lam_ft = f_fp_l(
+        z=z, xi=xi, v=v_ip, lam=lam_orig, v_wall=v_wall, v_sh=v_sh, z_st_thresh=z_st_thresh, n_xi=nxi,
+        parallel=parallel, exact_large_z=exact_large_z)
     A2 = 0.25 * (v_ft ** 2 + (const.CS0 * lam_ft) ** 2)
 
     return A2, v_ft ** 2 / 2, (const.CS0 * lam_ft) ** 2 / 2
