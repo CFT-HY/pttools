@@ -12,8 +12,11 @@ import typing as tp
 import unittest
 from unittest import mock
 
+import pytest
+
 from pttools.speedup import libraries
 from pttools.speedup.libraries import library, svml, tbb
+from pttools.utils.system import IS_LINUX, IS_OSX, IS_X86_64
 
 
 def installed(package: str) -> bool:
@@ -81,7 +84,14 @@ class TestTBB(unittest.TestCase):
         assert version is not None
         assert version >= tbb.TBB_MIN_VERSION
 
+    # As of Numba 0.67, the Numba wheels for ARM Linux and ARM macOS are built without the TBB threading layer,
+    # even though the TBB library is available from tbb4u.
     @staticmethod
+    @pytest.mark.xfail(
+        not IS_X86_64 and (IS_LINUX or IS_OSX),
+        reason="The Numba wheels for ARM Linux and ARM macOS don't have the TBB threading layer.",
+        raises=ModuleNotFoundError,
+    )
     def test_numba_tbb_layer() -> None:
         """Test that the Numba TBB threading layer can be imported and passes the TBB version check."""
         # Importing the TBB extension of Numba fails if the loader cannot find the TBB library.
