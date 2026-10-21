@@ -62,4 +62,3 @@ def save_figs(
         makedirs: bool = True,
         **kwargs: tp.Any) -> None:
     plot_utils.save_figs(figs=figs, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
-

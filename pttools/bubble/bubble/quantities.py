@@ -56,4 +56,3 @@ def get_kappa_omega(bubble: Bubble) -> tuple[float, float]:
     if (not bubble.solved) or bubble.solver_failed:
         return np.nan, np.nan
     return bubble.kappa, bubble.omega
-

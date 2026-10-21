@@ -5,10 +5,13 @@ Setting up the development environment
 --------------------------------------
 Install the dependencies with ``uv sync --all-extras``,
 and enable the Git hooks with ``uv run prek install``.
-The hooks are managed with `prek <https://github.com/j178/prek>`_ and configured in ``.pre-commit-config.yaml``.
+The hooks are managed with `prek <https://github.com/j178/prek>`_ and configured in ``prek.toml``.
 The pre-commit hooks run the same checks as the fast lint ``./lint.sh --fast``
 (``pyrefly check``, ``pyrefly coverage check`` and ``ruff check``) in parallel on the staged changes,
 and block the commit if any of them fails.
+They also fix trailing whitespace, missing newlines at the end of files and mixed line endings,
+check the syntax of JSON, TOML and YAML files,
+and check for large files and for the consistency of shebangs and executable bits.
 
 Developing a new feature
 ------------------------
