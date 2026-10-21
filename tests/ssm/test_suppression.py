@@ -76,17 +76,17 @@ class SuppressionTest(unittest.TestCase):
     V_WALLS: tp.ClassVar[th.FloatArr1D] = np.array([0.4, 0.5, 0.6])
     ALPHA_NS: tp.ClassVar[th.FloatArr1D] = np.array([0.05, 0.1])
     #: Reference values, computed after the datasets were recomputed with
-    #: :py:class:`pttools.ssm.spectrum.SSMSpectrum` instead of the bag-model-specific code path
+    #: the exact sine transforms of :py:func:`pttools.ssm.ssm.f_fp_l` for large $z$
     GRID_REF: tp.ClassVar[th.FloatArr2D] = np.array([
-        [0.2319092, 0.68632716, 0.99138433],
-        [0.18981828, 0.56054967, 0.75840316]
+        [0.23253673, 0.67716737, 0.97529562],
+        [0.19003867, 0.55461964, 0.74844373]
     ])
     #: A point outside the convex hull of the suppression points
     OUTSIDE_V_WALL: tp.ClassVar[float] = 0.95
     OUTSIDE_ALPHA_N: tp.ClassVar[float] = 0.9
     #: Reference value for the nearest-neighbour extrapolation, i.e. the data point
     #: ${v}_\text{wall} = 0.92, \alpha_n = 0.67$ of the dataset
-    OUTSIDE_REF: tp.ClassVar[float] = 0.6254621717600555
+    OUTSIDE_REF: tp.ClassVar[float] = 0.6283162564122916
 
     def test_grid(self) -> None:
         """Interpolating on a grid of points gives the reference values."""
