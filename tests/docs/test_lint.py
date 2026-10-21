@@ -2,14 +2,16 @@
 
 import contextlib
 import io
+import os
 from pathlib import Path
 import shutil
 import tempfile
 import typing as tp
 import unittest
+from unittest import mock
 
 from pttools.docs import lint
-from pttools.docs.paths import LINT_DIR_NAME
+from pttools.docs.paths import LINT_DIR_NAME, NO_PLOTS_ENV_VAR
 
 
 @unittest.skipIf(shutil.which("make") is None, "make is not installed")
@@ -21,7 +23,10 @@ class DocsLintRunMakeTest(unittest.TestCase):
         self.tmp_dir: tempfile.TemporaryDirectory[str] = tempfile.TemporaryDirectory()
         self.docs_dir: Path = Path(self.tmp_dir.name).resolve()
         (self.docs_dir / "Makefile").write_text(
-            "BUILDDIR = _build\nhello:\n\t@echo line1\n\t@echo line2\nbuilddir:\n\t@echo \"$(BUILDDIR)\"\n")
+            "BUILDDIR = _build\nhello:\n\t@echo line1\n\t@echo line2\nbuilddir:\n\t@echo \"$(BUILDDIR)\"\n"
+            # These print the Sphinx options given with O and the environment variable for disabling the figures.
+            f"opts:\n\t@echo \"O=$(O) plots=$${{{NO_PLOTS_ENV_VAR}}}\"\n"
+            f"opts-noplot:\n\t@echo \"O=$(O) plots=$${{{NO_PLOTS_ENV_VAR}}}\"\n")
         self.log_path: Path = self.docs_dir / "test.log"
 
     @tp.override
@@ -77,6 +82,30 @@ class DocsLintRunMakeTest(unittest.TestCase):
             returncode, lines = lint.run_make("builddir", self.log_path, self.docs_dir)
         assert returncode == 0
         assert "_build" in lines
+
+    def run_opts(self, target: str, env: dict[str, str] | None = None, jobs: int | None = None) -> str:
+        """Run a stub target that prints the Sphinx options and the environment variable for disabling the figures."""
+        environ = {key: value for key, value in os.environ.items() if key not in (NO_PLOTS_ENV_VAR, "O")}
+        environ.update(env or {})
+        with mock.patch.dict(os.environ, environ, clear=True), contextlib.redirect_stdout(io.StringIO()):
+            returncode, lines = lint.run_make(target, self.log_path, self.docs_dir, jobs=jobs)
+        assert returncode == 0
+        return next(line for line in lines if line.startswith("O="))
+
+    def test_run_make_noplot(self) -> None:
+        """The -noplot targets are run without the figures, unless the user enables them."""
+        assert self.run_opts("opts-noplot") == "O= plots=1"
+        assert self.run_opts("opts-noplot", env={NO_PLOTS_ENV_VAR: "0"}) == "O= plots=0"
+
+    def test_run_make_plot(self) -> None:
+        """The other targets are run with the figures."""
+        assert self.run_opts("opts") == "O= plots="
+
+    def test_run_make_jobs(self) -> None:
+        """The number of parallel Sphinx processes is given to make with O."""
+        assert self.run_opts("opts", jobs=3) == "O=--jobs 3 plots="
+        # The O of the user comes last, so that its --jobs takes precedence.
+        assert self.run_opts("opts", env={"O": "--jobs 5"}, jobs=3) == "O=--jobs 3 --jobs 5 plots="
 
 
 class DocsLintPathsTest(unittest.TestCase):

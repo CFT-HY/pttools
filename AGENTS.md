@@ -68,7 +68,7 @@
   As the descriptions are parsed as reStructuredText before `$...$` is converted to math,
   write e.g. `$c_s^2(T_{\text{gw}})$` instead of `$c_s^2(T_\text{gw})$`, since `T_` after `(` would be parsed as a link.
 - After changing equations in docstrings, run `uv run python -m pttools.docs.lint`.
-  It builds the documentation without running the examples (`make latexpdf-noplot`), prints the Sphinx errors and warnings
+  It builds the documentation without running the examples or generating the figures of the `plot` directive (`make latexpdf-noplot`), prints the Sphinx errors and warnings
   and the LaTeX errors, and saves the Sphinx output to `./logs/sphinx_TIMESTAMP.log`. Its exit code is that of `make`.
   It builds in a new temporary directory `./docs/lint/lint_TIMESTAMP_RANDOM`, whose path it prints,
   so multiple lints can be run simultaneously. These directories are not removed automatically.

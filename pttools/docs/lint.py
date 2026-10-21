@@ -5,6 +5,12 @@
 This runs ``make latexpdf-noplot`` in the ``docs`` directory,
 which builds the documentation with Sphinx without running the examples,
 and then builds the PDF with latexmk.
+For the ``-noplot`` targets, the figures of the Matplotlib ``plot`` directive are not generated either,
+as they are not needed for finding errors, and as generating them would take minutes
+(see :py:class:`pttools.docs.setup.NoPlotDirective`).
+They can be enabled by setting the environment variable ``PTTOOLS_DOCS_NO_PLOTS=0``.
+The number of parallel Sphinx processes can be set with ``--jobs``.
+Otherwise, the default of the ``Makefile`` is used.
 By default, the build is done in a new temporary build directory ``lint/lint_TIMESTAMP_RANDOM``
 in the ``docs`` directory, so that multiple lints can be run simultaneously in the same repository
 without affecting each other. Its path is printed, and it is not removed afterwards,
@@ -22,7 +28,7 @@ Only the Sphinx errors and warnings and the LaTeX errors are printed.
 The exit code is that of ``make``.
 
 Usage: ``uv run python -m pttools.docs.lint [--target latexpdf-noplot] [--docs-dir docs] [--build-dir DIR]
-[--log-dir logs] [--verbose]``
+[--log-dir logs] [--jobs N] [--verbose]``
 
 With ``--verbose``, the console output of make is also printed while it runs.
 This is used by the documentation builds on CI, which can take a long time.
@@ -49,8 +55,17 @@ import tempfile
 import time
 import typing as tp
 
-from pttools.docs.paths import LINT_DIR_NAME, SPHINX_LOG_ENV_VAR, default_log_dir, find_docs_dir, is_docs_dir
+from pttools.docs.paths import (
+    LINT_DIR_NAME,
+    NO_PLOTS_ENV_VAR,
+    SPHINX_LOG_ENV_VAR,
+    default_log_dir,
+    find_docs_dir,
+    is_docs_dir,
+)
 
+#: Suffix of the make targets that do not run the examples
+NOPLOT_SUFFIX: str = "-noplot"
 #: Name of the default build directory of the ``Makefile``, in the ``docs`` directory
 BUILD_DIR_NAME: str = "_build"
 #: Name of the LaTeX build directory of the ``latexpdf`` target, in the build directory
@@ -146,6 +161,29 @@ def latex_log_messages(log_path: str | os.PathLike[str]) -> tuple[list[str], lis
     return latex_errors(lines), warnings
 
 
+def create_parser() -> argparse.ArgumentParser:
+    """Create the parser for the command-line arguments of :py:func:`main`."""
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--target", default="latexpdf-noplot", help="the make target to run (default: %(default)s)")
+    parser.add_argument(
+        "--docs-dir", default=None,
+        help="the documentation directory (default: found alongside the virtual environment "
+             "or in the current working directory)")
+    parser.add_argument(
+        "--build-dir", default=None,
+        help="the build directory (default: a new temporary directory \"lint/lint_TIMESTAMP_RANDOM\" "
+             "in the documentation directory, which is not removed afterwards)")
+    parser.add_argument(
+        "--log-dir", default=None,
+        help="directory for the log file (default: \"logs\" alongside the documentation directory)")
+    parser.add_argument(
+        "-j", "--jobs", type=int, default=None,
+        help="the number of parallel Sphinx processes (default: that of the Makefile)")
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="also print the console output of make while it runs")
+    return parser
+
+
 def create_temp_build_dir(docs_dir: Path, timestamp: str) -> Path:
     """Create a new temporary build directory ``lint/lint_TIMESTAMP_RANDOM`` in the docs directory.
 
@@ -185,7 +223,8 @@ def run_make(
         log_path: Path,
         docs_dir: Path,
         verbose: bool = False,
-        build_dir: Path | None = None) -> tuple[int, list[str]]:
+        build_dir: Path | None = None,
+        jobs: int | None = None) -> tuple[int, list[str]]:
     """Run ``make target`` in the docs directory, streaming its output to the log file.
 
     :param target: the make target
@@ -194,6 +233,7 @@ def run_make(
     :param verbose: also print the console output of make while it runs
     :param build_dir: the build directory, which is given to make as ``BUILDDIR``.
         If None, the default build directory of the ``Makefile`` is used.
+    :param jobs: the number of parallel Sphinx processes. If None, the default of the ``Makefile`` is used.
     :return: the return code of make and the lines of its console output
     """
     command = ["make", target]
@@ -207,6 +247,12 @@ def run_make(
     shutil.rmtree(latex_dir, ignore_errors=True)
     env = os.environ.copy()
     env[SPHINX_LOG_ENV_VAR] = str(log_path)
+    if target.endswith(NOPLOT_SUFFIX):
+        env.setdefault(NO_PLOTS_ENV_VAR, "1")
+    if jobs is not None:
+        # The Makefile appends O to SPHINXOPTS, and the last --jobs given to Sphinx applies.
+        # The O given by the user in the environment is kept after this, so that it still takes precedence.
+        command.append(f"O=--jobs {jobs} {env.get('O', '')}".rstrip())
     env.setdefault("LATEXOPTS", DEFAULT_LATEXOPTS)
     env.setdefault("SPHINXBUILD", DEFAULT_SPHINXBUILD)
     with subprocess.Popen(
@@ -285,22 +331,7 @@ def main(argv: tp.Sequence[str] | None = None) -> int:
     :param argv: command-line arguments, defaults to ``sys.argv[1:]``
     :return: exit code of make, or 2 if the documentation directory is not found
     """
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--target", default="latexpdf-noplot", help="the make target to run (default: %(default)s)")
-    parser.add_argument(
-        "--docs-dir", default=None,
-        help="the documentation directory (default: found alongside the virtual environment "
-             "or in the current working directory)")
-    parser.add_argument(
-        "--build-dir", default=None,
-        help="the build directory (default: a new temporary directory \"lint/lint_TIMESTAMP_RANDOM\" "
-             "in the documentation directory, which is not removed afterwards)")
-    parser.add_argument(
-        "--log-dir", default=None,
-        help="directory for the log file (default: \"logs\" alongside the documentation directory)")
-    parser.add_argument(
-        "-v", "--verbose", action="store_true", help="also print the console output of make while it runs")
-    args = parser.parse_args(argv)
+    args = create_parser().parse_args(argv)
 
     try:
         docs_dir = resolve_docs_dir(args.docs_dir)
@@ -315,7 +346,8 @@ def main(argv: tp.Sequence[str] | None = None) -> int:
         else Path(args.build_dir).resolve()
     print(f"Running \"make {args.target}\" in {docs_dir}.\nBuild directory: {build_dir}\nLog: {log_path}")
     start = time.perf_counter()
-    returncode, lines = run_make(args.target, log_path, docs_dir, verbose=args.verbose, build_dir=build_dir)
+    returncode, lines = run_make(
+        args.target, log_path, docs_dir, verbose=args.verbose, build_dir=build_dir, jobs=args.jobs)
     elapsed = time.perf_counter() - start
 
     sphinx_lines = sphinx_messages(lines)

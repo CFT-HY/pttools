@@ -24,6 +24,10 @@ LOG_DIR_NAME: str = "logs"
 #: Environment variable with which the path of the Sphinx log file can be set,
 #: e.g. by :py:mod:`pttools.docs.lint`.
 SPHINX_LOG_ENV_VAR: str = "PTTOOLS_SPHINX_LOG"
+#: Environment variable with which the generation of the figures of the Matplotlib ``plot`` directive
+#: can be disabled (``1``) when building the documentation, e.g. by :py:mod:`pttools.docs.lint`.
+#: See :py:class:`pttools.docs.setup.NoPlotDirective`.
+NO_PLOTS_ENV_VAR: str = "PTTOOLS_DOCS_NO_PLOTS"
 
 
 def is_docs_dir(path: str | os.PathLike[str]) -> bool:

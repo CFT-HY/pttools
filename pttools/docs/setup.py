@@ -9,6 +9,7 @@ import time
 import typing as tp
 import warnings
 
+from matplotlib.sphinxext.plot_directive import PlotDirective
 from sphinx_gallery.directives import depart_imgsg_html, imgsgnode, visit_imgsg_html
 
 import pttools.type_hints as th
@@ -21,8 +22,23 @@ from pttools.docs.backreferences import patch_sphinx_gallery
 from pttools.docs.fields import add_field_docs, note_field_dependencies
 from pttools.docs.lock import setup_source_lock
 from pttools.docs.minigallery import add_minigalleries, remove_duplicate_minigalleries
-from pttools.docs.paths import LINT_DIR_NAME, SPHINX_LOG_ENV_VAR, default_log_dir
+from pttools.docs.paths import LINT_DIR_NAME, NO_PLOTS_ENV_VAR, SPHINX_LOG_ENV_VAR, default_log_dir
 from pttools.logging import setup_logging
+
+
+class NoPlotDirective(PlotDirective):
+    """A replacement for the Matplotlib ``plot`` directive, which does not generate the figure.
+
+    The arguments and options are validated as by the original directive, but the figure script is not run,
+    and nothing is added to the document.
+    Running the figure scripts can take minutes, as they compute e.g. bubbles and spectra,
+    and the figures are not needed when checking the documentation for errors with :py:mod:`pttools.docs.lint`.
+    This is enabled by setting the environment variable :py:data:`pttools.docs.paths.NO_PLOTS_ENV_VAR` to ``1``.
+    """
+
+    def run(self) -> list:
+        """Return no nodes, so that nothing is added to the document."""
+        return []
 
 
 def filter_warnings() -> None:
@@ -49,6 +65,14 @@ def pre_setup(doc_modules: tp.Container[str]) -> None:
     """This should be called from `docs/conf.py`."""
     patch_sphinx_gallery(doc_modules=doc_modules)
     filter_warnings()
+
+
+def no_plots() -> bool:
+    """Whether the generation of the figures of the ``plot`` directive has been disabled.
+
+    This is set with the environment variable :py:data:`pttools.docs.paths.NO_PLOTS_ENV_VAR`.
+    """
+    return bool(int(os.environ.get(NO_PLOTS_ENV_VAR, "0")))
 
 
 def setup_example_logging(gallery_conf: dict[str, tp.Any], fname: str | None) -> None:
@@ -120,6 +144,10 @@ def setup_sphinx(app: Sphinx) -> None:
     app.connect("builder-inited", add_field_docs)
     app.connect("autodoc-process-docstring", note_field_dependencies)
     app.connect("object-description-transform", remove_duplicate_minigalleries)
+    # The setup function of conf.py is run after the extensions have been loaded,
+    # and therefore overrides the directive of matplotlib.sphinxext.plot_directive.
+    if no_plots():
+        app.add_directive("plot", NoPlotDirective, override=True)
 
     # Sphinx-Gallery registers the visitors of its image nodes only for the HTML and LaTeX builders,
     # and a builder falls back to the handlers of its output format only if it has no handlers of its own.
