@@ -111,3 +111,5 @@ For an example of this primary use case, see `examples/basic/basic.py`.
 
 To avoid circular dependencies, each sub-package in `pttools` should depend only on the sub-packages before it in this order:
 `utils`, `speedup`, `math`, `bubble`, `models`, `ssm`, `omgw0`, `lattice`, `export`, `analysis`, `plot`, `docs`.
+Scripts in `./docs/fig/` and `./tests/test_examples.py` import from `examples`, and some scripts in `examples` import from `tests`.
+This is not an issue, since the `__init__.py` files in `docs.fig`, `examples` and `tests` don't import the package contents.
