@@ -19,7 +19,10 @@ class SignalToNoiseRatioTest(unittest.TestCase):
 
     @staticmethod
     def test_analytic() -> None:
-        r"""For a signal proportional to the noise, $\rho = c \sqrt{T_\text{obs} (f_\text{max} - f_\text{min})}$."""
+        r"""The SNR of a signal proportional to the noise should match the analytic result.
+
+        $$\rho = c \sqrt{T_{\text{obs}} (f_{\text{max}} - f_{\text{min}})}$$
+        """
         f = np.linspace(1e-4, 1e-2, 101)
         noise = omega_noise_h2(f)
         obs_time = 1e7
