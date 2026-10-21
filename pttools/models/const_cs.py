@@ -358,15 +358,60 @@ class ConstCSModel(AnalyticModel):
     #     return msg
 
     @tp.override
+    def alpha_n_max_find(self, w_min: float | None = None, w_max: float | None = None) -> tuple[float, float]:
+        r"""$\alpha_{n,\text{max}}$ of the constant sound speed model.
+
+        For $C = \frac{4}{3} (V_s - V_b) > 0$, the only stationary point of $\alpha_n(w)$ is a minimum,
+        as derived in :py:meth:`alpha_n_stationary_point`.
+        Therefore, the maximum over $[w_{\text{min}}, w_{\text{crit}}]$ is at one of the end points,
+        regardless of whether the stationary point is within the range.
+        For $C \leq 0$, the maximum is searched for numerically with :py:meth:`Model.alpha_n_max_find`.
+        The parameters and the return value are those of :py:meth:`Model.alpha_n_max_find`.
+        """
+        if self.bag_wn_const <= 0:
+            return super().alpha_n_max_find(w_min=w_min, w_max=w_max)
+        if w_min is None:
+            w_min = self.w_min
+        if w_max is None:
+            w_max = self.w_crit
+        if w_min <= 0:
+            return w_min, np.inf
+        alpha_n_w_min = self.alpha_n(w_min, error_on_invalid=False, log_invalid=False)
+        alpha_n_w_max = self.alpha_n(w_max, error_on_invalid=False, log_invalid=False)
+        return (w_max, alpha_n_w_max) if alpha_n_w_max > alpha_n_w_min else (w_min, alpha_n_w_min)
+
+    @tp.override
     def alpha_n_min_find(
             self,
             w_min: float | None = None,
             w_max: float | None = None) -> tuple[float, float]:
-        # xopt, fval = super().alpha_n_min_find(w_min=w_min, w_max=w_max)
-        analytical = self.alpha_n(self.w_crit)
-        # print(f"const_cs alpha_n_min: analytical={fval}, found={analytical}")
-        # return xopt, fval
-        return self.w_crit, analytical
+        r"""$\alpha_{n,\text{min}}$ of the constant sound speed model.
+
+        For $C = \frac{4}{3} (V_s - V_b) > 0$, $\alpha_n(w)$ has at most one stationary point $w_{\text{stat}}$,
+        which is a minimum, as derived in :py:meth:`alpha_n_stationary_point`.
+        Therefore, the minimum over $[w_{\text{min}}, w_{\text{crit}}]$ is $\alpha_n(w_{\text{stat}})$,
+        if $w_{\text{stat}}$ is within the range, and otherwise at one of the end points.
+        Usually $w_{\text{stat}} > w_{\text{crit}}$ or there is no stationary point,
+        and the minimum is at $w_{\text{crit}}$.
+        For $C \leq 0$, the minimum is searched for numerically with :py:meth:`Model.alpha_n_min_find`.
+        The parameters and the return value are those of :py:meth:`Model.alpha_n_min_find`.
+        """
+        if self.bag_wn_const <= 0:
+            return super().alpha_n_min_find(w_min=w_min, w_max=w_max)
+        if w_min is None:
+            w_min = self.w_min
+        if w_max is None:
+            w_max = self.w_crit
+        w_stat = self.alpha_n_stationary_point()
+        if w_min < w_stat < w_max:
+            return w_stat, self.alpha_n(w_stat)
+        alpha_n_w_max = self.alpha_n(w_max)
+        # For C > 0, alpha_n diverges at w = 0.
+        if w_min > 0:
+            alpha_n_w_min = self.alpha_n(w_min, error_on_invalid=False, log_invalid=False)
+            if alpha_n_w_min < alpha_n_w_max:
+                return w_min, alpha_n_w_min
+        return w_max, alpha_n_w_max
 
     def alpha_n_min_find_params(  # noqa: PLR0911, PLR0912
             self,
@@ -606,6 +651,49 @@ class ConstCSModel(AnalyticModel):
             a_b=a_b, V_b=V_b,
             alpha_n_target=alpha_n_target
         )
+
+    def alpha_n_stationary_point(self) -> float:
+        r"""$w_{\text{stat}}$, enthalpy at the stationary point of $\alpha_n(w)$.
+
+        With the enthalpy $w_{\pm} = \mu_{\pm} a_{\pm} \left( \frac{T}{T_0} \right)^{\mu_{\pm} - 4} T^4$
+        :maki_msc:`\ ` eq. 2.123,
+        and its inverse $T_{\pm} = \left( \frac{w}{\mu_{\pm} a_{\pm} T_0^4} \right)^{\frac{1}{\mu_{\pm}}} T_0$
+        :maki_msc:`\ ` eq. 2.125,
+        the transition strength of :py:meth:`alpha_n`
+        $$\alpha_n = \frac{1}{3} \left( 1 - \frac{4}{\mu_s} \right)
+        - \frac{1}{3} \left( 1 - \frac{4}{\mu_b} \right) \frac{w(T_n, \phi_b)}{w_n} + \alpha_{n,\text{bag}}$$
+        :maki_msc:`\ ` eq. 2.132,
+        where $\alpha_{n,\text{bag}} = \frac{4 (V_s - V_b)}{3 w_n}$ :maki_msc:`\ ` eq. 2.118,
+        can be written as a function of $w = w_n$ as
+        $$\alpha_n(w) = A - B k w^p + \frac{C}{w},$$
+        where
+        $A = \frac{1}{3} \left( 1 - \frac{4}{\mu_s} \right)$,
+        $B = \frac{1}{3} \left( 1 - \frac{4}{\mu_b} \right)$,
+        $C = \frac{4}{3} (V_s - V_b)$,
+        $p = \frac{\mu_b}{\mu_s} - 1$ and
+        $$k = \frac{\mu_b a_b}{\mu_s a_s} \left( \mu_s a_s T_0^4 \right)^{-p} > 0.$$
+        Its derivative
+        $$\frac{d \alpha_n}{d w} = -B k p w^{p - 1} - \frac{C}{w^2}$$
+        is zero only at
+        $$w_{\text{stat}} = \left( -\frac{C}{B k p} \right)^{\frac{\mu_s}{\mu_b}},$$
+        which exists only for $B p C < 0$,
+        since $w^{p + 1}$ is monotonic and positive for $p + 1 = \frac{\mu_b}{\mu_s} > 0$.
+        There
+        $$\frac{d^2 \alpha_n}{d w^2} \bigg|_{w_{\text{stat}}} = \frac{(p + 1) C}{w_{\text{stat}}^3},$$
+        and therefore the stationary point is a minimum for $C > 0$ and a maximum for $C < 0$.
+        For $C > 0$, it exists for $c_{s,s}^2 < c_{s,b}^2 < \frac{1}{3}$ ($B > 0, p < 0$)
+        and for $\frac{1}{3} < c_{s,b}^2 < c_{s,s}^2$ ($B < 0, p > 0$).
+
+        :return: $w_{\text{stat}}$, or nan if there is no stationary point
+        """
+        B = (1 - 4 / self.mu_b) / 3
+        p = self.mu_b / self.mu_s - 1
+        C = self.bag_wn_const
+        k = self.mu_b * self.a_b / (self.mu_s * self.a_s) * (self.mu_s * self.a_s * self.T_ref**4) ** (-p)
+        base = -C / (B * k * p) if B * p != 0 else np.nan
+        if not base > 0:
+            return np.nan
+        return base ** (self.mu_s / self.mu_b)
 
     def alpha_plus[T: FloatOrArr](
             self,

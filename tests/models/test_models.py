@@ -12,6 +12,16 @@ from pttools.math import assert_allclose
 from tests.models.base_bag import BagBaseCase
 from tests.models.base_model import ModelBaseCase
 
+#: Parameters of constant sound speed models for testing the limits of $\alpha_n$.
+#: They cover both $c_{s,b}^2 < c_{s,s}^2$ and $c_{s,b}^2 > c_{s,s}^2$, i.e. both signs of $p = \mu_b / \mu_s - 1$.
+CONST_CS_PARAMS: tuple[dict[str, tp.Any], ...] = (
+    {"css2": 1/4, "csb2": 0.3},
+    {"css2": 0.1, "csb2": 0.3},
+    {"css2": 1/4, "csb2": 1/4},
+    {"css2": 1/3, "csb2": 1/4, "a_s": 5, "a_b": 1, "V_s": 1},
+    {"css2": 0.4**2, "csb2": 1/3, "a_s": 1.2, "a_b": 1.1, "V_s": 1.3},
+)
+
 
 class TestBag(BagBaseCase[models.BagModel], unittest.TestCase):
     """Tests for the bag model."""
@@ -149,6 +159,61 @@ class TestConstCS(ModelBaseCase[models.ConstCSModel], unittest.TestCase):
         r"""Test the numerically solved $w_n$ against the reference data."""
         data = self.model.wn(self.alpha_n, analytical=False)
         self.assert_json(data, "w_n", allow_save=False)
+
+    def test_alpha_n_max_analytical(self) -> None:
+        r"""The analytical $\alpha_{n,\text{max}}$ should equal that of the numerical search of the base class.
+
+        The models of :py:data:`CONST_CS_PARAMS` cover both signs of $p = \mu_b / \mu_s - 1$.
+        """
+        params: dict[str, tp.Any]
+        for params in CONST_CS_PARAMS:
+            with self.subTest(**params):
+                model = models.ConstCSModel(**params)
+                w, alpha_n_max = model.alpha_n_max_find()
+                w_num, alpha_n_max_num = models.Model.alpha_n_max_find(model)
+                assert (w, alpha_n_max) == (model.w_at_alpha_n_max, model.alpha_n_max)
+                assert w == pytest.approx(w_num, rel=1e-12, abs=0)
+                assert alpha_n_max == pytest.approx(alpha_n_max_num, rel=1e-12, abs=0)
+
+    def test_alpha_n_min_analytical(self) -> None:
+        r"""The analytical $\alpha_{n,\text{min}}$ should equal that of the numerical search of the base class.
+
+        When the search range is extended to contain the stationary point $w_{\text{stat}}$ of $\alpha_n(w)$,
+        the minimum should be at it.
+        """
+        params: dict[str, tp.Any]
+        for params in CONST_CS_PARAMS:
+            with self.subTest(**params):
+                model = models.ConstCSModel(**params)
+                w, alpha_n_min = model.alpha_n_min_find()
+                w_num, alpha_n_min_num = models.Model.alpha_n_min_find(model)
+                assert (w, alpha_n_min) == (model.w_at_alpha_n_min, model.alpha_n_min)
+                assert w == pytest.approx(w_num, rel=1e-6, abs=0)
+                assert alpha_n_min == pytest.approx(alpha_n_min_num, rel=1e-12, abs=0)
+
+        model = models.ConstCSModel(css2=1/4, csb2=0.3)
+        w_stat = model.alpha_n_stationary_point()
+        assert model.w_crit < w_stat
+        w, alpha_n_min = model.alpha_n_min_find(w_max=10 * w_stat)
+        w_num, alpha_n_min_num = models.Model.alpha_n_min_find(model, w_max=10 * w_stat)
+        assert w == w_stat
+        assert w == pytest.approx(w_num, rel=1e-4, abs=0)
+        assert alpha_n_min == pytest.approx(alpha_n_min_num, rel=1e-9, abs=0)
+
+    def test_alpha_n_stationary_point(self) -> None:
+        r"""$\frac{d \alpha_n}{d w}$ should be zero at $w_{\text{stat}}$, which should exist only for $B p < 0$."""
+        # Whether the stationary point exists for each model of CONST_CS_PARAMS
+        exists_all = (True, True, False, False, False)
+        for params, exists in zip(CONST_CS_PARAMS, exists_all, strict=True):
+            with self.subTest(**params):
+                model = models.ConstCSModel(**params)
+                w_stat = model.alpha_n_stationary_point()
+                assert np.isfinite(w_stat) == exists
+                if exists:
+                    h = 1e-4 * w_stat
+                    derivative = (model.alpha_n(w_stat + h) - model.alpha_n(w_stat - h)) / (2 * h)
+                    # The derivative is compared to the scale of the terms of alpha_n, i.e. alpha_n / w.
+                    assert abs(derivative) < 1e-6 * model.alpha_n(w_stat) / w_stat
 
     def test_wn_small(self) -> None:
         r"""$w_n$ should be found numerically also when it is far below 1, i.e. for large $\alpha_n$.
