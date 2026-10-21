@@ -105,6 +105,9 @@ numbalsoda = ["numbalsoda >= 0.3.4"]
 # https://pypi.org/project/icc-rt/
 # https://pypi.org/project/intel-cmplr-lib-rt/
 # https://numba.readthedocs.io/en/stable/user/performance-tips.html#intel-svml
+# As of llvmlite 0.45, the llvmlite wheels from PyPI are built without SVML support,
+# so Numba does not use SVML, even though PTtools loads the library.
+# https://llvmlite.readthedocs.io/en/stable/user-guide/llvm20.html
 # TBB can be used to speed up Numba threading
 # https://pypi.org/project/tbb/
 # https://pypi.org/project/tbb4u/

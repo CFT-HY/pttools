@@ -11,7 +11,7 @@ import numba
 import numpy as np
 
 # The TBB library has to be loaded before the Numba threading layer can be predicted.
-from pttools.speedup.tbb import TBB_VERSION  # noqa: F401
+from pttools.speedup.libraries.tbb import TBB_VERSION  # noqa: F401
 from pttools.type_hints import FloatArr1D
 from pttools.utils import system
 

@@ -13,11 +13,14 @@ inputs:
       This is supported only on Linux.
     required: false
     default: ""
-  check-tbb:
+  check-libraries:
     description: >-
-      Check that a TBB library compatible with Numba can be loaded with "python -m pttools.speedup.tbb",
-      and fail if not. On CPU architectures other than x86-64, for which the tbb package is not available,
-      the check only prints a note.
+      Check that the native libraries for Numba, i.e. SVML and TBB, can be loaded
+      with "python -m pttools.speedup.libraries", and fail if a required library cannot be loaded.
+      A library is required on x86-64, and on other CPU architectures if one of its PyPI packages is installed,
+      e.g. tbb4u on ARM. For the other libraries, the check only prints a note.
+      With versions of PTtools that don't have pttools.speedup.libraries, only TBB is checked,
+      with "python -m pttools.speedup.tbb".
     required: false
     default: "true"
   generate-reference-data:
@@ -124,14 +127,21 @@ runs:
       if: inputs.print-numba-sysinfo == 'true'
       shell: bash
       # Numba is called as a Python module, since on macOS its script is not executable by default.
-      # The TBB library of the tbb package is not on the default library search path,
-      # so Numba reports it as unavailable here. PTtools loads it from the virtual environment instead,
-      # which is verified by the TBB check.
+      # The SVML and TBB libraries of the PyPI packages are not on the default library search path,
+      # so Numba reports them as unavailable here, unless they are also installed system-wide.
+      # PTtools loads them from the virtual environment instead, which is verified by the library check.
       run: python -m numba --sysinfo | tee numba-sysinfo.txt
-    - name: Check TBB
-      if: inputs.check-tbb == 'true'
+    - name: Check native libraries
+      if: inputs.check-libraries == 'true'
       shell: bash
-      run: python -m pttools.speedup.tbb
+      # Other repositories, such as PTPlot, may use a version of PTtools
+      # from before pttools.speedup.tbb was replaced by pttools.speedup.libraries.
+      run: |
+        if python -c "import importlib.util, sys; sys.exit(importlib.util.find_spec('pttools.speedup.libraries') is None)"; then
+          python -m pttools.speedup.libraries
+        else
+          python -m pttools.speedup.tbb
+        fi
     - name: Generate PTtools reference data
       if: inputs.generate-reference-data == 'true'
       shell: bash

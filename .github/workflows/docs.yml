@@ -84,12 +84,19 @@ jobs:
         env:
           SYNC_ARGS: ${{ inputs.uv-sync-args }}
       - name: Print Numba sysinfo
-        # The TBB library of the tbb package is not on the default library search path,
-        # so Numba reports it as unavailable here. PTtools loads it from the virtual environment instead,
-        # which is verified by the next step.
+        # The SVML and TBB libraries of the PyPI packages are not on the default library search path,
+        # so Numba reports them as unavailable here, unless they are also installed system-wide.
+        # PTtools loads them from the virtual environment instead, which is verified by the next step.
         run: python -m numba --sysinfo | tee numba-sysinfo.txt
-      - name: Check TBB
-        run: python -m pttools.speedup.tbb
+      - name: Check native libraries
+        # Other repositories, such as PTPlot, may use a version of PTtools
+        # from before pttools.speedup.tbb was replaced by pttools.speedup.libraries.
+        run: |
+          if python -c "import importlib.util, sys; sys.exit(importlib.util.find_spec('pttools.speedup.libraries') is None)"; then
+            python -m pttools.speedup.libraries
+          else
+            python -m pttools.speedup.tbb
+          fi
       # The database steps are run only for Django projects, such as PTPlot.
       - name: Create migrations
         if: hashFiles('manage.py') != ''

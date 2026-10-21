@@ -91,10 +91,18 @@ You can then have a look at the
 :ref:`NumbaLSODA` section of the installation instructions.
 
 The ``[performance]`` flag installs additional libraries such as
-`icc-rt <https://pypi.org/project/icc-rt/>`_
+`intel-cmplr-lib-rt <https://pypi.org/project/intel-cmplr-lib-rt/>`_
+(`icc-rt <https://pypi.org/project/icc-rt/>`_ on macOS)
 and
 `tbb <https://pypi.org/project/tbb/>`_
 for better performance with Numba.
+PTtools loads their libraries automatically when it's imported,
+which you can verify with ``python -m pttools.speedup.libraries``.
+The Intel SVML library of ``intel-cmplr-lib-rt`` and ``icc-rt`` has to be loaded before Numba is imported,
+so please import PTtools before Numba.
+However, as of llvmlite 0.45, the llvmlite wheels from PyPI are built without SVML support,
+so Numba does not use SVML even if the library is loaded,
+and ``numba --sysinfo`` reports ``SVML Operational`` as ``False``.
 
 
 With conda
@@ -271,13 +279,16 @@ when running pytest,
 please install either OpenMP or Intel TBB (or both).
 The ``[performance]`` extra of PTtools installs the
 `tbb <https://pypi.org/project/tbb/>`_
-package from PyPI, which places the TBB library in the ``lib`` directory of the Python environment.
-This directory is not on the default library search path of the operating system,
-so ``numba --sysinfo`` reports TBB as unavailable, but PTtools loads the library from there automatically.
-You can verify that this works by running the command ``python -m pttools.speedup.tbb``.
+package from PyPI on x86-64, which places the TBB library in the ``lib`` directory of the Python environment,
+and the unofficial `tbb4u <https://pypi.org/project/tbb4u/>`_ package on ARM,
+which places it in its own package directory.
+These directories are not on the default library search path of the operating system,
+so ``numba --sysinfo`` reports TBB as unavailable unless it's also installed system-wide,
+but PTtools loads the library from there automatically.
+You can verify that this works by running the command ``python -m pttools.speedup.libraries``.
 For a TBB installed system-wide, you can check the section ``Threading Layer Information``
 of the output of ``numba --sysinfo``.
-The ``tbb`` and ``intel-openmp`` packages are available on PyPI only for x86-64,
+The ``intel-openmp`` package is available on PyPI only for x86-64,
 and there is no OpenMP runtime on PyPI for ARM-based macOS.
 There, you can install OpenMP with Homebrew, and make it available for Numba with
 
