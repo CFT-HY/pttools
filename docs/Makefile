@@ -28,18 +28,23 @@ help:
 
 .PHONY: help Makefile
 
+# The link check can be skipped with SKIP_LINKCHECK=1, e.g. when it is run separately.
 all:
 	# Cleaning helps in detecting changes to the Python files.
 	$(MAKE) clean
 	# $(MAKE) apidoc
+ifndef SKIP_LINKCHECK
 	$(MAKE) linkcheck
+endif
 	$(MAKE) html
 	$(MAKE) latexpdf
 	$(MAKE) epub
 
 all-noplot:
 	$(MAKE) clean
+ifndef SKIP_LINKCHECK
 	$(MAKE) linkcheck-noplot
+endif
 	$(MAKE) html-noplot
 	$(MAKE) latexpdf-noplot
 	$(MAKE) epub-noplot

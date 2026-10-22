@@ -32,7 +32,9 @@
 - The CI workflow `.github/workflows/main.yml` runs all the CI jobs on every push.
   Most jobs start only after the `lint`, `typecheck` and `build` jobs have passed,
   and the Windows and macOS tests after `test-numba`.
-  The `docs` job lints the documentation with `python -m pttools.docs.lint` before building the full documentation.
+  The `docs` job lints the documentation with `python -m pttools.docs.lint`, checks the links,
+  and then builds the full documentation. Broken links are reported as warnings instead of failing the job,
+  see `--broken-links-as-warnings` of `pttools.docs.lint`.
   The Docker image is published for every commit that passes the Linux tests,
   and the PyPI package and the Software Heritage archive only for version tags, after all the other jobs have passed.
 - The following are also used by other repositories, such as PTPlot, from the `dev` branch:

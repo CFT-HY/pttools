@@ -2,6 +2,7 @@
 
 import contextlib
 import io
+import json
 import os
 from pathlib import Path
 import shutil
@@ -139,3 +140,111 @@ class DocsLintPathsTest(unittest.TestCase):
         assert second == log_dir / "sphinx_2026-01-01_00-00-00_1.log"
         assert first.is_file()
         assert second.is_file()
+
+
+@unittest.skipIf(shutil.which("make") is None, "make is not installed")
+class DocsLintLinksTest(unittest.TestCase):
+    """Tests for reporting the broken links of a link check as warnings, using a stub Makefile."""
+
+    #: Results of a link check, as written to output.json by Sphinx
+    LINKS: tp.ClassVar[list[dict[str, tp.Any]]] = [
+        {"filename": "index.rst", "lineno": 3, "status": "working", "code": 0, "uri": "https://ok.example", "info": ""},
+        {"filename": "index.rst", "lineno": 5, "status": "broken", "code": 0, "uri": "https://broken.example",
+         "info": "500 Server Error"},
+        {"filename": "api.rst", "lineno": 7, "status": "timeout", "code": 0, "uri": "https://slow.example",
+         "info": "timed out"},
+    ]
+
+    @tp.override
+    def setUp(self) -> None:
+        self.tmp_dir: tempfile.TemporaryDirectory[str] = tempfile.TemporaryDirectory()
+        self.docs_dir: Path = Path(self.tmp_dir.name).resolve() / "docs"
+        self.docs_dir.mkdir()
+        (self.docs_dir / "conf.py").write_text("")
+        # The link check fails because of the links, and "warning" also because of a Sphinx warning.
+        (self.docs_dir / "Makefile").write_text(
+            "links:\n\t@exit 1\n"
+            "warning:\n\t@echo \"index.rst:1: WARNING: something else\"\n\t@exit 1\n"
+            "ok:\n\t@echo ok\n")
+        self.build_dir: Path = self.docs_dir / "build"
+        self.linkcheck_dir: Path = self.build_dir / lint.LINKCHECK_SUBDIR_NAME
+        self.linkcheck_dir.mkdir(parents=True)
+
+    @tp.override
+    def tearDown(self) -> None:
+        self.tmp_dir.cleanup()
+
+    def write_links(self, links: list[dict[str, tp.Any]]) -> None:
+        """Write the results of a link check to output.json."""
+        with (self.linkcheck_dir / "output.json").open("w", encoding="utf-8") as file:
+            for link in links:
+                file.write(json.dumps(link) + "\n")
+
+    def run_main(self, target: str, as_warnings: bool, github_actions: bool = False) -> tuple[int, str]:
+        """Run the lint with a stub make target and return the exit code and the printed output."""
+        argv = [
+            "--target", target, "--docs-dir", str(self.docs_dir), "--build-dir", str(self.build_dir),
+            "--log-dir", str(self.docs_dir / "logs")
+        ]
+        if as_warnings:
+            argv.append("--broken-links-as-warnings")
+        stdout = io.StringIO()
+        with mock.patch.dict(os.environ, {"GITHUB_ACTIONS": "true" if github_actions else "false"}), \
+                contextlib.redirect_stdout(stdout):
+            returncode = lint.main(argv)
+        return returncode, stdout.getvalue()
+
+    def test_failed_links(self) -> None:
+        """Only the broken and timed out links are returned."""
+        self.write_links(self.LINKS)
+        assert lint.failed_links(self.linkcheck_dir) == self.LINKS[1:]
+
+    def test_failed_links_no_file(self) -> None:
+        """Without the results of a link check, there are no failed links."""
+        assert lint.failed_links(self.linkcheck_dir) == []
+
+    def test_broken_links_as_warnings(self) -> None:
+        """If make fails only because of the links, they are reported as warnings and the exit code is 0."""
+        self.write_links(self.LINKS)
+        returncode, printed = self.run_main("links", as_warnings=True, github_actions=True)
+        assert returncode == 0
+        assert "Broken or timed out links (2):" in printed
+        assert "::warning title=Broken link::index.rst:5: broken https://broken.example - 500 Server Error" in printed
+        assert "::warning title=Broken link::api.rst:7: timeout https://slow.example - timed out" in printed
+
+    def test_broken_links_as_warnings_not_github(self) -> None:
+        """The warning annotations are printed only on GitHub Actions."""
+        self.write_links(self.LINKS)
+        returncode, printed = self.run_main("links", as_warnings=True)
+        assert returncode == 0
+        assert "::warning" not in printed
+
+    def test_broken_links_as_errors(self) -> None:
+        """Without the option, the broken links are errors."""
+        self.write_links(self.LINKS)
+        returncode, printed = self.run_main("links", as_warnings=False)
+        assert returncode != 0
+        assert "Broken or timed out links (2):" in printed
+
+    def test_broken_links_other_errors(self) -> None:
+        """If there are other errors in addition to the links, the exit code is that of make."""
+        self.write_links(self.LINKS)
+        returncode, printed = self.run_main("warning", as_warnings=True)
+        assert returncode != 0
+        assert "WARNING: something else" in printed
+
+    def test_no_broken_links(self) -> None:
+        """If make fails without failed links, the exit code is that of make."""
+        self.write_links(self.LINKS[:1])
+        returncode, _ = self.run_main("links", as_warnings=True)
+        assert returncode != 0
+
+    def test_success(self) -> None:
+        """A successful build is not affected."""
+        returncode, _ = self.run_main("ok", as_warnings=True)
+        assert returncode == 0
+
+    @staticmethod
+    def test_github_warning() -> None:
+        """The special characters of the message are escaped."""
+        assert lint.github_warning("Title", "50% done\nnext\rline") == "::warning title=Title::50%25 done%0Anext%0Dline"

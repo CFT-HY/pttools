@@ -24,6 +24,19 @@ on:
         type: string
         required: false
         default: latexpdf-noplot
+      linkcheck:
+        description: >-
+          The make target in the docs directory that checks the links after the linting.
+          The broken and timed out links are reported as warnings instead of failing the job,
+          as they are often caused by temporary problems of the linked servers.
+          The other errors of the link check still fail the job.
+          The link check of the build target is then skipped with SKIP_LINKCHECK=1,
+          which the "all" targets of the Makefiles of PTtools and PTPlot support.
+          The default "linkcheck-noplot" checks the links without running the examples.
+          An empty string skips this, and the links are then checked by the build target, if at all.
+        type: string
+        required: false
+        default: linkcheck-noplot
       target:
         description: >-
           The make target in the docs directory that is run after the linting has passed.
@@ -115,11 +128,27 @@ jobs:
         run: python -m pttools.docs.lint --verbose --target "${LINT}"
         env:
           LINT: ${{ inputs.lint }}
+      - name: Check links
+        id: linkcheck
+        if: inputs.linkcheck != ''
+        run: |
+          # Other repositories, such as PTPlot, may use a version of PTtools that does not have this option.
+          # Then the links are checked by the build target, and the broken links fail the job.
+          if python -m pttools.docs.lint --help | grep -q -- "--broken-links-as-warnings"; then
+            python -m pttools.docs.lint --verbose --target "${LINKCHECK}" --broken-links-as-warnings
+            echo "checked=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "::notice title=Link check::This version of PTtools does not support reporting broken links as warnings, so the links are checked by the build target."
+          fi
+        env:
+          LINKCHECK: ${{ inputs.linkcheck }}
       - name: Build documentation
         if: inputs.target != ''
         run: python -m pttools.docs.lint --verbose --target "${TARGET}"
         env:
           TARGET: ${{ inputs.target }}
+          # The links have already been checked by the previous step.
+          SKIP_LINKCHECK: ${{ steps.linkcheck.outputs.checked == 'true' && '1' || '' }}
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v7
