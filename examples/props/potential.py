@@ -12,6 +12,7 @@ import numpy as np
 # from sympy import abc
 from examples.utils import save_and_show_fig
 import pttools.type_hints as th
+from pttools.utils.time import log_duration
 
 
 def potential(x: th.FloatOrArr, a: float, b: float, c: float) -> th.FloatOrArr:
@@ -30,6 +31,7 @@ def b_of_det_zero(a: float, c: float) -> float:
 #     print(sol)
 
 
+@log_duration
 def main() -> plt.Figure:
     """Plot the potential at various temperatures"""
     x = np.linspace(0, 2, 50)

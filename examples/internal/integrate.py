@@ -8,6 +8,7 @@ How to integrate a fluid shell profile manually
 import matplotlib.pyplot as plt
 
 from pttools.bubble import DEFAULT_FLUID_INTEGRATE_METHOD, DEFAULT_T_END, Phase, add_df_dtau, fluid_integrate_param
+from pttools.utils.time import log_duration
 
 
 def cs2(w: float, phase: float) -> float:
@@ -15,6 +16,7 @@ def cs2(w: float, phase: float) -> float:
     return 1/3 - 0.001 * phase
 
 
+@log_duration
 def main() -> None:
     """Integrate a fluid shell profile with a custom equation of state and plot it"""
     df_dtau_ptr = add_df_dtau(name="test", cs2_fun=cs2)

@@ -11,8 +11,10 @@ import numpy as np
 
 from examples.utils import save_and_show_fig
 from pttools import bubble
+from pttools.utils.time import log_duration
 
 
+@log_duration
 def main(dots: bool = False) -> plt.Figure:
     r"""Plot the ${v}_+, {v}_-$ plane"""
     # plt.rc('text', usetex=True)

@@ -16,10 +16,12 @@ from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR
 from pttools.bubble.relativity import lorentz
 from pttools.bubble.solution_type import SolutionType
 from pttools.models.const_cs import ConstCSModel
+from pttools.utils.time import log_duration
 from tests.paper.plane import xiv_plane
 from tests.paper.plot_plane_paper import plot_plane
 
 
+@log_duration
 def main() -> plt.Figure:
     r"""Plot the $\xi, v$ plane for the constant sound speed model"""
     css = 1 / np.sqrt(3) - 0.05

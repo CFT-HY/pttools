@@ -82,6 +82,7 @@ from pttools.speedup.parallel import FakeExecutor, get_pool
 from pttools.ssm.accuracy import Accuracy
 from pttools.ssm.nucleation import NucType
 import pttools.type_hints as th
+from pttools.utils.time import log_duration
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -387,6 +388,7 @@ class Progress:
         )
 
 
+@log_duration
 def main(
         n_points: int = SIZES["small"],
         path: Path | None = None,
@@ -451,10 +453,7 @@ def main(
                 progress.update(result)
             progress.report_if_due()
     progress.report()
-    logger.info(
-        "Exported the dataset to %s in %s. Size of the file: %s",
-        path, format_duration(progress.elapsed), format_size(path.stat().st_size)
-    )
+    logger.info("Exported the dataset to %s. Size of the file: %s", path, format_size(path.stat().st_size))
     return path
 
 

@@ -12,8 +12,10 @@ from pttools.bubble import Bubble
 from pttools.models import BagModel
 from pttools.omgw0 import Spectrum
 from pttools.ssm import NucType
+from pttools.utils.time import log_duration
 
 
+@log_duration
 def main() -> tuple[plt.Figure, plt.Figure]:
     """Plot a single bubble"""
     # Create the equation of state.

@@ -21,6 +21,7 @@ from pttools.models import BagModel
 from pttools.ssm import const
 from pttools.ssm.ssm import A2_e_conserving
 import pttools.type_hints as th
+from pttools.utils.time import log_duration
 
 #: $(v_{\text{wall}}, \alpha_n)$ of the fluid shells
 PARAMS: tuple[tuple[float, float], ...] = ((0.5, 0.1), (0.7, 0.1), (0.95, 0.5), (0.95, 1.45))
@@ -36,6 +37,7 @@ def window_mean(arr: th.FloatArr1D, z: th.FloatArr1D, width: float) -> th.FloatA
     return np.convolve(arr, np.ones(n) / n, mode="same")
 
 
+@log_duration
 def main() -> Figure:
     r"""Plot $\lvert A(z) \rvert^2$ with and without the exact sine transforms for large $z$."""
     model = BagModel.cached(alpha_n_min=0.001)

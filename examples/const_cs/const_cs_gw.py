@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import io
 import logging
-import time
 import typing as tp
 
 import matplotlib.pyplot as plt
@@ -25,6 +24,7 @@ from pttools.models import ConstCSModel
 from pttools.omgw0 import H2, Spectrum, SpectrumArr3D, omega_ins_h2
 import pttools.type_hints as th
 from pttools.utils.system import IS_READ_THE_DOCS
+from pttools.utils.time import log_duration
 
 if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.axes import Axes
@@ -197,6 +197,7 @@ def setup_axes(
     return title, title_omgw0
 
 
+@log_duration
 def main(
         low_k: bool = True,
         spectrum_kwargs: dict[str, tp.Any] | None = None) -> tuple[th.FigArr1D, th.FigArr2D, str]:
@@ -205,7 +206,6 @@ def main(
     :param low_k: whether to use the low-$k$ approximation
     :param spectrum_kwargs: additional arguments for the spectra, e.g. accuracy settings
     """
-    start_time = time.perf_counter()
     a_s = 5
     a_b = 1
     V_s = 1
@@ -307,10 +307,6 @@ def main(
         fig.tight_layout()
     for fig in figs2.flat:
         fig.tight_layout()
-
-    msg = f"Generating the figures took {time.perf_counter() - start_time} s"
-    logger.debug(msg)
-    print(msg)
     return figs, figs2, table
 
 

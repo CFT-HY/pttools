@@ -17,6 +17,7 @@ from examples.utils import save_fig
 from pttools import bubble
 import pttools.type_hints as th
 from pttools.utils import IS_GITHUB_ACTIONS
+from pttools.utils.time import log_duration
 
 if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.image import AxesImage
@@ -97,6 +98,7 @@ def plot_bubble(ax: plt.Axes, label: str, v_wall: float, alpha: float, n_xi: int
     return cs
 
 
+@log_duration
 def main(
         alpha: float = 0.5,
         v_walls: tuple[float, ...] = (0.44, 0.72, 0.92),

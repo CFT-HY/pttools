@@ -16,11 +16,13 @@ from pttools.models import ConstCSModel
 from pttools.omgw0 import DEFAULT_T_STAR, Spectrum
 from pttools.ssm import NucType
 import pttools.type_hints as th
+from pttools.utils.time import log_duration
 
 if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.figure import Figure
 
 
+@log_duration
 def main() -> Figure:
     """Plot the intermediate steps of the Sound Shell Model for a single bubble"""
     model = ConstCSModel.cached(css2=1/4, csb2=1/4, alpha_n_min=0.1)

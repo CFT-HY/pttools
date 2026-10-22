@@ -19,8 +19,10 @@ from pttools.plot.spectra import (
     POW_GW0_H2_LABEL,
 )
 from pttools.plot.utils import A4_PAPER_SIZE, legend
+from pttools.utils.time import log_duration
 
 
+@log_duration
 def main() -> plt.Figure:
     """Plot LISA instrument and astrophysical noise as a function of frequency"""
     fig: plt.Figure = plt.figure(figsize=A4_PAPER_SIZE)

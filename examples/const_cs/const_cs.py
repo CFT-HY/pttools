@@ -16,11 +16,13 @@ from pttools.omgw0 import Spectrum
 from pttools.plot.model import ModelPlot
 from pttools.ssm import NucType
 import pttools.type_hints as th
+from pttools.utils.time import log_duration
 
 if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.figure import Figure
 
 
+@log_duration
 def main() -> tuple[ModelPlot, Figure, Figure]:
     """Plot various quantities for the constant sound speed model"""
     csb = 1 / sqrt(3) - 0.01

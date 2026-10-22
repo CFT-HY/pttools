@@ -23,6 +23,7 @@ from examples.utils import save_and_show_figs
 from pttools.lattice import compare_chrw25_runs
 from pttools.plot.lattice import plot_spectra_comparison
 import pttools.type_hints as th
+from pttools.utils.time import log_duration
 
 if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.figure import Figure
@@ -36,6 +37,7 @@ R_STAR: float = 0.1
 Y_MIN: float = 2.
 
 
+@log_duration
 def main() -> dict[str, Figure]:
     """Plot the simulated and SSM velocity spectra and GW power growth rates of the runs of Correia et al."""
     figs = {}

@@ -10,8 +10,10 @@ import matplotlib.pyplot as plt
 from examples.utils import save_and_show_fig
 from pttools.bubble import fluid_reference
 from pttools.bubble.solution_type import SolutionType
+from pttools.utils.time import log_duration
 
 
+@log_duration
 def main() -> plt.Figure:
     """Plot the parameters of fluid_reference"""
     ref = fluid_reference.ref()

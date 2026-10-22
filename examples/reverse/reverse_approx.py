@@ -11,6 +11,7 @@ from scipy.optimize import OptimizeResult, minimize
 
 from pttools.omgw0.approx import f0_peak_approx, omgw_approx
 import pttools.type_hints as th
+from pttools.utils.time import log_duration
 
 
 def solvable(
@@ -54,6 +55,7 @@ def solver(
     return *sol.x, err
 
 
+@log_duration
 def main() -> None:
     """Usage example"""
     print("Starting solver")

@@ -18,6 +18,7 @@ import pandas as pd
 from examples.utils import save_and_show_figs
 from pttools.plot.suppression import SuppressionPlot
 from pttools.ssm.suppression import CHRW25, NO_HYBRIDS_EXT, NO_HYBRIDS_EXT_CHRW25
+from pttools.utils.time import log_duration
 
 
 def comparison_table() -> pd.DataFrame:
@@ -36,6 +37,7 @@ def comparison_table() -> pd.DataFrame:
     })
 
 
+@log_duration
 def main() -> tuple[SuppressionPlot, SuppressionPlot]:
     r"""Plot the suppression factor $\Sigma({v}_\text{wall}, \alpha_n)$ with and without the new data points."""
     print(comparison_table().to_markdown(index=False, floatfmt=".4g"))

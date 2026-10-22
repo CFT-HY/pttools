@@ -14,8 +14,10 @@ from pttools.bubble.solution_type import SolutionType
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
 from pttools.plot.fluid_shell_3d import BubblePlot3D
+from pttools.utils.time import log_duration
 
 
+@log_duration
 def main() -> BubblePlot3D:
     r"""Plot bag and constant sound speed model bubbles in 3D, and compare the bag bubbles with reference values"""
     bag = BagModel.cached(a_s=1.1, a_b=1, V_s=1)

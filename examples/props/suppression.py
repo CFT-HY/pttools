@@ -12,8 +12,10 @@ from pandas import DataFrame
 from examples.utils import save_and_show_figs
 from pttools.plot.suppression import SuppressionPlot
 from pttools.ssm.suppression import SUPPRESSIONS
+from pttools.utils.time import log_duration
 
 
+@log_duration
 def main() -> dict[str, SuppressionPlot]:
     r"""Plot the suppression factor $\Sigma({v}_\text{wall}, \alpha_n)$"""
     df = DataFrame({

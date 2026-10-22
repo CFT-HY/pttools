@@ -14,6 +14,7 @@ from pttools.bubble import Bubble
 from pttools.models import GKSVDV_ALPHA_N, ConstCSModel
 from pttools.plot import setup_bubbles_plot_multifig
 import pttools.type_hints as th
+from pttools.utils.time import log_duration
 
 if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.figure import Figure
@@ -21,6 +22,7 @@ if th.TYPE_CHECKING_OR_DOCS:
 logger: logging.Logger = logging.getLogger(__name__)
 
 
+@log_duration
 def main() -> Figure:
     r"""Plot the fluid profiles for a single wall speed and the $\alpha_n$ values of :giese_2021:`\ `"""
     model = ConstCSModel.cached(css2=1/4, csb2=1/4, a_s=5, a_b=1, V_s=1)

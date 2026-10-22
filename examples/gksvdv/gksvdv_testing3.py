@@ -14,11 +14,13 @@ from pttools.bubble.props import find_phase
 from pttools.bubble.thermo import kappa, kinetic_energy_density, va_trace_anomaly_diff
 from pttools.models import ConstCSModel
 import pttools.type_hints as th
+from pttools.utils.time import log_duration
 
 if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.figure import Figure
 
 
+@log_duration
 def main(
         css2: float = 1/4,
         csb2: float = 1/4,

@@ -12,8 +12,10 @@ from examples.utils import save_and_show_fig
 from pttools.analysis.bubble_grid import create_bubbles
 from pttools.bubble import get_ke_frac
 from pttools.models.const_cs import ConstCSModel
+from pttools.utils.time import log_duration
 
 
+@log_duration
 def main() -> plt.Figure:
     r"""Plot the kinetic energy fraction for various $\alpha_n$ as a function of $\xi_\text{wall}$"""
     # model = ConstCSModel(css2=1/3, csb2=1/3, a_s=100, a_b=50, V_s=1e-8, V_b=0)

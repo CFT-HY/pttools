@@ -15,8 +15,10 @@ from pttools.bubble import Bubble, Phase, lorentz, v_chapman_jouguet_const_cs
 from pttools.bubble.gksvdv import kappaNuMuModel
 from pttools.models import ConstCSModel
 from pttools.plot.utils import A4_PAPER_SIZE
+from pttools.utils.time import log_duration
 
 
+@log_duration
 def main(
         a_s: float = 5,
         a_b: float = 1,

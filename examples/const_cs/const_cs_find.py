@@ -4,8 +4,10 @@ Finding alpha_n_min for ConstCSModel
 """
 
 from pttools.models import ConstCSModel
+from pttools.utils.time import log_duration
 
 
+@log_duration
 def main() -> tuple[ConstCSModel, ConstCSModel]:
     """Create two constant sound speed models and print their parameters, including alpha_n_min"""
     model1 = ConstCSModel.cached(css2=1/3, csb2=1/4, a_s=5, alpha_n_min=0.02)

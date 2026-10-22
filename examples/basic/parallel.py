@@ -13,8 +13,10 @@ from pttools.bubble import get_kappa_omega
 from pttools.models import BagModel
 from pttools.plot import VwAlphaPlot
 from pttools.utils import testing
+from pttools.utils.time import log_duration
 
 
+@log_duration
 def main() -> VwAlphaPlot:
     """Minimal example of parallel bubble solving"""
     n = 10 if testing() else 20

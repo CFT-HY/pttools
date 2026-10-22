@@ -11,8 +11,10 @@ from examples.utils import FIG_DIR
 from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
 from pttools.plot.delta_theta import DeltaThetaPlot3D
+from pttools.utils.time import log_duration
 
 
+@log_duration
 def main() -> DeltaThetaPlot3D:
     r"""Plot $\Delta \theta$ surfaces as a function of $w_+$ and $w_-$."""
     bag = BagModel.cached(a_s=1.1, a_b=1, V_s=1)

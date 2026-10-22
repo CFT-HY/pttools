@@ -4,7 +4,6 @@ Compare κ(ξ) for old and new solvers
 """
 
 import logging
-import time
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,13 +12,14 @@ from examples.utils import save_and_show_fig
 from pttools.bubble.bubble import Bubble
 from pttools.bubble.thermo_bag import get_kappa_de_bag
 from pttools.models.bag import BagModel
+from pttools.utils.time import log_duration
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
+@log_duration
 def main() -> plt.Figure:
     r"""Compare $\kappa(\xi)$ for old and new solvers"""
-    t_start = time.perf_counter()
     model = BagModel.cached(a_s=1.1, a_b=1, V_s=1)
     v_walls = np.linspace(0.2, 0.95, 10)
     alpha_ns = np.array([0.1])
@@ -37,7 +37,6 @@ def main() -> plt.Figure:
             new[i_v] = bubble.kappa
         ax.plot(v_walls, new)
 
-    logger.info("Elapsed time: %s s", time.perf_counter() - t_start)
     return fig
 
 

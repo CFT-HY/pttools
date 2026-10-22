@@ -13,6 +13,7 @@ from pttools.bubble import Bubble
 from pttools.models import BagModel, Model
 from pttools.omgw0 import Spectrum
 import pttools.type_hints as th
+from pttools.utils.time import log_duration
 
 #: Maximum number of iterations of the optimizer, which is the default of the L-BFGS-B method of SciPy
 MAXITER: int = 15000
@@ -81,6 +82,7 @@ def solver(
     return *sol.x, err
 
 
+@log_duration
 def main(
         n_t: int = N_T,
         n_z_lookup: int = N_Z_LOOKUP,

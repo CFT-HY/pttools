@@ -12,8 +12,10 @@ import numpy as np
 
 from examples.utils import save_and_show_fig
 from pttools.models import ConstCSModel
+from pttools.utils.time import log_duration
 
 
+@log_duration
 def main() -> plt.Figure:
     r"""Plot $\alpha_n$ as a function of $\alpha_{\bar{\theta}_n}$ for a constant sound speed model"""
     model = ConstCSModel.cached(css2=1/3, csb2=1/4, a_s=5, a_b=1, V_s=1)

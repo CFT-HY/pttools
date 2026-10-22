@@ -49,6 +49,7 @@ from examples.utils import save_and_show_figs
 from pttools.lattice import CHRW25_RUNS, compare_chrw25_runs
 from pttools.plot.lattice import plot_pow_gw_asymptote_comparison
 import pttools.type_hints as th
+from pttools.utils.time import log_duration
 
 if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.figure import Figure
@@ -62,6 +63,7 @@ Y_MIN_FIT: dict[str, float] = {"detonation": 4., "deflagration": 0.}
 Y_MAX_FIT: dict[str, float] = {"detonation": 1e3, "deflagration": 360.}
 
 
+@log_duration
 def main() -> dict[str, Figure]:
     """Plot the asymptotically scaled simulated GW power spectra and the SSM spectra of the runs of Correia et al."""
     lattice_comparisons = compare_chrw25_runs(y_min=Y_MIN, r_star=R_STAR, missing_ok=True)

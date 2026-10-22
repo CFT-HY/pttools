@@ -13,11 +13,13 @@ from pttools.models import BagModel, ConstCSModel
 from pttools.omgw0 import Spectrum
 from pttools.plot import plot_spectra_multi
 import pttools.type_hints as th
+from pttools.utils.time import log_duration
 
 if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.figure import Figure
 
 
+@log_duration
 def main() -> Figure:
     """Plot the velocity and GW spectra of multiple bubbles"""
     # Create the equations of state.

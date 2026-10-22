@@ -10,8 +10,10 @@ import numpy as np
 from examples.utils import save_and_show_fig
 from pttools import models
 from pttools.plot.chapman_jouguet import ChapmanJouguetPlot
+from pttools.utils.time import log_duration
 
 
+@log_duration
 def main() -> ChapmanJouguetPlot:
     r"""Plot $v_{CJ} (\alpha_n)$"""
     plot = ChapmanJouguetPlot(alpha_n=np.linspace(0.15, 0.3, 100))

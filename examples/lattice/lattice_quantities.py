@@ -20,6 +20,7 @@ from examples.utils import save_and_show_figs
 from pttools.lattice import compare_chrw25_runs
 from pttools.plot.lattice import plot_gw_rate_time_comparison, plot_quantities_comparison
 import pttools.type_hints as th
+from pttools.utils.time import log_duration
 
 if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.figure import Figure
@@ -27,6 +28,7 @@ if th.TYPE_CHECKING_OR_DOCS:
 logger: logging.Logger = logging.getLogger(__name__)
 
 
+@log_duration
 def main() -> dict[str, Figure]:
     """Plot the quantities of the runs of Correia et al. and the corresponding SSM values."""
     figs = {}

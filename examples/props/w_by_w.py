@@ -16,8 +16,10 @@ from pttools.bubble.solution_type import SolutionType
 
 # from pttools.models.bag import BagModel
 from pttools.models.const_cs import ConstCSModel
+from pttools.utils.time import log_duration
 
 
+@log_duration
 def main(
         v_wall: float = 0.40454545454545454,
         alpha_n: float = 0.2534507678410117) -> plt.Figure:

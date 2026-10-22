@@ -18,6 +18,7 @@ from examples.utils import save_and_show_fig
 from pttools.bubble import Bubble
 from pttools.models import DataModel
 import pttools.type_hints as th
+from pttools.utils.time import log_duration
 
 if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.figure import Figure
@@ -27,6 +28,7 @@ if th.TYPE_CHECKING_OR_DOCS:
 logger: logging.Logger = logging.getLogger(__name__)
 
 
+@log_duration
 def main(data_path: str = "thermodynamics_data.h5") -> Figure | None:
     """Plot a bubble using a DataModel from an HDF5 data file"""
     # __file__ is not supported for example files by sphinx-gallery

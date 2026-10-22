@@ -24,6 +24,7 @@ from pttools.models import BagModel, Model
 from pttools.plot.utils import A3_PAPER_SIZE
 from pttools.ssm import SSMSpectrum, power_gw_bag, power_v_bag, spec_den_v_bag
 import pttools.type_hints as th
+from pttools.utils.time import log_duration
 from tests.paper.plane import xiv_plane
 from tests.paper.plot_plane_paper import plot_plane
 
@@ -100,6 +101,7 @@ def validate2(
     return dev
 
 
+@log_duration
 def main() -> plt.Figure:
     """Plot a comparison of the old and new solvers"""
     bag = BagModel.cached(a_s=1.1, a_b=1, V_s=2)

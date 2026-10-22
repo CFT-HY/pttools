@@ -18,10 +18,12 @@ from pttools.bubble.fluid_reference import ref
 from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR_BAG
 from pttools.logging import setup_logging
 from pttools.models.bag import BagModel
+from pttools.utils.time import log_duration
 
 setup_logging()
 
 
+@log_duration
 def main(
         v_wall: float = 0.85,
         alpha_n: float = 0.05

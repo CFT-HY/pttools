@@ -43,6 +43,7 @@ from examples.utils import save_and_show_figs
 from pttools.lattice import CHRW25_RUNS, LatticeRun, load_chrw25_runs
 from pttools.plot.lattice import plot_gw_asymptote
 import pttools.type_hints as th
+from pttools.utils.time import log_duration
 
 if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.figure import Figure
@@ -101,6 +102,7 @@ def step_ends(name: str, run: LatticeRun) -> dict[str, int]:
     return {"article": run.last_step() if step_end is None else step_end, "data": run.last_step()}
 
 
+@log_duration
 def main() -> dict[str, Figure]:
     """Plot the extrapolation of the GW power of the runs of Correia et al."""
     lattice_runs = load_chrw25_runs(missing_ok=True)

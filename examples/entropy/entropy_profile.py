@@ -12,11 +12,13 @@ from pttools.bubble.bubble import Bubble
 from pttools.models.bag import BagModel
 from pttools.plot.entropy import plot_entropy
 import pttools.type_hints as th
+from pttools.utils.time import log_duration
 
 if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.figure import Figure
 
 
+@log_duration
 def main() -> Figure:
     """Plot the entropy profiles of a few bubbles"""
     model = BagModel.cached(a_s=1.1, a_b=1, V_s=1)

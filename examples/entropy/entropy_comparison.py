@@ -18,8 +18,10 @@ from pttools.logging import setup_logging
 from pttools.models.bag import BagModel
 from pttools.plot.entropy_grid import compute
 from pttools.utils import testing_or_ci
+from pttools.utils.time import log_duration
 
 
+@log_duration
 def main(relative: bool = True) -> plt.Figure:
     """Plot the entropies of the old and new solvers"""
     n_points = 10 if testing_or_ci else 20

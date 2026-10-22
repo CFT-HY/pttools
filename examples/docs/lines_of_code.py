@@ -12,8 +12,10 @@ which is the PTtools repository when PTtools is run from its source repository.
 
 from pttools.docs.cloc import cloc_compact
 from pttools.utils.system import PROJECT_DIR, PTTOOLS_DIR
+from pttools.utils.time import log_duration
 
 
+@log_duration
 def main() -> None:
     """Print the lines of code of the project repository and the PTtools library."""
     if PROJECT_DIR is None:

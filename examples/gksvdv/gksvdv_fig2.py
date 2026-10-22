@@ -21,6 +21,7 @@ from pttools.models import GKSVDV_ALPHA_N, ConstCSModel, gksvdv_models, gksvdv_v
 from pttools.speedup import run_parallel
 from pttools.type_hints import FloatArr1D, FloatArr2D, FloatArr3D
 from pttools.utils.system import testing_or_ci
+from pttools.utils.time import log_duration
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -167,6 +168,7 @@ def create_diff_figure(
         ax.set_title(title_str)
 
 
+@log_duration
 def main(
         colors: tp.Sequence[str] = ("b", "y", "r", "g", "purple", "grey"),
         lss: tp.Sequence[str] = ("-", "--", ":", "-."),

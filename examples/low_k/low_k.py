@@ -13,8 +13,10 @@ from examples.utils import save_fig
 from pttools.bubble import Bubble
 from pttools.models import BagModel
 from pttools.omgw0 import Spectrum
+from pttools.utils.time import log_duration
 
 
+@log_duration
 def main(path: str | None = None) -> plt.Figure:
     """Plot the low-, intermediate- and high-frequency approximations of the GW power spectrum"""
     # Choose study parameters

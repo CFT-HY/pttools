@@ -20,12 +20,14 @@ import pttools.type_hints as th
 # from pttools.models.full import FullModel
 # from pttools.models.sm import StandardModel
 from pttools.utils import testing_or_ci
+from pttools.utils.time import log_duration
 from tests.profiling import utils_cprofile
 
 if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.figure import Figure
 
 
+@log_duration
 def main() -> Figure:
     """Plot the relative change in entropy density for a grid of bubbles"""
     n_points = 10 if testing_or_ci() else 20

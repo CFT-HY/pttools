@@ -15,10 +15,12 @@ from pttools.bubble.bubble import get_kappa
 from pttools.models import GKSVDV_ALPHA_N, gksvdv_models, gksvdv_v_wall
 from pttools.type_hints import FloatArr1D
 from pttools.utils import testing_or_ci
+from pttools.utils.time import log_duration
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
+@log_duration
 def main(
         colors: tp.Sequence[str] = ("b", "y", "r", "g", "purple", "grey"),
         alpha_ns: FloatArr1D = GKSVDV_ALPHA_N,

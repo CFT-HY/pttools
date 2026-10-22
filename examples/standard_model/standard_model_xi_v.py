@@ -13,8 +13,10 @@ from pttools.bubble.phase import Phase
 from pttools.logging import setup_logging
 from pttools.models.full import FullModel
 from pttools.models.sm import StandardModel
+from pttools.utils.time import log_duration
 
 
+@log_duration
 def main() -> plt.Figure:
     r"""Solve a bubble with the Standard Model and plot its fluid velocity profile $v(\xi)$"""
     sm = StandardModel.cached(V_s=5e12, g_mult_s=1 + 1e-9, silence_temp=True)

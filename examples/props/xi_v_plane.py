@@ -8,10 +8,12 @@ $(\xi, v)$ plane of the bag model.
 import matplotlib.pyplot as plt
 
 from examples.utils import save_and_show_fig
+from pttools.utils.time import log_duration
 from tests.paper.plane import xiv_plane
 from tests.paper.plot_plane_paper import plot_plane
 
 
+@log_duration
 def main() -> plt.Figure:
     r"""Plot the $(\xi, v)$ plane of the bag model."""
     data = xiv_plane(separate_phases=False)

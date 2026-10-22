@@ -66,6 +66,7 @@ from pttools.speedup.parallel import FakeFuture, get_pool
 from pttools.ssm.accuracy import Accuracy
 import pttools.type_hints as th
 from pttools.utils.system import IS_READ_THE_DOCS
+from pttools.utils.time import log_duration
 
 if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.figure import Figure
@@ -261,6 +262,7 @@ def plot_spectra(cases: tuple[Case, ...], dataset: list[Result], best: list[Resu
     return fig
 
 
+@log_duration
 def main(
         cases: tuple[Case, ...] = CASES,
         values: dict[str, tuple[int, ...]] = VALUES,
@@ -276,7 +278,6 @@ def main(
     :param accuracy: the accuracy settings of the dataset, which are compared with the reference settings
     :return: the figures of the errors, the bubbles and the spectra
     """
-    start_time = time.perf_counter()
     models = {
         (case.css2, case.csb2): ConstCSModel.cached(css2=case.css2, csb2=case.csb2, **MODEL_KWARGS)
         for case in cases
@@ -316,7 +317,6 @@ def main(
         [results[(i_case, "dataset", 0)] for i_case in range(len(cases))],
         [results[(i_case, "reference", 0)] for i_case in range(len(cases))]
     )
-    logger.info("Computing the accuracy comparison took %.1f s", time.perf_counter() - start_time)
     return fig_errors, fig_bubbles, fig_spectra
 
 
