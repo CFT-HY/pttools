@@ -210,6 +210,12 @@ jobs:
       contents: read
       id-token: write
     timeout-minutes: 30
+    # The tests of this job are run without Numba, and therefore without the nogil of the compiled functions,
+    # so the threads would be limited by the GIL. Processes are therefore used for the parallel computations.
+    # The tests that would have to pickle non-bag models to the processes are expected to fail,
+    # see mark_xfail_pickle_without_jit in tests/utils/mark.py.
+    env:
+      PTTOOLS_USE_THREADS: "0"
     strategy:
       matrix:
         python-version: ['3.12', '3.13', '3.14']  # '3.14t'
