@@ -77,6 +77,8 @@
   It builds in a new temporary directory `./docs/lint/lint_TIMESTAMP_RANDOM`, whose path it prints,
   so multiple lints can be run simultaneously. These directories are not removed automatically.
   Fix all reported errors, as the documentation is built with `--fail-on-warning`.
+- In docstring equations, write `\ast` instead of `*` after an opening bracket, e.g. `r_{\ast,0}`,
+  as reStructuredText reads `{*` as the start of italics.
 
 ## General instructions
 - Before editing code that has physics equations, ensure that there are unit tests that verify the results of that code.

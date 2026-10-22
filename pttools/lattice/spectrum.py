@@ -26,7 +26,7 @@ class LatticeSpectrum(Omgw0Base):
     ``step`` and ``step_prev``, as in :correia_2025:`\ ` fig. 5.
     The expansion of the universe is neglected in the simulations, and therefore $H_* = H_n$.
 
-    The simulation is in flat space, and its Hubble-scaled mean bubble spacing ${r}_{*,\text{lat}}$
+    The simulation is in flat space, and its Hubble-scaled mean bubble spacing ${r}_{\ast,\text{lat}}$
     (:py:attr:`pttools.lattice.run.LatticeRun.r_star`) follows from the energy density
     and the gravitational constant in lattice units.
     For comparisons with the Sound Shell Model, e.g. with :py:class:`pttools.omgw0.spectrum.Spectrum`,
@@ -34,7 +34,7 @@ class LatticeSpectrum(Omgw0Base):
     The GW power spectrum is proportional to $(H_* R_*)^2$, as the source lasts for a time proportional to $R_*$,
     and therefore :correia_2025:`\ ` give it as $\mathcal{P}_\text{gw} / (H_n R_*)^2$.
     Accordingly, the GW power spectrum is scaled as
-    $$\mathcal{P}_\text{gw} = \left( \frac{{r}_*}{{r}_{*,\text{lat}}} \right)^2 \mathcal{P}_{\text{gw},\text{lat}}.$$
+    $$\mathcal{P}_\text{gw} = \left( \frac{{r}_*}{{r}_{\ast,\text{lat}}} \right)^2 \mathcal{P}_{\text{gw},\text{lat}}.$$
     The mean bubble spacing $R_*$ is kept in lattice units, and the Hubble rate is therefore $H_* = {r}_* / R_*$.
     The other spectra and the GW power growth rate, which is normalised by $H_n R_*$ and $H_n t$,
     do not depend on ${r}_*$.
@@ -155,7 +155,20 @@ class LatticeSpectrum(Omgw0Base):
     @cached_property
     @tp.override
     def pow_gw(self) -> th.FloatArr1D:
-        return (self.r_star / self.run.r_star)**2 * self._pow(Quantity.GW_TT)
+        return self.pow_gw_r_star_scale * self._pow(Quantity.GW_TT)
+
+    @property
+    def pow_gw_r_star_scale(self) -> float:
+        r"""Scaling factor of the GW power spectrum from the simulation to $r_*$.
+
+        :py:attr:`pow_gw` is the GW power spectrum of the simulation multiplied by this factor:
+        $$\mathcal{P}_\text{gw} = \left( \frac{{r}_*}{{r}_{\ast,\text{lat}}} \right)^2
+        \mathcal{P}_{\text{gw},\text{lat}}.$$
+        It's 1 if the spectrum has not been scaled to another $r_*$,
+        and can be used to scale other GW power spectra of the simulation,
+        e.g. :py:attr:`pttools.lattice.asymptote.PowGwAsymptoteFit.pow_gw_inf`, to the $r_*$ of this spectrum.
+        """
+        return (self.r_star / self.run.r_star)**2
 
     @functools.cached_property
     def pow_gw_rate(self) -> th.FloatArr1D:
@@ -192,7 +205,7 @@ class LatticeSpectrum(Omgw0Base):
         """
         return self.run.omega_gw_asymptote(**kwargs).value / self.run.omega_gw(self.step)
 
-    def pow_gw_scaled_to_asymptote(self, **kwargs: tp.Any) -> th.FloatArr1D:
+    def pow_gw_asymptote(self, **kwargs: tp.Any) -> th.FloatArr1D:
         r"""$\mathcal{P}_\text{gw}^\infty(z)$, GW power spectrum scaled to the asymptote.
 
         This estimates the GW power spectrum at late times by scaling :py:attr:`pow_gw`

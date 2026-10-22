@@ -40,7 +40,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from examples.utils import save_and_show_figs
-from pttools.lattice import CHRW25_RUNS, LatticeRun, load_chrw25_runs
+from pttools.lattice import CHRW25_RUNS, LatticeRun, load_chrw25_runs, step_ends
 from pttools.plot.lattice import plot_gw_asymptote
 import pttools.type_hints as th
 from pttools.utils.time import log_duration
@@ -50,8 +50,11 @@ if th.TYPE_CHECKING_OR_DOCS:
 
 logger: logging.Logger = logging.getLogger(__name__)
 
+
 def fit_cases(lattice_runs: dict[str, LatticeRun]) -> list[tuple[str, LatticeRun, int, str]]:
-    """The fits to show: each run with each of its distinct last time steps, see :py:func:`step_ends`.
+    """The fits to show: each run with each of its distinct last time steps.
+
+    See :py:func:`pttools.lattice.chrw25.step_ends`.
 
     :param lattice_runs: the runs
     :return: the name of the run, the run, the last time step, and the description of the last time step
@@ -86,20 +89,6 @@ def fit_table(lattice_runs: dict[str, LatticeRun]) -> pd.DataFrame:
     table = pd.DataFrame.from_dict(rows, orient="index")
     table.index.names = ["Run", "Last time step"]
     return table
-
-
-def step_ends(name: str, run: LatticeRun) -> dict[str, int]:
-    """The last time steps of the fits: those of the scripts of the article and those of the data.
-
-    See :py:attr:`pttools.lattice.params.LatticeRunParams.fit_step_end`
-    and :py:meth:`pttools.lattice.run.LatticeRun.last_step`.
-
-    :param name: name of the run, a key of :py:data:`pttools.lattice.chrw25.CHRW25_RUNS`
-    :param run: the run
-    :return: the last time steps by their description
-    """
-    step_end = CHRW25_RUNS[name].fit_step_end
-    return {"article": run.last_step() if step_end is None else step_end, "data": run.last_step()}
 
 
 @log_duration

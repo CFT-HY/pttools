@@ -11,7 +11,7 @@ import typing as tp
 import numpy as np
 import pandas as pd
 
-from pttools.ssm.nucleation import NucType
+from pttools.omgw0.spectrum import Spectrum
 from pttools.ssm.suppression import SuppressionFit, SuppressionFitMethod, SuppressionMethod, fit_suppression_gw
 import pttools.type_hints as th
 
@@ -34,7 +34,6 @@ class LatticeComparison:
             self,
             spectrum: LatticeSpectrum,
             ssm: SSMSpectrum | None = None,
-            nuc_type: NucType = NucType.SIMULTANEOUS,
             method: SuppressionFitMethod = SuppressionFitMethod.DEFAULT,
             y_min: float | None = None,
             y_max: float | None = None,
@@ -50,7 +49,11 @@ class LatticeComparison:
             as the $r_*$ of the simulation in lattice units is unphysically large.
             The compared velocity spectra and GW power growth rates do not depend on $r_*$,
             but the GW power spectra and their conversion to $\Omega_{\text{gw},0}$ do.
-        :param nuc_type: nucleation type for :py:meth:`pttools.lattice.run.LatticeRun.ssm_spectrum`
+            A warning is logged if the SSM spectrum has a different nucleation type than the run
+            (:py:attr:`pttools.lattice.run.LatticeRun.nuc_type`), or a different $r_*$ than the simulation spectrum.
+            The latter is always the case if the simulation spectrum has not been scaled to a physical $r_*$.
+            If it's a :py:class:`pttools.omgw0.spectrum.Spectrum`,
+            a warning is also logged if its $T_*$ or $g_*$ differ from those of the simulation spectrum.
         :param method: fitting method
         :param y_min: smallest $z$ to include in the fit
         :param y_max: largest $z$ to include in the fit
@@ -63,8 +66,8 @@ class LatticeComparison:
         if ssm is None:
             # The r_star of the simulation in lattice units is unphysically large for the SSM spectrum.
             unscaled = not np.isfinite(spectrum.r_star) or spectrum.r_star == run.r_star
-            ssm = run.ssm_spectrum(nuc_type=nuc_type) if unscaled \
-                else run.ssm_spectrum(nuc_type=nuc_type, r_star=spectrum.r_star)
+            ssm = run.ssm_spectrum() if unscaled else run.ssm_spectrum(r_star=spectrum.r_star)
+        self._check_ssm(spectrum, ssm)
         if ssm.suppression_method != SuppressionMethod.NONE:
             logger.warning("The SSM spectrum includes a suppression factor, which will affect the fit.")
         #: The simulation run
@@ -76,12 +79,31 @@ class LatticeComparison:
         #: The fitted suppression factor of the GW power growth rate
         self.fit: SuppressionFit = fit_suppression_gw(spectrum, ssm, method=method, y_min=y_min, y_max=y_max, **kwargs)
 
+    @staticmethod
+    def _check_ssm(spectrum: LatticeSpectrum, ssm: SSMSpectrum) -> None:
+        """Log warnings if the parameters of the SSM spectrum do not match those of the simulation spectrum."""
+        name = spectrum.run.name
+        if ssm.nuc_type != spectrum.run.nuc_type:
+            logger.warning(
+                "The nucleation type of the SSM spectrum (%s) differs from that of the run %s (%s).",
+                ssm.nuc_type, name, spectrum.run.nuc_type)
+        if not np.isclose(ssm.r_star, spectrum.r_star):
+            logger.warning(
+                "The r_star of the SSM spectrum (%s) differs from that of the spectrum of the run %s (%s).",
+                ssm.r_star, name, spectrum.r_star)
+        if isinstance(ssm, Spectrum):
+            for attr in ("T_star", "g_star"):
+                if not np.isclose(getattr(ssm, attr), getattr(spectrum, attr)):
+                    logger.warning(
+                        "The %s of the SSM spectrum (%s) differs from that of the spectrum of the run %s (%s).",
+                        attr, getattr(ssm, attr), name, getattr(spectrum, attr))
+
     def omega(self, **kwargs: tp.Any) -> dict[str, float]:
         r"""$\Omega_\text{gw}$, total GW power of the simulation and of the SSM.
 
         The values are integrated over the $z = kR_*$ points of each spectrum.
         The asymptotic value of the simulation is that of
-        :py:meth:`pttools.lattice.spectrum.LatticeSpectrum.pow_gw_scaled_to_asymptote`.
+        :py:meth:`pttools.lattice.spectrum.LatticeSpectrum.pow_gw_asymptote`.
 
         :param kwargs: arguments for :py:meth:`pttools.lattice.run.LatticeRun.omega_gw_asymptote`
         :return: $\Omega_\text{gw}(t)$ and $\Omega_\text{gw}^\infty$ of the simulation,
@@ -93,7 +115,7 @@ class LatticeComparison:
         omega_ssm = float(np.trapezoid(ssm.pow_gw, np.log(ssm.y)))
         return {
             "Omega_gw(t)": float(np.trapezoid(spectrum.pow_gw, ln_y)),
-            "Omega_gw_inf": float(np.trapezoid(spectrum.pow_gw_scaled_to_asymptote(**kwargs), ln_y)),
+            "Omega_gw_inf": float(np.trapezoid(spectrum.pow_gw_asymptote(**kwargs), ln_y)),
             "Omega_gw SSM, suppressed": self.fit.factor * omega_ssm,
             "Omega_gw SSM, unsuppressed": omega_ssm,
         }

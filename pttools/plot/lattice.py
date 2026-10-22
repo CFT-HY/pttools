@@ -547,9 +547,10 @@ def plot_pow_gw_asymptote_comparison(
     r"""Plot the GW power spectrum of a simulation scaled to its asymptote, and that of the Sound Shell Model.
 
     The simulation spectrum at the time of the comparison is scaled to the asymptote with
-    :py:meth:`pttools.lattice.spectrum.LatticeSpectrum.pow_gw_scaled_to_asymptote`.
+    :py:meth:`pttools.lattice.spectrum.LatticeSpectrum.pow_gw_asymptote`.
     If the fits of each wavenumber are given, their asymptotes $\mathcal{P}_\text{gw}^\infty(k)$ are also plotted,
-    scaled to the $r_*$ of the spectrum, with the lower limit of their uncertainty band given by
+    scaled to the $r_*$ of the spectrum with :py:attr:`pttools.lattice.spectrum.LatticeSpectrum.pow_gw_r_star_scale`.
+    The lower limit of their uncertainty band is given by
     :py:attr:`pttools.lattice.asymptote.PowGwAsymptoteFit.pow_gw_inf_lower`.
     The SSM spectrum is plotted both with the suppression factor that is fitted to the GW power growth rate
     of the simulation and without suppression.
@@ -568,14 +569,14 @@ def plot_pow_gw_asymptote_comparison(
     ssm = comparison.ssm
     sup = comparison.fit.factor
     ratio = spectrum.omega_gw_asymptote_ratio(step_end=step_end)
-    pow_scaled = ratio * spectrum.pow_gw
+    pow_scaled = spectrum.pow_gw_asymptote(step_end=step_end)
 
     ax.plot(spectrum.y, spectrum.pow_gw, color=COLOR_GW, lw=0.8, alpha=0.5, label=f"Simulation, $t={spectrum.t:.0f}$")
     ax.plot(
         spectrum.y, pow_scaled, color=COLOR_GW,
         label=rf"Simulation $\times \Omega_\text{{gw}}^\infty / \Omega_\text{{gw}}(t) = {ratio:.3g}$")
     if pow_fit is not None:
-        r_scale = (spectrum.r_star / comparison.run.r_star)**2
+        r_scale = spectrum.pow_gw_r_star_scale
         pow_inf = r_scale * pow_fit.pow_gw_inf
         ax.fill_between(
             pow_fit.y, r_scale * pow_fit.pow_gw_inf_lower, pow_inf + r_scale * pow_fit.pow_gw_inf_err,

@@ -7,7 +7,7 @@ scaled to their late-time asymptotes with the Sound Shell Model.
 
 The GW power of the simulations is still growing at their end,
 and therefore their GW power spectra are scaled to the asymptote with
-:py:meth:`pttools.lattice.spectrum.LatticeSpectrum.pow_gw_scaled_to_asymptote`,
+:py:meth:`pttools.lattice.spectrum.LatticeSpectrum.pow_gw_asymptote`,
 i.e. by the ratio of the extrapolated asymptotic total GW power $\Omega_\text{gw}^\infty$
 and the total GW power $\Omega_\text{gw}(t)$ at the time of the spectrum.
 This assumes that the shape of the spectrum no longer changes.

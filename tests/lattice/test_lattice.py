@@ -25,6 +25,7 @@ from pttools.lattice import (
 )
 from pttools.omgw0 import const, freq
 from pttools.omgw0.base import Omgw0Base
+from pttools.omgw0.spectrum import Spectrum
 from pttools.ssm.nucleation import NucType
 from pttools.ssm.suppression import SuppressionMethod
 from tests.utils.const import LOW_ACCURACY_SPECTRUM_KWARGS
@@ -76,7 +77,7 @@ class SyntheticRunTest(unittest.TestCase):
                 amplitude = step / 1000 if quantity == Quantity.GW_TT else 1.
                 p = amplitude * k**3 * np.exp(-k)
                 np.savetxt(path / f"{quantity.file_prefix}{step}.txt", np.column_stack((k, p, counts)))
-        cls.lattice_run = LatticeRun(path, v_wall=0.5, alpha_n=0.1)
+        cls.lattice_run = LatticeRun(path, v_wall=0.5, alpha_n=0.1, nuc_type=NucType.SIMULTANEOUS)
 
     @classmethod
     @tp.override
@@ -174,7 +175,9 @@ class SyntheticRunTest(unittest.TestCase):
         assert spectrum.r_star == r_star
         assert spectrum.R_star == ref.R_star
         assert spectrum.H_star * spectrum.R_star == pytest.approx(r_star, rel=1e-15)
-        np.testing.assert_allclose(spectrum.pow_gw, (r_star / self.lattice_run.r_star)**2 * ref.pow_gw, rtol=1e-15)
+        assert ref.pow_gw_r_star_scale == 1
+        assert spectrum.pow_gw_r_star_scale == pytest.approx((r_star / self.lattice_run.r_star)**2, rel=1e-15)
+        np.testing.assert_allclose(spectrum.pow_gw, spectrum.pow_gw_r_star_scale * ref.pow_gw, rtol=1e-15)
         np.testing.assert_array_equal(spectrum.y, ref.y)
         np.testing.assert_array_equal(spectrum.pow_U_par, ref.pow_U_par)
         np.testing.assert_array_equal(spectrum.pow_gw_rate, ref.pow_gw_rate)
@@ -217,6 +220,35 @@ class SyntheticRunTest(unittest.TestCase):
         np.testing.assert_allclose(scalars["Ratio"], scalars["Simulation"] / scalars["PTtools"])
         assert scalars.loc["Gamma", "Simulation"] == pytest.approx(self.lattice_run.mean_adiabatic_index(1000))
         assert scalars.loc["Gamma", "PTtools"] == pytest.approx(ssm.bubble.mean_adiabatic_index)
+
+    def test_comparison_check_ssm(self) -> None:
+        """Warnings are logged if the parameters of the SSM spectrum differ from those of the simulation spectrum."""
+        spectrum = self.lattice_run.spectrum(1000, 500, r_star=0.1, T_star=100, g_star=100)
+        ssm = self.lattice_run.ssm_spectrum(compute=False, r_star=0.1)
+        bubble = ssm.bubble
+
+        def omgw0_spectrum(
+                T_star: float = 100, g_star: float = 100, nuc_type: NucType = NucType.SIMULTANEOUS) -> Spectrum:
+            return Spectrum(bubble, r_star=0.1, T_star=T_star, g_star=g_star, nuc_type=nuc_type, compute=False)
+
+        with self.assertNoLogs("pttools.lattice.comparison", level="WARNING"):
+            LatticeComparison._check_ssm(spectrum, ssm)  # noqa: SLF001
+            LatticeComparison._check_ssm(spectrum, omgw0_spectrum())  # noqa: SLF001
+        cases = {
+            "nucleation type": omgw0_spectrum(nuc_type=NucType.EXPONENTIAL),
+            "r_star": self.lattice_run.ssm_spectrum(compute=False, r_star=0.2),
+            "T_star": omgw0_spectrum(T_star=200),
+            "g_star": omgw0_spectrum(g_star=50),
+        }
+        for name, case in cases.items():
+            with self.subTest(name), self.assertLogs("pttools.lattice.comparison", level="WARNING") as logs:
+                LatticeComparison._check_ssm(spectrum, case)  # noqa: SLF001
+            assert len(logs.output) == 1
+            assert name in logs.output[0]
+        with self.assertLogs("pttools.lattice.comparison", level="WARNING") as logs:
+            LatticeComparison._check_ssm(self.lattice_run.spectrum(1000, 500), ssm)  # noqa: SLF001
+        assert len(logs.output) == 1
+        assert "r_star" in logs.output[0]
 
     def test_gw_rate_requires_step_prev(self) -> None:
         """The growth rate cannot be computed without the earlier time step."""

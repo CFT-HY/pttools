@@ -76,6 +76,7 @@ class LatticeRun:
             path: str | os.PathLike[str],
             v_wall: float,
             alpha_n: float,
+            nuc_type: NucType,
             name: str | None = None,
             label_latex: str | None = None,
             label_unicode: str | None = None,
@@ -92,6 +93,8 @@ class LatticeRun:
         :param path: directory of the run
         :param v_wall: ${v}_\text{wall}$, nominal wall speed
         :param alpha_n: $\alpha_n$, transition strength at the nucleation temperature
+        :param nuc_type: nucleation type of the bubbles of the simulation,
+            used for the Sound Shell Model spectrum, see :py:meth:`ssm_spectrum`
         :param name: name of the run, defaults to the name of the directory
         :param label_latex: label of the run in LaTeX format
         :param label_unicode: label of the run in Unicode format
@@ -115,6 +118,8 @@ class LatticeRun:
             raise FileNotFoundError(f"The run directory does not exist: {self.path}")
         self.v_wall: float = v_wall
         self.alpha_n: float = alpha_n
+        #: Nucleation type of the bubbles of the simulation
+        self.nuc_type: NucType = nuc_type
         self.name: str = self.path.name if name is None else name
         self.label_latex: str = rf"{self.name}, $v_w={v_wall}, \alpha_n={alpha_n}$" \
             if label_latex is None else label_latex
@@ -778,13 +783,13 @@ class LatticeRun:
     def ssm_spectrum(
             self,
             model: Model | None = None,
-            nuc_type: NucType = NucType.SIMULTANEOUS,
             y: th.FloatArr1D = DEFAULT_Y_LATTICE,
             **kwargs: tp.Any) -> SSMSpectrum:
         r"""Compute the Sound Shell Model spectrum for the parameters of the run, without suppression.
 
+        The nucleation type is that of the run, :py:attr:`nuc_type`.
+
         :param model: the equation of state, defaults to the bag model as in the simulations
-        :param nuc_type: nucleation type. The simulations of :correia_2025:`\ ` nucleate all bubbles simultaneously.
         :param y: $z = kR_*$ points of the spectrum
         :param kwargs: additional arguments for :py:class:`pttools.ssm.spectrum.SSMSpectrum`
         :return: the spectrum
@@ -793,7 +798,7 @@ class LatticeRun:
             model = BagModel(alpha_n_min=min(0.001, self.alpha_n / 2))
         bubble = Bubble(model, v_wall=self.v_wall, alpha_n=self.alpha_n)
         return SSMSpectrum(
-            bubble, y=y, nuc_type=nuc_type, suppression_method=SuppressionMethod.NONE,
-            label_latex=f"SSM, {nuc_type}", label_unicode=f"SSM, {nuc_type}",
+            bubble, y=y, nuc_type=self.nuc_type, suppression_method=SuppressionMethod.NONE,
+            label_latex=f"SSM, {self.nuc_type}", label_unicode=f"SSM, {self.nuc_type}",
             **kwargs
         )

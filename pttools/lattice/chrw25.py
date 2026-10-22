@@ -21,6 +21,7 @@ from pttools.lattice.comparison import LatticeComparison
 from pttools.lattice.params import LatticeRunParams
 from pttools.lattice.readers import INPUT_FILE_NAME
 from pttools.lattice.run import LatticeRun
+from pttools.ssm.nucleation import NucType
 from pttools.utils.system import PROJECT_DIR
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -39,11 +40,11 @@ logger: logging.Logger = logging.getLogger(__name__)
 CHRW25_RUNS: dict[str, LatticeRunParams] = {
     "detonation": LatticeRunParams(
         name="detonation", subdir="detonation_alpha067_vw092",
-        v_wall=0.92, alpha_n=0.67, fig_step=18000, fig_step_prev=12000,
+        v_wall=0.92, alpha_n=0.67, nuc_type=NucType.SIMULTANEOUS, fig_step=18000, fig_step_prev=12000,
         fit_start_fraction=0.8, fit_step_end=24800),
     "deflagration": LatticeRunParams(
         name="deflagration", subdir="deflagration_alpha050_vw044/ps-all-tfinal40k",
-        v_wall=0.44, alpha_n=0.5, fig_step=22000, fig_step_prev=18000,
+        v_wall=0.44, alpha_n=0.5, nuc_type=NucType.SIMULTANEOUS, fig_step=22000, fig_step_prev=18000,
         fit_start_fraction=0.6, fit_step_end=39600),
 }
 #: Environment variable for the location of the data
@@ -124,6 +125,7 @@ def load_chrw25_run(name: str, path: str | os.PathLike[str] | None = None) -> La
         run_dir,
         v_wall=meta.v_wall,
         alpha_n=meta.alpha_n,
+        nuc_type=meta.nuc_type,
         name=meta.name,
         label_latex=meta.label_latex,
         label_unicode=meta.label_unicode,
@@ -146,3 +148,17 @@ def load_chrw25_runs(path: str | os.PathLike[str] | None = None, missing_ok: boo
             "The data of Correia et al. was not found. Please set the environment variable %s.", DATA_DIR_ENV)
         return {}
     return {name: load_chrw25_run(name, root) for name in CHRW25_RUNS}
+
+
+def step_ends(name: str, run: LatticeRun) -> dict[str, int]:
+    """The last time steps of the fits: those of the scripts of the article and those of the data.
+
+    See :py:attr:`pttools.lattice.params.LatticeRunParams.fit_step_end`
+    and :py:meth:`pttools.lattice.run.LatticeRun.last_step`.
+
+    :param name: name of the run, a key of :py:data:`CHRW25_RUNS`
+    :param run: the run
+    :return: the last time steps by their description
+    """
+    step_end = CHRW25_RUNS[name].fit_step_end
+    return {"article": run.last_step() if step_end is None else step_end, "data": run.last_step()}

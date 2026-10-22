@@ -18,6 +18,7 @@ from pttools.lattice.asymptote import (
 from pttools.math.asymptote import AsymptoteFit, asymptotic_growth, fit_asymptote
 from pttools.math.numerics import running_mean
 from pttools.math.power_law import PowerLawFit
+from pttools.ssm.nucleation import NucType
 from tests.lattice.test_lattice import OUT_COLUMNS
 from tests.utils.const import LOW_ACCURACY_SPECTRUM_KWARGS
 
@@ -130,7 +131,7 @@ class SyntheticAsymptoteRunTest(unittest.TestCase):
                 p = p.copy()
                 p[0] = 1e3
                 np.savetxt(path / f"{quantity.file_prefix}{step}.txt", np.column_stack((cls.k, p, counts)))
-        cls.lattice_run = LatticeRun(path, v_wall=0.5, alpha_n=0.1)
+        cls.lattice_run = LatticeRun(path, v_wall=0.5, alpha_n=0.1, nuc_type=NucType.SIMULTANEOUS)
 
     @classmethod
     @tp.override
@@ -227,11 +228,11 @@ class SyntheticAsymptoteRunTest(unittest.TestCase):
         assert omega["Omega_gw SSM, suppressed"] == pytest.approx(
             comparison.suppression * omega["Omega_gw SSM, unsuppressed"], rel=1e-12)
 
-    def test_spectrum_scaled_to_asymptote(self) -> None:
+    def test_spectrum_pow_gw_asymptote(self) -> None:
         r"""The GW power spectrum scaled to the asymptote is $\mathcal{P}_\text{gw}$ times the ratio."""
         spectrum = self.lattice_run.spectrum(10000, r_star=0.1)
         np.testing.assert_allclose(
-            spectrum.pow_gw_scaled_to_asymptote(step_end=20000),
+            spectrum.pow_gw_asymptote(step_end=20000),
             spectrum.omega_gw_asymptote_ratio(step_end=20000) * spectrum.pow_gw, rtol=1e-14)
 
 

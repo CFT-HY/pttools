@@ -22,10 +22,13 @@ from pttools.lattice import (
     load_run,
     mean_square,
 )
+from pttools.ssm.nucleation import NucType
 from tests.lattice.test_lattice import OUT_COLUMNS
 
 #: Side length of the synthetic lattice
 L: int = 16
+#: Parameters of the test runs that are not in the input file
+RUN_KWARGS: dict[str, tp.Any] = {"v_wall": 0.5, "alpha_n": 0.1, "nuc_type": NucType.SIMULTANEOUS}
 #: The time steps of the synthetic run
 STEPS: tuple[int, ...] = (0, 100, 200, 300)
 
@@ -87,11 +90,11 @@ class ConvertTest(unittest.TestCase):
     def test_load_without_text_files(self) -> None:
         """After the conversion, the run is loaded from the HDF5 file alone."""
         write_run(self.path)
-        ref = LatticeRun(self.path, v_wall=0.5, alpha_n=0.1)
+        ref = LatticeRun(self.path, **RUN_KWARGS)
         for file in self.path.glob("*.txt"):
             file.unlink()
         (self.path / "run_1.out").unlink()
-        run = LatticeRun(self.path, v_wall=0.5, alpha_n=0.1)
+        run = LatticeRun(self.path, **RUN_KWARGS)
         np.testing.assert_array_equal(run.omega_gw(), ref.omega_gw())
         np.testing.assert_array_equal(run.rms(Quantity.X_DIV), ref.rms(Quantity.X_DIV))
         assert run.L == L
@@ -100,16 +103,16 @@ class ConvertTest(unittest.TestCase):
     def test_reconvert(self) -> None:
         """The run is converted again when requested, or when the format version differs."""
         write_run(self.path, steps=STEPS[:2])
-        assert LatticeRun(self.path, v_wall=0.5, alpha_n=0.1).steps().tolist() == list(STEPS[:2])
+        assert LatticeRun(self.path, **RUN_KWARGS).steps().tolist() == list(STEPS[:2])
         write_run(self.path)
-        assert LatticeRun(self.path, v_wall=0.5, alpha_n=0.1).steps().tolist() == list(STEPS[:2])
-        assert LatticeRun(self.path, v_wall=0.5, alpha_n=0.1, reconvert=True).steps().tolist() == list(STEPS)
+        assert LatticeRun(self.path, **RUN_KWARGS).steps().tolist() == list(STEPS[:2])
+        assert LatticeRun(self.path, **RUN_KWARGS, reconvert=True).steps().tolist() == list(STEPS)
         write_run(self.path, steps=STEPS[:3])
         for file in self.path.glob(f"*{STEPS[3]}.txt"):
             file.unlink()
         with h5py.File(self.path / HDF5_FILE_NAME, "r+") as file:
             file.attrs["format_version"] = FORMAT_VERSION - 1
-        assert LatticeRun(self.path, v_wall=0.5, alpha_n=0.1).steps().tolist() == list(STEPS[:3])
+        assert LatticeRun(self.path, **RUN_KWARGS).steps().tolist() == list(STEPS[:3])
 
     def test_different_wavenumbers(self) -> None:
         """The conversion fails if the wavenumbers or the numbers of modes of the files differ."""
@@ -127,13 +130,13 @@ class ConvertTest(unittest.TestCase):
     def test_no_spectra(self) -> None:
         """A directory without power spectrum files cannot be loaded."""
         with pytest.raises(FileNotFoundError, match="No power spectrum files"):
-            LatticeRun(self.path, v_wall=0.5, alpha_n=0.1, L=L, dx=1., dt=0.5, n_bubbles=2)
+            LatticeRun(self.path, **RUN_KWARGS, L=L, dx=1., dt=0.5, n_bubbles=2)
 
     def test_different_steps(self) -> None:
         """The quantities can have different time steps, and the run can be without the global quantities."""
         write_run(self.path, quantities=(Quantity.GW_TT,), out=False)
         write_run(self.path, steps=STEPS[:2], quantities=(Quantity.X_DIV,), out=False)
-        run = LatticeRun(self.path, v_wall=0.5, alpha_n=0.1)
+        run = LatticeRun(self.path, **RUN_KWARGS)
         np.testing.assert_array_equal(run.steps(Quantity.GW_TT), STEPS)
         np.testing.assert_array_equal(run.steps(Quantity.X_DIV), STEPS[:2])
         assert run.steps(Quantity.PHI).size == 0
@@ -145,7 +148,7 @@ class ConvertTest(unittest.TestCase):
         write_run(self.path)
         # Rewrite the log of the global quantities to end before the last time step of the power spectra.
         write_run(self.path, steps=STEPS[:3], quantities=())
-        run = LatticeRun(self.path, v_wall=0.5, alpha_n=0.1)
+        run = LatticeRun(self.path, **RUN_KWARGS)
         assert run.steps().tolist() == list(STEPS)
         assert run.last_step() == STEPS[2]
 
@@ -161,7 +164,7 @@ class StepArrayTest(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.tmpdir = tempfile.TemporaryDirectory()
         write_run(Path(cls.tmpdir.name))
-        cls.lattice_run = LatticeRun(cls.tmpdir.name, v_wall=0.5, alpha_n=0.1)
+        cls.lattice_run = LatticeRun(cls.tmpdir.name, **RUN_KWARGS)
 
     @classmethod
     @tp.override

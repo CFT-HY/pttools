@@ -2,6 +2,8 @@ r"""Parameters of hydrodynamic lattice simulation runs."""
 
 from dataclasses import dataclass
 
+from pttools.ssm.nucleation import NucType
+
 
 @dataclass(frozen=True, slots=True)
 class LatticeRunParams:
@@ -21,6 +23,8 @@ class LatticeRunParams:
     v_wall: float
     #: $\alpha_n$, transition strength
     alpha_n: float
+    #: Nucleation type of the bubbles
+    nuc_type: NucType
     #: The time step of the spectra of the figures of the article, e.g. the GW power growth rate of
     #: :correia_2025:`\ ` fig. 5
     fig_step: int
