@@ -55,7 +55,7 @@ import typing as tp
 import matplotlib.pyplot as plt
 import numpy as np
 
-from examples.const_cs.dataset import ACCURACY, MODEL_KWARGS, Accuracy, F, warm_up
+from examples.const_cs.dataset import ACCURACY, MODEL_KWARGS, F, warm_up
 from examples.utils import save_and_show_figs
 from pttools.bubble import Bubble
 from pttools.docs.examples import is_sphinx_gallery
@@ -63,6 +63,7 @@ from pttools.models import ConstCSModel
 from pttools.omgw0 import Spectrum
 from pttools.plot.utils import A4_PAPER_SIZE
 from pttools.speedup.parallel import FakeFuture, get_pool
+from pttools.ssm.accuracy import Accuracy
 import pttools.type_hints as th
 from pttools.utils.system import IS_READ_THE_DOCS
 

@@ -79,6 +79,7 @@ from pttools.models import ConstCSModel
 from pttools.omgw0 import Spectrum
 from pttools.speedup.options import MAX_WORKERS_DEFAULT
 from pttools.speedup.parallel import FakeExecutor, get_pool
+from pttools.ssm.accuracy import Accuracy
 from pttools.ssm.nucleation import NucType
 import pttools.type_hints as th
 
@@ -105,27 +106,6 @@ MIN_POINTS: int = 2
 
 #: Default interval of the progress messages in seconds
 DEFAULT_PROGRESS_INTERVAL: float = 300
-
-
-@dataclasses.dataclass(frozen=True, slots=True)
-class Accuracy:
-    r"""Accuracy settings of the bubbles and spectra.
-
-    :param n_xi: number of points of the fluid profiles of the bubbles
-    :param n_z_lookup: number of points of the lookup arrays of the spectra
-    :param nx_P_tilde_gw: number of points of the integration of $\tilde{P}_\text{gw}$,
-        or None for the same as ``n_z_lookup``
-    :param nT: number of points of the bubble lifetime distribution integration
-    """
-
-    n_xi: int
-    n_z_lookup: int
-    nx_P_tilde_gw: int | None  # noqa: N815
-    nT: int  # noqa: N815
-
-    def spectrum_kwargs(self) -> dict[str, tp.Any]:
-        """The accuracy settings as arguments of :py:class:`pttools.omgw0.spectrum.Spectrum`."""
-        return {"n_z_lookup": self.n_z_lookup, "nx_P_tilde_gw": self.nx_P_tilde_gw, "nT": self.nT}
 
 
 #: Accuracy settings of the dataset, see :py:mod:`examples.props.n_points`

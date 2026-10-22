@@ -49,21 +49,14 @@ from examples.solvers import bag, old_new, xi_kappa_bag
 from examples.standard_model import standard_model_xi_v
 from pttools.export import Importer, Table
 from pttools.plot import close_figs
-from tests.utils.const import LOW_ACCURACY_SPECTRUM_KWARGS, TEST_RESULT_PATH
+from tests.utils.const import (
+    LOW_ACCURACY_SPECTRUM_KWARGS,
+    TEST_ACCURACY,
+    TEST_N_POINTS_REFERENCE,
+    TEST_N_POINTS_VALUES,
+    TEST_RESULT_PATH,
+)
 from tests.utils.mark import mark_xfail_pickle_without_jit, skip_slow, uses_parallel
-
-#: Low accuracy settings for the examples whose results are not compared with reference values,
-#: see :py:mod:`examples.props.n_points`
-TEST_ACCURACY: dataset.Accuracy = dataset.Accuracy(n_xi=1000, nx_P_tilde_gw=100, **LOW_ACCURACY_SPECTRUM_KWARGS)
-#: Reference accuracy settings of :py:func:`examples.props.n_points.main` for the tests
-TEST_N_POINTS_REFERENCE: dataset.Accuracy = dataset.Accuracy(n_xi=2000, n_z_lookup=1000, nx_P_tilde_gw=None, nT=1000)
-#: Tested values of the accuracy settings of :py:func:`examples.props.n_points.main` for the tests
-TEST_N_POINTS_VALUES: dict[str, tuple[int, ...]] = {
-    "n_xi": (500, 1000),
-    "n_z_lookup": (200, 500),
-    "nx_P_tilde_gw": (50, 100),
-    "nT": (100, 300),
-}
 
 
 class ExampleTest(unittest.TestCase):

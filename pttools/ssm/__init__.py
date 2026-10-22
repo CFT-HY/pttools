@@ -8,6 +8,7 @@ The Sound Shell Model is discussed in further detail in the article
 at a First-Order Phase Transition in the Early Universe (Hindmarsh, 2018) <>`
 """
 
+from .accuracy import *
 from .barotropic import *
 from .calculators import *
 
