@@ -25,9 +25,11 @@ from pttools.lattice import (
 )
 from pttools.omgw0 import const, freq
 from pttools.omgw0.base import Omgw0Base
+from pttools.omgw0.noise import signal_to_noise_ratio
 from pttools.omgw0.spectrum import Spectrum
 from pttools.ssm.nucleation import NucType
 from pttools.ssm.suppression import SuppressionMethod
+from pttools.ssm.suppression.fit import lattice_artifact_start
 from tests.utils.const import LOW_ACCURACY_SPECTRUM_KWARGS
 
 #: Columns of the ``.out`` file that are used by the importer
@@ -165,10 +167,39 @@ class SyntheticRunTest(unittest.TestCase):
         assert spectrum.r_star == self.lattice_run.r_star
         assert spectrum.R_star == self.lattice_run.R_star
         assert spectrum.H_star == pytest.approx(self.lattice_run.H_star, rel=1e-15)
-        np.testing.assert_array_equal(spectrum.pow_gw, self.lattice_run.pow_normalised(Quantity.GW_TT, 500)[1])
+        np.testing.assert_array_equal(
+            spectrum.pow_gw_flat, self.lattice_run.pow_normalised(Quantity.GW_TT, 500)[1])
+
+    def test_spectrum_expansion(self) -> None:
+        r"""The GW power spectrum is reduced by the expansion of the universe during $t$ as in the SSM."""
+        r_star = 0.1
+        spectrum = self.lattice_run.spectrum(1000, 500, r_star=r_star)
+        assert spectrum.nu_gdh2024 == 0
+        assert spectrum.dilution_of_e == 1
+        assert spectrum.delta_tau_v == pytest.approx(1000 * self.dt / self.lattice_run.R_star, rel=1e-12)
+        x = r_star * spectrum.delta_tau_v
+        # For radiation domination: eta_v / Delta eta_v = 1 / (1 + Delta eta_v / eta_*)
+        assert spectrum.eta_ratio == pytest.approx(x, rel=1e-15)
+        assert spectrum.expansion_factor == pytest.approx(1 / (1 + x), rel=1e-12)
+        assert spectrum.pow_gw_scale == pytest.approx(spectrum.pow_gw_r_star_scale / (1 + x), rel=1e-12)
+        np.testing.assert_allclose(spectrum.pow_gw, spectrum.pow_gw_flat / (1 + x), rtol=1e-12)
+        # The relation of the SSM: P_gw = r_* H_* eta_v (a_*/a_r)^(2 nu / (1 + nu)) * mean growth rate
+        mean_rate = spectrum.pow_gw_flat / (r_star**2 * spectrum.delta_tau_v)
+        np.testing.assert_allclose(
+            spectrum.pow_gw, r_star * spectrum.H_star_eta_v * spectrum.dilution_of_e * mean_rate, rtol=1e-12)
+        np.testing.assert_allclose(spectrum.omgw0_h2(), spectrum.F_gw0_h2() * spectrum.pow_gw, rtol=1e-15)
+
+        # Another equation of state and dilution
+        other = self.lattice_run.spectrum(1000, 500, r_star=r_star, nu_gdh2024=0.2, a_star_a_r_ratio=0.5)
+        assert other.dilution_of_e == pytest.approx(0.5**(0.4 / 1.2), rel=1e-15)
+        assert other.eta_ratio == pytest.approx(x / 1.2, rel=1e-15)
+        assert other.expansion_factor == pytest.approx(
+            other.H_star_eta_v / (r_star * other.delta_tau_v), rel=1e-12)
+        np.testing.assert_allclose(
+            other.pow_gw, other.expansion_factor * other.dilution_of_e * spectrum.pow_gw_flat, rtol=1e-12)
 
     def test_spectrum_r_star(self) -> None:
-        r"""The GW power spectrum should be scaled with $r_*^2$, and the other spectra should not change."""
+        r"""The flat-space GW power spectrum should be scaled with $r_*^2$, and the other spectra should not change."""
         r_star = 0.1
         ref = self.lattice_run.spectrum(1000, 500)
         spectrum = self.lattice_run.spectrum(1000, 500, r_star=r_star)
@@ -177,7 +208,7 @@ class SyntheticRunTest(unittest.TestCase):
         assert spectrum.H_star * spectrum.R_star == pytest.approx(r_star, rel=1e-15)
         assert ref.pow_gw_r_star_scale == 1
         assert spectrum.pow_gw_r_star_scale == pytest.approx((r_star / self.lattice_run.r_star)**2, rel=1e-15)
-        np.testing.assert_allclose(spectrum.pow_gw, spectrum.pow_gw_r_star_scale * ref.pow_gw, rtol=1e-15)
+        np.testing.assert_allclose(spectrum.pow_gw_flat, spectrum.pow_gw_r_star_scale * ref.pow_gw_flat, rtol=1e-15)
         np.testing.assert_array_equal(spectrum.y, ref.y)
         np.testing.assert_array_equal(spectrum.pow_U_par, ref.pow_U_par)
         np.testing.assert_array_equal(spectrum.pow_gw_rate, ref.pow_gw_rate)
@@ -197,6 +228,32 @@ class SyntheticRunTest(unittest.TestCase):
         # Defaults
         spectrum = self.lattice_run.spectrum(1000, g_star=80.)
         assert (spectrum.T_star, spectrum.g_star, spectrum.gs_star) == (const.DEFAULT_T_STAR, 80., 80.)
+
+    def test_spectrum_valid_slice(self) -> None:
+        r"""The lattice artifact at high $z$ is excluded from the valid part of the spectrum and from the SNR."""
+        spectrum = self.lattice_run.spectrum(1000, r_star=0.1)
+        assert spectrum.valid_slice == slice(None)
+        np.testing.assert_array_equal(spectrum.f(valid=True), spectrum.f())
+        with pytest.raises(ValueError, match="valid"):
+            spectrum.f(spectrum.y, valid=True)
+
+        # A main peak that falls by many orders of magnitude, followed by a separate high-z peak
+        spectrum = self.lattice_run.spectrum(1000, r_star=0.1)
+        i = np.arange(spectrum.y.size)
+        i_peak2 = spectrum.y.size - 5
+        spectrum.pow_gw = 1e-10 * (np.exp(-((i - 10) / 4)**2) + 1e-4 * np.exp(-((i - i_peak2) / 2)**2))
+        i_artifact = lattice_artifact_start(spectrum.y, spectrum.pow_gw)
+        assert i_artifact is not None
+        assert 10 < i_artifact < i_peak2
+        assert spectrum.valid_slice == slice(None, i_artifact)
+        f = spectrum.f()[:i_artifact]
+        omgw0_h2 = spectrum.omgw0_h2()[:i_artifact]
+        np.testing.assert_array_equal(spectrum.f(valid=True), f)
+        np.testing.assert_array_equal(spectrum.omgw0_h2(valid=True), omgw0_h2)
+        snr, f_snr, omgw0_h2_snr, _, _ = spectrum.snr()
+        np.testing.assert_array_equal(f_snr, f)
+        np.testing.assert_array_equal(omgw0_h2_snr, omgw0_h2)
+        assert snr == signal_to_noise_ratio(f=f, signal=omgw0_h2)[0]
 
     def test_read_globals_incomplete_last_row(self) -> None:
         """The incomplete last row of an interrupted run should be ignored."""

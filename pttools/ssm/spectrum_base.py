@@ -5,18 +5,27 @@ The quantities of this interface can be computed both by the Sound Shell Model
 (:py:class:`pttools.lattice.spectrum.LatticeSpectrum`).
 They are defined in flat space, without the expansion of the universe,
 so that the spectra can be compared directly with each other.
+The exception is the GW power spectrum $\mathcal{P}_\text{gw}$, which includes the effects of the expansion
+of the universe during the source, see :py:attr:`SpectrumBase.expansion_factor`.
+These are computed in the same way for all the spectra from the source duration :py:attr:`SpectrumBase.delta_tau_v`,
+the equation of state parameter :py:attr:`SpectrumBase.nu_gdh2024` and the ratio of the scale factors
+:py:attr:`SpectrumBase.a_star_a_r_ratio`.
 """
 
 from __future__ import annotations
 
 import abc
+import functools
 import os
 import typing as tp
 
 import numpy as np
 
+from pttools.ssm import barotropic
+from pttools.ssm.scaling import H_star_eta_v
 import pttools.type_hints as th
 from pttools.type_hints import FloatArr1D
+from pttools.utils.docstrings import copy_docstring_dec
 
 if tp.TYPE_CHECKING:
     from pttools.plot.utils import FigAndAxes
@@ -29,8 +38,10 @@ if th.TYPE_CHECKING_OR_DOCS:
 class SpectrumBase(abc.ABC):
     r"""Base class for the power spectra that can be compared with each other.
 
-    The subclasses have to provide the attributes ``y``, ``r_star``, ``label_latex`` and ``label_unicode``
-    and the properties :py:attr:`pow_U_par`, :py:attr:`pow_gw` and :py:attr:`pow_gw_rate`.
+    The subclasses have to provide the attributes ``y``, ``r_star``, ``a_star_a_r_ratio``,
+    ``label_latex`` and ``label_unicode``
+    and the properties :py:attr:`pow_U_par`, :py:attr:`pow_gw`, :py:attr:`pow_gw_rate`,
+    :py:attr:`delta_tau_v` and :py:attr:`nu_gdh2024`.
     The derived quantities are then computed from these
     by integrating over $\ln z$ with the trapezoidal rule.
     The power spectra are normalised as in :correia_2025:`\ ` eq. 15, so that
@@ -43,6 +54,9 @@ class SpectrumBase(abc.ABC):
     # as pttools.ssm.spectrum.SSMSpectrum stores it as an instance attribute.
     #: $r_* = H_* R_*$, Hubble-scaled mean bubble spacing
     r_star: float
+    #: $\frac{a_*}{a_r}$, ratio of the scale factors at the time of GW production
+    #: and at the start of the radiation era, see :py:attr:`dilution_of_e`
+    a_star_a_r_ratio: float
     #: Label of the spectrum in LaTeX format
     label_latex: str
     #: Label of the spectrum in Unicode format
@@ -91,6 +105,92 @@ class SpectrumBase(abc.ABC):
         per Hubble time and per Hubble-scaled mean bubble spacing $H_n R_*$,
         as in :correia_2025:`\ ` fig. 5 and :gw_pt_ssm:`\ ` eq. 3.45.
         """
+
+    # -----
+    # Expansion of the universe
+    # -----
+
+    @property
+    @abc.abstractmethod
+    def delta_tau_v(self) -> float:
+        r"""$\Delta \tau_\text{v}$, source duration in units of the comoving mean bubble spacing.
+
+        $$\Delta \tau_\text{v} \equiv \frac{\Delta \eta_\text{v}}{R_*},$$
+        where $\tau \equiv \eta / R_*$ is the dimensionless conformal time of
+        :giombi_2026:`\ ` sec. 2.3 and :giombi_2024_cs:`\ ` p. 10.
+        """
+
+    @property
+    @abc.abstractmethod
+    def nu_gdh2024(self) -> float:
+        r"""$\nu_\text{gdh2024}$, equation of state parameter of the expansion of the universe.
+
+        See :py:func:`pttools.bubble.thermo.nu_gdh2024`.
+        """
+
+    @functools.cached_property
+    @copy_docstring_dec(barotropic.dilution_of_e, without_params=True)
+    def dilution_of_e(self) -> float:
+        return barotropic.dilution_of_e(a_star_a_r_ratio=self.a_star_a_r_ratio, nu=self.nu_gdh2024)
+
+    @functools.cached_property
+    def eta_ratio(self) -> float:
+        r"""$\frac{\Delta \eta_\text{v}}{\eta_*}$, source duration in units of the conformal time $\eta_*$.
+
+        $$\frac{\Delta \eta_\text{v}}{\eta_*} = \frac{\Delta \tau_\text{v}}{\tau_*}
+        = \frac{r_* \Delta \tau_\text{v}}{1 + \nu_\text{gdh2024}},$$
+        see :py:attr:`tau_star` and :py:func:`pttools.ssm.barotropic.eta_ratio`.
+        """
+        return self.r_star * self.delta_tau_v / barotropic.H_eta(self.nu_gdh2024)
+
+    @functools.cached_property
+    @copy_docstring_dec(barotropic.expansion_factor, without_params=True)
+    def expansion_factor(self) -> float:
+        return barotropic.expansion_factor(eta_ratio=self.eta_ratio, nu=self.nu_gdh2024)
+
+    @functools.cached_property
+    def H_star_eta_star(self) -> float:
+        r"""$\mathcal{H}_* \eta_*$, conformal Hubble rate times conformal time at the start of the acoustic phase.
+
+        $$\mathcal{H}_* \eta_* = 1 + \nu_\text{gdh2024}$$
+        See :py:func:`pttools.ssm.barotropic.H_eta`.
+        """
+        return barotropic.H_eta(nu=self.nu_gdh2024)
+
+    @functools.cached_property
+    @copy_docstring_dec(H_star_eta_v, without_params=True)
+    def H_star_eta_v(self) -> float:
+        return H_star_eta_v(source_lifetime_factor=self.source_lifetime_factor, nu=self.nu_gdh2024)
+
+    @functools.cached_property
+    @copy_docstring_dec(barotropic.source_lifetime_factor, without_params=True)
+    def source_lifetime_factor(self) -> float:
+        # This is the computation of pttools.ssm.barotropic.source_lifetime_factor with the eta_ratio of the spectrum.
+        return float(-barotropic.Upsilon(r=1 + self.eta_ratio, l=-barotropic.l(self.nu_gdh2024)))
+
+    @functools.cached_property
+    def tau_end(self) -> float:
+        r"""
+        Dimensionless conformal time $\tau_\text{end}$ when the anisotropic stress turns off.
+
+        $$\tau_\text{end} \equiv \frac{\eta_\text{end}}{R_*} = \tau_* + \Delta \tau_\text{v}$$
+        :giombi_2026:`\ ` sec. 2.3,
+        :giombi_2024_cs:`\ ` p. 8.
+        Not to be confused with the lifetime $\tau_\text{v}$ of the earlier articles,
+        see :py:mod:`pttools.ssm.scaling`.
+        """
+        return self.tau_star + self.delta_tau_v
+
+    @functools.cached_property
+    def tau_star(self) -> float:
+        r"""Dimensionless conformal time $\tau_*$ when the anisotropic stress turns on.
+
+        $$\tau_* \equiv \frac{\eta_*}{R_*} = \frac{\mathcal{H}_* \eta_*}{\mathcal{H}_* R_*}
+        = \frac{1 + \nu_\text{gdh2024}}{r_*}$$
+        :giombi_2026:`\ ` sec. 2.3,
+        :giombi_2024_cs:`\ ` p. 8.
+        """
+        return barotropic.tau_star(r_star=self.r_star, nu=self.nu_gdh2024)
 
     # -----
     # Derived quantities

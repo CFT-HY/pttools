@@ -540,6 +540,7 @@ def plot_pow_gw_asymptote_comparison(
         comparison: LatticeComparison,
         pow_fit: PowGwAsymptoteFit | None = None,
         step_end: int | None = None,
+        asymptote_duration: bool = False,
         fig: Figure | None = None,
         ax: Axes | None = None,
         xlim: tuple[float, float] | None = (1, 1e4),
@@ -549,7 +550,8 @@ def plot_pow_gw_asymptote_comparison(
     The simulation spectrum at the time of the comparison is scaled to the asymptote with
     :py:meth:`pttools.lattice.spectrum.LatticeSpectrum.pow_gw_asymptote`.
     If the fits of each wavenumber are given, their asymptotes $\mathcal{P}_\text{gw}^\infty(k)$ are also plotted,
-    scaled to the $r_*$ of the spectrum with :py:attr:`pttools.lattice.spectrum.LatticeSpectrum.pow_gw_r_star_scale`.
+    scaled to the $r_*$ of the spectrum in the expanding universe with
+    :py:meth:`pttools.lattice.spectrum.LatticeSpectrum.pow_gw_asymptote_scale`.
     The lower limit of their uncertainty band is given by
     :py:attr:`pttools.lattice.asymptote.PowGwAsymptoteFit.pow_gw_inf_lower`.
     The SSM spectrum is plotted both with the suppression factor that is fitted to the GW power growth rate
@@ -558,6 +560,9 @@ def plot_pow_gw_asymptote_comparison(
     :param comparison: the comparison of the simulation and the SSM
     :param pow_fit: the fits of each wavenumber, see :py:meth:`pttools.lattice.run.LatticeRun.pow_gw_asymptote`
     :param step_end: last time step of the fit of $\Omega_\text{gw}(t)$, defaults to the last available step
+    :param asymptote_duration: whether to take into account the expansion of the universe
+        with the duration of the asymptote instead of that of the time step,
+        see :py:meth:`pttools.lattice.spectrum.LatticeSpectrum.pow_gw_asymptote_scale`
     :param fig: figure to plot in
     :param ax: axes to plot in
     :param xlim: limits of the x-axis
@@ -569,17 +574,17 @@ def plot_pow_gw_asymptote_comparison(
     ssm = comparison.ssm
     sup = comparison.fit.factor
     ratio = spectrum.omega_gw_asymptote_ratio(step_end=step_end)
-    pow_scaled = spectrum.pow_gw_asymptote(step_end=step_end)
+    pow_scaled = spectrum.pow_gw_asymptote(asymptote_duration=asymptote_duration, step_end=step_end)
 
     ax.plot(spectrum.y, spectrum.pow_gw, color=COLOR_GW, lw=0.8, alpha=0.5, label=f"Simulation, $t={spectrum.t:.0f}$")
     ax.plot(
         spectrum.y, pow_scaled, color=COLOR_GW,
-        label=rf"Simulation $\times \Omega_\text{{gw}}^\infty / \Omega_\text{{gw}}(t) = {ratio:.3g}$")
+        label=rf"Simulation, asymptote, $\Omega_\text{{gw}}^\infty / \Omega_\text{{gw}}(t) = {ratio:.3g}$")
     if pow_fit is not None:
-        r_scale = spectrum.pow_gw_r_star_scale
-        pow_inf = r_scale * pow_fit.pow_gw_inf
+        scale = spectrum.pow_gw_asymptote_scale(asymptote_duration=asymptote_duration, step_end=step_end)
+        pow_inf = scale * pow_fit.pow_gw_inf
         ax.fill_between(
-            pow_fit.y, r_scale * pow_fit.pow_gw_inf_lower, pow_inf + r_scale * pow_fit.pow_gw_inf_err,
+            pow_fit.y, scale * pow_fit.pow_gw_inf_lower, pow_inf + scale * pow_fit.pow_gw_inf_err,
             color="silver", lw=0)
         ax.plot(pow_fit.y, pow_inf, color="black", ls="--", label=r"$\mathcal{P}_\text{gw}^\infty(k)$, fits")
     ax.plot(ssm.y, sup * ssm.pow_gw, color=COLOR_SSM, ls=":", label=rf"SSM $\times {sup:.3g}$")

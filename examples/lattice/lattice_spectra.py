@@ -35,6 +35,9 @@ see :py:mod:`examples.lattice.lattice_growth`.
 Note that the simulations are in flat space and their flows decay,
 whereas the SSM spectrum is that of a stationary source that lasts for $N_\text{sh} = 1$ shock formation time
 in an expanding universe.
+The GW power spectra of the simulations are scaled to the expanding universe in the same way as the SSM spectra,
+treating each simulation as a source that lasts from its start to the time of the spectrum
+with its mean GW power growth rate, see :py:class:`pttools.lattice.spectrum.LatticeSpectrum`.
 """
 
 from __future__ import annotations

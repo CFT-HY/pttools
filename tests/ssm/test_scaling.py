@@ -39,6 +39,24 @@ class ScalingTest(unittest.TestCase):
         upsilon = barotropic.source_lifetime_factor(ubarf=ubarf, r_star=r_star, N_sh=1., nu=0.)
         assert scaling.H_star_eta_v(upsilon, nu=0.) == pytest.approx(1 - 1 / (1 + x), abs=5e-8)
 
+    def test_expansion_factor(self) -> None:
+        r"""The expansion factor is $\Upsilon_\ell / (\Delta \eta_\text{v} / \eta_*)$, with its limits."""
+        assert barotropic.expansion_factor(0.) == 1
+        # Radiation domination: 1 / (1 + x)
+        for x in (1e-3, 0.4, 7.):
+            assert barotropic.expansion_factor(x, nu=0.) == pytest.approx(1 / (1 + x), rel=1e-12)
+        for nu in (0., 0.1, 0.3):
+            with self.subTest(nu=nu):
+                r_star, ubarf, N_sh = 0.2, 0.1, 2.
+                eta_ratio = barotropic.eta_ratio(ubarf=ubarf, r_star=r_star, N_sh=N_sh, nu=nu)
+                upsilon = barotropic.source_lifetime_factor(ubarf=ubarf, r_star=r_star, N_sh=N_sh, nu=nu)
+                # eta_v / Delta eta_v = H_* eta_v / (r_* Delta tau_v) with Delta tau_v = N_sh / ubarf
+                expected = scaling.H_star_eta_v(upsilon, nu) / (r_star * N_sh / ubarf)
+                assert barotropic.expansion_factor(eta_ratio, nu) == pytest.approx(expected, rel=1e-12)
+                # Short and long sources
+                assert barotropic.expansion_factor(1e-6, nu) == pytest.approx(1, abs=5e-6)
+                assert barotropic.expansion_factor(1e6, nu) == pytest.approx(1 / ((1 + 2 * nu) * 1e6), rel=1e-5)
+
     def test_H_star_eta_v_old_is_cosmic_time_version(self) -> None:
         """Test that the old formula 1 - 1/sqrt(1 + 2x) is the cosmic time version of Upsilon_1.
 

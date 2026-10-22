@@ -18,14 +18,14 @@ from pttools.math.formatting import as_latex, as_unicode
 from pttools.math.interpolation import interpolate_log_log
 from pttools.speedup import NAN_ARR
 from pttools.ssm import const
-from pttools.ssm.barotropic import H_eta, dilution_of_e, eta_ratio, source_lifetime_factor, tau_star
+from pttools.ssm.barotropic import eta_ratio
 from pttools.ssm.compute import SSMBaseResults, SSMGWResults, SSMInput, compute, compute_gw
 from pttools.ssm.export import SSM_SPECTRUM_FIELDS
 from pttools.ssm.low_k.intersection import z_cross_approx
 from pttools.ssm.nucleation import DEFAULT_NUC_TYPE, NucType, v_eff
 from pttools.ssm.nucleation import r_star as r_star_func
 from pttools.ssm.pow_spec import pow_spec
-from pttools.ssm.scaling import H_star_eta_sh, H_star_eta_v, H_star_eta_v_old, J
+from pttools.ssm.scaling import H_star_eta_sh, H_star_eta_v_old, J
 from pttools.ssm.spec_den_gw import spec_den_gw_scaling
 from pttools.ssm.spectrum_base import SpectrumBase
 from pttools.ssm.ssm import ubarf2_from_a2
@@ -509,6 +509,7 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
         return self.bubble.css2_Tn
 
     @functools.cached_property
+    @tp.override
     def delta_tau_v(self) -> float:
         r"""$\Delta \tau_\text{v}$, source duration in units of the comoving mean bubble spacing.
 
@@ -522,11 +523,7 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
         return self.N_sh / self.bubble.ubarf
 
     @functools.cached_property
-    @copy_docstring_dec(dilution_of_e, without_params=True)
-    def dilution_of_e(self) -> float:
-        return dilution_of_e(a_star_a_r_ratio=self.a_star_a_r_ratio, nu=self.nu_gdh2024)
-
-    @functools.cached_property
+    @tp.override
     @copy_docstring_dec(eta_ratio, without_params=True)
     def eta_ratio(self) -> float:
         return eta_ratio(ubarf=self.bubble.ubarf, r_star=self.r_star, N_sh=self.N_sh, nu=self.nu_gdh2024)
@@ -535,20 +532,6 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
     @copy_docstring_dec(H_star_eta_sh, without_params=True)
     def H_star_eta_sh(self) -> float:
         return H_star_eta_sh(r_star=self.r_star, ubarf=self.bubble.ubarf)
-
-    @functools.cached_property
-    def H_star_eta_star(self) -> float:
-        r"""$\mathcal{H}_* \eta_*$, conformal Hubble rate times conformal time at the start of the acoustic phase.
-
-        $$\mathcal{H}_* \eta_* = 1 + \nu_\text{gdh2024}$$
-        See :py:func:`pttools.ssm.barotropic.H_eta`.
-        """
-        return H_eta(nu=self.nu_gdh2024)
-
-    @functools.cached_property
-    @copy_docstring_dec(H_star_eta_v, without_params=True)
-    def H_star_eta_v(self) -> float:
-        return H_star_eta_v(source_lifetime_factor=self.source_lifetime_factor, nu=self.nu_gdh2024)
 
     @functools.cached_property
     @copy_docstring_dec(H_star_eta_v_old, without_params=True)
@@ -570,6 +553,7 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
         return J(r_star=self.r_star, H_star_eta_v=self.H_star_eta_v)
 
     @functools.cached_property
+    @tp.override
     @copy_docstring_dec(nu_gdh2024, without_params=True)
     def nu_gdh2024(self) -> float:
         if self._nu_gdh2024 is not None:
@@ -649,16 +633,6 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
         return 2 * self.pow_v
 
     @functools.cached_property
-    @copy_docstring_dec(source_lifetime_factor, without_params=True)
-    def source_lifetime_factor(self) -> float:
-        return source_lifetime_factor(
-            ubarf=self.bubble.ubarf,
-            r_star=self.r_star,
-            N_sh=self.N_sh,
-            nu=self.nu_gdh2024
-        )
-
-    @functools.cached_property
     @copy_docstring_dec(spec_den_gw_scaling, without_params=True)
     def spec_den_gw_scaling(self) -> float:
         return spec_den_gw_scaling(
@@ -688,30 +662,6 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
             alpha_n=self.bubble.alpha_n,
             method=self.suppression_method
         )
-
-    @functools.cached_property
-    def tau_end(self) -> float:
-        r"""
-        Dimensionless conformal time $\tau_\text{end}$ when the anisotropic stress turns off.
-
-        $$\tau_\text{end} \equiv \frac{\eta_\text{end}}{R_*} = \tau_* + \Delta \tau_\text{v}$$
-        :giombi_2026:`\ ` sec. 2.3,
-        :giombi_2024_cs:`\ ` p. 8.
-        Not to be confused with the lifetime $\tau_\text{v}$ of the earlier articles,
-        see :py:mod:`pttools.ssm.scaling`.
-        """
-        return self.tau_star + self.delta_tau_v
-
-    @functools.cached_property
-    def tau_star(self) -> float:
-        r"""Dimensionless conformal time $\tau_*$ when the anisotropic stress turns on.
-
-        $$\tau_* \equiv \frac{\eta_*}{R_*} = \frac{\mathcal{H}_* \eta_*}{\mathcal{H}_* R_*}
-        = \frac{1 + \nu_\text{gdh2024}}{r_*}$$
-        :giombi_2026:`\ ` sec. 2.3,
-        :giombi_2024_cs:`\ ` p. 8.
-        """
-        return tau_star(r_star=self.r_star, nu=self.nu_gdh2024)
 
     @property
     def ubarf(self) -> float:

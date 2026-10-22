@@ -125,15 +125,37 @@ class Omgw0Base(SpectrumBase):
             gs_star=self.gs_star
         )
 
+    @property
+    def valid_slice(self) -> slice:
+        r"""Slice of the $z$ array in which the spectrum is valid.
+
+        The spectrum is valid for all $z$ by default.
+        Subclasses can exclude e.g. numerical artifacts,
+        see :py:attr:`pttools.lattice.spectrum.LatticeSpectrum.valid_slice`.
+        """
+        return slice(None)
+
     # =====
     # Methods
     # =====
 
-    @copy_docstring_dec(freq.f, without_params=True)
-    def f(self, z: th.FloatArr1D | None = None) -> th.FloatArr1D:
+    def f(self, z: th.FloatArr1D | None = None, valid: bool = False) -> th.FloatArr1D:
+        r"""$f$, frequencies today corresponding to the $z$ array of the spectrum or to the given $z$.
+
+        $$f = \frac{z}{{r}_\ast} f_{\ast,0},$$
+        see :py:func:`pttools.omgw0.freq.f`.
+
+        :param z: $z = kR_*$, defaults to the $z$ array of the spectrum
+        :param valid: whether to return only the frequencies in which the spectrum is valid,
+            see :py:attr:`valid_slice`. Can be used only without $z$.
+        :return: the frequencies
+        :raises ValueError: if both $z$ and ``valid=True`` are given
+        """
         # The frequencies of the y array are cached, and the frequencies of a custom z are not.
         if z is None:
-            return self._f_y
+            return self._f_y[self.valid_slice] if valid else self._f_y
+        if valid:
+            raise ValueError("valid=True can be used only without z.")
         return freq.f(z=z, r_star=self.r_star, f_star0=self.f_star0)
 
     def F_gw0[T: FloatOrArr](
@@ -191,14 +213,17 @@ class Omgw0Base(SpectrumBase):
             self,
             ge0_photon: float = const.GE0_PHOTON,
             gs0: float = const.GS0,
-            om_gamma0_h2: float = const.OMEGA_PHOTON_H2) -> th.FloatArr1D:
+            om_gamma0_h2: float = const.OMEGA_PHOTON_H2,
+            valid: bool = False) -> th.FloatArr1D:
         r"""Gravitational wave power spectrum today $\Omega_{\text{gw},0} h^2$.
 
         :param ge0_photon: $g_{e\gamma 0}$, degrees of freedom for energy density of photons today
         :param gs0: $g_{s,0}$, degrees of freedom for entropy today
         :param om_gamma0_h2: $\Omega_{\gamma,0} h^2$, the photon density parameter today, multiplied by $h^2$
+        :param valid: whether to return only the part of the spectrum that is valid, see :py:attr:`valid_slice`
         """
-        return self.F_gw0_h2(ge0_photon=ge0_photon, gs0=gs0, om_gamma0_h2=om_gamma0_h2) * self.pow_gw
+        pow_gw = self.pow_gw[self.valid_slice] if valid else self.pow_gw
+        return self.F_gw0_h2(ge0_photon=ge0_photon, gs0=gs0, om_gamma0_h2=om_gamma0_h2) * pow_gw
 
     def omgw0_h2_peak(
             self,
@@ -270,6 +295,8 @@ class Omgw0Base(SpectrumBase):
         ) -> tuple[float, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D]:
         r"""Signal-to-noise ratio for LISA, taking into account all noise sources.
 
+        Only the part of the spectrum that is valid is included, see :py:attr:`valid_slice`.
+
         :param noise: $\Omega_\text{noise} h^2$
         :param f_noise: frequencies for the noise (assumed to be the same as for the signal, if not provided)
         :param ge0_photon: $g_{e\gamma 0}$, degrees of freedom for energy density of photons today
@@ -282,8 +309,8 @@ class Omgw0Base(SpectrumBase):
         :return: the signal-to-noise ratio, the frequencies of the signal, $\Omega_{\text{gw},0} h^2$,
             the frequencies of the noise and $\Omega_\text{noise} h^2$
         """
-        f: FloatArr1D = self.f()
-        omgw0_h2 = self.omgw0_h2(ge0_photon=ge0_photon, gs0=gs0, om_gamma0_h2=om_gamma0_h2)
+        f: FloatArr1D = self.f(valid=True)
+        omgw0_h2 = self.omgw0_h2(ge0_photon=ge0_photon, gs0=gs0, om_gamma0_h2=om_gamma0_h2, valid=True)
         snr, f_noise, noise = signal_to_noise_ratio(
             f=f, signal=omgw0_h2, obs_time=obs_time,
             noise=noise, f_noise=f_noise,

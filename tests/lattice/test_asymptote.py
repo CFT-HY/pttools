@@ -234,6 +234,20 @@ class SyntheticAsymptoteRunTest(unittest.TestCase):
         np.testing.assert_allclose(
             spectrum.pow_gw_asymptote(step_end=20000),
             spectrum.omega_gw_asymptote_ratio(step_end=20000) * spectrum.pow_gw, rtol=1e-14)
+        assert spectrum.pow_gw_asymptote_scale(step_end=20000) == spectrum.pow_gw_scale
+
+    def test_spectrum_pow_gw_asymptote_duration(self) -> None:
+        r"""With the duration of the asymptote, the expansion factor is that of the longer source."""
+        spectrum = self.lattice_run.spectrum(10000, r_star=0.1)
+        ratio = spectrum.omega_gw_asymptote_ratio(step_end=20000)
+        # Radiation domination: eta_v / Delta eta_v = 1 / (1 + r_* Delta tau_v)
+        x_inf = ratio * 0.1 * spectrum.delta_tau_v
+        scale = spectrum.pow_gw_asymptote_scale(asymptote_duration=True, step_end=20000)
+        assert scale == pytest.approx(spectrum.pow_gw_r_star_scale / (1 + x_inf), rel=1e-12)
+        assert scale < spectrum.pow_gw_scale
+        np.testing.assert_allclose(
+            spectrum.pow_gw_asymptote(asymptote_duration=True, step_end=20000),
+            ratio * scale / spectrum.pow_gw_r_star_scale * spectrum.pow_gw_flat, rtol=1e-12)
 
 
 if __name__ == "__main__":

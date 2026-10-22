@@ -63,6 +63,32 @@ def eta_ratio[T: FloatOrArr](
     return N_sh * r_star / ((1 + nu) * ubarf)  # pyrefly: ignore[bad-return]
 
 
+def expansion_factor(eta_ratio: float, nu: float = DEFAULT_NU_GDH2024) -> float:
+    r"""$\frac{\eta_\text{v}}{\Delta \eta_\text{v}}$, reduction of the GW power by the expansion of the Universe.
+
+    $$\frac{\eta_\text{v}}{\Delta \eta_\text{v}} = \frac{\Upsilon_\ell}{\Delta \eta_\text{v} / \eta_*}$$
+    This is the ratio of the effective lifetime $\eta_\text{v} = \eta_* \Upsilon_\ell$
+    (see :py:func:`pttools.ssm.scaling.H_star_eta_v` and :py:func:`source_lifetime_factor`)
+    to the source duration $\Delta \eta_\text{v}$.
+    Therefore, it's the GW power that a stationary source produces in the expanding Universe
+    during $\Delta \eta_\text{v}$, relative to the GW power that it would produce in flat space
+    during the same time.
+    For a short source $\Delta \eta_\text{v} \ll \eta_*$, it approaches 1,
+    and for a long source $\Delta \eta_\text{v} \gg \eta_*$, it approaches
+    $\frac{\eta_*}{\ell(\nu) \Delta \eta_\text{v}}$.
+    In a radiation-dominated Universe ($\nu = 0$, $\ell = 1$), it's
+    $$\frac{\eta_\text{v}}{\Delta \eta_\text{v}} = \frac{1}{1 + \Delta \eta_\text{v} / \eta_*}.$$
+
+    :param eta_ratio: $\frac{\Delta \eta_\text{v}}{\eta_*}$, source duration in units of $\eta_*$,
+        see :py:func:`eta_ratio`
+    :param nu: $\nu_\text{gdh2024}$
+    :return: $\frac{\eta_\text{v}}{\Delta \eta_\text{v}}$
+    """
+    if eta_ratio == 0:
+        return 1.
+    return float(-Upsilon(r=1 + eta_ratio, l=-l(nu)) / eta_ratio)
+
+
 @njit(cache=True)
 def H_eta[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:
     r"""$\mathcal{H} \eta$, conformal Hubble rate times conformal time, for a barotropic EoS.
