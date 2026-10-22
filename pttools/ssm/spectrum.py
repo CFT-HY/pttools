@@ -272,7 +272,9 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
             xi=self.bubble.xi,
             y=self.y,
             # Scalars
-            beta_tilde=self.beta_tilde,
+            # The scalars are converted to float, so that the compiled computation is not compiled separately
+            # for each combination of int, float and None arguments.
+            beta_tilde=np.nan if self.beta_tilde is None else float(self.beta_tilde),
             cs=self.cs,
             lifetime_distribution_a=self.lifetime_distribution_a,
             nu_gdh2024=self.nu_gdh2024,
@@ -285,7 +287,9 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
             eps_lookup=self.eps_lookup,
             nT=self.nT,
             n_z_lookup=self.n_z_lookup,
-            nx_P_tilde_gw=self.nx_P_tilde_gw,
+            # None is converted to 0, which means the size of the lookup array in spec_den_gw(),
+            # as the compiled computation would otherwise be compiled separately for None.
+            nx_P_tilde_gw=0 if self.nx_P_tilde_gw is None else self.nx_P_tilde_gw,
             T_tilde_min=self.T_tilde_min,
             T_tilde_max=self.T_tilde_max,
             z_st_thresh=self.z_st_thresh,

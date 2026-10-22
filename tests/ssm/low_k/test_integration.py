@@ -211,6 +211,15 @@ class IntegrationHighTest(unittest.TestCase):
                     rtol=1e-5
                 )
 
+    @staticmethod
+    def test_spec_den_gw_nx_default() -> None:
+        r"""The number of integration points 0, which is the default, should mean the size of the lookup array."""
+        z = np.logspace(-1, 2, 50)
+        ref = spec_den_gw(z_lookup=X, P_tilde_v_lookup=P_TILDE_V, y=z, nx_P_tilde_gw=X.size, parallel=False)[0]
+        for kwargs in ({}, {"nx_P_tilde_gw": 0}):
+            np.testing.assert_array_equal(
+                spec_den_gw(z_lookup=X, P_tilde_v_lookup=P_TILDE_V, y=z, parallel=False, **kwargs)[0], ref)
+
     def test_power_laws(self) -> None:
         r"""Test the power laws $\mathcal{P}_\text{gw} \propto k^9$ below and $k^{-3}$ above the peak.
 

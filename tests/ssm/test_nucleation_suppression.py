@@ -19,7 +19,7 @@ from pttools.bubble.const import CS0
 from pttools.math import assert_allclose
 from pttools.models.bag import BagModel
 from pttools.ssm import SSMSpectrum
-from pttools.ssm.nucleation import nucleation_f, r_star0
+from pttools.ssm.nucleation import bubble_spacing_enlargement, nucleation_f, r_star0
 
 
 class NucleationFTest(unittest.TestCase):
@@ -107,6 +107,19 @@ class NucleationSuppressionTest(unittest.TestCase):
         assert lam > 1.
         assert_allclose(self.spectrum_beta.r_star, lam * r_star0(100, self.bubble.v_wall))
         assert self.spectrum_r_star.bubble_spacing_enlargement_factor == 1.
+
+    def test_bubble_spacing_enlargement_none_nan(self) -> None:
+        r"""Without $\tilde{\beta}$, given as None or nan, there is no bubble spacing enlargement."""
+        bubble = self.bubble
+        enlarged = bubble_spacing_enlargement(
+            xi=bubble.xi, T=bubble.T, beta_tilde=100., v_wall=bubble.v_wall, sol_type=bubble.sol_type)
+        assert enlarged[2] > 1.
+        for beta_tilde in (None, np.nan):
+            with self.subTest(beta_tilde=beta_tilde):
+                assert bubble_spacing_enlargement(
+                    xi=self.bubble.xi, T=self.bubble.T, beta_tilde=beta_tilde,
+                    v_wall=self.bubble.v_wall, sol_type=self.bubble.sol_type
+                ) == (0., 0., 1.)
 
     def test_ubarf2(self) -> None:
         r"""Test that $\bar{U}_f^2$ does not depend on $\Lambda$."""

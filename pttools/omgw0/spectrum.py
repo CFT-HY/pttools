@@ -276,11 +276,13 @@ class Spectrum(Omgw0Base, SSMSpectrum):
                 gs0=self.snr_settings.gs0,
                 om_gamma0_h2=self.snr_settings.om_gamma0_h2
             ),
-            mean_adiabatic_index=self.bubble.mean_adiabatic_index,
-            r_star=self.r_star,
-            nu_gdh2024=self.nu_gdh2024,
-            dilution_of_e=self.dilution_of_e,
-            suppression_factor=self.suppression_factor,
+            # The scalars are converted to float, so that the compiled computation is not compiled separately
+            # for each combination of int and float arguments.
+            mean_adiabatic_index=float(self.bubble.mean_adiabatic_index),
+            r_star=float(self.r_star),
+            nu_gdh2024=float(self.nu_gdh2024),
+            dilution_of_e=float(self.dilution_of_e),
+            suppression_factor=float(self.suppression_factor),
             low_k=self.low_k,
             compute_snr=self.compute_snr,
             snr=self.snr_settings

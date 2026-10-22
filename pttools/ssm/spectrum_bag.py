@@ -200,6 +200,9 @@ def spec_den_v_bag(
 
     v_wall, alpha, nuc_type, nuc_args = parse_params(params)
     if filename is None:
+        # The numbers of points are converted to a tuple of ints, so that the jitted function is not compiled
+        # separately for arrays and tuples.
+        npt = tuple(int(n) for n in npt)
         A2_lookup = a2_ssm_func_bag(
             z=qT_lookup, v_wall=v_wall, alpha=alpha,
             df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,

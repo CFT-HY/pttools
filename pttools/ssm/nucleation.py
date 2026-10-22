@@ -115,8 +115,13 @@ def bubble_spacing_enlargement(
         beta_tilde: float | None,
         v_wall: float,
         sol_type: SolutionType) -> tuple[float, float, float]:
-    r"""Compute the bubble spacing enlargement quantities $f, h_x, \Lambda(h_x)$."""
-    if beta_tilde is None or sol_type == SolutionType.DETON.value:
+    r"""Compute the bubble spacing enlargement quantities $f, h_x, \Lambda(h_x)$.
+
+    There is no enlargement if $\tilde{\beta}$ is not given, i.e. it's None or nan, or for detonations.
+    Nan is accepted as well, so that the compiled callers can pass a float in both cases,
+    and therefore do not have to be compiled separately for None.
+    """
+    if beta_tilde is None or np.isnan(beta_tilde) or sol_type == SolutionType.DETON.value:
         return 0., 0., 1.
     f = nucleation_f(xi=xi, T=T, beta_tilde=beta_tilde, v_wall=v_wall)
     hx_val = hx(f)

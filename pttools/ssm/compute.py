@@ -54,8 +54,9 @@ class SSMInput(tp.NamedTuple):
     #: $z = kR_*$ array
     y: FloatArr1D
     # Scalars (in alphabetical order)
-    #: $\tilde{\beta}$, nucleation rate parameter, if given
-    beta_tilde: float | None
+    #: $\tilde{\beta}$, nucleation rate parameter, or nan if not given.
+    #: This is nan instead of None, so that the compiled functions do not have to be compiled separately for None.
+    beta_tilde: float
     #: $c_s$, speed of sound in the broken phase
     cs: float
     #: $a$, parameter of the bubble lifetime distribution
@@ -79,8 +80,8 @@ class SSMInput(tp.NamedTuple):
     nT: int  # noqa: N815
     #: number of points in the lookup arrays
     n_z_lookup: int
-    #: number of points for the integration of the GW spectral density
-    nx_P_tilde_gw: int | None  # noqa: N815
+    #: number of points for the integration of the GW spectral density, or 0 for the size of the lookup array
+    nx_P_tilde_gw: int  # noqa: N815
     #: $\tilde{T}_\text{min}$
     T_tilde_min: float
     #: $\tilde{T}_\text{max}$

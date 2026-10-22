@@ -121,7 +121,7 @@ def _spec_den_gw_core(
         y: FloatArr1D,
         cs: float = CS0,
         source_lifetime_factor: float = 1.,
-        nx_P_tilde_gw: int | None = None) -> tuple[FloatArr1D, FloatArr1D]:
+        nx_P_tilde_gw: int = 0) -> tuple[FloatArr1D, FloatArr1D]:
     r"""Core computation for :py:func:spec_den_gw_scaled:.
 
     :giombi_2024_cs:`\ ` eq. 3.13
@@ -137,7 +137,7 @@ def _spec_den_gw_core(
         )
 
     # Creating a second variable is required by Numba
-    nx_P_tilde_gw2 = z_lookup.size if nx_P_tilde_gw is None else nx_P_tilde_gw
+    nx_P_tilde_gw2 = z_lookup.size if nx_P_tilde_gw == 0 else nx_P_tilde_gw
 
     # Precompute shared intermediate results
     x_plus_factor = x_plus(z=1., cs=cs)
@@ -168,7 +168,7 @@ def _spec_den_gw_y(
         y: FloatArr1D | None = None,
         cs: float = CS0,
         source_lifetime_factor: float = 1.,
-        nx_P_tilde_gw: int | None = None,
+        nx_P_tilde_gw: int = 0,
         parallel: bool = True) -> tuple[FloatArr1D, FloatArr1D]:
     if y is None:
         raise TypeError("y must be given.")
@@ -195,7 +195,7 @@ def _spec_den_gw_no_y(
         y: FloatArr1D | None = None,
         cs: float = CS0,
         source_lifetime_factor: float = 1.,
-        nx_P_tilde_gw: int | None = None,
+        nx_P_tilde_gw: int = 0,
         parallel: bool = True) -> tuple[FloatArr1D, FloatArr1D]:
     z_min, z_max = limits_from_lookup(z_lookup, cs=cs)
     y = logspace(np.log10(z_min), np.log10(z_max), z_lookup.size)
@@ -221,7 +221,7 @@ def spec_den_gw(
         cs: float = CS0,
         source_lifetime_factor: float = 1.,
         # Settings
-        nx_P_tilde_gw: int | None = None,
+        nx_P_tilde_gw: int = 0,
         parallel: bool = True) -> tuple[FloatArr1D, FloatArr1D]:
     r"""
     Spectral density of gravitational wave power, $\tilde{P}_\text{gw}(z)$.
@@ -246,7 +246,8 @@ def spec_den_gw(
     :param y: $y = kL_f = kR*$ corresponding to z_lookup. If not given, will be created from z_lookup.
     :param cs: Speed of sound $c_s$ in the broken phase after the phase transition
     :param source_lifetime_factor: Source lifetime factor $\Upsilon_l$
-    :param nx_P_tilde_gw: Number of $z$ points for integration
+    :param nx_P_tilde_gw: Number of $z$ points for integration, or 0 to use ``z_lookup.size``.
+        The default is 0 instead of None, so that the compiled functions are not compiled separately for None.
     :param parallel: Whether to run with multiple threads
     :return: $\tilde{P}_\text{gw}(z)$
     """
@@ -278,7 +279,7 @@ def _spec_den_gw_numba(
         cs: float = CS0,
         source_lifetime_factor: float = 1.,
         # Settings
-        nx_P_tilde_gw: int | None = None,
+        nx_P_tilde_gw: int = 0,
         parallel: bool = True) -> NumbaFunc:
     if isinstance(y, numba.types.Array):
         return _spec_den_gw_y
