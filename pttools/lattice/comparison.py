@@ -98,13 +98,16 @@ class LatticeComparison:
                         "The %s of the SSM spectrum (%s) differs from that of the spectrum of the run %s (%s).",
                         attr, getattr(ssm, attr), name, getattr(spectrum, attr))
 
-    def omega(self, **kwargs: tp.Any) -> dict[str, float]:
+    def omega(self, asymptote_duration: bool = False, **kwargs: tp.Any) -> dict[str, float]:
         r"""$\Omega_\text{gw}$, total GW power of the simulation and of the SSM.
 
         The values are integrated over the $z = kR_*$ points of each spectrum.
         The asymptotic value of the simulation is that of
         :py:meth:`pttools.lattice.spectrum.LatticeSpectrum.pow_gw_asymptote`.
 
+        :param asymptote_duration: whether to take into account the expansion of the universe
+            with the duration of the asymptote, see
+            :py:meth:`pttools.lattice.spectrum.LatticeSpectrum.pow_gw_asymptote_scale`
         :param kwargs: arguments for :py:meth:`pttools.lattice.run.LatticeRun.omega_gw_asymptote`
         :return: $\Omega_\text{gw}(t)$ and $\Omega_\text{gw}^\infty$ of the simulation,
             and $\Omega_\text{gw}$ of the SSM with and without the fitted suppression factor
@@ -115,7 +118,8 @@ class LatticeComparison:
         omega_ssm = float(np.trapezoid(ssm.pow_gw, np.log(ssm.y)))
         return {
             "Omega_gw(t)": float(np.trapezoid(spectrum.pow_gw, ln_y)),
-            "Omega_gw_inf": float(np.trapezoid(spectrum.pow_gw_asymptote(**kwargs), ln_y)),
+            "Omega_gw_inf": float(np.trapezoid(
+                spectrum.pow_gw_asymptote(asymptote_duration=asymptote_duration, **kwargs), ln_y)),
             "Omega_gw SSM, suppressed": self.fit.factor * omega_ssm,
             "Omega_gw SSM, unsuppressed": omega_ssm,
         }

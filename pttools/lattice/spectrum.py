@@ -311,10 +311,28 @@ class LatticeSpectrum(Omgw0Base):
         :param kwargs: arguments for :py:meth:`pttools.lattice.run.LatticeRun.omega_gw_asymptote`
         :return: the scaled GW power spectrum
         """
+        return self.pow_gw_asymptote_ratio(asymptote_duration=asymptote_duration, **kwargs) * self.pow_gw
+
+    def pow_gw_asymptote_ratio(self, asymptote_duration: bool = False, **kwargs: tp.Any) -> float:
+        r"""$\mathcal{P}_\text{gw}^\infty / \mathcal{P}_\text{gw}(t)$, ratio of the asymptotic and current GW power.
+
+        $$\frac{\mathcal{P}_\text{gw}^\infty(z)}{\mathcal{P}_\text{gw}(z, t)}
+        = \frac{\Omega_\text{gw}^\infty}{\Omega_\text{gw}(t)} \frac{S}{S_t},$$
+        where $S$ is :py:meth:`pow_gw_asymptote_scale` and $S_t$ is :py:attr:`pow_gw_scale`.
+        This is the factor by which :py:meth:`pow_gw_asymptote` is larger than :py:attr:`pow_gw`,
+        and therefore also the ratio of their integrals over $\ln z$ in the expanding universe.
+        By default, $S = S_t$, and this is the flat-space ratio :py:meth:`omega_gw_asymptote_ratio`.
+        With ``asymptote_duration=True``, it's smaller, as the GW power produced after the time step
+        is reduced more by the expansion of the universe.
+
+        :param asymptote_duration: whether to use the duration of the asymptote for the expansion factor
+        :param kwargs: arguments for :py:meth:`pttools.lattice.run.LatticeRun.omega_gw_asymptote`
+        :return: the ratio
+        """
         ratio = self.omega_gw_asymptote_ratio(**kwargs)
         if not asymptote_duration:
-            return ratio * self.pow_gw
-        return ratio * self.pow_gw_asymptote_scale(asymptote_duration=True, **kwargs) * self._pow(Quantity.GW_TT)
+            return ratio
+        return ratio * self.pow_gw_asymptote_scale(asymptote_duration=True, **kwargs) / self.pow_gw_scale
 
     def pow_gw_asymptote_scale(self, asymptote_duration: bool = False, **kwargs: tp.Any) -> float:
         r"""Scaling factor of the asymptotic GW power spectrum from the simulation to $r_*$.

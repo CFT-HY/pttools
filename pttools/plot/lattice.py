@@ -556,6 +556,8 @@ def plot_pow_gw_asymptote_comparison(
     :py:attr:`pttools.lattice.asymptote.PowGwAsymptoteFit.pow_gw_inf_lower`.
     The SSM spectrum is plotted both with the suppression factor that is fitted to the GW power growth rate
     of the simulation and without suppression.
+    The legend gives the ratio of the asymptotic and the current GW power in the expanding universe,
+    see :py:meth:`pttools.lattice.spectrum.LatticeSpectrum.pow_gw_asymptote_ratio`.
 
     :param comparison: the comparison of the simulation and the SSM
     :param pow_fit: the fits of each wavenumber, see :py:meth:`pttools.lattice.run.LatticeRun.pow_gw_asymptote`
@@ -573,8 +575,8 @@ def plot_pow_gw_asymptote_comparison(
     spectrum = comparison.spectrum
     ssm = comparison.ssm
     sup = comparison.fit.factor
-    ratio = spectrum.omega_gw_asymptote_ratio(step_end=step_end)
-    pow_scaled = spectrum.pow_gw_asymptote(asymptote_duration=asymptote_duration, step_end=step_end)
+    ratio = spectrum.pow_gw_asymptote_ratio(asymptote_duration=asymptote_duration, step_end=step_end)
+    pow_scaled = ratio * spectrum.pow_gw
 
     ax.plot(spectrum.y, spectrum.pow_gw, color=COLOR_GW, lw=0.8, alpha=0.5, label=f"Simulation, $t={spectrum.t:.0f}$")
     ax.plot(

@@ -38,6 +38,9 @@ in an expanding universe.
 The GW power spectra of the simulations are scaled to the expanding universe in the same way as the SSM spectra,
 treating each simulation as a source that lasts from its start to the time of the spectrum
 with its mean GW power growth rate, see :py:class:`pttools.lattice.spectrum.LatticeSpectrum`.
+For the asymptotes, the expansion is taken into account with the duration
+in which this growth rate would produce the asymptotic GW power,
+see :py:data:`examples.lattice.lattice_spectra.ASYMPTOTE_DURATION`.
 """
 
 from __future__ import annotations
@@ -59,6 +62,10 @@ if th.TYPE_CHECKING_OR_DOCS:
 
 logger: logging.Logger = logging.getLogger(__name__)
 
+#: Whether to take into account the expansion of the universe with the duration of the asymptote
+#: instead of that of the time step, for both the plotted asymptotic spectra and $\Omega_\text{gw}^\infty$,
+#: see :py:meth:`pttools.lattice.spectrum.LatticeSpectrum.pow_gw_asymptote_scale`
+ASYMPTOTE_DURATION: bool = True
 #: Smallest $z = kR_*$ of the fits of each wavenumber of each run
 Y_MIN_FIT: dict[str, float] = {"detonation": 4., "deflagration": 0.}
 #: Largest $z = kR_*$ of the fits of each wavenumber of each run,
@@ -67,26 +74,34 @@ Y_MAX_FIT: dict[str, float] = {"detonation": 1e3, "deflagration": 360.}
 
 
 @log_duration
-def main() -> dict[str, Figure]:
-    """Plot the asymptotically scaled simulated GW power spectra and the SSM spectra of the runs of Correia et al."""
+def main(asymptote_duration: bool = ASYMPTOTE_DURATION) -> dict[str, Figure]:
+    """Plot the asymptotically scaled simulated GW power spectra and the SSM spectra of the runs of Correia et al.
+
+    :param asymptote_duration: see :py:data:`ASYMPTOTE_DURATION`
+    :return: the figures
+    """
     lattice_comparisons = compare_chrw25_runs(y_min=Y_MIN, r_star=R_STAR, missing_ok=True)
     if not lattice_comparisons:
         return {}
-    print(f"r_* = {R_STAR}")
+    print(f"r_* = {R_STAR}, asymptote_duration = {asymptote_duration}")
 
     step_end = {name: comparison.run.last_step() for name, comparison in lattice_comparisons.items()}
     omega = pd.DataFrame.from_dict({
-        comparison.run.label_unicode: comparison.omega(step_end=step_end[name])
+        comparison.run.label_unicode: comparison.omega(asymptote_duration=asymptote_duration, step_end=step_end[name])
         for name, comparison in lattice_comparisons.items()
     }, orient="index")
-    print(omega.to_markdown(floatfmt=".3e"))
+    ratio = omega["Omega_gw_inf"] / omega["Omega_gw(t)"]
+    omega.insert(list(omega.columns).index("Omega_gw_inf") + 1, "Omega_gw_inf / Omega_gw(t)", ratio)
+    print(omega.to_markdown(floatfmt=["", ".3e", ".3e", ".3f", ".3e", ".3e"]))
 
     fig, axs = plt.subplots(1, len(lattice_comparisons), figsize=(5 * len(lattice_comparisons), 4), squeeze=False)
     for ax, (name, comparison) in zip(axs[0], lattice_comparisons.items(), strict=True):
         pow_fit = comparison.run.pow_gw_asymptote(
             y_min=Y_MIN_FIT[name], y_max=Y_MAX_FIT[name],
             start_fraction=CHRW25_RUNS[name].fit_start_fraction, step_end=step_end[name])
-        plot_pow_gw_asymptote_comparison(comparison, pow_fit=pow_fit, step_end=step_end[name], fig=fig, ax=ax)
+        plot_pow_gw_asymptote_comparison(
+            comparison, pow_fit=pow_fit, step_end=step_end[name], asymptote_duration=asymptote_duration,
+            fig=fig, ax=ax)
     fig.tight_layout()
     return {"lattice_spectra": fig}
 

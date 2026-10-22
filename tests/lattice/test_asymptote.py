@@ -227,6 +227,14 @@ class SyntheticAsymptoteRunTest(unittest.TestCase):
         assert omega["Omega_gw SSM, unsuppressed"] == pytest.approx(np.trapezoid(ssm.pow_gw, np.log(ssm.y)), rel=1e-12)
         assert omega["Omega_gw SSM, suppressed"] == pytest.approx(
             comparison.suppression * omega["Omega_gw SSM, unsuppressed"], rel=1e-12)
+        omega_duration = comparison.omega(asymptote_duration=True, step_end=20000)
+        assert omega_duration["Omega_gw_inf"] == pytest.approx(np.trapezoid(
+            spectrum.pow_gw_asymptote(asymptote_duration=True, step_end=20000), np.log(spectrum.y)), rel=1e-12)
+        assert omega_duration["Omega_gw_inf"] < omega["Omega_gw_inf"]
+        # The ratio of the integrals is that of the spectra.
+        for duration, values in ((False, omega), (True, omega_duration)):
+            assert values["Omega_gw_inf"] / values["Omega_gw(t)"] == pytest.approx(
+                spectrum.pow_gw_asymptote_ratio(asymptote_duration=duration, step_end=20000), rel=1e-12)
 
     def test_spectrum_pow_gw_asymptote(self) -> None:
         r"""The GW power spectrum scaled to the asymptote is $\mathcal{P}_\text{gw}$ times the ratio."""
@@ -235,6 +243,7 @@ class SyntheticAsymptoteRunTest(unittest.TestCase):
             spectrum.pow_gw_asymptote(step_end=20000),
             spectrum.omega_gw_asymptote_ratio(step_end=20000) * spectrum.pow_gw, rtol=1e-14)
         assert spectrum.pow_gw_asymptote_scale(step_end=20000) == spectrum.pow_gw_scale
+        assert spectrum.pow_gw_asymptote_ratio(step_end=20000) == spectrum.omega_gw_asymptote_ratio(step_end=20000)
 
     def test_spectrum_pow_gw_asymptote_duration(self) -> None:
         r"""With the duration of the asymptote, the expansion factor is that of the longer source."""
@@ -245,6 +254,8 @@ class SyntheticAsymptoteRunTest(unittest.TestCase):
         scale = spectrum.pow_gw_asymptote_scale(asymptote_duration=True, step_end=20000)
         assert scale == pytest.approx(spectrum.pow_gw_r_star_scale / (1 + x_inf), rel=1e-12)
         assert scale < spectrum.pow_gw_scale
+        assert spectrum.pow_gw_asymptote_ratio(asymptote_duration=True, step_end=20000) == pytest.approx(
+            ratio * scale / spectrum.pow_gw_scale, rel=1e-12)
         np.testing.assert_allclose(
             spectrum.pow_gw_asymptote(asymptote_duration=True, step_end=20000),
             ratio * scale / spectrum.pow_gw_r_star_scale * spectrum.pow_gw_flat, rtol=1e-12)
