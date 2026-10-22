@@ -27,7 +27,9 @@ ALPHA_N_FROM_UBARF_MIN: float = 1e-8
 ALPHA_N_FROM_UBARF_MAX: float = 1e12
 
 
-@np.vectorize
+# The output type is given, as otherwise np.vectorize would call the function an extra time
+# with the first input to determine the output type, which would double the cost of scalar calls.
+@np.vectorize(otypes=[np.float64])
 def alpha_n_from_ubarf[T: FloatOrArr](
         v_wall: T,
         ubarf: T | float,

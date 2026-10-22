@@ -12,6 +12,7 @@ from pttools.bubble.junction import solve_junction, w2_junction
 from pttools.bubble.phase import Phase
 from pttools.bubble.shock_bag import v_shock_bag
 from pttools.bubble.solution_type import SolutionType
+from pttools.math.numerics import is_nan_or_outside, isclose_scalar
 from pttools.speedup import njit
 import pttools.type_hints as th
 
@@ -19,6 +20,11 @@ if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+#: Lower bounds of $\tilde{v}_1, w_1$ in the check of the inputs of :func:`solve_shock`
+SOLVE_SHOCK_LOWER: tp.Final[tuple[float, float]] = (0., 0.)
+#: Upper bounds of $\tilde{v}_1, w_1$ in the check of the inputs of :func:`solve_shock`
+SOLVE_SHOCK_UPPER: tp.Final[tuple[float, float]] = (1., np.inf)
 
 
 def find_shock_index(  # noqa: PLR0911, PLR0912, PLR0915
@@ -289,7 +295,7 @@ def shock_zoom_last_element(
     return v, w, xi
 
 
-def solve_shock(  # noqa: PLR0911
+def solve_shock(  # noqa: PLR0911, PLR0912
             model: Model,
             v1_tilde: float,
             w1: float,
@@ -315,17 +321,20 @@ def solve_shock(  # noqa: PLR0911
     :param warn_if_barely_exists: Warn if the shock barely exists
     :return: $\tilde{v}_{2,sh},w2$
     """
-    # Handle invalid inputs
-    if v1_tilde < 0 or v1_tilde > 1 or np.isclose(v1_tilde, 0) or np.isnan(v1_tilde):
-        logger.error("Got invalid v1=%s for shock solver.", v1_tilde)
-        return np.nan, np.nan
-    if np.isclose(w1, 0) or np.isnan(w1):
-        logger.error("Got invalid w1=%s for shock solver.", w1)
-        return np.nan, np.nan
+    # Handle invalid inputs.
+    # The individual checks are needed only if the inputs are not clearly valid,
+    # which is checked first with a single faster call.
+    if is_nan_or_outside((float(v1_tilde), float(w1)), SOLVE_SHOCK_LOWER, SOLVE_SHOCK_UPPER, isclose=True):
+        if v1_tilde < 0 or v1_tilde > 1 or isclose_scalar(v1_tilde, 0) or np.isnan(v1_tilde):
+            logger.error("Got invalid v1=%s for shock solver.", v1_tilde)
+            return np.nan, np.nan
+        if isclose_scalar(w1, 0) or np.isnan(w1):
+            logger.error("Got invalid w1=%s for shock solver.", w1)
+            return np.nan, np.nan
 
-    if np.isclose(v1_tilde, 1):
-        logger.error("Got v1=%s for shock solver.", v1_tilde)
-        return 1, np.nan
+        if isclose_scalar(v1_tilde, 1):
+            logger.error("Got v1=%s for shock solver.", v1_tilde)
+            return 1, np.nan
 
     if csp is None:
         # When solving forwards, this is only an approximation, but a valid one for tiny shocks.
@@ -335,7 +344,7 @@ def solve_shock(  # noqa: PLR0911
         csp2 = csp**2
 
     # If the shock barely exists
-    if np.isclose(v1_tilde, csp):
+    if isclose_scalar(v1_tilde, csp):
         if warn_if_barely_exists:
             logger.warning("The shock barely exists. Got v1=%s, w1=%s", v1_tilde, w1)
         return v1_tilde, w1
@@ -345,7 +354,9 @@ def solve_shock(  # noqa: PLR0911
         # v2_tilde_guess = 1 / (3 * v1_tilde)
         # General guess
         v2_tilde_guess = tp.cast(float, csp2 * v1_tilde)
-    if np.isclose(v2_tilde_guess, 0) or np.isclose(v2_tilde_guess, 1):
+    # The estimate can be close to its bounds only if it's not clearly valid, which is checked first.
+    if is_nan_or_outside(float(v2_tilde_guess), 0., 1., isclose=True) \
+            and (isclose_scalar(v2_tilde_guess, 0) or isclose_scalar(v2_tilde_guess, 1)):
         logger.error("Got invalid estimate for v2=%s", v2_tilde_guess)
         return np.nan, np.nan
 
@@ -370,7 +381,7 @@ def solve_shock(  # noqa: PLR0911
     if w2_guess is None:
         w2_guess = w2_junction(v1_tilde, w1, v2_tilde_guess)
 
-    if w2_guess < 0 or np.isclose(w2_guess, 0):
+    if w2_guess < 0 or isclose_scalar(w2_guess, 0):
         logger.error("Got invalid estimate for w2=%s", w2_guess)
         return np.nan, np.nan
 
@@ -383,12 +394,14 @@ def solve_shock(  # noqa: PLR0911
     )
 
 
-@np.vectorize
+# The output type is given, as otherwise np.vectorize would call the function an extra time
+# with the first input to determine the output type, which would double the cost of scalar calls.
+@np.vectorize(otypes=[np.float64])
 def v_shock(model: Model, wn: float, xi: float, cs_n: float, warn_if_barely_exists: bool = True) -> float:
     r"""Shock velocity $v_\text{sh}$."""
-    if xi <= cs_n or np.isclose(xi, cs_n):
+    if xi <= cs_n or isclose_scalar(xi, cs_n):
         return 0.
-    if np.isclose(xi, 1.):
+    if isclose_scalar(xi, 1.):
         return 1.
 
     # This can emit a lot of log spam if the warning of a barely existing shock is enabled.

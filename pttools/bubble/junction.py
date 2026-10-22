@@ -17,6 +17,7 @@ from pttools.bubble import const
 from pttools.bubble.junction_entropy import check_entropy_fluxes
 from pttools.bubble.phase import Phase
 from pttools.bubble.relativity import gamma2, lorentz
+from pttools.math.numerics import is_nan_or_outside
 from pttools.speedup import njit
 from pttools.speedup.solvers import fsolve_vary
 import pttools.type_hints as th
@@ -26,6 +27,11 @@ if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+#: Lower bounds of $\tilde{v}_1, w_1, \tilde{v}_{2,\text{guess}}, w_{2,\text{guess}}$ in :func:`solve_junction`
+SOLVE_JUNCTION_LOWER: tp.Final[tuple[float, float, float, float]] = (0., 0., 0., 0.)
+#: Upper bounds of $\tilde{v}_1, w_1, \tilde{v}_{2,\text{guess}}, w_{2,\text{guess}}$ in :func:`solve_junction`
+SOLVE_JUNCTION_UPPER: tp.Final[tuple[float, float, float, float]] = (1., np.inf, 1., np.inf)
 
 
 @njit(cache=True)
@@ -73,10 +79,24 @@ def junction_conditions_solvable(
         phase1: float,
         phase2: float) -> th.FloatArr1D:
     """Get the deviation from both boundary conditions simultaneously."""
+    return junction_conditions_solvable_p1(params, model, v1, w1, model.p(w=w1, phase=phase1), phase2)
+
+
+def junction_conditions_solvable_p1(
+        params: th.FloatArr1D,
+        model: Model,
+        v1: float,
+        w1: float,
+        p1: float,
+        phase2: float) -> th.FloatArr1D:
+    """Get the deviation from both boundary conditions simultaneously for a precomputed $p_1$.
+
+    This is used by the solver, since $p_1$ does not change during the solution.
+    """
     v2 = params[0]
     w2 = params[1]
     return junction_condition_deviations(
-        v1=v1, w1=w1, p1=model.p(w=w1, phase=phase1),
+        v1=v1, w1=w1, p1=p1,
         v2=v2, w2=w2, p2=model.p(w=w2, phase=phase2)
     )
 
@@ -186,11 +206,9 @@ def solve_junction(
     :param debug: Whether to enable debug logging
     :return: $\tilde{v}_2, w_2$
     """
-    if np.isnan(v1_tilde) or np.isnan(w1) or np.isnan(v2_tilde_guess) or np.isnan(w2_guess) \
-            or v1_tilde < 0 or v1_tilde > 1 or w1 < 0 or v2_tilde_guess < 0 or v2_tilde_guess > 1 or w2_guess < 0 \
-            or np.isclose(v1_tilde, 0) or np.isclose(v1_tilde, 1) \
-            or np.isclose(v2_tilde_guess, 0) or np.isclose(v2_tilde_guess, 1) \
-            or np.isclose(w1, 0) or np.isclose(w2_guess, 0):
+    if is_nan_or_outside(
+            (float(v1_tilde), float(w1), float(v2_tilde_guess), float(w2_guess)),
+            SOLVE_JUNCTION_LOWER, SOLVE_JUNCTION_UPPER, isclose=True):
         logger.warning(
             "Got invalid input for the junction solver. The inputs must have 0<v<1 and w>0. "
             "Got: v1=%s, w1=%s, v2_guess=%s, w2_guess=%s",
@@ -297,9 +315,9 @@ def solve_junction_internal(
     """
     # Using fsolve_vary helps in finding the solutions, but it can also make the overall solver a lot slower.
     return fsolve_vary(
-        junction_conditions_solvable,
+        junction_conditions_solvable_p1,
         x0=np.array([v2_tilde_guess, w2_guess]),
-        args=(model, v1_tilde, w1, phase1, phase2),
+        args=(model, v1_tilde, w1, model.p(w=w1, phase=phase1), phase2),
         # This would create a lot of log spam
         log_status=log_status
     )

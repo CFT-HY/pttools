@@ -10,6 +10,7 @@ from scipy.integrate import odeint, simpson
 
 from pttools.bubble.relativity import lorentz as mu
 from pttools.bubble.solution_type import SolutionType
+from pttools.speedup import njit
 import pttools.type_hints as th
 
 # from pttools.speedup import NUMBA_ENABLE_CACHE
@@ -60,7 +61,8 @@ def getvm(al: float, vw: float, cs2b: float) -> tuple[float, int]:
     return (cc + np.sqrt(disc))/2.*cs2b/vw, 2
 
 
-# @njit
+# This is called by odeint for each step of the integration, and therefore benefits from compilation.
+@njit
 def dfdv(xiw: tuple[float, float] | th.FloatArr1D, v: float, cs2: float) -> tuple[float, float]:
     """The differential equation that is solved in the shock/rarefaction wave.
 
@@ -103,8 +105,10 @@ def getKandWow(vw: float, v0: float, cs2: float) -> tuple[th.FloatArr1D, th.Floa
     # If the wall moves at less than the sound speed = is subsonic
     if mu(vw, v0) * vw <= cs2:
         ll = max(int(
-            # Counts the number of points until the shock
-            sum(
+            # Counts the number of points until the shock.
+            # np.sum() is a lot faster than the built-in sum() for arrays, and the result is the same,
+            # as the values are 0 or 1.
+            np.sum(
                 # Finds the position of the shock
                 np.heaviside(cs2 - (mu(xis, vs)*xis), 0.0)
         )), 1)
