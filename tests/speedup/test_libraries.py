@@ -16,7 +16,6 @@ import pytest
 
 from pttools.speedup import libraries
 from pttools.speedup.libraries import library, svml, tbb
-from pttools.utils.system import IS_LINUX, IS_OSX, IS_X86_64
 
 
 def installed(package: str) -> bool:
@@ -88,8 +87,8 @@ class TestTBB(unittest.TestCase):
     # even though the TBB library is available from tbb4u.
     @staticmethod
     @pytest.mark.xfail(
-        not IS_X86_64 and (IS_LINUX or IS_OSX),
-        reason="The Numba wheels for ARM Linux and ARM macOS don't have the TBB threading layer.",
+        not tbb.NUMBA_HAS_TBB_LAYER,
+        reason="The installed Numba, e.g. the Numba wheels for ARM Linux and ARM macOS, has no TBB threading layer.",
         raises=ModuleNotFoundError,
     )
     def test_numba_tbb_layer() -> None:
@@ -117,6 +116,18 @@ class TestTBB(unittest.TestCase):
         assert result.returncode == 0, result.stderr
         assert re.search(r"^TBB version: \d+$", result.stdout, re.MULTILINE), result.stdout
         assert "Warning" not in result.stderr
+
+
+class TestNumbaTBBLayer(unittest.TestCase):
+    """Test the detection of the TBB threading layer of Numba."""
+
+    @staticmethod
+    def test_numba_has_tbb_layer() -> None:
+        """If the TBB threading layer is not detected, it should not exist, and detecting it should not load it."""
+        assert "numba.np.ufunc.tbbpool" not in sys.modules or tbb.NUMBA_HAS_TBB_LAYER
+        if not tbb.NUMBA_HAS_TBB_LAYER:
+            with pytest.raises(ModuleNotFoundError):
+                importlib.import_module("numba.np.ufunc.tbbpool")
 
 
 class TestCheck(unittest.TestCase):

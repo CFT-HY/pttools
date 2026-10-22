@@ -1,11 +1,24 @@
 """Tests for the system utilities."""
 
 from pathlib import Path
+import platform
 import tempfile
 import typing as tp
 import unittest
 
 from pttools.utils import system
+
+
+class CPUArchTest(unittest.TestCase):
+    """Tests for the detection of the CPU architecture."""
+
+    @staticmethod
+    def test_cpu_arch() -> None:
+        """The architecture should be that of the platform, and at most one of the architecture flags should be set."""
+        assert platform.machine() == system.CPU_ARCH
+        assert not (system.IS_ARM64 and system.IS_X86_64)
+        known = ("aarch64", "arm64", "ARM64", "x86_64", "AMD64")
+        assert system.IS_ARM64 or system.IS_X86_64 or system.CPU_ARCH not in known
 
 
 class ProjectDirTest(unittest.TestCase):

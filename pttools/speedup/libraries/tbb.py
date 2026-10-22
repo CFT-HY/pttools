@@ -11,15 +11,23 @@ Based on numba.np.ufunc.parallel._check_tbb_version_compatible()
 """
 
 from ctypes import CDLL, c_int
+import importlib.util
 import os
 from pathlib import Path
 
 from pttools.speedup.libraries.library import NativeLibrary
 
 __all__ = [
-    "TBB", "TBB_LIBRARY_NAME", "TBB_MIN_VERSION", "TBB_VERSION", "TBBLibrary",
+    "NUMBA_HAS_TBB_LAYER", "TBB", "TBB_LIBRARY_NAME", "TBB_MIN_VERSION", "TBB_VERSION", "TBBLibrary",
     "get_tbb_version", "load_tbb", "tbb_library_dirs"
 ]
+
+#: Whether the installed Numba has been built with the TBB threading layer ``numba.np.ufunc.tbbpool``.
+#: As of Numba 0.67, the Numba wheels for ARM Linux and ARM macOS are built without it,
+#: even though the TBB library is available for them from ``tbb4u``.
+#: This finds the extension module without loading it, as loading it would require the TBB library.
+#: Therefore, this does not tell whether the TBB library can be loaded.
+NUMBA_HAS_TBB_LAYER: bool = importlib.util.find_spec("numba.np.ufunc.tbbpool") is not None
 
 # As required by Numba in numba.np.ufunc.parallel._check_tbb_version_compatible()
 TBB_MIN_VERSION = 12060

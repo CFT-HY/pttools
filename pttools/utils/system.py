@@ -20,6 +20,12 @@ _TESTING: bool = False
 AVAILABLE_CPU_CORES: int | None
 #: Whether the system provides information on which CPU cores are available for this process
 CPU_AFFINITY: bool = False
+#: CPU architecture as reported by :func:`platform.machine`, e.g. "x86_64" or "aarch64".
+#: The names depend on the operating system, so use :data:`IS_ARM64` and :data:`IS_X86_64` to check for them.
+CPU_ARCH: str = platform.machine()
+#: Whether the CPU architecture is 64-bit ARM.
+#: Python reports it as "aarch64" on Linux, as "arm64" on macOS, and as "ARM64" on Windows.
+IS_ARM64: bool = CPU_ARCH in ("aarch64", "arm64", "ARM64")
 #: Whether running on the CFT Big Machine
 IS_CFT_BIG_MACHINE: bool = platform.node() == "dx2-528-26839.ad.helsinki.fi"
 #: Whether running on GitHub Actions
@@ -32,7 +38,7 @@ IS_OSX: bool = sys.platform.startswith('darwin')
 IS_WINDOWS: bool = sys.platform.startswith('win32')
 #: Whether the CPU architecture is x86-64.
 #: Python reports it as "x86_64" on Linux and macOS, and as "AMD64" on Windows.
-IS_X86_64: bool = platform.machine() in ("x86_64", "AMD64")
+IS_X86_64: bool = CPU_ARCH in ("x86_64", "AMD64")
 #: Whether running on the Read the Docs builder
 IS_READ_THE_DOCS: bool = "READTHEDOCS_VIRTUALENV_PATH" in os.environ
 #: PTtools installation directory
