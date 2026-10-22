@@ -19,6 +19,7 @@ from pttools.math.asymptote import AsymptoteFit, asymptotic_growth, fit_asymptot
 from pttools.math.numerics import running_mean
 from pttools.math.power_law import PowerLawFit
 from tests.lattice.test_lattice import OUT_COLUMNS
+from tests.utils.const import LOW_ACCURACY_SPECTRUM_KWARGS
 
 
 class AsymptoteFunctionTest(unittest.TestCase):
@@ -214,7 +215,7 @@ class SyntheticAsymptoteRunTest(unittest.TestCase):
     def test_comparison_omega(self) -> None:
         r"""$\Omega_\text{gw}$ of the comparison are the integrals of the spectra, scaled to the asymptote as given."""
         run = self.lattice_run
-        ssm = run.ssm_spectrum(y=np.logspace(-1, 3, 200), r_star=0.1)
+        ssm = run.ssm_spectrum(y=np.logspace(-1, 3, 200), r_star=0.1, **LOW_ACCURACY_SPECTRUM_KWARGS)
         comparison = LatticeComparison(run.spectrum(10000, 9750, r_star=0.1), ssm=ssm)
         omega = comparison.omega(step_end=20000)
         spectrum = comparison.spectrum

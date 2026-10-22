@@ -49,8 +49,21 @@ from examples.solvers import bag, old_new, xi_kappa_bag
 from examples.standard_model import standard_model_xi_v
 from pttools.export import Importer, Table
 from pttools.plot import close_figs
-from tests.utils.const import TEST_RESULT_PATH
+from tests.utils.const import LOW_ACCURACY_SPECTRUM_KWARGS, TEST_RESULT_PATH
 from tests.utils.mark import mark_xfail_pickle_without_jit, skip_slow, uses_parallel
+
+#: Low accuracy settings for the examples whose results are not compared with reference values,
+#: see :py:mod:`examples.props.n_points`
+TEST_ACCURACY: dataset.Accuracy = dataset.Accuracy(n_xi=1000, nx_P_tilde_gw=100, **LOW_ACCURACY_SPECTRUM_KWARGS)
+#: Reference accuracy settings of :py:func:`examples.props.n_points.main` for the tests
+TEST_N_POINTS_REFERENCE: dataset.Accuracy = dataset.Accuracy(n_xi=2000, n_z_lookup=1000, nx_P_tilde_gw=None, nT=1000)
+#: Tested values of the accuracy settings of :py:func:`examples.props.n_points.main` for the tests
+TEST_N_POINTS_VALUES: dict[str, tuple[int, ...]] = {
+    "n_xi": (500, 1000),
+    "n_z_lookup": (200, 500),
+    "nx_P_tilde_gw": (50, 100),
+    "nT": (100, 300),
+}
 
 
 class ExampleTest(unittest.TestCase):
@@ -100,7 +113,7 @@ class ExampleTest(unittest.TestCase):
     @uses_parallel
     def test_const_cs_gw() -> None:
         """Test that the example ``examples.const_cs.const_cs_gw`` runs without errors."""
-        figs1, figs2, _table = const_cs_gw.main()
+        figs1, figs2, _table = const_cs_gw.main(spectrum_kwargs=LOW_ACCURACY_SPECTRUM_KWARGS)
         close_figs(*figs1)
         close_figs(*figs2.flat)
 
@@ -111,7 +124,10 @@ class ExampleTest(unittest.TestCase):
     def test_const_cs_dataset() -> None:
         """Test that the example ``examples.const_cs.dataset`` creates a dataset with the smallest grid."""
         path = TEST_RESULT_PATH / "const_cs_dataset.h5"
-        dataset.main(n_points=dataset.MIN_POINTS, path=path, overwrite=True, max_workers=4, progress_interval=0)
+        dataset.main(
+            n_points=dataset.MIN_POINTS, path=path, overwrite=True, max_workers=4, progress_interval=0,
+            accuracy=dataset.WARM_UP_ACCURACY
+        )
         grid = dataset.Grid.create(dataset.MIN_POINTS)
         with Importer(path, verify=True) as importer:
             assert importer.n_models == grid.n_models
@@ -125,7 +141,7 @@ class ExampleTest(unittest.TestCase):
         """Test that the size of the dataset can be estimated without computing it."""
         path = TEST_RESULT_PATH / "const_cs_dataset_dry_run.h5"
         path.unlink(missing_ok=True)
-        dataset.main(n_points=dataset.SIZES["large"], path=path, dry_run=True)
+        dataset.main(n_points=dataset.SIZES["large"], path=path, dry_run=True, accuracy=dataset.WARM_UP_ACCURACY)
         assert not path.exists()
 
     @staticmethod
@@ -175,7 +191,7 @@ class ExampleTest(unittest.TestCase):
     @uses_parallel
     def test_gksvdv_comparison() -> None:
         """Test that the example ``examples.gksvdv.gksvdv_comparison`` runs without errors."""
-        close_figs(*gksvdv_comparison.main())
+        close_figs(*gksvdv_comparison.main(n_v_walls=5))
 
     @staticmethod
     @mark_xfail_pickle_without_jit
@@ -183,7 +199,7 @@ class ExampleTest(unittest.TestCase):
     @uses_parallel
     def test_gksvdv_fig2() -> None:
         """Test that the example ``examples.gksvdv.gksvdv_fig2`` runs without errors."""
-        close_figs(*gksvdv_fig2.main())
+        close_figs(*gksvdv_fig2.main(n_v_walls=5))
 
     @staticmethod
     def test_gksvdv_testing() -> None:
@@ -265,7 +281,13 @@ class ExampleTest(unittest.TestCase):
     @uses_parallel
     def test_n_points() -> None:
         """Test that the example ``examples.props.n_points`` runs without errors."""
-        close_figs(*n_points.main(cases=n_points.CASES[:2]))
+        close_figs(*n_points.main(
+            cases=n_points.CASES[:2],
+            values=TEST_N_POINTS_VALUES,
+            base=dataset.WARM_UP_ACCURACY,
+            reference=TEST_N_POINTS_REFERENCE,
+            accuracy=TEST_ACCURACY,
+        ))
 
     @staticmethod
     def test_noise() -> None:
@@ -298,13 +320,16 @@ class ExampleTest(unittest.TestCase):
     @uses_parallel
     def test_xi_kappa() -> None:
         """Test that the example ``examples.props.xi_kappa`` runs without errors."""
-        close(xi_kappa.main())
+        close(xi_kappa.main(n_v_walls=3))
 
     # Reverse
     @staticmethod
     def test_reverse() -> None:
-        """Test that the example ``examples.reverse.reverse`` runs without errors."""
-        reverse.main()
+        """Test that the example ``examples.reverse.reverse`` runs without errors.
+
+        The accuracy and the number of iterations are reduced, as the result is not compared with a reference.
+        """
+        reverse.main(n_t=TEST_ACCURACY.nT, n_z_lookup=TEST_ACCURACY.n_z_lookup, maxiter=2)
 
     @staticmethod
     def test_reverse_approx() -> None:

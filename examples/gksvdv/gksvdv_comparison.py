@@ -21,10 +21,16 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 def main(
         colors: tp.Sequence[str] = ("b", "y", "r", "g", "purple", "grey"),
-        alpha_ns: FloatArr1D = GKSVDV_ALPHA_N) -> tuple[plt.Figure, plt.Figure]:
-    """Comparison of Giese et al. and PTtools solvers"""
+        alpha_ns: FloatArr1D = GKSVDV_ALPHA_N,
+        n_v_walls: int | None = None) -> tuple[plt.Figure, plt.Figure]:
+    """Comparison of Giese et al. and PTtools solvers
+
+    :param n_v_walls: number of wall speeds. Defaults to 10 in unit tests and CI, and to 50 otherwise.
+    """
     models = gksvdv_models()
-    v_walls = gksvdv_v_wall(n=10 if testing_or_ci() else 50)
+    if n_v_walls is None:
+        n_v_walls = 10 if testing_or_ci() else 50
+    v_walls = gksvdv_v_wall(n=n_v_walls)
     logger.info("Minimum alpha_ns: %s", [model.alpha_n_min for model in models])
     for model in models:
         logger.info("Model parameters: %s", model.params_str())

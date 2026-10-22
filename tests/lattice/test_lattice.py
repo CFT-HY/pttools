@@ -27,6 +27,7 @@ from pttools.omgw0 import const, freq
 from pttools.omgw0.base import Omgw0Base
 from pttools.ssm.nucleation import NucType
 from pttools.ssm.suppression import SuppressionMethod
+from tests.utils.const import LOW_ACCURACY_SPECTRUM_KWARGS
 
 #: Columns of the ``.out`` file that are used by the importer
 OUT_COLUMNS: tuple[str, ...] = (
@@ -208,7 +209,7 @@ class SyntheticRunTest(unittest.TestCase):
 
     def test_comparison_scalars(self) -> None:
         """The table of the scalar comparison has the values of the simulation and of PTtools, and their ratio."""
-        ssm = self.lattice_run.ssm_spectrum(y=np.logspace(-1, 3, 200), r_star=0.1)
+        ssm = self.lattice_run.ssm_spectrum(y=np.logspace(-1, 3, 200), r_star=0.1, **LOW_ACCURACY_SPECTRUM_KWARGS)
         comparison = LatticeComparison(self.lattice_run.spectrum(1000, 500, r_star=0.1), ssm=ssm)
         scalars = comparison.scalars()
         assert list(scalars.columns) == ["Simulation", "PTtools", "Ratio"]

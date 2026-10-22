@@ -161,26 +161,28 @@ def rel_errors(omgw0_h2: th.FloatArr1D, ref: th.FloatArr1D) -> tuple[float, floa
 def plot_errors(
         cases: tuple[Case, ...],
         results: dict[tuple[int, str, int], Result],
-        refs: dict[tuple[int, str], Result]) -> Figure:
+        refs: dict[tuple[int, str], Result],
+        values: dict[str, tuple[int, ...]] = VALUES,
+        accuracy: Accuracy = ACCURACY) -> Figure:
     """Plot the errors and the computation times as a function of the accuracy settings."""
     fig: Figure = plt.figure(figsize=(A4_PAPER_SIZE[0] * 1.5, A4_PAPER_SIZE[0] * 1.2))
-    axs = fig.subplots(3, len(VALUES), sharex="col", sharey="row")
+    axs = fig.subplots(3, len(values), sharex="col", sharey="row")
     for i_case, case in enumerate(cases):
         color = f"C{i_case}"
-        for i_param, (param, values) in enumerate(VALUES.items()):
+        for i_param, (param, param_values) in enumerate(values.items()):
             ref = refs[(i_case, param)].omgw0_h2
-            errs = np.array([rel_errors(results[(i_case, param, value)].omgw0_h2, ref) for value in values])
-            times = [results[(i_case, param, value)].time_spectrum for value in values]
-            axs[0, i_param].plot(values, errs[:, 0], color=color, marker=".", label=case.label)
-            axs[1, i_param].plot(values, errs[:, 1], color=color, marker=".")
-            axs[2, i_param].plot(values, times, color=color, marker=".")
-    for i_param, param in enumerate(VALUES):
+            errs = np.array([rel_errors(results[(i_case, param, value)].omgw0_h2, ref) for value in param_values])
+            times = [results[(i_case, param, value)].time_spectrum for value in param_values]
+            axs[0, i_param].plot(param_values, errs[:, 0], color=color, marker=".", label=case.label)
+            axs[1, i_param].plot(param_values, errs[:, 1], color=color, marker=".")
+            axs[2, i_param].plot(param_values, times, color=color, marker=".")
+    for i_param, param in enumerate(values):
         for i_row in range(3):
             ax = axs[i_row, i_param]
             ax.set_xscale("log")
             ax.set_yscale("log")
             ax.grid()
-        chosen = getattr(ACCURACY, param)
+        chosen = getattr(accuracy, param)
         for ax in axs[:, i_param]:
             if chosen is not None:
                 ax.axvline(chosen, color="k", ls="--")
@@ -200,26 +202,30 @@ def plot_errors(
     return fig
 
 
-def plot_bubbles(cases: tuple[Case, ...], results: dict[tuple[int, str, int], Result]) -> Figure:
+def plot_bubbles(
+        cases: tuple[Case, ...],
+        results: dict[tuple[int, str, int], Result],
+        values: dict[str, tuple[int, ...]] = VALUES,
+        accuracy: Accuracy = ACCURACY) -> Figure:
     r"""Plot $\kappa + \omega - 1$ and the size of the fluid profile as a function of $n_\xi$."""
     fig: Figure = plt.figure(figsize=(A4_PAPER_SIZE[0] * 1.5, A4_PAPER_SIZE[0] * 0.6))
     ax1, ax2 = fig.subplots(1, 2)
-    values = VALUES["n_xi"]
+    n_xis = values["n_xi"]
     for i_case, case in enumerate(cases):
-        res = [results[(i_case, "n_xi", value)] for value in values]
+        res = [results[(i_case, "n_xi", value)] for value in n_xis]
         err = np.array([abs(r.kappa_omega_err) for r in res])
         size = np.array([r.xi_size for r in res])
         failed = np.array([r.failed for r in res])
         color = f"C{i_case}"
         for ax, data in ((ax1, err), (ax2, size)):
-            ax.plot(values, data, color=color, label=case.label)
-            ax.scatter(np.array(values)[failed], data[failed], color=color, marker="x")
-            ax.scatter(np.array(values)[~failed], data[~failed], color=color, marker="o")
+            ax.plot(n_xis, data, color=color, label=case.label)
+            ax.scatter(np.array(n_xis)[failed], data[failed], color=color, marker="x")
+            ax.scatter(np.array(n_xis)[~failed], data[~failed], color=color, marker="o")
     ax1.axhline(1.5e-2, color="k", ls=":", label="Tolerance of the validation")
     ax1.set_ylabel(r"$|\kappa + \omega - 1|$")
     ax2.set_ylabel(r"Number of points in the fluid profile")
     for ax in (ax1, ax2):
-        ax.axvline(ACCURACY.n_xi, color="k", ls="--")
+        ax.axvline(accuracy.n_xi, color="k", ls="--")
         ax.set_xlabel(r"$n_\xi$")
         ax.set_xscale("log")
         ax.set_yscale("log")
@@ -254,8 +260,21 @@ def plot_spectra(cases: tuple[Case, ...], dataset: list[Result], best: list[Resu
     return fig
 
 
-def main(cases: tuple[Case, ...] = CASES) -> tuple[Figure, Figure, Figure]:
-    """Compute the spectra with the various accuracy settings and plot the errors."""
+def main(
+        cases: tuple[Case, ...] = CASES,
+        values: dict[str, tuple[int, ...]] = VALUES,
+        base: Accuracy = BASE,
+        reference: Accuracy = REFERENCE,
+        accuracy: Accuracy = ACCURACY) -> tuple[Figure, Figure, Figure]:
+    """Compute the spectra with the various accuracy settings and plot the errors.
+
+    :param cases: the test cases
+    :param values: the tested values of the accuracy settings
+    :param base: base values of the accuracy settings, which are used when the other settings are varied
+    :param reference: reference values of the accuracy settings
+    :param accuracy: the accuracy settings of the dataset, which are compared with the reference settings
+    :return: the figures of the errors, the bubbles and the spectra
+    """
     start_time = time.perf_counter()
     models = {
         (case.css2, case.csb2): ConstCSModel.cached(css2=case.css2, csb2=case.csb2, **MODEL_KWARGS)
@@ -267,14 +286,14 @@ def main(cases: tuple[Case, ...] = CASES) -> tuple[Figure, Figure, Figure]:
         ref_futs: dict[tuple[int, str], FakeFuture | Future[Result]] = {}
         for i_case, case in enumerate(cases):
             model = models[(case.css2, case.csb2)]
-            for param, values in VALUES.items():
+            for param, param_values in values.items():
                 ref_futs[(i_case, param)] = pool.submit(
-                    compute, case, model, dataclasses.replace(BASE, **{param: getattr(REFERENCE, param)}))
-                for value in values:
+                    compute, case, model, dataclasses.replace(base, **{param: getattr(reference, param)}))
+                for value in param_values:
                     futs[(i_case, param, value)] = pool.submit(
-                        compute, case, model, dataclasses.replace(BASE, **{param: value}))
-            futs[(i_case, "dataset", 0)] = pool.submit(compute, case, model, ACCURACY)
-            futs[(i_case, "reference", 0)] = pool.submit(compute, case, model, REFERENCE)
+                        compute, case, model, dataclasses.replace(base, **{param: value}))
+            futs[(i_case, "dataset", 0)] = pool.submit(compute, case, model, accuracy)
+            futs[(i_case, "reference", 0)] = pool.submit(compute, case, model, reference)
         results = {key: fut.result() for key, fut in futs.items()}
         refs = {key: fut.result() for key, fut in ref_futs.items()}
 
@@ -289,8 +308,8 @@ def main(cases: tuple[Case, ...] = CASES) -> tuple[Figure, Figure, Figure]:
             case.label, err_peak, err_all, dataset.failed, dataset.time_bubble, dataset.time_spectrum
         )
 
-    fig_errors = plot_errors(cases, results, refs)
-    fig_bubbles = plot_bubbles(cases, results)
+    fig_errors = plot_errors(cases, results, refs, values, accuracy)
+    fig_bubbles = plot_bubbles(cases, results, values, accuracy)
     fig_spectra = plot_spectra(
         cases,
         [results[(i_case, "dataset", 0)] for i_case in range(len(cases))],

@@ -14,6 +14,9 @@ from pttools.models import BagModel, Model
 from pttools.omgw0 import Spectrum
 import pttools.type_hints as th
 
+#: Maximum number of iterations of the optimizer, which is the default of the L-BFGS-B method of SciPy
+MAXITER: int = 15000
+
 # Accuracy settings of the spectra.
 # These are lower than the defaults, as the spectrum is computed for each step of the optimizer.
 # Compared to the defaults, they make the computation about 10 times faster without Numba,
@@ -28,11 +31,13 @@ def solvable(
         params: th.FloatArr1D,
         model: Model,
         f_peak_target: float,
-        omega_peak_target: float) -> float:
+        omega_peak_target: float,
+        n_t: int = N_T,
+        n_z_lookup: int = N_Z_LOOKUP) -> float:
     """This function is minimized when the parameters produce the desired peak frequency and amplitude"""
     v_wall, alpha_n, r_star = params
     bubble = Bubble(model, v_wall=v_wall, alpha_n=alpha_n)
-    spectrum = Spectrum(bubble, r_star=r_star, nT=N_T, n_z_lookup=N_Z_LOOKUP)
+    spectrum = Spectrum(bubble, r_star=r_star, nT=n_t, n_z_lookup=n_z_lookup)
     f_peak, omega_peak = spectrum.omgw0_peak()  # suppression=SuppressionMethod.EXT_CONSTANT
     f_diff = np.log10(f_peak) - np.log10(f_peak_target)
     omega_diff = np.log10(omega_peak) - np.log10(omega_peak_target)
@@ -50,30 +55,48 @@ def solver(
         v_wall_guess: float,
         alpha_n_guess: float,
         r_star_guess: float,
-        alpha_n_max: float = 0.66) -> tuple[float | None, float | None, float | None, float]:
-    """Find thermodynamic parameters for a given peak of the gravitational wave spectrum"""
+        alpha_n_max: float = 0.66,
+        n_t: int = N_T,
+        n_z_lookup: int = N_Z_LOOKUP,
+        maxiter: int = MAXITER) -> tuple[float | None, float | None, float | None, float]:
+    r"""Find thermodynamic parameters for a given peak of the gravitational wave spectrum
+
+    :param n_t: number of points in the $\tilde{T}$ array of the spectra
+    :param n_z_lookup: number of points in the lookup arrays of the spectra
+    :param maxiter: maximum number of iterations of the optimizer
+    """
     # The limits for v_wall and alpha_n come from the limits of the suppression data.
     x0 = np.array([v_wall_guess, alpha_n_guess, r_star_guess])
+    args = (model, f_peak_target, omega_peak_target, n_t, n_z_lookup)
     sol: OptimizeResult = minimize(
         solvable,
         x0=x0,
-        args=(model, f_peak_target, omega_peak_target),
-        bounds=((0.25, 0.95), (0.06, alpha_n_max), (1e-3, 1))
+        args=args,
+        bounds=((0.25, 0.95), (0.06, alpha_n_max), (1e-3, 1)),
+        options={"maxiter": maxiter}
     )
-    err = solvable(sol.x, model, f_peak_target, omega_peak_target)
+    err = solvable(sol.x, *args)
     if not sol.success:
         return None, None, None, err
     return *sol.x, err
 
 
-def main() -> tuple[float | None, float | None, float | None, float]:
-    """Usage example"""
+def main(
+        n_t: int = N_T,
+        n_z_lookup: int = N_Z_LOOKUP,
+        maxiter: int = MAXITER) -> tuple[float | None, float | None, float | None, float]:
+    r"""Usage example
+
+    :param n_t: number of points in the $\tilde{T}$ array of the spectra
+    :param n_z_lookup: number of points in the lookup arrays of the spectra
+    :param maxiter: maximum number of iterations of the optimizer
+    """
     model = BagModel.cached(alpha_n_min=0.01)
     print("Starting solver")
     ret = solver(
         model, f_peak_target=6e-3, omega_peak_target=3e-11,
         v_wall_guess=0.5, alpha_n_guess=0.05, r_star_guess=0.1,
-        alpha_n_max=0.1
+        alpha_n_max=0.1, n_t=n_t, n_z_lookup=n_z_lookup, maxiter=maxiter
     )
     print("Results:")
     print(f"v_wall={ret[0]}, alpha_n={ret[1]}, r_star={ret[2]}, diff={ret[3]}")

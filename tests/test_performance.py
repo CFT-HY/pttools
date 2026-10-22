@@ -43,7 +43,12 @@ class TestPerformance(unittest.TestCase):
     def time_and_plot(
             name: str, filename: str, stmt: str, setup: str,
             n_iterations: int, n_threads: th.IntArr1D = DEFAULT_VARYING_NUMBA_THREADS) -> FigAndAxes:
-        """Time the statement with varying numbers of Numba threads and plot the results."""
+        """Time the statement with varying numbers of Numba threads and plot the results.
+
+        The statement is first run once to compile the Numba functions, so that the compilation is not timed.
+        This is not done in the setup, as the setup is run before the timing of each number of threads.
+        """
+        exec(f"{setup}\n{stmt}", {})
         return time_and_plot_threads(
             name=name, filename=filename, path=PERFORMANCE_DIR,
             stmt=stmt, setup=setup,
@@ -59,7 +64,6 @@ class TestPerformance(unittest.TestCase):
         from pttools.models import BagModel
 
         model = BagModel()
-        Bubble(model, v_wall=0.3, alpha_n=0.1)
         """)
         command = "Bubble(model, v_wall=0.3, alpha_n=0.1)"
         cls.time_and_plot("Bubble", "bubble", command, setup, n_iterations=N_ITERATIONS)
@@ -74,8 +78,6 @@ class TestPerformance(unittest.TestCase):
         from pttools.omgw0 import Spectrum
 
         model = BagModel()
-        bubble = Bubble(model, v_wall=0.3, alpha_n=0.1)
-        Spectrum(bubble, r_star=0.1)
         """)
         command = textwrap.dedent("""
         bubble = Bubble(model, v_wall=0.3, alpha_n=0.1)
@@ -95,7 +97,6 @@ class TestPerformance(unittest.TestCase):
         from pttools import ssm
 
         z = np.logspace(0, 2, 100)
-        ssm.power_gw_bag(z, (0.1, 0.1))
         """)
         command = "ssm.power_gw_bag(z, (0.1, 0.1))"
         cls.time_and_plot(
@@ -115,7 +116,6 @@ class TestPerformance(unittest.TestCase):
         xi = np.linspace(0, 1, 10000)
         # This is an arbitrary function
         f = np.amax([np.zeros_like(xi), np.cos(xi)], axis=0)
-        sin_transform(z, xi, f)
         """)
         command = "sin_transform(z, xi, f)"
         cls.time_and_plot(
@@ -134,7 +134,6 @@ class TestPerformance(unittest.TestCase):
 
         model = BagModel()
         bubble = Bubble(model, v_wall=0.3, alpha_n=0.1)
-        Spectrum(bubble, r_star=0.1)
         """)
         command = "Spectrum(bubble, r_star=0.1)"
         cls.time_and_plot(

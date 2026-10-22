@@ -170,10 +170,16 @@ def create_diff_figure(
 def main(
         colors: tp.Sequence[str] = ("b", "y", "r", "g", "purple", "grey"),
         lss: tp.Sequence[str] = ("-", "--", ":", "-."),
-        alpha_ns: FloatArr1D = GKSVDV_ALPHA_N) \
+        alpha_ns: FloatArr1D = GKSVDV_ALPHA_N,
+        n_v_walls: int | None = None) \
         -> tuple[plt.Figure, plt.Figure, plt.Figure, plt.Figure]:
-    r"""Reproduction of :giese_2021:`\ `, fig. 2"""
-    v_walls = gksvdv_v_wall(n=10 if testing_or_ci() else 50)
+    r"""Reproduction of :giese_2021:`\ `, fig. 2
+
+    :param n_v_walls: number of wall speeds. Defaults to 10 in unit tests and CI, and to 50 otherwise.
+    """
+    if n_v_walls is None:
+        n_v_walls = 10 if testing_or_ci() else 50
+    v_walls = gksvdv_v_wall(n=n_v_walls)
     models = gksvdv_models()
     logger.info("Minimum alpha_ns: %s", [model.alpha_n_min for model in models])
     for model in models:

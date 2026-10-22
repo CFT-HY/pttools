@@ -13,11 +13,14 @@ from pttools.models import ConstCSModel, FullModel, StandardModel
 from pttools.omgw0 import Spectrum, freq
 from pttools.omgw0.compute import SNRSettings
 from pttools.omgw0.factors import F_gw0_h2
-from tests.utils import TEST_JSON_PATH
+from tests.utils import LOW_ACCURACY_SPECTRUM_KWARGS, TEST_JSON_PATH
 
 
 class SpectrumTest(unittest.TestCase):
-    """Tests for the Spectrum class."""
+    """Tests for the Spectrum class.
+
+    The spectra are computed with low accuracy, as they are not compared with reference values.
+    """
 
     spectrum: tp.ClassVar[Spectrum]
 
@@ -26,7 +29,7 @@ class SpectrumTest(unittest.TestCase):
     def setUpClass(cls) -> None:
         model = ConstCSModel.cached(css2=1/3-0.01, csb2=1/3-0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
         bubble = Bubble.cached(model, v_wall=0.5, alpha_n=0.2)
-        cls.spectrum = Spectrum.cached(bubble, r_star=0.1)
+        cls.spectrum = Spectrum.cached(bubble, r_star=0.1, **LOW_ACCURACY_SPECTRUM_KWARGS)
 
     def test_export(self) -> None:
         """Test that the spectrum can be exported as JSON."""
@@ -75,7 +78,7 @@ class SpectrumTest(unittest.TestCase):
     def test_f_given_spectrum(self) -> None:
         """A spectrum given the frequencies of another spectrum should be the same as the other spectrum."""
         f = self.spectrum.f()
-        spectrum = Spectrum(self.spectrum.bubble, r_star=0.1, f=f)
+        spectrum = Spectrum(self.spectrum.bubble, r_star=0.1, f=f, **LOW_ACCURACY_SPECTRUM_KWARGS)
         assert spectrum.f() is f
         np.testing.assert_allclose(spectrum.y, self.spectrum.y, rtol=1e-14)
         np.testing.assert_allclose(spectrum.omgw0(), self.spectrum.omgw0(), rtol=1e-10)

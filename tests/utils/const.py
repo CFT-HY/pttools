@@ -1,6 +1,11 @@
 """Constants used by the unit tests."""
 
 from pathlib import Path
+import typing as tp
+
+#: Low accuracy settings of the spectra for the tests that do not compare the values of the spectra
+#: with reference values, see :py:mod:`examples.props.n_points`
+LOW_ACCURACY_SPECTRUM_KWARGS: dict[str, tp.Any] = {"nT": 300, "n_z_lookup": 500}
 
 TEST_PATH: Path = Path(__file__).resolve().parent.parent
 REPO_DIR: Path = TEST_PATH.parent

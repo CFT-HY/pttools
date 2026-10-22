@@ -6,6 +6,7 @@ import unittest
 
 from pttools.speedup.numba_wrapper import NUMBA_PYINSTRUMENT_INCOMPATIBLE_PYTHON_VERSION, NUMBA_SEGFAULTING_PROFILERS
 from pttools.utils.system import IS_GITHUB_ACTIONS
+from tests.paper import const
 import tests.paper.ssm_paper_utils as spu
 from tests.profiling import utils_cprofile, utils_pyinstrument, utils_yappi
 from tests.profiling.test_profile import TestProfile
@@ -15,8 +16,12 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 def pow_specs() -> None:
-    """Compute the power spectra of the paper with simultaneous and exponential nucleation."""
-    spu.do_all_plot_ps_compare_nuc('final3', None)
+    """Compute the power spectra of the paper with simultaneous and exponential nucleation for one set of parameters.
+
+    The spectra of all the parameters are computed and compared with the reference data
+    by :py:mod:`tests.paper.test_pow_specs`, and repeating them here for each profiler would only slow down the tests.
+    """
+    spu.plot_ps_compare_nuc(spu.VW_LIST_ALL[0][0], const.ALPHA_LIST_ALL[0])
 
 
 class TestProfilePowSpecs(TestProfile):

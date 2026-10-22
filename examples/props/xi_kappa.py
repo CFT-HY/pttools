@@ -28,13 +28,16 @@ def alpha_theta_bar_n_to_alpha_n(model: ConstCSModel, alpha_thetabarn: float, wn
     return alpha_thetabarn - 1/wn * (1 - 1/(3*model.csb2))*(model.p(wn, Phase.SYMMETRIC) - model.p(wn, Phase.BROKEN))
 
 
-def main() -> plt.Figure:
-    r"""Plot $\kappa(\xi)$ for various models"""
+def main(n_v_walls: int = 10) -> plt.Figure:
+    r"""Plot $\kappa(\xi)$ for various models
+
+    :param n_v_walls: number of wall speeds
+    """
     ref()
     t_start = time.perf_counter()
     alpha_ns = np.array([0.01, 0.03, 0.1, 0.3, 1, 3])
     colors = ["blue", "orange", "red", "green", "purple", "grey"]
-    v_walls = np.linspace(0.2, 0.95, 10)
+    v_walls = np.linspace(0.2, 0.95, n_v_walls)
     lines = ["--", "-", "--", "-"]
     V_s = 1
     a_s = 1.1

@@ -21,7 +21,7 @@ class TestCreateSpectra(unittest.TestCase):
     model: tp.ClassVar[ConstCSModel]
     #: Low-resolution settings for faster tests
     SPECTRUM_KWARGS: tp.ClassVar[dict[str, tp.Any]] = {
-        "r_star": 0.1, "y": np.logspace(-1, 3, 300), "nT": 2000, "n_z_lookup": 2000
+        "r_star": 0.1, "y": np.logspace(-1, 3, 100), "nT": 300, "n_z_lookup": 300
     }
 
     @classmethod

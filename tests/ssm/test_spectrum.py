@@ -10,11 +10,14 @@ import pytest
 from pttools.bubble import Bubble
 from pttools.models import ConstCSModel
 from pttools.ssm import DEFAULT_NUC_TYPE, SSMSpectrum, spec_den_gw
-from tests.utils import TEST_JSON_PATH
+from tests.utils import LOW_ACCURACY_SPECTRUM_KWARGS, TEST_JSON_PATH
 
 
 class SSMSpectrumTest(unittest.TestCase):
-    """Tests for the SSMSpectrum class."""
+    """Tests for the SSMSpectrum class.
+
+    The spectrum is computed with low accuracy, as it's not compared with reference values.
+    """
 
     spectrum: tp.ClassVar[SSMSpectrum]
 
@@ -23,7 +26,7 @@ class SSMSpectrumTest(unittest.TestCase):
     def setUpClass(cls) -> None:
         model = ConstCSModel.cached(css2=1/3-0.01, csb2=1/3-0.011, a_s=1.1, a_b=1, V_s=1, V_b=0)
         bubble = Bubble.cached(model, v_wall=0.5, alpha_n=0.2)
-        cls.spectrum = SSMSpectrum.cached(bubble, beta_tilde=1.23)
+        cls.spectrum = SSMSpectrum.cached(bubble, beta_tilde=1.23, **LOW_ACCURACY_SPECTRUM_KWARGS)
 
     def test_beta(self) -> None:
         """Test that the nucleation rate parameter beta is finite for a given Hubble rate."""

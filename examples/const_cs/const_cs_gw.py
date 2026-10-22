@@ -197,8 +197,14 @@ def setup_axes(
     return title, title_omgw0
 
 
-def main(low_k: bool = True) -> tuple[th.FigArr1D, th.FigArr2D, str]:
-    """Plot GW spectra for various ConstCSModel parameter combinations"""
+def main(
+        low_k: bool = True,
+        spectrum_kwargs: dict[str, tp.Any] | None = None) -> tuple[th.FigArr1D, th.FigArr2D, str]:
+    """Plot GW spectra for various ConstCSModel parameter combinations
+
+    :param low_k: whether to use the low-$k$ approximation
+    :param spectrum_kwargs: additional arguments for the spectra, e.g. accuracy settings
+    """
     start_time = time.perf_counter()
     a_s = 5
     a_b = 1
@@ -230,7 +236,8 @@ def main(low_k: bool = True) -> tuple[th.FigArr1D, th.FigArr2D, str]:
                 "T_star": Tn,
                 # "g_star": 100,
                 # "gs_star": 100
-                "low_k": low_k
+                "low_k": low_k,
+                **({} if spectrum_kwargs is None else spectrum_kwargs)
             },
             # bubble_kwargs={"allow_invalid": False}, allow_bubble_failure=True,
             # This fixes a BrokenProcessPool error on Read the Docs
