@@ -121,6 +121,8 @@ To avoid circular dependencies, each sub-package in `pttools` should depend only
 Scripts in `./docs/fig/` and `./tests/test_examples.py` import from `examples`, and some scripts in `examples` import from `tests`.
 This is not an issue, since the `__init__.py` files in `docs.fig`, `examples` and `tests` don't import the package contents.
 
+`./docs/sg_api_usage.rst` and `./docs/sg_execution_times.rst` are auto-generated and untracked.
+
 ## Related repositories
 You may `git clone` these with SSH in the same parent directory as PTtools.
 - [PTPlot](https://github.com/CFT-HY/PTPlot): `../PTPlot`, plotting software that uses PTtools. (public)
