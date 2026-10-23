@@ -17,5 +17,20 @@
   "enabledPlugins": {
     "github@claude-plugins-official": true,
     "pyright-lsp@claude-plugins-official": true
+  },
+  "sandbox": {
+    "network": {
+      "allowedDomains": [
+        "*.pydata.org",
+        "*.readthedocs.io",
+        "docs.h5py.org",
+        "docs.pytest.org",
+        "docs.scipy.org",
+        "docs.sympy.org",
+        "matplotlib.org",
+        "numpy.org",
+        "plotly.com"
+      ]
+    }
   }
 }

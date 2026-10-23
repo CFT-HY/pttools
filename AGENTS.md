@@ -26,6 +26,9 @@
 - Build documentation with examples: `uv run make -C docs all`
   - This will run the examples and can therefore take up to 35 min.
 - Build documentation without examples: `uv run make -C docs all-noplot`
+- The documentation builds, including `python -m pttools.docs.lint`, need network access for the intersphinx inventories of `./pttools/docs/intersphinx.py`,
+  whose domains are allowed in the Claude Code sandbox in `.claude/settings.json`. Keep the two in sync.
+  The link check of `make all` and `make all-noplot` needs access to all the linked sites, and can be skipped with `SKIP_LINKCHECK=1`.
 - Build the package: `uv build`
 
 ## CI
