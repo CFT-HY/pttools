@@ -31,7 +31,7 @@ class LatticeSpectrum(Omgw0Base):
     The expansion of the universe is neglected in the simulations, and therefore $H_* = H_n$.
 
     The simulation is in flat space, and its Hubble-scaled mean bubble spacing ${r}_{\ast,\text{lat}}$
-    (:py:attr:`pttools.lattice.run.LatticeRun.r_star`) follows from the energy density
+    (:py:attr:`pttools.lattice.run_base.LatticeRunBase.r_star`) follows from the energy density
     and the gravitational constant in lattice units.
     For comparisons with the Sound Shell Model, e.g. with :py:class:`pttools.omgw0.spectrum.Spectrum`,
     the spectrum can be scaled to another Hubble-scaled mean bubble spacing ${r}_*$.
@@ -86,7 +86,7 @@ class LatticeSpectrum(Omgw0Base):
         :param step: the time step
         :param step_prev: the earlier time step for computing the GW power growth rate
         :param r_star: $r_*$, Hubble-scaled mean bubble spacing to which the spectrum is scaled.
-            Defaults to that of the simulation (:py:attr:`pttools.lattice.run.LatticeRun.r_star`),
+            Defaults to that of the simulation (:py:attr:`pttools.lattice.run_base.LatticeRunBase.r_star`),
             or nan if it's not available, as it requires the initial energy density.
         :param T_star: $T_*$, temperature at the time of GW production in GeV,
             for the conversion to the GW power spectrum today
@@ -271,7 +271,7 @@ class LatticeSpectrum(Omgw0Base):
     def mean_adiabatic_index(self) -> float:
         r"""$\Gamma = \bar{w} / \bar{\epsilon}_0$, mean adiabatic index.
 
-        See :py:meth:`pttools.lattice.run.LatticeRun.mean_adiabatic_index`.
+        See :py:meth:`pttools.lattice.run_base.LatticeRunBase.mean_adiabatic_index`.
         """
         return float(self.run.mean_adiabatic_index(self.step))
 

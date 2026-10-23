@@ -11,8 +11,10 @@ and the suppression factor of the Sound Shell Model can be fitted to it with
 - :py:mod:`pttools.lattice.quantities`: the quantities and the integrals over their power spectra
 - :py:mod:`pttools.lattice.readers`: the readers of the input file, the log of the global quantities
   and the power spectrum files
-- :py:mod:`pttools.lattice.run`: :py:class:`LatticeRun`, a simulation run, its parameters,
-  global quantities and time series
+- :py:mod:`pttools.lattice.run`: :py:class:`LatticeRun`, a simulation run,
+  which is split into :py:mod:`pttools.lattice.run_base` (:py:class:`LatticeRunBase`, the parameters
+  and global quantities) and :py:mod:`pttools.lattice.run_spectra` (:py:class:`LatticeRunSpectra`,
+  the power spectra and time series)
 - :py:mod:`pttools.lattice.spectrum`: :py:class:`LatticeSpectrum`, the spectra of a run at a given time
 - :py:mod:`pttools.lattice.chrw25`: the runs of :correia_2025:`\ `
 - :py:mod:`pttools.lattice.convert`: the conversion of the files of a run to HDF5, and reading it
@@ -31,4 +33,6 @@ from .params import *
 from .quantities import *
 from .readers import *
 from .run import *
+from .run_base import *
+from .run_spectra import *
 from .spectrum import *

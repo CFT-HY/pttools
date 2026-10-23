@@ -21,7 +21,7 @@ The fits use the same settings as the scripts of the article, which produce the 
 see :py:meth:`pttools.lattice.run.LatticeRun.omega_gw_asymptote`.
 However, the scripts of the article end the fits at the time steps 24800 and 39600,
 see :py:data:`pttools.lattice.chrw25.CHRW25_RUNS`, whereas the data with the global quantities
-extends to the time steps 24800 and 40000, see :py:meth:`pttools.lattice.run.LatticeRun.last_step`.
+extends to the time steps 24800 and 40000, see :py:meth:`pttools.lattice.run_spectra.LatticeRunSpectra.last_step`.
 The fits are therefore done both up to the last time steps of the article and up to those of the data.
 As they are the same for the detonation, the figure has three columns:
 the detonation, and the deflagration with the last time steps of the article and of the data.

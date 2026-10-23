@@ -36,7 +36,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 #: For the detonation, this agrees with the end of the data,
 #: as its log of the global quantities ends at the time step 24950, although its power spectra extend to 25400.
 #: For the deflagration, the data extends to the time step 40000.
-#: See :py:meth:`pttools.lattice.run.LatticeRun.last_step` for the last time steps of the data.
+#: See :py:meth:`pttools.lattice.run_spectra.LatticeRunSpectra.last_step` for the last time steps of the data.
 CHRW25_RUNS: dict[str, LatticeRunParams] = {
     "detonation": LatticeRunParams(
         name="detonation", subdir="detonation_alpha067_vw092",
@@ -154,7 +154,7 @@ def step_ends(name: str, run: LatticeRun) -> dict[str, int]:
     """The last time steps of the fits: those of the scripts of the article and those of the data.
 
     See :py:attr:`pttools.lattice.params.LatticeRunParams.fit_step_end`
-    and :py:meth:`pttools.lattice.run.LatticeRun.last_step`.
+    and :py:meth:`pttools.lattice.run_spectra.LatticeRunSpectra.last_step`.
 
     :param name: name of the run, a key of :py:data:`CHRW25_RUNS`
     :param run: the run

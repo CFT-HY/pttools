@@ -50,7 +50,8 @@ class LatticeComparison:
             The compared velocity spectra and GW power growth rates do not depend on $r_*$,
             but the GW power spectra and their conversion to $\Omega_{\text{gw},0}$ do.
             A warning is logged if the SSM spectrum has a different nucleation type than the run
-            (:py:attr:`pttools.lattice.run.LatticeRun.nuc_type`), or a different $r_*$ than the simulation spectrum.
+            (:py:attr:`pttools.lattice.run_base.LatticeRunBase.nuc_type`),
+            or a different $r_*$ than the simulation spectrum.
             The latter is always the case if the simulation spectrum has not been scaled to a physical $r_*$.
             If it's a :py:class:`pttools.omgw0.spectrum.Spectrum`,
             a warning is also logged if its $T_*$ or $g_*$ differ from those of the simulation spectrum.

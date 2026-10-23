@@ -18,7 +18,7 @@ and :py:data:`examples.lattice.lattice_spectra.Y_MAX_FIT`.
 Below $kR_* = 4$, the fit of the detonation does not converge,
 whereas those of the deflagration start from the smallest wavenumber of the data.
 The fits use all the time steps of the data with the global quantities,
-see :py:meth:`pttools.lattice.run.LatticeRun.last_step`.
+see :py:meth:`pttools.lattice.run_spectra.LatticeRunSpectra.last_step`.
 At higher wavenumbers, the GW power is still growing at an accelerating rate at the end of the simulations,
 and therefore its approach to an asymptote is not yet determined by them.
 For the detonation, this is the case above $kR_* \approx 10^3$,
