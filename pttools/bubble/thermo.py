@@ -101,7 +101,7 @@ def kappa(
     return va_kinetic_energy_density(v, w, xi) / np.abs(delta_e_theta)
 
 
-@njit(nogil=True)
+@njit(cache=True, nogil=True)
 def kinetic_energy_density(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float) -> float:
     r"""Bubble volume averaged kinetic energy density.
 
@@ -136,7 +136,6 @@ def kinetic_energy_fraction(ek_bva: float, eb: float) -> float:
     return ek_bva / eb
 
 
-# @njit
 def mean_adiabatic_index[T: FloatOrArr](wb: T, eb: T | float) -> T:
     r"""Mean adiabatic index $\Gamma$.
 
@@ -155,6 +154,7 @@ def mean_adiabatic_index[T: FloatOrArr](wb: T, eb: T | float) -> T:
     return wb / eb  # pyrefly: ignore[bad-return]
 
 
+@njit(cache=True, nogil=True)
 def mean_enthalpy_change(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float) -> float:
     r"""
     Mean change in enthalpy in bubble relative to outside value.
@@ -194,7 +194,7 @@ def omega(
         delta_e_theta: float | None = None) -> float:
     r"""Thermal efficiency factor $\omega$.
 
-    $$\omega = \frac{\Delta {e}_Q}{\Delta {e}_\theta}$$
+    $$\omega = \frac{\Delta {e}_Q}{\lvert\Delta {e}_\theta\rvert}$$
     :gw_pt_ssm:`\ ` eq. B.28.
 
     :param model: Equation of state model
@@ -238,9 +238,9 @@ def shell_end_index(w: th.FloatArr1D) -> int:
 
 
 def thermal_energy_density(v_shock: float, eqp: float) -> float:
-    r"""Average thermal energy density after the phase transition.
+    r"""$\bar{e}_Q'$, average thermal energy density after the phase transition.
 
-    $$\frac{3}{4\pi {v}_\text{sh}^3} {e}_Q'$$.
+    $$\bar{e}_Q' = \frac{3}{4\pi {v}_\text{sh}^3} {e}_Q'$$
 
     ${e}_Q'$ is the total thermal energy within the shock (see :py:func:`va_thermal_energy_density`),
     including that of the fluid between the wall and the shock, which was there already before the phase transition.
@@ -250,12 +250,14 @@ def thermal_energy_density(v_shock: float, eqp: float) -> float:
     For detonations, ${v}_\text{sh} = {v}_\text{wall}$.
 
     :param v_shock: Shock speed ${v}_\text{sh}$
-    :param eqp: Volume-averaged thermal energy density ${e}_Q'$
-    :return: Average thermal energy density after the phase transition
+    :param eqp: ${e}_Q'$, thermal energy within the shock after the phase transition,
+        see :py:func:`va_thermal_energy_density`
+    :return: $\bar{e}_Q'$, average thermal energy density after the phase transition
     """
     return 3/(4*np.pi * v_shock**3) * eqp
 
 
+@njit(cache=True, nogil=True)
 def thermal_energy_density_diff(w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float) -> float:
     r"""Bubble volume averaged thermal energy density difference.
 
@@ -269,17 +271,17 @@ def thermal_energy_density_diff(w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: flo
     return 3/(4*np.pi * v_wall**3) * va_thermal_energy_density_diff(w, xi)
 
 
-def thermal_energy_fraction[T: FloatOrArr](eq_bva: T, eb: T | float) -> T:
-    r"""Thermal energy fraction $\frac{{e}_Q'}{\bar{e}}$.
+def thermal_energy_fraction[T: FloatOrArr](eqp_bar: T, eb: T | float) -> T:
+    r"""$\frac{\bar{e}_Q'}{\bar{e}}$, thermal energy fraction.
 
     This is the fraction of the energy within the shock that is thermal energy after the phase transition.
 
-    :param eq_bva: Average thermal energy density ${e}_Q'$ after the phase transition,
+    :param eqp_bar: $\bar{e}_Q'$, average thermal energy density after the phase transition,
         see :py:func:`thermal_energy_density`
     :param eb: Average energy density $\bar{e}$
-    :return: Thermal energy fraction $\frac{{e}_Q'}{\bar{e}}$
+    :return: Thermal energy fraction $\frac{\bar{e}_Q'}{\bar{e}}$
     """
-    return eq_bva / eb  # pyrefly: ignore[bad-return]
+    return eqp_bar / eb  # pyrefly: ignore[bad-return]
 
 
 def trace_anomaly_diff(
@@ -302,7 +304,7 @@ def trace_anomaly_diff(
     return 3/(4*np.pi * v_wall**3) * va_trace_anomaly_diff(model, w, xi, v_wall, phase)
 
 
-@njit(nogil=True)
+@njit(cache=True, nogil=True)
 def ubarf2(
         v: th.FloatArr1D,
         w: th.FloatArr1D,
@@ -377,18 +379,22 @@ def ubarf2_from_K[T: FloatOrArr](K: T, adiabatic_index: T | float = DEFAULT_ADIA
     return K / adiabatic_index  # pyrefly: ignore[bad-return]
 
 
-def va_enthalpy_density(eq: float) -> float:
+def va_enthalpy_density(eqp_bar: float) -> float:
     r"""$w_\text{va}$, volume-averaged enthalpy density after the phase transition.
 
-    $$w_\text{va} = \frac{4}{3} e_Q$$.
+    $$w_\text{va} = \frac{4}{3} \bar{e}_Q', \quad \bar{e}_Q' = \frac{3}{4 \pi \xi_\text{max}^3} {e}_Q',$$
+    where $\bar{e}_Q'$ is the average thermal energy density after the phase transition
+    (:py:func:`thermal_energy_density`), and ${e}_Q'$ is the thermal energy within the shock
+    after the phase transition (:py:func:`va_thermal_energy_density`).
+    This follows from the thermal energy density being $e - \theta = \frac{3}{4} w$,
+    where $\theta = \frac{1}{4}(e - 3p)$ is the trace anomaly.
+    As $\bar{e}_Q'$ is averaged over the volume within the shock,
+    this is equal to :py:func:`w_bar` up to the numerical accuracy of the integrals, see :py:func:`w_bar_energy`.
 
-    This follows from $e_Q = e - \theta = \frac{3}{4} w$, where $\theta = \frac{1}{4}(e - 3p)$
-    is the trace anomaly. As $e_Q$ is averaged over the volume within the shock,
-    this is equal to :py:func:`w_bar` up to the numerical accuracy of the integrals.
-
-    :param eq: Average thermal energy density $e_Q$ after the phase transition, see :py:func:`thermal_energy_density`
+    :param eqp_bar: $\bar{e}_Q'$, average thermal energy density after the phase transition,
+        see :py:func:`thermal_energy_density`
     """
-    return 4/3 * eq
+    return 4/3 * eqp_bar
 
 
 def va_entropy_density_diff(
@@ -408,14 +414,14 @@ def va_entropy_density_diff(
     return 4*np.pi/3 * np.trapezoid(s_diff, xi**3)  # pyrefly: ignore[bad-return]
 
 
-@njit(nogil=True)
+@njit(cache=True, nogil=True)
 def va_kinetic_energy_density(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D) -> float:
     r"""
     ${e}_K$, volume-averaged kinetic energy density.
 
     $${e}_K = 4 \pi \int_0^{{\xi}_\text{max}} d\xi \xi^2 w \gamma^2 v^2$$
     Each point is multiplied by $v$, and therefore having ${\xi}_{max}$ too far does not affect the results.
-    :gw_pt_ssm:`\ ` eq. B.22.
+    :gw_pt_ssm:`\ ` eq. B.25.
 
     :param v: Fluid velocity $v$
     :param w: Enthalpy density $w$
@@ -428,7 +434,16 @@ def va_kinetic_energy_density(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatAr
 def va_kinetic_energy_fraction(ek_va: float, eb: float) -> float:
     r"""$K_\text{va}$, volume-averaged kinetic energy fraction.
 
-    $$K_\text{va} = \frac{e_{K,\text{va}}}{\bar{e}}$$.
+    $$K_\text{va} = \frac{{e}_K}{\bar{e}}$$
+    :gw_pt_ssm:`\ ` eq. B.31, where ${e}_K$ is the volume integral of :py:func:`va_kinetic_energy_density`.
+    It's therefore not an average fraction, but $\frac{4\pi}{3} {v}_\text{wall}^3$ times
+    the bubble volume averaged kinetic energy fraction :py:func:`kinetic_energy_fraction`,
+    which is the one that is consistent with :py:func:`ubarf2` and $K = \Gamma \bar{U}_f^2$
+    (:gw_pt_ssm:`\ ` eq. B.30, B.32).
+
+    :param ek_va: ${e}_K$, volume-averaged kinetic energy density, see :py:func:`va_kinetic_energy_density`
+    :param eb: Average energy density $\bar{e}$
+    :return: Volume-averaged kinetic energy fraction $K_\text{va}$
     """
     return ek_va / eb
 
@@ -436,13 +451,30 @@ def va_kinetic_energy_fraction(ek_va: float, eb: float) -> float:
 def va_thermal_energy_density(v_shock: float, wn: float, ek: float, delta_e_theta: float) -> float:
     r"""${e}_Q'$, volume-averaged thermal energy density after the phase transition.
 
-    $${e}_Q' = {e}_Q + {e}_\theta - {e}_K' - {e}_\theta'
-    = 4\pi \int_0^{{\xi}_\text{max}} d\xi \xi^2 \frac{3}{4} {w}_n - {e}_K' - \Delta {e}_\theta$$.
+    $${e}_Q' = {e}_Q - {e}_K - \Delta {e}_\theta
+    = 4\pi \int_0^{{\xi}_\text{max}} d\xi \xi^2 \frac{3}{4} {w}_n - {e}_K - \Delta {e}_\theta
+    = \pi {w}_n {\xi}_\text{max}^3 - {e}_K - \Delta {e}_\theta,$$
+    where ${e}_Q$ is the thermal energy within the shock before the phase transition, i.e. that of the fluid at rest
+    with the enthalpy density $w_n$ and the thermal energy density $e - \theta = \frac{3}{4} w_n$.
+    This follows from the energy budget ${e}_K + \Delta {e}_Q = -\Delta {e}_\theta$
+    (:gw_pt_ssm:`\ ` eq. B.24) with ${e}_Q' = {e}_Q + \Delta {e}_Q$,
+    where the kinetic energy ${e}_K$ (:py:func:`va_kinetic_energy_density`),
+    the thermal energy change $\Delta {e}_Q$ (:py:func:`va_thermal_energy_density_diff`)
+    and the trace anomaly change $\Delta {e}_\theta$ (:py:func:`va_trace_anomaly_diff`)
+    are the volume integrals of :gw_pt_ssm:`\ ` eq. B.25.
+    Like them, ${e}_Q'$ is a volume integral over $\xi$, which :gw_pt_ssm:`\ ` refers to as volume-averaged.
+    For the average thermal energy density, see :py:func:`thermal_energy_density`.
+
+    :param v_shock: ${\xi}_\text{max}$, the shock speed ${v}_\text{sh}$, or ${v}_\text{wall}$ for detonations
+    :param wn: ${w}_n$, enthalpy density at nucleation
+    :param ek: ${e}_K$, kinetic energy
+    :param delta_e_theta: $\Delta {e}_\theta$, trace anomaly change
+    :return: ${e}_Q'$, thermal energy within the shock after the phase transition
     """
     return np.pi * wn * v_shock**3 - ek - delta_e_theta
 
 
-@njit(nogil=True)
+@njit(cache=True, nogil=True)
 def va_thermal_energy_density_diff(w: th.FloatArr1D, xi: th.FloatArr1D) -> float:
     r"""$\Delta {e}_Q$, volume-averaged thermal energy density difference.
 
@@ -456,16 +488,20 @@ def va_thermal_energy_density_diff(w: th.FloatArr1D, xi: th.FloatArr1D) -> float
     return 4*np.pi/3 * np.trapezoid(0.75*(w - w[-1]), xi**3)  # pyrefly: ignore[bad-return]
 
 
-def va_thermal_energy_fraction(eq_va: float, eb: float) -> float:
+def va_thermal_energy_fraction(eqp: float, eb: float) -> float:
     r"""$Q_\text{va}$, volume-averaged thermal energy fraction.
 
-    $$Q_\text{va} = \frac{e_{Q,\text{va}}}{\bar{e}}$$.
+    $$Q_\text{va} = \frac{{e}_Q'}{\bar{e}},$$
+    where ${e}_Q'$ is the volume integral of :py:func:`va_thermal_energy_density`.
+    Like :py:func:`va_kinetic_energy_fraction`, this is not an average fraction,
+    but $\frac{4\pi}{3} {\xi}_\text{max}^3$ times the average thermal energy fraction
+    :py:func:`thermal_energy_fraction`.
 
-    :param eq_va: Volume-averaged thermal energy density $e_{Q,\text{va}}$
+    :param eqp: ${e}_Q'$, volume-averaged thermal energy density, see :py:func:`va_thermal_energy_density`
     :param eb: Average energy density $\bar{e}$
     :return: Volume-averaged thermal energy fraction $Q_\text{va}$
     """
-    return eq_va / eb
+    return eqp / eb
 
 
 def va_trace_anomaly_diff(

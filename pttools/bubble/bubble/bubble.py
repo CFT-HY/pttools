@@ -791,7 +791,7 @@ class Bubble(BaseBubble):
     def thermal_energy_fraction(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.thermal_energy_fraction(eq_bva=self.thermal_energy_density, eb=self.e_bar)
+        return thermo.thermal_energy_fraction(eqp_bar=self.thermal_energy_density, eb=self.e_bar)
 
     @functools.cached_property
     @copy_docstring_dec(thermo.trace_anomaly_diff, without_params=True)
@@ -808,7 +808,7 @@ class Bubble(BaseBubble):
     def va_enthalpy_density(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.va_enthalpy_density(eq=self.thermal_energy_density)
+        return thermo.va_enthalpy_density(eqp_bar=self.thermal_energy_density)
 
     @functools.cached_property
     @copy_docstring_dec(thermo.va_entropy_density_diff, without_params=True)
@@ -854,7 +854,7 @@ class Bubble(BaseBubble):
     def va_thermal_energy_fraction(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.va_thermal_energy_fraction(eq_va=self.va_thermal_energy_density, eb=self.e_bar)
+        return thermo.va_thermal_energy_fraction(eqp=self.va_thermal_energy_density, eb=self.e_bar)
 
     @functools.cached_property
     @copy_docstring_dec(thermo.va_trace_anomaly_diff, without_params=True)
