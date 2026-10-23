@@ -102,7 +102,7 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
                 xi=spectrum.bubble.xi,
                 v_wall=spectrum.bubble.v_wall,
                 ek_bva=spectrum.bubble.kinetic_energy_density,
-                w_bar=spectrum.bubble.wn
+                w_bar=spectrum.bubble.w_bar
             )
             for spectrum in self.spectra_lambda
         ])
@@ -137,7 +137,7 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
                 xi=spectrum.bubble.xi,
                 v_wall=spectrum.bubble.v_wall,
                 ek_bva=spectrum.bubble.kinetic_energy_density,
-                w_bar=spectrum.bubble.wn
+                w_bar=spectrum.bubble.w_bar
             ) ** 2
             for spectrum in self.spectra_lambda
         ])
@@ -148,7 +148,9 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
             # rtol=0.551
             # The exact sine transforms for large z change the normalisation of the new interface by ubarf2 from A2,
             # which the old interface does not have.
-            rtol=0.6
+            # rtol=0.6
+            # The average enthalpy density w_bar in lambda changes this normalisation further.
+            rtol=0.65
         )
 
 

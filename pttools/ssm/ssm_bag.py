@@ -9,6 +9,7 @@ import numpy as np
 from scipy.optimize import fsolve
 
 from pttools import bubble, speedup
+from pttools.bubble.thermo import w_bar as w_bar_func
 from pttools.speedup import njit
 from pttools.ssm import const
 from pttools.ssm.calculators import resample_merged_uniform_xi, resample_uniform_xi
@@ -36,7 +37,8 @@ def a2_e_conserving_bag(
         xi: th.FloatArr1D = speedup.NAN_ARR,
         lambda_correction: LambdaCorrection = DEFAULT_LAMBDA_CORRECTION,
         parallel: bool = True,
-        exact_large_z: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
+        exact_large_z: bool = True,
+        wn_as_w_bar: bool = False) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
     Returns the value of $|A(z)|^2$, calculated from self-similar hydro solution obtained with "bubble.fluid_shell".
 
@@ -52,6 +54,9 @@ def a2_e_conserving_bag(
       see :py:class:`pttools.ssm.ssm.LambdaCorrection`. ATM no other de_methods, but argument allows trials.
     :param lambda_correction: kinetic energy term of $\lambda$, see :py:class:`pttools.ssm.ssm.LambdaCorrection`
     :param exact_large_z: whether to use the exact transforms for large $z$, see :py:func:`pttools.ssm.ssm.f_fp_l`
+    :param wn_as_w_bar: whether to approximate the average enthalpy density $\bar{w}$ of $\lambda$ as $w_n$,
+        as in the legacy code, e.g. for comparing with old reference data.
+        Otherwise, $\bar{w}$ is computed with :py:func:`pttools.bubble.thermo.w_bar`.
     :return: $|A(z)|^2$, fp2_2, lam2
     """
     nxi = npt[0]
@@ -62,18 +67,19 @@ def a2_e_conserving_bag(
             v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr,
             ode_method=ode_method, cs2_ptr=cs2_ptr, n_xi=nxi)
 
-    # Now get lam = de/w
+    # Now get lam = de/w_bar
+    w_bar = w_ip[-1] if wn_as_w_bar else w_bar_func(w=w_ip, xi=xi, v_wall=v_wall)
     if de_method == DE_Method.ALTERNATE.value:
         lam_orig = bubble.de_from_w_new_bag(
             v_ip, w_ip, xi, v_wall, alpha_n,
-            df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_ptr=cs2_ptr) / w_ip[-1]
+            df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_ptr=cs2_ptr) / w_bar
     else:
         lam_orig = bubble.de_from_w_bag(
             w_ip, xi, v_wall, alpha_n,
-            df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_ptr=cs2_ptr) / w_ip[-1]
+            df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_ptr=cs2_ptr) / w_bar
 
     # The kinetic energy term is required for energy conservation, see LambdaCorrection.
-    lam_orig += lam_kinetic(v=v_ip, w=w_ip, w_bar=w_ip[-1], correction=lambda_correction)
+    lam_orig += lam_kinetic(v=v_ip, w=w_ip, w_bar=w_bar, correction=lambda_correction)
 
     # f(z), f'(z) and l(z), see pttools.ssm.ssm.f_fp_l
     _f, v_ft, lam_ft = f_fp_l(
@@ -157,7 +163,8 @@ def a2_ssm_func_bag(
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH,
         lambda_correction: LambdaCorrection = DEFAULT_LAMBDA_CORRECTION,
-        parallel: bool = True) -> th.FloatArr1D:
+        parallel: bool = True,
+        wn_as_w_bar: bool = False) -> th.FloatArr1D:
     r"""
     Returns the value of $|A(z)|^2$.
 
@@ -173,6 +180,7 @@ def a2_ssm_func_bag(
     :param de_method: How energy density fluctuation feeds into GW ps.  See A2_ssm_e_conserving.
     :param z_st_thresh: wavenumber at which to switch sin_transform to its approximation.
     :param lambda_correction: kinetic energy term of $\lambda$, see :py:class:`pttools.ssm.ssm.LambdaCorrection`
+    :param wn_as_w_bar: whether to approximate $\bar{w}$ as $w_n$, see :py:func:`a2_e_conserving_bag`
     :return: $|A(z)|^2$
     """
     if method == Method.E_CONSERVING.value:
@@ -181,7 +189,7 @@ def a2_ssm_func_bag(
             z, v_wall, alpha, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method,
             cs2_ptr=cs2_ptr,
             npt=npt, de_method=de_method, z_st_thresh=z_st_thresh,
-            lambda_correction=lambda_correction, parallel=parallel
+            lambda_correction=lambda_correction, parallel=parallel, wn_as_w_bar=wn_as_w_bar
         )[0]
     elif method == Method.F_ONLY.value:
         with numba.objmode:
@@ -211,7 +219,7 @@ def a2_ssm_func_bag(
         A2 = a2_e_conserving_bag(
             z, v_wall, alpha, df_dtau_ptr=df_dtau_ptr, ode_method=ode_method,
             cs2_ptr=cs2_ptr,
-            npt=npt, lambda_correction=lambda_correction, parallel=parallel
+            npt=npt, lambda_correction=lambda_correction, parallel=parallel, wn_as_w_bar=wn_as_w_bar
         )[0]
 
     return A2
@@ -323,11 +331,13 @@ def lam_ssm_func_bag(
         npt: const.NptType = const.DEFAULT_N_PT,
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH,
-        parallel: bool = True) -> th.FloatArr1D:
-    """
+        parallel: bool = True,
+        wn_as_w_bar: bool = False) -> th.FloatArr1D:
+    r"""
     3D FT of radial energy perturbation from Sound Shell Model fluid profile.
 
     :param z: array of scaled wavenumbers $z = kR_*$
+    :param wn_as_w_bar: whether to approximate $\bar{w}$ as $w_n$, see :py:func:`a2_e_conserving_bag`
     """
     nxi = npt[0]
     # xi_re = np.linspace(0,1-1/nxi,nxi) # need to resample for lam = de/w
@@ -336,18 +346,19 @@ def lam_ssm_func_bag(
         df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
         ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=bubble.CS2_BAG_SCALAR_PTR, n_xi=nxi)
 
+    w_bar = w_ip[-1] if wn_as_w_bar else w_bar_func(w=w_ip, xi=xi, v_wall=v_wall)
     if de_method == DE_Method.ALTERNATE:
         lam_orig = bubble.de_from_w_new_bag(
             v_ip, w_ip, xi, v_wall, alpha_n,
             df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
             ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD,
-            cs2_ptr=bubble.CS2_BAG_SCALAR_PTR) / w_ip[-1]
+            cs2_ptr=bubble.CS2_BAG_SCALAR_PTR) / w_bar
     else:
         lam_orig = bubble.de_from_w_bag(
             w_ip, xi, v_wall, alpha_n,
             df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
             ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD,
-            cs2_ptr=bubble.CS2_BAG_SCALAR_PTR) / w_ip[-1]
+            cs2_ptr=bubble.CS2_BAG_SCALAR_PTR) / w_bar
     xi_re, lam_re = resample_merged_uniform_xi(xi, lam_orig, nxi)
 
     # lam_ft = np.zeros_like(z)

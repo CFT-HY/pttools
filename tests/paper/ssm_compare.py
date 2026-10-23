@@ -123,7 +123,7 @@ def generate_ps(
     logger.debug(f"vw = {vw}, alpha = {alpha}, Np = {Np}")
 
     params = (vw, alpha, const.NUC_TYPE, const.NUC_ARGS)
-    sd_v = ssm.spec_den_v_bag(z, params, Np[1:], method=method)
+    sd_v = ssm.spec_den_v_bag(z, params, Np[1:], method=method, wn_as_w_bar=True)
     pow_v = ssm.pow_spec(z, sd_v)
     V2_pow_v = float(np.trapezoid(pow_v/z, z))
 

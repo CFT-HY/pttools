@@ -135,13 +135,13 @@ class MergeTest(unittest.TestCase):
 
         These were computed on 2026-10-23 with the default settings of
         :py:mod:`pttools.lattice.suppression`,
-        after the exact kinetic energy term of $\lambda$ was taken into use,
-        see :py:class:`pttools.ssm.ssm.LambdaCorrection`.
+        after the exact kinetic energy term of $\lambda$ (see :py:class:`pttools.ssm.ssm.LambdaCorrection`)
+        and the average enthalpy density $\bar{w}$ in $\lambda$ were taken into use.
         Recompute the dataset if the SSM spectra change.
         """
         assert CHRW25.v_walls.tolist() == [0.92, 0.44]
         assert CHRW25.alpha_ns.tolist() == [0.67, 0.5]
-        np.testing.assert_allclose(CHRW25.suppressions, [0.14942, 0.0099973], rtol=1e-4)
+        np.testing.assert_allclose(CHRW25.suppressions, [0.33485, 0.013122], rtol=1e-4)
 
 
 if __name__ == "__main__":

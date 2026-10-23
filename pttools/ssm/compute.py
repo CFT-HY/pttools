@@ -20,6 +20,9 @@ from __future__ import annotations
 
 import typing as tp
 
+import numpy as np
+
+from pttools.bubble.thermo import w_bar as w_bar_func
 from pttools.speedup import njit
 from pttools.ssm.low_k.integration import Iv_resampled, power_spectrum_integration_int, spec_den_gw_low
 from pttools.ssm.low_k.join import gw_junction
@@ -73,6 +76,9 @@ class SSMInput(tp.NamedTuple):
     v_sh: float
     #: $v_\text{wall}$, wall speed
     v_wall: float
+    #: $\bar{w}$, average enthalpy density, see :py:func:`pttools.bubble.thermo.w_bar`,
+    #: or nan if it has not been computed yet, in which case it's computed by :py:func:`compute_base`
+    w_bar: float
     # Accuracy parameters
     #: small offset used when generating the lookup table of $z$ values for the GW spectrum
     eps_lookup: float
@@ -263,10 +269,11 @@ def compute_base(inp: SSMInput, parallel: bool = True) -> SSMBaseResults:
     # -----
     T_tilde = T_tilde_func(T_tilde_min=inp.T_tilde_min, T_tilde_max=inp.T_tilde_max, n=inp.nT)
     qT_lookup = qT_lookup_func(T_tilde=T_tilde, z=inp.y)
+    w_bar = w_bar_func(w=inp.w, xi=inp.xi, v_wall=inp.v_wall) if np.isnan(inp.w_bar) else inp.w_bar
     A2 = A2_e_conserving(
         v=inp.v, w=inp.w, xi=inp.xi, e=inp.e, z=qT_lookup,
         v_wall=inp.v_wall, v_sh=inp.v_sh, cs=inp.cs, z_st_thresh=inp.z_st_thresh,
-        parallel=parallel, lambda_correction=inp.lambda_correction
+        parallel=parallel, lambda_correction=inp.lambda_correction, w_bar=w_bar
     )[0]
     # Todo: Think which z and A2 to use here and in Spectrum.ubarf2_custom_nucleation()
     # The bubble spacing enlargement factor does not enter here, as beta R_* = (8 pi)^(1/3) v_wall
@@ -291,7 +298,7 @@ def compute_base(inp: SSMInput, parallel: bool = True) -> SSMBaseResults:
     A2_gw_lookup = A2_e_conserving(
         v=inp.v, w=inp.w, xi=inp.xi, e=inp.e, z=qT_gw_lookup,
         v_wall=inp.v_wall, v_sh=inp.v_sh, cs=inp.cs, z_st_thresh=inp.z_st_thresh,
-        parallel=parallel, lambda_correction=inp.lambda_correction
+        parallel=parallel, lambda_correction=inp.lambda_correction, w_bar=w_bar
     )[0]
     spec_den_v_lookup = spec_den_v_func(
         z=z_gw_lookup, A2_lookup=A2_gw_lookup, qT_lookup=qT_gw_lookup, T_tilde=T_tilde,

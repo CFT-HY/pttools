@@ -439,7 +439,9 @@ def ps_from_ssm(
     sd_v = ssm.spec_den_v_bag(
         z,
         (vw, alpha, nuc_type, nuc_args),
-        Np[1:], method=method, lambda_correction=lambda_correction
+        Np[1:], method=method, lambda_correction=lambda_correction,
+        # The reference data was computed with w_bar = w_n.
+        wn_as_w_bar=True
     )
     # The factor of 2 compensates for the changed definition of spec_den_v
     pow_v = 2 * ssm.pow_spec(z, sd_v)
@@ -601,7 +603,7 @@ def plot_ps_1bubble(
     A2, fp2_2, lam2 = ssm.a2_e_conserving_bag(
         z, vw, alpha, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
         ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=bubble.CS2_BAG_SCALAR_PTR,
-        npt=Np[1:], lambda_correction=lambda_correction)
+        npt=Np[1:], lambda_correction=lambda_correction, wn_as_w_bar=True)
 
     z_list = 3*[z]
     ph_sp_fac = z**3/(2*np.pi**2)
@@ -842,7 +844,7 @@ def plot_and_save(
     logger.debug(f"vw = {vw}, alpha = {alpha}, Np = {Np}")
 
     params = (vw, alpha, const.NUC_TYPE, const.NUC_ARGS)
-    sd_v = ssm.spec_den_v_bag(z, params, Np[1:], method=method)
+    sd_v = ssm.spec_den_v_bag(z, params, Np[1:], method=method, wn_as_w_bar=True)
     pow_v = ssm.pow_spec(z, sd_v)
     ax_v.loglog(z, pow_v, color=col)
     V2_pow_v.append(np.trapezoid(pow_v/z, z))

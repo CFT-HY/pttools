@@ -68,6 +68,21 @@ class LambdaTest(unittest.TestCase):
             lam(v=v, w=w, e=e, e_bar=0.4, w_bar=1.2, correction=LambdaCorrection.LEGACY),
             (e - 0.4) / 1.2 + w * v**2 / 1.2, rtol=1e-15)
 
+    def test_A2_w_bar(self) -> None:
+        r"""$\bar{w}$ scales the $\lambda$ part of $\lvert A(z) \rvert^2$ by $(w_n / \bar{w})^2$."""
+        z = np.logspace(-1, 2, 31)
+        for (v_wall, alpha_n), bubble in zip(PARAMS[:2], self.bubbles[:2], strict=True):
+            with self.subTest(v_wall=v_wall, alpha_n=alpha_n):
+                kwargs = {
+                    "v": bubble.v, "w": bubble.w, "xi": bubble.xi, "e": bubble.model.e(bubble.w, bubble.phase), "z": z,
+                    "v_wall": bubble.v_wall, "v_sh": bubble.v_sh, "cs": np.sqrt(const.CS0_2)}
+                _, fp2_n, lam2_n = A2_e_conserving(**kwargs, w_bar=bubble.wn)
+                _, fp2, lam2 = A2_e_conserving(**kwargs, w_bar=bubble.w_bar)
+                np.testing.assert_array_equal(fp2, fp2_n)
+                np.testing.assert_allclose(lam2, (bubble.wn / bubble.w_bar)**2 * lam2_n, rtol=1e-9)
+                # By default, w_bar is computed from the profile.
+                np.testing.assert_allclose(A2_e_conserving(**kwargs)[2], lam2, rtol=1e-12)
+
     def test_energy_conservation(self) -> None:
         r"""$\int dV \lambda$ without the kinetic term is that with the exact kinetic term minus the kinetic energy."""
         for (v_wall, alpha_n), bubble in zip(PARAMS, self.bubbles, strict=True):

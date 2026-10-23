@@ -6,6 +6,7 @@ import logging
 import numpy as np
 
 from pttools import speedup
+from pttools.bubble.thermo import w_bar as w_bar_func
 from pttools.speedup import njit
 from pttools.ssm import NucType, const, lifetime_distribution_momentum
 from pttools.ssm.calculators import resample_merged_uniform_xi
@@ -87,7 +88,8 @@ def A2_e_conserving(
         n_xi: int = const.DEFAULT_N_XI_SSM,
         parallel: bool = True,
         lambda_correction: LambdaCorrection = DEFAULT_LAMBDA_CORRECTION,
-        exact_large_z: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
+        exact_large_z: bool = True,
+        w_bar: float | None = None) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
     Returns the value of $\lvert A(z) \rvert^2$.
 
@@ -108,10 +110,13 @@ def A2_e_conserving(
     :param exact_large_z: for $z >$ z_st_thresh, use the exact transforms of the piecewise-linear profiles
         (:py:func:`pttools.ssm.sin_transform_exact.sound_shell_transforms_pl_parallel`)
         and the analytical $f'(z)$ instead of the approximate sine transform and finite differences
+    :param w_bar: $\bar{w}$, average enthalpy density for $\lambda$, see :py:func:`lam`.
+        If not given, it's computed with :py:func:`pttools.bubble.thermo.w_bar`.
     :return: $\lvert A(z) \rvert^2, \frac{1}{2} f'(z)^2, \frac{1}{2}(c_s l(z))^2$ (same size as $z$)
     """
     #: $\lambda(z)$
-    lm = lam(v=v, w=w, e=e, correction=lambda_correction)
+    w_ref = w_bar_func(w=w, xi=xi, v_wall=v_wall) if w_bar is None else w_bar
+    lm = lam(v=v, w=w, e=e, w_bar=w_ref, correction=lambda_correction)
     _f_val, fp_val, l_val = f_fp_l(
         z=z, xi=xi, v=v, lam=lm, v_wall=v_wall, v_sh=v_sh, z_st_thresh=z_st_thresh, n_xi=n_xi,
         parallel=parallel, exact_large_z=exact_large_z)

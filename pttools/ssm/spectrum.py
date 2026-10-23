@@ -286,6 +286,9 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
             tau_star=self.tau_star,
             v_sh=self.bubble.v_sh,
             v_wall=self.bubble.v_wall,
+            # The average enthalpy density is reused if the bubble has already computed it,
+            # and otherwise it's computed by the compiled computation.
+            w_bar=self.bubble.__dict__.get("w_bar", np.nan),
             # Accuracy
             eps_lookup=self.eps_lookup,
             nT=self.nT,

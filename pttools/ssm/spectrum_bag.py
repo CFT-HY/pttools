@@ -54,7 +54,8 @@ def power_gw_bag(
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH,
         lambda_correction: LambdaCorrection = DEFAULT_LAMBDA_CORRECTION,
-        parallel: bool = True) -> th.FloatArr1D:
+        parallel: bool = True,
+        wn_as_w_bar: bool = False) -> th.FloatArr1D:
     r"""
     Scaled GW power spectrum at array of z = kR* values.
 
@@ -84,6 +85,8 @@ def power_gw_bag(
     :param npt: number of points
     :param filename: path to load A2 values from
     :param lambda_correction: kinetic energy term of $\lambda$, see :py:class:`pttools.ssm.ssm.LambdaCorrection`
+    :param wn_as_w_bar: whether to approximate the average enthalpy density $\bar{w}$ of $\lambda$ as $w_n$,
+        as in the legacy code, see :py:func:`pttools.ssm.ssm_bag.a2_e_conserving_bag`
     :return: scaled GW power spectrum
     """
     if np.any(z <= 0.0):
@@ -106,7 +109,7 @@ def power_gw_bag(
 
     sd_v = spec_den_v_bag(
         x, params, npt, filename, skip, method, de_method, z_st_thresh,
-        lambda_correction=lambda_correction, parallel=parallel
+        lambda_correction=lambda_correction, parallel=parallel, wn_as_w_bar=wn_as_w_bar
     )
     sd_gw, _y = spec_den_gw(x, sd_v, z, parallel=parallel)
     return pow_spec(z, sd_gw)
@@ -155,7 +158,8 @@ def spec_den_v_bag(
         z_st_thresh: float = const.Z_ST_THRESH,
         ubarf2: float = 1.,
         lambda_correction: LambdaCorrection = DEFAULT_LAMBDA_CORRECTION,
-        parallel: bool = True) -> th.FloatArr1D:
+        parallel: bool = True,
+        wn_as_w_bar: bool = False) -> th.FloatArr1D:
     r"""
     Get dimensionless velocity spectral density $\tilde{P}_v$.
 
@@ -173,6 +177,8 @@ def spec_den_v_bag(
         nuc_args (tuple, default (1,))
     :param npt: number of points
     :param lambda_correction: kinetic energy term of $\lambda$, see :py:class:`pttools.ssm.ssm.LambdaCorrection`
+    :param wn_as_w_bar: whether to approximate the average enthalpy density $\bar{w}$ of $\lambda$ as $w_n$,
+        as in the legacy code, see :py:func:`pttools.ssm.ssm_bag.a2_e_conserving_bag`
     :return: dimensionless velocity spectral density $\tilde{P}_v$
     """
     params = convert_params(params)
@@ -210,7 +216,7 @@ def spec_den_v_bag(
             df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
             ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=bubble.CS2_BAG_SCALAR_PTR,
             npt=npt, method=method, de_method=de_method, z_st_thresh=z_st_thresh,
-            lambda_correction=lambda_correction, parallel=parallel
+            lambda_correction=lambda_correction, parallel=parallel, wn_as_w_bar=wn_as_w_bar
         )
     else:
         A2_lookup = a2_e_conserving_bag_file(
