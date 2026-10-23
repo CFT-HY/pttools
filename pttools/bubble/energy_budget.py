@@ -160,7 +160,10 @@ def kappa_d[T: FloatOrArr](alpha_n: T) -> T:
     r"""$\kappa_d$, approximation of $\kappa$ for very large wall velocities $(v_{\text{wall}} \rightarrow 1)$.
 
     $$\kappa_D \approx \frac{\alpha_n}{0.73 + 0.083 \sqrt{\alpha_n} + \alpha_n}$$
-    :espinosa_2010:`\ `, eq. 98.
+    :espinosa_2010:`\ `, eq. 98,
+    :notes:`\ ` eq. 7.44.
+
+    This presumes that $\theta_b = 0$.
     """
     return alpha_n / (0.73 + 0.083 * np.sqrt(alpha_n) + alpha_n)  # pyrefly: ignore[bad-return]
 

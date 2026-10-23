@@ -101,18 +101,6 @@ def kappa(
     return va_kinetic_energy_density(v, w, xi) / np.abs(delta_e_theta)
 
 
-def kappa_approx[T: FloatOrArr](alpha_n: T) -> T:
-    r"""$\kappa$, approximate kinetic efficiency factor.
-
-    $$\kappa \approx \frac{\alpha_n}{0.73 + 0.083\sqrt{\alpha_n} + \alpha_n}$$
-    :notes:`\ ` eq. 7.44.
-
-    :param alpha_n: Transition strength $\alpha_n$
-    :return: Approximate kinetic efficiency factor $\kappa$
-    """
-    return alpha_n / (0.73 + 0.083*np.sqrt(alpha_n) + alpha_n)  # pyrefly: ignore[bad-return]
-
-
 @njit(nogil=True)
 def kinetic_energy_density(v: th.FloatArr1D, w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float) -> float:
     r"""Bubble volume averaged kinetic energy density.
