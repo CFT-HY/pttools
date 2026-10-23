@@ -309,7 +309,7 @@ def log_parallel_ready(
 def _collect_arr_output(
         futs: NDArray,
         output_dtypes: tuple[type, ...] | list[type] | None,
-        return_arr_shape: tuple[int, ...]) -> NDArray:
+        return_arr_shape: th.Shape) -> NDArray:
     """Collect the results of :func:`run_parallel` when the function returns an array."""
     if output_dtypes is None or not len(output_dtypes):
         raise ValueError("Please give the output dtype.")
@@ -375,7 +375,7 @@ def run_parallel(
         multiple_params: bool = False,
         unpack_params: bool = False,
         output_dtypes: tuple[type, ...] | list[type] | None = None,
-        return_arr_shape: tuple[int, ...] | None = None,
+        return_arr_shape: th.Shape | None = None,
         log_progress_element: int | None = None,
         log_progress_percentage: float | None = None,
         log_start_finish: bool = True,

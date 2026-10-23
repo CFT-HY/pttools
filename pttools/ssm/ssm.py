@@ -259,7 +259,7 @@ def l(  # noqa: E743
 
 
 @njit(cache=True)
-def lam[S: tuple[int, ...]](
+def lam[S: th.Shape](
         v: th.FloatArrShaped[S],
         w: th.FloatArrShaped[S],
         e: th.FloatArrShaped[S],
@@ -287,7 +287,7 @@ def lam[S: tuple[int, ...]](
 
 
 @njit(cache=True)
-def lam_kinetic[S: tuple[int, ...]](
+def lam_kinetic[S: th.Shape](
         v: th.FloatArrShaped[S],
         w: th.FloatArrShaped[S],
         w_bar: float,

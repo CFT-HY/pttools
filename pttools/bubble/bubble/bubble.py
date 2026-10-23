@@ -867,4 +867,4 @@ class Bubble(BaseBubble):
 # These are object arrays. Numpy typing has no way of expressing the element type of an object array,
 # but declaring the element type here does give the correct types when the arrays are indexed.
 type BubbleArr = NDArray[Bubble]  # pyrefly: ignore[bad-specialization]
-type BubbleArr2D = np.ndarray[tuple[int, int], np.dtype[Bubble]]  # pyrefly: ignore[bad-specialization]
+type BubbleArr2D = np.ndarray[th.Shape2D, np.dtype[Bubble]]  # pyrefly: ignore[bad-specialization]

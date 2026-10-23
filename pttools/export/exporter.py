@@ -90,6 +90,7 @@ from pttools.export.records import (
     table_of,
     validate_table_name,
 )
+import pttools.type_hints as th
 from pttools.utils.fields import (
     Extractable,
     Field,
@@ -472,7 +473,7 @@ class _TableWriter:
             self,
             name: str,
             dtype: tp.Any,
-            row_shape: tuple[int, ...] = (),
+            row_shape: th.Shape = (),
             kind: str = FieldShape.SCALAR,
             field_type: str = "",
             axis: str = "",

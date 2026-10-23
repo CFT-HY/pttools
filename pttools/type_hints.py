@@ -39,12 +39,12 @@ and the generic type alias :py:data:`FloatArrShaped`:
 .. code-block:: python
 
     @njit
-    def lam_kinetic[S: tuple[int, ...]](
+    def lam_kinetic[S: th.Shape](
             v: FloatArrShaped[S], w: FloatArrShaped[S], w_bar: float) -> FloatArrShaped[S]:
         return w * v * v / ((1 - v * v) * w_bar)  # pyrefly: ignore[bad-return]
 
 The type checker then solves ``S`` as the shape of the arguments,
-e.g. ``tuple[int]`` for :py:data:`FloatArr1D`, and gives the return value the same shape.
+e.g. :py:data:`Shape1D` for :py:data:`FloatArr1D`, and gives the return value the same shape.
 The shapes of the results of NumPy arithmetic are not tracked by the type stubs of NumPy,
 and therefore the return values have to be marked with a ``# pyrefly: ignore[bad-return]`` comment as above.
 
@@ -87,16 +87,30 @@ if TYPE_CHECKING_OR_DOCS:
 # from pttools.speedup.numba_wrapper import CPUDispatcher
 
 # -----
+# Array shapes
+# -----
+#: Shape of a Numpy array of any number of dimensions
+type Shape = tuple[int, ...]
+#: Shape of a 1D Numpy array
+type Shape1D = tuple[int]
+#: Shape of a 2D Numpy array
+type Shape2D = tuple[int, int]
+#: Shape of a 3D Numpy array
+type Shape3D = tuple[int, int, int]
+#: Shape of a 4D Numpy array
+type Shape4D = tuple[int, int, int, int]
+
+# -----
 # Function and object types
 # -----
 # These are object arrays. Numpy typing has no way of expressing the element type of an object array,
 # but declaring the element type here does give the correct types when the arrays are indexed.
 # The ignore comments are needed, since Matplotlib objects are not subclasses of np.generic.
-type AxesArr1D = np.ndarray[tuple[int], np.dtype[Axes]]  # pyrefly: ignore[bad-specialization]
-type AxesArr2D = np.ndarray[tuple[int, int], np.dtype[Axes]]  # pyrefly: ignore[bad-specialization]
-type AxesArr3D = np.ndarray[tuple[int, int, int], np.dtype[Axes]]  # pyrefly: ignore[bad-specialization]
-type FigArr1D = np.ndarray[tuple[int], np.dtype[Figure]]  # pyrefly: ignore[bad-specialization]
-type FigArr2D = np.ndarray[tuple[int, int], np.dtype[Figure]]  # pyrefly: ignore[bad-specialization]
+type AxesArr1D = np.ndarray[Shape1D, np.dtype[Axes]]  # pyrefly: ignore[bad-specialization]
+type AxesArr2D = np.ndarray[Shape2D, np.dtype[Axes]]  # pyrefly: ignore[bad-specialization]
+type AxesArr3D = np.ndarray[Shape3D, np.dtype[Axes]]  # pyrefly: ignore[bad-specialization]
+type FigArr1D = np.ndarray[Shape1D, np.dtype[Figure]]  # pyrefly: ignore[bad-specialization]
+type FigArr2D = np.ndarray[Shape2D, np.dtype[Figure]]  # pyrefly: ignore[bad-specialization]
 #: Numba function
 type NumbaFunc = tp.Callable | CPUDispatcher
 #: ODE solver specifier
@@ -107,21 +121,21 @@ type ODESolver = OdeSolver | type[OdeSolver] | tp.Callable | str
 # -----
 type Bool = np.dtype[np.bool_]
 type BoolArr = NDArray[np.bool_]
-type BoolArr1D = np.ndarray[tuple[int], Bool]
-type BoolArr2D = np.ndarray[tuple[int, int], Bool]
+type BoolArr1D = np.ndarray[Shape1D, Bool]
+type BoolArr2D = np.ndarray[Shape2D, Bool]
 # np.float64 is a subclass of float, so for scalars specifying "float" is sufficient.
 type Float64 = np.dtype[np.float64]
 #: Numpy array of floats
 type FloatArr = NDArray[np.float64]
 #: 1D Numpy array of floats
-type FloatArr1D = np.ndarray[tuple[int], Float64]
+type FloatArr1D = np.ndarray[Shape1D, Float64]
 type FloatArr1DOrList = FloatArr1D | list[float]
-type FloatArr2D = np.ndarray[tuple[int, int], Float64]
-type FloatArr3D = np.ndarray[tuple[int, int, int], Float64]
-type FloatArr4D = np.ndarray[tuple[int, int, int, int], Float64]
-#: Numpy array of floats with the shape ``S``, e.g. ``FloatArrShaped[tuple[int]]`` is :py:data:`FloatArr1D`.
+type FloatArr2D = np.ndarray[Shape2D, Float64]
+type FloatArr3D = np.ndarray[Shape3D, Float64]
+type FloatArr4D = np.ndarray[Shape4D, Float64]
+#: Numpy array of floats with the shape ``S``, e.g. ``FloatArrShaped[Shape1D]`` is :py:data:`FloatArr1D`.
 #: This is used with a type parameter for arrays that must have the same shape, see the module docstring.
-type FloatArrShaped[S: tuple[int, ...]] = np.ndarray[S, Float64]
+type FloatArrShaped[S: Shape] = np.ndarray[S, Float64]
 # Float list or a Numpy array
 # FloatListOrArr = list[tp.Union[float, Float64] | np.ndarray
 #: Float or a Numpy array of floats
@@ -133,8 +147,8 @@ type FloatOrArr1D2D = FloatOrArr1D | FloatArr2D
 type FloatOrArrNumba = float | FloatArr | NumbaFunc
 #: Integer or a Numpy array of integers
 type Int = np.dtype[np.int_]
-type IntArr1D = np.ndarray[tuple[int], Int]
-type IntArr2D = np.ndarray[tuple[int, int], Int]
+type IntArr1D = np.ndarray[Shape1D, Int]
+type IntArr2D = np.ndarray[Shape2D, Int]
 type IntOrArr = int | NDArray[np.int_]
 
 type VWXi = tuple[FloatArr1D, FloatArr1D, FloatArr1D]

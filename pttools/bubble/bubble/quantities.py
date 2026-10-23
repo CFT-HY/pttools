@@ -29,7 +29,7 @@ def get_kappa(bubble: Bubble) -> float:
     return bubble.kappa
 
 
-def get_kappa_for_v_walls(params: np.ndarray[tuple[int], tp.Any], v_walls: th.FloatArr1D) -> th.FloatArr1D:
+def get_kappa_for_v_walls(params: np.ndarray[th.Shape1D, tp.Any], v_walls: th.FloatArr1D) -> th.FloatArr1D:
     r"""Get $\kappa({v}_\text{wall})$ for the given parameters."""
     # Todo: replace the uses of this with a solution that uses get_kappa() instead.
     model, alpha_n = params

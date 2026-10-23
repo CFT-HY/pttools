@@ -457,5 +457,5 @@ class Spectrum(Omgw0Base, SSMSpectrum):
 # These are object arrays. Numpy typing has no way of expressing the element type of an object array,
 # but declaring the element type here does give the correct types when the arrays are indexed.
 type SpectrumArr = NDArray[Spectrum]  # pyrefly: ignore[bad-specialization]
-type SpectrumArr2D = np.ndarray[tuple[int, int], np.dtype[Spectrum]]  # pyrefly: ignore[bad-specialization]
-type SpectrumArr3D = np.ndarray[tuple[int, int, int], np.dtype[Spectrum]]  # pyrefly: ignore[bad-specialization]
+type SpectrumArr2D = np.ndarray[th.Shape2D, np.dtype[Spectrum]]  # pyrefly: ignore[bad-specialization]
+type SpectrumArr3D = np.ndarray[th.Shape3D, np.dtype[Spectrum]]  # pyrefly: ignore[bad-specialization]

@@ -49,7 +49,7 @@ class TestPlane(unittest.TestCase):
 
     FIGSIZE: tp.ClassVar[np.ndarray] = np.array([16, 9])*1.7
     FIG_PATH: tp.ClassVar[Path] = utils.TEST_FIGURE_PATH / "integrators"
-    grid_shape: tp.ClassVar[tuple[int, int]] = (2, 5)
+    grid_shape: tp.ClassVar[th.Shape2D] = (2, 5)
     grid_fig_abs: tp.ClassVar[plt.Figure]
     grid_fig_rel: tp.ClassVar[plt.Figure]
     axs_abs: tp.ClassVar[th.AxesArr2D]
