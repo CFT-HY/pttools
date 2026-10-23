@@ -9,8 +9,8 @@ from pttools import speedup
 from pttools.bubble.thermo import w_bar as w_bar_func
 from pttools.speedup import njit
 from pttools.ssm import NucType, const, lifetime_distribution_momentum
-from pttools.ssm.calculators import resample_merged_uniform_xi
 from pttools.ssm.nucleation import beta_R_star0, lifetime_distribution
+from pttools.ssm.resample import resample_merged_uniform_xi
 from pttools.ssm.sin_transform import sin_transform
 from pttools.ssm.sin_transform_exact import (
     sharpen_padding,

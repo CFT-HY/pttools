@@ -1,4 +1,7 @@
-"""Numerical utilities for the Sound Shell Model."""
+r"""Resampling of the fluid profiles of the Sound Shell Model to uniform grids of $\xi$.
+
+The resampled profiles are used for the sine transforms, see :py:mod:`pttools.ssm.sin_transform`.
+"""
 
 import logging
 

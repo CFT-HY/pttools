@@ -9,7 +9,7 @@ import sympy as sp
 
 # import time
 # from pttools import speedup
-# from pttools.ssm import calculators
+# from pttools.ssm import resample
 from pttools.ssm import const
 from pttools.ssm.sin_transform import sin_transform as _sin_transform
 import pttools.type_hints as th

@@ -12,7 +12,7 @@ import numpy as np
 
 from pttools.bubble import Bubble
 from pttools.models.bag import BagModel
-from pttools.ssm.calculators import resample_merged_uniform_xi, resample_uniform_xi
+from pttools.ssm.resample import resample_merged_uniform_xi, resample_uniform_xi
 from pttools.ssm.sin_transform import sin_transform_core_single
 from pttools.ssm.ssm import LambdaCorrection, f, l, lam
 import pttools.type_hints as th
@@ -89,7 +89,7 @@ class ThinShellTest(unittest.TestCase):
 
 
 class ResampleMergedTest(unittest.TestCase):
-    """Tests for :func:`pttools.ssm.calculators.resample_merged_uniform_xi`."""
+    """Tests for :func:`pttools.ssm.resample.resample_merged_uniform_xi`."""
 
     def test_merge(self) -> None:
         """The original points and the discontinuities should be preserved."""

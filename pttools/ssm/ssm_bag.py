@@ -12,7 +12,7 @@ from pttools import bubble, speedup
 from pttools.bubble.thermo import w_bar as w_bar_func
 from pttools.speedup import njit
 from pttools.ssm import const
-from pttools.ssm.calculators import resample_merged_uniform_xi, resample_uniform_xi
+from pttools.ssm.resample import resample_merged_uniform_xi, resample_uniform_xi
 from pttools.ssm.sin_transform import sin_transform
 from pttools.ssm.ssm import DEFAULT_LAMBDA_CORRECTION, DE_Method, LambdaCorrection, Method, f_fp_l, lam_kinetic
 import pttools.type_hints as th
