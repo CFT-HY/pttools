@@ -6,9 +6,10 @@ import typing as tp
 import unittest
 
 import numpy as np
+import pytest
 
 from pttools.bubble.bubble import Bubble
-from pttools.bubble.thermo import e_bar, ubarf2, w_bar, warn_if_ubarf_relativistic
+from pttools.bubble.thermo import e_bar, ubarf2, w_bar, w_bar_energy, warn_if_ubarf_relativistic
 from pttools.math.assertions import assert_allclose
 from pttools.models.const_cs import ConstCSModel
 from tests.bubble.ref import RefBag, Reference, RefHindmarshHijazi, RefLectureNotes
@@ -83,6 +84,27 @@ class ThermoTestLectureNotes(RefLectureNotes, ThermoTest, unittest.TestCase):
         )
         assert_allclose([np.sqrt(bubble.ubarf2) for bubble in self.bubbles], self.UBARF_REF, rtol=0.039)
 
+
+    def test_wbar_energy(self) -> None:
+        r"""$\bar{w}$ computed from the energy budget agrees with the direct average of $w$.
+
+        They are equal analytically due to energy conservation, see :py:func:`pttools.bubble.thermo.w_bar_energy`.
+        Their numerical difference is up to $1.2 \cdot 10^{-3}$ for hybrids close to $v_\text{CJ}$,
+        and decreases as $1/n$ with the number of points of the profile.
+        :py:attr:`pttools.bubble.bubble.Bubble.va_enthalpy_density` is computed with the same chain.
+        """
+        for bubble in self.bubbles:
+            with self.subTest(v_wall=bubble.v_wall, alpha_n=bubble.alpha_n):
+                energy = w_bar_energy(bubble.model, bubble.v, bubble.w, bubble.xi, bubble.v_wall, bubble.phase)
+                assert energy == pytest.approx(w_bar(bubble.w, bubble.xi, bubble.v_wall), rel=1.5e-3)
+                assert bubble.va_enthalpy_density == pytest.approx(energy, rel=1e-12)
+
+    @staticmethod
+    def test_wbar_first_point() -> None:
+        """If only the first point differs from wn, the average is over the whole array."""
+        xi = np.linspace(0, 1, 5)
+        w = np.array([2., 1., 1., 1., 1.])
+        assert w_bar(w=w, xi=xi, v_wall=0.5) == pytest.approx(np.trapezoid(w, xi**3), rel=1e-15)
 
 class ThermoTestBag(RefBag, ThermoTest, unittest.TestCase):
     """Test that the bag results have not changed due to code changes."""

@@ -232,16 +232,40 @@ def omega_barotropic[T: FloatOrArr](p: T, e: T | float) -> T:
     return p / e  # pyrefly: ignore[bad-return]
 
 
-def thermal_energy_density(v_wall: float, eqp: float) -> float:
-    r"""Bubble volume averaged thermal energy density after the phase transition.
+@njit(cache=True, nogil=True)
+def shell_end_index(w: th.FloatArr1D) -> int:
+    r"""Index of the end of the fluid shell, i.e. of the last point at which $w \neq w_n$.
 
-    $$\frac{3}{4\pi {v}_w^3} {e}_Q'$$.
+    This is the shock for deflagrations and hybrids, and the wall for detonations.
+    If $w = w_n$ everywhere, or if only the first point differs from $w_n$, this is the last index.
 
-    :param v_wall: Wall velocity ${v}_\text{wall}$
-    :param eqp: Volume-averaged thermal energy density ${e}_Q'$
-    :return: Bubble volume averaged thermal energy density after the phase transition
+    :param w: Enthalpy density $w$, of which the last point is $w_n$
+    :return: the index
     """
-    return 3/(4*np.pi * v_wall**3) * eqp
+    # If w = w_n everywhere, argmax returns 0, and therefore the index is the last one.
+    # https://stackoverflow.com/a/8768734
+    i_max = int(w.size - np.argmax(w[::-1] != w[-1]) - 1)
+    # If only the first point differs from w_n, the average is over the whole array.
+    return w.size - 1 if i_max == 0 else i_max
+
+
+def thermal_energy_density(v_shock: float, eqp: float) -> float:
+    r"""Average thermal energy density after the phase transition.
+
+    $$\frac{3}{4\pi {v}_\text{sh}^3} {e}_Q'$$.
+
+    ${e}_Q'$ is the total thermal energy within the shock (see :py:func:`va_thermal_energy_density`),
+    including that of the fluid between the wall and the shock, which was there already before the phase transition.
+    Therefore, it's averaged over the volume within the shock, unlike the changes of the energies,
+    such as :py:func:`kinetic_energy_density` and :py:func:`thermal_energy_density_diff`,
+    which are averaged over the volume of the bubble.
+    For detonations, ${v}_\text{sh} = {v}_\text{wall}$.
+
+    :param v_shock: Shock speed ${v}_\text{sh}$
+    :param eqp: Volume-averaged thermal energy density ${e}_Q'$
+    :return: Average thermal energy density after the phase transition
+    """
+    return 3/(4*np.pi * v_shock**3) * eqp
 
 
 def thermal_energy_density_diff(w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float) -> float:
@@ -260,7 +284,10 @@ def thermal_energy_density_diff(w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: flo
 def thermal_energy_fraction[T: FloatOrArr](eq_bva: T, eb: T | float) -> T:
     r"""Thermal energy fraction $\frac{{e}_Q'}{\bar{e}}$.
 
-    :param eq_bva: Thermal energy density ${e}_Q'$
+    This is the fraction of the energy within the shock that is thermal energy after the phase transition.
+
+    :param eq_bva: Average thermal energy density ${e}_Q'$ after the phase transition,
+        see :py:func:`thermal_energy_density`
     :param eb: Average energy density $\bar{e}$
     :return: Thermal energy fraction $\frac{{e}_Q'}{\bar{e}}$
     """
@@ -363,11 +390,15 @@ def ubarf2_from_K[T: FloatOrArr](K: T, adiabatic_index: T | float = DEFAULT_ADIA
 
 
 def va_enthalpy_density(eq: float) -> float:
-    r"""$w_\text{va}$, volume-averaged enthalpy density.
+    r"""$w_\text{va}$, volume-averaged enthalpy density after the phase transition.
 
     $$w_\text{va} = \frac{4}{3} e_Q$$.
 
-    :param eq: Thermal energy density $e_Q$
+    This follows from $e_Q = e - \theta = \frac{3}{4} w$, where $\theta = \frac{1}{4}(e - 3p)$
+    is the trace anomaly. As $e_Q$ is averaged over the volume within the shock,
+    this is equal to :py:func:`w_bar` up to the numerical accuracy of the integrals.
+
+    :param eq: Average thermal energy density $e_Q$ after the phase transition, see :py:func:`thermal_energy_density`
     """
     return 4/3 * eq
 
@@ -476,24 +507,76 @@ def va_trace_anomaly_diff(
 
 @njit(cache=True, nogil=True)
 def w_bar(w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float) -> float:
-    r"""Average enthalpy density $\bar{w}$.
+    r"""$\bar{w}$, average enthalpy density.
+
+    This is the volume average of the enthalpy density over the sphere that contains the fluid shell:
+    $$\bar{w} = \frac{3}{\xi_\text{max}^3} \int_0^{\xi_\text{max}} d\xi \xi^2 w(\xi)
+    = \frac{1}{\xi_\text{max}^3} \int_0^{\xi_\text{max}^3} d(\xi^3) w(\xi),$$
+    where $\xi_\text{max}$ is the largest $\xi$ at which $w \neq w_n$,
+    i.e. the shock $v_\text{sh}$ for deflagrations and hybrids and the wall $v_\text{wall}$ for detonations.
+    The integral is computed over $\xi^3$ with the trapezoidal rule,
+    which is exact for the constant regions of the profile, such as the interior of the bubble.
+    If the profile has no point with $w \neq w_n$, $\bar{w} = w_n$.
+
+    The energy of the self-similar flow is conserved, and therefore the average of the energy density
+    $T^{00} = e + w \gamma^2 v^2$ over the same sphere is $\bar{e} = e_n$, see :py:func:`e_bar`.
+    For the bag model, $e = \frac{3}{4} w + \theta$, and therefore
+    $$\bar{w} = \frac{4}{3} \left( e_n - \langle \theta \rangle - \langle w \gamma^2 v^2 \rangle \right),$$
+    where the angle brackets denote the averages over the sphere.
+    For deflagrations and hybrids, the sphere includes the fluid in the symmetric phase between the wall and the shock.
 
     :param w: Enthalpy density $w$
-    :param xi: $\xi$
-    :param v_wall: Wall velocity ${v}_\text{wall}$
+    :param xi: $\xi$, in increasing order
+    :param v_wall: Wall velocity ${v}_\text{wall}$. This is not used, as $\xi_\text{max}$ is found from $w$.
     :return: Average enthalpy density $\bar{w}$
     """
-    # https://stackoverflow.com/a/8768734
-    w_reverse = w[::-1]
-    i_max = w.size - np.argmax(w_reverse != w[-1]) - 1
-    if i_max == 0:
-        i_max = -1
+    i_max = shell_end_index(w)
     ret = 1/(xi[i_max]**3) * np.trapezoid(w[:i_max+1], xi[:i_max+1]**3)
     wn = w[-1]
     if not (ret is None or np.isnan(ret)) and ret <= wn:
         with numba.objmode:
             logger.warning("Should have w_bar > wn. Got: w_bar=%s, wn=%s", ret, wn)
     return ret
+
+
+def w_bar_energy(
+        model: Model,
+        v: th.FloatArr1D,
+        w: th.FloatArr1D,
+        xi: th.FloatArr1D,
+        v_wall: float,
+        phase: th.FloatArr1D | None = None) -> float:
+    r"""$\bar{w}$, average enthalpy density, computed from the energy budget of the bubble.
+
+    This is the same quantity as :py:func:`w_bar`, but computed with the chain
+    :py:func:`va_kinetic_energy_density`, :py:func:`va_trace_anomaly_diff`, :py:func:`va_thermal_energy_density`,
+    :py:func:`thermal_energy_density` and :py:func:`va_enthalpy_density`:
+    $$\bar{w} = \frac{4}{3} \frac{{e}_Q'}{{V}_\text{max}}
+    = \frac{4}{3} \frac{3}{4 \pi \xi_\text{max}^3}
+    \left( \pi w_n \xi_\text{max}^3 - {e}_K - \Delta {e}_\theta \right)
+    = w_n - \frac{4}{3} \left( \langle w \gamma^2 v^2 \rangle + \langle \theta - \theta_n \rangle \right),$$
+    where ${V}_\text{max} = \frac{4 \pi}{3} \xi_\text{max}^3$ is the volume within the shock,
+    the angle brackets denote averages over it,
+    and $\xi_\text{max}$ is found as in :py:func:`w_bar`.
+    This follows from the conservation of the energy $T^{00} = e + w \gamma^2 v^2$ within the shock
+    and from $e - \theta = \frac{3}{4} w$, where $\theta = \frac{1}{4}(e - 3p)$ is the trace anomaly.
+    Therefore, it's equal to :py:func:`w_bar` to the extent that the numerical solution conserves energy.
+
+    :param model: Equation of state model
+    :param v: Fluid velocity $v$
+    :param w: Enthalpy density $w$
+    :param xi: $\xi$, in increasing order
+    :param v_wall: Wall velocity ${v}_\text{wall}$
+    :param phase: Phase $\phi$. If not given, it's computed from $\xi$ and ${v}_\text{wall}$.
+    :return: Average enthalpy density $\bar{w}$
+    """
+    xi_max = xi[shell_end_index(w)]
+    eqp = va_thermal_energy_density(
+        v_shock=xi_max,
+        wn=w[-1],
+        ek=va_kinetic_energy_density(v, w, xi),
+        delta_e_theta=va_trace_anomaly_diff(model, w, xi, v_wall, phase))
+    return va_enthalpy_density(thermal_energy_density(v_shock=xi_max, eqp=eqp))
 
 
 __w_bar = w_bar
