@@ -29,6 +29,7 @@ from pttools.ssm.const import (
 )
 from pttools.ssm.nucleation import DEFAULT_NUC_TYPE, NucType
 from pttools.ssm.spectrum import SSMSpectrum
+from pttools.ssm.ssm import DEFAULT_LAMBDA_CORRECTION, LambdaCorrection
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 import pttools.type_hints as th
 from pttools.type_hints import FloatArr1D
@@ -225,7 +226,7 @@ class Spectrum(Omgw0Base, SSMSpectrum):
             self,
             eps_lookup: float = DEFAULT_EPS_LOOKUP,
             lifetime_distribution_a: float = DEFAULT_LIFETIME_DISTRIBUTION_A,
-            lambda_correction: bool = False,
+            lambda_correction: LambdaCorrection = DEFAULT_LAMBDA_CORRECTION,
             parallel: bool = True,
             compute_snr: bool | None = None,
             snr_settings: SNRSettings | None = None) -> None:
@@ -237,8 +238,7 @@ class Spectrum(Omgw0Base, SSMSpectrum):
         :param eps_lookup: small offset used when generating the lookup table of $z$ values for the GW spectrum
         :param lifetime_distribution_a: $a$, parameter of the bubble lifetime distribution,
             see :py:func:`pttools.ssm.nucleation.lifetime_distribution`
-        :param lambda_correction: whether to enable a non-linear correction for $\lambda$,
-            see :py:func:`pttools.ssm.ssm.A2_e_conserving`
+        :param lambda_correction: kinetic energy term of $\lambda$, see :py:class:`pttools.ssm.ssm.LambdaCorrection`
         :param parallel: whether to use multiple CPU cores
         :param compute_snr: whether to compute the signal-to-noise ratio.
             If not given, the value given to the constructor is used.

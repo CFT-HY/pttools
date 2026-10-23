@@ -26,7 +26,7 @@ from pttools.ssm.low_k.join import gw_junction
 from pttools.ssm.nucleation import NucType, bubble_spacing_enlargement
 from pttools.ssm.spec_den_gw import gen_lookup, spec_den_gw
 from pttools.ssm.spec_den_v import spec_den_v as spec_den_v_func
-from pttools.ssm.ssm import A2_e_conserving, ubarf2_from_a2
+from pttools.ssm.ssm import A2_e_conserving, LambdaCorrection, ubarf2_from_a2
 from pttools.ssm.ssm import T_tilde as T_tilde_func
 from pttools.ssm.ssm import qT_lookup as qT_lookup_func
 import pttools.type_hints as th
@@ -93,8 +93,8 @@ class SSMInput(tp.NamedTuple):
     nuc_type: NucType
     #: solution type of the fluid profile
     sol_type: SolutionType
-    #: whether to enable a non-linear correction for $\lambda$
-    lambda_correction: bool
+    #: kinetic energy term of $\lambda$, see :py:class:`pttools.ssm.ssm.LambdaCorrection`
+    lambda_correction: LambdaCorrection
     #: whether to compute the acoustic friction of the low-$k$ approximation from $c_s$ instead of $\nu$
     low_k_cs_friction: bool
 

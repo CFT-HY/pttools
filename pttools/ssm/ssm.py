@@ -31,6 +31,39 @@ class DE_Method(enum.StrEnum):
 
 
 @enum.unique
+class LambdaCorrection(enum.StrEnum):
+    r"""Kinetic energy term of the energy fluctuation variable $\lambda$, see :py:func:`lam`.
+
+    The energy density of the fluid is $T^{00} = e + w \gamma^2 v^2$.
+    For the self-similar flow of a single bubble, energy conservation
+    $\partial_t T^{00} + \nabla_i T^{0i} = 0$ gives
+    $$\int_0^1 d\xi \xi^2 \left( T^{00}(\xi) - e_n \right) = 0,$$
+    as $T^{0i} = w \gamma^2 v^i$ vanishes outside the shock.
+    The total energy fluctuation of the fluid shell is therefore zero only if $\lambda$ includes the kinetic term.
+    Otherwise $\int dV \lambda \neq 0$, and $\lvert A(z) \rvert^2$ does not vanish as $z \to 0$,
+    which adds spurious power to the velocity and GW power spectra at low $z$
+    and shifts their peaks to lower $z$.
+    The difference is of the order of the kinetic energy fraction,
+    and is therefore significant for strong phase transitions.
+    """
+
+    #: $\lambda = (T^{00} - \bar{e}) / \bar{w}$ with $T^{00} = e + w \gamma^2 v^2$,
+    #: which conserves the energy of the fluid shell.
+    EXACT = "exact"
+    #: $\lambda = (e + w v^2 - \bar{e}) / \bar{w}$, the non-relativistic kinetic term of the versions of PTtools
+    #: before 2026-04, e.g. those used for :correia_2025:`\ ` and for computing the suppression datasets of
+    #: :gowling_2021:`\ `. It does not fully conserve energy when $\gamma^2 \gg 1$ in the fluid shell.
+    LEGACY = "legacy"
+    #: $\lambda = (e - \bar{e}) / \bar{w}$, the linearised energy density fluctuation of :gw_pt_ssm:`\ ` eq. 3.20,
+    #: which does not include the kinetic energy and therefore does not conserve energy.
+    NONE = "none"
+
+
+#: Default kinetic energy term of $\lambda$
+DEFAULT_LAMBDA_CORRECTION: LambdaCorrection = LambdaCorrection.EXACT
+
+
+@enum.unique
 class Method(enum.StrEnum):
     r"""Method for computing $\lvert A(z) \rvert^2$."""
 
@@ -53,7 +86,7 @@ def A2_e_conserving(
         z_st_thresh: float = const.Z_ST_THRESH,
         n_xi: int = const.DEFAULT_N_XI_SSM,
         parallel: bool = True,
-        lambda_correction: bool = False,
+        lambda_correction: LambdaCorrection = DEFAULT_LAMBDA_CORRECTION,
         exact_large_z: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
     Returns the value of $\lvert A(z) \rvert^2$.
@@ -71,14 +104,14 @@ def A2_e_conserving(
     :param z_st_thresh: limit above which to use approximate sin transform
     :param n_xi: Number of $\xi$ points for uniform resampling
     :param parallel: Whether to use multiple threads
-    :param lambda_correction: whether to enable a non-linear correction for $\lambda$
+    :param lambda_correction: kinetic energy term of $\lambda$, see :py:class:`LambdaCorrection`
     :param exact_large_z: for $z >$ z_st_thresh, use the exact transforms of the piecewise-linear profiles
         (:py:func:`pttools.ssm.sin_transform_exact.sound_shell_transforms_pl_parallel`)
         and the analytical $f'(z)$ instead of the approximate sine transform and finite differences
     :return: $\lvert A(z) \rvert^2, \frac{1}{2} f'(z)^2, \frac{1}{2}(c_s l(z))^2$ (same size as $z$)
     """
     #: $\lambda(z)$
-    lm = lam(v=v, w=w, e=e, non_linear_correction=lambda_correction)
+    lm = lam(v=v, w=w, e=e, correction=lambda_correction)
     _f_val, fp_val, l_val = f_fp_l(
         z=z, xi=xi, v=v, lam=lm, v_wall=v_wall, v_sh=v_sh, z_st_thresh=z_st_thresh, n_xi=n_xi,
         parallel=parallel, exact_large_z=exact_large_z)
@@ -221,36 +254,58 @@ def l(  # noqa: E743
 
 
 @njit(cache=True)
-def lam(
-        v: th.FloatArr,
-        w: th.FloatArr,
-        e: th.FloatArr,
+def lam[S: tuple[int, ...]](
+        v: th.FloatArrShaped[S],
+        w: th.FloatArrShaped[S],
+        e: th.FloatArrShaped[S],
         e_bar: float | None = None,
         w_bar: float | None = None,
-        non_linear_correction: bool = False) -> th.FloatArr:
+        correction: LambdaCorrection = DEFAULT_LAMBDA_CORRECTION) -> th.FloatArrShaped[S]:
     r"""$\lambda(x)$, energy fluctuation variable.
 
-    $$\lambda(x) = \frac{e(x) - \bar{e}}{\bar{w}}$$
-    :gw_pt_ssm:`\ ` eq. 3.20.
+    $$\lambda(x) = \frac{T^{00}(x) - \bar{e}}{\bar{w}}, \quad T^{00} = e + w \gamma^2 v^2,$$
+    which is the energy fluctuation variable of :gw_pt_ssm:`\ ` eq. 3.20 with the kinetic energy included,
+    so that the energy of the fluid shell is conserved, see :py:class:`LambdaCorrection`.
+    The kinetic term is given by :py:func:`lam_kinetic`.
 
     :param v: $v$
-    :param w: $w$
-    :param e: $e$
+    :param w: $w$, of the same shape as $v$
+    :param e: $e$, of the same shape as $v$
     :param e_bar: Mean energy density $\bar{e}$. If not given, assumed to be $\bar{e} = e_n$.
     :param w_bar: Mean enthalpy density $\bar{w}$. If not given, assumed to be $\bar{w} = w_n$.
-    :param non_linear_correction:
-        Enable a non-linear correction.
-        This is a remnant from Mark's old experiments and doesn't make much difference at small $\alpha_n$.
+    :param correction: kinetic energy term, see :py:class:`LambdaCorrection`
     """
-    if e_bar is None:
-        e_bar = e[-1]
-    if w_bar is None:
-        w_bar = w[-1]
+    e_ref = e[-1] if e_bar is None else e_bar
+    w_ref = w[-1] if w_bar is None else w_bar
     # A similar step is done in de_from_w_bag()
-    lm = (e - e_bar) / w_bar  # pyrefly: ignore[unsupported-operation]
-    if non_linear_correction:
-        lm += w * v * v / w_bar  # pyrefly: ignore[unsupported-operation]
-    return lm
+    return (e - e_ref) / w_ref + lam_kinetic(v=v, w=w, w_bar=w_ref, correction=correction)  # pyrefly: ignore[bad-return]
+
+
+@njit(cache=True)
+def lam_kinetic[S: tuple[int, ...]](
+        v: th.FloatArrShaped[S],
+        w: th.FloatArrShaped[S],
+        w_bar: float,
+        correction: LambdaCorrection = DEFAULT_LAMBDA_CORRECTION) -> th.FloatArrShaped[S]:
+    r"""Kinetic energy term of the energy fluctuation variable $\lambda$.
+
+    $$\frac{w \gamma^2 v^2}{\bar{w}}$$ for :py:attr:`LambdaCorrection.EXACT`,
+    $$\frac{w v^2}{\bar{w}}$$ for :py:attr:`LambdaCorrection.LEGACY`,
+    and 0 for :py:attr:`LambdaCorrection.NONE`.
+
+    :param v: $v$
+    :param w: $w$, of the same shape as $v$
+    :param w_bar: Mean enthalpy density $\bar{w}$
+    :param correction: kinetic energy term, see :py:class:`LambdaCorrection`
+    :return: the kinetic energy term, of the same shape as $v$
+    """
+    if correction == LambdaCorrection.EXACT.value:
+        return w * v * v / ((1 - v * v) * w_bar)  # pyrefly: ignore[bad-return]
+    if correction == LambdaCorrection.LEGACY.value:
+        return w * v * v / w_bar  # pyrefly: ignore[bad-return]
+    if correction == LambdaCorrection.NONE.value:
+        return np.zeros_like(w)  # pyrefly: ignore[bad-return]
+    raise ValueError("Unknown lambda correction")
 
 
 @njit(cache=True)

@@ -34,7 +34,7 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
         cls.spectra_lambda = []
         for bubble in cls.bubbles:
             spectrum = SSMSpectrum(bubble, compute=False)
-            spectrum.compute(lambda_correction=True)
+            spectrum.compute(lambda_correction=ssm.LambdaCorrection.LEGACY)
             cls.spectra_lambda.append(spectrum)
         cls.z = cls.spectra[0].y
 
@@ -83,14 +83,14 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
     def test_spec_den_v(self) -> None:
         """Test that the velocity spectral density agrees with the old bag model interface.
 
-        This test has lambda_correction=True,
+        This test uses the legacy kinetic energy term of lambda, LambdaCorrection.LEGACY,
         as disabling it would require a somewhat looser tolerance for some of the points.
         """
         old = np.array([
             ssm.spec_den_v_bag(
                 self.z,
                 (v_wall, alpha_n),
-                lambda_correction=True
+                lambda_correction=ssm.LambdaCorrection.LEGACY
             )
             for v_wall, alpha_n in zip(self.V_WALLS, self.ALPHA_NS, strict=False)
         ])
@@ -116,15 +116,15 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
     def test_gw(self) -> None:
         """Test that the GW power spectrum agrees with the old bag model interface.
 
-        This test has lambda_correction=True,
+        This test uses the legacy kinetic energy term of lambda, LambdaCorrection.LEGACY,
         as disabling it would require a somewhat looser tolerance for some of the points.
-        This may be either due to numerical differences, or lambda_correction might hide some other difference.
+        This may be either due to numerical differences, or the kinetic energy term might hide some other difference.
         """
         old = np.array([
             ssm.power_gw_bag(
                 self.z,
                 (v_wall, alpha_n),
-                lambda_correction=True
+                lambda_correction=ssm.LambdaCorrection.LEGACY
             ) * spectrum.source_lifetime_factor
             for v_wall, alpha_n, spectrum \
             in zip(self.V_WALLS, self.ALPHA_NS, self.spectra_lambda, strict=False)

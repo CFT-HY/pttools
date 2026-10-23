@@ -75,18 +75,18 @@ class SuppressionTest(unittest.TestCase):
     SUPPRESSION: tp.ClassVar[sup.Suppression] = sup.NO_HYBRIDS_EXT
     V_WALLS: tp.ClassVar[th.FloatArr1D] = np.array([0.4, 0.5, 0.6])
     ALPHA_NS: tp.ClassVar[th.FloatArr1D] = np.array([0.05, 0.1])
-    #: Reference values, computed after the datasets were recomputed with
-    #: the exact sine transforms of :py:func:`pttools.ssm.ssm.f_fp_l` for large $z$
+    #: Reference values, computed after the datasets were recomputed with the exact kinetic energy term of $\lambda$,
+    #: see :py:class:`pttools.ssm.ssm.LambdaCorrection`
     GRID_REF: tp.ClassVar[th.FloatArr2D] = np.array([
-        [0.23253673, 0.67716737, 0.97529562],
-        [0.19003867, 0.55461964, 0.74844373]
+        [0.22227116, 0.57665607, 0.81126707],
+        [0.1758075, 0.44854314, 0.58089745]
     ])
     #: A point outside the convex hull of the suppression points
     OUTSIDE_V_WALL: tp.ClassVar[float] = 0.95
     OUTSIDE_ALPHA_N: tp.ClassVar[float] = 0.9
     #: Reference value for the nearest-neighbour extrapolation, i.e. the data point
     #: ${v}_\text{wall} = 0.92, \alpha_n = 0.67$ of the dataset
-    OUTSIDE_REF: tp.ClassVar[float] = 0.6283162564122916
+    OUTSIDE_REF: tp.ClassVar[float] = 0.2757468422095489
 
     def test_grid(self) -> None:
         """Interpolating on a grid of points gives the reference values."""

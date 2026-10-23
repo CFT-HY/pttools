@@ -11,7 +11,7 @@ from pttools.ssm.pow_spec import pow_spec
 from pttools.ssm.spec_den_gw import spec_den_gw
 from pttools.ssm.spec_den_v import spec_den_v_core, spec_den_v_core_single
 from pttools.ssm.spectrum import DEFAULT_NUC_TYPE, NucType
-from pttools.ssm.ssm import DE_Method, Method
+from pttools.ssm.ssm import DEFAULT_LAMBDA_CORRECTION, DE_Method, LambdaCorrection, Method
 from pttools.ssm.ssm import T_tilde as T_tilde_func
 from pttools.ssm.ssm_bag import a2_e_conserving_bag_file, a2_ssm_func_bag
 import pttools.type_hints as th
@@ -53,7 +53,7 @@ def power_gw_bag(
         method: Method = Method.E_CONSERVING,
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH,
-        lambda_correction: bool = False,
+        lambda_correction: LambdaCorrection = DEFAULT_LAMBDA_CORRECTION,
         parallel: bool = True) -> th.FloatArr1D:
     r"""
     Scaled GW power spectrum at array of z = kR* values.
@@ -83,6 +83,7 @@ def power_gw_bag(
     :param params: physical parameters, see the description above
     :param npt: number of points
     :param filename: path to load A2 values from
+    :param lambda_correction: kinetic energy term of $\lambda$, see :py:class:`pttools.ssm.ssm.LambdaCorrection`
     :return: scaled GW power spectrum
     """
     if np.any(z <= 0.0):
@@ -153,7 +154,7 @@ def spec_den_v_bag(
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH,
         ubarf2: float = 1.,
-        lambda_correction: bool = False,
+        lambda_correction: LambdaCorrection = DEFAULT_LAMBDA_CORRECTION,
         parallel: bool = True) -> th.FloatArr1D:
     r"""
     Get dimensionless velocity spectral density $\tilde{P}_v$.
@@ -171,6 +172,7 @@ def spec_den_v_bag(
         nuc_type (string [exponential* | simultaneous]),
         nuc_args (tuple, default (1,))
     :param npt: number of points
+    :param lambda_correction: kinetic energy term of $\lambda$, see :py:class:`pttools.ssm.ssm.LambdaCorrection`
     :return: dimensionless velocity spectral density $\tilde{P}_v$
     """
     params = convert_params(params)

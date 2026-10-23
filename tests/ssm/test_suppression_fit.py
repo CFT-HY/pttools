@@ -133,14 +133,15 @@ class MergeTest(unittest.TestCase):
     def test_correia_values(self) -> None:
         r"""Reference values of the suppression factors fitted to the simulations of :correia_2025:`\ `.
 
-        These were computed on 2026-10-21 with the default settings of
+        These were computed on 2026-10-23 with the default settings of
         :py:mod:`pttools.lattice.suppression`,
-        after the exact sine transforms were taken into use for large $z$.
+        after the exact kinetic energy term of $\lambda$ was taken into use,
+        see :py:class:`pttools.ssm.ssm.LambdaCorrection`.
         Recompute the dataset if the SSM spectra change.
         """
         assert CHRW25.v_walls.tolist() == [0.92, 0.44]
         assert CHRW25.alpha_ns.tolist() == [0.67, 0.5]
-        np.testing.assert_allclose(CHRW25.suppressions, [0.33707, 0.012145], rtol=1e-4)
+        np.testing.assert_allclose(CHRW25.suppressions, [0.14942, 0.0099973], rtol=1e-4)
 
 
 if __name__ == "__main__":

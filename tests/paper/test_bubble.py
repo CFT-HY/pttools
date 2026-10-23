@@ -10,6 +10,7 @@ import numpy as np
 from pttools.math import assert_allclose
 from pttools.plot import save_fig
 from pttools.speedup import NUMBA_INTEGRATE
+from pttools.ssm import LambdaCorrection
 from tests.paper import ssm_paper_utils as spu
 from tests.utils.const import TEST_DATA_PATH, TEST_FIGURE_PATH
 
@@ -24,7 +25,7 @@ class TestBubble(unittest.TestCase):
     @staticmethod
     def test_bubble() -> None:
         """Test that the single-bubble power spectra of the paper match the reference data."""
-        figs, fig_ids, data = spu.do_all_plot_ps_1bubble(debug=True, lambda_correction=True)
+        figs, fig_ids, data = spu.do_all_plot_ps_1bubble(debug=True, lambda_correction=LambdaCorrection.LEGACY)
         for fig, fig_id in zip(figs, fig_ids, strict=False):
             save_fig(fig, FIG_PATH / f"bubble_{fig_id}", force_formats=True)
             plt.close(fig)

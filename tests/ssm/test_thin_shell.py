@@ -14,7 +14,7 @@ from pttools.bubble import Bubble
 from pttools.models.bag import BagModel
 from pttools.ssm.calculators import resample_merged_uniform_xi, resample_uniform_xi
 from pttools.ssm.sin_transform import sin_transform_core_single
-from pttools.ssm.ssm import f, l, lam
+from pttools.ssm.ssm import LambdaCorrection, f, l, lam
 import pttools.type_hints as th
 
 V_WALL: float = 0.95
@@ -48,8 +48,15 @@ class ThinShellTest(unittest.TestCase):
 
     @staticmethod
     def compute_transforms(bubble: Bubble) -> tuple[float, float, float, float]:
-        r"""The RMS of the approximate and exact transforms of $\lambda$ and $v$ for large $z$."""
-        lm = lam(v=bubble.v, w=bubble.w, e=bubble.e)
+        r"""The RMS of the approximate and exact transforms of $\lambda$ and $v$ for large $z$.
+
+        $\lambda$ is computed without its kinetic energy term (:py:attr:`pttools.ssm.ssm.LambdaCorrection.NONE`),
+        for which the tolerances of :py:meth:`test_approximation` have been set.
+        With the term, $\lambda$ is steeper behind the wall, and the error of the approximation is up to 47 %,
+        which exceeds the tolerance of 40 %.
+        The approximation is not used by default, see ``exact_large_z`` of :py:func:`pttools.ssm.ssm.f_fp_l`.
+        """
+        lm = lam(v=bubble.v, w=bubble.w, e=bubble.e, correction=LambdaCorrection.NONE)
         xi_exact, lam_exact = resample_uniform_xi(bubble.xi, lm, N_XI_EXACT)
         _, v_exact = resample_uniform_xi(bubble.xi, bubble.v, N_XI_EXACT)
         l_exact = 4 * np.pi / Z * sin_transform_core_single(t=xi_exact, f=xi_exact * lam_exact, freq=Z)

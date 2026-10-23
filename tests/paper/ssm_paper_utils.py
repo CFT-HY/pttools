@@ -20,6 +20,7 @@ from scipy.optimize import curve_fit
 from pttools import bubble, ssm
 from pttools.bubble import DEFAULT_ADIABATIC_INDEX
 from pttools.speedup import njit
+from pttools.ssm import LambdaCorrection
 import pttools.type_hints as th
 from tests.paper import const, plotting, utils
 import tests.paper.tex_utils as tu
@@ -426,7 +427,8 @@ def ps_from_ssm(
         nuc_args: bubble.NucArgs = (1.,),
         Np: th.IntArr1D = const.NP_ARR[-1],
         method: ssm.Method = ssm.Method.E_CONSERVING,
-        lambda_correction: bool = False) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
+        lambda_correction: LambdaCorrection = LambdaCorrection.NONE) -> \
+            tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     """Get velocity and GW power spectra from SSM."""
     nuc_string = nuc_type[0:3] + '_'
     for n in range(len(nuc_args)):
@@ -553,7 +555,7 @@ def plot_ps_1bubble(
         graph_file_type: str | None = None,
         Np: th.IntArr1D = const.NP_ARR[-1],
         debug: tp.Literal[False] = False,
-        lambda_correction: bool = False) -> plt.Figure: ...
+        lambda_correction: LambdaCorrection = LambdaCorrection.NONE) -> plt.Figure: ...
 
 
 @tp.overload
@@ -565,7 +567,7 @@ def plot_ps_1bubble(
         Np: th.IntArr1D = const.NP_ARR[-1],
         *,
         debug: tp.Literal[True],
-        lambda_correction: bool = False) -> tuple[plt.Figure, th.FloatArr2D]: ...
+        lambda_correction: LambdaCorrection = LambdaCorrection.NONE) -> tuple[plt.Figure, th.FloatArr2D]: ...
 
 
 def plot_ps_1bubble(
@@ -575,7 +577,7 @@ def plot_ps_1bubble(
         graph_file_type: str | None = None,
         Np: th.IntArr1D = const.NP_ARR[-1],
         debug: bool = False,
-        lambda_correction: bool = False) -> plt.Figure | tuple[plt.Figure, th.FloatArr2D]:
+        lambda_correction: LambdaCorrection = LambdaCorrection.NONE) -> plt.Figure | tuple[plt.Figure, th.FloatArr2D]:
     # Sphinx considers vertical lines as substitution references. Therefore the command \mid has to be used instead.
     r"""
     Plots power spectra predictions of 1 bubble.
@@ -635,7 +637,7 @@ def plot_ps_compare_nuc(
         save_id: str | None = None,
         graph_file_type: str | None = None,
         method: ssm.Method = ssm.Method.E_CONSERVING,
-        lambda_correction: bool = False) -> \
+        lambda_correction: LambdaCorrection = LambdaCorrection.NONE) -> \
             tuple[list[float], list[float], list[float], list[float]]:
     """
     Plots power spectra predictions of SSM with different nucleation models.
@@ -928,7 +930,7 @@ def plot_and_save(
 def do_all_plot_ps_compare_nuc(
         save_id: str | None = None,
         graph_file_type: str | None = None,
-        lambda_correction: bool = False) \
+        lambda_correction: LambdaCorrection = LambdaCorrection.NONE) \
         -> tuple[list[list[float]], list[list[float]], list[list[float]], list[list[float]], list[list[float]]]:
     """Plot the power spectra with different nucleation types for all the parameters and return the statistics."""
     Omgw_scaled_list: list[list[float]] = []
@@ -957,7 +959,7 @@ def do_all_plot_ps_1bubble(
         save_id: str | None = None,
         graph_file_type: str | None = None,
         debug: tp.Literal[False] = False,
-        lambda_correction: bool = False) -> tuple[list[plt.Figure], list[str]]: ...
+        lambda_correction: LambdaCorrection = LambdaCorrection.NONE) -> tuple[list[plt.Figure], list[str]]: ...
 
 
 @tp.overload
@@ -966,14 +968,15 @@ def do_all_plot_ps_1bubble(
         graph_file_type: str | None = None,
         *,
         debug: tp.Literal[True],
-        lambda_correction: bool = False) -> tuple[list[plt.Figure], list[str], th.FloatArr3D]: ...
+        lambda_correction: LambdaCorrection = LambdaCorrection.NONE) -> \
+            tuple[list[plt.Figure], list[str], th.FloatArr3D]: ...
 
 
 def do_all_plot_ps_1bubble(
         save_id: str | None = None,
         graph_file_type: str | None = None,
         debug: bool = False,
-        lambda_correction: bool = False) -> \
+        lambda_correction: LambdaCorrection = LambdaCorrection.NONE) -> \
             tuple[list[plt.Figure], list[str]] | \
             tuple[list[plt.Figure], list[str], th.FloatArr3D]:
     """Plot the single-bubble power spectra for weak and intermediate transitions with several wall speeds."""

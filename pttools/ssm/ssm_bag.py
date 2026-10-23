@@ -13,7 +13,7 @@ from pttools.speedup import njit
 from pttools.ssm import const
 from pttools.ssm.calculators import resample_merged_uniform_xi, resample_uniform_xi
 from pttools.ssm.sin_transform import sin_transform
-from pttools.ssm.ssm import DE_Method, Method, f_fp_l
+from pttools.ssm.ssm import DEFAULT_LAMBDA_CORRECTION, DE_Method, LambdaCorrection, Method, f_fp_l, lam_kinetic
 import pttools.type_hints as th
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ def a2_e_conserving_bag(
         v_ip: th.FloatArr1D = speedup.NAN_ARR,
         w_ip: th.FloatArr1D = speedup.NAN_ARR,
         xi: th.FloatArr1D = speedup.NAN_ARR,
-        lambda_correction: bool = False,
+        lambda_correction: LambdaCorrection = DEFAULT_LAMBDA_CORRECTION,
         parallel: bool = True,
         exact_large_z: bool = True) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
@@ -46,10 +46,11 @@ def a2_e_conserving_bag(
     :param df_dtau_ptr: pointer to the differential equation function
     :param ode_method: differential equation solver to be used
     :param cs2_ptr: pointer to the $c_s^2$ function
-    :param de_method: Note that 'standard' (e-conserving) method is only accurate to
-      linear order, meaning that there is an apparent $z^0$ piece at very low $z$,
-      and may exaggerate the GWs at low vw. ATM no other de_methods, but argument
-      allows trials.
+    :param de_method: Note that without the kinetic energy term of $\lambda$,
+      the 'standard' (e-conserving) method is only accurate to linear order,
+      meaning that there is an apparent $z^0$ piece at very low $z$,
+      see :py:class:`pttools.ssm.ssm.LambdaCorrection`. ATM no other de_methods, but argument allows trials.
+    :param lambda_correction: kinetic energy term of $\lambda$, see :py:class:`pttools.ssm.ssm.LambdaCorrection`
     :param exact_large_z: whether to use the exact transforms for large $z$, see :py:func:`pttools.ssm.ssm.f_fp_l`
     :return: $|A(z)|^2$, fp2_2, lam2
     """
@@ -71,9 +72,8 @@ def a2_e_conserving_bag(
             w_ip, xi, v_wall, alpha_n,
             df_dtau_ptr=df_dtau_ptr, ode_method=ode_method, cs2_ptr=cs2_ptr) / w_ip[-1]
 
-    # This doesn't make much difference at small alpha
-    if lambda_correction:
-        lam_orig += w_ip * v_ip * v_ip / w_ip[-1]
+    # The kinetic energy term is required for energy conservation, see LambdaCorrection.
+    lam_orig += lam_kinetic(v=v_ip, w=w_ip, w_bar=w_ip[-1], correction=lambda_correction)
 
     # f(z), f'(z) and l(z), see pttools.ssm.ssm.f_fp_l
     _f, v_ft, lam_ft = f_fp_l(
@@ -156,7 +156,7 @@ def a2_ssm_func_bag(
         method: Method = Method.E_CONSERVING,
         de_method: DE_Method = DE_Method.STANDARD,
         z_st_thresh: float = const.Z_ST_THRESH,
-        lambda_correction: bool = False,
+        lambda_correction: LambdaCorrection = DEFAULT_LAMBDA_CORRECTION,
         parallel: bool = True) -> th.FloatArr1D:
     r"""
     Returns the value of $|A(z)|^2$.
@@ -172,6 +172,7 @@ def a2_ssm_func_bag(
       methods ``f_only`` and ``with_g``.
     :param de_method: How energy density fluctuation feeds into GW ps.  See A2_ssm_e_conserving.
     :param z_st_thresh: wavenumber at which to switch sin_transform to its approximation.
+    :param lambda_correction: kinetic energy term of $\lambda$, see :py:class:`pttools.ssm.ssm.LambdaCorrection`
     :return: $|A(z)|^2$
     """
     if method == Method.E_CONSERVING.value:

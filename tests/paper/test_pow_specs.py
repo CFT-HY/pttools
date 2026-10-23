@@ -9,6 +9,7 @@ import numpy as np
 
 from pttools.math.assertions import assert_allclose
 from pttools.speedup import NUMBA_DISABLE_JIT, NUMBA_INTEGRATE_TOLERANCES
+from pttools.ssm import LambdaCorrection
 from tests.paper.ssm_paper_utils import do_all_plot_ps_compare_nuc, save_compare_nuc_data
 from tests.utils import TEST_DATA_PATH
 
@@ -29,7 +30,7 @@ def pow_specs(filename: str = "data_compare_nuc-test.txt") -> None:
     params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list = do_all_plot_ps_compare_nuc(
         save_id="final3",
         graph_file_type=None,
-        lambda_correction=True
+        lambda_correction=LambdaCorrection.LEGACY
     )
     save_compare_nuc_data(
         TEST_DATA_PATH / filename,

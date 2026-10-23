@@ -28,7 +28,7 @@ from pttools.ssm.pow_spec import pow_spec
 from pttools.ssm.scaling import H_star_eta_sh, H_star_eta_v_old, J
 from pttools.ssm.spec_den_gw import spec_den_gw_scaling
 from pttools.ssm.spectrum_base import SpectrumBase
-from pttools.ssm.ssm import ubarf2_from_a2
+from pttools.ssm.ssm import DEFAULT_LAMBDA_CORRECTION, LambdaCorrection, ubarf2_from_a2
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 import pttools.type_hints as th
 from pttools.type_hints import FloatArr, FloatArr1D
@@ -187,8 +187,8 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
         self.eps_lookup: float = const.DEFAULT_EPS_LOOKUP
         #: $a$, parameter of the bubble lifetime distribution
         self.lifetime_distribution_a: float = const.DEFAULT_LIFETIME_DISTRIBUTION_A
-        #: Whether the non-linear correction for $\lambda$ is enabled
-        self.lambda_correction: bool = False
+        #: Kinetic energy term of $\lambda$, see :py:class:`pttools.ssm.ssm.LambdaCorrection`
+        self.lambda_correction: LambdaCorrection = DEFAULT_LAMBDA_CORRECTION
         #: Results of :py:func:`pttools.ssm.compute.compute_base`, which do not depend on $r_*$,
         #: and are therefore reused by :py:meth:`with_params`
         self.base_res: SSMBaseResults | None = None
@@ -213,7 +213,7 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
             self,
             eps_lookup: float = const.DEFAULT_EPS_LOOKUP,
             lifetime_distribution_a: float = const.DEFAULT_LIFETIME_DISTRIBUTION_A,
-            lambda_correction: bool = False,
+            lambda_correction: LambdaCorrection = DEFAULT_LAMBDA_CORRECTION,
             parallel: bool = True) -> None:
         r"""Compute the velocity and GW spectra and the related quantities, and store them as attributes.
 
@@ -222,8 +222,7 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
         :param eps_lookup: small offset used when generating the lookup table of $z$ values for the GW spectrum
         :param lifetime_distribution_a: $a$, parameter of the bubble lifetime distribution,
             see :py:func:`pttools.ssm.nucleation.lifetime_distribution`
-        :param lambda_correction: whether to enable a non-linear correction for $\lambda$,
-            see :py:func:`pttools.ssm.ssm.A2_e_conserving`
+        :param lambda_correction: kinetic energy term of $\lambda$, see :py:class:`pttools.ssm.ssm.LambdaCorrection`
         :param parallel: whether to use multiple CPU cores
         """
         self._prepare_compute(
@@ -251,7 +250,11 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
             return False
         return bool(y.min() >= self.y.min() * (1 - rtol) and y.max() <= self.y.max() * (1 + rtol))
 
-    def _prepare_compute(self, eps_lookup: float, lifetime_distribution_a: float, lambda_correction: bool) -> None:
+    def _prepare_compute(
+            self,
+            eps_lookup: float,
+            lifetime_distribution_a: float,
+            lambda_correction: LambdaCorrection) -> None:
         """Store the arguments of :py:meth:`compute`, and compute the input values that require the bubble."""
         if not self.bubble.solved:
             self.bubble.solve()

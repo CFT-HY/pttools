@@ -24,6 +24,8 @@ import numpy as np
 from pttools.lattice.chrw25 import CHRW25_RUNS, load_chrw25_run
 from pttools.lattice.comparison import LatticeComparison
 from pttools.ssm.nucleation import NucType
+from pttools.ssm.spectrum import SSMSpectrum
+from pttools.ssm.suppression import SuppressionMethod
 from pttools.ssm.suppression.fit import SuppressionFitMethod
 from pttools.ssm.suppression.suppression_ssm_data import SUPPRESSION_FOLDER
 
@@ -51,7 +53,11 @@ def calc_sup_lattice(save: bool = True, path: Path = SUPPRESSION_FOLDER) -> dict
     }
     for name, meta in CHRW25_RUNS.items():
         run = load_chrw25_run(name)
-        ssm = run.ssm_spectrum(nuc_type=NucType.SIMULTANEOUS)
+        ssm = run.ssm_spectrum()
+        # The suppression factor with exponential nucleation is computed for comparison,
+        # although the simulations nucleate the bubbles simultaneously.
+        ssm_exponential = SSMSpectrum(
+            ssm.bubble, y=ssm.y, nuc_type=NucType.EXPONENTIAL, suppression_method=SuppressionMethod.NONE)
         spectrum = run.spectrum(meta.fig_step, meta.fig_step_prev)
         comparison = LatticeComparison(
             spectrum, ssm=ssm,
@@ -60,7 +66,7 @@ def calc_sup_lattice(save: bool = True, path: Path = SUPPRESSION_FOLDER) -> dict
             spectrum, ssm=ssm,
             method=SuppressionFitMethod.LOG_LSQ, y_min=Y_MIN)
         exponential = LatticeComparison(
-            spectrum, ssm=run.ssm_spectrum(nuc_type=NucType.EXPONENTIAL),
+            spectrum, ssm=ssm_exponential,
             method=SuppressionFitMethod.INTEGRAL, y_min=Y_MIN)
         fit = comparison.fit
         values = {

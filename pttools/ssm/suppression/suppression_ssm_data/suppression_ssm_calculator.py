@@ -11,6 +11,7 @@ from pttools.bubble import Bubble
 from pttools.models import BagModel
 from pttools.ssm.nucleation import NucType
 from pttools.ssm.spectrum import SSMSpectrum
+from pttools.ssm.ssm import DEFAULT_LAMBDA_CORRECTION, LambdaCorrection
 from pttools.ssm.suppression.suppression import SuppressionMethod
 from pttools.ssm.suppression.suppression_ssm_data import SUPPRESSION_FOLDER
 import pttools.type_hints as th
@@ -47,7 +48,7 @@ def calc_sup_ssm(
         path: str | os.PathLike[str],
         save: bool = True,
         nuc_type: NucType = NucType.EXPONENTIAL,
-        lambda_correction: bool = False,
+        lambda_correction: LambdaCorrection = DEFAULT_LAMBDA_CORRECTION,
         z: th.FloatArr1D = DEFAULT_Z,
         **kwargs: tp.Any) -> dict[str, th.FloatArr1DOrList]:
     r"""Compute the kinetic energy suppression factors of the SSM by comparing to the simulation data in a file.
@@ -72,8 +73,8 @@ def calc_sup_ssm(
     :param path: path of the simulation data file, relative to the folder of the suppression data
     :param save: whether to save the results as ``<name>_ssm.txt`` next to the simulation data file
     :param nuc_type: nucleation type of the SSM spectra
-    :param lambda_correction: whether to enable the non-linear correction of $\lambda$,
-        see :py:meth:`pttools.ssm.spectrum.SSMSpectrum.compute`
+    :param lambda_correction: kinetic energy term of $\lambda$, see :py:class:`pttools.ssm.ssm.LambdaCorrection`
+        and :py:meth:`pttools.ssm.spectrum.SSMSpectrum.compute`
     :param z: $z = kR_*$ points over which the GW power growth rate is integrated
     :param kwargs: additional arguments for :py:class:`pttools.ssm.spectrum.SSMSpectrum`
     :return: the results, where ``vw_sim``, ``alpha_sim`` and ``sup_ssm`` form the suppression dataset

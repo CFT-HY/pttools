@@ -32,7 +32,23 @@ Note that a ``# type: ignore[...]`` comment would silence *all* the errors on it
 since Pyrefly does not recognise the error codes of Mypy,
 whereas ``# pyrefly: ignore[bad-return]`` silences only the return type error.
 
-There are two exceptions to this pattern:
+Similarly, functions whose array arguments must have the same shape,
+e.g. as they are combined elementwise, can declare it with a type parameter for the shape
+and the generic type alias :py:data:`FloatArrShaped`:
+
+.. code-block:: python
+
+    @njit
+    def lam_kinetic[S: tuple[int, ...]](
+            v: FloatArrShaped[S], w: FloatArrShaped[S], w_bar: float) -> FloatArrShaped[S]:
+        return w * v * v / ((1 - v * v) * w_bar)  # pyrefly: ignore[bad-return]
+
+The type checker then solves ``S`` as the shape of the arguments,
+e.g. ``tuple[int]`` for :py:data:`FloatArr1D`, and gives the return value the same shape.
+The shapes of the results of NumPy arithmetic are not tracked by the type stubs of NumPy,
+and therefore the return values have to be marked with a ``# pyrefly: ignore[bad-return]`` comment as above.
+
+There are two exceptions to the pattern of ``T: FloatOrArr``:
 
 - Pyrefly is currently unable to verify overrides of methods that have a ``T | float`` argument,
   so for the methods of the :py:class:`pttools.models.model.Model` classes
@@ -103,6 +119,9 @@ type FloatArr1DOrList = FloatArr1D | list[float]
 type FloatArr2D = np.ndarray[tuple[int, int], Float64]
 type FloatArr3D = np.ndarray[tuple[int, int, int], Float64]
 type FloatArr4D = np.ndarray[tuple[int, int, int, int], Float64]
+#: Numpy array of floats with the shape ``S``, e.g. ``FloatArrShaped[tuple[int]]`` is :py:data:`FloatArr1D`.
+#: This is used with a type parameter for arrays that must have the same shape, see the module docstring.
+type FloatArrShaped[S: tuple[int, ...]] = np.ndarray[S, Float64]
 # Float list or a Numpy array
 # FloatListOrArr = list[tp.Union[float, Float64] | np.ndarray
 #: Float or a Numpy array of floats

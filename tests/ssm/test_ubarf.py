@@ -9,7 +9,7 @@ import numpy as np
 from pttools.bubble import Bubble
 from pttools.math import assert_allclose
 from pttools.models.bag import BagModel
-from pttools.ssm import NucType, SSMSpectrum
+from pttools.ssm import LambdaCorrection, NucType, SSMSpectrum
 import pttools.type_hints as th
 
 #: :gw_pt_ssm:`\ ` table 1
@@ -52,7 +52,8 @@ class UbarfTest(unittest.TestCase):
         ]
         cls.spectra = [SSMSpectrum(bubble, compute=False) for bubble in cls.bubbles]
         for spectrum in cls.spectra:
-            spectrum.compute(lambda_correction=True)
+            # The reference values were computed with the legacy kinetic energy term of lambda.
+            spectrum.compute(lambda_correction=LambdaCorrection.LEGACY)
 
     def test_ubarf_1d(self) -> None:
         r"""Test $\bar{U}_f$ of the bubbles against the 1D values of :gw_pt_ssm:`\ ` table 1."""
