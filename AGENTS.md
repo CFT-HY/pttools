@@ -125,6 +125,11 @@ You may `git clone` these with SSH in the same parent directory as PTtools.
     If there are no uncommitted changes in the relevant files or other active sessions editing the code,
     you may edit the cloned repository directly. PTPlot is maintained by the same authors as PTtools,
     and therefore backwards-incompatible changes in the PTtools public API are OK.
+    However, PTPlot uses PTtools from a pinned commit.
+    Therefore, any changes in PTPlot that would not pass its lint or tests without updating its PTtools
+    should either be postponed until the pin has been updated first (as updating the pin requires approval from the user),
+    or should be performed in a separate worktree with PTtools pointed to this version of the repository.
+    In case of postponing the PTPlot changes, provide the user with a summary of what should or could be changed in PTPlot.
 - [PhD research of Mika Mäki](https://github.com/AgenttiX/phd-research): `../phd-research` (private)
   - Relevant articles are available at `../phd-research/literature/`
 - Legacy PTtools-related repositories by Mark Hindmarsh & Chloe Gowling (private)
