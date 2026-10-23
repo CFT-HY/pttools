@@ -85,7 +85,7 @@
   If there are no such unit tests yet, create them. Use the existing output of the code as a reference,
   and also reference values from the literature, if there are any.
 - If you change any of the physics, inform the user explicitly and exactly what has been changed and why.
-- PTtools is used by PTPlot, which may be available at `../PTPlot`.
+- When changing the physics beyond bug fixes, add an argument for switching to the old behaviour, if feasible.
 
 ## Description of PTtools
 PTtools is a library for computing the gravitational wave spectra of first-order cosmological phase transitions.
@@ -117,3 +117,28 @@ To avoid circular dependencies, each sub-package in `pttools` should depend only
 `utils`, `speedup`, `math`, `bubble`, `models`, `ssm`, `omgw0`, `lattice`, `export`, `analysis`, `plot`, `docs`.
 Scripts in `./docs/fig/` and `./tests/test_examples.py` import from `examples`, and some scripts in `examples` import from `tests`.
 This is not an issue, since the `__init__.py` files in `docs.fig`, `examples` and `tests` don't import the package contents.
+
+## Related repositories
+You may `git clone` these with SSH in the same parent directory as PTtools.
+- [PTPlot](https://github.com/CFT-HY/PTPlot): `../PTPlot`, plotting software that uses PTtools. (public)
+  - When updating the PTtools public API, check whether PTPlot needs to be updated as well.
+    If there are no uncommitted changes in the relevant files or other active sessions editing the code,
+    you may edit the cloned repository directly. PTPlot is maintained by the same authors as PTtools,
+    and therefore backwards-incompatible changes in the PTtools public API are OK.
+- [PhD research of Mika Mäki](https://github.com/AgenttiX/phd-research): `../phd-research` (private)
+  - Relevant articles are available at `../phd-research/literature/`
+- Legacy PTtools-related repositories by Mark Hindmarsh & Chloe Gowling (private)
+  - [fisher_analysis](https://bitbucket.org/cgowling/fisher_analysis): `../fisher_analysis`
+    - Gowling & Hindmarsh (2021), "Observational prospects for phase transitions at LISA: Fisher matrix analysis" (Gowling:2021gcy, 2106.05984)
+  - [gw_data_tools](https://bitbucket.org/cgowling/gw_data_tools): `../gw_data_tools`
+  - [MCMC SSM](https://bitbucket.org/cgowling/mcmc_ssm): `../MCMC_SSM`
+  - [MCMC SSM 2.0](https://bitbucket.org/cgowling/mcmc_ssm_2_0): `../MCMC_SSM_2_0`
+  - [PTtools Omgw0 addons](https://bitbucket.org/cgowling/pttools_omgw0_addons): `../pttools_omgw0_addons`
+    - The precursor of the `pttools.omgw0` module
+  - [sound-shell-model](https://bitbucket.org/hindmars/sound-shell-model): `../sound-shell-model`
+    - The precursor of the `tests.paper` module
+    - Hindmarsh (2018), "Sound Shell Model for Acoustic Gravitational Wave Production at a First-Order Phase Transition in the Early Universe" (Hindmarsh:2016lnk, 1608.04735)
+    - Hindmarsh & Hijazi (2019), "Gravitational waves from first order cosmological phase transitions in the Sound Shell Model" (Hindmarsh:2019phv, 1909.10040)
+- Correia et al. (2025), "Gravitational waves from strong first-order phase transitions" (Correia:2025qif, 2505.17824)
+  - [Hydro_plot](https://github.com/jrcccc/Hydro_plot): `../Hydro_plot`, another version of the plotting code (private)
+  - [UETC_paper_Hydro](https://github.com/jrcccc/UETC_paper_Hydro): `../UETC_paper_Hydro`, the code and data used in the article (private)
