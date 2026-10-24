@@ -92,7 +92,9 @@ class ThermoBagTestLectureNotes(RefLectureNotes, ThermoBagTest, unittest.TestCas
             ubarfs[i] = np.sqrt(thermo_bag.get_ubarf2_bag(
                 v_wall=self.V_WALLS[i], alpha_n=self.ALPHA_NS[i],
                 df_dtau_ptr=DF_DTAU_PTR_BAG,
-                ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR))
+                ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR,
+                # The reference values have been computed with w_bar = w_n.
+                wn_as_w_bar=True))
         assert_allclose(ubarfs, self.UBARF_REF, rtol=2.7e-3)
 
     def test_ubarf2_new_bag(self) -> None:

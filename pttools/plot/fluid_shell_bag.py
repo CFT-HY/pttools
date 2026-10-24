@@ -14,7 +14,8 @@ def plot_fluid_shell_bag(  # noqa: PLR0915
         Np: int = const.DEFAULT_N_XI,
         low_v_approx: bool = False,
         high_v_approx: bool = False,
-        draw: bool | None = None) \
+        draw: bool | None = None,
+        wn_as_w_bar: bool = False) \
         -> tuple[plt.Figure, fluid_bag.SoundShellDict]:
     r"""Plot the fluid shell of a bag model bubble.
 
@@ -44,6 +45,8 @@ def plot_fluid_shell_bag(  # noqa: PLR0915
     :param draw: whether to actually fill the figure with data.
         This is used to disable drawing on systems that don't have LaTeX installed,
         such as the unit testing environment.
+    :param wn_as_w_bar: whether to approximate the average enthalpy density $\bar{w}$ of $\bar{U}_f^2$ as $w_n$,
+        as in the legacy code, e.g. for comparing with old reference data
     :return: figure, dict of generated params
     """
     if draw is None:
@@ -54,7 +57,8 @@ def plot_fluid_shell_bag(  # noqa: PLR0915
         alpha_n=alpha_n,
         n_xi=Np,
         low_v_approx=low_v_approx,
-        high_v_approx=high_v_approx
+        high_v_approx=high_v_approx,
+        wn_as_w_bar=wn_as_w_bar
     )
     alpha_plus = params["alpha_plus"]
     dw = params["dw"]

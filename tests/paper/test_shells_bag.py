@@ -35,7 +35,8 @@ class TestShellsBag(unittest.TestCase):
 
     def test_fluid_shell(self) -> None:
         """Test that the sound shell parameters of a single bag model bubble match the reference data."""
-        params_all = bubble.sound_shell_dict(v_wall=0.7, alpha_n=0.052)
+        # The reference data has been computed with w_bar = w_n.
+        params_all = bubble.sound_shell_dict(v_wall=0.7, alpha_n=0.052, wn_as_w_bar=True)
         # These are not yet in the reference data
         excluded = {"sol_type", "xi_even", "v_approx", "w_approx"}
         params = {name: value for name, value in params_all.items() if name not in excluded}
@@ -79,8 +80,9 @@ class TestShellsBag(unittest.TestCase):
         alpha_weak_list = len(vw_weak_list) * [alpha_weak]
         alpha_inter_list = len(vw_inter_list) * [alpha_inter]
 
-        fig_weak, data_weak = plot_fluid_shells_bag(vw_weak_list, alpha_weak_list, debug=True)
-        fig_inter, data_inter = plot_fluid_shells_bag(vw_inter_list, alpha_inter_list, debug=True)
+        # The reference data has been computed with w_bar = w_n.
+        fig_weak, data_weak = plot_fluid_shells_bag(vw_weak_list, alpha_weak_list, debug=True, wn_as_w_bar=True)
+        fig_inter, data_inter = plot_fluid_shells_bag(vw_inter_list, alpha_inter_list, debug=True, wn_as_w_bar=True)
 
         vw_list_esp = np.array([0.5, 0.7, 0.77])
         alpha_plus_list_esp = [0.263, 0.052, 0.091]
@@ -92,7 +94,8 @@ class TestShellsBag(unittest.TestCase):
             for vw, ap in zip(vw_list_esp, alpha_plus_list_esp, strict=False)
         ]
 
-        fig_esp, data_esp = plot_fluid_shells_bag(vw_list_esp, alpha_n_list_esp, multi=True, debug=True)
+        fig_esp, data_esp = plot_fluid_shells_bag(
+            vw_list_esp, alpha_n_list_esp, multi=True, debug=True, wn_as_w_bar=True)
 
         for fig, name in zip([fig_weak, fig_inter, fig_esp], ["weak", "inter", "esp"], strict=False):
             save_fig(fig, FIG_PATH / name)

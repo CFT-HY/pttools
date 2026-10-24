@@ -1,5 +1,6 @@
 """Test the generation of data tables for the paper."""
 
+import functools
 import io
 import typing as tp
 import unittest
@@ -51,7 +52,8 @@ class TestTables(unittest.TestCase):
         """Test the table comparing the RMS fluid velocities of the SSM to those of single 1D bubbles."""
         self.validate(
             "table_1dh_compare.tex",
-            spu.make_1dh_compare_table,
+            # The values of the article have been computed with w_bar = w_n.
+            functools.partial(spu.make_1dh_compare_table, wn_as_w_bar=True),
             [self.params, self.v2])
 
     def test_3dh_compare_table(self) -> None:

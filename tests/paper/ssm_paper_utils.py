@@ -171,8 +171,16 @@ def add_ssm_fit(f_gw: plt.Figure, y: th.FloatArr1D, pow_gw: th.FloatArr1D) -> Fi
 def make_1dh_compare_table(
         params_list: th.FloatArr2D,
         v2_list: th.FloatArr2D,
-        file_name: str | os.PathLike[str] | io.TextIOBase = 'table_1dh_compare.tex') -> None:
-    r"""Write a LaTeX table comparing $\bar{U}_f$ with simultaneous and exponential nucleation to a single 1D bubble."""
+        file_name: str | os.PathLike[str] | io.TextIOBase = 'table_1dh_compare.tex',
+        wn_as_w_bar: bool = False) -> None:
+    r"""Write a LaTeX table comparing $\bar{U}_f$ with simultaneous and exponential nucleation to a single 1D bubble.
+
+    :param params_list: $\alpha$ and $v_\text{wall}$ of each row
+    :param v2_list: $\bar{U}_f^2$ with simultaneous and exponential nucleation of each row
+    :param file_name: path of the output file, or a text buffer
+    :param wn_as_w_bar: whether to approximate the average enthalpy density $\bar{w}$ of the single 1D bubble
+        as $w_n$, as in the legacy code and in :gw_pt_ssm:`\ ` table 1, e.g. for comparing with old reference data
+    """
     f = file_name if isinstance(file_name, io.TextIOBase) else Path(file_name).open("w")  # noqa: SIM115
     f.write('\\begin{tabular}{cc | rrr }\n')
 
@@ -192,7 +200,8 @@ def make_1dh_compare_table(
         v2_exp = v2_list[n][1]
         Ubarf_1d_ssm = np.sqrt(bubble.get_ubarf2_bag(
             vw, alpha, df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,
-            ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=bubble.CS2_BAG_SCALAR_PTR))
+            ode_method=bubble.DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=bubble.CS2_BAG_SCALAR_PTR,
+            wn_as_w_bar=wn_as_w_bar))
 
         f.write(tu.tex_sf(100*alpha) + ' & ')
         f.write(f'{vw:.2f} & ')

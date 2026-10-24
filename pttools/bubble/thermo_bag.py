@@ -15,7 +15,7 @@ from pttools.bubble.integrate import DEFAULT_FLUID_INTEGRATE_METHOD, DF_DTAU_PTR
 from pttools.bubble.phase import Phase
 from pttools.bubble.props import find_phase_core
 from pttools.bubble.solution_type_bag import SolutionType, identify_solution_type_bag
-from pttools.bubble.thermo import kinetic_energy_density, mean_enthalpy_change, ubarf2
+from pttools.bubble.thermo import kinetic_energy_density, mean_enthalpy_change, ubarf2, w_bar
 from pttools.speedup.jit import njit, njit_parallel_pair
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr, FloatOrArr1D
@@ -147,7 +147,8 @@ def get_kappa_bag[T: FloatOrArr](
                 vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG,
                 ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR, n_xi=n_xi)
 
-            kappa[...] = ubarf2(v, w, xi, vw, w_bar=w[-1]) / (0.75 * alpha_n)
+            # kappa = e_K / |Delta e_theta|, where |Delta e_theta| = epsilon = 3/4 alpha_n w_n for the bag model
+            kappa[...] = kinetic_energy_density(v, w, xi, vw) / (0.75 * alpha_n * w[-1])
         else:
             kappa[...] = np.nan
         if verbosity > 0:
@@ -195,8 +196,8 @@ def get_kappa_de_bag[T: FloatOrArr](
             v, w, xi = fluid_bag.sound_shell_bag(
                 vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG,
                 ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR, n_xi=n_xi)
-            # Esp+ epsilon is alpha_n * 0.75*w_n
-            kappa[...] = ubarf2(v, w, xi, vw, w_bar=w[-1]) / (0.75 * alpha_n)
+            # kappa = e_K / |Delta e_theta|, where |Delta e_theta| = epsilon = 3/4 alpha_n w_n for the bag model
+            kappa[...] = kinetic_energy_density(v, w, xi, vw) / (0.75 * alpha_n * w[-1])
             de[...] = mean_energy_change_bag(v, w, xi, vw, alpha_n)
         else:
             kappa[...] = np.nan
@@ -249,8 +250,8 @@ def get_kappa_dq_bag[T: FloatOrArr](
             v, w, xi = fluid_bag.sound_shell_bag(
                 vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG,
                 ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR, n_xi=n_xi)
-            # Esp+ epsilon is alpha_n * 0.75*w_n
-            kappa[...] = ubarf2(v, w, xi, vw, w_bar=w[-1]) / (0.75 * alpha_n)
+            # kappa = e_K / |Delta e_theta|, where |Delta e_theta| = epsilon = 3/4 alpha_n w_n for the bag model
+            kappa[...] = kinetic_energy_density(v, w, xi, vw) / (0.75 * alpha_n * w[-1])
             dq[...] = 0.75 * mean_enthalpy_change(v, w, xi, vw) / (0.75 * alpha_n * w[-1])
         else:
             kappa[...] = np.nan
@@ -301,8 +302,8 @@ def get_ke_de_frac_bag[T: FloatOrArr](
             v, w, xi = fluid_bag.sound_shell_bag(
                 vw, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG,
                 ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR, n_xi=n_xi)
-            # Esp+ epsilon is alpha_n * 0.75*w_n
-            ke[...] = ubarf2(v, w, xi, vw, w_bar=w[-1]) / (0.75 * (1 + alpha_n))
+            # K = e_K / e_n, where e_n = 3/4 (1 + alpha_n) w_n for the bag model with theta_b = 0
+            ke[...] = kinetic_energy_density(v, w, xi, vw) / (0.75 * (1 + alpha_n) * w[-1])
             de[...] = mean_energy_change_bag(v, w, xi, vw, alpha_n) / (0.75 * w[-1] * (1 + alpha_n))
         else:
             ke[...] = np.nan
@@ -338,9 +339,10 @@ def get_ke_frac_bag[T: FloatOrArr](v_wall: T, alpha_n: float, n_xi: int = const.
     :param n_xi: number of $\xi$ points
     :return: kinetic energy fraction
     """
+    # With w_bar = w_n, ubarf2 = e_K / w_n, and therefore K = e_K / e_n = ubarf2 / (3/4 (1 + alpha_n)) exactly.
     ubarf2 = get_ubarf2_bag(
         v_wall, alpha_n, df_dtau_ptr=DF_DTAU_PTR_BAG,
-        ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR, n_xi=n_xi)
+        ode_method=DEFAULT_FLUID_INTEGRATE_METHOD, cs2_ptr=CS2_BAG_SCALAR_PTR, n_xi=n_xi, wn_as_w_bar=True)
     return ubarf2 / (0.75 * (1 + alpha_n))  # pyrefly: ignore[bad-return]
 
 
@@ -401,7 +403,8 @@ def _get_ubarf2_bag_scalar(
         cs2_ptr: th.CS2FunScalarPtr,
         n_xi: int = const.DEFAULT_N_XI,
         verbosity: int = 0,
-        parallel: bool = True) -> float:
+        parallel: bool = True,
+        wn_as_w_bar: bool = False) -> float:
     # The v_wall annotation has to be identical to that of the overload typing function,
     # but only scalars and 0-dimensional arrays can end up here.
     if identify_solution_type_bag(
@@ -413,7 +416,8 @@ def _get_ubarf2_bag_scalar(
         v, w, xi = fluid_bag.sound_shell_bag(
             v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr,
             ode_method=ode_method, cs2_ptr=cs2_ptr, n_xi=n_xi)
-        ub2 = ubarf2(v, w, xi, v_wall, w_bar=w[-1])  # pyrefly: ignore[bad-argument-type]
+        w_bar_value = w[-1] if wn_as_w_bar else w_bar(w, xi, v_wall)  # pyrefly: ignore[bad-argument-type]
+        ub2 = ubarf2(v, w, xi, v_wall, w_bar=w_bar_value)  # pyrefly: ignore[bad-argument-type]
 
     if verbosity > 0:
         with numba.objmode:
@@ -434,12 +438,13 @@ def _get_ubarf2_bag_arr(
         ode_method: FluidIntegrateMethod,
         cs2_ptr: th.CS2FunScalarPtr,
         n_xi: int = const.DEFAULT_N_XI,
-        verbosity: int = 0) -> th.FloatArr1D:
+        verbosity: int = 0,
+        wn_as_w_bar: bool = False) -> th.FloatArr1D:
     ubarf2 = np.zeros_like(v_wall)
     for i in numba.prange(v_wall.size):
         ubarf2[i] = _get_ubarf2_bag_scalar_numba(
             v_wall[i], alpha_n, df_dtau_ptr=df_dtau_ptr,
-            ode_method=ode_method, cs2_ptr=cs2_ptr, n_xi=n_xi, verbosity=verbosity)
+            ode_method=ode_method, cs2_ptr=cs2_ptr, n_xi=n_xi, verbosity=verbosity, wn_as_w_bar=wn_as_w_bar)
     return ubarf2
 
 _get_ubarf2_bag_arr_parallel, _get_ubarf2_bag_arr_single = njit_parallel_pair(_get_ubarf2_bag_arr, nogil=True)
@@ -453,14 +458,15 @@ def _get_ubarf2_bag_arr_wrapper(
         cs2_ptr: th.CS2FunScalarPtr,
         n_xi: int = const.DEFAULT_N_XI,
         verbosity: int = 0,
-        parallel: bool = True) -> th.FloatArr1D:
+        parallel: bool = True,
+        wn_as_w_bar: bool = False) -> th.FloatArr1D:
     if parallel:
         return _get_ubarf2_bag_arr_parallel(
             v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr,
-            ode_method=ode_method, cs2_ptr=cs2_ptr, n_xi=n_xi, verbosity=verbosity)
+            ode_method=ode_method, cs2_ptr=cs2_ptr, n_xi=n_xi, verbosity=verbosity, wn_as_w_bar=wn_as_w_bar)
     return _get_ubarf2_bag_arr_single(
         v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr,
-        ode_method=ode_method, cs2_ptr=cs2_ptr, n_xi=n_xi, verbosity=verbosity)
+        ode_method=ode_method, cs2_ptr=cs2_ptr, n_xi=n_xi, verbosity=verbosity, wn_as_w_bar=wn_as_w_bar)
 
 
 def get_ubarf2_bag[T: FloatOrArr1D](
@@ -471,9 +477,16 @@ def get_ubarf2_bag[T: FloatOrArr1D](
         cs2_ptr: th.CS2FunScalarPtr,
         n_xi: int = const.DEFAULT_N_XI,
         verbosity: int = 0,
-        parallel: bool = True) -> T:
+        parallel: bool = True,
+        wn_as_w_bar: bool = False) -> T:
     r"""
-    Get mean square fluid velocity from $v_\text{wall}$ and $\alpha_n$.
+    Get the mean square fluid velocity $\bar{U}_f^2$ from $v_\text{wall}$ and $\alpha_n$.
+
+    $$\bar{U}_f^2 = \frac{3}{4\pi \bar{w} {v}_\text{wall}^3} {e}_K$$
+    :gw_pt_ssm:`\ ` eq. B.30, with the average enthalpy density $\bar{w}$ of :py:func:`pttools.bubble.thermo.w_bar`,
+    as in :py:attr:`pttools.bubble.bubble.Bubble.ubarf2`.
+    With ``wn_as_w_bar=True``, the legacy approximation $\bar{w} = w_n$ is used instead,
+    as in :gw_pt_ssm:`\ ` table 1.
 
     :param v_wall: $v_\text{wall}$
     :param alpha_n: $\alpha_n$
@@ -483,16 +496,17 @@ def get_ubarf2_bag[T: FloatOrArr1D](
     :param n_xi: number of $\xi$ points
     :param verbosity: logging verbosity
     :param parallel: whether to compute the values for the elements of an array with multiple threads
+    :param wn_as_w_bar: whether to approximate $\bar{w}$ as $w_n$, e.g. for comparing with old reference data
     :return: mean square fluid velocity
     """
     if isinstance(v_wall, float):
         return _get_ubarf2_bag_scalar(  # pyrefly: ignore[bad-return]
             v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr,
-            ode_method=ode_method, cs2_ptr=cs2_ptr, n_xi=n_xi, verbosity=verbosity)
+            ode_method=ode_method, cs2_ptr=cs2_ptr, n_xi=n_xi, verbosity=verbosity, wn_as_w_bar=wn_as_w_bar)
     if isinstance(v_wall, np.ndarray):
         return _get_ubarf2_bag_arr(  # pyrefly: ignore[bad-return]
             v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr,
-            ode_method=ode_method, cs2_ptr=cs2_ptr, n_xi=n_xi, verbosity=verbosity)
+            ode_method=ode_method, cs2_ptr=cs2_ptr, n_xi=n_xi, verbosity=verbosity, wn_as_w_bar=wn_as_w_bar)
     raise TypeError(f"Unknown type for v_wall: {type(v_wall)}")
 
 
@@ -507,7 +521,8 @@ def _get_ubarf2_bag_numba(
         cs2_ptr: th.CS2FunScalarPtr,
         n_xi: int = const.DEFAULT_N_XI,
         verbosity: int = 0,
-        parallel: bool = True) -> th.NumbaFunc:
+        parallel: bool = True,
+        wn_as_w_bar: bool = False) -> th.NumbaFunc:
     if isinstance(v_wall, numba.types.Float):
         return _get_ubarf2_bag_scalar
     if isinstance(v_wall, numba.types.Array):
@@ -523,7 +538,14 @@ def get_ubarf2_new_bag[T: FloatOrArr](
         n_xi: int = const.DEFAULT_N_XI,
         verbosity: int = 0) -> T:
     r"""
-    Get mean square fluid velocity from $v_\text{wall}$ and $\alpha_n$.
+    Get the mean square fluid velocity $\bar{U}_f^2$ from $v_\text{wall}$ and $\alpha_n$.
+
+    This is computed as $\bar{U}_f^2 = K / \Gamma$ (:gw_pt_ssm:`\ ` eq. B.32)
+    with the adiabatic index $\Gamma = \frac{4}{3}$ of the broken phase of the bag model.
+    This corresponds to $\bar{w} = \frac{4}{3} \bar{e} = (1 + \alpha_n) w_n$ in
+    :gw_pt_ssm:`\ ` eq. B.30, which neglects the kinetic energy in the average enthalpy density.
+    It therefore differs from :py:func:`get_ubarf2_bag` and :py:attr:`pttools.bubble.bubble.Bubble.ubarf2`,
+    which use the average enthalpy density $\bar{w}$ of :py:func:`pttools.bubble.thermo.w_bar`.
 
     :param v_wall: $v_\text{wall}$
     :param alpha_n: $\alpha_n$

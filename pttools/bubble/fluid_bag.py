@@ -257,7 +257,9 @@ class SoundShellDict(tp.TypedDict):
     r: float
     #: $\alpha_+$
     alpha_plus: float
-    #: $\bar{U}_f^2$
+    #: $\bar{U}_f^2$, see :py:func:`pttools.bubble.thermo.ubarf2`.
+    #: This is computed with the average enthalpy density $\bar{w}$ of :py:func:`pttools.bubble.thermo.w_bar`,
+    #: or with the legacy approximation $\bar{w} = w_n$ if ``wn_as_w_bar=True`` is given to :py:func:`sound_shell_dict`.
     ubarf2: float
     #: Kinetic energy fraction of the total
     ke_frac: float
@@ -274,7 +276,8 @@ def sound_shell_dict(
         alpha_n: float,
         n_xi: int = const.DEFAULT_N_XI,
         low_v_approx: bool = False,
-        high_v_approx: bool = False) -> SoundShellDict:
+        high_v_approx: bool = False,
+        wn_as_w_bar: bool = False) -> SoundShellDict:
     r"""Solve the fluid shell profile in the Bag Model, and compute quantities derived from it.
 
     :param v_wall: $v_\text{wall}$, wall speed
@@ -282,6 +285,8 @@ def sound_shell_dict(
     :param n_xi: number of $\xi$ points
     :param low_v_approx: whether to compute the low $\alpha_+$ approximations of $v(\xi)$ and $w(\xi)$
     :param high_v_approx: whether to compute the high $\alpha_+$ approximations of $v(\xi)$ and $w(\xi)$
+    :param wn_as_w_bar: whether to approximate the average enthalpy density $\bar{w}$ of $\bar{U}_f^2$ as $w_n$,
+        as in the legacy code, e.g. for comparing with old reference data
     :return: the fluid shell profile and the derived quantities
     :raises ValueError: if both approximations are enabled
     :raises RuntimeError: if no solution is found for the given parameters
@@ -317,11 +322,13 @@ def sound_shell_dict(
     r = w[n_wall + 1] / w[n_wall] if sol_type == SolutionType.DETON else w[n_wall] / w[n_wall - 1]
     alpha_plus = alpha_n * w[-1] / w[n_wall]
 
-    ubarf2 = thermo.ubarf2(v, w, xi, v_wall, w_bar=w[-1])
-    # Kinetic energy fraction of total (Bag equation of state)
-    ke_frac = ubarf2 / (0.75 * (1 + alpha_n))
-    # Efficiency of turning Higgs potential into kinetic energy
-    kappa = ubarf2 / (0.75 * alpha_n)
+    ek_bva = thermo.kinetic_energy_density(v, w, xi, v_wall)
+    w_bar = w[-1] if wn_as_w_bar else thermo.w_bar(w, xi, v_wall)
+    ubarf2 = thermo.ubarf2(v, w, xi, v_wall, ek_bva=ek_bva, w_bar=w_bar)
+    # Kinetic energy fraction of total, K = e_K / e_n with e_n = 3/4 (1 + alpha_n) w_n (bag equation of state)
+    ke_frac = ek_bva / (0.75 * (1 + alpha_n) * w[-1])
+    # Efficiency of turning Higgs potential into kinetic energy, kappa = e_K / epsilon with epsilon = 3/4 alpha_n w_n
+    kappa = ek_bva / (0.75 * alpha_n * w[-1])
     # and efficiency of turning Higgs potential into thermal energy
     dw = 0.75 * thermo.mean_enthalpy_change(v, w, xi, v_wall) / (0.75 * alpha_n * w[-1])
 

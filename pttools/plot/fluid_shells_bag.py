@@ -22,7 +22,8 @@ def plot_fluid_shells_bag(
         save_string: str | None = ...,
         Np: int = ...,
         debug: tp.Literal[False] = ...,
-        draw: bool | None = ...) -> plt.Figure: ...
+        draw: bool | None = ...,
+        wn_as_w_bar: bool = ...) -> plt.Figure: ...
 
 
 @tp.overload
@@ -34,7 +35,8 @@ def plot_fluid_shells_bag(
         Np: int = ...,
         *,
         debug: tp.Literal[True],
-        draw: bool | None = ...) -> tuple[plt.Figure, th.FloatArr2D]: ...
+        draw: bool | None = ...,
+        wn_as_w_bar: bool = ...) -> tuple[plt.Figure, th.FloatArr2D]: ...
 
 
 def plot_fluid_shells_bag(  # noqa: PLR0912, PLR0915
@@ -44,7 +46,8 @@ def plot_fluid_shells_bag(  # noqa: PLR0912, PLR0915
         save_string: str | None = None,
         Np: int = const.DEFAULT_N_XI,
         debug: bool = False,
-        draw: bool | None = None) -> plt.Figure | tuple[plt.Figure, th.FloatArr2D]:
+        draw: bool | None = None,
+        wn_as_w_bar: bool = False) -> plt.Figure | tuple[plt.Figure, th.FloatArr2D]:
     r"""Plot the fluid shells of several bag model bubbles.
 
     Calls :func:`pttools.bubble.fluid.fluid_shell` and plots resulting v, w against xi.
@@ -71,6 +74,8 @@ def plot_fluid_shells_bag(  # noqa: PLR0912, PLR0915
     :param draw: whether to actually fill the figure with data.
         This is used to disable drawing on systems that don't have LaTeX installed,
         such as the unit testing environment.
+    :param wn_as_w_bar: whether to approximate the average enthalpy density $\bar{w}$ of $\bar{U}_f^2$ as $w_n$,
+        as in the legacy code, e.g. for comparing with old reference data
     :return: figure (or figure and data array if debug is True)
     """
     if draw is None:
@@ -171,11 +176,13 @@ def plot_fluid_shells_bag(  # noqa: PLR0912, PLR0915
             ax[1, n].plot(xi_even[n_cs:], wmax_det[n_cs:], 'k-.', label=r'$w_{\rm max}$')
 
         if multi:
-            ubarf2 = thermo.ubarf2(v, w, xi, v_wall, w_bar=w[-1])
-            # Kinetic energy fraction of total (Bag equation of state)
-            ke_frac = ubarf2 / (0.75 * (1 + alpha_n))
-            # Efficiency of turning Higgs potential into kinetic energy
-            kappa = ubarf2 / (0.75 * alpha_n)
+            ek_bva = thermo.kinetic_energy_density(v, w, xi, v_wall)
+            w_bar = w[-1] if wn_as_w_bar else thermo.w_bar(w, xi, v_wall)
+            ubarf2 = thermo.ubarf2(v, w, xi, v_wall, ek_bva=ek_bva, w_bar=w_bar)
+            # Kinetic energy fraction of total, K = e_K / e_n with e_n = 3/4 (1 + alpha_n) w_n (bag equation of state)
+            ke_frac = ek_bva / (0.75 * (1 + alpha_n) * w[-1])
+            # Efficiency of turning Higgs potential into kinetic energy, kappa = e_K / epsilon
+            kappa = ek_bva / (0.75 * alpha_n * w[-1])
             # and efficiency of turning Higgs potential into thermal energy
             dw = 0.75 * thermo.mean_enthalpy_change(v, w, xi, v_wall) / (0.75 * alpha_n * w[-1])
             # ax[1,n].set_title(r'$w_0/w_n = {:4.2}$, $\bar{{U}}_f = {:.3f}$, '
