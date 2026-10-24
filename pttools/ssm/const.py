@@ -110,7 +110,7 @@ r"""
 Lower limit for $\tilde{\beta} \equiv \beta/H_*$
 This is a conservative estimate.
 Below this value, the abundance of primordial black holes would be too high.
-:giombi_2026:`\ ` p. 3
+:giombi_2026:`\ ` below eq. 1.1
 :lewicki_2023:`\ `
 """
 

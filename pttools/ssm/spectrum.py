@@ -522,7 +522,7 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
         $$\Delta \tau_\text{v} \equiv \frac{\Delta \eta_\text{v}}{R_*}
         = \frac{N_{\text{sh}} \eta_\text{sh}}{R_*} = \frac{N_{\text{sh}}}{\bar{U}_f},$$
         where $\tau \equiv \eta / R_*$ is the dimensionless conformal time of
-        :giombi_2026:`\ ` sec. 2.3 and :giombi_2024_cs:`\ ` p. 10,
+        :giombi_2026:`\ ` sec. 2.5 and :giombi_2024_cs:`\ ` p. 10,
         and $\eta_\text{sh} \approx R_* / \bar{U}_f$
         (see :py:func:`pttools.ssm.scaling.H_star_eta_sh`).
         """

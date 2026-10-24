@@ -22,8 +22,8 @@ class KernelLowTest(unittest.TestCase):
     def test_green_function(self) -> None:
         r"""Compare the kernel with a numerical integration over the Green's function.
 
-        The kernel of :giombi_2026:`\ ` eq. 2.38 is integrated numerically
-        using the exact Green's function of :giombi_2026:`\ ` eq. 2.17
+        The kernel of :giombi_2026:`\ ` eq. 2.43 is integrated numerically
+        using the exact Green's function of :giombi_2026:`\ ` eq. 2.20
         instead of its small-argument expansion eq. 2.40.
         The deviation is of order $(z \tau_\text{end})^{1 + 2\nu}$, as given by eq. 2.40.
         """
@@ -40,7 +40,7 @@ class KernelLowTest(unittest.TestCase):
         r"""Compare the bag model kernel with a numerical integration over the Green's function.
 
         For $\nu = 0$ the Green's function is $G_k(\eta, \eta_1) = \frac{1}{k} \sin(k(\eta - \eta_1))$
-        (:giombi_2026:`\ ` eq. 2.18),
+        (:giombi_2026:`\ ` eq. 2.21),
         and the non-oscillating part of the kernel is
         $\frac{1}{4} \ln^2 \left( \frac{\tau_\text{end}}{\tau_*} \right)$
         (:giombi_2024_cs:`\ ` eq. 3.4).
@@ -86,7 +86,7 @@ class KernelLowTest(unittest.TestCase):
         For $\nu > 0$ the kernel converges to a finite value,
         as $\Upsilon_{2\nu} \rightarrow 1 / (2\nu)$, whereas for $\nu = 0$ it grows logarithmically without bound.
         :giombi_2024_cs:`\ ` sec. 3.1,
-        :giombi_2026:`\ ` sec. 3.1.
+        :giombi_2026:`\ ` sec. 3.1.1.
         """
         z = 0.1
         for nu in NUS:

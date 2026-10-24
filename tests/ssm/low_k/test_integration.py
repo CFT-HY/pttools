@@ -224,7 +224,7 @@ class IntegrationHighTest(unittest.TestCase):
         r"""Test the power laws $\mathcal{P}_\text{gw} \propto k^9$ below and $k^{-3}$ above the peak.
 
         :giombi_2024_cs:`\ ` eq. 3.18,
-        :giombi_2026:`\ ` eq. 3.10.
+        :giombi_2026:`\ ` eq. 3.11.
         """
         cs = 0.5
         z_low = np.logspace(-2, -1, 5)

@@ -29,7 +29,7 @@ def acoustic_friction_exponent(nu: float, cs: float) -> float:
 
     The momentum conservation of the fluid in an expanding background gives the velocity equation
     $$\tilde{v}' + (1 - 3c_s^2) \mathcal{H} \tilde{v} - c_s^2 p \tilde{\lambda} = 0$$
-    (:giombi_2026:`\ ` eq. B.2b (arXiv v2) at leading order, there with $c_s^2 = \omega$),
+    (:giombi_2026:`\ ` eq. B.2b at leading order, there with $c_s^2 = \omega$),
     where $c_s^2 = \bar{p}' / \bar{e}'$ and $\mathcal{H} = \frac{1 + \nu}{\eta}$.
     The friction term $\frac{D}{\eta} \tilde{v}$ with $D = (1 + \nu)(1 - 3c_s^2)$
     damps the amplitude of the sound waves as $\eta^{-D/2}$, and therefore
@@ -68,7 +68,7 @@ def kernel_low[T: FloatOrArr](
     where $d = \nu$ by default.
     This is the non-oscillating part of the leading-order sound wave kernel $\Delta_\text{sw}^\text{lo}$ for
     super-horizon modes $k \eta_* = z \tau_* \ll 1$ in the limit $z \rightarrow 0$
-    (:giombi_2026:`\ ` eq. 2.41a and C.6a (arXiv v2)),
+    (:giombi_2026:`\ ` eqs. 2.49a and C.6a),
     and a part of :giombi_2026:`\ ` eq. 3.5a.
     The factor $\Upsilon_{2d}$ comes from the time integral
     $\int_{\tau_*}^{\tau_\text{end}} \frac{d\tau}{\tau_*} \left( \frac{\tau_*}{\tau} \right)^{1 + 2d}$,
@@ -79,7 +79,7 @@ def kernel_low[T: FloatOrArr](
     The articles assume $c_s^2 = \omega$, in which case $\nu$ describes both the expansion of the background
     and the acoustic friction of the sound waves (:giombi_2024_cs:`\ ` sec. 4.2).
     The factors $\left( \frac{z \tau_*}{2} \right)^{-2\nu} \Gamma^2 \left( \frac{1}{2} + \nu \right)$
-    come from the Green's function of the GWs in the expanding background (:giombi_2026:`\ ` eq. 2.40 (arXiv v2)).
+    come from the Green's function of the GWs in the expanding background (:giombi_2026:`\ ` eq. 2.48a).
     In the time integral, the factor $(\tau_* / \tau)^{1 - \nu}$ from the background (:giombi_2024_cs:`\ ` eq. 2.16)
     and $(\tau / \tau_*)^{-\nu}$ from the Green's function combine with $(\tau_* / \tau)^{2d}$
     from the acoustic friction of the two sound waves (:giombi_2024_cs:`\ ` eq. 2.28, 2.31) to

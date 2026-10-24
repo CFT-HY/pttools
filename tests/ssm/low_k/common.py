@@ -52,7 +52,7 @@ def green_derivative(eta: float, eta1: float, k: float, nu: float) -> float:
 
     $$G_k(\eta, \eta_1) = -k \eta \eta_1
     \left[ j_{\nu}(k\eta) y_{\nu}(k\eta_1) - j_{\nu}(k\eta_1) y_{\nu}(k\eta) \right]$$
-    :giombi_2026:`\ ` eq. 2.17.
+    :giombi_2026:`\ ` eq. 2.20.
     """
     return -eta1 * k * (
         _riccati_derivative(jv, jvp, nu, k * eta) * _sph(yv, nu, k * eta1)
@@ -73,7 +73,7 @@ def kernel_low_numerical(
     \left( \frac{\tau_*^2}{\tau_1 \tau_2} \right)^{1+\nu}
     \left\langle G_z'(\tau, \tau_1) G_z'(\tau, \tau_2) \right\rangle
     \cos(c_s x \tau_-) \cos(c_s y \tau_-)$$
-    :giombi_2026:`\ ` eq. 2.38, first term.
+    :giombi_2026:`\ ` eq. 2.43, first term (eq. 2.47a).
     In the limit $z \rightarrow 0$ we have $y \rightarrow x$,
     and the non-oscillating part of $\cos^2(c_s x \tau_-)$ is $\frac{1}{2}$.
     The integrand then factorizes, and the double integral is the square of a single integral.

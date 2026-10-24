@@ -61,8 +61,8 @@ def lookup_limits(z: FloatArr1D, cs: float = CS0, eps: float = 0.) -> tuple[floa
     r"""$x_-$ and $x_+$, limits of the lookup array of $x$ for the given $z$ array.
 
     $$x_\pm = z \frac{1 \pm c_s}{2c_s}$$
-    :giombi_2024_cs: \ ` p. 13
-    :giombi_2026: \ ` p. 25
+    :giombi_2024_cs:`\ ` p. 13
+    :giombi_2026:`\ ` below eq. 3.9
     This is denoted as $z_\pm$ on :gw_pt_ssm:`\ ` p. 12.
     """
     x_minus_min = x_minus(z=z.min(), cs=cs) * (1 - eps)

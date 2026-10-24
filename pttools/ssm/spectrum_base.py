@@ -117,7 +117,7 @@ class SpectrumBase(abc.ABC):
 
         $$\Delta \tau_\text{v} \equiv \frac{\Delta \eta_\text{v}}{R_*},$$
         where $\tau \equiv \eta / R_*$ is the dimensionless conformal time of
-        :giombi_2026:`\ ` sec. 2.3 and :giombi_2024_cs:`\ ` p. 10.
+        :giombi_2026:`\ ` sec. 2.5 and :giombi_2024_cs:`\ ` p. 10.
         """
 
     @property
@@ -174,7 +174,7 @@ class SpectrumBase(abc.ABC):
         Dimensionless conformal time $\tau_\text{end}$ when the anisotropic stress turns off.
 
         $$\tau_\text{end} \equiv \frac{\eta_\text{end}}{R_*} = \tau_* + \Delta \tau_\text{v}$$
-        :giombi_2026:`\ ` sec. 2.3,
+        :giombi_2026:`\ ` sec. 2.5,
         :giombi_2024_cs:`\ ` p. 8.
         Not to be confused with the lifetime $\tau_\text{v}$ of the earlier articles,
         see :py:mod:`pttools.ssm.scaling`.
@@ -187,7 +187,7 @@ class SpectrumBase(abc.ABC):
 
         $$\tau_* \equiv \frac{\eta_*}{R_*} = \frac{\mathcal{H}_* \eta_*}{\mathcal{H}_* R_*}
         = \frac{1 + \nu_\text{gdh2024}}{r_*}$$
-        :giombi_2026:`\ ` sec. 2.3,
+        :giombi_2026:`\ ` sec. 2.5 and below eq. 3.5,
         :giombi_2024_cs:`\ ` p. 8.
         """
         return barotropic.tau_star(r_star=self.r_star, nu=self.nu_gdh2024)

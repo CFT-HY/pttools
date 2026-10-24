@@ -14,7 +14,7 @@ def rho[T: FloatOrArr](z: T, x: T | float, y: T | float) -> T:
     \left( (x + z)^2 - y^2 \right)^2
     }{16 x y z^2}$$
     :giombi_2024_cs:`\ ` eq. 2.37
-    :giombi_2026:`\ ` eq. 2.37 (arXiv v2)
+    :giombi_2026:`\ ` eq. 2.42
     This is included in
     :gw_pt_ssm:`\ ` eq. 3.47.
     """
@@ -58,7 +58,7 @@ def rho_pm[T: FloatOrArr](z: T, x: T | float, cs: T | float = CS0) -> T:
     r"""$\rho(z,x,y)$, geometric function with $y$ determined by $x$ and $x_\pm$.
 
     Here $y \equiv x_+ + x_{-} - x$
-    :giombi_2026:`\ ` p. 25.
+    :giombi_2026:`\ ` below eq. 3.9.
     """
     return rho(z=z, x=x, y=x_plus(z=z, cs=cs) + x_minus(z=z, cs=cs) - x)  # pyrefly: ignore[bad-return]
 
@@ -68,8 +68,8 @@ def x_minus[T: FloatOrArr](z: T, cs: T | float = CS0) -> T:
     r"""$x_-$, lower limit of the integration over $x$.
 
     $$x_- = \frac{1 - c_s}{2 c_s} z$$
-    :giombi_2024_cs: \ ` p. 13
-    :giombi_2026: \ ` p. 25
+    :giombi_2024_cs:`\ ` p. 13
+    :giombi_2026:`\ ` below eq. 3.9
     This is denoted as $z_-$ on :gw_pt_ssm:`\ ` p. 12.
     """
     return (1 - cs) / (2 * cs) * z  # pyrefly: ignore[bad-return]
@@ -80,8 +80,8 @@ def x_plus[T: FloatOrArr](z: T, cs: T | float = CS0) -> T:
     r"""$x_+$, upper limit of the integration over $x$.
 
     $$x_+ = \frac{1 + c_s}{2 c_s} z$$
-    :giombi_2024_cs: \ ` p. 13
-    :giombi_2026: \ ` p. 25
+    :giombi_2024_cs:`\ ` p. 13
+    :giombi_2026:`\ ` below eq. 3.9
     This is denoted as $z_+$ on :gw_pt_ssm:`\ ` p. 12.
     """
     return (1 + cs) / (2 * cs) * z  # pyrefly: ignore[bad-return]

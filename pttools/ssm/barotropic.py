@@ -99,7 +99,7 @@ def H_eta[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:
     This comes from the scale factor for a barotropic EoS
     $$a(\eta) = a(\eta_*) \left( \frac{\eta}{\eta_*} \right)^{1 + \nu_\text{gdh2024}}
     = a(\eta_*) \left( \frac{\eta}{\eta_*} \right)^\frac{2}{1+3\omega}$$
-    :giombi_2026:`\ ` eq. 2.14 (arXiv v2), eq. 2.17 (journal),
+    :giombi_2026:`\ ` eq. 2.17,
     :giombi_2024_cs:`\ ` eq. 2.15,
     which gives
     $$\mathcal{H} = \frac{1 + \nu_\text{gdh2024}}{\eta}.$$
@@ -122,7 +122,7 @@ def l[T: FloatOrArr](nu: T = DEFAULT_NU_GDH2024) -> T:  # noqa: E743
     r"""$\ell(\nu)$, the exponent $\ell$ of the source lifetime factor $\Upsilon_\ell$.
 
     $$\ell(\nu) = 1 + 2\nu$$
-    :giombi_2026:`\ ` p. 25.
+    :giombi_2026:`\ ` below eqs. 3.10 and C.23.
     """
     return 1 + 2 * nu  # pyrefly: ignore[bad-return]
 
@@ -138,7 +138,7 @@ def source_lifetime_factor[T: FloatOrArr](
     $$\Upsilon_\ell \equiv
     \frac{1}{\ell(\nu)} \left(1 - \left( \frac{\eta_*}{\eta_\text{end}} \right)^{\ell(\nu)} \right)
     = \frac{1}{\ell(\nu)} \left(1 - \left(1 + \frac{\Delta \eta_\text{v}}{\eta_*} \right)^{-\ell(\nu)} \right)$$
-    :giombi_2026:`\ ` eqs. 3.6, 3.9a (there as $\Upsilon(\eta_* / \eta_\text{end}, 1 + 2\nu)$),
+    :giombi_2026:`\ ` eqs. 3.9a, 3.10 and C.23 (there as $\Upsilon_{1+2\nu}(\eta_* / \eta_\text{end})$),
     :giombi_2024_cs:`\ ` eq. 3.13.
     It enters the GW power spectrum as $\mathcal{H}_* \eta_\text{v} = \mathcal{H}_* \eta_* \Upsilon_\ell$,
     see :py:func:`pttools.ssm.scaling.H_star_eta_v`.
@@ -158,7 +158,7 @@ def Upsilon[T: FloatOrArr](r: T, l: float) -> T:  # noqa: E741
     r"""$\Upsilon_\ell$ for arbitrary $\ell$.
 
     $$\Upsilon_\ell (r) = \frac{1}{\ell} \left( 1 - r^\ell \right)$$
-    :giombi_2026:`\ ` eq. 3.6 (arXiv v2 and journal).
+    :giombi_2026:`\ ` eqs. 3.6 and C.23.
     This is computed as $\Upsilon_\ell (r) = -\frac{1}{\ell} \left( e^{\ell \ln r} - 1 \right)$
     with ``numpy.expm1``, which is accurate also for small $|\ell|$,
     and with the limit $\Upsilon_0 (r) = -\ln r$ for $\ell = 0$.
@@ -179,7 +179,7 @@ def tau_star[T: FloatOrArr](r_star: T, nu: T | float = DEFAULT_NU_GDH2024) -> T:
 
     $$\tau_* \equiv \frac{\eta_*}{R_*} = \frac{\mathcal{H}_* \eta_*}{\mathcal{H}_* R_*}
     = \frac{1 + \nu_\text{gdh2024}}{r_*}$$
-    :giombi_2026:`\ ` sec. 2.5 (arXiv v2 and journal),
+    :giombi_2026:`\ ` sec. 2.5 and below eq. 3.5,
     :giombi_2024_cs:`\ ` p. 10,
     where $\mathcal{H}_* \eta_*$ is given by :py:func:`H_eta`.
 

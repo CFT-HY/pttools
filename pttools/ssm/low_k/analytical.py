@@ -23,7 +23,7 @@ def gw_spectral_density_approx_low[T: FloatOrArr](z: T, HLf: float, cs: float, t
     (1 + \nu) \frac{\Gamma^2 \left( \frac{1}{2} + \nu \right)}{2\pi} \frac{16}{15} \mathcal{I}_v
     \Upsilon_{2\nu}^2 \left( \frac{\tau_*}{\tau_\text{end}} \right)
     = \frac{32}{15} \tau_* \mathcal{I}_v \Delta_\text{low},$$
-    :giombi_2026:`\ ` eq. 3.5a divided by the prefactor of eq. 2.35 (arXiv v2),
+    :giombi_2026:`\ ` eq. 3.5a divided by the prefactor of eq. 2.40,
     with $\mathcal{I}_v = \frac{1}{32\pi^2}$, $\tau_* = \frac{1 + \nu}{H L_f}$
     and $\nu = \frac{1 - 3c_s^2}{1 + 3c_s^2}$.
     For $c_s = \frac{1}{\sqrt{3}}$ this is

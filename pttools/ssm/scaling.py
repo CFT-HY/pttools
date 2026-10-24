@@ -113,7 +113,7 @@ def H_star_eta_v[T: FloatOrArr](source_lifetime_factor: T, nu: T | float = DEFAU
     which is on for $\Delta \eta_\text{v} = \eta_\text{end} - \eta_*$ in the expanding Universe.
     Here $\Upsilon_\ell = \Upsilon(\eta_* / \eta_\text{end}, \ell(\nu))$ with $\ell(\nu) = 1 + 2\nu$
     is the source lifetime factor of
-    :giombi_2026:`\ ` eqs. 3.6, 3.9a and
+    :giombi_2026:`\ ` eqs. 3.9a, 3.10 and
     :giombi_2024_cs:`\ ` eq. 3.13,
     and $\mathcal{H}_* \eta_* = 1 + \nu$ for a barotropic equation of state
     (:py:func:`pttools.ssm.barotropic.H_eta`).
