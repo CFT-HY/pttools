@@ -1,7 +1,11 @@
-"""Tests for the nightly run script."""
+"""Tests for the nightly run script.
+
+The script is for Linux, but most of it works also on macOS.
+It uses :mod:`fcntl` for the locks, which is not available on Windows,
+and ``/proc`` for finding and stopping the processes, which is available only on Linux.
+"""
 
 import datetime
-import fcntl
 import json
 import os
 from pathlib import Path
@@ -11,6 +15,10 @@ import sys
 import time
 
 import pytest
+
+pytest.importorskip("fcntl", reason="The nightly run script uses fcntl, which is not available on Windows.")
+
+import fcntl
 
 from pttools.docs import nightly
 from pttools.docs.nightly import CronSchedule, Repo
@@ -265,6 +273,7 @@ def test_skip(tmp_path: Path) -> None:
     assert "The nightly run of repo failed with exit code 3." in result.stderr
 
 
+@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="Finding the processes requires /proc of Linux.")
 def test_stop(tmp_path: Path) -> None:
     """--stop should stop the nightly run and all its child processes, including those that ignore SIGTERM."""
     repo, script, env = create_repo(tmp_path, FAKE_UV)
