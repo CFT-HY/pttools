@@ -109,3 +109,76 @@ and ``ConstCSModel`` shares them between all models with the same sound speeds
 (see ``pttools.models.const_cs.const_cs_funcs``).
 Each worker process of a process pool therefore compiles them once for each distinct set of sound speeds,
 and models that are pickled to the workers reuse the functions compiled there.
+
+
+Nightly runs
+------------
+The ``pttools/docs/nightly.py --run`` command runs the nightly run for multiple repositories in sequence,
+so that they don't compete for resources.
+By default, these are PTtools and PTPlot, if it exists in ``../PTPlot`` relative to the PTtools repository.
+Other repositories can be selected by giving their paths with ``--repo``, which can be given multiple times.
+The nightly run is run for each repository even if it fails for the previous ones,
+and the outputs of each repository are saved in that repository.
+
+For each repository, the nightly run runs the unit tests, builds the documentation
+(which also runs the examples) and the wheel,
+and archives the results with 7-Zip to ``./docs/nightly/nightly_YYYY-MM-DD.7z``.
+The documentation is built to ``./docs/nightly/_build`` instead of the default ``./docs/_build``,
+and the wheel to ``./docs/nightly/dist``. These directories are cleaned at the start of the run.
+The examples save their figures to ``./docs/nightly/fig/fig_YYYY-MM-DD`` instead of the default ``./examples/fig``.
+The figure directory is set with the ``NAME_FIG_DIR`` environment variable,
+where ``NAME`` is the name of the repository directory in upper case,
+i.e. ``PTTOOLS_FIG_DIR`` for PTtools and ``PTPLOT_FIG_DIR`` for PTPlot.
+It can also be used to change the figure directory when running the examples or building the documentation manually.
+The archive contains the build directory as ``_build``, the figure directory as ``fig``,
+the wheel directory as ``dist`` and a copy of the log of the run.
+The completion of the run is logged before archiving, so that the archived log includes it,
+and the creation of the archive is logged afterwards only to the log file.
+The HDF5 files ``*.h5`` are left out of the archive to save space, but their checksum files ``*.h5.sha256`` are included.
+If an archive of the same day already exists, a suffix ``_2``, ``_3`` etc. is added to the filename.
+
+The run of each repository logs to ``./logs/nightly_YYYY-MM-DD.log`` of that repository.
+The run of a repository is skipped if its HEAD commit is older than 24 hours,
+so that unchanged code is not rebuilt every night.
+The maximum age of the commit can be adjusted with the ``MAX_COMMIT_AGE``
+environment variable, which is given in seconds.
+A new sequence of runs is not started if the previous one is still going on.
+This is ensured with a lock on ``./nightly_sequence.lock`` of PTtools.
+Each repository also has a lock on its ``./nightly.lock``,
+to which the script writes the process ID, the start time and the HEAD commit of the run.
+
+``pttools/docs/nightly.py --status``, or ``pttools/docs/nightly.py`` without arguments,
+prints the crontab entry of the nightly run, its schedule and the next run time, the current time,
+and for each repository, whether a nightly run is currently in progress and its processes,
+and the last lines of the latest log.
+A nightly run in progress can be stopped with ``pttools/docs/nightly.py --stop``.
+It sends SIGTERM to the nightly run and all its child processes,
+and SIGKILL to those that are still running after 10 seconds,
+which can be changed with the ``--timeout`` argument.
+The runs of the remaining repositories are then not started.
+The next nightly run of each repository can be skipped with ``pttools/docs/nightly.py --skip``,
+which creates the file ``./nightly.skip`` in each repository.
+The next ``--run`` of the repository, whether it is started by cron or manually,
+then deletes the file and skips the repository.
+The skip can be cancelled by deleting the file.
+
+To run the script every night at 2 AM, open the crontab of your user
+
+.. code-block:: bash
+
+  crontab -e
+
+and add the following lines, where ``REPO_PATH`` is the path to the PTtools repository.
+Cron runs commands with a minimal environment, so the path is set explicitly.
+The ``MAILTO`` sends an email if a run fails, if a mail transfer agent is configured.
+Remove the ``MAILTO`` line if you don't want these emails.
+
+.. code-block:: text
+
+  PATH=/usr/local/bin:/usr/bin:/bin
+  MAILTO=your.email@example.com
+
+  0 2 * * * /REPO_PATH/pttools/docs/nightly.py --run
+
+The cron daemon uses the local time zone of the system, which can be checked with ``timedatectl``.
+The scheduled jobs can be listed with ``crontab -l``.

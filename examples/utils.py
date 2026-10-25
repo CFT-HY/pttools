@@ -14,8 +14,9 @@ from pttools.utils.docstrings import copy_docstring_dec
 if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.figure import Figure
 
-#: Figures directory for the examples
-FIG_DIR: Path = Path(__file__).resolve().parent / "fig"
+#: Figures directory for the examples, which can be changed with the ``PTTOOLS_FIG_DIR`` environment variable,
+#: e.g. by the nightly run ``pttools/docs/nightly.py``
+FIG_DIR: Path = Path(os.environ.get("PTTOOLS_FIG_DIR") or Path(__file__).resolve().parent / "fig").resolve()
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 #: Data directory for the files created by the examples, e.g. datasets

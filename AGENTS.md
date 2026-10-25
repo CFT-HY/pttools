@@ -30,6 +30,18 @@
   whose domains are allowed in the Claude Code sandbox in `.claude/settings.json`. Keep the two in sync.
   The link check of `make all` and `make all-noplot` needs access to all the linked sites, and can be skipped with `SKIP_LINKCHECK=1`.
 - Build the package: `uv build`
+- Nightly run: `./pttools/docs/nightly.py --run` runs the unit tests, builds the documentation with examples and the wheel, and archives the results,
+  for PTtools and PTPlot (if it exists in `../PTPlot`) in sequence. It is run by cron. It is documented in `./docs/dev.rst`.
+  - Check the status of the nightly run with `./pttools/docs/nightly.py --status`, or `pttools/docs/nightly.py` without arguments.
+    It prints the crontab entry, the schedule and the next run time, the current time,
+    and for each repository, whether a nightly run is currently in progress, and the last lines of its latest log `./logs/nightly_YYYY-MM-DD.log`.
+  - A nightly run in progress and all its child processes can be stopped with `./pttools/docs/nightly.py --stop`,
+    and the next nightly run can be skipped with `./pttools/docs/nightly.py --skip`.
+    The skip is consumed by the next `--run`, and it can be cancelled by deleting `./nightly.skip` of each repository.
+  - The script is run with the Python of the system, and therefore it may only use the Python standard library.
+  - If you're given an overnight task (e.g. "you have time until ..."),
+    run `./pttools/docs/nightly.py --status` before starting to work on it.
+    Skip the nightly run if needed. If you skip it, run it manually when you're done with your work.
 
 ## CI
 - The CI workflow `.github/workflows/main.yml` runs all the CI jobs on every push.
