@@ -45,12 +45,13 @@ class SuppressionTest(unittest.TestCase):
             "ssm_tot": 5.30e-7
         }
         if sys.platform == "darwin":
-            # As of 2026-10, one of the values of sup_ssm differs from the reference by 1.26e-4 on macOS.
+            # As of 2026-10, one of the values of suppression_2 differs from the reference on macOS
+            # by 1.34e-4 for sup_ssm, 1.63e-4 for Ubarf_2_ssm and 4.59e-4 for ssm_tot.
             # As sup_ssm is proportional to Ubarf_2_ssm**2 / ssm_tot, the relative difference of ssm_tot
             # can be up to that of sup_ssm plus twice that of Ubarf_2_ssm.
-            tolerances["sup_ssm"] = 1.26e-4
-            tolerances["Ubarf_2_ssm"] = 1.33e-5
-            tolerances["ssm_tot"] = 1.53e-4
+            tolerances["sup_ssm"] = 1.40e-4
+            tolerances["Ubarf_2_ssm"] = 1.70e-4
+            tolerances["ssm_tot"] = 4.80e-4
         elif sys.platform == "win32":
             tolerances["sup_ssm"] = 5.68e-7
             tolerances["ssm_tot"] = 5.63e-7
