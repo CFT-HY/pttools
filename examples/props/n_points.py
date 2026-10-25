@@ -65,7 +65,6 @@ from pttools.plot.utils import A4_PAPER_SIZE
 from pttools.speedup.parallel import FakeFuture, get_pool
 from pttools.ssm.accuracy import Accuracy
 import pttools.type_hints as th
-from pttools.utils.system import IS_READ_THE_DOCS
 from pttools.utils.time import log_duration
 
 if th.TYPE_CHECKING_OR_DOCS:
@@ -283,7 +282,7 @@ def main(
         for case in cases
     }
     # The futures are created first, so that all the computations run in parallel.
-    with get_pool(single_thread=IS_READ_THE_DOCS) as pool:
+    with get_pool() as pool:
         futs: dict[tuple[int, str, int], FakeFuture | Future[Result]] = {}
         ref_futs: dict[tuple[int, str], FakeFuture | Future[Result]] = {}
         for i_case, case in enumerate(cases):

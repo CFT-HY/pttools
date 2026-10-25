@@ -68,7 +68,7 @@ NUMBA_DISABLE_JIT: tp.Final[bool] = bool(int(os.getenv("NUMBA_DISABLE_JIT", "0")
 NUMBA_ENABLE_CACHE: bool = \
     bool(int(os.environ["NUMBA_ENABLE_CACHE"])) \
         if "NUMBA_ENABLE_CACHE" in os.environ \
-        else (system.IS_GITHUB_ACTIONS or system.IS_PACKAGE)
+        else (system.IS_GITHUB_ACTIONS or system.IS_PACKAGE or system.IS_READ_THE_DOCS)
 """Whether to enable caching for Numba-jitted functions
 
 This is enabled by default when running on GitHub Actions or when installed as a pip package,

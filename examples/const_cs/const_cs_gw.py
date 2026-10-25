@@ -23,7 +23,6 @@ from pttools.bubble.shock import v_shock_curve
 from pttools.models import ConstCSModel
 from pttools.omgw0 import H2, Spectrum, SpectrumArr3D, omega_ins_h2
 import pttools.type_hints as th
-from pttools.utils.system import IS_READ_THE_DOCS
 from pttools.utils.time import log_duration
 
 if th.TYPE_CHECKING_OR_DOCS:
@@ -240,8 +239,8 @@ def main(
                 **({} if spectrum_kwargs is None else spectrum_kwargs)
             },
             # bubble_kwargs={"allow_invalid": False}, allow_bubble_failure=True,
-            # This fixes a BrokenProcessPool error on Read the Docs
-            single_thread=IS_READ_THE_DOCS
+            # This fixes a BrokenProcessPool error on Read the Docs when using ProcessPoolExecutor.
+            # single_thread=IS_READ_THE_DOCS
         )
 
     figs: th.FigArr1D = np.array(
