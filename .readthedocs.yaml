@@ -16,6 +16,7 @@ build:
     - gfortran
     - libtbb12
     - optipng
+    - patchelf
 
 # Optionally build your docs in additional formats such as PDF
 formats: all
@@ -32,4 +33,4 @@ python:
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
   configuration: docs/conf.py
-  # fail_on_warning: true
+  fail_on_warning: true
