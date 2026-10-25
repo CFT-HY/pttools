@@ -11,14 +11,32 @@ build:
     # Read the Docs requires the Python version to be specified here and does not read the .python-version file.
     # Keep this in sync with .python-version, as otherwise uv would download another Python version for the build.
     python: "3.14"
-  # Kaleido needs Chrome for exporting Plotly figures
   apt_packages:
     - cloc
     - gfortran
     - libtbb12
     - optipng
     - patchelf
-    - https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+    # Shared libraries of Chrome, which Kaleido needs for exporting Plotly figures.
+    # The list is from choreographer.browsers._errors.BrowserDepsError.
+    - libasound2
+    - libatk-bridge2.0-0
+    - libcairo2
+    - libcups2
+    - libgbm1
+    - libnss3
+    - libpango-1.0-0
+    - libxcomposite1
+    - libxdamage1
+    - libxfixes3
+    - libxkbcommon0
+    - libxrandr2
+  jobs:
+    post_install:
+      # Read the Docs accepts only package names from the Ubuntu repositories in apt_packages, not URLs of .deb files,
+      # and the build jobs run without root access. Therefore, Chrome is installed with Kaleido,
+      # which downloads Chrome for Testing to the user data directory, where Kaleido finds it automatically.
+      - "$READTHEDOCS_VIRTUALENV_PATH/bin/kaleido_get_chrome"
 
 # Optionally build your docs in additional formats such as PDF
 formats: all
