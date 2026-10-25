@@ -19,10 +19,10 @@ build:
     - patchelf
     # Shared libraries of Chrome, which Kaleido needs for exporting Plotly figures.
     # The list is from choreographer.browsers._errors.BrowserDepsError.
-    - libasound2
+    - libasound2t64
     - libatk-bridge2.0-0
     - libcairo2
-    - libcups2
+    - libcups2t64
     - libgbm1
     - libnss3
     - libpango-1.0-0
