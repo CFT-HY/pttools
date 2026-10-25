@@ -11,12 +11,14 @@ build:
     # Read the Docs requires the Python version to be specified here and does not read the .python-version file.
     # Keep this in sync with .python-version, as otherwise uv would download another Python version for the build.
     python: "3.14"
+  # Kaleido needs Chrome for exporting Plotly figures
   apt_packages:
     - cloc
     - gfortran
     - libtbb12
     - optipng
     - patchelf
+    - https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 
 # Optionally build your docs in additional formats such as PDF
 formats: all
