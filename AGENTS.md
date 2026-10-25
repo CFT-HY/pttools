@@ -33,12 +33,13 @@
 
 ## CI
 - The CI workflow `.github/workflows/main.yml` runs all the CI jobs on every push.
-  Most jobs start only after the `lint`, `typecheck` and `build` jobs have passed,
-  and the Windows and macOS tests after `test-numba`.
+  Other jobs start only after the `lint`, `typecheck` and `build` jobs have passed.
+  The unit tests are first run with Numba for the primary Python version only, on x86-64 (`test-numba`) and on ARM (`test-arm`),
+  and the other test jobs (the other Python versions, without Numba, macOS and Windows) only after `test-numba` has passed.
   The `docs` job lints the documentation with `python -m pttools.docs.lint`, checks the links,
   and then builds the full documentation. Broken links are reported as warnings instead of failing the job,
   see `--broken-links-as-warnings` of `pttools.docs.lint`.
-  The Docker image is published for every commit that passes the Linux tests,
+  The Docker image is published for every commit that passes `test-numba` and `test-arm`,
   and the PyPI package and the Software Heritage archive only for version tags, after all the other jobs have passed.
 - The following are also used by other repositories, such as PTPlot, from the `dev` branch:
   - the reusable workflows `build.yml`, `deploy-shf.yml`, `docs.yml`, `graph.yml`, `lint.yml` and `typecheck.yml`,
