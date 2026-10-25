@@ -9,6 +9,22 @@ name: Graph
 on:
   workflow_call:
     inputs: &inputs
+      apt-packages:
+        description: >-
+          Additional apt packages to install, separated by spaces, e.g. "gfortran".
+          The ubuntu-slim runner has a minimal set of packages, so e.g. gfortran has to be installed
+          if a dependency without a wheel for the Python version, such as NumbaLSODA, has to be built from source.
+        type: string
+        required: false
+        default: ""
+      runs-on:
+        description: >-
+          The runner of the job, e.g. "ubuntu-latest".
+          The default ubuntu-slim runner is faster to start, but it has a minimal set of packages,
+          and e.g. no Fortran compiler.
+        type: string
+        required: false
+        default: ubuntu-slim
       target:
         description: The package or module to be analysed with Pyreverse, e.g. "pttools"
         type: string
@@ -26,15 +42,19 @@ permissions:
   contents: read
 jobs:
   graph:
-    runs-on: ubuntu-slim
+    runs-on: ${{ inputs.runs-on }}
     timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-      - name: Install graphviz
+      - name: Install apt packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y graphviz
+          # APT_PACKAGES is intentionally unquoted to split it into separate arguments.
+          # shellcheck disable=SC2086
+          sudo apt-get install -y graphviz ${APT_PACKAGES}
+        env:
+          APT_PACKAGES: ${{ inputs.apt-packages }}
       - name: Setup uv
         id: setup-uv
         uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0

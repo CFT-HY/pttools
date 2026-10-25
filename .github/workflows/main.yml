@@ -149,6 +149,7 @@ jobs:
     needs: [build, lint, typecheck]
     # This is the same as test-numba, but on ARM, and only for the primary Python version of .python-version.
     # The tbb package is not available for ARM, so the TBB check of setup-env only prints a note.
+    # The `ubuntu-26.04-arm` runner type does exist, but may not yet be recognized by actionlint.
     runs-on: ubuntu-26.04-arm
     # The id-token permission is needed for uploading the coverage to Codecov with OpenID Connect (OIDC).
     # The job-level permissions replace those of the workflow, so contents: read has to be repeated.

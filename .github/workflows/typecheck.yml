@@ -7,6 +7,14 @@ name: Typecheck
 on:
   workflow_call:
     inputs: &inputs
+      apt-packages:
+        description: >-
+          Additional apt packages to install, separated by spaces, e.g. "gfortran".
+          The ubuntu-slim runner has a minimal set of packages, so e.g. gfortran has to be installed
+          if a dependency without a wheel for the Python version, such as NumbaLSODA, has to be built from source.
+        type: string
+        required: false
+        default: ""
       runs-on:
         description: The runner, e.g. ubuntu-latest if the dependencies have to be compiled
         type: string
@@ -25,6 +33,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+      - name: Install apt packages
+        if: inputs.apt-packages != ''
+        run: |
+          sudo apt-get update
+          # APT_PACKAGES is intentionally unquoted to split it into separate arguments.
+          # shellcheck disable=SC2086
+          sudo apt-get install -y ${APT_PACKAGES}
+        env:
+          APT_PACKAGES: ${{ inputs.apt-packages }}
       - name: Setup uv
         id: setup-uv
         uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
