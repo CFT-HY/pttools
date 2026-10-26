@@ -133,19 +133,23 @@ def exclude_lint_dir(app: Sphinx, config: Config) -> None:
 
 
 def load_fluid_reference(app: Sphinx) -> None:
-    """Load the reference data of the fluid solver before Sphinx-Gallery runs the examples in parallel.
+    """Load the reference data of the fluid solver before the examples and the figures are generated.
 
     The data is generated when it's first needed, if it does not exist yet.
     If the examples are run in parallel, they would otherwise generate it simultaneously.
+    The data is loaded unless the figures of the ``plot`` directive have been disabled (see :func:`no_plots`),
+    as those also use it, even if the examples are not run (``-D plot_gallery=0``).
     This should be connected to the ``builder-inited`` event with a priority
     between those of the Sphinx-Gallery handlers ``update_gallery_conf_builder_inited`` (10),
     which applies e.g. ``-D plot_gallery=0`` to the configuration, and ``generate_gallery_rst`` (500),
     which runs the examples.
 
-    :param app: the Sphinx application
+    :param app: the Sphinx application (not used)
     """
-    gallery_conf = app.config.sphinx_gallery_conf
-    if gallery_conf["plot_gallery"] and gallery_conf["parallel"]:
+    # This would load the data only if Sphinx-Gallery runs the examples in parallel.
+    # gallery_conf = app.config.sphinx_gallery_conf
+    # if gallery_conf["plot_gallery"] and gallery_conf["parallel"]:
+    if not no_plots():
         from pttools.bubble.fluid_reference import ref  # noqa: PLC0415
         ref()
 

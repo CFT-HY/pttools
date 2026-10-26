@@ -284,7 +284,7 @@ linkcheck_workers = 10
 #: Whether Sphinx-Gallery measures the peak memory usage of the examples.
 #: This prevents running the examples in parallel. On Read the Docs, the build has only 2 cores and a time limit,
 #: and the examples use only one of the cores most of the time. Therefore, the examples are run in parallel there,
-#: without measuring the memory usage. The fluid reference data is then loaded or generated before the examples
+#: without measuring the memory usage. The fluid reference data is loaded or generated before the examples
 #: by :func:`pttools.docs.setup.load_fluid_reference`, so that the parallel examples don't generate it simultaneously.
 show_memory = not IS_READ_THE_DOCS
 
