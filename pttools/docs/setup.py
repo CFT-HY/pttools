@@ -10,6 +10,7 @@ import typing as tp
 import warnings
 
 from matplotlib.sphinxext.plot_directive import PlotDirective
+from sphinx_gallery._doctree_links import code_links_block, depart_code_links_block_html, visit_code_links_block_html
 from sphinx_gallery.directives import depart_imgsg_html, imgsgnode, visit_imgsg_html
 
 import pttools.type_hints as th
@@ -131,6 +132,24 @@ def exclude_lint_dir(app: Sphinx, config: Config) -> None:
         config.exclude_patterns.append(LINT_DIR_NAME)
 
 
+def load_fluid_reference(app: Sphinx) -> None:
+    """Load the reference data of the fluid solver before Sphinx-Gallery runs the examples in parallel.
+
+    The data is generated when it's first needed, if it does not exist yet.
+    If the examples are run in parallel, they would otherwise generate it simultaneously.
+    This should be connected to the ``builder-inited`` event with a priority
+    between those of the Sphinx-Gallery handlers ``update_gallery_conf_builder_inited`` (10),
+    which applies e.g. ``-D plot_gallery=0`` to the configuration, and ``generate_gallery_rst`` (500),
+    which runs the examples.
+
+    :param app: the Sphinx application
+    """
+    gallery_conf = app.config.sphinx_gallery_conf
+    if gallery_conf["plot_gallery"] and gallery_conf["parallel"]:
+        from pttools.bubble.fluid_reference import ref  # noqa: PLC0415
+        ref()
+
+
 def setup_sphinx(app: Sphinx) -> None:
     """Set up the customisations of the PTtools documentation.
 
@@ -144,14 +163,18 @@ def setup_sphinx(app: Sphinx) -> None:
     app.connect("builder-inited", add_field_docs)
     app.connect("autodoc-process-docstring", note_field_dependencies)
     app.connect("object-description-transform", remove_duplicate_minigalleries)
+    app.connect("builder-inited", load_fluid_reference, priority=400)
     # The setup function of conf.py is run after the extensions have been loaded,
     # and therefore overrides the directive of matplotlib.sphinxext.plot_directive.
     if no_plots():
         app.add_directive("plot", NoPlotDirective, override=True)
 
     # Sphinx-Gallery registers the visitors of its image nodes only for the HTML and LaTeX builders,
+    # and those of its linked code blocks only for the HTML builder,
     # and a builder falls back to the handlers of its output format only if it has no handlers of its own.
     # As sphinxcontrib-video registers handlers for the EPUB builder, the fallback is not used,
-    # and the EPUB builder would not know how to render the gallery images.
+    # and the EPUB builder would not know how to render the gallery images and the code blocks of the examples.
     # The EPUB builder is based on the HTML builder, and can therefore use the HTML visitors.
     app.add_node(imgsgnode, override=True, epub=(visit_imgsg_html, depart_imgsg_html))
+    app.add_node(
+        code_links_block, override=True, epub=(visit_code_links_block_html, depart_code_links_block_html))

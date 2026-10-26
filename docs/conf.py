@@ -38,7 +38,7 @@ from pttools.docs.links import EXTLINKS, LINKCHECK_ALLOWED_REDIRECTS, ExtLinks
 from pttools.docs.setup import pre_setup, setup_sphinx, setup_sphinx_logging
 from pttools.logging import setup_logging
 from pttools.speedup.options import MAX_WORKERS_DEFAULT
-from pttools.utils.system import IS_GITHUB_ACTIONS, PTTOOLS_DIR
+from pttools.utils.system import IS_GITHUB_ACTIONS, IS_READ_THE_DOCS, PTTOOLS_DIR
 
 setup_logging()
 logger: logging.Logger = logging.getLogger(__name__)
@@ -164,11 +164,15 @@ DOCUMENTED_EXAMPLES: tuple[Path, ...] = tuple(
     if path.name != "__init__.py" and path not in UNDOCUMENTED_EXAMPLES
     and MAIN_GUARD.search(path.read_text(encoding="utf-8"))
 )
-#: The files of the example directories that are excluded from the module documentation,
+#: The Python files of the example directories that are excluded from the module documentation,
 #: i.e. everything except the documented examples and the __init__.py files of the packages,
-#: which contain only docstrings
+#: which contain only docstrings.
+#: Apidoc documents only the Python files, and the other files, such as the __pycache__ directories
+#: and the outputs of the examples, are not listed, since they are created by the build.
+#: Otherwise, the list and therefore apidoc_modules would change after the first build,
+#: and Sphinx would read all the sources again in the next build, e.g. for another output format.
 EXCLUDED_EXAMPLES: list[str] = [
-    str(path) for path in sorted(EXAMPLES_DIR.glob("*/*"))
+    str(path) for path in sorted(EXAMPLES_DIR.glob("*/*.py"))
     if path not in DOCUMENTED_EXAMPLES and path.name != "__init__.py"
 ]
 
@@ -277,7 +281,12 @@ linkcheck_workers = 10
 # pio.renderers.default = "sphinx_gallery_png"
 
 # show_memory = IS_GITHUB_ACTIONS
-show_memory = True
+#: Whether Sphinx-Gallery measures the peak memory usage of the examples.
+#: This prevents running the examples in parallel. On Read the Docs, the build has only 2 cores and a time limit,
+#: and the examples use only one of the cores most of the time. Therefore, the examples are run in parallel there,
+#: without measuring the memory usage. The fluid reference data is then loaded or generated before the examples
+#: by :func:`pttools.docs.setup.load_fluid_reference`, so that the parallel examples don't generate it simultaneously.
+show_memory = not IS_READ_THE_DOCS
 
 sphinx_gallery_conf = {
     "backreferences_dir": "gen_modules/backreferences",

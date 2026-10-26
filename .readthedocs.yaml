@@ -37,6 +37,26 @@ build:
       # and the build jobs run without root access. Therefore, Chrome is installed with Kaleido,
       # which downloads Chrome for Testing to the user data directory, where Kaleido finds it automatically.
       - "$READTHEDOCS_VIRTUALENV_PATH/bin/kaleido_get_chrome"
+    pre_build:
+      # Generate the reference data of the fluid solver before the examples, like on CI.
+      # This is significantly faster with processes than with threads, as most of it holds the GIL.
+      # The memory usage of this is small, unlike that of the examples, which are therefore run with threads.
+      # As Numba caching is enabled on Read the Docs, this also compiles and caches some of the Numba functions for the examples.
+      - PTTOOLS_USE_THREADS=0 "$READTHEDOCS_VIRTUALENV_PATH/bin/python" -m pttools.bubble.fluid_reference
+    build:
+      # The PDF is built like by default, except that latexmk is run with the Makefile that Sphinx generates,
+      # like "make latexpdf" of docs/Makefile does, instead of directly.
+      # This sets XINDYOPTS for xindy, without which the index of the PDF fails to build,
+      # and allows running latexmk with -xelatex instead of -pdf. With -pdf, xelatex produces a PDF on every pass,
+      # but with -xelatex only once after the last pass, which makes the PDF build faster. See also docs/Makefile.
+      # The doctrees directory is the same as for the other formats, so that the sources don't have to be read again.
+      # Like by default, the errors of latexmk don't fail the build, as long as the PDF is produced.
+      pdf:
+        - cd docs && "$READTHEDOCS_VIRTUALENV_PATH/bin/python" -m sphinx -T -b latex -d _build/doctrees -D language=en . "$READTHEDOCS_OUTPUT/pdf"
+        - cd "$READTHEDOCS_OUTPUT/pdf" && (make all-pdf LATEXMKOPTS="-xelatex -f -interaction=nonstopmode" < /dev/null || echo "latexmk failed. See the output above.")
+        # Read the Docs accepts only a single file in the output directory of the PDF.
+        # The name of the PDF comes from latex_documents of docs/conf.py, which is by default the project name in lower case.
+        - cd "$READTHEDOCS_OUTPUT/pdf" && find . -mindepth 1 -not -name "$READTHEDOCS_PROJECT.pdf" -delete && ls -l
 
 # Optionally build your docs in additional formats such as PDF
 formats: all
