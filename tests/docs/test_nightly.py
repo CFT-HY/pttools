@@ -175,8 +175,11 @@ def create_repo(tmp_path: Path, fake_uv: str) -> tuple[Path, Path, dict[str, str
     fake_bin.mkdir()
     (fake_bin / "uv").write_text(fake_uv)
     (fake_bin / "uv").chmod(0o755)
+    # The figure directories set by a nightly run that runs these tests are removed,
+    # as the fake uv would otherwise use one of them instead of that of the test repository.
+    env = {key: value for key, value in os.environ.items() if not key.endswith("_FIG_DIR")}
     # The directory in $UV_INSTALL_DIR is put first in the PATH of the nightly run.
-    return repo, script, {**os.environ, "UV_INSTALL_DIR": str(fake_bin)}
+    return repo, script, {**env, "UV_INSTALL_DIR": str(fake_bin)}
 
 
 #: A fake uv that creates the outputs of the documentation and wheel builds, and succeeds for the other commands.
