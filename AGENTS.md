@@ -34,7 +34,8 @@
   for PTtools and PTPlot (if it exists in `../PTPlot`) in sequence. It is run by cron. It is documented in `./docs/dev.rst`.
   - Check the status of the nightly run with `./pttools/docs/nightly.py --status`, or `pttools/docs/nightly.py` without arguments.
     It prints the crontab entry, the schedule and the next run time, the current time,
-    and for each repository, whether a nightly run is currently in progress, and the last lines of its latest log `./logs/nightly_YYYY-MM-DD.log`.
+    and for each repository, whether a nightly run is currently in progress, and the last lines of its latest log `./logs/nightly_YYYY-MM-DD.log`
+    (or `nightly_YYYY-MM-DD_2.log` etc. for the later runs of the same day).
   - A nightly run in progress and all its child processes can be stopped with `./pttools/docs/nightly.py --stop`,
     and the next nightly run can be skipped with `./pttools/docs/nightly.py --skip`.
     The skip is consumed by the next `--run`, and it can be cancelled by deleting `./nightly.skip` of each repository.

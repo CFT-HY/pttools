@@ -98,6 +98,34 @@ def test_tail(tmp_path: Path, n_lines: int) -> None:
     assert nightly.tail(path, 5) == lines[-5:]
 
 
+def test_create_log_file(tmp_path: Path) -> None:
+    """A new log file should be created for each run, with a suffix for the later runs of the same day."""
+    repo = Repo(tmp_path)
+    names = [nightly.create_log_file(repo, NOW.date()).name for _ in range(3)]
+    assert names == ["nightly_2026-10-04.log", "nightly_2026-10-04_2.log", "nightly_2026-10-04_3.log"]
+    assert nightly.create_log_file(repo, datetime.date(2026, 10, 5)).name == "nightly_2026-10-05.log"
+
+
+def test_log_files(tmp_path: Path) -> None:
+    """The log files should be in the order of the runs, also when the suffix has multiple digits."""
+    repo = Repo(tmp_path)
+    repo.log_dir.mkdir()
+    names = [
+        "nightly_2026-10-03_2.log",
+        "nightly_2026-10-04.log",
+        "nightly_2026-10-04_2.log",
+        "nightly_2026-10-04_10.log",
+        "nightly_2026-10-05.log",
+    ]
+    for name in [*reversed(names), "nightly_other.log"]:
+        (repo.log_dir / name).touch()
+    assert [path.name for path in nightly.log_files(repo)] == names
+    assert nightly.latest_log_file(repo, NOW.date()).name == "nightly_2026-10-04_10.log"
+    # A log file is created if there is none of the date.
+    assert nightly.latest_log_file(repo, datetime.date(2026, 10, 6)).name == "nightly_2026-10-06.log"
+    assert (repo.log_dir / "nightly_2026-10-06.log").exists()
+
+
 def test_lock(tmp_path: Path) -> None:
     """The lock should be detected while it is held, and the run information should be readable from the lock file."""
     repo = Repo(tmp_path)
@@ -270,10 +298,14 @@ def test_skip(tmp_path: Path) -> None:
     assert "as requested with --skip" in log_file.read_text()
     assert "Next run will be skipped: NO" in run_script("--status").stdout
 
-    # The run after the skipped one should not be skipped.
+    # The run after the skipped one should not be skipped, and it should have its own log.
     result = run_script("--run")
     assert result.returncode == 3
     assert "The nightly run of repo failed with exit code 3." in result.stderr
+    second_log_file = log_file.with_name(f"{log_file.stem}_2.log")
+    assert f"See the log {second_log_file}" in result.stderr
+    assert "as requested with --skip" not in second_log_file.read_text()
+    assert f"Last lines of the latest log {second_log_file}" in run_script("--status").stdout
 
 
 @pytest.mark.skipif(not sys.platform.startswith("linux"), reason="Finding the processes requires /proc of Linux.")
@@ -383,6 +415,24 @@ def test_sequence_lock(tmp_path: Path) -> None:
     with (repo / "nightly_sequence.lock").open("w") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         result = subprocess.run([sys.executable, script, "--run"], env=env, capture_output=True, text=True, check=False)
+        assert (result.returncode, result.stdout, result.stderr) == (1, "", "")
+        log_files = list((repo / "logs").glob("nightly_*.log"))
+        assert len(log_files) == 1
+        assert "Another nightly run (PID unknown) is in progress." in log_files[0].read_text()
+        # The message of a run that was not started should be appended to the latest log instead of a new one.
+        subprocess.run([sys.executable, script, "--run"], env=env, capture_output=True, text=True, check=False)
+    assert list((repo / "logs").glob("nightly_*.log")) == log_files
+    assert log_files[0].read_text().count("Another nightly run (PID unknown) is in progress.") == 2
+
+
+def test_repo_lock(tmp_path: Path) -> None:
+    """The run of a repository should not be started while another run of it is in progress."""
+    repo, script, env = create_repo(tmp_path, FAKE_UV)
+    log_file = nightly.create_log_file(Repo(repo), datetime.date.today())
+    with (repo / "nightly.lock").open("w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        result = subprocess.run([sys.executable, script, "--run"], env=env, capture_output=True, text=True, check=False)
     assert (result.returncode, result.stdout, result.stderr) == (1, "", "")
-    log = next((repo / "logs").glob("nightly_*.log")).read_text()
-    assert "Another nightly run (PID unknown) is in progress." in log
+    # The message should be appended to the log of the run in progress instead of a new log.
+    assert list((repo / "logs").glob("nightly_*.log")) == [log_file]
+    assert "Another nightly run (PID unknown) of repo is in progress. Skipping repo." in log_file.read_text()

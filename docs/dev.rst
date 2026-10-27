@@ -138,6 +138,9 @@ The HDF5 files ``*.h5`` are left out of the archive to save space, but their che
 If an archive of the same day already exists, a suffix ``_2``, ``_3`` etc. is added to the filename.
 
 The run of each repository logs to ``./logs/nightly_YYYY-MM-DD.log`` of that repository.
+If that log already exists, e.g. when the run is started manually after the nightly run of the same day,
+a suffix ``_2``, ``_3`` etc. is added to the filename, so that each run has its own log.
+The message of a run that was not started, as another run was in progress, is appended to the latest log of the day.
 The run of a repository is skipped if its HEAD commit is older than 24 hours,
 so that unchanged code is not rebuilt every night.
 The maximum age of the commit can be adjusted with the ``MAX_COMMIT_AGE``

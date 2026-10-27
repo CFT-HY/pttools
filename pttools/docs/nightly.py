@@ -53,6 +53,9 @@ DOCS_TARGET: str = "all-nofail-links"
 #: The 7-Zip wildcards of the files that are left out of the archive.
 #: The checksum files ``*.h5.sha256`` of the HDF5 files are still included.
 ARCHIVE_EXCLUDE: tuple[str, ...] = ("*.h5",)
+#: The filename of a log of a nightly run: ``nightly_YYYY-MM-DD.log``,
+#: or ``nightly_YYYY-MM-DD_2.log``, ``nightly_YYYY-MM-DD_3.log`` etc. for the later runs of the same day
+LOG_FILE_PATTERN: re.Pattern[str] = re.compile(r"nightly_(\d{4}-\d{2}-\d{2})(?:_(\d+))?\.log")
 #: The command with which the nightly run is run
 RUN_COMMAND: str = f"{SCRIPT_PATH} --run"
 #: The string by which the crontab entry of the nightly run is found
@@ -97,7 +100,7 @@ class Repo:
 
     @property
     def log_dir(self) -> Path:
-        """The directory of the logs ``nightly_YYYY-MM-DD.log``."""
+        """The directory of the logs ``nightly_YYYY-MM-DD.log``, see :data:`LOG_FILE_PATTERN`."""
         return self.path / "logs"
 
     @property
@@ -305,6 +308,20 @@ def format_time(value: datetime.datetime) -> str:
     :return: the time, e.g. ``Sun 2026-10-04 12:25:06 EEST``
     """
     return value.astimezone().strftime("%a %Y-%m-%d %H:%M:%S %Z")
+
+
+def log_files(repo: Repo) -> list[Path]:
+    """The log files of the nightly runs of a repository, in the order of the runs.
+
+    :param repo: the repository
+    :return: the paths of the log files that match :data:`LOG_FILE_PATTERN`, from the oldest to the latest
+    """
+    logs = []
+    for path in repo.log_dir.glob("nightly_*.log"):
+        match = LOG_FILE_PATTERN.fullmatch(path.name)
+        if match is not None:
+            logs.append(((match[1], int(match[2] or 1)), path))
+    return [path for _, path in sorted(logs)]
 
 
 def tail(path: Path, lines: int) -> list[str]:
@@ -602,7 +619,7 @@ def repo_status(repo: Repo, now: datetime.datetime) -> None:
                 print(f"  {format_process(descendant)}")
         print(f"  The run can be stopped with: {SCRIPT_PATH} --stop")
 
-    logs = sorted(repo.log_dir.glob("nightly_*.log"))
+    logs = log_files(repo)
     if not logs:
         print(f"Last lines of the latest log: (no logs in {repo.log_dir})")
         return
@@ -612,6 +629,42 @@ def repo_status(repo: Repo, now: datetime.datetime) -> None:
 
 
 # -- Nightly run -------------------------------------------------------------
+
+
+def create_log_file(repo: Repo, date: datetime.date) -> Path:
+    """Create a new log file for a nightly run of a repository.
+
+    The log file is ``nightly_YYYY-MM-DD.log``, or if it already exists,
+    ``nightly_YYYY-MM-DD_2.log``, ``nightly_YYYY-MM-DD_3.log`` etc.
+    The file is created atomically, so that two runs never get the same log file.
+
+    :param repo: the repository
+    :param date: the date of the run
+    :return: the path of the created log file
+    """
+    repo.log_dir.mkdir(parents=True, exist_ok=True)
+    i = 1
+    while True:
+        log_file = repo.log_dir / f"nightly_{date:%Y-%m-%d}{f'_{i}' if i > 1 else ''}.log"
+        try:
+            os.close(os.open(log_file, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o666))
+        except FileExistsError:
+            i += 1
+        else:
+            return log_file
+
+
+def latest_log_file(repo: Repo, date: datetime.date) -> Path:
+    """The latest log file of a repository of a date, to which messages of the runs that were not started are appended.
+
+    :param repo: the repository
+    :param date: the date
+    :return: the path of the latest existing log file of the date, or of a new log file if there is none
+    """
+    logs = [log_file for log_file in log_files(repo) if log_file.name.startswith(f"nightly_{date:%Y-%m-%d}")]
+    if logs:
+        return logs[-1]
+    return create_log_file(repo, date)
 
 
 def log(message: str) -> None:
@@ -866,18 +919,20 @@ def run_repo(repo: Repo, uv: str | None, original_stdout: TextIO, original_stder
         so that the runs of the next repositories are not started
     """
     started = datetime.datetime.now()
-    repo.log_dir.mkdir(parents=True, exist_ok=True)
-    log_file = repo.log_dir / f"nightly_{started:%Y-%m-%d}.log"
-    if original_stdout.isatty():
-        print(f"Logging the nightly run of {repo.name} to {log_file}", file=original_stdout, flush=True)
-    redirect_output(log_file)
-
     lock_fd = acquire_lock(repo.lock_file)
     if lock_fd is None:
         _, info = read_lock_file(repo)
         pid = info["pid"] if info is not None else "unknown"
-        log(f"Another nightly run (PID {pid}) of {repo.name} is in progress. Skipping {repo.name}.")
+        append_log(
+            latest_log_file(repo, started.date()),
+            f"Another nightly run (PID {pid}) of {repo.name} is in progress. Skipping {repo.name}.",
+        )
         return 1
+
+    log_file = create_log_file(repo, started.date())
+    if original_stdout.isatty():
+        print(f"Logging the nightly run of {repo.name} to {log_file}", file=original_stdout, flush=True)
+    redirect_output(log_file)
 
     exit_code = 1
     stopped = False
@@ -927,8 +982,7 @@ def run(repos: collections.abc.Sequence[Repo]) -> int:
         if sys.stdout.isatty():
             print(message)
         for repo in repos:
-            repo.log_dir.mkdir(parents=True, exist_ok=True)
-            append_log(repo.log_dir / f"nightly_{datetime.datetime.now():%Y-%m-%d}.log", message)
+            append_log(latest_log_file(repo, datetime.date.today()), message)
         return 1
 
     signal.signal(signal.SIGTERM, raise_stop_requested)
