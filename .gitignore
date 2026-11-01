@@ -59,7 +59,6 @@ pytest.txt
 .DS_Store
 .env
 .idea
-.mcp.json
 .pytest_cache
 .pyrefly_cache
 .ruff_cache
