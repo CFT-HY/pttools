@@ -23,6 +23,7 @@ import time
 import matplotlib
 import pytest
 
+from pttools.bubble.fluid_reference import ref
 from pttools.logging import setup_logging
 from pttools.utils import system
 from pttools.utils.system import AVAILABLE_CPU_CORES
@@ -63,8 +64,11 @@ RUN_ON_SAME_WORKER_ATTR: str = "RUN_ON_SAME_WORKER"
 XDIST_GROUP_MARKER: str = "xdist_group"
 
 
-def configure_testing(name: str = "pttools", log_dir: str | os.PathLike[str] | None = None) -> None:
-    """Mark that unit tests are running, select the non-interactive Matplotlib backend and set up logging.
+def configure_testing(
+        name: str = "pttools",
+        log_dir: str | os.PathLike[str] | None = None,
+        reference: bool = True) -> None:
+    """Mark that unit tests are running, select the Agg backend, set up logging and load the fluid reference data.
 
     Without a display Matplotlib falls back to the Agg backend automatically,
     but with one (e.g. ``$DISPLAY`` of SSH X11 forwarding) it would select an interactive backend such as TkAgg.
@@ -73,15 +77,26 @@ def configure_testing(name: str = "pttools", log_dir: str | os.PathLike[str] | N
     e.g. in the worker threads of :func:`pttools.speedup.parallel.run_parallel`,
     which can deadlock the test.
 
+    The reference data of :func:`pttools.bubble.fluid_reference.ref` is generated, if it does not exist yet.
+    With pytest-xdist, the ``pytest_configure`` hooks are run in the main process
+    before the worker processes are started in ``pytest_sessionstart``.
+    Therefore, the data is generated only once, by the main process,
+    instead of the workers attempting to generate it simultaneously,
+    which would result in errors due to the locking of the file.
+    The workers then only load the existing data.
+
     This is called by :func:`pytest_configure` with the default arguments.
     Other projects can call this in their own ``pytest_configure`` with their own arguments.
 
     :param name: name of the log files, see :func:`pttools.logging.setup_logging`
     :param log_dir: directory of the log files, see :func:`pttools.logging.setup_logging`
+    :param reference: whether to generate or load the reference data of the fluid solver
     """
     matplotlib.use("Agg", force=True)
     system._TESTING = True  # noqa: SLF001
     setup_logging(name=name, log_dir=log_dir)
+    if reference:
+        ref()
 
 
 def defines_class_setup(cls: type) -> bool:
