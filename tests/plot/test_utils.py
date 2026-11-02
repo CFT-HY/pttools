@@ -59,8 +59,10 @@ def test_save_fig_no_makedirs(tmp_path: Path) -> None:
     assert saved_files(tmp_path) == []
 
 
-def test_show_figs_close() -> None:
+def test_show_figs_close(monkeypatch: pytest.MonkeyPatch) -> None:
     """In the unit tests the shown figures are closed even with the non-interactive Agg backend."""
+    # Drawing is disabled in the unit tests on GitHub Actions.
+    monkeypatch.setattr(pttools.plot.utils, "ENABLE_DRAWING", True)
     figs = [Figure(), Figure()]
     nums_before = set(plt.get_fignums())
     with warnings.catch_warnings():
@@ -70,8 +72,10 @@ def test_show_figs_close() -> None:
     assert set(plt.get_fignums()) == nums_before
 
 
-def test_show_fig_no_close() -> None:
+def test_show_fig_no_close(monkeypatch: pytest.MonkeyPatch) -> None:
     """With close=False the shown figure remains registered with pyplot."""
+    # Drawing is disabled in the unit tests on GitHub Actions.
+    monkeypatch.setattr(pttools.plot.utils, "ENABLE_DRAWING", True)
     fig = Figure()
     show_fig(fig, close=False)
     try:
