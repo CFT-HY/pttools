@@ -192,13 +192,13 @@ apidoc_modules = [
         "path": str(TESTS_DIR),
         "destination": "gen_modules/tests"
     },
-    {
-        # This file is excluded, since importing it for autodoc would run it a second time.
-        # The figure scripts are excluded, as they are already included with the plot directive.
-        "path": str(DOCS_DIR),
-        "destination": "gen_modules/docs",
-        "exclude_patterns": [str(DOCS_DIR / "conf.py"), str(DOCS_DIR / "fig")]
-    }
+    # {
+    #     # This file is excluded, since importing it for autodoc would run it a second time.
+    #     # The figure scripts are excluded, as they are already included with the plot directive.
+    #     "path": str(DOCS_DIR),
+    #     "destination": "gen_modules/docs",
+    #     "exclude_patterns": [str(DOCS_DIR / "conf.py"), str(DOCS_DIR / "fig")]
+    # }
 ]
 # apidoc_max_depth = 6
 apidoc_module_first = True

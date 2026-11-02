@@ -50,7 +50,6 @@ PTtools is also `available on Docker Hub <https://hub.docker.com/r/cfthy/pttools
   gen_modules/pttools/pttools
   gen_modules/examples/examples
   gen_modules/tests/tests
-  gen_modules/docs/docs
   history
   acknowledgements
   see_also
