@@ -1,4 +1,4 @@
-"""Utilities for PTtools models."""
+"""Utilities for validation of values."""
 
 import inspect
 import logging
