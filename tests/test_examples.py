@@ -38,6 +38,7 @@ from examples.props import (
     n_points,
     noise,
     reference_props,
+    ssm_process,
     suppression,
     vp_vm_plane,
     w_by_w,
@@ -290,6 +291,11 @@ class ExampleTest(unittest.TestCase):
     def test_reference_props() -> None:
         """Test that the example ``examples.props.reference_props`` runs without errors."""
         close_figs(reference_props.main())
+
+    @staticmethod
+    def test_ssm_process() -> None:
+        """Test that the example ``examples.props.ssm_process`` runs without errors."""
+        close_figs(*ssm_process.main())
 
     @staticmethod
     def test_suppression() -> None:

@@ -99,6 +99,8 @@ def plot_spectra_multi_common(
         ncols: int = 2,
         labels: tp.Sequence[str | None] | None = None,
         legend: bool | None = None,
+        eb: bool = True,
+        gb: bool = True,
         **kwargs: tp.Any) -> tuple[Figure, np.ndarray]:
     """Common steps for plotting multiple spectra."""
     if fig is None:
@@ -108,7 +110,7 @@ def plot_spectra_multi_common(
     plot_bubbles_v([spectrum.bubble for spectrum in spectra], fig, flat[0], legend=legend, **kwargs)
     plot_spectra_v(spectra, fig=fig, ax=flat[1], **kwargs)
     plot_spectra_gw(spectra, fig=fig, ax=flat[2], **kwargs)
-    plot_spectra(spectra, fig=fig, ax=flat[3], labels=labels, legend=legend, **kwargs)
+    plot_spectra(spectra, fig=fig, ax=flat[3], labels=labels, legend=legend, eb=eb, gb=gb, **kwargs)
     flat[0].set_title("Fluid velocity profile")
     flat[1].set_title("Power spectrum of the velocity field")
     flat[2].set_title("GW power spectrum")
@@ -123,13 +125,27 @@ def plot_spectra_multi_flat(
         path: str | os.PathLike[str] | None = None,
         labels: tp.Sequence[str | None] | None = None,
         legend: bool | None = None,
+        eb: bool = True,
+        gb: bool = True,
         **kwargs: tp.Any) -> tuple[Figure, th.AxesArr1D]:
-    """Plot multiple spectra in a flat layout."""
+    """Plot multiple spectra in a flat layout.
+
+    :param spectra: the spectra
+    :param fig: the figure to plot on
+    :param path: if given, save the figure to this path
+    :param labels: labels of the spectra
+    :param legend: whether to show the legend
+    :param eb: whether to include the extragalactic compact binary noise in the noise and the SNR
+    :param gb: whether to include the galactic compact binary noise in the noise and the SNR
+    :param kwargs: additional arguments for the plotting functions
+    :return: the figure and the 1D array of axes
+    """
     fig, axs = plot_spectra_multi_common(
         spectra, fig,
         figsize=(14, 4),
         nrows=1, ncols=4,
         labels=labels, legend=legend,
+        eb=eb, gb=gb,
         **kwargs
     )
 
@@ -153,6 +169,22 @@ def plot_spectra_multi_flat(
 # Individual plotting functions
 # -----
 
+def noise_label(eb: bool = True, gb: bool = True) -> str:
+    """Legend label for the LISA noise with the given noise sources.
+
+    :param eb: whether the extragalactic compact binary noise is included
+    :param gb: whether the galactic compact binary noise is included
+    :return: the label
+    """
+    if eb and gb:
+        return NOISE_LABEL
+    if eb:
+        return r"$\mathcal{P}_\text{LISA + EB noise} h^2$"
+    if gb:
+        return r"$\mathcal{P}_\text{LISA + GB noise} h^2$"
+    return NOISE_INS_LABEL
+
+
 def plot_spectra(
         spectra: tp.Collection[Omgw0Base],
         fig: Figure | None = None,
@@ -160,12 +192,26 @@ def plot_spectra(
         path: str | os.PathLike[str] | None = None,
         labels: tp.Sequence[str | None] | None = None,
         legend: bool | None = None,
+        eb: bool = True,
+        gb: bool = True,
         **kwargs: tp.Any) -> FigAndAxes:
-    r"""Plot the GW spectra today $\mathcal{P}_{\text{gw},0}(f)$."""
+    r"""Plot the GW spectra today $\mathcal{P}_{\text{gw},0}(f)$ together with the LISA noise.
+
+    :param spectra: the spectra
+    :param fig: the figure to plot on
+    :param ax: the axes to plot on
+    :param path: if given, save the figure to this path
+    :param labels: labels of the spectra
+    :param legend: whether to show the legend
+    :param eb: whether to include the extragalactic compact binary noise in the noise and the SNR
+    :param gb: whether to include the galactic compact binary noise in the noise and the SNR
+    :param kwargs: arguments for :py:meth:`matplotlib.axes.Axes.plot`
+    :return: the figure and the axes
+    """
     fig, ax = create_fig_ax(fig, ax)
     for i, spectrum in enumerate(spectra):
         snr: float
-        snr, _f, _omgw0_h2, _f_noise, _noise = spectrum.snr()
+        snr, _f, _omgw0_h2, _f_noise, _noise = spectrum.snr(noise_eb=eb, noise_gb=gb)
         ax.plot(
             spectrum.f(),
             spectrum.omgw0_h2(),
@@ -176,7 +222,7 @@ def plot_spectra(
     f_min = np.nanmin([np.nanmin(spectrum.f()) for spectrum in spectra])
     f_max = np.nanmax([np.nanmax(spectrum.f()) for spectrum in spectra])
     f_noise: th.FloatArr1D = np.logspace(np.log10(f_min), np.log10(f_max), 100, dtype=np.float64)
-    ax.plot(f_noise, omega_noise_h2(f_noise), label=NOISE_LABEL)
+    ax.plot(f_noise, omega_noise_h2(f_noise, eb=eb, gb=gb), label=noise_label(eb=eb, gb=gb))
     ax.set_xlabel(F_LABEL)
     ax.set_xscale("log")
     ax.set_xlim(f_min, f_max)

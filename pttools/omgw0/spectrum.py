@@ -442,6 +442,8 @@ class Spectrum(Omgw0Base, SSMSpectrum):
             path: str | os.PathLike[str] | None = None,
             label: str | None = None,
             legend: bool = False,
+            eb: bool = True,
+            gb: bool = True,
             **kwargs: tp.Any) -> tuple[Figure, th.AxesArr1D]:
         """Plot the fluid velocity profile, the velocity and GW power spectra, and the GW power spectrum today.
 
@@ -451,11 +453,14 @@ class Spectrum(Omgw0Base, SSMSpectrum):
         :param path: if given, save the figure to this path
         :param label: label of the spectrum
         :param legend: whether to show the legend
+        :param eb: whether to include the extragalactic compact binary noise in the noise and the SNR
+        :param gb: whether to include the galactic compact binary noise in the noise and the SNR
         :param kwargs: additional arguments for :py:func:`pttools.plot.spectra.plot_spectra_multi_flat`
         :return: the figure and the 1D array of axes
         """
         from pttools.plot.spectra import plot_spectra_multi_flat  # noqa: PLC0415
-        return plot_spectra_multi_flat([self], fig=fig, path=path, labels=[label], legend=legend, **kwargs)
+        return plot_spectra_multi_flat(
+            [self], fig=fig, path=path, labels=[label], legend=legend, eb=eb, gb=gb, **kwargs)
 
 
 # These are object arrays. Numpy typing has no way of expressing the element type of an object array,

@@ -3,4 +3,4 @@
 from examples.props.ssm_process import main
 from pttools.plot.utils import show_fig
 
-show_fig(main())
+show_fig(main()[0])

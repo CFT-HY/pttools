@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from examples.utils import save_and_show_fig
+from examples.utils import save_and_show_figs
 from pttools.bubble import Bubble
 from pttools.math import as_latex
 from pttools.models import ConstCSModel
@@ -23,8 +23,12 @@ if th.TYPE_CHECKING_OR_DOCS:
 
 
 @log_duration
-def main() -> Figure:
-    """Plot the intermediate steps of the Sound Shell Model for a single bubble"""
+def main() -> tuple[Figure, Figure]:
+    """Plot the intermediate steps of the Sound Shell Model for a single bubble
+
+    :return: the figure with all the LISA noise sources,
+        and the figure with only the LISA instrument noise
+    """
     model = ConstCSModel.cached(css2=1/4, csb2=1/4, alpha_n_min=0.1)
 
     # Create and simulate the fluid profile of a bubble.
@@ -37,9 +41,13 @@ def main() -> Figure:
         label_latex=rf"$T_*={as_latex(DEFAULT_T_STAR)} \ \mathrm{{GeV}}$"
     )
     fig, _axs = spectrum.plot_multi_flat(legend=True)
-    return fig
+    fig_ins, _axs_ins = spectrum.plot_multi_flat(legend=True, eb=False, gb=False)
+    return fig, fig_ins
 
 
 if __name__ == "__main__":
-    _fig = main()
-    save_and_show_fig(_fig, "ssm_process")
+    _fig, _fig_ins = main()
+    save_and_show_figs({
+        "ssm_process": _fig,
+        "ssm_process_ins": _fig_ins,
+    })
