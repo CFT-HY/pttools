@@ -36,7 +36,7 @@ class TestPerformance(unittest.TestCase):
 
     #: These tests measure the scaling of the performance with the number of threads,
     #: and should therefore not be run concurrently with each other.
-    #: See the "pytest_collection_modifyitems" hook in conftest.py for details.
+    #: See the "pytest_collection_modifyitems" hook in pttools/utils/pytest.py for details.
     RUN_ON_SAME_WORKER: tp.ClassVar[bool] = True
 
     @staticmethod
