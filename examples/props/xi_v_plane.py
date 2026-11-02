@@ -5,7 +5,8 @@ xi, v plane
 $(\xi, v)$ plane of the bag model.
 """
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 from examples.utils import save_and_show_fig
 from pttools.utils.time import log_duration
@@ -14,11 +15,11 @@ from tests.paper.plot_plane_paper import plot_plane
 
 
 @log_duration
-def main() -> plt.Figure:
+def main() -> Figure:
     r"""Plot the $(\xi, v)$ plane of the bag model."""
     data = xiv_plane(separate_phases=False)
-    fig: plt.Figure = plt.figure()
-    ax: plt.Axes = fig.add_subplot()
+    fig: Figure = Figure()
+    ax: Axes = fig.add_subplot()
     plot_plane(ax=ax, data_s=data, selected_solutions=False)
     return fig
 

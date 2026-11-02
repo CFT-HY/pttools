@@ -11,6 +11,7 @@ from .fluid_shell_bag import *
 from .fluid_shells_bag import *
 from .g_cs2 import *
 from .lattice import *
+from .lock import *
 from .model import *
 from .models import *
 from .plotly import *

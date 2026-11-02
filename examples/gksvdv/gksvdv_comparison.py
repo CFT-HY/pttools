@@ -6,7 +6,7 @@ Comparison of Giese et al. and PTtools solvers
 import logging
 import typing as tp
 
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 import numpy as np
 
 from examples.utils import save_and_show_figs
@@ -24,7 +24,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 def main(
         colors: tp.Sequence[str] = ("b", "y", "r", "g", "purple", "grey"),
         alpha_ns: FloatArr1D = GKSVDV_ALPHA_N,
-        n_v_walls: int | None = None) -> tuple[plt.Figure, plt.Figure]:
+        n_v_walls: int | None = None) -> tuple[Figure, Figure]:
     """Comparison of Giese et al. and PTtools solvers
 
     :param n_v_walls: number of wall speeds. Defaults to 10 in unit tests and CI, and to 50 otherwise.
@@ -38,8 +38,8 @@ def main(
         logger.info("Model parameters: %s", model.params_str())
 
     figsize_x = 10
-    fig1: plt.Figure = plt.figure(figsize=(figsize_x, 6))
-    fig2: plt.Figure = plt.figure(figsize=(figsize_x, 6))
+    fig1: Figure = Figure(figsize=(figsize_x, 6))
+    fig2: Figure = Figure(figsize=(figsize_x, 6))
     axs1 = fig1.subplots(1, 2)
     ax1 = axs1[0]
     ax2 = axs1[1]

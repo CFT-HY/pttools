@@ -76,9 +76,8 @@ dependencies = [
     "h5py >= 3.16.0",
     # For Plotly image export
     "kaleido >= 1.3.0",
-    # Matplotlib 3.9.1 wheels are broken
-    # https://pypi.org/project/matplotlib/3.9.1/
-    "matplotlib >= 3.10.9",
+    # Matplotlib 3.11 is required for registering existing figures with pyplot in pttools.plot.utils.show_figs.
+    "matplotlib >= 3.11.0",
     # Numba 0.55 breaks the unit tests
     # https://github.com/numba/numba/issues/7751
     # Numba does not yet support free-threading.

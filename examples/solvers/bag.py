@@ -5,7 +5,7 @@ Bag model
 Simple plots for the bag model
 """
 
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 
 from examples.utils import save_and_show_fig
 
@@ -27,7 +27,7 @@ setup_logging()
 def main(
         v_wall: float = 0.85,
         alpha_n: float = 0.05
-    ) -> plt.Figure:
+    ) -> Figure:
     """Compare the old and new solvers for a bag model bubble"""
     model = BagModel.cached(g_s=123, g_b=120, V_s=0.9)
     # model = BagModel(a_s=13.488, a_b=13.159, V_s=0.900, V_b=0.000)
@@ -49,7 +49,7 @@ def main(
         f"wp={ref_data[4]}, wm={ref_data[5]}"
     )
 
-    fig: plt.Figure = plt.figure()
+    fig: Figure = Figure()
     ax1, ax2, ax3, ax4 = fig.subplots(4, 1, sharex=True)
 
     phase = props.find_phase(bubble.xi, bubble.v_wall, bubble.sol_type)

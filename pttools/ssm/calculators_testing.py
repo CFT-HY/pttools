@@ -2,7 +2,8 @@
 
 import itertools
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import numpy as np
 import scipy.fft
 import sympy as sp
@@ -10,6 +11,7 @@ import sympy as sp
 # import time
 # from pttools import speedup
 # from pttools.ssm import resample
+from pttools.plot.utils import show_fig
 from pttools.ssm import const
 from pttools.ssm.sin_transform import sin_transform as _sin_transform
 import pttools.type_hints as th
@@ -90,12 +92,13 @@ def sin_transform_debug(  # noqa: PLR0915
         f: th.FloatArr1D,
         z_st_thresh: float = const.Z_ST_THRESH) -> None:
     """Debugging for sin_transform."""
-    _fig, axs = plt.subplots(2, 3, figsize=(11.7, 8.3))
-    ax1: plt.Axes = axs[0, 0]
-    ax2: plt.Axes = axs[0, 1]
-    ax3: plt.Axes = axs[1, 0]
-    ax4: plt.Axes = axs[1, 1]
-    ax5: plt.Axes = axs[1, 2]
+    fig = Figure(figsize=(11.7, 8.3))
+    axs = fig.subplots(2, 3)
+    ax1: Axes = axs[0, 0]
+    ax2: Axes = axs[0, 1]
+    ax3: Axes = axs[1, 0]
+    ax4: Axes = axs[1, 1]
+    ax5: Axes = axs[1, 2]
 
     # f
     ax1.plot(xi, f, label="f")
@@ -160,4 +163,4 @@ def sin_transform_debug(  # noqa: PLR0915
     ax5.set_ylabel("integral")
 
     ax1.legend()
-    plt.show()
+    show_fig(fig)

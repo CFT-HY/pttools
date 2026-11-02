@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import typing as tp
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 from pttools.plot import utils
 import pttools.type_hints as th
@@ -20,13 +21,13 @@ class ThermoModelsPlot:
         """:param temp: $T$, temperatures, used as the x-axis"""
         self.temp: th.FloatArr1D = temp
 
-        self.fig: plt.Figure = plt.figure()
+        self.fig: Figure = Figure()
         self.axs: th.AxesArr2D = self.fig.subplots(nrows=2, ncols=2)
 
-        self.ax_cs2: plt.Axes = self.axs[0, 0]
-        self.ax_g: plt.Axes = self.axs[0, 1]
-        self.ax_dg_dT: plt.Axes = self.axs[1, 0]
-        self.ax_dx_dT: plt.Axes = self.axs[1, 1]
+        self.ax_cs2: Axes = self.axs[0, 0]
+        self.ax_g: Axes = self.axs[0, 1]
+        self.ax_dg_dT: Axes = self.axs[1, 0]
+        self.ax_dx_dT: Axes = self.axs[1, 1]
 
         self.ax_cs2.set_ylabel("$c_s^2$")
         self.ax_g.set_ylabel("g")
@@ -57,6 +58,6 @@ class ThermoModelsPlot:
 
     def process(self) -> None:
         """Process the plot."""
-        ax: plt.Axes
+        ax: Axes
         for ax in self.axs.flat:
             utils.legend(ax, fontsize="x-small")

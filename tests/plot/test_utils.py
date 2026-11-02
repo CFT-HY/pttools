@@ -1,11 +1,14 @@
 """Test the plotting utilities."""
 
 from pathlib import Path
+import warnings
 
 from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 import pytest
 
-from pttools.plot.utils import save_fig
+import pttools.plot.utils
+from pttools.plot.utils import close_figs, save_fig, show_fig, show_figs
 
 FORMATS: tuple[str, ...] = ("pdf", "svg")
 
@@ -54,3 +57,33 @@ def test_save_fig_no_makedirs(tmp_path: Path) -> None:
     with pytest.raises(FileNotFoundError):
         save_fig(Figure(), "fig", fig_dir=tmp_path, formats=FORMATS, makedirs=False)
     assert saved_files(tmp_path) == []
+
+
+def test_show_figs_close() -> None:
+    """In the unit tests the shown figures are closed even with the non-interactive Agg backend."""
+    figs = [Figure(), Figure()]
+    nums_before = set(plt.get_fignums())
+    with warnings.catch_warnings():
+        # The warning of pyplot.show about the non-interactive backend should be suppressed.
+        warnings.simplefilter("error")
+        show_figs(figs)
+    assert set(plt.get_fignums()) == nums_before
+
+
+def test_show_fig_no_close() -> None:
+    """With close=False the shown figure remains registered with pyplot."""
+    fig = Figure()
+    show_fig(fig, close=False)
+    try:
+        assert fig.canvas.manager is not None
+        assert fig.canvas.manager.num in plt.get_fignums()
+    finally:
+        close_figs(fig)
+
+
+def test_show_figs_disabled(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Nothing is done if drawing is disabled."""
+    monkeypatch.setattr(pttools.plot.utils, "ENABLE_DRAWING", False)
+    fig = Figure()
+    show_fig(fig, close=False)
+    assert fig.canvas.manager is None

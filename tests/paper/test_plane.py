@@ -14,7 +14,8 @@ import timeit
 import typing as tp
 import unittest
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import numpy as np
 
 from pttools import speedup
@@ -47,11 +48,11 @@ class PlaneTolerances(tp.TypedDict, total=False):
 class TestPlane(unittest.TestCase):
     r"""Test the accuracy and performance of the ODE integrators for the $\xi, v$ plane."""
 
-    FIGSIZE: tp.ClassVar[np.ndarray] = np.array([16, 9])*1.7
+    FIGSIZE: tp.ClassVar[tuple[float, float]] = (16 * 1.7, 9 * 1.7)
     FIG_PATH: tp.ClassVar[Path] = utils.TEST_FIGURE_PATH / "integrators"
     grid_shape: tp.ClassVar[th.Shape2D] = (2, 5)
-    grid_fig_abs: tp.ClassVar[plt.Figure]
-    grid_fig_rel: tp.ClassVar[plt.Figure]
+    grid_fig_abs: tp.ClassVar[Figure]
+    grid_fig_rel: tp.ClassVar[Figure]
     axs_abs: tp.ClassVar[th.AxesArr2D]
     axs_rel: tp.ClassVar[th.AxesArr2D]
     ref_data: tp.ClassVar[th.FloatArr3D]
@@ -66,22 +67,23 @@ class TestPlane(unittest.TestCase):
     def setUpClass(cls) -> None:
         """Create the comparison figures and compute the odeint reference data, if plotting is enabled."""
         if PLOT:
-            cls.grid_fig_abs, cls.axs_abs = plt.subplots(*cls.grid_shape, figsize=cls.FIGSIZE)
-            cls.grid_fig_rel, cls.axs_rel = plt.subplots(*cls.grid_shape, figsize=cls.FIGSIZE)
+            cls.grid_fig_abs = Figure(figsize=cls.FIGSIZE)
+            cls.axs_abs = cls.grid_fig_abs.subplots(*cls.grid_shape)
+            cls.grid_fig_rel = Figure(figsize=cls.FIGSIZE)
+            cls.axs_rel = cls.grid_fig_rel.subplots(*cls.grid_shape)
             common_title = r"Comparison of integrators for $\xi$-$v$-plane"
             cls.grid_fig_abs.suptitle(f"{common_title}, absolute errors")
             cls.grid_fig_rel.suptitle(f"{common_title}, relative errors")
             cls.ref_data = plane.xiv_plane(method="odeint", separate_phases=False)
 
     @classmethod
-    def process_output(cls, name: str, fig: plt.Figure, axs: th.AxesArr2D, diffs: dict[int, float]) -> None:
+    def process_output(cls, name: str, fig: Figure, axs: th.AxesArr2D, diffs: dict[int, float]) -> None:
         """Add the performance and error plots to the comparison figure, save it, and animate it with ffmpeg."""
         cls.plot_perf(axs[0, 3])
         cls.plot_diff(axs[0, 4], name, diffs)
         fig.tight_layout()
         path = cls.FIG_PATH / f"integrators_{name}"
         save_fig(fig, path)
-        plt.close(fig)
         if shutil.which("ffmpeg"):
             video_path = path.with_name(f"{path.name}.mp4")
             video_path.unlink(missing_ok=True)
@@ -110,11 +112,9 @@ class TestPlane(unittest.TestCase):
         if PLOT:
             cls.process_output("absolute", cls.grid_fig_abs, cls.axs_abs, cls.mean_abs_diffs)
             cls.process_output("relative", cls.grid_fig_rel, cls.axs_rel, cls.mean_rel_diffs)
-            plt.close(cls.grid_fig_abs)
-            plt.close(cls.grid_fig_rel)
 
     @classmethod
-    def plot_perf(cls, ax: plt.Axes) -> None:
+    def plot_perf(cls, ax: Axes) -> None:
         """Plot the execution times of the solvers, and save them to a file."""
         inds = list(cls.names.keys())
         names = [cls.names[i] for i in inds]
@@ -130,7 +130,7 @@ class TestPlane(unittest.TestCase):
                 file.write(f"{name}: {time} s\n")
 
     @classmethod
-    def plot_diff(cls, ax: plt.Axes, name: str, diffs: dict[int, float]) -> None:
+    def plot_diff(cls, ax: Axes, name: str, diffs: dict[int, float]) -> None:
         """Plot the mean errors of the solvers compared to odeint."""
         diff_dict = {ind: diff for ind, diff in diffs.items() if np.isfinite(diff)}
         inds = list(diff_dict.keys())
@@ -183,14 +183,13 @@ class TestPlane(unittest.TestCase):
                     ("absolute", "relative"),
                     (self.axs_abs, self.axs_rel),
                     (abs_tols, rel_tols), strict=False):
-                fig: plt.Figure = plt.figure()
-                ax2: plt.Axes = fig.add_subplot()
+                fig: Figure = Figure()
+                ax2: Axes = fig.add_subplot()
                 plot_plane_paper.plot_plane(
                     ax=axs[ax[0], ax[1]], data_s=data, method=method, deflag_ref=self.ref_data, **tols)
                 plot_plane_paper.plot_plane(ax=ax2, data_s=data, method=method, deflag_ref=self.ref_data, **tols)
                 fig_name = self.FIG_PATH / f"integrators_{name}_{i}_{plot_plane_paper.get_solver_name(method)}"
                 save_fig(fig, fig_name)
-                plt.close(fig)
 
         data_summed = np.nansum(data, axis=2)
         file_path = utils.TEST_DATA_PATH / "xi-v_plane.txt"

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import numpy as np
 
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
@@ -22,8 +23,8 @@ class ChapmanJouguetPlot:
         r""":param alpha_n: $\alpha_n$, transition strengths at the nucleation temperature, used as the x-axis"""
         self.alpha_n: th.FloatArr1D = alpha_n
 
-        self.fig: plt.Figure = plt.figure()
-        self.ax: plt.Axes = self.fig.add_subplot()
+        self.fig: Figure = Figure()
+        self.ax: Axes = self.fig.add_subplot()
 
         self.ax.set_xlabel(r"$\alpha_n$")
         self.ax.set_ylabel("$v_{CJ}$")

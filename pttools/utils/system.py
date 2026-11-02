@@ -14,6 +14,40 @@ try:
 except ModuleNotFoundError:
     psutil = None
 
+from pttools.type_hints import IS_DOCS
+
+# IS_DOCS is imported on purpose, so that it's available with the other system constants.
+__all__ = [
+    "AVAILABLE_CPU_CORES",
+    "CPU_AFFINITY",
+    "CPU_ARCH",
+    "FORKING",
+    "IS_ARM64",
+    "IS_CFT_BIG_MACHINE",
+    "IS_DOCS",
+    "IS_GITHUB_ACTIONS",
+    "IS_LINUX",
+    "IS_OSX",
+    "IS_PACKAGE",
+    "IS_READ_THE_DOCS",
+    "IS_WINDOWS",
+    "IS_X86_64",
+    "PROCESS_START_METHOD",
+    "PROJECT_DIR",
+    "PTTOOLS_DIR",
+    "RAM_USE_HIGH_PERCENT",
+    "SUPPORTS_FREETHREADING",
+    "SUPPORTS_INTERPRETER_POOL",
+    "UNAME",
+    "dmesg",
+    "platform_info",
+    "project_dir",
+    "psutil_info",
+    "system_info",
+    "testing",
+    "testing_or_ci",
+]
+
 #: Whether currently running tests with pytest. Use :py:func:`pttools.utils.system.testing` to get this value.
 _TESTING: bool = False
 #: The number of available CPU cores

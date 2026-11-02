@@ -7,7 +7,8 @@ import os
 import typing as tp
 
 from matplotlib import ticker
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import numpy as np
 
 from pttools.analysis.bubble_grid import BubbleGridVWAlpha
@@ -31,7 +32,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 class DurationPlot(VwAlphaPlot):
     """Plot the time it took to simulate each bubble."""
 
-    def __init__(self, grid: BubbleGridVWAlpha, fig: plt.Figure | None = None, ax: plt.Axes | None = None):
+    def __init__(self, grid: BubbleGridVWAlpha, fig: Figure | None = None, ax: Axes | None = None):
         """Plot the solving durations of the bubbles on a logarithmic color scale.
 
         :param grid: grid of solved bubbles
@@ -60,8 +61,8 @@ class EntropyPlot(VwAlphaPlot):
             min_level: float,
             max_level: float,
             diff_level: float,
-            fig: plt.Figure | None = None,
-            ax: plt.Axes | None = None):
+            fig: Figure | None = None,
+            ax: Axes | None = None):
         r"""Plot the entropy data, and mark the regions with numerical errors or failures.
 
         The regions with numerical errors are shown in red, the regions with an unphysical $\alpha_+$ in green,
@@ -96,8 +97,8 @@ class DeltaEntropyPlot(VwAlphaPlot):
             w2: th.FloatArr2D,
             w_ref: th.FloatArr2D,
             title: str,
-            fig: plt.Figure | None = None,
-            ax: plt.Axes | None = None):
+            fig: Figure | None = None,
+            ax: Axes | None = None):
         r"""Plot the relative difference $(w_1 - w_2) / w_{\text{ref}}$.
 
         :param grid: grid of solved bubbles
@@ -125,8 +126,8 @@ class EntropyConservationPlot(VwAlphaPlot):
             self,
             grid: BubbleGridVWAlpha,
             diff: th.FloatArr2D,
-            fig: plt.Figure | None = None,
-            ax: plt.Axes | None = None):
+            fig: Figure | None = None,
+            ax: Axes | None = None):
         r"""Plot the entropy generation, and mark the regions where the solver failed in black.
 
         :param grid: grid of solved bubbles
@@ -156,8 +157,8 @@ class GieseApproximationPlot(VwAlphaPlot):
             self,
             grid: BubbleGridVWAlpha,
             diff: th.FloatArr2D,
-            fig: plt.Figure | None = None,
-            ax: plt.Axes | None = None):
+            fig: Figure | None = None,
+            ax: Axes | None = None):
         r"""Plot the relative difference on a logarithmic scale. The non-positive values are not shown.
 
         :param grid: grid of solved bubbles
@@ -185,7 +186,7 @@ class GieseApproximationPlot(VwAlphaPlot):
 class KappaOmegaSumPlot(VwAlphaPlot):
     r"""Plot $\kappa$ + $\omega$ of bubbles as a contour plot."""
 
-    def __init__(self, grid: BubbleGridVWAlpha, fig: plt.Figure | None = None, ax: plt.Axes | None = None):
+    def __init__(self, grid: BubbleGridVWAlpha, fig: Figure | None = None, ax: Axes | None = None):
         r"""Plot $|\kappa + \omega - 1|$ on a logarithmic scale.
 
         :param grid: grid of solved bubbles
@@ -247,10 +248,10 @@ def gen_and_plot_entropy(
         diff_level: float,
         use_bag_solver: bool = False,
         path: str | os.PathLike[str] | None = None,
-        single_plot: bool = False) -> tuple[plt.Figure, th.AxesArr1D | th.AxesArr2D]:
+        single_plot: bool = False) -> tuple[Figure, th.AxesArr1D | th.AxesArr2D]:
     """Generate the entropy plots."""
     figsize = None if single_plot else (16*1.5, 9*1.5)
-    fig: plt.Figure = plt.figure(figsize=figsize)
+    fig: Figure = Figure(figsize=figsize)
     axs = fig.subplots(nrows=len(models), ncols=1 if single_plot else 5)
 
     for i_model, model in enumerate(models):
@@ -293,8 +294,8 @@ def plot_entropy_data(
         min_level: float,
         max_level: float,
         diff_level: float,
-        fig: plt.Figure | None = None,
-        ax: plt.Axes | None = None) -> tuple[plt.Figure, plt.Axes]:
+        fig: Figure | None = None,
+        ax: Axes | None = None) -> tuple[Figure, Axes]:
     """Plot entrpy data that is not from a BubbleGridVWAlpha object."""
     if fig is None or ax is None:
         fig, ax = create_fig_ax()

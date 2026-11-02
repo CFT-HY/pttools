@@ -1,6 +1,7 @@
 r"""Plot $v(\xi)$ and $w(\xi)$ for a fluid shell using the bag model."""
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import numpy as np
 
 from pttools.bubble import SolutionType, const, fluid_bag, relativity
@@ -16,7 +17,7 @@ def plot_fluid_shell_bag(  # noqa: PLR0915
         high_v_approx: bool = False,
         draw: bool | None = None,
         wn_as_w_bar: bool = False) \
-        -> tuple[plt.Figure, fluid_bag.SoundShellDict]:
+        -> tuple[Figure, fluid_bag.SoundShellDict]:
     r"""Plot the fluid shell of a bag model bubble.
 
     Calls :func:`pttools.bubble.fluid.fluid_shell` and plots resulting $v, w$ against $\xi$.
@@ -89,10 +90,10 @@ def plot_fluid_shell_bag(  # noqa: PLR0915
     yscale_enth_min = min(w) / 1.2
     xscale_min = xi[n_wall] * 0.5
 
-    fig: plt.Figure = plt.figure(figsize=(7, 8))
+    fig: Figure = Figure(figsize=(7, 8))
     axs = fig.subplots(2, 1)
-    ax1: plt.Axes = axs[0]
-    ax2: plt.Axes = axs[1]
+    ax1: Axes = axs[0]
+    ax2: Axes = axs[1]
 
     # Velocity plot
     ax1.set_title(

@@ -5,7 +5,6 @@ from pathlib import Path
 import sys
 import unittest
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools import bubble
@@ -99,7 +98,6 @@ class TestShellsBag(unittest.TestCase):
 
         for fig, name in zip([fig_weak, fig_inter, fig_esp], ["weak", "inter", "esp"], strict=False):
             save_fig(fig, FIG_PATH / name)
-            plt.close(fig)
 
         # Generate new reference data
         # np.savetxt(self.shell_file_path("weak"), data_weak)
@@ -129,7 +127,6 @@ class TestShellsBag(unittest.TestCase):
         """Test that plotting a single bag model fluid shell works."""
         fig, _params = plot_fluid_shell_bag(v_wall=0.7, alpha_n=0.052)
         save_fig(fig, FIG_PATH / "fluid_shell_single")
-        plt.close(fig)
 
 
 if __name__ == "__main__":

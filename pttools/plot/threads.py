@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 
 from pttools.plot.utils import FigAndAxes, save_fig
 from pttools.speedup.threads import DEFAULT_VARYING_NUMBA_THREADS, time_with_varying_numba_threads
@@ -15,10 +15,10 @@ def plot_threads(
         n_threads: th.IntArr1D,
         times: th.FloatArr1D,
         n_iterations: int,
-        fig: plt.Figure | None = None) -> FigAndAxes:
+        fig: Figure | None = None) -> FigAndAxes:
     """Plot the execution times for different thread counts."""
     if fig is None:
-        fig = plt.figure()
+        fig = Figure()
     ax1, ax2 = fig.subplots(1, 2)
 
     for ax in (ax1, ax2):

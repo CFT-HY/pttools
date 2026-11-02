@@ -5,7 +5,8 @@ Plot κ(ξ) for various models
 
 import logging
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import numpy as np
 
 from examples.utils import save_and_show_fig
@@ -29,7 +30,7 @@ def alpha_theta_bar_n_to_alpha_n(model: ConstCSModel, alpha_thetabarn: float, wn
 
 
 @log_duration
-def main(n_v_walls: int = 10) -> plt.Figure:
+def main(n_v_walls: int = 10) -> Figure:
     r"""Plot $\kappa(\xi)$ for various models
 
     :param n_v_walls: number of wall speeds
@@ -51,8 +52,8 @@ def main(n_v_walls: int = 10) -> plt.Figure:
         ConstCSModel.cached(a_s=a_s, a_b=a_b, css2=1/4, csb2=1/4, V_s=V_s, allow_invalid=allow_invalid)
     ]
     logger.debug("Models loaded for plot_xi_kappa.")
-    fig: plt.Figure = plt.figure()
-    ax: plt.Axes = fig.add_subplot()
+    fig: Figure = Figure()
+    ax: Axes = fig.add_subplot()
     params = np.zeros((len(models), alpha_ns.size, 2), dtype=np.object_)
     for i_model, model in enumerate(models):
         for i_alpha, alpha_n in enumerate(alpha_ns):

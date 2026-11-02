@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import typing as tp
 
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 
 from pttools.analysis import entropy
 import pttools.type_hints as th
@@ -13,10 +13,10 @@ if th.TYPE_CHECKING_OR_DOCS:
     from pttools.bubble.bubble import Bubble
 
 
-def plot_entropy(bubbles: tp.Iterable[Bubble], colors: tp.Iterable[str], fig: plt.Figure | None = None) -> plt.Figure:
+def plot_entropy(bubbles: tp.Iterable[Bubble], colors: tp.Iterable[str], fig: Figure | None = None) -> Figure:
     """Plot the entropy profiles of given bubbles."""
     if fig is None:
-        fig = plt.figure()
+        fig = Figure()
     ax1 = fig.add_subplot()
     # ax1 = fig.add_subplot(1, 2, 1)
     # ax2 = fig.add_subplot(1, 2, 2, sharex=ax1)

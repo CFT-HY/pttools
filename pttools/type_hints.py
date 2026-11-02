@@ -62,16 +62,18 @@ There are two exceptions to the pattern of ``T: FloatOrArr``:
 import sys
 import typing as tp
 
+#: Whether the documentation is being built with Sphinx.
+#: Sphinx is imported before the modules that it documents, and therefore it's in ``sys.modules`` when they are.
+IS_DOCS: bool = "sphinx" in sys.modules
 #: Whether the type hints are being evaluated, i.e. when type checking or building the documentation with Sphinx.
 #: Sphinx evaluates the type hints, including the values of the type aliases, to document them.
-#: Sphinx is imported before the modules that it documents, and therefore it's in ``sys.modules`` when they are.
 #: The imports that are needed only for the type hints can be done ``if TYPE_CHECKING_OR_DOCS``
 #: to avoid their import time otherwise.
 #: The imports that would cause circular imports have to be done ``if tp.TYPE_CHECKING`` instead.
 #: As the annotations of functions and module-level variables are evaluated
 #: when the module is imported before Python 3.14, the modules that import names only for them
 #: use ``from __future__ import annotations``, so that the annotations do not have to be quoted.
-TYPE_CHECKING_OR_DOCS: bool = tp.TYPE_CHECKING or "sphinx" in sys.modules
+TYPE_CHECKING_OR_DOCS: bool = tp.TYPE_CHECKING or IS_DOCS
 
 # These are used only in the type aliases, which are evaluated lazily,
 # and therefore importing the type hints does not import Matplotlib, Numba, NumPy and SciPy.

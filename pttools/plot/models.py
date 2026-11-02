@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import typing as tp
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 from pttools.plot import utils
 import pttools.type_hints as th
@@ -20,18 +21,18 @@ class ModelsPlot:
         """:param temp: $T$, temperatures, used as the x-axis"""
         self.temp: th.FloatArr1D = temp
 
-        self.fig: plt.Figure = plt.figure(figsize=(11.69, 8.27))
+        self.fig: Figure = Figure(figsize=(11.69, 8.27))
         self.axs: th.AxesArr2D = self.fig.subplots(nrows=3, ncols=3)
-        self.ax_p: plt.Axes = self.axs[0, 0]
-        self.ax_s: plt.Axes = self.axs[0, 1]
-        self.ax_w: plt.Axes = self.axs[0, 2]
-        self.ax_e: plt.Axes = self.axs[1, 0]
-        self.ax_temp: plt.Axes = self.axs[1, 1]
-        self.ax_cs2: plt.Axes = self.axs[1, 2]
-        self.ax_alpha_n: plt.Axes = self.axs[2, 0]
-        self.ax_alpha_plus: plt.Axes = self.axs[2, 1]
+        self.ax_p: Axes = self.axs[0, 0]
+        self.ax_s: Axes = self.axs[0, 1]
+        self.ax_w: Axes = self.axs[0, 2]
+        self.ax_e: Axes = self.axs[1, 0]
+        self.ax_temp: Axes = self.axs[1, 1]
+        self.ax_cs2: Axes = self.axs[1, 2]
+        self.ax_alpha_n: Axes = self.axs[2, 0]
+        self.ax_alpha_plus: Axes = self.axs[2, 1]
 
-        ax: plt.Axes
+        ax: Axes
         for ax in [self.ax_p, self.ax_s, self.ax_w, self.ax_e, self.ax_alpha_n, self.ax_alpha_plus]:
             ax.set_yscale("log")
 
@@ -79,6 +80,6 @@ class ModelsPlot:
 
     def process(self) -> None:
         """Process the plot."""
-        ax: plt.Axes
+        ax: Axes
         for ax in self.axs.flat:
             utils.legend(ax, fontsize="x-small")

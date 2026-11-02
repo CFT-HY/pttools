@@ -9,7 +9,6 @@ import typing as tp
 
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 
@@ -149,7 +148,8 @@ def plot_spectra_comparison(comparison: LatticeComparison, figsize: tuple[float,
     :param figsize: size of the figure
     :return: the figure
     """
-    fig, axs = plt.subplots(1, 2, figsize=figsize)
+    fig = Figure(figsize=figsize)
+    axs = fig.subplots(1, 2)
     plot_velocity_comparison(comparison, fig=fig, ax=axs[0])
     plot_gw_rate_comparison(comparison, fig=fig, ax=axs[1])
     fig.tight_layout()
@@ -289,7 +289,8 @@ def plot_quantities_comparison(comparison: LatticeComparison, figsize: tuple[flo
     :param figsize: size of the figure
     :return: the figure
     """
-    fig, axs = plt.subplots(2, 2, figsize=figsize)
+    fig = Figure(figsize=figsize)
+    axs = fig.subplots(2, 2)
     plot_ubar_comparison(comparison, fig=fig, ax=axs[0, 0])
     plot_integral_scale_comparison(comparison, fig=fig, ax=axs[0, 1])
     plot_kinetic_energy_comparison(comparison, fig=fig, ax=axs[1, 0])
@@ -320,7 +321,8 @@ def plot_gw_rate_time_comparison(
     :return: the figure and the axes
     """
     if axs is None:
-        fig, axs = plt.subplots(2, 1, sharex=True, figsize=(6, 6))
+        fig = Figure(figsize=(6, 6))
+        axs = tp.cast("tp.Sequence[Axes]", fig.subplots(2, 1, sharex=True))
     elif fig is None:
         fig = tp.cast(Figure, axs[0].get_figure())
     run = comparison.run

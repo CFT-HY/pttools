@@ -36,17 +36,13 @@ from __future__ import annotations
 
 import logging
 
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 import pandas as pd
 
 from examples.utils import save_and_show_figs
 from pttools.lattice import CHRW25_RUNS, LatticeRun, load_chrw25_runs, step_ends
 from pttools.plot.lattice import plot_gw_asymptote
-import pttools.type_hints as th
 from pttools.utils.time import log_duration
-
-if th.TYPE_CHECKING_OR_DOCS:
-    from matplotlib.figure import Figure
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -99,7 +95,8 @@ def main() -> dict[str, Figure]:
         return {}
     print(fit_table(lattice_runs).reset_index().to_markdown(index=False))
     cases = fit_cases(lattice_runs)
-    fig, axs = plt.subplots(4, len(cases), figsize=(5 * len(cases), 14), squeeze=False)
+    fig = Figure(figsize=(5 * len(cases), 14))
+    axs = fig.subplots(4, len(cases), squeeze=False)
     for i, (name, run, step_end, description) in enumerate(cases):
         plot_gw_asymptote(
             run, axs[:, i], start_fraction=CHRW25_RUNS[name].fit_start_fraction, step_end=step_end,

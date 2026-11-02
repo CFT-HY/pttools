@@ -5,7 +5,8 @@ Potential
 Plot the shape of the potential of a first-order phase transition.
 """
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import numpy as np
 
 # import sympy as sp
@@ -32,12 +33,12 @@ def b_of_det_zero(a: float, c: float) -> float:
 
 
 @log_duration
-def main() -> plt.Figure:
+def main() -> Figure:
     """Plot the potential at various temperatures"""
     x = np.linspace(0, 2, 50)
 
-    fig: plt.Figure = plt.figure(figsize=(3.6, 3.2))
-    ax: plt.Axes = fig.add_subplot()
+    fig: Figure = Figure(figsize=(3.6, 3.2))
+    ax: Axes = fig.add_subplot()
     a = 1
     c = 1.15
     b = np.array([0, -b_of_det_zero(a, c), -2*np.sqrt(a*c), -2.25, -2.403])

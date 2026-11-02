@@ -7,7 +7,7 @@ Compare :giese_2021:`\ ` fluid profiles with PTtools
 
 import typing as tp
 
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 import numpy as np
 
 from examples.utils import save_and_show_fig
@@ -26,7 +26,7 @@ def main(
         alpha_n: float = 0.3,
         theta_bar: bool = False,
         colors: tp.Sequence[str] = ("r", "g", "b", "orange")
-    ) -> plt.Figure:
+    ) -> Figure:
     r"""Compare the fluid velocity profiles of PTtools and :giese_2021:`\ ` for several models and wall speeds"""
     # v_walls = np.array([0.5, 0.6, 0.65])
     v_walls = np.array([0.8122449, 0.82755102, 0.84285714, 0.85816327])
@@ -43,7 +43,7 @@ def main(
         print("Model:", model.params_str(), model.tn(alpha_n=alpha_n, theta_bar=theta_bar)/model.critical_temp())
         print("v_cj:", v_chapman_jouguet_const_cs(model, alpha_theta_bar_plus=alpha_theta_bar_n))
 
-    fig: plt.Figure = plt.figure(figsize=A4_PAPER_SIZE)
+    fig: Figure = Figure(figsize=A4_PAPER_SIZE)
     axs = fig.subplots(2, 2)
     axs_flat = np.ravel(axs)
 

@@ -13,7 +13,7 @@ import io
 import logging
 import typing as tp
 
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 import numpy as np
 
 from examples.utils import FIG_DIR, save_and_show_figs
@@ -244,10 +244,10 @@ def main(
         )
 
     figs: th.FigArr1D = np.array(
-        [plt.figure(figsize=(12, 10)) for _ in range(3)]
+        [Figure(figsize=(12, 10)) for _ in range(3)]
     )
     figs2: th.FigArr2D = np.array(
-        [[plt.figure(figsize=(12, 5)) for _ in alpha_ns] for _ in range(3)]
+        [[Figure(figsize=(12, 5)) for _ in alpha_ns] for _ in range(3)]
     )
     axs: th.AxesArr3D = np.stack(
         [fig.subplots(alpha_ns.size, v_walls.size) for fig in figs]

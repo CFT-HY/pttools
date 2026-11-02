@@ -4,7 +4,6 @@ import logging
 from pathlib import Path
 import unittest
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from pttools.math import assert_allclose
@@ -28,7 +27,6 @@ class TestBubble(unittest.TestCase):
         figs, fig_ids, data = spu.do_all_plot_ps_1bubble(debug=True, lambda_correction=LambdaCorrection.LEGACY)
         for fig, fig_id in zip(figs, fig_ids, strict=False):
             save_fig(fig, FIG_PATH / f"bubble_{fig_id}", force_formats=True)
-            plt.close(fig)
         data_summed = np.sum(data, axis=2)
         file_path = TEST_DATA_PATH / "bubble.txt"
 

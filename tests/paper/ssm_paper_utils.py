@@ -13,12 +13,14 @@ import os
 from pathlib import Path
 import typing as tp
 
-import matplotlib.pyplot as plt
+from matplotlib import rc_context
+from matplotlib.figure import Figure
 import numpy as np
 from scipy.optimize import curve_fit
 
 from pttools import bubble, ssm
 from pttools.bubble import DEFAULT_ADIABATIC_INDEX
+from pttools.plot.utils import show_figs
 from pttools.speedup import njit
 from pttools.ssm import LambdaCorrection
 import pttools.type_hints as th
@@ -150,7 +152,7 @@ def get_ssm_fit_pars(y: th.FloatArr1D, pow_gw: th.FloatArr1D) -> FitParsSSM:
     return pars[0], pars[1], pars[2]
 
 
-def add_cwg_fit(f_gw: plt.Figure, y: th.FloatArr1D, pow_gw: th.FloatArr1D) -> FitParsCWG:
+def add_cwg_fit(f_gw: Figure, y: th.FloatArr1D, pow_gw: th.FloatArr1D) -> FitParsCWG:
     """Fit the CWG fit function to the GW power spectrum, plot it to the figure and return the fit parameters."""
     p = get_cwg_fit_pars(y, pow_gw)
     pow_gw_sim_cwg = cwg_fitfun(y, p[0], p[1])
@@ -159,7 +161,7 @@ def add_cwg_fit(f_gw: plt.Figure, y: th.FloatArr1D, pow_gw: th.FloatArr1D) -> Fi
     return p
 
 
-def add_ssm_fit(f_gw: plt.Figure, y: th.FloatArr1D, pow_gw: th.FloatArr1D) -> FitParsSSM:
+def add_ssm_fit(f_gw: Figure, y: th.FloatArr1D, pow_gw: th.FloatArr1D) -> FitParsSSM:
     """Fit the SSM fit function to the GW power spectrum, plot it to the figure and return the fit parameters."""
     p = get_ssm_fit_pars(y, pow_gw)
     pow_gw_sim_ssm = ssm_fitfun(y, p[0], p[1], p[2])
@@ -478,7 +480,7 @@ def plot_ps_compare_res(
         nuc_args: bubble.NucArgs = (1.,),
         save_id: str | None = None,
         graph_file_type: str | None = None,
-        method: ssm.Method = ssm.Method.E_CONSERVING) -> tuple[plt.Figure, plt.Figure]:
+        method: ssm.Method = ssm.Method.E_CONSERVING) -> tuple[Figure, Figure]:
     """
     Plots power spectra predictions of SSM with different resolutions in Np_list.
 
@@ -527,7 +529,7 @@ def plot_ps_compare_res(
         nx_string_all += f'{Np[1] // 1000}k'
         nT_string_all += f'{Np[2]}-'
 
-    with plt.rc_context({'legend.fontsize': 12}):
+    with rc_context({'legend.fontsize': 12}):
         fig_v = plotting.plot_ps(
             z_list, pow_v_list, utils.PSType.V, ax_limits=strength, col_list=const.COLOURS)
         fig_gw = plotting.plot_ps(
@@ -553,8 +555,6 @@ def plot_ps_compare_res(
         fig_v.savefig("pow_v_" + graph_file_suffix)
         fig_gw.savefig("pow_gw_" + graph_file_suffix)
 
-    # plt.show()
-
     return fig_v, fig_gw
 
 
@@ -566,7 +566,7 @@ def plot_ps_1bubble(
         graph_file_type: str | None = None,
         Np: th.IntArr1D = const.NP_ARR[-1],
         debug: tp.Literal[False] = False,
-        lambda_correction: LambdaCorrection = LambdaCorrection.NONE) -> plt.Figure: ...
+        lambda_correction: LambdaCorrection = LambdaCorrection.NONE) -> Figure: ...
 
 
 @tp.overload
@@ -578,7 +578,7 @@ def plot_ps_1bubble(
         Np: th.IntArr1D = const.NP_ARR[-1],
         *,
         debug: tp.Literal[True],
-        lambda_correction: LambdaCorrection = LambdaCorrection.NONE) -> tuple[plt.Figure, th.FloatArr2D]: ...
+        lambda_correction: LambdaCorrection = LambdaCorrection.NONE) -> tuple[Figure, th.FloatArr2D]: ...
 
 
 def plot_ps_1bubble(
@@ -588,7 +588,7 @@ def plot_ps_1bubble(
         graph_file_type: str | None = None,
         Np: th.IntArr1D = const.NP_ARR[-1],
         debug: bool = False,
-        lambda_correction: LambdaCorrection = LambdaCorrection.NONE) -> plt.Figure | tuple[plt.Figure, th.FloatArr2D]:
+        lambda_correction: LambdaCorrection = LambdaCorrection.NONE) -> Figure | tuple[Figure, th.FloatArr2D]:
     # Sphinx considers vertical lines as substitution references. Therefore the command \mid has to be used instead.
     r"""
     Plots power spectra predictions of 1 bubble.
@@ -634,8 +634,6 @@ def plot_ps_1bubble(
         graph_file_suffix = f"vw{vw:.2f}alpha{alpha}_"  \
             + nz_string + nx_string + save_id + '.' + graph_file_type
         fig.savefig(MD_PATH / f"one_bub_{graph_file_suffix}")
-
-    # plt.show()
 
     if debug:
         return fig, np.array([z, A2, fp2_2, lam2])
@@ -727,8 +725,6 @@ def plot_ps_compare_nuc(
             + nz_string + nx_string + nT_string + ("" if save_id is None else save_id) + '.' + graph_file_type
         fig_v.savefig(MD_PATH / f"pow_v_{graph_file_suffix}")
         fig_gw.savefig(MD_PATH / f"pow_gw_{graph_file_suffix}")
-    plt.close(fig_v)
-    plt.close(fig_gw)
 
     return v2_list, Omgw_scaled_list, list(p_cwg), list(p_ssm)
 
@@ -838,11 +834,11 @@ def plot_and_save(
         logger.warning("alpha > 0.1, taking strength = inter")
         strength = utils.Strength.INTER
 
-    f1 = plt.figure(figsize=[8, 4])
-    ax_v = plt.gca()
+    f1 = Figure(figsize=(8, 4))
+    ax_v = f1.add_subplot()
 
-    f2 = plt.figure(figsize=[8, 4])
-    ax_gw = plt.gca()
+    f2 = Figure(figsize=(8, 4))
+    ax_gw = f2.add_subplot()
 
     V2_pow_v: list[th.FloatOrArr] = []
     gw_power: list[th.FloatOrArr] = []
@@ -934,7 +930,7 @@ def plot_and_save(
         f"gw power (scaled) = {gw_power}"
     )
 
-    plt.show()
+    show_figs((f1, f2))
     return V2_pow_v, gw_power
 
 
@@ -970,7 +966,7 @@ def do_all_plot_ps_1bubble(
         save_id: str | None = None,
         graph_file_type: str | None = None,
         debug: tp.Literal[False] = False,
-        lambda_correction: LambdaCorrection = LambdaCorrection.NONE) -> tuple[list[plt.Figure], list[str]]: ...
+        lambda_correction: LambdaCorrection = LambdaCorrection.NONE) -> tuple[list[Figure], list[str]]: ...
 
 
 @tp.overload
@@ -980,7 +976,7 @@ def do_all_plot_ps_1bubble(
         *,
         debug: tp.Literal[True],
         lambda_correction: LambdaCorrection = LambdaCorrection.NONE) -> \
-            tuple[list[plt.Figure], list[str], th.FloatArr3D]: ...
+            tuple[list[Figure], list[str], th.FloatArr3D]: ...
 
 
 def do_all_plot_ps_1bubble(
@@ -988,8 +984,8 @@ def do_all_plot_ps_1bubble(
         graph_file_type: str | None = None,
         debug: bool = False,
         lambda_correction: LambdaCorrection = LambdaCorrection.NONE) -> \
-            tuple[list[plt.Figure], list[str]] | \
-            tuple[list[plt.Figure], list[str], th.FloatArr3D]:
+            tuple[list[Figure], list[str]] | \
+            tuple[list[Figure], list[str], th.FloatArr3D]:
     """Plot the single-bubble power spectra for weak and intermediate transitions with several wall speeds."""
     vw_weak_list = [0.92, 0.56, 0.44]
     vw_inter_list = [0.92, 0.56, 0.44]
@@ -1000,7 +996,7 @@ def do_all_plot_ps_1bubble(
     vw_list_all = [vw_weak_list, vw_inter_list]
     alpha_list_all = [alpha_weak, alpha_inter]
 
-    figs: list[plt.Figure] = []
+    figs: list[Figure] = []
     fig_ids: list[str] = []
     data_lst: list[th.FloatArr2D] = []
     for vw_list, alpha, in zip(vw_list_all, alpha_list_all, strict=False):

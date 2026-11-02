@@ -6,7 +6,8 @@ Comparison of the entropies of the old and new solvers
 """
 
 from matplotlib import ticker
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import numpy as np
 
 from examples.utils import save_and_show_fig
@@ -22,7 +23,7 @@ from pttools.utils.time import log_duration
 
 
 @log_duration
-def main(relative: bool = True) -> plt.Figure:
+def main(relative: bool = True) -> Figure:
     """Plot the entropies of the old and new solvers"""
     n_points = 10 if testing_or_ci else 20
     v_walls = np.linspace(0.05, 0.95, n_points, endpoint=True)
@@ -32,8 +33,8 @@ def main(relative: bool = True) -> plt.Figure:
     # These should be the same as for the old data
     model = BagModel.cached(g_s=123, g_b=120, V_s=0.9)
 
-    fig: plt.Figure = plt.figure()
-    ax: plt.Axes = fig.add_subplot()
+    fig: Figure = Figure()
+    ax: Axes = fig.add_subplot()
 
     grid_old = BubbleGridVWAlpha(model, v_walls, alpha_ns, compute, use_bag_solver=True)
     entropy_old = grid_old.data[0]

@@ -10,7 +10,8 @@ In the :ssm_repo:`sound-shell-model repository <>` these methods are included in
 from collections.abc import Sequence
 import logging
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import numpy as np
 
 import pttools.type_hints as th
@@ -51,7 +52,7 @@ def get_yaxis_limits(ps_type: utils.PSType, strength: utils.Strength = utils.Str
 
 
 def plot_guide_power_law(
-        ax: plt.Axes,
+        ax: Axes,
         loc: th.FloatArr2D,
         power: float,
         xloglen: float = 1,
@@ -79,7 +80,7 @@ def plot_guide_power_law(
 
 
 def plot_guide_power_law_prace(
-        ax: plt.Axes,
+        ax: Axes,
         x: th.FloatArr1D,
         y: th.FloatArr1D,
         n: float,
@@ -127,14 +128,14 @@ def plot_guide_power_law_prace(
 
 
 def plot_guide_power_laws_prace(
-        f_v: plt.Figure,
-        f_gw: plt.Figure,
+        f_v: Figure,
+        f_gw: Figure,
         z: th.FloatArr1D,
         pow_v: th.FloatArr1D,
         y: th.FloatArr1D,
         pow_gw: th.FloatArr1D,
         np_lo: tuple[int, int] = (5, 9),
-        inter_flag: bool = False) -> tuple[plt.Figure, plt.Figure]:
+        inter_flag: bool = False) -> tuple[Figure, Figure]:
     """
     Plot guide power laws (assumes params all same for list).
 
@@ -173,11 +174,11 @@ def plot_guide_power_laws_prace(
 
 
 def plot_guide_power_laws_ssm(
-        fig: plt.Figure,
+        fig: Figure,
         z: th.FloatArr1D,
         powers: th.FloatArr1D,
         ps_type: utils.PSType = utils.PSType.V,
-        inter_flag: bool = False) -> plt.Figure:
+        inter_flag: bool = False) -> Figure:
     """
     Plot guide power laws (assumes params all same for list).
 
@@ -221,8 +222,8 @@ def plot_ps(
         leg_list: Sequence[str] | None = None,
         col_list: Sequence[str] | None = None,
         ls_list: Sequence[str] | None = None,
-        fig: plt.Figure | None = None,
-        pretty: bool = False) -> plt.Figure:
+        fig: Figure | None = None,
+        pretty: bool = False) -> Figure:
     """
     Plots a list of power spectra, with axis limits appropriate to prace runs.
 
@@ -234,7 +235,7 @@ def plot_ps(
         ls_list = ['-'] * len(z_list)
 
     if fig is None:
-        fig = plt.figure(figsize=(8, 4))
+        fig = Figure(figsize=(8, 4))
         ax = fig.add_subplot()
     else:
         raise NotImplementedError("TODO: axis is not defined")
@@ -263,7 +264,7 @@ def plot_ps(
         ax.set_ylim(p_min, p_max)
         ax.set_xlim(const.Z_MIN, const.Z_MAX)
         if leg_list is not None:
-            plt.legend(loc='best')
-        plt.tight_layout()
+            ax.legend(loc='best')
+        fig.tight_layout()
 
     return fig

@@ -1,8 +1,6 @@
 """Figure of the stages of the Sound Shell Model computation."""
 
-import matplotlib.pyplot as plt
-
 from examples.props.ssm_process import main
+from pttools.plot.utils import show_fig
 
-main()
-plt.show()
+show_fig(main())

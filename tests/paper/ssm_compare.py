@@ -11,10 +11,11 @@ import os
 from pathlib import Path
 import typing as tp
 
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 import numpy as np
 
 from pttools import bubble, ssm
+from pttools.plot.utils import show_figs
 import pttools.type_hints as th
 from tests.paper import const, plotting, utils
 from tests.utils.const import TEST_DATA_PATH, TEST_FIGURE_PATH
@@ -157,11 +158,11 @@ def generate_ps(
 
     # Now for some plotting if requested
     if save_ids[1] is not None or show:
-        f1 = plt.figure(figsize=[8, 4])
-        ax_v = plt.gca()
+        f1 = Figure(figsize=(8, 4))
+        ax_v = f1.add_subplot()
 
-        f2 = plt.figure(figsize=[8, 4])
-        ax_gw = plt.gca()
+        f2 = Figure(figsize=(8, 4))
+        ax_gw = f2.add_subplot()
 
         for pow_v_i, pow_gw_i, linestyle in zip(pow_v_list, pow_gw_list, ("-", "--"), strict=False):
             ax_gw.loglog(y, pow_gw_i, color=col, linestyle=linestyle)
@@ -195,9 +196,7 @@ def generate_ps(
             f2.savefig(GDP / f"pow_gw_{graph_file_suffix}")
 
         if show:
-            plt.show()
-        plt.close(f1)
-        plt.close(f2)
+            show_figs((f1, f2))
 
     # Save data if requested
     if save_ids[0] is not None:

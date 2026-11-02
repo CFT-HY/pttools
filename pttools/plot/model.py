@@ -3,7 +3,8 @@
 import logging
 import typing as tp
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import numpy as np
 
 from pttools import models
@@ -40,14 +41,14 @@ class ModelPlot:
         self.model: models.Model = model
         self.t_log: bool = t_log
 
-        self.fig: plt.Figure = plt.figure(figsize=A4_PAPER_SIZE)
+        self.fig: Figure = Figure(figsize=A4_PAPER_SIZE)
         self.axs: th.AxesArr2D = self.fig.subplots(nrows=3, ncols=3)
-        self.ax_p: plt.Axes = self.axs[0, 0]
-        self.ax_s: plt.Axes = self.axs[0, 1]
-        self.ax_w: plt.Axes = self.axs[0, 2]
-        self.ax_e: plt.Axes = self.axs[1, 0]
-        self.ax_cs2: plt.Axes = self.axs[1, 1]
-        self.ax_alpha_n: plt.Axes = self.axs[1, 2]
+        self.ax_p: Axes = self.axs[0, 0]
+        self.ax_s: Axes = self.axs[0, 1]
+        self.ax_w: Axes = self.axs[0, 2]
+        self.ax_e: Axes = self.axs[1, 0]
+        self.ax_cs2: Axes = self.axs[1, 1]
+        self.ax_alpha_n: Axes = self.axs[1, 2]
         # self.ax_theta = self.axs[2, 0]
 
         self.t_min: float
@@ -90,7 +91,7 @@ class ModelPlot:
 
     def plot(
             self,
-            ax: plt.Axes,
+            ax: Axes,
             func: tp.Callable,
             label: str | None = None,
             label_s: str | None = None,

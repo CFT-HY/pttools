@@ -47,18 +47,14 @@ from __future__ import annotations
 
 import logging
 
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 import pandas as pd
 
 from examples.lattice.lattice_growth import R_STAR, Y_MIN
 from examples.utils import save_and_show_figs
 from pttools.lattice import CHRW25_RUNS, compare_chrw25_runs
 from pttools.plot.lattice import plot_pow_gw_asymptote_comparison
-import pttools.type_hints as th
 from pttools.utils.time import log_duration
-
-if th.TYPE_CHECKING_OR_DOCS:
-    from matplotlib.figure import Figure
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -94,7 +90,8 @@ def main(asymptote_duration: bool = ASYMPTOTE_DURATION) -> dict[str, Figure]:
     omega.insert(list(omega.columns).index("Omega_gw_inf") + 1, "Omega_gw_inf / Omega_gw(t)", ratio)
     print(omega.to_markdown(floatfmt=["", ".3e", ".3e", ".3f", ".3e", ".3e"]))
 
-    fig, axs = plt.subplots(1, len(lattice_comparisons), figsize=(5 * len(lattice_comparisons), 4), squeeze=False)
+    fig = Figure(figsize=(5 * len(lattice_comparisons), 4))
+    axs = fig.subplots(1, len(lattice_comparisons), squeeze=False)
     for ax, (name, comparison) in zip(axs[0], lattice_comparisons.items(), strict=True):
         pow_fit = comparison.run.pow_gw_asymptote(
             y_min=Y_MIN_FIT[name], y_max=Y_MAX_FIT[name],

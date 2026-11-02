@@ -5,7 +5,7 @@ Old-new comparison
 Comparison of old and new solvers
 """
 
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 import numpy as np
 
 from examples.utils import save_and_show_fig
@@ -102,7 +102,7 @@ def validate2(
 
 
 @log_duration
-def main() -> plt.Figure:
+def main() -> Figure:
     """Plot a comparison of the old and new solvers"""
     bag = BagModel.cached(a_s=1.1, a_b=1, V_s=2)
 
@@ -119,7 +119,7 @@ def main() -> plt.Figure:
     z = spectra[0].y
 
     data = xiv_plane(separate_phases=False)
-    fig: plt.Figure = plt.figure(figsize=A3_PAPER_SIZE)
+    fig: Figure = Figure(figsize=A3_PAPER_SIZE)
     axs = fig.subplots(2, 2)
     ax1 = axs[0, 0]
     ax2 = axs[0, 1]

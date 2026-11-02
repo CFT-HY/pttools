@@ -5,7 +5,8 @@ from __future__ import annotations
 import os
 import typing as tp
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import numpy as np
 
 from pttools.plot.utils import FigAndAxes, create_fig_ax
@@ -29,8 +30,8 @@ V_ZOOM_THRESHOLD = 0.5
 
 def setup_bubbles_plot(
         bubbles: tp.Collection[BaseBubble],
-        fig: plt.Figure | None = None,
-        ax: plt.Axes | None = None) -> FigAndAxes:
+        fig: Figure | None = None,
+        ax: Axes | None = None) -> FigAndAxes:
     """Set up a figure for plotting multiple bubbles."""
     for bubble in bubbles:
         if not bubble.solved:
@@ -39,10 +40,10 @@ def setup_bubbles_plot(
     return fig, ax
 
 
-def setup_bubbles_plot_multifig(fig: plt.Figure | None = None) -> tuple[plt.Figure, plt.Axes, plt.Axes]:
+def setup_bubbles_plot_multifig(fig: Figure | None = None) -> tuple[Figure, Axes, Axes]:
     """Set up the figure and axes for a bubble plot."""
     if fig is None:
-        fig = plt.figure()
+        fig = Figure()
     ax_v = fig.add_subplot(211)
     ax_w = fig.add_subplot(212, sharex=ax_v)
     ax_v.tick_params("x", labelbottom=False)
@@ -52,8 +53,8 @@ def setup_bubbles_plot_multifig(fig: plt.Figure | None = None) -> tuple[plt.Figu
 
 def plot_bubbles_common(
         bubbles: tp.Collection[BaseBubble],
-        fig: plt.Figure,
-        ax: plt.Axes,
+        fig: Figure,
+        ax: Axes,
         path: str | os.PathLike[str] | None = None,
         legend: bool | None = None,
         legend_fontsize: int | None = None,
@@ -80,10 +81,10 @@ def plot_bubbles_common(
 
 def plot_bubbles(
         bubbles: tp.Sequence[BaseBubble],
-        fig: plt.Figure | None = None,
+        fig: Figure | None = None,
         path: str | os.PathLike[str] | None = None,
         full_range: bool = False,
-        **kwargs: tp.Any) -> plt.Figure:
+        **kwargs: tp.Any) -> Figure:
     """Plot the velocity and enthalpy profiles of bubbles."""
     fig, ax_v, ax_w = setup_bubbles_plot_multifig(fig)
     plot_bubbles_v(bubbles, fig, ax_v, full_range=full_range, **kwargs)
@@ -102,8 +103,8 @@ def plot_bubbles(
 
 def plot_bubbles_v(
         bubbles: tp.Collection[BaseBubble],
-        fig: plt.Figure | None = None,
-        ax: plt.Axes | None = None,
+        fig: Figure | None = None,
+        ax: Axes | None = None,
         path: str | os.PathLike[str] | None = None,
         v_max: float = 1,
         full_range: bool = False,
@@ -132,8 +133,8 @@ def plot_bubbles_v(
 
 def plot_bubbles_w(
         bubbles: tp.Collection[BaseBubble],
-        fig: plt.Figure | None = None,
-        ax: plt.Axes | None = None,
+        fig: Figure | None = None,
+        ax: Axes | None = None,
         path: str | os.PathLike[str] | None = None,
         full_range: bool = False,
         **kwargs: tp.Any) -> FigAndAxes:

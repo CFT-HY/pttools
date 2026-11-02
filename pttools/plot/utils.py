@@ -5,15 +5,19 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import typing as tp
+import warnings
 
+import matplotlib
 from matplotlib import rcParams
 from matplotlib.axes import Axes
+from matplotlib.backends import BackendFilter, backend_registry
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 
 from pttools.bubble.phase import Phase
+from pttools.plot.lock import matplotlib_lock
 import pttools.type_hints as th
-from pttools.utils.system import IS_GITHUB_ACTIONS
+from pttools.utils.system import IS_DOCS, IS_GITHUB_ACTIONS, testing
 
 if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.legend import Legend
@@ -24,8 +28,10 @@ if th.TYPE_CHECKING_OR_DOCS:
 A4_PAPER_SIZE: tuple[float, float] = (11.7, 8.3)
 #: A3 paper size in inches
 A3_PAPER_SIZE: tuple[float, float] = (16.5, 11.7)
-#: Whether to enable drawing of the plots
-ENABLE_DRAWING: bool = not IS_GITHUB_ACTIONS
+#: Whether to enable drawing of the plots.
+#: This is disabled when running the unit tests on GitHub Actions,
+#: but not when building the documentation there, as Sphinx-Gallery needs the figures.
+ENABLE_DRAWING: bool = IS_DOCS or not IS_GITHUB_ACTIONS
 #: File formats in which to save the figures by default
 FIG_FORMATS = ("eps", "pdf", "png", "svg")
 
@@ -46,13 +52,18 @@ def create_fig_ax(
     """Create a figure and axes if necessary."""
     if fig is None:
         if ax is None:
-            fig = plt.figure(figsize=figsize)
+            fig = Figure(figsize=figsize)
             ax = fig.add_subplot()
         else:
             fig = tp.cast(Figure, ax.get_figure())
     elif ax is None:
         ax = fig.add_subplot()
     return fig, ax
+
+
+def interactive_backend() -> bool:
+    """Get whether the current Matplotlib backend is interactive, i.e. whether it can show figures in windows."""
+    return matplotlib.get_backend().lower() not in backend_registry.list_builtin(BackendFilter.NON_INTERACTIVE)
 
 
 def legend(ax: Axes, **kwargs: tp.Any) -> Legend | None:
@@ -80,8 +91,7 @@ def save_and_show_fig(
         **kwargs: tp.Any) -> None:
     """Save and show a figure."""
     save_fig(fig=fig, path=path, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
-    if ENABLE_DRAWING:
-        plt.show()
+    show_fig(fig)
 
 
 def save_and_show_figs(
@@ -92,8 +102,7 @@ def save_and_show_figs(
         **kwargs: tp.Any) -> None:
     """Save and show figures."""
     save_figs(figs=figs, fig_dir=fig_dir, formats=formats, makedirs=makedirs, **kwargs)
-    if ENABLE_DRAWING:
-        plt.show()
+    show_figs(figs.values())
 
 
 def save_fig(
@@ -170,8 +179,8 @@ def setup_plotting(
     :param lines_linewidth: lines.linewidth
     :param usetex: whether to use LaTeX
     """
-    plt.rc("text", usetex=usetex)
-    plt.rc("font", family=font)
+    matplotlib.rc("text", usetex=usetex)
+    matplotlib.rc("font", family=font)
     rcParams.update({
         "axes.labelsize": font_size if axes_labelsize is None else axes_labelsize,
         "axes.linewidth": axes_linewidth,
@@ -181,3 +190,45 @@ def setup_plotting(
         "xtick.labelsize": font_size,
         "ytick.labelsize": font_size
     })
+
+
+def show_fig(fig: Figure, close: bool = True) -> None:
+    """Show a figure with :func:`matplotlib.pyplot.show`. Please see :func:`show_figs` for details.
+
+    :param fig: figure to show
+    :param close: close the figure after showing it
+    """
+    show_figs((fig,), close=close)
+
+
+@matplotlib_lock
+def show_figs(figs: tp.Iterable[Figure], close: bool = True) -> None:
+    """Show figures with :func:`matplotlib.pyplot.show`.
+
+    The figures of PTtools are created with :class:`matplotlib.figure.Figure`
+    instead of :func:`matplotlib.pyplot.figure`,
+    so that they are not registered with :mod:`matplotlib.pyplot`, whose global state is not thread-safe,
+    and which keeps the figures in memory until they are closed.
+    Therefore, the figures are registered with :mod:`matplotlib.pyplot` here, just before showing them.
+    Nothing is done if :data:`ENABLE_DRAWING` is false.
+
+    With a non-interactive backend, such as Agg, :func:`matplotlib.pyplot.show` returns immediately,
+    and its warning about the figures not being shown is suppressed.
+    The figures are then closed only when running unit tests,
+    and otherwise remain registered with :mod:`matplotlib.pyplot`,
+    so that e.g. Sphinx-Gallery and the ``plot`` directive of Matplotlib can find them.
+
+    :param figs: figures to show
+    :param close: close the figures after showing them with an interactive backend or in unit tests
+    """
+    if not ENABLE_DRAWING:
+        return
+    figs = list(figs)
+    for fig in figs:
+        plt.figure(fig)
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", message=".*is non-interactive, and thus cannot be shown", category=UserWarning)
+        plt.show()
+    if close and (testing() or interactive_backend()):
+        close_figs(*figs)

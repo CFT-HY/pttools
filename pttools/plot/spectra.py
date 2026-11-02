@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import typing as tp
 
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 import numpy as np
 
 from pttools.math.formatting import as_latex
@@ -102,7 +102,7 @@ def plot_spectra_multi_common(
         **kwargs: tp.Any) -> tuple[Figure, np.ndarray]:
     """Common steps for plotting multiple spectra."""
     if fig is None:
-        fig = plt.figure(figsize=figsize)
+        fig = Figure(figsize=figsize)
     axs = fig.subplots(nrows, ncols)
     flat = axs.flat
     plot_bubbles_v([spectrum.bubble for spectrum in spectra], fig, flat[0], legend=legend, **kwargs)

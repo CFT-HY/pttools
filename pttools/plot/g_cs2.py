@@ -2,7 +2,8 @@ r"""Plot $g_\text{eff}$ and $c_s^2$."""
 
 from __future__ import annotations
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import numpy as np
 
 from pttools.bubble.phase import Phase
@@ -15,14 +16,14 @@ if th.TYPE_CHECKING_OR_DOCS:
 def plot_g_cs2(
         thermo: ThermoModel,
         phase: Phase = Phase.SYMMETRIC,
-        fig: plt.Figure | None = None) -> plt.Figure:
+        fig: Figure | None = None) -> Figure:
     """Plot the degrees of freedom $g$ and the speed of sound squared $c_s^2$."""
     if fig is None:
-        fig = plt.figure()
+        fig = Figure()
     axs = fig.subplots(nrows=3, ncols=1, sharex=True)
-    ax1: plt.Axes = axs[0]
-    ax2: plt.Axes = axs[1]
-    ax3: plt.Axes = axs[2]
+    ax1: Axes = axs[0]
+    ax2: Axes = axs[1]
+    ax3: Axes = axs[2]
     fig.subplots_adjust(hspace=0)
 
     temp = np.logspace(thermo.GEFF_DATA_LOG_TEMP[0], thermo.GEFF_DATA_LOG_TEMP[-1], 100)

@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import typing as tp
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
 import numpy as np
 
 from pttools.bubble.chapman_jouguet import v_chapman_jouguet
@@ -26,8 +28,8 @@ class VwAlphaPlot:
     def __init__(
             self,
             grid: BubbleGridVWAlpha,
-            fig: plt.Figure | None = None,
-            ax: plt.Axes | None = None,
+            fig: Figure | None = None,
+            ax: Axes | None = None,
             title: str | None = None,
             alpha_label: str = r"$\alpha_n$"):
         r"""Create the axes for the plot. Add data to it with the other methods.
@@ -44,11 +46,11 @@ class VwAlphaPlot:
         if fig is None:
             if ax is not None:
                 raise ValueError("Cannot provide ax without fig")
-            self.fig: plt.Figure = plt.figure()
+            self.fig: Figure = Figure()
         else:
             self.fig = fig
 
-        self.ax: plt.Axes = self.fig.add_subplot() if ax is None else ax
+        self.ax: Axes = self.fig.add_subplot() if ax is None else ax
         self.ax.set_xlabel(r"$v_\text{wall}$")
         self.ax.set_ylabel(alpha_label)
         self.ax.set_xlim(grid.v_walls.min(), grid.v_walls.max())
@@ -89,7 +91,7 @@ class VwAlphaPlot:
             region=region, color=color, alpha=alpha
         )
 
-    def chapman_jouguet(self, color: str = "black", ls: str = "--", label: str = "$v_{CJ}$") -> list[plt.Line2D]:
+    def chapman_jouguet(self, color: str = "black", ls: str = "--", label: str = "$v_{CJ}$") -> list[Line2D]:
         """Add a Chapman-Jouguet speed curve to the plot."""
         return self.ax.plot(
             v_chapman_jouguet(self.grid.model, self.grid.alpha_ns),

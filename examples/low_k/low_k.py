@@ -6,18 +6,19 @@ Create an illustrative plot on the properties of the low-k approximation.
 """
 
 from matplotlib import rc_context
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 import numpy as np
 
 from examples.utils import save_fig
 from pttools.bubble import Bubble
 from pttools.models import BagModel
 from pttools.omgw0 import Spectrum
+from pttools.plot.utils import show_fig
 from pttools.utils.time import log_duration
 
 
 @log_duration
-def main(path: str | None = None) -> plt.Figure:
+def main(path: str | None = None) -> Figure:
     """Plot the low-, intermediate- and high-frequency approximations of the GW power spectrum"""
     # Choose study parameters
     npt = 2000  # number of points in the spectrum
@@ -109,7 +110,8 @@ def main(path: str | None = None) -> plt.Figure:
         "ytick.labelsize": font_size
     }):
         # fig, ax = plt.subplots(1,1, figsize =(12, 7))
-        fig, ax = plt.subplots(1, 1, figsize=(9, 5))
+        fig = Figure(figsize=(9, 5))
+        ax = fig.add_subplot()
 
         # Pgw_exp = HR* Ht * ssm.power_gw_scaled(z, params_v)
         # ax.plot(z, Pgw_high, color='blue', linestyle='--', label=r'high-freq appox: PTtools')
@@ -155,5 +157,4 @@ def main(path: str | None = None) -> plt.Figure:
 
 
 if __name__ == "__main__":
-    _fig = main("low_k")
-    plt.show()
+    show_fig(main("low_k"))

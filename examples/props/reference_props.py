@@ -5,7 +5,8 @@ Bag model reference properties
 Plot the parameters of fluid_reference
 """
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 from examples.utils import save_and_show_fig
 from pttools.bubble import fluid_reference
@@ -14,19 +15,19 @@ from pttools.utils.time import log_duration
 
 
 @log_duration
-def main() -> plt.Figure:
+def main() -> Figure:
     """Plot the parameters of fluid_reference"""
     ref = fluid_reference.ref()
 
-    fig: plt.Figure = plt.figure()
+    fig: Figure = Figure()
     axs = fig.subplots(nrows=2, ncols=3)
 
-    ax_vp: plt.Axes = axs[0, 0]
-    ax_vm: plt.Axes = axs[1, 0]
-    ax_vp_tilde: plt.Axes = axs[0, 1]
-    ax_vm_tilde: plt.Axes = axs[1, 1]
-    ax_wp: plt.Axes = axs[0, 2]
-    ax_wm: plt.Axes = axs[1, 2]
+    ax_vp: Axes = axs[0, 0]
+    ax_vm: Axes = axs[1, 0]
+    ax_vp_tilde: Axes = axs[0, 1]
+    ax_vm_tilde: Axes = axs[1, 1]
+    ax_wp: Axes = axs[0, 2]
+    ax_wm: Axes = axs[1, 2]
 
     ax_vp.contourf(ref.v_wall, ref.alpha_n, ref.vp)
     ax_vm.contourf(ref.v_wall, ref.alpha_n, ref.vm)

@@ -5,7 +5,8 @@ Compare κ(ξ) for old and new solvers
 
 import logging
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import numpy as np
 
 from examples.utils import save_and_show_fig
@@ -18,14 +19,14 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 @log_duration
-def main() -> plt.Figure:
+def main() -> Figure:
     r"""Compare $\kappa(\xi)$ for old and new solvers"""
     model = BagModel.cached(a_s=1.1, a_b=1, V_s=1)
     v_walls = np.linspace(0.2, 0.95, 10)
     alpha_ns = np.array([0.1])
 
-    fig: plt.Figure = plt.figure()
-    ax: plt.Axes = fig.add_subplot()
+    fig: Figure = Figure()
+    ax: Axes = fig.add_subplot()
     for alpha_n in alpha_ns:
         old = np.zeros_like(v_walls)
         new = np.zeros_like(v_walls)

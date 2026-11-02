@@ -2,7 +2,8 @@ r"""A plot of the $\xi-v$ plane."""
 
 from __future__ import annotations
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import numpy as np
 
 from pttools.bubble import const, props
@@ -10,6 +11,7 @@ from pttools.bubble.integrate import FluidIntegrateMethod, fluid_integrate_param
 from pttools.bubble.phase import Phase
 from pttools.bubble.shock import v_shock_curve
 from pttools.models.const_cs import ConstCSModel
+from pttools.plot.utils import show_fig
 import pttools.type_hints as th
 
 if th.TYPE_CHECKING_OR_DOCS:
@@ -19,7 +21,7 @@ if th.TYPE_CHECKING_OR_DOCS:
 class XIVPlanePlot:
     r"""A plot of the $\xi-v$ plane."""
 
-    def __init__(self, model: Model, fig: plt.Figure | None = None, ax: plt.Axes | None = None):
+    def __init__(self, model: Model, fig: Figure | None = None, ax: Axes | None = None):
         r"""Create the plot with the $v = \xi$ line. Add curves to it with :meth:`curves`.
 
         :param model: equation of state model
@@ -27,14 +29,14 @@ class XIVPlanePlot:
         :param ax: axes to plot in. If None, new axes are created in the figure. Requires fig.
         :raises ValueError: if ax is given without fig
         """
-        self.fig: plt.Figure
+        self.fig: Figure
         if fig is None:
             if ax is not None:
                 raise ValueError("Cannot provide ax without fig")
-            self.fig = plt.figure()
+            self.fig = Figure()
         else:
             self.fig = fig
-        self.ax: plt.Axes = self.fig.add_subplot() if ax is None else ax
+        self.ax: Axes = self.fig.add_subplot() if ax is None else ax
         self.model: Model = model
 
         self.ax.plot([0, 1], [0, 1], c="k", ls=":", label=r"$v=\xi$")
@@ -136,4 +138,4 @@ if __name__ == "__main__":
     plot = XIVPlanePlot(model)
     plot.curves(wn=model.wn(0.3))
     plot.fig.savefig("plane_test.png")
-    plt.show()
+    show_fig(plot.fig)

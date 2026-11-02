@@ -5,7 +5,8 @@ ConstCSModel xi, v plane
 Plot the $\xi, v$ plane for the constant sound speed model
 """
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import numpy as np
 
 from examples.utils import save_and_show_fig
@@ -22,12 +23,12 @@ from tests.paper.plot_plane_paper import plot_plane
 
 
 @log_duration
-def main() -> plt.Figure:
+def main() -> Figure:
     r"""Plot the $\xi, v$ plane for the constant sound speed model"""
     css = 1 / np.sqrt(3) - 0.05
 
-    fig: plt.Figure = plt.figure()
-    ax: plt.Axes = fig.add_subplot()
+    fig: Figure = Figure()
+    ax: Axes = fig.add_subplot()
 
     # Plane curves
     model = ConstCSModel.cached(a_s=1.1, a_b=1, css2=css**2, csb2=1/3, V_s=1, V_b=0)

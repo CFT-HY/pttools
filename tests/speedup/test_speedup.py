@@ -6,7 +6,8 @@ import typing as tp
 import unittest
 from unittest import mock
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import numpy as np
 import pytest
 import scipy.interpolate
@@ -138,13 +139,12 @@ class TestSpeedup(unittest.TestCase):
         ref = scipy.interpolate.splev(x2, spl)
         data = spline.splev(x2, spl)
 
-        fig: plt.Figure = plt.Figure()
-        ax: plt.Axes = fig.add_subplot()
+        fig: Figure = Figure()
+        ax: Axes = fig.add_subplot()
         ax.plot(x2, data, label="data")
         ax.plot(x2, ref, label="ref", ls=":")
         ax.legend()
         save_fig(fig, TEST_FIGURE_PATH / "spline_fitpack")
-        plt.close(fig)
 
         assert_allclose(data, ref)
 
@@ -158,13 +158,12 @@ class TestSpeedup(unittest.TestCase):
         ref = scipy.interpolate.splev(x2, spl)
         data = jitted_spline(x2, spl)
 
-        fig: plt.Figure = plt.Figure()
-        ax: plt.Axes = fig.add_subplot()
+        fig: Figure = Figure()
+        ax: Axes = fig.add_subplot()
         ax.plot(x2, data, label="data")
         ax.plot(x2, ref, label="ref", ls=":")
         ax.legend()
         save_fig(fig, TEST_FIGURE_PATH / "spline_linear")
-        plt.close(fig)
 
         try:
             assert_allclose(data, ref)

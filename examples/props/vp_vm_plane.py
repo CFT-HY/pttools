@@ -6,7 +6,8 @@ ${v}_+, {v}_-$ plane.
 Adapted from fig. 9 of :gw_pt_ssm:`\ `.
 """
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import numpy as np
 
 from examples.utils import save_and_show_fig
@@ -15,7 +16,7 @@ from pttools.utils.time import log_duration
 
 
 @log_duration
-def main(dots: bool = False) -> plt.Figure:
+def main(dots: bool = False) -> Figure:
     r"""Plot the ${v}_+, {v}_-$ plane"""
     # plt.rc('text', usetex=True)
     # plt.rc('font', family='serif')
@@ -37,8 +38,8 @@ def main(dots: bool = False) -> plt.Figure:
     linestyle_list = [':', '-.', '--', '-']
     grey = 3 * [0.8]
 
-    fig: plt.Figure = plt.figure()
-    ax: plt.Axes = fig.add_subplot()
+    fig: Figure = Figure()
+    ax: Axes = fig.add_subplot()
 
     for alpha, ls in zip(alpha_plus_list, linestyle_list, strict=False):
         x1 = np.copy(v_minus)

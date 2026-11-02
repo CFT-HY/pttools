@@ -5,7 +5,8 @@ Standard Model xi, v
 Example that the Standard Model can be used with the bubble solver
 """
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 from examples.utils import save_and_show_fig
 from pttools.bubble.bubble import Bubble
@@ -17,7 +18,7 @@ from pttools.utils.time import log_duration
 
 
 @log_duration
-def main() -> plt.Figure:
+def main() -> Figure:
     r"""Solve a bubble with the Standard Model and plot its fluid velocity profile $v(\xi)$"""
     sm = StandardModel.cached(V_s=5e12, g_mult_s=1 + 1e-9, silence_temp=True)
     model = FullModel.cached(sm, T_crit_guess=100e3)
@@ -27,8 +28,8 @@ def main() -> plt.Figure:
     bubble = Bubble.cached(model, v_wall=0.3, alpha_n=0.05)
 
 
-    fig: plt.Figure = plt.figure()
-    ax: plt.Axes = fig.add_subplot()
+    fig: Figure = Figure()
+    ax: Axes = fig.add_subplot()
 
     ax.plot(bubble.xi, bubble.v)
     ax.set_xlabel(r"$\xi$")

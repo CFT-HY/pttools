@@ -52,7 +52,8 @@ import logging
 import time
 import typing as tp
 
-import matplotlib.pyplot as plt
+from matplotlib import rcParams
+from matplotlib.figure import Figure
 import numpy as np
 
 from examples.const_cs.dataset import ACCURACY, MODEL_KWARGS, F, warm_up
@@ -166,7 +167,7 @@ def plot_errors(
         values: dict[str, tuple[int, ...]] = VALUES,
         accuracy: Accuracy = ACCURACY) -> Figure:
     """Plot the errors and the computation times as a function of the accuracy settings."""
-    fig: Figure = plt.figure(figsize=(A4_PAPER_SIZE[0] * 1.5, A4_PAPER_SIZE[0] * 1.2))
+    fig: Figure = Figure(figsize=(A4_PAPER_SIZE[0] * 1.5, A4_PAPER_SIZE[0] * 1.2))
     axs = fig.subplots(3, len(values), sharex="col", sharey="row")
     for i_case, case in enumerate(cases):
         color = f"C{i_case}"
@@ -189,7 +190,7 @@ def plot_errors(
                 ax.axvline(chosen, color="k", ls="--")
         for ax in axs[:2, i_param]:
             ax.axhline(1e-2, color="k", ls=":")
-        axs[2, i_param].set_xlabel(rf"\texttt{{{param}}}" if plt.rcParams["text.usetex"] else param)
+        axs[2, i_param].set_xlabel(rf"\texttt{{{param}}}" if rcParams["text.usetex"] else param)
     axs[0, 0].set_ylabel("Max. rel. error near the peak")
     axs[1, 0].set_ylabel("Max. rel. error over all $f$")
     axs[2, 0].set_ylabel("Spectrum computation time (s)")
@@ -209,7 +210,7 @@ def plot_bubbles(
         values: dict[str, tuple[int, ...]] = VALUES,
         accuracy: Accuracy = ACCURACY) -> Figure:
     r"""Plot $\kappa + \omega - 1$ and the size of the fluid profile as a function of $n_\xi$."""
-    fig: Figure = plt.figure(figsize=(A4_PAPER_SIZE[0] * 1.5, A4_PAPER_SIZE[0] * 0.6))
+    fig: Figure = Figure(figsize=(A4_PAPER_SIZE[0] * 1.5, A4_PAPER_SIZE[0] * 0.6))
     ax1, ax2 = fig.subplots(1, 2)
     n_xis = values["n_xi"]
     for i_case, case in enumerate(cases):
@@ -239,7 +240,7 @@ def plot_bubbles(
 
 def plot_spectra(cases: tuple[Case, ...], dataset: list[Result], best: list[Result]) -> Figure:
     """Plot the spectra computed with the accuracy settings of the dataset and with the reference settings."""
-    fig: Figure = plt.figure(figsize=(A4_PAPER_SIZE[0] * 1.5, A4_PAPER_SIZE[0] * 0.6))
+    fig: Figure = Figure(figsize=(A4_PAPER_SIZE[0] * 1.5, A4_PAPER_SIZE[0] * 0.6))
     ax1, ax2 = fig.subplots(1, 2, sharex=True)
     for i_case, case in enumerate(cases):
         color = f"C{i_case}"

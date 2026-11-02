@@ -2,7 +2,6 @@
 
 import unittest
 
-from matplotlib.pyplot import close
 import numpy as np
 
 from examples.basic import basic, datamodel, parallel, spectra
@@ -76,12 +75,12 @@ class ExampleTest(unittest.TestCase):
     @staticmethod
     def test_parallel() -> None:
         """Test that the example ``examples.basic.parallel`` runs without errors."""
-        close(parallel.main().fig)
+        close_figs(parallel.main().fig)
 
     @staticmethod
     def test_spectra() -> None:
         """Test that the example ``examples.basic.spectra`` runs without errors."""
-        close(spectra.main())
+        close_figs(spectra.main())
 
     # ConstCS
     @staticmethod
@@ -93,7 +92,7 @@ class ExampleTest(unittest.TestCase):
     @staticmethod
     def test_const_cs_bag_comparison() -> None:
         """Test that the example ``examples.const_cs.const_cs_bag_comparison`` runs without errors."""
-        close(const_cs_bag_comparison.main().fig)
+        close_figs(const_cs_bag_comparison.main().fig)
 
     @staticmethod
     def test_const_cs_find() -> None:
@@ -140,7 +139,7 @@ class ExampleTest(unittest.TestCase):
     @staticmethod
     def test_const_cs_xi_v() -> None:
         """Test that the example ``examples.const_cs.const_cs_xi_v`` runs without errors."""
-        close(const_cs_xi_v.main())
+        close_figs(const_cs_xi_v.main())
 
     @staticmethod
     def test_plot_const_cs_xi_v_w() -> None:
@@ -159,24 +158,24 @@ class ExampleTest(unittest.TestCase):
     @uses_parallel
     def test_entropy_grid() -> None:
         """Test that the example ``examples.entropy.entropy_grid`` runs without errors."""
-        close(entropy_grid.main())
+        close_figs(entropy_grid.main())
 
     @staticmethod
     @unittest.expectedFailure
     def test_entropy_old() -> None:
         """Run the example ``examples.entropy.entropy_old``, which is currently expected to fail."""
-        close(entropy_old.main())
+        close_figs(entropy_old.main())
 
     @staticmethod
     def test_entropy_profile() -> None:
         """Test that the example ``examples.entropy.entropy_profile`` runs without errors."""
-        close(entropy_profile.main())
+        close_figs(entropy_profile.main())
 
     # GKSVDV
     @staticmethod
     def test_gksvdv_bubble() -> None:
         """Test that the example ``examples.gksvdv.gksvdv_bubble`` runs without errors."""
-        close(gksvdv_bubble.main())
+        close_figs(gksvdv_bubble.main())
 
     @staticmethod
     @mark_xfail_pickle_without_jit
@@ -197,17 +196,17 @@ class ExampleTest(unittest.TestCase):
     @staticmethod
     def test_gksvdv_testing() -> None:
         """Test that the example ``examples.gksvdv.gksvdv_testing`` runs without errors."""
-        close(gksvdv_testing.main())
+        close_figs(gksvdv_testing.main())
 
     @staticmethod
     def test_gksvdv_testing2() -> None:
         """Test that the example ``examples.gksvdv.gksvdv_testing2`` runs without errors."""
-        close(gksvdv_testing2.main())
+        close_figs(gksvdv_testing2.main())
 
     @staticmethod
     def test_gksvdv_testing3() -> None:
         """Test that the example ``examples.gksvdv.gksvdv_testing3`` runs without errors."""
-        close(gksvdv_testing3.main())
+        close_figs(gksvdv_testing3.main())
 
     # Lattice
     @staticmethod
@@ -248,12 +247,12 @@ class ExampleTest(unittest.TestCase):
     @staticmethod
     def test_low_k() -> None:
         """Test that the example ``examples.low_k.low_k`` runs without errors."""
-        close(low_k.main())
+        close_figs(low_k.main())
 
     @staticmethod
     def test_plot_chapman_jouguet() -> None:
         """Test that the example ``examples.props.chapman_jouguet`` runs without errors."""
-        close(chapman_jouguet.main().fig)
+        close_figs(chapman_jouguet.main().fig)
 
     @staticmethod
     def test_delta_theta() -> None:
@@ -266,7 +265,7 @@ class ExampleTest(unittest.TestCase):
     @uses_parallel
     def test_ke_frac() -> None:
         """Test that the example ``examples.props.ke_frac`` runs without errors."""
-        close(ke_frac.main())
+        close_figs(ke_frac.main())
 
     @staticmethod
     @mark_xfail_pickle_without_jit
@@ -285,12 +284,12 @@ class ExampleTest(unittest.TestCase):
     @staticmethod
     def test_noise() -> None:
         """Test that the example ``examples.props.noise`` runs without errors."""
-        close(noise.main())
+        close_figs(noise.main())
 
     @staticmethod
     def test_reference_props() -> None:
         """Test that the example ``examples.props.reference_props`` runs without errors."""
-        close(reference_props.main())
+        close_figs(reference_props.main())
 
     @staticmethod
     def test_suppression() -> None:
@@ -300,12 +299,12 @@ class ExampleTest(unittest.TestCase):
     @staticmethod
     def test_vm_vp_plane() -> None:
         """Test that the example ``examples.props.vp_vm_plane`` runs without errors."""
-        close(vp_vm_plane.main())
+        close_figs(vp_vm_plane.main())
 
     @staticmethod
     def test_w_by_w() -> None:
         """Test that the example ``examples.props.w_by_w`` runs without errors."""
-        close(w_by_w.main())
+        close_figs(w_by_w.main())
 
     @staticmethod
     @mark_xfail_pickle_without_jit
@@ -313,7 +312,7 @@ class ExampleTest(unittest.TestCase):
     @uses_parallel
     def test_xi_kappa() -> None:
         """Test that the example ``examples.props.xi_kappa`` runs without errors."""
-        close(xi_kappa.main(n_v_walls=3))
+        close_figs(xi_kappa.main(n_v_walls=3))
 
     # Reverse
     @staticmethod
@@ -327,37 +326,37 @@ class ExampleTest(unittest.TestCase):
     @staticmethod
     def test_reverse_approx() -> None:
         """Test that the example ``examples.reverse.reverse_approx`` runs without errors."""
-        close(reverse_approx.main())
+        close_figs(reverse_approx.main())
 
     # Solvers
     @staticmethod
     def test_bag() -> None:
         """Test that the example ``examples.solvers.bag`` runs without errors."""
-        close(bag.main())
+        close_figs(bag.main())
 
     @staticmethod
     def test_old_new() -> None:
         """Test that the example ``examples.solvers.old_new`` runs without errors."""
-        close(old_new.main())
+        close_figs(old_new.main())
 
     @staticmethod
     def test_xi_kappa_bag() -> None:
         """Test that the example ``examples.solvers.xi_kappa_bag`` runs without errors."""
-        close(xi_kappa_bag.main())
+        close_figs(xi_kappa_bag.main())
 
     # Standard Model
     @staticmethod
     def test_standard_model() -> None:
         """Test that the example ``examples.standard_model.standard_model`` runs without errors."""
         import examples.standard_model.standard_model as script  # noqa: PLC0415
-        close(script.fig)
-        close(script.plot.fig)
-        close(script.plot2.fig)
+        close_figs(script.fig)
+        close_figs(script.plot.fig)
+        close_figs(script.plot2.fig)
 
     @staticmethod
     def test_standard_model_xi_v() -> None:
         """Test that the example ``examples.standard_model.standard_model_xi_v`` runs without errors."""
-        close(standard_model_xi_v.main())
+        close_figs(standard_model_xi_v.main())
 
 
 if __name__ == "__main__":

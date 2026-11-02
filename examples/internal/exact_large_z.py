@@ -12,7 +12,6 @@ As $\lvert A(z) \rvert^2$ oscillates, the ratio is shown for the values averaged
 """
 
 from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
 import numpy as np
 
 from examples.utils import save_and_show_fig
@@ -41,7 +40,8 @@ def window_mean(arr: th.FloatArr1D, z: th.FloatArr1D, width: float) -> th.FloatA
 def main() -> Figure:
     r"""Plot $\lvert A(z) \rvert^2$ with and without the exact sine transforms for large $z$."""
     model = BagModel.cached(alpha_n_min=0.001)
-    fig, axs = plt.subplots(2, len(PARAMS), figsize=(4 * len(PARAMS), 7), sharex=True, sharey="row")
+    fig = Figure(figsize=(4 * len(PARAMS), 7))
+    axs = fig.subplots(2, len(PARAMS), sharex=True, sharey="row")
     for i, (v_wall, alpha_n) in enumerate(PARAMS):
         bubble = Bubble.cached(model, v_wall=v_wall, alpha_n=alpha_n)
         kwargs = {

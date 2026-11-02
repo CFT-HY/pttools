@@ -7,7 +7,7 @@ Test comparison with :giese_2021:`\ ` code and data
 
 import contextlib
 
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 import numpy as np
 
 from examples.utils import save_and_show_fig
@@ -16,7 +16,7 @@ from pttools.utils.time import log_duration
 
 
 @log_duration
-def main() -> plt.Figure:
+def main() -> Figure:
     r"""Plot $\alpha_n$ as a function of $\alpha_{\bar{\theta}_n}$ for a constant sound speed model"""
     model = ConstCSModel.cached(css2=1/3, csb2=1/4, a_s=5, a_b=1, V_s=1)
     # alpha_theta_bar_ns
@@ -27,7 +27,7 @@ def main() -> plt.Figure:
             alpha_ns[i] = model.alpha_n_from_alpha_theta_bar_n(alpha_theta_bar_n=alpha_theta_bar_n)
 
     print(alpha_ns)
-    fig = plt.figure()
+    fig = Figure()
     ax = fig.add_subplot()
     ax.plot(atbs[alpha_ns < atbs], alpha_ns[alpha_ns < atbs])
     ax.plot(atbs[alpha_ns >= atbs], alpha_ns[alpha_ns >= atbs], color="red")

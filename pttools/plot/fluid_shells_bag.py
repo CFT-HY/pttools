@@ -2,7 +2,7 @@ r"""Plot $v(\xi)$ and $w(\xi)$ for fluid shells using the bag model."""
 
 import typing as tp
 
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 import numpy as np
 
 from pttools.bubble import SolutionType, check, const, fluid_bag, props, relativity, thermo
@@ -23,7 +23,7 @@ def plot_fluid_shells_bag(
         Np: int = ...,
         debug: tp.Literal[False] = ...,
         draw: bool | None = ...,
-        wn_as_w_bar: bool = ...) -> plt.Figure: ...
+        wn_as_w_bar: bool = ...) -> Figure: ...
 
 
 @tp.overload
@@ -36,7 +36,7 @@ def plot_fluid_shells_bag(
         *,
         debug: tp.Literal[True],
         draw: bool | None = ...,
-        wn_as_w_bar: bool = ...) -> tuple[plt.Figure, th.FloatArr2D]: ...
+        wn_as_w_bar: bool = ...) -> tuple[Figure, th.FloatArr2D]: ...
 
 
 def plot_fluid_shells_bag(  # noqa: PLR0912, PLR0915
@@ -47,7 +47,7 @@ def plot_fluid_shells_bag(  # noqa: PLR0912, PLR0915
         Np: int = const.DEFAULT_N_XI,
         debug: bool = False,
         draw: bool | None = None,
-        wn_as_w_bar: bool = False) -> plt.Figure | tuple[plt.Figure, th.FloatArr2D]:
+        wn_as_w_bar: bool = False) -> Figure | tuple[Figure, th.FloatArr2D]:
     r"""Plot the fluid shells of several bag model bubbles.
 
     Calls :func:`pttools.bubble.fluid.fluid_shell` and plots resulting v, w against xi.
@@ -92,9 +92,10 @@ def plot_fluid_shells_bag(  # noqa: PLR0912, PLR0915
         ncols = len(v_wall_list)
         fig_width = ncols * 5
 
-    fig: plt.Figure
+    fig: Figure
     ax: th.AxesArr2D
-    fig, ax = plt.subplots(2, ncols, figsize=(fig_width, 8), sharex='col', sharey='row', squeeze=False)
+    fig = Figure(figsize=(fig_width, 8))
+    ax = fig.subplots(2, ncols, sharex='col', sharey='row', squeeze=False)
     fig.subplots_adjust(hspace=0)
     fig.subplots_adjust(wspace=0.1)
 
@@ -233,14 +234,14 @@ def plot_fluid_shells_bag(  # noqa: PLR0912, PLR0915
 
     ax[0, 0].set_ylabel(r'$v(\xi)$')
     if draw:
-        plt.tight_layout()
+        fig.tight_layout()
 
     ax[1, 0].set_ylabel(r'$w(\xi)$')
     if draw:
-        plt.tight_layout()
+        fig.tight_layout()
 
     if save_string is not None:
-        plt.savefig(
+        fig.savefig(
             f"shells_plot_vw_{v_wall_list[0]}-{v_wall_list[-1]}_"
             f"alphan_{alpha_n_list[0]:.3}-{alpha_n_list[-1]:.3}{save_string}")
 

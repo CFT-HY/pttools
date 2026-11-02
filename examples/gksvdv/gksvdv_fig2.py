@@ -10,7 +10,8 @@ import logging
 import time
 import typing as tp
 
-import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import numpy as np
 
 from examples.utils import save_and_show_figs
@@ -62,7 +63,7 @@ def kappas_giese(
 
 
 def create_figure(
-        axs: tp.Iterable[plt.Axes],
+        axs: tp.Iterable[Axes],
         models: list[ConstCSModel],
         alpha_ns: FloatArr1D,
         colors: tp.Sequence[str],
@@ -127,7 +128,7 @@ def create_figure(
 
 
 def create_diff_figure(
-        ax: plt.Axes,
+        ax: Axes,
         kappas_pttools: FloatArr3D,
         kappas_giese: FloatArr3D,
         models: list[ConstCSModel],
@@ -174,7 +175,7 @@ def main(
         lss: tp.Sequence[str] = ("-", "--", ":", "-."),
         alpha_ns: FloatArr1D = GKSVDV_ALPHA_N,
         n_v_walls: int | None = None) \
-        -> tuple[plt.Figure, plt.Figure, plt.Figure, plt.Figure]:
+        -> tuple[Figure, Figure, Figure, Figure]:
     r"""Reproduction of :giese_2021:`\ `, fig. 2
 
     :param n_v_walls: number of wall speeds. Defaults to 10 in unit tests and CI, and to 50 otherwise.
@@ -188,10 +189,10 @@ def main(
         logger.info("Model parameters: %s", model.params_str())
 
     figsize_x = 8
-    fig1: plt.Figure = plt.figure(figsize=(figsize_x, 6))
-    fig2: plt.Figure = plt.figure(figsize=(figsize_x, 4))
-    fig3: plt.Figure = plt.figure(figsize=(figsize_x, 4))
-    fig4: plt.Figure = plt.figure(figsize=(figsize_x, 4))
+    fig1: Figure = Figure(figsize=(figsize_x, 6))
+    fig2: Figure = Figure(figsize=(figsize_x, 4))
+    fig3: Figure = Figure(figsize=(figsize_x, 4))
+    fig4: Figure = Figure(figsize=(figsize_x, 4))
     figs = (fig1, fig2, fig3, fig4)
     axs1 = fig1.subplots(2, 2)
     axs2 = fig2.subplots(1, 2)

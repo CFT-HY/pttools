@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import math
 
-from matplotlib import cm
+from matplotlib import cm, colormaps
+from matplotlib.axes import Axes
 from matplotlib.colors import Colormap, ListedColormap
-import matplotlib.pyplot as plt
 import numpy as np
 
 import pttools.type_hints as th
@@ -26,7 +26,7 @@ def get_cmap(cmap: Colormap | str) -> Colormap:
     If given a Colormap object, passes it through.
     """
     if isinstance(cmap, str):
-        return plt.colormaps[cmap]
+        return colormaps[cmap]
     return cmap
 
 
@@ -39,7 +39,7 @@ def cmap_lines(n: int, cmap: Colormap | str = DEFAULT_CMAP) -> th.FloatArr1D:
     """
     arr = np.linspace(0, 1, n)
     if isinstance(cmap, str):
-        return plt.colormaps[cmap](arr)
+        return colormaps[cmap](arr)
     return cmap(arr)
 
 
@@ -65,7 +65,7 @@ def cmap_plusminus(
 
 
 def color_region(
-        ax: plt.Axes,
+        ax: Axes,
         x: th.FloatArr1D,
         y: th.FloatArr1D,
         region: th.BoolArr | th.FloatArr,
