@@ -4,6 +4,7 @@ import logging
 import time
 
 # import typing as tp
+import matplotlib
 import pytest
 
 from pttools.logging import setup_logging
@@ -88,7 +89,16 @@ def pytest_xdist_auto_num_workers() -> int | None:
 
 
 def pytest_configure(config: pytest.Config) -> None:
-    """Mark that unit tests are running and set up logging."""
+    """Mark that unit tests are running, select the non-interactive Matplotlib backend and set up logging.
+
+    Without a display Matplotlib falls back to the Agg backend automatically,
+    but with one (e.g. ``$DISPLAY`` of SSH X11 forwarding) it would select an interactive backend such as TkAgg.
+    The objects of Tkinter must not be used outside the main thread,
+    but their ``__del__`` methods can be called by the garbage collector in any thread,
+    e.g. in the worker threads of :func:`pttools.speedup.parallel.run_parallel`,
+    which can deadlock the test.
+    """
+    matplotlib.use("Agg", force=True)
     system._TESTING = True  # noqa: SLF001
     setup_logging()
 
