@@ -82,6 +82,7 @@ class Spectrum(Omgw0Base, SSMSpectrum):
             T_tilde_max: float = T_TILDE_MAX,
             z_st_thresh: float = Z_ST_THRESH,
             # Switches
+            allow_beta_tilde_for_simultaneous: bool = False,
             compute: bool = True,
             compute_snr: bool = False,
             low_k: bool = True,
@@ -112,6 +113,8 @@ class Spectrum(Omgw0Base, SSMSpectrum):
         :param n_z_lookup: number of points in the lookup arrays
         :param z_st_thresh: for $z$ values above z_sh_tresh,
             use approximation rather than doing the sine transform integral.
+        :param allow_beta_tilde_for_simultaneous:
+            allow $\tilde{\beta}$ as an input parameter for simultaneous nucleation
         :param compute: whether to compute the spectrum immediately
         :param compute_snr: whether to compute the signal-to-noise ratio for LISA together with the spectrum
             in the same Numba-compiled function, so that :py:meth:`snr` returns the precomputed result
@@ -148,6 +151,7 @@ class Spectrum(Omgw0Base, SSMSpectrum):
             n_z_lookup=n_z_lookup,
             T_tilde_min=T_tilde_min,
             T_tilde_max=T_tilde_max,
+            allow_beta_tilde_for_simultaneous=allow_beta_tilde_for_simultaneous,
             compute=False,
             low_k=low_k,
             low_k_cs_friction=low_k_cs_friction,

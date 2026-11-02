@@ -17,9 +17,22 @@ from pttools.bubble.thermo import warn_if_ubarf_relativistic
 from pttools.math.formatting import as_latex, as_unicode
 from pttools.math.interpolation import interpolate_log_log
 from pttools.speedup import NAN_ARR
-from pttools.ssm import const
 from pttools.ssm.barotropic import eta_ratio
 from pttools.ssm.compute import SSMBaseResults, SSMGWResults, SSMInput, compute, compute_gw
+from pttools.ssm.const import (
+    BETA_TILDE_MIN,
+    DEFAULT_A_STAR_A_R_RATIO,
+    DEFAULT_EPS_LOOKUP,
+    DEFAULT_LIFETIME_DISTRIBUTION_A,
+    DEFAULT_N_SH,
+    DEFAULT_N_T,
+    DEFAULT_N_Z_LOOKUP,
+    DEFAULT_R_STAR,
+    DEFAULT_Y,
+    T_TILDE_MAX,
+    T_TILDE_MIN,
+    Z_ST_THRESH,
+)
 from pttools.ssm.export import SSM_SPECTRUM_FIELDS
 from pttools.ssm.low_k.intersection import z_cross_approx
 from pttools.ssm.nucleation import DEFAULT_NUC_TYPE, NucType, v_eff
@@ -65,22 +78,23 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
             # Input parameters
             beta_tilde: float | None = None,
             r_star: float | None = None,
-            y: FloatArr1D = const.DEFAULT_Y,
-            a_star_a_r_ratio: float = const.DEFAULT_A_STAR_A_R_RATIO,
-            N_sh: float = const.DEFAULT_N_SH,
+            y: FloatArr1D = DEFAULT_Y,
+            a_star_a_r_ratio: float = DEFAULT_A_STAR_A_R_RATIO,
+            N_sh: float = DEFAULT_N_SH,
             nuc_type: NucType = DEFAULT_NUC_TYPE,
             omega_barotropic: float | None = None,
             # Suppression
             suppression: Suppression = DEFAULT_SUPPRESSION,
             suppression_method: SuppressionMethod = SuppressionMethod.DEFAULT,
             # Accuracy settings
-            nT: int = const.DEFAULT_N_T,
+            nT: int = DEFAULT_N_T,
             nx_P_tilde_gw: int | None = None,
-            n_z_lookup: int = const.DEFAULT_N_Z_LOOKUP,
-            T_tilde_min: float = const.T_TILDE_MIN,
-            T_tilde_max: float = const.T_TILDE_MAX,
-            z_st_thresh: float = const.Z_ST_THRESH,
+            n_z_lookup: int = DEFAULT_N_Z_LOOKUP,
+            T_tilde_min: float = T_TILDE_MIN,
+            T_tilde_max: float = T_TILDE_MAX,
+            z_st_thresh: float = Z_ST_THRESH,
             # Switches
+            allow_beta_tilde_for_simultaneous: bool = False,
             compute: bool = True,
             low_k: bool = True,
             low_k_cs_friction: bool = False,
@@ -102,6 +116,8 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
         :param n_z_lookup: number of points in the lookup arrays
         :param z_st_thresh: for $z$ values above z_sh_tresh,
             use approximation rather than doing the sine transform integral.
+        :param allow_beta_tilde_for_simultaneous:
+            allow $\tilde{\beta}$ as an input parameter for simultaneous nucleation
         :param compute: whether to compute the spectrum immediately
         :param low_k: whether to use the :giombi_2024_cs: approximation for low $k$
         :param low_k_cs_friction: whether to compute the acoustic friction of the low-$k$ approximation
@@ -128,7 +144,10 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
         self.a_star_a_r_ratio: float = a_star_a_r_ratio
         self.N_sh: float = N_sh
         self.nuc_type: NucType = nuc_type
-        self.r_star: float = self.validate_nucleation(bubble=bubble, r_star=r_star, beta_tilde=beta_tilde)
+        self.r_star: float = self.validate_nucleation(
+            bubble=bubble, nuc_type=nuc_type, r_star=r_star, beta_tilde=beta_tilde,
+            allow_beta_tilde_for_simultaneous=allow_beta_tilde_for_simultaneous
+        )
         self.y: FloatArr1D = y
         # Suppression
         self.suppression: Suppression = suppression
@@ -184,9 +203,9 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
         self.Iv: float = np.nan
         # Arguments of compute()
         #: Small offset used when generating the lookup table of $z$ values for the GW spectrum
-        self.eps_lookup: float = const.DEFAULT_EPS_LOOKUP
+        self.eps_lookup: float = DEFAULT_EPS_LOOKUP
         #: $a$, parameter of the bubble lifetime distribution
-        self.lifetime_distribution_a: float = const.DEFAULT_LIFETIME_DISTRIBUTION_A
+        self.lifetime_distribution_a: float = DEFAULT_LIFETIME_DISTRIBUTION_A
         #: Kinetic energy term of $\lambda$, see :py:class:`pttools.ssm.ssm.LambdaCorrection`
         self.lambda_correction: LambdaCorrection = DEFAULT_LAMBDA_CORRECTION
         #: Results of :py:func:`pttools.ssm.compute.compute_base`, which do not depend on $r_*$,
@@ -211,8 +230,8 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
 
     def compute(
             self,
-            eps_lookup: float = const.DEFAULT_EPS_LOOKUP,
-            lifetime_distribution_a: float = const.DEFAULT_LIFETIME_DISTRIBUTION_A,
+            eps_lookup: float = DEFAULT_EPS_LOOKUP,
+            lifetime_distribution_a: float = DEFAULT_LIFETIME_DISTRIBUTION_A,
             lambda_correction: LambdaCorrection = DEFAULT_LAMBDA_CORRECTION,
             parallel: bool = True) -> None:
         r"""Compute the velocity and GW spectra and the related quantities, and store them as attributes.
@@ -712,8 +731,11 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
     @staticmethod
     def validate_nucleation(
             bubble: Bubble,
+            nuc_type: NucType,
             r_star: float | None,
-            beta_tilde: float | None = None) -> float:
+            beta_tilde: float | None = None,
+            allow_beta_tilde_for_simultaneous: bool = False,
+            warn_on_small_beta_tilde: bool = True) -> float:
         r"""Validate the nucleation parameters and determine $r_*$.
 
         Only one of $r_*$ and $\tilde{\beta}$ can be given.
@@ -722,14 +744,19 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
         Warnings are logged for $\tilde{\beta}$ values that are experimentally excluded and for $r_* \geq 1$.
 
         :param bubble: the bubble, which is solved if $\tilde{\beta}$ is given and it has not been solved yet
+        :param nuc_type: nucleation type
         :param r_star: $r_*$, Hubble-scaled mean bubble spacing
         :param beta_tilde: $\tilde{\beta} \equiv \frac{\beta}{H_*}$, nucleation rate parameter
+        :param allow_beta_tilde_for_simultaneous:
+            allow $\tilde{\beta}$ as an input parameter for simultaneous nucleation
+        :param warn_on_small_beta_tilde: warn if $\tilde{\beta}$ is experimentally excluded
         :return: $r_*$, Hubble-scaled mean bubble spacing
-        :raises ValueError: if both $r_*$ and $\tilde{\beta}$ are given, or if either of them is not positive
+        :raises ValueError: if both $r_*$ and $\tilde{\beta}$ are given, if either of them is not positive,
+            or if $\tilde{\beta}$ is given for simultaneous nucleation without ``allow_beta_tilde_for_simultaneous``
         """
         r_star_set: float
         if beta_tilde is None:
-            r_star_set = const.DEFAULT_R_STAR if r_star is None else r_star
+            r_star_set = DEFAULT_R_STAR if r_star is None else r_star
         # If beta_tilde is set, use it to obtain r_star.
         else:
             if r_star is not None:
@@ -737,14 +764,19 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
                     "Either beta_tilde or r_star must be provided, but not both. "
                     f"Got beta_tilde={beta_tilde}, r_star={r_star}."
                 )
+            if (not allow_beta_tilde_for_simultaneous) and nuc_type == NucType.SIMULTANEOUS:
+                raise ValueError(
+                    "beta_tilde -> r_star conversion is not defined for simultaneous nucleation. "
+                    f"Got: nuc_type={nuc_type}, r_star={r_star}, beta_tilde={beta_tilde}"
+                )
             if np.isnan(beta_tilde) or beta_tilde <= 0:
                 raise ValueError(f"beta_tilde must be positive. Got beta_tilde={beta_tilde}.")
-            if beta_tilde < const.BETA_TILDE_MIN:
+            if warn_on_small_beta_tilde and beta_tilde < BETA_TILDE_MIN:
                 logger.warning(
                     "Got beta_tilde=%s < %s. "
                     "This is experimentally excluded due to primordial black hole formation. "
                     "Please see Lewicki et al. (2023) for details.",
-                    beta_tilde, const.BETA_TILDE_MIN
+                    beta_tilde, BETA_TILDE_MIN
                 )
             if not bubble.solved:
                 bubble.solve()
@@ -754,13 +786,6 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
 
         if np.isnan(r_star_set) or r_star_set <= 0:
             raise ValueError(f"r_star must be positive. Got r_star={r_star_set}.")
-        if r_star_set >= 1:
-            # Todo: Find a better reference for this.
-            logger.warning(
-                "r_star < 1 is required for the phase transition to complete. "
-                "Got r_star=%s. See Hindmarsh & Hijazi 2019, p. 6.",
-                r_star_set
-            )
         return r_star_set
 
     @functools.cached_property

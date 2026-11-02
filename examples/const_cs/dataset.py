@@ -229,6 +229,8 @@ def create_spectrum(bubble: Bubble, params: SpectrumParams, accuracy: Accuracy) 
         T_star=params.T_star,
         g_star=params.g_star,
         nuc_type=params.nuc_type,
+        # The dataset covers both nucleation types with the same beta_tilde values.
+        allow_beta_tilde_for_simultaneous=True,
         f=F,
         parallel=False,
         **accuracy.spectrum_kwargs()

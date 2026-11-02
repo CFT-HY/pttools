@@ -96,14 +96,14 @@ The range is from :gw_pt_ssm:`\ ` p. 20, but there TODO
 # Limits
 # -----
 
-BETA_TILDE_CONVERSION_MIN: float = 10.
-r"""
-Lower limit for $\tilde{\beta} \equiv \beta/H_*$ conversion
-The conversion $r_* \rightarrow \tilde{\beta}$ should give a warning when under this limit.
-This is because the $\tilde{\beta} \leftrightarrow r_*$ conversion breaks down
-in the case of a very slow phase transition, which corresponds to $\beta/H_* \approx 1$.
-:caprini_2020:`\ ` p. 6
-"""
+# BETA_TILDE_CONVERSION_MIN: float = 10.
+# r"""
+# Lower limit for $\tilde{\beta} \equiv \beta/H_*$ conversion
+# The conversion $r_* \rightarrow \tilde{\beta}$ should give a warning when under this limit.
+# This is because the $\tilde{\beta} \leftrightarrow r_*$ conversion breaks down
+# in the case of a very slow phase transition, which corresponds to $\beta/H_* \approx 1$.
+# :caprini_2020:`\ ` p. 6
+# """
 
 BETA_TILDE_MIN: float = 3.8
 r"""

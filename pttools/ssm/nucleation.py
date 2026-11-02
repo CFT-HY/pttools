@@ -11,7 +11,6 @@ import numpy as np
 
 from pttools.bubble.solution_type import SolutionType
 from pttools.speedup import njit, vectorize
-from pttools.ssm import const
 import pttools.type_hints as th
 from pttools.type_hints import FloatArr1D, FloatOrArr
 
@@ -58,9 +57,7 @@ def beta[T: FloatOrArr](R_star: T, v_wall: T | float, legacy_cs: T | float | Non
 def beta_tilde[T: FloatOrArr](
         r_star: T,
         v_wall: T | float,
-        legacy_cs: T | float | None = None,
-        beta_tilde_min: float = const.BETA_TILDE_CONVERSION_MIN,
-        log_inaccurate: bool = True) -> T:
+        legacy_cs: T | float | None = None) -> T:
     r"""$\tilde{\beta}$, nucleation rate parameter, aka. "beta over H".
 
     $$\tilde{\beta} \equiv \frac{\beta}{H_*} = (8 \pi)^\frac{1}{3} \frac{\max ({v}_\text{wall}, c_s)}{{r}_*}$$
@@ -73,23 +70,17 @@ def beta_tilde[T: FloatOrArr](
     :param r_star: Hubble-scaled mean bubble spacing $r_*$
     :param v_wall: Wall velocity $v_w$
     :param legacy_cs: $c_s$ for legacy $\max(v_{\text{wall}}, c_s)$
-    :param beta_tilde_min: Minimum $\tilde{\beta}$ for which the conversion is considered to be accurate.
     :return: Nucleation rate parameter $\tilde{\beta}$
     """
-    b = beta(R_star=r_star, v_wall=v_wall, legacy_cs=legacy_cs)
-    if log_inaccurate and np.min(b) < beta_tilde_min:
-        with numba.objmode:
-            logger.warning(
-                "Got β/H*=%s < %s for r*=%s, v_wall=%s. "
-                "The conversion to from r* to β/H* may not have been accurate, "
-                "as this seems to be a very slow phase transition. Please see Caprini et al. (2020) p. 6.",
-                b, beta_tilde_min, r_star, v_wall
-            )
-    return b  # pyrefly: ignore[bad-return]
+    bt = beta(R_star=r_star, v_wall=v_wall, legacy_cs=legacy_cs)
+    r_star_warning(beta_tilde=bt, r_star=r_star, v_wall=v_wall, from_r_star_to_beta_tilde=True, legacy_cs=legacy_cs)
+    return bt  # pyrefly: ignore[bad-return]
 
 
 @njit(cache=True)
-def beta_R_star0[T: FloatOrArr](v_wall: T, legacy_cs: T | float | None = None) -> T:
+def beta_R_star0[T: FloatOrArr](
+        v_wall: T,
+        legacy_cs: T | float | None = None) -> T:
     r"""$\beta R_{\ast,0}$, nucleation rate parameter times mean bubble separation without nucleation suppression.
 
     $$\beta R_{\ast,0} = (8 \pi)^\frac{1}{3} v_{\text{wall}}$$
@@ -261,21 +252,19 @@ def r_star[T2: FloatOrArr](
     :param T: $T$
     :param sol_type: solution type
     :param legacy_cs: $c_s$ for legacy $\max(v_{\text{wall}}, c_s)$
-    :return: $R_*$
+    :return: $r_*$
     """
-    # if beta_over_H < beta_over_H_limit:
-    #     logger.warning(
-    #         "Got β/H*=%s < %s (and v_wall=%s). "
-    #         "The conversion from β/H* to r* may not be accurate, as this seems to be a very slow phase transition. "
-    #         "Please see Caprini et al. (2020) p. 6.",
-    #         beta_over_H, beta_over_H_limit, v_wall
-    #     )
     # For the nucleation suppression, i.e. when xi and T are given for a deflagration or a hybrid,
     # beta_tilde has to be a scalar.
-    return R_star(
+    rs = R_star(
         beta=beta_tilde, v_wall=v_wall, xi=xi, T=T, sol_type=sol_type, legacy_cs=legacy_cs,
-        beta_tilde=beta_tilde  # pyrefly: ignore[bad-argument-type]
+        beta_tilde=beta_tilde,  # pyrefly: ignore[bad-argument-type]
     )
+    r_star_warning(
+        beta_tilde=beta_tilde, r_star=rs, v_wall=v_wall,
+        from_r_star_to_beta_tilde=False, legacy_cs=legacy_cs, sol_type=sol_type
+    )
+    return rs
 
 
 @njit(cache=True)
@@ -361,11 +350,78 @@ def R_star0[T: FloatOrArr](beta: T, v_wall: T | float, legacy_cs: T | float | No
     :ajmi_2022:`\ ` eq. 1.
 
     :param beta: Nucleation rate parameter $\beta$
-    :param v_wall: Wall velocity ${v}_w$
+    :param v_wall: Wall speed $v_{\text{wall}}$
     :param legacy_cs: $c_s$ for legacy $\max(v_{\text{wall}}, c_s)$
-    :return: Mean bubble separation $R_*$
+    :return: Mean bubble separation $R_*(0)$
     """
     return beta_R_star0(v_wall=v_wall, legacy_cs=legacy_cs) / beta  # pyrefly: ignore[bad-return]
+
+
+@njit(cache=True)
+def r_star_warning[T: FloatOrArr](
+        beta_tilde: T,
+        r_star: T,
+        v_wall: T | float,
+        from_r_star_to_beta_tilde: bool,
+        legacy_cs: T | float | None = None,
+        sol_type: SolutionType | None = None) -> None:
+    r"""Warn if $r_* > 1$, as then the phase transition will not complete.
+
+    $r_* = 1$ does not give a warning, since it's the default.
+    The warning is formatted in object mode by :py:func:`r_star_warning_msg`.
+
+    :param beta_tilde: $\tilde{\beta}$, nucleation rate parameter
+    :param r_star: $r_*$, Hubble-scaled mean bubble spacing
+    :param v_wall: $v_{\text{wall}}$, wall speed
+    :param from_r_star_to_beta_tilde: whether $r_*$ was converted to $\tilde{\beta}$ instead of the other way around
+    :param legacy_cs: $c_s$ for legacy $\max(v_{\text{wall}}, c_s)$
+    :param sol_type: solution type
+    """
+    if np.any(r_star > 1.):
+        with numba.objmode:
+            logger.warning(r_star_warning_msg(
+                beta_tilde=beta_tilde, r_star=r_star, v_wall=v_wall,
+                from_r_star_to_beta_tilde=from_r_star_to_beta_tilde, legacy_cs=legacy_cs, sol_type=sol_type
+            ))
+
+
+def r_star_warning_msg(
+        beta_tilde: FloatOrArr,
+        r_star: FloatOrArr,
+        v_wall: FloatOrArr,
+        from_r_star_to_beta_tilde: bool,
+        legacy_cs: FloatOrArr | None = None,
+        sol_type: SolutionType | None = None) -> str:
+    r"""Warning message of :py:func:`r_star_warning` for the largest $r_*$.
+
+    :param beta_tilde: $\tilde{\beta}$, nucleation rate parameter
+    :param r_star: $r_*$, Hubble-scaled mean bubble spacing
+    :param v_wall: $v_{\text{wall}}$, wall speed
+    :param from_r_star_to_beta_tilde: whether $r_*$ was converted to $\tilde{\beta}$ instead of the other way around
+    :param legacy_cs: $c_s$ for legacy $\max(v_{\text{wall}}, c_s)$
+    :param sol_type: solution type
+    :return: warning message
+    """
+    if np.ndim(r_star) > 0:
+        ind = np.nanargmax(r_star)
+        r_star_max = np.asarray(r_star)[ind]
+        if np.ndim(beta_tilde) > 0:
+            beta_tilde = np.asarray(beta_tilde)[ind]
+        if np.ndim(v_wall) > 0:
+            v_wall = np.asarray(v_wall)[ind]
+    else:
+        r_star_max = r_star
+    conversion = (
+        f"r_star={r_star_max} > 1 -> beta_tilde={beta_tilde}"
+        if from_r_star_to_beta_tilde
+        else f"beta_tilde={beta_tilde} -> r_star={r_star_max} > 1"
+    )
+    return (
+        f"Converted {conversion} for v_wall={v_wall}, legacy_cs={legacy_cs}"
+        f"{"" if sol_type is None else f", sol_type={sol_type}"}. "
+        "This phase transition will not complete. "
+        "Please see Hindmarsh & Hijazi (2019), p. 6, Caprini et al. (2020) p. 6 and Lewicki et al. (2024)."
+    )
 
 
 @njit(cache=True)
@@ -376,5 +432,9 @@ def v_eff[T: FloatOrArr](f: T, v_wall: T | float) -> T:
     further bubble nucleation is effectively suppressed.
     $$v_{\text{eff}} = (1 + f)^{\frac{1}{3}} v_{\text{wall}}$$
     :ajmi_2022:`\ ` eq. 51
+
+    :param f: frequencies $f$
+    :param v_wall: wall speed $v_{\text{wall}}$
+    :return: effective suppression speed $v_{\text{eff}}$
     """
     return (1 + f)**(1/3) * v_wall  # pyrefly: ignore[bad-return]
