@@ -15,7 +15,7 @@ This example does not require the simulation data.
 
 import pandas as pd
 
-from examples.utils import save_and_show_figs
+from examples.utils import save_and_show_figs, save_table
 from pttools.plot.suppression import SuppressionPlot
 from pttools.ssm.suppression import CHRW25, NO_HYBRIDS_EXT, NO_HYBRIDS_EXT_CHRW25
 from pttools.utils.time import log_duration
@@ -24,7 +24,7 @@ from pttools.utils.time import log_duration
 def comparison_table() -> pd.DataFrame:
     """The old and new suppression factors at the parameters of the simulations.
 
-    :return: the table, which can be formatted e.g. as Markdown with :py:meth:`pandas.DataFrame.to_markdown`
+    :return: the table, which can be saved e.g. with :py:func:`examples.utils.save_table`
     """
     return pd.DataFrame({
         "v_wall": CHRW25.v_walls,
@@ -40,7 +40,7 @@ def comparison_table() -> pd.DataFrame:
 @log_duration
 def main() -> tuple[SuppressionPlot, SuppressionPlot]:
     r"""Plot the suppression factor $\Sigma({v}_\text{wall}, \alpha_n)$ with and without the new data points."""
-    print(comparison_table().to_markdown(index=False, floatfmt=".4g"))
+    save_table(comparison_table(), "lattice_suppression", index=False, floatfmt=".4g")
     plots = \
         SuppressionPlot(NO_HYBRIDS_EXT, title="No hybrids, extended"), \
         SuppressionPlot(NO_HYBRIDS_EXT_CHRW25, title="With Correia et al. 2025")

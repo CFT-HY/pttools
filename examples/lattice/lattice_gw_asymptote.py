@@ -37,54 +37,13 @@ from __future__ import annotations
 import logging
 
 from matplotlib.figure import Figure
-import pandas as pd
 
-from examples.utils import save_and_show_figs
-from pttools.lattice import CHRW25_RUNS, LatticeRun, load_chrw25_runs, step_ends
+from examples.utils import save_and_show_figs, save_table
+from pttools.lattice import CHRW25_RUNS, fit_cases, fit_table, load_chrw25_runs, step_ends
 from pttools.plot.lattice import plot_gw_asymptote
 from pttools.utils.time import log_duration
 
 logger: logging.Logger = logging.getLogger(__name__)
-
-
-def fit_cases(lattice_runs: dict[str, LatticeRun]) -> list[tuple[str, LatticeRun, int, str]]:
-    """The fits to show: each run with each of its distinct last time steps.
-
-    See :py:func:`pttools.lattice.chrw25.step_ends`.
-
-    :param lattice_runs: the runs
-    :return: the name of the run, the run, the last time step, and the description of the last time step
-    """
-    cases = []
-    for name, run in lattice_runs.items():
-        descriptions: dict[int, list[str]] = {}
-        for description, step_end in step_ends(name, run).items():
-            descriptions.setdefault(step_end, []).append(description)
-        cases += [(name, run, step_end, ", ".join(desc)) for step_end, desc in descriptions.items()]
-    return cases
-
-
-def fit_table(lattice_runs: dict[str, LatticeRun]) -> pd.DataFrame:
-    r"""The fitted indices and the asymptotic GW power of the runs, cf. :correia_2025:`\ ` tables IV and V.
-
-    The values are given both for the last time steps of the article and for the last time steps of the data,
-    see :py:func:`fit_cases`.
-    The ratio $\Omega_\text{gw}^\infty / \Omega_\text{gw}(t)$ is evaluated at the time step of the comparison
-    with the Sound Shell Model, see :py:data:`pttools.lattice.chrw25.CHRW25_RUNS`.
-
-    :param lattice_runs: the runs
-    :return: the table
-    """
-    rows = {}
-    for name, run, step_end, description in fit_cases(lattice_runs):
-        summary = run.gw_asymptote_summary(CHRW25_RUNS[name].fig_step, step_end=step_end)
-        rows[(run.label_unicode, f"{step_end} ({description})")] = {
-            key: f"{value:.2f} ± {summary[f'{key}_err']:.2f}" if f"{key}_err" in summary else f"{value:.4g}"
-            for key, value in summary.items() if not key.endswith("_err")
-        }
-    table = pd.DataFrame.from_dict(rows, orient="index")
-    table.index.names = ["Run", "Last time step"]
-    return table
 
 
 @log_duration
@@ -93,8 +52,8 @@ def main() -> dict[str, Figure]:
     lattice_runs = load_chrw25_runs(missing_ok=True)
     if not lattice_runs:
         return {}
-    print(fit_table(lattice_runs).reset_index().to_markdown(index=False))
-    cases = fit_cases(lattice_runs)
+    save_table(fit_table(lattice_runs, CHRW25_RUNS, step_ends).reset_index(), "lattice_gw_asymptote", index=False)
+    cases = fit_cases(lattice_runs, step_ends)
     fig = Figure(figsize=(5 * len(cases), 14))
     axs = fig.subplots(4, len(cases), squeeze=False)
     for i, (name, run, step_end, description) in enumerate(cases):

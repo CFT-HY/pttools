@@ -20,14 +20,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
+import typing as tp
 
 import numpy as np
+import pandas as pd
 
 from pttools.math.asymptote import AsymptoteFit, fit_asymptote, fit_start_index
 import pttools.type_hints as th
 
 if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.lattice.params import LatticeRunParams
     from pttools.math.power_law import PowerLawFit
+# This would be a circular import, as pttools.lattice.run imports this module.
+if tp.TYPE_CHECKING:
+    from pttools.lattice.run import LatticeRun
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -112,6 +118,26 @@ class PowGwAsymptoteFit:
         return np.trapezoid(fitted, ln_k, axis=1)
 
 
+def fit_cases(
+        lattice_runs: dict[str, LatticeRun],
+        step_ends: tp.Callable[[str, LatticeRun], dict[str, int]]) -> list[tuple[str, LatticeRun, int, str]]:
+    """The fits to show: each run with each of its distinct last time steps.
+
+    :param lattice_runs: the runs by their names
+    :param step_ends: function that gives the last time steps of the fits of a run by their description,
+        given the name of the run and the run, e.g. :py:func:`pttools.lattice.chrw25.step_ends`.
+        The descriptions of the same last time step are combined.
+    :return: the name of the run, the run, the last time step, and the description of the last time step
+    """
+    cases = []
+    for name, run in lattice_runs.items():
+        descriptions: dict[int, list[str]] = {}
+        for description, step_end in step_ends(name, run).items():
+            descriptions.setdefault(step_end, []).append(description)
+        cases += [(name, run, step_end, ", ".join(desc)) for step_end, desc in descriptions.items()]
+    return cases
+
+
 def fit_pow_gw_modes(
         t: th.FloatArr1D,
         k: th.FloatArr1D,
@@ -161,6 +187,36 @@ def fit_pow_gw_modes(
             index_guess, t_decay_guess = fit.index, fit.t_decay
         fits.append(fit)
     return PowGwAsymptoteFit(y=y, k=k, t=t, pow_gw=pow_gw, fits=tuple(fits))
+
+
+def fit_table(
+        lattice_runs: dict[str, LatticeRun],
+        params: dict[str, LatticeRunParams],
+        step_ends: tp.Callable[[str, LatticeRun], dict[str, int]]) -> pd.DataFrame:
+    r"""The fitted indices and the asymptotic GW power of the runs, cf. :correia_2025:`\ ` tables IV and V.
+
+    The values are given for each of the last time steps of each run, see :py:func:`fit_cases`,
+    e.g. for the last time steps of the article and for the last time steps of the data
+    with :py:func:`pttools.lattice.chrw25.step_ends`.
+    The ratio $\Omega_\text{gw}^\infty / \Omega_\text{gw}(t)$ is evaluated at the time step of the comparison
+    with the Sound Shell Model, :py:attr:`pttools.lattice.params.LatticeRunParams.fig_step`.
+
+    :param lattice_runs: the runs by their names
+    :param params: the parameters of the runs with the same keys,
+        e.g. :py:data:`pttools.lattice.chrw25.CHRW25_RUNS`
+    :param step_ends: see :py:func:`fit_cases`
+    :return: the table
+    """
+    rows = {}
+    for name, run, step_end, description in fit_cases(lattice_runs, step_ends):
+        summary = run.gw_asymptote_summary(params[name].fig_step, step_end=step_end)
+        rows[(run.label_unicode, f"{step_end} ({description})")] = {
+            key: f"{value:.2f} ± {summary[f'{key}_err']:.2f}" if f"{key}_err" in summary else f"{value:.4g}"
+            for key, value in summary.items() if not key.endswith("_err")
+        }
+    table = pd.DataFrame.from_dict(rows, orient="index")
+    table.index.names = ["Run", "Last time step"]
+    return table
 
 
 def gw_growth_index_prediction(zeta: PowerLawFit, lambda_: PowerLawFit) -> tuple[float, float]:

@@ -163,3 +163,32 @@ class LatticeComparison:
         table.index.name = "Quantity"
         table["Ratio"] = table["Simulation"] / table["PTtools"]
         return table
+
+
+def omega_comparisons(
+        comparisons: dict[str, LatticeComparison],
+        asymptote_duration: bool = False,
+        step_end: dict[str, int] | None = None,
+        **kwargs: tp.Any) -> pd.DataFrame:
+    r"""Table of the total GW power of the simulations and of the SSM.
+
+    The values are those of :py:meth:`LatticeComparison.omega`,
+    with the ratio $\Omega_\text{gw}^\infty / \Omega_\text{gw}(t)$ after $\Omega_\text{gw}^\infty$.
+
+    :param comparisons: the comparisons
+    :param asymptote_duration: see :py:meth:`LatticeComparison.omega`
+    :param step_end: last time step of the fits of each comparison, with the keys of ``comparisons``.
+        If not given, the default of :py:meth:`pttools.lattice.run.LatticeRun.omega_gw_asymptote` is used.
+    :param kwargs: additional arguments for :py:meth:`LatticeComparison.omega`
+    :return: the table, with the labels of the runs as the index
+    """
+    table = pd.DataFrame.from_dict({
+        comparison.run.label_unicode: comparison.omega(
+            asymptote_duration=asymptote_duration,
+            **({} if step_end is None else {"step_end": step_end[name]}),
+            **kwargs)
+        for name, comparison in comparisons.items()
+    }, orient="index")
+    ratio = table["Omega_gw_inf"] / table["Omega_gw(t)"]
+    table.insert(list(table.columns).index("Omega_gw_inf") + 1, "Omega_gw_inf / Omega_gw(t)", ratio)
+    return table

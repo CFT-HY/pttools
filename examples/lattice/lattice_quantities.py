@@ -16,7 +16,7 @@ from __future__ import annotations
 import logging
 
 from examples.lattice.lattice_growth import R_STAR, Y_MIN
-from examples.utils import save_and_show_figs
+from examples.utils import save_and_show_figs, save_table
 from pttools.lattice import compare_chrw25_runs
 from pttools.plot.lattice import plot_gw_rate_time_comparison, plot_quantities_comparison
 import pttools.type_hints as th
@@ -35,7 +35,7 @@ def main() -> dict[str, Figure]:
     for name, comparison in compare_chrw25_runs(y_min=Y_MIN, r_star=R_STAR, missing_ok=True).items():
         print(f"{comparison.run.label_unicode}, t = {comparison.spectrum.t:.0f} / T_c")
         # The format is given for each column, including the index.
-        print(comparison.scalars().to_markdown(floatfmt=("", ".4g", ".4g", ".3g")))
+        save_table(comparison.scalars(), f"lattice_quantities_{name}", floatfmt=("", ".4g", ".4g", ".3g"))
         figs[f"lattice_quantities_{name}"] = plot_quantities_comparison(comparison)
         figs[f"lattice_gw_rate_time_{name}"] = plot_gw_rate_time_comparison(comparison, y_min=Y_MIN)[0]
     return figs

@@ -48,11 +48,10 @@ from __future__ import annotations
 import logging
 
 from matplotlib.figure import Figure
-import pandas as pd
 
 from examples.lattice.lattice_growth import R_STAR, Y_MIN
-from examples.utils import save_and_show_figs
-from pttools.lattice import CHRW25_RUNS, compare_chrw25_runs
+from examples.utils import save_and_show_figs, save_table
+from pttools.lattice import CHRW25_RUNS, compare_chrw25_runs, omega_comparisons
 from pttools.plot.lattice import plot_pow_gw_asymptote_comparison
 from pttools.utils.time import log_duration
 
@@ -82,13 +81,8 @@ def main(asymptote_duration: bool = ASYMPTOTE_DURATION) -> dict[str, Figure]:
     print(f"r_* = {R_STAR}, asymptote_duration = {asymptote_duration}")
 
     step_end = {name: comparison.run.last_step() for name, comparison in lattice_comparisons.items()}
-    omega = pd.DataFrame.from_dict({
-        comparison.run.label_unicode: comparison.omega(asymptote_duration=asymptote_duration, step_end=step_end[name])
-        for name, comparison in lattice_comparisons.items()
-    }, orient="index")
-    ratio = omega["Omega_gw_inf"] / omega["Omega_gw(t)"]
-    omega.insert(list(omega.columns).index("Omega_gw_inf") + 1, "Omega_gw_inf / Omega_gw(t)", ratio)
-    print(omega.to_markdown(floatfmt=["", ".3e", ".3e", ".3f", ".3e", ".3e"]))
+    omega = omega_comparisons(lattice_comparisons, asymptote_duration=asymptote_duration, step_end=step_end)
+    save_table(omega, "lattice_spectra_omega", floatfmt=["", ".3e", ".3e", ".3f", ".3e", ".3e"])
 
     fig = Figure(figsize=(5 * len(lattice_comparisons), 4))
     axs = fig.subplots(1, len(lattice_comparisons), squeeze=False)
