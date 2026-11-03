@@ -3,7 +3,7 @@ r"""A run of a hydrodynamic lattice simulation.
 :py:class:`LatticeRun` is split into classes, each of which extends the previous one:
 
 - :py:class:`pttools.lattice.run_base.LatticeRunBase`: the parameters of the run
-  and the global quantities of the ``.out`` file, see :py:mod:`pttools.lattice.run_base` for the data and units
+  and the global quantities of the log, see :py:mod:`pttools.lattice.run_base` for the data and units
 - :py:class:`pttools.lattice.run_spectra.LatticeRunSpectra`: the power spectra and their time series
 - :py:class:`LatticeRun`: the spectra at a given time step, the extrapolation to late times
   and the comparison with the Sound Shell Model
@@ -161,8 +161,8 @@ class LatticeRun(LatticeRunSpectra):
         """
         key = ("lambda", step_end)
         if key not in self._fit_cache:
-            t, xi = self.integral_scale_series(
-                Quantity.X_DIV, self._fit_steps(Quantity.X_DIV, step_end, after_max=True))
+            quantity = self.u_quantity(Quantity.X_DIV)
+            t, xi = self.integral_scale_series(quantity, self._fit_steps(quantity, step_end, after_max=True))
             self._fit_cache[key] = fit_power_law(t, xi, factor=1.)
         return self._fit_cache[key]
 
@@ -176,7 +176,8 @@ class LatticeRun(LatticeRunSpectra):
         """
         key = ("zeta", step_end)
         if key not in self._fit_cache:
-            t, ubar = self.rms_series(Quantity.X_DIV, self._fit_steps(Quantity.X_DIV, step_end, after_max=True))
+            quantity = self.u_quantity(Quantity.X_DIV)
+            t, ubar = self.rms_series(quantity, self._fit_steps(quantity, step_end, after_max=True))
             self._fit_cache[key] = fit_power_law(t, ubar, factor=-0.5)
         return self._fit_cache[key]
 

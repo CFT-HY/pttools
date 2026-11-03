@@ -35,15 +35,46 @@ as its scripts have issues with the scale, see :py:attr:`pttools.lattice.run.Lat
 from __future__ import annotations
 
 import logging
+import typing as tp
 
 from matplotlib.figure import Figure
 
 from examples.utils import save_and_show_figs, save_table
 from pttools.lattice import CHRW25_RUNS, fit_cases, fit_table, load_chrw25_runs, step_ends
 from pttools.plot.lattice import plot_gw_asymptote
+import pttools.type_hints as th
 from pttools.utils.time import log_duration
 
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.lattice import LatticeRun, LatticeRunParams
+
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+def gw_asymptote(
+        lattice_runs: dict[str, LatticeRun],
+        params: dict[str, LatticeRunParams],
+        step_ends_func: tp.Callable[[str, LatticeRun], dict[str, int]],
+        name: str) -> Figure:
+    """Save the table of the fits of the extrapolation of the GW power and plot the extrapolations.
+
+    :param lattice_runs: the runs by their names
+    :param params: the parameters of the runs with the same keys
+    :param step_ends_func: function that gives the last time steps of the fits of a run,
+        see :py:func:`pttools.lattice.asymptote.fit_cases`
+    :param name: name of the table files, see :py:func:`examples.utils.save_table`
+    :return: the figure, with one column for each run and each of its distinct last time steps
+    """
+    save_table(fit_table(lattice_runs, params, step_ends_func).reset_index(), name, index=False)
+    cases = fit_cases(lattice_runs, step_ends_func)
+    fig = Figure(figsize=(5 * len(cases), 14))
+    axs = fig.subplots(4, len(cases), squeeze=False)
+    for i, (run_name, run, step_end, description) in enumerate(cases):
+        plot_gw_asymptote(
+            run, axs[:, i], start_fraction=params[run_name].fit_start_fraction, step_end=step_end,
+            title=f"{run.label_latex}\nlast time step {step_end} ({description})")
+    fig.tight_layout()
+    return fig
 
 
 @log_duration
@@ -52,16 +83,7 @@ def main() -> dict[str, Figure]:
     lattice_runs = load_chrw25_runs(missing_ok=True)
     if not lattice_runs:
         return {}
-    save_table(fit_table(lattice_runs, CHRW25_RUNS, step_ends).reset_index(), "lattice_gw_asymptote", index=False)
-    cases = fit_cases(lattice_runs, step_ends)
-    fig = Figure(figsize=(5 * len(cases), 14))
-    axs = fig.subplots(4, len(cases), squeeze=False)
-    for i, (name, run, step_end, description) in enumerate(cases):
-        plot_gw_asymptote(
-            run, axs[:, i], start_fraction=CHRW25_RUNS[name].fit_start_fraction, step_end=step_end,
-            title=f"{run.label_latex}\nlast time step {step_end} ({description})")
-    fig.tight_layout()
-    return {"lattice_gw_asymptote": fig}
+    return {"lattice_gw_asymptote": gw_asymptote(lattice_runs, CHRW25_RUNS, step_ends, "lattice_gw_asymptote")}
 
 
 if __name__ == "__main__":

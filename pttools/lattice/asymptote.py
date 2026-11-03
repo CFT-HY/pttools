@@ -200,6 +200,7 @@ def fit_table(
     with :py:func:`pttools.lattice.chrw25.step_ends`.
     The ratio $\Omega_\text{gw}^\infty / \Omega_\text{gw}(t)$ is evaluated at the time step of the comparison
     with the Sound Shell Model, :py:attr:`pttools.lattice.params.LatticeRunParams.fig_step`.
+    It's therefore required for all the runs.
 
     :param lattice_runs: the runs by their names
     :param params: the parameters of the runs with the same keys,
@@ -209,7 +210,7 @@ def fit_table(
     """
     rows = {}
     for name, run, step_end, description in fit_cases(lattice_runs, step_ends):
-        summary = run.gw_asymptote_summary(params[name].fig_step, step_end=step_end)
+        summary = run.gw_asymptote_summary(params[name].fig_steps[0], step_end=step_end)
         rows[(run.label_unicode, f"{step_end} ({description})")] = {
             key: f"{value:.2f} ± {summary[f'{key}_err']:.2f}" if f"{key}_err" in summary else f"{value:.4g}"
             for key, value in summary.items() if not key.endswith("_err")

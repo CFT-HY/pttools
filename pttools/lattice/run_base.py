@@ -1,8 +1,8 @@
 r"""The parameters and global quantities of a run of a hydrodynamic lattice simulation.
 
 The run directory contains the power spectrum files,
-and optionally the input file of the simulation and the log of the global quantities (``*.out``),
-see :py:mod:`pttools.lattice.readers`.
+and optionally the input file of the simulation, the log of the global quantities (``*.out`` or ``globals.txt``)
+and the bubble location file, see :py:mod:`pttools.lattice.readers`.
 When the run is first loaded, they are converted to an HDF5 file in the run directory,
 which is read afterwards, see :py:mod:`pttools.lattice.convert`.
 The quantities are in lattice units, where $T_c = 1$ and $G = 1$, see :correia_2025:`\ ` table I.
@@ -14,7 +14,7 @@ the Hubble rate at the time of GW production is $H_* = H_n$.
 
 The run is split into classes, each of which extends the previous one:
 
-- :py:class:`LatticeRunBase`: the parameters of the run and the global quantities of the ``.out`` file
+- :py:class:`LatticeRunBase`: the parameters of the run and the global quantities of the log
 - :py:class:`pttools.lattice.run_spectra.LatticeRunSpectra`: the power spectra and their time series
 - :py:class:`pttools.lattice.run.LatticeRun`: the spectra at a given time step, the extrapolation to late times
   and the comparison with the Sound Shell Model
@@ -50,8 +50,13 @@ class LatticeRunBase:
     The wall speed and the transition strength are not in the input file, so they have to be given as arguments.
 
     The quantities that depend on the energy density, such as the normalisation of the GW power spectrum,
-    require either the ``.out`` file or the argument ``epsilon_0``.
-    The quantities that depend on the mean enthalpy, such as $\bar{U}$, require the ``.out`` file.
+    require either the log of the global quantities or the argument ``epsilon_0``.
+    The quantities that depend on the mean enthalpy, such as $\bar{U}$, require the log of the global quantities.
+    The log is either the ``.out`` file of the later version of the simulation code,
+    whose quantities are split between the symmetric and the broken phase,
+    or the ``globals.txt`` file of the older version of :cutting_2019:`\ `, whose quantities are totals,
+    see :py:data:`pttools.lattice.readers.GLOBALS_TXT_COLUMNS`.
+    Some of the quantities, e.g. :py:attr:`broken_fraction`, are not available in all the versions.
 
     The data of the run is read from the HDF5 file in the run directory,
     which is created from the original files when the run is first loaded, see :py:mod:`pttools.lattice.convert`.
@@ -67,7 +72,8 @@ class LatticeRunBase:
             label_latex: str | None = None,
             label_unicode: str | None = None,
             input_path: str | os.PathLike[str] | None = None,
-            out_path: str | os.PathLike[str] | None = None,
+            globals_path: str | os.PathLike[str] | None = None,
+            bubble_locs_path: str | os.PathLike[str] | None = None,
             n_bubbles: int | None = None,
             L: float | None = None,
             dx: float | None = None,
@@ -85,19 +91,24 @@ class LatticeRunBase:
         :param label_latex: label of the run in LaTeX format
         :param label_unicode: label of the run in Unicode format
         :param input_path: path of the input file for the conversion to HDF5,
-            defaults to :py:data:`pttools.lattice.readers.INPUT_FILE_NAME` in the run directory
-        :param out_path: path of the log of the global quantities for the conversion to HDF5,
-            defaults to the last ``*.out`` file in the run directory
+            defaults to the file ``input-*`` in the run directory,
+            see :py:func:`pttools.lattice.readers.find_input_file`
+        :param globals_path: path of the log of the global quantities for the conversion to HDF5,
+            defaults to the last ``*.out`` file in the run directory, or ``globals.txt`` if there are none,
+            see :py:func:`pttools.lattice.convert.convert_run`
+        :param bubble_locs_path: path of the bubble location file for the conversion to HDF5,
+            defaults to :py:data:`pttools.lattice.readers.BUBBLE_LOCS_FILE_NAME` in the run directory
         :param n_bubbles: $N_b$, number of bubbles, overrides the input file
         :param L: $L$, side length of the lattice in lattice spacings, overrides the input file
         :param dx: $\delta x$, lattice spacing, overrides the input file
         :param dt: $\delta t$, time step, overrides the input file
-        :param epsilon_0: $\bar{\epsilon}_0$, initial mean energy density, overrides the ``.out`` file
+        :param epsilon_0: $\bar{\epsilon}_0$, initial mean energy density, overrides the log of the global quantities
         :param reconvert: whether to convert the original files to HDF5 again, e.g. after they have changed,
             see :py:func:`pttools.lattice.convert.load_run`
         :raises FileNotFoundError: if the run directory does not exist,
             or if it has neither the HDF5 file nor the power spectrum files
-        :raises ValueError: if a required parameter is neither given nor in the input file
+        :raises ValueError: if a required parameter is neither given nor in the input file,
+            or if ``input_path`` is not given and the run directory has multiple input files
         """
         self.path: Path = Path(path)
         if not self.path.is_dir():
@@ -113,7 +124,9 @@ class LatticeRunBase:
             if label_unicode is None else label_unicode
 
         #: The data of the run as read from its HDF5 file
-        self.data: RunData = load_run(self.path, input_path=input_path, out_path=out_path, reconvert=reconvert)
+        self.data: RunData = load_run(
+            self.path, input_path=input_path, globals_path=globals_path, bubble_locs_path=bubble_locs_path,
+            reconvert=reconvert)
         #: Parameters of the input file of the simulation, or an empty dict if it's not available
         self.params: dict[str, str] = self.data.params
         if not self.params:
@@ -134,6 +147,10 @@ class LatticeRunBase:
 
     def _param[T: (int, float)](self, value: T | None, key: str, type_: type[T]) -> T:
         if value is not None:
+            if key in self.params and not np.isclose(type_(self.params[key]), value):
+                logger.warning(
+                    "The given value of the parameter \"%s\" (%s) differs from that of the input file "
+                    "of the run %s (%s). Using the given value.", key, value, self.name, self.params[key])
             return value
         if key not in self.params:
             raise ValueError(
@@ -148,6 +165,16 @@ class LatticeRunBase:
     # -----
     # Lattice parameters
     # -----
+
+    @property
+    def bubble_locs(self) -> th.IntArr2D:
+        r"""The time steps of the nucleation and the lattice sites of the centres of the bubbles.
+
+        :return: the rows ``step x y z`` of the bubble location file with the shape (bubbles, 4),
+            where the positions are in units of $\delta x$, or an empty array with the shape (0, 4)
+            if the file is not available, see :py:func:`pttools.lattice.readers.read_bubble_locs`
+        """
+        return self.data.bubble_locs
 
     @property
     def R_star(self) -> float:
@@ -170,7 +197,7 @@ class LatticeRunBase:
 
     @property
     def broken_fraction(self) -> th.FloatArr1D:
-        r"""$f_b(t)$, fraction of the volume in the broken phase at the rows of the ``.out`` file."""
+        r"""$f_b(t)$, fraction of the volume in the broken phase at the rows of the log of the global quantities."""
         return self.globals["N broken"] * self.dx**3 / self.volume
 
     def enthalpy(self, step: Steps) -> th.FloatOrArr:
@@ -179,7 +206,7 @@ class LatticeRunBase:
 
     @property
     def enthalpy_global(self) -> th.FloatArr1D:
-        r"""$\bar{w}(t)$, mean enthalpy density at the rows of the ``.out`` file."""
+        r"""$\bar{w}(t)$, mean enthalpy density at the rows of the log of the global quantities."""
         return (self._global_sum("rest E") + self._global_sum("pressure")) / self.volume
 
     @functools.cached_property
@@ -195,27 +222,33 @@ class LatticeRunBase:
 
     @property
     def global_steps(self) -> th.FloatArr1D:
-        """The time steps of the rows of the ``.out`` file."""
+        """The time steps of the rows of the log of the global quantities."""
         return self.globals["step"]
 
     def _global_sum(self, name: str) -> th.FloatArr1D:
-        """Sum of the symmetric and broken phase contributions of a global quantity."""
+        """Total of a global quantity.
+
+        In the ``.out`` files, this is the sum of the contributions of the symmetric and the broken phase.
+        The ``globals.txt`` files have only the totals.
+        """
+        if name in self.globals:
+            return self.globals[name]
         return self.globals[f"{name} sym"] + self.globals[f"{name} broken"]
 
     @property
     def global_times(self) -> th.FloatArr1D:
-        """$t$, the times of the rows of the ``.out`` file."""
+        """$t$, the times of the rows of the log of the global quantities."""
         return self.globals["time"]
 
     @functools.cached_property
     def globals(self) -> dict[str, th.FloatArr1D]:
-        """The global quantities of the ``.out`` file.
+        """The columns of the log of the global quantities (``*.out`` or ``globals.txt``).
 
         :raises FileNotFoundError: if the file is not available
         """
         if not self.has_globals:
             raise FileNotFoundError(
-                f"The log of the global quantities (*.out) is not available for the run {self.name}.")
+                f"The log of the global quantities (*.out or globals.txt) is not available for the run {self.name}.")
         return self.data.globals
 
     @property
@@ -239,7 +272,8 @@ class LatticeRunBase:
         outside = step_arr[(step_arr > steps[-1]) | (step_arr < steps[0])]
         if outside.size:
             logger.debug(
-                "The time steps %s are outside the range of the .out file of the run %s. Using the nearest values.",
+                "The time steps %s are outside the range of the log of the global quantities of the run %s. "
+                "Using the nearest values.",
                 outside.tolist(), self.name)
         return np.interp(step, steps, values)
 
@@ -263,12 +297,13 @@ class LatticeRunBase:
     def time(self, step: Steps) -> th.FloatOrArr:
         r"""$t$, time at the given time steps.
 
-        The times are read from the ``.out`` file if it's available, as the time steps are not exactly $\delta t$.
+        The times are read from the log of the global quantities if it's available,
+        as the time steps are not exactly $\delta t$.
         """
         if self.has_globals:
             steps = self.global_steps
             step_arr = np.asarray(step, dtype=np.float64)
-            # Extrapolate linearly beyond the last row of the .out file.
+            # Extrapolate linearly beyond the last row of the log.
             slope = (self.global_times[-1] - self.global_times[0]) / (steps[-1] - steps[0])
             ret = np.where(
                 step_arr > steps[-1],

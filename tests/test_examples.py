@@ -24,6 +24,7 @@ from examples.gksvdv import (
     gksvdv_testing3,
 )
 from examples.lattice import (
+    chw19,
     lattice_growth,
     lattice_gw_asymptote,
     lattice_quantities,
@@ -238,6 +239,14 @@ class ExampleTest(unittest.TestCase):
     def test_lattice_gw_asymptote() -> None:
         """Test that the example ``examples.lattice.lattice_gw_asymptote`` runs without errors."""
         close_figs(*lattice_gw_asymptote.main().values())
+
+    @staticmethod
+    def test_chw19() -> None:
+        """Test that the example ``examples.lattice.chw19`` runs without errors for one run.
+
+        Without the simulation data the example is skipped.
+        """
+        close_figs(*chw19.main(["alph-0.5-vw-0.92-Nb-8-L-480-dx-2.0"]).values())
 
     @staticmethod
     def test_lattice_suppression() -> None:

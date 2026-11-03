@@ -56,6 +56,11 @@ class LatticeRunSpectra(LatticeRunBase):
         k, p, _ = self.power_spectrum(quantity, steps)
         return integral_scale(k, p)
 
+    @functools.cached_property
+    def has_x(self) -> bool:
+        r"""Whether the run has the power spectra of $X^i$, from which $U^i$ is computed, see :py:meth:`u_quantity`."""
+        return self.steps(Quantity.X_DIV).size > 0
+
     @property
     def k(self) -> th.FloatArr1D:
         """$k$, wavenumbers of the bins of the power spectra in lattice units, see :py:meth:`power_spectrum`."""
@@ -213,6 +218,31 @@ class LatticeRunSpectra(LatticeRunBase):
         """
         return self.data.steps.get(Quantity(quantity), np.array([], dtype=np.int_))
 
+    def u_quantity(self, quantity: Quantity) -> Quantity:
+        r"""The quantity whose power spectra are used for those of $U^i$.
+
+        This is the given component of $X^i$ if the run has its power spectra (:py:attr:`has_x`),
+        and otherwise the same component of the fluid 3-velocity $v^i$.
+        The runs of the older version of the simulation code of :cutting_2019:`\ ` mostly have only the latter,
+        see :py:mod:`pttools.lattice.chw19`.
+        Using $v^i$ approximates $U^i = \sqrt{w / \bar{w}} \gamma v^i$ by neglecting the variation of the enthalpy
+        and the Lorentz factor, i.e. $\bar{U}_\parallel \approx \bar{v}_\parallel$.
+        This affects the quantities that are computed from $\bar{U}_\parallel$, e.g. :py:attr:`ubar_par_max`,
+        :py:attr:`t_sh` and :py:meth:`kinetic_energy_fraction_par`.
+
+        :param quantity: a component of $X^i$, i.e. :py:attr:`Quantity.X_DIV`, :py:attr:`Quantity.X_ROT`
+            or :py:attr:`Quantity.X_TOT`. Other quantities are returned as they are.
+        :return: the quantity
+        """
+        quantity = Quantity(quantity)
+        if self.has_x:
+            return quantity
+        return {
+            Quantity.X_DIV: Quantity.VEL_DIV,
+            Quantity.X_ROT: Quantity.VEL_ROT,
+            Quantity.X_TOT: Quantity.VEL_TOT,
+        }.get(quantity, quantity)
+
     def _steps_or_all(self, quantity: Quantity, steps: npt.ArrayLike | None) -> th.IntArr1D:
         """The given time steps as an array, or all the time steps of the quantity if not given."""
         return self.steps(quantity) if steps is None else np.asarray(steps, dtype=np.int_)
@@ -239,7 +269,7 @@ class LatticeRunSpectra(LatticeRunBase):
 
         :correia_2025:`\ ` eq. 41.
         """
-        return float(self.mean_adiabatic_index(step) * self.rms(Quantity.X_DIV, step)**2)
+        return float(self.mean_adiabatic_index(step) * self.rms(self.u_quantity(Quantity.X_DIV), step)**2)
 
     def omega_gw_rate_series(
             self,
@@ -295,7 +325,8 @@ class LatticeRunSpectra(LatticeRunBase):
     @functools.cached_property
     def ubar_par_max(self) -> tuple[int, float]:
         r"""The time step and the value of the maximum of $\bar{U}_\parallel$, :correia_2025:`\ ` table IV."""
-        steps = self.steps(Quantity.X_DIV)
-        ubar = np.asarray(self.rms(Quantity.X_DIV))
+        quantity = self.u_quantity(Quantity.X_DIV)
+        steps = self.steps(quantity)
+        ubar = np.asarray(self.rms(quantity))
         i_max = int(np.argmax(ubar))
         return int(steps[i_max]), float(ubar[i_max])

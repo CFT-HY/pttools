@@ -53,7 +53,11 @@ from examples.lattice.lattice_growth import R_STAR, Y_MIN
 from examples.utils import save_and_show_figs, save_table
 from pttools.lattice import CHRW25_RUNS, compare_chrw25_runs, omega_comparisons
 from pttools.plot.lattice import plot_pow_gw_asymptote_comparison
+import pttools.type_hints as th
 from pttools.utils.time import log_duration
+
+if th.TYPE_CHECKING_OR_DOCS:
+    from pttools.lattice import LatticeComparison, LatticeRunParams
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -68,6 +72,44 @@ Y_MIN_FIT: dict[str, float] = {"detonation": 4., "deflagration": 0.}
 Y_MAX_FIT: dict[str, float] = {"detonation": 1e3, "deflagration": 360.}
 
 
+def spectra(
+        lattice_comparisons: dict[str, LatticeComparison],
+        params: dict[str, LatticeRunParams],
+        y_min_fit: dict[str, float],
+        y_max_fit: dict[str, float],
+        name: str,
+        asymptote_duration: bool = ASYMPTOTE_DURATION) -> Figure:
+    """Save the table of the total GW power and plot the asymptotically scaled GW power spectra and the SSM spectra.
+
+    The fits use all the time steps of the data with the global quantities,
+    see :py:meth:`pttools.lattice.run_spectra.LatticeRunSpectra.last_step`.
+
+    :param lattice_comparisons: the comparisons of the runs with the SSM by the names of the runs
+    :param params: the parameters of the runs with the same keys
+    :param y_min_fit: smallest $z = kR_*$ of the fits of each wavenumber of each run
+    :param y_max_fit: largest $z = kR_*$ of the fits of each wavenumber of each run
+    :param name: name of the table files, see :py:func:`examples.utils.save_table`
+    :param asymptote_duration: see :py:data:`ASYMPTOTE_DURATION`
+    :return: the figure, with one column for each run
+    """
+    print(f"r_* = {R_STAR}, asymptote_duration = {asymptote_duration}")
+    step_end = {run_name: comparison.run.last_step() for run_name, comparison in lattice_comparisons.items()}
+    omega = omega_comparisons(lattice_comparisons, asymptote_duration=asymptote_duration, step_end=step_end)
+    save_table(omega, name, floatfmt=["", ".3e", ".3e", ".3f", ".3e", ".3e"])
+
+    fig = Figure(figsize=(5 * len(lattice_comparisons), 4))
+    axs = fig.subplots(1, len(lattice_comparisons), squeeze=False)
+    for ax, (run_name, comparison) in zip(axs[0], lattice_comparisons.items(), strict=True):
+        pow_fit = comparison.run.pow_gw_asymptote(
+            y_min=y_min_fit[run_name], y_max=y_max_fit[run_name],
+            start_fraction=params[run_name].fit_start_fraction, step_end=step_end[run_name])
+        plot_pow_gw_asymptote_comparison(
+            comparison, pow_fit=pow_fit, step_end=step_end[run_name], asymptote_duration=asymptote_duration,
+            fig=fig, ax=ax)
+    fig.tight_layout()
+    return fig
+
+
 @log_duration
 def main(asymptote_duration: bool = ASYMPTOTE_DURATION) -> dict[str, Figure]:
     """Plot the asymptotically scaled simulated GW power spectra and the SSM spectra of the runs of Correia et al.
@@ -78,24 +120,10 @@ def main(asymptote_duration: bool = ASYMPTOTE_DURATION) -> dict[str, Figure]:
     lattice_comparisons = compare_chrw25_runs(y_min=Y_MIN, r_star=R_STAR, missing_ok=True)
     if not lattice_comparisons:
         return {}
-    print(f"r_* = {R_STAR}, asymptote_duration = {asymptote_duration}")
-
-    step_end = {name: comparison.run.last_step() for name, comparison in lattice_comparisons.items()}
-    omega = omega_comparisons(lattice_comparisons, asymptote_duration=asymptote_duration, step_end=step_end)
-    save_table(omega, "lattice_spectra_omega", floatfmt=["", ".3e", ".3e", ".3f", ".3e", ".3e"])
-
-    fig = Figure(figsize=(5 * len(lattice_comparisons), 4))
-    axs = fig.subplots(1, len(lattice_comparisons), squeeze=False)
-    for ax, (name, comparison) in zip(axs[0], lattice_comparisons.items(), strict=True):
-        pow_fit = comparison.run.pow_gw_asymptote(
-            y_min=Y_MIN_FIT[name], y_max=Y_MAX_FIT[name],
-            start_fraction=CHRW25_RUNS[name].fit_start_fraction, step_end=step_end[name])
-        plot_pow_gw_asymptote_comparison(
-            comparison, pow_fit=pow_fit, step_end=step_end[name], asymptote_duration=asymptote_duration,
-            fig=fig, ax=ax)
-    fig.tight_layout()
+    fig = spectra(
+        lattice_comparisons, CHRW25_RUNS, Y_MIN_FIT, Y_MAX_FIT, "lattice_spectra_omega",
+        asymptote_duration=asymptote_duration)
     return {"lattice_spectra": fig}
-
 
 if __name__ == "__main__":
     save_and_show_figs(main())

@@ -53,6 +53,7 @@ EXTLINKS_STATIC: ExtLinks = {
     "cornish_2017": arxiv_link("1703.09858", "Cornish & Robson"),
     "codata_2018": doi_link("10.1103/RevModPhys.93.025010", "CODATA", 2018),
     "planck_2018": arxiv_link("1807.06209", "Planck 2018 results"),
+    "cutting_2019": arxiv_link("1906.00480", "Cutting, Hindmarsh & Weir", 2020),
     "smith_2019": arxiv_link("1908.00546", "Smith & Caldwell"),
     "caprini_2020": arxiv_link("1910.13125", "Caprini et al.", 2020),
     "guo_2020": arxiv_link("2007.08537", "Guo et al.", 2021),

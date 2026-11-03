@@ -383,7 +383,7 @@ class CorreiaDataTest(unittest.TestCase):
         from pttools.ssm.suppression import lattice_artifact_start  # noqa: PLC0415
         for name, meta in CHRW25_RUNS.items():
             with self.subTest(name=name):
-                spectrum = load_chrw25_run(name).spectrum(meta.fig_step, meta.fig_step_prev)
+                spectrum = load_chrw25_run(name).spectrum(*meta.fig_steps)
                 rate = spectrum.pow_gw_rate
                 assert 3 < spectrum.y[np.argmax(rate)] < 8
                 i_artifact = lattice_artifact_start(spectrum.y, rate)

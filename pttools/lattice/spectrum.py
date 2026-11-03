@@ -104,7 +104,7 @@ class LatticeSpectrum(Omgw0Base):
         self.run: LatticeRun = run
         self.step: int = step
         self.step_prev: int | None = step_prev
-        k, _, counts = run.power_spectrum(Quantity.X_DIV, step)
+        k, _, counts = run.power_spectrum(run.u_quantity(Quantity.X_DIV), step)
         #: $k$, wavenumbers in lattice units
         self.k: th.FloatArr1D = k
         #: Number of lattice modes in each bin
@@ -128,7 +128,8 @@ class LatticeSpectrum(Omgw0Base):
     def _pow(self, quantity: Quantity) -> th.FloatArr1D:
         k, p = self.run.pow_normalised(quantity, self.step)
         if not np.array_equal(k, self.k):
-            raise ValueError(f"The wavenumbers of {quantity} differ from those of {Quantity.X_DIV}.")
+            raise ValueError(
+                f"The wavenumbers of {quantity} differ from those of {self.run.u_quantity(Quantity.X_DIV)}.")
         return p
 
     @property
@@ -179,16 +180,22 @@ class LatticeSpectrum(Omgw0Base):
 
     @functools.cached_property
     def pow_U_par(self) -> th.FloatArr1D:
-        r"""$\mathcal{P}_{U_{\parallel}}(z)$, power spectrum of the compressional component of $U^i$."""
-        return self._pow(Quantity.X_DIV)
+        r"""$\mathcal{P}_{U_{\parallel}}(z)$, power spectrum of the compressional component of $U^i$.
+
+        If the run does not have the power spectra of $X^i$, this is approximated by that of $v^i$,
+        see :py:meth:`pttools.lattice.run_spectra.LatticeRunSpectra.u_quantity`.
+        """
+        return self._pow(self.run.u_quantity(Quantity.X_DIV))
 
     @functools.cached_property
     def pow_U_perp(self) -> th.FloatArr1D:
         r"""$\mathcal{P}_{U_{\perp}}(z)$, power spectrum of the vortical component of $U^i$.
 
         This is the sum of both transverse polarisations.
+        If the run does not have the power spectra of $X^i$, this is approximated by that of $v^i$,
+        see :py:meth:`pttools.lattice.run_spectra.LatticeRunSpectra.u_quantity`.
         """
-        return self._pow(Quantity.X_ROT)
+        return self._pow(self.run.u_quantity(Quantity.X_ROT))
 
     @functools.cached_property
     def pow_v_par(self) -> th.FloatArr1D:

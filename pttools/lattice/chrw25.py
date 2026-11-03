@@ -78,9 +78,7 @@ def compare_chrw25_runs(
     :raises FileNotFoundError: if the data is not found and ``missing_ok`` is False
     """
     return {
-        name: LatticeComparison(
-            run.spectrum(CHRW25_RUNS[name].fig_step, CHRW25_RUNS[name].fig_step_prev, r_star=r_star),
-            y_min=y_min, **kwargs)
+        name: LatticeComparison(run.spectrum(*CHRW25_RUNS[name].fig_steps, r_star=r_star), y_min=y_min, **kwargs)
         for name, run in load_chrw25_runs(path, missing_ok=missing_ok).items()
     }
 

@@ -58,7 +58,8 @@ def calc_sup_lattice(save: bool = True, path: Path = SUPPRESSION_FOLDER) -> dict
         # although the simulations nucleate the bubbles simultaneously.
         ssm_exponential = SSMSpectrum(
             ssm.bubble, y=ssm.y, nuc_type=NucType.EXPONENTIAL, suppression_method=SuppressionMethod.NONE)
-        spectrum = run.spectrum(meta.fig_step, meta.fig_step_prev)
+        step, step_prev = meta.fig_steps
+        spectrum = run.spectrum(step, step_prev)
         comparison = LatticeComparison(
             spectrum, ssm=ssm,
             method=SuppressionFitMethod.INTEGRAL, y_min=Y_MIN)
@@ -72,7 +73,7 @@ def calc_sup_lattice(save: bool = True, path: Path = SUPPRESSION_FOLDER) -> dict
         values = {
             "vw_sim": run.v_wall, "alpha_sim": run.alpha_n, "sup_ssm": fit.factor,
             "sup_ssm_log_lsq": log_lsq.fit.factor, "sup_ssm_exponential": exponential.fit.factor,
-            "step": meta.fig_step, "step_prev": meta.fig_step_prev,
+            "step": step, "step_prev": step_prev,
             "y_min": fit.y_min, "y_max": fit.y_max, "y_artifact": fit.y_artifact,
             "ubar_par_sim": comparison.spectrum.ubar_par, "ubar_par_ssm": ssm.ubar_par,
             "omega_gw_rate_sim": comparison.spectrum.omega_gw_rate, "omega_gw_rate_ssm": ssm.omega_gw_rate,

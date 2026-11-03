@@ -125,9 +125,11 @@ def plot_velocity_comparison(
     fig, ax = create_fig_ax(fig, ax)
     spectrum = comparison.spectrum
     ssm = comparison.ssm
-    ax.plot(spectrum.y, spectrum.pow_U_par, color=COLOR_PAR, label=r"$\mathcal{P}_{U_{\parallel}}$")
-    ax.plot(spectrum.y, 0.5 * spectrum.pow_U_perp, color=COLOR_PERP, label=r"$\mathcal{P}_{U_{\perp}} / 2$")
-    if show_v:
+    # Without the spectra of X, those of U would be the same as those of v, see LatticeRunSpectra.u_quantity.
+    if comparison.run.has_x:
+        ax.plot(spectrum.y, spectrum.pow_U_par, color=COLOR_PAR, label=r"$\mathcal{P}_{U_{\parallel}}$")
+        ax.plot(spectrum.y, 0.5 * spectrum.pow_U_perp, color=COLOR_PERP, label=r"$\mathcal{P}_{U_{\perp}} / 2$")
+    if show_v or not comparison.run.has_x:
         ax.plot(spectrum.y, spectrum.pow_v_par, color=COLOR_V_PAR, lw=0.8, label=r"$\mathcal{P}_{v_{\parallel}}$")
         ax.plot(
             spectrum.y, 0.5 * spectrum.pow_v_perp, color=COLOR_V_PERP, lw=0.8, label=r"$\mathcal{P}_{v_{\perp}} / 2$")
@@ -186,11 +188,12 @@ def plot_ubar_comparison(
     """
     fig, ax = create_fig_ax(fig, ax)
     run = comparison.run
-    for quantity, color, label in (
-            (Quantity.X_DIV, COLOR_PAR, r"$\bar{U}_\parallel$"),
-            (Quantity.X_ROT, COLOR_PERP, r"$\bar{U}_\perp$"),
-            (Quantity.VEL_DIV, COLOR_V_PAR, r"$\bar{v}_\parallel$"),
-            (Quantity.VEL_ROT, COLOR_V_PERP, r"$\bar{v}_\perp$")):
+    quantities = (
+        (Quantity.X_DIV, COLOR_PAR, r"$\bar{U}_\parallel$"),
+        (Quantity.X_ROT, COLOR_PERP, r"$\bar{U}_\perp$"),
+        (Quantity.VEL_DIV, COLOR_V_PAR, r"$\bar{v}_\parallel$"),
+        (Quantity.VEL_ROT, COLOR_V_PERP, r"$\bar{v}_\perp$"))
+    for quantity, color, label in quantities if run.has_x else quantities[2:]:
         t, ubar = run.rms_series(quantity)
         ax.plot(t, ubar, color=color, label=label)
     ax.plot(run.global_times, run.ubarf_global, color="#332288", lw=0.8, label=r"$\bar{U}_f$ (global)")
@@ -221,9 +224,11 @@ def plot_integral_scale_comparison(
     """
     fig, ax = create_fig_ax(fig, ax)
     run = comparison.run
-    for quantity, color, label in (
-            (Quantity.X_DIV, COLOR_PAR, r"$\xi(U_{\parallel})$"),
-            (Quantity.X_ROT, COLOR_PERP, r"$\xi(U_{\perp})$")):
+    u_label = "U" if run.has_x else "v"
+    for x_quantity, color, label in (
+            (Quantity.X_DIV, COLOR_PAR, rf"$\xi({u_label}_{{\parallel}})$"),
+            (Quantity.X_ROT, COLOR_PERP, rf"$\xi({u_label}_{{\perp}})$")):
+        quantity = run.u_quantity(x_quantity)
         steps = run.steps(quantity)[1:]
         t, xi = run.integral_scale_series(quantity, steps)
         ax.plot(t, xi / run.R_star, color=color, label=label)
@@ -257,7 +262,7 @@ def plot_kinetic_energy_comparison(
     fig, ax = create_fig_ax(fig, ax)
     run = comparison.run
     bubble = comparison.ssm.bubble
-    steps = run.steps(Quantity.X_DIV)
+    steps = run.steps(run.u_quantity(Quantity.X_DIV))
     t = run.time(steps)
     k_par = np.array([run.kinetic_energy_fraction_par(int(step)) for step in steps])
     ax.plot(t, k_par, color=COLOR_PAR, label=r"$K_\parallel = \Gamma \bar{U}_\parallel^2$")

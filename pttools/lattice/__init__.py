@@ -1,7 +1,8 @@
 r"""Import the power spectra and global quantities of hydrodynamic lattice simulations.
 
 This supports the output of the simulation code (SCOTTS) of the Computational Field Theory group
-of the University of Helsinki, as published in the Zenodo release of :correia_2025:`\ `.
+of the University of Helsinki, as published in the Zenodo release of :correia_2025:`\ `,
+and that of its older version of :cutting_2019:`\ `.
 The data can be compared with the Sound Shell Model with the common interface of
 :py:class:`pttools.ssm.spectrum_base.SpectrumBase`,
 and the suppression factor of the Sound Shell Model can be fitted to it with
@@ -17,6 +18,9 @@ and the suppression factor of the Sound Shell Model can be fitted to it with
   the power spectra and time series)
 - :py:mod:`pttools.lattice.spectrum`: :py:class:`LatticeSpectrum`, the spectra of a run at a given time
 - :py:mod:`pttools.lattice.chrw25`: the runs of :correia_2025:`\ `
+- :py:mod:`pttools.lattice.chw19`: the runs of :cutting_2019:`\ `,
+  of which only :py:func:`chw19_runs`, :py:func:`load_chw19_run` and :py:func:`load_chw19_runs`
+  are imported by this package
 - :py:mod:`pttools.lattice.convert`: the conversion of the files of a run to HDF5, and reading it
 - :py:mod:`pttools.lattice.comparison`: :py:class:`LatticeComparison`,
   the comparison of a run with the Sound Shell Model
@@ -27,6 +31,7 @@ and the suppression factor of the Sound Shell Model can be fitted to it with
 
 from .asymptote import *
 from .chrw25 import *
+from .chw19 import *
 from .comparison import *
 from .convert import *
 from .params import *
