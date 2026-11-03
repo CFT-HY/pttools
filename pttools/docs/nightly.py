@@ -24,6 +24,7 @@ import collections.abc
 import dataclasses
 import datetime
 import fcntl
+import fnmatch
 import json
 import os
 from pathlib import Path
@@ -32,11 +33,12 @@ import shutil
 import signal
 import subprocess
 import sys
+import tarfile
 import tempfile
 import time
 import traceback
 import types
-from typing import Any, Self, TextIO, TypedDict, cast
+from typing import IO, Any, Self, TextIO, TypedDict, cast
 
 SCRIPT_PATH: Path = Path(__file__).resolve()
 #: The PTtools repository, in which this script is
@@ -50,7 +52,9 @@ SEQUENCE_LOCK_FILE: Path = SCRIPT_REPO_DIR / "nightly_sequence.lock"
 #: This is like "all", but a failed link check does not stop the build,
 #: as it is often caused by a temporarily unreachable server.
 DOCS_TARGET: str = "all-nofail-links"
-#: The 7-Zip wildcards of the files that are left out of the archive.
+#: The filename extension of the archives of the nightly runs
+ARCHIVE_SUFFIX: str = ".tar.xz"
+#: The wildcards of the filenames that are left out of the archive, see :mod:`fnmatch`.
 #: The checksum files ``*.h5.sha256`` of the HDF5 files are still included.
 ARCHIVE_EXCLUDE: tuple[str, ...] = ("*.h5",)
 #: The filename of a log of a nightly run: ``nightly_YYYY-MM-DD.log``,
@@ -762,34 +766,57 @@ def find_uv() -> str | None:
 
 
 def archive(archive_path: Path, paths: dict[Path, str], exclude: collections.abc.Iterable[str] = ()) -> Path:
-    """Compress directories and files to a 7-Zip archive.
+    """Compress directories and files to an xz-compressed tar archive.
 
-    7-Zip appends to an existing archive instead of replacing it,
-    so if there is already an archive with the same name, a suffix _2, _3 etc. is added to the filename.
+    The tar stream is created with :mod:`tarfile` and compressed with the ``xz`` command using all CPU cores,
+    as the :mod:`lzma` module of the standard library compresses with only one core.
+    If there is already an archive with the same name, a suffix _2, _3 etc. is added to the filename,
+    so that the existing archive is not overwritten.
     A message is logged after the archive has been created.
 
-    :param archive_path: the path of the archive
+    :param archive_path: the path of the archive, ending with ``.tar.xz``
     :param paths: the directories and files to compress, and their names at the root of the archive
     :param exclude: the wildcards of the filenames to leave out of the archive, e.g. ``*.h5``
     :return: the path of the created archive
-    :raises FileNotFoundError: if a directory or a file does not exist
+    :raises FileNotFoundError: if a directory or a file does not exist, or if ``xz`` is not installed
+    :raises subprocess.CalledProcessError: if ``xz`` fails
     """
     for item in paths:
         if not item.exists():
             raise FileNotFoundError(f"{item} does not exist.")
+    if shutil.which("xz") is None:
+        raise FileNotFoundError("xz was not found in PATH.")
+    exclude = tuple(exclude)
+    stem = archive_path.name.removesuffix(ARCHIVE_SUFFIX)
     path = archive_path
     i = 2
     while path.exists():
-        path = archive_path.with_name(f"{archive_path.stem}_{i}{archive_path.suffix}")
+        path = archive_path.with_name(f"{stem}_{i}{ARCHIVE_SUFFIX}")
         i += 1
     path.parent.mkdir(parents=True, exist_ok=True)
-    exclude_args = [f"-xr!{pattern}" for pattern in exclude]
-    subprocess.run(["7z", "a", "-mx=9", *exclude_args, str(path), *map(str, paths)], check=True)
-    # 7-Zip stores the directories and files with their own names, so they are renamed afterwards.
-    # Renaming a directory renames also its contents.
-    renames = [arg for item, name in paths.items() if item.name != name for arg in (item.name, name)]
-    if renames:
-        subprocess.run(["7z", "rn", str(path), *renames], check=True)
+
+    def exclude_filter(info: tarfile.TarInfo) -> tarfile.TarInfo | None:
+        name = info.name.rsplit("/", 1)[-1]
+        return None if any(fnmatch.fnmatchcase(name, pattern) for pattern in exclude) else info
+
+    # -T0 uses as many threads as there are CPU cores.
+    # The compressed output is written to the archive file, which must not exist yet.
+    command = ["xz", "-9", "-T0", "--stdout"]
+    try:
+        with path.open("xb") as file, subprocess.Popen(command, stdin=subprocess.PIPE, stdout=file) as xz:
+            stdin = cast(IO[bytes], xz.stdin)
+            try:
+                with tarfile.open(fileobj=stdin, mode="w|") as tar:
+                    for item, name in paths.items():
+                        tar.add(item, arcname=name, filter=exclude_filter)
+            finally:
+                stdin.close()
+        if xz.returncode:
+            raise subprocess.CalledProcessError(xz.returncode, command)
+    except BaseException:
+        # A partial archive is removed, so that it's not mistaken for a complete one.
+        path.unlink(missing_ok=True)
+        raise
     log(f"Created the archive {path} of {', '.join(f'{item} as {name}' for item, name in paths.items())}.")
     return path
 
@@ -868,12 +895,12 @@ def nightly_run(repo: Repo, uv: str | None, lock_fd: int, log_file: Path, starte
 
     # This is logged before archiving, so that the archived log includes it.
     log("Nightly run finished. Archiving the results.")
-    # A copy of the log is archived, as the output of 7-Zip is written to the log while it's being archived.
+    # A copy of the log is archived, so that the archive is not affected by anything written to the log meanwhile.
     with tempfile.TemporaryDirectory() as tmp_dir:
         log_copy = Path(tmp_dir) / log_file.name
         shutil.copy2(log_file, log_copy)
         archive(
-            repo.archive_dir / f"nightly_{started:%Y-%m-%d}.7z",
+            repo.archive_dir / f"{repo.name.lower()}_nightly_{started:%Y-%m-%d}{ARCHIVE_SUFFIX}",
             {
                 repo.docs_build_dir: repo.docs_build_dir.name,
                 fig_dir: "fig",

@@ -12,6 +12,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import tarfile
 import time
 
 import pytest
@@ -22,6 +23,8 @@ import fcntl
 
 from pttools.docs import nightly
 from pttools.docs.nightly import CronSchedule, Repo
+
+requires_xz: pytest.MarkDecorator = pytest.mark.skipif(shutil.which("xz") is None, reason="xz is not installed")
 
 # A Sunday
 NOW: datetime.datetime = datetime.datetime(2026, 10, 4, 12, 25, 6)
@@ -241,7 +244,55 @@ done
 """
 
 
-@pytest.mark.skipif(shutil.which("7z") is None, reason="7-Zip is not installed")
+@requires_xz
+def test_archive(tmp_path: Path) -> None:
+    """The archive should contain the given paths with their new names, without the excluded files.
+
+    An existing archive should not be overwritten.
+    """
+    src = tmp_path / "src"
+    (src / "sub").mkdir(parents=True)
+    (src / "a.txt").write_text("a")
+    (src / "sub" / "data.h5").write_text("h5")
+    (src / "sub" / "data.h5.sha256").write_text("sha")
+    log_file = tmp_path / "run.log"
+    log_file.write_text("log")
+    paths = {src: "renamed", log_file: "run.log"}
+    archive_path = tmp_path / "out" / "repo_nightly_2026-10-04.tar.xz"
+
+    first = nightly.archive(archive_path, paths, exclude=("*.h5",))
+    assert first == archive_path
+    with tarfile.open(first) as tar:
+        assert set(tar.getnames()) == {
+            "renamed", "renamed/a.txt", "renamed/sub", "renamed/sub/data.h5.sha256", "run.log"
+        }
+    second = nightly.archive(archive_path, paths)
+    assert second.name == "repo_nightly_2026-10-04_2.tar.xz"
+    with tarfile.open(second) as tar:
+        assert "renamed/sub/data.h5" in tar.getnames()
+    assert nightly.archive(archive_path, paths).name == "repo_nightly_2026-10-04_3.tar.xz"
+
+    with pytest.raises(FileNotFoundError):
+        nightly.archive(archive_path, {tmp_path / "missing": "missing"})
+
+
+def test_archive_xz_fails(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """If xz fails, the error should be raised and the partial archive removed."""
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    fake_xz = fake_bin / "xz"
+    fake_xz.write_text("#!/bin/sh\ncat > /dev/null\nexit 2\n")
+    fake_xz.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{fake_bin}{os.pathsep}{os.environ['PATH']}")
+    src = tmp_path / "a.txt"
+    src.write_text("a")
+    archive_path = tmp_path / "repo_nightly_2026-10-04.tar.xz"
+    with pytest.raises(subprocess.CalledProcessError):
+        nightly.archive(archive_path, {src: "a.txt"})
+    assert not archive_path.exists()
+
+
+@requires_xz
 def test_run(tmp_path: Path) -> None:
     """A successful run should archive the documentation, the figures, the wheel and the log.
 
@@ -251,18 +302,18 @@ def test_run(tmp_path: Path) -> None:
     repo, script, env = create_repo(tmp_path, FAKE_UV_OUTPUTS)
     result = subprocess.run([sys.executable, script, "--run"], env=env, capture_output=True, text=True, check=False)
     assert (result.returncode, result.stderr) == (0, "")
-    archives = list((repo / "docs" / "nightly").glob("nightly_*.7z"))
+    archives = list((repo / "docs" / "nightly").glob("repo_nightly_*.tar.xz"))
     assert len(archives) == 1
     log_file = next((repo / "logs").glob("nightly_*.log"))
-    listing = subprocess.run(
-        ["7z", "l", "-ba", "-slt", str(archives[0])], capture_output=True, text=True, check=True).stdout
-    names = {line.removeprefix("Path = ") for line in listing.splitlines() if line.startswith("Path = ")}
+    with tarfile.open(archives[0]) as tar:
+        names = set(tar.getnames())
+        archived_log_file = tar.extractfile(log_file.name)
+        assert archived_log_file is not None
+        archived_log = archived_log_file.read().decode()
     assert {
         "_build/html/index.html", "fig/fig.png", "dist/ptplot_gw-0.0.0-py3-none-any.whl", log_file.name
     } <= names
 
-    archived_log = subprocess.run(
-        ["7z", "e", "-so", str(archives[0]), log_file.name], capture_output=True, text=True, check=True).stdout
     assert "Wheel build finished: ptplot_gw-0.0.0-py3-none-any.whl." in archived_log
     assert "Nightly run finished." in archived_log
     assert "Created the archive" not in archived_log
@@ -358,7 +409,7 @@ def test_stop(tmp_path: Path) -> None:
     assert "No nightly run is in progress." in stop_again
 
 
-@pytest.mark.skipif(shutil.which("7z") is None, reason="7-Zip is not installed")
+@requires_xz
 def test_run_multiple_repos(tmp_path: Path) -> None:
     """The nightly run should be run for each repository in sequence, even if it fails for a previous repository.
 
@@ -378,11 +429,11 @@ def test_run_multiple_repos(tmp_path: Path) -> None:
 
     fail_log = next((fail / "logs").glob("nightly_*.log")).read_text()
     assert "FAILED:" in fail_log
-    assert not list((fail / "docs" / "nightly").glob("nightly_*.7z"))
+    assert not list((fail / "docs" / "nightly").glob("*_nightly_*.tar.xz"))
     other_log = next((other / "logs").glob("nightly_*.log")).read_text()
     assert "Saving the figures to" in other_log
     assert "(OTHER_FIG_DIR)" in other_log.replace("$", "")
-    assert len(list((other / "docs" / "nightly").glob("nightly_*.7z"))) == 1
+    assert len(list((other / "docs" / "nightly").glob("*_nightly_*.tar.xz"))) == 1
     assert len(list((other / "docs" / "nightly" / "fig").glob("fig_*/fig.png"))) == 1
 
     status = subprocess.run(

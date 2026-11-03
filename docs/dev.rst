@@ -122,7 +122,10 @@ and the outputs of each repository are saved in that repository.
 
 For each repository, the nightly run runs the unit tests, builds the documentation
 (which also runs the examples) and the wheel,
-and archives the results with 7-Zip to ``./docs/nightly/nightly_YYYY-MM-DD.7z``.
+and archives the results to ``./docs/nightly/name_nightly_YYYY-MM-DD.tar.xz``,
+where ``name`` is the name of the repository directory in lower case,
+e.g. ``pttools_nightly_YYYY-MM-DD.tar.xz`` or ``ptplot_nightly_YYYY-MM-DD.tar.xz``.
+The archive is compressed with the ``xz`` command using all CPU cores.
 The documentation is built to ``./docs/nightly/_build`` instead of the default ``./docs/_build``,
 and the wheel to ``./docs/nightly/dist``. These directories are cleaned at the start of the run.
 The examples save their figures to ``./docs/nightly/fig/fig_YYYY-MM-DD`` instead of the default ``./examples/fig``.
