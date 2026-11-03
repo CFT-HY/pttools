@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """Count the lines of code with `cloc <https://github.com/AlDanial/cloc>`_.
 
 Only the files tracked by Git are counted, and the files matching the patterns
@@ -26,9 +24,9 @@ It contains the same counts as the output of cloc, but its lines are much shorte
 as cloc pads the file column to a fixed width that is much wider than the file names.
 This makes it suitable for the documentation, including the PDF, where lines that are too long have to be wrapped.
 
-This can be used also in other projects, such as PTPlot, that have a ``.clocignore`` file.
-The script uses only the Python standard library, and can therefore also be run
-without installing PTtools with ``python3 path/to/pttools/docs/cloc.py``.
+This can be used also in other projects, such as PTPlot, that have a ``.clocignore`` file,
+by running ``python -m pttools.docs.cloc`` in their virtual environment.
+The files are listed with :py:func:`pttools.utils.git.tracked_files`.
 """
 
 import argparse
@@ -39,35 +37,14 @@ import subprocess
 import sys
 import typing as tp
 
+from pttools.utils.git import git_toplevel, tracked_files
+
 #: Name of the files that contain the patterns of the files to be excluded
 CLOCIGNORE: str = ".clocignore"
 #: Options that are passed to cloc if no other options are given
 DEFAULT_CLOC_ARGS: tuple[str, ...] = ("--by-file-by-lang",)
 #: Columns of the counts in the output of cloc
 CLOC_COUNT_COLUMNS: tuple[str, ...] = ("blank", "comment", "code")
-
-
-def git_ls_files(path: str | os.PathLike[str], *args: str) -> list[str]:
-    """List the files tracked by Git in the given directory.
-
-    :param path: the directory
-    :param args: additional arguments to ``git ls-files``
-    :return: paths of the files relative to the given directory
-    """
-    # With -z the paths are not quoted, even if they contain special characters.
-    output = subprocess.run(
-        ["git", "ls-files", "-z", "--cached", *args, "--", "."],
-        cwd=path, check=True, stdout=subprocess.PIPE, text=True
-    ).stdout
-    return [file for file in output.split("\0") if file]
-
-
-def git_toplevel(path: str | os.PathLike[str]) -> Path:
-    """The root directory of the Git repository that contains the given directory."""
-    return Path(subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"],
-        cwd=path, check=True, stdout=subprocess.PIPE, text=True
-    ).stdout.strip())
 
 
 def find_clocignore(path: str | os.PathLike[str]) -> list[Path]:
@@ -91,18 +68,10 @@ def find_clocignore(path: str | os.PathLike[str]) -> list[Path]:
 def counted_files(path: str | os.PathLike[str]) -> list[str]:
     """The files that are tracked by Git and are not excluded by the ``.clocignore`` files.
 
-    The files that have been deleted from the working tree but not from the Git index are skipped,
-    as are the Git submodules.
-
     :param path: the directory
     :return: paths of the files relative to the given directory
     """
-    # Git reads the .clocignore files of the given directory, its parent directories and its subdirectories.
-    ignored = set(git_ls_files(path, "--ignored", f"--exclude-per-directory={CLOCIGNORE}"))
-    return [
-        file for file in git_ls_files(path)
-        if file not in ignored and (Path(path) / file).is_file()
-    ]
+    return tracked_files(path, exclude_per_directory=CLOCIGNORE)
 
 
 def cloc(path: str | os.PathLike[str] | None = None, cloc_args: tp.Sequence[str] = DEFAULT_CLOC_ARGS) -> str:

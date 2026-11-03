@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from pttools.utils.files import dir_size, format_size, tail
+from pttools.utils.files import dir_size, format_size, split_lines, tail
 
 
 def test_dir_size(tmp_path: Path) -> None:
@@ -20,6 +20,11 @@ def test_format_size() -> None:
     """Sizes should be formatted in megabytes with one decimal."""
     assert format_size(0) == "0.0 MB"
     assert format_size(12_345_678) == "12.3 MB"
+
+
+def test_split_lines() -> None:
+    """The lines should be split also at carriage returns, and their trailing whitespace removed."""
+    assert split_lines("a  \r\nprogress 1\rprogress 2\nb\n") == ["a", "progress 1", "progress 2", "b", ""]
 
 
 @pytest.mark.parametrize("n_lines", [0, 3, 10_000])

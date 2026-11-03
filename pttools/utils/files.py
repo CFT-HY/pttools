@@ -2,8 +2,9 @@
 
 import os
 from pathlib import Path
+import re
 
-__all__ = ["dir_size", "format_size", "tail"]
+__all__ = ["dir_size", "format_size", "split_lines", "tail"]
 
 
 def dir_size(path: Path) -> int:
@@ -22,6 +23,17 @@ def format_size(size: int) -> str:
     :return: the size in megabytes, e.g. ``12.3 MB``
     """
     return f"{size / 1e6:.1f} MB"
+
+
+def split_lines(text: str) -> list[str]:
+    """Split text, such as console output, into lines, including the progress lines separated by carriage returns.
+
+    The trailing whitespace of each line is removed.
+
+    :param text: the text
+    :return: the lines
+    """
+    return [line.rstrip() for line in re.split(r"\r\n|\r|\n", text)]
 
 
 def tail(path: Path, lines: int) -> list[str]:

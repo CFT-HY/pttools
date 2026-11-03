@@ -11,7 +11,7 @@ import typing as tp
 import unittest
 from unittest import mock
 
-from pttools.docs import lint
+from pttools.docs import latex, lint
 from pttools.docs.paths import LINT_DIR_NAME, NO_PLOTS_ENV_VAR
 
 
@@ -69,7 +69,7 @@ class DocsLintRunMakeTest(unittest.TestCase):
     def test_run_make_build_dir(self) -> None:
         """The build directory overrides BUILDDIR of the Makefile, and its LaTeX directory is removed."""
         build_dir = self.docs_dir / "_build" / "custom"
-        latex_dir = build_dir / lint.LATEX_SUBDIR_NAME
+        latex_dir = build_dir / latex.LATEX_SUBDIR_NAME
         latex_dir.mkdir(parents=True)
         with contextlib.redirect_stdout(io.StringIO()):
             returncode, lines = lint.run_make("builddir", self.log_path, self.docs_dir, build_dir=build_dir)
@@ -243,8 +243,3 @@ class DocsLintLinksTest(unittest.TestCase):
         """A successful build is not affected."""
         returncode, _ = self.run_main("ok", as_warnings=True)
         assert returncode == 0
-
-    @staticmethod
-    def test_github_warning() -> None:
-        """The special characters of the message are escaped."""
-        assert lint.github_warning("Title", "50% done\nnext\rline") == "::warning title=Title::50%25 done%0Anext%0Dline"
