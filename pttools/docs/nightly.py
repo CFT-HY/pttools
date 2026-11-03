@@ -16,15 +16,18 @@ Usage:
 
 The script is run with the Python of the system and not in the virtualenv that uv manages,
 and therefore it may only use the Python standard library.
+The only exception is psutil, which is used if it's installed, and otherwise substituted with the standard library.
 It is documented in ``./docs/dev.rst``.
 """
 
 import argparse
 import collections.abc
+import concurrent.futures
 import dataclasses
 import datetime
 import fcntl
 import fnmatch
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -57,6 +60,10 @@ ARCHIVE_SUFFIX: str = ".tar.xz"
 #: The wildcards of the filenames that are left out of the archive, see :mod:`fnmatch`.
 #: The checksum files ``*.h5.sha256`` of the HDF5 files are still included.
 ARCHIVE_EXCLUDE: tuple[str, ...] = ("*.h5",)
+#: The arguments of optipng for the lossless optimization of the PNG files before archiving.
+#: ``-o7`` is the highest optimization level, ``-preserve`` keeps the modification times,
+#: and the metadata, such as the software that created the figure, is kept.
+OPTIPNG_ARGS: tuple[str, ...] = ("-o7", "-preserve", "-quiet")
 #: The filename of a log of a nightly run: ``nightly_YYYY-MM-DD.log``,
 #: or ``nightly_YYYY-MM-DD_2.log``, ``nightly_YYYY-MM-DD_3.log`` etc. for the later runs of the same day
 LOG_FILE_PATTERN: re.Pattern[str] = re.compile(r"nightly_(\d{4}-\d{2}-\d{2})(?:_(\d+))?\.log")
@@ -303,6 +310,63 @@ def format_duration(seconds: float) -> str:
     days, minutes = divmod(minutes, 24 * 60)
     hours, minutes = divmod(minutes, 60)
     return f"{days} d {hours} h {minutes} min" if days else f"{hours} h {minutes} min"
+
+
+def physical_cpu_count() -> int:
+    """Get the number of physical CPU cores available to this process.
+
+    On Linux, the logical CPUs to which the process is restricted are found with :func:`os.sched_getaffinity`,
+    and the physical cores to which they belong from ``/sys/devices/system/cpu/cpu*/topology/core_cpus_list``,
+    which lists the logical CPUs that share a physical core with simultaneous multithreading (SMT).
+    If this is not available, the physical cores of the whole system are counted with :func:`psutil.cpu_count`,
+    if :mod:`psutil` is installed for the Python of the system, e.g. with the ``python3-psutil`` package of Ubuntu.
+    If neither is available, an error is logged, and the number of logical CPUs available to the process is returned.
+
+    :return: the number of physical CPU cores
+    """
+    cpus = os.sched_getaffinity(0) if hasattr(os, "sched_getaffinity") else set(range(os.cpu_count() or 1))
+    try:
+        return len({
+            Path(f"/sys/devices/system/cpu/cpu{cpu}/topology/core_cpus_list").read_text().strip() for cpu in cpus
+        })
+    except OSError:
+        pass
+    try:
+        import psutil  # noqa: PLC0415
+    except ImportError:
+        log(
+            f"ERROR: The CPU topology is not available in /sys, and psutil is not installed for {sys.executable}, "
+            f"so the number of physical CPU cores is unknown. Using the number of logical CPUs ({len(cpus)}) instead. "
+            "Install psutil with e.g. 'sudo apt install python3-psutil' on Debian and Ubuntu, "
+            "or 'sudo dnf install python3-psutil' on Fedora."
+        )
+        return len(cpus)
+    cores = psutil.cpu_count(logical=False)
+    if cores is None:
+        log(
+            "ERROR: The CPU topology is not available in /sys, and psutil could not determine "
+            f"the number of physical CPU cores. Using the number of logical CPUs ({len(cpus)}) instead."
+        )
+        return len(cpus)
+    return cores
+
+
+def dir_size(path: Path) -> int:
+    """Get the total size of the files in a directory and its subdirectories, without following symbolic links.
+
+    :param path: the directory
+    :return: the total size in bytes
+    """
+    return sum(item.stat().st_size for item in path.rglob("*") if item.is_file() and not item.is_symlink())
+
+
+def format_size(size: int) -> str:
+    """Format a size in a human-readable format.
+
+    :param size: the size in bytes
+    :return: the size in megabytes, e.g. ``12.3 MB``
+    """
+    return f"{size / 1e6:.1f} MB"
 
 
 def format_time(value: datetime.datetime) -> str:
@@ -821,8 +885,72 @@ def archive(archive_path: Path, paths: dict[Path, str], exclude: collections.abc
     return path
 
 
+def optimize_pngs(dirs: collections.abc.Iterable[Path], workers: int | None = None) -> None:
+    """Optimize the PNG files in directories losslessly with optipng.
+
+    optipng uses only one CPU core, so the files are optimized in parallel, one optipng process per physical CPU core,
+    starting from the largest files. Using also the SMT threads would slow down the optimization of the largest file,
+    which usually determines the total time.
+    Identical files, such as the copies of the same figure in the HTML and EPUB builds of the documentation,
+    are optimized only once, and the optimized file is copied over the others.
+    The total sizes of the directories and of the PNG files before and after the optimization,
+    and the time spent, are logged.
+    If optipng is not installed or fails for a file, it's logged, and the files are left as they are.
+
+    :param dirs: the directories, in which the PNG files are searched recursively
+    :param workers: the number of parallel optipng processes, by default :func:`physical_cpu_count`
+    """
+    optipng = shutil.which("optipng")
+    if optipng is None:
+        log("optipng was not found in PATH. The PNG files are archived without optimization.")
+        return
+    dirs = [directory for directory in dirs if directory.is_dir()]
+    start = time.perf_counter()
+    dir_sizes_before = [dir_size(directory) for directory in dirs]
+    groups: dict[str, list[Path]] = {}
+    for directory in dirs:
+        for path in sorted(directory.rglob("*.png")):
+            if path.is_file() and not path.is_symlink():
+                groups.setdefault(hashlib.sha256(path.read_bytes()).hexdigest(), []).append(path)
+    files = [path for paths in groups.values() for path in paths]
+    png_size_before = sum(path.stat().st_size for path in files)
+
+    def optimize(paths: list[Path]) -> str | None:
+        result = subprocess.run(
+            [optipng, *OPTIPNG_ARGS, "--", str(paths[0])], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            text=True, check=False,
+        )
+        if result.returncode:
+            return f"{paths[0]} (exit code {result.returncode}): {result.stdout.strip()}"
+        for path in paths[1:]:
+            shutil.copy2(paths[0], path)
+        return None
+
+    # The largest files take the longest, so they are started first to keep all the cores busy until the end.
+    jobs = sorted(groups.values(), key=lambda paths: paths[0].stat().st_size, reverse=True)
+    if workers is None:
+        workers = physical_cpu_count()
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+        errors = [error for error in executor.map(optimize, jobs) if error is not None]
+    for error in errors:
+        log(f"optipng failed for {error}")
+
+    png_size_after = sum(path.stat().st_size for path in files)
+    sizes = ", ".join(
+        f"{directory} {format_size(before)} -> {format_size(dir_size(directory))}"
+        for directory, before in zip(dirs, dir_sizes_before, strict=True)
+    )
+    reduction = f" ({1 - png_size_after / png_size_before:.1%} smaller)" if png_size_before else ""
+    log(
+        f"Optimized {len(files)} PNG files ({len(groups)} unique) with optipng {' '.join(OPTIPNG_ARGS)} "
+        f"using {workers} parallel processes in {time.perf_counter() - start:.0f} s. "
+        f"PNG files: {format_size(png_size_before)} -> {format_size(png_size_after)}{reduction}. "
+        f"Directories: {sizes}."
+    )
+
+
 def nightly_run(repo: Repo, uv: str | None, lock_fd: int, log_file: Path, started: datetime.datetime) -> int:
-    """Run the unit tests, build the documentation and the wheel, and archive the results of a repository.
+    """Run the unit tests, build the docs and the wheel, optimize the PNG files and archive the results of a repo.
 
     The completion of the run is logged before archiving, so that the archived log includes it.
     The creation of the archive is then logged only to the log file.
@@ -892,6 +1020,8 @@ def nightly_run(repo: Repo, uv: str | None, lock_fd: int, log_file: Path, starte
         [uv, "build", "--wheel", "--out-dir", str(repo.dist_dir), str(repo.path)], cwd=repo.path, env=env, check=True
     )
     log(f"Wheel build finished: {', '.join(wheel.name for wheel in sorted(repo.dist_dir.glob('*.whl')))}.")
+
+    optimize_pngs([repo.docs_build_dir, fig_dir])
 
     # This is logged before archiving, so that the archived log includes it.
     log("Nightly run finished. Archiving the results.")

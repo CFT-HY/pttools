@@ -126,6 +126,12 @@ and archives the results to ``./docs/nightly/name_nightly_YYYY-MM-DD.tar.xz``,
 where ``name`` is the name of the repository directory in lower case,
 e.g. ``pttools_nightly_YYYY-MM-DD.tar.xz`` or ``ptplot_nightly_YYYY-MM-DD.tar.xz``.
 The archive is compressed with the ``xz`` command using all CPU cores.
+Before archiving, the PNG files of the documentation build and of the figure directory are optimized losslessly
+with `OptiPNG <https://optipng.sourceforge.net/>`_ at its highest optimization level ``-o7``, if ``optipng`` is installed.
+OptiPNG uses only one CPU core, so one ``optipng`` process is run per physical CPU core
+(counted with psutil, if it's installed for the Python of the system, and otherwise per logical CPU),
+and identical files, such as the copies of a figure in the HTML and EPUB builds, are optimized only once.
+The time spent and the total sizes of the PNG files and of the directories before and after the optimization are logged.
 The documentation is built to ``./docs/nightly/_build`` instead of the default ``./docs/_build``,
 and the wheel to ``./docs/nightly/dist``. These directories are cleaned at the start of the run.
 The examples save their figures to ``./docs/nightly/fig/fig_YYYY-MM-DD`` instead of the default ``./examples/fig``.

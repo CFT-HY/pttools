@@ -14,6 +14,8 @@ import subprocess
 import sys
 import tarfile
 import time
+from typing import Any
+import zlib
 
 import pytest
 
@@ -24,6 +26,9 @@ import fcntl
 from pttools.docs import nightly
 from pttools.docs.nightly import CronSchedule, Repo
 
+requires_optipng: pytest.MarkDecorator = pytest.mark.skipif(
+    shutil.which("optipng") is None, reason="optipng is not installed"
+)
 requires_xz: pytest.MarkDecorator = pytest.mark.skipif(shutil.which("xz") is None, reason="xz is not installed")
 
 # A Sunday
@@ -291,6 +296,112 @@ def test_archive_xz_fails(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> No
         nightly.archive(archive_path, {src: "a.txt"})
     assert not archive_path.exists()
 
+
+
+def test_physical_cpu_count() -> None:
+    """The number of physical cores should be at least 1 and at most the number of logical CPUs."""
+    assert 1 <= nightly.physical_cpu_count() <= (os.cpu_count() or 1)
+
+
+@pytest.fixture
+def no_sys_topology(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Make the CPU topology in /sys unavailable."""
+    read_text = Path.read_text
+
+    def fake_read_text(self: Path, *args: Any, **kwargs: Any) -> str:
+        if str(self).startswith("/sys/devices/system/cpu/"):
+            raise FileNotFoundError(self)
+        return read_text(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", fake_read_text)
+
+
+@pytest.mark.usefixtures("no_sys_topology")
+def test_physical_cpu_count_psutil(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Without the CPU topology in /sys, the physical cores should be counted with psutil."""
+    psutil = pytest.importorskip("psutil")
+    monkeypatch.setattr(psutil, "cpu_count", lambda logical=True: 3 if not logical else 6)
+    assert nightly.physical_cpu_count() == 3
+
+
+@pytest.mark.usefixtures("no_sys_topology")
+def test_physical_cpu_count_without_psutil(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Without the CPU topology in /sys and psutil, the number of logical CPUs should be returned.
+
+    An error with installation instructions should be logged.
+    """
+    # None in sys.modules makes the import raise an ImportError.
+    monkeypatch.setitem(sys.modules, "psutil", None)
+    cpus = len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else os.cpu_count() or 1
+    assert nightly.physical_cpu_count() == cpus
+    output = capsys.readouterr().out
+    assert "ERROR: The CPU topology is not available in /sys, and psutil is not installed" in output
+    assert "sudo apt install python3-psutil" in output
+
+
+def create_png(path: Path, width: int = 64, height: int = 64) -> None:
+    """Create an uncompressed grayscale PNG file, which optipng can make smaller.
+
+    :param path: the path of the file
+    :param width: the width of the image in pixels
+    :param height: the height of the image in pixels
+    """
+    def chunk(chunk_type: bytes, data: bytes) -> bytes:
+        return (
+            len(data).to_bytes(4, "big") + chunk_type + data
+            + zlib.crc32(chunk_type + data).to_bytes(4, "big")
+        )
+
+    pixels = b"".join(b"\x00" + bytes((x * y) % 256 for x in range(width)) for y in range(height))
+    header = width.to_bytes(4, "big") + height.to_bytes(4, "big") + bytes((8, 0, 0, 0, 0))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(
+        b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", header) + chunk(b"IDAT", zlib.compress(pixels, 0)) + chunk(b"IEND", b"")
+    )
+
+
+@requires_optipng
+def test_optimize_pngs(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """The PNG files should be made smaller, and identical files should stay identical.
+
+    Invalid files should be logged and left as they are.
+    """
+    build_dir = tmp_path / "_build"
+    fig_dir = tmp_path / "fig"
+    create_png(build_dir / "html" / "a.png")
+    create_png(build_dir / "epub" / "a.png")
+    create_png(fig_dir / "b.png", width=32)
+    invalid = fig_dir / "invalid.png"
+    invalid.write_text("not a PNG")
+    (fig_dir / "notes.txt").write_text("text")
+    sizes_before = {path: path.stat().st_size for path in tmp_path.rglob("*.png")}
+
+    nightly.optimize_pngs([build_dir, fig_dir, tmp_path / "missing"])
+
+    output = capsys.readouterr().out
+    assert f"optipng failed for {invalid}" in output
+    assert "Optimized 4 PNG files (3 unique) with optipng -o7 -preserve -quiet" in output
+    assert f"{build_dir} " in output
+    assert f"{fig_dir} " in output
+    assert invalid.read_text() == "not a PNG"
+    for path, size in sizes_before.items():
+        if path != invalid:
+            assert path.stat().st_size < size, path
+    assert (build_dir / "html" / "a.png").read_bytes() == (build_dir / "epub" / "a.png").read_bytes()
+
+
+def test_optimize_pngs_without_optipng(tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+                                       capsys: pytest.CaptureFixture[str]) -> None:
+    """Without optipng, the PNG files should be left as they are."""
+    monkeypatch.setenv("PATH", str(tmp_path / "bin"))
+    png = tmp_path / "fig" / "a.png"
+    create_png(png)
+    data = png.read_bytes()
+    nightly.optimize_pngs([png.parent])
+    assert "optipng was not found in PATH" in capsys.readouterr().out
+    assert png.read_bytes() == data
 
 @requires_xz
 def test_run(tmp_path: Path) -> None:
