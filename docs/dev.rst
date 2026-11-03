@@ -113,12 +113,19 @@ and models that are pickled to the workers reuse the functions compiled there.
 
 Nightly runs
 ------------
-The ``pttools/docs/nightly.py --run`` command runs the nightly run for multiple repositories in sequence,
+The ``uv run python -m pttools.docs.nightly --run`` command runs the nightly run for multiple repositories in sequence,
 so that they don't compete for resources.
 By default, these are PTtools and PTPlot, if it exists in ``../PTPlot`` relative to the PTtools repository.
 Other repositories can be selected by giving their paths with ``--repo``, which can be given multiple times.
 The nightly run is run for each repository even if it fails for the previous ones,
 and the outputs of each repository are saved in that repository.
+The script :mod:`pttools.docs.nightly` is run with ``uv run`` in the virtualenv of PTtools,
+so that it can use the utilities of PTtools, such as :mod:`pttools.utils.cron` and :mod:`pttools.utils.process`.
+In other directories than that of PTtools, it's run with ``uv run --project /REPO_PATH python -m pttools.docs.nightly``,
+where ``REPO_PATH`` is the path to the PTtools repository.
+The steps of each repository are run with ``uv run --frozen --project`` in the virtualenv of that repository.
+The virtualenv of PTtools is removed from their environment, i.e. ``$VIRTUAL_ENV`` and its ``bin`` directory in ``$PATH``,
+so that e.g. the steps of PTPlot see only the virtualenv of PTPlot, see :func:`pttools.utils.uv.env_without_venv`.
 
 For each repository, the nightly run runs the unit tests, builds the documentation
 (which also runs the examples) and the wheel,
@@ -129,7 +136,7 @@ The archive is compressed with the ``xz`` command using all CPU cores.
 Before archiving, the PNG files of the documentation build and of the figure directory are optimized losslessly
 with `OptiPNG <https://optipng.sourceforge.net/>`_ at its highest optimization level ``-o7``, if ``optipng`` is installed.
 OptiPNG uses only one CPU core, so one ``optipng`` process is run per physical CPU core
-(counted with psutil, if it's installed for the Python of the system, and otherwise per logical CPU),
+(counted from ``/sys``, or with psutil if that is not available, and otherwise per logical CPU),
 and identical files, such as the copies of a figure in the HTML and EPUB builds, are optimized only once.
 The time spent and the total sizes of the PNG files and of the directories before and after the optimization are logged.
 The documentation is built to ``./docs/nightly/_build`` instead of the default ``./docs/_build``,
@@ -159,16 +166,16 @@ This is ensured with a lock on ``./nightly_sequence.lock`` of PTtools.
 Each repository also has a lock on its ``./nightly.lock``,
 to which the script writes the process ID, the start time and the HEAD commit of the run.
 
-``pttools/docs/nightly.py --status``, or ``pttools/docs/nightly.py`` without arguments,
+``uv run python -m pttools.docs.nightly --status``, or the same command without arguments,
 prints the crontab entry of the nightly run, its schedule and the next run time, the current time,
 and for each repository, whether a nightly run is currently in progress and its processes,
 and the last lines of the latest log.
-A nightly run in progress can be stopped with ``pttools/docs/nightly.py --stop``.
+A nightly run in progress can be stopped with ``uv run python -m pttools.docs.nightly --stop``.
 It sends SIGTERM to the nightly run and all its child processes,
 and SIGKILL to those that are still running after 10 seconds,
 which can be changed with the ``--timeout`` argument.
 The runs of the remaining repositories are then not started.
-The next nightly run of each repository can be skipped with ``pttools/docs/nightly.py --skip``,
+The next nightly run of each repository can be skipped with ``uv run python -m pttools.docs.nightly --skip``,
 which creates the file ``./nightly.skip`` in each repository.
 The next ``--run`` of the repository, whether it is started by cron or manually,
 then deletes the file and skips the repository.
@@ -180,8 +187,11 @@ To run the script every night at 2 AM, open the crontab of your user
 
   crontab -e
 
-and add the following lines, where ``REPO_PATH`` is the path to the PTtools repository.
-Cron runs commands with a minimal environment, so the path is set explicitly.
+and add the following lines, where ``REPO_PATH`` is the path to the PTtools repository,
+and ``UV_PATH`` is the path to uv, which you can find with ``which uv``, e.g. ``/home/USER/.local/bin/uv``.
+Cron runs commands with a minimal environment, which does not include the installation directory of uv in ``PATH``,
+so the paths are given explicitly.
+``--quiet`` hides the messages of uv when it updates the virtualenv, so that cron does not send emails of them.
 The ``MAILTO`` sends an email if a run fails, if a mail transfer agent is configured.
 Remove the ``MAILTO`` line if you don't want these emails.
 
@@ -190,7 +200,9 @@ Remove the ``MAILTO`` line if you don't want these emails.
   PATH=/usr/local/bin:/usr/bin:/bin
   MAILTO=your.email@example.com
 
-  0 2 * * * /REPO_PATH/pttools/docs/nightly.py --run
+  0 2 * * * /UV_PATH run --frozen --quiet --project /REPO_PATH python -m pttools.docs.nightly --run
+
+The exact command for your system is printed by ``uv run python -m pttools.docs.nightly --status``.
 
 The cron daemon uses the local time zone of the system, which can be checked with ``timedatectl``.
 The scheduled jobs can be listed with ``crontab -l``.

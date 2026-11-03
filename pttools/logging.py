@@ -1,10 +1,12 @@
 """Logging configuration."""
 
 import dataclasses
+import datetime
 import faulthandler
 import logging
 import os
 from pathlib import Path
+import sys
 from threading import Lock
 import time
 import typing as tp
@@ -121,3 +123,47 @@ def setup_worker_logging(config: LoggingConfig | None) -> None:
     if not LOGGING_LOCK.acquire(blocking=False):
         return
     _apply_config(config)
+
+
+def append_log(log_file: Path, message: str) -> None:
+    """Append a message with a timestamp to a log file, without redirecting the output to it.
+
+    The format is the same as that of :py:func:`log_console`.
+
+    :param log_file: the path of the log file
+    :param message: the message
+    """
+    with log_file.open("a") as file:
+        print(_timestamped(message), file=file)
+
+
+def log_console(message: str) -> None:
+    """Print a message with a timestamp to stdout, e.g. ``[2026-10-04T12:25:06+03:00] message``.
+
+    Unlike the :py:mod:`logging` configuration of :py:func:`setup_logging`, this needs no setup,
+    and the output can be redirected to a log file with :py:func:`redirect_output`.
+
+    :param message: the message
+    """
+    print(_timestamped(message), flush=True)
+
+
+def redirect_output(log_file: Path) -> None:
+    """Redirect stdout and stderr of this process and of all its subprocesses to a log file.
+
+    The redirection is done at the level of the file descriptors,
+    so that it also affects the subprocesses started afterwards.
+
+    :param log_file: the path of the log file, to which the output is appended
+    """
+    sys.stdout.flush()
+    sys.stderr.flush()
+    fd = os.open(log_file, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o666)
+    os.dup2(fd, sys.stdout.fileno())
+    os.dup2(fd, sys.stderr.fileno())
+    os.close(fd)
+
+
+def _timestamped(message: str) -> str:
+    """Prefix a message with the current local time in ISO 8601 format with seconds and the UTC offset."""
+    return f"[{datetime.datetime.now().astimezone().isoformat(timespec='seconds')}] {message}"

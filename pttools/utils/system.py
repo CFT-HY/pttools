@@ -14,6 +14,7 @@ try:
 except ModuleNotFoundError:
     psutil = None
 
+from pttools.logging import log_console
 from pttools.type_hints import IS_DOCS
 
 # IS_DOCS is imported on purpose, so that it's available with the other system constants.
@@ -40,6 +41,7 @@ __all__ = [
     "SUPPORTS_INTERPRETER_POOL",
     "UNAME",
     "dmesg",
+    "physical_cpu_count",
     "platform_info",
     "project_dir",
     "psutil_info",
@@ -158,6 +160,41 @@ def dmesg(n_lines: int = 100, print_output: bool = False) -> str:
         print(f"Last {n_lines} lines from dmesg:")
         print(output)
     return output
+
+
+def physical_cpu_count() -> int:
+    """Get the number of physical CPU cores available to this process.
+
+    On Linux, the logical CPUs to which the process is restricted are found with :func:`os.sched_getaffinity`,
+    and the physical cores to which they belong from ``/sys/devices/system/cpu/cpu*/topology/core_cpus_list``,
+    which lists the logical CPUs that share a physical core with simultaneous multithreading (SMT).
+    If this is not available, the physical cores of the whole system are counted with :func:`psutil.cpu_count`,
+    if :mod:`psutil` is installed.
+    If neither is available, an error is logged, and the number of logical CPUs available to the process is returned.
+
+    :return: the number of physical CPU cores
+    """
+    cpus = os.sched_getaffinity(0) if hasattr(os, "sched_getaffinity") else set(range(os.cpu_count() or 1))
+    try:
+        return len({
+            Path(f"/sys/devices/system/cpu/cpu{cpu}/topology/core_cpus_list").read_text().strip() for cpu in cpus
+        })
+    except OSError:
+        pass
+    if psutil is None:
+        log_console(
+            f"ERROR: The CPU topology is not available in /sys, and psutil is not installed for {sys.executable}, "
+            f"so the number of physical CPU cores is unknown. Using the number of logical CPUs ({len(cpus)}) instead."
+        )
+        return len(cpus)
+    cores = psutil.cpu_count(logical=False)
+    if cores is None:
+        log_console(
+            "ERROR: The CPU topology is not available in /sys, and psutil could not determine "
+            f"the number of physical CPU cores. Using the number of logical CPUs ({len(cpus)}) instead."
+        )
+        return len(cpus)
+    return cores
 
 
 def platform_info() -> str:

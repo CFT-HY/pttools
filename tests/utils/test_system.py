@@ -1,10 +1,13 @@
 """Tests for the system utilities."""
 
+import os
 from pathlib import Path
 import platform
 import tempfile
 import typing as tp
 import unittest
+
+import pytest
 
 from pttools.utils import system
 
@@ -67,6 +70,49 @@ class ProjectDirTest(unittest.TestCase):
         assert system.project_dir() == system.PROJECT_DIR
         if not system.IS_PACKAGE:
             assert system.PTTOOLS_DIR.parent == system.PROJECT_DIR
+
+
+
+def test_physical_cpu_count() -> None:
+    """The number of physical cores should be at least 1 and at most the number of logical CPUs."""
+    assert 1 <= system.physical_cpu_count() <= (os.cpu_count() or 1)
+
+
+@pytest.fixture
+def no_sys_topology(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Make the CPU topology in /sys unavailable."""
+    read_text = Path.read_text
+
+    def fake_read_text(self: Path, *args: tp.Any, **kwargs: tp.Any) -> str:
+        if str(self).startswith("/sys/devices/system/cpu/"):
+            raise FileNotFoundError(self)
+        return read_text(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", fake_read_text)
+
+
+@pytest.mark.usefixtures("no_sys_topology")
+def test_physical_cpu_count_psutil(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Without the CPU topology in /sys, the physical cores should be counted with psutil."""
+    psutil = pytest.importorskip("psutil")
+    monkeypatch.setattr(system, "psutil", psutil)
+    monkeypatch.setattr(psutil, "cpu_count", lambda logical=True: 3 if not logical else 6)
+    assert system.physical_cpu_count() == 3
+
+
+@pytest.mark.usefixtures("no_sys_topology")
+def test_physical_cpu_count_without_psutil(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Without the CPU topology in /sys and psutil, the number of logical CPUs should be returned.
+
+    An error should be logged.
+    """
+    monkeypatch.setattr(system, "psutil", None)
+    cpus = len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else os.cpu_count() or 1
+    assert system.physical_cpu_count() == cpus
+    output = capsys.readouterr().out
+    assert "ERROR: The CPU topology is not available in /sys, and psutil is not installed" in output
 
 
 if __name__ == "__main__":

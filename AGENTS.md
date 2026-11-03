@@ -30,18 +30,20 @@
   whose domains are allowed in the Claude Code sandbox in `.claude/settings.json`. Keep the two in sync.
   The link check of `make all` and `make all-noplot` needs access to all the linked sites, and can be skipped with `SKIP_LINKCHECK=1`.
 - Build the package: `uv build`
-- Nightly run: `./pttools/docs/nightly.py --run` runs the unit tests, builds the documentation with examples and the wheel, and archives the results,
+- Nightly run: `uv run python -m pttools.docs.nightly --run` runs the unit tests, builds the documentation with examples and the wheel, and archives the results,
   for PTtools and PTPlot (if it exists in `../PTPlot`) in sequence. It is run by cron. It is documented in `./docs/dev.rst`.
-  - Check the status of the nightly run with `./pttools/docs/nightly.py --status`, or `pttools/docs/nightly.py` without arguments.
+  - Check the status of the nightly run with `uv run python -m pttools.docs.nightly --status`, or without arguments.
     It prints the crontab entry, the schedule and the next run time, the current time,
     and for each repository, whether a nightly run is currently in progress, and the last lines of its latest log `./logs/nightly_YYYY-MM-DD.log`
     (or `nightly_YYYY-MM-DD_2.log` etc. for the later runs of the same day).
-  - A nightly run in progress and all its child processes can be stopped with `./pttools/docs/nightly.py --stop`,
-    and the next nightly run can be skipped with `./pttools/docs/nightly.py --skip`.
+  - A nightly run in progress and all its child processes can be stopped with `uv run python -m pttools.docs.nightly --stop`,
+    and the next nightly run can be skipped with `uv run python -m pttools.docs.nightly --skip`.
     The skip is consumed by the next `--run`, and it can be cancelled by deleting `./nightly.skip` of each repository.
-  - The script is run with the Python of the system, and therefore it may only use the Python standard library.
+  - The script is always run with `uv run` in the virtualenv of PTtools, so it may use the utilities of PTtools,
+    e.g. those of `pttools.utils`. From other directories, run it with `uv run --project /path/to/pttools`.
+    It runs the steps of each repository with `uv run --project` in the virtualenv of that repository, without that of PTtools.
   - If you're given an overnight task (e.g. "you have time until ..."),
-    run `./pttools/docs/nightly.py --status` before starting to work on it.
+    run `uv run python -m pttools.docs.nightly --status` before starting to work on it.
     Skip the nightly run if needed. If you skip it, run it manually when you're done with your work.
 
 ## CI

@@ -15,7 +15,7 @@ if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.figure import Figure
 
 #: Figures directory for the examples, which can be changed with the ``PTTOOLS_FIG_DIR`` environment variable,
-#: e.g. by the nightly run ``pttools/docs/nightly.py``
+#: e.g. by the nightly run :mod:`pttools.docs.nightly`
 FIG_DIR: Path = Path(os.environ.get("PTTOOLS_FIG_DIR") or Path(__file__).resolve().parent / "fig").resolve()
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 

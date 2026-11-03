@@ -7,7 +7,7 @@ import unittest
 
 import pytest
 
-from pttools.utils.time import format_duration, log_duration
+from pttools.utils.time import format_duration, format_time, log_duration
 
 
 @log_duration
@@ -35,7 +35,7 @@ class FormatDurationTest(unittest.TestCase):
             (123.123, "2 min 3.123 s"),
             (3723.123, "1 h 2 min 3.123 s"),
             (3603, "1 h 0 min 3.000 s"),
-            (90000, "25 h 0 min 0.000 s"),
+            (90000, "1 d 1 h 0 min 0.000 s"),
             (-123.123, "-2 min 3.123 s"),
             (-1e-4, "0.000 s"),
             (float("inf"), "inf s"),
@@ -50,7 +50,33 @@ class FormatDurationTest(unittest.TestCase):
         """A timedelta should be formatted the same way as the corresponding number of seconds."""
         assert format_duration(datetime.timedelta(hours=1, minutes=2, seconds=3, milliseconds=123)) \
             == "1 h 2 min 3.123 s"
-        assert format_duration(datetime.timedelta(days=1)) == "24 h 0 min 0.000 s"
+        assert format_duration(datetime.timedelta(days=1)) == "1 d 0 h 0 min 0.000 s"
+
+
+    def test_days_and_minutes(self) -> None:
+        """The days should be included in the hours with days=False, and the seconds omitted with seconds=False."""
+        cases = (
+            (0, {"seconds": False}, "0 min"),
+            (59.9, {"seconds": False}, "0 min"),
+            (3 * 3600 + 61, {"seconds": False}, "3 h 1 min"),
+            (90000, {"days": False}, "25 h 0 min 0.000 s"),
+            (2 * 86400 + 3600, {"seconds": False}, "2 d 1 h 0 min"),
+            (86400 + 59, {"seconds": False}, "1 d 0 h 0 min"),
+            (-90, {"seconds": False}, "-1 min"),
+            (-30, {"seconds": False}, "0 min"),
+            (float("inf"), {"seconds": False}, "inf min"),
+        )
+        for seconds, kwargs, expected in cases:
+            with self.subTest(duration=seconds, **kwargs):
+                assert format_duration(seconds, **kwargs) == expected
+
+
+def test_format_time() -> None:
+    """A time should be formatted with the day of the week and the time zone."""
+    value = datetime.datetime(2026, 10, 4, 12, 25, 6)
+    assert format_time(value) == f"Sun 2026-10-04 12:25:06 {value.astimezone().strftime('%Z')}"
+    utc = datetime.datetime(2026, 10, 4, 12, 25, 6, tzinfo=datetime.UTC)
+    assert format_time(utc) == utc.astimezone().strftime("%a %Y-%m-%d %H:%M:%S %Z")
 
 
 class LogDurationTest(unittest.TestCase):
