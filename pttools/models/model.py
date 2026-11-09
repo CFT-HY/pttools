@@ -1267,9 +1267,8 @@ class Model(BaseModel, abc.ABC):
                 logger.error(msg)
             if not allow_invalid:
                 raise ValueError(msg)
-        elif alpha_n > 1:
-            if log_invalid:
-                logger.warning("Got alpha_n=%s > 1. Please be careful that it's valid.", alpha_n)
+        elif alpha_n > 1 and log_invalid:
+            logger.warning("Got alpha_n=%s > 1. Please be careful that it's valid.", alpha_n)
 
     def vp_vm_tilde_ratio_giese[T: FloatOrArr](
             self,
