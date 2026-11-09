@@ -8,8 +8,10 @@ import pytest
 
 from pttools.bubble import Bubble
 from pttools.models import BagModel
+from pttools.speedup.options import NUMBA_DISABLE_JIT
 from pttools.ssm import NucType, SSMSpectrum, barotropic, power_gw_bag
 from pttools.ssm.suppression import NO_HYBRIDS_EXT, SuppressionMethod
+from tests.utils.const import LOW_ACCURACY_SPECTRUM_KWARGS
 
 
 class SSMSpectrumFlatTest(unittest.TestCase):
@@ -51,13 +53,16 @@ class SSMSpectrumFlatTest(unittest.TestCase):
 
     def test_pow_gw_rate_suppression(self) -> None:
         """The growth rate includes the suppression factor."""
+        # The result does not depend on the accuracy, and therefore it's reduced without Numba to save time.
+        spectrum_kwargs: dict[str, tp.Any] = LOW_ACCURACY_SPECTRUM_KWARGS if NUMBA_DISABLE_JIT else {}
         # The dataset is given explicitly, as the suppression factor of the default dataset WITH_HYBRIDS_EXT
         # is above 1 at these parameters, as some of its data points near the hybrids are.
         suppressed = SSMSpectrum.cached(
             self.bubble, y=self.y, nuc_type=NucType.SIMULTANEOUS,
-            suppression=NO_HYBRIDS_EXT, suppression_method=SuppressionMethod.DEFAULT)
+            suppression=NO_HYBRIDS_EXT, suppression_method=SuppressionMethod.DEFAULT, **spectrum_kwargs)
         unsuppressed = SSMSpectrum.cached(
-            self.bubble, y=self.y, nuc_type=NucType.SIMULTANEOUS, suppression_method=SuppressionMethod.NONE)
+            self.bubble, y=self.y, nuc_type=NucType.SIMULTANEOUS, suppression_method=SuppressionMethod.NONE,
+            **spectrum_kwargs)
         assert suppressed.suppression_factor < 1
         np.testing.assert_allclose(
             suppressed.pow_gw_rate, suppressed.suppression_factor * unsuppressed.pow_gw_rate, rtol=1e-10)

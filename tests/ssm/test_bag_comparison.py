@@ -19,7 +19,6 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
     """Tests for comparing the results of the Spectrum class to the old bag model interface."""
 
     bubbles: tp.ClassVar[list[Bubble]]
-    spectra: tp.ClassVar[list[SSMSpectrum]]
     spectra_lambda: tp.ClassVar[list[SSMSpectrum]]
     z: tp.ClassVar[FloatArr1D]
 
@@ -30,13 +29,12 @@ class SpectrumTest(RefHindmarshHijazi, unittest.TestCase):
             Bubble.cached(cls.MODEL, v_wall=cls.V_WALLS[i], alpha_n=cls.ALPHA_NS[i])
             for i in range(cls.V_WALLS.size)
         ]
-        cls.spectra = [SSMSpectrum.cached(bubble) for bubble in cls.bubbles]
         cls.spectra_lambda = []
         for bubble in cls.bubbles:
             spectrum = SSMSpectrum(bubble, compute=False)
             spectrum.compute(lambda_correction=ssm.LambdaCorrection.LEGACY)
             cls.spectra_lambda.append(spectrum)
-        cls.z = cls.spectra[0].y
+        cls.z = cls.spectra_lambda[0].y
 
     def test_de(self) -> None:
         """Test that the energy density perturbation agrees with the old bag model interface."""

@@ -7,6 +7,7 @@ import numpy as np
 
 from pttools.bubble import Bubble
 from pttools.models.bag import BagModel
+from pttools.speedup.options import NUMBA_DISABLE_JIT
 from pttools.ssm.sin_transform_exact import (
     sharpen_padding,
     sound_shell_transforms_pl_parallel,
@@ -78,14 +79,36 @@ class SinTransformExactTest(unittest.TestCase):
 
     @staticmethod
     def test_fp() -> None:
-        r"""The analytical $f'(z)$ agrees with finite differences on a dense $z$ array."""
+        r"""The analytical $f'(z)$ agrees with finite differences on a dense $z$ array.
+
+        Without Numba, the full range would take several minutes,
+        and therefore only windows at its beginning, middle and end are tested with the same density of points.
+        The tolerance is then scaled by the maximum of $|f'(z)|$ on a sparse array over the full range,
+        which agrees with that of the full range within 0.1 %.
+        """
         bubble = Bubble.cached(BagModel.cached(alpha_n_min=0.01), v_wall=0.7, alpha_n=0.1)
         lm = lam(v=bubble.v, w=bubble.w, e=bubble.e)
-        z = np.logspace(np.log10(60), np.log10(200), 20001)
-        f_val, fp_val, _ = f_fp_l(
-            z=z, xi=bubble.xi, v=bubble.v, lam=lm, v_wall=bubble.v_wall, v_sh=bubble.v_sh, parallel=True)
-        fp_fd = np.gradient(f_val, z)
-        np.testing.assert_allclose(fp_val[1:-1], fp_fd[1:-1], rtol=0, atol=1e-5 * np.max(np.abs(fp_val)))
+
+        def compute(z: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+            f_val, fp_val, _ = f_fp_l(
+                z=z, xi=bubble.xi, v=bubble.v, lam=lm, v_wall=bubble.v_wall, v_sh=bubble.v_sh, parallel=True)
+            return f_val, fp_val
+
+        z_min, z_max, n_z = 60, 200, 20001
+        if NUMBA_DISABLE_JIT:
+            windows = [(60, 63), (110, 114), (195, 200)]
+            fp_max = np.max(np.abs(compute(np.logspace(np.log10(z_min), np.log10(z_max), 501))[1]))
+        else:
+            windows = [(z_min, z_max)]
+            fp_max = None
+        # The points per decade of the full range
+        density = (n_z - 1) / np.log10(z_max / z_min)
+        for start, stop in windows:
+            z = np.logspace(np.log10(start), np.log10(stop), round(density * np.log10(stop / start)) + 1)
+            f_val, fp_val = compute(z)
+            fp_fd = np.gradient(f_val, z)
+            scale = np.max(np.abs(fp_val)) if fp_max is None else fp_max
+            np.testing.assert_allclose(fp_val[1:-1], fp_fd[1:-1], rtol=0, atol=1e-5 * scale)
 
 
 if __name__ == "__main__":

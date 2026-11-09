@@ -1,6 +1,8 @@
 """Tests for the suppression module."""
 
+from pathlib import Path
 import sys
+import tempfile
 import typing as tp
 import unittest
 
@@ -56,22 +58,32 @@ class SuppressionTest(unittest.TestCase):
             tolerances["sup_ssm"] = 5.68e-7
             tolerances["ssm_tot"] = 5.63e-7
         spectrum_kwargs: dict[str, tp.Any] = {}
+        # Every row_step-th row of the simulation data is computed.
+        row_step = 1
         if NUMBA_DISABLE_JIT:
-            # Without Numba, the default accuracy would take several minutes.
+            # Without Numba, all the rows would take more than an hour, as each bubble takes about a minute to solve.
             # The point of running the test without Numba is to check that the code runs,
-            # so lower accuracy is used, which changes the results by up to 3.4e-4.
-            spectrum_kwargs = {"nT": 500, "n_z_lookup": 5000}
+            # so only a few rows are computed, and with lower accuracy,
+            # which changes the results by up to 3.4e-4.
+            spectrum_kwargs = {"nT": 500, "n_z_lookup": 5000, "nx_P_tilde_gw": 1000}
+            row_step = 30
             tolerances["sup_ssm"] = 3.5e-4
             tolerances["ssm_tot"] = 3.5e-4
-        for filename in filenames:
-            data = calc_sup_ssm(f"{filename}.txt", save=False, **spectrum_kwargs)
-            ref = np.genfromtxt(SUPPRESSION_FOLDER / f"{filename}_ssm.txt", names=True)
-            for key, rtol in tolerances.items():
-                with self.subTest(filename=filename, key=key):
-                    if rtol is None:
-                        assert_allclose(data[key], ref[key], name=key)
-                    else:
-                        assert_allclose(data[key], ref[key], name=key, rtol=rtol)
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            for filename in filenames:
+                path = SUPPRESSION_FOLDER / f"{filename}.txt"
+                if row_step > 1:
+                    header, *rows = path.read_text().splitlines()
+                    path = Path(tmp_dir) / path.name
+                    path.write_text("\n".join([header, *rows[::row_step]]) + "\n")
+                data = calc_sup_ssm(path, save=False, **spectrum_kwargs)
+                ref = np.genfromtxt(SUPPRESSION_FOLDER / f"{filename}_ssm.txt", names=True)[::row_step]
+                for key, rtol in tolerances.items():
+                    with self.subTest(filename=filename, key=key):
+                        if rtol is None:
+                            assert_allclose(data[key], ref[key], name=key)
+                        else:
+                            assert_allclose(data[key], ref[key], name=key, rtol=rtol)
 
     @staticmethod
     def test_suppression() -> None:

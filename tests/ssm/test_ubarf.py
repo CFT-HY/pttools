@@ -9,6 +9,7 @@ import numpy as np
 from pttools.bubble import Bubble
 from pttools.math import assert_allclose
 from pttools.models.bag import BagModel
+from pttools.speedup.options import NUMBA_DISABLE_JIT
 from pttools.ssm import LambdaCorrection, NucType, SSMSpectrum
 import pttools.type_hints as th
 
@@ -50,7 +51,12 @@ class UbarfTest(unittest.TestCase):
             Bubble.cached(cls.model, v_wall=v_wall, alpha_n=alpha_n)
             for v_wall, alpha_n in zip(V_WALL, ALPHA_N, strict=False)
         ]
-        cls.spectra = [SSMSpectrum(bubble, compute=False) for bubble in cls.bubbles]
+        spectrum_kwargs: dict[str, tp.Any] = {}
+        if NUMBA_DISABLE_JIT:
+            # Without Numba, the default accuracy would take more than 10 minutes.
+            # These settings affect only the GW spectra, and therefore give the same Ubarf as the defaults.
+            spectrum_kwargs = {"n_z_lookup": 2000, "nx_P_tilde_gw": 100}
+        cls.spectra = [SSMSpectrum(bubble, compute=False, **spectrum_kwargs) for bubble in cls.bubbles]
         for spectrum in cls.spectra:
             # The reference values were computed with the legacy kinetic energy term of lambda.
             spectrum.compute(lambda_correction=LambdaCorrection.LEGACY)

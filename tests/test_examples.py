@@ -50,6 +50,7 @@ from examples.solvers import bag, old_new, xi_kappa_bag
 from examples.standard_model import standard_model_xi_v
 from pttools.export import Importer, Table
 from pttools.plot import close_figs
+from pttools.speedup.options import NUMBA_DISABLE_JIT
 from tests.utils.const import (
     LOW_ACCURACY_SPECTRUM_KWARGS,
     TEST_ACCURACY,
@@ -335,8 +336,11 @@ class ExampleTest(unittest.TestCase):
         """Test that the example ``examples.reverse.reverse`` runs without errors.
 
         The accuracy and the number of iterations are reduced, as the result is not compared with a reference.
+        Without Numba, even the second iteration would take several minutes,
+        as the first step of the optimizer goes to the boundary of the parameter space,
+        where the spectra are slower to compute, and therefore only one iteration is run.
         """
-        reverse.main(n_t=TEST_ACCURACY.nT, n_z_lookup=TEST_ACCURACY.n_z_lookup, maxiter=2)
+        reverse.main(n_t=TEST_ACCURACY.nT, n_z_lookup=TEST_ACCURACY.n_z_lookup, maxiter=1 if NUMBA_DISABLE_JIT else 2)
 
     @staticmethod
     def test_reverse_approx() -> None:
@@ -351,8 +355,11 @@ class ExampleTest(unittest.TestCase):
 
     @staticmethod
     def test_old_new() -> None:
-        """Test that the example ``examples.solvers.old_new`` runs without errors."""
-        close_figs(old_new.main())
+        """Test that the example ``examples.solvers.old_new`` runs without errors.
+
+        Without Numba, the accuracy is reduced, as the default accuracy would take several minutes.
+        """
+        close_figs(old_new.main(accuracy=TEST_ACCURACY if NUMBA_DISABLE_JIT else None))
 
     @staticmethod
     def test_xi_kappa_bag() -> None:

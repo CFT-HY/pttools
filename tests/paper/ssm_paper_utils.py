@@ -7,6 +7,7 @@ Modified from
 <https://bitbucket.org/hindmars/sound-shell-model/src/master/paper/python/ssm_paper_utils.py>`__.
 """
 
+import collections.abc
 import io
 import logging
 import os
@@ -937,9 +938,14 @@ def plot_and_save(
 def do_all_plot_ps_compare_nuc(
         save_id: str | None = None,
         graph_file_type: str | None = None,
-        lambda_correction: LambdaCorrection = LambdaCorrection.NONE) \
+        lambda_correction: LambdaCorrection = LambdaCorrection.NONE,
+        indices: collections.abc.Sequence[int] | None = None) \
         -> tuple[list[list[float]], list[list[float]], list[list[float]], list[list[float]], list[list[float]]]:
-    """Plot the power spectra with different nucleation types for all the parameters and return the statistics."""
+    r"""Plot the power spectra with different nucleation types for all the parameters and return the statistics.
+
+    :param indices: the indices of the combinations of $\alpha_n$ and $v_\text{wall}$ to compute,
+        e.g. to save time, or None for all of them
+    """
     Omgw_scaled_list: list[list[float]] = []
     param_list: list[list[float]] = []
     p_cwg_list: list[list[float]] = []
@@ -947,16 +953,18 @@ def do_all_plot_ps_compare_nuc(
     v2_list: list[list[float]] = []
 
     # This loop cannot be multithreaded, as Matplotlib is not thread-safe.
-    for vw_list, alpha, in zip(VW_LIST_ALL, const.ALPHA_LIST_ALL, strict=False):
-        for vw in vw_list:
-            v2, Omgw_scaled, p_cwg, p_ssm = plot_ps_compare_nuc(
-                vw, alpha, save_id, graph_file_type, lambda_correction=lambda_correction
-            )
-            v2_list.append(v2)
-            Omgw_scaled_list.append(Omgw_scaled)
-            param_list.append([alpha, vw])
-            p_cwg_list.append(p_cwg)
-            p_ssm_list.append(p_ssm)
+    params = [(alpha, vw) for vw_list, alpha in zip(VW_LIST_ALL, const.ALPHA_LIST_ALL, strict=False) for vw in vw_list]
+    if indices is not None:
+        params = [params[i] for i in indices]
+    for alpha, vw in params:
+        v2, Omgw_scaled, p_cwg, p_ssm = plot_ps_compare_nuc(
+            vw, alpha, save_id, graph_file_type, lambda_correction=lambda_correction
+        )
+        v2_list.append(v2)
+        Omgw_scaled_list.append(Omgw_scaled)
+        param_list.append([alpha, vw])
+        p_cwg_list.append(p_cwg)
+        p_ssm_list.append(p_ssm)
 
     return param_list, v2_list, Omgw_scaled_list, p_cwg_list, p_ssm_list
 

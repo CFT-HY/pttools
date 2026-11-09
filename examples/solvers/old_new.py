@@ -5,6 +5,8 @@ Old-new comparison
 Comparison of old and new solvers
 """
 
+import typing as tp
+
 from matplotlib.figure import Figure
 import numpy as np
 
@@ -23,6 +25,8 @@ from pttools.bubble.junction import junction_conditions_solvable
 from pttools.models import BagModel, Model
 from pttools.plot.utils import A3_PAPER_SIZE
 from pttools.ssm import SSMSpectrum, power_gw_bag, power_v_bag, spec_den_v_bag
+from pttools.ssm.accuracy import Accuracy
+from pttools.ssm.const import DEFAULT_N_PT, NptType
 import pttools.type_hints as th
 from pttools.utils.time import log_duration
 from tests.paper.plane import xiv_plane
@@ -102,17 +106,29 @@ def validate2(
 
 
 @log_duration
-def main() -> Figure:
-    """Plot a comparison of the old and new solvers"""
+def main(accuracy: Accuracy | None = None) -> Figure:
+    """Plot a comparison of the old and new solvers
+
+    :param accuracy: accuracy settings of the bubbles and spectra, or None for the defaults
+    """
     bag = BagModel.cached(a_s=1.1, a_b=1, V_s=2)
 
     v_walls = [0.5, 0.7, 0.77]
     alpha_ns = [0.578, 0.151, 0.091]
     sol_types = [SolutionType.SUB_DEF, SolutionType.HYBRID, SolutionType.DETON]
 
+    bubble_kwargs: dict[str, tp.Any] = {}
+    spectrum_kwargs: dict[str, tp.Any] = {}
+    npt: NptType = DEFAULT_N_PT
+    if accuracy is not None:
+        bubble_kwargs = {"n_xi": accuracy.n_xi}
+        spectrum_kwargs = accuracy.spectrum_kwargs()
+        npt = (accuracy.n_xi, accuracy.nT, accuracy.n_z_lookup)
+
     spectra = [
         SSMSpectrum.cached(
-            Bubble.cached(bag, v_wall=v_walls[i], alpha_n=alpha_ns[i], sol_type=sol_types[i])
+            Bubble.cached(bag, v_wall=v_walls[i], alpha_n=alpha_ns[i], sol_type=sol_types[i], **bubble_kwargs),
+            **spectrum_kwargs
         )
         for i in range(len(v_walls))
     ]
@@ -137,13 +153,13 @@ def main() -> Figure:
         validate(bag, v, w, xi, sol_type)
 
         label = rf"old, $v_w={v_wall}, \alpha_n={alpha_n}$"
-        sdv = spec_den_v_bag(z, (v_wall, alpha_n))
+        sdv = spec_den_v_bag(z, (v_wall, alpha_n), npt=npt)
         ax2.plot(z, sdv, label=label)
 
-        pow_v = power_v_bag(z, (v_wall, alpha_n))
+        pow_v = power_v_bag(z, (v_wall, alpha_n), npt=npt)
         ax3.plot(z, pow_v, label=label)
 
-        gw = power_gw_bag(z, (v_wall, alpha_n))
+        gw = power_gw_bag(z, (v_wall, alpha_n), npt=npt)
         ax4.plot(z, gw, label=label)
 
     print("Plotting new bubbles")

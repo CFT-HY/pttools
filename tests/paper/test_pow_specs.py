@@ -1,5 +1,6 @@
 """Test power spectra predictions of SSM with different nucleation models."""
 
+import collections.abc
 import logging
 import unittest
 
@@ -15,6 +16,11 @@ from tests.utils import TEST_DATA_PATH
 
 logger: logging.Logger = logging.getLogger(__name__)
 
+#: The indices of the combinations of the parameters that are computed without Numba,
+#: as computing all of them would then take more than 10 minutes.
+#: These are a weak detonation and an intermediate-strength hybrid, which are faster to compute than the others.
+POW_SPECS_INDICES_NO_JIT: tuple[int, ...] = (0, 7)
+
 
 class TestPowSpecs(unittest.TestCase):
     """Unit testing for sound shell model power spectra, both velocity and GW."""
@@ -25,20 +31,31 @@ class TestPowSpecs(unittest.TestCase):
         pow_specs()
 
 
-def pow_specs(filename: str = "data_compare_nuc-test.txt") -> None:
-    """Compute the power spectra with different nucleation types and compare them to the reference and article data."""
+def pow_specs(
+        filename: str = "data_compare_nuc-test.txt",
+        indices: collections.abc.Sequence[int] | None = None) -> None:
+    """Compute the power spectra with different nucleation types and compare them to the reference and article data.
+
+    :param filename: the name of the file in the test data directory, to which the results are saved
+    :param indices: the indices of the combinations of the parameters to compute.
+        By default, all of them are computed with Numba, and :data:`POW_SPECS_INDICES_NO_JIT` without it.
+    """
+    if indices is None and NUMBA_DISABLE_JIT:
+        indices = POW_SPECS_INDICES_NO_JIT
+    rows = slice(None) if indices is None else list(indices)
     params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list = do_all_plot_ps_compare_nuc(
         save_id="final3",
         graph_file_type=None,
-        lambda_correction=LambdaCorrection.LEGACY
+        lambda_correction=LambdaCorrection.LEGACY,
+        indices=indices
     )
     save_compare_nuc_data(
         TEST_DATA_PATH / filename,
         params_list, v2_list, Omgw_list, p_cwg_list, p_ssm_list
     )
 
-    data_article = np.loadtxt(TEST_DATA_PATH / "data_compare_nuc-final3.txt")
-    data_reference = np.loadtxt(TEST_DATA_PATH / "data_compare_nuc-test_reference.txt")
+    data_article = np.loadtxt(TEST_DATA_PATH / "data_compare_nuc-final3.txt")[rows]
+    data_reference = np.loadtxt(TEST_DATA_PATH / "data_compare_nuc-test_reference.txt")[rows]
     data_test = np.loadtxt(TEST_DATA_PATH / filename)
 
     # The sign of p_cwg does not matter
