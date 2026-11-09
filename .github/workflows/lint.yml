@@ -16,3 +16,8 @@ jobs:
         uses: actions/checkout@v7
       - name: Run Ruff
         uses: astral-sh/ruff-action@v4.1.0
+        # The version of Ruff is read from uv.lock of the repository, so that the CI uses the same version
+        # as the local lint and the pre-commit hooks, and new rules of the latest version do not fail the CI.
+        # If the repository has no uv.lock, the latest version is used.
+        with:
+          version-file: uv.lock
