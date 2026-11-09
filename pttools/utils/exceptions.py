@@ -1,5 +1,7 @@
 """Utilities for handling exceptions."""
 
+from __future__ import annotations
+
 from contextlib import contextmanager
 
 from pttools.type_hints import TYPE_CHECKING_OR_DOCS
