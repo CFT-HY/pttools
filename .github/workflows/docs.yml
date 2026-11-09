@@ -67,18 +67,82 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+      # The downloaded APT packages (~420 MB) are cached, since the APT mirror of GitHub Actions is sometimes so slow
+      # that downloading them would take more than 10 minutes, while it usually takes less than a minute.
+      # Only the .deb files are cached, and they are installed with apt-get as usual,
+      # so that the post-installation scripts of e.g. TeX Live and the fonts are run.
+      # The cache key changes with the runner image, whose APT package versions are updated regularly,
+      # and with the list of packages. A cache with a different key is still used for the packages that it has,
+      # and only the rest are downloaded.
+      - name: Configure the APT package cache
+        id: apt-cache-key
+        run: |
+          # These are the packages required by all the repositories that use this workflow,
+          # followed by the additional packages of the caller.
+          PACKAGES="cloc cm-super dvipng ffmpeg fontconfig graphviz latexmk optipng texlive-latex-extra texlive-xetex fonts-freefont-otf xindy ${APT_PACKAGES}"
+          {
+            echo "packages=${PACKAGES}"
+            echo "hash=$(echo "${PACKAGES}" | sha256sum | cut -c1-16)"
+            echo "prefix=apt-docs-${RUNNER_OS}-${RUNNER_ARCH}-${ImageOS}-"
+            echo "version=${ImageVersion}"
+          } >> "${GITHUB_OUTPUT}"
+          # APT is configured to use a directory that is writable for actions/cache.
+          # It's outside the home directory, which the sandbox user _apt of the downloads cannot access.
+          sudo install -d -o "$(id -u)" -g "$(id -g)" "${APT_ARCHIVES}" "${APT_ARCHIVES}/partial"
+          # The packages are downloaded by the sandbox user _apt.
+          sudo chown _apt "${APT_ARCHIVES}/partial"
+          echo "Dir::Cache::Archives \"${APT_ARCHIVES}\";" | sudo tee /etc/apt/apt.conf.d/99-ci-archives
+        env:
+          APT_ARCHIVES: /var/cache/apt-ci/archives
+          APT_PACKAGES: ${{ inputs.apt-packages }}
+      - name: Restore the APT package cache
+        id: apt-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: /var/cache/apt-ci/archives/*.deb
+          key: ${{ steps.apt-cache-key.outputs.prefix }}${{ steps.apt-cache-key.outputs.version }}-${{ steps.apt-cache-key.outputs.hash }}
+          restore-keys: ${{ steps.apt-cache-key.outputs.prefix }}
       - name: Install LaTeX and the other build tools
-        # These are the packages required by all the repositories that use this workflow,
-        # followed by the additional packages of the caller.
+        # The packages that are not in the cache are first downloaded with a timeout,
+        # and the download is retried if it times out.
+        # The retries continue from the already downloaded packages, and may get a faster connection.
+        # The packages are installed only after they have been downloaded,
+        # so that the installation is not interrupted by the timeout.
         run: |
           sudo apt-get update
-          # APT_PACKAGES is intentionally unquoted to split it into separate arguments.
+          for ATTEMPT in 1 2 3; do
+            # PACKAGES is intentionally unquoted to split it into separate arguments.
+            # shellcheck disable=SC2086
+            if sudo timeout 300 apt-get install -y --download-only -o Acquire::Retries=3 ${PACKAGES}; then
+              break
+            elif [ "${ATTEMPT}" -eq 3 ]; then
+              echo "::error::Downloading the APT packages failed or timed out ${ATTEMPT} times."
+              exit 1
+            fi
+            echo "::warning::Downloading the APT packages failed or timed out on attempt ${ATTEMPT}. Retrying."
+          done
           # shellcheck disable=SC2086
-          sudo apt-get install -y cloc cm-super dvipng ffmpeg fontconfig graphviz latexmk optipng texlive-latex-extra texlive-xetex fonts-freefont-otf xindy ${APT_PACKAGES}
+          sudo apt-get install -y ${PACKAGES}
         env:
-          APT_PACKAGES: ${{ inputs.apt-packages }}
+          PACKAGES: ${{ steps.apt-cache-key.outputs.packages }}
         # `apt-get install` has sometimes got stuck on GitHub Actions.
-        timeout-minutes: 10
+        timeout-minutes: 20
+      - name: Prepare the APT package cache for saving
+        if: steps.apt-cache.outputs.cache-hit != 'true'
+        # The packages that can no longer be downloaded, i.e. those replaced by newer versions, are removed,
+        # so that the cache does not grow indefinitely when it's restored from an older key.
+        # Only the .deb files are saved, as the lock file of APT is not readable for actions/cache.
+        run: |
+          sudo apt-get autoclean
+          du -ch "${APT_ARCHIVES}"/*.deb | tail -n 1
+        env:
+          APT_ARCHIVES: /var/cache/apt-ci/archives
+      - name: Save the APT package cache
+        if: steps.apt-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: /var/cache/apt-ci/archives/*.deb
+          key: ${{ steps.apt-cache-key.outputs.prefix }}${{ steps.apt-cache-key.outputs.version }}-${{ steps.apt-cache-key.outputs.hash }}
       - name: Setup uv
         id: setup-uv
         uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
