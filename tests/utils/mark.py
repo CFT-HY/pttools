@@ -19,6 +19,11 @@ mark_xfail_pickle_without_jit: pytest.MarkDecorator = pytest.mark.xfail(
     NUMBA_DISABLE_JIT and not USE_THREADS,
     reason="Non-bag models cannot be pickled without Numba."
 )
+#: Mark tests that replace executables with shell scripts, which cannot be run on Windows
+requires_sh: pytest.MarkDecorator = pytest.mark.skipif(
+    IS_WINDOWS,
+    reason="The test replaces executables with shell scripts, which cannot be run on Windows."
+)
 #: Mark slow tests to be skipped on GitHub Actions Windows and macOS runners, and when Numba JIT is disabled,
 #: as the tests would then be much slower
 skip_slow: TypePreservingDecorator = unittest.skipIf(

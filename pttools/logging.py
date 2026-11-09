@@ -158,7 +158,11 @@ def redirect_output(log_file: Path) -> None:
     """
     sys.stdout.flush()
     sys.stderr.flush()
-    fd = os.open(log_file, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o666)
+    # On Windows, the file descriptor has to be opened in binary mode,
+    # as sys.stdout and sys.stderr already convert the line endings to \r\n,
+    # and the text mode of the file descriptor would convert them again to \r\r\n.
+    flags = os.O_WRONLY | os.O_CREAT | os.O_APPEND | getattr(os, "O_BINARY", 0)
+    fd = os.open(log_file, flags, 0o666)
     os.dup2(fd, sys.stdout.fileno())
     os.dup2(fd, sys.stderr.fileno())
     os.close(fd)

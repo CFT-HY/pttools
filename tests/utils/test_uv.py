@@ -7,6 +7,7 @@ import sys
 import pytest
 
 from pttools.utils.uv import env_without_venv, find_uv
+from tests.utils.mark import requires_sh
 
 
 def test_env_without_venv(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -20,6 +21,7 @@ def test_env_without_venv(monkeypatch: pytest.MonkeyPatch) -> None:
     assert env["PATH"] == os.pathsep.join(expected)
 
 
+@requires_sh
 def test_find_uv(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """The uv executable should be found in $UV_INSTALL_DIR, which is added to the PATH only once."""
     fake_uv = tmp_path / "uv"

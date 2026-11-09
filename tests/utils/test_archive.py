@@ -10,6 +10,7 @@ import zlib
 import pytest
 
 from pttools.utils.archive import archive, optimize_pngs
+from tests.utils.mark import requires_sh
 
 requires_optipng: pytest.MarkDecorator = pytest.mark.skipif(
     shutil.which("optipng") is None, reason="optipng is not installed"
@@ -49,6 +50,7 @@ def test_archive(tmp_path: Path) -> None:
         archive(archive_path, {tmp_path / "missing": "missing"})
 
 
+@requires_sh
 def test_archive_xz_fails(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """If xz fails, the error should be raised and the partial archive removed."""
     fake_bin = tmp_path / "bin"

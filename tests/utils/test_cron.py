@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from pttools.utils.cron import CronSchedule, parse_cron_field, read_crontab_entries
+from tests.utils.mark import requires_sh
 
 # A Sunday
 NOW: datetime.datetime = datetime.datetime(2026, 10, 4, 12, 25, 6)
@@ -65,6 +66,7 @@ def test_cron_schedule_invalid(entry: str) -> None:
         CronSchedule.parse(entry)
 
 
+@requires_sh
 def test_read_crontab_entries(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """The lines of the crontab should be returned, optionally only those that match the pattern."""
     fake_crontab = tmp_path / "crontab"
