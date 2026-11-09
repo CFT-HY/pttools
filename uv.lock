@@ -1730,7 +1730,7 @@ docs = [
 requires-dist = [
     { name = "h5py", specifier = ">=3.16.0" },
     { name = "icc-rt", marker = "platform_machine == 'x86_64' and sys_platform == 'darwin' and extra == 'performance'", specifier = ">=2019.0" },
-    { name = "intel-cmplr-lib-rt", marker = "(platform_machine == 'AMD64' and sys_platform != 'darwin' and extra == 'performance') or (platform_machine == 'x86_64' and sys_platform != 'darwin' and extra == 'performance')", specifier = ">=2025.3.3" },
+    { name = "intel-cmplr-lib-rt", marker = "(platform_machine == 'AMD64' and sys_platform != 'darwin' and extra == 'performance') or (platform_machine == 'x86_64' and sys_platform != 'darwin' and extra == 'performance')", specifier = ">=2025.1.1" },
     { name = "intel-openmp", marker = "platform_machine == 'x86_64' and sys_platform == 'darwin' and extra == 'performance'", specifier = ">=2023.2.0" },
     { name = "kaleido", specifier = ">=1.3.0" },
     { name = "matplotlib", specifier = ">=3.11.0" },
@@ -1743,7 +1743,7 @@ requires-dist = [
     { name = "scipy", specifier = ">=1.17.1" },
     { name = "tabulate", specifier = ">=0.10.0" },
     { name = "tbb", marker = "platform_machine == 'x86_64' and sys_platform == 'darwin' and extra == 'performance'", specifier = ">=2021.10.0,<2021.11" },
-    { name = "tbb", marker = "(platform_machine == 'AMD64' and sys_platform != 'darwin' and extra == 'performance') or (platform_machine == 'x86_64' and sys_platform != 'darwin' and extra == 'performance')", specifier = ">=2023.2.0" },
+    { name = "tbb", marker = "(platform_machine == 'AMD64' and sys_platform != 'darwin' and extra == 'performance') or (platform_machine == 'x86_64' and sys_platform != 'darwin' and extra == 'performance')", specifier = ">=2021.6.0" },
     { name = "tbb4u", marker = "(platform_machine == 'ARM64' and extra == 'performance') or (platform_machine == 'aarch64' and extra == 'performance') or (platform_machine == 'arm64' and extra == 'performance')", specifier = ">=2023.1.0" },
 ]
 provides-extras = ["numbalsoda", "performance"]
