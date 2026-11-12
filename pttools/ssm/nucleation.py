@@ -227,9 +227,17 @@ def nucleation_f(
     """
     # The integral is zero outside v_sh. It starts at the wall: the point at xi = v_wall on the outside of the wall
     # carries T_+ and must be included. For hybrids there is also a point at xi = v_wall on the inside,
-    # which only adds an interval of zero width.
+    # which carries T_- of the broken phase. It's excluded, as it would add only an interval of zero width,
+    # but T_- < T_n would make the exponential overflow for large beta_tilde, and inf * 0 would give nan.
+    # The xi array is not necessarily monotonic inside the wall, and therefore the points are selected with a mask.
     inds = v_wall <= xi
-    return 1 / v_wall**3 * np.trapezoid((1 - np.exp(-beta_tilde * (T[inds] - T[-1]) / T[-1])), xi[inds]**3)  # pyrefly: ignore[bad-return]
+    xi_out = xi[inds]
+    T_out = T[inds]
+    start = 0
+    while start + 1 < xi_out.size and xi_out[start + 1] == xi_out[start]:
+        start += 1
+    return 1 / v_wall**3 * np.trapezoid(  # pyrefly: ignore[bad-return]
+        (1 - np.exp(-beta_tilde * (T_out[start:] - T[-1]) / T[-1])), xi_out[start:]**3)
 
 
 @njit(cache=True)

@@ -294,8 +294,12 @@ class SSMSpectrum(Cacheable, BaseSSMSpectrum):
         self.bubble_spacing_enlargement_factor = gw_res.bubble_spacing_enlargement_factor
         self.spec_den_gw = self.spec_den_gw_expanded if self.low_k else self.spec_den_gw_ssm
 
-    def _store_base(self, base_res: SSMBaseResults) -> None:
-        """Store the results of :py:func:`pttools.ssm.compute.compute_base` as attributes."""
+    def _store_base(self, base_res: SSMBaseResults, warn: bool = True) -> None:
+        r"""Store the results of :py:func:`pttools.ssm.compute.compute_base` as attributes.
+
+        :param base_res: the results
+        :param warn: whether to warn if $\bar{U}_f > 1$, see :py:func:`pttools.bubble.thermo.warn_if_ubarf_relativistic`
+        """
         self.base_res = base_res
         self.a2 = base_res.A2
         self.a2_lookup = base_res.A2_lookup
@@ -308,7 +312,8 @@ class SSMSpectrum(Cacheable, BaseSSMSpectrum):
         self.z_lookup = base_res.z_lookup
         self.spec_den_gw_ssm_unscaled = base_res.spec_den_gw_ssm_unscaled
         self.Iv = base_res.Iv
-        warn_if_ubarf_relativistic(self.ubarf2, source=self.label_unicode)
+        if warn:
+            warn_if_ubarf_relativistic(self.ubarf2, source=self.label_unicode)
 
     def export(
             self,
@@ -469,7 +474,9 @@ class SSMSpectrum(Cacheable, BaseSSMSpectrum):
                 spec_den_v=interpolate_log_log(self.y, other.y, base_res.spec_den_v),
                 spec_den_gw_ssm_unscaled=interpolate_log_log(self.y, other.y, base_res.spec_den_gw_ssm_unscaled)
             )
-        self._store_base(base_res)
+        # The spectrum that is reused has already warned about the same velocity spectrum,
+        # and the warning would be repeated for each of the possibly thousands of reusing spectra.
+        self._store_base(base_res, warn=False)
         self._compute_gw()
 
     @staticmethod

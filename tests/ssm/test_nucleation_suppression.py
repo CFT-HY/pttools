@@ -52,13 +52,15 @@ class NucleationFTest(unittest.TestCase):
         = \left( \frac{v_{\text{sh}}^3}{v_{\text{wall}}^3} - 1 \right)
         \left( 1 - e^{-\tilde{\beta} \Delta T / T_n} \right).$$
         The grid is coarse, so this fails if the interval next to the wall is left out of the integral.
-        For hybrids, the extra point on the inside of the wall must not contribute.
+        For hybrids, the extra point on the inside of the wall must not contribute,
+        also for large $\tilde{\beta}$, for which its $T_- < T_n$ would make the exponential overflow.
         """
-        v_wall, v_sh, dT, beta_tilde = 0.4, 0.55, 0.01, 100.
-        expected = ((v_sh / v_wall) ** 3 - 1.) * (1. - np.exp(-beta_tilde * dT))
-        for hybrid in (False, True):
-            xi, T = self.top_hat(v_wall, v_sh, dT, hybrid)
-            assert_allclose(nucleation_f(xi=xi, T=T, beta_tilde=beta_tilde, v_wall=v_wall), expected, rtol=1e-6)
+        v_wall, v_sh, dT = 0.4, 0.55, 0.01
+        for beta_tilde in (100., 1e4):
+            expected = ((v_sh / v_wall) ** 3 - 1.) * (1. - np.exp(-beta_tilde * dT))
+            for hybrid in (False, True):
+                xi, T = self.top_hat(v_wall, v_sh, dT, hybrid)
+                assert_allclose(nucleation_f(xi=xi, T=T, beta_tilde=beta_tilde, v_wall=v_wall), expected, rtol=1e-6)
 
     def test_bag_profile_small_vw(self) -> None:
         r"""Small-$v_{\text{wall}}$ limit, :ajmi_2022:`\ ` eqs. 71-72.
