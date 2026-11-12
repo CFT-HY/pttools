@@ -2,7 +2,7 @@ r"""
 Loading the dataset of spectra
 ==============================
 
-Load a dataset created by :ref:`sphx_glr_auto_examples_const_cs_dataset.py`
+Load a dataset created by :ref:`sphx_glr_auto_examples_dataset_save.py`
 with :py:class:`pttools.export.importer.Importer`, print a summary of its contents,
 and plot a bubble and a spectrum from the stored data.
 
@@ -19,8 +19,8 @@ Run it from the root directory of the repository with e.g.
 
 .. code-block:: bash
 
-    python -m examples.const_cs.dataset_load
-    python -m examples.const_cs.dataset_load --path /scratch/const_cs_large.h5 --bubble 10 --spectrum 100
+    python -m examples.dataset.load
+    python -m examples.dataset.load --path /scratch/const_cs_large.h5 --bubble 10 --spectrum 100
 """
 
 import argparse
@@ -53,7 +53,7 @@ def default_path(data_dir: Path = DATA_DIR) -> Path:
     paths = sorted(path for path in data_dir.glob("*") if path.suffix in HDF5_SUFFIXES and path.is_file())
     if not paths:
         raise FileNotFoundError(
-            f"No HDF5 files found in {data_dir}. Create a dataset with: python -m examples.const_cs.dataset")
+            f"No HDF5 files found in {data_dir}. Create a dataset with: python -m examples.dataset.save")
     return paths[0]
 
 

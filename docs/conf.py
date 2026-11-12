@@ -326,6 +326,7 @@ sphinx_gallery_conf = {
     "subsection_order": ExplicitOrder([
         "../examples/basic",
         "../examples/const_cs",
+        "../examples/dataset",
         # "../examples/standard_model",
         "../examples/props",
         # "../examples/entropy",

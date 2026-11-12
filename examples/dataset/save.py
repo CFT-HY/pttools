@@ -5,7 +5,7 @@ Dataset of spectra
 Compute a dataset of gravitational wave spectra for the constant sound speed model,
 and export it to an HDF5 file with :py:class:`pttools.export.exporter.Exporter`.
 
-The parameters are varied on a grid, which is created by :py:meth:`~examples.const_cs.dataset.Grid.create`:
+The parameters are varied on a grid, which is created by :py:meth:`~examples.dataset.save.Grid.create`:
 
 - $c_{s,s}^2$ and $c_{s,b}^2$, the sound speeds squared of the phases from $1/4$ to $1/3$,
 - $\alpha_n$, the transition strength from 0.1 to 1 on a logarithmic axis,
@@ -18,12 +18,12 @@ The parameters are varied on a grid, which is created by :py:meth:`~examples.con
 The lower limit of $\alpha_n$ is 0.1 instead of 0.05,
 since some of the models of the grid don't allow $\alpha_n$ below about 0.09,
 and the grid would then have holes.
-The models are created with the same initial parameters :py:data:`~examples.const_cs.dataset.MODEL_KWARGS`,
+The models are created with the same initial parameters :py:data:`~examples.dataset.save.MODEL_KWARGS`,
 from which $a_s$ and $V_s$ are adjusted to allow $\alpha_n$ down to 0.05 where possible.
 This keeps the smallest $\alpha_n$ of the grid away from the limit of the model,
 where the bubbles would be marked as failed due to negative entropy fluxes.
 
-The spectra are computed for the fixed frequencies :py:data:`~examples.const_cs.dataset.F`.
+The spectra are computed for the fixed frequencies :py:data:`~examples.dataset.save.F`.
 The model is shared by the bubbles of the same sound speeds,
 and the bubble by the spectra of the same $\alpha_n$ and $v_\text{wall}$.
 Therefore, each bubble and its spectra are computed in the same task of a worker.
@@ -38,7 +38,7 @@ These are kept in the file with their error flags, such as ``failed`` and ``solv
 so that they can be filtered out by the user of the dataset.
 The spectra are computed for all the bubbles that have a fluid profile, including the failed ones.
 
-The accuracy settings :py:data:`~examples.const_cs.dataset.ACCURACY` have been chosen with
+The accuracy settings :py:data:`~examples.dataset.save.ACCURACY` have been chosen with
 :ref:`sphx_glr_auto_examples_props_n_points.py`.
 
 The computation of the large dataset takes several days even with dozens of CPU cores,
@@ -48,9 +48,9 @@ Run it from the root directory of the repository with e.g.
 
 .. code-block:: bash
 
-    python -m examples.const_cs.dataset --size small --dry-run
-    python -m examples.const_cs.dataset --size small
-    python -m examples.const_cs.dataset --size large --path /scratch/const_cs_large.h5
+    python -m examples.dataset.save --size small --dry-run
+    python -m examples.dataset.save --size small
+    python -m examples.dataset.save --size large --path /scratch/const_cs_large.h5
 
 The file can then be read with :py:class:`pttools.export.importer.Importer`.
 The models, bubbles and spectra refer to their parents by the row indices in the columns

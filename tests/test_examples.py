@@ -12,9 +12,8 @@ from examples.const_cs import (
     const_cs_gw,
     const_cs_xi_v,
     const_cs_xi_v_w,
-    dataset,
-    dataset_load,
 )
+from examples.dataset import load, save
 from examples.entropy import entropy_comparison, entropy_grid, entropy_old, entropy_profile
 from examples.gksvdv import (
     gksvdv_bubble,
@@ -114,34 +113,6 @@ class ExampleTest(unittest.TestCase):
         close_figs(*figs2.flat)
 
     @staticmethod
-    @mark_xfail_pickle_without_jit
-    @skip_slow
-    @uses_parallel
-    def test_const_cs_dataset() -> None:
-        """Test that ``examples.const_cs.dataset`` creates a dataset and ``dataset_load`` loads it."""
-        path = TEST_RESULT_PATH / "const_cs_dataset.h5"
-        dataset.main(
-            n_points=dataset.MIN_POINTS, path=path, overwrite=True, max_workers=4, progress_interval=0,
-            accuracy=dataset.WARM_UP_ACCURACY
-        )
-        grid = dataset.Grid.create(dataset.MIN_POINTS)
-        with Importer(path, verify=True) as importer:
-            assert importer.n_models == grid.n_models
-            assert importer.n_bubbles == grid.n_bubbles
-            assert 0 < importer.n_spectra_f <= grid.n_spectra
-            failed = importer.read(Table.BUBBLES, "failed")
-        assert failed.dtype == np.bool_
-        close_figs(*dataset_load.main(path, verify=True))
-
-    @staticmethod
-    def test_const_cs_dataset_dry_run() -> None:
-        """Test that the size of the dataset can be estimated without computing it."""
-        path = TEST_RESULT_PATH / "const_cs_dataset_dry_run.h5"
-        path.unlink(missing_ok=True)
-        dataset.main(n_points=dataset.SIZES["large"], path=path, dry_run=True, accuracy=dataset.WARM_UP_ACCURACY)
-        assert not path.exists()
-
-    @staticmethod
     def test_const_cs_xi_v() -> None:
         """Test that the example ``examples.const_cs.const_cs_xi_v`` runs without errors."""
         close_figs(const_cs_xi_v.main())
@@ -150,6 +121,35 @@ class ExampleTest(unittest.TestCase):
     def test_plot_const_cs_xi_v_w() -> None:
         """Test that the example ``examples.const_cs.const_cs_xi_v_w`` runs without errors."""
         const_cs_xi_v_w.main().fig()
+
+    # Dataset
+    @staticmethod
+    @mark_xfail_pickle_without_jit
+    @skip_slow
+    @uses_parallel
+    def test_dataset_save_load() -> None:
+        """Test that ``examples.dataset.save`` creates a dataset and ``examples.dataset.load`` loads it."""
+        path = TEST_RESULT_PATH / "const_cs_dataset.h5"
+        save.main(
+            n_points=save.MIN_POINTS, path=path, overwrite=True, max_workers=4, progress_interval=0,
+            accuracy=save.WARM_UP_ACCURACY
+        )
+        grid = save.Grid.create(save.MIN_POINTS)
+        with Importer(path, verify=True) as importer:
+            assert importer.n_models == grid.n_models
+            assert importer.n_bubbles == grid.n_bubbles
+            assert 0 < importer.n_spectra_f <= grid.n_spectra
+            failed = importer.read(Table.BUBBLES, "failed")
+        assert failed.dtype == np.bool_
+        close_figs(*load.main(path, verify=True))
+
+    @staticmethod
+    def test_dataset_save_dry_run() -> None:
+        """Test that the size of the dataset can be estimated without computing it."""
+        path = TEST_RESULT_PATH / "const_cs_dataset_dry_run.h5"
+        path.unlink(missing_ok=True)
+        save.main(n_points=save.SIZES["large"], path=path, dry_run=True, accuracy=save.WARM_UP_ACCURACY)
+        assert not path.exists()
 
     # Entropy
     @staticmethod
@@ -289,7 +289,7 @@ class ExampleTest(unittest.TestCase):
         close_figs(*n_points.main(
             cases=n_points.CASES[:2],
             values=TEST_N_POINTS_VALUES,
-            base=dataset.WARM_UP_ACCURACY,
+            base=save.WARM_UP_ACCURACY,
             reference=TEST_N_POINTS_REFERENCE,
             accuracy=TEST_ACCURACY,
         ))
