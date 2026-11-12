@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import functools
 import os
 import typing as tp
@@ -9,7 +10,7 @@ import typing as tp
 import numpy as np
 from numpy.typing import NDArray
 
-from pttools.omgw0 import const
+from pttools.omgw0 import const, freq
 from pttools.omgw0.base import Omgw0Base
 from pttools.omgw0.compute import OmGw0Input, OmGw0Results, SNRSettings, compute, compute_gw
 from pttools.omgw0.const import LISA_OBS_TIME
@@ -28,6 +29,7 @@ from pttools.ssm.const import (
     Z_ST_THRESH,
 )
 from pttools.ssm.nucleation import DEFAULT_NUC_TYPE, NucType
+from pttools.ssm.settings import SSMSettings
 from pttools.ssm.spectrum import SSMSpectrum
 from pttools.ssm.ssm import DEFAULT_LAMBDA_CORRECTION, LambdaCorrection
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
@@ -414,6 +416,107 @@ class Spectrum(Omgw0Base, SSMSpectrum):
             noise=noise, f_noise=f_noise, ge0_photon=ge0_photon, gs0=gs0, obs_time=obs_time,
             om_gamma0_h2=om_gamma0_h2, noise_eb=noise_eb, noise_gb=noise_gb, noise_ins=noise_ins
         )
+
+    # -----
+    # z arrays covering frequencies
+    # -----
+
+    @staticmethod
+    def n_z_lookup_covering(z: FloatArr1D, f: FloatArr1D, n_z_lookup: int = DEFAULT_N_Z_LOOKUP) -> int:
+        """Number of points in the lookup arrays for a $z$ array, giving the same density as for the frequencies.
+
+        The lookup arrays are logarithmically spaced over the range of the $z$ array.
+        This scales ``n_z_lookup`` by the ratio of the numbers of decades spanned by ``z`` and ``f``,
+        so that a spectrum computed for ``z`` is as accurate as one computed for the frequencies.
+
+        :param z: $z$ array, e.g. from :py:meth:`z_covering`
+        :param f: frequencies $f$ for which the spectra would otherwise be computed
+        :param n_z_lookup: number of points in the lookup arrays for the frequencies
+        :return: number of points in the lookup arrays for ``z``, at least ``n_z_lookup``
+        """
+        ratio = np.log10(z.max() / z.min()) / np.log10(f.max() / f.min())
+        return max(n_z_lookup, int(np.ceil(n_z_lookup * ratio)))
+
+    @classmethod
+    def settings_covering(cls, z: FloatArr1D, f: FloatArr1D, settings: SSMSettings | None = None) -> SSMSettings:
+        """Accuracy settings for a $z$ array, with ``n_z_lookup`` scaled by :py:meth:`n_z_lookup_covering`.
+
+        :param z: $z$ array, e.g. from :py:meth:`z_covering`
+        :param f: frequencies $f$ for which the spectra would otherwise be computed
+        :param settings: accuracy settings for the frequencies,
+            defaults to :py:class:`~pttools.ssm.settings.SSMSettings`
+        :return: accuracy settings for ``z``
+        """
+        if settings is None:
+            settings = SSMSettings()
+        return dataclasses.replace(
+            settings, n_z_lookup=cls.n_z_lookup_covering(z=z, f=f, n_z_lookup=settings.n_z_lookup))
+
+    @staticmethod
+    def z_covering(
+            f: FloatArr1D,
+            bubble: Bubble,
+            T_star: float,
+            g_star: float,
+            beta_tilde: FloatArr1D | None = None,
+            r_star: FloatArr1D | None = None,
+            f_star0_factor: float = 1.,
+            points_per_decade: float | None = None) -> FloatArr1D:
+        r"""$z$ array that covers the frequencies ``f`` for all the given values of $\tilde{\beta}$ or $r_*$.
+
+        The $z$ values corresponding to the frequencies are
+        $$z = \frac{f}{f_{\ast,0}} r_*,$$
+        inverted from :gowling_2021:`\ ` eq. 2.12,
+        where $f_{\ast,0}$ is that of :py:func:`pttools.omgw0.freq.f_star0` multiplied by ``f_star0_factor``,
+        and $r_*$ is computed from $\tilde{\beta}$ in the same way as for the spectra,
+        with :py:meth:`pttools.ssm.spectrum.SSMSpectrum.validate_nucleation`.
+        The returned array is logarithmically spaced from the smallest to the largest $z$.
+        The values that are not finite and positive are ignored, as are those for which $r_*$ cannot be computed.
+
+        :param f: frequencies $f$ to be covered
+        :param bubble: fluid shell of the spectra
+        :param T_star: $T_*$, temperature at which the GWs were produced
+        :param g_star: $g_*$, degrees of freedom
+        :param beta_tilde: $\tilde{\beta}$ values of the spectra
+        :param r_star: $r_*$ values of the spectra
+        :param f_star0_factor: correction factor for $f_{\ast,0}$
+        :param points_per_decade: number of $z$ points per decade.
+            Defaults to the average number of points per decade of ``f``.
+        :return: $z$ array
+        :raises ValueError: if not exactly one of $\tilde{\beta}$ and $r_*$ is given,
+            or if none of their values are valid
+        """
+        if (beta_tilde is None) == (r_star is None):
+            raise ValueError("Exactly one of beta_tilde and r_star must be given.")
+        r_stars: list[float] = []
+        for value in tp.cast(FloatArr1D, r_star if beta_tilde is None else beta_tilde):
+            if not (np.isfinite(value) and value > 0):
+                continue
+            try:
+                # r_* does not depend on the nucleation type.
+                r_stars.append(
+                    Spectrum.validate_nucleation(
+                        bubble=bubble, nuc_type=DEFAULT_NUC_TYPE, r_star=float(value), beta_tilde=None)
+                    if beta_tilde is None
+                    else Spectrum.validate_nucleation(
+                        bubble=bubble, nuc_type=DEFAULT_NUC_TYPE, r_star=None, beta_tilde=float(value))
+                )
+            except ValueError:
+                continue
+        if not r_stars:
+            raise ValueError("None of the beta_tilde or r_star values are valid.")
+
+        f_star0 = freq.f_star0(T_star=T_star, ge_star=g_star, gs_star=g_star) * f_star0_factor
+        z_min = freq.z(f=float(f.min()), r_star=min(r_stars), f_star0=f_star0)
+        z_max = freq.z(f=float(f.max()), r_star=max(r_stars), f_star0=f_star0)
+        if points_per_decade is None:
+            points_per_decade = (f.size - 1) / np.log10(f.max() / f.min())
+        n = max(int(np.ceil(points_per_decade * np.log10(z_max / z_min))) + 1, 2)
+        z = np.logspace(np.log10(z_min), np.log10(z_max), n)
+        # Ensure that the endpoints are exact despite the rounding errors of logspace.
+        z[0] = z_min
+        z[-1] = z_max
+        return z
 
     # -----
     # Plotting

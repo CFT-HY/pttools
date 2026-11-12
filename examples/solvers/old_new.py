@@ -25,8 +25,8 @@ from pttools.bubble.junction import junction_conditions_solvable
 from pttools.models import BagModel, Model
 from pttools.plot.utils import A3_PAPER_SIZE
 from pttools.ssm import SSMSpectrum, power_gw_bag, power_v_bag, spec_den_v_bag
-from pttools.ssm.accuracy import Accuracy
 from pttools.ssm.const import DEFAULT_N_PT, NptType
+from pttools.ssm.settings import SSMSettings
 import pttools.type_hints as th
 from pttools.utils.time import log_duration
 from tests.paper.plane import xiv_plane
@@ -106,7 +106,7 @@ def validate2(
 
 
 @log_duration
-def main(accuracy: Accuracy | None = None) -> Figure:
+def main(accuracy: SSMSettings | None = None) -> Figure:
     """Plot a comparison of the old and new solvers
 
     :param accuracy: accuracy settings of the bubbles and spectra, or None for the defaults

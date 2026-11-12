@@ -3,16 +3,18 @@
 from pathlib import Path
 import typing as tp
 
-from pttools.ssm.accuracy import Accuracy
+from pttools.ssm.settings import SSMSettings
 
 #: Low accuracy settings of the spectra for the tests that do not compare the values of the spectra
 #: with reference values, see :py:mod:`examples.props.n_points`
 LOW_ACCURACY_SPECTRUM_KWARGS: dict[str, tp.Any] = {"nT": 300, "n_z_lookup": 500}
 #: Low accuracy settings for the examples whose results are not compared with reference values,
 #: see :py:mod:`examples.props.n_points`
-TEST_ACCURACY: Accuracy = Accuracy(n_xi=1000, nx_P_tilde_gw=100, **LOW_ACCURACY_SPECTRUM_KWARGS)
+TEST_ACCURACY: SSMSettings = SSMSettings(
+    n_z_lookup=LOW_ACCURACY_SPECTRUM_KWARGS["n_z_lookup"], nT=LOW_ACCURACY_SPECTRUM_KWARGS["nT"],
+    nx_P_tilde_gw=100, n_xi=1000)
 #: Reference accuracy settings of :py:func:`examples.props.n_points.main` for the tests
-TEST_N_POINTS_REFERENCE: Accuracy = Accuracy(n_xi=2000, n_z_lookup=1000, nx_P_tilde_gw=None, nT=1000)
+TEST_N_POINTS_REFERENCE: SSMSettings = SSMSettings(n_xi=2000, n_z_lookup=1000, nx_P_tilde_gw=None, nT=1000)
 #: Tested values of the accuracy settings of :py:func:`examples.props.n_points.main` for the tests
 TEST_N_POINTS_VALUES: dict[str, tuple[int, ...]] = {
     "n_xi": (500, 1000),

@@ -62,7 +62,7 @@ from pttools.analysis.grid import Grid
 from pttools.docs.examples import is_sphinx_gallery
 from pttools.models import ConstCSModel
 from pttools.speedup.options import MAX_WORKERS_DEFAULT
-from pttools.ssm.accuracy import Accuracy
+from pttools.ssm.settings import SSMSettings
 import pttools.type_hints as th
 from pttools.utils.time import log_duration
 
@@ -87,7 +87,7 @@ SIZES: dict[str, int] = {"small": 3, "large": 10}
 MIN_POINTS: int = 2
 
 #: Accuracy settings of the dataset, see :py:mod:`examples.props.n_points`
-ACCURACY: Accuracy = Accuracy(n_xi=10000, n_z_lookup=5000, nx_P_tilde_gw=200, nT=1000)
+ACCURACY: SSMSettings = SSMSettings(n_xi=10000, n_z_lookup=5000, nx_P_tilde_gw=200, nT=1000)
 
 
 def create_grid(n: int) -> Grid:
@@ -116,7 +116,7 @@ def main(
         dry_run: bool = False,
         max_workers: int = MAX_WORKERS_DEFAULT,
         progress_interval: float = DEFAULT_PROGRESS_INTERVAL,
-        accuracy: Accuracy = ACCURACY) -> Path:
+        accuracy: SSMSettings = ACCURACY) -> Path:
     """Compute the dataset and export it to an HDF5 file.
 
     :param n_points: number of points per parameter range, see :py:data:`SIZES`

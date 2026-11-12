@@ -40,8 +40,8 @@ from pttools.models.model import Model
 from pttools.omgw0 import Spectrum
 from pttools.speedup.options import MAX_WORKERS_DEFAULT
 from pttools.speedup.parallel import FakeExecutor, get_pool
-from pttools.ssm.accuracy import Accuracy
 from pttools.ssm.nucleation import NucType
+from pttools.ssm.settings import SSMSettings
 import pttools.type_hints as th
 from pttools.utils.files import format_size
 from pttools.utils.time import format_duration
@@ -65,7 +65,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 DEFAULT_PROGRESS_INTERVAL: float = 300
 
 #: Low accuracy settings for compiling the Numba functions with a fast computation
-WARM_UP_ACCURACY: Accuracy = Accuracy(n_xi=500, n_z_lookup=200, nx_P_tilde_gw=50, nT=100)
+WARM_UP_ACCURACY: SSMSettings = SSMSettings(n_xi=500, n_z_lookup=200, nx_P_tilde_gw=50, nT=100)
 
 #: The identifiers of the models for which the Numba functions have been compiled in this process
 _WARMED_UP: set[str] = set()
@@ -150,7 +150,7 @@ def compute_dataset(
         path: str | os.PathLike[str],
         model_factory: Callable[..., Model],
         f: th.FloatArr1D,
-        accuracy: Accuracy,
+        accuracy: SSMSettings,
         overwrite: bool = False,
         dry_run: bool = False,
         max_workers: int = MAX_WORKERS_DEFAULT,
@@ -227,7 +227,7 @@ def compute_task(
         v_wall: float,
         spectrum_params: list[SpectrumParams],
         f: th.FloatArr1D,
-        accuracy: Accuracy,
+        accuracy: SSMSettings,
         extractor: Extractor) -> TaskResult:
     r"""Compute a bubble and its spectra, and extract their records.
 
@@ -267,7 +267,7 @@ def compute_task(
     return TaskResult(bubble=bubble_record, spectra=spectra, n_skipped=n_skipped)
 
 
-def create_bubble(model: Model, alpha_n: float, v_wall: float, accuracy: Accuracy) -> Bubble:
+def create_bubble(model: Model, alpha_n: float, v_wall: float, accuracy: SSMSettings) -> Bubble:
     r"""Create and solve a bubble.
 
     :param model: the model
@@ -279,7 +279,7 @@ def create_bubble(model: Model, alpha_n: float, v_wall: float, accuracy: Accurac
     return Bubble(model, v_wall=v_wall, alpha_n=alpha_n, n_xi=accuracy.n_xi, log_success=False)
 
 
-def create_spectrum(bubble: Bubble, params: SpectrumParams, f: th.FloatArr1D, accuracy: Accuracy) -> Spectrum:
+def create_spectrum(bubble: Bubble, params: SpectrumParams, f: th.FloatArr1D, accuracy: SSMSettings) -> Spectrum:
     """Create and compute a spectrum on a single CPU core, as the parallelism is provided by the workers.
 
     :param bubble: the bubble
@@ -306,7 +306,7 @@ def estimate_dataset(
         grid: Grid,
         model_factory: Callable[..., Model],
         f: th.FloatArr1D,
-        accuracy: Accuracy,
+        accuracy: SSMSettings,
         extractor: Extractor) -> tuple[SizeEstimate, float]:
     r"""Estimate the size of the dataset and the computation time of a spectrum.
 
@@ -335,7 +335,7 @@ def estimate_dataset(
     return estimate, spectrum_time
 
 
-def warm_up(model: Model, f: th.FloatArr1D, accuracy: Accuracy = WARM_UP_ACCURACY) -> None:
+def warm_up(model: Model, f: th.FloatArr1D, accuracy: SSMSettings = WARM_UP_ACCURACY) -> None:
     """Compile the Numba functions for the model in this process with a fast low-accuracy computation.
 
     This way the computation times measured later do not include the compilation.

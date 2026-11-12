@@ -5,7 +5,7 @@ Numbers of points
 Investigate how small the numbers of points of the numerical computations can be
 while still producing accurate gravitational wave spectra.
 
-The accuracy settings are
+The accuracy settings of :py:class:`pttools.ssm.settings.SSMSettings` are
 
 - ``n_xi``, the number of points $n_\xi$ of the fluid profile of :py:class:`pttools.bubble.bubble.Bubble`,
 - ``n_z_lookup``, the number of points of the lookup arrays of :py:class:`pttools.omgw0.spectrum.Spectrum`,
@@ -65,7 +65,7 @@ from pttools.models import ConstCSModel
 from pttools.omgw0 import Spectrum
 from pttools.plot.utils import A4_PAPER_SIZE
 from pttools.speedup.parallel import FakeFuture, get_pool
-from pttools.ssm.accuracy import Accuracy
+from pttools.ssm.settings import SSMSettings
 import pttools.type_hints as th
 from pttools.utils.time import log_duration
 
@@ -108,9 +108,9 @@ CASES: tuple[Case, ...] = (
 SPECTRUM_KWARGS: dict[str, tp.Any] = {"beta_tilde": 100, "T_star": 200, "g_star": 100, "f": F}
 
 #: Base values of the accuracy settings, which are used when the other settings are varied
-BASE: Accuracy = Accuracy(n_xi=10000, n_z_lookup=5000, nx_P_tilde_gw=1000, nT=1000)
+BASE: SSMSettings = SSMSettings(n_xi=10000, n_z_lookup=5000, nx_P_tilde_gw=1000, nT=1000)
 #: Reference values of the accuracy settings
-REFERENCE: Accuracy = Accuracy(n_xi=20000, n_z_lookup=20000, nx_P_tilde_gw=None, nT=10000)
+REFERENCE: SSMSettings = SSMSettings(n_xi=20000, n_z_lookup=20000, nx_P_tilde_gw=None, nT=10000)
 #: The tested values of the accuracy settings
 VALUES: dict[str, tuple[int, ...]] = {
     "n_xi": (500, 1000, 2000, 3000, 5000, 7000, 10000),
@@ -135,7 +135,7 @@ class Result:
     time_spectrum: float
 
 
-def compute(case: Case, model: ConstCSModel, accuracy: Accuracy) -> Result:
+def compute(case: Case, model: ConstCSModel, accuracy: SSMSettings) -> Result:
     """Compute a spectrum for the given case with the given accuracy settings on a single CPU core."""
     warm_up(model, F)
     start_time = time.perf_counter()
@@ -166,7 +166,7 @@ def plot_errors(
         results: dict[tuple[int, str, int], Result],
         refs: dict[tuple[int, str], Result],
         values: dict[str, tuple[int, ...]] = VALUES,
-        accuracy: Accuracy = ACCURACY) -> Figure:
+        accuracy: SSMSettings = ACCURACY) -> Figure:
     """Plot the errors and the computation times as a function of the accuracy settings."""
     fig: Figure = Figure(figsize=(A4_PAPER_SIZE[0] * 1.5, A4_PAPER_SIZE[0] * 1.2))
     axs = fig.subplots(3, len(values), sharex="col", sharey="row")
@@ -209,7 +209,7 @@ def plot_bubbles(
         cases: tuple[Case, ...],
         results: dict[tuple[int, str, int], Result],
         values: dict[str, tuple[int, ...]] = VALUES,
-        accuracy: Accuracy = ACCURACY) -> Figure:
+        accuracy: SSMSettings = ACCURACY) -> Figure:
     r"""Plot $\kappa + \omega - 1$ and the size of the fluid profile as a function of $n_\xi$."""
     fig: Figure = Figure(figsize=(A4_PAPER_SIZE[0] * 1.5, A4_PAPER_SIZE[0] * 0.6))
     ax1, ax2 = fig.subplots(1, 2)
@@ -267,9 +267,9 @@ def plot_spectra(cases: tuple[Case, ...], dataset: list[Result], best: list[Resu
 def main(
         cases: tuple[Case, ...] = CASES,
         values: dict[str, tuple[int, ...]] = VALUES,
-        base: Accuracy = BASE,
-        reference: Accuracy = REFERENCE,
-        accuracy: Accuracy = ACCURACY) -> tuple[Figure, Figure, Figure]:
+        base: SSMSettings = BASE,
+        reference: SSMSettings = REFERENCE,
+        accuracy: SSMSettings = ACCURACY) -> tuple[Figure, Figure, Figure]:
     """Compute the spectra with the various accuracy settings and plot the errors.
 
     :param cases: the test cases
