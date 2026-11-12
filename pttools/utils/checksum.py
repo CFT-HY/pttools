@@ -1,4 +1,4 @@
-"""SHA-256 checksums for verifying the integrity of the exported files.
+"""SHA-256 checksums for verifying the integrity of files, e.g. those of :py:mod:`pttools.export`.
 
 The checksum files are compatible with the ``sha256sum`` command-line utility,
 and can therefore also be verified with ``sha256sum --check FILE.sha256``.

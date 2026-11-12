@@ -104,6 +104,6 @@ field names, and custom :class:`pttools.utils.fields.Field` objects.
 The available fields are listed in
 :mod:`pttools.models.export`, :mod:`pttools.bubble.export`, :mod:`pttools.ssm.export` and :mod:`pttools.omgw0.export`.
 When the exporter is closed, it writes a SHA-256 checksum file next to the HDF5 file,
-which can be verified with :func:`pttools.export.checksum.verify_checksum` or ``sha256sum --check``.
+which can be verified with :func:`pttools.utils.checksum.verify_checksum` or ``sha256sum --check``.
 For parallel computation, the fields can be extracted in the worker processes with
 :attr:`pttools.export.exporter.Exporter.extractor`, as described in the documentation of the exporter.

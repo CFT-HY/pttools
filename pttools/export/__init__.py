@@ -31,7 +31,6 @@ from pttools.utils.fields import (
     field_size,
 )
 
-from .checksum import *
 from .exporter import *
 from .importer import *
 from .records import *

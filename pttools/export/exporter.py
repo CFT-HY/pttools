@@ -58,7 +58,7 @@ Integrity
 The numerical datasets are protected by the Fletcher-32 checksum filter of HDF5,
 which verifies each chunk automatically when it's read.
 In addition, a SHA-256 checksum of the entire file is written to ``FILE.sha256`` when the exporter is closed.
-It can be verified with :py:func:`pttools.export.checksum.verify_checksum` or ``sha256sum --check FILE.sha256``.
+It can be verified with :py:func:`pttools.utils.checksum.verify_checksum` or ``sha256sum --check FILE.sha256``.
 """
 
 from collections.abc import Iterable, Mapping
@@ -75,7 +75,6 @@ import typing as tp
 import h5py
 import numpy as np
 
-from pttools.export.checksum import checksum_path, write_checksum
 from pttools.export.records import (
     Extractor,
     Record,
@@ -91,6 +90,7 @@ from pttools.export.records import (
     validate_table_name,
 )
 import pttools.type_hints as th
+from pttools.utils.checksum import checksum_path, write_checksum
 from pttools.utils.fields import (
     Extractable,
     Field,

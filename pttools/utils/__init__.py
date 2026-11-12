@@ -2,6 +2,7 @@
 
 from .archive import *
 from .cache import *
+from .checksum import *
 from .cron import *
 from .decorators import *
 from .docstrings import *

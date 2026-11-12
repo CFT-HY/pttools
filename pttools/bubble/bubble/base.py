@@ -235,6 +235,14 @@ class BaseBubble(Cacheable, Extractable, abc.ABC):
             raise NotYetSolvedError
         return self.model.e(self.w, self.phase)
 
+    @property
+    def has_profile(self) -> bool:
+        """Whether the bubble has a finite fluid velocity profile, from which e.g. the spectra can be computed.
+
+        The bubble may have a profile even if the solution has failed, e.g. due to the validations of the solution.
+        """
+        return self.solved and not self.solver_crashed and bool(np.all(np.isfinite(self.v)))
+
     @functools.cached_property
     def p(self) -> th.FloatArr1D:
         r"""Pressure $p(\xi)$."""

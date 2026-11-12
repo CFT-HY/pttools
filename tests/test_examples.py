@@ -48,6 +48,7 @@ from examples.props import (
 from examples.reverse import reverse, reverse_approx
 from examples.solvers import bag, old_new, xi_kappa_bag
 from examples.standard_model import standard_model_xi_v
+from pttools.analysis.dataset import WARM_UP_ACCURACY
 from pttools.export import Importer, Table
 from pttools.plot import close_figs
 from pttools.speedup.options import NUMBA_DISABLE_JIT
@@ -132,9 +133,9 @@ class ExampleTest(unittest.TestCase):
         path = TEST_RESULT_PATH / "const_cs_dataset.h5"
         save.main(
             n_points=save.MIN_POINTS, path=path, overwrite=True, max_workers=4, progress_interval=0,
-            accuracy=save.WARM_UP_ACCURACY
+            accuracy=WARM_UP_ACCURACY
         )
-        grid = save.Grid.create(save.MIN_POINTS)
+        grid = save.create_grid(save.MIN_POINTS)
         with Importer(path, verify=True) as importer:
             assert importer.n_models == grid.n_models
             assert importer.n_bubbles == grid.n_bubbles
@@ -148,7 +149,7 @@ class ExampleTest(unittest.TestCase):
         """Test that the size of the dataset can be estimated without computing it."""
         path = TEST_RESULT_PATH / "const_cs_dataset_dry_run.h5"
         path.unlink(missing_ok=True)
-        save.main(n_points=save.SIZES["large"], path=path, dry_run=True, accuracy=save.WARM_UP_ACCURACY)
+        save.main(n_points=save.SIZES["large"], path=path, dry_run=True, accuracy=WARM_UP_ACCURACY)
         assert not path.exists()
 
     # Entropy
@@ -289,7 +290,7 @@ class ExampleTest(unittest.TestCase):
         close_figs(*n_points.main(
             cases=n_points.CASES[:2],
             values=TEST_N_POINTS_VALUES,
-            base=save.WARM_UP_ACCURACY,
+            base=WARM_UP_ACCURACY,
             reference=TEST_N_POINTS_REFERENCE,
             accuracy=TEST_ACCURACY,
         ))

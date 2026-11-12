@@ -15,7 +15,6 @@ import pytest
 from pttools.bubble import Bubble
 from pttools.export import (
     VLEN_STR_OVERHEAD,
-    ChecksumError,
     Exporter,
     ExportFormatError,
     Extractable,
@@ -28,15 +27,14 @@ from pttools.export import (
     Preset,
     Record,
     Table,
-    checksum_path,
     field_size,
     validate_table_name,
-    verify_checksum,
 )
 from pttools.models import BagModel, ConstCSModel
 from pttools.omgw0 import Spectrum
 from pttools.ssm import SSMSpectrum
 from pttools.type_hints import FloatArr1D
+from pttools.utils.checksum import ChecksumError, checksum_path, verify_checksum
 from tests.export.test_fields import SPECTRUM_MINIMAL_PARAMS
 from tests.utils import TEST_RESULT_PATH
 

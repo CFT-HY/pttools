@@ -56,8 +56,9 @@ from matplotlib import rcParams
 from matplotlib.figure import Figure
 import numpy as np
 
-from examples.dataset.save import ACCURACY, MODEL_KWARGS, F, warm_up
+from examples.dataset.save import ACCURACY, MODEL_KWARGS, F
 from examples.utils import save_and_show_figs
+from pttools.analysis.dataset import warm_up
 from pttools.bubble import Bubble
 from pttools.docs.examples import is_sphinx_gallery
 from pttools.models import ConstCSModel
@@ -136,7 +137,7 @@ class Result:
 
 def compute(case: Case, model: ConstCSModel, accuracy: Accuracy) -> Result:
     """Compute a spectrum for the given case with the given accuracy settings on a single CPU core."""
-    warm_up(model)
+    warm_up(model, F)
     start_time = time.perf_counter()
     bubble = Bubble(model, v_wall=case.v_wall, alpha_n=case.alpha_n, n_xi=accuracy.n_xi, log_success=False)
     bubble_time = time.perf_counter()

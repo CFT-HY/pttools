@@ -40,6 +40,18 @@ class BubbleTest(unittest.TestCase):
         """Test that the bubble can be exported to a JSON file."""
         self.bubble.export(TEST_JSON_PATH / "bubble.json")
 
+    def test_has_profile(self) -> None:
+        """Test that a solved bubble has a profile, and an unsolved or crashed one does not."""
+        assert self.bubble.has_profile
+        unsolved = Bubble(self.model, v_wall=0.5, alpha_n=0.1, solve=False)
+        assert not unsolved.has_profile
+        crashed = Bubble(self.model, v_wall=0.5, alpha_n=0.1)
+        crashed.solver_crashed = True
+        assert not crashed.has_profile
+        nan = Bubble(self.model, v_wall=0.5, alpha_n=0.1)
+        nan.v = np.full_like(nan.v, np.nan)
+        assert not nan.has_profile
+
     def test_vp_vm_tilde_ratio_giese(self) -> None:
         r"""Test that the ratio $\tilde{v}_+ / \tilde{v}_-$ of the Giese et al. method is positive."""
         assert self.bubble.vp_vm_tilde_ratio_giese > 0

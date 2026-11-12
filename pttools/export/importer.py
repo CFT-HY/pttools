@@ -19,7 +19,6 @@ import h5py
 import numpy as np
 
 from pttools.bubble.bubble import Bubble
-from pttools.export.checksum import verify_checksum
 from pttools.export.exporter import FORMAT_NAME, FORMAT_VERSION, ExportFormatError, offsets_name, parent_column
 from pttools.export.records import Table, TableName, find_class, table_fields
 from pttools.math.formatting import compact
@@ -27,6 +26,7 @@ from pttools.math.summary import MAX_LISTED_VALUES, summarize_values
 from pttools.models.model import Model
 from pttools.omgw0.spectrum import Spectrum
 from pttools.ssm.spectrum import SSMSpectrum
+from pttools.utils.checksum import verify_checksum
 from pttools.utils.fields import Extractable, FieldShape, Preset
 from pttools.utils.files import format_size
 
@@ -109,7 +109,7 @@ class Importer:
 
     :param path: path of the HDF5 file
     :param verify: whether to verify the file against its SHA-256 checksum file before opening it
-    :raises pttools.export.checksum.ChecksumError: if the verification fails
+    :raises pttools.utils.checksum.ChecksumError: if the verification fails
     :raises FileNotFoundError: if the verification is requested but the checksum file does not exist
     """
 
