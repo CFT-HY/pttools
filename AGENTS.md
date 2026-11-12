@@ -73,6 +73,9 @@
   with constants first, then classes, and then functions.
   However, the exceptions are that `logger` should be right after the imports, and that `main` should be the last function in a module.
   You may deviate from these if required for e.g. type hints.
+- Use `frozen=True, slots=True` for dataclasses where feasible.
+- Avoid code duplication. When implementing new functionality, check whether relevant code already exists in this repository.
+  If yes, generalize the existing code as needed. You may move it in the most suitable location.
 
 ## Docstring conventions
 - Use the Sphinx docstring format.
