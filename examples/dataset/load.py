@@ -4,14 +4,19 @@ Loading the dataset of spectra
 
 Load a dataset created by :ref:`sphx_glr_auto_examples_dataset_save.py`
 with :py:class:`pttools.export.importer.Importer`, print a summary of its contents,
-and plot a bubble and a spectrum from the stored data.
+and plot a bubble and a spectrum from the stored data with their plotting methods.
 
 The summary is created by :py:meth:`Importer.summary() <pttools.export.importer.Importer.summary>`.
 It contains the number of models, bubbles and spectra, the size of the file,
 and the ranges of the parameters of each table.
 The values of the parameters that have at most :py:data:`~pttools.math.summary.MAX_LISTED_VALUES`
 distinct values are listed.
-The bubble and the spectrum are plotted from the stored arrays without recomputing them.
+The bubble and the spectrum are imported without recomputing them
+with :py:meth:`Importer.import_spectrum() <pttools.export.importer.Importer.import_spectrum>`,
+which gives an :py:class:`~pttools.export.spectrum.ImportedSpectrum`
+and its :py:class:`~pttools.export.bubble.ImportedBubble`.
+These have the same plotting methods as the computed :py:class:`~pttools.omgw0.spectrum.Spectrum`
+and :py:class:`~pttools.bubble.bubble.Bubble`.
 
 By default, the first HDF5 file in the ``data`` directory of the repository is loaded.
 As the dataset is not available when building the documentation, the example is skipped by Sphinx-Gallery.
@@ -27,7 +32,6 @@ import argparse
 import logging
 from pathlib import Path
 
-from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 import numpy as np
 
@@ -85,54 +89,6 @@ def select_rows(importer: Importer, bubble: int | None, spectrum: int | None) ->
     return bubble, int(spectra[0]) if spectra.size else None
 
 
-def plot_bubble(importer: Importer, index: int) -> Figure:
-    r"""Plot the stored fluid velocity and enthalpy profiles $v(\xi)$ and $w(\xi)$ of a bubble."""
-    model = importer.model_params(int(importer.parent_indices(Table.BUBBLES, index)))
-    params = importer.read_scalars(Table.BUBBLES, ["v_wall", "alpha_n", "sol_type", "failed"], rows=index)
-    xi = importer.read(Table.BUBBLES, "xi", index)
-    fig = Figure(figsize=(6, 6))
-    ax_v: Axes = fig.add_subplot(211)
-    ax_w: Axes = fig.add_subplot(212, sharex=ax_v)
-    ax_v.plot(xi, importer.read(Table.BUBBLES, "v", index))
-    ax_w.plot(xi, importer.read(Table.BUBBLES, "w", index))
-    ax_v.set_ylabel("$v$")
-    ax_w.set_ylabel("$w$")
-    ax_w.set_xlabel(r"$\xi$")
-    ax_v.set_xlim(0, 1)
-    for ax in (ax_v, ax_w):
-        ax.grid()
-    ax_v.set_title(
-        f"Bubble {index}: {model.get('label_latex', model.get('name'))}, "
-        rf"$v_\text{{wall}}={params['v_wall']:.3g}$, $\alpha_n={params['alpha_n']:.3g}$, {params['sol_type']}"
-        + (" (failed)" if params["failed"] else ""),
-        fontsize="medium"
-    )
-    fig.tight_layout()
-    return fig
-
-
-def plot_spectrum(importer: Importer, index: int) -> Figure:
-    r"""Plot the stored gravitational wave power spectrum today $\Omega_{\text{gw},0} h^2(f)$."""
-    params = importer.read_scalars(
-        Table.SPECTRA_F, ["v_wall", "alpha_n", "beta_tilde", "T_star", "g_star", "nuc_type"], rows=index)
-    fig = Figure()
-    ax: Axes = fig.add_subplot()
-    ax.loglog(importer.read(Table.SPECTRA_F, "f"), importer.read(Table.SPECTRA_F, "omgw0_h2", index))
-    ax.set_xlabel(r"$f$ (Hz)")
-    ax.set_ylabel(r"$\Omega_{\text{gw},0} h^2$")
-    ax.grid()
-    ax.set_title(
-        f"Spectrum {index} of bubble {int(importer.parent_indices(Table.SPECTRA_F, index))}: "
-        rf"$v_\text{{wall}}={params['v_wall']:.3g}$, $\alpha_n={params['alpha_n']:.3g}$,"
-        "\n"
-        rf"$\tilde{{\beta}}={params['beta_tilde']:.3g}$, $T_*={params['T_star']:.3g}$ GeV, "
-        rf"$g_*={params['g_star']:.3g}$, {params['nuc_type']}",
-        fontsize="medium"
-    )
-    fig.tight_layout()
-    return fig
-
-
 @log_duration
 def main(
         path: Path | None = None,
@@ -153,12 +109,13 @@ def main(
     with Importer(path, verify=verify) as importer:
         print(importer.summary(max_listed=max_listed))
         bubble, spectrum = select_rows(importer, bubble, spectrum)
-        figs = [plot_bubble(importer, bubble)]
         if spectrum is None:
             logger.warning("The bubble %d has no spectra with shared frequencies to plot.", bubble)
-        else:
-            figs.append(plot_spectrum(importer, spectrum))
-    return figs
+            return [importer.import_bubble(bubble).plot()]
+        imported = importer.import_spectrum(spectrum, table=Table.SPECTRA_F)
+    # The figures are created from the imported data, and therefore the file can be closed before plotting.
+    fig_spectrum, _ax = imported.plot()
+    return [imported.bubble.plot(), fig_spectrum]
 
 
 def parse_args() -> argparse.Namespace:
