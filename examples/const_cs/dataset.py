@@ -82,6 +82,7 @@ from pttools.speedup.parallel import FakeExecutor, get_pool
 from pttools.ssm.accuracy import Accuracy
 from pttools.ssm.nucleation import NucType
 import pttools.type_hints as th
+from pttools.utils.files import format_size
 from pttools.utils.time import log_duration
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -292,15 +293,6 @@ def compute_task(
             continue
         spectra.append(extractor.extract(spectrum))
     return TaskResult(bubble=bubble_record, spectra=spectra, n_skipped=n_skipped)
-
-
-def format_size(n_bytes: float) -> str:
-    """Format a size in bytes with binary prefixes."""
-    for unit in ("B", "KiB", "MiB", "GiB"):
-        if abs(n_bytes) < 1024:  # noqa: PLR2004
-            return f"{n_bytes:.1f} {unit}"
-        n_bytes /= 1024
-    return f"{n_bytes:.1f} TiB"
 
 
 def format_duration(seconds: float) -> str:

@@ -4,7 +4,10 @@ import os
 from pathlib import Path
 import re
 
-__all__ = ["dir_size", "format_size", "split_lines", "tail"]
+__all__ = ["SIZE_UNITS", "dir_size", "format_size", "split_lines", "tail"]
+
+#: Units of :py:func:`format_size` with decimal prefixes
+SIZE_UNITS: tuple[str, ...] = ("B", "KB", "MB", "GB", "TB")
 
 
 def dir_size(path: Path) -> int:
@@ -16,13 +19,23 @@ def dir_size(path: Path) -> int:
     return sum(item.stat().st_size for item in path.rglob("*") if item.is_file() and not item.is_symlink())
 
 
-def format_size(size: int) -> str:
-    """Format a size in a human-readable format.
+def format_size(size: float) -> str:
+    """Format a size in a human-readable format with decimal prefixes.
+
+    The unit is the largest of B, KB, MB, GB and TB in which the size is at least one,
+    e.g. ``512 B``, ``12.3 MB`` or ``1.5 TB``.
 
     :param size: the size in bytes
-    :return: the size in megabytes, e.g. ``12.3 MB``
+    :return: the formatted size, in bytes without decimals and in the larger units with one decimal
     """
-    return f"{size / 1e6:.1f} MB"
+    # The sizes are compared after rounding, so that e.g. 999 950 B is 1.0 MB instead of 1000.0 KB.
+    if abs(round(size)) < 1000:  # noqa: PLR2004
+        return f"{size:.0f} B"
+    for unit in SIZE_UNITS[1:-1]:
+        size /= 1000
+        if abs(round(size, 1)) < 1000:  # noqa: PLR2004
+            return f"{size:.1f} {unit}"
+    return f"{size / 1000:.1f} {SIZE_UNITS[-1]}"
 
 
 def split_lines(text: str) -> list[str]:

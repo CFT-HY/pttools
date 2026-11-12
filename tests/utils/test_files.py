@@ -17,9 +17,18 @@ def test_dir_size(tmp_path: Path) -> None:
 
 
 def test_format_size() -> None:
-    """Sizes should be formatted in megabytes with one decimal."""
-    assert format_size(0) == "0.0 MB"
+    """Sizes should be formatted in the largest unit in which they are at least one."""
+    assert format_size(0) == "0 B"
+    assert format_size(999) == "999 B"
+    assert format_size(1000) == "1.0 KB"
+    assert format_size(12_345) == "12.3 KB"
+    assert format_size(999.6) == "1.0 KB"
+    assert format_size(999_950) == "1.0 MB"
     assert format_size(12_345_678) == "12.3 MB"
+    assert format_size(12_345_678_901) == "12.3 GB"
+    assert format_size(1.5e12) == "1.5 TB"
+    assert format_size(2.5e15) == "2500.0 TB"
+    assert format_size(-2_000_000) == "-2.0 MB"
 
 
 def test_split_lines() -> None:
