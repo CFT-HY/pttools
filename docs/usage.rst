@@ -97,7 +97,18 @@ A file can contain both.
       params = importer.read_scalars(Table.SPECTRA_Y)
       omgw0_h2 = importer.read(Table.SPECTRA_Y, "omgw0_h2")
       profiles_v = importer.read(Table.BUBBLES, "v")
-      spectrum = importer.load_spectrum(0)
+      imported = importer.import_spectrum(0)
+      recomputed = importer.load_spectrum(0)
+
+The bubbles and spectra can be imported without recomputing them with
+:meth:`pttools.export.importer.Importer.import_bubble` and :meth:`pttools.export.importer.Importer.import_spectrum`.
+The imported objects have the same base classes as the computed ones,
+e.g. :class:`pttools.bubble.bubble.nucleated.BaseNucleatedBubble` and :class:`pttools.ssm.spectrum_base_ssm.BaseSSMSpectrum`,
+so that the plotting and analysis functions that use only the stored data can take either of them.
+The quantities that are not stored are computed from the stored data when possible,
+and the quantities that need data that was not exported raise :class:`pttools.export.imported.NotImportedError`.
+Alternatively, the objects can be recreated from their stored parameters and computed again with
+:meth:`pttools.export.importer.Importer.load_bubble` and :meth:`pttools.export.importer.Importer.load_spectrum`.
 
 The exported fields are selected with the presets of :class:`pttools.utils.fields.Preset`,
 field names, and custom :class:`pttools.utils.fields.Field` objects.

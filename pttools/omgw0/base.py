@@ -19,7 +19,7 @@ from pttools.omgw0 import const, freq
 from pttools.omgw0.const import H2, LISA_OBS_TIME, OMEGA_PHOTON_H2
 from pttools.omgw0.factors import F_gw0_h2
 from pttools.omgw0.noise import omega_ins_h2, omega_noise_h2, signal_to_noise_ratio
-from pttools.ssm.spectrum_base import SpectrumBase
+from pttools.ssm.spectrum_base import BaseSpectrum
 import pttools.type_hints as th
 from pttools.type_hints import FloatArr1D, FloatOrArr
 from pttools.utils.docstrings import copy_docstring_dec
@@ -32,10 +32,10 @@ if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.figure import Figure
 
 
-class Omgw0Base(SpectrumBase):
+class BaseOmgw0(BaseSpectrum):
     r"""Base class for the spectra that can be converted to the GW power spectrum today $\Omega_{\text{gw},0}$.
 
-    In addition to the attributes and properties of :py:class:`pttools.ssm.spectrum_base.SpectrumBase`,
+    In addition to the attributes and properties of :py:class:`pttools.ssm.spectrum_base.BaseSpectrum`,
     the subclasses have to provide the attributes :py:attr:`T_star`, :py:attr:`g_star` and :py:attr:`gs_star`
     and the properties :py:attr:`H_star` and :py:attr:`R_star`.
     The frequencies today $f$ follow from $z = kR_*$, $r_*$ and $f_{\ast,0}$ (see :py:mod:`pttools.omgw0.freq`),

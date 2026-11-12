@@ -31,6 +31,10 @@ from pttools.utils.fields import (
     field_size,
 )
 
+from .bubble import *
 from .exporter import *
+from .imported import *
 from .importer import *
 from .records import *
+from .spectrum import *
+from .ssm import *

@@ -35,6 +35,7 @@ __all__ = [
     "FieldType",
     "Fields",
     "Preset",
+    "attribute_name",
     "decode_optional",
     "decode_optional_int",
     "describe",
@@ -368,6 +369,19 @@ class Extractable:
         :return: the size in bytes, see :py:func:`field_size`
         """
         return sum(field_size(field, field.get(self)) for field in self.FIELDS.select(fields))
+
+
+def attribute_name(field: Field) -> str | None:
+    """Name of the attribute from which the value of a field is read directly.
+
+    :param field: the field
+    :return: the attribute name, or None if the value is computed by a function or a method call,
+        or if it's read from an attribute of another object, e.g. ``bubble.v_wall``
+    """
+    if field.call or field.index is not None or callable(field.getter):
+        return None
+    name = field.name if field.getter is None else field.getter
+    return None if "." in name else name
 
 
 def decode_optional(value: tp.Any) -> tp.Any:

@@ -24,5 +24,6 @@ from .spec_den_v import *
 from .spectrum import *
 from .spectrum_bag import *
 from .spectrum_base import *
+from .spectrum_base_ssm import *
 from .ssm import *
 from .ssm_bag import *

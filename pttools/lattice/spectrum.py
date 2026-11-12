@@ -10,7 +10,7 @@ import numpy as np
 from pttools.bubble.const import DEFAULT_NU_GDH2024
 from pttools.lattice.quantities import Quantity
 from pttools.omgw0 import const
-from pttools.omgw0.base import Omgw0Base
+from pttools.omgw0.base import BaseOmgw0
 from pttools.ssm.barotropic import expansion_factor
 from pttools.ssm.const import DEFAULT_A_STAR_A_R_RATIO
 from pttools.ssm.suppression.fit import lattice_artifact_start
@@ -21,10 +21,10 @@ if tp.TYPE_CHECKING:
     from pttools.lattice.run import LatticeRun
 
 
-class LatticeSpectrum(Omgw0Base):
+class LatticeSpectrum(BaseOmgw0):
     r"""Power spectra of a hydrodynamic lattice simulation at a given time step.
 
-    The spectra are functions of $z = kR_*$ and normalised as in :py:class:`pttools.ssm.spectrum_base.SpectrumBase`,
+    The spectra are functions of $z = kR_*$ and normalised as in :py:class:`pttools.ssm.spectrum_base.BaseSpectrum`,
     so that they can be compared directly with :py:class:`pttools.ssm.spectrum.SSMSpectrum`.
     The GW power growth rate is computed from the difference of the GW power spectra at
     ``step`` and ``step_prev``, as in :correia_2025:`\ ` fig. 5.

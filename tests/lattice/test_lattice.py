@@ -24,7 +24,7 @@ from pttools.lattice import (
     read_globals,
 )
 from pttools.omgw0 import const, freq
-from pttools.omgw0.base import Omgw0Base
+from pttools.omgw0.base import BaseOmgw0
 from pttools.omgw0.noise import signal_to_noise_ratio
 from pttools.omgw0.spectrum import Spectrum
 from pttools.ssm.nucleation import NucType
@@ -163,7 +163,7 @@ class SyntheticRunTest(unittest.TestCase):
     def test_spectrum_omgw0_base(self) -> None:
         """By default, the Hubble rate and the bubble spacing of the spectrum should be those of the run."""
         spectrum = self.lattice_run.spectrum(500)
-        assert isinstance(spectrum, Omgw0Base)
+        assert isinstance(spectrum, BaseOmgw0)
         assert spectrum.r_star == self.lattice_run.r_star
         assert spectrum.R_star == self.lattice_run.R_star
         assert spectrum.H_star == pytest.approx(self.lattice_run.H_star, rel=1e-15)

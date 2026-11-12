@@ -19,7 +19,7 @@ from pttools.utils.fields import (
     PRESETS_ALL,
     PRESETS_FULL,
     PRESETS_FULL_INIT,
-    PRESETS_MINIMAL,
+    PRESETS_MINIMAL_FULL,
     Field,
     Fields,
     FieldShape,
@@ -87,7 +87,7 @@ SPECTRUM_FIELDS: Fields = Fields(
         "snr_ins", call=True, index=0, presets=PRESETS_FULL,
         description="signal-to-noise ratio for LISA with only the instrument noise"),
     # Computed arrays
-    _array("omgw0_h2", presets=PRESETS_MINIMAL, call=True),
+    _array("omgw0_h2", presets=PRESETS_MINIMAL_FULL, call=True),
     _array("omgw0", call=True),
     # The docstring of f() describes the conversion, and therefore it does not suit as a description.
     _array("f", "$f(y)$, frequency today", call=True),

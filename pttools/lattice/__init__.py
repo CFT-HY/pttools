@@ -4,7 +4,7 @@ This supports the output of the simulation code (SCOTTS) of the Computational Fi
 of the University of Helsinki, as published in the Zenodo release of :correia_2025:`\ `,
 and that of its older version of :cutting_2019:`\ `.
 The data can be compared with the Sound Shell Model with the common interface of
-:py:class:`pttools.ssm.spectrum_base.SpectrumBase`,
+:py:class:`pttools.ssm.spectrum_base.BaseSpectrum`,
 and the suppression factor of the Sound Shell Model can be fitted to it with
 :py:mod:`pttools.ssm.suppression.fit`.
 

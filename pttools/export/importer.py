@@ -18,14 +18,19 @@ import typing as tp
 import h5py
 import numpy as np
 
-from pttools.bubble.bubble import Bubble
+from pttools.bubble.bubble import BaseNucleatedBubble, Bubble
+from pttools.export.bubble import ImportedBubble
 from pttools.export.exporter import FORMAT_NAME, FORMAT_VERSION, ExportFormatError, offsets_name, parent_column
 from pttools.export.records import Table, TableName, find_class, table_fields
+from pttools.export.spectrum import ImportedSpectrum
+from pttools.export.ssm import ImportedSSMSpectrum
 from pttools.math.formatting import compact
 from pttools.math.summary import MAX_LISTED_VALUES, summarize_values
 from pttools.models.model import Model
+from pttools.omgw0.base_ssm import BaseSSMOmgw0
 from pttools.omgw0.spectrum import Spectrum
 from pttools.ssm.spectrum import SSMSpectrum
+from pttools.ssm.spectrum_base_ssm import BaseSSMSpectrum
 from pttools.utils.checksum import verify_checksum
 from pttools.utils.fields import Extractable, FieldShape, Preset
 from pttools.utils.files import format_size
@@ -137,6 +142,7 @@ class Importer:
             raise
         self._models: dict[int, Model] = {}
         self._bubbles: dict[int, Bubble] = {}
+        self._imported_bubbles: dict[int, ImportedBubble] = {}
 
     # -----
     # Context manager
@@ -473,6 +479,75 @@ class Importer:
         if other:
             lines.append(f"  Array fields: {', '.join(other)}")
         return "\n".join(lines)
+
+    # -----
+    # Importing objects without recomputing them
+    # -----
+
+    def _row(self, table: TableName, index: int) -> dict[str, tp.Any]:
+        """The stored values of the fields of a row and its identifier ``id``."""
+        data = {name: self.read(table, name, index) for name in self.fields(table)}
+        data["id"] = self.read(table, "id", index)
+        return data
+
+    def import_bubble(self, index: int) -> ImportedBubble:
+        """Import a bubble without solving it again.
+
+        The model of the bubble is recreated with :py:meth:`load_model`, which does not solve anything.
+        The imported bubbles are cached, so that the spectra of the same bubble share the same bubble object.
+        See :py:class:`pttools.export.bubble.ImportedBubble` for the available data.
+
+        :param index: row index of the bubble
+        :return: the bubble
+        """
+        index = int(self._indices(index, self.n_bubbles)[0])
+        bubble = self._imported_bubbles.get(index)
+        if bubble is None:
+            cls_name = self.class_name(Table.BUBBLES)
+            if cls_name is None:
+                raise ValueError("The file contains no bubbles.")
+            cls = find_class(BaseNucleatedBubble, cls_name)
+            model = self.load_model(int(self.read(Table.BUBBLES, "model", index)))
+            bubble = ImportedBubble(
+                model, self._row(Table.BUBBLES, index), fields=cls.FIELDS, source=f"bubble {index} of {self.path}")
+            self._imported_bubbles[index] = bubble
+        return bubble
+
+    def import_bubbles(self, rows: Rows = None) -> list[ImportedBubble]:
+        """Import multiple bubbles without solving them again, see :py:meth:`import_bubble`."""
+        return [self.import_bubble(int(i)) for i in self._indices(rows, self.n_bubbles)]
+
+    def import_spectrum(self, index: int, table: TableName = Table.SPECTRA_Y) -> ImportedSSMSpectrum:
+        """Import a spectrum without computing it again.
+
+        The spectra of :py:class:`pttools.omgw0.spectrum.Spectrum` are imported as
+        :py:class:`pttools.export.spectrum.ImportedSpectrum`, and the other SSM spectra as
+        :py:class:`pttools.export.ssm.ImportedSSMSpectrum`.
+        The bubble of the spectrum is imported with :py:meth:`import_bubble`.
+
+        :param index: row index of the spectrum
+        :param table: :py:attr:`Table.SPECTRA_Y <pttools.export.records.Table.SPECTRA_Y>`
+            for the spectra that share $y$,
+            or :py:attr:`Table.SPECTRA_F <pttools.export.records.Table.SPECTRA_F>` for the spectra that share $f$
+        :return: the spectrum
+        """
+        table = Table(table)
+        if table not in (Table.SPECTRA_Y, Table.SPECTRA_F):
+            raise ValueError(f"The table must be a table of spectra. Got: {table}")
+        index = int(self._indices(index, self.n_rows(table))[0])
+        cls_name = self.class_name(table)
+        if cls_name is None:
+            raise ValueError(f"The file contains no spectra in the table \"{table}\".")
+        cls = find_class(BaseSSMSpectrum, cls_name)
+        bubble = self.import_bubble(int(self.read(table, "bubble", index)))
+        imported_cls = ImportedSpectrum if issubclass(cls, BaseSSMOmgw0) else ImportedSSMSpectrum
+        return imported_cls(
+            bubble, self._row(table, index), fields=table_fields(cls, table),
+            source=f"spectrum {index} of the table \"{table}\" of {self.path}")
+
+    def import_spectra(self, rows: Rows = None, table: TableName = Table.SPECTRA_Y) -> list[ImportedSSMSpectrum]:
+        """Import multiple spectra without computing them again, see :py:meth:`import_spectrum`."""
+        return [self.import_spectrum(int(i), table=table) for i in self._indices(rows, self.n_rows(table))]
 
     # -----
     # Recreating objects

@@ -9,7 +9,7 @@ from matplotlib.figure import Figure
 import numpy as np
 
 from pttools.math.formatting import as_latex
-from pttools.omgw0 import Omgw0Base, Spectrum, omega_noise_h2
+from pttools.omgw0 import BaseOmgw0, omega_noise_h2
 from pttools.plot.bubbles import plot_bubbles_v
 from pttools.plot.utils import FigAndAxes, create_fig_ax
 import pttools.type_hints as th
@@ -18,8 +18,9 @@ if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
 
-    from pttools.ssm.spectrum import SSMSpectrum
-    from pttools.ssm.spectrum_base import SpectrumBase
+    from pttools.omgw0.base_ssm import BaseSSMOmgw0
+    from pttools.ssm.spectrum_base import BaseSpectrum
+    from pttools.ssm.spectrum_base_ssm import BaseSSMSpectrum
 
 F_LABEL = r"$f(\text{Hz})$"
 NOISE_EB_LABEL = r"$\mathcal{P}_\text{EB noise} h^2$"
@@ -42,7 +43,7 @@ Z_LABEL = r"$z = kR_*$"
 # -----
 
 def plot_spectra_common(
-        spectra: tp.Collection[SpectrumBase],
+        spectra: tp.Collection[BaseSpectrum],
         fig: Figure,
         ax: Axes,
         path: str | os.PathLike[str] | None = None,
@@ -66,7 +67,7 @@ def plot_spectra_common(
 
 
 def plot_spectra_multi(
-        spectra: tp.Collection[Spectrum],
+        spectra: tp.Collection[BaseSSMOmgw0],
         fig: Figure | None = None,
         path: str | os.PathLike[str] | None = None,
         **kwargs: tp.Any) -> tuple[Figure, th.AxesArr2D]:
@@ -92,7 +93,7 @@ def plot_spectra_multi(
 
 
 def plot_spectra_multi_common(
-        spectra: tp.Collection[Spectrum],
+        spectra: tp.Collection[BaseSSMOmgw0],
         fig: Figure | None,
         figsize: tuple[float, float] = (7, 5),
         nrows: int = 2,
@@ -120,7 +121,7 @@ def plot_spectra_multi_common(
 
 
 def plot_spectra_multi_flat(
-        spectra: tp.Collection[Spectrum],
+        spectra: tp.Collection[BaseSSMOmgw0],
         fig: Figure | None = None,
         path: str | os.PathLike[str] | None = None,
         labels: tp.Sequence[str | None] | None = None,
@@ -186,7 +187,7 @@ def noise_label(eb: bool = True, gb: bool = True) -> str:
 
 
 def plot_spectra(
-        spectra: tp.Collection[Omgw0Base],
+        spectra: tp.Collection[BaseOmgw0],
         fig: Figure | None = None,
         ax: Axes | None = None,
         path: str | os.PathLike[str] | None = None,
@@ -231,7 +232,7 @@ def plot_spectra(
 
 
 def plot_spectra_gw(
-        spectra: tp.Collection[SpectrumBase],
+        spectra: tp.Collection[BaseSpectrum],
         ax: Axes | None = None,
         fig: Figure | None = None,
         path: str | os.PathLike[str] | None = None,
@@ -245,7 +246,7 @@ def plot_spectra_gw(
 
 
 def plot_spectra_pow_gw_rate(
-        spectra: tp.Collection[SpectrumBase],
+        spectra: tp.Collection[BaseSpectrum],
         ax: Axes | None = None,
         fig: Figure | None = None,
         path: str | os.PathLike[str] | None = None,
@@ -253,7 +254,7 @@ def plot_spectra_pow_gw_rate(
         **kwargs: tp.Any) -> FigAndAxes:
     r"""Plot the growth rates of the GW power spectra.
 
-    See :py:attr:`pttools.ssm.spectrum_base.SpectrumBase.pow_gw_rate`.
+    See :py:attr:`pttools.ssm.spectrum_base.BaseSpectrum.pow_gw_rate`.
 
     :param spectra: the spectra
     :param ax: axes to plot in
@@ -274,7 +275,7 @@ def plot_spectra_pow_gw_rate(
 
 
 def plot_spectra_pow_U_par(
-        spectra: tp.Collection[SpectrumBase],
+        spectra: tp.Collection[BaseSpectrum],
         ax: Axes | None = None,
         fig: Figure | None = None,
         path: str | os.PathLike[str] | None = None,
@@ -301,7 +302,7 @@ def plot_spectra_pow_U_par(
 
 
 def plot_spectra_v(
-        spectra: tp.Collection[SSMSpectrum],
+        spectra: tp.Collection[BaseSSMSpectrum],
         ax: Axes | None = None,
         fig: Figure | None = None,
         path: str | os.PathLike[str] | None = None,
@@ -315,7 +316,7 @@ def plot_spectra_v(
 
 
 def plot_spectra_spec_den_gw(
-        spectra: tp.Collection[SSMSpectrum],
+        spectra: tp.Collection[BaseSSMSpectrum],
         ax: Axes | None = None,
         fig: Figure | None = None,
         path: str | os.PathLike[str] | None = None,
@@ -329,7 +330,7 @@ def plot_spectra_spec_den_gw(
 
 
 def plot_spectra_spec_den_v(
-        spectra: tp.Collection[SSMSpectrum],
+        spectra: tp.Collection[BaseSSMSpectrum],
         ax: Axes | None = None,
         fig: Figure | None = None,
         path: str | os.PathLike[str] | None = None,

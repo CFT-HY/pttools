@@ -9,6 +9,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 import numpy as np
 
+from pttools.bubble.bubble.computed import ComputedBubble
 from pttools.plot.utils import FigAndAxes, create_fig_ax
 from pttools.plot.utils import legend as legend_func
 import pttools.type_hints as th
@@ -33,8 +34,9 @@ def setup_bubbles_plot(
         fig: Figure | None = None,
         ax: Axes | None = None) -> FigAndAxes:
     """Set up a figure for plotting multiple bubbles."""
+    # The computed bubbles are solved if needed, whereas the imported ones have their solutions.
     for bubble in bubbles:
-        if not bubble.solved:
+        if isinstance(bubble, ComputedBubble) and not bubble.solved:
             bubble.solve()
     fig, ax = create_fig_ax(fig, ax)
     return fig, ax

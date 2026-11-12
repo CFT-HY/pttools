@@ -59,7 +59,7 @@ def _flag(name: str, description: str) -> Field:
     return Field(name, type=FieldType.BOOL, presets=PRESETS_MINIMAL_FULL, description=description)
 
 
-#: Fields of :py:class:`pttools.bubble.bubble.BaseBubble`
+#: Fields of :py:class:`pttools.bubble.bubble.base.BaseBubble`
 BASE_BUBBLE_FIELDS: Fields = Fields(
     Field("datetime", getter=now, type=FieldType.STR, presets=PRESETS_FULL, description="time of the export"),
     Field("solving_duration", presets=PRESETS_FULL, description="time taken by the solver in seconds"),
@@ -72,6 +72,8 @@ BASE_BUBBLE_FIELDS: Fields = Fields(
         "wm_guess", presets=PRESETS_INIT, decode=decode_optional,
         description=r"$w_{-,\text{guess}}$, initial guess for the enthalpy behind the wall"),
     # Solution
+    # The phase and the values at the wall are in the minimal preset, as the quantities of the bubbles
+    # are computed from them, see pttools.bubble.bubble.nucleated.BaseNucleatedBubble.
     _profile("v", r"$v(\xi)$, fluid velocity profile", PRESETS_MINIMAL_FULL),
     _profile("w", r"$w(\xi)$, enthalpy profile", PRESETS_MINIMAL_FULL),
     _profile("xi", r"$\xi$, self-similar radius coordinates", PRESETS_MINIMAL_FULL),
@@ -80,7 +82,7 @@ BASE_BUBBLE_FIELDS: Fields = Fields(
     _profile("e"),
     _profile("p"),
     _profile("s"),
-    _profile("phase", r"$\phi(\xi)$, phase profile"),
+    _profile("phase", r"$\phi(\xi)$, phase profile", PRESETS_MINIMAL_FULL),
     # Solution parameters
     Field("sp", presets=PRESETS_FULL, description="$s_+$, entropy density in front of the wall"),
     Field("sm", presets=PRESETS_FULL, description="$s_-$, entropy density behind the wall"),
@@ -90,14 +92,16 @@ BASE_BUBBLE_FIELDS: Fields = Fields(
     Field("vp", presets=PRESETS_FULL, description="$v_+$, fluid velocity in front of the wall"),
     Field("vm", presets=PRESETS_FULL, description="$v_-$, fluid velocity behind the wall"),
     Field(
-        "vp_tilde", presets=PRESETS_FULL,
+        "vp_tilde", presets=PRESETS_MINIMAL_FULL,
         description=r"$\tilde{v}_+$, fluid velocity in front of the wall in the wall frame"),
     Field(
-        "vm_tilde", presets=PRESETS_FULL,
+        "vm_tilde", presets=PRESETS_MINIMAL_FULL,
         description=r"$\tilde{v}_-$, fluid velocity behind the wall in the wall frame"),
-    Field("wp", presets=PRESETS_FULL, description="$w_+$, enthalpy in front of the wall"),
-    Field("wm", presets=PRESETS_FULL, description="$w_-$, enthalpy behind the wall"),
-    Field("w_center", presets=PRESETS_FULL, description=r"$w_\text{center}$, enthalpy at the center of the bubble"),
+    Field("wp", presets=PRESETS_MINIMAL_FULL, description="$w_+$, enthalpy in front of the wall"),
+    Field("wm", presets=PRESETS_MINIMAL_FULL, description="$w_-$, enthalpy behind the wall"),
+    Field(
+        "w_center", presets=PRESETS_MINIMAL_FULL,
+        description=r"$w_\text{center}$, enthalpy at the center of the bubble"),
     # Flags
     # These are in the minimal preset, so that the failed solutions can always be filtered out.
     _flag("failed", "whether the solution has errors"),
@@ -109,7 +113,8 @@ BASE_BUBBLE_FIELDS: Fields = Fields(
     _flag("numerical_error", r"whether there is a numerical error, e.g. $\kappa + \omega \neq 1$"),
 )
 
-#: Fields of :py:class:`pttools.bubble.bubble.Bubble`
+#: Fields of :py:class:`pttools.bubble.bubble.nucleated.BaseNucleatedBubble`
+#: and :py:class:`pttools.bubble.bubble.Bubble`
 BUBBLE_FIELDS: Fields = Fields(
     BASE_BUBBLE_FIELDS,
     # Input parameters
@@ -130,24 +135,26 @@ BUBBLE_FIELDS: Fields = Fields(
         "use_giese_solver", type=FieldType.BOOL, presets=PRESETS_INIT,
         description="whether the Giese et al. solver is used"),
     # Solution parameters
+    # Tn, v_sh, wn and alpha_theta_bar_n are in the minimal preset, as the quantities of the bubbles
+    # are computed from them, see pttools.bubble.bubble.nucleated.BaseNucleatedBubble.
     Field("alpha_plus", presets=PRESETS_FULL, description=r"$\alpha_+$, transition strength in front of the wall"),
     Field("sm_sh", presets=PRESETS_FULL, description=r"$s_{-,\text{sh}}$, entropy density behind the shock"),
     Field("sn", presets=PRESETS_FULL, description="$s_n$, entropy density at the nucleation temperature"),
-    Field("Tn", presets=PRESETS_FULL, description="$T_n$, nucleation temperature"),
+    Field("Tn", presets=PRESETS_MINIMAL_FULL, description="$T_n$, nucleation temperature"),
     Field("v_cj", presets=PRESETS_FULL, description=r"$v_\text{CJ}$, Chapman-Jouguet speed"),
-    Field("v_sh", presets=PRESETS_FULL, description=r"$v_\text{sh}$, shock speed"),
+    Field("v_sh", presets=PRESETS_MINIMAL_FULL, description=r"$v_\text{sh}$, shock speed"),
     Field("vm_sh", presets=PRESETS_FULL, description=r"$v_{-,\text{sh}}$, fluid velocity behind the shock"),
     Field(
         "vm_tilde_sh", presets=PRESETS_FULL,
         description=r"$\tilde{v}_{-,\text{sh}}$, fluid velocity behind the shock in the shock frame"),
     # The descriptions of the properties are taken from their docstrings.
-    Field("wn", presets=PRESETS_FULL),
+    Field("wn", presets=PRESETS_MINIMAL_FULL),
     # Computed values
     Field("mean_adiabatic_index", presets=PRESETS_FULL),
     Field("css2_Tn", presets=PRESETS_MINIMAL),
     Field("csb2_Tn", presets=PRESETS_MINIMAL),
     Field(
-        "alpha_theta_bar_n",
+        "alpha_theta_bar_n", presets=PRESETS_MINIMAL_FULL,
         description=r"$\alpha_{\bar{\theta}_n}$, transition strength based on the trace anomaly"),
     Field("kappa"),
     Field("omega"),

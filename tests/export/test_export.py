@@ -301,7 +301,7 @@ class ExportTest(unittest.TestCase):
         assert "  name: 2 distinct: ['bag', 'const_cs']" in models.splitlines()
         assert bubbles.startswith("Bubbles (2):\n")
         assert "  v_wall: 0.5 ... 0.7, 2 distinct: [0.5, 0.7]  # $v_\\text{wall}$, wall speed" in bubbles.splitlines()
-        assert "  Array fields: v (ragged), w (ragged), xi (ragged)" in bubbles.splitlines()
+        assert "  Array fields: v (ragged), w (ragged), xi (ragged), phase (ragged)" in bubbles.splitlines()
         assert "T_star: 100 ... 1000, 2 distinct  #" in spectra_f
         assert f"Array fields: omgw0_h2 ({self.f_spectra[0].f().size} points per row)" in spectra_f
         assert "Models: 2, Bubbles: 2, Spectra with shared y: 3, Spectra with shared f: 2" in summary.splitlines()
@@ -456,7 +456,7 @@ class ExportTest(unittest.TestCase):
             assert "w_crit" in importer.model_params(0)
             assert importer.read(Table.SPECTRA_Y, "label_unicode", 0) == self.y_spectra[0].label_unicode
             # Descriptions from the docstrings
-            # The docstring of R_star is inherited from Omgw0Base.
+            # The docstring of R_star is inherited from BaseOmgw0.
             assert importer.field_info(Table.SPECTRA_Y, "R_star")["description"] == "$R_*$, mean bubble separation"
             assert importer.field_info(Table.BUBBLES, "T")["description"] == r"Temperature profile $T(\xi)$"
 

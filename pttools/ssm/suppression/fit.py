@@ -22,7 +22,7 @@ import numpy as np
 import pttools.type_hints as th
 
 if th.TYPE_CHECKING_OR_DOCS:
-    from pttools.ssm.spectrum_base import SpectrumBase
+    from pttools.ssm.spectrum_base import BaseSpectrum
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -206,12 +206,12 @@ def fit_suppression(
 
 
 def fit_suppression_gw(
-        reference: SpectrumBase,
-        model: SpectrumBase,
+        reference: BaseSpectrum,
+        model: BaseSpectrum,
         **kwargs: tp.Any) -> SuppressionFit:
     r"""Fit the suppression factor of the GW power growth rate of a model spectrum to a reference spectrum.
 
-    This compares :py:attr:`pttools.ssm.spectrum_base.SpectrumBase.pow_gw_rate` of the spectra.
+    This compares :py:attr:`pttools.ssm.spectrum_base.BaseSpectrum.pow_gw_rate` of the spectra.
     The model spectrum should be computed without suppression,
     i.e. with :py:attr:`pttools.ssm.suppression.suppression.SuppressionMethod.NONE`.
 

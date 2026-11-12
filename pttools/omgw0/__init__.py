@@ -10,6 +10,7 @@ An earlier implementation by Chloe Hopling is available in
 from .approx import *
 from .bag import *
 from .base import *
+from .base_ssm import *
 from .const import *
 from .export import *
 from .factors import *

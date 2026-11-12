@@ -6,10 +6,10 @@ The quantities of this interface can be computed both by the Sound Shell Model
 They are defined in flat space, without the expansion of the universe,
 so that the spectra can be compared directly with each other.
 The exception is the GW power spectrum $\mathcal{P}_\text{gw}$, which includes the effects of the expansion
-of the universe during the source, see :py:attr:`SpectrumBase.expansion_factor`.
-These are computed in the same way for all the spectra from the source duration :py:attr:`SpectrumBase.delta_tau_v`,
-the equation of state parameter :py:attr:`SpectrumBase.nu_gdh2024` and the ratio of the scale factors
-:py:attr:`SpectrumBase.a_star_a_r_ratio`.
+of the universe during the source, see :py:attr:`BaseSpectrum.expansion_factor`.
+These are computed in the same way for all the spectra from the source duration :py:attr:`BaseSpectrum.delta_tau_v`,
+the equation of state parameter :py:attr:`BaseSpectrum.nu_gdh2024` and the ratio of the scale factors
+:py:attr:`BaseSpectrum.a_star_a_r_ratio`.
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.figure import Figure
 
 
-class SpectrumBase(abc.ABC):
+class BaseSpectrum(abc.ABC):
     r"""Base class for the power spectra that can be compared with each other.
 
     The subclasses have to provide the attributes ``y``, ``r_star``, ``a_star_a_r_ratio``,

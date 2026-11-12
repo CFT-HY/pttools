@@ -29,7 +29,7 @@ import inspect
 import logging
 
 import pttools.type_hints as th
-from pttools.utils.fields import Extractable, Field
+from pttools.utils.fields import Extractable, attribute_name
 
 if th.TYPE_CHECKING_OR_DOCS:
     from sphinx.application import Sphinx
@@ -61,19 +61,6 @@ FIELD_DEFINITION_MODULES: tuple[str, ...] = (
 
 #: Key of an attribute: the module name, the qualified name of the class, and the name of the attribute
 type AttributeKey = tuple[str, str, str]
-
-
-def attribute_name(field: Field) -> str | None:
-    """Name of the attribute from which the value of a field is read directly.
-
-    :param field: the field
-    :return: the attribute name, or None if the value is computed by a function or a method call,
-        or if it's read from an attribute of another object, e.g. ``bubble.v_wall``
-    """
-    if field.call or field.index is not None or callable(field.getter):
-        return None
-    name = field.name if field.getter is None else field.getter
-    return None if "." in name else name
 
 
 def format_description(description: str) -> str:

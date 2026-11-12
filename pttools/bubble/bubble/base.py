@@ -1,26 +1,19 @@
-"""A solution of the hydrodynamic equations."""
+"""Base classes of the solutions of the hydrodynamic equations."""
 
 from __future__ import annotations
 
 import abc
 import functools
-import logging
 import os
 import typing as tp
-import uuid
 
 import numpy as np
 
-from pttools.bubble import const
 from pttools.bubble.export import BASE_BUBBLE_FIELDS
 from pttools.bubble.thermo import va_kinetic_energy_density
-from pttools.speedup import NAN_ARR
 import pttools.type_hints as th
-from pttools.utils.cache import Cacheable
 from pttools.utils.docstrings import copy_docstring_dec
-from pttools.utils.fields import Extractable, Fields, FieldSpec, Preset
-from pttools.utils.json import export_json
-from pttools.utils.validation import ensure_floats
+from pttools.utils.fields import Extractable, Fields
 
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
@@ -30,163 +23,95 @@ if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
 
-logger: logging.Logger = logging.getLogger(__name__)
 
+class BaseBubble(Extractable, abc.ABC):
+    """Common base class of the bubbles and droplets, both computed and imported.
 
-class BaseBubble(Cacheable, Extractable, abc.ABC):
-    """A common base class for bubbles and droplets.
-
-    The bubbles can be cached with :py:meth:`pttools.utils.cache.Cacheable.cached`.
+    This defines the attributes of the solutions and the quantities that are computed from them,
+    so that the plotting and analysis functions can take any bubble.
+    The attributes are set either by the solver of :py:class:`~pttools.bubble.bubble.computed.ComputedBubble`,
+    or from the data of a file by :py:class:`pttools.export.bubble.ImportedBubble`.
     """
 
     #: The exportable fields of the bubble
     FIELDS: tp.ClassVar[Fields] = BASE_BUBBLE_FIELDS
 
-    def __init__(
-            self,
-            model: Model,
-            v_wall: float,
-            w_center: float | None = None,
-            w_outside: float | None = None,
-            wm_guess: float | None = None,
-            t_end: float = const.DEFAULT_T_END,
-            n_xi: int = const.DEFAULT_N_XI,
-            label_latex: str = "UNSET",
-            label_unicode: str = "UNSET"):
-        r"""Set the parameters of the bubble.
+    #: Unique identifier of the bubble, which is used for deduplication when exporting.
+    #: This is preserved when the bubble is pickled, e.g. when sent to another process.
+    id: str
+    #: Equation of state
+    model: Model
 
-        :param model: The equation of state object
-        :param v_wall: Wall velocity $v_\text{wall}$
-        :param w_center: Enthalpy at the center of the bubble $w_\text{center}$, if known
-        :param w_outside: Enthalpy far away from the bubble $w_\text{outside}$, if known
-        :param wm_guess: Initial guess for the enthalpy behind the wall $w_-$
-        :param t_end: The maximum value for the fluid shell ODE integration parameter
-        :param n_xi: Number of points in the fluid velocity profile
-        :param label_latex: LaTeX label for plots
-        :param label_unicode: Unicode label for plots
-        """
-        v_wall, w_center, w_outside, wm_guess = ensure_floats(
-            {"v_wall": v_wall, "w_center": w_center, "w_outside": w_outside, "wm_guess": wm_guess},
-            allow_none=True
-        )
+    # -----
+    # Parameters
+    # -----
+    v_wall: float
+    t_end: float
+    n_xi: int
+    w_center: float
+    #: $w_\text{outside}$ (far away)
+    w_outside: float
+    wm_guess: float | None
 
-        #: Unique identifier of the bubble, which is used for deduplication when exporting.
-        #: This is preserved when the bubble is pickled, e.g. when sent to another process.
-        self.id: str = uuid.uuid4().hex
+    # -----
+    # Profiles
+    # -----
+    v: th.FloatArr1D
+    w: th.FloatArr1D
+    xi: th.FloatArr1D
+    phase: th.FloatArr1D
 
-        # -----
-        # Set parameters
-        # -----
-        #: Equation of state
-        self.model: Model = model
-        self.v_wall: float = v_wall
-        self.t_end: float = t_end
-        self.n_xi: int = n_xi
-        self.w_center: float = np.nan if w_center is None else w_center
-        #: $w_\text{outside}$ (far away)
-        self.w_outside: float = np.nan if w_outside is None else w_outside
-        self.wm_guess: float | None = wm_guess
+    # -----
+    # Values
+    # -----
+    label_latex: str
+    label_unicode: str
+    notes: list[str]
+    solving_duration: float
 
-        # -----
-        # Output arrays
-        # -----
-        self.v: th.FloatArr1D = NAN_ARR
-        self.w: th.FloatArr1D = NAN_ARR
-        self.xi: th.FloatArr1D = NAN_ARR
-        self.phase: th.FloatArr1D = NAN_ARR
+    entropy_flux_p: float
+    r"""Incoming entropy flux at the wall
+    $$\tilde{\gamma}_+ \tilde{v}_+ {s}_+$$
+    """
 
-        # -----
-        # Output values
-        # -----
-        self.label_latex: str = label_latex
-        self.label_unicode: str = label_unicode
-        self.notes: list[str] = []
-        self.solving_duration: float = np.nan
+    entropy_flux_m: float
+    r"""Outgoing entropy flux at the wall
+    $$\tilde{\gamma}_- \tilde{v}_- {s}_- $$
+    """
 
-        self.entropy_flux_p: float = np.nan
-        r"""Incoming entropy flux at the wall
-        $$\tilde{\gamma}_+ \tilde{v}_+ {s}_+$$
-        """
+    entropy_flux_diff: float
+    r"""Entropy flux difference at the wall
+    $$\tilde{\gamma}_- \tilde{v}_- {s}_- - \tilde{\gamma}_+ \tilde{v}_+ {s}_+ $$
+    """
 
-        self.entropy_flux_m: float = np.nan
-        r"""Outgoing entropy flux at the wall
-        $$\tilde{\gamma}_- \tilde{v}_- {s}_- $$
-        """
+    sp: float
+    sm: float
+    Tp: float
+    Tm: float
+    T_center: float
+    vp: float
+    vp_tilde: float
+    vm: float
+    vm_tilde: float
+    wp: float
+    wm: float
 
-        self.entropy_flux_diff: float = np.nan
-        r"""Entropy flux difference at the wall
-        $$\tilde{\gamma}_- \tilde{v}_- {s}_- - \tilde{\gamma}_+ \tilde{v}_+ {s}_+ $$
-        """
-
-        self.sp: float = np.nan
-        self.sm: float = np.nan
-        self.Tp: float = np.nan
-        self.Tm: float = np.nan
-        self.T_center: float = np.nan
-        self.vp: float = np.nan
-        self.vp_tilde: float = np.nan
-        self.vm: float = np.nan
-        self.vm_tilde: float = np.nan
-        self.wp: float = np.nan
-        self.wm: float = np.nan
-
-        # Flags
-        self.failed: bool = False
-        #: Whether the solver provided a solution (not necessarily a valid one)
-        self.solved: bool = False
-        #: Whether the solving has been attempted
-        self.solving_attempted: bool = False
-        # Specific errors
-        # These are documented by the descriptions of their fields in pttools.bubble.export.
-        self.invalid_junction: bool = False
-        self.negative_entropy_flux: bool = False
-        self.negative_net_entropy_change: bool = False
-        self.numerical_error: bool = False
-        self.solver_crashed: bool = False
-        self.solver_failed: bool = False
-
-    def add_note(self, note: str) -> None:
-        """Add a note to the solution."""
-        self.notes.append(note)
-
-    def export(
-            self,
-            path: str | os.PathLike[str] | None = None,
-            fields: FieldSpec = Preset.FULL,
-            model_fields: FieldSpec = Preset.FULL) -> dict[str, tp.Any]:
-        """Export the bubble data to a dictionary, and optionally save it as a JSON file.
-
-        :param path: path of the JSON file
-        :param fields: the fields of the bubble to export, see :py:data:`pttools.utils.fields.FieldSpec`
-        :param model_fields: the fields of the model to export
-        :return: the exported data, where the model data is under the key ``"model"``
-        """
-        data = {
-            # extract() is used instead of export(), since user-created model classes may override export().
-            "model": self.model.extract(model_fields),
-            **self.extract(fields)
-        }
-        if path is not None:
-            export_json(data, path)
-        return data
-
-    @abc.abstractmethod
-    def solve(self) -> None:
-        """Solve the fluid velocity profile of the bubble.
-
-        Subclasses should call this with ``super().solve()`` before solving.
-        This base implementation marks the solving as attempted,
-        and warns and adds a note if the bubble has already been solved,
-        as the cached quantities will not be updated.
-        """
-        if self.solving_attempted:
-            msg = (
-                "Re-solving a bubble! "
-                "Already computed quantities will not be updated due to caching."
-            )
-            logger.warning(msg)
-            self.add_note(msg)
-        self.solving_attempted = True
+    # -----
+    # Flags
+    # -----
+    failed: bool
+    #: Whether the solver provided a solution (not necessarily a valid one)
+    solved: bool
+    #: Whether the solving has been attempted
+    solving_attempted: bool
+    # Specific errors
+    # These are documented by the descriptions of their fields in pttools.bubble.export.
+    invalid_junction: bool
+    negative_entropy_flux: bool
+    negative_net_entropy_change: bool
+    numerical_error: bool
+    solver_crashed: bool
+    solver_failed: bool
 
     # =====
     # Plotting

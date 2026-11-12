@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import dataclasses
-import functools
 import os
 import typing as tp
 
@@ -11,11 +10,9 @@ import numpy as np
 from numpy.typing import NDArray
 
 from pttools.omgw0 import const, freq
-from pttools.omgw0.base import Omgw0Base
+from pttools.omgw0.base_ssm import BaseSSMOmgw0
 from pttools.omgw0.compute import OmGw0Input, OmGw0Results, SNRSettings, compute, compute_gw
 from pttools.omgw0.const import LISA_OBS_TIME
-from pttools.omgw0.export import SPECTRUM_FIELDS, SPECTRUM_FIELDS_F, SPECTRUM_FIELDS_Y
-from pttools.omgw0.factors import H
 from pttools.ssm.const import (
     DEFAULT_A_STAR_A_R_RATIO,
     DEFAULT_EPS_LOOKUP,
@@ -35,13 +32,11 @@ from pttools.ssm.ssm import DEFAULT_LAMBDA_CORRECTION, LambdaCorrection
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 import pttools.type_hints as th
 from pttools.type_hints import FloatArr1D
-from pttools.utils.decorators import cached_property
 
 if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.figure import Figure
 
     from pttools.bubble import Bubble
-    from pttools.utils.fields import Fields
 
 
 #: Default density of the $z$ arrays of :py:meth:`Spectrum.z_covering` relative to the density of the frequencies.
@@ -62,18 +57,8 @@ Z_COVERING_DENSITY: float = 4
 Z_COVERING_MARGIN: float = 0.5
 
 
-class Spectrum(Omgw0Base, SSMSpectrum):
+class Spectrum(BaseSSMOmgw0, SSMSpectrum):
     r"""A spectrum object that includes the conversion to the GW power spectrum today $\Omega_{\text{gw},0}$."""
-
-    FIELDS: tp.ClassVar[Fields] = SPECTRUM_FIELDS
-    #: The exportable fields of the spectra that have been given the $y$ array.
-    #: For these, $y$ is shared by the spectra of a file.
-    #: This is an alias of :py:attr:`FIELDS` for consistency with :py:attr:`FIELDS_F`.
-    #: Subclasses that change :py:attr:`FIELDS` should also change this and :py:attr:`FIELDS_F`.
-    FIELDS_Y: tp.ClassVar[Fields] = SPECTRUM_FIELDS_Y
-    #: The exportable fields of the spectra that have been given the frequencies $f$ instead of $y$.
-    #: For these, $f$ is shared by the spectra of a file instead of $y$.
-    FIELDS_F: tp.ClassVar[Fields] = SPECTRUM_FIELDS_F
 
     def __init__(
             self,
@@ -194,7 +179,6 @@ class Spectrum(Omgw0Base, SSMSpectrum):
             else bubble.gs_star if bubble_temp_physical \
             else const.DEFAULT_G_STAR
 
-        # The frequencies given as an argument are returned by f() as is, instead of converting them back from y.
         self._f_given: th.FloatArr1D | None = f
         if f is not None:
             self.y: th.FloatArr1D = self.z_from_f(f)
@@ -208,38 +192,6 @@ class Spectrum(Omgw0Base, SSMSpectrum):
 
         if compute:
             self.compute(parallel=parallel)
-
-    # =====
-    # Properties
-    # =====
-
-    @property
-    def f_given(self) -> bool:
-        """Whether the frequencies $f$ were given as an argument instead of the $y$ array."""
-        return self._f_given is not None
-
-    @cached_property
-    @tp.override
-    def _f_y(self) -> th.FloatArr1D:
-        # The frequencies given as an argument are returned as is, instead of converting them back from y.
-        if self._f_given is not None:
-            return self._f_given
-        return self.f(self.y)
-
-    @cached_property
-    @tp.override
-    def H_star(self) -> float:
-        return float(H(self.e_star))
-
-    @cached_property
-    @tp.override
-    def R_star(self) -> float:
-        return self.r_star / self.H_star
-
-    @functools.cached_property
-    def R_star_m(self) -> th.FloatOrArr:
-        r"""Mean bubble separation $R_*$, in meters, presuming that $T$ is in GeV."""
-        return self.R_star * const.GEV_IN_J * const.PLANCK_LENGTH
 
     # =====
     # Methods
@@ -417,7 +369,7 @@ class Spectrum(Omgw0Base, SSMSpectrum):
             noise_gb: bool = True,
             noise_ins: bool = True,
         ) -> tuple[float, FloatArr1D, FloatArr1D, FloatArr1D, FloatArr1D]:
-        """Signal-to-noise ratio for LISA, see :py:meth:`pttools.omgw0.base.Omgw0Base.snr`.
+        """Signal-to-noise ratio for LISA, see :py:meth:`pttools.omgw0.base.BaseOmgw0.snr`.
 
         If the signal-to-noise ratio was computed together with the spectrum with the same settings
         (see :py:meth:`compute`), the precomputed result is returned.
