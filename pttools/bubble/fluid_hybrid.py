@@ -13,7 +13,7 @@ import typing as tp
 import numpy as np
 from scipy.optimize import fsolve
 
-from pttools.bubble import integrate, relativity
+from pttools.bubble import integrate, relativity, trim
 from pttools.bubble.const import DEFAULT_N_XI, DEFAULT_SOLVER_RTOL, DEFAULT_T_END, THIN_SHELL_T_POINTS_MIN
 from pttools.bubble.fluid_sub_def import sound_shell_deflagration_common
 from pttools.bubble.junction import v_plus_hybrid
@@ -307,7 +307,7 @@ def sound_shell_solver_hybrid(
             logger.error(msg)
 
     vm = relativity.lorentz(v_wall, np.sqrt(model.cs2(wm, Phase.BROKEN)))
-    v_tail, w_tail, xi_tail, _t_tail = integrate.fluid_integrate_param(
+    v_tail, w_tail, xi_tail, t_tail = integrate.fluid_integrate_param(
         vm, wm, v_wall,
         phase=Phase.BROKEN,
         t_end=-t_end,
@@ -315,6 +315,11 @@ def sound_shell_solver_hybrid(
         df_dtau_ptr=model.df_dtau_ptr(),
         method=integrate.DEFAULT_FLUID_INTEGRATE_METHOD
     )
+    # The integration approaches the fixed point at the sound speed asymptotically,
+    # and the points near it are only numerical fluctuations around it, which would make xi non-monotonic.
+    # The point at the wall is kept, as it's the value on the inside of the wall.
+    v_tail, w_tail, xi_tail, t_tail = trim.trim_fluid_wall_to_cs(
+        v_tail, w_tail, xi_tail, t_tail, v_wall, SolutionType.HYBRID, cs2_ptr=model.cs2_ptr(), keep_wall=True)
     v = np.concatenate((np.flip(v_tail), v))
     w = np.concatenate((np.flip(w_tail), w))
     xi = np.concatenate((np.flip(xi_tail), xi))

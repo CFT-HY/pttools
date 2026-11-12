@@ -109,6 +109,7 @@ class BaseBubble(Extractable, abc.ABC):
     invalid_junction: bool
     negative_entropy_flux: bool
     negative_net_entropy_change: bool
+    non_monotonic_xi: bool
     numerical_error: bool
     solver_crashed: bool
     solver_failed: bool

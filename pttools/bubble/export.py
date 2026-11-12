@@ -111,6 +111,7 @@ BASE_BUBBLE_FIELDS: Fields = Fields(
     _flag("negative_entropy_flux", "whether there is a negative entropy flux across a junction"),
     _flag("negative_net_entropy_change", "whether there is a negative net entropy change in the system"),
     _flag("numerical_error", r"whether there is a numerical error, e.g. $\kappa + \omega \neq 1$"),
+    _flag("non_monotonic_xi", r"whether $\xi$ is not monotonic"),
 )
 
 #: Fields of :py:class:`pttools.bubble.bubble.nucleated.BaseNucleatedBubble`

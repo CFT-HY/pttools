@@ -313,6 +313,7 @@ class Bubble(ComputedBubble, BaseNucleatedBubble):
         self.failed = any([
             self.solver_crashed,
             self.solver_failed,
+            self.validate_xi_monotonic(),
             self.validate_junction(),
             self.validate_alpha_plus(),
             self.validate_entropy_flux(),

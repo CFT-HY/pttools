@@ -52,6 +52,21 @@ class BubbleTest(unittest.TestCase):
         nan.v = np.full_like(nan.v, np.nan)
         assert not nan.has_profile
 
+    def test_validate_xi_monotonic(self) -> None:
+        """A non-monotonic xi should be stored as a failure and reported, and a monotonic one should not."""
+        bubble = Bubble(self.model, v_wall=0.5, alpha_n=0.1)
+        assert not bubble.validate_xi_monotonic()
+        assert not bubble.non_monotonic_xi
+        bubble.xi = bubble.xi.copy()
+        i = bubble.xi.size // 2
+        bubble.xi[i] = bubble.xi[i - 1] - 1e-3
+        n_notes = len(bubble.notes)
+        with self.assertLogs("pttools.bubble.bubble.computed", level="ERROR") as logs:
+            assert bubble.validate_xi_monotonic()
+        assert "xi is not monotonic: it decreases at 1 points" in logs.output[0]
+        assert len(bubble.notes) == n_notes + 1
+        assert bubble.non_monotonic_xi
+
     def test_vp_vm_tilde_ratio_giese(self) -> None:
         r"""Test that the ratio $\tilde{v}_+ / \tilde{v}_-$ of the Giese et al. method is positive."""
         assert self.bubble.vp_vm_tilde_ratio_giese > 0

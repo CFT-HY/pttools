@@ -24,13 +24,17 @@ def trim_fluid_wall_to_cs(
         v_wall: th.FloatOrArr,
         sol_type: SolutionType,
         cs2_ptr: th.CS2FunScalarPtr,
-        dxi_lim: float = const.DXI_SMALL) \
+        dxi_lim: float = const.DXI_SMALL,
+        keep_wall: bool = False) \
         -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
     Picks out fluid variable arrays $(v, w, \xi, t)$ which are definitely behind the wall for detonation and hybrid.
 
     Also removes negative fluid speeds and $\xi \leq c_s$, which might be left by
     an inaccurate integration.
+    The integration approaches the fixed point $(\xi, v) = (c_s, 0)$ asymptotically,
+    and the points near it fluctuate around it due to the numerical inaccuracies,
+    so that $\xi$ would not be monotonic. Therefore, the profile is cut at the first such point.
     If the wall is within about 1e-16 of cs, rounding errors are flagged.
 
     :param v: $v$
@@ -44,6 +48,8 @@ def trim_fluid_wall_to_cs(
         and a default value would therefore be baked into the Numba cache key.
         See the "Numba caching" section of the developer documentation.
     :param dxi_lim: not used
+    :param keep_wall: whether to keep the point at the wall also for the other solution types than detonations,
+        e.g. for a hybrid whose profile has a point at $\xi = v_{\text{wall}}$ on both sides of the wall
     :return: trimmed $v, w, \xi, t$
     """
     droplet = sol_type == SolutionType.DROPLET.value
@@ -77,7 +83,7 @@ def trim_fluid_wall_to_cs(
     else:
         n_stop = n_stop_index
 
-    if (xi[0] == v_wall) and sol_type != SolutionType.DETON.value:
+    if (xi[0] == v_wall) and sol_type != SolutionType.DETON.value and not keep_wall:
         n_start = 1
         n_stop += 1
 

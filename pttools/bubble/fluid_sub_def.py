@@ -280,6 +280,15 @@ def sound_shell_deflagration_common(
     v = v[:i_shock]
     w = w[:i_shock]
     xi = xi[:i_shock]
+    # For very weak shocks, the shock is close to the fixed point at the sound speed, which the integration
+    # approaches asymptotically. The points near it are only numerical fluctuations around it,
+    # which would make xi non-monotonic. Therefore, the profile is cut at the first of them.
+    decreasing = np.flatnonzero(np.diff(xi) < 0)
+    if decreasing.size:
+        n_monotonic = decreasing[0] + 1
+        v = v[:n_monotonic]
+        w = w[:n_monotonic]
+        xi = xi[:n_monotonic]
 
     xi_sh = xi[-1]
     vm_sh = v[-1]

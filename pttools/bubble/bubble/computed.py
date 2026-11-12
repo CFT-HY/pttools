@@ -113,6 +113,7 @@ class ComputedBubble(Cacheable, BaseBubble, abc.ABC):
         self.invalid_junction: bool = False
         self.negative_entropy_flux: bool = False
         self.negative_net_entropy_change: bool = False
+        self.non_monotonic_xi: bool = False
         self.numerical_error: bool = False
         self.solver_crashed: bool = False
         self.solver_failed: bool = False
@@ -159,3 +160,33 @@ class ComputedBubble(Cacheable, BaseBubble, abc.ABC):
             logger.warning(msg)
             self.add_note(msg)
         self.solving_attempted = True
+
+    # =====
+    # Validation
+    # =====
+
+    def validate_xi_monotonic(self) -> bool:
+        r"""Validate that the self-similar coordinates $\xi$ of the profiles are monotonically non-decreasing.
+
+        The points at the discontinuities, e.g. at the wall, may have the same $\xi$,
+        but $\xi$ should not decrease.
+        As $\xi$ is the self-similar radius, there should be only one $(v, w)$ for each $\xi$,
+        and otherwise e.g. the integrals over $\xi$ may be wrong.
+        If $\xi$ is not monotonic, :py:attr:`non_monotonic_xi` is set, an error is logged
+        and a note is added to the bubble.
+
+        :return: whether the validation failed, i.e. whether $\xi$ decreases somewhere
+        """
+        diff = np.diff(self.xi)
+        decreasing = np.flatnonzero(diff < 0)
+        fail = bool(decreasing.size)
+        self.non_monotonic_xi = fail
+        if fail:
+            msg = (
+                f"xi is not monotonic: it decreases at {decreasing.size} points, by at most {-diff.min():.3e}, "
+                f"within xi = {self.xi[decreasing[0]]:.6f} - {self.xi[decreasing[-1] + 1]:.6f}, "
+                f"for {self.label_unicode}"
+            )
+            logger.error(msg)
+            self.add_note(msg)
+        return fail
