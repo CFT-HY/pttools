@@ -26,6 +26,8 @@ This keeps the smallest $\alpha_n$ of the grid away from the limit of the model,
 where the bubbles would be marked as failed due to negative entropy fluxes.
 
 The spectra are computed for the fixed frequencies :py:data:`~examples.dataset.save.F`.
+The spectra of each bubble and nucleation type are created from a single spectrum,
+unless the ``--separate-spectra`` option is given, see :py:func:`pttools.analysis.dataset.compute_spectra`.
 For the details of the computation, e.g. the handling of the bubbles that cannot be solved correctly,
 see :py:mod:`pttools.analysis.dataset`.
 
@@ -116,7 +118,8 @@ def main(
         dry_run: bool = False,
         max_workers: int = MAX_WORKERS_DEFAULT,
         progress_interval: float = DEFAULT_PROGRESS_INTERVAL,
-        accuracy: SSMSettings = ACCURACY) -> Path:
+        accuracy: SSMSettings = ACCURACY,
+        share_spectra: bool = True) -> Path:
     """Compute the dataset and export it to an HDF5 file.
 
     :param n_points: number of points per parameter range, see :py:data:`SIZES`
@@ -126,6 +129,8 @@ def main(
     :param max_workers: number of workers
     :param progress_interval: interval of the progress messages in seconds
     :param accuracy: accuracy settings
+    :param share_spectra: whether to create the spectra of each bubble from shared spectra,
+        see :py:func:`pttools.analysis.dataset.compute_spectra`
     :return: path of the file
     """
     return compute_dataset(
@@ -138,6 +143,7 @@ def main(
         dry_run=dry_run,
         max_workers=max_workers,
         progress_interval=progress_interval,
+        share_spectra=share_spectra,
     )
 
 
@@ -156,6 +162,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--progress-interval", type=float, default=DEFAULT_PROGRESS_INTERVAL,
         help="interval of the progress messages in seconds")
+    parser.add_argument(
+        "--separate-spectra", action="store_true",
+        help="compute each spectrum separately instead of creating them from shared spectra (much slower)")
     return parser.parse_args()
 
 
@@ -169,4 +178,5 @@ if __name__ == "__main__" and not is_sphinx_gallery():
         dry_run=_args.dry_run,
         max_workers=_args.workers,
         progress_interval=_args.progress_interval,
+        share_spectra=not _args.separate_spectra,
     )

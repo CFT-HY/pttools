@@ -144,6 +144,8 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
         self.a_star_a_r_ratio: float = a_star_a_r_ratio
         self.N_sh: float = N_sh
         self.nuc_type: NucType = nuc_type
+        #: Whether $\tilde{\beta}$ is allowed as an input parameter for simultaneous nucleation
+        self.allow_beta_tilde_for_simultaneous: bool = allow_beta_tilde_for_simultaneous
         self.r_star: float = self.validate_nucleation(
             bubble=bubble, nuc_type=nuc_type, r_star=r_star, beta_tilde=beta_tilde,
             allow_beta_tilde_for_simultaneous=allow_beta_tilde_for_simultaneous
@@ -469,6 +471,7 @@ class SSMSpectrum(Cacheable, Extractable, SpectrumBase):
             "z_st_thresh": self.z_st_thresh,
             "low_k": self.low_k,
             "low_k_cs_friction": self.low_k_cs_friction,
+            "allow_beta_tilde_for_simultaneous": self.allow_beta_tilde_for_simultaneous,
         }
 
     def _with_params(self, params: dict[str, tp.Any]) -> tp.Self:

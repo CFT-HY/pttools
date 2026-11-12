@@ -33,6 +33,7 @@ from pttools.export import (
 from pttools.models import BagModel, ConstCSModel
 from pttools.omgw0 import Spectrum
 from pttools.ssm import SSMSpectrum
+from pttools.ssm.nucleation import NucType
 from pttools.type_hints import FloatArr1D
 from pttools.utils.checksum import ChecksumError, checksum_path, verify_checksum
 from tests.export.test_fields import SPECTRUM_MINIMAL_PARAMS
@@ -209,6 +210,21 @@ class ExportTest(unittest.TestCase):
             assert loaded.T_star == orig.T_star
             np.testing.assert_array_equal(loaded.y, orig.y)
             np.testing.assert_allclose(loaded.omgw0_h2(), orig.omgw0_h2(), rtol=1e-12)
+
+    def test_load_simultaneous_beta_tilde(self) -> None:
+        """Test that a spectrum with simultaneous nucleation that was given beta_tilde can be loaded back."""
+        spectrum = Spectrum.cached(
+            self.bubbles[1], beta_tilde=100, nuc_type=NucType.SIMULTANEOUS, allow_beta_tilde_for_simultaneous=True,
+            **F_SPECTRUM_KWARGS)
+        path = new_path("simultaneous")
+        with Exporter(path) as exporter:
+            exporter.add(spectrum)
+        with Importer(path) as importer:
+            loaded = importer.load_spectrum(0, table=Table.SPECTRA_F)
+        assert isinstance(loaded, Spectrum)
+        assert loaded.nuc_type == NucType.SIMULTANEOUS
+        assert loaded.beta_tilde == 100
+        np.testing.assert_allclose(loaded.omgw0_h2(), spectrum.omgw0_h2(), rtol=1e-12)
 
     def test_f_record(self) -> None:
         """Test that the extracted records are assigned to the correct spectrum tables."""

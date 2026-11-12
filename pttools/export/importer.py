@@ -560,6 +560,9 @@ class Importer:
         # r_star is computed from beta_tilde, and giving both would be an error.
         if init.get("beta_tilde") is not None:
             init["r_star"] = None
+            # A spectrum with simultaneous nucleation could have been exported with beta_tilde only if it was allowed.
+            if issubclass(cls, SSMSpectrum):
+                kwargs.setdefault("allow_beta_tilde_for_simultaneous", True)
         return cls(bubble, **init, compute=compute, **kwargs)
 
     def load_bubbles(self, rows: Rows = None, solve: bool = True, **kwargs: tp.Any) -> list[Bubble]:

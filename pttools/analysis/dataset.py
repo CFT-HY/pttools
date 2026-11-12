@@ -20,6 +20,10 @@ These are kept in the file with their error flags, such as ``failed`` and ``solv
 so that they can be filtered out by the user of the dataset.
 The spectra are computed for all the bubbles that have a fluid profile
 (see :py:attr:`~pttools.bubble.bubble.base.BaseBubble.has_profile`), including the failed ones.
+
+By default, the spectra of each bubble and nucleation type are created from a single spectrum,
+which is computed for a $z$ array that covers the frequencies for all their parameter values,
+see :py:func:`compute_spectra`.
 """
 
 from collections.abc import Callable
@@ -52,8 +56,10 @@ __all__ = [
     "Progress",
     "TaskResult",
     "compute_dataset",
+    "compute_spectra",
     "compute_task",
     "create_bubble",
+    "create_shared_spectrum",
     "create_spectrum",
     "estimate_dataset",
     "warm_up",
@@ -154,7 +160,8 @@ def compute_dataset(
         overwrite: bool = False,
         dry_run: bool = False,
         max_workers: int = MAX_WORKERS_DEFAULT,
-        progress_interval: float = DEFAULT_PROGRESS_INTERVAL) -> Path:
+        progress_interval: float = DEFAULT_PROGRESS_INTERVAL,
+        share_spectra: bool = True) -> Path:
     """Compute a dataset of spectra on a parameter grid and export it to an HDF5 file.
 
     The size of the dataset and the computation time are first estimated with :py:func:`estimate_dataset`.
@@ -170,22 +177,24 @@ def compute_dataset(
     :param dry_run: only log the size estimate without computing the dataset
     :param max_workers: number of workers
     :param progress_interval: interval of the progress messages in seconds
+    :param share_spectra: whether to create the spectra of each bubble from shared spectra,
+        see :py:func:`compute_spectra`
     :return: path of the file
     :raises TypeError: if the pool of :py:func:`~pttools.speedup.parallel.get_pool` is a single-thread executor
     """
     path = Path(path)
     extractor = Extractor()
-    estimate, spectrum_time = estimate_dataset(grid, model_factory, f, accuracy, extractor)
+    estimate, bubble_time = estimate_dataset(grid, model_factory, f, accuracy, extractor, share_spectra)
     n_rows = grid.n_rows()
     logger.info(
         "The dataset will have %d models, %d bubbles and %d spectra (%d per bubble) with %d frequencies each. "
         "Estimated uncompressed size: %s (models: %s, bubbles: %s, spectra: %s). "
         "The compression may reduce the size of the file. "
-        "Rough estimate of the computation time with %d workers: %s (%.2f s per spectrum)",
+        "Rough estimate of the computation time with %d workers: %s (%.2f s per bubble and its spectra)",
         grid.n_models, grid.n_bubbles, grid.n_spectra, grid.n_spectra_per_bubble, f.size,
         format_size(estimate.total(n_rows)),
         *(format_size(estimate.total({table: n_rows[table]})) for table in n_rows),
-        max_workers, format_duration(spectrum_time * grid.n_spectra / max_workers), spectrum_time
+        max_workers, format_duration(bubble_time * grid.n_bubbles / max_workers), bubble_time
     )
     if dry_run:
         return path
@@ -203,7 +212,7 @@ def compute_dataset(
         # The tasks are ordered by model, so that with processes, each worker process needs the compiled functions
         # of only a few models at a time.
         pending: set[cf.Future[TaskResult]] = {
-            pool.submit(compute_task, model, alpha_n, v_wall, spectrum_params, f, accuracy, extractor)
+            pool.submit(compute_task, model, alpha_n, v_wall, spectrum_params, f, accuracy, extractor, share_spectra)
             for model in models
             for alpha_n, v_wall in grid.bubble_params()
         }
@@ -221,6 +230,60 @@ def compute_dataset(
     return path
 
 
+def compute_spectra(
+        bubble: Bubble,
+        spectrum_params: list[SpectrumParams],
+        f: th.FloatArr1D,
+        accuracy: SSMSettings,
+        share_spectra: bool = True) -> tuple[list[Spectrum], int]:
+    r"""Compute the spectra of a bubble on a single CPU core.
+
+    With ``share_spectra``, a shared spectrum is computed for each nucleation type
+    with :py:func:`create_shared_spectrum`, and the spectra are created from it with
+    :py:meth:`pttools.omgw0.spectrum.Spectrum.with_params`, which reuses its computationally heavy part
+    and interpolates it to the frequencies.
+    This is much faster than computing the spectra separately,
+    but the results differ from those of separately computed spectra by the interpolation error,
+    see :py:data:`pttools.omgw0.spectrum.Z_COVERING_DENSITY`.
+    The nucleation type cannot be changed with :py:meth:`~pttools.omgw0.spectrum.Spectrum.with_params`,
+    as it affects the computationally heavy part.
+    If the shared spectrum cannot be computed, the spectra of its nucleation type are computed separately.
+    Without ``share_spectra``, all the spectra are computed separately with :py:func:`create_spectrum`.
+    The spectra that cannot be computed are logged and skipped.
+
+    :param bubble: the bubble
+    :param spectrum_params: the parameters of the spectra
+    :param f: $f$, frequencies of the spectra in Hz
+    :param accuracy: accuracy settings
+    :param share_spectra: whether to create the spectra from shared spectra
+    :return: the spectra in the order of ``spectrum_params`` without the skipped ones,
+        and the number of the skipped spectra
+    """
+    by_nuc_type: dict[NucType, list[SpectrumParams]] = {}
+    for params in spectrum_params:
+        by_nuc_type.setdefault(params.nuc_type, []).append(params)
+    computed: dict[SpectrumParams, Spectrum] = {}
+    n_skipped = 0
+    for nuc_type, params_list in by_nuc_type.items():
+        shared: Spectrum | None = None
+        if share_spectra:
+            try:
+                shared = create_shared_spectrum(bubble, params_list, f, accuracy)
+            except (ValueError, RuntimeError, IndexError, ZeroDivisionError):
+                logger.exception(
+                    "Could not compute the shared %s spectrum of %s. Computing the spectra separately.",
+                    nuc_type, bubble.label_unicode)
+        for params in params_list:
+            try:
+                computed[params] = create_spectrum(bubble, params, f, accuracy) if shared is None \
+                    else shared.with_params(
+                        beta_tilde=params.beta_tilde, T_star=params.T_star, g_star=params.g_star, f=f)
+            except (ValueError, RuntimeError, IndexError, ZeroDivisionError):
+                logger.exception("Could not compute the spectrum of %s with %s", bubble.label_unicode, params)
+                n_skipped += 1
+    return [computed[params] for params in spectrum_params if params in computed], n_skipped
+
+
 def compute_task(
         model: Model,
         alpha_n: float,
@@ -228,7 +291,8 @@ def compute_task(
         spectrum_params: list[SpectrumParams],
         f: th.FloatArr1D,
         accuracy: SSMSettings,
-        extractor: Extractor) -> TaskResult:
+        extractor: Extractor,
+        share_spectra: bool = True) -> TaskResult:
     r"""Compute a bubble and its spectra, and extract their records.
 
     The records are sent to the main process instead of the objects,
@@ -241,6 +305,7 @@ def compute_task(
     :param f: $f$, frequencies of the spectra in Hz
     :param accuracy: accuracy settings
     :param extractor: the extractor of the records
+    :param share_spectra: whether to create the spectra from shared spectra, see :py:func:`compute_spectra`
     :return: the records of the bubble and its spectra
     """
     try:
@@ -254,17 +319,9 @@ def compute_task(
         logger.error("Skipping the spectra of the bubble without a fluid profile: %s", bubble.label_unicode)
         return TaskResult(bubble=bubble_record, spectra=[], n_skipped=len(spectrum_params))
 
-    spectra: list[Record] = []
-    n_skipped = 0
-    for params in spectrum_params:
-        try:
-            spectrum = create_spectrum(bubble, params, f, accuracy)
-        except (ValueError, RuntimeError, IndexError, ZeroDivisionError):
-            logger.exception("Could not compute the spectrum of %s with %s", bubble.label_unicode, params)
-            n_skipped += 1
-            continue
-        spectra.append(extractor.extract(spectrum))
-    return TaskResult(bubble=bubble_record, spectra=spectra, n_skipped=n_skipped)
+    spectra, n_skipped = compute_spectra(bubble, spectrum_params, f, accuracy, share_spectra)
+    return TaskResult(
+        bubble=bubble_record, spectra=[extractor.extract(spectrum) for spectrum in spectra], n_skipped=n_skipped)
 
 
 def create_bubble(model: Model, alpha_n: float, v_wall: float, accuracy: SSMSettings) -> Bubble:
@@ -277,6 +334,40 @@ def create_bubble(model: Model, alpha_n: float, v_wall: float, accuracy: SSMSett
     :return: the bubble
     """
     return Bubble(model, v_wall=v_wall, alpha_n=alpha_n, n_xi=accuracy.n_xi, log_success=False)
+
+
+def create_shared_spectrum(
+        bubble: Bubble,
+        spectrum_params: list[SpectrumParams],
+        f: th.FloatArr1D,
+        accuracy: SSMSettings) -> Spectrum:
+    """Create and compute a spectrum from which the spectra of the given parameters can be created.
+
+    The spectrum is computed with :py:meth:`pttools.omgw0.spectrum.Spectrum.covering`
+    on a single CPU core, as the parallelism is provided by the workers.
+
+    :param bubble: the bubble
+    :param spectrum_params: the parameters of the spectra, which must have the same nucleation type
+    :param f: $f$, frequencies of the spectra in Hz
+    :param accuracy: accuracy settings for the frequencies, see :py:meth:`pttools.omgw0.spectrum.Spectrum.covering`
+    :return: the spectrum
+    :raises ValueError: if the parameters have different nucleation types
+    """
+    nuc_types = {params.nuc_type for params in spectrum_params}
+    if len(nuc_types) != 1:
+        raise ValueError(f"The spectra must have the same nucleation type. Got: {nuc_types}")
+    return Spectrum.covering(
+        bubble,
+        f,
+        T_star=np.unique([params.T_star for params in spectrum_params]),
+        g_star=np.unique([params.g_star for params in spectrum_params]),
+        beta_tilde=np.unique([params.beta_tilde for params in spectrum_params]),
+        settings=accuracy,
+        nuc_type=nuc_types.pop(),
+        # The datasets may cover both nucleation types with the same beta_tilde values.
+        allow_beta_tilde_for_simultaneous=True,
+        parallel=False
+    )
 
 
 def create_spectrum(bubble: Bubble, params: SpectrumParams, f: th.FloatArr1D, accuracy: SSMSettings) -> Spectrum:
@@ -307,10 +398,12 @@ def estimate_dataset(
         model_factory: Callable[..., Model],
         f: th.FloatArr1D,
         accuracy: SSMSettings,
-        extractor: Extractor) -> tuple[SizeEstimate, float]:
-    r"""Estimate the size of the dataset and the computation time of a spectrum.
+        extractor: Extractor,
+        share_spectra: bool = True) -> tuple[SizeEstimate, float]:
+    r"""Estimate the size of the dataset and the computation time of a bubble and its spectra.
 
     A bubble and a spectrum are computed at the center of the grid.
+    With ``share_spectra``, a shared spectrum is also computed, see :py:func:`compute_spectra`.
     The number of points of the fluid profiles varies by bubble,
     and therefore the profiles are presumed to have $n_\xi$ points each, which overestimates most of them.
     For large datasets, the size is dominated by the spectra, whose size is the same for all of them.
@@ -321,18 +414,30 @@ def estimate_dataset(
     :param f: $f$, frequencies of the spectra in Hz
     :param accuracy: accuracy settings
     :param extractor: the extractor of the records
-    :return: the size estimate and the computation time of a spectrum on a single CPU core in seconds
+    :param share_spectra: whether the spectra are created from shared spectra
+    :return: the size estimate and the computation time of a bubble and its spectra on a single CPU core in seconds
     """
     model = model_factory(**{name: float(np.median(values)) for name, values in grid.model_axes.items()})
     warm_up(model, f)
     bubble = create_bubble(model, float(np.median(grid.alpha_ns)), float(np.median(grid.v_walls)), accuracy)
+    spectrum_params = grid.spectrum_params()
+    params = spectrum_params[0]
     start_time = time.perf_counter()
-    spectrum = create_spectrum(bubble, grid.spectrum_params()[0], f, accuracy)
-    spectrum_time = time.perf_counter() - start_time
+    if share_spectra:
+        shared = create_shared_spectrum(
+            bubble, [p for p in spectrum_params if p.nuc_type == params.nuc_type], f, accuracy)
+        shared_time = time.perf_counter() - start_time
+        start_time = time.perf_counter()
+        spectrum = shared.with_params(beta_tilde=params.beta_tilde, T_star=params.T_star, g_star=params.g_star, f=f)
+        bubble_time = len(grid.nuc_types) * shared_time \
+            + grid.n_spectra_per_bubble * (time.perf_counter() - start_time)
+    else:
+        spectrum = create_spectrum(bubble, params, f, accuracy)
+        bubble_time = grid.n_spectra_per_bubble * (time.perf_counter() - start_time)
     estimate = estimate_size(spectrum, extractor)
     n_profiles = sum(field.shape == FieldShape.RAGGED for field in extractor.fields(Bubble, Table.BUBBLES))
     estimate.row_bytes[Table.BUBBLES] += 8 * n_profiles * (accuracy.n_xi - bubble.xi.size)
-    return estimate, spectrum_time
+    return estimate, bubble_time
 
 
 def warm_up(model: Model, f: th.FloatArr1D, accuracy: SSMSettings = WARM_UP_ACCURACY) -> None:
@@ -340,6 +445,7 @@ def warm_up(model: Model, f: th.FloatArr1D, accuracy: SSMSettings = WARM_UP_ACCU
 
     This way the computation times measured later do not include the compilation.
     A deflagration, a hybrid and a detonation are computed, as they use partially different functions.
+    Their spectra are computed both separately and from a shared spectrum, see :py:func:`compute_spectra`.
     The models are identified by their :py:attr:`~pttools.models.base.BaseModel.id`,
     so that each model is warmed up only once per process.
 
@@ -351,6 +457,10 @@ def warm_up(model: Model, f: th.FloatArr1D, accuracy: SSMSettings = WARM_UP_ACCU
         return
     for v_wall in (0.3, 0.7, 0.9):
         bubble = create_bubble(model, alpha_n=0.3, v_wall=v_wall, accuracy=accuracy)
-        for nuc_type in NucType:
-            create_spectrum(bubble, SpectrumParams(nuc_type, beta_tilde=100, T_star=100, g_star=100), f, accuracy)
+        spectrum_params = [
+            SpectrumParams(nuc_type, beta_tilde=beta_tilde, T_star=100, g_star=100)
+            for nuc_type in NucType for beta_tilde in (100, 1000)
+        ]
+        for share_spectra in (False, True):
+            compute_spectra(bubble, spectrum_params, f, accuracy, share_spectra)
     _WARMED_UP.add(model.id)

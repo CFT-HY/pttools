@@ -44,6 +44,24 @@ if th.TYPE_CHECKING_OR_DOCS:
     from pttools.utils.fields import Fields
 
 
+#: Default density of the $z$ arrays of :py:meth:`Spectrum.z_covering` relative to the density of the frequencies.
+#: The spectra created from a spectrum computed for the $z$ array with :py:meth:`Spectrum.with_params`
+#: are interpolated to the frequencies, and the interpolation error decreases with the square of the density.
+#: With the density of the frequencies, the interpolation error near the peak can be a few percent,
+#: and with four times the density, it is at most a few tenths of a percent, which is less than the error
+#: of about 1 % of the accuracy settings of :ref:`sphx_glr_auto_examples_dataset_save.py`.
+#: The computation time of the spectrum depends only weakly on the number of points of the $z$ array.
+Z_COVERING_DENSITY: float = 4
+
+#: Default margin of the $z$ arrays of :py:meth:`Spectrum.z_covering` beyond the $z$ values of the frequencies,
+#: in decades at each end.
+#: The spectra are inaccurate near the ends of their $z$ arrays, especially at the upper end, where the error
+#: can be over 100 % within a few tenths of a decade from the end when the $z$ array extends above the peak.
+#: A margin of half a decade removes this edge effect,
+#: and larger margins do not improve the accuracy further.
+Z_COVERING_MARGIN: float = 0.5
+
+
 class Spectrum(Omgw0Base, SSMSpectrum):
     r"""A spectrum object that includes the conversion to the GW power spectrum today $\Omega_{\text{gw},0}$."""
 
@@ -421,6 +439,70 @@ class Spectrum(Omgw0Base, SSMSpectrum):
     # z arrays covering frequencies
     # -----
 
+    @classmethod
+    def covering(
+            cls,
+            bubble: Bubble,
+            f: FloatArr1D,
+            T_star: th.FloatOrArr1D,
+            g_star: th.FloatOrArr1D,
+            beta_tilde: th.FloatOrArr1D | None = None,
+            r_star: th.FloatOrArr1D | None = None,
+            settings: SSMSettings | None = None,
+            f_star0_factor: float = 1.,
+            points_per_decade: float | None = None,
+            margin: float = Z_COVERING_MARGIN,
+            **kwargs: tp.Any) -> tp.Self:
+        r"""A spectrum that covers the frequencies ``f`` for all the given parameter values.
+
+        The spectrum is computed for the $z$ array of :py:meth:`z_covering`,
+        with the accuracy settings of :py:meth:`settings_covering`.
+        The spectra of the individual parameter values can then be created from it with :py:meth:`with_params`,
+        e.g. ``spectrum.with_params(beta_tilde=..., T_star=..., g_star=..., f=f)``,
+        which reuses the computationally heavy part, and interpolates the spectrum to the frequencies.
+        This is much faster than computing each of them separately,
+        but the results differ from the separately computed spectra by the interpolation error,
+        see :py:meth:`pttools.ssm.spectrum.SSMSpectrum.with_params`.
+        The parameters that cannot be changed with :py:meth:`with_params`, e.g. the nucleation type,
+        are given as ``kwargs`` and are the same for all the spectra created from this spectrum.
+
+        The spectrum itself is created with the first valid value of $\tilde{\beta}$ or $r_*$,
+        and the first values of $T_*$ and $g_*$.
+
+        :param bubble: fluid shell of the spectra
+        :param f: frequencies $f$ to be covered
+        :param T_star: $T_*$, temperatures at which the GWs were produced, a scalar or an array
+        :param g_star: $g_*$, degrees of freedom, a scalar or an array
+        :param beta_tilde: $\tilde{\beta}$ values of the spectra
+        :param r_star: $r_*$ values of the spectra
+        :param settings: accuracy settings for the frequencies,
+            defaults to :py:class:`~pttools.ssm.settings.SSMSettings`
+        :param f_star0_factor: correction factor for $f_{\ast,0}$, see :py:meth:`z_covering`
+        :param points_per_decade: number of $z$ points per decade, see :py:meth:`z_covering`
+        :param margin: margin of the $z$ array in decades, see :py:meth:`z_covering`
+        :param kwargs: other arguments of the spectrum, e.g. ``nuc_type`` or ``parallel``
+        :return: the spectrum
+        :raises ValueError: if not exactly one of $\tilde{\beta}$ and $r_*$ is given,
+            or if none of their values are valid
+        """
+        beta_tildes = None if beta_tilde is None else np.atleast_1d(np.asarray(beta_tilde, dtype=float))
+        r_stars = None if r_star is None else np.atleast_1d(np.asarray(r_star, dtype=float))
+        z = cls.z_covering(
+            f=f, bubble=bubble, T_star=T_star, g_star=g_star, beta_tilde=beta_tildes, r_star=r_stars,
+            f_star0_factor=f_star0_factor, points_per_decade=points_per_decade, margin=margin)
+        # Any valid value can be used, as with_params() changes it.
+        value = cls._valid_r_stars(bubble, beta_tilde=beta_tildes, r_star=r_stars)[0][0]
+        return cls(
+            bubble,
+            y=z,
+            beta_tilde=None if beta_tildes is None else value,
+            r_star=value if beta_tildes is None else None,
+            T_star=float(np.atleast_1d(T_star)[0]),
+            g_star=float(np.atleast_1d(g_star)[0]),
+            **cls.settings_covering(z=z, f=f, settings=settings).spectrum_kwargs(),
+            **kwargs
+        )
+
     @staticmethod
     def n_z_lookup_covering(z: FloatArr1D, f: FloatArr1D, n_z_lookup: int = DEFAULT_N_Z_LOOKUP) -> int:
         """Number of points in the lookup arrays for a $z$ array, giving the same density as for the frequencies.
@@ -456,13 +538,14 @@ class Spectrum(Omgw0Base, SSMSpectrum):
     def z_covering(
             f: FloatArr1D,
             bubble: Bubble,
-            T_star: float,
-            g_star: float,
+            T_star: th.FloatOrArr1D,
+            g_star: th.FloatOrArr1D,
             beta_tilde: FloatArr1D | None = None,
             r_star: FloatArr1D | None = None,
             f_star0_factor: float = 1.,
-            points_per_decade: float | None = None) -> FloatArr1D:
-        r"""$z$ array that covers the frequencies ``f`` for all the given values of $\tilde{\beta}$ or $r_*$.
+            points_per_decade: float | None = None,
+            margin: float = Z_COVERING_MARGIN) -> FloatArr1D:
+        r"""$z$ array that covers the frequencies ``f`` for all the given parameter values.
 
         The $z$ values corresponding to the frequencies are
         $$z = \frac{f}{f_{\ast,0}} r_*,$$
@@ -470,53 +553,76 @@ class Spectrum(Omgw0Base, SSMSpectrum):
         where $f_{\ast,0}$ is that of :py:func:`pttools.omgw0.freq.f_star0` multiplied by ``f_star0_factor``,
         and $r_*$ is computed from $\tilde{\beta}$ in the same way as for the spectra,
         with :py:meth:`pttools.ssm.spectrum.SSMSpectrum.validate_nucleation`.
-        The returned array is logarithmically spaced from the smallest to the largest $z$.
-        The values that are not finite and positive are ignored, as are those for which $r_*$ cannot be computed.
+        The array covers all the combinations of the given values of $\tilde{\beta}$ or $r_*$, $T_*$ and $g_*$,
+        with $g_{s,*} = g_*$.
+        The returned array is logarithmically spaced from the smallest to the largest $z$,
+        extended by ``margin`` decades at each end, as the spectra are inaccurate near the ends of their $z$ arrays.
+        The values of $\tilde{\beta}$ and $r_*$ that are not finite and positive are ignored,
+        as are those for which $r_*$ cannot be computed.
 
         :param f: frequencies $f$ to be covered
         :param bubble: fluid shell of the spectra
-        :param T_star: $T_*$, temperature at which the GWs were produced
-        :param g_star: $g_*$, degrees of freedom
+        :param T_star: $T_*$, temperatures at which the GWs were produced, a scalar or an array
+        :param g_star: $g_*$, degrees of freedom, a scalar or an array
         :param beta_tilde: $\tilde{\beta}$ values of the spectra
         :param r_star: $r_*$ values of the spectra
         :param f_star0_factor: correction factor for $f_{\ast,0}$
         :param points_per_decade: number of $z$ points per decade.
-            Defaults to the average number of points per decade of ``f``.
+            Defaults to :py:data:`Z_COVERING_DENSITY` times the average number of points per decade of ``f``.
+        :param margin: number of decades by which the array is extended at each end,
+            see :py:data:`Z_COVERING_MARGIN`
         :return: $z$ array
         :raises ValueError: if not exactly one of $\tilde{\beta}$ and $r_*$ is given,
             or if none of their values are valid
         """
-        if (beta_tilde is None) == (r_star is None):
-            raise ValueError("Exactly one of beta_tilde and r_star must be given.")
-        r_stars: list[float] = []
-        for value in tp.cast(FloatArr1D, r_star if beta_tilde is None else beta_tilde):
-            if not (np.isfinite(value) and value > 0):
-                continue
-            try:
-                # r_* does not depend on the nucleation type.
-                r_stars.append(
-                    Spectrum.validate_nucleation(
-                        bubble=bubble, nuc_type=DEFAULT_NUC_TYPE, r_star=float(value), beta_tilde=None)
-                    if beta_tilde is None
-                    else Spectrum.validate_nucleation(
-                        bubble=bubble, nuc_type=DEFAULT_NUC_TYPE, r_star=None, beta_tilde=float(value))
-                )
-            except ValueError:
-                continue
-        if not r_stars:
-            raise ValueError("None of the beta_tilde or r_star values are valid.")
-
-        f_star0 = freq.f_star0(T_star=T_star, ge_star=g_star, gs_star=g_star) * f_star0_factor
-        z_min = freq.z(f=float(f.min()), r_star=min(r_stars), f_star0=f_star0)
-        z_max = freq.z(f=float(f.max()), r_star=max(r_stars), f_star0=f_star0)
+        r_stars = [r for _value, r in Spectrum._valid_r_stars(bubble, beta_tilde=beta_tilde, r_star=r_star)]
+        # f_*,0 is computed for all the combinations of T_* and g_*.
+        T_stars = np.asarray(T_star, dtype=float).reshape(-1, 1)
+        g_stars = np.asarray(g_star, dtype=float).reshape(1, -1)
+        f_star0 = freq.f_star0(T_star=T_stars, ge_star=g_stars, gs_star=g_stars) * f_star0_factor
+        z_min = freq.z(f=float(f.min()), r_star=min(r_stars), f_star0=float(np.max(f_star0))) / 10**margin
+        z_max = freq.z(f=float(f.max()), r_star=max(r_stars), f_star0=float(np.min(f_star0))) * 10**margin
         if points_per_decade is None:
-            points_per_decade = (f.size - 1) / np.log10(f.max() / f.min())
+            points_per_decade = Z_COVERING_DENSITY * (f.size - 1) / np.log10(f.max() / f.min())
         n = max(int(np.ceil(points_per_decade * np.log10(z_max / z_min))) + 1, 2)
         z = np.logspace(np.log10(z_min), np.log10(z_max), n)
         # Ensure that the endpoints are exact despite the rounding errors of logspace.
         z[0] = z_min
         z[-1] = z_max
         return z
+
+    @staticmethod
+    def _valid_r_stars(
+            bubble: Bubble,
+            beta_tilde: FloatArr1D | None,
+            r_star: FloatArr1D | None) -> list[tuple[float, float]]:
+        r"""The valid values of $\tilde{\beta}$ or $r_*$, and the corresponding values of $r_*$.
+
+        See :py:meth:`z_covering`.
+
+        :raises ValueError: if not exactly one of $\tilde{\beta}$ and $r_*$ is given,
+            or if none of their values are valid
+        """
+        if (beta_tilde is None) == (r_star is None):
+            raise ValueError("Exactly one of beta_tilde and r_star must be given.")
+        valid: list[tuple[float, float]] = []
+        for value in np.atleast_1d(tp.cast(FloatArr1D, r_star if beta_tilde is None else beta_tilde)):
+            if not (np.isfinite(value) and value > 0):
+                continue
+            try:
+                # r_* does not depend on the nucleation type.
+                valid.append((float(value), (
+                    Spectrum.validate_nucleation(
+                        bubble=bubble, nuc_type=DEFAULT_NUC_TYPE, r_star=float(value), beta_tilde=None)
+                    if beta_tilde is None
+                    else Spectrum.validate_nucleation(
+                        bubble=bubble, nuc_type=DEFAULT_NUC_TYPE, r_star=None, beta_tilde=float(value))
+                )))
+            except ValueError:
+                continue
+        if not valid:
+            raise ValueError("None of the beta_tilde or r_star values are valid.")
+        return valid
 
     # -----
     # Plotting

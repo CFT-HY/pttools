@@ -10,7 +10,8 @@ import pytest
 from pttools.bubble import Bubble
 from pttools.models import BagModel
 from pttools.omgw0 import Spectrum, freq
-from pttools.ssm.nucleation import DEFAULT_NUC_TYPE
+from pttools.omgw0.spectrum import Z_COVERING_DENSITY, Z_COVERING_MARGIN
+from pttools.ssm.nucleation import DEFAULT_NUC_TYPE, NucType
 from pttools.ssm.settings import SSMSettings
 
 F: np.ndarray = np.logspace(-5, -1, 81)
@@ -52,7 +53,8 @@ class CoveringTest(unittest.TestCase):
             z = Spectrum.z_covering(
                 f=F, bubble=self.bubble, T_star=T_STAR, g_star=G_STAR, f_star0_factor=1.1,
                 beta_tilde=arr if name == "beta_tilde" else None,
-                r_star=arr if name == "r_star" else None
+                r_star=arr if name == "r_star" else None,
+                margin=0
             )
             assert np.all(np.diff(z) > 0)
             r_stars = values if name == "r_star" else [
@@ -62,12 +64,67 @@ class CoveringTest(unittest.TestCase):
             # The smallest and largest r_star determine the endpoints.
             assert z[0] == freq.z(f=F[0], r_star=min(r_stars), f_star0=f_star0)
             assert z[-1] == freq.z(f=F[-1], r_star=max(r_stars), f_star0=f_star0)
-            # The default density is that of the frequencies.
+            # The default density is relative to that of the frequencies.
             np.testing.assert_allclose(
-                (z.size - 1) / np.log10(z[-1] / z[0]), (F.size - 1) / np.log10(F[-1] / F[0]), rtol=1e-2)
+                (z.size - 1) / np.log10(z[-1] / z[0]),
+                Z_COVERING_DENSITY * (F.size - 1) / np.log10(F[-1] / F[0]), rtol=1e-2)
         z = Spectrum.z_covering(
-            f=F, bubble=self.bubble, T_star=T_STAR, g_star=G_STAR, r_star=np.array([0.1]), points_per_decade=5)
+            f=F, bubble=self.bubble, T_star=T_STAR, g_star=G_STAR, r_star=np.array([0.1]), points_per_decade=5,
+            margin=0)
         assert z.size == 21
+
+    def test_z_covering_margin(self) -> None:
+        """The z array should be extended by the margin at each end."""
+        kwargs = {"f": F, "bubble": self.bubble, "T_star": T_STAR, "g_star": G_STAR, "r_star": np.array([0.1])}
+        z0 = Spectrum.z_covering(**kwargs, margin=0)
+        for margin, z in (
+                (Z_COVERING_MARGIN, Spectrum.z_covering(**kwargs)),
+                (1., Spectrum.z_covering(**kwargs, margin=1))):
+            np.testing.assert_allclose([z[0], z[-1]], [z0[0] / 10**margin, z0[-1] * 10**margin], rtol=1e-14)
+
+    def test_z_covering_arrays(self) -> None:
+        """The z array should cover the frequencies for all the combinations of T_* and g_*."""
+        T_stars = np.array([50., 100., 500.])
+        g_stars = np.array([80., 130.])
+        r_stars = np.array([1e-3, 0.1])
+        z = Spectrum.z_covering(f=F, bubble=self.bubble, T_star=T_stars, g_star=g_stars, r_star=r_stars, margin=0)
+        for T_star in T_stars:
+            for g_star in g_stars:
+                z_scalar = Spectrum.z_covering(
+                    f=F, bubble=self.bubble, T_star=T_star, g_star=g_star, r_star=r_stars, margin=0)
+                assert z[0] <= z_scalar[0] * (1 + 1e-12)
+                assert z[-1] >= z_scalar[-1] * (1 - 1e-12)
+        # The extremes are given by the extremes of T_* and g_*, as f_*,0 increases with both of them.
+        assert z[0] == Spectrum.z_covering(
+            f=F, bubble=self.bubble, T_star=500., g_star=130., r_star=r_stars, margin=0)[0]
+        assert z[-1] == Spectrum.z_covering(
+            f=F, bubble=self.bubble, T_star=50., g_star=80., r_star=r_stars, margin=0)[-1]
+
+    def test_covering(self) -> None:
+        """The spectra created from the covering spectrum should be close to the separately computed spectra."""
+        settings = SSMSettings(n_z_lookup=1000, nT=300, nx_P_tilde_gw=100)
+        beta_tildes = np.array([100., 1000.])
+        T_stars = np.array([50., 500.])
+        g_stars = np.array([80., 130.])
+        for nuc_type in NucType:
+            shared = Spectrum.covering(
+                self.bubble, F, T_star=T_stars, g_star=g_stars, beta_tilde=beta_tildes, settings=settings,
+                nuc_type=nuc_type, allow_beta_tilde_for_simultaneous=True, parallel=False)
+            assert shared.nuc_type == nuc_type
+            assert shared.n_z_lookup == Spectrum.settings_covering(z=shared.y, f=F, settings=settings).n_z_lookup
+            for beta_tilde in beta_tildes:
+                for T_star in T_stars:
+                    for g_star in g_stars:
+                        kwargs = {"beta_tilde": beta_tilde, "T_star": T_star, "g_star": g_star, "f": F}
+                        spectrum = shared.with_params(**kwargs)
+                        ref = Spectrum(
+                            self.bubble, **kwargs, nuc_type=nuc_type, allow_beta_tilde_for_simultaneous=True,
+                            parallel=False, **settings.spectrum_kwargs())
+                        np.testing.assert_array_equal(spectrum.f(), F)
+                        omgw0_h2 = spectrum.omgw0_h2()
+                        omgw0_h2_ref = ref.omgw0_h2()
+                        peak = omgw0_h2_ref >= 1e-3 * omgw0_h2_ref.max()
+                        np.testing.assert_allclose(omgw0_h2[peak], omgw0_h2_ref[peak], rtol=1e-2)
 
     def test_z_covering_invalid(self) -> None:
         """Exactly one of beta_tilde and r_star should be given, and at least one value should be valid."""
