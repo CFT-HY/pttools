@@ -1,7 +1,20 @@
-"""Format floats as scientific notation in LaTeX and Unicode."""
+"""Format numbers compactly, and floats as scientific notation in LaTeX and Unicode."""
 
 from fractions import Fraction
 import math
+import typing as tp
+
+import numpy as np
+
+__all__ = [
+    "UNICODE_MINUS",
+    "UNICODE_SUPERSCRIPT",
+    "as_latex",
+    "as_unicode",
+    "compact",
+    "decompose_float",
+    "trim_zeros",
+]
 
 UNICODE_MINUS: str = "\u2212"
 UNICODE_SUPERSCRIPT: dict[int, int] = str.maketrans(
@@ -15,6 +28,23 @@ def trim_zeros(s: str, strip_zeros: bool) -> str:
     if strip_zeros and "." in s:
         s = s.rstrip("0").rstrip(".")
     return s or "0"
+
+
+def compact(value: tp.Any, precision: int = 6) -> str:
+    """Format a value compactly, e.g. for printing summaries.
+
+    Floats are formatted with the given number of significant digits,
+    strings are quoted, as they may contain e.g. commas, and other values are converted with :py:class:`str`.
+
+    :param value: the value
+    :param precision: number of significant digits of floats
+    :return: the formatted value
+    """
+    if isinstance(value, (float, np.floating)):
+        return f"{value:.{precision}g}"
+    if isinstance(value, (str, np.str_)):
+        return repr(str(value))
+    return str(value)
 
 
 def decompose_float(

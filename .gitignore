@@ -21,6 +21,7 @@ packages.svg
 .test_durations
 _build
 auto_examples
+data
 docs/lint
 docs/nightly
 docs/sg_api_usage.rst

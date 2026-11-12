@@ -1,0 +1,185 @@
+r"""
+Loading the dataset of spectra
+==============================
+
+Load a dataset created by :ref:`sphx_glr_auto_examples_const_cs_dataset.py`
+with :py:class:`pttools.export.importer.Importer`, print a summary of its contents,
+and plot a bubble and a spectrum from the stored data.
+
+The summary is created by :py:meth:`Importer.summary() <pttools.export.importer.Importer.summary>`.
+It contains the number of models, bubbles and spectra, the size of the file,
+and the ranges of the parameters of each table.
+The values of the parameters that have at most :py:data:`~pttools.math.summary.MAX_LISTED_VALUES`
+distinct values are listed.
+The bubble and the spectrum are plotted from the stored arrays without recomputing them.
+
+By default, the first HDF5 file in the ``data`` directory of the repository is loaded.
+As the dataset is not available when building the documentation, the example is skipped by Sphinx-Gallery.
+Run it from the root directory of the repository with e.g.
+
+.. code-block:: bash
+
+    python -m examples.const_cs.dataset_load
+    python -m examples.const_cs.dataset_load --path /scratch/const_cs_large.h5 --bubble 10 --spectrum 100
+"""
+
+import argparse
+import logging
+from pathlib import Path
+
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
+import numpy as np
+
+from examples.utils import DATA_DIR, save_and_show_fig
+from pttools.docs.examples import is_sphinx_gallery
+from pttools.export import Importer, Table
+from pttools.math.summary import MAX_LISTED_VALUES
+from pttools.utils.time import log_duration
+
+logger: logging.Logger = logging.getLogger(__name__)
+
+#: File extensions of the HDF5 files
+HDF5_SUFFIXES: tuple[str, ...] = (".h5", ".hdf5")
+
+
+def default_path(data_dir: Path = DATA_DIR) -> Path:
+    """The first HDF5 file in the data directory in alphabetical order.
+
+    :param data_dir: the data directory
+    :return: path of the file
+    :raises FileNotFoundError: if there are no HDF5 files in the directory
+    """
+    paths = sorted(path for path in data_dir.glob("*") if path.suffix in HDF5_SUFFIXES and path.is_file())
+    if not paths:
+        raise FileNotFoundError(
+            f"No HDF5 files found in {data_dir}. Create a dataset with: python -m examples.const_cs.dataset")
+    return paths[0]
+
+
+def select_rows(importer: Importer, bubble: int | None, spectrum: int | None) -> tuple[int, int | None]:
+    """Select the bubble and the spectrum to plot.
+
+    If the spectrum is given, the bubble defaults to the bubble of the spectrum.
+    Otherwise the bubble defaults to the first bubble that has not failed,
+    and the spectrum to the first spectrum of the bubble.
+
+    :param importer: the importer
+    :param bubble: row index of the bubble, or None for the default
+    :param spectrum: row index of the spectrum in :py:attr:`Table.SPECTRA_F <pttools.export.records.Table.SPECTRA_F>`,
+        or None for the default
+    :return: the row indices of the bubble and the spectrum, which is None if the bubble has no spectra
+    """
+    if importer.n_bubbles == 0:
+        raise ValueError(f"The file has no bubbles: {importer.path}")
+    if spectrum is not None:
+        if bubble is None:
+            bubble = int(importer.parent_indices(Table.SPECTRA_F, spectrum))
+        return bubble, spectrum
+    if bubble is None:
+        ok = np.flatnonzero(~importer.read(Table.BUBBLES, "failed"))
+        bubble = int(ok[0]) if ok.size else 0
+    if importer.n_spectra_f == 0:
+        return bubble, None
+    spectra = np.flatnonzero(importer.parent_indices(Table.SPECTRA_F) == bubble)
+    return bubble, int(spectra[0]) if spectra.size else None
+
+
+def plot_bubble(importer: Importer, index: int) -> Figure:
+    r"""Plot the stored fluid velocity and enthalpy profiles $v(\xi)$ and $w(\xi)$ of a bubble."""
+    model = importer.model_params(int(importer.parent_indices(Table.BUBBLES, index)))
+    params = importer.read_scalars(Table.BUBBLES, ["v_wall", "alpha_n", "sol_type", "failed"], rows=index)
+    xi = importer.read(Table.BUBBLES, "xi", index)
+    fig = Figure(figsize=(6, 6))
+    ax_v: Axes = fig.add_subplot(211)
+    ax_w: Axes = fig.add_subplot(212, sharex=ax_v)
+    ax_v.plot(xi, importer.read(Table.BUBBLES, "v", index))
+    ax_w.plot(xi, importer.read(Table.BUBBLES, "w", index))
+    ax_v.set_ylabel("$v$")
+    ax_w.set_ylabel("$w$")
+    ax_w.set_xlabel(r"$\xi$")
+    ax_v.set_xlim(0, 1)
+    for ax in (ax_v, ax_w):
+        ax.grid()
+    ax_v.set_title(
+        f"Bubble {index}: {model.get('label_latex', model.get('name'))}, "
+        rf"$v_\text{{wall}}={params['v_wall']:.3g}$, $\alpha_n={params['alpha_n']:.3g}$, {params['sol_type']}"
+        + (" (failed)" if params["failed"] else ""),
+        fontsize="medium"
+    )
+    fig.tight_layout()
+    return fig
+
+
+def plot_spectrum(importer: Importer, index: int) -> Figure:
+    r"""Plot the stored gravitational wave power spectrum today $\Omega_{\text{gw},0} h^2(f)$."""
+    params = importer.read_scalars(
+        Table.SPECTRA_F, ["v_wall", "alpha_n", "beta_tilde", "T_star", "g_star", "nuc_type"], rows=index)
+    fig = Figure()
+    ax: Axes = fig.add_subplot()
+    ax.loglog(importer.read(Table.SPECTRA_F, "f"), importer.read(Table.SPECTRA_F, "omgw0_h2", index))
+    ax.set_xlabel(r"$f$ (Hz)")
+    ax.set_ylabel(r"$\Omega_{\text{gw},0} h^2$")
+    ax.grid()
+    ax.set_title(
+        f"Spectrum {index} of bubble {int(importer.parent_indices(Table.SPECTRA_F, index))}: "
+        rf"$v_\text{{wall}}={params['v_wall']:.3g}$, $\alpha_n={params['alpha_n']:.3g}$,"
+        "\n"
+        rf"$\tilde{{\beta}}={params['beta_tilde']:.3g}$, $T_*={params['T_star']:.3g}$ GeV, "
+        rf"$g_*={params['g_star']:.3g}$, {params['nuc_type']}",
+        fontsize="medium"
+    )
+    fig.tight_layout()
+    return fig
+
+
+@log_duration
+def main(
+        path: Path | None = None,
+        bubble: int | None = None,
+        spectrum: int | None = None,
+        verify: bool = False,
+        max_listed: int = MAX_LISTED_VALUES) -> list[Figure]:
+    """Print the summary of a dataset and plot a bubble and a spectrum from it.
+
+    :param path: path of the HDF5 file. Defaults to the first HDF5 file in the ``data`` directory.
+    :param bubble: row index of the bubble to plot, see :py:func:`select_rows`
+    :param spectrum: row index of the spectrum to plot, see :py:func:`select_rows`
+    :param verify: whether to verify the file against its SHA-256 checksum file
+    :param max_listed: maximum number of distinct values to list for each parameter
+    :return: the figures of the bubble and the spectrum, or only that of the bubble if it has no spectra
+    """
+    path = default_path() if path is None else Path(path)
+    with Importer(path, verify=verify) as importer:
+        print(importer.summary(max_listed=max_listed))
+        bubble, spectrum = select_rows(importer, bubble, spectrum)
+        figs = [plot_bubble(importer, bubble)]
+        if spectrum is None:
+            logger.warning("The bubble %d has no spectra with shared frequencies to plot.", bubble)
+        else:
+            figs.append(plot_spectrum(importer, spectrum))
+    return figs
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse the command-line arguments."""
+    parser = argparse.ArgumentParser(description="Print a summary of a dataset and plot a bubble and a spectrum")
+    parser.add_argument("--path", type=Path, help="path of the HDF5 file (default: the first one in data/)")
+    parser.add_argument("--bubble", type=int, help="row index of the bubble to plot")
+    parser.add_argument("--spectrum", type=int, help="row index of the spectrum to plot")
+    parser.add_argument("--verify", action="store_true", help="verify the SHA-256 checksum of the file")
+    parser.add_argument(
+        "--max-listed", type=int, default=MAX_LISTED_VALUES,
+        help="maximum number of distinct values to list for each parameter")
+    return parser.parse_args()
+
+
+# The dataset is not available when building the documentation.
+if __name__ == "__main__" and not is_sphinx_gallery():
+    _args = parse_args()
+    _figs = main(
+        path=_args.path, bubble=_args.bubble, spectrum=_args.spectrum, verify=_args.verify,
+        max_listed=_args.max_listed)
+    save_and_show_fig(_figs[0], "const_cs_dataset_bubble")
+    if len(_figs) > 1:
+        save_and_show_fig(_figs[1], "const_cs_dataset_spectrum")

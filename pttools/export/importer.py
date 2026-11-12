@@ -22,18 +22,30 @@ from pttools.bubble.bubble import Bubble
 from pttools.export.checksum import verify_checksum
 from pttools.export.exporter import FORMAT_NAME, FORMAT_VERSION, ExportFormatError, offsets_name, parent_column
 from pttools.export.records import Table, TableName, find_class, table_fields
+from pttools.math.formatting import compact
+from pttools.math.summary import MAX_LISTED_VALUES, summarize_values
 from pttools.models.model import Model
 from pttools.omgw0.spectrum import Spectrum
 from pttools.ssm.spectrum import SSMSpectrum
 from pttools.utils.fields import Extractable, FieldShape, Preset
+from pttools.utils.files import format_size
 
 __all__ = [
+    "TABLE_TITLES",
     "Importer",
     "Rows",
 ]
 
 #: Row selection: a row index, a slice, a sequence of row indices, or None for all the rows
 type Rows = int | slice | Sequence[int] | np.ndarray | None
+
+#: Titles of the built-in tables in the summaries, see :py:meth:`Importer.table_info`
+TABLE_TITLES: dict[str, str] = {
+    Table.MODELS: "Models",
+    Table.BUBBLES: "Bubbles",
+    Table.SPECTRA_Y: "Spectra with shared y",
+    Table.SPECTRA_F: "Spectra with shared f",
+}
 
 
 def _to_python(value: tp.Any) -> tp.Any:
@@ -210,9 +222,24 @@ class Importer:
         group = self._group(table)
         return tuple(str(name) for name in group.attrs["fields"]) if "fields" in group.attrs else ()
 
+    def contents(self) -> dict[str, int]:
+        """Number of rows in each table, including the empty built-in tables.
+
+        :return: the numbers of rows by the table names
+        """
+        names = dict.fromkeys([*(str(table) for table in Table), *self.tables])
+        return {name: self.n_rows(name) for name in names}
+
     def field_info(self, table: TableName, name: str) -> dict[str, str]:
         """Metadata of a field, i.e. its kind, type, axis and description."""
         return {key: str(_to_python(value)) for key, value in self._group(table)[name].attrs.items()}
+
+    def info(self) -> dict[str, tp.Any]:
+        """Information about the file.
+
+        :return: the path of the file, its size in bytes, and its attributes, see :py:attr:`attrs`
+        """
+        return {"path": self.path, "size": self.path.stat().st_size, "attrs": self.attrs}
 
     # -----
     # Reading data
@@ -359,6 +386,93 @@ class Importer:
         if column is None:
             raise ValueError(f"The rows of the table \"{table}\" have no parents.")
         return self.read(table, column, rows)
+
+    # -----
+    # Summary
+    # -----
+
+    def model_params_info(self, max_listed: int = MAX_LISTED_VALUES) -> str:
+        """Summary of the classes and the parameters of the models.
+
+        The parameters are stored as JSON objects, see :py:meth:`model_params`.
+        Each parameter is summarized with :py:func:`~pttools.math.summary.summarize_values`.
+        The parameters that are not numbers or strings, e.g. lists, are compared as JSON.
+
+        :param max_listed: maximum number of distinct values to list for each parameter
+        :return: the summary
+        """
+        lines = [f"{TABLE_TITLES[Table.MODELS]} ({self.n_models}):"]
+        if self.n_models == 0:
+            return lines[0]
+        lines.append(f"  {summarize_values('class', self.read(Table.MODELS, 'class'), max_listed=max_listed)}")
+        params = [self.model_params(i) for i in range(self.n_models)]
+        for name in dict.fromkeys(name for row in params for name in row):
+            values = [row[name] for row in params if name in row]
+            if not all(isinstance(value, (bool, int, float, str)) for value in values):
+                values = [json.dumps(value) for value in values]
+            lines.append(f"  {summarize_values(name, values, max_listed=max_listed)}")
+        return "\n".join(lines)
+
+    def summary(self, max_listed: int = MAX_LISTED_VALUES) -> str:
+        """Summary of the file and its contents.
+
+        The summary contains the :py:meth:`info` of the file, the :py:meth:`contents`,
+        and the :py:meth:`model_params_info` and the :py:meth:`table_info` of each non-empty table.
+
+        :param max_listed: maximum number of distinct values to list for each parameter
+        :return: the summary
+        """
+        info = self.info()
+        lines = [
+            f"File: {info['path']}",
+            f"Size: {format_size(info['size'])} ({info['size']} bytes)",
+            *(f"{key}: {value}" for key, value in info["attrs"].items()),
+            "",
+            ", ".join(f"{TABLE_TITLES.get(name, name)}: {n_rows}" for name, n_rows in self.contents().items()),
+        ]
+        for name, n_rows in self.contents().items():
+            if n_rows:
+                lines += ["", self.table_info(name, max_listed=max_listed)]
+        return "\n".join(lines)
+
+    def table_info(self, table: TableName, max_listed: int = MAX_LISTED_VALUES) -> str:
+        """Summary of the fields of a table.
+
+        - Scalar fields are summarized with :py:func:`~pttools.math.summary.summarize_values`.
+        - Grid fields are summarized by their range and number of points.
+        - Array and ragged fields are only listed, as they would be slow to read for large files.
+
+        The models are summarized with :py:meth:`model_params_info`.
+
+        :param table: the table
+        :param max_listed: maximum number of distinct values to list for each field
+        :return: the summary
+        """
+        if str(table) == Table.MODELS:
+            return self.model_params_info(max_listed=max_listed)
+        n_rows = self.n_rows(table)
+        lines = [f"{TABLE_TITLES.get(str(table), str(table))} ({n_rows}):"]
+        if n_rows == 0:
+            return lines[0]
+        other: list[str] = []
+        for name in self.fields(table):
+            info = self.field_info(table, name)
+            kind = info.get("kind")
+            description = info.get("description", "")
+            if kind == FieldShape.SCALAR:
+                lines.append(f"  {summarize_values(name, self.read(table, name), description, max_listed)}")
+            elif kind == FieldShape.GRID:
+                grid = self.read(table, name)
+                lines.append(
+                    f"  {name}: {compact(grid.min())} ... {compact(grid.max())}, "
+                    f"{grid.size} points (shared by all rows)" + (f"  # {description}" if description else ""))
+            elif kind == FieldShape.ARRAY:
+                other.append(f"{name} ({self.read(table, name, 0).size} points per row)")
+            else:
+                other.append(f"{name} ({kind})")
+        if other:
+            lines.append(f"  Array fields: {', '.join(other)}")
+        return "\n".join(lines)
 
     # -----
     # Recreating objects

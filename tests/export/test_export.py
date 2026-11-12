@@ -266,6 +266,34 @@ class ExportTest(unittest.TestCase):
             np.testing.assert_array_equal(importer.parent_indices(Table.BUBBLES), [0, 1])
             assert list(importer.read(Table.SPECTRA_Y, "id")) == [spectrum.id for spectrum in self.y_spectra]
 
+    def test_info(self) -> None:
+        """Test the information about the file and its contents."""
+        with Importer(self.path) as importer:
+            info = importer.info()
+            contents = importer.contents()
+        assert info["path"] == self.path
+        assert info["size"] == self.path.stat().st_size
+        assert info["attrs"]["format"] == "pttools"
+        assert contents == {Table.MODELS: 2, Table.BUBBLES: 2, Table.SPECTRA_Y: 3, Table.SPECTRA_F: 2}
+
+    def test_summary(self) -> None:
+        """Test the summaries of the file and its tables."""
+        with Importer(self.path) as importer:
+            models = importer.model_params_info()
+            bubbles = importer.table_info(Table.BUBBLES)
+            spectra_f = importer.table_info(Table.SPECTRA_F, max_listed=1)
+            summary = importer.summary()
+        assert models.startswith("Models (2):\n")
+        assert "  name: 2 distinct: ['bag', 'const_cs']" in models.splitlines()
+        assert bubbles.startswith("Bubbles (2):\n")
+        assert "  v_wall: 0.5 ... 0.7, 2 distinct: [0.5, 0.7]  # $v_\\text{wall}$, wall speed" in bubbles.splitlines()
+        assert "  Array fields: v (ragged), w (ragged), xi (ragged)" in bubbles.splitlines()
+        assert "T_star: 100 ... 1000, 2 distinct  #" in spectra_f
+        assert f"Array fields: omgw0_h2 ({self.f_spectra[0].f().size} points per row)" in spectra_f
+        assert "Models: 2, Bubbles: 2, Spectra with shared y: 3, Spectra with shared f: 2" in summary.splitlines()
+        assert models in summary
+        assert bubbles in summary
+
     def test_load(self) -> None:
         """Test that the spectra can be loaded back with the same models, bubbles and results."""
         with Importer(self.path, verify=True) as importer:

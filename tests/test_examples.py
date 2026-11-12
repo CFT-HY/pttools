@@ -13,6 +13,7 @@ from examples.const_cs import (
     const_cs_xi_v,
     const_cs_xi_v_w,
     dataset,
+    dataset_load,
 )
 from examples.entropy import entropy_comparison, entropy_grid, entropy_old, entropy_profile
 from examples.gksvdv import (
@@ -117,7 +118,7 @@ class ExampleTest(unittest.TestCase):
     @skip_slow
     @uses_parallel
     def test_const_cs_dataset() -> None:
-        """Test that the example ``examples.const_cs.dataset`` creates a dataset with the smallest grid."""
+        """Test that ``examples.const_cs.dataset`` creates a dataset and ``dataset_load`` loads it."""
         path = TEST_RESULT_PATH / "const_cs_dataset.h5"
         dataset.main(
             n_points=dataset.MIN_POINTS, path=path, overwrite=True, max_workers=4, progress_interval=0,
@@ -130,6 +131,7 @@ class ExampleTest(unittest.TestCase):
             assert 0 < importer.n_spectra_f <= grid.n_spectra
             failed = importer.read(Table.BUBBLES, "failed")
         assert failed.dtype == np.bool_
+        close_figs(*dataset_load.main(path, verify=True))
 
     @staticmethod
     def test_const_cs_dataset_dry_run() -> None:
