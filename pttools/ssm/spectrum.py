@@ -47,6 +47,8 @@ if tp.TYPE_CHECKING:
 if th.TYPE_CHECKING_OR_DOCS:
     pass
 
+__all__ = ["SSMSpectrum"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

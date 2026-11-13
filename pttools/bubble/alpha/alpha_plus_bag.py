@@ -20,6 +20,8 @@ if th.TYPE_CHECKING_OR_DOCS:
     from pttools import speedup
     from pttools.bubble.integrate import FluidIntegrateMethod
 
+__all__ = ["find_alpha_plus_bag"]
+
 
 def _find_alpha_plus_bag_scalar(
         v_wall: th.FloatOrArr,

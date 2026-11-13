@@ -29,6 +29,30 @@ import re
 import sys
 import urllib.request
 
+__all__ = [
+    "DOCKERFILE_NAME",
+    "IMAGE",
+    "IMAGE_REF_RE",
+    "LTS_MONTH",
+    "PLATFORMS",
+    "REPO_DIR",
+    "TAG_RE",
+    "TAG_SUFFIX",
+    "Key",
+    "Version",
+    "env_dir",
+    "fetch_tags",
+    "find_candidates",
+    "find_dockerfile",
+    "fmt_cuda",
+    "fmt_ubuntu",
+    "is_lts",
+    "latest_per_ubuntu",
+    "parse_tag",
+    "read_current",
+    "ubuntu_first",
+]
+
 # This file is run also as a script with the system Python, in which PTtools may not be installed,
 # and therefore it does not import anything from PTtools, such as PTTOOLS_DIR or pttools.docs.paths.
 # The -P in the shebang prevents adding the directory of this file to sys.path,

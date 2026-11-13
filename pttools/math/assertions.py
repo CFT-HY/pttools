@@ -10,6 +10,8 @@ from pttools.math.numerics import rel_diff_arr, rel_diff_scalar
 from pttools.math.printing import DEFAULT_FMT, print_1d, print_2d
 import pttools.type_hints as th
 
+__all__ = ["assert_allclose"]
+
 
 def _assert_allclose_header(name: str | None, rtol: float, atol: float, caller: str) -> list[str]:
     """Create the first lines of the error message of :func:`assert_allclose`."""

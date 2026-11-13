@@ -21,6 +21,8 @@ if th.TYPE_CHECKING_OR_DOCS:
     from pttools.bubble.solution_type import SolutionType
     from pttools.speedup.differential import DifferentialPointer
 
+__all__ = ["BagModel"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

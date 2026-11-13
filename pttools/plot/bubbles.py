@@ -17,6 +17,20 @@ import pttools.type_hints as th
 if th.TYPE_CHECKING_OR_DOCS:
     from pttools.bubble.bubble import BaseBubble
 
+__all__ = [
+    "V_LABEL",
+    "V_ZOOM_THRESHOLD",
+    "W_LABEL",
+    "XI_LABEL",
+    "plot_bubbles",
+    "plot_bubbles_common",
+    "plot_bubbles_v",
+    "plot_bubbles_w",
+    "setup_bubbles_plot",
+    "setup_bubbles_plot_multifig",
+    "xi_limits",
+]
+
 XI_LABEL = r"$\xi$"
 V_LABEL = "$v$"
 W_LABEL = "$w$"

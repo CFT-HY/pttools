@@ -36,6 +36,18 @@ from pttools.ssm.barotropic import H_eta, source_lifetime_factor
 from pttools.ssm.const import DEFAULT_N_SH
 from pttools.type_hints import FloatArr1D, FloatOrArr
 
+__all__ = [
+    "H_star_eta_sh",
+    "H_star_eta_sh_full",
+    "H_star_eta_v",
+    "H_star_eta_v_old",
+    "H_star_eta_v_old2",
+    "J",
+    "J_full",
+    "J_old",
+    "omega_tilde_gw",
+]
+
 
 def H_star_eta_sh[T: FloatOrArr](r_star: T, ubarf: T | float) -> T:
     r"""$\mathcal{H}_* \eta_\text{sh}$, Hubble-scaled shock formation time.

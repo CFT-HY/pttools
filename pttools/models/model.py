@@ -38,6 +38,8 @@ if th.TYPE_CHECKING_OR_DOCS:
     from pttools.speedup.differential import DifferentialPointer
     from pttools.utils.fields import Fields
 
+__all__ = ["WN_XTOL", "Model"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 #: Maximum absolute tolerance of the bracketing $w_n$ solver, which is the default of :py:func:`scipy.optimize.brentq`

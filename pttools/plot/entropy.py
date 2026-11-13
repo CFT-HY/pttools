@@ -12,6 +12,8 @@ import pttools.type_hints as th
 if th.TYPE_CHECKING_OR_DOCS:
     from pttools.bubble.bubble import Bubble
 
+__all__ = ["plot_entropy"]
+
 
 def plot_entropy(bubbles: tp.Iterable[Bubble], colors: tp.Iterable[str], fig: Figure | None = None) -> Figure:
     """Plot the entropy profiles of given bubbles."""

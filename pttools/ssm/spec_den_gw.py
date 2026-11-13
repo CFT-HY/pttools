@@ -11,6 +11,8 @@ from pttools.ssm.const import CS0, DEFAULT_N_Z_LOOKUP, DEFAULT_R_STAR
 from pttools.ssm.rho import rho_delta_factor, rho_delta_frac, x_minus, x_plus
 from pttools.type_hints import FloatArr1D, FloatOrArr, NumbaFunc
 
+__all__ = ["gen_lookup", "limits_from_lookup", "lookup_limits", "spec_den_gw", "spec_den_gw_scaling"]
+
 
 @njit
 def gen_lookup(

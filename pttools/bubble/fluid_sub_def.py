@@ -28,6 +28,16 @@ import pttools.type_hints as th
 if tp.TYPE_CHECKING:
     from pttools.models import Model
 
+__all__ = [
+    "sound_shell_deflagration",
+    "sound_shell_deflagration_common",
+    "sound_shell_deflagration_reverse",
+    "sound_shell_solvable_deflagration",
+    "sound_shell_solvable_deflagration_reverse",
+    "sound_shell_solver_deflagration",
+    "sound_shell_solver_deflagration_reverse",
+]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

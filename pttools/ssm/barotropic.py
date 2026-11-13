@@ -7,6 +7,17 @@ from pttools.speedup import njit
 from pttools.ssm.const import DEFAULT_A_STAR_A_R_RATIO, DEFAULT_N_SH, DEFAULT_R_STAR
 from pttools.type_hints import FloatOrArr
 
+__all__ = [
+    "H_eta",
+    "Upsilon",
+    "dilution_of_e",
+    "eta_ratio",
+    "expansion_factor",
+    "l",
+    "source_lifetime_factor",
+    "tau_star",
+]
+
 
 def dilution_of_e[T: FloatOrArr](
         a_star_a_r_ratio: T = DEFAULT_A_STAR_A_R_RATIO,

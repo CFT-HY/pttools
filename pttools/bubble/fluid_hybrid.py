@@ -30,6 +30,13 @@ if tp.TYPE_CHECKING:
 if th.TYPE_CHECKING_OR_DOCS:
     from pttools.bubble.fluid_base import DeflagrationOutput, SolverOutput
 
+__all__ = [
+    "LOG_BACKUP_SOLVER_DETAILS",
+    "sound_shell_hybrid",
+    "sound_shell_solvable_hybrid",
+    "sound_shell_solver_hybrid",
+]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 #: Whether to log the details of the backup hybrid solver, such as the wm values and the corresponding vp values.

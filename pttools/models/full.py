@@ -21,6 +21,8 @@ if tp.TYPE_CHECKING:
 if th.TYPE_CHECKING_OR_DOCS:
     from pttools.models.thermo import ThermoModel
 
+__all__ = ["FullModel"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

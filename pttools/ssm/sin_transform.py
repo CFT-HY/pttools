@@ -13,6 +13,8 @@ from pttools.ssm.sin_transform_approx import sin_transform_approx
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
+__all__ = ["sin_transform", "sin_transform_core_parallel", "sin_transform_core_single"]
+
 
 def _sin_transform_arr(
         z: th.FloatOrArr,
@@ -36,7 +38,7 @@ def _sin_transform_arr(
 
     # If there are z values above the threshold, use the approximation for them.
     if z_lo.size < z.size:  # pyrefly: ignore[missing-attribute]
-        z_hi = z[np.where(z > z_st_thresh - const.DZ_ST_BLEND)]  # pyrefly: ignore[bad-index]
+        z_hi = z[np.where(z > z_st_thresh - const.DZ_ST_BLEND)]  # pyrefly: ignore[bad-index, no-matching-overload]
         I_hi = sin_transform_approx(z_hi, xi, f, v_wall=v_wall, v_sh=v_sh)
 
         if len(z_hi) + len(z_lo) > len(z):  # pyrefly: ignore[bad-argument-type]

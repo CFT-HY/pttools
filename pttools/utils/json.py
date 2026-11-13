@@ -6,6 +6,8 @@ import typing as tp
 
 from orjson import OPT_APPEND_NEWLINE, OPT_INDENT_2, OPT_SERIALIZE_NUMPY, dumps
 
+__all__ = ["export_json"]
+
 
 def export_json(data: dict[str, tp.Any], path: str | os.PathLike[str] | None = None, pretty: bool = True) -> bytes:
     """Export a dictionary as a JSON string."""

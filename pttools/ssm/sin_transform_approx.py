@@ -8,6 +8,8 @@ import numpy as np
 from pttools.speedup import njit
 import pttools.type_hints as th
 
+__all__ = ["envelope", "sin_transform_approx"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

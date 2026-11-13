@@ -29,6 +29,8 @@ from pttools.ssm.suppression import SuppressionMethod
 from pttools.ssm.suppression.fit import SuppressionFitMethod
 from pttools.ssm.suppression.suppression_ssm_data import SUPPRESSION_FOLDER
 
+__all__ = ["OUTPUT_NAME", "Y_MIN", "calc_sup_lattice"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 #: Name of the output files

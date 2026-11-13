@@ -24,6 +24,8 @@ from pttools.speedup.parallel import run_parallel
 import pttools.type_hints as th
 from pttools.utils.system import FORKING
 
+__all__ = ["FluidReference", "compute", "ref"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

@@ -32,6 +32,8 @@ if tp.TYPE_CHECKING:
 if th.TYPE_CHECKING_OR_DOCS:
     from pttools.utils.fields import Fields
 
+__all__ = ["PSI_N_MIN_DETON_LTE", "Bubble", "BubbleArr", "BubbleArr2D"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 # If alpha_n is closer than this to the bag model alpha_n_max for deflagrations, alpha_n is considered high

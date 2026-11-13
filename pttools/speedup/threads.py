@@ -12,6 +12,8 @@ from pttools.speedup.options import NUMBA_DISABLE_JIT
 import pttools.type_hints as th
 from pttools.utils import AVAILABLE_CPU_CORES
 
+__all__ = ["DEFAULT_VARYING_NUMBA_THREADS", "powers_of_2", "time_and_log", "time_with_varying_numba_threads"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

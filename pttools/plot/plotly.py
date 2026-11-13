@@ -15,6 +15,8 @@ import pttools.type_hints as th
 if th.TYPE_CHECKING_OR_DOCS:
     import plotly.graph_objects as go
 
+__all__ = ["PlotlyPlot", "plotly_fix"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

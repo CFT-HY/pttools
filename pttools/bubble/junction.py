@@ -26,6 +26,22 @@ from pttools.type_hints import FloatOrArr
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
+__all__ = [
+    "SOLVE_JUNCTION_LOWER",
+    "SOLVE_JUNCTION_UPPER",
+    "enthalpy_ratio",
+    "junction_condition_deviation1",
+    "junction_condition_deviation2",
+    "junction_condition_deviations",
+    "junction_conditions_deviation",
+    "junction_conditions_solvable",
+    "junction_conditions_solvable_p1",
+    "solve_junction",
+    "solve_junction_internal",
+    "v_plus_hybrid",
+    "w2_junction",
+]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 #: Lower bounds of $\tilde{v}_1, w_1, \tilde{v}_{2,\text{guess}}, w_{2,\text{guess}}$ in :func:`solve_junction`

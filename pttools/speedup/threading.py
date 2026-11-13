@@ -15,6 +15,8 @@ from pttools.speedup.libraries.tbb import TBB_VERSION  # noqa: F401
 from pttools.type_hints import FloatArr1D
 from pttools.utils import system
 
+__all__ = ["check_numba_threading_layer", "numba_openmp_vendor", "predict_numba_threading_layer"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

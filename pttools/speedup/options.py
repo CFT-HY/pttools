@@ -7,6 +7,25 @@ import typing as tp
 from pttools.speedup.threading import numba_openmp_vendor, predict_numba_threading_layer
 from pttools.utils import system
 
+__all__ = [
+    "CONCURRENT_PARALLELISM",
+    "CONCURRENT_THREADING_LAYERS",
+    "MAX_WORKERS_DEFAULT",
+    "MAX_WORKERS_WINDOWS",
+    "NUMBA_DISABLE_JIT",
+    "NUMBA_ENABLE_CACHE",
+    "NUMBA_INTEGRATE",
+    "NUMBA_INTEGRATE_TOLERANCES",
+    "NUMBA_NESTED_PARALLELISM",
+    "NUMBA_OPENMP_VENDOR",
+    "NUMBA_OPTS",
+    "NUMBA_THREADING_LAYER",
+    "SHARED_THREAD_POOL",
+    "THREADING_LAYER_INSTRUCTIONS",
+    "USE_INTERPRETERS",
+    "USE_THREADS",
+]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 # On Windows, the maximum number of worker processes is limited to 61.

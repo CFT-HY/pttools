@@ -62,6 +62,49 @@ There are two exceptions to the pattern of ``T: FloatOrArr``:
 import sys
 import typing as tp
 
+__all__ = [
+    "IS_DOCS",
+    "TYPE_CHECKING_OR_DOCS",
+    "AxesArr1D",
+    "AxesArr2D",
+    "AxesArr3D",
+    "Bool",
+    "BoolArr",
+    "BoolArr1D",
+    "BoolArr2D",
+    "CS2CFuncType",
+    "CS2Fun",
+    "CS2FunScalarPtr",
+    "FSolveOutput",
+    "FigArr1D",
+    "FigArr2D",
+    "Float64",
+    "FloatArr",
+    "FloatArr1D",
+    "FloatArr1DOrList",
+    "FloatArr2D",
+    "FloatArr3D",
+    "FloatArr4D",
+    "FloatArrShaped",
+    "FloatOrArr",
+    "FloatOrArr1D",
+    "FloatOrArr1D2D",
+    "FloatOrArrNumba",
+    "Int",
+    "IntArr1D",
+    "IntArr2D",
+    "IntOrArr",
+    "Interpolation",
+    "NumbaFunc",
+    "ODESolver",
+    "Shape",
+    "Shape1D",
+    "Shape2D",
+    "Shape3D",
+    "Shape4D",
+    "VWXi",
+]
+
 #: Whether the documentation is being built with Sphinx.
 #: Sphinx is imported before the modules that it documents, and therefore it's in ``sys.modules`` when they are.
 IS_DOCS: bool = "sphinx" in sys.modules

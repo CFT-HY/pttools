@@ -19,6 +19,16 @@ import pttools.type_hints as th
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
+__all__ = [
+    "SOLVE_SHOCK_LOWER",
+    "SOLVE_SHOCK_UPPER",
+    "find_shock_index",
+    "shock_zoom_last_element",
+    "solve_shock",
+    "v_shock",
+    "v_shock_curve",
+]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 #: Lower bounds of $\tilde{v}_1, w_1$ in the check of the inputs of :func:`solve_shock`

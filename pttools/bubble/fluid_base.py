@@ -6,6 +6,8 @@ from pttools.bubble.solution_type import SolutionType
 from pttools.speedup import NAN_ARR
 import pttools.type_hints as th
 
+__all__ = ["DEFLAGRATION_NAN", "DeflagrationOutput", "GenericSolverOutput", "SolverOutput"]
+
 # The output consists of:
 # v, w, xi
 # vp, vm, vp_tilde, vm_tilde, v_sh, vm_sh, vm_tilde_sh, wp, wm, wm_sh

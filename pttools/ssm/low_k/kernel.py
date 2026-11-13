@@ -8,6 +8,8 @@ from pttools.speedup import njit
 from pttools.ssm.barotropic import Upsilon
 from pttools.type_hints import FloatOrArr
 
+__all__ = ["acoustic_friction_exponent", "kernel_int_bracket", "kernel_low", "kernel_low_bag"]
+
 
 @njit(cache=True)
 def kernel_int_bracket[T: FloatOrArr](cs: T) -> T:

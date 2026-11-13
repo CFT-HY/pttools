@@ -16,6 +16,8 @@ import numpy as np
 
 from pttools.speedup.options import NUMBA_DISABLE_JIT, NUMBA_OPTS
 
+__all__ = ["Decorator", "njit", "njit_module", "njit_parallel_pair", "vectorize"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

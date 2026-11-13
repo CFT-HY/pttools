@@ -20,6 +20,16 @@ if th.TYPE_CHECKING_OR_DOCS:
     from pttools.bubble.integrate import FluidIntegrateMethod
     from pttools.speedup.differential import DifferentialPointer
 
+__all__ = [
+    "alpha_n_max_bag",
+    "alpha_n_max_deflagration_bag",
+    "alpha_n_max_detonation_bag",
+    "alpha_n_min_deflagration_bag",
+    "alpha_n_min_hybrid_bag",
+    "alpha_plus_max_detonation_bag",
+    "alpha_plus_min_hybrid",
+]
+
 # Alpha_n_max diverges as v_wall -> 1, and the solver fails to find the correct solution above this.
 _V_WALL_MAX_ALPHA_N_MAX_DEFLAGRATION: float = 0.9999
 
@@ -72,7 +82,7 @@ def _alpha_n_max_deflagration_bag_scalar(
         sol_type=SolutionType.HYBRID.value if v_wall > CS0 else SolutionType.SUB_DEF.value,
         n_xi=n_xi
     )
-    i_wall = props.find_v_index(xi, v_wall)
+    i_wall = props.find_v_index(xi, v_wall)  # pyrefly: ignore[bad-argument-type]
     # alpha_n = (w_+/w_N)*alpha_+
     # w is normalized to 1 at large xi
     # Need n_wall+1, as w is an integral of v, and lags by 1 step

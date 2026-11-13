@@ -20,6 +20,8 @@ from pttools.utils.decorators import cached_property
 if tp.TYPE_CHECKING:
     from pttools.lattice.run import LatticeRun
 
+__all__ = ["LatticeSpectrum"]
+
 
 class LatticeSpectrum(BaseOmgw0):
     r"""Power spectra of a hydrodynamic lattice simulation at a given time step.

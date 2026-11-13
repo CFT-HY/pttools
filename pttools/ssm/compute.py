@@ -38,6 +38,8 @@ from pttools.type_hints import FloatArr1D
 if th.TYPE_CHECKING_OR_DOCS:
     from pttools.bubble.solution_type import SolutionType
 
+__all__ = ["SSMBaseResults", "SSMGWResults", "SSMInput", "compute", "compute_base", "compute_gw", "compute_low_k"]
+
 
 class SSMInput(tp.NamedTuple):
     """Input parameters of the Sound Shell Model computation."""

@@ -13,6 +13,8 @@ from scipy.optimize import curve_fit
 
 import pttools.type_hints as th
 
+__all__ = ["PowerLawFit", "fit_power_law"]
+
 
 @dataclass(frozen=True, slots=True)
 class PowerLawFit:

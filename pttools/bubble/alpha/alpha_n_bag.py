@@ -12,6 +12,8 @@ if th.TYPE_CHECKING_OR_DOCS:
     from pttools import speedup
     from pttools.bubble.integrate import FluidIntegrateMethod
 
+__all__ = ["find_alpha_n_bag"]
+
 
 @njit(nogil=True)
 def find_alpha_n_bag(

@@ -9,6 +9,8 @@ from pttools.plot.utils import FigAndAxes, save_fig
 from pttools.speedup.threads import DEFAULT_VARYING_NUMBA_THREADS, time_with_varying_numba_threads
 import pttools.type_hints as th
 
+__all__ = ["plot_threads", "time_and_plot_threads"]
+
 
 def plot_threads(
         name: str,

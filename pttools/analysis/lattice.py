@@ -17,6 +17,8 @@ import pttools.type_hints as th
 if th.TYPE_CHECKING_OR_DOCS:
     from pttools.ssm.spectrum import SSMSpectrum
 
+__all__ = ["suppression_series"]
+
 
 def suppression_series(
         run: LatticeRun,

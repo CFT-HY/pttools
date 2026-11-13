@@ -7,6 +7,8 @@ from pttools.speedup.jit import njit
 import pttools.type_hints as th
 from pttools.type_hints import FloatArr, FloatArr1D
 
+__all__ = ["gradient", "logspace", "resample_log"]
+
 
 @njit(cache=True, nogil=True)
 def gradient[T: FloatArr](f: T) -> T:

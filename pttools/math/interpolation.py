@@ -5,6 +5,8 @@ import numpy as np
 from pttools.speedup import njit
 import pttools.type_hints as th
 
+__all__ = ["interpolate_log_log"]
+
 
 @njit(cache=True, nogil=True)
 def interpolate_log_log(x: th.FloatArr1D, xp: th.FloatArr1D, fp: th.FloatArr1D) -> th.FloatArr1D:

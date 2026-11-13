@@ -7,6 +7,8 @@ import numpy as np
 from pttools.models.const_cs import ConstCSModel
 from pttools.type_hints import FloatArr1D
 
+__all__ = ["GKSVDV_ALPHA_N", "gksvdv_models", "gksvdv_v_wall"]
+
 GKSVDV_ALPHA_N: FloatArr1D = np.array([0.01, 0.03, 0.1, 0.3, 1, 3])
 
 

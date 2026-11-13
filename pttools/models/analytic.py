@@ -19,6 +19,8 @@ if th.TYPE_CHECKING_OR_DOCS:
     from pttools.bubble.solution_type import SolutionType
     from pttools.utils.fields import Fields
 
+__all__ = ["AnalyticModel"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

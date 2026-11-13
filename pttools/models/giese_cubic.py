@@ -11,6 +11,8 @@ from pttools.models.analytic import AnalyticModel
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
+__all__ = ["GieseCubicModel"]
+
 
 class GieseCubicModel(AnalyticModel):
     r"""SM-like model with a cubic term in the free energy density.

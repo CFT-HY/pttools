@@ -26,6 +26,18 @@ from pttools.docs.minigallery import add_minigalleries, remove_duplicate_minigal
 from pttools.docs.paths import LINT_DIR_NAME, NO_PLOTS_ENV_VAR, SPHINX_LOG_ENV_VAR, default_log_dir
 from pttools.logging import setup_logging
 
+__all__ = [
+    "NoPlotDirective",
+    "exclude_lint_dir",
+    "filter_warnings",
+    "load_fluid_reference",
+    "no_plots",
+    "pre_setup",
+    "setup_example_logging",
+    "setup_sphinx",
+    "setup_sphinx_logging",
+]
+
 
 class NoPlotDirective(PlotDirective):
     """A replacement for the Matplotlib ``plot`` directive, which does not generate the figure.

@@ -12,6 +12,8 @@ from pttools.bubble.solution_type import SolutionType
 from pttools.speedup import njit
 import pttools.type_hints as th
 
+__all__ = ["trim_fluid_wall_to_cs", "trim_fluid_wall_to_shock"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 
@@ -22,7 +24,7 @@ def trim_fluid_wall_to_cs(
         xi: th.FloatArr1D,
         t: th.FloatArr1D,
         v_wall: th.FloatOrArr,
-        sol_type: SolutionType,
+        sol_type: SolutionType | str,
         cs2_ptr: th.CS2FunScalarPtr,
         dxi_lim: float = const.DXI_SMALL,
         keep_wall: bool = False) \
@@ -96,7 +98,7 @@ def trim_fluid_wall_to_shock(
         w: th.FloatArr1D,
         xi: th.FloatArr1D,
         t: th.FloatArr1D,
-        sol_type: SolutionType) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
+        sol_type: SolutionType | str) -> tuple[th.FloatArr1D, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D]:
     r"""
     Trims fluid variable arrays $(v, w, \xi)$ so last element is just ahead of shock.
 

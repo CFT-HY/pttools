@@ -36,6 +36,18 @@ if tp.TYPE_CHECKING:
     from pttools.models.const_cs import ConstCSModel
     from pttools.models.model import Model
 
+__all__ = [
+    "N_BRACKET_CJ",
+    "WM_WP_RATIO_MAX_CJ",
+    "v_chapman_jouguet",
+    "v_chapman_jouguet_analytical",
+    "v_chapman_jouguet_bag",
+    "v_chapman_jouguet_const_cs",
+    "v_chapman_jouguet_const_cs_reference",
+    "wm_chapman_jouguet",
+    "wm_solvable_chapman_jouguet_log",
+]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

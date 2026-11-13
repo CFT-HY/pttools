@@ -26,6 +26,19 @@ if th.TYPE_CHECKING_OR_DOCS:
 
     from pttools.bubble.bubble import Bubble
 
+__all__ = [
+    "COMPUTE_FAIL",
+    "DeltaEntropyPlot",
+    "DurationPlot",
+    "EntropyConservationPlot",
+    "EntropyPlot",
+    "GieseApproximationPlot",
+    "KappaOmegaSumPlot",
+    "compute",
+    "gen_and_plot_entropy",
+    "plot_entropy_data",
+]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

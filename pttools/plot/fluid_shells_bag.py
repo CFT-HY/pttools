@@ -13,6 +13,8 @@ from pttools.bubble.solution_type_bag import identify_solution_type_bag
 from pttools.plot import utils
 import pttools.type_hints as th
 
+__all__ = ["plot_fluid_shells_bag"]
+
 
 @tp.overload
 def plot_fluid_shells_bag(

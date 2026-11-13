@@ -7,6 +7,8 @@ Commented for better readability.
 import numpy as np
 from scipy.integrate import odeint, simpson
 
+__all__ = ["kappaNuModel"]
+
 
 def kappaNuModel(cs2: float, al: float, vp: float, n: int = 501) -> float:
     r"""Calculate the efficiency factor $\kappa_{\bar{\theta}}$.

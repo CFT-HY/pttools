@@ -15,6 +15,8 @@ from pttools.lattice.quantities import Quantity, integral_scale, mean_square
 from pttools.lattice.run_base import LatticeRunBase
 import pttools.type_hints as th
 
+__all__ = ["LatticeRunSpectra"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

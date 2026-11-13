@@ -16,6 +16,8 @@ if th.TYPE_CHECKING_OR_DOCS:
     from pttools.bubble.integrate import FluidIntegrateMethod
     from pttools.speedup.differential import DifferentialPointer
 
+__all__ = ["identify_solution_type_alpha_plus_bag", "identify_solution_type_bag"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

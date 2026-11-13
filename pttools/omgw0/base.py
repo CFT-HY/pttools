@@ -31,6 +31,8 @@ if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
 
+__all__ = ["BaseOmgw0"]
+
 
 class BaseOmgw0(BaseSpectrum):
     r"""Base class for the spectra that can be converted to the GW power spectrum today $\Omega_{\text{gw},0}$.

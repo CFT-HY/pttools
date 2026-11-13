@@ -16,6 +16,8 @@ from pttools.ssm.ssm import T_tilde as T_tilde_func
 from pttools.ssm.ssm_bag import a2_e_conserving_bag_file, a2_ssm_func_bag
 import pttools.type_hints as th
 
+__all__ = ["convert_params", "parse_params", "power_gw_bag", "power_v_bag", "spec_den_v_bag"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 
@@ -210,7 +212,7 @@ def spec_den_v_bag(
     if filename is None:
         # The numbers of points are converted to a tuple of ints, so that the jitted function is not compiled
         # separately for arrays and tuples.
-        npt = tuple(int(n) for n in npt)
+        npt = tuple(int(n) for n in npt)  # pyrefly: ignore[bad-assignment]
         A2_lookup = a2_ssm_func_bag(
             z=qT_lookup, v_wall=v_wall, alpha=alpha,
             df_dtau_ptr=bubble.DF_DTAU_PTR_BAG,

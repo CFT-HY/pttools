@@ -5,6 +5,8 @@ import numpy as np
 from pttools.speedup import njit
 from pttools.type_hints import FloatOrArr
 
+__all__ = ["gamma", "gamma2", "lorentz"]
+
 
 @njit(cache=True)
 def gamma[T: FloatOrArr](v: T) -> T:

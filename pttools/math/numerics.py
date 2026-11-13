@@ -12,6 +12,18 @@ from scipy.signal import savgol_filter
 from pttools.speedup import njit, threads
 import pttools.type_hints as th
 
+__all__ = [
+    "EPS",
+    "finite_edge",
+    "is_nan_or_none",
+    "is_nan_or_outside",
+    "isclose_scalar",
+    "powers_of_2",
+    "rel_diff_arr",
+    "rel_diff_scalar",
+    "running_mean",
+]
+
 #: Smallest float
 EPS: tp.Final[np.float64] = np.nextafter(0, 1)
 #: Powers of 2 up to a certain value, see :py:func:`pttools.speedup.threads.powers_of_2`.

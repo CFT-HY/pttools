@@ -15,6 +15,8 @@ if th.TYPE_CHECKING_OR_DOCS:
 
     from pttools.models.model import Model
 
+__all__ = ["ChapmanJouguetPlot"]
+
 
 class ChapmanJouguetPlot:
     """Plot Chapman-Jouguet speed."""

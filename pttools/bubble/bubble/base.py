@@ -23,6 +23,8 @@ if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
 
+__all__ = ["BaseBubble", "NotYetSolvedError"]
+
 
 class BaseBubble(Extractable, abc.ABC):
     """Common base class of the bubbles and droplets, both computed and imported.

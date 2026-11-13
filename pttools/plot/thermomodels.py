@@ -13,6 +13,8 @@ import pttools.type_hints as th
 if th.TYPE_CHECKING_OR_DOCS:
     from pttools import bubble, models
 
+__all__ = ["ThermoModelsPlot"]
+
 
 class ThermoModelsPlot:
     r"""A plot of the properties of multiple thermodynamic models."""

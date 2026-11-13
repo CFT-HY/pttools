@@ -12,6 +12,19 @@ import sys
 
 from pttools.utils.system import PROJECT_DIR
 
+__all__ = [
+    "DOCS_DIR_FILES",
+    "DOCS_DIR_NAME",
+    "LINT_DIR_NAME",
+    "LOG_DIR_NAME",
+    "NO_PLOTS_ENV_VAR",
+    "SPHINX_LOG_ENV_VAR",
+    "default_log_dir",
+    "env_dir",
+    "find_docs_dir",
+    "is_docs_dir",
+]
+
 #: Files that a Sphinx documentation directory should contain
 DOCS_DIR_FILES: tuple[str, ...] = ("conf.py", "Makefile")
 #: Name of the documentation directory

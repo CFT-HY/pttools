@@ -17,6 +17,8 @@ import pttools.type_hints as th
 if th.TYPE_CHECKING_OR_DOCS:
     from pttools.models.model import Model
 
+__all__ = ["XIVPlanePlot"]
+
 
 class XIVPlanePlot:
     r"""A plot of the $\xi-v$ plane."""

@@ -12,6 +12,8 @@ import pttools.type_hints as th
 if th.TYPE_CHECKING_OR_DOCS:
     from pttools.models.thermo import ThermoModel
 
+__all__ = ["plot_g_cs2"]
+
 
 def plot_g_cs2(
         thermo: ThermoModel,

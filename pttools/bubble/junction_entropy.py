@@ -15,6 +15,8 @@ if tp.TYPE_CHECKING:
 if th.TYPE_CHECKING_OR_DOCS:
     from pttools.bubble.phase import Phase
 
+__all__ = ["check_entropy_fluxes", "entropy_flux"]
+
 
 def check_entropy_fluxes(
         model: Model,

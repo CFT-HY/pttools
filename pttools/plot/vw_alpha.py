@@ -21,6 +21,8 @@ if th.TYPE_CHECKING_OR_DOCS:
 
     from pttools.analysis.bubble_grid import BubbleGridVWAlpha
 
+__all__ = ["VwAlphaPlot"]
+
 
 class VwAlphaPlot:
     r"""A plot with $v_\text{wall}$ on the x-axis and $\alpha_n$ on the y-axis."""

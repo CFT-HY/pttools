@@ -21,6 +21,16 @@ from pttools.speedup import fitpack
 from pttools.speedup.jit import njit
 import pttools.type_hints as th
 
+__all__ = [
+    "fitpack_spl_",
+    "splev",
+    "splev_linear",
+    "splev_linear_arr",
+    "splev_linear_core",
+    "splev_linear_scalar",
+    "splev_linear_validate",
+]
+
 # Extrapolation modes, i.e. the values of the ext argument, as in scipy.interpolate.splev()
 _EXT_EXTRAPOLATE = 0
 _EXT_ZERO = 1

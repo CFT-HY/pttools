@@ -4,6 +4,8 @@ import functools
 import typing as tp
 import warnings
 
+__all__ = []
+
 
 def _deprecated_alias[**P, R](
         new: tp.Callable[P, R],

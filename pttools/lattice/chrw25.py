@@ -24,6 +24,17 @@ from pttools.lattice.run import LatticeRun
 from pttools.ssm.nucleation import NucType
 from pttools.utils.system import PROJECT_DIR
 
+__all__ = [
+    "CHRW25_RUNS",
+    "DATA_DIR_ENV",
+    "DEFAULT_DATA_DIR",
+    "compare_chrw25_runs",
+    "data_dir",
+    "load_chrw25_run",
+    "load_chrw25_runs",
+    "step_ends",
+]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 #: The runs of :correia_2025:`\ `.

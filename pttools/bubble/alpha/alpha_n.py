@@ -5,6 +5,8 @@ from pttools.speedup import njit
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
+__all__ = ["find_alpha_n_from_w_xi"]
+
 
 @njit
 def find_alpha_n_from_w_xi[T: FloatOrArr](w: th.FloatArr1D, xi: th.FloatArr1D, v_wall: float, alpha_p: T) -> T:

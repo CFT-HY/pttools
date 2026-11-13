@@ -21,6 +21,8 @@ if tp.TYPE_CHECKING:
 if th.TYPE_CHECKING_OR_DOCS:
     from pttools.bubble.fluid_base import GenericSolverOutput
 
+__all__ = ["sound_shell_gksvdv"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

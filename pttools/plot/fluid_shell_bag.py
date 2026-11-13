@@ -7,6 +7,8 @@ import numpy as np
 from pttools.bubble import SolutionType, const, fluid_bag, relativity
 from pttools.plot import utils
 
+__all__ = ["plot_fluid_shell_bag"]
+
 
 def plot_fluid_shell_bag(  # noqa: PLR0915
         v_wall: float,
@@ -104,7 +106,7 @@ def plot_fluid_shell_bag(  # noqa: PLR0915
     if sol_type != SolutionType.DETON:
         ax1.plot(xi_even[n_cs:], v_sh[n_cs:], 'k--', label=r'$v_{\rm sh}(\xi_{\rm sh})$')
         if high_v_approx:
-            ax1.plot(xi[n_wall:n_sh], v_approx, 'b--', label=r'$v$ ($v < \xi$ approx)')
+            ax1.plot(xi[n_wall:n_sh], v_approx, 'b--', label=r'$v$ ($v < \xi$ approx)')  # pyrefly: ignore[bad-argument-type]
             ax1.plot(xi, xi, 'k--', label=r'$v = \xi$')
 
     if sol_type != SolutionType.SUB_DEF:
@@ -112,7 +114,7 @@ def plot_fluid_shell_bag(  # noqa: PLR0915
         ax1.plot(xi_even[n_cs:], v_minus_max[n_cs:], 'k-.', label=r'$\mu(\xi,c_{\rm s})$')
 
     if low_v_approx:
-        ax1.plot(xi, v_approx, 'b--', label=r'$v$ low $\alpha$ approx')
+        ax1.plot(xi, v_approx, 'b--', label=r'$v$ low $\alpha$ approx')  # pyrefly: ignore[bad-argument-type]
 
     ax1.legend(loc='best')
 
@@ -134,14 +136,14 @@ def plot_fluid_shell_bag(  # noqa: PLR0915
         ax2.plot(xi_even[n_cs:], w_sh[n_cs:], 'k--', label=r'$w_{\rm sh}(\xi_{\rm sh})$')
 
         if high_v_approx:
-            ax2.plot(xi[n_wall:n_sh], w_approx[:], 'b--', label=r'$w$ ($v < \xi$ approx)')
+            ax2.plot(xi[n_wall:n_sh], w_approx[:], 'b--', label=r'$w$ ($v < \xi$ approx)')  # pyrefly: ignore[unsupported-operation]
 
     else:
         wmax_det = (xi_even / const.CS0) * relativity.gamma2(xi_even) / relativity.gamma2(const.CS0)
         ax2.plot(xi_even[n_cs:], wmax_det[n_cs:], 'k-.', label=r'$w_{\rm max}$')
 
     if low_v_approx:
-        ax2.plot(xi, w_approx, 'b--', label=r'$w$ low $\alpha$ approx')
+        ax2.plot(xi, w_approx, 'b--', label=r'$w$ low $\alpha$ approx')  # pyrefly: ignore[bad-argument-type]
 
     ax2.legend(loc='best')
     ax2.set_ylabel(r'$w(\xi)$', size=16)

@@ -17,6 +17,14 @@ if th.TYPE_CHECKING_OR_DOCS:
 
 from pttools.docs.utils import backreference_names
 
+__all__ = [
+    "MINIGALLERY_CLASS",
+    "MINIGALLERY_REGEX",
+    "MINIGALLERY_TYPES",
+    "add_minigalleries",
+    "remove_duplicate_minigalleries",
+]
+
 #: Object types that get an automatic mini-gallery.
 #: These are the values of the "what" argument of the "autodoc-process-docstring" event.
 MINIGALLERY_TYPES: frozenset[str] = frozenset({

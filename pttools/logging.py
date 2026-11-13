@@ -11,6 +11,20 @@ from threading import Lock
 import time
 import typing as tp
 
+__all__ = [
+    "CONFIG",
+    "LOGGING_LOCK",
+    "LOG_FORMAT",
+    "LoggingConfig",
+    "MessageFilter",
+    "append_log",
+    "log_console",
+    "redirect_output",
+    "setup_logging",
+    "setup_worker_logging",
+    "silence_log_spam",
+]
+
 LOGGING_LOCK: Lock = Lock()
 
 #: Format of the log messages

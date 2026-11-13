@@ -22,6 +22,33 @@ if th.TYPE_CHECKING_OR_DOCS:
 
     from pttools.math.asymptote import AsymptoteFit
 
+__all__ = [
+    "COLOR_GW",
+    "COLOR_PAR",
+    "COLOR_PERP",
+    "COLOR_SSM",
+    "COLOR_V_PAR",
+    "COLOR_V_PERP",
+    "GW_ASYMPTOTE_SCALE_LABEL",
+    "GW_RATE_LABEL",
+    "T_LABEL",
+    "Z_LABEL",
+    "plot_gw_asymptote",
+    "plot_gw_growth_index",
+    "plot_gw_rate_comparison",
+    "plot_gw_rate_time_comparison",
+    "plot_integral_scale_comparison",
+    "plot_kinetic_energy_comparison",
+    "plot_omega_gw_asymptote",
+    "plot_pow_gw_asymptote",
+    "plot_pow_gw_asymptote_comparison",
+    "plot_pow_gw_time_fits",
+    "plot_quantities_comparison",
+    "plot_spectra_comparison",
+    "plot_ubar_comparison",
+    "plot_velocity_comparison",
+]
+
 #: Colours of the simulation data, as in :correia_2025:`\ `
 COLOR_GW: str = "#d55e00"
 COLOR_PAR: str = "#0072b2"

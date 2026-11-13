@@ -10,6 +10,8 @@ from pttools.bubble.v_minus import v_minus
 from pttools.bubble.v_plus import v_plus
 from pttools.speedup import njit
 
+__all__ = ["fluid_speeds_at_wall_bag"]
+
 
 @njit
 def fluid_speeds_at_wall_bag(

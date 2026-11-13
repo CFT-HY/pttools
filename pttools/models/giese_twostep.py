@@ -9,6 +9,8 @@ from pttools.models.analytic import AnalyticModel
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
+__all__ = ["GieseTwoStepModel"]
+
 
 class GieseTwoStepModel(AnalyticModel):
     """Model for a two-step phase transition.

@@ -12,6 +12,8 @@ from pttools.bubble.bubble.bubble import Bubble
 import pttools.type_hints as th
 from pttools.utils.decorators import post_func
 
+__all__ = ["get_kappa", "get_kappa_for_v_walls", "get_kappa_giese", "get_kappa_omega", "get_ke_frac"]
+
 
 @post_func(return_type=float, fail_value=np.nan)
 def get_ke_frac(bubble: Bubble) -> float:

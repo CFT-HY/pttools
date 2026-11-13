@@ -28,6 +28,16 @@ import pttools.type_hints as th
 if th.TYPE_CHECKING_OR_DOCS:
     from pttools import speedup
 
+__all__ = [
+    "SoundShellDict",
+    "fluid_shell_alpha_plus",
+    "fluid_shell_bag",
+    "fluid_shell_dict",
+    "sound_shell_alpha_plus_bag",
+    "sound_shell_bag",
+    "sound_shell_dict",
+]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 # These can be compiled with nogil=True even though find_alpha_plus_bag() uses "with numba.objmode",

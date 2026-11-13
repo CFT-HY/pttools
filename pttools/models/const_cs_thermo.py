@@ -15,6 +15,8 @@ from pttools.type_hints import FloatOrArr
 if th.TYPE_CHECKING_OR_DOCS:
     from pttools.utils.fields import Fields
 
+__all__ = ["ConstCSThermoModel"]
+
 
 class ConstCSThermoModel(ThermoModel):
     """ThermoModel-based constant $c_s$ model."""

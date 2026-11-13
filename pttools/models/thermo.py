@@ -15,6 +15,8 @@ from pttools.speedup import njit
 from pttools.speedup.overload import np_all_fix
 from pttools.type_hints import CS2Fun, FloatArr1D, FloatOrArr, NumbaFunc
 
+__all__ = ["ThermoModel"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

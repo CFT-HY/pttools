@@ -14,6 +14,8 @@ from scipy.optimize import curve_fit
 from pttools.speedup import njit
 import pttools.type_hints as th
 
+__all__ = ["AsymptoteFit", "asymptotic_growth", "fit_asymptote", "fit_start_index"]
+
 
 @dataclass(frozen=True, slots=True)
 class AsymptoteFit:

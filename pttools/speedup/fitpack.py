@@ -17,6 +17,8 @@ import numpy as np
 
 import pttools.type_hints as th
 
+__all__ = ["fpbspl", "splder", "splev"]
+
 
 # @njit
 def fpbspl(t: th.FloatArr1D, n: int, k: int, x: float, l: int, h: th.FloatArr1D) -> None:

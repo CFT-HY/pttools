@@ -13,6 +13,8 @@ import pttools.type_hints as th
 if th.TYPE_CHECKING_OR_DOCS:
     from pttools.bubble.bubble import Bubble
 
+__all__ = ["compute_entropy", "compute_entropy_region"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

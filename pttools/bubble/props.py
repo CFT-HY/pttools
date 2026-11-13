@@ -9,6 +9,8 @@ from pttools.speedup import njit
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
+__all__ = ["find_phase", "find_phase_core", "find_v_index", "v_and_w_from_solution", "v_max_behind"]
+
 
 def find_phase(xi: th.FloatArr1D, v_wall: float, sol_type: SolutionType | None = None) -> th.FloatArr1D:
     r"""Get the phase at each given $\xi$ value.

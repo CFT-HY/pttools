@@ -14,6 +14,17 @@ import pttools.type_hints as th
 if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.contour import QuadContourSet
 
+__all__ = [
+    "DEFAULT_CMAP",
+    "DEFAULT_CMAP_NEG",
+    "DEFAULT_CMAP_POS",
+    "DEFAULT_REGION_COLOR",
+    "cmap_lines",
+    "cmap_plusminus",
+    "color_region",
+    "get_cmap",
+]
+
 DEFAULT_CMAP: Colormap = cm.viridis
 DEFAULT_CMAP_NEG: Colormap = cm.Blues
 DEFAULT_CMAP_POS: Colormap = cm.Reds

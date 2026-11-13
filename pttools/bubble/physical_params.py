@@ -16,9 +16,12 @@ import numba
 
 # import numpy as np
 from pttools import speedup
+from pttools.speedup.numba_wrapper import jitclass
+
+__all__ = ["NucArgs", "PhysicalParams"]
 
 
-@speedup.jitclass([
+@jitclass([
     ("a", numba.float64)
 ])
 class NucArgs:
@@ -37,7 +40,7 @@ class NucArgs:
 # np.record()
 
 
-@speedup.jitclass([
+@jitclass([
     ("v_wall", numba.float64),
     ("alpha", numba.float64),
     ("nuc_type", numba.optional(numba.types.string)),

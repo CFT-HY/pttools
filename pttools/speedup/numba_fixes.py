@@ -14,6 +14,8 @@ import warnings
 from numba.core.compiler import CompileResult
 from numba.core.errors import NumbaWarning
 
+__all__ = ["ignore_objmode_nogil_warning", "patch_reload_init"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 _REBUILD_ORIG: tp.Callable[..., CompileResult] = CompileResult._rebuild.__func__

@@ -20,6 +20,8 @@ if th.TYPE_CHECKING_OR_DOCS:
     from pttools.lattice.spectrum import LatticeSpectrum
     from pttools.ssm.spectrum import SSMSpectrum
 
+__all__ = ["LatticeComparison", "omega_comparisons"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

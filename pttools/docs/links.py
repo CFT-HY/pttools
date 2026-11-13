@@ -2,6 +2,21 @@
 
 """Utilities for handling links in the documentation."""
 
+__all__ = [
+    "EXTLINKS",
+    "EXTLINKS_DYNAMIC",
+    "EXTLINKS_STATIC",
+    "HINDMARSH_ET_AL",
+    "LINKCHECK_ALLOWED_REDIRECTS",
+    "ExtLink",
+    "ExtLinks",
+    "arxiv_link",
+    "convert_extlinks",
+    "doi_link",
+    "hdl_link",
+    "print_links",
+]
+
 type ExtLink = tuple[str, str]
 type ExtLinks = dict[str, ExtLink]
 

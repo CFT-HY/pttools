@@ -17,6 +17,8 @@ from pttools.ssm.sin_transform import sin_transform as _sin_transform
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
+__all__ = ["gen_piecewise", "sin_transform", "sin_transform_debug"]
+
 
 # @profile
 def gen_piecewise(x: sp.Symbol, points: th.FloatArr2D) -> sp.Piecewise:

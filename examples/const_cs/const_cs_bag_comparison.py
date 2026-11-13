@@ -7,6 +7,7 @@ import numpy as np
 
 from examples.utils import save_and_show_fig
 from pttools import models
+from pttools.bubble import Phase
 from pttools.plot.models import ModelsPlot
 from pttools.utils.time import log_duration
 
@@ -22,9 +23,9 @@ def main() -> ModelsPlot:
     model_sm = models.FullModel.cached(thermo=models.StandardModel.cached(), allow_invalid=True)
 
     plot = ModelsPlot(temp=np.logspace(1, 2.5, 100))
-    plot.add(model_bag, phase=models.Phase.SYMMETRIC)
-    plot.add(model_thermo_bag, phase=models.Phase.SYMMETRIC, ls="--")
-    plot.add(model_sm, phase=models.Phase.SYMMETRIC, ls=":")
+    plot.add(model_bag, phase=Phase.SYMMETRIC)
+    plot.add(model_thermo_bag, phase=Phase.SYMMETRIC, ls="--")
+    plot.add(model_sm, phase=Phase.SYMMETRIC, ls=":")
     plot.process()
     return plot
 

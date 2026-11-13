@@ -8,6 +8,8 @@ from scipy.optimize import fsolve
 
 import pttools.type_hints as th
 
+__all__ = ["fsolve_vary"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

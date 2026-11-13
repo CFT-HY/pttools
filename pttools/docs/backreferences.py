@@ -24,6 +24,16 @@ from sphinx_gallery import backreferences, gen_rst
 
 from pttools.docs.utils import MISSING, is_same_object, resolve_object
 
+__all__ = [
+    "CodeObject",
+    "add_defining_modules",
+    "defining_module",
+    "defining_submodule",
+    "ensure_imported",
+    "gen_identify_names",
+    "patch_sphinx_gallery",
+]
+
 #: A code object of Sphinx-Gallery, which describes an object that is used in an example
 type CodeObject = dict[str, tp.Any]
 

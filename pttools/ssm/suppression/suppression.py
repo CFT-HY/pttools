@@ -14,6 +14,28 @@ from pttools.ssm.suppression.suppression_ssm_data import SUPPRESSION_FOLDER
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
+__all__ = [
+    "C1",
+    "C2",
+    "CHRW25",
+    "DEFAULT_SUPPRESSION",
+    "M1",
+    "M2",
+    "NO_HYBRIDS",
+    "NO_HYBRIDS_EXT",
+    "NO_HYBRIDS_EXT_CHRW25",
+    "SUPPRESSIONS",
+    "V_WALL_KINK",
+    "WITH_HYBRIDS",
+    "WITH_HYBRIDS_CHRW25",
+    "WITH_HYBRIDS_EXT",
+    "Suppression",
+    "SuppressionMethod",
+    "alpha_n_max",
+    "alpha_n_max_approx",
+    "extend",
+]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 # TODO: Why is there a difference in the low-alpha low-vw region between hybrids and no hybrids data set?

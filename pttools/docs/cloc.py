@@ -39,6 +39,17 @@ import typing as tp
 
 from pttools.utils.git import git_toplevel, tracked_files
 
+__all__ = [
+    "CLOCIGNORE",
+    "CLOC_COUNT_COLUMNS",
+    "DEFAULT_CLOC_ARGS",
+    "cloc",
+    "cloc_compact",
+    "counted_files",
+    "find_clocignore",
+    "format_compact",
+]
+
 #: Name of the files that contain the patterns of the files to be excluded
 CLOCIGNORE: str = ".clocignore"
 #: Options that are passed to cloc if no other options are given

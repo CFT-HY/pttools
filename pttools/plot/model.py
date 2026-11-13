@@ -12,6 +12,8 @@ from pttools.bubble import Phase
 from pttools.plot.utils import A4_PAPER_SIZE
 import pttools.type_hints as th
 
+__all__ = ["ModelPlot"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

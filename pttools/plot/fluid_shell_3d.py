@@ -19,6 +19,8 @@ if th.TYPE_CHECKING_OR_DOCS:
     from pttools.bubble.bubble import Bubble
     from pttools.models.model import Model
 
+__all__ = ["BubblePlot3D"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

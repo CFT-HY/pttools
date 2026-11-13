@@ -8,6 +8,8 @@ from pttools.ssm import DEFAULT_N_PT, J_old, NptType, NucType, power_gw_bag
 from pttools.ssm.suppression import DEFAULT_SUPPRESSION, Suppression, SuppressionMethod
 import pttools.type_hints as th
 
+__all__ = ["omgw0_bag"]
+
 
 def omgw0_bag(
         freqs: th.FloatArr1D,

@@ -32,6 +32,8 @@ from pttools.omgw0.factors import H
 from pttools.ssm.nucleation import NucType
 import pttools.type_hints as th
 
+__all__ = ["G_LATTICE", "LatticeRunBase", "Steps"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 #: Time step or an array of time steps

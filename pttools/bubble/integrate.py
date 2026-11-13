@@ -24,6 +24,23 @@ import pttools.type_hints as th
 if th.TYPE_CHECKING_OR_DOCS:
     from scipy.integrate._ivp.ivp import OdeResult
 
+__all__ = [
+    "DEFAULT_DF_DTAU",
+    "DEFAULT_FLUID_INTEGRATE_METHOD",
+    "DF_DTAU_PTR_BAG",
+    "FluidIntegrateMethod",
+    "FluidIntegrateOutput",
+    "IVPMethod",
+    "add_df_dtau",
+    "differentials",
+    "fluid_integrate_param",
+    "fluid_integrate_param_numba",
+    "fluid_integrate_param_odeint",
+    "fluid_integrate_param_solve_ivp",
+    "gen_df_dtau",
+    "precompile",
+]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 # _IVPMethod contains also the type objects, but these are not supported by Numba.
@@ -112,7 +129,7 @@ def fluid_integrate_param(
         v0: float,
         w0: float,
         xi0: float,
-        phase: Phase,
+        phase: Phase | float,
         df_dtau_ptr: DifferentialPointer,
         method: FluidIntegrateMethod,
         t_end: float = DEFAULT_T_END,

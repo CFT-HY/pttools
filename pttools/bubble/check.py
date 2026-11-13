@@ -16,6 +16,8 @@ if th.TYPE_CHECKING_OR_DOCS:
     from pttools.bubble.integrate import FluidIntegrateMethod
     from pttools.speedup.differential import DifferentialPointer
 
+__all__ = ["NucArgs", "PhysicalParams", "check_physical_params", "check_wall_speed", "find_most_negative_vals"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 type NucArgs = tuple[float, ...]

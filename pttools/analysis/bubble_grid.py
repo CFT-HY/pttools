@@ -16,6 +16,8 @@ if tp.TYPE_CHECKING:
 if th.TYPE_CHECKING_OR_DOCS:
     from numpy.typing import NDArray
 
+__all__ = ["BubbleGrid", "BubbleGridVWAlpha"]
+
 
 class BubbleGrid:
     """A grid of bubbles."""

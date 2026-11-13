@@ -10,6 +10,8 @@ from pttools.models.thermo import ThermoModel
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
+__all__ = ["StandardModel"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

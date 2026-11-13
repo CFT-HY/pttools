@@ -24,6 +24,15 @@ import pttools.type_hints as th
 if th.TYPE_CHECKING_OR_DOCS:
     from pttools.ssm.spectrum_base import BaseSpectrum
 
+__all__ = [
+    "SuppressionFit",
+    "SuppressionFitMethod",
+    "fit_mask",
+    "fit_suppression",
+    "fit_suppression_gw",
+    "lattice_artifact_start",
+]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

@@ -15,6 +15,8 @@ from pttools.speedup import njit, njit_parallel_pair
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
+__all__ = ["max_speed_deflag", "v_plus", "v_plus_limit", "v_plus_off_limits"]
+
 
 @njit(cache=True)
 def max_speed_deflag(alpha_p: float) -> float:

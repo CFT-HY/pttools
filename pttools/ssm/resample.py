@@ -11,6 +11,8 @@ from pttools.speedup import njit
 from pttools.ssm import const
 import pttools.type_hints as th
 
+__all__ = ["resample_merged_uniform_xi", "resample_uniform_xi"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

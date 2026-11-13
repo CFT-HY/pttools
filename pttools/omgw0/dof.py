@@ -5,6 +5,8 @@ import typing as tp
 from pttools.omgw0.const import GE0_PHOTON, GS0_PHOTON, N_NU
 from pttools.type_hints import FloatOrArr
 
+__all__ = ["ge0", "gs0"]
+
 
 def ge0[T: FloatOrArr](ge0_photon: T = GE0_PHOTON, n_nu: T | float = N_NU) -> T:
     r"""$g_{e0}$, the degrees of freedom for energy density today.

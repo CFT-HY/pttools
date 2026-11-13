@@ -5,13 +5,23 @@ import numpy as np
 from pttools.bubble import (
     DEFAULT_FLUID_INTEGRATE_METHOD,
     DF_DTAU_PTR_BAG,
-    DifferentialPointer,
     FluidIntegrateMethod,
     Phase,
     fluid_integrate_param,
     v_max_behind,
 )
+from pttools.speedup.differential import DifferentialPointer
 from pttools.type_hints import FloatArr1D, FloatArr3D
+
+__all__ = [
+    "DEFAULT_CURVES_BROKEN_V",
+    "DEFAULT_CURVES_INVERSE_V",
+    "DEFAULT_CURVES_SYMMETRIC_V",
+    "curves_broken",
+    "curves_droplet",
+    "curves_inverse",
+    "curves_symmetric",
+]
 
 DEFAULT_CURVES_BROKEN_V: FloatArr1D = np.linspace(0, 1, 5)
 DEFAULT_CURVES_INVERSE_V: FloatArr1D = np.linspace(-1, 0, 10)

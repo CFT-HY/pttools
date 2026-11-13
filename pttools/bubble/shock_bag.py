@@ -12,6 +12,8 @@ from pttools.speedup import njit
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
+__all__ = ["find_shock_index_bag", "v_shock_bag", "wm_shock_bag", "wp_shock_bag"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

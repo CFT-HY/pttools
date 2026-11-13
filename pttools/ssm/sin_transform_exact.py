@@ -8,6 +8,8 @@ import numpy as np
 from pttools.speedup import njit, njit_parallel_pair
 import pttools.type_hints as th
 
+__all__ = ["Z_DXI_SERIES", "sharpen_padding", "sound_shell_transforms_pl_parallel", "sound_shell_transforms_pl_single"]
+
 #: Below this $z \Delta\xi$, the segment terms are computed with a series to avoid cancellation.
 Z_DXI_SERIES: float = 1e-3
 

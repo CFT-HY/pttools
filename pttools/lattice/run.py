@@ -33,6 +33,8 @@ from pttools.ssm.spectrum import SSMSpectrum
 from pttools.ssm.suppression import SuppressionMethod
 import pttools.type_hints as th
 
+__all__ = ["DEFAULT_Y_LATTICE", "LatticeRun"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 #: Default $z = kR_*$ points of the Sound Shell Model spectra for comparisons with simulations.

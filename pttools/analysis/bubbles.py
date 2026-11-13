@@ -11,6 +11,8 @@ import pttools.type_hints as th
 if th.TYPE_CHECKING_OR_DOCS:
     from pttools.bubble import BaseBubble, Phase
 
+__all__ = ["cs2_common"]
+
 
 def cs2_common(
         bubbles: tp.Iterable[BaseBubble],

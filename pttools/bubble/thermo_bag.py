@@ -25,6 +25,24 @@ if th.TYPE_CHECKING_OR_DOCS:
 
     from pttools.speedup.differential import DifferentialPointer
 
+__all__ = [
+    "SPLIT_INTEGRATE_MIN_POINTS",
+    "Integrand",
+    "de_from_w_bag",
+    "de_from_w_new_bag",
+    "get_kappa_bag",
+    "get_kappa_de_bag",
+    "get_kappa_dq_bag",
+    "get_ke_de_frac_bag",
+    "get_ke_frac_bag",
+    "get_ke_frac_new_bag",
+    "get_ubarf2_bag",
+    "get_ubarf2_new_bag",
+    "mean_energy_change_bag",
+    "part_integrate",
+    "split_integrate",
+]
+
 type Integrand = \
     tp.Callable[
         [th.FloatArr1D, th.FloatArr1D, th.FloatArr1D],
@@ -414,7 +432,7 @@ def _get_ubarf2_bag_scalar(
     else:
         # Now ready to solve for fluid profile
         v, w, xi = fluid_bag.sound_shell_bag(
-            v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr,
+            v_wall, alpha_n, df_dtau_ptr=df_dtau_ptr,  # pyrefly: ignore[bad-argument-type]
             ode_method=ode_method, cs2_ptr=cs2_ptr, n_xi=n_xi)
         w_bar_value = w[-1] if wn_as_w_bar else w_bar(w, xi, v_wall)  # pyrefly: ignore[bad-argument-type]
         ub2 = ubarf2(v, w, xi, v_wall, w_bar=w_bar_value)  # pyrefly: ignore[bad-argument-type]

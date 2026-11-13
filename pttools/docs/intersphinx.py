@@ -1,5 +1,7 @@
 """Intersphinx configuration."""
 
+__all__ = ["INTERSPHINX_MAPPING", "IntersphinxMapping"]
+
 type IntersphinxMapping = dict[str, tuple[str, str | None]]
 
 INTERSPHINX_MAPPING: IntersphinxMapping = {

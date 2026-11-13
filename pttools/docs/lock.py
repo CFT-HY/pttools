@@ -29,6 +29,17 @@ import pttools.type_hints as th
 if th.TYPE_CHECKING_OR_DOCS:
     from sphinx.application import Sphinx
 
+__all__ = [
+    "ACQUIRE_PRIORITY",
+    "LOCKED_EVENTS",
+    "LOCK_FILE_NAME",
+    "LOG_WAIT_THRESHOLD",
+    "RELEASE_PRIORITY",
+    "SourceLock",
+    "setup_source_lock",
+    "source_lock_path",
+]
+
 #: The logger is in the namespace of the ``sphinx`` logger, so that its messages are handled by the handlers of Sphinx,
 #: e.g. printed to the console and saved to the log file of :py:func:`pttools.docs.setup.setup_sphinx_logging`.
 #: The standard library logger is used instead of :py:func:`sphinx.util.logging.getLogger`,

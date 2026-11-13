@@ -76,6 +76,28 @@ from pttools.docs.paths import (
 from pttools.utils.files import split_lines
 from pttools.utils.git import github_warning
 
+__all__ = [
+    "BUILD_DIR_NAME",
+    "DEFAULT_SPHINXBUILD",
+    "LINKCHECK_FAILED_STATUSES",
+    "LINKCHECK_SUBDIR_NAME",
+    "MAKE_ERROR_PATTERN",
+    "NOPLOT_SUFFIX",
+    "SPHINX_PATTERN",
+    "TAIL_LINES",
+    "TOOL_PATTERNS",
+    "create_log_file",
+    "create_parser",
+    "create_temp_build_dir",
+    "failed_links",
+    "format_link",
+    "report_links",
+    "resolve_docs_dir",
+    "run_make",
+    "sphinx_messages",
+    "tool_errors",
+]
+
 #: Suffix of the make targets that do not run the examples
 NOPLOT_SUFFIX: str = "-noplot"
 #: Name of the default build directory of the ``Makefile``, in the ``docs`` directory

@@ -11,6 +11,15 @@ from pttools.bubble.phase import Phase
 if tp.TYPE_CHECKING:
     from pttools.models.model import Model
 
+__all__ = [
+    "SolutionType",
+    "cannot_be_detonation",
+    "cannot_be_sub_def",
+    "is_surely_detonation",
+    "is_surely_sub_def",
+    "validate_solution_type",
+]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

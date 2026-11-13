@@ -14,6 +14,8 @@ from pttools.speedup import njit, njit_parallel_pair
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
+__all__ = ["v_minus"]
+
 
 def _v_minus_scalar(
         vp: th.FloatOrArr,

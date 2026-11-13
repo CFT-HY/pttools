@@ -15,6 +15,8 @@ import scipy.integrate
 from pttools.speedup.jit import njit
 import pttools.type_hints as th
 
+__all__ = ["simpson", "simpson_dx", "simpson_h", "simpson_x"]
+
 
 @njit(cache=True, nogil=True)
 def simpson_h(y: th.FloatArr1D, h: th.FloatArr1D) -> float:

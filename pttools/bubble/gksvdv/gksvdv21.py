@@ -13,6 +13,18 @@ from pttools.bubble.solution_type import SolutionType
 from pttools.speedup import njit
 import pttools.type_hints as th
 
+__all__ = [
+    "GKSVDV_SOLUTION_TYPES",
+    "XI_OFFSET",
+    "alN",
+    "dfdv",
+    "getKandWow",
+    "getalNwow",
+    "getvm",
+    "getwow",
+    "kappaNuMuModel",
+]
+
 # from pttools.speedup import NUMBA_ENABLE_CACHE
 
 #: Solution types corresponding to the modes of the Giese et al. (2021) solver

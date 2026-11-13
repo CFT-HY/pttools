@@ -3,6 +3,15 @@
 import logging
 import typing as tp
 
+__all__ = [
+    "HasDocstring",
+    "WrappedDecoratorFunction",
+    "copy_docstring",
+    "copy_docstring_dec",
+    "copy_docstrings",
+    "get_name",
+]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

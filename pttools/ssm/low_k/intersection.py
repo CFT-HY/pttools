@@ -10,6 +10,8 @@ from pttools.ssm.low_k.integration import power_spectrum_integration_int, spec_d
 from pttools.ssm.low_k.kernel import kernel_int_bracket, kernel_low
 from pttools.type_hints import FloatOrArr
 
+__all__ = ["z_cross", "z_cross_approx", "z_cross_junction", "z_star_approx"]
+
 
 @njit(nogil=True)
 def z_cross(HLf: float, cs: float, nu: float, tau_star: float, tau_end: float) -> float:

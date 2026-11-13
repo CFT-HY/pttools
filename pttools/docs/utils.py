@@ -15,6 +15,15 @@ import pttools.type_hints as th
 if th.TYPE_CHECKING_OR_DOCS:
     from sphinx.application import Sphinx
 
+__all__ = [
+    "BACKREFERENCES_WARNING_LOCK",
+    "MISSING",
+    "backreference_names",
+    "get_backreferences",
+    "is_same_object",
+    "resolve_object",
+]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 #: Sentinel for objects that could not be resolved

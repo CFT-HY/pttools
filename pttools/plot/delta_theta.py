@@ -15,6 +15,8 @@ if th.TYPE_CHECKING_OR_DOCS:
 
     from pttools.models.model import Model
 
+__all__ = ["DeltaThetaPlot3D"]
+
 
 class DeltaThetaPlot3D(PlotlyPlot):
     r"""Plot $\Delta \theta ({w}_+, {w}_-)$."""

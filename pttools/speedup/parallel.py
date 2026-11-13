@@ -25,6 +25,21 @@ from pttools.utils.system import SUPPORTS_INTERPRETER_POOL
 if th.TYPE_CHECKING_OR_DOCS:
     from numpy.typing import NDArray
 
+__all__ = [
+    "DEFAULT_FORKSERVER_PRELOAD",
+    "POOL",
+    "POOL_LOCK",
+    "FakeExecutor",
+    "FakeFuture",
+    "LoggingRunner",
+    "create_process_pool",
+    "get_global_process_pool",
+    "get_pool",
+    "log_parallel_ready",
+    "parallel_debug_message",
+    "run_parallel",
+]
+
 if SUPPORTS_INTERPRETER_POOL:
     from concurrent.futures import InterpreterPoolExecutor
 else:

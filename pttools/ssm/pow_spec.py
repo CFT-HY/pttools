@@ -5,6 +5,8 @@ import numpy as np
 from pttools.speedup import njit
 from pttools.type_hints import FloatOrArr
 
+__all__ = ["pow_spec"]
+
 
 @njit(cache=True)
 def pow_spec[T: FloatOrArr](z: T, spec_den: T | float) -> T:

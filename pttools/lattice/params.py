@@ -4,6 +4,8 @@ from dataclasses import dataclass
 
 from pttools.ssm.nucleation import NucType
 
+__all__ = ["LatticeRunParams"]
+
 
 @dataclass(frozen=True, slots=True)
 class LatticeRunParams:

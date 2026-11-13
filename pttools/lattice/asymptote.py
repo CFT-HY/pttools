@@ -35,6 +35,15 @@ if th.TYPE_CHECKING_OR_DOCS:
 if tp.TYPE_CHECKING:
     from pttools.lattice.run import LatticeRun
 
+__all__ = [
+    "DEFAULT_RUNNING_MEAN_WINDOW",
+    "PowGwAsymptoteFit",
+    "fit_cases",
+    "fit_pow_gw_modes",
+    "fit_table",
+    "gw_growth_index_prediction",
+]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 #: Default window length of the running mean of $\Omega_\text{gw}(t)$ before fitting,

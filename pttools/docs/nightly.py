@@ -51,6 +51,40 @@ from pttools.utils.repo import Repo
 from pttools.utils.time import format_duration, format_time
 from pttools.utils.uv import env_without_venv, find_uv
 
+__all__ = [
+    "ARCHIVE_EXCLUDE",
+    "CRONTAB_PATTERN",
+    "DEFAULT_MAX_COMMIT_AGE",
+    "DOCS_TARGET",
+    "LOG_FILE_PATTERN",
+    "MODULE",
+    "OPTIONAL_REPO_DIRS",
+    "SCRIPT_PATH",
+    "SCRIPT_REPO_DIR",
+    "SEQUENCE_LOCK_FILE",
+    "LockInfo",
+    "NightlyRepo",
+    "StopRequested",
+    "command",
+    "create_log_file",
+    "default_repos",
+    "find_run_process",
+    "latest_log_file",
+    "log_files",
+    "next_scheduled_run",
+    "nightly_run",
+    "print_crontab",
+    "raise_stop_requested",
+    "read_lock_file",
+    "read_skip_request",
+    "repo_status",
+    "run",
+    "run_repo",
+    "skip",
+    "status",
+    "stop_run",
+]
+
 #: The name of this module, with which it is run with ``python -m``
 MODULE: str = "pttools.docs.nightly"
 SCRIPT_PATH: Path = Path(__file__).resolve()

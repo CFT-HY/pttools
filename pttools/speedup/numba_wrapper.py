@@ -28,6 +28,17 @@ import numpy as np
 from pttools.speedup import options
 import pttools.type_hints as th
 
+__all__ = [
+    "NAN_ARR",
+    "NUMBA_OLD_STRUCTURE",
+    "NUMBA_PYINSTRUMENT_INCOMPATIBLE_PYTHON_VERSION",
+    "NUMBA_SEGFAULTING_PROFILERS",
+    "NUMBA_VERSION",
+    "OLD_NUMBALSODA",
+    "lsoda_sig",
+    "numbalsoda",
+]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 OLD_NUMBALSODA: bool = False

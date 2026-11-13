@@ -15,6 +15,8 @@ if th.TYPE_CHECKING_OR_DOCS:
     from pttools.bubble.integrate import FluidIntegrateMethod
     from pttools.speedup.differential import DifferentialPointer
 
+__all__ = ["alpha_plus_initial_guess"]
+
 # Below this, alpha_n itself is used as the initial guess for alpha_+
 _ALPHA_N_SMALL: float = 0.05
 

@@ -14,6 +14,7 @@ from .barotropic import *
 from .const import *
 from .export import *
 from .nucleation import *
+from .pow_spec import *
 from .resample import *
 from .scaling import *
 from .settings import *

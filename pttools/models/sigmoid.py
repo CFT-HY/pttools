@@ -12,6 +12,8 @@ from pttools.models.thermo import ThermoModel
 from pttools.speedup import njit
 from pttools.type_hints import FloatOrArr
 
+__all__ = ["SigmoidModel", "sigmoid", "sigmoid_derivative"]
+
 
 @njit(cache=True)
 def sigmoid(

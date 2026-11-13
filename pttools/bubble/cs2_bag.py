@@ -17,6 +17,20 @@ from pttools.type_hints import FloatOrArr
 if th.TYPE_CHECKING_OR_DOCS:
     from pttools.bubble.phase import Phase
 
+__all__ = [
+    "CS2_BAG_SCALAR_PTR",
+    "NUMBA_CACHE_CS2_BAG",
+    "CS2ScalarCType",
+    "cs2_bag",
+    "cs2_bag_arr",
+    "cs2_bag_multi",
+    "cs2_bag_neg",
+    "cs2_bag_numba",
+    "cs2_bag_scalar",
+    "cs2_bag_scalar_cfunc",
+    "cs2_bag_temp",
+]
+
 NUMBA_CACHE_CS2_BAG: bool = True
 """Whether to cache the Numba-compiled $c_s^2$ functions
 

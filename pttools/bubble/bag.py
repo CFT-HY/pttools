@@ -11,6 +11,8 @@ from pttools.speedup import njit
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
+__all__ = ["adiabatic_index_bag", "check_thetas", "e_bag", "p_bag", "theta_bag", "w_bag"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

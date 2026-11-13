@@ -34,6 +34,8 @@ if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
 
+__all__ = ["BaseSpectrum"]
+
 
 class BaseSpectrum(abc.ABC):
     r"""Base class for the power spectra that can be compared with each other.

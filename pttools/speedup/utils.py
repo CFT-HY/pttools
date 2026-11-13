@@ -6,6 +6,8 @@ import functools
 import threading
 import typing as tp
 
+__all__ = ["threadsafe_lru"]
+
 
 def threadsafe_lru[T: Callable](func: T) -> T:
     """

@@ -15,6 +15,8 @@ from pttools.utils.cache import Cacheable
 from pttools.utils.fields import Extractable, Fields, FieldSpec, Preset
 from pttools.utils.json import export_json
 
+__all__ = ["BaseModel"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

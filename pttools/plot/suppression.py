@@ -18,6 +18,8 @@ if th.TYPE_CHECKING_OR_DOCS:
     from matplotlib.colorbar import Colorbar
     from matplotlib.figure import Figure
 
+__all__ = ["SuppressionPlot"]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 

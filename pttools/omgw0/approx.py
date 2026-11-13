@@ -7,6 +7,8 @@ import numpy as np
 from pttools.omgw0 import const
 from pttools.type_hints import FloatOrArr
 
+__all__ = ["S_sw_approx", "f0_peak_approx", "f_peak_approx", "omgw_approx"]
+
 
 def omgw_approx[T: FloatOrArr](
         f: T,

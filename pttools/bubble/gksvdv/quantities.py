@@ -6,6 +6,8 @@ import numpy as np
 from pttools.bubble.gksvdv.gksvdv21 import kappaNuMuModel
 import pttools.type_hints as th
 
+__all__ = ["kappa_gksvdv"]
+
 # from pttools.speedup import NUMBA_ENABLE_CACHE
 
 

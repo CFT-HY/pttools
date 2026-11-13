@@ -12,6 +12,16 @@ from pttools.speedup.numba_wrapper import CFunc, CPUDispatcher, lsoda_sig
 from pttools.speedup.options import NUMBA_DISABLE_JIT
 import pttools.type_hints as th
 
+__all__ = [
+    "Differential",
+    "DifferentialCFunc",
+    "DifferentialCache",
+    "DifferentialKey",
+    "DifferentialOdeint",
+    "DifferentialPointer",
+    "DifferentialSolveIVP",
+]
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 type DifferentialCFunc = tp.Callable[[float, th.FloatArr1D, th.FloatArr1D, th.FloatArr1D | None], None] | CFunc

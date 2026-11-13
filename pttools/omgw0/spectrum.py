@@ -38,6 +38,8 @@ if th.TYPE_CHECKING_OR_DOCS:
 
     from pttools.bubble import Bubble
 
+__all__ = ["Z_COVERING_DENSITY", "Z_COVERING_MARGIN", "Spectrum", "SpectrumArr", "SpectrumArr2D", "SpectrumArr3D"]
+
 
 #: Default density of the $z$ arrays of :py:meth:`Spectrum.z_covering` relative to the density of the frequencies.
 #: The spectra created from a spectrum computed for the $z$ array with :py:meth:`Spectrum.with_params`

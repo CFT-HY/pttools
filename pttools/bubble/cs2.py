@@ -20,6 +20,8 @@ from pttools.speedup.numba_wrapper import CFunc, Dispatcher
 from pttools.speedup.options import NUMBA_DISABLE_JIT
 import pttools.type_hints as th
 
+__all__ = ["CS2_CFUNCS", "CS2_FUNCS", "CS2_FUNCS_LOCK", "CS2CFunc", "CS2FunScalarSig", "cs2_from_ptr", "cs2_to_ptr"]
+
 #: ctypes type of $c_s^2$ function
 CS2CFunc: type[ctypes._CFuncPtr] = ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double)
 #: Numba type of $c_s^2$ function

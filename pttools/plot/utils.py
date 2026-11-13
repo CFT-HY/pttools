@@ -24,6 +24,26 @@ if th.TYPE_CHECKING_OR_DOCS:
 
     from pttools.models.base import BaseModel
 
+__all__ = [
+    "A3_PAPER_SIZE",
+    "A4_PAPER_SIZE",
+    "ENABLE_DRAWING",
+    "FIG_FORMATS",
+    "FigAndAxes",
+    "close_figs",
+    "create_fig_ax",
+    "interactive_backend",
+    "legend",
+    "model_phase_label",
+    "save_and_show_fig",
+    "save_and_show_figs",
+    "save_fig",
+    "save_figs",
+    "setup_plotting",
+    "show_fig",
+    "show_figs",
+]
+
 #: A4 paper size in inches
 A4_PAPER_SIZE: tuple[float, float] = (11.7, 8.3)
 #: A3 paper size in inches

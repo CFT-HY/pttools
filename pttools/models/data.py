@@ -17,6 +17,8 @@ from pttools.speedup.overload import np_all_fix
 import pttools.type_hints as th
 from pttools.type_hints import FloatOrArr
 
+__all__ = ["DataModel", "SplineTCK"]
+
 #: Spline parameters (t, c, k) as returned by :func:`scipy.interpolate.splrep`
 type SplineTCK = tuple[th.FloatArr1D, th.FloatArr1D, int]
 
