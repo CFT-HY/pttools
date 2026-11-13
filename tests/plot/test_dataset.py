@@ -73,7 +73,10 @@ class ViewerTest(unittest.TestCase):
         """The application should serve its layout and update it with the callback."""
         from pttools.plot.dataset.app import create_app  # noqa: PLC0415
         client = create_app(self.importer).server.test_client()
-        assert client.get("/").status_code == 200
+        index = client.get("/")
+        assert index.status_code == 200
+        # The stylesheet of the tables is served from the assets of the package.
+        assert "viewer.css" in index.text
         layout = client.get("/_dash-layout")
         assert layout.status_code == 200
         assert "control-alpha_n" in layout.text

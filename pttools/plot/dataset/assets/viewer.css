@@ -1,0 +1,47 @@
+/* Styles of the dataset viewer of pttools.plot.dataset.app. Dash serves the files of this directory automatically. */
+
+/* The columns have fixed shares of the width, so that the three tables look the same regardless of their contents. */
+.pttools-scalars table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+}
+
+.pttools-scalars th,
+.pttools-scalars td {
+    border: 1px solid #c8c8c8;
+    padding: 3px 8px;
+    text-align: left;
+    vertical-align: top;
+    /* Long names and values, e.g. the class names of the models, are wrapped to fit in their columns. */
+    overflow-wrap: anywhere;
+}
+
+.pttools-scalars th {
+    background-color: #f2f2f2;
+}
+
+.pttools-scalars th:nth-child(1) {
+    width: 36%;
+}
+
+.pttools-scalars th:nth-child(2) {
+    width: 26%;
+}
+
+.pttools-scalars td p {
+    margin: 0;
+}
+
+.pttools-scalars td code {
+    font-size: 12px;
+}
+
+/* Equations cannot be wrapped, so those that are wider than their cell are scrolled. */
+.pttools-scalars td mjx-container {
+    display: inline-block;
+    max-width: 100%;
+    vertical-align: bottom;
+    overflow-x: auto;
+    overflow-y: hidden;
+}

@@ -75,6 +75,9 @@ MAX_CACHED_BUBBLES: int = 100
 #: Maximum number of labelled values on a slider
 MAX_MARKS: int = 11
 
+#: CSS class of the tables of the scalar values, which are styled in ``assets/viewer.css``
+SCALARS_CLASS: str = "pttools-scalars"
+
 #: Titles of the tables of the scalar values
 SCALAR_TITLES: dict[Table, str] = {
     Table.MODELS: "Model",
@@ -83,16 +86,16 @@ SCALAR_TITLES: dict[Table, str] = {
     Table.SPECTRA_F: "Spectrum",
 }
 
-_STYLE_PAGE: dict[str, tp.Any] = {
-    "fontFamily": "system-ui, sans-serif", "fontSize": "14px", "margin": "0 auto", "padding": "12px 16px",
-    "maxWidth": "1800px",
-}
+_STYLE_PAGE: dict[str, tp.Any] = {"fontFamily": "system-ui, sans-serif", "fontSize": "14px", "padding": "12px 16px"}
 _STYLE_BODY: dict[str, tp.Any] = {"display": "flex", "flexWrap": "wrap", "gap": "24px", "alignItems": "flex-start"}
 _STYLE_SIDEBAR: dict[str, tp.Any] = {"flex": "0 0 340px", "maxWidth": "100%"}
 _STYLE_MAIN: dict[str, tp.Any] = {"flex": "1 1 600px", "minWidth": "0"}
 _STYLE_ROW: dict[str, tp.Any] = {"display": "flex", "flexWrap": "wrap", "gap": "16px"}
 _STYLE_GRAPH: dict[str, tp.Any] = {"flex": "1 1 480px", "minWidth": "0", "height": "520px"}
-_STYLE_TABLE: dict[str, tp.Any] = {"flex": "1 1 420px", "minWidth": "0", "overflowX": "auto"}
+_STYLE_TABLE: dict[str, tp.Any] = {"minWidth": "0", "overflowX": "auto"}
+# The tables are below the controls and the figures in three columns of equal width.
+_STYLE_TABLES: dict[str, tp.Any] = {
+    "display": "grid", "gridTemplateColumns": "repeat(3, minmax(0, 1fr))", "gap": "16px", "marginTop": "8px"}
 _STYLE_CONTROL: dict[str, tp.Any] = {"marginBottom": "18px"}
 
 
@@ -195,14 +198,14 @@ class DatasetViewer:
                         dcc.Graph(id="bubble-graph", mathjax=True, style=_STYLE_GRAPH),
                         dcc.Graph(id="spectrum-graph", mathjax=True, style=_STYLE_GRAPH),
                     ]),
-                    html.Div(style=_STYLE_ROW, children=[
-                        html.Div(style=_STYLE_TABLE, children=[
-                            html.H3(SCALAR_TITLES[table]),
-                            dcc.Markdown(id=f"scalars-{table}", mathjax=True),
-                        ])
-                        for table in self.descriptions
-                    ]),
                 ]),
+            ]),
+            html.Div(style=_STYLE_TABLES, children=[
+                html.Div(style=_STYLE_TABLE, children=[
+                    html.H3(SCALAR_TITLES[table]),
+                    dcc.Markdown(id=f"scalars-{table}", mathjax=True, className=SCALARS_CLASS),
+                ])
+                for table in self.descriptions
             ]),
         ])
 
