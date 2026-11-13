@@ -118,6 +118,11 @@ SSM_SPECTRUM_FIELDS: Fields = Fields(
     Field(
         "low_k_cs_friction", type=FieldType.BOOL, presets=PRESETS_FULL_INIT,
         description="whether the acoustic friction of the low $k$ approximation is computed from $c_s$"),
+    Field(
+        "low_k_fallback_zp_gw", type=FieldType.BOOL, presets=PRESETS_FULL_INIT,
+        description=(
+            "whether the estimate of the GW peak is used as the fallback for the crossing "
+            "of the intermediate and high frequency regimes of the low $k$ approximation")),
     Field("N_sh", presets=PRESETS_FULL_INIT, description=r"$N_\text{sh}$, number of shock formation times"),
     Field("nuc_type", type=FieldType.STR, presets=PRESETS_FULL_INIT, decode=NucType, description="nucleation type"),
     Field("nT", type=FieldType.INT, presets=PRESETS_FULL_INIT, description="number of points in the $t$ array"),
@@ -168,7 +173,7 @@ SSM_SPECTRUM_FIELDS: Fields = Fields(
     Field("H_star_eta_star", presets=PRESETS_FULL),
     Field("H_star_eta_v", presets=PRESETS_FULL),
     Field("H_star_eta_v_old", presets=PRESETS_FULL),
-    Field("k_peak_eta_star", presets=PRESETS_FULL),
+    Field("kp_sw_eta_star", presets=PRESETS_FULL),
     Field("J", presets=PRESETS_FULL),
     Field("label_latex", type=FieldType.STR, presets=PRESETS_FULL, description="LaTeX label"),
     Field("label_unicode", type=FieldType.STR, presets=PRESETS_FULL, description="Unicode label"),

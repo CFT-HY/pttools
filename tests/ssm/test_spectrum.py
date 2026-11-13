@@ -75,9 +75,9 @@ class SSMSpectrumTest(unittest.TestCase):
         """Test that the fractional volume hx at which bubble nucleation stops is positive."""
         assert self.spectrum.hx > 0
 
-    def test_k_peak_eta_star(self) -> None:
-        """Test that the peak wavenumber scaled by the conformal time at GW formation is positive."""
-        assert self.spectrum.k_peak_eta_star > 0
+    def test_kp_sw_eta_star(self) -> None:
+        """Test that the sound wave scale in units of the conformal time at GW formation is positive."""
+        assert self.spectrum.kp_sw_eta_star > 0
 
     def test_J(self) -> None:
         """Test that the combined lifetime factor J is positive."""

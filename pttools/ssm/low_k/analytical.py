@@ -7,9 +7,9 @@ from pttools.bubble.thermo import nu_gdh2024
 from pttools.speedup import njit
 from pttools.ssm.barotropic import Upsilon
 from pttools.ssm.barotropic import tau_star as tau_star_func
-from pttools.ssm.low_k.const import IV_ANALYTICAL, KP_ANALYTICAL
+from pttools.ssm.low_k.const import IV_ANALYTICAL, ZP_SW
 from pttools.ssm.low_k.integration import power_spectrum_integration_int, spec_den_gw_low
-from pttools.ssm.low_k.intersection import z_cross, z_star_approx
+from pttools.ssm.low_k.intersection import z_cross, z_int_high_approx
 from pttools.ssm.low_k.join import join_regimes
 from pttools.ssm.rho import rho_pm, x_minus, x_plus
 from pttools.type_hints import FloatOrArr
@@ -90,8 +90,8 @@ def gw_spectral_density_approx_high_integrand(x: float, z: float, cs: float, ups
     """
     y = x_plus(z=z, cs=cs) + x_minus(z=z, cs=cs) - x
     return rho_pm(z=z, x=x, cs=cs) / (4 * np.pi * cs * z ** 3) \
-        * Pv_analytical(k=x, kp=KP_ANALYTICAL, ubarf2=1.) \
-        * Pv_analytical(k=y, kp=KP_ANALYTICAL, ubarf2=1.) \
+        * Pv_analytical(k=x, kp_sw=ZP_SW, ubarf2=1.) \
+        * Pv_analytical(k=y, kp_sw=ZP_SW, ubarf2=1.) \
         * upsilon
 
 
@@ -127,11 +127,15 @@ def Pgw_approx(z: float, HLf: float, cs: float, tau_star: float, tau_end: float)
     \tilde{P}_\text{gw}^\text{low} \frac{1}{2} \operatorname{erfc} \left( 2 \pi \tau_* (z - z_{\times}) \right)
     + \frac{1}{2} \left[ 1 + \operatorname{erf} \left( 2 \pi \tau_* (z - z_{\times}) \right) \right]
     \tilde{P}_\text{gw}^\text{int}
-    \frac{1}{2} \operatorname{erfc} \left( 2 \pi \tau_* \left( z - \frac{z_{\star}}{2} \right) \right)
+    \frac{1}{2} \operatorname{erfc} \left( 2 \pi \tau_* \left( z - z_{\text{int,high}} \right) \right)
     + \tilde{P}_\text{gw}^\text{high}$$
     This is :giombi_2024_cs:`\ ` eq. 4.9 with the analytical $\tilde{P}_v$,
-    except that the intermediate regime is switched off at $\frac{z_{\star}}{2}$ instead of $z_\star$.
-    Here $z_\star = 2 c_s k_p R_*$ (:py:func:`pttools.ssm.low_k.intersection.z_star_approx`),
+    except that the intermediate regime is switched off at the approximate crossing of the intermediate- and
+    high-frequency regimes $z_{\text{int,high}} \approx c_s k_p R_*$
+    (:py:func:`pttools.ssm.low_k.intersection.z_int_high_approx`)
+    instead of the estimate for the peak of the GW power spectrum $k_\star R_* \simeq 2 c_s k_p R_*$
+    (:py:func:`pttools.ssm.low_k.intersection.zp_gw_approx`), which is twice as large.
+    Here $k_p R_* = 2\pi$ is the sound wave scale (:py:data:`pttools.ssm.low_k.const.ZP_SW`),
     and $z_\times$ is given by :py:func:`pttools.ssm.low_k.intersection.z_cross`.
     This cannot be jitted, as :py:func:`gw_spectral_density_approx_high` cannot.
 
@@ -148,12 +152,12 @@ def Pgw_approx(z: float, HLf: float, cs: float, tau_star: float, tau_end: float)
     return join_regimes(
         z=z, Pgw_low=P_low, Pgw_int=P_int, Pgw_high=P_high, tau_star=tau_star,
         z_cross=z_cross(HLf, cs, nu_gdh2024(cs**2), tau_star, tau_end),
-        z_int_off=0.5 * z_star_approx(cs=cs), z_high_on=-np.inf
+        z_int_off=z_int_high_approx(cs=cs, xp_v=ZP_SW), z_high_on=-np.inf
     )
 
 
 @njit(cache=True)
-def Pv_analytical[T: FloatOrArr](k: T, kp: T | float, ubarf2: T | float) -> T:
+def Pv_analytical[T: FloatOrArr](k: T, kp_sw: T | float, ubarf2: T | float) -> T:
     r"""Analytical ansatz for $P_v(k)$.
 
     $$P_v(p) = 3 \pi \frac{\bar{U}_f^2}{k_p^3} \frac{(p/k_p)^2}{1 + (p/k_p)^6}$$
@@ -161,10 +165,13 @@ def Pv_analytical[T: FloatOrArr](k: T, kp: T | float, ubarf2: T | float) -> T:
     :giombi_2026:`\ ` eq. 3.1.
 
     :param k: $p$, wavenumber
-    :param kp: $k_p$, peak wavenumber
+    :param kp_sw: $k_p$, the sound wave scale, which is $p$ at the maximum of $p P_v(p)$.
+        It has the same units as $k$, so for the dimensionless $\tilde{P}_v(x)$ with $k = x = pR_*$ it is
+        $k_p R_* = 2\pi$ (:py:data:`pttools.ssm.low_k.const.ZP_SW`).
+        This is not the peak of the GW power spectrum $k_\star$ (``kp_gw``).
     :param ubarf2: $\bar{U}_f^2$
     :return: $P_v(p)$
     """
     # The equation numbers in the articles happen to be the same.
-    k_rel = k / kp
-    return 3 * np.pi * ubarf2 / kp**3 * k_rel **2 / (1 + k_rel ** 6)  # pyrefly: ignore[bad-return]
+    k_rel = k / kp_sw
+    return 3 * np.pi * ubarf2 / kp_sw**3 * k_rel **2 / (1 + k_rel ** 6)  # pyrefly: ignore[bad-return]

@@ -21,7 +21,7 @@ from pttools.ssm.low_k import (
     power_spectrum_integration_low,
 )
 from pttools.ssm.spec_den_gw import spec_den_gw
-from tests.ssm.low_k.common import KP, NUS, P_TILDE_V, X, cs_from_nu, p_tilde_gw_low
+from tests.ssm.low_k.common import NUS, P_TILDE_V, ZP_SW, X, cs_from_nu, p_tilde_gw_low
 
 R_STAR: float = 0.1
 ETA_RATIO: float = 2.
@@ -38,26 +38,26 @@ class PvAnalyticalTest(unittest.TestCase):
         where $C_{\tilde{v}\tilde{v}}(p, \eta_*, \eta_*) = 2 P_v(p)$ (eq. 2.30).
         This gives $\frac{1}{\pi^2} \int_0^\infty dx x^2 \tilde{P}_v(x) = 1$.
         """
-        for kp in (1., KP, 10.):
-            with self.subTest(kp=kp):
+        for kp_sw in (1., ZP_SW, 10.):
+            with self.subTest(kp_sw=kp_sw):
                 integral = quad(
-                    lambda x, kp=kp: x**2 * Pv_analytical(x, kp=kp, ubarf2=1.), 0, np.inf, epsrel=1e-12)[0]
+                    lambda x, kp_sw=kp_sw: x**2 * Pv_analytical(x, kp_sw=kp_sw, ubarf2=1.), 0, np.inf, epsrel=1e-12)[0]
                 assert_allclose(integral / np.pi**2, 1., rtol=1e-10)
 
     def test_power_laws(self) -> None:
         r"""Test the causal $k^2$ tail and the $k^{-4}$ decay of a flow with shocks, :giombi_2024_cs:`\ ` eq. 3.1."""
         x_low = np.logspace(-4, -3, 5)
         x_high = np.logspace(4, 5, 5)
-        assert_allclose(np.polyfit(np.log(x_low), np.log(Pv_analytical(x_low, KP, 1.)), 1)[0], 2.)
-        assert_allclose(np.polyfit(np.log(x_high), np.log(Pv_analytical(x_high, KP, 1.)), 1)[0], -4.)
+        assert_allclose(np.polyfit(np.log(x_low), np.log(Pv_analytical(x_low, ZP_SW, 1.)), 1)[0], 2.)
+        assert_allclose(np.polyfit(np.log(x_high), np.log(Pv_analytical(x_high, ZP_SW, 1.)), 1)[0], -4.)
 
     def test_peak(self) -> None:
-        r"""Test that $x \tilde{P}_v(x)$ has its maximum at $k_p$, which gives $k_\star = 2 c_s k_p$.
+        r"""Test that $x \tilde{P}_v(x)$ has its maximum at $k_p$, which gives the GW peak $k_\star = 2 c_s k_p$.
 
         :giombi_2024_cs:`\ ` eq. 3.15 and its footnote
         """
-        x = KP * np.linspace(0.9, 1.1, 20001)
-        assert_allclose(x[np.argmax(x * Pv_analytical(x, KP, 1.))], KP, rtol=1e-4)
+        x = ZP_SW * np.linspace(0.9, 1.1, 20001)
+        assert_allclose(x[np.argmax(x * Pv_analytical(x, ZP_SW, 1.))], ZP_SW, rtol=1e-4)
 
 
 class SourceIntegralTest(unittest.TestCase):
@@ -87,16 +87,16 @@ class SourceIntegralTest(unittest.TestCase):
         and $\mathcal{J}_v = \frac{\pi}{4 (k_p R_*)^5} \bar{U}_f^4$.
         """
         ubarf2 = 0.01
-        for kp in (1., 3., 20.):
-            with self.subTest(kp=kp):
-                p_tilde_v = Pv_analytical(X, kp=kp, ubarf2=ubarf2)
-                assert_allclose(Iv(x=X, P_tilde_v=p_tilde_v), np.pi / (4 * kp**3) * ubarf2**2, rtol=1e-8)
-                assert_allclose(Jv(x=X, P_tilde_v=p_tilde_v), np.pi / (4 * kp**5) * ubarf2**2, rtol=1e-8)
+        for kp_sw in (1., 3., 20.):
+            with self.subTest(kp_sw=kp_sw):
+                p_tilde_v = Pv_analytical(X, kp_sw=kp_sw, ubarf2=ubarf2)
+                assert_allclose(Iv(x=X, P_tilde_v=p_tilde_v), np.pi / (4 * kp_sw**3) * ubarf2**2, rtol=1e-8)
+                assert_allclose(Jv(x=X, P_tilde_v=p_tilde_v), np.pi / (4 * kp_sw**5) * ubarf2**2, rtol=1e-8)
 
     def test_resampled(self) -> None:
         """Test that resampling a coarse grid gives the integral of the fine grid."""
         x = np.logspace(-3, 4, 300)
-        p_tilde_v = Pv_analytical(x, kp=KP, ubarf2=1.)
+        p_tilde_v = Pv_analytical(x, kp_sw=ZP_SW, ubarf2=1.)
         assert_allclose(Iv_resampled(x=x, P_tilde_v=p_tilde_v, nx=10000), IV_ANALYTICAL, rtol=5e-3)
         assert_allclose(Jv_resampled(x=x, P_tilde_v=p_tilde_v, nx=10000), JV_ANALYTICAL, rtol=5e-3)
 
@@ -239,7 +239,7 @@ class IntegrationHighTest(unittest.TestCase):
 
         The estimates approximate $x \tilde{P}_v(x)$ with a Dirac delta function,
         which gives the peak location $k_\star \simeq 2 c_s k_p$ and the amplitude
-        $\frac{z^3}{2\pi^2} \tilde{P}_\text{gw}^\text{high}(z_{\star}) \simeq
+        $\frac{z^3}{2\pi^2} \tilde{P}_\text{gw}^\text{high}(k_{\star} R_*) \simeq
         \left( \frac{1 - c_s^2}{c_s^2} \right)^2 \frac{9}{(2\pi)^3} c_s^5$
         without the source lifetime factor.
         As these are rough estimates, the tolerances are loose.
@@ -249,7 +249,7 @@ class IntegrationHighTest(unittest.TestCase):
             with self.subTest(cs=cs):
                 p_gw = z**3 / (2 * np.pi**2) * power_spectrum_integration_high(x_data=X, Pv_data=P_TILDE_V, z=z, cs=cs)
                 i_max = np.argmax(p_gw)
-                assert 1 < z[i_max] / (2 * cs * KP) < 1.4
+                assert 1 < z[i_max] / (2 * cs * ZP_SW) < 1.4
                 assert_allclose(p_gw[i_max], ((1 - cs**2) / cs**2)**2 * 9 / (2 * np.pi)**3 * cs**5, rtol=0.4)
 
     def test_int_dtype(self) -> None:

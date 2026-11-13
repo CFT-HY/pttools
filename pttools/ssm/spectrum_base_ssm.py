@@ -80,6 +80,7 @@ class BaseSSMSpectrum(Extractable, BaseSpectrum, abc.ABC):
     # Switches
     low_k: bool
     low_k_cs_friction: bool
+    low_k_fallback_zp_gw: bool
 
     # -----
     # Results
@@ -114,6 +115,9 @@ class BaseSSMSpectrum(Extractable, BaseSpectrum, abc.ABC):
     spec_den_gw_ssm_unscaled: FloatArr1D
     #: $\mathcal{I}_v$, source contribution of the low-$k$ approximation
     Iv: float
+    #: $x_{p,v}$, $x$ at the maximum of $x \tilde{P}_v(x)$, or nan if the lookup array does not cover it,
+    #: see :py:func:`pttools.ssm.low_k.intersection.xp_v`
+    xp_v: float
 
     @property
     @abc.abstractmethod
@@ -213,11 +217,15 @@ class BaseSSMSpectrum(Extractable, BaseSpectrum, abc.ABC):
         return H_star_eta_v_old(H_star_eta_sh=self.H_star_eta_sh)
 
     @functools.cached_property
-    def k_peak_eta_star(self) -> float:
-        r"""$k_{\text{peak}} \eta_*$, peak wavenumber scaled by conformal time at GW formation.
+    def kp_sw_eta_star(self) -> float:
+        r"""$k_p \eta_*$, the sound wave scale in units of the conformal time at the start of the acoustic phase.
 
         $$k_p = \frac{2 \pi}{R_*} \Rightarrow k_p \eta_* = (1 + \nu_\text{gdh2024}) \frac{2\pi}{r_*}$$
         :giombi_2024_cs:`\ ` p. 2.
+        Here $k_p$ is the characteristic wavenumber of the sound waves, which the article calls the peak frequency.
+        It is not the peak of the GW power spectrum, which is $k_\star$ in the article,
+        and for the Sound Shell Model it is not the maximum of the velocity spectral density either,
+        see :py:data:`pttools.ssm.low_k.const.ZP_SW`.
         """
         return (1 + self.nu_gdh2024) * 2 * np.pi / self.r_star
 

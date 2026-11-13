@@ -13,12 +13,13 @@ from scipy.special import gamma, jv, jvp, yv, yvp
 from pttools.ssm.low_k import Pv_analytical
 import pttools.type_hints as th
 
-#: $k_p R_* = 2 \pi$, peak of the analytical $\tilde{P}_v$ (:giombi_2026:`\ ` below eq. 3.1)
-KP: float = 2 * np.pi
+#: $k_p R_* = 2 \pi$, the sound wave scale, which is $x$ at the maximum of $x \tilde{P}_v(x)$
+#: for the analytical $\tilde{P}_v$ (:giombi_2026:`\ ` below eq. 3.1)
+ZP_SW: float = 2 * np.pi
 #: Momenta $x = p R_*$ that cover the support of the analytical $\tilde{P}_v$
 X: th.FloatArr1D = np.logspace(-3, 4, 5000)
 #: Analytical $\tilde{P}_v$ for $\bar{U}_f = 1$
-P_TILDE_V: th.FloatArr1D = Pv_analytical(X, kp=KP, ubarf2=1.)
+P_TILDE_V: th.FloatArr1D = Pv_analytical(X, kp_sw=ZP_SW, ubarf2=1.)
 #: $\nu$ values of a softened equation of state ($c_s^2 < 1/3$)
 NUS: tuple[float, ...] = (0.1, 0.25, 0.4)
 

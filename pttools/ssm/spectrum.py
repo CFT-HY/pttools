@@ -89,6 +89,7 @@ class SSMSpectrum(Cacheable, BaseSSMSpectrum):
             compute: bool = True,
             low_k: bool = True,
             low_k_cs_friction: bool = False,
+            low_k_fallback_zp_gw: bool = False,
             parallel: bool = True,
             # Labels
             label_latex: str | None = None,
@@ -116,6 +117,11 @@ class SSMSpectrum(Cacheable, BaseSSMSpectrum):
             This generalises the articles to $c_s^2 \neq \omega$, and is disabled by default.
             It should be considered an estimate, see the caveat in
             :py:func:`pttools.ssm.low_k.kernel.acoustic_friction_exponent`.
+        :param low_k_fallback_zp_gw: whether to use the estimate of the peak of the GW power spectrum
+            $k_\star R_* \simeq 4 \pi c_s$ as the fallback for the crossing of the intermediate- and high-frequency
+            regimes of the low-$k$ approximation, instead of $c_s x_{p,v}$.
+            The fallback is used only if the regimes do not cross within the $y$ array,
+            see :py:func:`pttools.ssm.low_k.join.gw_junction`. Disabled by default.
         :param parallel: whether to use multiple CPU cores
         """
         if np.isnan(y).any():
@@ -152,6 +158,7 @@ class SSMSpectrum(Cacheable, BaseSSMSpectrum):
         # Switches
         self.low_k: bool = low_k
         self.low_k_cs_friction: bool = low_k_cs_friction
+        self.low_k_fallback_zp_gw: bool = low_k_fallback_zp_gw
         # Labels
         default_latex, default_unicode = self.default_labels(bubble, self.r_star)
         self.label_latex: str = default_latex if label_latex is None else label_latex
@@ -181,6 +188,7 @@ class SSMSpectrum(Cacheable, BaseSSMSpectrum):
         self.z_lookup: FloatArr1D = NAN_ARR
         self.spec_den_gw_ssm_unscaled: FloatArr1D = NAN_ARR
         self.Iv: float = np.nan
+        self.xp_v: float = np.nan
         # Arguments of compute()
         #: Small offset used when generating the lookup table of $z$ values for the GW spectrum
         self.eps_lookup: float = DEFAULT_EPS_LOOKUP
@@ -282,7 +290,8 @@ class SSMSpectrum(Cacheable, BaseSSMSpectrum):
             nuc_type=self.nuc_type,
             sol_type=self.bubble.sol_type,
             lambda_correction=self.lambda_correction,
-            low_k_cs_friction=self.low_k_cs_friction
+            low_k_cs_friction=self.low_k_cs_friction,
+            low_k_fallback_zp_gw=self.low_k_fallback_zp_gw
         )
 
     def _store_gw(self, gw_res: SSMGWResults) -> None:
@@ -314,6 +323,7 @@ class SSMSpectrum(Cacheable, BaseSSMSpectrum):
         self.z_lookup = base_res.z_lookup
         self.spec_den_gw_ssm_unscaled = base_res.spec_den_gw_ssm_unscaled
         self.Iv = base_res.Iv
+        self.xp_v = base_res.xp_v
         if warn:
             warn_if_ubarf_relativistic(self.ubarf2, source=self.label_unicode)
 
@@ -434,6 +444,7 @@ class SSMSpectrum(Cacheable, BaseSSMSpectrum):
             "z_st_thresh": self.z_st_thresh,
             "low_k": self.low_k,
             "low_k_cs_friction": self.low_k_cs_friction,
+            "low_k_fallback_zp_gw": self.low_k_fallback_zp_gw,
             "allow_beta_tilde_for_simultaneous": self.allow_beta_tilde_for_simultaneous,
         }
 

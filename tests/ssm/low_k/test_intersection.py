@@ -12,11 +12,15 @@ from pttools.ssm.low_k import (
     kernel_int_bracket,
     power_spectrum_integration_int,
     power_spectrum_integration_low,
+    xp_v,
     z_cross,
     z_cross_approx,
     z_cross_junction,
+    z_int_high,
+    z_int_high_approx,
+    zp_gw_approx,
 )
-from tests.ssm.low_k.common import NUS, P_TILDE_V, X, cs_from_nu
+from tests.ssm.low_k.common import NUS, P_TILDE_V, ZP_SW, X, cs_from_nu
 
 R_STAR: float = 0.1
 ETA_RATIOS: tuple[float, ...] = (0.5, 2., 20.)
@@ -115,3 +119,32 @@ class ZCrossApproxTest(unittest.TestCase):
                     z_cross_junction(cs=CS0, nu=0., tau_star=1 / R_STAR, tau_end=(1 + eta_ratio) / R_STAR),
                     rtol=1e-12
                 )
+
+
+class PeakScalesTest(unittest.TestCase):
+    r"""Tests for the scales of the velocity and GW spectra, and for the intermediate-high crossing."""
+
+    def test_xp_v(self) -> None:
+        r"""Test that $x \tilde{P}_v(x)$ of the analytical $\tilde{P}_v$ has its maximum at $k_p R_* = 2\pi$."""
+        assert_allclose(xp_v(x=X, P_tilde_v=P_TILDE_V), ZP_SW, rtol=2 * np.log(X[1] / X[0]))
+        # The maximum is not covered
+        assert np.isnan(xp_v(x=X[X < 1], P_tilde_v=P_TILDE_V[X < 1]))
+        assert np.isnan(xp_v(x=X[X > 10], P_tilde_v=P_TILDE_V[X > 10]))
+
+    def test_zp_gw_approx(self) -> None:
+        r"""Test $k_\star R_* \simeq 2 c_s k_p R_*$, :giombi_2024_cs:`\ ` eq. 3.15."""
+        assert_allclose(zp_gw_approx(cs=0.5), 2 * np.pi, rtol=1e-14)
+        assert_allclose(zp_gw_approx(cs=0.5, zp_sw=3.), 3., rtol=1e-14)
+
+    def test_z_int_high(self) -> None:
+        r"""Test that the crossing is the first point with $\tilde{P}_\text{gw}^\text{high}$ above the other."""
+        z = np.array([1., 2., 3., 4.])
+        p_int = np.ones_like(z)
+        assert z_int_high(z=z, Pgw_int=p_int, Pgw_high=np.array([0., 0.5, 2., 0.5])) == 3.
+        assert np.isnan(z_int_high(z=z, Pgw_int=p_int, Pgw_high=np.zeros_like(z)))
+
+    def test_z_int_high_approx(self) -> None:
+        r"""Test that the approximate crossing is half of the estimate of the GW peak for the analytical ansatz."""
+        for cs in (0.3, 0.5, CS0):
+            assert_allclose(z_int_high_approx(cs=cs), 0.5 * zp_gw_approx(cs=cs), rtol=1e-14)
+            assert_allclose(z_int_high_approx(cs=cs, xp_v=1.3), 1.3 * cs, rtol=1e-14)

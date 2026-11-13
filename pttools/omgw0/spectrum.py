@@ -94,6 +94,7 @@ class Spectrum(BaseSSMOmgw0, SSMSpectrum):
             compute_snr: bool = False,
             low_k: bool = True,
             low_k_cs_friction: bool = False,
+            low_k_fallback_zp_gw: bool = False,
             parallel: bool = True,
             # Labels
             label_latex: str | None = None,
@@ -132,6 +133,11 @@ class Spectrum(BaseSSMOmgw0, SSMSpectrum):
             This generalises the articles to $c_s^2 \neq \omega$, and is disabled by default.
             It should be considered an estimate, see the caveat in
             :py:func:`pttools.ssm.low_k.kernel.acoustic_friction_exponent`.
+        :param low_k_fallback_zp_gw: whether to use the estimate of the peak of the GW power spectrum
+            $k_\star R_* \simeq 4 \pi c_s$ as the fallback for the crossing of the intermediate- and high-frequency
+            regimes of the low-$k$ approximation, instead of $c_s x_{p,v}$.
+            The fallback is used only if the regimes do not cross within the $y$ array,
+            see :py:func:`pttools.ssm.low_k.join.gw_junction`. Disabled by default.
         :param parallel: whether to use multiple CPU cores
         """
         if f is not None:
@@ -162,6 +168,7 @@ class Spectrum(BaseSSMOmgw0, SSMSpectrum):
             compute=False,
             low_k=low_k,
             low_k_cs_friction=low_k_cs_friction,
+            low_k_fallback_zp_gw=low_k_fallback_zp_gw,
             label_latex=label_latex,
             label_unicode=label_unicode
         )

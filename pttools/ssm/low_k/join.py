@@ -68,7 +68,8 @@ def join_regimes[T: FloatOrArr](
     \frac{1}{2} \operatorname{erfc} \left( 2 \pi \tau_* (z - z_{\text{int,off}}) \right)
     + \frac{1}{2} \left[ 1 + \operatorname{erf} \left( 2 \pi \tau_* (z - z_{\text{high,on}}) \right) \right]
     \tilde{P}_\text{gw}^\text{high}$$
-    This is :giombi_2024_cs:`\ ` eq. 4.9 with $\tau_* z = \eta_* k$, $z_\text{int,off} = z_{\star}$
+    This is :giombi_2024_cs:`\ ` eq. 4.9 with $\tau_* z = \eta_* k$, $z_\text{int,off} = k_{\star} R_*$,
+    the peak of the GW power spectrum (:py:func:`pttools.ssm.low_k.intersection.zp_gw_approx`),
     and $z_\text{high,on} = -\infty$, i.e. without a switch for the high-frequency regime.
 
     :param z: $z = kR_*$
@@ -99,7 +100,9 @@ def gw_junction(
         nu: float,
         tau_star: float,
         tau_end: float,
-        cs_friction: bool = False) -> th.FloatArr1D:
+        cs_friction: bool = False,
+        xp_v: float = np.nan,
+        fallback_zp_gw: bool = False) -> th.FloatArr1D:
     r"""
     Create the junction of the gravitational wave power spectrum between different regimes.
 
@@ -109,13 +112,39 @@ def gw_junction(
     \tilde{P}_\text{gw}^\text{low} (kR_*) \frac{1}{2} \operatorname{erfc} \left( 2 \pi \eta_* (k - k_{\times}) \right)
     + \frac{1}{2} \left[ 1 + \operatorname{erf} \left( 2 \pi \eta_* (k - k_{\times}) \right) \right]
     \tilde{P}_\text{gw}^\text{int} (kR_*)
-    \frac{1}{2} \operatorname{erfc} \left( 2 \pi \eta_* (k - k_{\star}) \right)
-    + \frac{1}{2} \left[ 1 + \operatorname{erf} \left( 2 \pi \eta_* (k - k_{\star}) \right) \right]
+    \frac{1}{2} \operatorname{erfc} \left( 2 \pi \eta_* (k - k_{\text{int,high}}) \right)
+    + \frac{1}{2} \left[ 1 + \operatorname{erf} \left( 2 \pi \eta_* (k - k_{\text{int,high}}) \right) \right]
     \tilde{P}_\text{gw}^\text{high} (kR_*)$$
-    This is :giombi_2024_cs:`\ ` eq. 4.9 with a switch also for the high-frequency regime.
-    Here $k_\star$ is the first $k$ where $\tilde{P}_\text{gw}^\text{high} > \tilde{P}_\text{gw}^\text{int}$,
-    or :py:func:`pttools.ssm.low_k.intersection.z_star_approx` if there is no such $k$,
+    This is :giombi_2024_cs:`\ ` eq. 4.9 with two differences.
+    There is a switch also for the high-frequency regime,
+    and the intermediate-frequency regime is switched off at the crossing of the intermediate- and high-frequency
+    regimes $k_{\text{int,high}}$ instead of the peak of the GW power spectrum $k_\star \simeq 2 c_s k_p$
+    (:py:func:`pttools.ssm.low_k.intersection.zp_gw_approx`).
+    Here $z_{\text{int,high}} = k_{\text{int,high}} R_*$ is the first point of the $z$ array where
+    $\tilde{P}_\text{gw}^\text{high} > \tilde{P}_\text{gw}^\text{int}$
+    (:py:func:`pttools.ssm.low_k.intersection.z_int_high`),
+    which is below the peak of the GW power spectrum,
     and $k_\times$ is given by :py:func:`pttools.ssm.low_k.intersection.z_cross_junction`.
+
+    If there is no such point, e.g. when the $z$ array does not reach the crossing, a warning is logged,
+    and the crossing is approximated in one of the following ways.
+
+    - By default, $z_{\text{int,high}} \approx c_s x_{p,v}$, where $x_{p,v}$ is $x$ at the maximum of
+      $x \tilde{P}_v(x)$
+      (:py:func:`pttools.ssm.low_k.intersection.z_int_high_approx`).
+    - If ``fallback_zp_gw`` is enabled or $x_{p,v}$ is nan, $z_{\text{int,high}} \approx 4 \pi c_s$,
+      which is the estimate for the peak of the GW power spectrum $k_\star R_* \simeq 2 c_s k_p R_*$
+      with $k_p R_* = 2\pi$ (:py:func:`pttools.ssm.low_k.intersection.zp_gw_approx`).
+      This was the only fallback before the introduction of $x_{p,v}$. It is an estimate of the peak and not of
+      the crossing, and it is valid only for the analytical $\tilde{P}_v$, for which it is twice the estimate above.
+      For the $\tilde{P}_v$ of the Sound Shell Model it is $7 - 11$ times the crossing.
+      $x_{p,v}$ is nan if it is not given, or if the array of $\tilde{P}_v$ does not cover the maximum
+      (:py:func:`pttools.ssm.low_k.intersection.xp_v`).
+      The latter is the usual reason for the fallback in a spectrum: when the $z$ array ends below the crossing,
+      the lookup array of $\tilde{P}_v$ ends below $x_{p,v}$ as well.
+      Then the intermediate-frequency regime should extend to the end of the $z$ array, which this fallback gives,
+      as $4 \pi c_s$ is above the crossing.
+
     The warning is logged in object mode, as logging is not supported in Numba-jitted code.
 
     :param z: gravitational wave momentum values (kR_*)
@@ -128,21 +157,27 @@ def gw_junction(
     :param tau_end: $\tau_{end} = \frac{\eta_{end}}{L_f}$
     :param cs_friction: whether to compute the acoustic friction from $c_s$ instead of $\nu$,
         see :py:func:`pttools.ssm.low_k.kernel.kernel_low`. Disabled by default.
+    :param xp_v: $x_{p,v}$, $x$ at the maximum of $x \tilde{P}_v(x)$
+        (:py:func:`pttools.ssm.low_k.intersection.xp_v`),
+        for the fallback of $z_{\text{int,high}}$
+    :param fallback_zp_gw: whether to use the estimate of the peak of the GW power spectrum
+        $k_\star R_* \simeq 4 \pi c_s$ as the fallback of $z_{\text{int,high}}$ instead of $c_s x_{p,v}$.
+        Disabled by default.
     :return: gravitational wave power spectrum values at the given momentum
     """
-    difference = Pgw_high - Pgw_int
-    index = np.where(difference > 0)[0]
-    if index.size:
-        z_star = z[index[0]]
-    else:
-        z_star = intersection.z_star_approx(cs=cs)
+    z_int_high = intersection.z_int_high(z=z, Pgw_int=Pgw_int, Pgw_high=Pgw_high)
+    if np.isnan(z_int_high):
+        if fallback_zp_gw or np.isnan(xp_v):
+            z_int_high = intersection.zp_gw_approx(cs=cs)
+        else:
+            z_int_high = intersection.z_int_high_approx(cs=cs, xp_v=xp_v)
         with numba.objmode:
-            logger.warning("Using fallback z_star=%s for low-k junction.", z_star)
+            logger.warning("Using fallback z_int_high=%s for low-k junction.", z_int_high)
     z_cross = intersection.z_cross_junction(
         cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end, cs_friction=cs_friction)
     return join_regimes(
         z=z, Pgw_low=Pgw_low, Pgw_int=Pgw_int, Pgw_high=Pgw_high,
-        tau_star=tau_star, z_cross=z_cross, z_int_off=z_star, z_high_on=z_star
+        tau_star=tau_star, z_cross=z_cross, z_int_off=z_int_high, z_high_on=z_int_high
     )
 
 
@@ -155,7 +190,8 @@ def pow_gw_approximation(
         tau_star: float,
         tau_end: float,
         eps: float = 1e-8,
-        cs_friction: bool = False) -> th.FloatArr1D:
+        cs_friction: bool = False,
+        fallback_zp_gw: bool = False) -> th.FloatArr1D:
     r"""
     Spectral density of gravitational waves from the SSM with low- and intermediate-frequency approximations.
 
@@ -179,6 +215,8 @@ def pow_gw_approximation(
     :param eps: $\epsilon$, a small correction the integration x-range
     :param cs_friction: whether to compute the acoustic friction from $c_s$ instead of $\nu$,
         see :py:func:`pttools.ssm.low_k.kernel.kernel_low`. Disabled by default.
+    :param fallback_zp_gw: whether to use the old fallback for the crossing of the intermediate- and high-frequency
+        regimes, see :py:func:`gw_junction`. Disabled by default.
     :return: gravitational wave power spectrum values at the given momentum z = kR_*
     """
     # Todo: The eps of 1e-8 seems to be needed for max(z) <= 100. Why?
@@ -194,4 +232,4 @@ def pow_gw_approximation(
         z, cs=cs, tau_star=tau_star, Iv=integration.Iv_resampled(x=x, P_tilde_v=spec_den_v))
     return gw_junction(
         z, Pgw_low, Pgw_int, Pgw_high, cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end,
-        cs_friction=cs_friction)
+        cs_friction=cs_friction, xp_v=intersection.xp_v(x=x, P_tilde_v=spec_den_v), fallback_zp_gw=fallback_zp_gw)

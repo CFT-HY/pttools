@@ -101,7 +101,8 @@ class PgwApproxTest(unittest.TestCase):
         r"""Test that the approximation reduces to the correct regime far from the crossovers.
 
         Below $k_\times$ the approximation is $\tilde{P}_\text{gw}^\text{low}$,
-        and above $k_\star = 2 c_s k_p$, where $k_p R_* = 2\pi$, only $\tilde{P}_\text{gw}^\text{high}$ remains.
+        and above the estimate of the GW peak $k_\star = 2 c_s k_p$, where $k_p R_* = 2\pi$,
+        only $\tilde{P}_\text{gw}^\text{high}$ remains.
         The high-frequency term has no switch, as it is negligible at low frequencies.
         The tolerance is set by the tails of the error functions.
         """
@@ -109,7 +110,7 @@ class PgwApproxTest(unittest.TestCase):
             with self.subTest(nu=nu):
                 cs, tau_star, tau_end = params(nu)
                 z_x = z_cross(HLf=HLF, cs=cs, nu=nu, tau_star=tau_star, tau_end=tau_end)
-                z_star = 4 * np.pi * cs
+                zp_gw = 4 * np.pi * cs
 
                 z_low = z_x / 3
                 assert_allclose(
@@ -118,14 +119,14 @@ class PgwApproxTest(unittest.TestCase):
                     + gw_spectral_density_approx_high(z=z_low, HLf=HLF, cs=cs, tau_end=tau_end),
                     rtol=1e-6
                 )
-                z_int = np.sqrt(z_x * z_star)
+                z_int = np.sqrt(z_x * 0.5 * zp_gw)
                 assert_allclose(
                     Pgw_approx(z=z_int, HLf=HLF, cs=cs, tau_star=tau_star, tau_end=tau_end),
                     gw_spectral_density_approx_int(z=z_int, HLf=HLF, cs=cs)
                     + gw_spectral_density_approx_high(z=z_int, HLf=HLF, cs=cs, tau_end=tau_end),
                     rtol=1e-6
                 )
-                z_high = 1.5 * z_star
+                z_high = 1.5 * zp_gw
                 assert_allclose(
                     Pgw_approx(z=z_high, HLf=HLF, cs=cs, tau_star=tau_star, tau_end=tau_end),
                     gw_spectral_density_approx_high(z=z_high, HLf=HLF, cs=cs, tau_end=tau_end),

@@ -29,17 +29,18 @@ def main(path: str | None = None) -> Figure:
     # nu = (1 - 3 * cs**2) / (1 + 3 * cs**2)
     vw = 0.8
     alpha = 0.01
-    kp = 200 * np.pi # kp*eta_star
-    HR = 2 * np.pi / kp * 2 / (1 + 3 * omega)
-    # Lf = 2 * np.pi / kp
+    # Sound wave scale k_p = 2 pi / R_* in units of 1 / eta_star. This is not the peak of the GW power spectrum.
+    kp_sw_eta_star = 200 * np.pi
+    HR = 2 * np.pi / kp_sw_eta_star * 2 / (1 + 3 * omega)
+    # Lf = 2 * np.pi / kp_sw
 
     # INFO
     # Lf = R_star
     # HR = H_star * R_star = r_star
     # H_star =
-    # kp = kappa_peak * eta_star
+    # kp_sw_eta_star = k_p * eta_star
     # eta_star is set to 1 = initial time of the acoustic phase (this is a normalization choice)
-    # R_* = 2pi/kp (2pi is arbitrary)
+    # R_* = 2pi/kp_sw (2pi is arbitrary)
     # When plotting over z, we have the peak at around z = 1
     # 2/(1+3*omega) comes from the Friedmann equation
     # Use the existing PTtools definition for omega
@@ -48,8 +49,8 @@ def main(path: str | None = None) -> Figure:
 
     # r_star = H_star R_star
     # eta_star is set to 1
-    # -> k_peak * eta_star = k_peak = 2pi / r_star * 2 / (1 + 3*omega)
-    # -> Lf = 2pi / k_peak
+    # -> kp_sw * eta_star = kp_sw = 2pi / r_star * 2 / (1 + 3*omega)
+    # -> Lf = 2pi / kp_sw
     # -> Ht
     # -> eta_end, tau-star, tau_end
 
@@ -65,7 +66,7 @@ def main(path: str | None = None) -> Figure:
     eta_end = eta_star + Ht
     # tau_star = eta_star / Lf
     # tau_end = eta_end / Lf
-    # kp = 2*np.pi /HR
+    # kp_sw = 2*np.pi /HR
 
     z = np.logspace(-3, 3, npt)  # z = kR_*
 

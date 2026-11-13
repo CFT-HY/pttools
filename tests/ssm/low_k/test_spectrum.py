@@ -134,3 +134,30 @@ class CsFrictionSpectrumTest(unittest.TestCase):
         ]
         assert_allclose(spectra[1].spec_den_gw_low, spectra[0].spec_den_gw_low, rtol=1e-12)
         assert_allclose(spectra[1].spec_den_gw_expanded, spectra[0].spec_den_gw_expanded, rtol=1e-12)
+
+
+class LowKFallbackTest(unittest.TestCase):
+    r"""Test the fallback for the crossing of the intermediate- and high-frequency regimes."""
+
+    def test_fallback(self) -> None:
+        r"""Test the fallbacks with a $y$ array that ends below the crossing.
+
+        Then the lookup array of $\tilde{P}_v$ does not cover $x$ at the maximum of $x \tilde{P}_v(x)$ either,
+        so both fallbacks are the estimate of the GW peak $k_\star R_* \simeq 4 \pi c_s$, which is above the $y$ array,
+        and the junction is the intermediate-frequency regime up to the end of the $y$ array.
+        """
+        bubble = Bubble.cached(BagModel.cached(alpha_n_min=0.05), v_wall=0.5, alpha_n=0.05)
+        full = SSMSpectrum.cached(bubble, y=Y, r_star=R_STAR)
+        assert 1 < full.xp_v < 1.6
+        z_ih = Y[np.argmax(full.spec_den_gw_ssm > full.spec_den_gw_int)]
+        assert 0.9 < z_ih / (full.cs * full.xp_v) < 1.4
+        y = np.logspace(-3, np.log10(0.3 * z_ih), 100)
+        with self.assertLogs("pttools.ssm.low_k.join", level="WARNING"):
+            default = SSMSpectrum(bubble, y=y, r_star=R_STAR)
+        with self.assertLogs("pttools.ssm.low_k.join", level="WARNING"):
+            old = SSMSpectrum(bubble, y=y, r_star=R_STAR, low_k_fallback_zp_gw=True)
+        assert default.low_k_fallback_zp_gw is False
+        assert old.low_k_fallback_zp_gw is True
+        assert np.isnan(default.xp_v)
+        assert_allclose(default.spec_den_gw_expanded, old.spec_den_gw_expanded, rtol=1e-14)
+        assert_allclose(default.spec_den_gw_expanded[-1], default.spec_den_gw_int[-1], rtol=1e-6)

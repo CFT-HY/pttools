@@ -25,6 +25,7 @@ import numpy as np
 from pttools.bubble.thermo import w_bar as w_bar_func
 from pttools.speedup import njit
 from pttools.ssm.low_k.integration import Iv_resampled, power_spectrum_integration_int, spec_den_gw_low
+from pttools.ssm.low_k.intersection import xp_v as xp_v_func
 from pttools.ssm.low_k.join import gw_junction
 from pttools.ssm.nucleation import NucType, bubble_spacing_enlargement
 from pttools.ssm.spec_den_gw import gen_lookup, spec_den_gw
@@ -105,6 +106,9 @@ class SSMInput(tp.NamedTuple):
     lambda_correction: LambdaCorrection
     #: whether to compute the acoustic friction of the low-$k$ approximation from $c_s$ instead of $\nu$
     low_k_cs_friction: bool
+    #: whether to use the estimate of the peak of the GW power spectrum as the fallback for the crossing of the
+    #: intermediate- and high-frequency regimes, see :py:func:`pttools.ssm.low_k.join.gw_junction`
+    low_k_fallback_zp_gw: bool
 
 
 class SSMBaseResults(tp.NamedTuple):
@@ -133,6 +137,10 @@ class SSMBaseResults(tp.NamedTuple):
     #: $\mathcal{I}_v$, source contribution of the low-$k$ approximation,
     #: see :py:func:`pttools.ssm.low_k.integration.Iv_resampled`
     Iv: float
+    #: $x_{p,v}$, $x$ at the maximum of $x \tilde{P}_v(x)$ over the lookup array,
+    #: or nan if the array does not cover it,
+    #: see :py:func:`pttools.ssm.low_k.intersection.xp_v`
+    xp_v: float
 
 
 class SSMGWResults(tp.NamedTuple):
@@ -191,7 +199,8 @@ def compute_gw(inp: SSMInput, base_res: SSMBaseResults) -> SSMGWResults:
         y=inp.y,
         cs=inp.cs, Iv=base_res.Iv, nu_gdh2024=inp.nu_gdh2024,
         tau_end=inp.tau_end, tau_star=inp.tau_star,
-        cs_friction=inp.low_k_cs_friction
+        cs_friction=inp.low_k_cs_friction,
+        xp_v=base_res.xp_v, fallback_zp_gw=inp.low_k_fallback_zp_gw
     )
     return SSMGWResults(
         spec_den_gw_ssm=spec_den_gw_ssm,
@@ -216,7 +225,9 @@ def compute_low_k(
         tau_end: float,
         tau_star: float,
         # Other
-        cs_friction: bool = False) -> tuple[FloatArr1D, FloatArr1D, FloatArr1D]:
+        cs_friction: bool = False,
+        xp_v: float = np.nan,
+        fallback_zp_gw: bool = False) -> tuple[FloatArr1D, FloatArr1D, FloatArr1D]:
     r"""Compute the low-k approximation of :giombi_2024_cs:`\ `.
 
     The source integral $\mathcal{I}_v$ should be computed with :py:func:`pttools.ssm.low_k.integration.Iv_resampled`
@@ -235,6 +246,11 @@ def compute_low_k(
     :param tau_star: $\tau_*$
     :param cs_friction: whether to compute the acoustic friction from $c_s$ instead of $\nu$,
         see :py:func:`pttools.ssm.low_k.kernel.kernel_low`. Disabled by default.
+    :param xp_v: $x_{p,v}$, $x$ at the maximum of $x \tilde{P}_v(x)$
+        (:py:func:`pttools.ssm.low_k.intersection.xp_v`),
+        for the fallback of the crossing of the intermediate- and high-frequency regimes
+    :param fallback_zp_gw: whether to use the estimate of the peak of the GW power spectrum as that fallback,
+        see :py:func:`pttools.ssm.low_k.join.gw_junction`. Disabled by default.
     :return: $\tilde{P}_\text{gw}^\text{low}$, $\tilde{P}_\text{gw}^\text{int}$ and the joined spectrum
     """
     spec_den_gw_low_arr = spec_den_gw_low(
@@ -248,7 +264,8 @@ def compute_low_k(
         Pgw_high=spec_den_gw_ssm,
         cs=cs, nu=nu_gdh2024,
         tau_star=tau_star, tau_end=tau_end,
-        cs_friction=cs_friction
+        cs_friction=cs_friction,
+        xp_v=xp_v, fallback_zp_gw=fallback_zp_gw
     )
     return spec_den_gw_low_arr, spec_den_gw_int, spec_den_gw_expanded
 
@@ -328,5 +345,6 @@ def compute_base(inp: SSMInput, parallel: bool = True) -> SSMBaseResults:
         ubarf2=ubarf2,
         z_lookup=z_gw_lookup,
         spec_den_gw_ssm_unscaled=spec_den_gw_ssm_unscaled,
-        Iv=Iv_resampled(x=z_gw_lookup, P_tilde_v=spec_den_v_lookup)
+        Iv=Iv_resampled(x=z_gw_lookup, P_tilde_v=spec_den_v_lookup),
+        xp_v=xp_v_func(x=z_gw_lookup, P_tilde_v=spec_den_v_lookup)
     )
