@@ -170,6 +170,25 @@ def plot_spectra_multi_flat(
 # Individual plotting functions
 # -----
 
+def noise_curve(
+        spectra: tp.Collection[BaseOmgw0],
+        eb: bool = True,
+        gb: bool = True,
+        n_points: int = 100) -> tuple[th.FloatArr1D, th.FloatArr1D]:
+    r"""The LISA noise $\Omega_\text{noise} h^2$ for the frequency range of the given spectra.
+
+    :param spectra: the spectra
+    :param eb: whether to include the extragalactic compact binary noise
+    :param gb: whether to include the galactic compact binary noise
+    :param n_points: number of frequencies
+    :return: the frequencies in Hz on a logarithmic axis, and the noise
+    """
+    f_min = np.nanmin([np.nanmin(spectrum.f()) for spectrum in spectra])
+    f_max = np.nanmax([np.nanmax(spectrum.f()) for spectrum in spectra])
+    f_noise: th.FloatArr1D = np.logspace(np.log10(f_min), np.log10(f_max), n_points, dtype=np.float64)
+    return f_noise, omega_noise_h2(f_noise, eb=eb, gb=gb)
+
+
 def noise_label(eb: bool = True, gb: bool = True) -> str:
     """Legend label for the LISA noise with the given noise sources.
 
@@ -220,10 +239,9 @@ def plot_spectra(
                 if labels is None or labels[i] is None else labels[i],
             **kwargs
         )
-    f_min = np.nanmin([np.nanmin(spectrum.f()) for spectrum in spectra])
-    f_max = np.nanmax([np.nanmax(spectrum.f()) for spectrum in spectra])
-    f_noise: th.FloatArr1D = np.logspace(np.log10(f_min), np.log10(f_max), 100, dtype=np.float64)
-    ax.plot(f_noise, omega_noise_h2(f_noise, eb=eb, gb=gb), label=noise_label(eb=eb, gb=gb))
+    f_noise, noise = noise_curve(spectra, eb=eb, gb=gb)
+    f_min, f_max = f_noise[0], f_noise[-1]
+    ax.plot(f_noise, noise, label=noise_label(eb=eb, gb=gb))
     ax.set_xlabel(F_LABEL)
     ax.set_xscale("log")
     ax.set_xlim(f_min, f_max)

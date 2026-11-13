@@ -156,6 +156,16 @@ class Importer:
         """Close the file when exiting the context manager."""
         self.close()
 
+    def clear_cache(self) -> None:
+        """Remove the recreated and imported objects from the cache to free their memory.
+
+        This is useful when going through many bubbles of a large file one at a time,
+        as each imported bubble holds its fluid profiles.
+        """
+        self._models.clear()
+        self._bubbles.clear()
+        self._imported_bubbles.clear()
+
     def close(self) -> None:
         """Close the file."""
         self._file.close()

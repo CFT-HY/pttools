@@ -99,6 +99,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# For the interactive dataset viewer of pttools.plot.dataset
+dashboard = ["dash >= 4.5.0"]
 numbalsoda = ["numbalsoda >= 0.3.4"]
 # Intel SVML for Numba
 # https://pypi.org/project/icc-rt/

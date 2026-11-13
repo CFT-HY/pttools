@@ -55,6 +55,9 @@ dependencies:
   # -----
   # Optional dependencies
   # -----
+  # Dash for the interactive dataset viewer of pttools.plot.dataset
+  # https://anaconda.org/channels/conda-forge/packages/dash/overview
+  - dash >= 4.5.0
   # Intel SVML for Numba
   # https://anaconda.org/channels/conda-forge/packages/intel-cmplr-lib-rt/overview
   # https://numba.readthedocs.io/en/stable/user/performance-tips.html#intel-svml

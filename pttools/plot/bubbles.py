@@ -63,15 +63,7 @@ def plot_bubbles_common(
         full_range: bool = False) -> FigAndAxes:
     """Common steps for plotting multiple bubbles."""
     ax.set_xlabel(XI_LABEL)
-    if full_range:
-        ax.set_xlim(-1, 1)
-    else:
-        xi_min = np.nanmin([bubble.xi[1] for bubble in bubbles])
-        xi_max = np.nanmax([bubble.xi[-2] for bubble in bubbles])
-        ax.set_xlim(
-            np.nanmax([xi_min * 1.1, -1]) if xi_min < 0 else np.nanmin([xi_min * 0.9]),
-            np.nanmin([xi_max * 0.9, 0]) if xi_max < 0 else np.nanmin([xi_max * 1.1, 1])
-        )
+    ax.set_xlim(*xi_limits(bubbles, full_range=full_range))
     ax.grid()
     if (legend is None and len(bubbles) > 1) or legend:
         legend_func(ax, fontsize=legend_fontsize)
@@ -149,3 +141,20 @@ def plot_bubbles_w(
             ax.plot(bubble.xi, bubble.w, label=bubble.label_latex, **kwargs)
     ax.set_ylabel(W_LABEL)
     return plot_bubbles_common(bubbles, fig, ax, path, full_range=full_range)
+
+
+def xi_limits(bubbles: tp.Collection[BaseBubble], full_range: bool = False) -> tuple[float, float]:
+    r"""Limits of the $\xi$ axis that cover the fluid shells of the bubbles with a margin.
+
+    :param bubbles: the bubbles
+    :param full_range: whether to use the full range from -1 to 1
+    :return: the lower and the upper limit
+    """
+    if full_range:
+        return -1, 1
+    xi_min = np.nanmin([bubble.xi[1] for bubble in bubbles])
+    xi_max = np.nanmax([bubble.xi[-2] for bubble in bubbles])
+    return (
+        float(np.nanmax([xi_min * 1.1, -1]) if xi_min < 0 else np.nanmin([xi_min * 0.9])),
+        float(np.nanmin([xi_max * 0.9, 0]) if xi_max < 0 else np.nanmin([xi_max * 1.1, 1]))
+    )

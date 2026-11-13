@@ -118,3 +118,26 @@ When the exporter is closed, it writes a SHA-256 checksum file next to the HDF5 
 which can be verified with :func:`pttools.utils.checksum.verify_checksum` or ``sha256sum --check``.
 For parallel computation, the fields can be extracted in the worker processes with
 :attr:`pttools.export.exporter.Exporter.extractor`, as described in the documentation of the exporter.
+
+Viewing datasets
+----------------
+The datasets that have been computed on a parameter grid, e.g. with :func:`pttools.analysis.dataset.compute_dataset`,
+can be explored interactively in a web browser with the viewer of :mod:`pttools.plot.dataset.app`.
+It has a slider for each parameter with a step for each of its stored values,
+and it shows the stored fluid profile, spectrum and scalar values of the selected parameter values.
+Only the selected bubble and spectrum are read from the file, so the file can be much larger than the memory.
+The viewer needs `Dash <https://dash.plotly.com/>`_, which is installed with ``pip install "pttools-gw[dashboard]"``.
+
+.. code-block:: python
+
+  from pttools.plot.dataset.app import run
+
+  run("dataset.h5")
+
+The viewer is then available at ``http://127.0.0.1:8050``.
+By default, it accepts connections only from the same computer.
+If it's running on a remote computer, forward the port to your computer with e.g.
+``ssh -L 8050:localhost:8050 user@host``.
+The rows of a dataset can also be found by their parameter values without the viewer
+with :class:`pttools.export.index.DatasetIndex`.
+For an example, see :ref:`sphx_glr_auto_examples_dataset_view.py`.
