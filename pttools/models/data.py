@@ -30,6 +30,8 @@ class DataModel(Model):
     using $\log_{10} T$ as the variable for the temperature-dependent quantities.
     """
 
+    DEFAULT_NAME = "data"
+
     def __init__(
             self,
             T_s: th.FloatArr1D,
