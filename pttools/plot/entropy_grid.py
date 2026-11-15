@@ -82,7 +82,8 @@ class EntropyPlot(VwAlphaPlot):
         and the regions where the solver failed in black.
 
         :param grid: grid of solved bubbles
-        :param entropy: $\Delta s / s_n$, relative entropy change of each bubble
+        :param entropy: $\Delta s / s_n$, relative entropy production of each bubble,
+            see :py:attr:`pttools.bubble.bubble.nucleated.BaseNucleatedBubble.entropy_production_relative`
         :param min_level: minimum contour level
         :param max_level: maximum contour level
         :param diff_level: difference between contour levels
@@ -235,7 +236,7 @@ def compute(bubble: Bubble) -> tuple[float, float, float, float, float, float, f
         if bubble.solver_failed:
             return COMPUTE_FAIL
         return (
-            bubble.entropy_density_diff_relative,
+            bubble.entropy_production_relative,
             bubble.sp,
             bubble.sm,
             bubble.sm_sh,

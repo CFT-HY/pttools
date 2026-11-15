@@ -22,6 +22,7 @@ from pttools.bubble.solution_type import (
     SolutionType,
     cannot_be_detonation,
     cannot_be_sub_def,
+    is_subsonic_in_front,
     is_surely_detonation,
     is_surely_sub_def,
 )
@@ -1163,6 +1164,14 @@ class Model(BaseModel, abc.ABC):
         v_cj = tp.cast(float, v_chapman_jouguet(self, alpha_n, wn=wn, wm_guess=wm_guess))
 
         if is_surely_detonation(v_wall, v_cj):
+            if is_subsonic_in_front(self, v_wall, wn):
+                logger.error(
+                    "No direct solution type of PTtools for %s with v_wall=%s, alpha_n=%s: v_wall > v_cj=%s, "
+                    "but a detonation needs v_wall >= c_s,s(w_n)=%s. "
+                    "The solution may be a mixed hybrid, which PTtools does not support.",
+                    self.name, v_wall, alpha_n, v_cj, np.sqrt(self.cs2(wn, Phase.SYMMETRIC))
+                )
+                return SolutionType.ERROR
             return SolutionType.DETON
         if is_surely_sub_def(self, v_wall, wn):
             return SolutionType.SUB_DEF

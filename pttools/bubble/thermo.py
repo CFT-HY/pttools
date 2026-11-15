@@ -42,7 +42,7 @@ if tp.TYPE_CHECKING:
 
 __all__ = [
     "e_bar",
-    "entropy_density_diff",
+    "entropy_production",
     "kappa",
     "kinetic_energy_density",
     "kinetic_energy_fraction",
@@ -59,7 +59,7 @@ __all__ = [
     "ubarf2",
     "ubarf2_from_K",
     "va_enthalpy_density",
-    "va_entropy_density_diff",
+    "va_entropy_production",
     "va_kinetic_energy_density",
     "va_kinetic_energy_fraction",
     "va_thermal_energy_density",
@@ -88,23 +88,26 @@ def e_bar(model: Model, wn: float) -> float:
     return model.e(wn, Phase.SYMMETRIC)
 
 
-def entropy_density_diff(
+def entropy_production(
         model: Model,
         w: th.FloatArr1D,
+        v: th.FloatArr1D,
         xi: th.FloatArr1D,
         v_wall: float,
         phase: th.FloatArr1D | None = None) -> float:
-    r"""Bubble volume averaged entropy density.
+    r"""Bubble volume averaged entropy production.
 
-    $$\frac{3}{4\pi {v}_\text{wall}^3} {s}_\text{avg}$$.
+    $$\frac{3}{4\pi {v}_\text{wall}^3} \Delta S$$,
+    where $\Delta S$ is :py:func:`va_entropy_production`.
 
     :param model: Model
     :param w: Enthalpy density $w$
+    :param v: Fluid velocity $v$
     :param xi: $\xi$
     :param v_wall: Wall velocity ${v}_\text{wall}$
     :param phase: Phase $\phi$. If not given, it's computed from $\xi$ and ${v}_\text{wall}$.
     """
-    return 3/(4*np.pi * v_wall**3) * va_entropy_density_diff(model, w, xi, v_wall, phase)
+    return 3/(4*np.pi * v_wall**3) * va_entropy_production(model, w, v, xi, v_wall, phase)
 
 
 def kappa(
@@ -428,20 +431,33 @@ def va_enthalpy_density(eqp_bar: float) -> float:
     return 4/3 * eqp_bar
 
 
-def va_entropy_density_diff(
+def va_entropy_production(
         model: Model,
         w: th.FloatArr1D,
+        v: th.FloatArr1D,
         xi: th.FloatArr1D,
         v_wall: float,
         phase: th.FloatArr1D | None = None) -> float:
     r"""
-    ${s}_\text{avg}$, volume-averaged entropy density.
+    $\Delta S$, entropy produced by the bubble per $t^3$.
 
-    $${s}_\text{avg} = \int d\xi \xi^2 (s(w,\phi) - s({w}_n, \phi_s)$$.
+    The entropy current is $s u^\mu$, so the entropy density in the plasma frame is $s \gamma$.
+    The fluid outside the shock is at rest, so the entropy produced in a sphere that contains the fluid shell is
+    $$\Delta S = 4\pi \int d\xi \xi^2 \left( s(w,\phi) \gamma(v) - s({w}_n, \phi_s) \right),$$
+    which the second law of thermodynamics requires to be non-negative.
+    Without $\gamma$, the integral would be the difference of the entropy density in the rest frame of the fluid,
+    which is not conserved, and can be negative also when the entropy increases.
+
+    :param model: Model
+    :param w: Enthalpy density $w$
+    :param v: Fluid velocity $v$
+    :param xi: $\xi$
+    :param v_wall: Wall velocity ${v}_\text{wall}$
+    :param phase: Phase $\phi$. If not given, it's computed from $\xi$ and ${v}_\text{wall}$.
     """
     if phase is None:
         phase = tp.cast(th.FloatArr1D, props.find_phase(xi, v_wall))
-    s_diff = model.s(w, phase) - model.s(w[-1], Phase.SYMMETRIC)
+    s_diff = model.s(w, phase) * np.sqrt(relativity.gamma2(v)) - model.s(w[-1], Phase.SYMMETRIC)
     return 4*np.pi/3 * np.trapezoid(s_diff, xi**3)  # pyrefly: ignore[bad-return]
 
 

@@ -155,13 +155,13 @@ class BubbleTest(unittest.TestCase):
     # -----
     # bva = bubble volume averaged
     # -----
-    def test_entropy_density_diff(self) -> None:
-        """Test that the bubble volume averaged entropy density difference is positive."""
-        assert self.bubble.entropy_density_diff > 0
+    def test_entropy_production(self) -> None:
+        """Test that the bubble volume averaged entropy production is positive."""
+        assert self.bubble.entropy_production > 0
 
-    def test_entropy_density_diff_relative(self) -> None:
-        """Test that the relative bubble volume averaged entropy density difference is positive."""
-        assert self.bubble.entropy_density_diff_relative > 0
+    def test_entropy_production_relative(self) -> None:
+        """Test that the relative bubble volume averaged entropy production is positive."""
+        assert self.bubble.entropy_production_relative > 0
 
     def test_kinetic_energy_density(self) -> None:
         """Test that the bubble volume averaged kinetic energy density is positive."""
@@ -194,13 +194,13 @@ class BubbleTest(unittest.TestCase):
         """Test that the volume averaged enthalpy density is positive."""
         assert self.bubble.va_enthalpy_density > 0
 
-    def test_va_entropy_density_diff(self) -> None:
-        """Test that the volume averaged entropy density difference is positive."""
-        assert self.bubble.va_entropy_density_diff > 0
+    def test_va_entropy_production(self) -> None:
+        """Test that the entropy production is positive."""
+        assert self.bubble.va_entropy_production > 0
 
-    def test_va_entropy_density_diff_relative(self) -> None:
-        """Test that the relative volume averaged entropy density difference is positive."""
-        assert self.bubble.va_entropy_density_diff_relative > 0
+    def test_va_entropy_production_relative(self) -> None:
+        """Test that the relative entropy production is positive."""
+        assert self.bubble.va_entropy_production_relative > 0
 
     def test_va_kinetic_energy_fraction(self) -> None:
         """Test that the volume averaged kinetic energy fraction is between 0 and 1."""

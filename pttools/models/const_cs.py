@@ -998,7 +998,16 @@ class ConstCSModel(AnalyticModel):
         disc = b**2 - 4*a*c
         if disc < 0:
             return SolutionType.HYBRID
-        # A detonation solution exists
+        # The junction conditions of a detonation have a solution,
+        # but the fluid in front of the wall must also be supersonic.
+        if v_wall**2 < self.css2:
+            logger.error(
+                "No direct solution type of PTtools for %s with v_wall=%s, alpha_n=%s: "
+                "a detonation needs v_wall >= c_s,s=%s. "
+                "The solution may be a mixed hybrid, which PTtools does not support.",
+                self.name, v_wall, alpha_n, np.sqrt(self.css2)
+            )
+            return SolutionType.ERROR
         return SolutionType.DETON
 
     def temp[T: FloatOrArr](self, w: T, phase: th.FloatOrArr) -> T:

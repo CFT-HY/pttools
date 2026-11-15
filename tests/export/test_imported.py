@@ -31,8 +31,9 @@ from tests.export.test_export import F_SPECTRUM_KWARGS, Y_SPECTRUM_KWARGS, new_p
 BUBBLE_QUANTITIES: tuple[str, ...] = (
     "alpha_n", "v_wall", "sol_type", "wn", "Tn", "v_sh", "css2_Tn", "csb2_Tn", "en", "e_bar", "kappa", "kappa_giese",
     "omega", "ubarf", "ubarf2", "w_bar", "T_star", "g_star", "gs_star", "nu_gdh2024", "omega_barotropic",
-    "mean_adiabatic_index", "kinetic_energy_fraction", "thermal_energy_fraction", "entropy_density_diff",
-    "va_enthalpy_density", "va_trace_anomaly_diff", "vp_vm_tilde_ratio", "vp_vm_tilde_ratio_giese", "v_mu",
+    "mean_adiabatic_index", "kinetic_energy_fraction", "thermal_energy_fraction", "entropy_production",
+    "va_enthalpy_density", "va_trace_anomaly_diff", "vp_vm_tilde_ratio",
+    "vp_vm_tilde_ratio_giese", "v_mu",
 )
 #: Quantities of the spectra that are computed from the stored fields and the bubble
 SPECTRUM_QUANTITIES: tuple[str, ...] = (

@@ -309,21 +309,21 @@ class BaseNucleatedBubble(BaseBubble, abc.ABC):
     # bva = bubble volume averaged
     # -----
     @functools.cached_property
-    @copy_docstring_dec(thermo.entropy_density_diff, without_params=True)
-    def entropy_density_diff(self) -> float:
+    @copy_docstring_dec(thermo.entropy_production, without_params=True)
+    def entropy_production(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.entropy_density_diff(self.model, self.w, self.xi, self.v_wall, self.phase)
+        return thermo.entropy_production(self.model, self.w, self.v, self.xi, self.v_wall, self.phase)
 
     @functools.cached_property
-    def entropy_density_diff_relative(self) -> float:
-        r"""Bubble volume averaged entropy density difference relative to the entropy density $s_n$ outside the bubble.
+    def entropy_production_relative(self) -> float:
+        r"""Bubble volume averaged entropy production relative to the entropy density $s_n$ outside the bubble.
 
-        See :attr:`entropy_density_diff`.
+        See :attr:`entropy_production`.
         """
         if not self.solved:
             raise NotYetSolvedError
-        return self.entropy_density_diff / self.model.s(self.wn, Phase.SYMMETRIC)
+        return self.entropy_production / self.model.s(self.wn, Phase.SYMMETRIC)
 
     @functools.cached_property
     @copy_docstring_dec(thermo.kinetic_energy_density, without_params=True)
@@ -378,21 +378,21 @@ class BaseNucleatedBubble(BaseBubble, abc.ABC):
         return thermo.va_enthalpy_density(eqp_bar=self.thermal_energy_density)
 
     @functools.cached_property
-    @copy_docstring_dec(thermo.va_entropy_density_diff, without_params=True)
-    def va_entropy_density_diff(self) -> float:
+    @copy_docstring_dec(thermo.va_entropy_production, without_params=True)
+    def va_entropy_production(self) -> float:
         if not self.solved:
             raise NotYetSolvedError
-        return thermo.va_entropy_density_diff(self.model, self.w, self.xi, self.v_wall, self.phase)
+        return thermo.va_entropy_production(self.model, self.w, self.v, self.xi, self.v_wall, self.phase)
 
     @functools.cached_property
-    def va_entropy_density_diff_relative(self) -> float:
-        r"""Volume-averaged entropy density difference relative to the entropy density $s_n$ outside the bubble.
+    def va_entropy_production_relative(self) -> float:
+        r"""Entropy production $\Delta S$ relative to the entropy density $s_n$ outside the bubble.
 
-        See :attr:`va_entropy_density_diff`.
+        See :attr:`va_entropy_production`.
         """
         if not self.solved:
             raise NotYetSolvedError
-        return self.va_entropy_density_diff / self.model.s(self.wn, Phase.SYMMETRIC)
+        return self.va_entropy_production / self.model.s(self.wn, Phase.SYMMETRIC)
 
     @functools.cached_property
     @copy_docstring_dec(thermo.va_kinetic_energy_fraction, without_params=True)

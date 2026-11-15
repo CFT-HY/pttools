@@ -15,6 +15,7 @@ __all__ = [
     "SolutionType",
     "cannot_be_detonation",
     "cannot_be_sub_def",
+    "is_subsonic_in_front",
     "is_surely_detonation",
     "is_surely_sub_def",
     "validate_solution_type",
@@ -73,6 +74,20 @@ def cannot_be_sub_def(model: Model, v_wall: float, wn: float) -> bool:
     return v_wall**2 > cs2_max
 
 
+def is_subsonic_in_front(model: Model, v_wall: float, wn: float) -> bool:
+    r"""Check whether the wall is subsonic with respect to the fluid at rest in front of it, $v_w < c_{s,s}(w_n)$.
+
+    In a detonation, the fluid in front of the wall is at rest in the state of nucleation,
+    so $\tilde{v}_{+} = v_w$, which must be at least the speed of sound $c_{s,s}(w_n)$ there.
+    Therefore, if this is true, the solution cannot be a detonation, even if $v_w > v_{CJ}$.
+    With $c_{s,b} < c_{s,s}$, e.g. in the constant sound speed model, the solution can then be a mixed hybrid
+    with rarefaction waves on both sides of the wall (Barni and Madge, in preparation),
+    which PTtools does not support.
+    In the bag model $v_{CJ} > c_s$, and this is always false for $v_w > v_{CJ}$.
+    """
+    return v_wall**2 < model.cs2(wn, Phase.SYMMETRIC)
+
+
 def is_surely_detonation(v_wall: float, v_cj: float) -> float:
     r"""If $v_w > v_{CJ}$, it is certainly a detonation."""
     return v_wall > v_cj
@@ -102,6 +117,15 @@ def validate_solution_type(
         sol_type = model.solution_type(
             v_wall=v_wall, alpha_n=alpha_n, wn=wn, wn_guess=wn_guess, wm_guess=wm_guess
         )
+    if sol_type == SolutionType.DETON:
+        if wn is None:
+            wn = model.wn(alpha_n, wn_guess)
+        if is_subsonic_in_front(model, v_wall, wn):
+            msg = \
+                f"A detonation is not possible for model={model.name}, v_wall={v_wall}, alpha_n={alpha_n}, " \
+                f"since v_wall is below the speed of sound c_s,s(w_n)={float(model.cs2(wn, Phase.SYMMETRIC))**0.5}."
+            logger.error(msg)
+            raise ValueError(msg)
     if sol_type in [SolutionType.UNKNOWN, SolutionType.ERROR]:
         msg = \
             "Could not determine solution type automatically for " \

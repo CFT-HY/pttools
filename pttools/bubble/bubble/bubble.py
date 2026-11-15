@@ -352,11 +352,11 @@ class Bubble(ComputedBubble, BaseNucleatedBubble):
         return fail
 
     def validate_entropy_density(self, log_negative: bool = True) -> bool:
-        """Validate that the total entropy density is not decreasing."""
-        fail = self.va_entropy_density_diff < 0
+        """Validate that the bubble does not decrease the total entropy (:attr:`va_entropy_production` >= 0)."""
+        fail = self.va_entropy_production < 0
         if fail:
-            msg = "Entropy density change should not be negative! Now entropy is decreasing. " \
-                  f"Got: {self.va_entropy_density_diff} with " \
+            msg = "Entropy production should not be negative! Now entropy is decreasing. " \
+                  f"Got: {self.va_entropy_production} with " \
                   f"model={self.model.label_unicode}, v_wall={self.v_wall}, alpha_n={self.alpha_n}"
             if log_negative:
                 logger.warning(msg)
