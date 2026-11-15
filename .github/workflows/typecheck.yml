@@ -20,6 +20,21 @@ on:
         type: string
         required: false
         default: ubuntu-slim
+      setup-script:
+        description: >-
+          A shell command that is run after setting up uv and before installing the requirements,
+          e.g. a script of the caller that clones the path dependencies of its uv sources outside its workspace,
+          or builds native extensions whose type stubs it needs.
+          The virtual environment is already activated, and the command may install the requirements itself.
+          An empty string skips this.
+        type: string
+        required: false
+        default: ""
+      timeout-minutes:
+        description: The timeout of the job, e.g. longer if the setup script builds native extensions
+        type: number
+        required: false
+        default: 5
   # The inputs are defined also for the manual runs,
   # since otherwise the inputs would be empty instead of having the default values.
   workflow_dispatch:
@@ -29,7 +44,7 @@ permissions:
 jobs:
   typecheck:
     runs-on: ${{ inputs.runs-on }}
-    timeout-minutes: 5
+    timeout-minutes: ${{ inputs.timeout-minutes }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -54,6 +69,13 @@ jobs:
         env:
           UV_VERSION: ${{ steps.setup-uv.outputs.uv-version }}
           PYTHON_VERSION: ${{ steps.setup-uv.outputs.python-version }}
+      - name: Run setup script
+        if: inputs.setup-script != ''
+        # The command is passed in an environment variable instead of an expression in the script,
+        # which would be vulnerable to template injection.
+        run: eval "${SETUP_SCRIPT}"
+        env:
+          SETUP_SCRIPT: ${{ inputs.setup-script }}
       - name: Install requirements
         run: uv sync --locked
       - name: Run Pyrefly

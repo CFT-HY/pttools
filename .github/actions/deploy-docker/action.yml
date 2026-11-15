@@ -9,16 +9,29 @@
 name: Build and push Docker images
 description: >-
   Build the Docker image of the repository for multiple platforms,
-  push it to Docker Hub and the GitHub Container registry, and generate an artifact attestation for it.
-  The job has to have the permissions artifact-metadata, attestations, id-token and packages: write,
-  and contents: read.
+  push it to the GitHub Container registry and optionally to Docker Hub, and optionally generate an artifact attestation for it.
+  The job has to have the permissions contents: read and packages: write,
+  id-token: write for Docker Hub or the attestation, and artifact-metadata and attestations: write for the attestation.
 inputs:
+  attest:
+    description: >-
+      Generate an artifact attestation for the image in the GitHub Container registry.
+      Artifact attestations are available for private repositories only on the GitHub Enterprise Cloud plan,
+      so set this to "false" for private repositories on other plans.
+    required: false
+    default: "true"
   dockerhub-image:
-    description: The Docker Hub image name, e.g. "cfthy/pttools"
-    required: true
+    description: >-
+      The Docker Hub image name, e.g. "cfthy/pttools".
+      Required if dockerhub-oidc-connection-id is given.
+    required: false
+    default: ""
   dockerhub-oidc-connection-id:
-    description: The ID of the OIDC connection of the Docker Hub organization
-    required: true
+    description: >-
+      The ID of the OIDC connection of the Docker Hub organization.
+      If this is empty, Docker Hub is skipped, and the image is pushed only to the GitHub Container registry.
+    required: false
+    default: ""
   dockerhub-oidc-expire-in-minutes:
     description: >-
       The lifetime of the Docker Hub OIDC token in minutes, between 5 and 360.
@@ -28,8 +41,17 @@ inputs:
     required: false
     default: "60"
   dockerhub-organization:
-    description: The Docker Hub organization, which is used as the username for the login
-    required: true
+    description: >-
+      The Docker Hub organization, which is used as the username for the login.
+      Required if dockerhub-oidc-connection-id is given.
+    required: false
+    default: ""
+  platforms:
+    description: >-
+      The target platforms of the image, separated by commas.
+      The platforms other than that of the runner are built with QEMU emulation, which is slow.
+    required: false
+    default: linux/amd64,linux/arm64
 outputs:
   digest:
     description: The digest of the image
@@ -38,12 +60,31 @@ runs:
   using: composite
   steps:
     # Expressions do not support arithmetic, so the conversion to seconds is done in the shell.
-    - name: Convert the Docker Hub OIDC token lifetime to seconds
-      id: oidc-expire-in
+    # Docker Hub is used only if the ID of its OIDC connection is given,
+    # as e.g. personal repositories don't have a Docker Hub organization with an OIDC connection.
+    - name: Check the Docker Hub settings
+      id: dockerhub
       shell: bash
       env:
+        DOCKERHUB_IMAGE: ${{ inputs.dockerhub-image }}
+        DOCKERHUB_OIDC_CONNECTIONID: ${{ inputs.dockerhub-oidc-connection-id }}
+        DOCKERHUB_ORGANIZATION: ${{ inputs.dockerhub-organization }}
         EXPIRE_IN_MINUTES: ${{ inputs.dockerhub-oidc-expire-in-minutes }}
-      run: echo "seconds=$((EXPIRE_IN_MINUTES * 60))" >> "${GITHUB_OUTPUT}"
+      run: |
+        if [ -z "${DOCKERHUB_OIDC_CONNECTIONID}" ]; then
+          echo "No Docker Hub OIDC connection ID was given, so the image is pushed only to the GitHub Container registry."
+          echo "enabled=false" >> "${GITHUB_OUTPUT}"
+          exit 0
+        fi
+        if [ -z "${DOCKERHUB_IMAGE}" ] || [ -z "${DOCKERHUB_ORGANIZATION}" ]; then
+          echo "::error::dockerhub-image and dockerhub-organization are required with dockerhub-oidc-connection-id."
+          exit 1
+        fi
+        {
+          echo "enabled=true"
+          echo "image=${DOCKERHUB_IMAGE}"
+          echo "oidc-expire-in-seconds=$((EXPIRE_IN_MINUTES * 60))"
+        } >> "${GITHUB_OUTPUT}"
     # After the login, Docker uses the token for all the images of Docker Hub,
     # including the public images of other organizations, e.g. those of QEMU, BuildKit and the base images.
     # Therefore the ruleset of the OIDC connection has to grant read access to public repositories,
@@ -52,10 +93,11 @@ runs:
     # With the default lifetime of 5 minutes, the push fails with
     # "401 Unauthorized: incorrect username or password".
     - name: Log in to Docker Hub
+      if: steps.dockerhub.outputs.enabled == 'true'
       uses: docker/login-action@v4
       env:
         DOCKERHUB_OIDC_CONNECTIONID: ${{ inputs.dockerhub-oidc-connection-id }}
-        DOCKERHUB_OIDC_EXPIREIN: ${{ steps.oidc-expire-in.outputs.seconds }}
+        DOCKERHUB_OIDC_EXPIREIN: ${{ steps.dockerhub.outputs.oidc-expire-in-seconds }}
       with:
         username: ${{ inputs.dockerhub-organization }}
     - name: Log in to GitHub Container registry
@@ -68,12 +110,13 @@ runs:
       uses: docker/setup-qemu-action@v4
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v4
+    # The output image of the dockerhub step is empty if Docker Hub is not used, and the empty line is ignored.
     - name: Extract metadata (tags, labels) for Docker
       id: meta
       uses: docker/metadata-action@v6
       with:
         images: |
-          ${{ inputs.dockerhub-image }}
+          ${{ steps.dockerhub.outputs.image }}
           ghcr.io/${{ github.repository }}
     - name: Build and push Docker images
       id: build
@@ -82,13 +125,14 @@ runs:
         cache-from: type=gha
         cache-to: type=gha
         labels: ${{ steps.meta.outputs.labels }}
-        platforms: linux/amd64,linux/arm64
+        platforms: ${{ inputs.platforms }}
         provenance: mode=max
         pull: true
         push: true
         sbom: true
         tags: ${{ steps.meta.outputs.tags }}
     - name: Generate artifact attestation
+      if: inputs.attest == 'true'
       uses: actions/attest@v4
       with:
         subject-name: ghcr.io/${{ github.repository }}
