@@ -330,18 +330,26 @@ def test_run_multiple_repos(tmp_path: Path) -> None:
 
 
 def test_default_repos(tmp_path: Path) -> None:
-    """By default, the nightly run should be run for PTtools and for PTPlot if it exists next to PTtools."""
+    """By default, the nightly run should be run for PTtools, PTPlot and phd-research in this order, if they exist."""
     _, script, env = create_repo(tmp_path, FAKE_UV)
     status = subprocess.run([sys.executable, script], env=env, capture_output=True, text=True, check=True).stdout
     assert "Repositories, in the order of the runs: repo\n" in status
     assert "=== PTPlot" not in status
+    assert "=== phd-research" not in status
     assert status.count("Last lines of the latest log") == 1
+
+    init_repo(tmp_path / "phd-research")
+    status = subprocess.run([sys.executable, script], env=env, capture_output=True, text=True, check=True).stdout
+    assert "Repositories, in the order of the runs: repo, phd-research\n" in status
+    assert f"=== phd-research ({tmp_path / 'phd-research'}) ===" in status
+    assert status.count("Last lines of the latest log") == 2
 
     init_repo(tmp_path / "PTPlot")
     status = subprocess.run([sys.executable, script], env=env, capture_output=True, text=True, check=True).stdout
-    assert "Repositories, in the order of the runs: repo, PTPlot\n" in status
+    assert "Repositories, in the order of the runs: repo, PTPlot, phd-research\n" in status
     assert f"=== PTPlot ({tmp_path / 'PTPlot'}) ===" in status
-    assert status.count("Last lines of the latest log") == 2
+    assert status.index("=== PTPlot") < status.index("=== phd-research")
+    assert status.count("Last lines of the latest log") == 3
 
 
 def test_sequence_lock(tmp_path: Path) -> None:

@@ -115,7 +115,8 @@ Nightly runs
 ------------
 The ``uv run python -m pttools.docs.nightly --run`` command runs the nightly run for multiple repositories in sequence,
 so that they don't compete for resources.
-By default, these are PTtools and PTPlot, if it exists in ``../PTPlot`` relative to the PTtools repository.
+By default, these are PTtools, PTPlot and phd-research, in this order,
+the latter two if they exist in ``../PTPlot`` and ``../phd-research`` relative to the PTtools repository.
 Other repositories can be selected by giving their paths with ``--repo``, which can be given multiple times.
 The nightly run is run for each repository even if it fails for the previous ones,
 and the outputs of each repository are saved in that repository.
@@ -131,7 +132,7 @@ For each repository, the nightly run runs the unit tests, builds the documentati
 (which also runs the examples) and the wheel,
 and archives the results to ``./docs/nightly/name_nightly_YYYY-MM-DD.tar.xz``,
 where ``name`` is the name of the repository directory in lower case,
-e.g. ``pttools_nightly_YYYY-MM-DD.tar.xz`` or ``ptplot_nightly_YYYY-MM-DD.tar.xz``.
+e.g. ``pttools_nightly_YYYY-MM-DD.tar.xz``, ``ptplot_nightly_YYYY-MM-DD.tar.xz`` or ``phd-research_nightly_YYYY-MM-DD.tar.xz``.
 The archive is compressed with the ``xz`` command using all CPU cores.
 Before archiving, the PNG files of the documentation build and of the figure directory are optimized losslessly
 with `OptiPNG <https://optipng.sourceforge.net/>`_ at its highest optimization level ``-o7``, if ``optipng`` is installed.
@@ -143,8 +144,10 @@ The documentation is built to ``./docs/nightly/_build`` instead of the default `
 and the wheel to ``./docs/nightly/dist``. These directories are cleaned at the start of the run.
 The examples save their figures to ``./docs/nightly/fig/fig_YYYY-MM-DD`` instead of the default ``./examples/fig``.
 The figure directory is set with the ``NAME_FIG_DIR`` environment variable,
-where ``NAME`` is the name of the repository directory in upper case,
-i.e. ``PTTOOLS_FIG_DIR`` for PTtools and ``PTPLOT_FIG_DIR`` for PTPlot.
+where ``NAME`` is the name of the repository directory in upper case, with other characters than letters, digits and underscores replaced by underscores,
+i.e. ``PTTOOLS_FIG_DIR`` for PTtools, ``PTPLOT_FIG_DIR`` for PTPlot and ``PHD_RESEARCH_FIG_DIR`` for phd-research.
+In phd-research, the calculations save their outputs to the subdirectory of the figure directory
+that corresponds to their directory in ``./calculations``, instead of the default ``output`` directory next to them.
 It can also be used to change the figure directory when running the examples or building the documentation manually.
 The archive contains the build directory as ``_build``, the figure directory as ``fig``,
 the wheel directory as ``dist`` and a copy of the log of the run.

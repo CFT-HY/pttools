@@ -1,7 +1,8 @@
 """Nightly run: unit tests, documentation build (which runs the examples), wheel build and archiving of the results.
 
 The nightly run is run for multiple repositories in sequence, so that they don't compete for resources.
-By default, these are PTtools and PTPlot, if it exists in ``../PTPlot`` relative to the PTtools repository.
+By default, these are PTtools, PTPlot and phd-research, in this order,
+the latter two if they exist in ``../PTPlot`` and ``../phd-research`` relative to the PTtools repository.
 The repositories can be selected with ``--repo``.
 The outputs of each repository are saved in that repository.
 
@@ -90,8 +91,8 @@ MODULE: str = "pttools.docs.nightly"
 SCRIPT_PATH: Path = Path(__file__).resolve()
 #: The PTtools repository, in which this script is
 SCRIPT_REPO_DIR: Path = SCRIPT_PATH.parent.parent.parent
-#: The other repositories, for which the nightly run is run by default if they exist
-OPTIONAL_REPO_DIRS: tuple[Path, ...] = (SCRIPT_REPO_DIR.parent / "PTPlot",)
+#: The other repositories, for which the nightly run is run by default if they exist, in the order of the runs
+OPTIONAL_REPO_DIRS: tuple[Path, ...] = (SCRIPT_REPO_DIR.parent / "PTPlot", SCRIPT_REPO_DIR.parent / "phd-research")
 #: The lock that is held while the nightly runs of the repositories are run in sequence,
 #: so that two sequences don't run simultaneously and compete for resources
 SEQUENCE_LOCK_FILE: Path = SCRIPT_REPO_DIR / "nightly_sequence.lock"

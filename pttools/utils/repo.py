@@ -1,4 +1,4 @@
-"""Repositories of projects that use PTtools, such as PTtools itself and PTPlot."""
+"""Repositories of projects that use PTtools, such as PTtools itself, PTPlot and phd-research."""
 
 import dataclasses
 from pathlib import Path
