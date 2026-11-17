@@ -51,40 +51,49 @@ BUBBLE_LOCS_FILE_NAME: str = "bubblelocs.txt"
 #: except for the columns ``curl`` and ``unknown 15``, see below.
 #: The quantities are integrals over the simulation volume, i.e. sums over the lattice sites times $\delta x^3$,
 #: except for ``time``, ``GW Energy``, ``Nb``, ``s_max``, ``gamma_max`` and the numbers of sites and links.
-#: Where the quantity is the same as in the ``.out`` files of the later version of the code,
-#: the name is that of its column, but without the suffixes ``sym`` and ``broken``,
+#: The names of the 13 first columns are those given by the authors of the simulation code.
+#: The names of the further columns are those of the corresponding columns of the ``.out`` files
+#: of the later version of the code, but without the suffixes ``sym`` and ``broken``,
 #: as the older version does not split the quantities between the phases.
-#: The meanings were deduced from the data, as the source code of this version is not available:
+#: The names of the variables of the simulation code are given in parentheses for the files with 18 columns.
+#: Some of the meanings were deduced from the data, as the source code of this version is not available:
 #:
-#: - ``total E``: total energy, whose mean is the "initial avg energy per site" of the logs of the simulations
-#: - ``kin fluid``: $\int d^3x \, w \gamma^2 v^2$, so that $\bar{U}_f^2$ = ``kin fluid`` / (``rest E`` + ``pressure``)
+#: - ``step`` (``step``): time step
+#: - ``time`` (``t_sim``): $t$, simulation time
+#: - ``E`` (``current_energy``): total energy, whose mean is the "initial avg energy per site"
+#:   of the logs of the simulations
+#: - ``kin fluid`` (``current_kinetic_fluid``): kinetic energy of the fluid, $\int d^3x \, w \gamma^2 v^2$,
+#:   so that $\bar{U}_f^2$ = ``kin fluid`` / (``rest E`` + ``pressure``)
 #:   reproduces $\bar{U}_{f,\text{max}}$ of :cutting_2019:`\ ` table I
-#: - ``pot phi``: $\int d^3x \, V(\phi, T)$, which is $\Delta V_0 \mathcal{V}$ in the symmetric phase
-#:   and $\Delta V_0 (T/T_c)^4 \mathcal{V}$ in the broken phase
-#: - ``grad phi`` and ``kin phi``: the gradient and the kinetic energies of the scalar field,
-#:   whose ratio gives the wall speed $v_w^2$ = ``kin phi`` / ``grad phi``, as in the scripts of :correia_2025:`\ `
-#: - ``unknown 6``: not identified. At late times, it's approximately $0.9 \bar{U}_f$,
-#:   but it's slightly negative at some early times.
-#: - ``GW Energy``: $\rho_\text{gw}$, mean GW energy density, as in the logs of the simulations
+#: - ``E phi`` (``current_field_energy``): energy of the scalar field.
+#:   In the data, it's $\int d^3x \, V(\phi, T)$, which is $\Delta V_0 \mathcal{V}$ in the symmetric phase
+#:   and $\Delta V_0 (T/T_c)^4 \mathcal{V}$ in the broken phase.
+#: - ``grad phi`` (``current_gradient_energy``): gradient energy of the scalar field
+#: - ``V^2 tot`` (``current_veltot``): total of the squared fluid velocity.
+#:   At late times, it's approximately $0.9 \bar{U}_f$, but it's slightly negative at some early times.
+#: - ``GW Energy`` (``gwen``): $\rho_\text{gw}$, mean GW energy density, as in the logs of the simulations
 #:   ("Unnormalised GW energy [density]"). The integrals of the GW power spectra
 #:   of this version of the code are 10-30 % larger, see :py:mod:`pttools.lattice.chw19`.
-#: - ``Nb``: number of bubbles
-#: - ``rest E``: $\int d^3x \, \epsilon$, rest-frame energy
-#: - ``pressure``: $\int d^3x \, p$, which is zero in the first row, as it's not yet computed
-#: - ``s_max``: $\eta \gamma_\text{max} \delta t / 2$, a numerical stability parameter
+#: - ``Nb`` (``bcount``): number of bubbles
+#: - ``rest E`` (``current_rest``): $\int d^3x \, \epsilon$, rest-frame energy
+#: - ``pressure`` (``current_avgpress``): $\int d^3x \, p$, which is zero in the first row, as it's not yet computed
+#: - ``s_max`` (``s_max``): $\eta \gamma_\text{max} \delta t / 2$, a numerical stability parameter
 #:   (to a relative precision of $10^{-6}$ in the runs of :cutting_2019:`\ `)
-#: - ``gamma_max``: $\gamma_\text{max}$, maximum Lorentz factor of the fluid
+#: - ``gamma_max`` (``gamma_max``): $\gamma_\text{max}$, maximum Lorentz factor of the fluid
 #: - ``curl``: $\int d^3x \, \lvert \nabla \times Y \rvert^2$, where $Y$ is $v$ or $J$ depending on the run,
 #:   as estimated from the power spectra of the rotational component.
-#:   In the runs with 18 columns, it's ``curl J``.
-#: - ``div J``: $\int d^3x \, (\nabla \cdot J)^2$
+#:   In the runs with 18 columns, it's ``curl J`` (``curlJ_tot``).
+#: - ``kin phi`` (``current_kinetic_field``): kinetic energy of the scalar field.
+#:   The ratio of the kinetic and the gradient energies gives the wall speed $v_w^2$ = ``kin phi`` / ``grad phi``,
+#:   as in the scripts of :correia_2025:`\ `.
+#: - ``div J`` (``divJ_tot``): $\int d^3x \, (\nabla \cdot J)^2$
 #: - ``unknown 15``: not identified. It's small and fluctuates around zero,
 #:   e.g. $\int d^3x \, \nabla \cdot Y$, which would vanish for periodic boundary conditions.
-#: - ``N broken`` and ``N links``: the numbers of lattice sites in the broken phase
-#:   and of the lattice links that cross the phase boundary
+#: - ``N broken`` (``N_broken``): number of lattice sites in the broken phase
+#: - ``N links`` (``N_links``): number of lattice links that cross the phase boundary
 GLOBALS_TXT_COLUMNS: dict[int, tuple[str, ...]] = {
     13: (
-        "step", "time", "total E", "kin fluid", "pot phi", "grad phi", "unknown 6", "GW Energy", "Nb", "rest E",
+        "step", "time", "E", "kin fluid", "E phi", "grad phi", "V^2 tot", "GW Energy", "Nb", "rest E",
         "pressure", "s_max", "gamma_max"),
 }
 GLOBALS_TXT_COLUMNS[14] = GLOBALS_TXT_COLUMNS[13] + ("curl",)

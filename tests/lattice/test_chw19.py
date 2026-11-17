@@ -46,7 +46,7 @@ def write_globals_txt(path: Path, n_cols: int = 15, steps: tp.Sequence[int] = ST
     for step in steps:
         values = dict.fromkeys(columns, 0.)
         values |= {
-            "step": step, "time": 0.5 * step, "total E": EPSILON_0 * volume, "kin fluid": 0.01 * volume,
+            "step": step, "time": 0.5 * step, "E": EPSILON_0 * volume, "kin fluid": 0.01 * volume,
             "GW Energy": 1e-6 * step, "Nb": 2, "rest E": EPSILON_0 * volume,
             "pressure": 0. if step == 0 else (ENTHALPY - EPSILON_0) * volume, "gamma_max": 1.,
         }
