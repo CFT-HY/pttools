@@ -16,6 +16,7 @@ from pttools.type_hints import FloatArr1D, FloatOrArr
 
 __all__ = [
     "DEFAULT_NUC_TYPE",
+    "DEFAULT_NUC_TYPE_LATTICE",
     "Ih_approx",
     "NucType",
     "R_star",
@@ -50,6 +51,8 @@ class NucType(enum.StrEnum):
 
 #: Default nucleation type
 DEFAULT_NUC_TYPE = NucType.EXPONENTIAL
+#: Default nucleation type of lattice simulations
+DEFAULT_NUC_TYPE_LATTICE = NucType.SIMULTANEOUS
 
 
 @njit(cache=True)
@@ -62,7 +65,7 @@ def beta[T: FloatOrArr](R_star: T, v_wall: T | float, legacy_cs: T | float | Non
 
     This does not take into account the nucleation suppression,
     but instead presumes that $R_*$ already takes it into account.
-    Please see :py:func:`pttools.bubble.nucleation.R_star` for further information.
+    Please see :py:func:`pttools.ssm.nucleation.R_star` for further information.
 
     Some older sources use $\max (v_{\text{wall}}, c_s)$, which is wrong.
     $$\beta = \frac{8\pi}{3} \frac{\max (v_w, c_s)}{R_*}$$
@@ -87,8 +90,8 @@ def beta_tilde[T: FloatOrArr](
     :gowling_2021:`\ ` eq. 2.1.
 
     This does not take into account the nucleation suppression.
-    Please see :py:func:`pttools.bubble.nucleation.beta` and
-    :py:func:`pttools.bubble.nucleation.r_star` for further information.
+    Please see :py:func:`pttools.ssm.nucleation.beta` and
+    :py:func:`pttools.ssm.nucleation.r_star` for further information.
 
     :param r_star: Hubble-scaled mean bubble spacing $r_*$
     :param v_wall: Wall velocity $v_w$
@@ -128,14 +131,19 @@ def bubble_spacing_enlargement(
         T: FloatArr1D,
         beta_tilde: float | None,
         v_wall: float,
-        sol_type: SolutionType) -> tuple[float, float, float]:
+        sol_type: SolutionType,
+        nuc_type: NucType = DEFAULT_NUC_TYPE) -> tuple[float, float, float]:
     r"""Compute the bubble spacing enlargement quantities $f, h_x, \Lambda(h_x)$.
 
-    There is no enlargement if $\tilde{\beta}$ is not given, i.e. it's None or nan, or for detonations.
+    There is no enlargement if $\tilde{\beta}$ is not given, i.e. it's None or nan,
+    or for simultaneous nucleation or detonations.
     Nan is accepted as well, so that the compiled callers can pass a float in both cases,
     and therefore do not have to be compiled separately for None.
     """
-    if beta_tilde is None or np.isnan(beta_tilde) or sol_type == SolutionType.DETON.value:
+    if beta_tilde is None \
+            or np.isnan(beta_tilde) \
+            or nuc_type == NucType.SIMULTANEOUS.value \
+            or sol_type == SolutionType.DETON.value:
         return 0., 0., 1.
     f = nucleation_f(xi=xi, T=T, beta_tilde=beta_tilde, v_wall=v_wall)
     hx_val = hx(f)
@@ -275,7 +283,7 @@ def r_star[T2: FloatOrArr](
 
     $$r_* = \Lambda(h_x) r_*(0)$$
     :ajmi_2022:`\ ` eq. 77
-    Please see :py:func:`pttools.bubble.nucleation.R_star` for further information.
+    Please see :py:func:`pttools.ssm.nucleation.R_star` for further information.
 
     :param beta_tilde: $\tilde{\beta}$
     :param v_wall: $v_\text{wall}$
@@ -304,7 +312,7 @@ def r_star0[T: FloatOrArr](beta_over_H: T, v_wall: T | float) -> T:
 
     $$r_* = (8\pi)^\frac{1}{3} \frac{{v}_\text{wall}}{\tilde{\beta}}$$
     :ajmi_2022:`\ ` eq. 1
-    Please see :py:func:`pttools.bubble.nucleation.R_star0` for further information.
+    Please see :py:func:`pttools.ssm.nucleation.R_star0` for further information.
     """
     return R_star0(beta=beta_over_H, v_wall=v_wall)
 

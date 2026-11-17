@@ -15,7 +15,7 @@ class AlphaNMaxTest(unittest.TestCase):
     r"""Tests for $\alpha_{n,\max}({v}_\text{wall})$."""
 
     #: The $({v}_\text{wall}, \alpha_n)$ points of the suppression dataset,
-    #: from which the piecewise linear fit of :py:func:`pttools.ssm.suppression.alpha_n_max` is constructed.
+    #: from which the piecewise linear fit of :py:func:`pttools.ssm.suppression.alpha_n_max_dataset` is constructed.
     DATA_POINTS: tp.ClassVar[tuple[tuple[float, float], ...]] = ((0.24, 0.34), (0.44, 0.50), (0.56, 0.67))
     #: ${v}_\text{wall}$ at which the fit changes from the first line segment to the second
     V_WALL_KINK: tp.ClassVar[float] = 0.44
@@ -24,7 +24,7 @@ class AlphaNMaxTest(unittest.TestCase):
         """The fit goes through the data points from which it was constructed."""
         v_walls = np.array([point[0] for point in self.DATA_POINTS])
         alpha_ns = np.array([point[1] for point in self.DATA_POINTS])
-        assert_allclose(sup.alpha_n_max(v_walls), alpha_ns)
+        assert_allclose(sup.alpha_n_max_dataset(v_walls), alpha_ns)
 
     def test_scalar_matches_array(self) -> None:
         """A scalar argument gives the same result as the corresponding element of an array argument.
@@ -32,30 +32,30 @@ class AlphaNMaxTest(unittest.TestCase):
         This covers both line segments, as the fit is piecewise linear.
         """
         v_walls = np.linspace(0.2, 0.9, 15)
-        alpha_ns = sup.alpha_n_max(v_walls)
+        alpha_ns = sup.alpha_n_max_dataset(v_walls)
         for v_wall, alpha_n in zip(v_walls, alpha_ns, strict=True):
             with self.subTest(v_wall=v_wall):
-                assert sup.alpha_n_max(float(v_wall)) == pytest.approx(alpha_n, abs=5e-8)
+                assert sup.alpha_n_max_dataset(float(v_wall)) == pytest.approx(alpha_n, abs=5e-8)
 
     def test_continuous_at_kink(self) -> None:
         """The two line segments meet at the point that they have in common."""
         alpha_n_kink = self.DATA_POINTS[1][1]
-        assert sup.alpha_n_max(self.V_WALL_KINK) == pytest.approx(alpha_n_kink, abs=5e-8)
-        assert sup.alpha_n_max(self.V_WALL_KINK - 1e-9) == pytest.approx(alpha_n_kink, abs=5e-8)
-        assert sup.alpha_n_max(self.V_WALL_KINK + 1e-9) == pytest.approx(alpha_n_kink, abs=5e-8)
+        assert sup.alpha_n_max_dataset(self.V_WALL_KINK) == pytest.approx(alpha_n_kink, abs=5e-8)
+        assert sup.alpha_n_max_dataset(self.V_WALL_KINK - 1e-9) == pytest.approx(alpha_n_kink, abs=5e-8)
+        assert sup.alpha_n_max_dataset(self.V_WALL_KINK + 1e-9) == pytest.approx(alpha_n_kink, abs=5e-8)
 
     def test_increasing(self) -> None:
         r"""$\alpha_{n,\max}$ increases with ${v}_\text{wall}$."""
-        alpha_ns = sup.alpha_n_max(np.linspace(0.2, 0.9, 50))
+        alpha_ns = sup.alpha_n_max_dataset(np.linspace(0.2, 0.9, 50))
         assert np.all(np.diff(alpha_ns) > 0)
 
     def test_approx_scalar_matches_array(self) -> None:
         """The approximation gives the same result for a scalar and for an array argument."""
         v_walls = np.linspace(0.1, 0.9, 9)
-        alpha_ns = sup.alpha_n_max_approx(v_walls)
+        alpha_ns = sup.alpha_n_max_bag_approx(v_walls)
         for v_wall, alpha_n in zip(v_walls, alpha_ns, strict=True):
             with self.subTest(v_wall=v_wall):
-                assert sup.alpha_n_max_approx(float(v_wall)) == pytest.approx(alpha_n, abs=5e-8)
+                assert sup.alpha_n_max_bag_approx(float(v_wall)) == pytest.approx(alpha_n, abs=5e-8)
 
     def test_approx_limits(self) -> None:
         r"""$\alpha_{n,\max,\text{approx}} = \frac{1}{3}$ for ${v}_\text{wall}=0$ and 1 for ${v}_\text{wall}=c_s$.
@@ -63,8 +63,8 @@ class AlphaNMaxTest(unittest.TestCase):
         $$\alpha_{n,\max,\text{approx}}
         = \frac{1}{3} \frac{1 + 3 {v}_\text{wall}^2}{1 - {v}_\text{wall}^2}$$
         """
-        assert sup.alpha_n_max_approx(0.) == pytest.approx(1/3, abs=5e-8)
-        assert sup.alpha_n_max_approx(1/np.sqrt(3)) == pytest.approx(1., abs=5e-8)
+        assert sup.alpha_n_max_bag_approx(0.) == pytest.approx(1 / 3, abs=5e-8)
+        assert sup.alpha_n_max_bag_approx(1 / np.sqrt(3)) == pytest.approx(1., abs=5e-8)
 
 
 class SuppressionTest(unittest.TestCase):
@@ -76,17 +76,18 @@ class SuppressionTest(unittest.TestCase):
     V_WALLS: tp.ClassVar[th.FloatArr1D] = np.array([0.4, 0.5, 0.6])
     ALPHA_NS: tp.ClassVar[th.FloatArr1D] = np.array([0.05, 0.1])
     #: Reference values, computed after the datasets were recomputed with the exact kinetic energy term of $\lambda$
-    #: (see :py:class:`pttools.ssm.ssm.LambdaCorrection`) and the average enthalpy density $\bar{w}$ in $\lambda$
+    #: (see :py:class:`pttools.ssm.ssm.LambdaCorrection`) and the average enthalpy density $\bar{w}$ in $\lambda$,
+    #: and with the simultaneous nucleation of the lattice simulations
     GRID_REF: tp.ClassVar[th.FloatArr2D] = np.array([
-        [0.23335379, 0.61792794, 0.87464028],
-        [0.19317843, 0.5026051, 0.66337347]
+        [0.36742785, 1.00869739, 1.43850885],
+        [0.30226262, 0.8161546, 1.08442414]
     ])
     #: A point outside the convex hull of the suppression points
     OUTSIDE_V_WALL: tp.ClassVar[float] = 0.95
     OUTSIDE_ALPHA_N: tp.ClassVar[float] = 0.9
     #: Reference value for the nearest-neighbour extrapolation, i.e. the data point
     #: ${v}_\text{wall} = 0.92, \alpha_n = 0.67$ of the dataset
-    OUTSIDE_REF: tp.ClassVar[float] = 0.6184229381972474
+    OUTSIDE_REF: tp.ClassVar[float] = 1.013063299793391
 
     def test_grid(self) -> None:
         """Interpolating on a grid of points gives the reference values."""

@@ -191,7 +191,8 @@ def compute_gw(inp: SSMInput, base_res: SSMBaseResults) -> SSMGWResults:
     :return: GW spectra
     """
     nucleation_f, hx, bubble_spacing_enlargement_factor = bubble_spacing_enlargement(
-        xi=inp.xi, T=inp.T_profile, beta_tilde=inp.beta_tilde, v_wall=inp.v_wall, sol_type=inp.sol_type
+        xi=inp.xi, T=inp.T_profile, beta_tilde=inp.beta_tilde, v_wall=inp.v_wall, sol_type=inp.sol_type,
+        nuc_type=inp.nuc_type
     )
     spec_den_gw_ssm = inp.source_lifetime_factor * base_res.spec_den_gw_ssm_unscaled
     spec_den_gw_low, spec_den_gw_int, spec_den_gw_expanded = compute_low_k(

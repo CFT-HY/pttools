@@ -31,8 +31,8 @@ __all__ = [
     "WITH_HYBRIDS_EXT",
     "Suppression",
     "SuppressionMethod",
-    "alpha_n_max",
-    "alpha_n_max_approx",
+    "alpha_n_max_bag_approx",
+    "alpha_n_max_dataset",
     "extend",
 ]
 
@@ -63,7 +63,10 @@ class Suppression:
     so that the spectrum is not scaled by the old suppression.)
     The suppression datasets of :gowling_2021:`\ ` use $R_*$ instead of $\beta$,
     and therefore the thermal suppression of bubble nucleation of :ajmi_2022:`\ ` and
-    :py:func:pttools.ssm.nucleation.r_star: does not affect them.
+    :py:func:`pttools.ssm.nucleation.r_star` does not affect them.
+    The SSM spectra of the datasets are computed with the nucleation type of the lattice simulations,
+    :py:data:`pttools.ssm.nucleation.DEFAULT_NUC_TYPE_LATTICE`,
+    see :py:func:`pttools.ssm.suppression.suppression_ssm_data.suppression_ssm_calculator.calc_sup_ssm`.
     """
 
     def __init__(
@@ -225,13 +228,13 @@ class Suppression:
         return sup  # pyrefly: ignore[bad-return]
 
 
-def alpha_n_max_approx[T: FloatOrArr](v_wall: T) -> T:
+def alpha_n_max_bag_approx[T: FloatOrArr](v_wall: T) -> T:
     r"""Approximate $\alpha_{n,\text{max}}({v}_\text{wall})$ for the bag model."""
     return tp.cast(T, 1/3 * (1 + 3 * v_wall ** 2) / (1 - v_wall ** 2))
 
 
-def alpha_n_max[T: FloatOrArr](v_wall: T) -> T:
-    r"""$\alpha_{n,\text{max}}({v}_\text{wall})$."""
+def alpha_n_max_dataset[T: FloatOrArr](v_wall: T) -> T:
+    r"""$\alpha_{n,\text{max}}({v}_\text{wall})$ for the suppression dataset."""
     # vw, al
     # [0.24000, 0.34000]
     # [0.44000, 0.50000]

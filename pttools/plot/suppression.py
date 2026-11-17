@@ -9,8 +9,8 @@ import numpy as np
 
 from pttools.bubble import CS0, v_chapman_jouguet_bag
 from pttools.plot.utils import create_fig_ax
-from pttools.ssm.suppression import Suppression, alpha_n_max_approx
-from pttools.ssm.suppression import alpha_n_max as alpha_n_max_func
+from pttools.ssm.suppression import Suppression, alpha_n_max_bag_approx
+from pttools.ssm.suppression import alpha_n_max_dataset as alpha_n_max_func
 import pttools.type_hints as th
 
 if th.TYPE_CHECKING_OR_DOCS:
@@ -81,9 +81,11 @@ class SuppressionPlot:
 
         if alpha_n_max_lines:
             self.line_v_walls: th.FloatArr1D = np.linspace(0, 1, 20, endpoint=False)
-            self.ax.plot(self.line_v_walls, alpha_n_max_func(self.line_v_walls), label=r"$\alpha_{n,\text{max}}$")
             self.ax.plot(
-                self.line_v_walls, alpha_n_max_approx(self.line_v_walls),
+                self.line_v_walls, alpha_n_max_func(self.line_v_walls),
+                label=r"$\alpha_{n,\text{max,dataset}}$")
+            self.ax.plot(
+                self.line_v_walls, alpha_n_max_bag_approx(self.line_v_walls),
                 label=r"$\alpha_{n,\text{max,bag}}$")
         if cs is not None:
             self.ax.axvline(x=cs, label="$c_s$", ls=":", c="k")

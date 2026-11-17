@@ -8,8 +8,9 @@ import typing as tp
 import numpy as np
 
 from pttools.bubble import Bubble
+from pttools.logging import setup_logging
 from pttools.models import BagModel
-from pttools.ssm.nucleation import NucType
+from pttools.ssm.nucleation import DEFAULT_NUC_TYPE_LATTICE, NucType
 from pttools.ssm.spectrum import SSMSpectrum
 from pttools.ssm.ssm import DEFAULT_LAMBDA_CORRECTION, LambdaCorrection
 from pttools.ssm.suppression.suppression import SuppressionMethod
@@ -49,7 +50,7 @@ def save_columns(path: str | os.PathLike[str], data: dict[str, th.FloatArr1DOrLi
 def calc_sup_ssm(
         path: str | os.PathLike[str],
         save: bool = True,
-        nuc_type: NucType = NucType.EXPONENTIAL,
+        nuc_type: NucType = DEFAULT_NUC_TYPE_LATTICE,
         lambda_correction: LambdaCorrection = DEFAULT_LAMBDA_CORRECTION,
         z: th.FloatArr1D = DEFAULT_Z,
         **kwargs: tp.Any) -> dict[str, th.FloatArr1DOrList]:
@@ -74,13 +75,16 @@ def calc_sup_ssm(
 
     :param path: path of the simulation data file, relative to the folder of the suppression data
     :param save: whether to save the results as ``<name>_ssm.txt`` next to the simulation data file
-    :param nuc_type: nucleation type of the SSM spectra
+    :param nuc_type: nucleation type of the SSM spectra.
+        This should correspond to the nucleation type of the lattice simulations.
+        The CHW19 and CHRW25 runs used simultaneous nucleation.
     :param lambda_correction: kinetic energy term of $\lambda$, see :py:class:`pttools.ssm.ssm.LambdaCorrection`
         and :py:meth:`pttools.ssm.spectrum.SSMSpectrum.compute`
     :param z: $z = kR_*$ points over which the GW power growth rate is integrated
     :param kwargs: additional arguments for :py:class:`pttools.ssm.spectrum.SSMSpectrum`
     :return: the results, where ``vw_sim``, ``alpha_sim`` and ``sup_ssm`` form the suppression dataset
     """
+    logger.info("Computing suppression for \"%s\"", path)
     # If the path is absolute, the joining operator returns it as is.
     path = SUPPRESSION_FOLDER / path
     sim_data = np.loadtxt(path, skiprows=1)
@@ -118,5 +122,6 @@ def calc_sup_ssm(
 
 
 if __name__ == "__main__":
+    setup_logging("suppression")
     calc_sup_ssm("suppression_2.txt")
     calc_sup_ssm("suppression_no_hybrids.txt")
