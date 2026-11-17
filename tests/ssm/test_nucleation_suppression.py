@@ -19,7 +19,14 @@ from pttools.bubble.const import CS0
 from pttools.math import assert_allclose
 from pttools.models.bag import BagModel
 from pttools.ssm import SSMSpectrum
-from pttools.ssm.nucleation import NucType, bubble_spacing_enlargement, nucleation_f, r_star0
+from pttools.ssm.nucleation import (
+    NucType,
+    bubble_spacing_enlargement,
+    bubble_spacing_enlargement_factor,
+    nucleation_f,
+    r_star,
+    r_star0,
+)
 
 
 class NucleationFTest(unittest.TestCase):
@@ -135,6 +142,22 @@ class NucleationSuppressionTest(unittest.TestCase):
             y=self.spectrum_beta.y, low_k=False)
         assert spectrum.nucleation_f == 0.
         assert spectrum.bubble_spacing_enlargement_factor == 1.
+        assert_allclose(spectrum.r_star, r_star0(100, bubble.v_wall))
+        assert_allclose(
+            r_star(beta_tilde=100., v_wall=bubble.v_wall, xi=bubble.xi, T=bubble.T, sol_type=bubble.sol_type,
+                   nuc_type=NucType.SIMULTANEOUS),
+            r_star0(100, bubble.v_wall))
+
+    @staticmethod
+    def test_bubble_spacing_enlargement_factor_simultaneous() -> None:
+        r"""$\Lambda = 1$ for simultaneous nucleation and $\Lambda > 1$ for exponential nucleation."""
+        hx_vals = np.array([0.1, 0.3, 0.5])
+        assert_allclose(bubble_spacing_enlargement_factor(hx_vals, nuc_type=NucType.SIMULTANEOUS), np.ones(3))
+        assert bubble_spacing_enlargement_factor(0.3, nuc_type=NucType.SIMULTANEOUS) == 1.
+        assert np.all(bubble_spacing_enlargement_factor(hx_vals) > 1.)
+        assert_allclose(
+            bubble_spacing_enlargement_factor(hx_vals, nuc_type=NucType.EXPONENTIAL),
+            bubble_spacing_enlargement_factor(hx_vals))
 
     def test_ubarf2(self) -> None:
         r"""Test that $\bar{U}_f^2$ does not depend on $\Lambda$."""

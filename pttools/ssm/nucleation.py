@@ -147,16 +147,25 @@ def bubble_spacing_enlargement(
         return 0., 0., 1.
     f = nucleation_f(xi=xi, T=T, beta_tilde=beta_tilde, v_wall=v_wall)
     hx_val = hx(f)
-    return f, hx_val, bubble_spacing_enlargement_factor(hx_val)
+    return f, hx_val, bubble_spacing_enlargement_factor(hx_val, nuc_type=nuc_type)
 
 
 @njit(cache=True)
-def bubble_spacing_enlargement_factor[T: FloatOrArr](hx: T) -> T:
+def bubble_spacing_enlargement_factor[T: FloatOrArr](hx: T, nuc_type: NucType = DEFAULT_NUC_TYPE) -> T:
     r"""$\Lambda$, bubble spacing enlargement factor.
 
     $$\Lambda(h_x) \equiv \frac{R_{\ast}}{R_{\ast}(0)} = I_h^{-\frac{1}{3}}(h_x)$$
     :ajmi_2022:`\ ` eq. 77.
+    For simultaneous nucleation, all the bubbles are nucleated at the same time,
+    and therefore the reheating cannot suppress the nucleation, and $\Lambda = 1$.
+
+    :param hx: $h_x$, fractional volume at which the symmetric phase is reheated enough
+        to prevent further bubble nucleation
+    :param nuc_type: nucleation type
+    :return: $\Lambda$
     """
+    if nuc_type == NucType.SIMULTANEOUS.value:
+        return 1. + 0. * hx  # pyrefly: ignore[bad-return]
     return Ih_approx(hx)**(-1/3)  # pyrefly: ignore[bad-return]
 
 
@@ -278,7 +287,8 @@ def r_star[T2: FloatOrArr](
         xi: th.FloatArr1D | None = None,
         T: th.FloatArr1D | None = None,
         sol_type: SolutionType = SolutionType.DETON,
-        legacy_cs: float | None = None) -> T2:
+        legacy_cs: float | None = None,
+        nuc_type: NucType = DEFAULT_NUC_TYPE) -> T2:
     r"""$r_*(\beta)$, Hubble-scaled mean bubble spacing.
 
     $$r_* = \Lambda(h_x) r_*(0)$$
@@ -291,6 +301,7 @@ def r_star[T2: FloatOrArr](
     :param T: $T$
     :param sol_type: solution type
     :param legacy_cs: $c_s$ for legacy $\max(v_{\text{wall}}, c_s)$
+    :param nuc_type: nucleation type. For simultaneous nucleation, there is no bubble spacing enlargement.
     :return: $r_*$
     """
     # For the nucleation suppression, i.e. when xi and T are given for a deflagration or a hybrid,
@@ -298,6 +309,7 @@ def r_star[T2: FloatOrArr](
     rs = R_star(
         beta=beta_tilde, v_wall=v_wall, xi=xi, T=T, sol_type=sol_type, legacy_cs=legacy_cs,
         beta_tilde=beta_tilde,  # pyrefly: ignore[bad-argument-type]
+        nuc_type=nuc_type,
     )
     r_star_warning(
         beta_tilde=beta_tilde, r_star=rs, v_wall=v_wall,
@@ -336,7 +348,8 @@ def R_star[T2: FloatOrArr](
         T: th.FloatArr1D | None = None,
         sol_type: SolutionType = SolutionType.DETON,
         legacy_cs: float | None = None,
-        beta_tilde: float | None = None) -> T2:
+        beta_tilde: float | None = None,
+        nuc_type: NucType = DEFAULT_NUC_TYPE) -> T2:
     r"""$R_*$, mean bubble separation.
 
     $$R_* = \Lambda(h_x) R_*(0)$$
@@ -370,6 +383,8 @@ def R_star[T2: FloatOrArr](
     :param sol_type: solution type
     :param legacy_cs: $c_s$ for legacy $\max(v_{\text{wall}}, c_s)$
     :param beta_tilde: $\tilde{\beta}$
+    :param nuc_type: nucleation type. For simultaneous nucleation, there is no bubble spacing enlargement,
+        see :py:func:`bubble_spacing_enlargement_factor`.
     :return: $R_*$
     """
     rs0 = R_star0(beta=beta, v_wall=v_wall, legacy_cs=legacy_cs)
@@ -377,7 +392,7 @@ def R_star[T2: FloatOrArr](
         return rs0
     if sol_type in (SolutionType.SUB_DEF.value, SolutionType.HYBRID.value):
         f = nucleation_f(xi=xi, T=T, beta_tilde=beta_tilde, v_wall=v_wall)
-        return bubble_spacing_enlargement_factor(hx=hx(f)) * rs0  # pyrefly: ignore[bad-return]
+        return bubble_spacing_enlargement_factor(hx=hx(f), nuc_type=nuc_type) * rs0  # pyrefly: ignore[bad-return]
     raise ValueError(f"Invalid solution type: {sol_type}")
 
 

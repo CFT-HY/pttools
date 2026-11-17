@@ -448,11 +448,12 @@ class Spectrum(BaseSSMOmgw0, SSMSpectrum):
         """
         beta_tildes = None if beta_tilde is None else np.atleast_1d(np.asarray(beta_tilde, dtype=float))
         r_stars = None if r_star is None else np.atleast_1d(np.asarray(r_star, dtype=float))
+        nuc_type = kwargs.get("nuc_type", DEFAULT_NUC_TYPE)
         z = cls.z_covering(
             f=f, bubble=bubble, T_star=T_star, g_star=g_star, beta_tilde=beta_tildes, r_star=r_stars,
-            f_star0_factor=f_star0_factor, points_per_decade=points_per_decade, margin=margin)
+            f_star0_factor=f_star0_factor, points_per_decade=points_per_decade, margin=margin, nuc_type=nuc_type)
         # Any valid value can be used, as with_params() changes it.
-        value = cls._valid_r_stars(bubble, beta_tilde=beta_tildes, r_star=r_stars)[0][0]
+        value = cls._valid_r_stars(bubble, beta_tilde=beta_tildes, r_star=r_stars, nuc_type=nuc_type)[0][0]
         return cls(
             bubble,
             y=z,
@@ -505,7 +506,8 @@ class Spectrum(BaseSSMOmgw0, SSMSpectrum):
             r_star: FloatArr1D | None = None,
             f_star0_factor: float = 1.,
             points_per_decade: float | None = None,
-            margin: float = Z_COVERING_MARGIN) -> FloatArr1D:
+            margin: float = Z_COVERING_MARGIN,
+            nuc_type: NucType = DEFAULT_NUC_TYPE) -> FloatArr1D:
         r"""$z$ array that covers the frequencies ``f`` for all the given parameter values.
 
         The $z$ values corresponding to the frequencies are
@@ -532,11 +534,13 @@ class Spectrum(BaseSSMOmgw0, SSMSpectrum):
             Defaults to :py:data:`Z_COVERING_DENSITY` times the average number of points per decade of ``f``.
         :param margin: number of decades by which the array is extended at each end,
             see :py:data:`Z_COVERING_MARGIN`
+        :param nuc_type: nucleation type of the spectra, as $r_*$ depends on it when computed from $\tilde{\beta}$
         :return: $z$ array
         :raises ValueError: if not exactly one of $\tilde{\beta}$ and $r_*$ is given,
             or if none of their values are valid
         """
-        r_stars = [r for _value, r in Spectrum._valid_r_stars(bubble, beta_tilde=beta_tilde, r_star=r_star)]
+        r_stars = [
+            r for _value, r in Spectrum._valid_r_stars(bubble, beta_tilde=beta_tilde, r_star=r_star, nuc_type=nuc_type)]
         # f_*,0 is computed for all the combinations of T_* and g_*.
         T_stars = np.asarray(T_star, dtype=float).reshape(-1, 1)
         g_stars = np.asarray(g_star, dtype=float).reshape(1, -1)
@@ -556,10 +560,13 @@ class Spectrum(BaseSSMOmgw0, SSMSpectrum):
     def _valid_r_stars(
             bubble: Bubble,
             beta_tilde: FloatArr1D | None,
-            r_star: FloatArr1D | None) -> list[tuple[float, float]]:
+            r_star: FloatArr1D | None,
+            nuc_type: NucType = DEFAULT_NUC_TYPE) -> list[tuple[float, float]]:
         r"""The valid values of $\tilde{\beta}$ or $r_*$, and the corresponding values of $r_*$.
 
         See :py:meth:`z_covering`.
+        $\tilde{\beta}$ is accepted also for simultaneous nucleation,
+        as it's validated when the spectra are created.
 
         :raises ValueError: if not exactly one of $\tilde{\beta}$ and $r_*$ is given,
             or if none of their values are valid
@@ -571,13 +578,13 @@ class Spectrum(BaseSSMOmgw0, SSMSpectrum):
             if not (np.isfinite(value) and value > 0):
                 continue
             try:
-                # r_* does not depend on the nucleation type.
                 valid.append((float(value), (
                     Spectrum.validate_nucleation(
-                        bubble=bubble, nuc_type=DEFAULT_NUC_TYPE, r_star=float(value), beta_tilde=None)
+                        bubble=bubble, nuc_type=nuc_type, r_star=float(value), beta_tilde=None)
                     if beta_tilde is None
                     else Spectrum.validate_nucleation(
-                        bubble=bubble, nuc_type=DEFAULT_NUC_TYPE, r_star=None, beta_tilde=float(value))
+                        bubble=bubble, nuc_type=nuc_type, r_star=None, beta_tilde=float(value),
+                        allow_beta_tilde_for_simultaneous=True)
                 )))
             except ValueError:
                 continue
