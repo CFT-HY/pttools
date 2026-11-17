@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 import re
 
-__all__ = ["SIZE_UNITS", "dir_size", "format_size", "split_lines", "tail"]
+__all__ = ["SIZE_UNITS", "dir_size", "format_size", "split_lines", "tail", "unique_path"]
 
 #: Units of :py:func:`format_size` with decimal prefixes
 SIZE_UNITS: tuple[str, ...] = ("B", "KB", "MB", "GB", "TB")
@@ -66,3 +66,23 @@ def tail(path: Path, lines: int) -> list[str]:
             file.seek(position)
             data = file.read(read_size) + data
     return data.decode(errors="replace").splitlines()[-lines:]
+
+
+def unique_path(path: Path, suffix: str | None = None) -> Path:
+    """Get a path that does not exist yet, so that an existing file is not overwritten.
+
+    If the path already exists, a suffix ``_2``, ``_3`` etc. is added to the filename before its extension.
+
+    :param path: the preferred path
+    :param suffix: the extension of the filename, e.g. ``.tar.xz``, by default the last suffix of the path
+    :return: the path, or the first one with a number suffix that does not exist
+    """
+    if suffix is None:
+        suffix = path.suffix
+    stem = path.name.removesuffix(suffix)
+    unique = path
+    i = 2
+    while unique.exists():
+        unique = path.with_name(f"{stem}_{i}{suffix}")
+        i += 1
+    return unique

@@ -12,7 +12,7 @@ import time
 from typing import IO, cast
 
 from pttools.logging import log_console
-from pttools.utils.files import dir_size, format_size
+from pttools.utils.files import dir_size, format_size, unique_path
 from pttools.utils.system import physical_cpu_count
 from pttools.utils.time import format_duration
 
@@ -48,12 +48,7 @@ def archive(archive_path: Path, paths: dict[Path, str], exclude: collections.abc
     if shutil.which("xz") is None:
         raise FileNotFoundError("xz was not found in PATH.")
     exclude = tuple(exclude)
-    stem = archive_path.name.removesuffix(TAR_XZ_SUFFIX)
-    path = archive_path
-    i = 2
-    while path.exists():
-        path = archive_path.with_name(f"{stem}_{i}{TAR_XZ_SUFFIX}")
-        i += 1
+    path = unique_path(archive_path, TAR_XZ_SUFFIX)
     path.parent.mkdir(parents=True, exist_ok=True)
 
     def exclude_filter(info: tarfile.TarInfo) -> tarfile.TarInfo | None:

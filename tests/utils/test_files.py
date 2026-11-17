@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from pttools.utils.files import dir_size, format_size, split_lines, tail
+from pttools.utils.files import dir_size, format_size, split_lines, tail, unique_path
 
 
 def test_dir_size(tmp_path: Path) -> None:
@@ -43,3 +43,16 @@ def test_tail(tmp_path: Path, n_lines: int) -> None:
     lines = [f"line {i} " + "x" * 100 for i in range(n_lines)]
     path.write_text("".join(f"{line}\n" for line in lines))
     assert tail(path, 5) == lines[-5:]
+
+
+def test_unique_path(tmp_path: Path) -> None:
+    """A number suffix should be added before the extension until the path does not exist."""
+    path = tmp_path / "main.pdf"
+    assert unique_path(path) == path
+    path.touch()
+    assert unique_path(path) == tmp_path / "main_2.pdf"
+    (tmp_path / "main_2.pdf").touch()
+    assert unique_path(path) == tmp_path / "main_3.pdf"
+    archive = tmp_path / "a.tar.xz"
+    archive.touch()
+    assert unique_path(archive, ".tar.xz") == tmp_path / "a_2.tar.xz"

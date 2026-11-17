@@ -31,7 +31,11 @@
   The link check of `make all` and `make all-noplot` needs access to all the linked sites, and can be skipped with `SKIP_LINKCHECK=1`.
 - Build the package: `uv build`
 - Nightly run: `uv run python -m pttools.docs.nightly --run` runs the unit tests, builds the documentation with examples and the wheel, and archives the results,
-  for PTtools, PTPlot and phd-research (if they exist in `../PTPlot` and `../phd-research`) in sequence. It is run by cron. It is documented in `./docs/dev.rst`.
+  for PTtools, PTPlot, phd-research and ptplot-pttools-paper
+  (if they exist in `../PTPlot`, `../phd-research` and `../ptplot-pttools-paper`) in sequence.
+  It is run by cron. It is documented in `./docs/dev.rst`.
+  For a LaTeX repository (with a `Makefile` and `main.tex` in its root), it runs `make all` and copies `main.pdf`
+  to `./nightly/name_YYYY-MM-DD.pdf`, where `name` is the name of the repository directory in lower case.
   - Check the status of the nightly run with `uv run python -m pttools.docs.nightly --status`, or without arguments.
     It prints the crontab entry, the schedule and the next run time, the current time,
     and for each repository, whether a nightly run is currently in progress, and the last lines of its latest log `./logs/nightly_YYYY-MM-DD.log`

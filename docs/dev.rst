@@ -115,8 +115,9 @@ Nightly runs
 ------------
 The ``uv run python -m pttools.docs.nightly --run`` command runs the nightly run for multiple repositories in sequence,
 so that they don't compete for resources.
-By default, these are PTtools, PTPlot and phd-research, in this order,
-the latter two if they exist in ``../PTPlot`` and ``../phd-research`` relative to the PTtools repository.
+By default, these are PTtools, PTPlot, phd-research and ptplot-pttools-paper, in this order,
+the latter three if they exist in ``../PTPlot``, ``../phd-research`` and ``../ptplot-pttools-paper``
+relative to the PTtools repository.
 Other repositories can be selected by giving their paths with ``--repo``, which can be given multiple times.
 The nightly run is run for each repository even if it fails for the previous ones,
 and the outputs of each repository are saved in that repository.
@@ -155,6 +156,12 @@ The completion of the run is logged before archiving, so that the archived log i
 and the creation of the archive is logged afterwards only to the log file.
 The HDF5 files ``*.h5`` are left out of the archive to save space, but their checksum files ``*.h5.sha256`` are included.
 If an archive of the same day already exists, a suffix ``_2``, ``_3`` etc. is added to the filename.
+
+A LaTeX repository, which has a ``Makefile`` and ``main.tex`` in its root, such as ptplot-pttools-paper,
+has no unit tests, documentation or wheel. For it, the nightly run instead builds the document with ``make all``
+and copies the resulting ``main.pdf`` to ``./nightly/name_YYYY-MM-DD.pdf`` of the repository,
+where ``name`` is the name of the repository directory in lower case, e.g. ``ptplot-pttools-paper_YYYY-MM-DD.pdf``,
+with a suffix ``_2``, ``_3`` etc. if a PDF of the same day already exists.
 
 The run of each repository logs to ``./logs/nightly_YYYY-MM-DD.log`` of that repository.
 If that log already exists, e.g. when the run is started manually after the nightly run of the same day,

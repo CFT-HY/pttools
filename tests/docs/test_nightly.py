@@ -208,6 +208,63 @@ def test_run(tmp_path: Path) -> None:
     assert f"Created the archive {archives[0]}" in log_text.removeprefix(archived_log)
 
 
+#: A Makefile of a LaTeX repository, whose "all" target creates main.pdf from main.tex.
+#: It fails with exit code 2 if main.tex contains "fail".
+LATEX_MAKEFILE = """all:
+\t! grep -q fail main.tex
+\tcp main.tex main.pdf
+"""
+
+
+def test_is_latex(tmp_path: Path) -> None:
+    """A repository should be a LaTeX repository only if it has both a Makefile and main.tex in its root."""
+    repo = NightlyRepo(tmp_path)
+    assert not repo.is_latex
+    assert repo.archive_dir == tmp_path / "docs" / "nightly"
+    (tmp_path / "main.tex").touch()
+    assert not repo.is_latex
+    (tmp_path / "Makefile").touch()
+    assert repo.is_latex
+    assert repo.archive_dir == tmp_path / "nightly"
+
+
+def test_run_latex(tmp_path: Path) -> None:
+    """For a LaTeX repository, the run should build the document and copy the PDF, without running uv."""
+    # A fake uv that fails, so that the run would fail if it ran uv.
+    _, script, env = create_repo(tmp_path, '#!/bin/sh\nexit 3\n')
+    paper = tmp_path / "Paper"
+    paper.mkdir()
+    (paper / "Makefile").write_text(LATEX_MAKEFILE)
+    (paper / "main.tex").write_text("document\n")
+    init_repo(paper)
+
+    def run_script() -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [sys.executable, script, "--run", "--repo", str(paper)],
+            env=env,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+    for _ in range(2):
+        result = run_script()
+        assert (result.returncode, result.stderr) == (0, "")
+    date = datetime.date.today()
+    pdfs = [paper / "nightly" / f"paper_{date:%Y-%m-%d}.pdf", paper / "nightly" / f"paper_{date:%Y-%m-%d}_2.pdf"]
+    assert sorted((paper / "nightly").iterdir()) == pdfs
+    assert all(pdf.read_text() == "document\n" for pdf in pdfs)
+    log = next((paper / "logs").glob("nightly_*.log")).read_text()
+    assert "Document build finished." in log
+    assert f"Copied {paper / 'main.pdf'} to {pdfs[0]}." in log
+
+    (paper / "main.tex").write_text("fail\n")
+    result = run_script()
+    assert result.returncode == 2
+    assert "The nightly run of Paper failed with exit code 2." in result.stderr
+    assert len(list((paper / "nightly").iterdir())) == 2
+
+
 def test_skip(tmp_path: Path) -> None:
     """--skip should make the next run skip, and only the next one."""
     # A fake uv that fails, so that a run that is not skipped fails with its exit code.
@@ -330,7 +387,7 @@ def test_run_multiple_repos(tmp_path: Path) -> None:
 
 
 def test_default_repos(tmp_path: Path) -> None:
-    """By default, the nightly run should be run for PTtools, PTPlot and phd-research in this order, if they exist."""
+    """The default repositories should be PTtools, PTPlot, phd-research and ptplot-pttools-paper, if they exist."""
     _, script, env = create_repo(tmp_path, FAKE_UV)
     status = subprocess.run([sys.executable, script], env=env, capture_output=True, text=True, check=True).stdout
     assert "Repositories, in the order of the runs: repo\n" in status
@@ -350,6 +407,11 @@ def test_default_repos(tmp_path: Path) -> None:
     assert f"=== PTPlot ({tmp_path / 'PTPlot'}) ===" in status
     assert status.index("=== PTPlot") < status.index("=== phd-research")
     assert status.count("Last lines of the latest log") == 3
+
+    init_repo(tmp_path / "ptplot-pttools-paper")
+    status = subprocess.run([sys.executable, script], env=env, capture_output=True, text=True, check=True).stdout
+    assert "Repositories, in the order of the runs: repo, PTPlot, phd-research, ptplot-pttools-paper\n" in status
+    assert status.count("Last lines of the latest log") == 4
 
 
 def test_sequence_lock(tmp_path: Path) -> None:

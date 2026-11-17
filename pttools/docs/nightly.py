@@ -1,10 +1,15 @@
 """Nightly run: unit tests, documentation build (which runs the examples), wheel build and archiving of the results.
 
 The nightly run is run for multiple repositories in sequence, so that they don't compete for resources.
-By default, these are PTtools, PTPlot and phd-research, in this order,
-the latter two if they exist in ``../PTPlot`` and ``../phd-research`` relative to the PTtools repository.
+By default, these are PTtools, PTPlot, phd-research and ptplot-pttools-paper, in this order,
+the latter three if they exist in ``../PTPlot``, ``../phd-research`` and ``../ptplot-pttools-paper``
+relative to the PTtools repository.
 The repositories can be selected with ``--repo``.
 The outputs of each repository are saved in that repository.
+For a LaTeX repository, which has a ``Makefile`` and ``main.tex`` in its root,
+the nightly run instead builds the document with ``make all``
+and copies the resulting ``main.pdf`` to ``./nightly/name_YYYY-MM-DD.pdf``,
+where ``name`` is the name of the repository directory in lower case, see :func:`latex_run`.
 
 The script is run with ``uv run`` in the virtualenv of PTtools,
 so that it can use the utilities of PTtools, e.g. those of :mod:`pttools.utils`:
@@ -44,7 +49,7 @@ from typing import TextIO, TypedDict, cast
 from pttools.logging import append_log, log_console, redirect_output
 from pttools.utils.archive import TAR_XZ_SUFFIX, archive, optimize_pngs
 from pttools.utils.cron import CronSchedule, read_crontab_entries
-from pttools.utils.files import tail
+from pttools.utils.files import tail, unique_path
 from pttools.utils.git import git
 from pttools.utils.lock import acquire_lock, read_lock, write_lock_info
 from pttools.utils.process import ProcessInfo, find_descendants, format_process, read_cmdline, read_process, stop
@@ -57,6 +62,7 @@ __all__ = [
     "CRONTAB_PATTERN",
     "DEFAULT_MAX_COMMIT_AGE",
     "DOCS_TARGET",
+    "LATEX_MAIN",
     "LOG_FILE_PATTERN",
     "MODULE",
     "OPTIONAL_REPO_DIRS",
@@ -71,6 +77,7 @@ __all__ = [
     "default_repos",
     "find_run_process",
     "latest_log_file",
+    "latex_run",
     "log_files",
     "next_scheduled_run",
     "nightly_run",
@@ -92,7 +99,11 @@ SCRIPT_PATH: Path = Path(__file__).resolve()
 #: The PTtools repository, in which this script is
 SCRIPT_REPO_DIR: Path = SCRIPT_PATH.parent.parent.parent
 #: The other repositories, for which the nightly run is run by default if they exist, in the order of the runs
-OPTIONAL_REPO_DIRS: tuple[Path, ...] = (SCRIPT_REPO_DIR.parent / "PTPlot", SCRIPT_REPO_DIR.parent / "phd-research")
+OPTIONAL_REPO_DIRS: tuple[Path, ...] = (
+    SCRIPT_REPO_DIR.parent / "PTPlot",
+    SCRIPT_REPO_DIR.parent / "phd-research",
+    SCRIPT_REPO_DIR.parent / "ptplot-pttools-paper",
+)
 #: The lock that is held while the nightly runs of the repositories are run in sequence,
 #: so that two sequences don't run simultaneously and compete for resources
 SEQUENCE_LOCK_FILE: Path = SCRIPT_REPO_DIR / "nightly_sequence.lock"
@@ -109,6 +120,8 @@ LOG_FILE_PATTERN: re.Pattern[str] = re.compile(r"nightly_(\d{4}-\d{2}-\d{2})(?:_
 #: The regular expression by which the crontab entry of the nightly run is found.
 #: It matches both the module name and the path of the script.
 CRONTAB_PATTERN: str = r"pttools[./]docs[./]nightly"
+#: The stem of the main LaTeX file ``main.tex``, by which a LaTeX repository is detected, and of its output PDF
+LATEX_MAIN: str = "main"
 #: The default maximum age of the HEAD commit for the run to be started, in seconds.
 #: This can be overridden with the ``MAX_COMMIT_AGE`` environment variable.
 DEFAULT_MAX_COMMIT_AGE: int = 86400
@@ -129,8 +142,11 @@ class NightlyRepo(Repo):
 
     @property
     def archive_dir(self) -> Path:
-        """The directory of the outputs and the archives of the nightly runs."""
-        return self.docs_dir / "nightly"
+        """The directory of the outputs and the archives of the nightly runs.
+
+        It's ``./docs/nightly``, or ``./nightly`` for a LaTeX repository.
+        """
+        return (self.path if self.is_latex else self.docs_dir) / "nightly"
 
     @property
     def dist_dir(self) -> Path:
@@ -146,6 +162,11 @@ class NightlyRepo(Repo):
     def fig_parent_dir(self) -> Path:
         """The parent directory of the figure directories of the nightly runs, ``fig_YYYY-MM-DD``."""
         return self.archive_dir / "fig"
+
+    @property
+    def is_latex(self) -> bool:
+        """Whether this is a LaTeX repository, i.e. it has a ``Makefile`` and ``main.tex`` in its root."""
+        return (self.path / "Makefile").is_file() and (self.path / f"{LATEX_MAIN}.tex").is_file()
 
     @property
     def lock_file(self) -> Path:
@@ -394,9 +415,31 @@ def latest_log_file(repo: NightlyRepo, date: datetime.date) -> Path:
     return create_log_file(repo, date)
 
 
+def latex_run(repo: NightlyRepo, started: datetime.datetime) -> int:
+    """Build the document of a LaTeX repository with ``make all``, and copy the PDF to the archive directory.
+
+    The PDF ``main.pdf`` is copied to ``./nightly/name_YYYY-MM-DD.pdf``,
+    where ``name`` is the name of the repository directory in lower case, e.g. ``ptplot-pttools-paper``,
+    or with a suffix ``_2``, ``_3`` etc. if a PDF of the same day already exists.
+
+    :param repo: the LaTeX repository
+    :param started: the start time of the run
+    :return: the exit code
+    """
+    subprocess.run(["make", "all"], cwd=repo.path, env=env_without_venv(), check=True)
+    log_console("Document build finished.")
+    pdf = repo.path / f"{LATEX_MAIN}.pdf"
+    repo.archive_dir.mkdir(parents=True, exist_ok=True)
+    target = unique_path(repo.archive_dir / f"{repo.name.lower()}_{started:%Y-%m-%d}.pdf")
+    shutil.copy2(pdf, target)
+    log_console(f"Nightly run finished. Copied {pdf} to {target}.")
+    return 0
+
+
 def nightly_run(repo: NightlyRepo, uv: str | None, lock_fd: int, log_file: Path, started: datetime.datetime) -> int:
     """Run the unit tests, build the docs and the wheel, optimize the PNG files and archive the results of a repo.
 
+    For a LaTeX repository, the document is built instead, see :func:`latex_run`.
     The completion of the run is logged before archiving, so that the archived log includes it.
     The creation of the archive is then logged only to the log file.
 
@@ -428,6 +471,8 @@ def nightly_run(repo: NightlyRepo, uv: str | None, lock_fd: int, log_file: Path,
         return 0
 
     log_console(f"Starting the nightly run of {repo.path} at HEAD {head}.")
+    if repo.is_latex:
+        return latex_run(repo, started)
 
     # The build directory is cleaned also by the make target,
     # but cleaning it already here ensures that no output of a previous run is left there if the run fails.
