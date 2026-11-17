@@ -25,17 +25,23 @@ class Quantity(enum.StrEnum):
     The vortical spectra contain the sum of both transverse polarisations.
     """
 
-    #: $v^i$, fluid 3-velocity
+    #: $v^i_\parallel$, compressional component of the fluid 3-velocity $v^i$
     VEL_DIV = "vel-div"
+    #: $v^i_\perp$, vortical component of the fluid 3-velocity $v^i$
     VEL_ROT = "vel-rot"
+    #: $v^i$, fluid 3-velocity
     VEL_TOT = "vel-tot"
-    #: $X^i = \sqrt{w} \gamma v^i$, so that $U^i = X^i / \sqrt{\bar{w}}$ of :correia_2025:`\ ` eq. 20
+    #: $X^i_\parallel$, compressional component of $X^i$, see :py:attr:`X_TOT`
     X_DIV = "X-div"
+    #: $X^i_\perp$, vortical component of $X^i$, see :py:attr:`X_TOT`
     X_ROT = "X-rot"
+    #: $X^i = \sqrt{w} \gamma v^i$, so that $U^i = X^i / \sqrt{\bar{w}}$ of :correia_2025:`\ ` eq. 20
     X_TOT = "X-tot"
-    #: $J^i$, momentum density
+    #: $J^i_\parallel$, compressional component of the momentum density $J^i$
     J_DIV = "J-div"
+    #: $J^i_\perp$, vortical component of the momentum density $J^i$
     J_ROT = "J-rot"
+    #: $J^i$, momentum density
     J_TOT = "J-tot"
     #: $\Pi_{ij}$, transverse-traceless shear stress
     SHST_TT = "shst-TT"
