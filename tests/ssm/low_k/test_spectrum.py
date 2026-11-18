@@ -9,7 +9,7 @@ from pttools.bubble import Bubble
 from pttools.math import assert_allclose
 from pttools.models import BagModel, ConstCSModel
 from pttools.ssm import SSMSpectrum
-from pttools.ssm.low_k import Iv_resampled, z_cross_junction
+from pttools.ssm.low_k import z_cross_junction
 from tests.ssm.low_k.common import nu_from_cs, p_tilde_gw_low
 
 Y: np.ndarray = np.logspace(-3, 2, 200)
@@ -49,7 +49,7 @@ class LowKSpectrumTest(unittest.TestCase):
         for spectrum in self.spectra:
             nu = spectrum.nu_gdh2024
             with self.subTest(nu=nu):
-                iv = Iv_resampled(x=spectrum.z_lookup, P_tilde_v=spectrum.spec_den_v_lookup)
+                iv = spectrum.Iv
                 if nu == 0:
                     ref = 8 / 15 * spectrum.tau_star * iv * np.log(1 + spectrum.eta_ratio)**2 * np.ones_like(Y)
                 else:
@@ -117,7 +117,7 @@ class CsFrictionSpectrumTest(unittest.TestCase):
             assert spectrum.low_k_cs_friction is switch
             assert_allclose(spectrum.nu_gdh2024, nu, rtol=1e-14)
             assert_allclose(spectrum.cs2, 1/3, rtol=1e-12)
-        iv = Iv_resampled(x=spectra[0].z_lookup, P_tilde_v=spectra[0].spec_den_v_lookup)
+        iv = spectra[0].Iv
         default = p_tilde_gw_low(z=Y, nu=nu, r_star=R_STAR, eta_ratio=spectra[0].eta_ratio, iv=iv)
         assert_allclose(spectra[0].spec_den_gw_low, default, rtol=1e-12)
         upsilon_2nu = (1 - (1 + spectra[0].eta_ratio)**(-2 * nu)) / (2 * nu)

@@ -135,6 +135,11 @@ SSM_SPECTRUM_FIELDS: Fields = Fields(
     Field(
         "z_st_thresh", presets=PRESETS_FULL_INIT,
         description=r"$z_\text{st,thresh}$, $z$ above which an approximation of the sine transform is used"),
+    Field(
+        "qT_integrals_max", presets=PRESETS_FULL_INIT,
+        description=(
+            r"minimum upper limit of the $q\tilde{T}$ array of the integrals $\bar{U}_f^2$ and $\mathcal{I}_v$, "
+            "or 0 for the legacy behaviour")),
     Field("T_tilde_min", presets=PRESETS_INIT, description=r"$\tilde{T}_\text{min}$"),
     Field("T_tilde_max", presets=PRESETS_INIT, description=r"$\tilde{T}_\text{max}$"),
     Field(

@@ -72,6 +72,8 @@ class BaseSSMSpectrum(Extractable, BaseSpectrum, abc.ABC):
     _omega_barotropic: float | None
     # Accuracy
     z_st_thresh: float
+    #: Minimum upper limit of the $q\tilde{T}$ integral of $\bar{U}_f^2$
+    qT_integrals_max: float  # noqa: N815
     nT: int  # noqa: N815
     nx_P_tilde_gw: int | None  # noqa: N815
     n_z_lookup: int
@@ -87,6 +89,8 @@ class BaseSSMSpectrum(Extractable, BaseSpectrum, abc.ABC):
     # -----
     a2: FloatArr1D
     a2_lookup: FloatArr1D
+    #: ${\lvert A \rvert}^2$ for $qT_\text{integrals}$
+    a2_integrals: FloatArr1D
     #: Bubble spacing enlargement factor $\Lambda$
     bubble_spacing_enlargement_factor: float
     #: $c_s(T_{\text{gw}})$
@@ -100,6 +104,8 @@ class BaseSSMSpectrum(Extractable, BaseSpectrum, abc.ABC):
     qT_lookup: FloatArr1D
     #: $qT_\text{gw,lookup}$
     qT_gw_lookup: FloatArr1D  # noqa: N815
+    #: $qT_\text{integrals}$, see :py:func:`pttools.ssm.ssm.qT_integrals`
+    qT_integrals: FloatArr1D  # noqa: N815
     spec_den_v: FloatArr1D
     spec_den_v_lookup: FloatArr1D
     spec_den_gw: FloatArr1D
@@ -374,9 +380,8 @@ class BaseSSMSpectrum(Extractable, BaseSpectrum, abc.ABC):
         The result does not depend on the bubble spacing enlargement factor $\Lambda$,
         see :py:func:`pttools.ssm.ssm.ubarf2_from_a2`.
         """
-        # Todo: Think which z and A2 to use here and in compute_ssm()
         return ubarf2_from_a2(
-            T_tilde=self.T_tilde, z=self.qT_lookup, A2=self.a2, v_wall=self.bubble.v_wall,
+            T_tilde=self.T_tilde, z=self.qT_integrals, A2=self.a2_integrals, v_wall=self.bubble.v_wall,
             nuc_type=self.nuc_type if nuc_type is None else nuc_type
         )
 

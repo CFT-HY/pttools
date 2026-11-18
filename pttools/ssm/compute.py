@@ -23,15 +23,18 @@ import typing as tp
 import numpy as np
 
 from pttools.bubble.thermo import w_bar as w_bar_func
-from pttools.speedup import njit
+from pttools.speedup import logspace, njit
+from pttools.ssm.const import X_IV_MAX, X_IV_MIN, X_IV_POINTS_PER_DECADE
+from pttools.ssm.low_k.integration import Iv as Iv_func
 from pttools.ssm.low_k.integration import Iv_resampled, power_spectrum_integration_int, spec_den_gw_low
 from pttools.ssm.low_k.intersection import xp_v as xp_v_func
 from pttools.ssm.low_k.join import gw_junction
-from pttools.ssm.nucleation import NucType, bubble_spacing_enlargement
+from pttools.ssm.nucleation import NucType, beta_R_star0, bubble_spacing_enlargement
 from pttools.ssm.spec_den_gw import gen_lookup, spec_den_gw
 from pttools.ssm.spec_den_v import spec_den_v as spec_den_v_func
 from pttools.ssm.ssm import A2_e_conserving, LambdaCorrection, ubarf2_from_a2
 from pttools.ssm.ssm import T_tilde as T_tilde_func
+from pttools.ssm.ssm import qT_integrals as qT_integrals_func
 from pttools.ssm.ssm import qT_lookup as qT_lookup_func
 import pttools.type_hints as th
 from pttools.type_hints import FloatArr1D
@@ -91,6 +94,10 @@ class SSMInput(tp.NamedTuple):
     n_z_lookup: int
     #: number of points for the integration of the GW spectral density, or 0 for the size of the lookup array
     nx_P_tilde_gw: int  # noqa: N815
+    #: minimum upper limit of the $q\tilde{T}$ array of the integrals $\bar{U}_f^2$ and $\mathcal{I}_v$,
+    #: or 0 for the legacy behavior, where they use the lookup arrays,
+    #: see :py:func:`pttools.ssm.ssm.qT_integrals`
+    qT_integrals_max: float  # noqa: N815
     #: $\tilde{T}_\text{min}$
     T_tilde_min: float
     #: $\tilde{T}_\text{max}$
@@ -118,10 +125,15 @@ class SSMBaseResults(tp.NamedTuple):
     A2: FloatArr1D
     #: ${\lvert A \rvert}^2$ for $qT_\text{gw,lookup}$
     A2_lookup: FloatArr1D
+    #: ${\lvert A \rvert}^2$ for $qT_\text{integrals}$
+    A2_integrals: FloatArr1D
     #: $qT_\text{lookup}$
     qT_lookup: FloatArr1D
     #: $qT_\text{gw,lookup}$
     qT_gw_lookup: FloatArr1D  # noqa: N815
+    #: $qT_\text{integrals}$, array for the integrals $\bar{U}_f^2$ and $\mathcal{I}_v$,
+    #: see :py:func:`pttools.ssm.ssm.qT_integrals`
+    qT_integrals: FloatArr1D  # noqa: N815
     #: $\tilde{P}_v(z)$
     spec_den_v: FloatArr1D
     #: $\tilde{P}_v$ for the lookup array $z_\text{lookup}$
@@ -135,8 +147,13 @@ class SSMBaseResults(tp.NamedTuple):
     #: $\tilde{P}_\text{gw,ssm} / \Upsilon_\ell$, GW spectral density without the source lifetime factor
     spec_den_gw_ssm_unscaled: FloatArr1D
     #: $\mathcal{I}_v$, source contribution of the low-$k$ approximation,
-    #: see :py:func:`pttools.ssm.low_k.integration.Iv_resampled`
+    #: see :py:func:`pttools.ssm.low_k.integration.Iv`
     Iv: float
+    #: $x$ array of $\mathcal{I}_v$, see :py:data:`pttools.ssm.const.X_IV_MAX`,
+    #: or $z_\text{lookup}$ for the legacy behaviour
+    x_Iv: FloatArr1D  # noqa: N815
+    #: $\tilde{P}_v$ for $x_{\mathcal{I}_v}$
+    spec_den_v_Iv: FloatArr1D  # noqa: N815
     #: $x_{p,v}$, $x$ at the maximum of $x \tilde{P}_v(x)$ over the lookup array,
     #: or nan if the array does not cover it,
     #: see :py:func:`pttools.ssm.low_k.intersection.xp_v`
@@ -295,10 +312,26 @@ def compute_base(inp: SSMInput, parallel: bool = True) -> SSMBaseResults:
         v_wall=inp.v_wall, v_sh=inp.v_sh, cs=inp.cs, z_st_thresh=inp.z_st_thresh,
         parallel=parallel, lambda_correction=inp.lambda_correction, w_bar=w_bar
     )[0]
-    # Todo: Think which z and A2 to use here and in Spectrum.ubarf2_custom_nucleation()
+    # The integrals of ubarf2 and Iv use an array of their own, so that they do not depend on the y array.
+    # The integral of ubarf2 converges slowly at large qT, and its integrand oscillates.
+    # P_v(x) of Iv needs |A|^2 at qT = x T_tilde / (beta R_*), see spec_den_v().
+    use_integrals = inp.qT_integrals_max > 0  # 0 = use legacy behavior
+    if use_integrals:
+        beta_R = beta_R_star0(inp.v_wall)
+        qT_integrals = qT_integrals_func(
+            qT_lookup=qT_lookup, qT_max=max(inp.qT_integrals_max, X_IV_MAX * inp.T_tilde_max / beta_R))
+        A2_integrals = A2_e_conserving(
+            v=inp.v, w=inp.w, xi=inp.xi, e=inp.e, z=qT_integrals,
+            v_wall=inp.v_wall, v_sh=inp.v_sh, cs=inp.cs, z_st_thresh=inp.z_st_thresh,
+            parallel=parallel, lambda_correction=inp.lambda_correction, w_bar=w_bar
+        )[0]
+    else:
+        # Legacy behaviour
+        qT_integrals = qT_lookup
+        A2_integrals = A2
     # The bubble spacing enlargement factor does not enter here, as beta R_* = (8 pi)^(1/3) v_wall
     # also with the nucleation suppression. See ubarf2_from_a2.
-    ubarf2 = ubarf2_from_a2(T_tilde=T_tilde, z=qT_lookup, A2=A2, v_wall=inp.v_wall, nuc_type=inp.nuc_type)
+    ubarf2 = ubarf2_from_a2(T_tilde=T_tilde, z=qT_integrals, A2=A2_integrals, v_wall=inp.v_wall, nuc_type=inp.nuc_type)
 
     # -----
     # spec_den_v generation
@@ -326,6 +359,21 @@ def compute_base(inp: SSMInput, parallel: bool = True) -> SSMBaseResults:
         v_wall=inp.v_wall,
         parallel=parallel,
     )
+    if use_integrals:
+        n_x_Iv = int(np.ceil(np.log10(X_IV_MAX / X_IV_MIN) * X_IV_POINTS_PER_DECADE)) + 1
+        x_Iv = logspace(np.log10(X_IV_MIN), np.log10(X_IV_MAX), n_x_Iv)
+        spec_den_v_Iv = spec_den_v_func(
+            z=x_Iv, A2_lookup=A2_integrals, qT_lookup=qT_integrals, T_tilde=T_tilde,
+            a=inp.lifetime_distribution_a, nuc_type=inp.nuc_type, ubarf2=ubarf2,
+            v_wall=inp.v_wall,
+            parallel=parallel,
+        )
+        Iv = Iv_func(x=x_Iv, P_tilde_v=spec_den_v_Iv)
+    else:
+        # Legacy behaviour
+        x_Iv = z_gw_lookup
+        spec_den_v_Iv = spec_den_v_lookup
+        Iv = Iv_resampled(x=z_gw_lookup, P_tilde_v=spec_den_v_lookup)
     # The source lifetime factor is a mere scaling factor, which is applied in compute_gw().
     spec_den_gw_ssm_unscaled, _ = spec_den_gw(
         z_lookup=z_gw_lookup,
@@ -338,14 +386,18 @@ def compute_base(inp: SSMInput, parallel: bool = True) -> SSMBaseResults:
     return SSMBaseResults(
         A2=A2,
         A2_lookup=A2_gw_lookup,
+        A2_integrals=A2_integrals,
         qT_lookup=qT_lookup,
         qT_gw_lookup=qT_gw_lookup,
+        qT_integrals=qT_integrals,
         spec_den_v=spec_den_v,
         spec_den_v_lookup=spec_den_v_lookup,
         T_tilde=T_tilde,
         ubarf2=ubarf2,
         z_lookup=z_gw_lookup,
         spec_den_gw_ssm_unscaled=spec_den_gw_ssm_unscaled,
-        Iv=Iv_resampled(x=z_gw_lookup, P_tilde_v=spec_den_v_lookup),
+        Iv=Iv,
+        x_Iv=x_Iv,
+        spec_den_v_Iv=spec_den_v_Iv,
         xp_v=xp_v_func(x=z_gw_lookup, P_tilde_v=spec_den_v_lookup)
     )

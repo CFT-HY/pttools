@@ -21,6 +21,7 @@ from pttools.ssm.const import (
     DEFAULT_N_T,
     DEFAULT_N_Z_LOOKUP,
     DEFAULT_Y,
+    QT_INTEGRALS_MAX,
     T_TILDE_MAX,
     T_TILDE_MIN,
     Z_ST_THRESH,
@@ -88,6 +89,7 @@ class Spectrum(BaseSSMOmgw0, SSMSpectrum):
             T_tilde_min: float = T_TILDE_MIN,
             T_tilde_max: float = T_TILDE_MAX,
             z_st_thresh: float = Z_ST_THRESH,
+            qT_integrals_max: float = QT_INTEGRALS_MAX,
             # Switches
             allow_beta_tilde_for_simultaneous: bool = False,
             compute: bool = True,
@@ -121,6 +123,15 @@ class Spectrum(BaseSSMOmgw0, SSMSpectrum):
         :param n_z_lookup: number of points in the lookup arrays
         :param z_st_thresh: for $z$ values above z_sh_tresh,
             use approximation rather than doing the sine transform integral.
+        :param qT_integrals_max: minimum upper limit of the $q\tilde{T}$ array of the integrals
+            $\bar{U}_f^2$ and $\mathcal{I}_v$ (the source integral of the low-$k$ approximation),
+            see :py:func:`pttools.ssm.ssm.qT_integrals`.
+            The integrals use arrays of their own, which do not depend on the $y$ array.
+            0 gives the legacy behaviour, where they use the lookup arrays generated from the $y$ array.
+            Then the integral of $\bar{U}_f^2$ ends at $y_\text{max} \tilde{T}_\text{max}$,
+            which underestimates $\bar{U}_f^2$ for $y_\text{max} \lesssim 10^4$,
+            and its accuracy depends on the density of the $y$ array.
+            Similarly, $\mathcal{I}_v$ is underestimated if the $y$ array ends below about 10.
         :param allow_beta_tilde_for_simultaneous:
             allow $\tilde{\beta}$ as an input parameter for simultaneous nucleation
         :param compute: whether to compute the spectrum immediately
@@ -153,6 +164,7 @@ class Spectrum(BaseSSMOmgw0, SSMSpectrum):
             r_star=r_star,
             y=DEFAULT_Y if y is None else y,  # When f is set, this is a placeholder that will be replaced below.
             z_st_thresh=z_st_thresh,
+            qT_integrals_max=qT_integrals_max,
             nuc_type=nuc_type,
             omega_barotropic=omega_barotropic,
             suppression=suppression,

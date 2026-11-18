@@ -5,12 +5,16 @@ import typing as tp
 import unittest
 
 import numpy as np
+import pytest
 
 from pttools.bubble import Bubble
 from pttools.math import assert_allclose
 from pttools.models.bag import BagModel
 from pttools.speedup.options import NUMBA_DISABLE_JIT
 from pttools.ssm import LambdaCorrection, NucType, SSMSpectrum
+from pttools.ssm.const import QT_INTEGRALS_MAX, QT_INTEGRALS_MIN, QT_INTEGRALS_POINTS_PER_DECADE
+from pttools.ssm.low_k.integration import Iv, Iv_resampled
+from pttools.ssm.ssm import qT_integrals
 import pttools.type_hints as th
 
 #: :gw_pt_ssm:`\ ` table 1
@@ -98,6 +102,81 @@ class UbarfTest(unittest.TestCase):
             [bubble.wn for bubble in self.bubbles],
             rtol=0.05
         )
+
+
+class IntegralsTest(unittest.TestCase):
+    r"""Test that $\bar{U}_f^2$ and $\mathcal{I}_v$ of the spectra do not depend on their $y$ array.
+
+    See :py:func:`pttools.ssm.ssm.qT_integrals`.
+    """
+
+    bubble: tp.ClassVar[Bubble]
+    #: $y$ arrays with different ranges and densities
+    Y_ARRAYS: tp.ClassVar[tuple[th.FloatArr1D, ...]] = (np.logspace(-3, 0, 30), np.logspace(-1, 3, 300))
+    #: Accuracy settings that do not affect $\bar{U}_f^2$
+    SPECTRUM_KWARGS: tp.ClassVar[dict[str, tp.Any]] = {"n_z_lookup": 1000, "nx_P_tilde_gw": 100, "low_k": False}
+
+    @classmethod
+    @tp.override
+    def setUpClass(cls) -> None:
+        cls.bubble = Bubble.cached(BagModel.cached(alpha_n_min=0.01), v_wall=0.8, alpha_n=0.2)
+
+    def spectrum(self, y: th.FloatArr1D, **kwargs: tp.Any) -> SSMSpectrum:
+        """A spectrum of the bubble with the given $y$ array."""
+        return SSMSpectrum(self.bubble, y=y, r_star=0.01, **(self.SPECTRUM_KWARGS | kwargs))
+
+    def test_independent_of_y(self) -> None:
+        r"""$\bar{U}_f^2$ and $\mathcal{I}_v$ are the same for $y$ arrays with different ranges and densities."""
+        spectra = [self.spectrum(y) for y in self.Y_ARRAYS]
+        assert_allclose(spectra[0].ubarf2, spectra[1].ubarf2, rtol=1e-12)
+        assert_allclose(spectra[0].Iv, spectra[1].Iv, rtol=1e-12)
+        for spectrum in spectra:
+            assert_allclose(spectrum.ubarf2_custom_nucleation(), spectrum.ubarf2, rtol=1e-12)
+
+    def test_legacy(self) -> None:
+        r"""With ``qT_integrals_max=0``, $\bar{U}_f^2$ is integrated over the lookup array of $y \tilde{T}$.
+
+        The integral is then cut off at $y_\text{max} \tilde{T}_\text{max}$,
+        which underestimates $\bar{U}_f^2$ for the short $y$ array by more than a factor of 2.
+        """
+        y = self.Y_ARRAYS[0]
+        legacy = self.spectrum(y, qT_integrals_max=0)
+        np.testing.assert_array_equal(legacy.qT_integrals, legacy.qT_lookup)
+        assert legacy.ubarf2 < 0.5 * self.spectrum(y).ubarf2
+        assert legacy.Iv == Iv_resampled(x=legacy.z_lookup, P_tilde_v=legacy.spec_den_v_lookup)
+
+    def test_converged(self) -> None:
+        r"""Increasing the upper limit of the integral by a factor of 10 changes $\bar{U}_f^2$ only a little.
+
+        The difference is mostly the sampling error of the oscillating integrand,
+        see :py:data:`pttools.ssm.const.QT_INTEGRALS_POINTS_PER_DECADE`.
+        """
+        y = self.Y_ARRAYS[0]
+        assert_allclose(
+            self.spectrum(y, qT_integrals_max=10 * QT_INTEGRALS_MAX).ubarf2, self.spectrum(y).ubarf2, rtol=3e-3)
+
+    def test_iv(self) -> None:
+        r"""$\mathcal{I}_v$ agrees with that integrated over a wide lookup array of $\tilde{P}_v$.
+
+        The lookup array of the spectrum with $y$ from $10^{-3}$ to $10^4$ covers $x$ from about $4 \cdot 10^{-4}$
+        to $1.4 \cdot 10^4$, i.e. practically the whole support of $\tilde{P}_v$.
+        """
+        wide = self.spectrum(np.logspace(-3, 4, 700), n_z_lookup=14000)
+        assert_allclose(wide.Iv, Iv(x=wide.z_lookup, P_tilde_v=wide.spec_den_v_lookup), rtol=1e-3)
+        base_res = wide.base_res
+        assert base_res is not None
+        assert_allclose(wide.Iv, Iv(x=base_res.x_Iv, P_tilde_v=base_res.spec_den_v_Iv), rtol=1e-12)
+
+    @staticmethod
+    def test_qT_integrals() -> None:
+        r"""The array covers $[q\tilde{T}_\text{min}, \max(q\tilde{T}_\text{max}, \max(q\tilde{T}_\text{lookup}))]$."""
+        for qT_lookup in (np.logspace(-5, 1, 100), np.logspace(-1, 7, 100)):
+            qT = qT_integrals(qT_lookup)
+            assert qT[0] == pytest.approx(QT_INTEGRALS_MIN, rel=1e-12)
+            assert qT[-1] == pytest.approx(max(QT_INTEGRALS_MAX, qT_lookup[-1]), rel=1e-12)
+            assert np.log10(qT[1] / qT[0]) <= 1 / QT_INTEGRALS_POINTS_PER_DECADE * (1 + 1e-9)
+        qT_lookup = np.logspace(-1, 1, 10)
+        assert qT_integrals(qT_lookup, qT_max=0) is qT_lookup
 
 
 if __name__ == "__main__":

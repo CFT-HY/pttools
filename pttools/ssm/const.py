@@ -24,8 +24,14 @@ __all__ = [
     "DEFAULT_R_STAR",
     "DEFAULT_Y",
     "DZ_ST_BLEND",
+    "QT_INTEGRALS_MAX",
+    "QT_INTEGRALS_MIN",
+    "QT_INTEGRALS_POINTS_PER_DECADE",
     "T_TILDE_MAX",
     "T_TILDE_MIN",
+    "X_IV_MAX",
+    "X_IV_MIN",
+    "X_IV_POINTS_PER_DECADE",
     "Z_ST_THRESH",
     "NptType",
 ]
@@ -137,6 +143,42 @@ Below this value, the abundance of primordial black holes would be too high.
 :lewicki_2023:`\ `
 """
 
+QT_INTEGRALS_MAX: float = 2e5
+r"""
+Minimum upper limit of the $z = q\tilde{T}$ array of the integrals of the spectra,
+see :py:func:`pttools.ssm.ssm.qT_integrals`.
+For the integral of $\bar{U}_f^2$ in :py:func:`pttools.ssm.ssm.ubarf2_from_a2`,
+the integrand $z^2 {\lvert A(z) \rvert}^2$ decays approximately as $z^{-2}$,
+and therefore the relative error of the integral is approximately inversely proportional to its upper limit.
+With this value, the error is below $4 \cdot 10^{-4}$ for the tested deflagrations, hybrids and detonations,
+compared with up to 5 % for the upper limit of $2 \cdot 10^3$, and up to 44 % for $2 \cdot 10^2$.
+"""
+
+QT_INTEGRALS_MIN: float = 1e-3
+r"""
+Lower limit of the $z = q\tilde{T}$ array of the integrals of the spectra,
+see :py:func:`pttools.ssm.ssm.qT_integrals`.
+For the integral of $\bar{U}_f^2$, the part below 0.1 is below $10^{-7}$ of the total
+for the tested deflagrations, hybrids and detonations.
+The array extends lower, as $\tilde{P}_v(x)$ of $\mathcal{I}_v$ needs ${\lvert A \rvert}^2$ at
+$z = x \tilde{T} / (\beta R_*)$ for $x \geq$ :py:data:`X_IV_MIN`.
+Below this, ${\lvert A \rvert}^2$ is extrapolated as a constant,
+which affects $\tilde{P}_v(x)$ only for $\tilde{T} \lesssim 10^{-2} \beta R_* / x$,
+where the integrand of $\tilde{P}_v$ is suppressed by $\tilde{T}^6$.
+"""
+
+QT_INTEGRALS_POINTS_PER_DECADE: float = 1000.
+r"""
+Number of points per decade of the $z = q\tilde{T}$ array of the integrals of the spectra,
+see :py:func:`pttools.ssm.ssm.qT_integrals`.
+The integrand of $\bar{U}_f^2$ oscillates, and with this density,
+the sampling error of the integral is up to about $2 \cdot 10^{-3}$
+for the tested deflagrations, hybrids and detonations,
+compared with up to 2 % for 300 and 6 % for 100 points per decade.
+Increasing the density further does not reduce the error significantly,
+as the oscillations become faster at large $z$.
+"""
+
 T_TILDE_MAX: float = 20.0
 r"""
 Maximum $\tilde{T}$ in bubble lifetime distribution integration
@@ -166,6 +208,29 @@ for
 CS0: tp.Final[float] = bubble.CS0
 #: Default sound speed squared $c_s^2$
 CS0_2: tp.Final[float] = bubble.CS0_2
+
+X_IV_MAX: float = 100.
+r"""
+Upper limit of the $x$ array of the source integral $\mathcal{I}_v$ of the low-$k$ approximation,
+see :py:func:`pttools.ssm.low_k.integration.Iv`.
+As $\tilde{P}_v \propto x^{-4}$ at large $x$ ($x^{-3}$ for some hybrids), the integrand $x^2 \tilde{P}_v^2$
+decays as $x^{-6}$ or faster.
+For the tested deflagrations, hybrids and detonations with exponential and simultaneous nucleation,
+the part of $\mathcal{I}_v$ above this is below $10^{-4}$, compared with up to $2.4 \cdot 10^{-3}$ above 30
+and $9 \cdot 10^{-2}$ above 10.
+"""
+
+X_IV_MIN: float = 0.1
+r"""
+Lower limit of the $x$ array of the source integral $\mathcal{I}_v$, see :py:data:`X_IV_MAX`.
+For the tested bubbles, the part of $\mathcal{I}_v$ below this is below $2 \cdot 10^{-5}$.
+"""
+
+X_IV_POINTS_PER_DECADE: float = 300.
+r"""
+Number of points per decade of the $x$ array of the source integral $\mathcal{I}_v$, see :py:data:`X_IV_MAX`.
+$\tilde{P}_v$ is smooth, and with this density, $\mathcal{I}_v$ is accurate to about $10^{-4}$.
+"""
 
 DZ_ST_BLEND: float = np.pi
 """

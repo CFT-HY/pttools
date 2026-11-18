@@ -25,6 +25,7 @@ from pttools.ssm.const import (
     DEFAULT_N_Z_LOOKUP,
     DEFAULT_R_STAR,
     DEFAULT_Y,
+    QT_INTEGRALS_MAX,
     T_TILDE_MAX,
     T_TILDE_MIN,
     Z_ST_THRESH,
@@ -84,6 +85,7 @@ class SSMSpectrum(Cacheable, BaseSSMSpectrum):
             T_tilde_min: float = T_TILDE_MIN,
             T_tilde_max: float = T_TILDE_MAX,
             z_st_thresh: float = Z_ST_THRESH,
+            qT_integrals_max: float = QT_INTEGRALS_MAX,
             # Switches
             allow_beta_tilde_for_simultaneous: bool = False,
             compute: bool = True,
@@ -108,6 +110,15 @@ class SSMSpectrum(Cacheable, BaseSSMSpectrum):
         :param n_z_lookup: number of points in the lookup arrays
         :param z_st_thresh: for $z$ values above z_sh_tresh,
             use approximation rather than doing the sine transform integral.
+        :param qT_integrals_max: minimum upper limit of the $q\tilde{T}$ array of the integrals
+            $\bar{U}_f^2$ and $\mathcal{I}_v$ (the source integral of the low-$k$ approximation),
+            see :py:func:`pttools.ssm.ssm.qT_integrals`.
+            The integrals use arrays of their own, which do not depend on the $y$ array.
+            0 gives the legacy behaviour, where they use the lookup arrays generated from the $y$ array.
+            Then the integral of $\bar{U}_f^2$ ends at $y_\text{max} \tilde{T}_\text{max}$,
+            which underestimates $\bar{U}_f^2$ for $y_\text{max} \lesssim 10^4$,
+            and its accuracy depends on the density of the $y$ array.
+            Similarly, $\mathcal{I}_v$ is underestimated if the $y$ array ends below about 10.
         :param allow_beta_tilde_for_simultaneous:
             allow $\tilde{\beta}$ as an input parameter for simultaneous nucleation
         :param compute: whether to compute the spectrum immediately
@@ -150,6 +161,7 @@ class SSMSpectrum(Cacheable, BaseSSMSpectrum):
         self.suppression_method: SuppressionMethod = suppression_method
         # Accuracy
         self.z_st_thresh: float = z_st_thresh
+        self.qT_integrals_max: float = qT_integrals_max
         self.nT: int = nT
         self.nx_P_tilde_gw: int | None = nx_P_tilde_gw
         self.n_z_lookup: int = n_z_lookup
@@ -169,6 +181,7 @@ class SSMSpectrum(Cacheable, BaseSSMSpectrum):
         # -----
         self.a2: FloatArr1D = NAN_ARR
         self.a2_lookup: FloatArr1D = NAN_ARR
+        self.a2_integrals: FloatArr1D = NAN_ARR
         self.bubble_spacing_enlargement_factor: float = np.nan
         self.cs: float = np.nan
         self.cs2: float = np.nan
@@ -176,6 +189,7 @@ class SSMSpectrum(Cacheable, BaseSSMSpectrum):
         self.hx: float = np.nan
         self.qT_lookup: FloatArr1D = NAN_ARR
         self.qT_gw_lookup: FloatArr1D = NAN_ARR
+        self.qT_integrals: FloatArr1D = NAN_ARR
         self.spec_den_v: FloatArr1D = NAN_ARR
         self.spec_den_v_lookup: FloatArr1D = NAN_ARR
         self.spec_den_gw: FloatArr1D = NAN_ARR
@@ -286,6 +300,7 @@ class SSMSpectrum(Cacheable, BaseSSMSpectrum):
             T_tilde_min=self.T_tilde_min,
             T_tilde_max=self.T_tilde_max,
             z_st_thresh=self.z_st_thresh,
+            qT_integrals_max=self.qT_integrals_max,
             # Other
             nuc_type=self.nuc_type,
             sol_type=self.bubble.sol_type,
@@ -314,8 +329,10 @@ class SSMSpectrum(Cacheable, BaseSSMSpectrum):
         self.base_res = base_res
         self.a2 = base_res.A2
         self.a2_lookup = base_res.A2_lookup
+        self.a2_integrals = base_res.A2_integrals
         self.qT_lookup = base_res.qT_lookup
         self.qT_gw_lookup = base_res.qT_gw_lookup
+        self.qT_integrals = base_res.qT_integrals
         self.spec_den_v = base_res.spec_den_v
         self.spec_den_v_lookup = base_res.spec_den_v_lookup
         self.T_tilde = base_res.T_tilde
@@ -442,6 +459,7 @@ class SSMSpectrum(Cacheable, BaseSSMSpectrum):
             "T_tilde_min": self.T_tilde_min,
             "T_tilde_max": self.T_tilde_max,
             "z_st_thresh": self.z_st_thresh,
+            "qT_integrals_max": self.qT_integrals_max,
             "low_k": self.low_k,
             "low_k_cs_friction": self.low_k_cs_friction,
             "low_k_fallback_zp_gw": self.low_k_fallback_zp_gw,

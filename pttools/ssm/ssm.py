@@ -32,6 +32,7 @@ __all__ = [
     "l",
     "lam",
     "lam_kinetic",
+    "qT_integrals",
     "qT_lookup",
     "ubarf2_from_a2",
 ]
@@ -358,6 +359,44 @@ def qT_lookup(T_tilde: th.FloatArr1D, z: th.FloatArr1D) -> th.FloatArr1D:
     #     raise e
 
 
+@njit(cache=True)
+def qT_integrals(
+        qT_lookup: th.FloatArr1D,
+        qT_min: float = const.QT_INTEGRALS_MIN,
+        qT_max: float = const.QT_INTEGRALS_MAX,
+        points_per_decade: float = const.QT_INTEGRALS_POINTS_PER_DECADE) -> th.FloatArr1D:
+    r"""$z = q\tilde{T}$ array for the integrals of the spectra.
+
+    The lookup array of :py:func:`qT_lookup` ends at $y_\text{max} \tilde{T}_\text{max}$,
+    and its density is that of the $y$ array.
+    Therefore the integrals over all $z$ use an array of their own, which is logarithmically spaced
+    from $q\tilde{T}_\text{min}$ (:py:data:`pttools.ssm.const.QT_INTEGRALS_MIN`)
+    to $q\tilde{T}_\text{max}$ (:py:data:`pttools.ssm.const.QT_INTEGRALS_MAX`),
+    or to the end of the lookup array if it's larger,
+    with ``points_per_decade`` points per decade (:py:data:`pttools.ssm.const.QT_INTEGRALS_POINTS_PER_DECADE`).
+    These integrals are
+
+    - $\bar{U}_f^2$ (:py:func:`ubarf2_from_a2`), which converges slowly at large $z$,
+      and whose integrand oscillates,
+    - $\tilde{P}_v$ of the source integral $\mathcal{I}_v$ of the low-$k$ approximation
+      (:py:func:`pttools.ssm.low_k.integration.Iv`), which needs ${\lvert A \rvert}^2$ for a wider range of $x$
+      than that of the lookup array.
+
+    :param qT_lookup: $q\tilde{T}$ lookup array, see :py:func:`qT_lookup`
+    :param qT_min: $q\tilde{T}_\text{min}$, lower limit of the array
+    :param qT_max: $q\tilde{T}_\text{max}$, minimum upper limit of the array.
+        0 or nan returns the lookup array as is, which gives the legacy behaviour.
+    :param points_per_decade: number of points per decade
+    :return: $q\tilde{T}$ array for the integrals
+    """
+    if not qT_max > 0:
+        return qT_lookup
+    log10_start = np.log10(qT_min)
+    log10_stop = np.log10(max(qT_max, qT_lookup.max()))
+    n = int(np.ceil((log10_stop - log10_start) * points_per_decade))
+    return 10 ** np.linspace(log10_start, log10_stop, n + 1)
+
+
 @njit
 def T_tilde(T_tilde_min: float, T_tilde_max: float, n: int) -> th.FloatArr1D:
     r"""Generate $\tilde{T}$ array."""
@@ -390,6 +429,17 @@ def ubarf2_from_a2(
     As the bubbles fill space, $n_b \langle \frac{4\pi}{3} {v}_\text{wall}^3 T^3 \rangle = 1$,
     which gives $\nu_3 = 6$ for any nucleation history, including the suppressed one.
     Therefore $\bar{U}_f^2$ does not depend on the bubble spacing enlargement factor $\Lambda$.
+
+    The integrand $z^2 {\lvert A(z) \rvert}^2$ decays only approximately as $z^{-2}$,
+    and oscillates, and therefore $z$ should extend to large values with a sufficient density,
+    see :py:func:`qT_integrals`.
+
+    :param T_tilde: $\tilde{T}$ array of the lifetime distribution
+    :param z: $z = q\tilde{T}$ array
+    :param A2: ${\lvert A(z) \rvert}^2$
+    :param v_wall: $v_\text{wall}$, wall speed
+    :param nuc_type: nucleation type
+    :return: $\bar{U}_f^2$
     """
     if z.shape != A2.shape:
         raise TypeError(
