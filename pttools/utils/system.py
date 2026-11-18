@@ -52,6 +52,8 @@ __all__ = [
     "psutil_info",
     "pttools_commit_id",
     "pttools_version",
+    "pyproject",
+    "pyproject_version",
     "system_info",
     "testing",
     "testing_or_ci",
