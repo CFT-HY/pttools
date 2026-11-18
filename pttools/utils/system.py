@@ -1,6 +1,7 @@
 """System utilities."""
 
 import concurrent.futures
+import importlib.metadata
 import multiprocessing
 import os
 from pathlib import Path
@@ -8,6 +9,8 @@ import platform
 import subprocess
 import sys
 import sysconfig
+import tomllib
+from typing import Any
 
 try:
     import psutil
@@ -16,6 +19,7 @@ except ModuleNotFoundError:
 
 from pttools.logging import log_console
 from pttools.type_hints import IS_DOCS
+from pttools.utils.git import git_commit_id
 
 # IS_DOCS is imported on purpose, so that it's available with the other system constants.
 __all__ = [
@@ -36,6 +40,7 @@ __all__ = [
     "PROCESS_START_METHOD",
     "PROJECT_DIR",
     "PTTOOLS_DIR",
+    "PTTOOLS_REPO_DIR",
     "RAM_USE_HIGH_PERCENT",
     "SUPPORTS_FREETHREADING",
     "SUPPORTS_INTERPRETER_POOL",
@@ -45,6 +50,8 @@ __all__ = [
     "platform_info",
     "project_dir",
     "psutil_info",
+    "pttools_commit_id",
+    "pttools_version",
     "system_info",
     "testing",
     "testing_or_ci",
@@ -79,6 +86,8 @@ IS_X86_64: bool = CPU_ARCH in ("x86_64", "AMD64")
 IS_READ_THE_DOCS: bool = "READTHEDOCS_VIRTUALENV_PATH" in os.environ
 #: PTtools installation directory
 PTTOOLS_DIR: Path = Path(__file__).resolve().parent.parent
+#: PTtools repository directory
+PTTOOLS_REPO_DIR: Path | None = PTTOOLS_DIR.parent if (PTTOOLS_DIR.parent / "pyproject.toml").is_file() else None
 #: The method used by `multiprocessing` to start parallel processes
 PROCESS_START_METHOD: str = multiprocessing.get_start_method()
 #: RAM use percentage above which a warning is included in :py:func:`psutil_info`
@@ -122,6 +131,46 @@ def project_dir(pttools_dir: Path = PTTOOLS_DIR, is_package: bool = IS_PACKAGE) 
 
 #: Root directory of the project repository, see :py:func:`project_dir`
 PROJECT_DIR: Path | None = project_dir()
+
+
+def pttools_commit_id(rev: str = "HEAD", repo_dir: Path | None = PTTOOLS_REPO_DIR) -> str:
+    """Commit ID of the active PTtools revision / branch.
+
+    :param rev: Git revision (branch name)
+    :param repo_dir: the PTtools repository directory, see :py:data:`PTTOOLS_REPO_DIR`
+    :return: the full commit ID, or "unknown" if PTtools is installed as a package,
+        is not in a Git repository (e.g. a source archive), or Git is not installed
+    :raises subprocess.CalledProcessError: if the revision does not exist in the repository
+    """
+    # In a worktree or a submodule, .git is a file instead of a directory.
+    if repo_dir is None or not (repo_dir / ".git").exists():
+        return "unknown"
+    try:
+        return git_commit_id(repo_dir, rev=rev)
+    except FileNotFoundError:
+        return "unknown"
+
+
+def pttools_version() -> str:
+    """Get version of the installed PTtools package or repository, or "unknown" if the version is not found."""
+    try:
+        return importlib.metadata.version("pttools-gw")
+    except importlib.metadata.PackageNotFoundError:
+        return pyproject_version()
+
+
+def pyproject(path: Path) -> dict[str, Any]:
+    """Get the contents of the pyproject.toml in the given directory."""
+    with (path / "pyproject.toml").open("rb") as file:
+        return tomllib.load(file)
+
+
+def pyproject_version(repo_path: Path | None = PTTOOLS_REPO_DIR) -> str:
+    """Get version number from pyproject.toml."""
+    if repo_path is None:
+        return "unknown"
+    return pyproject(repo_path)["project"]["version"]
+
 
 # This is the same implementation as in Numba.
 # https://numba.readthedocs.io/en/stable/user/threading-layer.html

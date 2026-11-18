@@ -65,7 +65,6 @@ from collections.abc import Iterable, Mapping
 import dataclasses
 import datetime
 import enum
-import importlib.metadata
 import json
 import logging
 import os
@@ -102,6 +101,7 @@ from pttools.utils.fields import (
     extract,
     field_size,
 )
+from pttools.utils.system import pttools_commit_id, pttools_version
 
 __all__ = [
     "FORMAT_NAME",
@@ -156,14 +156,6 @@ def parent_column(table: TableName) -> str | None:
     The tables of other classes than the built-in ones have no parents.
     """
     return _PARENT_COLUMNS.get(Table(table)) if is_builtin_table(table) else None
-
-
-def _pttools_version() -> str:
-    """Version of the installed PTtools package, or "unknown" if it's not installed as a package."""
-    try:
-        return importlib.metadata.version("pttools-gw")
-    except importlib.metadata.PackageNotFoundError:
-        return "unknown"
 
 
 def _json_default(value: tp.Any) -> tp.Any:
@@ -732,7 +724,8 @@ class Exporter:
                 raise ExportFormatError(f"The file is not a PTtools export file: {self.path}")
             attrs["format"] = FORMAT_NAME
             attrs["format_version"] = FORMAT_VERSION
-            attrs["pttools_version"] = _pttools_version()
+            attrs["pttools_commit"] = pttools_commit_id()
+            attrs["pttools_version"] = pttools_version()
             attrs["created"] = datetime.datetime.now(datetime.UTC).isoformat()
             attrs["h5py_version"] = h5py.version.version
             attrs["hdf5_version"] = h5py.version.hdf5_version

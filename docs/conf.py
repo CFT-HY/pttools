@@ -19,7 +19,6 @@ import logging
 from pathlib import Path
 import re
 import sys
-import tomllib
 import typing as tp
 
 from matplotlib.animation import FFMpegWriter
@@ -38,7 +37,7 @@ from pttools.docs.links import EXTLINKS, LINKCHECK_ALLOWED_REDIRECTS, ExtLinks
 from pttools.docs.setup import pre_setup, setup_sphinx, setup_sphinx_logging
 from pttools.logging import setup_logging
 from pttools.speedup.options import MAX_WORKERS_DEFAULT
-from pttools.utils.system import IS_GITHUB_ACTIONS, IS_READ_THE_DOCS, PTTOOLS_DIR
+from pttools.utils.system import IS_GITHUB_ACTIONS, IS_READ_THE_DOCS, PTTOOLS_DIR, pttools_version
 
 setup_logging()
 logger: logging.Logger = logging.getLogger(__name__)
@@ -61,8 +60,7 @@ with (REPO_DIR / "AUTHORS").open() as file:
     _authors = file.read().splitlines()
 author = f"{', '.join(_authors[:-1])} & {_authors[-1]}"
 copyright = f"2015-{date.today().year}, {author}"
-with (REPO_DIR / "pyproject.toml").open("rb") as file:
-    version = tomllib.load(file)["project"]["version"]
+version: str = pttools_version()
 release = version
 
 

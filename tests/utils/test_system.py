@@ -115,5 +115,25 @@ def test_physical_cpu_count_without_psutil(
     assert "ERROR: The CPU topology is not available in /sys, and psutil is not installed" in output
 
 
+def test_pttools_commit_id(tmp_path: Path) -> None:
+    """The commit ID should be "unknown" for a package or a source archive, and the full ID in a repository."""
+    assert system.pttools_commit_id(repo_dir=None) == "unknown"
+    (tmp_path / "pyproject.toml").write_text("")
+    assert system.pttools_commit_id(repo_dir=tmp_path) == "unknown"
+    if system.PTTOOLS_REPO_DIR is not None and (system.PTTOOLS_REPO_DIR / ".git").exists():
+        assert len(system.pttools_commit_id()) == 40
+
+
+def test_pttools_commit_id_without_git(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """The commit ID should be "unknown" if Git is not installed."""
+    (tmp_path / ".git").mkdir()
+
+    def no_git(*args: object, **kwargs: object) -> str:
+        raise FileNotFoundError("git")
+
+    monkeypatch.setattr(system, "git_commit_id", no_git)
+    assert system.pttools_commit_id(repo_dir=tmp_path) == "unknown"
+
+
 if __name__ == "__main__":
     unittest.main()
