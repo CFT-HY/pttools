@@ -4,18 +4,32 @@ import os
 from pathlib import Path
 import subprocess
 
-__all__ = ["git", "git_ls_files", "git_toplevel", "github_warning", "tracked_files"]
+__all__ = ["git", "git_commit_id", "git_ls_files", "git_toplevel", "github_warning", "tracked_files"]
 
 
-def git(path: str | os.PathLike[str], *args: str) -> str:
+def git(path: str | os.PathLike[str], *args: str, strip: bool = True) -> str:
     """Run a Git command in a repository.
 
     :param path: the directory of the repository
     :param args: the arguments of the Git command
-    :return: the stripped standard output of the command
+    :param strip: whether to strip the leading and trailing whitespace from the output
+    :return: the standard output of the command
     :raises subprocess.CalledProcessError: if the command fails
     """
-    return subprocess.run(["git", *args], cwd=path, stdout=subprocess.PIPE, text=True, check=True).stdout.strip()
+    output = subprocess.run(["git", *args], cwd=path, stdout=subprocess.PIPE, text=True, check=True).stdout
+    return output.strip() if strip else output
+
+
+def git_commit_id(path: str | os.PathLike[str], rev: str = "HEAD") -> str:
+    """Get the full commit ID of a revision with ``git rev-parse``.
+
+    :param path: the directory of the repository
+    :param rev: the revision, e.g. ``HEAD``, a branch, a tag or an abbreviated commit ID
+    :return: the full commit ID of the revision
+    :raises subprocess.CalledProcessError: if the revision does not exist or does not point to a commit
+    """
+    # --verify ensures that the revision exists, and ^{commit} that annotated tags are resolved to their commits.
+    return git(path, "rev-parse", "--verify", "--end-of-options", f"{rev}^{{commit}}")
 
 
 def git_ls_files(path: str | os.PathLike[str], *args: str) -> list[str]:
@@ -27,10 +41,8 @@ def git_ls_files(path: str | os.PathLike[str], *args: str) -> list[str]:
     :raises subprocess.CalledProcessError: if the command fails
     """
     # With -z the paths are not quoted, even if they contain special characters.
-    output = subprocess.run(
-        ["git", "ls-files", "-z", "--cached", *args, "--", "."],
-        cwd=path, check=True, stdout=subprocess.PIPE, text=True
-    ).stdout
+    # The output is not stripped, as the paths may begin or end with whitespace.
+    output = git(path, "ls-files", "-z", "--cached", *args, "--", ".", strip=False)
     return [file for file in output.split("\0") if file]
 
 

@@ -5,7 +5,7 @@ import subprocess
 
 import pytest
 
-from pttools.utils.git import git, git_ls_files, git_toplevel, github_warning, tracked_files
+from pttools.utils.git import git, git_commit_id, git_ls_files, git_toplevel, github_warning, tracked_files
 
 
 def test_git(tmp_path: Path) -> None:
@@ -14,6 +14,23 @@ def test_git(tmp_path: Path) -> None:
     assert git(tmp_path, "symbolic-ref", "--short", "HEAD") == "main"
     with pytest.raises(subprocess.CalledProcessError):
         git(tmp_path, "rev-parse", "HEAD")
+
+
+def test_git_commit_id(tmp_path: Path) -> None:
+    """The full commit ID should be returned for HEAD, branches and annotated tags, and missing ones should fail."""
+    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=tmp_path, check=True)
+    with pytest.raises(subprocess.CalledProcessError):
+        git_commit_id(tmp_path)
+    user = ("-c", "user.name=Test", "-c", "user.email=test@example.com")
+    git(tmp_path, *user, "commit", "-q", "--allow-empty", "-m", "Test")
+    git(tmp_path, *user, "tag", "-a", "v1", "-m", "Tag")
+    commit_id = git_commit_id(tmp_path)
+    assert len(commit_id) == 40
+    assert git_commit_id(tmp_path, "main") == commit_id
+    assert git_commit_id(tmp_path, "v1") == commit_id
+    assert git_commit_id(tmp_path, commit_id[:7]) == commit_id
+    with pytest.raises(subprocess.CalledProcessError):
+        git_commit_id(tmp_path, "nonexistent")
 
 
 def init_repo(path: Path) -> Path:
