@@ -54,10 +54,5 @@ def omgw0_bag(
     J = J_old(r_star=r_star, K=K)
     if sup_method == SuppressionMethod.NONE:
         return attenuation * J * omgwi
-    if sup_method == SuppressionMethod.NO_EXT:
-        sup_fac = sup.suppression(vw, alpha, method=sup_method)
-        return attenuation * J * omgwi * sup_fac
-    if sup_method == SuppressionMethod.EXT_CONSTANT:
-        sup_fac = sup.suppression(vw, alpha, method=sup_method)
-        return attenuation * J * omgwi * sup_fac
-    raise ValueError(f"Invalid suppression method: {sup_method}")
+    sup_fac = sup.suppression(vw, alpha, method=sup_method)
+    return attenuation * J * omgwi * sup_fac

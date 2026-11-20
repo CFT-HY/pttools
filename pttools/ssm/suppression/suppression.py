@@ -19,6 +19,8 @@ __all__ = [
     "C2",
     "CHRW25",
     "DEFAULT_SUPPRESSION",
+    "GH21",
+    "GH21_FILL_VALUE",
     "M1",
     "M2",
     "NO_HYBRIDS",
@@ -50,6 +52,10 @@ class SuppressionMethod(enum.StrEnum):
     NO_EXT = "no_ext"
     #: Return the nearest suppression value when outside the convex hull of the suppression points.
     EXT_CONSTANT = DEFAULT = "ext_constant"
+    #: Return the fill value of the dataset (:py:attr:`Suppression.fill_value`)
+    #: when outside the convex hull of the suppression points.
+    #: This is the extrapolation of :gowling_2021:`\ `, see :py:data:`GH21`.
+    EXT_FILL = "ext_fill"
     # EXT_LINEAR_UBARF = "ext_linear_ubarf"  # TODO: not implemented yet
 
 
@@ -75,7 +81,8 @@ class Suppression:
             alpha_ns: th.FloatArr1D,
             suppressions: th.FloatArr1D,
             name: str,
-            label: str | None = None):
+            label: str | None = None,
+            fill_value: float | None = None):
         r"""Create a suppression dataset from the given data points.
 
         :param v_walls: ${v}_\text{wall}$, wall speeds of the data points
@@ -83,6 +90,9 @@ class Suppression:
         :param suppressions: suppression factors of the data points
         :param name: name of the dataset, used in file names
         :param label: label of the dataset, used in plots. If None, the name is used.
+        :param fill_value: suppression factor outside the convex hull of the data points
+            for :py:attr:`SuppressionMethod.EXT_FILL`.
+            If None, the dataset cannot be used with that method.
         :raises ValueError: if the arrays are not of the same size
         """
         if not v_walls.size == alpha_ns.size == suppressions.size:
@@ -93,6 +103,7 @@ class Suppression:
         self.suppressions: th.FloatArr1D = suppressions
         self.name: str = name
         self.label: str = name if label is None else label
+        self.fill_value: float | None = fill_value
 
         self.points: tuple[th.FloatArr1D, th.FloatArr1D] = (self.v_walls, self.alpha_ns)
         self.alpha_n_min: float = self.alpha_ns.min()
@@ -101,10 +112,16 @@ class Suppression:
         self.v_wall_max: float = self.v_walls.max()
 
     @classmethod
-    def from_file(cls, path: str | os.PathLike[str], name: str, label: str | None = None) -> "Suppression":
+    def from_file(
+            cls,
+            path: str | os.PathLike[str],
+            name: str,
+            label: str | None = None,
+            fill_value: float | None = None,
+            keys: tuple[str, str, str] = ("vw_sim", "alpha_sim", "sup_ssm")) -> "Suppression":
         """Load a suppression dataset from a text file or a ``.npz`` file.
 
-        The file should contain the columns or arrays ``vw_sim``, ``alpha_sim`` and ``sup_ssm``.
+        The file should contain the columns or arrays ``keys``, by default ``vw_sim``, ``alpha_sim`` and ``sup_ssm``.
         A text file should have a header row of column names, as the files created by
         :py:func:`pttools.ssm.suppression.suppression_ssm_data.suppression_ssm_calculator.calc_sup_ssm` and
         :py:func:`pttools.lattice.suppression.calc_sup_lattice`.
@@ -112,16 +129,19 @@ class Suppression:
         :param path: path of the file
         :param name: name of the dataset, used in file names
         :param label: label of the dataset, used in plots. If None, the name is used.
+        :param fill_value: see :py:meth:`__init__`
+        :param keys: names of the columns or arrays of the wall speeds, transition strengths and suppression factors
         :return: the suppression dataset
         """
-        keys = ("vw_sim", "alpha_sim", "sup_ssm")
         if Path(path).suffix == ".npz":
             with np.load(path) as data:
                 v_walls, alpha_ns, suppressions = (np.asarray(data[key], dtype=np.float64) for key in keys)
         else:
             data = np.genfromtxt(path, names=True, ndmin=1)
             v_walls, alpha_ns, suppressions = (np.asarray(data[key], dtype=np.float64) for key in keys)
-        return Suppression(v_walls=v_walls, alpha_ns=alpha_ns, suppressions=suppressions, name=name, label=label)
+        return Suppression(
+            v_walls=v_walls, alpha_ns=alpha_ns, suppressions=suppressions,
+            name=name, label=label, fill_value=fill_value)
 
     def merge(self, other: "Suppression", name: str, label: str | None = None, atol: float = 1e-6) -> "Suppression":
         r"""Create a new dataset that combines the data points of this dataset and another one.
@@ -167,19 +187,27 @@ class Suppression:
             alpha_n: th.FloatOrArr,
             method: SuppressionMethod = SuppressionMethod.DEFAULT,
             interpolation: th.Interpolation = "linear") -> T:
-        """Interpolate the suppression factor for the given points.
+        r"""Interpolate the suppression factor for the given points.
 
         If either of the arguments is an array, this will return a 2D grid indexed as ``[alpha_n, v_wall]``.
+
+        :param v_wall: ${v}_\text{wall}$, wall speed
+        :param alpha_n: $\alpha_n$, transition strength
+        :param method: how to handle the points outside the convex hull of the data points
+        :param interpolation: interpolation method of :py:func:`scipy.interpolate.griddata`
+        :return: the suppression factor
+        :raises ValueError: if the method is invalid,
+            or if it is :py:attr:`SuppressionMethod.EXT_FILL` and the dataset has no fill value
         """
         is_scalar = np.isscalar(v_wall) and np.isscalar(alpha_n)
 
         if method == SuppressionMethod.NONE:
-            if is_scalar:
-                return 1.  # pyrefly: ignore[bad-return]
             # This has the same shape as the grid that is interpolated below.
-            return np.ones((np.size(alpha_n), np.size(v_wall)))  # pyrefly: ignore[bad-return]
-        if method not in (SuppressionMethod.NO_EXT, SuppressionMethod.EXT_CONSTANT):
+            return 1. if is_scalar else np.ones((np.size(alpha_n), np.size(v_wall)))  # pyrefly: ignore[bad-return]
+        if method not in (SuppressionMethod.NO_EXT, SuppressionMethod.EXT_CONSTANT, SuppressionMethod.EXT_FILL):
             raise ValueError(f"Got invalid suppression method: {method}")
+        if method == SuppressionMethod.EXT_FILL and self.fill_value is None:
+            raise ValueError(f"The suppression dataset \"{self.name}\" has no fill value for {method}.")
 
         if is_scalar:
             point = (v_wall, alpha_n)
@@ -198,6 +226,8 @@ class Suppression:
                         xi=point,
                         method="nearest"
                     )
+                elif method == SuppressionMethod.EXT_FILL:
+                    sup_scalar = np.asarray(self.fill_value)
                 else:
                     logger.warning(
                         "Got NaN as the suppression factor for v_wall=%s, alpha_n=%s. "
@@ -225,6 +255,8 @@ class Suppression:
                     xi=(mesh[0][nans], mesh[1][nans]),
                     method="nearest"
                 )
+        elif method == SuppressionMethod.EXT_FILL:
+            sup[np.isnan(sup)] = self.fill_value
         return sup  # pyrefly: ignore[bad-return]
 
 
@@ -318,7 +350,21 @@ NO_HYBRIDS_EXT_CHRW25: Suppression = NO_HYBRIDS_EXT.merge(
 #: are replaced with those of the higher-resolution simulations
 WITH_HYBRIDS_CHRW25: Suppression = WITH_HYBRIDS.merge(
     CHRW25, name="with_hybrids_chrw25", label="With hybrids and Correia et al. (2025)")
+#: $\Sigma$ for points outside the convex hull of :py:data:`GH21`, as used by :gowling_2021:`\ `.
+#: It's defined as ``supp_factor_no_nans`` in the ``fisher_analysis`` repo.
+GH21_FILL_VALUE: float = 0.497138
+#: Suppression factors of :gowling_2021:`\ ` app. A, fig. 10,
+#: copied from ``supression_ssm_chloe.txt`` of the original code of the article.
+#: The suppression factors are those of the SSM implementation of PTtools in 2021,
+#: which used the exponential nucleation, and the lattice simulations of :cutting_2019:`\ `, including the hybrids.
+#: As the SSM of PTtools has been corrected and extended since then,
+#: the suppressed spectra of PTtools differ from those of the article, even with this dataset.
+#: The article used linear interpolation, and :py:data:`GH21_FILL_VALUE` outside the convex hull of the data points,
+#: which corresponds to :py:attr:`SuppressionMethod.EXT_FILL`.
+GH21: Suppression = Suppression.from_file(
+    SUPPRESSION_FOLDER / "suppression_gh21_ssm.txt", name="gh21", label="Gowling & Hindmarsh (2021)",
+    fill_value=GH21_FILL_VALUE, keys=("vw", "alpha", "sup_ssm"))
 #: The default suppression dataset of the spectra
 DEFAULT_SUPPRESSION: Suppression = WITH_HYBRIDS_EXT
 SUPPRESSIONS: list[Suppression] = [
-    NO_HYBRIDS, NO_HYBRIDS_EXT, WITH_HYBRIDS, WITH_HYBRIDS_EXT, NO_HYBRIDS_EXT_CHRW25, WITH_HYBRIDS_CHRW25]
+    NO_HYBRIDS, NO_HYBRIDS_EXT, WITH_HYBRIDS, WITH_HYBRIDS_EXT, NO_HYBRIDS_EXT_CHRW25, WITH_HYBRIDS_CHRW25, GH21]

@@ -169,6 +169,69 @@ class SuppressionTest(unittest.TestCase):
 
 
 
+class GH21Test(unittest.TestCase):
+    r"""Tests for the suppression factors of :gowling_2021:`\ `, :py:data:`pttools.ssm.suppression.GH21`."""
+
+    V_WALLS: tp.ClassVar[th.FloatArr1D] = np.array([0.4, 0.5, 0.6, 0.7, 0.85])
+    ALPHA_NS: tp.ClassVar[th.FloatArr1D] = np.array([0.01, 0.1, 0.3])
+    #: Reference values, computed with ``get_high_alpha_suppression_factor`` of ``gwtools.py``
+    #: of the original code of the article, which interpolates linearly with :py:func:`scipy.interpolate.griddata`
+    #: and replaces the NaNs outside the convex hull of the data points with 0.497138.
+    #: The point ${v}_\text{wall} = 0.4, \alpha_n = 0.01$ is outside the convex hull.
+    #: This reproduces the original function exactly on the $({v}_\text{wall}, \alpha_n)$ grid of the article.
+    GRID_REF: tp.ClassVar[th.FloatArr2D] = np.array([
+        [0.497138, 0.7561995556, 0.8078895556, 0.8595795556, 0.766603],
+        [0.2683900759, 0.6561758919, 1.1193362973, 0.9557339135, 0.7239881378],
+        [0.0468249684, 0.1966242136, 0.4635159394, 0.5304498545, 0.7019962364]
+    ])
+
+    def test_grid(self) -> None:
+        """Interpolating on a grid of points gives the values of the original code of the article."""
+        grid = sup.GH21.suppression(v_wall=self.V_WALLS, alpha_n=self.ALPHA_NS, method=sup.SuppressionMethod.EXT_FILL)
+        assert_allclose(grid, self.GRID_REF, rtol=1e-9)
+
+    def test_scalar(self) -> None:
+        """Scalar arguments give the same values as the grid."""
+        for i, alpha_n in enumerate(self.ALPHA_NS):
+            for j, v_wall in enumerate(self.V_WALLS):
+                with self.subTest(v_wall=v_wall, alpha_n=alpha_n):
+                    value = sup.GH21.suppression(
+                        v_wall=float(v_wall), alpha_n=float(alpha_n), method=sup.SuppressionMethod.EXT_FILL)
+                    assert value == pytest.approx(self.GRID_REF[i, j], rel=1e-9)
+
+    @staticmethod
+    def test_data_points() -> None:
+        r"""The dataset has the 63 data points of the article.
+
+        The peak is at ${v}_\text{wall} = 0.62, \alpha_n = 0.05$.
+        """
+        assert sup.GH21.v_walls.size == 63
+        assert sup.GH21.peak() == (0.62, 0.05, 2.14532)
+        assert sup.GH21.suppression(v_wall=0.92, alpha_n=0.67, method=sup.SuppressionMethod.EXT_FILL) \
+            == pytest.approx(0.638312, rel=1e-9)
+
+    @staticmethod
+    def test_fill_outside_hull() -> None:
+        """Outside the convex hull, the fill value is returned for both scalars and grids."""
+        assert sup.GH21.fill_value == sup.GH21_FILL_VALUE
+        assert sup.GH21.suppression(v_wall=0.95, alpha_n=0.9, method=sup.SuppressionMethod.EXT_FILL) \
+            == sup.GH21_FILL_VALUE
+        grid = sup.GH21.suppression(
+            v_wall=np.array([0.1, 0.95]), alpha_n=np.array([0.9]), method=sup.SuppressionMethod.EXT_FILL)
+        np.testing.assert_array_equal(grid, sup.GH21_FILL_VALUE)
+
+    @staticmethod
+    def test_no_fill_value() -> None:
+        """A dataset without a fill value cannot be used with the fill extrapolation."""
+        with pytest.raises(ValueError, match="has no fill value"):
+            sup.NO_HYBRIDS_EXT.suppression(v_wall=0.5, alpha_n=0.1, method=sup.SuppressionMethod.EXT_FILL)
+
+    @staticmethod
+    def test_in_suppressions() -> None:
+        """The dataset is one of the built-in datasets, so that it can be decoded from exported files."""
+        assert sup.GH21 in sup.SUPPRESSIONS
+
+
 class ExtendedDatasetTest(unittest.TestCase):
     """Tests for the datasets extended to the low v_wall and low alpha_n region."""
 
