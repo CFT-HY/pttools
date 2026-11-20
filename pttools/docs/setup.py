@@ -7,6 +7,7 @@ import logging
 import math
 import os
 from pathlib import Path
+import signal
 import time
 import typing as tp
 import warnings
@@ -48,8 +49,9 @@ __all__ = [
 
 #: Maximum running time of a Sphinx build step on Read the Docs in seconds, see :py:func:`start_watchdog`.
 #: The HTML build with the examples takes about 11 min there, and the other formats less than 1 min each.
-#: The build steps before the HTML build take about 2.5 min, and the time limit of the build is 30 min.
-BUILD_TIMEOUT_READ_THE_DOCS: float = 1200
+#: This is shorter than the time limit of the HTML build in ``.readthedocs.yaml``,
+#: so that the main process prints its stack traces and exits before the other processes are stopped.
+BUILD_TIMEOUT_READ_THE_DOCS: float = 950
 #: Maximum running time of a single example on Read the Docs in seconds, see :py:func:`example_watchdog`.
 #: The slowest examples take about 2.5 min there.
 EXAMPLE_TIMEOUT_READ_THE_DOCS: float = 600
@@ -179,6 +181,7 @@ def example_watchdog(gallery_conf: dict[str, tp.Any], fname: str | None, when: t
     if EXAMPLE_TIMEOUT is None:
         return
     if when == "before":
+        faulthandler.register(signal.SIGUSR1, all_threads=True)
         faulthandler.dump_traceback_later(min(EXAMPLE_TIMEOUT, _watchdog_remaining()), exit=True)
     else:
         # Restore the watchdog of start_watchdog(), if this example was run in the main process.
@@ -253,10 +256,14 @@ def start_watchdog(timeout: float) -> None:
     This replaces any previous watchdog of this process. It is used on Read the Docs, as it discards the output
     of a build step that exceeds the time limit of the build. When the watchdog stops the process instead,
     the output of the step, including the stack traces, is shown in the build log.
+    This also makes the process print the stack traces of all its threads when it receives ``SIGUSR1``,
+    which ``timeout -s USR1`` of the HTML build in ``.readthedocs.yaml`` sends to all the processes of the build.
+    :py:func:`example_watchdog` does the same for the processes that run the examples.
 
     :param timeout: time in seconds after which the process is stopped
     """
     _WATCHDOG["deadline"] = time.monotonic() + timeout
+    faulthandler.register(signal.SIGUSR1, all_threads=True)
     faulthandler.dump_traceback_later(timeout, exit=True)
 
 

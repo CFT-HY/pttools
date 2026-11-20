@@ -44,6 +44,17 @@ build:
       # As Numba caching is enabled on Read the Docs, this also compiles and caches some of the Numba functions for the examples.
       - PTTOOLS_USE_THREADS=0 "$READTHEDOCS_VIRTUALENV_PATH/bin/python" -m pttools.bubble.fluid_reference
     build:
+      # The HTML is built like by default, except that the output is written to a file, which is printed afterwards,
+      # and that the build is stopped after a time limit.
+      # Read the Docs discards the output of a command that exceeds the time limit of the build,
+      # and therefore a hanging build would otherwise leave no trace of where it hangs.
+      # The HTML build takes about 11 min, and the time limit of the whole build has been 20-30 min.
+      # "timeout" sends SIGUSR1 to all the processes of the build, including the worker processes of Sphinx-Gallery,
+      # whereupon those of Python print the stack traces of all their threads (see pttools.docs.setup.start_watchdog),
+      # and the others are stopped. The processes that are still running 30 s later are killed.
+      # Read the Docs shows only the last 1 MB of the output of a command.
+      html:
+        - cd docs && mkdir -p _build && (timeout -s USR1 -k 30 1000 "$READTHEDOCS_VIRTUALENV_PATH/bin/python" -m sphinx -T -W --keep-going -b html -d _build/doctrees -D language=en . "$READTHEDOCS_OUTPUT/html" > _build/html.log 2>&1; status=$?; tail -c 900000 _build/html.log; echo "Sphinx exit code $status"; exit $status)
       # The PDF is built like by default, except that latexmk is run with the Makefile that Sphinx generates,
       # like "make latexpdf" of docs/Makefile does, instead of directly.
       # This sets XINDYOPTS for xindy, without which the index of the PDF fails to build,
