@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import faulthandler
 import logging
+import math
 import os
 from pathlib import Path
 import time
@@ -25,9 +27,14 @@ from pttools.docs.lock import setup_source_lock
 from pttools.docs.minigallery import add_minigalleries, remove_duplicate_minigalleries
 from pttools.docs.paths import LINT_DIR_NAME, NO_PLOTS_ENV_VAR, SPHINX_LOG_ENV_VAR, default_log_dir
 from pttools.logging import setup_logging
+from pttools.utils.system import IS_READ_THE_DOCS
 
 __all__ = [
+    "BUILD_TIMEOUT_READ_THE_DOCS",
+    "EXAMPLE_TIMEOUT",
+    "EXAMPLE_TIMEOUT_READ_THE_DOCS",
     "NoPlotDirective",
+    "example_watchdog",
     "exclude_lint_dir",
     "filter_warnings",
     "load_fluid_reference",
@@ -36,7 +43,23 @@ __all__ = [
     "setup_example_logging",
     "setup_sphinx",
     "setup_sphinx_logging",
+    "start_watchdog",
 ]
+
+#: Maximum running time of a Sphinx build step on Read the Docs in seconds, see :py:func:`start_watchdog`.
+#: The HTML build with the examples takes about 11 min there, and the other formats less than 1 min each.
+#: The build steps before the HTML build take about 2.5 min, and the time limit of the build is 30 min.
+BUILD_TIMEOUT_READ_THE_DOCS: float = 1200
+#: Maximum running time of a single example on Read the Docs in seconds, see :py:func:`example_watchdog`.
+#: The slowest examples take about 2.5 min there.
+EXAMPLE_TIMEOUT_READ_THE_DOCS: float = 600
+#: Maximum running time of a single example in seconds, see :py:func:`example_watchdog`.
+#: This is :py:data:`EXAMPLE_TIMEOUT_READ_THE_DOCS` on Read the Docs, and None (no limit) elsewhere.
+EXAMPLE_TIMEOUT: float | None = EXAMPLE_TIMEOUT_READ_THE_DOCS if IS_READ_THE_DOCS else None
+
+#: The time of :py:func:`time.monotonic` at which the watchdog of :py:func:`start_watchdog` stops the process,
+#: stored with the key "deadline" when the watchdog has been started
+_WATCHDOG: dict[str, float] = {}
 
 
 class NoPlotDirective(PlotDirective):
@@ -138,6 +161,34 @@ def setup_sphinx_logging(log_path: str | os.PathLike[str] | None = None, level: 
     return path
 
 
+def example_watchdog(gallery_conf: dict[str, tp.Any], fname: str | None, when: tp.Literal["before", "after"]) -> None:
+    """Stop the process if an example runs for too long, and print the stack traces of all its threads.
+
+    This is a resetter for the ``reset_modules`` option of Sphinx-Gallery with ``reset_modules_order="both"``.
+    It starts a watchdog like that of :py:func:`start_watchdog` before each example, and cancels it after the example.
+    If :py:func:`start_watchdog` has been called in this process, its watchdog is restored after the example.
+    The maximum running time of an example is :py:data:`EXAMPLE_TIMEOUT`, and if it's None, this does nothing.
+    Sphinx-Gallery gives the ``when`` argument only to resetters that have exactly three parameters.
+    Read the Docs discards the output of a build step that exceeds the time limit of the build,
+    and therefore a hanging example would otherwise leave no trace of where it hangs.
+
+    :param gallery_conf: Sphinx-Gallery configuration (not used)
+    :param fname: file name of the example (not used)
+    :param when: whether the example is about to run ("before") or has finished ("after")
+    """
+    if EXAMPLE_TIMEOUT is None:
+        return
+    if when == "before":
+        faulthandler.dump_traceback_later(min(EXAMPLE_TIMEOUT, _watchdog_remaining()), exit=True)
+    else:
+        # Restore the watchdog of start_watchdog(), if this example was run in the main process.
+        remaining = _watchdog_remaining()
+        if remaining == math.inf:
+            faulthandler.cancel_dump_traceback_later()
+        else:
+            faulthandler.dump_traceback_later(remaining, exit=True)
+
+
 def exclude_lint_dir(app: Sphinx, config: Config) -> None:
     """Exclude the build directories of :py:mod:`pttools.docs.lint` from the documentation sources."""
     if LINT_DIR_NAME not in config.exclude_patterns:
@@ -194,3 +245,24 @@ def setup_sphinx(app: Sphinx) -> None:
     app.add_node(imgsgnode, override=True, epub=(visit_imgsg_html, depart_imgsg_html))
     app.add_node(
         code_links_block, override=True, epub=(visit_code_links_block_html, depart_code_links_block_html))
+
+
+def start_watchdog(timeout: float) -> None:
+    """Stop this process after the given time, and print the stack traces of all its threads to stderr.
+
+    This replaces any previous watchdog of this process. It is used on Read the Docs, as it discards the output
+    of a build step that exceeds the time limit of the build. When the watchdog stops the process instead,
+    the output of the step, including the stack traces, is shown in the build log.
+
+    :param timeout: time in seconds after which the process is stopped
+    """
+    _WATCHDOG["deadline"] = time.monotonic() + timeout
+    faulthandler.dump_traceback_later(timeout, exit=True)
+
+
+def _watchdog_remaining() -> float:
+    """Time in seconds until the watchdog of :py:func:`start_watchdog` stops the process, or infinity if not started."""
+    if "deadline" not in _WATCHDOG:
+        return math.inf
+    # faulthandler requires a positive timeout.
+    return max(_WATCHDOG["deadline"] - time.monotonic(), 1e-3)

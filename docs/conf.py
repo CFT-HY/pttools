@@ -34,7 +34,13 @@ sys.path.insert(0, str(REPO_DIR))
 
 from pttools.docs.intersphinx import INTERSPHINX_MAPPING, IntersphinxMapping
 from pttools.docs.links import EXTLINKS, LINKCHECK_ALLOWED_REDIRECTS, ExtLinks
-from pttools.docs.setup import pre_setup, setup_sphinx, setup_sphinx_logging
+from pttools.docs.setup import (
+    BUILD_TIMEOUT_READ_THE_DOCS,
+    pre_setup,
+    setup_sphinx,
+    setup_sphinx_logging,
+    start_watchdog,
+)
 from pttools.logging import setup_logging
 from pttools.speedup.options import MAX_WORKERS_DEFAULT
 from pttools.utils.system import IS_GITHUB_ACTIONS, IS_READ_THE_DOCS, PTTOOLS_DIR, pttools_version
@@ -43,6 +49,10 @@ setup_logging()
 logger: logging.Logger = logging.getLogger(__name__)
 # The Sphinx output is saved to logs/sphinx_TIMESTAMP.log. See also pttools/docs/lint.py.
 setup_sphinx_logging()
+if IS_READ_THE_DOCS:
+    # Read the Docs discards the output of a build step that exceeds the time limit of the build.
+    # The watchdog stops a hanging build step before that, so that its output and stack traces are shown in the log.
+    start_watchdog(BUILD_TIMEOUT_READ_THE_DOCS)
 
 #: The packages of this repository, which are documented in this documentation.
 #: Sphinx-Gallery creates hyperlinks from the examples and mini-galleries for the objects of these packages.
@@ -242,6 +252,9 @@ autodoc_typehints = "description"
 extlinks: ExtLinks = EXTLINKS
 extlinks_detect_hardcoded_links: bool = True
 intersphinx_mapping: IntersphinxMapping = INTERSPHINX_MAPPING
+# Without a timeout, a server that stops responding would make the build hang
+# until the time limit of the CI or Read the Docs.
+intersphinx_timeout: float = 30
 linkcheck_allowed_redirects: dict[str, str] = LINKCHECK_ALLOWED_REDIRECTS
 # The authentication info could be set up to work on the CI build
 # https://docs.github.com/en/actions/reference/authentication-in-a-workflow
@@ -303,6 +316,9 @@ sphinx_gallery_conf = {
     # https://stackoverflow.com/questions/31080829/python-error-io-unsupportedoperation-fileno
     # The examples are run with all the available cores, although the number of parallel Sphinx processes
     # is limited in the Makefile, which Sphinx-Gallery would otherwise use.
+    # Sphinx-Gallery parallelizes only within each gallery subdirectory, and waits for all the examples
+    # of a subdirectory to finish before starting the next one. Therefore, the build of each subdirectory
+    # takes at least as long as its slowest example.
     "parallel": False if show_memory else MAX_WORKERS_DEFAULT,
     # This has to be set in order to avoid a warning when disabling it with a command line option.
     # https://sphinx-gallery.github.io/stable/configuration.html#building-without-executing-examples
@@ -316,8 +332,16 @@ sphinx_gallery_conf = {
     # The None values mean that the objects are documented in this documentation instead of an external one.
     "reference_url": dict.fromkeys(DOC_MODULES),
     # Ensure that logging is configured for all examples, so that their log messages have the same format.
-    # The function is given as a string, since the configuration has to be picklable.
-    "reset_modules": ("matplotlib", "seaborn", "pttools.docs.setup.setup_example_logging"),
+    # The functions are given as strings, since the configuration has to be picklable.
+    # On Read the Docs, the watchdog stops an example that hangs, and prints its stack traces.
+    "reset_modules": (
+        "matplotlib",
+        "seaborn",
+        "pttools.docs.setup.setup_example_logging",
+        "pttools.docs.setup.example_watchdog",
+    ),
+    # The watchdog has to be started before and cancelled after each example.
+    "reset_modules_order": "both",
     # "run_stale_examples": True
     "show_api_usage": True,
     "show_memory": show_memory,
