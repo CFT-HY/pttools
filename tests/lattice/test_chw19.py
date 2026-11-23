@@ -139,7 +139,7 @@ class LegacyRunTest(unittest.TestCase):
         params = chw19.run_params(self.path)
         assert (params.alpha_n, params.v_wall, params.n_bubbles, params.L, params.dx) == (0.1, 0.5, 2, L, 1.)
         assert params.nuc_type == NucType.SIMULTANEOUS
-        assert params.label == "CHW19 seed-2"
+        assert params.display_name == "CHW19 seed-2"
         assert "L=16" in params.label_unicode
         # The wall speed is not in table I.
         assert params.fig_step is None

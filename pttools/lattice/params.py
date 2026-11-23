@@ -45,8 +45,8 @@ class LatticeRunParams:
     L: int | None = None
     #: $\delta x$, lattice spacing, or None to read it from the input file of the run
     dx: float | None = None
-    #: Short label of the run for the plots, defaults to the capitalised name
-    label: str | None = None
+    #: Short name of the run for the plots, or None to use the capitalised name, see :py:attr:`label_short`
+    display_name: str | None = None
 
     @property
     def fig_steps(self) -> tuple[int, int]:
@@ -62,14 +62,15 @@ class LatticeRunParams:
     def label_latex(self) -> str:
         """Label of the run in LaTeX format."""
         lattice = "" if self.L is None or self.dx is None else rf", $L={self.L}, \delta x={self.dx}$"
-        return rf"{self._label}, $v_w={self.v_wall}, \alpha_n={self.alpha_n}${lattice}"
+        return rf"{self.label_short}, $v_w={self.v_wall}, \alpha_n={self.alpha_n}${lattice}"
+
+    @property
+    def label_short(self) -> str:
+        """Short label of the run: :py:attr:`display_name`, or the capitalised name if it is not given."""
+        return self.name.capitalize() if self.display_name is None else self.display_name
 
     @property
     def label_unicode(self) -> str:
         """Label of the run in Unicode format."""
         lattice = "" if self.L is None or self.dx is None else f", L={self.L}, δx={self.dx}"
-        return f"{self._label}, vw={self.v_wall}, αₙ={self.alpha_n}{lattice}"
-
-    @property
-    def _label(self) -> str:
-        return self.name.capitalize() if self.label is None else self.label
+        return f"{self.label_short}, vw={self.v_wall}, αₙ={self.alpha_n}{lattice}"

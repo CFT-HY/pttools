@@ -255,7 +255,7 @@ def run_params(path: str | os.PathLike[str]) -> LatticeRunParams:
         n_bubbles=n_bubbles,
         L=L,
         dx=dx,
-        label="CHW19" if variant is None else f"CHW19 {variant}",
+        display_name="CHW19" if variant is None else f"CHW19 {variant}",
     )
 
 
