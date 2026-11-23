@@ -37,7 +37,7 @@ __all__ = [
 ]
 
 #: Number of points (in old bag code)
-NptType = th.IntArr1D | tuple[int, int, int]
+type NptType = th.IntArr1D | tuple[int, int, int]
 
 # -----
 # Default values
