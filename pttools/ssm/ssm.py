@@ -425,10 +425,10 @@ def ubarf2_from_a2(
     lifetime distribution $\nu$ dimensionless (:gw_pt_ssm:`\ ` p. 17), and $R_{\ast}$ is the actual mean bubble spacing.
     Therefore $\beta R_{\ast} = (8\pi)^\frac{1}{3} {v}_\text{wall}$ also with the thermal suppression
     of bubble nucleation of :ajmi_2022:`\ `,
-    where $R_{\ast} = \Lambda R_{\ast,0}$ and $\beta = \beta_\text{nuc} / \Lambda$.
+    where $R_{\ast} = \Lambda_\text{n} R_{\ast,0}$ and $\beta = \beta_\text{nuc} / \Lambda_\text{n}$.
     As the bubbles fill space, $n_b \langle \frac{4\pi}{3} {v}_\text{wall}^3 T^3 \rangle = 1$,
     which gives $\nu_3 = 6$ for any nucleation history, including the suppressed one.
-    Therefore $\bar{U}_f^2$ does not depend on the bubble spacing enlargement factor $\Lambda$.
+    Therefore $\bar{U}_f^2$ does not depend on the bubble spacing enlargement factor $\Lambda_\text{n}$.
 
     The integrand $z^2 {\lvert A(z) \rvert}^2$ decays only approximately as $z^{-2}$,
     and oscillates, and therefore $z$ should extend to large values with a sufficient density,

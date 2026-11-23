@@ -1,12 +1,12 @@
 r"""Tests for the thermal suppression of bubble nucleation in the Sound Shell Model.
 
 The suppression of :ajmi_2022:`\ ` changes the number density of bubbles, and therefore the mean bubble spacing
-$R_{\ast} = \Lambda R_{\ast,0}$, but not the self-similar fluid profiles.
+$R_{\ast} = \Lambda_\text{n} R_{\ast,0}$, but not the self-similar fluid profiles.
 In the Sound Shell Model of :gw_pt_ssm:`\ ` the bubbles fill space, $n_b \langle \frac{4\pi}{3} v_w^3 T^3 \rangle = 1$,
-so that $\bar{U}_f^2$ and the spectral densities as functions of $z = kR_{\ast}$ do not depend on $\Lambda$
+so that $\bar{U}_f^2$ and the spectral densities as functions of $z = kR_{\ast}$ do not depend on $\Lambda_\text{n}$
 (for a fixed lifetime distribution $\nu$).
 Therefore, a spectrum computed from $\tilde{\beta}$ must be the same as one computed directly
-from the resulting $r_{\ast} = \Lambda r_{\ast,0}$.
+from the resulting $r_{\ast} = \Lambda_\text{n} r_{\ast,0}$.
 """
 
 import typing as tp
@@ -111,7 +111,10 @@ class NucleationSuppressionTest(unittest.TestCase):
         cls.spectrum_r_star = SSMSpectrum.cached(cls.bubble, r_star=cls.spectrum_beta.r_star, y=y, low_k=False)
 
     def test_lambda(self) -> None:
-        r"""Test that $\Lambda > 1$ in $r_* = \Lambda r_{\ast,0}$ from $\tilde{\beta}$, and $\Lambda = 1$ from $r_*$."""
+        r"""Test that $\Lambda_\text{n} > 1$ for $\tilde{\beta}$ and $\Lambda_\text{n} = 1$ for $r_*$.
+
+        $r_* = \Lambda_\text{n} r_{\ast,0}$
+        """
         lam = self.spectrum_beta.bubble_spacing_enlargement_factor
         assert lam > 1.
         assert_allclose(self.spectrum_beta.r_star, lam * r_star0(100, self.bubble.v_wall))
@@ -150,7 +153,7 @@ class NucleationSuppressionTest(unittest.TestCase):
 
     @staticmethod
     def test_bubble_spacing_enlargement_factor_simultaneous() -> None:
-        r"""$\Lambda = 1$ for simultaneous nucleation and $\Lambda > 1$ for exponential nucleation."""
+        r"""$\Lambda_\text{n} = 1$ for simultaneous nucleation and $\Lambda_\text{n} > 1$ for exponential nucleation."""
         hx_vals = np.array([0.1, 0.3, 0.5])
         assert_allclose(bubble_spacing_enlargement_factor(hx_vals, nuc_type=NucType.SIMULTANEOUS), np.ones(3))
         assert bubble_spacing_enlargement_factor(0.3, nuc_type=NucType.SIMULTANEOUS) == 1.
@@ -160,16 +163,16 @@ class NucleationSuppressionTest(unittest.TestCase):
             bubble_spacing_enlargement_factor(hx_vals))
 
     def test_ubarf2(self) -> None:
-        r"""Test that $\bar{U}_f^2$ does not depend on $\Lambda$."""
+        r"""Test that $\bar{U}_f^2$ does not depend on $\Lambda_\text{n}$."""
         assert_allclose(self.spectrum_beta.ubarf2, self.spectrum_r_star.ubarf2)
         assert_allclose(self.spectrum_beta.ubarf_custom_nucleation(), self.spectrum_r_star.ubarf)
 
     def test_spec_den_v(self) -> None:
-        r"""Test that the velocity spectral density does not depend on $\Lambda$."""
+        r"""Test that the velocity spectral density does not depend on $\Lambda_\text{n}$."""
         assert_allclose(self.spectrum_beta.spec_den_v, self.spectrum_r_star.spec_den_v)
 
     def test_pow_gw(self) -> None:
-        r"""Test that the GW power spectrum does not depend on $\Lambda$."""
+        r"""Test that the GW power spectrum does not depend on $\Lambda_\text{n}$."""
         assert_allclose(self.spectrum_beta.pow_gw, self.spectrum_r_star.pow_gw)
 
 

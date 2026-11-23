@@ -91,7 +91,7 @@ class BaseSSMSpectrum(Extractable, BaseSpectrum, abc.ABC):
     a2_lookup: FloatArr1D
     #: ${\lvert A \rvert}^2$ for $qT_\text{integrals}$
     a2_integrals: FloatArr1D
-    #: Bubble spacing enlargement factor $\Lambda$
+    #: Bubble spacing enlargement factor $\Lambda_\text{n}$
     bubble_spacing_enlargement_factor: float
     #: $c_s(T_{\text{gw}})$
     cs: float
@@ -377,7 +377,7 @@ class BaseSSMSpectrum(Extractable, BaseSpectrum, abc.ABC):
 
         The arguments $z, {\lvert A \rvert}^2$ and $v_{\text{wall}}$
         are not directly dependent on the nucleation type, and therefore it's an adjustable parameter.
-        The result does not depend on the bubble spacing enlargement factor $\Lambda$,
+        The result does not depend on the bubble spacing enlargement factor $\Lambda_\text{n}$,
         see :py:func:`pttools.ssm.ssm.ubarf2_from_a2`.
         """
         return ubarf2_from_a2(

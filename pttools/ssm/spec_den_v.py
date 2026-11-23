@@ -68,7 +68,7 @@ def _spec_den_v_core(
     # It is defined as beta = (8 pi)^(1/3) v_wall / R_*, where R_* is the actual mean bubble spacing,
     # including the thermal suppression of bubble nucleation.
     # Without the suppression, this is the nucleation rate parameter beta.
-    # With the suppression, R_* = Lambda R_*0 and therefore beta = beta_nuc / Lambda,
+    # With the suppression, R_* = Lambda_n R_*0 and therefore beta = beta_nuc / Lambda_n,
     # so that beta R_* has the same value in both cases.
     beta_R = beta_R_star0(v_wall)
     factor = 1. / (ubarf2 * beta_R ** 6)
@@ -109,10 +109,10 @@ def spec_den_v(
     with $\beta R_{\ast} = (8\pi)^\frac{1}{3} {v}_\text{wall}$ and $z = q R_{\ast}$.
 
     With the thermal suppression of bubble nucleation of :ajmi_2022:`\ `,
-    $R_{\ast}$ is the enlarged mean bubble spacing $R_{\ast} = \Lambda R_{\ast,0}$,
+    $R_{\ast}$ is the enlarged mean bubble spacing $R_{\ast} = \Lambda_\text{n} R_{\ast,0}$,
     and $\beta = (8\pi)^\frac{1}{3} {v}_\text{wall} / R_{\ast}$ is the rate that makes
     the lifetime distribution $\nu$ dimensionless, not the nucleation rate parameter.
-    Then $\bar{U}_f^2$ and $\tilde{P}_v(z)$ do not depend on the bubble spacing enlargement factor $\Lambda$.
+    Then $\bar{U}_f^2$ and $\tilde{P}_v(z)$ do not depend on the bubble spacing enlargement factor $\Lambda_\text{n}$.
     It enters the GW power spectrum only via $R_{\ast}$ in $r_{\ast}$, in $z = kR_{\ast}$ and in the source lifetime.
 
     Please note that
@@ -126,7 +126,7 @@ def spec_den_v(
     \left| A \left( \frac{\tilde{T}q}{\beta} \right) \right|^2$$
     :gw_pt_ssm:`\ ` eq. 4.17
 
-    $$\Lambda \equiv \frac{R_{\ast}}{R_{\ast}(0)}$$
+    $$\Lambda_\text{n} \equiv \frac{R_{\ast}}{R_{\ast}(0)}$$
     :ajmi_2022:`\ ` eq. 77
 
     :param z: wavenumber range $z$

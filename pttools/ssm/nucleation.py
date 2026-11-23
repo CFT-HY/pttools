@@ -133,7 +133,7 @@ def bubble_spacing_enlargement(
         v_wall: float,
         sol_type: SolutionType,
         nuc_type: NucType = DEFAULT_NUC_TYPE) -> tuple[float, float, float]:
-    r"""Compute the bubble spacing enlargement quantities $f, h_x, \Lambda(h_x)$.
+    r"""Compute the bubble spacing enlargement quantities $f, h_x, \Lambda_\text{n}(h_x)$.
 
     There is no enlargement if $\tilde{\beta}$ is not given, i.e. it's None or nan,
     or for simultaneous nucleation or detonations.
@@ -152,17 +152,17 @@ def bubble_spacing_enlargement(
 
 @njit(cache=True)
 def bubble_spacing_enlargement_factor[T: FloatOrArr](hx: T, nuc_type: NucType = DEFAULT_NUC_TYPE) -> T:
-    r"""$\Lambda$, bubble spacing enlargement factor.
+    r"""$\Lambda_\text{n}$, bubble spacing enlargement factor.
 
-    $$\Lambda(h_x) \equiv \frac{R_{\ast}}{R_{\ast}(0)} = I_h^{-\frac{1}{3}}(h_x)$$
+    $$\Lambda_\text{n}(h_x) \equiv \frac{R_{\ast}}{R_{\ast}(0)} = I_h^{-\frac{1}{3}}(h_x)$$
     :ajmi_2022:`\ ` eq. 77.
     For simultaneous nucleation, all the bubbles are nucleated at the same time,
-    and therefore the reheating cannot suppress the nucleation, and $\Lambda = 1$.
+    and therefore the reheating cannot suppress the nucleation, and $\Lambda_\text{n} = 1$.
 
     :param hx: $h_x$, fractional volume at which the symmetric phase is reheated enough
         to prevent further bubble nucleation
     :param nuc_type: nucleation type
-    :return: $\Lambda$
+    :return: $\Lambda_\text{n}$
     """
     if nuc_type == NucType.SIMULTANEOUS.value:
         return 1. + 0. * hx  # pyrefly: ignore[bad-return]
@@ -291,7 +291,7 @@ def r_star[T2: FloatOrArr](
         nuc_type: NucType = DEFAULT_NUC_TYPE) -> T2:
     r"""$r_*(\beta)$, Hubble-scaled mean bubble spacing.
 
-    $$r_* = \Lambda(h_x) r_*(0)$$
+    $$r_* = \Lambda_\text{n}(h_x) r_*(0)$$
     :ajmi_2022:`\ ` eq. 77
     Please see :py:func:`pttools.ssm.nucleation.R_star` for further information.
 
@@ -352,7 +352,7 @@ def R_star[T2: FloatOrArr](
         nuc_type: NucType = DEFAULT_NUC_TYPE) -> T2:
     r"""$R_*$, mean bubble separation.
 
-    $$R_* = \Lambda(h_x) R_*(0)$$
+    $$R_* = \Lambda_\text{n}(h_x) R_*(0)$$
     :ajmi_2022:`\ ` eq. 77.
 
     This commonly used formula is wrong.

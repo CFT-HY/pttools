@@ -175,7 +175,7 @@ class SSMGWResults(tp.NamedTuple):
     nucleation_f: float
     #: nucleation $h_x$
     hx: float
-    #: bubble spacing enlargement factor $\Lambda$
+    #: bubble spacing enlargement factor $\Lambda_\text{n}$
     bubble_spacing_enlargement_factor: float
 
 
