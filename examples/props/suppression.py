@@ -20,10 +20,13 @@ def main() -> dict[str, SuppressionPlot]:
     r"""Plot the suppression factor $\Sigma({v}_\text{wall}, \alpha_n)$"""
     df = DataFrame({
         "name": [supp.name for supp in SUPPRESSIONS],
+        "min_supp": [supp.suppressions.min() for supp in SUPPRESSIONS],
         "max_supp": [supp.suppressions.max() for supp in SUPPRESSIONS]
     })
+    min_supp = df.min_supp.min()
     max_supp = df.max_supp.max()
     print(df)
+    print(f"Minimum of all suppressions: {min_supp}")
     print(f"Maximum of all suppressions: {max_supp}")
 
     step = 0.25
