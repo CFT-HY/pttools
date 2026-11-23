@@ -78,7 +78,7 @@ def f_star0[T: FloatOrArrU](
     \left( \frac{T_{\ast}}{100 \text{ GeV}} \right)
     \left( \frac{g_{e\ast}}{100} \right)^\frac{1}{6},$$
     where $f_{\ast,0,\text{ref}}$ is $f_{\ast,0}$ at $T_\ast = 100 \text{ GeV}$ and $g_\ast = 100$.
-    With $g_{s0} = 3.9298$ and $T_0 = 2.72548 \text{K}$,
+    With $g_{s0} = 3.930$ and $T_0 = 2.72548 \text{K}$,
     $f_{\ast,0,\text{ref}} = 2.625 \cdot 10^{-6} \text{Hz}$.
     The articles use the rounded value $f_{\ast,0,\text{ref}} = 2.6 \cdot 10^{-6} \text{Hz}$,
     and the definition of $g_\ast$ varies between them:

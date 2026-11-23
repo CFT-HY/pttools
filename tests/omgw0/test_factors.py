@@ -59,7 +59,7 @@ class DofTest(unittest.TestCase):
         n_nu = ufloat(3.044, 0.001)
         gs0_u: UFloat = gs0(n_nu=n_nu)
         assert gs0_u.nominal_value == gs0()
-        assert gs0_u.std_dev == pytest.approx(7 / 8 * 2 * 4 / 11 * 0.001, rel=1e-12)
+        assert gs0_u.std_dev == pytest.approx(7 / 8 * 2 * 4 / 11 * 3 / 4 * (3.044 / 3)**(-1/4) * 0.001, rel=1e-12)
         ge0_u: UFloat = ge0(n_nu=n_nu)
         assert ge0_u.nominal_value == ge0()
         assert ge0_u.std_dev == pytest.approx(7 / 8 * 2 * (4 / 11)**(4/3) * 0.001, rel=1e-12)
@@ -117,9 +117,15 @@ class ConstTest(unittest.TestCase):
         assert const.A_RADIATION / A_RAD_REF == pytest.approx(1, abs=5e-7)  # noqa: SIM300
 
     def test_gs0(self) -> None:
-        r"""The computed $g_{s0}$ should match the $3.91$ of :caprini_2020:`\ ` p. 12."""
+        r"""The computed $g_{s0}$ should match the literature.
+
+        It should match the $3.91$ of :caprini_2020:`\ ` p. 12 for $N_\nu = 3$,
+        and $h_\text{eff}$ of :escudero_2026:`\ ` table 1 for the default $N_\nu$.
+        """
+        assert gs0(gs0_photon=2, n_nu=3) == pytest.approx(43 / 11, rel=1e-15)
         assert gs0(gs0_photon=2, n_nu=3) == pytest.approx(3.91, abs=5e-3)
-        assert const.GS0 == pytest.approx(3.91, abs=0.0199)  # noqa: SIM300
+        assert gs0() == pytest.approx(const.GS0, abs=5e-4)
+        assert const.GS0 == pytest.approx(3.91, abs=0.0201)  # noqa: SIM300
 
     def test_omega_photon_h2(self) -> None:
         r"""$\Omega_{\gamma,0} h^2$ should match the literature value."""
@@ -188,7 +194,7 @@ class FGw0Test(unittest.TestCase):
         computed = F_gw0_h2(ge_star=100., om_gamma0_h2=const.OMEGA_PHOTON_H2)
         assert computed == pytest.approx(F_GW0_H2_REF, abs=F_GW0_H2_REF_ERR)
         # The agreement should in fact be better than the uncertainty of the reference value.
-        assert computed / F_GW0_H2_REF == pytest.approx(1, abs=0.0067)
+        assert computed / F_GW0_H2_REF == pytest.approx(1, abs=0.0068)
 
     def test_gs_star_default(self) -> None:
         r"""Omitting $g_{s\ast}$ should be equivalent to setting $g_{s\ast} = {g}_\ast$."""

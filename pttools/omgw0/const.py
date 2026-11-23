@@ -127,12 +127,17 @@ The older value $N \approx 3.046$ is used in
 :cosmo2:`\ ` table 4.
 """
 
-GS0: float = 3.9298
+GS0: float = 3.930
 r"""
 $g_{s0}$, degrees of freedom for the entropy density today
-:escudero_2026:`\ ` table 1
+:escudero_2026:`\ ` table 1 and section 6
 This version is denoted in the article as $h_\text{eff}$,
 and it's the one used for the temperature scaling from the conservation of comoving entropy.
+It is the value today of $h_{\ast}$, which is defined so that the comoving entropy is conserved
+also when the neutrinos are out of equilibrium (:escudero_2026:`\ ` eq. 5.4 and 5.6),
+$$h_{\ast} (a T_{\gamma})^3 \equiv \text{const}, \quad s \equiv h_{\ast} \frac{2 \pi^2 T_{\gamma}^3}{45}.$$
+Table 1 has several values in the range $h_\text{eff} \in [3.9296, 3.9306]$,
+and the article states the value as $h_\text{eff} \approx 3.930$.
 The article does not give an uncertainty for the value,
 and therefore this constant has no counterpart with an uncertainty.
 """
